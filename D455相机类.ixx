@@ -1,12 +1,41 @@
 ﻿export module D455相机模块;
 
 import 相机接口模块;
-
+import 基础数据类型模块 ;
 import <librealsense2/rs.hpp>;
 import <iostream>;
 import <algorithm>;
 import <cstdint>;
 import <cmath>;
+import <vector>;
+import <queue>;
+import <limits>;
+import <cstring>;
+
+
+export struct 结构体_轮廓观测 {
+    int 帧内序号 = 0;
+
+    // ROI（在“对齐后的深度/彩色图”坐标系中）
+    int x = 0, y = 0, w = 0, h = 0;
+
+    // 轮廓掩膜：按 ROI 原始尺寸存储（0/1），后续“特征值”阶段再按规则缩放/编码
+    // size = w*h
+    std::vector<std::uint8_t> 掩膜;
+
+    // 轮廓对应的原始彩色裁剪图（与掩膜同尺寸），用于后续继续提取“子存在/子轮廓”
+    // size = w*h
+    std::vector<Color> 裁剪颜色;
+
+    // 可选：边界点（全图坐标），打包为 (y<<32 | x)
+    std::vector<std::int64_t> 边界点;
+
+    // 统计信息（相机坐标系，单位：米）
+    Vector3D 中心{ 0,0,0 };
+    Vector3D 尺寸{ 0,0,0 };
+    Color    平均颜色{ 255,255,255 };
+    int      像素数 = 0;
+};
 
 export class D455_相机实现 : public 抽象深度相机接口 {
 public:
@@ -50,6 +79,30 @@ public:
         // 降采样滤波默认不启用（因为会改变分辨率，容易破坏对齐）
         bool 启用降采样 = false;
         float 降采样_倍率 = 1.0f;       // RS2_OPTION_FILTER_MAGNITUDE，>1 会改分辨率（谨慎）
+
+        // ===== 轮廓/存在初筛（前景分割 + 连通域）=====
+        bool 启用轮廓提取 = true;
+
+        // 背景深度学习：前 N 帧做平均得到背景；之后按 背景_更新系数 缓慢更新“非前景像素”
+        int   背景学习帧数 = 30;
+        float 背景_更新系数 = 0.01f;      // 0 表示不更新
+
+        // 前景判定：|depth - bg| > 阈值（米）
+        float 前景_深度差阈值_m = 0.06f;
+        float 前景_最小深度_m = 0.15f;
+        float 前景_最大深度_m = 4.0f;
+
+        // 连通域筛选
+        int 轮廓_最小像素数 = 400;
+        int 轮廓_最大数量 = 32;
+
+        // 形态学（简单填洞/去噪），0 表示关闭；1~2 通常足够
+        int 轮廓_形态学半径 = 1;
+
+        // 输出内容开关
+        bool 轮廓_输出边界点 = false;
+        bool 轮廓_输出裁剪颜色 = true;
+        bool 轮廓_输出原始掩膜 = true;
     };
 
 public:
@@ -172,6 +225,13 @@ public:
             // ===== 5) 点云生成（相机坐标系）=====
             生成点云(输出);
 
+            // ===== 6) 轮廓初筛（可选）：深度背景差异 -> 前景掩膜 -> 连通域（轮廓ROI/掩膜/裁剪图）=====
+            if (cfg.启用轮廓提取) {
+                最近轮廓.clear();
+                提取轮廓(输出, 最近轮廓);
+
+            }
+
             return true;
 
         }
@@ -180,6 +240,17 @@ public:
             return false;
         }
     }
+
+
+public:
+    // 便捷接口：直接返回本帧提取到的轮廓（若 cfg.启用轮廓提取=false，则返回空）
+    bool 采集一帧并提取轮廓(结构体_原始场景帧& 输出, std::vector<结构体_轮廓观测>& out轮廓) {
+        if (!采集一帧(输出)) return false;
+        out轮廓 = 最近轮廓;
+        return true;
+    }
+
+    const std::vector<结构体_轮廓观测>& 获取最近轮廓观测() const { return 最近轮廓; }
 
 private:
     bool 已打开 = false;
@@ -293,7 +364,7 @@ private:
         try_set(时间滤波, RS2_OPTION_FILTER_SMOOTH_DELTA, cfg.时间_平滑阈值);
         // 不同版本/设备可能是 PERSISTENCE_CONTROL，也可能复用 HOLES_FILL 等；supports 就会生效
       //  try_set(时间滤波, RS2_OPTION_PERSISTENCE_CONTROL, cfg.时间_持久性);
-       
+
 
         // hole filling
         try_set(填洞滤波, RS2_OPTION_HOLES_FILL, cfg.填洞_模式);
@@ -395,4 +466,318 @@ private:
             }
         }
     }
+private:
+    // ===== 轮廓提取状态 =====
+    std::vector<float> 背景深度;       // size = w*h
+    std::vector<float> 背景权重;       // size = w*h（用于学习期平均）
+    bool 背景已建立 = false;
+    int  背景累计帧 = 0;
+
+    std::vector<float> 上一帧深度;     // size = w*h（背景未建立时可用作“帧差”兜底）
+    std::vector<结构体_轮廓观测> 最近轮廓;
+
+private:
+    static inline bool 在范围内(int x, int a, int b) { return x >= a && x <= b; }
+
+    // 简单的 3x3 / 5x5 形态学：用于填洞/去毛刺（r=0 关闭）
+    static void 形态学_闭运算(std::vector<std::uint8_t>& m, int w, int h, int r) {
+        if (r <= 0) return;
+        std::vector<std::uint8_t> tmp((size_t)w * (size_t)h, 0);
+
+        auto idx = [&](int u, int v) { return (size_t)v * (size_t)w + (size_t)u; };
+
+        // dilation
+        for (int v = 0; v < h; ++v) {
+            for (int u = 0; u < w; ++u) {
+                bool on = false;
+                for (int dv = -r; dv <= r && !on; ++dv) {
+                    int y = v + dv;
+                    if (!在范围内(y, 0, h - 1)) continue;
+                    for (int du = -r; du <= r; ++du) {
+                        int x = u + du;
+                        if (!在范围内(x, 0, w - 1)) continue;
+                        if (m[idx(x, y)] != 0) { on = true; break; }
+                    }
+                }
+                tmp[idx(u, v)] = on ? 1 : 0;
+            }
+        }
+
+        // erosion on tmp -> m
+        for (int v = 0; v < h; ++v) {
+            for (int u = 0; u < w; ++u) {
+                bool on = true;
+                for (int dv = -r; dv <= r && on; ++dv) {
+                    int y = v + dv;
+                    if (!在范围内(y, 0, h - 1)) { on = false; break; }
+                    for (int du = -r; du <= r; ++du) {
+                        int x = u + du;
+                        if (!在范围内(x, 0, w - 1)) { on = false; break; }
+                        if (tmp[idx(x, y)] == 0) { on = false; break; }
+                    }
+                }
+                m[idx(u, v)] = on ? 1 : 0;
+            }
+        }
+    }
+
+    void 更新背景模型(const 结构体_原始场景帧& 帧, const std::vector<std::uint8_t>* 前景掩膜) {
+        const int w = 帧.宽度, h = 帧.高度;
+        const size_t N = (size_t)w * (size_t)h;
+
+        if (背景深度.size() != N) {
+            背景深度.assign(N, 0.0f);
+            背景权重.assign(N, 0.0f);
+            背景已建立 = false;
+            背景累计帧 = 0;
+        }
+
+        // 学习期：做逐像素平均
+        if (!背景已建立) {
+            for (size_t i = 0; i < N; ++i) {
+                float z = 帧.深度[i];
+                if (z <= 0.0f) continue;
+                float wgt = 背景权重[i];
+                背景深度[i] = (背景深度[i] * wgt + z) / (wgt + 1.0f);
+                背景权重[i] = wgt + 1.0f;
+            }
+            背景累计帧++;
+            if (背景累计帧 >= std::max(1, cfg.背景学习帧数)) {
+                背景已建立 = true;
+            }
+            return;
+        }
+
+        // 运行期：缓慢更新“非前景像素”的背景
+        const float a = std::max(0.0f, std::min(1.0f, cfg.背景_更新系数));
+        if (a <= 0.0f) return;
+
+        for (size_t i = 0; i < N; ++i) {
+            if (前景掩膜 && (*前景掩膜)[i]) continue; // 前景不更新
+            float z = 帧.深度[i];
+            if (z <= 0.0f) continue;
+            float bg = 背景深度[i];
+            if (bg <= 0.0f) {
+                背景深度[i] = z;
+            }
+            else {
+                背景深度[i] = bg * (1.0f - a) + z * a;
+            }
+        }
+    }
+
+    void 生成前景掩膜(const 结构体_原始场景帧& 帧, std::vector<std::uint8_t>& outMask) {
+        const int w = 帧.宽度, h = 帧.高度;
+        const size_t N = (size_t)w * (size_t)h;
+        outMask.assign(N, 0);
+
+        const float minZ = cfg.前景_最小深度_m;
+        const float maxZ = cfg.前景_最大深度_m;
+        const float th = cfg.前景_深度差阈值_m;
+
+        const bool canUseBG = 背景已建立 && 背景深度.size() == N;
+        const bool canUsePrev = (!canUseBG) && 上一帧深度.size() == N;
+
+        for (size_t i = 0; i < N; ++i) {
+            float z = 帧.深度[i];
+            if (!(z > 0.0f && z >= minZ && z <= maxZ)) continue;
+
+            float ref = 0.0f;
+            if (canUseBG) ref = 背景深度[i];
+            else if (canUsePrev) ref = 上一帧深度[i];
+
+            bool fg = false;
+            if (ref <= 0.0f) {
+                // 背景缺失：背景模式下把“新出现深度”视为前景；帧差模式下避免全屏抖动，默认不算前景
+                fg = canUseBG;
+            }
+            else {
+                fg = std::fabs(z - ref) > th;
+            }
+
+            outMask[i] = fg ? 1 : 0;
+        }
+
+        // 简单形态学（默认 r=1）：填洞 + 去毛刺
+        形态学_闭运算(outMask, w, h, cfg.轮廓_形态学半径);
+
+        // 运行期背景更新（只用“非前景像素”）
+        if (canUseBG) {
+            更新背景模型(帧, &outMask);
+        }
+        else {
+            // 背景学习期：先学习背景
+            更新背景模型(帧, nullptr);
+        }
+
+        // 更新上一帧（供背景未建立时兜底）
+        上一帧深度 = 帧.深度;
+    }
+
+    void 提取轮廓(const 结构体_原始场景帧& 帧, std::vector<结构体_轮廓观测>& out) {
+        out.clear();
+
+        const int w = 帧.宽度, h = 帧.高度;
+        if (w <= 0 || h <= 0) return;
+
+        // 1) 前景掩膜（深度背景差异）
+        std::vector<std::uint8_t> mask;
+        生成前景掩膜(帧, mask);
+
+        // 2) 连通域提取
+        const size_t N = (size_t)w * (size_t)h;
+        std::vector<std::uint8_t> vis(N, 0);
+
+        auto idx = [&](int u, int v) { return (size_t)v * (size_t)w + (size_t)u; };
+
+        std::queue<int> q;
+        int found = 0;
+        int seq = 0;
+
+        for (int v0 = 0; v0 < h; ++v0) {
+            for (int u0 = 0; u0 < w; ++u0) {
+                const size_t i0 = idx(u0, v0);
+                if (mask[i0] == 0 || vis[i0]) continue;
+
+                // BFS
+                int minx = u0, maxx = u0, miny = v0, maxy = v0;
+                int count = 0;
+
+                float minX = std::numeric_limits<float>::infinity();
+                float minY = std::numeric_limits<float>::infinity();
+                float minZ = std::numeric_limits<float>::infinity();
+                float maxX = -std::numeric_limits<float>::infinity();
+                float maxY = -std::numeric_limits<float>::infinity();
+                float maxZ = -std::numeric_limits<float>::infinity();
+
+                std::uint64_t sumR = 0, sumG = 0, sumB = 0;
+                std::vector<int> pixels;
+                pixels.reserve(2048);
+
+                q.push((int)i0);
+                vis[i0] = 1;
+
+                while (!q.empty()) {
+                    int i = q.front(); q.pop();
+                    int u = i % w;
+                    int v = i / w;
+
+                    ++count;
+                    pixels.push_back(i);
+
+                    if (u < minx) minx = u;
+                    if (u > maxx) maxx = u;
+                    if (v < miny) miny = v;
+                    if (v > maxy) maxy = v;
+
+                    // 3D bbox + avg color
+                    const auto& P = 帧.点云[(size_t)i];
+                    if (P.z > 0.0f) {
+                        if (P.x < minX) minX = (float)P.x;
+                        if (P.y < minY) minY = (float)P.y;
+                        if (P.z < minZ) minZ = (float)P.z;
+                        if (P.x > maxX) maxX = (float)P.x;
+                        if (P.y > maxY) maxY = (float)P.y;
+                        if (P.z > maxZ) maxZ = (float)P.z;
+                    }
+
+                    const auto& C = 帧.颜色[(size_t)i];
+                    sumR += C.r;
+                    sumG += C.g;
+                    sumB += C.b;
+
+                    // 4-neighbor
+                    auto try_push = [&](int nu, int nv) {
+                        if (!在范围内(nu, 0, w - 1) || !在范围内(nv, 0, h - 1)) return;
+                        size_t ni = idx(nu, nv);
+                        if (vis[ni]) return;
+                        if (mask[ni] == 0) return;
+                        vis[ni] = 1;
+                        q.push((int)ni);
+                        };
+                    try_push(u - 1, v);
+                    try_push(u + 1, v);
+                    try_push(u, v - 1);
+                    try_push(u, v + 1);
+                }
+
+                if (count < std::max(1, cfg.轮廓_最小像素数)) continue;
+
+                if (!(std::isfinite(minX) && std::isfinite(maxX) && std::isfinite(minZ) && std::isfinite(maxZ))) {
+                    continue;
+                }
+
+                结构体_轮廓观测 obs;
+                obs.帧内序号 = seq++;
+                obs.x = minx;
+                obs.y = miny;
+                obs.w = maxx - minx + 1;
+                obs.h = maxy - miny + 1;
+                obs.像素数 = count;
+
+                obs.中心 = Vector3D{ (minX + maxX) * 0.5f, (minY + maxY) * 0.5f, (minZ + maxZ) * 0.5f };
+                obs.尺寸 = Vector3D{ std::max(0.0f, maxX - minX), std::max(0.0f, maxY - minY), std::max(0.0f, maxZ - minZ) };
+
+                const int denom = std::max(1, count);
+                obs.平均颜色 = Color{
+                    (std::uint8_t)std::min<std::uint64_t>(255, sumR / (std::uint64_t)denom),
+                    (std::uint8_t)std::min<std::uint64_t>(255, sumG / (std::uint64_t)denom),
+                    (std::uint8_t)std::min<std::uint64_t>(255, sumB / (std::uint64_t)denom)
+                };
+
+                // ROI 掩膜/裁剪图（按原始尺寸存储）
+                const int rw = obs.w;
+                const int rh = obs.h;
+
+                if (cfg.轮廓_输出原始掩膜) {
+                    obs.掩膜.assign((size_t)rw * (size_t)rh, 0);
+                    for (int pi : pixels) {
+                        int u = pi % w;
+                        int v = pi / w;
+                        int ru = u - obs.x;
+                        int rv = v - obs.y;
+                        obs.掩膜[(size_t)rv * (size_t)rw + (size_t)ru] = 1;
+                    }
+                }
+
+                if (cfg.轮廓_输出裁剪颜色) {
+                    obs.裁剪颜色.assign((size_t)rw * (size_t)rh, Color{ 0,0,0 });
+                    for (int rv = 0; rv < rh; ++rv) {
+                        int v = obs.y + rv;
+                        for (int ru = 0; ru < rw; ++ru) {
+                            int u = obs.x + ru;
+                            obs.裁剪颜色[(size_t)rv * (size_t)rw + (size_t)ru] = 帧.颜色[(size_t)v * (size_t)w + (size_t)u];
+                        }
+                    }
+                }
+
+                if (cfg.轮廓_输出边界点 && cfg.轮廓_输出原始掩膜) {
+                    // 用 ROI 掩膜判定边界（4邻域）
+                    auto ridx = [&](int ru, int rv) { return (size_t)rv * (size_t)rw + (size_t)ru; };
+                    for (int rv = 0; rv < rh; ++rv) {
+                        for (int ru = 0; ru < rw; ++ru) {
+                            if (obs.掩膜[ridx(ru, rv)] == 0) continue;
+                            bool edge =
+                                (ru == 0 || obs.掩膜[ridx(ru - 1, rv)] == 0) ||
+                                (ru == rw - 1 || obs.掩膜[ridx(ru + 1, rv)] == 0) ||
+                                (rv == 0 || obs.掩膜[ridx(ru, rv - 1)] == 0) ||
+                                (rv == rh - 1 || obs.掩膜[ridx(ru, rv + 1)] == 0);
+                            if (edge) {
+                                int u = obs.x + ru;
+                                int v = obs.y + rv;
+                                obs.边界点.push_back((std::int64_t)((std::uint64_t)(std::uint32_t)v << 32) | (std::uint32_t)u);
+                            }
+                        }
+                    }
+                }
+
+                out.push_back(std::move(obs));
+                found++;
+                if (found >= std::max(1, cfg.轮廓_最大数量)) {
+                    return;
+                }
+            }
+        }
+    }
+
 };

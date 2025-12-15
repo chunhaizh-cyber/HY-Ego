@@ -112,7 +112,7 @@ void 外设类::采集循环_阻塞() {
         // 4) 输出给显示线程/上层逻辑
         if (回调) {
             auto spFrame = std::make_shared<结构体_原始场景帧>(std::move(帧));
-            auto spObs = std::make_shared<std::vector<存在观测>>(std::move(观测列表));
+            auto spObs = std::make_shared<std::vector<结构体_存在观测>>(std::move(观测列表));
             回调(std::move(spFrame), std::move(spObs));
         }
     }

@@ -4,6 +4,11 @@
 *.user
 *.userosscache
 *.sln.docstates
+# VS database / cache
+*.VC.db
+*.VC.opendb
+*.sdf
+*.opensdf
 
 # Build outputs
 Debug/
@@ -22,6 +27,9 @@ CMakeCache.txt
 cmake_install.cmake
 *.cmake
 compile_commands.json
+# CMake build folders (common)
+cmake-build-*/
+CMakeSettings.json
 
 # Logs
 *.log
@@ -41,6 +49,13 @@ vcpkg_installed/
 *.lib
 *.dll
 *.exe
+# Windows / MFC temp
+*.aps
+*.ncb
+*.pch
+*.res
+*.obj.enc
+Thumbs.db
 
 # C++20 modules intermediates (MSVC)
 *.ifc

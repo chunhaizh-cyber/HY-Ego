@@ -46,6 +46,7 @@ import 主信息定义模块;
 
         // 让链表模板负责主键生成和插入
         特征值节点类* 新节点 = 添加节点(根指针, 新主信息);
+     //   特征值节点类* 新节点 = 无锁_添加节点(新主信息);
         if (!新节点) return nullptr;
 
         // 根据实际类型登记到对应索引
@@ -74,9 +75,9 @@ import 主信息定义模块;
         return 新节点;
     }
 
-    特征值节点类* 特征值类::查找标量特征值(语素节点类* 单位指针, int64_t 数值) const
+    特征值节点类* 特征值类::查找标量特征值(语素节点类* 单位指针, std::int64_t 数值) const
     {
-        std::lock_guard<std::mutex> 锁(互斥锁);
+       
 
         // 线性遍历查找（标量节点很少，几百个以内完全无压力）
         for (特征值节点类* 当前 = 根指针->下; 当前 != 根指针; 当前 = 当前->下)
@@ -92,9 +93,9 @@ import 主信息定义模块;
         return nullptr;
     }
 
-    特征值节点类* 特征值类::获取或创建标量特征值(语素节点类* 单位指针, int64_t 数值)
+    特征值节点类* 特征值类::获取或创建标量特征值(语素节点类* 单位指针, std::int64_t 数值)
     {
-        std::lock_guard<std::mutex> 锁(互斥锁);
+      
 
         // 线性遍历查找（标量节点很少，几百个以内完全无压力）
         for (特征值节点类* 当前 = 根指针->下; 当前 != 根指针; 当前 = 当前->下)
@@ -123,7 +124,7 @@ import 主信息定义模块;
             键.end()
         );
 
-        std::lock_guard<std::mutex> 锁(互斥锁);
+       
         auto it = 文本特征值索引.find(键);
         if (it != 文本特征值索引.end())
             return it->second;
@@ -141,7 +142,7 @@ import 主信息定义模块;
         键.erase(std::remove_if(键.begin(), 键.end(), [](unsigned char c) { return std::isspace(c); }), 键.end());
 
         {
-            std::lock_guard<std::mutex> 锁(互斥锁);
+         
             auto 查找结果 = 文本特征值索引.find(键);
             if (查找结果 != 文本特征值索引.end())
                 return 查找结果->second;
@@ -151,14 +152,14 @@ import 主信息定义模块;
         return 创建并登记节点(new 字符特征值主信息类(原始文本));
     }
 
-    特征值节点类* 特征值类::查找矢量特征值(const std::vector<int64_t>& 矢量值) const
+    特征值节点类* 特征值类::查找矢量特征值(const std::vector<std::int64_t>& 矢量值) const
     {
         if (矢量值.empty()) return nullptr;
 
         // 先计算最高层级的哈希
         uint64_t 哈希 = 计算矢量压缩哈希(矢量值, 最大层级);
 
-        std::lock_guard<std::mutex> 锁(互斥锁);
+       
         auto it = 矢量金字塔索引[最大层级].find(哈希);
         if (it == 矢量金字塔索引[最大层级].end())
             return nullptr;
@@ -173,46 +174,62 @@ import 主信息定义模块;
 
         return nullptr;
     }
+ 
 
     特征值节点类* 特征值类::获取或创建矢量特征值(const std::vector<int64_t>& 矢量值)
     {
-        if (矢量值.empty()) return nullptr;
+        if (矢量值.empty()) {
+            static 特征值节点类* emptyVectorNode = nullptr;
+            if (!emptyVectorNode) {
+                emptyVectorNode = 创建并登记节点(new 矢量特征值主信息类(std::vector<std::int64_t>{}));
+            }
+            return emptyVectorNode;
+        }
 
-        // 使用最粗糙的一层（层级7 = 2048×2048）做快速过滤
+        constexpr int 最大层级 = 7;
+
         uint64_t 粗哈希 = 计算矢量压缩哈希(矢量值, 最大层级);
 
         特征值节点类* 候选节点 = nullptr;
 
         {
-            std::lock_guard<std::mutex> 锁(互斥锁);
-            auto 查找结果 = 矢量金字塔索引[最大层级].find(粗哈希);
-            if (查找结果 != 矢量金字塔索引[最大层级].end())
+          
+
+            // ===== 关键修复：必须判断是否找到 =====
+            auto& 索引地图 = 矢量金字塔索引[最大层级];
+            auto 查找结果 = 索引地图.find(粗哈希);
+            if (查找结果 != 索引地图.end()) {
                 候选节点 = 查找结果->second;
-        }
-
-        // 精确比对
-        if (候选节点)
-        {
-            if (auto* 信息 = dynamic_cast<矢量特征值主信息类*>(候选节点->主信息))
-            {
-                if (信息->值 == 矢量值)
-                    return 候选节点;   // 完全相等，直接返回
             }
-        }
 
-        // 真的没有 → 新建
-        return 创建并登记节点(new 矢量特征值主信息类(矢量值));
+            // 精确比对
+            if (候选节点) {
+                if (auto* 信息 = dynamic_cast<矢量特征值主信息类*>(候选节点->主信息)) {
+                    if (信息->值 == 矢量值) {
+                        return 候选节点;  // 命中缓存
+                    }
+                }
+            }
+
+            // 未命中 → 创建新节点
+            特征值节点类* 新节点 = 创建并登记节点(new 矢量特征值主信息类(矢量值));
+
+            // 登记到粗哈希层，供下次快速过滤
+            索引地图[粗哈希] = 新节点;
+
+            return 新节点;
+        }
     }
 
     
-    特征值节点类* 特征值类::获取或创建矢量特征值(int64_t 单值)
+    特征值节点类* 特征值类::获取或创建矢量特征值(std::int64_t 单值)
     {
-		std::vector<int64_t> 单值矢量 = { 单值 };
+		std::vector<std::int64_t> 单值矢量 = { 单值 };
         return 获取或创建矢量特征值(单值矢量);
     }
 
    
-    特征值类::相似矢量结果 特征值类::查找最相似矢量(const std::vector<int64_t>& 目标矢量, int 使用层级) const
+    特征值类::相似矢量结果 特征值类::查找最相似矢量(const std::vector<std::int64_t>& 目标矢量, int 使用层级) const
     {
         相似矢量结果 最佳;
         最佳.相似度 = -1.0;
@@ -222,7 +239,7 @@ import 主信息定义模块;
 
         uint64_t 哈希 = 计算矢量压缩哈希(目标矢量, 使用层级);
 
-        std::lock_guard<std::mutex> 锁(互斥锁);
+      
         auto 查找结果 = 矢量金字塔索引[使用层级].find(哈希);
         if (查找结果 == 矢量金字塔索引[使用层级].end())
             return 最佳;
@@ -245,7 +262,7 @@ import 主信息定义模块;
     {
         if (!待删除节点 || 待删除节点 == 根指针) return;
 
-        std::lock_guard<std::mutex> 锁(互斥锁);
+       
 
         // 从文本索引移除
         if (auto* 字符串信息 = dynamic_cast<字符特征值主信息类*>(待删除节点->主信息))
@@ -272,7 +289,7 @@ import 主信息定义模块;
     }
     void 特征值类::重建所有索引()
     {
-        std::lock_guard<std::mutex> 锁(互斥锁);
+      
 
         文本特征值索引.clear();
         for (int 层 = 0; 层 <= 最大层级; ++层)
@@ -307,8 +324,8 @@ import 主信息定义模块;
         }
     }
     double 特征值类::计算矢量相似度(
-        const std::vector<int64_t>& A,
-        const std::vector<int64_t>& B)
+        const std::vector<std::int64_t>& A,
+        const std::vector<std::int64_t>& B)
     {
         if (A.empty() || B.empty()) return -1.0;
 

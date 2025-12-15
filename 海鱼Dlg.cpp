@@ -15,6 +15,8 @@
 import 宇宙环境模块;
 import 外设模块;
 import 场景实时显示线程模块;
+import 基础数据类型模块;
+
 
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 
@@ -549,7 +551,7 @@ void C海鱼Dlg::启动外设()
 
 	// 统一回调：外设线程把“帧 + 观测列表”推入显示线程
 	auto cb = [this](std::shared_ptr<结构体_原始场景帧> f,
-					 std::shared_ptr<std::vector<存在观测>> o)
+					 std::shared_ptr<std::vector<结构体_存在观测>> o)
 	{
 		if (!外设回调允许.load()) return;
 		this->提交场景显示(std::move(f), std::move(o));
@@ -627,9 +629,11 @@ void C海鱼Dlg::停止场景实时显示()
 
 void C海鱼Dlg::提交场景显示(
 	std::shared_ptr<结构体_原始场景帧> 帧,
-	std::shared_ptr<std::vector<存在观测>> 观测)
+	std::shared_ptr<std::vector<结构体_存在观测>> 观测)
 {
 	if (场景显示线程) {
-		场景显示线程->提交(std::move(帧), std::move(观测));
+		// 新接口：直接传递已有的 shared_ptr（零拷贝，共享所有权）
+		// 第二个参数固定为世界树当前场景根（用于渲染持久记忆中的存在）
+		场景显示线程->提交(帧, g_宇宙.世界树.自我所在场景);
 	}
 }

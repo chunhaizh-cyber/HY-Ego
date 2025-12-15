@@ -3,6 +3,7 @@ export module 存在概念树模块;
 
 import 主信息定义模块;
 import 宇宙链模块;
+import 语素模块;
 
 import <string>;
 import <vector>;
@@ -15,12 +16,6 @@ using std::vector;
 using std::unordered_map;
 using std::unordered_set;
 
-export struct 存在概念扩展信息 {
-    存在节点类* 概念节点 = nullptr;
-    vector<词性节点类*> 特征类型集合;  // 概念模板：S(C)
-    string               集合Key;      // 规范化 key
-};
-
 export class 存在概念树类 {
 public:
     using 节点类型 = 存在节点类;
@@ -28,8 +23,10 @@ public:
 private:
     节点类型* 根_存在概念 = nullptr;  // 概念_存在树的根（也在 宇宙链 上）
 
-    vector<存在概念扩展信息>             概念扩展列表;
-    unordered_map<string, 存在概念扩展信息*> Key到概念映射;
+    // 用于概念去重：规范化 Key -> 概念节点
+    unordered_map<string, 节点类型*> Key到概念节点;
+    // 便于遍历/选父概念
+    vector<节点类型*> 概念节点列表;
 
 public:
     存在概念树类() = default;
@@ -43,8 +40,8 @@ public:
     // 在 宇宙链 上建立一棵“存在概念树”的根
     void 初始化默认存在概念() {
         根_存在概念 = nullptr;
-        概念扩展列表.clear();
-        Key到概念映射.clear();
+        Key到概念节点.clear();
+        概念节点列表.clear();
 
         auto* 主信息 = new 存在节点主信息类();   // 根概念本身可以是一个极空的“存在”
         基础信息基类* 基类指针 = 主信息;
@@ -54,40 +51,69 @@ public:
             );
         根_存在概念->主键 = "概念_存在_根";
 
-        存在概念扩展信息 ext;
-        ext.概念节点 = 根_存在概念;
-        ext.集合Key.clear();   // 根概念的模板特征集合视为 ∅
+        // 根概念的模板特征集合视为 ∅
+        if (auto* mi = dynamic_cast<存在节点主信息类*>((基础信息基类*)根_存在概念->主信息)) {
+            mi->特征类型集合.clear();
+        }
 
-        概念扩展列表.push_back(ext);
-        Key到概念映射[ext.集合Key] = &概念扩展列表.back();
+        Key到概念节点[""] = 根_存在概念;
+        概念节点列表.push_back(根_存在概念);
+        
+            std::vector<词性节点类*> types = {
+                语素集.添加词性词("位置坐标X轴", "名词"),
+                语素集.添加词性词("位置坐标Y轴", "名词"),
+                语素集.添加词性词("位置坐标Z轴", "名词"),
+                语素集.添加词性词("尺寸_左右",   "名词"),
+                语素集.添加词性词("尺寸_上下",   "名词"),
+                语素集.添加词性词("尺寸_前后",   "名词"),
+                语素集.添加词性词("平均颜色",   "名词"),
+                语素集.添加词性词("最近观测时间", "名词"),
+                语素集.添加词性词("观测次数",   "名词"),
+            };
+
+            // 你的存在概念树实例（示例用 g_宇宙.存在概念树；按你工程实际替换）                    
+        创建或查找概念_并设置别名主键(types,"概念_显示特征信息集合");
     }
 
     节点类型* 获取根概念() const { return 根_存在概念; }
-
-    const vector<存在概念扩展信息>& 获取全部扩展信息() const {
-        return 概念扩展列表;
-    }
 
     // —— 核心：给一组特征类型集合，创建或查找存在概念 —— 
     节点类型* 创建或查找概念(const vector<词性节点类*>& 特征类型集合) {
         vector<词性节点类*> 规范集合 = 去重并排序(特征类型集合);
         string key = 生成集合Key(规范集合);
 
-        auto it = Key到概念映射.find(key);
-        if (it != Key到概念映射.end()) {
-            return it->second->概念节点;
-        }
+        auto it = Key到概念节点.find(key);
+        if (it != Key到概念节点.end()) return it->second;
 
         return 创建概念节点_内部(规范集合, key);
+    }
+
+    // 常用：创建/查找后给概念一个稳定“别名主键”（便于显示模块定位）
+    节点类型* 创建或查找概念_并设置别名主键(
+        const vector<词性节点类*>& 特征类型集合,
+        const string& 别名主键)
+    {
+        auto* n = 创建或查找概念(特征类型集合);
+        if (n && !别名主键.empty()) n->主键 = 别名主键;
+        return n;
     }
 
     节点类型* 按特征类型集合查找(const vector<词性节点类*>& 特征类型集合) const {
         vector<词性节点类*> 规范集合 = 去重并排序(特征类型集合);
         string key = 生成集合Key(规范集合);
 
-        auto it = Key到概念映射.find(key);
-        if (it == Key到概念映射.end()) return nullptr;
-        return it->second->概念节点;
+        auto it = Key到概念节点.find(key);
+        if (it == Key到概念节点.end()) return nullptr;
+        return it->second;
+    }
+
+    // 便于外部按“概念主键别名”定位（例如："概念_显示特征信息集合"）
+    节点类型* 按概念主键查找(const string& 概念主键) const {
+        if (概念主键.empty()) return nullptr;
+        for (auto* n : 概念节点列表) {
+            if (n && n->主键 == 概念主键) return n;
+        }
+        return nullptr;
     }
 
 private:
@@ -131,6 +157,7 @@ private:
 
         // 2. 在 宇宙链 上，作为父概念的子节点插入
         auto* 主信息 = new 存在节点主信息类();
+        主信息->特征类型集合 = 规范集合; // 直接作为概念节点默认模板缓存
         基础信息基类* 基类指针 = 主信息;
 
         节点类型* 新节点 = nullptr;
@@ -146,15 +173,9 @@ private:
                 );
         }
 
-        // 3. 记录扩展信息 + 注册去重表
-        存在概念扩展信息 ext;
-        ext.概念节点 = 新节点;
-        ext.特征类型集合 = 规范集合;
-        ext.集合Key = key;
-
-        概念扩展列表.push_back(ext);
-        auto* extPtr = &概念扩展列表.back();
-        Key到概念映射[ext.集合Key] = extPtr;
+        // 3. 注册去重表 + 记录列表
+        Key到概念节点[key] = 新节点;
+        概念节点列表.push_back(新节点);
 
         // TODO：如果要实现“中间节点插入”，可以在这里重挂子树（S_new ⊆ S(child) 时）
 
@@ -174,9 +195,11 @@ private:
         节点类型* 最佳父 = 根_存在概念;
         std::size_t 最佳父特征数 = 0;
 
-        for (const auto& info : 概念扩展列表) {
-            if (!info.概念节点) continue;
-            const auto& S_parent = info.特征类型集合;
+        for (auto* node : 概念节点列表) {
+            if (!node) continue;
+            auto* mi = dynamic_cast<存在节点主信息类*>((基础信息基类*)node->主信息);
+            if (!mi) continue;
+            const auto& S_parent = mi->特征类型集合;
 
             bool 是子集 = true;
             for (auto* t : S_parent) {
@@ -191,7 +214,7 @@ private:
             std::size_t 当前特征数 = S_parent.size();
             if (当前特征数 > 最佳父特征数) {
                 最佳父特征数 = 当前特征数;
-                最佳父 = info.概念节点;
+                最佳父 = node;
             }
         }
 

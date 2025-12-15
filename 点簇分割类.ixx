@@ -148,11 +148,7 @@ private:
     }
 
     // 计算单个点簇的 8×8 封闭轮廓二值图（内部已填充）
-    static std::vector<std::int64_t> 计算封闭轮廓二值图(
-        const 结构体_原始场景帧& 帧,
-        const 点簇& 簇,
-        const Vector3D& 中心3D,
-        const Vector3D& 尺寸3D)
+    static std::vector<std::int64_t> 计算封闭轮廓二值图(const 结构体_原始场景帧& 帧,const 点簇& 簇,const Vector3D& 中心3D,const Vector3D& 尺寸3D)
     {
         constexpr int GRID = 8;
         constexpr int TOTAL = GRID * GRID;  // 64
@@ -300,10 +296,7 @@ public:
     }
 
     // ===== 返回点簇 + 边界框 =====
-    std::vector<点簇结果> 分割点簇_带边界框(
-        const 结构体_原始场景帧& 帧,
-        const 点簇分割参数& 参数
-    ) {
+    std::vector<点簇结果> 分割点簇_带边界框(const 结构体_原始场景帧& 帧,const 点簇分割参数& 参数 ) {
         auto 簇列表 = 分割点簇(帧, 参数);
 
         std::vector<点簇结果> out;
@@ -339,15 +332,19 @@ public:
         结果.reserve(原始簇列表.size());
 
         for (auto& c : 原始簇列表) {
-            if (c.size() < static_cast<size_t>(参数.最小点数)) continue;
+            // 过滤点数太少的簇
+            if (c.size() < static_cast<size_t>(参数.最小点数)) {
+                continue;
+            }
 
             点簇增强结果 res;
-            res.簇 = c;
+            res.簇 = std::move(c);  // 可选：move 提升性能
 
-            // 像素边界框
+            // ===== 计算像素级边界框 =====
             if (!res.簇.empty()) {
                 res.边界.umin = res.边界.umax = res.簇[0].u;
                 res.边界.vmin = res.边界.vmax = res.簇[0].v;
+
                 for (const auto& p : res.簇) {
                     res.边界.umin = std::min(res.边界.umin, p.u);
                     res.边界.umax = std::max(res.边界.umax, p.u);
@@ -356,13 +353,54 @@ public:
                 }
             }
 
-            // 3D 中心与尺寸
+            // ===== 计算 3D 中心与包围盒尺寸 =====
             计算簇3D信息(帧, res.簇, res.中心, res.尺寸);
 
-            // 封闭轮廓二值图（内部填充）
-            res.轮廓编码 = 计算封闭轮廓二值图(帧, res.簇, res.中心, res.尺寸);
+            // ===== 计算自适应的裁剪区域（高分辨率掩码 + 颜色）=====
+            res.裁剪宽 = res.边界.umax - res.边界.umin + 1;
+            res.裁剪高 = res.边界.vmax - res.边界.vmin + 1;
 
-            结果.push_back(res);
+            // 边界异常保护
+            if (res.裁剪宽 <= 0 || res.裁剪高 <= 0) {
+                // 无效边界，直接加入空结果（或 continue，视需求而定）
+                res.裁剪宽 = res.裁剪高 = 0;
+                res.裁剪颜色.clear();
+                res.裁剪掩码.clear();
+                结果.push_back(std::move(res));
+                continue;
+            }
+
+            const size_t total_pixels = static_cast<size_t>(res.裁剪宽) * res.裁剪高;
+
+            res.裁剪颜色.resize(total_pixels);
+            res.裁剪掩码.assign(total_pixels, 0);  // 全初始化为背景
+
+            // ===== 填充裁剪颜色和前景掩码 =====
+            for (const auto& pix : res.簇) {
+                const int local_u = pix.u - res.边界.umin;
+                const int local_v = pix.v - res.边界.vmin;
+
+                // 理论上不会越界，但加安全检查更稳健
+                if (local_u < 0 || local_u >= res.裁剪宽 || local_v < 0 || local_v >= res.裁剪高) {
+                    continue;
+                }
+
+                const size_t local_idx = static_cast<size_t>(local_v) * res.裁剪宽 + local_u;
+
+                const int global_idx = 索引(pix.u, pix.v, 帧.宽度);
+                if (global_idx >= 0 && static_cast<size_t>(global_idx) < 帧.颜色.size()) {
+                    res.裁剪颜色[local_idx] = 帧.颜色[global_idx];
+                }
+                res.裁剪掩码[local_idx] = 1;  // 前景点
+            }
+
+            // ===== 轮廓编码留空：在存在提取阶段再根据裁剪掩码标准化生成 =====
+            res.轮廓编码.clear();
+
+            // ===== 调试用轮廓3D 可选保留（当前不强制填充）=====
+            res.轮廓3D.clear();
+
+            结果.push_back(std::move(res));
         }
 
         return 结果;

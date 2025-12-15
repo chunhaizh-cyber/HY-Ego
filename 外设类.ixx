@@ -42,7 +42,7 @@ export class 外设类 {
 public:
     using 场景帧回调 = std::function<void(
         std::shared_ptr<结构体_原始场景帧>,
-        std::shared_ptr<std::vector<存在观测>>
+        std::shared_ptr<std::vector<结构体_存在观测>>
         )>;
 
 public:

@@ -13,15 +13,27 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="头文件\视频接口及显示">
+      <UniqueIdentifier>{081b2295-2dd1-4cb5-a7f4-1b831453ee80}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\概念树">
+      <UniqueIdentifier>{a1163a81-9aaf-4cd3-a1bc-6b5ced279ae3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\宇宙">
+      <UniqueIdentifier>{04b7581e-6c61-4523-944f-5ef1eca6734b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\窗口类">
+      <UniqueIdentifier>{740d95e8-3e40-4d9f-bd8c-d305b7aa092d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\世界树类">
+      <UniqueIdentifier>{96e4a276-bde8-4e5e-a56d-54dec5c225c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\自然语言模块">
+      <UniqueIdentifier>{b1dc1e99-6e12-4c30-a3b6-eff9d362f22d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="海鱼.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="海鱼Dlg.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="DlgProxy.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="framework.h">
@@ -36,11 +48,17 @@
     <ClInclude Include="pch.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="窗口_交互界面.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="百度分词类.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="窗口_交互界面.h">
+      <Filter>头文件\窗口类</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgProxy.h">
+      <Filter>头文件\窗口类</Filter>
+    </ClInclude>
+    <ClInclude Include="海鱼Dlg.h">
+      <Filter>头文件\窗口类</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -56,12 +74,6 @@
     <ClCompile Include="pch.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="动态类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="方法模块.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
     <ClCompile Include="基础数据类型.ixx">
       <Filter>头文件</Filter>
     </ClCompile>
@@ -71,13 +83,7 @@
     <ClCompile Include="任务类.ixx">
       <Filter>头文件</Filter>
     </ClCompile>
-    <ClCompile Include="世界树类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
     <ClCompile Include="双向链表模板.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="特征值类.ixx">
       <Filter>头文件</Filter>
     </ClCompile>
     <ClCompile Include="外部方法总接口.ixx">
@@ -92,16 +98,10 @@
     <ClCompile Include="因果信息类.ixx">
       <Filter>头文件</Filter>
     </ClCompile>
-    <ClCompile Include="语素类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
     <ClCompile Include="主信息定义模块.ixx">
       <Filter>头文件</Filter>
     </ClCompile>
     <ClCompile Include="状态类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="自然语言类.ixx">
       <Filter>头文件</Filter>
     </ClCompile>
     <ClCompile Include="自我线程模块.ixx">
@@ -119,9 +119,6 @@
     <ClCompile Include="窗口_交互界面.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="动作模块.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
     <ClCompile Include="动作模块.impl.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -137,32 +134,14 @@
     <ClCompile Include="全局函数模块.ixx">
       <Filter>头文件</Filter>
     </ClCompile>
-    <ClCompile Include="二次特征_通用判断.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
     <ClCompile Include="表达落地.ixx">
       <Filter>头文件</Filter>
     </ClCompile>
     <ClCompile Include="评估与提交策略.ixx">
       <Filter>头文件</Filter>
     </ClCompile>
-    <ClCompile Include="语言理解方法.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="语言知识库_初始化.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="语言学习模块.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="语言本能→学习桥接.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
     <ClCompile Include="自然语言类.impl.cpp">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="句子类.ixx">
-      <Filter>头文件</Filter>
     </ClCompile>
     <ClCompile Include="二次特征类.impl.cpp">
       <Filter>源文件</Filter>
@@ -182,80 +161,119 @@
     <ClCompile Include="内部方法_比较类.ixx">
       <Filter>头文件</Filter>
     </ClCompile>
-    <ClCompile Include="概念树类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="特征值类_轮廓模块.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="语言知识库类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="二次特征类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="宇宙链类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="宇宙环境类.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="概念_二次特征树类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="概念_存在树类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="概念_特征树类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="概念_状态树类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="概念_动态树类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="概念_因果树类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
     <ClCompile Include="宇宙环境类.impl.cpp">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="概念引擎类.ixx">
-      <Filter>头文件</Filter>
     </ClCompile>
     <ClCompile Include="概念引擎类.impl.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="外设类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="三维场景管理类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="D455相机类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="相机接口类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="点簇分割类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
     <ClCompile Include="外设类.impl.cpp">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="存在提取类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="场景实时显示类.ixx">
-      <Filter>头文件</Filter>
     </ClCompile>
     <ClCompile Include="线程模板类.ixx">
       <Filter>头文件</Filter>
     </ClCompile>
+    <ClCompile Include="D455相机类.ixx">
+      <Filter>头文件\视频接口及显示</Filter>
+    </ClCompile>
+    <ClCompile Include="场景实时显示类.ixx">
+      <Filter>头文件\视频接口及显示</Filter>
+    </ClCompile>
     <ClCompile Include="场景实时显示线程类.ixx">
-      <Filter>头文件</Filter>
+      <Filter>头文件\视频接口及显示</Filter>
+    </ClCompile>
+    <ClCompile Include="点簇分割类.ixx">
+      <Filter>头文件\视频接口及显示</Filter>
+    </ClCompile>
+    <ClCompile Include="三维场景管理类.ixx">
+      <Filter>头文件\视频接口及显示</Filter>
+    </ClCompile>
+    <ClCompile Include="相机接口类.ixx">
+      <Filter>头文件\视频接口及显示</Filter>
+    </ClCompile>
+    <ClCompile Include="概念_存在树类.ixx">
+      <Filter>头文件\概念树</Filter>
+    </ClCompile>
+    <ClCompile Include="概念_动态树类.ixx">
+      <Filter>头文件\概念树</Filter>
+    </ClCompile>
+    <ClCompile Include="概念_二次特征树类.ixx">
+      <Filter>头文件\概念树</Filter>
+    </ClCompile>
+    <ClCompile Include="概念_特征树类.ixx">
+      <Filter>头文件\概念树</Filter>
+    </ClCompile>
+    <ClCompile Include="概念_因果树类.ixx">
+      <Filter>头文件\概念树</Filter>
+    </ClCompile>
+    <ClCompile Include="概念_状态树类.ixx">
+      <Filter>头文件\概念树</Filter>
+    </ClCompile>
+    <ClCompile Include="概念树类.ixx">
+      <Filter>头文件\概念树</Filter>
+    </ClCompile>
+    <ClCompile Include="宇宙链类.ixx">
+      <Filter>头文件\宇宙</Filter>
+    </ClCompile>
+    <ClCompile Include="概念引擎类.ixx">
+      <Filter>头文件\概念树</Filter>
+    </ClCompile>
+    <ClCompile Include="存在提取类.ixx">
+      <Filter>头文件\视频接口及显示</Filter>
+    </ClCompile>
+    <ClCompile Include="动态类.ixx">
+      <Filter>头文件\世界树类</Filter>
+    </ClCompile>
+    <ClCompile Include="方法模块.ixx">
+      <Filter>头文件\世界树类</Filter>
+    </ClCompile>
+    <ClCompile Include="二次特征类.ixx">
+      <Filter>头文件\世界树类</Filter>
+    </ClCompile>
+    <ClCompile Include="二次特征_通用判断.ixx">
+      <Filter>头文件\世界树类</Filter>
+    </ClCompile>
+    <ClCompile Include="动作模块.ixx">
+      <Filter>头文件\世界树类</Filter>
+    </ClCompile>
+    <ClCompile Include="世界树类.ixx">
+      <Filter>头文件\世界树类</Filter>
+    </ClCompile>
+    <ClCompile Include="语素类.ixx">
+      <Filter>头文件\自然语言模块</Filter>
+    </ClCompile>
+    <ClCompile Include="语言本能→学习桥接.ixx">
+      <Filter>头文件\自然语言模块</Filter>
+    </ClCompile>
+    <ClCompile Include="语言理解方法.ixx">
+      <Filter>头文件\自然语言模块</Filter>
+    </ClCompile>
+    <ClCompile Include="语言学习模块.ixx">
+      <Filter>头文件\自然语言模块</Filter>
+    </ClCompile>
+    <ClCompile Include="语言知识库_初始化.ixx">
+      <Filter>头文件\自然语言模块</Filter>
+    </ClCompile>
+    <ClCompile Include="语言知识库类.ixx">
+      <Filter>头文件\自然语言模块</Filter>
+    </ClCompile>
+    <ClCompile Include="自然语言类.ixx">
+      <Filter>头文件\自然语言模块</Filter>
+    </ClCompile>
+    <ClCompile Include="句子类.ixx">
+      <Filter>头文件\自然语言模块</Filter>
+    </ClCompile>
+    <ClCompile Include="外设类.ixx">
+      <Filter>头文件\视频接口及显示</Filter>
+    </ClCompile>
+    <ClCompile Include="特征值类_轮廓模块.ixx">
+      <Filter>头文件\世界树类</Filter>
+    </ClCompile>
+    <ClCompile Include="特征值类.ixx">
+      <Filter>头文件\世界树类</Filter>
+    </ClCompile>
+    <ClCompile Include="宇宙环境类.ixx">
+      <Filter>头文件\宇宙</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
