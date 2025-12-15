@@ -1,0 +1,51 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build outputs
+Debug/
+Release/
+x64/
+x86/
+build/
+out/
+bin/
+obj/
+ipch/
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+*.cmake
+compile_commands.json
+
+# Logs
+*.log
+
+# Vcpkg (通常不要提交整套安装目录)
+vcpkg_installed/
+# MSVC / VS build artifacts
+*.obj
+*.pdb
+*.ilk
+*.idb
+*.tlog
+*.log
+*.iobj
+*.ipdb
+*.exp
+*.lib
+*.dll
+*.exe
+
+# C++20 modules intermediates (MSVC)
+*.ifc
+*.ifc.dt
+*.ifc.dt.*
+*.module.json
+*.module.json.*
+*.d.json

@@ -1,0 +1,285 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="海鱼.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海鱼Dlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgProxy.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="窗口_交互界面.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="百度分词类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="海鱼.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海鱼Dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgProxy.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="动态类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="方法模块.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="基础数据类型.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="内部方法总接口.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="任务类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="世界树类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="双向链表模板.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="特征值类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="外部方法总接口.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="线程类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="需求类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="因果信息类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="语素类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="主信息定义模块.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="状态类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="自然语言类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="自我线程模块.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="世界树类.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="外部方法总接口.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="自我线程模块.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="窗口_交互界面.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="动作模块.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="动作模块.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="方法模块.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="百度分词类.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="语素类.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="全局函数模块.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="二次特征_通用判断.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="表达落地.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="评估与提交策略.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="语言理解方法.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="语言知识库_初始化.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="语言学习模块.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="语言本能→学习桥接.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="自然语言类.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="句子类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="二次特征类.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="语言知识库类.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="概念树类.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="标准特征工具模块类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="特征值类.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="内部方法_比较类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="概念树类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="特征值类_轮廓模块.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="语言知识库类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="二次特征类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="宇宙链类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="宇宙环境类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="概念_二次特征树类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="概念_存在树类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="概念_特征树类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="概念_状态树类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="概念_动态树类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="概念_因果树类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="宇宙环境类.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="概念引擎类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="概念引擎类.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="外设类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="三维场景管理类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="D455相机类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="相机接口类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="点簇分割类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="外设类.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="存在提取类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="场景实时显示类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="线程模板类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="场景实时显示线程类.ixx">
+      <Filter>头文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="My.idl">
+      <Filter>源文件</Filter>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="海鱼.reg" />
+    <None Include="res\My.rc2">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="内部方法_比较类.impl.cpp">
+      <Filter>源文件</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="My.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\海鱼.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
+</Project>
