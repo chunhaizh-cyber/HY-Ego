@@ -17,7 +17,7 @@ import <chrono>;
 import <compare>;
 
 import 主信息定义模块; // 提供 基础信息节点类/特征节点类/存在节点类/场景节点类/状态节点类/动态节点类 等
-
+import 基础数据类型模块;
 export namespace 内部方法 {
 
     using 字符串 = std::string;

@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <iostream>
 #include "百度分词类.h"
+
 ////#include <stdexcept>
 //#include <curl/curl.h>
 //#include <json/json.h>
@@ -28,10 +29,9 @@
 //#pragma comment(lib, "Normaliz.lib")  // libcurl需要
 
 // 窗口_交互界面 对话框
-import 语素模块;
-import 全局函数模块;
-import 世界树模块;
-import 宇宙环境模块;
+import 语素环境模块;
+import 世界树环境模块;
+
 
 IMPLEMENT_DYNAMIC(窗口_交互界面, CDialogEx)
 
@@ -264,13 +264,13 @@ void 窗口_交互界面::OnBnClickedOk()
 			std::string 词 = t.word;
 			std::string 词性 = t.pos;
 
-			枚举_词性 枚举词性 = 枚举_词性_工厂::根据文本获取枚举值(词性);
-			词性节点类* 词性节点 = 语素集.添加词性词(词, 词性);
-			词性主信息类* 词性主信息 = dynamic_cast<词性主信息类*>(词性节点->主信息);
-			if (词性主信息->对应基础信息指针 == nullptr) {
-				基础信息节点类* 基础信息节点 = nullptr; //宇宙环境::世界树.世界树_根据词性创建默认基础信息节点(词性节点,枚举词性);
-				词性主信息->对应基础信息指针 = 基础信息节点;
-			}
+	//		枚举_词性 枚举词性 = 枚举_词性_工厂::根据文本获取枚举值(词性);
+	//		词性节点类* 词性节点 = 语素集.添加词性词(词, 词性);
+	//		词性主信息类* 词性主信息 = dynamic_cast<词性主信息类*>(词性节点->主信息);
+	//		if (词性主信息->对应基础信息指针 == nullptr) {
+	//			基础信息节点类* 基础信息节点 = nullptr; //宇宙环境::世界树.世界树_根据词性创建默认基础信息节点(词性节点,枚举词性);
+	//			词性主信息->对应基础信息指针 = 基础信息节点;
+	//		}
 
 		}
 
@@ -288,7 +288,7 @@ BOOL 窗口_交互界面::OnInitDialog()
 	CDialogEx::OnInitDialog();
 
 	// TODO:  在此添加额外的初始化
-	nlp_.初始化(app_id,api_key, secret_key);
+//	nlp_.初始化(app_id,api_key, secret_key);
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// 异常: OCX 属性页应返回 FALSE
 }

@@ -9,14 +9,57 @@ import <variant>;
 import <vector>;
 import <chrono>;
 
-export enum class 枚举_比较条件 { 相等, 大于, 小于, 不等于, 大于等于,小于等于, 包含, 除外,相似,未定义};
-export enum class 枚举_比较字段 {
-    未定义,
-    //特征值类//
+export enum class 枚举_链域 : std::uint8_t {
+    未定义 = 0,
+    世界链 = 1,    // 基础信息节点类
+    特征值链 = 2,  // 特征值节点类
+    语素集 = 3,    // 词/词性/短语节点
+    语言集 = 4,    // 自然语言成分节点
+    行动信息集 = 5 // 高级信息节点
+};
+export struct 结构体_节点引用 {
+    枚举_链域 域 = 枚举_链域::未定义;
+    std::string 主键; // 节点->主键
+    bool 空() const { return 域 == 枚举_链域::未定义 || 主键.empty(); }
+};
+struct 结构体_存在存档字段 {
+    结构体_节点引用 名称;
+    结构体_节点引用 类型;
+    结构体_节点引用 概念模板;
+    结构体_节点引用 内部世界;
+    //时间戳 创建时间{};
+    std::uint32_t 命中次数{};
+};
+
+
+export enum class 枚举_比较条件 : std::uint8_t {
+    未定义 = 0,
+    相等,
+    不等于,
+    大于,
+    小于,
+    大于等于,
+    小于等于
+};
+
+// 注意：这是“比较字段枚举”，用于各类主信息的多态比较。
+// 约定：
+//  - 未实现的字段比较允许返回 -1（不支持）
+//  - 这里尽量“按域分组”，方便扩展与检索
+export enum class 枚举_比较字段 : std::uint16_t {
+    未定义 = 0,
+
+    //==================== 通用（谨慎使用） ====================
     名称,
     类型,
     值,
-    //语素类//
+    单位,
+    实例信息,
+    词性词指针,
+    原始短语,
+    词指针,
+
+    //==================== 语素类 ====================
     语素_词_词,
 
     语素_词性_词性,
@@ -26,60 +69,70 @@ export enum class 枚举_比较字段 {
     语素_短语字节点_比较对象词,
     语素_短语子节点_比较词,
     语素_短语子节点_结果词,
-    //基础类
+
+    //==================== 基础信息基类 ====================
+    基础信息基类_名称,
+    基础信息基类_类型,
+
+    //==================== 指代节点 ====================
+    基础信息_指代节点_代词,
+    基础信息_指代节点_指代对象,
+
+    //==================== 特征值（细分类型） ====================
     基础信息_矢量特征值_类型,
     基础信息_矢量特征值_单位,
     基础信息_矢量特征值_值,
 
     基础信息_非矢量特征值_类型,
+    基础信息_非矢量特征值_单位,
     基础信息_非矢量特征值_值,
+
+    基础信息_字符串特征值_单位,
     基础信息_字符串特征值_值,
 
-    基础信息基类_名称,
-    基础信息基类_类型,
-    基础信息_指代节点_代词,
-    基础信息_指代节点_指代对象,
+    基础信息_引用特征值_目标,
 
+    //==================== 特征节点 ====================
     基础信息_特征节点_类型,
     基础信息_特征节点_值,
     基础信息_特征节点_名称,
 
-    基础信息_存在节点_绝对坐标_z轴,
-    基础信息_存在节点_绝对坐标_y轴,
+    //==================== 存在 / 场景（常用几何字段） ====================
     基础信息_存在节点_绝对坐标_x轴,
+    基础信息_存在节点_绝对坐标_y轴,
+    基础信息_存在节点_绝对坐标_z轴,
 
-    基础信息_场景节点_绝对坐标_z轴,
-    基础信息_场景节点_绝对坐标_y轴,
     基础信息_场景节点_绝对坐标_x轴,
+    基础信息_场景节点_绝对坐标_y轴,
+    基础信息_场景节点_绝对坐标_z轴,
 
+    //==================== 状态节点 ====================
     基础信息_状态节点主信息类_收到时间,
     基础信息_状态节点主信息类_发生时间,
     基础信息_状态节点主信息类_是否变化,
 
-   
-
-
-    实例信息,
-    词性词指针,
-    原始短语,
-    词指针,
-    单位,
+    //==================== 状态类型（你原枚举中提到的三类） ====================
     状态类型_特征,
     状态类型_存在,
     状态类型_场景,
+
+    //==================== 需求（占位：后续需求树/任务树会用） ====================
     产生需求主体,
     需求对象,
     需求状态,
-   
-    // ...已有字段
-    评估_覆盖率, 评估_指代解析率, 评估_一致性_冲突数,
-    评估_可执行性, 评估_全局置信度,
-    评估_时间对齐误差, 评估_空间对齐误差,
-    评估_比较正确率, 评估_否定正确率, 评估_程度正确率
 
-
+    //==================== 评估/度量（自然语言理解/融合质量） ====================
+    评估_覆盖率,
+    评估_指代解析率,
+    评估_一致性_冲突数,
+    评估_可执行性,
+    评估_全局置信度,
+    评估_时间对齐误差,
+    评估_空间对齐误差,
+    评估_比较正确率,
+    评估_否定正确率,
+    评估_程度正确率
 };
-
 export enum class 枚举_任务类型{普通任务,思考任务,尝试任务,学习任务};
 export enum class 枚举_基础方法 {添加存在,添加特征,添加场景,未定义, 外部调用};
 
@@ -341,13 +394,10 @@ export struct 结构体_时间戳 {
 
 
 
-export enum class 枚举_特征值类型 : std::int32_t
-{
-    未定义 = 0,
-    矢量,
-    标量,
-    字符串
-};
+
+
+
+
 
 export struct 点阵图
 {
@@ -477,7 +527,7 @@ export enum class 枚举_世界类型 {
     想象世界,
     记忆世界,
     推理世界,
-    附属世界,
+    内部世界,
     虚拟世界,
     其它
 };
@@ -547,7 +597,9 @@ export enum class 枚举_二次特征种类 : std::int16_t {
 
 // 为了以后扩展清晰，加一个比较模式标记
 export enum class 枚举_特征值比较模式 {
+    
     有序标量 = 0,      // 支持 <、>、范围、差值
+    相等,
     相等或相似度       // 只支持 == / != 或相似度，不支持大小关系
 };
 // 简单的颜色结构体，替代OpenCV的viz::Color
@@ -562,21 +614,21 @@ export struct Color {
 // 在 Vector3D 结构体定义后添加（同一模块内）
 
 export struct Vector3D {
-    float x = 0.0f;
-    float y = 0.0f;
-    float z = 0.0f;
+    double  x = 0.0f;
+    double  y = 0.0f;
+    double  z = 0.0f;
 
     // 可选：构造函数
     Vector3D() = default;
-    constexpr Vector3D(float xx, float yy, float zz) : x(xx), y(yy), z(zz) {}
+    constexpr Vector3D(double  xx, double  yy, double  zz) : x(xx), y(yy), z(zz) {}
 
     // ===== 关键：标量乘法（成员函数）=====
-    constexpr Vector3D operator*(float scalar) const {
+    constexpr Vector3D operator*(double  scalar) const {
         return Vector3D(x * scalar, y * scalar, z * scalar);
     }
 
     // ===== 推荐同时添加：标量除法 =====
-    constexpr Vector3D operator/(float scalar) const {
+    constexpr Vector3D operator/(double  scalar) const {
         if (scalar == 0.0f) return *this; // 防除零，或抛异常
         return Vector3D(x / scalar, y / scalar, z / scalar);
     }
@@ -591,12 +643,12 @@ export struct Vector3D {
     }
 
     // ===== 推荐添加：复合赋值运算符 =====
-    Vector3D& operator*=(float scalar) {
+    Vector3D& operator*=(double  scalar) {
         x *= scalar; y *= scalar; z *= scalar;
         return *this;
     }
 
-    Vector3D& operator/=(float scalar) {
+    Vector3D& operator/=(double  scalar) {
         if (scalar != 0.0f) {
             x /= scalar; y /= scalar; z /= scalar;
         }
@@ -614,27 +666,63 @@ export struct Vector3D {
     }
 };
 
-// ===== 额外：非成员函数版本，支持 float * Vector3D（如 0.5 * vec）=====
-export constexpr Vector3D operator*(float scalar, const Vector3D& vec) {
+// ===== 额外：非成员函数版本，支持 double  * Vector3D（如 0.5 * vec）=====
+export constexpr Vector3D operator*(double  scalar, const Vector3D& vec) {
     return vec * scalar;
 }
 
-export constexpr Vector3D operator/(float scalar, const Vector3D& vec) {
+export constexpr Vector3D operator/(double  scalar, const Vector3D& vec) {
     return Vector3D(scalar / vec.x, scalar / vec.y, scalar / vec.z); // 注意：语义不同，通常不常用
 }
 
 
 
 // ===== 原始场景帧 =====
+template<class T>
+struct RawImage {
+    int w = 0, h = 0;
+    std::vector<T> data;
+
+    bool valid() const { return w > 0 && h > 0 && (int)data.size() == w * h; }
+
+    T& at(int x, int y) { return data[(size_t)y * (size_t)w + (size_t)x]; }
+    const T& at(int x, int y) const { return data[(size_t)y * (size_t)w + (size_t)x]; }
+};
 export struct 结构体_原始场景帧 {
-    std::uint64_t 时间;
+    std::uint64_t 时间 = 0;
     int 宽度 = 0;
     int 高度 = 0;
 
-    std::vector<float> 深度;       // 深度图 Z (米)
-    std::vector<Color> 颜色;       // RGB 图
-    std::vector<Vector3D> 点云;    // 相机坐标系下生成的点云（可选）
-	std::vector < std::int64_t>  轮廓;   // 点云轮廓编码（可选）
+    // 深度图 Z (米)，按行优先展平：idx = v*宽度 + u
+    std::vector<double> 深度;
+
+    // RGB 图（可选），size==深度.size() 时有效
+    std::vector<Color> 颜色;
+
+    // 相机坐标系下点云（可选），size==深度.size() 时表示“每像素点云”
+    std::vector<Vector3D> 点云;
+
+    // 点云轮廓编码（可选）
+    std::vector<std::int64_t> 轮廓;
+
+    [[nodiscard]] bool 有效深度() const noexcept {
+        return 宽度 > 0 && 高度 > 0
+            && 深度.size() == static_cast<std::size_t>(宽度) * static_cast<std::size_t>(高度);
+    }
+    [[nodiscard]] bool 有效颜色() const noexcept { return 颜色.size() == 深度.size(); }
+    [[nodiscard]] bool 有效点云() const noexcept { return 点云.size() == 深度.size(); }
+
+    [[nodiscard]] inline std::size_t 索引(int u, int v) const noexcept {
+        return static_cast<std::size_t>(v) * static_cast<std::size_t>(宽度) + static_cast<std::size_t>(u);
+    }
+
+    [[nodiscard]] inline double 深度_at(int u, int v) const noexcept { return 深度[索引(u, v)]; }
+    [[nodiscard]] inline Color 颜色_at(int u, int v) const noexcept {
+        return 有效颜色() ? 颜色[索引(u, v)] : Color{ 255, 255, 255 };
+    }
+    [[nodiscard]] inline Vector3D 点云_at(int u, int v) const noexcept {
+        return 有效点云() ? 点云[索引(u, v)] : Vector3D{};
+    }
 };
 
 export struct 结构体_存在观测 {
@@ -655,6 +743,33 @@ export struct 结构体_存在观测 {
     // 存在类型 / 标签先留空，后面由识别模块填写
     int  存在类型候选ID = -1;   
     std::vector<std::int64_t> 轮廓编码;        // 核心：8×8*n*n=64*n*n 维封闭内部二值图
+
+    // ===== 外观复合特征 =====
+    std::vector<Color>      裁剪图像_BGR;           // ROI 原始像素（与掩膜同尺寸）
+    std::vector<std::uint8_t> 裁剪掩膜;              // 0/1 二值掩膜（前景=1）
+    std::vector<std::uint8_t> 边缘图;                // Sobel 边缘强度（0~255）
+   
+
+    // ===== 几何复合特征 =====  
+    std::vector<std::int64_t> 多尺度轮廓金字塔[4];  // 0:8x8, 1:16x16, 2:32x32, 3:64x64（可选）
+
+    // ===== 深度/表面复合特征 =====
+    std::vector<double >       法线图_XYZ;            // 每像素法线（归一化后打包或单独通道）
+    std::vector<std::uint8_t> 置信度图;              // 0~255，高质量区域高值
+
+    // ===== 绘画/合成专用 =====
+    std::vector<double >       融合权重图;            // 0.0~1.0，多帧融合权重
+    double                     可见率 = 1.0f;         // 0~1，估算未被遮挡比例
+    int                      Z顺序层级 = 0;         // 粗略深度排序用
+
+    // ===== 预留子存在提取接口 =====
+    int                      ROI_x = 0, ROI_y = 0;  // 在原图中的左上角
+    int                      ROI_w = 0, ROI_h = 0;  // 裁剪尺寸
+    
+
+    // 可选：边界点序列（全图坐标，y<<32|x）
+    std::vector<std::int64_t> 边界点序列;
+
 };
 
 // ===== 点索引 / 点簇 =====
@@ -667,14 +782,14 @@ export using 点簇 = std::vector<点索引>;
 // ===== 参数 =====
 export struct 点簇分割参数 {
     // 只考虑这个距离范围内的点（米）
-    float 最小深度 = 0.15f;
-    float 最大深度 = 8.0f;
+    double  最小深度 = 0.15f;
+    double  最大深度 = 8.0f;
 
     // 邻域连接阈值（米）
-    float 邻域最大三维距离 = 0.04f;
+    double  邻域最大三维距离 = 0.04f;
 
     // 当点云不可用时，用深度差做退化连接判断（米）
-    float 邻域最大深度差 = 0.06f;
+    double  邻域最大深度差 = 0.06f;
 
     // 4 邻域 or 8 邻域
     bool 使用8邻域 = true;
@@ -763,10 +878,20 @@ export struct 观测提取参数 {
     int 颜色采样步长 = 2;
 
     // 观测中心必须在相机前方：中心.z < 最小中心Z => 无效
-    float 最小中心Z = 0.05f;
+    double  最小中心Z = 0.05f;
 
     // 尺寸下限（防止 0 或极小噪声簇）：任一轴 < 最小尺寸 => 无效
-    float 最小尺寸 = 0.01f;
+    double  最小尺寸 = 0.01f;
+
+
+ /////////////////X////////////////////////////////
+
+    bool 生成边缘图 = true;
+    bool 生成法线图 = true;
+    bool 生成置信度图 = true;
+    bool 生成多尺度轮廓 = false;  // 消耗较大，慎开
+
+    
 };
 
 

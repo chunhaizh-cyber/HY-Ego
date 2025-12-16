@@ -15,7 +15,7 @@ import <cstdint>;
 import 方法模块;
 import 主信息定义模块;
 import 语素模块;
-
+import 基础数据类型模块;
 
 export class 基础动作类 {
 public:

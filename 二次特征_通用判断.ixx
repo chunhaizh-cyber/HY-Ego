@@ -5,7 +5,172 @@ import <vector>;
 import <functional>;
 import <cmath>;
 import 主信息定义模块;
+// 2) 方法层：整体理解（可成长）
+export struct 结构体_整体理解结果 {
+    场景节点类* 临时场景;
+    double 全局置信度;
+    int 未解析指代数;
+    int 冲突数;
+};
 
+export struct 结构体_自然语言理解输出 {
+    场景节点类* 临时场景;
+    double 全局置信度;
+    std::vector<基础信息节点类*> 未决分支;
+    bool 是否提交;
+};
+export struct 结构体_NLU评估 {
+    double 覆盖率;
+    double 指代解析率;
+    int    矛盾数;
+    double 全局置信度;
+    double 时间误差;
+    double 空间误差;
+    bool   可执行;
+};
+
+
+
+export struct 结构体_NLU评估值 {
+    double 覆盖率 = 0.0;
+    double 指代解析率 = 0.0;
+    int    冲突数 = 0;
+    bool   可执行 = false;
+    double 全局置信度 = 0.0;
+    double 时间误差 = 0.0;
+    double 空间误差 = 0.0;
+    double 比较正确率 = 0.0;
+    double 否定正确率 = 0.0;
+    double 程度正确率 = 0.0;
+};
+
+export struct 结构体_NLU阈值 {
+    double T_cov = 0.85;
+    double T_coref = 0.80;
+    int    N_conf_max = 0;
+    bool   必须可执行 = true;
+    double T_submit = 0.72;
+    double E_time_max = 0.5;   // 自定单位
+    double E_space_max = 0.5;  // 自定单位
+    double T_cmp = 0.75;
+    double T_neg = 0.90;
+    double T_deg = 0.75;
+};
+
+export struct 结构体_NLU评估结果 {
+    结构体_NLU评估值 值;
+    bool 通过提交 = false;
+    bool 局部提交 = false;
+    std::vector<基础信息节点类*> 待补证据; // 未决点
+};
+
+export struct 结构体_规则_判断远近_Y {
+    // 参照设定
+    bool 更大为更远 = true;  // false 表示更大为更近
+    int64_t 阈值_近 = 0;     // 根据坐标单位设置
+};
+
+// 绑定结果（抽象→具体）
+export struct 结构体_绑定_判断远近 {
+    基础信息节点类* 存在_E1 = nullptr;
+    基础信息节点类* 存在_E2 = nullptr;
+    特征节点类* 特征_E1_Y = nullptr;
+    特征节点类* 特征_E2_Y = nullptr;
+};
+
+// 计算产物
+export struct 结构体_判断远近输出 {
+    二次特征节点类* 二次特征_ΔY = nullptr;
+    二次特征节点类* 二次特征_排序 = nullptr;
+    基础信息节点类* 结果结论 = nullptr; // 可用特征节点或关系节点表达“远/近/等距”
+};
+
+
+
+
+export struct 结构体_判定 { bool 通过 = false; double 置信度 = 1.0; };
+
+// 通用“判断规格”
+
+
+
+
+// 抽象场景模板：占位符+必需特征
+export struct 结构体_抽象场景模板 {
+    // 抽象存在/特征占位（E1,E2,… Fx …）
+    std::vector<基础信息节点类*> 存在占位;   // E1,E2...
+    std::vector<特征节点类*>     特征占位;   // Fx...
+    // 约束（必须有的字段：名称/类型/坐标/时间/角色等）
+    std::vector<int> 必备约束ID; // 简化起见，用ID指代
+};
+
+// 语言模板：槽位化的“怎么说”
+export struct 结构体_语言模板 {
+    枚举_LK用途 用途;
+    std::string 模板ID;          // 全局唯一
+    // 词序列槽位，如 {主语:E1名, 谓词:动词“有/发生/位于”, 宾语:E2名, 修饰:Fx名…}
+    std::vector<词性节点类*> 词序列槽位;
+    // 线性化策略（见下：名称组装顺序）
+    std::string 线性化策略ID;
+};
+
+// 知识条目
+export struct 结构体_语言知识条目 {
+    结构体_语言模板 语言;
+    结构体_抽象场景模板 场景模板;
+    // 触发条件：最少输入/上下文要求/缺省单位等
+    std::vector<int> 触发条件ID;
+    // 生成时需要的“判断/二次特征”配方（可为空）
+    std::vector<int> 二次特征配方ID;
+    // 输出：形容词 or 短语 or 结构化句子
+    bool 输出为短语 = true;
+};
+
+export struct 结构体_线性化上下文 {
+    场景节点类* 场景;
+    std::unordered_map<std::string, 基础信息节点类*> 绑定; // "E1"->节点
+};
+export using 函数_线性化 = std::function<std::vector<词性节点类*>(const 结构体_语言模板&, const 结构体_线性化上下文&)>;
+
+export struct 结构体_LK生成输入 {
+    枚举_LK用途 用途;
+    std::string 模板ID;            // 可空：自动选最匹配
+    场景节点类* 目标场景;           // 抽象/当前场景
+    std::unordered_map<std::string, 基础信息节点类*> 预绑定; // 传入已有绑定（如 E1/E2）
+};
+export struct 结构体_LK生成输出 {
+    短语节点类* 语言节点 = nullptr;
+    std::vector<词性节点类*> 词序列;   // 已按策略顺序生成
+    std::unordered_map<std::string, 基础信息节点类*> 最终绑定;
+    std::vector<二次特征节点类*> 证据链; // 若涉及判断
+    bool 成功 = false;
+    double 置信度 = 1.0;
+};
+
+export struct 结构体_取值器输入 { 基础信息节点类* A; 基础信息节点类* B; 场景节点类* 场景; };
+//export struct 结构体_取值 { bool 有效 = false; std::vector<int64_t> 标量; /*或*/ 结构体_空间坐标 坐标; /*...*/ };
+
+export using 取值器 = std::function<结构体_取值(结构体_取值器输入)>;
+
+export struct 结构体_判断规格 {
+    基础信息节点类* A = nullptr;
+    基础信息节点类* B = nullptr;
+    取值器 取值器A; 取值器 取值器B;
+    枚举_运算类型 运算 = 枚举_运算类型::差值;
+    枚举_判据 判据 = 枚举_判据::大于;
+    double 阈值_浮 = 0; int64_t 阈值_整 = 0;
+    词性节点类* 输出名称 = nullptr;  // 结果名
+    语素节点类* 输出类型 = nullptr;  // 结果类型
+};
+
+export struct 结构体_判断输出 {
+    二次特征节点类* 证据节点1 = nullptr;
+    二次特征节点类* 证据节点2 = nullptr;
+    基础信息节点类* 结果节点 = nullptr;
+    bool 成功 = false;
+    double 置信度 = 1.0;
+};
+export struct 结构体_运算结果 { bool 有效 = false; int64_t 标量 = 0; double 浮点 = 0; int8_t 符号 = 0; int 枚举关系 = 0; /*证据*/ };
 
 // 取值器：从“存在/特征/状态/场景”抽取可比较的值（标量、向量、集合、轮廓…）
 

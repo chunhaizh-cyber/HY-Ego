@@ -1,343 +1,451 @@
-// 特征值模块.ixx
+// 特征值模块.impl.cpp
+
 module;
 
 #include <afx.h>
-#include <vector>
-#include <string>
-#include <unordered_map>
-#include <mutex>
-#include <algorithm>
-#include <cstdint>
+#include <cstring>
 #include <cmath>
+#include <algorithm>
 
 module 特征值模块;
 
-import 基础数据类型模块;
 import 模板模块;
 import 主信息定义模块;
+import 数据仓库模块;
+import 基础数据类型模块;
 
+static inline std::uint8_t clamp_u8(long long v)
+{
+    if (v < 0) return 0;
+    if (v > 255) return 255;
+    return (std::uint8_t)v;
+}
 
+void 特征值类::确保初始化_已加锁()
+{
+    if (已初始化) return;
 
-    uint64_t 特征值类::计算矢量压缩哈希(const std::vector<int64_t>& 原始矢量, int 目标层级)
+    // 为每个“特征值类型”建立一个根节点，挂在 特征值链 的根下。
+    // 根节点本身不参与去重索引（主信息类型统一设为 未定义）。
+    for (std::size_t i = 0; i < 类型数; ++i) {
+        auto* mi = new 主信息类{};
+        mi->类型 = 枚举_特征值类型::未定义;
+        mi->比较模式 = 枚举_比较模式::有序标量;
+        mi->值 = std::monostate{};
+        mi->命中次数 = 0;
+        mi->可信度 = 0.0;
+        mi->粗哈希 = 0xF00D0000ull ^ (std::uint64_t)i; // 仅用于调试区分
+        类型根[i] = 特征值链.添加子节点_已加锁(特征值链.根指针, mi);
+    }
+
+    已初始化 = true;
+}
+
+特征值类::节点类* 特征值类::查找等值_已加锁(const 主信息类& key)
+{
+    if (key.类型 == 枚举_特征值类型::未定义) return nullptr;
+    const auto i = idx(key.类型);
+
+    auto it = 类型索引[i].buckets.find(key.粗哈希);
+    if (it == 类型索引[i].buckets.end()) return nullptr;
+
+    for (auto* n : it->second) {
+        if (!n || !n->主信息) continue;
+        if (等值(*n->主信息, key)) return n;
+    }
+    return nullptr;
+}
+
+void 特征值类::索引插入_已加锁(const 主信息类& mi, 节点类* node)
+{
+    if (!node || !node->主信息) return;
+    if (mi.类型 == 枚举_特征值类型::未定义) return;
+    const auto i = idx(mi.类型);
+    类型索引[i].buckets[mi.粗哈希].push_back(node);
+}
+
+void 特征值类::索引移除_已加锁(const 主信息类& mi, 节点类* node)
+{
+    if (!node) return;
+    if (mi.类型 == 枚举_特征值类型::未定义) return;
+
+    const auto i = idx(mi.类型);
+    auto it = 类型索引[i].buckets.find(mi.粗哈希);
+    if (it == 类型索引[i].buckets.end()) return;
+
+    auto& vec = it->second;
+    vec.erase(std::remove(vec.begin(), vec.end(), node), vec.end());
+    if (vec.empty()) {
+        类型索引[i].buckets.erase(it);
+    }
+}
+
+特征值类::节点类* 特征值类::获取或创建(const 主信息类& mi) const
+{
+    主信息类 key = mi;
+    if (key.粗哈希 == 0) 重新计算粗哈希(key);
+
+    auto 锁 = 特征值链.获取锁();
+    确保初始化_已加锁();
+
+    if (auto* hit = 查找等值_已加锁(key)) {
+        if (hit->主信息) {
+            hit->主信息->命中次数 += 1;
+            hit->主信息->可信度 = (((1.0) < (hit->主信息->可信度 + 0.01)) ? (1.0) : (hit->主信息->可信度 + 0.01));
+        }
+        return hit;
+    }
+
+    auto* stored = new 主信息类(key);
+    stored->命中次数 = std::max<std::uint32_t>(1, stored->命中次数);
+    if (stored->可信度 <= 0.0) stored->可信度 = 1.0;
+
+    auto* parent = 类型根[idx(key.类型)];
+    auto* node = 特征值链.添加子节点_已加锁(parent, stored);
+    索引插入_已加锁(*stored, node);
+    return node;
+}
+
+特征值类::节点类* 特征值类::获取或创建(主信息类&& mi) const
+{
+    主信息类 key = std::move(mi);
+    if (key.粗哈希 == 0) 重新计算粗哈希(key);
+
+    auto 锁 = 特征值链.获取锁();
+    确保初始化_已加锁();
+
+    if (auto* hit = 查找等值_已加锁(key)) {
+        if (hit->主信息) {
+            hit->主信息->命中次数 += 1;
+            hit->主信息->可信度 = (((1.0) < (hit->主信息->可信度 + 0.01)) ? (1.0) : (hit->主信息->可信度 + 0.01));
+        }
+        return hit;
+    }
+
+    auto* stored = new 主信息类(std::move(key));
+    stored->命中次数 = std::max<std::uint32_t>(1, stored->命中次数);
+    if (stored->可信度 <= 0.0) stored->可信度 = 1.0;
+
+    auto* parent = 类型根[idx(stored->类型)];
+    auto* node = 特征值链.添加子节点_已加锁(parent, stored);
+    索引插入_已加锁(*stored, node);
+    return node;
+}
+
+特征值类::节点类* 特征值类::获取或创建标量特征值(void* /*单位*/, std::int64_t 值, 枚举_比较模式 mode) const
+{
+    主信息类 mi;
+    mi.类型 = 枚举_特征值类型::I64;
+    mi.比较模式 = mode;
+    mi.值 = 值;
+    重新计算粗哈希(mi);
+    return 获取或创建(std::move(mi));
+}
+
+特征值类::节点类* 特征值类::获取或创建无符号标量特征值(void* /*单位*/, std::uint64_t 值, 枚举_比较模式 mode) const
+{
+    主信息类 mi;
+    mi.类型 = 枚举_特征值类型::U64;
+    mi.比较模式 = mode;
+    mi.值 = 值;
+    重新计算粗哈希(mi);
+    return 获取或创建(std::move(mi));
+}
+
+特征值类::节点类* 特征值类::获取或创建浮点特征值(double 值, 枚举_比较模式 mode) const
+{
+    主信息类 mi;
+    mi.类型 = 枚举_特征值类型::F64;
+    mi.比较模式 = mode;
+    mi.值 = 值;
+    重新计算粗哈希(mi);
+    return 获取或创建(std::move(mi));
+}
+
+特征值类::节点类* 特征值类::获取或创建矢量特征值(const std::vector<std::int64_t>& 值, 枚举_比较模式 mode) const
+{
+    主信息类 mi;
+    mi.类型 = 枚举_特征值类型::VecI64;
+    mi.比较模式 = mode;
+    mi.值 = 值;
+    重新计算粗哈希(mi);
+    return 获取或创建(std::move(mi));
+}
+
+特征值类::节点类* 特征值类::获取或创建向量特征值_f32(const std::vector<float>& 值, 枚举_比较模式 mode) const
+{
+    主信息类 mi;
+    mi.类型 = 枚举_特征值类型::VecF32;
+    mi.比较模式 = mode;
+    mi.值 = 值;
+    重新计算粗哈希(mi);
+    return 获取或创建(std::move(mi));
+}
+
+特征值类::节点类* 特征值类::获取或创建字符串特征值_UTF8(const std::string& utf8, 枚举_比较模式 mode) const
+{
+    std::vector<std::uint8_t> bytes;
+    bytes.assign((const std::uint8_t*)utf8.data(), (const std::uint8_t*)utf8.data() + utf8.size());
+
+    主信息类 mi;
+    mi.类型 = 枚举_特征值类型::Bytes;
+    mi.比较模式 = mode;
+    mi.值 = std::move(bytes);
+    重新计算粗哈希(mi);
+    return 获取或创建(std::move(mi));
+}
+
+特征值类::节点类* 特征值类::获取或创建引用特征值(const void* ptr, 枚举_比较模式 mode) const
+{
+    主信息类 mi;
+    mi.类型 = 枚举_特征值类型::U64;
+    mi.比较模式 = mode;
+    mi.值 = (std::uint64_t)(std::uintptr_t)ptr;
+    重新计算粗哈希(mi);
+    return 获取或创建(std::move(mi));
+}
+
+特征值类::节点类* 特征值类::创建_不查重(const 主信息类& mi) const
+{
+    主信息类 key = mi;
+    if (key.粗哈希 == 0) 重新计算粗哈希(key);
+
+    auto 锁 = 特征值链.获取锁();
+    确保初始化_已加锁();
+
+    auto* stored = new 主信息类(key);
+    stored->命中次数 = std::max<std::uint32_t>(1, stored->命中次数);
+    if (stored->可信度 <= 0.0) stored->可信度 = 1.0;
+
+    auto* parent = 类型根[idx(stored->类型)];
+    auto* node = 特征值链.添加子节点_已加锁(parent, stored);
+    索引插入_已加锁(*stored, node);
+    return node;
+}
+
+特征值类::节点类* 特征值类::创建_不查重(主信息类&& mi) const
+{
+    主信息类 key = std::move(mi);
+    if (key.粗哈希 == 0) 重新计算粗哈希(key);
+
+    auto 锁 = 特征值链.获取锁();
+    确保初始化_已加锁();
+
+    auto* stored = new 主信息类(std::move(key));
+    stored->命中次数 = std::max<std::uint32_t>(1, stored->命中次数);
+    if (stored->可信度 <= 0.0) stored->可信度 = 1.0;
+
+    auto* parent = 类型根[idx(stored->类型)];
+    auto* node = 特征值链.添加子节点_已加锁(parent, stored);
+    索引插入_已加锁(*stored, node);
+    return node;
+}
+
+bool 特征值类::覆盖(节点类* 节点, const 主信息类& 新值) const
+{
+    if (!节点 || !节点->主信息) return false;
+
+    auto 锁 = 特征值链.获取锁();
+    确保初始化_已加锁();
+
+    主信息类 old = *节点->主信息;
+    主信息类 neu = 新值;
+    if (neu.粗哈希 == 0) 重新计算粗哈希(neu);
+
+    // 更新索引：先移除旧 key
+    索引移除_已加锁(old, 节点);
+
+    // 覆盖内容
+    *节点->主信息 = neu;
+
+    // 再插入新 key
+    索引插入_已加锁(neu, 节点);
+    return true;
+}
+
+bool 特征值类::尝试融合_已加锁(主信息类& inout, const 主信息类& obs, const 融合参数& p)
+{
+    if (inout.类型 != obs.类型) return false;
+    if (inout.比较模式 != obs.比较模式) return false;
+
+    // 命中次数/可信度
+    inout.命中次数 += 1;
+    inout.可信度 = (((1.0) < (inout.可信度 + 0.02)) ? (1.0) : (inout.可信度 + 0.02));
+
+    const double lr = std::clamp(p.学习率, 0.0, 1.0);
+
+    switch (inout.类型)
     {
-        if (原始矢量.empty()) return 0;
-
-        const int 边长 = 8 << 目标层级;           // 8、16、32 … 2048
-        const int 总格子数 = 边长 * 边长;
-        const double 缩放比例 = static_cast<double>(原始矢量.size()) / 总格子数;
-
-        uint64_t 哈希 = 0;
-
-        for (int i = 0; i < 总格子数 && i < 64; ++i) // 只取前64位就足够区分
-        {
-            int 源索引 = static_cast<int>(i * 缩放比例);
-            if (源索引 < static_cast<int>(原始矢量.size()) && 原始矢量[源索引] != 0)
-            {
-                哈希 |= (uint64_t(1) << (i % 64));
+    case 枚举_特征值类型::I64:
+        if (auto* a = std::get_if<std::int64_t>(&inout.值)) {
+            if (auto* b = std::get_if<std::int64_t>(&obs.值)) {
+                const double nv = (1.0 - lr) * (double)(*a) + lr * (double)(*b);
+                *a = (std::int64_t)std::llround(nv);
+                return true;
             }
         }
-        return 哈希;
-    }
+        return false;
 
-    
-    特征值节点类* 特征值类::创建并登记节点(特征值基类* 新主信息)
-    {
-      
-
-        // 让链表模板负责主键生成和插入
-        特征值节点类* 新节点 = 添加节点(根指针, 新主信息);
-     //   特征值节点类* 新节点 = 无锁_添加节点(新主信息);
-        if (!新节点) return nullptr;
-
-        // 根据实际类型登记到对应索引
-        if (auto* 字符串信息 = dynamic_cast<字符特征值主信息类*>(新主信息))
-        {
-            std::string 键 = 字符串信息->值;
-            // 统一转小写、去除空格
-            std::transform(键.begin(), 键.end(), 键.begin(),
-                [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-            键.erase(std::remove_if(键.begin(), 键.end(), [](unsigned char c) { return std::isspace(c); }), 键.end());
-
-            文本特征值索引[键] = 新节点;
-        }
-        else if (auto* 矢量信息 = dynamic_cast<矢量特征值主信息类*>(新主信息))
-        {
-            const auto& 矢量值 = 矢量信息->值;
-
-            for (int 层 = 0; 层 <= 最大层级; ++层)
-            {
-                uint64_t 哈希 = 计算矢量压缩哈希(矢量值, 层);
-                矢量金字塔索引[层][哈希] = 新节点;  // 同哈希后面会被覆盖，只保留最新（实际可用 vector 存多个）
+    case 枚举_特征值类型::U64:
+        if (auto* a = std::get_if<std::uint64_t>(&inout.值)) {
+            if (auto* b = std::get_if<std::uint64_t>(&obs.值)) {
+                const double nv = (1.0 - lr) * (double)(*a) + lr * (double)(*b);
+                const long long r = (long long)std::llround(nv);
+                *a = (std::uint64_t)std::max<long long>(0, r);
+                return true;
             }
         }
-        // 标量特征值数量极少，不建额外索引
+        return false;
 
-        return 新节点;
-    }
-
-    特征值节点类* 特征值类::查找标量特征值(语素节点类* 单位指针, std::int64_t 数值) const
-    {
-       
-
-        // 线性遍历查找（标量节点很少，几百个以内完全无压力）
-        for (特征值节点类* 当前 = 根指针->下; 当前 != 根指针; 当前 = 当前->下)
-        {
-            if (auto* 信息 = dynamic_cast<标量特征值主信息类*>(当前->主信息))
-            {
-                if (信息->值 == 数值 && 信息->单位 == 单位指针)
-                    return 当前;
+    case 枚举_特征值类型::U8:
+        if (auto* a = std::get_if<std::uint8_t>(&inout.值)) {
+            if (auto* b = std::get_if<std::uint8_t>(&obs.值)) {
+                const double nv = (1.0 - lr) * (double)(*a) + lr * (double)(*b);
+                *a = clamp_u8((long long)std::llround(nv));
+                return true;
             }
         }
+        return false;
 
-        // 没找到就返回 nullptr，不会创建新节点
-        return nullptr;
-    }
-
-    特征值节点类* 特征值类::获取或创建标量特征值(语素节点类* 单位指针, std::int64_t 数值)
-    {
-      
-
-        // 线性遍历查找（标量节点很少，几百个以内完全无压力）
-        for (特征值节点类* 当前 = 根指针->下; 当前 != 根指针; 当前 = 当前->下)
-        {
-            if (auto* 信息 = dynamic_cast<标量特征值主信息类*>(当前->主信息))
-            {
-                if (信息->值 == 数值 && 信息->单位 == 单位指针)
-                    return 当前;
+    case 枚举_特征值类型::F64:
+        if (auto* a = std::get_if<double>(&inout.值)) {
+            if (auto* b = std::get_if<double>(&obs.值)) {
+                *a = (1.0 - lr) * (*a) + lr * (*b);
+                return true;
             }
         }
+        return false;
 
-        // 不存在 → 新建
-        return 创建并登记节点(new 标量特征值主信息类(单位指针, 数值));
-    }
-
-    特征值节点类* 特征值类::查找字符串特征值(const std::string& 原始文本) const
-    {
-        if (原始文本.empty()) return nullptr;
-
-        std::string 键 = 原始文本;
-        std::transform(键.begin(), 键.end(), 键.begin(),
-            [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-        键.erase(
-            std::remove_if(键.begin(), 键.end(),
-                [](unsigned char c) { return std::isspace(c); }),
-            键.end()
-        );
-
-       
-        auto it = 文本特征值索引.find(键);
-        if (it != 文本特征值索引.end())
-            return it->second;
-
-        return nullptr;
-    }
-
-    特征值节点类* 特征值类::获取或创建字符串特征值(const std::string& 原始文本)
-    {
-        if (原始文本.empty()) return nullptr;
-
-        std::string 键 = 原始文本;
-        std::transform(键.begin(), 键.end(), 键.begin(),
-            [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-        键.erase(std::remove_if(键.begin(), 键.end(), [](unsigned char c) { return std::isspace(c); }), 键.end());
-
-        {
-         
-            auto 查找结果 = 文本特征值索引.find(键);
-            if (查找结果 != 文本特征值索引.end())
-                return 查找结果->second;
-        }
-
-        // 不存在 → 新建
-        return 创建并登记节点(new 字符特征值主信息类(原始文本));
-    }
-
-    特征值节点类* 特征值类::查找矢量特征值(const std::vector<std::int64_t>& 矢量值) const
-    {
-        if (矢量值.empty()) return nullptr;
-
-        // 先计算最高层级的哈希
-        uint64_t 哈希 = 计算矢量压缩哈希(矢量值, 最大层级);
-
-       
-        auto it = 矢量金字塔索引[最大层级].find(哈希);
-        if (it == 矢量金字塔索引[最大层级].end())
-            return nullptr;
-
-        特征值节点类* 候选 = it->second;
-        if (auto* 信息 = dynamic_cast<矢量特征值主信息类*>(候选->主信息))
-        {
-            // 为防止哈希碰撞，再做一次逐元素精确比对
-            if (信息->值 == 矢量值)
-                return 候选;
-        }
-
-        return nullptr;
-    }
- 
-
-    特征值节点类* 特征值类::获取或创建矢量特征值(const std::vector<int64_t>& 矢量值)
-    {
-        if (矢量值.empty()) {
-            static 特征值节点类* emptyVectorNode = nullptr;
-            if (!emptyVectorNode) {
-                emptyVectorNode = 创建并登记节点(new 矢量特征值主信息类(std::vector<std::int64_t>{}));
-            }
-            return emptyVectorNode;
-        }
-
-        constexpr int 最大层级 = 7;
-
-        uint64_t 粗哈希 = 计算矢量压缩哈希(矢量值, 最大层级);
-
-        特征值节点类* 候选节点 = nullptr;
-
-        {
-          
-
-            // ===== 关键修复：必须判断是否找到 =====
-            auto& 索引地图 = 矢量金字塔索引[最大层级];
-            auto 查找结果 = 索引地图.find(粗哈希);
-            if (查找结果 != 索引地图.end()) {
-                候选节点 = 查找结果->second;
-            }
-
-            // 精确比对
-            if (候选节点) {
-                if (auto* 信息 = dynamic_cast<矢量特征值主信息类*>(候选节点->主信息)) {
-                    if (信息->值 == 矢量值) {
-                        return 候选节点;  // 命中缓存
-                    }
+    case 枚举_特征值类型::区间_I64:
+        if (auto* a = std::get_if<区间_i64>(&inout.值)) {
+            if (auto* b = std::get_if<区间_i64>(&obs.值)) {
+                if (p.区间扩张) {
+                    a->lo = (((a->lo) < (b->lo)) ? (a->lo) : (b->lo));
+                    a->hi = (((a->hi) > (b->hi)) ? (a->hi) : (b->hi));
                 }
-            }
-
-            // 未命中 → 创建新节点
-            特征值节点类* 新节点 = 创建并登记节点(new 矢量特征值主信息类(矢量值));
-
-            // 登记到粗哈希层，供下次快速过滤
-            索引地图[粗哈希] = 新节点;
-
-            return 新节点;
-        }
-    }
-
-    
-    特征值节点类* 特征值类::获取或创建矢量特征值(std::int64_t 单值)
-    {
-		std::vector<std::int64_t> 单值矢量 = { 单值 };
-        return 获取或创建矢量特征值(单值矢量);
-    }
-
-   
-    特征值类::相似矢量结果 特征值类::查找最相似矢量(const std::vector<std::int64_t>& 目标矢量, int 使用层级) const
-    {
-        相似矢量结果 最佳;
-        最佳.相似度 = -1.0;
-
-        if (目标矢量.empty() || 使用层级 < 0 || 使用层级 > 最大层级)
-            return 最佳;
-
-        uint64_t 哈希 = 计算矢量压缩哈希(目标矢量, 使用层级);
-
-      
-        auto 查找结果 = 矢量金字塔索引[使用层级].find(哈希);
-        if (查找结果 == 矢量金字塔索引[使用层级].end())
-            return 最佳;
-
-        特征值节点类* 候选 = 查找结果->second;
-        if (auto* 信息 = dynamic_cast<矢量特征值主信息类*>(候选->主信息)) {
-            最佳.相似度 = 计算矢量相似度(目标矢量, 信息->值);
-            最佳.节点 = 候选;
-        }
-
-        return 最佳;
-    }
-
-    // impl.cpp（模块实现）
-   
-      
-
-
-    void 特征值类::删除特征值节点(特征值节点类* 待删除节点)
-    {
-        if (!待删除节点 || 待删除节点 == 根指针) return;
-
-       
-
-        // 从文本索引移除
-        if (auto* 字符串信息 = dynamic_cast<字符特征值主信息类*>(待删除节点->主信息))
-        {
-            std::string 键 = 字符串信息->值;
-            std::transform(键.begin(), 键.end(), 键.begin(),
-                [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-            键.erase(std::remove_if(键.begin(), 键.end(), [](unsigned char c) { return std::isspace(c); }), 键.end());
-            文本特征值索引.erase(键);
-        }
-        // 从矢量金字塔索引移除
-        else if (auto* 矢量信息 = dynamic_cast<矢量特征值主信息类*>(待删除节点->主信息))
-        {
-            const auto& 矢量 = 矢量信息->值;
-            for (int 层 = 0; 层 <= 最大层级; ++层)
-            {
-                uint64_t 哈希 = 计算矢量压缩哈希(矢量, 层);
-                矢量金字塔索引[层].erase(哈希);
-            }
-        }
-
-        // 交给链表模板统一释放内存
-        删除节点(待删除节点);
-    }
-    void 特征值类::重建所有索引()
-    {
-      
-
-        文本特征值索引.clear();
-        for (int 层 = 0; 层 <= 最大层级; ++层)
-            矢量金字塔索引[层].clear();
-
-        // 从链表重新扫描一遍
-        for (特征值节点类* 当前 = 根指针->下; 当前 != 根指针; 当前 = 当前->下)
-        {
-            auto* 主 = 当前->主信息;
-            if (!主) continue;
-
-            if (auto* 字符串信息 = dynamic_cast<字符特征值主信息类*>(主))
-            {
-                std::string 键 = 字符串信息->值;
-                std::transform(键.begin(), 键.end(), 键.begin(),
-                    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-                键.erase(std::remove_if(键.begin(), 键.end(),
-                    [](unsigned char c) { return std::isspace(c); }), 键.end());
-
-                文本特征值索引[键] = 当前;
-            }
-            else if (auto* 矢量信息 = dynamic_cast<矢量特征值主信息类*>(主))
-            {
-                const auto& 矢量 = 矢量信息->值;
-                for (int 层 = 0; 层 <= 最大层级; ++层)
-                {
-                    uint64_t 哈希 = 计算矢量压缩哈希(矢量, 层);
-                    矢量金字塔索引[层][哈希] = 当前;
+                else {
+                    // 简单 EMA：对 lo/hi 分别收敛
+                    a->lo = (std::int64_t)std::llround((1.0 - lr) * (double)a->lo + lr * (double)b->lo);
+                    a->hi = (std::int64_t)std::llround((1.0 - lr) * (double)a->hi + lr * (double)b->hi);
                 }
+                return true;
             }
-            // 标量目前仍不建立额外索引
+        }
+        return false;
+
+    case 枚举_特征值类型::区间_F64:
+        if (auto* a = std::get_if<区间_f64>(&inout.值)) {
+            if (auto* b = std::get_if<区间_f64>(&obs.值)) {
+                if (p.区间扩张) {
+                    a->lo = (((a->lo) < (b->lo)) ? (a->lo) : (b->lo));
+                    a->hi = (((a->hi) > (b->hi)) ? (a->hi) : (b->hi));
+                }
+                else {
+                    a->lo = (1.0 - lr) * a->lo + lr * b->lo;
+                    a->hi = (1.0 - lr) * a->hi + lr * b->hi;
+                }
+                return true;
+            }
+        }
+        return false;
+
+    case 枚举_特征值类型::颜色_BGR8:
+        if (auto* a = std::get_if<颜色_BGR8>(&inout.值)) {
+            if (auto* b = std::get_if<颜色_BGR8>(&obs.值)) {
+                a->b = clamp_u8((long long)std::llround((1.0 - lr) * a->b + lr * b->b));
+                a->g = clamp_u8((long long)std::llround((1.0 - lr) * a->g + lr * b->g));
+                a->r = clamp_u8((long long)std::llround((1.0 - lr) * a->r + lr * b->r));
+                return true;
+            }
+        }
+        return false;
+
+    case 枚举_特征值类型::Bits64:
+        if (auto* a = std::get_if<Bits64>(&inout.值)) {
+            if (auto* b = std::get_if<Bits64>(&obs.值)) {
+                if (p.Bits融合策略 == 1)      a->w |= b->w;
+                else if (p.Bits融合策略 == 2) a->w &= b->w;
+                else {
+                    // 不融合，仅计数
+                }
+                return true;
+            }
+        }
+        return false;
+
+    case 枚举_特征值类型::VecF32:
+        if (auto* a = std::get_if<std::vector<float>>(&inout.值)) {
+            if (auto* b = std::get_if<std::vector<float>>(&obs.值)) {
+                if (a->size() != b->size()) return false;
+                for (size_t i = 0; i < a->size(); ++i) {
+                    (*a)[i] = (float)((1.0 - lr) * (double)(*a)[i] + lr * (double)(*b)[i]);
+                }
+                return true;
+            }
+        }
+        return false;
+
+        // VecI64/Bytes：一般视为离散值，不建议融合；这里默认“仅计数”
+    case 枚举_特征值类型::VecI64:
+    case 枚举_特征值类型::Bytes:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+bool 特征值类::融合(节点类* 旧节点, const 主信息类& 新观测, const 融合参数& p, bool 失败则覆盖) const
+{
+    if (!旧节点 || !旧节点->主信息) return false;
+
+    auto 锁 = 特征值链.获取锁();
+    确保初始化_已加锁();
+
+    主信息类 old = *旧节点->主信息;
+
+    主信息类 obs = 新观测;
+    if (obs.粗哈希 == 0) 重新计算粗哈希(obs);
+
+    // 先从旧索引移除
+    索引移除_已加锁(old, 旧节点);
+
+    主信息类 merged = old;
+    const bool ok = 尝试融合_已加锁(merged, obs, p);
+    if (!ok) {
+        if (失败则覆盖) {
+            merged = obs;
+        }
+        else {
+            // 加回旧索引
+            索引插入_已加锁(old, 旧节点);
+            return false;
         }
     }
-    double 特征值类::计算矢量相似度(
-        const std::vector<std::int64_t>& A,
-        const std::vector<std::int64_t>& B)
-    {
-        if (A.empty() || B.empty()) return -1.0;
 
-        size_t n = (A.size() < B.size()) ? A.size() : B.size();
-        if (n == 0) return -1.0;
+    重新计算粗哈希(merged);
+    *旧节点->主信息 = merged;
 
-        int 不同计数 = 0;
-        for (size_t i = 0; i < n; ++i)
-        {
-            if (A[i] != B[i])
-                ++不同计数;
-        }
+    // 插入新索引
+    索引插入_已加锁(merged, 旧节点);
+    return true;
+}
 
-        return 1.0 - static_cast<double>(不同计数) / n;  // 完全相同 = 1.0
+bool 特征值类::删除(节点类* 节点) const
+{
+    if (!节点 || !节点->主信息) return false;
+
+    auto 锁 = 特征值链.获取锁();
+    确保初始化_已加锁();
+
+    // 避免误删类型根
+    for (auto* r : 类型根) {
+        if (节点 == r) return false;
     }
+
+    主信息类 old = *节点->主信息;
+    索引移除_已加锁(old, 节点);
+
+    特征值链.删除节点_已加锁(节点);
+    return true;
+}

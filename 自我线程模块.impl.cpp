@@ -2,6 +2,7 @@ module;
 #include <intsafe.h>
 
 module 自我线程模块;
+import 语素环境模块;
 import <thread>;
 import <mutex>;
 import <condition_variable>;
@@ -70,7 +71,7 @@ void 自我线程类::更新需求权重(需求节点类* 需求节点)
     需求主信息类* 根主信息 = dynamic_cast<需求主信息类*>(需求节点->主信息);
     if (!根主信息) throw std::runtime_error("需求节点主信息不是需求主信息类类型");
 
-    int64_t 子节点数量 = 需求节点->获取子节点数量();
+    int64_t 子节点数量 = 需求节点->子节点数量;
     if (子节点数量 <= 0)  throw std::runtime_error("需求节点子节点数量无效");
 
     int64_t 平均值 = 根主信息->权重 / 子节点数量;

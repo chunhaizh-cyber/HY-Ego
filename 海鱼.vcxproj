@@ -223,6 +223,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="世界树环境类.ixx" />
     <ClCompile Include="世界树类.impl.cpp" />
     <ClCompile Include="世界树类.ixx" />
     <ClCompile Include="主信息定义模块.ixx" />
@@ -230,7 +231,6 @@
     <ClCompile Include="二次特征类.impl.cpp" />
     <ClCompile Include="二次特征类.ixx" />
     <ClCompile Include="任务类.ixx" />
-    <ClCompile Include="全局函数模块.ixx" />
     <ClCompile Include="内部方法_比较类.ixx" />
     <ClCompile Include="内部方法总接口.ixx" />
     <ClCompile Include="动作模块.impl.cpp" />
@@ -241,15 +241,17 @@
     <ClCompile Include="因果信息类.ixx" />
     <ClCompile Include="场景实时显示类.ixx" />
     <ClCompile Include="场景实时显示线程类.ixx" />
+    <ClCompile Include="场景类.ixx" />
     <ClCompile Include="基础数据类型.ixx" />
     <ClCompile Include="外设类.impl.cpp" />
     <ClCompile Include="外设类.ixx" />
     <ClCompile Include="外部方法总接口.impl.cpp" />
     <ClCompile Include="外部方法总接口.ixx" />
+    <ClCompile Include="子存在提取类.ixx" />
     <ClCompile Include="存在提取类.ixx" />
-    <ClCompile Include="宇宙链类.ixx" />
+    <ClCompile Include="存在类.ixx" />
+    <ClCompile Include="数据仓库类.ixx" />
     <ClCompile Include="宇宙环境类.impl.cpp" />
-    <ClCompile Include="宇宙环境类.ixx" />
     <ClCompile Include="方法模块.impl.cpp" />
     <ClCompile Include="方法模块.ixx" />
     <ClCompile Include="标准特征工具模块类.ixx" />
@@ -266,9 +268,12 @@
     <ClCompile Include="海鱼.cpp" />
     <ClCompile Include="海鱼Dlg.cpp" />
     <ClCompile Include="点簇分割类.ixx" />
+    <ClCompile Include="特征值环境类.ixx" />
     <ClCompile Include="特征值类.impl.cpp" />
     <ClCompile Include="特征值类.ixx" />
     <ClCompile Include="特征值类_轮廓模块.ixx" />
+    <ClCompile Include="特征类.ixx" />
+    <ClCompile Include="特征类型定义类.ixx" />
     <ClCompile Include="状态类.ixx" />
     <ClCompile Include="百度分词类.cpp" />
     <ClCompile Include="相机接口类.ixx" />
@@ -281,10 +286,12 @@
     <ClCompile Include="自然语言类.ixx" />
     <ClCompile Include="表达落地.ixx" />
     <ClCompile Include="评估与提交策略.ixx" />
+    <ClCompile Include="语素环境类.ixx" />
     <ClCompile Include="语素类.impl.cpp" />
     <ClCompile Include="语素类.ixx" />
     <ClCompile Include="语言学习模块.ixx" />
     <ClCompile Include="语言本能→学习桥接.ixx" />
+    <ClCompile Include="语言环境类.ixx" />
     <ClCompile Include="语言理解方法.ixx" />
     <ClCompile Include="语言知识库类.impl.cpp" />
     <ClCompile Include="语言知识库类.ixx" />

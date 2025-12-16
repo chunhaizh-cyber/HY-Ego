@@ -11,10 +11,11 @@ import <string>;
 import 线程模板模块;
 import 场景实时显示模块;
 import 相机接口模块;        // 结构体_原始场景帧
-import 世界树模块;            // 场景节点类
+import 世界树环境模块;            // 场景节点类
 import 基础数据类型模块;      // 时间戳等
 import 主信息定义模块;    // 结构体_原始场景帧 
-import 宇宙环境模块;    // 时间戳等   
+//import 场景实时显示_点簇增强模块; // 可选：点簇增强显示  
+
 
 export class 场景显示线程类 : public 线程模板 {
 public:
@@ -70,7 +71,7 @@ protected:
         std::shared_ptr<结构体_原始场景帧> 使用帧 = nullptr;
 
         // ✅ 每帧都从世界树取“自我所在场景”
-        场景节点类* 使用场景根 = (场景节点类*)g_宇宙.世界树.自我所在场景;
+        场景节点类* 使用场景根 = (场景节点类*)世界树.自我所在场景;
 
         {
             std::lock_guard<std::mutex> lk(data_mtx);
@@ -97,6 +98,7 @@ protected:
 
 private:
     场景实时显示器 显示器;
+    //场景实时显示_点簇增强类 点簇增强显示器;
 
     std::mutex data_mtx;
     bool 有新数据 = false;

@@ -131,9 +131,6 @@
     <ClCompile Include="语素类.impl.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="全局函数模块.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
     <ClCompile Include="表达落地.ixx">
       <Filter>头文件</Filter>
     </ClCompile>
@@ -212,7 +209,7 @@
     <ClCompile Include="概念树类.ixx">
       <Filter>头文件\概念树</Filter>
     </ClCompile>
-    <ClCompile Include="宇宙链类.ixx">
+    <ClCompile Include="数据仓库类.ixx">
       <Filter>头文件\宇宙</Filter>
     </ClCompile>
     <ClCompile Include="概念引擎类.ixx">
@@ -272,8 +269,32 @@
     <ClCompile Include="特征值类.ixx">
       <Filter>头文件\世界树类</Filter>
     </ClCompile>
-    <ClCompile Include="宇宙环境类.ixx">
+    <ClCompile Include="特征类型定义类.ixx">
+      <Filter>头文件\自然语言模块</Filter>
+    </ClCompile>
+    <ClCompile Include="特征类.ixx">
+      <Filter>头文件\世界树类</Filter>
+    </ClCompile>
+    <ClCompile Include="存在类.ixx">
+      <Filter>头文件\世界树类</Filter>
+    </ClCompile>
+    <ClCompile Include="世界树环境类.ixx">
       <Filter>头文件\宇宙</Filter>
+    </ClCompile>
+    <ClCompile Include="语素环境类.ixx">
+      <Filter>头文件\宇宙</Filter>
+    </ClCompile>
+    <ClCompile Include="语言环境类.ixx">
+      <Filter>头文件\宇宙</Filter>
+    </ClCompile>
+    <ClCompile Include="特征值环境类.ixx">
+      <Filter>头文件\宇宙</Filter>
+    </ClCompile>
+    <ClCompile Include="场景类.ixx">
+      <Filter>头文件\世界树类</Filter>
+    </ClCompile>
+    <ClCompile Include="子存在提取类.ixx">
+      <Filter>头文件\视频接口及显示</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

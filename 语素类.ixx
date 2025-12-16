@@ -19,7 +19,7 @@ import 基础数据类型模块;
 
 
 // 词类：提供添加词、查找词、管理词性子节点的接口
-export class 语素类 : public 链表模板<语素基类*> {
+export class 语素类 {
 public:
     ~语素类() = default;
     语素类() {}
@@ -170,11 +170,6 @@ public:
         枚举到文本动态映射表.clear();
     }
 };
-
-
-
-
-export inline 语素类 语素集{};
 
 void 枚举_词性_工厂::初始化静态映射表()
 {

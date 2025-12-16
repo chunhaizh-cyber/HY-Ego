@@ -52,45 +52,45 @@ public:
         bool 彩色_自动白平衡 = true;
 
         // 若关闭自动，则使用手动值（仅在 supports 时生效）
-        float 彩色_曝光 = 8000.0f;     // microseconds (范围随设备而变)
-        float 彩色_增益 = 64.0f;        // 0..?
-        float 彩色_白平衡 = 4500.0f;    // Kelvin
+        double  彩色_曝光 = 8000.0f;     // microseconds (范围随设备而变)
+        double  彩色_增益 = 64.0f;        // 0..?
+        double  彩色_白平衡 = 4500.0f;    // Kelvin
 
         // ===== 深度稳定（可选）=====
         bool 深度_启用发射器 = true;
-        float 深度_激光功率 = 150.0f;   // D455 支持范围随设备而变
+        double  深度_激光功率 = 150.0f;   // D455 支持范围随设备而变
 
         // ===== 深度滤波链（推荐开启空间+时间+填洞）=====
         bool 启用视差域处理 = true;     // Spatial/Temporal 在 disparity 域更稳
 
         bool 启用空间滤波 = true;
-        float 空间_平滑系数 = 0.5f;     // RS2_OPTION_FILTER_SMOOTH_ALPHA (0..1)
-        float 空间_平滑阈值 = 20.0f;    // RS2_OPTION_FILTER_SMOOTH_DELTA
-        float 空间_孔洞填充 = 0.0f;     // RS2_OPTION_HOLES_FILL (0..2)
+        double  空间_平滑系数 = 0.5f;     // RS2_OPTION_FILTER_SMOOTH_ALPHA (0..1)
+        double  空间_平滑阈值 = 20.0f;    // RS2_OPTION_FILTER_SMOOTH_DELTA
+        double  空间_孔洞填充 = 0.0f;     // RS2_OPTION_HOLES_FILL (0..2)
 
         bool 启用时间滤波 = true;
-        float 时间_平滑系数 = 0.4f;     // RS2_OPTION_FILTER_SMOOTH_ALPHA (0..1)
-        float 时间_平滑阈值 = 20.0f;    // RS2_OPTION_FILTER_SMOOTH_DELTA
-        float 时间_持久性 = 3.0f;       // RS2_OPTION_HOLES_FILL / PERSISTENCE（不同版本命名可能不同，supports 则生效）
+        double  时间_平滑系数 = 0.4f;     // RS2_OPTION_FILTER_SMOOTH_ALPHA (0..1)
+        double  时间_平滑阈值 = 20.0f;    // RS2_OPTION_FILTER_SMOOTH_DELTA
+        double  时间_持久性 = 3.0f;       // RS2_OPTION_HOLES_FILL / PERSISTENCE（不同版本命名可能不同，supports 则生效）
 
         bool 启用填洞滤波 = true;
-        float 填洞_模式 = 1.0f;         // RS2_OPTION_HOLES_FILL (0..2)
+        double  填洞_模式 = 1.0f;         // RS2_OPTION_HOLES_FILL (0..2)
 
         // 降采样滤波默认不启用（因为会改变分辨率，容易破坏对齐）
         bool 启用降采样 = false;
-        float 降采样_倍率 = 1.0f;       // RS2_OPTION_FILTER_MAGNITUDE，>1 会改分辨率（谨慎）
+        double  降采样_倍率 = 1.0f;       // RS2_OPTION_FILTER_MAGNITUDE，>1 会改分辨率（谨慎）
 
         // ===== 轮廓/存在初筛（前景分割 + 连通域）=====
         bool 启用轮廓提取 = true;
 
         // 背景深度学习：前 N 帧做平均得到背景；之后按 背景_更新系数 缓慢更新“非前景像素”
         int   背景学习帧数 = 30;
-        float 背景_更新系数 = 0.01f;      // 0 表示不更新
+        double  背景_更新系数 = 0.01f;      // 0 表示不更新
 
         // 前景判定：|depth - bg| > 阈值（米）
-        float 前景_深度差阈值_m = 0.06f;
-        float 前景_最小深度_m = 0.15f;
-        float 前景_最大深度_m = 4.0f;
+        double  前景_深度差阈值_m = 0.06f;
+        double  前景_最小深度_m = 0.15f;
+        double  前景_最大深度_m = 4.0f;
 
         // 连通域筛选
         int 轮廓_最小像素数 = 400;
@@ -216,7 +216,7 @@ public:
             if (!dp) return false;
 
             for (int i = 0; i < w * h; ++i) {
-                输出.深度[(size_t)i] = (float)dp[i] * 深度尺度; // 米
+                输出.深度[(size_t)i] = (double )dp[i] * 深度尺度; // 米
             }
 
             // ===== 4) 彩色读取：支持 RGB/BGR/RGBA/BGRA + YUYV/UYVY 兜底 =====
@@ -263,7 +263,7 @@ private:
 
     // 深度参数
     rs2_intrinsics 深度内参{};
-    float 深度尺度 = 0.001f;
+    double  深度尺度 = 0.001f;
 
     // 滤波器
     rs2::decimation_filter 降采样滤波;
@@ -316,7 +316,7 @@ private:
                         s.set_option(RS2_OPTION_ENABLE_AUTO_EXPOSURE, cfg.彩色_自动曝光 ? 1.0f : 0.0f);
                     }
                     if (s.supports(RS2_OPTION_ENABLE_AUTO_WHITE_BALANCE)) {
-                        s.set_option(RS2_OPTION_ENABLE_AUTO_WHITE_BALANCE, cfg.彩色_自动白平衡 ? 1.0f : 0.0f);
+                        s.set_option(RS2_OPTION_ENABLE_AUTO_WHITE_BALANCE, cfg.彩色_自动白平衡 ? 1.0 : 0.0);
                     }
 
                     if (!cfg.彩色_自动曝光) {
@@ -346,7 +346,7 @@ private:
     }
 
     void 配置滤波链() {
-        auto try_set = [](auto& f, rs2_option opt, float val) {
+        auto try_set = [](auto& f, rs2_option opt, double  val) {
             try { if (f.supports(opt)) f.set_option(opt, val); }
             catch (...) {}
             };
@@ -444,36 +444,36 @@ private:
     }
 
     void 生成点云(结构体_原始场景帧& 帧) {
-        const float fx = 深度内参.fx;
-        const float fy = 深度内参.fy;
-        const float cx = 深度内参.ppx;
-        const float cy = 深度内参.ppy;
+        const double  fx = 深度内参.fx;
+        const double  fy = 深度内参.fy;
+        const double  cx = 深度内参.ppx;
+        const double  cy = 深度内参.ppy;
 
         const int w = 帧.宽度;
         const int h = 帧.高度;
 
         for (int v = 0; v < h; ++v) {
             for (int u = 0; u < w; ++u) {
-                const float z = 帧.深度[索引(u, v, w)];
+                const double  z = 帧.深度[索引(u, v, w)];
                 if (z <= 0.0f) {
                     帧.点云[索引(u, v, w)] = { 0,0,0 };
                     continue;
                 }
-                const float X = (u - cx) * z / fx;
-                const float Y = (v - cy) * z / fy;
-                const float Z = z;
+                const double  X = (u - cx) * z / fx;
+                const double  Y = (v - cy) * z / fy;
+                const double  Z = z;
                 帧.点云[索引(u, v, w)] = Vector3D{ X, Y, Z };
             }
         }
     }
 private:
     // ===== 轮廓提取状态 =====
-    std::vector<float> 背景深度;       // size = w*h
-    std::vector<float> 背景权重;       // size = w*h（用于学习期平均）
+    std::vector<double > 背景深度;       // size = w*h
+    std::vector<double > 背景权重;       // size = w*h（用于学习期平均）
     bool 背景已建立 = false;
     int  背景累计帧 = 0;
 
-    std::vector<float> 上一帧深度;     // size = w*h（背景未建立时可用作“帧差”兜底）
+    std::vector<double > 上一帧深度;     // size = w*h（背景未建立时可用作“帧差”兜底）
     std::vector<结构体_轮廓观测> 最近轮廓;
 
 private:
@@ -535,9 +535,9 @@ private:
         // 学习期：做逐像素平均
         if (!背景已建立) {
             for (size_t i = 0; i < N; ++i) {
-                float z = 帧.深度[i];
+                double  z = 帧.深度[i];
                 if (z <= 0.0f) continue;
-                float wgt = 背景权重[i];
+                double  wgt = 背景权重[i];
                 背景深度[i] = (背景深度[i] * wgt + z) / (wgt + 1.0f);
                 背景权重[i] = wgt + 1.0f;
             }
@@ -549,14 +549,14 @@ private:
         }
 
         // 运行期：缓慢更新“非前景像素”的背景
-        const float a = std::max(0.0f, std::min(1.0f, cfg.背景_更新系数));
+        const double  a = std::max(0.0, std::min(1.0, cfg.背景_更新系数));
         if (a <= 0.0f) return;
 
         for (size_t i = 0; i < N; ++i) {
             if (前景掩膜 && (*前景掩膜)[i]) continue; // 前景不更新
-            float z = 帧.深度[i];
+            double  z = 帧.深度[i];
             if (z <= 0.0f) continue;
-            float bg = 背景深度[i];
+            double  bg = 背景深度[i];
             if (bg <= 0.0f) {
                 背景深度[i] = z;
             }
@@ -571,18 +571,18 @@ private:
         const size_t N = (size_t)w * (size_t)h;
         outMask.assign(N, 0);
 
-        const float minZ = cfg.前景_最小深度_m;
-        const float maxZ = cfg.前景_最大深度_m;
-        const float th = cfg.前景_深度差阈值_m;
+        const double  minZ = cfg.前景_最小深度_m;
+        const double  maxZ = cfg.前景_最大深度_m;
+        const double  th = cfg.前景_深度差阈值_m;
 
         const bool canUseBG = 背景已建立 && 背景深度.size() == N;
         const bool canUsePrev = (!canUseBG) && 上一帧深度.size() == N;
 
         for (size_t i = 0; i < N; ++i) {
-            float z = 帧.深度[i];
+            double  z = 帧.深度[i];
             if (!(z > 0.0f && z >= minZ && z <= maxZ)) continue;
 
-            float ref = 0.0f;
+            double  ref = 0.0f;
             if (canUseBG) ref = 背景深度[i];
             else if (canUsePrev) ref = 上一帧深度[i];
 
@@ -643,12 +643,12 @@ private:
                 int minx = u0, maxx = u0, miny = v0, maxy = v0;
                 int count = 0;
 
-                float minX = std::numeric_limits<float>::infinity();
-                float minY = std::numeric_limits<float>::infinity();
-                float minZ = std::numeric_limits<float>::infinity();
-                float maxX = -std::numeric_limits<float>::infinity();
-                float maxY = -std::numeric_limits<float>::infinity();
-                float maxZ = -std::numeric_limits<float>::infinity();
+                double  minX = std::numeric_limits<double >::infinity();
+                double  minY = std::numeric_limits<double >::infinity();
+                double  minZ = std::numeric_limits<double >::infinity();
+                double  maxX = -std::numeric_limits<double >::infinity();
+                double  maxY = -std::numeric_limits<double >::infinity();
+                double  maxZ = -std::numeric_limits<double >::infinity();
 
                 std::uint64_t sumR = 0, sumG = 0, sumB = 0;
                 std::vector<int> pixels;
@@ -673,12 +673,12 @@ private:
                     // 3D bbox + avg color
                     const auto& P = 帧.点云[(size_t)i];
                     if (P.z > 0.0f) {
-                        if (P.x < minX) minX = (float)P.x;
-                        if (P.y < minY) minY = (float)P.y;
-                        if (P.z < minZ) minZ = (float)P.z;
-                        if (P.x > maxX) maxX = (float)P.x;
-                        if (P.y > maxY) maxY = (float)P.y;
-                        if (P.z > maxZ) maxZ = (float)P.z;
+                        if (P.x < minX) minX = (double )P.x;
+                        if (P.y < minY) minY = (double )P.y;
+                        if (P.z < minZ) minZ = (double )P.z;
+                        if (P.x > maxX) maxX = (double )P.x;
+                        if (P.y > maxY) maxY = (double )P.y;
+                        if (P.z > maxZ) maxZ = (double )P.z;
                     }
 
                     const auto& C = 帧.颜色[(size_t)i];
@@ -716,7 +716,7 @@ private:
                 obs.像素数 = count;
 
                 obs.中心 = Vector3D{ (minX + maxX) * 0.5f, (minY + maxY) * 0.5f, (minZ + maxZ) * 0.5f };
-                obs.尺寸 = Vector3D{ std::max(0.0f, maxX - minX), std::max(0.0f, maxY - minY), std::max(0.0f, maxZ - minZ) };
+                obs.尺寸 = Vector3D{ std::max(0.0, maxX - minX), std::max(0.0, maxY - minY), std::max(0.0, maxZ - minZ) };
 
                 const int denom = std::max(1, count);
                 obs.平均颜色 = Color{

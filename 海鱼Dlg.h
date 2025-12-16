@@ -13,6 +13,7 @@
 import 自我线程模块;
 import 外设模块;
 import 场景实时显示线程模块;
+import 世界树环境模块;
 
 class C海鱼DlgAutoProxy;
 
@@ -83,6 +84,8 @@ public:
 	// ===== 数据提交：外设/自我线程 -> 显示线程 =====
 	void 提交场景显示(std::shared_ptr<结构体_原始场景帧> 帧,
 		std::shared_ptr<std::vector<结构体_存在观测>> 观测);
+
+//	void 初始化();
 };
 
 

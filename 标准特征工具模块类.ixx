@@ -3,16 +3,24 @@
 import 模板模块;
 
 import 主信息定义模块;
-import 特征值模块;
-import 语素模块;
+import 语素环境模块;
 import 概念树模块;
-import 宇宙链模块;
+import 语言环境模块;  
+import 数据仓库模块;
+import 特征模块;
+
 import <string>;
 import <vector>;
 
 export namespace 标准特征工具 {
 
     using 节点类 = 链表模板<基础信息基类*>::节点类;
+
+    // ======== 特征操作入口：所有特征值相关操作统一走 特征类 ========
+    inline 特征类& 特征操作() {
+        static 特征类 inst;
+        return inst;
+    }
 
     // ======== 内部小工具：统一创建「名称词性」和「类型词性」 ========
 
@@ -25,22 +33,6 @@ export namespace 标准特征工具 {
         return 语素集.添加词性词(类型名, "特征类型");
     }
 
-    // ======== 通用：创建特征主信息 + 挂到宇宙链表 ========
-
-    inline 节点类* 添加特征节点(
-        节点类* 所属节点,
-        词性节点类* 名称词性,
-        词性节点类* 类型词性,
-        特征值节点类* 值对象
-    ) {
-        if (!所属节点 || !名称词性 || !类型词性 || !值对象) {
-            return nullptr;
-        }
-
-        auto* 主信息 = new 特征节点主信息类(名称词性, 类型词性, 值对象);       
-        return 宇宙链.添加子节点(所属节点, 主信息);
-    }
-
     // ======== 1. 通用「写入」接口：标量 / 向量 / 字符串 ========
 
     // 1.1 标量整数特征（可选单位）
@@ -51,11 +43,15 @@ export namespace 标准特征工具 {
         std::int64_t 数值,
         词性节点类* 单位 = nullptr   // 可以为 nullptr 表示“无单位 / 隐含单位”
     ) {
+        if (!所属节点) return nullptr;
         auto* 名 = 获取或创建特征名(特征名);
         auto* 型 = 获取或创建特征类型(特征类型名);
-        auto* 特征值节点=特征值集.获取或创建标量特征值(单位, 数值);
-
-        return 添加特征节点(所属节点, 名, 型, 特征值节点);
+        return 特征操作().创建并添加标量特征(
+            static_cast<基础信息节点类*>(所属节点),
+            型,
+            数值,
+            名
+        );
     }
 
     // 1.2 整数向量特征
@@ -65,10 +61,15 @@ export namespace 标准特征工具 {
         const std::string& 特征类型名,
         const std::vector<std::int64_t>& 数据
     ) {
+        if (!所属节点) return nullptr;
         auto* 名 = 获取或创建特征名(特征名);
         auto* 型 = 获取或创建特征类型(特征类型名);
-        auto* 值 = 特征值集.获取或创建矢量特征值(数据);
-        return 添加特征节点(所属节点, 名, 型, 值);
+        return 特征操作().创建并添加矢量特征(
+            static_cast<基础信息节点类*>(所属节点),
+            型,
+            数据,
+            名
+        );
     }
 
     // 1.3 字符串特征
@@ -78,11 +79,14 @@ export namespace 标准特征工具 {
         const std::string& 特征类型名,
         const std::string& 文本值
     ) {
+        if (!所属节点) return nullptr;
         auto* 名 = 获取或创建特征名(特征名);
         auto* 型 = 获取或创建特征类型(特征类型名);
-
-        auto* 值 = 特征值集.获取或创建字符串特征值(文本值);
-        return 添加特征节点(所属节点, 名, 型, 值);
+        return 特征操作().创建并添加文本特征_UTF8(static_cast<基础信息节点类*>(所属节点),
+            型,
+            文本值,
+            名
+        );
     }
 
     // ======== 2. 通用「查询特征节点」接口 ========
@@ -168,18 +172,10 @@ export namespace 标准特征工具 {
         特征查询条件 条件{ 特征名, 类型前缀 };
         节点类* 特征节点 = 查找第一个特征节点(所属节点, 条件);
         if (!特征节点) return false;
-
-        auto* 主 = dynamic_cast<特征节点主信息类*>(特征节点->主信息);
-        if (!主) return false;
-
-        auto* 值 = dynamic_cast<标量特征值主信息类*>(主->值);
-        if (!值) return false;
-
-        输出值 = 值->值;
-        if (输出单位) {
-            *输出单位 = 值->单位;
-        }
-        return true;
+        return 特征类::读取标量特征值(
+            static_cast<const 特征节点类*>(特征节点),
+            输出值            
+        );
     }
 
     inline bool 读取向量特征(
@@ -191,15 +187,10 @@ export namespace 标准特征工具 {
         特征查询条件 条件{ 特征名, 类型前缀 };
         节点类* 特征节点 = 查找第一个特征节点(所属节点, 条件);
         if (!特征节点) return false;
-
-        auto* 主 = dynamic_cast<特征节点主信息类*>(特征节点->主信息);
-        if (!主) return false;
-
-        auto* 值 = dynamic_cast<矢量特征值主信息类*>(主->值);
-        if (!值) return false;
-
-        输出值 = 值->值;
-        return true;
+        return 特征类::读取矢量特征值(
+            static_cast<const 特征节点类*>(特征节点),
+            输出值
+        );
     }
 
     inline bool 读取字符串特征(
@@ -211,20 +202,15 @@ export namespace 标准特征工具 {
         特征查询条件 条件{ 特征名, 类型前缀 };
         节点类* 特征节点 = 查找第一个特征节点(所属节点, 条件);
         if (!特征节点) return false;
-
-        auto* 主 = dynamic_cast<特征节点主信息类*>(特征节点->主信息);
-        if (!主) return false;
-
-        auto* 值 = dynamic_cast<字符特征值主信息类*>(主->值);
-        if (!值) return false;
-
-        输出文本 = 值->值;
-        return true;
+        return 特征类::读取文本特征值_UTF8(
+            static_cast<const 特征节点类*>(特征节点),
+            输出文本
+        );
     }
 
     // ======== 4. 通用：「存在引用特征」也是通用，不写死关系词 ========
 
-    // 写：from 上挂一个「存在引用」特征，值为 to 的主键字符串
+        // 写：from 上挂一个「存在引用」特征，值为 to 的主键字符串
     inline 节点类* 设置存在引用特征(
         节点类* from,
         节点类* to,
@@ -238,19 +224,15 @@ export namespace 标准特征工具 {
     }
 
     // 读：从 from 上解析一个存在引用特征，返回被引用节点（通过主键查找）
-    inline 节点类* 读取存在引用特征(
-        节点类* from,
-        const std::string& 特征名,
-        const std::string& 类型前缀 = "存在引用"
+    inline 节点类* 读取存在引用特征(存在节点类* from, const std::string& 特征名, const std::string& 类型前缀 = "存在引用"
     ) {
         if (!from) return nullptr;
-
         std::string 主键;
         if (!读取字符串特征(from, 特征名, 类型前缀, 主键)) {
             return nullptr;
         }
-
-        return 宇宙链.查找主键(主键);
+    //    return 世界链.查找主键(from->子, 主键);
+        return nullptr;
     }
 
 } // namespace 标准特征工具
