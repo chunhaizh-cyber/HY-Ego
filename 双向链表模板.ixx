@@ -40,9 +40,9 @@ public:
         void 变更子节点数量(std::int64_t delta) { 子节点数量 += delta; }
     };
 
-    using 锁守卫 = std::unique_lock<std::mutex>;
+    using 锁守卫 = std::unique_lock<std::recursive_mutex>;
 
-    mutable std::mutex 链表锁;
+    mutable std::recursive_mutex 链表锁;
 
     节点类* 根指针 = nullptr;
 
@@ -144,7 +144,7 @@ public:
 
     节点类* 添加节点(节点类* 位置节点, 节点类* 新节点)
     {
-        std::lock_guard<std::mutex> lock(链表锁);
+        std::lock_guard<std::recursive_mutex> lock(链表锁);
         return 添加节点_已加锁(位置节点, 新节点);
     }
 
@@ -157,7 +157,7 @@ public:
 
     节点类* 添加节点(节点类* 位置节点, 主信息类型 主信息)
     {
-        std::lock_guard<std::mutex> lock(链表锁);
+        std::lock_guard<std::recursive_mutex> lock(链表锁);
         return 添加节点_已加锁(位置节点, 主信息);
     }
 
@@ -192,7 +192,7 @@ public:
 
     节点类* 添加子节点(节点类* 父节点, 节点类* 子节点)
     {
-        std::lock_guard<std::mutex> lock(链表锁);
+        std::lock_guard<std::recursive_mutex> lock(链表锁);
         return 添加子节点_已加锁(父节点, 子节点);
     }
 
@@ -205,7 +205,7 @@ public:
 
     节点类* 添加子节点(节点类* 父节点, 主信息类型 主信息)
     {
-        std::lock_guard<std::mutex> lock(链表锁);
+        std::lock_guard<std::recursive_mutex> lock(链表锁);
         return 添加子节点_已加锁(父节点, 主信息);
     }
 
@@ -251,14 +251,14 @@ public:
     // 通过“节点指针”修改
     void 修改节点信息(节点类* 节点, 主信息类型 新信息)
     {
-        std::lock_guard<std::mutex> lock(链表锁);
+        std::lock_guard<std::recursive_mutex> lock(链表锁);
         修改节点信息_已加锁(节点, 新信息);
     }
 
     // 通过“主键”修改
     void 修改节点信息(const std::string& 主键, 主信息类型 新信息)
     {
-        std::lock_guard<std::mutex> lock(链表锁);
+        std::lock_guard<std::recursive_mutex> lock(链表锁);
         节点类* 节点 = 查找主键(主键);
         修改节点信息_已加锁(节点, 新信息);
     }
@@ -309,7 +309,7 @@ public:
 
     void 删除节点(节点类* 被删除节点)
     {
-        std::lock_guard<std::mutex> lock(链表锁);
+        std::lock_guard<std::recursive_mutex> lock(链表锁);
         删除节点_已加锁(被删除节点);
     }
 
@@ -337,7 +337,7 @@ public:
 
     void 删除子链(节点类* 父节点)
     {
-        std::lock_guard<std::mutex> lock(链表锁);
+        std::lock_guard<std::recursive_mutex> lock(链表锁);
         删除子链_已加锁(父节点);
     }
 
@@ -356,7 +356,7 @@ public:
 
     void 删除链表()
     {
-        std::lock_guard<std::mutex> lock(链表锁);
+        std::lock_guard<std::recursive_mutex> lock(链表锁);
         删除链表_已加锁();
     }
 

@@ -74,16 +74,10 @@
     <ClCompile Include="pch.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="基础数据类型.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
     <ClCompile Include="内部方法总接口.ixx">
       <Filter>头文件</Filter>
     </ClCompile>
     <ClCompile Include="任务类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="双向链表模板.ixx">
       <Filter>头文件</Filter>
     </ClCompile>
     <ClCompile Include="外部方法总接口.ixx">
@@ -96,9 +90,6 @@
       <Filter>头文件</Filter>
     </ClCompile>
     <ClCompile Include="因果信息类.ixx">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="主信息定义模块.ixx">
       <Filter>头文件</Filter>
     </ClCompile>
     <ClCompile Include="状态类.ixx">
@@ -294,6 +285,24 @@
       <Filter>头文件\世界树类</Filter>
     </ClCompile>
     <ClCompile Include="子存在提取类.ixx">
+      <Filter>头文件\视频接口及显示</Filter>
+    </ClCompile>
+    <ClCompile Include="观察类.ixx">
+      <Filter>头文件\视频接口及显示</Filter>
+    </ClCompile>
+    <ClCompile Include="基础数据类型.ixx">
+      <Filter>头文件\宇宙</Filter>
+    </ClCompile>
+    <ClCompile Include="双向链表模板.ixx">
+      <Filter>头文件\宇宙</Filter>
+    </ClCompile>
+    <ClCompile Include="主信息定义模块.ixx">
+      <Filter>头文件\宇宙</Filter>
+    </ClCompile>
+    <ClCompile Include="虚拟相机外设类.ixx">
+      <Filter>头文件\视频接口及显示</Filter>
+    </ClCompile>
+    <ClCompile Include="相机写入工作流模块.ixx">
       <Filter>头文件\视频接口及显示</Filter>
     </ClCompile>
   </ItemGroup>

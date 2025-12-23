@@ -88,8 +88,8 @@ void 自我线程类::更新需求权重(需求节点类* 需求节点)
 void 自我线程类::特征值类初始化()
 {
 
-    词性节点类* 词游标;
-    存在节点类* 存在游标;
+ //   词性节点类* 词游标;
+ //   存在节点类* 存在游标;
 
     矢量单位词指针 = 语素集.添加词性词("点", "抽象名词");
 
@@ -240,7 +240,7 @@ void 自我线程类::主循环() {
         std::unique_lock<std::mutex> lk(mtx_);
         // 等待消息或心跳
         if (队列_.empty()) {
-            cv_.wait_until(lk, 下次维护, [&] { return stop_ || !队列_.empty(); });
+      //      cv_.wait_until(lk, 下次维护, [&] { return stop_ || !队列_.empty(); });
         }
         // 批量处理当前消息
         while (!队列_.empty()) {
@@ -346,16 +346,16 @@ void 自我线程类::周期性维护() {
     auto now = steady_clock::now();
 
     // 1) 需求衰减（把 当前 向 目标 以固定速率靠近）
-    for (auto& [key, d] : 需求表_) {
-        double dt = duration_cast<duration<double>>(now - d.上次更新).count();
-        if (dt <= 0) continue;
-        double 差 = d.当前 - d.目标;
-        double 衰减 = std::exp(-需求衰减速率_每秒_ * dt);
-        d.当前 = d.目标 + 差 * 衰减;
-        d.上次更新 = now;
-        // EMA 自然衰减
-        d.指数平滑观测 = (1.0 - EMA_alpha_) * d.指数平滑观测 + EMA_alpha_ * d.当前;
-    }
+//    for (auto& [key, d] : 需求表_) {
+//    //    double dt = duration_cast<duration<double>>(now - d.上次更新).count();
+//    //    if (dt <= 0) continue;
+//        double 差 = d.当前 - d.目标;
+//        double 衰减 = std::exp(-需求衰减速率_每秒_ * dt);
+//        d.当前 = d.目标 + 差 * 衰减;
+//        d.上次更新 = now;
+//        // EMA 自然衰减
+//        d.指数平滑观测 = (1.0 - EMA_alpha_) * d.指数平滑观测 + EMA_alpha_ * d.当前;
+//    }
 
     // 2) 归一化权重（避免某个需求权重爆炸）
     归一化需求权重();

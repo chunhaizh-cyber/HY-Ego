@@ -27,21 +27,21 @@ class C海鱼Dlg : public CDialogEx
 	DECLARE_DYNAMIC(C海鱼Dlg);
 	friend class C海鱼DlgAutoProxy;
 
-// 构造
+	// 构造
 public:
 	C海鱼Dlg(CWnd* pParent = nullptr);	// 标准构造函数
 	virtual ~C海鱼Dlg();
 
-// 对话框数据
+	// 对话框数据
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_MY_DIALOG };
 #endif
 
-	protected:
+protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持
 
 
-// 实现
+	// 实现
 protected:
 	C海鱼DlgAutoProxy* m_pAutoProxy;
 	HICON m_hIcon;
@@ -63,11 +63,11 @@ public:
 
 private:
 	自我线程类 自我线程;
-	std::unique_ptr<场景显示线程类> 场景显示线程;
-	std::unique_ptr<外设类> 外设;
-	std::thread 外设采集线程;
-	std::atomic_bool 外设采集中{ false };
-	std::atomic_bool 外设回调允许{ false };
+	std::unique_ptr<场景实时显示线程类> 场景显示线程;
+
+	struct 摄像机运行时;
+	std::unique_ptr<摄像机运行时> 摄像机_;
+	
 public:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnSelchangeTab1(NMHDR* pNMHDR, LRESULT* pResult);
@@ -85,7 +85,7 @@ public:
 	void 提交场景显示(std::shared_ptr<结构体_原始场景帧> 帧,
 		std::shared_ptr<std::vector<结构体_存在观测>> 观测);
 
-//	void 初始化();
+	//	void 初始化();
 };
 
 

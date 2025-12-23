@@ -21,6 +21,11 @@ static inline std::uint8_t clamp_u8(long long v)
     return (std::uint8_t)v;
 }
 
+bool 特征值类::等值(const 主信息类& a, const 主信息类& b)
+{
+    return false;
+}
+
 void 特征值类::确保初始化_已加锁()
 {
     if (已初始化) return;
@@ -171,10 +176,24 @@ void 特征值类::索引移除_已加锁(const 主信息类& mi, 节点类* node)
     重新计算粗哈希(mi);
     return 获取或创建(std::move(mi));
 }
+特征值节点类* 特征值类::获取或创建向量特征值_已加锁(
+    const std::vector<std::int64_t>& vec,
+    枚举_比较模式 mode,
+    词性节点类* 单位) {
+    主信息类 mi;
+    mi.类型 = 枚举_特征值类型::VecI64;
+    mi.比较模式 = mode;
+    mi.值 = vec;
+
+    
+
+    重新计算粗哈希(mi);
+    return 获取或创建_已加锁(std::move(mi));
+}
 
 特征值类::节点类* 特征值类::获取或创建向量特征值_f32(const std::vector<float>& 值, 枚举_比较模式 mode) const
 {
-    主信息类 mi;
+    主信息类 mi; 
     mi.类型 = 枚举_特征值类型::VecF32;
     mi.比较模式 = mode;
     mi.值 = 值;

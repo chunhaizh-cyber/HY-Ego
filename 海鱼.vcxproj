@@ -94,7 +94,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;_DEBUG;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <StructMemberAlignment>Default</StructMemberAlignment>
@@ -102,7 +102,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <RegisterOutput>true</RegisterOutput>
+      <RegisterOutput>false</RegisterOutput>
       <AdditionalDependencies>realsense2.lib</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
@@ -276,6 +276,8 @@
     <ClCompile Include="特征类型定义类.ixx" />
     <ClCompile Include="状态类.ixx" />
     <ClCompile Include="百度分词类.cpp" />
+    <ClCompile Include="相机写入工作流模块.ixx" />
+    <ClCompile Include="虚拟相机外设类.ixx" />
     <ClCompile Include="相机接口类.ixx" />
     <ClCompile Include="窗口_交互界面.cpp" />
     <ClCompile Include="线程模板类.ixx" />
@@ -285,6 +287,7 @@
     <ClCompile Include="自然语言类.impl.cpp" />
     <ClCompile Include="自然语言类.ixx" />
     <ClCompile Include="表达落地.ixx" />
+    <ClCompile Include="观察类.ixx" />
     <ClCompile Include="评估与提交策略.ixx" />
     <ClCompile Include="语素环境类.ixx" />
     <ClCompile Include="语素类.impl.cpp" />

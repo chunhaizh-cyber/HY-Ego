@@ -57,8 +57,7 @@ export struct 子掩膜组件
     std::vector<std::uint8_t> 裁剪掩膜; // 大小=裁剪宽*裁剪高，bbox坐标系
 };
 
-export class 子存在提取类
-{
+export class 子存在提取类 {
 private:
     struct 点索引 { int u = 0; int v = 0; };
 

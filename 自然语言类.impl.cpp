@@ -1,4 +1,6 @@
+
 module 自然语言树模块;
+
 import 语言环境模块;
 import 语素模块;
 import 世界树环境模块;
@@ -26,4 +28,14 @@ import <string>;
     auto* 子句节点 = new 子句节点类();
     子句节点->主信息 = 子句主信息;
     return 语言链.添加子节点(自然句节点, 子句节点);
+}
+
+段落节点类* 自然语言树类::添加段落(文章节点类* 文章节点, std::size_t 在文章中的序号, const std::string& 段落文本)
+{
+    return nullptr;
+}
+
+自然句节点类* 自然语言树类::添加自然句(段落节点类* 段落节点, std::size_t 在段落中的序号, const std::vector<词性节点类*>& 词序列, const std::string& 原句文本)
+{
+    return nullptr;
 }

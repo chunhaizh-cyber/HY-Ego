@@ -88,8 +88,8 @@ export class 语素基类 {
 public:
     virtual ~语素基类() = default;
     virtual std::int64_t 比较(语素基类* 对象, 枚举_比较字段 字段, 枚举_比较条件 条件) const = 0;
-  //  void 收集存档字段(结构体_存在存档字段& out) const;
-  //  void 修复存档字段(const 结构体_存在存档字段& in, const 结构体_引用解析上下文& ctx);
+    //  void 收集存档字段(结构体_存在存档字段& out) const;
+    //  void 修复存档字段(const 结构体_存在存档字段& in, const 结构体_引用解析上下文& ctx);
 };
 
 //—— 词
@@ -233,7 +233,7 @@ public:
 //======================================================================
 // 3) 特征值族
 //======================================================================
-namespace 主信息定义_内部 {
+namespace  主信息定义_内部 {
     inline std::int64_t 比较_整数(std::int64_t l, std::int64_t r, 枚举_比较条件 c) {
         switch (c) {
         case 枚举_比较条件::相等:   return l == r ? 1 : 0;
@@ -288,7 +288,16 @@ export enum class 枚举_特征值类型 : std::uint16_t {
     // 向量/原始字节
     VecI64,
     VecF32,
-    Bytes
+    Bytes,
+    //字符串特征值
+    StringUTF8,
+
+    //指针特征值
+    Ptr,
+
+    // 3D 体素占据金字塔（顶层 64bit，层间 *8）
+    体素占据金字塔
+
 };
 
 export enum class 枚举_比较模式 : std::uint8_t {
@@ -334,6 +343,22 @@ export struct Bits64 {
 
 export using Bits512 = std::array<std::uint64_t, 8>;
 
+export struct 体素占据金字塔 {
+    // 顶层固定 4x4x4 = 64 bit（1 个 uint64）
+    // 每层细分 2x2x2，数据量 *8：L1=512bit(8块), L2=4096bit(64块)...
+    std::uint8_t 最大层 = 0;            // 0=仅顶层
+
+    // 本金字塔覆盖的局部立方体范围（毫米，便于跨帧对齐/重建）
+    std::int64_t 立方体边长_mm = 0;
+    std::int64_t min_x_mm = 0;
+    std::int64_t min_y_mm = 0;
+    std::int64_t min_z_mm = 0;
+
+    // 拼接块：L0(1) + L1(8) + L2(64) + ...
+    std::vector<std::uint64_t> 块;
+};
+
+
 export using 特征值载体 = std::variant<
     std::monostate,
     std::int64_t,
@@ -343,11 +368,14 @@ export using 特征值载体 = std::variant<
     颜色_BGR8,
     Bits64,
     Bits512,
+    体素占据金字塔,
     区间_i64,
     区间_f64,
     std::vector<std::int64_t>,
     std::vector<float>,
-    std::vector<std::uint8_t>
+    std::vector<std::uint8_t>,
+    std::string,
+    void*
 >;
 
 // =========================
@@ -420,6 +448,65 @@ export inline double Bits512_海明距离_掩码(const Bits512& a, const Bits512
     return (double)diff / (double)vis;
 }
 
+
+// =========================
+// 5.5) 体素占据金字塔：块数/距离/排序
+// =========================
+export inline std::uint64_t 体素金字塔_层块数(std::uint8_t level) {
+    // L0:1, L1:8, L2:64 ...
+    return 1ull << (3ull * level);
+}
+
+export inline std::uint64_t 体素金字塔_总块数(std::uint8_t max_level) {
+    std::uint64_t n = 0;
+    for (std::uint8_t i = 0; i <= max_level; ++i) n += 体素金字塔_层块数(i);
+    return n;
+}
+
+export inline std::uint64_t 体素金字塔_层起始偏移(std::uint8_t level) {
+    // sum_{i=0}^{level-1} 8^i
+    std::uint64_t off = 0;
+    for (std::uint8_t i = 0; i < level; ++i) off += 体素金字塔_层块数(i);
+    return off;
+}
+
+export inline std::strong_ordering 体素金字塔_字典序比较(const 体素占据金字塔& a, const 体素占据金字塔& b) {
+    if (a.最大层 != b.最大层) return a.最大层 <=> b.最大层;
+    if (a.立方体边长_mm != b.立方体边长_mm) return a.立方体边长_mm <=> b.立方体边长_mm;
+    if (a.min_x_mm != b.min_x_mm) return a.min_x_mm <=> b.min_x_mm;
+    if (a.min_y_mm != b.min_y_mm) return a.min_y_mm <=> b.min_y_mm;
+    if (a.min_z_mm != b.min_z_mm) return a.min_z_mm <=> b.min_z_mm;
+
+    const size_t n = std::min(a.块.size(), b.块.size());
+    for (size_t i = 0; i < n; ++i) {
+        if (a.块[i] != b.块[i]) return a.块[i] <=> b.块[i];
+    }
+    return a.块.size() <=> b.块.size();
+}
+
+export inline double 体素金字塔_海明距离(const 体素占据金字塔& a, const 体素占据金字塔& b) {
+    // 加权：顶层权重大，细层权重按 1/8^L 衰减
+    const std::uint8_t L = (a.最大层 < b.最大层) ? a.最大层 : b.最大层;
+    if (a.块.empty() || b.块.empty()) return 1.0;
+
+    double acc = 0.0;
+    double wsum = 0.0;
+    for (std::uint8_t lv = 0; lv <= L; ++lv) {
+        const std::uint64_t bc = 体素金字塔_层块数(lv);
+        const std::uint64_t off = 体素金字塔_层起始偏移(lv);
+        if (off + bc > a.块.size() or off + bc > b.块.size()) break;
+
+        std::uint64_t diff = 0;
+        for (std::uint64_t i = 0; i < bc; ++i) diff += popcount_u64(a.块[off + i] ^ b.块[off + i]);
+
+        const double dn = (double)diff / (double)(bc * 64ull);
+        const double w = 1.0 / (double)(1ull << (3ull * lv)); // 1/8^lv
+        acc += w * dn;
+        wsum += w;
+    }
+    if (wsum <= 0.0) return 1.0;
+    return acc / wsum;
+}
 // =========================
 // 6) 区间：关系 / 距离
 // =========================
@@ -493,6 +580,15 @@ export inline std::uint64_t 计算粗哈希(const 特征值主信息类& v) {
             std::uint64_t y[3] = { x[0], x[1], 512ull };
             h = fnv1a64(y, sizeof(y));
         }
+        else if constexpr (std::is_same_v<T, 体素占据金字塔>) {
+            std::uint64_t sz = (std::uint64_t)x.块.size();
+            // 取前 3 块 + max_level
+            std::uint64_t y[5] = { sz, (std::uint64_t)x.最大层, (sz > 0 ? x.块[0] : 0ull), (sz > 1 ? x.块[1] : 0ull), (sz > 2 ? x.块[2] : 0ull) };
+            h = fnv1a64(y, sizeof(y));
+            // 混入边界（避免不同尺度碰撞）
+            std::uint64_t bnd[4] = { (std::uint64_t)x.立方体边长_mm, (std::uint64_t)x.min_x_mm, (std::uint64_t)x.min_y_mm, (std::uint64_t)x.min_z_mm };
+            h ^= fnv1a64(bnd, sizeof(bnd));
+        }
         else if constexpr (std::is_same_v<T, std::vector<std::int64_t>>) {
             std::uint64_t sz = (std::uint64_t)x.size();
             size_t bytes = x.size() * sizeof(std::int64_t);
@@ -508,6 +604,12 @@ export inline std::uint64_t 计算粗哈希(const 特征值主信息类& v) {
             if (take) h ^= fnv1a64(x.data(), take);
         }
         else if constexpr (std::is_same_v<T, std::vector<std::uint8_t>>) {
+            std::uint64_t sz = (std::uint64_t)x.size();
+            size_t take = x.size() > 64 ? 64 : x.size();
+            h = fnv1a64(&sz, sizeof(sz));
+            if (take) h ^= fnv1a64(x.data(), take);
+        }
+        else if constexpr (std::is_same_v<T, std::string>) {
             std::uint64_t sz = (std::uint64_t)x.size();
             size_t take = x.size() > 64 ? 64 : x.size();
             h = fnv1a64(&sz, sizeof(sz));
@@ -570,6 +672,9 @@ export inline std::strong_ordering 严格比较_用于排序(const 特征值主�
                 }
                 return std::strong_ordering::equal;
             }
+            else if constexpr (std::is_same_v<X, 体素占据金字塔>) {
+                return 体素金字塔_字典序比较(x, y);
+            }
             else if constexpr (std::is_same_v<X, 区间_i64>) {
                 if (x.lo != y.lo) return x.lo <=> y.lo;
                 return x.hi <=> y.hi;
@@ -596,6 +701,13 @@ export inline std::strong_ordering 严格比较_用于排序(const 特征值主�
                 const size_t n = (x.size() < y.size()) ? x.size() : y.size();
                 for (size_t i = 0; i < n; ++i) {
                     if (x[i] != y[i]) return x[i] <=> y[i];
+                }
+                return x.size() <=> y.size();
+            }
+            else if constexpr (std::is_same_v<X, std::string>) {
+                const size_t n = (x.size() < y.size()) ? x.size() : y.size();
+                for (size_t i = 0; i < n; ++i) {
+                    if (x[i] != y[i]) return (unsigned char)x[i] <=> (unsigned char)y[i];
                 }
                 return x.size() <=> y.size();
             }
@@ -632,6 +744,20 @@ export inline double 距离或差异度(const 特征值主信息类& a, const �
             case 枚举_比较模式::海明距离:
                 if constexpr (std::is_same_v<X, Bits64>)  return Bits64_海明距离(x, y);
                 if constexpr (std::is_same_v<X, Bits512>) return Bits512_海明距离(x, y);
+                if constexpr (std::is_same_v<X, 体素占据金字塔>) return 体素金字塔_海明距离(x, y);
+                if constexpr (std::is_same_v<X, std::vector<std::int64_t>>) {
+                    const size_t n = std::min(x.size(), y.size());
+                    if (n == 0) return 1.0;
+                    std::uint64_t diff = 0;
+                    for (size_t i = 0; i < n; ++i) diff += popcount_u64((std::uint64_t)x[i] ^ (std::uint64_t)y[i]);
+                    const double dn = (double)diff / (double)(n * 64ull);
+                    // 若长度不同：缺失部分记为最大差异
+                    if (x.size() != y.size()) {
+                        const size_t m = std::max(x.size(), y.size());
+                        return std::min(1.0, dn * (double)m / (double)n);
+                    }
+                    return dn;
+                }
                 return 1.0;
 
             case 枚举_比较模式::颜色距离_BGR:
@@ -687,6 +813,9 @@ export inline bool 校验载体与类型一致(const 特征值主信息类& v) {
         case 枚举_特征值类型::VecI64:   ok = std::is_same_v<T, std::vector<std::int64_t>>; break;
         case 枚举_特征值类型::VecF32:   ok = std::is_same_v<T, std::vector<float>>; break;
         case 枚举_特征值类型::Bytes:    ok = std::is_same_v<T, std::vector<std::uint8_t>>; break;
+        case 枚举_特征值类型::StringUTF8: ok = std::is_same_v<T, std::string>; break;
+        case 枚举_特征值类型::Ptr:      ok = std::is_same_v<T, void*>; break;
+        case 枚举_特征值类型::体素占据金字塔: ok = std::is_same_v<T, 体素占据金字塔>; break;
         default: ok = std::is_same_v<T, std::monostate>; break;
         }
         }, v.值);
@@ -724,6 +853,15 @@ export inline 特征值主信息类 创建Bits512(const Bits512& bits, 枚举_�
     v.类型 = 枚举_特征值类型::Bits512;
     v.比较模式 = mode;
     v.值 = bits;
+    重新计算缓存(v);
+    return v;
+}
+
+export inline 特征值主信息类 创建体素占据金字塔(体素占据金字塔 v0, 枚举_比较模式 mode = 枚举_比较模式::海明距离) {
+    特征值主信息类 v;
+    v.类型 = 枚举_特征值类型::体素占据金字塔;
+    v.比较模式 = mode;
+    v.值 = std::move(v0);
     重新计算缓存(v);
     return v;
 }
@@ -785,8 +923,28 @@ export inline void 写入(二进制写入器& w, const 特征值主信息类& v)
             w.写(&n, sizeof(n));
             if (n) w.写(x.data(), (size_t)n);
         }
+        else if constexpr (std::is_same_v<T, std::string>) {
+            std::uint64_t n = (std::uint64_t)x.size();
+            w.写(&n, sizeof(n));
+            if (n) w.写(x.data(), (size_t)n);
+        }
+        else if constexpr (std::is_same_v<T, 体素占据金字塔>) {
+            w.写(&x.最大层, sizeof(x.最大层));
+            w.写(&x.立方体边长_mm, sizeof(x.立方体边长_mm));
+            w.写(&x.min_x_mm, sizeof(x.min_x_mm));
+            w.写(&x.min_y_mm, sizeof(x.min_y_mm));
+            w.写(&x.min_z_mm, sizeof(x.min_z_mm));
+            std::uint64_t n = (std::uint64_t)x.块.size();
+            w.写(&n, sizeof(n));
+            if (n) w.写(x.块.data(), (size_t)n * sizeof(std::uint64_t));
+        }
+        else if constexpr (std::is_same_v<T, void*>) {
+            // 指针不保证可跨进程/跨次启动复原，这里仅写入地址做调试用途
+            std::uint64_t u = (std::uint64_t)(std::uintptr_t)x;
+            w.写(&u, sizeof(u));
+        }
         else {
-            static_assert(!sizeof(T*), "未覆盖的 variant 类型");
+            //   static_assert(!sizeof(T*), "未覆盖的 variant 类型");
         }
         }, v.值);
 }
@@ -852,6 +1010,31 @@ export inline 特征值主信息类 读取(二进制读取器& r) {
         v.值 = std::move(x);
         break;
     }
+    case 枚举_特征值类型::StringUTF8: {
+        std::uint64_t n = 0; r.读(&n, sizeof(n));
+        std::string s; s.resize((size_t)n);
+        if (n) r.读(s.data(), (size_t)n);
+        v.值 = std::move(s);
+        break;
+    }
+    case 枚举_特征值类型::体素占据金字塔: {
+        体素占据金字塔 t;
+        r.读(&t.最大层, sizeof(t.最大层));
+        r.读(&t.立方体边长_mm, sizeof(t.立方体边长_mm));
+        r.读(&t.min_x_mm, sizeof(t.min_x_mm));
+        r.读(&t.min_y_mm, sizeof(t.min_y_mm));
+        r.读(&t.min_z_mm, sizeof(t.min_z_mm));
+        std::uint64_t n = 0; r.读(&n, sizeof(n));
+        t.块.resize((size_t)n);
+        if (n) r.读(t.块.data(), (size_t)n * sizeof(std::uint64_t));
+        v.值 = std::move(t);
+        break;
+    }
+    case 枚举_特征值类型::Ptr: {
+        std::uint64_t u = 0; r.读(&u, sizeof(u));
+        v.值 = (void*)(std::uintptr_t)u;
+        break;
+    }
     default:
         // 未定义/未知：降级为空
         v.值 = std::monostate{};
@@ -864,8 +1047,10 @@ export inline 特征值主信息类 读取(二进制读取器& r) {
 
 
 //======================================================================
-// 4) 基础信息族
+// 四. 基础信息族
 //======================================================================
+
+
 
 export class 基础信息基类 {
 public:
@@ -880,8 +1065,8 @@ protected:
     基础信息基类() = default;
     explicit 基础信息基类(词性节点类* 名) : 名称(名) {}
     基础信息基类(词性节点类* 名, 词性节点类* 型) : 名称(名), 类型(型) {}
- //   void 收集存档字段(结构体_存在存档字段& out) const;
- //   void 修复存档字段(const 结构体_存在存档字段& in, const 结构体_引用解析上下文& ctx);
+    //   void 收集存档字段(结构体_存在存档字段& out) const;
+    //   void 修复存档字段(const 结构体_存在存档字段& in, const 结构体_引用解析上下文& ctx);
 };
 
 //—— 指代
@@ -946,6 +1131,25 @@ public:
     }
 };
 
+
+//—— 三维模型特征：一个特征节点下挂多个“立体状态原型”（特征值节点指针）
+//   用于“站/坐/卧/行”等稳定姿态原型的比较与选择。
+export class 三维模型特征主信息类 : public 特征节点主信息类 {
+public:
+    std::vector<特征值节点类*> 状态原型;
+    std::vector<std::uint32_t>   状态命中;
+    std::uint32_t               最大原型数 = 16;
+
+    三维模型特征主信息类() = default;
+    explicit 三维模型特征主信息类(词性节点类* 特征类型) : 特征节点主信息类(特征类型) {}
+    三维模型特征主信息类(词性节点类* 特征类型, 特征值节点类* 当前) : 特征节点主信息类(特征类型, 当前) {
+        if (当前) { 状态原型.push_back(当前); 状态命中.push_back(1); }
+    }
+    三维模型特征主信息类(词性节点类* 名, 词性节点类* 型, 特征值节点类* 当前) : 特征节点主信息类(名, 型, 当前) {
+        if (当前) { 状态原型.push_back(当前); 状态命中.push_back(1); }
+    }
+};
+
 //—— 存在：作为“容器”，允许在子链上挂 子存在/特征（内部世界可选）
 export class 存在节点主信息类 : public 基础信息基类 {
 public:
@@ -961,7 +1165,7 @@ public:
     std::uint32_t 命中次数 = 0;
     float 可信度 = 1.0f;
     // 稳定度/命中计数：用于“帧间关联”与“过期清理”
-   
+
 
     // 方案C：索引（子链可混放，但用索引加速）
     std::vector<存在节点类*> 子存在索引;
@@ -1261,15 +1465,17 @@ public:
             return -1;
         }
     }
+
+
+
 };
-
-
 
 //—— 状态 / 动态 / 二次特征 / 因果：先给最小可编译骨架（你后续可在对应模块进一步细化）
 export class 状态节点主信息类 : public 基础信息基类 {
 public:
     时间戳 收到时间 = 0;
     时间戳 发生时间 = 0;
+    基础信息节点类* 对应信息节点 = nullptr; // 通常指向“特征节点”,也有可能是一个存在
     bool 是否变化 = false;
 
     状态节点主信息类() = default;
@@ -1296,6 +1502,8 @@ public:
 
 export class 动态节点主信息类 : public 基础信息基类 {
 public:
+    基础信息节点类* 初始状态 = nullptr;
+    基础信息节点类* 结果状态 = nullptr;
     动态节点主信息类() = default;
     动态节点主信息类(词性节点类* 名, 词性节点类* 型) : 基础信息基类(名, 型) {}
 
@@ -1307,12 +1515,61 @@ public:
 
 export class 二次特征主信息类 : public 基础信息基类 {
 public:
-    二次特征主信息类() = default;
-    二次特征主信息类(词性节点类* 名, 词性节点类* 型) : 基础信息基类(名, 型) {}
+    枚举_二次特征种类 种类 = 枚举_二次特征种类::未定义;
+    枚举_比较结果     结果 = 枚举_比较结果::未定义;
+
+    // ===== 关系实例 key（你已经加了，很好）=====
+    二次特征节点类* 概念模板 = nullptr;  // schema：指向二次特征概念树里的“观察”概念节点
+    场景节点类* 所属场景 = nullptr;
+    基础信息节点类* 主体 = nullptr;
+    基础信息节点类* 客体 = nullptr;
+
+    // ===== 比较类字段（保留兼容）=====
+    基础信息节点类* 左对象 = nullptr;
+    基础信息节点类* 右对象 = nullptr;
+    double 差值 = 0.0;
+    double 相似度 = 0.0;
+
+    // ===== 观察关系 payload（新增）=====
+    结构体_观察统计 观察{};
+
+public:
+    bool 是否观察关系() const noexcept { return 种类 == 枚举_二次特征种类::观察关系; }
+
+    // “概念节点” vs “实例节点” 的常用判定：
+    // 概念节点：概念模板==nullptr 且 主体/客体/所属场景 为空（作为 schema 存在）
+    // 实例节点：概念模板!=nullptr 且 主体/客体/所属场景 不为空（作为 state 存在）
+    bool 是否实例() const noexcept {
+        return 概念模板 != nullptr && 所属场景 && 主体 && 客体;
+    }
 
     std::int64_t 比较(基础信息基类* 对象, 枚举_比较字段 /*字段*/, 枚举_比较条件 /*条件*/) const override {
         if (!dynamic_cast<二次特征主信息类*>(对象)) throw std::invalid_argument("二次特征主信息类::比较 - 对象类型错误");
         return -1;
+    }
+    inline 二次特征节点类* 查找观察关系实例_在场景(
+        场景节点类* 场景,
+        二次特征节点类* 观察概念模板,
+        基础信息节点类* 主体,
+        基础信息节点类* 客体)
+    {
+        if (!场景 || !观察概念模板 || !主体 || !客体) return nullptr;
+        auto* smi = dynamic_cast<场景节点主信息类*>(场景->主信息);
+        if (!smi) return nullptr;
+
+        for (auto* r : smi->关系列表) {
+            二次特征主信息类* mi = dynamic_cast<二次特征主信息类*>(r->主信息);
+            if (!mi) continue;
+
+            if (mi->种类 != 枚举_二次特征种类::观察关系) continue;
+            if (mi->概念模板 != 观察概念模板) continue;
+            if (mi->所属场景 != 场景) continue;
+            if (mi->主体 != 主体) continue;
+            if (mi->客体 != 客体) continue;
+
+            return r;
+        }
+        return nullptr;
     }
 };
 
