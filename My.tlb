@@ -1,0 +1,46 @@
+﻿// My.idl: 海鱼.exe 的类型库源
+
+// 此文件将由 MIDL 编译器处理以产生
+// 类型库(My.tlb)。
+
+#include "olectl.h"
+[ uuid(9cf2e7e9-bd5a-4c2b-83a5-1fc0f0ee2ac3), version(1.0) ]
+library 海鱼
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+	//  C海鱼Doc 的主调度接口
+
+	[ uuid(7656fa3a-4221-460a-8f2c-c2291cb2ce1b) ]
+	dispinterface IMy
+	{
+		properties:
+
+		methods:
+	};
+
+	//  C海鱼Doc 的类信息
+
+	[ uuid(7dd0adaa-c857-4017-8a73-a9d37cb8577c) ]
+	coclass My
+	{
+		[default] dispinterface IMy;
+	};
+	//  窗口_交换界面 的主调度接口
+		
+	[ uuid(5d89d068-fbf4-41d2-90f0-3a04dc89bd47) ]
+	dispinterface I窗口_交换界面
+	{
+		properties:
+		methods:
+	};
+
+	//  窗口_交换界面 的类信息
+
+	[ uuid(8cb89fb1-70c0-47b8-9544-458409efe9c9) ]
+	coclass 窗口_交换界面
+	{
+		[default] dispinterface I窗口_交换界面;
+	};
+};
