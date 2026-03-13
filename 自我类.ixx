@@ -138,6 +138,10 @@ public:
 
     bool 是否已消亡() const noexcept { return safety_.load() == 0; }
 
+    U64 根目标安全值() const noexcept { return U64_MAX; }
+    U64 根目标服务值() const noexcept { return U64_MAX; }
+    U64 安全根方向差值() const noexcept { return U64_MAX - safety_.load(); }
+
     // 供调度线程调用的统一数值更新入口。
     void 安全值增加(U64 delta) noexcept { 安全值_上升_(delta); }
     void 安全值减少(U64 delta) noexcept { 安全值_下降_(delta); }

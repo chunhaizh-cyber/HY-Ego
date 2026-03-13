@@ -174,6 +174,29 @@ public:
         I64 调整方向 = 0;
     };
 
+    struct 结构_自我根需求结果 {
+        需求节点类* 安全需求 = nullptr;
+        需求节点类* 服务需求 = nullptr;
+        bool 新建安全需求 = false;
+        bool 新建服务需求 = false;
+
+        bool 完整可用() const noexcept {
+            return 安全需求 != nullptr && 服务需求 != nullptr;
+        }
+    };
+
+    struct 结构_顶层需求校验结果 {
+        std::size_t 顶层需求数 = 0;
+        std::size_t 非根顶层需求数 = 0;
+        bool 安全根存在 = false;
+        bool 服务根存在 = false;
+
+        bool 拓扑合法() const noexcept {
+            return 安全根存在 && 服务根存在 && 非根顶层需求数 == 0;
+        }
+    };
+
+
     // ============================================================
     // 1) CRUD
     // ============================================================
@@ -343,6 +366,145 @@ public:
         }
         return out;
     }
+
+    结构_自我根需求结果 确保自我安全服务根需求(
+        存在节点类* 自我存在,
+        场景节点类* 需求父场景,
+        const 词性节点类* 安全特征类型,
+        const 词性节点类* 服务特征类型,
+        I64 安全目标值,
+        I64 服务目标值,
+        时间戳 now = 0,
+        const std::string& 调用点 = "需求类::确保自我安全服务根需求")
+    {
+        using namespace 数据仓库模块;
+
+        结构_自我根需求结果 out{};
+        if (!自我存在 || !安全特征类型 || !服务特征类型) return out;
+
+        now = 需求模块_detail::规范化时间_(now);
+        const auto* 安全需求类型 = 语素集.添加词性词("安全需求", "名词");
+        const auto* 服务需求类型 = 语素集.添加词性词("服务需求", "名词");
+        const auto* 安全需求场景名 = 语素集.添加词性词("自我根需求_安全", "名词");
+        const auto* 服务需求场景名 = 语素集.添加词性词("自我根需求_服务", "名词");
+
+        auto 匹配根需求 = [&](需求节点类* need, const 词性节点类* 需求类型, const 词性节点类* 状态特征类型, I64 目标值) -> bool {
+            if (!need || !need->主信息) return false;
+            if (need->父 != nullptr) return false;
+
+            auto* mi = need->主信息;
+            if (mi->需求主体 != 自我存在) return false;
+            if (mi->被需求存在 != 自我存在) return false;
+            if (mi->类型 != 需求类型) return false;
+
+            auto* 状态主信息 = 需求模块_detail::取状态主信息_(mi->被需求状态);
+            if (!状态主信息 || !状态主信息->状态特征 || !状态主信息->状态特征->主信息) return false;
+
+            auto* 特征主信息 = dynamic_cast<特征节点主信息类*>(状态主信息->状态特征->主信息);
+            if (!特征主信息 || 特征主信息->类型 != 状态特征类型) return false;
+            if (!std::holds_alternative<I64>(状态主信息->状态值)) return false;
+            return std::get<I64>(状态主信息->状态值) == 目标值;
+        };
+
+        {
+            锁调度器守卫 锁({
+                锁请求::读(需求链.链表锁, 枚举_锁域::需求链, "需求链", 调用点 + "/扫描已有根需求")
+            });
+
+            if (需求链.根指针) {
+                auto* root = 需求链.根指针;
+                for (auto* it = root->链下; it && it != root; it = it->链下) {
+                    auto* need = static_cast<需求节点类*>(it);
+                    if (!out.安全需求 && 匹配根需求(need, 安全需求类型, 安全特征类型, 安全目标值)) {
+                        out.安全需求 = need;
+                        continue;
+                    }
+                    if (!out.服务需求 && 匹配根需求(need, 服务需求类型, 服务特征类型, 服务目标值)) {
+                        out.服务需求 = need;
+                    }
+                }
+            }
+        }
+
+        auto 创建根需求 = [&](const 词性节点类* 需求类型,
+                            const 词性节点类* 场景名称,
+                            const 词性节点类* 特征类型,
+                            I64 目标值,
+                            const std::string& 子调用点) -> 需求节点类* {
+            auto* 父场景 = 需求父场景 ? 需求父场景 : 世界树.取内部世界();
+            if (!父场景) return nullptr;
+
+            auto* 根场景 = 世界树.取或创建子场景_按名称(父场景, 场景名称, now, 子调用点 + "/根场景");
+            if (!根场景) return nullptr;
+
+            auto* 目标特征 = 世界树.确保特征(自我存在, 特征类型, 特征类型, 子调用点 + "/目标特征");
+            if (!目标特征) return nullptr;
+
+            auto* 目标状态 = 状态集.创建世界状态(
+                根场景,
+                自我存在,
+                目标特征,
+                特征快照值{ 目标值 },
+                枚举_存在状态事件::创建,
+                true,
+                now);
+            if (!目标状态) return nullptr;
+
+            结构_创建参数 参数{};
+            参数.类型 = 需求类型;
+            参数.发生场景 = 根场景;
+            参数.生成时间 = now;
+            参数.权重 = 目标值;
+            return 创建需求(自我存在, 自我存在, 目标状态, 参数, 子调用点, nullptr);
+        };
+
+        if (!out.安全需求) {
+            out.安全需求 = 创建根需求(安全需求类型, 安全需求场景名, 安全特征类型, 安全目标值, 调用点 + "/创建安全根需求");
+            out.新建安全需求 = out.安全需求 != nullptr;
+        }
+        if (!out.服务需求) {
+            out.服务需求 = 创建根需求(服务需求类型, 服务需求场景名, 服务特征类型, 服务目标值, 调用点 + "/创建服务根需求");
+            out.新建服务需求 = out.服务需求 != nullptr;
+        }
+
+        return out;
+    }
+
+    结构_顶层需求校验结果 校验自我安全服务根需求拓扑(
+        需求节点类* 安全根需求,
+        需求节点类* 服务根需求,
+        const std::string& 调用点 = "需求类::校验自我安全服务根需求拓扑") const
+    {
+        using namespace 数据仓库模块;
+
+        结构_顶层需求校验结果 out{};
+
+        锁调度器守卫 锁({
+            锁请求::读(需求链.链表锁, 枚举_锁域::需求链, "需求链", 调用点)
+        });
+
+        if (!需求链.根指针) return out;
+
+        auto* root = 需求链.根指针;
+        for (auto* it = root->链下; it && it != root; it = it->链下) {
+            auto* need = static_cast<需求节点类*>(it);
+            if (!need || need->父 != nullptr) continue;
+
+            ++out.顶层需求数;
+            if (need == 安全根需求) {
+                out.安全根存在 = true;
+                continue;
+            }
+            if (need == 服务根需求) {
+                out.服务根存在 = true;
+                continue;
+            }
+            ++out.非根顶层需求数;
+        }
+
+        return out;
+    }
+
 
     // ============================================================
     // 2) 扫描：补签名 + 去重合并权重

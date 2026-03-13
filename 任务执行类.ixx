@@ -718,6 +718,26 @@ public:
     void 设置尝试学习任务(任务节点类* 学习头) { try_learn_head_ = 学习头; }
     void 设置方法规避过滤(Fn_方法规避过滤 fn) { avoid_filter_ = std::move(fn); }
 
+    任务节点类* 仅筹办一步(任务节点类* 任务头结点) {
+        using namespace 任务执行模块_detail;
+
+        auto* headInfo = 取头信息(任务头结点);
+        if (!headInfo || !任务头结点->主信息) return nullptr;
+        if (是否终结(headInfo->状态)) return nullptr;
+
+        auto* stepNode = 私有_选择当前步骤(任务头结点);
+        if (!stepNode || 私有_步骤需要自动筹办(stepNode)) {
+            stepNode = 私有_自动筹办任务(任务头结点);
+            return stepNode;
+        }
+
+        私有_补全步骤预测结果(stepNode);
+        (void)私有_确保步骤补条件子任务(任务头结点, stepNode);
+        (void)任务类::设置任务当前步骤(任务头结点->主信息, stepNode, 结构体_时间戳::当前_微秒(), "任务执行器::仅筹办一步/设置当前步骤");
+        return stepNode;
+    }
+
+
     bool 推进一步(任务节点类* 任务头结点) {
         using namespace 任务执行模块_detail;
 
@@ -966,7 +986,14 @@ private:
         needArg.发生场景 = headInfo->场景;
         needArg.生成时间 = stateArg.now;
         needArg.权重 = std::max<std::int64_t>(1, 权重);
-        return 需求集.创建需求(需求主体, 被需求存在, demandState, needArg, 调用点);
+        if (!headInfo->需求) {
+            日志::运行f(
+                "[任务执行器][不变量][提示] INV-007/INV-008: 补条件需求缺少父需求，将临时创建为顶层需求: 任务头={}, 状态主体={}, 状态特征={}",
+                (void*)任务头结点,
+                (void*)stateInfo->状态主体,
+                (void*)stateInfo->状态特征);
+        }
+        return 需求集.创建需求(需求主体, 被需求存在, demandState, needArg, 调用点, headInfo->需求);
     }
 
     bool 私有_确保步骤补条件子任务(任务节点类* 任务头结点, 任务节点类* 步骤节点) {
@@ -1296,6 +1323,7 @@ private:
     Fn_方法规避过滤 avoid_filter_{};
     任务节点类* try_learn_head_ = nullptr;
 };
+
 
 
 
