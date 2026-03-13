@@ -1,4 +1,4 @@
-export module 自然语言树模块;
+﻿export module 自然语言树模块;
 
 import <string>;
 import <vector>;
@@ -49,4 +49,5 @@ public:
     // - 遍历某自然句的所有子句
     // - 根据世界树节点反查对应的子句等
 };
+
 

@@ -1,4 +1,4 @@
-// 数据仓库模块.ixx
+﻿// 数据仓库模块.ixx
 module;
 #define _WIN32_WINNT 0x0600  // 启用Windows Vista及以上版本的API
 // Windows头文件
@@ -399,3 +399,4 @@ public:
 };
 
 }//namespace 数据仓库模块
+

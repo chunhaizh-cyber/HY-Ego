@@ -1,4 +1,4 @@
-module;
+﻿module;
 
 #include <unordered_map>
 #include <vector>
@@ -712,3 +712,4 @@ public:
         return !outObs.empty();
     }
 };
+

@@ -1,22 +1,19 @@
-module;
+﻿export module 本能线程模块;
 
-#include <cstdint>
-#include <string>
-#include <vector>
-#include <array>
-#include <deque>
-#include <unordered_map>
-#include <mutex>
-#include <condition_variable>
-#include <thread>
-#include <atomic>
-#include <utility>
-#include <functional>
-#include <sstream>
-#include <iomanip>
-
-
-export module 本能线程模块;
+import <array>;
+import <cstdint>;
+import <string>;
+import <vector>;
+import <deque>;
+import <unordered_map>;
+import <mutex>;
+import <condition_variable>;
+import <thread>;
+import <atomic>;
+import <functional>;
+import <sstream>;
+import <utility>;
+import <algorithm>;
 
 import 日志模块;
 import 线程模板模块;

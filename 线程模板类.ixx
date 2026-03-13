@@ -1,4 +1,4 @@
-module;
+﻿module;
 #include <thread>
 #include <mutex>
 #include <shared_mutex>
@@ -171,3 +171,4 @@ private:
 
     处理函数 处理_{};
 };
+

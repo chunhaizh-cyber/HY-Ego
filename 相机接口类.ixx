@@ -1,5 +1,4 @@
-﻿
-export module 相机接口模块;
+﻿export module 相机接口模块;
 
 import 外设模块;
 import 基础数据类型模块;
@@ -66,3 +65,4 @@ public:
         return { 枚举_相机能力::深度 | 枚举_相机能力::彩色, false, false };
     }
 };
+

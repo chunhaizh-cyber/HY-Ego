@@ -33,6 +33,25 @@ if (-not (Test-Path $solutionPath)) {
     throw "Solution not found: $solutionPath"
 }
 
+# Build convention: always clean temp workspace before checks/build.
+$tempDir = Join-Path $repoRoot 'temp'
+if (Test-Path $tempDir) {
+    Get-ChildItem -Path $tempDir -Force -ErrorAction SilentlyContinue |
+        Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+} else {
+    $null = New-Item -Path $tempDir -ItemType Directory -Force
+}
+
+# Enforce module-layer rules before build to avoid hidden dependency regressions.
+$layerCheckScript = Join-Path $repoRoot 'tools\check_module_layers.ps1'
+if (Test-Path $layerCheckScript) {
+    Write-Host 'Checking module layers...'
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $layerCheckScript -RepoRoot $repoRoot
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Module layer check failed. See temp\module_layer_violations.csv'
+    }
+}
+
 $msbuild = Get-MSBuildPath
 
 $psi = New-Object System.Diagnostics.ProcessStartInfo

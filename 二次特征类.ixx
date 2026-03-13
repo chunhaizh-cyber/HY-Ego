@@ -1,4 +1,4 @@
-export module 二次特征模块;
+﻿export module 二次特征模块;
 
 // ============================================================================
 // 二次特征模块（与最新 二次特征主信息类 对齐）
@@ -18,6 +18,7 @@ import <vector>;
 import <limits>;
 import <algorithm>;
 import 语素环境模块;
+import 日志模块;
 import 状态模块;
 import <optional>;
 
@@ -554,10 +555,43 @@ public:
     // ============================================================
     // 6) 饱和差值（state 计算可复用）
     // ============================================================
+    static bool 链键是方向型_(const std::string& 链键) {
+        return 链键.find("方向") != std::string::npos
+            || 链键.find("先后") != std::string::npos
+            || 链键.find("趋势") != std::string::npos
+            || 链键.find("Trend") != std::string::npos;
+    }
+
+    static void 确保方向概念刻度_(const std::string& 链键, 枚举_二次特征种类 种类, const std::string& 调用点) {
+        if (链键.empty() || !链键是方向型_(链键)) return;
+
+        auto* 链根 = 获取或创建_度量链根(链键, 种类, 调用点 + "/方向链根");
+        if (!链根) return;
+
+        // 方向概念先不依赖名称：仅按区间（负/零/正）稳定复用。
+        (void)注册小区间(链根, I64区间{ I64_MIN, -1 }, nullptr, 调用点 + "/方向负");
+        (void)注册小区间(链根, I64区间{ 0, 0 }, nullptr, 调用点 + "/方向零");
+        (void)注册小区间(链根, I64区间{ 1, I64_MAX }, nullptr, 调用点 + "/方向正");
+    }
+
+    static void 尝试为关系节点命中概念_(二次特征节点类* 关系节点, const std::string& 调用点) {
+        auto* mi = 关系节点 && 关系节点->主信息 ? dynamic_cast<二次特征主信息类*>(关系节点->主信息) : nullptr;
+        if (!mi) return;
+
+        确保方向概念刻度_(mi->度量签名_链键, mi->种类, 调用点);
+
+        auto* 链根 = 获取或创建_度量链根(mi->度量签名_链键, mi->种类, 调用点 + "/链根");
+        if (!链根) return;
+
+        auto* 命中节点 = 按差值命中概念节点(链根, mi->标量值, 调用点 + "/按值命中");
+        if (!命中节点) return;
+
+        mi->概念模板 = 命中节点;
+    }
+
     static 动态节点主信息类* 取动态主信息(const 动态节点类* d) noexcept {
         return (d && d->主信息) ? dynamic_cast<动态节点主信息类*>(d->主信息) : nullptr;
     }
-
     static void 刷新新动态的二次特征(
         场景节点类* 场景,
         动态节点类* 新动态,
@@ -570,6 +604,7 @@ public:
         auto* 新mi = 取动态主信息(新动态);
         if (!smi || !新mi) return;
         smi->清理空指针();
+        const std::size_t 关系数量起始 = smi->关系列表.size();
         if (now == 0) now = 新mi->结束时间 ? 新mi->结束时间 : 结构体_时间戳::当前_微秒();
 
         const I64 新时长 = 时间差_有符号_饱和(新mi->结束时间, 新mi->开始时间);
@@ -626,6 +661,7 @@ public:
                 auto* 标量mi = 标量特征 ? dynamic_cast<特征节点主信息类*>(标量特征->主信息) : nullptr;
                 if (标量mi) 标量mi->当前快照 = 特征快照值{ 标量值 };
 
+                尝试为关系节点命中概念_(关系节点, 调用点 + "/关系概念");
                 状态集.记录内部特征状态(
                     场景,
                     关系节点,
@@ -649,6 +685,15 @@ public:
             记录候选("动态|结束时间差_微秒", 新旧结束差);
             记录候选("动态|结束先后", 新旧结束差 > 0 ? 1 : (新旧结束差 < 0 ? -1 : 0));
         }
+        const bool 验收关注 = (调用点.find("安全值") != std::string::npos) || (调用点.find("记录安全状态") != std::string::npos);
+        if (验收关注) {
+            const std::size_t 关系数量结束 = smi->关系列表.size();
+            if (关系数量结束 > 关系数量起始) {
+                日志::运行f("[验收安全链路] 二次特征已生成(动态): 场景={}, 新增关系={}",
+                    static_cast<void*>(场景),
+                    (关系数量结束 - 关系数量起始));
+            }
+        }
     }
     static I64 计算差值(I64 左值, I64 右值) noexcept {
         return 通用函数模块::安全减(左值, 右值);
@@ -662,6 +707,13 @@ public:
     {
         if (!场景 || !新状态) return;
         if (auto* 新动态 = 动态集.状态记录后刷新动态(场景, 新状态, now, 调用点 + "/动态")) {
+            const bool 验收关注 = (调用点.find("安全值") != std::string::npos) || (调用点.find("记录安全状态") != std::string::npos);
+            if (验收关注) {
+                日志::运行f("[验收安全链路] 动态已生成(状态触发): 场景={}, 动态={}, 来源状态={}",
+                    static_cast<void*>(场景),
+                    static_cast<void*>(新动态),
+                    static_cast<void*>(新状态));
+            }
             因果集.动态记录后刷新因果(场景, 新动态, now, 调用点 + "/因果");
             刷新新动态的二次特征(场景, 新动态, now, 调用点 + "/动态二次特征");
             return;
@@ -680,6 +732,7 @@ public:
         auto* smi = dynamic_cast<场景节点主信息类*>(场景->主信息);
         if (!新mi || !smi || !新mi->状态特征) return;
         smi->清理空指针();
+        const std::size_t 关系数量起始 = smi->关系列表.size();
         if (now == 0) now = 新mi->发生时间 ? 新mi->发生时间 : 结构体_时间戳::当前_微秒();
 
         for (auto* 旧状态 : smi->状态列表) {
@@ -735,6 +788,7 @@ public:
                 auto* 标量mi = 标量特征 ? dynamic_cast<特征节点主信息类*>(标量特征->主信息) : nullptr;
                 if (标量mi) 标量mi->当前快照 = 特征快照值{ 标量值 };
 
+                尝试为关系节点命中概念_(关系节点, 调用点 + "/关系概念");
                 状态集.记录内部特征状态(
                     场景,
                     关系节点,
@@ -779,6 +833,15 @@ public:
                 记录候选("状态|值可比较", 新mi->状态值.index() == 旧mi->状态值.index() && 新mi->状态值.index() != 0 ? 1 : 0);
             }
         }
+        const bool 验收关注 = (调用点.find("安全值") != std::string::npos) || (调用点.find("记录安全状态") != std::string::npos);
+        if (验收关注) {
+            const std::size_t 关系数量结束 = smi->关系列表.size();
+            if (关系数量结束 > 关系数量起始) {
+                日志::运行f("[验收安全链路] 二次特征已生成(状态): 场景={}, 新增关系={}",
+                    static_cast<void*>(场景),
+                    (关系数量结束 - 关系数量起始));
+            }
+        }
     }
 private:
     static void 确保三大区间_已加锁(二次特征节点类* 链根, 枚举_二次特征种类 种类) {
@@ -812,6 +875,11 @@ private:
         for (const auto& r : ranges) ensureDomain(r);
     }
 };
+
+
+
+
+
 
 
 

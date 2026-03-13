@@ -1,22 +1,20 @@
-module;
+﻿export module 动作线程模块;
 
-#include <cstdint>
-#include <atomic>
-#include <thread>
-#include <mutex>
-#include <condition_variable>
-#include <future>
-#include <queue>
-#include <unordered_map>
-#include <vector>
-#include <string>
-#include <utility>
-#include <exception>
-#include <functional>
-#include <memory>
-#include <algorithm>
-
-export module 动作线程模块;
+import <algorithm>;
+import <atomic>;
+import <condition_variable>;
+import <cstdint>;
+import <exception>;
+import <functional>;
+import <future>;
+import <memory>;
+import <mutex>;
+import <queue>;
+import <string>;
+import <thread>;
+import <unordered_map>;
+import <utility>;
+import <vector>;
 
 import 基础数据类型模块;
 import 主信息定义模块;
@@ -45,7 +43,10 @@ export struct 动作执行上下文 {
     任务节点类* 任务节点 = nullptr;
     任务信息基类* 任务 = nullptr;
 
+    // 兼容字段：历史调用只传一个场景时仍可用.
     场景节点类* 场景 = nullptr;
+    场景节点类* 输入场景 = nullptr;
+    场景节点类* 输出场景 = nullptr;
     存在节点类* 目标存在 = nullptr;
 
     方法节点类* 方法根 = nullptr;
@@ -91,7 +92,10 @@ export struct 结构体_动作执行请求 {
     std::vector<枚举_本能动作ID> 执行序列;
 
     // 上下文（透传给动作回调）
+    // 兼容字段：历史调用只传一个场景时仍可用.
     场景节点类* 场景 = nullptr;
+    场景节点类* 输入场景 = nullptr;
+    场景节点类* 输出场景 = nullptr;
     存在节点类* 目标存在 = nullptr;
     任务节点类* 任务节点 = nullptr;
     方法节点类* 方法根 = nullptr;
@@ -324,6 +328,7 @@ public:
     std::future<结构体_动作执行结果> 提交执行序列(
         std::vector<枚举_本能动作ID> 序列,
         场景节点类* 场景,
+        场景节点类* 输出场景 = nullptr,
         存在节点类* 目标存在 = nullptr,
         bool 失败继续 = false,
         任务节点类* 任务节点 = nullptr,
@@ -332,6 +337,8 @@ public:
         结构体_动作执行请求 r{};
         r.执行序列 = std::move(序列);
         r.场景 = 场景;
+        r.输入场景 = 场景;
+        r.输出场景 = 输出场景 ? 输出场景 : 场景;
         r.目标存在 = 目标存在;
         r.失败继续 = 失败继续;
         r.任务节点 = 任务节点;
@@ -377,9 +384,112 @@ private:
             队列项 item{};
             bool has = false;
 
-           
+            {
+                std::unique_lock<std::mutex> lk(q_mtx_);
+                cv_.wait(lk, [this] {
+                    return stop_.load(std::memory_order_acquire) || !q_.empty();
+                });
+
+                if (!q_.empty()) {
+                    item = std::move(q_.front());
+                    q_.pop();
+                    has = true;
+                } else if (stop_.load(std::memory_order_acquire)) {
+                    break;
+                }
             }
 
-           
+            if (!has) {
+                continue;
+            }
+
+            结构体_动作执行结果 out{};
+            out.请求ID = item.req.请求ID;
+            out.开始_us = 结构体_时间戳::当前_微秒();
+
+            动作执行上下文 ctx{};
+            ctx.世界树 = 世界树_.load(std::memory_order_acquire);
+            ctx.场景管理 = 场景管理_.load(std::memory_order_acquire);
+            ctx.任务节点 = item.req.任务节点;
+            ctx.输入场景 = item.req.输入场景 ? item.req.输入场景 : item.req.场景;
+            ctx.输出场景 = item.req.输出场景 ? item.req.输出场景 : ctx.输入场景;
+            ctx.场景 = ctx.输出场景 ? ctx.输出场景 : ctx.输入场景;
+            ctx.目标存在 = item.req.目标存在;
+            ctx.方法根 = item.req.方法根;
+            ctx.请求ID = out.请求ID;
+
+            const bool fail_fast = !item.req.失败继续;
+
+            for (auto 动作ID : item.req.执行序列) {
+                auto fn = 取动作函数_(动作ID);
+                if (!fn) {
+                    结构体_动作步骤结果 step{};
+                    step.动作ID = 动作ID;
+                    step.成功码 = 错误_动作未注册;
+                    step.备注 = "动作未注册";
+                    out.步骤结果.push_back(std::move(step));
+
+                    if (out.总成功码 == 0) {
+                        out.总成功码 = 错误_动作未注册;
+                    }
+                    if (fail_fast) {
+                        break;
+                    }
+                    continue;
+                }
+
+                try {
+                    auto step = (*fn)(ctx);
+                    if (step.动作ID == 枚举_本能动作ID::未定义) {
+                        step.动作ID = 动作ID;
+                    }
+                    if (step.成功码 != 0 && out.总成功码 == 0) {
+                        out.总成功码 = step.成功码;
+                    }
+                    out.步骤结果.push_back(std::move(step));
+
+                    if (fail_fast && out.总成功码 != 0) {
+                        break;
+                    }
+                }
+                catch (const std::exception& ex) {
+                    结构体_动作步骤结果 step{};
+                    step.动作ID = 动作ID;
+                    step.成功码 = 错误_动作异常;
+                    step.备注 = ex.what();
+                    out.步骤结果.push_back(std::move(step));
+
+                    if (out.总成功码 == 0) {
+                        out.总成功码 = 错误_动作异常;
+                    }
+                    if (fail_fast) {
+                        break;
+                    }
+                }
+                catch (...) {
+                    结构体_动作步骤结果 step{};
+                    step.动作ID = 动作ID;
+                    step.成功码 = 错误_动作未知异常;
+                    step.备注 = "动作抛出未知异常";
+                    out.步骤结果.push_back(std::move(step));
+
+                    if (out.总成功码 == 0) {
+                        out.总成功码 = 错误_动作未知异常;
+                    }
+                    if (fail_fast) {
+                        break;
+                    }
+                }
+            }
+
+            out.结束_us = 结构体_时间戳::当前_微秒();
+            item.prom.set_value(std::move(out));
+        }
+
+        running_.store(false, std::memory_order_release);
+        日志::运行("[动作线程] 线程退出");
     }
 };
+
+
+

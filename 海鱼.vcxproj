@@ -112,6 +112,14 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\vcpkg\installed\x64-windows\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>if exist "D:\vcpkg\installed\x64-windows\debug\bin" (
+  xcopy /Y /D "D:\vcpkg\installed\x64-windows\debug\bin\opencv_*4d.dll" "$(OutDir)" &gt;nul
+  xcopy /Y /D "D:\vcpkg\installed\x64-windows\debug\bin\jsoncpp.dll" "$(OutDir)" &gt;nul
+  xcopy /Y /D "D:\vcpkg\installed\x64-windows\debug\bin\libcurl-d.dll" "$(OutDir)" &gt;nul
+  xcopy /Y /D "D:\vcpkg\installed\x64-windows\debug\bin\zlibd1.dll" "$(OutDir)" &gt;nul
+)</Command>
+    </PostBuildEvent>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
       <ValidateAllParameters>true</ValidateAllParameters>
@@ -195,6 +203,14 @@
       <OptimizeReferences>true</OptimizeReferences>
       <RegisterOutput>true</RegisterOutput>
     </Link>
+    <PostBuildEvent>
+      <Command>if exist "D:\vcpkg\installed\x64-windows\bin" (
+  xcopy /Y /D "D:\vcpkg\installed\x64-windows\bin\opencv_*4.dll" "$(OutDir)" &gt;nul
+  xcopy /Y /D "D:\vcpkg\installed\x64-windows\bin\jsoncpp.dll" "$(OutDir)" &gt;nul
+  xcopy /Y /D "D:\vcpkg\installed\x64-windows\bin\libcurl.dll" "$(OutDir)" &gt;nul
+  xcopy /Y /D "D:\vcpkg\installed\x64-windows\bin\zlib1.dll" "$(OutDir)" &gt;nul
+)</Command>
+    </PostBuildEvent>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
       <ValidateAllParameters>true</ValidateAllParameters>

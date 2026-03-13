@@ -1081,8 +1081,7 @@ export enum class 枚举_任务节点种类 : std::uint8_t {
     未定义 = 0,
     头结点 = 1,
     步骤节点 = 2,
-    分支节点 = 3,
-    结果节点 = 4,
+    结果节点 = 3,
 };
 
 export enum class 枚举_任务状态 : std::uint8_t {
@@ -1108,7 +1107,7 @@ export enum class 枚举_任务树类型 : std::uint8_t {
     叶子任务 = 2,   // 主要职责：直接选方法执行并产出结果
 };
 
-// （可选）分支选择的结果
+// 结果命中后的默认动作
 export enum class 枚举_分支选择动作 : std::uint8_t {
     未定义 = 0,
     继续下一步 = 1,
@@ -1118,92 +1117,91 @@ export enum class 枚举_分支选择动作 : std::uint8_t {
     挂起等待 = 5,
 };
 
-// ======= 任务节点主信息基类（模板与实例通用）=======
+export enum class 枚举_任务结果角色 : std::uint8_t {
+    未定义 = 0,
+    预测结果 = 1,
+    实际结果 = 2,
+};
+
+// ======= 任务节点主信息基类（实例运行信息）=======
 export class 任务信息基类 {
 public:
-    // 基本标识（模板与实例通用）
+    // 基本标识
     const 词性节点类* 名称 = nullptr;
     const 自然句节点类* 描述信息 = nullptr;
-    const 词性节点类* 类型 = nullptr;              // 任务类型（分类/索引/策略）
+    const 词性节点类* 类型 = nullptr;
     枚举_任务节点种类 节点种类 = 枚举_任务节点种类::未定义;
 
-    // 执行元信息（实例级）
+    // 执行元信息
+    // - 状态字段仅作为运行期镜像/缓存；权威状态以任务虚拟存在中的特征为准
     枚举_任务状态 状态 = 枚举_任务状态::未定义;
     时间戳 创建时间 = 0;
-    std::int64_t 优先级 = 0;
+
+    // 优先级规则：
+    // - 基准优先级：来自主任务需求，是整棵任务树共享的基础值
+    // - 局部优先级偏移：步骤命中分、并列候选分等局部调度修正
+    // - 调度优先级：运行期实际排队值，由执行器按当前上下文刷新
+    std::int64_t 基准优先级 = 0;
+    std::int64_t 局部优先级偏移 = 0;
+    std::int64_t 调度优先级 = 0;
 
     // 场景锚点（每个节点只有一个；语义由 节点种类 决定）
-    // - 头结点：现实场景
-    // - 步骤节点：步骤上下文场景（可为头场景裁剪/克隆 + 局部补充）
-    // - 分支节点：判定/对账场景（通常来自上一步结果摘要）
-    // - 结果节点：结果场景（发生了什么）
+    // - 头结点：任务全局条件场景
+    // - 步骤节点：该步骤的局部条件/执行场景
+    // - 结果节点：该步骤的预测结果或实际结果场景
     场景节点类* 场景 = nullptr;
-    // 任务虚拟存在锚点（实例级）：运行统计、黑名单、派生评估包都写这里 
+
+    // 任务虚拟存在锚点：运行状态与统计写在这里
     存在节点类* 任务虚拟存在 = nullptr;
 
-    // 任务树类型（对执行器/筹办器有用）
     枚举_任务树类型 任务树类型 = 枚举_任务树类型::未定义;
 
     virtual ~任务信息基类() = default;
 };
 
-// ======= 头结点主信息：现实场景 + 需求（生成目标/方向，作为分解依据）=======
+// ======= 头结点主信息：需求 + 任务全局条件 =======
 export class 任务头结点信息 final : public 任务信息基类 {
 public:
-    // 需求锚点（只允许头结点持有）
     需求节点类* 需求 = nullptr;
-
-    //（可选）方向/维度签名缓存：用于快速分解与方法召回粗筛
-    // 如果你已经把“维度签名”作为需求签名规则的一部分，也可以不缓存，运行时派生。
+    任务节点类* 父任务头结点 = nullptr;
+    任务节点类* 来源父结果节点 = nullptr;
+    任务节点类* 来源父步骤节点 = nullptr;
+    任务节点类* 当前步骤节点 = nullptr;
+    任务节点类* 当前子任务头结点 = nullptr;
+    任务节点类* 最近实际结果节点 = nullptr;
+    std::vector<任务节点类*> 直属子任务头结点列表{};
     std::vector<std::string> 目标维度签名{};
 };
 
-
-
-
 export class 任务步骤节点信息 final : public 任务信息基类 {
 public:
-    // 本步骤对应的“子任务”
-    任务节点类* 子任务头结点 = nullptr;
-
-    // 并行/串行靠数据表达：同阶段号可并行；依赖集合决定串行顺序
-    std::int32_t 阶段号 = 0;
-    std::vector<任务节点类*> 依赖子任务头结点列表;
-
-    //（可选）召回锚点：如果你希望“步骤”在筹办期进行方法召回粗筛，可填。
-    // 注意：这是“意图锚点”，不是运行统计。
-    // 不需要时可为空（让子任务内部自己召回）。
-    std::string 召回维度签名{};        // 或者直接存度量签名/维度签名
+    任务节点类* 所属任务头结点 = nullptr;
+    std::vector<方法节点类*> 可用方法首节点列表{};
+    方法节点类* 当前选中方法首节点 = nullptr;
+    std::vector<任务节点类*> 并发子任务头结点列表{};
+    任务节点类* 当前子任务头结点 = nullptr;
+    std::int32_t 步骤序号 = 0;
+    std::int32_t 已重试次数 = 0;
+    std::int32_t 允许重试次数 = 0;
+    时间戳 超时截止时间 = 0;
+    bool 允许切换方法 = true;
 };
 
-// ======= 分支节点主信息：根据结果评估选择下一步（允许回跳形成循环）=======
-export struct 结构_分支候选 {
-    // 下一步要激活的步骤（通常就是某个步骤节点或子任务头结点）  
-    任务节点类* 下一子任务头结点 = nullptr;
-    std::int64_t 静态偏好 = 0;          // 可选：无评估时的默认倾向
-};
-
-export class 任务分支节点信息 final : public 任务信息基类 {
-public:
-    // 分支依据：引用“上一步结果节点”或其评估包所在虚拟存在路径
-    任务节点类* 依据结果节点 = nullptr;
-    存在节点类* 依据评估包存在 = nullptr;  // 可选：例如虚拟存在里的 "Task/Eval/Package"
-
-    // 候选路径
-    std::vector<结构_分支候选> 候选{};
-
-    // 分支动作提示（可选）：执行器可据此选择策略（回跳/补条件/尝试学习/挂起）
-    枚举_分支选择动作 建议动作 = 枚举_分支选择动作::未定义;
-};
-
-// ======= 结果节点主信息：记录结果场景 + 评估摘要锚点（用于分支与学习）=======
+// ======= 结果节点主信息：步骤下的预测结果/实际结果 =======
 export class 任务结果节点信息 final : public 任务信息基类 {
 public:
-    // 本次结果对应哪个步骤/子任务（可选，便于追溯）
-    任务节点类* 来源子任务头结点 = nullptr;
-
-    // 评估摘要锚点（相符性/缺口/未知等），建议写在虚拟存在里，这里只保存键或引用
-    存在节点类* 评估摘要存在 = nullptr;       // 例如 "Task/Eval/Last" 或 "Task/Steps/<k>/Eval"
+    枚举_任务结果角色 结果角色 = 枚举_任务结果角色::未定义;
+    任务节点类* 所属任务头结点 = nullptr;
+    任务节点类* 来源步骤节点 = nullptr;
+    std::vector<任务节点类*> 派生子任务头结点列表{};
+    方法节点类* 来源方法首节点 = nullptr;
+    方法节点类* 对应方法结果节点 = nullptr;
+    任务节点类* 命中预测结果节点 = nullptr;
+    枚举_分支选择动作 命中后动作 = 枚举_分支选择动作::未定义;
+    bool 是否预测外结果 = false;
+    std::int64_t 置信度_Q10000 = 0;
+    std::int64_t 错误码 = 0;
+    存在节点类* 评估摘要存在 = nullptr;
 };
 
 // =========================================================
@@ -2382,195 +2380,6 @@ inline 需求主信息类* 需求主信息类::反序列化(std::istream& is)
     return out;
 }
 
-// ----------------------- 任务信息基类 -----------------------
-inline void 任务信息基类::序列化(std::ostream& os) const
-{
-    using namespace 主信息定义模块_存档_detail;
-    const std::uint16_t ver = 1;
-    写POD(os, ver);
-
-    写枚举(os, 节点种类);
-    写POD(os, 节点ID);
-    写POD(os, 状态);
-    // 跳过不存在的返回值字段
-    std::uint8_t dummy_kind = 0;
-    std::uint64_t dummy_ret_val = 0;
-    写POD(os, dummy_kind);
-    写POD(os, dummy_ret_val);
-
-    // 跳过不存在的命中次数字段
-    std::uint64_t dummy_hit_count = 0;
-    写POD(os, dummy_hit_count);
-
-    写字符串(os, 节点主键(描述信息));
-
-    // 派生
-    if (auto* p = dynamic_cast<const 任务头主信息类*>(this)) {
-        写POD(os, p->入口步骤ID);
-        return;
-    }
-    if (auto* p = dynamic_cast<const 任务步骤主信息类*>(this)) {
-        // 跳过不存在的字段
-        std::uint64_t dummy_next_node_id = 0;
-        std::uint64_t dummy_occur_time = 0;
-        std::uint64_t dummy_expire_time = 0;
-        std::uint64_t dummy_current_count = 0;
-        std::uint64_t dummy_max_count = 0;
-        写POD(os, dummy_next_node_id);
-        写POD(os, dummy_occur_time);
-        写POD(os, dummy_expire_time);
-        写POD(os, dummy_current_count);
-        写POD(os, dummy_max_count);
-        return;
-    }
-    if (auto* p = dynamic_cast<const 任务分支主信息类*>(this)) {
-        // 跳过不存在的字段
-        std::uint64_t dummy_hit_branch_id = 0;
-        std::uint64_t dummy_satisfy_time = 0;
-        std::uint64_t dummy_expire_time = 0;
-        写POD(os, dummy_hit_branch_id);
-        写POD(os, dummy_satisfy_time);
-        写POD(os, dummy_expire_time);
-
-        // 条件描述主键
-        写字符串(os, 节点主键(p->条件描述));
-
-        // 跳过不存在的分支列表
-        std::uint32_t dummy_branch_count = 0;
-        写POD(os, dummy_branch_count);
-        return;
-    }
-    if (auto* p = dynamic_cast<const 任务终止主信息类*>(this)) {
-        写枚举(os, p->终止类型);
-        // 跳过不存在的终止时间字段
-        std::uint64_t dummy_terminate_time = 0;
-        写POD(os, dummy_terminate_time);
-        return;
-    }
-}
-
-inline 任务信息基类* 任务信息基类::反序列化(std::istream& is)
-{
-    using namespace 主信息定义模块_存档_detail;
-    std::uint16_t ver = 0;
-    if (!读POD(is, ver)) return nullptr;
-    if (ver != 1) return nullptr;
-
-    枚举_任务节点种类 kind = 枚举_任务节点种类::未定义;
-    if (!读枚举(is, kind)) return nullptr;
-
-    std::uint64_t id{};
-    std::uint32_t st{};
-    std::variant<std::uint64_t, std::vector<std::uint64_t>> ret{};
-    std::uint64_t hit{};
-    if (!读POD(is, id)) return nullptr;
-    if (!读POD(is, st)) return nullptr;
-
-    // 跳过状态字段（在任务信息基类中状态是枚举类型，不能直接从uint32_t赋值）
-    // 状态将在之后设置为默认值
-
-    // 返回值：variant<uint64_t, vector<uint64_t>>
-    {
-        std::uint8_t kind = 0;
-        if (!读POD(is, kind)) return nullptr;
-        if (kind == 0) {
-            std::uint64_t v = 0;
-            if (!读POD(is, v)) return nullptr;
-            ret = v;
-        }
-        else if (kind == 1) {
-            std::uint32_t n = 0;
-            if (!读POD(is, n)) return nullptr;
-            std::vector<std::uint64_t> vec;
-            vec.resize(n);
-            for (std::uint32_t i = 0; i < n; ++i) {
-                if (!读POD(is, vec[i])) return nullptr;
-            }
-            ret = std::move(vec);
-        }
-        else {
-            return nullptr;
-        }
-    }
-
-    if (!读POD(is, hit)) return nullptr;
-
-    // 描述信息主键（不解析）
-    std::string _descKey;
-    if (!读字符串(is, _descKey)) return nullptr;
-    任务信息基类* out = nullptr;
-    switch (kind)
-    {
-    case 枚举_任务节点种类::任务头: {
-        auto* p = new 任务头主信息类();
-        if (!读POD(is, p->入口步骤ID)) { delete p; return nullptr; }
-        out = p;
-        break;
-    }
-    case 枚举_任务节点种类::步骤: {
-        auto* p = new 任务步骤主信息类();
-        // 跳过不存在的字段：下一节点ID、发生时间、过期时间、当前次数、最大次数
-        std::uint64_t dummy_next_node_id, dummy_occur_time, dummy_expire_time, dummy_current_count, dummy_max_count;
-        if (!读POD(is, dummy_next_node_id)) { delete p; return nullptr; }
-        if (!读POD(is, dummy_occur_time)) { delete p; return nullptr; }
-        if (!读POD(is, dummy_expire_time)) { delete p; return nullptr; }
-        if (!读POD(is, dummy_current_count)) { delete p; return nullptr; }
-        if (!读POD(is, dummy_max_count)) { delete p; return nullptr; }
-        out = p;
-        break;
-    }
-    case 枚举_任务节点种类::分支: {
-        auto* p = new 任务分支主信息类();
-        // 跳过不存在的字段：命中分支ID、满足时间、过期时间
-        std::uint64_t dummy_hit_branch_id, dummy_satisfy_time, dummy_expire_time;
-        if (!读POD(is, dummy_hit_branch_id)) { delete p; return nullptr; }
-        if (!读POD(is, dummy_satisfy_time)) { delete p; return nullptr; }
-        if (!读POD(is, dummy_expire_time)) { delete p; return nullptr; }
-        std::string _condKey;
-        if (!读字符串(is, _condKey)) { delete p; return nullptr; }
-        // 跳过分支列表数据
-        std::uint32_t n{};
-        if (!读POD(is, n)) { delete p; return nullptr; }
-        for (std::uint32_t i = 0; i < n; ++i) {
-            std::uint64_t dummy_branch_id, dummy_priority;
-            if (!读POD(is, dummy_branch_id)) { delete p; return nullptr; }
-            if (!读POD(is, dummy_priority)) { delete p; return nullptr; }
-        }
-        out = p;
-        break;
-    }
-    case 枚举_任务节点种类::终止: {
-        auto* p = new 任务终止主信息类();
-        if (!读枚举(is, p->终止类型)) { delete p; return nullptr; }
-        // 跳过不存在的字段：终止时间
-        std::uint64_t dummy_terminate_time;
-        if (!读POD(is, dummy_terminate_time)) { delete p; return nullptr; }
-        out = p;
-        break;
-    }
-    default:
-        return nullptr;
-    }
-
-    out->节点种类 = kind;
-    out->节点ID = id;
-    // 安全地将 uint32_t 转换为枚举类型
-    if (st <= 7) {  // 根据枚举定义检查范围
-        out->状态 = static_cast<枚举_任务状态>(st);
-    }
-    else {
-        out->状态 = 枚举_任务状态::未定义;
-    }
-    out->描述信息 = nullptr;
-
-    // 跳过不存在的字段：创建时间、最后更新时间
-    std::uint64_t dummy_create_time, dummy_last_update_time;
-    if (!读POD(is, dummy_create_time)) { delete out; return nullptr; }
-    if (!读POD(is, dummy_last_update_time)) { delete out; return nullptr; }
-
-    return out;
-}
-
 // ----------------------- 方法信息基类 -----------------------
 inline void 方法信息基类::序列化(std::ostream& os) const
 {
@@ -2852,6 +2661,10 @@ inline 自然语言成分基类* 自然语言成分基类::反序列化(std::ist
 }
 
 */
+
+
+
+
 
 
 

@@ -1,18 +1,9 @@
 ﻿// TaskExecutionModule.ixx
 // ============================================================
-// 最小可运行骨架（对齐你最新任务主信息）
-//
-// 目标：跑通“任何时候都至少有任务在执行中”的最小闭环：
-// - 创建子任务（步骤节点引用子任务头结点）
-// - 依赖调度（阶段号 + 依赖列表）
-// - 叶子执行（占位：调用点留给方法系统；当前用最小成功/失败模拟）
-// - 结果聚合（父任务根据子任务结果推进/终止）
-// - 循环上限（回跳重试次数上限）
-// - 尝试学习兜底（无可执行时，注入/提升 学习_尝试学习）
-//
-// 说明：
-// - 按你要求：不做兼容处理；无用的旧逻辑直接清理。
-// - 当前不考虑存档/读档；任务虚拟存在仅做“锚点指针”，运行期可用但不强依赖。
+// 任务执行器
+// - 筹办：按需求找“能把当前状态推进到目标状态”的方法
+// - 执行：顺序推进当前步骤
+// - 命中：实际结果与预测结果按二次特征相等/相似匹配
 // ============================================================
 
 export module 任务执行模块;
@@ -20,30 +11,63 @@ export module 任务执行模块;
 import <cstdint>;
 import <vector>;
 import <string>;
-import <unordered_map>;
-import <unordered_set>;
-import <algorithm>;
 import <functional>;
+import <algorithm>;
+import <unordered_set>;
 import <limits>;
-import <optional>;
 import <variant>;
 
 import 日志模块;
 import 主信息定义模块;
 import 数据仓库模块;
 import 任务模块;
+import 方法模块;
 import 方法环境模块;
-import 世界树环境模块;
+import 需求模块;
+import 需求环境模块;
 import 状态模块;
-import 二次特征模块;
-import 语素环境模块;
+import 世界树环境模块;
+import 二次特征匹配模块;
 
 using namespace 数据仓库模块;
+using namespace 二次特征匹配模块;
 
-// ============================================================
-// 小工具：遍历“同父子链”的所有子节点（链表模板子链是环）
-// ============================================================
+export enum class 枚举_任务失败类型 : std::uint8_t {
+    未定义 = 0,
+    无叶子执行回调 = 1,
+};
+
+export enum class 枚举_任务反馈动作 : std::uint8_t {
+    未定义 = 0,
+    继续下一步 = 1,
+    回跳重试 = 2,
+    更新参数后重试 = 3,
+    转入尝试学习 = 4,
+    挂起等待 = 5,
+};
+
+export enum class 枚举_推荐参数 : std::uint8_t {
+    未定义 = 0,
+};
+
 namespace 任务执行模块_detail {
+
+    struct 结构_筹办分支 {
+        任务节点类* 入口步骤 = nullptr;
+        任务节点类* 目标预测结果 = nullptr;
+        std::int64_t 评分Q = 0;
+    };
+
+    inline std::int64_t 绝对值I64(std::int64_t x) noexcept {
+        if (x == std::numeric_limits<std::int64_t>::min()) return std::numeric_limits<std::int64_t>::max();
+        return x < 0 ? -x : x;
+    }
+
+    inline bool 节点主键相同(const 基础信息节点类* 左, const 基础信息节点类* 右) noexcept {
+        if (左 == 右) return true;
+        if (!左 || !右) return false;
+        return 左->获取主键() == 右->获取主键();
+    }
 
     inline std::vector<任务节点类*> 枚举子节点(任务节点类* 父) {
         std::vector<任务节点类*> out{};
@@ -69,337 +93,603 @@ namespace 任务执行模块_detail {
         if (!n || !n->主信息) return nullptr;
         return dynamic_cast<任务头结点信息*>(n->主信息);
     }
+
     inline 任务步骤节点信息* 取步骤信息(任务节点类* n) noexcept {
         if (!n || !n->主信息) return nullptr;
         return dynamic_cast<任务步骤节点信息*>(n->主信息);
     }
+
     inline 任务结果节点信息* 取结果信息(任务节点类* n) noexcept {
         if (!n || !n->主信息) return nullptr;
         return dynamic_cast<任务结果节点信息*>(n->主信息);
     }
-    inline 任务分支节点信息* 取分支信息(任务节点类* n) noexcept {
+
+    inline 场景节点主信息类* 取场景信息(场景节点类* n) noexcept {
         if (!n || !n->主信息) return nullptr;
-        return dynamic_cast<任务分支节点信息*>(n->主信息);
+        return dynamic_cast<场景节点主信息类*>(n->主信息);
     }
 
-    inline std::int64_t 取优先级(任务节点类* head) noexcept {
-        if (!head || !head->主信息) return 0;
-        return head->主信息->优先级;
+    inline 状态节点主信息类* 取状态信息(状态节点类* n) noexcept {
+        if (!n || !n->主信息) return nullptr;
+        return dynamic_cast<状态节点主信息类*>(n->主信息);
     }
 
-    inline const 词性节点类* 类型_存在_任务结果评估摘要_() {
-        return 语素集.添加词性词("存在_任务结果评估摘要", "名词");
+    inline 方法首节点主信息类* 取方法首信息(方法节点类* n) noexcept {
+        if (!n || !n->主信息) return nullptr;
+        return dynamic_cast<方法首节点主信息类*>(n->主信息);
     }
 
-    inline const 词性节点类* 名称_存在_任务结果评估摘要_() {
-        return 语素集.添加词性词("任务结果评估摘要", "名词");
+    inline 方法条件节点主信息类* 取方法条件信息(方法节点类* n) noexcept {
+        if (!n || !n->主信息) return nullptr;
+        return dynamic_cast<方法条件节点主信息类*>(n->主信息);
     }
 
-    inline const 词性节点类* 特征_结果成功标记_() {
-        return 语素集.添加词性词("结果_成功标记", "名词");
+    inline 方法结果节点主信息类* 取方法结果信息(方法节点类* n) noexcept {
+        if (!n || !n->主信息) return nullptr;
+        return dynamic_cast<方法结果节点主信息类*>(n->主信息);
     }
 
-    inline const 词性节点类* 特征_结果失败类型ID_() {
-        return 语素集.添加词性词("结果_失败类型ID", "名词");
+    inline bool 是否可主动推进任务(枚举_任务状态 st) noexcept {
+        return st == 枚举_任务状态::未定义
+            || st == 枚举_任务状态::未启动
+            || st == 枚举_任务状态::就绪
+            || st == 枚举_任务状态::运行中
+            || st == 枚举_任务状态::筹办中
+            || st == 枚举_任务状态::排队中;
     }
 
-    inline const 词性节点类* 特征_结果建议动作_() {
-        return 语素集.添加词性词("结果_建议动作", "名词");
+    inline bool 是否可进入调度队列(枚举_任务状态 st) noexcept {
+        return !是否终结(st)
+            && st != 枚举_任务状态::挂起
+            && st != 枚举_任务状态::等待中;
     }
 
-    inline const 词性节点类* 特征_结果推荐参数ID_() {
-        return 语素集.添加词性词("结果_推荐参数ID", "名词");
+    inline 任务头结点信息* 取所属任务头信息(任务节点类* n) noexcept {
+        if (auto* h = 取头信息(n)) return h;
+        if (auto* s = 取步骤信息(n)) return 取头信息(s->所属任务头结点);
+        if (auto* r = 取结果信息(n)) return 取头信息(r->所属任务头结点);
+        return nullptr;
     }
 
-    inline const 词性节点类* 特征_结果推荐参数增量_() {
-        return 语素集.添加词性词("结果_推荐参数增量", "名词");
+    inline 任务头结点信息* 取主任务头信息(任务节点类* n) noexcept {
+        auto* h = 取所属任务头信息(n);
+        while (h && h->父任务头结点) {
+            auto* parent = 取头信息(h->父任务头结点);
+            if (!parent || parent == h) break;
+            h = parent;
+        }
+        return h;
     }
 
-    inline const 词性节点类* 特征_结果缺口_Q10000_() {
-        return 语素集.添加词性词("结果_缺口_Q10000", "名词");
+    inline std::int32_t 推导关联步骤序号(任务节点类* n) noexcept {
+        if (auto* s = 取步骤信息(n)) return s->步骤序号;
+        if (auto* r = 取结果信息(n)) {
+            if (auto* src = 取步骤信息(r->来源步骤节点)) return src->步骤序号;
+        }
+        if (auto* h = 取头信息(n)) {
+            if (auto* parentStep = 取步骤信息(h->来源父步骤节点)) return parentStep->步骤序号;
+            if (auto* parentResult = 取结果信息(h->来源父结果节点)) {
+                if (auto* src = 取步骤信息(parentResult->来源步骤节点)) return src->步骤序号;
+            }
+        }
+        return 0;
     }
 
-    inline const 词性节点类* 特征_结果推荐重试任务树类型_() {
-        return 语素集.添加词性词("结果_推荐重试任务树类型", "名词");
+    inline std::size_t 统计直属步骤数量(任务节点类* 父节点) {
+        std::size_t count = 0;
+        for (auto* child : 枚举子节点(父节点)) {
+            if (取步骤信息(child)) ++count;
+        }
+        return count;
     }
 
-    inline const 词性节点类* 特征_结果摘要哈希_() {
-        return 语素集.添加词性词("结果_摘要哈希", "名词");
+    inline bool 任务头有可推进直接子任务(const 任务头结点信息* headInfo) {
+        if (!headInfo) return false;
+        for (auto* childHead : headInfo->直属子任务头结点列表) {
+            auto* childInfo = 取头信息(childHead);
+            if (!childInfo || !childHead || !childHead->主信息) continue;
+            if (是否终结(childInfo->状态)) continue;
+            if (是否可主动推进任务(childInfo->状态)) return true;
+        }
+        return false;
     }
 
-    inline const 词性节点类* 特征_结果来源任务节点指针_() {
-        return 语素集.添加词性词("结果_来源任务节点指针", "名词");
+    inline bool 任务头近似是最小叶子任务(任务节点类* 任务头结点, const 任务头结点信息* headInfo) {
+        if (!任务头结点 || !headInfo) return false;
+        const auto stepCount = 统计直属步骤数量(任务头结点);
+        if (stepCount > 1) return false;
+
+        任务节点类* stepNode = headInfo->当前步骤节点;
+        if (!stepNode || !取步骤信息(stepNode)) {
+            for (auto* child : 枚举子节点(任务头结点)) {
+                if (取步骤信息(child)) {
+                    stepNode = child;
+                    break;
+                }
+            }
+        }
+
+        if (!stepNode) return headInfo->任务树类型 == 枚举_任务树类型::叶子任务;
+        auto* stepInfo = 取步骤信息(stepNode);
+        if (!stepInfo) return false;
+        return stepInfo->并发子任务头结点列表.empty();
     }
 
-    inline const 词性节点类* 特征_结果失败对象指针_() {
-        return 语素集.添加词性词("结果_失败对象指针", "名词");
+    inline std::int64_t 取优先级(任务节点类* 节点) noexcept {
+        if (!节点 || !节点->主信息) return 0;
+
+        auto* mi = 节点->主信息;
+        const auto* 主任务头信息 = 取主任务头信息(节点);
+        const auto 基准优先级 = 主任务头信息 ? 主任务头信息->基准优先级 : mi->基准优先级;
+        std::int64_t score = 基准优先级 * 1000000LL + mi->局部优先级偏移;
+
+        switch (mi->状态) {
+        case 枚举_任务状态::就绪:
+            score += 20000;
+            break;
+        case 枚举_任务状态::运行中:
+        case 枚举_任务状态::筹办中:
+            score += 10000;
+            break;
+        case 枚举_任务状态::执行中:
+            score += 5000;
+            break;
+        case 枚举_任务状态::等待中:
+        case 枚举_任务状态::挂起:
+            score -= 900000;
+            break;
+        default:
+            break;
+        }
+
+        if (auto* h = 取头信息(节点)) {
+            if (h->父任务头结点) score += 300000;
+            score += std::max<std::int64_t>(0, 80000 - static_cast<std::int64_t>(推导关联步骤序号(节点)) * 2000);
+            if (mi->任务树类型 == 枚举_任务树类型::叶子任务) score += 120000;
+            if (任务头近似是最小叶子任务(节点, h)) score += 150000;
+            if (任务头有可推进直接子任务(h)) score -= 400000;
+        }
+        else if (auto* s = 取步骤信息(节点)) {
+            score += std::max<std::int64_t>(0, 120000 - static_cast<std::int64_t>(s->步骤序号) * 4000);
+            if (s->并发子任务头结点列表.empty()) score += 120000;
+            if (s->当前选中方法首节点 || !s->可用方法首节点列表.empty()) score += 20000;
+        }
+        else if (auto* r = 取结果信息(节点)) {
+            score += std::max<std::int64_t>(0, 40000 - static_cast<std::int64_t>(推导关联步骤序号(节点)) * 1000);
+            if (r->结果角色 == 枚举_任务结果角色::实际结果) score -= 20000;
+        }
+
+        mi->调度优先级 = score;
+        return score;
     }
 
-    inline const 词性节点类* 类型_存在_任务序列样本_() {
-        return 语素集.添加词性词("存在_任务序列样本", "名词");
+    inline std::vector<方法节点类*> 枚举方法子节点(方法节点类* 父) {
+        std::vector<方法节点类*> out{};
+        if (!父) return out;
+        auto* first = static_cast<方法节点类*>(父->子);
+        if (!first) return out;
+        auto* cur = first;
+        do {
+            out.push_back(cur);
+            cur = static_cast<方法节点类*>(cur->下);
+        } while (cur && cur != first);
+        return out;
     }
 
-    inline const 词性节点类* 特征_任务序列签名哈希_() {
-        return 语素集.添加词性词("任务序列_签名哈希", "名词");
+    inline std::vector<方法节点类*> 枚举全部方法首节点() {
+        std::vector<方法节点类*> out{};
+        auto* root = 方法链.根指针;
+        if (!root || !root->子) return out;
+        auto* first = static_cast<方法节点类*>(root->子);
+        auto* cur = first;
+        do {
+            if (取方法首信息(cur)) out.push_back(cur);
+            cur = static_cast<方法节点类*>(cur->下);
+        } while (cur && cur != first);
+        return out;
     }
 
-    inline const 词性节点类* 特征_任务序列步骤数_() {
-        return 语素集.添加词性词("任务序列_步骤数", "名词");
+    inline std::vector<方法节点类*> 枚举方法直接条件节点(方法节点类* 方法首节点) {
+        std::vector<方法节点类*> out{};
+        for (auto* child : 枚举方法子节点(方法首节点)) {
+            if (取方法条件信息(child)) out.push_back(child);
+        }
+        return out;
     }
 
-    inline const 词性节点类* 特征_任务序列样本数_() {
-        return 语素集.添加词性词("任务序列_样本数", "名词");
+    inline std::vector<方法节点类*> 枚举方法树结果节点(方法节点类* 方法首节点) {
+        std::vector<方法节点类*> out{};
+        if (!方法首节点) return out;
+
+        std::function<void(方法节点类*)> dfs = [&](方法节点类* node) {
+            if (!node) return;
+            if (取方法结果信息(node)) out.push_back(node);
+            for (auto* child : 枚举方法子节点(node)) dfs(child);
+        };
+        dfs(方法首节点);
+        return out;
     }
 
-    inline const 词性节点类* 特征_任务序列成功次数_() {
-        return 语素集.添加词性词("任务序列_成功次数", "名词");
+    inline std::vector<状态节点类*> 枚举场景状态(场景节点类* 场景) {
+        if (auto* smi = 取场景信息(场景)) return smi->状态列表;
+        return {};
     }
 
-    inline const 词性节点类* 特征_任务序列失败次数_() {
-        return 语素集.添加词性词("任务序列_失败次数", "名词");
+    inline std::vector<const 二次特征节点类*> 枚举场景二次特征指针(场景节点类* 场景) {
+        std::vector<const 二次特征节点类*> out{};
+        auto* smi = 取场景信息(场景);
+        if (!smi) return out;
+        out.reserve(smi->关系列表.size());
+        for (auto* node : smi->关系列表) {
+            if (node && node->主信息) out.push_back(node);
+        }
+        return out;
     }
 
-    inline const 词性节点类* 特征_任务序列连续成功次数_() {
-        return 语素集.添加词性词("任务序列_连续成功次数", "名词");
+    inline 状态节点类* 查找场景状态_按目标特征(场景节点类* 场景, 状态节点类* 目标状态) {
+        auto* 目标信息 = 取状态信息(目标状态);
+        if (!目标信息 || !目标信息->状态特征) return nullptr;
+
+        状态节点类* best = nullptr;
+        时间戳 bestTs = 0;
+        for (auto* state : 枚举场景状态(场景)) {
+            auto* smi = 取状态信息(state);
+            if (!smi || !smi->状态特征) continue;
+            if (!节点主键相同(smi->状态特征, 目标信息->状态特征)) continue;
+            if (!best || smi->发生时间 >= bestTs) {
+                best = state;
+                bestTs = smi->发生时间;
+            }
+        }
+        return best;
     }
 
-    inline const 词性节点类* 特征_任务序列最近成功标记_() {
-        return 语素集.添加词性词("任务序列_最近成功标记", "名词");
+    inline 状态节点类* 查找方法结果状态_按目标特征(方法节点类* 方法结果节点, 状态节点类* 目标状态) {
+        auto* rmi = 取方法结果信息(方法结果节点);
+        if (!rmi) return nullptr;
+        return 查找场景状态_按目标特征(&rmi->场景根节点, 目标状态);
     }
 
-    inline const 词性节点类* 特征_任务序列成功率_Q10000_() {
-        return 语素集.添加词性词("任务序列_成功率_Q10000", "名词");
+    inline std::vector<const 二次特征节点类*> 取结果摘要指针集(方法节点类* 方法结果节点) {
+        std::vector<const 二次特征节点类*> out{};
+        auto* rmi = 取方法结果信息(方法结果节点);
+        if (!rmi) return out;
+        out.reserve(rmi->结果摘要索引.size());
+        for (auto& sec : rmi->结果摘要索引) out.push_back(&sec);
+        return out;
     }
 
-    inline const 词性节点类* 特征_任务序列可沉淀方法标记_() {
-        return 语素集.添加词性词("任务序列_可沉淀方法标记", "名词");
-    }
-
-    inline const 词性节点类* 特征_任务序列方法首节点指针_() {
-        return 语素集.添加词性词("任务序列_方法首节点指针", "名词");
-    }
-
-    inline const 词性节点类* 特征_结果任务序列签名哈希_() {
-        return 语素集.添加词性词("结果_任务序列签名哈希", "名词");
-    }
-
-    inline const 词性节点类* 特征_结果任务序列可沉淀方法标记_() {
-        return 语素集.添加词性词("结果_任务序列可沉淀方法标记", "名词");
-    }
-
-    inline bool 快照相等_(const std::optional<特征快照值>& oldValue, const 特征快照值& newValue) noexcept {
-        return oldValue.has_value() && *oldValue == newValue;
-    }
-
-    inline 状态节点类* 记录内部特征状态_(
-        场景节点类* 场景,
-        基础信息节点类* 主体,
-        const 词性节点类* 特征类型,
-        const 特征快照值& 值,
-        枚举_存在状态事件 事件,
-        bool 是否变化,
-        时间戳 now,
-        const std::string& 调用点)
+    inline std::int64_t 评分_方法结果满足需求(
+        场景节点类* 当前场景,
+        状态节点类* 目标状态,
+        方法节点类* 方法结果节点)
     {
-        if (!场景 || !主体 || !特征类型) return nullptr;
-        if (事件 != 枚举_存在状态事件::创建 && !是否变化) return nullptr;
+        auto* 目标信息 = 取状态信息(目标状态);
+        auto* 预测状态 = 查找方法结果状态_按目标特征(方法结果节点, 目标状态);
+        auto* 预测信息 = 取状态信息(预测状态);
+        if (!目标信息 || !预测信息 || !目标信息->状态特征 || !预测信息->状态特征) return -1;
+        if (!节点主键相同(目标信息->状态特征, 预测信息->状态特征)) return -1;
 
-        auto* feat = 世界树.确保特征(主体, 特征类型, 特征类型, 调用点);
-        return 状态集.记录内部特征状态(
-            场景,
-            主体,
-            feat,
-            值,
-            事件,
-            是否变化,
-            now,
-            [](场景节点类* s, 状态节点类* n, 时间戳 ts, const std::string& cp) {
-                二次特征类::状态记录后刷新二次特征(s, n, ts, cp);
-            },
-            调用点);
+        auto* 当前状态 = 查找场景状态_按目标特征(当前场景, 目标状态);
+        auto* 当前信息 = 取状态信息(当前状态);
+        const auto& 目标值 = 目标信息->状态值;
+        const auto& 预测值 = 预测信息->状态值;
+        if (目标值.index() != 预测值.index()) return -1;
+
+        std::int64_t score = 10000;
+        if (目标信息->状态主体 && 预测信息->状态主体 && 节点主键相同(目标信息->状态主体, 预测信息->状态主体)) {
+            score += 2000;
+        }
+
+        if (std::holds_alternative<I64>(目标值) && std::holds_alternative<I64>(预测值)) {
+            const auto target = std::get<I64>(目标值);
+            const auto predicted = std::get<I64>(预测值);
+            const auto predictedGap = 绝对值I64(target - predicted);
+            score += std::max<std::int64_t>(0, 10000 - std::min<std::int64_t>(10000, predictedGap));
+
+            if (当前信息 && std::holds_alternative<I64>(当前信息->状态值)) {
+                const auto current = std::get<I64>(当前信息->状态值);
+                const auto currentGap = 绝对值I64(target - current);
+                if (currentGap == 0) return -1;
+                if (predictedGap > currentGap) return -1;
+
+                const auto targetDelta = target - current;
+                const auto predictedDelta = predicted - current;
+                if (targetDelta != 0 && predictedDelta != 0 && ((targetDelta > 0) != (predictedDelta > 0))) {
+                    return -1;
+                }
+                if (predictedGap < currentGap) score += 10000;
+                if (predictedGap == 0) score += 10000;
+            }
+            else if (predictedGap == 0) {
+                score += 12000;
+            }
+            return score;
+        }
+
+        if (预测值 == 目标值) return score + 20000;
+        return -1;
     }
 
-    inline void 写评估特征_I64_(
-        场景节点类* 场景,
-        基础信息节点类* 主体,
-        const 词性节点类* 特征类型,
-        I64 值,
-        时间戳 now,
-        const std::string& 调用点)
+    inline bool 当前条件满足方法(
+        方法节点类* 方法首节点,
+        const std::vector<const 二次特征节点类*>& 当前条件特征)
     {
-        if (!场景 || !主体 || !特征类型) return;
-        const 特征快照值 新值{ 值 };
-        const auto 旧值 = 世界树.读取特征快照(主体, 特征类型, 调用点);
-        const bool 已有 = 旧值.has_value();
-        const bool 值变化 = !快照相等_(旧值, 新值);
-        (void)世界树.写入特征_I64(主体, 特征类型, 值, {}, 调用点);
-        (void)记录内部特征状态_(
-            场景,
-            主体,
-            特征类型,
-            新值,
-            已有 ? 枚举_存在状态事件::变化 : 枚举_存在状态事件::创建,
-            已有 ? 值变化 : true,
-            now,
-            调用点);
+        auto conditions = 枚举方法直接条件节点(方法首节点);
+        if (conditions.empty()) return true;
+
+        for (auto* condNode : conditions) {
+            auto* cmi = 取方法条件信息(condNode);
+            if (!cmi) continue;
+            if (cmi->条件判定索引.empty()) return true;
+            I64 hit = 0;
+            if (条件索引_满足(cmi->条件判定索引, 当前条件特征, &hit)) return true;
+        }
+        return false;
     }
 
-    inline void 写评估特征_指针_(
-        场景节点类* 场景,
-        基础信息节点类* 主体,
-        const 词性节点类* 特征类型,
-        std::uintptr_t ptr,
-        时间戳 now,
-        const std::string& 调用点)
+    inline bool 状态值精确相等(const 特征快照值& 左, const 特征快照值& 右) noexcept {
+        if (左.index() != 右.index()) return false;
+        return 左 == 右;
+    }
+
+    inline 状态节点类* 查找场景状态_按目标模板(场景节点类* 场景, 状态节点类* 目标状态) {
+        auto* 目标信息 = 取状态信息(目标状态);
+        if (!目标信息 || !目标信息->状态特征) return nullptr;
+
+        状态节点类* best = nullptr;
+        时间戳 bestTs = 0;
+        for (auto* state : 枚举场景状态(场景)) {
+            auto* smi = 取状态信息(state);
+            if (!smi || !smi->状态特征) continue;
+            if (!节点主键相同(smi->状态特征, 目标信息->状态特征)) continue;
+            if (目标信息->状态主体 && smi->状态主体 && !节点主键相同(smi->状态主体, 目标信息->状态主体)) continue;
+            const auto ts = smi->发生时间 ? smi->发生时间 : smi->收到时间;
+            if (!best || ts >= bestTs) {
+                best = state;
+                bestTs = ts;
+            }
+        }
+        return best;
+    }
+
+    inline bool 场景已满足目标状态(场景节点类* 场景, 状态节点类* 目标状态) {
+        auto* 目标信息 = 取状态信息(目标状态);
+        auto* 当前状态 = 查找场景状态_按目标模板(场景, 目标状态);
+        auto* 当前信息 = 取状态信息(当前状态);
+        if (!目标信息 || !当前信息) return false;
+        return 状态值精确相等(目标信息->状态值, 当前信息->状态值);
+    }
+
+    struct 结构_条件展开结果 {
+        方法节点类* 条件节点 = nullptr;
+        std::vector<状态节点类*> 未满足状态{};
+        std::int64_t 命中条件数 = 0;
+        std::int64_t 条件总数 = 0;
+        bool 当前可直接执行 = true;
+    };
+
+    struct 结构_筹办方法候选 {
+        方法节点类* 方法首节点 = nullptr;
+        方法节点类* 匹配结果节点 = nullptr;
+        方法节点类* 首选条件节点 = nullptr;
+        std::vector<状态节点类*> 未满足条件状态{};
+        std::int64_t 评分Q = 0;
+        bool 可直接执行 = true;
+    };
+
+    inline 结构_条件展开结果 分析方法条件缺口(
+        方法节点类* 方法首节点,
+        场景节点类* 当前场景,
+        const std::vector<const 二次特征节点类*>& 当前条件特征)
     {
-        if (!场景 || !主体 || !特征类型 || ptr == 0) return;
-        const 特征快照值 新值{ 指针句柄{ ptr } };
-        const auto 旧值 = 世界树.读取特征快照(主体, 特征类型, 调用点);
-        const bool 已有 = 旧值.has_value();
-        const bool 值变化 = !快照相等_(旧值, 新值);
-        (void)世界树.写入特征_指针(主体, 特征类型, ptr, {}, 调用点);
-        (void)记录内部特征状态_(
-            场景,
-            主体,
-            特征类型,
-            新值,
-            已有 ? 枚举_存在状态事件::变化 : 枚举_存在状态事件::创建,
-            已有 ? 值变化 : true,
-            now,
-            调用点);
+        结构_条件展开结果 best{};
+        auto conditions = 枚举方法直接条件节点(方法首节点);
+        if (conditions.empty()) return best;
+
+        best.当前可直接执行 = false;
+        std::int64_t bestScore = std::numeric_limits<std::int64_t>::min();
+
+        for (auto* condNode : conditions) {
+            auto* cmi = 取方法条件信息(condNode);
+            if (!cmi) continue;
+
+            auto* condSceneInfo = 取场景信息(&cmi->场景根节点);
+            std::vector<状态节点类*> condStates{};
+            if (condSceneInfo) condStates = condSceneInfo->状态列表;
+
+            I64 hit = 0;
+            const bool 满足索引 = cmi->条件判定索引.empty() ? true : 条件索引_满足(cmi->条件判定索引, 当前条件特征, &hit);
+
+            std::vector<状态节点类*> unmet{};
+            unmet.reserve(condStates.size());
+            for (auto* targetState : condStates) {
+                if (!targetState) continue;
+                if (!场景已满足目标状态(当前场景, targetState)) unmet.push_back(targetState);
+            }
+
+            const auto total = static_cast<std::int64_t>(
+                cmi->条件判定索引.empty()
+                ? condStates.size()
+                : cmi->条件判定索引.size());
+            const bool 当前可直接执行 = 满足索引 && unmet.empty();
+
+            std::int64_t score = hit * 10000;
+            score -= static_cast<std::int64_t>(unmet.size()) * 4000;
+            score -= std::max<std::int64_t>(0, total - hit) * 1000;
+            if (当前可直接执行) score += 50000;
+
+            if (!best.条件节点 || 当前可直接执行 || score > bestScore) {
+                best.条件节点 = condNode;
+                best.未满足状态 = std::move(unmet);
+                best.命中条件数 = hit;
+                best.条件总数 = total;
+                best.当前可直接执行 = 当前可直接执行;
+                bestScore = score;
+            }
+
+            if (当前可直接执行) return best;
+        }
+
+        return best;
     }
 
-    inline I64 读取特征_I64_(基础信息节点类* 主体, const 词性节点类* 特征类型, I64 默认值 = 0, const std::string& 调用点 = "任务执行模块_detail::读取特征_I64_") {
-        if (!主体 || !特征类型) return 默认值;
-        auto v = 世界树.读取特征快照(主体, 特征类型, 调用点);
-        if (!v.has_value()) return 默认值;
-        if (auto* p = std::get_if<I64>(&*v)) return *p;
-        return 默认值;
+    inline 任务节点类* 选择首选步骤节点(任务节点类* 父节点) {
+        任务节点类* best = nullptr;
+        std::int64_t bestScore = std::numeric_limits<std::int64_t>::min();
+        for (auto* child : 枚举子节点(父节点)) {
+            auto* stepInfo = 取步骤信息(child);
+            if (!stepInfo || !child || !child->主信息) continue;
+            if (!是否可进入调度队列(stepInfo->状态)) continue;
+
+            const auto score = 取优先级(child);
+            if (!best || score > bestScore) {
+                best = child;
+                bestScore = score;
+            }
+        }
+        return best;
     }
 
-    inline std::uint64_t 计算摘要哈希_(const std::string& 文本) noexcept {
-        return std::hash<std::string>{}(文本);
+    struct 结构_步骤子任务汇总 {
+        std::size_t 总数 = 0;
+        std::size_t 完成数 = 0;
+        std::size_t 失败数 = 0;
+        任务节点类* 首选可推进子任务 = nullptr;
+        任务节点类* 首个未终结子任务 = nullptr;
+    };
+
+    inline 结构_步骤子任务汇总 汇总步骤子任务(const 任务步骤节点信息* stepInfo) {
+        结构_步骤子任务汇总 out{};
+        if (!stepInfo) return out;
+
+        for (auto* childHead : stepInfo->并发子任务头结点列表) {
+            auto* childInfo = 取头信息(childHead);
+            if (!childInfo || !childHead->主信息) continue;
+
+            ++out.总数;
+            if (childInfo->状态 == 枚举_任务状态::完成) {
+                ++out.完成数;
+                continue;
+            }
+            if (是否终结(childInfo->状态)) {
+                ++out.失败数;
+                continue;
+            }
+
+            if (!out.首个未终结子任务) out.首个未终结子任务 = childHead;
+            if (是否可主动推进任务(childInfo->状态)) {
+                if (!out.首选可推进子任务 || 取优先级(childHead) > 取优先级(out.首选可推进子任务)) {
+                    out.首选可推进子任务 = childHead;
+                }
+            }
+        }
+        return out;
     }
 
-    inline 任务节点类* 查找最近结果节点(任务节点类* 父) {
-        auto children = 枚举子节点(父);
-        for (auto it = children.rbegin(); it != children.rend(); ++it) {
-            if (取结果信息(*it)) return *it;
+    inline std::vector<任务节点类*> 枚举步骤下结果节点(任务节点类* 步骤节点) {
+        std::vector<任务节点类*> out{};
+        for (auto* child : 枚举子节点(步骤节点)) {
+            if (取结果信息(child)) out.push_back(child);
+        }
+        return out;
+    }
+
+    inline std::vector<任务节点类*> 枚举预测结果节点(任务节点类* 步骤节点) {
+        std::vector<任务节点类*> out{};
+        for (auto* resultNode : 枚举步骤下结果节点(步骤节点)) {
+            auto* info = 取结果信息(resultNode);
+            if (info && info->结果角色 == 枚举_任务结果角色::预测结果) out.push_back(resultNode);
+        }
+        return out;
+    }
+
+    inline 任务节点类* 选择首选预测结果节点(任务节点类* 步骤节点, 方法节点类* 优先方法首节点 = nullptr) {
+        任务节点类* fallback = nullptr;
+        for (auto* resultNode : 枚举预测结果节点(步骤节点)) {
+            auto* info = 取结果信息(resultNode);
+            if (!info) continue;
+            if (!fallback) fallback = resultNode;
+            if (优先方法首节点 && info->来源方法首节点 == 优先方法首节点) return resultNode;
+        }
+        return fallback;
+    }
+
+    inline 任务节点类* 选择步骤中的预测结果_按方法结果(任务节点类* 步骤节点, 方法节点类* 目标方法结果节点) {
+        if (!目标方法结果节点) return nullptr;
+        for (auto* resultNode : 枚举预测结果节点(步骤节点)) {
+            auto* info = 取结果信息(resultNode);
+            if (info && info->对应方法结果节点 == 目标方法结果节点) return resultNode;
         }
         return nullptr;
     }
 
-    inline std::string 取任务节点标记_(任务节点类* 节点) {
-        if (!节点 || !节点->主信息) return "task:null";
-        auto* mi = 节点->主信息;
-        std::string token;
-        if (mi->名称) token = mi->名称->获取主键();
-        else if (mi->类型) token = mi->类型->获取主键();
-        else token = std::string("kind=") + std::to_string(static_cast<int>(mi->节点种类));
+    inline 任务节点类* 选择命中预测结果节点(
+        任务节点类* 步骤节点,
+        场景节点类* 实际结果场景,
+        方法节点类* 来源方法首节点)
+    {
+        auto actualFeatures = 枚举场景二次特征指针(实际结果场景);
+        任务节点类* best = nullptr;
+        任务节点类* methodFallback = nullptr;
+        std::int64_t bestScore = -1;
 
-        token += std::string("|tree=") + std::to_string(static_cast<int>(mi->任务树类型));
-        if (auto* step = 取步骤信息(节点)) {
-            token += std::string("|phase=") + std::to_string(step->阶段号);
+        for (auto* resultNode : 枚举预测结果节点(步骤节点)) {
+            auto* info = 取结果信息(resultNode);
+            if (!info) continue;
+            if (!methodFallback && 来源方法首节点 && info->来源方法首节点 == 来源方法首节点) {
+                methodFallback = resultNode;
+            }
+
+            std::int64_t score = -1;
+            if (info->对应方法结果节点) {
+                if (auto* rmi = 取方法结果信息(info->对应方法结果节点)) {
+                    auto match = 结果摘要_匹配目标(rmi->结果摘要索引, actualFeatures);
+                    score = match.得分_Q10000;
+                    if (来源方法首节点 && info->来源方法首节点 == 来源方法首节点) score += 50;
+                }
+            }
+            else if (来源方法首节点 && info->来源方法首节点 == 来源方法首节点) {
+                score = 1;
+            }
+
+            if (score > bestScore) {
+                bestScore = score;
+                best = resultNode;
+            }
         }
-        return token;
+
+        if (best && bestScore > 0) return best;
+        if (methodFallback) return methodFallback;
+        return 选择首选预测结果节点(步骤节点, 来源方法首节点);
     }
 
-    inline void 收集任务序列Token_(任务节点类* 节点, std::vector<std::string>& out) {
-        if (!节点 || !节点->主信息) return;
-
-        if (auto* step = 取步骤信息(节点)) {
-            out.push_back(std::string("step:") + std::to_string(step->阶段号));
-            if (step->子任务头结点) 收集任务序列Token_(step->子任务头结点, out);
-            return;
-        }
-
-        auto* mi = 节点->主信息;
-        out.push_back(std::string(mi->任务树类型 == 枚举_任务树类型::叶子任务 ? "leaf:" : "plan:") + 取任务节点标记_(节点));
-        if (mi->任务树类型 == 枚举_任务树类型::叶子任务) return;
-
-        auto children = 枚举子节点(节点);
-        std::vector<任务节点类*> steps;
-        for (auto* c : children) {
-            if (取步骤信息(c)) steps.push_back(c);
-        }
-        std::sort(steps.begin(), steps.end(), [](任务节点类* a, 任务节点类* b) {
-            auto* sa = 取步骤信息(a);
-            auto* sb = 取步骤信息(b);
-            const int pa = sa ? sa->阶段号 : 0;
-            const int pb = sb ? sb->阶段号 : 0;
-            return pa < pb;
-        });
-        for (auto* stepNode : steps) {
-            收集任务序列Token_(stepNode, out);
-        }
+    inline 任务节点类* 取命中结果后的下一步骤(任务节点类* 预测结果节点) {
+        return 选择首选步骤节点(预测结果节点);
     }
 
-    inline std::uint64_t 混入字符串哈希_(std::uint64_t h, const std::string& s) noexcept {
-        for (unsigned char c : s) {
-            h ^= static_cast<std::uint64_t>(c);
-            h *= 1099511628211ull;
+    inline 枚举_分支选择动作 从反馈动作映射处置(bool 成功, 枚举_任务反馈动作 动作) {
+        if (成功) return 枚举_分支选择动作::继续下一步;
+        switch (动作) {
+        case 枚举_任务反馈动作::回跳重试:
+        case 枚举_任务反馈动作::更新参数后重试:
+            return 枚举_分支选择动作::回跳重试;
+        case 枚举_任务反馈动作::转入尝试学习:
+            return 枚举_分支选择动作::转入尝试学习;
+        case 枚举_任务反馈动作::挂起等待:
+            return 枚举_分支选择动作::挂起等待;
+        default:
+            return 枚举_分支选择动作::回跳重试;
         }
-        h ^= 0xffull;
-        h *= 1099511628211ull;
-        return h;
-    }
-
-    inline std::uint64_t 计算任务序列签名_(任务节点类* 根, I64* 步骤数 = nullptr) {
-        std::vector<std::string> tokens;
-        收集任务序列Token_(根, tokens);
-        if (步骤数) *步骤数 = static_cast<I64>(tokens.size());
-        if (tokens.empty()) return 0ull;
-
-        std::uint64_t h = 1469598103934665603ull;
-        for (const auto& token : tokens) h = 混入字符串哈希_(h, token);
-        return h;
     }
 
 } // namespace 任务执行模块_detail
 
-export enum class 枚举_任务失败类型 : std::int64_t {
-    未定义 = 0,
-    无叶子执行回调 = 1,
-    无结果场景 = 2,
-    参数不足 = 3,
-    识别缺口过大 = 4,
-    轮廓不稳定 = 5,
-    深度质量不足 = 6,
-    跨帧匹配冲突 = 7,
-    需要尝试学习 = 8
-};
-
-export enum class 枚举_任务反馈动作 : std::int64_t {
-    未定义 = 0,
-    继续下一步 = 1,
-    回跳重试 = 2,
-    更新参数后重试 = 3,
-    切换方法 = 4,
-    转入尝试学习 = 5,
-    挂起等待 = 6
-};
-
-export enum class 枚举_推荐参数 : std::int64_t {
-    未定义 = 0,
-    焦距 = 1,
-    曝光 = 2,
-    光圈 = 3,
-    对焦 = 4,
-    对比度 = 5,
-    深度模式 = 6,
-    轮廓阈值 = 7,
-    匹配阈值 = 8
-};
-
-// ============================================================
-// 任务执行器：最小推进器
-// ============================================================
 export class 任务执行器 {
 public:
-    // 叶子执行回调：你后续把“选方法->执行->产出结果场景”接进来即可。
     struct 结构_叶子执行结果 {
         bool 成功 = false;
-        场景节点类* 结果场景 = nullptr;     // 可为空（最小闭环不强依赖）
+        场景节点类* 结果场景 = nullptr;
         std::string 摘要{};
         枚举_任务失败类型 失败类型 = 枚举_任务失败类型::未定义;
         枚举_任务反馈动作 建议动作 = 枚举_任务反馈动作::未定义;
@@ -410,11 +700,13 @@ public:
         std::uintptr_t 失败对象指针 = 0;
     };
 
-    using Fn_叶子执行 = std::function<结构_叶子执行结果(任务节点类* 叶子头结点)>;
+    using Fn_叶子执行 = std::function<结构_叶子执行结果(任务节点类* 步骤节点)>;
+    using Fn_方法规避过滤 = std::function<bool(任务节点类* 任务头结点, 方法节点类* 方法首节点)>;
 
     struct 结构_配置 {
-        std::int64_t 单步最大递归深度 = 32;  // 防止一帧推进过深
-        std::int64_t 回跳重试上限 = 3;      // 同一任务回跳重试次数
+        std::int64_t 单步最大递归深度 = 0;
+        std::int64_t 回跳重试上限 = 3;
+        std::size_t 自动召回候选上限 = 5;
     };
 
 public:
@@ -423,598 +715,598 @@ public:
     }
 
     void 设置叶子执行回调(Fn_叶子执行 fn) { leaf_exec_ = std::move(fn); }
-
-    // 可选：注入系统的“尝试学习任务头结点”（常驻最低优先级）
     void 设置尝试学习任务(任务节点类* 学习头) { try_learn_head_ = 学习头; }
+    void 设置方法规避过滤(Fn_方法规避过滤 fn) { avoid_filter_ = std::move(fn); }
 
-    // ============================================================
-    // 入口：推进一个任务头结点“一小步”
-    // - 返回 true：本次推进做了实际动作（执行了叶子/推进了子任务/创建了子任务等）
-    // - 返回 false：本次无事可做（通常意味着要去跑别的任务，或落入尝试学习兜底）
-    // ============================================================
     bool 推进一步(任务节点类* 任务头结点) {
         using namespace 任务执行模块_detail;
 
-        if (!任务头结点 || !任务头结点->主信息) return false;
-        auto& mi = *任务头结点->主信息;
+        auto* headInfo = 取头信息(任务头结点);
+        if (!headInfo || !任务头结点->主信息) return false;
+        if (是否终结(headInfo->状态)) return false;
 
-        if (是否终结(mi.状态)) return false;
-        if (mi.状态 == 枚举_任务状态::未定义) {
-            任务类::设置任务状态(任务头结点, 枚举_任务状态::未启动, "任务执行器::推进一步/置未启动");
+        auto* stepNode = 私有_选择当前步骤(任务头结点);
+        if (!stepNode || 私有_步骤需要自动筹办(stepNode)) {
+            stepNode = 私有_自动筹办任务(任务头结点);
+            if (!stepNode) return false;
         }
-        if (任务头结点->主信息 && 任务头结点->主信息->状态 == 枚举_任务状态::未启动) {
+
+        if (headInfo->状态 == 枚举_任务状态::未定义
+            || headInfo->状态 == 枚举_任务状态::未启动
+            || headInfo->状态 == 枚举_任务状态::就绪
+            || headInfo->状态 == 枚举_任务状态::筹办中) {
             任务类::设置任务状态(任务头结点, 枚举_任务状态::运行中, "任务执行器::推进一步/置运行中");
         }
-        if (任务头结点->主信息) {
-            任务类::标记任务最近调度(任务头结点->主信息, 结构体_时间戳::当前_微秒(), "任务执行器::推进一步/标记最近调度");
-        }
-
-        // 深度保护
-        当前递归深度_ = 0;
-        return 私有_推进一步_递归(任务头结点);
+        (void)任务类::标记任务最近调度(任务头结点->主信息, 结构体_时间戳::当前_微秒(), "任务执行器::推进一步/标记最近调度");
+        return 私有_执行步骤(任务头结点, stepNode);
     }
 
-    // ============================================================
-    // 全局入口：从一组任务头结点里挑一个可推进的
-    // - 若全部不可推进，则兜底推进“尝试学习任务”（必要时自动创建）
-    // ============================================================
     bool 调度并推进一步(const std::vector<任务节点类*>& 候选任务头) {
         using namespace 任务执行模块_detail;
 
         任务节点类* best = nullptr;
+        std::int64_t bestScore = std::numeric_limits<std::int64_t>::min();
         for (auto* t : 候选任务头) {
             if (!t || !t->主信息) continue;
-            if (是否终结(t->主信息->状态)) continue;
-            if (!best || 取优先级(t) > 取优先级(best)) best = t;
+            if (!是否可进入调度队列(t->主信息->状态)) continue;
+
+            const auto score = 取优先级(t);
+            if (!best || score > bestScore) {
+                best = t;
+                bestScore = score;
+            }
         }
 
+        if (best) {
+            (void)任务类::设置任务调度优先级(best->主信息, best->主信息->调度优先级, 结构体_时间戳::当前_微秒(), "任务执行器::调度并推进一步/刷新选中任务优先级");
+        }
         if (best && 推进一步(best)) return true;
 
-        // 兜底：尝试学习
         auto* learn = 私有_确保尝试学习任务();
         if (!learn) return false;
-        // “没有方法可用/其它任务都卡住”时，你会在调度层提高它的优先级。
-        // 最小骨架：若所有任务都没推进，则直接推进它。
         return 推进一步(learn);
     }
 
 private:
-    // ============================================================
-    // 编排任务：若无步骤则生成；否则调度可运行的子任务推进
-    // ============================================================
-    bool 私有_推进一步_递归(任务节点类* head) {
+    任务节点类* 私有_选择当前步骤(任务节点类* 任务头结点) {
         using namespace 任务执行模块_detail;
 
-        if (!head || !head->主信息) return false;
-        if (当前递归深度_++ > cfg_.单步最大递归深度) return false;
-
-        auto& mi = *head->主信息;
-        if (是否终结(mi.状态)) return false;
-
-        if (mi.任务树类型 == 枚举_任务树类型::叶子任务) {
-            return 私有_推进叶子任务(head);
+        auto* headInfo = 取头信息(任务头结点);
+        if (!headInfo) return nullptr;
+        if (headInfo->当前步骤节点) {
+            auto* currentInfo = 取步骤信息(headInfo->当前步骤节点);
+            if (currentInfo && !是否终结(currentInfo->状态)) {
+                return headInfo->当前步骤节点;
+            }
         }
 
-        // 默认：编排任务（或未定义则按编排处理）
-        return 私有_推进编排任务(head);
+        auto* best = 选择首选步骤节点(任务头结点);
+        if (best) {
+            (void)任务类::设置任务调度优先级(best->主信息, best->主信息->调度优先级, 结构体_时间戳::当前_微秒(), "任务执行器::选择当前步骤/刷新优先级");
+            (void)任务类::设置任务当前步骤(任务头结点->主信息, best, 结构体_时间戳::当前_微秒(), "任务执行器::选择当前步骤");
+        }
+        return best;
     }
 
-    bool 私有_推进编排任务(任务节点类* 编排头) {
+    bool 私有_步骤需要自动筹办(任务节点类* 步骤节点) {
         using namespace 任务执行模块_detail;
-
-        // 1) 若没有步骤节点：创建一个最小“单步骤子任务”
-        auto children = 枚举子节点(编排头);
-        std::vector<任务节点类*> step_nodes{};
-        for (auto* c : children) {
-            if (auto* s = 取步骤信息(c)) {
-                (void)s;
-                step_nodes.push_back(c);
-            }
-        }
-        if (step_nodes.empty()) {
-            return 私有_为编排任务_生成最小步骤(编排头);
-        }
-
-        // 2) 选一个“依赖已满足”的步骤，推进其子任务
-        //    - 阶段号小的优先
-        std::sort(step_nodes.begin(), step_nodes.end(), [](任务节点类* a, 任务节点类* b) {
-            auto* sa = 任务执行模块_detail::取步骤信息(a);
-            auto* sb = 任务执行模块_detail::取步骤信息(b);
-            const int pa = sa ? sa->阶段号 : 0;
-            const int pb = sb ? sb->阶段号 : 0;
-            return pa < pb;
-        });
-
-        bool 有推进 = false;
-        bool 全部成功 = true;
-        bool 有失败 = false;
-
-        for (auto* step_node : step_nodes) {
-            auto* step = 取步骤信息(step_node);
-            if (!step) continue;
-
-            auto* child_head = step->子任务头结点;
-            if (!child_head || !child_head->主信息) {
-                // 子任务缺失：按“缺口”处理，生成一个学习子任务顶上
-                日志::运行("[任务执行] 步骤子任务为空：注入尝试学习子任务");
-                step->子任务头结点 = 私有_确保尝试学习任务();
-                child_head = step->子任务头结点;
-            }
-            if (!child_head || !child_head->主信息) continue;
-
-            // 依赖检查：依赖列表里任何一个未成功，则本步骤不可跑
-            bool 依赖满足 = true;
-            for (auto* dep : step->依赖子任务头结点列表) {
-                if (!dep || !dep->主信息) { 依赖满足 = false; break; }
-                if (dep->主信息->状态 != 枚举_任务状态::完成) { 依赖满足 = false; break; }
-            }
-            if (!依赖满足) { 全部成功 = false; continue; }
-
-            // 子任务终结态汇总
-            if (child_head->主信息->状态 == 枚举_任务状态::完成) {
-                continue;
-            }
-            if (child_head->主信息->状态 == 枚举_任务状态::失败) {
-                有失败 = true;
-                全部成功 = false;
-                continue;
-            }
-            if (child_head->主信息->状态 == 枚举_任务状态::取消
-                || child_head->主信息->状态 == 枚举_任务状态::超时) {
-                有失败 = true;
-                全部成功 = false;
-                continue;
-            }
-
-            // 推进这个子任务
-            if (编排头->主信息) {
-                任务类::设置任务当前步骤(编排头->主信息, step_node, 结构体_时间戳::当前_微秒(), "任务执行器::推进编排任务/设置当前步骤");
-                任务类::设置任务当前分支动作(编排头->主信息, 枚举_分支选择动作::继续下一步, 结构体_时间戳::当前_微秒(), "任务执行器::推进编排任务/设置分支动作");
-            }
-            if (私有_推进一步_递归(child_head)) {
-                有推进 = true;
-                break; // 单步推进：每次只推进一个可运行子任务
-            }
-            全部成功 = false;
-        }
-
-        // 3) 聚合：全部子任务成功 -> 编排任务成功
-        if (全部成功 && !step_nodes.empty()) {
-            if (编排头->主信息) {
-                任务类::设置任务当前分支动作(编排头->主信息, 枚举_分支选择动作::继续下一步, 结构体_时间戳::当前_微秒(), "任务执行器::推进编排任务/全部成功_分支动作");
-            }
-            任务类::设置任务状态(编排头, 枚举_任务状态::完成, "任务执行器::推进编排任务/全部成功");
-            (void)私有_挂接结果节点(编排头, /*成功*/true, "编排任务：所有子任务成功");
-            return true;
-        }
-
-        // 4) 失败处理：有失败 -> 允许回跳重试；超过上限则失败并兜底学习
-        if (有失败) {
-            bool 直接转入尝试学习 = false;
-            for (auto* step_node : step_nodes) {
-                auto* step = 取步骤信息(step_node);
-                if (!step || !step->子任务头结点 || !step->子任务头结点->主信息) continue;
-                if (step->子任务头结点->主信息->状态 != 枚举_任务状态::失败) continue;
-                const auto 建议动作 = 私有_读取任务最近建议动作(step->子任务头结点);
-                if (建议动作 == 枚举_任务反馈动作::转入尝试学习) {
-                    直接转入尝试学习 = true;
-                    break;
-                }
-            }
-
-            if (直接转入尝试学习) {
-                日志::运行("[任务执行] 子任务反馈建议直接转入尝试学习：本轮不回跳");
-                if (编排头->主信息) {
-                    任务类::设置任务当前分支动作(编排头->主信息, 枚举_分支选择动作::转入尝试学习, 结构体_时间戳::当前_微秒(), "任务执行器::推进编排任务/直接尝试学习_分支动作");
-                }
-                任务类::设置任务状态(编排头, 枚举_任务状态::失败, "任务执行器::推进编排任务/直接尝试学习");
-                (void)私有_挂接结果节点(编排头, /*成功*/false, "编排任务：子任务建议转入尝试学习");
-                (void)私有_确保尝试学习任务();
-                return true;
-            }
-
-            const auto count = ++回跳计数_[编排头];
-            if (count <= cfg_.回跳重试上限) {
-                日志::运行f("[任务执行] 编排任务发现失败子任务：回跳重试 {}/{}", count, cfg_.回跳重试上限);
-                if (编排头->主信息) {
-                    任务类::设置任务当前分支动作(编排头->主信息, 枚举_分支选择动作::回跳重试, 结构体_时间戳::当前_微秒(), "任务执行器::推进编排任务/回跳重试_分支动作");
-                }
-                // 最小策略：把失败子任务改为挂起，让下一轮重新推进
-                for (auto* step_node : step_nodes) {
-                    auto* step = 取步骤信息(step_node);
-                    if (!step || !step->子任务头结点 || !step->子任务头结点->主信息) continue;
-                    if (step->子任务头结点->主信息->状态 == 枚举_任务状态::失败) {
-                        任务类::设置任务状态(step->子任务头结点, 枚举_任务状态::挂起, "任务执行器::推进编排任务/回跳挂起");
-                    }
-                }
-                return true;
-            }
-
-            日志::运行("[任务执行] 编排任务回跳超限：标记失败，并转入尝试学习兜底");
-            if (编排头->主信息) {
-                任务类::设置任务当前分支动作(编排头->主信息, 枚举_分支选择动作::转入尝试学习, 结构体_时间戳::当前_微秒(), "任务执行器::推进编排任务/回跳超限_分支动作");
-            }
-            任务类::设置任务状态(编排头, 枚举_任务状态::失败, "任务执行器::推进编排任务/回跳超限");
-            (void)私有_挂接结果节点(编排头, /*成功*/false, "编排任务：回跳超限失败");
-            // 兜底推进尝试学习（调度层也会继续兜底）
-            (void)私有_确保尝试学习任务();
-            return true;
-        }
-
-        return 有推进;
-    }
-
-    bool 私有_为编排任务_生成最小步骤(任务节点类* 编排头) {
-        using namespace 任务执行模块_detail;
-
-        // 生成一个“叶子子任务”，默认让它去跑（或兜底学习）
-        auto* 子任务信息 = new 任务头结点信息();
-        子任务信息->节点种类 = 枚举_任务节点种类::头结点;
-        子任务信息->状态 = 枚举_任务状态::未启动;
-        子任务信息->优先级 = 编排头->主信息 ? 编排头->主信息->优先级 : 0;
-        子任务信息->任务树类型 = 枚举_任务树类型::叶子任务;
-        子任务信息->场景 = 编排头->主信息 ? 编排头->主信息->场景 : nullptr;
-        子任务信息->任务虚拟存在 = nullptr;
-
-        auto* 子任务头 = 任务类::新建任务节点(子任务信息, 编排头, "任务执行器::生成最小步骤_子任务头");
-        if (!子任务头) return false;
-
-        auto* 步骤信息 = new 任务步骤节点信息();
-        步骤信息->节点种类 = 枚举_任务节点种类::步骤节点;
-        步骤信息->状态 = 枚举_任务状态::未启动;
-        步骤信息->优先级 = 子任务信息->优先级;
-        步骤信息->任务树类型 = 枚举_任务树类型::叶子任务; // 步骤节点本身不执行，字段仅占位
-        步骤信息->场景 = 编排头->主信息 ? 编排头->主信息->场景 : nullptr;
-        步骤信息->子任务头结点 = 子任务头;
-        步骤信息->阶段号 = 0;
-
-        auto* step_node = 任务类::新建任务节点(步骤信息, 编排头, "任务执行器::生成最小步骤_步骤节点");
-        if (!step_node) return false;
-
-        日志::运行("[任务执行] 已为编排任务生成最小步骤（单子任务）");
+        auto* stepInfo = 取步骤信息(步骤节点);
+        if (!stepInfo) return true;
+        if (stepInfo->当前选中方法首节点) return false;
+        if (!stepInfo->可用方法首节点列表.empty()) return false;
         return true;
     }
 
-    // ============================================================
-    // 叶子任务：执行一次，产出结果节点
-    // ============================================================
-    bool 私有_推进叶子任务(任务节点类* 叶子头) {
+    std::vector<任务执行模块_detail::结构_筹办方法候选> 私有_召回可筹办方法(任务节点类* 任务头结点) {
         using namespace 任务执行模块_detail;
 
-        if (!叶子头 || !叶子头->主信息) return false;
-        auto& mi = *叶子头->主信息;
-        if (是否终结(mi.状态)) return false;
+        std::vector<结构_筹办方法候选> out{};
+        auto* headInfo = 取头信息(任务头结点);
+        if (!headInfo || !headInfo->需求 || !headInfo->需求->主信息) return out;
+        auto* 目标状态 = headInfo->需求->主信息->被需求状态;
+        if (!目标状态) return out;
 
-        // 默认叶子执行：若未设置回调，则“保守失败”，迫使系统走尝试学习兜底
+        auto 当前条件特征 = 枚举场景二次特征指针(headInfo->场景);
+        auto 追加候选 = [&](方法节点类* 方法首节点, 方法节点类* 匹配结果节点, std::int64_t 基础评分) {
+            if (!方法首节点) return;
+            auto 条件展开 = 分析方法条件缺口(方法首节点, headInfo->场景, 当前条件特征);
+            if (!条件展开.当前可直接执行 && 条件展开.未满足状态.empty() && !枚举方法直接条件节点(方法首节点).empty()) return;
+
+            结构_筹办方法候选 c{};
+            c.方法首节点 = 方法首节点;
+            c.匹配结果节点 = 匹配结果节点;
+            c.首选条件节点 = 条件展开.条件节点;
+            c.未满足条件状态 = 条件展开.未满足状态;
+            c.可直接执行 = 条件展开.当前可直接执行;
+            c.评分Q = 基础评分 + (c.可直接执行 ? 30000 : 0) - static_cast<std::int64_t>(c.未满足条件状态.size()) * 5000;
+            out.push_back(std::move(c));
+        };
+
+        for (auto* methodHead : 枚举全部方法首节点()) {
+            if (!methodHead) continue;
+            if (avoid_filter_ && !avoid_filter_(任务头结点, methodHead)) continue;
+
+            结构_方法候选 best{};
+            for (auto* resultNode : 枚举方法树结果节点(methodHead)) {
+                const auto score = 评分_方法结果满足需求(headInfo->场景, 目标状态, resultNode);
+                if (score <= 0) continue;
+                if (!best.方法首节点 || score > best.评分Q) {
+                    best.方法首节点 = methodHead;
+                    best.匹配结果节点 = resultNode;
+                    best.评分Q = score;
+                    best.命中数量 = 1;
+                    best.目标数量 = 1;
+                }
+            }
+            if (best.方法首节点) 追加候选(best.方法首节点, best.匹配结果节点, best.评分Q);
+        }
+
+        std::sort(out.begin(), out.end(), [](const auto& a, const auto& b) {
+            return a.评分Q > b.评分Q;
+        });
+
+        if (out.empty() && !headInfo->目标维度签名.empty()) {
+            auto coarseHeads = 方法集.召回_按影响度量签名(
+                headInfo->目标维度签名,
+                cfg_.自动召回候选上限,
+                "任务执行器::召回可筹办方法/粗召回");
+            std::int64_t rank = static_cast<std::int64_t>(coarseHeads.size());
+            for (auto* methodHead : coarseHeads) {
+                if (!methodHead) continue;
+                if (avoid_filter_ && !avoid_filter_(任务头结点, methodHead)) continue;
+                auto resultNodes = 枚举方法树结果节点(methodHead);
+                追加候选(methodHead, resultNodes.empty() ? nullptr : resultNodes.front(), rank > 0 ? rank * 10000 : 1);
+                --rank;
+            }
+
+            std::sort(out.begin(), out.end(), [](const auto& a, const auto& b) {
+                return a.评分Q > b.评分Q;
+            });
+        }
+
+        if (out.size() > cfg_.自动召回候选上限) out.resize(cfg_.自动召回候选上限);
+        return out;
+    }
+
+    void 私有_补全步骤预测结果(任务节点类* 步骤节点) {
+        using namespace 任务执行模块_detail;
+
+        auto* stepInfo = 取步骤信息(步骤节点);
+        if (!stepInfo || !步骤节点->主信息) return;
+
+        std::vector<方法节点类*> methods = stepInfo->可用方法首节点列表;
+        if (methods.empty() && stepInfo->当前选中方法首节点) methods.push_back(stepInfo->当前选中方法首节点);
+        if (methods.empty()) return;
+
+        std::unordered_set<std::uintptr_t> existingResults{};
+        std::unordered_set<std::uintptr_t> existingPlaceholders{};
+        for (auto* resultNode : 枚举预测结果节点(步骤节点)) {
+            auto* info = 取结果信息(resultNode);
+            if (!info) continue;
+            if (info->对应方法结果节点) existingResults.insert(reinterpret_cast<std::uintptr_t>(info->对应方法结果节点));
+            else if (info->来源方法首节点) existingPlaceholders.insert(reinterpret_cast<std::uintptr_t>(info->来源方法首节点));
+        }
+
+        for (auto* methodHead : methods) {
+            if (!methodHead) continue;
+            auto resultNodes = 枚举方法树结果节点(methodHead);
+            if (resultNodes.empty()) {
+                const auto key = reinterpret_cast<std::uintptr_t>(methodHead);
+                if (!existingPlaceholders.insert(key).second) continue;
+
+                任务类::结构_创建结果参数 arg{};
+                arg.所属任务头结点 = stepInfo->所属任务头结点;
+                arg.结果场景 = nullptr;
+                arg.结果角色 = 枚举_任务结果角色::预测结果;
+                arg.来源方法首节点 = methodHead;
+                arg.命中后动作 = 枚举_分支选择动作::继续下一步;
+                arg.局部优先级偏移 = 步骤节点->主信息->局部优先级偏移;
+                arg.初始状态 = 枚举_任务状态::就绪;
+                (void)任务类::创建结果节点(步骤节点, arg, "任务执行器::补全步骤预测结果/占位预测");
+                continue;
+            }
+
+            for (auto* resultNode : resultNodes) {
+                const auto key = reinterpret_cast<std::uintptr_t>(resultNode);
+                if (!existingResults.insert(key).second) continue;
+
+                auto* rmi = 任务执行模块_detail::取方法结果信息(resultNode);
+                任务类::结构_创建结果参数 arg{};
+                arg.所属任务头结点 = stepInfo->所属任务头结点;
+                arg.结果场景 = rmi ? &rmi->场景根节点 : nullptr;
+                arg.结果角色 = 枚举_任务结果角色::预测结果;
+                arg.来源方法首节点 = methodHead;
+                arg.对应方法结果节点 = resultNode;
+                arg.命中后动作 = 枚举_分支选择动作::继续下一步;
+                arg.局部优先级偏移 = 步骤节点->主信息->局部优先级偏移;
+                arg.初始状态 = 枚举_任务状态::就绪;
+                (void)任务类::创建结果节点(步骤节点, arg, "任务执行器::补全步骤预测结果");
+            }
+        }
+    }
+
+    需求节点类* 私有_创建补条件需求(
+        任务节点类* 任务头结点,
+        状态节点类* 目标状态,
+        std::int64_t 权重,
+        const std::string& 调用点)
+    {
+        using namespace 任务执行模块_detail;
+
+        auto* headInfo = 取头信息(任务头结点);
+        auto* stateInfo = 取状态信息(目标状态);
+        if (!headInfo || !stateInfo) return nullptr;
+
+        auto* parentNeedInfo = (headInfo->需求 && headInfo->需求->主信息) ? headInfo->需求->主信息 : nullptr;
+        auto* 需求主体 = parentNeedInfo ? parentNeedInfo->需求主体 : dynamic_cast<存在节点类*>(stateInfo->状态主体);
+        auto* 被需求存在 = dynamic_cast<存在节点类*>(stateInfo->状态主体);
+        if (!被需求存在 && parentNeedInfo) 被需求存在 = parentNeedInfo->被需求存在;
+        if (!需求主体) 需求主体 = 被需求存在;
+        if (!需求主体 || !被需求存在) return nullptr;
+
+        auto* sceneMi = new 场景节点主信息类();
+        auto* demandScene = 世界树.创建场景(世界树.取内部世界(), sceneMi, 调用点 + "/创建需求场景");
+        if (!demandScene) return nullptr;
+
+        状态创建参数 stateArg{};
+        stateArg.状态域 = stateInfo->状态域;
+        stateArg.事件 = 枚举_存在状态事件::创建;
+        stateArg.状态主体 = stateInfo->状态主体;
+        stateArg.状态特征 = stateInfo->状态特征;
+        stateArg.状态值 = stateInfo->状态值;
+        stateArg.对应信息节点 = stateInfo->对应信息节点;
+        stateArg.是否变化 = true;
+        stateArg.now = 结构体_时间戳::当前_微秒();
+        auto* demandState = 状态集.创建状态(demandScene, stateArg);
+        if (!demandState) return nullptr;
+
+        需求类::结构_创建参数 needArg{};
+        needArg.描述 = parentNeedInfo ? parentNeedInfo->描述信息 : nullptr;
+        needArg.类型 = parentNeedInfo ? parentNeedInfo->类型 : nullptr;
+        needArg.发生场景 = headInfo->场景;
+        needArg.生成时间 = stateArg.now;
+        needArg.权重 = std::max<std::int64_t>(1, 权重);
+        return 需求集.创建需求(需求主体, 被需求存在, demandState, needArg, 调用点);
+    }
+
+    bool 私有_确保步骤补条件子任务(任务节点类* 任务头结点, 任务节点类* 步骤节点) {
+        using namespace 任务执行模块_detail;
+
+        auto* headInfo = 取头信息(任务头结点);
+        auto* stepInfo = 取步骤信息(步骤节点);
+        if (!headInfo || !stepInfo || !任务头结点->主信息 || !步骤节点->主信息) return false;
+        if (!stepInfo->并发子任务头结点列表.empty()) return false;
+
+        if (!stepInfo->当前选中方法首节点 && !stepInfo->可用方法首节点列表.empty()) {
+            stepInfo->当前选中方法首节点 = stepInfo->可用方法首节点列表.front();
+        }
+        auto* methodHead = stepInfo->当前选中方法首节点;
+        if (!methodHead) return false;
+
+        auto 当前条件特征 = 枚举场景二次特征指针(headInfo->场景);
+        auto gap = 分析方法条件缺口(methodHead, headInfo->场景, 当前条件特征);
+        if (gap.当前可直接执行 || gap.未满足状态.empty()) return false;
+
+        auto* parentNeedInfo = (headInfo->需求 && headInfo->需求->主信息) ? headInfo->需求->主信息 : nullptr;
+        const auto needWeight = parentNeedInfo
+            ? std::max<std::int64_t>(1, parentNeedInfo->权重)
+            : std::max<std::int64_t>(1, 任务头结点->主信息->基准优先级);
+
+        std::unordered_set<std::string> seen{};
+        bool createdAny = false;
+        std::int64_t childIndex = 0;
+
+        for (auto* targetState : gap.未满足状态) {
+            auto* targetInfo = 取状态信息(targetState);
+            if (!targetInfo) continue;
+
+            std::string key{};
+            if (targetInfo->状态主体) key += targetInfo->状态主体->获取主键();
+            key += "|";
+            if (targetInfo->状态特征) key += targetInfo->状态特征->获取主键();
+            key += "|";
+            if (std::holds_alternative<I64>(targetInfo->状态值)) key += std::to_string(std::get<I64>(targetInfo->状态值));
+            else key += std::to_string(targetInfo->状态值.index());
+            if (!seen.insert(key).second) continue;
+
+            auto* need = 私有_创建补条件需求(任务头结点, targetState, needWeight, "任务执行器::确保步骤补条件子任务/创建需求");
+            if (!need) continue;
+
+            任务类::结构_创建任务头参数 arg{};
+            arg.父任务头结点 = 任务头结点;
+            arg.来源父步骤节点 = 步骤节点;
+            arg.初始场景 = headInfo->场景;
+            arg.局部优先级偏移 = std::max<std::int64_t>(0, 步骤节点->主信息->局部优先级偏移 + 50000 - childIndex * 1000);
+            arg.任务树类型 = 枚举_任务树类型::编排任务;
+            arg.自动进入筹办阶段 = true;
+
+            auto* childTask = 任务类::创建任务头结点(need, arg, nullptr, "任务执行器::确保步骤补条件子任务/创建子任务");
+            if (!childTask) continue;
+
+            (void)任务类::绑定步骤并发子任务(步骤节点, childTask, !createdAny, "任务执行器::确保步骤补条件子任务/绑定步骤");
+            createdAny = true;
+            ++childIndex;
+        }
+
+        if (createdAny) {
+            任务类::设置任务状态(步骤节点, 枚举_任务状态::等待中, "任务执行器::确保步骤补条件子任务/步骤等待补条件");
+            任务类::设置任务状态(任务头结点, 枚举_任务状态::运行中, "任务执行器::确保步骤补条件子任务/头结点等待补条件");
+        }
+        return createdAny;
+    }
+
+    任务节点类* 私有_自动筹办任务(任务节点类* 任务头结点) {
+        using namespace 任务执行模块_detail;
+
+        auto* headInfo = 取头信息(任务头结点);
+        if (!headInfo || !任务头结点->主信息) return nullptr;
+
+        auto* existed = 选择首选步骤节点(任务头结点);
+        if (existed && !私有_步骤需要自动筹办(existed)) {
+            私有_补全步骤预测结果(existed);
+            (void)私有_确保步骤补条件子任务(任务头结点, existed);
+            (void)任务类::设置任务当前步骤(任务头结点->主信息, existed, 结构体_时间戳::当前_微秒(), "任务执行器::自动筹办任务/沿用已有步骤");
+            return existed;
+        }
+
+        任务类::设置任务状态(任务头结点, 枚举_任务状态::筹办中, "任务执行器::自动筹办任务/进入筹办");
+
+        for (auto* child : 枚举子节点(任务头结点)) {
+            if (!取步骤信息(child)) continue;
+            if (!私有_步骤需要自动筹办(child)) continue;
+            if (!枚举步骤下结果节点(child).empty()) continue;
+            if (headInfo->当前步骤节点 == child) {
+                (void)任务类::设置任务当前步骤(任务头结点->主信息, nullptr, 结构体_时间戳::当前_微秒(), "任务执行器::自动筹办任务/清空当前步骤");
+            }
+            (void)任务类::删除任务节点(child, "任务执行器::自动筹办任务/删除空白步骤");
+        }
+
+        auto candidates = 私有_召回可筹办方法(任务头结点);
+        if (candidates.empty()) return nullptr;
+
+        std::int32_t stepIndex = 0;
+        for (const auto& candidate : candidates) {
+            任务类::结构_创建步骤参数 arg{};
+            arg.所属任务头结点 = 任务头结点;
+            arg.步骤场景 = headInfo->场景;
+            arg.可用方法首节点列表 = { candidate.方法首节点 };
+            arg.当前选中方法首节点 = candidate.方法首节点;
+            arg.局部优先级偏移 = candidate.评分Q;
+            arg.步骤序号 = stepIndex++;
+            arg.允许重试次数 = static_cast<std::int32_t>(cfg_.回跳重试上限);
+            arg.允许切换方法 = false;
+            auto* step = 任务类::创建步骤节点(任务头结点, arg, "任务执行器::自动筹办任务/创建并列步骤");
+            if (!step) continue;
+            私有_补全步骤预测结果(step);
+            if (!candidate.可直接执行) (void)私有_确保步骤补条件子任务(任务头结点, step);
+        }
+
+        auto* best = 选择首选步骤节点(任务头结点);
+        if (best) {
+            (void)任务类::设置任务当前步骤(任务头结点->主信息, best, 结构体_时间戳::当前_微秒(), "任务执行器::自动筹办任务/设置首选步骤");
+        }
+        return best;
+    }
+
+    bool 私有_先推进步骤子任务(任务节点类* 任务头结点, 任务节点类* 步骤节点, bool& 子任务已全部完成) {
+        using namespace 任务执行模块_detail;
+
+        子任务已全部完成 = false;
+        auto* headInfo = 取头信息(任务头结点);
+        auto* stepInfo = 取步骤信息(步骤节点);
+        if (!headInfo || !stepInfo || !任务头结点->主信息 || !步骤节点->主信息) return false;
+
+        auto summary = 汇总步骤子任务(stepInfo);
+        if (summary.总数 == 0) {
+            (void)任务类::设置任务当前子任务(步骤节点->主信息, nullptr, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/清空步骤当前子任务");
+            (void)任务类::设置任务当前子任务(任务头结点->主信息, nullptr, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/清空头结点当前子任务");
+            return false;
+        }
+
+        if (summary.失败数 > 0) {
+            (void)任务类::设置任务当前子任务(步骤节点->主信息, nullptr, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/子任务失败清空步骤当前子任务");
+            (void)任务类::设置任务当前子任务(任务头结点->主信息, nullptr, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/子任务失败清空头结点当前子任务");
+            任务类::设置任务状态(步骤节点, 枚举_任务状态::失败, "任务执行器::先推进步骤子任务/步骤失败");
+            任务类::设置任务状态(任务头结点, 枚举_任务状态::失败, "任务执行器::先推进步骤子任务/头结点失败");
+            return true;
+        }
+
+        if (summary.完成数 == summary.总数) {
+            (void)任务类::设置任务当前子任务(步骤节点->主信息, nullptr, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/全部完成清空步骤当前子任务");
+            (void)任务类::设置任务当前子任务(任务头结点->主信息, nullptr, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/全部完成清空头结点当前子任务");
+            任务类::设置任务状态(步骤节点, 枚举_任务状态::就绪, "任务执行器::先推进步骤子任务/步骤恢复就绪");
+            子任务已全部完成 = true;
+            return true;
+        }
+
+        auto* childToRun = summary.首选可推进子任务 ? summary.首选可推进子任务 : summary.首个未终结子任务;
+        if (childToRun) {
+            (void)任务类::设置任务调度优先级(childToRun->主信息, childToRun->主信息->调度优先级, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/刷新子任务优先级");
+            (void)任务类::设置任务当前子任务(步骤节点->主信息, childToRun, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/设置步骤当前子任务");
+            (void)任务类::设置任务当前子任务(任务头结点->主信息, childToRun, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/设置头结点当前子任务");
+        }
+
+        if (summary.首选可推进子任务) {
+            任务类::设置任务状态(步骤节点, 枚举_任务状态::等待中, "任务执行器::先推进步骤子任务/步骤等待子任务");
+            任务类::设置任务状态(任务头结点, 枚举_任务状态::运行中, "任务执行器::先推进步骤子任务/头结点调度子任务");
+            (void)推进一步(summary.首选可推进子任务);
+
+            auto after = 汇总步骤子任务(stepInfo);
+            if (after.失败数 > 0) {
+                (void)任务类::设置任务当前子任务(步骤节点->主信息, nullptr, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/推进后失败清空步骤当前子任务");
+                (void)任务类::设置任务当前子任务(任务头结点->主信息, nullptr, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/推进后失败清空头结点当前子任务");
+                任务类::设置任务状态(步骤节点, 枚举_任务状态::失败, "任务执行器::先推进步骤子任务/推进后步骤失败");
+                任务类::设置任务状态(任务头结点, 枚举_任务状态::失败, "任务执行器::先推进步骤子任务/推进后头结点失败");
+                return true;
+            }
+            if (after.总数 > 0 && after.完成数 == after.总数) {
+                (void)任务类::设置任务当前子任务(步骤节点->主信息, nullptr, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/推进后全部完成清空步骤当前子任务");
+                (void)任务类::设置任务当前子任务(任务头结点->主信息, nullptr, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/推进后全部完成清空头结点当前子任务");
+                任务类::设置任务状态(步骤节点, 枚举_任务状态::就绪, "任务执行器::先推进步骤子任务/推进后步骤恢复就绪");
+                子任务已全部完成 = true;
+                return true;
+            }
+            return true;
+        }
+
+        任务类::设置任务状态(步骤节点, 枚举_任务状态::等待中, "任务执行器::先推进步骤子任务/步骤等待并发子任务");
+        任务类::设置任务状态(任务头结点, 枚举_任务状态::等待中, "任务执行器::先推进步骤子任务/头结点等待并发子任务");
+        return true;
+    }
+
+    bool 私有_切换到下一个方法(任务步骤节点信息* stepInfo) {
+        if (!stepInfo || !stepInfo->允许切换方法) return false;
+        const auto& methods = stepInfo->可用方法首节点列表;
+        if (methods.size() < 2) return false;
+
+        auto it = std::find(methods.begin(), methods.end(), stepInfo->当前选中方法首节点);
+        if (it == methods.end()) {
+            stepInfo->当前选中方法首节点 = methods.front();
+            return true;
+        }
+        ++it;
+        if (it == methods.end()) return false;
+        stepInfo->当前选中方法首节点 = *it;
+        return true;
+    }
+
+    bool 私有_执行步骤(任务节点类* 任务头结点, 任务节点类* 步骤节点) {
+        using namespace 任务执行模块_detail;
+
+        auto* headInfo = 取头信息(任务头结点);
+        auto* stepInfo = 取步骤信息(步骤节点);
+        if (!headInfo || !stepInfo || !任务头结点->主信息 || !步骤节点->主信息) return false;
+
+        (void)任务类::设置任务当前步骤(任务头结点->主信息, 步骤节点, 结构体_时间戳::当前_微秒(), "任务执行器::执行步骤/设置当前步骤");
+
+        if (!stepInfo->当前选中方法首节点 && !stepInfo->可用方法首节点列表.empty()) {
+            stepInfo->当前选中方法首节点 = stepInfo->可用方法首节点列表.front();
+        }
+        if (!stepInfo->当前选中方法首节点) return false;
+
+        (void)私有_确保步骤补条件子任务(任务头结点, 步骤节点);
+
+        bool 子任务已全部完成 = false;
+        if (私有_先推进步骤子任务(任务头结点, 步骤节点, 子任务已全部完成)) {
+            if (!子任务已全部完成) return true;
+        }
+
+        私有_补全步骤预测结果(步骤节点);
+        任务类::设置任务状态(步骤节点, 枚举_任务状态::执行中, "任务执行器::执行步骤/步骤执行中");
+
         结构_叶子执行结果 r{};
-        if (leaf_exec_) r = leaf_exec_(叶子头);
+        if (leaf_exec_) {
+            r = leaf_exec_(步骤节点);
+        }
         else {
             r.成功 = false;
-            r.摘要 = "叶子执行回调未设置：按失败处理，等待尝试学习";
+            r.摘要 = "步骤执行回调未设置";
             r.失败类型 = 枚举_任务失败类型::无叶子执行回调;
             r.建议动作 = 枚举_任务反馈动作::转入尝试学习;
             r.推荐重试任务树类型 = 枚举_任务树类型::叶子任务;
         }
 
-        r = 私有_规范化叶子执行结果(叶子头, std::move(r));
+        auto* matchedPrediction = 选择命中预测结果节点(步骤节点, r.结果场景, stepInfo->当前选中方法首节点);
+        auto* matchedInfo = 取结果信息(matchedPrediction);
+        auto action = 从反馈动作映射处置(r.成功, r.建议动作);
+        if (matchedInfo && matchedInfo->命中后动作 != 枚举_分支选择动作::未定义) {
+            action = matchedInfo->命中后动作;
+        }
 
-        任务类::设置任务状态(叶子头, r.成功 ? 枚举_任务状态::完成 : 枚举_任务状态::失败, "任务执行器::推进叶子任务");
-        (void)私有_挂接结果节点(叶子头, r);
+        任务类::结构_创建结果参数 resultArg{};
+        resultArg.所属任务头结点 = 任务头结点;
+        resultArg.结果场景 = r.结果场景
+            ? r.结果场景
+            : ((matchedPrediction && matchedPrediction->主信息) ? matchedPrediction->主信息->场景 : 步骤节点->主信息->场景);
+        resultArg.结果角色 = 枚举_任务结果角色::实际结果;
+        resultArg.来源方法首节点 = stepInfo->当前选中方法首节点;
+        resultArg.对应方法结果节点 = matchedInfo ? matchedInfo->对应方法结果节点 : nullptr;
+        resultArg.命中预测结果节点 = matchedPrediction;
+        resultArg.命中后动作 = action;
+        resultArg.是否预测外结果 = matchedPrediction == nullptr;
+        resultArg.置信度_Q10000 = matchedPrediction ? 10000 : 0;
+        resultArg.局部优先级偏移 = (matchedPrediction && matchedPrediction->主信息) ? matchedPrediction->主信息->局部优先级偏移 : 步骤节点->主信息->局部优先级偏移;
+        resultArg.错误码 = static_cast<std::int64_t>(r.失败类型);
+        resultArg.初始状态 = r.成功 ? 枚举_任务状态::完成 : 枚举_任务状态::失败;
+        auto* actualResultNode = 任务类::创建结果节点(步骤节点, resultArg, "任务执行器::执行步骤/追加实际结果");
+        if (!actualResultNode) return false;
 
-        // 失败时兜底尝试学习
-        if (!r.成功) (void)私有_确保尝试学习任务();
+        (void)任务类::设置任务最近结果节点(任务头结点->主信息, actualResultNode, 结构体_时间戳::当前_微秒(), "任务执行器::执行步骤/记录最近结果");
+        (void)任务类::设置任务当前分支动作(任务头结点->主信息, action, 结构体_时间戳::当前_微秒(), "任务执行器::执行步骤/记录动作");
+        任务类::设置任务状态(步骤节点, r.成功 ? 枚举_任务状态::完成 : 枚举_任务状态::失败, "任务执行器::执行步骤/步骤结束");
+
+        auto* nextStep = 取命中结果后的下一步骤(matchedPrediction);
+        if (nextStep) {
+            (void)任务类::设置任务当前步骤(任务头结点->主信息, nextStep, 结构体_时间戳::当前_微秒(), "任务执行器::执行步骤/进入下一步骤");
+            任务类::设置任务状态(任务头结点, 枚举_任务状态::运行中, "任务执行器::执行步骤/头结点继续运行");
+            return true;
+        }
+
+        if (!r.成功) {
+            const auto retryLimit = stepInfo->允许重试次数 > 0 ? stepInfo->允许重试次数 : static_cast<std::int32_t>(cfg_.回跳重试上限);
+            if (action == 枚举_分支选择动作::回跳重试 && stepInfo->已重试次数 < retryLimit) {
+                ++stepInfo->已重试次数;
+                (void)私有_切换到下一个方法(stepInfo);
+                任务类::设置任务状态(步骤节点, 枚举_任务状态::就绪, "任务执行器::执行步骤/重试回到就绪");
+                任务类::设置任务状态(任务头结点, 枚举_任务状态::运行中, "任务执行器::执行步骤/任务等待重试");
+                return true;
+            }
+
+            if (action == 枚举_分支选择动作::转入尝试学习) {
+                auto* learn = 私有_确保尝试学习任务();
+                if (learn && learn != 任务头结点) {
+                    (void)推进一步(learn);
+                }
+            }
+
+            if (action == 枚举_分支选择动作::挂起等待) {
+                任务类::设置任务状态(任务头结点, 枚举_任务状态::挂起, "任务执行器::执行步骤/挂起等待");
+            }
+            else {
+                任务类::设置任务状态(任务头结点, 枚举_任务状态::失败, "任务执行器::执行步骤/任务失败");
+            }
+            return true;
+        }
+
+        任务类::设置任务状态(任务头结点, 枚举_任务状态::完成, "任务执行器::执行步骤/任务完成");
         return true;
     }
 
-    // ============================================================
-    // 结果节点：挂在头结点子链下（最小信息：来源子任务 + 结果场景）
-    // ============================================================
-    任务节点类* 私有_挂接结果节点(任务节点类* head, bool 成功, const std::string& 摘要) {
-        结构_叶子执行结果 r{};
-        r.成功 = 成功;
-        r.摘要 = 摘要;
-        r.建议动作 = 成功 ? 枚举_任务反馈动作::继续下一步 : 枚举_任务反馈动作::转入尝试学习;
-        r.失败类型 = 成功 ? 枚举_任务失败类型::未定义 : 枚举_任务失败类型::需要尝试学习;
-        r.推荐重试任务树类型 = 枚举_任务树类型::叶子任务;
-        return 私有_挂接结果节点(head, r);
-    }
-
-    任务节点类* 私有_挂接结果节点(任务节点类* head, const 结构_叶子执行结果& 结果) {
-        using namespace 任务执行模块_detail;
-
-        auto* info = new 任务结果节点信息();
-        info->节点种类 = 枚举_任务节点种类::结果节点;
-        info->状态 = 结果.成功 ? 枚举_任务状态::完成 : 枚举_任务状态::失败;
-        info->优先级 = head && head->主信息 ? head->主信息->优先级 : 0;
-        info->任务树类型 = 枚举_任务树类型::叶子任务;
-        info->场景 = 结果.结果场景 ? 结果.结果场景 : (head && head->主信息 ? head->主信息->场景 : nullptr);
-        info->来源子任务头结点 = head; // 最小追溯：自己
-        info->评估摘要存在 = nullptr;
-
-        auto* node = 任务类::新建任务节点(info, head, "任务执行器::挂接结果节点");
-        if (node) {
-            const auto now = 结构体_时间戳::当前_微秒();
-            私有_写入结果评估摘要(node, 结果);
-            私有_记录任务序列样本(node, 结果);
-            if (head && head->主信息) {
-                任务类::设置任务最近结果节点(head->主信息, node, now, "任务执行器::挂接结果节点/最近结果");
-                枚举_分支选择动作 分支动作 = 枚举_分支选择动作::未定义;
-                switch (结果.建议动作) {
-                case 枚举_任务反馈动作::继续下一步:
-                    分支动作 = 枚举_分支选择动作::继续下一步;
-                    break;
-                case 枚举_任务反馈动作::回跳重试:
-                case 枚举_任务反馈动作::更新参数后重试:
-                    分支动作 = 枚举_分支选择动作::回跳重试;
-                    break;
-                case 枚举_任务反馈动作::转入尝试学习:
-                    分支动作 = 枚举_分支选择动作::转入尝试学习;
-                    break;
-                case 枚举_任务反馈动作::挂起等待:
-                    分支动作 = 枚举_分支选择动作::挂起等待;
-                    break;
-                default:
-                    break;
-                }
-                if (分支动作 != 枚举_分支选择动作::未定义) {
-                    任务类::设置任务当前分支动作(head->主信息, 分支动作, now, "任务执行器::挂接结果节点/分支动作");
-                }
-            }
-            日志::运行f("[任务执行] 结果节点已挂接：head={}, ok={}, {}", (void*)head, 结果.成功, 结果.摘要);
-        }
-        return node;
-    }
-
-    // ============================================================
-    // 尝试学习兜底：确保存在一个“常驻学习任务”
-    // - 当前最小实现：创建一个叶子任务（你后续接入真正学习执行器）
-    // ============================================================
     任务节点类* 私有_确保尝试学习任务() {
         if (try_learn_head_ && try_learn_head_->主信息) return try_learn_head_;
 
         auto* mi = new 任务头结点信息();
         mi->节点种类 = 枚举_任务节点种类::头结点;
         mi->状态 = 枚举_任务状态::未启动;
-        mi->优先级 = (std::numeric_limits<std::int64_t>::min)(); // 最低
+        mi->基准优先级 = 0;
+        mi->局部优先级偏移 = 0;
+        mi->调度优先级 = 0;
         mi->任务树类型 = 枚举_任务树类型::叶子任务;
         mi->场景 = nullptr;
         mi->任务虚拟存在 = nullptr;
         mi->需求 = nullptr;
 
-        // 作为根层任务插入（父节点=null）
         try_learn_head_ = 任务类::新建任务节点(mi, nullptr, "任务执行器::确保尝试学习任务");
-        if (try_learn_head_) {
-            日志::运行("[任务执行] 已创建兜底任务：学习_尝试学习（叶子任务占位）");
-        }
         return try_learn_head_;
-    }
-
-private:
-    结构_叶子执行结果 私有_规范化叶子执行结果(任务节点类* 叶子头, 结构_叶子执行结果 r) {
-        if (r.成功) {
-            if (r.建议动作 == 枚举_任务反馈动作::未定义) {
-                r.建议动作 = 枚举_任务反馈动作::继续下一步;
-            }
-            r.失败类型 = 枚举_任务失败类型::未定义;
-            r.推荐参数 = 枚举_推荐参数::未定义;
-            r.推荐参数增量 = 0;
-            r.缺口_Q10000 = 0;
-        }
-        else {
-            if (r.失败类型 == 枚举_任务失败类型::未定义) {
-                r.失败类型 = r.结果场景 ? 枚举_任务失败类型::参数不足 : 枚举_任务失败类型::需要尝试学习;
-            }
-            if (r.建议动作 == 枚举_任务反馈动作::未定义) {
-                switch (r.失败类型) {
-                case 枚举_任务失败类型::识别缺口过大:
-                    r.建议动作 = 枚举_任务反馈动作::更新参数后重试;
-                    if (r.推荐参数 == 枚举_推荐参数::未定义) r.推荐参数 = 枚举_推荐参数::焦距;
-                    if (r.推荐参数增量 == 0) r.推荐参数增量 = 1;
-                    break;
-                case 枚举_任务失败类型::轮廓不稳定:
-                    r.建议动作 = 枚举_任务反馈动作::更新参数后重试;
-                    if (r.推荐参数 == 枚举_推荐参数::未定义) r.推荐参数 = 枚举_推荐参数::对焦;
-                    if (r.推荐参数增量 == 0) r.推荐参数增量 = 1;
-                    break;
-                case 枚举_任务失败类型::深度质量不足:
-                    r.建议动作 = 枚举_任务反馈动作::更新参数后重试;
-                    if (r.推荐参数 == 枚举_推荐参数::未定义) r.推荐参数 = 枚举_推荐参数::深度模式;
-                    if (r.推荐参数增量 == 0) r.推荐参数增量 = 1;
-                    break;
-                case 枚举_任务失败类型::跨帧匹配冲突:
-                    r.建议动作 = 枚举_任务反馈动作::回跳重试;
-                    if (r.推荐参数 == 枚举_推荐参数::未定义) r.推荐参数 = 枚举_推荐参数::匹配阈值;
-                    if (r.推荐参数增量 == 0) r.推荐参数增量 = 1;
-                    break;
-                case 枚举_任务失败类型::参数不足:
-                    r.建议动作 = 枚举_任务反馈动作::更新参数后重试;
-                    if (r.推荐参数 == 枚举_推荐参数::未定义) r.推荐参数 = 枚举_推荐参数::轮廓阈值;
-                    if (r.推荐参数增量 == 0) r.推荐参数增量 = 1;
-                    break;
-                case 枚举_任务失败类型::无结果场景:
-                case 枚举_任务失败类型::无叶子执行回调:
-                case 枚举_任务失败类型::需要尝试学习:
-                default:
-                    r.建议动作 = 枚举_任务反馈动作::转入尝试学习;
-                    break;
-                }
-            }
-            if (r.推荐重试任务树类型 == 枚举_任务树类型::未定义) {
-                r.推荐重试任务树类型 = 枚举_任务树类型::叶子任务;
-            }
-        }
-
-        if (r.失败对象指针 == 0 && 叶子头) {
-            r.失败对象指针 = reinterpret_cast<std::uintptr_t>(叶子头);
-        }
-        return r;
-    }
-
-    存在节点类* 私有_确保结果评估摘要存在(任务节点类* 结果节点, 时间戳 now) {
-        using namespace 任务执行模块_detail;
-
-        auto* info = 取结果信息(结果节点);
-        if (!info) return nullptr;
-        if (info->评估摘要存在) return info->评估摘要存在;
-
-        auto* parent = info->任务虚拟存在;
-        if (!parent) parent = 世界树.取内部世界();
-        if (!parent) return nullptr;
-
-        auto* veMi = new 存在节点主信息类();
-        veMi->类型 = const_cast<词性节点类*>(类型_存在_任务结果评估摘要_());
-        veMi->名称 = const_cast<词性节点类*>(名称_存在_任务结果评估摘要_());
-        info->评估摘要存在 = 世界树.添加子存在(parent, veMi, now, "任务执行器::确保结果评估摘要存在");
-        return info->评估摘要存在;
-    }
-
-    void 私有_写入结果评估摘要(任务节点类* 结果节点, const 结构_叶子执行结果& r) {
-        using namespace 任务执行模块_detail;
-
-        auto* info = 取结果信息(结果节点);
-        if (!info) return;
-
-        const 时间戳 now = 结构体_时间戳::当前_微秒();
-        auto* eval = 私有_确保结果评估摘要存在(结果节点, now);
-        if (!eval) return;
-
-        auto* 场景 = info->场景 ? info->场景 : (info->来源子任务头结点 && info->来源子任务头结点->主信息 ? info->来源子任务头结点->主信息->场景 : nullptr);
-        if (!场景) return;
-
-        写评估特征_I64_(场景, eval, 特征_结果成功标记_(), r.成功 ? 1 : 0, now, "任务执行器::写入结果评估摘要/成功");
-        写评估特征_I64_(场景, eval, 特征_结果失败类型ID_(), static_cast<I64>(r.失败类型), now, "任务执行器::写入结果评估摘要/失败类型");
-        写评估特征_I64_(场景, eval, 特征_结果建议动作_(), static_cast<I64>(r.建议动作), now, "任务执行器::写入结果评估摘要/建议动作");
-        写评估特征_I64_(场景, eval, 特征_结果推荐参数ID_(), static_cast<I64>(r.推荐参数), now, "任务执行器::写入结果评估摘要/推荐参数");
-        写评估特征_I64_(场景, eval, 特征_结果推荐参数增量_(), r.推荐参数增量, now, "任务执行器::写入结果评估摘要/参数增量");
-        写评估特征_I64_(场景, eval, 特征_结果缺口_Q10000_(), r.缺口_Q10000, now, "任务执行器::写入结果评估摘要/缺口");
-        写评估特征_I64_(场景, eval, 特征_结果推荐重试任务树类型_(), static_cast<I64>(r.推荐重试任务树类型), now, "任务执行器::写入结果评估摘要/重试任务");
-        写评估特征_I64_(场景, eval, 特征_结果摘要哈希_(), static_cast<I64>(计算摘要哈希_(r.摘要) & 0x7fffffffffffffffULL), now, "任务执行器::写入结果评估摘要/摘要哈希");
-
-        if (info->来源子任务头结点) {
-            写评估特征_指针_(场景, eval, 特征_结果来源任务节点指针_(), reinterpret_cast<std::uintptr_t>(info->来源子任务头结点), now, "任务执行器::写入结果评估摘要/来源任务");
-        }
-        if (r.失败对象指针 != 0) {
-            写评估特征_指针_(场景, eval, 特征_结果失败对象指针_(), r.失败对象指针, now, "任务执行器::写入结果评估摘要/失败对象");
-        }
-    }
-
-    枚举_任务反馈动作 私有_读取任务最近建议动作(任务节点类* 任务头) const {
-        using namespace 任务执行模块_detail;
-
-        auto* 结果节点 = 查找最近结果节点(任务头);
-        auto* info = 取结果信息(结果节点);
-        if (!info || !info->评估摘要存在) return 枚举_任务反馈动作::未定义;
-
-        const auto v = 读取特征_I64_(info->评估摘要存在, 特征_结果建议动作_(), 0, "任务执行器::读取任务最近建议动作");
-        return static_cast<枚举_任务反馈动作>(v);
-    }
-
-    存在节点类* 私有_确保任务序列样本存在(std::uint64_t 序列签名, 时间戳 now) {
-        using namespace 任务执行模块_detail;
-        if (序列签名 == 0) return nullptr;
-        auto* 内部世界 = 世界树.取内部世界();
-        if (!内部世界) return nullptr;
-
-        return 世界树.取或创建子存在_按类型并按特征I64(
-            内部世界,
-            类型_存在_任务序列样本_(),
-            特征_任务序列签名哈希_(),
-            static_cast<I64>(序列签名 & 0x7fffffffffffffffULL),
-            now,
-            "任务执行器::确保任务序列样本存在");
-    }
-
-    方法节点类* 私有_尝试沉淀任务序列为方法(任务节点类* 结果节点, std::uint64_t 序列签名, 时间戳 now) {
-        using namespace 任务执行模块_detail;
-
-        auto* info = 取结果信息(结果节点);
-        if (!info || !info->来源子任务头结点 || 序列签名 == 0) return nullptr;
-
-        auto* 输入场景 = info->来源子任务头结点->主信息 ? info->来源子任务头结点->主信息->场景 : nullptr;
-        auto* 输出场景 = info->场景;
-
-        结构体_动作句柄 handle{};
-        handle.类型 = 枚举_动作句柄类型::动作序列主键;
-        handle.动作序列主键 = std::string("taskseq:") + std::to_string(序列签名);
-
-        const auto* 动作名 = 语素集.添加词性词(std::string("任务序列_") + std::to_string(序列签名), "动词");
-        auto* 方法首节点 = 方法集.注册方法首节点(动作名, handle, 枚举_方法沉淀来源::组合, {}, "任务执行器::尝试沉淀任务序列为方法/注册首节点");
-        if (!方法首节点) return nullptr;
-
-        方法集.初始化方法虚拟存在信息(方法首节点, now, "任务执行器::尝试沉淀任务序列为方法/初始化");
-
-        auto* 条件节点 = 输入场景
-            ? 方法集.取或创建_条件节点_按场景(方法首节点, 输入场景, now, 64, {}, "任务执行器::尝试沉淀任务序列为方法/条件")
-            : 方法集.取或创建_条件节点_按签名(方法首节点, 0ull, now, 64, "任务执行器::尝试沉淀任务序列为方法/空条件");
-        if (!条件节点) return 方法首节点;
-
-        方法节点类* 结果方法节点 = nullptr;
-        if (输出场景) {
-            const auto 结果签名 = 方法集.生成结果签名_基础(输出场景, 96, "任务执行器::尝试沉淀任务序列为方法/结果签名");
-            结果方法节点 = 方法集.取或创建_结果节点_按签名(条件节点, 结果签名, 输出场景, now, 64, "任务执行器::尝试沉淀任务序列为方法/结果节点");
-        }
-
-        方法集.写入_运行证据_到节点虚拟存在(方法首节点, 条件节点, 结果方法节点, true, 0, 0, 序列签名, now, "任务执行器::尝试沉淀任务序列为方法/写证据");
-        return 方法首节点;
-    }
-
-    void 私有_记录任务序列样本(任务节点类* 结果节点, const 结构_叶子执行结果& r) {
-        using namespace 任务执行模块_detail;
-
-        auto* info = 取结果信息(结果节点);
-        if (!info || !info->来源子任务头结点) return;
-
-        I64 步骤数 = 0;
-        const auto 序列签名 = 计算任务序列签名_(info->来源子任务头结点, &步骤数);
-        if (序列签名 == 0) return;
-
-        const 时间戳 now = 结构体_时间戳::当前_微秒();
-        auto* 样本存在 = 私有_确保任务序列样本存在(序列签名, now);
-        if (!样本存在) return;
-
-        auto* 场景 = info->场景 ? info->场景 : (info->来源子任务头结点->主信息 ? info->来源子任务头结点->主信息->场景 : nullptr);
-        if (!场景) return;
-
-        const I64 样本数 = 读取特征_I64_(样本存在, 特征_任务序列样本数_(), 0, "任务执行器::记录任务序列样本/读样本数") + 1;
-        const I64 成功次数 = 读取特征_I64_(样本存在, 特征_任务序列成功次数_(), 0, "任务执行器::记录任务序列样本/读成功次数") + (r.成功 ? 1 : 0);
-        const I64 失败次数 = 读取特征_I64_(样本存在, 特征_任务序列失败次数_(), 0, "任务执行器::记录任务序列样本/读失败次数") + (r.成功 ? 0 : 1);
-        const I64 上次成功标记 = 读取特征_I64_(样本存在, 特征_任务序列最近成功标记_(), 0, "任务执行器::记录任务序列样本/读上次成功标记");
-        const I64 原连续成功次数 = 读取特征_I64_(样本存在, 特征_任务序列连续成功次数_(), 0, "任务执行器::记录任务序列样本/读连续成功次数");
-        const I64 连续成功次数 = r.成功 ? ((上次成功标记 == 1) ? (原连续成功次数 + 1) : 1) : 0;
-        const I64 成功率_Q10000 = 样本数 > 0 ? static_cast<I64>((成功次数 * 10000) / 样本数) : 0;
-        const I64 可沉淀 = (样本数 >= 5 && 成功率_Q10000 >= 8000 && 连续成功次数 >= 3) ? 1 : 0;
-
-        写评估特征_I64_(场景, 样本存在, 特征_任务序列签名哈希_(), static_cast<I64>(序列签名 & 0x7fffffffffffffffULL), now, "任务执行器::记录任务序列样本/签名");
-        写评估特征_I64_(场景, 样本存在, 特征_任务序列步骤数_(), 步骤数, now, "任务执行器::记录任务序列样本/步骤数");
-        写评估特征_I64_(场景, 样本存在, 特征_任务序列样本数_(), 样本数, now, "任务执行器::记录任务序列样本/样本数");
-        写评估特征_I64_(场景, 样本存在, 特征_任务序列成功次数_(), 成功次数, now, "任务执行器::记录任务序列样本/成功次数");
-        写评估特征_I64_(场景, 样本存在, 特征_任务序列失败次数_(), 失败次数, now, "任务执行器::记录任务序列样本/失败次数");
-        写评估特征_I64_(场景, 样本存在, 特征_任务序列连续成功次数_(), 连续成功次数, now, "任务执行器::记录任务序列样本/连续成功次数");
-        写评估特征_I64_(场景, 样本存在, 特征_任务序列最近成功标记_(), r.成功 ? 1 : 0, now, "任务执行器::记录任务序列样本/最近成功标记");
-        写评估特征_I64_(场景, 样本存在, 特征_任务序列成功率_Q10000_(), 成功率_Q10000, now, "任务执行器::记录任务序列样本/成功率");
-        写评估特征_I64_(场景, 样本存在, 特征_任务序列可沉淀方法标记_(), 可沉淀, now, "任务执行器::记录任务序列样本/可沉淀");
-
-        if (info->评估摘要存在) {
-            写评估特征_I64_(场景, info->评估摘要存在, 特征_结果任务序列签名哈希_(), static_cast<I64>(序列签名 & 0x7fffffffffffffffULL), now, "任务执行器::记录任务序列样本/结果签名");
-            写评估特征_I64_(场景, info->评估摘要存在, 特征_结果任务序列可沉淀方法标记_(), 可沉淀, now, "任务执行器::记录任务序列样本/结果可沉淀");
-        }
-
-        if (可沉淀 && r.成功) {
-            if (auto* 方法首节点 = 私有_尝试沉淀任务序列为方法(结果节点, 序列签名, now)) {
-                写评估特征_指针_(场景, 样本存在, 特征_任务序列方法首节点指针_(), reinterpret_cast<std::uintptr_t>(方法首节点), now, "任务执行器::记录任务序列样本/方法首节点");
-            }
-        }
     }
 
 private:
     结构_配置 cfg_{};
     Fn_叶子执行 leaf_exec_{};
-
+    Fn_方法规避过滤 avoid_filter_{};
     任务节点类* try_learn_head_ = nullptr;
-
-    std::unordered_map<任务节点类*, std::int64_t> 回跳计数_{};
-    std::int64_t 当前递归深度_ = 0;
 };
+
+
+
+
+
+
+
+
+
+
+
 
 
 

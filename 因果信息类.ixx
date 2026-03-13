@@ -495,3 +495,4 @@ public:
 };
 
 export inline 因果类 因果集{};
+

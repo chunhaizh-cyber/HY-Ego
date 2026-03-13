@@ -1,4 +1,4 @@
-module;
+﻿module;
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <unordered_set>
@@ -2102,3 +2102,5 @@ public:
         return out;
     }
 };
+
+

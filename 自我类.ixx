@@ -91,6 +91,7 @@ public:
         catch (...) {
             // 允许重复注册或失败不致命
         }
+        重算时序步长_按服务值_();
         刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, 结构体_时间戳::当前_微秒(), "自我类::初始化");
     }
 
@@ -131,7 +132,82 @@ public:
     }
     void 设置服务值(U64 v) noexcept {
         service_.store(v);
+        重算时序步长_按服务值_();
         刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, 结构体_时间戳::当前_微秒(), "自我类::设置服务值");
+    }
+
+    bool 是否已消亡() const noexcept { return safety_.load() == 0; }
+
+    // 供调度线程调用的统一数值更新入口。
+    void 安全值增加(U64 delta) noexcept { 安全值_上升_(delta); }
+    void 安全值减少(U64 delta) noexcept { 安全值_下降_(delta); }
+    void 服务值增加(U64 delta) noexcept { 服务值_上升_(delta); }
+    void 服务值减少(U64 delta) noexcept { 服务值_下降_(delta); }
+    U64 时序正向步长() const noexcept { return temporal_forward_step_.load(); }
+    U64 时序反向步长() const noexcept { return temporal_backward_step_.load(); }
+    bool 是否待机状态() const noexcept { return standby_mode_.load(); }
+
+    // 默认任务结果策略：成功偏服务增长，失败同时惩罚服务与安全。
+    void 应用任务结果_默认策略(bool 成功) noexcept {
+        if (成功) {
+            服务值_上升_(50);
+            return;
+        }
+        服务值_下降_(10);
+        安全值_下降_(5);
+    }
+
+
+    // 时序维护：向中位回归 + 内部状态压力 + 服务值耦合步长。
+    // 规则：
+    // 1) 默认时序步长为 1（正向/反向），并随服务值实时重算；
+    // 2) 服务值越高：正向步长越大、反向步长越小；
+    // 3) 服务值为 0：安全值置为最小非零并进入待机，不触发消亡。
+    void 按时序规则更新安全值(
+        U64 待完成任务数,
+        U64 待学习任务数,
+        时间戳 now = 结构体_时间戳::当前_微秒(),
+        const std::string& 调用点 = "自我类::按时序规则更新安全值") noexcept
+    {
+        重算时序步长_按服务值_();
+
+        const U64 srv = service_.load();
+        U64 s = safety_.load();
+
+        if (srv == 0) {
+            standby_mode_.store(true);
+            constexpr U64 最小非零安全值 = 1;
+            if (s != 最小非零安全值) {
+                safety_.store(最小非零安全值);
+                刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, now, 调用点 + "/服务为零待机");
+            }
+            return;
+        }
+
+        standby_mode_.store(false);
+
+        const U64 中位值 = (U64_MAX / 2);
+        const U64 正向 = temporal_forward_step_.load();
+        const U64 反向 = temporal_backward_step_.load();
+
+        if (s < 中位值) {
+            s = sat_add(s, 正向);
+        }
+        else if (s > 中位值) {
+            s = sat_sub(s, 反向);
+        }
+
+        // 内部状态压力：当前先使用默认步长 1（有积压即扣减）。
+        const U64 总待办 = sat_add(待完成任务数, 待学习任务数);
+        const U64 内部压力步长 = (总待办 > 0) ? 1 : 0;
+        if (内部压力步长 > 0) {
+            s = sat_sub(s, 内部压力步长);
+        }
+
+        if (s != safety_.load()) {
+            safety_.store(s);
+            刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, now, 调用点 + "/时序更新");
+        }
     }
 
     结构_根任务权重& 根任务权重() noexcept { return roots_; }
@@ -312,7 +388,9 @@ private:
         tmi->节点种类 = 枚举_任务节点种类::头结点;
         tmi->状态 = 枚举_任务状态::就绪;
         tmi->创建时间 = now;
-        tmi->优先级 = (std::max<std::int64_t>)(1, roots_.学习);
+        tmi->基准优先级 = (std::max<std::int64_t>)(1, roots_.学习);
+        tmi->局部优先级偏移 = 0;
+        tmi->调度优先级 = tmi->基准优先级;
         tmi->场景 = 场景;
         tmi->任务树类型 = 枚举_任务树类型::叶子任务;
         tmi->需求 = need;
@@ -563,9 +641,9 @@ private:
         std::uint64_t tickCount = 0;
 
         while (!stop_.load()) {
-            // 退出硬条件：安全值或服务值归零
-            if (safety_.load() == 0 || service_.load() == 0) {
-                保存退出事件_("安全值或服务值归零", startUs, tickCount);
+            // 退出硬条件：安全值归零（服务值为零进入待机，不视为消亡）
+            if (safety_.load() == 0) {
+                保存退出事件_("安全值归零", startUs, tickCount);
                 break;
             }
             // 调试上限
@@ -754,10 +832,39 @@ private:
         return (a > b) ? (a - b) : 0;
     }
 
-    void 安全值_上升_(U64 delta) noexcept { safety_.store(sat_add(safety_.load(), delta)); 刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, 结构体_时间戳::当前_微秒(), "自我类::安全值_上升_"); }
-    void 安全值_下降_(U64 delta) noexcept { safety_.store(sat_sub(safety_.load(), delta)); 刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, 结构体_时间戳::当前_微秒(), "自我类::安全值_下降_"); }
-    void 服务值_上升_(U64 delta) noexcept { service_.store(sat_add(service_.load(), delta)); 刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, 结构体_时间戳::当前_微秒(), "自我类::服务值_上升_"); }
-    void 服务值_下降_(U64 delta) noexcept { service_.store(sat_sub(service_.load(), delta)); 刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, 结构体_时间戳::当前_微秒(), "自我类::服务值_下降_"); }
+    void 重算时序步长_按服务值_() noexcept {
+        const U64 srv = service_.load();
+        if (srv == 0) {
+            temporal_forward_step_.store(1);
+            temporal_backward_step_.store(1);
+            return;
+        }
+        // 服务值越高：正向步长越大，反向步长越小。
+        constexpr U64 放大倍率 = 4; // 步长范围：[1,5]
+        const U64 正向 = 1 + (srv * 放大倍率) / U64_MAX;
+        const U64 反向 = 1 + ((U64_MAX - srv) * 放大倍率) / U64_MAX;
+        temporal_forward_step_.store((std::max<U64>)(1, 正向));
+        temporal_backward_step_.store((std::max<U64>)(1, 反向));
+    }
+
+    void 安全值_上升_(U64 delta) noexcept {
+        safety_.store(sat_add(safety_.load(), delta));
+        刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, 结构体_时间戳::当前_微秒(), "自我类::安全值_上升_");
+    }
+    void 安全值_下降_(U64 delta) noexcept {
+        safety_.store(sat_sub(safety_.load(), delta));
+        刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, 结构体_时间戳::当前_微秒(), "自我类::安全值_下降_");
+    }
+    void 服务值_上升_(U64 delta) noexcept {
+        service_.store(sat_add(service_.load(), delta));
+        重算时序步长_按服务值_();
+        刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, 结构体_时间戳::当前_微秒(), "自我类::服务值_上升_");
+    }
+    void 服务值_下降_(U64 delta) noexcept {
+        service_.store(sat_sub(service_.load(), delta));
+        重算时序步长_按服务值_();
+        刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, 结构体_时间戳::当前_微秒(), "自我类::服务值_下降_");
+    }
 
     // ==========================================================
     // 退出事件落盘（最小版：文本文件）
@@ -793,6 +900,9 @@ private:
     // 全局状态：数值尺度 0..U64_MAX
     std::atomic<U64> safety_{ (U64_MAX / 2) };
     std::atomic<U64> service_{ (U64_MAX / 2) };
+    std::atomic<U64> temporal_forward_step_{ 1 };
+    std::atomic<U64> temporal_backward_step_{ 1 };
+    std::atomic_bool standby_mode_{ false };
     结构_根任务权重 roots_{};
     std::mutex 尝试学习参数队列锁_{};
     std::deque<结构_尝试学习参数队列项> 尝试学习参数队列_{};
@@ -800,6 +910,9 @@ private:
     // 诊断
     std::string lastError_{};
 };
+
+
+
 
 
 

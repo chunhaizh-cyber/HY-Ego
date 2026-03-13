@@ -34,6 +34,7 @@ import D455相机模块;
 import 相机外设基类模块;	
 import 日志模块;
 import 需求环境模块;
+import 自我线程模块;
 
 // ===== 调试：打印 RealSense IMU profiles（输出到 VS 输出窗口） =====
 
@@ -312,10 +313,27 @@ BOOL C海鱼Dlg::OnInitDialog()
 	语素集.初始化();
 	世界树.初始化默认世界();
 	语言集.初始化();
+	bool 跳过外设模式 = false;
 	自我线程.启动();
 
-	启动场景实时显示();
-	启动外设();
+
+	char* skipIoRaw = nullptr;
+	size_t skipIoLen = 0;
+	if (_dupenv_s(&skipIoRaw, &skipIoLen, "HY_ACCEPTANCE_SKIP_IO") == 0 && skipIoRaw) {
+		std::string skipIo(skipIoRaw);
+		std::free(skipIoRaw);
+		if (skipIo == "1") {
+			跳过外设模式 = true;
+		}
+	}
+
+	if (!跳过外设模式) {
+		启动场景实时显示();
+		启动外设();
+	}
+	else {
+		日志::运行("[验收安全链路] 外设跳过模式：跳过场景显示与外设启动");
+	}
 
 	变量_TAB1.InsertItem(0, _T("交互界面"));
 	变量_TAB1.InsertItem(1, _T("任务信息"));
@@ -403,7 +421,7 @@ CString C海鱼Dlg::生成标签页文本(int 标签索引) const
 			os << "[" << count << "] "
 			   << (词键_(mi->名称).empty() ? "<未命名任务>" : 词键_(mi->名称))
 			   << " | 状态=" << 任务状态文本_(mi->状态)
-			   << " | 优先级=" << mi->优先级
+			   << " | 优先级=" << mi->调度优先级
 			   << " | 内部存在=" << (mi->任务虚拟存在 ? "是" : "否")
 			   << "\r\n";
 		});
@@ -1038,6 +1056,7 @@ LRESULT C海鱼Dlg::OnApp观察换角度(WPARAM, LPARAM)
 	AfxMessageBox(L"需要更换观测角度");
 	return 0;
 }
+
 
 
 
