@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="源文件">
@@ -381,6 +381,9 @@
       <Filter>头文件\自我</Filter>
     </ClCompile>
     <ClCompile Include="自我本能方法_相机认知模块.ixx">
+      <Filter>头文件\自我</Filter>
+    </ClCompile>
+    <ClCompile Include="自我本能方法_最小试探模块.ixx">
       <Filter>头文件\自我</Filter>
     </ClCompile>
     <ClCompile Include="特征值类.cpp">

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -318,6 +318,7 @@
     <ClCompile Include="相机外设基类.ixx" />
     <ClCompile Include="窗口_基础信息类.cpp" />
     <ClCompile Include="自我本能方法_相机认知模块.ixx" />
+    <ClCompile Include="自我本能方法_最小试探模块.ixx" />
     <ClCompile Include="自我类.ixx" />
     <ClCompile Include="节点特征更新模块.ixx" />
     <ClCompile Include="虚拟存在模块.ixx" />
@@ -364,3 +365,4 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
+
