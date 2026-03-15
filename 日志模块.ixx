@@ -31,7 +31,7 @@ import 日志模块;
 void 初始化日志()
 {
     日志参数 p{};
-    p.根目录 = "./日志";
+    p.根目录 = std::filesystem::path(std::u8string(u8"./日志"));
     p.文件前缀 = "海鱼";
     p.每条刷新 = true;      // 崩溃也尽量能落盘；想更快可设 false
     日志::初始化(p);
@@ -80,7 +80,7 @@ export enum class 枚举_日志级别 : std::int8_t {
 
 export struct 日志参数 {
     // 日志根目录（默认 ./日志）
-    std::filesystem::path 根目录 = std::filesystem::path("./日志");
+    std::filesystem::path 根目录 = std::filesystem::path(std::u8string(u8"./日志"));
     // 文件名前缀（默认 海鱼）
     std::string 文件前缀 = "海鱼";
     // 写入后是否每条都 flush（默认 true，便于崩溃前落盘；追求性能可关）
@@ -125,6 +125,10 @@ export namespace 日志 {
 // =========================
 
 export namespace 日志::detail {
+    inline std::filesystem::path utf8_path(std::string_view text) {
+        const auto begin = reinterpret_cast<const char8_t*>(text.data());
+        return std::filesystem::path(std::u8string(begin, begin + text.size()));
+    }
 
     struct 单文件日志器 {
         std::mutex mtx;
@@ -193,7 +197,7 @@ export namespace 日志::detail {
         std::filesystem::path 生成文件路径(const std::string& yyyymmdd) const {
             // logs/海鱼_run_20260118.低值g
             std::string name = std::format("{}_{}_{}.低值g", 文件前缀, 文件标识, yyyymmdd);
-            return 根目录 / name;
+            return 根目录 / utf8_path(name);
         }
 
         void 确保打开_已加锁() {

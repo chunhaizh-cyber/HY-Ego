@@ -20,6 +20,8 @@ import 特征值环境模块;
 import 语素环境模块;
 import 世界树环境模块;
 import 语言环境模块;
+import 特征类型定义模块;
+import 本能动作管理模块;
 
 import 外设模块;
 import 场景实时显示线程模块;
@@ -128,6 +130,16 @@ static void 打印IMUProfiles_到输出窗口_() {
 }
 
 namespace {
+	void 安全销毁窗口_(CWnd& wnd) noexcept
+	{
+		if (!::IsWindow(wnd.GetSafeHwnd())) return;
+		try {
+			wnd.DestroyWindow();
+		}
+		catch (...) {
+		}
+	}
+
 	constexpr UINT_PTR 定时器_标签页刷新 = 1;
 	constexpr UINT IDC_标签内容查看框 = 0x52A1;
 
@@ -234,12 +246,28 @@ C海鱼Dlg::~C海鱼Dlg()
 {
 	停止外设();
 	停止场景实时显示();
+	if (自我线程) {
+		自我线程->停止();
+		自我线程.reset();
+	}
 
 	// 如果该对话框有自动化代理，则
 	//  此对话框的返回指针为 null，所以它知道
 	//  此代理知道该对话框已被删除。
 	if (m_pAutoProxy != nullptr)
 		m_pAutoProxy->m_pDialog = nullptr;
+}
+
+void C海鱼Dlg::清理退出子窗口()
+{
+	if (::IsWindow(GetSafeHwnd())) {
+		KillTimer(定时器_标签页刷新);
+	}
+	安全销毁窗口_(变量_信息查看框);
+	安全销毁窗口_(变量_配置及测试窗口);
+	安全销毁窗口_(变量_交互界面);
+	安全销毁窗口_(变量_基础信息界面);
+	安全销毁窗口_(变量_TAB1);
 }
 
 void C海鱼Dlg::DoDataExchange(CDataExchange* pDX)
@@ -304,7 +332,7 @@ BOOL C海鱼Dlg::OnInitDialog()
 	主窗口指针 = this;
 	// 日志：运行/异常分文件按日滚动
 	日志参数 lp{};
-	lp.根目录 = std::filesystem::path("./日志");
+	lp.根目录 = std::filesystem::path(std::u8string(u8"./日志"));
 	lp.文件前缀 = "海鱼";
 	lp.每条刷新 = true;
 	日志::初始化(lp);
@@ -314,7 +342,26 @@ BOOL C海鱼Dlg::OnInitDialog()
 	世界树.初始化默认世界();
 	语言集.初始化();
 	bool 跳过外设模式 = false;
-	自我线程.启动();
+	bool 仅主窗口硬件采集模式 = false;
+
+	char* captureOnlyRaw = nullptr;
+	size_t captureOnlyLen = 0;
+	if (_dupenv_s(&captureOnlyRaw, &captureOnlyLen, "HY_CAPTURE_ONLY") == 0 && captureOnlyRaw) {
+		std::string captureOnly(captureOnlyRaw);
+		std::free(captureOnlyRaw);
+		if (captureOnly == "1") {
+			仅主窗口硬件采集模式 = true;
+		}
+	}
+	if (!仅主窗口硬件采集模式) {
+		if (!自我线程) {
+			自我线程 = std::make_unique<自我线程类>();
+		}
+		自我线程->启动();
+	}
+	else {
+		日志::运行("[受控硬件采集] HY_CAPTURE_ONLY=1：跳过自我线程启动，仅保留主窗口相机链");
+	}
 
 
 	char* skipIoRaw = nullptr;
@@ -410,6 +457,25 @@ CString C海鱼Dlg::生成标签页文本(int 标签索引) const
 {
 	std::ostringstream os;
 	os << "标签索引: " << 标签索引 << "\r\n\r\n";
+	const auto 布尔文本_ = [](bool 值) {
+		return 值 ? "是" : "否";
+		};
+	const auto 追加自我线程生命体征面板_ = [&](std::ostringstream& 输出) {
+		const bool 线程活着 = 自我线程 && 自我线程->是否正在运行();
+		const bool 初始化完成 = 自我线程 && 自我线程->是否初始化完成();
+		const bool 健康运行 = 自我线程 && 自我线程->是否健康运行();
+		std::string 最近故障 = "无";
+		if (自我线程) {
+			auto 摘要 = 自我线程->最近故障摘要();
+			if (!摘要.empty()) {
+				最近故障 = std::move(摘要);
+			}
+		}
+		输出 << "线程活着: " << 布尔文本_(线程活着) << "\r\n";
+		输出 << "初始化完成: " << 布尔文本_(初始化完成) << "\r\n";
+		输出 << "健康运行: " << 布尔文本_(健康运行) << "\r\n";
+		输出 << "最近故障: " << 最近故障 << "\r\n";
+		};
 
 	if (标签索引 == 1) {
 		size_t count = 0;
@@ -470,7 +536,7 @@ CString C海鱼Dlg::生成标签页文本(int 标签索引) const
 		枚举根子节点_(static_cast<任务节点类*>(数据仓库模块::任务链.根指针), [&](任务节点类*) { ++taskCount; });
 		枚举根子节点_(static_cast<方法节点类*>(数据仓库模块::方法链.根指针), [&](方法节点类*) { ++methodCount; });
 		os << (标签索引 == 5 ? "环境 / 自我状态" : "学习 / 自我状态") << "\r\n\r\n";
-		os << "自我线程运行: " << (自我线程.是否正在运行() ? "是" : "否") << "\r\n";
+		追加自我线程生命体征面板_(os);
 		os << "世界根子节点数: " << worldCount << "\r\n";
 		os << "需求数: " << needCount << "\r\n";
 		os << "任务数: " << taskCount << "\r\n";
@@ -524,7 +590,7 @@ CString C海鱼Dlg::生成标签页文本(int 标签索引) const
 		枚举根子节点_(static_cast<任务节点类*>(数据仓库模块::任务链.根指针), [&](任务节点类*) { ++taskCount; });
 		枚举根子节点_(static_cast<方法节点类*>(数据仓库模块::方法链.根指针), [&](方法节点类*) { ++methodCount; });
 		os << "当前标签页暂未单独细化，先显示系统摘要。\r\n\r\n";
-		os << "自我线程运行: " << (自我线程.是否正在运行() ? "是" : "否") << "\r\n";
+		追加自我线程生命体征面板_(os);
 		os << "需求数: " << needCount << "\r\n";
 		os << "任务数: " << taskCount << "\r\n";
 		os << "方法数: " << methodCount << "\r\n";
@@ -611,57 +677,70 @@ HCURSOR C海鱼Dlg::OnQueryDragIcon()
 
 void C海鱼Dlg::OnClose()
 {
+	应用退出中_ = true;
+	日志::运行("[主窗口关闭] OnClose 开始");
 	if (!CanExit()) {
+		日志::运行("[主窗口关闭] OnClose 被 CanExit 拦截");
 		return;
 	}
+	日志::运行("[主窗口关闭] 停止外设开始");
 	停止外设();
+	日志::运行("[主窗口关闭] 停止外设完成");
+	日志::运行("[主窗口关闭] 停止场景显示开始");
 	停止场景实时显示();
-	// 视情况停止自我线程（如果提供了接口）
-	if constexpr (requires(自我线程类 & t) { t.停止(); }) {
-		自我线程.停止();
+	日志::运行("[主窗口关闭] 停止场景显示完成");
+	日志::运行("[主窗口关闭] 清理子窗口开始");
+	清理退出子窗口();
+	日志::运行("[主窗口关闭] 清理子窗口完成");
+	if (自我线程) {
+		日志::运行("[主窗口关闭] 停止自我线程开始");
+		自我线程->停止();
+		日志::运行("[主窗口关闭] 停止自我线程完成");
+		自我线程.reset();
+		日志::运行("[主窗口关闭] 自我线程对象释放完成");
 	}
-	else if constexpr (requires(自我线程类 & t) { t.请求退出(); }) {
-		自我线程.请求退出();
-	}
-	CDialogEx::OnClose();
+	日志::运行("[主窗口关闭] EndDialog(IDCANCEL)");
+	EndDialog(IDCANCEL);
 }
 
 void C海鱼Dlg::OnOK()
 {
+	应用退出中_ = true;
 	if (!CanExit()) {
 		return;
 	}
 	停止外设();
 	停止场景实时显示();
-	// 视情况停止自我线程（如果提供了接口）
-	if constexpr (requires(自我线程类 & t) { t.停止(); }) {
-		自我线程.停止();
-	}
-	else if constexpr (requires(自我线程类 & t) { t.请求退出(); }) {
-		自我线程.请求退出();
+	清理退出子窗口();
+	if (自我线程) {
+		自我线程->停止();
+		自我线程.reset();
 	}
 	CDialogEx::OnOK();
 }
 
 void C海鱼Dlg::OnCancel()
 {
+	应用退出中_ = true;
 	if (!CanExit()) {
 		return;
 	}
 	停止外设();
 	停止场景实时显示();
-	// 视情况停止自我线程（如果提供了接口）
-	if constexpr (requires(自我线程类 & t) { t.停止(); }) {
-		自我线程.停止();
-	}
-	else if constexpr (requires(自我线程类 & t) { t.请求退出(); }) {
-		自我线程.请求退出();
+	清理退出子窗口();
+	if (自我线程) {
+		自我线程->停止();
+		自我线程.reset();
 	}
 	CDialogEx::OnCancel();
 }
 
 BOOL C海鱼Dlg::CanExit()
 {
+	if (应用退出中_) {
+		return TRUE;
+	}
+
 	// 如果代理对象仍保留在那里，则自动化
 	//  控制器仍会保持此应用程序。
 	//  使对话框保留在那里，但将其 UI 隐藏起来。
@@ -801,6 +880,8 @@ struct C海鱼Dlg::摄像机运行时 {
 	std::unique_ptr<相机外设基类> 外设{};
 	std::thread worker{};
 	std::atomic_bool running{ false };
+	场景节点类* 自我观察桥输入场景{ nullptr };
+	场景节点类* 自我观察桥输出场景{ nullptr };
 
 	bool 启动(C海鱼Dlg& dlg) {
 		if (running.exchange(true)) return false;
@@ -835,24 +916,185 @@ struct C海鱼Dlg::摄像机运行时 {
 	}
 
 	void 停止() {
+		日志::运行("[主窗口摄像机运行时] 停止开始");
 		running.store(false);
 
 		if (外设) {
+			日志::运行("[主窗口摄像机运行时] 停止外设开始");
 			外设->停止();
+			日志::运行("[主窗口摄像机运行时] 停止外设完成");
 		}
 		if (worker.joinable()) {
+			日志::运行("[主窗口摄像机运行时] 等待采集线程结束开始");
 			worker.join();
+			日志::运行("[主窗口摄像机运行时] 等待采集线程结束完成");
 		}
 		外设.reset();
+		日志::运行("[主窗口摄像机运行时] 停止完成");
 	}
 
 private:
+	static void 清空场景子节点(场景节点类* 场景, const std::string& 调用点)
+	{
+		while (场景 && 场景->子) {
+			auto* child = static_cast<基础信息节点类*>(场景->子);
+			if (!世界树.删除节点(child, 调用点)) {
+				break;
+			}
+		}
+	}
+
+	static 场景节点类* 确保桥接场景(
+		场景节点类*& 缓存,
+		const char* 名称,
+		const char* 类型,
+		const std::string& 调用点)
+	{
+		if (缓存 && 缓存->主信息) {
+			return 缓存;
+		}
+
+		auto* parent = 世界树.取内部世界() ? 世界树.取内部世界() : 世界树.虚拟世界;
+		if (!parent) return nullptr;
+
+		auto* mi = new 场景节点主信息类();
+		mi->名称 = 语素集.添加词性词(名称, "名词");
+		mi->类型 = 语素集.添加词性词(类型, "名词");
+		mi->最后观测时间 = 结构体_时间戳::当前_微秒();
+		缓存 = 世界树.创建场景(parent, mi, 调用点);
+		return 缓存;
+	}
+
+	static I64 计算深度有效万分比(const 结构体_原始场景帧* frame)
+	{
+		if (!frame) return 0;
+		const auto total = static_cast<std::uint64_t>(frame->宽度) * static_cast<std::uint64_t>(frame->高度);
+		if (total == 0) return 0;
+
+		std::uint64_t valid = 0;
+		if (!frame->深度有效.empty()) {
+			for (auto v : frame->深度有效) valid += (v ? 1ull : 0ull);
+		}
+		else if (!frame->深度.empty()) {
+			for (auto z : frame->深度) valid += (z > 0.0 ? 1ull : 0ull);
+		}
+		return static_cast<I64>((valid * 10000ull) / total);
+	}
+
+	bool 提交存在观测到自我观察(const 帧处理结果& out, 时间戳 now)
+	{
+		日志::运行f(
+			"[主窗口桥接自我观察] 进入函数：候选={}, 轮廓={}, now={}",
+			out.存在观测列表.size(),
+			out.轮廓观测列表.size(),
+			static_cast<long long>(now));
+
+		auto* 输入场景 = 确保桥接场景(
+			自我观察桥输入场景,
+			"主窗口_自我观察输入",
+			"主窗口相机桥接场景",
+			"C海鱼Dlg::摄像机运行时::提交存在观测到自我观察/确保输入场景");
+		auto* 输出场景 = 确保桥接场景(
+			自我观察桥输出场景,
+			"主窗口_自我观察输出",
+			"主窗口相机桥接场景",
+			"C海鱼Dlg::摄像机运行时::提交存在观测到自我观察/确保输出场景");
+		if (!输入场景 || !输出场景) {
+			日志::运行("[主窗口桥接自我观察] 失败：桥接输入或输出场景创建失败");
+			return false;
+		}
+		日志::运行("[主窗口桥接自我观察] 桥接输入输出场景已就绪");
+
+		清空场景子节点(输入场景, "C海鱼Dlg::摄像机运行时::提交存在观测到自我观察/清空输入");
+		清空场景子节点(输出场景, "C海鱼Dlg::摄像机运行时::提交存在观测到自我观察/清空输出");
+		if (auto* 输入主信息 = 输入场景 && 输入场景->主信息 ? dynamic_cast<场景节点主信息类*>(输入场景->主信息) : nullptr) {
+			输入主信息->最后观测时间 = now;
+		}
+		if (auto* 输出主信息 = 输出场景 && 输出场景->主信息 ? dynamic_cast<场景节点主信息类*>(输出场景->主信息) : nullptr) {
+			输出主信息->最后观测时间 = now;
+		}
+
+		(void)世界树.写入特征_I64(
+			输入场景,
+			语素集.添加词性词("深度有效万分比", "名词"),
+			计算深度有效万分比(out.原始场景帧.get()),
+			{},
+			"C海鱼Dlg::摄像机运行时::提交存在观测到自我观察/写深度有效万分比");
+
+		auto* 候选集信息 = new 场景节点主信息类();
+		候选集信息->名称 = 语素集.添加词性词("候选存在集", "名词");
+		候选集信息->类型 = 语素集.添加词性词("候选集场景", "名词");
+		候选集信息->最后观测时间 = now;
+		auto* 候选场景 = 世界树.创建场景(
+			输入场景,
+			候选集信息,
+			"C海鱼Dlg::摄像机运行时::提交存在观测到自我观察/创建候选场景");
+		if (!候选场景) {
+			日志::运行("[主窗口桥接自我观察] 失败：候选场景创建失败");
+			return false;
+		}
+		日志::运行("[主窗口桥接自我观察] 候选场景已创建");
+
+		auto* 跟踪ID类型 = 语素集.添加词性词("跟踪ID", "名词");
+		for (const auto& obs : out.存在观测列表) {
+			auto* miE = new 存在节点主信息类();
+			miE->名称 = 语素集.添加词性词("候选存在", "名词");
+			miE->类型 = 语素集.添加词性词("候选存在类型", "名词");
+			miE->最后观测时间 = now;
+			auto* e = 世界树.创建存在(
+				候选场景,
+				miE,
+				"C海鱼Dlg::摄像机运行时::提交存在观测到自我观察/创建候选存在");
+			if (!e) continue;
+			(void)世界树.写入特征_VecU(e, 特征类型定义类::类型_绝对位置, VecIU64{
+				static_cast<U64>(std::bit_cast<std::int64_t>(std::llround(obs.中心坐标.x))),
+				static_cast<U64>(std::bit_cast<std::int64_t>(std::llround(obs.中心坐标.y))),
+				static_cast<U64>(std::bit_cast<std::int64_t>(std::llround(obs.中心坐标.z)))
+				}, {}, "C海鱼Dlg::摄像机运行时::提交存在观测到自我观察/写中心");
+			(void)世界树.写入特征_VecU(e, 特征类型定义类::类型_尺寸, VecIU64{
+				static_cast<U64>(std::bit_cast<std::int64_t>(std::llround(obs.尺寸.x))),
+				static_cast<U64>(std::bit_cast<std::int64_t>(std::llround(obs.尺寸.y))),
+				static_cast<U64>(std::bit_cast<std::int64_t>(std::llround(obs.尺寸.z)))
+				}, {}, "C海鱼Dlg::摄像机运行时::提交存在观测到自我观察/写尺寸");
+			if (!obs.轮廓编码.empty()) {
+				(void)世界树.写入特征_VecU(
+					e,
+					特征类型定义类::类型_轮廓编码,
+					obs.轮廓编码,
+					{},
+					"C海鱼Dlg::摄像机运行时::提交存在观测到自我观察/写轮廓");
+			}
+			(void)世界树.写入特征_I64(
+				e,
+				跟踪ID类型,
+				static_cast<I64>(obs.跟踪ID),
+				{},
+				"C海鱼Dlg::摄像机运行时::提交存在观测到自我观察/写跟踪ID");
+			(void)世界树.写入特征_I64(
+				e,
+				特征类型定义类::类型_时间戳_us,
+				static_cast<I64>(now),
+				{},
+				"C海鱼Dlg::摄像机运行时::提交存在观测到自我观察/写时间戳");
+		}
+		日志::运行f(
+			"[主窗口桥接自我观察] 候选存在写入完成：数量={}",
+			out.存在观测列表.size());
+		日志::运行f(
+			"[主窗口桥接自我观察] 已发布候选存在集：候选={}, 输入场景={}, 输出场景={}",
+			out.存在观测列表.size(),
+			(void*)输入场景,
+			(void*)输出场景);
+		return true;
+	}
+
 	void 循环_(C海鱼Dlg& dlg)
 	{
 		外设数据包<结构体_原始场景帧> pkg{};
 		时间戳 时间1,时间2,D455时长,点簇分割时长,存在提取时长,三维场景处理时长;
 		D455时长= 点簇分割时长=存在提取时长= 三维场景处理时长=0;
 		日志::运行f("主窗口摄像机采集线程启动...");
+		std::uint64_t 处理帧计数 = 0;
 		while (running.load())
 		{
 			auto r = 外设 ? 外设->等待下一包(pkg, 50) : 枚举_取数结果::已停止;
@@ -876,6 +1118,36 @@ private:
 				if (!处理器.处理一帧(out)) {
 					// 处理失败：继续下一帧
 					continue;
+				}
+
+				++处理帧计数;
+				if (处理帧计数 <= 5 || (处理帧计数 % 30) == 0) {
+					std::size_t 深度有效数 = 0;
+					if (out.原始场景帧 && !out.原始场景帧->深度有效.empty()) {
+						for (auto v : out.原始场景帧->深度有效) {
+							深度有效数 += (v ? 1u : 0u);
+						}
+					}
+					const auto 总像素数 = out.原始场景帧
+						? static_cast<std::uint64_t>(out.原始场景帧->宽度) * static_cast<std::uint64_t>(out.原始场景帧->高度)
+						: 0ull;
+					const auto 深度有效万分比 = 总像素数 > 0
+						? static_cast<std::uint64_t>((深度有效数 * 10000ull) / 总像素数)
+						: 0ull;
+					const auto 帧号 = out.原始场景帧 ? out.原始场景帧->时间戳.深度帧号 : 0u;
+					日志::运行f(
+						"[主窗口相机观察] 帧={}, 存在观测={}, 轮廓={}, 深度有效万分比={}",
+						帧号,
+						out.存在观测列表.size(),
+						out.轮廓观测列表.size(),
+						深度有效万分比);
+				}
+				if ((处理帧计数 % 5) == 0) {
+					// 第一阶段只做受控硬件采集测试，暂时不把主窗口候选桥接进自我链。
+					日志::运行f(
+						"[主窗口相机观察] 当前阶段跳过自我桥接：处理帧计数={}, 候选={}",
+						处理帧计数,
+						out.存在观测列表.size());
 				}
 
 				// ----------------------------

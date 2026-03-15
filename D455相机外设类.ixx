@@ -19,7 +19,8 @@ protected:
     // 设备时间戳：优先用 D455 的设备时间域（微秒）。
     时间戳 取设备时间戳(const 结构体_原始场景帧& d) const override {
         if (d.相机.设备时间_微秒 > 0) return d.相机.设备时间_微秒;
-        return static_cast<时间戳>(d.时间);
+        if (d.时间戳.设备时间_us > 0) return static_cast<时间戳>(d.时间戳.设备时间_us);
+        return static_cast<时间戳>(d.时间戳.系统到达时间_us);
     }
 
     bool 启动设备(const 外设启动参数& p) override {

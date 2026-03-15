@@ -31,8 +31,8 @@
 #endif /* __RPCNDR_H_VERSION__ */
 
 
-#ifndef ___E6B5B7E9B1BC_h_h__
-#define ___E6B5B7E9B1BC_h_h__
+#ifndef ___BAA3D3E3_h_h__
+#define ___BAA3D3E3_h_h__
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once

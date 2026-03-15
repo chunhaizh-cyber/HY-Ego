@@ -27,6 +27,7 @@ import <atomic>;
 import <chrono>;
 import <memory>;
 import <mutex>;
+import <condition_variable>;
 import <shared_mutex>;
 import <functional>;
 
@@ -61,6 +62,7 @@ public:
 
         if (worker_.joinable()) {
             worker_.request_stop();
+            waitCv_.notify_all();
             worker_.join();
         }
 
@@ -179,7 +181,8 @@ private:
             auto snap = std::make_shared<结构_场景可视化快照>(display->取快照());
             latest_.store(std::move(snap), std::memory_order_release);
 
-            std::this_thread::sleep_for(period_);
+            std::unique_lock lk(waitMtx_);
+            (void)waitCv_.wait_for(lk, st, period_, [] { return false; });
         }
 
         displayPtr_.store(nullptr, std::memory_order_release);
@@ -200,6 +203,8 @@ private:
     std::jthread worker_{};
     std::atomic_bool running_{ false };
     std::chrono::milliseconds period_{ 33 };
+    std::mutex waitMtx_{};
+    std::condition_variable_any waitCv_{};
 
     // 输出
     std::atomic<显示类*> displayPtr_{ nullptr };

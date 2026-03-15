@@ -5,6 +5,7 @@ import <string>;
 import <cstdint>;
 import <algorithm>;
 import <functional>;
+import <variant>;
 
 import 模板模块;
 import 基础数据类型模块;
@@ -72,6 +73,13 @@ export inline 枚举_存在状态事件 取状态事件(const 状态节点类* s
 
 export class 状态类 {
 public:
+    struct 结构_最近两次I64状态方向结果 {
+        bool 可比较 = false;
+        I64 方向 = 0;
+        状态节点类* 最近状态 = nullptr;
+        状态节点类* 前一状态 = nullptr;
+    };
+
     状态类() = default;
     ~状态类() = default;
 
@@ -267,6 +275,55 @@ public:
             return s;
         }
         return nullptr;
+    }
+
+    结构_最近两次I64状态方向结果 比较最近两次I64状态方向(
+        场景节点类* 场景,
+        枚举_状态域 状态域,
+        const 基础信息节点类* 状态主体 = nullptr,
+        const 特征节点类* 状态特征 = nullptr) const
+    {
+        结构_最近两次I64状态方向结果 结果{};
+        if (!场景 || !场景->主信息) return 结果;
+        auto* smi = dynamic_cast<场景节点主信息类*>(场景->主信息);
+        if (!smi) return 结果;
+
+        I64 最近值 = 0;
+        bool 已有最近值 = false;
+
+        for (auto it = smi->状态列表.rbegin(); it != smi->状态列表.rend(); ++it) {
+            auto* s = *it;
+            auto* mi = (s && s->主信息) ? dynamic_cast<状态节点主信息类*>(s->主信息) : nullptr;
+            if (!mi) continue;
+            if (状态域 != 枚举_状态域::未定义 && mi->状态域 != 状态域) continue;
+            if (状态主体 && mi->状态主体 != 状态主体) continue;
+            if (状态特征 && mi->状态特征 != 状态特征) continue;
+
+            const auto* 值 = std::get_if<I64>(&mi->状态值);
+            if (!值) continue;
+
+            if (!已有最近值) {
+                最近值 = *值;
+                已有最近值 = true;
+                结果.最近状态 = s;
+                continue;
+            }
+
+            结果.前一状态 = s;
+            结果.可比较 = true;
+            if (最近值 > *值) {
+                结果.方向 = 1;
+            }
+            else if (最近值 < *值) {
+                结果.方向 = -1;
+            }
+            else {
+                结果.方向 = 0;
+            }
+            return 结果;
+        }
+
+        return 结果;
     }
 
     bool 移除状态(

@@ -23,6 +23,7 @@ import 数据仓库模块;
 import 任务模块;
 import 方法模块;
 import 方法环境模块;
+import 本能动作管理模块;
 import 需求模块;
 import 需求环境模块;
 import 状态模块;
@@ -86,7 +87,8 @@ namespace 任务执行模块_detail {
         return st == 枚举_任务状态::完成
             || st == 枚举_任务状态::失败
             || st == 枚举_任务状态::取消
-            || st == 枚举_任务状态::超时;
+            || st == 枚举_任务状态::超时
+            || st == 枚举_任务状态::无法执行;
     }
 
     inline 任务头结点信息* 取头信息(任务节点类* n) noexcept {
@@ -461,9 +463,120 @@ namespace 任务执行模块_detail {
         return 状态值精确相等(目标信息->状态值, 当前信息->状态值);
     }
 
+    enum class 枚举_条件判定类别 : std::uint8_t {
+        未定义 = 0,
+        已满足 = 1,
+        值未知需观察 = 2,
+        未满足但可补 = 3,
+        不可获取 = 4,
+        无权限 = 5,
+    };
+
+    struct 结构_条件判定项 {
+        状态节点类* 目标状态 = nullptr;
+        状态节点类* 场景命中状态 = nullptr;
+        枚举_条件判定类别 判定 = 枚举_条件判定类别::未定义;
+        bool 来自世界树当前值 = false;
+        bool 权限由兜底规则推定 = false;
+    };
+
+    inline bool 目标状态被规则禁止使用(const 状态节点主信息类* 目标信息) noexcept {
+        // V1: 规则禁止仍未独立建模，先预留统一拦截口。
+        (void)目标信息;
+        return false;
+    }
+
+    inline bool 目标状态兜底可使用(const 状态节点主信息类* 目标信息, 结构_条件判定项* 明细 = nullptr) noexcept {
+        if (明细) 明细->权限由兜底规则推定 = false;
+        if (!目标信息) return false;
+
+        auto* self = 世界树.自我指针;
+        if (目标信息->状态主体 && self && 节点主键相同(目标信息->状态主体, self)) {
+            return true;
+        }
+
+        if (目标状态被规则禁止使用(目标信息)) {
+            if (明细) 明细->权限由兜底规则推定 = true;
+            return false;
+        }
+
+        // V1 兜底：初始自我还分不清自我/他者时，默认允许尝试使用；
+        // 后续再由学习出的归属/授权/禁止规则覆盖。
+        if (明细) 明细->权限由兜底规则推定 = true;
+        return true;
+    }
+
+    inline 枚举_条件判定类别 判定目标状态可用性(
+        场景节点类* 当前场景,
+        状态节点类* 目标状态,
+        结构_条件判定项* 明细 = nullptr)
+    {
+        if (明细) {
+            明细->目标状态 = 目标状态;
+            明细->场景命中状态 = nullptr;
+            明细->判定 = 枚举_条件判定类别::未定义;
+            明细->来自世界树当前值 = false;
+            明细->权限由兜底规则推定 = false;
+        }
+
+        auto* 目标信息 = 取状态信息(目标状态);
+        if (!目标信息 || !目标信息->状态主体 || !目标信息->状态特征 || !目标信息->状态特征->主信息) {
+            if (明细) 明细->判定 = 枚举_条件判定类别::不可获取;
+            return 枚举_条件判定类别::不可获取;
+        }
+
+        if (!目标状态兜底可使用(目标信息, 明细)) {
+            if (明细) 明细->判定 = 枚举_条件判定类别::无权限;
+            return 枚举_条件判定类别::无权限;
+        }
+
+        auto* 当前状态 = 查找场景状态_按目标模板(当前场景, 目标状态);
+        auto* 当前信息 = 取状态信息(当前状态);
+        if (当前信息 && 状态值精确相等(目标信息->状态值, 当前信息->状态值)) {
+            if (明细) {
+                明细->场景命中状态 = 当前状态;
+                明细->判定 = 枚举_条件判定类别::已满足;
+            }
+            return 枚举_条件判定类别::已满足;
+        }
+
+        auto* 特征主信息 = dynamic_cast<特征节点主信息类*>(目标信息->状态特征->主信息);
+        if (!特征主信息 || !特征主信息->类型) {
+            if (明细) 明细->判定 = 枚举_条件判定类别::不可获取;
+            return 枚举_条件判定类别::不可获取;
+        }
+
+        const auto 当前快照 = 世界树.读取特征快照(
+            目标信息->状态主体,
+            特征主信息->类型,
+            "任务执行模块_detail::判定目标状态可用性/读世界树当前值");
+        if (!当前快照.has_value() || !特征快照有值(*当前快照)) {
+            if (明细) 明细->判定 = 枚举_条件判定类别::值未知需观察;
+            return 枚举_条件判定类别::值未知需观察;
+        }
+
+        if (状态值精确相等(目标信息->状态值, *当前快照)) {
+            if (明细) {
+                明细->判定 = 枚举_条件判定类别::已满足;
+                明细->来自世界树当前值 = true;
+            }
+            return 枚举_条件判定类别::已满足;
+        }
+
+        if (明细) {
+            明细->判定 = 枚举_条件判定类别::未满足但可补;
+            明细->来自世界树当前值 = true;
+        }
+        return 枚举_条件判定类别::未满足但可补;
+    }
+
     struct 结构_条件展开结果 {
         方法节点类* 条件节点 = nullptr;
         std::vector<状态节点类*> 未满足状态{};
+        std::vector<状态节点类*> 待观察状态{};
+        std::vector<状态节点类*> 不可获取状态{};
+        std::vector<状态节点类*> 无权限状态{};
+        std::vector<结构_条件判定项> 条件判定清单{};
         std::int64_t 命中条件数 = 0;
         std::int64_t 条件总数 = 0;
         bool 当前可直接执行 = true;
@@ -474,6 +587,10 @@ namespace 任务执行模块_detail {
         方法节点类* 匹配结果节点 = nullptr;
         方法节点类* 首选条件节点 = nullptr;
         std::vector<状态节点类*> 未满足条件状态{};
+        std::vector<状态节点类*> 待观察条件状态{};
+        std::vector<状态节点类*> 不可获取条件状态{};
+        std::vector<状态节点类*> 无权限条件状态{};
+        std::vector<结构_条件判定项> 条件判定清单{};
         std::int64_t 评分Q = 0;
         bool 可直接执行 = true;
     };
@@ -502,26 +619,55 @@ namespace 任务执行模块_detail {
             const bool 满足索引 = cmi->条件判定索引.empty() ? true : 条件索引_满足(cmi->条件判定索引, 当前条件特征, &hit);
 
             std::vector<状态节点类*> unmet{};
+            std::vector<状态节点类*> 待观察{};
+            std::vector<状态节点类*> 不可获取{};
+            std::vector<状态节点类*> 无权限{};
+            std::vector<结构_条件判定项> 清单{};
             unmet.reserve(condStates.size());
+            待观察.reserve(condStates.size());
+            不可获取.reserve(condStates.size());
+            无权限.reserve(condStates.size());
+            清单.reserve(condStates.size());
             for (auto* targetState : condStates) {
                 if (!targetState) continue;
-                if (!场景已满足目标状态(当前场景, targetState)) unmet.push_back(targetState);
+                结构_条件判定项 判定项{};
+                const auto 判定 = 判定目标状态可用性(当前场景, targetState, &判定项);
+                清单.push_back(判定项);
+                if (判定 == 枚举_条件判定类别::未满足但可补) {
+                    unmet.push_back(targetState);
+                }
+                else if (判定 == 枚举_条件判定类别::值未知需观察) {
+                    待观察.push_back(targetState);
+                }
+                else if (判定 == 枚举_条件判定类别::不可获取) {
+                    不可获取.push_back(targetState);
+                }
+                else if (判定 == 枚举_条件判定类别::无权限) {
+                    无权限.push_back(targetState);
+                }
             }
 
             const auto total = static_cast<std::int64_t>(
                 cmi->条件判定索引.empty()
                 ? condStates.size()
                 : cmi->条件判定索引.size());
-            const bool 当前可直接执行 = 满足索引 && unmet.empty();
+            const bool 当前可直接执行 = 满足索引 && unmet.empty() && 待观察.empty() && 不可获取.empty() && 无权限.empty();
 
             std::int64_t score = hit * 10000;
             score -= static_cast<std::int64_t>(unmet.size()) * 4000;
+            score -= static_cast<std::int64_t>(待观察.size()) * 2500;
+            score -= static_cast<std::int64_t>(不可获取.size()) * 8000;
+            score -= static_cast<std::int64_t>(无权限.size()) * 12000;
             score -= std::max<std::int64_t>(0, total - hit) * 1000;
             if (当前可直接执行) score += 50000;
 
             if (!best.条件节点 || 当前可直接执行 || score > bestScore) {
                 best.条件节点 = condNode;
                 best.未满足状态 = std::move(unmet);
+                best.待观察状态 = std::move(待观察);
+                best.不可获取状态 = std::move(不可获取);
+                best.无权限状态 = std::move(无权限);
+                best.条件判定清单 = std::move(清单);
                 best.命中条件数 = hit;
                 best.条件总数 = total;
                 best.当前可直接执行 = 当前可直接执行;
@@ -555,9 +701,15 @@ namespace 任务执行模块_detail {
         std::size_t 总数 = 0;
         std::size_t 完成数 = 0;
         std::size_t 失败数 = 0;
+        std::size_t 无法执行数 = 0;
+        std::size_t 终结数 = 0;
         任务节点类* 首选可推进子任务 = nullptr;
         任务节点类* 首个未终结子任务 = nullptr;
     };
+
+    inline bool 子任务已清零(const 结构_步骤子任务汇总& x) noexcept {
+        return x.总数 > 0 && x.终结数 == x.总数;
+    }
 
     inline 结构_步骤子任务汇总 汇总步骤子任务(const 任务步骤节点信息* stepInfo) {
         结构_步骤子任务汇总 out{};
@@ -570,10 +722,17 @@ namespace 任务执行模块_detail {
             ++out.总数;
             if (childInfo->状态 == 枚举_任务状态::完成) {
                 ++out.完成数;
+                ++out.终结数;
+                continue;
+            }
+            if (childInfo->状态 == 枚举_任务状态::无法执行) {
+                ++out.无法执行数;
+                ++out.终结数;
                 continue;
             }
             if (是否终结(childInfo->状态)) {
                 ++out.失败数;
+                ++out.终结数;
                 continue;
             }
 
@@ -738,17 +897,56 @@ public:
     }
 
 
-    bool 推进一步(任务节点类* 任务头结点) {
+    bool 推进一步(任务节点类* 任务头结点, 结构_任务返回消息* 返回消息 = nullptr) {
         using namespace 任务执行模块_detail;
 
         auto* headInfo = 取头信息(任务头结点);
         if (!headInfo || !任务头结点->主信息) return false;
         if (是否终结(headInfo->状态)) return false;
 
+        日志::运行f(
+            "[任务执行器] 推进一步开始: 任务={}, 状态={}, 当前步骤={}",
+            (void*)任务头结点,
+            static_cast<int>(headInfo->状态),
+            (void*)headInfo->当前步骤节点);
+
+        // 一旦任务重新进入单步推进，就清掉“等待学习唤醒”标记。
+        headInfo->等待学习唤醒 = false;
+        headInfo->等待学习方法首节点 = nullptr;
+
         auto* stepNode = 私有_选择当前步骤(任务头结点);
+        日志::运行f(
+            "[任务执行器] 推进一步选中步骤: 任务={}, 步骤={}, 需自动筹办={}",
+            (void*)任务头结点,
+            (void*)stepNode,
+            stepNode ? (私有_步骤需要自动筹办(stepNode) ? 1 : 0) : 1);
         if (!stepNode || 私有_步骤需要自动筹办(stepNode)) {
             stepNode = 私有_自动筹办任务(任务头结点);
-            if (!stepNode) return false;
+            日志::运行f(
+                "[任务执行器] 推进一步自动筹办结果: 任务={}, 步骤={}",
+                (void*)任务头结点,
+                (void*)stepNode);
+            if (!stepNode) {
+                if (headInfo->是否真根任务) {
+                    任务类::设置任务状态(任务头结点, 枚举_任务状态::待重筹办, "任务执行器::推进一步/真根任务筹办失败待重筹办");
+                    (void)私有_写筹办失败返回消息(
+                        任务头结点,
+                        枚举_任务返回消息类型::步骤无法执行,
+                        true,
+                        "当前未能筹办出可执行步骤，等待后续重筹办",
+                        返回消息);
+                    return true;
+                }
+
+                任务类::设置任务状态(任务头结点, 枚举_任务状态::无法执行, "任务执行器::推进一步/普通任务筹办失败无法执行");
+                (void)私有_写筹办失败返回消息(
+                    任务头结点,
+                    枚举_任务返回消息类型::步骤无法执行,
+                    false,
+                    "当前未能筹办出可执行步骤，任务进入无法执行",
+                    返回消息);
+                return true;
+            }
         }
 
         if (headInfo->状态 == 枚举_任务状态::未定义
@@ -758,33 +956,7 @@ public:
             任务类::设置任务状态(任务头结点, 枚举_任务状态::运行中, "任务执行器::推进一步/置运行中");
         }
         (void)任务类::标记任务最近调度(任务头结点->主信息, 结构体_时间戳::当前_微秒(), "任务执行器::推进一步/标记最近调度");
-        return 私有_执行步骤(任务头结点, stepNode);
-    }
-
-    bool 调度并推进一步(const std::vector<任务节点类*>& 候选任务头) {
-        using namespace 任务执行模块_detail;
-
-        任务节点类* best = nullptr;
-        std::int64_t bestScore = std::numeric_limits<std::int64_t>::min();
-        for (auto* t : 候选任务头) {
-            if (!t || !t->主信息) continue;
-            if (!是否可进入调度队列(t->主信息->状态)) continue;
-
-            const auto score = 取优先级(t);
-            if (!best || score > bestScore) {
-                best = t;
-                bestScore = score;
-            }
-        }
-
-        if (best) {
-            (void)任务类::设置任务调度优先级(best->主信息, best->主信息->调度优先级, 结构体_时间戳::当前_微秒(), "任务执行器::调度并推进一步/刷新选中任务优先级");
-        }
-        if (best && 推进一步(best)) return true;
-
-        auto* learn = 私有_确保尝试学习任务();
-        if (!learn) return false;
-        return 推进一步(learn);
+        return 私有_执行步骤(任务头结点, stepNode, 返回消息);
     }
 
 private:
@@ -806,6 +978,28 @@ private:
             (void)任务类::设置任务当前步骤(任务头结点->主信息, best, 结构体_时间戳::当前_微秒(), "任务执行器::选择当前步骤");
         }
         return best;
+    }
+
+    bool 私有_写筹办失败返回消息(
+        任务节点类* 任务头结点,
+        枚举_任务返回消息类型 类型,
+        bool 需要重筹办,
+        const std::string& 摘要,
+        结构_任务返回消息* 返回消息) const
+    {
+        if (!返回消息 || !任务头结点 || !任务头结点->主信息) return false;
+
+        auto* 头信息 = dynamic_cast<任务头结点信息*>(任务头结点->主信息);
+        返回消息->类型 = 类型;
+        返回消息->来源任务 = 任务头结点;
+        返回消息->来源步骤 = nullptr;
+        返回消息->相关子任务 = nullptr;
+        返回消息->对应需求 = 头信息 ? 头信息->需求 : nullptr;
+        返回消息->需求已满足 = false;
+        返回消息->已进入下一阶段 = false;
+        返回消息->需要重筹办 = 需要重筹办;
+        返回消息->摘要 = 摘要;
+        return true;
     }
 
     bool 私有_步骤需要自动筹办(任务节点类* 步骤节点) {
@@ -830,15 +1024,28 @@ private:
         auto 追加候选 = [&](方法节点类* 方法首节点, 方法节点类* 匹配结果节点, std::int64_t 基础评分) {
             if (!方法首节点) return;
             auto 条件展开 = 分析方法条件缺口(方法首节点, headInfo->场景, 当前条件特征);
-            if (!条件展开.当前可直接执行 && 条件展开.未满足状态.empty() && !枚举方法直接条件节点(方法首节点).empty()) return;
+            if (!条件展开.不可获取状态.empty() || !条件展开.无权限状态.empty()) return;
+            if (!条件展开.当前可直接执行
+                && 条件展开.未满足状态.empty()
+                && 条件展开.待观察状态.empty()
+                && !枚举方法直接条件节点(方法首节点).empty()) return;
 
             结构_筹办方法候选 c{};
             c.方法首节点 = 方法首节点;
             c.匹配结果节点 = 匹配结果节点;
             c.首选条件节点 = 条件展开.条件节点;
             c.未满足条件状态 = 条件展开.未满足状态;
+            c.待观察条件状态 = 条件展开.待观察状态;
+            c.不可获取条件状态 = 条件展开.不可获取状态;
+            c.无权限条件状态 = 条件展开.无权限状态;
+            c.条件判定清单 = 条件展开.条件判定清单;
             c.可直接执行 = 条件展开.当前可直接执行;
-            c.评分Q = 基础评分 + (c.可直接执行 ? 30000 : 0) - static_cast<std::int64_t>(c.未满足条件状态.size()) * 5000;
+            c.评分Q = 基础评分
+                + (c.可直接执行 ? 30000 : 0)
+                - static_cast<std::int64_t>(c.未满足条件状态.size()) * 5000
+                - static_cast<std::int64_t>(c.待观察条件状态.size()) * 3000
+                - static_cast<std::int64_t>(c.不可获取条件状态.size()) * 9000
+                - static_cast<std::int64_t>(c.无权限条件状态.size()) * 12000;
             out.push_back(std::move(c));
         };
 
@@ -893,23 +1100,49 @@ private:
 
         auto* stepInfo = 取步骤信息(步骤节点);
         if (!stepInfo || !步骤节点->主信息) return;
+        日志::运行f(
+            "[任务执行器] 补全步骤预测结果开始: 步骤={}, 子首节点={}, 当前方法={}",
+            (void*)步骤节点,
+            (void*)步骤节点->子,
+            (void*)stepInfo->当前选中方法首节点);
 
         std::vector<方法节点类*> methods = stepInfo->可用方法首节点列表;
         if (methods.empty() && stepInfo->当前选中方法首节点) methods.push_back(stepInfo->当前选中方法首节点);
         if (methods.empty()) return;
+        日志::运行f(
+            "[任务执行器] 补全步骤预测结果方法集就绪: 步骤={}, 方法数={}",
+            (void*)步骤节点,
+            static_cast<unsigned long long>(methods.size()));
 
         std::unordered_set<std::uintptr_t> existingResults{};
         std::unordered_set<std::uintptr_t> existingPlaceholders{};
+        日志::运行f(
+            "[任务执行器] 补全步骤预测结果扫描已有结果前: 步骤={}",
+            (void*)步骤节点);
         for (auto* resultNode : 枚举预测结果节点(步骤节点)) {
             auto* info = 取结果信息(resultNode);
             if (!info) continue;
             if (info->对应方法结果节点) existingResults.insert(reinterpret_cast<std::uintptr_t>(info->对应方法结果节点));
             else if (info->来源方法首节点) existingPlaceholders.insert(reinterpret_cast<std::uintptr_t>(info->来源方法首节点));
         }
+        日志::运行f(
+            "[任务执行器] 补全步骤预测结果扫描已有结果后: 步骤={}, 已有结果数={}, 已有占位数={}",
+            (void*)步骤节点,
+            static_cast<unsigned long long>(existingResults.size()),
+            static_cast<unsigned long long>(existingPlaceholders.size()));
 
         for (auto* methodHead : methods) {
             if (!methodHead) continue;
+            日志::运行f(
+                "[任务执行器] 补全步骤预测结果开始枚举方法结果: 步骤={}, 方法={}",
+                (void*)步骤节点,
+                (void*)methodHead);
             auto resultNodes = 枚举方法树结果节点(methodHead);
+            日志::运行f(
+                "[任务执行器] 补全步骤预测结果完成枚举方法结果: 步骤={}, 方法={}, 方法结果数={}",
+                (void*)步骤节点,
+                (void*)methodHead,
+                static_cast<unsigned long long>(resultNodes.size()));
             if (resultNodes.empty()) {
                 const auto key = reinterpret_cast<std::uintptr_t>(methodHead);
                 if (!existingPlaceholders.insert(key).second) continue;
@@ -922,7 +1155,15 @@ private:
                 arg.命中后动作 = 枚举_分支选择动作::继续下一步;
                 arg.局部优先级偏移 = 步骤节点->主信息->局部优先级偏移;
                 arg.初始状态 = 枚举_任务状态::就绪;
+                日志::运行f(
+                    "[任务执行器] 补全步骤预测结果创建占位前: 步骤={}, 方法={}",
+                    (void*)步骤节点,
+                    (void*)methodHead);
                 (void)任务类::创建结果节点(步骤节点, arg, "任务执行器::补全步骤预测结果/占位预测");
+                日志::运行f(
+                    "[任务执行器] 补全步骤预测结果创建占位后: 步骤={}, 方法={}",
+                    (void*)步骤节点,
+                    (void*)methodHead);
                 continue;
             }
 
@@ -940,9 +1181,67 @@ private:
                 arg.命中后动作 = 枚举_分支选择动作::继续下一步;
                 arg.局部优先级偏移 = 步骤节点->主信息->局部优先级偏移;
                 arg.初始状态 = 枚举_任务状态::就绪;
+                日志::运行f(
+                    "[任务执行器] 补全步骤预测结果创建预测前: 步骤={}, 方法={}, 方法结果={}",
+                    (void*)步骤节点,
+                    (void*)methodHead,
+                    (void*)resultNode);
                 (void)任务类::创建结果节点(步骤节点, arg, "任务执行器::补全步骤预测结果");
+                日志::运行f(
+                    "[任务执行器] 补全步骤预测结果创建预测后: 步骤={}, 方法={}, 方法结果={}",
+                    (void*)步骤节点,
+                    (void*)methodHead,
+                    (void*)resultNode);
             }
         }
+        日志::运行f(
+            "[任务执行器] 补全步骤预测结果完成: 步骤={}",
+            (void*)步骤节点);
+    }
+
+    std::vector<方法节点类*> 私有_选择观察方法候选(
+        状态节点类* 目标状态,
+        时间戳 now,
+        const std::string& 调用点)
+    {
+        using namespace 任务执行模块_detail;
+
+        std::vector<方法节点类*> out{};
+        auto* stateInfo = 取状态信息(目标状态);
+        if (!stateInfo) return out;
+
+        auto 追加本能方法 = [&](枚举_本能动作ID id) {
+            if (!本能集.有(id)) return;
+            auto* head = 方法集.查找或创建_本能方法首节点(id, now, 调用点);
+            if (!head) return;
+            if (auto q = 本能集.查询(id)) {
+                if (!q->方法信息首节点) {
+                    (void)本能集.补全方法信息(id, head);
+                }
+            }
+            if (std::find(out.begin(), out.end(), head) == out.end()) {
+                out.push_back(head);
+            }
+        };
+
+        auto* featureInfo = (stateInfo->状态特征 && stateInfo->状态特征->主信息)
+            ? dynamic_cast<特征节点主信息类*>(stateInfo->状态特征->主信息)
+            : nullptr;
+        const auto* featureType = featureInfo ? featureInfo->类型 : nullptr;
+        const std::string featureKey = featureType ? featureType->获取主键() : std::string{};
+        const bool 看起来像人类输入 = featureKey.find("人类输入") != std::string::npos;
+        const bool 是自我内部状态 = stateInfo->是否内部状态()
+            || (stateInfo->状态主体 && 世界树.自我指针 && 节点主键相同(stateInfo->状态主体, 世界树.自我指针));
+
+        if (看起来像人类输入) {
+            追加本能方法(枚举_本能动作ID::自我_读取最新人类输入);
+        }
+        if (是自我内部状态) {
+            追加本能方法(枚举_本能动作ID::自我_读取核心状态);
+        }
+
+        追加本能方法(枚举_本能动作ID::自我_观察场景);
+        return out;
     }
 
     需求节点类* 私有_创建补条件需求(
@@ -985,6 +1284,16 @@ private:
         needArg.类型 = parentNeedInfo ? parentNeedInfo->类型 : nullptr;
         needArg.发生场景 = headInfo->场景;
         needArg.生成时间 = stateArg.now;
+        if (auto* 当前步骤信息 = (headInfo->当前步骤节点 && headInfo->当前步骤节点->主信息)
+            ? dynamic_cast<任务步骤节点信息*>(headInfo->当前步骤节点->主信息)
+            : nullptr) {
+            if (当前步骤信息->超时截止时间 > 0) {
+                needArg.有效截止 = 当前步骤信息->超时截止时间;
+            }
+        }
+        if (needArg.有效截止 == 0 && parentNeedInfo && parentNeedInfo->需求有效截止 > 0) {
+            needArg.有效截止 = parentNeedInfo->需求有效截止;
+        }
         needArg.权重 = std::max<std::int64_t>(1, 权重);
         if (!headInfo->需求) {
             日志::运行f(
@@ -994,6 +1303,61 @@ private:
                 (void*)stateInfo->状态特征);
         }
         return 需求集.创建需求(需求主体, 被需求存在, demandState, needArg, 调用点, headInfo->需求);
+    }
+
+    bool 私有_创建观察子任务(
+        任务节点类* 任务头结点,
+        任务节点类* 步骤节点,
+        状态节点类* 目标状态,
+        std::int64_t 权重,
+        std::int64_t childIndex,
+        bool 设为当前)
+    {
+        using namespace 任务执行模块_detail;
+
+        auto* headInfo = 取头信息(任务头结点);
+        auto* stepInfo = 取步骤信息(步骤节点);
+        if (!headInfo || !stepInfo) return false;
+
+        const auto now = 结构体_时间戳::当前_微秒();
+        auto 观察方法列表 = 私有_选择观察方法候选(
+            目标状态,
+            now,
+            "任务执行器::创建观察子任务/选择观察方法");
+        if (观察方法列表.empty()) return false;
+
+        auto* need = 私有_创建补条件需求(任务头结点, 目标状态, 权重, "任务执行器::创建观察子任务/创建观察需求");
+        if (!need) return false;
+
+        任务类::结构_创建任务头参数 任务参数{};
+        任务参数.父任务头结点 = 任务头结点;
+        任务参数.来源父步骤节点 = 步骤节点;
+        任务参数.初始场景 = headInfo->场景;
+        任务参数.局部优先级偏移 = std::max<std::int64_t>(0, 步骤节点->主信息->局部优先级偏移 + 60000 - childIndex * 1000);
+        任务参数.任务树类型 = 枚举_任务树类型::叶子任务;
+        任务参数.初始状态 = 枚举_任务状态::就绪;
+
+        auto* childTask = 任务类::创建任务头结点(need, 任务参数, nullptr, "任务执行器::创建观察子任务/创建观察任务");
+        if (!childTask || !childTask->主信息) return false;
+
+        任务类::结构_创建步骤参数 步骤参数{};
+        步骤参数.所属任务头结点 = childTask;
+        步骤参数.步骤场景 = headInfo->场景;
+        步骤参数.步骤序号 = 0;
+        步骤参数.初始状态 = 枚举_任务状态::就绪;
+        步骤参数.允许切换方法 = true;
+        步骤参数.可用方法首节点列表 = 观察方法列表;
+        步骤参数.当前选中方法首节点 = 观察方法列表.front();
+        if (stepInfo->超时截止时间 > 0) {
+            步骤参数.超时截止时间 = stepInfo->超时截止时间;
+        }
+
+        auto* observeStep = 任务类::创建步骤节点(childTask, 步骤参数, "任务执行器::创建观察子任务/创建观察步骤");
+        if (!observeStep) return false;
+
+        (void)任务类::设置任务当前步骤(childTask->主信息, observeStep, now, "任务执行器::创建观察子任务/设置当前步骤");
+        (void)任务类::绑定步骤并发子任务(步骤节点, childTask, 设为当前, "任务执行器::创建观察子任务/绑定步骤");
+        return true;
     }
 
     bool 私有_确保步骤补条件子任务(任务节点类* 任务头结点, 任务节点类* 步骤节点) {
@@ -1012,7 +1376,7 @@ private:
 
         auto 当前条件特征 = 枚举场景二次特征指针(headInfo->场景);
         auto gap = 分析方法条件缺口(methodHead, headInfo->场景, 当前条件特征);
-        if (gap.当前可直接执行 || gap.未满足状态.empty()) return false;
+        if (gap.当前可直接执行 || (gap.未满足状态.empty() && gap.待观察状态.empty())) return false;
 
         auto* parentNeedInfo = (headInfo->需求 && headInfo->需求->主信息) ? headInfo->需求->主信息 : nullptr;
         const auto needWeight = parentNeedInfo
@@ -1053,6 +1417,25 @@ private:
             (void)任务类::绑定步骤并发子任务(步骤节点, childTask, !createdAny, "任务执行器::确保步骤补条件子任务/绑定步骤");
             createdAny = true;
             ++childIndex;
+        }
+
+        for (auto* targetState : gap.待观察状态) {
+            auto* targetInfo = 取状态信息(targetState);
+            if (!targetInfo) continue;
+
+            std::string key{ "observe|" };
+            if (targetInfo->状态主体) key += targetInfo->状态主体->获取主键();
+            key += "|";
+            if (targetInfo->状态特征) key += targetInfo->状态特征->获取主键();
+            key += "|";
+            if (std::holds_alternative<I64>(targetInfo->状态值)) key += std::to_string(std::get<I64>(targetInfo->状态值));
+            else key += std::to_string(targetInfo->状态值.index());
+            if (!seen.insert(key).second) continue;
+
+            if (私有_创建观察子任务(任务头结点, 步骤节点, targetState, needWeight, childIndex, !createdAny)) {
+                createdAny = true;
+                ++childIndex;
+            }
         }
 
         if (createdAny) {
@@ -1115,7 +1498,7 @@ private:
         return best;
     }
 
-    bool 私有_先推进步骤子任务(任务节点类* 任务头结点, 任务节点类* 步骤节点, bool& 子任务已全部完成) {
+    bool 私有_先推进步骤子任务(任务节点类* 任务头结点, 任务节点类* 步骤节点, bool& 子任务已全部完成, 结构_任务返回消息* 返回消息 = nullptr) {
         using namespace 任务执行模块_detail;
 
         子任务已全部完成 = false;
@@ -1123,24 +1506,53 @@ private:
         auto* stepInfo = 取步骤信息(步骤节点);
         if (!headInfo || !stepInfo || !任务头结点->主信息 || !步骤节点->主信息) return false;
 
+        auto 写子任务返回消息 = [&](枚举_任务返回消息类型 类型, 任务节点类* 相关子任务, bool 需要重筹办, const std::string& 摘要) {
+            if (!返回消息) return;
+            返回消息->类型 = 类型;
+            返回消息->来源任务 = 任务头结点;
+            返回消息->来源步骤 = 步骤节点;
+            返回消息->相关子任务 = 相关子任务;
+            返回消息->对应需求 = headInfo->需求;
+            返回消息->需求已满足 = false;
+            返回消息->已进入下一阶段 = false;
+            返回消息->需要重筹办 = 需要重筹办;
+            返回消息->摘要 = 摘要;
+        };
+
+        auto 清空当前子任务指针 = [&]() {
+            if (stepInfo->当前子任务头结点 == nullptr && headInfo->当前子任务头结点 == nullptr) {
+                return;
+            }
+            stepInfo->当前子任务头结点 = nullptr;
+            headInfo->当前子任务头结点 = nullptr;
+        };
+
         auto summary = 汇总步骤子任务(stepInfo);
         if (summary.总数 == 0) {
-            (void)任务类::设置任务当前子任务(步骤节点->主信息, nullptr, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/清空步骤当前子任务");
-            (void)任务类::设置任务当前子任务(任务头结点->主信息, nullptr, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/清空头结点当前子任务");
+            清空当前子任务指针();
             return false;
         }
 
-        if (summary.失败数 > 0) {
-            (void)任务类::设置任务当前子任务(步骤节点->主信息, nullptr, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/子任务失败清空步骤当前子任务");
-            (void)任务类::设置任务当前子任务(任务头结点->主信息, nullptr, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/子任务失败清空头结点当前子任务");
-            任务类::设置任务状态(步骤节点, 枚举_任务状态::失败, "任务执行器::先推进步骤子任务/步骤失败");
-            任务类::设置任务状态(任务头结点, 枚举_任务状态::失败, "任务执行器::先推进步骤子任务/头结点失败");
+        if (子任务已清零(summary)) {
+            清空当前子任务指针();
+            if (summary.完成数 == summary.总数) {
+                任务类::设置任务状态(步骤节点, 枚举_任务状态::就绪, "任务执行器::先推进步骤子任务/步骤恢复就绪");
+                子任务已全部完成 = true;
+                return true;
+            }
+
+            任务类::设置任务状态(步骤节点, 枚举_任务状态::待重筹办, "任务执行器::先推进步骤子任务/子任务清零待重筹办");
+            任务类::设置任务状态(任务头结点, 枚举_任务状态::待重筹办, "任务执行器::先推进步骤子任务/头结点待重筹办");
+            写子任务返回消息(
+                summary.无法执行数 > 0 ? 枚举_任务返回消息类型::子任务无法执行 : 枚举_任务返回消息类型::子任务失败,
+                nullptr,
+                true,
+                summary.无法执行数 > 0 ? "子任务已清零且包含无法执行分支，需要重新筹办" : "子任务已清零但未满足需求，需要重新筹办");
             return true;
         }
 
         if (summary.完成数 == summary.总数) {
-            (void)任务类::设置任务当前子任务(步骤节点->主信息, nullptr, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/全部完成清空步骤当前子任务");
-            (void)任务类::设置任务当前子任务(任务头结点->主信息, nullptr, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/全部完成清空头结点当前子任务");
+            清空当前子任务指针();
             任务类::设置任务状态(步骤节点, 枚举_任务状态::就绪, "任务执行器::先推进步骤子任务/步骤恢复就绪");
             子任务已全部完成 = true;
             return true;
@@ -1156,28 +1568,17 @@ private:
         if (summary.首选可推进子任务) {
             任务类::设置任务状态(步骤节点, 枚举_任务状态::等待中, "任务执行器::先推进步骤子任务/步骤等待子任务");
             任务类::设置任务状态(任务头结点, 枚举_任务状态::运行中, "任务执行器::先推进步骤子任务/头结点调度子任务");
-            (void)推进一步(summary.首选可推进子任务);
-
-            auto after = 汇总步骤子任务(stepInfo);
-            if (after.失败数 > 0) {
-                (void)任务类::设置任务当前子任务(步骤节点->主信息, nullptr, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/推进后失败清空步骤当前子任务");
-                (void)任务类::设置任务当前子任务(任务头结点->主信息, nullptr, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/推进后失败清空头结点当前子任务");
-                任务类::设置任务状态(步骤节点, 枚举_任务状态::失败, "任务执行器::先推进步骤子任务/推进后步骤失败");
-                任务类::设置任务状态(任务头结点, 枚举_任务状态::失败, "任务执行器::先推进步骤子任务/推进后头结点失败");
-                return true;
-            }
-            if (after.总数 > 0 && after.完成数 == after.总数) {
-                (void)任务类::设置任务当前子任务(步骤节点->主信息, nullptr, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/推进后全部完成清空步骤当前子任务");
-                (void)任务类::设置任务当前子任务(任务头结点->主信息, nullptr, 结构体_时间戳::当前_微秒(), "任务执行器::先推进步骤子任务/推进后全部完成清空头结点当前子任务");
-                任务类::设置任务状态(步骤节点, 枚举_任务状态::就绪, "任务执行器::先推进步骤子任务/推进后步骤恢复就绪");
-                子任务已全部完成 = true;
-                return true;
-            }
+            写子任务返回消息(
+                枚举_任务返回消息类型::生成子任务,
+                summary.首选可推进子任务,
+                false,
+                "子任务已就绪，等待外层调度继续推进");
             return true;
         }
 
         任务类::设置任务状态(步骤节点, 枚举_任务状态::等待中, "任务执行器::先推进步骤子任务/步骤等待并发子任务");
         任务类::设置任务状态(任务头结点, 枚举_任务状态::等待中, "任务执行器::先推进步骤子任务/头结点等待并发子任务");
+        写子任务返回消息(枚举_任务返回消息类型::生成子任务, childToRun, false, "当前没有可直接推进的子任务，父任务保持等待");
         return true;
     }
 
@@ -1197,32 +1598,108 @@ private:
         return true;
     }
 
-    bool 私有_执行步骤(任务节点类* 任务头结点, 任务节点类* 步骤节点) {
+    bool 私有_执行步骤(任务节点类* 任务头结点, 任务节点类* 步骤节点, 结构_任务返回消息* 返回消息 = nullptr) {
         using namespace 任务执行模块_detail;
 
         auto* headInfo = 取头信息(任务头结点);
         auto* stepInfo = 取步骤信息(步骤节点);
         if (!headInfo || !stepInfo || !任务头结点->主信息 || !步骤节点->主信息) return false;
 
+        日志::运行f(
+            "[任务执行器] 执行步骤开始: 任务={}, 步骤={}, 方法={}, 并发子任务数={}",
+            (void*)任务头结点,
+            (void*)步骤节点,
+            (void*)stepInfo->当前选中方法首节点,
+            stepInfo->并发子任务头结点列表.size());
+
+        auto 写返回消息 = [&](枚举_任务返回消息类型 类型, bool 需求已满足, bool 已进入下一阶段, bool 需要重筹办, const std::string& 摘要) {
+            if (!返回消息) return;
+            返回消息->类型 = 类型;
+            返回消息->来源任务 = 任务头结点;
+            返回消息->来源步骤 = 步骤节点;
+            返回消息->相关子任务 = nullptr;
+            返回消息->对应需求 = headInfo->需求;
+            返回消息->需求已满足 = 需求已满足;
+            返回消息->已进入下一阶段 = 已进入下一阶段;
+            返回消息->需要重筹办 = 需要重筹办;
+            返回消息->摘要 = 摘要;
+        };
+
         (void)任务类::设置任务当前步骤(任务头结点->主信息, 步骤节点, 结构体_时间戳::当前_微秒(), "任务执行器::执行步骤/设置当前步骤");
 
         if (!stepInfo->当前选中方法首节点 && !stepInfo->可用方法首节点列表.empty()) {
             stepInfo->当前选中方法首节点 = stepInfo->可用方法首节点列表.front();
         }
-        if (!stepInfo->当前选中方法首节点) return false;
-
-        (void)私有_确保步骤补条件子任务(任务头结点, 步骤节点);
-
-        bool 子任务已全部完成 = false;
-        if (私有_先推进步骤子任务(任务头结点, 步骤节点, 子任务已全部完成)) {
-            if (!子任务已全部完成) return true;
+        if (!stepInfo->当前选中方法首节点) {
+            任务类::设置任务状态(步骤节点, 枚举_任务状态::无法执行, "任务执行器::执行步骤/无可执行方法");
+            任务类::设置任务状态(任务头结点, 枚举_任务状态::无法执行, "任务执行器::执行步骤/任务无法执行");
+            写返回消息(枚举_任务返回消息类型::步骤无法执行, false, false, false, "当前步骤没有可执行方法");
+            return false;
         }
 
+        日志::运行f(
+            "[任务执行器] 执行步骤检查补条件前: 任务={}, 步骤={}, 方法={}",
+            (void*)任务头结点,
+            (void*)步骤节点,
+            (void*)stepInfo->当前选中方法首节点);
+        (void)私有_确保步骤补条件子任务(任务头结点, 步骤节点);
+        日志::运行f(
+            "[任务执行器] 执行步骤检查补条件后: 任务={}, 步骤={}, 并发子任务数={}",
+            (void*)任务头结点,
+            (void*)步骤节点,
+            stepInfo->并发子任务头结点列表.size());
+
+        bool 子任务已全部完成 = false;
+        日志::运行f(
+            "[任务执行器] 执行步骤进入子任务推进: 任务={}, 步骤={}",
+            (void*)任务头结点,
+            (void*)步骤节点);
+        if (私有_先推进步骤子任务(任务头结点, 步骤节点, 子任务已全部完成, 返回消息)) {
+            日志::运行f(
+                "[任务执行器] 执行步骤子任务分支返回: 任务={}, 步骤={}, 子任务已全部完成={}, 返回类型={}",
+                (void*)任务头结点,
+                (void*)步骤节点,
+                子任务已全部完成 ? 1 : 0,
+                返回消息 ? static_cast<int>(返回消息->类型) : -1);
+            if (!子任务已全部完成) {
+                if (!返回消息 || 返回消息->类型 == 枚举_任务返回消息类型::未定义) {
+                    写返回消息(枚举_任务返回消息类型::生成子任务, false, false, false, "当前步骤等待子任务结果");
+                }
+                return true;
+            }
+        }
+
+        日志::运行f(
+            "[任务执行器] 执行步骤子任务推进结束: 任务={}, 步骤={}, 子任务已全部完成={}",
+            (void*)任务头结点,
+            (void*)步骤节点,
+            子任务已全部完成 ? 1 : 0);
+        日志::运行f(
+            "[任务执行器] 执行步骤补全预测结果前: 任务={}, 步骤={}",
+            (void*)任务头结点,
+            (void*)步骤节点);
         私有_补全步骤预测结果(步骤节点);
+        日志::运行f(
+            "[任务执行器] 执行步骤补全预测结果后: 任务={}, 步骤={}",
+            (void*)任务头结点,
+            (void*)步骤节点);
+        日志::运行f(
+            "[任务执行器] 执行步骤设置执行中前: 任务={}, 步骤={}",
+            (void*)任务头结点,
+            (void*)步骤节点);
         任务类::设置任务状态(步骤节点, 枚举_任务状态::执行中, "任务执行器::执行步骤/步骤执行中");
+        日志::运行f(
+            "[任务执行器] 执行步骤设置执行中后: 任务={}, 步骤={}",
+            (void*)任务头结点,
+            (void*)步骤节点);
 
         结构_叶子执行结果 r{};
         if (leaf_exec_) {
+            日志::运行f(
+                "[任务执行器] 执行步骤即将调用叶子回调: 任务={}, 步骤={}, 方法={}",
+                (void*)任务头结点,
+                (void*)步骤节点,
+                (void*)stepInfo->当前选中方法首节点);
             r = leaf_exec_(步骤节点);
         }
         else {
@@ -1256,7 +1733,10 @@ private:
         resultArg.错误码 = static_cast<std::int64_t>(r.失败类型);
         resultArg.初始状态 = r.成功 ? 枚举_任务状态::完成 : 枚举_任务状态::失败;
         auto* actualResultNode = 任务类::创建结果节点(步骤节点, resultArg, "任务执行器::执行步骤/追加实际结果");
-        if (!actualResultNode) return false;
+        if (!actualResultNode) {
+            写返回消息(枚举_任务返回消息类型::步骤失败, false, false, false, "步骤执行结果未能写入结果节点");
+            return false;
+        }
 
         (void)任务类::设置任务最近结果节点(任务头结点->主信息, actualResultNode, 结构体_时间戳::当前_微秒(), "任务执行器::执行步骤/记录最近结果");
         (void)任务类::设置任务当前分支动作(任务头结点->主信息, action, 结构体_时间戳::当前_微秒(), "任务执行器::执行步骤/记录动作");
@@ -1265,7 +1745,8 @@ private:
         auto* nextStep = 取命中结果后的下一步骤(matchedPrediction);
         if (nextStep) {
             (void)任务类::设置任务当前步骤(任务头结点->主信息, nextStep, 结构体_时间戳::当前_微秒(), "任务执行器::执行步骤/进入下一步骤");
-            任务类::设置任务状态(任务头结点, 枚举_任务状态::运行中, "任务执行器::执行步骤/头结点继续运行");
+            任务类::设置任务状态(任务头结点, 枚举_任务状态::就绪, "任务执行器::执行步骤/头结点等待下一步回复");
+            写返回消息(枚举_任务返回消息类型::步骤完成, false, true, false, r.摘要.empty() ? "步骤完成，已进入下一阶段" : r.摘要);
             return true;
         }
 
@@ -1280,22 +1761,50 @@ private:
             }
 
             if (action == 枚举_分支选择动作::转入尝试学习) {
-                auto* learn = 私有_确保尝试学习任务();
-                if (learn && learn != 任务头结点) {
-                    (void)推进一步(learn);
-                }
+                (void)私有_确保尝试学习任务();
+                headInfo->等待学习唤醒 = true;
+                headInfo->等待学习方法首节点 = stepInfo->当前选中方法首节点;
+                任务类::设置任务状态(任务头结点, 枚举_任务状态::待重筹办, "任务执行器::执行步骤/转入尝试学习待重筹办");
+                写返回消息(
+                    枚举_任务返回消息类型::步骤无法执行,
+                    false,
+                    false,
+                    true,
+                    r.摘要.empty() ? "步骤执行失败，已转入尝试学习并等待重筹办" : r.摘要);
             }
-
-            if (action == 枚举_分支选择动作::挂起等待) {
+            else if (action == 枚举_分支选择动作::挂起等待) {
                 任务类::设置任务状态(任务头结点, 枚举_任务状态::挂起, "任务执行器::执行步骤/挂起等待");
+                写返回消息(枚举_任务返回消息类型::步骤无法执行, false, false, false, r.摘要.empty() ? "步骤挂起等待外部回复" : r.摘要);
             }
             else {
                 任务类::设置任务状态(任务头结点, 枚举_任务状态::失败, "任务执行器::执行步骤/任务失败");
+                写返回消息(枚举_任务返回消息类型::步骤失败, false, false, false, r.摘要.empty() ? "步骤执行失败" : r.摘要);
             }
             return true;
         }
 
+        bool 需求已满足 = false;
+        bool 需要重筹办 = false;
+        if (headInfo->需求) {
+            const auto 判定 = 需求集.判断需求状态(headInfo->需求, "任务执行器::执行步骤/阶段完成后判断需求");
+            需求已满足 = 判定.已满足 && !headInfo->是否真根任务;
+            需要重筹办 = headInfo->是否真根任务 || !判定.已满足;
+        }
+
+        (void)任务类::设置任务当前步骤(
+            任务头结点->主信息,
+            nullptr,
+            结构体_时间戳::当前_微秒(),
+            "任务执行器::执行步骤/阶段结束清空当前步骤");
+
+        if (需要重筹办) {
+            任务类::设置任务状态(任务头结点, 枚举_任务状态::待重筹办, "任务执行器::执行步骤/任务待重筹办");
+            写返回消息(枚举_任务返回消息类型::步骤完成, false, false, true, r.摘要.empty() ? "局部阶段结束，需求未满足，等待重筹办" : r.摘要);
+            return true;
+        }
+
         任务类::设置任务状态(任务头结点, 枚举_任务状态::完成, "任务执行器::执行步骤/任务完成");
+        写返回消息(枚举_任务返回消息类型::步骤完成, 需求已满足 || !headInfo->需求, false, false, r.摘要.empty() ? "局部阶段结束，任务完成" : r.摘要);
         return true;
     }
 

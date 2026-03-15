@@ -6,6 +6,8 @@ module;
 #include <optional>
 #include <algorithm>
 #include <bit>
+#include <functional>
+#include <mutex>
 
 export module 世界树模块;
 
@@ -85,6 +87,13 @@ namespace 世界树模块_detail {
 
 export class 世界树类 {
 public:
+    struct 结构_存在创建结果 {
+        存在节点类* 节点 = nullptr;
+        bool 是否新建 = false;
+    };
+
+    using 回调_新存在创建 = std::function<void(存在节点类*)>;
+
     世界树类() {
         // 默认差异度：
         // - I64：|a-b|
@@ -104,6 +113,31 @@ public:
     场景节点类* 虚拟世界 = nullptr;
     存在节点类* 自我指针 = nullptr;
     场景节点类* 自我所在场景 = nullptr;
+    void 设置新存在创建回调(回调_新存在创建 回调) {
+        std::lock_guard<std::mutex> lk(新存在创建回调锁_);
+        新存在创建回调_ = std::move(回调);
+    }
+private:
+    void 私有_通知新存在创建(存在节点类* 节点, const std::string& 调用点) {
+        if (!节点) return;
+
+        回调_新存在创建 回调;
+        {
+            std::lock_guard<std::mutex> lk(新存在创建回调锁_);
+            回调 = 新存在创建回调_;
+        }
+        if (!回调) return;
+
+        (void)安全执行_记录异常(
+            调用点 + "/通知新存在创建",
+            [&] {
+                回调(节点);
+            });
+    }
+
+    mutable std::mutex 新存在创建回调锁_{};
+    回调_新存在创建 新存在创建回调_{};
+public:
     // ============================================================
     // 0) 初始化
     // ============================================================
@@ -194,12 +228,29 @@ public:
     // ============================================================
     // 3) 存在 CRUD
     // ============================================================
-    存在节点类* 创建存在(基础信息节点类* parent, 存在节点主信息类* mi, const std::string& 调用点 = "世界树类::创建存在") {
-        if (!mi) return nullptr;
-        锁调度器守卫 锁({ 锁请求::写(世界链.链表锁, 枚举_锁域::世界链, "世界链", 调用点) });
-        auto* p = parent ? parent : 世界链.根指针;
-        return static_cast<存在节点类*>(世界链.添加子节点_已加锁(p, static_cast<基础信息基类*>(mi)));
+    结构_存在创建结果 创建存在_返回结果(
+        基础信息节点类* parent,
+        存在节点主信息类* mi,
+        const std::string& 调用点 = "世界树类::创建存在")
+    {
+        if (!mi) return {};
 
+        结构_存在创建结果 结果{};
+        {
+            锁调度器守卫 锁({ 锁请求::写(世界链.链表锁, 枚举_锁域::世界链, "世界链", 调用点) });
+            auto* p = parent ? parent : 世界链.根指针;
+            结果.节点 = static_cast<存在节点类*>(世界链.添加子节点_已加锁(p, static_cast<基础信息基类*>(mi)));
+            结果.是否新建 = (结果.节点 != nullptr);
+        }
+
+        if (结果.是否新建) {
+            私有_通知新存在创建(结果.节点, 调用点);
+        }
+        return 结果;
+    }
+
+    存在节点类* 创建存在(基础信息节点类* parent, 存在节点主信息类* mi, const std::string& 调用点 = "世界树类::创建存在") {
+        return 创建存在_返回结果(parent, mi, 调用点).节点;
     }
         // 兼容/便捷：添加子存在（别名）
         // - 说明：部分实现模块使用“添加子存在”命名；底层仍走 创建存在
@@ -258,34 +309,54 @@ public:
         return static_cast<场景节点类*>(世界链.添加子节点_已加锁(p, static_cast<基础信息基类*>(mi)));
     }
 
+    结构_存在创建结果 取或创建子存在_按类型_返回结果(
+        基础信息节点类* parent,
+        const 词性节点类* 存在类型,
+        时间戳 now = 0,
+        const std::string& 调用点 = "世界树类::取或创建子存在_按类型")
+    {
+        (void)now;
+        if (!存在类型) return {};
+
+        结构_存在创建结果 结果{};
+        {
+            锁调度器守卫 锁({ 锁请求::写(世界链.链表锁, 枚举_锁域::世界链, "世界链", 调用点) });
+            auto* p = parent ? parent : 世界链.根指针;
+
+            const std::string key = 存在类型->获取主键();
+            if (p->子) {
+                auto* first = static_cast<基础信息节点类*>(p->子);
+                auto* it = first;
+                do {
+                    auto* emi = it ? dynamic_cast<存在节点主信息类*>(it->主信息) : nullptr;
+                    if (emi && emi->类型 && emi->类型->获取主键() == key) {
+                        结果.节点 = static_cast<存在节点类*>(it);
+                        return 结果;
+                    }
+                    it = static_cast<基础信息节点类*>(it->下);
+                } while (it && it != first);
+            }
+
+            auto* mi = new 存在节点主信息类();
+            mi->类型 = const_cast<词性节点类*>(存在类型);
+            // mi->记录观测(now);
+            结果.节点 = static_cast<存在节点类*>(世界链.添加子节点_已加锁(p, static_cast<基础信息基类*>(mi)));
+            结果.是否新建 = (结果.节点 != nullptr);
+        }
+
+        if (结果.是否新建) {
+            私有_通知新存在创建(结果.节点, 调用点);
+        }
+        return 结果;
+    }
+
     存在节点类* 取或创建子存在_按类型(
         基础信息节点类* parent,
         const 词性节点类* 存在类型,
         时间戳 now = 0,
         const std::string& 调用点 = "世界树类::取或创建子存在_按类型")
     {
-        if (!存在类型) return nullptr;
-
-        锁调度器守卫 锁({ 锁请求::写(世界链.链表锁, 枚举_锁域::世界链, "世界链", 调用点) });
-        auto* p = parent ? parent : 世界链.根指针;
-
-        const std::string key = 存在类型->获取主键();
-        if (p->子) {
-            auto* first = static_cast<基础信息节点类*>(p->子);
-            auto* it = first;
-            do {
-                auto* emi = it ? dynamic_cast<存在节点主信息类*>(it->主信息) : nullptr;
-                if (emi && emi->类型 && emi->类型->获取主键() == key) {
-                    return static_cast<存在节点类*>(it);
-                }
-                it = static_cast<基础信息节点类*>(it->下);
-            } while (it && it != first);
-        }
-
-        auto* mi = new 存在节点主信息类();
-        mi->类型 = const_cast<词性节点类*>(存在类型);
-        // mi->记录观测(now);
-        return static_cast<存在节点类*>(世界链.添加子节点_已加锁(p, static_cast<基础信息基类*>(mi)));
+        return 取或创建子存在_按类型_返回结果(parent, 存在类型, now, 调用点).节点;
     }
 
 
@@ -298,6 +369,80 @@ public:
     // - 特征值用于唯一键（例如：设备ID哈希）
     // - 只支持 I64 作为唯一键（与你当前特征快照载体一致）
     // ============================================================
+    结构_存在创建结果 取或创建子存在_按类型并按特征I64_返回结果(
+        基础信息节点类* parent,
+        const 词性节点类* 存在类型,
+        const 词性节点类* 唯一键特征类型,
+        I64 唯一键特征值,
+        时间戳 now = 0,
+        const std::string& 调用点 = "世界树类::取或创建子存在_按类型并按特征I64")
+    {
+        (void)now;
+        if (!存在类型 || !唯一键特征类型) return {};
+
+        结构_存在创建结果 结果{};
+        {
+            锁调度器守卫 锁({ 锁请求::写(世界链.链表锁, 枚举_锁域::世界链, "世界链", 调用点) });
+            auto* p = parent ? parent : 世界链.根指针;
+
+            const std::string typeKey = 存在类型->获取主键();
+            const std::string featKey = 唯一键特征类型->获取主键();
+
+            auto 取子特征I64_不加锁 = [&](基础信息节点类* host) -> std::optional<I64> {
+                if (!host || !host->子) return std::nullopt;
+                auto* first = static_cast<基础信息节点类*>(host->子);
+                auto* it = first;
+                do {
+                    auto* fmi = it ? dynamic_cast<特征节点主信息类*>(it->主信息) : nullptr;
+                    if (fmi && fmi->类型 && fmi->类型->获取主键() == featKey) {
+                        if (std::holds_alternative<I64>(fmi->当前快照)) return std::get<I64>(fmi->当前快照);
+                        return std::nullopt;
+                    }
+                    it = static_cast<基础信息节点类*>(it->下);
+                } while (it && it != first);
+                return std::nullopt;
+                };
+
+            // 先查找：类型相同且唯一键特征相等
+            if (p->子) {
+                auto* first = static_cast<基础信息节点类*>(p->子);
+                auto* it = first;
+                do {
+                    auto* emi = it ? dynamic_cast<存在节点主信息类*>(it->主信息) : nullptr;
+                    if (emi && emi->类型 && emi->类型->获取主键() == typeKey) {
+                        auto key = 取子特征I64_不加锁(it);
+                        if (key && *key == 唯一键特征值) {
+                            结果.节点 = static_cast<存在节点类*>(it);
+                            return 结果;
+                        }
+                    }
+                    it = static_cast<基础信息节点类*>(it->下);
+                } while (it && it != first);
+            }
+
+            // 未命中：创建新存在，并写入唯一键特征（初始化快照即可）
+            auto* mi = new 存在节点主信息类();
+            mi->类型 = const_cast<词性节点类*>(存在类型);
+            auto* node = static_cast<存在节点类*>(世界链.添加子节点_已加锁(p, static_cast<基础信息基类*>(mi)));
+            if (!node) return 结果;
+
+            // 写唯一键特征（初始化快照即可；后续写入仍走特征服务）
+            auto* f = 确保特征_已加锁(node, 唯一键特征类型);
+            if (f) {
+                auto* fmi = dynamic_cast<特征节点主信息类*>(f->主信息);
+                if (fmi) fmi->当前快照 = 特征快照值{ 唯一键特征值 };
+            }
+
+            结果.节点 = node;
+            结果.是否新建 = true;
+        }
+
+        if (结果.是否新建) {
+            私有_通知新存在创建(结果.节点, 调用点);
+        }
+        return 结果;
+    }
+
     存在节点类* 取或创建子存在_按类型并按特征I64(
         基础信息节点类* parent,
         const 词性节点类* 存在类型,
@@ -306,56 +451,13 @@ public:
         时间戳 now = 0,
         const std::string& 调用点 = "世界树类::取或创建子存在_按类型并按特征I64")
     {
-        if (!存在类型 || !唯一键特征类型) return nullptr;
-
-        锁调度器守卫 锁({ 锁请求::写(世界链.链表锁, 枚举_锁域::世界链, "世界链", 调用点) });
-        auto* p = parent ? parent : 世界链.根指针;
-
-        const std::string typeKey = 存在类型->获取主键();
-        const std::string featKey = 唯一键特征类型->获取主键();
-
-        auto 取子特征I64_不加锁 = [&](基础信息节点类* host) -> std::optional<I64> {
-            if (!host || !host->子) return std::nullopt;
-            auto* first = static_cast<基础信息节点类*>(host->子);
-            auto* it = first;
-            do {
-                auto* fmi = it ? dynamic_cast<特征节点主信息类*>(it->主信息) : nullptr;
-                if (fmi && fmi->类型 && fmi->类型->获取主键() == featKey) {
-                    if (std::holds_alternative<I64>(fmi->当前快照)) return std::get<I64>(fmi->当前快照);
-                    return std::nullopt;
-                }
-                it = static_cast<基础信息节点类*>(it->下);
-            } while (it && it != first);
-            return std::nullopt;
-            };
-
-        // 先查找：类型相同且唯一键特征相等
-        if (p->子) {
-            auto* first = static_cast<基础信息节点类*>(p->子);
-            auto* it = first;
-            do {
-                auto* emi = it ? dynamic_cast<存在节点主信息类*>(it->主信息) : nullptr;
-                if (emi && emi->类型 && emi->类型->获取主键() == typeKey) {
-                    auto key = 取子特征I64_不加锁(it);
-                    if (key && *key == 唯一键特征值) return static_cast<存在节点类*>(it);
-                }
-                it = static_cast<基础信息节点类*>(it->下);
-            } while (it && it != first);
-        }
-
-        // 未命中：创建新存在，并写入唯一键特征（初始化快照即可）
-        auto* mi = new 存在节点主信息类();
-        mi->类型 = const_cast<词性节点类*>(存在类型);
-        auto* node = static_cast<存在节点类*>(世界链.添加子节点_已加锁(p, static_cast<基础信息基类*>(mi)));
-        if (!node) return nullptr;
-
-        // 写唯一键特征（初始化快照即可；后续写入仍走特征服务）
-        auto* f = 确保特征_已加锁(node, 唯一键特征类型);
-        if (f) {
-            auto* fmi = dynamic_cast<特征节点主信息类*>(f->主信息);
-            if (fmi) fmi->当前快照 = 特征快照值{ 唯一键特征值 };
-        }
-        return node;
+        return 取或创建子存在_按类型并按特征I64_返回结果(
+            parent,
+            存在类型,
+            唯一键特征类型,
+            唯一键特征值,
+            now,
+            调用点).节点;
     }
 
     // ============================================================

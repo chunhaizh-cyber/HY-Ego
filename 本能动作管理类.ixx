@@ -18,7 +18,6 @@ import <string>;
 import <vector>;
 import <unordered_map>;
 import <functional>;
-import <shared_mutex>;
 import <mutex>;
 import <optional>;
 import <utility>;
@@ -141,13 +140,13 @@ public:
         ctx.函数名称 = std::move(函数名称);
         ctx.方法信息首节点 = 方法首节点;
 
-        std::unique_lock lk(mu_);
+        std::lock_guard lk(mu_);
         表_[id] = std::move(ctx);
         return true;
     }
 
     bool 补全方法信息(枚举_本能动作ID id, 方法节点类* 方法首节点) {
-        std::unique_lock lk(mu_);
+        std::lock_guard lk(mu_);
         auto it = 表_.find(id);
         if (it == 表_.end()) return false;
         it->second.方法信息首节点 = 方法首节点;
@@ -155,17 +154,17 @@ public:
     }
 
     bool 注销(枚举_本能动作ID id) {
-        std::unique_lock lk(mu_);
+        std::lock_guard lk(mu_);
         return 表_.erase(id) > 0;
     }
 
     bool 有(枚举_本能动作ID id) const {
-        std::shared_lock lk(mu_);
+        std::lock_guard lk(mu_);
         return 表_.find(id) != 表_.end();
     }
 
     std::optional<结构体_本能动作上下文> 查询(枚举_本能动作ID id) const {
-        std::shared_lock lk(mu_);
+        std::lock_guard lk(mu_);
         auto it = 表_.find(id);
         if (it == 表_.end()) return std::nullopt;
         return it->second;
@@ -176,7 +175,7 @@ public:
         查询_按函数名(const std::string& 函数名称) const
     {
         if (函数名称.empty()) return std::nullopt;
-        std::shared_lock lk(mu_);
+        std::lock_guard lk(mu_);
         for (const auto& kv : 表_) {
             if (kv.second.函数名称 == 函数名称) return std::make_pair(kv.first, kv.second);
         }
@@ -184,7 +183,7 @@ public:
     }
 
     std::string 查询函数名称(枚举_本能动作ID id) const {
-        std::shared_lock lk(mu_);
+        std::lock_guard lk(mu_);
         auto it = 表_.find(id);
         if (it == 表_.end()) return "";
         return it->second.函数名称;
@@ -192,7 +191,7 @@ public:
 
     枚举_本能动作ID 查询ID(const std::string& 函数名称) const {
         if (函数名称.empty()) return 枚举_本能动作ID::未定义;
-        std::shared_lock lk(mu_);
+        std::lock_guard lk(mu_);
         for (const auto& kv : 表_) {
             if (kv.second.函数名称 == 函数名称) return kv.first;
         }
@@ -201,7 +200,7 @@ public:
 
     std::vector<枚举_本能动作ID> 枚举已注册ID() const {
         std::vector<枚举_本能动作ID> out;
-        std::shared_lock lk(mu_);
+        std::lock_guard lk(mu_);
         out.reserve(表_.size());
         for (const auto& kv : 表_) out.push_back(kv.first);
         return out;
@@ -210,7 +209,7 @@ public:
     bool 调用(枚举_本能动作ID id, 场景节点类* 输入场景, 场景节点类* 输出场景) const {
         结构体_本能动作上下文 ctx{};
         {
-            std::shared_lock lk(mu_);
+            std::lock_guard lk(mu_);
             auto it = 表_.find(id);
             if (it == 表_.end()) return false;
             ctx = it->second;
@@ -220,7 +219,7 @@ public:
     }
 
 private:
-    mutable std::shared_mutex mu_{};
+    mutable std::mutex mu_{};
     std::unordered_map<枚举_本能动作ID, 结构体_本能动作上下文> 表_{};
 };
 

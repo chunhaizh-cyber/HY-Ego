@@ -40,6 +40,20 @@ const GUID CDECL BASED_CODE _tlid =
 const WORD _wVerMajor = 1;
 const WORD _wVerMinor = 0;
 
+namespace {
+bool 运行于受控硬件采集模式_()
+{
+	char* raw = nullptr;
+	size_t len = 0;
+	if (_dupenv_s(&raw, &len, "HY_CAPTURE_ONLY") == 0 && raw) {
+		std::string value(raw);
+		std::free(raw);
+		return value == "1";
+	}
+	return false;
+}
+}
+
 
 // C海鱼App 初始化
 
@@ -63,12 +77,17 @@ BOOL C海鱼App::InitInstance()
 		return FALSE;
 	}
 
+	const bool 受控硬件采集模式 = 运行于受控硬件采集模式_();
 
-	// 初始化 OLE 库
-	if (!AfxOleInit())
-	{
-		AfxMessageBox(IDP_OLE_INIT_FAILED);
-		return FALSE;
+	// 受控硬件采集阶段只验证主窗口相机链，暂时绕开 OLE 自动化宿主，
+	// 避免退出时落入 MFC 自动化断言。
+	if (!受控硬件采集模式) {
+		// 初始化 OLE 库
+		if (!AfxOleInit())
+		{
+			AfxMessageBox(IDP_OLE_INIT_FAILED);
+			return FALSE;
+		}
 	}
 
 	AfxEnableControlContainer();
@@ -94,14 +113,14 @@ BOOL C海鱼App::InitInstance()
 
 	// 应用程序是用 /Embedding 或 /Automation 开关启动的。
 	//使应用程序作为自动化服务器运行。
-	if (cmdInfo.m_bRunEmbedded || cmdInfo.m_bRunAutomated)
+	if (!受控硬件采集模式 && (cmdInfo.m_bRunEmbedded || cmdInfo.m_bRunAutomated))
 	{
 		// 通过 CoRegisterClassObject() 注册类工厂。
 		COleTemplateServer::RegisterAll();
 	}
 	// 应用程序是用 /Unregserver 或 /Unregister 开关启动的。  移除
 	// 注册表中的项。
-	else if (cmdInfo.m_nShellCommand == CCommandLineInfo::AppUnregister)
+	else if (!受控硬件采集模式 && cmdInfo.m_nShellCommand == CCommandLineInfo::AppUnregister)
 	{
 		COleObjectFactory::UpdateRegistryAll(FALSE);
 		AfxOleUnregisterTypeLib(_tlid, _wVerMajor, _wVerMinor);
@@ -109,7 +128,7 @@ BOOL C海鱼App::InitInstance()
 	}
 	// 应用程序是以独立方式或用其他开关(如 /Register
 	// 或 /Regserver)启动的。  更新注册表项，包括类型库。
-	else
+	else if (!受控硬件采集模式)
 	{
 		COleObjectFactory::UpdateRegistryAll();
 		AfxOleRegisterTypeLib(AfxGetInstanceHandle(), _tlid);
@@ -153,7 +172,9 @@ BOOL C海鱼App::InitInstance()
 
 int C海鱼App::ExitInstance()
 {
-	AfxOleTerm(FALSE);
+	if (!运行于受控硬件采集模式_()) {
+		AfxOleTerm(FALSE);
+	}
 
 	return CWinApp::ExitInstance();
 }

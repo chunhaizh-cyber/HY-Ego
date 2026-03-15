@@ -23,6 +23,7 @@ import 特征类型定义模块;
 import 主信息定义模块;
 import 外设本能方法_相机模块;   // 相机帧仓库_取只读()
 import 相机写入工作流模块;       // 相机帧处理器（点簇分割/存在提取）
+import 日志模块;
 
 import 场景模块;
 import 数据仓库模块;
@@ -35,6 +36,7 @@ import <cstdint>;
 import <chrono>;
 import <limits>;
 import <bit>;
+import <unordered_set>;
 
 export class 自我本能方法类_相机认知模块 {
 public:
@@ -192,6 +194,98 @@ private:
         return 解码Vec3I64(std::get<2>(mi->当前快照), out);
     }
 
+    static const 词性节点类* 私有_类型_跟踪ID()
+    {
+        static const 词性节点类* t跟踪ID = nullptr;
+        if (!t跟踪ID) t跟踪ID = 语素集.添加词性词("跟踪ID", "名词");
+        return t跟踪ID;
+    }
+
+    static bool 候选读取_跟踪ID(存在节点类* cand, I64& out)
+    {
+        auto* mi = 取存在特征主信息(cand, 私有_类型_跟踪ID());
+        if (!mi) return false;
+        if (!std::holds_alternative<I64>(mi->当前快照)) return false;
+        out = std::get<1>(mi->当前快照);
+        return true;
+    }
+
+    static 场景节点类* 私有_确保观察存在集场景(时间戳 now, const std::string& 调用点)
+    {
+        auto* root = 世界树.世界根();
+        if (!root) return nullptr;
+        auto* name = 语素集.添加词性词("观察存在集", "名词");
+        return 世界树.取或创建子场景_按名称(root, name, now, 调用点);
+    }
+
+    static void 私有_递归收集存在(基础信息节点类* parent, std::vector<存在节点类*>& out)
+    {
+        if (!parent) return;
+        auto xs = 场景类::获取子存在(parent);
+        out.insert(out.end(), xs.begin(), xs.end());
+        for (auto* sc : 场景类::获取子场景(parent)) {
+            私有_递归收集存在(sc, out);
+        }
+    }
+
+    static std::vector<存在节点类*> 私有_枚举观察存在候选()
+    {
+        std::vector<存在节点类*> out{};
+        auto* scene = 私有_确保观察存在集场景(当前_微秒(), "自我本能方法_相机认知模块::枚举观察存在候选");
+        if (!scene) return out;
+        私有_递归收集存在(scene, out);
+        return out;
+    }
+
+    static 场景节点类* 私有_查找候选存在集场景(基础信息节点类* parent)
+    {
+        if (!parent) return nullptr;
+        auto 子场景 = 场景类::获取子场景(parent);
+        if (子场景.empty()) return nullptr;
+
+        const auto* 名_候选集 = 语素集.添加词性词("候选存在集", "名词");
+        const auto* 型_候选集场景 = 语素集.添加词性词("候选集场景", "名词");
+
+        for (auto* sc : 子场景) {
+            if (!sc || !sc->主信息) continue;
+            auto* mi = dynamic_cast<场景节点主信息类*>(sc->主信息);
+            if (!mi) continue;
+            if (mi->名称 == 名_候选集 || mi->类型 == 型_候选集场景) return sc;
+        }
+
+        for (auto* sc : 子场景) {
+            if (!sc) continue;
+            if (!场景类::获取子存在(sc).empty()) return sc;
+        }
+        return 子场景[0];
+    }
+
+    static std::uint32_t 私有_观察存在允许连续未命中帧() noexcept
+    {
+        return 10;
+    }
+
+    static std::size_t 私有_衰减并清理未命中观察存在(
+        const std::vector<存在节点类*>& 已有存在,
+        const std::unordered_set<存在节点类*>& 本帧命中,
+        const std::string& 调用点)
+    {
+        std::size_t 删除数 = 0;
+        for (auto* e : 已有存在) {
+            if (!e || !e->主信息) continue;
+            if (本帧命中.find(e) != 本帧命中.end()) continue;
+            auto* mi = dynamic_cast<存在节点主信息类*>(e->主信息);
+            if (!mi) continue;
+            mi->记录未命中();
+            if (mi->连续未命中帧 >= 私有_观察存在允许连续未命中帧()) {
+                if (世界树.删除节点(e, 调用点)) {
+                    ++删除数;
+                }
+            }
+        }
+        return 删除数;
+    }
+
     static 基础信息节点类* 私有_创建指代(基础信息节点类* parent, 指代节点主信息类* mi, const std::string& 调用点)
     {
         if (!parent || !mi) return nullptr;
@@ -312,8 +406,7 @@ public:
 
         I64 validRate = 0;
         (void)读I64_按类型(输入场景, tValid, validRate);
-        auto subScenes = 场景类::获取子场景(输入场景);
-        场景节点类* candScene = subScenes.empty() ? nullptr : subScenes[0];
+        场景节点类* candScene = 私有_查找候选存在集场景(输入场景);
 
         I64 total = 0;
         I64 withContour = 0;
@@ -361,22 +454,27 @@ public:
 
         Vector3D cPos{};
         VecU句柄 cContour{};
+        I64 cTrackId = 0;
         const bool hasPos = 候选读取_中心(cand, cPos);
         const bool hasContour = 候选读取_轮廓句柄(cand, cContour);
-
-        auto* root = 世界树.世界根();
-        if (!root) { 守卫.设置结果(false, -11); 写回执(输出场景, false, -11); return false; }
+        const bool hasTrackId = 候选读取_跟踪ID(cand, cTrackId);
+        auto 已观测存在 = 私有_枚举观察存在候选();
+        if (已观测存在.empty()) { 守卫.设置结果(false, -11); 写回执(输出场景, false, -11); return false; }
 
         I64 bestScore = std::numeric_limits<I64>::min();
         存在节点类* best = nullptr;
-        for (auto* e : 场景类::获取子存在(root)) {
+        for (auto* e : 已观测存在) {
             if (!e || !e->主信息) continue;
-            auto* emi = 取存在特征主信息(e, 特征类型定义类::类型_轮廓编码);
-            if (!emi || !std::holds_alternative<VecU句柄>(emi->当前快照)) continue;
 
             I64 score = 0;
-            const auto eh = std::get<2>(emi->当前快照);
-            if (hasContour) {
+            I64 eTrackId = 0;
+            if (hasTrackId && 候选读取_跟踪ID(e, eTrackId) && eTrackId == cTrackId) {
+                score += 200000;
+            }
+
+            auto* emi = 取存在特征主信息(e, 特征类型定义类::类型_轮廓编码);
+            if (hasContour && emi && std::holds_alternative<VecU句柄>(emi->当前快照)) {
+                const auto eh = std::get<2>(emi->当前快照);
                 if (eh.主信息指针 == cContour.主信息指针) score += 100000;
                 else {
                     const VecIU64* eContourVec = 世界树.值池().取VecU只读指针(eh);
@@ -400,7 +498,7 @@ public:
             if (score > bestScore) { bestScore = score; best = e; }
         }
 
-        if (!best) { 守卫.设置结果(false, -20); 写回执(输出场景, false, -20); return false; }
+        if (!best || bestScore < 10000) { 守卫.设置结果(false, -20); 写回执(输出场景, false, -20); return false; }
 
         auto* miRef = new 指代节点主信息类();
         miRef->名称 = 语素集.添加词性词("匹配存在", "名词");
@@ -436,8 +534,8 @@ public:
         if (cands.empty()) { 守卫.设置结果(false, -10); 写回执(输出场景, false, -10); return false; }
         auto* cand = cands[0];
 
-        auto* root = 世界树.世界根();
-        if (!root) { 守卫.设置结果(false, -11); 写回执(输出场景, false, -11); return false; }
+        auto* observeRoot = 私有_确保观察存在集场景(now, "本能_生成存在/确保观察存在集场景");
+        if (!observeRoot) { 守卫.设置结果(false, -11); 写回执(输出场景, false, -11); return false; }
 
         static const 词性节点类* 名_外部存在 = nullptr;
         static const 词性节点类* 型_外部存在 = nullptr;
@@ -448,7 +546,7 @@ public:
         miE->名称 = 名_外部存在;
         miE->类型 = 型_外部存在;
         miE->最后观测时间 = now;
-        auto* e = 世界树.创建存在(root, miE, "本能_生成存在");
+        auto* e = 世界树.创建存在(observeRoot, miE, "本能_生成存在");
         if (!e) { 守卫.设置结果(false, -20); 写回执(输出场景, false, -20); return false; }
 
         if (auto* mi = 取存在特征主信息(cand, 特征类型定义类::类型_绝对位置)) {
@@ -475,6 +573,12 @@ public:
                 }
             }
         }
+        if (auto* mi = 取存在特征主信息(cand, 私有_类型_跟踪ID())) {
+            if (std::holds_alternative<I64>(mi->当前快照)) {
+                (void)世界树.写入特征_I64(e, 私有_类型_跟踪ID(), std::get<1>(mi->当前快照), {}, "本能_生成存在");
+            }
+        }
+        (void)世界树.写入特征_I64(e, 特征类型定义类::类型_时间戳_us, (I64)now, {}, "本能_生成存在");
 
         auto* miRef = new 指代节点主信息类();
         miRef->名称 = 语素集.添加词性词("新存在", "名词");
@@ -544,6 +648,13 @@ public:
         copyVecU(特征类型定义类::类型_绝对位置);
         copyVecU(特征类型定义类::类型_尺寸);
         copyVecU(特征类型定义类::类型_轮廓编码);
+        auto* 跟踪ID特征 = 取存在特征主信息(cand, 私有_类型_跟踪ID());
+        if (跟踪ID特征 && std::holds_alternative<I64>(跟踪ID特征->当前快照)) {
+            (void)世界树.写入特征_I64(target, 私有_类型_跟踪ID(), std::get<1>(跟踪ID特征->当前快照), {}, "本能_更新存在");
+        }
+        if (auto* targetMi = dynamic_cast<存在节点主信息类*>(target->主信息)) {
+            targetMi->记录观测(now);
+        }
         (void)世界树.写入特征_I64(target, 特征类型定义类::类型_时间戳_us, (I64)now, {}, "本能_更新存在");
         守卫.设置结果(true, 0);
         写回执(输出场景, true, 0);
@@ -616,37 +727,52 @@ public:
             return 世界树.创建场景(输出场景, mi, 调用点);
         };
 
-        auto* 取帧输出 = 建场景("观察_取帧输出", "观察过程场景", "本能_观察场景/取帧输出");
-        bool gotFrame = 取帧输出 && 本能集.调用(枚举_本能动作ID::外设_获取帧信息, 输入场景, 取帧输出);
-        if (!gotFrame) {
-            auto* 启动输出 = 建场景("观察_启动相机输出", "观察过程场景", "本能_观察场景/启动输出");
-            if (!启动输出 || !本能集.调用(枚举_本能动作ID::外设_相机启动, 输入场景, 启动输出)) {
+        场景节点类* 预置候选输入 = nullptr;
+        if (输入场景 && 私有_查找候选存在集场景(输入场景)) {
+            预置候选输入 = 输入场景;
+        }
+
+        场景节点类* 读帧输出 = 预置候选输入
+            ? 预置候选输入
+            : 建场景("观察_候选事实输出", "观察过程场景", "本能_观察场景/候选事实输出");
+
+        bool gotFacts = (预置候选输入 != nullptr);
+        if (!gotFacts) {
+            gotFacts = 读帧输出
+                && 本能集.有(枚举_本能动作ID::外设_提取前景存在候选事实)
+                && 本能集.调用(枚举_本能动作ID::外设_提取前景存在候选事实, 输入场景, 读帧输出);
+        }
+        if (!gotFacts) {
+            auto* 取帧输出 = 建场景("观察_取帧输出", "观察过程场景", "本能_观察场景/取帧输出");
+            bool gotFrame = 取帧输出 && 本能集.调用(枚举_本能动作ID::外设_获取帧信息, 输入场景, 取帧输出);
+            if (!gotFrame) {
+                日志::运行(
+                    "[自我观察场景] 当前阶段禁止自我主动启动相机：未收到主窗口桥接候选，也未获取到现成帧");
                 守卫.设置结果(false, -10);
                 写回执(输出场景, false, -10);
                 return false;
             }
-            gotFrame = 本能集.调用(枚举_本能动作ID::外设_获取帧信息, 输入场景, 取帧输出);
-        }
-        if (!gotFrame) { 守卫.设置结果(false, -11); 写回执(输出场景, false, -11); return false; }
+            if (!gotFrame) { 守卫.设置结果(false, -11); 写回执(输出场景, false, -11); return false; }
 
-        I64 handle = 0;
-        if (!读I64_按类型(取帧输出, 特征类型定义类::类型_深度帧句柄, handle) || handle <= 0) {
-            auto* t句柄帧 = 语素集.添加词性词("句柄_帧", "名词");
-            if (!读I64_按类型(取帧输出, t句柄帧, handle) || handle <= 0) {
-                守卫.设置结果(false, -12);
-                写回执(输出场景, false, -12);
+            I64 handle = 0;
+            if (!读I64_按类型(取帧输出, 特征类型定义类::类型_深度帧句柄, handle) || handle <= 0) {
+                auto* t句柄帧 = 语素集.添加词性词("句柄_帧", "名词");
+                if (!读I64_按类型(取帧输出, t句柄帧, handle) || handle <= 0) {
+                    守卫.设置结果(false, -12);
+                    写回执(输出场景, false, -12);
+                    return false;
+                }
+            }
+
+            auto* 读帧输入 = 建场景("观察_读帧输入", "观察过程场景", "本能_观察场景/读帧输入");
+            读帧输出 = 建场景("观察_读帧输出", "观察过程场景", "本能_观察场景/读帧输出");
+            if (!读帧输入 || !读帧输出) { 守卫.设置结果(false, -13); 写回执(输出场景, false, -13); return false; }
+            (void)世界树.写入特征_I64(读帧输入, 特征类型定义类::类型_深度帧句柄, handle, {}, "本能_观察场景");
+            if (!本能集.调用(枚举_本能动作ID::自我_读取帧特征信息, 读帧输入, 读帧输出)) {
+                守卫.设置结果(false, -14);
+                写回执(输出场景, false, -14);
                 return false;
             }
-        }
-
-        auto* 读帧输入 = 建场景("观察_读帧输入", "观察过程场景", "本能_观察场景/读帧输入");
-        auto* 读帧输出 = 建场景("观察_读帧输出", "观察过程场景", "本能_观察场景/读帧输出");
-        if (!读帧输入 || !读帧输出) { 守卫.设置结果(false, -13); 写回执(输出场景, false, -13); return false; }
-        (void)世界树.写入特征_I64(读帧输入, 特征类型定义类::类型_深度帧句柄, handle, {}, "本能_观察场景");
-        if (!本能集.调用(枚举_本能动作ID::自我_读取帧特征信息, 读帧输入, 读帧输出)) {
-            守卫.设置结果(false, -14);
-            写回执(输出场景, false, -14);
-            return false;
         }
 
         auto* 识别率输出 = 建场景("观察_识别率输出", "观察过程场景", "本能_观察场景/识别率输出");
@@ -656,8 +782,7 @@ public:
             (void)世界树.写入特征_I64(输出场景, 语素集.添加词性词("识别率_万分比", "名词"), recog, {}, "本能_观察场景");
         }
 
-        auto subScenes = 场景类::获取子场景(读帧输出);
-        场景节点类* candScene = subScenes.empty() ? nullptr : subScenes[0];
+        场景节点类* candScene = 私有_查找候选存在集场景(读帧输出);
         if (!candScene) {
             (void)世界树.写入特征_I64(输出场景, 语素集.添加词性词("观察候选数量", "名词"), 0, {}, "本能_观察场景");
             守卫.设置结果(true, 0);
@@ -668,6 +793,11 @@ public:
         I64 observed = 0;
         I64 updated = 0;
         I64 created = 0;
+        I64 removed = 0;
+        auto 旧观察存在 = 私有_枚举观察存在候选();
+        std::unordered_set<存在节点类*> 本帧命中存在{};
+        std::unordered_set<存在节点类*> 已输出识别结果{};
+        auto* 识别结果场景 = 建场景("观察_识别结果", "观察结果场景", "本能_观察场景/识别结果场景");
         for (auto* cand : 场景类::获取子存在(candScene)) {
             if (!cand) continue;
             observed += 1;
@@ -688,21 +818,60 @@ public:
                 miRef->指代对象 = target;
                 (void)私有_创建指代(更新输入, miRef, "本能_观察场景/更新输入指代");
                 (void)私有_复制候选存在到场景(cand, 更新输入, now, "本能_观察场景/复制候选到更新输入");
-                if (本能集.调用(枚举_本能动作ID::自我_更新存在, 更新输入, 更新输出)) updated += 1;
-                else created += 1;
+                if (本能集.调用(枚举_本能动作ID::自我_更新存在, 更新输入, 更新输出)) {
+                    updated += 1;
+                    (void)本帧命中存在.insert(target);
+                    if (识别结果场景 && 已输出识别结果.insert(target).second) {
+                        auto* outRef = new 指代节点主信息类();
+                        outRef->名称 = 语素集.添加词性词("观察识别存在", "名词");
+                        outRef->类型 = 语素集.添加词性词("指代", "名词");
+                        outRef->指代对象 = target;
+                        (void)私有_创建指代(识别结果场景, outRef, "本能_观察场景/输出已更新存在");
+                    }
+                }
             }
             else {
                 auto* 生成输入 = 建场景("观察_生成输入", "观察过程场景", "本能_观察场景/生成输入");
                 auto* 生成输出 = 建场景("观察_生成输出", "观察过程场景", "本能_观察场景/生成输出");
                 if (!生成输入 || !生成输出) continue;
                 if (!私有_复制候选存在到场景(cand, 生成输入, now, "本能_观察场景/复制候选到生成输入")) continue;
-                if (本能集.调用(枚举_本能动作ID::自我_生成存在, 生成输入, 生成输出)) created += 1;
+                if (本能集.调用(枚举_本能动作ID::自我_生成存在, 生成输入, 生成输出)) {
+                    created += 1;
+                    auto* newTarget = 私有_读取指代对象(生成输出);
+                    if (newTarget) {
+                        (void)本帧命中存在.insert(newTarget);
+                    }
+                    if (识别结果场景 && newTarget && 已输出识别结果.insert(newTarget).second) {
+                        auto* outRef = new 指代节点主信息类();
+                        outRef->名称 = 语素集.添加词性词("观察识别存在", "名词");
+                        outRef->类型 = 语素集.添加词性词("指代", "名词");
+                        outRef->指代对象 = newTarget;
+                        (void)私有_创建指代(识别结果场景, outRef, "本能_观察场景/输出新建存在");
+                    }
+                }
             }
         }
+
+        removed = (I64)私有_衰减并清理未命中观察存在(
+            旧观察存在,
+            本帧命中存在,
+            "本能_观察场景/清理失联观察存在");
+        const auto 当前观察存在 = 私有_枚举观察存在候选();
 
         (void)世界树.写入特征_I64(输出场景, 语素集.添加词性词("观察候选数量", "名词"), observed, {}, "本能_观察场景");
         (void)世界树.写入特征_I64(输出场景, 语素集.添加词性词("观察更新数量", "名词"), updated, {}, "本能_观察场景");
         (void)世界树.写入特征_I64(输出场景, 语素集.添加词性词("观察新建数量", "名词"), created, {}, "本能_观察场景");
+        (void)世界树.写入特征_I64(输出场景, 语素集.添加词性词("观察清理数量", "名词"), removed, {}, "本能_观察场景");
+        (void)世界树.写入特征_I64(输出场景, 语素集.添加词性词("观察当前存在数量", "名词"), (I64)当前观察存在.size(), {}, "本能_观察场景");
+        (void)世界树.写入特征_I64(输出场景, 语素集.添加词性词("观察识别存在数量", "名词"), (I64)已输出识别结果.size(), {}, "本能_观察场景");
+        日志::运行f(
+            "[本能_观察场景] 候选={}, 更新={}, 新建={}, 清理={}, 当前存在={}, 识别存在={}",
+            observed,
+            updated,
+            created,
+            removed,
+            (I64)当前观察存在.size(),
+            (I64)已输出识别结果.size());
         守卫.设置结果(true, 0);
         写回执(输出场景, true, 0);
         return true;

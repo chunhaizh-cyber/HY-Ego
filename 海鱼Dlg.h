@@ -68,8 +68,9 @@ public:
 	窗口_基础信息类 变量_基础信息界面;
 	窗口_配置及测试类 变量_配置及测试窗口;
 private:
-	自我线程类 自我线程;
+	std::unique_ptr<自我线程类> 自我线程 = std::make_unique<自我线程类>();
 	std::unique_ptr<场景实时显示线程类> 场景显示线程;
+	bool 应用退出中_ = false;
 
 	struct 摄像机运行时;
 	std::unique_ptr<摄像机运行时> 摄像机_;
@@ -104,6 +105,7 @@ public:
 	void 刷新当前标签内容();
 	CString 生成标签页文本(int 标签索引) const;
 	bool 标签页使用信息查看框(int 标签索引) const;
+	void 清理退出子窗口();
 //	void 初始化();
 
 private:

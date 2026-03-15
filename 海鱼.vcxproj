@@ -74,12 +74,19 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Label="UserMacros">
+    <RealSenseSdkRoot Condition="'$(RealSenseSdkRoot)'=='' and Exists('C:\Program Files (x86)\Intel RealSense SDK 2.0')">C:\Program Files (x86)\Intel RealSense SDK 2.0</RealSenseSdkRoot>
+    <RealSenseSdkRoot Condition="'$(RealSenseSdkRoot)'=='' and Exists('D:\librealsense-2.53.1')">D:\librealsense-2.53.1</RealSenseSdkRoot>
+    <RealSenseIncludeDir Condition="'$(RealSenseIncludeDir)'=='' and '$(RealSenseSdkRoot)'!=''">$(RealSenseSdkRoot)\include</RealSenseIncludeDir>
+    <RealSenseLibDir Condition="'$(RealSenseLibDir)'=='' and '$(RealSenseSdkRoot)'!=''">$(RealSenseSdkRoot)\lib\x64</RealSenseLibDir>
+    <GladIncludeDir Condition="'$(GladIncludeDir)'=='' and Exists('D:\vcpkg\installed\x64-windows\include\glad\glad.h')">D:\vcpkg\installed\x64-windows\include</GladIncludeDir>
+    <GladIncludeDir Condition="'$(GladIncludeDir)'=='' and Exists('D:\opengl\glad\include')">D:\opengl\glad\include</GladIncludeDir>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <ExternalIncludePath>$(ExternalIncludePath)</ExternalIncludePath>
     <LibraryWPath>$(LibraryWPath)</LibraryWPath>
-    <LibraryPath>C:\Program Files %28x86%29\Intel RealSense SDK 2.0\lib\x64;C:\Program Files %28x86%29\Intel RealSense SDK 2.0\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(RealSenseLibDir);$(RealSenseSdkRoot)\lib;$(LibraryPath)</LibraryPath>
     <IncludePath>$(VCInstallDir)Tools\MSVC\$(VCToolsVersion)\atlmfc\include;$(IncludePath)</IncludePath>
     <PublicIncludeDirectories>$(PublicIncludeDirectories)</PublicIncludeDirectories>
   </PropertyGroup>
@@ -101,7 +108,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <StructMemberAlignment>Default</StructMemberAlignment>
-      <AdditionalIncludeDirectories>D:\vcpkg\installed\x64-windows\include\opencv4;C:\Program Files %28x86%29\Intel RealSense SDK 2.0\include;D:\vcpkg\installed\x64-windows\bin;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\vcpkg\installed\x64-windows\include\opencv4;$(RealSenseIncludeDir);$(GladIncludeDir);D:\vcpkg\installed\x64-windows\bin;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdclatest</LanguageStandard_C>
     </ClCompile>
@@ -241,6 +248,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="三维场景管理类.ixx" />
+    <ClCompile Include="D455相机外设类.ixx" />
     <ClCompile Include="D455相机类.ixx" />
     <ClCompile Include="DlgProxy.cpp" />
     <ClCompile Include="pch.cpp">

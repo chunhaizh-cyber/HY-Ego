@@ -25,8 +25,9 @@ import 外设模块;
 import 主信息定义模块;
 import 基础数据类型模块;
 import 相机外设基类模块;
-import D455相机模块;
+import D455相机外设模块;
 import 虚拟相机外设模块;
+import 相机写入工作流模块;
 
 import 本能动作管理模块;
 import 本能动作模块;        // 通用：形参模板写入/模式匹配/评分
@@ -35,6 +36,7 @@ import 世界树环境模块;      // export inline 世界树类 世界树;
 import 场景模块;
 import 语素环境模块;        // export inline 语素类 语素集;
 import 特征类型定义模块;    // 型_外设摄像机 等（若已注册）
+import 日志模块;
 
 import 通用函数模块;        // 允许使用部分通用函数（不引入循环依赖：实现模块允许依赖通用模块）
 
@@ -49,10 +51,20 @@ import <utility>;
 import <cstdint>;
 import <vector>;
 import <algorithm>;
+import <bit>;
+import <cmath>;
 
 export class 外设本能方法类_相机模块 {
 private:
    static inline 时间戳 当前_微秒() noexcept { return 结构体_时间戳::当前_微秒(); }
+   static inline VecIU64 编码Vec3I64(const Vector3D& v)
+   {
+       return VecIU64{
+           static_cast<U64>(std::bit_cast<std::int64_t>(std::llround(v.x))),
+           static_cast<U64>(std::bit_cast<std::int64_t>(std::llround(v.y))),
+           static_cast<U64>(std::bit_cast<std::int64_t>(std::llround(v.z)))
+       };
+   }
    
    static inline 本能动作类 本能动作{};
     static constexpr I64 方法运行状态_未运行 = 0;
@@ -137,6 +149,105 @@ private:
             if (it->句柄 == 句柄) return it->帧;
         }
         return {};
+    }
+
+    static bool 私有_抓取一帧句柄(方法节点类* 方法首节点, 时间戳 now, const std::string& 调用点, I64& out句柄, I64& out错误码)
+    {
+        out句柄 = 0;
+        out错误码 = 0;
+
+        外设数据包<结构体_原始场景帧> pkg{};
+        枚举_取数结果 r = 枚举_取数结果::故障;
+
+        {
+            std::scoped_lock lk(g_mu);
+            if (!g_cam) { 私有_确保_相机外设实例_已加锁(); }
+            私有_同步方法相机特征(方法首节点, g_cam != nullptr, now, 调用点);
+            if (g_cam) r = g_cam->等待下一包(pkg, 50);
+        }
+
+        if (r != 枚举_取数结果::成功) {
+            out错误码 = (I64)r;
+            return false;
+        }
+
+        {
+            std::scoped_lock lk(g_mu);
+            auto sp = std::make_shared<结构体_原始场景帧>(std::move(pkg.数据));
+            私有_帧仓库_插入_已加锁(std::move(sp), pkg.头.时间_系统 ? pkg.头.时间_系统 : now, out句柄);
+        }
+        return true;
+    }
+
+    static bool 私有_写入前景存在候选事实(场景节点类* 输出场景, I64 句柄, 时间戳 now, const std::string& 调用点, I64& out候选数)
+    {
+        out候选数 = 0;
+        if (!输出场景 || 句柄 <= 0) return false;
+
+        auto sp = 私有_相机帧仓库_取只读(句柄);
+        if (!sp) return false;
+
+        const I64 W = (I64)sp->宽度;
+        const I64 H = (I64)sp->高度;
+        const I64 total = W * H;
+        I64 valid = 0;
+        if (!sp->深度有效.empty()) {
+            for (auto v : sp->深度有效) valid += (v ? 1 : 0);
+        }
+        const I64 validRate = (total > 0) ? (valid * 10000 / total) : 0;
+
+        (void)世界树.写入特征_I64(输出场景, g_t.句柄_帧, 句柄, {}, 调用点);
+        if (特征类型定义类::类型_深度帧句柄) {
+            (void)世界树.写入特征_I64(输出场景, 特征类型定义类::类型_深度帧句柄, 句柄, {}, 调用点);
+        }
+        (void)世界树.写入特征_I64(输出场景, 语素集.添加词性词("帧_宽", "名词"), W, {}, 调用点);
+        (void)世界树.写入特征_I64(输出场景, 语素集.添加词性词("帧_高", "名词"), H, {}, 调用点);
+        (void)世界树.写入特征_I64(输出场景, 语素集.添加词性词("深度有效万分比", "名词"), validRate, {}, 调用点);
+
+        相机帧处理器 proc{};
+        帧处理结果 out{};
+        out.原始场景帧 = std::const_pointer_cast<结构体_原始场景帧>(sp);
+        if (!proc.处理一帧(out)) {
+            return false;
+        }
+
+        static const 词性节点类* 名_候选集 = nullptr;
+        static const 词性节点类* 型_候选集场景 = nullptr;
+        static const 词性节点类* 名_候选存在 = nullptr;
+        static const 词性节点类* 型_候选存在 = nullptr;
+        static const 词性节点类* t跟踪ID = nullptr;
+        if (!名_候选集) 名_候选集 = 语素集.添加词性词("候选存在集", "名词");
+        if (!型_候选集场景) 型_候选集场景 = 语素集.添加词性词("候选集场景", "名词");
+        if (!名_候选存在) 名_候选存在 = 语素集.添加词性词("候选存在", "名词");
+        if (!型_候选存在) 型_候选存在 = 语素集.添加词性词("候选存在类型", "名词");
+        if (!t跟踪ID) t跟踪ID = 语素集.添加词性词("跟踪ID", "名词");
+
+        auto* miSc = new 场景节点主信息类();
+        miSc->名称 = 名_候选集;
+        miSc->类型 = 型_候选集场景;
+        miSc->最后观测时间 = now;
+        auto* candScene = 世界树.创建场景(输出场景, miSc, 调用点 + "/创建候选集场景");
+        if (!candScene) return false;
+
+        for (const auto& obs : out.存在观测列表) {
+            auto* miE = new 存在节点主信息类();
+            miE->名称 = 名_候选存在;
+            miE->类型 = 型_候选存在;
+            miE->最后观测时间 = now;
+            auto* e = 世界树.创建存在(candScene, miE, 调用点 + "/创建候选存在");
+            if (!e) continue;
+            (void)世界树.写入特征_VecU(e, 特征类型定义类::类型_绝对位置, 编码Vec3I64(obs.中心坐标), {}, 调用点);
+            (void)世界树.写入特征_VecU(e, 特征类型定义类::类型_尺寸, 编码Vec3I64(obs.尺寸), {}, 调用点);
+            if (!obs.轮廓编码.empty()) {
+                (void)世界树.写入特征_VecU(e, 特征类型定义类::类型_轮廓编码, obs.轮廓编码, {}, 调用点);
+            }
+            (void)世界树.写入特征_I64(e, t跟踪ID, (I64)obs.跟踪ID, {}, 调用点);
+            (void)世界树.写入特征_I64(e, 特征类型定义类::类型_时间戳_us, (I64)now, {}, 调用点);
+            ++out候选数;
+        }
+
+        (void)世界树.写入特征_I64(输出场景, 语素集.添加词性词("前景存在候选数量", "名词"), out候选数, {}, 调用点);
+        return true;
     }
 
     // ----------------------------
@@ -228,7 +339,7 @@ private:
         if (g_cam) return;
 
         try {
-            //   g_cam = std::make_unique<D455_相机实现>();
+            g_cam = std::make_unique<D455相机外设类>();
         }
         catch (...) {
             g_cam = std::make_unique<虚拟相机外设类>();
@@ -826,7 +937,7 @@ private:
     // 本能方法：外设_获取帧信息
     // 输出：帧句柄（I64），供自我侧后续读取帧特征
     // ============================================================================
-        static bool 本能_外设_获取帧信息(场景节点类* 输入场景, 场景节点类* 输出场景)
+    static bool 本能_外设_获取帧信息(场景节点类* 输入场景, 场景节点类* 输出场景)
     {
         constexpr 枚举_本能动作ID id = 枚举_本能动作ID::外设_获取帧信息;
         const std::string fn = "本能_外设_获取帧信息";
@@ -844,36 +955,112 @@ private:
             return false;
         }
 
-        外设数据包<结构体_原始场景帧> pkg{};
-        枚举_取数结果 r = 枚举_取数结果::故障;
-
-        {
-            std::scoped_lock lk(g_mu);
-            if (!g_cam) { 私有_确保_相机外设实例_已加锁(); }
-            私有_同步方法相机特征(head, g_cam != nullptr, now, fn);
-            if (g_cam) {
-                r = g_cam->等待下一包(pkg, 50);
-            }
-            else {
-                r = 枚举_取数结果::故障;
-            }
-        }
-
-        if (r != 枚举_取数结果::成功) {
-            I64 err = (I64)r;
+        I64 handle = 0;
+        I64 err = 0;
+        if (!私有_抓取一帧句柄(head, now, fn, handle, err)) {
             守卫.设置结果(false, err);
             私有_写回执(输出场景, false, err, now, cond.条件场景);
             return false;
         }
 
-        I64 handle = 0;
-        {
-            std::scoped_lock lk(g_mu);
-            auto sp = std::make_shared<结构体_原始场景帧>(std::move(pkg.数据));
-            私有_帧仓库_插入_已加锁(std::move(sp), pkg.头.时间_系统 ? pkg.头.时间_系统 : now, handle);
+        (void)世界树.写入特征_I64(输出场景, g_t.句柄_帧, handle, {}, fn);
+        if (特征类型定义类::类型_深度帧句柄) {
+            (void)世界树.写入特征_I64(输出场景, 特征类型定义类::类型_深度帧句柄, handle, {}, fn);
+        }
+        守卫.设置结果(true, 0);
+        私有_写回执(输出场景, true, 0, now, cond.条件场景);
+        return true;
+    }
+
+    // ============================================================================
+    // 本能方法：外设_读取深度相机状态
+    // 输出：深度相机可用 / 深度帧可获取 / 可选帧句柄
+    // ============================================================================
+    static bool 本能_外设_读取深度相机状态(场景节点类* 输入场景, 场景节点类* 输出场景)
+    {
+        constexpr 枚举_本能动作ID id = 枚举_本能动作ID::外设_读取深度相机状态;
+        const std::string fn = "本能_外设_读取深度相机状态";
+        const 时间戳 now = 当前_微秒();
+        私有_初始化词性();
+
+        auto* head = 私有_取或创建_方法首节点_并回填(id, fn);
+        结构体_方法调用守卫 守卫(head, 输入场景, 输出场景, now, fn);
+        if (head) 本能动作.方法首节点_确保条件参数类型(head, {});
+
+        auto cond = 私有_Step2_解析_无参动作(head, fn);
+        if (!cond.ok) {
+            守卫.设置结果(false, cond.错误码);
+            私有_写回执(输出场景, false, cond.错误码, now, nullptr);
+            return false;
         }
 
-        (void)世界树.写入特征_I64(输出场景, g_t.句柄_帧, handle, {}, fn);
+        私有_同步_相机运行状态_从外设(now);
+
+        bool 相机可用 = false;
+        {
+            std::scoped_lock lk(g_mu);
+            if (!g_cam) { 私有_确保_相机外设实例_已加锁(); }
+            相机可用 = (g_cam != nullptr);
+            私有_同步方法相机特征(head, 相机可用, now, fn);
+        }
+
+        I64 handle = 0;
+        I64 err = 0;
+        const bool 帧可获取 = 私有_抓取一帧句柄(head, now, fn, handle, err);
+
+        (void)世界树.写入特征_I64(输出场景, 语素集.添加词性词("深度相机可用", "名词"), 相机可用 ? 1 : 0, {}, fn);
+        (void)世界树.写入特征_I64(输出场景, 语素集.添加词性词("深度帧可获取", "名词"), 帧可获取 ? 1 : 0, {}, fn);
+        if (帧可获取) {
+            (void)世界树.写入特征_I64(输出场景, g_t.句柄_帧, handle, {}, fn);
+            if (特征类型定义类::类型_深度帧句柄) {
+                (void)世界树.写入特征_I64(输出场景, 特征类型定义类::类型_深度帧句柄, handle, {}, fn);
+            }
+        }
+
+        守卫.设置结果(true, 帧可获取 ? 0 : err);
+        私有_写回执(输出场景, true, 帧可获取 ? 0 : err, now, cond.条件场景);
+        return true;
+    }
+
+    // ============================================================================
+    // 本能方法：外设_提取前景存在候选事实
+    // 输出：帧宽/帧高/深度有效万分比/候选存在集
+    // ============================================================================
+    static bool 本能_外设_提取前景存在候选事实(场景节点类* 输入场景, 场景节点类* 输出场景)
+    {
+        constexpr 枚举_本能动作ID id = 枚举_本能动作ID::外设_提取前景存在候选事实;
+        const std::string fn = "本能_外设_提取前景存在候选事实";
+        const 时间戳 now = 当前_微秒();
+        私有_初始化词性();
+
+        auto* head = 私有_取或创建_方法首节点_并回填(id, fn);
+        结构体_方法调用守卫 守卫(head, 输入场景, 输出场景, now, fn);
+        if (head) 本能动作.方法首节点_确保条件参数类型(head, {});
+
+        auto cond = 私有_Step2_解析_无参动作(head, fn);
+        if (!cond.ok) {
+            守卫.设置结果(false, cond.错误码);
+            私有_写回执(输出场景, false, cond.错误码, now, nullptr);
+            return false;
+        }
+
+        I64 handle = 0;
+        I64 err = 0;
+        if (!私有_抓取一帧句柄(head, now, fn, handle, err)) {
+            守卫.设置结果(false, err);
+            私有_写回执(输出场景, false, err, now, cond.条件场景);
+            return false;
+        }
+
+        I64 候选数 = 0;
+        if (!私有_写入前景存在候选事实(输出场景, handle, now, fn, 候选数)) {
+            守卫.设置结果(false, -20);
+            私有_写回执(输出场景, false, -20, now, cond.条件场景);
+            return false;
+        }
+
+        日志::运行f("[外设_提取前景存在候选事实] 句柄={}, 候选数={}", handle, 候选数);
+
         守卫.设置结果(true, 0);
         私有_写回执(输出场景, true, 0, now, cond.条件场景);
         return true;
@@ -914,6 +1101,8 @@ private:
         reg(枚举_本能动作ID::外设_获取相机参数, 本能_外设_获取相机参数, "本能_外设_获取相机参数", {});
         reg(枚举_本能动作ID::外设_获取相机状态, 本能_外设_获取相机状态, "本能_外设_获取相机状态", {});
         reg(枚举_本能动作ID::外设_获取帧信息, 本能_外设_获取帧信息, "本能_外设_获取帧信息", {});
+        reg(枚举_本能动作ID::外设_读取深度相机状态, 本能_外设_读取深度相机状态, "本能_外设_读取深度相机状态", {});
+        reg(枚举_本能动作ID::外设_提取前景存在候选事实, 本能_外设_提取前景存在候选事实, "本能_外设_提取前景存在候选事实", {});
     }
 };
 

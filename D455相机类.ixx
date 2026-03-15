@@ -326,12 +326,16 @@ public:
                     输出.时间戳.系统到达时间_us = 主机当前时间_us();
                 }
 
-                // 帧号：用于丢帧/串帧排查
+                // 帧号：优先取 frame API，metadata 作为可选覆盖，用于丢帧/串帧排查。
+                输出.时间戳.深度帧号 = static_cast<std::uint32_t>(depth.get_frame_number());
+                输出.时间戳.彩色帧号 = static_cast<std::uint32_t>(color.get_frame_number());
                 if (depth.supports_frame_metadata(RS2_FRAME_METADATA_FRAME_COUNTER)) {
-                    输出.时间戳.深度帧号 = (std::uint32_t)depth.get_frame_metadata(RS2_FRAME_METADATA_FRAME_COUNTER);
+                    输出.时间戳.深度帧号 = static_cast<std::uint32_t>(
+                        depth.get_frame_metadata(RS2_FRAME_METADATA_FRAME_COUNTER));
                 }
                 if (color.supports_frame_metadata(RS2_FRAME_METADATA_FRAME_COUNTER)) {
-                    输出.时间戳.彩色帧号 = (std::uint32_t)color.get_frame_metadata(RS2_FRAME_METADATA_FRAME_COUNTER);
+                    输出.时间戳.彩色帧号 = static_cast<std::uint32_t>(
+                        color.get_frame_metadata(RS2_FRAME_METADATA_FRAME_COUNTER));
                 }
             }
 

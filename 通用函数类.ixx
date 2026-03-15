@@ -12,13 +12,33 @@
 #include <type_traits>
 #include <typeinfo>
 #include <random>
+#include <exception>
+#include <utility>
 
 export module 通用函数模块;
 import 基础数据类型模块;
+import 日志模块;
 
 
 
 namespace 通用函数模块 {
+
+    export template<class 函数类型>
+    inline bool 安全执行_记录异常(const std::string& 上下文, 函数类型&& 函数)
+    {
+        try {
+            std::forward<函数类型>(函数)();
+            return true;
+        }
+        catch (const std::exception& 异常) {
+            日志::记录异常(异常, 上下文);
+        }
+        catch (...) {
+            const auto& 可见上下文 = 上下文.empty() ? std::string("未命名上下文") : 上下文;
+            日志::异常f("[{}] 未知异常", 可见上下文);
+        }
+        return false;
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
        // //   特征值类
@@ -1531,6 +1551,20 @@ namespace 通用函数模块 {
         }
 
         return 左值 + 右值;
+    }
+    export inline std::uint64_t 非负双精度转U64饱和(double 数值) noexcept
+    {
+        if (!std::isfinite(数值) || 数值 <= 0.0) {
+            return 0;
+        }
+
+        const long double 上限 = static_cast<long double>((std::numeric_limits<std::uint64_t>::max)());
+        const long double 当前 = static_cast<long double>(数值);
+        if (当前 >= 上限) {
+            return (std::numeric_limits<std::uint64_t>::max)();
+        }
+
+        return static_cast<std::uint64_t>(std::llround(当前));
     }
     // -------------------- 小工具：遍历同层环（安全防御版） --------------------
     export   template<class NodePtr, class Fn>

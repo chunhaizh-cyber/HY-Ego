@@ -1098,6 +1098,39 @@ export enum class 枚举_任务状态 : std::uint8_t {
     筹办中 = 10,
     排队中 = 11,
     等待中 = 12,
+    无法执行 = 13,
+    待重筹办 = 14,
+};
+
+export enum class 枚举_需求运行状态 : std::uint8_t {
+    未知 = 0,
+    待执行 = 1,
+    已满足 = 2,
+    已取消 = 3,
+    失败 = 4,
+};
+
+export enum class 枚举_任务返回消息类型 : std::uint8_t {
+    未定义 = 0,
+    步骤完成 = 1,
+    步骤失败 = 2,
+    步骤无法执行 = 3,
+    生成子任务 = 4,
+    子任务完成 = 5,
+    子任务失败 = 6,
+    子任务无法执行 = 7,
+};
+
+export struct 结构_任务返回消息 {
+    枚举_任务返回消息类型 类型 = 枚举_任务返回消息类型::未定义;
+    任务节点类* 来源任务 = nullptr;
+    任务节点类* 来源步骤 = nullptr;
+    任务节点类* 相关子任务 = nullptr;
+    需求节点类* 对应需求 = nullptr;
+    bool 需求已满足 = false;
+    bool 已进入下一阶段 = false;
+    bool 需要重筹办 = false;
+    std::string 摘要{};
 };
 
 // 任务树类型：用于执行器决定“遇到缺口时优先分解还是执行”
@@ -1163,6 +1196,10 @@ public:
 export class 任务头结点信息 final : public 任务信息基类 {
 public:
     需求节点类* 需求 = nullptr;
+    bool 是否真根任务 = false;
+    bool 是否常驻任务 = false;
+    bool 等待学习唤醒 = false;
+    方法节点类* 等待学习方法首节点 = nullptr;
     任务节点类* 父任务头结点 = nullptr;
     任务节点类* 来源父结果节点 = nullptr;
     任务节点类* 来源父步骤节点 = nullptr;

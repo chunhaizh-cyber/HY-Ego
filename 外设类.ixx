@@ -178,10 +178,12 @@ public:
             paused_.store(false);
         }
         cv_.notify_all();
-        if (采集线程_.joinable()) 采集线程_.join();
 
+        // 先停设备，优先打断底层阻塞取数（例如相机 wait_for_frames），
+        // 再回收采集线程，避免“join 等待阻塞取数、阻塞取数又等设备停止”的互卡。
         try { 停止设备(); }
         catch (...) {}
+        if (采集线程_.joinable()) 采集线程_.join();
 
         {
             std::scoped_lock lk(m_);

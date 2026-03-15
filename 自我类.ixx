@@ -32,6 +32,7 @@ import 方法模块;
 import 方法环境模块;
 import 任务模块;
 import 度量模板注册表模块;
+import 日志模块;
 
 // ============================================================
 // 自我模块（Self）
@@ -149,9 +150,25 @@ public:
     void 服务值减少(U64 delta) noexcept { 服务值_下降_(delta); }
     U64 时序正向步长() const noexcept { return temporal_forward_step_.load(); }
     U64 时序反向步长() const noexcept { return temporal_backward_step_.load(); }
+    U64 服务时序衰减步长() const noexcept { return 时序反向步长(); }
     bool 是否待机状态() const noexcept { return standby_mode_.load(); }
 
-    // 默认任务结果策略：成功偏服务增长，失败同时惩罚服务与安全。
+    状态节点类* 记录基础方向概念(
+        const std::string& 概念名,
+        I64 值,
+        时间戳 now = 结构体_时间戳::当前_微秒(),
+        const std::string& 调用点 = "自我类::记录基础方向概念")
+    {
+        const auto* 概念类型 = 语素集.添加词性词("基础概念_" + 概念名, "名词");
+        return 记录自我特征_(
+            概念类型,
+            特征快照值{ 值 },
+            now,
+            调用点 + "/基础概念/" + 概念名);
+    }
+
+    // 兼容旧实验逻辑：保留接口，但主调度链不再调用。
+    // 当前正式结算入口改为：自我线程类::私有_按叶子需求结算安全服务值(...)
     void 应用任务结果_默认策略(bool 成功) noexcept {
         if (成功) {
             服务值_上升_(50);
@@ -212,6 +229,15 @@ public:
             safety_.store(s);
             刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, now, 调用点 + "/时序更新");
         }
+    }
+
+    void 按时序规则更新安全服务值(
+        U64 待完成任务数,
+        U64 待学习任务数,
+        时间戳 now = 结构体_时间戳::当前_微秒(),
+        const std::string& 调用点 = "自我类::按时序规则更新安全服务值") noexcept
+    {
+        按时序规则更新安全值(待完成任务数, 待学习任务数, now, 调用点);
     }
 
     结构_根任务权重& 根任务权重() noexcept { return roots_; }
@@ -294,7 +320,7 @@ private:
         }
 
         auto* feat = 世界树.确保特征(自我存在, 特征类型, 特征类型, 调用点);
-        return 状态集.记录内部特征状态(
+        auto* 状态 = 状态集.记录内部特征状态(
             内部世界,
             自我存在,
             feat,
@@ -306,6 +332,8 @@ private:
                 二次特征类::状态记录后刷新二次特征(s, n, ts, cp);
             },
             调用点);
+
+        return 状态;
     }
 
     I64 判定外设可用性_() const
