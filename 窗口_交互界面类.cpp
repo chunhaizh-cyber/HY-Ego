@@ -9,6 +9,7 @@
 #include "afxdialogex.h"
 #include <stdio.h>
 #include <iostream>
+#include <cstdlib>
 #include "百度分词类.h"
 #include "窗口_交互界面类.h"	
 
@@ -36,6 +37,98 @@ import 世界树环境模块;
 
 IMPLEMENT_DYNAMIC(窗口_交互界面类, CDialogEx)
 
+namespace {
+struct 百度凭据配置 {
+	std::string app_id;
+	std::string api_key;
+	std::string secret_key;
+
+	bool 可用() const {
+		return !api_key.empty() && !secret_key.empty();
+	}
+};
+
+std::string 读取环境变量_若存在(const char* 名称)
+{
+	char* value = nullptr;
+	size_t len = 0;
+	if (_dupenv_s(&value, &len, 名称) != 0 || value == nullptr) {
+		return "";
+	}
+
+	std::string result(value);
+	free(value);
+	return result;
+}
+
+bool 任一凭据已提供(const 百度凭据配置& 凭据)
+{
+	return !凭据.app_id.empty() || !凭据.api_key.empty() || !凭据.secret_key.empty();
+}
+
+百度凭据配置 从环境变量读取百度凭据()
+{
+	百度凭据配置 凭据;
+	凭据.app_id = 读取环境变量_若存在("HY_BAIDU_APP_ID");
+	if (凭据.app_id.empty()) 凭据.app_id = 读取环境变量_若存在("BAIDU_APP_ID");
+
+	凭据.api_key = 读取环境变量_若存在("HY_BAIDU_API_KEY");
+	if (凭据.api_key.empty()) 凭据.api_key = 读取环境变量_若存在("BAIDU_API_KEY");
+
+	凭据.secret_key = 读取环境变量_若存在("HY_BAIDU_SECRET_KEY");
+	if (凭据.secret_key.empty()) 凭据.secret_key = 读取环境变量_若存在("BAIDU_SECRET_KEY");
+	return 凭据;
+}
+
+bool 从本地配置文件读取百度凭据(const char* 路径, 百度凭据配置& out, std::string& error)
+{
+	std::ifstream 输入流(路径, std::ios::binary);
+	if (!输入流.is_open()) return false;
+
+	Json::CharReaderBuilder builder;
+	builder["collectComments"] = false;
+	Json::Value root;
+	std::string errs;
+	if (!Json::parseFromStream(builder, 输入流, &root, &errs)) {
+		error = std::string("无法解析本地配置文件 config\\baidu_lexer.local.json: ") + errs;
+		return false;
+	}
+	if (!root.isObject()) {
+		error = "本地配置文件 config\\baidu_lexer.local.json 必须是 JSON 对象。";
+		return false;
+	}
+
+	out.app_id = root.get("app_id", "").asString();
+	out.api_key = root.get("api_key", "").asString();
+	out.secret_key = root.get("secret_key", "").asString();
+	return true;
+}
+
+bool 加载百度凭据(百度凭据配置& out, std::string& error)
+{
+	out = 从环境变量读取百度凭据();
+	if (out.可用()) return true;
+	if (任一凭据已提供(out)) {
+		error = "检测到部分环境变量已设置，但百度凭据不完整。请同时提供 HY_BAIDU_API_KEY 与 HY_BAIDU_SECRET_KEY；app_id 可选。";
+		return false;
+	}
+
+	百度凭据配置 文件凭据;
+	if (从本地配置文件读取百度凭据("config\\baidu_lexer.local.json", 文件凭据, error)) {
+		if (文件凭据.可用()) {
+			out = 文件凭据;
+			return true;
+		}
+		error = "本地配置文件 config\\baidu_lexer.local.json 缺少 api_key 或 secret_key。";
+		return false;
+	}
+	if (!error.empty()) return false;
+
+	error = "未找到百度凭据。请设置环境变量 HY_BAIDU_API_KEY / HY_BAIDU_SECRET_KEY（可选 HY_BAIDU_APP_ID），或创建本地私有文件 config\\baidu_lexer.local.json。";
+	return false;
+}
+} // namespace
+
 窗口_交互界面类::窗口_交互界面类(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_DIALOG2, pParent)
 {
@@ -45,6 +138,21 @@ IMPLEMENT_DYNAMIC(窗口_交互界面类, CDialogEx)
 
 	EnableAutomation();
 
+}
+
+void 窗口_交互界面类::初始化百度分词客户端()
+{
+	百度凭据配置 凭据;
+	std::string error;
+	if (!加载百度凭据(凭据, error)) {
+		百度分词已配置_ = false;
+		百度分词配置错误_ = error;
+		return;
+	}
+
+	nlp_.初始化(凭据.app_id, 凭据.api_key, 凭据.secret_key);
+	百度分词已配置_ = true;
+	百度分词配置错误_.clear();
 }
 
 窗口_交互界面类::~窗口_交互界面类()
@@ -249,6 +357,19 @@ void 窗口_交互界面类::OnBnClickedOk()
 		变量_交互者输入框.SetFocus();
 		return;
 	}
+	if (!百度分词已配置_)
+	{
+		CString msg = _T("未配置百度 NLP 凭据。请设置环境变量 HY_BAIDU_API_KEY / HY_BAIDU_SECRET_KEY（可选 HY_BAIDU_APP_ID），或创建本地私有文件 config\\baidu_lexer.local.json。");
+		if (!百度分词配置错误_.empty()) {
+			CStringA detailA(百度分词配置错误_.c_str());
+			CString detailW(detailA);
+			msg += _T("\n\n详细信息：");
+			msg += detailW;
+		}
+		AfxMessageBox(msg);
+		变量_交互者输入框.SetFocus();
+		return;
+	}
 
 	变量_消息输出框.GetWindowTextW(历史文本);
 	变量_消息输出框.SetWindowTextW(输入文本 + _T("\r\n") +历史文本  );
@@ -289,7 +410,7 @@ BOOL 窗口_交互界面类::OnInitDialog()
 	CDialogEx::OnInitDialog();
 
 	// TODO:  在此添加额外的初始化
-//	nlp_.初始化(app_id,api_key, secret_key);
+	初始化百度分词客户端();
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// 异常: OCX 属性页应返回 FALSE
 }

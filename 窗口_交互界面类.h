@@ -66,11 +66,10 @@ private:
 //	static std::mutex nlp_mutex;
 	const int MAX_RETRY = 3;
 	const std::chrono::milliseconds RETRY_DELAY{ 500 };
-	std::string app_id = "34133478";
-	std::string api_key = "nVCuP6EjIxgySqhMpohig7dN";
-	std::string secret_key = "8Grk5dTtxB7W2Wx5r0FAKP0zAzxQztOf";
-
 	BaiduLexerClient nlp_;
+	bool 百度分词已配置_ = false;
+	std::string 百度分词配置错误_;
+	void 初始化百度分词客户端();
 	void 等待(int 毫秒);
 	// 带重试机制的API调用
 
