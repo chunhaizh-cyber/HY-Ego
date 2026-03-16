@@ -408,7 +408,18 @@ private:
             if (std::holds_alternative<I64>(mi->状态值) && std::get<I64>(mi->状态值) == 0) return s;
         }
 
-        return 状态集.创建内部状态(场景, 自我存在, feat, 特征快照值{ (I64)0 }, 枚举_存在状态事件::创建, false, now);
+        return 状态集.创建内部状态(
+            场景,
+            自我存在,
+            feat,
+            特征快照值{ (I64)0 },
+            枚举_存在状态事件::创建,
+            false,
+            now,
+            [](场景节点类* s, 状态节点类* n, 时间戳 ts, const std::string& cp) {
+                二次特征类::状态记录后刷新二次特征(s, n, ts, cp);
+            },
+            调用点 + "/初始化零状态");
     }
 
     任务节点类* 创建内部尝试学习任务_(需求节点类* need, 场景节点类* 场景, 时间戳 now, const std::string& 调用点)
