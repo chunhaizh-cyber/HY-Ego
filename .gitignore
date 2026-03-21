@@ -1,0 +1,42 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.VC.db
+*.VC.opendb
+*.ipch
+
+# Build outputs
+[Dd]ebug/
+[Dd]ebug_check/
+[Rr]elease/
+[Xx]64/
+[Xx]86/
+**/[Xx]64/
+**/[Xx]86/
+_buildcheck/
+_d455_probe/
+
+# Intermediate files
+*.obj
+*.idb
+*.ilk
+*.pdb
+*.pch
+*.tlog
+*.lastbuildstate
+*.iobj
+*.ipdb
+*.res
+*.aps
+
+# Runtime binaries and temp
+*.dll
+*.exe
+*.log
+*.tmp
+tmp/
+logs/
+日志/
+_run_*/
+_run_*

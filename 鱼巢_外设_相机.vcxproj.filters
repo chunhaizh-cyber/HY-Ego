@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="三维场景管理类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="D455相机外设类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="D455相机类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="鱼巢_外设_相机.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="鱼巢_外设_相机Dlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="世界树环境类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="世界树类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="主信息定义模块.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="主信息定义模块_impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="自治宿主模块.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="二次特征匹配模块.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="二次特征类.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="二次特征类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="任务执行类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="任务类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="任务调度类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="像机外设线程模块.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="内部方法_比较类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="外部方法总接口.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="动作线程类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="状态类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="双向链表模板.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="四域方法树匹配器_v0.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="四域方法树写回器_v0.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="四域方法树生长判定器_v0.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="四域方法树注册模块_v0.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="句子类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="因果信息类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="场景实时显示类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="场景实时显示线程类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="场景类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="基础数据类型.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="外设本能方法_相机模块.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="外设类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="内部方法总接口.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="子存在提取类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="子轮廓提取类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="字体渲染辅助类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="存在提取类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="存在类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="学习类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="元层核心模块.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="方法管理模块_v0.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="学习写回模块_v0.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="任务管理模块_v0.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="任务控制总控模块_v0.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="原生学习兜底函数定义模块_v0.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="任务失败恢复模块_v0.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="任务管理模块_v0.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="度量模板注册表类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="数据仓库类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="宇宙环境类.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="方法环境类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="方法类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="日志模块.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="本能动作管理类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="本能动作类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="本能线程类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="标准特征工具模块类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="概念_二次特征树类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="概念_动态树类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="概念_因果树类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="概念_存在树类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="概念_特征树类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="概念_状态树类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="概念引擎类.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="概念引擎类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="概念树类.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="概念树类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="点簇分割类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="特征值环境类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="特征值类.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="特征值类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="特征值类_轮廓模块.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="特征比较策略类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="特征类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="特征类型定义类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="动态类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="现代OpenGL辅助类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="后台前端通道模块.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="相机写入工作流模块.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="相机观测运行时模块.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="相机外设基类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="自我本能方法_学习兜底模块.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="自我本能方法_相机认知模块.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="自我本能方法_最小试探模块.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="自我类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="节点特征更新模块.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="虚拟存在模块.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="虚拟相机外设类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="相机接口类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="线程模板类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="线程类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="自我线程模块.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="自然语言类.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="自然语言类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="表达落地.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="观察类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="语素环境类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="语素类.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="语素类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="语言学习模块.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="语言本能→学习桥接.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="语言环境类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="语言理解方法.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="语言知识库类.impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="语言知识库类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="语言知识库_初始化.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="轮廓记忆融合类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="轮廓颜色缓存线程类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="通用函数类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="需求环境类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="需求类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="鱼巢_外设_相机.h" />
+    <ClInclude Include="鱼巢_外设_相机Dlg.h" />
+    <ClInclude Include="鱼巢_外设_相机_resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="鱼巢_外设_相机.rc" />
+  </ItemGroup>
+</Project>

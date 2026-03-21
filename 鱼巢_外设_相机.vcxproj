@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{597CA732-B738-4888-A9B5-0B415B5CD714}</ProjectGuid>
+    <Keyword>MFCProj</Keyword>
+    <RootNamespace>鱼巢_外设_相机</RootNamespace>
+    <ProjectName>鱼巢_外设_相机</ProjectName>
+    <TargetName>鱼巢_外设_相机</TargetName>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <PropertyGroup Label="VCTargetsFallback">
+    <VCTargetsPath Condition="'$(VCTargetsPath)'=='' and Exists('C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Microsoft\\VC\\v170\\Microsoft.Cpp.Default.props')">C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\</VCTargetsPath>
+    <VCTargetsPath Condition="'$(VCTargetsPath)'=='' and Exists('D:\\Program Files\\Microsoft Visual Studio\\18\\Community\\MSBuild\\Microsoft\\VC\\v170\\Microsoft.Cpp.Default.props')">D:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v170\</VCTargetsPath>
+    <VCTargetsPath Condition="'$(VCTargetsPath)'=='' and Exists('$(MSBuildExtensionsPath32)\\Microsoft\\VC\\v170\\Microsoft.Cpp.Default.props')">$(MSBuildExtensionsPath32)\Microsoft\VC\v170\</VCTargetsPath>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <AdditionalOptions>$(AdditionalOptions) /FS</AdditionalOptions>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros">
+    <RealSenseSdkRoot Condition="'$(RealSenseSdkRoot)'=='' and Exists('C:\Program Files (x86)\Intel RealSense SDK 2.0')">C:\Program Files (x86)\Intel RealSense SDK 2.0</RealSenseSdkRoot>
+    <RealSenseSdkRoot Condition="'$(RealSenseSdkRoot)'=='' and Exists('D:\librealsense-2.53.1')">D:\librealsense-2.53.1</RealSenseSdkRoot>
+    <RealSenseIncludeDir Condition="'$(RealSenseIncludeDir)'=='' and '$(RealSenseSdkRoot)'!=''">$(RealSenseSdkRoot)\include</RealSenseIncludeDir>
+    <RealSenseLibDir Condition="'$(RealSenseLibDir)'=='' and '$(RealSenseSdkRoot)'!=''">$(RealSenseSdkRoot)\lib\x64</RealSenseLibDir>
+    <RealSenseIncludeDir Condition="'$(RealSenseIncludeDir)'=='' and Exists('D:\vcpkg\installed\x64-windows\include\librealsense2\rs2.hpp')">D:\vcpkg\installed\x64-windows\include</RealSenseIncludeDir>
+    <RealSenseLibDir Condition="'$(RealSenseLibDir)'=='' and Exists('D:\vcpkg\installed\x64-windows\lib\realsense2.lib')">D:\vcpkg\installed\x64-windows\lib</RealSenseLibDir>
+    <RealSenseDebugLibDir Condition="'$(RealSenseDebugLibDir)'=='' and Exists('D:\vcpkg\installed\x64-windows\debug\lib\realsense2d.lib')">D:\vcpkg\installed\x64-windows\debug\lib</RealSenseDebugLibDir>
+    <GladIncludeDir Condition="'$(GladIncludeDir)'=='' and Exists('D:\vcpkg\installed\x64-windows\include\glad\glad.h')">D:\vcpkg\installed\x64-windows\include</GladIncludeDir>
+    <GladIncludeDir Condition="'$(GladIncludeDir)'=='' and Exists('D:\opengl\glad\include')">D:\opengl\glad\include</GladIncludeDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <ExternalIncludePath>$(ExternalIncludePath)</ExternalIncludePath>
+    <LibraryWPath>$(LibraryWPath)</LibraryWPath>
+    <LibraryPath>$(RealSenseDebugLibDir);$(RealSenseLibDir);$(RealSenseSdkRoot)\lib;D:\vcpkg\installed\x64-windows\debug\lib;D:\vcpkg\installed\x64-windows\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(VCInstallDir)Tools\MSVC\$(VCToolsVersion)\atlmfc\include;$(IncludePath)</IncludePath>
+    <PublicIncludeDirectories>$(PublicIncludeDirectories)</PublicIncludeDirectories>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <LibraryPath>$(RealSenseLibDir);D:\vcpkg\installed\x64-windows\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_WINDOWS;_DEBUG;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <AdditionalIncludeDirectories>D:\vcpkg\installed\x64-windows\include\opencv4;$(RealSenseIncludeDir);$(GladIncludeDir);D:\vcpkg\installed\x64-windows\bin;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 /FS %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard_C>stdclatest</LanguageStandard_C>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <RegisterOutput>false</RegisterOutput>
+      <AdditionalDependencies>delayimp.lib;realsense2d.lib;glad.lib;opencv_core4d.lib;opencv_imgproc4d.lib;opengl32.lib;Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>realsense2d.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(RealSenseDebugLibDir);$(RealSenseLibDir);D:\vcpkg\installed\x64-windows\debug\lib;D:\vcpkg\installed\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent>
+      <Command>"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" -ExecutionPolicy Bypass -NoProfile -File "$(MSBuildProjectDirectory)\copy-runtime.ps1" -ProjectDir "$(MSBuildProjectDirectory)" -OutDir "$(OutDir)." -Configuration "$(Configuration)"</Command>
+    </PostBuildEvent>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TypeLibraryName>$(IntDir)鱼巢_外设_相机.tlb</TypeLibraryName>
+      <HeaderFileName>鱼巢_外设_相机_h.h</HeaderFileName>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0804</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)res;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>HY_D455_VIRTUAL_FALLBACK;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <RegisterOutput>true</RegisterOutput>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TypeLibraryName>$(IntDir)鱼巢_外设_相机.tlb</TypeLibraryName>
+      <HeaderFileName>鱼巢_外设_相机_h.h</HeaderFileName>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0804</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)res;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>HY_D455_VIRTUAL_FALLBACK;WIN32;_WINDOWS;NDEBUG;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <RegisterOutput>true</RegisterOutput>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TypeLibraryName>$(IntDir)鱼巢_外设_相机.tlb</TypeLibraryName>
+      <HeaderFileName>鱼巢_外设_相机_h.h</HeaderFileName>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0804</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)res;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_WINDOWS;NDEBUG;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <AdditionalIncludeDirectories>D:\vcpkg\installed\x64-windows\include\opencv4;$(RealSenseIncludeDir);$(GladIncludeDir);D:\vcpkg\installed\x64-windows\bin;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 /FS %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard_C>stdclatest</LanguageStandard_C>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>delayimp.lib;realsense2.lib;glad.lib;opencv_core4.lib;opencv_imgproc4.lib;opengl32.lib;Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>realsense2.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
+      <AdditionalLibraryDirectories>$(RealSenseLibDir);D:\vcpkg\installed\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <RegisterOutput>false</RegisterOutput>
+    </Link>
+    <PostBuildEvent>
+      <Command>"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" -ExecutionPolicy Bypass -NoProfile -File "$(MSBuildProjectDirectory)\copy-runtime.ps1" -ProjectDir "$(MSBuildProjectDirectory)" -OutDir "$(OutDir)." -Configuration "$(Configuration)"</Command>
+    </PostBuildEvent>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TypeLibraryName>$(IntDir)鱼巢_外设_相机.tlb</TypeLibraryName>
+      <HeaderFileName>鱼巢_外设_相机_h.h</HeaderFileName>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0804</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)res;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="鱼巢_外设_相机.h" />
+    <ClInclude Include="鱼巢_外设_相机Dlg.h" />
+    <ClInclude Include="鱼巢_外设_相机_resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="三维场景管理类.ixx" />
+    <ClCompile Include="D455相机外设类.ixx" />
+    <ClCompile Include="D455相机类.ixx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="鱼巢_外设_相机.cpp" />
+    <ClCompile Include="鱼巢_外设_相机Dlg.cpp" />
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="世界树环境类.ixx" />
+    <ClCompile Include="世界树类.ixx" />
+    <ClCompile Include="主信息定义模块.ixx" />
+    <ClCompile Include="主信息定义模块_impl.cpp" />
+    <ClCompile Include="自治宿主模块.ixx" />
+    <ClCompile Include="二次特征匹配模块.ixx" />
+    <ClCompile Include="二次特征类.impl.cpp" />
+    <ClCompile Include="二次特征类.ixx" />
+    <ClCompile Include="任务执行类.ixx" />
+    <ClCompile Include="任务类.ixx" />
+    <ClCompile Include="任务调度类.ixx" />
+    <ClCompile Include="像机外设线程模块.ixx" />
+    <ClCompile Include="内部方法_比较类.ixx" />
+    <ClCompile Include="外部方法总接口.ixx" />
+    <ClCompile Include="动作线程类.ixx" />
+    <ClCompile Include="状态类.ixx" />
+    <ClCompile Include="双向链表模板.ixx" />
+    <ClCompile Include="四域方法树匹配器_v0.ixx" />
+    <ClCompile Include="四域方法树写回器_v0.ixx" />
+    <ClCompile Include="四域方法树生长判定器_v0.ixx" />
+    <ClCompile Include="四域方法树注册模块_v0.ixx" />
+    <ClCompile Include="句子类.ixx" />
+    <ClCompile Include="因果信息类.ixx" />
+    <ClCompile Include="场景实时显示类.ixx" />
+    <ClCompile Include="场景实时显示线程类.ixx" />
+    <ClCompile Include="场景类.ixx" />
+    <ClCompile Include="基础数据类型.ixx" />
+    <ClCompile Include="外设本能方法_相机模块.ixx" />
+    <ClCompile Include="外设类.ixx" />
+    <ClCompile Include="内部方法总接口.ixx" />
+    <ClCompile Include="子存在提取类.ixx" />
+    <ClCompile Include="子轮廓提取类.ixx" />
+    <ClCompile Include="字体渲染辅助类.ixx" />
+    <ClCompile Include="存在提取类.ixx" />
+    <ClCompile Include="存在类.ixx" />
+    <ClCompile Include="学习类.ixx" />
+    <ClCompile Include="元层核心模块.ixx" />
+    <ClCompile Include="方法管理模块_v0.ixx" />
+    <ClCompile Include="学习写回模块_v0.ixx" />
+    <ClCompile Include="任务管理模块_v0.ixx" />
+    <ClCompile Include="任务控制总控模块_v0.ixx" />
+    <ClCompile Include="原生学习兜底函数定义模块_v0.ixx" />
+    <ClCompile Include="任务失败恢复模块_v0.ixx" />
+    <ClCompile Include="任务管理模块_v0.impl.cpp" />
+    <ClCompile Include="度量模板注册表类.ixx" />
+    <ClCompile Include="数据仓库类.ixx" />
+    <ClCompile Include="宇宙环境类.impl.cpp" />
+    <ClCompile Include="方法环境类.ixx" />
+    <ClCompile Include="方法类.ixx" />
+    <ClCompile Include="日志模块.ixx" />
+    <ClCompile Include="本能动作管理类.ixx" />
+    <ClCompile Include="本能动作类.ixx" />
+    <ClCompile Include="本能线程类.ixx" />
+    <ClCompile Include="标准特征工具模块类.ixx" />
+    <ClCompile Include="概念_二次特征树类.ixx" />
+    <ClCompile Include="概念_动态树类.ixx" />
+    <ClCompile Include="概念_因果树类.ixx" />
+    <ClCompile Include="概念_存在树类.ixx" />
+    <ClCompile Include="概念_特征树类.ixx" />
+    <ClCompile Include="概念_状态树类.ixx" />
+    <ClCompile Include="概念引擎类.impl.cpp" />
+    <ClCompile Include="概念引擎类.ixx" />
+    <ClCompile Include="概念树类.impl.cpp" />
+    <ClCompile Include="概念树类.ixx" />
+    <ClCompile Include="点簇分割类.ixx" />
+    <ClCompile Include="特征值环境类.ixx" />
+    <ClCompile Include="特征值类.cpp" />
+    <ClCompile Include="特征值类.ixx" />
+    <ClCompile Include="特征值类_轮廓模块.ixx" />
+    <ClCompile Include="特征比较策略类.ixx" />
+    <ClCompile Include="特征类.ixx" />
+    <ClCompile Include="特征类型定义类.ixx" />
+    <ClCompile Include="动态类.ixx" />
+    <ClCompile Include="现代OpenGL辅助类.ixx" />
+    <ClCompile Include="后台前端通道模块.ixx" />
+    <ClCompile Include="相机写入工作流模块.ixx" />
+    <ClCompile Include="相机观测运行时模块.ixx" />
+    <ClCompile Include="相机外设基类.ixx" />
+    <ClCompile Include="自我本能方法_学习兜底模块.ixx" />
+    <ClCompile Include="自我本能方法_相机认知模块.ixx" />
+    <ClCompile Include="自我本能方法_最小试探模块.ixx" />
+    <ClCompile Include="自我类.ixx" />
+    <ClCompile Include="节点特征更新模块.ixx" />
+    <ClCompile Include="虚拟存在模块.ixx" />
+    <ClCompile Include="虚拟相机外设类.ixx" />
+    <ClCompile Include="相机接口类.ixx" />
+    <ClCompile Include="线程模板类.ixx" />
+    <ClCompile Include="线程类.ixx" />
+    <ClCompile Include="自我线程模块.ixx" />
+    <ClCompile Include="自然语言类.impl.cpp" />
+    <ClCompile Include="自然语言类.ixx" />
+    <ClCompile Include="表达落地.ixx" />
+    <ClCompile Include="观察类.ixx" />
+    <ClCompile Include="语素环境类.ixx" />
+    <ClCompile Include="语素类.impl.cpp" />
+    <ClCompile Include="语素类.ixx" />
+    <ClCompile Include="语言学习模块.ixx" />
+    <ClCompile Include="语言本能→学习桥接.ixx" />
+    <ClCompile Include="语言环境类.ixx" />
+    <ClCompile Include="语言理解方法.ixx" />
+    <ClCompile Include="语言知识库类.impl.cpp" />
+    <ClCompile Include="语言知识库类.ixx" />
+    <ClCompile Include="语言知识库_初始化.ixx" />
+    <ClCompile Include="轮廓记忆融合类.ixx" />
+    <ClCompile Include="轮廓颜色缓存线程类.ixx" />
+    <ClCompile Include="通用函数类.ixx" />
+    <ClCompile Include="需求环境类.ixx" />
+    <ClCompile Include="需求类.ixx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="鱼巢_外设_相机.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Target Name="CopyProjectRuntimeAfterBuild" AfterTargets="Build">
+    <Exec Command="&quot;C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe&quot; -ExecutionPolicy Bypass -NoProfile -File &quot;$(MSBuildProjectDirectory)\copy-runtime.ps1&quot; -ProjectDir &quot;$(MSBuildProjectDirectory)&quot; -OutDir &quot;$(OutDir).&quot; -Configuration &quot;$(Configuration)&quot;" />
+  </Target>
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

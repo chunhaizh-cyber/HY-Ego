@@ -1,0 +1,54 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36915.13 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "鱼巢控制面板", "鱼巢.vcxproj", "{42504A32-6069-4B71-8C44-FBEC47C52E97}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2029EDCE-AE6E-40AF-9A44-C81E2B50BFD5} = {2029EDCE-AE6E-40AF-9A44-C81E2B50BFD5}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "鱼巢", "鱼巢Headless.vcxproj", "{2029EDCE-AE6E-40AF-9A44-C81E2B50BFD5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "鱼巢_外设_相机", "鱼巢_外设_相机.vcxproj", "{597CA732-B738-4888-A9B5-0B415B5CD714}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{42504A32-6069-4B71-8C44-FBEC47C52E97}.Debug|x64.ActiveCfg = Debug|x64
+		{42504A32-6069-4B71-8C44-FBEC47C52E97}.Debug|x64.Build.0 = Debug|x64
+		{42504A32-6069-4B71-8C44-FBEC47C52E97}.Debug|x86.ActiveCfg = Debug|Win32
+		{42504A32-6069-4B71-8C44-FBEC47C52E97}.Debug|x86.Build.0 = Debug|Win32
+		{42504A32-6069-4B71-8C44-FBEC47C52E97}.Release|x64.ActiveCfg = Release|x64
+		{42504A32-6069-4B71-8C44-FBEC47C52E97}.Release|x64.Build.0 = Release|x64
+		{42504A32-6069-4B71-8C44-FBEC47C52E97}.Release|x86.ActiveCfg = Release|Win32
+		{42504A32-6069-4B71-8C44-FBEC47C52E97}.Release|x86.Build.0 = Release|Win32
+		{2029EDCE-AE6E-40AF-9A44-C81E2B50BFD5}.Debug|x64.ActiveCfg = Debug|x64
+		{2029EDCE-AE6E-40AF-9A44-C81E2B50BFD5}.Debug|x64.Build.0 = Debug|x64
+		{2029EDCE-AE6E-40AF-9A44-C81E2B50BFD5}.Debug|x86.ActiveCfg = Debug|Win32
+		{2029EDCE-AE6E-40AF-9A44-C81E2B50BFD5}.Debug|x86.Build.0 = Debug|Win32
+		{2029EDCE-AE6E-40AF-9A44-C81E2B50BFD5}.Release|x64.ActiveCfg = Release|x64
+		{2029EDCE-AE6E-40AF-9A44-C81E2B50BFD5}.Release|x64.Build.0 = Release|x64
+		{2029EDCE-AE6E-40AF-9A44-C81E2B50BFD5}.Release|x86.ActiveCfg = Release|Win32
+		{2029EDCE-AE6E-40AF-9A44-C81E2B50BFD5}.Release|x86.Build.0 = Release|Win32
+		{597CA732-B738-4888-A9B5-0B415B5CD714}.Debug|x64.ActiveCfg = Debug|x64
+		{597CA732-B738-4888-A9B5-0B415B5CD714}.Debug|x64.Build.0 = Debug|x64
+		{597CA732-B738-4888-A9B5-0B415B5CD714}.Debug|x86.ActiveCfg = Debug|Win32
+		{597CA732-B738-4888-A9B5-0B415B5CD714}.Debug|x86.Build.0 = Debug|Win32
+		{597CA732-B738-4888-A9B5-0B415B5CD714}.Release|x64.ActiveCfg = Release|x64
+		{597CA732-B738-4888-A9B5-0B415B5CD714}.Release|x64.Build.0 = Release|x64
+		{597CA732-B738-4888-A9B5-0B415B5CD714}.Release|x86.ActiveCfg = Release|Win32
+		{597CA732-B738-4888-A9B5-0B415B5CD714}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {453A60EF-39F1-4249-96B8-BD3E4254462D}
+	EndGlobalSection
+EndGlobal
