@@ -203,8 +203,9 @@ const 词性节点类* 语素类::绑定词性词到场景基础信息(const std
  词节点类* 语素类::查找词(const std::string& 词字符串) {
      if (词字符串.empty()) return nullptr;
      if (!语素链.根指针) return nullptr;
-     if (语素链.根指针->下 = 语素链.根指针) return nullptr;
-     词节点类* 终点,*游标 = 语素链.根指针;
+     if (语素链.根指针->下 == 语素链.根指针) return nullptr;
+
+     词节点类* 当前父节点 = 语素链.根指针;
      std::string 前缀;
      前缀.reserve(词字符串.size());
 
@@ -213,23 +214,39 @@ const 词性节点类* 语素类::绑定词性词到场景基础信息(const std
          if (i + n > 词字符串.size()) n = 1; // 防御：不完整 UTF-8
          前缀.append(词字符串, i, n);
          i += n;
-          if (游标 == 语素链.根指针) {
-             游标 = 游标->下;
-             终点 = 语素链.根指针;
-         }else
-             终点 = 游标->子;
-         do {
-             if (游标->主信息->主信息类型 != 枚举_主信息类型::词) continue;
-             auto* mi = dynamic_cast<词主信息类*>(游标->主信息);
-             if (mi->词 == 前缀)
-                 break;
-             游标 = 游标->下;
-         } while (游标 != 终点);
-            
-     }
-     if (游标 == 语素链.根指针 ) return nullptr;
 
-     return 游标;
+         词节点类* 命中节点 = nullptr;
+         if (当前父节点 == 语素链.根指针) {
+             for (auto* 游标 = 当前父节点->下; 游标 && 游标 != 当前父节点; 游标 = 游标->下) {
+                 if (!游标->主信息) continue;
+                 if (游标->主信息->主信息类型 != 枚举_主信息类型::词) continue;
+                 auto* mi = dynamic_cast<词主信息类*>(游标->主信息);
+                 if (mi && mi->词 == 前缀) {
+                     命中节点 = static_cast<词节点类*>(游标);
+                     break;
+                 }
+             }
+         }
+         else {
+             auto* 首子节点 = 当前父节点->子;
+             if (!首子节点) return nullptr;
+             auto* 游标 = 首子节点;
+             do {
+                 if (游标->主信息 && 游标->主信息->主信息类型 == 枚举_主信息类型::词) {
+                     auto* mi = dynamic_cast<词主信息类*>(游标->主信息);
+                     if (mi && mi->词 == 前缀) {
+                         命中节点 = static_cast<词节点类*>(游标);
+                         break;
+                     }
+                 }
+                 游标 = 游标->下;
+             } while (游标 && 游标 != 首子节点);
+         }
+
+         if (!命中节点) return nullptr;
+         当前父节点 = 命中节点;
+     }
+     return 当前父节点 == 语素链.根指针 ? nullptr : 当前父节点;
  }
 
  枚举_主信息类型 语素类::映射_词性到主信息类型(枚举_词性 词性) {

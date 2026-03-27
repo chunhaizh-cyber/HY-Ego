@@ -35,6 +35,30 @@ export struct 结构_任务分解调制结果_v0
     任务类::结构_创建步骤参数 调制后步骤参数{};
 };
 
+export struct 结构_学习任务进化输入_v0
+{
+    std::int64_t 基线可用方法数 = 0;
+    std::int64_t 当前可用方法数 = 0;
+    std::int64_t 基线稳定方法数 = 0;
+    std::int64_t 当前稳定方法数 = 0;
+    std::int64_t 基线稳定度总分 = 0;
+    std::int64_t 当前稳定度总分 = 0;
+    std::int64_t 待进化方法数 = 0;
+    bool 有待处理请求 = false;
+};
+
+export struct 结构_学习任务进化结果_v0
+{
+    bool 成功 = false;
+    std::string 错误摘要;
+    bool 可用方法已增加 = false;
+    bool 方法稳定性已提升 = false;
+    bool 应继续进化 = false;
+    std::int64_t 可用方法增量 = 0;
+    std::int64_t 稳定方法增量 = 0;
+    std::int64_t 稳定度总分增量 = 0;
+};
+
 export class 任务管理器_v0 final
 {
 public:
@@ -82,4 +106,9 @@ public:
         任务节点类* 任务头结点,
         const 任务类::结构_创建结果参数& 参数 = {},
         const std::string& 调用点 = "任务管理器_v0::写入反馈");
+
+    结构_学习任务进化结果_v0 推进学习任务进化(
+        任务节点类* 学习任务头结点,
+        const 结构_学习任务进化输入_v0& 输入 = {},
+        const std::string& 调用点 = "任务管理器_v0::推进学习任务进化");
 };

@@ -7,6 +7,7 @@ export module 场景模块;
 
 import 主信息定义模块;
 import 数据仓库模块;
+import 世界树环境模块;
 
 
 using namespace 数据仓库模块;
@@ -34,9 +35,7 @@ public:
     static 场景节点类* 创建场景(基础信息节点类* parent, 场景节点主信息类* mi)
     {
         if (!mi) return nullptr;
-        锁调度器守卫 锁({ 锁请求::写(世界链.链表锁, 枚举_锁域::世界链, "世界链", "场景类::创建场景") });
-        基础信息节点类* p = parent ? parent : 世界链.根指针;
-        return static_cast<场景节点类*>(世界链.添加子节点_已加锁(p, static_cast<基础信息基类*>(mi)));
+        return 世界树.创建场景(parent, mi, "场景类::创建场景");
     }
 
     // 将已分配的场景节点挂到父节点

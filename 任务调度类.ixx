@@ -35,7 +35,6 @@ import 数据仓库模块;
 
 export struct 结构_结构B调度上下文 {
     double 当前安全值 = 50.0;
-    double 当前服务值 = 0.0;
     double 安全下限 = 1.0;
     double 安全回归中心 = 50.0;
 };

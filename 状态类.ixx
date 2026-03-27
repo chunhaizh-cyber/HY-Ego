@@ -40,6 +40,8 @@ export struct 状态创建参数 {
     特征快照值 状态值{};
     基础信息节点类* 对应信息节点 = nullptr;
     bool 是否变化 = false;
+    std::string 变化原因类别{};
+    std::string 变化原因说明{};
     时间戳 now = 0;
 };
 
@@ -60,6 +62,8 @@ public:
         状态值 = p.状态值;
         对应信息节点 = p.对应信息节点 ? p.对应信息节点 : (p.状态特征 ? static_cast<基础信息节点类*>(p.状态特征) : p.状态主体);
         是否变化 = p.是否变化;
+        变化原因类别 = p.变化原因类别;
+        变化原因说明 = p.变化原因说明;
         收到时间 = p.now;
         发生时间 = p.now;
     }
@@ -71,6 +75,30 @@ export inline 枚举_存在状态事件 取状态事件(const 状态节点类* s
     if (auto* ex = dynamic_cast<状态节点主信息_扩展类*>(s->主信息)) return ex->事件;
     if (auto* mi = dynamic_cast<状态节点主信息类*>(s->主信息)) return mi->是否变化 ? 枚举_存在状态事件::变化 : 枚举_存在状态事件::未定义;
     return 枚举_存在状态事件::未定义;
+}
+
+export inline bool 是否原始时间状态特征文本(const std::string& 文本) noexcept
+{
+    if (文本.empty()) return false;
+    if (文本.find("时间戳") != std::string::npos) return true;
+    if (文本.find("截止时间") != std::string::npos) return true;
+    if (文本.find("开始时间") != std::string::npos) return true;
+    if (文本.find("结束时间") != std::string::npos) return true;
+    if (文本.find("调度时间") != std::string::npos) return true;
+    if (文本.find("调用时间") != std::string::npos) return true;
+    if (文本.find("创建时间") != std::string::npos) return true;
+    if (文本.find("修改时间") != std::string::npos) return true;
+    if (文本.find("成功时间") != std::string::npos) return true;
+    if (文本.find("失败时间") != std::string::npos) return true;
+    if (文本 == "设备时间_us") return true;
+    if (文本.find("时间") != std::string::npos && 文本.ends_with("_UTCms")) return true;
+    if (文本.find("时间") != std::string::npos && 文本.ends_with("_us")) return true;
+    return false;
+}
+
+export inline bool 是否原始时间状态特征(const 特征节点类* 状态特征) noexcept
+{
+    return 状态特征 && 是否原始时间状态特征文本(状态特征->获取主键());
 }
 
 export class 状态类 {
@@ -122,6 +150,8 @@ public:
     {
         (void)调用点;
         if (!场景 || !场景->主信息) return nullptr;
+        // 原始时间戳/时间点只作为元信息与排序依据存在，不落成状态节点。
+        if (p.状态特征 && 是否原始时间状态特征(p.状态特征)) return nullptr;
         auto* smi = dynamic_cast<场景节点主信息类*>(场景->主信息);
         if (!smi) return nullptr;
 
@@ -151,7 +181,9 @@ public:
         bool 是否变化 = false,
         时间戳 now = 0,
         状态后处理函数 后处理 = {},
-        const std::string& 调用点 = "状态类::创建状态/兼容")
+        const std::string& 调用点 = "状态类::创建状态/兼容",
+        const std::string& 变化原因类别 = {},
+        const std::string& 变化原因说明 = {})
     {
         状态创建参数 p{};
         p.状态域 = 枚举_状态域::未定义;
@@ -159,6 +191,8 @@ public:
         p.对应信息节点 = 对应信息节点;
         p.状态主体 = 对应信息节点;
         p.是否变化 = 是否变化;
+        p.变化原因类别 = 变化原因类别;
+        p.变化原因说明 = 变化原因说明;
         p.now = now;
         return 创建状态(场景, p, std::move(后处理), 调用点);
     }
@@ -172,7 +206,9 @@ public:
         bool 是否变化 = true,
         时间戳 now = 0,
         状态后处理函数 后处理 = {},
-        const std::string& 调用点 = "状态类::创建内部状态")
+        const std::string& 调用点 = "状态类::创建内部状态",
+        const std::string& 变化原因类别 = {},
+        const std::string& 变化原因说明 = {})
     {
         状态创建参数 p{};
         p.状态域 = 枚举_状态域::内部状态;
@@ -182,6 +218,8 @@ public:
         p.状态值 = 状态值;
         p.对应信息节点 = 状态特征 ? static_cast<基础信息节点类*>(状态特征) : 内部主体;
         p.是否变化 = 是否变化;
+        p.变化原因类别 = 变化原因类别;
+        p.变化原因说明 = 变化原因说明;
         p.now = now;
         return 创建状态(场景, p, std::move(后处理), 调用点);
     }
@@ -195,7 +233,9 @@ public:
         bool 是否变化 = true,
         时间戳 now = 0,
         状态后处理函数 后处理 = {},
-        const std::string& 调用点 = "状态类::创建世界状态")
+        const std::string& 调用点 = "状态类::创建世界状态",
+        const std::string& 变化原因类别 = {},
+        const std::string& 变化原因说明 = {})
     {
         状态创建参数 p{};
         p.状态域 = 枚举_状态域::世界状态;
@@ -205,6 +245,8 @@ public:
         p.状态值 = 状态值;
         p.对应信息节点 = 状态特征 ? static_cast<基础信息节点类*>(状态特征) : 世界主体;
         p.是否变化 = 是否变化;
+        p.变化原因类别 = 变化原因类别;
+        p.变化原因说明 = 变化原因说明;
         p.now = now;
         return 创建状态(场景, p, std::move(后处理), 调用点);
     }
@@ -218,12 +260,14 @@ public:
         bool 是否变化 = true,
         时间戳 now = 0,
         状态后处理函数 后处理 = {},
-        const std::string& 调用点 = "状态类::记录内部特征状态")
+        const std::string& 调用点 = "状态类::记录内部特征状态",
+        const std::string& 变化原因类别 = {},
+        const std::string& 变化原因说明 = {})
     {
         (void)调用点;
         if (!场景 || !内部主体) return nullptr;
         if (事件 != 枚举_存在状态事件::创建 && !是否变化) return nullptr;
-        return 创建内部状态(场景, 内部主体, 状态特征, 状态值, 事件, 是否变化, now, std::move(后处理), 调用点);
+        return 创建内部状态(场景, 内部主体, 状态特征, 状态值, 事件, 是否变化, now, std::move(后处理), 调用点, 变化原因类别, 变化原因说明);
     }
 
     状态节点类* 记录世界特征状态(
@@ -235,12 +279,14 @@ public:
         bool 是否变化 = true,
         时间戳 now = 0,
         状态后处理函数 后处理 = {},
-        const std::string& 调用点 = "状态类::记录世界特征状态")
+        const std::string& 调用点 = "状态类::记录世界特征状态",
+        const std::string& 变化原因类别 = {},
+        const std::string& 变化原因说明 = {})
     {
         (void)调用点;
         if (!场景 || !世界主体 || !状态特征) return nullptr;
         if (事件 != 枚举_存在状态事件::创建 && !是否变化) return nullptr;
-        return 创建世界状态(场景, 世界主体, 状态特征, 状态值, 事件, 是否变化, now, std::move(后处理), 调用点);
+        return 创建世界状态(场景, 世界主体, 状态特征, 状态值, 事件, 是否变化, now, std::move(后处理), 调用点, 变化原因类别, 变化原因说明);
     }
 
     状态节点类* 查找最近状态(
@@ -301,39 +347,54 @@ public:
         auto* smi = dynamic_cast<场景节点主信息类*>(场景->主信息);
         if (!smi) return 结果;
 
-        I64 最近值 = 0;
-        bool 已有最近值 = false;
+        struct 候选状态 {
+            时间戳 时间 = 0;
+            I64 值 = 0;
+            状态节点类* 节点 = nullptr;
+        };
+        std::vector<候选状态> 候选列表{};
+        候选列表.reserve(smi->状态列表.size() + smi->运行时状态列表.size());
 
-        for (auto it = smi->状态列表.rbegin(); it != smi->状态列表.rend(); ++it) {
-            auto* s = *it;
+        for (auto* s : smi->状态列表) {
             auto* mi = (s && s->主信息) ? dynamic_cast<状态节点主信息类*>(s->主信息) : nullptr;
             if (!mi) continue;
             if (状态域 != 枚举_状态域::未定义 && mi->状态域 != 状态域) continue;
             if (状态主体 && mi->状态主体 != 状态主体) continue;
             if (状态特征 && mi->状态特征 != 状态特征) continue;
-
             const auto* 值 = std::get_if<I64>(&mi->状态值);
             if (!值) continue;
+            候选列表.push_back({ 取状态排序时间_(s), *值, s });
+        }
 
-            if (!已有最近值) {
-                最近值 = *值;
-                已有最近值 = true;
-                结果.最近状态 = s;
-                continue;
-            }
+        for (const auto& s : smi->运行时状态列表) {
+            if (状态域 != 枚举_状态域::未定义 && s.状态域 != 状态域) continue;
+            if (状态主体 && s.状态主体 != 状态主体) continue;
+            if (状态特征 && s.状态特征 != 状态特征) continue;
+            const auto* 值 = std::get_if<I64>(&s.状态值);
+            if (!值) continue;
+            const auto 排序时间 = s.发生时间 ? s.发生时间 : s.收到时间;
+            候选列表.push_back({ 排序时间, *值, nullptr });
+        }
 
-            结果.前一状态 = s;
-            结果.可比较 = true;
-            if (最近值 > *值) {
-                结果.方向 = 1;
-            }
-            else if (最近值 < *值) {
-                结果.方向 = -1;
-            }
-            else {
-                结果.方向 = 0;
-            }
-            return 结果;
+        if (候选列表.size() < 2) return 结果;
+        std::sort(候选列表.begin(), 候选列表.end(), [](const 候选状态& a, const 候选状态& b) {
+            if (a.时间 != b.时间) return a.时间 < b.时间;
+            return a.节点 < b.节点;
+        });
+
+        const auto& 前一 = 候选列表[候选列表.size() - 2];
+        const auto& 最近 = 候选列表.back();
+        结果.最近状态 = 最近.节点;
+        结果.前一状态 = 前一.节点;
+        结果.可比较 = true;
+        if (最近.值 > 前一.值) {
+            结果.方向 = 1;
+        }
+        else if (最近.值 < 前一.值) {
+            结果.方向 = -1;
+        }
+        else {
+            结果.方向 = 0;
         }
 
         return 结果;
@@ -377,6 +438,7 @@ public:
             }
         }
         smi->状态列表.clear();
+        smi->运行时状态列表.clear();
     }
 };
 

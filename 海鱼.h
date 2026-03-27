@@ -24,10 +24,15 @@ public:
 public:
 	virtual BOOL InitInstance();
 	virtual int ExitInstance();
+	void 记录直接退出码(int 退出码);
 
 // 实现
 
 	DECLARE_MESSAGE_MAP()
+
+private:
+	bool 使用直接退出码_ = false;
+	int 直接退出码_ = 0;
 };
 
 extern C海鱼App theApp;

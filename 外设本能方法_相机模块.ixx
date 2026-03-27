@@ -1081,18 +1081,12 @@ private:
 
         auto reg = [&](枚举_本能动作ID id, 本能函数 fn, const std::string& name,
             const std::vector<const 词性节点类*>& 需要类型) {
-                // 先看注册表是否已有首节点指针
-                方法节点类* head = nullptr;
-                if (auto opt = 本能集.查询(id)) head = opt->方法信息首节点;
-                if (!head) head = 方法集.查找或创建_本能方法首节点(id, now, "注册默认本能动作_外设相机");
-                if (head) 方法集.初始化方法虚拟存在信息(head, now, "注册默认本能动作_外设相机");
-
-                if (!本能集.有(id)) {
-                    本能集.注册(id, fn, name, head);
-                }
-                else {
-                    (void)本能集.补全方法信息(id, head);
-                }
+                auto* head = 方法集.注册本能函数(
+                    id,
+                    std::move(fn),
+                    name,
+                    now,
+                    "注册默认本能动作_外设相机");
 
                 // 补写形参类型到首节点条件模板（幂等）
                 if (head) 本能动作.方法首节点_确保条件参数类型(head, 需要类型);

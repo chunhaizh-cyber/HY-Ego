@@ -12,7 +12,6 @@
 #include <cstdint>
 #include <limits>
 export  module 模板模块;
-
 import 基础数据类型模块;
 
 // 双向链表模板（环形）

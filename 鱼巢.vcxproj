@@ -137,8 +137,11 @@
       <MkTypLibCompatible>false</MkTypLibCompatible>
       <ValidateAllParameters>true</ValidateAllParameters>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <TypeLibraryName>$(IntDir)鱼巢.tlb</TypeLibraryName>
-      <HeaderFileName>鱼巢_h.h</HeaderFileName>
+      <TypeLibraryName>$(IntDir)My.tlb</TypeLibraryName>
+      <HeaderFileName>$(IntDir)海鱼_h.h</HeaderFileName>
+      <InterfaceIdentifierFileName>$(IntDir)My_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>$(IntDir)My_p.c</ProxyFileName>
+      <DllDataFileName>$(IntDir)dlldata.c</DllDataFileName>
     </Midl>
     <ResourceCompile>
       <Culture>0x0804</Culture>
@@ -163,8 +166,11 @@
       <MkTypLibCompatible>false</MkTypLibCompatible>
       <ValidateAllParameters>true</ValidateAllParameters>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <TypeLibraryName>$(IntDir)鱼巢.tlb</TypeLibraryName>
-      <HeaderFileName>鱼巢_h.h</HeaderFileName>
+      <TypeLibraryName>$(IntDir)My.tlb</TypeLibraryName>
+      <HeaderFileName>$(IntDir)海鱼_h.h</HeaderFileName>
+      <InterfaceIdentifierFileName>$(IntDir)My_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>$(IntDir)My_p.c</ProxyFileName>
+      <DllDataFileName>$(IntDir)dlldata.c</DllDataFileName>
     </Midl>
     <ResourceCompile>
       <Culture>0x0804</Culture>
@@ -193,8 +199,11 @@
       <MkTypLibCompatible>false</MkTypLibCompatible>
       <ValidateAllParameters>true</ValidateAllParameters>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <TypeLibraryName>$(IntDir)鱼巢.tlb</TypeLibraryName>
-      <HeaderFileName>鱼巢_h.h</HeaderFileName>
+      <TypeLibraryName>$(IntDir)My.tlb</TypeLibraryName>
+      <HeaderFileName>$(IntDir)海鱼_h.h</HeaderFileName>
+      <InterfaceIdentifierFileName>$(IntDir)My_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>$(IntDir)My_p.c</ProxyFileName>
+      <DllDataFileName>$(IntDir)dlldata.c</DllDataFileName>
     </Midl>
     <ResourceCompile>
       <Culture>0x0804</Culture>
@@ -232,8 +241,11 @@
       <MkTypLibCompatible>false</MkTypLibCompatible>
       <ValidateAllParameters>true</ValidateAllParameters>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <TypeLibraryName>$(IntDir)鱼巢.tlb</TypeLibraryName>
-      <HeaderFileName>鱼巢_h.h</HeaderFileName>
+      <TypeLibraryName>$(IntDir)My.tlb</TypeLibraryName>
+      <HeaderFileName>$(IntDir)海鱼_h.h</HeaderFileName>
+      <InterfaceIdentifierFileName>$(IntDir)My_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>$(IntDir)My_p.c</ProxyFileName>
+      <DllDataFileName>$(IntDir)dlldata.c</DllDataFileName>
     </Midl>
     <ResourceCompile>
       <Culture>0x0804</Culture>
@@ -242,6 +254,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Midl Include="My.idl" />
     <ClInclude Include="DlgProxy.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
@@ -253,6 +266,7 @@
     <ClInclude Include="海鱼.h" />
     <ClInclude Include="海鱼_h.h" />
     <ClInclude Include="海鱼Dlg.h" />
+    <ClInclude Include="鱼巢Headless入口.h" />
     <ClInclude Include="百度分词类.h" />
     <ClInclude Include="窗口_交互界面类.h" />
     <ClInclude Include="窗口_基础信息类.h" />
@@ -273,6 +287,16 @@
     <ClCompile Include="自我场景再现窗口.cpp" />
     <ClCompile Include="海鱼.cpp" />
     <ClCompile Include="海鱼Dlg.cpp" />
+    <ClCompile Include="鱼巢Headless.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">HY_HEADLESS_NO_MFC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">HY_HEADLESS_NO_MFC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">HY_HEADLESS_NO_MFC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">HY_HEADLESS_NO_MFC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

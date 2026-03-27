@@ -20,6 +20,8 @@ import 特征值模块;
 import 特征模块;
 import 二次特征模块;
 import 概念树模块;
+import 语素环境模块;
+import 特征类型定义模块;
 
 // ============================================================
 // 世界树模块（Facade / Single Entry）
@@ -138,6 +140,7 @@ private:
 
     mutable std::mutex 新存在创建回调锁_{};
     回调_新存在创建 新存在创建回调_{};
+    std::once_flag 默认世界初始化_once_{};
 public:
     // ============================================================
     // 0) 初始化
@@ -149,7 +152,30 @@ public:
         (void)调用点;
     }
 
-    void 初始化默认世界() {}
+    void 初始化默认世界() {
+        std::call_once(默认世界初始化_once_, [this]() {
+            const auto now = 结构体_时间戳::当前_微秒();
+            auto 初始化世界节点 = [this, now](场景节点类*& 目标, const char* 名称, 枚举_世界类型 世界类型, const std::string& 调用点) {
+                const auto* 名称词 = 语素集.添加词性词(名称, "名词");
+                目标 = 取或创建子场景_按名称(nullptr, 名称词, now, 调用点);
+                auto* 主信息 = (目标 && 目标->主信息) ? dynamic_cast<场景节点主信息类*>(目标->主信息) : nullptr;
+                if (!主信息) return;
+                主信息->名称 = const_cast<词性节点类*>(名称词);
+                主信息->世界类型 = 世界类型;
+                if (主信息->创建时间 == 0) 主信息->创建时间 = now;
+            };
+
+            初始化世界节点(现实世界, "现实世界", 枚举_世界类型::现实世界, "世界树类::初始化默认世界/现实世界");
+            初始化世界节点(文本世界, "文本世界", 枚举_世界类型::文本世界, "世界树类::初始化默认世界/文本世界");
+            初始化世界节点(想象世界, "想象世界", 枚举_世界类型::想象世界, "世界树类::初始化默认世界/想象世界");
+            初始化世界节点(记忆世界, "记忆世界", 枚举_世界类型::记忆世界, "世界树类::初始化默认世界/记忆世界");
+            初始化世界节点(推理世界, "推理世界", 枚举_世界类型::推理世界, "世界树类::初始化默认世界/推理世界");
+            初始化世界节点(虚拟世界, "虚拟世界", 枚举_世界类型::虚拟世界, "世界树类::初始化默认世界/虚拟世界");
+
+            初始化_概念域根_挂世界根(now);
+            (void)取或创建自我内部世界(now, "世界树类::初始化默认世界/默认自我");
+        });
+    }
     // 世界树类.ixx 里建议加
 
     void 初始化_概念域根_挂世界根(时间戳 now)
@@ -167,6 +193,56 @@ public:
         概念树.获取或创建_概念域根(枚举_概念域::因果, now);
         概念树.获取或创建_概念域根(枚举_概念域::自然语言, now);
     }
+
+    场景节点类* 取或创建自我现实场景(
+        时间戳 now = 结构体_时间戳::当前_微秒(),
+        const std::string& 调用点 = "世界树类::取或创建自我现实场景")
+    {
+        特征类型定义类::初始化特征类型定义模块_依赖语素();
+        if (!现实世界) return nullptr;
+
+        const 词性节点类* 名称 = 语素集.添加词性词("自我初始场景", "专有名词");
+        auto* 场景 = 取或创建子场景_按名称(现实世界, 名称, now, 调用点 + "/现实场景");
+        auto* 场景信息 = (场景 && 场景->主信息) ? dynamic_cast<场景节点主信息类*>(场景->主信息) : nullptr;
+        if (场景信息) {
+            场景信息->名称 = const_cast<词性节点类*>(名称);
+            场景信息->世界类型 = 枚举_世界类型::现实世界;
+            if (场景信息->创建时间 == 0) 场景信息->创建时间 = now;
+        }
+        自我所在场景 = 场景;
+        return 场景;
+    }
+
+    存在节点类* 取或创建自我存在(
+        时间戳 now = 结构体_时间戳::当前_微秒(),
+        const std::string& 调用点 = "世界树类::取或创建自我存在")
+    {
+        特征类型定义类::初始化特征类型定义模块_依赖语素();
+        auto* 自我场景 = 取或创建自我现实场景(now, 调用点);
+        if (!自我场景) return nullptr;
+
+        if (自我指针) {
+            return 自我指针;
+        }
+
+        const 词性节点类* 自我类型 = 特征类型定义类::型_自我
+            ? 特征类型定义类::型_自我
+            : 语素集.添加词性词("自我类型", "名词");
+        auto* self = 取或创建子存在_按类型(自我场景, 自我类型, now, 调用点 + "/自我存在");
+        if (!self) return nullptr;
+
+        const 词性节点类* 自我名称 = 特征类型定义类::名_自我
+            ? 特征类型定义类::名_自我
+            : 语素集.添加词性词("自我", "专有名词");
+        (void)写入名称(self, 自我名称, now, 调用点 + "/自我名称");
+
+        if (auto* 自我信息 = self->主信息 ? dynamic_cast<存在节点主信息类*>(self->主信息) : nullptr) {
+            if (自我信息->创建时间 == 0) 自我信息->创建时间 = now;
+        }
+        自我指针 = self;
+        自我所在场景 = 自我场景;
+        return self;
+    }
     // ============================================================
     // 1) 世界根
     // ============================================================
@@ -179,7 +255,9 @@ public:
         if (!mi) return nullptr;
         锁调度器守卫 锁({ 锁请求::写(世界链.链表锁, 枚举_锁域::世界链, "世界链", 调用点) });
         auto* p = parent ? parent : 世界链.根指针;
-        return static_cast<场景节点类*>(世界链.添加子节点_已加锁(p, static_cast<基础信息基类*>(mi)));
+        auto* 场景 = static_cast<场景节点类*>(世界链.添加子节点_已加锁(p, static_cast<基础信息基类*>(mi)));
+        确保场景默认特征已初始化_已加锁(场景, 调用点 + "/默认特征");
+        return 场景;
     }
 
     bool 删除节点(基础信息节点类* node, const std::string& 调用点 = "世界树类::删除节点") {
@@ -298,7 +376,9 @@ public:
             do {
                 auto* smi = it ? dynamic_cast<场景节点主信息类*>(it->主信息) : nullptr;
                 if (smi && smi->名称 && smi->名称->获取主键() == key) {
-                    return static_cast<场景节点类*>(it);
+                    auto* 场景 = static_cast<场景节点类*>(it);
+                    确保场景默认特征已初始化_已加锁(场景, 调用点 + "/命中已有场景");
+                    return 场景;
                 }
                 it = static_cast<基础信息节点类*>(it->下);
             } while (it && it != first);
@@ -307,7 +387,9 @@ public:
         auto* mi = new 场景节点主信息类();
         mi->名称 = const_cast<词性节点类*>(场景名称);
         // mi->记录观测(now);
-        return static_cast<场景节点类*>(世界链.添加子节点_已加锁(p, static_cast<基础信息基类*>(mi)));
+        auto* 场景 = static_cast<场景节点类*>(世界链.添加子节点_已加锁(p, static_cast<基础信息基类*>(mi)));
+        确保场景默认特征已初始化_已加锁(场景, 调用点 + "/新建场景");
+        return 场景;
     }
 
     结构_存在创建结果 取或创建子存在_按类型_返回结果(
@@ -469,11 +551,13 @@ public:
         锁调度器守卫 锁({ 锁请求::读(世界链.链表锁, 枚举_锁域::世界链, "世界链", 调用点) });
         auto* first = static_cast<基础信息节点类*>(host->子);
         auto* it = first;
-        do {
+        std::vector<基础信息节点类*> 已遍历同层{};
+        while (it && std::find(已遍历同层.begin(), 已遍历同层.end(), it) == 已遍历同层.end()) {
+            已遍历同层.push_back(it);
             auto* mi = it ? dynamic_cast<特征节点主信息类*>(it->主信息) : nullptr;
             if (mi && mi->类型 == 特征类型) return static_cast<特征节点类*>(it);
             it = it ? static_cast<基础信息节点类*>(it->下) : nullptr;
-        } while (it && it != first);
+        }
         return nullptr;
     }
 
@@ -489,11 +573,13 @@ public:
         if (host->子) {
             auto* first = static_cast<基础信息节点类*>(host->子);
             auto* it = first;
-            do {
+            std::vector<基础信息节点类*> 已遍历同层{};
+            while (it && std::find(已遍历同层.begin(), 已遍历同层.end(), it) == 已遍历同层.end()) {
+                已遍历同层.push_back(it);
                 auto* mi = it ? dynamic_cast<特征节点主信息类*>(it->主信息) : nullptr;
                 if (mi && mi->类型 == 特征类型) return static_cast<特征节点类*>(it);
                 it = it ? static_cast<基础信息节点类*>(it->下) : nullptr;
-            } while (it && it != first);
+            }
         }
 
         auto* mi = new 特征节点主信息类();
@@ -716,6 +802,30 @@ public:
     const 特征类& 特征服务() const noexcept { return 特征服务_; }
 
 private:
+    void 确保场景默认特征已初始化_已加锁(
+        场景节点类* 场景,
+        const std::string& 调用点)
+    {
+        if (!场景) return;
+
+        const auto* 安全度特征 = 语素集.添加词性词("安全度", "名词");
+        if (!安全度特征) return;
+
+        auto* 特征 = 确保特征_已加锁(场景, 安全度特征);
+        auto* 特征主信息 = (特征 && 特征->主信息)
+            ? dynamic_cast<特征节点主信息类*>(特征->主信息)
+            : nullptr;
+        if (!特征主信息) return;
+        if (std::holds_alternative<I64>(特征主信息->当前快照)) return;
+
+        特征主信息->名称 = const_cast<词性节点类*>(安全度特征);
+        特征服务_.写入特征值(
+            特征,
+            特征快照值{ (std::numeric_limits<I64>::max)() / 2 },
+            {});
+        (void)调用点;
+    }
+
     // 内部：在“已持有世界链写锁”的前提下确保特征
     特征节点类* 确保特征_已加锁(基础信息节点类* host, const 词性节点类* 特征类型) {
         if (!host || !特征类型) return nullptr;
@@ -723,11 +833,13 @@ private:
         if (host->子) {
             auto* first = static_cast<基础信息节点类*>(host->子);
             auto* it = first;
-            do {
+            std::vector<基础信息节点类*> 已遍历同层{};
+            while (it && std::find(已遍历同层.begin(), 已遍历同层.end(), it) == 已遍历同层.end()) {
+                已遍历同层.push_back(it);
                 auto* mi = it ? dynamic_cast<特征节点主信息类*>(it->主信息) : nullptr;
                 if (mi && mi->类型 == 特征类型) return static_cast<特征节点类*>(it);
                 it = it ? static_cast<基础信息节点类*>(it->下) : nullptr;
-            } while (it && it != first);
+            }
         }
 
         auto* mi = new 特征节点主信息类();
@@ -741,10 +853,12 @@ private:
         if (!parent || !parent->子) return out;
         auto* first = static_cast<基础信息节点类*>(parent->子);
         auto* it = first;
-        do {
+        std::vector<基础信息节点类*> 已遍历同层{};
+        while (it && std::find(已遍历同层.begin(), 已遍历同层.end(), it) == 已遍历同层.end()) {
+            已遍历同层.push_back(it);
             if (it && it->主信息 && dynamic_cast<特征节点主信息类*>(it->主信息)) out.push_back(static_cast<特征节点类*>(it));
             it = it ? static_cast<基础信息节点类*>(it->下) : nullptr;
-        } while (it && it != first);
+        }
         return out;
     }
 
@@ -766,7 +880,66 @@ private:
     }
 
 public:
-    场景节点类* 取内部世界() const noexcept { return 虚拟世界; }
+    场景节点类* 取存在内部世界(const 存在节点类* 宿主存在) const noexcept {
+        auto* 宿主信息 = (宿主存在 && 宿主存在->主信息)
+            ? dynamic_cast<const 存在节点主信息类*>(宿主存在->主信息)
+            : nullptr;
+        if (!宿主信息 || !宿主信息->内部世界) return nullptr;
+        return const_cast<场景节点类*>(宿主信息->内部世界);
+    }
+
+    场景节点类* 取或创建自我内部世界(
+        时间戳 now = 结构体_时间戳::当前_微秒(),
+        const std::string& 调用点 = "世界树类::取或创建自我内部世界")
+    {
+        特征类型定义类::初始化特征类型定义模块_依赖语素();
+        auto* 自我存在 = 取或创建自我存在(now, 调用点 + "/宿主存在");
+        if (!自我存在) return nullptr;
+
+        const 词性节点类* 名称 = 特征类型定义类::名_自我内部世界
+            ? 特征类型定义类::名_自我内部世界
+            : 语素集.添加词性词("自我内部世界", "专有名词");
+        return 取或创建存在内部世界(自我存在, now, 名称, 调用点 + "/内部世界");
+    }
+
+    场景节点类* 取或创建存在内部世界(
+        存在节点类* 宿主存在,
+        时间戳 now = 结构体_时间戳::当前_微秒(),
+        const 词性节点类* 场景名称 = nullptr,
+        const std::string& 调用点 = "世界树类::取或创建存在内部世界")
+    {
+        if (!宿主存在) return nullptr;
+
+        auto* 宿主信息 = (宿主存在->主信息)
+            ? dynamic_cast<存在节点主信息类*>(宿主存在->主信息)
+            : nullptr;
+        if (!宿主信息) return nullptr;
+
+        auto* 现有内部世界 = 取存在内部世界(宿主存在);
+        const auto* 名称词 = 场景名称 ? 场景名称 : 语素集.添加词性词("内部世界", "专有名词");
+        if (!现有内部世界) {
+            现有内部世界 = 取或创建子场景_按名称(宿主存在, 名称词, now, 调用点);
+        }
+        if (!现有内部世界) return nullptr;
+
+        auto* 场景信息 = 现有内部世界->主信息
+            ? dynamic_cast<场景节点主信息类*>(现有内部世界->主信息)
+            : nullptr;
+        if (场景信息) {
+            场景信息->名称 = const_cast<词性节点类*>(名称词);
+            场景信息->绑定宿主(宿主存在);
+            场景信息->世界类型 = 枚举_世界类型::内部世界;
+            if (场景信息->创建时间 == 0) 场景信息->创建时间 = now;
+        }
+
+        宿主信息->内部世界 = 现有内部世界;
+        return 现有内部世界;
+    }
+
+    场景节点类* 取内部世界() const noexcept {
+        auto* 自我内部世界 = 取存在内部世界(自我指针);
+        return 自我内部世界 ? 自我内部世界 : 虚拟世界;
+    }
 
     struct 状态关系结果 {
         bool 同主体 = false;

@@ -357,18 +357,17 @@ void 窗口_交互界面类::OnBnClickedOk()
 		变量_交互者输入框.SetFocus();
 		return;
 	}
-	if (主窗口指针 && 主窗口指针->是否使用远程后台模式())
-	{
+	if (主窗口指针) {
 		CString 错误文本;
 		if (!主窗口指针->提交远程人类输入(输入文本, &错误文本)) {
-			AfxMessageBox(_T("提交后台失败：\n") + 错误文本);
+			AfxMessageBox(_T("提交到鱼巢失败：\n") + 错误文本);
 			变量_交互者输入框.SetFocus();
 			return;
 		}
 
 		变量_消息输出框.GetWindowTextW(历史文本);
 		变量_消息输出框.SetWindowTextW(输入文本 + _T("\r\n") + 历史文本);
-		变量_智能输出框.SetWindowTextW(_T("已提交到后台，自我线程会按服务阶段继续处理这条输入。"));
+		变量_智能输出框.SetWindowTextW(_T("已提交到鱼巢内核，自我线程会按服务阶段继续处理这条输入。"));
 		变量_交互者输入框.SetWindowTextW(_T(""));
 		变量_交互者输入框.SetFocus();
 		return;
@@ -446,8 +445,24 @@ void 窗口_交互界面类::OnBnClicked自我状态按钮()
 		刷新远程后台状态();
 		return;
 	}
-
-	AfxMessageBox(_T("当前是本地内核模式；请在主窗口摘要页查看自我线程状态。"));
+	if (主窗口指针) {
+		CString 错误文本;
+		if (主窗口指针->后台是否在线()) {
+			if (!主窗口指针->请求远程后台安全停机(&错误文本)) {
+				AfxMessageBox(_T("本地内核停机失败：\n") + 错误文本);
+				return;
+			}
+			变量_智能输出框.SetWindowTextW(_T("已请求本地内核安全停机。需要时可再次点击按钮重新启动。"));
+		}
+		else {
+			if (!主窗口指针->启动远程后台(&错误文本)) {
+				AfxMessageBox(_T("本地内核启动失败：\n") + 错误文本);
+				return;
+			}
+			变量_智能输出框.SetWindowTextW(_T("本地内核正在启动，很快就可以继续提交输入。"));
+		}
+		刷新远程后台状态();
+	}
 }
 
 void 窗口_交互界面类::刷新远程后台状态()
@@ -474,10 +489,14 @@ void 窗口_交互界面类::刷新远程后台状态()
 		}
 	}
 	else {
-		变量_自我状态按钮.SetWindowTextW(_T("自我状态"));
-		变量_自我状态按钮.EnableWindow(TRUE);
-		变量_自我状态文本条.SetWindowTextW(_T("本地内核模式"));
-		当前状态提示颜色_ = RGB(40, 90, 160);
+		const bool 本地内核运行中 = 主窗口指针 && 主窗口指针->后台是否在线();
+		const bool 本地内核停止中 = 主窗口指针 && 主窗口指针->本地内核是否停止中();
+		变量_自我状态按钮.SetWindowTextW(
+			本地内核停止中 ? _T("停止中...") : (本地内核运行中 ? _T("停止内核") : _T("启动内核")));
+		变量_自我状态按钮.EnableWindow(!本地内核停止中);
+		变量_自我状态文本条.SetWindowTextW(
+			主窗口指针 ? 主窗口指针->取远程后台状态摘要() : CString(_T("本地内核模式")));
+		当前状态提示颜色_ = 本地内核停止中 ? RGB(180, 120, 0) : (本地内核运行中 ? RGB(0, 120, 50) : RGB(180, 40, 40));
 	}
 	变量_自我状态文本条.Invalidate();
 }
@@ -503,6 +522,9 @@ BOOL 窗口_交互界面类::OnInitDialog()
 	变量_自我状态文本条.ModifyStyle(0, SS_CENTER);
 	if (主窗口指针 && 主窗口指针->是否使用远程后台模式()) {
 		变量_智能输出框.SetWindowTextW(_T("当前是远程后台模式：界面会先显示，后台连接完成后即可直接提交输入到鱼巢。"));
+	}
+	else {
+		变量_智能输出框.SetWindowTextW(_T("当前是本地一体化模式：控制面板已直接内置鱼巢内核，可直接提交输入。"));
 	}
 	刷新远程后台状态();
 	return TRUE;  // return TRUE unless you set the focus to a control

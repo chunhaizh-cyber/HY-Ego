@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <cstdint>
 #include <cassert>
+#include <string>
+#include <sstream>
 
 // 数据仓库模块.ixx
 #define _WIN32_WINNT 0x0600  // 启用Windows Vista及以上版本的API
@@ -93,6 +95,8 @@ export enum class 枚举_锁模式 : std::int32_t {
 // 锁顺序轨迹记录结构
 export struct 锁轨迹记录 {
     std::uint64_t 线程ID;
+    枚举_锁域 域{};
+    枚举_锁模式 模式{};
     std::string 锁名;
     std::uint64_t 时间戳;
     std::string 调用点;
@@ -175,6 +179,79 @@ export class 锁调度器守卫 {
     static std::int32_t top_level() {
         return _stack.empty() ? std::int32_t(-1) : _stack.back();
     }
+    static const char* 锁域名称(枚举_锁域 域) noexcept {
+        switch (域) {
+        case 枚举_锁域::世界链: return "世界链";
+        case 枚举_锁域::特征值链: return "特征值链";
+        case 枚举_锁域::语素链: return "语素链";
+        case 枚举_锁域::语言链: return "语言链";
+        case 枚举_锁域::需求链: return "需求链";
+        case 枚举_锁域::任务链: return "任务链";
+        case 枚举_锁域::方法链: return "方法链";
+        case 枚举_锁域::帧锁: return "帧锁";
+        case 枚举_锁域::消息队列锁: return "消息队列锁";
+        case 枚举_锁域::OpenGL锁: return "OpenGL锁";
+        case 枚举_锁域::参数锁: return "参数锁";
+        case 枚举_锁域::缓存锁: return "缓存锁";
+        case 枚举_锁域::缓存队列锁: return "缓存队列锁";
+        case 枚举_锁域::其它: return "其它";
+        default: return "未知锁域";
+        }
+    }
+    static const char* 锁模式名称(枚举_锁模式 模式) noexcept {
+        switch (模式) {
+        case 枚举_锁模式::互斥: return "互斥";
+        case 枚举_锁模式::读: return "读";
+        case 枚举_锁模式::写: return "写";
+        default: return "未知模式";
+        }
+    }
+    static std::string 格式化锁请求(const 锁请求& r) {
+        std::ostringstream oss;
+        oss << 锁模式名称(r.模式) << " " << 锁域名称(r.域)
+            << "(" << static_cast<std::int32_t>(r.域) << ")";
+        if (!r.锁名.empty()) {
+            oss << " 锁名=" << r.锁名;
+        }
+        if (!r.调用点.empty()) {
+            oss << " 调用点=" << r.调用点;
+        }
+        return oss.str();
+    }
+    static std::string 正确链表锁顺序文本() {
+        return "世界链 -> 特征值链 -> 语素链 -> 语言链 -> 需求链 -> 任务链 -> 方法链";
+    }
+    static void 记录ABBA诊断_(std::int32_t 已持有域, const std::vector<锁请求>& 请求集) {
+        const auto 当前线程ID = 获取线程ID();
+        const auto 目标最早域 = 请求集.empty() ? 已持有域 : static_cast<std::int32_t>(请求集.front().域);
+
+        日志::异常f(
+            "[锁ABBA] 线程ID:{0}, 已持有更高域:{1}({2}), 本次最早请求域:{3}({4})。多链同持必须一次性提交并服从顺序:{5}",
+            当前线程ID,
+            锁域名称(static_cast<枚举_锁域>(已持有域)),
+            已持有域,
+            锁域名称(static_cast<枚举_锁域>(目标最早域)),
+            目标最早域,
+            正确链表锁顺序文本().c_str());
+
+        for (std::size_t i = 0; i < 请求集.size(); ++i) {
+            日志::异常f("[锁ABBA] 请求[{0}] {1}", i, 格式化锁请求(请求集[i]).c_str());
+        }
+
+        const auto 最近轨迹 = g_锁轨迹缓冲.获取最近记录(8);
+        if (!最近轨迹.empty()) {
+            日志::异常("[锁ABBA] 最近锁轨迹:");
+            for (const auto& 记录 : 最近轨迹) {
+                日志::异常f(
+                    "[锁ABBA]   tid={0} 域={1} 模式={2} 锁名={3} 调用点={4}",
+                    记录.线程ID,
+                    锁域名称(记录.域),
+                    锁模式名称(记录.模式),
+                    记录.锁名.c_str(),
+                    记录.调用点.c_str());
+            }
+        }
+    }
 public:
     锁调度器守卫() = default;
     explicit 锁调度器守卫(std::vector<锁请求> reqs) : reqs_(std::move(reqs)) { lock(); }
@@ -219,9 +296,10 @@ public:
         if (held >= 0 && !reqs_.empty()) {
             // if trying to acquire an earlier domain while holding a later domain => potential ABBA
             if ((std::int32_t)reqs_.front().域 < held) {
+                记录ABBA诊断_(held, reqs_);
 #ifdef _DEBUG
                 // keep it as assert in debug; in release we still lock in sorted order.
-                assert(false && "lock scheduler: potential ABBA (domain inversion)");
+                assert(false && "lock scheduler: potential ABBA (see log for details)");
 #endif
             }
         }
@@ -248,6 +326,8 @@ public:
             // 记录锁顺序轨迹
             锁轨迹记录 记录;
             记录.线程ID = 线程ID;
+            记录.域 = r.域;
+            记录.模式 = r.模式;
             记录.锁名 = r.锁名;
             记录.时间戳 = 结束时间;
             记录.调用点 = r.调用点;

@@ -61,6 +61,8 @@
 #define IDC_BUTTON_TASK_CONTROL_SELF_TEST 1043
 #define IDC_EDIT_TASK_CONTROL_SELF_TEST 1044
 #define IDC_STATIC_SELF_SCENE_PANEL     1045
+#define IDC_BUTTON_REFRESH_MAIN         1046
+#define IDC_BUTTON_COPY_WORLD_TREE      1047
 
 // Next default values for new objects
 // 
@@ -68,7 +70,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        142
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1046
+#define _APS_NEXT_CONTROL_VALUE         1048
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

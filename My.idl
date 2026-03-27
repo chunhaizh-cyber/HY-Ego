@@ -1,4 +1,4 @@
-// My.idl: 海鱼.exe 的类型库源
+﻿// My.idl: 海鱼.exe 的类型库源
 
 // 此文件将由 MIDL 编译器处理以产生
 // 类型库(My.tlb)。
@@ -76,3 +76,4 @@ library 海鱼
 		[default] dispinterface I配置及测试窗口类;
 	};	
 };
+

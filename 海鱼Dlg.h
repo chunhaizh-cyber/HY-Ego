@@ -11,9 +11,11 @@
 #include <string>
 #include <thread>
 #include <atomic>
+#include <cstdint>
 
 
 import 后台前端通道模块;
+import 自治宿主模块;
 import 自我线程模块;
 import 外设模块;
 import 场景实时显示线程模块;
@@ -72,10 +74,16 @@ public:
 	窗口_基础信息类 变量_基础信息界面;
 	窗口_配置及测试类 变量_配置及测试窗口;
 private:
+	struct 本地宿主停止状态 {
+		std::atomic_bool 停止中{ false };
+	};
 	std::unique_ptr<自我线程类> 自我线程;
+	std::unique_ptr<自治宿主类> 本地宿主_;
+	本地宿主停止状态 本地宿主停止状态_{};
 	std::unique_ptr<场景实时显示线程类> 场景显示线程;
 	std::unique_ptr<C自我场景再现窗口> 自我场景再现窗口_;
 	bool 应用退出中_ = false;
+	std::atomic_bool 退出清理完成标记_{ false };
 	bool 使用远程后台模式_ = false;
 	bool 后台在线_ = false;
 	后台前端客户端类 后台客户端_{};
@@ -89,6 +97,14 @@ private:
 	std::thread 后台连接线程_{};
 	std::atomic_bool 后台连接中_{ false };
 	std::atomic_bool 后台连接取消_{ false };
+	std::uint64_t 本地下一个输入序号_ = 1;
+	std::uint64_t 本地最近输入序号_ = 0;
+	std::shared_ptr<std::string> 本地最近输入对象_{};
+	std::string 本地最近输入文本_{};
+	std::string 本地最近命令摘要_ = "本地内核未启动";
+	bool 本地自我场景再现已启用_ = false;
+	std::uint64_t 本地自我场景再现帧序号_ = 0;
+	std::string 本地自我场景再现状态摘要_ = "自我场景再现未启动";
 
 	struct 摄像机运行时;
 	std::unique_ptr<摄像机运行时> 摄像机_;
@@ -98,7 +114,7 @@ public:
 	afx_msg void OnSelchangeTab1(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
 	afx_msg LRESULT OnApp显示参数(WPARAM wParam, LPARAM lParam);
-	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg void OnBnClicked刷新当前页();
 
 	// 观察导演：提示更换观测角度	
 	static constexpr UINT WM_APP_观察换角度 = WM_APP + 502;
@@ -125,6 +141,11 @@ public:
 	void 解除锁定观测();
 
 	void 更新信息查看框布局();
+	void 更新主界面布局_();
+	void 刷新当前界面_(bool 主动拉取远程快照);
+	bool 标签页使用因果树控件_(int 标签索引) const;
+	void 刷新方法树控件_();
+	void 刷新因果树控件_();
 	void 刷新当前标签内容();
 	CString 生成标签页文本(int 标签索引) const;
 	CString 生成远程标签页文本(int 标签索引) const;
@@ -141,8 +162,9 @@ public:
 	bool 强制结束已跟踪后台进程(CString* 错误文本 = nullptr);
 	void 执行主窗口退出清理();
 	bool 是否使用远程后台模式() const { return 使用远程后台模式_; }
-	bool 后台是否在线() const { return 后台在线_; }
+	bool 后台是否在线() const { return 使用远程后台模式_ ? 后台在线_ : (本地宿主_ && 本地宿主_->是否正在运行()); }
 	bool 后台是否连接中() const { return 后台连接中_.load(); }
+	bool 本地内核是否停止中() const;
 	CString 取远程后台状态摘要() const;
 	bool 提交远程人类输入(const CString& 文本, CString* 错误文本 = nullptr);
 		bool 启动远程后台(CString* 错误文本 = nullptr);
@@ -153,10 +175,20 @@ public:
 		bool 启动远程自我场景再现(CString* 错误文本 = nullptr);
 		bool 停止远程自我场景再现(CString* 错误文本 = nullptr);
 		bool 查询远程自我场景快照(结构_后台自我场景快照* 输出, CString* 错误文本 = nullptr);
+		bool 启动本地内核_(CString* 错误文本 = nullptr);
+		bool 停止本地内核_(CString* 错误文本 = nullptr);
+	bool 提交本地人类输入_(const CString& 文本, CString* 错误文本 = nullptr);
+	bool 查询本地自我场景快照_(结构_后台自我场景快照* 输出, CString* 错误文本 = nullptr);
+	结构_后台前端快照 生成本地快照_() const;
+	CString 取本地内核状态摘要_() const;
+	void 异步回收本地宿主_(std::unique_ptr<自治宿主类> 待停止宿主);
+	void 安排应用退出兜底_();
 //	void 初始化();
 
 private:
 	CEdit 变量_信息查看框;
+	CButton 变量_刷新按钮;
+	CTreeCtrl 变量_因果树控件;
 };
 
 

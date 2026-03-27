@@ -5,6 +5,7 @@
 #include <string>
 #include <optional>
 #include <mutex>
+#include <unordered_map>
 #include <variant>
 
 // 任务模块.ixx
@@ -25,6 +26,7 @@ import 日志模块;
 import 通用函数模块;
 import 世界树环境模块;
 import 状态模块;
+import 动态模块;
 import 二次特征模块;
 import 语素环境模块;
 
@@ -59,83 +61,186 @@ namespace 任务模块_detail {
     }
 
     inline const 词性节点类* 类型_存在_任务虚拟存在_() {
-        return 语素集.添加词性词("存在_任务虚拟存在", "名词");
+        static const 词性节点类* type = 语素集.添加词性词("存在_任务虚拟存在", "名词");
+        return type;
     }
 
     inline const 词性节点类* 名称_存在_任务虚拟存在_() {
-        return 语素集.添加词性词("任务虚拟存在", "名词");
+        static const 词性节点类* type = 语素集.添加词性词("任务虚拟存在", "名词");
+        return type;
     }
 
     inline const 词性节点类* 名称_场景_任务内部状态_() {
-        return 语素集.添加词性词("场景_任务内部状态", "名词");
+        static const 词性节点类* type = 语素集.添加词性词("场景_任务内部状态", "名词");
+        return type;
     }
 
     inline const 词性节点类* 名称_场景_任务头条件_() {
-        return 语素集.添加词性词("场景_任务头条件", "名词");
+        static const 词性节点类* type = 语素集.添加词性词("场景_任务头条件", "名词");
+        return type;
     }
 
     inline const 词性节点类* 名称_任务_默认_() {
-        return 语素集.添加词性词("任务", "名词");
+        static const 词性节点类* type = 语素集.添加词性词("任务", "名词");
+        return type;
     }
 
     inline const 词性节点类* 类型_任务_需求驱动_() {
-        return 语素集.添加词性词("需求驱动任务", "名词");
+        static const 词性节点类* type = 语素集.添加词性词("需求驱动任务", "名词");
+        return type;
     }
 
     inline const 词性节点类* 特征_任务状态_() {
-        return 语素集.添加词性词("任务_状态", "名词");
+        static const 词性节点类* type = 语素集.添加词性词("任务_状态", "名词");
+        return type;
     }
 
     inline const 词性节点类* 特征_任务基准优先级_() {
-        return 语素集.添加词性词("任务_基准优先级", "名词");
+        static const 词性节点类* type = 语素集.添加词性词("任务_基准优先级", "名词");
+        return type;
     }
 
     inline const 词性节点类* 特征_任务局部优先级偏移_() {
-        return 语素集.添加词性词("任务_局部优先级偏移", "名词");
+        static const 词性节点类* type = 语素集.添加词性词("任务_局部优先级偏移", "名词");
+        return type;
     }
 
     inline const 词性节点类* 特征_任务调度优先级_() {
-        return 语素集.添加词性词("任务_调度优先级", "名词");
+        static const 词性节点类* type = 语素集.添加词性词("任务_调度优先级", "名词");
+        return type;
     }
 
     inline const 词性节点类* 特征_任务当前步骤ID_() {
-        return 语素集.添加词性词("任务_当前步骤ID", "名词");
+        static const 词性节点类* type = 语素集.添加词性词("任务_当前步骤ID", "名词");
+        return type;
     }
 
     inline const 词性节点类* 特征_任务当前子任务头指针_() {
-        return 语素集.添加词性词("任务_当前子任务头指针", "名词");
+        static const 词性节点类* type = 语素集.添加词性词("任务_当前子任务头指针", "名词");
+        return type;
     }
 
     inline const 词性节点类* 特征_任务当前分支动作_() {
-        return 语素集.添加词性词("任务_当前分支动作", "名词");
+        static const 词性节点类* type = 语素集.添加词性词("任务_当前分支动作", "名词");
+        return type;
     }
 
     inline const 词性节点类* 特征_任务已重试次数_() {
-        return 语素集.添加词性词("任务_已重试次数", "名词");
+        static const 词性节点类* type = 语素集.添加词性词("任务_已重试次数", "名词");
+        return type;
     }
 
     inline const 词性节点类* 特征_任务允许重试次数_() {
-        return 语素集.添加词性词("任务_允许重试次数", "名词");
+        static const 词性节点类* type = 语素集.添加词性词("任务_允许重试次数", "名词");
+        return type;
     }
 
     inline const 词性节点类* 特征_任务进度_Q10000_() {
-        return 语素集.添加词性词("任务_进度_Q10000", "名词");
+        static const 词性节点类* type = 语素集.添加词性词("任务_进度_Q10000", "名词");
+        return type;
+    }
+
+    inline const 词性节点类* 特征_任务运行次数_() {
+        static const 词性节点类* type = 语素集.添加词性词("任务_运行次数", "名词");
+        return type;
+    }
+
+    inline const 词性节点类* 特征_任务成功次数_() {
+        static const 词性节点类* type = 语素集.添加词性词("任务_成功次数", "名词");
+        return type;
+    }
+
+    inline const 词性节点类* 特征_任务失败次数_() {
+        static const 词性节点类* type = 语素集.添加词性词("任务_失败次数", "名词");
+        return type;
+    }
+
+    inline const 词性节点类* 特征_任务连续失败次数_() {
+        static const 词性节点类* type = 语素集.添加词性词("任务_连续失败次数", "名词");
+        return type;
+    }
+
+    inline const 词性节点类* 特征_任务转入学习次数_() {
+        static const 词性节点类* type = 语素集.添加词性词("任务_转入学习次数", "名词");
+        return type;
+    }
+
+    inline const 词性节点类* 特征_任务最近错误码_() {
+        static const 词性节点类* type = 语素集.添加词性词("任务_最近错误码", "名词");
+        return type;
+    }
+
+    inline const 词性节点类* 特征_任务最近开始时间_() {
+        static const 词性节点类* type = 语素集.添加词性词("任务_最近开始时间", "名词");
+        return type;
+    }
+
+    inline const 词性节点类* 特征_任务最近结束时间_() {
+        static const 词性节点类* type = 语素集.添加词性词("任务_最近结束时间", "名词");
+        return type;
     }
 
     inline const 词性节点类* 特征_任务最近调度时间_() {
-        return 语素集.添加词性词("任务_最近调度时间", "名词");
+        static const 词性节点类* type = 语素集.添加词性词("任务_最近调度时间", "名词");
+        return type;
+    }
+
+    inline const 词性节点类* 特征_任务当前方法首节点指针_() {
+        static const 词性节点类* type = 语素集.添加词性词("任务_当前方法首节点指针", "名词");
+        return type;
+    }
+
+    inline const 词性节点类* 特征_任务最近方法首节点指针_() {
+        static const 词性节点类* type = 语素集.添加词性词("任务_最近方法首节点指针", "名词");
+        return type;
     }
 
     inline const 词性节点类* 特征_任务最近结果节点指针_() {
-        return 语素集.添加词性词("任务_最近结果节点指针", "名词");
+        static const 词性节点类* type = 语素集.添加词性词("任务_最近结果节点指针", "名词");
+        return type;
     }
 
     inline const 词性节点类* 特征_任务绑定全局容器指针_() {
-        return 语素集.添加词性词("任务_绑定全局容器指针", "名词");
+        static const 词性节点类* type = 语素集.添加词性词("任务_绑定全局容器指针", "名词");
+        return type;
+    }
+
+    inline const 词性节点类* 动作_绑定任务全局容器_() {
+        static const 词性节点类* type = 语素集.添加词性词("绑定任务全局容器", "动词");
+        return type;
+    }
+
+    inline const 词性节点类* 动作_设置任务当前步骤_() {
+        static const 词性节点类* type = 语素集.添加词性词("设置任务当前步骤", "动词");
+        return type;
+    }
+
+    inline const 词性节点类* 动作_设置任务当前子任务_() {
+        static const 词性节点类* type = 语素集.添加词性词("设置任务当前子任务", "动词");
+        return type;
+    }
+
+    inline const 词性节点类* 动作_设置任务当前分支动作_() {
+        static const 词性节点类* type = 语素集.添加词性词("设置任务当前分支动作", "动词");
+        return type;
+    }
+
+    inline const 词性节点类* 动作_设置任务最近结果节点_() {
+        static const 词性节点类* type = 语素集.添加词性词("设置任务最近结果", "动词");
+        return type;
+    }
+
+    inline const 词性节点类* 动作_进入筹办阶段_() {
+        static const 词性节点类* type = 语素集.添加词性词("进入筹办阶段", "动词");
+        return type;
     }
 
     inline bool 快照相等_(const std::optional<特征快照值>& oldValue, const 特征快照值& newValue) noexcept {
         return oldValue.has_value() && *oldValue == newValue;
+    }
+
+    inline bool 是否仅写快照任务事实特征_(const std::string& 调用点) {
+        return 调用点.find("/写任务事实/") != std::string::npos;
     }
 
     inline 状态节点类* 记录内部特征状态_(
@@ -249,6 +354,7 @@ namespace 任务模块_detail {
     {
         if (!mi || !特征类型) return nullptr;
         if (now == 0) now = 结构体_时间戳::当前_微秒();
+        const bool 仅快照任务事实 = 是否仅写快照任务事实特征_(调用点);
 
         auto* ve = 确保任务虚拟存在_(mi, now, 调用点);
         auto* 状态场景 = 取或创建_任务内部状态场景_(mi, now, 调用点);
@@ -257,12 +363,29 @@ namespace 任务模块_detail {
         const auto 旧值 = 世界树.读取特征快照(ve, 特征类型, 调用点);
         const bool 值发生变化 = !快照相等_(旧值, 值);
 
+        switch (值.index()) {
+        case 1:
+            世界树.写入特征_I64(ve, 特征类型, std::get<I64>(值), {}, 调用点);
+            break;
+        case 3:
+            世界树.写入特征_指针(ve, 特征类型, std::get<指针句柄>(值).指针, {}, 调用点);
+            break;
+        default:
+            break;
+        }
+
+        if (仅快照任务事实) {
+            return nullptr;
+        }
+
         auto* feat = 世界树.确保特征(ve, 特征类型, 特征类型, 调用点);
         if (!feat || !feat->主信息) return nullptr;
         if (auto* fmi = dynamic_cast<特征节点主信息类*>(feat->主信息)) {
             fmi->当前快照 = 值;
         }
 
+        // 任务事实更偏向“状态板/管理指标”，统一入口仍然写回虚拟存在，
+        // 但默认不派生内部状态与二次特征，避免把管理板指标放大成高成本状态流。
         if (!状态场景) return nullptr;
         return 记录内部特征状态_(
             状态场景,
@@ -273,6 +396,30 @@ namespace 任务模块_detail {
             值发生变化,
             now,
             调用点);
+    }
+
+    inline std::optional<特征快照值> 按主键读取任务虚拟存在特征快照_(
+        基础信息节点类* host,
+        const std::string& 主键,
+        const std::string& 调用点)
+    {
+        if (!host || 主键.empty() || !host->子) return std::nullopt;
+
+        锁调度器守卫 锁({
+            锁请求::读(世界链.链表锁, 枚举_锁域::世界链, "世界链", 调用点)
+        });
+
+        auto* first = static_cast<基础信息节点类*>(host->子);
+        auto* it = first;
+        std::optional<特征快照值> found = std::nullopt;
+        do {
+            auto* mi = it ? dynamic_cast<特征节点主信息类*>(it->主信息) : nullptr;
+            if (mi && mi->类型 && mi->类型->获取主键() == 主键) {
+                found = mi->当前快照;
+            }
+            it = it ? static_cast<基础信息节点类*>(it->下) : nullptr;
+        } while (it && it != first);
+        return found;
     }
 
     inline void 初始化任务虚拟存在信息_(任务信息基类* mi, 时间戳 now, const std::string& 调用点) {
@@ -292,7 +439,17 @@ namespace 任务模块_detail {
         初始化I64特征_(状态场景, ve, 特征_任务已重试次数_(), 0, now, 调用点);
         初始化I64特征_(状态场景, ve, 特征_任务允许重试次数_(), 0, now, 调用点);
         初始化I64特征_(状态场景, ve, 特征_任务进度_Q10000_(), 0, now, 调用点);
-        初始化I64特征_(状态场景, ve, 特征_任务最近调度时间_(), 0, now, 调用点);
+        初始化I64特征_(状态场景, ve, 特征_任务运行次数_(), mi->运行次数, now, 调用点);
+        初始化I64特征_(状态场景, ve, 特征_任务成功次数_(), mi->成功次数, now, 调用点);
+        初始化I64特征_(状态场景, ve, 特征_任务失败次数_(), mi->失败次数, now, 调用点);
+        初始化I64特征_(状态场景, ve, 特征_任务连续失败次数_(), mi->连续失败次数, now, 调用点);
+        初始化I64特征_(状态场景, ve, 特征_任务转入学习次数_(), mi->转入学习次数, now, 调用点);
+        初始化I64特征_(状态场景, ve, 特征_任务最近错误码_(), mi->最近错误码, now, 调用点);
+        初始化I64特征_(状态场景, ve, 特征_任务最近开始时间_(), static_cast<I64>(mi->最近开始时间), now, 调用点);
+        初始化I64特征_(状态场景, ve, 特征_任务最近结束时间_(), static_cast<I64>(mi->最近结束时间), now, 调用点);
+        初始化I64特征_(状态场景, ve, 特征_任务最近调度时间_(), static_cast<I64>(mi->最近调度时间), now, 调用点);
+        初始化指针特征_(状态场景, ve, 特征_任务当前方法首节点指针_(), reinterpret_cast<std::uintptr_t>(mi->当前方法首节点), now, 调用点);
+        初始化指针特征_(状态场景, ve, 特征_任务最近方法首节点指针_(), reinterpret_cast<std::uintptr_t>(mi->最近方法首节点), now, 调用点);
         初始化指针特征_(状态场景, ve, 特征_任务最近结果节点指针_(), 0, now, 调用点);
         初始化指针特征_(状态场景, ve, 特征_任务绑定全局容器指针_(), 0, now, 调用点);
     }
@@ -312,6 +469,56 @@ namespace 任务模块_detail {
         世界树.写入特征_I64(ve, 特征_任务状态_(), v, {}, 调用点);
         if (!状态场景 && !mi->场景) return;
         (void)记录内部特征状态_(状态场景 ? 状态场景 : mi->场景, ve, 特征_任务状态_(), 新值, 事件, 值发生变化, now, 调用点);
+    }
+
+    inline 方法节点类* 推断任务动作来源方法_(任务信息基类* mi) noexcept {
+        if (!mi) return nullptr;
+        if (auto* step = dynamic_cast<任务步骤节点信息*>(mi)) {
+            if (step->当前选中方法首节点) return step->当前选中方法首节点;
+        }
+        if (auto* result = dynamic_cast<任务结果节点信息*>(mi)) {
+            if (result->来源方法首节点) return result->来源方法首节点;
+        }
+        if (mi->当前方法首节点) return mi->当前方法首节点;
+        return mi->最近方法首节点;
+    }
+
+    inline 运行时动态主信息记录* 记录任务动作动态_(
+        任务信息基类* mi,
+        const 词性节点类* 动作词,
+        场景节点类* 输入场景 = nullptr,
+        场景节点类* 输出场景 = nullptr,
+        bool 成功 = true,
+        std::int64_t 错误码 = 0,
+        时间戳 开始时间 = 0,
+        时间戳 结束时间 = 0,
+        枚举_动作事件相位 动作相位 = 枚举_动作事件相位::未定义,
+        const std::string& 调用点 = "任务模块_detail::记录任务动作动态") noexcept
+    {
+        if (!mi || !动作词) return nullptr;
+        if (开始时间 == 0) 开始时间 = 结构体_时间戳::当前_微秒();
+        if (结束时间 == 0) 结束时间 = 开始时间;
+        if (结束时间 < 开始时间) std::swap(开始时间, 结束时间);
+
+        auto* ve = 确保任务虚拟存在_(mi, 结束时间, 调用点);
+        auto* 状态场景 = 取或创建_任务内部状态场景_(mi, 结束时间, 调用点);
+        if (!ve || !状态场景) return nullptr;
+
+        auto* 动作特征 = 世界树.确保特征(ve, 动作词, 动作词, 调用点 + "/动作特征");
+        if (!动作特征) return nullptr;
+
+        auto* 动态信息 = 动态集.创建动作动态主信息(状态场景, ve, 动作特征, 开始时间, 结束时间);
+        if (!动态信息) return 动态信息;
+
+        动态信息->来源类型 = 枚举_动态来源类型::内部机制动作;
+        动态信息->来源动作名 = 动作词;
+        动态信息->来源动作相位 = 动作相位;
+        动态信息->来源方法首节点 = 推断任务动作来源方法_(mi);
+        动态信息->来源输入场景 = 输入场景 ? 输入场景 : mi->场景;
+        动态信息->来源输出场景 = 输出场景;
+        动态信息->来源执行成功 = 成功;
+        动态信息->来源错误码 = 错误码;
+        return 动态信息;
     }
 
     inline 任务头结点信息* 取头结点信息_(任务节点类* 节点) noexcept {
@@ -384,6 +591,87 @@ namespace 任务模块_detail {
 
 export class 任务类 {
 public:
+    static const 词性节点类* 取任务事实特征(const std::string& 键) {
+        static std::mutex mtx;
+        static std::unordered_map<std::string, const 词性节点类*> cache;
+        std::lock_guard<std::mutex> lk(mtx);
+        auto it = cache.find(键);
+        if (it != cache.end()) return it->second;
+        auto* type = 语素集.添加词性词("任务_事实_" + 键, "名词");
+        cache.emplace(键, type);
+        return type;
+    }
+
+    static const 词性节点类* 取任务方向特征(const std::string& 键) {
+        static std::mutex mtx;
+        static std::unordered_map<std::string, const 词性节点类*> cache;
+        std::lock_guard<std::mutex> lk(mtx);
+        auto it = cache.find(键);
+        if (it != cache.end()) return it->second;
+        auto* type = 语素集.添加词性词("任务_方向_" + 键, "名词");
+        cache.emplace(键, type);
+        return type;
+    }
+
+    static const 词性节点类* 取任务执行账特征(const std::string& 键) {
+        if (键 == "任务_运行次数") return 任务模块_detail::特征_任务运行次数_();
+        if (键 == "任务_成功次数") return 任务模块_detail::特征_任务成功次数_();
+        if (键 == "任务_失败次数") return 任务模块_detail::特征_任务失败次数_();
+        if (键 == "任务_连续失败次数") return 任务模块_detail::特征_任务连续失败次数_();
+        if (键 == "任务_转入学习次数") return 任务模块_detail::特征_任务转入学习次数_();
+        if (键 == "任务_最近错误码") return 任务模块_detail::特征_任务最近错误码_();
+        if (键 == "任务_最近开始时间") return 任务模块_detail::特征_任务最近开始时间_();
+        if (键 == "任务_最近结束时间") return 任务模块_detail::特征_任务最近结束时间_();
+        if (键 == "任务_当前方法首节点指针") return 任务模块_detail::特征_任务当前方法首节点指针_();
+        if (键 == "任务_最近方法首节点指针") return 任务模块_detail::特征_任务最近方法首节点指针_();
+        if (键 == "任务_最近结果节点指针") return 任务模块_detail::特征_任务最近结果节点指针_();
+        if (键 == "任务_最近调度时间") return 任务模块_detail::特征_任务最近调度时间_();
+        if (键 == "任务_当前步骤ID") return 任务模块_detail::特征_任务当前步骤ID_();
+        return nullptr;
+    }
+
+    static std::optional<特征快照值> 读取任务执行账快照(
+        任务信息基类* 主信息,
+        const std::string& 键,
+        const std::string& 调用点 = "任务管理类::读取任务执行账快照")
+    {
+        if (!主信息 || !主信息->任务虚拟存在) return std::nullopt;
+        const auto* 特征类型 = 取任务执行账特征(键);
+        if (!特征类型) return std::nullopt;
+
+        if (auto 快照 = 世界树.读取特征快照(
+            主信息->任务虚拟存在,
+            特征类型,
+            调用点 + "/按类型")) {
+            return 快照;
+        }
+
+        return 任务模块_detail::按主键读取任务虚拟存在特征快照_(
+            主信息->任务虚拟存在,
+            特征类型->获取主键(),
+            调用点 + "/按主键回退");
+    }
+
+    static std::optional<I64> 读取任务执行账I64(
+        任务信息基类* 主信息,
+        const std::string& 键,
+        const std::string& 调用点 = "任务管理类::读取任务执行账I64")
+    {
+        const auto 快照 = 读取任务执行账快照(主信息, 键, 调用点);
+        if (!快照.has_value() || !std::holds_alternative<I64>(*快照)) return std::nullopt;
+        return std::get<I64>(*快照);
+    }
+
+    static std::optional<std::uintptr_t> 读取任务执行账指针(
+        任务信息基类* 主信息,
+        const std::string& 键,
+        const std::string& 调用点 = "任务管理类::读取任务执行账指针")
+    {
+        const auto 快照 = 读取任务执行账快照(主信息, 键, 调用点);
+        if (!快照.has_value() || !std::holds_alternative<指针句柄>(*快照)) return std::nullopt;
+        return std::get<指针句柄>(*快照).指针;
+    }
+
     struct 结构_创建任务头参数 {
         const 词性节点类* 名称 = nullptr;
         const 自然句节点类* 描述 = nullptr;
@@ -743,13 +1031,293 @@ public:
         return 任务模块_detail::记录任务虚拟存在特征_(主信息, 特征类型, 特征快照值{ 指针句柄{ ptr } }, now, 调用点);
     }
 
+    static 运行时动态主信息记录* 记录任务动作动态(
+        任务信息基类* 主信息,
+        const 词性节点类* 动作词,
+        场景节点类* 输入场景 = nullptr,
+        场景节点类* 输出场景 = nullptr,
+        bool 成功 = true,
+        std::int64_t 错误码 = 0,
+        时间戳 开始时间 = 0,
+        时间戳 结束时间 = 0,
+        枚举_动作事件相位 动作相位 = 枚举_动作事件相位::未定义,
+        const std::string& 调用点 = "任务管理类::记录任务动作动态")
+    {
+        return 任务模块_detail::记录任务动作动态_(
+            主信息,
+            动作词,
+            输入场景,
+            输出场景,
+            成功,
+            错误码,
+            开始时间,
+            结束时间,
+            动作相位,
+            调用点);
+    }
+
     static 状态节点类* 标记任务最近调度(
         任务信息基类* 主信息,
         时间戳 now = 0,
         const std::string& 调用点 = "任务管理类::标记任务最近调度")
     {
         if (now == 0) now = 结构体_时间戳::当前_微秒();
+        if (主信息) {
+            主信息->最近调度时间 = now;
+        }
         return 写任务虚拟存在_I64特征(主信息, 任务模块_detail::特征_任务最近调度时间_(), static_cast<I64>(now), now, 调用点);
+    }
+
+    static void 标记任务推进(
+        任务信息基类* 主信息,
+        任务节点类* 当前步骤节点 = nullptr,
+        时间戳 now = 0,
+        const std::string& 调用点 = "任务管理类::标记任务推进")
+    {
+        if (!主信息) return;
+        if (now == 0) now = 结构体_时间戳::当前_微秒();
+
+        (void)标记任务最近调度(
+            主信息,
+            now,
+            调用点 + "/最近调度");
+        (void)设置任务当前步骤(
+            主信息,
+            当前步骤节点,
+            now,
+            调用点 + "/当前步骤");
+    }
+
+    static 状态节点类* 设置任务当前方法首节点(
+        任务信息基类* 主信息,
+        方法节点类* 方法首节点,
+        时间戳 now = 0,
+        const std::string& 调用点 = "任务管理类::设置任务当前方法首节点")
+    {
+        if (!主信息) return nullptr;
+        const bool 已变化 = 主信息->当前方法首节点 != 方法首节点;
+        主信息->当前方法首节点 = 方法首节点;
+        if (!已变化) return nullptr;
+        return 写任务虚拟存在_指针特征(
+            主信息,
+            任务模块_detail::特征_任务当前方法首节点指针_(),
+            reinterpret_cast<std::uintptr_t>(方法首节点),
+            now,
+            调用点);
+    }
+
+    static 状态节点类* 设置任务最近方法首节点(
+        任务信息基类* 主信息,
+        方法节点类* 方法首节点,
+        时间戳 now = 0,
+        const std::string& 调用点 = "任务管理类::设置任务最近方法首节点")
+    {
+        if (!主信息) return nullptr;
+        const bool 已变化 = 主信息->最近方法首节点 != 方法首节点;
+        主信息->最近方法首节点 = 方法首节点;
+        if (!已变化) return nullptr;
+        return 写任务虚拟存在_指针特征(
+            主信息,
+            任务模块_detail::特征_任务最近方法首节点指针_(),
+            reinterpret_cast<std::uintptr_t>(方法首节点),
+            now,
+            调用点);
+    }
+
+    static void 标记任务执行开始(
+        任务信息基类* 主信息,
+        任务节点类* 当前步骤节点 = nullptr,
+        方法节点类* 方法首节点 = nullptr,
+        时间戳 now = 0,
+        const std::string& 调用点 = "任务管理类::标记任务执行开始")
+    {
+        if (!主信息) return;
+        if (now == 0) now = 结构体_时间戳::当前_微秒();
+
+        日志::运行f(
+            "[任务类][调试] 标记任务执行开始入口: 主信息={}, 当前步骤={}, 方法={}, 调用点={}",
+            (void*)主信息,
+            (void*)当前步骤节点,
+            (void*)方法首节点,
+            调用点);
+        ++主信息->运行次数;
+        主信息->最近开始时间 = now;
+
+        日志::运行f(
+            "[任务类][调试] 标记任务执行开始/运行次数前: 主信息={}, 运行次数={}",
+            (void*)主信息,
+            主信息->运行次数);
+        (void)写任务虚拟存在_I64特征(
+            主信息,
+            任务模块_detail::特征_任务运行次数_(),
+            主信息->运行次数,
+            now,
+            调用点 + "/运行次数");
+        日志::运行f(
+            "[任务类][调试] 标记任务执行开始/运行次数后: 主信息={}, 运行次数={}",
+            (void*)主信息,
+            主信息->运行次数);
+        日志::运行f(
+            "[任务类][调试] 标记任务执行开始/最近开始时间前: 主信息={}, 最近开始时间={}",
+            (void*)主信息,
+            static_cast<I64>(主信息->最近开始时间));
+        (void)写任务虚拟存在_I64特征(
+            主信息,
+            任务模块_detail::特征_任务最近开始时间_(),
+            static_cast<I64>(主信息->最近开始时间),
+            now,
+            调用点 + "/最近开始时间");
+        日志::运行f(
+            "[任务类][调试] 标记任务执行开始/最近开始时间后: 主信息={}, 最近开始时间={}",
+            (void*)主信息,
+            static_cast<I64>(主信息->最近开始时间));
+        日志::运行f(
+            "[任务类][调试] 标记任务执行开始/当前方法前: 主信息={}, 方法={}",
+            (void*)主信息,
+            (void*)方法首节点);
+        (void)设置任务当前方法首节点(
+            主信息,
+            方法首节点,
+            now,
+            调用点 + "/当前方法");
+        日志::运行f(
+            "[任务类][调试] 标记任务执行开始/当前方法后: 主信息={}, 方法={}",
+            (void*)主信息,
+            (void*)方法首节点);
+        if (当前步骤节点) {
+            日志::运行f(
+                "[任务类][调试] 标记任务执行开始/当前步骤前: 主信息={}, 当前步骤={}",
+                (void*)主信息,
+                (void*)当前步骤节点);
+            (void)设置任务当前步骤(
+                主信息,
+                当前步骤节点,
+                now,
+                调用点 + "/当前步骤");
+            日志::运行f(
+                "[任务类][调试] 标记任务执行开始/当前步骤后: 主信息={}, 当前步骤={}",
+                (void*)主信息,
+                (void*)当前步骤节点);
+        }
+        if (方法首节点) {
+            日志::运行f(
+                "[任务类][调试] 标记任务执行开始/最近方法前: 主信息={}, 方法={}",
+                (void*)主信息,
+                (void*)方法首节点);
+            (void)设置任务最近方法首节点(
+                主信息,
+                方法首节点,
+                now,
+                调用点 + "/最近方法");
+            日志::运行f(
+                "[任务类][调试] 标记任务执行开始/最近方法后: 主信息={}, 方法={}",
+                (void*)主信息,
+                (void*)方法首节点);
+        }
+        日志::运行f(
+            "[任务类][调试] 标记任务执行开始出口: 主信息={}, 当前步骤={}, 方法={}",
+            (void*)主信息,
+            (void*)当前步骤节点,
+            (void*)方法首节点);
+    }
+
+    static void 标记任务执行结束(
+        任务信息基类* 主信息,
+        枚举_任务执行记账结果 结果,
+        std::int64_t 错误码 = 0,
+        任务节点类* 最近结果节点 = nullptr,
+        方法节点类* 方法首节点 = nullptr,
+        bool 转入学习 = false,
+        时间戳 now = 0,
+        const std::string& 调用点 = "任务管理类::标记任务执行结束")
+    {
+        if (!主信息) return;
+        if (now == 0) now = 结构体_时间戳::当前_微秒();
+
+        主信息->最近结束时间 = now;
+        方法节点类* 结束后当前方法 = 方法首节点;
+        方法节点类* 结束后最近方法 = 方法首节点 ? 方法首节点 : 主信息->最近方法首节点;
+
+        switch (结果) {
+        case 枚举_任务执行记账结果::成功:
+            ++主信息->成功次数;
+            主信息->连续失败次数 = 0;
+            主信息->最近错误码 = 0;
+            结束后当前方法 = nullptr;
+            break;
+        case 枚举_任务执行记账结果::失败:
+            ++主信息->失败次数;
+            ++主信息->连续失败次数;
+            主信息->最近错误码 = 错误码;
+            结束后当前方法 = nullptr;
+            break;
+        case 枚举_任务执行记账结果::未完成:
+            主信息->最近错误码 = 错误码;
+            结束后当前方法 = 方法首节点;
+            break;
+        default:
+            主信息->最近错误码 = 错误码;
+            结束后当前方法 = 方法首节点;
+            break;
+        }
+
+        if (转入学习) {
+            ++主信息->转入学习次数;
+        }
+
+        (void)写任务虚拟存在_I64特征(
+            主信息,
+            任务模块_detail::特征_任务成功次数_(),
+            主信息->成功次数,
+            now,
+            调用点 + "/成功次数");
+        (void)写任务虚拟存在_I64特征(
+            主信息,
+            任务模块_detail::特征_任务失败次数_(),
+            主信息->失败次数,
+            now,
+            调用点 + "/失败次数");
+        (void)写任务虚拟存在_I64特征(
+            主信息,
+            任务模块_detail::特征_任务连续失败次数_(),
+            主信息->连续失败次数,
+            now,
+            调用点 + "/连续失败次数");
+        (void)写任务虚拟存在_I64特征(
+            主信息,
+            任务模块_detail::特征_任务转入学习次数_(),
+            主信息->转入学习次数,
+            now,
+            调用点 + "/转入学习次数");
+        (void)写任务虚拟存在_I64特征(
+            主信息,
+            任务模块_detail::特征_任务最近错误码_(),
+            主信息->最近错误码,
+            now,
+            调用点 + "/最近错误码");
+        (void)写任务虚拟存在_I64特征(
+            主信息,
+            任务模块_detail::特征_任务最近结束时间_(),
+            static_cast<I64>(主信息->最近结束时间),
+            now,
+            调用点 + "/最近结束时间");
+        (void)设置任务当前方法首节点(
+            主信息,
+            结束后当前方法,
+            now,
+            调用点 + "/当前方法");
+        (void)设置任务最近方法首节点(
+            主信息,
+            结束后最近方法,
+            now,
+            调用点 + "/最近方法");
+        if (最近结果节点 || 结果 != 枚举_任务执行记账结果::未完成) {
+            (void)设置任务最近结果节点(
+                主信息,
+                最近结果节点,
+                now,
+                调用点 + "/最近结果");
+        }
     }
 
     static 状态节点类* 设置任务基准优先级(
@@ -798,6 +1366,17 @@ public:
         }
         if (!已变化) return nullptr;
         const auto stepId = static_cast<I64>(reinterpret_cast<std::uintptr_t>(步骤节点));
+        (void)任务模块_detail::记录任务动作动态_(
+            主信息,
+            任务模块_detail::动作_设置任务当前步骤_(),
+            主信息 ? 主信息->场景 : nullptr,
+            步骤节点 && 步骤节点->主信息 ? 步骤节点->主信息->场景 : nullptr,
+            true,
+            0,
+            now,
+            now,
+            枚举_动作事件相位::未定义,
+            调用点 + "/动作动态");
         return 写任务虚拟存在_I64特征(主信息, 任务模块_detail::特征_任务当前步骤ID_(), stepId, now, 调用点);
     }
 
@@ -817,6 +1396,17 @@ public:
             smi->当前子任务头结点 = 子任务头结点;
         }
         if (!已变化) return nullptr;
+        (void)任务模块_detail::记录任务动作动态_(
+            主信息,
+            任务模块_detail::动作_设置任务当前子任务_(),
+            主信息 ? 主信息->场景 : nullptr,
+            子任务头结点 && 子任务头结点->主信息 ? 子任务头结点->主信息->场景 : nullptr,
+            true,
+            0,
+            now,
+            now,
+            枚举_动作事件相位::未定义,
+            调用点 + "/动作动态");
         return 写任务虚拟存在_指针特征(主信息, 任务模块_detail::特征_任务当前子任务头指针_(), reinterpret_cast<std::uintptr_t>(子任务头结点), now, 调用点);
     }
 
@@ -826,6 +1416,17 @@ public:
         时间戳 now = 0,
         const std::string& 调用点 = "任务管理类::设置任务当前分支动作")
     {
+        (void)任务模块_detail::记录任务动作动态_(
+            主信息,
+            任务模块_detail::动作_设置任务当前分支动作_(),
+            主信息 ? 主信息->场景 : nullptr,
+            主信息 ? 主信息->场景 : nullptr,
+            true,
+            static_cast<std::int64_t>(动作),
+            now,
+            now,
+            枚举_动作事件相位::未定义,
+            调用点 + "/动作动态");
         return 写任务虚拟存在_I64特征(主信息, 任务模块_detail::特征_任务当前分支动作_(), static_cast<I64>(动作), now, 调用点);
     }
 
@@ -838,6 +1439,17 @@ public:
         if (auto* hmi = dynamic_cast<任务头结点信息*>(主信息)) {
             hmi->最近实际结果节点 = 结果节点;
         }
+        (void)任务模块_detail::记录任务动作动态_(
+            主信息,
+            任务模块_detail::动作_设置任务最近结果节点_(),
+            主信息 ? 主信息->场景 : nullptr,
+            结果节点 && 结果节点->主信息 ? 结果节点->主信息->场景 : nullptr,
+            true,
+            0,
+            now,
+            now,
+            枚举_动作事件相位::未定义,
+            调用点 + "/动作动态");
         return 写任务虚拟存在_指针特征(主信息, 任务模块_detail::特征_任务最近结果节点指针_(), reinterpret_cast<std::uintptr_t>(结果节点), now, 调用点);
     }
 
@@ -847,6 +1459,17 @@ public:
         时间戳 now = 0,
         const std::string& 调用点 = "任务管理类::绑定任务全局容器")
     {
+        (void)任务模块_detail::记录任务动作动态_(
+            主信息,
+            任务模块_detail::动作_绑定任务全局容器_(),
+            主信息 ? 主信息->场景 : nullptr,
+            dynamic_cast<场景节点类*>(全局容器),
+            true,
+            0,
+            now,
+            now,
+            枚举_动作事件相位::未定义,
+            调用点 + "/动作动态");
         return 写任务虚拟存在_指针特征(主信息, 任务模块_detail::特征_任务绑定全局容器指针_(), reinterpret_cast<std::uintptr_t>(全局容器), now, 调用点);
     }
 
@@ -1021,6 +1644,17 @@ public:
         else (void)更新任务头结点场景(头结点, scene, now, 调用点 + "/更新条件场景");
 
         if (!scene) return false;
+        (void)任务模块_detail::记录任务动作动态_(
+            hmi,
+            任务模块_detail::动作_进入筹办阶段_(),
+            hmi ? hmi->场景 : nullptr,
+            scene,
+            true,
+            0,
+            now,
+            now,
+            枚举_动作事件相位::未定义,
+            调用点 + "/动作动态");
         设置任务状态(头结点, 枚举_任务状态::筹办中, 调用点);
         return true;
     }

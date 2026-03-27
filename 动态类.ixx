@@ -80,6 +80,18 @@ private:
         const 状态节点类* s0 = (const 状态节点类*)mi->初始状态;
         const 状态节点类* s1 = (const 状态节点类*)mi->结果状态;
 
+        if (!s0 && !s1) {
+            std::uint64_t pack[8]{};
+            std::size_t k = 0;
+            pack[k++] = (std::uint64_t)(std::uintptr_t)mi->动态主体;
+            pack[k++] = (std::uint64_t)(std::uintptr_t)mi->动态特征;
+            pack[k++] = (std::uint64_t)mi->来源类型;
+            pack[k++] = (std::uint64_t)(std::uintptr_t)mi->来源方法首节点;
+            pack[k++] = (std::uint64_t)(std::uintptr_t)mi->来源动作名;
+            pack[k++] = (std::uint64_t)(mi->来源执行成功 ? 1 : 0);
+            return 私有_FNV64(pack, k * sizeof(std::uint64_t));
+        }
+
         // 尽量用“事件+对应信息节点”组合；没有扩展信息时退化为指针。
         std::uint64_t pack[8]{};
 
@@ -138,11 +150,50 @@ private:
         return (s && s->主信息) ? dynamic_cast<状态节点主信息类*>(s->主信息) : nullptr;
     }
 
+    static 运行时状态主信息记录 私有_构造运行时状态记录(const 状态节点类* s) noexcept
+    {
+        运行时状态主信息记录 out{};
+        auto* mi = 私有_取状态主信息(s);
+        if (!mi) return out;
+        out.状态域 = mi->状态域;
+        out.收到时间 = mi->收到时间;
+        out.发生时间 = mi->发生时间;
+        out.状态主体 = mi->状态主体;
+        out.状态特征 = mi->状态特征;
+        out.状态值 = mi->状态值;
+        out.对应信息节点 = mi->对应信息节点;
+        out.是否变化 = mi->是否变化;
+        out.变化原因类别 = mi->变化原因类别;
+        out.变化原因说明 = mi->变化原因说明;
+        return out;
+    }
+
     static 时间戳 私有_取状态时间(const 状态节点类* s) noexcept
     {
         auto* mi = 私有_取状态主信息(s);
         if (!mi) return 0;
         return mi->发生时间 ? mi->发生时间 : mi->收到时间;
+    }
+
+    static 时间戳 私有_取运行时状态时间(const 运行时状态主信息记录& s) noexcept
+    {
+        return s.发生时间 ? s.发生时间 : s.收到时间;
+    }
+
+    static bool 私有_运行时状态记录相同(
+        const 运行时状态主信息记录& a,
+        const 运行时状态主信息记录& b) noexcept
+    {
+        return a.状态域 == b.状态域
+            && a.收到时间 == b.收到时间
+            && a.发生时间 == b.发生时间
+            && a.状态主体 == b.状态主体
+            && a.状态特征 == b.状态特征
+            && 特征快照相等(a.状态值, b.状态值)
+            && a.对应信息节点 == b.对应信息节点
+            && a.是否变化 == b.是否变化
+            && a.变化原因类别 == b.变化原因类别
+            && a.变化原因说明 == b.变化原因说明;
     }
 
     static void 私有_追加唯一事件(std::vector<状态节点类*>& out, 状态节点类* s)
@@ -152,11 +203,29 @@ private:
         out.push_back(s);
     }
 
+    static void 私有_追加唯一事件(std::vector<运行时状态主信息记录>& out, const 运行时状态主信息记录* s)
+    {
+        if (!s) return;
+        if (std::find_if(out.begin(), out.end(), [&](const 运行时状态主信息记录& 已有) {
+            return 私有_运行时状态记录相同(已有, *s);
+        }) != out.end()) {
+            return;
+        }
+        out.push_back(*s);
+    }
+
     static void 私有_追加唯一状态路径(std::vector<状态节点类*>& out, 状态节点类* s)
     {
         if (!s) return;
         if (!out.empty() && out.back() == s) return;
         out.push_back(s);
+    }
+
+    static void 私有_追加唯一状态路径(std::vector<运行时状态主信息记录>& out, const 运行时状态主信息记录* s)
+    {
+        if (!s) return;
+        if (!out.empty() && 私有_运行时状态记录相同(out.back(), *s)) return;
+        out.push_back(*s);
     }
 
     static void 私有_收集动态事件(const 动态节点类* d, std::vector<状态节点类*>& out)
@@ -227,6 +296,17 @@ private:
         私有_清理场景事件动态(场景, now);
     }
 
+    static 运行时动态主信息记录* 私有_追加运行时动态(
+        场景节点类* 场景,
+        运行时动态主信息记录&& 记录)
+    {
+        if (!场景 || !场景->主信息) return nullptr;
+        auto* smi = dynamic_cast<场景节点主信息类*>(场景->主信息);
+        if (!smi) return nullptr;
+        smi->运行时动态列表.push_back(std::move(记录));
+        return &smi->运行时动态列表.back();
+    }
+
     static std::uint64_t 私有_状态路径签名(const std::vector<状态节点类*>& 路径) noexcept
     {
         if (路径.empty()) return 0ull;
@@ -241,6 +321,23 @@ private:
             pack.push_back((std::uint64_t)私有_取状态时间(s));
             if (mi && std::holds_alternative<I64>(mi->状态值)) pack.push_back((std::uint64_t)std::get<I64>(mi->状态值));
             else pack.push_back((std::uint64_t)(std::uintptr_t)s);
+        }
+        return 私有_FNV64(pack.data(), pack.size() * sizeof(std::uint64_t));
+    }
+
+    static std::uint64_t 私有_状态路径签名(const std::vector<运行时状态主信息记录>& 路径) noexcept
+    {
+        if (路径.empty()) return 0ull;
+
+        std::vector<std::uint64_t> pack;
+        pack.reserve(路径.size() * 5);
+        for (const auto& s : 路径) {
+            pack.push_back((std::uint64_t)(std::uintptr_t)s.状态主体);
+            pack.push_back((std::uint64_t)(std::uintptr_t)s.状态特征);
+            pack.push_back((std::uint64_t)私有_取运行时状态时间(s));
+            if (std::holds_alternative<I64>(s.状态值)) pack.push_back((std::uint64_t)std::get<I64>(s.状态值));
+            else pack.push_back((std::uint64_t)(std::uintptr_t)s.对应信息节点);
+            pack.push_back((std::uint64_t)(s.是否变化 ? 1 : 0));
         }
         return 私有_FNV64(pack.data(), pack.size() * sizeof(std::uint64_t));
     }
@@ -487,6 +584,87 @@ public:
     动态节点类* 获取动态树根() const noexcept { return 动态树根_; }
     void 设置动态树根(动态节点类* root) noexcept { 动态树根_ = root; }
 
+    运行时动态主信息记录* 创建叶子动态主信息(
+        场景节点类* 场景,
+        状态节点类* 初始状态,
+        状态节点类* 结果状态,
+        时间戳 now = 0)
+    {
+        if (!场景 || !场景->主信息) return nullptr;
+        if (!私有_可形成基础动态(初始状态, 结果状态)) return nullptr;
+
+        auto* 初始mi = 私有_取状态主信息(初始状态);
+        auto* 结果mi = 私有_取状态主信息(结果状态);
+        if (!初始mi || !结果mi) return nullptr;
+
+        if (now == 0) now = 私有_取状态时间(结果状态);
+
+        运行时动态主信息记录 记录{};
+        记录.初始状态 = 私有_构造运行时状态记录(初始状态);
+        记录.结果状态 = 私有_构造运行时状态记录(结果状态);
+        记录.动态主体 = 结果mi->状态主体;
+        记录.动态特征 = 结果mi->状态特征;
+        记录.开始时间 = 私有_取状态时间(初始状态);
+        记录.结束时间 = 私有_取状态时间(结果状态);
+        if (记录.结束时间 == 0) 记录.结束时间 = now;
+        if (记录.开始时间 == 0) 记录.开始时间 = 记录.结束时间;
+        私有_追加唯一事件(记录.事件列表, &*记录.初始状态);
+        私有_追加唯一事件(记录.事件列表, &*记录.结果状态);
+        私有_追加唯一状态路径(记录.状态路径列表, &*记录.初始状态);
+        私有_追加唯一状态路径(记录.状态路径列表, &*记录.结果状态);
+        记录.动态路径签名 = 私有_状态路径签名(记录.状态路径列表);
+        return 私有_追加运行时动态(场景, std::move(记录));
+    }
+
+    运行时动态主信息记录* 创建动作动态主信息(
+        场景节点类* 场景,
+        基础信息节点类* 动态主体,
+        特征节点类* 动态特征,
+        时间戳 开始时间 = 0,
+        时间戳 结束时间 = 0)
+    {
+        if (!场景 || !场景->主信息 || !动态主体 || !动态特征) return nullptr;
+
+        if (开始时间 == 0 && 结束时间 == 0) {
+            结束时间 = 结构体_时间戳::当前_微秒();
+            开始时间 = 结束时间;
+        }
+        else if (开始时间 == 0) {
+            开始时间 = 结束时间;
+        }
+        else if (结束时间 == 0) {
+            结束时间 = 开始时间;
+        }
+        if (结束时间 < 开始时间) std::swap(开始时间, 结束时间);
+
+        运行时动态主信息记录 记录{};
+        记录.动态主体 = 动态主体;
+        记录.动态特征 = 动态特征;
+        记录.开始时间 = 开始时间;
+        记录.结束时间 = 结束时间;
+        {
+            const std::uint64_t pack[3] = {
+                (std::uint64_t)(std::uintptr_t)动态主体,
+                (std::uint64_t)(std::uintptr_t)动态特征,
+                0xAC7100D1ULL
+            };
+            记录.动态路径签名 = 私有_FNV64(pack, sizeof(pack));
+        }
+        return 私有_追加运行时动态(场景, std::move(记录));
+    }
+
+    运行时动态主信息记录* 状态记录后刷新动态主信息(
+        场景节点类* 场景,
+        状态节点类* 新状态,
+        时间戳 now = 0,
+        const std::string& /*调用点*/ = "动态类::状态记录后刷新动态主信息")
+    {
+        if (!场景 || !新状态) return nullptr;
+        auto* 前状态 = 查找相邻前状态(场景, 新状态);
+        if (!前状态) return nullptr;
+        return 创建叶子动态主信息(场景, 前状态, 新状态, now);
+    }
+
     // ============================================================
     // 创建叶子动态（不入世界链）
     // - 由相邻两个状态组成最基础的动态信息节点
@@ -528,6 +706,52 @@ public:
 
         smi->添加动态(n);
         私有_记录原始动态事件(场景, n, now ? now : mi->结束时间);
+        return n;
+    }
+
+    动态节点类* 创建动作动态(
+        场景节点类* 场景,
+        基础信息节点类* 动态主体,
+        特征节点类* 动态特征,
+        时间戳 开始时间 = 0,
+        时间戳 结束时间 = 0)
+    {
+        if (!场景 || !场景->主信息 || !动态主体 || !动态特征) return nullptr;
+        auto* smi = dynamic_cast<场景节点主信息类*>(场景->主信息);
+        if (!smi) return nullptr;
+
+        if (开始时间 == 0 && 结束时间 == 0) {
+            结束时间 = 结构体_时间戳::当前_微秒();
+            开始时间 = 结束时间;
+        }
+        else if (开始时间 == 0) {
+            开始时间 = 结束时间;
+        }
+        else if (结束时间 == 0) {
+            结束时间 = 开始时间;
+        }
+        if (结束时间 < 开始时间) std::swap(开始时间, 结束时间);
+
+        auto* n = 私有_创建空动态节点_();
+        auto* mi = new 动态节点主信息类();
+        mi->初始状态 = nullptr;
+        mi->结果状态 = nullptr;
+        mi->动态主体 = 动态主体;
+        mi->动态特征 = 动态特征;
+        mi->开始时间 = 开始时间;
+        mi->结束时间 = 结束时间;
+        {
+            const std::uint64_t pack[3] = {
+                (std::uint64_t)(std::uintptr_t)动态主体,
+                (std::uint64_t)(std::uintptr_t)动态特征,
+                0xAC7100D1ULL
+            };
+            mi->动态路径签名 = 私有_FNV64(pack, sizeof(pack));
+        }
+        n->主信息 = mi;
+
+        smi->添加动态(n);
+        私有_记录原始动态事件(场景, n, mi->结束时间);
         return n;
     }
 

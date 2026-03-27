@@ -33,6 +33,13 @@ export class 特征值类 {
 public:
     // 初始化：扫描特征值链，重建“哈希->候选”缓存（唯一性索引用）
     void 初始化() const;
+    void 调试清空缓存() const noexcept {
+        缓存已构建_ = false;
+        哈希到候选_.clear();
+        索引池_.clear();
+        根2D_ = nullptr;
+        根3D_ = nullptr;
+    }
 
     // ===== 唯一性（绝对相同） =====
     // 兼容：以 主信息 形式传入（主信息目前仅包含 VecIU64）

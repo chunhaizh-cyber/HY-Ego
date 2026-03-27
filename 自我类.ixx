@@ -26,14 +26,17 @@
 export module 自我模块;
 
 import 基础数据类型模块;
+import 通用函数模块;
 import 主信息定义模块;
 import 数据仓库模块;
 import 语素环境模块;
 import 特征类型定义模块;
 import 状态模块;
 import 二次特征模块;
+import 动态模块;
 
 import 世界树环境模块;
+import 语言环境模块;
 import 需求环境模块;
 import 方法模块;
 import 方法环境模块;
@@ -79,6 +82,9 @@ public:
     ~自我类() {
         请求停止();
         等待停止();
+        if (当前活动自我_.load(std::memory_order_acquire) == this) {
+            当前活动自我_.store(nullptr, std::memory_order_release);
+        }
     }
 
     自我类(const 自我类&) = delete;
@@ -90,7 +96,12 @@ public:
     
     void 初始化自我(const std::string& 调用点 = "自我类::初始化") {
         (void)调用点;
-        世界树.初始化();
+        当前活动自我_.store(this, std::memory_order_release);
+        初始化世界骨架环境(调用点 + "/世界骨架");
+        const 时间戳 now = 结构体_时间戳::当前_微秒();
+        (void)世界树.取或创建自我内部世界(now, 调用点 + "/默认自我");
+        重置时序步长为默认值_();
+        初始化自我特征类型与默认值_(now, 调用点 + "/初始化自我特征");
         // 方法/需求是环境单例：需求集、方法集
         // 默认模板：建议在世界树初始化后调用一次
         try {
@@ -99,8 +110,6 @@ public:
         catch (...) {
             // 允许重复注册或失败不致命
         }
-        重算时序步长_按服务值_();
-        刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, 结构体_时间戳::当前_微秒(), "自我类::初始化");
     }
 
     void 启动() {
@@ -131,46 +140,241 @@ public:
     // 状态（安全/服务值）
     // ==========================================================
 
-    I64 安全值() const noexcept { return safety_.load(); }
-    I64 服务值() const noexcept { return service_.load(); }
-
-    void 设置安全值(I64 v) noexcept {
-        safety_.store(钳制生命值_(v));
-        刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, 结构体_时间戳::当前_微秒(), "自我类::设置安全值");
+    I64 获取安全值() const noexcept {
+        return 读取自我I64特征当前值_(
+            特征类型定义类::类型_自我_安全值,
+            (生命值上限_() / 2),
+            "自我类::获取安全值");
     }
-    void 设置服务值(I64 v) noexcept {
-        service_.store(钳制生命值_(v));
-        重算时序步长_按服务值_();
-        刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, 结构体_时间戳::当前_微秒(), "自我类::设置服务值");
+    I64 获取服务值() const noexcept {
+        return std::get<I64>(*世界树.读取特征快照(
+            世界树.自我指针,
+            特征类型定义类::类型_自我_服务值,
+            "自我类::获取服务值"));
+    }
+    I64 获取物理安全值() const noexcept {
+        return 读取自我I64特征当前值_(
+            特征类型定义类::类型_自我_物理安全,
+            生命值上限_(),
+            "自我类::获取物理安全值");
+    }
+    I64 获取风险安全值() const noexcept {
+        return 读取自我I64特征当前值_(
+            特征类型定义类::类型_自我_风险安全,
+            生命值上限_(),
+            "自我类::获取风险安全值");
     }
 
-    bool 是否已消亡() const noexcept { return safety_.load() == 0; }
+    bool 是否已消亡() const noexcept { return 获取安全值() == 0; }
 
     I64 根目标安全值() const noexcept { return 生命值上限_(); }
     I64 根目标服务值() const noexcept { return 生命值上限_(); }
-    I64 安全根方向差值() const noexcept { return 根目标安全值() - 安全值(); }
+    I64 安全根方向差值() const noexcept { return 根目标安全值() - 获取安全值(); }
 
     // 供调度线程调用的统一数值更新入口。
-    void 安全值增加(I64 delta) noexcept {
-        if (delta > 0) 安全值_上升_(delta);
-        else if (delta < 0) 安全值_下降_(-delta);
+    void 安全值增加(
+        I64 delta,
+        const std::string& 原因类别 = "安全值增加",
+        const std::string& 原因说明 = {}) noexcept {
+        if (delta > 0) 安全值_上升_(delta, 原因类别, 原因说明);
+        else if (delta < 0) 安全值_下降_(-delta, 原因类别, 原因说明);
     }
-    void 安全值减少(I64 delta) noexcept {
-        if (delta > 0) 安全值_下降_(delta);
-        else if (delta < 0) 安全值_上升_(-delta);
+    void 安全值减少(
+        I64 delta,
+        const std::string& 原因类别 = "安全值减少",
+        const std::string& 原因说明 = {}) noexcept {
+        if (delta > 0) 安全值_下降_(delta, 原因类别, 原因说明);
+        else if (delta < 0) 安全值_上升_(-delta, 原因类别, 原因说明);
     }
-    void 服务值增加(I64 delta) noexcept {
-        if (delta > 0) 服务值_上升_(delta);
-        else if (delta < 0) 服务值_下降_(-delta);
+    void 服务值增加(
+        I64 delta,
+        const std::string& 原因类别 = "服务值增加",
+        const std::string& 原因说明 = {}) noexcept {
+        if (delta > 0) 服务值_上升_(delta, 原因类别, 原因说明);
+        else if (delta < 0) 服务值_下降_(-delta, 原因类别, 原因说明);
     }
-    void 服务值减少(I64 delta) noexcept {
-        if (delta > 0) 服务值_下降_(delta);
-        else if (delta < 0) 服务值_上升_(-delta);
+    void 服务值减少(
+        I64 delta,
+        const std::string& 原因类别 = "服务值减少",
+        const std::string& 原因说明 = {}) noexcept {
+        if (delta > 0) 服务值_下降_(delta, 原因类别, 原因说明);
+        else if (delta < 0) 服务值_上升_(-delta, 原因类别, 原因说明);
     }
     I64 时序正向步长() const noexcept { return temporal_forward_step_.load(); }
     I64 时序反向步长() const noexcept { return temporal_backward_step_.load(); }
-    I64 服务时序衰减步长() const noexcept { return 时序反向步长(); }
+    I64 服务时序衰减步长() const noexcept { return (std::max<I64>)(1, service_decay_step_.load()); }
+    void 设置服务时序衰减步长(I64 步长) noexcept {
+        service_decay_step_.store((std::max<I64>)(1, 步长));
+    }
     bool 是否待机状态() const noexcept { return standby_mode_.load(); }
+    static 自我类* 当前活动自我() noexcept {
+        return 当前活动自我_.load(std::memory_order_acquire);
+    }
+    运行时动态主信息记录* 记录自我动作动态(
+        const 词性节点类* 动作词,
+        场景节点类* 输入场景 = nullptr,
+        场景节点类* 输出场景 = nullptr,
+        bool 成功 = true,
+        std::int64_t 错误码 = 0,
+        时间戳 开始时间 = 0,
+        时间戳 结束时间 = 0,
+        枚举_动作事件相位 动作相位 = 枚举_动作事件相位::未定义,
+        const std::string& 调用点 = "自我类::记录自我动作动态",
+        状态节点类* 初始状态 = nullptr,
+        状态节点类* 结果状态 = nullptr)
+    {
+        if (!动作词) return nullptr;
+        if (开始时间 == 0) 开始时间 = 结构体_时间戳::当前_微秒();
+        if (结束时间 == 0) 结束时间 = 开始时间;
+        if (结束时间 < 开始时间) std::swap(开始时间, 结束时间);
+
+        auto* 内部世界 = 确保自我内部世界_(结束时间, 调用点);
+        auto* 自我存在 = 确保自我存在_(结束时间, 调用点);
+        if (!内部世界 || !自我存在) return nullptr;
+
+        auto* 动作特征 = 世界树.确保特征(
+            自我存在,
+            动作词,
+            动作词,
+            调用点 + "/动作特征");
+        if (!动作特征) return nullptr;
+
+        auto* 动态信息 = 动态集.创建动作动态主信息(
+            内部世界,
+            自我存在,
+            动作特征,
+            开始时间,
+            结束时间);
+        if (!动态信息) return 动态信息;
+
+        auto 状态节点转运行时记录 = [](状态节点类* 状态) -> std::optional<运行时状态主信息记录> {
+            auto* 状态信息 = (状态 && 状态->主信息)
+                ? dynamic_cast<状态节点主信息类*>(状态->主信息)
+                : nullptr;
+            if (!状态信息) return std::nullopt;
+            运行时状态主信息记录 out{};
+            out.状态域 = 状态信息->状态域;
+            out.收到时间 = 状态信息->收到时间;
+            out.发生时间 = 状态信息->发生时间;
+            out.状态主体 = 状态信息->状态主体;
+            out.状态特征 = 状态信息->状态特征;
+            out.状态值 = 状态信息->状态值;
+            out.对应信息节点 = 状态信息->对应信息节点;
+            out.是否变化 = 状态信息->是否变化;
+            out.变化原因类别 = 状态信息->变化原因类别;
+            out.变化原因说明 = 状态信息->变化原因说明;
+            return out;
+        };
+        auto 追加唯一状态记录 = [](std::vector<运行时状态主信息记录>& out, const std::optional<运行时状态主信息记录>& 状态) {
+            if (!状态.has_value()) return;
+            const auto 已有 = std::find_if(out.begin(), out.end(), [&](const 运行时状态主信息记录& 当前) {
+                return 当前.状态域 == 状态->状态域
+                    && 当前.收到时间 == 状态->收到时间
+                    && 当前.发生时间 == 状态->发生时间
+                    && 当前.状态主体 == 状态->状态主体
+                    && 当前.状态特征 == 状态->状态特征
+                    && 特征快照相等(当前.状态值, 状态->状态值)
+                    && 当前.对应信息节点 == 状态->对应信息节点
+                    && 当前.是否变化 == 状态->是否变化
+                    && 当前.变化原因类别 == 状态->变化原因类别
+                    && 当前.变化原因说明 == 状态->变化原因说明;
+            });
+            if (已有 == out.end()) out.push_back(*状态);
+        };
+        const auto 初始状态记录 = 状态节点转运行时记录(初始状态);
+        const auto 结果状态记录 = 状态节点转运行时记录(结果状态);
+        if (初始状态记录.has_value()) 动态信息->初始状态 = *初始状态记录;
+        if (结果状态记录.has_value()) 动态信息->结果状态 = *结果状态记录;
+        追加唯一状态记录(动态信息->事件列表, 初始状态记录);
+        追加唯一状态记录(动态信息->事件列表, 结果状态记录);
+        追加唯一状态记录(动态信息->状态路径列表, 初始状态记录);
+        追加唯一状态记录(动态信息->状态路径列表, 结果状态记录);
+        动态信息->来源类型 = 枚举_动态来源类型::内部机制动作;
+        动态信息->来源动作名 = 动作词;
+        动态信息->来源动作相位 = 动作相位;
+        动态信息->来源输入场景 = 输入场景;
+        动态信息->来源输出场景 = 输出场景;
+        动态信息->来源执行成功 = 成功;
+        动态信息->来源错误码 = 错误码;
+        return 动态信息;
+    }
+
+    bool 应用服务归零待机保护(
+        时间戳 now = 结构体_时间戳::当前_微秒(),
+        const std::string& 调用点 = "自我类::应用服务归零待机保护",
+        状态节点类** out主结果状态 = nullptr) noexcept
+    {
+        重算时序步长_按服务值_();
+
+        if (获取服务值() != 0) {
+            standby_mode_.store(false);
+            return false;
+        }
+
+        standby_mode_.store(true);
+        constexpr I64 最小非零安全值 = 1;
+        const I64 旧安全值 = 获取安全值();
+        if (旧安全值 == 最小非零安全值) return false;
+
+        const 时间戳 结果时间 = 结构体_时间戳::当前_微秒();
+        (void)写入自我I64特征当前值_(
+            特征类型定义类::类型_自我_安全值,
+            最小非零安全值,
+            结果时间,
+            调用点 + "/写安全值");
+        if (out主结果状态) *out主结果状态 = nullptr;
+        return true;
+    }
+
+    bool 应用定时衰减服务值(
+        I64 delta = 0,
+        时间戳 now = 结构体_时间戳::当前_微秒(),
+        const std::string& 调用点 = "自我类::应用定时衰减服务值",
+        状态节点类** out主结果状态 = nullptr) noexcept
+    {
+        if (delta <= 0) {
+            delta = 服务时序衰减步长();
+        }
+        delta = (std::max<I64>)(1, delta);
+        const I64 旧服务值 = 获取服务值();
+        const I64 新服务值 = 通用函数模块::饱和减(旧服务值, delta);
+        if (新服务值 == 旧服务值) return false;
+
+        const 时间戳 结果时间 = 结构体_时间戳::当前_微秒();
+        (void)写入自我I64特征当前值_(
+            特征类型定义类::类型_自我_服务值,
+            新服务值,
+            结果时间,
+            调用点 + "/写服务值");
+        重算时序步长_按服务值_();
+        if (out主结果状态) *out主结果状态 = nullptr;
+        return true;
+    }
+
+    bool 应用风险安全回归(
+        I64 delta = 1,
+        时间戳 now = 结构体_时间戳::当前_微秒(),
+        const std::string& 调用点 = "自我类::应用风险安全回归",
+        状态节点类** out主结果状态 = nullptr) noexcept
+    {
+        delta = (std::max<I64>)(1, delta);
+        const I64 旧风险安全值 = 获取风险安全值();
+        const I64 目标风险安全值 = 风险安全回归目标值_();
+        if (旧风险安全值 <= 目标风险安全值) return false;
+
+        const I64 候选值 = 通用函数模块::饱和减(旧风险安全值, delta);
+        const I64 新风险安全值 = (std::max<I64>)(候选值, 目标风险安全值);
+        if (新风险安全值 == 旧风险安全值) return false;
+
+        const 时间戳 结果时间 = (now > 0) ? now : 结构体_时间戳::当前_微秒();
+        (void)写入自我I64特征当前值_(
+            特征类型定义类::类型_自我_风险安全,
+            新风险安全值,
+            结果时间,
+            调用点 + "/写风险安全");
+        if (out主结果状态) *out主结果状态 = nullptr;
+        return true;
+    }
 
     状态节点类* 记录基础方向概念(
         const std::string& 概念名,
@@ -179,74 +383,42 @@ public:
         const std::string& 调用点 = "自我类::记录基础方向概念")
     {
         const auto* 概念类型 = 语素集.添加词性词("基础概念_" + 概念名, "名词");
-        return 记录自我特征_(
+        auto* 自我存在 = 确保自我存在_(now, 调用点);
+        if (!概念类型 || !自我存在) return nullptr;
+        (void)世界树.写入特征_I64(
+            自我存在,
             概念类型,
-            特征快照值{ 值 },
-            now,
+            值,
+            {},
             调用点 + "/基础概念/" + 概念名);
+        return nullptr;
     }
 
     // 兼容旧实验逻辑：保留接口，但主调度链不再调用。
     // 当前正式结算入口改为：自我线程类::私有_按叶子需求结算安全服务值(...)
     void 应用任务结果_默认策略(bool 成功) noexcept {
         if (成功) {
-            服务值_上升_(50);
+            服务值_上升_(50, "任务成功奖励");
             return;
         }
-        服务值_下降_(10);
-        安全值_下降_(5);
+        服务值_下降_(10, "任务失败惩罚");
+        安全值_下降_(5, "任务失败惩罚");
     }
 
 
-    // 时序维护：向中位回归 + 内部状态压力 + 服务值耦合步长。
-    // 规则：
-    // 1) 默认时序步长为 1（正向/反向），并随服务值实时重算；
-    // 2) 服务值越高：正向步长越大、反向步长越小；
-    // 3) 服务值为 0：安全值置为最小非零并进入待机，不触发消亡。
+    // 当前这组接口只保留“服务归零待机保护”这条底线规则。
+    // 旧的“安全时序回归”链路已移除。
     void 按时序规则更新安全值(
         I64 待完成任务数,
         I64 待学习任务数,
         时间戳 now = 结构体_时间戳::当前_微秒(),
-        const std::string& 调用点 = "自我类::按时序规则更新安全值") noexcept
+        const std::string& 调用点 = "自我类::按时序规则更新安全值",
+        状态节点类** out主结果状态 = nullptr) noexcept
     {
-        重算时序步长_按服务值_();
-
-        const I64 srv = service_.load();
-        I64 s = safety_.load();
-
-        if (srv == 0) {
-            standby_mode_.store(true);
-            constexpr I64 最小非零安全值 = 1;
-            if (s != 最小非零安全值) {
-                safety_.store(最小非零安全值);
-                刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, now, 调用点 + "/服务为零待机");
-            }
-            return;
-        }
-
-        standby_mode_.store(false);
-
-        const I64 中位值 = (生命值上限_() / 2);
-        const I64 正向 = temporal_forward_step_.load();
-        const I64 反向 = temporal_backward_step_.load();
-
-        if (s < 中位值) {
-            s = sat_add(s, 正向);
-        }
-        else if (s > 中位值) {
-            s = sat_sub(s, 反向);
-        }
-
-        // 内部状态压力：当前先使用默认步长 1（有积压即扣减）。
-        const bool 有待办 = (待完成任务数 > 0) || (待学习任务数 > 0);
-        const I64 内部压力步长 = 有待办 ? 1 : 0;
-        if (内部压力步长 > 0) {
-            s = sat_sub(s, 内部压力步长);
-        }
-
-        if (s != safety_.load()) {
-            safety_.store(s);
-            刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, now, 调用点 + "/时序更新");
+        (void)待完成任务数;
+        (void)待学习任务数;
+        if (获取服务值() == 0) {
+            (void)应用服务归零待机保护(now, 调用点, out主结果状态);
         }
     }
 
@@ -254,9 +426,10 @@ public:
         I64 待完成任务数,
         I64 待学习任务数,
         时间戳 now = 结构体_时间戳::当前_微秒(),
-        const std::string& 调用点 = "自我类::按时序规则更新安全服务值") noexcept
+        const std::string& 调用点 = "自我类::按时序规则更新安全服务值",
+        状态节点类** out主结果状态 = nullptr) noexcept
     {
-        按时序规则更新安全值(待完成任务数, 待学习任务数, now, 调用点);
+        按时序规则更新安全值(待完成任务数, 待学习任务数, now, 调用点, out主结果状态);
     }
 
     结构_根任务权重& 根任务权重() noexcept { return roots_; }
@@ -269,10 +442,7 @@ public:
    // const 世界树类& 世界树() const noexcept { return 世界树_; }
 
 private:
-    static constexpr I64 自我尝试学习状态_空闲 = 0;
-    static constexpr I64 自我尝试学习状态_准备中 = 1;
-    static constexpr I64 自我尝试学习状态_已生成 = 2;
-    static constexpr I64 自我尝试学习状态_失败 = 3;
+    inline static std::atomic<自我类*> 当前活动自我_{ nullptr };
 
     struct 结构_尝试学习参数队列项 {
         方法节点类* 方法首节点 = nullptr;
@@ -280,110 +450,84 @@ private:
         需求节点类* 来源需求 = nullptr;
         时间戳 入队时间 = 0;
     };
-    static bool 快照相等_(const std::optional<特征快照值>& oldValue, const 特征快照值& newValue) noexcept
+
+    场景节点类* 确保自我现实场景_(时间戳 now, const std::string& 调用点)
     {
-        return oldValue.has_value() && *oldValue == newValue;
+        return 世界树.取或创建自我现实场景(now, 调用点);
     }
 
     场景节点类* 确保自我内部世界_(时间戳 now, const std::string& 调用点)
     {
-        特征类型定义类::初始化特征类型定义模块_依赖语素();
-        if (!世界树.虚拟世界) {
-            const 词性节点类* 名称 = 特征类型定义类::名_自我内部世界
-                ? 特征类型定义类::名_自我内部世界
-                : 语素集.添加词性词("自我内部世界", "名词");
-            世界树.虚拟世界 = 世界树.取或创建子场景_按名称(nullptr, 名称, now, 调用点 + "/内部世界");
-        }
-        return 世界树.虚拟世界;
+        return 世界树.取或创建自我内部世界(now, 调用点);
     }
 
     存在节点类* 确保自我存在_(时间戳 now, const std::string& 调用点)
     {
-        特征类型定义类::初始化特征类型定义模块_依赖语素();
-        if (世界树.自我指针) return 世界树.自我指针;
-        auto* 内部世界 = 确保自我内部世界_(now, 调用点);
-        if (!内部世界) return nullptr;
-
-        const 词性节点类* 自我类型 = 特征类型定义类::型_自我
-            ? 特征类型定义类::型_自我
-            : 语素集.添加词性词("自我类型", "名词");
-        auto* self = 世界树.取或创建子存在_按类型(内部世界, 自我类型, now, 调用点 + "/自我存在");
-        if (!self) return nullptr;
-
-        if (特征类型定义类::名_自我) {
-            (void)世界树.写入名称(self, 特征类型定义类::名_自我, now, 调用点 + "/自我名称");
-        }
-        世界树.自我指针 = self;
-        return self;
+        return 世界树.取或创建自我存在(now, 调用点);
     }
 
-    状态节点类* 记录自我特征_(const 词性节点类* 特征类型, const 特征快照值& 值, 时间戳 now, const std::string& 调用点)
+    void 确保自我I64特征已初始化_(
+        存在节点类* 自我存在,
+        const 词性节点类* 特征类型,
+        I64 默认值,
+        const std::string& 调用点) noexcept
     {
-        if (!特征类型) return nullptr;
-        auto* 内部世界 = 确保自我内部世界_(now, 调用点);
-        auto* 自我存在 = 确保自我存在_(now, 调用点);
-        if (!内部世界 || !自我存在) return nullptr;
-
-        const auto 旧值 = 世界树.读取特征快照(自我存在, 特征类型, 调用点);
-        const bool 值发生变化 = !快照相等_(旧值, 值);
-        const auto 事件 = 旧值.has_value() ? 枚举_存在状态事件::变化 : 枚举_存在状态事件::创建;
-
-        if (auto* pi = std::get_if<I64>(&值)) {
-            (void)世界树.写入特征_I64(自我存在, 特征类型, *pi, {}, 调用点);
-        }
-        else if (auto* ph = std::get_if<指针句柄>(&值)) {
-            (void)世界树.写入特征_指针(自我存在, 特征类型, ph->指针, {}, 调用点);
-        }
-        else {
-            return nullptr;
-        }
-
-        auto* feat = 世界树.确保特征(自我存在, 特征类型, 特征类型, 调用点);
-        auto* 状态 = 状态集.记录内部特征状态(
-            内部世界,
-            自我存在,
-            feat,
-            值,
-            事件,
-            值发生变化,
-            now,
-            [](场景节点类* s, 状态节点类* n, 时间戳 ts, const std::string& cp) {
-                二次特征类::状态记录后刷新二次特征(s, n, ts, cp);
-            },
-            调用点);
-
-        return 状态;
+        if (!自我存在 || !特征类型) return;
+        (void)世界树.确保特征(自我存在, 特征类型, 特征类型, 调用点 + "/确保特征");
+        const auto 快照 = 世界树.读取特征快照(自我存在, 特征类型, 调用点 + "/读取快照");
+        if (快照.has_value() && std::holds_alternative<I64>(*快照)) return;
+        (void)世界树.写入特征_I64(自我存在, 特征类型, 默认值, {}, 调用点 + "/写默认值");
     }
 
-    I64 判定外设可用性_() const
+    void 确保自我指针特征已初始化_(
+        存在节点类* 自我存在,
+        const 词性节点类* 特征类型,
+        std::uintptr_t 默认值,
+        const std::string& 调用点) noexcept
+    {
+        if (!自我存在 || !特征类型) return;
+        (void)世界树.确保特征(自我存在, 特征类型, 特征类型, 调用点 + "/确保特征");
+        const auto 快照 = 世界树.读取特征快照(自我存在, 特征类型, 调用点 + "/读取快照");
+        if (快照.has_value() && std::holds_alternative<指针句柄>(*快照)) return;
+        (void)世界树.写入特征_指针(自我存在, 特征类型, 默认值, {}, 调用点 + "/写默认值");
+    }
+
+    void 初始化自我特征类型与默认值_(时间戳 now, const std::string& 调用点) noexcept
     {
         特征类型定义类::初始化特征类型定义模块_依赖语素();
-        auto* root = 世界树.世界根();
-        if (!root) return 0;
-        const 词性节点类* 运行状态 = 语素集.添加词性词("运行状态", "名词");
-        for (auto* e : 世界树.获取子存在(root, "自我类::判定外设可用性")) {
-            if (!e || !e->主信息) continue;
-            auto* emi = dynamic_cast<存在节点主信息类*>(e->主信息);
-            if (!emi || emi->类型 != 特征类型定义类::型_外设摄像机) continue;
-            const auto snap = 世界树.读取特征快照(e, 运行状态, "自我类::判定外设可用性");
-            if (!snap.has_value()) return 1;
-            if (auto* pv = std::get_if<I64>(&*snap)) return (*pv != 0) ? 1 : 0;
-            return 1;
-        }
-        return 0;
-    }
 
-    void 刷新自我融合特征_(需求节点类* 当前主需求, 任务节点类* 当前主任务, 方法节点类* 当前主方法, I64 尝试学习状态, 时间戳 now, const std::string& 调用点)
-    {
-        (void)确保自我存在_(now, 调用点);
-        (void)记录自我特征_(特征类型定义类::类型_自我_安全值, 特征快照值{ (I64)safety_.load() }, now, 调用点 + "/安全值");
-        (void)记录自我特征_(特征类型定义类::类型_自我_服务值, 特征快照值{ (I64)service_.load() }, now, 调用点 + "/服务值");
-        (void)记录自我特征_(特征类型定义类::类型_自我_待学习方法数量, 特征快照值{ (I64)roots_.学习 }, now, 调用点 + "/待学习方法数量");
-        (void)记录自我特征_(特征类型定义类::类型_自我_当前主需求, 特征快照值{ 指针句柄{ reinterpret_cast<std::uintptr_t>(当前主需求) } }, now, 调用点 + "/当前主需求");
-        (void)记录自我特征_(特征类型定义类::类型_自我_当前主任务, 特征快照值{ 指针句柄{ reinterpret_cast<std::uintptr_t>(当前主任务) } }, now, 调用点 + "/当前主任务");
-        (void)记录自我特征_(特征类型定义类::类型_自我_当前主方法, 特征快照值{ 指针句柄{ reinterpret_cast<std::uintptr_t>(当前主方法) } }, now, 调用点 + "/当前主方法");
-        (void)记录自我特征_(特征类型定义类::类型_自我_外设可用性, 特征快照值{ 判定外设可用性_() }, now, 调用点 + "/外设可用性");
-        (void)记录自我特征_(特征类型定义类::类型_自我_尝试学习状态, 特征快照值{ 尝试学习状态 }, now, 调用点 + "/尝试学习状态");
+        auto* 自我存在 = 确保自我存在_(now, 调用点 + "/自我存在");
+        if (!自我存在) return;
+
+        const I64 默认最大安全值 = (std::numeric_limits<I64>::max)();
+        const I64 默认安全值 = 生命值上限_() / 4;
+        const I64 默认服务值 = 生命值上限_() / 2;
+
+        确保自我I64特征已初始化_(自我存在, 特征类型定义类::类型_自我_安全值, 默认安全值, 调用点 + "/安全值");
+        确保自我I64特征已初始化_(自我存在, 特征类型定义类::类型_自我_服务值, 默认服务值, 调用点 + "/服务值");
+        确保自我I64特征已初始化_(自我存在, 特征类型定义类::类型_自我_物理安全, 默认最大安全值, 调用点 + "/物理安全");
+        确保自我I64特征已初始化_(自我存在, 特征类型定义类::类型_自我_风险安全, 默认最大安全值, 调用点 + "/风险安全");
+        确保自我I64特征已初始化_(自我存在, 特征类型定义类::类型_自我_情绪ID, 0, 调用点 + "/情绪ID");
+        确保自我I64特征已初始化_(自我存在, 特征类型定义类::类型_自我_情绪强度, 0, 调用点 + "/情绪强度");
+        确保自我I64特征已初始化_(自我存在, 特征类型定义类::类型_自我_外显情绪ID, 0, 调用点 + "/外显情绪ID");
+        确保自我I64特征已初始化_(自我存在, 特征类型定义类::类型_自我_外显情绪强度, 0, 调用点 + "/外显情绪强度");
+        确保自我I64特征已初始化_(自我存在, 特征类型定义类::类型_自我_待学习方法数量, 0, 调用点 + "/待学习方法数量");
+        确保自我I64特征已初始化_(自我存在, 特征类型定义类::类型_自我_外设可用性, 0, 调用点 + "/外设可用性");
+        确保自我I64特征已初始化_(自我存在, 特征类型定义类::类型_自我_尝试学习状态, 0, 调用点 + "/尝试学习状态");
+
+        确保自我指针特征已初始化_(自我存在, 特征类型定义类::类型_自我_当前主需求, 0, 调用点 + "/当前主需求");
+        确保自我指针特征已初始化_(自我存在, 特征类型定义类::类型_自我_当前主任务, 0, 调用点 + "/当前主任务");
+        确保自我指针特征已初始化_(自我存在, 特征类型定义类::类型_自我_当前主方法, 0, 调用点 + "/当前主方法");
+
+        const auto* 待机状态特征 = 语素集.添加词性词("待机状态", "名词");
+        const auto* 时序正向步长特征 = 语素集.添加词性词("时序正向步长", "名词");
+        const auto* 时序反向步长特征 = 语素集.添加词性词("时序反向步长", "名词");
+        const auto* 服务时序衰减步长特征 = 语素集.添加词性词("服务时序衰减步长", "名词");
+
+        确保自我I64特征已初始化_(自我存在, 待机状态特征, 0, 调用点 + "/待机状态");
+        确保自我I64特征已初始化_(自我存在, 时序正向步长特征, 1, 调用点 + "/时序正向步长");
+        确保自我I64特征已初始化_(自我存在, 时序反向步长特征, 1, 调用点 + "/时序反向步长");
+        确保自我I64特征已初始化_(自我存在, 服务时序衰减步长特征, 1, 调用点 + "/服务时序衰减步长");
     }
 
     const 词性节点类* 类型_内部尝试学习需求_() const
@@ -540,19 +684,13 @@ private:
         auto item = 取下一尝试学习参数_();
         if (!item.has_value()) return false;
 
-        auto* need = item->来源需求;
-        auto* nmi = need ? need->主信息 : nullptr;
-        刷新自我融合特征_(need, nmi ? nmi->相关任务 : nullptr, item->方法首节点, 自我尝试学习状态_准备中, now, "自我类::消费尝试学习参数队列/执行前");
-
         const bool ok = 执行尝试学习参数场景_(item->方法首节点, item->参数场景, now, "自我类::消费尝试学习参数队列");
         if (ok) {
-            服务值_上升_(5);
-            刷新自我融合特征_(need, nmi ? nmi->相关任务 : nullptr, item->方法首节点, 自我尝试学习状态_已生成, now, "自我类::消费尝试学习参数队列/执行成功");
+            服务值_上升_(5, "尝试学习成功奖励");
         }
         else {
-            服务值_下降_(2);
-            安全值_下降_(1);
-            刷新自我融合特征_(need, nmi ? nmi->相关任务 : nullptr, item->方法首节点, 自我尝试学习状态_失败, now, "自我类::消费尝试学习参数队列/执行失败");
+            服务值_下降_(2, "尝试学习失败惩罚");
+            安全值_下降_(1, "尝试学习失败惩罚");
         }
         return true;
     }
@@ -704,7 +842,7 @@ private:
 
         while (!stop_.load()) {
             // 退出硬条件：安全值归零（服务值为零进入待机，不视为消亡）
-            if (safety_.load() == 0) {
+            if (获取安全值() == 0) {
                 保存退出事件_("安全值归零", startUs, tickCount);
                 break;
             }
@@ -719,11 +857,11 @@ private:
             }
             catch (const std::exception& e) {
                 // 异常视为危险信号：轻度下降安全值
-                安全值_下降_(100);
+                安全值_下降_(100, "异常风险惩罚");
                 lastError_ = e.what();
             }
             catch (...) {
-                安全值_下降_(100);
+                安全值_下降_(100, "异常风险惩罚");
                 lastError_ = "unknown";
             }
 
@@ -753,14 +891,42 @@ private:
         // 2) 选择下一需求
         auto* needNode = 需求集.选择下一需求();
         if (!needNode || !needNode->主信息) {
-            // 无需求：服务值慢慢下降（模拟“无人需求会掉服务值”）
-            服务值_下降_(1);
-            刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, 结构体_时间戳::当前_微秒(), "自我类::TickOnce_/无需求");
+            // 无需求时仍按时间规则持续衰减服务值。
+            const auto* 动作词 = 语素集.添加词性词("定时衰减服务值", "动词");
+            const 时间戳 动作开始 = 结构体_时间戳::当前_微秒();
+            (void)记录自我动作动态(
+                动作词,
+                nullptr,
+                nullptr,
+                true,
+                0,
+                动作开始,
+                动作开始,
+                枚举_动作事件相位::开始运行,
+                "自我类::TickOnce_/定时衰减/开始");
+            状态节点类* 主结果状态 = nullptr;
+            const bool 成功 = 应用定时衰减服务值(
+                服务时序衰减步长(),
+                动作开始,
+                "自我类::TickOnce_/定时衰减",
+                &主结果状态);
+            const 时间戳 动作结束 = 结构体_时间戳::当前_微秒();
+            (void)记录自我动作动态(
+                动作词,
+                nullptr,
+                nullptr,
+                成功,
+                成功 ? 0 : -1,
+                动作结束,
+                动作结束,
+                成功 ? 枚举_动作事件相位::完成 : 枚举_动作事件相位::失败,
+                "自我类::TickOnce_/定时衰减/结束",
+                nullptr,
+                主结果状态);
             return;
         }
 
         auto* nmi = needNode->主信息;
-        刷新自我融合特征_(needNode, nmi ? nmi->相关任务 : nullptr, nullptr, 自我尝试学习状态_空闲, 结构体_时间戳::当前_微秒(), "自我类::TickOnce_/选中需求");
 
         // 3) 用需求签名召回方法（粗筛）
         const auto& sig = nmi->需求签名;
@@ -770,7 +936,6 @@ private:
             // 4) 无法召回：提高学习权重并对该需求加权，避免饿死
             roots_.学习 = roots_.学习 + 1;
             需求集.调整权重(needNode, 1);
-            刷新自我融合特征_(needNode, nmi ? nmi->相关任务 : nullptr, nullptr, 自我尝试学习状态_准备中, 结构体_时间戳::当前_微秒(), "自我类::TickOnce_/无方法召回");
             // 可选：触发尝试学习（当前只做最小兜底）
             触发尝试学习_(needNode);
             return;
@@ -791,29 +956,25 @@ private:
             // 候选都不可执行：当作学习缺口
             roots_.学习 = roots_.学习 + 1;
             需求集.调整权重(needNode, 1);
-            刷新自我融合特征_(needNode, nmi ? nmi->相关任务 : nullptr, nullptr, 自我尝试学习状态_准备中, 结构体_时间戳::当前_微秒(), "自我类::TickOnce_/无可执行方法");
             触发尝试学习_(needNode);
             return;
         }
 
         // 6) 执行（丢到 worker）
-        刷新自我融合特征_(needNode, nmi ? nmi->相关任务 : nullptr, chosen, 自我尝试学习状态_空闲, 结构体_时间戳::当前_微秒(), "自我类::TickOnce_/执行前");
         auto res = 执行方法_同步等待(chosen, cfg_.执行超时_微秒);
 
         if (res.成功) {
             // 7) 成功：服务值上升，需求权重下降或直接删除
-            服务值_上升_(50);
+            服务值_上升_(50, "任务执行成功奖励");
             // 简化策略：成功就删除需求（后续可换成“降权 + 留档”）
-            刷新自我融合特征_(needNode, nmi ? nmi->相关任务 : nullptr, chosen, 自我尝试学习状态_空闲, 结构体_时间戳::当前_微秒(), "自我类::TickOnce_/执行成功");
             (void)需求集.删除需求(needNode);
         }
         else {
             // 8) 失败：轻度下降安全/服务，并推动学习
-            服务值_下降_(10);
-            安全值_下降_(5);
+            服务值_下降_(10, "任务执行失败惩罚");
+            安全值_下降_(5, "任务执行失败惩罚");
             roots_.学习 = roots_.学习 + 2;
             需求集.调整权重(needNode, 1);
-            刷新自我融合特征_(needNode, nmi ? nmi->相关任务 : nullptr, chosen, 自我尝试学习状态_准备中, 结构体_时间戳::当前_微秒(), "自我类::TickOnce_/执行失败");
         }
     }
 
@@ -843,18 +1004,15 @@ private:
         if (!mi->被需求状态) return;
 
         const auto now = 结构体_时间戳::当前_微秒();
-        刷新自我融合特征_(need, mi->相关任务, nullptr, 自我尝试学习状态_准备中, now, "自我类::触发尝试学习_/开始");
         auto 条件状态 = 收集尝试学习条件状态_(mi);
         const auto& sig = mi->需求签名;
         auto heads = 方法集.召回_按影响度量签名(sig, 3, "自我类::触发尝试学习_召回");
         if (heads.empty()) {
-            刷新自我融合特征_(need, mi->相关任务, nullptr, 自我尝试学习状态_失败, now, "自我类::触发尝试学习_/无候选");
             return;
         }
 
         for (auto* head : heads) {
             if (!head) continue;
-            刷新自我融合特征_(need, mi->相关任务, head, 自我尝试学习状态_准备中, now, "自我类::触发尝试学习_/候选方法");
             auto 结果 = 方法集.生成尝试学习参数(
                 head,
                 条件状态,
@@ -874,11 +1032,9 @@ private:
                         (void)需求集.调整权重(need, -1, "自我类::触发尝试学习_/内部需求降权");
                     }
                 }
-                刷新自我融合特征_(need, mi->相关任务, head, 自我尝试学习状态_已生成, now, "自我类::触发尝试学习_/生成成功");
                 return;
             }
         }
-        刷新自我融合特征_(need, mi->相关任务, nullptr, 自我尝试学习状态_失败, now, "自我类::触发尝试学习_/结束");
     }
 
     // ==========================================================
@@ -889,23 +1045,54 @@ private:
         return (std::numeric_limits<I64>::max)();
     }
 
-    static I64 钳制生命值_(I64 v) noexcept {
-        return std::clamp<I64>(v, 0, 生命值上限_());
+    static constexpr I64 风险安全回归目标值_() noexcept {
+        return ((生命值上限_() / 5) * 4) + (((生命值上限_() % 5) * 4) / 5);
     }
 
-    static I64 sat_add(I64 a, I64 b) noexcept {
-        if (b <= 0) return 钳制生命值_(a);
-        const I64 上限 = 生命值上限_();
-        if (a >= 上限 - b) return 上限;
-        return 钳制生命值_(a + b);
+    I64 读取自我I64特征当前值_(
+        const 词性节点类* 特征类型,
+        I64 缺省值,
+        const std::string& 调用点) const noexcept
+    {
+        if (!特征类型) return 缺省值;
+        auto* 自我存在 = 世界树.自我指针;
+        if (!自我存在) return 缺省值;
+
+        const auto 快照 = 世界树.读取特征快照(自我存在, 特征类型, 调用点);
+        if (!快照.has_value()) return 缺省值;
+        if (const auto* 值 = std::get_if<I64>(&*快照)) {
+            return *值;
+        }
+        return 缺省值;
     }
-    static I64 sat_sub(I64 a, I64 b) noexcept {
-        if (b <= 0) return 钳制生命值_(a);
-        return (a > b) ? (a - b) : 0;
+
+    bool 写入自我I64特征当前值_(
+        const 词性节点类* 特征类型,
+        I64 值,
+        时间戳 now,
+        const std::string& 调用点) noexcept
+    {
+        if (!特征类型) return false;
+        auto* 自我存在 = 确保自我存在_(now, 调用点);
+        if (!自我存在) return false;
+        (void)世界树.写入特征_I64(
+            自我存在,
+            特征类型,
+            值,
+            {},
+            调用点);
+        return true;
+    }
+
+    void 重置时序步长为默认值_() noexcept {
+        temporal_forward_step_.store(1);
+        temporal_backward_step_.store(1);
+        service_decay_step_.store(1);
+        standby_mode_.store(false);
     }
 
     void 重算时序步长_按服务值_() noexcept {
-        const I64 srv = 钳制生命值_(service_.load());
+        const I64 srv = 获取服务值();
         if (srv == 0) {
             temporal_forward_step_.store(1);
             temporal_backward_step_.store(1);
@@ -920,23 +1107,59 @@ private:
         temporal_backward_step_.store((std::max<I64>)(1, 反向));
     }
 
-    void 安全值_上升_(I64 delta) noexcept {
-        safety_.store(sat_add(safety_.load(), delta));
-        刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, 结构体_时间戳::当前_微秒(), "自我类::安全值_上升_");
+    void 安全值_上升_(
+        I64 delta,
+        const std::string& 原因类别 = "安全值上升",
+        const std::string& 原因说明 = {}) noexcept {
+        const 时间戳 now = 结构体_时间戳::当前_微秒();
+        (void)写入自我I64特征当前值_(
+            特征类型定义类::类型_自我_安全值,
+            通用函数模块::饱和加(获取安全值(), delta),
+            now,
+            "自我类::安全值_上升_/写当前值");
+        (void)原因类别;
+        (void)原因说明;
     }
-    void 安全值_下降_(I64 delta) noexcept {
-        safety_.store(sat_sub(safety_.load(), delta));
-        刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, 结构体_时间戳::当前_微秒(), "自我类::安全值_下降_");
+    void 安全值_下降_(
+        I64 delta,
+        const std::string& 原因类别 = "安全值下降",
+        const std::string& 原因说明 = {}) noexcept {
+        const 时间戳 now = 结构体_时间戳::当前_微秒();
+        (void)写入自我I64特征当前值_(
+            特征类型定义类::类型_自我_安全值,
+            通用函数模块::饱和减(获取安全值(), delta),
+            now,
+            "自我类::安全值_下降_/写当前值");
+        (void)原因类别;
+        (void)原因说明;
     }
-    void 服务值_上升_(I64 delta) noexcept {
-        service_.store(sat_add(service_.load(), delta));
+    void 服务值_上升_(
+        I64 delta,
+        const std::string& 原因类别 = "服务值上升",
+        const std::string& 原因说明 = {}) noexcept {
+        const 时间戳 now = 结构体_时间戳::当前_微秒();
+        (void)写入自我I64特征当前值_(
+            特征类型定义类::类型_自我_服务值,
+            通用函数模块::饱和加(获取服务值(), delta),
+            now,
+            "自我类::服务值_上升_/写当前值");
         重算时序步长_按服务值_();
-        刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, 结构体_时间戳::当前_微秒(), "自我类::服务值_上升_");
+        (void)原因类别;
+        (void)原因说明;
     }
-    void 服务值_下降_(I64 delta) noexcept {
-        service_.store(sat_sub(service_.load(), delta));
+    void 服务值_下降_(
+        I64 delta,
+        const std::string& 原因类别 = "服务值下降",
+        const std::string& 原因说明 = {}) noexcept {
+        const 时间戳 now = 结构体_时间戳::当前_微秒();
+        (void)写入自我I64特征当前值_(
+            特征类型定义类::类型_自我_服务值,
+            通用函数模块::饱和减(获取服务值(), delta),
+            now,
+            "自我类::服务值_下降_/写当前值");
         重算时序步长_按服务值_();
-        刷新自我融合特征_(nullptr, nullptr, nullptr, 自我尝试学习状态_空闲, 结构体_时间戳::当前_微秒(), "自我类::服务值_下降_");
+        (void)原因类别;
+        (void)原因说明;
     }
 
     // ==========================================================
@@ -952,8 +1175,8 @@ private:
             os << "start_us=" << startUs << "\n";
             os << "now_us=" << now << "\n";
             os << "ticks=" << ticks << "\n";
-            os << "safety=" << safety_.load() << "\n";
-            os << "service=" << service_.load() << "\n";
+            os << "safety=" << 获取安全值() << "\n";
+            os << "service=" << 获取服务值() << "\n";
             os << "last_error=" << lastError_ << "\n";
             os.close();
         }
@@ -970,11 +1193,9 @@ private:
     std::thread selfThread_;
     工作者池 worker_;
 
-    // 全局状态：数值尺度 0..I64_MAX
-    std::atomic<I64> safety_{ (生命值上限_() / 2) };
-    std::atomic<I64> service_{ (生命值上限_() / 2) };
     std::atomic<I64> temporal_forward_step_{ 1 };
     std::atomic<I64> temporal_backward_step_{ 1 };
+    std::atomic<I64> service_decay_step_{ 1 };
     std::atomic_bool standby_mode_{ false };
     结构_根任务权重 roots_{};
     std::mutex 尝试学习参数队列锁_{};

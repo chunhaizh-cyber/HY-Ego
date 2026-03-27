@@ -61,6 +61,7 @@ export struct 结构_后台前端快照 {
     std::string 最近故障摘要;
     std::string 宿主故障摘要;
     std::string 相机状态摘要;
+    std::string 因果链摘要;
 };
 
 export struct 结构_后台自我场景存在快照 {
@@ -168,7 +169,7 @@ namespace 后台前端通道模块_内部 {
 
     inline std::string 序列化(const 结构_后台前端快照& 快照) {
         std::string 输出;
-        输出.reserve(768);
+        输出.reserve(4096);
         追加字段(输出, "backend_online", 快照.后台在线 ? "1" : "0");
         追加字段(输出, "host_running", 快照.宿主运行中 ? "1" : "0");
         追加字段(输出, "stop_requested", 快照.请求停止 ? "1" : "0");
@@ -208,6 +209,7 @@ namespace 后台前端通道模块_内部 {
         追加字段(输出, "recent_fault", 快照.最近故障摘要);
         追加字段(输出, "host_fault", 快照.宿主故障摘要);
         追加字段(输出, "camera_status", 快照.相机状态摘要);
+        追加字段(输出, "causality_detail", 快照.因果链摘要);
         return 输出;
     }
 
@@ -308,6 +310,7 @@ namespace 后台前端通道模块_内部 {
         输出->最近故障摘要 = 解析文本(字段, "recent_fault");
         输出->宿主故障摘要 = 解析文本(字段, "host_fault");
         输出->相机状态摘要 = 解析文本(字段, "camera_status");
+        输出->因果链摘要 = 解析文本(字段, "causality_detail");
         return true;
     }
 
