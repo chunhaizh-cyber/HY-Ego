@@ -3,10 +3,10 @@
 
 #ifdef HY_EGO_ENABLE_FAULT_TOLERANCE_CHECK
 
+#include "日志系统.h"
+
 #include <Windows.h>
 
-#include <filesystem>
-#include <fstream>
 #include <sstream>
 #include <string>
 
@@ -22,13 +22,7 @@ inline void 记录容错检查错误(const wchar_t* 文件, int 行号, const wc
         << L"条件: " << 条件 << L'\n'
         << L"说明: " << 说明 << L'\n';
 
-    const std::filesystem::path 日志目录 = L"D:\\海中鱼巣\\日志";
-    std::error_code 错误码;
-    std::filesystem::create_directories(日志目录, 错误码);
-    std::wofstream 日志(日志目录 / L"逻辑错误.log", std::ios::app);
-    if (日志.is_open()) {
-        日志 << 内容.str() << L'\n';
-    }
+    (void)记录逻辑错误日志(L"容错检查", 条件, 内容.str());
 
     const std::wstring 文本 = 内容.str();
     OutputDebugStringW(文本.c_str());

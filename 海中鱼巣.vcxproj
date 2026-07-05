@@ -145,6 +145,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="海中鱼巣\核心\句柄.h" />
+    <ClInclude Include="海中鱼巣\核心\日志系统.h" />
     <ClInclude Include="海中鱼巣\核心\容错检查.h" />
     <ClInclude Include="海中鱼巣\核心\主信息仓库.h" />
     <ClInclude Include="海中鱼巣\核心\节点仓库.h" />

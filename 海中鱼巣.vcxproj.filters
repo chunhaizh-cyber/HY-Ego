@@ -38,6 +38,9 @@
     <ClInclude Include="海中鱼巣\核心\句柄.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\核心\日志系统.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="海中鱼巣\核心\容错检查.h">
       <Filter>头文件</Filter>
     </ClInclude>
