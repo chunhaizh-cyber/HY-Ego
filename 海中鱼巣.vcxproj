@@ -152,6 +152,11 @@
     <ClInclude Include="海中鱼巣\核心\索引仓库.h" />
     <ClInclude Include="海中鱼巣\核心\写入事务.h" />
     <ClInclude Include="海中鱼巣\领域\世界服务.h" />
+    <ClInclude Include="海中鱼巣\领域\存在服务.h" />
+    <ClInclude Include="海中鱼巣\领域\场景服务.h" />
+    <ClInclude Include="海中鱼巣\领域\状态服务.h" />
+    <ClInclude Include="海中鱼巣\领域\动态服务.h" />
+    <ClInclude Include="海中鱼巣\领域\二次特征服务.h" />
     <ClInclude Include="海中鱼巣\领域\任务服务.h" />
     <ClInclude Include="海中鱼巣\领域\方法服务.h" />
     <ClInclude Include="海中鱼巣\领域\特征值服务.h" />

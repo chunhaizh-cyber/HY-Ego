@@ -59,6 +59,21 @@
     <ClInclude Include="海中鱼巣\领域\世界服务.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\存在服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\场景服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\状态服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\动态服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\二次特征服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="海中鱼巣\领域\任务服务.h">
       <Filter>头文件</Filter>
     </ClInclude>

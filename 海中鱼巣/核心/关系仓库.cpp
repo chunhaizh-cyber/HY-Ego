@@ -175,6 +175,20 @@ std::optional<节点句柄> 关系仓库::获取目标节点(节点句柄 源节
     return std::nullopt;
 }
 
+bool 关系仓库::存在目标关系(关系类型 类型, 节点句柄 目标节点) const {
+    if (!节点_.节点是否有效(目标节点) || !关系类型已定义(类型)) {
+        return false;
+    }
+    for (const auto& 条目 : 关系表_) {
+        const 关系记录& 记录 = 条目.second;
+        if (记录.状态 == 记录状态::有效 && 记录.类型 == 类型 && 记录.目标节点 == 目标节点
+            && 节点_.节点是否有效(记录.源节点)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 std::uint64_t 关系仓库::有效关系数量() const {
     std::uint64_t 数量 = 0;
     for (const auto& 条目 : 关系表_) {
