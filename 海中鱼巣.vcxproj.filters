@@ -14,4 +14,71 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="海中鱼巣\入口.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\主信息仓库.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\节点仓库.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\关系仓库.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\索引仓库.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\写入事务.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="海中鱼巣\核心\句柄.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\核心\容错检查.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\核心\主信息仓库.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\核心\节点仓库.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\核心\关系仓库.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\核心\索引仓库.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\核心\写入事务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\世界服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\任务服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\方法服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\特征值服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\特征服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\因果服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\语素服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\需求服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
 </Project>
