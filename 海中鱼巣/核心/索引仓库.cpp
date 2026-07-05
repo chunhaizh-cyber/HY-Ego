@@ -37,4 +37,14 @@ bool 索引仓库::删除主键(std::uint64_t 主键) {
     return 主键索引_.erase(主键) != 0;
 }
 
+std::uint64_t 索引仓库::有效主键数量() const {
+    std::uint64_t 数量 = 0;
+    for (const auto& 条目 : 主键索引_) {
+        if (节点_.节点是否有效(条目.second)) {
+            ++数量;
+        }
+    }
+    return 数量;
+}
+
 }

@@ -27,6 +27,7 @@ public:
     std::optional<节点记录> 读取节点(节点句柄 节点) const;
     bool 删除节点(节点句柄 节点);
     bool 节点是否有效(节点句柄 节点) const;
+    std::uint64_t 有效节点数量() const;
     std::uint64_t 仓库编号() const;
 
 private:

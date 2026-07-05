@@ -5,9 +5,12 @@
 
 #include <Windows.h>
 
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <string>
+
+#pragma comment(lib, "User32.lib")
 
 namespace 海中鱼巣 {
 
@@ -19,7 +22,10 @@ inline void 记录容错检查错误(const wchar_t* 文件, int 行号, const wc
         << L"条件: " << 条件 << L'\n'
         << L"说明: " << 说明 << L'\n';
 
-    std::wofstream 日志("HY_Ego_fault_tolerance.log", std::ios::app);
+    const std::filesystem::path 日志目录 = L"D:\\海中鱼巣\\日志";
+    std::error_code 错误码;
+    std::filesystem::create_directories(日志目录, 错误码);
+    std::wofstream 日志(日志目录 / L"逻辑错误.log", std::ios::app);
     if (日志.is_open()) {
         日志 << 内容.str() << L'\n';
     }

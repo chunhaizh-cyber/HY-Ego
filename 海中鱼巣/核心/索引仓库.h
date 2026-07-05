@@ -17,6 +17,7 @@ public:
     bool 绑定主键(std::uint64_t 主键, 节点句柄 节点);
     std::optional<节点句柄> 按主键查节点(std::uint64_t 主键) const;
     bool 删除主键(std::uint64_t 主键);
+    std::uint64_t 有效主键数量() const;
 
 private:
     const 节点仓库& 节点_;

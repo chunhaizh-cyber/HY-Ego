@@ -61,6 +61,16 @@ bool 节点仓库::节点是否有效(节点句柄 节点) const {
     return 读取节点(节点).has_value();
 }
 
+std::uint64_t 节点仓库::有效节点数量() const {
+    std::uint64_t 数量 = 0;
+    for (const auto& 条目 : 节点表_) {
+        if (条目.second.状态 == 记录状态::有效) {
+            ++数量;
+        }
+    }
+    return 数量;
+}
+
 std::uint64_t 节点仓库::仓库编号() const {
     return 仓库编号_;
 }
