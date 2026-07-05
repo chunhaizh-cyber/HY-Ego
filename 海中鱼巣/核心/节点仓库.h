@@ -21,7 +21,7 @@ struct 节点记录 {
 
 class 节点仓库 {
 public:
-    explicit 节点仓库(std::uint64_t 仓库编号 = 1);
+    explicit 节点仓库(const 主信息仓库& 主信息, std::uint64_t 仓库编号 = 1);
 
     节点句柄 创建节点(节点类型 类型, 主信息句柄 主信息);
     std::optional<节点记录> 读取节点(节点句柄 节点) const;
@@ -30,6 +30,7 @@ public:
     std::uint64_t 仓库编号() const;
 
 private:
+    const 主信息仓库& 主信息_;
     std::uint64_t 仓库编号_ = 1;
     std::uint64_t 下个节点编号_ = 1;
     std::uint64_t 下个创建序号_ = 1;

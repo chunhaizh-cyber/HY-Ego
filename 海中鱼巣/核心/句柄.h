@@ -23,7 +23,8 @@ enum class 节点类型 : std::uint32_t {
     任务 = 8,
     方法 = 9,
     动态 = 10,
-    因果引用 = 11
+    因果引用 = 11,
+    状态 = 12
 };
 
 enum class 关系类型 : std::uint32_t {
