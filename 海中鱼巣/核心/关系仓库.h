@@ -33,6 +33,7 @@ public:
     std::vector<节点句柄> 获取子节点(节点句柄 父节点) const;
     std::optional<节点句柄> 获取父节点(节点句柄 子节点) const;
     std::optional<节点句柄> 获取目标节点(节点句柄 源节点, 关系类型 类型) const;
+    std::vector<节点句柄> 获取目标节点组(节点句柄 源节点, 关系类型 类型) const;
     bool 存在关系(关系类型 类型, 节点句柄 源节点, 节点句柄 目标节点) const;
     bool 存在目标关系(关系类型 类型, 节点句柄 目标节点) const;
     std::uint64_t 有效关系数量() const;
