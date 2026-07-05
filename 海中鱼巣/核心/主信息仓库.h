@@ -27,7 +27,9 @@ public:
     bool 删除主信息(主信息句柄 主信息);
     bool 主信息是否有效(主信息句柄 主信息) const;
     bool 写入I64值(主信息句柄 主信息, std::int64_t 值);
+    bool 写入I64值(主信息句柄 主信息, std::uint64_t 值索引, std::int64_t 值);
     std::optional<std::int64_t> 读取I64值(主信息句柄 主信息) const;
+    std::optional<std::int64_t> 读取I64值(主信息句柄 主信息, std::uint64_t 值索引) const;
 
 private:
     std::uint64_t 仓库编号_ = 1;

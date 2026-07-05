@@ -5,6 +5,8 @@
 #include "../核心/主信息仓库.h"
 #include "../核心/关系仓库.h"
 
+#include <cstdint>
+#include <limits>
 #include <optional>
 
 namespace 海中鱼巣 {
@@ -15,11 +17,12 @@ public:
         : 主信息_(主信息), 节点_(节点), 关系_(关系) {
     }
 
-    节点句柄 创建实例状态(节点句柄 场景, 节点句柄 存在, std::int64_t 状态值) {
-        if (!节点类型匹配(场景, 节点类型::场景) || !节点类型匹配(存在, 节点类型::存在)) {
+    节点句柄 创建实例状态(节点句柄 场景, 节点句柄 存在, std::uint64_t 发生时间戳, std::int64_t 状态值) {
+        if (!节点类型匹配(场景, 节点类型::场景) || !节点类型匹配(存在, 节点类型::存在)
+            || !发生时间戳可用(发生时间戳)) {
             return {};
         }
-        const auto 状态节点 = 创建状态节点(状态值);
+        const auto 状态节点 = 创建状态节点(状态值, 发生时间戳);
         if (!句柄有效(状态节点)) {
             return {};
         }
@@ -61,6 +64,18 @@ public:
         return 主信息_.读取I64值(记录->主信息);
     }
 
+    std::optional<std::uint64_t> 读取发生时间戳(节点句柄 状态节点) const {
+        const auto 记录 = 节点_.读取节点(状态节点);
+        if (!记录.has_value() || 记录->类型 != 节点类型::状态) {
+            return std::nullopt;
+        }
+        const auto 发生时间戳 = 主信息_.读取I64值(记录->主信息, 发生时间戳槽位);
+        if (!发生时间戳.has_value() || 发生时间戳.value() <= 0) {
+            return std::nullopt;
+        }
+        return static_cast<std::uint64_t>(发生时间戳.value());
+    }
+
     bool 状态是否实例状态(节点句柄 状态节点) const {
         const auto 记录 = 节点_.读取节点(状态节点);
         return 记录.has_value() && 记录->类型 == 节点类型::状态
@@ -68,9 +83,23 @@ public:
     }
 
 private:
-    节点句柄 创建状态节点(std::int64_t 状态值) {
+    static constexpr std::uint64_t 发生时间戳槽位 = 1;
+
+    bool 发生时间戳可用(std::uint64_t 发生时间戳) const {
+        return 发生时间戳 != 0
+            && 发生时间戳 <= static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max());
+    }
+
+    节点句柄 创建状态节点(std::int64_t 状态值, std::optional<std::uint64_t> 发生时间戳 = std::nullopt) {
+        if (发生时间戳.has_value() && !发生时间戳可用(发生时间戳.value())) {
+            return {};
+        }
         const auto 主信息句柄 = 主信息_.创建主信息();
         if (!主信息_.写入I64值(主信息句柄, 状态值)) {
+            return {};
+        }
+        if (发生时间戳.has_value()
+            && !主信息_.写入I64值(主信息句柄, 发生时间戳槽位, static_cast<std::int64_t>(发生时间戳.value()))) {
             return {};
         }
         return 节点_.创建节点(节点类型::状态, 主信息句柄);
