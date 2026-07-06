@@ -35,6 +35,7 @@ public:
     std::optional<节点句柄> 获取目标节点(节点句柄 源节点, 关系类型 类型) const;
     std::vector<节点句柄> 获取目标节点组(节点句柄 源节点, 关系类型 类型) const;
     std::vector<节点句柄> 获取目标节点组(节点句柄 源节点, 关系类型 类型, std::int64_t 顺序号) const;
+    std::vector<关系记录> 获取关系记录组(节点句柄 源节点, 关系类型 类型) const;
     bool 存在关系(关系类型 类型, 节点句柄 源节点, 节点句柄 目标节点) const;
     bool 存在目标关系(关系类型 类型, 节点句柄 目标节点) const;
     std::uint64_t 有效关系数量() const;
