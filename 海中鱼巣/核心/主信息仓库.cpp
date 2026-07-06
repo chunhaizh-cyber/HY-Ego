@@ -81,10 +81,10 @@ std::optional<std::int64_t> 主信息仓库::读取I64值(主信息句柄 主信
         return std::nullopt;
     }
     const auto 索引 = static_cast<std::size_t>(值索引);
-    if (记录->值容器.size() <= 索引) {
+    if (记录->值容器.size() <= 索引 || !记录->值容器[索引].has_value()) {
         return std::nullopt;
     }
-    return 记录->值容器[索引];
+    return 记录->值容器[索引].value();
 }
 
 }

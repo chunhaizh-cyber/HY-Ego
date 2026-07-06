@@ -15,7 +15,7 @@ struct 主信息记录 {
     std::uint32_t 版本号 = 0;
     记录状态 状态 = 记录状态::无效;
     std::uint64_t 拓扑锚点编号 = 0;
-    std::vector<std::int64_t> 值容器;
+    std::vector<std::optional<std::int64_t>> 值容器;
 };
 
 class 主信息仓库 {
