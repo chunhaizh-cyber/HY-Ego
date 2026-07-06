@@ -39,6 +39,8 @@ public:
     std::uint64_t 有效关系数量() const;
 
 private:
+    bool 节点在父链中(节点句柄 起点, 节点句柄 目标) const;
+
     const 节点仓库& 节点_;
     std::uint64_t 仓库编号_ = 1;
     std::uint64_t 下个关系编号_ = 1;
