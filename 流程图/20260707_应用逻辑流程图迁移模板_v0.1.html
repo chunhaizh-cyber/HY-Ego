@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>应用逻辑流程图迁移模板 v0.1</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+      background: #f7f7f5;
+      color: #1f2328;
+    }
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 24px;
+      margin: 0 0 16px;
+    }
+    .mermaid {
+      background: #ffffff;
+      border: 1px solid #d0d7de;
+      border-radius: 8px;
+      padding: 16px;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>应用逻辑流程图迁移模板 v0.1</h1>
+    <pre class="mermaid">flowchart TD
+    A["旧函数事实证据"] --> B["提取应用逻辑意图"]
+    B --> C["整理输入材料"]
+    C --> D{"前置拒绝是否通过"}
+    D -- "否" --> R["拒绝路径：结构不变化"]
+    D -- "是" --> E["映射到领域服务入口"]
+    E --> F["调用服务操作函数矩阵"]
+    F --> G{"是否需要写结构"}
+    G -- "否" --> H["返回只读材料或候选"]
+    G -- "是" --> I["经领域服务写节点 / 主信息 / 关系 / 索引"]
+    I --> J{"是否记录动态 / 因果"}
+    J -- "否" --> K["输出结构变化和读取结果"]
+    J -- "是" --> L["动态服务记录实例动态"]
+    L --> M["因果服务记录轻量因果引用"]
+    M --> K
+    H --> K
+    R --> N["验收：拒绝后节点 / 关系 / 索引数量不变"]
+    K --> O["验收：输入入口 / 核心处理 / 结构承载 / 输出变化 / 调用路径 / 验证方式"]
+    O --> P["生成批次级代码实施包候选"]</pre>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>
