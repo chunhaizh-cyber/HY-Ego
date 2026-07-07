@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="海中鱼巣.vcxproj" />
+  <Project Path="海中鱼巣.vcxproj" Id="9e26e203-9619-4d61-aa6c-5ed4d8694ecf" />
 </Solution>
