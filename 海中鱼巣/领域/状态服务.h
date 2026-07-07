@@ -8,8 +8,17 @@
 #include <cstdint>
 #include <limits>
 #include <optional>
+#include <vector>
 
 namespace 海中鱼巣 {
+
+struct 状态材料 {
+    节点句柄 状态;
+    节点句柄 场景;
+    节点句柄 主体;
+    std::int64_t 状态值 = 0;
+    std::uint64_t 发生时间戳 = 0;
+};
 
 class 状态服务 {
 public:
@@ -28,7 +37,8 @@ public:
         }
         const auto 场景关系 = 关系_.创建关系(关系类型::运行期临时, 场景, 状态节点);
         const auto 存在关系 = 关系_.创建关系(关系类型::引用, 状态节点, 存在);
-        if (!句柄有效(场景关系) || !句柄有效(存在关系)) {
+        const auto 场景材料关系 = 关系_.创建关系(关系类型::引用, 状态节点, 场景);
+        if (!句柄有效(场景关系) || !句柄有效(存在关系) || !句柄有效(场景材料关系)) {
             return {};
         }
         return 状态节点;
@@ -82,6 +92,48 @@ public:
             && 关系_.存在目标关系(关系类型::运行期临时, 状态节点);
     }
 
+    std::optional<节点句柄> 读取状态主体(节点句柄 状态节点) const {
+        if (!状态是否实例状态(状态节点)) {
+            return std::nullopt;
+        }
+        return 读取唯一引用目标(状态节点, 节点类型::存在);
+    }
+
+    std::optional<节点句柄> 读取状态场景(节点句柄 状态节点) const {
+        if (!状态是否实例状态(状态节点)) {
+            return std::nullopt;
+        }
+        return 读取唯一引用目标(状态节点, 节点类型::场景);
+    }
+
+    std::vector<节点句柄> 读取场景状态(节点句柄 场景) const {
+        std::vector<节点句柄> 状态组;
+        if (!节点类型匹配(场景, 节点类型::场景)) {
+            return 状态组;
+        }
+        const auto 目标组 = 关系_.获取目标节点组(场景, 关系类型::运行期临时);
+        for (const auto& 目标 : 目标组) {
+            if (节点类型匹配(目标, 节点类型::状态)) {
+                状态组.push_back(目标);
+            }
+        }
+        return 状态组;
+    }
+
+    std::optional<状态材料> 读取状态材料(节点句柄 状态节点) const {
+        if (!状态是否实例状态(状态节点)) {
+            return std::nullopt;
+        }
+        const auto 主体 = 读取状态主体(状态节点);
+        const auto 场景 = 读取状态场景(状态节点);
+        const auto 状态值 = 读取状态值(状态节点);
+        const auto 时间戳 = 读取发生时间戳(状态节点);
+        if (!主体.has_value() || !场景.has_value() || !状态值.has_value() || !时间戳.has_value()) {
+            return std::nullopt;
+        }
+        return 状态材料{状态节点, 场景.value(), 主体.value(), 状态值.value(), 时间戳.value()};
+    }
+
 private:
     static constexpr std::uint64_t 发生时间戳槽位 = 1;
 
@@ -108,6 +160,21 @@ private:
     bool 节点类型匹配(节点句柄 节点句柄值, 节点类型 类型) const {
         const auto 记录 = 节点_.读取节点(节点句柄值);
         return 记录.has_value() && 记录->类型 == 类型;
+    }
+
+    std::optional<节点句柄> 读取唯一引用目标(节点句柄 源节点, 节点类型 目标类型) const {
+        const auto 目标组 = 关系_.获取目标节点组(源节点, 关系类型::引用);
+        std::optional<节点句柄> 唯一目标;
+        for (const auto& 目标 : 目标组) {
+            if (!节点类型匹配(目标, 目标类型)) {
+                continue;
+            }
+            if (唯一目标.has_value()) {
+                return std::nullopt;
+            }
+            唯一目标 = 目标;
+        }
+        return 唯一目标;
     }
 
     主信息仓库& 主信息_;

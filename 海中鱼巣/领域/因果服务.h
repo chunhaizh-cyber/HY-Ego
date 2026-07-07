@@ -3,6 +3,9 @@
 
 #include "../核心/节点仓库.h"
 #include "../核心/主信息仓库.h"
+#include "动态服务.h"
+
+#include <optional>
 
 namespace 海中鱼巣 {
 
@@ -19,6 +22,18 @@ public:
     节点句柄 记录因果引用(节点句柄 来源动态) {
         const auto 动态记录 = 节点_.读取节点(来源动态);
         if (!动态记录.has_value() || 动态记录->类型 != 节点类型::动态) {
+            return {};
+        }
+        return 记录因果引用();
+    }
+
+    std::optional<动态材料> 读取因果准入动态材料(节点句柄 来源动态, const 动态服务& 动态) const {
+        return 动态.读取动态材料(来源动态);
+    }
+
+    节点句柄 记录因果引用(节点句柄 来源动态, const 动态服务& 动态) {
+        const auto 动态材料值 = 读取因果准入动态材料(来源动态, 动态);
+        if (!动态材料值.has_value()) {
             return {};
         }
         return 记录因果引用();
