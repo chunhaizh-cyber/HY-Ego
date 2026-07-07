@@ -199,6 +199,30 @@ public:
             改变后值.value(), 来源动作值, 前值.value(), 后值.value(), 时间戳.value()};
     }
 
+    bool 来源动作入口是否有效(节点句柄 来源动作) const {
+        return 节点是否动作入口角色(来源动作);
+    }
+
+    std::optional<节点句柄> 读取动态来源动作(节点句柄 动态节点) const {
+        const auto 材料 = 读取动态材料(动态节点);
+        if (!材料.has_value() || !句柄有效(材料->来源动作)) {
+            return std::nullopt;
+        }
+        return 材料->来源动作;
+    }
+
+    bool 动态证据材料是否完整(节点句柄 动态节点) const {
+        const auto 材料 = 读取动态材料(动态节点);
+        return 材料.has_value()
+            && 句柄有效(材料->场景)
+            && 句柄有效(材料->主体)
+            && 句柄有效(材料->被改变目标)
+            && 句柄有效(材料->改变前值)
+            && 句柄有效(材料->改变后值)
+            && 材料->发生时间戳 != 0
+            && (!句柄有效(材料->来源动作) || 来源动作入口是否有效(材料->来源动作));
+    }
+
 private:
     static constexpr std::uint64_t 发生时间戳槽位 = 1;
     static constexpr std::int64_t 方法角色顺序号 = 0;
