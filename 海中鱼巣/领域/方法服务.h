@@ -141,6 +141,14 @@ public:
         return 角色;
     }
 
+    bool 方法节点是否有效(节点句柄 方法节点) const {
+        return 节点类型匹配(方法节点, 节点类型::方法);
+    }
+
+    bool 方法首是否有效(节点句柄 方法节点, const 状态服务& 状态) const {
+        return 有效方法首(方法节点, 状态);
+    }
+
     std::optional<节点句柄> 读取方法虚拟存在(节点句柄 方法节点, const 状态服务& 状态) const {
         if (!有效方法首(方法节点, 状态)) {
             return std::nullopt;
@@ -154,6 +162,22 @@ public:
 
     std::vector<节点句柄> 读取方法结果节点集合(节点句柄 方法首节点, const 状态服务& 状态) const {
         return 读取方法角色节点集合(方法首节点, 方法角色状态::方法结果, 状态);
+    }
+
+    std::optional<节点句柄> 读取方法条件归属方法首(节点句柄 方法首节点, 节点句柄 方法条件节点,
+        const 状态服务& 状态) const {
+        if (!有效方法条件节点(方法首节点, 方法条件节点, 状态)) {
+            return std::nullopt;
+        }
+        return 方法首节点;
+    }
+
+    std::optional<节点句柄> 读取方法结果归属方法首(节点句柄 方法首节点, 节点句柄 方法结果节点,
+        const 状态服务& 状态) const {
+        if (!有效方法结果节点(方法首节点, 方法结果节点, 状态)) {
+            return std::nullopt;
+        }
+        return 方法首节点;
     }
 
     std::optional<节点句柄> 读取方法条件场景(节点句柄 方法首节点, 节点句柄 方法条件节点,
