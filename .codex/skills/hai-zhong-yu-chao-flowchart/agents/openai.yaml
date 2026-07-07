@@ -1,0 +1,4 @@
+interface:
+  display_name: "海中鱼巣流程图"
+  short_description: "Create durable Sea Nest Mermaid flowchart files"
+  default_prompt: "Use $hai-zhong-yu-chao-flowchart to 生成海中鱼巣流程图，并同时写入匹配的 Markdown 和 HTML 文件。"

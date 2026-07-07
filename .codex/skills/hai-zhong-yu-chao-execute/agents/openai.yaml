@@ -1,0 +1,4 @@
+interface:
+  display_name: "海中鱼巣执行"
+  short_description: "Consume confirmed Sea Nest executable queues safely"
+  default_prompt: "Use $hai-zhong-yu-chao-execute to 按计划索引和 Codex 任务队列持续执行已确认切片，直到队列清空、真实阻塞或用户暂停。"

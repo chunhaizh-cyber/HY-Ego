@@ -1,0 +1,4 @@
+interface:
+  display_name: "海中鱼巣讨论"
+  short_description: "Review Sea Nest ideas, specs, plans, and service boundaries"
+  default_prompt: "Use $hai-zhong-yu-chao-discuss to 讨论和审查海中鱼巣方案，指出问题、结构映射和需要确认的边界。"

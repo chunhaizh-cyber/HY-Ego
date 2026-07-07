@@ -1,0 +1,4 @@
+interface:
+  display_name: "海中鱼巣根因追踪"
+  short_description: "Trace Sea Nest runtime and validation failures to root cause"
+  default_prompt: "Use $hai-zhong-yu-chao-root-cause to 分层追踪海中鱼巣弹窗、逻辑错误、运行异常或验收失败根因，并最小修复验证。"
