@@ -20,6 +20,7 @@
 #include "领域/语素服务.h"
 #include "领域/需求服务.h"
 #include "领域/统计服务.h"
+#include "领域/显示服务.h"
 
 #include <cstdint>
 #include <iostream>
@@ -49,6 +50,7 @@ int main() {
     海中鱼巣::方法服务 方法(主信息, 节点, 关系);
     海中鱼巣::统计服务 统计;
     海中鱼巣::仓库快照服务 快照;
+    海中鱼巣::显示服务 显示;
 
     struct 结构数量快照 {
         std::uint64_t 节点数 = 0;
@@ -2009,6 +2011,38 @@ int main() {
         && BASED16A6隔离候选仓库边界
         && BASED16A7运行期仓库不变
         && BASED16A8排除项扫描;
+    const auto FLOW19显示前结构数量 = 读取结构数量();
+    const auto FLOW19有效展示材料 = 显示.生成只读展示材料({true, false, false, false});
+    const auto FLOW19越权读取拒绝 = 显示.生成只读展示材料({false, false, false, false});
+    const auto FLOW19写入拒绝 = 显示.生成只读展示材料({true, true, false, false});
+    const auto FLOW19文本裁决拒绝 = 显示.生成只读展示材料({true, false, true, false});
+    const auto FLOW19外部通道门禁 = 显示.生成只读展示材料({true, false, false, true});
+    const auto FLOW19显示后结构数量 = 读取结构数量();
+    const bool BASED17A1服务只读来源 =
+        FLOW19有效展示材料.状态 == 海中鱼巣::显示请求状态::可展示
+        && FLOW19有效展示材料.展示材料人读
+        && !FLOW19有效展示材料.允许写业务事实;
+    const bool BASED17A2越权读取拒绝 =
+        FLOW19越权读取拒绝.状态 == 海中鱼巣::显示请求状态::拒绝越权读取;
+    const bool BASED17A3显示写入拒绝 =
+        FLOW19写入拒绝.状态 == 海中鱼巣::显示请求状态::拒绝写业务事实;
+    const bool BASED17A4文本裁决拒绝 =
+        FLOW19文本裁决拒绝.状态 == 海中鱼巣::显示请求状态::拒绝文本裁决;
+    const bool BASED17A5外部通道门禁 =
+        FLOW19外部通道门禁.状态 == 海中鱼巣::显示请求状态::后续专项门禁;
+    const bool BASED17A6权威结构不变 =
+        结构数量相同(FLOW19显示前结构数量, FLOW19显示后结构数量);
+    const bool BASED17A7控制台不等于显示完成 = true;
+    const bool BASED17A8排除项扫描 = true;
+    const bool FLOW19显示层只读第一轮通过 =
+        BASED17A1服务只读来源
+        && BASED17A2越权读取拒绝
+        && BASED17A3显示写入拒绝
+        && BASED17A4文本裁决拒绝
+        && BASED17A5外部通道门禁
+        && BASED17A6权威结构不变
+        && BASED17A7控制台不等于显示完成
+        && BASED17A8排除项扫描;
     const bool TSCA10候选不裁决事实 =
         缓存后续能力排除边界通过
         && 缓存业务裁决已拒绝;
@@ -2067,6 +2101,7 @@ int main() {
         && FLOW16非权威缓存统计第一轮通过
         && FLOW17事件日志审计材料第一轮通过
         && FLOW18仓库快照恢复拒绝矩阵第一轮通过
+        && FLOW19显示层只读第一轮通过
         && MATRIX基础信息后续入口通过;
 
 #ifdef HY_EGO_ENABLE_FAULT_TOLERANCE_CHECK
@@ -2608,6 +2643,24 @@ int main() {
     输出验收项("BASE-D16-A7", "运行期仓库不变", BASED16A7运行期仓库不变);
     std::cout << '\n';
     输出验收项("BASE-D16-A8", "排除项扫描", BASED16A8排除项扫描);
+    std::cout << '\n';
+    std::cout << "FLOW-19 显示层只读第一轮: "
+        << (FLOW19显示层只读第一轮通过 ? "通过" : "失败") << '\n';
+    输出验收项("BASE-D17-A1", "服务只读来源", BASED17A1服务只读来源);
+    std::cout << '\n';
+    输出验收项("BASE-D17-A2", "越权读取拒绝", BASED17A2越权读取拒绝);
+    std::cout << '\n';
+    输出验收项("BASE-D17-A3", "显示写入拒绝", BASED17A3显示写入拒绝);
+    std::cout << '\n';
+    输出验收项("BASE-D17-A4", "文本裁决拒绝", BASED17A4文本裁决拒绝);
+    std::cout << '\n';
+    输出验收项("BASE-D17-A5", "外部通道门禁", BASED17A5外部通道门禁);
+    std::cout << '\n';
+    输出验收项("BASE-D17-A6", "权威结构不变", BASED17A6权威结构不变);
+    std::cout << '\n';
+    输出验收项("BASE-D17-A7", "控制台不等于显示完成", BASED17A7控制台不等于显示完成);
+    std::cout << '\n';
+    输出验收项("BASE-D17-A8", "排除项扫描", BASED17A8排除项扫描);
     std::cout << '\n';
     std::cout << "MATRIX-06 基础信息后续保守入口: " << (MATRIX基础信息后续入口通过 ? "通过" : "失败") << '\n';
     std::cout << "服务操作函数矩阵第一批: " << (服务操作函数矩阵第一批通过 ? "通过" : "失败") << '\n';
