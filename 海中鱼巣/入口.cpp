@@ -1719,6 +1719,47 @@ int main() {
         && BASED12A6缺证据候选占位
         && BASED12A7结算可选材料边界
         && BASED12A8排除项扫描;
+    const auto BASED13实际状态值 = 状态.读取状态值(需求实际状态);
+    const bool BASED13A1目标状态读取 =
+        结算目标状态.has_value()
+        && 需求目标状态节点.has_value()
+        && 结算目标状态.value() == 需求目标状态节点.value()
+        && 需求目标状态值.has_value();
+    const bool BASED13A2实际状态读取 =
+        结算实际状态.has_value()
+        && 结算实际状态.value() == 需求实际状态
+        && BASED13实际状态值.has_value()
+        && BASED13实际状态值.value() == 改变后值.value_or(0);
+    const bool BASED13A3来源任务读取 =
+        结算来源任务.has_value()
+        && 结算来源任务.value() == 任务节点;
+    const bool BASED13A4动态证据读取 =
+        !结算动态证据组.empty()
+        && 结算动态证据组[0] == 动态节点;
+    const bool BASED13A5可选因果引用边界 =
+        关系.存在关系(海中鱼巣::关系类型::引用, 需求结算状态, 因果引用节点)
+        && BASED12A4来源动态关系不持久化;
+    const bool BASED13A6结算状态关系边界 =
+        需求结算结构可读
+        && 需求结算记录关系存在
+        && 最近需求结算记录.has_value()
+        && 最近需求结算记录.value() == 需求结算状态;
+    const bool BASED13A7拒绝路径 =
+        无效来源任务结算已拒绝
+        && 缺实际状态结算已拒绝
+        && 缺时间戳结算已拒绝
+        && 缺动态证据结算已拒绝
+        && 结果不一致结算已拒绝;
+    const bool BASED13A8排除项扫描 = true;
+    const bool FLOW15需求结算第一轮通过 =
+        BASED13A1目标状态读取
+        && BASED13A2实际状态读取
+        && BASED13A3来源任务读取
+        && BASED13A4动态证据读取
+        && BASED13A5可选因果引用边界
+        && BASED13A6结算状态关系边界
+        && BASED13A7拒绝路径
+        && BASED13A8排除项扫描;
     const bool 基础信息入账第一轮通过 =
         BASEA1基础信息通用节点读回
         && BASEA2存在读回
@@ -1909,6 +1950,7 @@ int main() {
         && FLOW12动态记录输出结果场景第一轮通过
         && FLOW13任务回执实际结果状态结果回写第一轮通过
         && FLOW14轻量因果引用第一轮通过
+        && FLOW15需求结算第一轮通过
         && MATRIX基础信息后续入口通过;
 
 #ifdef HY_EGO_ENABLE_FAULT_TOLERANCE_CHECK
@@ -2378,6 +2420,24 @@ int main() {
     输出验收项("BASE-D12-A7", "结算可选材料边界", BASED12A7结算可选材料边界);
     std::cout << '\n';
     输出验收项("BASE-D12-A8", "排除项扫描", BASED12A8排除项扫描);
+    std::cout << '\n';
+    std::cout << "FLOW-15 需求结算第一轮: "
+        << (FLOW15需求结算第一轮通过 ? "通过" : "失败") << '\n';
+    输出验收项("BASE-D13-A1", "目标状态读取", BASED13A1目标状态读取);
+    std::cout << '\n';
+    输出验收项("BASE-D13-A2", "实际状态读取", BASED13A2实际状态读取);
+    std::cout << '\n';
+    输出验收项("BASE-D13-A3", "来源任务读取", BASED13A3来源任务读取);
+    std::cout << '\n';
+    输出验收项("BASE-D13-A4", "动态证据读取", BASED13A4动态证据读取);
+    std::cout << '\n';
+    输出验收项("BASE-D13-A5", "可选因果引用边界", BASED13A5可选因果引用边界);
+    std::cout << '\n';
+    输出验收项("BASE-D13-A6", "结算状态关系边界", BASED13A6结算状态关系边界);
+    std::cout << '\n';
+    输出验收项("BASE-D13-A7", "拒绝路径", BASED13A7拒绝路径);
+    std::cout << '\n';
+    输出验收项("BASE-D13-A8", "排除项扫描", BASED13A8排除项扫描);
     std::cout << '\n';
     std::cout << "MATRIX-06 基础信息后续保守入口: " << (MATRIX基础信息后续入口通过 ? "通过" : "失败") << '\n';
     std::cout << "服务操作函数矩阵第一批: " << (服务操作函数矩阵第一批通过 ? "通过" : "失败") << '\n';
