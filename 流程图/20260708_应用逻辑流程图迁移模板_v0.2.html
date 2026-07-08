@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>应用逻辑流程图迁移模板 v0.2</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+      background: #f7f7f5;
+      color: #1f2328;
+    }
+    main {
+      max-width: 1480px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 24px;
+      margin: 0 0 16px;
+    }
+    .mermaid {
+      background: #ffffff;
+      border: 1px solid #d0d7de;
+      border-radius: 8px;
+      padding: 16px;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>应用逻辑流程图迁移模板 v0.2</h1>
+    <pre class="mermaid">flowchart TD
+    A["旧函数事实证据"] --> A1["登记证据包：旧函数 / 调用点 / 输入输出 / 副作用 / 依据文件"]
+    A1 --> B["提取领域意图与目标状态"]
+    B --> B1["形成服务逻辑包草案：目标状态 / 触发入口 / 输入 / 输出 / 读写类型 / 禁止范围"]
+    B1 --> C["整理输入材料并标注证据等级"]
+    C --> C1["入口参数检测：句柄 / 类型 / 关系 / 生命周期 / 权限 / 必需材料"]
+    C1 --> D{"前置拒绝闸门是否通过"}
+    D -- "否" --> R["拒绝输出：拒绝原因 / 缺失证据 / 待确认项 / 结构不变化"]
+    R --> R1["追溯非法数据来源：上游材料 / 服务调用 / 流程编排"]
+    R1 --> R2["禁止生成代码实施包"]
+    D -- "是" --> E["映射并确认领域服务归属"]
+    E --> E1{"领域服务入口是否明确"}
+    E1 -- "否" --> Q1["生成领域服务归属缺口草案"]
+    Q1 --> Q0["进入待确认，不进入实施"]
+    E1 -- "是" --> F["匹配服务操作函数矩阵"]
+    F --> F1{"矩阵匹配是否唯一"}
+    F1 -- "无匹配" --> Q2["生成矩阵缺口草案"]
+    Q2 --> Q0
+    F1 -- "多匹配" --> Q3["生成归属冲突确认单"]
+    Q3 --> Q0
+    F1 -- "唯一匹配" --> S["服务逻辑包确认闸门"]
+    S --> S1{"服务逻辑包是否已确认"}
+    S1 -- "否" --> Q4["输出待确认服务逻辑包草案"]
+    Q4 --> Q0
+    S1 -- "是" --> G{"读写类型判定"}
+    G -- "只读 / 候选" --> H["返回只读材料 / 候选结果 / 不变式说明"]
+    H --> K["输出读取结果与结构不变化证据"]
+    G -- "写结构" --> I["生成结构写入计划：归属服务 / 写入对象 / 幂等 / 冲突 / 读回验证"]
+    I --> I0["写入口参数检测：再次排除非法输入并记录来源追溯点"]
+    I0 -- "发现非法数据" --> R1
+    I0 -- "通过" --> I1["经领域服务写节点 / 主信息 / 关系 / 索引"]
+    I1 --> J{"是否记录实例动态与轻量因果引用"}
+    J -- "否" --> K2["输出结构变化与读回结果"]
+    J -- "是" --> L["动态服务记录实例动态"]
+    L --> M["因果服务记录轻量因果引用"]
+    M --> K2
+    K --> O["实施包生成前检查：入口 / 处理 / 承载 / 输出 / 路径 / 验证 / 禁止范围"]
+    K2 --> O
+    O --> P{"是否满足生成批次级代码实施包条件"}
+    P -- "否" --> Q5["输出缺口与待确认项，不进入 Codex 队列"]
+    P -- "是" --> X["生成批次级代码实施包候选：允许文件 / 禁止文件 / 步骤 / 验证命令 / 声明边界"]</pre>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>
