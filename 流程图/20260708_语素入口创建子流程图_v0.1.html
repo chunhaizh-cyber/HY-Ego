@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>2.3 语素入口创建子流程图</title><style>body{margin:0;font-family:"Microsoft YaHei","Segoe UI",sans-serif;background:#f7f7f4;color:#202124}main{max-width:1280px;margin:0 auto;padding:32px 24px 48px}.mermaid{background:#fff;border:1px solid #dadce0;border-radius:6px;padding:16px;overflow-x:auto;white-space:pre-wrap;line-height:1.6}</style></head><body><main><h1>2.3 语素入口创建子流程图</h1><p>更新时间：2026-07-08</p><pre class="mermaid">flowchart TD
+    A["输入：对应信息节点 / 可选主键"] --> B["2.2 对应信息节点准入"]
+    B --> C{"准入是否通过"}
+    C -- "否" --> R["返回无效句柄"]
+    R --> R1["结构不变化：不创建主信息 / 语素节点 / 关系 / 索引"]
+    C -- "是" --> D["主信息仓库创建主信息"]
+    D --> E["节点仓库创建语素节点"]
+    E --> F["关系仓库创建语素对应信息关系"]
+    F --> G{"主键是否非 0"}
+    G -- "是" --> H["索引仓库绑定主键到语素节点"]
+    G -- "否" --> I["跳过索引绑定"]
+    H --> S["返回语素入口句柄"]
+    I --> S</pre></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs"; mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });</script></body></html>

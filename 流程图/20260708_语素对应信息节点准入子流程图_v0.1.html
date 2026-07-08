@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>2.2 语素对应信息节点准入子流程图</title><style>body{margin:0;font-family:"Microsoft YaHei","Segoe UI",sans-serif;background:#f7f7f4;color:#202124}main{max-width:1280px;margin:0 auto;padding:32px 24px 48px}.mermaid{background:#fff;border:1px solid #dadce0;border-radius:6px;padding:16px;overflow-x:auto;white-space:pre-wrap;line-height:1.6}</style></head><body><main><h1>2.2 语素对应信息节点准入子流程图</h1><p>更新时间：2026-07-08</p><pre class="mermaid">flowchart TD
+    A["输入：节点句柄"] --> B["节点仓库读取节点"]
+    B --> C{"节点记录是否存在"}
+    C -- "否" --> R1["拒绝：无效句柄"]
+    C -- "是" --> D{"节点类型"}
+    D -- "基础信息 / 存在 / 场景 / 特征 / 二次特征 / 因果引用 / 需求 / 任务 / 方法" --> S["准入通过"]
+    D -- "状态" --> E{"是否存在运行期临时目标关系"}
+    D -- "动态" --> F{"是否存在运行期临时目标关系"}
+    D -- "其他类型" --> R2["拒绝：类型不允许"]
+    E -- "是" --> R3["拒绝：运行期临时实例状态"]
+    E -- "否" --> S
+    F -- "是" --> R4["拒绝：运行期临时实例动态"]
+    F -- "否" --> S
+    R1 --> X["结构不变化"]
+    R2 --> X
+    R3 --> X
+    R4 --> X</pre></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs"; mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });</script></body></html>

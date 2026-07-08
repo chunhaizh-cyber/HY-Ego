@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>2.1 语素文本准入子流程图</title><style>body{margin:0;font-family:"Microsoft YaHei","Segoe UI",sans-serif;background:#f7f7f4;color:#202124}main{max-width:1280px;margin:0 auto;padding:32px 24px 48px}.mermaid,pre{background:#fff;border:1px solid #dadce0;border-radius:6px;padding:16px;overflow-x:auto;white-space:pre-wrap;line-height:1.6}</style></head><body><main><h1>2.1 语素文本准入子流程图</h1><p>更新时间：2026-07-08</p><pre class="mermaid">flowchart TD
+    A["输入：std::wstring_view 文本"] --> B{"文本是否为空"}
+    B -- "是" --> R1["返回：空文本"]
+    B -- "否" --> C["逐字符扫描"]
+    C --> D{"字符是否为空白"}
+    D -- "是" --> R2["返回：含空白"]
+    D -- "否" --> E{"字符是否为组合分隔符"}
+    E -- "是" --> R3["返回：含组合分隔符"]
+    E -- "否" --> F["有效字符数加 1"]
+    F --> G{"是否还有字符"}
+    G -- "是" --> C
+    G -- "否" --> H{"有效字符数是否大于 3"}
+    H -- "是" --> R4["返回：超出第一轮长度"]
+    H -- "否" --> S["返回：可作为最小词单元"]</pre></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs"; mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });</script></body></html>

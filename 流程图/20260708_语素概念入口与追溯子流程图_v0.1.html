@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>2.4 语素概念入口与追溯子流程图</title><style>body{margin:0;font-family:"Microsoft YaHei","Segoe UI",sans-serif;background:#f7f7f4;color:#202124}main{max-width:1280px;margin:0 auto;padding:32px 24px 48px}.mermaid{background:#fff;border:1px solid #dadce0;border-radius:6px;padding:16px;overflow-x:auto;white-space:pre-wrap;line-height:1.6}</style></head><body><main><h1>2.4 语素概念入口与追溯子流程图</h1><p>更新时间：2026-07-08</p><pre class="mermaid">flowchart TD
+    A["输入：文本 / 对应信息节点 / 概念节点 / 可选主键"] --> B["2.1 文本准入"]
+    B --> C{"文本是否可作为最小词单元"}
+    C -- "否" --> R1["拒绝：返回无效句柄"]
+    R1 --> X["结构不变化"]
+    C -- "是" --> D["2.2 概念节点准入"]
+    D --> E{"概念节点是否可绑定"}
+    E -- "否" --> R2["拒绝：返回无效句柄"]
+    R2 --> X
+    E -- "是" --> F["2.3 创建语素入口"]
+    F --> G{"语素入口是否有效"}
+    G -- "否" --> R3["返回无效句柄"]
+    R3 --> X
+    G -- "是" --> H["追加语素概念追溯"]
+    H --> I{"追溯关系是否已存在"}
+    I -- "是" --> J["返回入口句柄：不重复写关系"]
+    I -- "否" --> K["创建语素概念追溯关系"]
+    K --> J</pre></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs"; mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });</script></body></html>
