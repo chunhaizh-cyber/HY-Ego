@@ -1,6 +1,6 @@
 ---
 name: hai-zhong-yu-chao-execute
-description: Execute or resume the D:\海中鱼巣 plan-index workflow. Use when the user says "执行", "继续", "按照计划索引执行", "继续执行计划", "持续执行", or asks Codex to consume the confirmed executable queue from `项目记忆/Codex任务队列.md` and `计划/计划索引.md` until the queue is empty, a real blocker appears, or the user stops it.
+description: Execute or resume the D:\海中鱼巣 plan-index workflow. Use when the current window is explicitly an execution window and the user says "执行", "继续", "按照计划索引执行", "继续执行计划", "持续执行", or when the user asks Codex to consume the confirmed executable queue from `项目记忆/Codex任务队列.md` and `计划/计划索引.md` until the queue is empty, a real blocker appears, or the user stops it. Do not use bare "继续" as an execution trigger in a design-confirmation window or read-only monitoring window.
 ---
 
 # 海中鱼巣执行
@@ -20,6 +20,17 @@ Treat execution as:
 ```
 
 Do not self-authorize unconfirmed design, code implementation, old-function migration, field landing, SQL/control-panel/D455/voxel/peripheral work.
+
+## Window-Type Gate
+
+Before treating `继续` as execution, identify the current window type:
+
+```text
+设计确认窗口：`继续` means continue design / rules / plans / information data / confirmation material. Do not consume the executable queue.
+执行窗口：`继续` means continue consuming confirmed queue items.
+只读监控 / 复核窗口：`继续` means continue read-only fact checking and reporting. Do not edit files.
+未声明窗口类型：infer from the latest explicit user declaration, thread title, and task object; if still unclear, do not execute from bare `继续`.
+```
 
 ## Preflight
 
