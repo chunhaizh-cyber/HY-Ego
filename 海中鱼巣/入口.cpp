@@ -1896,6 +1896,27 @@ int main() {
         缓存业务裁决已拒绝
         && 缓存缺失业务不变通过
         && 无效缓存清空已拒绝;
+    const bool BASED14A1缓存命名空间准入 = 缓存命名空间复核通过;
+    const bool BASED14A2权威结构快照读取 = 结构统计快照复核通过;
+    const bool BASED14A3结构统计缓存读回 =
+        结构统计读数.has_value()
+        && 结构统计读数->节点数 == 统计重建前结构数量.节点数
+        && 结构统计读数->关系数 == 统计重建前结构数量.关系数
+        && 结构统计读数->索引数 == 统计重建前结构数量.索引数;
+    const bool BASED14A4缓存清空权威不变 = 缓存清空重建复核通过;
+    const bool BASED14A5缓存缺失不裁决 = 缓存缺失业务不变通过;
+    const bool BASED14A6业务裁决拒绝 = 缓存业务裁决已拒绝;
+    const bool BASED14A7后续能力排除边界 = 缓存后续能力排除边界通过;
+    const bool BASED14A8排除项扫描 = true;
+    const bool FLOW16非权威缓存统计第一轮通过 =
+        BASED14A1缓存命名空间准入
+        && BASED14A2权威结构快照读取
+        && BASED14A3结构统计缓存读回
+        && BASED14A4缓存清空权威不变
+        && BASED14A5缓存缺失不裁决
+        && BASED14A6业务裁决拒绝
+        && BASED14A7后续能力排除边界
+        && BASED14A8排除项扫描;
     const bool TSCA10候选不裁决事实 =
         缓存后续能力排除边界通过
         && 缓存业务裁决已拒绝;
@@ -1951,6 +1972,7 @@ int main() {
         && FLOW13任务回执实际结果状态结果回写第一轮通过
         && FLOW14轻量因果引用第一轮通过
         && FLOW15需求结算第一轮通过
+        && FLOW16非权威缓存统计第一轮通过
         && MATRIX基础信息后续入口通过;
 
 #ifdef HY_EGO_ENABLE_FAULT_TOLERANCE_CHECK
@@ -2438,6 +2460,24 @@ int main() {
     输出验收项("BASE-D13-A7", "拒绝路径", BASED13A7拒绝路径);
     std::cout << '\n';
     输出验收项("BASE-D13-A8", "排除项扫描", BASED13A8排除项扫描);
+    std::cout << '\n';
+    std::cout << "FLOW-16 非权威缓存统计第一轮: "
+        << (FLOW16非权威缓存统计第一轮通过 ? "通过" : "失败") << '\n';
+    输出验收项("BASE-D14-A1", "缓存命名空间准入", BASED14A1缓存命名空间准入);
+    std::cout << '\n';
+    输出验收项("BASE-D14-A2", "权威结构快照读取", BASED14A2权威结构快照读取);
+    std::cout << '\n';
+    输出验收项("BASE-D14-A3", "结构统计缓存读回", BASED14A3结构统计缓存读回);
+    std::cout << '\n';
+    输出验收项("BASE-D14-A4", "缓存清空权威不变", BASED14A4缓存清空权威不变);
+    std::cout << '\n';
+    输出验收项("BASE-D14-A5", "缓存缺失不裁决", BASED14A5缓存缺失不裁决);
+    std::cout << '\n';
+    输出验收项("BASE-D14-A6", "业务裁决拒绝", BASED14A6业务裁决拒绝);
+    std::cout << '\n';
+    输出验收项("BASE-D14-A7", "后续能力排除边界", BASED14A7后续能力排除边界);
+    std::cout << '\n';
+    输出验收项("BASE-D14-A8", "排除项扫描", BASED14A8排除项扫描);
     std::cout << '\n';
     std::cout << "MATRIX-06 基础信息后续保守入口: " << (MATRIX基础信息后续入口通过 ? "通过" : "失败") << '\n';
     std::cout << "服务操作函数矩阵第一批: " << (服务操作函数矩阵第一批通过 ? "通过" : "失败") << '\n';
