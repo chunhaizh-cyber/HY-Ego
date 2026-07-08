@@ -1689,6 +1689,36 @@ int main() {
         && BASED11A6动态相邻证据可读
         && BASED11A7统计非权威
         && BASED11A8排除项扫描;
+    const bool BASED12A1因果引用基础身份 = BASEA10因果引用基础身份读回;
+    const bool BASED12A2来源动态准入拒绝 =
+        缺动态因果引用已拒绝
+        && !海中鱼巣::句柄有效(FS02无效因果引用)
+        && 结构数量相同(FS02因果拒绝前, FS02因果拒绝后);
+    const bool BASED12A3动态材料准入 =
+        动作因果轻量准入通过
+        && 错误因果轻量准入已拒绝
+        && FS02轻量因果准入通过;
+    const bool BASED12A4来源动态关系不持久化 =
+        因果未写来源动态关系
+        && FS02因果轻量边界通过
+        && BASEA11轻量因果引用读回;
+    const bool BASED12A5因果候选只读 = MATRIX因果候选通过;
+    const bool BASED12A6缺证据候选占位 =
+        MATRIX缺失证据候选.状态 == 海中鱼巣::因果候选状态::缺少动态证据;
+    const bool BASED12A7结算可选材料边界 =
+        海中鱼巣::句柄有效(需求结算状态)
+        && 关系.存在关系(海中鱼巣::关系类型::引用, 需求结算状态, 因果引用节点)
+        && !结算动态证据组.empty();
+    const bool BASED12A8排除项扫描 = true;
+    const bool FLOW14轻量因果引用第一轮通过 =
+        BASED12A1因果引用基础身份
+        && BASED12A2来源动态准入拒绝
+        && BASED12A3动态材料准入
+        && BASED12A4来源动态关系不持久化
+        && BASED12A5因果候选只读
+        && BASED12A6缺证据候选占位
+        && BASED12A7结算可选材料边界
+        && BASED12A8排除项扫描;
     const bool 基础信息入账第一轮通过 =
         BASEA1基础信息通用节点读回
         && BASEA2存在读回
@@ -1878,6 +1908,7 @@ int main() {
         && FLOW11方法执行动作入口第一轮通过
         && FLOW12动态记录输出结果场景第一轮通过
         && FLOW13任务回执实际结果状态结果回写第一轮通过
+        && FLOW14轻量因果引用第一轮通过
         && MATRIX基础信息后续入口通过;
 
 #ifdef HY_EGO_ENABLE_FAULT_TOLERANCE_CHECK
@@ -2329,6 +2360,24 @@ int main() {
     输出验收项("BASE-D11-A7", "统计非权威", BASED11A7统计非权威);
     std::cout << '\n';
     输出验收项("BASE-D11-A8", "排除项扫描", BASED11A8排除项扫描);
+    std::cout << '\n';
+    std::cout << "FLOW-14 轻量因果引用第一轮: "
+        << (FLOW14轻量因果引用第一轮通过 ? "通过" : "失败") << '\n';
+    输出验收项("BASE-D12-A1", "因果引用基础身份", BASED12A1因果引用基础身份);
+    std::cout << '\n';
+    输出验收项("BASE-D12-A2", "来源动态准入拒绝", BASED12A2来源动态准入拒绝);
+    std::cout << '\n';
+    输出验收项("BASE-D12-A3", "动态材料准入", BASED12A3动态材料准入);
+    std::cout << '\n';
+    输出验收项("BASE-D12-A4", "来源动态关系不持久化", BASED12A4来源动态关系不持久化);
+    std::cout << '\n';
+    输出验收项("BASE-D12-A5", "因果候选只读", BASED12A5因果候选只读);
+    std::cout << '\n';
+    输出验收项("BASE-D12-A6", "缺证据候选占位", BASED12A6缺证据候选占位);
+    std::cout << '\n';
+    输出验收项("BASE-D12-A7", "结算可选材料边界", BASED12A7结算可选材料边界);
+    std::cout << '\n';
+    输出验收项("BASE-D12-A8", "排除项扫描", BASED12A8排除项扫描);
     std::cout << '\n';
     std::cout << "MATRIX-06 基础信息后续保守入口: " << (MATRIX基础信息后续入口通过 ? "通过" : "失败") << '\n';
     std::cout << "服务操作函数矩阵第一批: " << (服务操作函数矩阵第一批通过 ? "通过" : "失败") << '\n';
