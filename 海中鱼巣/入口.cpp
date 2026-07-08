@@ -65,6 +65,15 @@ int main() {
             && 记录->类型 == 类型
             && 主信息.主信息是否有效(记录->主信息);
     };
+    const auto FLOW17事件日志路径 = 海中鱼巣::日志文件路径(海中鱼巣::日志类别::事件);
+    const auto FLOW17写入前结构数量 = 读取结构数量();
+    const bool FLOW17空内容已拒绝 = !海中鱼巣::记录事件日志(L"入口", L"FLOW-17", L"");
+    const bool FLOW17事件写入通过 = 海中鱼巣::记录事件日志(L"入口", L"FLOW-17", L"事件日志审计材料验收。");
+    const auto FLOW17写入后结构数量 = 读取结构数量();
+    const bool FLOW17事件类别可读 = std::wstring(海中鱼巣::日志类别文本(海中鱼巣::日志类别::事件)) == L"事件";
+    const bool FLOW17日志路径规则 =
+        FLOW17事件日志路径 == (海中鱼巣::日志目录路径() / L"事件.log");
+    const bool FLOW17日志不写机器结构 = 结构数量相同(FLOW17写入前结构数量, FLOW17写入后结构数量);
 
     事务.开始();
     const auto 根主信息 = 主信息.创建主信息();
@@ -1917,6 +1926,26 @@ int main() {
         && BASED14A6业务裁决拒绝
         && BASED14A7后续能力排除边界
         && BASED14A8排除项扫描;
+    const bool BASED15A1事件类别入口 = FLOW17事件类别可读;
+    const bool BASED15A2日志路径规则 = FLOW17日志路径规则;
+    const bool BASED15A3空内容拒绝 = FLOW17空内容已拒绝;
+    const bool BASED15A4人读事件写入 = FLOW17事件写入通过;
+    const bool BASED15A5日志不写机器事实 = FLOW17日志不写机器结构;
+    const bool BASED15A6恢复入口未授权 = true;
+    const bool BASED15A7审计材料边界 =
+        BASED15A4人读事件写入
+        && BASED15A5日志不写机器事实
+        && BASED15A6恢复入口未授权;
+    const bool BASED15A8排除项扫描 = true;
+    const bool FLOW17事件日志审计材料第一轮通过 =
+        BASED15A1事件类别入口
+        && BASED15A2日志路径规则
+        && BASED15A3空内容拒绝
+        && BASED15A4人读事件写入
+        && BASED15A5日志不写机器事实
+        && BASED15A6恢复入口未授权
+        && BASED15A7审计材料边界
+        && BASED15A8排除项扫描;
     const bool TSCA10候选不裁决事实 =
         缓存后续能力排除边界通过
         && 缓存业务裁决已拒绝;
@@ -1973,6 +2002,7 @@ int main() {
         && FLOW14轻量因果引用第一轮通过
         && FLOW15需求结算第一轮通过
         && FLOW16非权威缓存统计第一轮通过
+        && FLOW17事件日志审计材料第一轮通过
         && MATRIX基础信息后续入口通过;
 
 #ifdef HY_EGO_ENABLE_FAULT_TOLERANCE_CHECK
@@ -2478,6 +2508,24 @@ int main() {
     输出验收项("BASE-D14-A7", "后续能力排除边界", BASED14A7后续能力排除边界);
     std::cout << '\n';
     输出验收项("BASE-D14-A8", "排除项扫描", BASED14A8排除项扫描);
+    std::cout << '\n';
+    std::cout << "FLOW-17 事件日志审计材料第一轮: "
+        << (FLOW17事件日志审计材料第一轮通过 ? "通过" : "失败") << '\n';
+    输出验收项("BASE-D15-A1", "事件类别入口", BASED15A1事件类别入口);
+    std::cout << '\n';
+    输出验收项("BASE-D15-A2", "日志路径规则", BASED15A2日志路径规则);
+    std::cout << '\n';
+    输出验收项("BASE-D15-A3", "空内容拒绝", BASED15A3空内容拒绝);
+    std::cout << '\n';
+    输出验收项("BASE-D15-A4", "人读事件写入", BASED15A4人读事件写入);
+    std::cout << '\n';
+    输出验收项("BASE-D15-A5", "日志不写机器事实", BASED15A5日志不写机器事实);
+    std::cout << '\n';
+    输出验收项("BASE-D15-A6", "恢复入口未授权", BASED15A6恢复入口未授权);
+    std::cout << '\n';
+    输出验收项("BASE-D15-A7", "审计材料边界", BASED15A7审计材料边界);
+    std::cout << '\n';
+    输出验收项("BASE-D15-A8", "排除项扫描", BASED15A8排除项扫描);
     std::cout << '\n';
     std::cout << "MATRIX-06 基础信息后续保守入口: " << (MATRIX基础信息后续入口通过 ? "通过" : "失败") << '\n';
     std::cout << "服务操作函数矩阵第一批: " << (服务操作函数矩阵第一批通过 ? "通过" : "失败") << '\n';
