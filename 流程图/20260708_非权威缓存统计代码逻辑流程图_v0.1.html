@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>非权威缓存统计代码逻辑流程图 v0.1</title>
+  <style>
+    body { margin: 0; padding: 24px; font-family: "Microsoft YaHei", sans-serif; background: #f7f7f5; color: #1f2933; }
+    h1 { margin: 0 0 8px; font-size: 22px; }
+    .meta { margin-bottom: 16px; color: #5b6472; }
+    .mermaid { background: #ffffff; border: 1px solid #d8dde6; border-radius: 6px; padding: 16px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>非权威缓存统计代码逻辑流程图 v0.1</h1>
+  <div class="meta">更新时间：2026-07-08</div>
+  <pre class="mermaid">flowchart TD
+    A["只读输入：节点仓库 / 关系仓库 / 索引仓库"] --> B["进入 统计服务"]
+    B --> C["定义缓存命名空间"]
+    C --> D{"缓存类型 / 来源类型 / 值类型 / 失效条件是否有效"}
+    D -->|失败| R0["返回空命名空间；不创建缓存"]
+    D -->|通过| E["读取权威结构统计快照：有效节点数 / 有效关系数 / 有效主键数"]
+    E --> F["创建统计快照结构"]
+    F --> G{"命名空间是否为结构统计且数量材料有效"}
+    G -->|失败| R1["返回空快照；不得裁决业务事实"]
+    G -->|通过| H["重建结构统计缓存：写入运行期缓存壳"]
+    H --> I["读取结构统计缓存"]
+    I --> J{"缓存存在且命名空间一致"}
+    J -->|是| K["输出结构统计快照给显示层或人工观察"]
+    J -->|否| L["缓存缺失"]
+    L --> M["结构统计缓存缺失仍不可裁决业务"]
+    K --> N{"调用方试图用缓存裁决业务事实"}
+    M --> N
+    N -->|是| R2["拒绝：缓存可裁决业务事实恒为 false"]
+    N -->|否| O["只读展示或候选观察"]
+    O --> P{"需要清空缓存"}
+    P -->|清空结构统计| Q["清空结构统计缓存"]
+    P -->|清空全部| S["清空全部缓存壳"]
+    Q --> T["权威节点 / 关系 / 索引结构不变"]
+    S --> T</pre>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>

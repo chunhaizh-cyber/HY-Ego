@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>需求结算代码逻辑流程图 v0.1</title>
+  <style>
+    body { margin: 0; padding: 24px; font-family: "Microsoft YaHei", sans-serif; background: #f7f7f5; color: #1f2933; }
+    h1 { margin: 0 0 8px; font-size: 22px; }
+    .meta { margin-bottom: 16px; color: #5b6472; }
+    .mermaid { background: #ffffff; border: 1px solid #d8dde6; border-radius: 6px; padding: 16px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>需求结算代码逻辑流程图 v0.1</h1>
+  <div class="meta">更新时间：2026-07-08</div>
+  <pre class="mermaid">flowchart TD
+    A["上游材料：需求 / 来源任务 / 目标状态 / 实际状态 / 场景 / 结算主体 / 动态证据 / 可选因果引用"] --> B["进入 需求服务::记录需求结算"]
+    B --> C{"入口类型与材料准入"}
+    C -->|失败| R0["返回空句柄；不得写结算记录或结算状态"]
+    C -->|通过| D["复核需求目标状态：读取需求目标状态必须等于传入目标状态"]
+    D -->|不一致| R1["返回空句柄；不得用外部状态替换需求目标"]
+    D -->|一致| E["比较目标状态和实际状态：读取状态值"]
+    E --> F{"目标值和实际值是否可读"}
+    F -->|缺值| G["结果只能为证据不足"]
+    F -->|可读| H{"实际状态值 >= 目标状态值"}
+    H -->|是| I["结果为已满足"]
+    H -->|否| J["结果为未满足"]
+    G --> K{"结果是否为未结算"}
+    I --> K
+    J --> K
+    K -->|未结算| R2["入口拒绝；未结算不得写为结算记录"]
+    K -->|可记录结果| L["状态服务创建结算状态实例状态"]
+    L --> M{"结算状态创建成功"}
+    M -->|失败| R3["返回空句柄；后续必须补数量快照和失败收口验证"]
+    M -->|成功| N["写关系：需求-归属-结算状态；顺序号=发生时间戳"]
+    N --> O["写关系：结算状态引用来源任务 / 模板目标状态 / 引用实际状态 / 因果来源动态证据"]
+    O --> P{"可选因果引用存在"}
+    P -->|存在| Q["仅复核节点类型为因果引用；当前不调用因果服务裁决满足"]
+    P -->|不存在| S["跳过因果引用关系"]
+    Q --> T["写结算状态引用因果引用"]
+    S --> U["读回验证门禁"]
+    T --> U
+    U --> V["读取最近结算记录；读取结算来源任务 / 目标状态 / 实际状态 / 动态证据"]
+    V --> W{"结算记录完整且唯一"}
+    W -->|是| X["输出结算状态句柄；供非权威缓存和显示层只读"]
+    W -->|否| R4["返回空或后续验收失败；不得留下可读半结构"]</pre>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>
