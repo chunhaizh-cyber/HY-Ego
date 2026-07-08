@@ -59,6 +59,12 @@ int main() {
     const auto 结构数量相同 = [](const 结构数量快照& 左, const 结构数量快照& 右) {
         return 左.节点数 == 右.节点数 && 左.关系数 == 右.关系数 && 左.索引数 == 右.索引数;
     };
+    const auto 节点类型和主信息可读 = [&节点, &主信息](海中鱼巣::节点句柄 节点值, 海中鱼巣::节点类型 类型) {
+        const auto 记录 = 节点.读取节点(节点值);
+        return 记录.has_value()
+            && 记录->类型 == 类型
+            && 主信息.主信息是否有效(记录->主信息);
+    };
 
     事务.开始();
     const auto 根主信息 = 主信息.创建主信息();
@@ -1041,6 +1047,120 @@ int main() {
         && 海中鱼巣::句柄有效(方法.登记方法())
         && 海中鱼巣::句柄有效(因果.记录因果引用())
         && 语素第一轮通过;
+
+    constexpr std::uint64_t BASE实例状态时间戳 = 202607080101ULL;
+    constexpr std::uint64_t BASE实例动态时间戳 = 202607080102ULL;
+    const auto BASE基础信息 = 世界.创建基础信息();
+    const auto BASE兼容壳复核 = 世界.复核兼容壳用途(BASE基础信息);
+    const bool BASEA1基础信息通用节点读回 =
+        节点类型和主信息可读(BASE基础信息, 海中鱼巣::节点类型::基础信息)
+        && BASE兼容壳复核.状态 == 海中鱼巣::世界兼容壳复核状态::可作为兼容壳;
+    const auto BASE存在 = 存在.创建实际存在();
+    const bool BASEA2存在读回 =
+        节点类型和主信息可读(BASE存在, 海中鱼巣::节点类型::存在)
+        && 存在.存在是否有效(BASE存在);
+    const auto BASE场景 = 场景.创建场景();
+    const bool BASEA3场景读回 =
+        节点类型和主信息可读(BASE场景, 海中鱼巣::节点类型::场景)
+        && 场景.场景是否有效(BASE场景);
+    const auto BASE场景存在关系 = 场景.接纳存在(BASE场景, BASE存在);
+    const bool BASEA4场景接纳存在读回 =
+        海中鱼巣::句柄有效(BASE场景存在关系)
+        && 关系.存在关系(海中鱼巣::关系类型::归属, BASE场景, BASE存在);
+    const auto BASE实例状态 = 状态.创建实例状态(BASE场景, BASE存在, BASE实例状态时间戳, 101);
+    const auto BASE实例状态材料 = 状态.读取状态材料(BASE实例状态);
+    const bool BASEA5实例状态读回 =
+        BASE实例状态材料.has_value()
+        && BASE实例状态材料->场景 == BASE场景
+        && BASE实例状态材料->主体 == BASE存在
+        && BASE实例状态材料->状态值 == 101
+        && BASE实例状态材料->发生时间戳 == BASE实例状态时间戳;
+    const auto BASE抽象状态 = 状态.创建抽象状态(202);
+    const auto BASE抽象状态值 = 状态.读取状态值(BASE抽象状态);
+    const bool BASEA6抽象状态读回 =
+        节点类型和主信息可读(BASE抽象状态, 海中鱼巣::节点类型::状态)
+        && BASE抽象状态值.has_value()
+        && BASE抽象状态值.value() == 202
+        && !状态.状态是否实例状态(BASE抽象状态);
+    const auto BASE实例动态 = 动态.记录实例动态(
+        状态, BASE场景, BASE存在, BASE实例动态时间戳, BASE基础信息,
+        std::optional<std::int64_t>{101}, std::optional<std::int64_t>{303});
+    const auto BASE实例动态材料 = 动态.读取动态材料(BASE实例动态.动态);
+    const auto BASE动态前值材料 = 状态.读取状态材料(BASE实例动态.改变前值);
+    const auto BASE动态后值材料 = 状态.读取状态材料(BASE实例动态.改变后值);
+    const bool BASEA7实例动态读回 =
+        BASE实例动态材料.has_value()
+        && BASE动态前值材料.has_value()
+        && BASE动态后值材料.has_value()
+        && BASE实例动态材料->场景 == BASE场景
+        && BASE实例动态材料->主体 == BASE存在
+        && BASE实例动态材料->被改变目标 == BASE基础信息
+        && BASE实例动态材料->改变前I64 == 101
+        && BASE实例动态材料->改变后I64 == 303
+        && BASE实例动态材料->发生时间戳 == BASE实例动态时间戳;
+    const auto BASE抽象动态 = 动态.创建抽象动态(404);
+    const auto BASE抽象动态记录 = 节点.读取节点(BASE抽象动态);
+    const auto BASE抽象动态材料 =
+        BASE抽象动态记录.has_value() ? 主信息.读取I64值(BASE抽象动态记录->主信息) : std::optional<std::int64_t>{};
+    const bool BASEA8抽象动态读回 =
+        节点类型和主信息可读(BASE抽象动态, 海中鱼巣::节点类型::动态)
+        && BASE抽象动态材料.has_value()
+        && BASE抽象动态材料.value() == 404
+        && !动态.动态是否实例动态(BASE抽象动态);
+    const std::vector<海中鱼巣::节点句柄> BASE二次特征组成项组{
+        BASE基础信息, BASE存在, BASE抽象状态, BASE抽象动态
+    };
+    const auto BASE二次特征 = 二次特征.创建组合二次特征(BASE二次特征组成项组);
+    const auto BASE二次特征组成读回 = 二次特征.读取组成项(BASE二次特征);
+    const bool BASEA9二次特征读回 =
+        节点类型和主信息可读(BASE二次特征, 海中鱼巣::节点类型::二次特征)
+        && BASE二次特征组成读回.size() == BASE二次特征组成项组.size();
+    const auto BASE因果基础身份 = 因果.记录因果引用();
+    const bool BASEA10因果引用基础身份读回 =
+        节点类型和主信息可读(BASE因果基础身份, 海中鱼巣::节点类型::因果引用);
+    const auto BASE轻量因果前关系数 = 关系.有效关系数量();
+    const auto BASE轻量因果引用 = 因果.记录因果引用(BASE实例动态.动态, 动态);
+    const auto BASE轻量因果后关系数 = 关系.有效关系数量();
+    const bool BASEA11轻量因果引用读回 =
+        节点类型和主信息可读(BASE轻量因果引用, 海中鱼巣::节点类型::因果引用)
+        && BASE轻量因果前关系数 == BASE轻量因果后关系数;
+    const auto BASE拒绝前结构数量 = 读取结构数量();
+    const auto BASE错误场景接纳 = 场景.接纳存在(BASE场景, BASE基础信息);
+    const auto BASE缺时间戳状态 = 状态.创建实例状态(BASE场景, BASE存在, 0, 1);
+    const auto BASE缺时间戳动态 = 动态.记录实例动态(
+        状态, BASE场景, BASE存在, 0, BASE基础信息,
+        std::optional<std::int64_t>{1}, std::optional<std::int64_t>{2});
+    const auto BASE缺目标动态 = 动态.记录实例动态(
+        状态, BASE场景, BASE存在, BASE实例动态时间戳, {},
+        std::optional<std::int64_t>{1}, std::optional<std::int64_t>{2});
+    const auto BASE缺前值动态 = 动态.记录实例动态(
+        状态, BASE场景, BASE存在, BASE实例动态时间戳, BASE基础信息,
+        std::nullopt, std::optional<std::int64_t>{2});
+    const auto BASE无效来源因果 = 因果.记录因果引用({}, 动态);
+    const auto BASE空组成二次特征 = 二次特征.创建组合二次特征({});
+    const auto BASE拒绝后结构数量 = 读取结构数量();
+    const bool BASEA12拒绝后结构不变化 =
+        结构数量相同(BASE拒绝前结构数量, BASE拒绝后结构数量)
+        && !海中鱼巣::句柄有效(BASE错误场景接纳)
+        && !海中鱼巣::句柄有效(BASE缺时间戳状态)
+        && !海中鱼巣::句柄有效(BASE缺时间戳动态.动态)
+        && !海中鱼巣::句柄有效(BASE缺目标动态.动态)
+        && !海中鱼巣::句柄有效(BASE缺前值动态.动态)
+        && !海中鱼巣::句柄有效(BASE无效来源因果)
+        && !海中鱼巣::句柄有效(BASE空组成二次特征);
+    const bool 基础信息入账第一轮通过 =
+        BASEA1基础信息通用节点读回
+        && BASEA2存在读回
+        && BASEA3场景读回
+        && BASEA4场景接纳存在读回
+        && BASEA5实例状态读回
+        && BASEA6抽象状态读回
+        && BASEA7实例动态读回
+        && BASEA8抽象动态读回
+        && BASEA9二次特征读回
+        && BASEA10因果引用基础身份读回
+        && BASEA11轻量因果引用读回
+        && BASEA12拒绝后结构不变化;
     const bool 入口拒绝通过 =
         无效主信息节点已拒绝
         && 未定义节点类型已拒绝
@@ -1526,9 +1646,39 @@ int main() {
     输出验收项("MC-11", "事务边界", MC11事务边界通过);
     std::cout << " | 未开始提交拒绝=" << (未开始提交已拒绝 ? "是" : "否")
         << " 失败后提交拒绝=" << (失败后提交已拒绝 ? "是" : "否") << '\n';
+    输出验收项("BASE-A1", "基础信息通用节点读回", BASEA1基础信息通用节点读回);
+    std::cout << '\n';
+    输出验收项("BASE-A2", "存在读回", BASEA2存在读回);
+    std::cout << '\n';
+    输出验收项("BASE-A3", "场景读回", BASEA3场景读回);
+    std::cout << '\n';
+    输出验收项("BASE-A4", "场景接纳存在读回", BASEA4场景接纳存在读回);
+    std::cout << '\n';
+    输出验收项("BASE-A5", "实例状态读回", BASEA5实例状态读回);
+    std::cout << '\n';
+    输出验收项("BASE-A6", "抽象状态读回", BASEA6抽象状态读回);
+    std::cout << '\n';
+    输出验收项("BASE-A7", "实例动态读回", BASEA7实例动态读回);
+    std::cout << '\n';
+    输出验收项("BASE-A8", "抽象动态读回", BASEA8抽象动态读回);
+    std::cout << '\n';
+    输出验收项("BASE-A9", "二次特征读回", BASEA9二次特征读回);
+    std::cout << '\n';
+    输出验收项("BASE-A10", "因果引用基础身份读回", BASEA10因果引用基础身份读回);
+    std::cout << '\n';
+    输出验收项("BASE-A11", "轻量因果引用读回", BASEA11轻量因果引用读回);
+    std::cout << '\n';
+    输出验收项("BASE-A12", "拒绝后结构不变化", BASEA12拒绝后结构不变化);
+    std::cout << '\n';
+    std::cout << "BASE-D1 基础信息入账第一轮: " << (基础信息入账第一轮通过 ? "通过" : "失败")
+        << " | 拒绝前节点=" << BASE拒绝前结构数量.节点数
+        << " 拒绝后节点=" << BASE拒绝后结构数量.节点数
+        << " 拒绝前关系=" << BASE拒绝前结构数量.关系数
+        << " 拒绝后关系=" << BASE拒绝后结构数量.关系数 << '\n';
     const bool 程序通过 = 结构可读 && 已提交 && 索引已绑定 && 节点已重挂 && 删除已执行 && 旧句柄已失效
         && 主信息仓库最小函数复验通过
         && 子节点组.size() == 1 && 入口拒绝通过 && 领域服务可写 && 最小闭环通过
+        && 基础信息入账第一轮通过
         && FS02状态材料读取通过
         && FS02状态读取拒绝通过
         && FS02状态变化动态通过
