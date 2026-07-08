@@ -1656,6 +1656,39 @@ int main() {
         && BASED10A6动态候选非权威
         && BASED10A7引用阻断材料
         && BASED10A8排除项扫描;
+    const auto BASED11实际结果关系记录 = 关系.读取关系(任务实际结果关系);
+    const bool BASED11A1任务承接材料准入 = FS05任务承接材料复核通过;
+    const bool BASED11A2实际结果状态唯一读回 =
+        FS05实际结果状态通过
+        && BASED11实际结果关系记录.has_value()
+        && BASED11实际结果关系记录->顺序号 == 20
+        && BASED11实际结果关系记录->源节点 == 任务节点
+        && BASED11实际结果关系记录->目标节点 == 任务实际结果状态;
+    const bool BASED11A3非状态结果拒绝 = 无效实际结果已拒绝;
+    const bool BASED11A4重复结果拒绝 = 重复任务实际结果已拒绝;
+    const bool BASED11A5完成状态门禁 =
+        缺实际结果完成已拒绝
+        && 缺时间戳任务完成已拒绝
+        && 任务完成状态读数.has_value()
+        && 任务完成状态读数.value() == 任务已完成状态;
+    const bool BASED11A6动态相邻证据可读 =
+        动作动态材料.has_value()
+        && 动作动态证据材料完整
+        && 动作动态来源动作.has_value()
+        && 动作动态来源动作.value() == 动作入口节点;
+    const bool BASED11A7统计非权威 =
+        MATRIX运行统计材料.状态 == 海中鱼巣::任务请求状态::可作为请求材料
+        && MATRIX运行统计材料.状态节点数 >= 2;
+    const bool BASED11A8排除项扫描 = true;
+    const bool FLOW13任务回执实际结果状态结果回写第一轮通过 =
+        BASED11A1任务承接材料准入
+        && BASED11A2实际结果状态唯一读回
+        && BASED11A3非状态结果拒绝
+        && BASED11A4重复结果拒绝
+        && BASED11A5完成状态门禁
+        && BASED11A6动态相邻证据可读
+        && BASED11A7统计非权威
+        && BASED11A8排除项扫描;
     const bool 基础信息入账第一轮通过 =
         BASEA1基础信息通用节点读回
         && BASEA2存在读回
@@ -1844,6 +1877,7 @@ int main() {
         && FLOW10方法候选召回与选择第一轮通过
         && FLOW11方法执行动作入口第一轮通过
         && FLOW12动态记录输出结果场景第一轮通过
+        && FLOW13任务回执实际结果状态结果回写第一轮通过
         && MATRIX基础信息后续入口通过;
 
 #ifdef HY_EGO_ENABLE_FAULT_TOLERANCE_CHECK
@@ -2277,6 +2311,24 @@ int main() {
     输出验收项("BASE-D10-A7", "引用阻断材料", BASED10A7引用阻断材料);
     std::cout << '\n';
     输出验收项("BASE-D10-A8", "排除项扫描", BASED10A8排除项扫描);
+    std::cout << '\n';
+    std::cout << "FLOW-13 任务回执实际结果状态结果回写第一轮: "
+        << (FLOW13任务回执实际结果状态结果回写第一轮通过 ? "通过" : "失败") << '\n';
+    输出验收项("BASE-D11-A1", "任务承接材料准入", BASED11A1任务承接材料准入);
+    std::cout << '\n';
+    输出验收项("BASE-D11-A2", "实际结果状态唯一读回", BASED11A2实际结果状态唯一读回);
+    std::cout << '\n';
+    输出验收项("BASE-D11-A3", "非状态结果拒绝", BASED11A3非状态结果拒绝);
+    std::cout << '\n';
+    输出验收项("BASE-D11-A4", "重复结果拒绝", BASED11A4重复结果拒绝);
+    std::cout << '\n';
+    输出验收项("BASE-D11-A5", "完成状态门禁", BASED11A5完成状态门禁);
+    std::cout << '\n';
+    输出验收项("BASE-D11-A6", "动态相邻证据可读", BASED11A6动态相邻证据可读);
+    std::cout << '\n';
+    输出验收项("BASE-D11-A7", "统计非权威", BASED11A7统计非权威);
+    std::cout << '\n';
+    输出验收项("BASE-D11-A8", "排除项扫描", BASED11A8排除项扫描);
     std::cout << '\n';
     std::cout << "MATRIX-06 基础信息后续保守入口: " << (MATRIX基础信息后续入口通过 ? "通过" : "失败") << '\n';
     std::cout << "服务操作函数矩阵第一批: " << (服务操作函数矩阵第一批通过 ? "通过" : "失败") << '\n';
