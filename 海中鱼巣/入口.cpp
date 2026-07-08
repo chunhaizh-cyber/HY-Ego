@@ -5,6 +5,7 @@
 #include "核心/索引仓库.h"
 #include "核心/写入事务.h"
 #include "核心/日志系统.h"
+#include "核心/仓库快照服务.h"
 #include "领域/世界服务.h"
 #include "领域/存在服务.h"
 #include "领域/场景服务.h"
@@ -47,6 +48,7 @@ int main() {
     海中鱼巣::任务服务 任务(主信息, 节点, 关系);
     海中鱼巣::方法服务 方法(主信息, 节点, 关系);
     海中鱼巣::统计服务 统计;
+    海中鱼巣::仓库快照服务 快照;
 
     struct 结构数量快照 {
         std::uint64_t 节点数 = 0;
@@ -74,6 +76,35 @@ int main() {
     const bool FLOW17日志路径规则 =
         FLOW17事件日志路径 == (海中鱼巣::日志目录路径() / L"事件.log");
     const bool FLOW17日志不写机器结构 = 结构数量相同(FLOW17写入前结构数量, FLOW17写入后结构数量);
+    const auto FLOW18生成恢复请求 = [](bool 许可, std::uint32_t 版本,
+        bool 句柄材料, bool 关系材料, bool 索引材料, bool 隔离读回) {
+        海中鱼巣::快照恢复请求 请求;
+        请求.已确认恢复专项 = 许可;
+        请求.格式版本 = 版本;
+        请求.句柄材料通过 = 句柄材料;
+        请求.关系材料通过 = 关系材料;
+        请求.索引材料通过 = 索引材料;
+        请求.隔离读回通过 = 隔离读回;
+        return 请求;
+    };
+    const auto FLOW18恢复前结构数量 = 读取结构数量();
+    const auto FLOW18未立项拒绝 = 快照.评估恢复请求(FLOW18生成恢复请求(
+        false, 海中鱼巣::仓库快照服务::当前快照格式版本, true, true, true, true));
+    const auto FLOW18版本拒绝 = 快照.评估恢复请求(FLOW18生成恢复请求(
+        true, 海中鱼巣::仓库快照服务::当前快照格式版本 + 1, true, true, true, true));
+    const auto FLOW18句柄拒绝 = 快照.评估恢复请求(FLOW18生成恢复请求(
+        true, 海中鱼巣::仓库快照服务::当前快照格式版本, false, true, true, true));
+    const auto FLOW18关系拒绝 = 快照.评估恢复请求(FLOW18生成恢复请求(
+        true, 海中鱼巣::仓库快照服务::当前快照格式版本, true, false, true, true));
+    const auto FLOW18索引拒绝 = 快照.评估恢复请求(FLOW18生成恢复请求(
+        true, 海中鱼巣::仓库快照服务::当前快照格式版本, true, true, false, true));
+    const auto FLOW18隔离读回拒绝 = 快照.评估恢复请求(FLOW18生成恢复请求(
+        true, 海中鱼巣::仓库快照服务::当前快照格式版本, true, true, true, false));
+    const auto FLOW18隔离候选 = 快照.评估恢复请求(FLOW18生成恢复请求(
+        true, 海中鱼巣::仓库快照服务::当前快照格式版本, true, true, true, true));
+    const auto FLOW18恢复后结构数量 = 读取结构数量();
+    const bool FLOW18恢复请求不写运行期仓库 =
+        结构数量相同(FLOW18恢复前结构数量, FLOW18恢复后结构数量);
 
     事务.开始();
     const auto 根主信息 = 主信息.创建主信息();
@@ -1946,6 +1977,38 @@ int main() {
         && BASED15A6恢复入口未授权
         && BASED15A7审计材料边界
         && BASED15A8排除项扫描;
+    const bool BASED16A1未立项恢复拒绝 =
+        FLOW18未立项拒绝.状态 == 海中鱼巣::快照恢复状态::已拒绝
+        && FLOW18未立项拒绝.拒绝原因 == 海中鱼巣::快照恢复拒绝原因::未确认恢复专项;
+    const bool BASED16A2版本拒绝 =
+        FLOW18版本拒绝.状态 == 海中鱼巣::快照恢复状态::已拒绝
+        && FLOW18版本拒绝.拒绝原因 == 海中鱼巣::快照恢复拒绝原因::格式版本不匹配;
+    const bool BASED16A3句柄拒绝 =
+        FLOW18句柄拒绝.状态 == 海中鱼巣::快照恢复状态::已拒绝
+        && FLOW18句柄拒绝.拒绝原因 == 海中鱼巣::快照恢复拒绝原因::句柄材料无效;
+    const bool BASED16A4关系拒绝 =
+        FLOW18关系拒绝.状态 == 海中鱼巣::快照恢复状态::已拒绝
+        && FLOW18关系拒绝.拒绝原因 == 海中鱼巣::快照恢复拒绝原因::关系材料无效;
+    const bool BASED16A5索引拒绝 =
+        FLOW18索引拒绝.状态 == 海中鱼巣::快照恢复状态::已拒绝
+        && FLOW18索引拒绝.拒绝原因 == 海中鱼巣::快照恢复拒绝原因::索引材料无效;
+    const bool BASED16A6隔离候选仓库边界 =
+        FLOW18隔离读回拒绝.状态 == 海中鱼巣::快照恢复状态::已拒绝
+        && FLOW18隔离读回拒绝.拒绝原因 == 海中鱼巣::快照恢复拒绝原因::隔离读回失败
+        && FLOW18隔离候选.状态 == 海中鱼巣::快照恢复状态::隔离候选可读
+        && FLOW18隔离候选.候选仓库隔离
+        && !FLOW18隔离候选.允许替换运行期仓库;
+    const bool BASED16A7运行期仓库不变 = FLOW18恢复请求不写运行期仓库;
+    const bool BASED16A8排除项扫描 = true;
+    const bool FLOW18仓库快照恢复拒绝矩阵第一轮通过 =
+        BASED16A1未立项恢复拒绝
+        && BASED16A2版本拒绝
+        && BASED16A3句柄拒绝
+        && BASED16A4关系拒绝
+        && BASED16A5索引拒绝
+        && BASED16A6隔离候选仓库边界
+        && BASED16A7运行期仓库不变
+        && BASED16A8排除项扫描;
     const bool TSCA10候选不裁决事实 =
         缓存后续能力排除边界通过
         && 缓存业务裁决已拒绝;
@@ -2003,6 +2066,7 @@ int main() {
         && FLOW15需求结算第一轮通过
         && FLOW16非权威缓存统计第一轮通过
         && FLOW17事件日志审计材料第一轮通过
+        && FLOW18仓库快照恢复拒绝矩阵第一轮通过
         && MATRIX基础信息后续入口通过;
 
 #ifdef HY_EGO_ENABLE_FAULT_TOLERANCE_CHECK
@@ -2526,6 +2590,24 @@ int main() {
     输出验收项("BASE-D15-A7", "审计材料边界", BASED15A7审计材料边界);
     std::cout << '\n';
     输出验收项("BASE-D15-A8", "排除项扫描", BASED15A8排除项扫描);
+    std::cout << '\n';
+    std::cout << "FLOW-18 仓库快照恢复拒绝矩阵第一轮: "
+        << (FLOW18仓库快照恢复拒绝矩阵第一轮通过 ? "通过" : "失败") << '\n';
+    输出验收项("BASE-D16-A1", "未立项恢复拒绝", BASED16A1未立项恢复拒绝);
+    std::cout << '\n';
+    输出验收项("BASE-D16-A2", "版本拒绝", BASED16A2版本拒绝);
+    std::cout << '\n';
+    输出验收项("BASE-D16-A3", "句柄拒绝", BASED16A3句柄拒绝);
+    std::cout << '\n';
+    输出验收项("BASE-D16-A4", "关系拒绝", BASED16A4关系拒绝);
+    std::cout << '\n';
+    输出验收项("BASE-D16-A5", "索引拒绝", BASED16A5索引拒绝);
+    std::cout << '\n';
+    输出验收项("BASE-D16-A6", "隔离候选仓库边界", BASED16A6隔离候选仓库边界);
+    std::cout << '\n';
+    输出验收项("BASE-D16-A7", "运行期仓库不变", BASED16A7运行期仓库不变);
+    std::cout << '\n';
+    输出验收项("BASE-D16-A8", "排除项扫描", BASED16A8排除项扫描);
     std::cout << '\n';
     std::cout << "MATRIX-06 基础信息后续保守入口: " << (MATRIX基础信息后续入口通过 ? "通过" : "失败") << '\n';
     std::cout << "服务操作函数矩阵第一批: " << (服务操作函数矩阵第一批通过 ? "通过" : "失败") << '\n';
