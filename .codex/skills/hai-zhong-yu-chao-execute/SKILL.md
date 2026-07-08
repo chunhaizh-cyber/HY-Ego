@@ -67,10 +67,12 @@ Before treating `继续` as execution, identify the current window type:
 
 When moving plan files, update `计划/计划索引.md`, `项目记忆/*`, and related breakpoint records.
 
-## Locks
+## Git Worktree Protection
 
-- Before editing `计划/计划索引.md`, create `计划/.计划索引.lock`; remove it after the index edit is complete.
-- If a fresh lock exists, do not edit the index. Record the blocker.
+- Editing `计划/计划索引.md` does not require `计划/.计划索引.lock`.
+- Before editing shared governance files, check `git status --short` and identify unrelated dirty or staged files.
+- After editing, inspect targeted diffs and stage only the current slice's files.
+- If another window has already changed the same target lines and the merge is ambiguous, stop and record the blocker instead of overwriting.
 - For C++ build/run slices, use the project’s current build/run lock convention if present; otherwise build and run sequentially and never overlap them across windows intentionally.
 
 ## Validation And Sync

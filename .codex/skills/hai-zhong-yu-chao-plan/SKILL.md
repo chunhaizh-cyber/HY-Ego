@@ -93,7 +93,8 @@ For code implementation slices, allowed files, forbidden files, and validation c
 
 ## Plan Index And Queue
 
-- Editing `计划/计划索引.md` requires `计划/.计划索引.lock`.
+- Editing `计划/计划索引.md` does not require `计划/.计划索引.lock`.
+- Protect concurrent work through Git facts: check `git status --short` before editing, inspect targeted diffs after editing, stage only the current slice's files, and never overwrite unrelated dirty changes.
 - If a plan is generated but not confirmed, register it as 待确认 and keep it under `计划/待确认计划/`.
 - After user confirmation, move it to `计划/`, update references, and register the confirmed next executable item in `项目记忆/Codex任务队列.md`.
 - When the plan is completed, move it to `计划/已完成计划/` and update references.
