@@ -51,6 +51,10 @@ Do not create a code plan from chat memory alone. Do not treat old functions as 
 
 If no relevant design, migration package, or S0 fact exists, generate that prerequisite first if it is a document-governance action; otherwise stop and state what is missing.
 
+Detailed designs no longer require a separate user confirmation step before plan generation. Once a relevant detailed design has been generated, create the next unconfirmed plan directly unless the user explicitly asks to revise, withdraw, or hold that design. Plan confirmation, queue registration, and code implementation gates still remain separate.
+
+When confirming a plan, synchronously confirm the plan's corresponding flowchart and detailed design. The confirmation record, plan index, project memory, and queue-entry breakpoint must list the flowchart path, detailed-design path, and plan path, and must state that the flowchart and detailed design are confirmed or confirmed through this plan-confirmation gate. If the flowchart or detailed design is missing, withdrawn, still under unresolved questions, or does not cover the plan scope, do not confirm the plan or register the queue item. For pure rule, read-only scan, information-data, breakpoint, or project-memory plans with no flowchart/detailed-design source, explicitly record why the linkage is not applicable and what formal source replaces it.
+
 ## Output Location
 
 - New unconfirmed plans go to `计划/待确认计划/`.
@@ -96,7 +100,8 @@ For code implementation slices, allowed files, forbidden files, and validation c
 - Editing `计划/计划索引.md` does not require `计划/.计划索引.lock`.
 - Protect concurrent work through Git facts: check `git status --short` before editing, inspect targeted diffs after editing, stage only the current slice's files, and never overwrite unrelated dirty changes.
 - If a plan is generated but not confirmed, register it as 待确认 and keep it under `计划/待确认计划/`.
-- After user confirmation, move it to `计划/`, update references, and register the confirmed next executable item in `项目记忆/Codex任务队列.md`.
+- Before user confirmation, verify the plan's corresponding flowchart and detailed design paths and status. Confirmation must either synchronously mark those upstream artifacts confirmed or explicitly state why the linkage is not applicable.
+- After user confirmation and upstream linkage verification, move it to `计划/`, update references, and register the confirmed next executable item in `项目记忆/Codex任务队列.md`.
 - When the plan is completed, move it to `计划/已完成计划/` and update references.
 
 ## Verification

@@ -53,6 +53,7 @@ Before treating `继续` as execution, identify the current window type:
 
 - Confirmed plans must be in `项目记忆/Codex任务队列.md` before execution.
 - A confirmation statement alone is not executable.
+- Before executing a confirmed plan, verify that the plan confirmation also confirmed the corresponding flowchart and detailed design, or explicitly recorded why no flowchart/detailed-design linkage applies. If the linked flowchart or detailed design is missing, unresolved, withdrawn, or outside the plan scope, stop before execution and record the blocker in `项目记忆/待确认问题.md`.
 - If a queue item is document governance, read-only scan, breakpoint creation, project-memory sync, or plan-index maintenance, execute directly.
 - If a queue item changes C++ code, old capability migration, fields, functions, or machine structure, require an implementation slice with allowed files, forbidden files, and validation commands.
 - If implementation discovers new decisions, write them to `项目记忆/待确认问题.md`; do not expand scope.
