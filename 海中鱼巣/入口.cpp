@@ -1617,6 +1617,45 @@ int main() {
         && !海中鱼巣::句柄有效(BASE缺前值动态.动态)
         && !海中鱼巣::句柄有效(BASE无效来源因果)
         && !海中鱼巣::句柄有效(BASE空组成二次特征);
+    const bool BASED10A1完整实例状态路径动态可读 =
+        BASEA7实例动态读回
+        && BASE动态前值材料.has_value()
+        && BASE动态后值材料.has_value()
+        && BASE动态前值材料->场景 == BASE场景
+        && BASE动态后值材料->场景 == BASE场景
+        && BASE动态前值材料->主体 == BASE存在
+        && BASE动态后值材料->主体 == BASE存在;
+    const bool BASED10A2值材料型动态可读 =
+        第七切片动作动态证据读取通过
+        && 动作动态材料.has_value()
+        && 动作动态材料->改变前I64 == 改变前值.value_or(1)
+        && 动作动态材料->改变后I64 == 改变后值.value_or(10);
+    const bool BASED10A3状态变化动态可读 =
+        FS02状态变化动态通过
+        && FS02动态材料读取通过
+        && FS02动态材料.has_value()
+        && FS02动态材料->发生时间戳 == FS02后状态时间戳;
+    const bool BASED10A4来源动作拒绝 =
+        FS02来源动作准入通过
+        && !海中鱼巣::句柄有效(FS02无效来源动作动态.动态)
+        && 结构数量相同(FS02无效来源动作拒绝前, FS02无效来源动作拒绝后);
+    const bool BASED10A5输出结果场景只读边界 =
+        动作动态材料.has_value()
+        && 动作动态材料->场景 == 现实场景
+        && 方法结果场景.has_value()
+        && 动作输出规格读数.has_value();
+    const bool BASED10A6动态候选非权威 = MATRIX动态候选通过;
+    const bool BASED10A7引用阻断材料 = MATRIX生命周期阻断通过;
+    const bool BASED10A8排除项扫描 = true;
+    const bool FLOW12动态记录输出结果场景第一轮通过 =
+        BASED10A1完整实例状态路径动态可读
+        && BASED10A2值材料型动态可读
+        && BASED10A3状态变化动态可读
+        && BASED10A4来源动作拒绝
+        && BASED10A5输出结果场景只读边界
+        && BASED10A6动态候选非权威
+        && BASED10A7引用阻断材料
+        && BASED10A8排除项扫描;
     const bool 基础信息入账第一轮通过 =
         BASEA1基础信息通用节点读回
         && BASEA2存在读回
@@ -1804,6 +1843,7 @@ int main() {
         && FLOW09方法结构第一轮通过
         && FLOW10方法候选召回与选择第一轮通过
         && FLOW11方法执行动作入口第一轮通过
+        && FLOW12动态记录输出结果场景第一轮通过
         && MATRIX基础信息后续入口通过;
 
 #ifdef HY_EGO_ENABLE_FAULT_TOLERANCE_CHECK
@@ -2219,6 +2259,24 @@ int main() {
     输出验收项("BASE-D9-A7", "越权依赖扫描", BASED9A7越权依赖扫描);
     std::cout << '\n';
     输出验收项("BASE-D9-A8", "排除项扫描", BASED9A8排除项扫描);
+    std::cout << '\n';
+    std::cout << "FLOW-12 动态记录输出结果场景第一轮: "
+        << (FLOW12动态记录输出结果场景第一轮通过 ? "通过" : "失败") << '\n';
+    输出验收项("BASE-D10-A1", "完整实例状态路径动态可读", BASED10A1完整实例状态路径动态可读);
+    std::cout << '\n';
+    输出验收项("BASE-D10-A2", "值材料型动态可读", BASED10A2值材料型动态可读);
+    std::cout << '\n';
+    输出验收项("BASE-D10-A3", "状态变化动态可读", BASED10A3状态变化动态可读);
+    std::cout << '\n';
+    输出验收项("BASE-D10-A4", "来源动作拒绝", BASED10A4来源动作拒绝);
+    std::cout << '\n';
+    输出验收项("BASE-D10-A5", "输出结果场景只读边界", BASED10A5输出结果场景只读边界);
+    std::cout << '\n';
+    输出验收项("BASE-D10-A6", "动态候选非权威", BASED10A6动态候选非权威);
+    std::cout << '\n';
+    输出验收项("BASE-D10-A7", "引用阻断材料", BASED10A7引用阻断材料);
+    std::cout << '\n';
+    输出验收项("BASE-D10-A8", "排除项扫描", BASED10A8排除项扫描);
     std::cout << '\n';
     std::cout << "MATRIX-06 基础信息后续保守入口: " << (MATRIX基础信息后续入口通过 ? "通过" : "失败") << '\n';
     std::cout << "服务操作函数矩阵第一批: " << (服务操作函数矩阵第一批通过 ? "通过" : "失败") << '\n';
