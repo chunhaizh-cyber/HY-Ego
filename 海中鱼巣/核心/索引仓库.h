@@ -5,7 +5,9 @@
 #include "节点仓库.h"
 
 #include <cstdint>
+#include <mutex>
 #include <optional>
+#include <shared_mutex>
 #include <unordered_map>
 
 namespace 海中鱼巣 {
@@ -21,6 +23,7 @@ public:
 
 private:
     const 节点仓库& 节点_;
+    mutable std::shared_mutex 仓库锁_;
     std::unordered_map<std::uint64_t, 节点句柄> 主键索引_;
 };
 

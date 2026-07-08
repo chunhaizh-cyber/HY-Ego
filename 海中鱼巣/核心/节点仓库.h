@@ -5,7 +5,9 @@
 #include "主信息仓库.h"
 
 #include <cstdint>
+#include <mutex>
 #include <optional>
+#include <shared_mutex>
 #include <unordered_map>
 
 namespace 海中鱼巣 {
@@ -35,6 +37,7 @@ private:
     std::uint64_t 仓库编号_ = 1;
     std::uint64_t 下个节点编号_ = 1;
     std::uint64_t 下个创建序号_ = 1;
+    mutable std::shared_mutex 仓库锁_;
     std::unordered_map<std::uint64_t, 节点记录> 节点表_;
 };
 

@@ -5,7 +5,9 @@
 #include "节点仓库.h"
 
 #include <cstdint>
+#include <mutex>
 #include <optional>
+#include <shared_mutex>
 #include <unordered_map>
 #include <vector>
 
@@ -42,10 +44,13 @@ public:
 
 private:
     bool 节点在父链中(节点句柄 起点, 节点句柄 目标) const;
+    std::optional<节点句柄> 获取父节点_已加锁(节点句柄 子节点) const;
+    bool 节点在父链中_已加锁(节点句柄 起点, 节点句柄 目标) const;
 
     const 节点仓库& 节点_;
     std::uint64_t 仓库编号_ = 1;
     std::uint64_t 下个关系编号_ = 1;
+    mutable std::shared_mutex 仓库锁_;
     std::unordered_map<std::uint64_t, 关系记录> 关系表_;
 };
 

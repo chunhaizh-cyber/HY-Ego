@@ -19,6 +19,7 @@ bool 节点类型已定义(节点类型 类型) {
     if (!主信息_.主信息是否有效(主信息) || !节点类型已定义(类型)) {
         return {};
     }
+    std::unique_lock<std::shared_mutex> 锁(仓库锁_);
     const std::uint64_t 编号 = 下个节点编号_++;
     节点记录 记录;
     记录.节点编号 = 编号;
@@ -32,6 +33,7 @@ bool 节点类型已定义(节点类型 类型) {
 }
 
 std::optional<节点记录> 节点仓库::读取节点(节点句柄 节点) const {
+    std::shared_lock<std::shared_mutex> 锁(仓库锁_);
     const auto 位置 = 节点表_.find(节点.节点编号);
     if (位置 == 节点表_.end()) {
         return std::nullopt;
@@ -44,6 +46,7 @@ std::optional<节点记录> 节点仓库::读取节点(节点句柄 节点) cons
 }
 
 bool 节点仓库::删除节点(节点句柄 节点) {
+    std::unique_lock<std::shared_mutex> 锁(仓库锁_);
     auto 位置 = 节点表_.find(节点.节点编号);
     if (位置 == 节点表_.end()) {
         return false;
@@ -62,6 +65,7 @@ bool 节点仓库::节点是否有效(节点句柄 节点) const {
 }
 
 std::uint64_t 节点仓库::有效节点数量() const {
+    std::shared_lock<std::shared_mutex> 锁(仓库锁_);
     std::uint64_t 数量 = 0;
     for (const auto& 条目 : 节点表_) {
         if (条目.second.状态 == 记录状态::有效) {
@@ -72,6 +76,7 @@ std::uint64_t 节点仓库::有效节点数量() const {
 }
 
 std::uint64_t 节点仓库::仓库编号() const {
+    std::shared_lock<std::shared_mutex> 锁(仓库锁_);
     return 仓库编号_;
 }
 

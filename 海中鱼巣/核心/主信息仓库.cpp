@@ -8,6 +8,7 @@ namespace 海中鱼巣 {
 }
 
 主信息句柄 主信息仓库::创建主信息() {
+    std::unique_lock<std::shared_mutex> 锁(仓库锁_);
     const std::uint64_t 编号 = 下个主信息编号_++;
     主信息记录 记录;
     记录.主信息编号 = 编号;
@@ -18,6 +19,7 @@ namespace 海中鱼巣 {
 }
 
 std::optional<主信息记录> 主信息仓库::读取主信息(主信息句柄 主信息) const {
+    std::shared_lock<std::shared_mutex> 锁(仓库锁_);
     const auto 位置 = 主信息表_.find(主信息.主信息编号);
     if (位置 == 主信息表_.end()) {
         return std::nullopt;
@@ -30,6 +32,7 @@ std::optional<主信息记录> 主信息仓库::读取主信息(主信息句柄 
 }
 
 bool 主信息仓库::删除主信息(主信息句柄 主信息) {
+    std::unique_lock<std::shared_mutex> 锁(仓库锁_);
     auto 位置 = 主信息表_.find(主信息.主信息编号);
     if (位置 == 主信息表_.end()) {
         return false;
@@ -52,6 +55,7 @@ bool 主信息仓库::写入I64值(主信息句柄 主信息, std::int64_t 值) 
 }
 
 bool 主信息仓库::写入I64值(主信息句柄 主信息, std::uint64_t 值索引, std::int64_t 值) {
+    std::unique_lock<std::shared_mutex> 锁(仓库锁_);
     auto 位置 = 主信息表_.find(主信息.主信息编号);
     if (位置 == 主信息表_.end()) {
         return false;

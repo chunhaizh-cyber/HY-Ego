@@ -4,7 +4,9 @@
 #include "句柄.h"
 
 #include <cstdint>
+#include <mutex>
 #include <optional>
+#include <shared_mutex>
 #include <unordered_map>
 #include <vector>
 
@@ -34,6 +36,7 @@ public:
 private:
     std::uint64_t 仓库编号_ = 1;
     std::uint64_t 下个主信息编号_ = 1;
+    mutable std::shared_mutex 仓库锁_;
     std::unordered_map<std::uint64_t, 主信息记录> 主信息表_;
 };
 
