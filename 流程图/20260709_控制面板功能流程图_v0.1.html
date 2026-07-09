@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>控制面板功能流程图 v0.1</title>
+  <style>
+    body { margin: 0; padding: 24px; font-family: "Microsoft YaHei", sans-serif; background: #f7f7f5; color: #1f2933; }
+    h1 { margin: 0 0 8px; font-size: 22px; }
+    .meta { margin-bottom: 16px; color: #5b6472; }
+    .mermaid { background: #ffffff; border: 1px solid #d8dde6; border-radius: 6px; padding: 16px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>控制面板功能流程图 v0.1</h1>
+  <div class="meta">更新时间：2026-07-09</div>
+  <pre class="mermaid">flowchart TD
+    A["用户明确请求：控制面板功能重建材料"] --> B["进入控制面板功能边界识别"]
+    B --> C{"功能类型"}
+    C -->|只读总览| D["读取显示服务：必须来自服务只读入口"]
+    C -->|树视图 / 详情| E["读取领域服务只读材料：需求 / 任务 / 方法 / 状态 / 动态 / 因果 / 统计"]
+    C -->|日志 / 统计观察| F["读取人读日志材料和非权威统计快照"]
+    C -->|操作按钮或命令| G["降级为操作请求壳：只能生成请求材料"]
+    C -->|数据库 / SQL| H["转数据库审计适配候选"]
+    C -->|WebView / HTML / 截图| I["转人读渲染通道候选"]
+    C -->|D455 / 体素 / 外设| J["转独立外设或体素专项"]
+    D --> K{"显示请求是否试图越权读取、写事实或用文本裁决"}
+    E --> K
+    F --> K
+    K -->|是| R0["拒绝：返回人读错误材料；权威结构不变"]
+    K -->|否| L["组装控制面板只读视图材料"]
+    L --> M["功能区：系统状态 / 需求树 / 任务树 / 方法材料 / 状态动态 / 因果引用 / 统计缓存 / 日志审计"]
+    M --> N{"是否请求外部显示通道"}
+    N -->|否| O["输出控制台或后续只读视图材料；不写机器事实"]
+    N -->|是| P["当前显示服务返回后续专项门禁"]
+    G --> Q{"请求是否试图直接写业务事实"}
+    Q -->|是| R1["拒绝：控制面板按钮不得写节点、关系、任务、方法或状态"]
+    Q -->|否| S["后续只能交给已确认领域服务入口；本图不执行"]
+    H --> T{"SQL 是否试图裁决运行期事实"}
+    T -->|是| R2["拒绝：运行期核心以内存仓库为准"]
+    T -->|否| U["仅可作为快照、事件日志、恢复、审计或只读查询候选"]
+    I --> V["只允许渲染已生成的人读材料；HTML / JSON / 截图不得承载机器事实"]
+    J --> W["等待外设材料规范、体素服务或真实样本专项；不得借控制面板接入"]
+    P --> X["后续专项门禁：控制面板只读专项 / 数据库审计专项 / WebView 渲染专项"]
+    S --> X
+    U --> X
+    V --> X
+    W --> X
+    O --> Y["完成：文档级功能图生成；不入队、不改 C++、不运行构建"]
+    X --> Y</pre>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>
