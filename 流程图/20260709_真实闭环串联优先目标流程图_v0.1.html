@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>真实闭环串联优先目标流程图</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", "Segoe UI", sans-serif; background: #f7f7f4; color: #202124; }
+    main { max-width: 1280px; margin: 0 auto; padding: 32px 24px 48px; }
+    .mermaid { background: #fff; border: 1px solid #d7d7d2; padding: 16px; overflow: auto; }
+    .note { white-space: pre-wrap; line-height: 1.7; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>真实闭环串联优先目标流程图</h1>
+  <p>更新时间：2026-07-09</p>
+  <div class="mermaid">
+flowchart TD
+    A["前置门禁：运行宿主与多线程消息队列专项完成"] --> B["创建或读取需求目标状态"]
+    B --> C["任务服务承接需求"]
+    C --> D["任务管理线程读取任务候选材料"]
+    D --> E["方法候选召回与选择"]
+    E --> F{"任务选择方法关系有效？"}
+    F -- "否" --> G["拒绝：不写动作请求"]
+    F -- "是" --> H["生成方法执行动作请求"]
+    H --> I["任务工作线程调用领域服务入口"]
+    I --> J{"领域入口前置拒绝通过？"}
+    J -- "否" --> K["任务拒绝回执材料"]
+    J -- "是" --> L["动作请求经方法服务与特征服务处理"]
+    L --> M["动态服务记录实例动态"]
+    M --> N["因果服务记录轻量因果候选"]
+    M --> O["任务回执实际结果状态回写"]
+    O --> P["需求结算复核目标状态与实际状态"]
+    P --> Q["权威需求结算结构"]
+    Q --> R["缓存刷新消息"]
+    Q --> S["事件日志消息"]
+    Q --> T["只读显示材料刷新"]
+    R --> U["缓存统计线程更新非权威缓存"]
+    S --> V["事件日志线程写人读审计材料"]
+    T --> W["显示服务只读输出"]
+    U --> X["闭环验收材料"]
+    V --> X
+    W --> X
+    X --> Y["完成声明：只证明更真实闭环第一轮通过"]
+  </div>
+  <h2>关键边界</h2>
+  <div class="note">必须等运行宿主与多线程消息队列专项完成后，才能确认并入队本优先目标计划。
+线程只调度、搬运、等待和执行耗时计算，不作为动作来源。
+动作来源候选只能来自方法执行或领域服务写入入口。
+消息、队列、日志、控制台输出和显示材料不得承载机器事实。
+需求目标仍是目标状态，不是 I64。
+任务回执和需求结算必须回到领域服务入口复核，不得由工作线程直接写权威事实。
+非权威缓存、事件日志和只读显示材料只作为观察、审计和恢复候选材料，不裁决需求满足、任务完成或方法成功。
+第一批不接 SQL、ADO、WebView、D455、体素或真实外设。</div>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>
