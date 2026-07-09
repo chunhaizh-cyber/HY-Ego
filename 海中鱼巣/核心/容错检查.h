@@ -49,3 +49,12 @@ inline void 记录容错检查错误(const wchar_t* 文件, int 行号, const wc
 #define 海中鱼巣容错检查(条件, 说明) do { } while (false)
 
 #endif
+
+namespace 海中鱼巣 {
+
+inline bool 追根因检查(bool 条件, const wchar_t* 说明) {
+    海中鱼巣容错检查(条件, 说明);
+    return 条件;
+}
+
+}

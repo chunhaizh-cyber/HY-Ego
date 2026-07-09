@@ -54,7 +54,7 @@ flowchart TD
 消息和队列只承载请求、材料、回执和调度信号，不承载机器事实。
 权威写入必须回到领域服务或正式仓库入口重新复核句柄、版本、任务状态、任务方法关系、动作入口和时间戳。
 外设采样材料线程第一轮只允许产生外部材料消息，不接 D455、体素、真实外设控制或外设事实入账。</div>
-</main>
+<section><h2>中途非成功返回二分口径</h2><p>本 HTML 仅为人读渲染产物，不承载机器事实。2026-07-09 起，中途非成功返回只分为追根因解决和逻辑内返回。</p><ul><li>追根因解决：前置条件已经满足，并进入创建、绑定、写关系、写状态、记录动态、结算、读回或结构承载后，结果不符合内部预期；必须停止依赖路径并定位根因，当前未证明完整回滚时登记事务隔离缺口或半结构隔离缺口。</li><li>逻辑内返回：领域协议允许的拒绝、候选为空、请求材料返回或人读材料返回；必须保证结构不变化，且返回材料、日志、回执、显示或控制台输出不裁决机器事实。</li></ul></section></main>
 <script type="module">
   import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
   mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
