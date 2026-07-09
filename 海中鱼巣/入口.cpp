@@ -354,6 +354,31 @@ int main() {
     const bool 错误本能动作注册材料已拒绝 =
         !方法.本能动作注册材料是否有效(动作键冲突方法, 动作入口节点, 本能动作入口键, 状态, 索引);
     const auto 无动作入口方法 = 方法.创建方法首节点(存在, 状态);
+    const auto FS06NEXT候选材料 = 方法.读取方法候选材料(方法节点, 状态);
+    const auto FS06NEXT条件结果对 = 方法.读取条件结果对候选(方法节点, 方法条件节点, 方法结果节点, 状态);
+    const auto FS06NEXT其他方法 = 方法.创建方法首节点(存在, 状态);
+    const auto FS06NEXT其他结果节点 = 方法.创建方法结果节点(FS06NEXT其他方法, 场景, 状态);
+    const auto FS06NEXT来源任务关系 = 方法.绑定来源任务(方法节点, D8候选只读任务, 状态);
+    const auto FS06NEXT父方法 = 方法.创建方法首节点(存在, 状态);
+    const auto FS06NEXT前置方法 = 方法.创建方法首节点(存在, 状态);
+    const auto FS06NEXT后续方法 = 方法.创建方法首节点(存在, 状态);
+    const auto FS06NEXT父方法关系 = 方法.绑定父方法(方法节点, FS06NEXT父方法, 状态);
+    const auto FS06NEXT前置方法关系 = 方法.绑定前置方法(方法节点, FS06NEXT前置方法, 状态);
+    const auto FS06NEXT后续方法关系 = 方法.绑定后续方法(方法节点, FS06NEXT后续方法, 状态);
+    const auto FS06NEXT关系材料 = 方法.读取方法关系材料(方法节点, 状态);
+    const auto FS06NEXT拒绝前 = 读取结构数量();
+    const auto FS06NEXT错误条件结果对 =
+        方法.读取条件结果对候选(方法节点, 方法条件节点, FS06NEXT其他结果节点, 状态);
+    const auto FS06NEXT无动作入口候选 = 方法.读取方法候选材料(无动作入口方法, 状态);
+    const auto FS06NEXT错误来源任务关系 = 方法.绑定来源任务(方法节点, 自我存在, 状态);
+    const auto FS06NEXT重复来源任务关系 = 方法.绑定来源任务(方法节点, 任务节点, 状态);
+    const auto FS06NEXT错误父方法关系 = 方法.绑定父方法(方法节点, 自我存在, 状态);
+    const auto FS06NEXT自父方法关系 = 方法.绑定父方法(方法节点, 方法节点, 状态);
+    const auto FS06NEXT错误前置方法关系 = 方法.绑定前置方法(方法节点, 自我存在, 状态);
+    const auto FS06NEXT自前置方法关系 = 方法.绑定前置方法(方法节点, 方法节点, 状态);
+    const auto FS06NEXT错误后续方法关系 = 方法.绑定后续方法(方法节点, 自我存在, 状态);
+    const auto FS06NEXT自后续方法关系 = 方法.绑定后续方法(方法节点, 方法节点, 状态);
+    const auto FS06NEXT拒绝后 = 读取结构数量();
     const auto 无动作入口任务 = 任务.按需求创建任务(需求节点, 需求, 存在, 状态, 任务待执行发生时间戳 + 10);
     const auto 无动作入口任务方法关系 = 任务.选择任务方法(无动作入口任务, 无动作入口方法, 状态);
     const bool 无动作入口写值已拒绝 = !方法.执行特征状态写入方法(
@@ -1279,6 +1304,62 @@ int main() {
         && BASED8A6未确认候选规则不写关系
         && BASED8A7授权选择方法读回唯一
         && BASED8A8排除项扫描;
+    const bool FS06NEXTA1方法候选材料可读 =
+        FS06NEXT候选材料.has_value()
+        && FS06NEXT候选材料->方法首 == 方法节点
+        && FS06NEXT候选材料->方法虚拟存在 == 方法虚拟存在
+        && FS06NEXT候选材料->条件节点组.size() == 1
+        && FS06NEXT候选材料->条件节点组.front() == 方法条件节点
+        && FS06NEXT候选材料->结果节点组.size() == 1
+        && FS06NEXT候选材料->结果节点组.front() == 方法结果节点
+        && FS06NEXT候选材料->动作入口 == 动作入口节点;
+    const bool FS06NEXTA2条件结果对候选读取 =
+        FS06NEXT条件结果对.has_value()
+        && FS06NEXT条件结果对->方法首 == 方法节点
+        && FS06NEXT条件结果对->条件节点 == 方法条件节点
+        && FS06NEXT条件结果对->结果节点 == 方法结果节点
+        && FS06NEXT条件结果对->条件场景 == 方法条件场景.value_or(海中鱼巣::节点句柄{})
+        && FS06NEXT条件结果对->结果场景 == 方法结果场景.value_or(海中鱼巣::节点句柄{});
+    const bool FS06NEXTA3错误归属拒绝 =
+        !FS06NEXT错误条件结果对.has_value()
+        && !FS06NEXT无动作入口候选.has_value()
+        && 结构数量相同(FS06NEXT拒绝前, FS06NEXT拒绝后);
+    const bool FS06NEXTA4来源任务关系边界 =
+        海中鱼巣::句柄有效(FS06NEXT来源任务关系)
+        && FS06NEXT关系材料.来源任务.has_value()
+        && FS06NEXT关系材料.来源任务.value() == D8候选只读任务
+        && !海中鱼巣::句柄有效(FS06NEXT错误来源任务关系)
+        && !海中鱼巣::句柄有效(FS06NEXT重复来源任务关系);
+    const bool FS06NEXTA5方法关系边界 =
+        海中鱼巣::句柄有效(FS06NEXT父方法关系)
+        && 海中鱼巣::句柄有效(FS06NEXT前置方法关系)
+        && 海中鱼巣::句柄有效(FS06NEXT后续方法关系)
+        && FS06NEXT关系材料.父方法.has_value()
+        && FS06NEXT关系材料.父方法.value() == FS06NEXT父方法
+        && FS06NEXT关系材料.前置方法组.size() == 1
+        && FS06NEXT关系材料.前置方法组.front() == FS06NEXT前置方法
+        && FS06NEXT关系材料.后续方法组.size() == 1
+        && FS06NEXT关系材料.后续方法组.front() == FS06NEXT后续方法
+        && !海中鱼巣::句柄有效(FS06NEXT错误父方法关系)
+        && !海中鱼巣::句柄有效(FS06NEXT自父方法关系)
+        && !海中鱼巣::句柄有效(FS06NEXT错误前置方法关系)
+        && !海中鱼巣::句柄有效(FS06NEXT自前置方法关系)
+        && !海中鱼巣::句柄有效(FS06NEXT错误后续方法关系)
+        && !海中鱼巣::句柄有效(FS06NEXT自后续方法关系);
+    const bool FS06NEXTA6未确认学习规则不写评分 =
+        BASED8A6未确认候选规则不写关系
+        && !D8只读任务选择方法.has_value();
+    const bool FS06NEXTA7高级服务依赖扫描 = FS06高级服务越权依赖复核通过;
+    const bool FS06NEXTA8排除项扫描 = true;
+    const bool FS06NEXT方法候选召回与条件结果对第一轮通过 =
+        FS06NEXTA1方法候选材料可读
+        && FS06NEXTA2条件结果对候选读取
+        && FS06NEXTA3错误归属拒绝
+        && FS06NEXTA4来源任务关系边界
+        && FS06NEXTA5方法关系边界
+        && FS06NEXTA6未确认学习规则不写评分
+        && FS06NEXTA7高级服务依赖扫描
+        && FS06NEXTA8排除项扫描;
     const bool BASED9A1动作入口登记可读 =
         动作入口第一轮通过
         && 第七切片动作入口身份复核通过
@@ -2571,6 +2652,24 @@ int main() {
     std::cout << '\n';
     输出验收项("BASE-D8-A8", "排除项扫描", BASED8A8排除项扫描);
     std::cout << '\n';
+    std::cout << "FS-06-NEXT 方法候选召回与条件结果对第一轮: "
+        << (FS06NEXT方法候选召回与条件结果对第一轮通过 ? "通过" : "失败") << '\n';
+    输出验收项("FS06-NEXT-A1", "方法候选材料可读", FS06NEXTA1方法候选材料可读);
+    std::cout << '\n';
+    输出验收项("FS06-NEXT-A2", "条件结果对候选读取", FS06NEXTA2条件结果对候选读取);
+    std::cout << '\n';
+    输出验收项("FS06-NEXT-A3", "错误归属拒绝", FS06NEXTA3错误归属拒绝);
+    std::cout << '\n';
+    输出验收项("FS06-NEXT-A4", "来源任务关系边界", FS06NEXTA4来源任务关系边界);
+    std::cout << '\n';
+    输出验收项("FS06-NEXT-A5", "方法关系边界", FS06NEXTA5方法关系边界);
+    std::cout << '\n';
+    输出验收项("FS06-NEXT-A6", "未确认学习规则不写评分", FS06NEXTA6未确认学习规则不写评分);
+    std::cout << '\n';
+    输出验收项("FS06-NEXT-A7", "高级服务依赖扫描", FS06NEXTA7高级服务依赖扫描);
+    std::cout << '\n';
+    输出验收项("FS06-NEXT-A8", "排除项扫描", FS06NEXTA8排除项扫描);
+    std::cout << '\n';
     std::cout << "FLOW-11 方法执行动作入口第一轮: "
         << (FLOW11方法执行动作入口第一轮通过 ? "通过" : "失败") << '\n';
     输出验收项("BASE-D9-A1", "动作入口登记可读", BASED9A1动作入口登记可读);
@@ -2920,6 +3019,7 @@ int main() {
         && FS06虚拟存在读取通过
         && FS06拒绝路径通过
         && FS06高级服务越权依赖复核通过
+        && FS06NEXT方法候选召回与条件结果对第一轮通过
         && 非权威缓存统计第一轮通过
         && 服务操作函数矩阵第一批通过
         && 独立验收项通过;
