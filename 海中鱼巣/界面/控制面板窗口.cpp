@@ -31,27 +31,26 @@ constexpr int 刷新按钮编号 = 1001;
 constexpr int 操作请求按钮编号 = 1002;
 constexpr int 关闭按钮编号 = 1003;
 constexpr int 导航栏编号 = 1004;
-constexpr int 分页树菜单编号 = 1101;
-constexpr int 分页系统信息菜单编号 = 1102;
-constexpr int 分页日志菜单编号 = 1103;
+constexpr int 信息树菜单编号 = 1101;
+constexpr int 日志信息菜单编号 = 1102;
+constexpr int 系统信息菜单编号 = 1103;
 constexpr int 上一分页菜单编号 = 1104;
 constexpr int 下一分页菜单编号 = 1105;
-constexpr int 树分类菜单编号起点 = 1200;
 constexpr UINT_PTR 停止检查计时器编号 = 1;
 constexpr UINT 停止检查间隔毫秒 = 100;
 constexpr wchar_t 窗口类名称[] = L"海中鱼巣控制面板窗口类";
 constexpr wchar_t 窗口标题[] = L"海中鱼巣控制面板";
 
 enum class 控制面板分页 : std::uint32_t {
-    树 = 0,
-    系统信息 = 1,
-    日志 = 2
+    信息树 = 0,
+    日志信息 = 1,
+    系统信息 = 2
 };
 
 const std::array<const wchar_t*, 3> 分页名称{
-    L"树",
-    L"系统信息",
-    L"日志"
+    L"信息树",
+    L"日志信息",
+    L"系统信息"
 };
 
 const std::array<const wchar_t*, 6> 树分类名称{
@@ -96,26 +95,26 @@ std::uint32_t 分页索引(控制面板分页 分页) {
 控制面板分页 从分页索引读取分页(std::uint32_t 索引) {
     switch (索引) {
     case 0:
-        return 控制面板分页::树;
+        return 控制面板分页::信息树;
     case 1:
-        return 控制面板分页::系统信息;
+        return 控制面板分页::日志信息;
     case 2:
-        return 控制面板分页::日志;
+        return 控制面板分页::系统信息;
     default:
-        return 控制面板分页::树;
+        return 控制面板分页::信息树;
     }
 }
 
 int 分页菜单编号(控制面板分页 分页) {
     switch (分页) {
-    case 控制面板分页::树:
-        return 分页树菜单编号;
+    case 控制面板分页::信息树:
+        return 信息树菜单编号;
+    case 控制面板分页::日志信息:
+        return 日志信息菜单编号;
     case 控制面板分页::系统信息:
-        return 分页系统信息菜单编号;
-    case 控制面板分页::日志:
-        return 分页日志菜单编号;
+        return 系统信息菜单编号;
     }
-    return 分页树菜单编号;
+    return 信息树菜单编号;
 }
 
 void 显示控件(HWND 控件, bool 显示) {
@@ -209,13 +208,11 @@ struct 控制面板窗口::窗口实现 {
     HWND 关闭按钮 = nullptr;
     HWND 状态栏 = nullptr;
     HMENU 菜单栏 = nullptr;
-    HMENU 分页菜单 = nullptr;
-    HMENU 树菜单 = nullptr;
     HACCEL 快捷键表 = nullptr;
     HFONT 正文字体 = nullptr;
     HFONT 标题字体 = nullptr;
 
-    控制面板分页 当前分页 = 控制面板分页::树;
+    控制面板分页 当前分页 = 控制面板分页::信息树;
     std::uint32_t 当前分类索引 = 0;
     std::size_t 当前树项引用序号 = 0;
     std::vector<控制面板树项引用> 树项引用组;
@@ -342,42 +339,18 @@ struct 控制面板窗口::窗口实现 {
 
     bool 创建菜单栏() {
         菜单栏 = CreateMenu();
-        分页菜单 = CreatePopupMenu();
-        树菜单 = CreatePopupMenu();
-        HMENU 操作菜单 = CreatePopupMenu();
-        if (菜单栏 == nullptr || 分页菜单 == nullptr || 树菜单 == nullptr || 操作菜单 == nullptr) {
+        if (菜单栏 == nullptr) {
             标记追根因错误(L"控制面板菜单栏创建失败");
             return false;
         }
 
-        AppendMenuW(分页菜单, MF_STRING, 分页树菜单编号, L"树页(&T)\tCtrl+1");
-        AppendMenuW(分页菜单, MF_STRING, 分页系统信息菜单编号, L"系统信息页(&S)\tCtrl+2");
-        AppendMenuW(分页菜单, MF_STRING, 分页日志菜单编号, L"日志页(&L)\tCtrl+3");
-        AppendMenuW(分页菜单, MF_SEPARATOR, 0, nullptr);
-        AppendMenuW(分页菜单, MF_STRING, 上一分页菜单编号, L"上一页\tCtrl+Shift+Tab");
-        AppendMenuW(分页菜单, MF_STRING, 下一分页菜单编号, L"下一页\tCtrl+Tab");
-
-        for (std::uint32_t 索引 = 0; 索引 < 树分类名称.size(); ++索引) {
-            std::wstring 菜单文本 = 树分类名称[索引];
-            菜单文本 += L"\tAlt+";
-            菜单文本 += std::to_wstring(索引 + 1);
-            AppendMenuW(树菜单, MF_STRING, 树分类菜单编号起点 + 索引, 菜单文本.c_str());
-        }
-
-        AppendMenuW(操作菜单, MF_STRING, 刷新按钮编号, L"刷新(&R)\tF5");
-        AppendMenuW(操作菜单, MF_STRING, 操作请求按钮编号, L"生成操作请求(&G)");
-        AppendMenuW(操作菜单, MF_SEPARATOR, 0, nullptr);
-        AppendMenuW(操作菜单, MF_STRING, 关闭按钮编号, L"关闭(&C)");
-
-        AppendMenuW(菜单栏, MF_POPUP, reinterpret_cast<UINT_PTR>(分页菜单), L"分页(&P)");
-        AppendMenuW(菜单栏, MF_POPUP, reinterpret_cast<UINT_PTR>(树菜单), L"树(&T)");
-        AppendMenuW(菜单栏, MF_POPUP, reinterpret_cast<UINT_PTR>(操作菜单), L"操作(&O)");
+        AppendMenuW(菜单栏, MF_STRING, 信息树菜单编号, L"信息树(&T)");
+        AppendMenuW(菜单栏, MF_STRING, 日志信息菜单编号, L"日志信息(&L)");
+        AppendMenuW(菜单栏, MF_STRING, 系统信息菜单编号, L"系统信息(&S)");
         if (!SetMenu(主窗口, 菜单栏)) {
             标记追根因错误(L"控制面板菜单栏挂接失败");
             DestroyMenu(菜单栏);
             菜单栏 = nullptr;
-            分页菜单 = nullptr;
-            树菜单 = nullptr;
             return false;
         }
         更新菜单状态();
@@ -386,19 +359,13 @@ struct 控制面板窗口::窗口实现 {
     }
 
     bool 创建快捷键表() {
-        const std::array<ACCEL, 12> 快捷键组{{
-            {static_cast<BYTE>(FVIRTKEY | FCONTROL), static_cast<WORD>('1'), static_cast<WORD>(分页树菜单编号)},
-            {static_cast<BYTE>(FVIRTKEY | FCONTROL), static_cast<WORD>('2'), static_cast<WORD>(分页系统信息菜单编号)},
-            {static_cast<BYTE>(FVIRTKEY | FCONTROL), static_cast<WORD>('3'), static_cast<WORD>(分页日志菜单编号)},
+        const std::array<ACCEL, 6> 快捷键组{{
+            {static_cast<BYTE>(FVIRTKEY | FCONTROL), static_cast<WORD>('1'), static_cast<WORD>(信息树菜单编号)},
+            {static_cast<BYTE>(FVIRTKEY | FCONTROL), static_cast<WORD>('2'), static_cast<WORD>(日志信息菜单编号)},
+            {static_cast<BYTE>(FVIRTKEY | FCONTROL), static_cast<WORD>('3'), static_cast<WORD>(系统信息菜单编号)},
             {static_cast<BYTE>(FVIRTKEY | FCONTROL | FSHIFT), static_cast<WORD>(VK_TAB), static_cast<WORD>(上一分页菜单编号)},
             {static_cast<BYTE>(FVIRTKEY | FCONTROL), static_cast<WORD>(VK_TAB), static_cast<WORD>(下一分页菜单编号)},
-            {static_cast<BYTE>(FVIRTKEY), static_cast<WORD>(VK_F5), static_cast<WORD>(刷新按钮编号)},
-            {static_cast<BYTE>(FVIRTKEY | FALT), static_cast<WORD>('1'), static_cast<WORD>(树分类菜单编号起点 + 0)},
-            {static_cast<BYTE>(FVIRTKEY | FALT), static_cast<WORD>('2'), static_cast<WORD>(树分类菜单编号起点 + 1)},
-            {static_cast<BYTE>(FVIRTKEY | FALT), static_cast<WORD>('3'), static_cast<WORD>(树分类菜单编号起点 + 2)},
-            {static_cast<BYTE>(FVIRTKEY | FALT), static_cast<WORD>('4'), static_cast<WORD>(树分类菜单编号起点 + 3)},
-            {static_cast<BYTE>(FVIRTKEY | FALT), static_cast<WORD>('5'), static_cast<WORD>(树分类菜单编号起点 + 4)},
-            {static_cast<BYTE>(FVIRTKEY | FALT), static_cast<WORD>('6'), static_cast<WORD>(树分类菜单编号起点 + 5)}
+            {static_cast<BYTE>(FVIRTKEY), static_cast<WORD>(VK_F5), static_cast<WORD>(刷新按钮编号)}
         }};
         快捷键表 = CreateAcceleratorTableW(const_cast<ACCEL*>(快捷键组.data()), static_cast<int>(快捷键组.size()));
         if (快捷键表 == nullptr) {
@@ -428,20 +395,20 @@ struct 控制面板窗口::窗口实现 {
         return 读取树项引用(static_cast<LPARAM>(当前树项引用序号));
     }
 
-    HTREEITEM 插入控制面板树节点(HTREEITEM 父项, const 控制面板树节点材料& 节点材料) {
+    HTREEITEM 插入控制面板树节点(HTREEITEM 父项, const 控制面板树节点材料& 节点材料, std::uint32_t 分类索引) {
         TVINSERTSTRUCTW 插入材料{};
         插入材料.hParent = 父项;
         插入材料.hInsertAfter = TVI_LAST;
         插入材料.item.mask = TVIF_TEXT | TVIF_PARAM;
         插入材料.item.pszText = const_cast<wchar_t*>(节点材料.显示名称.c_str());
-        插入材料.item.lParam = 追加树项引用({当前分类索引, &节点材料, true});
+        插入材料.item.lParam = 追加树项引用({分类索引, &节点材料, true});
         const auto 新项 = TreeView_InsertItem(树视图, &插入材料);
         if (新项 == nullptr) {
             标记追根因错误(L"控制面板树节点创建失败");
             return nullptr;
         }
         for (const auto& 子节点 : 节点材料.子节点组) {
-            if (插入控制面板树节点(新项, 子节点) == nullptr) {
+            if (插入控制面板树节点(新项, 子节点, 分类索引) == nullptr) {
                 return nullptr;
             }
         }
@@ -469,7 +436,7 @@ struct 控制面板窗口::窗口实现 {
     }
 
     bool 重建当前树视图() {
-        if (树视图 == nullptr || 当前分类索引 >= 树分类名称.size()) {
+        if (树视图 == nullptr) {
             标记追根因错误(L"控制面板树视图重建入口无效");
             return false;
         }
@@ -477,58 +444,53 @@ struct 控制面板窗口::窗口实现 {
         树项引用组.clear();
         当前树项引用序号 = 0;
 
-        HTREEITEM 根项 = nullptr;
-        if (当前分类索引 == 0) {
-            根项 = 插入控制面板树节点(TVI_ROOT, 当前快照.世界树结构材料.根节点);
-        } else if (当前分类索引 == 2) {
-            根项 = 插入控制面板树节点(TVI_ROOT, 当前快照.语素树结构材料.根节点);
-        } else {
-            根项 = 插入分类树根(当前分类索引);
+        for (std::uint32_t 分类索引 = 0; 分类索引 < 树分类名称.size(); ++分类索引) {
+            const auto 分类根项 = 插入分类树根(分类索引);
+            if (分类根项 == nullptr) {
+                return false;
+            }
+            if (分类索引 == 0) {
+                if (插入控制面板树节点(分类根项, 当前快照.世界树结构材料.根节点, 分类索引) == nullptr) {
+                    return false;
+                }
+                TreeView_Expand(树视图, 分类根项, TVE_EXPAND);
+            } else if (分类索引 == 2) {
+                if (插入控制面板树节点(分类根项, 当前快照.语素树结构材料.根节点, 分类索引) == nullptr) {
+                    return false;
+                }
+                TreeView_Expand(树视图, 分类根项, TVE_EXPAND);
+            }
         }
-        if (根项 == nullptr || 树项引用组.empty()) {
-            return false;
-        }
-        当前树项引用序号 = 1;
-        TreeView_SelectItem(树视图, 根项);
-        TreeView_Expand(树视图, 根项, TVE_EXPAND);
-        return true;
+        return !树项引用组.empty();
     }
 
     void 更新菜单状态() const {
-        if (分页菜单 != nullptr) {
+        if (菜单栏 != nullptr) {
             CheckMenuRadioItem(
-                分页菜单,
-                分页树菜单编号,
-                分页日志菜单编号,
+                菜单栏,
+                信息树菜单编号,
+                系统信息菜单编号,
                 分页菜单编号(当前分页),
-                MF_BYCOMMAND);
-        }
-        if (树菜单 != nullptr) {
-            CheckMenuRadioItem(
-                树菜单,
-                树分类菜单编号起点,
-                树分类菜单编号起点 + static_cast<int>(树分类名称.size()) - 1,
-                树分类菜单编号起点 + static_cast<int>(当前分类索引),
                 MF_BYCOMMAND);
         }
     }
 
     void 应用分页控件可见性() const {
-        const bool 树页 = 当前分页 == 控制面板分页::树;
+        const bool 信息树页 = 当前分页 == 控制面板分页::信息树;
         const bool 系统信息页 = 当前分页 == 控制面板分页::系统信息;
-        const bool 日志页 = 当前分页 == 控制面板分页::日志;
-        显示控件(导航栏, 树页);
-        显示控件(树视图, 树页);
-        显示控件(节点数文本, 树页 || 系统信息页);
-        显示控件(关系数文本, 树页 || 系统信息页);
-        显示控件(索引数文本, 树页 || 系统信息页);
+        const bool 日志信息页 = 当前分页 == 控制面板分页::日志信息;
+        显示控件(导航栏, true);
+        显示控件(树视图, 信息树页);
+        显示控件(节点数文本, 系统信息页);
+        显示控件(关系数文本, 系统信息页);
+        显示控件(索引数文本, 系统信息页);
         显示控件(详情文本, true);
-        显示控件(数据库标题文本, 系统信息页 || 日志页);
+        显示控件(数据库标题文本, 系统信息页 || 日志信息页);
         显示控件(数据库列表, 系统信息页);
-        (void)日志页;
     }
 
     void 更新系统信息页() const {
+        SetWindowTextW(数据库标题文本, L"数据库审计投影 | 只读，不裁决运行期事实");
         std::wostringstream 文本;
         文本 << L"系统信息"
             << L"\r\n\r\n"
@@ -540,7 +502,7 @@ struct 控制面板窗口::窗口实现 {
             << L"\r\n"
             << L"数据库审计投影：只作人读审计材料，不裁决运行期事实"
             << L"\r\n\r\n"
-            << L"启动结构统计"
+            << L"仓库信息"
             << L"\r\n"
             << L"节点数：" << 当前快照.启动结构统计.节点数
             << L"\r\n"
@@ -558,7 +520,7 @@ struct 控制面板窗口::窗口实现 {
                 << L"\r\n";
         }
         文本 << L"\r\n"
-            << L"实际树结构"
+            << L"信息树结构"
             << L"\r\n"
             << L"世界树节点数：" << 计算树节点数量(当前快照.世界树结构材料.根节点)
             << L"\r\n"
@@ -568,9 +530,9 @@ struct 控制面板窗口::窗口实现 {
     }
 
     void 更新日志页() const {
-        SetWindowTextW(数据库标题文本, L"日志 | 人读诊断材料，不裁决机器事实");
+        SetWindowTextW(数据库标题文本, L"日志信息 | 人读诊断材料，不裁决机器事实");
         std::wostringstream 文本;
-        文本 << L"日志页"
+        文本 << L"日志信息"
             << L"\r\n\r\n"
             << L"日志目录：" << 日志目录路径().wstring()
             << L"\r\n"
@@ -590,14 +552,14 @@ struct 控制面板窗口::窗口实现 {
 
     void 更新当前分页内容() const {
         switch (当前分页) {
-        case 控制面板分页::树:
+        case 控制面板分页::信息树:
             更新详情控件();
             break;
         case 控制面板分页::系统信息:
             更新系统信息页();
             更新数据库控件();
             break;
-        case 控制面板分页::日志:
+        case 控制面板分页::日志信息:
             更新日志页();
             break;
         }
@@ -609,6 +571,9 @@ struct 控制面板窗口::窗口实现 {
             return false;
         }
         当前分页 = 新分页;
+        if (导航栏 != nullptr) {
+            SendMessageW(导航栏, LB_SETCURSEL, static_cast<WPARAM>(分页索引(当前分页)), 0);
+        }
         更新菜单状态();
         应用分页控件可见性();
         更新当前分页内容();
@@ -625,26 +590,6 @@ struct 控制面板窗口::窗口实现 {
         const int 当前索引 = static_cast<int>(分页索引(当前分页));
         const int 新索引 = (当前索引 + 偏移 + 分页总数) % 分页总数;
         return 切换分页(从分页索引读取分页(static_cast<std::uint32_t>(新索引)));
-    }
-
-    bool 切换树分类(std::uint32_t 新分类索引) {
-        if (新分类索引 >= 树分类名称.size()) {
-            标记追根因错误(L"控制面板导航栏分类索引越界");
-            return false;
-        }
-        当前分类索引 = 新分类索引;
-        if (导航栏 != nullptr) {
-            SendMessageW(导航栏, LB_SETCURSEL, static_cast<WPARAM>(当前分类索引), 0);
-        }
-        if (!重建当前树视图()) {
-            return false;
-        }
-        当前分页 = 控制面板分页::树;
-        更新菜单状态();
-        应用分页控件可见性();
-        更新详情控件();
-        布局控件();
-        return true;
     }
 
     bool 创建控件() {
@@ -722,9 +667,9 @@ struct 控制面板窗口::窗口实现 {
             SendMessageW(控件, WM_SETFONT, reinterpret_cast<WPARAM>(正文字体), TRUE);
         }
 
-        for (std::uint32_t 索引 = 0; 索引 < 树分类名称.size(); ++索引) {
-            if (SendMessageW(导航栏, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(树分类名称[索引])) == LB_ERR) {
-                标记追根因错误(L"控制面板导航栏分类创建失败");
+        for (std::uint32_t 索引 = 0; 索引 < 分页名称.size(); ++索引) {
+            if (SendMessageW(导航栏, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(分页名称[索引])) == LB_ERR) {
+                标记追根因错误(L"控制面板导航栏分页创建失败");
                 return false;
             }
         }
@@ -777,24 +722,18 @@ struct 控制面板窗口::窗口实现 {
     }
 
     void 更新详情控件() const {
-        const auto& 树材料 = 当前快照.树视图材料组[当前分类索引];
         const auto* 树项 = 读取当前树项引用();
         std::wostringstream 文本;
-        文本 << L"当前分类：" << 树分类名称[当前分类索引]
-            << L"\r\n\r\n"
-            << 树分类说明(树材料.分类)
-            << L"\r\n\r\n"
-            << L"树视图分类资格：" << (树材料.可作为树视图分类 ? L"可展示" : L"拒绝")
-            << L"\r\n"
-            << L"材料来源：控制面板服务 / 显示服务"
-            << L"\r\n"
-            << L"机器事实写入：禁止"
-            << L"\r\n"
-            << L"状态与动态：只作为详情材料"
+        文本 << L"节点信息"
             << L"\r\n\r\n";
         if (树项 != nullptr && 树项->是结构节点 && 树项->节点材料 != nullptr) {
             const auto& 节点材料 = *树项->节点材料;
-            文本 << L"选中结点：" << 节点材料.显示名称
+            const auto& 树材料 = 当前快照.树视图材料组[树项->分类索引];
+            文本 << L"所属信息树：" << 树分类名称[树项->分类索引]
+                << L"\r\n"
+                << L"分类说明：" << 树分类说明(树材料.分类)
+                << L"\r\n\r\n"
+                << L"选中结点：" << 节点材料.显示名称
                 << L"\r\n"
                 << L"结点仓库：" << 节点材料.节点.仓库编号
                 << L"\r\n"
@@ -815,24 +754,17 @@ struct 控制面板窗口::窗口实现 {
                 << L"子结点数量：" << 节点材料.子节点组.size()
                 << L"\r\n\r\n"
                 << L"显示文本来源：语素入口与基础信息只读材料。";
-        } else if (树材料.分类 == 控制面板树分类::世界树) {
-            文本 << L"世界树快照根节点：" << 当前快照.世界树结构材料.根节点.显示名称
-                << L"\r\n"
-                << L"世界树快照节点数：" << 计算树节点数量(当前快照.世界树结构材料.根节点)
-                << L"\r\n"
-                << L"结构来源：世界树初始化入口与普通父子关系只读快照";
-        } else if (树材料.分类 == 控制面板树分类::语素树) {
-            文本 << L"语素树快照根节点：" << 当前快照.语素树结构材料.根节点.显示名称
-                << L"\r\n"
-                << L"语素树快照节点数：" << 计算树节点数量(当前快照.语素树结构材料.根节点)
-                << L"\r\n"
-                << L"结构来源：初始化语素入口与语素对应信息 / 概念追溯只读材料";
+        } else if (树项 != nullptr && 树项->分类索引 < 树分类名称.size()) {
+            const auto& 树材料 = 当前快照.树视图材料组[树项->分类索引];
+            文本 << L"当前选中：" << 树分类名称[树项->分类索引]
+                << L"\r\n\r\n"
+                << 树分类说明(树材料.分类)
+                << L"\r\n\r\n"
+                << L"请展开左侧信息树并选择具体节点，右侧栏会显示节点句柄、类型、语素入口和子节点数量。";
         } else {
-            文本 << L"选中树根：" << 树分类名称[当前分类索引]
+            文本 << L"请在信息树中选择具体节点。"
                 << L"\r\n"
-                << L"树形显示：当前树以根结点显示在中间树控件中。"
-                << L"\r\n"
-                << L"第一轮边界：当前分类只显示树根入口，不生成虚假子结点。真实领域树子结点由后续只读 DTO 专项承接。";
+                << L"右侧栏只显示节点只读材料；仓库数量和数据库审计已移动到系统信息页。";
         }
         SetWindowTextW(详情文本, 文本.str().c_str());
     }
@@ -892,7 +824,6 @@ struct 控制面板窗口::窗口实现 {
         const int 按钮区高度 = 52;
         const int 内容顶部 = 边距 + 标题高度;
         const int 内容底部 = 高度 - 状态栏高度 - 按钮区高度;
-        const int 内容宽度 = std::max(260, 宽度 - 2 * 边距);
         const int 统计间距 = 10;
         const int 统计高度 = 58;
         const int 数据库标题高度 = 24;
@@ -916,43 +847,39 @@ struct 控制面板窗口::窗口实现 {
             ListView_SetColumnWidth(数据库列表, 5, 数量列宽);
         };
 
-        if (当前分页 == 控制面板分页::树) {
-            const int 导航栏宽度 = std::clamp(宽度 / 6, 150, 210);
+        const int 导航栏宽度 = std::clamp(宽度 / 6, 150, 210);
+        const int 导航栏左边 = 边距;
+        const int 页面左边 = 导航栏左边 + 导航栏宽度 + 边距;
+        const int 页面宽度 = std::max(260, 宽度 - 页面左边 - 边距);
+        MoveWindow(导航栏, 导航栏左边, 内容顶部, 导航栏宽度, std::max(120, 内容底部 - 内容顶部), TRUE);
+
+        if (当前分页 == 控制面板分页::信息树) {
             const int 右详情宽度 = std::clamp(宽度 / 3, 320, 430);
-            const int 导航栏左边 = 边距;
-            const int 树左边 = 导航栏左边 + 导航栏宽度 + 边距;
             const int 右栏左边 = 宽度 - 边距 - 右详情宽度;
-            const int 树宽度 = std::max(260, 右栏左边 - 树左边 - 边距);
+            const int 树宽度 = std::max(260, 右栏左边 - 页面左边 - 边距);
             const int 右栏宽度 = std::max(260, 右详情宽度);
-            const int 单统计宽度 = std::max(80, (右栏宽度 - 2 * 统计间距) / 3);
-            MoveWindow(导航栏, 导航栏左边, 内容顶部, 导航栏宽度, std::max(120, 内容底部 - 内容顶部), TRUE);
-            MoveWindow(树视图, 树左边, 内容顶部, 树宽度, std::max(120, 内容底部 - 内容顶部), TRUE);
-            MoveWindow(节点数文本, 右栏左边, 内容顶部, 单统计宽度, 统计高度, TRUE);
-            MoveWindow(关系数文本, 右栏左边 + 单统计宽度 + 统计间距, 内容顶部, 单统计宽度, 统计高度, TRUE);
-            MoveWindow(索引数文本, 右栏左边 + 2 * (单统计宽度 + 统计间距), 内容顶部,
-                右栏宽度 - 2 * (单统计宽度 + 统计间距), 统计高度, TRUE);
-            const int 详情顶部 = 内容顶部 + 统计高度 + 12;
-            MoveWindow(详情文本, 右栏左边, 详情顶部, 右栏宽度, std::max(180, 内容底部 - 详情顶部), TRUE);
+            MoveWindow(树视图, 页面左边, 内容顶部, 树宽度, std::max(120, 内容底部 - 内容顶部), TRUE);
+            MoveWindow(详情文本, 右栏左边, 内容顶部, 右栏宽度, std::max(180, 内容底部 - 内容顶部), TRUE);
         } else if (当前分页 == 控制面板分页::系统信息) {
-            const int 单统计宽度 = std::max(90, (内容宽度 - 2 * 统计间距) / 3);
-            MoveWindow(节点数文本, 边距, 内容顶部, 单统计宽度, 统计高度, TRUE);
-            MoveWindow(关系数文本, 边距 + 单统计宽度 + 统计间距, 内容顶部, 单统计宽度, 统计高度, TRUE);
-            MoveWindow(索引数文本, 边距 + 2 * (单统计宽度 + 统计间距), 内容顶部,
-                内容宽度 - 2 * (单统计宽度 + 统计间距), 统计高度, TRUE);
+            const int 单统计宽度 = std::max(90, (页面宽度 - 2 * 统计间距) / 3);
+            MoveWindow(节点数文本, 页面左边, 内容顶部, 单统计宽度, 统计高度, TRUE);
+            MoveWindow(关系数文本, 页面左边 + 单统计宽度 + 统计间距, 内容顶部, 单统计宽度, 统计高度, TRUE);
+            MoveWindow(索引数文本, 页面左边 + 2 * (单统计宽度 + 统计间距), 内容顶部,
+                页面宽度 - 2 * (单统计宽度 + 统计间距), 统计高度, TRUE);
             const int 详情顶部 = 内容顶部 + 统计高度 + 12;
             const int 剩余高度 = std::max(220, 内容底部 - 详情顶部);
             const int 详情高度 = std::max(150, 剩余高度 / 2);
             const int 数据库标题顶部 = 详情顶部 + 详情高度 + 10;
             const int 数据库列表顶部 = 数据库标题顶部 + 数据库标题高度;
-            MoveWindow(详情文本, 边距, 详情顶部, 内容宽度, 详情高度, TRUE);
-            MoveWindow(数据库标题文本, 边距, 数据库标题顶部, 内容宽度, 数据库标题高度, TRUE);
-            MoveWindow(数据库列表, 边距, 数据库列表顶部, 内容宽度, std::max(90, 内容底部 - 数据库列表顶部), TRUE);
-            设置数据库列宽(内容宽度);
+            MoveWindow(详情文本, 页面左边, 详情顶部, 页面宽度, 详情高度, TRUE);
+            MoveWindow(数据库标题文本, 页面左边, 数据库标题顶部, 页面宽度, 数据库标题高度, TRUE);
+            MoveWindow(数据库列表, 页面左边, 数据库列表顶部, 页面宽度, std::max(90, 内容底部 - 数据库列表顶部), TRUE);
+            设置数据库列宽(页面宽度);
         } else {
             const int 日志标题顶部 = 内容顶部;
             const int 日志正文顶部 = 日志标题顶部 + 数据库标题高度 + 8;
-            MoveWindow(数据库标题文本, 边距, 日志标题顶部, 内容宽度, 数据库标题高度, TRUE);
-            MoveWindow(详情文本, 边距, 日志正文顶部, 内容宽度, std::max(180, 内容底部 - 日志正文顶部), TRUE);
+            MoveWindow(数据库标题文本, 页面左边, 日志标题顶部, 页面宽度, 数据库标题高度, TRUE);
+            MoveWindow(详情文本, 页面左边, 日志正文顶部, 页面宽度, std::max(180, 内容底部 - 日志正文顶部), TRUE);
         }
 
         const int 按钮顶部 = 高度 - 状态栏高度 - 42;
@@ -989,17 +916,13 @@ struct 控制面板窗口::窗口实现 {
 
     bool 尝试处理命令编号(WORD 命令编号, bool& 已处理) {
         已处理 = true;
-        if (命令编号 >= 树分类菜单编号起点
-            && 命令编号 < 树分类菜单编号起点 + static_cast<WORD>(树分类名称.size())) {
-            return 切换树分类(static_cast<std::uint32_t>(命令编号 - 树分类菜单编号起点));
-        }
         switch (命令编号) {
-        case 分页树菜单编号:
-            return 切换分页(控制面板分页::树);
-        case 分页系统信息菜单编号:
+        case 信息树菜单编号:
+            return 切换分页(控制面板分页::信息树);
+        case 日志信息菜单编号:
+            return 切换分页(控制面板分页::日志信息);
+        case 系统信息菜单编号:
             return 切换分页(控制面板分页::系统信息);
-        case 分页日志菜单编号:
-            return 切换分页(控制面板分页::日志);
         case 上一分页菜单编号:
             return 切换相邻分页(-1);
         case 下一分页菜单编号:
@@ -1127,7 +1050,7 @@ struct 控制面板窗口::窗口实现 {
                     当前实现->当前分类索引 = 树项->分类索引;
                     当前实现->当前树项引用序号 = static_cast<std::size_t>(树通知->itemNew.lParam);
                     if (当前实现->导航栏 != nullptr) {
-                        SendMessageW(当前实现->导航栏, LB_SETCURSEL, static_cast<WPARAM>(当前实现->当前分类索引), 0);
+                        SendMessageW(当前实现->导航栏, LB_SETCURSEL, static_cast<WPARAM>(分页索引(当前实现->当前分页)), 0);
                     }
                     当前实现->更新详情控件();
                     当前实现->设置状态栏文本(树项->是结构节点 ? L"已选择只读树结点" : L"已选择只读树根");
@@ -1139,10 +1062,10 @@ struct 控制面板窗口::窗口实现 {
             if (reinterpret_cast<HWND>(参数二) == 当前实现->导航栏 && HIWORD(参数一) == LBN_SELCHANGE) {
                 const auto 选中项 = SendMessageW(当前实现->导航栏, LB_GETCURSEL, 0, 0);
                 if (选中项 != LB_ERR) {
-                    if (!当前实现->切换树分类(static_cast<std::uint32_t>(选中项))) {
+                    if (!当前实现->切换分页(从分页索引读取分页(static_cast<std::uint32_t>(选中项)))) {
                         DestroyWindow(窗口);
                     } else {
-                        当前实现->设置状态栏文本(L"已切换导航树");
+                        当前实现->设置状态栏文本(L"已切换左侧导航页面");
                     }
                 }
                 return 0;
@@ -1179,8 +1102,6 @@ struct 控制面板窗口::窗口实现 {
             KillTimer(窗口, 停止检查计时器编号);
             当前实现->主窗口 = nullptr;
             当前实现->菜单栏 = nullptr;
-            当前实现->分页菜单 = nullptr;
-            当前实现->树菜单 = nullptr;
             PostQuitMessage(0);
             return 0;
         default:
