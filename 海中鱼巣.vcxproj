@@ -145,6 +145,7 @@
     <ClCompile Include="海中鱼巣\线程\任务管理线程.ixx" />
     <ClCompile Include="海中鱼巣\线程\任务工作线程.ixx" />
     <ClCompile Include="海中鱼巣\线程\任务管理上行桥.ixx" />
+    <ClCompile Include="海中鱼巣\线程\自我治理领域路由.ixx" />
     <ClCompile Include="海中鱼巣\线程\缓存统计线程.ixx" />
     <ClCompile Include="海中鱼巣\线程\事件日志线程.ixx" />
     <ClCompile Include="海中鱼巣\线程\外设采样材料线程.ixx" />

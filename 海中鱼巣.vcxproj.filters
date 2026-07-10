@@ -42,6 +42,9 @@
     <ClCompile Include="海中鱼巣\线程\任务管理上行桥.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\线程\自我治理领域路由.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\线程\缓存统计线程.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
