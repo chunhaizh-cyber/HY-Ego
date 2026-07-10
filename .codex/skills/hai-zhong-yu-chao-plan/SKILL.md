@@ -1,6 +1,6 @@
 ---
 name: hai-zhong-yu-chao-plan
-description: Use in D:\海中鱼巣 when the user says "制定计划", "生成计划", "拆分计划", "修订计划", "更新计划索引", "生成下一个计划", "加入设计计划队列", or asks Codex to turn confirmed specs, detailed designs, logic migration packages, or S0 facts into a plan-layer artifact. Generated but unconfirmed plans must go under `计划/待确认计划/`.
+description: Use in D:\海中鱼巣 when the user says "制定计划", "生成计划", "拆分计划", "修订计划", "更新计划索引", "生成下一个计划", "加入设计计划队列", or asks Codex to turn specs, detailed designs, logic migration packages, or S0 facts into a plan-layer artifact. Complete plans go directly under `计划/` and are registered as waiting execution.
 ---
 
 # 海中鱼巣制定计划
@@ -13,14 +13,14 @@ Treat planning as:
 规范 / 详细设计 / 逻辑迁移包 / S0 事实
 -> 服务级计划或实施切片
 -> 计划索引登记
--> 待确认或可执行队列
+-> Codex 任务队列待执行
 ```
 
 Do not create a code plan from chat memory alone. Do not treat old functions as migration units. Use:
 
 ```text
 函数 = 证据采集单位
-服务逻辑包 = 迁移确认单位
+服务逻辑包 = 迁移计划单位
 领域服务 / 结构闭环 = 代码实施单位
 ```
 
@@ -46,26 +46,24 @@ Do not create a code plan from chat memory alone. Do not treat old functions as 
 实施记录/*逻辑迁移包归并表.md
 实施记录/*S0当前代码事实扫描*_Codex断点清单.md
 计划/
-计划/待确认计划/
 ```
 
 If no relevant design, migration package, or S0 fact exists, generate that prerequisite first if it is a document-governance action; otherwise stop and state what is missing.
 
-Detailed designs no longer require a separate user confirmation step before plan generation. Once a relevant detailed design has been generated, create the next unconfirmed plan directly unless the user explicitly asks to revise, withdraw, or hold that design. Plan confirmation, queue registration, and code implementation gates still remain separate.
+Once a relevant detailed design has been generated, create the plan directly, write it under `计划/`, and register it in the plan index and Codex task queue as waiting execution. No separate user confirmation step remains.
 
-When confirming a plan, synchronously confirm the plan's corresponding flowchart and detailed design. The confirmation record, plan index, project memory, and queue-entry breakpoint must list the flowchart path, detailed-design path, and plan path, and must state that the flowchart and detailed design are confirmed or confirmed through this plan-confirmation gate. If the flowchart or detailed design is missing, withdrawn, still under unresolved questions, or does not cover the plan scope, do not confirm the plan or register the queue item. For pure rule, read-only scan, information-data, breakpoint, or project-memory plans with no flowchart/detailed-design source, explicitly record why the linkage is not applicable and what formal source replaces it.
+When registering a plan, synchronously verify its corresponding flowchart and detailed design. The plan, plan index, project memory, and generation breakpoint must list the flowchart path, detailed-design path, and plan path, and must state that their scopes agree. If the flowchart or detailed design is missing, withdrawn, still has a question without a default ruling, or does not cover the plan scope, do not register the queue item. For pure rule, read-only scan, information-data, breakpoint, or project-memory plans with no flowchart/detailed-design source, explicitly record why the linkage is not applicable and what formal source replaces it.
 
 ## Output Location
 
-- New unconfirmed plans go to `计划/待确认计划/`.
-- Confirmed and still-active plans live in `计划/`.
+- New complete plans go to `计划/` and are registered as waiting execution.
 - Completed plans move to `计划/已完成计划/`.
 
 Recommended filenames:
 
 ```text
-计划/待确认计划/YYYYMMDD_FSxx_主题专项_v0.1.md
-计划/待确认计划/YYYYMMDD_FSxx_主题代码实施切片_v0.1.md
+计划/YYYYMMDD_FSxx_主题专项_v0.1.md
+计划/YYYYMMDD_FSxx_主题代码实施切片_v0.1.md
 ```
 
 ## Required Plan Sections
@@ -75,7 +73,7 @@ Include these sections when applicable:
 ```text
 状态行
 依据
-确认范围
+实施范围
 明确排除项
 目标服务 / 目标结构
 允许文件
@@ -83,7 +81,7 @@ Include these sections when applicable:
 实施步骤 S0/S1/...
 验收方式
 完成声明边界
-待确认问题
+默认裁决 / 已知风险
 ```
 
 For code implementation slices, allowed files, forbidden files, and validation commands are mandatory.
@@ -92,16 +90,15 @@ For code implementation slices, allowed files, forbidden files, and validation c
 
 - Do not write `旧函数 A -> 新函数 A`.
 - Use old functions only as evidence anchors.
-- Confirm service logic packages, service plans, or service implementation slices.
-- Exclude SQL/control-panel/display mirror, D455, voxel, peripherals, old linked-list containers, and old main-info fields unless a later confirmed plan explicitly allows them.
+- Use service logic packages, service plans, or service implementation slices as the migration unit.
+- Exclude SQL/control-panel/display mirror, D455, voxel, peripherals, old linked-list containers, and old main-info fields unless a later registered plan explicitly allows them.
 
 ## Plan Index And Queue
 
 - Editing `计划/计划索引.md` does not require `计划/.计划索引.lock`.
 - Protect concurrent work through Git facts: check `git status --short` before editing, inspect targeted diffs after editing, stage only the current slice's files, and never overwrite unrelated dirty changes.
-- If a plan is generated but not confirmed, register it as 待确认 and keep it under `计划/待确认计划/`.
-- Before user confirmation, verify the plan's corresponding flowchart and detailed design paths and status. Confirmation must either synchronously mark those upstream artifacts confirmed or explicitly state why the linkage is not applicable.
-- After user confirmation and upstream linkage verification, move it to `计划/`, update references, and register the confirmed next executable item in `项目记忆/Codex任务队列.md`.
+- When a plan is generated, keep it under `计划/`, update references, and register the next waiting executable item in `项目记忆/Codex任务队列.md`.
+- Before queue registration, verify the plan's corresponding flowchart and detailed design paths, scope, and default rulings, or explicitly state why the linkage is not applicable.
 - When the plan is completed, move it to `计划/已完成计划/` and update references.
 
 ## Verification
