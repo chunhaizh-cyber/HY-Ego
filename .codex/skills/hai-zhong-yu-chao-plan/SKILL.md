@@ -52,6 +52,17 @@ If no relevant design, migration package, or S0 fact exists, generate that prere
 
 Once a relevant detailed design has been generated, create the plan directly, write it under `计划/`, and register it in the plan index and Codex task queue as waiting execution. No separate user confirmation step remains.
 
+Do not wait for a prerequisite implementation merely to generate a dependent plan. Use:
+
+```text
+先生成依赖门控计划
+-> 登记为依赖门控待执行
+-> 前置计划完成后由执行窗口复核实际接口
+-> 接口一致才执行；接口漂移则退回修订
+```
+
+A dependency-gated plan must separate verified current facts from assumed interface contracts. It must list prerequisite plan / queue ids, expected formal artifacts, execution-time interface checks, and the revision path for drift. Never describe an expected artifact as current code fact.
+
 When registering a plan, synchronously verify its corresponding flowchart and detailed design. The plan, plan index, project memory, and generation breakpoint must list the flowchart path, detailed-design path, and plan path, and must state that their scopes agree. If the flowchart or detailed design is missing, withdrawn, still has a question without a default ruling, or does not cover the plan scope, do not register the queue item. For pure rule, read-only scan, information-data, breakpoint, or project-memory plans with no flowchart/detailed-design source, explicitly record why the linkage is not applicable and what formal source replaces it.
 
 ## Output Location
@@ -86,6 +97,18 @@ Include these sections when applicable:
 
 For code implementation slices, allowed files, forbidden files, and validation commands are mandatory.
 
+For dependency-gated code slices, these sections are also mandatory:
+
+```text
+依赖门控状态
+已验证当前事实
+假定接口契约
+前置计划 / 队列编号
+预期正式产物
+执行前接口复核
+接口漂移退回规则
+```
+
 ## Service-Level Migration Rules
 
 - Do not write `旧函数 A -> 新函数 A`.
@@ -98,6 +121,7 @@ For code implementation slices, allowed files, forbidden files, and validation c
 - Editing `计划/计划索引.md` does not require `计划/.计划索引.lock`.
 - Protect concurrent work through Git facts: check `git status --short` before editing, inspect targeted diffs after editing, stage only the current slice's files, and never overwrite unrelated dirty changes.
 - When a plan is generated, keep it under `计划/`, update references, and register the next waiting executable item in `项目记忆/Codex任务队列.md`.
+- A plan whose prerequisites are incomplete is registered as `依赖门控待执行`; plan generation does not claim that its dependencies or assumed interfaces already exist.
 - Before queue registration, verify the plan's corresponding flowchart and detailed design paths, scope, and default rulings, or explicitly state why the linkage is not applicable.
 - When the plan is completed, move it to `计划/已完成计划/` and update references.
 

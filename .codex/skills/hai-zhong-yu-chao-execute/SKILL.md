@@ -12,11 +12,12 @@ Treat execution as:
 ```text
 读取 AGENTS.md 和项目规则
 -> 读取计划索引与 Codex 任务队列
--> 只消费已登记的待执行项
+-> 按队列检查依赖门控，只消费依赖已满足的待执行项
+-> 执行前复核前置正式产物和实际接口
 -> 执行最小闭合切片
 -> 更新断点清单、计划索引和项目记忆
 -> 验证、提交、推送
--> 继续下一项直到队列清空或遇到真实阻塞
+-> 继续下一项直到没有依赖就绪项或遇到真实阻塞
 ```
 
 Do not execute work that has no plan, exceeds a plan's allowed files, or lacks required upstream design and validation boundaries.
@@ -52,6 +53,9 @@ Before treating `继续` as execution, identify the current window type:
 ## Routing Rules
 
 - Plans must be in `项目记忆/Codex任务队列.md` as waiting execution before execution.
+- If a plan is marked `依赖门控待执行`, verify every prerequisite plan / queue item has completed and produced the formal artifacts named by the plan. Unmet dependencies are skipped without marking a real blocker.
+- After dependencies complete, compare the actual files, symbols, signatures, and behavior named by the plan with its assumed interface contract before any code edit. If they differ, do not edit code; record that plan revision is required and continue with another dependency-ready item.
+- A genuinely blocked prerequisite does not unlock dependent execution. The dependent item remains gated unless a revised plan supplies an explicit alternative basis.
 - A discussion conclusion, flowchart, or detailed design alone is not executable; a complete plan is required.
 - Before executing a plan, verify that its generation record links the corresponding flowchart and detailed design, or explicitly records why no flowchart/detailed-design linkage applies. If the linked flowchart or detailed design is missing, withdrawn, has a question without a default ruling, or falls outside the plan scope, stop before execution and record the blocker in `项目记忆/待确认问题.md`.
 - If a queue item is document governance, read-only scan, breakpoint creation, project-memory sync, or plan-index maintenance, execute directly.
@@ -103,6 +107,7 @@ git rev-list --left-right --count main...origin/main
 Stop only when:
 
 - the executable queue is empty;
+- every remaining queue item is dependency-gated and no dependency-ready item exists;
 - a plan says hard stop / wait for user confirmation;
 - a higher-level rule conflicts with the requested action;
 - required runtime, hardware, credentials, or evidence are unavailable;
