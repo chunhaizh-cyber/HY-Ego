@@ -144,6 +144,7 @@
     <ClCompile Include="海中鱼巣\线程\缓存统计线程.ixx" />
     <ClCompile Include="海中鱼巣\线程\事件日志线程.ixx" />
     <ClCompile Include="海中鱼巣\线程\外设采样材料线程.ixx" />
+    <ClCompile Include="海中鱼巣\线程\自我线程.ixx" />
     <ClCompile Include="海中鱼巣\入口.cpp" />
     <ClCompile Include="海中鱼巣\界面\控制面板窗口.cpp" />
     <ClCompile Include="海中鱼巣\适配\SQL数据库适配.cpp" />
@@ -166,6 +167,7 @@
     <ClInclude Include="海中鱼巣\核心\写入事务.h" />
     <ClInclude Include="海中鱼巣\领域\世界服务.h" />
     <ClInclude Include="海中鱼巣\领域\初始化.世界树.ixx" />
+    <ClInclude Include="海中鱼巣\领域\初始化.需求.ixx" />
     <ClInclude Include="海中鱼巣\领域\存在服务.h" />
     <ClInclude Include="海中鱼巣\领域\场景服务.h" />
     <ClInclude Include="海中鱼巣\领域\状态服务.h" />
