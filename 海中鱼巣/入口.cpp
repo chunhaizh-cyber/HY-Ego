@@ -25,12 +25,33 @@
 #include "领域/显示服务.h"
 #include "领域/控制面板服务.h"
 
+#include <chrono>
+#include <csignal>
 #include <cstdint>
 #include <iostream>
 #include <optional>
+#include <string_view>
+#include <thread>
 #include <vector>
 
-int main() {
+namespace {
+
+volatile std::sig_atomic_t 常驻停止请求 = 0;
+
+void 接收常驻停止信号(int) {
+    常驻停止请求 = 1;
+}
+
+}
+
+int main(int 参数数量, char* 参数组[]) {
+    bool 自检后退出 = false;
+    for (int 参数索引 = 1; 参数索引 < 参数数量; ++参数索引) {
+        if (std::string_view(参数组[参数索引]) == "--self-test-exit") {
+            自检后退出 = true;
+        }
+    }
+
     (void)海中鱼巣::记录运行日志(L"入口", L"main", L"海中鱼巣核心内核最小自检开始。");
 
     海中鱼巣::主信息仓库 主信息;
@@ -3887,5 +3908,33 @@ int main() {
         && FLOWEX中途返回二分口径通过
         && 独立验收项通过;
     (void)海中鱼巣::记录运行日志(L"入口", L"main", 程序通过 ? L"海中鱼巣核心内核最小自检通过。" : L"海中鱼巣核心内核最小自检失败。");
-    return 程序通过 ? 0 : 1;
+    if (!程序通过) {
+        return 1;
+    }
+    if (自检后退出) {
+        return 0;
+    }
+
+    常驻停止请求 = 0;
+    const auto 中断信号原处理 = std::signal(SIGINT, 接收常驻停止信号);
+    const auto 终止信号原处理 = std::signal(SIGTERM, 接收常驻停止信号);
+    bool 停止信号安装失败 = 中断信号原处理 == SIG_ERR || 终止信号原处理 == SIG_ERR;
+#ifdef _WIN32
+    const auto 中断退出信号原处理 = std::signal(SIGBREAK, 接收常驻停止信号);
+    停止信号安装失败 = 停止信号安装失败 || 中断退出信号原处理 == SIG_ERR;
+#endif
+    if (停止信号安装失败) {
+        (void)海中鱼巣::记录运行日志(L"入口", L"main", L"常驻运行停止信号安装失败。");
+        std::cerr << "海中鱼巣常驻运行启动失败: 无法安装停止信号。\n";
+        return 1;
+    }
+
+    (void)海中鱼巣::记录运行日志(L"入口", L"main", L"海中鱼巣进入常驻运行。");
+    std::cout << "海中鱼巣已进入常驻运行，按 Ctrl+C 停止。" << std::endl;
+    while (常驻停止请求 == 0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    (void)海中鱼巣::记录运行日志(L"入口", L"main", L"海中鱼巣常驻运行已停止。");
+    return 0;
 }
