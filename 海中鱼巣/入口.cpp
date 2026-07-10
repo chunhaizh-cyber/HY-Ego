@@ -6,6 +6,7 @@
 #include "核心/写入事务.h"
 #include "核心/日志系统.h"
 #include "核心/仓库快照服务.h"
+#include "核心/运行消息队列.h"
 #include "领域/世界服务.h"
 #include "领域/存在服务.h"
 #include "领域/场景服务.h"
@@ -71,6 +72,113 @@ int main() {
             && 记录->类型 == 类型
             && 主信息.主信息是否有效(记录->主信息);
     };
+    const auto THREADS1生成消息 = [](std::uint64_t 编号, 海中鱼巣::运行消息类型 类型) {
+        海中鱼巣::运行消息 消息;
+        消息.消息编号 = 编号;
+        消息.类型 = 类型;
+        消息.来源角色 = 海中鱼巣::运行线程角色::运行宿主;
+        消息.目标角色 = 海中鱼巣::运行线程角色::任务管理;
+        消息.目标任务 = 1;
+        消息.目标材料 = 编号;
+        消息.句柄版本 = 1;
+        消息.当前句柄版本 = 1;
+        消息.发生时间戳 = 10000 + 编号;
+        消息.优先级 = 海中鱼巣::运行消息优先级::普通;
+        消息.幂等键 = 编号;
+        消息.批次号 = 1;
+        消息.材料摘要 = 编号 * 10;
+        消息.任务编号 = 1;
+        消息.任务序号 = 编号;
+        消息.只读材料说明 = true;
+        消息.承载机器事实 = false;
+        return 消息;
+    };
+    const auto THREADS1前结构数量 = 读取结构数量();
+    海中鱼巣::有界运行消息队列 THREADS1有界队列(2);
+    const auto THREADS1第一条入队 = THREADS1有界队列.入队(
+        THREADS1生成消息(1, 海中鱼巣::运行消息类型::任务执行请求));
+    const auto THREADS1第二条入队 = THREADS1有界队列.入队(
+        THREADS1生成消息(2, 海中鱼巣::运行消息类型::缓存刷新));
+    const auto THREADS1满载拒绝 = THREADS1有界队列.入队(
+        THREADS1生成消息(3, 海中鱼巣::运行消息类型::事件日志));
+    auto THREADS1停止消息 = THREADS1生成消息(4, 海中鱼巣::运行消息类型::停止);
+    THREADS1停止消息.优先级 = 海中鱼巣::运行消息优先级::低;
+    const auto THREADS1停止入队 = THREADS1有界队列.入队(THREADS1停止消息);
+    const auto THREADS1停止出队 = THREADS1有界队列.出队();
+    const auto THREADS1停止后普通拒绝 = THREADS1有界队列.入队(
+        THREADS1生成消息(5, 海中鱼巣::运行消息类型::任务执行请求));
+
+    海中鱼巣::有界运行消息队列 THREADS1幂等队列(4);
+    auto THREADS1幂等原消息 = THREADS1生成消息(10, 海中鱼巣::运行消息类型::任务执行请求);
+    THREADS1幂等原消息.幂等键 = 700;
+    THREADS1幂等原消息.材料摘要 = 11;
+    const auto THREADS1幂等原入队 = THREADS1幂等队列.入队(THREADS1幂等原消息);
+    auto THREADS1幂等冲突消息 = THREADS1幂等原消息;
+    THREADS1幂等冲突消息.消息编号 = 11;
+    THREADS1幂等冲突消息.材料摘要 = 12;
+    const auto THREADS1幂等冲突拒绝 = THREADS1幂等队列.入队(THREADS1幂等冲突消息);
+
+    海中鱼巣::有界运行消息队列 THREADS1版本队列(4);
+    auto THREADS1过期消息 = THREADS1生成消息(12, 海中鱼巣::运行消息类型::任务执行请求);
+    THREADS1过期消息.句柄版本 = 1;
+    THREADS1过期消息.当前句柄版本 = 2;
+    const auto THREADS1版本过期拒绝 = THREADS1版本队列.入队(THREADS1过期消息);
+
+    海中鱼巣::有界运行消息队列 THREADS1顺序队列(4);
+    auto THREADS1后序消息 = THREADS1生成消息(13, 海中鱼巣::运行消息类型::任务执行请求);
+    THREADS1后序消息.任务编号 = 9;
+    THREADS1后序消息.任务序号 = 2;
+    THREADS1后序消息.幂等键 = 901;
+    const auto THREADS1后序入队 = THREADS1顺序队列.入队(THREADS1后序消息);
+    auto THREADS1倒退消息 = THREADS1生成消息(14, 海中鱼巣::运行消息类型::任务执行请求);
+    THREADS1倒退消息.任务编号 = 9;
+    THREADS1倒退消息.任务序号 = 1;
+    THREADS1倒退消息.幂等键 = 902;
+    const auto THREADS1乱序拒绝 = THREADS1顺序队列.入队(THREADS1倒退消息);
+    const auto THREADS1后结构数量 = 读取结构数量();
+    const bool THREADS1A1消息不承载事实 =
+        THREADS1幂等原消息.只读材料说明
+        && !THREADS1幂等原消息.承载机器事实
+        && !THREADS1第一条入队.写业务事实;
+    const bool THREADS1A2队列有界 =
+        THREADS1有界队列.容量() == 2
+        && THREADS1第一条入队.已入队
+        && THREADS1第二条入队.已入队
+        && !THREADS1满载拒绝.已入队
+        && THREADS1满载拒绝.拒绝原因 == 海中鱼巣::入队拒绝原因::队列已满
+        && !THREADS1满载拒绝.写业务事实;
+    const bool THREADS1A3停止优先 =
+        THREADS1停止入队.已入队
+        && THREADS1有界队列.已停止()
+        && THREADS1停止出队.有消息
+        && THREADS1停止出队.消息.类型 == 海中鱼巣::运行消息类型::停止
+        && THREADS1停止出队.消息.优先级 == 海中鱼巣::运行消息优先级::停止;
+    const bool THREADS1A4停止后拒绝 =
+        !THREADS1停止后普通拒绝.已入队
+        && THREADS1停止后普通拒绝.拒绝原因 == 海中鱼巣::入队拒绝原因::队列已停止
+        && !THREADS1停止后普通拒绝.写业务事实;
+    const bool THREADS1A5幂等冲突拒绝 =
+        THREADS1幂等原入队.已入队
+        && !THREADS1幂等冲突拒绝.已入队
+        && THREADS1幂等冲突拒绝.拒绝原因 == 海中鱼巣::入队拒绝原因::幂等键冲突;
+    const bool THREADS1A6句柄版本过期拒绝 =
+        !THREADS1版本过期拒绝.已入队
+        && THREADS1版本过期拒绝.拒绝原因 == 海中鱼巣::入队拒绝原因::句柄版本过期;
+    const bool THREADS1A7同一任务乱序拒绝 =
+        THREADS1后序入队.已入队
+        && !THREADS1乱序拒绝.已入队
+        && THREADS1乱序拒绝.拒绝原因 == 海中鱼巣::入队拒绝原因::同一任务序号倒退;
+    const bool THREADS1A8禁止能力未接入 =
+        结构数量相同(THREADS1前结构数量, THREADS1后结构数量);
+    const bool THREADS1消息类型与有界队列基础壳通过 =
+        THREADS1A1消息不承载事实
+        && THREADS1A2队列有界
+        && THREADS1A3停止优先
+        && THREADS1A4停止后拒绝
+        && THREADS1A5幂等冲突拒绝
+        && THREADS1A6句柄版本过期拒绝
+        && THREADS1A7同一任务乱序拒绝
+        && THREADS1A8禁止能力未接入;
     const auto FLOW17事件日志路径 = 海中鱼巣::日志文件路径(海中鱼巣::日志类别::事件);
     const auto FLOW17写入前结构数量 = 读取结构数量();
     const bool FLOW17空内容已拒绝 = !海中鱼巣::记录事件日志(L"入口", L"FLOW-17", L"");
@@ -3171,6 +3279,24 @@ int main() {
     std::cout << '\n';
     输出验收项("CONSOLE-PANEL-A9", "结构不变", 控制面板A9结构不变);
     std::cout << '\n';
+    std::cout << "THREAD-S1 消息类型与有界队列基础壳: "
+        << (THREADS1消息类型与有界队列基础壳通过 ? "通过" : "失败") << '\n';
+    输出验收项("THREAD-S1-A1", "消息不承载机器事实", THREADS1A1消息不承载事实);
+    std::cout << '\n';
+    输出验收项("THREAD-S1-A2", "队列容量固定且满载局部失败", THREADS1A2队列有界);
+    std::cout << '\n';
+    输出验收项("THREAD-S1-A3", "停止消息最高优先级", THREADS1A3停止优先);
+    std::cout << '\n';
+    输出验收项("THREAD-S1-A4", "停止后普通消息拒绝", THREADS1A4停止后拒绝);
+    std::cout << '\n';
+    输出验收项("THREAD-S1-A5", "幂等键冲突拒绝", THREADS1A5幂等冲突拒绝);
+    std::cout << '\n';
+    输出验收项("THREAD-S1-A6", "句柄版本过期拒绝", THREADS1A6句柄版本过期拒绝);
+    std::cout << '\n';
+    输出验收项("THREAD-S1-A7", "同一任务乱序拒绝", THREADS1A7同一任务乱序拒绝);
+    std::cout << '\n';
+    输出验收项("THREAD-S1-A8", "未启动真实线程且未写业务事实", THREADS1A8禁止能力未接入);
+    std::cout << '\n';
     std::cout << "MATRIX-06 基础信息后续保守入口: " << (MATRIX基础信息后续入口通过 ? "通过" : "失败") << '\n';
     std::cout << "服务操作函数矩阵第一批: " << (服务操作函数矩阵第一批通过 ? "通过" : "失败") << '\n';
     std::cout << "最小闭环通过: " << (最小闭环通过 ? "是" : "否") << '\n';
@@ -3346,6 +3472,7 @@ int main() {
         && FS07NEXT动作执行桥与本能动作治理第一轮通过
         && FS08NEXT非权威缓存二级材料第一轮通过
         && FS09事件日志第一轮结构化事件材料通过
+        && THREADS1消息类型与有界队列基础壳通过
         && 非权威缓存统计第一轮通过
         && 服务操作函数矩阵第一批通过
         && FLOWEX中途返回二分口径通过
