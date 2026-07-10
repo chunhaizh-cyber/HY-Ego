@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>控制面板原生窗口运行流程图 v0.1</title>
+  <style>
+    body { margin: 0; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; background: #f4f6f8; color: #17202a; }
+    main { max-width: 1680px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0 0 16px; font-size: 24px; font-weight: 650; letter-spacing: 0; }
+    .diagram { overflow: auto; border: 1px solid #cbd2d9; background: #ffffff; padding: 20px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>控制面板原生窗口运行流程图 v0.1</h1>
+    <div class="diagram">
+      <pre class="mermaid">
+flowchart TD
+    A["程序启动并解析参数"] --> B["运行现有核心自检"]
+    B --> C{"自检是否通过"}
+    C -->|否| R0["逻辑内返回：保持现有失败退出"]
+    C -->|是| D{"是否指定 --self-test-exit"}
+    D -->|是| R1["逻辑内返回：自检成功后退出"]
+    D -->|否| E["安装停止信号并准备运行期只读材料"]
+    E --> F{"是否指定 --headless"}
+    F -->|是| G["进入现有无窗口常驻循环"]
+    G --> H{"是否收到停止信号"}
+    H -->|否| G
+    H -->|是| R2["逻辑内返回：记录停止并退出"]
+    F -->|否| I["由控制面板服务生成只读总览、六类树候选和操作请求壳"]
+    I --> J["读取启动时结构统计快照并组装窗口会话 DTO"]
+    J --> K{"只读材料是否符合来源和不写事实边界"}
+    K -->|否| X0["追根因解决：停止启动窗口，不用空白 UI 掩盖材料异常"]
+    K -->|是| L["初始化公共控件并注册原生窗口类"]
+    L --> M{"窗口和必需控件是否创建成功"}
+    M -->|否| X1["追根因解决：记录失败阶段，关闭已创建控件并退出"]
+    M -->|是| N["显示海中鱼巣控制面板"]
+    N --> O["展示只读总览、结构计数和六类树根"]
+    O --> P{"用户动作"}
+    P -->|选择树根| Q["更新右侧只读分类详情"]
+    P -->|刷新| R["重新读取控制面板服务显示材料并刷新窗口"]
+    P -->|生成操作请求| S["只生成未执行请求壳并显示结果"]
+    P -->|写事实或外部通道请求| R3["逻辑内返回：显示拒绝或后续专项门禁，结构不变"]
+    P -->|关闭窗口或收到停止信号| T["销毁窗口和会话 DTO"]
+    Q --> O
+    R --> U{"刷新材料是否仍符合边界"}
+    U -->|是| O
+    U -->|否| X2["追根因解决：停止依赖路径并关闭窗口"]
+    S --> O
+    R3 --> O
+    T --> V["退出消息循环并记录正常停止"]
+      </pre>
+    </div>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "strict" });
+  </script>
+</body>
+</html>
