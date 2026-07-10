@@ -157,6 +157,68 @@ public:
         return 特征值_->读取I64值(特征值节点);
     }
 
+    bool 写入VecI64特征值(
+        节点句柄 特征节点,
+        节点句柄 特征值节点,
+        const std::vector<std::int64_t>& 值) {
+        if (!特征值属于特征(特征节点, 特征值节点)
+            || 特征值_ == nullptr
+            || 值.empty()
+            || 值.size() > 特征值服务::最大序列元素数量) {
+            return false;
+        }
+        return 特征值_->写入VecI64值(特征值节点, 值);
+    }
+
+    std::optional<std::vector<std::int64_t>> 读取VecI64特征值(
+        节点句柄 特征节点,
+        节点句柄 特征值节点) const {
+        if (!特征值属于特征(特征节点, 特征值节点) || 特征值_ == nullptr) {
+            return std::nullopt;
+        }
+        return 特征值_->读取VecI64值(特征值节点);
+    }
+
+    bool 写入VecU64特征值(
+        节点句柄 特征节点,
+        节点句柄 特征值节点,
+        const std::vector<std::uint64_t>& 值) {
+        if (!特征值属于特征(特征节点, 特征值节点)
+            || 特征值_ == nullptr
+            || 值.empty()
+            || 值.size() > 特征值服务::最大序列元素数量) {
+            return false;
+        }
+        return 特征值_->写入VecU64值(特征值节点, 值);
+    }
+
+    std::optional<std::vector<std::uint64_t>> 读取VecU64特征值(
+        节点句柄 特征节点,
+        节点句柄 特征值节点) const {
+        if (!特征值属于特征(特征节点, 特征值节点) || 特征值_ == nullptr) {
+            return std::nullopt;
+        }
+        return 特征值_->读取VecU64值(特征值节点);
+    }
+
+    std::optional<海中鱼巣::特征值原始类型> 读取特征值原始类型(
+        节点句柄 特征节点,
+        节点句柄 特征值节点) const {
+        if (!特征值属于特征(特征节点, 特征值节点) || 特征值_ == nullptr) {
+            return std::nullopt;
+        }
+        return 特征值_->读取原始类型(特征值节点);
+    }
+
+    std::optional<std::uint64_t> 读取特征值原始版本(
+        节点句柄 特征节点,
+        节点句柄 特征值节点) const {
+        if (!特征值属于特征(特征节点, 特征值节点) || 特征值_ == nullptr) {
+            return std::nullopt;
+        }
+        return 特征值_->读取容器版本(特征值节点);
+    }
+
     bool 特征值属于特征(节点句柄 特征节点, 节点句柄 特征值节点) const {
         return 关系_ != nullptr
             && 节点类型匹配(特征节点, 节点类型::特征)
