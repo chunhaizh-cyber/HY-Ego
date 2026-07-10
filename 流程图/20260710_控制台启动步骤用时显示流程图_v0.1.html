@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>控制台启动步骤用时显示流程图</title>
+  <style>
+    body { margin: 0; padding: 24px; font-family: "Microsoft YaHei", sans-serif; color: #1f2937; background: #f8fafc; }
+    main { max-width: 1500px; margin: 0 auto; }
+    h1 { font-size: 28px; letter-spacing: 0; }
+    p { line-height: 1.7; }
+    .mermaid { overflow: auto; padding: 20px; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>控制台启动步骤用时显示流程图</h1>
+    <p>启动耗时只做人读观察，不改变机器事实、启动顺序或返回裁决。</p>
+    <pre class="mermaid">
+flowchart TD
+    A["进入 main，建立单调时钟计时器"] --> B["解析启动参数"]
+    B --> B1["控制台输出参数解析步骤与累计用时"]
+    B1 --> C["打开运行日志入口"]
+    C --> C1["控制台输出运行日志入口用时"]
+    C1 --> D["构造核心仓库、领域服务和适配器"]
+    D --> D1["控制台输出核心仓库与服务构造用时"]
+    D1 --> E["初始化世界树"]
+    E --> E1["控制台输出世界树初始化用时"]
+    E1 --> F["初始化基础显示语素"]
+    F --> F1["控制台输出语素初始化用时"]
+    F1 --> G["执行既有核心启动自检"]
+    G --> H{"核心自检是否通过"}
+    H -- "否" --> R1["追根因解决：输出失败总用时并退出"]
+    H -- "是" --> G1["控制台输出核心启动自检用时"]
+    G1 --> I{"是否为自检后退出模式"}
+    I -- "是" --> L1["逻辑内返回：输出自检模式总用时并退出"]
+    I -- "否" --> J["执行 SQL Server 非权威审计投影"]
+    J --> J1["控制台输出 SQL 审计步骤用时"]
+    J1 --> K{"是否为数据库自检后退出模式"}
+    K -- "是" --> L2["逻辑内返回：输出数据库自检总用时并退出"]
+    K -- "否" --> M["安装常驻停止信号"]
+    M --> N{"停止信号是否安装成功"}
+    N -- "否" --> L3["逻辑内返回：输出启动失败总用时并退出"]
+    N -- "是" --> M1["控制台输出停止信号安装用时"]
+    M1 --> O{"是否无窗口常驻"}
+    O -- "否" --> P["构造控制面板窗口并输出运行入口就绪总用时"]
+    O -- "是" --> Q["输出无窗口常驻入口就绪总用时"]
+    </pre>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>
