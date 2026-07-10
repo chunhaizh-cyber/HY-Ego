@@ -7,6 +7,7 @@
 #include "核心/日志系统.h"
 #include "核心/仓库快照服务.h"
 #include "核心/运行消息队列.h"
+#include "核心/运行宿主.h"
 #include "领域/世界服务.h"
 #include "领域/存在服务.h"
 #include "领域/场景服务.h"
@@ -179,6 +180,41 @@ int main() {
         && THREADS1A6句柄版本过期拒绝
         && THREADS1A7同一任务乱序拒绝
         && THREADS1A8禁止能力未接入;
+    const auto THREADS2前结构数量 = 读取结构数量();
+    海中鱼巣::运行宿主 THREADS2宿主(4);
+    const auto THREADS2启动结果 = THREADS2宿主.启动(200, 20000);
+    const auto THREADS2重复启动结果 = THREADS2宿主.启动(201, 20001);
+    const bool THREADS2A1宿主可启动 =
+        THREADS2启动结果.成功
+        && THREADS2宿主.当前状态() == 海中鱼巣::运行宿主状态::运行中;
+    const bool THREADS2A2重复启动拒绝 =
+        !THREADS2重复启动结果.成功
+        && THREADS2重复启动结果.拒绝原因 == 海中鱼巣::运行宿主拒绝原因::重复启动
+        && !THREADS2重复启动结果.写业务事实;
+    const auto THREADS2停止结果 = THREADS2宿主.请求停止并发送停止消息(202, 20002);
+    const bool THREADS2A3停止消息触发停止态 =
+        THREADS2停止结果.成功
+        && THREADS2宿主.只读消息队列().已停止()
+        && THREADS2宿主.当前状态() == 海中鱼巣::运行宿主状态::正在停止;
+    const auto THREADS2收口结果 = THREADS2宿主.收口等待();
+    const auto THREADS2后结构数量 = 读取结构数量();
+    const bool THREADS2A4收口等待通过 =
+        THREADS2收口结果.成功
+        && THREADS2宿主.线程可收口()
+        && THREADS2宿主.当前状态() == 海中鱼巣::运行宿主状态::已停止;
+    const bool THREADS2A5调度周期不写业务事实 =
+        !THREADS2启动结果.写业务事实
+        && 结构数量相同(THREADS2前结构数量, THREADS2后结构数量);
+    const bool THREADS2A6未创建其他线程 =
+        THREADS2宿主.线程可收口()
+        && 结构数量相同(THREADS2前结构数量, THREADS2后结构数量);
+    const bool THREADS2运行宿主生命周期壳通过 =
+        THREADS2A1宿主可启动
+        && THREADS2A2重复启动拒绝
+        && THREADS2A3停止消息触发停止态
+        && THREADS2A4收口等待通过
+        && THREADS2A5调度周期不写业务事实
+        && THREADS2A6未创建其他线程;
     const auto FLOW17事件日志路径 = 海中鱼巣::日志文件路径(海中鱼巣::日志类别::事件);
     const auto FLOW17写入前结构数量 = 读取结构数量();
     const bool FLOW17空内容已拒绝 = !海中鱼巣::记录事件日志(L"入口", L"FLOW-17", L"");
@@ -3297,6 +3333,20 @@ int main() {
     std::cout << '\n';
     输出验收项("THREAD-S1-A8", "未启动真实线程且未写业务事实", THREADS1A8禁止能力未接入);
     std::cout << '\n';
+    std::cout << "THREAD-S2 运行宿主线程生命周期壳: "
+        << (THREADS2运行宿主生命周期壳通过 ? "通过" : "失败") << '\n';
+    输出验收项("THREAD-S2-A1", "宿主可启动", THREADS2A1宿主可启动);
+    std::cout << '\n';
+    输出验收项("THREAD-S2-A2", "重复启动拒绝", THREADS2A2重复启动拒绝);
+    std::cout << '\n';
+    输出验收项("THREAD-S2-A3", "停止消息触发停止态", THREADS2A3停止消息触发停止态);
+    std::cout << '\n';
+    输出验收项("THREAD-S2-A4", "join 可收口", THREADS2A4收口等待通过);
+    std::cout << '\n';
+    输出验收项("THREAD-S2-A5", "Tick 不写业务事实", THREADS2A5调度周期不写业务事实);
+    std::cout << '\n';
+    输出验收项("THREAD-S2-A6", "未创建任务/缓存/日志/外设线程", THREADS2A6未创建其他线程);
+    std::cout << '\n';
     std::cout << "MATRIX-06 基础信息后续保守入口: " << (MATRIX基础信息后续入口通过 ? "通过" : "失败") << '\n';
     std::cout << "服务操作函数矩阵第一批: " << (服务操作函数矩阵第一批通过 ? "通过" : "失败") << '\n';
     std::cout << "最小闭环通过: " << (最小闭环通过 ? "是" : "否") << '\n';
@@ -3473,6 +3523,7 @@ int main() {
         && FS08NEXT非权威缓存二级材料第一轮通过
         && FS09事件日志第一轮结构化事件材料通过
         && THREADS1消息类型与有界队列基础壳通过
+        && THREADS2运行宿主生命周期壳通过
         && 非权威缓存统计第一轮通过
         && 服务操作函数矩阵第一批通过
         && FLOWEX中途返回二分口径通过
