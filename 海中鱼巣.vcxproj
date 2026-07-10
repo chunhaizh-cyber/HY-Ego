@@ -136,6 +136,14 @@
   </ItemDefinitionGroup>
 
   <ItemGroup>
+    <ClCompile Include="海中鱼巣\线程\运行消息协议.ixx" />
+    <ClCompile Include="海中鱼巣\线程\有界运行消息队列.ixx" />
+    <ClCompile Include="海中鱼巣\线程\运行宿主线程.ixx" />
+    <ClCompile Include="海中鱼巣\线程\任务管理线程.ixx" />
+    <ClCompile Include="海中鱼巣\线程\任务工作线程.ixx" />
+    <ClCompile Include="海中鱼巣\线程\缓存统计线程.ixx" />
+    <ClCompile Include="海中鱼巣\线程\事件日志线程.ixx" />
+    <ClCompile Include="海中鱼巣\线程\外设采样材料线程.ixx" />
     <ClCompile Include="海中鱼巣\入口.cpp" />
     <ClCompile Include="海中鱼巣\界面\控制面板窗口.cpp" />
     <ClCompile Include="海中鱼巣\适配\SQL数据库适配.cpp" />

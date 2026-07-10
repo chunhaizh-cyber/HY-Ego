@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>每线程独立 ixx 模块拆分流程图</title>
+  <style>
+    body { margin: 0; padding: 24px; font-family: "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #17202a; }
+    main { max-width: 1600px; margin: 0 auto; }
+    h1 { font-size: 24px; margin: 0 0 16px; }
+    p { line-height: 1.7; }
+    .diagram { overflow: auto; padding: 16px; background: #fff; border: 1px solid #d5d9df; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>每线程独立 ixx 模块拆分流程图</h1>
+    <p>每个线程文件只拥有一个线程角色、一个 std::thread 生命周期和一个消费循环；共享消息与队列模块不定义线程类。</p>
+    <div class="diagram">
+      <pre class="mermaid">
+flowchart TD
+    A["读取当前线程入口、调用点与工程配置"] --> B["建立最小 C++20 模块编译探针"]
+    B --> C{"v145 / C++20 / UTF-8 下 .ixx 可编译并可被入口导入?"}
+    C -- "否" --> R1["追根因解决模块工程配置或工具链问题"]
+    R1 --> B
+    C -- "是" --> D["建立运行消息协议.ixx 与有界运行消息队列.ixx"]
+    D --> E1["建立运行宿主线程.ixx"]
+    D --> E2["建立任务管理线程.ixx"]
+    D --> E3["建立任务工作线程.ixx"]
+    D --> E4["建立缓存统计线程.ixx"]
+    D --> E5["建立事件日志线程.ixx"]
+    D --> E6["建立外设采样材料线程.ixx"]
+    E1 --> F["更新入口导入、工程项目与筛选器"]
+    E2 --> F
+    E3 --> F
+    E4 --> F
+    E5 --> F
+    E6 --> F
+    F --> G["移除运行宿主.h 中线程定义和混合线程壳"]
+    G --> H{"Debug x64 构建通过?"}
+    H -- "否" --> R2["追根因解决模块依赖、导出或工程登记问题"]
+    R2 --> F
+    H -- "是" --> I{"默认入口与 THREAD-S2 至 S6 验收通过?"}
+    I -- "否" --> R3["追根因解决生命周期、消息或停止收口差异"]
+    R3 --> E1
+    I -- "是" --> J{"静态扫描满足一线程一文件且共享模块不含线程类?"}
+    J -- "否" --> R4["追根因解决文件归属和线程混放"]
+    R4 --> E1
+    J -- "是" --> K["形成实施记录并收口"]
+      </pre>
+    </div>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>
