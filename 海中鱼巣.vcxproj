@@ -138,6 +138,7 @@
   <ItemGroup>
     <ClCompile Include="海中鱼巣\线程\运行消息协议.ixx" />
     <ClCompile Include="海中鱼巣\线程\自我治理消息协议.ixx" />
+    <ClCompile Include="海中鱼巣\线程\有界自我治理队列.ixx" />
     <ClCompile Include="海中鱼巣\线程\有界运行消息队列.ixx" />
     <ClCompile Include="海中鱼巣\线程\运行宿主线程.ixx" />
     <ClCompile Include="海中鱼巣\线程\任务管理线程.ixx" />
