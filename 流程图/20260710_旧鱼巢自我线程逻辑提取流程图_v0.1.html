@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>旧鱼巢自我线程逻辑提取流程图 v0.1</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+      background: #f7f9fb;
+      color: #1f2937;
+    }
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    h1 {
+      font-size: 24px;
+      margin: 0 0 8px;
+    }
+    .meta {
+      margin: 0 0 16px;
+      color: #52616f;
+      font-size: 14px;
+    }
+    .mermaid {
+      background: #ffffff;
+      border: 1px solid #d9e2ec;
+      border-radius: 8px;
+      padding: 16px;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>旧鱼巢自我线程逻辑提取流程图 v0.1</h1>
+    <p class="meta">更新时间：2026-07-10</p>
+    <pre class="mermaid">flowchart TD
+    START["旧鱼巢自我线程逻辑提取开始"]
+    SRC["只读旧项目代码与旧流程图"]
+    INIT_CALL["自我线程类::自我初始化"]
+    INIT_FAST{"已经初始化且非故障"}
+    INIT_RETURN["逻辑内返回：初始化快路径成功"]
+    INIT_ENV["执行自我初始化并记录步骤耗时"]
+    INIT_INSTINCT["注册本能函数执行闭环"]
+    INIT_DELAY["默认本能方法专属规格延后确认"]
+    INIT_DEMAND["刷新需求列表并确保需求相关任务"]
+    INIT_MAIN["选择当前主任务候选并同步当前主需求"]
+    INIT_MARK["刷新初始化标记与最近初始化结果"]
+    INIT_OK{"初始化完成"}
+    INIT_FAIL["追根因解决：初始化异常或标记不及预期进入故障收口"]
+
+    RUN_ENTER["线程函数进入运行态"]
+    LOOP["while 未收到停止请求"]
+    ROUND["执行主循环一轮"]
+    FREEZE["冻结本轮治理消息批次"]
+    STOP1{"停止请求"}
+    STOP_RETURN["逻辑内返回：停止请求中"]
+    NORMALIZE["规范化消息并落一次特征账"]
+    PREEMPT1["抢占处理：成功结果、派生需求、观察事实承接、执行前许可"]
+    DERIVED1{"存在待落账派生需求"}
+    WAIT_DERIVED["逻辑内返回：暂停本轮任务派发，等待派生需求入树"]
+    SECONDARY["重算受影响二次特征"]
+    FRAME["刷新线程上下文并生成治理帧"]
+    DEMAND["整理需求并做根层重判"]
+    DISPATCH["生成并执行主派发决议"]
+    TASK_REQ["向任务管理界面提交任务治理请求或调度意图"]
+    PREEMPT2["主派发后再次抢占落账与许可审批"]
+    DERIVED2{"主派发后出现待落账派生需求"}
+    WAIT_DERIVED2["逻辑内返回：暂停任务巡检，下一轮优先冻结治理邮箱"]
+    TASK_UP["提取并上报任务管理后台上行消息"]
+    SERVICE["执行服务治理周期维护"]
+    SELF_CHECK["休眠期自检报告修复门控"]
+    ROUND_OK["更新 Tick、最近时间、首轮完成和最近循环结果"]
+    WAIT_WAKE["等待 Tick 间隔或治理邮箱唤醒"]
+
+    MSG_IN["外部反馈、自检报告、任务管理上行消息"]
+    POST["投递治理消息"]
+    POST_STOP{"停止请求中"}
+    POST_SKIP["逻辑内返回：拒绝入队"]
+    POST_FILL["补齐产生时间、来源链、优先级、可抢占、消息主键和载荷键"]
+    POST_MERGE{"幂等键已存在"}
+    POST_UPDATE["合并既有事件的优先级、摘要和附加载荷"]
+    POST_APPEND["追加到治理 mailbox 并唤醒线程"]
+
+    PROTOCOL["结构_治理消息"]
+    PAYLOAD["附加载荷：线程状态、派生需求、结果状态、观察承接、执行前许可、自检报告、控制面板刷新请求"]
+    BATCH["消息批次执行器拆分抢占消息与普通消息"]
+    ACTION["消息处理器计算动作：需求队列刷新、根层重判、主派发、二次特征、结算候选"]
+
+    TASK_UI["任务管理界面线程"]
+    TASK_WORKER["任务管理工作线程"]
+    TASK_RESULT["任务工作结果与结构_任务管理上行消息"]
+    SELF_MAILBOX["转换为自我线程结构_治理消息"]
+    PERMIT["执行前许可请求由自我线程审批并回传许可结果"]
+
+    EXCEPTION["运行期异常"]
+    FAULT["追根因解决：故障收口，生命周期置故障，停止请求生效"]
+    EXIT["退出循环并切换已停止"]
+
+    RULE_THREAD["边界：线程不是动作来源"]
+    RULE_TASK["边界：自我线程不得直接写任务状态"]
+    RULE_TEXT["边界：日志、摘要、控制台和显示不承载机器事实"]
+    RULE_MIGRATE["边界：本图只生成流程图依据，不迁移旧函数体"]
+    RULE_EXCLUDE["排除：SQL、控制面板实现、D455、体素、外设接入不借本图进入实施"]
+
+    START --> SRC --> INIT_CALL --> INIT_FAST
+    INIT_FAST -->|是| INIT_RETURN
+    INIT_FAST -->|否| INIT_ENV --> INIT_INSTINCT --> INIT_DELAY --> INIT_DEMAND --> INIT_MAIN --> INIT_MARK --> INIT_OK
+    INIT_OK -->|是| RUN_ENTER
+    INIT_OK -->|否| INIT_FAIL
+    INIT_FAIL --> FAULT
+
+    RUN_ENTER --> LOOP --> ROUND --> FREEZE --> STOP1
+    STOP1 -->|是| STOP_RETURN --> WAIT_WAKE
+    STOP1 -->|否| NORMALIZE --> PREEMPT1 --> DERIVED1
+    DERIVED1 -->|是| WAIT_DERIVED --> WAIT_WAKE
+    DERIVED1 -->|否| SECONDARY --> FRAME --> DEMAND --> DISPATCH
+    DISPATCH --> TASK_REQ --> TASK_UI
+    DISPATCH --> PREEMPT2 --> DERIVED2
+    DERIVED2 -->|是| WAIT_DERIVED2 --> WAIT_WAKE
+    DERIVED2 -->|否| TASK_UP --> SERVICE --> SELF_CHECK --> ROUND_OK --> WAIT_WAKE --> LOOP
+    ROUND --> EXCEPTION --> FAULT --> EXIT
+    LOOP -->|停止请求| EXIT
+
+    MSG_IN --> POST --> POST_STOP
+    POST_STOP -->|是| POST_SKIP
+    POST_STOP -->|否| POST_FILL --> POST_MERGE
+    POST_MERGE -->|是| POST_UPDATE --> POST_APPEND
+    POST_MERGE -->|否| POST_APPEND
+    POST_APPEND --> LOOP
+
+    POST_FILL --> PROTOCOL --> PAYLOAD
+    FREEZE --> BATCH --> ACTION
+    ACTION --> NORMALIZE
+
+    TASK_UI --> TASK_WORKER --> TASK_RESULT --> SELF_MAILBOX --> MSG_IN
+    TASK_WORKER -->|执行前许可请求| PERMIT --> TASK_UI
+    TASK_REQ -.->|只发意图| RULE_TASK
+    PERMIT -.->|许可不等于任务状态裁决| RULE_TASK
+    DISPATCH -.->|线程不生成动作动态| RULE_THREAD
+    PAYLOAD -.->|摘要只做人读| RULE_TEXT
+    SRC -.->|证据材料| RULE_MIGRATE
+    SRC -.->|排除项| RULE_EXCLUDE
+
+    classDef source fill:#eef2f7,stroke:#59687a,color:#102030;
+    classDef init fill:#e8f4ff,stroke:#2f6f9f,color:#102030;
+    classDef loop fill:#edf7ed,stroke:#3f7f4f,color:#102010;
+    classDef msg fill:#f6f0ff,stroke:#6c56a4,color:#1d1730;
+    classDef gate fill:#fff8e8,stroke:#9a6a1a,color:#24160a;
+    classDef logic fill:#eef7f6,stroke:#3c8b86,color:#102827;
+    classDef fault fill:#ffecec,stroke:#b84a4a,color:#401111;
+    classDef boundary fill:#fff0f3,stroke:#b4234a,color:#3a0d18;
+
+    class START,SRC source;
+    class INIT_CALL,INIT_ENV,INIT_INSTINCT,INIT_DELAY,INIT_DEMAND,INIT_MAIN,INIT_MARK,INIT_RETURN init;
+    class RUN_ENTER,LOOP,ROUND,FREEZE,NORMALIZE,PREEMPT1,SECONDARY,FRAME,DEMAND,DISPATCH,PREEMPT2,TASK_UP,SERVICE,SELF_CHECK,ROUND_OK,WAIT_WAKE,EXIT loop;
+    class MSG_IN,POST,POST_FILL,POST_UPDATE,POST_APPEND,PROTOCOL,PAYLOAD,BATCH,ACTION,TASK_REQ,TASK_UI,TASK_WORKER,TASK_RESULT,SELF_MAILBOX,PERMIT msg;
+    class INIT_FAST,INIT_OK,STOP1,DERIVED1,DERIVED2,POST_STOP,POST_MERGE gate;
+    class STOP_RETURN,WAIT_DERIVED,WAIT_DERIVED2,POST_SKIP logic;
+    class INIT_FAIL,EXCEPTION,FAULT fault;
+    class RULE_THREAD,RULE_TASK,RULE_TEXT,RULE_MIGRATE,RULE_EXCLUDE boundary;</pre>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>
