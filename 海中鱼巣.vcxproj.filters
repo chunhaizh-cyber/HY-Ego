@@ -110,6 +110,9 @@
     <ClInclude Include="海中鱼巣\领域\初始化.需求.ixx">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\初始化.概念图.ixx">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="海中鱼巣\领域\存在服务.h">
       <Filter>头文件</Filter>
     </ClInclude>

@@ -173,6 +173,7 @@
     <ClInclude Include="海中鱼巣\领域\世界服务.h" />
     <ClInclude Include="海中鱼巣\领域\初始化.世界树.ixx" />
     <ClInclude Include="海中鱼巣\领域\初始化.需求.ixx" />
+    <ClInclude Include="海中鱼巣\领域\初始化.概念图.ixx" />
     <ClInclude Include="海中鱼巣\领域\存在服务.h" />
     <ClInclude Include="海中鱼巣\领域\场景服务.h" />
     <ClInclude Include="海中鱼巣\领域\状态服务.h" />

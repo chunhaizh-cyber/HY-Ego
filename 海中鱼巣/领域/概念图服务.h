@@ -142,6 +142,28 @@ public:
         return 关系_.获取来源节点组(概念, 关系类型::实例支持概念);
     }
 
+    std::optional<节点句柄> 确保存在实例根支持(节点句柄 存在实例) {
+        const auto 实例记录 = 节点_.读取节点(存在实例);
+        const auto 根材料 = 读取概念根(概念根类别::存在);
+        if (!实例记录.has_value()
+            || 实例记录->类型 != 节点类型::存在
+            || !根材料.has_value()
+            || 存在实例 == 根材料->根节点) {
+            return std::nullopt;
+        }
+        if (!绑定实例支持概念(存在实例, 根材料->根节点)) {
+            return std::nullopt;
+        }
+        const auto 实例目标组 = 读取实例支持概念(存在实例);
+        const auto 根来源组 = 读取支持概念的实例(根材料->根节点);
+        const bool 双向可读 = std::find(实例目标组.begin(), 实例目标组.end(), 根材料->根节点) != 实例目标组.end()
+            && std::find(根来源组.begin(), 根来源组.end(), 存在实例) != 根来源组.end();
+        if (!追根因检查(双向可读, L"确保存在实例根支持后双向读回不符合内部预期。")) {
+            return std::nullopt;
+        }
+        return 根材料->根节点;
+    }
+
     bool 绑定概念上下位(节点句柄 上位概念, 节点句柄 下位概念) {
         std::lock_guard<std::mutex> 图锁(图写锁_);
         const auto 上位类别 = 读取节点概念类别(上位概念);
