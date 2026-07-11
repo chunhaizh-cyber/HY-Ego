@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>概念命名用途与生命周期治理流程图</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", sans-serif; background: #f5f7f8; color: #172026; }
+    main { max-width: 1800px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: 0; }
+    p { margin: 0 0 20px; color: #4d5b63; }
+    dl { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 8px 16px; margin: 0 0 20px; padding: 16px; border: 1px solid #cfd8dc; background: #fff; }
+    dt { font-weight: 700; }
+    dd { margin: 0; color: #4d5b63; }
+    .diagram { overflow: auto; padding: 20px; border: 1px solid #cfd8dc; background: #fff; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>概念命名用途与生命周期治理流程图</h1>
+    <p>名称不裁决身份，统计只提候选，生命周期由概念图服务重读权威结构后转换。</p>
+    <dl>
+      <dt>图类型</dt><dd>施工流程图</dd>
+      <dt>绑定计划</dt><dd>#194、#195、#196、#197、#198</dd>
+      <dt>绑定详细设计</dt><dd>概念命名用途与生命周期治理详细设计</dd>
+      <dt>允许文件</dt><dd>分别以五份绑定计划的允许文件为准，本图不授予合并修改许可。</dd>
+      <dt>禁止文件</dt><dd>分别以五份绑定计划的禁止文件为准，禁止提前实现命名需求和物理删除。</dd>
+      <dt>预期结构变化</dt><dd>S6A 增加生命周期关系，S6B 增加非权威用途缓存，S7 只重挂生命周期关系；两份 S0 不改机器结构。</dd>
+      <dt>执行前复核</dt><dd>逐项比对前置正式产物与实际接口；漂移时退回修订计划。</dd>
+      <dt>验证方式</dt><dd>代码切片执行构建、自检、规范和排除项扫描；S0 执行文档与 C++ 零差异检查。</dd>
+      <dt>不得宣称</dt><dd>施工目标是当前代码事实，或命名需求、安全删除、恢复已经实现。</dd>
+    </dl>
+    <div class="diagram">
+      <pre class="mermaid">
+flowchart TD
+    A["开始：#193 及其前序项已形成正式产物"] --> B["执行前复核 CONCEPT-S5 活动图、语素反查、状态、统计和关系仓库实际接口"]
+    B --> C{"实际接口与本批假定契约一致"}
+    C -->|"否"| G0["逻辑内返回：不改代码，退回设计计划窗口修订对应计划"]
+    C -->|"是"| D["S6A：登记活跃 / 冷却 / 退役三个抽象状态材料"]
+    D --> E["为每个活动概念确保唯一概念生命周期关系，初态为活跃"]
+    E --> F{"生命周期关系或状态材料完整读回"}
+    F -->|"否"| R1["追根因解决：停止依赖路径并清理或隔离本轮半结构"]
+    F -->|"是"| H["从语素概念追溯关系反向读取名称入口组"]
+    H --> I{"名称入口组为空"}
+    I -->|"是"| I1["输出结构化待命名请求：概念、根类别、活动图版本、原因"]
+    I -->|"否"| I2["返回稳定排序的名称入口组，不生成待命名请求"]
+    I1 --> J["表达上下文可构造临时指代令牌"]
+    I2 --> J
+    J --> K["临时指代只含上下文编号、指代序号、概念句柄和图版本；不持久化代词文本"]
+    K --> L["S6B：接收一次用途观察"]
+    L --> M{"用途类型"}
+    M -->|"一般"| M1["记录一般用途观察候选"]
+    M -->|"因果预测"| M2["只允许因果概念，记录预测用途与结果效用候选"]
+    M -->|"因果行动"| M3["只允许因果概念，记录行动用途与结果效用候选"]
+    M2 --> N
+    M3 --> N
+    M1 --> N["统计服务更新可清空、不可裁决业务事实的用途缓存"]
+    N --> O{"输入无效、类别不符或时间倒退"}
+    O -->|"是"| L1["逻辑内返回：拒绝观察，权威概念图和生命周期不变化"]
+    O -->|"否"| P["概念图服务读取用途候选，并重读实例支持和外部引用"]
+    P --> Q{"仍有支持、外部引用或正向用途"}
+    Q -->|"是"| Q1["保持活跃；若当前为冷却或退役则生成重新激活依据"]
+    Q -->|"否"| Q2["只输出冷却 / 退役复核候选，不由统计直接改生命周期"]
+    Q1 --> S["S7：概念图服务在写前再次复核权威材料"]
+    Q2 --> S
+    S --> T{"目标转换满足状态机和权威前置"}
+    T -->|"否"| L2["逻辑内返回：保持原生命周期，关系和版本不变化"]
+    T -->|"是"| U["原子重挂唯一概念生命周期关系：活跃、冷却、退役或重新激活"]
+    U --> V{"新状态、关系版本和活动概念读回一致"}
+    V -->|"否"| R2["追根因解决：停止依赖路径，不发布成功转换材料"]
+    V -->|"是"| W["返回值式生命周期转换结果；退役概念仍可读但不进入主动召回"]
+    W --> X["S6C：只读扫描命名需求如何映射为目标状态需求，不在本图伪造需求"]
+    X --> Y["S8-S0：复核安全物理删除、重挂、失效隔离和删除后固定点实际能力"]
+    Y --> Z["完成：形成后续命名需求设计和安全删除实施依据"]
+      </pre>
+    </div>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>
