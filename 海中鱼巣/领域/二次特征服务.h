@@ -11,6 +11,24 @@
 
 namespace 海中鱼巣 {
 
+struct 关系实例角色候选材料 {
+    节点句柄 组成项;
+    节点类型 组成项类型 = 节点类型::未分类;
+    std::uint64_t 组成顺序 = 0;
+};
+
+struct 关系实例完成材料 {
+    节点句柄 二次特征;
+    std::vector<节点句柄> 组成项组;
+    std::vector<关系实例角色候选材料> 角色候选组;
+
+    bool 完整() const {
+        return 句柄有效(二次特征)
+            && !组成项组.empty()
+            && 组成项组.size() == 角色候选组.size();
+    }
+};
+
 class 二次特征服务 {
 public:
     二次特征服务(主信息仓库& 主信息, 节点仓库& 节点, 关系仓库& 关系)
@@ -97,6 +115,28 @@ public:
             }
         }
         return 组成项组;
+    }
+
+    std::optional<关系实例完成材料> 读取关系实例完成材料(节点句柄 二次特征) const {
+        if (!节点类型匹配(二次特征, 节点类型::二次特征)) {
+            return std::nullopt;
+        }
+        const auto 组成项组 = 读取组成项(二次特征);
+        if (组成项组.empty()) {
+            return std::nullopt;
+        }
+        关系实例完成材料 材料;
+        材料.二次特征 = 二次特征;
+        材料.组成项组 = 组成项组;
+        材料.角色候选组.reserve(组成项组.size());
+        for (std::size_t 索引 = 0; 索引 < 组成项组.size(); ++索引) {
+            const auto 记录 = 节点_.读取节点(组成项组[索引]);
+            if (!记录.has_value()) {
+                return std::nullopt;
+            }
+            材料.角色候选组.push_back({组成项组[索引], 记录->类型, static_cast<std::uint64_t>(索引)});
+        }
+        return 材料.完整() ? std::optional<关系实例完成材料>{材料} : std::nullopt;
     }
 
     节点句柄 创建状态迁移二次特征(const 状态服务& 状态, const 动态服务& 动态, 节点句柄 前状态,
