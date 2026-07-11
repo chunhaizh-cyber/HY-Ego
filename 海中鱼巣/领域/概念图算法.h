@@ -7,7 +7,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <limits>
 #include <optional>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -140,6 +142,32 @@ struct 概念候选直接边 {
     std::uint64_t 下位候选编号 = 0;
 };
 
+struct 概念签名编号材料 {
+    std::uint64_t 项编号 = 0;
+    概念签名材料 签名;
+
+    bool 完整() const {
+        return 项编号 != 0 && 签名.完整();
+    }
+};
+
+enum class 完整签名直接边计算状态 : std::uint32_t {
+    输入拒绝 = 0,
+    已完成 = 1,
+    待重算 = 2
+};
+
+struct 完整签名直接边计算材料 {
+    完整签名直接边计算状态 状态 = 完整签名直接边计算状态::输入拒绝;
+    std::vector<概念候选直接边> 直接边组;
+    std::size_t 输入项数量 = 0;
+    std::size_t 所需计算预算 = 0;
+
+    bool 已完成() const {
+        return 状态 == 完整签名直接边计算状态::已完成;
+    }
+};
+
 struct 概念候选实例支持边 {
     节点句柄 实例;
     std::uint64_t 概念候选编号 = 0;
@@ -227,15 +255,148 @@ public:
         const auto 具体规范 = 规范化概念签名(具体);
         if (!一般规范.has_value()
             || !具体规范.has_value()
-            || 一般规范->类别 != 具体规范->类别
-            || 一般规范->签名版本 != 具体规范->签名版本
-            || 签名相同(一般规范.value(), 具体规范.value())) {
+            || !签名更一般_已规范化(一般规范.value(), 具体规范.value())) {
             return false;
         }
-        return std::includes(
-            具体规范->约束组.begin(), 具体规范->约束组.end(),
-            一般规范->约束组.begin(), 一般规范->约束组.end(),
-            约束小于);
+        return true;
+    }
+
+    static 完整签名直接边计算材料 重算完整签名直接边(
+        const std::vector<概念签名编号材料>& 完整签名组,
+        std::size_t 计算预算) {
+        完整签名直接边计算材料 输出;
+        输出.输入项数量 = 完整签名组.size();
+        if (完整签名组.empty()) {
+            return 输出;
+        }
+
+        std::vector<概念签名编号材料> 规范签名组;
+        规范签名组.reserve(完整签名组.size());
+        for (const auto& 材料 : 完整签名组) {
+            const auto 规范签名 = 规范化概念签名(材料.签名);
+            if (材料.项编号 == 0 || !规范签名.has_value()) {
+                return 输出;
+            }
+            for (const auto& 已有 : 规范签名组) {
+                if (已有.项编号 == 材料.项编号
+                    || 签名相同(已有.签名, 规范签名.value())) {
+                    return 输出;
+                }
+            }
+            规范签名组.push_back({材料.项编号, 规范签名.value()});
+        }
+
+        const auto 所需预算 = 计算直接边所需预算(规范签名组.size());
+        if (!所需预算.has_value()) {
+            输出.状态 = 完整签名直接边计算状态::待重算;
+            输出.所需计算预算 = std::numeric_limits<std::size_t>::max();
+            return 输出;
+        }
+        输出.所需计算预算 = 所需预算.value();
+        if (计算预算 < 输出.所需计算预算) {
+            输出.状态 = 完整签名直接边计算状态::待重算;
+            return 输出;
+        }
+
+        const auto 项数量 = 规范签名组.size();
+        std::vector<std::uint8_t> 更一般矩阵(项数量 * 项数量, 0);
+        const auto 填充行 = [&](std::size_t 起始行, std::size_t 结束行) {
+            for (std::size_t 上位索引 = 起始行; 上位索引 < 结束行; ++上位索引) {
+                for (std::size_t 下位索引 = 0; 下位索引 < 项数量; ++下位索引) {
+                    if (上位索引 == 下位索引) {
+                        continue;
+                    }
+                    更一般矩阵[上位索引 * 项数量 + 下位索引] =
+                        签名更一般_已规范化(
+                            规范签名组[上位索引].签名,
+                            规范签名组[下位索引].签名)
+                        ? 1
+                        : 0;
+                }
+            }
+        };
+
+        constexpr std::size_t 并行计算阈值 = 8;
+        const auto 硬件线程数 = static_cast<std::size_t>(std::thread::hardware_concurrency());
+        const auto 工作线程数 = 项数量 >= 并行计算阈值 && 硬件线程数 > 1
+            ? std::min(项数量, 硬件线程数)
+            : std::size_t{1};
+        if (工作线程数 == 1) {
+            填充行(0, 项数量);
+        }
+        else {
+            std::vector<std::thread> 线程组;
+            线程组.reserve(工作线程数 - 1);
+            const auto 每线程行数 = (项数量 + 工作线程数 - 1) / 工作线程数;
+            for (std::size_t 线程索引 = 1; 线程索引 < 工作线程数; ++线程索引) {
+                const auto 起始行 = 线程索引 * 每线程行数;
+                const auto 结束行 = std::min(项数量, 起始行 + 每线程行数);
+                if (起始行 >= 结束行) {
+                    break;
+                }
+                线程组.emplace_back(填充行, 起始行, 结束行);
+            }
+            填充行(0, std::min(项数量, 每线程行数));
+            for (auto& 线程 : 线程组) {
+                线程.join();
+            }
+        }
+
+        std::vector<std::vector<概念候选直接边>> 每行直接边组(项数量);
+        const auto 约简行 = [&](std::size_t 起始行, std::size_t 结束行) {
+            for (std::size_t 上位索引 = 起始行; 上位索引 < 结束行; ++上位索引) {
+                auto& 当前行 = 每行直接边组[上位索引];
+                for (std::size_t 下位索引 = 0; 下位索引 < 项数量; ++下位索引) {
+                    if (更一般矩阵[上位索引 * 项数量 + 下位索引] == 0) {
+                        continue;
+                    }
+                    bool 存在中间 = false;
+                    for (std::size_t 中间索引 = 0; 中间索引 < 项数量; ++中间索引) {
+                        if (中间索引 == 上位索引 || 中间索引 == 下位索引) {
+                            continue;
+                        }
+                        if (更一般矩阵[上位索引 * 项数量 + 中间索引] != 0
+                            && 更一般矩阵[中间索引 * 项数量 + 下位索引] != 0) {
+                            存在中间 = true;
+                            break;
+                        }
+                    }
+                    if (!存在中间) {
+                        当前行.push_back({
+                            规范签名组[上位索引].项编号,
+                            规范签名组[下位索引].项编号});
+                    }
+                }
+            }
+        };
+        if (工作线程数 == 1) {
+            约简行(0, 项数量);
+        }
+        else {
+            std::vector<std::thread> 线程组;
+            线程组.reserve(工作线程数 - 1);
+            const auto 每线程行数 = (项数量 + 工作线程数 - 1) / 工作线程数;
+            for (std::size_t 线程索引 = 1; 线程索引 < 工作线程数; ++线程索引) {
+                const auto 起始行 = 线程索引 * 每线程行数;
+                const auto 结束行 = std::min(项数量, 起始行 + 每线程行数);
+                if (起始行 >= 结束行) {
+                    break;
+                }
+                线程组.emplace_back(约简行, 起始行, 结束行);
+            }
+            约简行(0, std::min(项数量, 每线程行数));
+            for (auto& 线程 : 线程组) {
+                线程.join();
+            }
+        }
+        for (auto& 当前行 : 每行直接边组) {
+            输出.直接边组.insert(
+                输出.直接边组.end(),
+                std::make_move_iterator(当前行.begin()),
+                std::make_move_iterator(当前行.end()));
+        }
+        输出.状态 = 完整签名直接边计算状态::已完成;
+        return 输出;
     }
 
     static std::optional<概念签名材料> 提取共同一般签名(
@@ -387,8 +548,8 @@ public:
         }
 
         输出.状态 = 概念候选计算状态::已收敛;
-        整理候选输出(输出, 工作候选组, true);
-        if (!候选直接边无环(输出)) {
+        if (!整理候选输出(输出, 工作候选组, true)
+            || !候选直接边无环(输出)) {
             输出 = 概念图候选版本材料{};
             输出.基准活动版本 = 基准活动版本;
         }
@@ -518,6 +679,34 @@ private:
             }
         }
         return true;
+    }
+
+    static bool 签名更一般_已规范化(
+        const 概念签名材料& 一般,
+        const 概念签名材料& 具体) {
+        return 一般.类别 == 具体.类别
+            && 一般.签名版本 == 具体.签名版本
+            && !签名相同(一般, 具体)
+            && std::includes(
+                具体.约束组.begin(), 具体.约束组.end(),
+                一般.约束组.begin(), 一般.约束组.end(),
+                约束小于);
+    }
+
+    static std::optional<std::size_t> 计算直接边所需预算(std::size_t 项数量) {
+        const auto 上限 = std::numeric_limits<std::size_t>::max();
+        if (项数量 != 0 && 项数量 > 上限 / 项数量) {
+            return std::nullopt;
+        }
+        const auto 平方预算 = 项数量 * 项数量;
+        if (项数量 != 0 && 平方预算 > 上限 / 项数量) {
+            return std::nullopt;
+        }
+        const auto 立方预算 = 平方预算 * 项数量;
+        if (平方预算 > 上限 - 立方预算) {
+            return std::nullopt;
+        }
+        return 平方预算 + 立方预算;
     }
 
     static bool 签名小于(const 概念签名材料& 左, const 概念签名材料& 右) {
@@ -677,11 +866,11 @@ private:
         输出.状态 = 概念候选计算状态::待重算;
         输出.待重算材料 = 构造待重算材料(
             根材料组, 输入组, 候选数量预算, 迭代预算, 原因);
-        整理候选输出(输出, 工作候选组, false);
+        (void)整理候选输出(输出, 工作候选组, false);
         return 输出;
     }
 
-    static void 整理候选输出(
+    static bool 整理候选输出(
         概念图候选版本材料& 输出,
         std::vector<概念候选项>& 工作候选组,
         bool 生成直接边) {
@@ -694,6 +883,7 @@ private:
             工作候选组[索引].候选编号 = static_cast<std::uint64_t>(索引 + 1);
         }
         输出.候选项组 = 工作候选组;
+        输出.直接边组.clear();
         输出.实例支持边组.clear();
         输出.定义材料边组.clear();
         for (const auto& 候选 : 输出.候选项组) {
@@ -705,29 +895,21 @@ private:
             }
         }
         if (!生成直接边) {
-            return;
+            return true;
         }
-        for (const auto& 上位 : 输出.候选项组) {
-            for (const auto& 下位 : 输出.候选项组) {
-                if (!概念签名更一般(上位.签名, 下位.签名)) {
-                    continue;
-                }
-                bool 存在中间 = false;
-                for (const auto& 中间 : 输出.候选项组) {
-                    if (中间.候选编号 == 上位.候选编号 || 中间.候选编号 == 下位.候选编号) {
-                        continue;
-                    }
-                    if (概念签名更一般(上位.签名, 中间.签名)
-                        && 概念签名更一般(中间.签名, 下位.签名)) {
-                        存在中间 = true;
-                        break;
-                    }
-                }
-                if (!存在中间) {
-                    输出.直接边组.push_back({上位.候选编号, 下位.候选编号});
-                }
-            }
+        std::vector<概念签名编号材料> 完整签名组;
+        完整签名组.reserve(输出.候选项组.size());
+        for (const auto& 候选 : 输出.候选项组) {
+            完整签名组.push_back({候选.候选编号, 候选.签名});
         }
+        const auto 直接边结果 = 重算完整签名直接边(
+            完整签名组,
+            std::numeric_limits<std::size_t>::max());
+        if (!直接边结果.已完成()) {
+            return false;
+        }
+        输出.直接边组 = 直接边结果.直接边组;
+        return true;
     }
 
     static std::optional<const 概念候选项*> 按编号查找候选(
