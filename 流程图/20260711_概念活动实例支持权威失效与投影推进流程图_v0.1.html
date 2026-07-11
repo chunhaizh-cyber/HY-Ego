@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>概念活动实例支持权威失效与投影推进流程图</title>
+  <style>
+    body { margin: 0; background: #f4f6f8; color: #17212b; font-family: "Microsoft YaHei", sans-serif; }
+    main { min-width: 1400px; padding: 24px; }
+    h1 { margin: 0 0 8px; font-size: 24px; letter-spacing: 0; }
+    p { margin: 0 0 20px; color: #53606d; }
+    .diagram { overflow: auto; border: 1px solid #ccd4dc; background: #fff; padding: 20px; }
+  </style>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</head>
+<body>
+  <main>
+    <h1>概念活动实例支持权威失效与投影推进流程图</h1>
+    <p>保留历史关系、失效当前支持并推进活动版本的权威路径。</p>
+    <div class="diagram">
+      <pre class="mermaid">flowchart TD
+    A["调用方提交一个明确的活动支持失效请求"] --> B["请求携带实例、概念、当前支持关系和预期活动版本"]
+    B --> C{"句柄、类别、关系类型和活动版本有效"}
+    C -- "否" --> R1["逻辑内返回：结构不变化"]
+    C -- "是" --> D["概念图服务取得图写锁和活动图独占锁"]
+    D --> E["重读当前活动快照、专用登记和关系仓库有效记录"]
+    E --> F{"当前是否存在完全相同的有效支持"}
+    F -- "否且有同端点已失效历史" --> R2["逻辑内返回：幂等返回已失效材料"]
+    F -- "否且无历史" --> R3["逻辑内返回：目标支持不存在"]
+    F -- "当前结构互相矛盾" --> X1["追根因解决：停止依赖路径"]
+    F -- "是" --> G["在内存中复制活动快照和专用登记"]
+    G --> H["移除精确支持边、活动版本加一、清除上一候选幂等材料"]
+    H --> I{"新快照根、概念、签名、上下位和剩余关系仍完整"}
+    I -- "否" --> X2["追根因解决：尚未写仓库，保持旧事实"]
+    I -- "是" --> J["关系仓库把原支持关系状态从有效改为已失效"]
+    J --> K["保持关系编号、版本加一，普通有效查询不再返回"]
+    K --> L{"失效审计记录、旧有效读取消失和新版本一致"}
+    L -- "否" --> X3["追根因解决：停止活动图与生命周期依赖"]
+    L -- "是" --> M["无分配交换发布新活动快照和有效专用登记"]
+    M --> N{"活动版本、有效支持投影和审计历史完整读回"}
+    N -- "否" --> X4["追根因解决：停止后续候选和转换"]
+    N -- "是" --> O["返回支持已失效材料"]
+
+    O --> P["#195 生命周期候选按新活动版本重算有效支持数量"]
+    P --> Q{"目标普通概念是否仍有其它有效支持、外部引用或有效用途"}
+    Q -- "是" --> R4["逻辑内返回：#197 仍不得冷却"]
+    Q -- "否" --> S["#197 获得真实可达的活跃到冷却样本"]
+    S --> T["后续新候选可创建新的有效支持关系，不复活旧关系记录"]
+
+    Z1["测试裸删支持关系或从快照直接抹边"] --> Z9["禁止"]
+    Z2["把已失效关系继续计入活动支持或外部活性"] --> Z9
+    Z3["不推进活动版本却改变有效支持投影"] --> Z9
+    Z4["修改候选完整性以允许无来源实例概念"] --> Z9
+    Z5["用统计缓存、日志或 bool 标记支持失效"] --> Z9</pre>
+    </div>
+  </main>
+</body>
+</html>
