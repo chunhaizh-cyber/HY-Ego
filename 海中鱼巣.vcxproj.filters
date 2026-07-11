@@ -140,6 +140,9 @@
     <ClInclude Include="海中鱼巣\领域\因果服务.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\概念图服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="海中鱼巣\领域\语素服务.h">
       <Filter>头文件</Filter>
     </ClInclude>
