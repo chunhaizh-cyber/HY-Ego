@@ -7,6 +7,7 @@
 #include "../核心/索引仓库.h"
 #include "../核心/容错检查.h"
 
+#include <algorithm>
 #include <cwctype>
 #include <optional>
 #include <string_view>
@@ -196,6 +197,29 @@ public:
             return {};
         }
         return 关系_.获取目标节点组(语素入口, 关系类型::语素概念追溯);
+    }
+
+    std::vector<节点句柄> 读取概念名称入口组(节点句柄 概念节点) const {
+        if (!节点是可作为概念追溯目标(概念节点)) {
+            return {};
+        }
+        auto 入口组 = 关系_.获取来源节点组(概念节点, 关系类型::语素概念追溯);
+        入口组.erase(
+            std::remove_if(入口组.begin(), 入口组.end(), [this](const auto& 入口) {
+                return !节点是语素入口(入口);
+            }),
+            入口组.end());
+        std::sort(入口组.begin(), 入口组.end(), [](const auto& 左, const auto& 右) {
+            if (左.仓库编号 != 右.仓库编号) {
+                return 左.仓库编号 < 右.仓库编号;
+            }
+            if (左.节点编号 != 右.节点编号) {
+                return 左.节点编号 < 右.节点编号;
+            }
+            return 左.版本号 < 右.版本号;
+        });
+        入口组.erase(std::unique(入口组.begin(), 入口组.end()), 入口组.end());
+        return 入口组;
     }
 
     bool 语素入口同一(节点句柄 左入口, 节点句柄 右入口) const {

@@ -8,7 +8,9 @@
 #include "因果服务.h"
 #include "概念图算法.h"
 #include "存在服务.h"
+#include "状态服务.h"
 #include "特征服务.h"
+#include "语素服务.h"
 
 #include <algorithm>
 #include <array>
@@ -25,6 +27,62 @@ struct 概念根登记材料 {
     概念根类别 根类别 = 概念根类别::未定义;
     std::uint64_t 稳定非名称键 = 0;
     节点句柄 根节点;
+};
+
+enum class 概念生命周期阶段 : std::uint32_t {
+    未定义 = 0,
+    活跃 = 1,
+    冷却 = 2,
+    退役 = 3
+};
+
+enum class 概念待命名原因 : std::uint32_t {
+    未定义 = 0,
+    名称入口为空 = 1
+};
+
+struct 概念生命周期材料 {
+    节点句柄 概念;
+    概念生命周期阶段 阶段 = 概念生命周期阶段::未定义;
+    节点句柄 状态;
+    关系句柄 关系;
+
+    bool 完整() const {
+        return 句柄有效(概念)
+            && 阶段 >= 概念生命周期阶段::活跃
+            && 阶段 <= 概念生命周期阶段::退役
+            && 句柄有效(状态)
+            && 句柄有效(关系);
+    }
+};
+
+struct 概念待命名请求材料 {
+    节点句柄 概念;
+    概念根类别 根类别 = 概念根类别::未定义;
+    std::uint64_t 活动图版本 = 0;
+    概念待命名原因 原因 = 概念待命名原因::未定义;
+
+    bool 完整() const {
+        return 句柄有效(概念)
+            && 根类别 >= 概念根类别::存在
+            && 根类别 <= 概念根类别::因果
+            && 活动图版本 != 0
+            && 原因 == 概念待命名原因::名称入口为空;
+    }
+};
+
+struct 概念临时指代材料 {
+    std::uint64_t 表达上下文编号 = 0;
+    std::uint64_t 指代序号 = 0;
+    节点句柄 概念;
+    std::uint64_t 活动图版本 = 0;
+
+    bool 完整() const {
+        return 表达上下文编号 != 0
+            && 指代序号 != 0
+            && 句柄有效(概念)
+            && 活动图版本 != 0;
+    }
 };
 
 struct 概念活动关系材料 {
@@ -174,6 +232,102 @@ public:
             return std::nullopt;
         }
         return 节点类型对应根类别(记录->类型);
+    }
+
+    std::optional<节点句柄> 登记生命周期状态(
+        概念生命周期阶段 阶段,
+        节点句柄 状态节点,
+        const 状态服务& 状态) {
+        const auto 状态记录 = 节点_.读取节点(状态节点);
+        const auto 状态值 = 状态.读取状态值(状态节点);
+        if (!生命周期阶段有效(阶段)
+            || !状态记录.has_value()
+            || 状态记录->类型 != 节点类型::状态
+            || !状态值.has_value()
+            || 状态值.value() != static_cast<std::int64_t>(阶段)
+            || 状态.状态是否实例状态(状态节点)) {
+            return std::nullopt;
+        }
+
+        std::unique_lock<std::shared_mutex> 锁(生命周期状态锁_);
+        const auto 索引 = 生命周期阶段索引(阶段);
+        const auto& 已登记 = 生命周期状态组_[索引];
+        if (已登记.has_value()) {
+            return 已登记.value() == 状态节点 ? 已登记 : std::nullopt;
+        }
+        for (const auto& 其他状态 : 生命周期状态组_) {
+            if (其他状态.has_value() && 其他状态.value() == 状态节点) {
+                return std::nullopt;
+            }
+        }
+        生命周期状态组_[索引] = 状态节点;
+        const auto& 已发布 = 生命周期状态组_[索引];
+        if (!追根因检查(已发布.has_value() && 已发布.value() == 状态节点,
+            L"概念生命周期状态登记发布后读回不符合内部预期。")) {
+            return std::nullopt;
+        }
+        return 已发布;
+    }
+
+    std::optional<节点句柄> 读取生命周期状态(概念生命周期阶段 阶段) const {
+        if (!生命周期阶段有效(阶段)) {
+            return std::nullopt;
+        }
+        std::shared_lock<std::shared_mutex> 锁(生命周期状态锁_);
+        const auto& 状态 = 生命周期状态组_[生命周期阶段索引(阶段)];
+        if (!状态.has_value() || !节点_.节点是否有效(状态.value())) {
+            return std::nullopt;
+        }
+        return 状态;
+    }
+
+    bool 初始化活动概念生命周期() {
+        if (!生命周期状态登记完整()) {
+            return false;
+        }
+        const auto 根组 = 读取全部概念根();
+        if (根组.size() != 4) {
+            return false;
+        }
+
+        std::unique_lock<std::shared_mutex> 活动锁(活动图锁_);
+        std::lock_guard<std::mutex> 图锁(图写锁_);
+        const auto 原关系数量 = 关系_.有效关系数量();
+        std::vector<关系句柄> 本轮新增关系组;
+        bool 全部就绪 = true;
+        for (const auto& 根 : 根组) {
+            if (!确保概念生命周期_已加锁(
+                    根.根节点,
+                    概念生命周期阶段::活跃,
+                    true,
+                    本轮新增关系组).has_value()) {
+                全部就绪 = false;
+                break;
+            }
+        }
+        if (全部就绪) {
+            for (const auto& 根 : 根组) {
+                const auto 生命周期 = 读取概念生命周期_已加锁(根.根节点);
+                if (!生命周期.has_value()
+                    || 生命周期->阶段 != 概念生命周期阶段::活跃) {
+                    全部就绪 = false;
+                    break;
+                }
+            }
+        }
+        if (!全部就绪) {
+            const bool 清理完成 = 清理生命周期关系_已加锁(本轮新增关系组);
+            (void)追根因检查(
+                清理完成 && 关系_.有效关系数量() == 原关系数量,
+                L"概念根生命周期初始化失败后的关系清理不符合内部预期。");
+            return false;
+        }
+        if (活动快照_.has_value()
+            && !追根因检查(验证活动快照_已加锁(活动快照_.value()),
+                L"概念根生命周期初始化后活动快照读回不符合内部预期。")) {
+            return false;
+        }
+        return true;
     }
 
     bool 绑定实例支持概念(节点句柄 实例, 节点句柄 概念) {
@@ -415,9 +569,22 @@ public:
         }
         std::unique_lock<std::shared_mutex> 活动锁(活动图锁_);
         if (活动快照_.has_value()) {
-            return 活动快照_->活动版本;
+            return 追根因检查(验证活动快照_已加锁(活动快照_.value()),
+                L"概念活动图基础版本重复读取时生命周期或结构不完整。")
+                ? std::optional<std::uint64_t>{活动快照_->活动版本}
+                : std::nullopt;
         }
         std::lock_guard<std::mutex> 图锁(图写锁_);
+        if (!生命周期状态登记完整()) {
+            return std::nullopt;
+        }
+        for (const auto& 根 : 根组) {
+            const auto 生命周期 = 读取概念生命周期_已加锁(根.根节点);
+            if (!生命周期.has_value()
+                || 生命周期->阶段 != 概念生命周期阶段::活跃) {
+                return std::nullopt;
+            }
+        }
         概念活动快照 候选;
         候选.活动版本 = 1;
         for (const auto& 根 : 根组) {
@@ -492,6 +659,104 @@ public:
         return std::nullopt;
     }
 
+    std::optional<概念生命周期材料> 读取概念生命周期(节点句柄 概念) const {
+        std::shared_lock<std::shared_mutex> 锁(活动图锁_);
+        if (!读取节点概念类别(概念).has_value()) {
+            return std::nullopt;
+        }
+        return 读取概念生命周期_已加锁(概念);
+    }
+
+    std::optional<概念待命名请求材料> 读取待命名请求(
+        节点句柄 概念,
+        const 语素服务& 语素) const {
+        std::shared_lock<std::shared_mutex> 锁(活动图锁_);
+        if (!活动快照_.has_value()) {
+            return std::nullopt;
+        }
+        const auto 签名 = 从快照读取签名(活动快照_.value(), 概念);
+        if (!签名.has_value()) {
+            return std::nullopt;
+        }
+        if (!追根因检查(读取概念生命周期_已加锁(概念).has_value(),
+            L"读取待命名请求时活动概念生命周期不完整。")) {
+            return std::nullopt;
+        }
+        if (!语素.读取概念名称入口组(概念).empty()) {
+            return std::nullopt;
+        }
+        概念待命名请求材料 材料{
+            概念,
+            签名->类别,
+            活动快照_->活动版本,
+            概念待命名原因::名称入口为空
+        };
+        return 材料.完整() ? std::optional<概念待命名请求材料>{材料} : std::nullopt;
+    }
+
+    std::optional<std::vector<概念待命名请求材料>> 读取全部待命名请求(
+        const 语素服务& 语素) const {
+        std::shared_lock<std::shared_mutex> 锁(活动图锁_);
+        if (!活动快照_.has_value()) {
+            return std::nullopt;
+        }
+        std::vector<概念待命名请求材料> 结果;
+        for (const auto& 签名材料 : 活动快照_->签名组) {
+            if (!追根因检查(读取概念生命周期_已加锁(签名材料.概念).has_value(),
+                L"读取全部待命名请求时活动概念生命周期不完整。")) {
+                return std::nullopt;
+            }
+            if (!语素.读取概念名称入口组(签名材料.概念).empty()) {
+                continue;
+            }
+            概念待命名请求材料 材料{
+                签名材料.概念,
+                签名材料.签名.类别,
+                活动快照_->活动版本,
+                概念待命名原因::名称入口为空
+            };
+            if (!追根因检查(材料.完整(), L"概念待命名请求材料组装后不完整。")) {
+                return std::nullopt;
+            }
+            结果.push_back(材料);
+        }
+        std::sort(结果.begin(), 结果.end(), [](const auto& 左, const auto& 右) {
+            return 节点句柄小于(左.概念, 右.概念);
+        });
+        return 结果;
+    }
+
+    std::optional<概念临时指代材料> 构造临时指代(
+        节点句柄 概念,
+        std::uint64_t 预期活动图版本,
+        std::uint64_t 表达上下文编号,
+        std::uint64_t 指代序号) const {
+        if (预期活动图版本 == 0 || 表达上下文编号 == 0 || 指代序号 == 0) {
+            return std::nullopt;
+        }
+        std::shared_lock<std::shared_mutex> 锁(活动图锁_);
+        if (!活动快照_.has_value()
+            || 活动快照_->活动版本 != 预期活动图版本
+            || !从快照读取签名(活动快照_.value(), 概念).has_value()
+            || !读取概念生命周期_已加锁(概念).has_value()) {
+            return std::nullopt;
+        }
+        概念临时指代材料 材料{
+            表达上下文编号,
+            指代序号,
+            概念,
+            活动快照_->活动版本
+        };
+        return 材料.完整() ? std::optional<概念临时指代材料>{材料} : std::nullopt;
+    }
+
+    std::optional<概念临时指代材料> 构造临时指代(
+        节点句柄 概念,
+        std::uint64_t 表达上下文编号,
+        std::uint64_t 指代序号) const {
+        return 构造临时指代(概念, 读取活动图版本(), 表达上下文编号, 指代序号);
+    }
+
     std::optional<std::uint64_t> 发布候选图版本(
         const 概念图候选版本材料& 候选图,
         存在服务& 存在,
@@ -506,7 +771,10 @@ public:
             return std::nullopt;
         }
         if (上一候选图_.has_value() && 候选图内容等价(上一候选图_.value(), 候选图)) {
-            return 活动快照_->活动版本;
+            return 追根因检查(验证活动快照_已加锁(活动快照_.value()),
+                L"概念候选图重复发布时活动结构或生命周期不完整。")
+                ? std::optional<std::uint64_t>{活动快照_->活动版本}
+                : std::nullopt;
         }
         if (候选图.基准活动版本 != 活动快照_->活动版本
             || !候选图可发布_已加锁(候选图, 活动快照_.value())) {
@@ -517,19 +785,33 @@ public:
         const auto 旧快照 = 活动快照_.value();
         const auto 原专用关系登记数量 = 专用关系登记组_.size();
         std::vector<节点句柄> 本轮新增节点组;
+        std::vector<关系句柄> 本轮新增生命周期关系组;
         auto 新快照 = 构造候选活动快照_已加锁(
-            候选图, 旧快照, 存在, 动态, 二次特征, 因果, 本轮新增节点组);
+            候选图,
+            旧快照,
+            存在,
+            动态,
+            二次特征,
+            因果,
+            本轮新增节点组,
+            本轮新增生命周期关系组);
         if (!新快照.has_value()) {
             (void)追根因检查(
-                清理未发布候选_已加锁(原专用关系登记数量, 本轮新增节点组),
+                清理未发布候选_已加锁(
+                    原专用关系登记数量,
+                    本轮新增生命周期关系组,
+                    本轮新增节点组),
                 L"候选概念图构造失败后的新增结构清理不符合内部预期。");
             return std::nullopt;
         }
         if (!追根因检查(
                 验证活动快照_已加锁(新快照.value()),
-                L"候选概念图发布前完整读回不符合内部预期。")) {
+            L"候选概念图发布前完整读回不符合内部预期。")) {
             (void)追根因检查(
-                清理未发布候选_已加锁(原专用关系登记数量, 本轮新增节点组),
+                清理未发布候选_已加锁(
+                    原专用关系登记数量,
+                    本轮新增生命周期关系组,
+                    本轮新增节点组),
                 L"候选概念图读回失败后的新增结构清理不符合内部预期。");
             return std::nullopt;
         }
@@ -623,6 +905,12 @@ private:
         关系类型 类型 = 关系类型::普通父子;
         节点句柄 源节点;
         节点句柄 目标节点;
+    };
+
+    struct 生命周期关系登记材料 {
+        关系句柄 关系;
+        节点句柄 概念;
+        节点句柄 状态;
     };
 
     struct 概念活动快照 {
@@ -737,6 +1025,199 @@ private:
 
     static std::size_t 根类别索引(概念根类别 类别) {
         return static_cast<std::size_t>(类别) - 1;
+    }
+
+    static bool 生命周期阶段有效(概念生命周期阶段 阶段) {
+        return 阶段 >= 概念生命周期阶段::活跃
+            && 阶段 <= 概念生命周期阶段::退役;
+    }
+
+    static std::size_t 生命周期阶段索引(概念生命周期阶段 阶段) {
+        return static_cast<std::size_t>(阶段) - 1;
+    }
+
+    bool 生命周期状态登记完整() const {
+        std::shared_lock<std::shared_mutex> 锁(生命周期状态锁_);
+        std::vector<节点句柄> 状态组;
+        状态组.reserve(生命周期状态组_.size());
+        for (const auto& 状态 : 生命周期状态组_) {
+            if (!状态.has_value() || !节点_.节点是否有效(状态.value())) {
+                return false;
+            }
+            状态组.push_back(状态.value());
+        }
+        std::sort(状态组.begin(), 状态组.end(), 节点句柄小于);
+        return std::adjacent_find(状态组.begin(), 状态组.end()) == 状态组.end();
+    }
+
+    std::optional<概念生命周期阶段> 读取生命周期阶段_已加锁(节点句柄 状态节点) const {
+        std::shared_lock<std::shared_mutex> 锁(生命周期状态锁_);
+        for (std::size_t 索引 = 0; 索引 < 生命周期状态组_.size(); ++索引) {
+            const auto& 已登记 = 生命周期状态组_[索引];
+            if (已登记.has_value()
+                && 已登记.value() == 状态节点
+                && 节点_.节点是否有效(状态节点)) {
+                return static_cast<概念生命周期阶段>(索引 + 1);
+            }
+        }
+        return std::nullopt;
+    }
+
+    std::optional<关系句柄> 确保概念生命周期_已加锁(
+        节点句柄 概念,
+        std::optional<概念生命周期阶段> 预期阶段,
+        bool 允许创建,
+        std::vector<关系句柄>& 本轮新增关系组) {
+        if (!读取节点概念类别(概念).has_value()
+            || (预期阶段.has_value() && !生命周期阶段有效(预期阶段.value()))) {
+            return std::nullopt;
+        }
+
+        std::optional<节点句柄> 预期状态;
+        if (预期阶段.has_value()) {
+            预期状态 = 读取生命周期状态(预期阶段.value());
+            if (!预期状态.has_value()) {
+                return std::nullopt;
+            }
+        }
+
+        const auto 记录组 = 关系_.获取关系记录组(概念, 关系类型::概念生命周期);
+        if (记录组.size() > 1) {
+            (void)追根因检查(false, L"概念生命周期出现多个有效目标。");
+            return std::nullopt;
+        }
+        if (!记录组.empty()) {
+            const auto& 记录 = 记录组.front();
+            const auto 阶段 = 读取生命周期阶段_已加锁(记录.目标节点);
+            if (!追根因检查(阶段.has_value(), L"概念生命周期关系指向未登记状态。")) {
+                return std::nullopt;
+            }
+            if (预期阶段.has_value()
+                && !追根因检查(阶段.value() == 预期阶段.value(),
+                    L"概念生命周期关系阶段与当前写入路径预期不一致。")) {
+                return std::nullopt;
+            }
+            const auto 匹配数量 = std::count_if(
+                生命周期关系登记组_.begin(), 生命周期关系登记组_.end(),
+                [this, &记录, &概念](const auto& 登记) {
+                    if (登记.概念 != 概念 || 登记.状态 != 记录.目标节点) {
+                        return false;
+                    }
+                    const auto 读回 = 关系_.读取关系(登记.关系);
+                    return 读回.has_value()
+                        && 读回->关系编号 == 记录.关系编号
+                        && 读回->版本号 == 记录.版本号
+                        && 读回->类型 == 关系类型::概念生命周期
+                        && 读回->源节点 == 概念
+                        && 读回->目标节点 == 记录.目标节点;
+                });
+            if (!追根因检查(匹配数量 == 1, L"概念生命周期关系存在但服务登记不唯一。")) {
+                return std::nullopt;
+            }
+            const auto 已登记 = std::find_if(
+                生命周期关系登记组_.begin(), 生命周期关系登记组_.end(),
+                [this, &记录, &概念](const auto& 登记) {
+                    if (登记.概念 != 概念 || 登记.状态 != 记录.目标节点) {
+                        return false;
+                    }
+                    const auto 读回 = 关系_.读取关系(登记.关系);
+                    return 读回.has_value()
+                        && 读回->关系编号 == 记录.关系编号
+                        && 读回->版本号 == 记录.版本号;
+                });
+            return 已登记 != 生命周期关系登记组_.end()
+                ? std::optional<关系句柄>{已登记->关系}
+                : std::nullopt;
+        }
+
+        const bool 有残留登记 = std::any_of(
+            生命周期关系登记组_.begin(), 生命周期关系登记组_.end(),
+            [&概念](const auto& 登记) { return 登记.概念 == 概念; });
+        if (!允许创建 || !预期状态.has_value() || 有残留登记) {
+            if (有残留登记) {
+                (void)追根因检查(false, L"概念生命周期关系已失效但服务登记仍残留。");
+            }
+            return std::nullopt;
+        }
+
+        const auto 新关系 = 关系_.创建关系(关系类型::概念生命周期, 概念, 预期状态.value());
+        const auto 读回 = 关系_.读取关系(新关系);
+        if (!追根因检查(句柄有效(新关系)
+            && 读回.has_value()
+            && 读回->类型 == 关系类型::概念生命周期
+            && 读回->源节点 == 概念
+            && 读回->目标节点 == 预期状态.value(),
+            L"概念生命周期关系写入后读回不符合内部预期。")) {
+            if (句柄有效(新关系)) {
+                (void)追根因检查(
+                    关系_.删除关系(新关系) || !关系_.读取关系(新关系).has_value(),
+                    L"概念生命周期关系写入读回失败后的清理不符合内部预期。");
+            }
+            return std::nullopt;
+        }
+        生命周期关系登记组_.push_back({新关系, 概念, 预期状态.value()});
+        本轮新增关系组.push_back(新关系);
+        return 新关系;
+    }
+
+    std::optional<概念生命周期材料> 读取概念生命周期_已加锁(节点句柄 概念) const {
+        const auto 记录组 = 关系_.获取关系记录组(概念, 关系类型::概念生命周期);
+        if (记录组.empty()) {
+            return std::nullopt;
+        }
+        if (!追根因检查(记录组.size() == 1, L"读取概念生命周期时发现多个有效目标。")) {
+            return std::nullopt;
+        }
+        const auto& 记录 = 记录组.front();
+        const auto 阶段 = 读取生命周期阶段_已加锁(记录.目标节点);
+        if (!追根因检查(阶段.has_value(), L"读取概念生命周期时目标状态未登记。")) {
+            return std::nullopt;
+        }
+        std::optional<关系句柄> 关系句柄值;
+        for (const auto& 登记 : 生命周期关系登记组_) {
+            if (登记.概念 != 概念 || 登记.状态 != 记录.目标节点) {
+                continue;
+            }
+            const auto 读回 = 关系_.读取关系(登记.关系);
+            if (!读回.has_value()
+                || 读回->关系编号 != 记录.关系编号
+                || 读回->版本号 != 记录.版本号
+                || 读回->类型 != 关系类型::概念生命周期
+                || 读回->源节点 != 概念
+                || 读回->目标节点 != 记录.目标节点
+                || 关系句柄值.has_value()) {
+                (void)追根因检查(false, L"读取概念生命周期时服务登记与权威关系不一致。");
+                return std::nullopt;
+            }
+            关系句柄值 = 登记.关系;
+        }
+        if (!追根因检查(关系句柄值.has_value(), L"读取概念生命周期时缺少服务关系登记。")) {
+            return std::nullopt;
+        }
+        概念生命周期材料 材料{概念, 阶段.value(), 记录.目标节点, 关系句柄值.value()};
+        return 材料.完整() ? std::optional<概念生命周期材料>{材料} : std::nullopt;
+    }
+
+    bool 清理生命周期关系_已加锁(const std::vector<关系句柄>& 关系组) {
+        bool 全部完成 = true;
+        for (auto 迭代 = 关系组.rbegin(); 迭代 != 关系组.rend(); ++迭代) {
+            const auto 待清理关系 = *迭代;
+            const auto 位置 = std::find_if(
+                生命周期关系登记组_.begin(), 生命周期关系登记组_.end(),
+                [&待清理关系](const auto& 登记) { return 登记.关系 == 待清理关系; });
+            if (位置 == 生命周期关系登记组_.end()) {
+                全部完成 = false;
+                continue;
+            }
+            const bool 已清理 = 关系_.删除关系(待清理关系)
+                || !关系_.读取关系(待清理关系).has_value();
+            if (!已清理) {
+                全部完成 = false;
+                continue;
+            }
+            生命周期关系登记组_.erase(位置);
+        }
+        return 全部完成;
     }
 
     static std::optional<概念根类别> 节点类型对应根类别(节点类型 类型) {
@@ -1149,7 +1630,8 @@ private:
         动态服务& 动态,
         二次特征服务& 二次特征,
         因果服务& 因果,
-        std::vector<节点句柄>& 本轮新增节点组) {
+        std::vector<节点句柄>& 本轮新增节点组,
+        std::vector<关系句柄>& 本轮新增生命周期关系组) {
         概念活动快照 新快照;
         新快照.活动版本 = 旧快照.活动版本 + 1;
         新快照.根组 = 旧快照.根组;
@@ -1177,6 +1659,20 @@ private:
                     }
                     概念 = 新概念.value();
                 }
+            }
+            const bool 是根 = std::find(旧快照.根组.begin(), 旧快照.根组.end(), 概念)
+                != 旧快照.根组.end();
+            const bool 是本轮新增 = std::find(
+                本轮新增节点组.begin(), 本轮新增节点组.end(), 概念) != 本轮新增节点组.end();
+            const auto 预期阶段 = (是根 || 是本轮新增)
+                ? std::optional<概念生命周期阶段>{概念生命周期阶段::活跃}
+                : std::nullopt;
+            if (!确保概念生命周期_已加锁(
+                    概念,
+                    预期阶段,
+                    是本轮新增,
+                    本轮新增生命周期关系组).has_value()) {
+                return std::nullopt;
             }
             映射组.push_back({候选.候选编号, 概念});
             新快照.概念节点组.push_back(概念);
@@ -1236,6 +1732,7 @@ private:
 
     bool 清理未发布候选_已加锁(
         std::size_t 原专用关系登记数量,
+        const std::vector<关系句柄>& 本轮新增生命周期关系组,
         const std::vector<节点句柄>& 本轮新增节点组) {
         if (原专用关系登记数量 > 专用关系登记组_.size()) {
             return false;
@@ -1254,7 +1751,8 @@ private:
             }
         }
         专用关系登记组_ = std::move(保留登记组);
-        if (!关系清理完成) {
+        const bool 生命周期关系清理完成 = 清理生命周期关系_已加锁(本轮新增生命周期关系组);
+        if (!关系清理完成 || !生命周期关系清理完成) {
             return false;
         }
         bool 节点清理完成 = true;
@@ -1275,6 +1773,20 @@ private:
             if (!节点是否已登记概念根(根)
                 || std::find(快照.概念节点组.begin(), 快照.概念节点组.end(), 根)
                     == 快照.概念节点组.end()) {
+                return false;
+            }
+        }
+        if (!生命周期状态登记完整()) {
+            return false;
+        }
+        for (const auto& 概念 : 快照.概念节点组) {
+            const auto 生命周期 = 读取概念生命周期_已加锁(概念);
+            if (!生命周期.has_value()) {
+                return false;
+            }
+            const bool 是根 = std::find(快照.根组.begin(), 快照.根组.end(), 概念)
+                != 快照.根组.end();
+            if (是根 && 生命周期->阶段 != 概念生命周期阶段::活跃) {
                 return false;
             }
         }
@@ -1475,8 +1987,11 @@ private:
     关系仓库& 关系_;
     mutable std::shared_mutex 根登记锁_;
     std::array<std::optional<概念根登记材料>, 4> 根登记组_;
+    mutable std::shared_mutex 生命周期状态锁_;
+    std::array<std::optional<节点句柄>, 3> 生命周期状态组_;
     std::mutex 图写锁_;
     std::vector<专用关系登记材料> 专用关系登记组_;
+    std::vector<生命周期关系登记材料> 生命周期关系登记组_;
     mutable std::shared_mutex 活动图锁_;
     std::optional<概念活动快照> 活动快照_;
     std::optional<概念图候选版本材料> 上一候选图_;
