@@ -10,11 +10,33 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <limits>
 #include <mutex>
 #include <optional>
 #include <vector>
 
 namespace 海中鱼巣 {
+
+struct 特征值内容签名材料 {
+    节点句柄 特征节点;
+    节点句柄 特征值节点;
+    特征值原始类型 原始类型 = 特征值原始类型::未建立;
+    std::uint64_t 原始值版本 = 0;
+    std::uint64_t 哈希规则版本 = 0;
+    std::uint64_t 内容哈希64 = 0;
+
+    bool 完整() const {
+        const bool 原始类型有效 = 原始类型 == 特征值原始类型::I64
+            || 原始类型 == 特征值原始类型::VecI64
+            || 原始类型 == 特征值原始类型::VecU64;
+        return 句柄有效(特征节点)
+            && 句柄有效(特征值节点)
+            && !(特征节点 == 特征值节点)
+            && 原始类型有效
+            && 原始值版本 != 0
+            && 哈希规则版本 != 0;
+    }
+};
 
 struct 概念特征约束材料 {
     节点句柄 宿主;
@@ -64,6 +86,8 @@ struct 概念特征约束材料 {
 
 class 特征服务 {
 public:
+    static constexpr std::uint64_t 特征值内容哈希规则版本 = 1;
+
     特征服务(主信息仓库& 主信息, 节点仓库& 节点)
         : 主信息_(主信息), 节点_(节点), 关系_(nullptr), 二次特征_(nullptr), 特征值_(nullptr) {
     }
@@ -297,6 +321,107 @@ public:
         return 特征值_->读取原始值材料(特征值节点);
     }
 
+    std::optional<特征值内容签名材料> 生成特征值内容签名(
+        节点句柄 特征节点,
+        节点句柄 特征值节点,
+        std::uint64_t 哈希规则版本 = 特征值内容哈希规则版本) const {
+        if (哈希规则版本 != 特征值内容哈希规则版本) {
+            return std::nullopt;
+        }
+        const auto 原始材料 = 读取特征值原始材料(特征节点, 特征值节点);
+        if (!原始材料.has_value()) {
+            return std::nullopt;
+        }
+
+        std::uint64_t 内容哈希 = FNV1a偏移基数;
+        追加小端U64(内容哈希, 哈希规则版本);
+        追加小端U32(内容哈希, static_cast<std::uint32_t>(原始材料->原始类型));
+        switch (原始材料->原始类型) {
+        case 特征值原始类型::I64:
+            追加小端U64(内容哈希, 1);
+            追加小端U64(内容哈希, ZigZag64(原始材料->I64值.value()));
+            break;
+        case 特征值原始类型::VecI64:
+            追加小端U64(内容哈希, static_cast<std::uint64_t>(原始材料->VecI64值.size()));
+            for (const auto 元素 : 原始材料->VecI64值) {
+                追加小端U64(内容哈希, ZigZag64(元素));
+            }
+            break;
+        case 特征值原始类型::VecU64:
+            追加小端U64(内容哈希, static_cast<std::uint64_t>(原始材料->VecU64值.size()));
+            for (const auto 元素 : 原始材料->VecU64值) {
+                追加小端U64(内容哈希, 元素);
+            }
+            break;
+        default:
+            return std::nullopt;
+        }
+
+        const auto 计算后版本 = 读取特征值原始版本(特征节点, 特征值节点);
+        if (!计算后版本.has_value() || 计算后版本.value() != 原始材料->原始值版本) {
+            return std::nullopt;
+        }
+        特征值内容签名材料 结果{
+            特征节点,
+            特征值节点,
+            原始材料->原始类型,
+            原始材料->原始值版本,
+            哈希规则版本,
+            内容哈希};
+        if (!追根因检查(结果.完整(), L"生成特征值内容签名后材料不完整。")) {
+            return std::nullopt;
+        }
+        return 结果;
+    }
+
+    bool 复核特征值内容签名仍为当前(const 特征值内容签名材料& 签名) const {
+        if (!签名.完整() || 签名.哈希规则版本 != 特征值内容哈希规则版本) {
+            return false;
+        }
+        const auto 当前签名 = 生成特征值内容签名(
+            签名.特征节点, 签名.特征值节点, 签名.哈希规则版本);
+        return 当前签名.has_value() && 内容签名相同(当前签名.value(), 签名);
+    }
+
+    std::optional<bool> 复核特征值内容相同(
+        节点句柄 左特征节点,
+        节点句柄 左特征值节点,
+        节点句柄 右特征节点,
+        节点句柄 右特征值节点) const {
+        const auto 左材料 = 读取特征值原始材料(左特征节点, 左特征值节点);
+        const auto 右材料 = 读取特征值原始材料(右特征节点, 右特征值节点);
+        if (!左材料.has_value() || !右材料.has_value()) {
+            return std::nullopt;
+        }
+
+        bool 内容相同 = false;
+        if (左材料->原始类型 == 右材料->原始类型) {
+            switch (左材料->原始类型) {
+            case 特征值原始类型::I64:
+                内容相同 = 左材料->I64值 == 右材料->I64值;
+                break;
+            case 特征值原始类型::VecI64:
+                内容相同 = 左材料->VecI64值 == 右材料->VecI64值;
+                break;
+            case 特征值原始类型::VecU64:
+                内容相同 = 左材料->VecU64值 == 右材料->VecU64值;
+                break;
+            default:
+                return std::nullopt;
+            }
+        }
+
+        const auto 左复核版本 = 读取特征值原始版本(左特征节点, 左特征值节点);
+        const auto 右复核版本 = 读取特征值原始版本(右特征节点, 右特征值节点);
+        if (!左复核版本.has_value()
+            || !右复核版本.has_value()
+            || 左复核版本.value() != 左材料->原始值版本
+            || 右复核版本.value() != 右材料->原始值版本) {
+            return std::nullopt;
+        }
+        return 内容相同;
+    }
+
     std::optional<std::vector<概念特征约束材料>> 读取宿主概念特征约束组(节点句柄 宿主节点) const {
         if (关系_ == nullptr || 特征值_ == nullptr || !节点类型是允许特征宿主(宿主节点)) {
             return std::nullopt;
@@ -361,6 +486,9 @@ public:
     }
 
 private:
+    static constexpr std::uint64_t FNV1a偏移基数 = 14695981039346656037ULL;
+    static constexpr std::uint64_t FNV1a质数 = 1099511628211ULL;
+
     enum class 实例槽位当前值状态 : std::uint32_t {
         无效 = 0,
         无当前值 = 1,
@@ -381,6 +509,37 @@ private:
             return 左.节点编号 < 右.节点编号;
         }
         return 左.版本号 < 右.版本号;
+    }
+
+    static std::uint64_t ZigZag64(std::int64_t 值) {
+        const auto 原始位 = static_cast<std::uint64_t>(值);
+        return (原始位 << 1) ^ (值 < 0 ? std::numeric_limits<std::uint64_t>::max() : 0ULL);
+    }
+
+    static void 追加哈希字节(std::uint64_t& 哈希, std::uint8_t 字节) {
+        哈希 ^= static_cast<std::uint64_t>(字节);
+        哈希 *= FNV1a质数;
+    }
+
+    static void 追加小端U32(std::uint64_t& 哈希, std::uint32_t 值) {
+        for (std::uint32_t 位移 = 0; 位移 < 32; 位移 += 8) {
+            追加哈希字节(哈希, static_cast<std::uint8_t>((值 >> 位移) & 0xFFU));
+        }
+    }
+
+    static void 追加小端U64(std::uint64_t& 哈希, std::uint64_t 值) {
+        for (std::uint32_t 位移 = 0; 位移 < 64; 位移 += 8) {
+            追加哈希字节(哈希, static_cast<std::uint8_t>((值 >> 位移) & 0xFFULL));
+        }
+    }
+
+    static bool 内容签名相同(const 特征值内容签名材料& 左, const 特征值内容签名材料& 右) {
+        return 左.特征节点 == 右.特征节点
+            && 左.特征值节点 == 右.特征值节点
+            && 左.原始类型 == 右.原始类型
+            && 左.原始值版本 == 右.原始值版本
+            && 左.哈希规则版本 == 右.哈希规则版本
+            && 左.内容哈希64 == 右.内容哈希64;
     }
 
     bool 节点类型匹配(节点句柄 节点句柄值, 节点类型 类型) const {
