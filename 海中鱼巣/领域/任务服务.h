@@ -10,8 +10,10 @@
 #include "需求服务.h"
 #include "状态服务.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <optional>
+#include <vector>
 
 namespace 海中鱼巣 {
 
@@ -226,6 +228,33 @@ public:
             目标状态.value(),
             创建状态.value()
         };
+    }
+
+    std::vector<节点句柄> 读取需求承接任务组(节点句柄 需求节点, const 状态服务& 状态) const {
+        std::vector<节点句柄> 任务组;
+        if (!节点类型匹配(需求节点, 节点类型::需求)) {
+            return 任务组;
+        }
+        for (const auto& 来源节点 : 关系_.获取来源节点组(需求节点, 关系类型::引用)) {
+            if (!节点类型匹配(来源节点, 节点类型::任务)) {
+                continue;
+            }
+            const auto 承接材料 = 读取任务承接材料(来源节点, 状态);
+            if (承接材料.has_value() && 承接材料->来源需求 == 需求节点) {
+                任务组.push_back(来源节点);
+            }
+        }
+        std::sort(任务组.begin(), 任务组.end(), [](const auto& 左, const auto& 右) {
+            if (左.仓库编号 != 右.仓库编号) {
+                return 左.仓库编号 < 右.仓库编号;
+            }
+            if (左.节点编号 != 右.节点编号) {
+                return 左.节点编号 < 右.节点编号;
+            }
+            return 左.版本号 < 右.版本号;
+        });
+        任务组.erase(std::unique(任务组.begin(), 任务组.end()), 任务组.end());
+        return 任务组;
     }
 
     关系句柄 记录任务实际结果状态(节点句柄 任务节点, 节点句柄 实际结果状态, const 状态服务& 状态) {
