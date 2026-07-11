@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>旧鱼巢筹办方法与执行现状流程图</title><style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}</style></head><body><main><h1>旧鱼巢筹办方法与执行现状流程图</h1><p>旧 HEAD：ef2cbbf；图类型：旧代码现状证据。</p><div class="mermaid">
+flowchart TD
+    P1["筹办读取任务目标与条件场景"] --> P2["因果反推目标所需条件"]
+    P2 --> P3["召回方法候选"]
+    P3 --> P4{"候选是否具备条件、结果与动作入口"}
+    P4 -- "否" --> P5["派生证据或方法结构缺口"]
+    P5 --> P1
+    P4 -- "是" --> P6["选择方法并冻结执行材料"]
+    P6 --> E1["执行前复核任务、方法与输入场景"]
+    E1 --> E2{"当前仍可执行"}
+    E2 -- "否" --> L1["逻辑内返回：等待或重筹办"]
+    E2 -- "是" --> E3["调用本能或自我动作"]
+    E3 --> E4["记录方法动作动态"]
+    E4 --> E5["形成执行记账与结果场景"]
+    E5 --> E6{"写后读回一致"}
+    E6 -- "否" --> R1["追根因：执行后结构矛盾"]
+    E6 -- "是" --> E7["提交任务结果回执"]
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

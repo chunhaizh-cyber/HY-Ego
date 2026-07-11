@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>旧鱼巢需求与任务管理现状流程图</title><style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}</style></head><body><main><h1>旧鱼巢需求与任务管理现状流程图</h1><p>旧 HEAD：ef2cbbf；图类型：旧代码现状证据。</p><div class="mermaid">
+flowchart TD
+    D1["需求进入活动需求树"] --> D2["读取目标、主体、场景与父需求"]
+    D2 --> D3{"是否可承接为任务"}
+    D3 -- "否" --> L1["逻辑内返回：材料不足或当前不可承接"]
+    D3 -- "是" --> T1["创建任务并绑定来源需求"]
+    T1 --> T2["任务进入管理队列"]
+    T2 --> M1["管理线程冻结工作项"]
+    M1 --> M2["分派任务工作线程"]
+    M2 --> M3["工作线程处理并形成回执材料"]
+    M3 --> M4["管理界面线程接收上行回执"]
+    M4 --> T3["更新任务阶段或重筹办材料"]
+    T3 --> D4["更新需求活动集、权重或结算候选"]
+    D4 --> D1
+    T1 --> R1{"创建或绑定后读回不完整"}
+    R1 -- "是" --> R2["追根因：不得把半结构继续发布"]
+    R1 -- "否" --> T2
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

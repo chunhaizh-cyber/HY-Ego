@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>FLOW-COVERAGE-S1 鱼巢逻辑与当前实现流程覆盖收口现状流程图</title><style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}</style></head><body><main><h1>FLOW-COVERAGE-S1 鱼巢逻辑与当前实现流程覆盖收口现状流程图</h1><div class="mermaid">
+flowchart TD
+    A["冻结旧仓库 ef2cbbf、ahead 与 dirty 差异"] --> B["121 个旧源码逐项分类"]
+    B --> C["六条旧运行主链完整包"]
+    C --> D["旧证据只进入保留 / 删除 / 重实现台账，不直接迁移"]
+    E["冻结海中鱼巣 70c73a7"] --> F["批量刷新 51 份施工图对应现状基线"]
+    F --> G["补入 3 份严格现状兼容入口，形成 54 对"]
+    G --> H["校正 #192、#200、#203-#211、#216 实现状态"]
+    H --> I["61 个当前源码逐项分类：44 显式绑定，17 归类闭合"]
+    I --> J["补齐 THREAD-S1 契约 / 二分 / 偏差字段"]
+    J --> K["按 #236 生成当前总入口八段完整包"]
+    D --> L{"文件级证据与现状包是否闭合"}
+    K --> L
+    L -- "否" --> M["登记真实缺口，不宣称全量"]
+    L -- "是" --> N["完成 #240 文档覆盖收口"]
+    N --> O["未实施 #212-#235、#237-#239 保持施工图身份"]
+    O --> P["后续代码计划完成后必须回绘现状图"]
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

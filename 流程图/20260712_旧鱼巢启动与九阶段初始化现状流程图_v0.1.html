@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>旧鱼巢启动与九阶段初始化现状流程图</title><style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}</style></head><body><main><h1>旧鱼巢启动与九阶段初始化现状流程图</h1><p>旧 HEAD：ef2cbbf；图类型：旧代码现状证据。</p><div class="mermaid">
+flowchart TD
+    N1["程序 main 解析命令行并初始化日志"] --> N2["确保自我环境初始化"]
+    N2 --> I1["数据层与世界根"]
+    I1 --> I2["语素与概念层"]
+    I2 --> I3["自我存在锚点"]
+    I3 --> I4["核心特征承载"]
+    I4 --> I5["默认本能方法"]
+    I5 --> I6["根需求与结构根"]
+    I6 --> I7["主链镜像"]
+    I7 --> I8["运行控制与当前主链同步"]
+    I8 --> I9{"初始化读回是否完整"}
+    I9 -- "否" --> R1["追根因：阶段进入后结构或读回不完整"]
+    I9 -- "是" --> N3["启动自我线程"]
+    N3 --> N4["按模式启动自检线程"]
+    N4 --> N5{"命令行模式"}
+    N5 -- "检查" --> N6["输出自检摘要后退出"]
+    N5 -- "默认" --> N7["打开控制面板并进入控制台循环"]
+    N7 --> N8["退出守卫逆序停止自检与自我线程"]
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

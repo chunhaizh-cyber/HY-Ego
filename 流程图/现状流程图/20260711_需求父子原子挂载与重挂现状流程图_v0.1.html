@@ -1,13 +1,30 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><title>需求父子原子挂载与重挂现状流程图</title>
 <style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}code{background:#eef2f6;padding:2px 4px}</style></head>
-<body><main><h1>需求父子原子挂载与重挂现状流程图</h1><p>图类型：现状流程图；实现状态：未实现</p><p>对应施工图：<code>流程图/20260711_需求父子原子挂载与重挂流程图_v0.1.md</code></p>
+<body><main><h1>需求父子原子挂载与重挂现状流程图</h1><p>图类型：现状流程图；实现状态：已实现或已形成第一轮入口</p><p>对应施工图：<code>流程图/20260711_需求父子原子挂载与重挂流程图_v0.1.md</code></p>
 <div class="mermaid">
 flowchart TD
-    A["对应施工图：需求父子原子挂载与重挂"] --> B["扫描当前代码、计划和实施记录"]
-    B --> C{"是否存在完整正式实现入口？"}
-    C -- "否" --> D["当前现状：当前没有需求父子原子挂载与重挂正式实现，#192 仍为依赖门控计划。"]
-    D --> E["施工路径不进入当前运行流程；保持现有结构不变"]
-    C -- "仅有相邻材料" --> F["只标记相邻已实现入口，不宣称目标能力完成"]
-    F --> E
+    CURRENT_SCOPE["现状基线：已实现或已形成第一轮入口；未来/候选节点不视为当前已实现"] --> A
+    A["开始：#191 及其前序切片已形成正式产物"] --> B["执行前复核 #187 对需求服务的只读接口和关系仓库实际接口"]
+    B --> C{"实际接口与假定契约一致"}
+    C -->|"否"| G0["逻辑内返回：不改代码，退回设计计划窗口修订 #192"]
+    C -->|"是"| D["需求服务接收子需求与新父需求"]
+    D --> E{"句柄有效、两端均为需求、目标状态可读且不是自身"}
+    E -->|"否"| L1["逻辑内返回：写前拒绝，节点、关系、索引不变化"]
+    E -->|"是"| F["读取当前普通父节点与父链材料"]
+    F --> H{"当前父需求已经是目标父需求"}
+    H -->|"是"| L2["逻辑内返回：幂等已存在，不重复写关系"]
+    H -->|"否"| I{"新父需求是否位于子需求的后代链"}
+    I -->|"是"| L3["逻辑内返回：拒绝成环，原父子结构不变化"]
+    I -->|"否"| J["关系仓库在独占锁内执行挂载或重挂"]
+    J --> K{"无旧父关系"}
+    K -->|"是"| K1["创建唯一普通父子关系：父需求到子需求"]
+    K -->|"否"| K2["原地重挂既有普通父子关系并推进关系版本"]
+    K1 --> M["需求服务读回父需求、子需求组和关系数量"]
+    K2 --> M
+    M --> N{"读回与本次结果一致且单父无环"}
+    N -->|"否"| R1["追根因解决：停止依赖路径，定位仓库写入或并发根因"]
+    N -->|"是"| O["返回值式需求父子更新材料"]
+    O --> P["只读入口按稳定句柄顺序返回父需求与子需求组"]
+    P --> Q["完成：真实父子拓扑可读，不生成权重或方法裁决"]
 </div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

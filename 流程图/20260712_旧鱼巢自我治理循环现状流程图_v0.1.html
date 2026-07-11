@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>旧鱼巢自我治理循环现状流程图</title><style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}</style></head><body><main><h1>旧鱼巢自我治理循环现状流程图</h1><p>旧 HEAD：ef2cbbf；图类型：旧代码现状证据。</p><div class="mermaid">
+flowchart TD
+    G1["自我线程启动并完成初始化"] --> G2["等待治理消息或停止请求"]
+    G2 --> G3{"停止是否到达"}
+    G3 -- "是" --> G9["收口批次并停止线程"]
+    G3 -- "否" --> G4["冻结当前治理批次"]
+    G4 --> G5["按优先级路由消息"]
+    G5 --> G6["处理需求、任务、方法或外部观察材料"]
+    G6 --> G7{"批次结果"}
+    G7 -- "产生后继" --> G8["回灌后继消息并更新状态快照"]
+    G7 -- "无后继" --> G2
+    G8 --> G2
+    G6 --> R1{"正式消息承诺后出现结构矛盾"}
+    R1 -- "是" --> R2["追根因：停止依赖路径，不靠日志修复"]
+    R1 -- "否" --> G7
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

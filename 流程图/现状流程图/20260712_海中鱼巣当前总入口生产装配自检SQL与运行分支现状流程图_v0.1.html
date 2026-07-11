@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>海中鱼巣当前总入口生产装配自检 SQL 与运行分支现状流程图</title><style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}</style></head><body><main><h1>海中鱼巣当前总入口生产装配自检 SQL 与运行分支现状流程图</h1><p>代码版本：70c73a7；图类型：现状流程图。</p><div class="mermaid">
+flowchart TD
+    A["main 解析 --self-test-exit 与 --database-self-test-exit"] --> B["初始化运行日志"]
+    B --> C["构造四仓库、领域服务、初始化服务、线程、快照、显示与 SQL 适配"]
+    C --> D["启动自我线程并完成语素、世界树、两个根需求初始化"]
+    D --> E["初始化概念四根、存在支持与方法登记根"]
+    E --> F["执行存量领域 Axx、自我治理、线程、概念、方法召回、事件、控制面板自检"]
+    F --> G{"总自检是否通过"}
+    G -- "否" --> R1["自检模式返回失败；常驻模式停止进入后续启动"]
+    G -- "是且自检模式" --> H["输出总用时并返回 0"]
+    G -- "是且常驻 / 数据库模式" --> I["读取结构统计并写入 SQL 审计投影"]
+    I --> J{"数据库自检模式"}
+    J -- "是" --> K["按 SQL 往返结果退出"]
+    J -- "否" --> L["安装停止信号"]
+    L --> M{"是否启用控制面板"}
+    M -- "是" --> N["运行原生只读控制面板并等待关闭"]
+    M -- "否" --> O["进入 headless 常驻循环等待停止信号"]
+    N --> P["记录正常关闭并退出"]
+    O --> P
+    I --> L1{"SQL 外部通道不可用"}
+    L1 -- "是" --> L2["逻辑内返回：记录人读失败，不改机器事实"]
+    L1 -- "否" --> J
+    C --> R2{"正式装配后内部服务关系矛盾"}
+    R2 -- "是" --> R3["追根因：停止启动，不由输出修复"]
+    R2 -- "否" --> D
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

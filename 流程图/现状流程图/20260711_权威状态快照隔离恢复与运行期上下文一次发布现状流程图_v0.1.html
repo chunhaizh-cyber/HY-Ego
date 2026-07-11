@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>权威状态快照隔离恢复与运行期上下文一次发布现状流程图</title>
+<style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}code{background:#eef2f6;padding:2px 4px}</style></head>
+<body><main><h1>权威状态快照隔离恢复与运行期上下文一次发布现状流程图</h1><p>图类型：现状流程图；实现状态：未实现</p><p>对应施工图：<code>流程图/20260711_权威状态快照隔离恢复与运行期上下文一次发布流程图_v0.1.md</code></p>
+<div class="mermaid">
+flowchart TD
+    A["对应施工图：权威状态快照隔离恢复与运行期上下文一次发布"] --> B["扫描当前代码、计划和实施记录"]
+    B --> C{"是否存在完整正式实现入口？"}
+    C -- "否" --> D["当前现状：当前代码未匹配到对应正式实现入口。"]
+    D --> E["施工路径不进入当前运行流程；保持现有结构不变"]
+    C -- "仅有相邻材料" --> F["只标记相邻已实现入口，不宣称目标能力完成"]
+    F --> E
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>
