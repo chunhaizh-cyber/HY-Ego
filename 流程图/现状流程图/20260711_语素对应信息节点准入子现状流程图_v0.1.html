@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>2.2 语素对应信息与概念追溯目标准入子现状流程图</title>
+<style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}code{background:#eef2f6;padding:2px 4px}</style></head>
+<body><main><h1>2.2 语素对应信息与概念追溯目标准入子现状流程图</h1><p>图类型：现状流程图；实现状态：已实现或已形成第一轮入口</p><p>对应施工图：<code>流程图/20260708_语素对应信息节点准入子流程图_v0.1.md</code></p>
+<div class="mermaid">
+flowchart TD
+    CURRENT_SCOPE["现状基线：已实现或已形成第一轮入口；未来/候选节点不视为当前已实现"] --> A
+    A["输入：节点句柄 / 准入用途"] --> B["节点仓库读取节点"]
+    B --> C{"节点记录是否存在"}
+    C -- "否" --> R1["拒绝：无效句柄"]
+    C -- "是" --> U{"准入用途"}
+    U -- "2.2a 对应信息节点" --> D{"对应信息节点类型"}
+    U -- "2.2b 概念追溯目标" --> G{"概念追溯目标类型"}
+    D -- "基础信息 / 存在 / 场景 / 特征 / 二次特征 / 因果引用 / 需求 / 任务 / 方法" --> S1["对应信息准入通过"]
+    D -- "状态" --> E{"是否存在运行期临时目标关系"}
+    D -- "动态" --> F{"是否存在运行期临时目标关系"}
+    D -- "其他类型" --> R2["拒绝：对应信息类型不允许"]
+    E -- "是" --> R3["拒绝：运行期临时实例状态"]
+    E -- "否" --> S1
+    F -- "是" --> R4["拒绝：运行期临时实例动态"]
+    F -- "否" --> S1
+    G -- "基础信息 / 特征 / 抽象状态 / 抽象动态 / 二次特征 / 因果引用" --> S2["概念追溯准入通过"]
+    G -- "需求 / 任务 / 方法" --> R5["拒绝：不得默认作为概念追溯目标"]
+    G -- "存在 / 场景 / 特征值 / 运行期实例状态 / 运行期实例动态 / 其他类型" --> R6["拒绝：概念追溯目标类型不允许"]
+    R1 --> X["结构不变化"]
+    R2 --> X
+    R3 --> X
+    R4 --> X
+    R5 --> X
+    R6 --> X
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

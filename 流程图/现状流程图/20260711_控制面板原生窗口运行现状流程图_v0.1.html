@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>控制面板原生窗口运行现状流程图</title>
+<style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}code{background:#eef2f6;padding:2px 4px}</style></head>
+<body><main><h1>控制面板原生窗口运行现状流程图</h1><p>图类型：现状流程图；实现状态：已实现或已形成第一轮入口</p><p>对应施工图：<code>流程图/20260710_控制面板原生窗口运行流程图_v0.1.md</code></p>
+<div class="mermaid">
+flowchart TD
+    CURRENT_SCOPE["现状基线：已实现或已形成第一轮入口；未来/候选节点不视为当前已实现"] --> A
+    A["程序启动并解析参数"] --> B["运行现有核心自检"]
+    B --> C{"自检是否通过"}
+    C -->|否| R0["逻辑内返回：保持现有失败退出"]
+    C -->|是| D{"是否指定 --self-test-exit"}
+    D -->|是| R1["逻辑内返回：自检成功后退出"]
+    D -->|否| E["安装停止信号并准备运行期只读材料"]
+    E --> F{"是否指定 --headless"}
+    F -->|是| G["进入现有无窗口常驻循环"]
+    G --> H{"是否收到停止信号"}
+    H -->|否| G
+    H -->|是| R2["逻辑内返回：记录停止并退出"]
+    F -->|否| I["由控制面板服务生成只读总览、六类树候选和操作请求壳"]
+    I --> J["读取启动时结构统计快照并组装窗口会话 DTO"]
+    J --> K{"只读材料是否符合来源和不写事实边界"}
+    K -->|否| X0["追根因解决：停止启动窗口，不用空白 UI 掩盖材料异常"]
+    K -->|是| L["初始化公共控件并注册原生窗口类"]
+    L --> M{"窗口和必需控件是否创建成功"}
+    M -->|否| X1["追根因解决：记录失败阶段，关闭已创建控件并退出"]
+    M -->|是| N["显示海中鱼巣控制面板"]
+    N --> O["展示只读总览、结构计数和六类树根"]
+    O --> P{"用户动作"}
+    P -->|选择树根| Q["更新右侧只读分类详情"]
+    P -->|刷新| R["重新读取控制面板服务显示材料并刷新窗口"]
+    P -->|生成操作请求| S["只生成未执行请求壳并显示结果"]
+    P -->|写事实或外部通道请求| R3["逻辑内返回：显示拒绝或后续专项门禁，结构不变"]
+    P -->|关闭窗口或收到停止信号| T["销毁窗口和会话 DTO"]
+    Q --> O
+    R --> U{"刷新材料是否仍符合边界"}
+    U -->|是| O
+    U -->|否| X2["追根因解决：停止依赖路径并关闭窗口"]
+    S --> O
+    R3 --> O
+    T --> V["退出消息循环并记录正常停止"]
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

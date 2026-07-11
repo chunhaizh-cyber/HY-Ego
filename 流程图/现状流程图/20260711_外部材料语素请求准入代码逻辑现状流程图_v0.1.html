@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>语素服务入口材料总览代码逻辑现状流程图</title>
+<style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}code{background:#eef2f6;padding:2px 4px}</style></head>
+<body><main><h1>语素服务入口材料总览代码逻辑现状流程图</h1><p>图类型：现状流程图；实现状态：已实现或已形成第一轮入口</p><p>对应施工图：<code>流程图/20260708_外部材料语素请求准入代码逻辑流程图_v0.1.md</code></p>
+<div class="mermaid">
+flowchart TD
+    CURRENT_SCOPE["现状基线：已实现或已形成第一轮入口；未来/候选节点不视为当前已实现"] --> A
+    A["外部材料：词面文本 / 对应信息节点 / 概念节点 / 可选主键"] --> B["降权为语素请求材料"]
+    B --> C{"请求类型"}
+    C -- "只绑定已有信息节点" --> D["2.2a 对应信息节点准入"]
+    C -- "创建概念入口" --> E["2.4 创建概念入口与概念追溯组合流程"]
+    C -- "追加已有语素入口关系 / 读取绑定组" --> K["2.5 追加关系与读回验证"]
+    D --> G{"准入是否通过"}
+    E --> K
+    G -- "否" --> R["拒绝：输出原因 / 来源追溯 / 结构不变化"]
+    R --> R1["不创建主信息 / 不创建语素节点 / 不写关系 / 不写索引"]
+    G -- "是" --> H["2.3 创建语素入口"]
+    H --> K
+    K --> L["输出服务材料"]
+    L --> L1["语素入口句柄"]
+    L --> L2["语素对应信息关系 / 绑定目标组"]
+    L --> L3["语素概念追溯关系 / 概念追溯组"]
+    L --> L4["可选主键索引"]
+    L --> M["只读方：后续领域逻辑 / 显示层只读 / 人读观察"]
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

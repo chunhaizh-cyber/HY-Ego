@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>2.3 语素入口创建子现状流程图</title>
+<style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}code{background:#eef2f6;padding:2px 4px}</style></head>
+<body><main><h1>2.3 语素入口创建子现状流程图</h1><p>图类型：现状流程图；实现状态：已实现或已形成第一轮入口</p><p>对应施工图：<code>流程图/20260708_语素入口创建子流程图_v0.1.md</code></p>
+<div class="mermaid">
+flowchart TD
+    CURRENT_SCOPE["现状基线：已实现或已形成第一轮入口；未来/候选节点不视为当前已实现"] --> A
+    A["输入：对应信息节点 / 可选主键"] --> B["2.2 对应信息节点准入"]
+    B --> C{"准入是否通过"}
+    C -- "否" --> R["返回空句柄"]
+    R --> R1["结构不变化：不创建主信息 / 语素节点 / 关系 / 索引"]
+    C -- "是" --> D["主信息仓库创建主信息"]
+    D --> D1{"主信息是否创建成功"}
+    D1 -- "否" --> Z["追根因解决收口：不返回有效入口"]
+    D1 -- "是" --> E["节点仓库创建语素节点"]
+    E --> E1{"语素节点是否创建成功"}
+    E1 -- "否" --> Z
+    E1 -- "是" --> F["关系仓库创建语素对应信息关系"]
+    F --> F1{"对应信息关系是否创建成功"}
+    F1 -- "否" --> Z
+    F1 -- "是" --> G{"主键是否非 0"}
+    G -- "是" --> H{"主键是否已存在或绑定失败"}
+    H -- "是" --> Z
+    H -- "否" --> H1["索引仓库绑定主键到语素节点"]
+    G -- "否" --> I["跳过索引绑定"]
+    H1 --> S["返回语素入口句柄"]
+    I --> S
+    Z --> Z1["回滚或失效已创建结构 / 登记逻辑错误或待确认问题"]
+    Z1 --> Z2["不得留下可被读取为有效业务事实的半结构"]
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

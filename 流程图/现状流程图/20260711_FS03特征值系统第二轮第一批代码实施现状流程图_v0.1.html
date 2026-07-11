@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>FS-03 特征值系统第二轮第一批代码实施现状流程图</title>
+<style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}code{background:#eef2f6;padding:2px 4px}</style></head>
+<body><main><h1>FS-03 特征值系统第二轮第一批代码实施现状流程图</h1><p>图类型：现状流程图；实现状态：已实现或已形成第一轮入口</p><p>对应施工图：<code>流程图/20260710_FS03特征值系统第二轮第一批代码实施流程图_v0.1.md</code></p>
+<div class="mermaid">
+flowchart TD
+    CURRENT_SCOPE["现状基线：已实现或已形成第一轮入口；未来/候选节点不视为当前已实现"] --> A
+    A["特征服务收到特征值请求"] --> B{"请求类型"}
+
+    B -->|"写 VecI64 / VecU64"| C["校验特征句柄、特征值句柄及归属关系"]
+    C -->|"前置条件不满足"| L1["逻辑内返回：拒绝请求材料"]
+    C -->|"通过"| D["校验序列类型、非空且元素数不超过 4096"]
+    D -->|"前置条件不满足"| L2["逻辑内返回：拒绝请求材料"]
+    D -->|"通过"| E["检查 I64、VecI64、VecU64 类型互斥"]
+    E -->|"已有冲突类型"| L3["逻辑内返回：拒绝类型转换"]
+    E -->|"允许写入"| F["构造完整临时 Vec 容器记录"]
+    F --> G["整体发布：首次版本为 1，同类型替换版本加 1"]
+    G --> H["由特征服务读回类型、版本和值副本"]
+    H -->|"读回与写入不一致"| R1["追根因解决：记录逻辑错误并停止依赖路径"]
+    H -->|"一致"| S1["成功：返回原始值类型和容器版本"]
+
+    B -->|"读 VecI64 / VecU64"| I["校验特征句柄、特征值句柄及归属关系"]
+    I -->|"前置条件不满足"| L4["逻辑内返回：拒绝请求材料"]
+    I -->|"通过"| J["按完整节点句柄查找 Vec 容器记录"]
+    J -->|"不存在或类型不匹配"| L5["逻辑内返回：无对应原始值"]
+    J -->|"存在且匹配"| K["复制序列、类型和版本后返回"]
+    K --> S2["成功：调用方获得值副本"]
+
+    B -->|"写现有 I64"| M["增加 Vec 类型冲突前置拒绝"]
+    M -->|"已有 Vec"| L6["逻辑内返回：拒绝类型转换"]
+    M -->|"无 Vec"| N["进入既有 I64 写入路径"]
+    N -->|"内部写入或读回不符合预期"| R2["追根因解决：记录逻辑错误并停止依赖路径"]
+    N -->|"成功"| S3["成功：保持既有 I64 行为"]
+
+    B -->|"哈希、缓存、值域、稳态、比较或序列化请求"| L7["逻辑内返回：不属于第一批实施范围"]
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>事件日志审计材料代码逻辑现状流程图</title>
+<style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}code{background:#eef2f6;padding:2px 4px}</style></head>
+<body><main><h1>事件日志审计材料代码逻辑现状流程图</h1><p>图类型：现状流程图；实现状态：已实现或已形成第一轮入口</p><p>对应施工图：<code>流程图/20260708_事件日志审计材料代码逻辑流程图_v0.1.md</code></p>
+<div class="mermaid">
+flowchart TD
+    CURRENT_SCOPE["现状基线：已实现或已形成第一轮入口；未来/候选节点不视为当前已实现"] --> A
+    A["人读审计材料请求：模块 / 入口 / 内容"] --> B["进入 记录事件日志"]
+    B --> C["委托 写入日志(日志类别::事件)"]
+    C --> D{"内容是否为空"}
+    D -->|为空| R0["返回 false；不写日志"]
+    D -->|非空| E["解析日志目录：D:\\海中鱼巣\\日志"]
+    E --> F["选择事件日志文件：事件.log"]
+    F --> G{"日志路径是否可用"}
+    G -->|不可用| R1["返回 false；不写运行期机器事实"]
+    G -->|可用| H["追加人读日志行"]
+    H --> I["输出写入成功 / 失败布尔值"]
+    I --> J{"调用方试图把日志当机器事实"}
+    J -->|是| R2["拒绝：日志不得承载需求满足 / 任务完成 / 方法成功 / 恢复事实"]
+    J -->|否| K["作为审计材料或人工排查材料"]
+    K --> L{"后续是否进入事件材料恢复专项"}
+    L -->|未确认专项| M["不得恢复节点 / 主信息 / 关系 / 索引"]
+    L -->|另行确认后| N["必须走结构化事件材料设计和恢复拒绝矩阵"]
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

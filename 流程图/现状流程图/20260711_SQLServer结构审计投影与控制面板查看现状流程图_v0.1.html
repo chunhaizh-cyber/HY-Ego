@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>SQL Server 结构审计投影与控制面板查看现状流程图</title>
+<style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}code{background:#eef2f6;padding:2px 4px}</style></head>
+<body><main><h1>SQL Server 结构审计投影与控制面板查看现状流程图</h1><p>图类型：现状流程图；实现状态：已实现或已形成第一轮入口</p><p>对应施工图：<code>流程图/20260710_SQLServer结构审计投影与控制面板查看流程图_v0.1.md</code></p>
+<div class="mermaid">
+flowchart TD
+    CURRENT_SCOPE["现状基线：已实现或已形成第一轮入口；未来/候选节点不视为当前已实现"] --> A
+    A["程序核心自检通过"] --> B["统计服务读取当前结构统计快照"]
+    B --> C{"快照命名空间和结构计数可用?"}
+    C -- "否" --> C1["逻辑内返回: 不发起数据库写入"]
+    C -- "是" --> D["SQL 数据库适配验证服务器和数据库配置"]
+    D --> E{"本地 SQL Server 可连接?"}
+    E -- "否" --> E1["逻辑内返回: 形成数据库不可用材料并保持内存事实不变"]
+    E -- "是" --> F["连接 master 并确保海中鱼巣数据库存在"]
+    F --> G["连接业务数据库并确保结构统计审计表存在"]
+    G --> H["参数化追加结构统计审计记录"]
+    H --> I{"写入并读回是否符合预期?"}
+    I -- "否" --> I1["追根因解决: 返回失败阶段并保持内存事实不变"]
+    I -- "是" --> J["数据库审计写入完成"]
+    J --> K["控制面板通过适配器查询最近审计记录"]
+    E1 --> K
+    K --> L{"查询是否成功?"}
+    L -- "否" --> L1["逻辑内返回: 面板显示数据库不可用原因"]
+    L -- "是" --> M["列表展示编号 时间 来源 节点 关系 索引"]
+    M --> N["显示材料不写核心仓库且不裁决机器事实"]
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

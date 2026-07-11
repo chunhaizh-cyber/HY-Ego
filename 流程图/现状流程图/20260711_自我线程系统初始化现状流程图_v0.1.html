@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>自我线程系统初始化现状流程图</title>
+<style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}code{background:#eef2f6;padding:2px 4px}</style></head>
+<body><main><h1>自我线程系统初始化现状流程图</h1><p>图类型：现状流程图；实现状态：已实现或已形成第一轮入口</p><p>对应施工图：<code>流程图/20260710_自我线程系统初始化流程图_v0.1.md</code></p>
+<div class="mermaid">
+flowchart TD
+    CURRENT_SCOPE["现状基线：已实现或已形成第一轮入口；未来/候选节点不视为当前已实现"] --> A
+    A["入口构造仓库、领域服务和初始化服务"] --> B["构造自我线程与显式初始化参数"]
+    B --> C{"依赖、稳定键、当前值和目标值参数是否有效"}
+    C -- "否" --> L1["逻辑内返回：拒绝启动，不创建线程，不写结构"]
+    C -- "是" --> D["启动自我线程"]
+    D --> E["自我线程入口标记为初始化中"]
+    E --> F{"首笔写入前是否已收到停止请求"}
+    F -- "是" --> L2["逻辑内返回：线程正常停止，结构不变化"]
+    F -- "否" --> G["调用语素初始化服务，建立基础语素信息"]
+    G --> H{"语素初始化结果和读回是否符合预期"}
+    H -- "否" --> R1["追根因解决：标记初始化失败，停止依赖路径，程序不得进入常驻态"]
+    H -- "是" --> I["调用世界树初始化服务，建立世界根、场景和自我存在"]
+    I --> J{"世界树句柄、父子关系、归属关系和坐标读回是否符合预期"}
+    J -- "否" --> R2["追根因解决：标记初始化失败，停止依赖路径，程序不得进入常驻态"]
+    J -- "是" --> K["调用 初始化.需求.ixx 初始化两个根需求"]
+    K --> K1["经特征服务建立安全值、服务值定义和自我当前特征材料"]
+    K1 --> K2["经语素服务绑定安全值、服务值概念语素和显式稳定键"]
+    K2 --> K3["经需求服务和状态服务创建安全根需求、服务根需求及抽象目标状态"]
+    K3 --> M{"两个根需求、目标状态和完整承接材料是否可读"}
+    M -- "否" --> R3["追根因解决：标记初始化失败，停止依赖路径，程序不得进入常驻态"]
+    M -- "是" --> N["一次性发布自我线程初始化结果快照"]
+    N --> O{"初始化期间是否锁存停止请求"}
+    O -- "是" --> P["线程正常停止并由入口收口等待"]
+    O -- "否" --> Q["进入驻留等待态，等待停止或后续治理接线"]
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

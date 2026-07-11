@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>2.5 语素追加关系与读回验证子现状流程图</title>
+<style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}code{background:#eef2f6;padding:2px 4px}</style></head>
+<body><main><h1>2.5 语素追加关系与读回验证子现状流程图</h1><p>图类型：现状流程图；实现状态：已实现或已形成第一轮入口</p><p>对应施工图：<code>流程图/20260708_语素追加关系与读回验证子流程图_v0.1.md</code></p>
+<div class="mermaid">
+flowchart TD
+    CURRENT_SCOPE["现状基线：已实现或已形成第一轮入口；未来/候选节点不视为当前已实现"] --> A
+    A["输入：语素入口 / 操作类型 / 可选目标节点 / 可选关系类型"] --> B["检查语素入口是否有效"]
+    B --> C{"入口是否为语素节点"}
+    C -- "否" --> R1["拒绝：返回 false 或空集合"]
+    R1 --> X["结构不变化"]
+    C -- "是" --> O{"操作类型"}
+    O -- "读取绑定目标组" --> J["读取入口绑定目标组"]
+    O -- "读取概念追溯组" --> K["读取入口概念追溯组"]
+    O -- "追加关系" --> W{"关系类型是否属于白名单"}
+    W -- "否" --> R2["拒绝：关系类型不允许"]
+    R2 --> X
+    W -- "语素对应信息" --> D["2.2a 对应信息节点准入"]
+    W -- "语素概念追溯" --> D2["2.2b 概念追溯目标准入"]
+    D --> E{"目标节点是否准入"}
+    D2 --> E
+    E -- "否" --> R6["拒绝：目标节点不允许"]
+    R6 --> X
+    E -- "是" --> F{"关系是否已存在"}
+    F -- "是" --> R3["重复拒绝：返回 false，不重复写关系"]
+    R3 --> X
+    F -- "否" --> G{"白名单关系类型"}
+    G -- "语素对应信息" --> H["创建语素对应信息关系"]
+    G -- "语素概念追溯" --> I["创建语素概念追溯关系"]
+    H --> J["读取入口绑定目标组"]
+    I --> K["读取入口概念追溯组"]
+    J --> L{"读回是否包含目标"}
+    K --> L
+    L -- "否" --> R4["逻辑错误：写入后读回不符合预期"]
+    R4 --> R5["追根因：关系仓库 / 调用参数 / 入口句柄"]
+    R5 --> STOP["停止后续产物生成 / 登记断点问题"]
+    L -- "是" --> S["输出只读材料：目标组 / 概念追溯组"]
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

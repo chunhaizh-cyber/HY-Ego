@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>运行宿主与多线程消息队列现状流程图</title>
+<style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}code{background:#eef2f6;padding:2px 4px}</style></head>
+<body><main><h1>运行宿主与多线程消息队列现状流程图</h1><p>图类型：现状流程图；实现状态：已实现或已形成第一轮入口</p><p>对应施工图：<code>流程图/20260709_运行宿主与多线程消息队列流程图_v0.1.md</code></p>
+<div class="mermaid">
+flowchart TD
+    CURRENT_SCOPE["现状基线：已实现或已形成第一轮入口；未来/候选节点不视为当前已实现"] --> A
+    A["运行宿主线程"] --> B["调度周期消息"]
+    A --> C["停止消息"]
+    B --> D["任务管理线程"]
+    D --> E["读取待执行任务材料"]
+    E --> F{"任务方法关系和动作入口有效？"}
+    F -- "否" --> G["任务拒绝回执消息"]
+    F -- "是" --> H["任务执行请求消息"]
+    H --> I["任务工作线程池"]
+    I --> J["调用领域服务入口复核"]
+    J --> K{"领域入口前置拒绝通过？"}
+    K -- "否" --> L["失败回执消息"]
+    K -- "是" --> M["方法执行或领域服务写入"]
+    M --> N["动态和因果候选材料"]
+    N --> O["结果回执消息"]
+    O --> P["任务服务结算入口复核"]
+    P --> Q["权威任务状态和需求结算结构"]
+    M --> R["缓存刷新消息"]
+    R --> S["缓存统计线程"]
+    S --> T["非权威缓存材料"]
+    M --> U["事件日志消息"]
+    U --> V["事件日志线程"]
+    V --> W["人读审计和恢复候选材料"]
+    X["外设采样材料线程"] --> Y["外部材料消息"]
+    Y --> D
+    Y --> Z["材料准入服务复核"]
+    Z --> AA["只作为材料或请求"]
+    C --> D
+    C --> I
+    C --> S
+    C --> V
+    C --> X
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

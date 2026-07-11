@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>2.1 语素文本准入子现状流程图</title>
+<style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}code{background:#eef2f6;padding:2px 4px}</style></head>
+<body><main><h1>2.1 语素文本准入子现状流程图</h1><p>图类型：现状流程图；实现状态：已实现或已形成第一轮入口</p><p>对应施工图：<code>流程图/20260708_语素文本准入子流程图_v0.1.md</code></p>
+<div class="mermaid">
+flowchart TD
+    CURRENT_SCOPE["现状基线：已实现或已形成第一轮入口；未来/候选节点不视为当前已实现"] --> A
+    A["输入：std::wstring_view 文本"] --> B{"文本是否为空"}
+    B -- "是" --> R1["返回：空文本"]
+    B -- "否" --> C["逐字符扫描"]
+    C --> D{"字符是否为空白"}
+    D -- "是" --> R2["返回：含空白"]
+    D -- "否" --> E{"字符是否为组合分隔符"}
+    E -- "是" --> R3["返回：含组合分隔符"]
+    E -- "否" --> F["有效字符数加 1"]
+    F --> G{"是否还有字符"}
+    G -- "是" --> C
+    G -- "否" --> H{"有效字符数是否大于 3"}
+    H -- "是" --> R4["返回：超出第一轮长度"]
+    H -- "否" --> S["返回：可作为最小词单元"]
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

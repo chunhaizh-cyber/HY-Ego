@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>海中鱼巣自我治理循环承载边界现状流程图</title>
+<style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}code{background:#eef2f6;padding:2px 4px}</style></head>
+<body><main><h1>海中鱼巣自我治理循环承载边界现状流程图</h1><p>图类型：现状流程图；实现状态：部分实现</p><p>对应施工图：<code>流程图/20260710_海中鱼巣自我治理循环承载边界流程图_v0.1.md</code></p>
+<div class="mermaid">
+flowchart TD
+    CURRENT_SCOPE["现状基线：部分实现；未来/候选节点不视为当前已实现"] --> START
+    START["海中鱼巣自我治理循环承载边界开始"]
+    SCOPE["限定：新项目承载边界，不照搬旧自我线程"]
+
+    CUR0["当前已落地：运行消息队列"]
+    CUR1["运行消息只承载请求、材料、回执、调度信号"]
+    CUR2{"入队准入"}
+    CUR3["逻辑内返回：容量为零、编号无效、队列满、队列停止、承载机器事实、幂等冲突、版本过期、任务序号倒退"]
+    CUR4["入队成功：按优先级保存只读材料"]
+
+    HOST0["当前已落地：运行宿主::启动"]
+    HOST1{"启动前置条件"}
+    HOST2["逻辑内返回：重复启动、队列容量为零、队列已停止，结构不变"]
+    HOST3["写入调度周期材料到运行消息队列"]
+    HOST4["启动宿主线程壳：yield 等待停止请求"]
+    HOST5["不写业务事实，不启动任务 / 缓存 / 日志 / 外设业务线程"]
+    HOST_STOP["请求停止并发送停止消息"]
+    HOST_STOP_OK["本轮返回停止结果：状态切为正在停止"]
+    HOST_CLOSE["收口等待 join"]
+    HOST_DONE["已停止"]
+
+    TASK0["当前已落地：任务线程壳"]
+    TASK1["启动任务管理线程壳与任务工作线程壳"]
+    TASK2["任务执行请求材料入任务调度队列"]
+    TASK3["任务工作线程消费一次并生成结果回执材料"]
+    TASK4["回执进入任务回执队列"]
+    TASK5["结果只作为材料：需要领域服务复核"]
+    TASK6["不裁决任务完成 / 需求满足 / 方法成功，不裸写仓库"]
+
+    CACHE0["当前已落地：缓存统计 / 事件日志线程材料壳"]
+    CACHE1["缓存刷新消息与事件日志消息只作材料"]
+    CACHE2["缓存清空不改变权威结构，日志失败不裁决机器事实"]
+
+    EXT0["当前已落地：外设采样材料线程壳"]
+    EXT1["只接模拟 / 空采样材料和过期材料丢弃"]
+    EXT2["不接 D455 / 体素 / 真实驱动 / 真实外设动作"]
+
+    VERIFY0["当前已验证：THREAD-S6 并发与停止收口"]
+    VERIFY1["覆盖满载、幂等、版本过期、乱序、停止和禁止能力扫描"]
+    VERIFY2["不证明完整线程调度、完整任务系统或自我循环完成"]
+
+    OLD0["旧鱼巢参考证据：自我线程启动"]
+    OLD1["自我初始化、切启动中、注册任务管理上行回调、注册调度让步回调、启动任务管理工作线程池、创建自我工作线程"]
+    OLD2["旧鱼巢参考证据：主循环"]
+    OLD3["冻结治理消息批次"]
+    OLD4["规范化与结构准入"]
+    OLD5["批次分类与抢占顺序"]
+    OLD6["动作候选与治理决议"]
+    OLD7["逐条归并与落账"]
+    OLD8["派生需求、观察承接、执行前许可、结果回流、服务治理维护"]
+
+    DESIGN0["后续候选：自我治理请求材料"]
+    DESIGN1["自我治理消息协议候选"]
+    DESIGN2["运行消息队列 / 治理 mailbox / 有界治理队列 / 冻结批次关系待矩阵裁决"]
+    DESIGN3["规范化与结构准入"]
+    DESIGN4["批次分类：抢占消息 / 普通消息"]
+    DESIGN5["治理动作候选"]
+    DESIGN6["逐条归并与领域服务落账"]
+    DESIGN7["需求服务 / 任务服务 / 方法服务 / 状态服务 / 动态服务 / 因果服务 / 特征服务"]
+
+    BRIDGE0["任务桥后续候选"]
+    BRIDGE1["任务服务请求材料"]
+    BRIDGE2["任务管理消息材料"]
+    BRIDGE3["任务工作材料"]
+    BRIDGE4["任务管理上行回执材料"]
+    BRIDGE5["转换为自我治理消息"]
+    BRIDGE6["执行前许可预判只作治理候选材料，不形成权限事实"]
+    BRIDGE7["许可 / 需求回写 / 任务完成 / 方法成功 / 需求满足 / 结算预览均经领域服务复核"]
+
+    OKRETURN["逻辑内返回口径"]
+    OKRETURN2["允许分支且不产生可读半结构：材料为空、候选为空、重复请求、队列拒绝、未启动、停止请求、只读显示请求"]
+    ROOTCAUSE["追根因解决口径"]
+    ROOTCAUSE2["入口已通过并进入创建、绑定、写关系、写状态、记录动态、结算、读回或结构承载后，结果不符合内部预期"]
+
+    GAP0["当前承载差距"]
+    GAP1["尚无自我治理 mailbox / 自我循环 / 治理消息协议落地"]
+    GAP2["尚无旧自我线程函数体迁移许可"]
+    GAP3["尚未证明完整事务回滚、失效隔离或数量快照级半结构不可读"]
+
+    BOUND0["硬边界：线程不是动作来源"]
+    BOUND1["日志、摘要、控制台和控制面板刷新请求只做人读或旧协议证据"]
+    BOUND2["控制面板刷新请求不进入迁移候选主干"]
+    BOUND3["SQL、D455、体素、真实外设、旧函数体不借本图进入实施"]
+    BOUND4["高级服务需要特征状态材料时必须经特征服务，不得直接依赖特征值服务"]
+    BOUND5["执行权限仍来自任务授权、任务承接和任务选择方法关系"]
+
+    START --> SCOPE
+    SCOPE --> CUR0 --> CUR1 --> CUR2
+    CUR2 -->|拒绝| CUR3
+    CUR2 -->|通过| CUR4
+
+    SCOPE --> HOST0 --> HOST1
+    HOST1 -->|拒绝| HOST2
+    HOST1 -->|通过| HOST3 --> HOST4 --> HOST5
+    HOST4 --> HOST_STOP --> HOST_STOP_OK --> HOST_CLOSE --> HOST_DONE
+
+    SCOPE --> TASK0 --> TASK1 --> TASK2 --> TASK3 --> TASK4 --> TASK5 --> TASK6
+    SCOPE --> CACHE0 --> CACHE1 --> CACHE2
+    SCOPE --> EXT0 --> EXT1 --> EXT2
+    SCOPE --> VERIFY0 --> VERIFY1 --> VERIFY2
+
+    SCOPE --> OLD0 --> OLD1
+    OLD0 --> OLD2 --> OLD3 --> OLD4 --> OLD5 --> OLD6 --> OLD7 --> OLD8
+
+    OLD3 -.->|只作参考证据| DESIGN0
+    DESIGN0 --> DESIGN1 --> DESIGN2 --> DESIGN3 --> DESIGN4 --> DESIGN5 --> DESIGN6 --> DESIGN7
+    DESIGN6 -.->|写结构必须通过领域服务| DESIGN7
+
+    TASK5 --> BRIDGE0 --> BRIDGE1 --> BRIDGE2 --> BRIDGE3 --> BRIDGE4 --> BRIDGE5 --> BRIDGE6 --> BRIDGE7
+    BRIDGE5 -.->|执行前许可不得由工作线程直连裁决| DESIGN1
+    BRIDGE7 -.->|任务完成和需求满足仍需领域服务读回| DESIGN7
+
+    CUR3 --> OKRETURN
+    HOST2 --> OKRETURN
+    TASK6 --> OKRETURN
+    BRIDGE6 --> OKRETURN
+    OKRETURN --> OKRETURN2
+
+    DESIGN6 --> ROOTCAUSE
+    BRIDGE7 --> ROOTCAUSE
+    ROOTCAUSE --> ROOTCAUSE2
+
+    DESIGN0 --> GAP0 --> GAP1
+    GAP0 --> GAP2
+    GAP0 --> GAP3
+
+    DESIGN7 -.-> BOUND0
+    DESIGN7 -.-> BOUND4
+    BRIDGE7 -.-> BOUND5
+    OLD8 -.-> BOUND1
+    OLD8 -.-> BOUND2
+    SCOPE -.-> BOUND3
+
+    classDef current fill:#e8f4ff,stroke:#2f6f9f,color:#102030;
+    classDef host fill:#edf7ed,stroke:#3f7f4f,color:#102010;
+    classDef task fill:#f2f6ff,stroke:#5368a8,color:#121a33;
+    classDef old fill:#fff7e8,stroke:#9a6a1a,color:#24160a;
+    classDef design fill:#f6f0ff,stroke:#6c56a4,color:#1d1730;
+    classDef bridge fill:#eef7f6,stroke:#3c8b86,color:#102827;
+    classDef logic fill:#eef2f7,stroke:#59687a,color:#102030;
+    classDef fault fill:#ffecec,stroke:#b84a4a,color:#401111;
+    classDef gap fill:#fff0f3,stroke:#b4234a,color:#3a0d18;
+    classDef boundary fill:#f4f4f4,stroke:#555555,color:#111111;
+
+    class START,SCOPE current;
+    class CUR0,CUR1,CUR2,CUR3,CUR4 current;
+    class HOST0,HOST1,HOST2,HOST3,HOST4,HOST5,HOST_STOP,HOST_STOP_OK,HOST_CLOSE,HOST_DONE host;
+    class TASK0,TASK1,TASK2,TASK3,TASK4,TASK5,TASK6 task;
+    class CACHE0,CACHE1,CACHE2,EXT0,EXT1,EXT2,VERIFY0,VERIFY1,VERIFY2 current;
+    class OLD0,OLD1,OLD2,OLD3,OLD4,OLD5,OLD6,OLD7,OLD8 old;
+    class DESIGN0,DESIGN1,DESIGN2,DESIGN3,DESIGN4,DESIGN5,DESIGN6,DESIGN7 design;
+    class BRIDGE0,BRIDGE1,BRIDGE2,BRIDGE3,BRIDGE4,BRIDGE5,BRIDGE6,BRIDGE7 bridge;
+    class OKRETURN,OKRETURN2 logic;
+    class ROOTCAUSE,ROOTCAUSE2 fault;
+    class GAP0,GAP1,GAP2,GAP3 gap;
+    class BOUND0,BOUND1,BOUND2,BOUND3,BOUND4 boundary;
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

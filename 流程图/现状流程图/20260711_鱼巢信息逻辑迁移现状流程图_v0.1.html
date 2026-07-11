@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>鱼巢信息逻辑迁移现状流程图</title>
+<style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}code{background:#eef2f6;padding:2px 4px}</style></head>
+<body><main><h1>鱼巢信息逻辑迁移现状流程图</h1><p>图类型：现状流程图；实现状态：部分实现</p><p>对应施工图：<code>流程图/20260710_鱼巢信息逻辑迁移流程图_v0.1.md</code></p>
+<div class="mermaid">
+flowchart TD
+    CURRENT_SCOPE["现状基线：部分实现；未来/候选节点不视为当前已实现"] --> A
+    A["用户确认无旧数据库"] --> B["冻结鱼巢只读证据快照"]
+    B --> C["读取规范、说明书、初始化代码、定义表和既有 FS 逻辑包"]
+    C --> D["提取定义候选、关系候选、服务逻辑候选和排除材料"]
+    D --> E["逐项分类：保留、改写、暂缓、拒绝、待裁决"]
+    E --> F{"本批是否有已确认候选"}
+    F -- "否" --> G["逻辑内返回：记录空批次或待裁决项"]
+    F -- "是" --> H["入口预检：来源指纹、稳定键、文本、目标服务和依赖"]
+    H --> I{"前置条件是否满足"}
+    I -- "否" --> J["逻辑内拒绝：不创建候选结构"]
+    I -- "是" --> K["在隔离候选仓库经领域服务构建"]
+    K --> L{"内部写入和读回是否符合预期"}
+    L -- "否" --> M["追根因解决：丢弃整套隔离候选仓库"]
+    L -- "是" --> N["生成节点、主信息、关系、索引和语义映射证据矩阵"]
+    N --> O{"是否已有独立运行期导入许可"}
+    O -- "否" --> P["保存迁移证据，等待后续实施切片"]
+    O -- "是" --> Q["按后续确认事务入口导入内存仓库"]
+    Q --> R["读回运行期结构并核对幂等、版本和拒绝矩阵"]
+    R --> S["生成新项目仓库快照和事件审计材料"]
+    S --> T["后续持久化适配写入 SQL Server"]
+    U["旧数据库不存在"] -. "不作为来源" .-> B
+    V["旧日志、缓存、显示文本、指针和旧编号"] -. "拒绝成为机器事实" .-> E
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

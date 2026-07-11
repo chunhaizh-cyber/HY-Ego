@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>控制面板数据库重建候选代码逻辑现状流程图</title>
+<style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}code{background:#eef2f6;padding:2px 4px}</style></head>
+<body><main><h1>控制面板数据库重建候选代码逻辑现状流程图</h1><p>图类型：现状流程图；实现状态：部分实现</p><p>对应施工图：<code>流程图/20260708_控制面板数据库重建候选代码逻辑流程图_v0.1.md</code></p>
+<div class="mermaid">
+flowchart TD
+    CURRENT_SCOPE["现状基线：部分实现；未来/候选节点不视为当前已实现"] --> A
+    A["候选来源：旧控制面板 / SQL-ADO / WebView2 / D455 / 体素 / 外设"] --> B["进入 FS-X 排除证据边界"]
+    B --> C{"用户是否明确要求重建专项"}
+    C -->|否| R0["拒绝自动迁移；不生成计划、不入队、不改代码"]
+    C -->|是| D["先生成专项问题定义和边界材料"]
+    D --> E{"目标属于只读显示还是数据库审计适配"}
+    E -->|只读显示| F["必须依附显示层只读设计；不得写机器事实"]
+    E -->|数据库适配| G["数据库只可做快照 / 事件日志 / 恢复 / 审计适配"]
+    E -->|D455 / 体素 / 外设| H["另建独立专项；不得借本图接入"]
+    F --> I{"是否试图由面板按钮 / HTML / WebView 写业务事实"}
+    G --> J{"是否试图由 SQL 裁决运行期事实"}
+    H --> K["保持排除项，等待用户明确专项"]
+    I -->|是| R1["拒绝：控制面板不得写事实"]
+    I -->|否| L["可进入只读显示详细设计候选"]
+    J -->|是| R2["拒绝：运行期核心以内存仓库为准"]
+    J -->|否| M["可进入数据库审计适配详细设计候选"]
+    L --> N["仍需待确认计划和用户确认"]
+    M --> N
+    K --> N
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>显示层只读代码逻辑现状流程图</title>
+<style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}code{background:#eef2f6;padding:2px 4px}</style></head>
+<body><main><h1>显示层只读代码逻辑现状流程图</h1><p>图类型：现状流程图；实现状态：已实现或已形成第一轮入口</p><p>对应施工图：<code>流程图/20260708_显示层只读代码逻辑流程图_v0.1.md</code></p>
+<div class="mermaid">
+flowchart TD
+    CURRENT_SCOPE["现状基线：已实现或已形成第一轮入口；未来/候选节点不视为当前已实现"] --> A
+    A["显示请求：人读查看 / 调试观察 / 后续只读视图候选"] --> B["只读读取领域服务材料"]
+    B --> C["可读材料：需求 / 任务 / 方法 / 状态 / 动态 / 因果 / 统计快照 / 日志审计材料"]
+    C --> D{"读取是否走服务只读入口"}
+    D -->|否| R0["拒绝：显示层不得绕过领域服务读取或写仓库"]
+    D -->|是| E["组装只读展示材料"]
+    E --> F{"展示材料是否试图承载机器逻辑"}
+    F -->|是| R1["拒绝：标题 / JSON / HTML / 控制台文本不得裁决业务状态"]
+    F -->|否| G["输出到控制台或后续只读视图"]
+    G --> H{"显示层是否试图写业务事实"}
+    H -->|是| R2["拒绝：不得写节点 / 主信息 / 关系 / 索引 / 需求 / 任务 / 方法"]
+    H -->|否| I["显示完成；权威结构不变"]
+    I --> J{"是否请求 WebView / DTO / JSON / 截图 / 控制面板"}
+    J -->|当前未立项| R3["保持候选；不接入新显示通道"]
+    J -->|后续专项确认| K["另建只读显示详细设计和施工计划"]
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>
