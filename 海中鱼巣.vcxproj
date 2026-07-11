@@ -158,12 +158,14 @@
     <ClCompile Include="海中鱼巣\核心\关系仓库.cpp" />
     <ClCompile Include="海中鱼巣\核心\索引仓库.cpp" />
     <ClCompile Include="海中鱼巣\核心\写入事务.cpp" />
+    <ClCompile Include="海中鱼巣\核心\事件日志段服务.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="海中鱼巣\界面\控制面板窗口.h" />
     <ClInclude Include="海中鱼巣\适配\SQL数据库适配.h" />
     <ClInclude Include="海中鱼巣\核心\句柄.h" />
     <ClInclude Include="海中鱼巣\核心\日志系统.h" />
+    <ClInclude Include="海中鱼巣\核心\事件日志段服务.h" />
     <ClInclude Include="海中鱼巣\核心\容错检查.h" />
     <ClInclude Include="海中鱼巣\核心\主信息仓库.h" />
     <ClInclude Include="海中鱼巣\核心\节点仓库.h" />
