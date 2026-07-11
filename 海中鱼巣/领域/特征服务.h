@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <mutex>
 #include <optional>
 #include <vector>
 
@@ -152,15 +153,20 @@ public:
         if (!槽位节点.has_value()) {
             return false;
         }
-        auto 特征值节点 = 读取宿主当前特征值(槽位节点.value());
-        if (!特征值节点.has_value()) {
+        const auto 当前值材料 = 读取实例槽位当前值材料(槽位节点.value());
+        if (当前值材料.状态 == 实例槽位当前值状态::无效
+            || 当前值材料.状态 == 实例槽位当前值状态::多值歧义) {
+            return false;
+        }
+        auto 特征值节点 = 当前值材料.当前特征值;
+        if (当前值材料.状态 == 实例槽位当前值状态::无当前值) {
             const auto 新特征值节点 = 创建特征值(槽位节点.value());
             if (!句柄有效(新特征值节点)) {
                 return false;
             }
             特征值节点 = 新特征值节点;
         }
-        return 写入I64特征值(槽位节点.value(), 特征值节点.value(), 值);
+        return 写入I64特征值(槽位节点.value(), 特征值节点, 值);
     }
 
     std::optional<std::int64_t> 读取宿主I64特征状态材料(节点句柄 宿主节点, 节点句柄 特征类型) const {
@@ -168,16 +174,32 @@ public:
         if (!槽位节点.has_value()) {
             return std::nullopt;
         }
-        const auto 特征值节点 = 读取宿主当前特征值(槽位节点.value());
+        const auto 特征值节点 = 读取实例槽位当前特征值(槽位节点.value());
         if (!特征值节点.has_value()) {
             return std::nullopt;
         }
         return 读取I64特征值(槽位节点.value(), 特征值节点.value());
     }
 
+    std::optional<节点句柄> 读取实例槽位当前特征值(节点句柄 槽位节点) const {
+        const auto 材料 = 读取实例槽位当前值材料(槽位节点);
+        if (材料.状态 != 实例槽位当前值状态::唯一当前值) {
+            return std::nullopt;
+        }
+        return 材料.当前特征值;
+    }
+
     节点句柄 创建特征值(节点句柄 特征节点) {
         if (!节点类型匹配(特征节点, 节点类型::特征) || 特征值_ == nullptr || 关系_ == nullptr) {
             return {};
+        }
+        std::unique_lock<std::mutex> 槽位写锁(实例槽位当前值写锁_, std::defer_lock);
+        if (节点是实例特征槽位(特征节点)) {
+            槽位写锁.lock();
+            const auto 当前值材料 = 读取实例槽位当前值材料(特征节点);
+            if (当前值材料.状态 != 实例槽位当前值状态::无当前值) {
+                return {};
+            }
         }
         const auto 特征值节点 = 特征值_->创建特征值();
         if (!追根因检查(句柄有效(特征值节点), L"创建特征值并归属时特征值节点创建不及预期。")) {
@@ -263,7 +285,16 @@ public:
         if (!特征值属于特征(特征节点, 特征值节点) || 特征值_ == nullptr) {
             return std::nullopt;
         }
-        return 特征值_->读取容器版本(特征值节点);
+        return 特征值_->读取原始值版本(特征值节点);
+    }
+
+    std::optional<特征值原始材料> 读取特征值原始材料(
+        节点句柄 特征节点,
+        节点句柄 特征值节点) const {
+        if (!特征值属于特征(特征节点, 特征值节点) || 特征值_ == nullptr) {
+            return std::nullopt;
+        }
+        return 特征值_->读取原始值材料(特征值节点);
     }
 
     std::optional<std::vector<概念特征约束材料>> 读取宿主概念特征约束组(节点句柄 宿主节点) const {
@@ -275,12 +306,12 @@ public:
         结果.reserve(槽位组.size());
         for (const auto& 槽位 : 槽位组) {
             const auto 特征定义 = 读取槽位唯一特征定义(槽位);
-            const auto 当前值 = 读取槽位唯一当前特征值(槽位);
+            const auto 当前值 = 读取实例槽位当前特征值(槽位);
             if (!特征定义.has_value() || !当前值.has_value()) {
                 return std::nullopt;
             }
-            const auto 原始类型 = 读取特征值原始类型(槽位, 当前值.value());
-            if (!原始类型.has_value() || 原始类型.value() == 特征值原始类型::未建立) {
+            const auto 原始材料 = 读取特征值原始材料(槽位, 当前值.value());
+            if (!原始材料.has_value()) {
                 return std::nullopt;
             }
 
@@ -289,27 +320,19 @@ public:
             材料.特征定义 = 特征定义.value();
             材料.实例槽位 = 槽位;
             材料.当前特征值 = 当前值.value();
-            材料.原始类型 = 原始类型.value();
+            材料.原始类型 = 原始材料->原始类型;
             switch (材料.原始类型) {
             case 特征值原始类型::I64:
-                材料.I64值 = 读取I64特征值(槽位, 当前值.value());
+                材料.I64值 = 原始材料->I64值;
                 break;
-            case 特征值原始类型::VecI64: {
-                const auto 值 = 读取VecI64特征值(槽位, 当前值.value());
-                if (值.has_value()) {
-                    材料.VecI64值 = 值.value();
-                }
-                材料.容器版本 = 读取特征值原始版本(槽位, 当前值.value());
+            case 特征值原始类型::VecI64:
+                材料.VecI64值 = 原始材料->VecI64值;
+                材料.容器版本 = 原始材料->原始值版本;
                 break;
-            }
-            case 特征值原始类型::VecU64: {
-                const auto 值 = 读取VecU64特征值(槽位, 当前值.value());
-                if (值.has_value()) {
-                    材料.VecU64值 = 值.value();
-                }
-                材料.容器版本 = 读取特征值原始版本(槽位, 当前值.value());
+            case 特征值原始类型::VecU64:
+                材料.VecU64值 = 原始材料->VecU64值;
+                材料.容器版本 = 原始材料->原始值版本;
                 break;
-            }
             default:
                 return std::nullopt;
             }
@@ -338,6 +361,18 @@ public:
     }
 
 private:
+    enum class 实例槽位当前值状态 : std::uint32_t {
+        无效 = 0,
+        无当前值 = 1,
+        唯一当前值 = 2,
+        多值歧义 = 3
+    };
+
+    struct 实例槽位当前值材料 {
+        实例槽位当前值状态 状态 = 实例槽位当前值状态::无效;
+        节点句柄 当前特征值;
+    };
+
     static bool 节点句柄小于(const 节点句柄& 左, const 节点句柄& 右) {
         if (左.仓库编号 != 右.仓库编号) {
             return 左.仓库编号 < 右.仓库编号;
@@ -365,19 +400,6 @@ private:
             || 记录->类型 == 节点类型::方法;
     }
 
-    std::optional<节点句柄> 读取宿主当前特征值(节点句柄 槽位节点) const {
-        if (关系_ == nullptr || !节点是特征(槽位节点)) {
-            return std::nullopt;
-        }
-        const auto 候选组 = 关系_->获取目标节点组(槽位节点, 关系类型::归属);
-        for (const auto& 候选 : 候选组) {
-            if (节点类型匹配(候选, 节点类型::特征值)) {
-                return 候选;
-            }
-        }
-        return std::nullopt;
-    }
-
     std::optional<节点句柄> 读取槽位唯一特征定义(节点句柄 槽位节点) const {
         if (关系_ == nullptr || !节点是特征(槽位节点)) {
             return std::nullopt;
@@ -396,22 +418,43 @@ private:
         return 结果;
     }
 
-    std::optional<节点句柄> 读取槽位唯一当前特征值(节点句柄 槽位节点) const {
-        if (关系_ == nullptr || !节点是特征(槽位节点)) {
-            return std::nullopt;
+    实例槽位当前值材料 读取实例槽位当前值材料(节点句柄 槽位节点) const {
+        实例槽位当前值材料 结果;
+        if (关系_ == nullptr || !节点是实例特征槽位(槽位节点)) {
+            return 结果;
         }
-        std::optional<节点句柄> 结果;
+        std::vector<节点句柄> 当前值组;
         const auto 候选组 = 关系_->获取目标节点组(槽位节点, 关系类型::归属);
         for (const auto& 候选 : 候选组) {
             if (!节点类型匹配(候选, 节点类型::特征值)) {
-                continue;
+                return 结果;
             }
-            if (结果.has_value()) {
-                return std::nullopt;
-            }
-            结果 = 候选;
+            当前值组.push_back(候选);
         }
+        std::sort(当前值组.begin(), 当前值组.end(), 节点句柄小于);
+        当前值组.erase(std::unique(当前值组.begin(), 当前值组.end()), 当前值组.end());
+        if (当前值组.empty()) {
+            结果.状态 = 实例槽位当前值状态::无当前值;
+            return 结果;
+        }
+        if (当前值组.size() == 1) {
+            结果.状态 = 实例槽位当前值状态::唯一当前值;
+            结果.当前特征值 = 当前值组.front();
+            return 结果;
+        }
+        (void)追根因检查(false, L"实例特征槽位存在多个归属特征值，不能选择第一个。" );
+        结果.状态 = 实例槽位当前值状态::多值歧义;
         return 结果;
+    }
+
+    bool 节点是实例特征槽位(节点句柄 槽位节点) const {
+        if (关系_ == nullptr || !节点是特征(槽位节点) || !槽位绑定特征类型(槽位节点)) {
+            return false;
+        }
+        const auto 宿主候选组 = 关系_->获取来源节点组(槽位节点, 关系类型::归属);
+        return std::any_of(宿主候选组.begin(), 宿主候选组.end(), [this](const auto& 宿主候选) {
+            return 节点类型是允许特征宿主(宿主候选);
+        });
     }
 
     bool 槽位绑定特征类型(节点句柄 槽位节点) const {
@@ -432,6 +475,7 @@ private:
     关系仓库* 关系_;
     二次特征服务* 二次特征_;
     特征值服务* 特征值_;
+    mutable std::mutex 实例槽位当前值写锁_;
 };
 
 }
