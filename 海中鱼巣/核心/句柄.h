@@ -8,7 +8,8 @@ namespace 海中鱼巣 {
 enum class 记录状态 : std::uint32_t {
     无效 = 0,
     有效 = 1,
-    已删除 = 2
+    已删除 = 2,
+    已失效 = 3
 };
 
 enum class 节点类型 : std::uint32_t {
