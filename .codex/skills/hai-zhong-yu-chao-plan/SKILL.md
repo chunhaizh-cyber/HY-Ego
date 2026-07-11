@@ -50,6 +50,10 @@ Do not create a code plan from chat memory alone. Do not treat old functions as 
 
 If no relevant design, migration package, or S0 fact exists, generate that prerequisite first if it is a document-governance action; otherwise stop and state what is missing.
 
+If a plan creates or renames code files, read `规范/代码文件建立归属与模块命名规范.md`. The plan must classify every new file as a data-structure pair or a true module, use `功能.分类`, state the project item type and `include` / `import` path, separate production and self-test modules, and keep full test bodies out of `入口.cpp`.
+
+If a plan preserves, deletes, reimplements, constrains, or newly creates an ability that can be confused with old-project migration, read `规范/迁移路线权力分层规范.md` and `实施记录/20260711_旧能力迁移与新内核建设逐能力台账.md`. The plan must state its source nature, old evidence id, target structure / writer, and whether completion counts toward old-capability migration.
+
 Once a relevant detailed design has been generated, create the plan directly, write it under `计划/`, and register it in the plan index and Codex task queue as waiting execution. No separate user confirmation step remains.
 
 Do not wait for a prerequisite implementation merely to generate a dependent plan. Use:
@@ -96,6 +100,8 @@ Include these sections when applicable:
 ```
 
 For code implementation slices, allowed files, forbidden files, and validation commands are mandatory.
+
+For slices that create code files, a new-file classification table is mandatory. A pre-existing plan that conflicts with the current code-file specification must be revised before execution; do not rely on its age as an exception.
 
 For dependency-gated code slices, these sections are also mandatory:
 

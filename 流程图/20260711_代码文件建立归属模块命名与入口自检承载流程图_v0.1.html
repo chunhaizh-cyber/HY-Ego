@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>代码文件建立归属、模块命名与入口自检承载流程图</title>
+  <style>
+    body { margin: 0; padding: 24px; font-family: "Microsoft YaHei", sans-serif; color: #202124; background: #f5f7f8; }
+    main { max-width: 1600px; margin: 0 auto; }
+    h1 { font-size: 24px; margin: 0 0 16px; }
+    .note { margin: 0 0 16px; line-height: 1.7; }
+    .mermaid { overflow: auto; background: #fff; border: 1px solid #d7dde2; padding: 20px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>代码文件建立归属、模块命名与入口自检承载流程图</h1>
+    <p class="note">现有目录和旧文件原地保留；本图约束以后新建文件及入口不恶化门禁。</p>
+    <pre class="mermaid">
+flowchart TD
+    A["提出代码文件变更"] --> B{"是否只修改既有文件"}
+    B -- "是" --> B1["按既有文件与计划范围实施；不因本规范批量改名"]
+    B -- "否" --> C["保持现有职责目录；先判定新文件的唯一职责"]
+    C --> D{"是否为稳定数据结构文件"}
+    D -- "是" --> E["命名为 功能.分类.h 与 功能.分类.cpp；声明结构、布局及自身不变式"]
+    E --> E1["工程分别按 ClInclude 与 ClCompile 登记；使用方 include"]
+    D -- "否" --> F["命名为 功能.分类.ixx；生产、自检分别建立模块"]
+    F --> F1["声明 export module 海中鱼巣.目录.功能.分类"]
+    F1 --> F2["工程按 ClCompile 登记；使用方通过 import 调用"]
+    E1 --> G{"文件名、分类、工程登记和调用方式是否一致"}
+    F2 --> G
+    G -- "否：计划或输入不完整" --> R1["逻辑内返回：不建立文件，退回设计计划修订"]
+    G -- "是" --> H{"是否包含自检或验收场景"}
+    H -- "是" --> H1["自检正文进入同职责目录的 自检.分类 模块"]
+    H1 --> H2["入口.cpp 只组装最小上下文并调用一次；统一运行器形成后改由运行器登记"]
+    H -- "否" --> I["生产调用方直接 import 或 include 对应正式入口"]
+    H2 --> J{"入口是否仍新增领域实现、并发测试正文或逐项验收正文"}
+    I --> K["构建、完整自检、文件范围和静态模块检查"]
+    J -- "是" --> R2["逻辑内返回：停止实施并修订承载文件；不把正文写回入口"]
+    J -- "否" --> K
+    K --> L{"已进入工程后，模块名或调用图是否内部矛盾"}
+    L -- "是" --> X1["追根因解决：停止依赖路径，修正声明、登记或依赖环"]
+    L -- "否" --> M["提交计划内文件；既有目录和无关文件保持不变"]
+    </pre>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>

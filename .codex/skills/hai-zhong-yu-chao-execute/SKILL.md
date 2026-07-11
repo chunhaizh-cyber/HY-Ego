@@ -49,6 +49,7 @@ Before treating `继续` as execution, identify the current window type:
 
 4. If executing a named plan, read that plan file and relevant breakpoint records.
 5. Check `git status --short`; never stage unrelated dirty files.
+6. If the plan creates code files or changes `入口.cpp`, read `规范/代码文件建立归属与模块命名规范.md` and verify file classification, `功能.分类`, real-module registration, production / self-test separation, and the entry no-worsening boundary before editing.
 
 ## Routing Rules
 
@@ -61,6 +62,7 @@ Before treating `继续` as execution, identify the current window type:
 - If a queue item is document governance, read-only scan, breakpoint creation, project-memory sync, or plan-index maintenance, execute directly.
 - If a queue item changes C++ code, old capability migration, fields, functions, or machine structure, require an implementation slice with allowed files, forbidden files, and validation commands.
 - If implementation discovers new decisions, write them to `项目记忆/待确认问题.md`; do not expand scope.
+- If an older plan permits a new non-module implementation file or full self-test body in `入口.cpp`, treat that as specification drift: do not edit code, return the plan to the design window, and continue with another dependency-ready item.
 
 ## Plan Directories
 
@@ -124,5 +126,8 @@ Do not declare:
 自我循环已完成
 自我苏醒完成
 初步成熟完成
-外设 / 体素 / 控制面板已接入
+完整业务操作控制面板已完成
+数据库恢复已完成
+旧控制面板或旧数据库能力已迁移完成
+外设 / 体素已接入
 ```

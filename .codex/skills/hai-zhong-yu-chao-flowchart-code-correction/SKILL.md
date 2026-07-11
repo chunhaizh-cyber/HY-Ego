@@ -179,7 +179,7 @@ Do not claim:
 全部流程图已校正
 真实闭环、自我循环、自我苏醒完成
 旧项目能力已迁移
-SQL / 控制面板 / D455 / 体素 / 真实外设已接入
+完整业务操作控制面板 / 权威数据库恢复 / D455 / 体素 / 真实外设已接入
 ```
 
-unless a later executed code plan proves it with the required validation level.
+unless a later executed code plan proves it with the required validation level. 当前已证明的只读控制面板第一版、SQL 审计投影和六类真实树只能按其已验收边界陈述，不计旧能力迁移完成度。
