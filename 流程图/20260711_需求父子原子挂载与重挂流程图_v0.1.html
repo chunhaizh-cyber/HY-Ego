@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>需求父子原子挂载与重挂流程图</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", sans-serif; background: #f5f7f8; color: #172026; }
+    main { max-width: 1500px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: 0; }
+    p { margin: 0 0 20px; color: #4d5b63; }
+    .diagram { overflow: auto; padding: 20px; border: 1px solid #cfd8dc; background: #fff; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>需求父子原子挂载与重挂流程图</h1>
+    <p>父子拓扑复用普通父子关系；通用防环归关系仓库，需求准入归需求服务。</p>
+    <div class="diagram">
+      <pre class="mermaid">
+flowchart TD
+    A["开始：#191 及其前序切片已形成正式产物"] --> B["执行前复核 #187 对需求服务的只读接口和关系仓库实际接口"]
+    B --> C{"实际接口与假定契约一致"}
+    C -->|"否"| G0["逻辑内返回：不改代码，退回设计计划窗口修订 #192"]
+    C -->|"是"| D["需求服务接收子需求与新父需求"]
+    D --> E{"句柄有效、两端均为需求、目标状态可读且不是自身"}
+    E -->|"否"| L1["逻辑内返回：写前拒绝，节点、关系、索引不变化"]
+    E -->|"是"| F["读取当前普通父节点与父链材料"]
+    F --> H{"当前父需求已经是目标父需求"}
+    H -->|"是"| L2["逻辑内返回：幂等已存在，不重复写关系"]
+    H -->|"否"| I{"新父需求是否位于子需求的后代链"}
+    I -->|"是"| L3["逻辑内返回：拒绝成环，原父子结构不变化"]
+    I -->|"否"| J["关系仓库在独占锁内执行挂载或重挂"]
+    J --> K{"无旧父关系"}
+    K -->|"是"| K1["创建唯一普通父子关系：父需求到子需求"]
+    K -->|"否"| K2["原地重挂既有普通父子关系并推进关系版本"]
+    K1 --> M["需求服务读回父需求、子需求组和关系数量"]
+    K2 --> M
+    M --> N{"读回与本次结果一致且单父无环"}
+    N -->|"否"| R1["追根因解决：停止依赖路径，定位仓库写入或并发根因"]
+    N -->|"是"| O["返回值式需求父子更新材料"]
+    O --> P["只读入口按稳定句柄顺序返回父需求与子需求组"]
+    P --> Q["完成：真实父子拓扑可读，不生成权重或方法裁决"]
+      </pre>
+    </div>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>
