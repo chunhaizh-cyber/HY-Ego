@@ -23,6 +23,38 @@ struct 关系记录 {
     记录状态 状态 = 记录状态::无效;
 };
 
+enum class 节点挂载结果状态 : std::uint32_t {
+    已创建 = 1,
+    已重挂 = 2,
+    已在目标父 = 3,
+    无效端点 = 4,
+    拒绝自身 = 5,
+    拒绝成环 = 6,
+    内部不一致 = 7
+};
+
+struct 节点挂载结果 {
+    节点挂载结果状态 状态 = 节点挂载结果状态::无效端点;
+    节点句柄 节点;
+    std::optional<节点句柄> 旧父节点;
+    节点句柄 新父节点;
+    std::optional<关系句柄> 父关系;
+
+    bool 关系已确定() const {
+        if (!句柄有效(节点) || !句柄有效(新父节点) || 节点 == 新父节点 || !父关系.has_value()) {
+            return false;
+        }
+        if (状态 == 节点挂载结果状态::已创建) {
+            return !旧父节点.has_value();
+        }
+        if (状态 == 节点挂载结果状态::已重挂) {
+            return 旧父节点.has_value() && !(旧父节点.value() == 新父节点);
+        }
+        return 状态 == 节点挂载结果状态::已在目标父
+            && 旧父节点 == std::optional<节点句柄>{新父节点};
+    }
+};
+
 class 关系仓库 {
 public:
     explicit 关系仓库(const 节点仓库& 节点, std::uint64_t 仓库编号 = 1);
@@ -32,8 +64,10 @@ public:
     bool 删除关系(关系句柄 关系);
     bool 重挂关系(关系句柄 关系, 节点句柄 新源节点, 节点句柄 新目标节点);
     bool 重挂节点(节点句柄 节点, 节点句柄 新父节点);
+    节点挂载结果 挂载或重挂节点(节点句柄 节点, 节点句柄 新父节点);
     std::vector<节点句柄> 获取子节点(节点句柄 父节点) const;
     std::optional<节点句柄> 获取父节点(节点句柄 子节点) const;
+    bool 节点在父链中(节点句柄 起点, 节点句柄 目标) const;
     std::optional<节点句柄> 获取目标节点(节点句柄 源节点, 关系类型 类型) const;
     std::vector<节点句柄> 获取目标节点组(节点句柄 源节点, 关系类型 类型) const;
     std::vector<节点句柄> 获取目标节点组(节点句柄 源节点, 关系类型 类型, std::int64_t 顺序号) const;
@@ -46,9 +80,23 @@ public:
     std::uint64_t 有效关系数量() const;
 
 private:
-    bool 节点在父链中(节点句柄 起点, 节点句柄 目标) const;
-    std::optional<节点句柄> 获取父节点_已加锁(节点句柄 子节点) const;
-    bool 节点在父链中_已加锁(节点句柄 起点, 节点句柄 目标) const;
+    struct 普通父关系复核材料 {
+        std::optional<std::uint64_t> 关系编号;
+        std::optional<节点句柄> 父节点;
+        bool 结构不一致 = false;
+    };
+
+    enum class 父链复核结果 : std::uint32_t {
+        未包含目标 = 1,
+        包含目标 = 2,
+        结构不一致 = 3
+    };
+
+    普通父关系复核材料 复核普通父关系_已加锁(节点句柄 子节点) const;
+    父链复核结果 复核父链_已加锁(
+        节点句柄 起点,
+        节点句柄 目标,
+        std::vector<节点句柄>* 父链节点组 = nullptr) const;
 
     const 节点仓库& 节点_;
     std::uint64_t 仓库编号_ = 1;
