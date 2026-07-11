@@ -184,6 +184,7 @@
     <ClInclude Include="海中鱼巣\领域\任务服务.h" />
     <ClInclude Include="海中鱼巣\领域\方法服务.h" />
     <ClInclude Include="海中鱼巣\领域\方法召回索引.h" />
+    <ClInclude Include="海中鱼巣\领域\方法召回服务.h" />
     <ClInclude Include="海中鱼巣\领域\特征值服务.h" />
     <ClInclude Include="海中鱼巣\领域\特征服务.h" />
     <ClInclude Include="海中鱼巣\领域\因果服务.h" />
