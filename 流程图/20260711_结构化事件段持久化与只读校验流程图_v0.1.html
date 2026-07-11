@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>结构化事件段持久化与只读校验流程图 v0.1</title>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'neutral', flowchart: { curve: 'basis', htmlLabels: true } });
+  </script>
+  <style>
+    body { margin: 0; color: #17202a; background: #f4f6f7; font-family: "Microsoft YaHei", "Segoe UI", sans-serif; }
+    main { max-width: 1440px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: 0; }
+    .status { margin: 0 0 18px; color: #566573; }
+    section { margin: 18px 0; padding: 16px 0; border-top: 1px solid #ccd1d1; }
+    dl { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 8px 14px; margin: 0; }
+    dt { font-weight: 700; }
+    dd { margin: 0; overflow-wrap: anywhere; }
+    .diagram { overflow-x: auto; background: #fff; border: 1px solid #ccd1d1; border-radius: 6px; padding: 14px; }
+    ul { margin: 8px 0 0; padding-left: 24px; }
+    li { margin: 6px 0; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>结构化事件段持久化与只读校验流程图 v0.1</h1>
+  <p class="status">施工流程图，绑定 #200 EVENT-SEGMENT-S1。当前未修改 C++，未运行构建。</p>
+
+  <section>
+    <dl>
+      <dt>图类型</dt><dd>施工流程图</dd>
+      <dt>绑定计划</dt><dd>#200 EVENT-SEGMENT-S1</dd>
+      <dt>绑定详细设计</dt><dd>规范/详细设计/结构化事件段持久化与只读校验详细设计.md</dd>
+      <dt>允许文件</dt><dd>以 #200 计划允许文件为准，不授权领域服务、仓库或事件日志线程改动。</dd>
+      <dt>禁止文件</dt><dd>四仓库、需求/任务/方法/概念图服务、事件日志线程、SQL、控制面板和外设文件。</dd>
+      <dt>预期结构变化</dt><dd>新增事件日志段服务和值式追加/读取材料，只写日志目录下的持久化候选文件。</dd>
+      <dt>执行前复核</dt><dd>读取 #153、#159 正式记录与日志系统实际接口；漂移则退回修订 #200。</dd>
+      <dt>验证方式</dt><dd>Debug x64、A01-A10、目录边界、损坏段拒绝、替换失败收口、规范和排除项扫描。</dd>
+      <dt>不得宣称</dt><dd>事件线程已接线、日志可裁决当前事实、快照恢复或跨重启完整恢复已经实现。</dd>
+    </dl>
+  </section>
+
+  <section class="diagram">
+    <pre class="mermaid">
+flowchart TD
+    A["开始：#199 及其前序项已形成正式产物"] --> B["执行前复核日志系统、事件材料、日志目录和工程实际接口"]
+    B --> C{"实际接口与 #200 假定契约一致"}
+    C -->|"否"| L0["逻辑内返回：不改代码，退回设计计划窗口修订 #200"]
+    C -->|"是"| D["构造事件段配置：日志根、非零段编号、4 MiB 上限"]
+    D --> E{"配置路径严格位于日志/事件段且限制有效"}
+    E -->|"否"| L1["逻辑内返回：拒绝配置，不创建目录或文件"]
+    E -->|"是"| F["进入事件段服务单写锁"]
+    F --> G{"目标段已存在"}
+    G -->|"否"| H["构造版本 1 空段头候选"]
+    G -->|"是"| I["只读加载目标段并校验魔数、版本、长度、序号和校验值"]
+    I --> J{"既有段完整可读"}
+    J -->|"否"| L2["逻辑内返回：拒绝外部或跨重启损坏材料，不追加、不修补"]
+    J -->|"是"| K["获得最后事件序号与完整原始字节"]
+    H --> K
+    K --> M["复核待追加事件材料：类别、结果、结构字段、时间戳和禁止恢复标记"]
+    M --> N{"材料有效且调用方未预填事件序号"}
+    N -->|"否"| L3["逻辑内返回：拒绝材料，目标段保持原字节"]
+    N -->|"是"| O["服务分配严格递增事件序号并按小端规范编码帧"]
+    O --> P{"入口 UTF-8 不超过 512、摘要不超过 4096、帧与段均未超限"}
+    P -->|"否"| L4["逻辑内返回：字段或段容量超限，不自动轮换"]
+    P -->|"是"| Q["计算帧校验和与新段头校验和，生成完整候选字节"]
+    Q --> R{"同名临时段不存在"}
+    R -->|"否"| L5["逻辑内返回：拒绝覆盖残留临时段，保留诊断材料"]
+    R -->|"是"| S["写入同目录临时完整段并 flush / close"]
+    S --> T{"临时段写入结果符合预期"}
+    T -->|"否"| R1["追根因解决：停止依赖路径，不发布追加成功"]
+    T -->|"是"| U["严格只读解析临时段"]
+    U --> V{"记录数、末序号、字段和校验值全部一致"}
+    V -->|"否"| R2["追根因解决：保留目标旧段，不替换，不返回部分记录"]
+    V -->|"是"| W["使用同卷替换并请求写穿，将临时段发布为目标段"]
+    W --> X{"替换结果符合预期"}
+    X -->|"否"| R3["追根因解决：目标旧段保持有效，不声明持久化成功"]
+    X -->|"是"| Y["再次只读目标段并核对新增事件"]
+    Y --> Z{"最终读回与分配序号一致"}
+    Z -->|"否"| R4["追根因解决：停止依赖路径，记录事件段内部不一致"]
+    Z -->|"是"| AA["返回值式追加结果：段编号、事件序号、记录数、文件字节数"]
+    AA --> AB["只读入口可重新解析完整段并返回事件候选组"]
+    AB --> AC["完成：不写节点、主信息、关系、索引或领域事实"]
+    </pre>
+  </section>
+
+  <section>
+    <h2>关键边界</h2>
+    <ul>
+      <li>事件段只能位于 D:\海中鱼巣\日志\事件段。</li>
+      <li>格式使用显式小端编码，不写裸 C++ 结构体。</li>
+      <li>事件序号由服务单写锁内分配；未知版本和损坏段只读拒绝。</li>
+      <li>第一轮单段 4 MiB，不轮换、不压缩、不加密、不支持多进程并发写。</li>
+      <li>读回只形成恢复候选材料，不写任何运行期机器事实。</li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>
