@@ -52,7 +52,8 @@ export namespace 海中鱼巣 {
     const bool A01关系数值锁定 = static_cast<std::uint32_t>(关系类型::概念生命周期) == 12
         && static_cast<std::uint32_t>(关系类型::需求目标概念) == 13
         && static_cast<std::uint32_t>(关系类型::任务生命周期) == 14
-        && static_cast<std::uint32_t>(关系类型::任务生命周期证据) == 15;
+        && static_cast<std::uint32_t>(关系类型::任务生命周期证据) == 15
+        && static_cast<std::uint32_t>(关系类型::任务方法选择) == 16;
     const auto 世界树 = 世界树初始化.初始化自我世界树();
     const auto 拒绝前节点数 = 节点.有效节点数量();
     const auto 拒绝前关系数 = 关系.有效关系数量();
@@ -80,7 +81,7 @@ export namespace 海中鱼巣 {
     const auto 目标关系读回 = 关系.读取关系(目标关系);
     const auto 未知关系前数量 = 关系.有效关系数量();
     const auto 未知关系 = 关系.创建关系(
-        static_cast<关系类型>(16), 根需求.服务根需求.根需求, 目标概念);
+        static_cast<关系类型>(17), 根需求.服务根需求.根需求, 目标概念);
     const bool A02关系仓库接受十三 = 目标关系读回.has_value()
         && 目标关系读回->类型 == 关系类型::需求目标概念
         && !句柄有效(未知关系)
