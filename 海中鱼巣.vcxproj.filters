@@ -57,6 +57,9 @@
     <ClCompile Include="海中鱼巣\领域\自检.概念删除候选.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\自检.概念命名目标.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\线程\自检.自我治理闭环.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
