@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>旧鱼巢外设持久化与显示现状流程图</title><style>body{font-family:"Microsoft YaHei","Segoe UI",sans-serif;margin:28px;color:#1f2933;background:#f7f9fb}main{max-width:1500px;margin:auto;background:#fff;border:1px solid #d9e2ec;border-radius:6px;padding:24px}.mermaid{overflow:auto;border:1px solid #d9e2ec;padding:14px}</style></head><body><main><h1>旧鱼巢外设持久化与显示现状流程图</h1><p>旧 HEAD：ef2cbbf；图类型：旧代码现状证据。</p><div class="mermaid">
+flowchart TD
+    X1["D455 或其它外设初始化"] --> X2["采样深度、图像或观察帧"]
+    X2 --> X3["外设线程封装观察报告"]
+    X3 --> X4["观察队列提交候选材料"]
+    X4 --> X5["自我 / 任务治理读取外部材料"]
+    X5 --> X6["运行日志、快照或 SQL 人读审计"]
+    X6 --> X7["控制面板读取世界树与任务摘要"]
+    X7 --> X8["WebView2 / 原生页面展示"]
+    X2 --> L1{"设备或外部材料不可用"}
+    L1 -- "是" --> L2["逻辑内返回：不直接写世界事实"]
+    L1 -- "否" --> X3
+    X7 --> R1{"显示读回与权威结构矛盾"}
+    R1 -- "是" --> R2["追根因显示适配，不由 UI 修业务"]
+    R1 -- "否" --> X8
+</div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>旧鱼巢运行主链与两条旁路总览现状流程图</title>
+  <style>
+    body { font-family: "Microsoft YaHei", "Segoe UI", sans-serif; margin: 28px; color: #1f2933; background: #f7f9fb; }
+    main { max-width: 1500px; margin: auto; background: #fff; border: 1px solid #d9e2ec; border-radius: 6px; padding: 24px; }
+    .mermaid { overflow: auto; border: 1px solid #d9e2ec; padding: 14px; background: #fff; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>旧鱼巢运行主链与两条旁路总览现状流程图</h1>
+  <p>旧代码基线：D:/鱼巢 HEAD ef2cbbf。本图只串联旧证据，不构成海中鱼巢施工许可。</p>
+  <div class="mermaid">
+flowchart TD
+    A["启动与九阶段初始化"] --> B["自我线程治理循环"]
+    B --> C["需求树生长、活动集与重判"]
+    C --> D["任务创建、承接、管理与筹办"]
+    D --> E["方法召回、选择和执行"]
+    E --> F["动作动态与因果证据"]
+    F --> G["任务结果回写与需求结算"]
+    G --> H["下一轮自我状态与需求判断"]
+    H --> B
+
+    B --> X1["外设观察旁路：D455、观察报告和外部材料"]
+    X1 --> X2{"设备或外部材料可用？"}
+    X2 -- "否" --> XL["逻辑内返回：外部材料缺失，不直接写世界事实"]
+    X2 -- "是" --> C
+
+    F --> P1["审计显示旁路：日志、快照、SQL 和控制面板"]
+    P1 --> P2{"只读投影与权威结构一致？"}
+    P2 -- "否" --> PR["追根因解决：修正适配或证据链，不由显示层修业务事实"]
+    P2 -- "是" --> P3["输出人读审计和显示材料"]
+
+    D --> R1{"正式创建、绑定或写入后读回符合预期？"}
+    R1 -- "否" --> R2["追根因解决：停止依赖路径，不发布半结构"]
+    R1 -- "是" --> E
+  </div>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>
