@@ -1893,6 +1893,34 @@ public:
         return 材料.完整() ? std::optional<概念待命名请求材料>{材料} : std::nullopt;
     }
 
+    std::optional<概念待命名请求材料> 读取待命名请求(
+        节点句柄 概念,
+        const 语素服务& 语素,
+        const 结构事务令牌& 令牌) const {
+        std::shared_lock<std::shared_mutex> 锁(活动图锁_);
+        if (!活动快照_.has_value()) {
+            return std::nullopt;
+        }
+        const auto 签名 = 从快照读取签名(活动快照_.value(), 概念);
+        if (!签名.has_value()) {
+            return std::nullopt;
+        }
+        if (!追根因检查(读取概念生命周期_已加锁(概念, 令牌).has_value(),
+            L"令牌路径读取待命名请求时活动概念生命周期不完整。")) {
+            return std::nullopt;
+        }
+        if (!语素.读取概念名称入口组(概念, 令牌).empty()) {
+            return std::nullopt;
+        }
+        概念待命名请求材料 材料{
+            概念,
+            签名->类别,
+            活动快照_->活动版本,
+            概念待命名原因::名称入口为空
+        };
+        return 材料.完整() ? std::optional<概念待命名请求材料>{材料} : std::nullopt;
+    }
+
     std::optional<std::vector<概念待命名请求材料>> 读取全部待命名请求(
         const 语素服务& 语素) const {
         std::shared_lock<std::shared_mutex> 锁(活动图锁_);
@@ -2996,6 +3024,21 @@ private:
         return std::nullopt;
     }
 
+    std::optional<概念生命周期阶段> 读取生命周期阶段_已加锁(
+        节点句柄 状态节点,
+        const 结构事务令牌& 令牌) const {
+        std::shared_lock<std::shared_mutex> 锁(生命周期状态锁_);
+        for (std::size_t 索引 = 0; 索引 < 生命周期状态组_.size(); ++索引) {
+            const auto& 已登记 = 生命周期状态组_[索引];
+            if (已登记.has_value()
+                && 已登记.value() == 状态节点
+                && 节点_.节点是否有效(状态节点, 令牌)) {
+                return static_cast<概念生命周期阶段>(索引 + 1);
+            }
+        }
+        return std::nullopt;
+    }
+
     std::optional<关系句柄> 确保概念生命周期_已加锁(
         节点句柄 概念,
         std::optional<概念生命周期阶段> 预期阶段,
@@ -3125,6 +3168,49 @@ private:
             关系句柄值 = 登记.关系;
         }
         if (!追根因检查(关系句柄值.has_value(), L"读取概念生命周期时缺少服务关系登记。")) {
+            return std::nullopt;
+        }
+        概念生命周期材料 材料{概念, 阶段.value(), 记录.目标节点, 关系句柄值.value()};
+        return 材料.完整() ? std::optional<概念生命周期材料>{材料} : std::nullopt;
+    }
+
+    std::optional<概念生命周期材料> 读取概念生命周期_已加锁(
+        节点句柄 概念,
+        const 结构事务令牌& 令牌) const {
+        const auto 记录组 = 关系_.获取关系记录组(
+            概念, 关系类型::概念生命周期, 令牌);
+        if (记录组.empty()) {
+            return std::nullopt;
+        }
+        if (!追根因检查(记录组.size() == 1,
+            L"令牌路径读取概念生命周期时发现多个有效目标。")) {
+            return std::nullopt;
+        }
+        const auto& 记录 = 记录组.front();
+        const auto 阶段 = 读取生命周期阶段_已加锁(记录.目标节点, 令牌);
+        if (!追根因检查(阶段.has_value(),
+            L"令牌路径读取概念生命周期时目标状态未登记。")) {
+            return std::nullopt;
+        }
+        std::optional<关系句柄> 关系句柄值;
+        for (const auto& 登记 : 生命周期关系登记组_) {
+            if (登记.概念 != 概念 || 登记.状态 != 记录.目标节点) continue;
+            const auto 读回 = 关系_.读取关系(登记.关系, 令牌);
+            if (!读回.has_value()
+                || 读回->关系编号 != 记录.关系编号
+                || 读回->版本号 != 记录.版本号
+                || 读回->类型 != 关系类型::概念生命周期
+                || 读回->源节点 != 概念
+                || 读回->目标节点 != 记录.目标节点
+                || 关系句柄值.has_value()) {
+                (void)追根因检查(false,
+                    L"令牌路径读取概念生命周期时服务登记与权威关系不一致。");
+                return std::nullopt;
+            }
+            关系句柄值 = 登记.关系;
+        }
+        if (!追根因检查(关系句柄值.has_value(),
+            L"令牌路径读取概念生命周期时缺少服务关系登记。")) {
             return std::nullopt;
         }
         概念生命周期材料 材料{概念, 阶段.value(), 记录.目标节点, 关系句柄值.value()};

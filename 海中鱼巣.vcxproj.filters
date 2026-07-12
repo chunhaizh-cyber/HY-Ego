@@ -48,7 +48,13 @@
     <ClCompile Include="海中鱼巣\线程\上行桥.概念命名治理.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\线程\路由.概念命名治理.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\线程\自检.概念命名治理.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\线程\自检.概念命名需求.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\自检.概念生命周期.ixx">
