@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>运行期主装配结构事务接域与恢复链单一所有权流程图</title><style>body{font-family:"Microsoft YaHei",sans-serif;margin:0;background:#f5f7f8;color:#172026}main{max-width:2200px;margin:auto;padding:24px}.diagram{overflow:auto;background:#fff;border:1px solid #cfd8dc;padding:20px}h1{letter-spacing:0}</style></head><body><main><h1>运行期主装配结构事务接域与恢复链单一所有权流程图</h1><div class="diagram"><pre class="mermaid">flowchart TD
+    A["开始：#217 已完成，#246 已输出主装配与恢复链所有权裁决"] --> B{"#246 实际接口是否与本批假定一致"}
+    B -->|"否"| G0["设计漂移返回：不改代码，修订 #247-#249"]
+    B -->|"是"| C["#247：建立唯一运行期上下文与宿主；创建一个协调状态并生成正式接线"]
+    C --> D["同一接线构造节点、主信息、关系、索引四仓库；禁止平行协调器"]
+    D --> E{"四仓库域 / 纪元 / 身份是否一致"}
+    E -->|"否"| R1["追根因解决：上下文不可发布"]
+    E -->|"是"| F["#248：向生产领域服务注入同一值式接线；调用期许可下传同一令牌"]
+    F --> H["分类处理创建期补偿、已发布删除、失效、候选丢弃和内部不一致清理"]
+    H --> I{"请求拒绝还是内部结构异常"}
+    I -->|"请求拒绝"| L1["逻辑内返回：写前拒绝或完整准备丢弃，结构不变化"]
+    I -->|"内部异常"| R2["追根因解决：不得用扫描、日志或空读兜底"]
+    I -->|"成功"| J["#249：全新启动、快照冻结、恢复候选发布复用同一上下文 / 宿主 / 租约合同"]
+    J --> K{"并发读写、失败清理、快照与恢复身份是否守恒"}
+    K -->|"否"| R3["追根因解决：不解锁恢复链"]
+    K -->|"是"| Z["完成：主装配接域合同成立；按 JY-277 裁决解锁或修订 #226-#230/#237-#239"]</pre></div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

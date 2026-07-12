@@ -1,0 +1,12 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第二批领域自检迁移与入口剩余责任收口流程图</title><style>body{font-family:"Microsoft YaHei",sans-serif;margin:0;background:#f5f7f8}main{max-width:2100px;margin:auto;padding:24px}.diagram{overflow:auto;background:#fff;border:1px solid #cfd8dc;padding:20px}h1{letter-spacing:0}</style></head><body><main><h1>第二批领域自检迁移与入口剩余责任收口流程图</h1><div class="diagram"><pre class="mermaid">flowchart TD
+    A["开始：#230、#235、#250 均完成"] --> B["#251 只读扫描入口剩余验收调用、并发夹具、输出和跨段材料"]
+    B --> C{"是否已形成编号守恒、夹具所有权和阶段顺序矩阵"}
+    C -->|"否"| G0["设计漂移返回：不迁移正文"]
+    C -->|"是"| D["#252 迁移仓库、语素、基础信息、特征、状态、动态、因果现存自检到独立真模块"]
+    D --> E["#253 迁移需求、任务、方法、召回、结算及其现存自检到独立真模块"]
+    E --> F{"每批编号、结果、阶段和共享材料是否守恒"}
+    F -->|"否"| R1["追根因解决：停止后继批次，不改测试语义或复制夹具"]
+    F -->|"是"| H["#254 只读审计入口剩余职责、模块依赖和历史兼容 include"]
+    H --> I{"入口是否只保留参数、模式、唯一装配、阶段登记、顶层调用和退出码"}
+    I -->|"否"| L1["正常审计结论：登记下一批具体残留，不伪称入口收口"]
+    I -->|"是"| Z["完成：第二批迁移与入口责任收口证据形成"]</pre></div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

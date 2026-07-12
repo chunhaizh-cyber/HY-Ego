@@ -1,0 +1,12 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>历史初始化真模块迁移与唯一上下文装配流程图</title><style>body{font-family:"Microsoft YaHei",sans-serif;margin:0;background:#f5f7f8}main{max-width:2000px;margin:auto;padding:24px}.diagram{overflow:auto;background:#fff;border:1px solid #cfd8dc;padding:20px}h1{letter-spacing:0}</style></head><body><main><h1>历史初始化真模块迁移与唯一上下文装配流程图</h1><div class="diagram"><pre class="mermaid">flowchart TD
+    A["开始：#249 已形成唯一正式运行期上下文和主装配合同"] --> B["执行前扫描四个历史初始化文件、include 链、公开类型和调用点"]
+    B --> C{"实际接口是否可按概念图 -> 世界树 -> 语素 -> 需求的有向依赖迁移"}
+    C -->|"否"| G0["设计漂移返回：不改代码，修订初始化计划"]
+    C -->|"是"| D["建立 初始化.概念图 / 初始化.世界树 / 初始化.语素 / 初始化.需求 真模块"]
+    D --> E["使用唯一上下文提供的仓库与领域服务；禁止模块创建第二套仓库"]
+    E --> F{"前置请求无效还是初始化后内部读回异常"}
+    F -->|"前置无效"| L1["逻辑内返回：不发布半初始化上下文"]
+    F -->|"内部异常"| R1["追根因解决：停止后继初始化"]
+    F -->|"成功"| H["入口只 import 初始化模块并执行一次顶层初始化总成"]
+    H --> I["独立自检模块复核顺序、幂等、失败不变式和旧 include 清零"]
+    I --> Z["完成：四个历史兼容初始化文件不再按 ClInclude/include 使用"]</pre></div></main><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>
