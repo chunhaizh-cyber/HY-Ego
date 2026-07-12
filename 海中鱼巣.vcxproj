@@ -159,6 +159,7 @@
     <ClCompile Include="海中鱼巣\领域\自检.概念安全删除.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.概念删除后验.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.概念命名目标.ixx" />
+    <ClCompile Include="海中鱼巣\领域\自检.任务生命周期初态.ixx" />
     <ClCompile Include="海中鱼巣\线程\自检.自我治理闭环.ixx" />
     <ClCompile Include="海中鱼巣\线程\自检.自我治理多轮.ixx" />
     <ClCompile Include="海中鱼巣\线程\自检.自我治理回执.ixx" />

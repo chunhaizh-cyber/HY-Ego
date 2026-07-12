@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <optional>
 #include <vector>
+#include <utility>
 
 namespace 海中鱼巣 {
 
@@ -72,10 +73,53 @@ struct 任务非权威统计材料 {
     任务请求状态 状态 = 任务请求状态::无效任务;
 };
 
+struct 任务生命周期当前材料 { 节点句柄 任务; 节点句柄 来源需求; 节点句柄 主体; 节点句柄 场景; 关系句柄 关系; 节点句柄 状态; 任务生命周期状态 阶段=任务生命周期状态::未定义; std::uint32_t 版本=0; std::uint64_t 时间戳=0; };
+struct 任务生命周期历史项 { 关系句柄 关系; 节点句柄 状态; 任务生命周期状态 阶段=任务生命周期状态::未定义; std::uint32_t 版本=0; std::uint64_t 时间戳=0; 记录状态 记录阶段=记录状态::无效; };
+
 class 任务服务 {
 public:
     任务服务(主信息仓库& 主信息, 节点仓库& 节点, 关系仓库& 关系)
         : 主信息_(主信息), 节点_(节点), 关系_(关系) {
+    }
+    任务服务(主信息仓库& a,节点仓库& b,关系仓库& c,结构事务接线 d)
+        :主信息_(a),节点_(b),关系_(c),接线_(std::move(d)){}
+
+    节点句柄 按需求创建任务(节点句柄 d,const 需求服务& 需求,存在服务& 存在,状态服务& 状态,
+        std::uint64_t 时间,const 结构事务令牌& t){
+        if(!验证独占(t)||时间==0||!需求.需求是否有效(d,t))return {};
+        auto dm=需求.读取需求承接材料(d,t); if(!dm)return {};
+        auto mi=主信息_.创建主信息(t); auto task=句柄有效(mi)?节点_.创建节点(节点类型::任务,mi,t):节点句柄{};
+        std::vector<关系句柄> own;
+        if(!句柄有效(task)){if(句柄有效(mi))(void)主信息_.删除主信息(mi,t);return {};}
+        auto ec=存在.创建虚拟存在候选(task,t); if(!ec){清任务(task,mi,own,t);return {};}
+        auto sc=状态.创建实例状态候选(dm->场景,ec->读取存在(),时间,static_cast<std::int64_t>(任务生命周期状态::已创建),t);
+        if(!sc){(void)存在.撤销候选(*ec,t);清任务(task,mi,own,t);return {};}
+        own={
+            关系_.创建关系(关系类型::归属,d,task,0,t),关系_.创建关系(关系类型::引用,task,d,0,t),
+            关系_.创建关系(关系类型::引用,task,ec->读取存在(),0,t),关系_.创建关系(关系类型::引用,task,dm->场景,0,t),
+            关系_.创建关系(关系类型::模板,task,dm->目标状态,0,t),关系_.创建关系(关系类型::任务生命周期,task,sc->读取状态(),1,t)};
+        const bool rel=std::all_of(own.begin(),own.end(),[](auto x){return 句柄有效(x);});
+        auto cur=rel?读取任务生命周期当前材料(task,状态,t):std::optional<任务生命周期当前材料>{};
+        if(!cur){清关系(own,t);(void)状态.撤销候选(*sc,t);(void)存在.撤销候选(*ec,t);清任务(task,mi,{},t);return {};}
+        if(状态.确认候选(*sc,t)!=状态候选操作状态::已完成
+            ||存在.确认候选(*ec,t)!=未发布候选操作状态::已完成){return {};}
+        return task;
+    }
+
+    std::optional<任务生命周期当前材料> 读取任务生命周期当前材料(节点句柄 task,const 状态服务& 状态,const 结构事务令牌& t) const{
+        if(!验证独占(t))return std::nullopt; auto rs=关系_.获取关系记录组(task,关系类型::任务生命周期,t);
+        if(rs.size()!=1||rs[0].顺序号!=1||rs[0].状态!=记录状态::有效)return std::nullopt;
+        auto sm=状态.读取状态材料(rs[0].目标节点,t); if(!sm||sm->状态值!=static_cast<std::int64_t>(任务生命周期状态::已创建))return std::nullopt;
+        auto demand=唯一目标(task,关系类型::引用,节点类型::需求,t); if(!demand)return std::nullopt;
+        return 任务生命周期当前材料{task,*demand,sm->主体,sm->场景,{task.仓库编号,rs[0].关系编号,rs[0].版本号},sm->状态,任务生命周期状态::已创建,static_cast<std::uint32_t>(rs[0].顺序号),sm->发生时间戳};
+    }
+    std::vector<任务生命周期历史项> 读取任务生命周期历史(节点句柄 task,const 状态服务& 状态,const 结构事务令牌& t) const{
+        std::vector<任务生命周期历史项> out;if(!验证独占(t))return out;
+        for(const auto& r:关系_.获取关系审计记录组(task,关系类型::任务生命周期,t)){
+            auto sm=状态.读取状态材料(r.目标节点,t);if(!sm||r.顺序号<=0)continue;
+            out.push_back({{task.仓库编号,r.关系编号,r.版本号},r.目标节点,static_cast<任务生命周期状态>(sm->状态值),static_cast<std::uint32_t>(r.顺序号),sm->发生时间戳,r.状态});
+        }
+        std::sort(out.begin(),out.end(),[](const auto&a,const auto&b){return a.版本<b.版本;});return out;
     }
 
     节点句柄 创建任务() {
@@ -347,6 +391,10 @@ public:
 private:
     static constexpr std::int64_t 任务实际结果状态顺序号 = 20;
     static constexpr std::int64_t 任务选择方法顺序号 = 30;
+    bool 验证独占(const 结构事务令牌& t) const{return 接线_.已接域()&&接线_.验证独占令牌(接线_.运行期状态,t);}
+    std::optional<节点句柄> 唯一目标(节点句柄 s,关系类型 k,节点类型 n,const 结构事务令牌& t) const{std::optional<节点句柄> r;for(auto x:关系_.获取目标节点组(s,k,t)){auto q=节点_.读取节点(x,t);if(!q||q->类型!=n)continue;if(r)return std::nullopt;r=x;}return r;}
+    void 清关系(const std::vector<关系句柄>& v,const 结构事务令牌& t){for(auto i=v.rbegin();i!=v.rend();++i)if(句柄有效(*i))(void)关系_.删除关系(*i,t);}
+    void 清任务(节点句柄 n,主信息句柄 m,const std::vector<关系句柄>& v,const 结构事务令牌& t){清关系(v,t);if(句柄有效(n))(void)节点_.删除节点(n,t);if(句柄有效(m))(void)主信息_.删除主信息(m,t);}
 
     bool 任务承接壳完整(节点句柄 任务节点, const 状态服务& 状态) const {
         return 读取唯一目标(任务节点, 关系类型::引用, 节点类型::需求).has_value()
@@ -413,6 +461,7 @@ private:
     主信息仓库& 主信息_;
     节点仓库& 节点_;
     关系仓库& 关系_;
+    结构事务接线 接线_;
 };
 
 }
