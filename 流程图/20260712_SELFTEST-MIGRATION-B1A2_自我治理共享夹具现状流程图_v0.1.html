@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>SELFTEST-MIGRATION-B1A2 自我治理共享夹具现状流程图</title>
+  <style>
+    body { font-family: "Microsoft YaHei", "Segoe UI", sans-serif; margin: 32px; color: #1f2933; background: #f7f9fb; line-height: 1.6; }
+    main { max-width: 1800px; margin: 0 auto; background: #fff; border: 1px solid #d9e2ec; border-radius: 6px; padding: 28px; }
+    h1 { margin-top: 0; font-size: 26px; }
+    pre { background: #f0f4f8; border: 1px solid #d9e2ec; border-radius: 6px; padding: 14px; overflow-x: auto; }
+    .mermaid { background: #fff; border: 1px solid #d9e2ec; border-radius: 6px; padding: 16px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>SELFTEST-MIGRATION-B1A2 自我治理共享夹具现状流程图</h1>
+  <p>更新时间：2026-07-12；代码基线：<code>10e24cb</code></p>
+  <pre>性质：当前代码事实与 #245 接口漂移复核，不表示迁移完成。</pre>
+  <div class="mermaid">
+flowchart TD
+    A["入口完成主仓库、领域服务、自我线程与根需求初始化"] --> B["S4A-D：借用主装配主信息、四仓库、领域服务和初始化结果"]
+    B --> B1["S4A-D 通过正式领域入口形成任务、方法、动作、动态、因果、结算和观察结构"]
+    B1 --> B2["控制面板与 CONCEPT-S6D 后继读取这些真实结构"]
+    B2 --> C["S5：入口另建完整隔离主信息、仓库、服务、路由、上行桥、邮箱和初始化器"]
+    C --> C1["S5 还借用方法登记根稳定键和自我根需求参数值"]
+    C1 --> C2["S5 隔离夹具内部拥有结构统计、并发门锁、处理器、自我线程和停止收口"]
+    C2 --> D["继续控制面板、概念与通用需求任务方法动作动态材料建立"]
+    D --> E["S3B：借用后段需求、方法、动作、场景、主体、特征值和前后值材料"]
+    E --> E1["S3B 额外借用动作键冲突方法、被动动作入口、FS02 跨场景和自我存在负例"]
+    E1 --> E2["S3B 使用 #242 暂留的主信息观察锚点，内部建立临时线程、上行桥和邮箱"]
+    E2 --> F{"直接按原 #245 两个最小上下文迁移是否成立？"}
+    F -- "否" --> G["逻辑内返回：不改代码，退回流程图、详细设计和计划修订"]
+    G --> H["裁决一：S4A-D 使用显式非拥有调用语境和初始化事实值"]
+    H --> I["裁决二：S5 自检模块唯一拥有完整隔离夹具，只接收两个值式参数"]
+    I --> J["裁决三：S3B 使用后段借用语境与值式身份材料，模块内拥有临时线程桥邮箱"]
+    J --> K["执行前逐字段复核实际接口；不一致继续退回，不复制夹具或扩大生产边界"]
+  </div>
+  <h2>当前结论</h2>
+  <pre>S4A-D、S5、S3B 是三种不同所有权和生命周期，不能压成一个共享总夹具。
+值式材料使用 DTO；仓库和服务使用调用期非拥有语境。
+S5 唯一拥有完整隔离夹具；S3B 不复制后段跨域夹具。
+内部不一致追根因解决；缺少材料或接口漂移执行前逻辑内返回。</pre>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>
