@@ -148,6 +148,9 @@
     <ClCompile Include="海中鱼巣\线程\任务管理上行桥.ixx" />
     <ClCompile Include="海中鱼巣\线程\上行桥.概念命名治理.ixx" />
     <ClCompile Include="海中鱼巣\线程\自检.概念命名治理.ixx" />
+    <ClCompile Include="海中鱼巣\线程\自检.自我治理闭环.ixx" />
+    <ClCompile Include="海中鱼巣\线程\自检.自我治理多轮.ixx" />
+    <ClCompile Include="海中鱼巣\线程\自检.自我治理回执.ixx" />
     <ClCompile Include="海中鱼巣\线程\自检.运行线程.ixx" />
     <ClCompile Include="海中鱼巣\线程\自检.自我治理协议.ixx" />
     <ClCompile Include="海中鱼巣\线程\自我治理领域路由.ixx" />
