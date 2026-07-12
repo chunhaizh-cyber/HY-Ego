@@ -57,6 +57,9 @@
     <ClCompile Include="海中鱼巣\领域\自检.概念删除候选.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\自检.概念清理适配.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\自检.概念命名目标.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -119,6 +122,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="海中鱼巣\领域\概念安全删除提交能力.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="海中鱼巣\核心\结构事务接线.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>

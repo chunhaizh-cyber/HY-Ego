@@ -150,6 +150,7 @@
     <ClCompile Include="海中鱼巣\线程\自检.概念命名治理.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.概念生命周期.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.概念删除候选.ixx" />
+    <ClCompile Include="海中鱼巣\领域\自检.概念清理适配.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.概念命名目标.ixx" />
     <ClCompile Include="海中鱼巣\线程\自检.自我治理闭环.ixx" />
     <ClCompile Include="海中鱼巣\线程\自检.自我治理多轮.ixx" />
@@ -174,6 +175,7 @@
     <ClCompile Include="海中鱼巣\核心\自检.结构事务.ixx" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="海中鱼巣\领域\概念安全删除提交能力.数据.h" />
     <ClInclude Include="海中鱼巣\核心\结构事务接线.数据.h" />
     <ClInclude Include="海中鱼巣\界面\控制面板窗口.h" />
     <ClInclude Include="海中鱼巣\适配\SQL数据库适配.h" />

@@ -3,6 +3,7 @@
 
 #include "句柄.h"
 #include "节点仓库.h"
+#include "../领域/概念安全删除提交能力.数据.h"
 
 #include <cstdint>
 #include <limits>
@@ -101,6 +102,25 @@ struct 节点挂载结果 {
     }
 };
 
+struct 节点关系失效准备包 {
+    节点句柄 目标;
+    std::vector<关系记录> 关系组;
+    std::uint64_t 写集身份 = 0;
+
+    bool 完整() const {
+        if (!句柄有效(目标) || 写集身份 == 0) return false;
+        for (std::size_t 索引 = 0; 索引 < 关系组.size(); ++索引) {
+            const auto& 关系 = 关系组[索引];
+            if (关系.状态 != 记录状态::有效
+                || (关系.源节点 != 目标 && 关系.目标节点 != 目标)) return false;
+            for (std::size_t 已有 = 0; 已有 < 索引; ++已有) {
+                if (关系组[已有].关系编号 == 关系.关系编号) return false;
+            }
+        }
+        return true;
+    }
+};
+
 class 关系仓库 {
 public:
     explicit 关系仓库(const 节点仓库& 节点, std::uint64_t 仓库编号 = 1, 结构事务接线 接线 = {});
@@ -154,6 +174,10 @@ public:
     std::vector<关系记录> 获取来源关系记录组(节点句柄 目标节点, 关系类型 类型, const 结构事务令牌& 令牌) const;
     std::vector<关系记录> 获取节点相关关系记录组(节点句柄 节点) const;
     std::vector<关系记录> 获取节点相关关系记录组(节点句柄 节点, const 结构事务令牌& 令牌) const;
+    std::optional<节点关系失效准备包> 准备节点关系失效包(
+        节点句柄 节点,
+        const std::vector<关系记录>& 精确当前关系,
+        const 结构事务令牌& 令牌) const;
     bool 存在关系(关系类型 类型, 节点句柄 源节点, 节点句柄 目标节点) const;
     bool 存在关系(关系类型 类型, 节点句柄 源节点, 节点句柄 目标节点, const 结构事务令牌& 令牌) const;
     bool 存在目标关系(关系类型 类型, 节点句柄 目标节点) const;
@@ -162,6 +186,11 @@ public:
     std::uint64_t 有效关系数量(const 结构事务令牌& 令牌) const;
 
 private:
+    friend class 领域::概念安全删除编排器;
+    void 提交节点关系失效包(
+        const 节点关系失效准备包& 包,
+        const 结构事务令牌& 令牌,
+        const 概念安全删除提交会话& 会话);
     struct 普通父关系复核材料 {
         std::optional<std::uint64_t> 关系编号;
         std::optional<节点句柄> 父节点;

@@ -204,8 +204,41 @@ struct 概念用途观察材料 {
     }
 };
 
+struct 概念缓存清理准备包 {
+    节点句柄 目标概念;
+    std::vector<概念用途观察材料> 用途观察组;
+    std::uint64_t 写集身份 = 0;
+
+    bool 完整() const {
+        return 句柄有效(目标概念)
+            && 写集身份 != 0
+            && std::all_of(用途观察组.begin(), 用途观察组.end(), [this](const auto& 材料) {
+                return 材料.完整() && 材料.概念 == 目标概念 && !材料.可裁决业务事实;
+            });
+    }
+};
+
 class 统计服务 {
 public:
+    std::optional<概念缓存清理准备包> 准备概念缓存清理包(
+        节点句柄 目标概念,
+        const 结构事务令牌& 令牌) const {
+        if (!句柄有效(目标概念)
+            || 令牌.类型 != 结构许可类型::独占
+            || 令牌.许可序号 == 0) return std::nullopt;
+        概念缓存清理准备包 包;
+        包.目标概念 = 目标概念;
+        包.写集身份 = 令牌.许可序号;
+        {
+            std::shared_lock<std::shared_mutex> 锁(概念用途缓存锁_);
+            包.用途观察组.reserve(概念用途缓存_.size());
+            for (const auto& 条目 : 概念用途缓存_) {
+                if (条目.second.概念 == 目标概念) 包.用途观察组.push_back(条目.second);
+            }
+        }
+        return 包.完整() ? std::optional<概念缓存清理准备包>{std::move(包)} : std::nullopt;
+    }
+
     缓存命名空间 定义缓存命名空间(缓存类型 类型, 来源结构类型 来源, std::uint64_t 来源版本,
         std::uint64_t 规则版本, 缓存值类型 值类型, bool 可持久化, 缓存失效条件 失效条件) const {
         if (!缓存类型有效(类型)

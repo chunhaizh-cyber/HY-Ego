@@ -1,6 +1,9 @@
 // 文件规则：主信息仓库只维护主信息记录生命周期；业务字段必须先经规范确认。
 #include "主信息仓库.h"
 
+#include <limits>
+#include <stdexcept>
+
 namespace 海中鱼巣 {
 
 namespace {
@@ -63,6 +66,79 @@ std::optional<主信息记录> 主信息仓库::读取主信息(主信息句柄 
     const auto 位置=主信息表_.find(主信息.主信息编号);
     if(位置==主信息表_.end()||主信息.仓库编号!=仓库编号_||主信息.版本号!=位置->second.版本号||位置->second.状态!=记录状态::有效)return std::nullopt;
     return 位置->second;
+}
+
+std::optional<主信息记录> 主信息仓库::读取主信息审计(主信息句柄 主信息) const {
+    if (事务接线_.已接域()) {
+        auto 许可 = 事务接线_.取得共享许可(事务接线_.运行期状态);
+        return 许可.有效() ? 读取主信息审计(主信息, 许可.读取令牌()) : std::nullopt;
+    }
+    std::shared_lock<std::shared_mutex> 锁(仓库锁_);
+    const auto 位置 = 主信息表_.find(主信息.主信息编号);
+    if (位置 == 主信息表_.end() || 主信息.仓库编号 != 仓库编号_) return std::nullopt;
+    const auto& 记录 = 位置->second;
+    const bool 版本匹配 = 主信息.版本号 == 记录.版本号
+        || (记录.状态 == 记录状态::已删除
+            && 主信息.版本号 != std::numeric_limits<std::uint32_t>::max()
+            && 主信息.版本号 + 1 == 记录.版本号);
+    return 版本匹配 ? std::optional<主信息记录>{记录} : std::nullopt;
+}
+
+std::optional<主信息记录> 主信息仓库::读取主信息审计(
+    主信息句柄 主信息,
+    const 结构事务令牌& 令牌) const {
+    if (!验证共享令牌(事务接线_, 令牌)) return std::nullopt;
+    std::shared_lock<std::shared_mutex> 锁(仓库锁_);
+    const auto 位置 = 主信息表_.find(主信息.主信息编号);
+    if (位置 == 主信息表_.end() || 主信息.仓库编号 != 仓库编号_) return std::nullopt;
+    const auto& 记录 = 位置->second;
+    const bool 版本匹配 = 主信息.版本号 == 记录.版本号
+        || (记录.状态 == 记录状态::已删除
+            && 主信息.版本号 != std::numeric_limits<std::uint32_t>::max()
+            && 主信息.版本号 + 1 == 记录.版本号);
+    return 版本匹配 ? std::optional<主信息记录>{记录} : std::nullopt;
+}
+
+std::optional<主信息删除准备包> 主信息仓库::准备主信息删除包(
+    节点句柄 目标节点,
+    主信息句柄 主信息,
+    const 结构事务令牌& 令牌) const {
+    if (!验证独占令牌(事务接线_, 令牌) || !句柄有效(目标节点)) return std::nullopt;
+    std::shared_lock<std::shared_mutex> 锁(仓库锁_);
+    const auto 位置 = 主信息表_.find(主信息.主信息编号);
+    if (位置 == 主信息表_.end()
+        || 主信息.仓库编号 != 仓库编号_
+        || 主信息.版本号 != 位置->second.版本号
+        || 位置->second.状态 != 记录状态::有效
+        || 令牌.许可序号 == 0) return std::nullopt;
+    return 主信息删除准备包{目标节点, 主信息, 位置->second.版本号, 令牌.许可序号};
+}
+
+void 主信息仓库::提交主信息删除包(
+    const 主信息删除准备包& 包,
+    const 结构事务令牌& 令牌,
+    const 概念安全删除提交会话& 会话) {
+    if (!验证独占令牌(事务接线_, 令牌)
+        || !包.完整()
+        || !会话.有效()
+        || 会话.读取运行期状态() != 事务接线_.运行期状态
+        || 会话.读取目标() != 包.目标节点
+        || 会话.读取写集身份() != 包.写集身份
+        || 包.写集身份 != 令牌.许可序号
+        || 会话.读取阶段() != 概念安全删除提交阶段::主信息) {
+        throw std::logic_error("概念安全删除主信息提交能力不匹配");
+    }
+    std::unique_lock<std::shared_mutex> 锁(仓库锁_);
+    const auto 位置 = 主信息表_.find(包.目标主信息.主信息编号);
+    if (位置 == 主信息表_.end()
+        || 包.目标主信息.仓库编号 != 仓库编号_
+        || 位置->second.版本号 != 包.预期版本
+        || 位置->second.状态 != 记录状态::有效
+        || 位置->second.版本号 == std::numeric_limits<std::uint32_t>::max()) {
+        throw std::logic_error("概念安全删除主信息提交前结构漂移");
+    }
+    位置->second.状态 = 记录状态::已删除;
+    ++位置->second.版本号;
 }
 
 bool 主信息仓库::删除主信息(主信息句柄 主信息) {

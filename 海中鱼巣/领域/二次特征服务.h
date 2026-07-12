@@ -117,6 +117,16 @@ public:
         return 组成项组;
     }
 
+    std::optional<概念结构所有者清理授权> 形成概念节点清理授权(
+        const 概念结构所有者清理请求& 请求,
+        const 结构事务令牌& 令牌) const {
+        if (!请求.完整() || 请求.所有者 != 概念结构所有者类型::二次特征服务) return std::nullopt;
+        const auto 记录 = 节点_.读取节点(请求.目标, 令牌);
+        if (!记录.has_value() || 记录->类型 != 节点类型::二次特征 || 记录->主信息 != 请求.主信息) return std::nullopt;
+        概念结构所有者清理授权 授权{请求.目标, 请求.主信息, 请求.所有者, 令牌.许可序号};
+        return 授权.完整() ? std::optional<概念结构所有者清理授权>{授权} : std::nullopt;
+    }
+
     std::optional<关系实例完成材料> 读取关系实例完成材料(节点句柄 二次特征) const {
         if (!节点类型匹配(二次特征, 节点类型::二次特征)) {
             return std::nullopt;

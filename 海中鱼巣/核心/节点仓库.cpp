@@ -1,6 +1,7 @@
 // 文件规则：节点删除只让旧句柄失效，不在此直接改写业务事实。
 #include "节点仓库.h"
 
+#include <limits>
 #include <stdexcept>
 
 namespace 海中鱼巣 {
@@ -88,6 +89,79 @@ std::optional<节点记录> 节点仓库::读取节点(节点句柄 节点, cons
     const auto 位置 = 节点表_.find(节点.节点编号);
     if (位置 == 节点表_.end() || 节点.仓库编号 != 仓库编号_ || 节点.版本号 != 位置->second.版本号 || 位置->second.状态 != 记录状态::有效) return std::nullopt;
     return 位置->second;
+}
+
+std::optional<节点记录> 节点仓库::读取节点审计(节点句柄 节点) const {
+    if (事务接线_.已接域()) {
+        auto 许可 = 事务接线_.取得共享许可(事务接线_.运行期状态);
+        return 许可.有效() ? 读取节点审计(节点, 许可.读取令牌()) : std::nullopt;
+    }
+    std::shared_lock<std::shared_mutex> 锁(仓库锁_);
+    const auto 位置 = 节点表_.find(节点.节点编号);
+    if (位置 == 节点表_.end() || 节点.仓库编号 != 仓库编号_) return std::nullopt;
+    const auto& 记录 = 位置->second;
+    const bool 版本匹配 = 节点.版本号 == 记录.版本号
+        || (记录.状态 == 记录状态::已删除
+            && 节点.版本号 != std::numeric_limits<std::uint32_t>::max()
+            && 节点.版本号 + 1 == 记录.版本号);
+    return 版本匹配 ? std::optional<节点记录>{记录} : std::nullopt;
+}
+
+std::optional<节点记录> 节点仓库::读取节点审计(
+    节点句柄 节点,
+    const 结构事务令牌& 令牌) const {
+    if (!验证共享令牌(事务接线_, 令牌)) return std::nullopt;
+    std::shared_lock<std::shared_mutex> 锁(仓库锁_);
+    const auto 位置 = 节点表_.find(节点.节点编号);
+    if (位置 == 节点表_.end() || 节点.仓库编号 != 仓库编号_) return std::nullopt;
+    const auto& 记录 = 位置->second;
+    const bool 版本匹配 = 节点.版本号 == 记录.版本号
+        || (记录.状态 == 记录状态::已删除
+            && 节点.版本号 != std::numeric_limits<std::uint32_t>::max()
+            && 节点.版本号 + 1 == 记录.版本号);
+    return 版本匹配 ? std::optional<节点记录>{记录} : std::nullopt;
+}
+
+std::optional<节点删除准备包> 节点仓库::准备节点删除包(
+    节点句柄 节点,
+    const 结构事务令牌& 令牌) const {
+    if (!验证独占令牌(事务接线_, 令牌)) return std::nullopt;
+    std::shared_lock<std::shared_mutex> 锁(仓库锁_);
+    const auto 位置 = 节点表_.find(节点.节点编号);
+    if (位置 == 节点表_.end()
+        || 节点.仓库编号 != 仓库编号_
+        || 节点.版本号 != 位置->second.版本号
+        || 位置->second.状态 != 记录状态::有效
+        || 令牌.许可序号 == 0) return std::nullopt;
+    return 节点删除准备包{节点, 位置->second.主信息, 位置->second.版本号, 令牌.许可序号};
+}
+
+void 节点仓库::提交节点删除包(
+    const 节点删除准备包& 包,
+    const 结构事务令牌& 令牌,
+    const 概念安全删除提交会话& 会话) {
+    if (!验证独占令牌(事务接线_, 令牌)
+        || !包.完整()
+        || !会话.有效()
+        || 会话.读取运行期状态() != 事务接线_.运行期状态
+        || 会话.读取目标() != 包.目标
+        || 会话.读取写集身份() != 包.写集身份
+        || 包.写集身份 != 令牌.许可序号
+        || 会话.读取阶段() != 概念安全删除提交阶段::节点) {
+        throw std::logic_error("概念安全删除节点提交能力不匹配");
+    }
+    std::unique_lock<std::shared_mutex> 锁(仓库锁_);
+    const auto 位置 = 节点表_.find(包.目标.节点编号);
+    if (位置 == 节点表_.end()
+        || 包.目标.仓库编号 != 仓库编号_
+        || 位置->second.版本号 != 包.预期版本
+        || 位置->second.主信息 != 包.主信息
+        || 位置->second.状态 != 记录状态::有效
+        || 位置->second.版本号 == std::numeric_limits<std::uint32_t>::max()) {
+        throw std::logic_error("概念安全删除节点提交前结构漂移");
+    }
+    位置->second.状态 = 记录状态::已删除;
+    ++位置->second.版本号;
 }
 
 bool 节点仓库::删除节点(节点句柄 节点) {
