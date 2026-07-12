@@ -108,8 +108,17 @@
     <ClCompile Include="海中鱼巣\核心\事件日志段服务.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\协调.结构事务.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\自检.结构事务.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="海中鱼巣\核心\结构事务接线.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="海中鱼巣\核心\句柄.h">
       <Filter>头文件</Filter>
     </ClInclude>

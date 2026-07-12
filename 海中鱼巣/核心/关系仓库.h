@@ -103,35 +103,63 @@ struct 节点挂载结果 {
 
 class 关系仓库 {
 public:
-    explicit 关系仓库(const 节点仓库& 节点, std::uint64_t 仓库编号 = 1);
+    explicit 关系仓库(const 节点仓库& 节点, std::uint64_t 仓库编号 = 1, 结构事务接线 接线 = {});
 
     关系句柄 创建关系(关系类型 类型, 节点句柄 源节点, 节点句柄 目标节点, std::int64_t 顺序号 = 0);
+    关系句柄 创建关系(关系类型 类型, 节点句柄 源节点, 节点句柄 目标节点, std::int64_t 顺序号, const 结构事务令牌& 令牌);
     std::optional<关系记录> 读取关系(关系句柄 关系) const;
+    std::optional<关系记录> 读取关系(关系句柄 关系, const 结构事务令牌& 令牌) const;
     std::optional<关系记录> 读取关系审计(关系句柄 当前关系) const;
+    std::optional<关系记录> 读取关系审计(关系句柄 当前关系, const 结构事务令牌& 令牌) const;
     std::vector<关系记录> 获取关系审计记录组(节点句柄 源节点, 关系类型 类型) const;
+    std::vector<关系记录> 获取关系审计记录组(节点句柄 源节点, 关系类型 类型, const 结构事务令牌& 令牌) const;
     关系状态变更材料 失效关系(关系句柄 关系);
+    关系状态变更材料 失效关系(关系句柄 关系, const 结构事务令牌& 令牌);
     bool 删除关系(关系句柄 关系);
+    bool 删除关系(关系句柄 关系, const 结构事务令牌& 令牌);
     bool 重挂关系(关系句柄 关系, 节点句柄 新源节点, 节点句柄 新目标节点);
+    bool 重挂关系(关系句柄 关系, 节点句柄 新源节点, 节点句柄 新目标节点, const 结构事务令牌& 令牌);
     std::optional<关系句柄> 重挂关系并返回新句柄(
         关系句柄 关系,
         节点句柄 新源节点,
         节点句柄 新目标节点);
+    std::optional<关系句柄> 重挂关系并返回新句柄(
+        关系句柄 关系,
+        节点句柄 新源节点,
+        节点句柄 新目标节点,
+        const 结构事务令牌& 令牌);
     bool 重挂节点(节点句柄 节点, 节点句柄 新父节点);
+    bool 重挂节点(节点句柄 节点, 节点句柄 新父节点, const 结构事务令牌& 令牌);
     节点挂载结果 挂载或重挂节点(节点句柄 节点, 节点句柄 新父节点);
+    节点挂载结果 挂载或重挂节点(节点句柄 节点, 节点句柄 新父节点, const 结构事务令牌& 令牌);
     std::vector<节点句柄> 获取子节点(节点句柄 父节点) const;
+    std::vector<节点句柄> 获取子节点(节点句柄 父节点, const 结构事务令牌& 令牌) const;
     std::optional<节点句柄> 获取父节点(节点句柄 子节点) const;
+    std::optional<节点句柄> 获取父节点(节点句柄 子节点, const 结构事务令牌& 令牌) const;
     bool 节点在父链中(节点句柄 起点, 节点句柄 目标) const;
+    bool 节点在父链中(节点句柄 起点, 节点句柄 目标, const 结构事务令牌& 令牌) const;
     std::optional<节点句柄> 获取目标节点(节点句柄 源节点, 关系类型 类型) const;
+    std::optional<节点句柄> 获取目标节点(节点句柄 源节点, 关系类型 类型, const 结构事务令牌& 令牌) const;
     std::vector<节点句柄> 获取目标节点组(节点句柄 源节点, 关系类型 类型) const;
+    std::vector<节点句柄> 获取目标节点组(节点句柄 源节点, 关系类型 类型, const 结构事务令牌& 令牌) const;
     std::vector<节点句柄> 获取目标节点组(节点句柄 源节点, 关系类型 类型, std::int64_t 顺序号) const;
+    std::vector<节点句柄> 获取目标节点组(节点句柄 源节点, 关系类型 类型, std::int64_t 顺序号, const 结构事务令牌& 令牌) const;
     std::vector<关系记录> 获取关系记录组(节点句柄 源节点, 关系类型 类型) const;
+    std::vector<关系记录> 获取关系记录组(节点句柄 源节点, 关系类型 类型, const 结构事务令牌& 令牌) const;
     std::vector<节点句柄> 获取来源节点组(节点句柄 目标节点, 关系类型 类型) const;
+    std::vector<节点句柄> 获取来源节点组(节点句柄 目标节点, 关系类型 类型, const 结构事务令牌& 令牌) const;
     std::vector<节点句柄> 获取来源节点组(节点句柄 目标节点, 关系类型 类型, std::int64_t 顺序号) const;
+    std::vector<节点句柄> 获取来源节点组(节点句柄 目标节点, 关系类型 类型, std::int64_t 顺序号, const 结构事务令牌& 令牌) const;
     std::vector<关系记录> 获取来源关系记录组(节点句柄 目标节点, 关系类型 类型) const;
+    std::vector<关系记录> 获取来源关系记录组(节点句柄 目标节点, 关系类型 类型, const 结构事务令牌& 令牌) const;
     std::vector<关系记录> 获取节点相关关系记录组(节点句柄 节点) const;
+    std::vector<关系记录> 获取节点相关关系记录组(节点句柄 节点, const 结构事务令牌& 令牌) const;
     bool 存在关系(关系类型 类型, 节点句柄 源节点, 节点句柄 目标节点) const;
+    bool 存在关系(关系类型 类型, 节点句柄 源节点, 节点句柄 目标节点, const 结构事务令牌& 令牌) const;
     bool 存在目标关系(关系类型 类型, 节点句柄 目标节点) const;
+    bool 存在目标关系(关系类型 类型, 节点句柄 目标节点, const 结构事务令牌& 令牌) const;
     std::uint64_t 有效关系数量() const;
+    std::uint64_t 有效关系数量(const 结构事务令牌& 令牌) const;
 
 private:
     struct 普通父关系复核材料 {
@@ -151,9 +179,11 @@ private:
         节点句柄 起点,
         节点句柄 目标,
         std::vector<节点句柄>* 父链节点组 = nullptr) const;
+    bool 节点有效_(节点句柄 节点) const;
 
     const 节点仓库& 节点_;
     std::uint64_t 仓库编号_ = 1;
+    结构事务接线 事务接线_;
     std::uint64_t 下个关系编号_ = 1;
     mutable std::shared_mutex 仓库锁_;
     std::unordered_map<std::uint64_t, 关系记录> 关系表_;

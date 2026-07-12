@@ -23,18 +23,26 @@ struct 节点记录 {
 
 class 节点仓库 {
 public:
-    explicit 节点仓库(const 主信息仓库& 主信息, std::uint64_t 仓库编号 = 1);
+    explicit 节点仓库(const 主信息仓库& 主信息, std::uint64_t 仓库编号 = 1, 结构事务接线 接线 = {});
 
     节点句柄 创建节点(节点类型 类型, 主信息句柄 主信息);
+    节点句柄 创建节点(节点类型 类型, 主信息句柄 主信息, const 结构事务令牌& 令牌);
     std::optional<节点记录> 读取节点(节点句柄 节点) const;
+    std::optional<节点记录> 读取节点(节点句柄 节点, const 结构事务令牌& 令牌) const;
     bool 删除节点(节点句柄 节点);
+    bool 删除节点(节点句柄 节点, const 结构事务令牌& 令牌);
     bool 节点是否有效(节点句柄 节点) const;
+    bool 节点是否有效(节点句柄 节点, const 结构事务令牌& 令牌) const;
     std::uint64_t 有效节点数量() const;
+    std::uint64_t 有效节点数量(const 结构事务令牌& 令牌) const;
     std::uint64_t 仓库编号() const;
 
 private:
+    friend class 关系仓库;
+    friend class 索引仓库;
     const 主信息仓库& 主信息_;
     std::uint64_t 仓库编号_ = 1;
+    结构事务接线 事务接线_;
     std::uint64_t 下个节点编号_ = 1;
     std::uint64_t 下个创建序号_ = 1;
     mutable std::shared_mutex 仓库锁_;
