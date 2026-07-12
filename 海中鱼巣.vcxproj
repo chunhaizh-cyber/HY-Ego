@@ -136,6 +136,7 @@
   </ItemDefinitionGroup>
 
   <ItemGroup>
+    <ClCompile Include="海中鱼巣\自检.运行器.ixx" />
     <ClCompile Include="海中鱼巣\线程\运行消息协议.ixx" />
     <ClCompile Include="海中鱼巣\线程\自我治理消息协议.ixx" />
     <ClCompile Include="海中鱼巣\线程\任务结果回执协议.ixx" />

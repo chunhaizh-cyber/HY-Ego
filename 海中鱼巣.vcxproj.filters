@@ -15,6 +15,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="海中鱼巣\自检.运行器.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\线程\运行消息协议.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
