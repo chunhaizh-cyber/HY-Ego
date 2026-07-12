@@ -98,6 +98,20 @@ public:
         return std::nullopt;
     }
 
+    std::optional<状态未发布候选> 创建实例状态候选(节点句柄 场景, 节点句柄 存在,
+        std::uint64_t 时间戳, std::int64_t 值, std::uint64_t 幂等编号, const 结构事务令牌& 令牌) {
+        if (!验证独占(令牌) || !发生时间戳可用(时间戳) || 幂等编号 == 0) return std::nullopt;
+        const auto 场景记录=节点_.读取节点(场景,令牌);const auto 存在记录=节点_.读取节点(存在,令牌);
+        if(!场景记录||场景记录->类型!=节点类型::场景||!存在记录||存在记录->类型!=节点类型::存在)return std::nullopt;
+        const auto 主信息=主信息_.创建主信息(令牌);const auto 低位=static_cast<std::int64_t>(幂等编号&0xffffffffULL);const auto 高位=static_cast<std::int64_t>((幂等编号>>32U)&0xffffffffULL);
+        if(!句柄有效(主信息)||!主信息_.写入I64值(主信息,0,值,令牌)||!主信息_.写入I64值(主信息,发生时间戳槽位,static_cast<std::int64_t>(时间戳),令牌)
+            ||!主信息_.写入I64值(主信息,幂等编号低位槽位,低位,令牌)||!主信息_.写入I64值(主信息,幂等编号高位槽位,高位,令牌)){if(句柄有效(主信息))(void)主信息_.删除主信息(主信息,令牌);return std::nullopt;}
+        const auto 状态=节点_.创建节点(节点类型::状态,主信息,令牌);std::array<关系句柄,3> 关系组{};
+        if(句柄有效(状态)){关系组[0]=关系_.创建关系(关系类型::运行期临时,场景,状态,0,令牌);关系组[1]=关系_.创建关系(关系类型::引用,状态,存在,0,令牌);关系组[2]=关系_.创建关系(关系类型::引用,状态,场景,0,令牌);}
+        if(句柄有效(状态)&&std::all_of(关系组.begin(),关系组.end(),[](auto x){return 句柄有效(x);}))return 状态未发布候选{this,令牌,状态,主信息,关系组};
+        for(auto it=关系组.rbegin();it!=关系组.rend();++it)if(句柄有效(*it))(void)关系_.删除关系(*it,令牌);if(句柄有效(状态))(void)节点_.删除节点(状态,令牌);(void)主信息_.删除主信息(主信息,令牌);return std::nullopt;
+    }
+
     状态候选操作状态 撤销候选(状态未发布候选& 候选, const 结构事务令牌& 令牌) {
         if (候选.服务_!=this || !令牌匹配(候选.令牌_,令牌) || !验证独占(令牌)) return 状态候选操作状态::已拒绝;
         if (候选.阶段_==状态未发布候选::阶段::已撤销) return 状态候选操作状态::幂等已撤销;
@@ -246,6 +260,12 @@ public:
         auto v=主信息_.读取I64值(r->主信息,0,t); auto tm=主信息_.读取I64值(r->主信息,发生时间戳槽位,t);
         if(!p||!c||!v||!tm||*tm<=0)return std::nullopt; return 状态材料{s,*c,*p,*v,static_cast<std::uint64_t>(*tm)};
     }
+    std::optional<std::uint64_t> 读取状态幂等编号(节点句柄 状态,const 结构事务令牌& t) const{
+        if(!验证独占(t))return std::nullopt;const auto r=节点_.读取节点(状态,t);if(!r||r->类型!=节点类型::状态)return std::nullopt;
+        const auto lo=主信息_.读取I64值(r->主信息,幂等编号低位槽位,t);const auto hi=主信息_.读取I64值(r->主信息,幂等编号高位槽位,t);
+        if(!lo&&!hi)return std::nullopt;if(!lo||!hi||*lo<0||*hi<0||static_cast<std::uint64_t>(*lo)>0xffffffffULL||static_cast<std::uint64_t>(*hi)>0xffffffffULL){(void)追根因检查(false,L"迁移实例状态幂等编号双槽不完整或越界。");return std::nullopt;}
+        const auto n=static_cast<std::uint64_t>(*lo)|(static_cast<std::uint64_t>(*hi)<<32U);if(n==0){(void)追根因检查(false,L"迁移实例状态幂等编号读回为零。");return std::nullopt;}return n;
+    }
 
     实例状态引用阻断结果 读取实例状态引用阻断(节点句柄 状态节点) const {
         if (!节点类型匹配(状态节点, 节点类型::状态)) {
@@ -263,6 +283,8 @@ public:
 
 private:
     static constexpr std::uint64_t 发生时间戳槽位 = 1;
+    static constexpr std::uint64_t 幂等编号低位槽位 = 2;
+    static constexpr std::uint64_t 幂等编号高位槽位 = 3;
     bool 验证独占(const 结构事务令牌& 令牌) const { return 接线_.已接域()&&接线_.验证独占令牌(接线_.运行期状态,令牌); }
     static bool 令牌匹配(const 结构事务令牌& a,const 结构事务令牌& b){return a.域编号==b.域编号&&a.运行期纪元==b.运行期纪元&&a.许可序号==b.许可序号&&a.类型==b.类型;}
 
