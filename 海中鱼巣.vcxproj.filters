@@ -51,6 +51,12 @@
     <ClCompile Include="海中鱼巣\线程\自检.概念命名治理.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\线程\自检.运行线程.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\线程\自检.自我治理协议.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\线程\自我治理领域路由.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
