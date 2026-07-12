@@ -60,6 +60,12 @@
     <ClCompile Include="海中鱼巣\领域\自检.概念清理适配.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\服务.概念安全删除.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\自检.概念安全删除.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\自检.概念命名目标.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
