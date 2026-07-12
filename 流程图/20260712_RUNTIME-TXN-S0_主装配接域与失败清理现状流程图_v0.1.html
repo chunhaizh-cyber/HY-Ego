@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RUNTIME-TXN-S0 主装配接域与失败清理现状流程图</title>
+  <style>body{font-family:"Microsoft YaHei",sans-serif;margin:24px;color:#202124}.mermaid{min-width:1200px}pre{white-space:pre-wrap}</style>
+</head>
+<body>
+  <h1>RUNTIME-TXN-S0 主装配接域与失败清理现状流程图</h1>
+  <pre>生产主装配仍未接域；全新启动与恢复启动必须共用一个上下文类型和一次发布合同。</pre>
+  <div class="mermaid">
+flowchart TD
+    A["main 参数与日志"] --> B["构造未接域主信息仓库"]
+    B --> C["构造未接域节点、关系、索引仓库"]
+    C --> D["构造领域服务、初始化器、自我线程、统计、快照拒绝壳"]
+    D --> E["全新启动初始化与既有自检"]
+    E --> F{"调用点分类"}
+    F -->|"入口与独立模块夹具"| G["测试隔离材料，保持夹具所有权"]
+    F -->|"无结构或候选丢弃"| H["逻辑内返回，不清理权威结构"]
+    F -->|"本次创建尚未发布"| I["创建期精确逆序补偿"]
+    F -->|"已发布结构变化"| J["领域所有者入口，必须进入正式事务语境"]
+    F -->|"写后读回异常"| K["追根因并记录异常清理，不冒充普通失败"]
+    G --> L["当前主装配仍未接域"]
+    H --> L
+    I --> L
+    J --> L
+    K --> L
+    L --> M["后继唯一运行期上下文模块"]
+    M --> N{"启动分支"}
+    N -->|"全新启动"| O["同一上下文类型构造协调状态、四仓库和服务"]
+    N -->|"恢复启动"| P["隔离候选通过屏障后构造同一上下文类型"]
+    O --> Q["每进程一次发布唯一上下文与租约"]
+    P --> Q
+    Q --> R["快照、线程、SQL 审计和只读面板只消费租约"]
+    R --> S["禁止第二协调器、第二宿主或平行租约"]
+  </div>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>
