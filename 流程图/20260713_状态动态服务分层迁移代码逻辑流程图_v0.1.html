@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>状态动态服务分层迁移代码逻辑流程图 v0.1</title>
+  <style>
+    body { margin: 0; padding: 24px; font-family: "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #20242a; }
+    main { max-width: 2200px; margin: 0 auto; }
+    h1 { font-size: 24px; margin: 0 0 8px; }
+    p { margin: 0 0 18px; color: #4b5563; }
+    .diagram { overflow: auto; background: #fff; border: 1px solid #d7dde5; padding: 20px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>状态动态服务分层迁移代码逻辑流程图 v0.1</h1>
+  <p>范围：#266 / SERVICE-DATA-S2，依赖 #272 / 725。</p>
+  <div class="diagram">
+    <pre class="mermaid">
+flowchart TD
+    A["调用方提交无令牌状态或动态业务请求"] --> B["状态业务服务 / 动态业务服务 / 状态动态组合器"]
+    B --> C["入口参数检测：主键、句柄、类型、时间戳、值和来源角色"]
+    C --> D{"入口是否符合业务前置条件"}
+    D -->|"否"| L1["逻辑内返回：入口拒绝或幂等冲突，结构不变化"]
+    D -->|"是"| E{"请求类型"}
+
+    E -->|"创建抽象状态"| AS1["非零状态主键 + 抽象状态值"]
+    E -->|"创建实例状态"| IS1["非零状态主键 + 场景 + 存在 + 时间戳 + 状态值"]
+    E -->|"创建抽象动态"| AD1["非零动态主键 + 抽象动态材料"]
+    E -->|"用已有状态记录动态"| ED1["非零动态主键 + 前后状态 + 被改变目标 + 可选来源动作"]
+    E -->|"创建前后状态并记录动态"| CD1["三个互异非零主键 + 场景 + 存在 + 前后值和时间戳 + 目标 + 可选动作"]
+
+    AS1 --> P["写前按主键和权威结构读取幂等材料"]
+    IS1 --> P
+    AD1 --> P
+    ED1 --> SR["动态服务通过状态业务服务读取完整前后状态材料"]
+    SR --> P
+    CD1 --> SS["状态业务服务形成两个完整实例状态写入规格"]
+    SS --> P
+    P --> Q{"同一事实已存在"}
+    Q -->|"完全一致"| L2["逻辑内返回：幂等读回"]
+    Q -->|"主键或结构冲突"| L1
+    Q -->|"不存在"| R["数据操作.状态动态提交类型化操作"]
+
+    R --> S["#272 执行器取得一次独占许可并构造不透明会话"]
+    S --> T["许可内复核现有节点类型、主信息、I64 值和关系材料"]
+    T --> U{"许可内材料仍符合请求"}
+    U -->|"版本漂移或前置不再成立"| L3["逻辑内返回：版本漂移；第一笔写入前结构不变化"]
+    U -->|"是"| V{"结构写入路径"}
+
+    V -->|"抽象状态"| AS2["主信息候选写槽位 0 -> 状态节点候选 -> 主键"]
+    V -->|"实例状态"| IS2["主信息候选写值/时间/幂等双槽 -> 状态节点候选 -> 主键 -> 场景临时关系和主体/场景引用"]
+    V -->|"抽象动态"| AD2["主信息候选写槽位 0 -> 动态节点候选 -> 主键"]
+    V -->|"已有状态动态"| ED2["复核前后状态同主体同场景且时间有序 -> 动态候选写后时间 -> 主键 -> 目标/前/后/动作关系"]
+    V -->|"组合创建"| CD2["同会话依次创建两个完整实例状态 -> 创建实例动态 -> 不生成裸状态"]
+
+    AS2 --> W["同令牌读回主信息、节点、主键、值和全部关系"]
+    IS2 --> W
+    AD2 --> W
+    ED2 --> W
+    CD2 --> W
+    W --> X{"读回是否与请求和业务规格完全一致"}
+    X -->|"否"| R1["追根因：内部不一致，禁止提交"]
+    X -->|"是"| Y["请求提交并确认候选"]
+    Y --> Z["释放独占许可"]
+    Z --> AA["返回值式状态 / 动态业务结果和完整句柄"]
+
+    R1 --> RB["许可释放前按索引、关系、节点候选、主信息候选逆序撤销"]
+    S -->|"许可失败、异常或无提交决定"| RB
+    RB --> RC["释放许可后权威重读"]
+    RC --> RD{"是否为并发形成的同一完整事实"}
+    RD -->|"是"| L2
+    RD -->|"否且结构回前态"| L4["返回许可失败、版本漂移或结构化失败"]
+    RD -->|"否且存在半结构"| R2["追根因：停止后继计划并登记断点"]
+    </pre>
+  </div>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>
