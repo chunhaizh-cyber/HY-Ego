@@ -147,6 +147,12 @@
     <ClCompile Include="海中鱼巣\核心\协调.结构事务.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\会话.结构写入.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\执行器.结构写入.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\核心\自检.结构事务.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -154,6 +160,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\核心\自检.仓库统一合同.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\自检.结构写入会话.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

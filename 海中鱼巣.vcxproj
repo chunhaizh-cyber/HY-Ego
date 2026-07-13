@@ -182,9 +182,12 @@
     <ClCompile Include="海中鱼巣\核心\写入事务.cpp" />
     <ClCompile Include="海中鱼巣\核心\事件日志段服务.cpp" />
     <ClCompile Include="海中鱼巣\核心\协调.结构事务.ixx" />
+    <ClCompile Include="海中鱼巣\核心\会话.结构写入.ixx" />
+    <ClCompile Include="海中鱼巣\核心\执行器.结构写入.ixx" />
     <ClCompile Include="海中鱼巣\核心\自检.结构事务.ixx" />
     <ClCompile Include="海中鱼巣\核心\自检.未发布身份候选.ixx" />
     <ClCompile Include="海中鱼巣\核心\自检.仓库统一合同.ixx" />
+    <ClCompile Include="海中鱼巣\核心\自检.结构写入会话.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="海中鱼巣\领域\概念安全删除提交能力.数据.h" />
