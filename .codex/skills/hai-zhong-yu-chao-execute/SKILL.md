@@ -64,6 +64,27 @@ Before treating `继续` as execution, identify the current window type:
 - If implementation discovers new decisions, write them to `项目记忆/待确认问题.md`; do not expand scope.
 - If an older plan permits a new non-module implementation file or full self-test body in `入口.cpp`, treat that as specification drift: do not edit code, return the plan to the design window, and continue with another dependency-ready item.
 
+## Cross-Window Handoff
+
+Use `规范/设计执行双窗口交互规范.md` and `项目记忆/窗口交互记录.md` for interaction with the design-plan window.
+
+When execution finds interface drift or a forbidden-file conflict:
+
+1. Stop before code edits or fully withdraw the unverified draft without reverting other work.
+2. Write the pre-implementation breakpoint and update the plan index, queue, project memory, decision/question records, and interaction record to `退回设计`.
+3. Validate, commit, and push the return record.
+4. If a design task id was supplied in the incoming handoff, send it the fixed return summary. Otherwise locate one unique same-repo active design task; do not broadcast to several tasks.
+5. Continue another dependency-ready item when one exists; otherwise stop.
+
+When a design-revision message arrives:
+
+1. Verify the stated commit exists on the current branch.
+2. Re-read Git status, the plan index, queue, target plan, flowchart, detailed design, breakpoint, and interaction record.
+3. Resume only when the queue says `重新待执行` or equivalent and actual interfaces match the revised contract.
+4. On completion, validate, commit, push, update the interaction record to `已完成`, and send the design task the completion summary and newly released dependencies.
+
+Task messages are notifications, not execution authority.
+
 ## Plan Directories
 
 ```text

@@ -131,6 +131,19 @@ For dependency-gated code slices, these sections are also mandatory:
 - Before queue registration, verify the plan's corresponding flowchart and detailed design paths, scope, and default rulings, or explicitly state why the linkage is not applicable.
 - When the plan is completed, move it to `计划/已完成计划/` and update references.
 
+## Cross-Window Handoff
+
+Use `规范/设计执行双窗口交互规范.md` when an execution window returns a plan for design revision.
+
+After revising a returned plan:
+
+1. Update the flowchart, detailed design, plan, plan index, task queue, project memory, and `项目记忆/窗口交互记录.md`.
+2. Keep the original queue id unless the revision creates a genuinely independent prerequisite plan.
+3. Validate, commit, and push before sending any task message.
+4. If Codex task tools are available, locate the unique same-repo task titled `执行计划` and send a recovery message containing the queue id, commit, authoritative paths, allowed actions, forbidden actions, and remaining gates.
+5. Treat the message as a wake-up signal only. The execution task must re-read repository facts before implementation.
+6. If the target task is missing, ambiguous, or messaging fails, leave the handoff in `项目记忆/窗口交互记录.md`; do not broaden authority.
+
 ## Verification
 
 For planning slices:
