@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>已发布关系可逆换代与普通父子重挂代码逻辑流程图 v0.1</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", sans-serif; background: #f5f7f8; color: #172126; }
+    main { max-width: 1600px; margin: 0 auto; padding: 24px; }
+    h1 { font-size: 24px; margin: 0 0 8px; }
+    p { margin: 0 0 18px; color: #4d5b62; }
+    .diagram { overflow: auto; background: #fff; border: 1px solid #cfd8dc; padding: 20px; }
+  </style>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</head>
+<body>
+  <main>
+    <h1>已发布关系可逆换代与普通父子重挂代码逻辑流程图 v0.1</h1>
+    <p>#277 只补同一独占许可内的已发布关系可逆失效、重挂、普通父子挂载和审计读回。</p>
+    <div class="diagram mermaid">
+flowchart TD
+    A["数据操作层提交类型化关系变更请求"] --> B["结构写入执行器取得一次独占许可并构造不透明会话"]
+    B --> C{"请求类型"}
+
+    C -->|"失效已发布关系"| D1["复核完整当前关系句柄、有效状态和预期端点"]
+    C -->|"重挂已发布关系"| D2["复核完整当前关系句柄、新端点和重复关系约束"]
+    C -->|"普通父子挂载 / 重挂"| D3["关系仓库复核单父、当前父、有效端点和父链防环"]
+    C -->|"审计只读"| D4["读取当前 / 已失效关系和按源审计记录组值副本"]
+
+    D1 --> E{"入口与当前结构是否一致"}
+    D2 --> E
+    D3 --> E
+    D4 --> E
+    E -->|"无效、过期、允许拒绝或确实无记录"| L1["逻辑内返回：结构不变化"]
+    E -->|"同一当前版本结构互相矛盾"| R1["追根因停止：不继续形成后继写集"]
+    E -->|"一致"| F{"是否改变结构"}
+
+    F -->|"审计读取或已在目标状态"| G["返回完整值式材料，不登记写集"]
+    F -->|"首次普通父子挂载"| H["关系仓库原子创建普通父子关系；会话登记本次关系写集"]
+    F -->|"失效 / 重挂 / 已有父关系重挂"| I["关系仓库锁内保存写前快照并应用变更；返回不可复制可逆变更能力"]
+
+    H --> J["同许可读回关系类型、端点、顺序号、状态和版本"]
+    I --> K["会话登记关系变更写集；读回写前 / 写后版本连续和当前结构"]
+    G --> M{"业务回调提交决定"}
+    J --> M
+    K --> M
+
+    M -->|"未请求提交、显式撤销、写入失败或异常"| N["先按逆序撤销已发布关系变更，再沿既有索引、关系、节点、主信息写集收口"]
+    M -->|"请求提交"| O["完成既有候选确认后，逐项确认关系变更能力并关闭撤销权"]
+    N --> P["同许可审计读回写前快照；数量和可读关系回到前态"]
+    O --> Q["同许可读回唯一当前关系和审计材料"]
+    P --> S["释放许可并返回结构化结果"]
+    Q --> S
+    </div>
+  </main>
+</body>
+</html>
