@@ -17,6 +17,30 @@ export module 海中鱼巣.核心.会话.结构写入;
 export namespace 海中鱼巣 {
 
 class 结构写入执行器;
+class 结构写入会话;
+
+class 结构提交准备只读视图 final {
+public:
+    结构提交准备只读视图() = delete;
+    结构提交准备只读视图(const 结构提交准备只读视图&) = delete;
+    结构提交准备只读视图& operator=(const 结构提交准备只读视图&) = delete;
+    结构提交准备只读视图(结构提交准备只读视图&&) = delete;
+    结构提交准备只读视图& operator=(结构提交准备只读视图&&) = delete;
+    ~结构提交准备只读视图() = default;
+
+    bool 主信息是本会话候选(主信息句柄 主信息) const;
+    bool 节点是本会话候选(节点句柄 节点) const;
+    std::optional<节点类型> 读取候选节点类型(节点句柄 节点) const;
+    std::optional<主信息句柄> 读取候选节点主信息(节点句柄 节点) const;
+    std::optional<std::int64_t> 读取候选I64值(主信息句柄 主信息, std::uint64_t 槽位) const;
+
+private:
+    friend class 结构写入执行器;
+
+    explicit 结构提交准备只读视图(const 结构写入会话& 会话) : 会话_(&会话) {}
+
+    const 结构写入会话* 会话_ = nullptr;
+};
 
 class 结构写入会话 final {
 public:
@@ -264,6 +288,7 @@ public:
 
 private:
     friend class 结构写入执行器;
+    friend class 结构提交准备只读视图;
 
     enum class 阶段 : std::uint8_t { 写入中, 收口中, 已结束 };
     enum class 决定 : std::uint8_t { 未决定, 提交, 撤销 };
@@ -323,6 +348,46 @@ private:
     bool 可继续写入() const {
         return 当前线程可访问() && 阶段_ == 阶段::写入中
             && 决定_ == 决定::未决定 && !首次失败_.has_value();
+    }
+
+    bool 可读取提交准备材料() const {
+        return 当前线程可访问() && 阶段_ == 阶段::写入中
+            && 决定_ == 决定::提交 && !首次失败_.has_value();
+    }
+
+    bool 主信息是本会话候选_提交准备(主信息句柄 主信息) const {
+        if (!可读取提交准备材料() || !句柄有效(主信息)) return false;
+        for (const auto& 记录 : 主信息候选组_) {
+            if (记录.候选.完整() && 记录.候选.读取主信息() == 主信息) return true;
+        }
+        return false;
+    }
+
+    bool 节点是本会话候选_提交准备(节点句柄 节点) const {
+        if (!可读取提交准备材料() || !句柄有效(节点)) return false;
+        for (const auto& 记录 : 节点候选组_) {
+            if (记录.候选.完整() && 记录.候选.读取节点() == 节点) return true;
+        }
+        return false;
+    }
+
+    std::optional<节点类型> 读取候选节点类型_提交准备(节点句柄 节点) const {
+        if (!节点是本会话候选_提交准备(节点)) return std::nullopt;
+        const auto 记录 = 节点_.读取节点(节点, 令牌_);
+        return 记录.has_value() ? std::optional<节点类型>{记录->类型} : std::nullopt;
+    }
+
+    std::optional<主信息句柄> 读取候选节点主信息_提交准备(节点句柄 节点) const {
+        if (!节点是本会话候选_提交准备(节点)) return std::nullopt;
+        const auto 记录 = 节点_.读取节点(节点, 令牌_);
+        return 记录.has_value() ? std::optional<主信息句柄>{记录->主信息} : std::nullopt;
+    }
+
+    std::optional<std::int64_t> 读取候选I64值_提交准备(
+        主信息句柄 主信息,
+        std::uint64_t 槽位) const {
+        if (!主信息是本会话候选_提交准备(主信息)) return std::nullopt;
+        return 主信息_.读取I64值(主信息, 槽位, 令牌_);
     }
 
     void 记录失败(const 结构写入结果& 结果) {
@@ -403,5 +468,27 @@ private:
     std::vector<索引绑定记录> 索引写集_;
     std::vector<候选I64写入记录> 候选I64写集_;
 };
+
+inline bool 结构提交准备只读视图::主信息是本会话候选(主信息句柄 主信息) const {
+    return 会话_ != nullptr && 会话_->主信息是本会话候选_提交准备(主信息);
+}
+
+inline bool 结构提交准备只读视图::节点是本会话候选(节点句柄 节点) const {
+    return 会话_ != nullptr && 会话_->节点是本会话候选_提交准备(节点);
+}
+
+inline std::optional<节点类型> 结构提交准备只读视图::读取候选节点类型(节点句柄 节点) const {
+    return 会话_ != nullptr ? 会话_->读取候选节点类型_提交准备(节点) : std::nullopt;
+}
+
+inline std::optional<主信息句柄> 结构提交准备只读视图::读取候选节点主信息(节点句柄 节点) const {
+    return 会话_ != nullptr ? 会话_->读取候选节点主信息_提交准备(节点) : std::nullopt;
+}
+
+inline std::optional<std::int64_t> 结构提交准备只读视图::读取候选I64值(
+    主信息句柄 主信息,
+    std::uint64_t 槽位) const {
+    return 会话_ != nullptr ? 会话_->读取候选I64值_提交准备(主信息, 槽位) : std::nullopt;
+}
 
 }

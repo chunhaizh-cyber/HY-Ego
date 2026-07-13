@@ -108,7 +108,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -198,6 +198,8 @@
     <ClCompile Include="海中鱼巣\领域\服务.动态.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.状态动态.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.状态动态分层.ixx" />
+    <ClCompile Include="海中鱼巣\领域\参与者.特征值原始材料.ixx" />
+    <ClCompile Include="海中鱼巣\领域\自检.特征值原始材料事务.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="海中鱼巣\领域\概念安全删除提交能力.数据.h" />

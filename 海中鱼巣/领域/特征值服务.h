@@ -184,6 +184,9 @@ struct 特征值恢复候选材料 {
     }
 };
 
+class 特征值原始材料事务参与者;
+class 特征值原始材料侧表访问器;
+
 class 特征值服务 {
 public:
     static constexpr std::size_t 最大序列元素数量 = 4096;
@@ -453,6 +456,9 @@ public:
     }
 
 private:
+    friend class 特征值原始材料事务参与者;
+    friend class 特征值原始材料侧表访问器;
+
     struct Vec原始值记录 {
         节点句柄 特征值节点;
         特征值原始类型 类型 = 特征值原始类型::未建立;
