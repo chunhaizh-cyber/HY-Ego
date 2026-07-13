@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>数据仓库关系查询二级索引与性能治理流程图</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #17212b; }
+    main { padding: 24px; }
+    h1 { margin: 0 0 8px; font-size: 24px; }
+    p { margin: 0 0 18px; color: #506070; }
+    .diagram { overflow: auto; background: #fff; border: 1px solid #d8dee6; border-radius: 6px; padding: 18px; }
+  </style>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</head>
+<body>
+  <main>
+    <h1>数据仓库关系查询二级索引与性能治理流程图</h1>
+    <p>先建立可复现基线，再优化关系候选读取；令牌、分片和显示投影均按证据后置。</p>
+    <div class="diagram">
+      <pre class="mermaid">flowchart TD
+    A["S0：建立隔离关系仓库夹具与可复现规模"] --> B["记录全表扫描路径、查询耗时、并发等待代理值、吞吐和正确性摘要"]
+    B --> B1{"基线是否完整且可重复"}
+    B1 -- "否" --> X1["追根因解决：停止 S1，不以单次微基准裁决结构"]
+    B1 -- "是" --> C["S1：关系仓库同锁维护正向、反向、节点相关和审计候选索引"]
+
+    C --> C1["写前完成句柄、类型、唯一性和领域前置拒绝"]
+    C1 --> C2{"创建 / 失效 / 重挂 / 删除类型"}
+    C2 -- "创建" --> W1["预备索引项；关系表与全部索引在同一独占锁内提交"]
+    C2 -- "失效" --> W2["有效索引移除；审计索引保留当前失效记录候选"]
+    C2 -- "重挂" --> W3["预备新端点索引项；推进同一关系版本；移除旧端点索引项"]
+    C2 -- "物理删除" --> W4["按精确当前关系从有效 / 审计索引和关系表同步移除"]
+    W1 --> W5{"提交是否完整"}
+    W2 --> W5
+    W3 --> W5
+    W4 --> W5
+    W5 -- "否" --> X2["追根因解决：回退本次索引与主表改动；不得发布半索引关系"]
+    W5 -- "是" --> R1["按查询键从二级索引复制关系编号候选"]
+
+    R1 --> R2["逐项复核关系表当前记录：仓库 / 编号 / 版本 / 类型 / 顺序 / 状态 / 源目标端点"]
+    R2 --> R3["复核有效端点；按顺序号、关系编号确定性排序"]
+    R3 --> R4{"候选与权威记录是否一致"}
+    R4 -- "否" --> X3["追根因解决：停止后续产物；禁止事后全表扫描修复"]
+    R4 -- "是" --> O1["返回值式关系记录或节点句柄组；索引不裁决业务事实"]
+
+    O1 --> D1{"S1 后指标是否仍达到令牌 / 批量读取优化门槛"}
+    D1 -- "否" --> D2["S2 记录不实施裁决；保持事务 ABI 和现有令牌语义"]
+    D1 -- "是" --> D3["S2：只优化已证明热点的计数、批量读取或许可活动表路径"]
+    D2 --> E1{"S1 / S2 后锁竞争是否仍达到分片门槛"}
+    D3 --> E1
+    E1 -- "否" --> E2["S3 记录不实施裁决；保持单一统一仓库"]
+    E1 -- "是" --> E3["S3：设计统一句柄下的仓库分片或类型分区与跨分区事务边界"]
+
+    E2 --> P1["独立后继：显示分类 / 当前概念根按需请求只读投影"]
+    E3 --> P1
+    P1 --> P2["按根、关系白名单、深度和页限读取候选并复核权威关系"]
+    P2 --> P3["多根森林、多父共享节点和图边保留；重复节点显示去重但边不丢失"]
+    P3 --> P4["控制面板只消费值式投影，不写仓库、不缓存为机器事实"]
+
+    Q1["索引命中但关系版本 / 端点 / 状态不符"] --> Q2["拒绝候选；若同一许可内出现则按内部不一致追根因"]
+    Q3["微基准变快但入口拒绝、普通删除独占或事务安全回归"] --> Q4["验收失败；不得接受优化"]</pre>
+    </div>
+  </main>
+</body>
+</html>
