@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>D455 项目视频处理实现流程图 v0.1</title>
+  <style>
+    body { font-family: "Microsoft YaHei", "Segoe UI", sans-serif; margin: 24px; color: #1f2933; line-height: 1.65; }
+    h1, h2 { color: #17324d; }
+    .meta, .notice { background: #f4f7fa; border-left: 4px solid #4f6f8f; padding: 12px 16px; margin: 14px 0; white-space: pre-wrap; }
+    .warning { background: #fff5cc; border-left-color: #a57900; }
+    .mermaid-wrap { overflow-x: auto; border: 1px solid #d8e0e8; border-radius: 8px; padding: 14px; margin: 16px 0; background: #fff; }
+    .mermaid { min-width: 1500px; }
+    table { border-collapse: collapse; width: 100%; margin: 14px 0 24px; font-size: 14px; }
+    th, td { border: 1px solid #cfd8e3; padding: 8px 10px; vertical-align: top; }
+    th { background: #edf3f8; text-align: left; }
+    code { background: #eef2f5; padding: 1px 4px; border-radius: 3px; }
+    ol, ul { padding-left: 24px; }
+  </style>
+</head>
+<body>
+  <h1>D455 项目视频处理实现流程图 v0.1</h1>
+  <p>更新时间：2026-07-13</p>
+
+  <h2>元数据</h2>
+  <div class="meta">图类型：外部参考项目当前实现证据流程图
+来源仓库：D:\D455
+来源分支：codex/visual-capability-loop-plan
+代码版本：b3608530f5a1c1da736517c1ef93a666c1fa5895
+代码状态：D455.cpp、README.md、相关 docs/scripts 在抽取时无未提交差异；未跟踪 analysis_runs 不在证据范围
+目标仓库：D:\海中鱼巣
+覆盖入口：main、runReplayDirectory、runCaptureReplayDirectory、实时逐帧主循环
+覆盖终点：五画面 / AVI / 可选 CSV / cluster 与 final 导出 / 离线 analysis package
+不得作为施工许可：是
+不得宣称：海中鱼巣已实现或接入 D455、视频处理、真实外设、体素或视觉融合</div>
+
+  <h2>说明</h2>
+  <p>本图按 <code>D:\D455</code> 当前源码抽取实时 D455、目录 replay 与 capture-replay 三类输入语境。当前没有 AVI/MP4/bag 作为 RGB-D 输入；AVI 只用于处理后仪表盘录像。专项测试入口只标出分流，不展开其独立循环。</p>
+  <div class="notice warning">默认实际路径：实时档跳过深度后处理并关闭 PCL；彩图轮廓每帧全帧计算；attention、cluster map 和录像默认关闭；显示为五个核心画面的三列仪表盘，不是旧说明中的 2×2 四格。</div>
+
+  <h2>视频处理主流程图</h2>
+<div class="mermaid-wrap"><pre class="mermaid">flowchart TD
+    A["D455.exe main：解析分割、姿态、运动、显示、录制和帧数参数；打印用法"] --> HELP{"--help / -h？"}
+    A -. "非法数值解析发生在主 try 之前" .-> X0["追根因解决：stoi 异常缺少统一入口收口"]
+    HELP -->|是| LHELP["逻辑内返回：返回 0"]
+    HELP -->|否| REPLAYMODE{"--replay-dir？"}
+
+    REPLAYMODE -->|是| RLIST["枚举存在配对 Depth16 的目录帧，并按帧号排序"]
+    RLIST --> RANY{"枚举到配对路径？"}
+    RANY -->|否| LR0["逻辑内返回：无 replay 帧，返回 1"]
+    RANY -->|是| RREAD["逐帧读取 Color PNG"]
+    RREAD --> RCOLOR{"Color 可解码？"}
+    RCOLOR -->|否| LR2["逻辑内返回：Color 材料不可读，返回 2"]
+    RCOLOR -->|是| RLOAD["读取毫米 Depth16 与左/右 IR；固定 depthScale=0.001；首帧构造近似内参"]
+    RLOAD -. "目录或 Depth 读取异常位于 main try 外" .-> X1["追根因解决：replay 缺少统一异常边界"]
+    RLOAD --> RMAT["Replay 帧材料：不再执行 RealSense 同步、对齐或深度后处理"]
+
+    REPLAYMODE -->|否| TRY["进入 main try：设备、capture、专项与实时路径共享异常收口"]
+    TRY -. "范围内任一 rs2::error" .-> XR2["异常收口：打印 RealSense 诊断并返回 2"]
+    TRY -. "范围内任一 std::exception" .-> XR3["异常收口：打印错误并返回 3"]
+    TRY --> DEV["查询 RealSense 设备"]
+    DEV --> PROBE{"--probe-only？"}
+    PROBE -->|是| PROBERET["逻辑内返回：有设备返回 0；无设备返回 1"]
+    PROBE -->|否| DOK{"设备存在？"}
+    DOK -->|否| LR1["逻辑内返回：外部设备不可用"]
+    DOK -->|是| CAPMODE{"--capture-replay-dir？"}
+    CAPMODE -->|是| CAPSTART["配置并启动 Color / Depth / 左 IR / 可选右 IR；创建输出目录"]
+    CAPSTART --> CAPWARM["预热循环：连续取得最新 RGB-D"]
+    CAPWARM --> CAPMORE{"captured < captureFrames？"}
+    CAPMORE -->|是| CAPWAIT["取得最新帧；Depth 对齐 Color；读取左右 IR"]
+    CAPWAIT --> CAPOK{"Color / Depth 都存在？"}
+    CAPOK -->|否| CAPMORE
+    CAPOK -->|是| CAPSAVE["保存 Color / 毫米 Depth16 / 可用左右 IR PNG；captured++"]
+    CAPSAVE -. "imwrite 返回值未检查" .-> X3["追根因提醒：PNG 失败可能未被发现，manifest / metadata 与图片不一致"]
+    CAPSAVE --> CAPMORE
+    CAPMORE -->|否| CAPMAN["写 case_manifest.json"]
+    CAPMAN --> CAPSTOP["pipeline.stop；返回 0"]
+    CAPSTOP --> CAPEND["范围终点：只生成 replay 输入，不执行分割、跟踪或仪表盘录像"]
+
+    CAPMODE -->|否| IMU{"IMU 重力专项？"}
+    IMU -->|是| IMUTEST["进入 IMU 独立循环并返回"]
+    IMU -->|否| STREAM["配置 Color、Depth、左 IR；默认再启用右 IR；可选 Accel / Gyro"]
+    STREAM --> START["pipeline.start；读取真实 depthScale 与 Color 内参"]
+    START --> SPECIAL{"深度稳定 / 锚点 / 稳定轮廓 / RGB 深度专项？"}
+    SPECIAL -->|是| TEST["进入对应独立测试循环并返回；不走默认五画面主循环"]
+    SPECIAL -->|否| SETUP["装配 tracker、轮廓缓存、profile / 验收 writer 与录像器"]
+    SETUP --> LIVEWAIT["wait_for_frames 阻塞取帧；再最多 poll 8 组，保留最新完整 RGB-D"]
+    LIVEWAIT -. "无超时" .-> X2["风险：停止或设备失联时等待可能无法及时收口"]
+    LIVEWAIT --> RAWOK{"原始 Color / Depth 有效？"}
+    RAWOK -->|否| SKIP["逻辑内返回：跳过当前外部帧"]
+    SKIP --> LIVEWAIT
+    RAWOK -->|是| ALIGN["读取姿态材料；Depth 对齐到 Color"]
+    ALIGN --> AOK{"对齐后 Color / Depth 有效？"}
+    AOK -->|否| SKIP
+    AOK -->|是| DP{"深度后处理配置？"}
+    DP -->|默认实时档：跳过| LMAT["生成 colorBgr、rawDepth16、depth16；统一尺寸"]
+    DP -->|快速后处理| DPS["只执行 Spatial 滤波"]
+    DP -->|完整后处理| DPF["Depth→Disparity→Spatial→Temporal→Depth→Hole Filling"]
+    DPS --> LMAT
+    DPF --> LMAT
+
+    RMAT --> MAT["统一逐帧算法材料：彩图、原始/当前深度、IR 灰度、内参与帧号"]
+    LMAT --> MAT
+    MAT --> GRAY["分割灰度：优先左 IR，缺失时退回彩图灰度"]
+
+    GRAY --> ARESULT{"异步 worker 有已完成结果？"}
+    ARESULT -->|否| ATT["计算 startup / interval / motion / unknown spike / far loss 刷新原因；执行最小间隔门禁"]
+    ARESULT -->|是| AVALID{"attentionDifferenceScan=true，且版本不一致或结果超龄？"}
+    AVALID -->|是| ADROP["丢弃过期异步候选，保留当前缓存"]
+    ADROP --> ATT
+    AVALID -->|否| ASTEREO["先给异步候选复用旧 stereo 证据；普通 async 不做版本 / 年龄拒绝"]
+    ASTEREO --> AMERGE["再与缓存合并；更新缓存版本、来源帧与运动签名"]
+    AMERGE --> ATT
+    ATT --> ATRIG{"本帧刷新？默认 interval=1，因此每帧为是"}
+    ATRIG -->|否| CREUSE["复用 ColorContourRegion 缓存和已有双目粗距"]
+    ATRIG -->|是| SAFE{"已有缓存 + 非 startup + 非对齐失败 + 脏区未超预算？"}
+    SAFE -->|否| FORCEFULL["强制同步全帧提取：startup、attention 对齐失败或脏区超预算"]
+    SAFE -->|是| MOTION{"motion 触发？"}
+    MOTION -->|否| FULLREQ["允许异步的全帧刷新请求：interval / unknown spike / far loss 等"]
+    MOTION -->|是| ROI["计算单个 / 多个脏 ROI 候选"]
+    ROI --> ROK{"生成有效 ROI？"}
+    ROK -->|否| RSKIP{"确有 ROI 空 / 过大拒绝标志 + 非 attention + 仅 motion 触发 + 启用 rejected-ROI skip？"}
+    RSKIP -->|是| CREUSE
+    RSKIP -->|否| FULLREQ
+    ROK -->|是| ASYNC{"异步 worker 存在？"}
+    FULLREQ --> ASYNC
+    ASYNC -->|否| RWORK["同步提取：空 ROI 全帧、单 ROI 串行、多 ROI 且有 worker pool 才并行；Canny / Lab / 连通域 / 过滤"]
+    ASYNC -->|是| AIDLE{"worker 无待处理任务？"}
+    AIDLE -->|否| CREUSE
+    AIDLE -->|是| ASUBMIT["提交单 / 多 / 空 ROI 任务；本帧复用缓存"]
+    ASUBMIT --> CREUSE
+    FORCEFULL --> STEREO["先建立或复用 stereo 证据：左右 IR 模板匹配粗距"]
+    RWORK --> STEREO
+    STEREO --> DROP["ROI 路径可选丢弃无 stereo 的新区域"]
+    DROP --> MERGE["再与缓存确定性合并：保留 ROI 外缓存及无匹配新证据的旧 stereo 区域"]
+    CREUSE --> CCOUT["ColorContourRegion：2D 轮廓 + 可选双目粗距、尺寸和置信度"]
+    MERGE --> CCOUT
+
+    CCOUT --> ANCHOR["可靠深度锚点：量程、原始/当前深度一致性、边缘排除、邻域稳定性"]
+    ANCHOR --> BOUNDARY["边界分析：深度台阶 / 可选孔洞 / IR或RGB边缘 / 深度确认边；默认实时档仅保留深度台阶"]
+    BOUNDARY --> DEPTHC["按深度切片生成 mask；形态学；扣除边界；轮廓/连通域；面积、ROI和贴边大块过滤"]
+    BOUNDARY --> FAR["可选远距材料：3501-12000mm 区间轮廓与相对近远分层"]
+    DEPTHC --> CREFINE["按重叠彩图轮廓精修当前深度候选，并重算深度统计与 3D AABB"]
+    CREFINE --> PCL{"PCL 实际启用？结构默认开启，但实时 / replay 档默认压制；默认配置需 --no-realtime-disable-pcl"}
+    PCL -->|否| CAND["当前帧 ObservationMaterial 候选"]
+    PCL -->|是| PCEMPTY{"当前候选为空？"}
+    PCEMPTY -->|是| PCLCLEAR["清空 PCL 候选缓存；输出空候选"]
+    PCLCLEAR --> CAND
+    PCEMPTY -->|否| PCREFRESH{"缓存为空，或到达至少 6 帧的刷新间隔？"}
+    PCREFRESH -->|是| PCLTAG["立即执行候选内点云欧式聚类；只写 pclClusterId；更新候选缓存"]
+    PCLTAG -.-> XPCL["风险：当前主链没有行为性消费者使用该 ID"]
+    PCLTAG --> CAND
+    PCREFRESH -->|否| PCLREUSE["整体复用旧候选，仅把 sourceFrameId 改为本帧"]
+    PCLREUSE -.-> XPCLR["风险：复用候选几何可能陈旧"]
+    PCLREUSE --> CAND
+
+    CAND --> QSEG{"qualitySegmentation？默认开启"}
+    QSEG -->|是| FSEG["构造 FinalSegmentationFrame：当前深度候选先占 ID；彩图轮廓只补未分配像素"]
+    QSEG -->|否| CAL["按锚点数量准入并校准中心/深度；可选稳定平面碎片合并"]
+    FSEG --> CAL
+    CAL --> CUE["Cue selection：深度边、受深度支持边、强锚点；弱证据可走 fallback"]
+    CUE --> TRACK["SegmentationTracker：一对一匹配、平滑、连续命中确认、短时丢失保持"]
+    TRACK --> STABLE["稳定 ObservationMaterial 与 track 汇总"]
+    FAR --> POST["汇总稳定材料、远距材料、可选近场平面与室内平面缓存"]
+    STABLE --> POST
+    POST --> CM{"--cluster-map？默认关闭"}
+    CM -->|是| CMAP["构造 full-frame ClusterMap：当前写入五类 mode；DepthHoleCandidate / Unknown 无写入点，剩余像素归 FarBackground"]
+    CM -->|否| FRAMEOUT["本帧 final / cluster / 稳定材料处理完成"]
+    CMAP --> FRAMEOUT
+    FRAMEOUT --> PERIODIC{"满足 analysisExportEveryN 周期？"}
+    PERIODIC -->|是| PEXPORT["帧内周期导出：cluster 启用则写；final 还要求显式导出路径"]
+    PERIODIC -->|否| OUT{"输入语境？"}
+    PEXPORT -. "imwrite 返回值未检查" .-> X3
+    PEXPORT --> OUT
+
+    OUT -->|Replay| RPROFILE["可选 profile CSV；默认关闭；不显示、不录 AVI"]
+    RPROFILE --> RNEXT{"还有目录帧？"}
+    RNEXT -->|是| RREAD
+    RNEXT -->|否| RCLOSE["关闭 profile CSV"]
+    RCLOSE --> RFINAL["末帧导出：cluster 启用即写默认 / 指定路径；final 仅显式路径"]
+    RFINAL -. "imwrite 返回值未检查" .-> X3
+    RFINAL --> REND["Replay 返回 0"]
+
+    OUT -->|实时| NEEDVIEW{"needsViews？显示 / recorder / 命令控制任一开启"}
+    NEEDVIEW -->|否| METRIC["可选 profile CSV；可选验收 CSV；两者默认关闭"]
+    NEEDVIEW -->|是| VIEW["构造五个核心画面：原图、稳定诊断、稳定轮廓内彩图、轮廓外彩图、非精度彩图归属"]
+    VIEW --> DASHBOARD["锁定双目重叠裁剪与面板尺寸；五画面裁剪 / 缩放后处理"]
+    DASHBOARD --> DISPLAYGATE{"显示启用？"}
+    DISPLAYGATE -->|是| DISPLAY["三列拼图；imshow；读取窗口键"]
+    DISPLAYGATE -->|否| HEADLESS["不调用 imshow；允许 headless 录像 / 命令控制"]
+    DISPLAY --> COMMAND["窗口键；命令控制开启时再轮询控制台：r 启动、s 停止、q / Esc 退出"]
+    HEADLESS --> COMMAND
+    COMMAND --> REC{"recorder 当前启用？"}
+    REC -->|是| AVI["MJPG AVI：五画面；诊断开启时可追加到六 / 七画面"]
+    REC -->|否| METRIC
+    AVI --> METRIC
+    METRIC --> QUIT{"收到退出命令？"}
+    QUIT -->|是| LCLOSE["关闭验收 / profile CSV"]
+    QUIT -->|否| INCR["frameId++"]
+    INCR --> MAX{"达到 maxFrames？"}
+    MAX -->|否| LIVEWAIT
+    MAX -->|是| LCLOSE
+    LCLOSE --> LFINAL["末帧导出：cluster 启用即写默认 / 指定路径；final 仅显式路径"]
+    LFINAL -. "imwrite 返回值未检查" .-> X3
+    LFINAL --> END["关闭录像、pipeline 和窗口；返回 0"]
+
+    classDef logicReturn fill:#fff5cc,stroke:#a57900,color:#3a2a00;
+    classDef rootCause fill:#ffe1e1,stroke:#b42318,color:#5a0b08;
+    classDef output fill:#e7f6e7,stroke:#2f7d32,color:#123d15;
+    class LHELP,LR0,LR2,PROBERET,LR1,SKIP logicReturn;
+    class X0,X1,X2,X3,XPCL,XPCLR,XR2,XR3 rootCause;
+    class CAPSAVE,CAPMAN,FSEG,CMAP,PEXPORT,RFINAL,LFINAL,VIEW,DASHBOARD,AVI,END output;</pre></div>
+
+  <h2>运行期输出与离线分析关系图</h2>
+<div class="mermaid-wrap"><pre class="mermaid">flowchart LR
+    CAP["capture-replay：真实 D455 同步采集"] --> DATA["目录帧：Color / Depth16 mm / 左右 IR / manifest"]
+    DATA --> REPLAY["runReplayDirectory：确定性逐帧处理"]
+    LIVE["实时 D455 帧"] --> CORE["共享底层算法：彩图轮廓、深度候选、锚点、边界、cue、tracker"]
+    REPLAY --> CORE
+
+    CORE --> CURRENT["当前帧深度候选 + ColorContourRegion"]
+    CURRENT --> FINAL["FinalSegmentationFrame：锚点/track 前的当前候选 ID 图"]
+    CORE --> STABLE["稳定 track 材料 + 远距/平面材料"]
+    STABLE --> CLUSTER["可选 ClusterMapFrame：全帧归簇与 mode"]
+    STABLE --> DASH["实时五画面仪表盘"]
+    DASH --> AVI["可选 MJPG AVI"]
+
+    FINAL --> FMETA["仅显式路径时导出 final ids / overlay / metadata"]
+    CLUSTER --> CMETA["启用 cluster map 即导出默认 / 指定路径的 ids / overlay / metadata"]
+    CORE --> PROFILE["可选 profile.csv"]
+    CORE --> ACCEPT["可选 acceptance.csv"]
+    FMETA --> CONVERT["convert_exports_to_analysis_run.py：离线桥"]
+    CMETA --> CONVERT
+    PROFILE --> CONVERT
+    ACCEPT --> CONVERT
+    CONVERT --> FM["frame_metrics.csv"]
+    CONVERT --> CMET["cluster_metrics.jsonl"]
+    CONVERT --> EVENTS["events.csv：当前只推导 unknown_spike / far_stereo_failed / color_contour_refresh / frame_time_spike"]
+    CONVERT --> MANIFEST["run_manifest.json：按条件更新 / 生成"]
+    CONVERT --> CONFIG["config_snapshot.json：按条件更新 / 生成"]
+    CONVERT --> NOTES["notes.md：缺失时创建"]
+    FM --> SCORE["score_run.py：评测，不回写实时机器事实"]
+    CMET --> SCORE
+    EVENTS --> SCORE
+    MANIFEST --> SCORE
+    CONFIG --> SCORE
+    PROFILE --> SCORE
+    SAMPLE["analysis run 可选 sample_frames/ 诊断样本"] --> SCORE
+    WEIGHTS["eval/score_weights.yaml 或 --weights 指定文件"] --> SCORE
+    SCORE --> RUNSCORE["run_score.json"]
+    SCORE --> SUMMARY["run_summary.md"]
+    SCORE --> FAILURE["failure_report.md"]
+    RUNSCORE --> RANK["leaderboard / winner 选择"]
+
+    classDef runtime fill:#e7f6e7,stroke:#2f7d32,color:#123d15;
+    classDef offline fill:#eef3f8,stroke:#51606f,color:#1d2730;
+    class CORE,CURRENT,STABLE,FINAL,CLUSTER,DASH,AVI,FMETA,CMETA,PROFILE,ACCEPT runtime;
+    class CONVERT,FM,CMET,EVENTS,MANIFEST,CONFIG,NOTES,SAMPLE,WEIGHTS,SCORE,RUNSCORE,SUMMARY,FAILURE,RANK offline;</pre></div>
+
+  <h2>关键代码映射</h2>
+  <table>
+    <thead><tr><th>阶段</th><th>代码位置</th><th>当前行为</th></tr></thead>
+    <tbody>
+      <tr><td>入口优先级</td><td><code>D455.cpp:13786-13958</code></td><td>参数/help → replay → 查询设备 → probe → 无设备退出 → capture-replay → IMU → 配流启动 → 其它专项 → 实时主循环</td></tr>
+      <tr><td>实时采集与对齐</td><td><code>D455.cpp:1634-1648,13871-13910,14125-14171</code></td><td>等最新帧、对齐、转换并统一尺寸</td></tr>
+      <tr><td>Replay</td><td><code>D455.cpp:2510-2624,12969-13665</code></td><td>目录 PNG 输入，不重复 RealSense 对齐或滤波</td></tr>
+      <tr><td>彩图轮廓/attention</td><td><code>D455.cpp:6058-7575,14206-14505</code></td><td>默认全帧；可选缓存、ROI、线程池、异步和双目粗距</td></tr>
+      <tr><td>深度主链</td><td><code>D455.cpp:2698-4711,10359-11052,14507-14638</code></td><td>锚点、边界、深度切片、彩图精修、可选 PCL、cue、tracker</td></tr>
+      <tr><td>结构输出</td><td><code>D455.cpp:7578-8558,14577-14732</code></td><td>当前候选 final segmentation、稳定材料 cluster map；周期导出早于显示/profile</td></tr>
+      <tr><td>显示/录像/指标</td><td><code>D455.cpp:9076-10163,14735-15009</code></td><td>可选五画面、独立显示门、运行时录像命令、可选 CSV 与末帧导出</td></tr>
+      <tr><td>离线分析桥</td><td><code>convert_exports_to_analysis_run.py:192-247,347-904</code></td><td>converter 生成 frame/cluster/events 并更新 manifest/config/notes；score_run.py 还读取 manifest/config/profile/sample_frames/weights，生成 run_score、run_summary 与 failure_report</td></tr>
+    </tbody>
+  </table>
+
+  <h2>当前实现偏差摘要</h2>
+  <table>
+    <thead><tr><th>编号</th><th>当前事实</th><th>结论</th></tr></thead>
+    <tbody>
+      <tr><td>D455-VIDEO-01</td><td>代码是五核心画面，旧 README/流程图仍写 2×2 四格</td><td>新图以当前代码为准</td></tr>
+      <tr><td>D455-VIDEO-02</td><td>默认实时档跳过滤波并关闭 PCL</td><td>必须区分可选实现与默认执行</td></tr>
+      <tr><td>D455-VIDEO-03</td><td>PCL 只标记 cluster ID；唯一比较入口当前无调用点；非刷新帧复用整个旧候选缓存</td><td>当前主链没有行为性消费者，且存在几何陈旧风险</td></tr>
+      <tr><td>D455-VIDEO-04</td><td>attention 单独开启时 interval=1 仍让每帧刷新</td><td>开关本身不保证缓存复用或提速</td></tr>
+      <tr><td>D455-VIDEO-05</td><td>ROI 并发仅覆盖彩图轮廓提取</td><td>不是完整视频流水线并行化</td></tr>
+      <tr><td>D455-VIDEO-06</td><td>FinalSegmentationFrame 在锚点和 tracker 前生成</td><td>不等于稳定分割或 ClusterMapFrame</td></tr>
+      <tr><td>D455-VIDEO-07</td><td>DepthHoleCandidate/Unknown 当前无 builder 写入；剩余像素归 FarBackground</td><td>七种枚举不等于七种 mode 已全部生成</td></tr>
+      <tr><td>D455-VIDEO-08</td><td>events.csv 由离线 converter 推导，当前只有四类事件</td><td>不是实时事件账本</td></tr>
+    </tbody>
+  </table>
+
+  <h2>关键边界</h2>
+  <ol>
+    <li>本图是静态源码抽取，未运行构建、真实 D455、replay 或录像烟测。</li>
+    <li>D455 输出是非权威观察、诊断或评测材料，不是海中鱼巣世界事实。</li>
+    <li>FinalSegmentationFrame、ClusterMapFrame、五画面仪表盘是三种不同输出。</li>
+    <li>线程池只服务彩图轮廓刷新；线程不是动作来源，缓存不是权威事实。</li>
+    <li>未修改计划索引或任务队列；外部参考图不自动生成海中鱼巣详细设计、计划或代码许可。</li>
+    <li>本图不构成海中鱼巣 D455 代码施工许可，也不证明外设、体素或视觉融合已经接入。</li>
+  </ol>
+
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>
