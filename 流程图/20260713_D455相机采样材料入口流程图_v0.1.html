@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>D455 相机采样材料入口流程图</title>
+  <style>
+    body { margin: 0; padding: 24px; font-family: "Microsoft YaHei", sans-serif; background: #f6f8fa; color: #1f2328; }
+    main { max-width: 1800px; margin: 0 auto; background: #fff; border: 1px solid #d0d7de; border-radius: 10px; padding: 24px; }
+    h1 { margin-top: 0; }
+    .note { line-height: 1.7; }
+    .mermaid { overflow: auto; padding: 16px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>D455 相机采样材料入口流程图</h1>
+    <p class="note">本图只描述 D455 第一轮材料入口：RealSense 采集结果先复制成 SDK 无关强类型材料，再进入专用有界缓存，最后生成只含材料引用的外部材料消息。当前切片不建立生产采样线程，不修改现有模拟外设线程，不把材料写为世界事实。</p>
+    <div class="mermaid">
+flowchart TD
+    A["显式 D455 真实样本入口<br/>或后续调用方采样请求"] --> B{"入口配置、缓存上限<br/>和设备选择材料有效？"}
+    A2["无硬件模拟自检材料"] --> H
+    A3["显式停止或关闭请求"] --> S1{"采集器当前状态允许收口？"}
+    S1 -- "未打开或已停止" --> L5["逻辑内返回：状态无变化<br/>不重复操作 SDK"]
+    S1 -- "运行中或正在停止" --> S2["请求停止并结束有限等待<br/>停止 pipeline、释放 SDK 资源"]
+    S2 --> S3{"等待、停止和资源释放<br/>均已收口？"}
+    S3 -- "否" --> R4["追根因解决：停止后仍不能收口<br/>不得声明生命周期验收通过"]
+    S3 -- "是" --> S4["状态进入已停止<br/>后续采样在入口拒绝"]
+    B -- "否" --> L1["逻辑内返回：入口拒绝<br/>不启动、不写缓存、不生成消息"]
+    B -- "是" --> C["采集器唯一进入 RealSense API<br/>选择唯一 D455 并启动四路 profile"]
+    C --> D{"设备、profile 和启动结果可用？"}
+    D -- "否" --> D1{"是否已经取得部分 SDK 资源？"}
+    D1 -- "否" --> L2["逻辑内返回：无设备、设备不唯一、profile 不支持或外部启动失败<br/>不发布材料"]
+    D1 -- "是" --> D2["停止并释放部分启动资源"]
+    D2 --> D3{"资源释放完成？"}
+    D3 -- "是" --> L2
+    D3 -- "否" --> R4
+    D -- "是" --> E["有限超时等待同一 frameset"]
+    E --> F{"RGB、Depth、左 IR、右 IR<br/>四路候选完整？"}
+    F -- "否" --> L3["逻辑内返回：超时、断开或候选帧不完整<br/>丢弃本次候选，不发布材料"]
+    F -- "是" --> G["复制字节、设备身份、逐路帧号与时间戳、深度比例和标定<br/>立即脱离 SDK 生命周期"]
+    G --> H{"SDK 无关材料布局、来源与标定<br/>内部不变量一致？"}
+    H -- "否" --> R1["追根因解决：完整候选的复制结果自相矛盾<br/>停止依赖路径，不发布材料"]
+    H -- "是" --> I["上行桥入口前置拒绝<br/>检查编号、版本、批次、时间和容量"]
+    I --> J{"材料准入通过？"}
+    J -- "否" --> L4["逻辑内返回：无效、过期、超限、重复或缓存满载<br/>结构不变化，不生成消息"]
+    J -- "是" --> K["在 D455 专用缓存中<br/>准备未发布候选"]
+    K --> M{"候选能力按相同编号和版本<br/>读回完全一致？"}
+    M -- "否" --> R2["追根因解决：精确撤销未发布候选<br/>停止依赖路径"]
+    M -- "是" --> N["构造 运行消息类型::外部材料<br/>只写编号、版本、批次、摘要和时间戳"]
+    N --> N2{"确认缓存候选发布成功？"}
+    N2 -- "否" --> R3["追根因解决：不返回消息并精确撤销材料<br/>停止依赖路径"]
+    N2 -- "是" --> O{"普通只读入口可按消息引用解析为<br/>刚发布的同一材料？"}
+    O -- "否" --> R3
+    O -- "是" --> P["返回值式消息和只读材料引用<br/>当前切片不进入生产消息队列"]
+    P --> Q["输出：非权威 D455 采样材料<br/>不写节点、主信息、关系、索引或领域事实"]
+    L1 --> Z["结束本次请求"]
+    L2 --> Z
+    L3 --> Z
+    L4 --> Z
+    L5 --> Z
+    S4 --> Z
+    R1 --> X["停止依赖实现或验收<br/>按公共诊断规则追查根因"]
+    R2 --> X
+    R3 --> X
+    R4 --> X
+    Q --> Z
+    </div>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>
