@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>共享写入未发布身份候选与撤销流程图</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #17212b; }
+    main { padding: 24px; }
+    h1 { margin: 0 0 8px; font-size: 24px; }
+    p { margin: 0 0 18px; color: #506070; }
+    .diagram { overflow: auto; background: #fff; border: 1px solid #d8dee6; border-radius: 6px; padding: 18px; }
+  </style>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</head>
+<body>
+  <main>
+    <h1>共享写入未发布身份候选与撤销流程图</h1>
+    <p>共享路径只可撤销本次创建返回的未发布候选；普通身份删除继续要求独占令牌。</p>
+    <div class="diagram">
+      <pre class="mermaid">flowchart TD
+    A["领域服务持有效共享路径令牌并完成入口前置拒绝"] --> B["主信息仓库创建主信息未发布候选；候选绑定仓库实例、完整令牌和新主信息句柄"]
+    B --> B1{"候选是否完整"}
+    B1 -- "否" --> X1["追根因解决：不得继续创建节点"]
+    B1 -- "是" --> C["节点仓库以候选主信息句柄创建节点未发布候选；绑定仓库实例、完整令牌和新节点句柄"]
+    C --> C1{"节点候选是否完整"}
+    C1 -- "否" --> R1["领域服务请求主信息仓库撤销主信息候选"]
+    R1 --> Z1["数量回到前态；不返回有效业务事实"]
+    C1 -- "是" --> D["领域服务创建本领域引用 / 因果关系；候选对象仍只在调用栈存活"]
+    D --> D1{"发布前关系与材料读回是否完整"}
+    D1 -- "否" --> R2["先删除本次关系，再撤销节点候选，最后撤销主信息候选"]
+    R2 --> Z1
+    D1 -- "是" --> E["领域服务创建唯一最终发布关系"]
+    E --> E1{"最终发布关系是否创建成功"}
+    E1 -- "否" --> R2
+    E1 -- "是" --> F["立即确认节点候选和主信息候选；确认只关闭撤销能力，不写机器事实"]
+    F --> G["领域服务按最终发布关系读回完整业务结构"]
+    G --> G1{"完整读回是否一致"}
+    G1 -- "否" --> X2["追根因解决：结构已发布，不得再用候选撤销或静默删除"]
+    G1 -- "是" --> O["返回完整领域结果"]
+
+    W1["普通句柄 + 共享令牌请求删除"] --> W2["拒绝：已发布身份删除仍要求独占令牌"]
+    W3["错误仓库 / 错线程 / 错域 / 过期令牌 / 已确认候选请求撤销"] --> W4["拒绝：结构与数量不变化"]
+    W5["候选析构"] --> W6["不自动清理；领域服务必须显式确认或撤销"]</pre>
+    </div>
+  </main>
+</body>
+</html>
