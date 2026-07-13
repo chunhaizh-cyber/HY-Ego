@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>不透明结构写入会话概念图只读材料扩展代码逻辑流程图 v0.1</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", sans-serif; background: #f5f7f8; color: #172126; }
+    main { max-width: 1500px; margin: 0 auto; padding: 24px; }
+    h1 { font-size: 24px; margin: 0 0 8px; }
+    p { margin: 0 0 18px; color: #4d5b62; }
+    .diagram { overflow: auto; background: #fff; border: 1px solid #cfd8dc; padding: 20px; }
+  </style>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</head>
+<body>
+  <main>
+    <h1>不透明结构写入会话概念图只读材料扩展代码逻辑流程图 v0.1</h1>
+    <p>#276 只补同一独占许可内的节点主键组和按目标来源关系记录组读取，不增加概念业务语义。</p>
+    <div class="diagram mermaid">
+flowchart TD
+    A["数据操作层提交同步类型化回调"] --> B["执行器取得一次独占许可并构造不透明会话"]
+    B --> C{"只读材料请求类型"}
+
+    C -->|"节点主键组"| D["入口复核：当前线程、写入阶段、未决定、无首次失败、节点句柄有效"]
+    C -->|"按目标的来源关系记录组"| E["入口复核：当前线程、写入阶段、未决定、无首次失败、目标句柄有效"]
+    D --> F{"入口是否通过"}
+    E --> F
+    F -->|"否"| L1["逻辑内返回：空值式材料，结构不变化"]
+    F -->|"是"| G{"仓库窄读取路径"}
+    G -->|"主键组"| H["索引仓库带同一令牌读取节点主键组"]
+    G -->|"来源关系"| I["关系仓库带同一令牌获取来源关系记录组"]
+    H --> J["返回稳定排序的主键值副本"]
+    I --> K["返回稳定排序的完整关系记录值副本"]
+    J --> M["数据操作层复核唯一非零主键、键到节点映射和完整句柄"]
+    K --> N["数据操作层复核关系句柄、版本、状态、类型、源端点和目标端点"]
+    M --> O["与既有按源关系记录组组合，形成同许可类别遍历材料"]
+    N --> O
+    O --> P{"业务回调是否请求提交"}
+    P -->|"否、显式撤销或异常"| Q["沿现有写集逆序收口；本批只读材料不加入写集"]
+    P -->|"是"| R["沿现有合同确认并发布本次关系写集"]
+    Q --> S["释放许可并返回值式结果"]
+    R --> S
+    </div>
+  </main>
+</body>
+</html>
