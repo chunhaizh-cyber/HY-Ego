@@ -3,6 +3,7 @@
 
 #include "句柄.h"
 #include "节点仓库.h"
+#include "结果.结构写入.h"
 #include "../领域/概念安全删除提交能力.数据.h"
 
 #include <algorithm>
@@ -37,6 +38,10 @@ public:
 
     bool 绑定主键(std::uint64_t 主键, 节点句柄 节点);
     bool 绑定主键(std::uint64_t 主键, 节点句柄 节点, const 结构事务令牌& 令牌);
+    结构写入结果 结构化绑定主键(
+        std::uint64_t 主键,
+        节点句柄 节点,
+        const 结构事务令牌& 令牌);
     std::optional<节点句柄> 按主键查节点(std::uint64_t 主键) const;
     std::optional<节点句柄> 按主键查节点(std::uint64_t 主键, const 结构事务令牌& 令牌) const;
     std::vector<std::uint64_t> 读取节点主键组(节点句柄 节点) const;
@@ -47,6 +52,10 @@ public:
         const 结构事务令牌& 令牌) const;
     bool 删除主键(std::uint64_t 主键);
     bool 删除主键(std::uint64_t 主键, const 结构事务令牌& 令牌);
+    结构写入结果 严格删除主键(
+        std::uint64_t 主键,
+        节点句柄 预期节点,
+        const 结构事务令牌& 令牌);
     std::uint64_t 有效主键数量() const;
     std::uint64_t 有效主键数量(const 结构事务令牌& 令牌) const;
 

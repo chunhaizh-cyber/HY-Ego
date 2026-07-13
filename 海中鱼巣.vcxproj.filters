@@ -153,6 +153,9 @@
     <ClCompile Include="海中鱼巣\核心\自检.未发布身份候选.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\自检.仓库统一合同.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="海中鱼巣\领域\概念安全删除提交能力.数据.h">
@@ -171,6 +174,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\核心\容错检查.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\核心\结果.结构写入.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\核心\主信息仓库.h">
