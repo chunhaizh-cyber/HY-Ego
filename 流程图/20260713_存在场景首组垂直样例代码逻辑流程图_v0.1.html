@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>存在场景首组垂直样例代码逻辑流程图</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #17212b; }
+    main { padding: 24px; }
+    h1 { margin: 0 0 8px; font-size: 24px; }
+    p { margin: 0 0 18px; color: #506070; }
+    .diagram { overflow: auto; background: #fff; border: 1px solid #d8dee6; border-radius: 6px; padding: 18px; }
+  </style>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</head>
+<body>
+  <main>
+    <h1>存在场景首组垂直样例代码逻辑流程图</h1>
+    <p>以实际存在、虚拟存在、场景和接纳关系验证业务服务无令牌公开面与失败无残留。</p>
+    <div class="diagram">
+      <pre class="mermaid">flowchart TD
+    A["调用存在 / 场景业务服务；输入业务请求和稳定句柄"] --> B{"请求类型"}
+    B -- "创建实际存在" --> C1["存在服务检查请求形状和幂等键"]
+    B -- "创建虚拟存在" --> C2["存在服务检查来源为需求 / 任务 / 方法且当前有效"]
+    B -- "创建场景" --> C3["场景服务检查请求形状和幂等键"]
+    B -- "场景接纳已有存在" --> C4["场景服务检查场景 / 存在身份和重复归属"]
+    B -- "创建并接纳场景存在" --> C5["存在场景组合器同时检查场景和存在请求"]
+
+    C1 --> D["结构写入执行器创建一次独占不透明会话"]
+    C2 --> D
+    C3 --> D
+    C4 --> D
+    C5 --> D
+    D --> D1{"会话是否有效"}
+    D1 -- "否" --> L1["逻辑内返回：结构不变化"]
+    D1 -- "是" --> E["存在场景数据操作层在同一会话复核当前结构"]
+
+    E --> F{"是否需要新身份"}
+    F -- "是" --> G["创建主信息候选 -> 创建存在或场景节点候选"]
+    F -- "否" --> H["复核已有场景和存在当前句柄"]
+    G --> I{"是否为虚拟存在"}
+    I -- "是" --> I1["创建存在 -> 来源节点引用关系"]
+    I -- "否" --> J
+    I1 --> J{"是否需要场景接纳"}
+    H --> J
+    J -- "是" --> J1["创建场景 -> 存在归属关系；该关系为组合操作最后发布结构"]
+    J -- "否" --> K["节点身份确认或来源关系作为当前操作最后发布结构"]
+    J1 --> K
+    K --> K1{"全部结构是否同会话读回完整"}
+    K1 -- "否，最后发布前" --> R["逆序删除本次关系并撤销节点 / 主信息候选"]
+    R --> R1{"数量和可读结构是否回到前态"}
+    R1 -- "否" --> X1["追根因解决：停止后继迁移"]
+    R1 -- "是" --> L2["返回结构化失败；无残留"]
+    K1 -- "否，最后发布后" --> X2["追根因解决：不得静默删除已发布结构"]
+    K1 -- "是" --> M["确认候选并释放会话"]
+    M --> N["返回实际存在 / 虚拟存在 / 场景 / 归属关系的领域结果"]
+
+    P1["旧无令牌 / 带令牌 / 候选入口"] --> P2["调用清单登记为兼容路径；首组样例不直接删除"]</pre>
+    </div>
+  </main>
+</body>
+</html>
