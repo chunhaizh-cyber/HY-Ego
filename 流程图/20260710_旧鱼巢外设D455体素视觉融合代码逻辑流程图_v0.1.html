@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>旧鱼巢外设 D455 体素视觉融合代码逻辑流程图 v0.1</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", "Segoe UI", sans-serif; background: #f7f7f4; color: #202124; }
+    main { max-width: 1500px; margin: 0 auto; padding: 28px; }
+    h1 { font-size: 28px; margin: 0 0 10px; }
+    h2 { margin-top: 24px; font-size: 18px; }
+    .meta { color: #5f6368; margin-bottom: 20px; }
+    pre { white-space: pre-wrap; background: #fff; border: 1px solid #d7d7d0; border-radius: 8px; padding: 16px; }
+    .mermaid { background: #fff; overflow: auto; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>旧鱼巢外设 D455 体素视觉融合代码逻辑流程图 v0.1</h1>
+  <div class="meta">更新时间：2026-07-10</div>
+
+  <h2>说明</h2>
+  <p>本图按旧 D:\鱼巢 外设 / D455 / 体素 / 视觉融合代码链提取候选逻辑，只作为 D:\海中鱼巣 后续外设材料、体素服务和视觉融合专项的流程图依据。当前结论仍是排除 / 后续专项，不接真实 D455，不接体素，不接外设，不生成代码实施许可。</p>
+
+  <h2>流程图</h2>
+  <pre class="mermaid">flowchart TD
+    A["旧鱼巢外设视觉链入口"] --> B{"入口来源类型"}
+    B -->|D455相机| C["D455相机类：打开设备 / 采集彩色视频帧 / 读取阶段耗时"]
+    B -->|相机接口| D["相机接口与双目相机适配器：统一打开 / 释放 / 采集一帧"]
+    B -->|外设线程| E["外设线程_D455深度相机：启动 / 停止 / 读取结果"]
+    B -->|观察报告队列| F["外设观察报告队列：报告入队 / 出队 / 速率材料"]
+    B -->|体素视觉| G["场景体素模块与视觉观察融合：先验 / 候选 / 评分 / 缺口"]
+    B -->|外设动作| H["自我动作实现.外设模块：相机可用 / 刷新场景 / 建立像素索引"]
+
+    C --> I["输出外设原始材料"]
+    D --> I
+    E --> I
+    F --> I
+    I --> J{"是否试图直接写世界事实"}
+    J -->|是| R1["逻辑内返回：当前禁止外设材料直写世界事实"]
+    J -->|否| K["作为外部材料或请求进入后续候选"]
+
+    K --> L{"是否已有外设材料规范和服务入口"}
+    L -->|否| R2["逻辑内返回：转外设材料专项"]
+    L -->|是| M["外设服务候选：材料准入 / 来源 / 时间戳 / 样本批次"]
+    M --> N{"是否已有体素服务和视觉融合详细设计"}
+    N -->|否| R3["逻辑内返回：转体素和视觉融合专项"]
+    N -->|是| O["体素视觉候选：先验快照 / 观察候选 / 评分 / 信息缺口"]
+
+    O --> P{"是否生成需求 / 状态 / 动态 / 特征写入"}
+    P -->|未确认写入口| R4["逻辑内返回：只输出候选材料"]
+    P -->|已确认领域服务入口| Q["经领域服务入账：状态 / 动态 / 特征 / 缺口需求候选"]
+    Q --> RV["最小读回验证：来源材料、场景、主体、时间戳、候选和写入关系"]
+    RV --> S{"读回是否符合确认结构"}
+    S -->|是| T["输出后续专项证据包"]
+    S -->|否| X["追根因解决：不得留下可读半结构"]
+
+    R1 --> Z["当前保持排除边界"]
+    R2 --> Z
+    R3 --> Z
+    R4 --> Z</pre>
+
+  <h2>关键边界</h2>
+  <pre>1. 本图不证明 D455、体素、真实外设或视觉融合已接入。
+2. 外设材料只能作为材料或请求，不能直接成为世界事实。
+3. 线程、采样队列、帧、截图、日志和显示文本不得成为动作来源或事实来源。
+4. 后续若恢复，必须先有外设材料规范、体素服务详细设计、领域服务写入口、真实样本验收和失败收口。
+5. 进入创建、绑定、写状态、写动态或写特征后不及预期，必须追根因解决，不得画成普通失败返回。</pre>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>

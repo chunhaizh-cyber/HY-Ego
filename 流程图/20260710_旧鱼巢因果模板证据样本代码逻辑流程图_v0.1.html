@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>旧鱼巢因果模板证据样本代码逻辑流程图 v0.1</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", "Segoe UI", sans-serif; background: #f7f7f4; color: #202124; }
+    main { max-width: 1500px; margin: 0 auto; padding: 28px; }
+    h1 { font-size: 28px; margin: 0 0 10px; }
+    h2 { margin-top: 24px; font-size: 18px; }
+    .meta { color: #5f6368; margin-bottom: 20px; }
+    pre { white-space: pre-wrap; background: #fff; border: 1px solid #d7d7d0; border-radius: 8px; padding: 16px; }
+    .mermaid { background: #fff; overflow: auto; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>旧鱼巢因果模板证据样本代码逻辑流程图 v0.1</h1>
+  <div class="meta">更新时间：2026-07-10</div>
+
+  <h2>说明</h2>
+  <p>本图提取旧因果模板身份、证据状态、从动态生成或命中因果模板、追加证据动态样本和动作结果因果验收路径。当前海中鱼巣第一轮只有轻量因果引用，不生成稳定因果模板，不迁移旧因果主信息字段。</p>
+
+  <h2>流程图</h2>
+  <pre class="mermaid">flowchart TD
+    A["旧因果链入口"] --> B{"入口类型"}
+    B -->|查询| C["解析因果节点 / 读取证据状态 / 查询因果链"]
+    B -->|生成| D["读取动态因果生成输入"]
+    B -->|验收| E["验收动作结果因果证据"]
+
+    D --> F{"动态材料是否完整"}
+    F -->|否| R1["逻辑内返回：动态材料不足，不生成模板"]
+    F -->|是| G["提取条件特征 / 结果特征 / 状态迁移 / 来源动作"]
+    G --> H{"是否命中既有因果模板"}
+    H -->|是| I["追加证据动态样本候选"]
+    H -->|否| J{"当前是否允许创建因果模板"}
+    J -->|否| R2["逻辑内返回：只输出因果模板候选"]
+    J -->|是| K["创建因果模板节点和证据集合"]
+
+    E --> L{"预测结果与实际结果是否可回查"}
+    L -->|否| R3["逻辑内返回：证据不足，不更新稳定结论"]
+    L -->|是| I
+
+    I --> M{"是否更新证据计数或稳定度"}
+    M -->|第一轮轻量因果| R4["逻辑内返回：只记录来源动态准入，不写稳定模板"]
+    M -->|后续因果增强| N["经因果服务写证据集合 / 评分 / 版本"]
+
+    C --> O{"查询结果是否被当作事实"}
+    O -->|是| R5["逻辑内返回：查询结果只能是候选"]
+    O -->|否| P["输出因果候选材料"]
+
+    K --> RV1["最小读回验证：模板节点、来源动态、条件、结果、证据样本"]
+    N --> RV1
+    RV1 --> S{"读回是否一致"}
+    S -->|是| T["输出因果增强专项证据包"]
+    S -->|否| X["追根因解决：不得留下半因果模板"]</pre>
+
+  <h2>关键边界</h2>
+  <pre>1. 轻量因果引用不等于稳定因果结论。
+2. 单条动态、单个模板命中、日志文本或动作语义文本键不得成为可靠因果事实。
+3. 旧因果模板主信息、证据计数字段和稳定度字段不得直接迁移为新主信息字段。
+4. 后续因果增强必须补因果服务详细设计，并明确证据集合、评分、版本和复判边界。
+5. 创建模板或写证据后读回不一致，必须追根因解决。</pre>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>
