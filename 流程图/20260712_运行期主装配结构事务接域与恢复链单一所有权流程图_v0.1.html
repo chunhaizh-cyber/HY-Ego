@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>运行期主装配结构事务接域与恢复链单一所有权流程图</title><style>body{font-family:"Microsoft YaHei",sans-serif;margin:0;background:#f5f7f8;color:#172026}main{max-width:2200px;margin:auto;padding:24px}.diagram{overflow:auto;background:#fff;border:1px solid #cfd8dc;padding:20px}h1{letter-spacing:0}</style></head><body><main><h1>运行期主装配结构事务接域与恢复链单一所有权流程图</h1><div class="diagram"><pre class="mermaid">flowchart TD
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>运行期主装配结构事务接域与恢复链单一所有权流程图</title><style>body{font-family:"Microsoft YaHei",sans-serif;margin:0;background:#f5f7f8;color:#172026}main{max-width:2200px;margin:auto;padding:24px}.diagram{overflow:auto;background:#fff;border:1px solid #cfd8dc;padding:20px}h1{letter-spacing:0}</style></head><body><main><h1>运行期主装配结构事务接域与恢复链单一所有权流程图</h1><p><strong>历史设计证据：</strong>本图已由 JY-338 和 20260714 运行期上下文首次发布租约与恢复链单一所有权代码逻辑流程图替代，不得作为 #249 当前实施入口。</p><div class="diagram"><pre class="mermaid">flowchart TD
     A["开始：#217 已完成，#246 已输出主装配与恢复链所有权裁决"] --> B{"#246 实际接口是否与本批假定一致"}
     B -->|"否"| G0["设计漂移返回：不改代码，修订 #247-#249"]
     B -->|"是"| C["#247：建立唯一运行期结构核心与宿主 / 租约骨架；创建一个协调状态并生成正式接线"]

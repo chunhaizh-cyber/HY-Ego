@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>运行期上下文首次发布租约与恢复链单一所有权代码逻辑流程图</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", sans-serif; background: #f6f7f9; color: #1f2328; }
+    main { max-width: 1800px; margin: 0 auto; padding: 24px; }
+    h1 { font-size: 26px; margin: 0 0 8px; }
+    p { line-height: 1.7; }
+    .diagram { overflow: auto; background: #fff; border: 1px solid #d0d7de; padding: 20px; }
+    .boundary { margin-top: 16px; padding: 16px 20px; background: #fff; border-left: 4px solid #57606a; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>运行期上下文首次发布租约与恢复链单一所有权代码逻辑流程图</h1>
+  <p>本批只启用全新完整候选的一次首次发布和同身份租约；恢复链只冻结为同一上下文、宿主、发布槽和租约所有权，恢复许可与恢复算法继续由后继专项实现。</p>
+  <div class="diagram">
+    <pre class="mermaid">
+flowchart TD
+    A["输入：全新未发布运行期上下文候选"] --> B{"候选指针是否有效"}
+    B -->|"否"| L1["逻辑内返回：无效候选；宿主保持空或保持原上下文"]
+    B -->|"是"| C{"结构核心是否完整"}
+    C -->|"否"| L2["逻辑内返回：结构核心不完整；不保存候选"]
+    C -->|"是"| D{"运行期业务装配是否完整"}
+    D -->|"否"| L3["逻辑内返回：缺少领域服务装配；不保存候选"]
+    D -->|"是"| E{"版本 1 系统角色清单及权威复核是否完整"}
+    E -->|"否"| L4["逻辑内返回：缺少初始化完成材料；不保存候选"]
+    E -->|"是"| F["取得唯一宿主发布锁，并在提交点前再次复核完整性"]
+    F --> G{"宿主是否已有当前上下文"}
+    G -->|"是"| L5["逻辑内返回：已有当前上下文；不得替换或销毁原上下文"]
+    G -->|"否"| H["同一临界区内把候选 shared_ptr 写入唯一 当前上下文 槽"]
+    H --> I{"写入后宿主、租约和候选身份是否为同一对象"}
+    I -->|"否"| R1["追根因解决：停止后继；不得生成伪租约或启动消费者"]
+    I -->|"是"| J["返回已发布；后续读取租约复制同一 const shared_ptr 身份"]
+    J --> K["并发首次发布：仅一个线程返回已发布，其余返回已有当前上下文"]
+
+    P["#226 快照冻结"] --> P1["只消费已发布租约和同一上下文接线；不得新建协调器或宿主"]
+    Q["#229 恢复屏障"] --> Q1["形成绑定恢复候选、快照和事务身份的不可伪造发布许可"]
+    Q1 --> R["#237 恢复适配"]
+    R --> R2["复用同一运行期上下文类型、同一宿主槽和同一租约类型"]
+    R2 --> R3["使用恢复专用许可入口；禁止调用全新候选普通发布入口"]
+    R3 --> Z["恢复发布、快照解析、启动接线继续由恢复专项实施"]
+    </pre>
+  </div>
+  <div class="boundary">
+    <strong>边界：</strong>#249 不实现快照或恢复，只启用全新候选首发并冻结恢复链单一所有权；普通发布入口不得成为恢复屏障绕过路径。
+  </div>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>
