@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>存在状态候选写入规格与同会话参与者代码逻辑流程图 v0.1</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", sans-serif; background: #f5f7f8; color: #172126; }
+    main { max-width: 1700px; margin: 0 auto; padding: 24px; }
+    h1 { font-size: 24px; margin: 0 0 8px; }
+    p { margin: 0 0 18px; color: #4d5b62; }
+    .diagram { overflow: auto; background: #fff; border: 1px solid #cfd8dc; padding: 20px; }
+  </style>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</head>
+<body>
+  <main>
+    <h1>存在状态候选写入规格与同会话参与者代码逻辑流程图 v0.1</h1>
+    <p>#278 只补原子服务规格与数据操作同会话参与入口，不实施需求任务方法业务。</p>
+    <div class="diagram mermaid">
+flowchart TD
+    A["上层业务服务请求存在 / 状态原子写入规格"] --> B{"规格类型"}
+
+    B -->|"虚拟存在"| C1["存在业务服务复核非零幂等键、来源角色和来源阶段"]
+    B -->|"抽象状态"| C2["状态业务服务复核非零幂等键和 I64 状态材料"]
+    B -->|"已发布主体实例状态"| C3["状态业务服务复核场景、主体、时间戳和值式材料"]
+    B -->|"本会话候选主体实例状态"| C4["状态业务服务复核场景、时间戳和值式材料；主体由调用方同会话产生"]
+
+    C1 --> D{"入口参数是否符合原子服务规则"}
+    C2 --> D
+    C3 --> D
+    C4 --> D
+    D -->|"否"| L1["逻辑内返回：不形成规格，不取得写许可"]
+    D -->|"是"| E["返回不可默认构造、构造权封闭、只读访问的类型化写入规格"]
+
+    E --> F{"调用模式"}
+    F -->|"既有原子服务立即创建"| G1["原子数据操作层自己的执行器取得一次独占许可"]
+    F -->|"需求 / 任务 / 方法组合创建"| G2["上层数据操作层已经取得一次独占许可，并传入当前结构写入会话"]
+    G1 --> H["调用原子数据操作同会话参与入口"]
+    G2 --> H
+
+    H --> I{"规格要求的来源 / 主体阶段"}
+    I -->|"已发布"| J1["同许可复核完整句柄、节点类型、主信息和当前关系材料"]
+    I -->|"本会话候选"| J2["用会话候选身份入口复核句柄属于本次写集，并复核节点类型和主信息"]
+    J1 --> K{"同许可复核结果"}
+    J2 --> K
+    K -->|"版本漂移、类型不符或允许拒绝"| L2["逻辑内返回：第一笔参与者写入前结束"]
+    K -->|"同一当前版本结构矛盾"| R1["追根因停止：不进入参与者写入"]
+    K -->|"一致"| M{"参与写入类型"}
+
+    M -->|"虚拟存在"| N1["创建主信息候选、存在节点、主键和来源引用关系"]
+    M -->|"抽象状态"| N2["创建主信息候选、I64 状态值、状态节点和主键"]
+    M -->|"实例状态"| N3["创建主信息候选、状态 / 时间 / 幂等材料、状态节点、主键、场景临时关系和主体 / 场景引用"]
+
+    N1 --> O["参与者同许可最小读回自己的全部写集；只返回值式结果，不请求提交"]
+    N2 --> O
+    N3 --> O
+    O --> P{"上层一次操作的其余写入和总读回是否完成"}
+    P -->|"否、异常或未请求提交"| R2["会话统一逆序撤销本次全部原子与上层写集"]
+    P -->|"是"| Q["由唯一外层事务所有者请求提交"]
+    R2 --> S["释放许可后按主键、完整句柄和数量快照证明无可读半结构"]
+    Q --> T["确认候选并释放许可；权威重读映射已提交 / 幂等 / 漂移"]
+    </div>
+  </main>
+</body>
+</html>
