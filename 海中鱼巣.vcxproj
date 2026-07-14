@@ -74,6 +74,13 @@
 
   <PropertyGroup Label="UserMacros" />
 
+  <PropertyGroup>
+    <EnableD455RealSense Condition="'$(EnableD455RealSense)'==''">false</EnableD455RealSense>
+    <D455VcpkgRoot Condition="'$(VcpkgRoot)'!=''">$(VcpkgRoot)</D455VcpkgRoot>
+    <D455VcpkgRoot Condition="'$(D455VcpkgRoot)'=='' and '$(VCPKG_ROOT)'!=''">$(VCPKG_ROOT)</D455VcpkgRoot>
+    <D455RealSensePreprocessorDefinitions Condition="'$(EnableD455RealSense)'=='true' and '$(Platform)'=='x64'">HY_EGO_ENABLE_D455_REALSENSE;</D455RealSensePreprocessorDefinitions>
+  </PropertyGroup>
+
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -108,7 +115,8 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST;$(D455RealSensePreprocessorDefinitions)%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories Condition="'$(EnableD455RealSense)'=='true'">$(D455VcpkgRoot)\installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -116,6 +124,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
        <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories Condition="'$(EnableD455RealSense)'=='true'">$(D455VcpkgRoot)\installed\x64-windows\debug\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies Condition="'$(EnableD455RealSense)'=='true'">realsense2d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -124,7 +134,8 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;$(D455RealSensePreprocessorDefinitions)%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories Condition="'$(EnableD455RealSense)'=='true'">$(D455VcpkgRoot)\installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -132,6 +143,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
        <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories Condition="'$(EnableD455RealSense)'=='true'">$(D455VcpkgRoot)\installed\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies Condition="'$(EnableD455RealSense)'=='true'">realsense2.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
 
@@ -140,6 +153,16 @@
     <ClCompile Include="海中鱼巣\启动.运行期上下文.ixx" />
     <ClCompile Include="海中鱼巣\自检.运行期上下文.ixx" />
     <ClCompile Include="海中鱼巣\线程\运行消息协议.ixx" />
+    <ClCompile Include="海中鱼巣\适配\协议.D455采样材料.ixx" />
+    <ClCompile Include="海中鱼巣\适配\采集器.D455相机.ixx">
+      <ExcludedFromBuild Condition="'$(Platform)'!='x64' or '$(EnableD455RealSense)'!='true'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\线程\缓存.D455帧材料.ixx" />
+    <ClCompile Include="海中鱼巣\线程\上行桥.D455采样材料.ixx" />
+    <ClCompile Include="海中鱼巣\线程\自检.D455采样材料.ixx" />
+    <ClCompile Include="海中鱼巣\适配\自检.D455真实样本.ixx">
+      <ExcludedFromBuild Condition="'$(Platform)'!='x64' or '$(EnableD455RealSense)'!='true'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\线程\自我治理消息协议.ixx" />
     <ClCompile Include="海中鱼巣\线程\任务结果回执协议.ixx" />
     <ClCompile Include="海中鱼巣\线程\有界自我治理队列.ixx" />
@@ -254,6 +277,22 @@
     <ClInclude Include="海中鱼巣\领域\语素服务.h" />
     <ClInclude Include="海中鱼巣\领域\需求服务.h" />
   </ItemGroup>
+  <Target Name="验证D455RealSense构建输入" BeforeTargets="PrepareForBuild"
+          Condition="'$(EnableD455RealSense)'=='true' and '$(Platform)'=='x64'">
+    <Error Condition="'$(D455VcpkgRoot)'==''" Text="启用 D455 RealSense 时必须通过 VcpkgRoot 或 VCPKG_ROOT 提供 SDK 根目录。" />
+    <Error Condition="!Exists('$(D455VcpkgRoot)\installed\x64-windows\include\librealsense2\rs2.hpp')" Text="未找到 RealSense 头文件。" />
+    <Error Condition="'$(Configuration)'=='Debug' and !Exists('$(D455VcpkgRoot)\installed\x64-windows\debug\bin\lz4d.dll')" Text="未找到 Debug RealSense 所需的 LZ4 运行库。" />
+    <Error Condition="'$(Configuration)'=='Release' and !Exists('$(D455VcpkgRoot)\installed\x64-windows\bin\lz4.dll')" Text="未找到 Release RealSense 所需的 LZ4 运行库。" />
+  </Target>
+  <Target Name="复制D455RealSense运行库" AfterTargets="Build"
+          Condition="'$(EnableD455RealSense)'=='true' and '$(Platform)'=='x64'">
+    <Copy Condition="'$(Configuration)'=='Debug'"
+          SourceFiles="$(D455VcpkgRoot)\installed\x64-windows\debug\bin\realsense2d.dll;$(D455VcpkgRoot)\installed\x64-windows\debug\bin\lz4d.dll"
+          DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy Condition="'$(Configuration)'=='Release'"
+          SourceFiles="$(D455VcpkgRoot)\installed\x64-windows\bin\realsense2.dll;$(D455VcpkgRoot)\installed\x64-windows\bin\lz4.dll"
+          DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
