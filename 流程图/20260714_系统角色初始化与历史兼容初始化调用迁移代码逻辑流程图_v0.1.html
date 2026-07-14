@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>系统角色初始化与历史兼容初始化调用迁移代码逻辑流程图</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", sans-serif; background: #f6f7f9; color: #1f2328; }
+    main { max-width: 1800px; margin: 0 auto; padding: 24px; }
+    h1 { font-size: 26px; margin: 0 0 8px; }
+    p { line-height: 1.7; }
+    .diagram { overflow: auto; background: #fff; border: 1px solid #d0d7de; padding: 20px; }
+    .boundary { margin-top: 16px; padding: 16px 20px; background: #fff; border-left: 4px solid #57606a; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>系统角色初始化与历史兼容初始化调用迁移代码逻辑流程图</h1>
+  <p>第一轮只在未发布候选内形成并权威读回版本 1 系统角色清单，同时把四个历史初始化文件迁为隔离兼容真模块；首次发布、租约、恢复和旧线程正文继续后置。</p>
+  <div class="diagram">
+    <pre class="mermaid">
+flowchart TD
+    A["输入未发布运行期上下文候选与系统角色初始化参数"] --> B{"结构核心、业务装配、角色清单版本和全部稳定键是否有效且互异"}
+    B -->|"否"| L1["逻辑内返回：第一笔写入前拒绝；结构与数量不变化"]
+    B -->|"是"| C["系统角色数据操作只读预检全部稳定键占用、预期节点类型和已有角色材料"]
+    C --> D{"已有键为空或与本请求完整匹配"}
+    D -->|"冲突 / 错误类型 / 版本漂移"| L2["逻辑内返回：不覆盖、不删除、不改键；上下文仍不完整"]
+    D -->|"内部读回矛盾"| R1["追根因解决：停止后继，不扫描修复"]
+    D -->|"可以继续"| E["经新业务服务幂等形成世界根、自我场景、自我存在和场景接纳关系"]
+    E --> F["经特征、状态、需求服务形成安全 / 服务两组特征当前状态、目标状态和根需求"]
+    F --> G["经存在、动态、轻量因果、二次特征和概念图结构服务形成并复核概念四根"]
+    G --> H["经方法服务形成方法登记根及角色 / 生命周期状态"]
+    H --> I["系统角色数据操作在一次不透明会话内发布世界根到场景、场景到自我的普通父子关系"]
+    I --> J{"按稳定键、节点类型、主信息、场景归属、普通父子、需求目标和根角色完整读回是否一致"}
+    J -->|"否"| R2["追根因解决：不形成系统角色清单；不得把部分候选解释为系统已初始化"]
+    J -->|"是"| K["形成版本 1 值式系统角色清单并写入候选上下文"]
+    K --> M{"再次由业务装配复核清单所指权威结构"}
+    M -->|"否"| R3["追根因解决：上下文保持不可发布；追查稳定键、关系和调用来源"]
+    M -->|"是"| N["运行期上下文完整性成立，但宿主仍返回首次发布尚未启用"]
+    N --> O["#249 后继：首次发布、租约和恢复链所有权验收"]
+
+    P["四个历史初始化兼容文件"] --> Q["原地转换为 ClCompile + export module"]
+    Q --> S["全部当前调用点只把 include 改为 import；兼容业务正文和结果类型不改义"]
+    S --> T["新系统角色初始化器禁止 import 或调用历史兼容初始化模块"]
+    T --> U["独立自检复核模块身份、旧 include 清零、兼容结果回归和新旧路径隔离"]
+    </pre>
+  </div>
+  <div class="boundary">
+    <strong>边界：</strong>系统角色由稳定键、完整句柄和权威结构读回裁决；显示语素、旧坐标槽、旧线程和宿主发布不进入本批。
+  </div>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>
