@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>运行期组合器与线程路由去令牌代码逻辑流程图</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", sans-serif; background: #f6f7f9; color: #1f2328; }
+    main { max-width: 1680px; margin: 0 auto; padding: 24px; }
+    h1 { font-size: 26px; margin: 0 0 8px; }
+    p { line-height: 1.7; }
+    .diagram { overflow: auto; background: #fff; border: 1px solid #d0d7de; padding: 20px; }
+    .boundary { margin-top: 16px; padding: 16px 20px; background: #fff; border-left: 4px solid #57606a; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>运行期组合器与线程路由去令牌代码逻辑流程图</h1>
+  <p>第一轮只建立唯一运行期业务装配和线程侧值式请求路由；系统角色初始化、生产上下文发布、旧线程正文迁移及兼容路径删除均后置。</p>
+  <div class="diagram">
+    <pre class="mermaid">
+flowchart TD
+    A["运行期上下文候选已形成同域协调器、接线和四仓库结构核心"] --> B["运行期业务装配按固定顺序构造私有特征值服务和七个数据操作对象"]
+    B --> C["构造十四个无令牌业务服务、六个既有组合器和运行期业务操作组合器"]
+    C --> D{"数据操作有效、依赖方向和同仓库身份是否完整"}
+    D -->|"否"| X1["追根因解决：候选不可用；不得用空服务、日志或兼容入口兜底"]
+    D -->|"是"| E["上下文记录服务装配已就绪；线程路由只持运行期业务操作组合器引用"]
+    E --> F{"#250 系统角色初始化材料是否已形成并权威读回"}
+    F -->|"否，本批现状"| L0["逻辑内返回：上下文仍不可生产发布；宿主保持空"]
+    F -->|"是，后继计划"| G["#249 复核完整候选并裁决首次发布与恢复链所有权"]
+
+    T["线程 / 消息提交强类型值式业务请求；不携带令牌、许可、会话或仓库"] --> U{"请求类型与载荷是否匹配，入口参数是否完整"}
+    U -->|"否"| L1["逻辑内返回：结构化拒绝；结构和数量不变化"]
+    U -->|"是"| V["运行期业务请求路由按唯一变体分派；不重写领域准入"]
+    V --> W{"八类已登记操作中的哪一类"}
+    W -->|"存在场景"| W1["已有场景创建并接纳实际存在"]
+    W -->|"状态动态"| W2["创建两个状态并记录动态"]
+    W -->|"特征状态"| W3["创建槽位并发布初始特征状态"]
+    W -->|"语素概念"| W4["创建语素概念入口"]
+    W -->|"概念结构"| W5["发布一组创建型概念结构"]
+    W -->|"需求任务方法"| W6["创建需求并承接任务 / 召回并选择 / 完成并独立结算"]
+    W1 --> Y
+    W2 --> Y
+    W3 --> Y
+    W4 --> Y
+    W5 --> Y
+    W6 --> Y["既有业务服务 / 组合器完成入口准入，数据操作层内部取得一次许可并提交"]
+    Y --> Z{"值式业务结果分类"}
+    Z -->|"已提交或幂等读回"| O["线程获得强类型值式结果；不得把结果文本当机器事实"]
+    Z -->|"入口拒绝、冲突、许可竞争或版本漂移"| L2["逻辑内返回：沿原业务状态返回；路由不重试、不改写、不降级"]
+    Z -->|"内部不一致或已发布后读回异常"| X2["追根因解决：停止依赖路径；不得切回旧令牌路径或扫描修复"]
+
+    P["概念生命周期 / 活动快照 / 统计缓存 / 安全删除"] --> P1["保留独立兼容所有者；不进入 #270 装配或路由"]
+    P1 --> P2["#271 精确矩阵标记保留项和后继治理，不得批量删除"]
+    </pre>
+  </div>
+  <div class="boundary">
+    <strong>边界：</strong>线程不是动作来源；路由不持事务能力；上下文在系统角色初始化完成前仍不可发布；兼容生命周期、统计和删除能力本批只保留，不迁移、不删除。
+  </div>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>
