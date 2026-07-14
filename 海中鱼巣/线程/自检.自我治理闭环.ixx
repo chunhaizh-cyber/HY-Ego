@@ -7,9 +7,6 @@ module;
 #include "../核心/索引仓库.h"
 #include "../核心/事件日志段服务.h"
 #include "../领域/世界服务.h"
-#include "../领域/初始化.世界树.ixx"
-#include "../领域/初始化.语素.ixx"
-#include "../领域/初始化.需求.ixx"
 #include "../领域/存在服务.h"
 #include "../领域/场景服务.h"
 #include "../领域/状态服务.h"
@@ -39,6 +36,9 @@ module;
 #include <vector>
 export module 海中鱼巣.线程.自检.自我治理闭环;
 
+import 海中鱼巣.领域.初始化.世界树;
+import 海中鱼巣.领域.初始化.语素;
+import 海中鱼巣.领域.初始化.需求;
 import 海中鱼巣.线程.自我治理消息协议;
 import 海中鱼巣.线程.任务结果回执协议;
 import 海中鱼巣.线程.有界自我治理队列;

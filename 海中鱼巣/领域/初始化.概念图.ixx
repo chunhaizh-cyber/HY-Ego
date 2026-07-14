@@ -1,5 +1,5 @@
 // 文件规则：概念图初始化只经基础信息原子服务、概念图服务和语素服务建立四根及生命周期初态；名称不得裁决根身份。
-#pragma once
+module;
 
 #include "二次特征服务.h"
 #include "动态服务.h"
@@ -16,7 +16,9 @@
 #include <string>
 #include <utility>
 
-namespace 海中鱼巣 {
+export module 海中鱼巣.领域.初始化.概念图;
+
+export namespace 海中鱼巣 {
 
 struct 概念根初始化项 {
     概念根类别 根类别 = 概念根类别::未定义;

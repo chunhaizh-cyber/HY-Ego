@@ -1,5 +1,5 @@
 // 文件规则：初始化语素只建立第一轮基础显示语素材料；不得把显示文本写入主信息字段或裁决机器事实。
-#pragma once
+module;
 
 #include "../核心/主信息仓库.h"
 #include "../核心/节点仓库.h"
@@ -12,7 +12,9 @@
 #include <string_view>
 #include <vector>
 
-namespace 海中鱼巣 {
+export module 海中鱼巣.领域.初始化.语素;
+
+export namespace 海中鱼巣 {
 
 struct 语素初始化显示项 {
     节点句柄 基础信息;

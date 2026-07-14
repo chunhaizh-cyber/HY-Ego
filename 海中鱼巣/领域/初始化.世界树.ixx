@@ -1,5 +1,5 @@
 // 文件规则：初始化世界树只经世界、场景、存在服务和关系仓库建立第一轮结构；不得接外设、体素、控制面板或显示事实。
-#pragma once
+module;
 
 #include "../核心/关系仓库.h"
 #include "../核心/主信息仓库.h"
@@ -11,7 +11,9 @@
 #include <cstdint>
 #include <optional>
 
-namespace 海中鱼巣 {
+export module 海中鱼巣.领域.初始化.世界树;
+
+export namespace 海中鱼巣 {
 
 struct 世界树相对坐标 {
     double 横向 = 0.0;

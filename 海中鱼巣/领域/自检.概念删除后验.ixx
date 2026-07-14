@@ -12,7 +12,6 @@ module;
 #include "状态服务.h"
 #include "语素服务.h"
 #include "概念图服务.h"
-#include "初始化.概念图.ixx"
 #include "统计服务.h"
 
 #include <algorithm>
@@ -28,6 +27,7 @@ module;
 
 export module 海中鱼巣.领域.自检.概念删除后验;
 
+import 海中鱼巣.领域.初始化.概念图;
 import 海中鱼巣.核心.协调.结构事务;
 import 海中鱼巣.领域.服务.概念安全删除;
 import 海中鱼巣.自检.运行器;

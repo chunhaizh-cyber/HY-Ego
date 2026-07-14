@@ -16,8 +16,6 @@ module;
 #include "语素服务.h"
 #include "需求服务.h"
 #include "世界服务.h"
-#include "初始化.世界树.ixx"
-#include "初始化.需求.ixx"
 
 #include <array>
 #include <cstddef>
@@ -26,6 +24,8 @@ module;
 
 export module 海中鱼巣.领域.自检.概念命名目标;
 
+import 海中鱼巣.领域.初始化.世界树;
+import 海中鱼巣.领域.初始化.需求;
 import 海中鱼巣.自检.运行器;
 
 export namespace 海中鱼巣 {

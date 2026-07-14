@@ -3,7 +3,6 @@ module;
 
 #include "../核心/容错检查.h"
 #include "../核心/日志系统.h"
-#include "../领域/初始化.需求.ixx"
 #include "../领域/需求服务.h"
 #include "../领域/任务服务.h"
 #include "../领域/方法服务.h"
@@ -23,6 +22,7 @@ module;
 
 export module 海中鱼巣.线程.自我治理领域路由;
 
+import 海中鱼巣.领域.初始化.需求;
 import 海中鱼巣.线程.自我治理消息协议;
 
 export namespace 海中鱼巣 {

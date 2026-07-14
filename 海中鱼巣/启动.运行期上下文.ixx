@@ -5,6 +5,7 @@ module;
 #include "核心/节点仓库.h"
 #include "核心/关系仓库.h"
 #include "核心/索引仓库.h"
+#include "领域/系统角色清单.数据.h"
 
 #include <cstdint>
 #include <memory>
@@ -26,7 +27,8 @@ enum class 运行期上下文发布状态 : std::uint32_t {
     结构核心不完整 = 3,
     缺少领域服务装配 = 4,
     已有当前上下文 = 5,
-    缺少初始化完成材料 = 6
+    缺少初始化完成材料 = 6,
+    首次发布尚未启用 = 7
 };
 
 class 运行期上下文 {
@@ -61,7 +63,9 @@ public:
     }
 
     bool 完整() const {
-        return false;
+        const auto 清单 = 读取系统角色材料();
+        return 结构核心完整() && 业务装配_.完整() && 清单.has_value()
+            && 清单->完整() && 业务装配_.复核系统角色(*清单).成功();
     }
 
     bool 服务装配完整() const noexcept {
@@ -70,6 +74,40 @@ public:
 
     const 运行期业务操作组合器* 读取候选业务操作() const noexcept {
         return 业务装配_.读取业务操作();
+    }
+
+    系统角色初始化结果 初始化系统角色(const 系统角色初始化参数& 参数) {
+        if (!结构核心完整() || !业务装配_.完整() || !参数.有效()) return {};
+        {
+            std::lock_guard<std::mutex> 锁(系统角色锁_);
+            if (系统角色清单_.has_value()) {
+                if (!系统角色清单_->匹配参数(参数)) {
+                    return {系统角色业务状态::幂等冲突};
+                }
+                auto 当前 = 业务装配_.复核系统角色(*系统角色清单_);
+                if (当前.成功()) 当前.状态 = 系统角色业务状态::幂等读回;
+                return 当前;
+            }
+        }
+        auto 结果 = 业务装配_.初始化系统角色(参数);
+        if (!结果.成功()) return 结果;
+        std::lock_guard<std::mutex> 锁(系统角色锁_);
+        if (系统角色清单_.has_value() && !(*系统角色清单_ == 结果.清单)) {
+            return {系统角色业务状态::内部不一致};
+        }
+        系统角色清单_ = 结果.清单;
+        return 结果;
+    }
+
+    std::optional<系统角色清单> 读取系统角色材料() const {
+        std::lock_guard<std::mutex> 锁(系统角色锁_);
+        return 系统角色清单_;
+    }
+
+    bool 系统角色完整() const {
+        const auto 清单 = 读取系统角色材料();
+        return 清单.has_value() && 清单->完整()
+            && 业务装配_.复核系统角色(*清单).成功();
     }
 
     const 结构事务接线& 读取接线() const { return 接线_; }
@@ -91,6 +129,8 @@ private:
     索引仓库 索引_;
     运行期业务装配 业务装配_;
     std::uint64_t 仓库编号_ = 0;
+    mutable std::mutex 系统角色锁_;
+    std::optional<系统角色清单> 系统角色清单_;
 };
 
 class 运行期上下文租约 {
@@ -126,7 +166,7 @@ public:
         if (当前上下文_) {
             return 运行期上下文发布状态::已有当前上下文;
         }
-        return 运行期上下文发布状态::缺少初始化完成材料;
+        return 运行期上下文发布状态::首次发布尚未启用;
     }
 
     运行期上下文租约 读取租约() const {

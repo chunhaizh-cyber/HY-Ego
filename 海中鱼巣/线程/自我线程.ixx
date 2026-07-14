@@ -1,10 +1,6 @@
 // 文件规则：自我线程只编排系统初始化、治理批次和驻留停止；领域处理必须在队列锁外委托既有路由，不得裸写核心仓库。
 module;
 
-#include "../领域/初始化.世界树.ixx"
-#include "../领域/初始化.语素.ixx"
-#include "../领域/初始化.需求.ixx"
-
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
@@ -18,6 +14,9 @@ module;
 
 export module 海中鱼巣.线程.自我线程;
 
+import 海中鱼巣.领域.初始化.世界树;
+import 海中鱼巣.领域.初始化.语素;
+import 海中鱼巣.领域.初始化.需求;
 import 海中鱼巣.线程.自我治理消息协议;
 import 海中鱼巣.线程.有界自我治理队列;
 

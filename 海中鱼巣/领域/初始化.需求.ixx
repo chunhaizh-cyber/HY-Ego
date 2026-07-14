@@ -1,7 +1,6 @@
 // 文件规则：初始化需求只经特征、语素、需求和状态服务编排两个根需求；不得直接写核心仓库或承载显示事实。
-#pragma once
+module;
 
-#include "初始化.世界树.ixx"
 #include "需求服务.h"
 #include "特征服务.h"
 #include "语素服务.h"
@@ -12,7 +11,11 @@
 #include <optional>
 #include <string_view>
 
-namespace 海中鱼巣 {
+export module 海中鱼巣.领域.初始化.需求;
+
+export import 海中鱼巣.领域.初始化.世界树;
+
+export namespace 海中鱼巣 {
 
 struct 自我根需求初始化参数 {
     std::uint64_t 安全值语素稳定键 = 0;

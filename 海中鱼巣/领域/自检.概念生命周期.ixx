@@ -6,7 +6,6 @@ module;
 #include "../核心/索引仓库.h"
 #include "概念图服务.h"
 #include "概念图算法.h"
-#include "初始化.概念图.ixx"
 #include "语素服务.h"
 #include "统计服务.h"
 #include "存在服务.h"
@@ -23,6 +22,8 @@ module;
 #include <vector>
 
 export module 海中鱼巣.领域.自检.概念生命周期;
+
+import 海中鱼巣.领域.初始化.概念图;
 
 export namespace 海中鱼巣 {
 
