@@ -356,6 +356,14 @@ public:
         return 关系_.获取来源关系记录组(目标节点, 类型, 令牌_);
     }
 
+    bool 节点是本会话候选(节点句柄 节点) const {
+        if (!可继续写入() || !句柄有效(节点)) return false;
+        for (const auto& 记录 : 节点候选组_) {
+            if (记录.候选.完整() && 记录.候选.读取节点() == 节点) return true;
+        }
+        return false;
+    }
+
     bool 主信息可读(主信息句柄 主信息) {
         if (!当前线程可访问()) return false;
         const bool 可读 = 主信息_.读取主信息(主信息, 令牌_).has_value();

@@ -198,6 +198,7 @@
     <ClCompile Include="海中鱼巣\领域\服务.动态.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.状态动态.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.状态动态分层.ixx" />
+    <ClCompile Include="海中鱼巣\领域\自检.存在状态同会话参与.ixx" />
     <ClCompile Include="海中鱼巣\领域\参与者.特征值原始材料.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据操作.特征体系.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.特征.ixx" />
