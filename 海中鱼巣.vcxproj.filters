@@ -213,6 +213,9 @@
     <ClCompile Include="海中鱼巣\核心\自检.结构写入会话.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\自检.关系仓库性能基线.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\数据操作.存在场景.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
