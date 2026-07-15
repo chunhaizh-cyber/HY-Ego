@@ -176,8 +176,10 @@
     <ClCompile Include="海中鱼巣\线程\运行宿主线程.ixx" />
     <ClCompile Include="海中鱼巣\线程\任务管理线程.ixx" />
     <ClCompile Include="海中鱼巣\线程\路由.任务执行调度.ixx" />
+    <ClCompile Include="海中鱼巣\线程\路由.任务结果治理.ixx" />
     <ClCompile Include="海中鱼巣\线程\任务工作线程.ixx" />
     <ClCompile Include="海中鱼巣\线程\自检.任务执行调度.ixx" />
+    <ClCompile Include="海中鱼巣\线程\自检.任务结果结算.ixx" />
     <ClCompile Include="海中鱼巣\线程\任务管理上行桥.ixx" />
     <ClCompile Include="海中鱼巣\线程\上行桥.概念命名治理.ixx" />
     <ClCompile Include="海中鱼巣\线程\路由.概念命名治理.ixx" />
@@ -261,6 +263,7 @@
     <ClCompile Include="海中鱼巣\领域\服务.方法召回.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.需求任务方法.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.任务执行.ixx" />
+    <ClCompile Include="海中鱼巣\领域\组合.任务结果结算.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.运行期业务操作.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.需求任务方法分层.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.方法动作场景关系.ixx" />
