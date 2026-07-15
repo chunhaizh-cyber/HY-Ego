@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>服务写入兼容路径精确收口代码逻辑流程图</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", sans-serif; background: #f6f7f9; color: #1f2328; }
+    main { max-width: 1800px; margin: 0 auto; padding: 24px; }
+    h1 { font-size: 26px; margin: 0 0 8px; }
+    p { line-height: 1.7; }
+    .diagram { overflow: auto; background: #fff; border: 1px solid #d0d7de; padding: 20px; }
+    .boundary { margin-top: 16px; padding: 16px 20px; background: #fff; border-left: 4px solid #57606a; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>服务写入兼容路径精确收口代码逻辑流程图</h1>
+  <p>第一轮冻结新正式业务公开面和现存兼容所有者，只新增边界自检与不增长门禁；不批量删除传统服务、旧线程、历史初始化、生命周期、统计、删除、入口自检或只读投影。</p>
+  <div class="diagram">
+    <pre class="mermaid">
+flowchart TD
+    A["执行前读取精确兼容矩阵、#270/#250/#249 正式产物和当前实际接口"] --> B{"当前分支、允许文件和 780 是否与计划一致"}
+    B -->|"否"| X0["退回设计：不修改 C++，登记接口或范围漂移"]
+    B -->|"是"| C["枚举新正式业务面：14 个服务、7 个组合器、1 个运行期请求路由"]
+    C --> D{"是否出现原始令牌、许可、会话、执行器或四仓库公开能力"}
+    D -->|"是"| X1["追根因解决：停止 #271；不得用白名单排除新增违规"]
+    D -->|"否"| E["复核运行期装配：仓库只用于内部构造，对外只读业务操作组合器"]
+    E --> F{"装配是否新增事务能力或仓库逃生口"}
+    F -->|"是"| X2["追根因解决：停止并修正来源，不得把装配当领域服务绕行口"]
+    F -->|"否"| G["读取传统服务、旧线程、历史初始化、生命周期统计删除、入口自检和显示适配矩阵"]
+    G --> H{"兼容调用是否超出已登记所有者或基线增长"}
+    H -->|"是"| X3["退回设计：定位新增调用来源；不得扩大兼容白名单"]
+    H -->|"否"| I["新增自检.服务写入兼容边界真模块和 Debug 780 最小登记"]
+    I --> J{"入口请求材料是否无效、类型不符或前置条件不足"}
+    J -->|"是"| L1["逻辑内返回：写前拒绝；参数不改写；结构与数量不变化"]
+    J -->|"否"| K["只走运行期业务请求路由 -> 组合器 -> 无令牌服务 -> 数据操作"]
+    K --> M{"业务结果属于哪一类"}
+    M -->|"已提交 / 幂等读回"| O["返回强类型值式结果；不产生兼容调用"]
+    M -->|"协议允许拒绝 / 冲突 / 竞争"| L2["逻辑内返回：保持原结果；不重试、不补默认值、不降级"]
+    M -->|"内部读回或结构非预期"| X4["追根因解决：停止依赖路径；不得切回旧写入入口"]
+    O --> N["执行静态矩阵、不增长、工程登记、Debug / Release 和连续回归验收"]
+    L1 --> N
+    L2 --> N
+    N --> P{"A01-A18 是否全部通过"}
+    P -->|"否"| X5["停止并登记断点；780 不得登记为完成"]
+    P -->|"是"| Q["归档 #271：只声明新公开面封闭和兼容所有者已冻结"]
+    Q --> R["解除 #257 架构前置；#214 继续用户暂停"]
+
+    S["概念生命周期 / 活动快照 / 统计缓存 / 安全删除"] --> S1["保留独立兼容所有者，不进入本批删除"]
+    T["入口 / 历史自检直接仓库夹具"] --> T1["交给 #251-#254，当前禁止新增生产依赖"]
+    U["控制面板 / SQL 只读投影"] --> U1["交给 #261，不得裁决机器事实"]
+    V["核心带令牌 ABI / 数据操作 / 会话"] --> V1["长期内部能力，不属于兼容删除目标"]
+    </pre>
+  </div>
+  <div class="boundary">
+    <strong>边界：</strong>入口先发现并拒绝非法数据来源，不在函数内部兜底；兼容调用不得增长；仍有真实所有者的传统路径本批不删除；#271 完成只解除 #257 架构前置。
+  </div>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>
