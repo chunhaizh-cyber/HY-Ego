@@ -274,7 +274,7 @@ bool 已完成唯一分派(const 运行期业务路由结果& 结果, std::size_
         const auto 内部拒绝后 = 读取数量();
 
         运行期上下文宿主 宿主;
-        const auto 发布状态 = 宿主.尝试发布(上下文);
+        const auto 发布状态 = 宿主.尝试首次发布全新上下文(上下文);
 
         std::cout << "SERVICE-COMPOSER-S1-EVIDENCE A08"
             << " idempotent=" << static_cast<int>(幂等路由.状态)

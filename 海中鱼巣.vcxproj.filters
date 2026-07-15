@@ -27,6 +27,9 @@
     <ClCompile Include="海中鱼巣\自检.运行期上下文.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\自检.主装配事务.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\自检.系统角色初始化.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
