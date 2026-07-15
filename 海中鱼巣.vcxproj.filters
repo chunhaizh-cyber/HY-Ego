@@ -63,6 +63,9 @@
     <ClCompile Include="海中鱼巣\线程\自我治理消息协议.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\线程\协议.任务执行请求.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\线程\任务结果回执协议.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -78,7 +81,13 @@
     <ClCompile Include="海中鱼巣\线程\任务管理线程.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\线程\路由.任务执行调度.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\线程\任务工作线程.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\线程\自检.任务执行调度.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\线程\任务管理上行桥.ixx">
@@ -319,6 +328,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\组合.需求任务方法.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\组合.任务执行.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\组合.运行期业务操作.ixx">
