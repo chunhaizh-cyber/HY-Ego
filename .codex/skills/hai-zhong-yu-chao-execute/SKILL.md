@@ -16,7 +16,7 @@ Treat execution as:
 -> 执行前复核前置正式产物和实际接口
 -> 执行最小闭合切片
 -> 更新断点清单、计划索引和项目记忆
--> 验证、提交、推送
+-> 验证、自动本地提交；取得明确推送授权时再推送
 -> 继续下一项直到没有依赖就绪项或遇到真实阻塞
 ```
 
@@ -72,8 +72,8 @@ When execution finds interface drift or a forbidden-file conflict:
 
 1. Stop before code edits or fully withdraw the unverified draft without reverting other work.
 2. Write the pre-implementation breakpoint and update the plan index, queue, project memory, decision/question records, and interaction record to `退回设计`.
-3. Validate, commit, and push the return record.
-4. If a design task id was supplied in the incoming handoff, send it the fixed return summary. Otherwise locate one unique same-repo active design task; do not broadcast to several tasks.
+3. Validate and automatically commit the return record locally. Push only when the user, target plan / queue item, or formal handoff contract explicitly authorizes it.
+4. Send the fixed return summary only after any required push succeeds. Otherwise keep the local commit and report that formal handoff is pending push authorization.
 5. Continue another dependency-ready item when one exists; otherwise stop.
 
 When a design-revision message arrives:
@@ -81,7 +81,7 @@ When a design-revision message arrives:
 1. Verify the stated commit exists on the current branch.
 2. Re-read Git status, the plan index, queue, target plan, flowchart, detailed design, breakpoint, and interaction record.
 3. Resume only when the queue says `重新待执行` or equivalent and actual interfaces match the revised contract.
-4. On completion, validate, commit, push, update the interaction record to `已完成`, and send the design task the completion summary and newly released dependencies.
+4. On completion, validate and automatically commit locally. Push and send the design task the completion summary only when push is explicitly authorized; otherwise record the local completion and pending formal handoff.
 
 Task messages are notifications, not execution authority.
 
@@ -119,11 +119,15 @@ msbuild .\海中鱼巣.vcxproj /p:Configuration=Debug /p:Platform=x64 /m
 git diff --check
 ```
 
-After each completed slice, stage only this slice’s files, commit, push, and verify:
+After every completed task round that changed files, stage only that round's files and commit locally. Do not create empty commits, and do not include unrelated dirty files:
 
 ```powershell
-git rev-list --left-right --count main...origin/main
+git status --short
+git diff --cached --check
+git commit
 ```
+
+Push only when the user, target plan / queue item, or formal handoff contract explicitly authorizes it. After an authorized push, verify with `git rev-list --left-right --count main...origin/main`.
 
 ## Stop Conditions
 
