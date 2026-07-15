@@ -20,8 +20,6 @@ import 海中鱼巣.核心.执行器.结构写入;
 
 export namespace 海中鱼巣 {
 
-class 语素业务服务;
-
 enum class 语义基础业务状态 : std::uint8_t {
     已提交 = 1,
     幂等读回 = 2,
@@ -175,7 +173,7 @@ public:
     }
 
 private:
-    friend class 语素业务服务;
+    friend class 语素基础数据操作;
 
     语素入口写入规格(
         std::uint64_t 幂等主键,
@@ -208,6 +206,19 @@ public:
 
     bool 有效() const noexcept {
         return 接线_.已接域() && 关系仓库编号_ != 0 && 执行器_.有效();
+    }
+
+    std::optional<语素入口写入规格> 形成语素入口写入规格(
+        std::uint64_t 幂等主键,
+        节点句柄 对应信息,
+        语义节点角色 对应角色,
+        std::optional<节点句柄> 概念追溯,
+        语义节点角色 追溯角色) const {
+        语素入口写入规格 规格(
+            幂等主键, 对应信息, 对应角色, 概念追溯, 追溯角色);
+        return 规格.完整()
+            ? std::optional<语素入口写入规格>{std::move(规格)}
+            : std::nullopt;
     }
 
     语义节点身份 读取节点身份(节点句柄 目标) const {

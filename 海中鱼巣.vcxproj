@@ -259,6 +259,7 @@
     <ClCompile Include="海中鱼巣\领域\组合.需求任务方法.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.运行期业务操作.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.需求任务方法分层.ixx" />
+    <ClCompile Include="海中鱼巣\领域\自检.方法动作场景关系.ixx" />
     <ClCompile Include="海中鱼巣\线程\路由.运行期业务请求.ixx" />
   </ItemGroup>
   <ItemGroup>

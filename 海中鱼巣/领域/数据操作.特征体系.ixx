@@ -24,8 +24,6 @@ import 海中鱼巣.领域.参与者.特征值原始材料;
 
 export namespace 海中鱼巣 {
 
-class 特征业务服务;
-
 enum class 特征体系业务状态 : std::uint8_t {
     已提交 = 1,
     幂等读回 = 2,
@@ -203,7 +201,7 @@ public:
     }
 
 private:
-    friend class 特征业务服务;
+    friend class 特征体系数据操作;
 
     特征槽位写入规格(std::uint64_t 幂等主键, 节点句柄 宿主, 节点句柄 特征定义)
         : 幂等主键_(幂等主键), 宿主_(宿主), 特征定义_(特征定义) {}
@@ -240,7 +238,7 @@ public:
     }
 
 private:
-    friend class 特征业务服务;
+    friend class 特征体系数据操作;
 
     初始特征值写入规格(
         std::uint64_t 幂等主键,
@@ -274,6 +272,29 @@ public:
 
     bool 有效() const noexcept {
         return 接线_.已接域() && 关系仓库编号_ != 0 && 执行器_.有效();
+    }
+
+    std::optional<特征槽位写入规格> 形成特征槽位写入规格(
+        std::uint64_t 幂等主键,
+        节点句柄 宿主,
+        节点句柄 特征定义) const {
+        特征槽位写入规格 规格(幂等主键, 宿主, 特征定义);
+        return 规格.完整()
+            ? std::optional<特征槽位写入规格>{std::move(规格)}
+            : std::nullopt;
+    }
+
+    std::optional<初始特征值写入规格> 形成初始特征值写入规格(
+        std::uint64_t 幂等主键,
+        特征值原始类型 原始类型,
+        std::optional<std::int64_t> I64值,
+        std::vector<std::int64_t> VecI64值,
+        std::vector<std::uint64_t> VecU64值) const {
+        初始特征值写入规格 规格(
+            幂等主键, 原始类型, I64值, std::move(VecI64值), std::move(VecU64值));
+        return 规格.完整()
+            ? std::optional<初始特征值写入规格>{std::move(规格)}
+            : std::nullopt;
     }
 
     特征节点身份 读取节点身份(节点句柄 目标) const {

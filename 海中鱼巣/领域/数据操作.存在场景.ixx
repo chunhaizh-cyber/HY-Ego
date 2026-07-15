@@ -17,8 +17,6 @@ import 海中鱼巣.核心.执行器.结构写入;
 
 export namespace 海中鱼巣 {
 
-class 存在业务服务;
-
 enum class 存在场景业务状态 : std::uint8_t {
     已提交 = 1,
     幂等读回 = 2,
@@ -101,7 +99,7 @@ public:
     }
 
 private:
-    friend class 存在业务服务;
+    friend class 存在场景数据操作;
 
     虚拟存在写入规格(
         std::uint64_t 幂等主键,
@@ -154,6 +152,16 @@ public:
 
     bool 有效() const noexcept {
         return 接线_.已接域() && 关系仓库编号_ != 0 && 执行器_.有效();
+    }
+
+    std::optional<虚拟存在写入规格> 形成虚拟存在写入规格(
+        std::uint64_t 幂等主键,
+        节点类型 预期来源类型,
+        虚拟存在来源阶段 来源阶段) const {
+        虚拟存在写入规格 规格(幂等主键, 预期来源类型, 来源阶段);
+        return 规格.完整()
+            ? std::optional<虚拟存在写入规格>{std::move(规格)}
+            : std::nullopt;
     }
 
     节点身份材料 读取主键身份(std::uint64_t 主键) const {

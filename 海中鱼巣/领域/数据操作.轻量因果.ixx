@@ -18,8 +18,6 @@ import 海中鱼巣.核心.执行器.结构写入;
 
 export namespace 海中鱼巣 {
 
-class 轻量因果业务服务;
-
 enum class 轻量因果业务状态 : std::uint8_t {
     已提交 = 1,
     幂等读回 = 2,
@@ -79,7 +77,7 @@ public:
     }
 
 private:
-    friend class 轻量因果业务服务;
+    friend class 轻量因果数据操作;
 
     轻量因果写入规格(
         std::uint64_t 幂等主键,
@@ -105,6 +103,16 @@ public:
 
     bool 有效() const noexcept {
         return 接线_.已接域() && 执行器_.有效();
+    }
+
+    std::optional<轻量因果写入规格> 形成轻量因果写入规格(
+        std::uint64_t 幂等主键,
+        节点句柄 来源动态,
+        主信息句柄 来源主信息) const {
+        轻量因果写入规格 规格(幂等主键, 来源动态, 来源主信息);
+        return 规格.完整()
+            ? std::optional<轻量因果写入规格>{std::move(规格)}
+            : std::nullopt;
     }
 
     轻量因果值式材料 读取因果引用(节点句柄 因果引用) const {

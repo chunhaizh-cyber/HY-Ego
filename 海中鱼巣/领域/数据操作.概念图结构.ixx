@@ -23,7 +23,6 @@ import 海中鱼巣.核心.执行器.结构写入;
 
 export namespace 海中鱼巣 {
 
-class 概念图结构业务服务;
 class 概念图结构数据操作;
 
 enum class 概念根类别 : std::uint8_t {
@@ -205,7 +204,6 @@ public:
     }
 
 private:
-    friend class 概念图结构业务服务;
     friend class 概念图结构数据操作;
 
     概念关系写入规格(
@@ -257,6 +255,18 @@ public:
 
     bool 有效() const noexcept {
         return 接线_.已接域() && 关系仓库编号_ != 0 && 执行器_.有效();
+    }
+
+    std::optional<概念关系写入规格> 形成概念关系写入规格(
+        关系类型 类型,
+        概念根类别 根类别,
+        节点句柄 源节点,
+        节点句柄 目标节点,
+        std::int64_t 顺序号) const {
+        概念关系写入规格 规格(类型, 根类别, 源节点, 目标节点, 顺序号);
+        return 规格.完整()
+            ? std::optional<概念关系写入规格>{std::move(规格)}
+            : std::nullopt;
     }
 
     概念根角色组值式材料 复核根角色组(const 概念根候选组& 候选组) const {

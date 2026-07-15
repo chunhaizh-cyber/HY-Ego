@@ -20,8 +20,6 @@ import 海中鱼巣.核心.执行器.结构写入;
 
 export namespace 海中鱼巣 {
 
-class 状态业务服务;
-
 enum class 状态动态业务状态 : std::uint8_t {
     已提交 = 1,
     幂等读回 = 2,
@@ -204,7 +202,7 @@ public:
     bool 完整() const noexcept { return 幂等主键_ != 0; }
 
 private:
-    friend class 状态业务服务;
+    friend class 状态动态数据操作;
 
     抽象状态写入规格(std::uint64_t 幂等主键, std::int64_t 状态值)
         : 幂等主键_(幂等主键), 状态值_(状态值) {
@@ -231,7 +229,6 @@ public:
     }
 
 private:
-    friend class 状态业务服务;
     friend class 状态动态数据操作;
 
     实例状态写入规格(
@@ -267,7 +264,7 @@ public:
     }
 
 private:
-    friend class 状态业务服务;
+    friend class 状态动态数据操作;
 
     候选主体实例状态写入规格(
         std::uint64_t 幂等主键,
@@ -317,6 +314,38 @@ public:
 
     bool 有效() const noexcept {
         return 接线_.已接域() && 关系仓库编号_ != 0 && 执行器_.有效();
+    }
+
+    std::optional<抽象状态写入规格> 形成抽象状态写入规格(
+        std::uint64_t 幂等主键,
+        std::int64_t 状态值) const {
+        抽象状态写入规格 规格(幂等主键, 状态值);
+        return 规格.完整()
+            ? std::optional<抽象状态写入规格>{std::move(规格)}
+            : std::nullopt;
+    }
+
+    std::optional<实例状态写入规格> 形成实例状态写入规格(
+        std::uint64_t 幂等主键,
+        节点句柄 场景,
+        节点句柄 主体,
+        std::uint64_t 发生时间戳,
+        std::int64_t 状态值) const {
+        实例状态写入规格 规格(幂等主键, 场景, 主体, 发生时间戳, 状态值);
+        return 规格.完整()
+            ? std::optional<实例状态写入规格>{std::move(规格)}
+            : std::nullopt;
+    }
+
+    std::optional<候选主体实例状态写入规格> 形成候选主体实例状态写入规格(
+        std::uint64_t 幂等主键,
+        节点句柄 场景,
+        std::uint64_t 发生时间戳,
+        std::int64_t 状态值) const {
+        候选主体实例状态写入规格 规格(幂等主键, 场景, 发生时间戳, 状态值);
+        return 规格.完整()
+            ? std::optional<候选主体实例状态写入规格>{std::move(规格)}
+            : std::nullopt;
     }
 
     节点值式身份 读取节点身份(节点句柄 节点) const {
