@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>因果用途观察与方法学习无环接线流程图 v0.2</title>
+  <style>
+    body { margin: 0; padding: 24px; font-family: "Microsoft YaHei", sans-serif; background: #f5f7fb; color: #1f2937; }
+    main { max-width: 1840px; margin: 0 auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 6px 24px rgba(15,23,42,.08); }
+    h1 { margin-top: 0; }
+    .note { line-height: 1.7; color: #475569; }
+    .mermaid { overflow: auto; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>因果用途观察与方法学习无环接线流程图 v0.2</h1>
+  <p class="note">JY-376 / #287 / DQ-179。三项 S0 已完成；当前只授权纯值复合因果身份。节点 15、关系 18、权威用途账、统计、学习、晋级、代际、生产接线和恢复仍未获得代码许可。</p>
+  <pre class="mermaid">
+flowchart TD
+    A["#282 / #286 已完成&lt;br/&gt;执行前用途冻结纯值合同 + 三种任务结果 + 单一正式结算"] --&gt; S["JY-376 汇总三项 S0&lt;br/&gt;按最早可闭合依赖重新拆分"]
+    B["JY-371 / #283 已完成&lt;br/&gt;节点 15、身份索引、关系阶段、容量、数据操作、恢复合同不足"] --&gt; S
+    C["JY-373 / #284 已完成&lt;br/&gt;当前只有原因动态键 + 结果动态键 + 因果规则版本&lt;br/&gt;缺独立身份与 A/B 完整比较"] --&gt; S
+    D["JY-375 / #285 已完成&lt;br/&gt;缺完整方法冻结、确定差异、晋级授权、代际与生产接线"] --&gt; S
+    S --&gt; I0["#287 CAUSAL-IDENTITY-S1&lt;br/&gt;建立纯值因果完整结构键"]
+    I0 --&gt; G0{"来源候选局部完整、原因与结果不同&lt;br/&gt;格式和三类规则版本受支持"}
+    G0 -- "否：材料不完整或原因结果相同" --&gt; LR0["逻辑内返回&lt;br/&gt;零结构变化"]
+    G0 -- "否：版本未获兼容表支持" --&gt; LR1["逻辑内不支持&lt;br/&gt;不猜测兼容"]
+    G0 -- "是" --&gt; I1["按固定原因 / 结果角色形成复合身份&lt;br/&gt;A/B 比较覆盖两把七字段键、因果版本和格式版本"]
+    I1 --&gt; I2["计算稳定哈希&lt;br/&gt;只用于候选桶召回；命中后必须全字段比较"]
+    I2 --&gt; G1{"形成结果与来源候选逐字段一致"}
+    G1 -- "否" --&gt; RC1["追根因解决&lt;br/&gt;算法不变量破坏，不用日志或哈希修补"]
+    G1 -- "是" --&gt; O0["纯值身份供因果概率分量和后继设计消费&lt;br/&gt;不创建节点、不写仓库、不接生产运行期"]
+    O0 --&gt; O1["后继权威用途观察结构设计&lt;br/&gt;语义身份固定为完整任务句柄 + 任务序号&lt;br/&gt;冻结键只作来源关联材料"]
+    O1 --&gt; G2{"节点类型、专用关系、固定容量、双重唯一&lt;br/&gt;阶段换代、原子发布和唯一恢复链合同是否全部闭合"}
+    G2 -- "否" --&gt; H1["保持节点 15、关系 18 未分配&lt;br/&gt;只补设计，不生成结构代码许可"]
+    G2 -- "是且经新计划授权" --&gt; O2["发布唯一权威用途观察&lt;br/&gt;待结算不得进入统计或学习"]
+    O2 --&gt; O3["从已发布观察重建非权威分栏统计&lt;br/&gt;完整因果身份为主键；概念映射只作可选标注"]
+    O3 --&gt; O4["冻结来源方法完整内容版本&lt;br/&gt;确定排序观察组 + 新增 / 保留 / 移除 / 替换差异"]
+    O4 --&gt; O5["独立晋级复核任务授权与当前性&lt;br/&gt;只请求方法服务发布不可变新代际"]
+    O5 --&gt; O6["新代际仅对后续选择快照可见&lt;br/&gt;不复用当前任务序号充当 N / N+1"]
+    O6 --&gt; O7["唯一运行期顺序接线&lt;br/&gt;动作前冻结 -&gt; 结果收口 -&gt; 观察 -&gt; 投影 -&gt; 学习 -&gt; 晋级 -&gt; 新代际"]
+    O7 --&gt; O8["权威观察、晋级授权、方法版本 / 代际&lt;br/&gt;原地并入既有唯一恢复链；非权威材料清空重建"]
+    O8 -. "未来正式实现后" .-&gt; N["后续任务重新召回、授权、选择和执行"]
+    N --&gt; A
+  </pre>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>
