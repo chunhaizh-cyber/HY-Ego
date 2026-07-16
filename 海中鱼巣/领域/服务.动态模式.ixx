@@ -47,6 +47,10 @@ public:
             动态模式拒绝原因::无, std::move(*窗口)};
     }
 
+    static 动态聚类结果 形成动态聚类候选(const 动态聚类请求& 请求) {
+        return 海中鱼巣::执行动态聚类(请求);
+    }
+
 private:
     static 动态模式拒绝原因 复核正式链(const 动态模式权威批次& 批次) noexcept {
         if (!批次.完整() || !批次.请求.回执.来源执行请求.has_value()) {

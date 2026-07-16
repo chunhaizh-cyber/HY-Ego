@@ -179,6 +179,7 @@
     <ClCompile Include="海中鱼巣\领域\服务.动态模式.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.动态观察.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.动态模式.ixx" />
+    <ClCompile Include="海中鱼巣\领域\自检.动态聚类.ixx" />
     <ClCompile Include="海中鱼巣\线程\有界自我治理队列.ixx" />
     <ClCompile Include="海中鱼巣\线程\有界运行消息队列.ixx" />
     <ClCompile Include="海中鱼巣\线程\运行宿主线程.ixx" />

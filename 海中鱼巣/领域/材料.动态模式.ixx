@@ -16,6 +16,10 @@ export namespace 海中鱼巣 {
 
 inline constexpr std::uint32_t 动态模式规则版本 = 1;
 inline constexpr std::size_t 动态模式最大片段数量 = 64;
+inline constexpr std::size_t 动态聚类最大窗口数量 = 动态模式最大片段数量;
+inline constexpr std::size_t 动态聚类最大步骤数量 =
+    动态模式最大片段数量 * 动态模式最大片段数量;
+inline constexpr std::size_t 动态聚类桶数量 = 动态模式最大片段数量;
 
 enum class 动态模式处理状态 : std::uint8_t {
     已形成 = 1,
@@ -280,6 +284,95 @@ struct 动态模式窗口结果 {
 
     bool 成功() const noexcept {
         return 状态 == 动态模式处理状态::已形成 && 窗口.完整();
+    }
+};
+
+enum class 动态聚类处理状态 : std::uint8_t {
+    已形成 = 1,
+    入口拒绝 = 2,
+    不支持 = 3,
+    内部不一致 = 4
+};
+
+enum class 动态聚类拒绝原因 : std::uint8_t {
+    无 = 0,
+    请求为空 = 1,
+    容量越界 = 2,
+    窗口不完整 = 3,
+    步骤不完整 = 4,
+    规则版本不支持 = 5,
+    来源动态矛盾 = 6,
+    回合锚点矛盾 = 7,
+    算法不变量破坏 = 8
+};
+
+struct 动态聚类请求 {
+    std::vector<规范动态窗口> 窗口组;
+
+    bool 数量有效() const noexcept {
+        if (窗口组.empty() || 窗口组.size() > 动态聚类最大窗口数量) {
+            return false;
+        }
+        std::size_t 步骤总数 = 0;
+        for (const auto& 窗口 : 窗口组) {
+            if (窗口.步骤组.empty()
+                || 窗口.步骤组.size() > 动态模式最大片段数量
+                || 步骤总数 > 动态聚类最大步骤数量 - 窗口.步骤组.size()) {
+                return false;
+            }
+            步骤总数 += 窗口.步骤组.size();
+        }
+        return 步骤总数 != 0 && 步骤总数 <= 动态聚类最大步骤数量;
+    }
+};
+
+struct 单步片段实例候选 {
+    std::uint64_t 结构键哈希 = 0;
+    动态模式结构键 结构键;
+    规范动态步 来源步骤;
+
+    bool 完整() const noexcept {
+        return 结构键哈希 != 0 && 结构键.完整() && 来源步骤.完整();
+    }
+};
+
+struct 重复动态聚类候选 {
+    std::uint64_t 结构键哈希 = 0;
+    动态模式结构键 结构键;
+    std::vector<单步片段实例候选> 来源实例组;
+    std::vector<动态模式回合身份> 支持回合组;
+
+    bool 完整() const noexcept {
+        return 结构键哈希 != 0 && 结构键.完整()
+            && !来源实例组.empty() && 支持回合组.size() >= 2;
+    }
+};
+
+struct 运动基元候选 {
+    std::uint64_t 结构键哈希 = 0;
+    动态模式结构键 结构键;
+    节点句柄 来源动作;
+    std::vector<单步片段实例候选> 来源实例组;
+
+    bool 完整() const noexcept {
+        return 结构键哈希 != 0 && 结构键.完整()
+            && 结构键.有来源动作 && 句柄有效(来源动作)
+            && 来源动作 == 结构键.来源动作 && !来源实例组.empty();
+    }
+};
+
+struct 动态聚类结果 {
+    动态聚类处理状态 状态 = 动态聚类处理状态::入口拒绝;
+    动态聚类拒绝原因 拒绝原因 = 动态聚类拒绝原因::请求为空;
+    std::vector<单步片段实例候选> 单步实例组;
+    std::vector<重复动态聚类候选> 重复聚类组;
+    std::vector<运动基元候选> 运动基元组;
+
+    bool 成功() const noexcept {
+        return 状态 == 动态聚类处理状态::已形成
+            && 拒绝原因 == 动态聚类拒绝原因::无
+            && !单步实例组.empty()
+            && 重复聚类组.size() == 运动基元组.size();
     }
 };
 
