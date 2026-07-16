@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>显示分类与当前概念根按需只读投影流程图 v0.1</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+      color: #182126;
+      background: #f3f5f6;
+    }
+    body {
+      margin: 0;
+      padding: 24px;
+    }
+    main {
+      width: min(1900px, 100%);
+      margin: 0 auto;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      letter-spacing: 0;
+    }
+    p {
+      margin: 0 0 20px;
+      color: #45535b;
+      line-height: 1.7;
+    }
+    .diagram {
+      overflow: auto;
+      padding: 20px;
+      border: 1px solid #c7d0d5;
+      border-radius: 6px;
+      background: #ffffff;
+    }
+    .mermaid {
+      min-width: 1800px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>显示分类与当前概念根按需只读投影流程图 v0.1</h1>
+    <p>生产窗口一次只读取当前分类；概念分类一次只生成当前活动根。根页整体替换，不与其它页拼接为机器快照。</p>
+    <section class="diagram" aria-label="显示分类与当前概念根按需只读投影流程">
+      <pre class="mermaid">
+flowchart TD
+    A["控制面板启动、分类切换、概念根切换、翻页或刷新"] --> B["形成按需请求：当前分类、可选概念根、节点预算、深度预算、根页大小和可选游标"]
+    B --> C{"基础只读准入、分类和预算是否有效"}
+    C -->|"否"| L1["逻辑内返回：拒绝请求，保留当前有效页，权威结构不变化"]
+    C -->|"是"| D{"当前分类是否为概念"}
+    D -->|"是"| E["读取活动版本与四个概念根选项；未指定时确定选择首根，指定时复核活动根"]
+    E --> F{"概念根与活动版本是否可读"}
+    F -->|"否，未就绪或非活动根"| L2["逻辑内返回：不发布概念页，不用其它概念根或旧页冒充"]
+    F -->|"是"| G["只调用一次正式单根抽象树读取；绑定节点预算和深度预算"]
+    D -->|"否"| H["按分类读取根身份：世界或语素值式根、固定需求根、需求承接任务根、任务选择方法根"]
+    H --> I{"根身份组是否为空、重复、失效或与分类不匹配"}
+    I -->|"允许的空根或输入拒绝"| L3["逻辑内返回：不发布空分类页"]
+    I -->|"前置通过后内部不一致"| R1["追根因解决：停止当前页生成，不发布部分材料"]
+    I -->|"有效"| J["确定排序根身份组并计算根集签名"]
+    J --> K{"游标的分类、概念根、根集签名和偏移是否匹配"}
+    K -->|"否"| L4["逻辑内返回：游标失效；窗口从当前分类首页重新读取"]
+    K -->|"是"| M["按根页大小选择当前真实根页；单棵递归树不跨页截断"]
+    G --> N["生成当前概念根的值式树投影"]
+    M --> O["只为当前页根构造当前分类投影；任务或方法只读取上游根身份，不构造其它分类"]
+    N --> P["统一复核分类、稳定句柄、关系角色、来源版本、重复投影和预算"]
+    O --> P
+    P --> Q{"是否预算耗尽或命中内部结构不一致"}
+    Q -->|"预算耗尽"| L5["逻辑内返回：不发布截断树，不改变当前有效页"]
+    Q -->|"内部不一致"| R2["追根因解决：停止调用路径并定位领域读回或 DTO 组装根因"]
+    Q -->|"通过"| S["形成单分类当前页候选、概念根选项和可选下一页游标"]
+    S --> T["窗口整体替换当前页快照；不与上一页或其它分类拼接"]
+    T --> U["TreeView 只重建当前分类根与当前页真实根；六项导航继续保留"]
+    U --> V{"当前分类是否为概念"}
+    V -->|"是"| W["显示概念根下拉选项并保持当前活动根选择"]
+    V -->|"否"| X["隐藏概念根选项，只显示当前分类页"]
+    W --> Y["选择节点后显示完整句柄、类型、关系角色、来源版本和重复投影"]
+    X --> Y
+    Y --> Z{"节点、主信息、关系、索引及业务结构数量是否保持不变"}
+    Z -->|"否"| R3["追根因解决：只读路径越权写入，停止窗口依赖路径"]
+    Z -->|"是"| AA["完成当前分类或当前概念根按需只读显示"]
+
+    AB["旧生成六类真实树只读材料入口"] --> AC["仅保留兼容自检与对应分类结果对照"]
+    AC --> AD["不得作为生产刷新回退，不得绕过按需逻辑"]
+      </pre>
+    </section>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: "loose",
+      theme: "neutral",
+      flowchart: { useMaxWidth: false, htmlLabels: true, curve: "basis" }
+    });
+  </script>
+</body>
+</html>
