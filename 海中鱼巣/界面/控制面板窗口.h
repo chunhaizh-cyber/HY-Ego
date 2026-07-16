@@ -9,15 +9,20 @@
 #include <csignal>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
+#include <vector>
 
 namespace 海中鱼巣 {
 
 struct 控制面板窗口快照 {
     控制面板材料 总览材料;
     std::array<控制面板树视图材料, 6> 树视图材料组;
-    std::array<控制面板树结构材料, 6> 树结构材料组;
-    std::uint64_t 六树候选序号 = 0;
+    控制面板按需树候选材料 当前树候选;
+    控制面板树分类 当前分类 = 控制面板树分类::世界树;
+    std::optional<节点句柄> 当前概念根;
+    std::vector<控制面板概念根选项> 概念根选项组;
+    std::optional<控制面板根页游标> 当前页游标;
     控制面板操作请求材料 操作请求材料;
     结构统计快照 启动结构统计;
     数据库查询结果 数据库审计查询;

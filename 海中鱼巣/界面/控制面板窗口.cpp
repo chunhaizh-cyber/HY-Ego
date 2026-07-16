@@ -31,6 +31,9 @@ constexpr int 刷新按钮编号 = 1001;
 constexpr int 操作请求按钮编号 = 1002;
 constexpr int 关闭按钮编号 = 1003;
 constexpr int 导航栏编号 = 1004;
+constexpr int 概念根下拉编号 = 1005;
+constexpr int 上一根页按钮编号 = 1006;
+constexpr int 下一根页按钮编号 = 1007;
 constexpr int 信息树菜单编号 = 1101;
 constexpr int 日志信息菜单编号 = 1102;
 constexpr int 系统信息菜单编号 = 1103;
@@ -92,6 +95,21 @@ const std::array<const wchar_t*, 4> 系统信息导航名称{
 
 控制面板请求 创建只读请求() {
     return {true, false, false, false, false, false};
+}
+
+控制面板按需树请求 创建按需树请求(
+    控制面板树分类 分类,
+    std::optional<节点句柄> 当前概念根,
+    std::optional<控制面板根页游标> 继续游标) {
+    控制面板按需树请求 请求;
+    请求.基础请求 = 创建只读请求();
+    请求.当前分类 = 分类;
+    请求.当前概念根 = 当前概念根;
+    请求.节点预算 = 4096;
+    请求.深度预算 = 128;
+    请求.根页大小 = 64;
+    请求.继续游标 = std::move(继续游标);
+    return 请求;
 }
 
 const wchar_t* 树分类说明(控制面板树分类 分类) {
@@ -248,6 +266,9 @@ struct 控制面板窗口::窗口实现 {
     HWND 边界文本 = nullptr;
     HWND 导航栏 = nullptr;
     HWND 树视图 = nullptr;
+    HWND 概念根下拉 = nullptr;
+    HWND 上一根页按钮 = nullptr;
+    HWND 下一根页按钮 = nullptr;
     HWND 节点数文本 = nullptr;
     HWND 关系数文本 = nullptr;
     HWND 索引数文本 = nullptr;
@@ -269,10 +290,12 @@ struct 控制面板窗口::窗口实现 {
     std::uint32_t 当前系统信息索引 = 0;
     std::size_t 当前树项引用序号 = 0;
     std::vector<控制面板树项引用> 树项引用组;
-    std::array<HTREEITEM, 6> 分类树根项组{};
+    HTREEITEM 当前分类树根项 = nullptr;
+    std::vector<std::optional<控制面板根页游标>> 根页历史组{std::nullopt};
     bool 已显示窗口 = false;
     bool 追根因错误 = false;
-    bool 最近六树候选已替换 = false;
+    bool 最近按需候选已替换 = false;
+    控制面板请求状态 最近逻辑拒绝状态 = 控制面板请求状态::可展示;
     bool 正在重建树视图 = false;
     bool 窗口类由本次注册 = false;
     std::wstring 失败阶段;
@@ -291,10 +314,78 @@ struct 控制面板窗口::窗口实现 {
         }
     }
 
+    bool 读取并替换当前树(
+        控制面板树分类 分类,
+        std::optional<节点句柄> 当前概念根,
+        std::optional<控制面板根页游标> 当前页游标,
+        bool 允许保留旧快照) {
+        const auto 按需候选 = 控制面板.生成当前分类真实树只读材料(
+            创建按需树请求(分类, 当前概念根, 当前页游标));
+        if (!按需候选.完整 || 按需候选.状态 != 控制面板请求状态::可展示) {
+            最近按需候选已替换 = false;
+            最近逻辑拒绝状态 = 按需候选.状态;
+            if (按需候选.追根因错误) {
+                标记追根因错误(L"控制面板当前分类按需候选出现结构不一致");
+                return false;
+            }
+            if (允许保留旧快照 && 当前快照.当前树候选.候选序号 != 0) {
+                设置状态栏文本(L"当前分类按需候选被逻辑拒绝；已保留上一份有效页且未标记为新刷新");
+                return true;
+            }
+            失败阶段 = L"控制面板当前分类按需候选未形成完整页";
+            return false;
+        }
+        const auto 分类索引 = static_cast<std::size_t>(分类);
+        bool 候选有效 = 分类索引 < 6
+            && 按需候选.候选序号 != 0
+            && 按需候选.当前分类 == 分类
+            && 树结构显示语义有效(按需候选.当前页树结构材料, 分类);
+        if (分类 == 控制面板树分类::概念树) {
+            候选有效 = 候选有效
+                && 按需候选.当前概念根.has_value()
+                && 按需候选.概念活动版本 != 0
+                && 按需候选.概念根选项组.size() == 4
+                && std::all_of(
+                    按需候选.概念根选项组.begin(), 按需候选.概念根选项组.end(),
+                    [](const auto& 选项) { return 选项.完整(); })
+                && std::any_of(
+                    按需候选.概念根选项组.begin(), 按需候选.概念根选项组.end(),
+                    [&按需候选](const auto& 选项) {
+                        return 选项.根节点 == 按需候选.当前概念根.value();
+                    });
+        } else {
+            候选有效 = 候选有效
+                && !按需候选.当前概念根.has_value()
+                && 按需候选.概念活动版本 == 0
+                && 按需候选.概念根选项组.empty();
+        }
+        if (按需候选.下一页游标.has_value()) {
+            const auto& 游标 = 按需候选.下一页游标.value();
+            候选有效 = 候选有效
+                && 游标.分类 == 分类
+                && 游标.当前概念根 == 按需候选.当前概念根
+                && 游标.概念活动版本 == 按需候选.概念活动版本
+                && 游标.根集签名 != 0
+                && 游标.下一根偏移 != 0;
+        }
+        if (!候选有效) {
+            标记追根因错误(L"控制面板当前分类按需候选完整复核失败");
+            return false;
+        }
+        当前快照.当前树候选 = 按需候选;
+        当前快照.当前分类 = 分类;
+        当前快照.当前概念根 = 按需候选.当前概念根;
+        当前快照.概念根选项组 = 按需候选.概念根选项组;
+        当前快照.当前页游标 = std::move(当前页游标);
+        当前分类索引 = static_cast<std::uint32_t>(分类索引);
+        最近按需候选已替换 = true;
+        最近逻辑拒绝状态 = 控制面板请求状态::可展示;
+        return true;
+    }
+
     bool 读取只读材料(bool 允许保留旧快照 = false) {
         const auto 总览材料 = 控制面板.生成只读总览材料(创建只读请求());
         const auto 树材料组 = 控制面板.生成六类树视图候选材料();
-        const auto 六树候选 = 控制面板.生成六类真实树只读材料(创建只读请求());
         const bool 总览有效 =
             总览材料.状态 == 控制面板请求状态::可展示
             && 总览材料.人读材料
@@ -315,35 +406,13 @@ struct 控制面板窗口::窗口实现 {
             标记追根因错误(L"控制面板总览材料、树分类材料或启动结构统计不符合已确认边界");
             return false;
         }
-        if (!六树候选.完整 || 六树候选.状态 != 控制面板请求状态::可展示) {
-            最近六树候选已替换 = false;
-            if (六树候选.追根因错误) {
-                标记追根因错误(L"控制面板六类真实树候选出现结构不一致");
-                return false;
-            }
-            if (允许保留旧快照 && 当前快照.六树候选序号 != 0) {
-                设置状态栏文本(L"六类真实树候选被逻辑拒绝；已保留上一份完整快照");
-                return true;
-            }
-            失败阶段 = L"控制面板六类真实树候选未形成完整快照";
-            return false;
-        }
-        bool 六树结构有效 = 六树候选.候选序号 != 0;
-        for (std::size_t 索引 = 0; 索引 < 六树候选.树结构材料组.size(); ++索引) {
-            六树结构有效 = 六树结构有效
-                && 树结构显示语义有效(
-                    六树候选.树结构材料组[索引], static_cast<控制面板树分类>(索引));
-        }
-        if (!六树结构有效) {
-            标记追根因错误(L"控制面板六类真实树候选完整复核失败");
-            return false;
-        }
         当前快照.总览材料 = 总览材料;
         当前快照.树视图材料组 = 树材料组;
-        当前快照.树结构材料组 = 六树候选.树结构材料组;
-        当前快照.六树候选序号 = 六树候选.候选序号;
-        最近六树候选已替换 = true;
-        return true;
+        return 读取并替换当前树(
+            当前快照.当前分类,
+            当前快照.当前概念根,
+            当前快照.当前页游标,
+            允许保留旧快照);
     }
 
     void 读取数据库审计材料() {
@@ -569,7 +638,7 @@ struct 控制面板窗口::窗口实现 {
         return 新项;
     }
 
-    bool 重建全部树视图() {
+    bool 重建当前树视图() {
         if (树视图 == nullptr || 当前分类索引 >= 树分类名称.size()) {
             标记追根因错误(L"控制面板树视图重建入口无效");
             return false;
@@ -584,36 +653,34 @@ struct 控制面板窗口::窗口实现 {
         重建状态收口器 重建收口{正在重建树视图};
         TreeView_DeleteAllItems(树视图);
         树项引用组.clear();
-        分类树根项组.fill(nullptr);
+        当前分类树根项 = nullptr;
         当前树项引用序号 = 0;
 
-        for (std::uint32_t 分类索引 = 0; 分类索引 < 树分类名称.size(); ++分类索引) {
-            const auto 分类根项 = 插入分类树根(分类索引);
-            if (分类根项 == nullptr) {
-                return false;
-            }
-            分类树根项组[分类索引] = 分类根项;
-            const auto& 树材料 = 当前快照.树结构材料组[分类索引];
-            if (树材料.根节点组.empty()) {
-                标记追根因错误(L"控制面板真实树根组为空");
-                return false;
-            }
-            for (const auto& 真实根 : 树材料.根节点组) {
-                if (插入控制面板树节点(分类根项, 真实根, 分类索引) == nullptr) {
-                    return false;
-                }
-            }
-            TreeView_Expand(树视图, 分类根项, TVE_EXPAND);
-        }
-        if (树项引用组.empty() || 分类树根项组[当前分类索引] == nullptr) {
-            标记追根因错误(L"控制面板六类树项引用建立失败");
+        当前分类树根项 = 插入分类树根(当前分类索引);
+        if (当前分类树根项 == nullptr) {
             return false;
         }
-        TreeView_SelectItem(树视图, 分类树根项组[当前分类索引]);
-        TreeView_EnsureVisible(树视图, 分类树根项组[当前分类索引]);
+        const auto& 树材料 = 当前快照.当前树候选.当前页树结构材料;
+        if (树材料.分类 != static_cast<控制面板树分类>(当前分类索引)
+            || 树材料.根节点组.empty()) {
+            标记追根因错误(L"控制面板当前分类真实根页为空或分类不匹配");
+            return false;
+        }
+        for (const auto& 真实根 : 树材料.根节点组) {
+            if (插入控制面板树节点(当前分类树根项, 真实根, 当前分类索引) == nullptr) {
+                return false;
+            }
+        }
+        TreeView_Expand(树视图, 当前分类树根项, TVE_EXPAND);
+        if (树项引用组.empty()) {
+            标记追根因错误(L"控制面板当前分类树项引用建立失败");
+            return false;
+        }
+        TreeView_SelectItem(树视图, 当前分类树根项);
+        TreeView_EnsureVisible(树视图, 当前分类树根项);
         TVITEMW 当前项{};
         当前项.mask = TVIF_PARAM;
-        当前项.hItem = 分类树根项组[当前分类索引];
+        当前项.hItem = 当前分类树根项;
         if (!TreeView_GetItem(树视图, &当前项) || 当前项.lParam <= 0) {
             标记追根因错误(L"控制面板分类树根引用读回失败");
             return false;
@@ -622,18 +689,66 @@ struct 控制面板窗口::窗口实现 {
         return true;
     }
 
-    bool 定位分类树根(std::uint32_t 分类索引) {
+    bool 定位当前分类树根() {
         if (树视图 == nullptr
-            || 分类索引 >= 分类树根项组.size()
-            || 分类树根项组[分类索引] == nullptr) {
+            || 当前分类索引 >= 树分类名称.size()
+            || 当前分类树根项 == nullptr) {
             标记追根因错误(L"控制面板分类树根定位入口无效");
             return false;
         }
-        当前分类索引 = 分类索引;
-        TreeView_Expand(树视图, 分类树根项组[分类索引], TVE_EXPAND);
-        TreeView_SelectItem(树视图, 分类树根项组[分类索引]);
-        TreeView_EnsureVisible(树视图, 分类树根项组[分类索引]);
+        TreeView_Expand(树视图, 当前分类树根项, TVE_EXPAND);
+        TreeView_SelectItem(树视图, 当前分类树根项);
+        TreeView_EnsureVisible(树视图, 当前分类树根项);
         return true;
+    }
+
+    bool 重建概念根下拉() {
+        if (概念根下拉 == nullptr) {
+            标记追根因错误(L"控制面板概念根下拉重建入口无效");
+            return false;
+        }
+        SendMessageW(概念根下拉, CB_RESETCONTENT, 0, 0);
+        if (当前快照.当前分类 != 控制面板树分类::概念树) {
+            return true;
+        }
+        if (!当前快照.当前概念根.has_value()
+            || 当前快照.概念根选项组.size() != 4) {
+            标记追根因错误(L"控制面板概念根下拉缺少完整活动根选项");
+            return false;
+        }
+        std::size_t 当前选项 = 当前快照.概念根选项组.size();
+        for (std::size_t 索引 = 0; 索引 < 当前快照.概念根选项组.size(); ++索引) {
+            const auto& 选项 = 当前快照.概念根选项组[索引];
+            if (!选项.完整()
+                || SendMessageW(
+                    概念根下拉,
+                    CB_ADDSTRING,
+                    0,
+                    reinterpret_cast<LPARAM>(选项.显示名称.c_str())) == CB_ERR) {
+                标记追根因错误(L"控制面板概念根选项创建失败");
+                return false;
+            }
+            if (选项.根节点 == 当前快照.当前概念根.value()) {
+                当前选项 = 索引;
+            }
+        }
+        if (当前选项 >= 当前快照.概念根选项组.size()) {
+            标记追根因错误(L"控制面板当前概念根不在活动选项中");
+            return false;
+        }
+        SendMessageW(概念根下拉, CB_SETCURSEL, static_cast<WPARAM>(当前选项), 0);
+        return true;
+    }
+
+    void 更新根页按钮状态() const {
+        if (上一根页按钮 != nullptr) {
+            EnableWindow(上一根页按钮, 根页历史组.size() > 1 ? TRUE : FALSE);
+        }
+        if (下一根页按钮 != nullptr) {
+            EnableWindow(
+                下一根页按钮,
+                当前快照.当前树候选.下一页游标.has_value() ? TRUE : FALSE);
+        }
     }
 
     void 更新菜单状态() const {
@@ -653,8 +768,12 @@ struct 控制面板窗口::窗口实现 {
         const bool 日志信息页 = 当前分页 == 控制面板分页::日志信息;
         const bool 仓库信息页 = 系统信息页 && 当前系统信息是(系统信息导航::仓库信息);
         const bool 数据库审计页 = 系统信息页 && 当前系统信息是(系统信息导航::数据库审计);
+        const bool 概念树页 = 信息树页 && 当前快照.当前分类 == 控制面板树分类::概念树;
         显示控件(导航栏, true);
         显示控件(树视图, 信息树页);
+        显示控件(概念根下拉, 概念树页);
+        显示控件(上一根页按钮, 信息树页);
+        显示控件(下一根页按钮, 信息树页);
         显示控件(节点数文本, 仓库信息页);
         显示控件(关系数文本, 仓库信息页);
         显示控件(索引数文本, 仓库信息页);
@@ -690,15 +809,14 @@ struct 控制面板窗口::窗口实现 {
                 << L"\r\n"
                 << L"索引仓库数量：" << 当前快照.启动结构统计.索引数
                 << L"\r\n\r\n"
-                << L"六类信息树投影"
+                << L"当前分类按需投影"
                 << L"\r\n";
-            for (std::size_t 索引 = 0; 索引 < 当前快照.树结构材料组.size(); ++索引) {
-                const auto& 树材料 = 当前快照.树结构材料组[索引];
-                文本 << 树分类名称[索引]
-                    << L"：根 " << 树材料.根节点组.size()
-                    << L"，投影项 " << 树材料.真实节点投影数量
-                    << L"\r\n";
-            }
+            const auto& 当前树 = 当前快照.当前树候选.当前页树结构材料;
+            文本 << 树分类名称[当前分类索引]
+                << L"：本页真实根 " << 当前树.根节点组.size()
+                << L"，投影项 " << 当前树.真实节点投影数量
+                << L"，其它五类未生成"
+                << L"\r\n";
             文本 << L"\r\n"
                 << L"显示边界：树项和仓库统计只做人读；节点、关系、索引仍以内存仓库结构为准。";
         } else if (当前系统信息是(系统信息导航::数据库审计)) {
@@ -725,10 +843,16 @@ struct 控制面板窗口::窗口实现 {
                 const auto& 树材料 = 当前快照.树视图材料组[索引];
                 文本 << L"- " << 树分类名称[索引]
                     << L"："
-                    << (树材料.可作为树视图分类 ? L"可展示" : L"拒绝")
-                    << L"，真实根 " << 当前快照.树结构材料组[索引].根节点组.size()
-                    << L"，投影项 " << 当前快照.树结构材料组[索引].真实节点投影数量
-                    << L"\r\n";
+                    << (树材料.可作为树视图分类 ? L"可按需读取" : L"拒绝");
+                if (索引 == 当前分类索引) {
+                    文本 << L"，本页真实根 "
+                        << 当前快照.当前树候选.当前页树结构材料.根节点组.size()
+                        << L"，投影项 "
+                        << 当前快照.当前树候选.当前页树结构材料.真实节点投影数量;
+                } else {
+                    文本 << L"，本次未请求";
+                }
+                文本 << L"\r\n";
             }
         }
         SetWindowTextW(详情文本, 文本.str().c_str());
@@ -788,7 +912,7 @@ struct 控制面板窗口::窗口实现 {
         if (!重建导航栏()) {
             return false;
         }
-        if (当前分页 == 控制面板分页::信息树 && !定位分类树根(当前分类索引)) {
+        if (当前分页 == 控制面板分页::信息树 && !定位当前分类树根()) {
             return false;
         }
         更新菜单状态();
@@ -816,12 +940,44 @@ struct 控制面板窗口::窗口实现 {
                 标记追根因错误(L"控制面板信息树导航索引越界");
                 return false;
             }
-            当前分类索引 = 选中索引;
-            if (!定位分类树根(当前分类索引)) {
+            if (选中索引 == 当前分类索引) {
+                if (!定位当前分类树根()) {
+                    return false;
+                }
+                更新详情控件();
+                return true;
+            }
+            {
+                const auto 上一快照 = 当前快照;
+                const auto 上一根页历史 = 根页历史组;
+                const auto 上一分类索引 = 当前分类索引;
+                if (!读取并替换当前树(
+                    static_cast<控制面板树分类>(选中索引), std::nullopt, std::nullopt, true)) {
+                    return false;
+                }
+                if (!最近按需候选已替换) {
+                    SendMessageW(导航栏, LB_SETCURSEL, static_cast<WPARAM>(上一分类索引), 0);
+                    return true;
+                }
+                根页历史组 = {std::nullopt};
+                if (!重建当前树视图() || !重建概念根下拉()) {
+                    当前快照 = 上一快照;
+                    根页历史组 = 上一根页历史;
+                    当前分类索引 = 上一分类索引;
+                    if (!重建当前树视图() || !重建概念根下拉()) {
+                        标记追根因错误(L"控制面板分类切换失败且旧页恢复失败");
+                    }
+                    return false;
+                }
+            }
+            if (!定位当前分类树根()) {
                 return false;
             }
+            更新根页按钮状态();
+            应用分页控件可见性();
+            布局控件();
             更新详情控件();
-            设置状态栏文本(L"已切换信息树导航");
+            设置状态栏文本(L"已按需切换信息树分类；未生成其它五类树");
             return true;
         case 控制面板分页::日志信息:
             if (选中索引 >= 日志信息导航名称.size()) {
@@ -875,6 +1031,19 @@ struct 控制面板窗口::窗口实现 {
             WS_EX_CLIENTEDGE, WC_TREEVIEWW, L"",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS,
             0, 0, 0, 0, 主窗口, nullptr, GetModuleHandleW(nullptr), nullptr);
+        概念根下拉 = CreateWindowExW(
+            0, L"COMBOBOX", L"",
+            WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST | WS_VSCROLL,
+            0, 0, 0, 0, 主窗口,
+            reinterpret_cast<HMENU>(static_cast<INT_PTR>(概念根下拉编号)), GetModuleHandleW(nullptr), nullptr);
+        上一根页按钮 = CreateWindowExW(0, L"BUTTON", L"上一页",
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
+            0, 0, 0, 0, 主窗口,
+            reinterpret_cast<HMENU>(static_cast<INT_PTR>(上一根页按钮编号)), GetModuleHandleW(nullptr), nullptr);
+        下一根页按钮 = CreateWindowExW(0, L"BUTTON", L"下一页",
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
+            0, 0, 0, 0, 主窗口,
+            reinterpret_cast<HMENU>(static_cast<INT_PTR>(下一根页按钮编号)), GetModuleHandleW(nullptr), nullptr);
         节点数文本 = CreateWindowExW(WS_EX_CLIENTEDGE, L"STATIC", L"",
             WS_CHILD | WS_VISIBLE | SS_CENTER, 0, 0, 0, 0, 主窗口, nullptr, GetModuleHandleW(nullptr), nullptr);
         关系数文本 = CreateWindowExW(WS_EX_CLIENTEDGE, L"STATIC", L"",
@@ -909,6 +1078,7 @@ struct 控制面板窗口::窗口实现 {
             0, 0, 0, 0, 主窗口, nullptr, GetModuleHandleW(nullptr), nullptr);
 
         if (标题文本 == nullptr || 边界文本 == nullptr || 导航栏 == nullptr || 树视图 == nullptr
+            || 概念根下拉 == nullptr || 上一根页按钮 == nullptr || 下一根页按钮 == nullptr
             || 节点数文本 == nullptr || 关系数文本 == nullptr || 索引数文本 == nullptr
             || 详情文本 == nullptr || 数据库标题文本 == nullptr || 数据库列表 == nullptr
             || 刷新按钮 == nullptr || 操作请求按钮 == nullptr
@@ -918,7 +1088,8 @@ struct 控制面板窗口::窗口实现 {
         }
 
         SendMessageW(标题文本, WM_SETFONT, reinterpret_cast<WPARAM>(标题字体), TRUE);
-        for (HWND 控件 : {边界文本, 导航栏, 树视图, 节点数文本, 关系数文本, 索引数文本,
+        for (HWND 控件 : {边界文本, 导航栏, 树视图, 概念根下拉, 上一根页按钮, 下一根页按钮,
+                 节点数文本, 关系数文本, 索引数文本,
                  详情文本, 数据库标题文本, 数据库列表, 刷新按钮, 操作请求按钮, 关闭按钮, 状态栏}) {
             SendMessageW(控件, WM_SETFONT, reinterpret_cast<WPARAM>(正文字体), TRUE);
         }
@@ -926,9 +1097,10 @@ struct 控制面板窗口::窗口实现 {
         if (!重建导航栏()) {
             return false;
         }
-        if (!重建全部树视图()) {
+        if (!重建当前树视图() || !重建概念根下拉()) {
             return false;
         }
+        更新根页按钮状态();
 
         ListView_SetExtendedListViewStyle(数据库列表, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_DOUBLEBUFFER);
         const std::array<std::pair<const wchar_t*, int>, 6> 数据库列{
@@ -1010,7 +1182,7 @@ struct 控制面板窗口::窗口实现 {
                 << L"显示名称只做人读；节点身份只按完整稳定句柄判断。";
         } else if (树项 != nullptr && 树项->分类索引 < 树分类名称.size()) {
             const auto& 树材料 = 当前快照.树视图材料组[树项->分类索引];
-            const auto& 树结构 = 当前快照.树结构材料组[树项->分类索引];
+            const auto& 树结构 = 当前快照.当前树候选.当前页树结构材料;
             文本 << L"当前选中：" << 树分类名称[树项->分类索引]
                 << L"\r\n\r\n"
                 << 树分类说明(树材料.分类)
@@ -1021,7 +1193,11 @@ struct 控制面板窗口::窗口实现 {
                 << L"\r\n"
                 << L"来源版本：" << 树结构.来源版本
                 << L"\r\n"
-                << L"快照序号：" << 当前快照.六树候选序号
+                << L"按需候选序号：" << 当前快照.当前树候选.候选序号
+                << L"\r\n"
+                << L"上一页可用：" << (根页历史组.size() > 1 ? L"是" : L"否")
+                << L"\r\n"
+                << L"下一页可用：" << (当前快照.当前树候选.下一页游标.has_value() ? L"是" : L"否")
                 << L"\r\n\r\n"
                 << L"请选择具体节点查看完整句柄、关系角色和名称入口。";
         } else {
@@ -1121,7 +1297,27 @@ struct 控制面板窗口::窗口实现 {
             const int 右栏左边 = 宽度 - 边距 - 右详情宽度;
             const int 树宽度 = std::max(260, 右栏左边 - 页面左边 - 边距);
             const int 右栏宽度 = std::max(260, 右详情宽度);
-            MoveWindow(树视图, 页面左边, 内容顶部, 树宽度, std::max(120, 内容底部 - 内容顶部), TRUE);
+            const int 页控件高度 = 30;
+            const int 页控件间距 = 8;
+            const int 翻页按钮宽度 = 82;
+            const int 概念根宽度 = std::max(140, 树宽度 - 2 * (翻页按钮宽度 + 页控件间距));
+            MoveWindow(概念根下拉, 页面左边, 内容顶部, 概念根宽度, 220, TRUE);
+            MoveWindow(
+                上一根页按钮,
+                页面左边 + 树宽度 - 2 * 翻页按钮宽度 - 页控件间距,
+                内容顶部,
+                翻页按钮宽度,
+                页控件高度,
+                TRUE);
+            MoveWindow(
+                下一根页按钮,
+                页面左边 + 树宽度 - 翻页按钮宽度,
+                内容顶部,
+                翻页按钮宽度,
+                页控件高度,
+                TRUE);
+            const int 树顶部 = 内容顶部 + 页控件高度 + 页控件间距;
+            MoveWindow(树视图, 页面左边, 树顶部, 树宽度, std::max(120, 内容底部 - 树顶部), TRUE);
             MoveWindow(详情文本, 右栏左边, 内容顶部, 右栏宽度, std::max(180, 内容底部 - 内容顶部), TRUE);
         } else if (当前分页 == 控制面板分页::系统信息) {
             if (当前系统信息是(系统信息导航::仓库信息)) {
@@ -1156,30 +1352,123 @@ struct 控制面板窗口::窗口实现 {
         MoveWindow(关闭按钮, 宽度 - 边距 - 100, 按钮顶部, 100, 30, TRUE);
     }
 
-    bool 刷新显示材料() {
+    bool 请求并重建当前树页(
+        std::optional<节点句柄> 当前概念根,
+        std::optional<控制面板根页游标> 当前页游标,
+        std::vector<std::optional<控制面板根页游标>> 新根页历史,
+        const wchar_t* 成功状态) {
         const auto 上一快照 = 当前快照;
-        if (!读取只读材料(true)) {
+        const auto 上一根页历史 = 根页历史组;
+        if (!读取并替换当前树(
+            当前快照.当前分类, 当前概念根, 当前页游标, true)) {
             return false;
         }
-        if (!最近六树候选已替换) {
-            return true;
+        if (!最近按需候选已替换) {
+            return 重建概念根下拉();
         }
-        if (!重建全部树视图()) {
+        根页历史组 = std::move(新根页历史);
+        if (!重建当前树视图() || !重建概念根下拉()) {
             当前快照 = 上一快照;
+            根页历史组 = 上一根页历史;
+            当前分类索引 = static_cast<std::uint32_t>(当前快照.当前分类);
             TreeView_DeleteAllItems(树视图);
             树项引用组.clear();
-            分类树根项组.fill(nullptr);
-            if (!重建全部树视图()) {
-                标记追根因错误(L"控制面板六树刷新失败且旧快照视图恢复失败");
+            当前分类树根项 = nullptr;
+            if (!重建当前树视图() || !重建概念根下拉()) {
+                标记追根因错误(L"控制面板当前页切换失败且旧页恢复失败");
             }
             return false;
         }
+        更新根页按钮状态();
+        应用分页控件可见性();
+        更新详情控件();
+        布局控件();
+        设置状态栏文本(成功状态);
+        return true;
+    }
+
+    bool 切换概念根(std::size_t 选项索引) {
+        if (当前快照.当前分类 != 控制面板树分类::概念树
+            || 选项索引 >= 当前快照.概念根选项组.size()) {
+            标记追根因错误(L"控制面板概念根选择入口无效");
+            return false;
+        }
+        const auto 目标根 = 当前快照.概念根选项组[选项索引].根节点;
+        if (当前快照.当前概念根 == std::optional<节点句柄>{目标根}) {
+            return true;
+        }
+        return 请求并重建当前树页(
+            目标根, std::nullopt, {std::nullopt}, L"已按需切换当前活动概念根");
+    }
+
+    bool 翻到下一根页() {
+        if (!当前快照.当前树候选.下一页游标.has_value()) {
+            return true;
+        }
+        auto 新历史 = 根页历史组;
+        const auto 下一页游标 = 当前快照.当前树候选.下一页游标;
+        新历史.push_back(下一页游标);
+        return 请求并重建当前树页(
+            当前快照.当前概念根,
+            下一页游标,
+            std::move(新历史),
+            L"已按真实根边界切换下一页；未累计上一页结构");
+    }
+
+    bool 翻到上一根页() {
+        if (根页历史组.size() <= 1) {
+            return true;
+        }
+        auto 新历史 = 根页历史组;
+        新历史.pop_back();
+        return 请求并重建当前树页(
+            当前快照.当前概念根,
+            新历史.back(),
+            std::move(新历史),
+            L"已按真实根边界返回上一页；未累计后一页结构");
+    }
+
+    bool 刷新显示材料() {
+        const auto 上一快照 = 当前快照;
+        const auto 上一根页历史 = 根页历史组;
+        if (!读取只读材料(true)) {
+            return false;
+        }
+        if (!最近按需候选已替换
+            && 最近逻辑拒绝状态 == 控制面板请求状态::拒绝游标失效
+            && 当前快照.当前页游标.has_value()) {
+            if (!读取并替换当前树(
+                当前快照.当前分类, 当前快照.当前概念根, std::nullopt, true)) {
+                return false;
+            }
+            if (最近按需候选已替换) {
+                根页历史组 = {std::nullopt};
+            }
+        }
+        if (!最近按需候选已替换) {
+            return true;
+        }
+        if (!重建当前树视图() || !重建概念根下拉()) {
+            当前快照 = 上一快照;
+            根页历史组 = 上一根页历史;
+            当前分类索引 = static_cast<std::uint32_t>(当前快照.当前分类);
+            TreeView_DeleteAllItems(树视图);
+            树项引用组.clear();
+            当前分类树根项 = nullptr;
+            if (!重建当前树视图() || !重建概念根下拉()) {
+                标记追根因错误(L"控制面板当前按需页刷新失败且旧页恢复失败");
+            }
+            return false;
+        }
+        更新根页按钮状态();
         读取数据库审计材料();
         更新总览控件();
         更新当前分页内容();
+        应用分页控件可见性();
+        布局控件();
         设置状态栏文本(当前快照.数据库审计查询.操作.成功
-            ? L"只读材料和数据库审计投影已刷新；权威结构未改变"
-            : L"内存只读材料已刷新；数据库审计投影不可用；权威结构未改变");
+            ? L"当前分类按需页和数据库审计投影已刷新；权威结构未改变"
+            : L"当前分类按需页已刷新；数据库审计投影不可用；权威结构未改变");
         return true;
     }
 
@@ -1211,6 +1500,10 @@ struct 控制面板窗口::窗口实现 {
             return 切换相邻分页(1);
         case 刷新按钮编号:
             return 刷新显示材料();
+        case 上一根页按钮编号:
+            return 翻到上一根页();
+        case 下一根页按钮编号:
+            return 翻到下一根页();
         case 操作请求按钮编号:
             return 生成操作请求材料();
         case 关闭按钮编号:
@@ -1344,6 +1637,15 @@ struct 控制面板窗口::窗口实现 {
             return 0;
         }
         case WM_COMMAND:
+            if (reinterpret_cast<HWND>(参数二) == 当前实现->概念根下拉
+                && HIWORD(参数一) == CBN_SELCHANGE) {
+                const auto 选中项 = SendMessageW(当前实现->概念根下拉, CB_GETCURSEL, 0, 0);
+                if (选中项 != CB_ERR
+                    && !当前实现->切换概念根(static_cast<std::size_t>(选中项))) {
+                    DestroyWindow(窗口);
+                }
+                return 0;
+            }
             if (reinterpret_cast<HWND>(参数二) == 当前实现->导航栏 && HIWORD(参数一) == LBN_SELCHANGE) {
                 const auto 选中项 = SendMessageW(当前实现->导航栏, LB_GETCURSEL, 0, 0);
                 if (选中项 != LB_ERR) {

@@ -158,6 +158,7 @@
     <ClCompile Include="海中鱼巣\自检.系统角色初始化.ixx" />
     <ClCompile Include="海中鱼巣\自检.运行期组合分层.ixx" />
     <ClCompile Include="海中鱼巣\自检.服务写入兼容边界.ixx" />
+    <ClCompile Include="海中鱼巣\自检.控制面板按需投影.ixx" />
     <ClCompile Include="海中鱼巣\线程\运行消息协议.ixx" />
     <ClCompile Include="海中鱼巣\适配\协议.D455采样材料.ixx" />
     <ClCompile Include="海中鱼巣\适配\采集器.D455相机.ixx">

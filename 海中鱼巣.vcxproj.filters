@@ -42,6 +42,9 @@
     <ClCompile Include="海中鱼巣\自检.服务写入兼容边界.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\自检.控制面板按需投影.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\线程\运行消息协议.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
