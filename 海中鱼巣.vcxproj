@@ -181,6 +181,11 @@
     <ClCompile Include="海中鱼巣\领域\材料.因果模式.ixx" />
     <ClCompile Include="海中鱼巣\领域\算法.因果模式.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.因果模式.ixx" />
+    <ClCompile Include="海中鱼巣\领域\材料.用途事件.ixx" />
+    <ClCompile Include="海中鱼巣\领域\算法.用途事件.ixx" />
+    <ClCompile Include="海中鱼巣\领域\服务.用途事件.ixx" />
+    <ClCompile Include="海中鱼巣\领域\组合.用途事件.ixx" />
+    <ClCompile Include="海中鱼巣\领域\自检.用途事件.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.动态模式.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.动态聚类.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.因果模式.ixx" />
