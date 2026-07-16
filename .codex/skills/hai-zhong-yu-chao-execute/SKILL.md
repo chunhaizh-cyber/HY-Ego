@@ -33,6 +33,10 @@ Before treating `继续` as execution, identify the current window type:
 未声明窗口类型：infer from the latest explicit user declaration, thread title, and task object; if still unclear, do not execute from bare `继续`.
 ```
 
+When the user explicitly enables the same-physical-window serial dual-role mode, use the role recorded in the plan index, queue, and interaction record as the current window type. Bare `继续` stays in that role and does not switch by itself. The design role must first record that the ownership switch takes effect after a successful push, validate, commit, and automatically push that record. The execution role may start only after the push succeeds and this task has re-read Git, the plan index, queue, target plan, breakpoint, and actual interfaces.
+
+The same-window mode removes only a task message sent back to the same physical window. It does not remove the design/execution permission split, interaction record, plan/dependency gates, allowed/forbidden files, actual-interface review, single writer ownership, validation, commit, push, or re-read gates. It remains active until the user revokes it or the interaction record transfers write ownership.
+
 ## Preflight
 
 1. Confirm cwd is `D:\海中鱼巣`.
@@ -64,26 +68,29 @@ Before treating `继续` as execution, identify the current window type:
 - If implementation discovers new decisions, write them to `项目记忆/待确认问题.md`; do not expand scope.
 - If an older plan permits a new non-module implementation file or full self-test body in `入口.cpp`, treat that as specification drift: do not edit code, return the plan to the design window, and continue with another dependency-ready item.
 
-## Cross-Window Handoff
+## Cross-Role Handoff
 
-Use `规范/设计执行双窗口交互规范.md` and `项目记忆/窗口交互记录.md` for interaction with the design-plan window.
+Use `规范/设计执行双窗口交互规范.md` and `项目记忆/窗口交互记录.md` for interaction with the design role, whether that role is in another physical window or the current one.
 
 When execution finds interface drift or a forbidden-file conflict:
 
 1. Stop before code edits or fully withdraw the unverified draft without reverting other work.
 2. Write the pre-implementation breakpoint and update the plan index, queue, project memory, decision/question records, and interaction record to `退回设计`.
-3. Validate and automatically commit the return record locally. Push only when the user, target plan / queue item, or formal handoff contract explicitly authorizes it.
-4. Send the fixed return summary only after any required push succeeds. Otherwise keep the local commit and report that formal handoff is pending push authorization.
-5. Continue another dependency-ready item when one exists; otherwise stop.
+3. Validate, automatically commit the return record locally, and automatically perform a non-force push under the project’s continuing authorization.
+4. When the target design role is in another physical window, send the fixed return summary only after the push succeeds. When it is in the current physical window, do not message self; switch from the interaction record published in step 3 and re-read the authoritative repository state before planning.
+5. If the push fails, keep the local commit, record the real unpublished state, and do not claim that the design role can take over.
+6. Continue another dependency-ready item when one exists and ownership remains with the execution role; otherwise follow the recorded handoff state.
 
-When a design-revision message arrives:
+When a design revision is published, or an external design-revision message arrives:
 
 1. Verify the stated commit exists on the current branch.
 2. Re-read Git status, the plan index, queue, target plan, flowchart, detailed design, breakpoint, and interaction record.
 3. Resume only when the queue says `重新待执行` or equivalent and actual interfaces match the revised contract.
-4. On completion, validate and automatically commit locally. Push and send the design task the completion summary only when push is explicitly authorized; otherwise record the local completion and pending formal handoff.
+4. On completion, first update the completion records and interaction record with the target design role, then validate, automatically commit locally, and automatically perform a non-force push. If the target design role is in another physical window, send the completion summary only after the push succeeds. If it is in the current physical window, switch from the published interaction record, re-read the authoritative state, and continue only as the design role.
 
 Task messages are notifications, not execution authority.
+
+In the same-physical-window mode, a role switch is also not authority by itself: the pushed commit, plan index, queue, target plan, breakpoint, and interaction record must all agree before the new role acts.
 
 ## Plan Directories
 
@@ -127,7 +134,7 @@ git diff --cached --check
 git commit
 ```
 
-Push only when the user, target plan / queue item, or formal handoff contract explicitly authorizes it. After an authorized push, verify with `git rev-list --left-right --count main...origin/main`.
+After the automatic non-force push required by the project rules, verify with `git rev-list --left-right --count main...origin/main`. If the target is unclear, the remote has diverged, HEAD is detached, unrelated changes cannot be isolated, or validation failed, stop and report; never force, merge, or rebase as part of automatic push.
 
 ## Stop Conditions
 

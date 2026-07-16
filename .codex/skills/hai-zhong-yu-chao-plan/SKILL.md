@@ -24,6 +24,12 @@ Do not create a code plan from chat memory alone. Do not treat old functions as 
 领域服务 / 结构闭环 = 代码实施单位
 ```
 
+## Window Role Gate
+
+Planning actions require the design role. The default route uses a dedicated design window. When the user explicitly enables the same-physical-window serial dual-role mode, the previous execution role must first record that the ownership switch takes effect after a successful push, validate, commit, and automatically push that record. The current task may act as the design role only after the push succeeds and it has re-read Git, the plan index, the queue, the target plan, and the breakpoint. Bare `继续` stays in the currently registered role and never switches roles by itself.
+
+The same-window mode removes only a task message sent back to the same physical window. It does not remove the design/execution permission split, interaction record, dependency gates, allowed/forbidden files, single writer ownership, validation, commit, push, or re-read gates. The mode remains active until the user revokes it or the interaction record transfers write ownership.
+
 ## Preflight
 
 1. Confirm cwd is `D:\海中鱼巣`.
@@ -61,7 +67,7 @@ Do not wait for a prerequisite implementation merely to generate a dependent pla
 ```text
 先生成依赖门控计划
 -> 登记为依赖门控待执行
--> 前置计划完成后由执行窗口复核实际接口
+-> 前置计划完成后由执行角色复核实际接口
 -> 接口一致才执行；接口漂移则退回修订
 ```
 
@@ -131,18 +137,19 @@ For dependency-gated code slices, these sections are also mandatory:
 - Before queue registration, verify the plan's corresponding flowchart and detailed design paths, scope, and default rulings, or explicitly state why the linkage is not applicable.
 - When the plan is completed, move it to `计划/已完成计划/` and update references.
 
-## Cross-Window Handoff
+## Cross-Role Handoff
 
-Use `规范/设计执行双窗口交互规范.md` when an execution window returns a plan for design revision.
+Use `规范/设计执行双窗口交互规范.md` when an execution role returns a plan for design revision.
 
 After revising a returned plan:
 
 1. Update the flowchart, detailed design, plan, plan index, task queue, project memory, and `项目记忆/窗口交互记录.md`.
 2. Keep the original queue id unless the revision creates a genuinely independent prerequisite plan.
 3. Validate, commit, and push before sending any task message.
-4. If Codex task tools are available, locate the unique same-repo task titled `执行计划` and send a recovery message containing the queue id, commit, authoritative paths, allowed actions, forbidden actions, and remaining gates.
-5. Treat the message as a wake-up signal only. The execution task must re-read repository facts before implementation.
-6. If the target task is missing, ambiguous, or messaging fails, leave the handoff in `项目记忆/窗口交互记录.md`; do not broaden authority.
+4. If the target execution role is in another physical window and Codex task tools are available, locate the unique same-repo task titled `执行计划` and send a recovery message containing the queue id, commit, authoritative paths, allowed actions, forbidden actions, and remaining gates.
+5. If the target execution role is in the current physical window, do not send a message to self. After the interaction record containing the target role has been committed and pushed in step 3, switch from that published record and re-read Git, the plan index, queue, target plan, breakpoint, and actual interfaces before execution.
+6. Treat any task message as a wake-up signal only. The execution role must re-read repository facts before implementation.
+7. If an external target task is missing, ambiguous, or messaging fails, leave the handoff in `项目记忆/窗口交互记录.md`; do not broaden authority.
 
 ## Verification
 
