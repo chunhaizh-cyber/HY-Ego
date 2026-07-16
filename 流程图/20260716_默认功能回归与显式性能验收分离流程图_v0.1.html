@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>默认功能回归与显式性能验收分离流程图 v0.1</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+      color: #182126;
+      background: #f3f5f6;
+    }
+    body {
+      margin: 0;
+      padding: 24px;
+    }
+    main {
+      width: min(1900px, 100%);
+      margin: 0 auto;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      letter-spacing: 0;
+    }
+    p {
+      margin: 0 0 20px;
+      color: #45535b;
+      line-height: 1.7;
+    }
+    .diagram {
+      overflow: auto;
+      padding: 20px;
+      border: 1px solid #c7d0d5;
+      border-radius: 6px;
+      background: #ffffff;
+    }
+    .mermaid {
+      min-width: 1800px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>默认功能回归与显式性能验收分离流程图 v0.1</h1>
+    <p>默认功能回归不登记阶段 790；显式性能模式保持原指标、门槛、顺序和真实退出码。</p>
+    <section class="diagram" aria-label="默认功能回归与显式性能验收分离流程">
+      <pre class="mermaid">
+flowchart TD
+    A["执行窗口接管 #280"] --> B{"工作树 dirty 是否恰好为 #261 七文件 WIP，且暂存区为空"}
+    B -->|"否"| R1["追根因解决：停止处置，不覆盖未知改动"]
+    B -->|"是"| C["按七个精确路径创建带说明的本地可逆 stash；记录 stash 身份"]
+    C --> D["保持 #258 救援 stash 不读取、不恢复、不删除；纯快进到 JY-360 正式基线"]
+    D --> E["解析运行参数"]
+    E --> F{"是否显式请求 --warehouse-performance-self-test-exit"}
+    F -->|"否"| G["默认功能模式：不登记 WAREHOUSE-OPT-S0 阶段 790"]
+    G --> H["登记并运行现有功能自检与 SELFTEST-PERF-GATE-S1 阶段 795"]
+    H --> I{"功能自检和门禁分离合同是否全部通过"}
+    I -->|"否"| R2["追根因解决：默认功能回归真实失败，退出 1"]
+    I -->|"是"| J["功能回归退出 0；输出中阶段 790 命中为 0"]
+    F -->|"是"| K{"当前构建是否具备 Debug 性能基线能力"}
+    K -->|"否"| L1["逻辑内返回：显式拒绝并退出 2，不伪装为性能通过"]
+    K -->|"是"| L["按原最终回归顺序登记阶段 790；固定签名、三档规模和 15% 门槛不变"]
+    L --> M["登记阶段 795，运行全部功能自检与性能基线"]
+    M --> N{"阶段 790 和其它功能自检是否全部通过"}
+    N -->|"是"| O["显式性能验收退出 0；保留完整原始指标"]
+    N -->|"否"| P["显式性能验收退出 1；保留真实失败，不改变阈值或优先级"]
+    J --> Q["验证 Debug 默认功能回归连续 20/20、Release 功能回归和显式性能拒绝"]
+    O --> Q
+    P --> Q
+    L1 --> Q
+    Q --> S{"入口、阶段、模块、Release 与禁止范围证据是否闭合"}
+    S -->|"否"| R3["追根因解决：不登记 795，不发布 #280"]
+    S -->|"是"| T["提交并发布 #280；阶段 795 登记，#261 WIP stash 保持未恢复"]
+    T --> U["设计窗口重读 #280 正式接口，再决定 #261 WIP 的恢复与冲突收口"]
+      </pre>
+    </section>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: "loose",
+      theme: "neutral",
+      flowchart: { useMaxWidth: false, htmlLabels: true, curve: "basis" }
+    });
+  </script>
+</body>
+</html>
