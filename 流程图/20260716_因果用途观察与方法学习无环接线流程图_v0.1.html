@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>因果用途观察与方法学习无环接线流程图</title>
+  <style>
+    body { margin: 0; padding: 24px; font-family: "Microsoft YaHei", sans-serif; background: #f5f7fb; color: #1f2937; }
+    main { max-width: 1680px; margin: 0 auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 6px 24px rgba(15,23,42,.08); }
+    h1 { margin-top: 0; }
+    .note { line-height: 1.7; color: #475569; }
+    .mermaid { overflow: auto; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>因果用途观察与方法学习无环接线流程图</h1>
+  <p class="note">JY-369 二次修订 / #282-#286。只有 #282 新增阶段 850；#286 复用 610 / 760；#283-#285 均为纯只读 S0，不代表节点 15、统计或学习代码已经实现。</p>
+  <pre class="mermaid">
+flowchart TD
+    A["正式因果概率候选&lt;br/&gt;历史机会证据 + Q10000"] --&gt; AF["执行前显式用途来源冻结&lt;br/&gt;候选 + 任务 + 选择 + 方法 + 动作 + 版本"]
+    AF --&gt; C["#282 复核冻结来源与结果属于同一完整任务回合"]
+    B["正式任务结果治理&lt;br/&gt;回执 + 冻结请求 + 三种收口"] --&gt; C
+    C --&gt; D{"冻结来源、版本、任务、方法、选择、状态、动态是否完整一致"}
+    D -- "否：设计允许的材料缺失或当前性漂移" --&gt; LR1["逻辑内返回&lt;br/&gt;结构零变化"]
+    D -- "否：正式 DTO 内部互相矛盾" --&gt; RC1["追根因解决&lt;br/&gt;停止后继，不用日志或缓存修补"]
+    D -- "是" --&gt; E{"正式任务结果状态"}
+    E -- "未达成已转待重筹办" --&gt; F["结构化尝试效用&lt;br/&gt;任务未达成；需求最终效用未形成&lt;br/&gt;概率分量保持独立"]
+    E -- "任务已完成待需求结算" --&gt; G["完整待结算材料&lt;br/&gt;不形成最终效用、不进入统计"]
+    E -- "已完成并结算" --&gt; H["结构化最终效用&lt;br/&gt;任务已达成；需求已满足&lt;br/&gt;概率分量保持独立"]
+    F --&gt; I["#283 只读 S0&lt;br/&gt;权威用途观察字段承载与恢复边界"]
+    G --&gt; I
+    H --&gt; I
+    DS["#286 需求结算单一正式合同收口&lt;br/&gt;值相等 + 完整结构幂等 + 多记录内部不一致"] --&gt; I
+    I --&gt; J{"主信息准入、身份索引、关系阶段、事务发布、容量重建和唯一恢复链是否已有事实"}
+    J -- "否" --&gt; LR2["设计缺口&lt;br/&gt;缺结构 / 缺入口 / 违反规则 / 待设计"]
+    J -- "是" --&gt; K["形成可复用结构事实矩阵&lt;br/&gt;仍不创建节点 15、不登记 860"]
+    LR2 --&gt; CM
+    K --&gt; CM["#284 只读 S0&lt;br/&gt;完整因果结构键与活动概念签名映射事实"]
+    CM --&gt; R{"原因 / 结果完整键能否无损表达&lt;br/&gt;活动签名与生命周期能否同边界复核"}
+    R -- "否" --&gt; LR3["设计缺口&lt;br/&gt;缺结构签名或缺原子只读视图"]
+    R -- "是" --&gt; S["形成可信字段映射与当前性矩阵&lt;br/&gt;唯一标注也不替代完整结构键"]
+    LR3 --&gt; T
+    S --&gt; T["#285 只读 S0&lt;br/&gt;复核确定差异算法与方法代际结构映射"]
+    T --&gt; U{"算法来源、结构承载和正式读回是否全部确定"}
+    U -- "否" --&gt; LR4["设计缺口&lt;br/&gt;不生成代码许可"]
+    U -- "是" --&gt; V["切回设计角色&lt;br/&gt;修订流程图 / 详细设计并生成新计划"]
+    V --&gt; W["后继概念方向&lt;br/&gt;学习候选 -&gt; 独立晋级 -&gt; 新代际后继回合"]
+    W --&gt; X["再生成唯一运行期与恢复影响 S0&lt;br/&gt;不建平行恢复链"]
+    W -. "未来正式实现后" .-&gt; Y["新任务回合"]
+    Y --&gt; AF
+  </pre>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>

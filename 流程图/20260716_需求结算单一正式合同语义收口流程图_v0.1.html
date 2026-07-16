@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>需求结算单一正式合同语义收口流程图</title>
+  <style>
+    body { margin: 0; padding: 24px; font-family: "Microsoft YaHei", sans-serif; background: #f7f8fa; color: #1f2937; }
+    main { max-width: 1600px; margin: 0 auto; background: #fff; border: 1px solid #dfe3e8; border-radius: 12px; padding: 24px; }
+    h1 { margin-top: 0; }
+    .note { line-height: 1.7; color: #4b5563; }
+    .mermaid { overflow: auto; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>需求结算单一正式合同语义收口流程图</h1>
+  <p class="note">JY-369 / #286 / DQ-178。施工设计，不代表当前公开需求结算入口已经完成收口；复用既有自检阶段 610 与 760。</p>
+  <pre class="mermaid">
+flowchart TD
+    A["公开任务结果或独立结算请求"] --&gt; B{"句柄、幂等键、时间戳和证据是否完整"}
+    B -- "否" --&gt; LR1["逻辑内返回&lt;br/&gt;第一笔写入前结构零变化"]
+    B -- "是" --&gt; C["重读需求、来源任务、目标状态、实际状态和证据身份"]
+    C --&gt; D{"正式材料是否完整且相互一致"}
+    D -- "允许的材料缺失或当前性不满足" --&gt; LR2["逻辑内返回&lt;br/&gt;不补默认材料"]
+    D -- "权威读回内部矛盾" --&gt; RC1["追根因解决&lt;br/&gt;停止后继，不用最近记录或缓存修补"]
+    D -- "一致" --&gt; E{"目标状态值是否等于实际状态值"}
+    E -- "否" --&gt; LR3["逻辑内未达成&lt;br/&gt;不完成既有通用组合入口任务&lt;br/&gt;(#225 新结果治理路径之外)&lt;br/&gt;不写需求最终结算"]
+    E -- "是" --&gt; F{"当前正式结算记录数量"}
+    F -- "零条" --&gt; G0{"进入独占结构会话后&lt;br/&gt;再次确认状态型归属仍为零"}
+    G0 -- "已被并发提交占用" --&gt; J
+    G0 -- "仍为零" --&gt; G["只形成已满足实例状态规格&lt;br/&gt;归属顺序号=发生时间戳&lt;br/&gt;同一会话写完整证据关系"]
+    G --&gt; H{"全部写入和完整读回是否一致"}
+    H -- "否" --&gt; RC2["追根因解决&lt;br/&gt;精确撤销未发布候选"]
+    H -- "是" --&gt; I["最后发布唯一正式结算"]
+    F -- "恰一条" --&gt; J["比较完整结构&lt;br/&gt;幂等主键 + 时间 + 来源任务 + 目标/实际状态 + 动态 + 可选因果"]
+    J -- "完整同义" --&gt; ID["幂等读回原结算"]
+    J -- "任一字段异义" --&gt; CF["幂等冲突&lt;br/&gt;结构零变化"]
+    F -- "两条或更多" --&gt; RC3["追根因解决&lt;br/&gt;不得选择最近记录"]
+    K["既有通用组合入口&lt;br/&gt;完成任务并独立结算&lt;br/&gt;(#225 新结果治理路径之外)"] --&gt; L["完成任务前先调用值相等裁决"]
+    L --&gt; E
+  </pre>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>
