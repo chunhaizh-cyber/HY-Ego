@@ -18,6 +18,9 @@
     <ClCompile Include="海中鱼巣\自检.运行器.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\自检.性能门禁分离.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\装配.运行期业务.ixx">
       <Filter>源文件</Filter>
     </ClCompile>

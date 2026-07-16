@@ -150,6 +150,7 @@
 
   <ItemGroup>
     <ClCompile Include="海中鱼巣\自检.运行器.ixx" />
+    <ClCompile Include="海中鱼巣\自检.性能门禁分离.ixx" />
     <ClCompile Include="海中鱼巣\装配.运行期业务.ixx" />
     <ClCompile Include="海中鱼巣\启动.运行期上下文.ixx" />
     <ClCompile Include="海中鱼巣\自检.运行期上下文.ixx" />
