@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>权威用途观察最小业务合同流程图 v0.1</title>
+  <style>
+    body { margin: 0; padding: 24px; font-family: "Microsoft YaHei", sans-serif; background: #f5f7fb; color: #1f2937; }
+    main { max-width: 1840px; margin: 0 auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 6px 24px rgba(15,23,42,.08); }
+    h1 { margin-top: 0; }
+    .note { line-height: 1.7; color: #475569; }
+    .mermaid { overflow: auto; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>权威用途观察最小业务合同流程图 v0.1</h1>
+  <p class="note">JY-377 / #288 / DQ-180。本图只形成 O1-D1 设计审计输入；节点 15、关系 18、容量、事务发布、恢复和代码阶段均未锁定。</p>
+  <pre class="mermaid">
+flowchart TD
+    O0["#287 已完成并发布&lt;br/&gt;纯值因果完整结构键 + A/B 比较 + 召回哈希"] --&gt; D1["O1-D1 形成用途观察最小业务合同&lt;br/&gt;本轮仍是设计材料，四仓库零写"]
+    S0["#282 / #286 正式输入&lt;br/&gt;用途事件纯值材料 + 三种结果 + 单一正式结算"] --&gt; D1
+    S1["#283 正式缺口矩阵&lt;br/&gt;承载、索引关系、容量、发布、恢复仍未闭合"] --&gt; D1
+
+    D1 --&gt; G1{"G1 上游结果状态门禁&lt;br/&gt;入口拒绝 / 不支持 / 内部不一致 / 已形成&lt;br/&gt;状态、具体原因与 optional 按当前矩阵合法"}
+    G1 -- "合法入口拒绝态" --&gt; L1["逻辑内返回：入口拒绝&lt;br/&gt;零结构变化，不补默认值"]
+    G1 -- "合法不支持态" --&gt; L0["逻辑内不支持&lt;br/&gt;不猜测兼容"]
+    G1 -- "上游内部不一致或非法组合" --&gt; R1["追根因解决：内部不一致&lt;br/&gt;停止后继"]
+    G1 -- "已形成 + 无原因 + 有事件" --&gt; G2{"G2 身份门禁&lt;br/&gt;完整任务句柄 + 非零任务序号&lt;br/&gt;事件、冻结请求、回执内嵌请求与回执一致"}
+
+    G2 -- "目标候选格式不支持" --&gt; L3["逻辑内不支持&lt;br/&gt;不猜测兼容"]
+    G2 -- "句柄无效、序号为零或来源不一致" --&gt; R2["追根因解决：身份不变量破坏&lt;br/&gt;冻结键、哈希不得补身份"]
+    G2 -- "通过" --&gt; G3{"G3 内容门禁&lt;br/&gt;不可变核心逐字段完整&lt;br/&gt;因果身份和四项概率快照与来源一致"}
+
+    G3 -- "九个引用、概率快照或来源投影不一致" --&gt; R3["追根因解决：内容不变量破坏&lt;br/&gt;停止后继"]
+    G3 -- "通过" --&gt; G4{"G4 阶段门禁&lt;br/&gt;三种合法阶段元组之一&lt;br/&gt;既有账项只允许待结算推进最终"}
+
+    G4 -- "候选阶段元组非法" --&gt; R4["追根因解决：已接受事件阶段矛盾&lt;br/&gt;停止后继"]
+    G4 -- "同身份同核心同阶段" --&gt; I1["同账幂等读回"]
+    G4 -- "同身份同核心且待结算推进最终" --&gt; P1["形成唯一允许推进候选"]
+    G4 -- "同身份核心变化、终态变化或逆向推进" --&gt; C1["逻辑内返回：同账冲突&lt;br/&gt;零结构变化"]
+    G4 -- "新身份或无既有账项" --&gt; G5{"G5 候选输出投影门禁&lt;br/&gt;只保留经批准的固定形状值对象&lt;br/&gt;不保留来源业务 DTO 或可变长集合"}
+    P1 --&gt; G5
+
+    G5 -- "投影仍含 vector / string 或被排除来源 DTO" --&gt; R5["追根因解决：投影合同破坏&lt;br/&gt;停止后继"]
+    G5 -- "通过" --&gt; V1["形成纯值身份 + 不可变核心 + 阶段负载合同&lt;br/&gt;仍不分配节点、关系、索引或恢复字段"]
+
+    V1 --&gt; A0{"#288 设计审计&lt;br/&gt;三件套、来源、比较和门禁是否一致"}
+    A0 -- "否" --&gt; H0["退回设计修订&lt;br/&gt;不生成代码许可"]
+    A0 -- "是" --&gt; H1["只允许设计角色另行生成 O1-V1 纯值计划&lt;br/&gt;四仓库、运行期、持久化和恢复仍零写"]
+
+    H1 -. "未来纯值计划完成后再次设计" .-&gt; G6{"节点关系、物理索引、规范容量&lt;br/&gt;专用数据操作、最后发布和唯一恢复链是否全部闭合"}
+    G6 -- "否" --&gt; H2["保持节点 15、关系 18 未分配"]
+    G6 -- "是且经新计划授权" --&gt; S2["才可登记后置权威结构计划"]
+  </pre>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>
