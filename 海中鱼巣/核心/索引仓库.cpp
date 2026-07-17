@@ -274,20 +274,46 @@ std::optional<主键绑定记录> 索引仓库::读取主键绑定记录(
     return 主键绑定记录{主键, 位置->second};
 }
 
-std::vector<主键绑定记录> 索引仓库::读取全部主键绑定组(const 结构事务令牌& 令牌) const {
-    if (!验证共享令牌(事务接线_, 令牌)) return {};
-    std::vector<主键绑定记录> 结果;
+主键绑定组读取结果 索引仓库::读取全部主键绑定组(const 结构事务令牌& 令牌) const {
+    if (!验证共享令牌(事务接线_, 令牌)) {
+        return {主键绑定组读取状态::入口拒绝, {}};
+    }
+#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
+    if (下一次主键绑定组资源失败_.exchange(false)) {
+        return {主键绑定组读取状态::资源失败, {}};
+    }
+#endif
+    主键绑定组读取结果 输出{主键绑定组读取状态::已形成, {}};
     std::shared_lock<std::shared_mutex> 锁(仓库锁_);
     try {
-        结果.reserve(主键索引_.size());
-        for (const auto& [主键, 节点] : 主键索引_) 结果.push_back({主键, 节点});
+        输出.记录组.reserve(主键索引_.size());
+        for (const auto& [主键, 节点] : 主键索引_) {
+            const 主键绑定记录 记录{主键, 节点};
+            const auto 反向位置 = 节点主键组_.find(节点.节点编号);
+            if (!记录.完整() || 反向位置 == 节点主键组_.end()
+                || std::count(反向位置->second.cbegin(), 反向位置->second.cend(), 主键) != 1) {
+                return {主键绑定组读取状态::内部不一致, {}};
+            }
+            输出.记录组.push_back(记录);
+        }
+        for (const auto& [节点编号, 主键组] : 节点主键组_) {
+            if (节点编号 == 0) return {主键绑定组读取状态::内部不一致, {}};
+            for (const auto 主键 : 主键组) {
+                const auto 正向位置 = 主键索引_.find(主键);
+                if (主键 == 0 || 正向位置 == 主键索引_.end()
+                    || 正向位置->second.节点编号 != 节点编号
+                    || std::count(主键组.cbegin(), 主键组.cend(), 主键) != 1) {
+                    return {主键绑定组读取状态::内部不一致, {}};
+                }
+            }
+        }
+        std::sort(输出.记录组.begin(), 输出.记录组.end(), [](const 主键绑定记录& 左, const 主键绑定记录& 右) {
+            return 左.主键 < 右.主键;
+        });
     } catch (...) {
-        return {};
+        return {主键绑定组读取状态::资源失败, {}};
     }
-    std::sort(结果.begin(), 结果.end(), [](const 主键绑定记录& 左, const 主键绑定记录& 右) {
-        return 左.主键 < 右.主键;
-    });
-    return 结果;
+    return 输出;
 }
 
 结构写入结果 索引仓库::严格删除主键(
@@ -364,6 +390,10 @@ std::uint64_t 索引仓库::有效主键数量(const 结构事务令牌& 令牌)
 }
 
 #ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
+void 索引仓库::自检注入下一次主键绑定组资源失败() {
+    下一次主键绑定组资源失败_.store(true);
+}
+
 bool 索引仓库::自检删除反向绑定(
     std::uint64_t 主键,
     节点句柄 节点,

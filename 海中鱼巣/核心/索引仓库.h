@@ -7,6 +7,9 @@
 #include "../领域/概念安全删除提交能力.数据.h"
 
 #include <algorithm>
+#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
+#include <atomic>
+#endif
 #include <cstdint>
 #include <mutex>
 #include <optional>
@@ -39,6 +42,18 @@ struct 主键绑定记录 {
     bool 完整() const { return 主键 != 0 && 句柄有效(节点); }
 };
 
+enum class 主键绑定组读取状态 : std::uint8_t {
+    已形成,
+    入口拒绝,
+    资源失败,
+    内部不一致
+};
+
+struct 主键绑定组读取结果 {
+    主键绑定组读取状态 状态 = 主键绑定组读取状态::入口拒绝;
+    std::vector<主键绑定记录> 记录组;
+};
+
 class 索引仓库 {
 public:
     explicit 索引仓库(const 节点仓库& 节点, 结构事务接线 接线 = {});
@@ -56,7 +71,7 @@ public:
         const 结构事务令牌& 令牌) const;
     std::vector<std::uint64_t> 读取节点主键组(节点句柄 节点) const;
     std::vector<std::uint64_t> 读取节点主键组(节点句柄 节点, const 结构事务令牌& 令牌) const;
-    std::vector<主键绑定记录> 读取全部主键绑定组(const 结构事务令牌& 令牌) const;
+    主键绑定组读取结果 读取全部主键绑定组(const 结构事务令牌& 令牌) const;
     std::optional<节点主键删除准备包> 准备节点主键删除包(
         节点句柄 节点,
         const std::vector<std::uint64_t>& 精确主键组,
@@ -71,6 +86,7 @@ public:
     std::uint64_t 有效主键数量(const 结构事务令牌& 令牌) const;
 
 #ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
+    void 自检注入下一次主键绑定组资源失败();
     bool 自检删除反向绑定(
         std::uint64_t 主键,
         节点句柄 节点,
@@ -92,6 +108,9 @@ private:
     mutable std::shared_mutex 仓库锁_;
     std::unordered_map<std::uint64_t, 节点句柄> 主键索引_;
     std::unordered_map<std::uint64_t, std::vector<std::uint64_t>> 节点主键组_;
+#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
+    mutable std::atomic<bool> 下一次主键绑定组资源失败_{false};
+#endif
 };
 
 }

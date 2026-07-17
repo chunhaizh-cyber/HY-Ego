@@ -6,6 +6,9 @@
 #include "结果.结构写入.h"
 #include "../领域/概念安全删除提交能力.数据.h"
 
+#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
+#include <atomic>
+#endif
 #include <cstdint>
 #include <mutex>
 #include <optional>
@@ -63,6 +66,18 @@ struct 节点记录 {
     std::uint64_t 创建序号 = 0;
 };
 
+enum class 节点记录组读取状态 : std::uint8_t {
+    已形成,
+    入口拒绝,
+    资源失败,
+    内部不一致
+};
+
+struct 节点记录组读取结果 {
+    节点记录组读取状态 状态 = 节点记录组读取状态::入口拒绝;
+    std::vector<节点记录> 记录组;
+};
+
 struct 节点删除准备包 {
     节点句柄 目标;
     主信息句柄 主信息;
@@ -103,7 +118,7 @@ public:
         const 结构事务令牌& 令牌);
     std::optional<节点记录> 读取节点(节点句柄 节点) const;
     std::optional<节点记录> 读取节点(节点句柄 节点, const 结构事务令牌& 令牌) const;
-    std::vector<节点记录> 读取指定类型有效节点记录组(
+    节点记录组读取结果 读取指定类型有效节点记录组(
         节点类型 类型,
         const 结构事务令牌& 令牌) const;
     std::optional<节点记录> 读取节点审计(节点句柄 节点) const;
@@ -120,6 +135,10 @@ public:
     std::uint64_t 有效节点数量(const 结构事务令牌& 令牌) const;
     std::uint64_t 仓库编号() const;
 
+#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
+    void 自检注入下一次节点记录组资源失败();
+#endif
+
 private:
     friend class 领域::概念安全删除编排器;
     friend class 关系仓库;
@@ -135,6 +154,9 @@ private:
     std::uint64_t 下个创建序号_ = 1;
     mutable std::shared_mutex 仓库锁_;
     std::unordered_map<std::uint64_t, 节点记录> 节点表_;
+#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
+    mutable std::atomic<bool> 下一次节点记录组资源失败_{false};
+#endif
 };
 
 }
