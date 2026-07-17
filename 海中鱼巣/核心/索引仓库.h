@@ -70,6 +70,17 @@ public:
     std::uint64_t 有效主键数量() const;
     std::uint64_t 有效主键数量(const 结构事务令牌& 令牌) const;
 
+#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
+    bool 自检删除反向绑定(
+        std::uint64_t 主键,
+        节点句柄 节点,
+        const 结构事务令牌& 令牌);
+    bool 自检追加反向绑定(
+        std::uint64_t 主键,
+        节点句柄 节点,
+        const 结构事务令牌& 令牌);
+#endif
+
 private:
     friend class 领域::概念安全删除编排器;
     void 提交节点主键删除包(

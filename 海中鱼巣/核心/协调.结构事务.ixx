@@ -3,6 +3,7 @@ module;
 
 #include "结构事务接线.数据.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -162,5 +163,30 @@ public:
 private:
     std::shared_ptr<结构事务内部::结构事务运行期状态> 状态_;
 };
+
+#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
+bool 结构事务活动请求数量至少为自检(
+    const 结构事务接线& 接线,
+    std::size_t 最小数量) {
+    const auto 状态 = 结构事务内部::转换状态(接线.运行期状态);
+    if (!状态) return false;
+    std::lock_guard<std::mutex> 锁(状态->活动锁);
+    return 状态->活动表.size() >= 最小数量;
+}
+
+bool 结构事务域已隔离自检(const 结构事务接线& 接线) {
+    const auto 状态 = 结构事务内部::转换状态(接线.运行期状态);
+    if (!状态) return false;
+    std::lock_guard<std::mutex> 锁(状态->活动锁);
+    return 状态->已隔离;
+}
+
+std::uint64_t 读取结构事务下个许可序号自检(const 结构事务接线& 接线) {
+    const auto 状态 = 结构事务内部::转换状态(接线.运行期状态);
+    if (!状态) return 0;
+    std::lock_guard<std::mutex> 锁(状态->活动锁);
+    return 状态->下个许可序号;
+}
+#endif
 
 }

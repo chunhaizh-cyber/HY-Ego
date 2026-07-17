@@ -198,6 +198,7 @@ public:
     }
 
     节点句柄 创建特征值() {
+        if (!事务接线_.接线形态有效()) return {};
         if (事务接线_.已接域()) {
             auto 许可 = 事务接线_.取得独占许可(事务接线_.运行期状态);
             if (!许可.有效()) return {};
@@ -209,13 +210,21 @@ public:
     }
 
     bool 写入I64值(节点句柄 特征值节点, std::int64_t 值) {
-        const auto 节点记录值 = 读取有效特征值节点(特征值节点);
+        if (!事务接线_.接线形态有效()) return false;
+        结构事务许可 许可;
+        const 结构事务令牌* 令牌 = nullptr;
+        if (事务接线_.已接域()) {
+            许可 = 事务接线_.取得独占许可(事务接线_.运行期状态);
+            if (!许可.有效()) return false;
+            令牌 = &许可.读取令牌();
+        }
+        const auto 节点记录值 = 读取有效特征值节点(特征值节点, 令牌);
         if (!节点记录值.has_value()) {
             return false;
         }
 
         std::unique_lock<std::shared_mutex> 锁(原始值锁_);
-        const auto 写入前状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息);
+        const auto 写入前状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息, 令牌);
         if (!写入前状态.内部一致
             || 写入前状态.类型 == 特征值原始类型::VecI64
             || 写入前状态.类型 == 特征值原始类型::VecU64) {
@@ -235,7 +244,10 @@ public:
             L"写入 I64 前原始值与版本记录不对应。")) {
             return false;
         }
-        if (!追根因检查(主信息_.写入I64值(节点记录值->主信息, 值), L"写入 I64 特征值时主信息写入不及预期。")) {
+        const bool 已写入 = 令牌
+            ? 主信息_.写入I64值(节点记录值->主信息, 0, 值, *令牌)
+            : 主信息_.写入I64值(节点记录值->主信息, 值);
+        if (!追根因检查(已写入, L"写入 I64 特征值时主信息写入不及预期。")) {
             return false;
         }
         if (版本位置 == I64版本记录表_.end()) {
@@ -244,7 +256,7 @@ public:
             版本位置->原始值版本 = 新版本;
         }
 
-        const auto 写入后状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息);
+        const auto 写入后状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息, 令牌);
         return 追根因检查(
             写入后状态.内部一致
                 && 写入后状态.类型 == 特征值原始类型::I64
@@ -254,13 +266,21 @@ public:
     }
 
     std::optional<std::int64_t> 读取I64值(节点句柄 特征值节点) const {
-        const auto 节点记录值 = 读取有效特征值节点(特征值节点);
+        if (!事务接线_.接线形态有效()) return std::nullopt;
+        结构事务许可 许可;
+        const 结构事务令牌* 令牌 = nullptr;
+        if (事务接线_.已接域()) {
+            许可 = 事务接线_.取得共享许可(事务接线_.运行期状态);
+            if (!许可.有效()) return std::nullopt;
+            令牌 = &许可.读取令牌();
+        }
+        const auto 节点记录值 = 读取有效特征值节点(特征值节点, 令牌);
         if (!节点记录值.has_value()) {
             return std::nullopt;
         }
 
         std::shared_lock<std::shared_mutex> 锁(原始值锁_);
-        const auto 状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息);
+        const auto 状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息, 令牌);
         if (!状态.内部一致 || 状态.类型 != 特征值原始类型::I64) {
             return std::nullopt;
         }
@@ -268,7 +288,15 @@ public:
     }
 
     bool 写入VecI64值(节点句柄 特征值节点, const std::vector<std::int64_t>& 值) {
-        const auto 节点记录值 = 读取有效特征值节点(特征值节点);
+        if (!事务接线_.接线形态有效()) return false;
+        结构事务许可 许可;
+        const 结构事务令牌* 令牌 = nullptr;
+        if (事务接线_.已接域()) {
+            许可 = 事务接线_.取得独占许可(事务接线_.运行期状态);
+            if (!许可.有效()) return false;
+            令牌 = &许可.读取令牌();
+        }
+        const auto 节点记录值 = 读取有效特征值节点(特征值节点, 令牌);
         if (!节点记录值.has_value() || !序列元素数量有效(值.size())) {
             return false;
         }
@@ -279,7 +307,7 @@ public:
         新记录.VecI64值 = 值;
 
         std::unique_lock<std::shared_mutex> 锁(原始值锁_);
-        const auto 写入前状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息);
+        const auto 写入前状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息, 令牌);
         if (!写入前状态.内部一致
             || 写入前状态.类型 == 特征值原始类型::I64
             || 写入前状态.类型 == 特征值原始类型::VecU64) {
@@ -305,7 +333,7 @@ public:
             *Vec位置 = std::move(新记录);
         }
 
-        const auto 写入后状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息);
+        const auto 写入后状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息, 令牌);
         return 追根因检查(
             写入后状态.内部一致
                 && 写入后状态.类型 == 特征值原始类型::VecI64
@@ -317,13 +345,21 @@ public:
     }
 
     std::optional<std::vector<std::int64_t>> 读取VecI64值(节点句柄 特征值节点) const {
-        const auto 节点记录值 = 读取有效特征值节点(特征值节点);
+        if (!事务接线_.接线形态有效()) return std::nullopt;
+        结构事务许可 许可;
+        const 结构事务令牌* 令牌 = nullptr;
+        if (事务接线_.已接域()) {
+            许可 = 事务接线_.取得共享许可(事务接线_.运行期状态);
+            if (!许可.有效()) return std::nullopt;
+            令牌 = &许可.读取令牌();
+        }
+        const auto 节点记录值 = 读取有效特征值节点(特征值节点, 令牌);
         if (!节点记录值.has_value()) {
             return std::nullopt;
         }
 
         std::shared_lock<std::shared_mutex> 锁(原始值锁_);
-        const auto 状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息);
+        const auto 状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息, 令牌);
         if (!状态.内部一致 || 状态.类型 != 特征值原始类型::VecI64 || 状态.Vec记录 == nullptr) {
             return std::nullopt;
         }
@@ -331,7 +367,15 @@ public:
     }
 
     bool 写入VecU64值(节点句柄 特征值节点, const std::vector<std::uint64_t>& 值) {
-        const auto 节点记录值 = 读取有效特征值节点(特征值节点);
+        if (!事务接线_.接线形态有效()) return false;
+        结构事务许可 许可;
+        const 结构事务令牌* 令牌 = nullptr;
+        if (事务接线_.已接域()) {
+            许可 = 事务接线_.取得独占许可(事务接线_.运行期状态);
+            if (!许可.有效()) return false;
+            令牌 = &许可.读取令牌();
+        }
+        const auto 节点记录值 = 读取有效特征值节点(特征值节点, 令牌);
         if (!节点记录值.has_value() || !序列元素数量有效(值.size())) {
             return false;
         }
@@ -342,7 +386,7 @@ public:
         新记录.VecU64值 = 值;
 
         std::unique_lock<std::shared_mutex> 锁(原始值锁_);
-        const auto 写入前状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息);
+        const auto 写入前状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息, 令牌);
         if (!写入前状态.内部一致
             || 写入前状态.类型 == 特征值原始类型::I64
             || 写入前状态.类型 == 特征值原始类型::VecI64) {
@@ -368,7 +412,7 @@ public:
             *Vec位置 = std::move(新记录);
         }
 
-        const auto 写入后状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息);
+        const auto 写入后状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息, 令牌);
         return 追根因检查(
             写入后状态.内部一致
                 && 写入后状态.类型 == 特征值原始类型::VecU64
@@ -380,13 +424,21 @@ public:
     }
 
     std::optional<std::vector<std::uint64_t>> 读取VecU64值(节点句柄 特征值节点) const {
-        const auto 节点记录值 = 读取有效特征值节点(特征值节点);
+        if (!事务接线_.接线形态有效()) return std::nullopt;
+        结构事务许可 许可;
+        const 结构事务令牌* 令牌 = nullptr;
+        if (事务接线_.已接域()) {
+            许可 = 事务接线_.取得共享许可(事务接线_.运行期状态);
+            if (!许可.有效()) return std::nullopt;
+            令牌 = &许可.读取令牌();
+        }
+        const auto 节点记录值 = 读取有效特征值节点(特征值节点, 令牌);
         if (!节点记录值.has_value()) {
             return std::nullopt;
         }
 
         std::shared_lock<std::shared_mutex> 锁(原始值锁_);
-        const auto 状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息);
+        const auto 状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息, 令牌);
         if (!状态.内部一致 || 状态.类型 != 特征值原始类型::VecU64 || 状态.Vec记录 == nullptr) {
             return std::nullopt;
         }
@@ -394,13 +446,21 @@ public:
     }
 
     std::optional<特征值原始类型> 读取原始类型(节点句柄 特征值节点) const {
-        const auto 节点记录值 = 读取有效特征值节点(特征值节点);
+        if (!事务接线_.接线形态有效()) return std::nullopt;
+        结构事务许可 许可;
+        const 结构事务令牌* 令牌 = nullptr;
+        if (事务接线_.已接域()) {
+            许可 = 事务接线_.取得共享许可(事务接线_.运行期状态);
+            if (!许可.有效()) return std::nullopt;
+            令牌 = &许可.读取令牌();
+        }
+        const auto 节点记录值 = 读取有效特征值节点(特征值节点, 令牌);
         if (!节点记录值.has_value()) {
             return std::nullopt;
         }
 
         std::shared_lock<std::shared_mutex> 锁(原始值锁_);
-        const auto 状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息);
+        const auto 状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息, 令牌);
         if (!状态.内部一致) {
             return std::nullopt;
         }
@@ -408,13 +468,21 @@ public:
     }
 
     std::optional<std::uint64_t> 读取容器版本(节点句柄 特征值节点) const {
-        const auto 节点记录值 = 读取有效特征值节点(特征值节点);
+        if (!事务接线_.接线形态有效()) return std::nullopt;
+        结构事务许可 许可;
+        const 结构事务令牌* 令牌 = nullptr;
+        if (事务接线_.已接域()) {
+            许可 = 事务接线_.取得共享许可(事务接线_.运行期状态);
+            if (!许可.有效()) return std::nullopt;
+            令牌 = &许可.读取令牌();
+        }
+        const auto 节点记录值 = 读取有效特征值节点(特征值节点, 令牌);
         if (!节点记录值.has_value()) {
             return std::nullopt;
         }
 
         std::shared_lock<std::shared_mutex> 锁(原始值锁_);
-        const auto 状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息);
+        const auto 状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息, 令牌);
         if (!状态.内部一致
             || (状态.类型 != 特征值原始类型::VecI64 && 状态.类型 != 特征值原始类型::VecU64)) {
             return std::nullopt;
@@ -423,13 +491,21 @@ public:
     }
 
     std::optional<std::uint64_t> 读取原始值版本(节点句柄 特征值节点) const {
-        const auto 节点记录值 = 读取有效特征值节点(特征值节点);
+        if (!事务接线_.接线形态有效()) return std::nullopt;
+        结构事务许可 许可;
+        const 结构事务令牌* 令牌 = nullptr;
+        if (事务接线_.已接域()) {
+            许可 = 事务接线_.取得共享许可(事务接线_.运行期状态);
+            if (!许可.有效()) return std::nullopt;
+            令牌 = &许可.读取令牌();
+        }
+        const auto 节点记录值 = 读取有效特征值节点(特征值节点, 令牌);
         if (!节点记录值.has_value()) {
             return std::nullopt;
         }
 
         std::shared_lock<std::shared_mutex> 锁(原始值锁_);
-        const auto 状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息);
+        const auto 状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息, 令牌);
         if (!状态.内部一致 || 状态.类型 == 特征值原始类型::未建立) {
             return std::nullopt;
         }
@@ -437,13 +513,21 @@ public:
     }
 
     std::optional<特征值原始材料> 读取原始值材料(节点句柄 特征值节点) const {
-        const auto 节点记录值 = 读取有效特征值节点(特征值节点);
+        if (!事务接线_.接线形态有效()) return std::nullopt;
+        结构事务许可 许可;
+        const 结构事务令牌* 令牌 = nullptr;
+        if (事务接线_.已接域()) {
+            许可 = 事务接线_.取得共享许可(事务接线_.运行期状态);
+            if (!许可.有效()) return std::nullopt;
+            令牌 = &许可.读取令牌();
+        }
+        const auto 节点记录值 = 读取有效特征值节点(特征值节点, 令牌);
         if (!节点记录值.has_value()) {
             return std::nullopt;
         }
 
         std::shared_lock<std::shared_mutex> 锁(原始值锁_);
-        const auto 状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息);
+        const auto 状态 = 读取原始值状态_已加锁(特征值节点, 节点记录值->主信息, 令牌);
         if (!状态.内部一致 || 状态.类型 == 特征值原始类型::未建立) {
             return std::nullopt;
         }
@@ -510,18 +594,28 @@ private:
         return 句柄有效(记录.特征值节点) && 记录.原始值版本 != 0;
     }
 
-    std::optional<节点记录> 读取有效特征值节点(节点句柄 特征值节点) const {
-        const auto 记录 = 节点_.读取节点(特征值节点);
+    std::optional<节点记录> 读取有效特征值节点(
+        节点句柄 特征值节点,
+        const 结构事务令牌* 令牌 = nullptr) const {
+        const auto 记录 = 令牌
+            ? 节点_.读取节点(特征值节点, *令牌)
+            : 节点_.读取节点(特征值节点);
         if (!记录.has_value() || 记录->类型 != 节点类型::特征值) {
             return std::nullopt;
         }
-        if (!追根因检查(主信息_.主信息是否有效(记录->主信息), L"有效特征值节点的主信息已经失效。")) {
+        const bool 主信息有效 = 令牌
+            ? 主信息_.主信息是否有效(记录->主信息, *令牌)
+            : 主信息_.主信息是否有效(记录->主信息);
+        if (!追根因检查(主信息有效, L"有效特征值节点的主信息已经失效。")) {
             return std::nullopt;
         }
         return 记录;
     }
 
-    原始值状态 读取原始值状态_已加锁(节点句柄 特征值节点, 主信息句柄 主信息句柄值) const {
+    原始值状态 读取原始值状态_已加锁(
+        节点句柄 特征值节点,
+        主信息句柄 主信息句柄值,
+        const 结构事务令牌* 令牌 = nullptr) const {
         原始值状态 结果;
         const auto Vec记录数量 = 计算Vec记录数量_已加锁(特征值节点);
         const auto I64版本记录数量 = 计算I64版本记录数量_已加锁(特征值节点);
@@ -541,7 +635,9 @@ private:
             return 结果;
         }
 
-        const auto I64值 = 主信息_.读取I64值(主信息句柄值);
+        const auto I64值 = 令牌
+            ? 主信息_.读取I64值(主信息句柄值, 0, *令牌)
+            : 主信息_.读取I64值(主信息句柄值);
         if (I64值.has_value() && Vec位置 != Vec记录表_.cend()) {
             (void)追根因检查(false, L"同一特征值节点存在多个原始类型。" );
             return 结果;

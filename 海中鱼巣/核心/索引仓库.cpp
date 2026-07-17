@@ -73,6 +73,9 @@ bool 删除主键_已加锁(
 
 索引仓库::索引仓库(const 节点仓库& 节点, 结构事务接线 接线)
     : 节点_(节点), 事务接线_(std::move(接线)) {
+    if (!事务接线_.接线形态有效() || !节点_.事务接线_.接线形态有效()) {
+        throw std::invalid_argument("索引仓库只接受全空未接域或完整结构事务接线");
+    }
     if (!接线一致(事务接线_, 节点_.事务接线_)) {
         throw std::invalid_argument("索引仓库与节点仓库必须同时未接域或使用同一结构事务域");
     }
@@ -359,5 +362,32 @@ std::uint64_t 索引仓库::有效主键数量(const 结构事务令牌& 令牌)
     for (const auto& 候选 : 候选组) if (节点_.节点是否有效(候选, 令牌)) ++数量;
     return 数量;
 }
+
+#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
+bool 索引仓库::自检删除反向绑定(
+    std::uint64_t 主键,
+    节点句柄 节点,
+    const 结构事务令牌& 令牌) {
+    if (!验证独占令牌(事务接线_, 令牌) || 主键 == 0 || !句柄有效(节点)) return false;
+    std::unique_lock<std::shared_mutex> 锁(仓库锁_);
+    const auto 位置 = 节点主键组_.find(节点.节点编号);
+    if (位置 == 节点主键组_.end()) return false;
+    const auto 主键位置 = std::find(位置->second.begin(), 位置->second.end(), 主键);
+    if (主键位置 == 位置->second.end()) return false;
+    位置->second.erase(主键位置);
+    if (位置->second.empty()) 节点主键组_.erase(位置);
+    return true;
+}
+
+bool 索引仓库::自检追加反向绑定(
+    std::uint64_t 主键,
+    节点句柄 节点,
+    const 结构事务令牌& 令牌) {
+    if (!验证独占令牌(事务接线_, 令牌) || 主键 == 0 || !句柄有效(节点)) return false;
+    std::unique_lock<std::shared_mutex> 锁(仓库锁_);
+    节点主键组_[节点.节点编号].push_back(主键);
+    return true;
+}
+#endif
 
 }
