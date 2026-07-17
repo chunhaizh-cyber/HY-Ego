@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>权威用途观察结构承载与事务发布恢复流程图</title>
+  <style>
+    :root { color-scheme: light; }
+    body { margin: 0; padding: 24px; background: #f5f7fb; color: #172033; font-family: "Microsoft YaHei", "Segoe UI", sans-serif; }
+    main { max-width: 1800px; margin: 0 auto; background: #fff; border: 1px solid #d8deea; border-radius: 12px; padding: 24px; box-shadow: 0 8px 24px rgba(23, 32, 51, 0.08); }
+    h1 { margin-top: 0; }
+    .state { padding: 10px 14px; background: #fff5d9; border-left: 4px solid #d79a00; }
+    .note { color: #4b5873; line-height: 1.7; }
+    .diagram { overflow: auto; margin-top: 20px; }
+    pre.mermaid { min-width: 1500px; }
+    code { background: #eef2f8; padding: 1px 5px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>权威用途观察结构承载与事务发布恢复流程图</h1>
+    <p class="state">状态：JY-381 设计候选，待 #290 审计；代码未实施</p>
+    <p class="note">本图只固定 O1-S2 的物理合同设计候选。全部中途非成功严格归入“逻辑内返回”或“追根因解决”；节点 15、关系 18、主信息、索引、事务和恢复均尚未编码。</p>
+    <div class="diagram">
+<pre class="mermaid">flowchart TD
+    A["输入：用途事件结果"] --> B["复用 #289 形成用途观察纯值候选&lt;br/&gt;先验证状态、原因、optional 和格式"]
+    B -->|"合法入口拒绝或不支持"| L1["逻辑内返回&lt;br/&gt;零结构变化"]
+    B -->|"来源、身份、核心或阶段内部矛盾"| R1["追根因解决&lt;br/&gt;停止后继"]
+    B -->|"纯值候选合法"| D["单一语义身份索引加角色 1 反向任务组双证&lt;br/&gt;反查完整关系记录并只筛角色 1；36 字节、FNV-1a64、1024 次探测"]
+    D -->|"1024 个物理键耗尽"| L2["逻辑内返回&lt;br/&gt;零结构变化"]
+    D --> E["命中后完整比较&lt;br/&gt;完整任务句柄加非零任务序号"]
+    E -->|"索引和角色 1 反查不一致、同身份多记录"| R3["追根因解决&lt;br/&gt;不扫描选优"]
+    E -->|"零记录"| C["新建写前固定形状和容量门禁&lt;br/&gt;15 槽、每任务 1024、全局 65536、单条 2048、总量 128MiB"]
+    C -->|"任一容量已满或请求材料越界"| L2
+    C -->|"已发布计数、槽位或角色结构异常"| R2["追根因解决&lt;br/&gt;停止后继"]
+    C -->|"写前门禁通过"| N["新建候选结构&lt;br/&gt;关系 18 按类型加完整源句柄加角色唯一，不同角色可复用目标"]
+    E -->|"一条合法既有记录"| F["完整读回既有身份、不可变核心和阶段"]
+    F -->|"既有结构自身非法"| R4["追根因解决&lt;br/&gt;禁止覆盖或修补"]
+    F -->|"同账幂等"| S0["正常成功&lt;br/&gt;幂等零写"]
+    F -->|"同账冲突"| L3["逻辑内返回&lt;br/&gt;零结构变化"]
+    F -->|"待结算合法推进最终"| P["推进写前固定形状门禁&lt;br/&gt;新增 15/32、失效 31；最多 17 条关系且规范编码不超过 2048 字节"]
+    N --> Q["同一不透明结构写入会话&lt;br/&gt;逐项读回主信息、节点、索引和关系"]
+    P --> Q
+    Q -->|"写后读回、确认或提交不一致"| R5["追根因解决&lt;br/&gt;按已证明能力撤销；未证明确认失败退回设计，撤销失败继续追根因"]
+    Q -->|"全部一致"| T["请求提交并确认全部候选"]
+    T --> U["执行器返回并释放独占许可&lt;br/&gt;唯一最后发布点，新建或推进正常成功"]
+    U --> V["只读读回：单索引加角色 1 双重唯一&lt;br/&gt;阶段 30/31/32 恰一当前有效"]
+    V --> W["冻结进入既有 HYSNAP01 段 1 元数据和段 2 至 5 结构材料&lt;br/&gt;段 5 不复制 36 字节身份，不新增第十段"]
+    W --> X["严格解析到隔离四仓库候选&lt;br/&gt;保留原物理键和已失效阶段历史"]
+    X -->|"外部快照格式、容量或引用不合法"| L4["逻辑内返回&lt;br/&gt;拒绝恢复候选，不改变当前运行期"]
+    X -->|"自生成快照读回、已验证候选导入或跨段互证异常"| R6["追根因解决&lt;br/&gt;停止发布"]
+    X -->|"跨段屏障全部通过"| Y["经既有 #229 和 #237 路线&lt;br/&gt;发布到同一运行期上下文和同一宿主槽"]
+    Y --> Z["恢复后只读复核&lt;br/&gt;不自动统计、学习、晋级、发布方法或执行动作"]</pre>
+    </div>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>
