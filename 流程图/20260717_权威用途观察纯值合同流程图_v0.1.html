@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>权威用途观察纯值合同流程图 v0.1</title>
+  <style>
+    body { margin: 0; padding: 24px; background: #f7f8fa; color: #1f2937; font-family: "Microsoft YaHei", "Segoe UI", sans-serif; }
+    main { min-width: max-content; background: #fff; border: 1px solid #d9dee8; border-radius: 12px; padding: 24px; box-shadow: 0 8px 24px rgba(31, 41, 55, 0.08); }
+    h1 { margin-top: 0; font-size: 24px; }
+    p { max-width: 1100px; line-height: 1.7; }
+    .mermaid { margin-top: 20px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>权威用途观察纯值合同流程图 v0.1</h1>
+  <p>本图只授权 O1-V1 固定形状纯值候选的形成与同账比较。四仓库、事务、线程、运行期、持久化、恢复以及 O1-S2 权威结构继续零写、零授权。</p>
+  <div class="mermaid">
+flowchart TD
+    E0["E111：O1-D1 第三次设计审计 A01-A12 通过<br/>#288 / DQ-180 已完成归档"] --> I0["输入：用途事件结果<br/>目标纯值格式版本"]
+    I0 --> G1{"G1 先判上游结果组合<br/>状态 + 具体原因 + optional 事件"}
+    G1 -- "合法入口拒绝" --> F1["形成结果：入口拒绝<br/>无候选，零结构变化"]
+    G1 -- "合法不支持" --> F2["形成结果：不支持<br/>无候选，不猜测兼容"]
+    G1 -- "内部不一致或非法组合" --> R1["形成结果：内部不一致<br/>追根因并停止"]
+    G1 -- "已形成 + 无原因 + 有事件" --> G1F{"目标格式是否合法且受支持<br/>当前只接受格式 1"}
+    G1F -- "格式 0 / 畸形" --> F1
+    G1F -- "非零未知格式" --> F2
+    G1F -- "格式 1" --> G2{"G2 完整身份互证<br/>事件、冻结请求、回执内嵌请求、回执<br/>完整任务句柄 + 非零任务序号"}
+
+    G2 -- "无效或来源不一致" --> R2["内部不一致：身份不变量破坏<br/>冻结键、哈希、单编号不得补身份"]
+    G2 -- "通过" --> G3{"G3 不可变核心互证<br/>九个完整业务句柄 + 因果完整结构键<br/>机会 / 正 / 负计数 + Q10000"}
+    G3 -- "字段缺失或来源不一致" --> R3["内部不一致：内容不变量破坏<br/>停止后继"]
+    G3 -- "通过" --> G4V{"G4V 新候选合法性先行<br/>三种合法阶段元组<br/>最终阶段深检正式结算材料"}
+
+    G4V -- "阶段非法、正式结算缺失或矛盾" --> R4["内部不一致：候选自身非法<br/>不进入同账比较"]
+    G4V -- "通过" --> G5["G5 按类型白名单构造固定形状候选<br/>格式版本 + 身份 + 不可变核心 + 阶段负载<br/>不保留来源 DTO 或可变长集合"]
+    G5 --> G5V{"构造后字段是否与<br/>已接受来源逐项相同"}
+    G5V -- "否" --> R5["内部不一致：算法不变量破坏<br/>不输出半候选"]
+    G5V -- "是" --> F3["形成结果：已形成<br/>携带完整纯值候选"]
+
+    F3 --> C0["可选后继：仅在既有候选存在时<br/>调用独立双候选同账比较入口"]
+    C0 --> C1{"先分别验证两个候选<br/>格式兼容且各自合法"}
+    C1 -- "格式不兼容" --> C2["比较结果：不支持"]
+    C1 -- "任一候选自身非法" --> C3["比较结果：内部不一致<br/>追根因，不扫描选优"]
+    C1 -- "均合法" --> C4{"完整身份是否相同<br/>任务完整句柄 + 任务序号"}
+    C4 -- "不同" --> C5["比较结果：不同身份<br/>正常新账项分流"]
+    C4 -- "相同" --> C6{"不可变核心与阶段负载比较"}
+    C6 -- "核心相同且阶段相同" --> C7["比较结果：同账幂等"]
+    C6 -- "核心相同且待结算推进合法最终" --> C8["比较结果：同账允许推进"]
+    C6 -- "异核心、终态变化、逆向或其它转换" --> C9["比较结果：同账冲突<br/>逻辑内返回，零结构变化"]
+
+    F3 --> Z0["O1-V1 输出仍是调用期纯值材料<br/>阶段 870 只验证合同"]
+    Z0 -. "未来必须另行设计" .-> Z1["O1-S2：节点 / 关系 / 索引 / 容量<br/>数据操作 / 最后发布 / 唯一恢复链"]
+  </div>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>
