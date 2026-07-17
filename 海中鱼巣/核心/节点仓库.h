@@ -11,6 +11,7 @@
 #include <optional>
 #include <shared_mutex>
 #include <unordered_map>
+#include <vector>
 
 namespace 海中鱼巣 {
 
@@ -102,6 +103,9 @@ public:
         const 结构事务令牌& 令牌);
     std::optional<节点记录> 读取节点(节点句柄 节点) const;
     std::optional<节点记录> 读取节点(节点句柄 节点, const 结构事务令牌& 令牌) const;
+    std::vector<节点记录> 读取指定类型有效节点记录组(
+        节点类型 类型,
+        const 结构事务令牌& 令牌) const;
     std::optional<节点记录> 读取节点审计(节点句柄 节点) const;
     std::optional<节点记录> 读取节点审计(节点句柄 节点, const 结构事务令牌& 令牌) const;
     std::optional<节点删除准备包> 准备节点删除包(节点句柄 节点, const 结构事务令牌& 令牌) const;

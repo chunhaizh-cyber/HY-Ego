@@ -76,10 +76,12 @@ private:
             : 结构写入结果{结构写入状态::内部不一致, 0, 0, 0};
     }
 
-    结构写入结果 完成提交() override {
+    结构写入结果 确认待发布() override {
         已完成提交 = true;
-        return {结构写入状态::已提交, 0, 0, 0};
+        return {结构写入状态::候选已确认, 0, 0, 0};
     }
+
+    void 完成发布() noexcept override {}
 
     结构写入结果 完成撤销() override {
         已完成撤销 = true;
@@ -98,9 +100,11 @@ private:
         return {结构写入状态::许可拒绝, 0, 0, 0};
     }
 
-    结构写入结果 完成提交() override {
+    结构写入结果 确认待发布() override {
         return {结构写入状态::内部不一致, 0, 0, 0};
     }
+
+    void 完成发布() noexcept override {}
 
     结构写入结果 完成撤销() override {
         已撤销 = true;

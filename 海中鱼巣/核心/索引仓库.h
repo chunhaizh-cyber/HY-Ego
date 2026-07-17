@@ -32,6 +32,13 @@ struct 节点主键删除准备包 {
     }
 };
 
+struct 主键绑定记录 {
+    std::uint64_t 主键 = 0;
+    节点句柄 节点;
+
+    bool 完整() const { return 主键 != 0 && 句柄有效(节点); }
+};
+
 class 索引仓库 {
 public:
     explicit 索引仓库(const 节点仓库& 节点, 结构事务接线 接线 = {});
@@ -44,8 +51,12 @@ public:
         const 结构事务令牌& 令牌);
     std::optional<节点句柄> 按主键查节点(std::uint64_t 主键) const;
     std::optional<节点句柄> 按主键查节点(std::uint64_t 主键, const 结构事务令牌& 令牌) const;
+    std::optional<主键绑定记录> 读取主键绑定记录(
+        std::uint64_t 主键,
+        const 结构事务令牌& 令牌) const;
     std::vector<std::uint64_t> 读取节点主键组(节点句柄 节点) const;
     std::vector<std::uint64_t> 读取节点主键组(节点句柄 节点, const 结构事务令牌& 令牌) const;
+    std::vector<主键绑定记录> 读取全部主键绑定组(const 结构事务令牌& 令牌) const;
     std::optional<节点主键删除准备包> 准备节点主键删除包(
         节点句柄 节点,
         const std::vector<std::uint64_t>& 精确主键组,

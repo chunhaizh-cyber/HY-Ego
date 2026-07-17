@@ -261,6 +261,32 @@ bool 索引仓库::删除主键(std::uint64_t 主键, const 结构事务令牌& 
     return 删除主键_已加锁(主键索引_, 节点主键组_, 主键);
 }
 
+std::optional<主键绑定记录> 索引仓库::读取主键绑定记录(
+    std::uint64_t 主键,
+    const 结构事务令牌& 令牌) const {
+    if (!验证共享令牌(事务接线_, 令牌) || 主键 == 0) return std::nullopt;
+    std::shared_lock<std::shared_mutex> 锁(仓库锁_);
+    const auto 位置 = 主键索引_.find(主键);
+    if (位置 == 主键索引_.end()) return std::nullopt;
+    return 主键绑定记录{主键, 位置->second};
+}
+
+std::vector<主键绑定记录> 索引仓库::读取全部主键绑定组(const 结构事务令牌& 令牌) const {
+    if (!验证共享令牌(事务接线_, 令牌)) return {};
+    std::vector<主键绑定记录> 结果;
+    std::shared_lock<std::shared_mutex> 锁(仓库锁_);
+    try {
+        结果.reserve(主键索引_.size());
+        for (const auto& [主键, 节点] : 主键索引_) 结果.push_back({主键, 节点});
+    } catch (...) {
+        return {};
+    }
+    std::sort(结果.begin(), 结果.end(), [](const 主键绑定记录& 左, const 主键绑定记录& 右) {
+        return 左.主键 < 右.主键;
+    });
+    return 结果;
+}
+
 结构写入结果 索引仓库::严格删除主键(
     std::uint64_t 主键,
     节点句柄 预期节点,

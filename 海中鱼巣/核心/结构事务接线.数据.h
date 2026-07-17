@@ -67,9 +67,11 @@ struct 结构事务接线 {
     结构事务许可 (*取得独占许可)(const std::shared_ptr<void>&) = nullptr;
     bool (*验证共享路径令牌)(const std::shared_ptr<void>&, const 结构事务令牌&) = nullptr;
     bool (*验证独占令牌)(const std::shared_ptr<void>&, const 结构事务令牌&) = nullptr;
+    bool (*标记撤销失败隔离)(const std::shared_ptr<void>&, const 结构事务令牌&) = nullptr;
 
     bool 已接域() const {
-        return 域编号 != 0 && 运行期纪元 != 0 && 运行期状态 && 取得共享许可 && 取得独占许可 && 验证共享路径令牌 && 验证独占令牌;
+        return 域编号 != 0 && 运行期纪元 != 0 && 运行期状态 && 取得共享许可 && 取得独占许可
+            && 验证共享路径令牌 && 验证独占令牌 && 标记撤销失败隔离;
     }
 };
 

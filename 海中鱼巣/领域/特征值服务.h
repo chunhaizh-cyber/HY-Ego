@@ -3,6 +3,7 @@
 
 #include "../核心/节点仓库.h"
 #include "../核心/主信息仓库.h"
+#include "../核心/结构事务接线.数据.h"
 #include "../核心/容错检查.h"
 
 #include <algorithm>
@@ -12,6 +13,7 @@
 #include <mutex>
 #include <optional>
 #include <shared_mutex>
+#include <utility>
 #include <vector>
 
 namespace 海中鱼巣 {
@@ -191,11 +193,18 @@ class 特征值服务 {
 public:
     static constexpr std::size_t 最大序列元素数量 = 4096;
 
-    特征值服务(主信息仓库& 主信息, 节点仓库& 节点)
-        : 主信息_(主信息), 节点_(节点) {
+    特征值服务(主信息仓库& 主信息, 节点仓库& 节点, 结构事务接线 接线 = {})
+        : 主信息_(主信息), 节点_(节点), 事务接线_(std::move(接线)) {
     }
 
     节点句柄 创建特征值() {
+        if (事务接线_.已接域()) {
+            auto 许可 = 事务接线_.取得独占许可(事务接线_.运行期状态);
+            if (!许可.有效()) return {};
+            const auto 主信息 = 主信息_.创建主信息(许可.读取令牌());
+            return 句柄有效(主信息)
+                ? 节点_.创建节点(节点类型::特征值, 主信息, 许可.读取令牌()) : 节点句柄{};
+        }
         return 节点_.创建节点(节点类型::特征值, 主信息_.创建主信息());
     }
 
@@ -605,6 +614,7 @@ private:
 
     主信息仓库& 主信息_;
     节点仓库& 节点_;
+    结构事务接线 事务接线_;
     mutable std::shared_mutex 原始值锁_;
     std::vector<Vec原始值记录> Vec记录表_;
     std::vector<I64版本记录> I64版本记录表_;

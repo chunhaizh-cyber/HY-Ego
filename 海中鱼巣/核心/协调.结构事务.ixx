@@ -30,6 +30,7 @@ struct 结构事务运行期状态 {
     std::shared_mutex 结构锁;
     std::mutex 活动锁;
     std::unordered_map<std::uint64_t, std::unique_ptr<结构事务活动记录>> 活动表;
+    bool 已隔离 = false;
 };
 
 std::uint64_t 下个运行期纪元 = 1;
@@ -51,6 +52,14 @@ bool 验证令牌(const std::shared_ptr<void>& 状态, const 结构事务令牌&
     return 位置 != 运行期状态->活动表.end() && 位置->second != nullptr
         && 位置->second->类型 == 令牌.类型
         && 位置->second->线程 == std::this_thread::get_id();
+}
+
+bool 标记撤销失败隔离(const std::shared_ptr<void>& 状态, const 结构事务令牌& 令牌) {
+    const auto 运行期状态 = 转换状态(状态);
+    if (!运行期状态 || !验证令牌(状态, 令牌, true)) return false;
+    std::lock_guard<std::mutex> 锁(运行期状态->活动锁);
+    运行期状态->已隔离 = true;
+    return true;
 }
 
 void 释放许可(const std::shared_ptr<void>& 状态, const 结构事务令牌& 令牌) noexcept {
@@ -83,6 +92,7 @@ void 释放许可(const std::shared_ptr<void>& 状态, const 结构事务令牌&
     结构事务活动记录* 记录 = nullptr;
     {
         std::lock_guard<std::mutex> 活动锁(运行期状态->活动锁);
+        if (运行期状态->已隔离) return {};
         for (const auto& [_, 记录] : 运行期状态->活动表) {
             if (记录 != nullptr && 记录->线程 == std::this_thread::get_id()) {
                 return {};
@@ -104,6 +114,18 @@ void 释放许可(const std::shared_ptr<void>& 状态, const 结构事务令牌&
         运行期状态->活动表.erase(令牌.许可序号);
         return {};
     }
+    std::unique_ptr<结构事务活动记录> 隔离等待记录;
+    {
+        std::lock_guard<std::mutex> 活动锁(运行期状态->活动锁);
+        if (运行期状态->已隔离) {
+            const auto 位置 = 运行期状态->活动表.find(令牌.许可序号);
+            if (位置 != 运行期状态->活动表.end()) {
+                隔离等待记录 = std::move(位置->second);
+                运行期状态->活动表.erase(位置);
+            }
+        }
+    }
+    if (隔离等待记录) return {};
     return 结构事务许可::创建(状态, 令牌, 释放许可);
 }
 
@@ -129,7 +151,8 @@ public:
             [](const std::shared_ptr<void>& 状态) { return 结构事务内部::取得许可(状态, 结构许可类型::共享); },
             [](const std::shared_ptr<void>& 状态) { return 结构事务内部::取得许可(状态, 结构许可类型::独占); },
             [](const std::shared_ptr<void>& 状态, const 结构事务令牌& 令牌) { return 结构事务内部::验证令牌(状态, 令牌, false); },
-            [](const std::shared_ptr<void>& 状态, const 结构事务令牌& 令牌) { return 结构事务内部::验证令牌(状态, 令牌, true); }};
+            [](const std::shared_ptr<void>& 状态, const 结构事务令牌& 令牌) { return 结构事务内部::验证令牌(状态, 令牌, true); },
+            [](const std::shared_ptr<void>& 状态, const 结构事务令牌& 令牌) { return 结构事务内部::标记撤销失败隔离(状态, 令牌); }};
     }
 
     std::uint64_t 读取域编号() const {

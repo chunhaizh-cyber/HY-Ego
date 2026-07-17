@@ -52,6 +52,7 @@ public:
 
     bool 完整() const;
     bool 处于持有阶段() const;
+    bool 处于可撤销阶段() const;
     关系记录 读取写前记录() const { return 写前记录_; }
     关系记录 读取写后记录() const { return 写后记录_; }
     已发布关系变更种类 读取种类() const { return 种类_; }
