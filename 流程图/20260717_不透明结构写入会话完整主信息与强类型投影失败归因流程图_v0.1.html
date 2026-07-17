@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>不透明结构写入会话完整主信息与强类型投影失败归因流程图</title>
+  <style>
+    :root { color-scheme: light; }
+    body { margin: 0; padding: 24px; background: #f5f7fb; color: #172033; font-family: "Microsoft YaHei", "Segoe UI", sans-serif; }
+    main { max-width: 1900px; margin: 0 auto; background: #fff; border: 1px solid #d8deea; border-radius: 12px; padding: 24px; box-shadow: 0 8px 24px rgba(23, 32, 51, 0.08); }
+    h1 { margin-top: 0; }
+    .state { padding: 10px 14px; background: #fff5d9; border-left: 4px solid #d79a00; }
+    .note { color: #4b5873; line-height: 1.7; }
+    .diagram { overflow: auto; margin-top: 20px; }
+    pre.mermaid { min-width: 1650px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>不透明结构写入会话完整主信息与强类型投影失败归因流程图</h1>
+    <p class="state">状态：JY-384 设计候选 / #292、DQ-184 待执行 / #290 v0.3 依赖门控 / 阶段 761、880 未登记</p>
+    <p class="note">本图只补通用结构会话的读取失败归因和完整主信息值式读回。核心层不解释 O1、FNV、15 槽、角色、容量或 2048 字节。</p>
+    <div class="diagram">
+<pre class="mermaid">flowchart TD
+    A["输入：同一不透明结构写入会话中的只读请求"] --> B["复核当前线程、写入中、未决定、无首次失败"]
+    B -->|"线程、阶段、句柄或类型无效"| L1["逻辑内返回&lt;br/&gt;入口拒绝且零新增写入"]
+    B --> C{"读取种类"}
+    C -->|"类型—索引投影"| D["要求第一笔候选写入前且会话写集为空"]
+    D -->|"已有写集"| L1
+    D --> E["节点仓库强类型批量读取&lt;br/&gt;已形成 / 入口拒绝 / 资源失败 / 内部不一致"]
+    E -->|"资源失败"| L2["逻辑内失败收口&lt;br/&gt;登记会话失败、禁止后继写入、空写集不变"]
+    E -->|"仓库入口拒绝或记录自身非法"| R1["追根因解决&lt;br/&gt;会话已有有效许可却收到异常结果"]
+    E -->|"已形成，允许真实空集合"| F["释放节点仓库锁后&lt;br/&gt;索引仓库强类型批量读取"]
+    F -->|"资源失败"| L2
+    F -->|"仓库入口拒绝或绑定自身非法"| R1
+    F -->|"已形成，允许真实空集合"| G["会话逐完整句柄互证&lt;br/&gt;正向绑定、反向主键、节点类型与去重"]
+    G -->|"悬空、重复、错类型或正反不对称"| R2["追根因解决&lt;br/&gt;内部不一致并禁止后继写入"]
+    G -->|"一致且两组可真实为空"| H["返回强类型已形成投影&lt;br/&gt;值式节点组与绑定组"]
+    C -->|"完整主信息"| I["允许读取既有记录或本会话候选&lt;br/&gt;不要求空写集，但必须在请求提交前"]
+    I --> J["会话用原许可调用主信息仓库&lt;br/&gt;复制完整主信息记录和值容器"]
+    J -->|"复制资源失败"| R3["强类型资源失败&lt;br/&gt;登记会话失败；已有写集由执行器撤销"]
+    J -->|"有效句柄无当前记录、版本或状态矛盾"| R2
+    J -->|"成功"| K["返回完整主信息值式副本&lt;br/&gt;并把本会话候选标记为已读回"]
+    K --> M["专用数据操作自行验证业务格式&lt;br/&gt;可检查容器长度、全部槽和额外非空槽"]
+    H --> N["调用方只消费值式结果&lt;br/&gt;不取得仓库引用、原始令牌或第二许可"]
+    M --> N
+    N --> O["业务合法才继续候选写入或请求提交"]
+    L2 --> P["执行器按会话失败收口&lt;br/&gt;空写集直接结束"]
+    R1 --> Q["记录逻辑错误来源并停止依赖路径"]
+    R2 --> Q
+    R3 --> Q
+    Q -->|"已有候选写集"| S["按既有 #291 合同逆序撤销&lt;br/&gt;撤销失败则隔离事务域"]
+    Q -->|"无写集"| P</pre>
+    </div>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>
