@@ -17,7 +17,7 @@ Treat execution as:
 -> 执行最小闭合切片
 -> 更新执行专属断点 / 实施记录；中央路由由设计角色同步
 -> 验证、自动本地提交并自动非强制推送
--> 继续下一项直到没有依赖就绪项或遇到真实阻塞
+-> 返回设计角色核对并派发独立集成；只有正式预授权执行批次才继续本 worktree 的下一项
 ```
 
 Do not execute work that has no plan, exceeds a plan's allowed files, or lacks required upstream design and validation boundaries.
@@ -93,6 +93,7 @@ When a design revision is published, or an external design-revision message arri
 2. Re-read Git status, worktree path, branch, frozen base, plan index, queue, worktree registry, target plan, flowchart, detailed design, breakpoint, and interaction record.
 3. Resume only when the queue says `重新待执行` or equivalent and actual interfaces match the revised contract.
 4. On completion, write only execution-owned implementation records, validate, automatically commit locally, and automatically perform a non-force push to the registered task branch. Report `分支完成待集成`; do not update central completion or switch to design until the integration and design roles publish the corresponding main state.
+5. A task branch completion does not authorize this execution role to create or reuse an integration worktree. The design role must verify the task commit and perform a separate, real integration dispatch.
 
 Task messages are notifications, not execution authority.
 

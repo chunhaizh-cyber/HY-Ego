@@ -90,9 +90,21 @@ If used as an executable S0 slice, write a breakpoint file under:
 
 and update project memory when the plan requires it.
 
+When this skill is used by a formally assigned read-only review role, the dispatch must also name:
+
+```text
+目标提交与 worktree
+复核对象与问题清单
+证据入口
+报告接收的设计任务
+```
+
+Return the report as `事实 / 差异 / 证据 / 风险 / 建议`. Do not persist it, enqueue work, unlock dependencies, or decide completion. If a durable report is required, return it to the design role for a design record or a separately registered pure-document plan.
+
 ## Boundaries
 
 - Do not modify code, plans, specs, or docs unless the S0 slice explicitly asks to write the breakpoint/project-memory record.
+- A formal read-only review role never takes that write exception; a request to persist output must return to design or a registered pure-document execution role.
 - Do not combine facts from different worktrees without naming each path, branch, commit, dirty state, and registry status.
 - Do not infer cloud state from local state.
 - Do not treat logs, console output, or display text as machine facts.

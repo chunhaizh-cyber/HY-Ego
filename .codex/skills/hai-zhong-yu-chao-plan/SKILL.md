@@ -28,7 +28,9 @@ Do not create a code plan from chat memory alone. Do not treat old functions as 
 
 Planning actions require the design role in the `main` integration worktree. The default route uses a dedicated design window. When the user explicitly enables the same-physical-window serial dual-role mode, the previous execution role must first record that the ownership switch takes effect after a successful push, validate, commit, and automatically push that record. The current task may act as the design role only after the push succeeds and it has re-read Git, the plan index, the queue, the worktree registry, the target plan, and the breakpoint. Bare `继续` stays in the currently registered role and never switches roles by itself.
 
-The same-window mode removes only a task message sent back to the same physical window. It does not remove the design/execution/integration permission split, interaction record, dependency gates, allowed/forbidden files, per-worktree single writer ownership, validation, commit, push, or re-read gates. The mode remains active until the user revokes it or the interaction record transfers write ownership.
+The same-window mode removes only a task message sent back to the same physical window. It does not remove the design/execution/integration/read-only permission split, interaction record, dependency gates, allowed/forbidden files, per-worktree single writer ownership, validation, commit, push, or re-read gates. The mode remains active until the user revokes it or the interaction record transfers write ownership.
+
+The design role owns end-to-end migration orchestration. After every archive or return, recompute dependencies and either dispatch the unique ready execution, integration, or review task, or record the exact gate. A reserved worktree, named target, or written next step is not a dispatch.
 
 ## Preflight
 
@@ -145,17 +147,22 @@ For dependency-gated code slices, these sections are also mandatory:
 
 Use `规范/设计执行双窗口交互规范.md` when an execution role returns a plan for design revision.
 
-After revising a returned plan:
+After revising a returned plan or preparing an execution, integration, or read-only handoff:
 
 1. Update the flowchart, detailed design, plan, plan index, task queue, project memory, and `项目记忆/窗口交互记录.md`.
 2. Keep the original queue id unless the revision creates a genuinely independent prerequisite plan.
 3. Validate, commit, and push before sending any task message.
-4. If the target execution role is in another physical window and Codex task tools are available, locate the unique same-repo task titled `执行计划` and send a recovery message containing the queue id, commit, authoritative paths, allowed actions, forbidden actions, and remaining gates.
+4. If the target role is in another physical window and Codex task tools are available, locate the unique same-repo task by task id, title, cwd, registered worktree, and role; send a message containing the queue / integration id, commit, authoritative paths, allowed actions, forbidden actions, validation, ownership release, and remaining gates.
 5. If the target execution role is in the current physical window, do not send a message to self. After the interaction record containing the target role has been committed and pushed in step 3, switch from that published record and re-read Git, the plan index, queue, target plan, breakpoint, and actual interfaces before execution.
-6. Treat any task message as a wake-up signal only. The execution role must re-read repository facts before implementation.
-7. If an external target task is missing, ambiguous, or messaging fails, leave the handoff in `项目记忆/窗口交互记录.md`; do not broaden authority.
+6. Treat any task message as a wake-up signal only. The target role must re-read repository facts before action.
+7. After sending, read back the target task state. Only a uniquely delivered task may be marked `已派发待执行回执` or `已派发待集成回执`; a reservation remains pending.
+8. If an external target task is missing, ambiguous, or messaging fails, leave the handoff as pending in `项目记忆/窗口交互记录.md`; do not broaden authority or claim execution / integration has started.
 
 For a task-worktree handoff, also record the worktree id, absolute path, `codex/*` branch, frozen base, batch id, file ownership, and integration order. A task branch completion is `分支完成待集成`, not plan completion.
+
+For an integration handoff, inspect the target path and branch before publication. If either already exists with a different HEAD, parent, owner, start commit, or reflog, mark the old candidate invalid and allocate a new id, path, and branch. Never instruct the integration role to reset, delete, retarget, or reuse the mismatched candidate. Once the integration role enters `集成中`, the design role must keep WT-MAIN clean and must not commit or push until integration releases the main publication lease.
+
+For a read-only review handoff, specify the exact commit, worktree, review object, questions, and evidence sources. The reviewer only returns facts, differences, evidence, risks, and suggestions; the design role owns persistence and final disposition.
 
 ## Git Worktree Protection
 
