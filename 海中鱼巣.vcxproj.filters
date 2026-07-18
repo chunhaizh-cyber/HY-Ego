@@ -27,6 +27,12 @@
     <ClCompile Include="海中鱼巣\启动.运行期上下文.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\启动.生产运行期.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\自检.生产运行期首发.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\自检.运行期上下文.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -444,6 +450,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="海中鱼巣\领域\概念安全删除提交能力.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\生产运行期配置.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\系统角色清单.数据.h">
