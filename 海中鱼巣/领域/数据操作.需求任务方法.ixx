@@ -2733,7 +2733,8 @@ private:
 #ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
         if (命中固定故障(故障)) return false;
 #endif
-        if (!会话.绑定主键(主键, 新节点).成功()) return false;
+        if (!会话.绑定主键(形成索引绑定请求(
+            主键, 新节点, 索引所有者::需求任务方法)).成功()) return false;
 #ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
         if (命中固定故障(故障)) return false;
 #endif

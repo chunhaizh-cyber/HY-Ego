@@ -4,6 +4,7 @@
 #include "句柄.h"
 #include "节点仓库.h"
 #include "结果.结构写入.h"
+#include "索引所有权.数据.h"
 #include "../领域/概念安全删除提交能力.数据.h"
 
 #include <algorithm>
@@ -38,9 +39,18 @@ struct 节点主键删除准备包 {
 struct 主键绑定记录 {
     std::uint64_t 主键 = 0;
     节点句柄 节点;
+    索引所有者声明 所有者声明 = 形成未知兼容索引所有者声明();
+    std::uint32_t 探测序号 = 0;
 
-    bool 完整() const { return 主键 != 0 && 句柄有效(节点); }
+    bool 完整() const {
+        return 索引绑定请求{主键, 节点, 所有者声明, 探测序号}.兼容完整();
+    }
 };
+
+inline bool operator==(const 主键绑定记录& 左, const 主键绑定记录& 右) noexcept {
+    return 左.主键 == 右.主键 && 左.节点 == 右.节点
+        && 左.所有者声明 == 右.所有者声明 && 左.探测序号 == 右.探测序号;
+}
 
 enum class 主键绑定组读取状态 : std::uint8_t {
     已形成,
@@ -63,6 +73,9 @@ public:
     结构写入结果 结构化绑定主键(
         std::uint64_t 主键,
         节点句柄 节点,
+        const 结构事务令牌& 令牌);
+    结构写入结果 结构化绑定主键(
+        const 索引绑定请求& 请求,
         const 结构事务令牌& 令牌);
     std::optional<节点句柄> 按主键查节点(std::uint64_t 主键) const;
     std::optional<节点句柄> 按主键查节点(std::uint64_t 主键, const 结构事务令牌& 令牌) const;
@@ -106,8 +119,9 @@ private:
     const 节点仓库& 节点_;
     结构事务接线 事务接线_;
     mutable std::shared_mutex 仓库锁_;
-    std::unordered_map<std::uint64_t, 节点句柄> 主键索引_;
+    std::unordered_map<std::uint64_t, 主键绑定记录> 主键索引_;
     std::unordered_map<std::uint64_t, std::vector<std::uint64_t>> 节点主键组_;
+    std::unordered_map<std::uint64_t, 主键绑定记录> 永久保留主键组_;
 #ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
     mutable std::atomic<bool> 下一次主键绑定组资源失败_{false};
 #endif

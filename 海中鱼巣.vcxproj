@@ -249,6 +249,7 @@
     <ClCompile Include="海中鱼巣\核心\自检.结构事务.ixx" />
     <ClCompile Include="海中鱼巣\核心\自检.未发布身份候选.ixx" />
     <ClCompile Include="海中鱼巣\核心\自检.仓库统一合同.ixx" />
+    <ClCompile Include="海中鱼巣\核心\自检.索引所有者声明.ixx" />
     <ClCompile Include="海中鱼巣\核心\自检.结构写入会话.ixx" />
     <ClCompile Include="海中鱼巣\核心\自检.关系仓库性能基线.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据操作.存在场景.ixx" />
@@ -309,6 +310,7 @@
     <ClInclude Include="海中鱼巣\领域\系统角色清单.数据.h" />
     <ClInclude Include="海中鱼巣\领域\概念活动状态.数据.h" />
     <ClInclude Include="海中鱼巣\核心\结构事务接线.数据.h" />
+    <ClInclude Include="海中鱼巣\核心\索引所有权.数据.h" />
     <ClInclude Include="海中鱼巣\界面\控制面板窗口.h" />
     <ClInclude Include="海中鱼巣\适配\SQL数据库适配.h" />
     <ClInclude Include="海中鱼巣\核心\句柄.h" />
