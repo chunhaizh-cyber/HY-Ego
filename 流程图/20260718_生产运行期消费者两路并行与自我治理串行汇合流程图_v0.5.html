@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>生产运行期消费者两路并行与自我治理串行汇合流程图 v0.5</title>
+  <style>
+    body { font-family: "Microsoft YaHei", sans-serif; margin: 24px; color: #1f2937; }
+    .mermaid { min-width: 1500px; }
+    .note { max-width: 1100px; line-height: 1.7; }
+  </style>
+</head>
+<body>
+  <h1>生产运行期消费者两路并行与自我治理串行汇合流程图 v0.5</h1>
+  <p class="note">本图替代 v0.4 的三路并行路线。#299 与 #302 可以在 #298 后并行；#301 因共享多轮自检的真实构造调用依赖，必须等待两路集成后串行执行。</p>
+  <pre class="mermaid">
+flowchart TD
+    A["#297 分支完成待集成"] --> B{"独立集成验证、main 发布和设计归档通过？"}
+    B -->|"否"| B0["保持 #298 及后继依赖门控"]
+    B -->|"是"| C["串行 #298：建立 B0 正式值式合同与公共只读查询门面"]
+    C --> D{"#298 集成后逐签名、共同基线和两任务互斥复核通过？"}
+    D -->|"否"| D0["退回设计修订，不创建并行 worktree"]
+    D -->|"是"| E["登记 WB-P0B-01 两路批次、共同基线和 #299/#302 worktree"]
+
+    E --> F1["#299：两条纯只读上行桥<br/>同步多轮自检中的上行桥构造调用"]
+    E --> F2["#302：SQL/控制面板值式投影<br/>唯一拥有工程登记与投影新模块"]
+
+    F1 --> G{"两任务分支验证和范围门禁通过？"}
+    F2 --> G
+    G -->|"任一失败或漂移"| G0["对应任务写断点并退回设计；另一任务不得替代其所有权"]
+    G -->|"全部通过"| H["独立集成 worktree 按 #299 -&gt; #302 固定顺序汇集"]
+    H --> I{"完整 Rebuild、自检、数据库模式、连续运行、strict、diff 和交叉回归通过？"}
+    I -->|"否"| I0["停止发布；按具名归因退回责任任务或设计"]
+    I -->|"是"| J["main 非强制发布并完成两路设计同步"]
+
+    J --> K["从新 main 串行冻结 #301：自我治理权威写改接<br/>再次接管多轮自检并同步治理路由构造调用"]
+    K --> L{"#301 任务验证、独立集成和 main 发布通过？"}
+    L -->|"否"| L0["保持 #309 门控并退回 #301 责任边界"]
+    L -->|"是"| M["#309 串行汇合：统一登记 920/940/950 和同租约交叉验收"]
+    M --> N{"#309 验证通过？"}
+    N -->|"否"| N0["不得执行默认入口切换"]
+    N -->|"是"| O["#303 串行：默认入口切换与旧生产所有者退出"]
+    O --> P["#304-#307 继续串行形成九段冻结前置"]
+  </pre>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>
