@@ -15,7 +15,7 @@ Treat execution as:
 -> 按队列检查依赖门控，只消费依赖已满足的待执行项
 -> 执行前复核前置正式产物和实际接口
 -> 执行最小闭合切片
--> 更新断点清单、计划索引和项目记忆
+-> 更新执行专属断点 / 实施记录；中央路由由设计角色同步
 -> 验证、自动本地提交并自动非强制推送
 -> 继续下一项直到没有依赖就绪项或遇到真实阻塞
 ```
@@ -33,13 +33,13 @@ Before treating `继续` as execution, identify the current window type:
 未声明窗口类型：infer from the latest explicit user declaration, thread title, and task object; if still unclear, do not execute from bare `继续`.
 ```
 
-When the user explicitly enables the same-physical-window serial dual-role mode, use the role recorded in the plan index, queue, and interaction record as the current window type. Bare `继续` stays in that role and does not switch by itself. The design role must first record that the ownership switch takes effect after a successful push, validate, commit, and automatically push that record. The execution role may start only after the push succeeds and this task has re-read Git, the plan index, queue, target plan, breakpoint, and actual interfaces.
+When the user explicitly enables the same-physical-window serial dual-role mode, use the role recorded in the plan index, queue, worktree registry, and interaction record as the current window type. Bare `继续` stays in that role and does not switch by itself. The design role must first record that the ownership switch takes effect after a successful push, validate, commit, and automatically push that record. The execution role may start only after the push succeeds and this task has re-read Git, the plan index, queue, worktree registry, target plan, breakpoint, and actual interfaces.
 
-The same-window mode removes only a task message sent back to the same physical window. It does not remove the design/execution permission split, interaction record, plan/dependency gates, allowed/forbidden files, actual-interface review, single writer ownership, validation, commit, push, or re-read gates. It remains active until the user revokes it or the interaction record transfers write ownership.
+The same-window mode removes only a task message sent back to the same physical window. It does not remove the design/execution/integration permission split, interaction record, plan/dependency gates, allowed/forbidden files, actual-interface review, per-worktree single writer ownership, validation, commit, push, or re-read gates. It remains active until the user revokes it or the interaction record transfers write ownership.
 
 ## Preflight
 
-1. Confirm cwd is `D:\海中鱼巣`.
+1. Confirm cwd is either the registered `D:\海中鱼巣` main integration worktree or the exact task worktree assigned to this plan. Reject unregistered paths, branches, detached HEAD, or a branch checked out in the wrong worktree.
 2. Read `AGENTS.md`.
 3. Read:
 
@@ -47,8 +47,10 @@ The same-window mode removes only a task message sent back to the same physical 
 计划/计划索引.md
 规范/000_项目规则总纲.md
 规范/001_规则迁移清单.md
+规范/多工作树并发与集成规范.md
 项目记忆/Codex任务队列.md
 项目记忆/当前状态.md
+项目记忆/并行工作树登记表.md
 ```
 
 4. If executing a named plan, read that plan file and relevant breakpoint records.
@@ -58,6 +60,7 @@ The same-window mode removes only a task message sent back to the same physical 
 ## Routing Rules
 
 - Plans must be in `项目记忆/Codex任务队列.md` as waiting execution before execution.
+- In parallel mode, the current task worktree must have exactly one assigned plan, branch, frozen base, owner, and file set in `项目记忆/并行工作树登记表.md`. Global queue uniqueness is replaced only by per-worktree assignment uniqueness; undeclared parallel candidates are not executable.
 - If a plan is marked `依赖门控待执行`, verify every prerequisite plan / queue item has completed and produced the formal artifacts named by the plan. Unmet dependencies are skipped without marking a real blocker.
 - After dependencies complete, compare the actual files, symbols, signatures, and behavior named by the plan with its assumed interface contract before any code edit. If they differ, do not edit code; record that plan revision is required and continue with another dependency-ready item.
 - A genuinely blocked prerequisite does not unlock dependent execution. The dependent item remains gated unless a revised plan supplies an explicit alternative basis.
@@ -75,18 +78,18 @@ Use `规范/设计执行双窗口交互规范.md` and `项目记忆/窗口交互
 When execution finds interface drift or a forbidden-file conflict:
 
 1. Stop before code edits or fully withdraw the unverified draft without reverting other work.
-2. Write the pre-implementation breakpoint and update the plan index, queue, project memory, decision/question records, and interaction record to `退回设计`.
-3. Validate, automatically commit the return record locally, and automatically perform a non-force push under the project’s continuing authorization.
-4. When the target design role is in another physical window, send the fixed return summary only after the push succeeds. When it is in the current physical window, do not message self; switch from the interaction record published in step 3 and re-read the authoritative repository state before planning.
-5. If the push fails, keep the local commit, record the real unpublished state, and do not claim that the design role can take over.
-6. Continue another dependency-ready item when one exists and ownership remains with the execution role; otherwise follow the recorded handoff state.
+2. Write only the execution-owned pre-implementation breakpoint or return record; do not update the plan index, queue, central project memory, worktree registry, decision records, or interaction record.
+3. Validate, automatically commit the return record locally, and automatically perform a non-force push to the currently registered task branch.
+4. The integration role brings a pure return-record commit into `main`; the design role then updates central routing. Send the fixed return summary only after the task-branch push succeeds.
+5. If the push fails, keep the local commit, record the real unpublished state, and do not claim that the design or integration role can take over.
+6. Do not consume another plan in the same task worktree unless the registry and batch explicitly reassign it after central synchronization.
 
 When a design revision is published, or an external design-revision message arrives:
 
-1. Verify the stated commit exists on the current branch.
-2. Re-read Git status, the plan index, queue, target plan, flowchart, detailed design, breakpoint, and interaction record.
+1. Verify the stated commit exists on the registered branch or is contained in the registered frozen base.
+2. Re-read Git status, worktree path, branch, frozen base, plan index, queue, worktree registry, target plan, flowchart, detailed design, breakpoint, and interaction record.
 3. Resume only when the queue says `重新待执行` or equivalent and actual interfaces match the revised contract.
-4. On completion, first update the completion records and interaction record with the target design role, then validate, automatically commit locally, and automatically perform a non-force push. If the target design role is in another physical window, send the completion summary only after the push succeeds. If it is in the current physical window, switch from the published interaction record, re-read the authoritative state, and continue only as the design role.
+4. On completion, write only execution-owned implementation records, validate, automatically commit locally, and automatically perform a non-force push to the registered task branch. Report `分支完成待集成`; do not update central completion or switch to design until the integration and design roles publish the corresponding main state.
 
 Task messages are notifications, not execution authority.
 
@@ -103,11 +106,11 @@ When moving plan files, update `计划/计划索引.md`, `项目记忆/*`, and r
 
 ## Git Worktree Protection
 
-- Editing `计划/计划索引.md` does not require `计划/.计划索引.lock`.
-- Before editing shared governance files, check `git status --short` and identify unrelated dirty or staged files.
+- Execution roles do not edit shared governance files. Before any task edit, verify the exact worktree id, absolute path, branch, frozen base, batch, plan version, owner, and file set in the registry.
 - After editing, inspect targeted diffs and stage only the current slice's files.
 - If another window has already changed the same target lines and the merge is ambiguous, stop and record the blocker instead of overwriting.
-- For C++ build/run slices, use the project’s current build/run lock convention if present; otherwise build and run sequentially and never overlap them across windows intentionally.
+- Do not merge, rebase, cherry-pick, or pull `main` into a task branch. Frozen-base drift returns to design.
+- Builds and runs may proceed concurrently only when worktrees have independent output paths and the batch validation matrix explicitly allows it; otherwise serialize them.
 
 ## Validation And Sync
 
@@ -134,7 +137,7 @@ git diff --cached --check
 git commit
 ```
 
-After the automatic non-force push required by the project rules, verify with `git rev-list --left-right --count main...origin/main`. If the target is unclear, the remote has diverged, HEAD is detached, unrelated changes cannot be isolated, or validation failed, stop and report; never force, merge, or rebase as part of automatic push.
+After the automatic non-force push required by the project rules, verify the current task branch against its same-name remote branch. Do not compare or push task HEAD directly to `origin/main`. If the target is unclear, the remote has diverged, HEAD is detached, the registry differs, unrelated changes cannot be isolated, or validation failed, stop and report; never force, merge, or rebase as part of a task push.
 
 ## Stop Conditions
 

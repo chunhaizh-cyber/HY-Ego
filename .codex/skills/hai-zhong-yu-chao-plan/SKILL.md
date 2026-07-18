@@ -26,9 +26,9 @@ Do not create a code plan from chat memory alone. Do not treat old functions as 
 
 ## Window Role Gate
 
-Planning actions require the design role. The default route uses a dedicated design window. When the user explicitly enables the same-physical-window serial dual-role mode, the previous execution role must first record that the ownership switch takes effect after a successful push, validate, commit, and automatically push that record. The current task may act as the design role only after the push succeeds and it has re-read Git, the plan index, the queue, the target plan, and the breakpoint. Bare `继续` stays in the currently registered role and never switches roles by itself.
+Planning actions require the design role in the `main` integration worktree. The default route uses a dedicated design window. When the user explicitly enables the same-physical-window serial dual-role mode, the previous execution role must first record that the ownership switch takes effect after a successful push, validate, commit, and automatically push that record. The current task may act as the design role only after the push succeeds and it has re-read Git, the plan index, the queue, the worktree registry, the target plan, and the breakpoint. Bare `继续` stays in the currently registered role and never switches roles by itself.
 
-The same-window mode removes only a task message sent back to the same physical window. It does not remove the design/execution permission split, interaction record, dependency gates, allowed/forbidden files, single writer ownership, validation, commit, push, or re-read gates. The mode remains active until the user revokes it or the interaction record transfers write ownership.
+The same-window mode removes only a task message sent back to the same physical window. It does not remove the design/execution/integration permission split, interaction record, dependency gates, allowed/forbidden files, per-worktree single writer ownership, validation, commit, push, or re-read gates. The mode remains active until the user revokes it or the interaction record transfers write ownership.
 
 ## Preflight
 
@@ -40,7 +40,9 @@ The same-window mode removes only a task message sent back to the same physical 
 计划/计划索引.md
 规范/000_项目规则总纲.md
 规范/001_规则迁移清单.md
+规范/多工作树并发与集成规范.md
 项目记忆/Codex任务队列.md
+项目记忆/并行工作树登记表.md
 项目记忆/待确认问题.md
 ```
 
@@ -61,6 +63,8 @@ If a plan creates or renames code files, read `规范/代码文件建立归属�
 If a plan preserves, deletes, reimplements, constrains, or newly creates an ability that can be confused with old-project migration, read `规范/迁移路线权力分层规范.md` and `实施记录/20260711_旧能力迁移与新内核建设逐能力台账.md`. The plan must state its source nature, old evidence id, target structure / writer, and whether completion counts toward old-capability migration.
 
 Once a relevant detailed design has been generated, create the plan directly, write it under `计划/`, and register it in the plan index and Codex task queue as waiting execution. No separate user confirmation step remains.
+
+Do not mark plans as parallel merely because their names differ. A pre-authorized parallel batch also requires a common frozen base, disjoint allowed-file sets, disjoint structure/interface ownership, a single owner for shared integration files, a fixed integration order, and an integration validation matrix. Register each task worktree, branch, plan version, base commit, owner, and file set in `项目记忆/并行工作树登记表.md` before any task worktree writes.
 
 Do not wait for a prerequisite implementation merely to generate a dependent plan. Use:
 
@@ -150,6 +154,16 @@ After revising a returned plan:
 5. If the target execution role is in the current physical window, do not send a message to self. After the interaction record containing the target role has been committed and pushed in step 3, switch from that published record and re-read Git, the plan index, queue, target plan, breakpoint, and actual interfaces before execution.
 6. Treat any task message as a wake-up signal only. The execution role must re-read repository facts before implementation.
 7. If an external target task is missing, ambiguous, or messaging fails, leave the handoff in `项目记忆/窗口交互记录.md`; do not broaden authority.
+
+For a task-worktree handoff, also record the worktree id, absolute path, `codex/*` branch, frozen base, batch id, file ownership, and integration order. A task branch completion is `分支完成待集成`, not plan completion.
+
+## Git Worktree Protection
+
+- Planning and central governance edits occur only in the registered `main` integration worktree.
+- Read `项目记忆/并行工作树登记表.md` before creating, assigning, invalidating, integrating, or reclaiming a task worktree.
+- Before editing shared governance files, check `git status --short` and identify unrelated dirty or staged files.
+- After editing, inspect targeted diffs and stage only the current slice's files.
+- If another window has already changed the same target lines and the merge is ambiguous, stop and record the blocker instead of overwriting.
 
 ## Verification
 

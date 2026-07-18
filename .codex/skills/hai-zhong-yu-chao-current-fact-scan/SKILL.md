@@ -21,7 +21,7 @@ Do not edit files, run builds, or claim implementation completion unless the use
 
 ## Preflight
 
-1. Confirm cwd is `D:\海中鱼巣`.
+1. Resolve the current Git top level and confirm it is either the registered main integration worktree or a registered task / integration worktree.
 2. Read `AGENTS.md`.
 3. Read:
 
@@ -31,6 +31,7 @@ Do not edit files, run builds, or claim implementation completion unless the use
 规范/001_规则迁移清单.md
 项目记忆/当前状态.md
 项目记忆/Codex任务队列.md
+项目记忆/并行工作树登记表.md
 ```
 
 4. Read current Git evidence:
@@ -38,6 +39,9 @@ Do not edit files, run builds, or claim implementation completion unless the use
 ```powershell
 git status --short --branch --untracked-files=no
 git diff --name-only
+git rev-parse --show-toplevel
+git branch --show-current
+git worktree list --porcelain
 ```
 
 Use scoped `rg` and short file reads.
@@ -64,6 +68,8 @@ When relevant, return:
 ```text
 当前扫描对象：
 当前分支：
+当前 worktree 编号 / 类型：
+登记基线与任务分配：
 worktree 是否 dirty：
 已读证据：
 本地真实入口：
@@ -87,6 +93,7 @@ and update project memory when the plan requires it.
 ## Boundaries
 
 - Do not modify code, plans, specs, or docs unless the S0 slice explicitly asks to write the breakpoint/project-memory record.
+- Do not combine facts from different worktrees without naming each path, branch, commit, dirty state, and registry status.
 - Do not infer cloud state from local state.
 - Do not treat logs, console output, or display text as machine facts.
 - Do not say `已实现` without current code path, structure carrying path, and validation evidence.

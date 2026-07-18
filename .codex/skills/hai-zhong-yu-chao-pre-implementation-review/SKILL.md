@@ -28,6 +28,7 @@ Use this as the gate before edits:
 规范/000_项目规则总纲.md
 规范/001_规则迁移清单.md
 项目记忆/Codex任务队列.md
+项目记忆/并行工作树登记表.md
 项目记忆/待确认问题.md
 ```
 
@@ -45,6 +46,8 @@ Answer before permitting edits:
 5. Will dirty worktree state contaminate the slice?
 6. Are validation commands and completion boundaries explicit?
 7. Does the action require user confirmation before machine-structure changes?
+8. Is the current worktree path, branch, frozen base, plan version, owner, and file set formally registered?
+9. In a parallel batch, are dependencies, files, structures, public interfaces, shared integration files, integration order, and validation matrix conflict-free?
 
 ## Output States
 
@@ -56,6 +59,9 @@ Answer before permitting edits:
 缺实施切片
 越界风险
 脏树风险
+工作树未登记
+并行所有权冲突
+冻结基线失效
 待用户确认
 ```
 
@@ -64,6 +70,7 @@ Answer before permitting edits:
 ```text
 审查对象：
 当前事实是否足够：
+当前工作树 / 分支 / 基线是否匹配：
 权威依据：
 允许修改范围：
 禁止修改范围：
@@ -81,3 +88,4 @@ Do not implement during this skill.
 - Do not allow old main-info field landing without confirmed field mapping.
 - Do not allow SQL/control-panel/D455/voxel/peripheral work in first-round migration slices.
 - Do not use logs, README, console output, or comments as machine logic.
+- Do not approve parallel execution when the worktree registry, frozen base, file ownership, structure/interface ownership, or integration contract is missing or inconsistent.
