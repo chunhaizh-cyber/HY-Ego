@@ -1,6 +1,6 @@
 ---
 name: hai-zhong-yu-chao-execute
-description: Execute or resume the D:\海中鱼巢 plan-index workflow. Use when the current window is explicitly an execution window and the user says "执行", "继续", "按照计划索引执行", "继续执行计划", "持续执行", or when the user asks Codex to consume the waiting executable queue from `项目记忆/Codex任务队列.md` and `计划/计划索引.md` until the queue is empty, a real blocker appears, or the user stops it. Do not use bare "继续" as an execution trigger in a design window or read-only monitoring window.
+description: Execute or resume the D:\海中鱼巢 plan-index workflow. Use only when the current window is explicitly and formally an execution window and the user says "执行", "继续执行", "按照计划索引执行", "继续执行计划", "持续执行", or explicitly asks Codex to consume this task worktree's assigned executable plan. Do not trigger this skill from bare "继续"; route context-dependent continuation through hai-zhong-yu-chao-continue first.
 ---
 
 # 海中鱼巣执行
@@ -24,16 +24,19 @@ Do not execute work that has no plan, exceeds a plan's allowed files, or lacks r
 
 ## Window-Type Gate
 
-Before treating `继续` as execution, identify the current window type:
+Do not classify bare `继续` inside this skill. Use `hai-zhong-yu-chao-continue` first. Enter this execution workflow only after the current window has already been identified and formally registered as an execution window.
+
+Use these boundaries when checking an explicit execution request:
 
 ```text
-设计窗口：`继续` means continue design / rules / plans / information data and queue registration. Do not consume the executable queue.
-执行窗口：`继续` means continue consuming registered waiting queue items.
-只读监控 / 复核窗口：`继续` means continue read-only fact checking and reporting. Do not edit files.
-未声明窗口类型：infer from the latest explicit user declaration, thread title, and task object; if still unclear, do not execute from bare `继续`.
+设计窗口：不进入本技能；继续设计并把执行派发到独立窗口。
+执行窗口：只消费当前任务 worktree 正式分配的计划。
+集成窗口：不进入本技能；只按登记批次执行集成工作。
+只读监控 / 复核窗口：不进入本技能；只读事实检查和报告。
+未声明窗口类型：不进入本技能；保持只读并先识别窗口。
 ```
 
-When the user explicitly enables the same-physical-window serial dual-role mode, use the role recorded in the plan index, queue, worktree registry, and interaction record as the current window type. Bare `继续` stays in that role and does not switch by itself. The design role must first record that the ownership switch takes effect after a successful push, validate, commit, and automatically push that record. The execution role may start only after the push succeeds and this task has re-read Git, the plan index, queue, worktree registry, target plan, breakpoint, and actual interfaces.
+When the user explicitly enables the same-physical-window serial dual-role mode, bare `继续` still stays in the current role and never activates this skill by itself. A switch to execution additionally requires an explicit user request to switch this physical window, a pushed ownership record, and a fresh read of Git, the plan index, queue, worktree registry, target plan, breakpoint, and actual interfaces. A design window whose next step names an execution or integration role must dispatch that work to a separate window unless the user explicitly orders the formal same-window switch.
 
 The same-window mode removes only a task message sent back to the same physical window. It does not remove the design/execution/integration permission split, interaction record, plan/dependency gates, allowed/forbidden files, actual-interface review, per-worktree single writer ownership, validation, commit, push, or re-read gates. It remains active until the user revokes it or the interaction record transfers write ownership.
 
