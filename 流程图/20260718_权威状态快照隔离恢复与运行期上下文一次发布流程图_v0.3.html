@@ -104,6 +104,26 @@
     U4 --> Z["完成：受控 HYSNAP01 发布 / 启动恢复路径；事件重放、断电耐久、跨版本与恰好一次仍后置"]</pre>
     </div>
   </main>
+  <section>
+    <h2>JY-425 当前路线替换子图</h2>
+    <p>以下子图替代主图从 B0 到 A4 的旧顺序；其余编码、隔离恢复和一次发布部分保持不变。</p>
+    <pre class="mermaid">flowchart LR
+    A["#297 已集成 main@eb78435"] --> B["#298 串行：13 个业务入口 + 两类值式查询"]
+    B --> C1["WB-P0B-01 / #299 只读桥"]
+    B --> C2["WB-P0B-01 / #304 索引所有者与 970"]
+    C1 --> D["第一批独立集成"]
+    C2 --> D
+    D --> E1["WB-P0B-02 / #301 权威写改接"]
+    D --> E2["WB-P0B-02 / #305 四仓库导出与 980"]
+    E1 --> F["第二批独立集成"]
+    E2 --> F
+    F --> G["#306 侧表 / 角色 / 登记 / 活动导出与 990"]
+    G --> H["#307 九段同冻结值式材料与 1000"]
+    H --> I["#302 控制面板 / SQL 值式投影"]
+    I --> J["#309 登记 920 / 940 / 950"]
+    J --> K["#303 默认入口切换"]
+    K --> L["#226 规范编码与原子发布"]</pre>
+  </section>
   <script type="module">
     import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
     mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });

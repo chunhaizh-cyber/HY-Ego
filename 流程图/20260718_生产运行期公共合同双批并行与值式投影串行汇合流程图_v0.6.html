@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>生产运行期公共合同双批并行与值式投影串行汇合流程图 v0.6</title>
+  <style>
+    body { font-family: "Microsoft YaHei", sans-serif; margin: 24px; color: #1f2937; }
+    .mermaid { min-width: 1700px; }
+    .note { max-width: 1180px; line-height: 1.7; }
+  </style>
+</head>
+<body>
+  <h1>生产运行期公共合同双批并行与值式投影串行汇合流程图 v0.6</h1>
+  <p class="note">本图替代 v0.5 的当前路线。#298 后先并行 #299 / #304，再并行 #301 / #305；完整控制面板与 SQL 投影等待 #307 九段冻结材料后由 #302 串行实现。</p>
+  <pre class="mermaid">
+flowchart TD
+    A["#297 已集成并发布 main@eb78435"] --> B["设计归档 #297；串行冻结并派发 #298 B0"]
+    B --> C{"#298 的 13 个业务入口、两类只读查询、生产动作键和租约门面是否全部形成？"}
+    C -->|"否"| C0["写接口漂移断点并退回设计；不得启动消费者批次"]
+    C -->|"是"| D["#298 独立集成、发布 main 并完成设计同步"]
+
+    D --> E{"WB-P0B-01 文件、结构、接口与阶段所有权是否互斥？"}
+    E -->|"否"| E0["取消批次冻结并修订计划"]
+    E -->|"是"| F["冻结 WB-P0B-01 共同基线"]
+    F --> F1["#299：概念命名与任务结果纯只读上行桥"]
+    F --> F2["#304：索引所有者、命名域与键保留合同；独占工程/入口 970"]
+    F1 --> G{"两分支验证和范围门禁通过？"}
+    F2 --> G
+    G -->|"否"| G0["对应任务退回；另一任务不得接管其文件或结构"]
+    G -->|"是"| H["按 #299 -&gt; #304 独立集成并发布 main"]
+
+    H --> I{"WB-P0B-02 文件、结构、接口与阶段所有权是否互斥？"}
+    I -->|"否"| I0["取消第二批冻结并修订计划"]
+    I -->|"是"| J["冻结 WB-P0B-02 共同基线"]
+    J --> J1["#301：自我治理权威写路径改接"]
+    J --> J2["#305：四仓库全状态与精确高水位导出；独占工程/入口 980"]
+    J1 --> K{"两分支验证和范围门禁通过？"}
+    J2 --> K
+    K -->|"否"| K0["对应任务退回；不得提前形成九段材料"]
+    K -->|"是"| L["按 #301 -&gt; #305 独立集成并发布 main"]
+
+    L --> M["#306 串行：侧表、系统角色、领域登记与概念活动导出；990"]
+    M --> N["#307 串行：正式租约同域独占九段冻结值式材料；1000"]
+    N --> O["#302 串行：B0 查询 + 九段冻结材料 -&gt; 控制面板六树与 SQL 只读投影"]
+    O --> P["#309 串行汇合：统一登记 920 / 940 / 950 并做同租约交叉验收"]
+    P --> Q{"#300 / #214 是否仍默认不可达，全部汇合验证是否通过？"}
+    Q -->|"否"| Q0["不得切换默认入口"]
+    Q -->|"是"| R["#303 串行：默认入口切换与旧生产所有者退出"]
+    R --> S["#226 以后编码、隔离恢复与一次发布路线继续门控"]
+  </pre>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>
