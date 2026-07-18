@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>生产运行期 B3 合同补齐与仓库导出并行后串行改接流程图 v0.7</title>
+  <style>
+    body { font-family: "Microsoft YaHei", sans-serif; margin: 24px; color: #1f2937; }
+    .mermaid { min-width: 1900px; }
+    .note { max-width: 1280px; line-height: 1.7; }
+  </style>
+</head>
+<body>
+  <h1>生产运行期 B3 合同补齐与仓库导出并行后串行改接流程图 v0.7</h1>
+  <p class="note">本图替代 v0.6 的第二批路线：#310 与 #305 并行，集成后 #301 从新 main 串行改接；#298 的 13 类线程入口和 14 / 11 variant 保持不变。</p>
+  <pre class="mermaid">
+flowchart TD
+    A["WB-P0B-01 已发布并由 JY-440 归档"] --> B["main@4f5f4ac 执行第二批 S0 实际接口复核"]
+    B --> C{"#298 的 13 类线程路由是否完整覆盖 B3 旧写链？"}
+    C -->|"否"| D["冻结真实缺口：已有需求承接、生命周期、方法登记、轻量因果"]
+    C -->|"是"| C0["不得使用：与逐调用点事实矛盾"]
+
+    D --> E["新增 #310：B3 强类型直接合同补齐；不改 variant / 线程请求路由"]
+    D --> F["保留 #305：四仓库全状态与精确高水位导出；独占工程/入口 980"]
+    E --> G{"#310 / #305 文件、结构、ABI 与阶段所有权是否互斥？"}
+    F --> G
+    G -->|"否"| G0["取消并行冻结并继续拆分"]
+    G -->|"是"| H["冻结 WB-P0B-02 共同基线并创建两个任务 worktree"]
+
+    H --> H1["#310：11 个 B3 直接读写委托；扩展既有 910 自检，不登记 940"]
+    H --> H2["#305：四仓库 DTO、全状态、高水位与 Debug 980"]
+    H1 --> I{"两任务分支验证和范围门禁通过？"}
+    H2 --> I
+    I -->|"否"| I0["只退回责任任务；另一任务不得接管其所有权"]
+    I -->|"是"| J["按 #310 -&gt; #305 独立集成、完整重验并发布 main"]
+
+    J --> K["设计同步并从新 main 串行冻结 #301 v0.5"]
+    K --> L["治理阶段：需求读回 -&gt; 已有需求承接任务 -&gt; 已承接 / 筹办中 -&gt; 方法结果与动作 -&gt; 唯一选择"]
+    L --> M["动作阶段：冻结 -&gt; 排队 -&gt; 执行目标状态值变化 -&gt; 轻量因果"]
+    M --> N["结算阶段：任务完成与需求独立结算；观察只消费值式结果"]
+    N --> O{"#301 是否零传统服务、零仓库、零旧写兜底？"}
+    O -->|"否"| O0["退回 #310 / #301 责任边界，不恢复旧链"]
+    O -->|"是"| P["#301 独立集成发布 main；940 仍后置 #309"]
+
+    P --> Q["#306 -&gt; #307 -&gt; #302 串行"]
+    Q --> R["#309 统一登记 920 / 940 / 950 并做同租约交叉验收"]
+    R --> S["#303 默认入口切换；#300 / #214 继续暂停"]
+    S --> T["#226 以后编码、隔离恢复与一次发布继续门控"]
+  </pre>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>
