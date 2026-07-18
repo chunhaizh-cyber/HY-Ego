@@ -190,6 +190,9 @@
     <ClCompile Include="海中鱼巣\领域\材料.用途观察.ixx" />
     <ClCompile Include="海中鱼巣\领域\算法.用途观察.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.用途观察.ixx" />
+    <ClCompile Include="海中鱼巣\领域\数据操作.用途观察.ixx" />
+    <ClCompile Include="海中鱼巣\领域\服务.用途观察.ixx" />
+    <ClCompile Include="海中鱼巣\领域\自检.用途观察结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.动态模式.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.动态聚类.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.因果模式.ixx" />
