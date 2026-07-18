@@ -1,6 +1,6 @@
 ---
 name: hai-zhong-yu-chao-execute
-description: Execute or resume the D:\海中鱼巣 plan-index workflow. Use when the current window is explicitly an execution window and the user says "执行", "继续", "按照计划索引执行", "继续执行计划", "持续执行", or when the user asks Codex to consume the waiting executable queue from `项目记忆/Codex任务队列.md` and `计划/计划索引.md` until the queue is empty, a real blocker appears, or the user stops it. Do not use bare "继续" as an execution trigger in a design window or read-only monitoring window.
+description: Execute or resume the D:\海中鱼巢 plan-index workflow. Use when the current window is explicitly an execution window and the user says "执行", "继续", "按照计划索引执行", "继续执行计划", "持续执行", or when the user asks Codex to consume the waiting executable queue from `项目记忆/Codex任务队列.md` and `计划/计划索引.md` until the queue is empty, a real blocker appears, or the user stops it. Do not use bare "继续" as an execution trigger in a design window or read-only monitoring window.
 ---
 
 # 海中鱼巣执行
@@ -39,7 +39,7 @@ The same-window mode removes only a task message sent back to the same physical 
 
 ## Preflight
 
-1. Confirm cwd is either the registered `D:\海中鱼巣` main integration worktree or the exact task worktree assigned to this plan. Reject unregistered paths, branches, detached HEAD, or a branch checked out in the wrong worktree.
+1. Confirm cwd is either the registered `D:\海中鱼巢` main integration worktree or the exact task worktree assigned to this plan. Reject unregistered paths, branches, detached HEAD, or a branch checked out in the wrong worktree.
 2. Read `AGENTS.md`.
 3. Read:
 

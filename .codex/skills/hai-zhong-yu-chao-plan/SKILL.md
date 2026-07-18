@@ -1,6 +1,6 @@
 ---
 name: hai-zhong-yu-chao-plan
-description: Use in D:\海中鱼巣 when the user says "制定计划", "生成计划", "拆分计划", "修订计划", "更新计划索引", "生成下一个计划", "加入设计计划队列", or asks Codex to turn specs, detailed designs, logic migration packages, or S0 facts into a plan-layer artifact. Complete plans go directly under `计划/` and are registered as waiting execution.
+description: Use in D:\海中鱼巢 when the user says "制定计划", "生成计划", "拆分计划", "修订计划", "更新计划索引", "生成下一个计划", "加入设计计划队列", or asks Codex to turn specs, detailed designs, logic migration packages, or S0 facts into a plan-layer artifact. Complete plans go directly under `计划/` and are registered as waiting execution.
 ---
 
 # 海中鱼巣制定计划
@@ -32,7 +32,7 @@ The same-window mode removes only a task message sent back to the same physical 
 
 ## Preflight
 
-1. Confirm cwd is `D:\海中鱼巣`.
+1. Confirm cwd is `D:\海中鱼巢`.
 2. Read `AGENTS.md`.
 3. Read:
 
