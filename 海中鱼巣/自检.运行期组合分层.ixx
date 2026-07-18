@@ -72,8 +72,8 @@ bool 已完成唯一分派(const 运行期业务路由结果& 结果, std::size_
 自检单元结果 运行运行期组合分层自检(bool 需求任务方法回归通过) {
     using namespace 运行期组合分层自检内部;
 
-    static_assert(std::variant_size_v<运行期业务请求> == 9);
-    static_assert(std::variant_size_v<运行期业务结果> == 9);
+    static_assert(std::variant_size_v<运行期业务请求> == 14);
+    static_assert(std::variant_size_v<运行期业务结果> == 11);
     static_assert(std::is_same_v<
         std::variant_alternative_t<1, 运行期业务请求>,
         已有场景创建并接纳实际存在请求>);
