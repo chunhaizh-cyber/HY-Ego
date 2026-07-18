@@ -6,6 +6,7 @@ module;
 #include "核心/关系仓库.h"
 #include "核心/索引仓库.h"
 #include "领域/系统角色清单.数据.h"
+#include "领域/概念活动状态.数据.h"
 
 #include <cstdint>
 #include <memory>
@@ -63,8 +64,11 @@ public:
 
     bool 完整() const {
         const auto 清单 = 读取系统角色材料();
+        const auto 活动 = 读取概念活动材料();
         return 结构核心完整() && 业务装配_.完整() && 清单.has_value()
-            && 清单->完整() && 业务装配_.复核系统角色(*清单).成功();
+            && 清单->完整() && 业务装配_.复核系统角色(*清单).成功()
+            && 活动.has_value() && 活动->完整()
+            && 业务装配_.复核概念活动(*清单, *活动).成功();
     }
 
     bool 服务装配完整() const noexcept {
@@ -109,6 +113,44 @@ public:
             && 业务装配_.复核系统角色(*清单).成功();
     }
 
+    概念活动初始化结果 初始化概念活动(const 概念活动初始化参数& 参数) {
+        if (!结构核心完整() || !业务装配_.完整() || !参数.有效()) return {};
+        const auto 清单 = 读取系统角色材料();
+        if (!清单.has_value() || !清单->完整()
+            || !业务装配_.复核系统角色(*清单).成功()) return {};
+        {
+            std::lock_guard<std::mutex> 锁(概念活动锁_);
+            if (概念活动材料_.has_value()) {
+                if (!概念活动材料_->匹配参数(参数)) {
+                    return {概念活动业务状态::幂等冲突};
+                }
+                auto 当前 = 业务装配_.复核概念活动(*清单, *概念活动材料_);
+                if (当前.成功()) 当前.状态 = 概念活动业务状态::幂等读回;
+                return 当前;
+            }
+        }
+        auto 结果 = 业务装配_.初始化概念活动(*清单, 参数);
+        if (!结果.成功()) return 结果;
+        std::lock_guard<std::mutex> 锁(概念活动锁_);
+        if (概念活动材料_.has_value() && !概念活动材料_->等于(结果.材料)) {
+            return {概念活动业务状态::内部不一致};
+        }
+        概念活动材料_ = 结果.材料;
+        return 结果;
+    }
+
+    std::optional<概念活动材料> 读取概念活动材料() const {
+        std::lock_guard<std::mutex> 锁(概念活动锁_);
+        return 概念活动材料_;
+    }
+
+    bool 概念活动完整() const {
+        const auto 清单 = 读取系统角色材料();
+        const auto 活动 = 读取概念活动材料();
+        return 清单.has_value() && 清单->完整() && 活动.has_value()
+            && 活动->完整() && 业务装配_.复核概念活动(*清单, *活动).成功();
+    }
+
     const 结构事务接线& 读取接线() const { return 接线_; }
     主信息仓库& 读取主信息仓库() { return 主信息_; }
     节点仓库& 读取节点仓库() { return 节点_; }
@@ -130,6 +172,8 @@ private:
     std::uint64_t 仓库编号_ = 0;
     mutable std::mutex 系统角色锁_;
     std::optional<系统角色清单> 系统角色清单_;
+    mutable std::mutex 概念活动锁_;
+    std::optional<概念活动材料> 概念活动材料_;
 };
 
 class 运行期上下文租约 {

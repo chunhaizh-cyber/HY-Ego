@@ -36,6 +36,9 @@
     <ClCompile Include="海中鱼巣\自检.系统角色初始化.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\自检.概念活动所有权.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\自检.运行期组合分层.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -312,6 +315,12 @@
     <ClCompile Include="海中鱼巣\领域\服务.状态.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\数据操作.概念活动.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\服务.概念活动.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\服务.动态.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -438,6 +447,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\系统角色清单.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\概念活动状态.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\核心\结构事务接线.数据.h">
