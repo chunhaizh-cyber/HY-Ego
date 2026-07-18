@@ -300,6 +300,9 @@
     <ClCompile Include="海中鱼巣\核心\自检.索引所有者声明.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\自检.仓库权威导出.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\核心\自检.结构写入会话.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -477,6 +480,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\核心\索引所有权.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\核心\权威冻结材料.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\核心\句柄.h">

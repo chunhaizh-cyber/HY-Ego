@@ -4,6 +4,7 @@
 #include "句柄.h"
 #include "结果.结构写入.h"
 #include "结构事务接线.数据.h"
+#include "权威冻结材料.数据.h"
 #include "../领域/概念安全删除提交能力.数据.h"
 
 #include <cstdint>
@@ -123,6 +124,8 @@ public:
     std::optional<std::int64_t> 读取I64值(主信息句柄 主信息) const;
     std::optional<std::int64_t> 读取I64值(主信息句柄 主信息, std::uint64_t 值索引) const;
     std::optional<std::int64_t> 读取I64值(主信息句柄 主信息, std::uint64_t 值索引, const 结构事务令牌& 令牌) const;
+    仓库权威导出结果<主信息仓库权威材料> 导出权威状态(
+        const 结构事务令牌& 令牌) const;
 
 private:
     friend class 领域::概念安全删除编排器;
