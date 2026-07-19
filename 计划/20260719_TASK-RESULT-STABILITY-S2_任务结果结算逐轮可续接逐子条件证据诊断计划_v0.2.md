@@ -8,7 +8,7 @@
 
 设计裁决：JY-458
 
-状态：纯诊断 / WB-DIAG-04 / WT-313-R2 已预留待创建 / 重新待执行 / 冻结候选 `0890464` / 从有效轮次 43 续接至 60 / 不登记自检阶段
+状态：纯诊断 / WB-DIAG-04 / WT-313-R2 已创建待派发 / 重新待执行 / 冻结候选 `0890464` / 从有效轮次 43 续接至 60 / 不登记自检阶段
 
 ## 1. 目标与替代依据
 
@@ -50,8 +50,8 @@ A14 仍由 14 个既有条件合取，A18 仍由 11 个既有条件合取。
 ```text
 批次：WB-DIAG-04
 任务 worktree：WT-313-R2
-预留路径：C:\Users\zhchh\.codex\worktrees\313-task-result-subcondition-r2\海中鱼巢
-预留分支：codex/313-task-result-subcondition-r2
+路径：C:\Users\zhchh\.codex\worktrees\313-task-result-subcondition-r2\海中鱼巢
+分支：codex/313-task-result-subcondition-r2
 冻结候选提交：0890464414a8ffd5dfc71dcfc80641d9e4f18181
 候选父提交：1d95aa5975057965fcfa179c56521ad69e5b5b6a
 冻结自检 blob：74734d038e3baa0be12a46ee1f275273305b7bf5
