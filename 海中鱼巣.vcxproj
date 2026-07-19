@@ -300,6 +300,8 @@
     <ClCompile Include="海中鱼巣\领域\组合.任务结果结算.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.运行期只读查询.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.运行期业务操作.ixx" />
+    <ClCompile Include="海中鱼巣\线程\路由.根需求筹办.ixx" />
+    <ClCompile Include="海中鱼巣\线程\自检.根需求筹办.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.需求任务方法分层.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.方法动作场景关系.ixx" />
     <ClCompile Include="海中鱼巣\线程\路由.运行期业务请求.ixx" />
@@ -307,6 +309,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="海中鱼巣\领域\概念安全删除提交能力.数据.h" />
+    <ClInclude Include="海中鱼巣\生产治理闭环配置.数据.h" />
     <ClInclude Include="海中鱼巣\生产运行期配置.数据.h" />
     <ClInclude Include="海中鱼巣\领域\系统角色清单.数据.h" />
     <ClInclude Include="海中鱼巣\领域\概念活动状态.数据.h" />
