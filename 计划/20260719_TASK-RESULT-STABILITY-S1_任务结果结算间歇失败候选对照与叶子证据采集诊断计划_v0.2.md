@@ -1,4 +1,4 @@
-# TASK-RESULT-STABILITY-S1 任务结果结算间歇失败候选对照与叶子证据采集诊断计划 v0.1
+# TASK-RESULT-STABILITY-S1 任务结果结算间歇失败候选对照与叶子证据采集诊断计划 v0.2
 
 日期：2026-07-19
 
@@ -6,9 +6,9 @@
 
 设计队列：DQ-204
 
-设计裁决：JY-449
+设计裁决：JY-449、JY-451
 
-状态：纯诊断 / WB-DIAG-02 / WT-312-R1 已创建待派发 / 冻结候选 `0890464` / 不修改 C++ / 不登记自检阶段
+状态：纯诊断 / WB-DIAG-02 / WT-312-R1 S0 输出解析漂移已修订 / 重新待执行回执 / 冻结候选 `0890464` / 不修改 C++ / 不登记自检阶段
 
 ## 1. 目标与替代依据
 
@@ -106,18 +106,25 @@ foreach ($轮 in 1..60) {
         Select-String '^PERSIST-S1-P0-B3C-A(0[1-9]|1[0-2]) ')
     $B0叶子 = @(Get-Content -LiteralPath $轮日志 |
         Select-String '^PERSIST-S1-P0-B0-A(0[1-9]|1[0-9]|20) ')
-    $失败叶子 = @($任务结果叶子 + $B3C叶子 + $B0叶子 |
+    $任务结果失败叶子 = @($任务结果叶子 |
         Where-Object { $_.Line -match ': 失败$' })
+    $B3C失败叶子 = @($B3C叶子 |
+        Where-Object { $_.Line -match '=失败$' })
+    $B0失败叶子 = @($B0叶子 |
+        Where-Object { $_.Line -match '=失败$' })
+    $失败叶子 = @($任务结果失败叶子 + $B3C失败叶子 + $B0失败叶子)
 
     if ($任务结果叶子.Count -ne 18 -or $B3C叶子.Count -ne 12 -or
-        $B0叶子.Count -ne 20 -or $退出码 -ne 0 -or $失败叶子.Count -ne 0) {
+        $B0叶子.Count -ne 20 -or $退出码 -ne 0 -or
+        $任务结果失败叶子.Count -ne 0 -or $B3C失败叶子.Count -ne 0 -or
+        $B0失败叶子.Count -ne 0) {
         break
     }
     Start-Sleep -Seconds 2
 }
 ```
 
-摘要必须逐轮保存退出码、三组叶子计数、三组失败计数、完整日志 SHA-256 和绝对路径。发生失败时逐字保存全部失败叶子、该轮 TASK-RESULT 18 行、B3C 12 行、B0 20 行、顶层失败门禁和原始日志 SHA-256。
+摘要必须逐轮分别保存退出码、TASK-RESULT / B3C / B0 三组叶子计数、三组独立失败计数、完整日志 SHA-256 和绝对路径。TASK-RESULT 失败后缀按 `: 失败$` 解析；B3C / B0 失败后缀按 `=失败$` 解析。发生失败时逐字保存全部失败叶子、该轮 TASK-RESULT 18 行、B3C 12 行、B0 20 行、顶层失败门禁和原始日志 SHA-256。
 
 ## 6. 结果分支与后继裁决
 
