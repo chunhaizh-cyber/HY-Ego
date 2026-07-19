@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>根需求任务筹办执行学习闭环现状流程图</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", sans-serif; background: #f6f7f9; color: #1f2328; }
+    main { max-width: 2200px; margin: 0 auto; padding: 24px; }
+    h1 { font-size: 26px; margin: 0 0 8px; }
+    p { line-height: 1.7; }
+    .mermaid { overflow: auto; background: #fff; border: 1px solid #d0d7de; padding: 20px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>根需求任务筹办执行学习闭环现状流程图</h1>
+  <p>分散能力已经存在，但默认生产消费者、真实后台消费与学习后半链尚未串联。</p>
+  <div class="mermaid">
+flowchart TD
+    A["生产运行期会话启动"] --> B["同一运行期初始化系统角色"]
+    B --> C["已创建安全根需求与服务根需求"]
+    C --> D["发布运行期上下文并返回同身份租约"]
+    D --> E{"当前生产入口是否启动消费者"}
+    E -->|"否"| F["--runtime-context 完成首发后直接退出"]
+    E -->|"默认入口"| G["继续构造传统仓库、传统服务和旧线程夹具"]
+    G --> H["旧自我线程再次初始化世界树与两个根需求"]
+    H --> I["与新生产运行期不是同一所有权链"]
+    D --> J["B0 已有需求、任务、方法、执行、结果结算强类型入口"]
+    J --> K["任务管理线程已有强类型两阶段请求队列"]
+    K --> L["任务工作线程已有受控消费和强类型回执队列"]
+    L --> M{"后台线程体是否自动消费业务请求"}
+    M -->|"否"| N["线程体仅等待或 yield；自检从外部手工调用受控消费"]
+    N --> O["任务管理上行桥可转换回执，但没有生产持续接线"]
+    J --> P["自检可同步创建任务、筹办、执行并结算"]
+    P --> Q["证明分散入口可工作，不证明生产线程闭环"]
+    J --> R["用途事件纯值形成与 O1 权威用途观察结构已实现"]
+    R --> S{"是否进入运行期业务装配和生产结果链"}
+    S -->|"否"| T["O1 仍是隔离能力"]
+    T --> U["O2 统计投影未实现"]
+    U --> V["方法内容版本与执行快照 M0 未实现"]
+    V --> W["确定性差异候选 M1 未实现"]
+    W --> X["独立晋级授权与新代际 M2 未实现"]
+    F --> Y["现状：没有根需求到学习的生产闭环"]
+    I --> Y
+    O --> Y
+    Q --> Y
+    X --> Y
+  </div>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>
