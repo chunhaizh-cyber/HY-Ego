@@ -10,7 +10,7 @@
 
 计划阶段：Debug 最终回归 1100
 
-状态：v0.2 已形成七文件 WIP，但 E256 Debug 单轮 A09—A12 失败 / WT-315-R2 验证失败只读失效 / v0.3 已按根因收窄修订 / WT-315-R4 已绑定唯一代理 `/root/wt315_r4_execution`，待 E259 后正式派发只读 S0
+状态：v0.2 已形成七文件 WIP，但 E256 Debug 单轮 A09—A12 失败 / WT-315-R2 验证失败只读失效 / v0.3 已按根因收窄修订 / WT-315-R4 独立只读 S0 全项 PASS，待 E260 后授权固定顺序带入与实施
 
 ## 1. 目标与依据
 
@@ -134,7 +134,7 @@ msbuild .\海中鱼巣.vcxproj /t:Rebuild /p:Configuration=Debug /p:Platform=x64
 .\x64\Debug\海中鱼巣.exe --self-test-exit
 msbuild .\海中鱼巣.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform=x64 /m
 .\x64\Release\海中鱼巣.exe --self-test-exit
-py -3.14 .\tools\check_specs.py --strict
+python .\tools\check_specs.py --strict
 git diff --check
 git diff --name-only
 ```
