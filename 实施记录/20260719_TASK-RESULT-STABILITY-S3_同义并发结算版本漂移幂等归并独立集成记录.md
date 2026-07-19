@@ -1,0 +1,77 @@
+# TASK-RESULT-STABILITY-S3 同义并发结算版本漂移幂等归并独立集成记录
+
+日期：2026-07-19
+
+计划：#314 / DQ-206 / TASK-RESULT-STABILITY-S3 v0.2
+
+集成批次：INT-WB-TASK-RESULT-01-R1
+
+状态：已集成待设计同步
+
+## 1. 冻结身份与输入
+
+集成工作树为 `C:\Users\zhchh\.codex\worktrees\integration-wb-task-result-01-r1\海中鱼巢`，分支为 `codex/integration-wb-task-result-01-r1`。创建前已核对目标路径、本地分支、远端同名分支和 worktree 均不存在。
+
+精确集成起点为 `544f7a44f208f6744c5ce990cf4b88943793b3ec`。唯一任务输入为 `8111270126778230593a4bf20684bf91fa1e85bd`，唯一父为 `dd9bf97297ee0b1b6da53b8a6135bfcb6c4aa274`。任务 worktree 与远端任务分支一致、0/0、clean。
+
+任务输入经无冲突 cherry-pick 形成 `c4b61f99da4587ec1e2207da47bfcf07de25d916`，父提交精确为集成起点。三个任务文件及输入 blob 为：
+
+| 文件 | blob |
+| --- | --- |
+| `海中鱼巣/领域/数据操作.需求任务方法.ixx` | `d8eade88a441499067fe54721418b62efeb54b76` |
+| `海中鱼巣/领域/自检.需求任务方法分层.ixx` | `eacad5fefaed5b33d19bae9881af25483799afc6` |
+| `实施记录/20260719_TASK-RESULT-STABILITY-S3_同义并发结算版本漂移幂等归并代码实施_Codex断点清单.md` | `a9bf1ecf5c0b39abb8f3f6e1d46f4ef0bb447188` |
+
+## 2. 集成内容核对
+
+数据操作层将版本漂移与并发占用收口到同一组权威当前需求、来源任务、正式结算读回和唯一正式结算匹配器：无当前结算时仍返回版本漂移；完整同义时幂等读回；同键异义时拒绝为幂等冲突。未新增重试、休眠、调度让步、全局锁、第二匹配器、公开 ABI 或机器字段。
+
+SERVICE-DATA-S5 同义结算专项局部扩大为 100 路，精确验收 1 个已提交、99 个幂等读回、0 个其它状态；异义数量和语义保持原状。A34 人读标签同步为“百路同义结算唯一提交其余幂等”。
+
+## 3. 两配置重建
+
+完整构建日志位于非 Git 目录 `D:\海中鱼巣\日志\诊断\TASK-RESULT-STABILITY-S3-INT-WB-TASK-RESULT-01-R1`。
+
+| 配置 | exit | warning | error | 日志 SHA-256 |
+| --- | ---: | ---: | ---: | --- |
+| Debug x64 Rebuild | 0 | 0 | 0 | `70478502254F1BC4DF2B174DA9859375872F60CDF02B9E2D5E7F33F78F5ACFAC` |
+| Release x64 Rebuild | 0 | 0 | 0 | `9D6AF3B10C0A112A3FFC4FC933D84B37A0E6981700D95815E0EDC73DD0B69247` |
+
+首次合并构建工具调用在 Debug 完成后命中外层 124 秒超时；Debug 日志已完整收口为成功 0/0，Release 日志当时不完整，因此只重新执行 Release Rebuild，并以上表全新完整 Release 日志作为证据。
+
+## 4. 两配置完整自检
+
+Debug 单轮使用全新同步产品进程，退出 0；SERVICE-DATA-S5 / TASK-RESULT-S1 / PERSIST-S1-P0-A / PERSIST-S1-P0-B0 分别为 38 / 18 / 18 / 20 行，失败均为 0；A33、A34、A14、A18 均通过。日志 SHA-256 为 `5FFFBAE97D945DDF9993A72D234AE691567ED6ED8BB85718D61C0A29BD8752A4`。
+
+Debug 单轮完成后的第一版外层校验器未容纳已落盘 UTF-8 日志行尾中的 `CR`，因此错误返回 2；产品本身退出 0、四组数量与失败数均正确，具名叶子正文均直接观察为通过，且进程 0。未补跑产品单轮，仅对同一份已落盘日志使用行尾无关表达式复核，结果通过。
+
+Release 单轮退出 0，四组专项输出均为 0，进程 0；日志 SHA-256 为 `AE19F6C4968DEC8BF81F64F359F5606FEBD6A34449B6776118921D6F2C60F994`。Release 专项输出隔离成立。
+
+## 5. Debug 严格连续 20 轮
+
+连续验证从第 1 轮全新开始。每轮启动一个同步产品进程，完整 stdout / stderr 先落独立日志，再核对退出 0、四组 38 / 18 / 18 / 20、四组失败 0、A33 / A34 / A14 / A18 通过和产品进程 0；成功轮之间等待 2 秒。
+
+20 / 20 轮全部通过。逐轮日志 SHA-256 为：
+
+| 轮次 | SHA-256 | 轮次 | SHA-256 |
+| ---: | --- | ---: | --- |
+| 1 | `9C6DA55D1F215866335CF3FE0C3B4A2DDB5CD2655DDA2E50EFB50ECD8284FA86` | 11 | `4027AE60D93325457E08765451383EFCA3B9AE9E125BAD075BD675E1695A6850` |
+| 2 | `268FE99D1210FDABC104F1A293683952C7A14F755156DA93B42539CEE1AECB53` | 12 | `7DC918713C6F7014FB4F026DD2D8F9A1D5766A927F340F76934ED431D1702D5B` |
+| 3 | `4C00C923F271C857154636BC2641B30CD7CEE64A59C074A53AA7BB39DC77FD70` | 13 | `291259ACBA0943EAD7D8C344C3E70602437C53D23B17EA8E7E9D5C831A23221D` |
+| 4 | `03D16286FFA0994AACA8C90D083618E2B7C65173CF76E8157A4CCB8846F0BCCE` | 14 | `8E667F407F9C94A3F45171DCFA246571DFCAFF526ABC42D5912CFFDA24A86FD3` |
+| 5 | `7A3AFFD9D3A9DA08374E5611D2A89C77DAB11024258592758F4E8387B5A03729` | 15 | `6B46A7BE4789254458AA3A77B0EFD27A15AA0A2A8F89BBA59AAC66C721F4FD95` |
+| 6 | `B3D862BB56A9429B779E64D9C5147DC89377704B30E1BE9A64F3614AC161BF6A` | 16 | `E0D19871011947EDE90D35957581B858C849F7996ABA2E4F7D4C3773CB89F80E` |
+| 7 | `223F4D64DE177E5DDE9C192843C2BB926C76CCE187F9024E000DCE9AE48C9881` | 17 | `6FA450874BFABBB6B325FEEC8CB5E51C6F9FE05DC110D1FB1B2D85473EFC6670` |
+| 8 | `71F65DA512DC3DC1261A011EDEB4850FFC90A5EA9BC153BE5B31428653A84E4D` | 18 | `1F5732EDD3F2A8EAFC73D9730847CECD723627806B526E17F880B795D47B83C4` |
+| 9 | `3A5B8CA0B73F122B70192D0B5AD01AD0C9D4B94F875FB1B27D08C24134E26281` | 19 | `CC0134078F44E965D800037ACFF5D02ED07C49F0DF9DF7A1F773A20B88AC02BA` |
+| 10 | `F35BA447C1CA760D34442172A9F51567EE71043BFA83824D2595235E10A0A909` | 20 | `0B39D0F1DA0EB3FCEFBC50DDD11DCEB7BFD2A1A54243020FCABB7348DDEBC642` |
+
+逐轮汇总 SHA-256 为 `7B10B5C36ABDC497463BB1D78C6C2E25FFFB592B5555AA1BDDC9E482F247A954`。
+
+第 20 轮结束后已第一时间确认 `海中鱼巣.exe` 进程 0，并向设计窗口明确释放 `D:\海中鱼巣\日志\事件段\自检`；释放后未再运行产品或自检。
+
+## 6. 静态与范围门禁
+
+strict、`git diff --check`、三任务文件逐 blob、任务输入单父 / 单提交 / 三文件、公开 ABI 零变化和 Release 专项隔离均通过。相对集成起点的最终范围精确为三份任务文件与本集成记录，共四个文件；C++ 其它文件、工程、入口、计划、索引、队列和中央治理零差异。
+
+本次独立集成只证明 #314 同义并发结算版本漂移幂等归并在集成起点上完成范围复核、两配置构建、两配置单轮与 Debug 连续 20 / 20 验证。状态只到“已集成待设计同步”；不归档 #314，不生成 #310 计划，不消费旧 `0890464` WIP，也不解除 #305 / #301 / #306 门控。
