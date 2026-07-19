@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>任务结果同义并发结算版本漂移归并现状与纠偏流程图</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", sans-serif; background: #f6f7f9; color: #1f2328; }
+    main { max-width: 2100px; margin: 0 auto; padding: 24px; }
+    h1 { font-size: 26px; margin: 0 0 8px; }
+    p { line-height: 1.7; }
+    .diagram { overflow: auto; background: #fff; border: 1px solid #d0d7de; padding: 20px; }
+    .boundary { margin-top: 16px; padding: 16px 20px; background: #fff; border-left: 4px solid #57606a; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>任务结果同义并发结算版本漂移归并现状与纠偏流程图</h1>
+  <p>当前版本漂移分支在正式结算读回前返回，使同义并发结果受调度影响。纠偏只把无写入竞争退出统一归并到权威当前态，不增加自动重试或新机器事实。</p>
+  <div class="mermaid">
+flowchart TD
+    A["需求业务服务准入同义结算请求并形成结算写入规格"] --> B["数据操作读取需求写前材料与已完成来源任务"]
+    B --> C{"写前需求是否已有正式结算"}
+    C -->|"有且完整同义"| I1["逻辑内完成：返回幂等读回"]
+    C -->|"有但异义"| I2["逻辑内拒绝：返回幂等冲突"]
+    C -->|"没有"| D["进入结构写入会话并复核写前需求与任务材料"]
+    D --> E{"会话内写前材料是否仍匹配"}
+    E -->|"否；竞争者可能已经发布"| F["现状：标记版本漂移"]
+    E -->|"是"| G{"状态型归属是否已由竞争者占用"}
+    G -->|"是"| H["标记并发占用"]
+    G -->|"否"| W["写结算状态与完整关系组，请求一次提交"]
+    W --> X{"提交与写后读回是否完整同义"}
+    X -->|"是"| S1["完成：唯一提交者返回已提交"]
+    X -->|"否"| R1["追根因解决：停止后继，不伪造结算完成"]
+    F --> OLD["现状偏差：在权威当前态读回前直接返回版本漂移"]
+    OLD --> PEND["上层返回任务已完成待需求结算；百路同义调用结果受调度影响"]
+    F --> J["纠偏：与并发占用统一进入权威需求和来源任务读回"]
+    H --> J
+    J --> K{"当前正式结算状态"}
+    K -->|"不存在"| L1["逻辑内返回：保留原版本漂移或许可失败；结构不变化"]
+    K -->|"存在且完整同义"| I3["逻辑内完成：返回幂等读回；上层收口为已完成并结算"]
+    K -->|"存在但异义"| I4["逻辑内拒绝：返回幂等冲突，不覆盖权威结算"]
+    K -->|"多归属、缺字段或同版本矛盾"| R2["追根因解决：返回内部不一致并停止后继"]
+  </div>
+  <div class="boundary">
+    <strong>边界：</strong>只有完整同义的权威正式结算可把竞争退出归并为幂等读回；未结算保留版本漂移，异义结算返回冲突，结构矛盾追根因。
+  </div>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>
