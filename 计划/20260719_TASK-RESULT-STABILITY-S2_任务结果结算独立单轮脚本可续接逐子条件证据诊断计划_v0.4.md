@@ -6,9 +6,9 @@
 
 设计队列：DQ-205
 
-设计裁决：JY-466—JY-469
+设计裁决：JY-466—JY-470
 
-状态：纯诊断 / WB-DIAG-06 / WT-313-R4 S1—S3 通过 / 待 S4 独立单轮续接 / 冻结候选 `0890464` / 下一轮 43 / 不登记自检阶段
+状态：纯诊断 / WB-DIAG-06 / WT-313-R4 具名退回 / 分支完成待独立文档集成 / 冻结候选 `0890464` / 正式有效轮仍 1—42 / 不登记自检阶段
 
 ## 1. 目标与替代依据
 
@@ -47,6 +47,10 @@ S1 临时差异精确只有任务结果结算自检；原 A14 / A18 表达式、
 S2 Debug x64 Rebuild 退出 0、0 warning、0 error，完整日志位于 R4 非 Git诊断目录。
 S3 脚本 AST 错误 0，冻结 SHA-256 为 095AAF9EC0E3370C4EE09C3F0F7099BD5C969DD6108A53C6E331B326A97370AC；LF / CRLF 同解析器逐键一致，同脚本 ValidateOnly 退出 0、产品未启动、进程 0。
 S3 后正式状态仍为精确六键、下一轮 43、未终止；真实轮日志 0，summary 不存在，共享事件段目录继续由 WT-313-R4 独占。
+S4 第 43 轮产品退出 0，TASK / B3C / B0 为 18 / 12 / 20 且失败 0；脚本已形成下一轮 44 的临时六键状态和摘要。
+脚本在 `[System.IO.File]::Replace($TemporaryPath, $StatePath, $null)` 处抛出 `ArgumentException: The path is not of a legal form.`，最终退出 1，正式状态仍为下一轮 43。
+按合同第 43 轮不计新有效轮，未补跑 43，未启动 44—60；共享目录已释放、进程 0、源码恢复冻结 blob。
+任务提交 `464a6f2c1d5879bed8a65a159ad25ea48dde1d7e` 精确只含 R4 专属诊断记录，远端 0/0、worktree / index clean。
 ```
 
 ## 3. 冻结身份与写入范围
