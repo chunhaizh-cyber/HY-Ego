@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>根需求任务筹办并发同义选择收口施工流程图</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", sans-serif; background: #f6f7f9; color: #1f2328; }
+    main { max-width: 2400px; margin: 0 auto; padding: 24px; }
+    h1 { font-size: 26px; margin: 0 0 8px; }
+    p { line-height: 1.7; }
+    .mermaid { overflow: auto; background: #fff; border: 1px solid #d0d7de; padding: 20px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>根需求任务筹办并发同义选择收口施工流程图</h1>
+  <p>只在路由层以权威任务与方法读回承认完整同义选择；内部不一致和半结构继续追根因。</p>
+  <div class="mermaid">
+flowchart TD
+    S0["从新 origin/main 建立全新 R8 worktree"] --> S1["按 23ca426 十个具名 blob 固定恢复 #315 生产源树"]
+    S1 --> A["筹办生产根需求：入口、根需求、任务生命周期和方法基线复核"]
+    A --> B{"调用前权威任务是否已有当前选择"}
+    B -->|"是"| V0["权威重读当前任务与当前方法"]
+    B -->|"否"| C["调用召回并提交唯一选择组合入口"]
+    C --> D{"组合调用是否成功"}
+    D -->|"是"| V0
+    D -->|"否"| E{"召回或选择结果是否内部不一致"}
+    E -->|"是"| R0["追根因解决：保留返回与权威读回证据，停止冻结"]
+    E -->|"否"| F["权威重读当前任务与当前方法"]
+    F --> G{"任务和方法读回是否完整"}
+    G -->|"否"| R1["追根因解决：正式流程读回不完整"]
+    G -->|"是"| H{"任务来源/筹办中生命周期与方法活跃关系是否仍同义"}
+    H -->|"否"| L0["逻辑内返回：当前性变化，零新增结构"]
+    H -->|"是"| I{"当前任务是否已有选择"}
+    I -->|"否，召回无候选"| L1["逻辑内返回：无候选"]
+    I -->|"否，召回非唯一"| L2["逻辑内返回：非唯一"]
+    I -->|"否，其它非成功"| R2["追根因解决：有效正式输入仍无选择"]
+    I -->|"是"| J{"选择材料是否完整"}
+    J -->|"否"| R3["追根因解决：当前选择半结构"]
+    J -->|"是"| K{"选择是否与本路由全字段同义"}
+    K -->|"否"| L3["逻辑内返回：异义选择或来源当前性变化"]
+    K -->|"是"| P["并发同义完成读回：采用权威当前选择"]
+    V0 --> V1{"任务、方法和当前选择是否完整且全字段同义"}
+    V1 -->|"读回不完整"| R4["追根因解决"]
+    V1 -->|"当前性或选择异义"| L4["逻辑内返回：当前性变化"]
+    V1 -->|"是"| P
+    P --> Q["报告写入权威任务和选择材料"]
+    Q --> T["冻结纯值任务执行请求"]
+    T --> U{"冻结请求和最终报告是否完整"}
+    U -->|"否：内部承载矛盾"| R5["追根因解决"]
+    U -->|"是"| W["返回已冻结完整报告"]
+    W --> X["自检：重复同义与两线程并发报告共享同一任务、方法、完整选择和冻结请求"]
+    X --> Y["Debug/Release 与严格连续 20/20 门禁"]
+    Y --> Z["任务分支完成待设计核对；不得直接发布 main"]
+  </div>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>
