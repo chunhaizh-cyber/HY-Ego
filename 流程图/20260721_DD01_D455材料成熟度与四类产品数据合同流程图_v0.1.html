@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DD-01 D455 材料成熟度与四类产品数据合同流程图</title>
+  <style>
+    body { margin: 0; padding: 24px; font-family: "Microsoft YaHei", "Segoe UI", sans-serif; background: #f6f8fb; color: #172033; }
+    main { min-width: 1500px; background: #fff; border: 1px solid #d9e0ea; border-radius: 12px; padding: 24px; box-shadow: 0 8px 28px rgba(24, 39, 75, 0.08); }
+    h1 { margin-top: 0; font-size: 24px; }
+    p { line-height: 1.7; }
+    .mermaid { overflow: auto; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>DD-01 D455 材料成熟度与四类产品数据合同流程图</h1>
+    <p>只覆盖成熟度、产品形成和强类型合同验证；队列发布、任务域消费、方法执行和世界事实提交由后继设计承担。</p>
+    <pre class="mermaid">
+flowchart TD
+    A["D455 原始同步帧、深度与采集元数据"] --> B{"入口材料、设备、时间和布局有效？"}
+    B -- "否" --> R1["逻辑内拒绝：不形成材料候选"]
+    B -- "是" --> C["形成 L0：原始帧引用、点云、有效掩码、单位、坐标系与来源链"]
+    C --> D{"等待项外显模式"}
+
+    D -- "逐簇识别" --> E["形成 L0 原始逐簇诊断产品，或进入 L1 单轮校正、对齐、滤波和分割"]
+    E --> F["形成 L1 簇、掩码、局部图、平面轮廓与局部质量"]
+    F --> G["可发布 L1 原始逐簇产品"]
+    F --> H["进入 L2 跨轮关联、连续命中、离散度与稳定性材料"]
+    H --> I["可发布 L2 原始逐簇产品"]
+    H --> J{"L3 来源、范围、时效、深度、对齐、跨轮和局部质量门全部通过？"}
+    J -- "否" --> K["逻辑内结果：保留原始逐簇产品和具名未通过原因"]
+    J -- "是" --> L["形成 L3 稳定可交付材料"]
+    L --> M["形成稳定观察子集报告，只引用来源原始逐簇产品"]
+
+    D -- "扫描变化" --> N{"存在可比基准和本轮覆盖范围？"}
+    N -- "否" --> R2["逻辑内结果：只形成当前材料，不报告变化"]
+    N -- "是" --> O["按同一 L0 到 L3 成熟链形成当前稳定材料"]
+    O --> P["形成扫描变化报告：基准、覆盖、变化候选、未覆盖与质量"]
+
+    D -- "目标跟踪" --> Q{"目标约束和观察窗口有效？"}
+    Q -- "否" --> R3["逻辑内拒绝：不形成跟踪产品"]
+    Q -- "是" --> S["按同一 L0 到 L3 成熟链形成目标当前材料"]
+    S --> T{"目标是否复现？"}
+    T -- "是" --> U["形成目标跟踪报告：新坐标、复现离散度与质量"]
+    T -- "暂失或丢失" --> V["形成强类型暂失或丢失报告：空坐标、原因与重捕获候选"]
+
+    G --> W["公共合同验证：身份、版本、模式、产品、成熟度、来源、范围、时间和负载一致"]
+    I --> W
+    K --> W
+    M --> W
+    P --> W
+    U --> W
+    V --> W
+    W --> X{"合同有效？"}
+    X -- "写入前不满足" --> R4["逻辑内拒绝：不得准备发布"]
+    X -- "有效" --> Y["生成不可变非权威产品值，交 DD-02 候选发布"]
+    X -- "候选已准备后读回矛盾" --> Z["内部逻辑错误：精确撤销并追根因"]
+    Y --> AA["禁止直接写存在、场景、状态、动态、任务完成或需求满足"]
+    </pre>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>
