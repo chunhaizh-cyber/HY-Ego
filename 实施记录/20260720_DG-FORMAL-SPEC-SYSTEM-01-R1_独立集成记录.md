@@ -79,3 +79,36 @@ git forbidden-tree consistency=PASS
 最终主线发布复核要求 WT-MAIN 仍为 `main == origin/main == 54fc3dce5f20b98680a905520d9797be2129cd33`，且存在登记的重叠 dirty/WIP。根据门禁，集成窗口不得 stash、clean、checkout、reset、覆盖或直接 fast-forward main；本记录不宣称 main 已集成，也不宣称正式规范迁移最终完成。
 
 集成分支已完成固定汇入和验证，待设计窗口在 WT-MAIN 重叠 WIP 由所有者正式释放后，另行取得主线发布占用并按集成规范执行发布。当前主线发布占用未取得，已释放。
+
+## 6. E296 释放后主线发布候选
+
+E296 中央提交已重新核对为：
+
+```text
+E296=3434e9afa029302b0eaa188bd5457e05dab50f5c
+E296父=54fc3dce5f20b98680a905520d9797be2129cd33
+```
+
+E296 的五份中央治理产物为计划索引、任务队列、并行工作树登记表、窗口交互记录和 `项目记忆/设计记录/20260720_DG-FORMAL-SPEC-SYSTEM-01_R1主线发布重叠WIP精确释放方案.md`。释放方案记录：已从 WT-MAIN 精确释放 69 项与集成范围重叠的任务 WIP，保留 6 项无关 WIP，释放后与集成范围交集为 0。
+
+S0 重新核对结果：
+
+```text
+WT-MAIN main==origin/main==3434e9afa029302b0eaa188bd5457e05dab50f5c
+WT-MAIN默认dirty=6项：控制面板、计划索引HR-000工作副本、三份复盘、日志
+集成分支HEAD=0567ba4c63f5f3080745c6eb2062a60ebd9349ce
+集成worktree=clean
+集成远端与本地=0/0
+```
+
+直接比较 `3434e9a..0567ba4` 会包含计划索引这一中央路由差异；它属于 E296 中央侧变更，不是待覆盖的任务 WIP。以共同父 `54fc3dce..0567ba4` 计算的合入后候选预期范围为 104 个路径，与六项 WT-MAIN dirty 的交集为 0。
+
+在取得本批主线发布占用后，已在 clean 集成 worktree 中无冲突合入 E296，形成：
+
+```text
+最终集成候选=102056e48ef06f45f421a6b923d3d30e3a8030ff
+第一父=0567ba4c63f5f3080745c6eb2062a60ebd9349ce
+第二父=3434e9afa029302b0eaa188bd5457e05dab50f5c
+```
+
+该提交当前仅是主线发布候选，尚未推送 `origin/main`，不得解释为 main 已发布或正式规范迁移最终完成。候选仍需完成最终严格规范、树一致性、范围和六项 dirty 保留复核；全部通过后才允许按门禁 fast-forward WT-MAIN main 并推送 `origin/main`。
