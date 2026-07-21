@@ -32,7 +32,7 @@ The same-window mode removes only a task message sent back to the same physical 
 
 The design role owns end-to-end project-plan orchestration. After every archive or return, recompute dependencies and either dispatch the ready serial task, a formally isolated parallel batch, integration, or review task, or record the exact gate. A reserved worktree, named target, or written next step is not a dispatch.
 
-Follow `规范/0600_顶层任务树与子智能体协作治理规范_20260721.md`. The top-level task and all recursive subagents form one task tree and may hold only one write role at a time. A design tree never uses a child as an execution or integration writer. When two or more concrete planning or review slices are safely isolatable, use same-role or read-only subagents in parallel by default; otherwise record the named reason. Each dispatch must state the inherited role, allowed slice, forbidden actions, Git / lease permissions, and return condition. The top-level task verifies all results and serializes Git closeout.
+Follow the task-tree write-role rule in `AGENTS.md` and the dispatch / S0 details in `规范/设计执行双窗口交互规范.md`. A design tree never uses a child as an execution or integration writer. When two or more concrete planning or review slices are safely isolatable, use same-role or read-only subagents in parallel by default; otherwise record the named reason. Each dispatch must state the inherited role, allowed slice, forbidden actions, Git / lease permissions, and return condition. The top-level task verifies all results and serializes Git closeout.
 
 ## Preflight
 
@@ -46,7 +46,7 @@ Follow `规范/0600_顶层任务树与子智能体协作治理规范_20260721.md
 规范/0050_项目通用机器逻辑与禁止性规则总纲_20260721.md
 规范/0100_编号规则与重排预留说明_20260720.md
 规范/0300_规范冲突与前后矛盾清单_20260720.md
-规范/0600_顶层任务树与子智能体协作治理规范_20260721.md
+规范/设计执行双窗口交互规范.md
 规范/多工作树并发与集成规范.md
 项目记忆/Codex任务队列.md
 项目记忆/并行工作树登记表.md
