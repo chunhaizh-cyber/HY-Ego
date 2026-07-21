@@ -40,6 +40,8 @@ When the user explicitly enables the same-physical-window serial dual-role mode,
 
 The same-window mode removes only a task message sent back to the same physical window. It does not remove the design/execution/integration permission split, interaction record, plan/dependency gates, allowed/forbidden files, actual-interface review, per-worktree single writer ownership, validation, commit, push, or re-read gates. It remains active until the user revokes it or the interaction record transfers write ownership.
 
+Follow `规范/0600_顶层任务树与子智能体协作治理规范_20260721.md`. The top-level task and all recursive subagents form one task tree and may hold only one write role at a time. An execution tree never uses a child as a design or integration writer. When two or more plan-authorized implementation, evidence, or verification slices are safely isolatable, use same-role or read-only subagents in parallel by default; otherwise record the named reason. Each dispatch must state the inherited role, allowed slice, forbidden actions, Git / lease permissions, and return condition. The top-level task verifies all results and serializes Git closeout.
+
 ## Preflight
 
 1. Confirm cwd is either the registered `D:\海中鱼巢` main integration worktree or the exact task worktree assigned to this plan. Reject unregistered paths, branches, detached HEAD, or a branch checked out in the wrong worktree.
@@ -48,8 +50,11 @@ The same-window mode removes only a task message sent back to the same physical 
 
 ```text
 计划/计划索引.md
-规范/000_项目规则总纲.md
-规范/001_规则迁移清单.md
+规范/规范目录.md
+规范/0050_项目通用机器逻辑与禁止性规则总纲_20260721.md
+规范/0100_编号规则与重排预留说明_20260720.md
+规范/0300_规范冲突与前后矛盾清单_20260720.md
+规范/0600_顶层任务树与子智能体协作治理规范_20260721.md
 规范/多工作树并发与集成规范.md
 项目记忆/Codex任务队列.md
 项目记忆/当前状态.md
@@ -122,7 +127,7 @@ For document-only slices:
 
 ```powershell
 git diff --check
-if (Test-Path .\tools\check_specs.py) { python .\tools\check_specs.py }
+if (Test-Path .\tools\check_specs.py) { python .\tools\check_specs.py --strict }
 ```
 
 For code slices, use the implementation plan’s validation commands. Default build command when allowed:

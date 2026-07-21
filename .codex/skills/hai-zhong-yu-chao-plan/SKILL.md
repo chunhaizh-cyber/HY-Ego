@@ -32,6 +32,8 @@ The same-window mode removes only a task message sent back to the same physical 
 
 The design role owns end-to-end project-plan orchestration. After every archive or return, recompute dependencies and either dispatch the ready serial task, a formally isolated parallel batch, integration, or review task, or record the exact gate. A reserved worktree, named target, or written next step is not a dispatch.
 
+Follow `规范/0600_顶层任务树与子智能体协作治理规范_20260721.md`. The top-level task and all recursive subagents form one task tree and may hold only one write role at a time. A design tree never uses a child as an execution or integration writer. When two or more concrete planning or review slices are safely isolatable, use same-role or read-only subagents in parallel by default; otherwise record the named reason. Each dispatch must state the inherited role, allowed slice, forbidden actions, Git / lease permissions, and return condition. The top-level task verifies all results and serializes Git closeout.
+
 ## Preflight
 
 1. Confirm cwd is `D:\海中鱼巢`.
@@ -44,6 +46,7 @@ The design role owns end-to-end project-plan orchestration. After every archive 
 规范/0050_项目通用机器逻辑与禁止性规则总纲_20260721.md
 规范/0100_编号规则与重排预留说明_20260720.md
 规范/0300_规范冲突与前后矛盾清单_20260720.md
+规范/0600_顶层任务树与子智能体协作治理规范_20260721.md
 规范/多工作树并发与集成规范.md
 项目记忆/Codex任务队列.md
 项目记忆/并行工作树登记表.md
@@ -157,8 +160,8 @@ After revising a returned plan or preparing an execution, integration, or read-o
 1. Update the flowchart, detailed design, plan, plan index, task queue, project memory, and `项目记忆/窗口交互记录.md`.
 2. Keep the original queue id unless the revision creates a genuinely independent prerequisite plan.
 3. Validate, commit, and push before sending any task message.
-4. If the target role is in another physical window and Codex task tools are available, locate the unique same-repo task by task id, title, cwd, registered worktree, and role; send a message containing the queue / integration id, commit, authoritative paths, allowed actions, forbidden actions, validation, ownership release, and remaining gates.
-5. If the target execution role is in the current physical window, do not send a message to self. After the interaction record containing the target role has been committed and pushed in step 3, switch from that published record and re-read Git, the plan index, queue, target plan, breakpoint, and actual interfaces before execution.
+4. If the target role is in another independent top-level window / task and Codex task tools are available, first verify it is not a subagent in the current top-level task tree; then locate the unique same-repo task by task id, title, cwd, registered worktree, and role and send a message containing the queue / integration id, commit, authoritative paths, allowed actions, forbidden actions, validation, ownership release, and remaining gates. Never use a child agent of the current design task as an execution or integration writer.
+5. Only when the user has explicitly enabled the same-physical-window serial role switch may the target role remain in the current top-level task. Do not send a message to self; first stop every descendant, release the old role, commit and push the interaction record, then switch the whole tree and re-read Git, the plan index, queue, target plan, breakpoint, and actual interfaces before execution.
 6. Treat any task message as a wake-up signal only. The target role must re-read repository facts before action.
 7. After sending, read back the target task state. Only a uniquely delivered task may be marked `已派发待执行回执` or `已派发待集成回执`; a reservation remains pending.
 8. If an external target task is missing, ambiguous, or messaging fails, leave the handoff as pending in `项目记忆/窗口交互记录.md`; do not broaden authority or claim execution / integration has started.
@@ -183,7 +186,7 @@ For planning slices:
 
 ```powershell
 git diff --check
-if (Test-Path .\tools\check_specs.py) { python .\tools\check_specs.py }
+if (Test-Path .\tools\check_specs.py) { python .\tools\check_specs.py --strict }
 ```
 
 Do not run C++ build unless the planning slice also includes code changes.
