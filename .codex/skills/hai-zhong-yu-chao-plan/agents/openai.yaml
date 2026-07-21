@@ -1,4 +1,4 @@
 interface:
   display_name: "海中鱼巣计划"
-  short_description: "Create Sea Nest plans from specs, designs, and migration packages"
-  default_prompt: "Use $hai-zhong-yu-chao-plan to 生成或修订海中鱼巣计划，未确认计划放入计划/待确认计划，确认后再登记可执行队列。"
+  short_description: "Create spec-based plans and isolate safe parallel work"
+  default_prompt: "Use $hai-zhong-yu-chao-plan to 生成或修订海中鱼巣计划，只对真实依赖设置门控，并优先隔离可安全并发的计划。"
