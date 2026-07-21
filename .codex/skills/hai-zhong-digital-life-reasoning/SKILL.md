@@ -1,87 +1,80 @@
 ---
 name: hai-zhong-digital-life-reasoning
-description: Use when the user says "推理", "逻辑推理", "请推理", "梳理逻辑", or asks to reason about digital-life concepts as they should map into the D:\海中鱼巣 rebuild, including self/need/task/method, service boundaries, state/dynamic/causal chains, and implementation constraints.
+description: Use when the user says 推理, 逻辑推理, 请推理, 梳理逻辑, or asks to reason about digital-life concepts for the current 海中鱼巣 repository, including self, demand, task, method, service boundaries, and state/dynamic/causal chains. Produce testable reasoning and design-governance inputs only; do not formalize conclusions or implementation authority directly.
 ---
 
 # 海中鱼巣数字生命推理
 
-## Core Rule
+## 入口与身份
 
-Reason from theory into Sea Nest project structures:
+先遵守当前仓库根目录 `AGENTS.md`。用 `git rev-parse --show-toplevel` 解析项目根目录；用户明确指定另一个现存项目路径时才改用该路径，不硬编码盘符、旧项目名或分支别名。
+
+本技能把概念推理转换为可审查的设计输入：
 
 ```text
 概念 / 机制 / 因果链
--> 前提、定义、约束
--> 可验证推理链
--> 海中鱼巣结构映射
--> 规范 / 详细设计 / 计划落点
+-> 前提、定义和约束
+-> 可证伪的中间推理
+-> 项目结构映射
+-> 待设计治理的规范 / 详细设计 / 计划草稿
 ```
 
-Do not turn theory conclusions into implementation facts without code and validation evidence.
+推理结论不等于规范事实、代码事实或能力完成。用户确认仍须由设计角色按 `AGENTS.md` 完成正式依据、冲突裁决、文件修订和规范目录登记。
 
-## Source Priority
+## 输入证据
+
+优先使用用户本轮裁决和当前项目中本轮实际读取的正式证据。用户明确要求参考其它项目或材料时，只读使用并标明其参考身份；不得把旧项目、日志、显示、聊天或外部资料直接升级为本项目机器语义。
+
+## 推理算法
+
+1. 定义对象：概念、机制、因果链、实施假设、边界、反例或评价标准。
+2. 分离：
 
 ```text
-1. User-stated rules in the current conversation.
-2. D:\海中鱼巣 AGENTS.md, 规范, 计划, 项目记忆.
-3. Existing files under D:\数字生命思路 when explicitly relevant.
-4. Read-only reference material under D:\鱼巢.
-5. External web only for current public facts.
+事实：本轮有证据支持
+假设：等待验证
+定义：术语的必要边界
+约束：不得违反的正式规则
 ```
 
-## Reasoning Workflow
-
-1. Define the object:
+3. 建立可证伪链：
 
 ```text
-对象 = 概念 / 机制 / 因果链 / 实施方案 / 边界 / 反例 / 评价标准
-```
-
-2. Separate:
-
-```text
-事实
-假设
-定义
-约束
-```
-
-3. Build the chain:
-
-```text
-前提 P
-约束 C
+前提 P + 约束 C
 => 中间结论 M
-=> 可验证后果 V
+=> 可观察后果 V
 => 结论 K
 ```
 
-4. Map to Sea Nest:
+每一步都列出反例、替代解释和使其失效的证据。
+
+4. 映射到项目结构：
 
 ```text
-概念 -> 节点/关系/索引/特征/状态/动态/需求/任务/方法/因果引用 -> 写入方 -> 读取方 -> 验证方式
+概念
+-> 节点 / 身份 / 关系 / 索引 / 特征 / 状态 / 动态 / 需求 / 任务 / 方法 / 因果引用
+-> 写入方
+-> 读取方
+-> 生命周期 / 发布边界
+-> 验证方式
 ```
 
-5. Test counterexamples.
+映射不全时标记 `缺结构`、`缺入口`、`待核` 或 `需裁决`，不得称为可实施。
 
-## Durable Output
+5. 区分逻辑可行、规范允许、设计完整、代码已接通和能力已验收五个层级，禁止相互替代。
 
-If the user asks to save the aligned reasoning, write under the current project directory unless they specify another path:
+## 落盘与交接
+
+用户要求保存时，只有当前顶层任务树拥有设计角色且路径在正式授权范围内才可落盘；默认作为 `项目记忆/设计记录/` 下的推理草稿，或写入用户明确指定的设计材料路径。非设计角色只返回交接文本。
+
+草稿必须标明依据、假设、反例、结构映射、待核项和 `非正式 / 不得作为施工依据`。后续通过：
 
 ```text
-推理_<主题>_YYYYMMDD.md
-方案_<主题>_YYYYMMDD.md
+设计治理
+-> 正式规范登记
+-> 有效详细设计
+-> 已登记计划
+-> 独立执行与验证
 ```
 
-For Sea Nest project-governance conclusions, prefer landing as draft material and then route through:
-
-```text
-规范 -> 详细设计 -> 计划 -> 实施记录 -> 验证
-```
-
-## Boundaries
-
-- Do not modify `D:\鱼巢` or `D:\数字生命思路` unless explicitly asked.
-- Do not claim old capability migration or self-loop completion from reasoning.
-- Do not use text, logs, or display as machine logic.
-- Do not bypass service-level migration confirmation.
+不得从推理直接跳到代码、构建、运行、提交、发布或完成声明。

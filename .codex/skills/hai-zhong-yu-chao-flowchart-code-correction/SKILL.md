@@ -1,78 +1,97 @@
 ---
 name: hai-zhong-yu-chao-flowchart-code-correction
-description: Use in D:\海中鱼巣 when the user asks to 根据代码画流程图, 检查流程图, 根据流程图优化代码, 流程图驱动代码纠偏, 生成修订计划, or 将修订计划加入计划索引. This skill turns current code into a current-state flowchart, contract-context review, non-success return classification, deviation list, and a registered correction plan.
+description: Use in the 海中鱼巣 repository when the user asks to 根据代码画流程图, 检查流程图, 根据流程图优化代码, 流程图驱动代码纠偏, 生成修订计划, or 将修订计划加入计划索引. This design-role workflow derives a current-state flowchart and code mapping from live code, audits input contracts and non-success returns, records deviations under project design records, and produces and dispatches a registered correction plan when ready.
 ---
 
 # 海中鱼巣流程图驱动代码纠偏
 
-## Core Meaning
+## 角色与输入
 
-Treat flowcharts as a code-review and correction tool:
+只在设计角色中使用。遵守 `AGENTS.md`；计划登记与派发使用 `hai-zhong-yu-chao-plan`；派发 / S0 和 worktree 身份分别读取现行交互规范与多工作树规范。
 
-```text
-当前代码
--> 现状流程图
--> 逐行代码映射表
--> 输入契约 / 调用语境表
--> 非成功返回二分审查
--> 偏差清单
--> 修订计划
--> 计划索引和 Codex 任务队列登记
-```
+本技能只读代码并生成设计治理产物，不直接修改 C++ / 工程 / 自检，不运行 C++ 构建、程序或业务自检。子智能体只能承担互不重叠的设计或只读切片。
 
-This skill does not directly edit C++ unless the user separately asks to execute a registered code plan.
+不得硬编码仓库路径或读取已经退出的旧入口。先解析 Git 顶层并读取 `AGENTS.md` 要求的共同入口，再读取目标正式规范、有效详细设计 / 流程图、当前计划 / 差距记录、目标源文件及其文件头规则。代码事实必须来自当前 Git 与当前工作树。
 
-## Required Context
+## 产物包
 
-Before modifying project files, read:
-
-```text
-计划/计划索引.md
-规范/000_项目规则总纲.md
-规范/001_规则迁移清单.md
-规范/现状流程图与施工流程图区分规范.md
-```
-
-When deriving from code, read the relevant source files and their file-head rules. Do not rely on chat memory for code facts.
-
-## Output Package
-
-For each target, create or verify:
+每个目标建立或核对：
 
 ```text
 流程图/YYYYMMDD_<主题>现状流程图_v0.1.md
 流程图/YYYYMMDD_<主题>现状流程图_v0.1.html
-实施记录/YYYYMMDD_<主题>逐行代码映射表.md
-实施记录/YYYYMMDD_<主题>输入契约与调用语境表.md
-实施记录/YYYYMMDD_<主题>非成功返回二分审查表.md
-实施记录/YYYYMMDD_<主题>现状施工偏差清单.md
+项目记忆/设计记录/YYYYMMDD_<主题>逐行代码映射表.md
+项目记忆/设计记录/YYYYMMDD_<主题>输入契约与调用语境表.md
+项目记忆/设计记录/YYYYMMDD_<主题>非成功返回二分审查表.md
+项目记忆/设计记录/YYYYMMDD_<主题>现状施工偏差清单.md
 计划/YYYYMMDD_<主题>代码纠偏或文档修订计划_v0.1.md
 ```
 
-If the target only needs documentation correction, the plan may be a document-governance plan. If it changes C++ or machine structures, the plan must include allowed files, forbidden files, entry rejection rules, failure closure, and validation commands.
+现行规范或详细设计不能覆盖纠偏目标时，先在允许的规范 / 详细设计治理切片中补齐；未补齐前不能登记代码执行计划。新的设计审查产物一律写入 `项目记忆/设计记录/`，不得写入 `实施记录/`。
 
-## Workflow
-
-1. Confirm the target scope: files, functions, old construction flowchart, detailed design, and completed plan records.
-2. Generate the current-state flowchart from current code, not from intended design.
-3. Generate the line-by-line code mapping table. Cover every non-empty effective line; pure braces may be included in adjacent ranges.
-4. Generate the input contract / call-context table.
-5. Review every mid-flow non-success return using the contract table.
-6. Generate the deviation list, splitting findings into:
+## 专用算法
 
 ```text
-修图
-修详细设计
-修代码
-补规范或补契约
+冻结目标文件、函数、调用点和当前提交
+-> 从当前代码生成现状流程图
+-> 建立逐行代码映射
+-> 建立输入契约 / 调用语境表
+-> 对每个中途非成功返回做二分审查
+-> 对照正式规范、有效设计和计划形成偏差清单
+-> 分流为修图 / 修详细设计 / 修代码 / 补规范或契约
+-> 形成范围一致的纠偏计划
+-> 机械验证产物包
+-> 就绪时登记、提交推送并真实派发独立执行任务
 ```
 
-7. Generate a correction plan.
-8. If the plan is complete and executable, add it to `计划/计划索引.md` and `项目记忆/Codex任务队列.md`. If dependencies are missing, register it as dependency-gated. If it is only an upstream document package and the user explicitly says not to index it, record that boundary.
-9. Run mechanical validation:
+逐行映射覆盖每个非空有效代码行；纯括号可并入相邻范围。现状流程图只能表达当前代码，目标设计另行标识，不能把待实施逻辑画成当前事实。
+
+## 非成功返回二分
+
+对每个非成功返回核对：
+
+```text
+输入是外部 / 测试 / 候选材料，还是正式上游保证有效的结构？
+设计是否明确允许拒绝、空候选或等待？
+是否已经进入创建、绑定、关系 / 状态 / 动态写入、结算、读回或发布？
+是否产生可读半结构？
+```
+
+分类固定为：
+
+```text
+逻辑内返回：外部、测试、候选或请求材料在写入前被协议允许地拒绝 / 判空 / 等待，且没有可读半结构。
+追根因解决：正式上游已保证输入有效，或内部结构处理已经开始但结果不符合预期。
+```
+
+同一代码分支兼具两种语境时，在流程图和审查表中拆成两个节点，不得用“结构未变化”单独裁决。
+
+## 必填表
+
+输入契约 / 调用语境表：
+
+```text
+入口 | 调用方 | 输入字段 | 来源 | 上游保证 | 允许逻辑内返回 | 追根因条件 | 结构变化 | 验证
+```
+
+非成功返回审查表：
+
+```text
+节点 | 代码位置 | 返回条件 | 输入语境 | 上游保证 | 结构变化 | 设计允许 | 二分口径 | 理由 / 根因对象 | 计划动作
+```
+
+偏差清单：
+
+```text
+编号 | 当前代码事实 | 规范 / 流程图 / 详细设计 / 计划口径 | 偏差类型 | 唯一纠偏归属 | 是否需要代码计划
+```
+
+## 验证、登记与派发
+
+使用仓库实际存在的专项工具：
 
 ```powershell
-py -3 .\tools\check_flowchart_correction.py --strict `
+python .\tools\check_flowchart_correction.py --strict `
   --flowchart-md <md> `
   --flowchart-html <html> `
   --mapping <mapping> `
@@ -83,103 +102,10 @@ py -3 .\tools\check_flowchart_correction.py --strict `
   --require-plan-registration
 ```
 
-Use `--help` for optional flags.
+同时运行 `git diff --check` 和 `python .\tools\check_specs.py --strict`。不存在的脚本不得写入必需验证。
 
-## Contract Review Rule
+只有 MD / HTML 主体一致、全部表存在、偏差有唯一归属、计划与规范 / 流程图 / 详细设计范围一致且专项验证通过时，才把代码纠偏计划登记到计划索引和任务队列。
 
-Never classify a non-success return as `逻辑内返回` only because the structure did not change.
+计划具备执行写范围、依赖满足、实际接口一致且执行身份可建立时，按计划技能完成中央治理提交推送，并立即真实派发给独立执行顶层任务；不得用当前设计任务树子智能体执行，也不得停在预留或“下一步”。未满足条件时只登记精确依赖或接口门禁。
 
-For each non-success return, ask:
-
-```text
-Is the input external/test/candidate material?
-Is the input guaranteed valid by an upstream formal flow?
-Has the flow entered creation, binding, relation write, state write, dynamic recording, settlement, readback, or structure carriage?
-Is this return explicitly allowed by the design?
-```
-
-Classification:
-
-```text
-逻辑内返回:
-  External/test/candidate/request material is rejected or empty, the design allows the branch, and no readable partial structure is produced.
-
-追根因解决:
-  The upstream formal flow already promised the value was valid, or internal structure carriage/readback has begun and the result is not as expected.
-```
-
-If one code branch can be reached by both contexts, split the diagram node and table row into:
-
-```text
-外部材料语境：逻辑内返回
-正式流程契约语境：追根因解决
-```
-
-## Required Tables
-
-Input contract / call-context table:
-
-```text
-入口
-调用方
-输入字段
-输入来源
-上游是否保证有效
-允许逻辑内返回
-追根因触发条件
-结构变化
-验证方式
-```
-
-Non-success return review table:
-
-```text
-节点
-代码位置
-返回条件
-输入语境
-是否上游保证有效
-结构是否变化
-设计是否允许
-二分口径
-追根因对象或逻辑返回理由
-计划动作
-```
-
-Deviation list:
-
-```text
-编号
-现状代码事实
-流程图 / 详细设计 / 计划描述
-偏差类型
-纠偏方向
-是否需要代码计划
-```
-
-## Registration Rule
-
-When a correction plan changes code, machine structure, or formal project state, it must be:
-
-```text
-1. Written under 计划/
-2. Referenced in 计划/计划索引.md
-3. Registered in 项目记忆/Codex任务队列.md
-4. Linked back to the current-state flowchart, contract table, non-success review, and deviation list
-```
-
-Do not register a plan if the flowchart, contract table, non-success review, or deviation list is missing or fails mechanical validation.
-
-## Boundaries
-
-Do not claim:
-
-```text
-代码已纠偏
-全部流程图已校正
-真实闭环、自我循环、自我苏醒完成
-旧项目能力已迁移
-完整业务操作控制面板 / 权威数据库恢复 / D455 / 体素 / 真实外设已接入
-```
-
-unless a later executed code plan proves it with the required validation level. 当前已证明的只读控制面板第一版、SQL 审计投影和六类真实树只能按其已验收边界陈述，不计旧能力迁移完成度。
+本技能产物只证明现状映射、设计审查和施工计划形成，不证明代码已纠偏、构建通过、计划已集成或目标能力闭环。

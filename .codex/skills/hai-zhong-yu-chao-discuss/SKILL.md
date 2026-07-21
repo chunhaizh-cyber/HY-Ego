@@ -1,13 +1,13 @@
 ---
 name: hai-zhong-yu-chao-discuss
-description: Use in D:\海中鱼巣 when the user says "讨论", "请讨论", "一起讨论", "挑剔", "专家审查", "帮我找问题", or asks Codex to review a spec, plan, detailed design, migration package, service boundary, or implementation direction without immediately editing code.
+description: Use in the 海中鱼巣 repository when the user says "讨论", "请讨论", "一起讨论", "挑剔", "专家审查", "帮我找问题", or asks Codex to review a spec, plan, detailed design, migration package, service boundary, or implementation direction. This skill returns design-decision input and does not edit files.
 ---
 
 # 海中鱼巣讨论
 
-## Core Meaning
+## 角色与入口
 
-Treat discussion as expert review, not implementation authorization:
+严格服从仓库根目录 `AGENTS.md`。用 Git 顶层和正式登记解析仓库、worktree 与角色，不硬编码路径或分支。讨论是专家审查，不是实施授权，也不因用户接受某一观点自动切换为写入：
 
 ```text
 用户观点
@@ -17,20 +17,32 @@ Treat discussion as expert review, not implementation authorization:
 -> 给出最小可落地口径
 ```
 
-## Context
+## 专用步骤
 
-For `D:\海中鱼巣`, read as needed:
+1. 按议题限载读取：
 
 ```text
 AGENTS.md
 计划/计划索引.md
-规范/000_项目规则总纲.md
-规范/001_规则迁移清单.md
+规范/规范目录.md
+直接相关的正式规范、有效设计、现行计划
 项目记忆/当前状态.md
 项目记忆/待确认问题.md
 ```
 
-Use current evidence labels:
+2. 涉及实现现状时，先使用当前事实扫描取得真实入口、调用点和结构，不用旧对话或目标设计替代代码事实。
+3. 依次核对：
+
+```text
+概念是否已有唯一正式定义
+是否可映射到正式结构及其写入方、读取方、生命周期
+是否绕过领域服务或把日志 / 显示 / 线程状态当机器事实
+是否把旧函数、旧文件或旧结构当迁移单位
+是否与现行规范、有效设计、计划范围和当前代码冲突
+是否仍有会改变系统口径的待用户裁决
+```
+
+4. 使用证据标签：
 
 ```text
 已读证据
@@ -42,23 +54,9 @@ Use current evidence labels:
 待核
 ```
 
-## Review Standard
+## 输出
 
-Check:
-
-```text
-概念是否已定义
-能否映射到节点 / 主信息 / 关系 / 索引 / 特征 / 特征值 / 需求 / 任务 / 方法 / 状态 / 动态 / 因果引用
-写入方、读取方、生命周期是否明确
-是否绕过领域服务
-是否把日志 / 控制台 / 显示 / 注释当机器逻辑
-是否把旧函数当迁移单位
-是否需要用户确认
-```
-
-## Output Shape
-
-Prefer:
+返回设计裁决输入：
 
 ```text
 我的判断：
@@ -80,10 +78,11 @@ For findings:
 验证方式：
 ```
 
-## Hard Rules
+明确标记 `可保留 / 需修改 / 需拆分 / 待用户裁决 / 应排除`，并给出唯一规则归属或需要建立的正式产物；不得把讨论结论写成已经生效的规范或计划事实。
 
-- Do not implement during discussion unless the user explicitly asks to modify files.
-- Do not override formal specs silently.
-- Do not expand project scope to make an idea work.
-- Do not say "可以" unless writer, reader, structure, and validation path are clear.
-- Do not declare self-loop, awakening, old capability migration, SQL/control-panel/peripheral integration, or full system completion from design discussion.
+## 停止边界
+
+- 本技能不修改代码、规范、设计、计划、项目记忆或 Git 状态。用户确认观点只形成设计治理输入；由当前正式设计角色另行登记和修改，或路由给独立设计任务。
+- 不静默覆盖正式规范，不为使观点成立而扩大范围。
+- 写入方、读取方、结构、生命周期和验证路径不完整时，不得回答“可以直接实施”。
+- 不从讨论声明自我闭环、苏醒、旧能力迁移、SQL / 控制面板 / 外设接通或系统完成。

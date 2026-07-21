@@ -1,71 +1,53 @@
 ---
 name: hai-zhong-yu-chao-pre-implementation-review
-description: Use in D:\海中鱼巣 when the user says "实施前审查", "先审查再改", "改之前先检查", "先确认能不能改", "实现前 review", or asks whether a planned code/document change is grounded in current facts, confirmed scope, allowed files, forbidden files, and validation rules.
+description: Use in the 海中鱼巣 repository when the user says "实施前审查", "先审查再改", "改之前先检查", "先确认能不能改", "实现前 review", or asks whether a planned change is grounded in current facts, registered scope, file ownership, and validation rules. This skill is read-only and returns PASS or DRIFT; it never grants execution authority.
 ---
 
 # 海中鱼巣实施前审查
 
-## Core Meaning
+## 角色与入口
 
-Use this as the gate before edits:
+严格服从仓库根目录 `AGENTS.md`。用 Git 顶层和正式 worktree 登记解析当前路径、分支、冻结基线、角色、所有者和文件范围，不硬编码仓库路径或主分支名。
+
+本技能是只读实施前证据审查：
 
 ```text
 用户目标
 -> 当前本地事实
 -> 规范 / 详细设计 / 已确认计划
 -> 允许文件 / 禁止文件 / 验证方式
--> 是否可以实施
+-> PASS / DRIFT 审查回执
 ```
 
-## Preflight
+`PASS` 只表示本次所列证据未发现漂移，供正式角色决定是否开工；不授予执行权，不迁移任务执行权，也不解除依赖。
 
-1. Confirm cwd is `D:\海中鱼巣`.
-2. Read `AGENTS.md`.
-3. Read:
+## 专用步骤
+
+1. 解析 Git 顶层并读取 `AGENTS.md`。
+2. 按目标限载读取：
 
 ```text
 计划/计划索引.md
-规范/000_项目规则总纲.md
-规范/001_规则迁移清单.md
+规范/规范目录.md
 项目记忆/Codex任务队列.md
 项目记忆/并行工作树登记表.md
 项目记忆/待确认问题.md
+目标正式规范、有效流程图与详细设计、现行计划、最新正式回执或断点
 ```
 
-4. Read the target plan or implementation slice.
-5. If current facts are stale or missing, require S0 fact scan first.
+3. 当前事实缺失或过期时先调用只读 S0 事实扫描。
+4. 逐项核对：
 
-## Review Questions
+   - 目标是否由当前本地事实支撑；
+   - 规范、流程图、详细设计、计划、队列是否完整且范围一致；
+   - 允许 / 禁止文件、结构与公开接口所有权是否明确；
+   - dirty state 是否污染切片；
+   - worktree、分支、冻结基线、计划版本、所有者是否与登记一致；
+   - 依赖、共享装配面、集成顺序和验证矩阵是否无冲突；
+   - 入口拒绝、失败收口、验证命令和完成边界是否可机械执行。
+5. 任一缺失或漂移统一返回 `DRIFT`，并用子类说明 `缺事实 / 缺规范 / 缺设计 / 缺计划 / 未登记 / 所有权冲突 / 基线漂移 / 脏树污染 / 待用户裁决`。
 
-Answer before permitting edits:
-
-1. Is the target grounded in current local code/document facts?
-2. Is there a formal spec, detailed design, or confirmed plan?
-3. Is the requested action inside the current slice boundary?
-4. Are allowed files and forbidden files explicit?
-5. Will dirty worktree state contaminate the slice?
-6. Are validation commands and completion boundaries explicit?
-7. Does the action require user confirmation before machine-structure changes?
-8. Is the current worktree path, branch, frozen base, plan version, owner, and file set formally registered?
-9. In a parallel batch, are dependencies, files, structures, public interfaces, shared integration files, integration order, and validation matrix conflict-free?
-
-## Output States
-
-```text
-可执行
-缺事实
-缺规范
-缺详细设计
-缺实施切片
-越界风险
-脏树风险
-工作树未登记
-并行所有权冲突
-冻结基线失效
-待用户确认
-```
-
-## Required Output
+## 输出
 
 ```text
 审查对象：
@@ -76,16 +58,16 @@ Answer before permitting edits:
 禁止修改范围：
 现有可复用入口：
 主要风险：
-审查结论：
-进入实现前的下一步：
+审查结论：PASS / DRIFT（子类）
+证据接收角色：
+正式角色下一步：
 ```
 
-Do not implement during this skill.
+`PASS` 回执必须列明所核对的提交、worktree、计划版本和文件范围；正式执行角色仍须依据最新登记取得任务执行权并在开工前复核。`DRIFT` 只退回受影响对象，不越权修改中央治理材料。
 
-## Hard Boundaries
+## 停止边界
 
-- Do not allow old function body migration without a confirmed service implementation slice.
-- Do not allow old main-info field landing without confirmed field mapping.
-- Do not allow SQL/control-panel/D455/voxel/peripheral work in first-round migration slices.
-- Do not use logs, README, console output, or comments as machine logic.
-- Do not approve parallel execution when the worktree registry, frozen base, file ownership, structure/interface ownership, or integration contract is missing or inconsistent.
+- 本技能不得修改文件、构建、运行程序、暂存、提交、推送、入队、解除依赖、裁决完成或取得执行 / 发布占用。
+- 不以旧函数体、旧字段、日志、README、控制台或注释补齐缺失依据。
+- 登记、冻结基线、文件 / 结构 / 接口所有权或集成合同缺失时必须返回 `DRIFT`，不得批准并行执行。
+- 用户要求立即修改时，先把回执交给当前正式设计或执行角色；本技能不自动切换角色。

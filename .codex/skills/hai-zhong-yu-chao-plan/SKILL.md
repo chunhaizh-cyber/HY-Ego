@@ -1,192 +1,140 @@
 ---
 name: hai-zhong-yu-chao-plan
-description: Use in D:\海中鱼巢 when the user says "制定计划", "生成计划", "拆分计划", "修订计划", "更新计划索引", "生成下一个计划", "加入设计计划队列", or asks Codex to turn current formal specs, effective detailed designs, code-gap records, or S0 facts into a plan-layer artifact. Complete plans go directly under `计划/` and are registered as waiting execution; only real dependencies are gated, while independent plans are isolated for parallel worktrees when safe.
+description: Use in the 海中鱼巣 repository when the user asks to 制定计划, 生成计划, 拆分计划, 修订计划, 更新计划索引, 生成下一个计划, 加入设计计划队列, or turn current formal specs, effective detailed designs, code-gap records, or S0 facts into an executable plan. This design-role workflow creates and registers plans, records only real dependency gates, and promptly dispatches every ready implementation plan to an independent execution task after governance validation, commit, and push.
 ---
 
 # 海中鱼巣制定计划
 
-## Core Meaning
+## 角色与权威入口
 
-Treat planning as:
+只在已登记的设计角色中使用本技能。遵守 `AGENTS.md`；派发、S0 和角色切换读取 `规范/设计执行双窗口交互规范.md`；worktree、分支、冻结与集成读取 `规范/多工作树并发与集成规范.md`。
 
-```text
-现行正式规范 / 有效详细设计 / 代码差距记录 / S0 事实
--> 服务级计划或实施切片
--> 计划索引登记
--> Codex 任务队列待执行
-```
+设计任务树可以把互不重叠的设计或只读切片交给同角色 / 只读子智能体，但不得把任何后代切换成执行或集成写角色。顶层统一复核差异，并串行完成 Git 和任务派发收口。
 
-Do not create a code plan from chat memory alone. Do not treat old functions as current planning units. Use:
+不得硬编码仓库盘符、旧仓库名或固定 worktree。先用 Git 顶层、`git worktree list --porcelain` 和 `项目记忆/并行工作树登记表.md` 解析当前中央工作树及目标任务身份；三者不一致时停止写入并报告 DRIFT。
 
-```text
-函数 = 证据采集单位
-旧函数集合 = 来源证据整理单位
-现行规范规定的业务对象 / 领域服务 / 结构闭环 = 代码实施单位
-```
+本技能只做设计治理：可以读取代码事实并形成计划，不修改 C++ / 工程 / 自检，不运行 C++ 构建、程序或业务自检。
 
-## Window Role Gate
+## 前置读取
 
-Planning actions require the design role in the `main` integration worktree. The default route uses a dedicated design window. When the user explicitly enables the same-physical-window serial dual-role mode, the previous execution role must first record that the ownership switch takes effect after a successful push, validate, commit, and automatically push that record. The current task may act as the design role only after the push succeeds and it has re-read Git, the plan index, the queue, the worktree registry, the target plan, and the breakpoint. Bare `继续` stays in the currently registered role and never switches roles by itself.
-
-The same-window mode removes only a task message sent back to the same physical window. It does not remove the design/execution/integration/read-only permission split, interaction record, dependency gates, allowed/forbidden files, per-worktree single writer ownership, validation, commit, push, or re-read gates. The mode remains active until the user revokes it or the interaction record transfers write ownership.
-
-The design role owns end-to-end project-plan orchestration. After every archive or return, recompute dependencies and either dispatch the ready serial task, a formally isolated parallel batch, integration, or review task, or record the exact gate. A reserved worktree, named target, or written next step is not a dispatch.
-
-Follow the task-tree write-role rule in `AGENTS.md` and the dispatch / S0 details in `规范/设计执行双窗口交互规范.md`. A design tree never uses a child as an execution or integration writer. When two or more concrete planning or review slices are safely isolatable, use same-role or read-only subagents in parallel by default; otherwise record the named reason. Each dispatch must state the inherited role, allowed slice, forbidden actions, Git / lease permissions, and return condition. The top-level task verifies all results and serializes Git closeout.
-
-## Preflight
-
-1. Confirm cwd is `D:\海中鱼巢`.
-2. Read `AGENTS.md`.
-3. Read:
+先读取 `AGENTS.md` 要求的共同入口，再按任务读取：
 
 ```text
+目标正式规范与相邻边界
+有效流程图与详细设计
+代码差距或设计审查记录
+当前代码 / 接口 S0 事实
 计划/计划索引.md
-规范/规范目录.md
-规范/0050_项目通用机器逻辑与禁止性规则总纲_20260721.md
-规范/0100_编号规则与重排预留说明_20260720.md
-规范/0300_规范冲突与前后矛盾清单_20260720.md
-规范/设计执行双窗口交互规范.md
-规范/多工作树并发与集成规范.md
 项目记忆/Codex任务队列.md
 项目记忆/并行工作树登记表.md
-项目记忆/待确认问题.md
+项目记忆/窗口交互记录.md
 ```
 
-4. Read the relevant formal source:
+聊天、旧项目规则、过期计划和旧函数只能作为来源证据。代码实施单位必须来自现行规范定义的业务对象、领域服务、结构闭环和有效设计，不能按旧函数一对一迁移。
+
+缺少正式规范、有效设计、当前接口事实或必要差距记录时，先在设计角色内补齐允许的设计产物；无法补齐时停止，并登记具名缺口，不能凭假设生成可执行代码计划。
+
+## 计划形成算法
+
+按以下顺序工作：
 
 ```text
-规范/
-规范/详细设计/
-项目记忆/设计记录/*代码差距*.md
-实施记录/*S0当前代码事实扫描*_Codex断点清单.md
-计划/
+确认目标规范与完成边界
+-> 核对当前代码和实际接口
+-> 核对流程图、详细设计、差距记录的范围一致性
+-> 按业务对象、文件、结构、公开接口和装配面拆分
+-> 判断真实依赖与所有权隔离
+-> 形成计划正文及机械阶段
+-> 登记索引、队列、工作树和交互状态
+-> 验证、精确提交、非强制推送
+-> 对就绪计划真实派发独立执行任务并读回接收状态
 ```
 
-If no relevant effective design, code-gap record, or S0 fact exists, generate that prerequisite first if it is a document-governance action; otherwise stop and state what is missing.
+函数只是事实采集单位；计划范围由现行规范与有效设计裁决。
 
-If a plan creates or renames code files, read `规范/代码文件建立归属与模块命名规范.md`. The plan must classify every new file as a data-structure pair or a true module, use `功能.分类`, state the project item type and `include` / `import` path, separate production and self-test modules, and keep full test bodies out of `入口.cpp`.
+### 真实依赖
 
-If a plan preserves, deletes, reimplements, constrains, or newly creates an ability that can be confused with the old project, read `规范/规范目录.md`, the relevant current formal specs and effective design materials, and use `实施记录/20260711_旧能力迁移与新内核建设逐能力台账.md` only as historical evidence. The plan must state the target structure, writer, current code gap, and completion boundary. Old rules, old implementation, migration records, and expired plans never authorize current code.
+只有下列情况可以登记依赖：
 
-Once a relevant detailed design has been generated, create the plan directly, write it under `计划/`, and register it in the plan index and Codex task queue as waiting execution. No separate user confirmation step remains.
+- 当前切片必须消费尚未形成的具名正式产物或接口。
+- 文件、结构、公开接口或装配所有权无法通过拆分隔离，存在不可消除的先后。
 
-Do not mark plans as parallel merely because their names differ. A pre-authorized parallel batch also requires a common frozen base, disjoint allowed-file sets, disjoint structure/interface ownership, a single owner for shared integration files, a fixed integration order, and an integration validation matrix. Register each task worktree, branch, plan version, base commit, owner, and file set in `项目记忆/并行工作树登记表.md` before any task worktree writes.
+同主题、同总计划、生成顺序、文档顺序、目录或验收顺序都不是依赖。仅共享工程、入口、统一运行器或装配文件时，优先拆成私有实现切片和唯一共享接线切片。
 
-First determine whether a dependency is real and whether ownership can be isolated. Use:
-
-```text
-按业务对象、文件、结构、接口和装配面拆分
--> 无真实依赖：独立登记为待执行，满足并行门禁后优先分配不同 worktree
--> 必须消费尚未形成的正式产物 / 接口，或存在无法隔离的所有权先后：登记为依赖门控待执行
--> 前置计划完成后由执行角色复核实际接口
--> 接口一致才执行；接口漂移只退回受影响计划
-```
-
-The same topic, parent plan, source, generation order, document order, directory, or acceptance order does not by itself create a dependency. A later plan may be generated early, but it must not be gated merely because it was generated later. If only shared project, entry, runner, or assembly files overlap, split private implementation from a uniquely owned shared-wiring plan before deciding the private plans are serial.
-
-A dependency-gated plan must separate verified current facts from assumed interface contracts. It must list the named dependency artifact, consumed interface, why the dependency cannot be isolated, prerequisite plan / queue ids, unlock conditions, expected formal artifacts, execution-time interface checks, and the revision path for drift. Never describe an expected artifact as current code fact. If an otherwise independent plan is not placed in a parallel batch, record the concrete resource, ownership, or validation reason.
-
-When registering a plan, synchronously verify its corresponding flowchart and detailed design. The plan, plan index, project memory, and generation breakpoint must list the flowchart path, detailed-design path, and plan path, and must state that their scopes agree. If the flowchart or detailed design is missing, withdrawn, still has a question without a default ruling, or does not cover the plan scope, do not register the queue item. For pure rule, read-only scan, information-data, breakpoint, or project-memory plans with no flowchart/detailed-design source, explicitly record why the linkage is not applicable and what formal source replaces it.
-
-## Output Location
-
-- New complete plans go to `计划/` and are registered as waiting execution.
-- Completed plans move to `计划/已完成计划/`.
-
-Recommended filenames:
+依赖门控计划必须写明：
 
 ```text
-计划/YYYYMMDD_FSxx_主题专项_v0.1.md
-计划/YYYYMMDD_FSxx_主题代码实施切片_v0.1.md
-```
-
-## Required Plan Sections
-
-Include these sections when applicable:
-
-```text
-状态行
-依据
-实施范围
-明确排除项
-目标服务 / 目标结构
-允许文件
-禁止文件
-实施步骤 S0/S1/...
-验收方式
-完成声明边界
-默认裁决 / 已知风险
-```
-
-For code implementation slices, allowed files, forbidden files, and validation commands are mandatory.
-
-For slices that create code files, a new-file classification table is mandatory. A pre-existing plan that conflicts with the current code-file specification must be revised before execution; do not rely on its age as an exception.
-
-For dependency-gated code slices, these sections are also mandatory:
-
-```text
-依赖门控状态
 已验证当前事实
-假定接口契约
-前置计划 / 队列编号
-预期正式产物
-执行前接口复核
-接口漂移退回规则
+具名前置计划 / 队列和产物
+待消费的文件、符号、签名与行为
+无法隔离的原因
+解除条件
+执行前复核命令
+接口漂移的精确退回点
 ```
 
-## Old-Project Evidence Rules
+依赖未满足或接口漂移时，只登记受影响计划的精确门禁，不冻结无关计划，不把预期产物写成当前事实，也不生成泛化的“等待后续处理”。
 
-- Do not write `旧函数 A -> 新函数 A` as current implementation authority.
-- Use old functions and historical ledgers only as evidence anchors.
-- Derive plan scope from current formal specs, effective design, current code facts, and current code gaps.
-- Exclude SQL/control-panel/display mirror, D455, voxel, peripherals, old linked-list containers, and old main-info fields unless a current formal spec and registered plan explicitly allow them.
+### 并发与所有权
 
-## Plan Index And Queue
+无真实依赖的计划独立登记。两个以上计划满足共同冻结基线、文件 / 结构 / 接口所有权互斥、共享文件唯一所有者、固定集成顺序和验证矩阵时，优先登记并行批次；不能并行时写明具体所有权、资源或验证原因。
 
-- Editing `计划/计划索引.md` does not require `计划/.计划索引.lock`.
-- Protect concurrent work through Git facts: check `git status --short` before editing, inspect targeted diffs after editing, stage only the current slice's files, and never overwrite unrelated dirty changes.
-- When a plan is generated, keep it under `计划/`, update references, and register the next waiting executable item in `项目记忆/Codex任务队列.md`.
-- Register a plan as `依赖门控待执行` only when its named prerequisite artifacts or interfaces are incomplete and the dependency cannot be isolated. Otherwise register it independently as `待执行` and prefer a parallel batch when all worktree gates pass.
-- Before queue registration, verify the plan's corresponding flowchart and detailed design paths, scope, and default rulings, or explicitly state why the linkage is not applicable.
-- When the plan is completed, move it to `计划/已完成计划/` and update references.
+在任何任务 worktree 写入前，登记任务编号、计划版本、绝对路径、`codex/*` 分支、冻结基线、文件 / 结构所有权、接口证据、验证矩阵和集成顺序。
 
-## Cross-Role Handoff
+## 计划正文
 
-Use `规范/设计执行双窗口交互规范.md` when an execution role returns a plan for design revision.
+完整计划放在 `计划/`。代码实施切片至少包含：
 
-After revising a returned plan or preparing an execution, integration, or read-only handoff:
+```text
+状态和计划 / 队列身份
+依据：正式规范、流程图、详细设计、差距 / S0 记录
+已验证前置事实
+实施范围与明确排除项
+目标服务、结构和公开接口
+允许文件与禁止文件
+机械步骤 S0/S1/...
+入口拒绝、内部错误和失败收口
+验证命令与成功条件
+实施后证据
+完成声明边界
+```
 
-1. Update the flowchart, detailed design, plan, plan index, task queue, project memory, and `项目记忆/窗口交互记录.md`.
-2. Keep the original queue id unless the revision creates a genuinely independent prerequisite plan.
-3. Validate, commit, and push before sending any task message.
-4. If the target role is in another independent top-level window / task and Codex task tools are available, first verify it is not a subagent in the current top-level task tree; then locate the unique same-repo task by task id, title, cwd, registered worktree, and role and send a message containing the queue / integration id, commit, authoritative paths, allowed actions, forbidden actions, validation, ownership release, and remaining gates. Never use a child agent of the current design task as an execution or integration writer.
-5. Only when the user has explicitly enabled the same-physical-window serial role switch may the target role remain in the current top-level task. Do not send a message to self; first stop every descendant, release the old role, commit and push the interaction record, then switch the whole tree and re-read Git, the plan index, queue, target plan, breakpoint, and actual interfaces before execution.
-6. Treat any task message as a wake-up signal only. The target role must re-read repository facts before action.
-7. After sending, read back the target task state. Only a uniquely delivered task may be marked `已派发待执行回执` or `已派发待集成回执`; a reservation remains pending.
-8. If an external target task is missing, ambiguous, or messaging fails, leave the handoff as pending in `项目记忆/窗口交互记录.md`; do not broaden authority or claim execution / integration has started.
+面向常规执行模型的每一阶段明确区分：已验证前置事实、待实施目标、实施后可核对证据、只有前置成立后才能判断的完成 / 退回条件。
 
-For a task-worktree handoff, also record the worktree id, absolute path, `codex/*` branch, frozen base, batch id, file ownership, and integration order. A task branch completion is `分支完成待集成`, not plan completion.
+新增或改名代码文件时，读取 `规范/代码文件建立归属与模块命名规范.md`，列出文件分类、项目项类型、`include` / `import` 路径、工程登记、生产 / 自检依赖方向和 `入口.cpp` 不恶化边界。
 
-For an integration handoff, inspect the target path and branch before publication. If either already exists with a different HEAD, parent, owner, start commit, or reflog, mark the old candidate invalid and allocate a new id, path, and branch. Never instruct the integration role to reset, delete, retarget, or reuse the mismatched candidate. Once the integration role enters `集成中`, the design role must keep WT-MAIN clean and must not commit or push until integration releases the main publication lease.
+计划、流程图、详细设计和设计记录必须互相列明路径且范围一致。纯规则或只读治理确实不需要流程图 / 详细设计时，写明不适用原因和替代正式依据。
 
-For a read-only review handoff, specify the exact commit, worktree, review object, questions, and evidence sources. The reviewer only returns facts, differences, evidence, risks, and suggestions; the design role owns persistence and final disposition.
+## 登记与真实派发
 
-## Git Worktree Protection
+计划形成后同步更新计划索引、任务队列、工作树登记、窗口交互记录和必要的设计状态。只有具名依赖尚未满足时标为 `依赖门控待执行`；其余完整实施计划登记为 `待执行`。
 
-- Planning and central governance edits occur only in the registered `main` integration worktree.
-- Read `项目记忆/并行工作树登记表.md` before creating, assigning, invalidating, integrating, or reclaiming a task worktree.
-- Before editing shared governance files, check `git status --short` and identify unrelated dirty or staged files.
-- After editing, inspect targeted diffs and stage only the current slice's files.
-- If another window has already changed the same target lines and the merge is ambiguous, stop and record the blocker instead of overwriting.
+计划登记不是派发。具有执行写范围的计划同时满足下列条件后，不等待下一轮用户确认：
 
-## Verification
+```text
+依赖已满足
+流程图、详细设计、计划和记录范围一致
+实际接口复核通过
+已登记队列、执行身份、worktree、分支、基线和所有权
+文档治理验证通过
+中央治理精确提交并非强制推送成功
+```
 
-For planning slices:
+随后立即通过 Codex 任务工具向唯一、独立、用户可见的执行顶层任务发送正式消息，并读回接收状态。不得使用本设计任务树的子智能体承担执行角色，也不得把预留 worktree、目标标题、消息草稿或“下一步”当作已经派发。
+
+派发消息至少包含计划 / 队列编号、派发提交、权威路径、允许 / 禁止范围、任务 worktree / 分支 / 冻结基线、必须重读的材料、验证和返回条件。消息只负责唤醒，执行窗口仍须从仓库完成 S0。
+
+唯一目标缺失、歧义、工具不可用或消息发送 / 读回失败时，保持 `待派发`，在窗口交互记录中具名写明缺失的目标身份或失败证据；不得宣称执行已经开始。具名门禁解除后立即恢复派发链。
+
+## 验证与停止
+
+设计治理至少运行：
 
 ```powershell
 git diff --check
-if (Test-Path .\tools\check_specs.py) { python .\tools\check_specs.py --strict }
+python .\tools\check_specs.py --strict
 ```
 
-Do not run C++ build unless the planning slice also includes code changes.
+只暂存本轮设计文件，按 `AGENTS.md` 精确提交并非强制推送。目标分支、主线发布占用、远端前进、同文件 WIP、验证或推送任一不安全时停止，不扩大范围。
+
+本技能形成并派发计划，不证明代码已修改、构建通过、任务已集成或能力已闭环。

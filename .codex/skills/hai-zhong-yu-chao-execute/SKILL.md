@@ -1,177 +1,109 @@
 ---
 name: hai-zhong-yu-chao-execute
-description: Execute or resume the D:\海中鱼巢 plan-index workflow. Use only when the current window is explicitly and formally an execution window and the user says "执行", "继续执行", "按照计划索引执行", "继续执行计划", "持续执行", or explicitly asks Codex to consume this task worktree's assigned executable plan. Do not trigger this skill from bare "继续"; route context-dependent continuation through hai-zhong-yu-chao-continue first.
+description: Execute or resume one formally assigned 海中鱼巣 implementation plan. Use only when the current top-level task is registered as the execution role and the user says 执行, 继续执行, 按照计划索引执行, 继续执行计划, 持续执行, or explicitly asks to consume this task worktree's assigned plan. Never trigger from bare 继续, never select a global next plan, and never update central design governance.
 ---
 
 # 海中鱼巣执行
 
-## Core Meaning
+## 角色与唯一任务入口
 
-Treat execution as:
+只在已登记执行角色中使用本技能。遵守 `AGENTS.md`；角色 S0、完成 / 退回回执读取 `规范/设计执行双窗口交互规范.md`；worktree 与 Git 身份读取 `规范/多工作树并发与集成规范.md`。
+
+不得硬编码仓库或 worktree 路径。用 Git 顶层、`git worktree list --porcelain` 和 `项目记忆/并行工作树登记表.md` 解析当前任务 worktree，并确认路径、分支、HEAD、冻结基线、计划版本、所有者和 dirty state 完全一致。
+
+本技能只消费当前 worktree 正式分配的唯一计划。不得从全局计划索引挑选“下一项”，不得因为另一个计划依赖已满足就自动执行，也不得把裸 `继续` 解释为角色切换。
+
+执行任务树的后代只能继承执行角色或只读；不得承担设计或集成写角色。多个计划允许切片确实可隔离时才使用执行 / 只读子智能体，并冻结唯一所有权；Git 暂存、提交和推送由指定智能体串行收口。
+
+## S0
+
+开始写入、构建或运行前：
 
 ```text
-读取 AGENTS.md 和项目规则
--> 读取计划索引与 Codex 任务队列
--> 按队列检查依赖门控，只消费依赖已满足的待执行项
--> 执行前复核前置正式产物和实际接口
--> 执行最小闭合切片
--> 更新执行专属断点 / 实施记录；中央路由由设计角色同步
--> 验证、自动本地提交并自动非强制推送
--> 返回设计角色核对并派发独立集成；只有正式预授权执行批次才继续本 worktree 的下一项
+读取 AGENTS.md 要求的共同入口
+-> 读取当前计划、任务队列中的本任务登记、worktree 登记和执行断点
+-> 读取关联规范、流程图、详细设计和实际代码接口
+-> 核对允许 / 禁止文件、依赖产物、验证矩阵和完成边界
+-> 核对当前任务树角色、worktree、分支、HEAD、dirty state 与所有权
+-> 返回 PASS 或具名 DRIFT
 ```
 
-Do not execute work that has no plan, exceeds a plan's allowed files, or lacks required upstream design and validation boundaries.
+只有本任务登记、计划、设计材料、实际接口和 Git 身份全部一致时才能写入。
 
-## Window-Type Gate
-
-Do not classify bare `继续` inside this skill. Use `hai-zhong-yu-chao-continue` first. Enter this execution workflow only after the current window has already been identified and formally registered as an execution window.
-
-Use these boundaries when checking an explicit execution request:
+## 执行算法
 
 ```text
-设计窗口：不进入本技能；继续设计并把执行派发到独立窗口。
-执行窗口：只消费当前任务 worktree 正式分配的计划。
-集成窗口：不进入本技能；只按登记批次执行集成工作。
-只读监控 / 复核窗口：不进入本技能；只读事实检查和报告。
-未声明窗口类型：不进入本技能；保持只读并先识别窗口。
+取得当前唯一登记计划
+-> 复核具名前置产物与实际接口
+-> 按计划机械阶段实施最小闭合切片
+-> 只修改允许的代码 / 工程 / 自检和执行专属记录
+-> 运行计划明确授权的验证
+-> 写执行专属实施记录或复核断点
+-> 精确提交并非强制推送同名任务分支
+-> 向设计窗口返回分支完成或精确退回回执
+-> 停止，不选择全局下一计划，不自行集成
 ```
 
-When the user explicitly enables the same-physical-window serial dual-role mode, bare `继续` still stays in the current role and never activates this skill by itself. A switch to execution additionally requires an explicit user request to switch this physical window, a pushed ownership record, and a fresh read of Git, the plan index, queue, worktree registry, target plan, breakpoint, and actual interfaces. A design window whose next step names an execution or integration role must dispatch that work to a separate window unless the user explicitly orders the formal same-window switch.
+代码计划必须明确允许文件、禁止文件和验证命令。新增文件或修改 `入口.cpp` 时，还必须符合 `规范/代码文件建立归属与模块命名规范.md` 及计划中的文件分类 / 装配合同。
 
-The same-window mode removes only a task message sent back to the same physical window. It does not remove the design/execution/integration permission split, interaction record, plan/dependency gates, allowed/forbidden files, actual-interface review, per-worktree single writer ownership, validation, commit, push, or re-read gates. It remains active until the user revokes it or the interaction record transfers write ownership.
+前置已满足后，内部结构写入、绑定、读回、发布或验证不符合预期时，按计划的内部逻辑错误路径停止并追根因；不得擅自改为普通失败或扩充计划。
 
-Follow the task-tree write-role rule in `AGENTS.md` and the dispatch / S0 details in `规范/设计执行双窗口交互规范.md`. An execution tree never uses a child as a design or integration writer. When two or more plan-authorized implementation, evidence, or verification slices are safely isolatable, use same-role or read-only subagents in parallel by default; otherwise record the named reason. Each dispatch must state the inherited role, allowed slice, forbidden actions, Git / lease permissions, and return condition. The top-level task verifies all results and serializes Git closeout.
+## 允许写入
 
-## Preflight
+只允许：
 
-1. Confirm cwd is either the registered `D:\海中鱼巢` main integration worktree or the exact task worktree assigned to this plan. Reject unregistered paths, branches, detached HEAD, or a branch checked out in the wrong worktree.
-2. Read `AGENTS.md`.
-3. Read:
+- 当前登记计划列出的代码、工程和自检文件。
+- 当前任务专属的 `实施记录/*`、执行前复核或接口漂移断点。
+
+禁止修改或移动：
 
 ```text
+AGENTS.md
+规范/**
+流程图/**
+规范/详细设计/**
+计划/**
 计划/计划索引.md
-规范/规范目录.md
-规范/0050_项目通用机器逻辑与禁止性规则总纲_20260721.md
-规范/0100_编号规则与重排预留说明_20260720.md
-规范/0300_规范冲突与前后矛盾清单_20260720.md
-规范/设计执行双窗口交互规范.md
-规范/多工作树并发与集成规范.md
 项目记忆/Codex任务队列.md
 项目记忆/当前状态.md
+项目记忆/窗口交互记录.md
 项目记忆/并行工作树登记表.md
+项目记忆/设计记录/**
 ```
 
-4. If executing a named plan, read that plan file and relevant breakpoint records.
-5. Check `git status --short`; never stage unrelated dirty files.
-6. If the plan creates code files or changes `入口.cpp`, read `规范/代码文件建立归属与模块命名规范.md` and verify file classification, `功能.分类`, real-module registration, production / self-test separation, and the entry no-worsening boundary before editing.
+计划未明确允许的文件一律禁止。无关 WIP 不得修改、暂存、stash、清理或带入提交。
 
-## Routing Rules
+## 依赖、漂移与退回
 
-- Plans must be in `项目记忆/Codex任务队列.md` as waiting execution before execution.
-- In parallel mode, the current task worktree must have exactly one assigned plan, branch, frozen base, owner, and file set in `项目记忆/并行工作树登记表.md`. Global queue uniqueness is replaced only by per-worktree assignment uniqueness; undeclared parallel candidates are not executable.
-- If a plan is marked `依赖门控待执行`, verify every prerequisite plan / queue item has completed and produced the formal artifacts named by the plan. Unmet dependencies are skipped without marking a real blocker.
-- After dependencies complete, compare the actual files, symbols, signatures, and behavior named by the plan with its assumed interface contract before any code edit. If they differ, do not edit code; record that plan revision is required and continue with another dependency-ready item.
-- A genuinely blocked prerequisite does not unlock dependent execution. The dependent item remains gated unless a revised plan supplies an explicit alternative basis.
-- A discussion conclusion, flowchart, or detailed design alone is not executable; a complete plan is required.
-- Before executing a plan, verify that its generation record links the corresponding flowchart and detailed design, or explicitly records why no flowchart/detailed-design linkage applies. If the linked flowchart or detailed design is missing, withdrawn, has a question without a default ruling, or falls outside the plan scope, stop before execution and record the blocker in `项目记忆/待确认问题.md`.
-- If a queue item is document governance, read-only scan, breakpoint creation, project-memory sync, or plan-index maintenance, execute directly.
-- If a queue item changes C++ code, old capability migration, fields, functions, or machine structure, require an implementation slice with allowed files, forbidden files, and validation commands.
-- If implementation discovers new decisions, write them to `项目记忆/待确认问题.md`; do not expand scope.
-- If an older plan permits a new non-module implementation file or full self-test body in `入口.cpp`, treat that as specification drift: do not edit code, return the plan to the design window, and continue with another dependency-ready item.
+计划标为依赖门控、前置产物尚未进入登记基线，或任务身份尚未正式派发时，不执行。
 
-## Cross-Role Handoff
+依赖完成后按计划逐项比较实际文件、符号、签名与行为。发生任一情况时立即停止扩大范围：
 
-Use `规范/设计执行双窗口交互规范.md` and `项目记忆/窗口交互记录.md` for interaction with the design role, whether that role is in another physical window or the current one.
+- 实际接口与计划假定契约不一致。
+- 需要修改禁止文件或中央治理文件。
+- 冻结基线、所有权、worktree、分支或远端身份漂移。
+- 有效流程图 / 详细设计缺失、撤回或不能覆盖计划范围。
+- 发现需要新的业务裁决。
 
-When execution finds interface drift or a forbidden-file conflict:
+只在执行专属断点写明计划 / 队列编号、派发基线、实际接口、具名差异、已改文件、验证、保留 WIP 或撤回状态、建议设计动作和完成边界。不得替设计窗口修订计划、登记前置计划、解除依赖或修改中央状态。
 
-1. Stop before code edits or fully withdraw the unverified draft without reverting other work.
-2. Write only the execution-owned pre-implementation breakpoint or return record; do not update the plan index, queue, central project memory, worktree registry, decision records, or interaction record.
-3. Validate, automatically commit the return record locally, and automatically perform a non-force push to the currently registered task branch.
-4. The integration role brings a pure return-record commit into `main`; the design role then updates central routing. Send the fixed return summary only after the task-branch push succeeds.
-5. If the push fails, keep the local commit, record the real unpublished state, and do not claim that the design or integration role can take over.
-6. Do not consume another plan in the same task worktree unless the registry and batch explicitly reassign it after central synchronization.
+断点验证后只提交并推送当前任务分支，再发送退回消息。推送失败时保留本地事实并如实报告，不宣称设计窗口已经取得正式回执。
 
-When a design revision is published, or an external design-revision message arrives:
+## 完成与 Git 收口
 
-1. Verify the stated commit exists on the registered branch or is contained in the registered frozen base.
-2. Re-read Git status, worktree path, branch, frozen base, plan index, queue, worktree registry, target plan, flowchart, detailed design, breakpoint, and interaction record.
-3. Resume only when the queue says `重新待执行` or equivalent and actual interfaces match the revised contract.
-4. On completion, write only execution-owned implementation records, validate, automatically commit locally, and automatically perform a non-force push to the registered task branch. Report `分支完成待集成`; do not update central completion or switch to design until the integration and design roles publish the corresponding main state.
-5. A task branch completion does not authorize this execution role to create or reuse an integration worktree. The design role must verify the task commit and perform a separate, real integration dispatch.
-
-Task messages are notifications, not execution authority.
-
-In the same-physical-window mode, a role switch is also not authority by itself: the pushed commit, plan index, queue, target plan, breakpoint, and interaction record must all agree before the new role acts.
-
-## Plan Directories
-
-```text
-新生成且等待执行的计划：计划/
-完成、验证或收口后的计划：计划/已完成计划/
-```
-
-When moving plan files, update `计划/计划索引.md`, `项目记忆/*`, and related breakpoint records.
-
-## Git Worktree Protection
-
-- Execution roles do not edit shared governance files. Before any task edit, verify the exact worktree id, absolute path, branch, frozen base, batch, plan version, owner, and file set in the registry.
-- After editing, inspect targeted diffs and stage only the current slice's files.
-- If another window has already changed the same target lines and the merge is ambiguous, stop and record the blocker instead of overwriting.
-- Do not merge, rebase, cherry-pick, or pull `main` into a task branch. Frozen-base drift returns to design.
-- Builds and runs may proceed concurrently only when worktrees have independent output paths and the batch validation matrix explicitly allows it; otherwise serialize them.
-
-## Validation And Sync
-
-For document-only slices:
+完成时执行计划规定的全部验证；构建和程序运行只有计划明确授权时才可运行。至少检查：
 
 ```powershell
 git diff --check
-if (Test-Path .\tools\check_specs.py) { python .\tools\check_specs.py --strict }
-```
-
-For code slices, use the implementation plan’s validation commands. Default build command when allowed:
-
-```powershell
-msbuild .\海中鱼巣.vcxproj /p:Configuration=Debug /p:Platform=x64 /m
-.\x64\Debug\海中鱼巣.exe
-git diff --check
-```
-
-After every completed task round that changed files, stage only that round's files and commit locally. Do not create empty commits, and do not include unrelated dirty files:
-
-```powershell
-git status --short
 git diff --cached --check
-git commit
 ```
 
-After the automatic non-force push required by the project rules, verify the current task branch against its same-name remote branch. Do not compare or push task HEAD directly to `origin/main`. If the target is unclear, the remote has diverged, HEAD is detached, the registry differs, unrelated changes cannot be isolated, or validation failed, stop and report; never force, merge, or rebase as part of a task push.
+只暂存当前计划允许文件和执行专属记录，提交后非强制推送同名 `codex/*` 任务分支。禁止 force、merge、rebase、cherry-pick、把 main 拉入任务分支或直接推送 `origin/main`。
 
-## Stop Conditions
+回执状态只能是计划定义的执行中续点、`接口漂移待设计修订` 或 `分支完成待集成`。任务分支完成不等于进入 main，也不授权当前执行任务创建集成 worktree、修改中央路由或消费另一计划。
 
-Stop only when:
+## 停止条件
 
-- the executable queue is empty;
-- every remaining queue item is dependency-gated and no dependency-ready item exists;
-- a plan says hard stop / wait for user confirmation;
-- a higher-level rule conflicts with the requested action;
-- required runtime, hardware, credentials, or evidence are unavailable;
-- the user explicitly pauses or redirects.
+当前计划完成、退回、用户暂停、角色 / 规则冲突、依赖未满足、身份漂移、验证失败或计划要求的环境不可用时停止并回执。平台轮次结束但未命中完成 / 退回条件时，只写精确执行续点并保持执行中。
 
-Do not stop merely because one stage, one commit, or one validation command succeeded.
-
-## Forbidden Claims
-
-Do not declare:
-
-```text
-鱼巢旧能力已迁移完成
-自我循环已完成
-自我苏醒完成
-初步成熟完成
-完整业务操作控制面板已完成
-数据库恢复已完成
-旧控制面板或旧数据库能力已迁移完成
-外设 / 体素已接入
-```
+不得用本技能声明计划归档、主线集成、完整业务闭环、旧能力等价迁移、外设接通、自我循环、自我苏醒或成熟验收。
