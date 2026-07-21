@@ -165,12 +165,14 @@
     <ClCompile Include="海中鱼巣\自检.控制面板按需投影.ixx" />
     <ClCompile Include="海中鱼巣\线程\运行消息协议.ixx" />
     <ClCompile Include="海中鱼巣\适配\协议.D455采样材料.ixx" />
+    <ClCompile Include="海中鱼巣\适配\协议.D455观察供给.ixx" />
     <ClCompile Include="海中鱼巣\适配\采集器.D455相机.ixx">
       <ExcludedFromBuild Condition="'$(Platform)'!='x64' or '$(EnableD455RealSense)'!='true'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="海中鱼巣\线程\缓存.D455帧材料.ixx" />
     <ClCompile Include="海中鱼巣\线程\上行桥.D455采样材料.ixx" />
     <ClCompile Include="海中鱼巣\线程\自检.D455采样材料.ixx" />
+    <ClCompile Include="海中鱼巣\适配\自检.D455观察供给合同.ixx" />
     <ClCompile Include="海中鱼巣\适配\自检.D455真实样本.ixx">
       <ExcludedFromBuild Condition="'$(Platform)'!='x64' or '$(EnableD455RealSense)'!='true'">true</ExcludedFromBuild>
     </ClCompile>
