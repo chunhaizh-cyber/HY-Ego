@@ -348,7 +348,13 @@
     <ClCompile Include="海中鱼巣\领域\自检.存在状态同会话参与.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\桥接.特征批次同层授权.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\参与者.特征值原始材料.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\参与者.特征批次发布记录.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\数据操作.特征体系.ixx">
