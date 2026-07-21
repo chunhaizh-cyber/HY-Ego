@@ -13,12 +13,15 @@ module;
 #include <cstdint>
 #include <limits>
 #include <optional>
+#include <span>
 #include <utility>
 #include <vector>
 
 export module 海中鱼巣.领域.数据操作.需求任务方法;
 
 import 海中鱼巣.核心.执行器.结构写入;
+import 海中鱼巣.领域.桥接.特征批次同层授权;
+import 海中鱼巣.领域.数据操作.特征体系;
 import 海中鱼巣.领域.数据操作.存在场景;
 import 海中鱼巣.领域.数据操作.状态动态;
 
@@ -1762,6 +1765,38 @@ public:
     }
 
 #ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
+    特征批次结果 执行特征批次同层参与调试(
+        特征体系数据操作& 特征数据操作,
+        const 特征批次变更规格& 规格) const {
+        auto 参与包 = 特征批次同层授权桥::形成参与包(特征数据操作, 规格);
+        if (!参与包) return {};
+        const auto 预读 = 特征批次同层授权桥::读取候选结果(*参与包);
+        if (预读.状态 != 特征批次提交状态::入口拒绝) return 预读;
+        const auto 结构结果 = 特征批次同层授权桥::执行参与包(
+            *this, *参与包, [](结构写入会话&) { return true; });
+        auto 输出 = 特征批次同层授权桥::读取候选结果(*参与包);
+        if (输出.成功()) {
+            if (结构结果.状态 == 结构写入状态::已提交
+                || 结构结果.状态 == 结构写入状态::候选已确认) {
+                输出.状态 = 特征批次提交状态::已提交;
+            }
+            return 输出;
+        }
+        if (输出.状态 != 特征批次提交状态::入口拒绝) return 输出;
+        switch (结构结果.状态) {
+        case 结构写入状态::许可拒绝:
+            输出.状态 = 特征批次提交状态::许可拒绝;
+            break;
+        case 结构写入状态::版本漂移:
+            输出.状态 = 特征批次提交状态::版本漂移;
+            break;
+        default:
+            输出.状态 = 特征批次提交状态::内部不一致;
+            break;
+        }
+        return 输出;
+    }
+
     需求任务方法故障自检结果 执行完整需求固定故障自检(
         const 完整需求写入规格& 规格,
         std::size_t 故障写点) const {
@@ -1788,6 +1823,25 @@ public:
 #endif
 
 private:
+    friend class 特征批次同层授权桥;
+
+    template <typename 具名候选形成回调类型, typename 特征候选形成回调类型,
+        typename 原始材料参与者类型, typename 批次记录参与者类型>
+    结构写入结果 执行特征批次同层参与包_(
+        具名候选形成回调类型&& 具名候选形成回调,
+        特征候选形成回调类型&& 特征候选形成回调,
+        原始材料参与者类型& 原始材料参与者,
+        批次记录参与者类型& 批次记录参与者) const {
+        std::array<结构写入事务参与者*, 2> 参与者组{
+            &原始材料参与者, &批次记录参与者};
+        return 执行器_.执行(
+            [&](结构写入会话& 会话) {
+                if (!std::forward<具名候选形成回调类型>(具名候选形成回调)(会话)) return;
+                (void)std::forward<特征候选形成回调类型>(特征候选形成回调)(会话);
+            },
+            std::span<结构写入事务参与者* const>(参与者组));
+    }
+
     static constexpr std::int64_t 需求主体顺序号 = 1;
     static constexpr std::int64_t 需求目标宿主顺序号 = 2;
     static constexpr std::int64_t 需求场景顺序号 = 3;
