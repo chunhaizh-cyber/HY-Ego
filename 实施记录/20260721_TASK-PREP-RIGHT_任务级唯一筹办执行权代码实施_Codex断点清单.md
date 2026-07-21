@@ -75,11 +75,11 @@ msbuild .\海中鱼巣.vcxproj /t:Rebuild /p:Configuration=Debug /p:Platform=x64
 接口漂移待设计修订
 ```
 
-执行窗口不得越权修改该自检文件，也不得继续 S1—S7、TPR-A01—A12、Release Rebuild 或完整自检。
+执行窗口不得越权修改该自检文件，也不得继续 S1—S7、TPR-A01—A12、Release Rebuild 或完整自检。首次 Debug Rebuild 失败后未运行 Debug 自检、Release Rebuild、Release 自检或其它后续验收。
 
 ## 5. 安全撤回结果
 
-首次 Debug Rebuild 后，已完整撤回七份计划内生产代码草案，并恢复编辑过程中产生的行尾机械变化。撤回后复核：
+首次 Debug Rebuild 后，已完整撤回七份计划内生产代码草案，并恢复编辑过程中产生的行尾机械变化。以冻结基线 `80da244e10e1071f4f82561e249905599ac210f0` 复核，七份草案涉及的代码内容哈希全部等于基线；对整个 `海中鱼巣/` 代码目录执行基线到当前 HEAD 的差异检查也为零。撤回后复核：
 
 ```text
 C++ 差异：0
