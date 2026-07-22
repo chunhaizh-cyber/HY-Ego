@@ -27,6 +27,7 @@ description: Use in the 海中鱼巣 repository when the user says "按当前代
 ```text
 计划/计划索引.md
 规范/规范目录.md
+项目记忆/任务状态台账.md
 项目记忆/当前状态.md
 项目记忆/Codex任务队列.md
 项目记忆/并行工作树登记表.md
@@ -44,7 +45,7 @@ git worktree list --porcelain
 ```
 
 4. 用范围受限的 `rg` 和短文件读取定位真实入口、调用者、结构承载、写入方、读取方、拒绝、返回和验证证据。
-5. 核对 dirty diff 是否影响所读事实；不得把不同 worktree 的事实混合为同一结论。
+5. 核对 dirty diff 是否影响所读事实；任务生命周期只读台账，`当前状态.md` 只作带版本投影；不得把不同 worktree 的事实或不同状态版本混合为同一结论。
 6. 将结果分为 `事实 / 差异 / 证据 / 风险 / 建议`；不能由当前证据证明的内容标记为待核，不用计划目标替代代码事实。
 
 ## 输出
@@ -55,6 +56,7 @@ git worktree list --porcelain
 当前扫描对象：
 当前分支：
 当前 worktree 编号 / 类型：
+任务状态版本 / 计划 blob：
 登记基线与任务分配：
 worktree 是否 dirty：
 已读证据：
