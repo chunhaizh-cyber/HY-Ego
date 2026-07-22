@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NODE-TYPED-MIGRATION NT-P4 统一快照恢复退役现状流程图</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", sans-serif; background: #f5f7f8; color: #172026; }
+    main { max-width: 2600px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    p { color: #4d5b63; line-height: 1.7; }
+    .meta { padding: 16px; border: 1px solid #cfd8dc; background: #fff; }
+    .diagram { overflow: auto; margin-top: 20px; padding: 20px; border: 1px solid #cfd8dc; background: #fff; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>NODE-TYPED-MIGRATION NT-P4 统一快照恢复退役现状流程图</h1>
+    <div class="meta">
+      <p><strong>基线：</strong>main@1185e1b4；当前代码事实，不是施工许可。</p>
+      <p><strong>现状：</strong>旧四仓可值式导出，恢复仅布尔评估，生产只支持全新上下文首次发布。</p>
+      <p><strong>禁止误读：</strong>不得据此宣称完整快照、恢复导入或自我跨重启已经实现。</p>
+    </div>
+    <div class="diagram">
+      <pre class="mermaid">flowchart TD
+    A["当前生产入口：--runtime-context"] --> B["生产运行期会话只读取固定全新配置"]
+    B --> C["构造运行期上下文：主信息仓库 + 节点仓库 + 关系仓库 + 索引仓库 + 旧业务装配"]
+    C --> D["初始化系统角色和概念活动材料"]
+    D --> E{"候选是否完整"}
+    E -->|"否"| LR0["逻辑内返回：启动失败；不发布"]
+    E -->|"是"| F["运行期上下文宿主::尝试首次发布全新上下文"]
+    F --> G{"宿主是否已有当前上下文"}
+    G -->|"是"| LR1["逻辑内返回：已有当前上下文；不替换"]
+    G -->|"否"| H["发布同一完整全新候选并返回租约"]
+
+    I["当前冻结入口：取得结构事务许可"] --> J["主信息仓库::导出权威状态"]
+    I --> K["节点仓库::导出权威状态"]
+    I --> L["关系仓库::导出权威状态"]
+    I --> M["索引仓库::导出权威状态"]
+    J --> N["权威冻结材料聚合四仓材料"]
+    K --> N
+    L --> N
+    M --> N
+    N --> O["材料仍含主信息记录、拓扑锚点、无类型值容器和节点主信息句柄"]
+    O --> P["仓库权威导出自检验证四仓值式导出与高水位；没有导入后再导出"]
+
+    Q["仓库快照服务::评估恢复请求"] --> R{"专项、格式、句柄、关系、索引、隔离读回布尔值是否通过"}
+    R -->|"否"| LR2["逻辑内返回：具名拒绝原因"]
+    R -->|"是"| S["仅返回隔离候选可读；允许替换运行期仓库固定为否"]
+    S --> T["没有字节序列化、严格解析、隔离仓库装载、领域记录互证或发布调用"]
+
+    U["4170 特征批次账"] --> V["只有事务写入、读取和自检注入；无生产全量冻结/恢复"]
+    W["特征值、状态、动态及其它领域材料"] --> X["没有进入统一冻结聚合；P2 目标类型化记录尚未实现"]
+
+    P --> G1["差距：冻结权威仍是旧四仓结构，没有节点直接稳定主键"]
+    T --> G2["差距：恢复当前只做布尔评估，没有真实恢复候选"]
+    V --> G3["差距：4170 和领域历史账无法随快照恢复"]
+    X --> G4["差距：缺全部领域类型化记录、失效关系和历史事实的统一互证"]
+    H --> G5["保留边界：宿主只允许空槽首次发布，当前无恢复/清空/替换后门"]
+    G5 --> G6["差距：生产启动没有全新/恢复互斥路由，也没有完整自我跨重启读回"]</pre>
+    </div>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>

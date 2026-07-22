@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NODE-TYPED-MIGRATION NT-P3 服务兼容删除审计迁移现状流程图</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", sans-serif; background: #f5f7f8; color: #172026; }
+    main { max-width: 2400px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    p { color: #4d5b63; line-height: 1.7; }
+    .meta { padding: 16px; border: 1px solid #cfd8dc; background: #fff; }
+    .diagram { overflow: auto; margin-top: 20px; padding: 20px; border: 1px solid #cfd8dc; background: #fff; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>NODE-TYPED-MIGRATION NT-P3 服务兼容删除审计迁移现状流程图</h1>
+    <div class="meta">
+      <p><strong>身份：</strong>main@1185e1b4 当前代码事实图，不是目标施工图。</p>
+      <p><strong>当前事实：</strong>现代服务和旧服务头仍共同依赖旧四仓，删除链仍混合权威结构与派生投影。</p>
+      <p><strong>禁止：</strong>不得把现代模块名称解释为节点直接新域已实现，不得在 P4 前切换默认装配。</p>
+    </div>
+    <div class="diagram">
+      <pre class="mermaid">flowchart TD
+    A["当前调用方进入业务或删除路径"] --> B{"入口族"}
+
+    B -- "现代运行期请求" --> M1["运行期业务请求路由或组合器"]
+    M1 --> M2["现代服务模块：存在、场景、状态、动态、特征、语素、需求、任务、方法等"]
+    M2 --> M3["现代数据操作：当前扫描 11 个模块仍引用主信息仓库"]
+    M3 --> M4["旧结构执行器：主信息、节点、关系、索引四仓"]
+    M4 --> M5["创建主信息候选，再创建绑定主信息的节点候选"]
+    M5 --> M6["按裸 uint64 物理主键绑定索引，写关系或 I64 槽"]
+    M6 --> M7["读回节点、主信息、关系和索引后发布"]
+    M7 --> MO["输出仍含旧主信息身份或由旧槽组合的值式材料"]
+
+    B -- "旧服务头或旧初始化" --> L1["十四份旧服务头直接持有主信息、节点、关系或索引仓库"]
+    L1 --> L2["逐步创建主信息、节点、关系、I64 值或局部清理"]
+    L2 --> L3{"中途步骤异常"}
+    L3 -- "是" --> L4["部分入口返回空句柄或 bool，并尝试局部删除"]
+    L3 -- "否" --> LO["旧域结构成为当前默认装配事实"]
+
+    B -- "概念安全删除" --> D1["概念删除候选冻结活动图与用途统计缓存"]
+    D1 --> D2["重读目标节点、主信息、全部当前关系和节点主键组"]
+    D2 --> D3{"与旧候选完全一致"}
+    D3 -- "否" --> LR1["逻辑内返回：候选已过期或提交环境繁忙"]
+    D3 -- "是" --> D4["准备关系失效、索引删除、主信息删除、节点删除、登记/活动图和缓存包"]
+    D4 --> D5["依次提交关系、索引、主信息、节点、概念登记、统计缓存和活动快照"]
+    D5 --> D6["读取节点/主信息/关系审计，检查索引、登记、缓存和活动版本"]
+    D6 --> DO["旧删除回执同时混合权威结构与派生投影结果"]
+
+    B -- "普通读取或按主键读取" --> R1["索引按裸主键返回候选节点"]
+    R1 --> R2["读取节点后继续要求节点所绑主信息当前可读"]
+    R2 --> R3["按模块读取关系和主信息 I64 槽，组合值式材料"]
+    R3 --> RO["索引候选、节点身份和业务材料仍与主信息耦合"]
+
+    MO --> G1["差距汇总"]
+    LO --> G1
+    DO --> G1
+    RO --> G1
+    L4 --> G1
+    G1 --> G2["节点身份未直接承载稳定主键；现代层和旧头仍共同依赖旧四仓"]
+    G2 --> G3["任务方法选择 16 槽、用途观察 15 槽及方法规格值仍依赖无类型 I64 槽"]
+    G3 --> G4["索引主键与节点稳定主键未机械区分，多个公开请求仍接收裸 uint64"]
+    G4 --> G5["删除链仍以主信息删除为中心，并把活动快照和缓存放进同一权威提交"]
+    G5 --> G6["入口.cpp、运行期装配、线程路由和旧初始化仍把旧域接为默认生产域"]
+    G6 --> G7["当前没有可在隔离新域运行且保证零跨域的完整 P3 服务调用图"]</pre>
+    </div>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>

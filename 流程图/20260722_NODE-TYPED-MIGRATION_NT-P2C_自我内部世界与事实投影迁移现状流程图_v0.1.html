@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NODE-TYPED-MIGRATION NT-P2C 自我内部世界与事实投影迁移现状流程图</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", sans-serif; background: #f5f7f8; color: #172026; }
+    main { max-width: 2400px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    p { color: #4d5b63; line-height: 1.7; }
+    .meta { padding: 16px; border: 1px solid #cfd8dc; background: #fff; }
+    .diagram { overflow: auto; margin-top: 20px; padding: 20px; border: 1px solid #cfd8dc; background: #fff; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>NODE-TYPED-MIGRATION NT-P2C 自我内部世界与事实投影迁移现状流程图</h1>
+    <div class="meta">
+      <p><strong>身份：</strong>main@1185e1b4 当前代码事实图；只作差距证据，不是施工许可。</p>
+      <p><strong>当前结构：</strong>系统角色清单、普通父子、归属/模板/旧当前值关系，以及旧状态动态关系拼装。</p>
+      <p><strong>核心差距：</strong>关系 19—22 尚未进入代码；没有唯一自我内部世界和四类可重建聚合投影。</p>
+    </div>
+    <div class="diagram">
+      <pre class="mermaid">flowchart TD
+    A["生产启动：构造全新运行期上下文候选"] --> B["运行期上下文::初始化系统角色"]
+    B --> C["系统角色初始化器：按 21 个稳定键预检旧索引、节点与主信息"]
+    C --> D{"稳定键和旧结构预检结果"}
+    D -->|"无效、错类型或异义占用"| LR0["逻辑内返回：入口拒绝、幂等冲突或版本漂移；不进入后继初始化"]
+    D -->|"允许创建或同义读回"| E["创建世界根基础信息、自我场景和自我存在"]
+    E --> F["存在场景组合器：以关系类型 1 归属把自我接纳进自我场景"]
+    F --> G["创建安全/服务特征定义、实例槽、当前值、目标状态和根需求"]
+    G --> H["当前特征结构：宿主到槽位用归属，槽位到定义用模板，槽位到当前值仍用归属"]
+    H --> I["系统角色数据操作::发布世界拓扑"]
+    I --> J["创建普通父子：世界根到自我场景、自我场景到自我存在"]
+    J --> K["形成系统角色清单并缓存在运行期上下文 optional 材料中"]
+    K --> L["生产候选完整后首次发布；清单负责后续复核，但不是关系 21 自我身份查询"]
+
+    T0["另一条仍存在的旧路径：自我线程::初始化"] --> T1["世界树初始化器::初始化自我世界树"]
+    T1 --> T2["另创建世界树根、自我所在场景和自我存在"]
+    T2 --> T3["再次写普通父子和归属，并把自我相对坐标写入主信息 I64 槽"]
+    T3 --> GAP0["差距：两条初始化路径未由同一结构唯一自我合同收口"]
+
+    M["关系类型 ABI 当前只定义 0—18"] --> GAP1["差距：关系 19 状态事实、20 动态事实、21 自我结构、22 特征实例均未进入代码"]
+    F --> GAP2["差距：自我所在场景归属被当作自我内部世界；没有自我到独立内部世界的角色 1"]
+    J --> GAP3["差距：自我是场景普通父子目标；没有自我非自身成员和自包含环门禁"]
+    H --> GAP4["差距：自我实例槽没有关系 22 角色 1/2/3 的 ABI 与基数读回"]
+
+    S0["状态数据操作：主信息槽保存状态值、时间和拆分主键"] --> S1["状态关系：场景运行期临时 + 状态到主体/场景引用"]
+    S1 --> GAP5["差距：缺关系 19 的特征、值、来源存在；没有按主体完整状态投影接口"]
+    D0["动态数据操作：主信息槽保存时间"] --> D1["动态关系：场景运行期临时 + 主体/场景引用 + 旧因果来源角色"]
+    D1 --> GAP6["差距：关系 20 角色 1—9 未成立；没有按主体完整动态投影接口"]
+
+    Q0["当前自我读取入口"] --> Q1["主要读取系统角色清单、稳定键索引或既有服务单项结果"]
+    Q1 --> GAP7["差距：没有从关系 21/22/19/20 确定重建的单一自我聚合投影"]
+    GAP1 --> Z["结论：当前代码尚未接通 7130 定义的自我持久结构与四类可重建投影"]
+    GAP2 --> Z
+    GAP3 --> Z
+    GAP4 --> Z
+    GAP5 --> Z
+    GAP6 --> Z
+    GAP7 --> Z
+    GAP0 --> Z</pre>
+    </div>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>

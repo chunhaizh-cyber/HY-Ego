@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>仓库快照恢复拒绝矩阵代码逻辑流程图 v0.1</title>
+  <style>
+    body { margin: 0; padding: 24px; font-family: "Microsoft YaHei", sans-serif; background: #f7f7f5; color: #1f2933; }
+    h1 { margin: 0 0 8px; font-size: 22px; }
+    .meta { margin-bottom: 16px; color: #5b6472; }
+    .mermaid { background: #ffffff; border: 1px solid #d8dde6; border-radius: 6px; padding: 16px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>仓库快照恢复拒绝矩阵代码逻辑流程图 v0.1</h1>
+  <p><strong>归档状态：</strong>因 C013 基础结构裁决失效，仅作历史流程证据，不得作为当前施工依据；后继由 #338 / NODE-TYPED-MIGRATION 重建。</p>
+  <div class="meta">更新时间：2026-07-08</div>
+  <pre class="mermaid">flowchart TD
+    A["候选输入：节点快照 / 主信息快照 / 关系快照 / 索引快照 / 事件日志材料"] --> B["当前代码事实：无仓库快照服务，默认无恢复写入许可"]
+    B --> C{"是否已有用户确认的恢复专项和施工计划"}
+    C -->|否| R0["拒绝恢复；当前运行期仓库保持不变"]
+    C -->|是| D["后续专项入口：读取快照头和格式版本"]
+    D --> E{"版本 / 枚举 / 字段是否匹配当前规范"}
+    E -->|失败| R1["拒绝恢复；不得尝试兼容性猜测写入"]
+    E -->|通过| F["复核节点句柄、节点类型、主信息归属"]
+    F --> G{"存在悬空句柄或错误节点类型"}
+    G -->|是| R2["拒绝恢复；不得创建半节点结构"]
+    G -->|否| H["复核关系端点、关系类型、顺序号和唯一性"]
+    H --> I{"关系端点缺失或关系冲突"}
+    I -->|是| R3["拒绝恢复；不得写半关系结构"]
+    I -->|否| J["复核索引键、索引目标和权威结构一致性"]
+    J --> K{"索引指向无效或与关系结构冲突"}
+    K -->|是| R4["拒绝恢复；不得用索引覆盖关系事实"]
+    K -->|否| L["构建隔离候选仓库"]
+    L --> M{"最小闭环读回是否通过"}
+    M -->|否| R5["丢弃候选仓库；当前仓库不变"]
+    M -->|是| N["后续确认后才允许替换运行期仓库"]</pre>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>

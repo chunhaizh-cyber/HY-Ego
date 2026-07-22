@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>不透明结构写入会话许可内探测计量与全参与者原子收口代码逻辑流程图</title>
+  <style>
+    :root { color-scheme: light; }
+    body { margin: 0; padding: 24px; background: #f5f7fb; color: #172033; font-family: "Microsoft YaHei", "Segoe UI", sans-serif; }
+    main { max-width: 1900px; margin: 0 auto; background: #fff; border: 1px solid #d8deea; border-radius: 12px; padding: 24px; box-shadow: 0 8px 24px rgba(23, 32, 51, 0.08); }
+    h1 { margin-top: 0; }
+    .state { padding: 10px 14px; background: #fff5d9; border-left: 4px solid #d79a00; }
+    .note { color: #4b5873; line-height: 1.7; }
+    .diagram { overflow: auto; margin-top: 20px; }
+    pre.mermaid { min-width: 1650px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>不透明结构写入会话许可内探测计量与全参与者原子收口代码逻辑流程图</h1>
+    <p><strong>归档状态：</strong>因 C013 基础结构裁决失效，仅作历史流程证据，不得作为当前施工依据；后继由 #338 / NODE-TYPED-MIGRATION 重建。</p>
+    <p class="state">状态：532e3e5 已完成 M0—M2 并具名 CORE-UNPUBLISHED-S1 / JY-382 v0.6、E121 定向同步既有候选自检合同 / 当前物理窗口继续串行双角色 / 阶段 759 未登记</p>
+    <p class="note">本图只固定通用结构底座。核心层不知道 O1、FNV、关系角色或业务容量；节点 15、关系 18、HYSNAP01 和阶段 880 均不在范围。</p>
+    <div class="diagram">
+<pre class="mermaid">flowchart TD
+    A["输入：通用数据操作同步回调"] --> B0["完整接域门禁&lt;br/&gt;许可、令牌验证与撤销失败隔离回调全部有效"]
+    B0 -->|"缺少任一接线能力"| L1["逻辑内返回&lt;br/&gt;零结构变化"]
+    B0 --> B["执行器取得唯一结构独占许可&lt;br/&gt;构造当前线程不透明会话"]
+    B -->|"仓库或许可无效"| L1
+    B --> C["会话空写集查询阶段&lt;br/&gt;未决定、无首次失败、第一笔候选写入前"]
+    C -->|"零主键、未定义类型或阶段错误"| L2["逻辑内返回或入口拒绝&lt;br/&gt;零结构变化"]
+    C --> D["许可内物理主键点查&lt;br/&gt;空闲 / 已绑定完整节点 / 内部不一致三分"]
+    D -->|"悬空目标或句柄版本不一致"| R1["追根因解决&lt;br/&gt;登记首次失败并禁止写入"]
+    D -->|"空闲或已绑定完整节点"| G
+    C --> E["许可内类型—索引值式投影&lt;br/&gt;类型有效节点 + 全部主键绑定副本"]
+    E --> F["会话逐完整句柄复核正向与反向索引&lt;br/&gt;仓库锁逐个取得，不跨仓库同时持锁"]
+    F -->|"正反不对称、错类型或悬空绑定"| R1
+    F -->|"投影一致"| G["返回值式查询材料给数据操作&lt;br/&gt;不返回仓库、令牌、许可或可变引用"]
+    G --> H["业务回调形成候选写集并逐项读回&lt;br/&gt;请求提交"]
+    H -->|"写前业务拒绝或未请求提交"| X1["逻辑内返回收口&lt;br/&gt;逆序撤销未确认写集"]
+    H --> I["参与者准备提交&lt;br/&gt;持有精确侧表写集与内部独占锁"]
+    I -->|"资源或竞争拒绝且零可读半结构"| I1["逻辑内返回&lt;br/&gt;保留原拒绝并全撤销"]
+    I -->|"抛出、内部不一致或准备后材料异常"| I2["追根因解决&lt;br/&gt;保留原错误并全撤销"]
+    I1 --> X2L["逻辑内返回收口&lt;br/&gt;先撤销参与者，再撤销会话"]
+    I2 --> X2R["追根因解决收口&lt;br/&gt;先撤销参与者，再撤销会话"]
+    I --> J["会话逐项可逆确认&lt;br/&gt;节点、主信息、关系变更并记录确认进度"]
+    J -->|"任一确认点失败或故障注入"| X2R
+    J --> J1["关系变更确认只切能力阶段&lt;br/&gt;关系记录与版本保持写后值不变"]
+    J1 -->|"后继会话令牌调用原能力"| L4["入口拒绝&lt;br/&gt;许可拒绝且写后记录、句柄与能力阶段零变化"]
+    J1 --> K["参与者确认待发布&lt;br/&gt;仍保留锁与反向撤销材料"]
+    K -->|"参与者失败或最终发布前故障"| X2R
+    K --> P["无失败最终发布区&lt;br/&gt;禁止分配、回调、日志、故障注入和可失败返回"]
+    P --> P1["会话封口为已发布"]
+    P1 --> P2["参与者完成发布 noexcept&lt;br/&gt;清撤销材料并释放侧表锁"]
+    P2 --> U["最后释放结构独占许可&lt;br/&gt;唯一外部可见点"]
+    U --> S["正常成功&lt;br/&gt;普通读者一次看到完整结构与侧表"]
+    S -.-> T["阶段前置：先实施顶层单一具名门禁表&lt;br/&gt;表不存在时旧无归因退出 1 不触发退回"]
+    T --> V["实施后运行完整自检&lt;br/&gt;程序通过由同一表汇总"]
+    V -->|"全部为真"| V1["继续 Release、20 / 20 与阶段 759 收口"]
+    V -->|"CORE-UNPUBLISHED-S1"| V2A["M3 定向自检同步&lt;br/&gt;候选甲同一原许可确认后精确撤销且不可读"]
+    V2A --> V2B["候选乙确认后释放原许可&lt;br/&gt;后继许可序号不同、撤销拒绝且记录不变"]
+    V2B --> V2C["释放后继许可&lt;br/&gt;独占许可按节点 -&gt; 主信息清理候选乙"]
+    V2C --> V1
+    V -->|"其它假门禁"| V2["只输出实际失败名称&lt;br/&gt;退出码保持 1 并按归属退回"]
+    V -->|"退出 1 但表内无假项"| V3["顶层汇总内部不一致&lt;br/&gt;形成具体实施后证据再退回"]
+    X1 --> X3["关系变更 -&gt; 索引 -&gt; 新关系&lt;br/&gt;-&gt; 节点候选 -&gt; 主信息候选"]
+    X2L --> X3
+    X2R --> X3
+    X3 --> X3R["同一原许可撤销关系变更&lt;br/&gt;逐字恢复写前记录与写前版本"]
+    X3R --> X4["写前句柄恢复有效、写后句柄过期&lt;br/&gt;继续尝试全部逆操作并读回前态"]
+    X4 -->|"全部撤销并复核成功"| L3["释放独占许可并返回原失败&lt;br/&gt;已烧掉编号高水位不回拨"]
+    X4 -->|"任一逆操作失败"| Q["当前许可析构前调用接线隔离回调&lt;br/&gt;协调层登记撤销失败隔离"]
+    Q --> Q1["已登记但未授予的等待请求&lt;br/&gt;获结构锁后复核隔离、释放并返回无效"]
+    Q1 --> R2["追根因解决&lt;br/&gt;写逻辑错误诊断并停止运行期依赖路径"]</pre>
+    </div>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NODE-TYPED-MIGRATION NT-P1 节点直接身份与事务底座施工流程图 v0.1</title>
+  <style>
+    body { margin: 0; padding: 24px; font-family: "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #20242a; }
+    main { max-width: 1900px; margin: 0 auto; }
+    h1 { font-size: 24px; margin: 0 0 8px; }
+    p { margin: 0 0 18px; color: #4b5563; }
+    .diagram { overflow: auto; background: #fff; border: 1px solid #d7dde5; padding: 20px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>NODE-TYPED-MIGRATION NT-P1 节点直接身份与事务底座施工流程图 v0.1</h1>
+  <p>施工目标设计图；受 NT-P1 详细设计和后继叶子计划门控，当前未实现。</p>
+  <div class="diagram">
+    <pre class="mermaid">
+flowchart TD
+    A["隔离自检或已迁服务在新结构域形成已通过业务准入的类型化请求"] --> B["服务专用数据操作形成节点稳定主键、节点类型、关系请求、索引请求和本域类型化记录候选"]
+    B --> C{"写前结构准入是否完整"}
+    C -->|"否：零主键、错命名域、未知类型、无效句柄、错版本或越权"| L1["逻辑内返回：具名入口拒绝，全部结构零变化"]
+    C -->|"是"| D["结构写入执行器取得同一事务域独占许可"]
+    D --> E["构造只持有节点、关系、索引与事务令牌的不透明会话"]
+    E --> F{"稳定主键是否已有当前身份"}
+    F -->|"同键同类型同语义"| L2["逻辑内返回：幂等读回既有节点，零写"]
+    F -->|"同键异类型或异语义"| L3["逻辑内返回：具名身份冲突，零写"]
+    F -->|"无当前或历史占用"| G["创建节点候选：节点编号、稳定主键、节点类型、版本、状态、创建序号"]
+    G --> H["按业务关系合同创建或变更正式关系候选"]
+    H --> I["按具名所有者和命名域登记可重建索引候选"]
+    I --> J["本域参与者登记强类型记录候选及精确写前/写后材料"]
+    J --> K["同一令牌读回节点、关系、索引和全部领域参与者写集"]
+    K --> M{"完整读回、基数、版本、正反绑定和领域不变量是否成立"}
+    M -->|"否：前置已通过后的结构异常"| R1["追根因：停止新增写入"]
+    M -->|"是"| N["会话请求提交；执行器依次调用全部参与者准备提交"]
+    N --> O{"会话与全部参与者确认是否成功"}
+    O -->|"否"| R1
+    O -->|"是"| P["进入无失败发布区：关闭节点/关系/索引候选撤销能力并完成参与者发布"]
+    P --> Q["释放唯一独占许可形成普通读取统一可见点"]
+    Q --> S["通过正式服务按稳定身份读回节点、关系和本域类型化记录并组合值式投影"]
+
+    R1 --> T["逆序撤销：领域参与者、索引、关系变更与新关系、节点候选"]
+    T --> U{"能否证明可读前态完整恢复"}
+    U -->|"是"| V["返回首次内部不一致；不得继续依赖路径"]
+    U -->|"否"| W["释放许可前隔离事务域；后继请求不得进入"]
+
+    X["冻结边界"] --> X1["节点材料直接含稳定主键，不含主信息句柄"]
+    X --> X2["关系材料保存有效、失效和历史拓扑"]
+    X --> X3["各领域分别导出自身强类型记录材料"]
+    X --> X4["索引材料可携带但必须能从权威来源重建"]
+    </pre>
+  </div>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>

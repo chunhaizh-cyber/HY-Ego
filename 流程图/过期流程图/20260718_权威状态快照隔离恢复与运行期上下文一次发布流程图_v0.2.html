@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>权威状态快照隔离恢复与运行期上下文一次发布流程图 v0.2</title>
+  <style>
+    body { margin: 0; font-family: "Microsoft YaHei", sans-serif; background: #f5f7f8; color: #172026; }
+    main { max-width: 2400px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    p { margin: 0 0 20px; color: #4d5b63; }
+    dl { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 8px 16px; margin: 0 0 20px; padding: 16px; border: 1px solid #cfd8dc; background: #fff; }
+    dt { font-weight: 700; }
+    dd { margin: 0; color: #4d5b63; }
+    .diagram { overflow: auto; padding: 20px; border: 1px solid #cfd8dc; background: #fff; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>权威状态快照隔离恢复与运行期上下文一次发布流程图 v0.2</h1>
+    <p><strong>归档状态：</strong>因 C013 基础结构裁决失效，仅作历史流程证据，不得作为当前施工依据；后继由 #338 / NODE-TYPED-MIGRATION 重建。</p>
+    <p>先收敛生产唯一上下文与段 9 所有者，再形成同冻结九段材料；#226 只负责编码、严格自读和原子发布。</p>
+    <dl>
+      <dt>图类型</dt><dd>施工流程图 / JY-390 当前物理合同修订</dd>
+      <dt>当前可执行</dt><dd>#295 / DQ-187 纯只读事实复核</dd>
+      <dt>设计门控</dt><dd>#226 / DQ-118 / PERSIST-S1-B v0.2</dd>
+      <dt>完成边界</dt><dd>不含事件重放、在线热替换、断电耐久、跨版本迁移或旧能力迁移完成</dd>
+    </dl>
+    <div class="diagram">
+      <pre class="mermaid">flowchart TD
+    A["当前事实：#294 已通过；生产入口仍是旧仓库 / 旧服务栈；新上下文段 9 无所有者"] --> B["#295 只读复核：逐调用点冻结旧生产消费者、宿主切换面和概念活动字段"]
+    B --> B1{"M0—M6 与 A01—A18 是否形成唯一事实矩阵"}
+    B1 -->|"否：当前事实冲突"| R0["退回高推理设计角色：不改代码、不扩范围"]
+    B1 -->|"是"| D1["设计角色归档 #295；生成窄 P0-A / P0-B / P0-C 代码计划"]
+
+    D1 --> P0A["P0-A：完整候选初始化后，由生产最小组合点首次发布唯一运行期上下文"]
+    P0A --> P0B["P0-B：仍写机器事实的兼容消费者按不重叠批次改接同身份租约 / 正式业务公开面"]
+    P0B --> P0C["P0-C：概念活动唯一所有者或确定性重建参与者进入新运行期；上一候选图仍是瞬态缓存"]
+    P0C --> G1{"生产旧对象是否已退出机器事实所有者；段 9 是否有唯一当前所有者"}
+    G1 -->|"否"| L0["依赖门控返回：#226、恢复链继续不可执行"]
+    G1 -->|"是"| F1["PERSIST-S1-A：从已发布正式租约取得同域独占许可"]
+
+    F1 --> F2["逐参与者快速复制：四仓库全状态 / 高水位、特征值侧表、系统角色、索引所有者、领域登记、概念活动"]
+    F2 --> F3{"九段材料是否同域、同冻结身份、集合完整且内部一致"}
+    F3 -->|"否"| R1["追根因解决：释放许可，不编码当前内部矛盾"]
+    F3 -->|"是"| F4["释放独占许可；形成不可变九段冻结材料"]
+
+    F4 --> E1["PERSIST-S1-B / #226：按稳定完整身份规范排序和显式小端编码"]
+    E1 --> E2["单 / 多线程编码必须得到相同 HYSNAP01 总头、九段、段校验和跨段摘要"]
+    E2 --> E3["CREATE_NEW 临时文件 -> 写穿 -> 当前格式严格自读并逐值比较"]
+    E3 --> E4{"提交点前结果"}
+    E4 -->|"路径 / 权限 / 空间等允许失败"| L1["逻辑内返回：清理本次临时候选，旧正式快照保持"]
+    E4 -->|"写入方无法读回自己的文件"| R2["追根因解决：不得替换旧快照"]
+    E4 -->|"完整"| E5["同卷替换正式快照并最终严格读回；仅此时返回已发布"]
+
+    E5 --> S1["启动调用方显式选择：全新初始化或从指定快照恢复"]
+    S1 --> S2{"启动策略是否明确且互斥"}
+    S2 -->|"否"| L2["逻辑内返回：不猜模式、不删除快照、不启动线程"]
+    S2 -->|"全新"| N1["构造完整全新候选；复用同一空宿主首次发布合同"]
+    S2 -->|"恢复"| Q1["RECOVERY-S1：严格校验总头 / 段表 / 九段 / 长度 / 校验 / 摘要"]
+    Q1 --> Q2{"外部文件是否受支持"}
+    Q2 -->|"否"| L3["逻辑内拒绝：丢弃候选，不回退全新初始化"]
+    Q2 -->|"是"| Q3["按指定身份构造隔离四仓库；索引只暂存候选"]
+    Q3 --> Q4["RECOVERY-S2：恢复侧表与角色；所有者重算索引；重建并比较概念活动"]
+    Q4 --> Q5["RECOVERY-S3A：任务中断收口与跨段屏障；形成绑定候选身份的发布许可"]
+    Q5 --> Q6{"隔离候选是否完整且无防复活冲突"}
+    Q6 -->|"外部材料无效"| L4["逻辑内返回：丢弃整个隔离候选"]
+    Q6 -->|"当前实现内部矛盾"| R3["追根因解决：不发布、不扫描修复"]
+    Q6 -->|"是"| U1["RECOVERY-S3B：适配为同一运行期上下文类型并消费同一空宿主恢复发布能力"]
+
+    N1 --> U2{"唯一宿主是否为空；候选是否完整"}
+    U1 --> U2
+    U2 -->|"否"| L5["逻辑内拒绝：首版不在线热替换"]
+    U2 -->|"是"| U3["首次发布成功后，所有消费者只取得同身份租约"]
+    U3 --> U4["RECOVERY-S3C：线程后启；SQL 审计和控制面板最后只读启动"]
+    U4 --> Z["完成：受控 HYSNAP01 发布 / 启动恢复路径；事件重放、断电耐久、跨版本与恰好一次仍后置"]</pre>
+    </div>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</body>
+</html>

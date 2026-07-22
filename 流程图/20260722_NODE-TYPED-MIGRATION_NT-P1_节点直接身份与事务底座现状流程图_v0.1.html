@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NODE-TYPED-MIGRATION NT-P1 节点直接身份与事务底座现状流程图 v0.1</title>
+  <style>
+    body { margin: 0; padding: 24px; font-family: "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #20242a; }
+    main { max-width: 1900px; margin: 0 auto; }
+    h1 { font-size: 24px; margin: 0 0 8px; }
+    p { margin: 0 0 18px; color: #4b5563; }
+    .diagram { overflow: auto; background: #fff; border: 1px solid #d7dde5; padding: 20px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>NODE-TYPED-MIGRATION NT-P1 节点直接身份与事务底座现状流程图 v0.1</h1>
+  <p>当前实现事实图；基线 main@1185e1b4。主信息与 I64 槽是待迁现状，不得作为施工目标。</p>
+  <div class="diagram">
+    <pre class="mermaid">
+flowchart TD
+    A["数据操作或兼容服务形成现行创建请求"] --> B{"调用是否经过结构写入执行器"}
+    B -->|"否：旧兼容路径"| C["分别创建主信息并把值写入无类型 I64 槽"]
+    C --> D["节点仓库以节点类型和主信息句柄创建节点"]
+    D --> E["关系仓库写拓扑，索引仓库绑定物理主键"]
+    E --> F["各仓库分别返回句柄或布尔结果"]
+
+    B -->|"是：现行事务路径"| G["执行器取得同一结构域独占许可"]
+    G --> H["用主信息、节点、关系、索引四仓构造结构写入会话"]
+    H --> I{"写前入口与许可是否有效"}
+    I -->|"否"| L1["逻辑内返回：入口拒绝或许可拒绝，零新增写入"]
+    I -->|"是"| J["创建主信息未发布候选"]
+    J --> K["向主信息候选写入一个或多个 I64 槽"]
+    K --> M["以节点类型和主信息句柄创建节点候选"]
+    M --> N["创建或变更关系，并绑定索引物理键"]
+    N --> O["同令牌读回主信息、I64、节点、关系和索引写集"]
+    O --> P{"是否请求提交且全部写集已读回"}
+    P -->|"否、异常或显式撤销"| Q["逆序撤销：关系变更、索引、新关系、节点候选、主信息候选"]
+    P -->|"是"| R["事务参与者读取候选节点主信息和候选 I64 材料并准备"]
+    R --> S{"会话与参与者确认是否成功"}
+    S -->|"否"| Q
+    S -->|"是"| T["确认节点候选、主信息候选和已发布关系变更"]
+    T --> U["会话与参与者完成发布"]
+    U --> V["独占许可释放后普通读取可见"]
+    Q --> W{"撤销是否完整"}
+    W -->|"是"| X["返回原拒绝或内部不一致结果，结构回前态"]
+    W -->|"否"| Y["标记事务域隔离并返回内部不一致"]
+
+    Z["现行冻结材料"] --> Z1["主信息仓库权威材料"]
+    Z --> Z2["节点记录：节点编号、类型、主信息句柄、版本、状态、创建序号"]
+    Z --> Z3["关系仓库权威材料"]
+    Z --> Z4["索引仓库权威材料"]
+    </pre>
+  </div>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>
