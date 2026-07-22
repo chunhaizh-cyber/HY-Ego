@@ -289,7 +289,11 @@ def 解析仓库内路径(相对路径: str) -> tuple[Path | None, str | None]:
 
 
 def 提取精确允许文件(计划文本: str, 当前计划路径: str | None = None) -> tuple[set[str], str | None]:
-    标题匹配 = re.search(r"^##\s+\d+(?:\.\d+)*\.\s*精确允许文件\s*$", 计划文本, re.MULTILINE)
+    标题匹配 = re.search(
+        r"^##\s+\d+(?:\.\d+)*\.\s*(?:精确允许文件(?:与所有权)?|精确允许与禁止范围)\s*$",
+        计划文本,
+        re.MULTILINE,
+    )
     if not 标题匹配:
         return set(), "缺少“精确允许文件”章节"
     后续标题 = re.search(r"^##\s+", 计划文本[标题匹配.end():], re.MULTILINE)
