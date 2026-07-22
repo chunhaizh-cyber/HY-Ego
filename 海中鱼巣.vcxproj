@@ -246,6 +246,13 @@
     <ClCompile Include="海中鱼巣\核心\协调.结构事务.ixx" />
     <ClCompile Include="海中鱼巣\核心\会话.结构写入.ixx" />
     <ClCompile Include="海中鱼巣\核心\执行器.结构写入.ixx" />
+    <ClCompile Include="海中鱼巣\核心\仓库.节点直接身份.ixx" />
+    <ClCompile Include="海中鱼巣\核心\仓库.正式关系.ixx" />
+    <ClCompile Include="海中鱼巣\核心\仓库.可重建索引.ixx" />
+    <ClCompile Include="海中鱼巣\核心\会话.节点直接身份结构写入.ixx" />
+    <ClCompile Include="海中鱼巣\核心\执行器.节点直接身份结构写入.ixx" />
+    <ClCompile Include="海中鱼巣\核心\冻结.节点直接身份结构.ixx" />
+    <ClCompile Include="海中鱼巣\核心\自检.节点直接身份结构写入.ixx" />
     <ClCompile Include="海中鱼巣\核心\自检.结构事务.ixx" />
     <ClCompile Include="海中鱼巣\核心\自检.未发布身份候选.ixx" />
     <ClCompile Include="海中鱼巣\核心\自检.仓库统一合同.ixx" />

@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="核心">
+      <UniqueIdentifier>{E6F6E9BB-7BB6-4DD0-A99C-4F2BA9C1B7EE}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="海中鱼巣\自检.运行器.ixx">
@@ -287,6 +290,27 @@
     </ClCompile>
     <ClCompile Include="海中鱼巣\核心\执行器.结构写入.ixx">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\仓库.节点直接身份.ixx">
+      <Filter>核心</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\仓库.正式关系.ixx">
+      <Filter>核心</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\仓库.可重建索引.ixx">
+      <Filter>核心</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\会话.节点直接身份结构写入.ixx">
+      <Filter>核心</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\执行器.节点直接身份结构写入.ixx">
+      <Filter>核心</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\冻结.节点直接身份结构.ixx">
+      <Filter>核心</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\自检.节点直接身份结构写入.ixx">
+      <Filter>核心</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\核心\自检.结构事务.ixx">
       <Filter>源文件</Filter>
