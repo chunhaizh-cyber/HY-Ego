@@ -1223,11 +1223,17 @@ def 检查任务状态治理() -> list[检查项]:
                             实际HEAD = HEAD结果.stdout.strip() if HEAD结果.returncode == 0 else ""
                             if 分支结果.returncode != 0 or 分支结果.stdout.strip() != 目标分支:
                                 结果.append(检查项("ERROR", 文件相对路径, f"{任务} worktree 实际分支与登记不一致"))
-                            if 字段["当前生命周期"] in {"待执行", "已派发待执行回执", "已派发待集成回执"}:
+                            if 字段["当前生命周期"] in {"待执行", "已派发待执行回执"}:
                                 if 实际HEAD != 基线提交:
                                     结果.append(检查项("ERROR", 文件相对路径, f"{任务} S0 前 worktree HEAD 必须等于冻结基线"))
                                 if 状态结果.returncode != 0 or 状态结果.stdout.strip():
                                     结果.append(检查项("ERROR", 文件相对路径, f"{任务} S0 前 worktree 必须 clean"))
+                            elif 字段["当前生命周期"] == "已派发待集成回执":
+                                祖先结果 = 目标Git("merge-base", "--is-ancestor", 基线提交, 实际HEAD)
+                                if not 实际HEAD or 祖先结果.returncode != 0:
+                                    结果.append(检查项("ERROR", 文件相对路径, f"{任务} 内容冻结基线不是集成 worktree 建立起点的祖先"))
+                                if 状态结果.returncode != 0 or 状态结果.stdout.strip():
+                                    结果.append(检查项("ERROR", 文件相对路径, f"{任务} S0 前集成 worktree 必须 clean"))
                             else:
                                 祖先结果 = 目标Git("merge-base", "--is-ancestor", 基线提交, 实际HEAD)
                                 if not 实际HEAD or 祖先结果.returncode != 0:
