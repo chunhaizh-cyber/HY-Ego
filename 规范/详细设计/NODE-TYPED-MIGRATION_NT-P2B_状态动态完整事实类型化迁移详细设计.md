@@ -49,7 +49,7 @@
 - 总计划：`计划/20260722_NODE-TYPED-MIGRATION_节点直接身份与领域类型化持久结构代码修订总计划_v0.3.md`
 - P2 子计划：`计划/20260722_NODE-TYPED-MIGRATION_NT-P2_领域载荷与自我投影迁移子计划_v0.3.md`
 - 叶子计划：`计划/20260722_NODE-TYPED-MIGRATION_NT-P2B_状态动态完整事实代码实施切片_v0.3.md`
-- 函数与结构图谱：`项目记忆/设计记录/20260722_NODE-TYPED-MIGRATION_NT-P2B_函数结构知识图谱.md`
+- 函数与结构图谱：`规范/详细设计/函数结构知识图谱/20260722_NODE-TYPED-MIGRATION_NT-P2B_函数结构知识图谱.md`
 
 ## 3. 当前代码事实
 
