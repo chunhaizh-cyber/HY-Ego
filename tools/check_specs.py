@@ -1441,9 +1441,13 @@ def 检查任务状态治理() -> list[检查项]:
                         结果.append(检查项("ERROR", "项目记忆/并行工作树登记表.md", f"{工作树编号} 缺少可解析路径 / 分支"))
                     else:
                         目标路径, 目标分支 = 路径分支[0], 路径分支[1]
-                        if not Path(目标路径).is_dir():
+                        已完成且技术身份已回收 = (
+                            字段["当前生命周期"] == "已完成 / 已归档"
+                            and "已回收" in 技术登记["技术状态"]
+                        )
+                        if not Path(目标路径).is_dir() and not 已完成且技术身份已回收:
                             结果.append(检查项("ERROR", 文件相对路径, f"{任务} 已冻结 worktree 路径不存在"))
-                        else:
+                        elif Path(目标路径).is_dir():
                             def 目标Git(*参数: str) -> subprocess.CompletedProcess[str]:
                                 return subprocess.run(
                                     ["git", *参数], cwd=目标路径, text=True, encoding="utf-8",
