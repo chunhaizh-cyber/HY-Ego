@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>METHOD-LEARNING：用途观察学习晋级后继回合施工流程图 v0.1</title>
+  <style>
+    body { margin: 0; background: #f4f7fb; color: #142033; font: 16px/1.6 "Microsoft YaHei", sans-serif; }
+    main { min-width: max-content; padding: 28px; }
+    section { display: inline-block; min-width: 1080px; padding: 24px; background: #fff; border: 1px solid #dbe3ef; border-radius: 12px; box-shadow: 0 8px 28px #1d355722; }
+    h1 { margin-top: 0; font-size: 24px; }
+    .meta, .boundary { max-width: 1200px; }
+    .mermaid { margin: 24px 0; }
+    .meta-table { border-collapse: collapse; max-width: 1400px; }
+    .meta-table th, .meta-table td { border: 1px solid #c9d4e3; padding: 6px 10px; text-align: left; vertical-align: top; }
+  </style>
+</head>
+<body>
+<main>
+  <section>
+    <h1>METHOD-LEARNING：用途观察学习晋级后继回合施工流程图 v0.1</h1>
+    <p class="meta">更新时间：2026-07-23。待实施目标图，冻结 SELF-C5 / v0.1；绑定《方法学习候选晋级新代际与后继回合详细设计》；不证明代码已实现。</p>
+    <table class="meta-table">
+      <tr><th>项</th><th>冻结内容</th></tr>
+      <tr><td>图类型</td><td>待实施目标流程图；不是当前代码流程</td></tr>
+      <tr><td>绑定详细设计</td><td><code>规范/详细设计/方法学习候选晋级新代际与后继回合详细设计.md</code></td></tr>
+      <tr><td>绑定计划</td><td>#353 设计计划；后继 #358</td></tr>
+      <tr><td>允许文件</td><td>SELF-C5 合同和 #358 叶子计划最终白名单</td></tr>
+      <tr><td>禁止文件</td><td>原地改父代、候选自证晋级、任务执行回合反写、共享装配、工程和入口</td></tr>
+      <tr><td>预期结构变化</td><td>用途观察分栏、可重建统计、非权威候选、独立授权、不可变新代际和任务级可见性</td></tr>
+      <tr><td>执行前复核</td><td>核对 4330 三阶段、5330 输入、5340 同轮隔离、发布代次和来源任务回合</td></tr>
+      <tr><td>验证方式</td><td>待结算排除、差异六类、授权拒绝、父代保留、同轮不可见和不同任务分别可见</td></tr>
+      <tr><td>不得宣称</td><td>统计、候选、授权或单次发布均不证明方法好用或学习闭环完成</td></tr>
+    </table>
+    <div class="mermaid">
+flowchart TD
+    A["读取 4330 已发布、结构合法的用途观察"] --> A1{"观察阶段？"}
+    A1 -- "待结算" --> R0["排除：不得进入效果差异统计"]
+    A1 -- "尝试未达成或最终已结算" --> B{"方法代际、任务运行、观察组和场景版本完整？"}
+    B -- "否" --> R1["逻辑内拒绝：不写用途观察"]
+    B -- "是" --> C["用途观察服务提交确定观察组"]
+    C --> D["按完整因果结构键、适用范围和统计规则版本分组；两栏分别保留样本数、正负结果数和派生比例"]
+    D --> F["SELF-C5：基于完整方法快照和确定观察组形成非权威学习候选"]
+    F --> E{"候选差异属于新增 / 保留 / 移除 / 替换 / 未知 / 冲突六类且证据范围充分？"}
+    E -- "否" --> R2["逻辑内返回：未知、冲突或样本不足，不形成可晋级事实"]
+    E -- "是" --> G{"候选键与来源方法代际当前且无异义冲突？"}
+    G -- "否" --> R3["逻辑内拒绝：来源漂移或同键异义"]
+    G -- "是" --> H["独立晋级服务校验规则、证据、授权方和目标代际"]
+    H --> I{"晋级授权成立且未过期？"}
+    I -- "否" --> R4["逻辑内不晋级；父代保持不变"]
+    I -- "是" --> J["方法领域建立不可变新代际候选"]
+    J --> K{"父代、条件、结果、动作、来源和版本完整读回？"}
+    K -- "否" --> X1["内部错误：撤销未发布候选或隔离代际"]
+    K -- "是" --> L["原子发布新代际并保留父代"]
+    L --> M["记录新代际发布代次和来源任务回合"]
+    M --> N{"待筹办任务当前冻结快照属于哪一类？"}
+    N -- "来源任务产生代际的同一回合或其它发布前旧冻结" --> O["本轮保持不可见；继续使用自身已冻结代际"]
+    O --> O1["旧回合结束后重新取得筹办权并权威重读"]
+    N -- "发布后建立或没有活动旧冻结" --> P["首次取得筹办权并权威重读后，可按新代际条件召回"]
+    O1 --> P
+    P --> Q["形成下一轮任务结果与新的用途观察"]
+    Q --> A
+    F -. "候选自证晋级" .-> X2["内部错误：拒绝越权路径"]
+    L -. "父代原地变化或出现双当前代际" .-> X3["内部错误：隔离发布结果并追根因"]
+    </div>
+    <p class="boundary">关键边界：候选非权威；独立晋级授权；新代际不可变；同轮不可见；恢复不自动晋级。</p>
+  </section>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>

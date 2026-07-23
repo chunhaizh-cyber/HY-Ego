@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PERCEPTION-INGEST：D455 成熟度产品受控材料报告队列施工流程图 v0.1</title>
+  <style>
+    body { margin: 0; background: #f4f7fb; color: #142033; font: 16px/1.6 "Microsoft YaHei", sans-serif; }
+    main { min-width: max-content; padding: 28px; }
+    section { display: inline-block; min-width: 1080px; padding: 24px; background: #fff; border: 1px solid #dbe3ef; border-radius: 12px; box-shadow: 0 8px 28px #1d355722; }
+    h1 { margin-top: 0; font-size: 24px; }
+    .meta, .boundary { max-width: 1200px; }
+    .mermaid { margin: 24px 0; }
+    .meta-table { border-collapse: collapse; max-width: 1400px; }
+    .meta-table th, .meta-table td { border: 1px solid #c9d4e3; padding: 6px 10px; text-align: left; vertical-align: top; }
+  </style>
+</head>
+<body>
+<main>
+  <section>
+    <h1>PERCEPTION-INGEST：D455 成熟度产品受控材料报告队列施工流程图 v0.1</h1>
+    <p class="meta">更新时间：2026-07-23。待实施目标图，冻结 PER-C1—PER-C5 / v0.1；绑定《D455 成熟度产品受控材料与报告队列详细设计》；材料、报告、物理队列与队列项均不是世界事实。</p>
+    <table class="meta-table">
+      <tr><th>项</th><th>冻结内容</th></tr>
+      <tr><td>图类型</td><td>待实施目标流程图；不是当前代码流程</td></tr>
+      <tr><td>绑定详细设计</td><td><code>规范/详细设计/D455成熟度产品受控材料与报告队列详细设计.md</code></td></tr>
+      <tr><td>绑定计划</td><td>#360 设计计划；后继 #361—#365 代码计划</td></tr>
+      <tr><td>允许文件</td><td>唯一读取绑定详细设计第 3.2 节中归属 #361—#365 的精确新建文件；共享工程、入口和运行器只归 #373</td></tr>
+      <tr><td>禁止文件</td><td>现行需求 / 任务 / 方法 / 存在 / 场景 / 状态 / 动态仓与服务、控制面板、SQL；#361—#365 不得改工程 / 入口</td></tr>
+      <tr><td>预期结构变化</td><td>新建 PER-C1—PER-C5 强类型合同、处理模块、一个物理传递队列和四类可重建索引</td></tr>
+      <tr><td>执行前复核</td><td>核对 L0 六个现有文件、全部待新建路径、<code>export module</code>、PER-C1—PER-C5 ABI 和文件所有权</td></tr>
+      <tr><td>验证方式</td><td>类型 / 负载、首次无基准、单队列四索引、并发、故障和恢复静态 / 自检；真实汇合留给 #373</td></tr>
+      <tr><td>不得宣称</td><td>流程图、编译或模拟通过均不证明真实 D455、队列消费或生产闭环已接通</td></tr>
+    </table>
+    <div class="mermaid">
+flowchart TD
+    A["D455 采样材料进入受控入口"] --> B{"设备身份、采集代次、帧序号、时间、标定与材料版本有效？"}
+    B -- "否" --> R1["逻辑内拒绝：返回具名原因，不发布材料"]
+    B -- "是" --> C["PER-C1：形成值式成熟度判定输入"]
+    C --> D["分别判定 L0—L3 成熟度"]
+    D --> E["分别标注逐簇识别、扫描变化、目标跟踪外显模式"]
+    E --> F["PER-C2：写入受控材料仓并取得不可伪造引用"]
+    F --> G["PER-C3：对齐、滤波、点云与分割"]
+    G --> H{"逐簇材料结构、坐标、质量和版本读回一致？"}
+    H -- "否且前置合法" --> X1["内部错误：停止该生产路径并追根因"]
+    H -- "否且输入不合格" --> R2["逻辑内拒绝：不形成产品"]
+    H -- "是" --> I["形成原始逐簇产品候选"]
+    I --> J["PER-C4：跨轮关联、局部质量累计和稳定门"]
+    J --> K{"稳定门满足？"}
+    K -- "否" --> L["仅保留原始逐簇产品；不得进入业务方法"]
+    K -- "是" --> M["形成稳定观察子集"]
+    M --> N{"PER-C5：请求的模式前置是否成立？"}
+    N -- "仅稳定观察" --> P["提交稳定观察子集引用"]
+    N -- "扫描但无可比基准" --> R3["不形成第五产品或扫描变化；以稳定观察子集和结构化基准缺口进入观察任务链"]
+    N -- "扫描且有可比基准" --> N1["形成扫描变化产品候选"]
+    N -- "跟踪且目标 / 窗口成立" --> N2["形成目标跟踪产品候选"]
+    N -- "模式前置不成立" --> R4["逻辑内拒绝：不伪造产品"]
+    L --> O["提交原始逐簇产品引用"]
+    N1 --> Q["提交扫描变化产品引用"]
+    N2 --> Q1["提交目标跟踪产品引用"]
+    R3 --> P
+    O --> S["单一物理报告队列原子发布"]
+    P --> S
+    Q --> S
+    Q1 --> S
+    S --> T["重建四类产品索引 / 只读视图"]
+    T --> U{"队列、材料仓、索引与产品元数据读回一致？"}
+    U -- "否" --> X2["内部错误：撤销未发布写入或隔离已发布代次"]
+    U -- "是" --> V["等待任务域按产品类型唯一承接"]
+    V --> W["报告与队列项仍是材料；不得直接写世界事实"]
+    </div>
+    <p class="boundary">关键边界：分类三轴独立；一个物理传递队列配四类可重建索引；原始逐簇不得进入业务方法；首次无基准不得新增第五产品或形成扫描变化，稳定观察子集须经观察任务建立合法当前数据项；产品发布不等于世界事实提交。</p>
+  </section>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>

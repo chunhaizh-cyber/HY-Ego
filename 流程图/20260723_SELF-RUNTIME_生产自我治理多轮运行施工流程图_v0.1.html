@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SELF-RUNTIME：生产自我治理多轮运行施工流程图 v0.1</title>
+  <style>
+    body { margin: 0; background: #f4f7fb; color: #142033; font: 16px/1.6 "Microsoft YaHei", sans-serif; }
+    main { min-width: max-content; padding: 28px; }
+    section { display: inline-block; min-width: 1080px; padding: 24px; background: #fff; border: 1px solid #dbe3ef; border-radius: 12px; box-shadow: 0 8px 28px #1d355722; }
+    h1 { margin-top: 0; font-size: 24px; }
+    .meta, .boundary { max-width: 1200px; }
+    .mermaid { margin: 24px 0; }
+    .meta-table { border-collapse: collapse; max-width: 1400px; }
+    .meta-table th, .meta-table td { border: 1px solid #c9d4e3; padding: 6px 10px; text-align: left; vertical-align: top; }
+  </style>
+</head>
+<body>
+<main>
+  <section>
+    <h1>SELF-RUNTIME：生产自我治理多轮运行施工流程图 v0.1</h1>
+    <p class="meta">更新时间：2026-07-23。最终生产切换目标图，冻结 SELF-C6 / v0.1 及 SELF-C1—SELF-C5 的生产组合；绑定《生产自我治理循环装配与验收详细设计》；不证明代码已实现。</p>
+    <table class="meta-table">
+      <tr><th>项</th><th>冻结内容</th></tr>
+      <tr><td>图类型</td><td>最终生产切换与多轮验收目标流程图；不是当前代码流程</td></tr>
+      <tr><td>绑定详细设计</td><td><code>规范/详细设计/生产自我治理循环装配与验收详细设计.md</code></td></tr>
+      <tr><td>绑定计划</td><td>#353 设计计划；后继 #359 唯一生产切换计划</td></tr>
+      <tr><td>允许文件</td><td>SELF-C6 合同与 #359 精确装配、入口、运行器和验收白名单</td></tr>
+      <tr><td>禁止文件</td><td>#354—#358 私有实现文件只读汇合；不得改表外代码或跨领域直接写事实</td></tr>
+      <tr><td>预期结构变化</td><td>唯一治理消费者、SELF-C1—C5 提供者、停止恢复、多轮输入和端到端验收接线</td></tr>
+      <tr><td>执行前复核</td><td>核对固定候选、唯一自我 / 内部世界、恢复代次、前轮动作收口和最小本能方法集</td></tr>
+      <tr><td>验证方式</td><td>至少十轮，覆盖并发任务、等待、缺口、完成、学习后继回合、待机 / 唤醒、故障、停止和恢复</td></tr>
+      <tr><td>不得宣称</td><td>构建、自检、日志、线程退出或单轮通过不证明自我循环、苏醒或成熟完成</td></tr>
+    </table>
+    <div class="mermaid">
+flowchart TD
+    A["建立正常启动候选或隔离恢复候选"] --> B{"唯一自我、内部世界、节点、关系、类型化记录和版本完整？"}
+    B -- "否" --> R1["逻辑内拒绝：不得发布半运行期"]
+    B -- "是" --> C["重建索引、状态 / 动态读取投影和下一轮输入"]
+    C --> D{"结构与业务不变量全部通过？"}
+    D -- "否" --> R2["隔离恢复候选并返回具名缺项"]
+    D -- "是" --> D1{"恢复候选含旧筹办占用或执行冻结历史？"}
+    D1 -- "否" --> E["原子发布新运行期和恢复代次"]
+    D1 -- "是" --> D2["隔离保留旧占用 / 冻结历史；明确不继承执行权"]
+    D2 --> D3{"已证明旧运行代次终止且前轮动作停止或已有实际回读？"}
+    D3 -- "否" --> D4["形成合法等待、动作核验生产者和重新触发条件；不得新执行"]
+    D3 -- "是" --> D5["原子失效旧占用及旧冻结当前性；形成待重筹办触发"]
+    D4 --> E
+    D5 --> E
+    E --> F{"唯一治理消费者和 SELF-C1—C5 提供者装配完整？"}
+    F -- "否" --> R3["逻辑内拒绝启动治理循环"]
+    F -- "是" --> G["启动唯一自我治理消费者"]
+    G --> H{"上一轮外部动作已停止或完成实际回读？"}
+    H -- "否" --> I["合法等待；不得重复外部动作或复用旧冻结"]
+    H -- "是" --> J["运行一个治理轮次"]
+    J --> K["根缺口→需求→任务→唯一筹办→六类结果"]
+    K --> L["方法执行→实际回读→任务完成→需求满足→价值结算"]
+    L --> M["用途观察分栏→候选→独立晋级→记录发布代次；旧冻结本轮不可见，发布后无活动旧冻结的新任务首次筹办可见"]
+    M --> N["提交轮次结果和下一轮输入"]
+    I --> O{"收到停止请求、故障或新治理事件？"}
+    N --> O
+    O -- "继续" --> H
+    O -- "停止" --> P["拒绝新轮次和新筹办占用"]
+    P --> Q["收口当前动作、实际回读、任务状态和占用"]
+    Q --> R{"停止结构完整读回？"}
+    R -- "否" --> X1["内部错误：隔离运行代次并追根因"]
+    R -- "是" --> S["原子发布停止结果"]
+    S --> T["停止后禁止任何线程继续写业务事实"]
+    T --> U{"后续是否恢复？"}
+    U -- "否" --> V["保持停止"]
+    U -- "是" --> A
+    G -. "第二消费者或同轮双消费" .-> X2["内部错误：停止新增写入"]
+    E -. "半恢复结构可见" .-> X3["内部错误：撤销发布或隔离代次"]
+    </div>
+    <p class="boundary">关键边界：恢复隔离验证后原子发布；旧占用不继承，且必须先核验旧代次和前轮动作再失效当前性；线程只编排；停止先收口；连续十轮和停止恢复是最终验收。</p>
+  </section>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>
