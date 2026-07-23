@@ -183,13 +183,12 @@ def 检查计划登记(参数: argparse.Namespace) -> list[检查项]:
         return 结果
 
     计划路径 = 相对或原样路径(参数.plan)
-    for 登记路径文本, 名称 in [(参数.plan_index, "计划索引"), (参数.queue, "Codex 任务队列")]:
-        if not 路径存在(登记路径文本):
-            结果.append(检查项("ERROR", 登记路径文本, f"缺少{名称}"))
-            continue
-        登记文本 = 读取文本(登记路径文本)
-        if 计划路径 not in 登记文本 and Path(计划路径).name not in 登记文本:
-            结果.append(检查项("ERROR", 登记路径文本, f"{名称}未登记修订计划: {计划路径}"))
+    if not 路径存在(参数.plan_index):
+        结果.append(检查项("ERROR", 参数.plan_index, "缺少计划索引"))
+        return 结果
+    索引文本 = 读取文本(参数.plan_index)
+    if 计划路径 not in 索引文本 and Path(计划路径).name not in 索引文本:
+        结果.append(检查项("ERROR", 参数.plan_index, f"计划索引未登记修订计划: {计划路径}"))
 
     return 结果
 
@@ -240,7 +239,6 @@ def 自检() -> int:
         deviation = 写入临时文件(临时目录, "偏差.md", "| 编号 | 现状代码事实 | 流程图 | 详细设计 | 偏差类型 | 纠偏方向 | 是否需要代码计划 |\n| --- | --- | --- | --- | --- | --- | --- |\n")
         plan = 写入临时文件(临时目录, "计划.md", f"# 计划\n\n## 依据\n{标准路径(md)}\n{标准路径(mapping)}\n{标准路径(contract)}\n{标准路径(non_success)}\n{标准路径(deviation)}\n## 允许文件\n待填\n## 禁止文件\n待填\n## 验证\n待填\n## 完成声明边界\n待填\n")
         plan_index = 写入临时文件(临时目录, "计划索引.md", f"{Path(plan).name}\n")
-        queue = 写入临时文件(临时目录, "队列.md", f"{Path(plan).name}\n")
 
         参数 = argparse.Namespace(
             flowchart_md=md,
@@ -251,7 +249,6 @@ def 自检() -> int:
             deviation=deviation,
             plan=plan,
             plan_index=plan_index,
-            queue=queue,
             require_plan=True,
             require_plan_registration=True,
         )
@@ -270,9 +267,8 @@ def 构建参数() -> argparse.Namespace:
     解析器.add_argument("--deviation", help="现状施工偏差清单路径")
     解析器.add_argument("--plan", help="修订计划路径")
     解析器.add_argument("--plan-index", default="计划/计划索引.md", help="计划索引路径")
-    解析器.add_argument("--queue", default="项目记忆/Codex任务队列.md", help="Codex 任务队列路径")
     解析器.add_argument("--require-plan", action="store_true", help="要求提供修订计划")
-    解析器.add_argument("--require-plan-registration", action="store_true", help="要求计划已登记到计划索引和任务队列")
+    解析器.add_argument("--require-plan-registration", action="store_true", help="要求计划已登记到计划索引")
     解析器.add_argument("--strict", action="store_true", help="遇到 ERROR 时返回非零退出码")
     解析器.add_argument("--self-test", action="store_true", help="运行工具自检")
     return 解析器.parse_args()

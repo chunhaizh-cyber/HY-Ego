@@ -1,6 +1,6 @@
 ---
 name: hai-zhong-yu-chao-continue
-description: Route context-dependent continuation in the 海中鱼巣 repository. Use whenever the user says bare 继续, 接着继续, 继续处理, or asks to resume without naming a concrete operation. Resolve the current design, execution, integration, or read-only role from the latest explicit declaration plus registered task, worktree, and Git facts, then continue only that role without selecting another role or a global next plan.
+description: Route context-dependent continuation in the 海中鱼巣 repository. Use whenever the user says bare 继续, 接着继续, 继续处理, or asks to resume without naming a concrete operation. Resolve the current design, execution, integration, or read-only role from the latest explicit declaration, plan list, current worktree and Git facts, then continue only that role.
 ---
 
 # 海中鱼巣继续路由
@@ -10,12 +10,12 @@ description: Route context-dependent continuation in the 海中鱼巣 repository
 裸 `继续` 只表示：
 
 ```text
-继续当前顶层任务树已登记的角色与当前切片
+继续当前顶层任务树已明确的角色与当前切片
 ```
 
-不得解释为切换角色、消费全局下一队列项、进入另一个 worktree、开始构建 / 集成或执行窗口交互记录中的“下一步”。遵守 `AGENTS.md` 和 `规范/设计执行双窗口交互规范.md`。
+不得解释为切换角色、进入另一个 worktree 或跨过当前角色边界。设计角色不据此消费代码计划；执行角色可以按计划索引中的计划状态、具名依赖和自身执行通道自主选中计划。遵守 `AGENTS.md` 和 `.codex/rules/设计执行双窗口交互规则.md`。
 
-不得硬编码仓库或 worktree 路径。用 Git 顶层、`项目记忆/任务状态台账.md`、`git worktree list --porcelain` 和 `项目记忆/并行工作树登记表.md` 解析当前任务生命周期与技术身份；窗口交互记录只作历史事件证据，不裁决当前状态。
+不得硬编码仓库或 worktree 路径。用 Git 顶层、`git worktree list --porcelain`、当前分支、HEAD、upstream、dirty state、远端事实和 `.codex/rules/` 中的执行通道合同解析当前技术身份。
 
 ## 识别顺序
 
@@ -24,13 +24,13 @@ description: Route context-dependent continuation in the 海中鱼巣 repository
 ```text
 用户最近一次明确角色声明
 -> 平台顶层任务 / 协作代理关系
--> 任务状态台账的当前角色 / 执行身份和状态版本
--> worktree 登记的当前路径、分支和所有者
--> Git 分支、HEAD、dirty state
--> 当前计划、实施 / 集成记录或只读问题集
+-> 计划索引中的计划列表、计划状态和具名依赖
+-> `.codex/rules/` 与 Git 中的执行通道身份
+-> Git worktree、分支、HEAD、upstream、dirty state 和远端事实
+-> 当前计划、最新结构化消息或只读问题集
 ```
 
-聊天声明与正式登记冲突、任务树同时出现两种写角色、目标无法唯一识别或 Git 身份漂移时，保持只读，报告具名 DRIFT；不得先行动再补登记。
+聊天声明与计划合同或 Git 事实冲突、任务树同时出现两种写角色、目标无法唯一识别或 Git 身份漂移时，保持只读，报告具名 DRIFT；不得先行动再补规则。
 
 执行动作前用一句话说明：
 
@@ -42,29 +42,29 @@ description: Route context-dependent continuation in the 海中鱼巣 repository
 
 ### 设计
 
-继续当前规范、流程图、详细设计、不可变计划合同、索引导航、队列依赖、设计记录、任务状态台账和路由治理；不得修改 C++ / 工程 / 自检或运行 C++ 构建与程序。任务生命周期迁移只原子更新台账并追加窗口事件，其它文件不复制当前状态。
+继续当前规范、流程图、详细设计、不可变计划合同和计划索引；不得修改 C++ / 工程 / 自检或运行 C++ 构建与程序。计划索引以列表维护每份计划的计划状态、路径、版本和具名依赖，不另建 Markdown 状态文件。
 
-形成可执行计划后，若依赖满足、实际接口一致且执行身份可安全建立，继续完成登记、治理验证、精确提交、非强制推送、向独立执行顶层任务真实发送消息并读回接收状态。不得停在计划文件、worktree 预留或“下一步”。若目标缺失或门禁未满足，只记录精确缺口。
+形成可执行计划后，若依赖满足且实际接口一致，继续更新计划列表中的路径、版本、计划状态和具名依赖，完成治理验证、精确提交和非强制推送。执行通道合同只在 `.codex/rules/` 中维护。设计窗口不得向执行窗口发送开始、继续、停止、选择下一项或接受 S0 的消息；若目标缺失或门禁未满足，只在计划或索引中保留精确缺口。
 
 集成角色已经取得主线发布占用时，设计角色只继续只读审查，不写主集成工作树。
 
 ### 执行
 
-只继续任务状态台账当前行和 worktree 技术登记共同分配的唯一计划；先核对状态版本、计划 blob、冻结基线和 S0 结果，再按计划修改允许的代码 / 工程 / 自检和执行专属记录，运行已授权验证，精确提交并只推送同名任务分支。
+重读计划索引，根据计划状态、具名依赖和自身执行通道自主选中一份计划；先核对计划版本与 blob、当前 Git/worktree、计划段起点和 S0 结果，再按计划修改允许的代码 / 工程 / 自检，运行已授权验证，精确提交并只推送当前任务或长期通道分支。
 
-不得写计划、索引、队列、规范、流程图、详细设计或中央项目记忆，不得选择全局下一计划、切换 main、自行集成或归档。完成 / 漂移后回执并停止。
+不得写任何 Markdown、计划、索引、规范、流程图或详细设计，不得切换 main、自行集成或归档。完成 / 漂移后发送结构化消息；worktree / index clean 后可以继续检查列表中的其它无关 `可执行` 计划。
 
 ### 集成
 
-只继续当前登记集成批次的身份核对、固定顺序汇集、验证、集成专属记录和授权发布。不得发明业务语义、修改任务实现 / 计划或复用身份不一致的旧 worktree / 分支。完成到 `已集成待设计同步` 后停止并释放或报告主线占用状态。
+只继续当前计划合同和 Git 事实共同指向的集成批次身份核对、固定顺序汇集、验证、集成专属记录和授权发布。不得发明业务语义、修改任务实现 / 计划或复用身份不一致的旧 worktree / 分支。完成后通过结构化消息报告并释放或报告主线占用状态。
 
 ### 只读复核
 
-只继续指定提交、对象和问题集上的事实、差异、证据、风险与建议核对。禁止修改、构建、运行、worktree 创建、暂存、提交、推送、入队、解除依赖和完成裁决。
+只继续指定提交、对象和问题集上的事实、差异、证据、风险与建议核对。禁止修改、构建、运行、worktree 创建、暂存、提交、推送、修改计划状态、解除依赖和完成裁决。
 
 ## 角色切换
 
-裸 `继续` 永远不构成角色切换。同一物理窗口串行切换也必须由用户明确要求，并在整棵任务树全部后代停止、旧角色记录与验证完成、Git 和占用释放、正式路由提交推送后整体切换；切换后重新读取 Git、任务状态台账、索引、队列、登记、目标计划 blob、断点和实际接口。
+裸 `继续` 永远不构成角色切换。同一物理窗口串行切换也必须由用户明确要求，并在整棵任务树全部后代停止、旧角色验证完成、Git 和占用释放后整体切换；切换后重新读取 Git、计划索引、目标计划 blob、最新结构化消息和实际接口。
 
 默认跨写角色工作派发给独立用户可见顶层任务，不能让当前任务树的子智能体取得不同写角色。
 
