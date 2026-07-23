@@ -42,6 +42,7 @@ class 任务状态事件:
 规范目录 = 根目录 / "规范"
 正式目录路径 = 规范目录 / "规范目录.md"
 任务状态台账路径 = 根目录 / "项目记忆" / "任务状态台账.md"
+计划索引路径 = 根目录 / "计划" / "计划索引.md"
 
 必需静态入口 = [
     "AGENTS.md",
@@ -117,6 +118,17 @@ class 任务状态事件:
 关系编号模式 = re.compile(r"(?<!\d)(\d{3,4})(?!\d)")
 
 受管任务编号 = {f"#{编号}" for 编号 in range(339, 353)}
+合法计划激活状态 = {"待激活", "可执行", "已退出"}
+执行Markdown遗留例外 = {
+    "#341": (
+        "实施记录/20260722_NODE-TYPED-MIGRATION_NT-P2B_状态动态完整事实代码实施_Codex断点清单.md",
+        "0fe7706ca85fa3bc988da02814da46a4aa49b3c1",
+    ),
+    "#349": (
+        "实施记录/20260722_NODE-TYPED-MIGRATION_NT-P4-FREEZE_统一权威冻结与编码代码实施_v0.2_Codex断点清单.md",
+        "b5bc616a023c5221b56201a7d1c5c8e7c08119ee",
+    ),
+}
 合法任务状态 = {
     "待执行", "依赖门控待执行", "已派发待执行回执", "执行中", "分支完成待集成",
     "已预留待集成派发", "已派发待集成回执", "集成中", "集成身份冲突待设计重建",
@@ -133,7 +145,10 @@ class 任务状态事件:
     "分支完成待集成": {"已预留待集成派发"},
     "已预留待集成派发": {"已派发待集成回执"},
     "已派发待集成回执": {"集成中", "集成身份冲突待设计重建"},
-    "集成中": {"已集成待设计同步", "集成分支验证通过待主线发布", "集成失败退回任务"},
+    "集成中": {
+        "已集成待设计同步", "集成分支验证通过待主线发布", "集成失败退回任务",
+        "集成身份冲突待设计重建",
+    },
     "集成身份冲突待设计重建": {"已预留待集成派发"},
     "集成失败退回任务": {"待执行", "依赖门控待执行"},
     "集成分支验证通过待主线发布": {"已预留待集成派发"},
@@ -150,7 +165,7 @@ class 任务状态事件:
 状态责任角色 = {
     "待执行": "设计", "依赖门控待执行": "设计", "已派发待执行回执": "设计",
     "执行中": "执行", "分支完成待集成": "执行", "已预留待集成派发": "设计",
-    "已派发待集成回执": "设计", "集成中": "集成", "集成身份冲突待设计重建": "集成",
+    "已派发待集成回执": "设计", "集成中": "集成", "集成身份冲突待设计重建": "设计",
     "集成失败退回任务": "集成", "集成分支验证通过待主线发布": "设计",
     "已集成待设计同步": "集成", "接口漂移待设计修订": "执行",
     "验证失败待设计裁决": "执行", "只读复核中": "只读复核",
@@ -315,6 +330,8 @@ def 提取精确允许文件(计划文本: str, 当前计划路径: str | None =
                 候选 = 表格匹配.group(1)
         if 候选 is None or not re.search(r"\.(?:h|cpp|ixx|vcxproj|filters|md)$", 候选, re.IGNORECASE):
             continue
+        if Path(候选).suffix.lower() == ".md":
+            continue
         路径, 错误 = 解析仓库内路径(候选)
         if 错误 or 路径 is None:
             return set(), f"允许文件路径非法: {候选}（{错误}）"
@@ -329,15 +346,15 @@ def 提取精确允许文件(计划文本: str, 当前计划路径: str | None =
     return 允许文件, None
 
 
-def 读取工作树变更路径(工作树路径: str) -> tuple[set[str], str | None]:
+def 读取工作树变更状态(工作树路径: str) -> tuple[dict[str, str], str | None]:
     状态 = subprocess.run(
         ["git", "status", "--porcelain=v1", "-z"], cwd=工作树路径, text=True,
         encoding="utf-8", errors="replace", capture_output=True, check=False,
     )
     if 状态.returncode != 0:
-        return set(), 状态.stderr.strip() or 状态.stdout.strip()
+        return {}, 状态.stderr.strip() or 状态.stdout.strip()
     记录 = 状态.stdout.split("\0")
-    变更路径: set[str] = set()
+    变更状态: dict[str, str] = {}
     索引 = 0
     while 索引 < len(记录):
         当前 = 记录[索引]
@@ -345,16 +362,59 @@ def 读取工作树变更路径(工作树路径: str) -> tuple[set[str], str | N
             索引 += 1
             continue
         if len(当前) < 4:
-            return set(), f"无法解析 porcelain 记录: {当前!r}"
+            return {}, f"无法解析 porcelain 记录: {当前!r}"
         状态码 = 当前[:2]
-        变更路径.add(当前[3:].replace("\\", "/"))
+        变更状态[当前[3:].replace("\\", "/")] = 状态码
         if "R" in 状态码 or "C" in 状态码:
             索引 += 1
             if 索引 >= len(记录) or not 记录[索引]:
-                return set(), "重命名 / 复制记录缺少原路径"
-            变更路径.add(记录[索引].replace("\\", "/"))
+                return {}, "重命名 / 复制记录缺少原路径"
+            变更状态[记录[索引].replace("\\", "/")] = 状态码
         索引 += 1
-    return 变更路径, None
+    return 变更状态, None
+
+
+def 计算指定工作树Blob(工作树路径: str, 相对路径: str) -> tuple[str | None, str | None]:
+    结果 = subprocess.run(
+        ["git", "hash-object", "--filters", f"--path={相对路径}", "--", 相对路径],
+        cwd=工作树路径,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        capture_output=True,
+        check=False,
+    )
+    if 结果.returncode != 0:
+        return None, 结果.stderr.strip() or 结果.stdout.strip()
+    return 结果.stdout.strip(), None
+
+
+def 分离执行Markdown变更(
+    任务: str,
+    工作树路径: str,
+    变更状态: dict[str, str],
+) -> tuple[set[str], list[str]]:
+    非Markdown路径: set[str] = set()
+    错误: list[str] = []
+    for 相对路径, 状态码 in 变更状态.items():
+        if Path(相对路径).suffix.lower() != ".md":
+            非Markdown路径.add(相对路径)
+            continue
+        遗留例外 = 执行Markdown遗留例外.get(任务)
+        if 遗留例外 is None or 相对路径 != 遗留例外[0]:
+            错误.append(f"执行窗口不得新增、修改、移动、删除、暂存或提交 Markdown: {相对路径}")
+            continue
+        if 状态码 != "??":
+            错误.append(f"遗留 Markdown 只能保持未跟踪隔离，实际状态 {状态码!r}: {相对路径}")
+            continue
+        实际Blob, Blob错误 = 计算指定工作树Blob(工作树路径, 相对路径)
+        if Blob错误:
+            错误.append(f"无法核对遗留 Markdown blob: {相对路径}（{Blob错误}）")
+        elif 实际Blob != 遗留例外[1]:
+            错误.append(
+                f"遗留 Markdown 内容 blob 漂移: {相对路径}（实际 {实际Blob}，预期 {遗留例外[1]}）"
+            )
+    return 非Markdown路径, 错误
 
 
 def 解析主线发布占用(技术状态: str) -> tuple[str | None, bool]:
@@ -402,6 +462,177 @@ def 解析全部同结构表格(
     if 命中表数 == 0:
         结果.append(检查项("ERROR", 文件相对路径, f"缺少结构化表: {', '.join(预期字段)}"))
     return 项目, 结果
+
+
+def 提取Markdown表格(文本: str) -> list[tuple[int, list[str], list[tuple[int, dict[str, str]]]]]:
+    行 = 文本.splitlines()
+    表格: list[tuple[int, list[str], list[tuple[int, dict[str, str]]]]] = []
+    for 表头位置 in range(len(行) - 1):
+        表头行 = 行[表头位置]
+        分隔行 = 行[表头位置 + 1]
+        if not 表头行.lstrip().startswith("|") or not 分隔行.lstrip().startswith("|"):
+            continue
+        字段 = [清理表格单元格(项) for 项 in 表头行.strip().strip("|").split("|")]
+        分隔 = [项.strip() for 项 in 分隔行.strip().strip("|").split("|")]
+        if len(字段) != len(分隔) or not all(re.fullmatch(r":?-{3,}:?", 项) for 项 in 分隔):
+            continue
+        项目: list[tuple[int, dict[str, str]]] = []
+        for 数据位置 in range(表头位置 + 2, len(行)):
+            数据行 = 行[数据位置]
+            if not 数据行.lstrip().startswith("|"):
+                break
+            单元格 = [清理表格单元格(项) for 项 in 数据行.strip().strip("|").split("|")]
+            if len(单元格) != len(字段):
+                continue
+            项目.append((数据位置 + 1, dict(zip(字段, 单元格))))
+        表格.append((表头位置 + 1, 字段, 项目))
+    return 表格
+
+
+def 检查计划索引治理() -> list[检查项]:
+    相对路径 = "计划/计划索引.md"
+    if not 计划索引路径.is_file():
+        return [检查项("ERROR", 相对路径, "缺少计划索引")]
+    结果: list[检查项] = []
+    文本 = 读取文本(计划索引路径)
+    全部表格 = 提取Markdown表格(文本)
+
+    叶子必需字段 = {"路由", "计划", "计划激活状态", "任务状态定位键"}
+    叶子表 = [表 for 表 in 全部表格 if 叶子必需字段.issubset(set(表[1]))]
+    if len(叶子表) != 1:
+        结果.append(
+            检查项(
+                "ERROR", 相对路径,
+                f"必须且只能有一个含路由、计划、计划激活状态、任务状态定位键的叶子登记表，实际 {len(叶子表)} 个",
+            )
+        )
+        叶子行: list[tuple[int, dict[str, str]]] = []
+    else:
+        叶子行 = 叶子表[0][2]
+
+    叶子任务: dict[str, tuple[int, dict[str, str]]] = {}
+    for 行号, 字段 in 叶子行:
+        任务匹配 = re.findall(r"#\d+", 字段["路由"])
+        if len(任务匹配) != 1 or 任务匹配[0] not in 受管任务编号:
+            continue
+        任务 = 任务匹配[0]
+        if 任务 in 叶子任务:
+            结果.append(检查项("ERROR", 相对路径, f"第 {行号} 行 {任务} 叶子计划登记重复"))
+            continue
+        叶子任务[任务] = (行号, 字段)
+        激活状态 = 字段["计划激活状态"]
+        if 激活状态 not in 合法计划激活状态:
+            结果.append(检查项("ERROR", 相对路径, f"{任务} 使用非法计划激活状态: {激活状态}"))
+        if 激活状态 in 合法任务状态:
+            结果.append(检查项("ERROR", 相对路径, f"{任务} 把计划激活状态写成任务生命周期: {激活状态}"))
+        if 任务 not in 字段["任务状态定位键"]:
+            结果.append(检查项("ERROR", 相对路径, f"{任务} 任务状态定位键未包含自身任务编号"))
+    缺少叶子 = sorted(受管任务编号 - set(叶子任务), key=lambda 值: int(值[1:]))
+    if 缺少叶子:
+        结果.append(检查项("ERROR", 相对路径, f"叶子登记缺少计划激活状态行: {', '.join(缺少叶子)}"))
+    if "| 当前生命周期 |" in 文本 or "| 当前状态 |" in 文本:
+        结果.append(检查项("ERROR", 相对路径, "计划索引不得用任务生命周期 / 当前状态列替代计划激活状态"))
+
+    台账文本 = 读取文本(任务状态台账路径) if 任务状态台账路径.is_file() else ""
+    台账表 = [
+        表 for 表 in 提取Markdown表格(台账文本)
+        if {"任务", "计划版本", "计划 blob", "worktree 引用"}.issubset(set(表[1]))
+    ]
+    台账任务: dict[str, dict[str, str]] = {}
+    if len(台账表) == 1:
+        台账任务 = {字段["任务"]: 字段 for _, 字段 in 台账表[0][2] if 字段["任务"] in 受管任务编号}
+
+    序列表 = [
+        表 for 表 in 全部表格
+        if "序列名" in 表[1] and ("任务顺序" in 表[1] or {"顺序", "任务"}.issubset(set(表[1])))
+    ]
+    if not 序列表:
+        结果.append(检查项("ERROR", 相对路径, "缺少可解析的具名有序执行序列表"))
+        return 结果
+
+    已见序列: set[str] = set()
+    已登记任务: set[str] = set()
+    定位字段候选 = ("合同定位", "定位键", "计划 / blob / worktree 定位", "计划合同定位")
+    for _, 字段列表, 行项目 in 序列表:
+        if "任务顺序" in 字段列表:
+            for 行号, 字段 in 行项目:
+                序列名 = 字段["序列名"].strip()
+                if not 序列名:
+                    结果.append(检查项("ERROR", 相对路径, f"第 {行号} 行执行序列缺少序列名"))
+                    continue
+                if 序列名 in 已见序列:
+                    结果.append(检查项("ERROR", 相对路径, f"执行序列名重复: {序列名}"))
+                已见序列.add(序列名)
+                任务顺序 = re.findall(r"#\d+", 字段["任务顺序"])
+                if not 任务顺序 or len(任务顺序) != len(set(任务顺序)):
+                    结果.append(检查项("ERROR", 相对路径, f"序列 {序列名} 的任务顺序为空或含重复任务"))
+                for 任务 in 任务顺序:
+                    if 任务 not in 受管任务编号:
+                        结果.append(检查项("ERROR", 相对路径, f"序列 {序列名} 含非受管任务 {任务}"))
+                    if 任务 in 已登记任务:
+                        结果.append(检查项("ERROR", 相对路径, f"任务 {任务} 被重复登记到多个执行序列"))
+                    已登记任务.add(任务)
+                定位字段 = next((字段名 for 字段名 in 定位字段候选 if 字段名 in 字段), None)
+                定位 = 字段.get(定位字段, "") if 定位字段 else ""
+                定位要素 = ("任务状态台账", "计划版本", "计划 blob", "worktree")
+                if not all(要素 in 定位 for 要素 in 定位要素) or not re.search(r"唯一行|最新行", 定位):
+                    结果.append(
+                        检查项(
+                            "ERROR", 相对路径,
+                            f"序列 {序列名} 未显式列出合同，且合同定位不能语义定位到台账唯一行",
+                        )
+                    )
+            continue
+
+        分组: dict[str, list[tuple[int, dict[str, str]]]] = {}
+        for 行号, 字段 in 行项目:
+            分组.setdefault(字段["序列名"].strip(), []).append((行号, 字段))
+        for 序列名, 序列行 in 分组.items():
+            if not 序列名:
+                结果.append(检查项("ERROR", 相对路径, "逐任务执行序列表含空序列名"))
+                continue
+            if 序列名 in 已见序列:
+                结果.append(检查项("ERROR", 相对路径, f"执行序列名重复: {序列名}"))
+            已见序列.add(序列名)
+            顺序值: list[int] = []
+            序列内任务: set[str] = set()
+            for 行号, 字段 in 序列行:
+                if not 字段["顺序"].isdigit() or int(字段["顺序"]) < 1:
+                    结果.append(检查项("ERROR", 相对路径, f"序列 {序列名} 第 {行号} 行顺序必须为正整数"))
+                    continue
+                顺序值.append(int(字段["顺序"]))
+                任务匹配 = re.findall(r"#\d+", 字段["任务"])
+                if len(任务匹配) != 1 or 任务匹配[0] not in 受管任务编号:
+                    结果.append(检查项("ERROR", 相对路径, f"序列 {序列名} 第 {行号} 行任务非法"))
+                    continue
+                任务 = 任务匹配[0]
+                if 任务 in 序列内任务 or 任务 in 已登记任务:
+                    结果.append(检查项("ERROR", 相对路径, f"任务 {任务} 在具名执行序列中重复"))
+                序列内任务.add(任务)
+                已登记任务.add(任务)
+                台账字段 = 台账任务.get(任务)
+                显式字段 = {"计划版本", "计划 blob", "worktree 引用"}.issubset(set(字段列表))
+                if 显式字段:
+                    if 台账字段 is None:
+                        结果.append(检查项("ERROR", 相对路径, f"序列 {序列名} 的 {任务} 无法定位台账唯一行"))
+                    else:
+                        for 字段名 in ("计划版本", "计划 blob", "worktree 引用"):
+                            if 字段[字段名] != 台账字段[字段名]:
+                                结果.append(
+                                    检查项("ERROR", 相对路径, f"序列 {序列名} 的 {任务} {字段名} 与台账不一致")
+                                )
+                else:
+                    定位字段 = next((字段名 for 字段名 in 定位字段候选 if 字段名 in 字段), None)
+                    定位 = 字段.get(定位字段, "") if 定位字段 else ""
+                    必需定位 = (任务, "任务状态台账", "计划 blob", "worktree")
+                    if not all(要素 in 定位 for 要素 in 必需定位) or not re.search(r"唯一行|最新行", 定位):
+                        结果.append(
+                            检查项("ERROR", 相对路径, f"序列 {序列名} 的 {任务} 缺少完整合同或唯一行语义定位")
+                        )
+            if sorted(顺序值) != list(range(1, len(序列行) + 1)):
+                结果.append(检查项("ERROR", 相对路径, f"序列 {序列名} 的顺序必须从 1 连续且唯一"))
+
+    return 结果
 
 
 def 计算工作树Blob(相对路径: str) -> tuple[str | None, str | None]:
@@ -870,12 +1101,12 @@ def 检查任务状态治理() -> list[检查项]:
 
     派发闭合状态 = {
         "已派发待执行回执", "执行中", "分支完成待集成",
-        "已派发待集成回执", "集成中", "集成失败退回任务",
+        "已派发待集成回执", "集成中", "集成身份冲突待设计重建", "集成失败退回任务",
         "集成分支验证通过待主线发布", "已集成待设计同步",
     }
     派发等待S0状态 = {"已派发待执行回执", "已派发待集成回执"}
     S0已接受状态 = {
-        "执行中", "分支完成待集成", "集成中", "集成失败退回任务",
+        "执行中", "分支完成待集成", "集成中", "集成身份冲突待设计重建", "集成失败退回任务",
         "集成分支验证通过待主线发布", "已集成待设计同步",
     }
 
@@ -1190,7 +1421,8 @@ def 检查任务状态治理() -> list[检查项]:
                 if 字段["当前生命周期"] == "集成中" and 占用状态 != "已取得":
                     结果.append(检查项("ERROR", 文件相对路径, f"{任务} 集成中技术登记未证明主线发布占用"))
                 if 字段["当前生命周期"] in {
-                    "集成失败退回任务", "集成分支验证通过待主线发布", "已集成待设计同步",
+                    "集成身份冲突待设计重建", "集成失败退回任务",
+                    "集成分支验证通过待主线发布", "已集成待设计同步",
                 } and 占用状态 != "已释放":
                     结果.append(检查项("ERROR", 文件相对路径, f"{任务} 集成交接 / 退回状态未登记主线占用已释放"))
 
@@ -1220,13 +1452,25 @@ def 检查任务状态治理() -> list[检查项]:
                             分支结果 = 目标Git("branch", "--show-current")
                             HEAD结果 = 目标Git("rev-parse", "HEAD")
                             状态结果 = 目标Git("status", "--porcelain")
+                            任务非Markdown变更: set[str] | None = None
+                            任务状态错误: str | None = None
+                            if 任务工作树匹配:
+                                变更状态, 任务状态错误 = 读取工作树变更状态(目标路径)
+                                if 任务状态错误:
+                                    结果.append(
+                                        检查项("ERROR", 文件相对路径, f"{任务} 无法读取执行工作树变更: {任务状态错误}")
+                                    )
+                                else:
+                                    任务非Markdown变更, Markdown错误 = 分离执行Markdown变更(任务, 目标路径, 变更状态)
+                                    for 错误说明 in Markdown错误:
+                                        结果.append(检查项("ERROR", 文件相对路径, f"{任务} {错误说明}"))
                             实际HEAD = HEAD结果.stdout.strip() if HEAD结果.returncode == 0 else ""
                             if 分支结果.returncode != 0 or 分支结果.stdout.strip() != 目标分支:
                                 结果.append(检查项("ERROR", 文件相对路径, f"{任务} worktree 实际分支与登记不一致"))
                             if 字段["当前生命周期"] in {"待执行", "已派发待执行回执"}:
                                 if 实际HEAD != 基线提交:
                                     结果.append(检查项("ERROR", 文件相对路径, f"{任务} S0 前 worktree HEAD 必须等于冻结基线"))
-                                if 状态结果.returncode != 0 or 状态结果.stdout.strip():
+                                if 状态结果.returncode != 0 or 任务状态错误 or 任务非Markdown变更:
                                     结果.append(检查项("ERROR", 文件相对路径, f"{任务} S0 前 worktree 必须 clean"))
                             elif 字段["当前生命周期"] == "已派发待集成回执":
                                 祖先结果 = 目标Git("merge-base", "--is-ancestor", 基线提交, 实际HEAD)
@@ -1241,18 +1485,20 @@ def 检查任务状态治理() -> list[检查项]:
                                 if 字段["当前生命周期"] in {
                                     "分支完成待集成", "集成失败退回任务",
                                     "集成分支验证通过待主线发布", "已集成待设计同步",
-                                } and (状态结果.returncode != 0 or 状态结果.stdout.strip()):
+                                } and (
+                                    状态结果.returncode != 0 or 任务状态错误
+                                    or (任务非Markdown变更 if 任务工作树匹配 else 状态结果.stdout.strip())
+                                ):
                                     结果.append(检查项("ERROR", 文件相对路径, f"{任务} 交接 / 退回阶段 worktree 必须 clean"))
                                 if 字段["当前生命周期"] == "执行中":
                                     允许文件, 允许错误 = 提取精确允许文件(计划文本, 计划路径)
                                     if 允许错误:
                                         结果.append(检查项("ERROR", 计划路径, f"无法建立执行期 dirty 白名单: {允许错误}"))
                                     else:
-                                        变更路径, 状态错误 = 读取工作树变更路径(目标路径)
-                                        if 状态错误:
-                                            结果.append(检查项("ERROR", 文件相对路径, f"{任务} 无法读取执行期 dirty 文件: {状态错误}"))
-                                        else:
-                                            越界路径 = sorted(变更路径 - 允许文件)
+                                        if 任务状态错误:
+                                            结果.append(检查项("ERROR", 文件相对路径, f"{任务} 无法读取执行期 dirty 文件: {任务状态错误}"))
+                                        elif 任务非Markdown变更 is not None:
+                                            越界路径 = sorted(任务非Markdown变更 - 允许文件)
                                             if 越界路径:
                                                 结果.append(
                                                     检查项(
@@ -1494,6 +1740,7 @@ def 主函数() -> int:
     结果.extend(检查目录文件(项目))
     结果.extend(检查规范关系图(项目))
     结果.extend(检查退出文件())
+    结果.extend(检查计划索引治理())
     结果.extend(检查任务状态治理())
     打印结果(结果, sum(项.编号 != "000" for 项 in 项目))
 

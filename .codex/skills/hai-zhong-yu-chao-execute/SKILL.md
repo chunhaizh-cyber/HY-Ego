@@ -1,6 +1,6 @@
 ---
 name: hai-zhong-yu-chao-execute
-description: Execute or resume one formally assigned 海中鱼巣 implementation plan. Use only when the current top-level task is registered as the execution role and the user says 执行, 继续执行, 按照计划索引执行, 继续执行计划, 持续执行, or explicitly asks to consume this task worktree's assigned plan. Never trigger from bare 继续, never select a global next plan, and never update central design governance.
+description: Execute or resume the formally assigned plan or named ordered plan sequence for one 海中鱼巣 execution task. Use only when the current top-level task is registered as the execution role and the user says 执行, 继续执行, 按照计划索引执行, 继续执行计划, 持续执行, or explicitly asks to consume this task's assigned sequence. Never trigger from bare 继续, never select outside the assigned sequence, and never update central design governance or Markdown.
 ---
 
 # 海中鱼巣执行
@@ -11,7 +11,7 @@ description: Execute or resume one formally assigned 海中鱼巣 implementation
 
 不得硬编码仓库或 worktree 路径。用 Git 顶层、`项目记忆/任务状态台账.md`、`git worktree list --porcelain` 和 `项目记忆/并行工作树登记表.md` 解析当前任务生命周期与 worktree，并确认状态版本、计划 blob、路径、分支、HEAD、冻结基线、所有者和 dirty state 完全一致。
 
-本技能只消费当前 worktree 正式分配的唯一计划。不得从全局计划索引挑选“下一项”，不得因为另一个计划依赖已满足就自动执行，也不得把裸 `继续` 解释为角色切换。
+本技能只消费当前任务正式分配的唯一计划，或设计窗口已经发布的具名有序执行序列。不得从全局计划索引挑选序列外“下一项”，不得把裸 `继续` 解释为角色切换。序列内当前计划完成，或因无法解决 / 需要修订而已由设计窗口确认冻结为 `待激活` 后，下一项已为 `可执行` 且本地 S0 PASS 时可以直接继续，不需要逐份重新派发、等待设计再次接受 S0 或等待上一计划完成集成。
 
 执行任务树的后代只能继承执行角色或只读；不得承担设计或集成写角色。多个计划允许切片确实可隔离时才使用执行 / 只读子智能体，并冻结唯一所有权；Git 暂存、提交和推送由指定智能体串行收口。
 
@@ -21,14 +21,14 @@ description: Execute or resume one formally assigned 海中鱼巣 implementation
 
 ```text
 读取 AGENTS.md 要求的共同入口
--> 读取任务状态台账中本任务唯一当前行、当前计划、任务队列中的依赖、worktree 登记和执行断点
+-> 读取任务状态台账中本任务唯一当前行、计划索引中的激活状态 / 具名执行序列、当前计划、任务队列中的依赖、worktree 登记，以及设计窗口形成的正式实施 / 冻结记录（如有）
 -> 读取关联规范、流程图、详细设计，以及实际代码接口或计划登记的预冻结待实现接口合同
 -> 核对允许 / 禁止文件、依赖产物或合同版本、提供者 / 消费者所有权、验证矩阵和完成边界
--> 核对当前任务树角色、状态版本、派发计划 blob、S0 计划 blob、worktree、分支、HEAD、dirty state 与所有权
+-> 核对当前任务树角色、状态版本、派发计划 blob、S0 计划 blob、具名序列、计划激活状态、worktree、分支、HEAD、dirty state 与所有权
 -> 返回 PASS 或具名 DRIFT
 ```
 
-只有台账当前状态已由设计窗口接受到允许写入的阶段，且台账计划 blob、派发计划 blob、S0 计划 blob、实际计划、设计材料、实际接口或预冻结合同和 Git 身份全部一致时才能写入。合同并行任务中，提供者实现尚不存在属于计划内当前事实，不得仅因此返回 DRIFT；执行者必须确认自己只按合同形成候选，且不修改接口所有者或共享接线文件。
+首次接管任务或序列时，只有台账当前状态已由设计窗口接受到允许写入的阶段，且台账计划 blob、派发计划 blob、S0 计划 blob、实际计划、设计材料、实际接口或预冻结合同和 Git 身份全部一致时才能写入。序列内后续计划还必须已由设计窗口预先冻结版本、blob、worktree、所有权和顺序，计划索引激活状态为 `可执行`，上一计划已完成或已被设计确认冻结，并由执行窗口重新完成本地 S0；满足这些条件后不再要求逐份派发或设计重复接受 PASS。合同并行任务中，提供者实现尚不存在属于计划内当前事实，不得仅因此返回 DRIFT；执行者必须确认自己只按合同形成候选，且不修改接口所有者或共享接线文件。
 
 ## 执行算法
 
@@ -36,12 +36,13 @@ description: Execute or resume one formally assigned 海中鱼巣 implementation
 取得当前唯一登记计划
 -> 复核具名前置产物与实际接口，或预冻结接口合同
 -> 按计划机械阶段实施最小闭合切片
--> 只修改允许的代码 / 工程 / 自检和执行专属记录
+-> 只修改允许的代码 / 工程 / 自检
 -> 运行计划明确授权的验证
--> 写执行专属实施记录或复核断点
 -> 精确提交并非强制推送同名任务分支
--> 向设计窗口返回分支完成或精确退回回执
--> 停止，不选择全局下一计划，不自行集成
+-> 向设计窗口返回结构化的完成、冻结、漂移或失败回执
+-> 当前项正常完成，或设计已确认冻结为待激活：对具名序列下一项重新执行本地 S0
+-> 下一项可执行且 S0 PASS：直接继续；否则停止等待设计
+-> 不选择序列外计划，不自行集成
 ```
 
 代码计划必须明确允许文件、禁止文件和验证命令。新增文件或修改 `入口.cpp` 时，还必须符合 `规范/代码文件建立归属与模块命名规范.md` 及计划中的文件分类 / 装配合同。
@@ -50,15 +51,13 @@ description: Execute or resume one formally assigned 海中鱼巣 implementation
 
 ## 允许写入
 
-只允许：
-
-- 当前登记计划列出的代码、工程和自检文件。
-- 当前任务专属的 `实施记录/*`、执行前复核或接口漂移断点。
+只允许当前登记计划列出的代码、工程和自检文件。任何低位计划、旧交互规范或历史实施习惯列出的 Markdown 路径都不再构成执行写权或完成必需项。
 
 禁止修改或移动：
 
 ```text
 AGENTS.md
+**/*.md
 规范/**
 流程图/**
 规范/详细设计/**
@@ -87,9 +86,9 @@ AGENTS.md
 - 有效流程图 / 详细设计缺失、撤回或不能覆盖计划范围。
 - 发现需要新的业务裁决。
 
-只在执行专属断点写明计划 / 队列编号、派发基线、实际接口、具名差异、已改文件、验证、保留 WIP 或撤回状态、建议设计动作和完成边界。不得替设计窗口修订计划、登记前置计划、解除依赖或修改中央状态。
+通过结构化消息写明计划 / 队列编号、计划版本与 blob、派发基线、实际接口、具名差异、已改文件、验证、保留 WIP 或撤回状态、建议设计动作和完成边界。不得在仓库内新建或修改断点 Markdown，不得替设计窗口修订计划、登记前置计划、解除依赖或修改中央状态。设计窗口确认当前计划冻结后，执行窗口按具名序列检查下一项；确认到达前不得用口头猜测跳过当前项。
 
-断点验证后只提交并推送当前任务分支，再发送退回消息。推送失败时保留本地事实并如实报告，不宣称设计窗口已经取得正式回执。
+代码差异验证后只提交并推送当前任务分支，再发送退回消息。推送失败时保留本地事实并如实报告，不宣称设计窗口已经取得正式回执。
 
 ## 完成与 Git 收口
 
@@ -100,12 +99,12 @@ git diff --check
 git diff --cached --check
 ```
 
-只暂存当前计划允许文件和执行专属记录，提交后非强制推送同名 `codex/*` 任务分支。禁止 force、merge、rebase、cherry-pick、把 main 拉入任务分支或直接推送 `origin/main`。
+只暂存当前计划允许的代码、工程和自检文件，提交后非强制推送同名 `codex/*` 任务分支。任何 Markdown 都不得进入 index。禁止 force、merge、rebase、cherry-pick、把 main 拉入任务分支或直接推送 `origin/main`。
 
-回执只能建议保持执行中续点、迁移为 `接口漂移待设计修订` 或 `分支完成待集成`；执行窗口不得直接修改中央任务状态台账。任务分支完成不等于进入 main，也不授权当前执行任务创建集成 worktree、修改中央路由或消费另一计划。
+回执只能建议保持执行中续点、将当前计划冻结为 `待激活`、迁移为 `接口漂移待设计修订` 或 `分支完成待集成`；执行窗口不得直接修改计划索引或中央任务状态台账。任务分支完成不等于进入 main，也不授权当前执行任务创建集成 worktree、修改中央路由或消费序列外计划。
 
 ## 停止条件
 
-当前计划完成、退回、用户暂停、角色 / 规则冲突、依赖未满足、身份漂移、验证失败或计划要求的环境不可用时停止并回执。平台轮次结束但未命中完成 / 退回条件时，只写精确执行续点并保持执行中。
+当前计划完成时先回执，再按已发布序列判断是否直接进入下一项；没有下一项才停止。无法解决、需要修订、用户暂停、角色 / 规则冲突、依赖未满足、身份漂移、验证失败或计划要求的环境不可用时停止当前项并回执；只有设计确认冻结后才越过当前项。平台轮次结束但未命中完成 / 退回条件时，只发送精确执行续点并保持执行中。
 
 不得用本技能声明计划归档、主线集成、完整业务闭环、旧能力等价迁移、外设接通、自我循环、自我苏醒或成熟验收。
