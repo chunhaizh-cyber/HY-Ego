@@ -53,12 +53,12 @@
 
 | 包 | 详细设计 | 现状 / 施工流程图主题 | 知识图谱 |
 | --- | --- | --- | --- |
-| NT-P1 | `规范/详细设计/NODE-TYPED-MIGRATION_NT-P1_节点直接身份与类型化记录事务底座详细设计.md` | `20260722_NODE-TYPED-MIGRATION_NT-P1_节点直接身份与事务底座现状/施工流程图_v0.1` | `项目记忆/设计记录/20260722_NODE-TYPED-MIGRATION_NT-P1_函数结构知识图谱.md` |
-| NT-P2A | `规范/详细设计/NODE-TYPED-MIGRATION_NT-P2A_特征值类型化记录与当前关系迁移详细设计.md` | `20260722_NODE-TYPED-MIGRATION_NT-P2A_特征值类型化记录迁移现状/施工流程图_v0.1` | `项目记忆/设计记录/20260722_NODE-TYPED-MIGRATION_NT-P2A_函数结构知识图谱.md` |
-| NT-P2B | `规范/详细设计/NODE-TYPED-MIGRATION_NT-P2B_状态动态完整事实类型化迁移详细设计.md` | `20260722_NODE-TYPED-MIGRATION_NT-P2B_状态动态完整事实迁移现状/施工流程图_v0.1` | `项目记忆/设计记录/20260722_NODE-TYPED-MIGRATION_NT-P2B_函数结构知识图谱.md` |
-| NT-P2C | `规范/详细设计/NODE-TYPED-MIGRATION_NT-P2C_自我内部世界与事实投影迁移详细设计.md` | `20260722_NODE-TYPED-MIGRATION_NT-P2C_自我内部世界与事实投影迁移现状/施工流程图_v0.1` | `项目记忆/设计记录/20260722_NODE-TYPED-MIGRATION_NT-P2C_函数结构知识图谱.md` |
+| NT-P1 | `规范/详细设计/NODE-TYPED-MIGRATION_NT-P1_节点直接身份与类型化记录事务底座详细设计.md` | `20260722_NODE-TYPED-MIGRATION_NT-P1_节点直接身份与事务底座现状/施工流程图_v0.1` | `规范/详细设计/函数结构知识图谱/20260722_NODE-TYPED-MIGRATION_NT-P1_函数结构知识图谱.md` |
+| NT-P2A | `规范/详细设计/NODE-TYPED-MIGRATION_NT-P2A_特征值类型化记录与当前关系迁移详细设计.md` | `20260722_NODE-TYPED-MIGRATION_NT-P2A_特征值类型化记录迁移现状/施工流程图_v0.1` | `规范/详细设计/函数结构知识图谱/20260722_NODE-TYPED-MIGRATION_NT-P2A_函数结构知识图谱.md` |
+| NT-P2B | `规范/详细设计/NODE-TYPED-MIGRATION_NT-P2B_状态动态完整事实类型化迁移详细设计.md` | `20260722_NODE-TYPED-MIGRATION_NT-P2B_状态动态完整事实迁移现状/施工流程图_v0.1` | `规范/详细设计/函数结构知识图谱/20260722_NODE-TYPED-MIGRATION_NT-P2B_函数结构知识图谱.md` |
+| NT-P2C | `规范/详细设计/NODE-TYPED-MIGRATION_NT-P2C_自我内部世界与事实投影迁移详细设计.md` | `20260722_NODE-TYPED-MIGRATION_NT-P2C_自我内部世界与事实投影迁移现状/施工流程图_v0.1` | `规范/详细设计/函数结构知识图谱/20260722_NODE-TYPED-MIGRATION_NT-P2C_函数结构知识图谱.md` |
 | NT-P3 | `规范/详细设计/NODE-TYPED-MIGRATION_NT-P3_服务兼容删除审计迁移详细设计.md` | `20260722_NODE-TYPED-MIGRATION_NT-P3_服务兼容删除审计迁移现状/施工流程图_v0.1` | `规范/详细设计/函数结构知识图谱/20260722_NODE-TYPED-MIGRATION_NT-P3_函数结构知识图谱.md` |
-| NT-P4 | `规范/详细设计/NODE-TYPED-MIGRATION_NT-P4_统一快照恢复退役验收详细设计.md` | `20260722_NODE-TYPED-MIGRATION_NT-P4_统一快照恢复退役现状/施工流程图_v0.1` | `项目记忆/设计记录/20260722_NODE-TYPED-MIGRATION_NT-P4_函数结构知识图谱.md` |
+| NT-P4 | `规范/详细设计/NODE-TYPED-MIGRATION_NT-P4_统一快照恢复退役验收详细设计.md` | `20260722_NODE-TYPED-MIGRATION_NT-P4_统一快照恢复退役现状/施工流程图_v0.1` | `规范/详细设计/函数结构知识图谱/20260722_NODE-TYPED-MIGRATION_NT-P4_函数结构知识图谱.md` |
 
 上述流程图主题必须各自同时存在 `.md` 与 `.html`，且 Mermaid 主体一致。
 
