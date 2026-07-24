@@ -1,4 +1,4 @@
 interface:
   display_name: "海中鱼巣实施前审查"
-  short_description: "Check Sea Nest implementation readiness before editing"
-  default_prompt: "Use $hai-zhong-yu-chao-pre-implementation-review to 在改代码或文档前审查事实、规范、计划、允许文件、禁止文件和验证方式。"
+  short_description: "Read-only PASS or DRIFT review before Sea Nest execution"
+  default_prompt: "Use $hai-zhong-yu-chao-pre-implementation-review to return a read-only PASS or named DRIFT against current Sea Nest plans, ownership, interfaces, and Git facts."

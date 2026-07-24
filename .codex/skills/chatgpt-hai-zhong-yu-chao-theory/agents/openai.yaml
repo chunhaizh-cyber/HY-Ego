@@ -1,4 +1,4 @@
 interface:
   display_name: "ChatGPT 海中鱼巣理论探讨"
-  short_description: "Review 海中鱼巣 theory, state, and sync drafts against project rules"
-  default_prompt: "Use $chatgpt-hai-zhong-yu-chao-theory to analyze a 海中鱼巣 design or state snapshot, find conflicts, and draft conservative project-memory or spec updates."
+  short_description: "Read-only Sea Nest theory and design-input review"
+  default_prompt: "Use $chatgpt-hai-zhong-yu-chao-theory to read-only review Sea Nest evidence and produce clearly labeled design inputs."

@@ -1,4 +1,4 @@
 interface:
   display_name: "海中鱼巣计划"
-  short_description: "Create spec-based plans and isolate safe parallel work"
-  default_prompt: "Use $hai-zhong-yu-chao-plan to 生成或修订海中鱼巣计划，只对真实依赖设置门控，并优先隔离可安全并发的计划。"
+  short_description: "Create or revise lifecycle-owned Sea Nest design packages"
+  default_prompt: "Use $hai-zhong-yu-chao-plan to create an unselected new Sea Nest design package as a plan agent or revise an execution-selected package as its paired plan-support agent."

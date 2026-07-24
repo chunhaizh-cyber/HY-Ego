@@ -1,4 +1,4 @@
 interface:
-  display_name: "海中鱼巢流程图纠偏"
-  short_description: "根据代码画现状流程图、审查非成功返回并生成修订计划。"
-  default_prompt: "根据当前代码生成现状流程图，审查非成功返回，形成偏差清单和修订计划。"
+  display_name: "海中鱼巣流程图纠偏"
+  short_description: "Map current code to flowcharts and owned correction plans"
+  default_prompt: "Use $hai-zhong-yu-chao-flowchart-code-correction to map current Sea Nest code into flowcharts and route deviations within the current owned design package."

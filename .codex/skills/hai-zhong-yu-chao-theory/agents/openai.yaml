@@ -1,4 +1,4 @@
 interface:
   display_name: "海中鱼巣理论草稿"
-  short_description: "Draft and review Sea Nest theory, specs, and migration口径"
-  default_prompt: "Use $hai-zhong-yu-chao-theory to 分析和起草海中鱼巣理论、规范、计划和迁移口径，避免把设计或扫描夸大成实现。"
+  short_description: "Turn Sea Nest theory into governed design inputs"
+  default_prompt: "Use $hai-zhong-yu-chao-theory to analyze Sea Nest theory into governed design inputs, writing files only when the current plan or plan-support agent owns that design package."

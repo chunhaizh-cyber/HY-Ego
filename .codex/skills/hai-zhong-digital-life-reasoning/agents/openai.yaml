@@ -1,4 +1,4 @@
 interface:
   display_name: "海中鱼巣推理"
-  short_description: "Reason digital-life theory into Sea Nest structures"
-  default_prompt: "Use $hai-zhong-digital-life-reasoning to 将数字生命理论推理映射到海中鱼巣结构、服务边界和验证路径。"
+  short_description: "Map digital-life reasoning into Sea Nest design inputs"
+  default_prompt: "Use $hai-zhong-digital-life-reasoning to map digital-life reasoning into testable Sea Nest design inputs without formalizing them directly."

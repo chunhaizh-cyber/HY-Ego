@@ -1,4 +1,4 @@
 interface:
   display_name: "海中鱼巣事实扫描"
-  short_description: "Scan current Sea Nest worktree facts before planning or editing"
-  default_prompt: "Use $hai-zhong-yu-chao-current-fact-scan to 做 S0 当前代码事实扫描，确认真实入口、调用点、承载结构和 dirty state。"
+  short_description: "Read-only scan of current Sea Nest code and Git facts"
+  default_prompt: "Use $hai-zhong-yu-chao-current-fact-scan to read-only verify current Sea Nest code entry points, structures, worktree identity, and dirty state."

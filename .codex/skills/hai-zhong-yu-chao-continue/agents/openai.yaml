@@ -1,4 +1,4 @@
 interface:
   display_name: "海中鱼巣继续路由"
-  short_description: "Route Sea Nest continuation by current window type"
-  default_prompt: "Use $hai-zhong-yu-chao-continue to 根据当前窗口类型和正式登记角色继续海中鱼巣工作，不切换角色。"
+  short_description: "Route continuation across four Sea Nest agent types"
+  default_prompt: "Use $hai-zhong-yu-chao-continue to continue only the current interaction, plan, execution, or plan-support agent slice."

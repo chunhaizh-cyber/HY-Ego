@@ -1,4 +1,4 @@
 interface:
   display_name: "海中鱼巣执行"
-  short_description: "Consume Sea Nest executable plan-list items safely"
-  default_prompt: "Use $hai-zhong-yu-chao-execute to 从计划索引列表中按计划状态和具名依赖自主选中可执行计划，直到没有可执行计划、发生具名 DRIFT 或用户暂停。"
+  short_description: "Execute plans and record verified Sea Nest construction facts"
+  default_prompt: "Use $hai-zhong-yu-chao-execute to autonomously execute one eligible Sea Nest plan, maintain its exclusive construction and validation records, and report only to the paired plan-support agent."
