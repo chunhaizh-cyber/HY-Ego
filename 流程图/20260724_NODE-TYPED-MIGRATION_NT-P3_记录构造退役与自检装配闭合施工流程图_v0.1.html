@@ -1,0 +1,19 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>NT-P3 合同闭合施工流程图</title></head><body>
+<h1>NODE-TYPED-MIGRATION NT-P3 记录、构造、退役与自检装配闭合施工流程图</h1>
+<pre class="mermaid">
+flowchart TD
+    A["冻结 NT-C3/v0.5 DTO、记录、构造签名"] --> B["#343—#345 形成分型服务和记录参与者"]
+    B --> C["各叶导出具名退役参与包与专项自检"]
+    C --> D["#346 冻结全引用并统一原子退役"]
+    D --> E["#347 形成 CUTOVER-MAP/v2 M01—M26 不可变组"]
+    E --> F["#348 按 A→E 聚合专项自检"]
+    F --> G{"构造、导出、结果 ABI 与映射均闭合？"}
+    G -- "否" --> R["只退回精确提供者/消费者"]
+    G -- "是" --> H["固定为 #352 的 P3 输入候选"]
+    H --> W["等待 #349—#351 的 P4 固定候选与完整接受矩阵"]
+    W --> I["#352 单点登记、接线、构建、运行和零命中验证"]
+</pre>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script></body></html>

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>NT-P1Q 关系反向读取与退役原子能力施工流程图</title>
+  <style>body{font-family:"Microsoft YaHei",sans-serif;margin:24px;color:#172033}.mermaid{min-width:1200px}</style>
+</head>
+<body>
+<h1>NODE-TYPED-MIGRATION NT-P1Q 关系反向读取与退役原子能力施工流程图</h1>
+<pre class="mermaid">
+flowchart TD
+    A["收到关系读取或对象退役请求"] --> B{"身份、仓库域、版本和类型有效？"}
+    B -- "否" --> R["逻辑内拒绝；零写入"]
+    B -- "是：只读" --> C{"已发布仓库或会话候选视图？"}
+    C -- "已发布仓库" --> C1["按目标 / 相关节点 / 类型角色读取当前有效关系"]
+    C -- "会话候选视图" --> C2["叠加创建 / 失效 / 重挂候选；同一关系旧新版本不可并见"]
+    C1 --> D["去重并按关系编号排序"]
+    C2 --> D
+    D --> E["领域服务复判角色、端点、基数和当前性"]
+    E --> O["返回值式组；空集合为合法空组"]
+    B -- "是：退役" --> F["冻结全部入向、出向、历史和索引引用"]
+    F --> G{"仍有未纳入事务的有效引用？"}
+    G -- "是" --> R
+    G -- "否" --> H1["先登记全部关系失效候选"]
+    H1 --> H2["再登记各领域强类型记录退役候选"]
+    H2 --> H3["再登记全部索引移除候选"]
+    H3 --> H4["最后登记节点删除候选"]
+    H4 --> I["全参与者准备与确认"]
+    I --> J{"全部成功？"}
+    J -- "否" --> K["逆序撤销；普通读取不变"]
+    J -- "是" --> L["最后发布"]
+    L --> M["读回节点不可普通读取、关系/记录历史可审计、索引不可命中"]
+    M --> N{"读回闭合？"}
+    N -- "否" --> X["内部逻辑错误；停止依赖路径"]
+    N -- "是" --> P["返回具名强类型退役结果"]
+</pre>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>

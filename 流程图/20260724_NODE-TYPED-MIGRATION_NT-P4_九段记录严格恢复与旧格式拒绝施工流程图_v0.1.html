@@ -1,0 +1,27 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>NT-P4 严格恢复施工流程图</title></head><body>
+<h1>NODE-TYPED-MIGRATION NT-P4 九段记录、严格恢复与旧格式拒绝施工流程图</h1>
+<pre class="mermaid">
+flowchart TD
+    A["取得九段同代次冻结材料"] --> B["按 NT-C4/v0.4 逐字段规范编码"]
+    B --> C["写段摘要与容器摘要"]
+    C --> D["严格解析：头、段、记录帧、枚举、上限"]
+    D --> E{"材料完整？"}
+    E -- "否" --> R["材料拒绝；宿主不变"]
+    E -- "是" --> F["按1→9装入隔离仓"]
+    F --> G["重建索引、自我和业务投影"]
+    G --> H["跨段互证、旧运行占用失效、再冻结相等"]
+    H --> I{"全部闭合？"}
+    I -- "否：结构不一致" --> X["内部不一致；销毁整个候选"]
+    I -- "否：资源不足" --> Y["资源失败；销毁整个候选"]
+    I -- "是" --> J["形成单次移动的已验证候选"]
+    J --> K{"#352 空宿主首次发布？"}
+    K -- "已有当前上下文" --> Q["逻辑内返回；当前宿主不变"]
+    K -- "成功" --> P["发布后完整读回"]
+    L["旧格式输入"] --> M{"支持版本集合命中？"}
+    M -- "否：当前集合为空" --> N["具名拒绝；输入不变、输出为空"]
+    M -- "是" --> O["当前不可达；必须先升版冻结完整旧格式与逐字段映射"]
+</pre>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script></body></html>

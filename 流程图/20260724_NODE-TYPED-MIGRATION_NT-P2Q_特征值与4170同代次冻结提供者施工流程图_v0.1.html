@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>NT-P2Q 特征值与 4170 同代次冻结提供者施工流程图</title>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+  </script>
+</head>
+<body>
+  <h1>NODE-TYPED-MIGRATION NT-P2Q 特征值与 4170 同代次冻结提供者施工流程图</h1>
+  <pre class="mermaid">
+flowchart TD
+    A["收到冻结域、代次和规则版本"] --> B{"身份与冻结权有效？"}
+    B -- "否" --> R["逻辑内返回；零材料"]
+    B -- "是" --> C["读取特征值当前 / 历史 / 失效 / 删除全量"]
+    C --> D["读取 4170 全部批次与项目"]
+    D --> E["再读冻结身份、数量和高水位"]
+    E --> F{"同域同代次且批次引用、值版本、关系和顺序互证？"}
+    F -- "否" --> X["内部逻辑错误；不得过滤坏项"]
+    F -- "是" --> G["按稳定排序键形成两个自有值式材料"]
+    G --> H["#349 只读适配为第3段和第9段"]
+  </pre>
+</body>
+</html>

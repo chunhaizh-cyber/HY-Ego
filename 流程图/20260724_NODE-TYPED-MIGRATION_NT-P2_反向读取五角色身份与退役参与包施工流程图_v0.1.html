@@ -1,0 +1,30 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>NT-P2 合同闭合施工流程图</title></head><body>
+<h1>NODE-TYPED-MIGRATION NT-P2 反向读取、五角色身份与退役参与包施工流程图</h1>
+<pre class="mermaid">
+flowchart TD
+    A["取得状态 / 动态、自我初始化 / 读取或退役请求"] --> B{"核心 NT-C1Q 接口吻合？"}
+    B -- "否" --> R["DRIFT：退回 #374 或精确消费者"]
+    B -- "是" --> C["按目标 / 相关 / 类型角色读取当前关系"]
+    C --> D{"P2B 状态或动态？"}
+    D -- "是" --> E["形成具名角色证据和类型化记录"]
+    D -- "否：P2C" --> F{"初始化 / 读取或退役？"}
+    F -- "初始化" --> F1["一次形成五个互异身份：世界根、世界根内部世界场景、自我所在场景、自我、自我内部世界场景"]
+    F1 --> F2["登记五条固定关系：三条普通父子 + 关系21角色1 + 角色2成员"]
+    F -- "读取" --> F3["逐项读回五身份和固定拓扑；任一缺项整体失败"]
+    F -- "退役" --> F4["形成可移动不可复制的自我结构退役参与包"]
+    E --> G["登记状态/动态记录参与包"]
+    G --> I["统一结构执行器"]
+    F2 --> I
+    F4 --> I
+    F3 --> P["返回完整值式材料；投影由权威结构重建"]
+    I --> J{"准备与确认闭合？"}
+    J -- "否" --> K["逆序撤销；零发布"]
+    J -- "是" --> L["最后发布"]
+    L --> M{"权威读回闭合？"}
+    M -- "否" --> X["内部逻辑错误；停止依赖路径，不否认已发布事实"]
+    M -- "是" --> P
+</pre>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script></body></html>
