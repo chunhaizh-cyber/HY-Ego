@@ -1,4 +1,4 @@
 interface:
   display_name: "海中鱼巣执行"
-  short_description: "Continuously execute eligible Sea Nest plans until a named stop"
-  default_prompt: "Use $hai-zhong-yu-chao-execute to continuously execute eligible Sea Nest plans in the current execution channel. After every clean plan-segment closeout, run the continuation gate and immediately S0 the next eligible plan. Stop only with a named terminal code, and report execution facts only to the paired plan-support agent."
+  short_description: "Continuously execute plans and resume on support notices"
+  default_prompt: "Use $hai-zhong-yu-chao-execute to continuously execute eligible Sea Nest plans and immediately re-evaluate formal state when PLAN-SUPPORT-NOTICE or an EXECUTION-YIELD wakeup arrives; stop only with a named terminal code."
