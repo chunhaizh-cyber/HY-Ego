@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OBSERVE-VOXEL v0.2</title>
+<style>body{margin:0;background:#f4f7fb;color:#142033;font:16px/1.6 "Microsoft YaHei",sans-serif}main{min-width:max-content;padding:28px}section{display:inline-block;min-width:1080px;padding:24px;background:#fff;border:1px solid #dbe3ef;border-radius:12px;box-shadow:0 8px 28px #1d355722}h1{margin-top:0}.meta{max-width:1200px}</style>
+</head><body><main><section>
+<h1>OBSERVE-VOXEL：观察世界事实与体素融合施工流程图 v0.2</h1>
+<p class="meta">待实施目标图；绑定详细设计 v0.2 与 #369—#372。不建立观察事实节点或体素节点类型，C11 权威写入，C12 只读投影。</p>
+<div class="mermaid">
+flowchart TD
+    A["观察方法结果与 D455稳定观察子集"] --> C9["PER-C9：形成像素簇材料和存在候选"]
+    C9 --> B{"结构、坐标、来源、场景和版本有效？"}
+    B -- "否" --> R1["逻辑内拒绝：不形成存在对应"]
+    B -- "是" --> C["形成识别派生需求材料"]
+    C --> D["需求入口 -> 新任务 -> SELF-C2 新许可 -> 识别工作包"]
+    D --> E["识别方法返回唯一已有存在或空结果"]
+    E --> F{"对应结果？"}
+    F -- "唯一已有存在" --> G["读回存在类型、场景范围和版本"]
+    F -- "空且材料可复验" --> H["形成新存在承接或复验需求"]
+    F -- "冲突或不稳定" --> R2["逻辑内等待或补观察"]
+    H --> I["后继任务按 7100 建立实例与场景成员"]
+    I --> G
+    G --> J{"存在、场景成员、状态字段、时间、来源动作完整？"}
+    J -- "否" --> R3["逻辑内拒绝：不得提交半结构"]
+    J -- "是" --> K["原子提交存在 / 场景关系和适用状态事实"]
+    K --> L{"写后完整读回一致？"}
+    L -- "否" --> X1["内部错误：撤销或隔离并追根因"]
+    L -- "是" --> M["形成合法外设当前数据项只读投影"]
+    M --> N["独立扫描 / 跟踪任务可提交状态和动态"]
+    N --> O{"首次基准或可验证变化？"}
+    O -- "首次基准" --> P["只提交当前状态；不形成动态"]
+    O -- "可比且变化成立" --> Q["PER-C10：提交状态、动态并回流任务结果"]
+    O -- "无变化或目标丢失" --> R4["逻辑内结果：不伪造动态"]
+    M --> V0["形成具有新增确认关系和一次消费键的观察体素材"]
+    V0 --> C11["PER-C11：锁外计算；会话内复核并写权威体素模型 / 单元记录"]
+    C11 --> V1{"空间、父子、材料消费和模型版本读回一致？"}
+    V1 -- "否" --> X2["内部错误：逆序撤销或隔离融合代次"]
+    V1 -- "是" --> V2["最后写消费记录并发布新模型代次"]
+    V2 --> C12["PER-C12：由已发布模型生成场景快照与视觉先验投影"]
+    S5["PER-C5 D455稳定观察子集"] --> C12
+    C12 --> V3["按确定性顺序辅助后继存在候选"]
+    V3 --> V4["不得覆盖当前观察、关系、状态、动态或体素权威记录"]
+</div></section></main>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script>
+</body></html>

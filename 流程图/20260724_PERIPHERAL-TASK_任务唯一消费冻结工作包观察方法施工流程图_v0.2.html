@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PERIPHERAL-TASK v0.2</title>
+<style>body{margin:0;background:#f4f7fb;color:#142033;font:16px/1.6 "Microsoft YaHei",sans-serif}main{min-width:max-content;padding:28px}section{display:inline-block;min-width:1080px;padding:24px;background:#fff;border:1px solid #dbe3ef;border-radius:12px;box-shadow:0 8px 28px #1d355722}h1{margin-top:0}.meta{max-width:1200px}</style>
+</head><body><main><section>
+<h1>PERIPHERAL-TASK：任务唯一消费冻结工作包观察方法施工流程图 v0.2</h1>
+<p class="meta">待实施目标图；绑定详细设计 v0.2 与 #366—#368。C6 按稳定报告身份唯一承接，C7 只读 SELF-C2 许可。</p>
+<div class="mermaid">
+flowchart TD
+    A["任务域取得待筹办任务、工作项和 SELF-C2 许可投影"] --> B{"输入来源分支？"}
+    B -- "D455 报告" --> C["PER-C6：读取单一报告队列分类视图"]
+    C --> D{"报告身份、产品类型、任务目标、窗口和质量匹配？"}
+    D -- "否" --> R1["逻辑内返回：无匹配、等待、过期或版本漂移"]
+    D -- "是" --> E["以 D455报告身份 建立唯一消费候选"]
+    E --> F{"跨窗口、任务和代次是否已承接？"}
+    F -- "是" --> R2["逻辑内返回：已承接；不得按窗口另领"]
+    F -- "否" --> G["确认报告消费并形成已承接 D455 材料引用"]
+    B -- "识别派生需求" --> G1["读取经需求入口、新任务承接形成的识别材料"]
+    B -- "扫描基准" --> G2["读取已提交事实形成的合法外设当前数据项或已有变化报告"]
+    G --> H["PER-C7：只读核对 SELF-C2 当前许可、任务、轮次和方法登记"]
+    G1 --> H
+    G2 --> H
+    H --> I{"许可当前且输入分支与方法匹配？"}
+    I -- "否" --> R3["逻辑内拒绝：不取得筹办权、不回读队列补造"]
+    I -- "是" --> J["冻结 D455 / 识别 / 扫描强类型工作包"]
+    J --> K{"冻结后全字段读回一致？"}
+    K -- "否" --> X1["内部错误：停止该任务路径并追根因"]
+    K -- "是" --> C8["PER-C8：方法只读打开匹配工作包"]
+    C8 --> L{"入口类型？"}
+    L -- "观察" --> O["形成观察结果候选"]
+    L -- "识别" --> P["形成唯一已有存在或空结果"]
+    L -- "首次扫描" --> Q0["形成当前状态基准结果；不形成动态"]
+    L -- "基准扫描" --> Q["形成扫描变化结果"]
+    L -- "跟踪" --> R["形成跟踪结果"]
+    O --> S["提交强类型方法结果"]
+    P --> S
+    Q0 --> S
+    Q --> S
+    R --> S
+    S --> T{"需要后继能力？"}
+    T -- "否" --> U["任务域继续独立裁决任务与需求"]
+    T -- "是" --> V["结构化材料 -> 需求入口 -> 新任务 -> SELF-C2 新许可"]
+    V --> A
+</div></section></main>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script>
+</body></html>

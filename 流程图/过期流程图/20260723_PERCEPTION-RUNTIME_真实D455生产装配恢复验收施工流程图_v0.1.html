@@ -1,0 +1,98 @@
+<!doctype html>
+<!-- 已退出：现行版本为 20260724_PERCEPTION-RUNTIME...v0.2.html -->
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PERCEPTION-RUNTIME：真实 D455 生产装配恢复验收施工流程图 v0.1</title>
+  <style>
+    body { margin: 0; background: #f4f7fb; color: #142033; font: 16px/1.6 "Microsoft YaHei", sans-serif; }
+    main { min-width: max-content; padding: 28px; }
+    section { display: inline-block; min-width: 1080px; padding: 24px; background: #fff; border: 1px solid #dbe3ef; border-radius: 12px; box-shadow: 0 8px 28px #1d355722; }
+    h1 { margin-top: 0; font-size: 24px; }
+    .meta, .boundary { max-width: 1200px; }
+    .mermaid { margin: 24px 0; }
+    .meta-table { border-collapse: collapse; max-width: 1400px; }
+    .meta-table th, .meta-table td { border: 1px solid #c9d4e3; padding: 6px 10px; text-align: left; vertical-align: top; }
+  </style>
+</head>
+<body>
+<main>
+  <section>
+    <h1>PERCEPTION-RUNTIME：真实 D455 生产装配恢复验收施工流程图 v0.1</h1>
+    <p class="meta">更新时间：2026-07-23。最终生产切换目标图，冻结 PER-C13 / v0.1；绑定《真实 D455 生产装配恢复与验收详细设计》；生产接线和真实硬件验收均未实现。</p>
+    <table class="meta-table">
+      <tr><th>项</th><th>冻结内容</th></tr>
+      <tr><td>图类型</td><td>最终生产切换与验收目标流程图；不是当前代码流程</td></tr>
+      <tr><td>绑定详细设计</td><td><code>规范/详细设计/真实D455生产装配恢复与验收详细设计.md</code></td></tr>
+      <tr><td>绑定计划</td><td>#360 设计计划；后继 #373 唯一生产切换计划</td></tr>
+      <tr><td>允许文件</td><td>唯一读取绑定详细设计第 2 节 #373 精确现有 / 新建文件集、工程、filters 和入口</td></tr>
+      <tr><td>禁止文件</td><td>#361—#372 私有实现文件只读汇合；不得改规范、计划或表外代码</td></tr>
+      <tr><td>预期结构变化</td><td>接通真实设备占用、完整运行期上下文、单队列消费、四方法分回合、事实、体素、停止和两套恢复</td></tr>
+      <tr><td>执行前复核</td><td>核对固定候选提交、真实设备、零残留占用、PER-C1—C13 ABI、报告恢复和筹办恢复</td></tr>
+      <tr><td>验证方式</td><td>Debug / Release、模拟故障、跨重启、真实 D455 连续硬件场景、独立覆盖审计</td></tr>
+      <tr><td>不得宣称</td><td>单帧、构建、自检、日志、控制面板或无硬件模拟不能替代真实生产闭环验收</td></tr>
+    </table>
+    <div class="mermaid">
+flowchart TD
+    A["生产入口读取运行配置与恢复候选"] --> B{"配置、设备身份、标定版本和运行代次有效？"}
+    B -- "否" --> R1["启动拒绝：不创建半装配运行期"]
+    B -- "是" --> C["PER-C13：原子取得真实 D455 设备占用"]
+    C --> D{"占用成功？"}
+    D -- "否" --> R2["启动拒绝：设备已被其它运行期占用"]
+    D -- "是" --> E["装配采集器、帧材料缓存、上行桥、观察生产者与单一报告队列"]
+    E --> F["装配任务唯一消费、冻结工作包、观察世界事实与体素融合服务"]
+    F --> G{"存在跨重启恢复候选？"}
+    G -- "否" --> H["建立空物理队列和四索引"]
+    G -- "是" --> I["校验设备代次、权威结构、关键报告与消费治理事实"]
+    I --> J{"恢复材料全部满足结构与业务不变量？"}
+    J -- "否" --> R3["整批拒绝恢复；不得发布半结构"]
+    J -- "是" --> K0{"报告 / 消费治理状态属于哪一类？"}
+    K0 -- "已承接未完成" --> K["只恢复任务侧引用；禁止重新消费"]
+    K0 -- "未承接且当前不可舍弃" --> K1["保留原报告身份；形成新生产代次投递候选"]
+    K0 -- "过期、已消费或失效" --> K2["按原状态收束；不重新投递"]
+    K --> K7["重建空物理队列、四索引和新消费代次候选"]
+    K1 --> K7
+    K2 --> K7
+    J -- "是" --> T0{"恢复候选是否含任务筹办占用历史？"}
+    T0 -- "否" --> T1["无任务占用迁移；任务恢复分支收口"]
+    T0 -- "是" --> T2["隔离保留旧占用 / 冻结历史；明确不继承执行权"]
+    T2 --> T3{"已证明旧运行代次终止，且前轮外部动作停止或已有实际回读？"}
+    T3 -- "否" --> T4["任务侧合法等待、动作核验生产者和重新触发条件；不得新执行"]
+    T3 -- "是" --> T5["原子失效旧占用及旧冻结当前性"]
+    T5 --> T6["发布新恢复代次和待重筹办触发；后继新轮次重新取得执行权"]
+    K7 --> K8{"报告恢复与任务筹办恢复是否都已合法收口？"}
+    T1 --> K8
+    T4 --> K8
+    T6 --> K8
+    K8 -- "否" --> R3
+    K8 -- "是" --> L
+    H --> L["原子发布完整运行期装配"]
+    L --> M["启动真实 D455 采集并连续形成受控产品"]
+    M --> N["任务域唯一承接；观察 / 识别 / 扫描 / 跟踪按独立任务回合执行"]
+    N --> O["提交场景事实、状态动态和体素模型代次"]
+    O --> P{"设备断流或采集异常？"}
+    P -- "否" --> Q["继续生产闭环并记录可审计恢复材料"]
+    P -- "是" --> R["停止新产品发布，封闭当前采集代次"]
+    R --> S["保留已发布队列项、消费状态和权威领域事实"]
+    S --> T{"在策略窗口内恢复同一合法设备与标定代次？"}
+    T -- "否" --> U["结束运行期；释放设备占用并形成完整恢复候选"]
+    T -- "是" --> V["建立新采集代次，校验连续性后恢复生产"]
+    V --> M
+    Q --> W{"收到正常停止？"}
+    W -- "否" --> M
+    W -- "是" --> U
+    U --> X["真实硬件端到端验收：采集、四类产品、唯一消费、世界事实、体素、断流与重启"]
+    X --> Y{"全部具名验收通过？"}
+    Y -- "否" --> R4["能力未完成：保留证据并退回对应合同"]
+    Y -- "是" --> Z["仅此时声明真实 D455 观察体素生产闭环通过"]
+    </div>
+    <p class="boundary">关键边界：设备占用、报告消费、任务筹办使用不同隔离键；物理队列与索引不作为权威快照；报告三类恢复互斥；旧筹办占用不继承，且必须先核验旧代次和前轮动作再失效当前性；恢复材料不升级世界事实；真实硬件验收未发生前不得声明闭环完成。</p>
+  </section>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>

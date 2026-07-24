@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PERCEPTION-RUNTIME v0.2</title>
+<style>body{margin:0;background:#f4f7fb;color:#142033;font:16px/1.6 "Microsoft YaHei",sans-serif}main{min-width:max-content;padding:28px}section{display:inline-block;min-width:1080px;padding:24px;background:#fff;border:1px solid #dbe3ef;border-radius:12px;box-shadow:0 8px 28px #1d355722}h1{margin-top:0}.meta{max-width:1200px}</style>
+</head><body><main><section>
+<h1>PERCEPTION-RUNTIME：真实 D455 生产装配恢复验收施工流程图 v0.2</h1>
+<p class="meta">最终切换目标图；绑定详细设计 v0.2 与 #373。四恢复提供者独立确认，失败逆序撤销，完整上下文最后发布。</p>
+<div class="mermaid">
+flowchart TD
+    A["读取 #352、#359、#361—#372 固定结果提交"] --> B{"文件、模块、ABI、依赖方向和设备配置一致？"}
+    B -- "否" --> R1["DRIFT：停止生产切换，不修改候选提供者"]
+    B -- "是" --> C["尝试取得真实 D455 设备占用"]
+    C --> D{"设备、USB、标定和流配置有效？"}
+    D -- "否" --> R2["逻辑内返回：设备不可用或已占用"]
+    D -- "是" --> E["建立隔离运行期上下文候选"]
+    E --> F{"存在跨重启恢复候选？"}
+    F -- "否" --> N0["建立全新生产代次"]
+    F -- "是" --> H1["权威结构恢复提供者：节点、关系、领域事实与索引重建确认"]
+    H1 --> H2["报告治理恢复提供者：按原报告身份分类确认"]
+    H2 --> H3["任务筹办恢复提供者：旧占用失效或合法等待确认"]
+    H3 --> H4["体素恢复提供者：模型、单元、消费记录与投影重建确认"]
+    H4 --> I{"四提供者均确认且代次 / 身份 / 版本不变量成立？"}
+    I -- "否" --> X1["逆序撤销：体素 -> 筹办 -> 报告 -> 权威结构；释放设备占用"]
+    X1 --> R3["整批拒绝：不得发布半运行期"]
+    I -- "是" --> J["最后原子发布完整运行期上下文"]
+    N0 --> J
+    J --> K["启动 D455生产采样线程并连续形成受控产品"]
+    K --> L["任务域唯一承接；四方法按独立任务回合运行"]
+    L --> M["提交存在 / 场景 / 状态动态与体素模型"]
+    M --> N{"断流、停止或继续？"}
+    N -- "继续" --> K
+    N -- "断流" --> O["封闭当前采集代次，停止新产品发布"]
+    O --> P{"30 秒内同一设备和合法标定可重连？"}
+    P -- "是" --> Q["建立可区分的新采集代次并恢复生产"]
+    Q --> K
+    P -- "否" --> S["形成完整恢复候选并进入停止"]
+    N -- "正常停止" --> S
+    S --> T["封闭生产 / 消费入口，10 秒内逆序停止并释放设备"]
+    T --> U["跨进程两轮真实硬件验收"]
+    U --> V{"60 秒、300 批次、10 报告、四产品各 1、零重复承接及全部恢复门通过？"}
+    V -- "否" --> R4["验收失败：能力未完成，退回具名合同"]
+    V -- "是" --> W["仅此时形成真实 D455 观察体素生产闭环验收证据"]
+</div></section></main>
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script>
+</body></html>
