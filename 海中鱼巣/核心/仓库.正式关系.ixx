@@ -349,6 +349,32 @@ public:
         return 结果;
     }
 
+    std::vector<正式关系记录> 读取指向有效关系组(
+        节点句柄 目标节点,
+        关系类型 类型) const {
+        if (!节点_.读取节点(目标节点).has_value()) return {};
+        return 读取匹配有效关系组_(类型, [目标节点](const 正式关系记录& 记录) {
+            return 记录.目标节点 == 目标节点;
+        });
+    }
+
+    std::vector<正式关系记录> 读取相关有效关系组(
+        节点句柄 节点,
+        关系类型 类型) const {
+        if (!节点_.读取节点(节点).has_value()) return {};
+        return 读取匹配有效关系组_(类型, [节点](const 正式关系记录& 记录) {
+            return 记录.源节点 == 节点 || 记录.目标节点 == 节点;
+        });
+    }
+
+    std::vector<正式关系记录> 读取有效类型角色关系组(
+        关系类型 类型,
+        std::int64_t 顺序号) const {
+        return 读取匹配有效关系组_(类型, [顺序号](const 正式关系记录& 记录) {
+            return 记录.顺序号 == 顺序号;
+        });
+    }
+
     正式关系操作状态 确认候选(正式关系候选& 候选, std::uint64_t 事务序号) {
         std::unique_lock 锁(仓库锁_);
         if (!候选匹配_(候选, 事务序号, 正式关系候选阶段::持有)) {
@@ -412,6 +438,32 @@ private:
     };
 
     using 关系位置 = std::unordered_map<std::uint64_t, 关系条目>::const_iterator;
+
+    template <typename 匹配函数>
+    std::vector<正式关系记录> 读取匹配有效关系组_(
+        关系类型 类型,
+        匹配函数 匹配) const {
+        if (static_cast<std::uint32_t>(类型) >= 正式关系类型ABI数量) return {};
+        std::vector<正式关系记录> 结果;
+        {
+            std::shared_lock 锁(仓库锁_);
+            for (const auto& [编号, 条目] : 关系表_) {
+                const auto& 记录 = 条目.当前记录;
+                if (条目.已发布 && 记录.状态 == 记录状态::有效
+                    && 记录.类型 == 类型 && 匹配(记录)) {
+                    结果.push_back(记录);
+                }
+            }
+        }
+        结果.erase(std::remove_if(结果.begin(), 结果.end(), [this](const auto& 记录) {
+            return !节点_.读取节点(记录.源节点).has_value()
+                || !节点_.读取节点(记录.目标节点).has_value();
+        }), 结果.end());
+        std::sort(结果.begin(), 结果.end(), [](const auto& 左, const auto& 右) {
+            return 左.关系编号 < 右.关系编号;
+        });
+        return 结果;
+    }
 
     bool 句柄属于当前记录_(关系句柄 句柄, 关系位置 位置) const noexcept {
         return 句柄有效(句柄) && 句柄.仓库编号 == 仓库编号_

@@ -6,6 +6,7 @@ module;
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <exception>
 #include <mutex>
 #include <optional>
 #include <shared_mutex>
@@ -70,7 +71,13 @@ enum class 可重建索引操作状态 : std::uint32_t {
     入口拒绝_无效物理键 = 7,
     入口拒绝_无效目标 = 8,
     入口拒绝_物理键冲突 = 9,
-    内部不一致 = 10
+    内部不一致 = 10,
+    已移除候选 = 11
+};
+
+enum class 可重建索引候选种类 : std::uint8_t {
+    创建 = 1,
+    移除 = 2
 };
 
 enum class 可重建索引候选阶段 : std::uint8_t {
@@ -89,7 +96,8 @@ public:
     可重建索引候选(const 可重建索引候选&) = delete;
     可重建索引候选& operator=(const 可重建索引候选&) = delete;
     可重建索引候选(可重建索引候选&& 其它) noexcept
-        : 事务序号_(其它.事务序号_), 记录_(其它.记录_), 阶段_(其它.阶段_) {
+        : 事务序号_(其它.事务序号_), 记录_(其它.记录_), 种类_(其它.种类_),
+          阶段_(其它.阶段_) {
         其它.事务序号_ = 0;
         其它.阶段_ = 可重建索引候选阶段::已移动;
     }
@@ -97,15 +105,20 @@ public:
 
     std::uint64_t 读取事务序号() const noexcept { return 事务序号_; }
     const 可重建索引记录& 读取记录() const noexcept { return 记录_; }
+    可重建索引候选种类 读取种类() const noexcept { return 种类_; }
     可重建索引候选阶段 读取阶段() const noexcept { return 阶段_; }
 
 private:
     friend class 可重建索引仓库;
-    可重建索引候选(std::uint64_t 事务序号, 可重建索引记录 记录) noexcept
-        : 事务序号_(事务序号), 记录_(std::move(记录)) {
+    可重建索引候选(
+        std::uint64_t 事务序号,
+        可重建索引记录 记录,
+        可重建索引候选种类 种类) noexcept
+        : 事务序号_(事务序号), 记录_(std::move(记录)), 种类_(种类) {
     }
     std::uint64_t 事务序号_ = 0;
     可重建索引记录 记录_;
+    可重建索引候选种类 种类_ = 可重建索引候选种类::创建;
     可重建索引候选阶段 阶段_ = 可重建索引候选阶段::持有;
 };
 
@@ -116,6 +129,7 @@ struct 可重建索引写入结果 {
 
     bool 成功() const noexcept {
         return 状态 == 可重建索引操作状态::已创建候选
+            || 状态 == 可重建索引操作状态::已移除候选
             || 状态 == 可重建索引操作状态::幂等读回;
     }
 };
@@ -180,7 +194,56 @@ public:
         }
         结果.状态 = 可重建索引操作状态::已创建候选;
         结果.当前记录 = 记录;
-        结果.候选.emplace(可重建索引候选{事务序号, 记录});
+        结果.候选.emplace(可重建索引候选{
+            事务序号, 记录, 可重建索引候选种类::创建});
+        return 结果;
+    }
+
+    可重建索引写入结果 结构化移除索引候选(
+        const 索引物理键& 键,
+        std::uint64_t 事务序号) {
+        可重建索引写入结果 结果;
+        if (事务序号 == 0) {
+            结果.状态 = 可重建索引操作状态::入口拒绝_无效事务;
+            return 结果;
+        }
+        if (!索引物理键完整(键)) {
+            结果.状态 = 可重建索引操作状态::入口拒绝_无效物理键;
+            return 结果;
+        }
+        std::unique_lock 锁(仓库锁_);
+        const auto 位置 = 正向绑定_.find(键);
+        if (位置 == 正向绑定_.end()) {
+            结果.状态 = 可重建索引操作状态::幂等读回;
+            return 结果;
+        }
+        auto& 条目 = 位置->second;
+        if (!条目.已发布) {
+            if (条目.候选事务序号 == 事务序号 && 条目.待移除) {
+                结果.状态 = 可重建索引操作状态::幂等读回;
+                结果.当前记录 = 条目.记录;
+            } else {
+                结果.状态 = 可重建索引操作状态::入口拒绝_物理键冲突;
+            }
+            return 结果;
+        }
+        if (!可重建索引记录完整(条目.记录) || !(条目.记录.物理键 == 键)) {
+            结果.状态 = 可重建索引操作状态::内部不一致;
+            return 结果;
+        }
+        const auto 反向位置 = 反向绑定_.find(形成目标标识_(条目.记录));
+        if (反向位置 == 反向绑定_.end()
+            || std::count(反向位置->second.begin(), 反向位置->second.end(), 键) != 1) {
+            结果.状态 = 可重建索引操作状态::内部不一致;
+            return 结果;
+        }
+        条目.已发布 = false;
+        条目.候选事务序号 = 事务序号;
+        条目.待移除 = true;
+        结果.状态 = 可重建索引操作状态::已移除候选;
+        结果.当前记录 = 条目.记录;
+        结果.候选.emplace(可重建索引候选{
+            事务序号, 条目.记录, 可重建索引候选种类::移除});
         return 结果;
     }
 
@@ -219,7 +282,9 @@ public:
         const auto 位置 = 正向绑定_.find(候选.记录_.物理键);
         if (位置 == 正向绑定_.end() || 位置->second.已发布
             || 位置->second.候选事务序号 != 事务序号
-            || !记录相同_(位置->second.记录, 候选.记录_)) {
+            || !记录相同_(位置->second.记录, 候选.记录_)
+            || 位置->second.待移除
+                != (候选.种类_ == 可重建索引候选种类::移除)) {
             return 可重建索引操作状态::内部不一致;
         }
         候选.阶段_ = 可重建索引候选阶段::已确认待发布;
@@ -238,14 +303,24 @@ public:
             || 位置->second.候选事务序号 != 事务序号) {
             return 可重建索引操作状态::内部不一致;
         }
-        const auto 目标 = 形成目标标识_(位置->second.记录);
-        const auto 反向位置 = 反向绑定_.find(目标);
-        if (反向位置 == 反向绑定_.end()) return 可重建索引操作状态::内部不一致;
-        const auto 键位置 = std::find(反向位置->second.begin(), 反向位置->second.end(), 候选.记录_.物理键);
-        if (键位置 == 反向位置->second.end()) return 可重建索引操作状态::内部不一致;
-        反向位置->second.erase(键位置);
-        if (反向位置->second.empty()) 反向绑定_.erase(反向位置);
-        正向绑定_.erase(位置);
+        if (候选.种类_ == 可重建索引候选种类::移除) {
+            if (!位置->second.待移除) return 可重建索引操作状态::内部不一致;
+            位置->second.已发布 = true;
+            位置->second.候选事务序号 = 0;
+            位置->second.待移除 = false;
+        } else {
+            const auto 目标 = 形成目标标识_(位置->second.记录);
+            const auto 反向位置 = 反向绑定_.find(目标);
+            if (反向位置 == 反向绑定_.end()) return 可重建索引操作状态::内部不一致;
+            const auto 键位置 = std::find(
+                反向位置->second.begin(), 反向位置->second.end(), 候选.记录_.物理键);
+            if (键位置 == 反向位置->second.end()) {
+                return 可重建索引操作状态::内部不一致;
+            }
+            反向位置->second.erase(键位置);
+            if (反向位置->second.empty()) 反向绑定_.erase(反向位置);
+            正向绑定_.erase(位置);
+        }
         候选.阶段_ = 可重建索引候选阶段::已撤销;
         return 可重建索引操作状态::已撤销;
     }
@@ -256,8 +331,22 @@ public:
         const auto 位置 = 正向绑定_.find(候选.记录_.物理键);
         if (位置 == 正向绑定_.end() || 位置->second.已发布
             || 位置->second.候选事务序号 != 事务序号) return;
-        位置->second.已发布 = true;
-        位置->second.候选事务序号 = 0;
+        if (候选.种类_ == 可重建索引候选种类::移除) {
+            if (!位置->second.待移除) std::terminate();
+            const auto 目标 = 形成目标标识_(位置->second.记录);
+            const auto 反向位置 = 反向绑定_.find(目标);
+            if (反向位置 == 反向绑定_.end()) std::terminate();
+            const auto 键位置 = std::find(
+                反向位置->second.begin(), 反向位置->second.end(), 候选.记录_.物理键);
+            if (键位置 == 反向位置->second.end()) std::terminate();
+            反向位置->second.erase(键位置);
+            if (反向位置->second.empty()) 反向绑定_.erase(反向位置);
+            正向绑定_.erase(位置);
+        } else {
+            if (位置->second.待移除) std::terminate();
+            位置->second.已发布 = true;
+            位置->second.候选事务序号 = 0;
+        }
         候选.阶段_ = 可重建索引候选阶段::已发布;
     }
 
@@ -341,6 +430,7 @@ private:
         可重建索引记录 记录;
         bool 已发布 = false;
         std::uint64_t 候选事务序号 = 0;
+        bool 待移除 = false;
     };
 
     static 索引目标标识 形成目标标识_(const 可重建索引记录& 记录) noexcept {
@@ -368,6 +458,7 @@ private:
         if (位置 == 正向绑定_.end()) return std::nullopt;
         if (!位置->second.已发布
             && (!事务序号.has_value() || 位置->second.候选事务序号 != 事务序号.value())) return std::nullopt;
+        if (位置->second.待移除) return std::nullopt;
         const auto 反向位置 = 反向绑定_.find(形成目标标识_(位置->second.记录));
         if (反向位置 == 反向绑定_.end()
             || std::count(反向位置->second.begin(), 反向位置->second.end(), 键) != 1) return std::nullopt;
