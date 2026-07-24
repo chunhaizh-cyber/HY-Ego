@@ -6,6 +6,7 @@ module;
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
@@ -20,6 +21,78 @@ export import 海中鱼巣.核心.会话.节点直接身份结构写入;
 export namespace 海中鱼巣 {
 
 class 节点直接身份结构写入执行器;
+
+struct 节点直接统一冻结见证 final {
+    std::uint64_t 冻结域身份 = 0;
+    std::uint64_t 已发布代次 = 0;
+    std::uint32_t 冻结规则版本 = 0;
+};
+
+class 节点直接统一冻结许可 final {
+public:
+    节点直接统一冻结许可() = default;
+    节点直接统一冻结许可(const 节点直接统一冻结许可&) = delete;
+    节点直接统一冻结许可& operator=(const 节点直接统一冻结许可&) = delete;
+    节点直接统一冻结许可(节点直接统一冻结许可&&) noexcept = default;
+    节点直接统一冻结许可& operator=(节点直接统一冻结许可&& 来源) noexcept {
+        if (this == &来源) return *this;
+        if (锁_.owns_lock()) 锁_.unlock();
+        锁_ = std::move(来源.锁_);
+        互斥_ = std::move(来源.互斥_);
+        隔离标记_ = std::move(来源.隔离标记_);
+        冻结域身份_ = std::move(来源.冻结域身份_);
+        已发布代次_ = std::move(来源.已发布代次_);
+        冻结规则版本_ = std::exchange(来源.冻结规则版本_, 0);
+        return *this;
+    }
+
+    bool 有效() const noexcept {
+        return 锁_.owns_lock() && 互斥_ != nullptr && 隔离标记_ != nullptr
+            && 冻结域身份_ != nullptr && 已发布代次_ != nullptr
+            && *冻结域身份_ != 0 && 冻结规则版本_ != 0
+            && !隔离标记_->load(std::memory_order_acquire);
+    }
+
+    节点直接统一冻结见证 读取见证() const noexcept {
+        if (!有效()) return {};
+        return {*冻结域身份_,
+            已发布代次_->load(std::memory_order_acquire),
+            冻结规则版本_};
+    }
+
+private:
+    friend class 节点直接身份结构事务域;
+
+    节点直接统一冻结许可(
+        std::shared_ptr<std::shared_mutex> 互斥,
+        std::shared_ptr<std::atomic_bool> 隔离标记,
+        std::shared_ptr<const std::uint64_t> 冻结域身份,
+        std::shared_ptr<std::atomic_uint64_t> 已发布代次,
+        std::uint32_t 冻结规则版本,
+        std::uint32_t 预期冻结规则版本)
+        : 互斥_(std::move(互斥)), 隔离标记_(std::move(隔离标记)),
+          冻结域身份_(std::move(冻结域身份)), 已发布代次_(std::move(已发布代次)),
+          冻结规则版本_(冻结规则版本) {
+        if (冻结规则版本_ == 0 || 冻结规则版本_ != 预期冻结规则版本
+            || 互斥_ == nullptr || 隔离标记_ == nullptr || 冻结域身份_ == nullptr
+            || 已发布代次_ == nullptr || *冻结域身份_ == 0
+            || 已发布代次_->load(std::memory_order_acquire) == 0
+            || 隔离标记_->load(std::memory_order_acquire)) {
+            return;
+        }
+        锁_ = std::shared_lock<std::shared_mutex>(*互斥_, std::try_to_lock);
+        if (锁_.owns_lock() && 隔离标记_->load(std::memory_order_acquire)) {
+            锁_.unlock();
+        }
+    }
+
+    std::shared_ptr<std::shared_mutex> 互斥_;
+    std::shared_ptr<std::atomic_bool> 隔离标记_;
+    std::shared_ptr<const std::uint64_t> 冻结域身份_;
+    std::shared_ptr<std::atomic_uint64_t> 已发布代次_;
+    std::uint32_t 冻结规则版本_ = 0;
+    std::shared_lock<std::shared_mutex> 锁_;
+};
 
 class 节点直接身份结构读取许可 final {
 public:
@@ -93,7 +166,12 @@ class 节点直接身份结构事务域 final {
 public:
     节点直接身份结构事务域()
         : 互斥_(std::make_shared<std::shared_mutex>()),
-          隔离标记_(std::make_shared<std::atomic_bool>(false)) {
+          隔离标记_(std::make_shared<std::atomic_bool>(false)),
+          冻结域身份_(std::make_shared<const std::uint64_t>(签发冻结域身份())),
+          已发布代次_(std::make_shared<std::atomic_uint64_t>(1)) {
+        if (*冻结域身份_ == 0) {
+            隔离标记_->store(true, std::memory_order_release);
+        }
     }
 
     节点直接身份结构事务域(const 节点直接身份结构事务域&) = delete;
@@ -101,6 +179,28 @@ public:
 
     节点直接身份结构读取许可 取得读取许可() const {
         return 节点直接身份结构读取许可(互斥_, 隔离标记_);
+    }
+
+    节点直接统一冻结许可 取得统一冻结许可(
+        std::uint32_t 预期冻结规则版本) const {
+        return 节点直接统一冻结许可(
+            互斥_, 隔离标记_, 冻结域身份_, 已发布代次_,
+            当前冻结规则版本, 预期冻结规则版本);
+    }
+
+    bool 冻结许可属于本域(
+        const 节点直接统一冻结许可& 许可) const noexcept {
+        if (!许可.有效() || 许可.互斥_.get() != 互斥_.get()
+            || 许可.隔离标记_.get() != 隔离标记_.get()
+            || 许可.冻结域身份_.get() != 冻结域身份_.get()
+            || 许可.已发布代次_.get() != 已发布代次_.get()
+            || 许可.冻结规则版本_ != 当前冻结规则版本) {
+            return false;
+        }
+        const auto 见证 = 许可.读取见证();
+        return 见证.冻结域身份 == *冻结域身份_
+            && 见证.已发布代次 == 已发布代次_->load(std::memory_order_acquire)
+            && 见证.冻结规则版本 == 当前冻结规则版本;
     }
 
     bool 已隔离() const noexcept {
@@ -116,8 +216,40 @@ private:
         return 节点直接身份结构事务许可(互斥_, 隔离标记_, 事务序号);
     }
 
+    static std::uint64_t 签发冻结域身份() noexcept {
+        static std::atomic_uint64_t 下一冻结域身份{1};
+        auto 候选 = 下一冻结域身份.load(std::memory_order_relaxed);
+        while (候选 != std::numeric_limits<std::uint64_t>::max()) {
+            if (下一冻结域身份.compare_exchange_weak(
+                    候选, 候选 + 1,
+                    std::memory_order_relaxed, std::memory_order_relaxed)) {
+                return 候选;
+            }
+        }
+        return 0;
+    }
+
+    bool 推进已发布代次(
+        const 节点直接身份结构事务许可& 许可) noexcept {
+        if (!许可.有效() || 许可.互斥_.get() != 互斥_.get()) {
+            隔离标记_->store(true, std::memory_order_release);
+            return false;
+        }
+        const auto 当前代次 = 已发布代次_->load(std::memory_order_relaxed);
+        if (当前代次 == 0
+            || 当前代次 == std::numeric_limits<std::uint64_t>::max()) {
+            隔离标记_->store(true, std::memory_order_release);
+            return false;
+        }
+        已发布代次_->store(当前代次 + 1, std::memory_order_release);
+        return true;
+    }
+
+    static constexpr std::uint32_t 当前冻结规则版本 = 1;
     std::shared_ptr<std::shared_mutex> 互斥_;
     std::shared_ptr<std::atomic_bool> 隔离标记_;
+    std::shared_ptr<const std::uint64_t> 冻结域身份_;
+    std::shared_ptr<std::atomic_uint64_t> 已发布代次_;
     std::atomic_uint64_t 下一事务序号_{1};
 };
 
@@ -205,10 +337,16 @@ public:
 
         会话.完成发布();
         for (auto* 参与者 : 参与者组) 完成参与者发布(*参与者);
-        return {会话确认.状态 == 节点直接身份结构写入状态::幂等读回
+        const auto 最终状态 = 会话确认.状态 == 节点直接身份结构写入状态::幂等读回
                 ? 节点直接身份结构写入状态::幂等读回
-                : 节点直接身份结构写入状态::已提交,
-            会话确认.结构编号, 会话确认.请求版本, 会话确认.当前版本};
+                : 节点直接身份结构写入状态::已提交;
+        if (最终状态 == 节点直接身份结构写入状态::已提交
+            && !事务域_->推进已发布代次(许可)) {
+            return {节点直接身份结构写入状态::内部不一致,
+                会话确认.结构编号, 会话确认.请求版本, 会话确认.当前版本};
+        }
+        return {最终状态, 会话确认.结构编号,
+            会话确认.请求版本, 会话确认.当前版本};
     }
 
     template <typename 参与者类型>

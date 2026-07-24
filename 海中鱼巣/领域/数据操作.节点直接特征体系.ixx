@@ -12,6 +12,7 @@ module;
 #include <functional>
 #include <limits>
 #include <mutex>
+#include <new>
 #include <optional>
 #include <shared_mutex>
 #include <span>
@@ -86,6 +87,7 @@ private:
 
     mutable std::shared_mutex 锁_;
     std::vector<节点直接特征批次记录> 记录组_;
+    std::uint64_t 结构版本_ = 1;
 };
 
 class 节点直接特征批次记录参与者 final : public 节点直接身份结构写入事务参与者 {
@@ -177,6 +179,10 @@ private:
             std::terminate();
         }
         记录仓_.记录组_[候选位置_].已发布 = true;
+        if (记录仓_.结构版本_ == std::numeric_limits<std::uint64_t>::max()) {
+            std::terminate();
+        }
+        ++记录仓_.结构版本_;
         候选位置_ = 无候选位置;
         阶段_ = 阶段::已发布;
         记录锁_.unlock();
@@ -224,6 +230,38 @@ private:
 
 export namespace 海中鱼巣 {
 
+inline constexpr std::uint64_t 节点直接特征批次身份命名域ABI = 1;
+
+struct 节点直接特征批次冻结记录 final {
+    特征批次身份 批次身份;
+    std::uint32_t 记录格式版本 = 0;
+    std::uint64_t 业务规则版本 = 0;
+    节点句柄 宿主;
+    std::vector<特征值批次引用值式材料> 项目组;
+};
+
+struct 节点直接特征同代次冻结材料 final {
+    节点直接统一冻结见证 见证;
+    std::uint64_t 特征值结构版本 = 0;
+    std::uint64_t 批次结构版本 = 0;
+    std::uint64_t 特征值记录数量 = 0;
+    std::uint64_t 批次记录数量 = 0;
+    std::vector<特征值类型化记录> 特征值记录组;
+    std::vector<节点直接特征批次冻结记录> 批次记录组;
+};
+
+enum class 节点直接特征冻结状态 : std::uint32_t {
+    已形成 = 1,
+    入口拒绝 = 2,
+    资源失败 = 3,
+    内部不一致 = 0x8000
+};
+
+struct 节点直接特征同代次冻结结果 final {
+    节点直接特征冻结状态 状态 = 节点直接特征冻结状态::内部不一致;
+    std::optional<节点直接特征同代次冻结材料> 材料;
+};
+
 class 节点直接特征体系数据操作 final {
 public:
     节点直接特征体系数据操作(
@@ -239,6 +277,172 @@ public:
     bool 有效() const noexcept {
         return 事务域_ != nullptr && 节点_ != nullptr && 关系_ != nullptr
             && 索引_ != nullptr && 记录仓_ != nullptr && !事务域_->已隔离();
+    }
+
+    节点直接特征同代次冻结结果 复制同代次特征值与批次全量(
+        const 节点直接统一冻结许可& 许可) const {
+        if (!有效() || !许可.有效() || !事务域_->冻结许可属于本域(许可)) {
+            return {节点直接特征冻结状态::入口拒绝, std::nullopt};
+        }
+        const auto 首次见证 = 许可.读取见证();
+        if (首次见证.冻结域身份 == 0 || 首次见证.已发布代次 == 0
+            || 首次见证.冻结规则版本 != 1) {
+            return {节点直接特征冻结状态::内部不一致, std::nullopt};
+        }
+
+        auto 特征值副本 = 特征值类型化记录只读访问器(*记录仓_)
+            .复制全部已发布记录();
+        if (特征值副本.状态 != 特征值类型化记录全量读取状态::已形成) {
+            return {
+                特征值副本.状态 == 特征值类型化记录全量读取状态::资源失败
+                    ? 节点直接特征冻结状态::资源失败
+                    : 节点直接特征冻结状态::内部不一致,
+                std::nullopt};
+        }
+
+        std::uint64_t 批次结构版本 = 0;
+        std::vector<节点直接特征批次冻结记录> 批次副本;
+        {
+            std::shared_lock<std::shared_mutex> 锁(
+                批次记录仓_.锁_, std::try_to_lock);
+            if (!锁.owns_lock() || 批次记录仓_.结构版本_ == 0) {
+                return {节点直接特征冻结状态::内部不一致, std::nullopt};
+            }
+            try {
+                批次副本.reserve(批次记录仓_.记录组_.size());
+                for (const auto& 记录 : 批次记录仓_.记录组_) {
+                    if (!记录.已发布 || !记录.完整()) {
+                        return {
+                            节点直接特征冻结状态::内部不一致, std::nullopt};
+                    }
+                    const auto 重复 = std::find_if(
+                        批次副本.cbegin(), 批次副本.cend(),
+                        [&记录](const auto& 已有) {
+                            return 已有.批次身份 == 记录.批次身份;
+                        });
+                    if (重复 != 批次副本.cend()) {
+                        return {
+                            节点直接特征冻结状态::内部不一致, std::nullopt};
+                    }
+                    批次副本.push_back({
+                        记录.批次身份,
+                        记录.记录格式版本,
+                        记录.业务规则版本,
+                        记录.宿主,
+                        记录.项目组});
+                }
+            } catch (const std::bad_alloc&) {
+                return {节点直接特征冻结状态::资源失败, std::nullopt};
+            } catch (...) {
+                return {节点直接特征冻结状态::内部不一致, std::nullopt};
+            }
+            批次结构版本 = 批次记录仓_.结构版本_;
+        }
+
+        const auto 再次见证 = 许可.读取见证();
+        if (!事务域_->冻结许可属于本域(许可)
+            || 首次见证.冻结域身份 != 再次见证.冻结域身份
+            || 首次见证.已发布代次 != 再次见证.已发布代次
+            || 首次见证.冻结规则版本 != 再次见证.冻结规则版本) {
+            return {节点直接特征冻结状态::内部不一致, std::nullopt};
+        }
+
+        const auto 特征值复核 = 特征值类型化记录只读访问器(*记录仓_)
+            .复制全部已发布记录();
+        if (特征值复核.状态 != 特征值类型化记录全量读取状态::已形成) {
+            return {
+                特征值复核.状态 == 特征值类型化记录全量读取状态::资源失败
+                    ? 节点直接特征冻结状态::资源失败
+                    : 节点直接特征冻结状态::内部不一致,
+                std::nullopt};
+        }
+        if (特征值副本.结构版本 != 特征值复核.结构版本
+            || 特征值副本.记录组.size() != 特征值复核.记录组.size()) {
+            return {节点直接特征冻结状态::内部不一致, std::nullopt};
+        }
+
+        {
+            std::shared_lock<std::shared_mutex> 锁(
+                批次记录仓_.锁_, std::try_to_lock);
+            if (!锁.owns_lock() || 批次记录仓_.结构版本_ != 批次结构版本
+                || 批次记录仓_.记录组_.size() != 批次副本.size()) {
+                return {节点直接特征冻结状态::内部不一致, std::nullopt};
+            }
+            for (const auto& 记录 : 批次记录仓_.记录组_) {
+                if (!记录.已发布 || !记录.完整()) {
+                    return {节点直接特征冻结状态::内部不一致, std::nullopt};
+                }
+            }
+        }
+
+        const auto 特征值存在 = [&特征值副本](
+            节点句柄 特征值,
+            std::optional<std::uint64_t> 原始值版本) {
+            std::size_t 匹配数量 = 0;
+            for (const auto& 记录 : 特征值副本.记录组) {
+                if (记录.特征值 == 特征值
+                    && (!原始值版本.has_value()
+                        || 记录.原始值版本 == *原始值版本)) {
+                    ++匹配数量;
+                }
+            }
+            return 匹配数量 == 1;
+        };
+        for (const auto& 批次 : 批次副本) {
+            if (!批次.批次身份.有效()
+                || 批次.记录格式版本 != 节点直接特征批次记录::当前记录格式版本
+                || 批次.业务规则版本 == 0 || !句柄有效(批次.宿主)
+                || 批次.项目组.empty()) {
+                return {节点直接特征冻结状态::内部不一致, std::nullopt};
+            }
+            for (std::size_t 序号 = 0; 序号 < 批次.项目组.size(); ++序号) {
+                const auto& 项目 = 批次.项目组[序号];
+                const bool 初始 = !项目.写前当前关系.has_value()
+                    && !项目.写前当前值.has_value()
+                    && !项目.写前原始值版本.has_value();
+                const bool 换代 = 项目.写前当前关系.has_value()
+                    && 项目.写前当前值.has_value()
+                    && 项目.写前原始值版本.has_value();
+                if (项目.批次身份 != 批次.批次身份
+                    || 项目.业务规则版本 != 批次.业务规则版本
+                    || 项目.项目顺序号 != 序号 || 项目.宿主 != 批次.宿主
+                    || (!初始 && !换代)
+                    || !特征值存在(项目.新特征值, std::nullopt)
+                    || (换代 && !特征值存在(
+                        *项目.写前当前值, 项目.写前原始值版本))) {
+                    return {节点直接特征冻结状态::内部不一致, std::nullopt};
+                }
+            }
+        }
+
+        std::sort(特征值副本.记录组.begin(), 特征值副本.记录组.end(),
+            [](const auto& 左, const auto& 右) {
+                if (左.特征值.仓库编号 != 右.特征值.仓库编号) {
+                    return 左.特征值.仓库编号 < 右.特征值.仓库编号;
+                }
+                if (左.特征值.节点编号 != 右.特征值.节点编号) {
+                    return 左.特征值.节点编号 < 右.特征值.节点编号;
+                }
+                if (左.特征值.版本号 != 右.特征值.版本号) {
+                    return 左.特征值.版本号 < 右.特征值.版本号;
+                }
+                return 左.原始值版本 < 右.原始值版本;
+            });
+        std::sort(批次副本.begin(), 批次副本.end(),
+            [](const auto& 左, const auto& 右) {
+                return 左.批次身份.编号 < 右.批次身份.编号;
+            });
+
+        节点直接特征同代次冻结材料 材料;
+        材料.见证 = 首次见证;
+        材料.特征值结构版本 = 特征值副本.结构版本;
+        材料.批次结构版本 = 批次结构版本;
+        材料.特征值记录数量 =
+            static_cast<std::uint64_t>(特征值副本.记录组.size());
+        材料.批次记录数量 = static_cast<std::uint64_t>(批次副本.size());
+        材料.特征值记录组 = std::move(特征值副本.记录组);
+        材料.批次记录组 = std::move(批次副本);
+        return {节点直接特征冻结状态::已形成, std::move(材料)};
     }
 
     特征值归属读取结果 复核特征值归属(

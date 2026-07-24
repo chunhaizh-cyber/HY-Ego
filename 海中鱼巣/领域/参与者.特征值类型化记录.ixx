@@ -9,6 +9,7 @@ module;
 #include <cstdint>
 #include <exception>
 #include <mutex>
+#include <new>
 #include <optional>
 #include <shared_mutex>
 #include <utility>
@@ -41,6 +42,20 @@ struct 特征值类型化记录读取结果 {
         return 状态 == 特征值类型化记录读取状态::可读
             && 记录.has_value() && 记录->完整();
     }
+};
+
+enum class 特征值类型化记录全量读取状态 : std::uint32_t {
+    已形成 = 1,
+    许可竞争 = 2,
+    资源失败 = 3,
+    内部不一致 = 0x8000
+};
+
+struct 特征值类型化记录全量读取结果 final {
+    特征值类型化记录全量读取状态 状态 =
+        特征值类型化记录全量读取状态::内部不一致;
+    std::uint64_t 结构版本 = 0;
+    std::vector<特征值类型化记录> 记录组;
 };
 
 class 特征值类型化记录仓 final {
@@ -150,6 +165,52 @@ public:
     std::uint64_t 读取结构版本() const noexcept {
         std::shared_lock<std::shared_mutex> 锁(记录仓_.锁_, std::try_to_lock);
         return 锁.owns_lock() ? 记录仓_.结构版本_ : 0;
+    }
+
+    特征值类型化记录全量读取结果 复制全部已发布记录() const {
+        特征值类型化记录全量读取结果 输出;
+        std::shared_lock<std::shared_mutex> 锁(记录仓_.锁_, std::try_to_lock);
+        if (!锁.owns_lock()) {
+            输出.状态 = 特征值类型化记录全量读取状态::许可竞争;
+            return 输出;
+        }
+        if (记录仓_.结构版本_ == 0) return 输出;
+
+        try {
+            输出.记录组.reserve(记录仓_.记录组_.size());
+            for (const auto& 候选 : 记录仓_.记录组_) {
+                if (!候选.已发布 || !候选.记录.完整()
+                    || 候选.记录.记录格式版本 != 特征值类型化记录当前格式版本) {
+                    输出.记录组.clear();
+                    return 输出;
+                }
+                for (const auto& 已有 : 输出.记录组) {
+                    if (已有.特征值 == 候选.记录.特征值
+                        && 已有.原始值版本 == 候选.记录.原始值版本) {
+                        输出.记录组.clear();
+                        return 输出;
+                    }
+                    if (已有.特征值 == 候选.记录.特征值
+                        && 已有.状态 == 记录状态::有效
+                        && 候选.记录.状态 == 记录状态::有效) {
+                        输出.记录组.clear();
+                        return 输出;
+                    }
+                }
+                输出.记录组.push_back(候选.记录);
+            }
+        } catch (const std::bad_alloc&) {
+            输出.记录组.clear();
+            输出.状态 = 特征值类型化记录全量读取状态::资源失败;
+            return 输出;
+        } catch (...) {
+            输出.记录组.clear();
+            return 输出;
+        }
+
+        输出.状态 = 特征值类型化记录全量读取状态::已形成;
+        输出.结构版本 = 记录仓_.结构版本_;
+        return 输出;
     }
 
 private:
