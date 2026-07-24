@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>服务合同、服务值维护与生存安全回归现状流程图</title>
+  <style>
+    body { font-family: "Microsoft YaHei", sans-serif; margin: 24px; color: #172033; background: #f7f9fc; }
+    main { max-width: 1500px; margin: 0 auto; background: white; padding: 28px; border-radius: 12px; box-shadow: 0 8px 28px rgba(23,32,51,.08); }
+    h1 { margin-top: 0; }
+    .note { padding: 12px 16px; border-left: 4px solid #b45309; background: #fff7ed; }
+    .mermaid { overflow: auto; padding: 16px 0; }
+    li { margin: 8px 0; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>服务合同、服务值维护与生存安全回归现状流程图</h1>
+  <p>更新时间：2026-07-24</p>
+  <p class="note">这是当前 main 的实现现状图，不是目标施工图。现行代码尚未建立服务合同、完整秒维护、生存安全回归和安全 / 服务任务权限。</p>
+  <div class="mermaid">
+flowchart TD
+    A["入口初始化存在、场景、特征和需求服务"] --> B["需求初始化建立安全值与服务值语素、实例槽及两个根需求"]
+    B --> C["当前值仅作为初始化材料进入兼容结构"]
+    C --> D["入口使用三参数构造自我线程：没有治理邮箱或处理器"]
+    D --> E["线程完成初始化快照后进入运行中"]
+    E --> F["当前生产路径只等待停止请求，不进入治理循环"]
+    C -. "类能力但当前入口未采用" .-> G["五参数构造可进入可选消息批次治理循环"]
+    G --> H["只有外部同时注入邮箱与处理器时才调用可选治理处理器"]
+    H --> I{"目标是否为固定安全根"}
+    I -->|是| J["固定安全值兼容动作与结算链"]
+    I -->|服务根| K["明确拒绝服务根需求"]
+    J --> L["形成兼容状态、动态、轻量因果及结果"]
+    K --> M["没有服务合同或服务结算"]
+    F --> N["没有完整秒服务维护"]
+    L --> O["没有服务值衰减和生存安全根回归"]
+    M --> O
+    N --> O
+    O --> P["任务请求协议没有安全或服务权限来源"]
+    P --> Q["任务管理 / 工作线程模块可按确认顺序加入并消费双端队列，但当前入口未装配该生产链"]
+    Q --> R["模块内任务调度每次取队首一项；不是当前生产闭环"]
+    R --> S["当前未形成服务合同、三成七成结算、三十天门禁、休眠唤醒或权限闭环"]
+  </div>
+  <h2>关键边界</h2>
+  <ol>
+    <li>初始化只建立根特征和根需求，不等于服务合同或维护规则已实现。</li>
+    <li>当前生产入口使用三参数自我线程构造，初始化后只等待停止；五参数消息批次治理只是未装配类能力。循环次数和等待超时都不能作为完整物理秒。</li>
+    <li>固定安全根兼容路由明确拒绝服务根需求。</li>
+    <li>需求、任务和方法服务没有目标合同、预算、结算与进展结构。</li>
+    <li>任务管理模块仍按 FIFO 消费，不具备安全 / 服务权限组合，且生产入口未装配该运行链。</li>
+  </ol>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });
+</script>
+</body>
+</html>
