@@ -1,6 +1,6 @@
 ---
 name: hai-zhong-yu-chao-continue
-description: Route context-dependent continuation in the 海中鱼巣 repository. Use whenever the user says bare 继续, 接着继续, 继续处理, or asks to resume without naming a concrete operation. Resolve the current interaction-agent, plan-agent, execution-agent, or plan-support-agent type and any integration or read-only technical mode from the latest explicit declaration, design-package ownership, plan list, current worktree, and Git facts, then continue only that type and slice.
+description: Route context-dependent continuation in the 海中鱼巣 repository. Use whenever the user says bare 继续, 接着继续, 继续处理, or asks to resume without naming a concrete operation. Resolve the current interaction-agent, plan-agent, execution-agent, or plan-support-agent type and any validation or read-only technical mode from the latest explicit declaration, design-package ownership, plan list, current workspace, and Git facts, then continue only that type and slice.
 ---
 
 # 海中鱼巣继续路由
@@ -13,9 +13,9 @@ description: Route context-dependent continuation in the 海中鱼巣 repository
 继续当前顶层任务树已明确的智能体类型与当前切片
 ```
 
-不得解释为切换智能体类型、进入另一个 worktree 或跨过当前权限边界。交互智能体不据此建立项目设计包；计划智能体不据此处理执行问题；执行智能体可以按计划索引中的计划状态、具名依赖和自身执行通道自主选中计划；计划支撑智能体只继续执行侧已经具名请求修订且复核成立的设计包。遵守 `AGENTS.md` 和 `.codex/rules/设计执行双窗口交互规则.md`。
+不得解释为切换智能体类型、建立额外工作区或跨过当前权限边界。交互智能体不据此建立项目设计包；计划智能体不据此处理执行问题；执行智能体可以按计划索引中的计划状态、具名依赖和自身执行通道自主选中计划；计划支撑智能体只继续执行侧已经具名请求修订且复核成立的设计包。遵守 `AGENTS.md`、`.codex/rules/设计执行双窗口交互规则.md` 和 `.codex/rules/单工作区串行执行与发布规则.md`。
 
-不得硬编码仓库或 worktree 路径。用 Git 顶层、`git worktree list --porcelain`、当前分支、HEAD、upstream、dirty state、远端事实和 `.codex/rules/` 中的执行通道合同解析当前技术身份。
+不得硬编码仓库路径。用 Git 顶层、当前分支、HEAD、`origin/main`、dirty state、远端事实和 `.codex/rules/` 中的执行通道合同解析当前技术身份。
 
 ## 识别顺序
 
@@ -27,7 +27,7 @@ description: Route context-dependent continuation in the 海中鱼巣 repository
 -> 当前任务是否在创建新计划，或是否存在执行侧明确的设计包修订请求
 -> 计划索引中的计划列表、计划状态和具名依赖
 -> `.codex/rules/` 与 Git 中的执行通道身份
--> Git worktree、分支、HEAD、upstream、dirty state 和远端事实
+-> Git 顶层、分支、HEAD、origin/main、dirty state 和远端事实
 -> 当前计划、最新结构化消息或只读问题集
 ```
 
@@ -51,17 +51,17 @@ description: Route context-dependent continuation in the 海中鱼巣 repository
 
 ### 执行智能体
 
-重读计划索引，根据计划状态、具名依赖和自身执行通道自主选中一份计划；先核对计划版本与 blob、当前 Git/worktree、计划段起点和 S0 结果，再按计划修改允许的代码 / 工程 / 自检 / 唯一专属施工记录 / 验证记录，运行已授权验证，精确提交并只推送当前任务或长期通道分支。
+重读计划索引，根据计划状态、具名依赖和自身执行通道自主选中一份计划；先核对计划版本与 blob、当前 `main` / `origin/main`、计划段起点和 S0 结果，再按计划修改允许的代码 / 工程 / 自检 / 唯一专属施工记录 / 验证记录，完成计划要求的集成级验证，精确提交并非强制推送 `origin/main`。
 
-除计划冻结的专属施工 / 验证记录外，不得写其它 Markdown、计划、索引、规范、流程图或详细设计。计划段选择、S0、完成、漂移或失败只向配对计划支撑智能体发送结构化消息；worktree / index clean 后可以继续检查列表中的其它无关 `可执行` 计划。
+除计划冻结的专属施工 / 验证记录外，不得写其它 Markdown、计划、索引、规范、流程图或详细设计。计划段选择、S0、完成、漂移或失败只向配对计划支撑智能体发送结构化消息；工作区 / index clean 后可以继续检查列表中的其它无关 `可执行` 计划。
 
 ### 计划支撑智能体
 
 只在配对执行智能体已报告具名计划 / 设计问题、明确请求设计包修订且支撑侧复核成立时，继续关联设计包修订。只在原目标内修订必要的规范、流程图、详细设计、知识图谱、既有计划和对应索引项；不得修改代码、施工记录或智能体协作规则。计划选择、S0 PASS、正常完成、纯代码问题和环境问题只读处理，不取得文件写权。修订完成后只向来源执行智能体发送 `PLAN-SUPPORT-NOTICE`。无法解决、需要改变用户目标或涉及协作规则时停止并列出问题，等待用户直接消息。
 
-### 集成或只读技术模式
+### 验证或只读技术模式
 
-集成是执行智能体的登记技术模式，只继续当前计划合同和 Git 事实共同指向的身份核对、固定顺序汇集、验证、集成记录和授权发布。只读模式不改变所属智能体类型，只继续指定提交、对象和问题集上的事实、差异、证据、风险与建议核对，不产生写权。
+集成级验证属于执行智能体当前计划段的技术步骤，只继续当前计划合同和 Git 事实共同指向的身份核对、验证和授权发布，不建立独立集成工作区。只读模式不改变所属智能体类型，只继续指定提交、对象和问题集上的事实、差异、证据、风险与建议核对，不产生写权。
 
 ## 智能体类型切换
 
@@ -71,4 +71,4 @@ description: Route context-dependent continuation in the 海中鱼巣 repository
 
 ## 中断恢复
 
-上一轮被中断时先核对当前智能体启动的进程、worktree、分支、HEAD、dirty state、已形成证据和未完成门禁。用户已经暂停或改向时停止本窗口启动的相关动作。只恢复当前智能体当前切片，不自动恢复其它智能体或其它计划。
+上一轮被中断时先核对当前智能体启动的进程、唯一工作区、分支、HEAD、dirty state、已形成证据和未完成门禁。用户已经暂停或改向时停止本窗口启动的相关动作。只恢复当前智能体当前切片，不自动恢复其它智能体或其它计划。

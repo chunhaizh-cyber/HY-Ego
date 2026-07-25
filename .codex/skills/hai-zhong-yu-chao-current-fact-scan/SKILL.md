@@ -1,19 +1,19 @@
 ---
 name: hai-zhong-yu-chao-current-fact-scan
-description: Use in the 海中鱼巣 repository when the user says "按当前代码检查", "按当前 worktree 检查", "先扫描本地事实", "先确认当前入口和调用点", "S0 当前代码事实扫描", or asks Codex to confirm current local code facts before planning or editing. This skill is strictly read-only.
+description: Use in the 海中鱼巣 repository when the user says "按当前代码检查", "按当前工作区检查", "先扫描本地事实", "先确认当前入口和调用点", "S0 当前代码事实扫描", or asks Codex to confirm current local code facts before planning or editing. This skill is strictly read-only.
 ---
 
 # 海中鱼巣当前事实扫描
 
 ## 角色与入口
 
-严格服从仓库根目录 `AGENTS.md`。用 `git rev-parse --show-toplevel`、`git worktree list --porcelain` 和当前 worktree 的 Git 结果解析路径、分支、HEAD、upstream、dirty state 与远端事实，并从 `.codex/rules/` 核对执行通道；不得硬编码仓库路径、主分支名或工作树身份。身份无法确认时停止在只读事实报告，不推测补齐。
+严格服从仓库根目录 `AGENTS.md`。用 `git rev-parse --show-toplevel` 和当前唯一工作区的 Git 结果解析路径、分支、HEAD、`origin/main`、dirty state 与远端事实，并从 `.codex/rules/` 核对执行通道；不得硬编码仓库路径或主分支名。身份无法确认时停止在只读事实报告，不推测补齐。
 
 本技能只完成 S0 / 当前本地事实扫描：
 
 ```text
 当前目标
--> 当前 worktree 与 dirty state
+-> 当前工作区与 dirty state
 -> 当前规则 / 计划列表 / 计划状态 / 具名依赖
 -> 当前真实代码入口、调用点、结构承载
 -> 缺口、风险、待确认问题
@@ -37,11 +37,12 @@ git status --short --branch --untracked-files=no
 git diff --name-only
 git rev-parse --show-toplevel
 git branch --show-current
-git worktree list --porcelain
+git rev-parse HEAD
+git rev-parse origin/main
 ```
 
 4. 用范围受限的 `rg` 和短文件读取定位真实入口、调用者、结构承载、写入方、读取方、拒绝、返回和验证证据。
-5. 核对 dirty diff 是否影响所读事实；计划状态只从计划索引读取，计划段开始、漂移、失败和完成事实只从 Git/worktree 与结构化消息读取；不得把不同 worktree、提交或计划版本的事实混合为同一结论。
+5. 核对 dirty diff 是否影响所读事实；计划状态只从计划索引读取，计划段开始、漂移、失败和完成事实只从 Git 与结构化消息读取；不得把不同提交或计划版本的事实混合为同一结论。
 6. 将结果分为 `事实 / 差异 / 证据 / 风险 / 建议`；不能由当前证据证明的内容标记为待核，不用计划目标替代代码事实。
 
 ## 输出
@@ -51,10 +52,10 @@ git worktree list --porcelain
 ```text
 当前扫描对象：
 当前分支：
-当前 worktree / 执行通道：
+当前工作区 / 执行通道：
 计划路径 / 版本 / 计划状态 / blob：
 HEAD / upstream / 远端：
-worktree 是否 dirty：
+工作区是否 dirty：
 已读证据：
 本地真实入口：
 本地调用点：
@@ -69,7 +70,7 @@ worktree 是否 dirty：
 正式只读复核还必须具名：
 
 ```text
-目标提交与 worktree
+目标提交与工作区
 复核对象与问题清单
 证据入口
 报告所属智能体类型与授权接收对象

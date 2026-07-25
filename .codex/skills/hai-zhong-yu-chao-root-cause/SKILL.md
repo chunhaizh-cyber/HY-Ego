@@ -7,7 +7,7 @@ description: Trace popup, Debug Error, abort, runtime anomaly, logic-error log, 
 
 ## 角色与入口
 
-严格服从仓库根目录 `AGENTS.md`。用 Git 顶层、计划索引和当前 worktree 的 Git 事实解析仓库、分支、提交和角色，不硬编码路径或分支。把每个弹窗、逻辑错误日志、验证失败、异常状态或崩溃邻近现象按只读证据链追踪：
+严格服从仓库根目录 `AGENTS.md`。用 Git 顶层、计划索引和当前唯一工作区的 Git 事实解析仓库、分支、提交和角色，不硬编码路径或分支。把每个弹窗、逻辑错误日志、验证失败、异常状态或崩溃邻近现象按只读证据链追踪：
 
 ```text
 现象
@@ -31,7 +31,7 @@ description: Trace popup, Debug Error, abort, runtime anomaly, logic-error log, 
 相关正式规范、有效设计、现行计划、目标代码文件头部规则
 ```
 
-3. 核对当前提交、dirty state 和现象证据的来源时间；不同运行、不同 worktree 或不同提交的证据必须分账。
+3. 核对当前提交、dirty state 和现象证据的来源时间；不同运行或不同提交的证据必须分账。
 4. 按层搜索并先列同层候选，再向下钻取：
 
 ```text

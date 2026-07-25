@@ -28,7 +28,7 @@ description: Use on the ChatGPT side to analyze, discuss, correct, synchronize, 
 规范事实：来自当前正式目录登记的现行规范
 代码事实：来自本轮可读代码、提交、差异、构建或运行证据
 计划事实：来自本轮可读叶子计划与计划索引中的计划状态和具名依赖
-过程事实：来自本轮可核对的 Git/worktree 与结构化消息
+过程事实：来自本轮可核对的 Git / 单工作区与结构化消息
 用户口径：本轮用户明确说明
 参考材料：上传文件、旧项目、日志、界面或历史摘要
 合理推断 / 待核：证据尚不足
@@ -44,7 +44,7 @@ description: Use on the ChatGPT side to analyze, discuss, correct, synchronize, 
 
 ```text
 把设计、计划、S0 扫描或同步摘要说成代码实现
-把 dirty worktree 说成已提交或已同步事实
+把 dirty 工作区说成已提交或已同步事实
 把旧函数、日志、显示、说明或临时文本说成机器事实
 把候选材料或外部输入说成已准入事实
 把局部验证、只读投影或外设实验说成完整闭环
@@ -62,7 +62,7 @@ description: Use on the ChatGPT side to analyze, discuss, correct, synchronize, 
 
 ### 当前事实同步
 
-分开列出已提交基线、dirty worktree、当前结构化消息、当前聊天材料和历史材料；说明本轮实际读取范围，标记过期口径，并输出可交给计划智能体或计划支撑智能体的事实 / 决策草稿。不得把同步摘要当提交、计划状态变更或 Git 事实。
+分开列出已提交基线、dirty 工作区、当前结构化消息、当前聊天材料和历史材料；说明本轮实际读取范围，标记过期口径，并输出可交给计划智能体或计划支撑智能体的事实 / 决策草稿。不得把同步摘要当提交、计划状态变更或 Git 事实。
 
 ### 计划或实现映射草稿
 
