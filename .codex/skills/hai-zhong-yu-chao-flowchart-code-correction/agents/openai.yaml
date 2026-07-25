@@ -1,4 +1,4 @@
 interface:
   display_name: "海中鱼巣流程图纠偏"
-  short_description: "Map current code to flowcharts and owned correction plans"
-  default_prompt: "Use $hai-zhong-yu-chao-flowchart-code-correction to map current Sea Nest code into flowcharts and route deviations within the current owned design package."
+  short_description: "Map code functions, calls, and correction plans"
+  default_prompt: "Use $hai-zhong-yu-chao-flowchart-code-correction to map current Sea Nest code into single-function flowcharts, rebuild project-source call relationships under the correct artifact root, and route deviations within the current owned design package."

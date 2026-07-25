@@ -1,6 +1,6 @@
 ---
 name: hai-zhong-yu-chao-flowchart-code-correction
-description: Use in the 海中鱼巣 repository when a plan agent or plan-support agent asks to 根据代码画流程图, 检查或校正流程图, 区分现状流程图与施工流程图, 根据流程图优化代码, 流程图驱动代码纠偏, 生成修订计划, or 将修订计划加入计划索引. This design-package workflow freezes current code facts, produces exact current-state metadata and line-by-line mappings, audits input contracts and non-success branches, compares them with formally grounded construction design, and routes each deviation without authorizing code by itself.
+description: Use in the 海中鱼巣 repository when a plan agent or plan-support agent asks to 根据代码画流程图, 从主程序重建代码流程图, 建立函数调用关系或知识图谱, 检查或校正流程图, 区分现状流程图与施工流程图, 根据流程图优化代码, 流程图驱动代码纠偏, 生成修订计划, or 将修订计划加入计划索引. This design-package workflow freezes current code facts, produces exact current-state metadata and line-by-line mappings, audits input contracts and non-success branches, compares them with formally grounded construction design, and routes each deviation without authorizing code by itself.
 ---
 
 # 海中鱼巣流程图驱动代码纠偏
@@ -14,14 +14,17 @@ description: Use in the 海中鱼巣 repository when a plan agent or plan-suppor
 5. 施工流程图必须同时具名绑定现行正式规范、有效详细设计和现行计划，并保持三者范围一致；任一依据缺失、失效、冲突或未覆盖目标时，不生成施工图或可执行代码纠偏计划，退回相应设计治理。
 6. 本技能只读代码并写设计治理产物；不修改 C++、工程或自检，不运行构建、程序或业务自检。
 7. 现状图和施工图都遵守一图一函数：每图冻结唯一根函数、完整参数和返回结果；节点只能是被调函数或本函数内具体指令。多函数范围必须生成流程图组和调用图，模块 / 服务 / 阶段只能作归属信息。
+8. 先按任务目标裁决产物范围：针对具名函数或既有设计包的局部现状审查属于“局部现状审查”；从主程序、模式入口或其它根函数出发，递归整理项目源码函数、调用关系、覆盖队列或知识图谱，属于“代码函数图谱重建”。两类产物使用不同目录合同，不得因都基于当前代码而混写路径。
 
 ## 专用算法
 
 ```text
 确认智能体类型、设计包所有权、目标、用途与唯一文件所有者
 -> 冻结提交、工作区状态、覆盖文件、函数、调用点和行号口径
+-> 裁决为局部现状审查或代码函数图谱重建，并冻结唯一产物根目录
 -> 为每个函数分别逐行读取当前代码并建立完整映射
 -> 为每个函数分别生成单函数现状流程图及配对 HTML
+-> 代码函数图谱重建时，从具名根函数记录项目源码调用边、待展开队列、已覆盖集合和递归回边
 -> 建立输入契约 / 调用语境表
 -> 对每个中途非成功结果做二分审查
 -> 对照正式规范、有效流程图 / 详细设计和现行计划形成偏差清单
@@ -41,7 +44,9 @@ description: Use in the 海中鱼巣 repository when a plan agent or plan-suppor
 
 ## 产物合同
 
-按目标范围建立或核对以下产物；现状图与施工图必须使用不同标题和文件名，Markdown 与 HTML 必须包含相同 Mermaid 主体：
+按目标范围建立或核对以下产物；现状图与施工图必须使用不同标题和文件名，Markdown 与 HTML 必须包含相同 Mermaid 主体。
+
+局部现状审查沿用以下合同：
 
 ```text
 流程图/YYYYMMDD_<函数主题>现状流程图_v0.1.md
@@ -55,7 +60,24 @@ description: Use in the 海中鱼巣 repository when a plan agent or plan-suppor
 计划/YYYYMMDD_<主题>代码纠偏或文档修订计划_v0.1.md（需要且具备形成条件时）
 ```
 
-新的现状审查产物写入 `流程图/现状流程图/`，不另建旁路状态目录。已有位于 `流程图/` 的有效产物按其现行路径原地修订；旧旁路材料不读取、不更新。版本、命名和计划列表引用按仓库现行治理规则处理。
+新的局部现状审查配套产物写入 `流程图/现状流程图/`，不另建旁路状态目录。已有位于 `流程图/` 的有效产物按其现行路径原地修订；旧旁路材料不读取、不更新。版本、命名和计划列表引用按仓库现行治理规则处理。
+
+代码函数图谱重建采用以下专属目录合同：
+
+```text
+流程图/代码流程图/                         （本次重建的唯一产物根目录）
+流程图/代码流程图/<单函数流程图>.md
+流程图/代码流程图/<单函数流程图>.html
+流程图/代码流程图/<逐行代码映射表>.md
+流程图/代码流程图/<函数清单或覆盖清单>.md
+流程图/代码流程图/<函数调用关系或知识图谱>.md
+流程图/代码流程图/<待展开队列或覆盖状态>.md
+流程图/代码流程图/<规范差异或缺漏审查>.md
+```
+
+具体文件名和根目录内的进一步分组由对应新计划设计包冻结，但该任务的全部新增代码现状流程图、映射、函数清单、调用关系、知识图谱、展开队列和差异审查都必须位于 `流程图/代码流程图/` 内，不得写入 `流程图/现状流程图/` 或 `流程图/` 顶层。已有流程图保持原位，不因重建直接删除、覆盖或迁移；只有新图谱完成覆盖核对后，才能形成具名的复用、修订或退出建议。
+
+代码函数图谱重建必须冻结根函数，从根函数开始逐层记录调用边。项目源码内被调用函数进入待展开队列：未建图时后续建立自己的单函数流程图，已建图时建立双向引用，递归调用只记录回边而不无限展开。标准库、操作系统、编译器、第三方库及其它非本项目源码函数只记录边界调用、参数与返回结果，不为其生成流程图。一个项目源码函数在本次重建范围内只能有一个现状流程图身份，不得同时在 `流程图/代码流程图/` 与 `流程图/现状流程图/` 新建重复图。
 
 ### 现状图精确元数据
 
