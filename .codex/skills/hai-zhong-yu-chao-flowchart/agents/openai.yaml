@@ -1,4 +1,4 @@
 interface:
-  display_name: "海中鱼巣流程图"
-  short_description: "Create paired Sea Nest flowcharts in owned design packages"
-  default_prompt: "Use $hai-zhong-yu-chao-flowchart to create paired Markdown and HTML flowcharts only inside the current plan or plan-support agent owned design package."
+  display_name: "海中鱼巣单函数流程图"
+  short_description: "Create single-function Sea Nest flowcharts"
+  default_prompt: "Use $hai-zhong-yu-chao-flowchart to create paired single-function flowcharts with explicit parameters, results, calls, and in-function instructions."
