@@ -1,6 +1,6 @@
 ---
 name: hai-zhong-yu-chao-flowchart
-description: Create paired Markdown and HTML single-function flowchart artifacts for the current 海中鱼巣 Git repository when the user asks to 画流程图, 生成流程图, 绘制流程图, or diagram an implementation function, service lifecycle, boundary, root-cause chain, migration route, or plan. Require one root function with explicit parameters and result per implementation-facing chart, nodes that are only named function calls or concrete in-function instructions, the current task tree to be a plan agent owning an unselected new design package or a plan-support agent owning an execution-selected package, formal governing evidence for implementation-facing charts, and non-authoritative labels for conceptual diagrams.
+description: Create paired Markdown and HTML single-function flowchart artifacts for the current 海中鱼巣 Git repository when the user asks to 画流程图, 生成流程图, 绘制流程图, or diagram an implementation function, service lifecycle, boundary, root-cause chain, migration route, or plan. Require one root function with explicit parameters and result per implementation-facing chart, nodes that are only named function calls or concrete in-function instructions, the current task tree to be a plan agent creating a new plan package or a plan-support agent revising an existing package after a named execution-side design problem, formal governing evidence for implementation-facing charts, and non-authoritative labels for conceptual diagrams.
 ---
 
 # 海中鱼巣流程图落盘
@@ -9,7 +9,7 @@ description: Create paired Markdown and HTML single-function flowchart artifacts
 
 1. 先遵守仓库根目录 `AGENTS.md`，不在技能内复制其权威顺序、角色权限或机器硬规则。
 2. 用 `git rev-parse --show-toplevel` 解析当前仓库根目录；只有用户明确指定另一个现存项目路径时才改用该路径。不得硬编码盘符、旧项目名或路径别名。
-3. 只有计划智能体或计划支撑智能体可以在自己拥有的设计包内落盘：计划智能体写尚未被执行选中的新目标流程图，计划支撑智能体只修订配对执行智能体已选中并交回的关联流程图。交互智能体只形成目标 / 草稿输入；执行智能体只返回事实，不写流程图。
+3. 只有计划智能体或计划支撑智能体可以在自己拥有的设计包内落盘：计划智能体只为创建新计划形成所需流程图；计划支撑智能体只在执行侧报告具名计划 / 设计问题、明确请求修订且复核成立后，修订该既有计划的关联流程图。计划选择、S0 PASS 和正常执行不触发流程图写入。交互智能体只形成目标 / 草稿输入；执行智能体只返回事实，不写流程图。
 4. 实现、服务边界、生命周期、迁移、根因或活动计划流程图必须先读取 `规范/规范目录.md`、相关现行正式规范、有效设计或计划以及必要的当前代码证据。依据缺失、冲突、过期或设计包所有权不符时停止落盘。
 5. 纯概念图可以不依赖实现依据，但必须在标题、说明和关键边界中同时标明 `概念草图 / 非正式 / 非权威 / 不得作为施工依据`。概念图不会因生成、评审或用户确认自动成为规范、详细设计、计划或代码许可。
 

@@ -1,4 +1,4 @@
 interface:
   display_name: "海中鱼巣根因追踪"
   short_description: "Read-only Sea Nest root-cause tracing and fix routing"
-  default_prompt: "Use $hai-zhong-yu-chao-root-cause to trace a Sea Nest failure read-only and route a new fix goal to planning or an active-plan defect to paired plan support."
+  default_prompt: "Use $hai-zhong-yu-chao-root-cause to trace a Sea Nest failure read-only, route new fix goals to planning, route only named active-plan design defects with an explicit revision request to paired plan support, and leave code defects to execution."

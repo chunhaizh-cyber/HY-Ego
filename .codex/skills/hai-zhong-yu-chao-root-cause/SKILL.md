@@ -1,6 +1,6 @@
 ---
 name: hai-zhong-yu-chao-root-cause
-description: Trace popup, Debug Error, abort, runtime anomaly, logic-error log, failed validation, or unexpected-state root causes in the 海中鱼巣 repository. Use when the user asks to 追根因, 定位弹窗根因, 分析逻辑错误, 追查运行异常, or explain why an error appears. This skill is read-only; a new fix goal goes to the plan agent, an active-plan defect goes to its paired plan-support agent, and code changes remain an execution-agent task.
+description: Trace popup, Debug Error, abort, runtime anomaly, logic-error log, failed validation, or unexpected-state root causes in the 海中鱼巣 repository. Use when the user asks to 追根因, 定位弹窗根因, 分析逻辑错误, 追查运行异常, or explain why an error appears. This skill is read-only; a new fix goal goes to the plan agent, a named active-plan design defect may go to its paired plan-support agent after explicit revision request and review, and code defects remain execution-agent work.
 ---
 
 # 海中鱼巣根因追踪
@@ -64,7 +64,7 @@ L5 规范契约层：AGENTS、规则总纲、详细设计、计划切片。
 禁止宣称
 ```
 
-需要持久化时，本技能仍保持只读。新目标由交互智能体交给计划智能体形成设计包；已选计划中的根因事实由执行智能体只交给配对计划支撑智能体修订关联设计包；代码修改仍由执行智能体依据计划状态、具名依赖和自身执行通道自主 S0。各阶段不得在本技能内自动串成同一写任务。
+需要持久化时，本技能仍保持只读。新目标由交互智能体交给计划智能体形成设计包；已选计划中的根因事实仍只由执行智能体发送给配对计划支撑智能体，但只有具名计划 / 设计缺口、明确请求修订且支撑侧复核成立时，才由计划支撑智能体修订关联设计包。纯代码根因、环境根因或通道根因不产生设计写权，代码修改仍由执行智能体依据计划状态、具名依赖和自身执行通道自主 S0。各阶段不得在本技能内自动串成同一写任务。
 
 ## 停止边界
 

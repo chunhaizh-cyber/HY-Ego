@@ -1,6 +1,6 @@
 ---
 name: hai-zhong-yu-chao-plan
-description: "Use in the 海中鱼巣 repository when a plan agent must turn a self-derived or interaction-agent goal into a complete new design package and notify the uniquely registered existing execution agent after formal publication, or when a paired plan-support agent must revise the already-selected package returned by its execution agent. The package may include formal specifications and indexes, conflict entries, flowcharts, detailed designs, knowledge graphs, plans, and plan-index entries. Preserve lifecycle ownership: plan agents do not receive execution returns and send only PLAN-AVAILABLE-NOTICE; plan-support agents only revise their paired execution package and reply only to that execution agent."
+description: "Use in the 海中鱼巣 repository when a plan agent must create a new plan and perform the specific design work required to create it, or when a paired plan-support agent must revise an existing plan after its execution agent reports a named plan or design problem and explicitly requests revision. The package may include formal specifications and indexes, conflict entries, flowcharts, detailed designs, knowledge graphs, plans, and plan-index entries. Preserve lifecycle ownership: published packages stay frozen during normal execution; plan selection and S0 do not trigger support takeover."
 ---
 
 # 海中鱼巣制定计划
@@ -11,8 +11,8 @@ description: "Use in the 海中鱼巣 repository when a plan agent must turn a s
 
 计划任务树只能把互不重叠的设计包切片交给同类型 / 只读子智能体，不得让后代切换为其它写类型。顶层统一复核差异并串行完成设计 Git 收口。
 
-- 计划智能体只接收自身沿既有总目标推导的目标或交互智能体发送的目标，拥有尚未被执行选中的新目标设计包，不接收执行事实；每份完整设计包验证、提交并推送且计划状态成为 `可执行` 后，只向唯一登记的既有执行智能体发送 `PLAN-AVAILABLE-NOTICE`。
-- 计划支撑智能体只接收配对执行智能体的结构化执行事实，从首次 S0 起接管该计划关联设计包，只在原目标内修订，并只向来源执行智能体发送 `PLAN-SUPPORT-NOTICE`。
+- 计划智能体只接收自身沿既有总目标推导的目标或交互智能体发送的目标，负责创建新计划以及创建该计划所需的现状扫描、规范治理、流程图、逐节点分析、详细设计、接口冻结和计划拆分，不接收执行问题；每份完整新设计包验证、提交并推送且计划状态成为 `可执行` 后，只向唯一登记的既有执行智能体发送 `PLAN-AVAILABLE-NOTICE`。
+- 计划支撑智能体只读接收配对执行智能体的结构化执行事实；只有执行侧在实施既有计划时报告具名计划 / 设计问题、明确请求修订，且支撑侧复核确认缺口属于设计包后，才接管受影响包并在原目标内形成修订版本，只向来源执行智能体发送 `PLAN-SUPPORT-NOTICE`。选择、S0 PASS、正常完成、纯代码问题和环境问题不触发写入。
 
 不得硬编码仓库盘符、旧仓库名或固定 worktree。先用 Git 顶层、`git worktree list --porcelain`、当前分支、HEAD、upstream 和 dirty state 解析当前工作树事实；计划预期执行通道与 Git 事实不一致时停止受影响切片并报告 DRIFT。
 
@@ -42,6 +42,7 @@ description: "Use in the 海中鱼巣 repository when a plan agent must turn a s
 
 ```text
 确认当前智能体类型、设计包所有权、目标规范与完成边界
+-> 计划智能体确认本任务是在创建新计划；计划支撑智能体确认具名执行问题修订请求与缺口归属成立
 -> 建立或修订正式规范、规范目录与冲突登记
 -> 建立函数清单、调用图和单函数流程图组，冻结每图完整签名、参数 / 结果、节点身份、分支和终止路径
 -> 按 `.codex/rules/设计执行双窗口交互规则.md` 第 6.1 节逐函数、逐节点完成实现分析
@@ -56,7 +57,7 @@ description: "Use in the 海中鱼巣 repository when a plan agent must turn a s
 -> 验证、精确提交并非强制推送设计结果
 -> 每完成一份计划就发布该精确版本 / blob 的 `可执行` 设计事实
 -> 计划智能体向唯一登记的既有执行智能体发送 PLAN-AVAILABLE-NOTICE 后继续形成下一份新目标计划
--> 计划支撑智能体向来源执行智能体发送修订事实后等待新的执行事实
+-> 计划支撑智能体完成执行问题修订后向来源执行智能体发送修订事实；没有修订请求或不是设计包缺口时保持只读
 ```
 
 流程图的最小正式单位是一个函数，但计划范围仍由现行规范与有效设计裁决。一个计划可以包含多个函数；必须使用单函数流程图组和调用图表达，不得把多个函数的内部过程合并为一张图。
@@ -148,9 +149,9 @@ description: "Use in the 海中鱼巣 repository when a plan agent must turn a s
 
 计划形成后，叶子正文冻结为不可变施工合同，只写计划身份、版本、稳定设计状态、目标、依据、允许 / 禁止范围、唯一专属施工 / 验证记录路径、失败收口和验证合同，不复制当前 `待激活 / 可执行 / 已退出` 状态，也不写当前派发、S0、执行或集成过程。计划索引以列表形式登记路径、版本、具名依赖和唯一计划状态 `待激活 / 可执行 / 已退出`；计划之间只登记具名依赖，不另建层级结构。执行通道由 `.codex/rules/` 管理；worktree、分支、HEAD、提交、dirty state 和远端直接读取 Git。施工过程只允许写入计划冻结的专属施工 / 验证记录，不另建共享 Markdown 状态台账。
 
-计划智能体按总目标逐份形成尚未被执行选中的新设计包，不等待上一份计划执行或整批设计完毕。每份计划的完整设计包通过治理验证、登记为 `可执行`、精确提交并推送到正式中央分支后，只向唯一登记且用户未撤销的既有执行智能体发送一次幂等 `PLAN-AVAILABLE-NOTICE`；随后继续形成下一份计划。通知目标只取用户在计划任务自身窗口明确指定的平台任务身份，或 `INTERACTION-GOAL` 携带的精确平台任务身份；标题、分支、worktree 和名称不能建立登记，也不得自行猜测或创建接收任务。该绑定可在同一计划顶层任务后续自推导目标中复用，直到用户撤销、替换或平台证明不可达。执行智能体选中计划并首次发送 S0 后，该关联设计包的修订权转给配对计划支撑智能体，计划智能体停止修改该包。
+计划智能体按总目标逐份创建新计划及其前置设计产物，不等待上一份计划执行或整批设计完毕。每份计划的完整设计包通过治理验证、登记为 `可执行`、精确提交并推送到正式中央分支后，只向唯一登记且用户未撤销的既有执行智能体发送一次幂等 `PLAN-AVAILABLE-NOTICE`；随后停止修改该精确设计包并继续形成下一份新计划。通知目标只取用户在计划任务自身窗口明确指定的平台任务身份，或 `INTERACTION-GOAL` 携带的精确平台任务身份；标题、分支、worktree 和名称不能建立登记，也不得自行猜测或创建接收任务。该绑定可在同一计划顶层任务后续自推导目标中复用，直到用户撤销、替换或平台证明不可达。正式发布和正常执行期间设计包冻结；执行智能体选择计划、首次发送 S0、S0 PASS、正常施工或完成都不产生支撑接管。
 
-计划支撑智能体收到执行缺口后，核对结构化消息与 Git，把受影响计划版本改为 `待激活`，不改写不可变旧版本；在原目标内同步修订必要的规范、流程图、详细设计、知识图谱、计划和索引，形成新版本 / blob 后恢复为 `可执行`，再只向来源执行智能体发送 `PLAN-SUPPORT-NOTICE`。如果必须改变用户目标、修改智能体协作规则或无法裁决机器语义，停止并在自身用户可见窗口列出问题，等待用户直接消息。
+计划支撑智能体收到执行事实后先只读核对结构化消息与 Git。没有明确的“请求设计包修订”，或问题属于执行智能体可在现行白名单和设计内解决的代码实现错误、环境、权限或通道问题时，不取得设计文件写权。只有请求成立且缺口确实要求修改计划、规范、流程图、详细设计、知识图谱、接口合同、范围、依赖或验证合同时，才把受影响计划版本改为 `待激活`，不改写不可变旧版本；在原目标内同步修订必要产物，形成新版本 / blob 后恢复为 `可执行`，再只向来源执行智能体发送 `PLAN-SUPPORT-NOTICE`。如果必须改变用户目标、修改智能体协作规则或无法裁决机器语义，停止并在自身用户可见窗口列出问题，等待用户直接消息。
 
 具有执行写范围的计划同时满足下列条件后，当前设计包所有者即可发布 `可执行`：
 

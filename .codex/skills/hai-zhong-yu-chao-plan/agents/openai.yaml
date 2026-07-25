@@ -1,4 +1,4 @@
 interface:
   display_name: "海中鱼巣计划"
-  short_description: "Publish design packages and notify execution"
-  default_prompt: "Use $hai-zhong-yu-chao-plan to publish a complete Sea Nest design package and send the permitted availability notice, or revise a selected package as its paired plan-support agent."
+  short_description: "Create plans or revise execution-returned plans"
+  default_prompt: "Use $hai-zhong-yu-chao-plan to create a new Sea Nest plan and its required design package, or as a paired plan-support agent revise an existing plan only after a named execution-side plan or design problem explicitly requests revision."
