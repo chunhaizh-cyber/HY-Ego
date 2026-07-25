@@ -1,6 +1,6 @@
 ---
 name: hai-zhong-yu-chao-execute
-description: Execute or resume design-ready plans inside an existing 海中鱼巣 independent task worktree or long-lived execution channel. Use when the current top-level task tree is the execution-agent type and either the user says 执行, 继续执行, 按照计划索引执行, 继续执行计划, or 持续执行, or the existing execution task receives PLAN-SUPPORT-NOTICE, or it is woken after EXECUTION-YIELD. The execution agent continuously selects eligible plans, performs one S0 per plan segment, writes only plan-authorized code, engineering files, self-checks, and the plan's exclusive construction and validation records, sends execution facts only to its paired plan-support agent, and stops only on a named terminal condition.
+description: Execute or resume design-ready plans inside an existing 海中鱼巣 independent task worktree or long-lived execution channel. Use when the current top-level task tree is the execution-agent type and either the user says 执行, 继续执行, 按照计划索引执行, 继续执行计划, or 持续执行, the existing execution task receives PLAN-AVAILABLE-NOTICE or PLAN-SUPPORT-NOTICE, or it is woken after EXECUTION-YIELD. The execution agent continuously selects eligible plans, performs one S0 per plan segment, writes only plan-authorized code, engineering files, self-checks, and the plan's exclusive construction and validation records, sends execution facts only to its paired plan-support agent, and stops only on a named terminal condition.
 ---
 
 # 海中鱼巣执行
@@ -19,11 +19,49 @@ description: Execute or resume design-ready plans inside an existing 海中鱼�
 
 执行智能体任务树的后代只能继承执行智能体写类型或保持只读；不得承担交互、计划或计划支撑写类型。多个计划允许切片确实可隔离时才使用执行 / 只读子智能体，并冻结唯一所有权；Git 暂存、提交和推送由指定智能体串行收口。集成是执行智能体在登记身份下进入的技术模式，不改变智能体类型。
 
+## 新计划可用通知触发
+
+既有执行任务收到 `PLAN-AVAILABLE-NOTICE` 并产生新轮次时，必须使用本技能；不要求用户同时发送“继续”。通知只证明计划智能体声称一份新计划已经发布，是定位线索，不是执行许可、计划选择或 S0 PASS。
+
+先核对用户暂停和当前活动计划段：
+
+```text
+用户已在执行智能体自身窗口明确暂停
+-> 保持 USER-PAUSED，不由通知恢复施工
+
+没有活动计划段且 worktree / index clean
+-> 刷新并重读 origin/main
+-> 核对计划索引 blob、通知所述计划版本 / blob、正式设计提交和具名依赖
+-> 扫描全部可执行候选，不把被通知计划强制置顶
+-> 自主选择一份计划并当轮 S0，PASS 后直接实施
+-> 无候选或发生阻断时以具名终止码和完整证据收口
+
+没有活动计划段、用户未暂停但 worktree / index dirty
+-> 不开始 S0，不 stash、不清理、不覆盖现场
+-> 固定 dirty 文件、index、HEAD / upstream 和来源证据
+-> 以 DIRTY-BLOCKED 和完整候选扫描证据收口
+
+已有活动计划段
+-> 不暂停、不切换、不扩大当前白名单
+-> 仅保留通知中的提交、索引 blob 和 plan blob 作为后续定位线索
+-> 当前段合法收口且 worktree / index clean 后立即运行继续门禁
+-> 从正式仓库重新扫描全部候选
+```
+
+禁止只回复“已收到”“下次恢复时处理”或等待另一条“继续”后结束，也禁止为了响应通知打断尚未 clean 收口的活动计划段。
+
 ## 计划支撑通知触发
 
 既有执行任务收到 `PLAN-SUPPORT-NOTICE` 并产生新轮次时，必须使用本技能；不要求用户同时发送“继续”。通知只是正式状态可能变化的定位线索，不是执行授权、计划选择或 S0 PASS。除非用户已经在执行智能体自身窗口明确暂停，立即：
 
 ```text
+当前已有其它活动计划段
+-> 不暂停、不切换、不扩大当前白名单
+-> 当前段合法收口且 worktree / index clean 后优先处理本通知并重新扫描全部候选
+
+当前没有活动计划段
+-> 继续以下步骤
+
 刷新并重读 origin/main
 -> 核对计划索引 blob、受影响计划版本 / blob 和正式设计提交
 -> 核对当前执行通道 HEAD / upstream / dirty state 与累计父链
@@ -164,6 +202,6 @@ git diff --cached --check
 
 平台轮次或上下文上限迫使当前轮让出时，只发送 `EXECUTION-YIELD`，固定当前活动计划或下一候选、HEAD、dirty state 和精确续点；不得宣称执行任务停止或完成。它不是终止码，任务被重新唤醒后先重读正式状态再继续。
 
-`PLAN-SUPPORT-NOTICE` 或 `EXECUTION-YIELD` 后的任务唤醒本身就触发本技能。消息不替代正式仓库，但也不得被解释为等待用户再次授权；任务产生新轮次后必须完成重新 S0、候选扫描或具名终止收口。
+`PLAN-AVAILABLE-NOTICE`、`PLAN-SUPPORT-NOTICE` 或 `EXECUTION-YIELD` 后的任务唤醒本身就触发本技能。消息不替代正式仓库，但也不得被解释为等待用户再次授权；没有活动计划段时，任务产生新轮次后必须完成重新 S0、候选扫描或具名终止收口；已有活动计划段时，通知只进入该段合法 clean 收口后的继续门禁。
 
 不得用本技能声明计划归档、主线集成、完整业务闭环、旧能力等价迁移、外设接通、自我循环、自我苏醒或成熟验收。

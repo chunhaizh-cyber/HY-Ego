@@ -1,6 +1,6 @@
 ---
 name: hai-zhong-yu-chao-plan
-description: "Use in the 海中鱼巣 repository when a plan agent must turn a self-derived or interaction-agent goal into a complete new design package, or when a paired plan-support agent must revise the already-selected package returned by its execution agent. The package may include formal specifications and indexes, conflict entries, flowcharts, detailed designs, knowledge graphs, plans, and plan-index entries. Preserve lifecycle ownership: plan agents do not receive execution returns or send messages; plan-support agents only revise their paired execution package and reply only to that execution agent."
+description: "Use in the 海中鱼巣 repository when a plan agent must turn a self-derived or interaction-agent goal into a complete new design package and notify the uniquely registered existing execution agent after formal publication, or when a paired plan-support agent must revise the already-selected package returned by its execution agent. The package may include formal specifications and indexes, conflict entries, flowcharts, detailed designs, knowledge graphs, plans, and plan-index entries. Preserve lifecycle ownership: plan agents do not receive execution returns and send only PLAN-AVAILABLE-NOTICE; plan-support agents only revise their paired execution package and reply only to that execution agent."
 ---
 
 # 海中鱼巣制定计划
@@ -11,7 +11,7 @@ description: "Use in the 海中鱼巣 repository when a plan agent must turn a s
 
 计划任务树只能把互不重叠的设计包切片交给同类型 / 只读子智能体，不得让后代切换为其它写类型。顶层统一复核差异并串行完成设计 Git 收口。
 
-- 计划智能体只接收自身沿既有总目标推导的目标或交互智能体发送的目标，拥有尚未被执行选中的新目标设计包，不接收执行事实，也不发送跨智能体消息。
+- 计划智能体只接收自身沿既有总目标推导的目标或交互智能体发送的目标，拥有尚未被执行选中的新目标设计包，不接收执行事实；每份完整设计包验证、提交并推送且计划状态成为 `可执行` 后，只向唯一登记的既有执行智能体发送 `PLAN-AVAILABLE-NOTICE`。
 - 计划支撑智能体只接收配对执行智能体的结构化执行事实，从首次 S0 起接管该计划关联设计包，只在原目标内修订，并只向来源执行智能体发送 `PLAN-SUPPORT-NOTICE`。
 
 不得硬编码仓库盘符、旧仓库名或固定 worktree。先用 Git 顶层、`git worktree list --porcelain`、当前分支、HEAD、upstream 和 dirty state 解析当前工作树事实；计划预期执行通道与 Git 事实不一致时停止受影响切片并报告 DRIFT。
@@ -55,7 +55,8 @@ description: "Use in the 海中鱼巣 repository when a plan agent must turn a s
 -> 在计划索引列表中登记计划路径、版本、计划状态和具名依赖
 -> 验证、精确提交并非强制推送设计结果
 -> 每完成一份计划就发布该精确版本 / blob 的 `可执行` 设计事实
--> 计划智能体继续形成下一份新目标计划；计划支撑智能体向来源执行智能体发送修订事实后等待新的执行事实
+-> 计划智能体向唯一登记的既有执行智能体发送 PLAN-AVAILABLE-NOTICE 后继续形成下一份新目标计划
+-> 计划支撑智能体向来源执行智能体发送修订事实后等待新的执行事实
 ```
 
 函数只是事实采集单位；计划范围由现行规范与有效设计裁决。
@@ -146,7 +147,7 @@ description: "Use in the 海中鱼巣 repository when a plan agent must turn a s
 
 计划形成后，叶子正文冻结为不可变施工合同，只写计划身份、版本、稳定设计状态、目标、依据、允许 / 禁止范围、唯一专属施工 / 验证记录路径、失败收口和验证合同，不复制当前 `待激活 / 可执行 / 已退出` 状态，也不写当前派发、S0、执行或集成过程。计划索引以列表形式登记路径、版本、具名依赖和唯一计划状态 `待激活 / 可执行 / 已退出`；计划之间只登记具名依赖，不另建层级结构。执行通道由 `.codex/rules/` 管理；worktree、分支、HEAD、提交、dirty state 和远端直接读取 Git。施工过程只允许写入计划冻结的专属施工 / 验证记录，不另建共享 Markdown 状态台账。
 
-计划智能体按总目标逐份形成尚未被执行选中的新设计包，不等待上一份计划执行或整批设计完毕，也不发送消息。执行智能体选中计划并首次发送 S0 后，该关联设计包的修订权转给配对计划支撑智能体，计划智能体停止修改该包。
+计划智能体按总目标逐份形成尚未被执行选中的新设计包，不等待上一份计划执行或整批设计完毕。每份计划的完整设计包通过治理验证、登记为 `可执行`、精确提交并推送到正式中央分支后，只向唯一登记且用户未撤销的既有执行智能体发送一次幂等 `PLAN-AVAILABLE-NOTICE`；随后继续形成下一份计划。通知目标只取用户在计划任务自身窗口明确指定的平台任务身份，或 `INTERACTION-GOAL` 携带的精确平台任务身份；标题、分支、worktree 和名称不能建立登记，也不得自行猜测或创建接收任务。该绑定可在同一计划顶层任务后续自推导目标中复用，直到用户撤销、替换或平台证明不可达。执行智能体选中计划并首次发送 S0 后，该关联设计包的修订权转给配对计划支撑智能体，计划智能体停止修改该包。
 
 计划支撑智能体收到执行缺口后，核对结构化消息与 Git，把受影响计划版本改为 `待激活`，不改写不可变旧版本；在原目标内同步修订必要的规范、流程图、详细设计、知识图谱、计划和索引，形成新版本 / blob 后恢复为 `可执行`，再只向来源执行智能体发送 `PLAN-SUPPORT-NOTICE`。如果必须改变用户目标、修改智能体协作规则或无法裁决机器语义，停止并在自身用户可见窗口列出问题，等待用户直接消息。
 
@@ -159,10 +160,24 @@ description: "Use in the 海中鱼巣 repository when a plan agent must turn a s
 实际接口或预冻结待实现接口合同复核通过
 计划索引已列明具名依赖和计划状态，计划正文已冻结所有权与预期 Git 合同（适用时）
 文档治理验证通过
-中央治理精确提交并非强制推送成功
+中央治理精确提交完成，且以非强制方式推送成功
 ```
 
-设计发布到此结束。计划智能体不得发送任何跨智能体消息；计划支撑智能体只发送正式修订事实，不发送唤醒、开始、继续、停止、恢复、S0 接受或下一项指令。不得把 `可执行`、预期 worktree / 通道、目标标题或任务 active 状态解释为已经实施。执行智能体读取计划索引，根据计划状态、具名依赖和自身执行通道自主选中计划，只修改当前计划段允许的代码、工程、自检及专属施工 / 验证记录，并只向配对计划支撑智能体返回结构化消息。
+设计发布后，计划智能体发送：
+
+```text
+PLAN-AVAILABLE-NOTICE
+来源计划任务
+正式设计提交
+计划索引路径和 blob
+新计划路由、路径、版本和 plan blob
+计划状态必须为可执行
+具名依赖和影响范围
+通知只触发执行智能体重读正式仓库和候选扫描
+不构成计划选择、执行许可、S0 PASS、开始、继续或停止命令
+```
+
+计划智能体不得发送该通知之外的跨智能体消息，不向多个执行任务广播，也不自行创建或选择新的执行任务。没有唯一可识别接收方时，在自身窗口报告通知不可达，但不回退已正式发布的计划状态。计划支撑智能体只发送正式修订事实，不发送开始、继续、停止、恢复、S0 接受或下一项指令。不得把通知、`可执行`、预期 worktree / 通道、目标标题或任务 active 状态解释为已经实施。执行智能体仍从正式计划索引自主选中计划，只修改当前计划段允许的代码、工程、自检及专属施工 / 验证记录，并只向配对计划支撑智能体返回结构化消息。
 
 ## 验证与停止
 
@@ -175,4 +190,4 @@ python .\tools\check_specs.py --strict
 
 只暂存当前智能体拥有的本轮设计包文件，按 `AGENTS.md` 精确提交并非强制推送。目标分支、主线发布占用、远端前进、同文件 WIP、验证或推送任一不安全时停止，不扩大范围。
 
-本技能只形成、修订并发布当前智能体拥有的设计包事实，不指挥执行智能体，也不证明代码已修改、构建通过、任务已集成或能力已闭环。
+本技能只形成、修订并发布当前智能体拥有的设计包事实；`PLAN-AVAILABLE-NOTICE` 只唤醒既有执行智能体重新读取正式状态，不指挥其选择或实施，也不证明代码已修改、构建通过、任务已集成或能力已闭环。

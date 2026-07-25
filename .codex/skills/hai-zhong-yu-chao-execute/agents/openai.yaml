@@ -1,4 +1,4 @@
 interface:
   display_name: "海中鱼巣执行"
-  short_description: "Continuously execute plans and resume on support notices"
-  default_prompt: "Use $hai-zhong-yu-chao-execute to continuously execute eligible Sea Nest plans and immediately re-evaluate formal state when PLAN-SUPPORT-NOTICE or an EXECUTION-YIELD wakeup arrives; stop only with a named terminal code."
+  short_description: "Execute plans and react to formal notices"
+  default_prompt: "Use $hai-zhong-yu-chao-execute to continuously execute eligible Sea Nest plans and re-evaluate formal state when a plan-availability, support, or yield wakeup arrives."
