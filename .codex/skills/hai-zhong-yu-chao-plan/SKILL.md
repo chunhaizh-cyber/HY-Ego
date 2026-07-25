@@ -1,6 +1,6 @@
 ---
 name: hai-zhong-yu-chao-plan
-description: "Use in the 海中鱼巣 repository when a plan agent must create a new plan and its related design files without editing the plan index, when the plan-support agent receives PLAN-PACKAGE-READY-NOTICE and must exclusively register the verified plan in the plan index, or when plan support must revise an existing plan after an explicit execution-side design-gap request. Preserve lifecycle ownership and serial write handoff."
+description: "Use in the 海中鱼巣 repository when a plan agent must create a new plan and its related design files without editing the plan index, when the plan-support agent receives PLAN-PACKAGE-READY-NOTICE and may create or revise necessary files in that package before exclusively registering its final exact version, or when plan support must revise an existing plan after an explicit execution-side design-gap request. Preserve lifecycle ownership and serial write handoff."
 ---
 
 # 海中鱼巣制定计划
@@ -12,11 +12,11 @@ description: "Use in the 海中鱼巣 repository when a plan agent must create a
 计划任务树只能把互不重叠的设计包切片交给同类型 / 只读子智能体，不得让后代切换为其它写类型。顶层统一复核差异并串行完成设计 Git 收口。
 
 - 计划智能体只接收自身沿既有总目标推导的目标或交互智能体发送的目标，负责创建新计划以及创建该计划所需的现状扫描、规范治理、流程图、逐节点分析、详细设计、接口冻结和计划拆分，不接收执行问题、不修改计划索引；每份完整新设计包验证、提交并推送后，只向唯一登记的计划支撑智能体发送 `PLAN-PACKAGE-READY-NOTICE` 并停写。
-- 计划支撑智能体独占维护计划索引：收到 `PLAN-PACKAGE-READY-NOTICE` 后复核正式设计包，合格时登记为 `可执行`、提交推送并向执行智能体发送 `PLAN-AVAILABLE-NOTICE`；同时只读接收配对执行智能体的结构化事实，只有具名计划 / 设计问题明确请求修订且复核成立时才接管既有设计包修订。
+- 计划支撑智能体独占维护计划索引：收到 `PLAN-PACKAGE-READY-NOTICE` 后复核正式设计包，可在当前包原目标和登记范围内按需新建或修改必要设计文件，形成最终精确版本后登记为 `可执行`、提交推送并向执行智能体发送 `PLAN-AVAILABLE-NOTICE`；同时只读接收配对执行智能体的结构化事实，只有具名计划 / 设计问题明确请求修订且复核成立时才接管既有设计包修订，并可在受影响包内按需新建必要文件。
 
 不得硬编码仓库盘符或旧仓库名。先用 Git 顶层、当前分支、HEAD、`origin/main` 和 dirty state 解析唯一主工作区事实；当前工作区不是 `main`、远端已经前进或存在其它写入占用时停止受影响切片并报告 DRIFT。
 
-本技能只做项目设计包治理：可以读取代码事实。计划智能体按所有权建立或修订正式规范、规范目录、冲突登记、流程图、详细设计、知识图谱和新计划，但禁止修改计划索引；计划支撑智能体独占计划索引登记，并只在执行问题复核成立时修订既有设计包。不修改 C++ / 工程 / 自检、施工记录或验证记录，不运行 C++ 构建、程序或业务自检，也不修改 `AGENTS.md`、`.codex/rules/` 或 `.codex/skills/`。
+本技能只做项目设计包治理：可以读取代码事实。计划智能体按所有权建立或修订正式规范、规范目录、冲突登记、流程图、详细设计、知识图谱和新计划，但禁止修改计划索引；计划支撑智能体独占计划索引登记，可在接管的新计划登记包或执行问题复核成立的既有设计包内按需新建、修改必要设计文件，但不得独立发起无关新计划或扩大用户目标。不修改 C++ / 工程 / 自检、施工记录或验证记录，不运行 C++ 构建、程序或业务自检，也不修改 `AGENTS.md`、`.codex/rules/` 或 `.codex/skills/`。
 
 ## 前置读取
 
@@ -49,7 +49,9 @@ description: "Use in the 海中鱼巣 repository when a plan agent must create a
    -> 发送 PLAN-PACKAGE-READY-NOTICE 后停写
 -> 若为计划支撑智能体登记新计划：
    只读复核 PLAN-PACKAGE-READY-NOTICE、正式提交、plan blob、范围、依赖和验证
-   -> 合格时只修改计划索引，登记为可执行，验证、提交并推送
+   -> 在当前包原目标和登记范围内按需新建 / 修改必要设计文件
+   -> 若设计包变化，形成、验证、提交并推送新的精确版本 / blob
+   -> 把最终版本登记为可执行，验证、提交并推送计划索引
    -> 发送 PLAN-INDEX-RESULT 和 PLAN-AVAILABLE-NOTICE
    -> 不合格时不改索引，发送具名 PLAN-INDEX-RESULT 并退回同一设计包修正权
 -> 若为计划支撑智能体处理执行退回：
@@ -151,7 +153,7 @@ description: "Use in the 海中鱼巣 repository when a plan agent must create a
 
 计划智能体每次只创建一份新计划及其前置设计产物。完整设计包通过治理验证、精确提交并非强制推送 `origin/main` 后，只向唯一登记且用户未撤销的计划支撑智能体发送一次幂等 `PLAN-PACKAGE-READY-NOTICE`，随后停写。登记拒绝时只修正该包；登记成功后必须等待执行 clean 终止和 `PLAN-WRITE-RELEASE`，不得与计划支撑或执行智能体同时形成下一份计划。通知目标只取用户明确登记的平台任务身份，不得按标题或名称猜测。正式发布和正常执行期间设计包冻结。
 
-计划支撑智能体收到 `PLAN-PACKAGE-READY-NOTICE` 后先只读核对正式设计提交、plan blob、范围、具名依赖、验证合同和工作区占用。复核通过后只修改 `计划/计划索引.md`，登记精确版本为 `可执行`，验证、提交并推送，再发送 `PLAN-INDEX-RESULT` 和 `PLAN-AVAILABLE-NOTICE`；复核失败时不得修改索引，只发送具名 `PLAN-INDEX-RESULT`。收到执行事实后，没有明确的“请求设计包修订”，或问题属于代码实现、环境、权限或通道问题时，不取得设计文件写权。只有请求成立且确属计划 / 设计缺口时，才在原目标内形成修订版本并发送 `PLAN-SUPPORT-NOTICE`。
+计划支撑智能体收到 `PLAN-PACKAGE-READY-NOTICE` 后先只读核对正式设计提交、plan blob、范围、具名依赖、验证合同和工作区占用。取得登记轮次唯一写权后，可以在该计划原目标和登记范围内按需新建或修改必要设计文件；若设计包发生变化，必须先形成、验证、提交并推送新的精确版本 / blob，再把最终版本登记到 `计划/计划索引.md`，验证、提交并推送，然后发送同时列明来源 blob、最终登记 blob 和新增 / 修改文件的 `PLAN-INDEX-RESULT` 以及 `PLAN-AVAILABLE-NOTICE`。无法在原目标内补齐时不得修改索引，只发送具名 `PLAN-INDEX-RESULT`。收到执行事实后，没有明确的“请求设计包修订”，或问题属于代码实现、环境、权限或通道问题时，不取得设计文件写权。只有请求成立且确属计划 / 设计缺口时，才在原目标内形成修订版本；修订所需文件不存在时可以新建，完成后发送 `PLAN-SUPPORT-NOTICE`。
 
 具有执行写范围的计划同时满足下列条件后，计划智能体可以发布待登记设计包；只有计划支撑智能体复核并写入计划索引后，该计划才成为 `可执行`：
 
@@ -178,7 +180,7 @@ PLAN-PACKAGE-READY-NOTICE
 请求计划支撑智能体复核并登记计划索引
 ```
 
-计划智能体不得发送该通知之外的跨智能体消息，不直接通知执行智能体，也不得在发送后继续写下一份计划。计划支撑智能体复核失败时发送 `PLAN-INDEX-RESULT` 并退回同一设计包修正权；复核成功时独占修改计划索引、提交推送，再向执行智能体发送 `PLAN-AVAILABLE-NOTICE`。执行 clean 终止且工作区无其它写入者时，计划支撑智能体才能向计划智能体发送 `PLAN-WRITE-RELEASE`。
+计划智能体不得发送该通知之外的跨智能体消息，不直接通知执行智能体，也不得在发送后继续写下一份计划。计划支撑智能体接管登记后可在当前包原目标内按需新建或修改必要文件；复核失败时发送 `PLAN-INDEX-RESULT` 并退回同一设计包修正权，复核成功时登记最终精确版本、提交推送，再向执行智能体发送 `PLAN-AVAILABLE-NOTICE`。执行 clean 终止且工作区无其它写入者时，计划支撑智能体才能向计划智能体发送 `PLAN-WRITE-RELEASE`。
 
 ## 验证与停止
 

@@ -57,7 +57,7 @@ description: Route context-dependent continuation in the 海中鱼巣 repository
 
 ### 计划支撑智能体
 
-收到 `PLAN-PACKAGE-READY-NOTICE` 时，先复核正式提交；合格后独占把新计划登记到计划索引、提交推送，并发送 `PLAN-INDEX-RESULT` 和 `PLAN-AVAILABLE-NOTICE`。除此之外，只在配对执行智能体已报告具名计划 / 设计问题、明确请求设计包修订且支撑侧复核成立时，继续关联设计包修订。执行 clean 终止且没有其它写入者时，可以向计划智能体发送 `PLAN-WRITE-RELEASE`。不得修改代码、施工记录或智能体协作规则，也不得替计划智能体创建新计划。
+收到 `PLAN-PACKAGE-READY-NOTICE` 时，先复核正式提交；取得唯一写权后可在当前包原目标和登记范围内按需新建或修改必要设计文件，形成最终精确版本并独占登记到计划索引、提交推送，再发送 `PLAN-INDEX-RESULT` 和 `PLAN-AVAILABLE-NOTICE`。除此之外，只在配对执行智能体已报告具名计划 / 设计问题、明确请求设计包修订且支撑侧复核成立时，继续关联设计包修订，并可按需新建必要文件。执行 clean 终止且没有其它写入者时，可以向计划智能体发送 `PLAN-WRITE-RELEASE`。不得修改代码、施工记录或智能体协作规则，也不得独立发起无关新计划或扩大用户目标。
 
 ### 验证或只读技术模式
 
