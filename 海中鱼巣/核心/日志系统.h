@@ -98,13 +98,13 @@ inline std::filesystem::path 日志文件路径(日志类别 类别, std::wstrin
             return 日志目录路径() / L"调试" / L"入口初始化自检.log";
         }
         if (调试切片名 == L"SELF_TEST_DATABASE") {
-            return 日志目录路径() / L"调试" / L"数据库专项.log";
+            return 日志目录路径() / L"调试" / L"数据库专项自检.log";
         }
         if (调试切片名 == L"SELF_TEST_WAREHOUSE_PERFORMANCE") {
-            return 日志目录路径() / L"调试" / L"关系仓库性能专项.log";
+            return 日志目录路径() / L"调试" / L"关系仓库性能专项自检.log";
         }
         if (调试切片名 == L"SELF_TEST_D455") {
-            return 日志目录路径() / L"调试" / L"D455专项.log";
+            return 日志目录路径() / L"调试" / L"D455专项自检.log";
         }
         return 日志目录路径() / (std::wstring(L"调试_") + std::wstring(调试切片名) + L".log");
     }

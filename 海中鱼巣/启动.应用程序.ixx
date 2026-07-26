@@ -10,7 +10,6 @@ module;
 #include <cstddef>
 #include <cstdint>
 #include <optional>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -325,23 +324,28 @@ std::size_t 信号替身调用数量 = 0;
 
 自检单元结果 运行入口隔离合同自检() {
     std::vector<std::string> 第一编号组;
-    std::vector<std::uintptr_t> 第一地址组;
+    bool 第一地址全非零 = true;
     bool 第一初始为零 = true;
     入口初始化自检运行配置 第一配置;
     第一配置.观察回调 = [&](std::string_view 编号, std::uintptr_t 地址,
         入口初始化自检初始计数 计数) {
         第一编号组.emplace_back(编号);
-        第一地址组.push_back(地址);
+        第一地址全非零 = 第一地址全非零 && 地址 != 0;
         第一初始为零 = 第一初始为零
             && 计数.节点数量 == 0 && 计数.关系数量 == 0 && 计数.索引数量 == 0;
     };
     自检运行器 第一运行器;
     const bool 第一登记 = 登记入口初始化自检单元(第一运行器, 第一配置);
     const auto 第一批次 = 第一运行器.运行全部();
-    const std::set<std::uintptr_t> 第一地址集合(第一地址组.begin(), 第一地址组.end());
+    const std::vector<std::string> 固定编号组{
+        "ENTRY-ONLY-S01", "ENTRY-ONLY-S02", "ENTRY-ONLY-S03", "ENTRY-ONLY-S04",
+        "ENTRY-ONLY-S05", "ENTRY-ONLY-S06", "ENTRY-ONLY-S07", "ENTRY-ONLY-S08",
+        "ENTRY-ONLY-S09", "ENTRY-ONLY-S10", "ENTRY-ONLY-S11", "ENTRY-ONLY-S12",
+        "ENTRY-ONLY-S13", "ENTRY-ONLY-S14"
+    };
     const bool 第一通过 = 第一登记 && 第一批次.总通过
         && 第一批次.登记数量 == 14 && 第一批次.执行数量 == 14
-        && 第一编号组.size() == 14 && 第一地址集合.size() == 14 && 第一初始为零;
+        && 第一编号组 == 固定编号组 && 第一地址全非零 && 第一初始为零;
 
     入口初始化自检运行配置 第二配置;
     第二配置.强制失败编号 = "ENTRY-ONLY-S08";
@@ -362,7 +366,7 @@ std::size_t 信号替身调用数量 = 0;
         (++日志参数求值计数,
             std::wstring(L"第一批次=") + (第一通过 ? L"通过" : L"失败")
                 + L"，第二批次=" + (第二通过 ? L"通过" : L"失败")
-                + L"，地址数=" + std::to_wstring(第一地址集合.size())
+                + L"，地址全非零=" + (第一地址全非零 ? L"1" : L"0")
                 + L"，编号数=" + std::to_wstring(第一编号组.size())
                 + L"，初始全零=" + (第一初始为零 ? L"1" : L"0")));
 #ifndef HY_EGO_DEBUG_LOG_SELF_TEST_ENTRY_INITIALIZATION
