@@ -27,8 +27,8 @@ git rev-list --left-right --count HEAD...origin/main
 ```text
 当前分支为 main
 main == origin/main
-工作区 / index clean
-没有其它智能体持有写入占用
+index clean，计划目标文件和冻结语义没有冲突 dirty
+没有其它智能体占用同文件 / 同语义切片或必需验证资源
 没有第二活动计划段
 ```
 
@@ -46,7 +46,7 @@ main == origin/main
 用户已在执行智能体自身任务明确暂停
 -> USER-PAUSED，不由通知恢复施工
 
-没有活动计划段、工作区 / index clean 且没有其它写入占用
+没有活动计划段、index clean 且目标切片没有冲突占用
 -> 刷新并重读 origin/main、计划索引和全部可执行候选
 -> 自主选择一份并当轮 S0，PASS 后直接实施
 
@@ -71,7 +71,7 @@ main == origin/main
 -> 读取关联规范、流程图、详细设计和实际代码接口 / 接口骨架；派生需求提供者计划读取预冻结合同作为待实现目标
 -> 核对详细设计的节点实现、函数、数据、调用 / 事务、失败、代码映射、验证和空未决项
 -> 核对允许 / 禁止文件、依赖、合同版本、所有权、验证矩阵和完成边界
--> 核对唯一主工作区、main、HEAD、origin/main、dirty state 和写入占用
+-> 核对唯一主工作区、main、HEAD、origin/main、dirty 所有权、目标切片和发布 / 验证租约
 -> 确认 main == origin/main、没有第二写入者或第二活动计划段
 -> 把当前 HEAD 固定为本段唯一起点
 -> 返回 PASS 或具名 DRIFT
@@ -89,7 +89,7 @@ main == origin/main
 
 ```text
 从计划索引自主选择一份可执行且真实依赖满足的计划
--> 取得单工作区写入占用
+-> 取得唯一活动代码计划段及目标切片所有权
 -> 冻结 main 当前 HEAD、计划 blob、白名单和验证矩阵
 -> 复核具名前置产物与实际接口 / 接口骨架；派生需求提供者计划复核预冻结合同
 -> 按计划机械阶段实施最小闭合切片
@@ -98,7 +98,7 @@ main == origin/main
 -> 精确提交计划段结果、按计划许可提交普通具名 WIP，或按规则许可提交 DESIGN-DRIFT-WIP
 -> 提交正文写入 Plan-Id / Plan-Blob / Plan-Segment-Start / Plan-Segment-Result
 -> 非强制推送 origin/main
--> 确认 main == origin/main 且工作区 / index clean，释放写入占用
+-> 确认 main == origin/main 且本计划文件 / index 收口，释放代码切片和发布租约
 -> 只向配对计划支撑智能体返回结构化事实
 -> 正常结果 / 普通 WIP 重读计划索引并运行继续门禁；DESIGN-DRIFT-WIP 进入 DESIGN-DRIFT-WAIT
 ```
@@ -176,7 +176,9 @@ git diff --cached --check
 DESIGN-DRIFT-WIP 已 clean 推送 -> DESIGN-DRIFT-WAIT
 无法形成 clean 断点 -> DIRTY-BLOCKED
 main / origin/main / 段起点漂移 -> MAIN-DRIFT
-另一智能体仍持有写入占用 -> WRITE-OCCUPIED
+目标文件或语义切片已被占用 -> SLICE-OCCUPIED
+Git 发布租约已被占用 -> RELEASE-OCCUPIED
+必需验证资源已被占用 -> VALIDATION-OCCUPIED
 规则或角色冲突 -> RULE-BLOCKED
 环境不可用且无其它候选 -> ENVIRONMENT-BLOCKED
 ```

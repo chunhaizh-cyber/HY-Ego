@@ -1,6 +1,6 @@
 ---
 name: hai-zhong-yu-chao-root-cause
-description: Trace popup, Debug Error, abort, runtime anomaly, logic-error log, failed validation, compile error, or unexpected-state root causes in the 海中鱼巣 repository. Use when the user asks to 追根因, 定位弹窗根因, 分析逻辑错误, 排除编译错误, 追查运行异常, or explain why an error appears. Diagnosis is read-only; when the user explicitly asks the current interaction window to repair their uncommitted code, a subsequent direct-repair phase may modify only that exact code slice after exclusive-write checks.
+description: Trace popup, Debug Error, abort, runtime anomaly, logic-error log, failed validation, compile error, or unexpected-state root causes in the 海中鱼巣 repository. Use when the user asks to 追根因, 定位弹窗根因, 分析逻辑错误, 排除编译错误, 追查运行异常, or explain why an error appears. Diagnosis is read-only; after diagnosis, the interaction agent may enter a separate user-authorized write phase for an explicitly owned project slice.
 ---
 
 # 海中鱼巣根因追踪
@@ -64,11 +64,11 @@ L5 规范契约层：AGENTS、规则总纲、详细设计、计划切片。
 禁止宣称
 ```
 
-需要持久化时，诊断阶段仍保持只读。新功能目标由交互智能体交给计划智能体形成设计包；已选计划中的根因事实仍只由执行智能体发送给配对计划支撑智能体，但只有具名计划 / 设计缺口、明确请求修订且支撑侧复核成立时，才由计划支撑智能体修订关联设计包。用户明确要求当前交互窗口直接修复其未提交代码时，完成只读诊断后可以进入独立直接修复阶段：固定 HEAD、dirty 文件和删除范围，暂停其它写入者，只修改该用户切片及其机械必需依赖，通过编译 / 链接和必要运行验证收敛；不得恢复整文件覆盖用户意图，不得借机设计新功能或机器语义。
+需要持久化时，诊断阶段仍保持只读。诊断结束后的独立写步骤中，交互智能体可按用户直接指令取得明确切片，直接修订规则、规范、设计、计划、索引或代码；自动计划、执行和支撑窗口仍按各自默认消息与所有权工作。进入写阶段前固定 HEAD、dirty 所有者、文件和语义范围；只停止同文件 / 同语义或验证资源冲突的切片，无关写入可以继续。修复后按产物类型完成验证和串行发布，不得恢复整文件覆盖用户意图，也不得用诊断结论伪造机器事实。
 
 ## 停止边界
 
-- 本技能的诊断阶段不得修改任何项目文件或 Git 状态，不得构建或运行程序，也不得形成活动计划段；只有用户明确授权当前交互窗口直接修复其未提交代码时，才可在诊断结束后按上节进入独立直接修复阶段。
+- 本技能的诊断阶段不得修改任何项目文件或 Git 状态，不得构建或运行程序，也不得形成活动计划段；用户要求落盘或修复时，在诊断结束后退出本技能并进入独立交互写阶段。
 - 不绕过领域服务，不建议先写错误结构再靠后续校验修复。
-- 没有正式设计和已列入计划索引的计划时，不得把新功能修复方向交给执行智能体；用户代码直接修复例外只处理现有语义下的编译、链接和既有行为恢复。
+- 没有正式设计和已列入计划索引的计划时，不得把新功能修复方向交给执行智能体；交互智能体若直接实现新功能，必须先自行补齐并登记正式规范、设计和计划依据。
 - 不从一次根因定位声明旧能力迁移、系统完成或外设生产接通。

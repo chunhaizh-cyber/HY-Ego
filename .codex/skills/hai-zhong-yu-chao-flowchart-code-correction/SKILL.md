@@ -1,13 +1,13 @@
 ---
 name: hai-zhong-yu-chao-flowchart-code-correction
-description: Use in the 海中鱼巣 repository when a plan agent or plan-support agent asks to 根据代码画流程图, 从主程序重建代码流程图, 建立函数调用关系或知识图谱, 检查或校正流程图, 区分现状流程图与施工流程图, 根据流程图优化代码, 流程图驱动代码纠偏, 生成修订计划, or 将修订计划加入计划索引. This design-package workflow freezes current code facts, produces exact current-state metadata and line-by-line mappings, audits input contracts and non-success branches, compares them with formally grounded construction design, and routes each deviation without authorizing code by itself.
+description: Use in the 海中鱼巣 repository when the interaction agent, plan agent, or plan-support agent asks to 根据代码画流程图, 从主程序重建代码流程图, 建立函数调用关系或知识图谱, 检查或校正流程图, 区分现状流程图与施工流程图, 根据流程图优化代码, 流程图驱动代码纠偏, 生成修订计划, or 将修订计划加入计划索引. This design-package workflow freezes current code facts, produces exact current-state metadata and line-by-line mappings, audits input contracts and non-success branches, compares them with formally grounded construction design, and routes each deviation without authorizing code by itself.
 ---
 
 # 海中鱼巣流程图驱动代码纠偏
 
 ## 权威引用与门禁
 
-1. 只在当前顶层任务树为计划智能体或计划支撑智能体，且拥有目标设计包时使用；遵守 `AGENTS.md`，不复制其中的智能体、消息、Git 或执行状态机。计划智能体只为创建新计划处理所需的新设计包；计划支撑智能体可以处理已接管的新计划登记包，或配对执行智能体因具名计划 / 设计问题明确请求修订且支撑侧复核成立的关联包，并可在包内按需新建必要文件。计划选择、S0 PASS、正常执行或纯代码错误不产生流程图 / 详细设计修订权。其它智能体只返回只读事实，不落盘治理产物。
+1. 只在交互智能体按用户直接指令取得目标切片，或当前顶层任务树为计划智能体 / 计划支撑智能体且拥有目标设计包时使用；遵守 `AGENTS.md`，不复制其中的智能体、消息、Git 或执行状态机。计划智能体只为创建新计划处理所需的新设计包；计划支撑智能体可以处理已接管的新计划登记包或经复核成立的执行退回包。计划选择、S0 PASS、正常执行或纯代码错误不产生自动窗口的流程图 / 详细设计修订权。执行智能体只返回只读事实，不落盘治理产物。
 2. 先解析当前 Git 顶层并读取 `AGENTS.md` 指定的共同入口，再读取目标正式规范、有效流程图与详细设计、现行计划、计划索引中的计划状态与具名依赖，以及目标代码和调用点。代码事实只取自冻结的当前提交与唯一工作区。
 3. 流程图和详细设计只能在正式规范内解释实现，不能覆盖规范；流程图、映射表、偏差清单和用户确认都不能单独授权修改代码。需要形成施工计划时转用 `hai-zhong-yu-chao-plan`：计划智能体完成并推送设计包后只向计划支撑智能体发送 `PLAN-PACKAGE-READY-NOTICE`，不得修改计划索引或直接通知执行智能体；计划支撑智能体接管登记后可在当前包原目标内按需新建或修改必要设计文件，形成最终精确版本并独占登记计划索引，再向执行智能体发送 `PLAN-AVAILABLE-NOTICE`。
 4. 现状流程图只表达当前代码事实。Git 提交、结构化消息和验证输出只能交叉核对来源，不得把目标、旧状态或未发生的验证画成当前事实。
