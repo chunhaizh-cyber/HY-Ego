@@ -76,16 +76,24 @@
 
   <PropertyGroup>
     <EnableD455RealSense Condition="'$(EnableD455RealSense)'==''">false</EnableD455RealSense>
+    <EnableEntryInitializationSelfTestDebugLog Condition="'$(EnableEntryInitializationSelfTestDebugLog)'==''">false</EnableEntryInitializationSelfTestDebugLog>
+    <EnableDatabaseSelfTestDebugLog Condition="'$(EnableDatabaseSelfTestDebugLog)'==''">false</EnableDatabaseSelfTestDebugLog>
+    <EnableWarehousePerformanceSelfTestDebugLog Condition="'$(EnableWarehousePerformanceSelfTestDebugLog)'==''">false</EnableWarehousePerformanceSelfTestDebugLog>
+    <EnableD455SelfTestDebugLog Condition="'$(EnableD455SelfTestDebugLog)'==''">false</EnableD455SelfTestDebugLog>
     <D455VcpkgRoot Condition="'$(VcpkgRoot)'!=''">$(VcpkgRoot)</D455VcpkgRoot>
     <D455VcpkgRoot Condition="'$(D455VcpkgRoot)'=='' and '$(VCPKG_ROOT)'!=''">$(VCPKG_ROOT)</D455VcpkgRoot>
     <D455RealSensePreprocessorDefinitions Condition="'$(EnableD455RealSense)'=='true' and '$(Platform)'=='x64'">HY_EGO_ENABLE_D455_REALSENSE;</D455RealSensePreprocessorDefinitions>
+    <EntryInitializationSelfTestDebugDefinition Condition="'$(EnableEntryInitializationSelfTestDebugLog)'=='true'">HY_EGO_DEBUG_LOG_SELF_TEST_ENTRY_INITIALIZATION;</EntryInitializationSelfTestDebugDefinition>
+    <DatabaseSelfTestDebugDefinition Condition="'$(EnableDatabaseSelfTestDebugLog)'=='true'">HY_EGO_DEBUG_LOG_SELF_TEST_DATABASE;</DatabaseSelfTestDebugDefinition>
+    <WarehousePerformanceSelfTestDebugDefinition Condition="'$(EnableWarehousePerformanceSelfTestDebugLog)'=='true'">HY_EGO_DEBUG_LOG_SELF_TEST_WAREHOUSE_PERFORMANCE;</WarehousePerformanceSelfTestDebugDefinition>
+    <D455SelfTestDebugDefinition Condition="'$(EnableD455SelfTestDebugLog)'=='true'">HY_EGO_DEBUG_LOG_SELF_TEST_D455;</D455SelfTestDebugDefinition>
   </PropertyGroup>
 
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;$(EntryInitializationSelfTestDebugDefinition)$(DatabaseSelfTestDebugDefinition)$(WarehousePerformanceSelfTestDebugDefinition)$(D455SelfTestDebugDefinition)%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -101,7 +109,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;$(EntryInitializationSelfTestDebugDefinition)$(DatabaseSelfTestDebugDefinition)$(WarehousePerformanceSelfTestDebugDefinition)$(D455SelfTestDebugDefinition)%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -115,7 +123,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST;$(D455RealSensePreprocessorDefinitions)%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST;$(D455RealSensePreprocessorDefinitions)$(EntryInitializationSelfTestDebugDefinition)$(DatabaseSelfTestDebugDefinition)$(WarehousePerformanceSelfTestDebugDefinition)$(D455SelfTestDebugDefinition)%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(EnableD455RealSense)'=='true'">$(D455VcpkgRoot)\installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -134,7 +142,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;$(D455RealSensePreprocessorDefinitions)%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;$(D455RealSensePreprocessorDefinitions)$(EntryInitializationSelfTestDebugDefinition)$(DatabaseSelfTestDebugDefinition)$(WarehousePerformanceSelfTestDebugDefinition)$(D455SelfTestDebugDefinition)%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(EnableD455RealSense)'=='true'">$(D455VcpkgRoot)\installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -149,6 +157,14 @@
   </ItemDefinitionGroup>
 
   <ItemGroup>
+    <ClCompile Include="海中鱼巣\启动.程序入口.ixx" />
+    <ClCompile Include="海中鱼巣\装配.普通应用.ixx" />
+    <ClCompile Include="海中鱼巣\领域\初始化.系统.ixx" />
+    <ClCompile Include="海中鱼巣\界面\投影.控制面板启动.ixx" />
+    <ClCompile Include="海中鱼巣\适配\审计.数据库启动.ixx" />
+    <ClCompile Include="海中鱼巣\启动.程序运行宿主.ixx" />
+    <ClCompile Include="海中鱼巣\自检.入口初始化.ixx" />
+    <ClCompile Include="海中鱼巣\启动.应用程序.ixx" />
     <ClCompile Include="海中鱼巣\自检.运行器.ixx" />
     <ClCompile Include="海中鱼巣\自检.性能门禁分离.ixx" />
     <ClCompile Include="海中鱼巣\装配.运行期业务.ixx" />
@@ -315,6 +331,8 @@
     <ClCompile Include="海中鱼巣\适配\查询.运行期只读.ixx" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="海中鱼巣\启动选项.数据.h" />
+    <ClInclude Include="海中鱼巣\程序运行结果.数据.h" />
     <ClInclude Include="海中鱼巣\领域\概念安全删除提交能力.数据.h" />
     <ClInclude Include="海中鱼巣\生产运行期配置.数据.h" />
     <ClInclude Include="海中鱼巣\领域\系统角色清单.数据.h" />

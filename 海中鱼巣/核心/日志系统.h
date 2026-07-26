@@ -94,6 +94,18 @@ inline std::filesystem::path 日志文件路径(日志类别 类别, std::wstrin
         if (!调试日志切片名可用(调试切片名)) {
             return {};
         }
+        if (调试切片名 == L"SELF_TEST_ENTRY_INITIALIZATION") {
+            return 日志目录路径() / L"调试" / L"入口初始化自检.log";
+        }
+        if (调试切片名 == L"SELF_TEST_DATABASE") {
+            return 日志目录路径() / L"调试" / L"数据库专项.log";
+        }
+        if (调试切片名 == L"SELF_TEST_WAREHOUSE_PERFORMANCE") {
+            return 日志目录路径() / L"调试" / L"关系仓库性能专项.log";
+        }
+        if (调试切片名 == L"SELF_TEST_D455") {
+            return 日志目录路径() / L"调试" / L"D455专项.log";
+        }
         return 日志目录路径() / (std::wstring(L"调试_") + std::wstring(调试切片名) + L".log");
     }
     return {};
@@ -214,7 +226,7 @@ inline bool 写入日志(日志类别 类别, std::wstring_view 模块, std::wst
     }
 
     std::error_code 错误码;
-    std::filesystem::create_directories(日志目录路径(), 错误码);
+    std::filesystem::create_directories(文件路径.parent_path(), 错误码);
     if (错误码) {
         return false;
     }
@@ -296,4 +308,32 @@ inline bool 记录调试日志(std::wstring_view 调试切片名, std::wstring_v
     } while (false)
 #else
 #define 海中鱼巣记录最小闭环调试日志(模块, 入口, 内容) do { } while (false)
+#endif
+
+#ifdef HY_EGO_DEBUG_LOG_SELF_TEST_ENTRY_INITIALIZATION
+#define 海中鱼巣记录入口初始化自检调试日志(模块, 入口, 内容) \
+    do { (void)::海中鱼巣::记录调试日志(L"SELF_TEST_ENTRY_INITIALIZATION", 模块, 入口, 内容); } while (false)
+#else
+#define 海中鱼巣记录入口初始化自检调试日志(模块, 入口, 内容) do { } while (false)
+#endif
+
+#ifdef HY_EGO_DEBUG_LOG_SELF_TEST_DATABASE
+#define 海中鱼巣记录数据库专项调试日志(模块, 入口, 内容) \
+    do { (void)::海中鱼巣::记录调试日志(L"SELF_TEST_DATABASE", 模块, 入口, 内容); } while (false)
+#else
+#define 海中鱼巣记录数据库专项调试日志(模块, 入口, 内容) do { } while (false)
+#endif
+
+#ifdef HY_EGO_DEBUG_LOG_SELF_TEST_WAREHOUSE_PERFORMANCE
+#define 海中鱼巣记录关系仓库性能专项调试日志(模块, 入口, 内容) \
+    do { (void)::海中鱼巣::记录调试日志(L"SELF_TEST_WAREHOUSE_PERFORMANCE", 模块, 入口, 内容); } while (false)
+#else
+#define 海中鱼巣记录关系仓库性能专项调试日志(模块, 入口, 内容) do { } while (false)
+#endif
+
+#ifdef HY_EGO_DEBUG_LOG_SELF_TEST_D455
+#define 海中鱼巣记录D455专项调试日志(模块, 入口, 内容) \
+    do { (void)::海中鱼巣::记录调试日志(L"SELF_TEST_D455", 模块, 入口, 内容); } while (false)
+#else
+#define 海中鱼巣记录D455专项调试日志(模块, 入口, 内容) do { } while (false)
 #endif
