@@ -1,0 +1,1283 @@
+{
+  "schema_version": 1,
+  "frozen_commit": "a48a70b2d678dea64dd8228adb4f26f0badd9506",
+  "root_function_id": "F0001",
+  "functions": [
+    {
+      "id": "F0001",
+      "layer": 0,
+      "signature": "int main(int 参数数量, char* 参数组[])",
+      "file": "海中鱼巣/入口.cpp",
+      "definition_line": 8,
+      "status": "已完成",
+      "chart": "L0/CF-L0-0001_main_现状流程图.md"
+    },
+    {
+      "id": "F0002",
+      "layer": 1,
+      "signature": "海中鱼巣::启动选项解析结果 海中鱼巣::解析并验证启动选项(int 参数数量, char* const 参数组[]) noexcept",
+      "file": "海中鱼巣/启动.程序入口.ixx",
+      "definition_line": 12,
+      "status": "已完成",
+      "chart": "L1/CF-L1-0001_解析并验证启动选项_现状流程图.md"
+    },
+    {
+      "id": "F0003",
+      "layer": 1,
+      "signature": "bool 海中鱼巣::启动选项解析结果::成功() const noexcept",
+      "file": "海中鱼巣/启动选项.数据.h",
+      "definition_line": 39,
+      "status": "已完成",
+      "chart": "L1/CF-L1-0002_启动选项解析结果_成功_现状流程图.md"
+    },
+    {
+      "id": "F0004",
+      "layer": 1,
+      "signature": "int 海中鱼巣::映射进程退出码(const 海中鱼巣::启动选项解析结果& 解析, const 海中鱼巣::程序运行结果* 运行) noexcept",
+      "file": "海中鱼巣/启动.程序入口.ixx",
+      "definition_line": 71,
+      "status": "已完成",
+      "chart": "L1/CF-L1-0003_映射进程退出码_现状流程图.md"
+    },
+    {
+      "id": "F0005",
+      "layer": 1,
+      "signature": "海中鱼巣::程序运行结果 海中鱼巣::运行海中鱼巣(const 海中鱼巣::启动选项& 选项)",
+      "file": "海中鱼巣/启动.应用程序.ixx",
+      "definition_line": 444,
+      "status": "已完成",
+      "chart": "L1/CF-L1-0004_运行海中鱼巣_现状流程图.md"
+    },
+    {
+      "id": "F0006",
+      "layer": 2,
+      "signature": "bool 海中鱼巣::程序运行结果::成功() const noexcept",
+      "file": "海中鱼巣/程序运行结果.数据.h",
+      "definition_line": 65,
+      "status": "已完成",
+      "chart": "L2/CF-L2-0001_程序运行结果_成功_现状流程图.md"
+    },
+    {
+      "id": "F0007",
+      "layer": 2,
+      "signature": "海中鱼巣::程序运行结果 海中鱼巣::运行普通程序(海中鱼巣::启动模式 模式)",
+      "file": "海中鱼巣/启动.应用程序.ixx",
+      "definition_line": 46,
+      "status": "已完成",
+      "chart": "L2/CF-L2-0002_运行普通程序_现状流程图.md"
+    },
+    {
+      "id": "F0008",
+      "layer": 2,
+      "signature": "海中鱼巣::程序运行结果 海中鱼巣::运行生产运行期模式()",
+      "file": "海中鱼巣/启动.应用程序.ixx",
+      "definition_line": 36,
+      "status": "已完成",
+      "chart": "L2/CF-L2-0003_运行生产运行期模式_现状流程图.md"
+    },
+    {
+      "id": "F0009",
+      "layer": 2,
+      "signature": "海中鱼巣::程序运行结果 海中鱼巣::运行完整自检模式()",
+      "file": "海中鱼巣/启动.应用程序.ixx",
+      "definition_line": 379,
+      "status": "已完成",
+      "chart": "L2/CF-L2-0004_运行完整自检模式_现状流程图.md"
+    },
+    {
+      "id": "F0010",
+      "layer": 2,
+      "signature": "海中鱼巣::程序运行结果 海中鱼巣::运行数据库专项(const 海中鱼巣::数据库启动审计端口* 覆盖端口 = nullptr)",
+      "file": "海中鱼巣/启动.应用程序.ixx",
+      "definition_line": 112,
+      "status": "已完成",
+      "chart": "L2/CF-L2-0005_运行数据库专项_现状流程图.md"
+    },
+    {
+      "id": "F0011",
+      "layer": 2,
+      "signature": "海中鱼巣::程序运行结果 海中鱼巣::运行关系仓库性能专项()",
+      "file": "海中鱼巣/启动.应用程序.ixx",
+      "definition_line": 400,
+      "status": "已完成",
+      "chart": "L2/CF-L2-0006_运行关系仓库性能专项_现状流程图.md"
+    },
+    {
+      "id": "F0012",
+      "layer": 2,
+      "signature": "海中鱼巣::程序运行结果 海中鱼巣::运行D455真实样本专项()",
+      "file": "海中鱼巣/启动.应用程序.ixx",
+      "definition_line": 420,
+      "status": "已完成",
+      "chart": "L2/CF-L2-0007_运行D455真实样本专项_现状流程图.md"
+    },
+    {
+      "id": "F0013",
+      "layer": 3,
+      "signature": "海中鱼巣::普通应用装配结果 海中鱼巣::构造普通应用上下文(const 海中鱼巣::普通应用配置& 配置)",
+      "file": "海中鱼巣/装配.普通应用.ixx",
+      "definition_line": 128,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0001_构造普通应用上下文_现状流程图.md"
+    },
+    {
+      "id": "F0014",
+      "layer": 3,
+      "signature": "bool 海中鱼巣::普通应用装配结果::成功() const noexcept",
+      "file": "海中鱼巣/装配.普通应用.ixx",
+      "definition_line": 123,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0002_普通应用装配结果_成功_现状流程图.md"
+    },
+    {
+      "id": "F0015",
+      "layer": 3,
+      "signature": "海中鱼巣::系统初始化结果 海中鱼巣::初始化普通系统(const 海中鱼巣::系统初始化端口& 端口, const 海中鱼巣::系统初始化请求& 请求)",
+      "file": "海中鱼巣/领域/初始化.系统.ixx",
+      "definition_line": 75,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0003_初始化普通系统_现状流程图.md"
+    },
+    {
+      "id": "F0016",
+      "layer": 3,
+      "signature": "bool 海中鱼巣::系统初始化结果::成功() const noexcept",
+      "file": "海中鱼巣/领域/初始化.系统.ixx",
+      "definition_line": 65,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0004_系统初始化结果_成功_现状流程图.md"
+    },
+    {
+      "id": "F0017",
+      "layer": 3,
+      "signature": "海中鱼巣::程序失败阶段 海中鱼巣::运行普通程序(海中鱼巣::启动模式)::<lambda@启动.应用程序.ixx:67>::operator()() const",
+      "file": "海中鱼巣/启动.应用程序.ixx",
+      "definition_line": 67,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0005_普通程序失败阶段映射lambda_现状流程图.md"
+    },
+    {
+      "id": "F0018",
+      "layer": 3,
+      "signature": "海中鱼巣::数据库启动审计结果 海中鱼巣::执行启动结构审计(const 海中鱼巣::数据库启动审计端口& 端口, 海中鱼巣::数据库审计要求 要求)",
+      "file": "海中鱼巣/适配/审计.数据库启动.ixx",
+      "definition_line": 55,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0006_执行启动结构审计_现状流程图.md"
+    },
+    {
+      "id": "F0019",
+      "layer": 3,
+      "signature": "海中鱼巣::停止信号安装结果 海中鱼巣::安装程序停止信号(海中鱼巣::程序信号安装函数 安装函数 = {&std::signal}) noexcept",
+      "file": "海中鱼巣/启动.程序运行宿主.ixx",
+      "definition_line": 110,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0007_安装程序停止信号_现状流程图.md"
+    },
+    {
+      "id": "F0020",
+      "layer": 3,
+      "signature": "bool 海中鱼巣::停止信号安装结果::成功() const noexcept",
+      "file": "海中鱼巣/启动.程序运行宿主.ixx",
+      "definition_line": 91,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0008_停止信号安装结果_成功_现状流程图.md"
+    },
+    {
+      "id": "F0021",
+      "layer": 3,
+      "signature": "海中鱼巣::程序运行结果 海中鱼巣::运行无窗口宿主(海中鱼巣::普通应用上下文&, 海中鱼巣::停止信号租约& 信号)",
+      "file": "海中鱼巣/启动.程序运行宿主.ixx",
+      "definition_line": 174,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0009_运行无窗口宿主_现状流程图.md"
+    },
+    {
+      "id": "F0022",
+      "layer": 3,
+      "signature": "海中鱼巣::控制面板启动投影结果 海中鱼巣::生成控制面板启动投影(const 海中鱼巣::普通应用上下文& 上下文, const 海中鱼巣::系统初始化结果& 初始化)",
+      "file": "海中鱼巣/界面/投影.控制面板启动.ixx",
+      "definition_line": 258,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0010_生成控制面板启动投影_现状流程图.md"
+    },
+    {
+      "id": "F0023",
+      "layer": 3,
+      "signature": "bool 海中鱼巣::控制面板启动投影结果::成功() const noexcept",
+      "file": "海中鱼巣/界面/投影.控制面板启动.ixx",
+      "definition_line": 251,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0011_控制面板启动投影结果_成功_现状流程图.md"
+    },
+    {
+      "id": "F0024",
+      "layer": 3,
+      "signature": "海中鱼巣::程序运行结果 海中鱼巣::运行控制面板宿主(海中鱼巣::普通应用上下文&, const 海中鱼巣::系统初始化结果&, const 海中鱼巣::控制面板启动投影结果&, const 海中鱼巣::数据库启动审计结果&, 海中鱼巣::停止信号租约&)",
+      "file": "海中鱼巣/启动.程序运行宿主.ixx",
+      "definition_line": 142,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0012_运行控制面板宿主_现状流程图.md"
+    },
+    {
+      "id": "F0025",
+      "layer": 3,
+      "signature": "海中鱼巣::停止信号租约::~停止信号租约()",
+      "file": "海中鱼巣/启动.程序运行宿主.ixx",
+      "definition_line": 45,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0013_停止信号租约_析构_现状流程图.md"
+    },
+    {
+      "id": "F0026",
+      "layer": 3,
+      "signature": "海中鱼巣::生产运行期会话::生产运行期会话()",
+      "file": "海中鱼巣/启动.生产运行期.ixx",
+      "definition_line": 46,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0014_生产运行期会话_构造_现状流程图.md"
+    },
+    {
+      "id": "F0027",
+      "layer": 3,
+      "signature": "海中鱼巣::生产运行期启动结果 海中鱼巣::生产运行期会话::启动(const 海中鱼巣::生产运行期启动请求& 请求)",
+      "file": "海中鱼巣/启动.生产运行期.ixx",
+      "definition_line": 50,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0015_生产运行期会话_启动_现状流程图.md"
+    },
+    {
+      "id": "F0028",
+      "layer": 3,
+      "signature": "bool 海中鱼巣::生产运行期启动结果::成功() const",
+      "file": "海中鱼巣/启动.生产运行期.ixx",
+      "definition_line": 37,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0016_生产运行期启动结果_成功_现状流程图.md"
+    },
+    {
+      "id": "F0029",
+      "layer": 3,
+      "signature": "bool 海中鱼巣::登记入口初始化自检单元(海中鱼巣::自检运行器&, const 海中鱼巣::入口初始化自检运行配置&)",
+      "file": "海中鱼巣/自检.入口初始化.ixx",
+      "definition_line": 482,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0017_登记入口初始化自检单元_现状流程图.md"
+    },
+    {
+      "id": "F0030",
+      "layer": 3,
+      "signature": "bool 海中鱼巣::自检运行器::登记自检(std::uint32_t, std::string, std::string, 海中鱼巣::自检执行回调)",
+      "file": "海中鱼巣/自检.运行器.ixx",
+      "definition_line": 41,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0018_自检运行器_登记自检_现状流程图.md"
+    },
+    {
+      "id": "F0031",
+      "layer": 3,
+      "signature": "海中鱼巣::自检批次结果 海中鱼巣::自检运行器::运行全部()",
+      "file": "海中鱼巣/自检.运行器.ixx",
+      "definition_line": 61,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0019_自检运行器_运行全部_现状流程图.md"
+    },
+    {
+      "id": "F0032",
+      "layer": 4,
+      "signature": "海中鱼巣::自检单元结果 海中鱼巣::运行入口端口合同自检()",
+      "file": "海中鱼巣/启动.应用程序.ixx",
+      "definition_line": 176,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0033",
+      "layer": 4,
+      "signature": "海中鱼巣::自检单元结果 海中鱼巣::运行入口隔离合同自检()",
+      "file": "海中鱼巣/启动.应用程序.ixx",
+      "definition_line": 322,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0034",
+      "layer": 3,
+      "signature": "海中鱼巣::程序失败阶段 海中鱼巣::运行数据库专项(const 海中鱼巣::数据库启动审计端口*)::<lambda@启动.应用程序.ixx:131>::operator()() const",
+      "file": "海中鱼巣/启动.应用程序.ixx",
+      "definition_line": 131,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0020_数据库专项失败阶段映射lambda_现状流程图.md"
+    },
+    {
+      "id": "F0035",
+      "layer": 3,
+      "signature": "bool 海中鱼巣::数据库启动审计结果::成功() const noexcept",
+      "file": "海中鱼巣/适配/审计.数据库启动.ixx",
+      "definition_line": 50,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0021_数据库启动审计结果_成功_现状流程图.md"
+    },
+    {
+      "id": "F0036",
+      "layer": 3,
+      "signature": "bool 海中鱼巣::记录调试日志(std::wstring_view, std::wstring_view, std::wstring_view, std::wstring_view)",
+      "file": "海中鱼巣/核心/日志系统.h",
+      "definition_line": 298,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0022_记录调试日志_现状流程图.md"
+    },
+    {
+      "id": "F0037",
+      "layer": 3,
+      "signature": "海中鱼巣::自检单元结果 海中鱼巣::运行关系仓库性能基线自检()",
+      "file": "海中鱼巣/核心/自检.关系仓库性能基线.ixx",
+      "definition_line": 859,
+      "status": "已完成",
+      "chart": "L3/CF-L3-0023_运行关系仓库性能基线自检_现状流程图.md"
+    },
+    {
+      "id": "F0038",
+      "layer": 3,
+      "signature": "海中鱼巣::自检单元结果 海中鱼巣::运行D455真实样本自检()",
+      "file": "海中鱼巣/适配/自检.D455真实样本.ixx",
+      "definition_line": 21,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0039",
+      "layer": 4,
+      "signature": "bool 海中鱼巣::普通应用配置::有效() const noexcept",
+      "file": "海中鱼巣/装配.普通应用.ixx",
+      "definition_line": 47,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0040",
+      "layer": 4,
+      "signature": "海中鱼巣::普通应用上下文::普通应用上下文()",
+      "file": "海中鱼巣/装配.普通应用.ixx",
+      "definition_line": 54,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0041",
+      "layer": 4,
+      "signature": "bool 海中鱼巣::系统初始化请求::有效() const noexcept",
+      "file": "海中鱼巣/领域/初始化.系统.ixx",
+      "definition_line": 23,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0042",
+      "layer": 4,
+      "signature": "bool 海中鱼巣::系统初始化端口::完整() const noexcept",
+      "file": "海中鱼巣/领域/初始化.系统.ixx",
+      "definition_line": 36,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0043",
+      "layer": 4,
+      "signature": "std::optional<海中鱼巣::方法登记根材料> 海中鱼巣::方法服务::初始化方法登记根(std::uint64_t, 海中鱼巣::状态服务&)",
+      "file": "海中鱼巣/领域/方法服务.h",
+      "definition_line": 254,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0044",
+      "layer": 4,
+      "signature": "海中鱼巣::自我线程操作结果 海中鱼巣::自我线程::启动(const 海中鱼巣::自我根需求初始化参数&)",
+      "file": "海中鱼巣/线程/自我线程.ixx",
+      "definition_line": 182,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0045",
+      "layer": 4,
+      "signature": "bool 海中鱼巣::自我线程::等待初始化完成(std::chrono::milliseconds) const",
+      "file": "海中鱼巣/线程/自我线程.ixx",
+      "definition_line": 215,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0046",
+      "layer": 4,
+      "signature": "std::optional<海中鱼巣::自我线程初始化快照> 海中鱼巣::自我线程::读取初始化快照() const",
+      "file": "海中鱼巣/线程/自我线程.ixx",
+      "definition_line": 230,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0047",
+      "layer": 4,
+      "signature": "bool 海中鱼巣::自我线程初始化快照::成功() const",
+      "file": "海中鱼巣/线程/自我线程.ixx",
+      "definition_line": 56,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0048",
+      "layer": 4,
+      "signature": "海中鱼巣::概念图初始化结果 海中鱼巣::概念图初始化服务::初始化四个根()",
+      "file": "海中鱼巣/领域/初始化.概念图.ixx",
+      "definition_line": 98,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0049",
+      "layer": 4,
+      "signature": "bool 海中鱼巣::概念图初始化结果::成功() const",
+      "file": "海中鱼巣/领域/初始化.概念图.ixx",
+      "definition_line": 49,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0050",
+      "layer": 4,
+      "signature": "std::optional<海中鱼巣::节点句柄> 海中鱼巣::概念图服务::确保存在实例根支持(海中鱼巣::节点句柄)",
+      "file": "海中鱼巣/领域/概念图服务.h",
+      "definition_line": 1052,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0051",
+      "layer": 4,
+      "signature": "bool 海中鱼巣::operator==(const 海中鱼巣::节点句柄&, const 海中鱼巣::节点句柄&)",
+      "file": "海中鱼巣/核心/句柄.h",
+      "definition_line": 139,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0052",
+      "layer": 4,
+      "signature": "bool 海中鱼巣::数据库启动审计端口::完整() const noexcept",
+      "file": "海中鱼巣/适配/审计.数据库启动.ixx",
+      "definition_line": 25,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0053",
+      "layer": 4,
+      "signature": "海中鱼巣::缓存命名空间 海中鱼巣::统计服务::定义缓存命名空间(...) const",
+      "file": "海中鱼巣/领域/统计服务.h",
+      "definition_line": 243,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0054",
+      "layer": 4,
+      "signature": "海中鱼巣::结构统计快照 海中鱼巣::统计服务::读取权威结构统计快照(...) const",
+      "file": "海中鱼巣/领域/统计服务.h",
+      "definition_line": 690,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0055",
+      "layer": 4,
+      "signature": "海中鱼巣::数据库操作结果 海中鱼巣::SQL数据库适配::写入结构统计审计(const 海中鱼巣::结构统计快照&, std::wstring) const",
+      "file": "海中鱼巣/适配/SQL数据库适配.cpp",
+      "definition_line": 381,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0056",
+      "layer": 4,
+      "signature": "海中鱼巣::数据库查询结果 海中鱼巣::SQL数据库适配::读取最近结构统计审计(std::size_t) const",
+      "file": "海中鱼巣/适配/SQL数据库适配.cpp",
+      "definition_line": 471,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0057",
+      "layer": 4,
+      "signature": "海中鱼巣::停止信号租约::停止信号租约()",
+      "file": "海中鱼巣/启动.程序运行宿主.ixx",
+      "definition_line": 44,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0058",
+      "layer": 4,
+      "signature": "void 海中鱼巣::接收程序停止信号(int)",
+      "file": "海中鱼巣/启动.程序运行宿主.ixx",
+      "definition_line": 100,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0059",
+      "layer": 4,
+      "signature": "std::optional<海中鱼巣::世界树相对坐标> 海中鱼巣::世界树初始化服务::读取自我相对坐标(海中鱼巣::节点句柄) const",
+      "file": "海中鱼巣/领域/初始化.世界树.ixx",
+      "definition_line": 88,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0060",
+      "layer": 4,
+      "signature": "海中鱼巣::控制面板树结构材料 海中鱼巣::生成控制面板世界树结构材料(const 海中鱼巣::节点仓库&, const 海中鱼巣::关系仓库&, const 海中鱼巣::世界树初始化结果&, const 海中鱼巣::语素初始化结果&, const std::optional<海中鱼巣::世界树相对坐标>&)",
+      "file": "海中鱼巣/界面/投影.控制面板启动.ixx",
+      "definition_line": 128,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0061",
+      "layer": 4,
+      "signature": "海中鱼巣::控制面板树结构材料 海中鱼巣::生成控制面板语素树结构材料(const 海中鱼巣::语素初始化结果&, const 海中鱼巣::概念图初始化结果&)",
+      "file": "海中鱼巣/界面/投影.控制面板启动.ixx",
+      "definition_line": 187,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0062",
+      "layer": 4,
+      "signature": "海中鱼巣::控制面板服务::控制面板服务(const 海中鱼巣::显示服务&, const 海中鱼巣::节点仓库&, const 海中鱼巣::概念图服务&, const 海中鱼巣::语素服务&, const 海中鱼巣::需求服务&, const 海中鱼巣::任务服务&, const 海中鱼巣::方法服务&, const 海中鱼巣::状态服务&, 海中鱼巣::控制面板树结构材料, 海中鱼巣::控制面板树结构材料, std::array<海中鱼巣::节点句柄, 2>)",
+      "file": "海中鱼巣/领域/控制面板服务.h",
+      "definition_line": 254,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0063",
+      "layer": 4,
+      "signature": "海中鱼巣::控制面板窗口::控制面板窗口(const 海中鱼巣::控制面板服务&, const 海中鱼巣::SQL数据库适配&, 海中鱼巣::结构统计快照)",
+      "file": "海中鱼巣/界面/控制面板窗口.cpp",
+      "definition_line": 1699,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0064",
+      "layer": 4,
+      "signature": "海中鱼巣::控制面板窗口运行结果 海中鱼巣::控制面板窗口::运行(const volatile std::sig_atomic_t*)",
+      "file": "海中鱼巣/界面/控制面板窗口.cpp",
+      "definition_line": 1707,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0065",
+      "layer": 4,
+      "signature": "海中鱼巣::控制面板窗口::~控制面板窗口()",
+      "file": "海中鱼巣/界面/控制面板窗口.cpp",
+      "definition_line": 1705,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0066",
+      "layer": 4,
+      "signature": "bool 海中鱼巣::运行期上下文租约::有效() const",
+      "file": "海中鱼巣/启动.运行期上下文.ixx",
+      "definition_line": 195,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0067",
+      "layer": 4,
+      "signature": "海中鱼巣::程序信号处理函数 海中鱼巣::运行入口端口合同自检()::<lambda@启动.应用程序.ixx:286>::operator()(int 信号, 海中鱼巣::程序信号处理函数) const",
+      "file": "海中鱼巣/启动.应用程序.ixx",
+      "definition_line": 286,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0068",
+      "layer": 4,
+      "signature": "bool 海中鱼巣::生产运行期启动请求::有效() const noexcept",
+      "file": "海中鱼巣/生产运行期配置.数据.h",
+      "definition_line": 95,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0069",
+      "layer": 4,
+      "signature": "海中鱼巣::运行期上下文租约 海中鱼巣::运行期上下文宿主::读取租约() const",
+      "file": "海中鱼巣/启动.运行期上下文.ixx",
+      "definition_line": 233,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0070",
+      "layer": 4,
+      "signature": "海中鱼巣::生产运行期配置 海中鱼巣::读取生产运行期固定配置() noexcept",
+      "file": "海中鱼巣/生产运行期配置.数据.h",
+      "definition_line": 28,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0071",
+      "layer": 4,
+      "signature": "bool 海中鱼巣::生产运行期配置::有效() const noexcept",
+      "file": "海中鱼巣/生产运行期配置.数据.h",
+      "definition_line": 77,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0072",
+      "layer": 4,
+      "signature": "海中鱼巣::运行期上下文::运行期上下文(std::uint64_t 域编号, std::uint64_t 仓库编号, std::uint64_t 稳定动作键)",
+      "file": "海中鱼巣/启动.运行期上下文.ixx",
+      "definition_line": 41,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0073",
+      "layer": 4,
+      "signature": "海中鱼巣::系统角色初始化结果 海中鱼巣::运行期上下文::初始化系统角色(const 海中鱼巣::系统角色初始化参数&)",
+      "file": "海中鱼巣/启动.运行期上下文.ixx",
+      "definition_line": 95,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0074",
+      "layer": 4,
+      "signature": "bool 海中鱼巣::系统角色初始化结果::成功() const noexcept",
+      "file": "海中鱼巣/领域/系统角色清单.数据.h",
+      "definition_line": 294,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0075",
+      "layer": 4,
+      "signature": "海中鱼巣::概念活动初始化结果 海中鱼巣::运行期上下文::初始化概念活动(const 海中鱼巣::概念活动初始化参数&)",
+      "file": "海中鱼巣/启动.运行期上下文.ixx",
+      "definition_line": 129,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0076",
+      "layer": 4,
+      "signature": "bool 海中鱼巣::概念活动初始化结果::成功() const noexcept",
+      "file": "海中鱼巣/领域/概念活动状态.数据.h",
+      "definition_line": 210,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0077",
+      "layer": 4,
+      "signature": "bool 海中鱼巣::运行期上下文::完整() const",
+      "file": "海中鱼巣/启动.运行期上下文.ixx",
+      "definition_line": 74,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0078",
+      "layer": 4,
+      "signature": "海中鱼巣::运行期上下文发布状态 海中鱼巣::运行期上下文宿主::尝试首次发布全新上下文(std::shared_ptr<海中鱼巣::运行期上下文> 候选)",
+      "file": "海中鱼巣/启动.运行期上下文.ixx",
+      "definition_line": 208,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0079",
+      "layer": 4,
+      "signature": "const 海中鱼巣::运行期上下文* 海中鱼巣::运行期上下文租约::读取() const",
+      "file": "海中鱼巣/启动.运行期上下文.ixx",
+      "definition_line": 196,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0080",
+      "layer": 4,
+      "signature": "海中鱼巣::自检单元结果 海中鱼巣::登记入口初始化自检单元(海中鱼巣::自检运行器&, const 海中鱼巣::入口初始化自检运行配置&)::<lambda@自检.入口初始化.ixx:486>::operator()() const",
+      "file": "海中鱼巣/自检.入口初始化.ixx",
+      "definition_line": 486,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0081",
+      "layer": 4,
+      "signature": "海中鱼巣::自检单元结果 海中鱼巣::登记入口初始化自检单元(海中鱼巣::自检运行器&, const 海中鱼巣::入口初始化自检运行配置&)::<lambda@自检.入口初始化.ixx:488>::operator()() const",
+      "file": "海中鱼巣/自检.入口初始化.ixx",
+      "definition_line": 488,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0082",
+      "layer": 4,
+      "signature": "海中鱼巣::自检单元结果 海中鱼巣::登记入口初始化自检单元(海中鱼巣::自检运行器&, const 海中鱼巣::入口初始化自检运行配置&)::<lambda@自检.入口初始化.ixx:490>::operator()() const",
+      "file": "海中鱼巣/自检.入口初始化.ixx",
+      "definition_line": 490,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0083",
+      "layer": 4,
+      "signature": "海中鱼巣::自检单元结果 海中鱼巣::登记入口初始化自检单元(海中鱼巣::自检运行器&, const 海中鱼巣::入口初始化自检运行配置&)::<lambda@自检.入口初始化.ixx:492>::operator()() const",
+      "file": "海中鱼巣/自检.入口初始化.ixx",
+      "definition_line": 492,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0084",
+      "layer": 4,
+      "signature": "海中鱼巣::自检单元结果 海中鱼巣::登记入口初始化自检单元(海中鱼巣::自检运行器&, const 海中鱼巣::入口初始化自检运行配置&)::<lambda@自检.入口初始化.ixx:494>::operator()() const",
+      "file": "海中鱼巣/自检.入口初始化.ixx",
+      "definition_line": 494,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0085",
+      "layer": 4,
+      "signature": "海中鱼巣::自检单元结果 海中鱼巣::登记入口初始化自检单元(海中鱼巣::自检运行器&, const 海中鱼巣::入口初始化自检运行配置&)::<lambda@自检.入口初始化.ixx:496>::operator()() const",
+      "file": "海中鱼巣/自检.入口初始化.ixx",
+      "definition_line": 496,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0086",
+      "layer": 4,
+      "signature": "海中鱼巣::自检单元结果 海中鱼巣::登记入口初始化自检单元(海中鱼巣::自检运行器&, const 海中鱼巣::入口初始化自检运行配置&)::<lambda@自检.入口初始化.ixx:498>::operator()() const",
+      "file": "海中鱼巣/自检.入口初始化.ixx",
+      "definition_line": 498,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0087",
+      "layer": 4,
+      "signature": "海中鱼巣::自检单元结果 海中鱼巣::登记入口初始化自检单元(海中鱼巣::自检运行器&, const 海中鱼巣::入口初始化自检运行配置&)::<lambda@自检.入口初始化.ixx:500>::operator()() const",
+      "file": "海中鱼巣/自检.入口初始化.ixx",
+      "definition_line": 500,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0088",
+      "layer": 4,
+      "signature": "海中鱼巣::自检单元结果 海中鱼巣::登记入口初始化自检单元(海中鱼巣::自检运行器&, const 海中鱼巣::入口初始化自检运行配置&)::<lambda@自检.入口初始化.ixx:502>::operator()() const",
+      "file": "海中鱼巣/自检.入口初始化.ixx",
+      "definition_line": 502,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0089",
+      "layer": 4,
+      "signature": "海中鱼巣::自检单元结果 海中鱼巣::登记入口初始化自检单元(海中鱼巣::自检运行器&, const 海中鱼巣::入口初始化自检运行配置&)::<lambda@自检.入口初始化.ixx:504>::operator()() const",
+      "file": "海中鱼巣/自检.入口初始化.ixx",
+      "definition_line": 504,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0090",
+      "layer": 4,
+      "signature": "海中鱼巣::自检单元结果 海中鱼巣::登记入口初始化自检单元(海中鱼巣::自检运行器&, const 海中鱼巣::入口初始化自检运行配置&)::<lambda@自检.入口初始化.ixx:506>::operator()() const",
+      "file": "海中鱼巣/自检.入口初始化.ixx",
+      "definition_line": 506,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0091",
+      "layer": 4,
+      "signature": "海中鱼巣::自检单元结果 海中鱼巣::登记入口初始化自检单元(海中鱼巣::自检运行器&, const 海中鱼巣::入口初始化自检运行配置&)::<lambda@自检.入口初始化.ixx:508>::operator()() const",
+      "file": "海中鱼巣/自检.入口初始化.ixx",
+      "definition_line": 508,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0092",
+      "layer": 4,
+      "signature": "海中鱼巣::自检单元结果 海中鱼巣::登记入口初始化自检单元(海中鱼巣::自检运行器&, const 海中鱼巣::入口初始化自检运行配置&)::<lambda@自检.入口初始化.ixx:510>::operator()() const",
+      "file": "海中鱼巣/自检.入口初始化.ixx",
+      "definition_line": 510,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0093",
+      "layer": 4,
+      "signature": "海中鱼巣::自检单元结果 海中鱼巣::登记入口初始化自检单元(海中鱼巣::自检运行器&, const 海中鱼巣::入口初始化自检运行配置&)::<lambda@自检.入口初始化.ixx:512>::operator()() const",
+      "file": "海中鱼巣/自检.入口初始化.ixx",
+      "definition_line": 512,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0094",
+      "layer": 4,
+      "signature": "bool 海中鱼巣::自检运行器::登记自检(std::uint32_t, std::string, std::string, 海中鱼巣::自检执行回调)::<lambda@自检.运行器.ixx:50>::operator()(const 海中鱼巣::自检运行器::自检登记& 已有) const",
+      "file": "海中鱼巣/自检.运行器.ixx",
+      "definition_line": 50,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0095",
+      "layer": 4,
+      "signature": "bool 海中鱼巣::写入日志(海中鱼巣::日志类别 类别, std::wstring_view 模块, std::wstring_view 入口, std::wstring_view 内容, std::wstring_view 调试切片名 = {})",
+      "file": "海中鱼巣/核心/日志系统.h",
+      "definition_line": 218,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0096",
+      "layer": 4,
+      "signature": "bool 海中鱼巣::运行关系仓库性能基线自检()::<lambda@自检.关系仓库性能基线.ixx:877>::operator()() const",
+      "file": "海中鱼巣/核心/自检.关系仓库性能基线.ixx",
+      "definition_line": 877,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0097",
+      "layer": 4,
+      "signature": "海中鱼巣::关系仓库性能基线内部::规模报告 海中鱼巣::关系仓库性能基线内部::运行单规模基线(std::size_t 规模)",
+      "file": "海中鱼巣/核心/自检.关系仓库性能基线.ixx",
+      "definition_line": 756,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0098",
+      "layer": 4,
+      "signature": "bool 海中鱼巣::运行关系仓库性能基线自检()::<lambda@自检.关系仓库性能基线.ixx:902>::operator()<海中鱼巣::关系仓库性能基线内部::规模报告>(const 海中鱼巣::关系仓库性能基线内部::规模报告& 报告) const",
+      "file": "海中鱼巣/核心/自检.关系仓库性能基线.ixx",
+      "definition_line": 902,
+      "status": "待处理",
+      "chart": null
+    },
+    {
+      "id": "F0099",
+      "layer": 4,
+      "signature": "bool 海中鱼巣::关系仓库性能基线内部::规模报告::完整() const",
+      "file": "海中鱼巣/核心/自检.关系仓库性能基线.ixx",
+      "definition_line": 732,
+      "status": "待处理",
+      "chart": null
+    }
+  ],
+  "calls": [
+    {
+      "id": "E0001",
+      "caller": "F0001",
+      "callee": "F0002",
+      "location": "海中鱼巣/入口.cpp:9",
+      "arguments": "参数数量, 参数组",
+      "return_binding": "解析",
+      "condition": "always",
+      "type": "direct_free_function"
+    },
+    {
+      "id": "E0002",
+      "caller": "F0001",
+      "callee": "F0003",
+      "location": "海中鱼巣/入口.cpp:10",
+      "arguments": "this=&解析",
+      "return_binding": "解析成功",
+      "condition": "after E0001",
+      "type": "direct_const_member"
+    },
+    {
+      "id": "E0003",
+      "caller": "F0001",
+      "callee": "F0004",
+      "location": "海中鱼巣/入口.cpp:11",
+      "arguments": "解析, nullptr",
+      "return_binding": "进程退出码",
+      "condition": "解析成功 == false",
+      "type": "direct_free_function"
+    },
+    {
+      "id": "E0004",
+      "caller": "F0001",
+      "callee": "F0005",
+      "location": "海中鱼巣/入口.cpp:13",
+      "arguments": "解析.选项",
+      "return_binding": "运行",
+      "condition": "解析成功 == true",
+      "type": "direct_free_function"
+    },
+    {
+      "id": "E0005",
+      "caller": "F0001",
+      "callee": "F0004",
+      "location": "海中鱼巣/入口.cpp:14",
+      "arguments": "解析, &运行",
+      "return_binding": "进程退出码",
+      "condition": "after E0004",
+      "type": "direct_free_function"
+    },
+    {
+      "id": "E0006",
+      "caller": "F0004",
+      "callee": "F0003",
+      "location": "海中鱼巣/启动.程序入口.ixx:74",
+      "arguments": "this=&解析",
+      "return_binding": "解析成功",
+      "condition": "always",
+      "type": "direct_const_member"
+    },
+    {
+      "id": "E0007",
+      "caller": "F0004",
+      "callee": "F0006",
+      "location": "海中鱼巣/启动.程序入口.ixx:80",
+      "arguments": "this=运行",
+      "return_binding": "运行成功",
+      "condition": "解析已接受 && 运行 != nullptr",
+      "type": "direct_const_member"
+    },
+    {
+      "id": "E0008",
+      "caller": "F0005",
+      "callee": "F0007",
+      "location": "海中鱼巣/启动.应用程序.ixx:448",
+      "arguments": "选项.模式",
+      "return_binding": "普通结果",
+      "condition": "普通控制面板 || 无窗口常驻",
+      "type": "direct_free_function"
+    },
+    {
+      "id": "E0009",
+      "caller": "F0005",
+      "callee": "F0008",
+      "location": "海中鱼巣/启动.应用程序.ixx:450",
+      "arguments": "",
+      "return_binding": "生产结果",
+      "condition": "生产运行期",
+      "type": "direct_free_function"
+    },
+    {
+      "id": "E0010",
+      "caller": "F0005",
+      "callee": "F0009",
+      "location": "海中鱼巣/启动.应用程序.ixx:452",
+      "arguments": "",
+      "return_binding": "自检结果",
+      "condition": "完整自检",
+      "type": "direct_free_function"
+    },
+    {
+      "id": "E0011",
+      "caller": "F0005",
+      "callee": "F0010",
+      "location": "海中鱼巣/启动.应用程序.ixx:454",
+      "arguments": "覆盖端口=nullptr",
+      "return_binding": "数据库结果",
+      "condition": "数据库专项",
+      "type": "direct_free_function"
+    },
+    {
+      "id": "E0012",
+      "caller": "F0005",
+      "callee": "F0011",
+      "location": "海中鱼巣/启动.应用程序.ixx:456",
+      "arguments": "",
+      "return_binding": "性能结果",
+      "condition": "关系仓库性能专项",
+      "type": "direct_free_function"
+    },
+    {
+      "id": "E0013",
+      "caller": "F0005",
+      "callee": "F0012",
+      "location": "海中鱼巣/启动.应用程序.ixx:458",
+      "arguments": "",
+      "return_binding": "D455结果",
+      "condition": "D455真实样本专项",
+      "type": "direct_free_function"
+    },
+    {"id":"E0014","caller":"F0007","callee":"F0013","location":"海中鱼巣/启动.应用程序.ixx:51","arguments":"配置","return_binding":"装配","condition":"普通模式有效","type":"direct_free_function"},
+    {"id":"E0015","caller":"F0007","callee":"F0014","location":"海中鱼巣/启动.应用程序.ixx:52","arguments":"this=&装配","return_binding":"装配成功","condition":"after E0014","type":"direct_const_member"},
+    {"id":"E0016","caller":"F0007","callee":"F0015","location":"海中鱼巣/启动.应用程序.ixx:64","arguments":"系统端口, 初始化请求","return_binding":"初始化","condition":"装配成功","type":"direct_free_function"},
+    {"id":"E0017","caller":"F0007","callee":"F0016","location":"海中鱼巣/启动.应用程序.ixx:66","arguments":"this=&初始化","return_binding":"初始化成功","condition":"after E0016","type":"direct_const_member"},
+    {"id":"E0018","caller":"F0007","callee":"F0017","location":"海中鱼巣/启动.应用程序.ixx:67","arguments":"捕获初始化","return_binding":"失败阶段","condition":"初始化失败","type":"lambda_direct"},
+    {"id":"E0019","caller":"F0007","callee":"F0018","location":"海中鱼巣/启动.应用程序.ixx:95","arguments":"审计端口, 最佳努力","return_binding":"审计","condition":"初始化成功","type":"direct_free_function"},
+    {"id":"E0020","caller":"F0007","callee":"F0019","location":"海中鱼巣/启动.应用程序.ixx:96","arguments":"默认安装函数","return_binding":"信号","condition":"after E0019","type":"direct_free_function"},
+    {"id":"E0021","caller":"F0007","callee":"F0020","location":"海中鱼巣/启动.应用程序.ixx:97","arguments":"this=&信号","return_binding":"信号成功","condition":"after E0020","type":"direct_const_member"},
+    {"id":"E0022","caller":"F0007","callee":"F0021","location":"海中鱼巣/启动.应用程序.ixx:101","arguments":"*装配.上下文, *信号.租约","return_binding":"运行结果","condition":"信号成功 && 无窗口常驻","type":"direct_free_function"},
+    {"id":"E0023","caller":"F0007","callee":"F0022","location":"海中鱼巣/启动.应用程序.ixx:103","arguments":"*装配.上下文, 初始化","return_binding":"投影","condition":"信号成功 && 普通控制面板","type":"direct_free_function"},
+    {"id":"E0024","caller":"F0007","callee":"F0023","location":"海中鱼巣/启动.应用程序.ixx:104","arguments":"this=&投影","return_binding":"投影成功","condition":"after E0023","type":"direct_const_member"},
+    {"id":"E0025","caller":"F0007","callee":"F0024","location":"海中鱼巣/启动.应用程序.ixx:108","arguments":"上下文, 初始化, 投影, 审计, 信号租约","return_binding":"运行结果","condition":"投影成功","type":"direct_free_function"},
+    {"id":"E0026","caller":"F0007","callee":"F0025","location":"海中鱼巣/启动.应用程序.ixx:102","arguments":"this=信号.租约.get()","return_binding":"","condition":"无窗口宿主返回后","type":"compiler_implicit_destructor"},
+    {"id":"E0027","caller":"F0007","callee":"F0025","location":"海中鱼巣/启动.应用程序.ixx:107","arguments":"this=信号.租约.get()","return_binding":"","condition":"投影失败返回前","type":"compiler_implicit_destructor"},
+    {"id":"E0028","caller":"F0007","callee":"F0025","location":"海中鱼巣/启动.应用程序.ixx:110","arguments":"this=信号.租约.get()","return_binding":"","condition":"控制面板宿主返回后","type":"compiler_implicit_destructor"},
+    {"id":"E0029","caller":"F0008","callee":"F0026","location":"海中鱼巣/启动.应用程序.ixx:37","arguments":"","return_binding":"会话","condition":"always","type":"direct_constructor"},
+    {"id":"E0030","caller":"F0008","callee":"F0027","location":"海中鱼巣/启动.应用程序.ixx:38","arguments":"this=&会话, 生产运行期启动请求{}","return_binding":"结果","condition":"always","type":"direct_member"},
+    {"id":"E0031","caller":"F0008","callee":"F0028","location":"海中鱼巣/启动.应用程序.ixx:39","arguments":"this=&结果","return_binding":"启动成功","condition":"after E0030","type":"direct_const_member"},
+    {"id":"E0032","caller":"F0009","callee":"F0029","location":"海中鱼巣/启动.应用程序.ixx:381","arguments":"运行器, 空配置","return_binding":"入口登记成功","condition":"always","type":"direct_free_function"},
+    {"id":"E0033","caller":"F0009","callee":"F0030","location":"海中鱼巣/启动.应用程序.ixx:382-383","arguments":"this=&运行器, 150, F27编号名称, 回调","return_binding":"端口登记成功","condition":"入口登记成功","type":"direct_member"},
+    {"id":"E0034","caller":"F0009","callee":"F0030","location":"海中鱼巣/启动.应用程序.ixx:384-385","arguments":"this=&运行器, 160, F29编号名称, 回调","return_binding":"隔离登记成功","condition":"入口登记成功 && 端口登记成功","type":"direct_member"},
+    {"id":"E0035","caller":"F0009","callee":"F0031","location":"海中鱼巣/启动.应用程序.ixx:390","arguments":"this=&运行器","return_binding":"批次","condition":"三段登记均成功","type":"direct_member"},
+    {"id":"E0036","caller":"F0009","callee":"F0032","location":"海中鱼巣/启动.应用程序.ixx:383","arguments":"无捕获转发回调","return_binding":"F27回调槽","condition":"端口自检登记","type":"callback_bind"},
+    {"id":"E0037","caller":"F0009","callee":"F0033","location":"海中鱼巣/启动.应用程序.ixx:385","arguments":"无捕获转发回调","return_binding":"F29回调槽","condition":"隔离自检登记","type":"callback_bind"},
+    {"id":"E0038","caller":"F0031","callee":"F0032","location":"海中鱼巣/自检.运行器.ixx:80","arguments":"登记.回调()","return_binding":"单元","condition":"执行到顺序150","type":"callback_invoke"},
+    {"id":"E0039","caller":"F0031","callee":"F0033","location":"海中鱼巣/自检.运行器.ixx:80","arguments":"登记.回调()","return_binding":"单元","condition":"执行到顺序160","type":"callback_invoke"},
+    {"id":"E0040","caller":"F0010","callee":"F0013","location":"海中鱼巣/启动.应用程序.ixx:114","arguments":"配置","return_binding":"装配","condition":"always","type":"direct_free_function"},
+    {"id":"E0041","caller":"F0010","callee":"F0014","location":"海中鱼巣/启动.应用程序.ixx:115","arguments":"this=&装配","return_binding":"装配成功","condition":"after E0040","type":"direct_const_member"},
+    {"id":"E0042","caller":"F0010","callee":"F0015","location":"海中鱼巣/启动.应用程序.ixx:128-129","arguments":"系统端口, 初始化请求","return_binding":"初始化","condition":"装配成功","type":"direct_free_function"},
+    {"id":"E0043","caller":"F0010","callee":"F0016","location":"海中鱼巣/启动.应用程序.ixx:130","arguments":"this=&初始化","return_binding":"初始化成功","condition":"after E0042","type":"direct_const_member"},
+    {"id":"E0044","caller":"F0010","callee":"F0034","location":"海中鱼巣/启动.应用程序.ixx:131-140","arguments":"捕获初始化","return_binding":"失败阶段","condition":"初始化失败","type":"lambda_direct"},
+    {"id":"E0045","caller":"F0010","callee":"F0018","location":"海中鱼巣/启动.应用程序.ixx:159-161","arguments":"选中端口, 必须往返一致","return_binding":"审计","condition":"初始化成功","type":"direct_free_function"},
+    {"id":"E0046","caller":"F0010","callee":"F0035","location":"海中鱼巣/启动.应用程序.ixx:163","arguments":"this=&审计","return_binding":"摘要成功","condition":"after E0045","type":"direct_const_member"},
+    {"id":"E0047","caller":"F0010","callee":"F0035","location":"海中鱼巣/启动.应用程序.ixx:166","arguments":"this=&审计","return_binding":"日志结果","condition":"数据库调试日志宏开启","type":"direct_const_member"},
+    {"id":"E0048","caller":"F0010","callee":"F0036","location":"海中鱼巣/启动.应用程序.ixx:164-166","arguments":"SELF_TEST_DATABASE, 模块, 入口, 内容","return_binding":"丢弃","condition":"数据库调试日志宏开启","type":"macro_expanded_direct"},
+    {"id":"E0049","caller":"F0010","callee":"F0035","location":"海中鱼巣/启动.应用程序.ixx:167","arguments":"this=&审计","return_binding":"最终成功","condition":"always after summary","type":"direct_const_member"},
+    {"id":"E0050","caller":"F0011","callee":"F0037","location":"海中鱼巣/启动.应用程序.ixx:402","arguments":"","return_binding":"结果","condition":"性能能力宏开启","type":"direct_free_function"},
+    {"id":"E0051","caller":"F0011","callee":"F0036","location":"海中鱼巣/启动.应用程序.ixx:406-408","arguments":"SELF_TEST_WAREHOUSE_PERFORMANCE, 模块, 入口, 内容","return_binding":"丢弃","condition":"性能能力宏 && 性能日志宏","type":"macro_expanded_direct"},
+    {"id":"E0052","caller":"F0012","callee":"F0038","location":"海中鱼巣/启动.应用程序.ixx:422","arguments":"","return_binding":"结果","condition":"D455能力宏开启","type":"direct_free_function"},
+    {"id":"E0053","caller":"F0012","callee":"F0036","location":"海中鱼巣/启动.应用程序.ixx:426-428","arguments":"SELF_TEST_D455, 模块, 入口, 内容","return_binding":"丢弃","condition":"D455能力宏 && D455日志宏","type":"macro_expanded_direct"},
+    {"id":"E0054","caller":"F0013","callee":"F0039","location":"海中鱼巣/装配.普通应用.ixx:129","arguments":"this=&配置","return_binding":"配置有效","condition":"always","type":"direct_const_member"},
+    {"id":"E0055","caller":"F0013","callee":"F0040","location":"海中鱼巣/装配.普通应用.ixx:133","arguments":"this=新分配存储","return_binding":"完整上下文","condition":"配置有效 && make_unique分配成功","type":"external_template_project_constructor"},
+    {"id":"E0056","caller":"F0015","callee":"F0041","location":"海中鱼巣/领域/初始化.系统.ixx:79","arguments":"this=&请求","return_binding":"请求有效","condition":"always","type":"direct_const_member"},
+    {"id":"E0057","caller":"F0015","callee":"F0042","location":"海中鱼巣/领域/初始化.系统.ixx:83","arguments":"this=&端口","return_binding":"端口完整","condition":"请求有效","type":"direct_const_member"},
+    {"id":"E0058","caller":"F0015","callee":"F0043","location":"海中鱼巣/领域/初始化.系统.ixx:88","arguments":"请求.方法登记根稳定键, 状态服务","return_binding":"方法根候选","condition":"正常生产端口绑定","type":"callback_invoke_resolved_normal"},
+    {"id":"E0059","caller":"F0015","callee":"F0044","location":"海中鱼巣/领域/初始化.系统.ixx:93","arguments":"请求.根需求参数","return_binding":"启动候选","condition":"方法根有值 && 正常生产端口绑定","type":"callback_invoke_resolved_normal"},
+    {"id":"E0060","caller":"F0015","callee":"F0045","location":"海中鱼巣/领域/初始化.系统.ixx:98-99","arguments":"10000ms","return_binding":"已等待","condition":"首次启动成功 && 正常生产端口绑定","type":"callback_invoke_resolved_normal"},
+    {"id":"E0061","caller":"F0015","callee":"F0046","location":"海中鱼巣/领域/初始化.系统.ixx:100","arguments":"","return_binding":"快照候选","condition":"等待回调返回 && 正常生产端口绑定","type":"callback_invoke_resolved_normal"},
+    {"id":"E0062","caller":"F0015","callee":"F0047","location":"海中鱼巣/领域/初始化.系统.ixx:103","arguments":"this=快照对象","return_binding":"快照成功","condition":"等待成功 && 快照有值","type":"direct_const_member"},
+    {"id":"E0063","caller":"F0015","callee":"F0048","location":"海中鱼巣/领域/初始化.系统.ixx:107","arguments":"","return_binding":"概念图候选","condition":"快照成功 && 正常生产端口绑定","type":"callback_invoke_resolved_normal"},
+    {"id":"E0064","caller":"F0015","callee":"F0049","location":"海中鱼巣/领域/初始化.系统.ixx:108","arguments":"this=&结果.概念图","return_binding":"概念图成功","condition":"after E0063","type":"direct_const_member"},
+    {"id":"E0065","caller":"F0015","callee":"F0050","location":"海中鱼巣/领域/初始化.系统.ixx:112-113","arguments":"自我存在节点","return_binding":"支持候选","condition":"概念图成功 && 正常生产端口绑定","type":"callback_invoke_resolved_normal"},
+    {"id":"E0066","caller":"F0015","callee":"F0051","location":"海中鱼巣/领域/初始化.系统.ixx:115","arguments":"支持根, 存在根","return_binding":"根相等","condition":"支持有值","type":"direct_operator"},
+    {"id":"E0067","caller":"F0016","callee":"F0047","location":"海中鱼巣/领域/初始化.系统.ixx:69","arguments":"this=自我初始化快照","return_binding":"快照成功","condition":"状态已初始化 && 方法根有值 && 快照有值","type":"direct_const_member"},
+    {"id":"E0068","caller":"F0016","callee":"F0049","location":"海中鱼巣/领域/初始化.系统.ixx:70","arguments":"this=&概念图","return_binding":"概念图成功","condition":"前项全部为真","type":"direct_const_member"},
+    {"id":"E0069","caller":"F0018","callee":"F0052","location":"海中鱼巣/适配/审计.数据库启动.ixx:59","arguments":"this=&端口","return_binding":"端口完整","condition":"always","type":"direct_const_member"},
+    {"id":"E0070","caller":"F0018","callee":"F0053","location":"海中鱼巣/适配/审计.数据库启动.ixx:62","arguments":"生产命名空间规格","return_binding":"命名空间候选","condition":"正常生产端口绑定","type":"callback_invoke_resolved_normal"},
+    {"id":"E0071","caller":"F0018","callee":"F0054","location":"海中鱼巣/适配/审计.数据库启动.ixx:72","arguments":"命名空间, 三仓库","return_binding":"快照","condition":"正常生产端口绑定","type":"callback_invoke_resolved_normal"},
+    {"id":"E0072","caller":"F0018","callee":"F0055","location":"海中鱼巣/适配/审计.数据库启动.ixx:73","arguments":"快照, 启动结构统计说明","return_binding":"写入","condition":"正常生产端口绑定","type":"callback_invoke_resolved_normal"},
+    {"id":"E0073","caller":"F0018","callee":"F0056","location":"海中鱼巣/适配/审计.数据库启动.ixx:78","arguments":"1","return_binding":"读回","condition":"写入成功 && 正常生产端口绑定","type":"callback_invoke_resolved_normal"},
+    {"id":"E0074","caller":"F0019","callee":"F0057","location":"海中鱼巣/启动.程序运行宿主.ixx:116","arguments":"this=新分配存储","return_binding":"新租约","condition":"前置通过 && make_unique分配成功","type":"external_template_project_constructor"},
+    {"id":"E0075","caller":"F0019","callee":"F0058","location":"海中鱼巣/启动.程序运行宿主.ixx:118","arguments":"SIGINT回调地址","return_binding":"注册槽","condition":"安装SIGINT","type":"callback_register"},
+    {"id":"E0076","caller":"F0019","callee":"F0025","location":"海中鱼巣/启动.程序运行宿主.ixx:120","arguments":"this=租约","return_binding":"","condition":"SIGINT安装失败","type":"compiler_implicit_destructor"},
+    {"id":"E0077","caller":"F0019","callee":"F0058","location":"海中鱼巣/启动.程序运行宿主.ixx:123","arguments":"SIGTERM回调地址","return_binding":"注册槽","condition":"安装SIGTERM","type":"callback_register"},
+    {"id":"E0078","caller":"F0019","callee":"F0025","location":"海中鱼巣/启动.程序运行宿主.ixx:125","arguments":"this=租约","return_binding":"","condition":"SIGTERM安装失败","type":"compiler_implicit_destructor"},
+    {"id":"E0079","caller":"F0019","callee":"F0058","location":"海中鱼巣/启动.程序运行宿主.ixx:129","arguments":"SIGBREAK回调地址","return_binding":"注册槽","condition":"Windows编译 && 安装SIGBREAK","type":"callback_register"},
+    {"id":"E0080","caller":"F0019","callee":"F0025","location":"海中鱼巣/启动.程序运行宿主.ixx:131","arguments":"this=租约","return_binding":"","condition":"SIGBREAK安装失败","type":"compiler_implicit_destructor"},
+    {"id":"E0081","caller":"F0019","callee":"F0025","location":"海中鱼巣/启动.程序运行宿主.ixx:137-139","arguments":"this=租约","return_binding":"","condition":"已构造租约后的异常展开","type":"compiler_implicit_destructor"},
+    {"id":"E0082","caller":"F0022","callee":"F0016","location":"海中鱼巣/界面/投影.控制面板启动.ixx:262","arguments":"this=&初始化","return_binding":"初始化成功","condition":"always","type":"direct_const_member"},
+    {"id":"E0083","caller":"F0022","callee":"F0059","location":"海中鱼巣/界面/投影.控制面板启动.ixx:267","arguments":"快照.世界树.自我存在节点","return_binding":"坐标","condition":"初始化成功","type":"direct_const_member"},
+    {"id":"E0084","caller":"F0022","callee":"F0060","location":"海中鱼巣/界面/投影.控制面板启动.ixx:268-269","arguments":"上下文.节点, 上下文.关系, 快照.世界树, 快照.语素, 坐标","return_binding":"结果.世界树","condition":"初始化成功","type":"direct_free_function"},
+    {"id":"E0085","caller":"F0022","callee":"F0061","location":"海中鱼巣/界面/投影.控制面板启动.ixx:274","arguments":"快照.语素, 初始化.概念图","return_binding":"结果.语素树","condition":"世界树可展示且只读","type":"direct_free_function"},
+    {"id":"E0086","caller":"F0024","callee":"F0016","location":"海中鱼巣/启动.程序运行宿主.ixx:148","arguments":"this=&初始化","return_binding":"初始化成功","condition":"always","type":"direct_const_member"},
+    {"id":"E0087","caller":"F0024","callee":"F0023","location":"海中鱼巣/启动.程序运行宿主.ixx:148","arguments":"this=&投影","return_binding":"投影成功","condition":"初始化成功","type":"direct_const_member_short_circuit"},
+    {"id":"E0088","caller":"F0024","callee":"F0062","location":"海中鱼巣/启动.程序运行宿主.ixx:153-164","arguments":"上下文八项引用, 投影两树, 两个根需求句柄","return_binding":"控制面板","condition":"初始化和投影成功","type":"direct_constructor"},
+    {"id":"E0089","caller":"F0024","callee":"F0063","location":"海中鱼巣/启动.程序运行宿主.ixx:165","arguments":"控制面板, 上下文.数据库, 审计.快照","return_binding":"窗口","condition":"after E0088","type":"direct_constructor"},
+    {"id":"E0090","caller":"F0024","callee":"F0064","location":"海中鱼巣/启动.程序运行宿主.ixx:166","arguments":"this=&窗口, &信号.停止请求","return_binding":"窗口结果","condition":"after E0089","type":"direct_member"},
+    {"id":"E0091","caller":"F0024","callee":"F0065","location":"海中鱼巣/启动.程序运行宿主.ixx:172","arguments":"this=&窗口","return_binding":"","condition":"函数返回前","type":"compiler_implicit_destructor"},
+    {"id":"E0092","caller":"F0028","callee":"F0066","location":"海中鱼巣/启动.生产运行期.ixx:40","arguments":"this=&租约","return_binding":"租约有效结果","condition":"状态为已启动或已有当前上下文","type":"direct_const_member"},
+    {"id":"E0093","caller":"F0025","callee":"F0067","location":"海中鱼巣/启动.程序运行宿主.ixx:49/53/56","arguments":"信号常量, 对应原处理器","return_binding":"丢弃","condition":"安装函数实例来自入口端口合同自检且对应信号已安装","type":"callback_invoke_resolved_test"},
+    {"id":"E0094","caller":"F0027","callee":"F0068","location":"海中鱼巣/启动.生产运行期.ixx:51","arguments":"this=&请求","return_binding":"请求有效","condition":"always","type":"direct_const_member"},
+    {"id":"E0095","caller":"F0027","callee":"F0069","location":"海中鱼巣/启动.生产运行期.ixx:56","arguments":"this=&宿主_","return_binding":"当前租约","condition":"请求有效且已取得启动锁","type":"direct_const_member"},
+    {"id":"E0096","caller":"F0027","callee":"F0066","location":"海中鱼巣/启动.生产运行期.ixx:57","arguments":"this=&当前租约","return_binding":"租约有效","condition":"after E0095","type":"direct_const_member"},
+    {"id":"E0097","caller":"F0027","callee":"F0070","location":"海中鱼巣/启动.生产运行期.ixx:66","arguments":"","return_binding":"配置","condition":"无现有有效租约","type":"direct_free_function"},
+    {"id":"E0098","caller":"F0027","callee":"F0071","location":"海中鱼巣/启动.生产运行期.ixx:67","arguments":"this=&配置","return_binding":"配置有效","condition":"after E0097","type":"direct_const_member"},
+    {"id":"E0099","caller":"F0027","callee":"F0072","location":"海中鱼巣/启动.生产运行期.ixx:71","arguments":"配置.域编号, 配置.仓库编号, 配置.动作键","return_binding":"候选共享对象","condition":"配置有效","type":"external_template_project_constructor"},
+    {"id":"E0100","caller":"F0027","callee":"F0073","location":"海中鱼巣/启动.生产运行期.ixx:72","arguments":"this=候选.get(), 配置.系统角色","return_binding":"系统角色结果","condition":"候选构造完成","type":"direct_member"},
+    {"id":"E0101","caller":"F0027","callee":"F0074","location":"海中鱼巣/启动.生产运行期.ixx:73","arguments":"this=&系统角色结果","return_binding":"系统角色成功","condition":"after E0100","type":"direct_const_member"},
+    {"id":"E0102","caller":"F0027","callee":"F0075","location":"海中鱼巣/启动.生产运行期.ixx:79","arguments":"this=候选.get(), 配置.概念活动","return_binding":"概念活动结果","condition":"系统角色初始化成功","type":"direct_member"},
+    {"id":"E0103","caller":"F0027","callee":"F0076","location":"海中鱼巣/启动.生产运行期.ixx:80","arguments":"this=&概念活动结果","return_binding":"概念活动成功","condition":"after E0102","type":"direct_const_member"},
+    {"id":"E0104","caller":"F0027","callee":"F0077","location":"海中鱼巣/启动.生产运行期.ixx:86","arguments":"this=候选.get()","return_binding":"候选完整","condition":"概念活动初始化成功","type":"direct_const_member"},
+    {"id":"E0105","caller":"F0027","callee":"F0078","location":"海中鱼巣/启动.生产运行期.ixx:93","arguments":"this=&宿主_, 候选共享所有权副本","return_binding":"发布状态","condition":"候选完整","type":"direct_member"},
+    {"id":"E0106","caller":"F0027","callee":"F0069","location":"海中鱼巣/启动.生产运行期.ixx:103","arguments":"this=&宿主_","return_binding":"当前租约","condition":"发布状态被协议允许","type":"direct_const_member"},
+    {"id":"E0107","caller":"F0027","callee":"F0066","location":"海中鱼巣/启动.生产运行期.ixx:104","arguments":"this=&当前租约","return_binding":"租约有效","condition":"after E0106","type":"direct_const_member"},
+    {"id":"E0108","caller":"F0027","callee":"F0079","location":"海中鱼巣/启动.生产运行期.ixx:106","arguments":"this=&当前租约","return_binding":"已发布上下文只读指针","condition":"租约有效且发布状态为已发布","type":"direct_const_member"},
+    {"id":"E0109","caller":"F0029","callee":"F0030","location":"海中鱼巣/自检.入口初始化.ixx:485-486","arguments":"10, S01编号名称, F0080回调","return_binding":"S01登记结果","condition":"always","type":"direct_member"},
+    {"id":"E0110","caller":"F0029","callee":"F0030","location":"海中鱼巣/自检.入口初始化.ixx:487-488","arguments":"20, S02编号名称, F0081回调","return_binding":"S02登记结果","condition":"S01成功","type":"direct_member"},
+    {"id":"E0111","caller":"F0029","callee":"F0030","location":"海中鱼巣/自检.入口初始化.ixx:489-490","arguments":"30, S03编号名称, F0082回调","return_binding":"S03登记结果","condition":"S01-S02成功","type":"direct_member"},
+    {"id":"E0112","caller":"F0029","callee":"F0030","location":"海中鱼巣/自检.入口初始化.ixx:491-492","arguments":"40, S04编号名称, F0083回调","return_binding":"S04登记结果","condition":"S01-S03成功","type":"direct_member"},
+    {"id":"E0113","caller":"F0029","callee":"F0030","location":"海中鱼巣/自检.入口初始化.ixx:493-494","arguments":"50, S05编号名称, F0084回调","return_binding":"S05登记结果","condition":"S01-S04成功","type":"direct_member"},
+    {"id":"E0114","caller":"F0029","callee":"F0030","location":"海中鱼巣/自检.入口初始化.ixx:495-496","arguments":"60, S06编号名称, F0085回调","return_binding":"S06登记结果","condition":"S01-S05成功","type":"direct_member"},
+    {"id":"E0115","caller":"F0029","callee":"F0030","location":"海中鱼巣/自检.入口初始化.ixx:497-498","arguments":"70, S07编号名称, F0086回调","return_binding":"S07登记结果","condition":"S01-S06成功","type":"direct_member"},
+    {"id":"E0116","caller":"F0029","callee":"F0030","location":"海中鱼巣/自检.入口初始化.ixx:499-500","arguments":"80, S08编号名称, F0087回调","return_binding":"S08登记结果","condition":"S01-S07成功","type":"direct_member"},
+    {"id":"E0117","caller":"F0029","callee":"F0030","location":"海中鱼巣/自检.入口初始化.ixx:501-502","arguments":"90, S09编号名称, F0088回调","return_binding":"S09登记结果","condition":"S01-S08成功","type":"direct_member"},
+    {"id":"E0118","caller":"F0029","callee":"F0030","location":"海中鱼巣/自检.入口初始化.ixx:503-504","arguments":"100, S10编号名称, F0089回调","return_binding":"S10登记结果","condition":"S01-S09成功","type":"direct_member"},
+    {"id":"E0119","caller":"F0029","callee":"F0030","location":"海中鱼巣/自检.入口初始化.ixx:505-506","arguments":"110, S11编号名称, F0090回调","return_binding":"S11登记结果","condition":"S01-S10成功","type":"direct_member"},
+    {"id":"E0120","caller":"F0029","callee":"F0030","location":"海中鱼巣/自检.入口初始化.ixx:507-508","arguments":"120, S12编号名称, F0091回调","return_binding":"S12登记结果","condition":"S01-S11成功","type":"direct_member"},
+    {"id":"E0121","caller":"F0029","callee":"F0030","location":"海中鱼巣/自检.入口初始化.ixx:509-510","arguments":"130, S13编号名称, F0092回调","return_binding":"S13登记结果","condition":"S01-S12成功","type":"direct_member"},
+    {"id":"E0122","caller":"F0029","callee":"F0030","location":"海中鱼巣/自检.入口初始化.ixx:511-512","arguments":"140, S14编号名称, F0093回调","return_binding":"S14登记结果","condition":"S01-S13成功","type":"direct_member"},
+    {"id":"E0123","caller":"F0029","callee":"F0080","location":"海中鱼巣/自检.入口初始化.ixx:486","arguments":"配置按值捕获","return_binding":"S01回调槽","condition":"构造S01登记参数","type":"callback_bind"},
+    {"id":"E0124","caller":"F0029","callee":"F0081","location":"海中鱼巣/自检.入口初始化.ixx:488","arguments":"配置按值捕获","return_binding":"S02回调槽","condition":"S01成功","type":"callback_bind"},
+    {"id":"E0125","caller":"F0029","callee":"F0082","location":"海中鱼巣/自检.入口初始化.ixx:490","arguments":"配置按值捕获","return_binding":"S03回调槽","condition":"S01-S02成功","type":"callback_bind"},
+    {"id":"E0126","caller":"F0029","callee":"F0083","location":"海中鱼巣/自检.入口初始化.ixx:492","arguments":"配置按值捕获","return_binding":"S04回调槽","condition":"S01-S03成功","type":"callback_bind"},
+    {"id":"E0127","caller":"F0029","callee":"F0084","location":"海中鱼巣/自检.入口初始化.ixx:494","arguments":"配置按值捕获","return_binding":"S05回调槽","condition":"S01-S04成功","type":"callback_bind"},
+    {"id":"E0128","caller":"F0029","callee":"F0085","location":"海中鱼巣/自检.入口初始化.ixx:496","arguments":"配置按值捕获","return_binding":"S06回调槽","condition":"S01-S05成功","type":"callback_bind"},
+    {"id":"E0129","caller":"F0029","callee":"F0086","location":"海中鱼巣/自检.入口初始化.ixx:498","arguments":"配置按值捕获","return_binding":"S07回调槽","condition":"S01-S06成功","type":"callback_bind"},
+    {"id":"E0130","caller":"F0029","callee":"F0087","location":"海中鱼巣/自检.入口初始化.ixx:500","arguments":"配置按值捕获","return_binding":"S08回调槽","condition":"S01-S07成功","type":"callback_bind"},
+    {"id":"E0131","caller":"F0029","callee":"F0088","location":"海中鱼巣/自检.入口初始化.ixx:502","arguments":"配置按值捕获","return_binding":"S09回调槽","condition":"S01-S08成功","type":"callback_bind"},
+    {"id":"E0132","caller":"F0029","callee":"F0089","location":"海中鱼巣/自检.入口初始化.ixx:504","arguments":"配置按值捕获","return_binding":"S10回调槽","condition":"S01-S09成功","type":"callback_bind"},
+    {"id":"E0133","caller":"F0029","callee":"F0090","location":"海中鱼巣/自检.入口初始化.ixx:506","arguments":"配置按值捕获","return_binding":"S11回调槽","condition":"S01-S10成功","type":"callback_bind"},
+    {"id":"E0134","caller":"F0029","callee":"F0091","location":"海中鱼巣/自检.入口初始化.ixx:508","arguments":"配置按值捕获","return_binding":"S12回调槽","condition":"S01-S11成功","type":"callback_bind"},
+    {"id":"E0135","caller":"F0029","callee":"F0092","location":"海中鱼巣/自检.入口初始化.ixx:510","arguments":"配置按值捕获","return_binding":"S13回调槽","condition":"S01-S12成功","type":"callback_bind"},
+    {"id":"E0136","caller":"F0029","callee":"F0093","location":"海中鱼巣/自检.入口初始化.ixx:512","arguments":"配置按值捕获","return_binding":"S14回调槽","condition":"S01-S13成功","type":"callback_bind"},
+    {"id":"E0137","caller":"F0030","callee":"F0094","location":"海中鱼巣/自检.运行器.ixx:50-52","arguments":"当前登记项, 捕获顺序和编号引用","return_binding":"find_if命中判定","condition":"入口参数合法且遍历尚未命中","type":"standard_algorithm_callback"},
+    {"id":"E0138","caller":"F0031","callee":"F0080","location":"海中鱼巣/自检.运行器.ixx:80","arguments":"S01登记回调","return_binding":"单元","condition":"执行到S01","type":"callback_invoke"},
+    {"id":"E0139","caller":"F0031","callee":"F0081","location":"海中鱼巣/自检.运行器.ixx:80","arguments":"S02登记回调","return_binding":"单元","condition":"执行到S02","type":"callback_invoke"},
+    {"id":"E0140","caller":"F0031","callee":"F0082","location":"海中鱼巣/自检.运行器.ixx:80","arguments":"S03登记回调","return_binding":"单元","condition":"执行到S03","type":"callback_invoke"},
+    {"id":"E0141","caller":"F0031","callee":"F0083","location":"海中鱼巣/自检.运行器.ixx:80","arguments":"S04登记回调","return_binding":"单元","condition":"执行到S04","type":"callback_invoke"},
+    {"id":"E0142","caller":"F0031","callee":"F0084","location":"海中鱼巣/自检.运行器.ixx:80","arguments":"S05登记回调","return_binding":"单元","condition":"执行到S05","type":"callback_invoke"},
+    {"id":"E0143","caller":"F0031","callee":"F0085","location":"海中鱼巣/自检.运行器.ixx:80","arguments":"S06登记回调","return_binding":"单元","condition":"执行到S06","type":"callback_invoke"},
+    {"id":"E0144","caller":"F0031","callee":"F0086","location":"海中鱼巣/自检.运行器.ixx:80","arguments":"S07登记回调","return_binding":"单元","condition":"执行到S07","type":"callback_invoke"},
+    {"id":"E0145","caller":"F0031","callee":"F0087","location":"海中鱼巣/自检.运行器.ixx:80","arguments":"S08登记回调","return_binding":"单元","condition":"执行到S08","type":"callback_invoke"},
+    {"id":"E0146","caller":"F0031","callee":"F0088","location":"海中鱼巣/自检.运行器.ixx:80","arguments":"S09登记回调","return_binding":"单元","condition":"执行到S09","type":"callback_invoke"},
+    {"id":"E0147","caller":"F0031","callee":"F0089","location":"海中鱼巣/自检.运行器.ixx:80","arguments":"S10登记回调","return_binding":"单元","condition":"执行到S10","type":"callback_invoke"},
+    {"id":"E0148","caller":"F0031","callee":"F0090","location":"海中鱼巣/自检.运行器.ixx:80","arguments":"S11登记回调","return_binding":"单元","condition":"执行到S11","type":"callback_invoke"},
+    {"id":"E0149","caller":"F0031","callee":"F0091","location":"海中鱼巣/自检.运行器.ixx:80","arguments":"S12登记回调","return_binding":"单元","condition":"执行到S12","type":"callback_invoke"},
+    {"id":"E0150","caller":"F0031","callee":"F0092","location":"海中鱼巣/自检.运行器.ixx:80","arguments":"S13登记回调","return_binding":"单元","condition":"执行到S13","type":"callback_invoke"},
+    {"id":"E0151","caller":"F0031","callee":"F0093","location":"海中鱼巣/自检.运行器.ixx:80","arguments":"S14登记回调","return_binding":"单元","condition":"执行到S14","type":"callback_invoke"},
+    {"id":"E0152","caller":"F0036","callee":"F0095","location":"海中鱼巣/核心/日志系统.h:299","arguments":"调试类别, 模块, 入口, 内容, 调试切片名","return_binding":"写入结果","condition":"F0036被调用","type":"direct_free_function"},
+    {"id":"E0153","caller":"F0037","callee":"F0096","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:877-880","arguments":"","return_binding":"无效参数写前拒绝","condition":"try开始后","type":"lambda_direct"},
+    {"id":"E0154","caller":"F0037","callee":"F0097","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:885","arguments":"规模","return_binding":"规模报告","condition":"对1000/10000/100000各一次","type":"direct_free_function"},
+    {"id":"E0155","caller":"F0037","callee":"F0098","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:902-911","arguments":"当前规模报告","return_binding":"参考模型与分位判定","condition":"all_of遍历且尚未失败","type":"standard_algorithm_callback"},
+    {"id":"E0156","caller":"F0037","callee":"F0099","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:922","arguments":"当前规模报告","return_binding":"报告完整判定","condition":"all_of遍历且尚未失败","type":"trivial_adapter_direct"}
+  ],
+  "external_boundaries": [
+    {
+      "id": "X0001",
+      "signature": "std::basic_string_view<char>::basic_string_view(const char*)",
+      "caller": "F0002",
+      "locations": ["海中鱼巣/启动.程序入口.ixx:29"],
+      "call_count": 1,
+      "queued": false
+    },
+    {
+      "id": "X0002",
+      "signature": "std::operator==(std::basic_string_view<char>, std::basic_string_view<char>) noexcept",
+      "caller": "F0002",
+      "locations": [
+        "海中鱼巣/启动.程序入口.ixx:31",
+        "海中鱼巣/启动.程序入口.ixx:33",
+        "海中鱼巣/启动.程序入口.ixx:35",
+        "海中鱼巣/启动.程序入口.ixx:37",
+        "海中鱼巣/启动.程序入口.ixx:39",
+        "海中鱼巣/启动.程序入口.ixx:41",
+        "海中鱼巣/启动.程序入口.ixx:48"
+      ],
+      "call_count": 7,
+      "queued": false
+    },
+    {
+      "id": "X0003",
+      "signature": "std::unique_ptr<T>::operator*() const",
+      "caller": "F0007",
+      "locations": [
+        "海中鱼巣/启动.应用程序.ixx:55",
+        "海中鱼巣/启动.应用程序.ixx:101",
+        "海中鱼巣/启动.应用程序.ixx:103",
+        "海中鱼巣/启动.应用程序.ixx:109"
+      ],
+      "call_count": 6,
+      "queued": false
+    },
+    {
+      "id": "X0004",
+      "signature": "std::unique_ptr<T>::operator*() const",
+      "caller": "F0010",
+      "locations": ["海中鱼巣/启动.应用程序.ixx:119"],
+      "call_count": 1,
+      "queued": false
+    },
+    {
+      "id": "X0005",
+      "signature": "std::optional<海中鱼巣::程序专项摘要>::optional(std::nullopt_t) noexcept",
+      "caller": "F0008",
+      "locations": [
+        "海中鱼巣/启动.应用程序.ixx:40-41",
+        "海中鱼巣/启动.应用程序.ixx:42-43"
+      ],
+      "call_count": 2,
+      "queued": false
+    },
+    {
+      "id": "X0006",
+      "signature": "std::function<海中鱼巣::自检单元结果()>::function<lambda>(lambda)",
+      "caller": "F0009",
+      "locations": [
+        "海中鱼巣/启动.应用程序.ixx:383",
+        "海中鱼巣/启动.应用程序.ixx:385"
+      ],
+      "call_count": 2,
+      "queued": false
+    },
+    {
+      "id": "X0007",
+      "signature": "std::mutex::mutex()",
+      "caller": "F0026",
+      "locations": ["海中鱼巣/启动.生产运行期.ixx:46,130"],
+      "call_count": 1,
+      "queued": false
+    },
+    {
+      "id": "X0008",
+      "signature": "海中鱼巣::运行期上下文宿主::运行期上下文宿主() [编译器隐式生成]",
+      "caller": "F0026",
+      "locations": ["海中鱼巣/启动.生产运行期.ixx:46,131"],
+      "call_count": 1,
+      "queued": false
+    },
+    {
+      "id": "X0009",
+      "signature": "std::lock_guard<std::mutex>::lock_guard(std::mutex&) / ~lock_guard()",
+      "caller": "F0027",
+      "locations": ["海中鱼巣/启动.生产运行期.ixx:55-123"],
+      "call_count": 2,
+      "queued": false
+    },
+    {
+      "id": "X0010",
+      "signature": "std::make_shared<海中鱼巣::运行期上下文>(...)",
+      "caller": "F0027",
+      "locations": ["海中鱼巣/启动.生产运行期.ixx:71"],
+      "call_count": 1,
+      "queued": false
+    },
+    {
+      "id": "X0011",
+      "signature": "std::shared_ptr<海中鱼巣::运行期上下文>::get() const noexcept",
+      "caller": "F0027",
+      "locations": ["海中鱼巣/启动.生产运行期.ixx:106"],
+      "call_count": 1,
+      "queued": false
+    }
+  ],
+  "unresolved_calls": []
+}
