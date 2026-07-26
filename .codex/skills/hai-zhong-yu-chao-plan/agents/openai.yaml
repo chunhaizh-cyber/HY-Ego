@@ -1,4 +1,4 @@
 interface:
   display_name: "海中鱼巣计划"
-  short_description: "Create plans or support exact package registration"
-  default_prompt: "Use $hai-zhong-yu-chao-plan to create a new Sea Nest plan package without editing the plan index, or as plan support create or revise necessary files in the currently owned registration or execution-returned package before publishing its final exact version."
+  short_description: "Create plans, derived providers, or register exact packages"
+  default_prompt: "Use $hai-zhong-yu-chao-plan to create a new Sea Nest plan package or a provider package from DERIVED-REQUIREMENT-NOTICE without editing the plan index, or as plan support register an exact package and formalize missing required functions as derived requirements with truthful interface-skeleton gates."
