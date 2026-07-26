@@ -1319,9 +1319,9 @@
     {"id":"F0248","layer":5,"signature":"海中鱼巣::概念活动初始化结果 海中鱼巣::运行期业务装配::复核概念活动(const 海中鱼巣::系统角色清单& 系统角色, const 海中鱼巣::概念活动材料& 材料) const","file":"海中鱼巣/装配.运行期业务.ixx","definition_line":163,"status":"已完成","chart":"L5/CF-L5-0124_运行期业务装配复核概念活动_现状流程图.md"},
     {"id":"F0249","layer":5,"signature":"海中鱼巣::概念活动初始化结果 海中鱼巣::运行期业务装配::初始化概念活动(const 海中鱼巣::系统角色清单& 系统角色, const 海中鱼巣::概念活动初始化参数& 参数)","file":"海中鱼巣/装配.运行期业务.ixx","definition_line":156,"status":"已完成","chart":"L5/CF-L5-0125_运行期业务装配初始化概念活动_现状流程图.md"},
     {"id":"F0250","layer":5,"signature":"bool 海中鱼巣::概念活动材料::等于(const 海中鱼巣::概念活动材料& 右) const noexcept","file":"海中鱼巣/领域/概念活动状态.数据.h","definition_line":186,"status":"已完成","chart":"L5/CF-L5-0126_概念活动材料等值比较_现状流程图.md"},
-    {"id":"F0251","layer":5,"signature":"bool 海中鱼巣::概念活动材料::完整() const noexcept","file":"海中鱼巣/领域/概念活动状态.数据.h","definition_line":160,"status":"待处理","chart":null},
-    {"id":"F0252","layer":5,"signature":"std::optional<海中鱼巣::概念活动材料> 海中鱼巣::运行期上下文::读取概念活动材料() const","file":"海中鱼巣/启动.运行期上下文.ixx","definition_line":155,"status":"待处理","chart":null},
-    {"id":"F0253","layer":5,"signature":"bool 海中鱼巣::运行期上下文::服务装配完整() const noexcept","file":"海中鱼巣/启动.运行期上下文.ixx","definition_line":83,"status":"待处理","chart":null},
+    {"id":"F0251","layer":5,"signature":"bool 海中鱼巣::概念活动材料::完整() const noexcept","file":"海中鱼巣/领域/概念活动状态.数据.h","definition_line":160,"status":"已完成","chart":"L5/CF-L5-0127_概念活动材料完整_现状流程图.md"},
+    {"id":"F0252","layer":5,"signature":"std::optional<海中鱼巣::概念活动材料> 海中鱼巣::运行期上下文::读取概念活动材料() const","file":"海中鱼巣/启动.运行期上下文.ixx","definition_line":155,"status":"已完成","chart":"L5/CF-L5-0128_运行期上下文读取概念活动材料_现状流程图.md"},
+    {"id":"F0253","layer":5,"signature":"bool 海中鱼巣::运行期上下文::服务装配完整() const noexcept","file":"海中鱼巣/启动.运行期上下文.ixx","definition_line":83,"status":"已完成","chart":"L5/CF-L5-0129_运行期上下文服务装配完整_现状流程图.md"},
     {"id":"F0254","layer":5,"signature":"海中鱼巣::自检单元结果 海中鱼巣::运行概念图四根创建自检(const 海中鱼巣::入口初始化自检运行配置& 配置)","file":"海中鱼巣/自检.入口初始化.ixx","definition_line":73,"status":"待处理","chart":null},
     {"id":"F0255","layer":5,"signature":"海中鱼巣::自检单元结果 海中鱼巣::运行概念图四根唯一自检(const 海中鱼巣::入口初始化自检运行配置& 配置)","file":"海中鱼巣/自检.入口初始化.ixx","definition_line":102,"status":"待处理","chart":null},
     {"id":"F0256","layer":5,"signature":"海中鱼巣::自检单元结果 海中鱼巣::运行概念图非名称身份自检(const 海中鱼巣::入口初始化自检运行配置& 配置)","file":"海中鱼巣/自检.入口初始化.ixx","definition_line":130,"status":"待处理","chart":null},
@@ -1533,7 +1533,9 @@
     {"id":"F0462","layer":6,"signature":"海中鱼巣::概念活动初始化结果 海中鱼巣::概念活动业务服务::初始化(const 海中鱼巣::系统角色清单& 系统角色, const 海中鱼巣::概念活动初始化参数& 参数)","file":"海中鱼巣/领域/服务.概念活动.ixx","definition_line":28,"status":"待处理","chart":null},
     {"id":"F0463","layer":6,"signature":"bool 海中鱼巣::概念活动状态角色材料::operator==(const 海中鱼巣::概念活动状态角色材料&) const","file":"海中鱼巣/领域/概念活动状态.数据.h","definition_line":70,"status":"待处理","chart":null},
     {"id":"F0464","layer":6,"signature":"bool 海中鱼巣::概念活动重建视图::等于(const 海中鱼巣::概念活动重建视图& 右) const noexcept","file":"海中鱼巣/领域/概念活动状态.数据.h","definition_line":143,"status":"待处理","chart":null},
-    {"id":"F0465","layer":6,"signature":"bool 海中鱼巣::概念活动根材料::等于(const 海中鱼巣::概念活动根材料& 右) const noexcept","file":"海中鱼巣/领域/概念活动状态.数据.h","definition_line":115,"status":"待处理","chart":null}
+    {"id":"F0465","layer":6,"signature":"bool 海中鱼巣::概念活动根材料::等于(const 海中鱼巣::概念活动根材料& 右) const noexcept","file":"海中鱼巣/领域/概念活动状态.数据.h","definition_line":115,"status":"待处理","chart":null},
+    {"id":"F0466","layer":6,"signature":"bool 海中鱼巣::概念活动重建视图::完整() const noexcept","file":"海中鱼巣/领域/概念活动状态.数据.h","definition_line":127,"status":"待处理","chart":null},
+    {"id":"F0467","layer":6,"signature":"bool 海中鱼巣::概念活动状态角色材料::完整() const noexcept","file":"海中鱼巣/领域/概念活动状态.数据.h","definition_line":62,"status":"待处理","chart":null}
   ],
   "calls": [
     {
@@ -2619,7 +2621,14 @@
     {"id":"E0967","caller":"F0250","callee":"F0460","location":"海中鱼巣/领域/概念活动状态.数据.h:188","arguments":"this=&初始化参数,右=&右.初始化参数","return_binding":"参数相等","condition":"材料版本和活动版本相等","type":"defaulted_const_member"},
     {"id":"E0968","caller":"F0250","callee":"F0463","location":"海中鱼巣/领域/概念活动状态.数据.h:188","arguments":"this=&状态角色组[元素],右=&右.状态角色组[元素]","return_binding":"状态角色组相等","condition":"E0967返回true；由X0180按元素短路0..3次","type":"std_array_element_compare"},
     {"id":"E0969","caller":"F0250","callee":"F0464","location":"海中鱼巣/领域/概念活动状态.数据.h:189","arguments":"this=&重建视图,右=&右.重建视图","return_binding":"重建视图相等","condition":"E0968聚合结果为true","type":"direct_const_member"},
-    {"id":"E0970","caller":"F0250","callee":"F0465","location":"海中鱼巣/领域/概念活动状态.数据.h:191","arguments":"this=&根组[索引],右=&右.根组[索引]","return_binding":"全部根材料相等","condition":"E0969返回true；循环短路0..4次","type":"direct_const_member"}
+    {"id":"E0970","caller":"F0250","callee":"F0465","location":"海中鱼巣/领域/概念活动状态.数据.h:191","arguments":"this=&根组[索引],右=&右.根组[索引]","return_binding":"全部根材料相等","condition":"E0969返回true；循环短路0..4次","type":"direct_const_member"},
+    {"id":"E0971","caller":"F0251","callee":"F0229","location":"海中鱼巣/领域/概念活动状态.数据.h:162","arguments":"this=&初始化参数","return_binding":"初始化参数有效","condition":"材料版本正确且活动版本非零","type":"direct_const_member"},
+    {"id":"E0972","caller":"F0251","callee":"F0466","location":"海中鱼巣/领域/概念活动状态.数据.h:162","arguments":"this=&重建视图","return_binding":"重建视图完整","condition":"E0971返回true","type":"direct_const_member"},
+    {"id":"E0973","caller":"F0251","callee":"F0463","location":"海中鱼巣/领域/概念活动状态.数据.h:163","arguments":"this=&状态角色组[元素],右=&重建视图.状态角色组[元素]","return_binding":"两组状态角色相等","condition":"E0972返回true；由X0182按元素短路0..3次","type":"std_array_element_compare"},
+    {"id":"E0974","caller":"F0251","callee":"F0231","location":"海中鱼巣/领域/概念活动状态.数据.h:164","arguments":"this=&初始化参数","return_binding":"稳定键组副本","condition":"E0973聚合结果为true","type":"direct_const_member"},
+    {"id":"E0975","caller":"F0251","callee":"F0465","location":"海中鱼巣/领域/概念活动状态.数据.h:169","arguments":"this=&根组[索引],右=&重建视图.根组[索引]","return_binding":"全部根投影相等","condition":"三项稳定键一致；循环短路0..4次","type":"direct_const_member"},
+    {"id":"E0976","caller":"F0251","callee":"F0467","location":"海中鱼巣/领域/概念活动状态.数据.h:173","arguments":"this=&当前状态角色","return_binding":"全部状态角色完整","condition":"根投影均相等；范围遍历短路0..3次","type":"direct_const_member"},
+    {"id":"E0977","caller":"F0253","callee":"F0240","location":"海中鱼巣/启动.运行期上下文.ixx:84","arguments":"this=&业务装配_","return_binding":"根函数布尔返回","condition":"函数进入","type":"direct_const_member"}
   ],
   "external_boundaries": [
     {
@@ -3401,7 +3410,11 @@
     {"id":"X0178","signature":"四类std::optional与std::nullopt等值比较边界","caller":"F0239","locations":["海中鱼巣/启动.运行期上下文.ixx:68-71"],"call_count":4,"queued":false},
     {"id":"X0179","signature":"std::lock_guard<std::mutex>获取/释放与std::optional<系统角色清单>值式复制返回边界","caller":"F0246","locations":["海中鱼巣/启动.运行期上下文.ixx:119-120"],"call_count":3,"queued":false},
     {"id":"X0180","signature":"std::array<概念活动状态角色材料,3>等值或不等比较及元素短路编排边界","caller":"F0250","locations":["海中鱼巣/领域/概念活动状态.数据.h:188"],"call_count":1,"queued":false},
-    {"id":"X0181","signature":"std::array<概念活动根材料,4>::size与operator[] const容器访问边界","caller":"F0250","locations":["海中鱼巣/领域/概念活动状态.数据.h:190-191"],"call_count":3,"queued":false}
+    {"id":"X0181","signature":"std::array<概念活动根材料,4>::size与operator[] const容器访问边界","caller":"F0250","locations":["海中鱼巣/领域/概念活动状态.数据.h:190-191"],"call_count":3,"queued":false},
+    {"id":"X0182","signature":"std::array<概念活动状态角色材料,3>不等比较、size/operator[]与范围遍历边界","caller":"F0251","locations":["海中鱼巣/领域/概念活动状态.数据.h:163,165-166,171-174"],"call_count":6,"queued":false},
+    {"id":"X0183","signature":"std::array<std::uint64_t,3>::operator[] const标准库边界","caller":"F0251","locations":["海中鱼巣/领域/概念活动状态.数据.h:166"],"call_count":1,"queued":false},
+    {"id":"X0184","signature":"std::array<概念活动根材料,4>::size/operator[] const与范围遍历边界","caller":"F0251","locations":["海中鱼巣/领域/概念活动状态.数据.h:168-169,175-178"],"call_count":5,"queued":false},
+    {"id":"X0185","signature":"std::lock_guard<std::mutex>获取/释放与std::optional<概念活动材料>值式深复制返回边界","caller":"F0252","locations":["海中鱼巣/启动.运行期上下文.ixx:156-157"],"call_count":3,"queued":false}
   ],
   "unresolved_calls": [
     {"id":"U0001","caller":"F0167","location":"海中鱼巣/核心/关系仓库.cpp:185（关系共享许可范围宏展开）","expression":"事务接线_.取得共享许可(事务接线_.运行期状态)","reason":"运行期可替换函数指针；静态调用点无法唯一裁决实际项目源码目标","known_contract":"结构事务许可(const std::shared_ptr<void>&)","status":"未解析调用"},
