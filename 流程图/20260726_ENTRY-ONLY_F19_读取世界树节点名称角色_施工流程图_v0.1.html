@@ -1,0 +1,9 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>ENTRY-ONLY F19</title><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });</script></head><body><h1>F19 读取世界树节点名称角色</h1><p>施工流程图 v0.1；完整合同见同名 Markdown。</p><div class="mermaid">
+flowchart TD
+    N01{"N01【本函数内指令-判断】节点值等于世界树根节点"} -- "是" --> N02["N02【本函数内指令-返回】返回 世界"]
+    N01 -- "否" --> N03{"N03【本函数内指令-判断】节点值等于自我所在场景"}
+    N03 -- "是" --> N04["N04【本函数内指令-返回】返回 场景"]
+    N03 -- "否" --> N05{"N05【本函数内指令-判断】节点值等于自我存在节点"}
+    N05 -- "是" --> N06["N06【本函数内指令-返回】返回 自我"]
+    N05 -- "否" --> N07["N07【本函数内指令-返回】返回 通用节点"]
+</div></body></html>

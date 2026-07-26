@@ -1,21 +1,21 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>F06 运行普通程序</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';mermaid.initialize({startOnLoad:true});</script></head><body><h1>F06 运行普通程序</h1><p>UI/headless 唯一普通编排；审计非门禁；绑定规范8120和详细设计第8节。</p><div class="mermaid">
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>F06 运行普通程序</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });</script></head><body><h1>F06 运行普通程序</h1><p>UI/headless 唯一普通编排；审计非门禁；绑定规范8120和详细设计第8节。</p><div class="mermaid">
 flowchart TD
-    N01{"N01【指令】模式为UI或headless"} -- "否" --> R0["N02【指令】返回内部不一致"]
+    N01{"N01【本函数内指令】模式为UI或headless"} -- "否" --> R0["N02【本函数内指令】返回内部不一致"]
     N01 -- "是" --> N03["N03【函数调用】构造普通应用上下文(固定配置) -> 装配"]
-    N03 --> N04{"N04【指令】装配成功"}
-    N04 -- "否" --> R1["N05【指令】返回装配失败"]
+    N03 --> N04{"N04【本函数内指令】装配成功"}
+    N04 -- "否" --> R1["N05【本函数内指令】返回装配失败"]
     N04 -- "是" --> N06["N06【函数调用】初始化普通系统(上下文, 请求) -> 初始化"]
-    N06 --> N07{"N07【指令】初始化成功"}
-    N07 -- "否" --> R2["N08【指令】返回初始化失败与阶段"]
+    N06 --> N07{"N07【本函数内指令】初始化成功"}
+    N07 -- "否" --> R2["N08【本函数内指令】返回初始化失败与阶段"]
     N07 -- "是" --> N09["N09【函数调用】执行启动结构审计(上下文, 最佳努力) -> 审计"]
     N09 --> N10["N10【函数调用】安装程序停止信号() -> 信号"]
-    N10 --> N11{"N11【指令】信号安装成功"}
-    N11 -- "否" --> R3["N12【指令】返回宿主失败/停止信号"]
+    N10 --> N11{"N11【本函数内指令】信号安装成功"}
+    N11 -- "否" --> R3["N12【本函数内指令】返回宿主失败/停止信号"]
     N11 -- "是且UI" --> N13["N13【函数调用】生成控制面板启动投影(上下文, 初始化) -> 投影"]
-    N13 --> N14{"N14【指令】投影成功"}
-    N14 -- "否" --> R4["N15【指令】返回投影失败"]
+    N13 --> N14{"N14【本函数内指令】投影成功"}
+    N14 -- "否" --> R4["N15【本函数内指令】返回投影失败"]
     N14 -- "是" --> N16["N16【函数调用】运行控制面板宿主(上下文, 初始化, 投影, 审计, 信号)"]
     N11 -- "是且headless" --> N17["N17【函数调用】运行无窗口宿主(上下文, 信号)"]
-    N16 --> N18["N18【指令】返回宿主结果"]
+    N16 --> N18["N18【本函数内指令】返回宿主结果"]
     N17 --> N18
 </div><p>验证 V02-V03、V08-V14、V17-V19、V23；不得把审计成功当初始化成功。</p></body></html>

@@ -1,9 +1,9 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>F03 映射进程退出码</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';mermaid.initialize({startOnLoad:true});</script></head><body><h1>F03 映射进程退出码</h1><p>纯值施工图；绑定规范8120；无结构变化、无日志。</p><div class="mermaid">
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>F03 映射进程退出码</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });</script></head><body><h1>F03 映射进程退出码</h1><p>纯值施工图；绑定规范8120；无结构变化、无日志。</p><div class="mermaid">
 flowchart TD
-    N01{"N01【指令】解析是否成功"} -- "否" --> N02["N02【指令】返回2"]
-    N01 -- "是" --> N03{"N03【指令】运行指针是否为空"}
-    N03 -- "是" --> N04["N04【指令】返回1"]
-    N03 -- "否" --> N05{"N05【指令】运行结果是否成功"}
-    N05 -- "是" --> N06["N06【指令】返回0"]
-    N05 -- "否" --> N07["N07【指令】返回1"]
+    N01{"N01【本函数内指令】解析是否成功"} -- "否" --> N02["N02【本函数内指令】返回2"]
+    N01 -- "是" --> N03{"N03【本函数内指令】运行指针是否为空"}
+    N03 -- "是" --> N04["N04【本函数内指令】返回1"]
+    N03 -- "否" --> N05{"N05【本函数内指令】运行结果是否成功"}
+    N05 -- "是" --> N06["N06【本函数内指令】返回0"]
+    N05 -- "否" --> N07["N07【本函数内指令】返回1"]
 </div><p>验证 V04-V07、V15-V25；不得以日志裁决。</p></body></html>

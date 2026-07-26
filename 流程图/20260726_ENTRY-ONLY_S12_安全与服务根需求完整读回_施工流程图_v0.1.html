@@ -1,9 +1,9 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>S12 根需求读回</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';mermaid.initialize({startOnLoad:true});</script></head><body><h1>S12 安全与服务根需求完整读回</h1><p>隔离读回承接、槽位、当前值和目标值。</p><div class="mermaid">
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>S12 根需求读回</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });</script></head><body><h1>S12 安全与服务根需求完整读回</h1><p>隔离读回承接、槽位、当前值和目标值。</p><div class="mermaid">
 flowchart TD
     N01["N01【函数调用】构造入口初始化自检环境() -> 环境"] --> N02["N02【函数调用】初始化普通系统(...) -> 初始化"]
     N02 --> N03["N03【函数调用】逐根读取承接、目标特征、当前特征状态、槽位、当前值和目标值"]
-    N03 --> N04["N04【指令】核对安全/服务主体、宿主、场景、状态、数值完整且两根不同"]
-    N04 --> N05["N05【指令】形成ENTRY-ONLY-S12结果"]
-    N05 --> N06["N06【日志宏调用】记录S12人读结果"]
-    N06 --> N07["N07【指令】返回结果"]
+    N03 --> N04["N04【本函数内指令】核对安全/服务主体、宿主、场景、状态、数值完整且两根不同"]
+    N04 --> N05["N05【本函数内指令】形成ENTRY-ONLY-S12结果"]
+    N05 --> N06["N06【本函数内指令-日志宏调用】记录S12人读结果"]
+    N06 --> N07["N07【本函数内指令】返回结果"]
 </div><p>验证V20-V22/V26-V28；不得把bool当需求机器事实。</p></body></html>

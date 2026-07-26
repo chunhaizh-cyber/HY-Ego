@@ -1,10 +1,10 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>S05 重复初始化</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';mermaid.initialize({startOnLoad:true});</script></head><body><h1>S05 概念图重复初始化结构不变</h1><p>隔离幂等验证，不进入普通启动。</p><div class="mermaid">
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>S05 重复初始化</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });</script></head><body><h1>S05 概念图重复初始化结构不变</h1><p>隔离幂等验证，不进入普通启动。</p><div class="mermaid">
 flowchart TD
     N01["N01【函数调用】构造入口初始化自检环境() -> 环境"] --> N02["N02【函数调用】初始化普通系统(...) -> 首次"]
-    N02 --> N03["N03【指令】读取首次后节点、关系、索引数量"]
+    N02 --> N03["N03【本函数内指令】读取首次后节点、关系、索引数量"]
     N03 --> N04["N04【函数调用】概念图初始化.初始化四个根() -> 重复结果"]
-    N04 --> N05["N05【指令】读取重复后数量并核对四根句柄相同、数量不变"]
-    N05 --> N06["N06【指令】形成ENTRY-ONLY-S05结果"]
-    N06 --> N07["N07【日志宏调用】记录S05人读结果"]
-    N07 --> N08["N08【指令】返回结果"]
+    N04 --> N05["N05【本函数内指令】读取重复后数量并核对四根句柄相同、数量不变"]
+    N05 --> N06["N06【本函数内指令】形成ENTRY-ONLY-S05结果"]
+    N06 --> N07["N07【本函数内指令-日志宏调用】记录S05人读结果"]
+    N07 --> N08["N08【本函数内指令】返回结果"]
 </div><p>验证V20-V22/V26-V28；不得在普通初始化中重复执行。</p></body></html>

@@ -1,11 +1,11 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>F12 安装程序停止信号</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';mermaid.initialize({startOnLoad:true});</script></head><body><h1>F12 安装程序停止信号</h1><p>进程宿主租约；仅外部signal边界；无领域写入。</p><div class="mermaid">
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>F12 安装程序停止信号</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });</script></head><body><h1>F12 安装程序停止信号</h1><p>进程宿主租约；仅外部signal边界；无领域写入。</p><div class="mermaid">
 flowchart TD
-    N01["N01【指令】构造停止信号租约并清零停止请求"] --> N02["N02【外部调用】signal(SIGINT, 处理器) -> 原处理器"]
-    N02 --> N03["N03【外部调用】signal(SIGTERM, 处理器) -> 原处理器"]
-    N03 --> N04{"N04【指令】Windows平台"}
-    N04 -- "是" --> N05["N05【外部调用】signal(SIGBREAK, 处理器) -> 原处理器"]
-    N04 -- "否" --> N06{"N06【指令】全部安装成功"}
+    N01["N01【本函数内指令】构造停止信号租约并清零停止请求"] --> N02["N02【函数调用-外部边界】signal(SIGINT, 处理器) -> 原处理器"]
+    N02 --> N03["N03【函数调用-外部边界】signal(SIGTERM, 处理器) -> 原处理器"]
+    N03 --> N04{"N04【本函数内指令】Windows平台"}
+    N04 -- "是" --> N05["N05【函数调用-外部边界】signal(SIGBREAK, 处理器) -> 原处理器"]
+    N04 -- "否" --> N06{"N06【本函数内指令】全部安装成功"}
     N05 --> N06
-    N06 -- "否" --> N07["N07【指令】恢复已安装处理器并返回失败"]
-    N06 -- "是" --> N08["N08【指令】返回有效租约"]
+    N06 -- "否" --> N07["N07【本函数内指令】恢复已安装处理器并返回失败"]
+    N06 -- "是" --> N08["N08【本函数内指令】返回有效租约"]
 </div><p>验证V18-V19；不得宣称信号是动作来源。</p></body></html>

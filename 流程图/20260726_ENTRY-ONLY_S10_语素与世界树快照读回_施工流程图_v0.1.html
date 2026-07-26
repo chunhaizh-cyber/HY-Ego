@@ -1,9 +1,9 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>S10 语素世界树</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';mermaid.initialize({startOnLoad:true});</script></head><body><h1>S10 语素与世界树快照读回</h1><p>隔离只读验证18语素、世界结构、坐标和代次。</p><div class="mermaid">
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>S10 语素世界树</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });</script></head><body><h1>S10 语素与世界树快照读回</h1><p>隔离只读验证18语素、世界结构、坐标和代次。</p><div class="mermaid">
 flowchart TD
     N01["N01【函数调用】构造入口初始化自检环境() -> 环境"] --> N02["N02【函数调用】初始化普通系统(...) -> 初始化"]
     N02 --> N03["N03【函数调用】读取世界树自我相对坐标 -> 坐标"]
-    N03 --> N04["N04【指令】核对18个语素文本、世界/场景/自我类型、三关系、零坐标和代次1"]
-    N04 --> N05["N05【指令】形成ENTRY-ONLY-S10结果"]
-    N05 --> N06["N06【日志宏调用】记录S10人读结果"]
-    N06 --> N07["N07【指令】返回结果"]
+    N03 --> N04["N04【本函数内指令】核对18个语素文本、世界/场景/自我类型、三关系、零坐标和代次1"]
+    N04 --> N05["N05【本函数内指令】形成ENTRY-ONLY-S10结果"]
+    N05 --> N06["N06【本函数内指令-日志宏调用】记录S10人读结果"]
+    N06 --> N07["N07【本函数内指令】返回结果"]
 </div><p>验证V20-V22/V26-V28；不得让显示文本裁决身份。</p></body></html>

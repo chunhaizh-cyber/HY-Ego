@@ -1,11 +1,11 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>F10 启动结构审计</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';mermaid.initialize({startOnLoad:true});</script></head><body><h1>F10 执行启动结构审计</h1><p>SQL审计投影，返回T06，不裁决领域初始化。</p><div class="mermaid">
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>F10 启动结构审计</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });</script></head><body><h1>F10 执行启动结构审计</h1><p>SQL审计投影，返回T06，不裁决领域初始化。</p><div class="mermaid">
 flowchart TD
     N01["N01【函数调用】统计.定义缓存命名空间(...) -> 命名空间"] --> N02["N02【函数调用】统计.读取权威结构统计快照(...) -> 快照"]
     N02 --> N03["N03【函数调用】数据库.写入结构统计审计(快照, 来源) -> 写入"]
-    N03 --> N04{"N04【指令】写入成功"}
-    N04 -- "否" --> N05["N05【指令】返回往返不一致与写入失败材料"]
+    N03 --> N04{"N04【本函数内指令】写入成功"}
+    N04 -- "否" --> N05["N05【本函数内指令】返回往返不一致与写入失败材料"]
     N04 -- "是" --> N06["N06【函数调用】数据库.读取最近结构统计审计(1) -> 读回"]
-    N06 --> N07{"N07【指令】读回成功且唯一记录字段一致"}
-    N07 -- "否" --> N08["N08【指令】返回往返不一致与读回材料"]
-    N07 -- "是" --> N09["N09【指令】返回往返一致"]
+    N06 --> N07{"N07【本函数内指令】读回成功且唯一记录字段一致"}
+    N07 -- "否" --> N08["N08【本函数内指令】返回往返不一致与读回材料"]
+    N07 -- "是" --> N09["N09【本函数内指令】返回往返一致"]
 </div><p>验证V14-V16；不得宣称数据库是机器事实。</p></body></html>
