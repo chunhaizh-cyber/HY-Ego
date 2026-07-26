@@ -7,8 +7,10 @@ module;
 #include <chrono>
 #include <csignal>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <thread>
+#include <utility>
 
 export module 海中鱼巣.启动.程序运行宿主;
 
@@ -20,7 +22,8 @@ import 海中鱼巣.适配.审计.数据库启动;
 export namespace 海中鱼巣 {
 
 using 程序信号处理函数 = void (*)(int);
-using 程序信号安装函数 = 程序信号处理函数 (*)(int, 程序信号处理函数);
+using 程序信号安装函数 =
+    std::function<程序信号处理函数(int, 程序信号处理函数)>;
 
 }
 
@@ -40,7 +43,7 @@ class 停止信号租约 {
 public:
     停止信号租约() = default;
     ~停止信号租约() {
-        if (安装函数 != nullptr) {
+        if (安装函数) {
 #ifdef _WIN32
             if (SIGBREAK已安装) {
                 (void)安装函数(SIGBREAK, SIGBREAK原处理);
@@ -70,7 +73,7 @@ private:
     friend 停止信号安装结果 安装程序停止信号(程序信号安装函数) noexcept;
     friend void 接收程序停止信号(int);
     static inline 停止信号租约* 当前停止信号租约 = nullptr;
-    程序信号安装函数 安装函数 = nullptr;
+    程序信号安装函数 安装函数;
     程序信号处理函数 SIGINT原处理 = SIG_DFL;
     程序信号处理函数 SIGTERM原处理 = SIG_DFL;
 #ifdef _WIN32
@@ -105,25 +108,25 @@ void 接收程序停止信号(int) {
 export namespace 海中鱼巣 {
 
 停止信号安装结果 安装程序停止信号(
-    程序信号安装函数 安装函数 = &std::signal) noexcept {
-    if (安装函数 == nullptr || 停止信号租约::当前停止信号租约 != nullptr) {
+    程序信号安装函数 安装函数 = 程序信号安装函数{&std::signal}) noexcept {
+    if (!安装函数 || 停止信号租约::当前停止信号租约 != nullptr) {
         return {};
     }
     try {
         auto 租约 = std::make_unique<停止信号租约>();
-        租约->安装函数 = 安装函数;
-        租约->SIGINT原处理 = 安装函数(SIGINT, 接收程序停止信号);
+        租约->安装函数 = std::move(安装函数);
+        租约->SIGINT原处理 = 租约->安装函数(SIGINT, 接收程序停止信号);
         if (租约->SIGINT原处理 == SIG_ERR) {
             return {停止信号安装状态::SIGINT失败, nullptr};
         }
         租约->SIGINT已安装 = true;
-        租约->SIGTERM原处理 = 安装函数(SIGTERM, 接收程序停止信号);
+        租约->SIGTERM原处理 = 租约->安装函数(SIGTERM, 接收程序停止信号);
         if (租约->SIGTERM原处理 == SIG_ERR) {
             return {停止信号安装状态::SIGTERM失败, nullptr};
         }
         租约->SIGTERM已安装 = true;
 #ifdef _WIN32
-        租约->SIGBREAK原处理 = 安装函数(SIGBREAK, 接收程序停止信号);
+        租约->SIGBREAK原处理 = 租约->安装函数(SIGBREAK, 接收程序停止信号);
         if (租约->SIGBREAK原处理 == SIG_ERR) {
             return {停止信号安装状态::SIGBREAK失败, nullptr};
         }

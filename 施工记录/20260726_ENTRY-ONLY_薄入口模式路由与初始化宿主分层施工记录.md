@@ -88,3 +88,38 @@ F18/F29/V21 同时要求：
 - 已通过 `--self-test-exit=0`、`--database-self-test-exit=0`、`--runtime-context=0`；默认未启用的 D455 和未知参数均为 exit 2。
 - 未完成：完整参数矩阵、UI/headless 信号收口、五轮日志宏 fresh-build、覆盖与最终静态收口。
 - 本断点只保存 v0.2 已闭合修订及新设计缺口，不声明 #380 完成。
+
+## v0.3 续段 ENVIRONMENT-BLOCKED
+
+- 计划版本：`v0.3`。
+- plan blob：`024c51c780705425c70009ba03a1c2404361b7e3`。
+- 计划索引 blob：`d5bcf2f500a342d4007d4c03b4a7e74747fbe519`。
+- 计划段起点：`e63a8def085b0676b56af12bba5e88efc0691ebe`。
+- S0 时 `main == origin/main == e63a8def085b0676b56af12bba5e88efc0691ebe`，divergence `0/0`，工作区和 index clean；#380 是唯一可执行候选。
+
+### 机械实施
+
+- `海中鱼巣/启动.程序运行宿主.ixx`
+  - `程序信号安装函数` 改为冻结的可捕获 `std::function`。
+  - F12 按值取得端口并移动到成功租约，失败恢复和成功析构均使用租约拥有的同一端口。
+  - 生产默认端口显式绑定 `std::signal`。
+- `海中鱼巣/启动.应用程序.ixx`
+  - 删除模块级 `信号替身调用序列` 和 `信号替身调用数量`。
+  - F27 在自动存储期建立局部三槽序列、局部计数和引用捕获替身，验证 `SIGINT, SIGTERM, SIGINT`。
+
+### 已闭合验证
+
+- 严格规范检查 `99/99`，`git diff --check` 通过。
+- 计划要求的默认并行 fresh Debug Rebuild `/m` 通过，0 error、0 warning。
+- 参数拒绝矩阵：6 个重复、15 对组合的正反顺序共 30 项、2 个未知参数全部 exit 2。
+- 默认路由：self/database/runtime exit 0；D455 未启用 exit 2；关系仓库性能专项完整执行 exit 0。
+- 普通 UI 和无效 SQL UI 均取得非零窗口句柄，`CloseMainWindow()` 成功并 exit 0。
+- headless 的 SIGINT 和 Windows SIGBREAK 均受控优雅 exit 0。
+- 五轮 fresh-build 配置均已构建；入口、数据库、关系仓库性能三个可运行调试切片只更新对应日志，D455 能力未启用时显式模式 exit 2 且不伪造日志；四宏全关时四份日志均无新增。
+- 入口领域关键字和 stdout/stderr/printf 旁路扫描零命中；自检 import 扫描只命中设计明确拥有 F15/F28 的 `启动.应用程序.ixx` 两行。
+
+### 环境阻断
+
+Windows 控制台事件可机械发送 SIGINT 和 SIGBREAK，但没有映射为 C 运行库 SIGTERM 的外部控制台事件。为避免用强制终止冒充信号收口，本轮只对自行创建的精确 headless 子进程尝试调用其已加载 UCRT 的 `raise(SIGTERM)`；该调用发生在注入的新线程，走 C 运行库默认终止并得到 exit 3，未触发主执行线程已安装处理器，不能作为优雅 exit 0 证据。
+
+因此计划第 7.3 节的 headless SIGTERM 外部产品验证在当前 Windows 环境未闭合，按第 8 节以 `ENVIRONMENT-BLOCKED` 收口。是否请求设计包修订：否。不得据此声明 #380 完成。

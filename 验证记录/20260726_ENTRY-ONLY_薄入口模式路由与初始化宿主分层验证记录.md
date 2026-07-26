@@ -99,3 +99,55 @@
 ### 续段安全断点结论
 
 v0.2 的 V21/F29 修订和精确日志路径已形成可编译、可运行断点；F27/V19 新设计缺口有明确代码位置和语言约束证据。该断点可验证但不满足 #380 完成合同。
+
+## v0.3 续段验证
+
+### 身份
+
+- plan blob：`024c51c780705425c70009ba03a1c2404361b7e3`。
+- 计划段起点：`e63a8def085b0676b56af12bba5e88efc0691ebe`。
+- 计划索引 blob：`d5bcf2f500a342d4007d4c03b4a7e74747fbe519`。
+- 结果类型：`ENVIRONMENT-BLOCKED` WIP，不证明计划完成。
+
+### 构建与静态验证
+
+1. `msbuild .\海中鱼巣.vcxproj /t:Rebuild /p:Configuration=Debug /p:Platform=x64 /m`
+   - 四日志属性显式为 false 的默认轮通过，0 error、0 warning。
+2. 四个独立日志属性各自单开的 fresh build
+   - 均以可靠单节点 `/m:1` 完整构建通过。
+   - 入口宏：`--self-test-exit=0`，只产生入口初始化自检日志。
+   - 数据库宏：`--database-self-test-exit=0`，`数据库专项自检.log` 从不存在变为 120 字节，其它切片无新增。
+   - 性能宏：完整性能专项 exit 0，`关系仓库性能专项自检.log` 从不存在变为 135 字节，其它切片无新增。
+   - D455 日志宏：D455 能力未启用，显式模式 exit 2，不产生假专项日志。
+   - 恢复四宏全关后 self/database/runtime 分别 exit 0、D455 exit 2，四份调试日志长度均不变。
+3. `python .\tools\check_specs.py --strict`
+   - 结果：99 份目录项全部通过。
+4. 静态扫描
+   - `入口.cpp` 领域/UI/SQL/自检关键字：零命中。
+   - 五个入口相关文件 stdout/stderr/printf：零命中。
+   - 非自检文件的自检 import：只命中 `启动.应用程序.ixx` 对入口初始化自检和中央运行器的两项设计内导入；无其它非法命中。
+   - F27 的信号序列和计数只在函数局部，零模块/static/global/thread_local 测试证据。
+
+### 参数、专项和宿主
+
+1. 参数矩阵
+   - 6 个重复 flag：全部 exit 2。
+   - 15 个两两组合的正反顺序，共 30 项：全部 exit 2。
+   - 2 个未知参数：全部 exit 2。
+2. 单模式
+   - `--self-test-exit=0`。
+   - `--database-self-test-exit=0`。
+   - `--runtime-context=0`。
+   - `--d455-real-sample-exit=2`，能力未启用。
+   - `--warehouse-performance-self-test-exit=0`；三档规模与 12 项验收全部通过。
+3. UI
+   - 无参数：取得非零 `MainWindowHandle`，`CloseMainWindow()` 返回 true，exit 0。
+   - `HY_EGO_SQL_SERVER=tcp:127.0.0.1,1`：取得非零窗口句柄，关闭成功，exit 0；`finally` 清理环境变量。
+4. headless
+   - Windows 新进程组 `CTRL_BREAK_EVENT` 映射 SIGBREAK：exit 0。
+   - 独立新控制台 `CTRL_C_EVENT` 映射 SIGINT：exit 0。
+   - SIGTERM：Windows 无外部控制台事件映射；对精确子进程新线程调用 UCRT `raise(SIGTERM)` 得到 exit 3，未形成优雅收口证据。强制终止未被当作通过。
+
+### 结论
+
+代码合同、自检、构建、参数、UI、SIGINT/SIGBREAK、专项和静态验证均已取得通过证据；唯独当前 Windows 环境不能从外部把 SIGTERM 投递到已安装处理器所在的正常执行上下文。依据计划第 8 节，结果为 `ENVIRONMENT-BLOCKED` WIP，是否请求设计包修订：否。
