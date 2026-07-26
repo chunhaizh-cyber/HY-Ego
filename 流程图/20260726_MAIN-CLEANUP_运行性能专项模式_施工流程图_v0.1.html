@@ -1,0 +1,10 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>运行性能专项模式施工流程图</title></head><body><h1>运行性能专项模式施工流程图</h1><pre>int 运行性能专项模式()</pre><div class="mermaid">
+flowchart TD
+    N01{"N01【指令-判断】构建是否启用关系仓库性能自检"} -- "否" --> N02["N02【指令-返回】返回 2"]
+    N01 -- "是" --> N03["N03【指令-构造】构造隔离性能自检上下文"]
+    N03 --> N04["N04【函数调用】运行关系仓库性能自检(隔离上下文) -> 结构化结果"]
+    N04 --> N05["N05【函数调用】记录自检人读报告(WAREHOUSE_PERFORMANCE, 结果投影) -> void"]
+    N05 --> N06{"N06【指令-判断】结构化结果是否通过"}
+    N06 -- "否" --> N07["N07【指令-返回】返回 1"]
+    N06 -- "是" --> N08["N08【指令-返回】返回 0"]
+</div><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

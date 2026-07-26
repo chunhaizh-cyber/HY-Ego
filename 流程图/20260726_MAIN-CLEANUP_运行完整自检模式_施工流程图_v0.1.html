@@ -1,0 +1,10 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>运行完整自检模式施工流程图</title></head><body><h1>运行完整自检模式施工流程图</h1><pre>int 运行完整自检模式()</pre><div class="mermaid">
+flowchart TD
+    N01["N01【指令-构造】构造隔离自检总成和隔离数据生命周期"] --> N02["N02【函数调用】登记完整自检清单(总成) -> 登记结果"]
+    N02 --> N03{"N03【指令-判断】登记合同是否完整"}
+    N03 -- "否" --> N04["N04【指令-返回】返回 1"]
+    N03 -- "是" --> N05["N05【函数调用】总成.运行全部阶段() -> 结构化结果"]
+    N05 --> N06["N06【函数调用】记录自检人读报告(结构化结果) -> void"]
+    N06 --> N07["N07【函数调用】阶段化自检总成.转换退出码(结构化结果) -> 退出码"]
+    N07 --> N08["N08【指令-返回】返回 退出码"]
+</div><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

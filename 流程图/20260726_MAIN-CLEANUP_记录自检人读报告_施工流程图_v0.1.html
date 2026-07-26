@@ -1,0 +1,5 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>记录自检人读报告施工流程图</title></head><body><h1>记录自检人读报告施工流程图</h1><pre>void 记录自检人读报告(std::wstring_view 切片名, std::wstring_view 内容) noexcept</pre><div class="mermaid">
+flowchart TD
+    N01["N01【函数调用】记录调试日志(切片名, 模块, 入口, 内容) -> 写入结果"] --> N02["N02【指令-丢弃】丢弃写入结果"]
+    N02 --> N03["N03【指令-返回】返回 void"]
+</div><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

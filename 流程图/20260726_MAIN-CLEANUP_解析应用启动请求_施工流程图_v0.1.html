@@ -1,0 +1,13 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>解析应用启动请求施工流程图</title></head><body><h1>解析应用启动请求施工流程图</h1><pre>应用启动请求 解析应用启动请求(int 参数数量, char* 参数组[]) noexcept</pre><div class="mermaid">
+flowchart TD
+    N01["N01【指令-赋值】模式候选=普通控制面板，显式模式数=0"] --> N02{"N02【指令-循环】是否还有参数"}
+    N02 -- "是" --> N03{"N03【指令-判断】参数是否为七个已知模式之一"}
+    N03 -- "否" --> N04["N04【指令-返回】返回 未知参数拒绝"]
+    N03 -- "是" --> N05["N05【指令-赋值】记录模式并递增显式模式数"]
+    N05 --> N02
+    N02 -- "否" --> N06{"N06【指令-判断】显式模式数是否大于1"}
+    N06 -- "是" --> N07["N07【指令-返回】返回 模式冲突拒绝"]
+    N06 -- "否" --> N08{"N08【指令-判断】专项模式是否受当前构建支持"}
+    N08 -- "否" --> N09["N09【指令-返回】返回 构建能力拒绝"]
+    N08 -- "是" --> N10["N10【指令-返回】返回 有效启动请求"]
+</div><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

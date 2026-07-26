@@ -1,0 +1,8 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>运行数据库专项模式施工流程图</title></head><body><h1>运行数据库专项模式施工流程图</h1><pre>int 运行数据库专项模式()</pre><div class="mermaid">
+flowchart TD
+    N01["N01【指令-构造】构造隔离数据库自检上下文"] --> N02["N02【函数调用】运行数据库结构统计往返自检(隔离上下文) -> 结构化结果"]
+    N02 --> N03["N03【函数调用】记录自检人读报告(DATABASE_SELFTEST, 结果投影) -> void"]
+    N03 --> N04{"N04【指令-判断】结果.总通过且失败数量为0"}
+    N04 -- "否" --> N05["N05【指令-返回】销毁隔离数据并返回 1"]
+    N04 -- "是" --> N06["N06【指令-返回】销毁隔离数据并返回 0"]
+</div><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>

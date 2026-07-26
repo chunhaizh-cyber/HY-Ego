@@ -1,0 +1,10 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>构造生产应用上下文施工流程图</title></head><body><h1>构造生产应用上下文施工流程图</h1><pre>应用上下文构造结果 构造生产应用上下文(const 应用启动请求&amp; 请求)</pre><div class="mermaid">
+flowchart TD
+    N01{"N01【指令-判断】模式是否需要生产上下文"} -- "否" --> N02["N02【指令-返回】返回 模式拒绝"]
+    N01 -- "是" --> N03["N03【指令-构造】构造仓库、事务和领域服务所有者"]
+    N03 --> N04["N04【函数调用】启动自我线程并等待初始化(启动参数) -> 初始化结果"]
+    N04 --> N05{"N05【指令-判断】初始化是否成功"}
+    N05 -- "否" --> N06["N06【指令-返回】销毁候选并返回失败编号"]
+    N05 -- "是" --> N07["N07【指令-构造】形成世界树、语素、根需求、概念根和控制面板只读投影"]
+    N07 --> N08["N08【指令-返回】转移独占上下文"]
+</div><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,securityLevel:"loose",flowchart:{useMaxWidth:false,htmlLabels:true}});</script></body></html>
