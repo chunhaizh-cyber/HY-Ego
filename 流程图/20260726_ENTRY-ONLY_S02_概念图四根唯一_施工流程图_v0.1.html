@@ -1,9 +1,9 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>S02 四根唯一</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });</script></head><body><h1>S02 概念图四根唯一</h1><p>隔离自检，根数4且稳定键两两不同。</p><div class="mermaid">
 flowchart TD
-    N01["N01【函数调用】构造入口初始化自检环境() -> 环境"] --> N02["N02【函数调用】初始化普通系统(环境.上下文, 请求) -> 初始化"]
+    N01["N01【函数调用】构造入口初始化自检环境(配置.观察回调, ENTRY-ONLY-S02) -> 环境"] --> N02["N02【函数调用】初始化普通系统(系统初始化端口{环境.上下文绑定}, 环境.初始化请求) -> 初始化"]
     N02 --> N03["N03【函数调用】概念图.读取全部概念根() -> 根组"]
     N03 --> N04["N04【本函数内指令】核对根数为4且四个稳定非名称键两两不同"]
     N04 --> N05["N05【本函数内指令】形成ENTRY-ONLY-S02自检单元结果"]
-    N05 --> N06["N06【本函数内指令-日志宏调用】记录S02人读结果"]
+    N05 --> N06["N06【本函数内指令-日志宏调用】记录S02调试结果"]
     N06 --> N07["N07【本函数内指令】返回结果"]
 </div><p>验证V20-V22/V26-V28；不得宣称普通启动已自检。</p></body></html>
