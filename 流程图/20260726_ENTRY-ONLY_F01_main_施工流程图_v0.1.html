@@ -1,0 +1,9 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>ENTRY-ONLY F01 main</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';mermaid.initialize({startOnLoad:true});</script></head><body><h1>F01 main</h1><p>施工流程图 v0.1；签名 int main(int 参数数量, char* 参数组[])；归属 海中鱼巣/入口.cpp；绑定规范 8120、详细设计与计划。无机器结构变化；禁止领域、UI、SQL、自检和日志正文。</p><div class="mermaid">
+flowchart TD
+    N01["N01【函数调用】解析并验证启动选项(参数数量, 参数组) -> 解析"] --> N02{"N02【指令】解析是否成功"}
+    N02 -- "否" --> N03["N03【函数调用】映射进程退出码(解析, nullptr) -> 退出码"]
+    N02 -- "是" --> N04["N04【函数调用】运行海中鱼巣(解析.选项) -> 运行"]
+    N04 --> N05["N05【函数调用】映射进程退出码(解析, &运行) -> 退出码"]
+    N03 --> N06["N06【指令】返回退出码"]
+    N05 --> N06
+</div><p>验证 V01-V06、V29；不得宣称领域能力完成。被调图 F02/F03/F04。</p></body></html>

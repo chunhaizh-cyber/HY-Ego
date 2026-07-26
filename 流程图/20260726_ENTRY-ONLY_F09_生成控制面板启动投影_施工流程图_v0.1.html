@@ -1,0 +1,14 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>F09 控制面板启动投影</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';mermaid.initialize({startOnLoad:true});</script></head><body><h1>F09 生成控制面板启动投影</h1><p>只读T03/T04，返回T05；无结构变化。</p><div class="mermaid">
+flowchart TD
+    N01{"N01【指令】初始化结果完整"} -- "否" --> R0["N02【指令】返回材料缺失"]
+    N01 -- "是" --> N03["N03【函数调用】读取自我相对坐标(自我存在节点) -> 坐标"]
+    N03 --> N04{"N04【指令】坐标存在"}
+    N04 -- "否" --> R1["N05【指令】返回世界树投影失败"]
+    N04 -- "是" --> N06["N06【函数调用】生成控制面板世界树结构材料(...) -> 世界树"]
+    N06 --> N07{"N07【指令】世界树可展示且只读"}
+    N07 -- "否" --> R1
+    N07 -- "是" --> N08["N08【函数调用】生成控制面板语素树结构材料(...) -> 语素树"]
+    N08 --> N09{"N09【指令】语素树可展示且只读"}
+    N09 -- "否" --> R2["N10【指令】返回语素树投影失败"]
+    N09 -- "是" --> N11["N11【指令】返回完整只读投影"]
+</div><p>验证V13；不得宣称投影是机器事实。</p></body></html>

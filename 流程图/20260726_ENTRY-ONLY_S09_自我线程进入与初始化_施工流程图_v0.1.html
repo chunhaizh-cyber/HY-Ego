@@ -1,0 +1,10 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>S09 自我线程初始化</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';mermaid.initialize({startOnLoad:true});</script></head><body><h1>S09 自我线程进入与初始化</h1><p>隔离验证首次进入与初始化结构增长。</p><div class="mermaid">
+flowchart TD
+    N01["N01【函数调用】构造入口初始化自检环境() -> 环境"] --> N02["N02【指令】记录初始化前结构数量"]
+    N02 --> N03["N03【函数调用】初始化普通系统(...) -> 初始化"]
+    N03 --> N04["N04【指令】读取线程进入、运行状态和初始化后结构数量"]
+    N04 --> N05["N05【指令】核对首次非复用、快照完整、线程运行且三类数量增长"]
+    N05 --> N06["N06【指令】形成ENTRY-ONLY-S09结果"]
+    N06 --> N07["N07【日志宏调用】记录S09人读结果"]
+    N07 --> N08["N08【指令】返回结果"]
+</div><p>验证V20-V22/V26-V28；不得用线程状态承载机器事实。</p></body></html>

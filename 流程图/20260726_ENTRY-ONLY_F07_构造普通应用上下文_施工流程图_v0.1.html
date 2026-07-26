@@ -1,0 +1,10 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>F07 构造普通应用上下文</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';mermaid.initialize({startOnLoad:true});</script></head><body><h1>F07 构造普通应用上下文</h1><p>返回独占T03；26成员固定顺序；禁止初始化、自检和写入事务。</p><div class="mermaid">
+flowchart TD
+    N01{"N01【指令】配置是否有效"} -- "否" --> N02["N02【指令】返回配置无效"]
+    N01 -- "是" --> N03["N03【指令】按声明顺序构造主信息、节点、关系、索引"]
+    N03 --> N04["N04【指令】按依赖顺序构造领域服务与初始化服务"]
+    N04 --> N05["N05【指令】构造自我线程、任务、方法、统计、显示"]
+    N05 --> N06["N06【函数调用】SQL数据库适配::从环境创建配置() -> SQL配置"]
+    N06 --> N07["N07【指令】构造SQL数据库适配并封装unique_ptr"]
+    N07 --> N08["N08【指令】返回已装配"]
+</div><p>验证V08；不得宣称系统已初始化。</p></body></html>
