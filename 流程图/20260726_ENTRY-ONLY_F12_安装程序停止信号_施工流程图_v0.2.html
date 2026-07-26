@@ -1,0 +1,18 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>F12 安装程序停止信号</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });</script></head><body><h1>F12 安装程序停止信号</h1><p>进程宿主租约；仅外部signal边界；无领域写入。</p><div class="mermaid">
+flowchart TD
+    N01["N01【本函数内指令】构造停止信号租约并清零停止请求"] --> N02["N02【函数调用】安装函数(SIGINT, 处理器) -> 原处理器"]
+    N02 --> N03{"N03【本函数内指令】SIGINT安装是否失败"}
+    N03 -- "是" --> N04["N04【本函数内指令】返回SIGINT失败"]
+    N03 -- "否" --> N05["N05【函数调用】安装函数(SIGTERM, 处理器) -> 原处理器"]
+    N05 --> N06{"N06【本函数内指令】SIGTERM安装是否失败"}
+    N06 -- "是" --> N07["N07【函数调用】安装函数(SIGINT, 原SIGINT处理器) -> 恢复结果"]
+    N07 --> N08["N08【本函数内指令】返回SIGTERM失败"]
+    N06 -- "否" --> N09{"N09【本函数内指令】Windows平台"}
+    N09 -- "否" --> N15["N15【本函数内指令】返回有效租约"]
+    N09 -- "是" --> N10["N10【函数调用】安装函数(SIGBREAK, 处理器) -> 原处理器"]
+    N10 --> N11{"N11【本函数内指令】SIGBREAK安装是否失败"}
+    N11 -- "否" --> N15
+    N11 -- "是" --> N12["N12【函数调用】安装函数(SIGTERM, 原SIGTERM处理器) -> 恢复结果"]
+    N12 --> N13["N13【函数调用】安装函数(SIGINT, 原SIGINT处理器) -> 恢复结果"]
+    N13 --> N14["N14【本函数内指令】返回SIGBREAK失败"]
+</div><p>验证V18-V19；不得宣称信号是动作来源。</p></body></html>
