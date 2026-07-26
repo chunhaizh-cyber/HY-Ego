@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>S08 支持拒绝</title><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';mermaid.initialize({ startOnLoad: true, securityLevel: "loose", flowchart: { useMaxWidth: false, htmlLabels: true } });</script></head><body><h1>S08 存在根支持拒绝</h1><p>三类错误输入仅在隔离环境验证。</p><div class="mermaid">
 flowchart TD
-    N01["N01【函数调用】构造入口初始化自检环境(配置.观察回调, ENTRY-ONLY-S08) -> 环境"] --> N02["N02【函数调用】初始化普通系统(系统初始化端口{环境.上下文绑定}, 环境.初始化请求) -> 初始化"]
+    N01["N01【函数调用】构造入口初始化自检环境(配置, ENTRY-ONLY-S08) -> 环境"] --> N02["N02【函数调用】初始化普通系统(系统初始化端口{环境.上下文绑定}, 环境.初始化请求) -> 初始化"]
     N02 --> N03["N03【函数调用】存在.创建实际存在() -> 待删除实例"]
     N03 --> N04["N04【函数调用】节点.删除节点(待删除实例) -> 删除结果"]
     N04 --> N05["N05【本函数内指令】记录错误调用前结构数量"]
