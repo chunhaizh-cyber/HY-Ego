@@ -1,4 +1,4 @@
 interface:
   display_name: "海中鱼巣单函数流程图"
   short_description: "Create single-function Sea Nest flowcharts"
-  default_prompt: "Use $hai-zhong-yu-chao-flowchart to create paired single-function flowcharts with explicit parameters, results, calls, and in-function instructions."
+  default_prompt: "Use $hai-zhong-yu-chao-flowchart to create Markdown-only single-function flowcharts with Mermaid, explicit parameters, results, calls, and in-function instructions."
