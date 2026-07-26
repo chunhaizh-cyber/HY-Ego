@@ -1310,9 +1310,9 @@
     {"id":"F0239","layer":5,"signature":"bool 海中鱼巣::运行期上下文::结构核心完整() const","file":"海中鱼巣/启动.运行期上下文.ixx","definition_line":59,"status":"已完成","chart":"L5/CF-L5-0115_运行期上下文结构核心完整_现状流程图.md"},
     {"id":"F0240","layer":5,"signature":"bool 海中鱼巣::运行期业务装配::完整() const noexcept","file":"海中鱼巣/装配.运行期业务.ixx","definition_line":124,"status":"已完成","chart":"L5/CF-L5-0116_运行期业务装配完整_现状流程图.md"},
     {"id":"F0241","layer":5,"signature":"bool 海中鱼巣::系统角色清单::匹配参数(const 海中鱼巣::系统角色初始化参数& 参数) const noexcept","file":"海中鱼巣/领域/系统角色清单.数据.h","definition_line":234,"status":"已完成","chart":"L5/CF-L5-0117_系统角色清单匹配参数_现状流程图.md"},
-    {"id":"F0242","layer":5,"signature":"海中鱼巣::系统角色初始化结果 海中鱼巣::运行期业务装配::复核系统角色(const 海中鱼巣::系统角色清单& 清单) const","file":"海中鱼巣/装配.运行期业务.ixx","definition_line":152,"status":"待处理","chart":null},
-    {"id":"F0243","layer":5,"signature":"海中鱼巣::系统角色初始化结果 海中鱼巣::运行期业务装配::初始化系统角色(const 海中鱼巣::系统角色初始化参数& 参数)","file":"海中鱼巣/装配.运行期业务.ixx","definition_line":148,"status":"待处理","chart":null},
-    {"id":"F0244","layer":5,"signature":"bool 海中鱼巣::系统角色清单::operator==(const 海中鱼巣::系统角色清单&) const","file":"海中鱼巣/领域/系统角色清单.数据.h","definition_line":264,"status":"待处理","chart":null},
+    {"id":"F0242","layer":5,"signature":"海中鱼巣::系统角色初始化结果 海中鱼巣::运行期业务装配::复核系统角色(const 海中鱼巣::系统角色清单& 清单) const","file":"海中鱼巣/装配.运行期业务.ixx","definition_line":152,"status":"已完成","chart":"L5/CF-L5-0118_运行期业务装配复核系统角色_现状流程图.md"},
+    {"id":"F0243","layer":5,"signature":"海中鱼巣::系统角色初始化结果 海中鱼巣::运行期业务装配::初始化系统角色(const 海中鱼巣::系统角色初始化参数& 参数)","file":"海中鱼巣/装配.运行期业务.ixx","definition_line":148,"status":"已完成","chart":"L5/CF-L5-0119_运行期业务装配初始化系统角色_现状流程图.md"},
+    {"id":"F0244","layer":5,"signature":"bool 海中鱼巣::系统角色清单::operator==(const 海中鱼巣::系统角色清单&) const","file":"海中鱼巣/领域/系统角色清单.数据.h","definition_line":264,"status":"已完成","chart":"L5/CF-L5-0120_系统角色清单等值比较_现状流程图.md"},
     {"id":"F0245","layer":5,"signature":"bool 海中鱼巣::系统角色清单::完整() const noexcept","file":"海中鱼巣/领域/系统角色清单.数据.h","definition_line":221,"status":"待处理","chart":null},
     {"id":"F0246","layer":5,"signature":"std::optional<海中鱼巣::系统角色清单> 海中鱼巣::运行期上下文::读取系统角色材料() const","file":"海中鱼巣/启动.运行期上下文.ixx","definition_line":118,"status":"待处理","chart":null},
     {"id":"F0247","layer":5,"signature":"bool 海中鱼巣::概念活动材料::匹配参数(const 海中鱼巣::概念活动初始化参数& 参数) const noexcept","file":"海中鱼巣/领域/概念活动状态.数据.h","definition_line":182,"status":"待处理","chart":null},
@@ -1521,7 +1521,11 @@
     {"id":"F0450","layer":6,"signature":"bool 海中鱼巣::概念活动数据操作::有效() const noexcept","file":"海中鱼巣/领域/数据操作.概念活动.ixx","definition_line":37,"status":"待处理","chart":null},
     {"id":"F0451","layer":6,"signature":"bool 海中鱼巣::概念活动业务服务::有效() const noexcept","file":"海中鱼巣/领域/服务.概念活动.ixx","definition_line":26,"status":"待处理","chart":null},
     {"id":"F0452","layer":6,"signature":"bool 海中鱼巣::系统角色初始化器::有效() const noexcept","file":"海中鱼巣/领域/初始化.系统角色.ixx","definition_line":64,"status":"待处理","chart":null},
-    {"id":"F0453","layer":6,"signature":"bool 海中鱼巣::运行期业务操作组合器::完整() const noexcept","file":"海中鱼巣/领域/组合.运行期业务操作.ixx","definition_line":77,"status":"待处理","chart":null}
+    {"id":"F0453","layer":6,"signature":"bool 海中鱼巣::运行期业务操作组合器::完整() const noexcept","file":"海中鱼巣/领域/组合.运行期业务操作.ixx","definition_line":77,"status":"待处理","chart":null},
+    {"id":"F0454","layer":6,"signature":"海中鱼巣::系统角色初始化结果 海中鱼巣::系统角色初始化器::复核(const 海中鱼巣::系统角色清单& 清单) const","file":"海中鱼巣/领域/初始化.系统角色.ixx","definition_line":175,"status":"待处理","chart":null},
+    {"id":"F0455","layer":6,"signature":"海中鱼巣::系统角色初始化结果 海中鱼巣::系统角色初始化器::初始化(const 海中鱼巣::系统角色初始化参数& 参数)","file":"海中鱼巣/领域/初始化.系统角色.ixx","definition_line":66,"status":"待处理","chart":null},
+    {"id":"F0456","layer":6,"signature":"bool 海中鱼巣::系统角色主体材料::operator==(const 海中鱼巣::系统角色主体材料&) const","file":"海中鱼巣/领域/系统角色清单.数据.h","definition_line":212,"status":"待处理","chart":null},
+    {"id":"F0457","layer":6,"signature":"bool 海中鱼巣::系统角色关系材料::operator==(const 海中鱼巣::系统角色关系材料&) const","file":"海中鱼巣/领域/系统角色清单.数据.h","definition_line":140,"status":"待处理","chart":null}
   ],
   "calls": [
     {
@@ -2581,7 +2585,14 @@
     {"id":"E0941","caller":"F0240","callee":"F0452","location":"海中鱼巣/装配.运行期业务.ixx:135","arguments":"this=&系统角色初始化器_","return_binding":"第十一项完整条件","condition":"E0940返回true","type":"direct_const_member"},
     {"id":"E0942","caller":"F0240","callee":"F0453","location":"海中鱼巣/装配.运行期业务.ixx:137","arguments":"this=&业务操作_","return_binding":"最终完整条件","condition":"E0941返回true且稳定动作键_非零","type":"direct_const_member"},
     {"id":"E0943","caller":"F0241","callee":"F0245","location":"海中鱼巣/领域/系统角色清单.数据.h:235","arguments":"this=&当前清单","return_binding":"清单完整","condition":"函数进入","type":"direct_const_member"},
-    {"id":"E0944","caller":"F0241","callee":"F0228","location":"海中鱼巣/领域/系统角色清单.数据.h:235","arguments":"this=&参数","return_binding":"参数有效","condition":"E0943返回true","type":"direct_const_member"}
+    {"id":"E0944","caller":"F0241","callee":"F0228","location":"海中鱼巣/领域/系统角色清单.数据.h:235","arguments":"this=&参数","return_binding":"参数有效","condition":"E0943返回true","type":"direct_const_member"},
+    {"id":"E0945","caller":"F0242","callee":"F0240","location":"海中鱼巣/装配.运行期业务.ixx:153","arguments":"this=&当前运行期业务装配","return_binding":"装配完整","condition":"函数进入","type":"direct_const_member"},
+    {"id":"E0946","caller":"F0242","callee":"F0454","location":"海中鱼巣/装配.运行期业务.ixx:153","arguments":"this=&系统角色初始化器_,清单=const只读借用","return_binding":"复核结果","condition":"E0945返回true","type":"direct_const_member"},
+    {"id":"E0947","caller":"F0243","callee":"F0240","location":"海中鱼巣/装配.运行期业务.ixx:149","arguments":"this=&当前运行期业务装配","return_binding":"装配完整","condition":"函数进入","type":"direct_const_member"},
+    {"id":"E0948","caller":"F0243","callee":"F0455","location":"海中鱼巣/装配.运行期业务.ixx:149","arguments":"this=&系统角色初始化器_,参数=const只读借用","return_binding":"初始化结果","condition":"E0947返回true","type":"direct_member"},
+    {"id":"E0949","caller":"F0244","callee":"F0456","location":"海中鱼巣/领域/系统角色清单.数据.h:217,264","arguments":"this=&this->主体,右=&右.主体","return_binding":"主体相等","condition":"版本相等","type":"defaulted_const_member"},
+    {"id":"E0950","caller":"F0244","callee":"F0457","location":"海中鱼巣/领域/系统角色清单.数据.h:218,264","arguments":"this=&this->世界根到场景关系,右=&右.世界根到场景关系","return_binding":"第一关系相等","condition":"E0949返回true","type":"defaulted_const_member"},
+    {"id":"E0951","caller":"F0244","callee":"F0457","location":"海中鱼巣/领域/系统角色清单.数据.h:219,264","arguments":"this=&this->场景到自我关系,右=&右.场景到自我关系","return_binding":"第二关系相等","condition":"E0950返回true","type":"defaulted_const_member"}
   ],
   "external_boundaries": [
     {
