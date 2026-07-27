@@ -1392,9 +1392,9 @@
     {"id":"F0323","layer":6,"signature":"bool 海中鱼巣::{匿名命名空间@关系仓库.cpp}::接线一致(const 海中鱼巣::结构事务接线& 左, const 海中鱼巣::结构事务接线& 右)","file":"海中鱼巣/核心/关系仓库.cpp","definition_line":81,"status":"已完成","chart":"L6/CF-L6-0003_关系仓库接线一致_现状流程图.md"},
     {"id":"F0324","layer":6,"signature":"bool 海中鱼巣::{匿名命名空间@索引仓库.cpp}::接线一致(const 海中鱼巣::结构事务接线& 左, const 海中鱼巣::结构事务接线& 右)","file":"海中鱼巣/核心/索引仓库.cpp","definition_line":12,"status":"已完成","chart":"L6/CF-L6-0004_索引仓库接线一致_现状流程图.md"},
     {"id":"F0325","layer":6,"signature":"std::wstring 海中鱼巣::{匿名命名空间@SQL数据库适配.cpp}::读取环境字段(const wchar_t* 名称)","file":"海中鱼巣/适配/SQL数据库适配.cpp","definition_line":78,"status":"已完成","chart":"L6/CF-L6-0005_读取SQL环境字段_现状流程图.md"},
-    {"id":"F0326","layer":6,"signature":"bool 海中鱼巣::方法登记根材料::完整() const","file":"海中鱼巣/领域/方法服务.h","definition_line":137,"status":"待处理","chart":null},
-    {"id":"F0327","layer":6,"signature":"海中鱼巣::方法角色状态 海中鱼巣::方法服务::读取方法角色状态值(海中鱼巣::节点句柄 节点, const 海中鱼巣::状态服务& 状态) const","file":"海中鱼巣/领域/方法服务.h","definition_line":1747,"status":"待处理","chart":null},
-    {"id":"F0328","layer":6,"signature":"bool 海中鱼巣::状态服务::状态是否实例状态(海中鱼巣::节点句柄 状态) const","file":"海中鱼巣/领域/状态服务.h","definition_line":205,"status":"待处理","chart":null},
+    {"id":"F0326","layer":6,"signature":"bool 海中鱼巣::方法登记根材料::完整() const","file":"海中鱼巣/领域/方法服务.h","definition_line":137,"status":"已完成","chart":"L6/CF-L6-0006_方法登记根材料完整_现状流程图.md"},
+    {"id":"F0327","layer":6,"signature":"海中鱼巣::方法角色状态 海中鱼巣::方法服务::读取方法角色状态值(海中鱼巣::节点句柄 方法节点, const 海中鱼巣::状态服务& 状态) const","file":"海中鱼巣/领域/方法服务.h","definition_line":1747,"status":"已完成","chart":"L6/CF-L6-0007_读取方法角色状态值_现状流程图.md"},
+    {"id":"F0328","layer":6,"signature":"bool 海中鱼巣::状态服务::状态是否实例状态(海中鱼巣::节点句柄 状态节点) const","file":"海中鱼巣/领域/状态服务.h","definition_line":205,"status":"已完成","chart":"L6/CF-L6-0008_状态服务状态是否实例状态_现状流程图.md"},
     {"id":"F0329","layer":6,"signature":"std::optional<std::int64_t> 海中鱼巣::状态服务::读取状态值(海中鱼巣::节点句柄 状态) const","file":"海中鱼巣/领域/状态服务.h","definition_line":185,"status":"待处理","chart":null},
     {"id":"F0330","layer":6,"signature":"std::optional<海中鱼巣::节点句柄> 海中鱼巣::方法服务::读取唯一目标(海中鱼巣::节点句柄 起点, 海中鱼巣::关系类型 类型, 海中鱼巣::节点类型 目标类型, std::optional<std::int64_t> 目标状态值 = std::nullopt) const","file":"海中鱼巣/领域/方法服务.h","definition_line":1711,"status":"待处理","chart":null},
     {"id":"F0331","layer":6,"signature":"海中鱼巣::主信息句柄 海中鱼巣::主信息仓库::创建主信息()","file":"海中鱼巣/核心/主信息仓库.cpp","definition_line":38,"status":"待处理","chart":null},
@@ -3448,7 +3448,20 @@
     {"id":"E1648","caller":"F0324","callee":"F0336","location":"海中鱼巣/核心/索引仓库.cpp:13（左操作数）","arguments":"this=&左","return_binding":"左首次接域bool","condition":"函数进入；总是求值","type":"direct_const_member"},
     {"id":"E1649","caller":"F0324","callee":"F0336","location":"海中鱼巣/核心/索引仓库.cpp:13（右操作数）","arguments":"this=&右","return_binding":"右首次接域bool","condition":"左首次接域为false","type":"direct_const_member"},
     {"id":"E1650","caller":"F0324","callee":"F0336","location":"海中鱼巣/核心/索引仓库.cpp:14（左操作数）","arguments":"this=&左","return_binding":"左二次接域bool","condition":"双方未接域提前返回条件不成立","type":"direct_const_member"},
-    {"id":"E1651","caller":"F0324","callee":"F0336","location":"海中鱼巣/核心/索引仓库.cpp:14（右操作数）","arguments":"this=&右","return_binding":"右二次接域bool","condition":"左二次接域为true","type":"direct_const_member"}
+    {"id":"E1651","caller":"F0324","callee":"F0336","location":"海中鱼巣/核心/索引仓库.cpp:14（右操作数）","arguments":"this=&右","return_binding":"右二次接域bool","condition":"左二次接域为true","type":"direct_const_member"},
+    {"id":"E1652","caller":"F0326","callee":"F0163","location":"海中鱼巣/领域/方法服务.h:139","arguments":"登记根","return_binding":"登记根句柄有效bool","condition":"稳定非名称键非零","type":"direct_free"},
+    {"id":"E1653","caller":"F0326","callee":"F0163","location":"海中鱼巣/领域/方法服务.h:140","arguments":"活跃状态","return_binding":"活跃状态句柄有效bool","condition":"登记根句柄有效","type":"direct_free"},
+    {"id":"E1654","caller":"F0326","callee":"F0163","location":"海中鱼巣/领域/方法服务.h:141","arguments":"失效状态","return_binding":"失效状态句柄有效bool","condition":"活跃状态句柄有效","type":"direct_free"},
+    {"id":"E1655","caller":"F0326","callee":"F0051","location":"海中鱼巣/领域/方法服务.h:142","arguments":"登记根,活跃状态","return_binding":"登记根与活跃状态相等bool并取反","condition":"三个句柄均有效","type":"direct_free_operator"},
+    {"id":"E1656","caller":"F0326","callee":"F0051","location":"海中鱼巣/领域/方法服务.h:143","arguments":"登记根,失效状态","return_binding":"登记根与失效状态相等bool并取反","condition":"登记根与活跃状态不等","type":"direct_free_operator"},
+    {"id":"E1657","caller":"F0326","callee":"F0051","location":"海中鱼巣/领域/方法服务.h:144","arguments":"活跃状态,失效状态","return_binding":"两个状态相等bool并取反后决定最终返回","condition":"登记根分别与两个状态不等","type":"direct_free_operator"},
+    {"id":"E1658","caller":"F0327","callee":"F0333","location":"海中鱼巣/领域/方法服务.h:1748","arguments":"this=&方法服务,方法节点,节点类型::方法","return_binding":"方法节点类型匹配bool","condition":"函数进入","type":"direct_const_member"},
+    {"id":"E1659","caller":"F0327","callee":"F0330","location":"海中鱼巣/领域/方法服务.h:1751","arguments":"this=&方法服务,方法节点,关系类型::模板,节点类型::状态,方法角色顺序号","return_binding":"角色状态节点optional","condition":"方法节点类型匹配","type":"direct_const_member"},
+    {"id":"E1660","caller":"F0327","callee":"F0329","location":"海中鱼巣/领域/方法服务.h:1755","arguments":"this=&状态,角色状态节点.value()","return_binding":"角色状态I64 optional","condition":"角色状态目标存在且唯一","type":"direct_const_member"},
+    {"id":"E1661","caller":"F0327","callee":"F0334","location":"海中鱼巣/领域/方法服务.h:1760","arguments":"this=&方法服务,角色","return_binding":"方法角色白名单有效bool","condition":"角色状态I64存在并完成枚举转换","type":"direct_const_member"},
+    {"id":"E1662","caller":"F0328","callee":"F0190","location":"海中鱼巣/领域/状态服务.h:206","arguments":"this=&节点_,状态节点","return_binding":"节点记录optional","condition":"函数进入","type":"direct_const_member"},
+    {"id":"E1663","caller":"F0328","callee":"F0580","location":"海中鱼巣/领域/状态服务.h:208","arguments":"this=&关系_,关系类型::运行期临时,状态节点","return_binding":"存在有效目标临时关系bool并决定最终返回","condition":"节点记录存在且类型为状态","type":"direct_const_member"},
+    {"id":"E1664","caller":"F0357","callee":"F0328","location":"海中鱼巣/领域/概念图服务.h:945","arguments":"this=&状态,状态节点","return_binding":"状态是否实例状态bool","condition":"阶段有效、节点可读且类型为状态、状态值存在并匹配阶段","type":"direct_const_member"}
   ],
   "external_boundaries": [
     {
@@ -4407,7 +4420,9 @@
     {"id":"X0355","signature":"两个std::uint64_t按值相等、std::shared_ptr<void>按get存储指针相等及bool短路返回边界","caller":"F0322","locations":["海中鱼巣/核心/节点仓库.cpp:19-20"],"call_count":3,"queued":false},
     {"id":"X0356","signature":"两个std::uint64_t按值相等、std::shared_ptr<void>按get存储指针相等及bool短路返回边界","caller":"F0323","locations":["海中鱼巣/核心/关系仓库.cpp:83-84"],"call_count":3,"queued":false},
     {"id":"X0357","signature":"两个std::uint64_t按值相等、std::shared_ptr<void>按get存储指针相等及bool短路返回边界","caller":"F0324","locations":["海中鱼巣/核心/索引仓库.cpp:14-15"],"call_count":3,"queued":false},
-    {"id":"X0358","signature":"Microsoft UCRT _wdupenv_s/std::free与std::wstring空值构造、宽字符深复制、返回物化及异常生命周期边界","caller":"F0325","locations":["海中鱼巣/适配/SQL数据库适配.cpp:81-86"],"call_count":5,"queued":false}
+    {"id":"X0358","signature":"Microsoft UCRT _wdupenv_s/std::free与std::wstring空值构造、宽字符深复制、返回物化及异常生命周期边界","caller":"F0325","locations":["海中鱼巣/适配/SQL数据库适配.cpp:81-86"],"call_count":5,"queued":false},
+    {"id":"X0359","signature":"std::optional<std::int64_t>/std::optional<节点句柄>构造、has_value/value访问、枚举static_cast与返回物化边界","caller":"F0327","locations":["海中鱼巣/领域/方法服务.h:1751-1760"],"call_count":6,"queued":false},
+    {"id":"X0360","signature":"std::optional<节点记录>::has_value/operator->、节点类型枚举相等及bool短路返回生命周期边界","caller":"F0328","locations":["海中鱼巣/领域/状态服务.h:207-208"],"call_count":3,"queued":false}
   ],
   "unresolved_calls": [
     {"id":"U0001","caller":"F0167","location":"海中鱼巣/核心/关系仓库.cpp:185（关系共享许可范围宏展开）","expression":"事务接线_.取得共享许可(事务接线_.运行期状态)","reason":"运行期可替换函数指针；静态调用点无法唯一裁决实际项目源码目标","known_contract":"结构事务许可(const std::shared_ptr<void>&)","status":"未解析调用"},
