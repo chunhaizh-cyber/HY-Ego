@@ -151,3 +151,53 @@ v0.2 的 V21/F29 修订和精确日志路径已形成可编译、可运行断点
 ### 结论
 
 代码合同、自检、构建、参数、UI、SIGINT/SIGBREAK、专项和静态验证均已取得通过证据；唯独当前 Windows 环境不能从外部把 SIGTERM 投递到已安装处理器所在的正常执行上下文。依据计划第 8 节，结果为 `ENVIRONMENT-BLOCKED` WIP，是否请求设计包修订：否。
+
+## v0.3 第二次续段验证
+
+### 身份
+
+- plan blob：`024c51c780705425c70009ba03a1c2404361b7e3`。
+- 计划索引 blob：`d5bcf2f500a342d4007d4c03b4a7e74747fbe519`。
+- 计划段起点：`177f2d8014cbe0f10b16a47b1d73e4f4d339510e`。
+- 结果类型：`ENVIRONMENT-BLOCKED` WIP，不证明计划完成。
+
+### 已通过
+
+1. S0
+   - S0 时 `main == origin/main`、divergence `0/0`、index clean。
+   - #380 是唯一可执行候选，plan / index blob 未变。
+   - `a48a70b2..HEAD` 的 14 个目标代码 / 工程文件与 C01—C42 提供接口零变化。
+2. 构建与静态
+   - 最终 `msbuild .\海中鱼巣.vcxproj /t:Rebuild /p:Configuration=Debug /p:Platform=x64 /m`：通过。
+   - 单节点 fresh Rebuild：通过。
+   - `python .\tools\check_specs.py --strict`：正式规范目录 `100/100`。
+   - `git diff --check`：通过。
+   - 入口领域关键字与 stdout/stderr/printf：零命中。
+   - 自检 import 只有设计内 `启动.应用程序.ixx` 两项。
+3. 参数与快速路由
+   - 6 个重复、30 个两两组合正反顺序、2 个未知参数，以及 runtime/self/database/D455 四个单模式，共 42 项：全部符合预期。
+   - `--runtime-context=0`、`--self-test-exit=0`、`--database-self-test-exit=0`、D455 未启用 `exit 2`。
+4. UI 与 SIGTERM
+   - 普通 UI：非零窗口句柄、关闭成功、`exit 0`。
+   - Debug CRT 精确主线程 `ucrtbased!raise(SIGTERM)`：headless 正常收口，`exit 0`。
+5. 日志宏矩阵
+   - 四宏全关最终 fresh build 通过。
+   - 入口、数据库、关系仓库性能、D455 四个属性分别单开 fresh build 通过。
+   - 入口模式 `exit 0` 并只形成入口日志；数据库模式 `exit 0` 并只形成数据库日志；性能宏单开运行 `exit 0` 并形成性能日志；D455 未启用 `exit 2` 且不形成假日志。
+
+### 未闭合
+
+1. V14 固定无效 SQL UI
+   - 两轮均设置 `HY_EGO_SQL_SERVER=tcp:127.0.0.1,1`。
+   - 两轮均取得非零窗口句柄且 `CloseMainWindow()` 返回 true。
+   - 分别等待 90 秒和 180 秒仍未退出，随后终止精确子进程。
+   - 未取得计划要求的受控 `exit 0`。
+2. 关系仓库性能专项稳定性
+   - 四宏全关构建：约 240 秒后 `exit 1`。
+   - 性能宏单开 fresh build：约 215 秒后 `exit 0`。
+   - 两轮结构化退出码不一致，不能以日志或单次通过覆盖失败。
+3. 首轮 `/m` 和首次单节点 Rebuild 曾在模块扫描阶段产生级联缺模块错误；随后单节点和最终 `/m` fresh Rebuild 均通过。该瞬时构建器故障不再是当前阻断，但已保留为环境证据。
+
+### 结论
+
+SIGTERM 的旧验证夹具错误已纠正，产品在 Debug CRT 主线程上下文收到 SIGTERM 后能正常收口。当前剩余阻断是固定无效 SQL UI 无法受控退出，以及性能专项结果不稳定；两项来源均不允许由 #380 修改。结果为 `ENVIRONMENT-BLOCKED`，是否请求设计包修订：否。

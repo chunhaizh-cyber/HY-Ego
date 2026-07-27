@@ -123,3 +123,31 @@ F18/F29/V21 同时要求：
 Windows 控制台事件可机械发送 SIGINT 和 SIGBREAK，但没有映射为 C 运行库 SIGTERM 的外部控制台事件。为避免用强制终止冒充信号收口，本轮只对自行创建的精确 headless 子进程尝试调用其已加载 UCRT 的 `raise(SIGTERM)`；该调用发生在注入的新线程，走 C 运行库默认终止并得到 exit 3，未触发主执行线程已安装处理器，不能作为优雅 exit 0 证据。
 
 因此计划第 7.3 节的 headless SIGTERM 外部产品验证在当前 Windows 环境未闭合，按第 8 节以 `ENVIRONMENT-BLOCKED` 收口。是否请求设计包修订：否。不得据此声明 #380 完成。
+
+## v0.3 第二次续段 ENVIRONMENT-BLOCKED
+
+- plan blob：`024c51c780705425c70009ba03a1c2404361b7e3`。
+- 计划索引 blob：`d5bcf2f500a342d4007d4c03b4a7e74747fbe519`。
+- 计划段起点：`177f2d8014cbe0f10b16a47b1d73e4f4d339510e`。
+- S0 时 `main == origin/main == 177f2d8014cbe0f10b16a47b1d73e4f4d339510e`，divergence `0/0`，index clean；#380 仍为唯一可执行候选。
+- 从上一 v0.3 WIP 提交 `a48a70b2d678dea64dd8228adb4f26f0badd9506` 到本轮 S0，14 个目标代码 / 工程文件与 C01—C42 提供接口零变化；本轮未修改产品代码。
+
+### 新闭合的 SIGTERM 证据
+
+上一轮验证夹具调用了 Release CRT 的 `ucrtbase!raise`，而 Debug 产品实际通过 `ucrtbased.dll` 注册信号处理器，因此得到默认终止，不能证明产品合同。
+
+本轮以 `CreateProcess` 返回的精确主线程句柄暂停主线程，在该线程上下文调用目标进程 `ucrtbased!raise(SIGTERM)`，随后恢复原指令上下文。headless 由已安装处理器设置停止请求并正常返回 `exit 0`。该夹具只存在于执行命令进程，不新增仓库文件、产品测试后门或模块级证据。
+
+### 当前环境阻断
+
+1. 固定无效 SQL 的普通 UI 两轮均取得非零 `MainWindowHandle`，`CloseMainWindow()` 均返回 true，但分别等待 90 秒和 180 秒后仍未退出，只能终止精确子进程。该结果未满足 V14 的受控关闭和 `exit 0`。
+2. 关系仓库性能专项在四宏全关构建中一次运行约 240 秒后 `exit 1`；性能日志宏单开 fresh build 后复跑约 215 秒并 `exit 0`，结果不稳定，不能把单次通过当作稳定完成证据。
+3. SQL 适配器、关系仓库性能自检及其阈值均不在 #380 白名单；执行侧不得修改来源或降低验收。
+
+### 本轮收口
+
+- 已通过最终 Debug x64 `/m` fresh Rebuild、单节点 fresh Rebuild、strict `100/100`、`git diff --check`、入口静态门禁、42 个快速参数用例、self/database/runtime/D455 路由、普通 UI，以及入口 / 数据库 / 性能 / D455 四个日志宏单开 fresh build。
+- 已保留上一 WIP 中 SIGINT、SIGBREAK、F27/F29、日志隔离和覆盖事实；关联代码从 `a48a70b2` 至本轮零变化。
+- 未闭合 V14 无效 SQL UI 收口和稳定性能专项结果，不声明 #380 完成。
+- 结果：`ENVIRONMENT-BLOCKED`。
+- 是否请求设计包修订：否。
