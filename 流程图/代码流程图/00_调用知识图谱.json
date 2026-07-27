@@ -1355,9 +1355,9 @@
     {"id":"F0284","layer":5,"signature":"海中鱼巣::关系仓库性能基线内部::分位指标 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::测量创建()","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":341,"status":"已完成","chart":"L5/CF-L5-0160_隔离关系夹具测量创建_现状流程图.md"},
     {"id":"F0285","layer":5,"signature":"海中鱼巣::关系仓库性能基线内部::分位指标 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::测量失效()","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":377,"status":"已完成","chart":"L5/CF-L5-0161_隔离关系夹具测量失效_现状流程图.md"},
     {"id":"F0286","layer":5,"signature":"海中鱼巣::关系仓库性能基线内部::分位指标 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::测量重挂()","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":400,"status":"已完成","chart":"L5/CF-L5-0162_隔离关系夹具测量重挂_现状流程图.md"},
-    {"id":"F0287","layer":5,"signature":"海中鱼巣::关系仓库性能基线内部::分位指标 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::测量删除()","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":357,"status":"待处理","chart":null},
-    {"id":"F0288","layer":5,"signature":"海中鱼巣::关系仓库& 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::读取关系仓库()","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":328,"status":"待处理","chart":null},
-    {"id":"F0289","layer":5,"signature":"bool 海中鱼巣::运行关系仓库性能基线自检()::<lambda@自检.关系仓库性能基线.ixx:902>::operator()<海中鱼巣::关系仓库性能基线内部::规模报告>(const 海中鱼巣::关系仓库性能基线内部::规模报告& 报告) const::<lambda@自检.关系仓库性能基线.ixx:904>::operator()<海中鱼巣::关系仓库性能基线内部::分位指标>(const 海中鱼巣::关系仓库性能基线内部::分位指标& 指标) const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":904,"status":"待处理","chart":null},
+    {"id":"F0287","layer":5,"signature":"海中鱼巣::关系仓库性能基线内部::分位指标 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::测量删除()","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":357,"status":"已完成","chart":"L5/CF-L5-0163_隔离关系夹具测量删除_现状流程图.md"},
+    {"id":"F0288","layer":5,"signature":"海中鱼巣::关系仓库& 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::读取关系仓库()","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":328,"status":"已完成","chart":"L5/CF-L5-0164_隔离关系夹具读取关系仓库_现状流程图.md"},
+    {"id":"F0289","layer":5,"signature":"bool 海中鱼巣::运行关系仓库性能基线自检()::<lambda@自检.关系仓库性能基线.ixx:902>::operator()<海中鱼巣::关系仓库性能基线内部::规模报告>(const 海中鱼巣::关系仓库性能基线内部::规模报告& 报告) const::<lambda@自检.关系仓库性能基线.ixx:904>::operator()<海中鱼巣::关系仓库性能基线内部::分位指标>(const 海中鱼巣::关系仓库性能基线内部::分位指标& 指标) const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":904,"status":"已完成","chart":"L5/CF-L5-0165_查询指标结果一致谓词lambda_现状流程图.md"},
     {"id":"F0290","layer":5,"signature":"bool 海中鱼巣::运行关系仓库性能基线自检()::<lambda@自检.关系仓库性能基线.ixx:902>::operator()<海中鱼巣::关系仓库性能基线内部::规模报告>(const 海中鱼巣::关系仓库性能基线内部::规模报告& 报告) const::<lambda@自检.关系仓库性能基线.ixx:907>::operator()<海中鱼巣::关系仓库性能基线内部::分位指标>(const 海中鱼巣::关系仓库性能基线内部::分位指标& 指标) const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":907,"status":"待处理","chart":null},
     {"id":"F0291","layer":5,"signature":"bool 海中鱼巣::关系仓库性能基线内部::规模报告::完整() const::<lambda@自检.关系仓库性能基线.ixx:741>::operator()<海中鱼巣::关系仓库性能基线内部::分位指标>(const 海中鱼巣::关系仓库性能基线内部::分位指标& 指标) const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":741,"status":"待处理","chart":null},
     {"id":"F0292","layer":5,"signature":"bool 海中鱼巣::关系仓库性能基线内部::规模报告::完整() const::<lambda@自检.关系仓库性能基线.ixx:744>::operator()<海中鱼巣::关系仓库性能基线内部::分位指标>(const 海中鱼巣::关系仓库性能基线内部::分位指标& 指标) const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":744,"status":"待处理","chart":null},
@@ -3172,7 +3172,13 @@
     {"id":"E1393","caller":"F0286","callee":"F0051","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:418","arguments":"记录->目标节点,新目标","return_binding":"目标相等位","condition":"旧记录为空且新记录存在","type":"direct_free"},
     {"id":"E1394","caller":"F0286","callee":"F0576","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:421","arguments":"结束-开始","return_binding":"重挂耗时纳秒","condition":"正式轮且重挂成功","type":"direct_free"},
     {"id":"E1395","caller":"F0286","callee":"F0590","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:423","arguments":"当前关系","return_binding":"删除成功位","condition":"全部循环结束且累计正确仍为true","type":"direct_member_nonvirtual"},
-    {"id":"E1396","caller":"F0286","callee":"F0281","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:424","arguments":"\"重挂\",样本,初始当前记录数量_+661,正确","return_binding":"返回分位指标","condition":"最终删除短路完成","type":"direct_free"}
+    {"id":"E1396","caller":"F0286","callee":"F0281","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:424","arguments":"\"重挂\",样本,初始当前记录数量_+661,正确","return_binding":"返回分位指标","condition":"最终删除短路完成","type":"direct_free"},
+    {"id":"E1397","caller":"F0287","callee":"F0167","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:362-363","arguments":"关系类型::运行期临时,节点组_[940],节点组_[941],2","return_binding":"新关系","condition":"进入当前循环","type":"direct_member_nonvirtual"},
+    {"id":"E1398","caller":"F0287","callee":"F0168","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:364","arguments":"新关系","return_binding":"句柄有效位","condition":"创建关系返回","type":"direct_free"},
+    {"id":"E1399","caller":"F0287","callee":"F0590","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:369","arguments":"新关系","return_binding":"已删除","condition":"新关系句柄有效","type":"direct_member_nonvirtual"},
+    {"id":"E1400","caller":"F0287","callee":"F0587","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:371","arguments":"新关系","return_binding":"删除后记录optional","condition":"累计正确且删除成功","type":"direct_const_member"},
+    {"id":"E1401","caller":"F0287","callee":"F0576","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:372","arguments":"结束-开始","return_binding":"删除耗时纳秒","condition":"正式轮且创建成功；不要求删除成功","type":"direct_free"},
+    {"id":"E1402","caller":"F0287","callee":"F0281","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:374","arguments":"\"删除\",样本,初始当前记录数量_+440,正确","return_binding":"返回分位指标","condition":"全部循环结束","type":"direct_free"}
   ],
   "external_boundaries": [
     {
@@ -4096,7 +4102,13 @@
     {"id":"X0320","signature":"std::vector<节点句柄>::operator[]固定下标读取、三元选择及节点句柄按值复制边界","caller":"F0286","locations":["海中鱼巣/核心/自检.关系仓库性能基线.ixx:405,408,410"],"call_count":10,"queued":false},
     {"id":"X0321","signature":"steady_clock::now两次调用、时间点局部值与duration相减边界","caller":"F0286","locations":["海中鱼巣/核心/自检.关系仓库性能基线.ixx:409,411,421"],"call_count":3,"queued":false},
     {"id":"X0322","signature":"std::optional<关系句柄/关系记录>值式结果、has_value、operator*、operator->及临时析构边界","caller":"F0286","locations":["海中鱼巣/核心/自检.关系仓库性能基线.ixx:410-419"],"call_count":12,"queued":false},
-    {"id":"X0323","signature":"字符串字面量重挂到std::string构造、分位指标返回值物化及返回生命周期边界","caller":"F0286","locations":["海中鱼巣/核心/自检.关系仓库性能基线.ixx:424-425"],"call_count":3,"queued":false}
+    {"id":"X0323","signature":"字符串字面量重挂到std::string构造、分位指标返回值物化及返回生命周期边界","caller":"F0286","locations":["海中鱼巣/核心/自检.关系仓库性能基线.ixx:424-425"],"call_count":3,"queued":false},
+    {"id":"X0324","signature":"std::vector<double>默认构造、reserve、push_back及正常/异常生命周期边界","caller":"F0287","locations":["海中鱼巣/核心/自检.关系仓库性能基线.ixx:358-359,372,374-375"],"call_count":5,"queued":false},
+    {"id":"X0325","signature":"std::vector<节点句柄>::operator[]固定下标读取及节点句柄按值复制边界","caller":"F0287","locations":["海中鱼巣/核心/自检.关系仓库性能基线.ixx:363"],"call_count":4,"queued":false},
+    {"id":"X0326","signature":"steady_clock::now两次调用、时间点局部值与duration相减边界","caller":"F0287","locations":["海中鱼巣/核心/自检.关系仓库性能基线.ixx:368,370,372"],"call_count":3,"queued":false},
+    {"id":"X0327","signature":"std::optional<关系记录>临时值、has_value及析构边界","caller":"F0287","locations":["海中鱼巣/核心/自检.关系仓库性能基线.ixx:371"],"call_count":3,"queued":false},
+    {"id":"X0328","signature":"size_t循环加法比较递增、句柄结果取反、三段bool短路、读取结果取反、正式轮比较及候选常量加法边界","caller":"F0287","locations":["海中鱼巣/核心/自检.关系仓库性能基线.ixx:361,364,371-374"],"call_count":9,"queued":false},
+    {"id":"X0329","signature":"字符串字面量删除到std::string构造、分位指标返回值物化及返回生命周期边界","caller":"F0287","locations":["海中鱼巣/核心/自检.关系仓库性能基线.ixx:374-375"],"call_count":3,"queued":false}
   ],
   "unresolved_calls": [
     {"id":"U0001","caller":"F0167","location":"海中鱼巣/核心/关系仓库.cpp:185（关系共享许可范围宏展开）","expression":"事务接线_.取得共享许可(事务接线_.运行期状态)","reason":"运行期可替换函数指针；静态调用点无法唯一裁决实际项目源码目标","known_contract":"结构事务许可(const std::shared_ptr<void>&)","status":"未解析调用"},
