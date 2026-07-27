@@ -1343,9 +1343,9 @@
     {"id":"F0272","layer":5,"signature":"海中鱼巣::关系仓库性能基线内部::隔离关系夹具::隔离关系夹具(std::size_t 有效关系规模, std::uint64_t 随机种子)","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":146,"status":"已完成","chart":"L5/CF-L5-0148_隔离关系夹具构造_现状流程图.md"},
     {"id":"F0273","layer":5,"signature":"bool 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::构建()","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":154,"status":"已完成","chart":"L5/CF-L5-0149_隔离关系夹具构建_现状流程图.md"},
     {"id":"F0274","layer":5,"signature":"std::uint64_t 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::当前签名() const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":195,"status":"已完成","chart":"L5/CF-L5-0150_隔离关系夹具当前签名_现状流程图.md"},
-    {"id":"F0275","layer":5,"signature":"std::size_t 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::初始当前记录数量() const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":194,"status":"待处理","chart":null},
-    {"id":"F0276","layer":5,"signature":"bool 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::分布完整() const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":219,"status":"待处理","chart":null},
-    {"id":"F0277","layer":5,"signature":"bool 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::验证结构边界() const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":234,"status":"待处理","chart":null},
+    {"id":"F0275","layer":5,"signature":"std::size_t 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::初始当前记录数量() const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":194,"status":"已完成","chart":"L5/CF-L5-0151_隔离关系夹具初始当前记录数量_现状流程图.md"},
+    {"id":"F0276","layer":5,"signature":"bool 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::分布完整() const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":219,"status":"已完成","chart":"L5/CF-L5-0152_隔离关系夹具分布完整_现状流程图.md"},
+    {"id":"F0277","layer":5,"signature":"bool 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::验证结构边界() const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":234,"status":"已完成","chart":"L5/CF-L5-0153_隔离关系夹具验证结构边界_现状流程图.md"},
     {"id":"F0278","layer":5,"signature":"std::vector<海中鱼巣::关系仓库性能基线内部::查询定义> 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::形成查询定义组() const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":272,"status":"待处理","chart":null},
     {"id":"F0279","layer":5,"signature":"海中鱼巣::关系仓库性能基线内部::单次测量 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::执行查询(const 海中鱼巣::关系仓库性能基线内部::查询定义& 定义) const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":296,"status":"待处理","chart":null},
     {"id":"F0280","layer":5,"signature":"double 海中鱼巣::关系仓库性能基线内部::读取分位数(std::vector<double> 样本, double 分位)","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":70,"status":"待处理","chart":null},
@@ -1638,7 +1638,10 @@
     {"id":"F0567","layer":6,"signature":"std::uint64_t 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::下一随机数()","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":428,"status":"待处理","chart":null},
     {"id":"F0568","layer":6,"signature":"海中鱼巣::关系句柄 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::添加关系(海中鱼巣::关系类型 类型, std::size_t 源索引, std::size_t 目标索引, std::int64_t 顺序号, bool 跟踪引用键)","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":438,"status":"待处理","chart":null},
     {"id":"F0569","layer":6,"signature":"bool 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::应用固定变更()","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":510,"status":"待处理","chart":null},
-    {"id":"F0570","layer":6,"signature":"void 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::当前签名() const::<lambda@自检.关系仓库性能基线.ixx:203>::operator()(std::uint64_t 值) const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":203,"status":"待处理","chart":null}
+    {"id":"F0570","layer":6,"signature":"void 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::当前签名() const::<lambda@自检.关系仓库性能基线.ixx:203>::operator()(std::uint64_t 值) const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":203,"status":"待处理","chart":null},
+    {"id":"F0571","layer":6,"signature":"std::vector<海中鱼巣::关系记录> 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::参考按目标(海中鱼巣::节点句柄 目标节点, 海中鱼巣::关系类型 类型, bool 包含当前失效) const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":553,"status":"待处理","chart":null},
+    {"id":"F0572","layer":6,"signature":"std::vector<海中鱼巣::关系记录> 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::参考按源(海中鱼巣::节点句柄 源节点, 海中鱼巣::关系类型 类型, bool 包含当前失效) const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":534,"status":"待处理","chart":null},
+    {"id":"F0573","layer":6,"signature":"bool 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::参考精确存在(海中鱼巣::关系类型 类型, 海中鱼巣::节点句柄 源节点, 海中鱼巣::节点句柄 目标节点) const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":587,"status":"待处理","chart":null}
   ],
   "calls": [
     {
@@ -3077,7 +3080,15 @@
     {"id":"E1320","caller":"F0274","callee":"F0570","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:211","arguments":"记录.目标节点.节点编号","return_binding":"","condition":"E1319完成","type":"local_lambda_direct"},
     {"id":"E1321","caller":"F0274","callee":"F0570","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:212","arguments":"uint64(记录.顺序号)","return_binding":"","condition":"E1320完成","type":"local_lambda_direct"},
     {"id":"E1322","caller":"F0274","callee":"F0570","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:213","arguments":"记录.版本号","return_binding":"","condition":"E1321完成","type":"local_lambda_direct"},
-    {"id":"E1323","caller":"F0274","callee":"F0570","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:214","arguments":"uint64(记录.状态)","return_binding":"","condition":"E1322完成","type":"local_lambda_direct"}
+    {"id":"E1323","caller":"F0274","callee":"F0570","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:214","arguments":"uint64(记录.状态)","return_binding":"","condition":"E1322完成","type":"local_lambda_direct"},
+    {"id":"E1324","caller":"F0276","callee":"F0278","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:220","arguments":"this","return_binding":"查询组","condition":"F0276被调用","type":"direct_const_member"},
+    {"id":"E1325","caller":"F0277","callee":"F0571","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:235","arguments":"节点组_[1002],关系类型::普通父子,false","return_binding":"普通父组","condition":"F0277被调用","type":"direct_const_member"},
+    {"id":"E1326","caller":"F0277","callee":"F0571","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:236","arguments":"节点组_[992],关系类型::概念上下位,false","return_binding":"多父组","condition":"E1325成功返回","type":"direct_const_member"},
+    {"id":"E1327","caller":"F0277","callee":"F0572","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:237","arguments":"节点组_[996],关系类型::概念上下位,false","return_binding":"第一源关系组","condition":"E1326成功返回","type":"direct_const_member"},
+    {"id":"E1328","caller":"F0277","callee":"F0572","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:238","arguments":"节点组_[998],关系类型::概念上下位,false","return_binding":"第二源关系组","condition":"E1327结果非空","type":"direct_const_member"},
+    {"id":"E1329","caller":"F0277","callee":"F0573","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:239","arguments":"关系类型::概念上下位,节点组_[993],节点组_[994]","return_binding":"第一环边存在","condition":"两棵根布尔值已形成","type":"direct_const_member"},
+    {"id":"E1330","caller":"F0277","callee":"F0573","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:240","arguments":"关系类型::概念上下位,节点组_[994],节点组_[995]","return_binding":"第二环边存在","condition":"E1329返回true","type":"direct_const_member"},
+    {"id":"E1331","caller":"F0277","callee":"F0573","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:241","arguments":"关系类型::概念上下位,节点组_[995],节点组_[993]","return_binding":"第三环边存在","condition":"E1329与E1330均返回true","type":"direct_const_member"}
   ],
   "external_boundaries": [
     {
@@ -3957,7 +3968,11 @@
     {"id":"X0276","signature":"std::unordered_map<uint64_t,关系记录>::size与范围遍历begin/end/解引用/递增边界","caller":"F0274","locations":["海中鱼巣/核心/自检.关系仓库性能基线.ixx:197-198"],"call_count":5,"queued":false},
     {"id":"X0277","signature":"std::vector<关系记录>默认构造、reserve、push_back复制、范围遍历与正常/异常析构边界","caller":"F0274","locations":["海中鱼巣/核心/自检.关系仓库性能基线.ixx:196-199,207-217"],"call_count":8,"queued":false},
     {"id":"X0278","signature":"std::sort调度、vector迭代器与无捕获关系编号比较闭包构造/回调/析构边界","caller":"F0274","locations":["海中鱼巣/核心/自检.关系仓库性能基线.ixx:199-201"],"call_count":6,"queued":false},
-    {"id":"X0279","signature":"F0570混合闭包构造、七次同步调用与析构边界","caller":"F0274","locations":["海中鱼巣/核心/自检.关系仓库性能基线.ixx:203-216"],"call_count":9,"queued":false}
+    {"id":"X0279","signature":"F0570混合闭包构造、七次同步调用与析构边界","caller":"F0274","locations":["海中鱼巣/核心/自检.关系仓库性能基线.ixx:203-216"],"call_count":9,"queued":false},
+    {"id":"X0280","signature":"std::vector<查询定义>返回值物化、size、十次operator[]访问及局部析构边界","caller":"F0276","locations":["海中鱼巣/核心/自检.关系仓库性能基线.ixx:220-232"],"call_count":13,"queued":false},
+    {"id":"X0281","signature":"八个std::vector<关系记录>::size常量读取边界","caller":"F0276","locations":["海中鱼巣/核心/自检.关系仓库性能基线.ixx:222-225,228-231"],"call_count":8,"queued":false},
+    {"id":"X0282","signature":"std::vector<节点句柄>::operator[] const固定下标读取及节点句柄按值实参边界","caller":"F0277","locations":["海中鱼巣/核心/自检.关系仓库性能基线.ixx:235-241"],"call_count":10,"queued":false},
+    {"id":"X0283","signature":"四个std::vector<关系记录>返回值物化与生命周期、两次empty及两次size常量读取边界","caller":"F0277","locations":["海中鱼巣/核心/自检.关系仓库性能基线.ixx:235-247"],"call_count":12,"queued":false}
   ],
   "unresolved_calls": [
     {"id":"U0001","caller":"F0167","location":"海中鱼巣/核心/关系仓库.cpp:185（关系共享许可范围宏展开）","expression":"事务接线_.取得共享许可(事务接线_.运行期状态)","reason":"运行期可替换函数指针；静态调用点无法唯一裁决实际项目源码目标","known_contract":"结构事务许可(const std::shared_ptr<void>&)","status":"未解析调用"},
