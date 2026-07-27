@@ -1337,9 +1337,9 @@
     {"id":"F0266","layer":5,"signature":"海中鱼巣::自检单元结果 海中鱼巣::运行自我线程重复启动结构不变自检(const 海中鱼巣::入口初始化自检运行配置& 配置)","file":"海中鱼巣/自检.入口初始化.ixx","definition_line":425,"status":"已完成","chart":"L5/CF-L5-0142_运行自我线程重复启动结构不变自检_现状流程图.md"},
     {"id":"F0267","layer":5,"signature":"海中鱼巣::自检单元结果 海中鱼巣::运行自我线程无效参数拒绝与生命周期自检(const 海中鱼巣::入口初始化自检运行配置& 配置)","file":"海中鱼巣/自检.入口初始化.ixx","definition_line":456,"status":"已完成","chart":"L5/CF-L5-0143_运行自我线程无效参数拒绝与生命周期自检_现状流程图.md"},
     {"id":"F0268","layer":5,"signature":"std::filesystem::path 海中鱼巣::日志文件路径(海中鱼巣::日志类别 类别, std::wstring_view 调试切片名 = {})","file":"海中鱼巣/核心/日志系统.h","definition_line":85,"status":"已完成","chart":"L5/CF-L5-0144_日志文件路径_现状流程图.md"},
-    {"id":"F0269","layer":5,"signature":"std::wstring 海中鱼巣::当前日志时间文本()","file":"海中鱼巣/核心/日志系统.h","definition_line":114,"status":"待处理","chart":null},
-    {"id":"F0270","layer":5,"signature":"const wchar_t* 海中鱼巣::日志类别文本(海中鱼巣::日志类别 类别)","file":"海中鱼巣/核心/日志系统.h","definition_line":125,"status":"待处理","chart":null},
-    {"id":"F0271","layer":5,"signature":"std::string 海中鱼巣::转为UTF8(std::wstring_view 文本)","file":"海中鱼巣/核心/日志系统.h","definition_line":202,"status":"待处理","chart":null},
+    {"id":"F0269","layer":5,"signature":"std::wstring 海中鱼巣::当前日志时间文本()","file":"海中鱼巣/核心/日志系统.h","definition_line":114,"status":"已完成","chart":"L5/CF-L5-0145_当前日志时间文本_现状流程图.md"},
+    {"id":"F0270","layer":5,"signature":"const wchar_t* 海中鱼巣::日志类别文本(海中鱼巣::日志类别 类别)","file":"海中鱼巣/核心/日志系统.h","definition_line":125,"status":"已完成","chart":"L5/CF-L5-0146_日志类别文本_现状流程图.md"},
+    {"id":"F0271","layer":5,"signature":"std::string 海中鱼巣::转为UTF8(std::wstring_view 文本)","file":"海中鱼巣/核心/日志系统.h","definition_line":202,"status":"已完成","chart":"L5/CF-L5-0147_转为UTF8_现状流程图.md"},
     {"id":"F0272","layer":5,"signature":"海中鱼巣::关系仓库性能基线内部::隔离关系夹具::隔离关系夹具(std::size_t 有效关系规模, std::uint64_t 随机种子)","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":146,"status":"待处理","chart":null},
     {"id":"F0273","layer":5,"signature":"bool 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::构建()","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":154,"status":"待处理","chart":null},
     {"id":"F0274","layer":5,"signature":"std::uint64_t 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::当前签名() const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":195,"status":"待处理","chart":null},
@@ -3913,7 +3913,14 @@
     {"id":"X0262","signature":"std::thread::joinable()与bool取反边界","caller":"F0562","locations":["海中鱼巣/线程/自我线程.ixx:147"],"call_count":2,"queued":false},
     {"id":"X0263","signature":"std::filesystem::path默认构造、十二次路径拼接及返回值生命周期边界","caller":"F0268","locations":["海中鱼巣/核心/日志系统.h:88,90,92,95,98,101,104,107,109,111"],"call_count":14,"queued":false},
     {"id":"X0264","signature":"std::wstring_view与四个宽字符串固定切片名比较边界","caller":"F0268","locations":["海中鱼巣/核心/日志系统.h:97,100,103,106"],"call_count":4,"queued":false},
-    {"id":"X0265","signature":"fallback两个std::wstring构造与两次字符串拼接边界","caller":"F0268","locations":["海中鱼巣/核心/日志系统.h:109"],"call_count":4,"queued":false}
+    {"id":"X0265","signature":"fallback两个std::wstring构造与两次字符串拼接边界","caller":"F0268","locations":["海中鱼巣/核心/日志系统.h:109"],"call_count":4,"queued":false},
+    {"id":"X0266","signature":"std::chrono::system_clock::now、to_time_t及time_point/time_t局部值边界","caller":"F0269","locations":["海中鱼巣/核心/日志系统.h:115-116"],"call_count":2,"queued":false},
+    {"id":"X0267","signature":"Microsoft UCRT localtime_s、本地时区折算及tm局部值边界","caller":"F0269","locations":["海中鱼巣/核心/日志系统.h:117-118"],"call_count":1,"queued":false},
+    {"id":"X0268","signature":"std::wcsftime与std::wstring(const wchar_t*)构造/返回生命周期边界","caller":"F0269","locations":["海中鱼巣/核心/日志系统.h:120-122"],"call_count":2,"queued":false},
+    {"id":"X0269","signature":"四个日志类别case分派与五个宽字符串字面量静态存储、数组到const wchar_t指针转换及返回生命周期边界","caller":"F0270","locations":["海中鱼巣/核心/日志系统.h:126-136"],"call_count":9,"queued":false},
+    {"id":"X0270","signature":"std::wstring_view空值/长度/数据访问与numeric_limits<int>::max边界","caller":"F0271","locations":["海中鱼巣/核心/日志系统.h:203,207-208,214"],"call_count":6,"queued":false},
+    {"id":"X0271","signature":"WideCharToMultiByte两阶段UTF-8长度查询与缓冲写入边界","caller":"F0271","locations":["海中鱼巣/核心/日志系统.h:208,214"],"call_count":2,"queued":false},
+    {"id":"X0272","signature":"std::string空结果、定长填零构造、data访问及返回生命周期边界","caller":"F0271","locations":["海中鱼巣/核心/日志系统.h:204,210,213-215"],"call_count":4,"queued":false}
   ],
   "unresolved_calls": [
     {"id":"U0001","caller":"F0167","location":"海中鱼巣/核心/关系仓库.cpp:185（关系共享许可范围宏展开）","expression":"事务接线_.取得共享许可(事务接线_.运行期状态)","reason":"运行期可替换函数指针；静态调用点无法唯一裁决实际项目源码目标","known_contract":"结构事务许可(const std::shared_ptr<void>&)","status":"未解析调用"},
