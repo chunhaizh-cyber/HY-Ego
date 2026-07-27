@@ -1364,9 +1364,8 @@
     {"id":"F0293","layer":5,"signature":"bool 海中鱼巣::关系仓库性能基线内部::并发指标::完整() const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":628,"status":"已完成","chart":"L5/CF-L5-0169_并发指标完整_现状流程图.md"},
     {"id":"F0294","layer":5,"signature":"海中鱼巣::D455相机采集器::D455相机采集器(海中鱼巣::D455采集配置 配置)","file":"海中鱼巣/适配/采集器.D455相机.ixx","definition_line":427,"status":"已完成","chart":"L5/CF-L5-0170_D455相机采集器构造_现状流程图.md"},
     {"id":"F0295","layer":5,"signature":"海中鱼巣::D455操作结果 海中鱼巣::D455相机采集器::打开()","file":"海中鱼巣/适配/采集器.D455相机.ixx","definition_line":440,"status":"已完成","chart":"L5/CF-L5-0171_D455相机采集器打开_现状流程图.md"},
-    {"id":"F0296","layer":5,"signature":"bool 海中鱼巣::D455流配置有效(const 海中鱼巣::D455流配置& 配置) noexcept","file":"海中鱼巣/适配/协议.D455采样材料.ixx","definition_line":179,"status":"待处理","chart":null},
-    {"id":"F0297","layer":5,"signature":"海中鱼巣::D455采集结果 海中鱼巣::模拟D455帧来源::采样一次(std::uint32_t 超时毫秒)","file":"海中鱼巣/线程/自检.D455采样材料.ixx","definition_line":107,"status":"待处理","chart":null},
-    {"id":"F0298","layer":5,"signature":"海中鱼巣::D455帧材料缓存::D455候选准备结果 海中鱼巣::D455帧材料缓存::准备帧材料候选(std::shared_ptr<const 海中鱼巣::D455同步帧材料> 材料, std::uint64_t 当前单调时间戳)","file":"海中鱼巣/线程/缓存.D455帧材料.ixx","definition_line":131,"status":"待处理","chart":null},
+    {"id":"F0296","layer":5,"signature":"bool 海中鱼巣::D455流配置有效(const 海中鱼巣::D455流配置& 配置) noexcept","file":"海中鱼巣/适配/协议.D455采样材料.ixx","definition_line":179,"status":"已完成","chart":"L5/CF-L5-0172_D455流配置有效_现状流程图.md"},
+    {"id":"F0298","layer":5,"signature":"海中鱼巣::D455帧材料缓存::D455候选准备结果 海中鱼巣::D455帧材料缓存::准备帧材料候选(std::shared_ptr<const 海中鱼巣::D455同步帧材料> 材料, std::uint64_t 当前单调时间戳)","file":"海中鱼巣/线程/缓存.D455帧材料.ixx","definition_line":131,"status":"已完成","chart":"L5/CF-L5-0173_D455帧材料缓存准备候选_现状流程图.md"},
     {"id":"F0299","layer":5,"signature":"bool 海中鱼巣::D455帧材料句柄::有效() const noexcept","file":"海中鱼巣/线程/缓存.D455帧材料.ixx","definition_line":45,"status":"待处理","chart":null},
     {"id":"F0300","layer":5,"signature":"海中鱼巣::D455缓存读取结果 海中鱼巣::D455帧材料缓存::读取候选(const 海中鱼巣::D455帧材料缓存::D455帧材料候选& 候选) const","file":"海中鱼巣/线程/缓存.D455帧材料.ixx","definition_line":182,"status":"待处理","chart":null},
     {"id":"F0301","layer":5,"signature":"std::uint64_t 海中鱼巣::计算D455同步帧字节数(const 海中鱼巣::D455同步帧材料& 材料) noexcept","file":"海中鱼巣/适配/协议.D455采样材料.ixx","definition_line":291,"status":"待处理","chart":null},
@@ -1672,7 +1671,10 @@
     {"id":"F0601","layer":6,"signature":"void 海中鱼巣::{匿名命名空间}::设备列表释放器::operator()(rs2_device_list* 值) const noexcept","file":"海中鱼巣/适配/采集器.D455相机.ixx","definition_line":67,"status":"待处理","chart":null},
     {"id":"F0602","layer":6,"signature":"void 海中鱼巣::{匿名命名空间}::设备释放器::operator()(rs2_device* 值) const noexcept","file":"海中鱼巣/适配/采集器.D455相机.ixx","definition_line":68,"status":"待处理","chart":null},
     {"id":"F0603","layer":6,"signature":"void 海中鱼巣::{匿名命名空间}::配置释放器::operator()(rs2_config* 值) const noexcept","file":"海中鱼巣/适配/采集器.D455相机.ixx","definition_line":70,"status":"待处理","chart":null},
-    {"id":"F0604","layer":6,"signature":"void 海中鱼巣::{匿名命名空间}::管线配置释放器::operator()(rs2_pipeline_profile* 值) const noexcept","file":"海中鱼巣/适配/采集器.D455相机.ixx","definition_line":71,"status":"待处理","chart":null}
+    {"id":"F0604","layer":6,"signature":"void 海中鱼巣::{匿名命名空间}::管线配置释放器::operator()(rs2_pipeline_profile* 值) const noexcept","file":"海中鱼巣/适配/采集器.D455相机.ixx","definition_line":71,"status":"待处理","chart":null},
+    {"id":"F0605","layer":6,"signature":"bool 海中鱼巣::D455帧材料缓存::已过期(const 海中鱼巣::D455同步帧材料& 材料, std::uint64_t 当前单调时间戳) const noexcept","file":"海中鱼巣/线程/缓存.D455帧材料.ixx","definition_line":309,"status":"待处理","chart":null},
+    {"id":"F0606","layer":6,"signature":"海中鱼巣::D455帧材料缓存::D455帧材料候选::D455帧材料候选(const 海中鱼巣::D455帧材料缓存* 所属缓存, 海中鱼巣::D455帧材料句柄 句柄, std::uint64_t 能力编号) noexcept","file":"海中鱼巣/线程/缓存.D455帧材料.ixx","definition_line":100,"status":"待处理","chart":null},
+    {"id":"F0607","layer":6,"signature":"海中鱼巣::D455帧材料缓存::D455帧材料候选::D455帧材料候选(海中鱼巣::D455帧材料缓存::D455帧材料候选&& 来源) noexcept","file":"海中鱼巣/线程/缓存.D455帧材料.ixx","definition_line":82,"status":"待处理","chart":null}
   ],
   "calls": [
     {
@@ -2335,8 +2337,7 @@
     {"id":"E0541","caller":"F0104","callee":"F0296","location":"海中鱼巣/适配/协议.D455采样材料.ixx:199","arguments":"配置.深度","return_binding":"深度流有效bool","condition":"彩色流有效","type":"direct_free"},
     {"id":"E0542","caller":"F0104","callee":"F0296","location":"海中鱼巣/适配/协议.D455采样材料.ixx:200","arguments":"配置.左红外","return_binding":"左红外流有效bool","condition":"深度流有效","type":"direct_free"},
     {"id":"E0543","caller":"F0104","callee":"F0296","location":"海中鱼巣/适配/协议.D455采样材料.ixx:201","arguments":"配置.右红外","return_binding":"右红外流有效bool","condition":"左红外流有效","type":"direct_free"},
-    {"id":"E0544","caller":"F0107","callee":"F0113","location":"海中鱼巣/线程/上行桥.D455采样材料.ixx:64","arguments":"请求.采样超时毫秒","return_binding":"采集结果","condition":"真实样本调用语境中帧来源动态类型为D455相机采集器","type":"virtual_dispatch_resolved_context"},
-    {"id":"E0545","caller":"F0107","callee":"F0297","location":"海中鱼巣/线程/上行桥.D455采样材料.ixx:64","arguments":"请求.采样超时毫秒","return_binding":"采集结果","condition":"自检调用语境中帧来源动态类型为模拟D455帧来源","type":"virtual_dispatch_resolved_context"},
+    {"id":"E0544","caller":"F0107","callee":"F0113","location":"海中鱼巣/线程/上行桥.D455采样材料.ixx:64","arguments":"请求.采样超时毫秒","return_binding":"采集结果","condition":"当前唯一可达 F0038 调用语境中帧来源动态类型为D455相机采集器","type":"virtual_dispatch_resolved_context"},
     {"id":"E0546","caller":"F0107","callee":"F0108","location":"海中鱼巣/线程/上行桥.D455采样材料.ixx:72","arguments":"*采集结果.材料","return_binding":"材料有效bool","condition":"采集成功且材料指针非空","type":"direct_free"},
     {"id":"E0547","caller":"F0107","callee":"F0298","location":"海中鱼巣/线程/上行桥.D455采样材料.ixx:80-81","arguments":"采集结果.材料,请求.当前宿主时间戳","return_binding":"准备结果","condition":"材料有效且批次匹配","type":"direct_member_nonvirtual"},
     {"id":"E0548","caller":"F0107","callee":"F0300","location":"海中鱼巣/线程/上行桥.D455采样材料.ixx:91","arguments":"候选","return_binding":"候选读回","condition":"准备成功且候选存在","type":"direct_const_member"},
@@ -3268,7 +3269,12 @@
     {"id":"E1477","caller":"F0295","callee":"F0601","location":"海中鱼巣/适配/采集器.D455相机.ixx:461,584","arguments":"设备组非空指针","return_binding":"释放SDK设备列表","condition":"离开try且设备列表非空","type":"callback_invoke"},
     {"id":"E1478","caller":"F0295","callee":"F0309","location":"海中鱼巣/适配/采集器.D455相机.ixx:460,584","arguments":"this=&列表错误","return_binding":"释放非空SDK错误","condition":"已构造后离开try","type":"destructor"},
     {"id":"E1479","caller":"F0295","callee":"F0309","location":"海中鱼巣/适配/采集器.D455相机.ixx:455,584","arguments":"this=&上下文错误","return_binding":"释放非空SDK错误","condition":"已构造后离开try","type":"destructor"},
-    {"id":"E1480","caller":"F0295","callee":"F0594","location":"海中鱼巣/适配/采集器.D455相机.ixx:586","arguments":"内部不一致,true","return_binding":"异常失败结果","condition":"catch-all","type":"direct_member"}
+    {"id":"E1480","caller":"F0295","callee":"F0594","location":"海中鱼巣/适配/采集器.D455相机.ixx:586","arguments":"内部不一致,true","return_binding":"异常失败结果","condition":"catch-all","type":"direct_member"},
+    {"id":"E1481","caller":"F0298","callee":"F0108","location":"海中鱼巣/线程/缓存.D455帧材料.ixx:137","arguments":"*材料","return_binding":"材料有效位","condition":"配置有效且材料共享指针非空","type":"direct_free"},
+    {"id":"E1482","caller":"F0298","callee":"F0605","location":"海中鱼巣/线程/缓存.D455帧材料.ixx:140","arguments":"this,*材料,当前单调时间戳","return_binding":"材料过期位","condition":"材料和当前时间有效","type":"direct_const_member"},
+    {"id":"E1483","caller":"F0298","callee":"F0301","location":"海中鱼巣/线程/缓存.D455帧材料.ixx:143","arguments":"*材料","return_binding":"四平面总字节数","condition":"材料未过期","type":"direct_free"},
+    {"id":"E1484","caller":"F0298","callee":"F0606","location":"海中鱼巣/线程/缓存.D455帧材料.ixx:178","arguments":"this,句柄,能力编号","return_binding":"临时候选","condition":"未发布条目插入且总量更新成功","type":"private_constructor"},
+    {"id":"E1485","caller":"F0298","callee":"F0607","location":"海中鱼巣/线程/缓存.D455帧材料.ixx:178","arguments":"临时候选&&","return_binding":"optional内候选","condition":"F0606构造完成且optional为空","type":"move_constructor"}
   ],
   "external_boundaries": [
     {
@@ -4201,7 +4207,12 @@
     {"id":"X0329","signature":"字符串字面量删除到std::string构造、分位指标返回值物化及返回生命周期边界","caller":"F0287","locations":["海中鱼巣/核心/自检.关系仓库性能基线.ixx:374-375"],"call_count":3,"queued":false},
     {"id":"X0330","signature":"std::move、D455帧来源隐式默认构造、D455采集配置隐式移动/析构、mutex/unique_ptr/atomic及身份/实际配置默认构造边界","caller":"F0294","locations":["海中鱼巣/适配/采集器.D455相机.ixx:427-429,733-743","海中鱼巣/适配/协议.D455采样材料.ixx:73-87,160-166"],"call_count":10,"queued":false},
     {"id":"X0331","signature":"scoped_lock、atomic store、string、unique_ptr、移动、循环、值式结果及异常展开等标准库/编译器生命周期边界","caller":"F0295","locations":["海中鱼巣/适配/采集器.D455相机.ixx:440-588"],"call_count":67,"queued":false},
-    {"id":"X0332","signature":"rs2_create_context、rs2_query_devices、rs2_get_device_count、rs2_create_device、rs2_create_pipeline、rs2_create_config、rs2_config_enable_device、rs2_pipeline_start_with_config及rs2_pipeline_profile_get_device直接RealSense C API边界","caller":"F0295","locations":["海中鱼巣/适配/采集器.D455相机.ixx:456,461,466,474,528,530,535,556,566"],"call_count":9,"queued":false}
+    {"id":"X0332","signature":"rs2_create_context、rs2_query_devices、rs2_get_device_count、rs2_create_device、rs2_create_pipeline、rs2_create_config、rs2_config_enable_device、rs2_pipeline_start_with_config及rs2_pipeline_profile_get_device直接RealSense C API边界","caller":"F0295","locations":["海中鱼巣/适配/采集器.D455相机.ixx:456,461,466,474,528,530,535,556,566"],"call_count":9,"queued":false},
+    {"id":"X0333","signature":"shared_ptr<const D455同步帧材料>按值所有权、非空检查、解引用、std::move及参数析构边界","caller":"F0298","locations":["海中鱼巣/线程/缓存.D455帧材料.ixx:131-180"],"call_count":4,"queued":false},
+    {"id":"X0334","signature":"std::scoped_lock<std::mutex>加锁、解锁与异常展开边界","caller":"F0298","locations":["海中鱼巣/线程/缓存.D455帧材料.ixx:148-180"],"call_count":2,"queued":false},
+    {"id":"X0335","signature":"unordered_map::size/emplace、allocator与容器异常保证边界","caller":"F0298","locations":["海中鱼巣/线程/缓存.D455帧材料.ixx:152,171"],"call_count":2,"queued":false},
+    {"id":"X0336","signature":"optional候选默认构造与移动赋值、结果物化、NRVO或隐式移动返回边界","caller":"F0298","locations":["海中鱼巣/线程/缓存.D455帧材料.ixx:176-179"],"call_count":3,"queued":false},
+    {"id":"X0337","signature":"size_t与uint64比较、减法、后增、加法、短路、结构化绑定及聚合结果初始化边界","caller":"F0298","locations":["海中鱼巣/线程/缓存.D455帧材料.ixx:134-179"],"call_count":20,"queued":false}
   ],
   "unresolved_calls": [
     {"id":"U0001","caller":"F0167","location":"海中鱼巣/核心/关系仓库.cpp:185（关系共享许可范围宏展开）","expression":"事务接线_.取得共享许可(事务接线_.运行期状态)","reason":"运行期可替换函数指针；静态调用点无法唯一裁决实际项目源码目标","known_contract":"结构事务许可(const std::shared_ptr<void>&)","status":"未解析调用"},
