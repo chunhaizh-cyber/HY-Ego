@@ -1358,9 +1358,9 @@
     {"id":"F0287","layer":5,"signature":"海中鱼巣::关系仓库性能基线内部::分位指标 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::测量删除()","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":357,"status":"已完成","chart":"L5/CF-L5-0163_隔离关系夹具测量删除_现状流程图.md"},
     {"id":"F0288","layer":5,"signature":"海中鱼巣::关系仓库& 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::读取关系仓库()","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":328,"status":"已完成","chart":"L5/CF-L5-0164_隔离关系夹具读取关系仓库_现状流程图.md"},
     {"id":"F0289","layer":5,"signature":"bool 海中鱼巣::运行关系仓库性能基线自检()::<lambda@自检.关系仓库性能基线.ixx:902>::operator()<海中鱼巣::关系仓库性能基线内部::规模报告>(const 海中鱼巣::关系仓库性能基线内部::规模报告& 报告) const::<lambda@自检.关系仓库性能基线.ixx:904>::operator()<海中鱼巣::关系仓库性能基线内部::分位指标>(const 海中鱼巣::关系仓库性能基线内部::分位指标& 指标) const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":904,"status":"已完成","chart":"L5/CF-L5-0165_查询指标结果一致谓词lambda_现状流程图.md"},
-    {"id":"F0290","layer":5,"signature":"bool 海中鱼巣::运行关系仓库性能基线自检()::<lambda@自检.关系仓库性能基线.ixx:902>::operator()<海中鱼巣::关系仓库性能基线内部::规模报告>(const 海中鱼巣::关系仓库性能基线内部::规模报告& 报告) const::<lambda@自检.关系仓库性能基线.ixx:907>::operator()<海中鱼巣::关系仓库性能基线内部::分位指标>(const 海中鱼巣::关系仓库性能基线内部::分位指标& 指标) const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":907,"status":"待处理","chart":null},
-    {"id":"F0291","layer":5,"signature":"bool 海中鱼巣::关系仓库性能基线内部::规模报告::完整() const::<lambda@自检.关系仓库性能基线.ixx:741>::operator()<海中鱼巣::关系仓库性能基线内部::分位指标>(const 海中鱼巣::关系仓库性能基线内部::分位指标& 指标) const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":741,"status":"待处理","chart":null},
-    {"id":"F0292","layer":5,"signature":"bool 海中鱼巣::关系仓库性能基线内部::规模报告::完整() const::<lambda@自检.关系仓库性能基线.ixx:744>::operator()<海中鱼巣::关系仓库性能基线内部::分位指标>(const 海中鱼巣::关系仓库性能基线内部::分位指标& 指标) const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":744,"status":"待处理","chart":null},
+    {"id":"F0290","layer":5,"signature":"bool 海中鱼巣::运行关系仓库性能基线自检()::<lambda@自检.关系仓库性能基线.ixx:902>::operator()<海中鱼巣::关系仓库性能基线内部::规模报告>(const 海中鱼巣::关系仓库性能基线内部::规模报告& 报告) const::<lambda@自检.关系仓库性能基线.ixx:907>::operator()<海中鱼巣::关系仓库性能基线内部::分位指标>(const 海中鱼巣::关系仓库性能基线内部::分位指标& 指标) const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":907,"status":"已完成","chart":"L5/CF-L5-0166_写入指标结果一致谓词lambda_现状流程图.md"},
+    {"id":"F0291","layer":5,"signature":"bool 海中鱼巣::关系仓库性能基线内部::规模报告::完整() const::<lambda@自检.关系仓库性能基线.ixx:741>::operator()<海中鱼巣::关系仓库性能基线内部::分位指标>(const 海中鱼巣::关系仓库性能基线内部::分位指标& 指标) const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":741,"status":"已完成","chart":"L5/CF-L5-0167_查询指标完整谓词lambda_现状流程图.md"},
+    {"id":"F0292","layer":5,"signature":"bool 海中鱼巣::关系仓库性能基线内部::规模报告::完整() const::<lambda@自检.关系仓库性能基线.ixx:744>::operator()<海中鱼巣::关系仓库性能基线内部::分位指标>(const 海中鱼巣::关系仓库性能基线内部::分位指标& 指标) const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":744,"status":"已完成","chart":"L5/CF-L5-0168_写入指标完整谓词lambda_现状流程图.md"},
     {"id":"F0293","layer":5,"signature":"bool 海中鱼巣::关系仓库性能基线内部::并发指标::完整() const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":628,"status":"待处理","chart":null},
     {"id":"F0294","layer":5,"signature":"海中鱼巣::D455相机采集器::D455相机采集器(海中鱼巣::D455采集配置 配置)","file":"海中鱼巣/适配/采集器.D455相机.ixx","definition_line":427,"status":"待处理","chart":null},
     {"id":"F0295","layer":5,"signature":"海中鱼巣::D455操作结果 海中鱼巣::D455相机采集器::打开()","file":"海中鱼巣/适配/采集器.D455相机.ixx","definition_line":440,"status":"待处理","chart":null},
@@ -1660,7 +1660,8 @@
     {"id":"F0589","layer":6,"signature":"std::optional<海中鱼巣::关系记录> 海中鱼巣::关系仓库::读取关系审计(海中鱼巣::关系句柄 当前关系) const","file":"海中鱼巣/核心/关系仓库.cpp","definition_line":295,"status":"待处理","chart":null},
     {"id":"F0590","layer":6,"signature":"bool 海中鱼巣::关系仓库::删除关系(海中鱼巣::关系句柄 关系)","file":"海中鱼巣/核心/关系仓库.cpp","definition_line":409,"status":"待处理","chart":null},
     {"id":"F0591","layer":6,"signature":"海中鱼巣::关系状态变更材料 海中鱼巣::关系仓库::失效关系(海中鱼巣::关系句柄 关系)","file":"海中鱼巣/核心/关系仓库.cpp","definition_line":339,"status":"待处理","chart":null},
-    {"id":"F0592","layer":6,"signature":"bool 海中鱼巣::关系状态变更材料::完整() const","file":"海中鱼巣/核心/关系仓库.h","definition_line":113,"status":"待处理","chart":null}
+    {"id":"F0592","layer":6,"signature":"bool 海中鱼巣::关系状态变更材料::完整() const","file":"海中鱼巣/核心/关系仓库.h","definition_line":113,"status":"待处理","chart":null},
+    {"id":"F0593","layer":6,"signature":"bool 海中鱼巣::关系仓库性能基线内部::分位指标::完整() const","file":"海中鱼巣/核心/自检.关系仓库性能基线.ixx","definition_line":87,"status":"待处理","chart":null}
   ],
   "calls": [
     {
@@ -2314,7 +2315,7 @@
     {"id":"E0532","caller":"F0098","callee":"F0289","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:904-906","arguments":"当前查询分位指标const引用","return_binding":"查询all_of谓词bool","condition":"参考模型一致且标准算法遍历未短路","type":"external_callback"},
     {"id":"E0533","caller":"F0098","callee":"F0290","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:907-909","arguments":"当前写入分位指标const引用","return_binding":"写入all_of谓词bool","condition":"参考模型与查询指标一致且标准算法遍历未短路","type":"external_callback"},
     {"id":"E0534","caller":"F0099","callee":"F0291","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:741-743","arguments":"当前查询分位指标const引用","return_binding":"查询all_of谓词bool","condition":"基础字段和查询写入指标数量门禁通过且算法未短路","type":"external_callback"},
-    {"id":"E0535","caller":"F0099","callee":"F0292","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:744-746","arguments":"当前写入分位指标const引用","return_binding":"写入all_of谓词bool","condition":"查询指标全部完整且算法未短路","type":"external_callback"},
+    {"id":"E0535","caller":"F0099","callee":"F0292","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:744-746","arguments":"当前写入分位指标const引用","return_binding":"写入all_of谓词bool","condition":"基础字段和两组数量门禁通过、查询指标全部完整且算法未短路","type":"external_callback"},
     {"id":"E0536","caller":"F0099","callee":"F0293","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:747","arguments":"this=&并发","return_binding":"并发完整bool","condition":"查询和写入指标全部完整","type":"direct_const_member"},
     {"id":"E0537","caller":"F0101","callee":"F0294","location":"海中鱼巣/适配/采集器.D455相机.ixx:749","arguments":"std::move(配置)经make_unique","return_binding":"堆上具体采集器并绑定局部unique_ptr","condition":"F0101执行且分配成功","type":"constructor_via_make_unique"},
     {"id":"E0538","caller":"F0101","callee":"F0295","location":"海中鱼巣/适配/采集器.D455相机.ixx:750","arguments":"this=采集器.get()","return_binding":"临时操作结果再赋打开结果","condition":"采集器构造成功","type":"direct_member_nonvirtual"},
@@ -3178,7 +3179,9 @@
     {"id":"E1399","caller":"F0287","callee":"F0590","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:369","arguments":"新关系","return_binding":"已删除","condition":"新关系句柄有效","type":"direct_member_nonvirtual"},
     {"id":"E1400","caller":"F0287","callee":"F0587","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:371","arguments":"新关系","return_binding":"删除后记录optional","condition":"累计正确且删除成功","type":"direct_const_member"},
     {"id":"E1401","caller":"F0287","callee":"F0576","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:372","arguments":"结束-开始","return_binding":"删除耗时纳秒","condition":"正式轮且创建成功；不要求删除成功","type":"direct_free"},
-    {"id":"E1402","caller":"F0287","callee":"F0281","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:374","arguments":"\"删除\",样本,初始当前记录数量_+440,正确","return_binding":"返回分位指标","condition":"全部循环结束","type":"direct_free"}
+    {"id":"E1402","caller":"F0287","callee":"F0281","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:374","arguments":"\"删除\",样本,初始当前记录数量_+440,正确","return_binding":"返回分位指标","condition":"全部循环结束","type":"direct_free"},
+    {"id":"E1403","caller":"F0291","callee":"F0593","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:742","arguments":"this=&指标","return_binding":"查询指标完整位","condition":"F0291回调执行","type":"direct_const_member"},
+    {"id":"E1404","caller":"F0292","callee":"F0593","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:745","arguments":"this=&指标","return_binding":"写入指标完整位","condition":"F0292回调执行","type":"direct_const_member"}
   ],
   "external_boundaries": [
     {
