@@ -1384,9 +1384,9 @@
     {"id":"F0314","layer":5,"signature":"bool 海中鱼巣::{匿名命名空间}::读取外参(const rs2_frame* 来源帧, const rs2_frame* 目标帧, 海中鱼巣::D455流类型 来源类型, std::uint32_t 来源索引, 海中鱼巣::D455流类型 目标类型, std::uint32_t 目标索引, 海中鱼巣::D455相机外参材料& 材料)","file":"海中鱼巣/适配/采集器.D455相机.ixx","definition_line":379,"status":"已完成","chart":"L5/CF-L5-0189_读取外参_现状流程图.md"},
     {"id":"F0315","layer":5,"signature":"std::uint64_t 海中鱼巣::{匿名命名空间}::计算标定摘要(const 海中鱼巣::D455同步帧材料& 材料)","file":"海中鱼巣/适配/采集器.D455相机.ixx","definition_line":404,"status":"已完成","chart":"L5/CF-L5-0190_计算标定摘要_现状流程图.md"},
     {"id":"F0316","layer":5,"signature":"海中鱼巣::{匿名命名空间}::SDK错误槽::SDK错误槽()","file":"海中鱼巣/适配/采集器.D455相机.ixx","definition_line":44,"status":"已完成","chart":"L5/CF-L5-0191_SDK错误槽默认构造_现状流程图.md"},
-    {"id":"F0317","layer":5,"signature":"void 海中鱼巣::{匿名命名空间}::管线释放器::operator()(rs2_pipeline* 值) const noexcept","file":"海中鱼巣/适配/采集器.D455相机.ixx","definition_line":69,"status":"待处理","chart":null},
-    {"id":"F0318","layer":5,"signature":"void 海中鱼巣::{匿名命名空间}::上下文释放器::operator()(rs2_context* 值) const noexcept","file":"海中鱼巣/适配/采集器.D455相机.ixx","definition_line":66,"status":"待处理","chart":null},
-    {"id":"F0319","layer":5,"signature":"海中鱼巣::D455帧来源::~D455帧来源() noexcept","file":"海中鱼巣/适配/协议.D455采样材料.ixx","definition_line":162,"status":"待处理","chart":null},
+    {"id":"F0317","layer":5,"signature":"void 海中鱼巣::{匿名命名空间}::管线释放器::operator()(rs2_pipeline* 值) const noexcept","file":"海中鱼巣/适配/采集器.D455相机.ixx","definition_line":69,"status":"已完成","chart":"L5/CF-L5-0192_管线释放器调用_现状流程图.md"},
+    {"id":"F0318","layer":5,"signature":"void 海中鱼巣::{匿名命名空间}::上下文释放器::operator()(rs2_context* 值) const noexcept","file":"海中鱼巣/适配/采集器.D455相机.ixx","definition_line":66,"status":"已完成","chart":"L5/CF-L5-0193_上下文释放器调用_现状流程图.md"},
+    {"id":"F0319","layer":5,"signature":"海中鱼巣::D455帧来源::~D455帧来源() noexcept","file":"海中鱼巣/适配/协议.D455采样材料.ixx","definition_line":162,"status":"已完成","chart":"L5/CF-L5-0194_D455帧来源析构_现状流程图.md"},
     {"id":"F0320","layer":6,"signature":"海中鱼巣::自我治理停止结果 海中鱼巣::有界自我治理邮箱::请求停止并唤醒()","file":"海中鱼巣/线程/有界自我治理队列.ixx","definition_line":189,"status":"待处理","chart":null},
     {"id":"F0321","layer":6,"signature":"bool 海中鱼巣::结构事务接线::接线形态有效() const","file":"海中鱼巣/核心/结构事务接线.数据.h","definition_line":82,"status":"待处理","chart":null},
     {"id":"F0322","layer":6,"signature":"bool 海中鱼巣::{匿名命名空间@节点仓库.cpp}::接线一致(const 海中鱼巣::结构事务接线& 左, const 海中鱼巣::结构事务接线& 右)","file":"海中鱼巣/核心/节点仓库.cpp","definition_line":16,"status":"待处理","chart":null},
@@ -1981,10 +1981,9 @@
     {"id":"E0175","caller":"F0038","callee":"F0115","location":"海中鱼巣/适配/自检.D455真实样本.ixx:110","arguments":"this=采集器唯一具体对象","return_binding":"","condition":"after E0174","type":"virtual_dispatch_resolved_final"},
     {"id":"E0176","caller":"F0038","callee":"F0102","location":"海中鱼巣/适配/自检.D455真实样本.ixx:111","arguments":"this=采集器唯一具体对象","return_binding":"关闭快照","condition":"after E0175","type":"virtual_dispatch_resolved_final"},
     {"id":"E0177","caller":"F0038","callee":"F0116","location":"海中鱼巣/适配/自检.D455真实样本.ixx:112","arguments":"this=&缓存","return_binding":"缓存快照","condition":"关闭快照状态为已关闭","type":"direct_const_member"},
-    {"id":"E0178","caller":"F0038","callee":"F0117","location":"海中鱼巣/适配/自检.D455真实样本.ixx:130","arguments":"this=unique_ptr所有的唯一具体对象","return_binding":"","condition":"非早退路径函数退出；采集器非空","type":"compiler_implicit_virtual_destructor_resolved_final"},
+    {"id":"E0178","caller":"F0038","callee":"F0117","location":"海中鱼巣/适配/自检.D455真实样本.ixx:130","arguments":"this=unique_ptr所有的唯一具体对象","return_binding":"","condition":"成功取得非空采集器后的正常退出或任意异常展开","type":"compiler_implicit_virtual_destructor_resolved_final"},
     {"id":"E0179","caller":"F0037","callee":"F0118","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:893-895","arguments":"当前规模报告","return_binding":"随机种子与结构签名判定","condition":"验收1前置短路均通过且all_of遍历","type":"standard_algorithm_callback"},
     {"id":"E0180","caller":"F0037","callee":"F0119","location":"海中鱼巣/核心/自检.关系仓库性能基线.ixx:912-915","arguments":"当前规模报告","return_binding":"指标数量与并发吞吐判定","condition":"all_of遍历且尚未失败","type":"standard_algorithm_callback"},
-    {"id":"E0181","caller":"F0038","callee":"F0117","location":"海中鱼巣/适配/自检.D455真实样本.ixx:29","arguments":"this=unique_ptr所有的唯一具体对象","return_binding":"","condition":"打开结果失败但采集器非空；早退前","type":"compiler_implicit_virtual_destructor_resolved_final"},
     {"id":"E0182","caller":"F0032","callee":"F0013","location":"海中鱼巣/启动.应用程序.ixx:197","arguments":"配置","return_binding":"装配","condition":"六轮各一次","type":"direct_free_function"},
     {"id":"E0183","caller":"F0032","callee":"F0014","location":"海中鱼巣/启动.应用程序.ixx:198","arguments":"this=&装配","return_binding":"装配成功","condition":"每轮装配后","type":"direct_const_member"},
     {"id":"E0184","caller":"F0032","callee":"F0015","location":"海中鱼巣/启动.应用程序.ixx:242-243","arguments":"故障注入端口, {配置.方法登记根稳定键,配置.根需求参数}","return_binding":"结果","condition":"装配成功；六轮","type":"direct_free_function"},
@@ -3434,7 +3433,9 @@
     {"id":"E1632","caller":"F0600","callee":"F0316","location":"海中鱼巣/适配/采集器.D455相机.ixx:237","arguments":"无","return_binding":"数量错误槽","condition":"实际流配置列表有效","type":"constructor"},
     {"id":"E1633","caller":"F0600","callee":"F0316","location":"海中鱼巣/适配/采集器.D455相机.ixx:247","arguments":"无","return_binding":"读取错误槽","condition":"每次实际流配置索引迭代","type":"constructor"},
     {"id":"E1634","caller":"F0613","callee":"F0316","location":"海中鱼巣/适配/采集器.D455相机.ixx:189","arguments":"无","return_binding":"数据错误槽","condition":"进入读取流配置","type":"constructor"},
-    {"id":"E1635","caller":"F0613","callee":"F0316","location":"海中鱼巣/适配/采集器.D455相机.ixx:197","arguments":"无","return_binding":"分辨率错误槽","condition":"profile数据读取无错误","type":"constructor"}
+    {"id":"E1635","caller":"F0613","callee":"F0316","location":"海中鱼巣/适配/采集器.D455相机.ixx:197","arguments":"无","return_binding":"分辨率错误槽","condition":"profile数据读取无错误","type":"constructor"},
+    {"id":"E1636","caller":"F0594","callee":"F0317","location":"海中鱼巣/适配/采集器.D455相机.ixx:726","arguments":"管线_旧指针","return_binding":"删除非空SDK管线","condition":"打开失败收口；reset时成员管线非空","type":"callback_invoke"},
+    {"id":"E1637","caller":"F0594","callee":"F0318","location":"海中鱼巣/适配/采集器.D455相机.ixx:727","arguments":"上下文_旧指针","return_binding":"删除非空SDK上下文","condition":"成员管线已reset；reset时成员上下文非空","type":"callback_invoke"}
   ],
   "external_boundaries": [
     {
@@ -4387,7 +4388,9 @@
     {"id":"X0349","signature":"RealSense frame profile、宽高步长位数、字节数、数据、编号、时间戳、时间域及视频内参读取与借用生命周期边界","caller":"F0313","locations":["海中鱼巣/适配/采集器.D455相机.ixx:320,330,332,334,336,338,345,347,349,351,354"],"call_count":11,"queued":false},
     {"id":"X0350","signature":"整数与浮点转换、isfinite、llround、vector resize/data/size、memcpy、分配异常及SDK数据借用到拥有字节组的深复制边界","caller":"F0313","locations":["海中鱼巣/适配/采集器.D455相机.ixx:339-375"],"call_count":16,"queued":false},
     {"id":"X0351","signature":"RealSense rs2_get_frame_stream_profile两次与rs2_get_extrinsics一次读取profile及外参、SDK借用和错误输出边界","caller":"F0314","locations":["海中鱼巣/适配/采集器.D455相机.ixx:388,390,396"],"call_count":3,"queued":false},
-    {"id":"X0352","signature":"局部闭包生命周期、两个范围循环、字符无符号转换、fabs、百万倍浮点乘法、llround、uint64转换及返回生命周期边界","caller":"F0315","locations":["海中鱼巣/适配/采集器.D455相机.ixx:406-421"],"call_count":14,"queued":false}
+    {"id":"X0352","signature":"局部闭包生命周期、两个范围循环、字符无符号转换、fabs、百万倍浮点乘法、llround、uint64转换及返回生命周期边界","caller":"F0315","locations":["海中鱼巣/适配/采集器.D455相机.ixx:406-421"],"call_count":14,"queued":false},
+    {"id":"X0353","signature":"RealSense rs2_delete_pipeline删除非空SDK管线、void返回与noexcept异常越界边界","caller":"F0317","locations":["海中鱼巣/适配/采集器.D455相机.ixx:69"],"call_count":1,"queued":false},
+    {"id":"X0354","signature":"RealSense rs2_delete_context删除非空SDK上下文、void返回与noexcept异常越界边界","caller":"F0318","locations":["海中鱼巣/适配/采集器.D455相机.ixx:66"],"call_count":1,"queued":false}
   ],
   "unresolved_calls": [
     {"id":"U0001","caller":"F0167","location":"海中鱼巣/核心/关系仓库.cpp:185（关系共享许可范围宏展开）","expression":"事务接线_.取得共享许可(事务接线_.运行期状态)","reason":"运行期可替换函数指针；静态调用点无法唯一裁决实际项目源码目标","known_contract":"结构事务许可(const std::shared_ptr<void>&)","status":"未解析调用"},
