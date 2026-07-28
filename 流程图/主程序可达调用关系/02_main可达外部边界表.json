@@ -16,7 +16,7 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1154,
-  "project_call_edge_count": 2760,
+  "project_call_edge_count": 2756,
   "external_count": 1628,
   "callback_registration_count": 27,
   "external_boundaries": [

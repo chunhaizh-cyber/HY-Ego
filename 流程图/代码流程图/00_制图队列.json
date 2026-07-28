@@ -8,14 +8,14 @@
   "source_relation_publish_commit": "52e7496b0dab5a31ba0d4be9b727903541ee9373",
   "generated_from_commit": "7342125cb3aa42b81a2c01393ca86abd383ec387",
   "source_identity_path": "流程图/主程序可达调用关系/00_main可达函数身份表.json",
-  "source_identity_blob": "366ae792a0ba2643ec65d45cc4ad464e85cbe0d1",
+  "source_identity_blob": "cc3e12c0de8d1175dc68c93d3c8225dc2cb22510",
   "source_edge_path": "流程图/主程序可达调用关系/01_main可达项目调用边表.json",
-  "source_edge_blob": "bf1fde0e9865aeed2568843a2d821c53a8a1b82a",
+  "source_edge_blob": "ee5ca886e427958139a936e981ad1dff2ca45b1d",
   "source_external_path": "流程图/主程序可达调用关系/02_main可达外部边界表.json",
-  "source_external_blob": "5b88aa381fa57c7a5ebf8cd8c2d89f125e326fb1",
+  "source_external_blob": "9f9ba80596768e1cfab4b3a71ba17768531af60c",
   "current_reachable_function_count": 1154,
-  "chart_completed_count": 315,
-  "chart_pending_count": 839,
+  "chart_completed_count": 318,
+  "chart_pending_count": 836,
   "historical_unreachable_chart_count": 49,
   "queue_order": "正式身份表的 BFS / 最短深度顺序；同深度保持正式表稳定顺序",
   "entries": [
@@ -7713,7 +7713,8 @@
         "F0261",
         "F0262",
         "F0266",
-        "F0267"
+        "F0267",
+        "F0468"
       ],
       "callee_ids": [
         "F0336",
@@ -7827,7 +7828,8 @@
         "F0261",
         "F0262",
         "F0266",
-        "F0267"
+        "F0267",
+        "F0468"
       ],
       "callee_ids": [
         "F0336",
@@ -7844,7 +7846,8 @@
         "E1141",
         "E1170",
         "E1260",
-        "E1289"
+        "E1289",
+        "RCE0249"
       ],
       "outgoing_project_edge_ids": [
         "E0802",
@@ -10118,7 +10121,6 @@
         "F0197",
         "F0198",
         "F0199",
-        "F0376",
         "F0468",
         "F0469",
         "R0083"
@@ -10138,7 +10140,6 @@
         "E1069",
         "RCE0063",
         "E1070",
-        "RCE0064",
         "E1072",
         "E1073",
         "E1074",
@@ -10301,7 +10302,6 @@
         "F0197",
         "F0198",
         "F0199",
-        "F0376",
         "F0468",
         "F0469",
         "F0516",
@@ -10327,7 +10327,6 @@
         "E1140",
         "RCE0075",
         "E1141",
-        "RCE0076",
         "E1142",
         "E1145",
         "E1149"
@@ -10371,7 +10370,6 @@
         "F0197",
         "F0198",
         "F0199",
-        "F0376",
         "F0468",
         "F0469",
         "F0530",
@@ -10396,7 +10394,6 @@
         "E1169",
         "RCE0080",
         "E1170",
-        "RCE0081",
         "E1171"
       ],
       "external_boundary_ids": [
@@ -10627,7 +10624,6 @@
         "F0197",
         "F0198",
         "F0199",
-        "F0376",
         "F0468",
         "F0469",
         "F0531",
@@ -10648,7 +10644,6 @@
         "E1259",
         "RCE0101",
         "E1260",
-        "RCE0102",
         "E1261",
         "E1262",
         "E1263",
@@ -10688,7 +10683,6 @@
         "F0197",
         "F0198",
         "F0199",
-        "F0376",
         "F0468",
         "F0469",
         "F0530",
@@ -10711,7 +10705,6 @@
         "E1288",
         "RCE0103",
         "E1289",
-        "RCE0104",
         "E1290"
       ],
       "external_boundary_ids": [
@@ -14140,9 +14133,9 @@
       "external_boundary_ids": [
         "X00997"
       ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L5/CF-L5-0198_节点仓库有效节点数量令牌重载_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L5/CF-L5-0198_节点仓库有效节点数量令牌重载_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L5"
     },
     {
@@ -14172,9 +14165,9 @@
         "RCE1681"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L5/CF-L5-0199_结构事务许可移动构造_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L5/CF-L5-0199_结构事务许可移动构造_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L5"
     },
     {
@@ -14192,35 +14185,25 @@
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0199；调用点=海中鱼巣/核心/索引仓库.cpp:405",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "caller_ids": [
-        "F0199",
-        "F0258",
-        "F0261",
-        "F0262",
-        "F0266",
-        "F0267",
-        "F0468"
+        "F0199"
       ],
       "callee_ids": [
+        "F0630",
         "R0120"
       ],
       "incoming_project_edge_ids": [
-        "E0805",
-        "RCE0064",
-        "RCE0076",
-        "RCE0081",
-        "RCE0102",
-        "RCE0104",
-        "RCE0249"
+        "E0805"
       ],
       "outgoing_project_edge_ids": [
+        "RCE1736",
         "RCE0162"
       ],
       "external_boundary_ids": [
         "X00998"
       ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L5/CF-L5-0200_索引仓库有效主键数量令牌重载_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L5/CF-L5-0200_索引仓库有效主键数量令牌重载_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L5"
     },
     {
@@ -17371,7 +17354,7 @@
       "callee_ids": [
         "F0013",
         "F0014",
-        "F0376",
+        "F0199",
         "R0083"
       ],
       "incoming_project_edge_ids": [
@@ -22215,6 +22198,7 @@
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "caller_ids": [
         "F0343",
+        "F0376",
         "F0377",
         "R0066",
         "R0068",
@@ -22229,6 +22213,7 @@
       ],
       "incoming_project_edge_ids": [
         "E1782",
+        "RCE1736",
         "RCE0163",
         "RCE0430",
         "RCE0434",

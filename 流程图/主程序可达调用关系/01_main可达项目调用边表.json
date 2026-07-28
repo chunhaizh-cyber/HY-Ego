@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1154,
-  "project_call_edge_count": 2760,
-  "edge_count": 2760,
+  "project_call_edge_count": 2756,
+  "edge_count": 2756,
   "edges": [
     {
       "edge_id": "E0002",
@@ -12335,22 +12335,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0064",
-      "caller": "F0258",
-      "callee": "F0376",
-      "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:209",
-        "海中鱼巣/自检.入口初始化.ixx:218"
-      ],
-      "call_category": "unique_name",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E1072",
       "caller": "F0258",
       "callee": "F0016",
@@ -12944,22 +12928,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0076",
-      "caller": "F0261",
-      "callee": "F0376",
-      "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:291",
-        "海中鱼巣/自检.入口初始化.ixx:299"
-      ],
-      "call_category": "unique_name",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E1142",
       "caller": "F0261",
       "callee": "F0050",
@@ -13199,21 +13167,6 @@
       "return_binding": "索引数量",
       "reachable_condition": "E1169大于初始关系数量",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0081",
-      "caller": "F0262",
-      "callee": "F0376",
-      "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:324"
-      ],
-      "call_category": "unique_name",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
       "current_root_reachable": true
     },
     {
@@ -13979,22 +13932,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0102",
-      "caller": "F0266",
-      "callee": "F0376",
-      "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:443",
-        "海中鱼巣/自检.入口初始化.ixx:450"
-      ],
-      "call_category": "unique_name",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E1261",
       "caller": "F0266",
       "callee": "F0044",
@@ -14203,21 +14140,6 @@
       "return_binding": "索引数量",
       "reachable_condition": "E1288等于环境初始关系数量",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0104",
-      "caller": "F0267",
-      "callee": "F0376",
-      "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:476"
-      ],
-      "call_category": "unique_name",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
       "current_root_reachable": true
     },
     {
@@ -18974,16 +18896,16 @@
     {
       "edge_id": "RCE0249",
       "caller": "F0468",
-      "callee": "F0376",
+      "callee": "F0199",
       "callsites": [
         "海中鱼巣/自检.入口初始化.ixx:62"
       ],
-      "call_category": "unique_name",
+      "call_category": "direct_const_member+source_audited",
       "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "argument_resolution": "无实参；接收者静态类型与无参 const 重载逐调用点复核",
+      "return_binding": "有效主键数量",
+      "reachable_condition": "调用方可达且初始化仓库自检路径进入数量读取",
+      "resolution_source": "当前源码调用点、接收者类型与重载复核",
       "current_root_reachable": true
     },
     {
@@ -42418,6 +42340,21 @@
       "return_binding": "完整句柄相同bool",
       "reachable_condition": "实例与概念粗类别读取完成后进入写前短路判断",
       "resolution_source": "当前源码逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1736",
+      "caller": "F0376",
+      "callee": "F0630",
+      "callsites": [
+        "海中鱼巣/核心/索引仓库.cpp:427"
+      ],
+      "call_category": "direct_const_member+source_audited",
+      "arguments": "this=&节点_, 候选, 令牌",
+      "argument_resolution": "接收者类型、完整实参与三参数令牌重载逐调用点复核",
+      "return_binding": "候选节点当前有效bool",
+      "reachable_condition": "共享令牌有效；候选快照已形成；逐候选循环",
+      "resolution_source": "当前源码逐调用点、接收者类型与重载复核",
       "current_root_reachable": true
     }
   ]
