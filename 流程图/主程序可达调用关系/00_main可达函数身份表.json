@@ -3,7 +3,7 @@
   "scope": "main-current-reachable",
   "root": "F0001",
   "root_signature": "int main(int 参数数量, char* 参数组[])",
-  "code_commit": "dabb2b7483eb2f3dd72dbe309de7baf61689ee31",
+  "code_commit": "2b5e1ea547986ece688988452c6b92e50a6cce23",
   "old_graph_blob": "527f20b7f125d97c3f0cdaf9a650c905d0255203",
   "old_graph_frozen_commit": "a48a70b2d678dea64dd8228adb4f26f0badd9506",
   "configuration": "Debug|x64",
@@ -16,7 +16,7 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1162,
-  "project_call_edge_count": 2751,
+  "project_call_edge_count": 2757,
   "functions": [
     {
       "function_id": "F0001",
@@ -3862,6 +3862,8 @@
         "F0273",
         "F0326",
         "F0350",
+        "F0363",
+        "F0364",
         "F0467",
         "R0026",
         "R0030",
@@ -3966,7 +3968,7 @@
     {
       "function_id": "F0167",
       "complete_signature": "海中鱼巣::关系句柄 海中鱼巣::关系仓库::创建关系(海中鱼巣::关系类型 类型, 海中鱼巣::节点句柄 源节点, 海中鱼巣::节点句柄 目标节点, std::int64_t 顺序号)",
-      "callable_type": "Function",
+      "callable_type": "Method",
       "category": "Function/Method",
       "module_identity": "全局模块片段/源文件定义",
       "file": "海中鱼巣/核心/关系仓库.cpp",
@@ -3982,6 +3984,7 @@
         "F0286",
         "F0287",
         "F0359",
+        "F0364",
         "R0065"
       ],
       "callees": [
@@ -4679,7 +4682,7 @@
     {
       "function_id": "F0190",
       "complete_signature": "std::optional<海中鱼巣::节点记录> 海中鱼巣::节点仓库::读取节点(海中鱼巣::节点句柄 节点) const",
-      "callable_type": "Function",
+      "callable_type": "Method",
       "category": "Function/Method",
       "module_identity": "全局模块片段/源文件定义",
       "file": "海中鱼巣/核心/节点仓库.cpp",
@@ -4706,7 +4709,9 @@
         "R0284",
         "R0300",
         "R0321",
-        "R0324"
+        "R0324",
+        "R0571",
+        "R0572"
       ],
       "callees": [
         "F0336",
@@ -7607,7 +7612,7 @@
     {
       "function_id": "F0331",
       "complete_signature": "海中鱼巣::主信息句柄 海中鱼巣::主信息仓库::创建主信息()",
-      "callable_type": "Function",
+      "callable_type": "Method",
       "category": "Function/Method",
       "module_identity": "全局模块片段/源文件定义",
       "file": "海中鱼巣/核心/主信息仓库.cpp",
@@ -8557,7 +8562,9 @@
         "F0350"
       ],
       "callees": [
-        "F0168"
+        "F0163",
+        "F0168",
+        "F0565"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0183；调用点=海中鱼巣/领域/初始化.概念图.ixx:177,海中鱼巣/领域/初始化.概念图.ixx:182",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -8583,6 +8590,8 @@
         "R0249"
       ],
       "callees": [
+        "F0163",
+        "F0167",
         "F0168",
         "F0497",
         "R0570",
@@ -13318,6 +13327,7 @@
       "shortest_depth": 6,
       "callers": [
         "F0273",
+        "F0363",
         "F0467",
         "R0028",
         "R0029",
@@ -13678,7 +13688,7 @@
     {
       "function_id": "F0580",
       "complete_signature": "bool 海中鱼巣::关系仓库::存在目标关系(海中鱼巣::关系类型 类型, 海中鱼巣::节点句柄 目标节点) const",
-      "callable_type": "Function",
+      "callable_type": "Method",
       "category": "Function/Method",
       "module_identity": "全局模块片段/源文件定义",
       "file": "海中鱼巣/核心/关系仓库.cpp",
@@ -13689,7 +13699,9 @@
       "callers": [
         "F0279",
         "F0328",
-        "R0082"
+        "R0082",
+        "R0571",
+        "R0572"
       ],
       "callees": [
         "F0341",
@@ -14324,7 +14336,7 @@
     {
       "function_id": "F0629",
       "complete_signature": "std::optional<海中鱼巣::节点句柄> 海中鱼巣::方法服务::读取唯一目标(海中鱼巣::节点句柄 源节点, 海中鱼巣::关系类型 类型, 海中鱼巣::节点类型 目标类型) const",
-      "callable_type": "Function",
+      "callable_type": "Method",
       "category": "Function/Method",
       "module_identity": "头文件内联/模板定义",
       "file": "海中鱼巣/领域/方法服务.h",
@@ -16753,9 +16765,7 @@
       "shortest_depth": 6,
       "callers": [
         "R0250",
-        "R0396",
-        "R0571",
-        "R0572"
+        "R0396"
       ],
       "callees": [
         "F0580"
@@ -28675,7 +28685,8 @@
         "F0364"
       ],
       "callees": [
-        "R0082"
+        "F0190",
+        "F0580"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0364；调用点=海中鱼巣/领域/语素服务.h:101",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -28685,20 +28696,21 @@
     },
     {
       "function_id": "R0572",
-      "complete_signature": "bool 海中鱼巣::语素服务::节点是可作为概念追溯目标( 节点句柄 节点句柄值, const 结构事务令牌& 令牌) const",
+      "complete_signature": "bool 海中鱼巣::语素服务::节点是可作为概念追溯目标(节点句柄 节点句柄值) const",
       "callable_type": "Method",
       "category": "Function/Method",
       "module_identity": "头文件内联/模板定义",
       "file": "海中鱼巣/领域/语素服务.h",
-      "definition_line": 310,
-      "definition_end_line": 326,
-      "overload_identity": "bool 海中鱼巣::语素服务::节点是可作为概念追溯目标( 节点句柄 节点句柄值, const 结构事务令牌& 令牌) const",
+      "definition_line": 296,
+      "definition_end_line": 308,
+      "overload_identity": "bool 海中鱼巣::语素服务::节点是可作为概念追溯目标(节点句柄 节点句柄值) const",
       "shortest_depth": 6,
       "callers": [
         "F0364"
       ],
       "callees": [
-        "R0082"
+        "F0190",
+        "F0580"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0364；调用点=海中鱼巣/领域/语素服务.h:106",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
