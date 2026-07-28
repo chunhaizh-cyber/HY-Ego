@@ -15,9 +15,9 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1163,
-  "project_call_edge_count": 2770,
-  "external_count": 1637,
+  "function_count": 1154,
+  "project_call_edge_count": 2760,
+  "external_count": 1628,
   "callback_registration_count": 27,
   "external_boundaries": [
     {
@@ -18209,250 +18209,6 @@
       "current_root_reachable": true
     },
     {
-      "id": "X02016",
-      "caller": "R0251",
-      "signature": "bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept",
-      "locations": [
-        "海中鱼巣/领域/动态服务.h:329"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library optional",
-      "reachable_condition": "读取发生时间戳时复核节点记录",
-      "resolution_source": "专项源码外部边界复核",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X02017",
-      "caller": "R0251",
-      "signature": "const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept",
-      "locations": [
-        "海中鱼巣/领域/动态服务.h:329",
-        "海中鱼巣/领域/动态服务.h:332"
-      ],
-      "call_count": 2,
-      "boundary_category": "Standard library optional",
-      "reachable_condition": "节点记录有值后读取类型和主信息",
-      "resolution_source": "专项源码外部边界复核",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X02018",
-      "caller": "R0251",
-      "signature": "bool std::optional<std::int64_t>::has_value() const noexcept",
-      "locations": [
-        "海中鱼巣/领域/动态服务.h:333"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library optional",
-      "reachable_condition": "时间戳主信息读取完成后复核有值",
-      "resolution_source": "专项源码外部边界复核",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X02019",
-      "caller": "R0251",
-      "signature": "const std::int64_t& std::optional<std::int64_t>::value() const &",
-      "locations": [
-        "海中鱼巣/领域/动态服务.h:333",
-        "海中鱼巣/领域/动态服务.h:336"
-      ],
-      "call_count": 2,
-      "boundary_category": "Standard library optional",
-      "reachable_condition": "时间戳值存在后复核并返回",
-      "resolution_source": "专项源码外部边界复核",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X02020",
-      "caller": "R0252",
-      "signature": "constexpr bool std::optional<T>::has_value() const noexcept",
-      "locations": [
-        "海中鱼巣/领域/动态服务.h:352",
-        "海中鱼巣/领域/动态服务.h:353",
-        "海中鱼巣/领域/动态服务.h:354"
-      ],
-      "call_count": 8,
-      "boundary_category": "Standard library member",
-      "reachable_condition": "动态材料八项必填 optional 依次短路复核",
-      "resolution_source": "专项源码外部边界复核",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X02021",
-      "caller": "R0252",
-      "signature": "constexpr 海中鱼巣::节点句柄 std::optional<海中鱼巣::节点句柄>::value_or(海中鱼巣::节点句柄&&) const &",
-      "locations": [
-        "海中鱼巣/领域/动态服务.h:357"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library member",
-      "reachable_condition": "可选来源动作已读取",
-      "resolution_source": "专项源码外部边界复核",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X02022",
-      "caller": "R0252",
-      "signature": "constexpr const T& std::optional<T>::value() const &",
-      "locations": [
-        "海中鱼巣/领域/动态服务.h:361",
-        "海中鱼巣/领域/动态服务.h:362"
-      ],
-      "call_count": 8,
-      "boundary_category": "Standard library member",
-      "reachable_condition": "八项动态材料必填 optional 均有值",
-      "resolution_source": "专项源码外部边界复核",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X02023",
-      "caller": "R0253",
-      "signature": "bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept",
-      "locations": [
-        "海中鱼巣/领域/动态服务.h:494"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library optional",
-      "reachable_condition": "节点类型匹配时复核记录有值",
-      "resolution_source": "专项源码外部边界复核",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X02024",
-      "caller": "R0253",
-      "signature": "const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept",
-      "locations": [
-        "海中鱼巣/领域/动态服务.h:494"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library optional",
-      "reachable_condition": "节点记录有值后读取类型",
-      "resolution_source": "专项源码外部边界复核",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X02025",
-      "caller": "R0255",
-      "signature": "bool std::vector<海中鱼巣::节点句柄>::empty() const noexcept",
-      "locations": [
-        "海中鱼巣/领域/动态服务.h:515"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library container",
-      "reachable_condition": "顺序目标组已读取",
-      "resolution_source": "专项源码外部边界复核",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X02026",
-      "caller": "R0255",
-      "signature": "std::vector<海中鱼巣::节点句柄>::size_type size() const noexcept",
-      "locations": [
-        "海中鱼巣/领域/动态服务.h:516",
-        "海中鱼巣/领域/动态服务.h:522"
-      ],
-      "call_count": 2,
-      "boundary_category": "Standard library container",
-      "reachable_condition": "复核唯一顺序目标或旧顺序位置",
-      "resolution_source": "专项源码外部边界复核",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X02027",
-      "caller": "R0255",
-      "signature": "const 海中鱼巣::节点句柄& std::vector<海中鱼巣::节点句柄>::front() const",
-      "locations": [
-        "海中鱼巣/领域/动态服务.h:519"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library container",
-      "reachable_condition": "顺序目标唯一",
-      "resolution_source": "专项源码外部边界复核",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X02028",
-      "caller": "R0255",
-      "signature": "const 海中鱼巣::节点句柄& std::vector<海中鱼巣::节点句柄>::operator[](size_type) const",
-      "locations": [
-        "海中鱼巣/领域/动态服务.h:525"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library container",
-      "reachable_condition": "旧顺序位置在范围内",
-      "resolution_source": "专项源码外部边界复核",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X02029",
-      "caller": "R0256",
-      "signature": "constexpr bool std::optional<T>::has_value() const noexcept",
-      "locations": [
-        "海中鱼巣/领域/动态服务.h:529",
-        "海中鱼巣/领域/动态服务.h:533"
-      ],
-      "call_count": 2,
-      "boundary_category": "Standard library member",
-      "reachable_condition": "复核状态节点和节点记录 optional",
-      "resolution_source": "专项源码外部边界复核",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X02030",
-      "caller": "R0256",
-      "signature": "constexpr const 海中鱼巣::节点句柄& std::optional<海中鱼巣::节点句柄>::value() const &",
-      "locations": [
-        "海中鱼巣/领域/动态服务.h:532"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library member",
-      "reachable_condition": "状态节点 optional 有值",
-      "resolution_source": "专项源码外部边界复核",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X02031",
-      "caller": "R0256",
-      "signature": "constexpr const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept",
-      "locations": [
-        "海中鱼巣/领域/动态服务.h:533",
-        "海中鱼巣/领域/动态服务.h:536"
-      ],
-      "call_count": 2,
-      "boundary_category": "Standard library member",
-      "reachable_condition": "节点记录有值",
-      "resolution_source": "专项源码外部边界复核",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X02032",
-      "caller": "R0258",
-      "signature": "constexpr bool std::optional<std::int64_t>::has_value() const noexcept",
-      "locations": [
-        "海中鱼巣/领域/动态服务.h:561",
-        "海中鱼巣/领域/动态服务.h:562"
-      ],
-      "call_count": 2,
-      "boundary_category": "Standard library member",
-      "reachable_condition": "角色和入口状态 optional 依次复核",
-      "resolution_source": "专项源码外部边界复核",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X02033",
-      "caller": "R0258",
-      "signature": "constexpr const std::int64_t& std::optional<std::int64_t>::value() const &",
-      "locations": [
-        "海中鱼巣/领域/动态服务.h:561",
-        "海中鱼巣/领域/动态服务.h:562"
-      ],
-      "call_count": 3,
-      "boundary_category": "Standard library member",
-      "reachable_condition": "角色与入口状态有值",
-      "resolution_source": "专项源码外部边界复核",
-      "current_root_reachable": true
-    },
-    {
       "id": "X02034",
       "caller": "R0260",
       "signature": "bool std::vector<海中鱼巣::特征值初始原始材料>::empty() const noexcept",
@@ -21687,6 +21443,135 @@
       "queued": false,
       "boundary_category": "Standard library optional",
       "reachable_condition": "节点记录有值",
+      "resolution_source": "逐调用点源码与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02288",
+      "caller": "R0611",
+      "signature": "bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/因果服务.h:48"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "记录读回已返回",
+      "resolution_source": "逐调用点源码与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02289",
+      "caller": "R0611",
+      "signature": "const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/因果服务.h:48",
+        "海中鱼巣/领域/因果服务.h:49"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "记录有值并进入相应短路分支",
+      "resolution_source": "逐调用点源码与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02290",
+      "caller": "F0368",
+      "signature": "bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/因果服务.h:59"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "创建因果概念根已读回根节点记录",
+      "resolution_source": "逐调用点源码与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02291",
+      "caller": "F0368",
+      "signature": "const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/因果服务.h:60",
+        "海中鱼巣/领域/因果服务.h:61"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "根节点记录有值并进入相应短路分支",
+      "resolution_source": "逐调用点源码与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02292",
+      "caller": "F0369",
+      "signature": "bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/概念图服务.h:928"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "节点读取已返回记录 optional",
+      "resolution_source": "逐调用点源码与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02293",
+      "caller": "F0369",
+      "signature": "const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/概念图服务.h:931"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "节点记录有值并读取节点类型",
+      "resolution_source": "逐调用点源码与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02294",
+      "caller": "F0370",
+      "signature": "std::lock_guard<std::mutex>::lock_guard(std::mutex&) / ~lock_guard()",
+      "locations": [
+        "海中鱼巣/领域/概念图服务.h:1031-1042"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library synchronization",
+      "reachable_condition": "F0370进入后构造图写锁守卫；正常返回或异常展开时析构",
+      "resolution_source": "逐调用点源码与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02295",
+      "caller": "F0370",
+      "signature": "bool std::optional<海中鱼巣::概念根类别>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/概念图服务.h:1035",
+        "海中鱼巣/领域/概念图服务.h:1036"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "实例与概念不相同时按左到右短路次序观察两个类别 optional",
+      "resolution_source": "逐调用点源码与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02296",
+      "caller": "F0370",
+      "signature": "const 海中鱼巣::概念根类别& std::optional<海中鱼巣::概念根类别>::value() const &",
+      "locations": [
+        "海中鱼巣/领域/概念图服务.h:1037"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "两个类别 optional 均有值后按左到右顺序取值比较",
       "resolution_source": "逐调用点源码与标准库静态类型复核",
       "current_root_reachable": true
     }

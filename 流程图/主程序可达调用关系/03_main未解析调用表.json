@@ -15,8 +15,8 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1163,
-  "project_call_edge_count": 2770,
+  "function_count": 1154,
+  "project_call_edge_count": 2760,
   "unresolved_count": 0,
   "unresolved_calls": []
 }

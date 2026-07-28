@@ -2,7 +2,7 @@
   "schema_version": 1,
   "code_commit": "2b5e1ea547986ece688988452c6b92e50a6cce23",
   "scope": "main-current-reachable-exclusions",
-  "excluded_function_count": 75,
+  "excluded_function_count": 85,
   "rejected_candidate_edge_count": 546,
   "excluded_functions": [
     {
@@ -529,6 +529,76 @@
       "file": "海中鱼巣/领域/动态服务.h",
       "definition_line": 321,
       "reason": "F0366 在动态服务.h:294 仅传入一个节点句柄，实际匹配 R0610；两参数事务令牌重载在当前 main 可达闭包中无调用方"
+    },
+    {
+      "function_id": "R0251",
+      "signature": "std::optional<std::uint64_t> 海中鱼巣::动态服务::读取发生时间戳(节点句柄 动态节点) const",
+      "file": "海中鱼巣/领域/动态服务.h",
+      "definition_line": 327,
+      "reason": "F0368:57 实际绑定无参数 R0611；原双参数 R0274 及其唯一后继链在当前 Debug|x64 main 可达调用图中无其它可达调用方"
+    },
+    {
+      "function_id": "R0252",
+      "signature": "std::optional<动态材料> 海中鱼巣::动态服务::读取动态材料(节点句柄 动态节点) const",
+      "file": "海中鱼巣/领域/动态服务.h",
+      "definition_line": 339,
+      "reason": "F0368:57 实际绑定无参数 R0611；原双参数 R0274 及其唯一后继链在当前 Debug|x64 main 可达调用图中无其它可达调用方"
+    },
+    {
+      "function_id": "R0253",
+      "signature": "bool 海中鱼巣::动态服务::节点类型匹配(节点句柄 节点句柄值, 节点类型 类型) const",
+      "file": "海中鱼巣/领域/动态服务.h",
+      "definition_line": 492,
+      "reason": "F0368:57 实际绑定无参数 R0611；原双参数 R0274 及其唯一后继链在当前 Debug|x64 main 可达调用图中无其它可达调用方"
+    },
+    {
+      "function_id": "R0254",
+      "signature": "std::optional<节点句柄> 海中鱼巣::动态服务::读取唯一引用目标(节点句柄 源节点, 节点类型 目标类型) const",
+      "file": "海中鱼巣/领域/动态服务.h",
+      "definition_line": 497,
+      "reason": "F0368:57 实际绑定无参数 R0611；原双参数 R0274 及其唯一后继链在当前 Debug|x64 main 可达调用图中无其它可达调用方"
+    },
+    {
+      "function_id": "R0255",
+      "signature": "std::optional<节点句柄> 海中鱼巣::动态服务::读取因果来源目标(节点句柄 动态节点, std::int64_t 顺序号, std::size_t 旧顺序位置) const",
+      "file": "海中鱼巣/领域/动态服务.h",
+      "definition_line": 512,
+      "reason": "F0368:57 实际绑定无参数 R0611；原双参数 R0274 及其唯一后继链在当前 Debug|x64 main 可达调用图中无其它可达调用方"
+    },
+    {
+      "function_id": "R0256",
+      "signature": "std::optional<std::int64_t> 海中鱼巣::动态服务::读取状态节点值(std::optional<节点句柄> 状态节点) const",
+      "file": "海中鱼巣/领域/动态服务.h",
+      "definition_line": 528,
+      "reason": "F0368:57 实际绑定无参数 R0611；原双参数 R0274 及其唯一后继链在当前 Debug|x64 main 可达调用图中无其它可达调用方"
+    },
+    {
+      "function_id": "R0257",
+      "signature": "std::optional<std::int64_t> 海中鱼巣::动态服务::读取模板状态值(节点句柄 方法节点, std::int64_t 顺序号) const",
+      "file": "海中鱼巣/领域/动态服务.h",
+      "definition_line": 539,
+      "reason": "F0368:57 实际绑定无参数 R0611；原双参数 R0274 及其唯一后继链在当前 Debug|x64 main 可达调用图中无其它可达调用方"
+    },
+    {
+      "function_id": "R0258",
+      "signature": "bool 海中鱼巣::动态服务::节点是否动作入口角色(节点句柄 节点) const",
+      "file": "海中鱼巣/领域/动态服务.h",
+      "definition_line": 555,
+      "reason": "F0368:57 实际绑定无参数 R0611；原双参数 R0274 及其唯一后继链在当前 Debug|x64 main 可达调用图中无其它可达调用方"
+    },
+    {
+      "function_id": "R0273",
+      "signature": "std::optional<动态材料> 海中鱼巣::因果服务::读取因果准入动态材料(节点句柄 来源动态, const 动态服务& 动态) const",
+      "file": "海中鱼巣/领域/因果服务.h",
+      "definition_line": 76,
+      "reason": "F0368:57 实际绑定无参数 R0611；原双参数 R0274 及其唯一后继链在当前 Debug|x64 main 可达调用图中无其它可达调用方"
+    },
+    {
+      "function_id": "R0274",
+      "signature": "节点句柄 海中鱼巣::因果服务::记录因果引用(节点句柄 来源动态, const 动态服务& 动态)",
+      "file": "海中鱼巣/领域/因果服务.h",
+      "definition_line": 99,
+      "reason": "F0368:57 实际绑定无参数 R0611；原双参数 R0274 及其唯一后继链在当前 Debug|x64 main 可达调用图中无其它可达调用方"
     }
   ],
   "rejected_candidate_edges": [

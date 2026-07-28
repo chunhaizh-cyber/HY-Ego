@@ -15,8 +15,8 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1163,
-  "project_call_edge_count": 2770,
+  "function_count": 1154,
+  "project_call_edge_count": 2760,
   "functions": [
     {
       "function_id": "F0001",
@@ -1473,8 +1473,7 @@
         "F0181",
         "F0182",
         "F0183",
-        "F0184",
-        "F0368"
+        "F0184"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0007；调用点=海中鱼巣/启动.应用程序.ixx:61",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -1589,6 +1588,7 @@
         "F0359",
         "F0360",
         "F0362",
+        "F0370",
         "F0495",
         "F0551",
         "R0064",
@@ -3873,7 +3873,6 @@
         "R0125",
         "R0128",
         "R0136",
-        "R0252",
         "R0266",
         "R0267",
         "R0268",
@@ -4547,7 +4546,8 @@
         "R0426",
         "R0524",
         "R0525",
-        "R0579"
+        "R0579",
+        "R0611"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0048；调用点=海中鱼巣/领域/初始化.概念图.ixx:135,海中鱼巣/领域/初始化.概念图.ixx:135-136",
@@ -4700,10 +4700,11 @@
         "F0362",
         "F0366",
         "F0367",
+        "F0368",
+        "F0369",
         "F0377",
         "F0476",
         "R0222",
-        "R0256",
         "R0283",
         "R0284",
         "R0300",
@@ -4712,7 +4713,8 @@
         "R0571",
         "R0572",
         "R0609",
-        "R0610"
+        "R0610",
+        "R0611"
       ],
       "callees": [
         "F0336",
@@ -7626,7 +7628,8 @@
         "F0273",
         "F0335",
         "F0365",
-        "F0366"
+        "F0366",
+        "R0611"
       ],
       "callees": [
         "F0336",
@@ -7658,7 +7661,8 @@
         "F0273",
         "F0335",
         "F0365",
-        "F0366"
+        "F0366",
+        "R0611"
       ],
       "callees": [
         "F0336",
@@ -8705,16 +8709,17 @@
       "definition_line": 56,
       "definition_end_line": 66,
       "overload_identity": "海中鱼巣::节点句柄 海中鱼巣::因果服务::创建因果概念根()",
-      "shortest_depth": 4,
+      "shortest_depth": 6,
       "callers": [
-        "F0048",
         "F0188"
       ],
       "callees": [
         "F0184",
-        "R0274"
+        "F0190",
+        "F0624",
+        "R0611"
       ],
-      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0048；调用点=海中鱼巣/领域/初始化.概念图.ixx:111",
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0188；调用点=海中鱼巣/领域/初始化.概念图.ixx:111",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
       "legacy_or_unwired": false,
@@ -8739,6 +8744,7 @@
         "F0370"
       ],
       "callees": [
+        "F0190",
         "R0521"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0191；调用点=海中鱼巣/领域/概念图服务.h:4406",
@@ -8762,6 +8768,7 @@
         "F0191"
       ],
       "callees": [
+        "F0051",
         "F0369",
         "R0526",
         "R0531"
@@ -14104,8 +14111,7 @@
       "callers": [
         "F0329",
         "F0366",
-        "R0029",
-        "R0256"
+        "R0029"
       ],
       "callees": [
         "F0217",
@@ -14132,7 +14138,6 @@
         "F0330",
         "R0077",
         "R0220",
-        "R0255",
         "R0483"
       ],
       "callees": [
@@ -14163,7 +14168,6 @@
         "F0371",
         "R0220",
         "R0221",
-        "R0255",
         "R0482",
         "R0494"
       ],
@@ -14250,7 +14254,9 @@
         "F0332",
         "F0365",
         "F0366",
-        "F0367"
+        "F0367",
+        "F0368",
+        "R0611"
       ],
       "callees": [
         "F0384",
@@ -16640,8 +16646,6 @@
       "shortest_depth": 7,
       "callers": [
         "R0204",
-        "R0254",
-        "R0257",
         "R0576",
         "R0577",
         "R0581",
@@ -20855,197 +20859,6 @@
       "current_root_reachable": true
     },
     {
-      "function_id": "R0251",
-      "complete_signature": "std::optional<std::uint64_t> 海中鱼巣::动态服务::读取发生时间戳(节点句柄 动态节点) const",
-      "callable_type": "Method",
-      "category": "Function/Method",
-      "module_identity": "头文件内联/模板定义",
-      "file": "海中鱼巣/领域/动态服务.h",
-      "definition_line": 327,
-      "definition_end_line": 337,
-      "overload_identity": "std::optional<std::uint64_t> 海中鱼巣::动态服务::读取发生时间戳(节点句柄 动态节点) const",
-      "shortest_depth": 8,
-      "callers": [
-        "R0252"
-      ],
-      "callees": [],
-      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0252；调用点=海中鱼巣/领域/动态服务.h:351",
-      "reachability_class": "main 生产、公共启动或控制面板路径可达",
-      "test_or_self_check_path": false,
-      "legacy_or_unwired": false,
-      "current_root_reachable": true
-    },
-    {
-      "function_id": "R0252",
-      "complete_signature": "std::optional<动态材料> 海中鱼巣::动态服务::读取动态材料(节点句柄 动态节点) const",
-      "callable_type": "Method",
-      "category": "Function/Method",
-      "module_identity": "头文件内联/模板定义",
-      "file": "海中鱼巣/领域/动态服务.h",
-      "definition_line": 339,
-      "definition_end_line": 363,
-      "overload_identity": "std::optional<动态材料> 海中鱼巣::动态服务::读取动态材料(节点句柄 动态节点) const",
-      "shortest_depth": 7,
-      "callers": [
-        "R0273"
-      ],
-      "callees": [
-        "F0163",
-        "R0251",
-        "R0254",
-        "R0255",
-        "R0256",
-        "R0258",
-        "R0610"
-      ],
-      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0273；调用点=海中鱼巣/领域/因果服务.h:77",
-      "reachability_class": "main 生产、公共启动或控制面板路径可达",
-      "test_or_self_check_path": false,
-      "legacy_or_unwired": false,
-      "current_root_reachable": true
-    },
-    {
-      "function_id": "R0253",
-      "complete_signature": "bool 海中鱼巣::动态服务::节点类型匹配(节点句柄 节点句柄值, 节点类型 类型) const",
-      "callable_type": "Method",
-      "category": "Function/Method",
-      "module_identity": "头文件内联/模板定义",
-      "file": "海中鱼巣/领域/动态服务.h",
-      "definition_line": 492,
-      "definition_end_line": 495,
-      "overload_identity": "bool 海中鱼巣::动态服务::节点类型匹配(节点句柄 节点句柄值, 节点类型 类型) const",
-      "shortest_depth": 9,
-      "callers": [
-        "R0258"
-      ],
-      "callees": [],
-      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0258；调用点=海中鱼巣/领域/动态服务.h:556",
-      "reachability_class": "main 生产、公共启动或控制面板路径可达",
-      "test_or_self_check_path": false,
-      "legacy_or_unwired": false,
-      "current_root_reachable": true
-    },
-    {
-      "function_id": "R0254",
-      "complete_signature": "std::optional<节点句柄> 海中鱼巣::动态服务::读取唯一引用目标(节点句柄 源节点, 节点类型 目标类型) const",
-      "callable_type": "Method",
-      "category": "Function/Method",
-      "module_identity": "头文件内联/模板定义",
-      "file": "海中鱼巣/领域/动态服务.h",
-      "definition_line": 497,
-      "definition_end_line": 510,
-      "overload_identity": "std::optional<节点句柄> 海中鱼巣::动态服务::读取唯一引用目标(节点句柄 源节点, 节点类型 目标类型) const",
-      "shortest_depth": 8,
-      "callers": [
-        "R0252"
-      ],
-      "callees": [
-        "R0077"
-      ],
-      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0252；调用点=海中鱼巣/领域/动态服务.h:343,海中鱼巣/领域/动态服务.h:344",
-      "reachability_class": "main 生产、公共启动或控制面板路径可达",
-      "test_or_self_check_path": false,
-      "legacy_or_unwired": false,
-      "current_root_reachable": true
-    },
-    {
-      "function_id": "R0255",
-      "complete_signature": "std::optional<节点句柄> 海中鱼巣::动态服务::读取因果来源目标(节点句柄 动态节点, std::int64_t 顺序号, std::size_t 旧顺序位置) const",
-      "callable_type": "Method",
-      "category": "Function/Method",
-      "module_identity": "头文件内联/模板定义",
-      "file": "海中鱼巣/领域/动态服务.h",
-      "definition_line": 512,
-      "definition_end_line": 526,
-      "overload_identity": "std::optional<节点句柄> 海中鱼巣::动态服务::读取因果来源目标(节点句柄 动态节点, std::int64_t 顺序号, std::size_t 旧顺序位置) const",
-      "shortest_depth": 8,
-      "callers": [
-        "R0252"
-      ],
-      "callees": [
-        "F0620",
-        "F0621"
-      ],
-      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0252；调用点=海中鱼巣/领域/动态服务.h:345,海中鱼巣/领域/动态服务.h:346,海中鱼巣/领域/动态服务.h:347,海中鱼巣/领域/动态服务.h:348",
-      "reachability_class": "main 生产、公共启动或控制面板路径可达",
-      "test_or_self_check_path": false,
-      "legacy_or_unwired": false,
-      "current_root_reachable": true
-    },
-    {
-      "function_id": "R0256",
-      "complete_signature": "std::optional<std::int64_t> 海中鱼巣::动态服务::读取状态节点值(std::optional<节点句柄> 状态节点) const",
-      "callable_type": "Method",
-      "category": "Function/Method",
-      "module_identity": "头文件内联/模板定义",
-      "file": "海中鱼巣/领域/动态服务.h",
-      "definition_line": 528,
-      "definition_end_line": 537,
-      "overload_identity": "std::optional<std::int64_t> 海中鱼巣::动态服务::读取状态节点值(std::optional<节点句柄> 状态节点) const",
-      "shortest_depth": 8,
-      "callers": [
-        "R0252",
-        "R0257"
-      ],
-      "callees": [
-        "F0190",
-        "F0619"
-      ],
-      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0252；调用点=海中鱼巣/领域/动态服务.h:349,海中鱼巣/领域/动态服务.h:350",
-      "reachability_class": "main 生产、公共启动或控制面板路径可达",
-      "test_or_self_check_path": false,
-      "legacy_or_unwired": false,
-      "current_root_reachable": true
-    },
-    {
-      "function_id": "R0257",
-      "complete_signature": "std::optional<std::int64_t> 海中鱼巣::动态服务::读取模板状态值(节点句柄 方法节点, std::int64_t 顺序号) const",
-      "callable_type": "Method",
-      "category": "Function/Method",
-      "module_identity": "头文件内联/模板定义",
-      "file": "海中鱼巣/领域/动态服务.h",
-      "definition_line": 539,
-      "definition_end_line": 553,
-      "overload_identity": "std::optional<std::int64_t> 海中鱼巣::动态服务::读取模板状态值(节点句柄 方法节点, std::int64_t 顺序号) const",
-      "shortest_depth": 9,
-      "callers": [
-        "R0258"
-      ],
-      "callees": [
-        "R0077",
-        "R0256"
-      ],
-      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0258；调用点=海中鱼巣/领域/动态服务.h:559,海中鱼巣/领域/动态服务.h:560",
-      "reachability_class": "main 生产、公共启动或控制面板路径可达",
-      "test_or_self_check_path": false,
-      "legacy_or_unwired": false,
-      "current_root_reachable": true
-    },
-    {
-      "function_id": "R0258",
-      "complete_signature": "bool 海中鱼巣::动态服务::节点是否动作入口角色(节点句柄 节点) const",
-      "callable_type": "Method",
-      "category": "Function/Method",
-      "module_identity": "头文件内联/模板定义",
-      "file": "海中鱼巣/领域/动态服务.h",
-      "definition_line": 555,
-      "definition_end_line": 563,
-      "overload_identity": "bool 海中鱼巣::动态服务::节点是否动作入口角色(节点句柄 节点) const",
-      "shortest_depth": 8,
-      "callers": [
-        "R0252"
-      ],
-      "callees": [
-        "R0253",
-        "R0257"
-      ],
-      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0252；调用点=海中鱼巣/领域/动态服务.h:358",
-      "reachability_class": "main 生产、公共启动或控制面板路径可达",
-      "test_or_self_check_path": false,
-      "legacy_or_unwired": false,
-      "current_root_reachable": true
-    },
-    {
       "function_id": "R0259",
       "complete_signature": "static bool 海中鱼巣::特征值原始材料事务参与者::同一节点身份(节点句柄 左, 节点句柄 右)",
       "callable_type": "Method",
@@ -21367,52 +21180,6 @@
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0404；调用点=海中鱼巣/领域/数据操作.特征体系.ixx:469",
-      "reachability_class": "main 生产、公共启动或控制面板路径可达",
-      "test_or_self_check_path": false,
-      "legacy_or_unwired": false,
-      "current_root_reachable": true
-    },
-    {
-      "function_id": "R0273",
-      "complete_signature": "std::optional<动态材料> 海中鱼巣::因果服务::读取因果准入动态材料(节点句柄 来源动态, const 动态服务& 动态) const",
-      "callable_type": "Method",
-      "category": "Function/Method",
-      "module_identity": "头文件内联/模板定义",
-      "file": "海中鱼巣/领域/因果服务.h",
-      "definition_line": 76,
-      "definition_end_line": 78,
-      "overload_identity": "std::optional<动态材料> 海中鱼巣::因果服务::读取因果准入动态材料(节点句柄 来源动态, const 动态服务& 动态) const",
-      "shortest_depth": 6,
-      "callers": [
-        "R0274"
-      ],
-      "callees": [
-        "R0252"
-      ],
-      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0274；调用点=海中鱼巣/领域/因果服务.h:100",
-      "reachability_class": "main 生产、公共启动或控制面板路径可达",
-      "test_or_self_check_path": false,
-      "legacy_or_unwired": false,
-      "current_root_reachable": true
-    },
-    {
-      "function_id": "R0274",
-      "complete_signature": "节点句柄 海中鱼巣::因果服务::记录因果引用(节点句柄 来源动态, const 动态服务& 动态)",
-      "callable_type": "Method",
-      "category": "Function/Method",
-      "module_identity": "头文件内联/模板定义",
-      "file": "海中鱼巣/领域/因果服务.h",
-      "definition_line": 99,
-      "definition_end_line": 105,
-      "overload_identity": "节点句柄 海中鱼巣::因果服务::记录因果引用(节点句柄 来源动态, const 动态服务& 动态)",
-      "shortest_depth": 5,
-      "callers": [
-        "F0368"
-      ],
-      "callees": [
-        "R0273"
-      ],
-      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0368；调用点=海中鱼巣/领域/因果服务.h:57",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
       "legacy_or_unwired": false,
@@ -29631,14 +29398,40 @@
       "overload_identity": "bool 海中鱼巣::动态服务::动态是否实例动态(海中鱼巣::节点句柄 动态节点) const",
       "shortest_depth": 7,
       "callers": [
-        "F0366",
-        "R0252"
+        "F0366"
       ],
       "callees": [
         "F0190",
         "F0580"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0366；调用点=海中鱼巣/领域/动态服务.h:294",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0611",
+      "complete_signature": "海中鱼巣::节点句柄 海中鱼巣::因果服务::记录因果引用()",
+      "callable_type": "Method",
+      "category": "Function/Method",
+      "module_identity": "头文件内联/模板定义",
+      "file": "海中鱼巣/领域/因果服务.h",
+      "definition_line": 44,
+      "definition_end_line": 54,
+      "overload_identity": "海中鱼巣::节点句柄 海中鱼巣::因果服务::记录因果引用()",
+      "shortest_depth": 7,
+      "callers": [
+        "F0368"
+      ],
+      "callees": [
+        "F0184",
+        "F0190",
+        "F0331",
+        "F0332",
+        "F0624"
+      ],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0368；调用点=海中鱼巣/领域/因果服务.h:57",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
       "legacy_or_unwired": false,

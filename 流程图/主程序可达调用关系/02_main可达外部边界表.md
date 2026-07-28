@@ -1,6 +1,6 @@
 # main 可达外部边界表
 
-外部边界记录：1637。本表不把外部函数升级为项目函数身份。
+外部边界记录：1628。本表不把外部函数升级为项目函数身份。
 
 | ID | 调用方 | 类别 | 外部签名/边界 | 调用点 | 调用次数 | 可达条件 | 解析来源 |
 | --- | --- | --- | --- | --- | ---: | --- | --- |
@@ -1380,24 +1380,6 @@
 | X01934 | R0249 | Standard library | <code>rend :: <bound member function type></code> | <code>海中鱼巣/领域/初始化.需求.ixx:177</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全模块Clang候选-4c89f990.json |
 | X01935 | R0249 | Standard library | <code>operator* :: reference () const noexcept(is_nothrow_copy_constructible_v<std::_Array_iterator<海中鱼巣::关系句柄, 3>> && noexcept(* -- (::std::declval<std::_Array_iterator<海中鱼巣::关系句柄, 3> &>())))</code> | <code>海中鱼巣/领域/初始化.需求.ixx:178</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全模块Clang候选-4c89f990.json |
 | X01936 | R0249 | Standard library | <code>operator++ :: reverse_iterator<std::_Array_iterator<海中鱼巣::关系句柄, 3>> &() noexcept(noexcept(-- this->current))</code> | <code>海中鱼巣/领域/初始化.需求.ixx:178</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全模块Clang候选-4c89f990.json |
-| X02016 | R0251 | Standard library optional | <code>bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept</code> | <code>海中鱼巣/领域/动态服务.h:329</code> | 1 | 读取发生时间戳时复核节点记录 | 专项源码外部边界复核 |
-| X02017 | R0251 | Standard library optional | <code>const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept</code> | <code>海中鱼巣/领域/动态服务.h:329, 海中鱼巣/领域/动态服务.h:332</code> | 2 | 节点记录有值后读取类型和主信息 | 专项源码外部边界复核 |
-| X02018 | R0251 | Standard library optional | <code>bool std::optional<std::int64_t>::has_value() const noexcept</code> | <code>海中鱼巣/领域/动态服务.h:333</code> | 1 | 时间戳主信息读取完成后复核有值 | 专项源码外部边界复核 |
-| X02019 | R0251 | Standard library optional | <code>const std::int64_t& std::optional<std::int64_t>::value() const &</code> | <code>海中鱼巣/领域/动态服务.h:333, 海中鱼巣/领域/动态服务.h:336</code> | 2 | 时间戳值存在后复核并返回 | 专项源码外部边界复核 |
-| X02020 | R0252 | Standard library member | <code>constexpr bool std::optional<T>::has_value() const noexcept</code> | <code>海中鱼巣/领域/动态服务.h:352, 海中鱼巣/领域/动态服务.h:353, 海中鱼巣/领域/动态服务.h:354</code> | 8 | 动态材料八项必填 optional 依次短路复核 | 专项源码外部边界复核 |
-| X02021 | R0252 | Standard library member | <code>constexpr 海中鱼巣::节点句柄 std::optional<海中鱼巣::节点句柄>::value_or(海中鱼巣::节点句柄&&) const &</code> | <code>海中鱼巣/领域/动态服务.h:357</code> | 1 | 可选来源动作已读取 | 专项源码外部边界复核 |
-| X02022 | R0252 | Standard library member | <code>constexpr const T& std::optional<T>::value() const &</code> | <code>海中鱼巣/领域/动态服务.h:361, 海中鱼巣/领域/动态服务.h:362</code> | 8 | 八项动态材料必填 optional 均有值 | 专项源码外部边界复核 |
-| X02023 | R0253 | Standard library optional | <code>bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept</code> | <code>海中鱼巣/领域/动态服务.h:494</code> | 1 | 节点类型匹配时复核记录有值 | 专项源码外部边界复核 |
-| X02024 | R0253 | Standard library optional | <code>const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept</code> | <code>海中鱼巣/领域/动态服务.h:494</code> | 1 | 节点记录有值后读取类型 | 专项源码外部边界复核 |
-| X02025 | R0255 | Standard library container | <code>bool std::vector<海中鱼巣::节点句柄>::empty() const noexcept</code> | <code>海中鱼巣/领域/动态服务.h:515</code> | 1 | 顺序目标组已读取 | 专项源码外部边界复核 |
-| X02026 | R0255 | Standard library container | <code>std::vector<海中鱼巣::节点句柄>::size_type size() const noexcept</code> | <code>海中鱼巣/领域/动态服务.h:516, 海中鱼巣/领域/动态服务.h:522</code> | 2 | 复核唯一顺序目标或旧顺序位置 | 专项源码外部边界复核 |
-| X02027 | R0255 | Standard library container | <code>const 海中鱼巣::节点句柄& std::vector<海中鱼巣::节点句柄>::front() const</code> | <code>海中鱼巣/领域/动态服务.h:519</code> | 1 | 顺序目标唯一 | 专项源码外部边界复核 |
-| X02028 | R0255 | Standard library container | <code>const 海中鱼巣::节点句柄& std::vector<海中鱼巣::节点句柄>::operator[](size_type) const</code> | <code>海中鱼巣/领域/动态服务.h:525</code> | 1 | 旧顺序位置在范围内 | 专项源码外部边界复核 |
-| X02029 | R0256 | Standard library member | <code>constexpr bool std::optional<T>::has_value() const noexcept</code> | <code>海中鱼巣/领域/动态服务.h:529, 海中鱼巣/领域/动态服务.h:533</code> | 2 | 复核状态节点和节点记录 optional | 专项源码外部边界复核 |
-| X02030 | R0256 | Standard library member | <code>constexpr const 海中鱼巣::节点句柄& std::optional<海中鱼巣::节点句柄>::value() const &</code> | <code>海中鱼巣/领域/动态服务.h:532</code> | 1 | 状态节点 optional 有值 | 专项源码外部边界复核 |
-| X02031 | R0256 | Standard library member | <code>constexpr const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept</code> | <code>海中鱼巣/领域/动态服务.h:533, 海中鱼巣/领域/动态服务.h:536</code> | 2 | 节点记录有值 | 专项源码外部边界复核 |
-| X02032 | R0258 | Standard library member | <code>constexpr bool std::optional<std::int64_t>::has_value() const noexcept</code> | <code>海中鱼巣/领域/动态服务.h:561, 海中鱼巣/领域/动态服务.h:562</code> | 2 | 角色和入口状态 optional 依次复核 | 专项源码外部边界复核 |
-| X02033 | R0258 | Standard library member | <code>constexpr const std::int64_t& std::optional<std::int64_t>::value() const &</code> | <code>海中鱼巣/领域/动态服务.h:561, 海中鱼巣/领域/动态服务.h:562</code> | 3 | 角色与入口状态有值 | 专项源码外部边界复核 |
 | X02034 | R0260 | Standard library container | <code>bool std::vector<海中鱼巣::特征值初始原始材料>::empty() const noexcept</code> | <code>海中鱼巣/领域/参与者.特征值原始材料.ixx:106</code> | 1 | 准备提交前复核存在待发布材料 | 专项源码外部边界复核 |
 | X02035 | R0260 | Standard library optional | <code>std::optional<海中鱼巣::节点类型>::optional(海中鱼巣::节点类型)</code> | <code>海中鱼巣/领域/参与者.特征值原始材料.ixx:114</code> | 1 | 构造预期特征值节点类型 | 专项源码外部边界复核 |
 | X02036 | R0260 | Standard library optional | <code>std::optional<海中鱼巣::主信息句柄>::optional(海中鱼巣::主信息句柄)</code> | <code>海中鱼巣/领域/参与者.特征值原始材料.ixx:116</code> | 1 | 构造预期主信息句柄 | 专项源码外部边界复核 |
@@ -1677,3 +1659,12 @@
 | RCB0025 | R0552 | R0553 | <code>std::find_if</code> | <code>海中鱼巣/领域/特征值服务.h:692</code> | const I64 记录查找期间零到多次调用 | 源码标准算法第三实参、局部 lambda 范围与记录静态类型复核 |
 | RCB0026 | R0554 | R0555 | <code>std::count_if</code> | <code>海中鱼巣/领域/特征值服务.h:699</code> | Vec 记录计数期间每项调用一次 | 源码标准算法第三实参、局部 lambda 范围与记录静态类型复核 |
 | RCB0027 | R0556 | R0557 | <code>std::count_if</code> | <code>海中鱼巣/领域/特征值服务.h:706</code> | I64 记录计数期间每项调用一次 | 源码标准算法第三实参、局部 lambda 范围与记录静态类型复核 |
+| X02288 | R0611 | Standard library optional | <code>bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept</code> | <code>海中鱼巣/领域/因果服务.h:48</code> | 1 | 记录读回已返回 | 逐调用点源码与标准库静态类型复核 |
+| X02289 | R0611 | Standard library optional | <code>const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept</code> | <code>海中鱼巣/领域/因果服务.h:48, 海中鱼巣/领域/因果服务.h:49</code> | 2 | 记录有值并进入相应短路分支 | 逐调用点源码与标准库静态类型复核 |
+| X02290 | F0368 | Standard library optional | <code>bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept</code> | <code>海中鱼巣/领域/因果服务.h:59</code> | 1 | 创建因果概念根已读回根节点记录 | 逐调用点源码与标准库静态类型复核 |
+| X02291 | F0368 | Standard library optional | <code>const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept</code> | <code>海中鱼巣/领域/因果服务.h:60, 海中鱼巣/领域/因果服务.h:61</code> | 2 | 根节点记录有值并进入相应短路分支 | 逐调用点源码与标准库静态类型复核 |
+| X02292 | F0369 | Standard library optional | <code>bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:928</code> | 1 | 节点读取已返回记录 optional | 逐调用点源码与标准库静态类型复核 |
+| X02293 | F0369 | Standard library optional | <code>const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:931</code> | 1 | 节点记录有值并读取节点类型 | 逐调用点源码与标准库静态类型复核 |
+| X02294 | F0370 | Standard library synchronization | <code>std::lock_guard<std::mutex>::lock_guard(std::mutex&) / ~lock_guard()</code> | <code>海中鱼巣/领域/概念图服务.h:1031-1042</code> | 1 | F0370进入后构造图写锁守卫；正常返回或异常展开时析构 | 逐调用点源码与RAII作用域复核 |
+| X02295 | F0370 | Standard library optional | <code>bool std::optional<海中鱼巣::概念根类别>::has_value() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:1035, 海中鱼巣/领域/概念图服务.h:1036</code> | 2 | 实例与概念不相同时按左到右短路次序观察两个类别 optional | 逐调用点源码与标准库静态类型复核 |
+| X02296 | F0370 | Standard library optional | <code>const 海中鱼巣::概念根类别& std::optional<海中鱼巣::概念根类别>::value() const &</code> | <code>海中鱼巣/领域/概念图服务.h:1037</code> | 2 | 两个类别 optional 均有值后按左到右顺序取值比较 | 逐调用点源码与标准库静态类型复核 |
