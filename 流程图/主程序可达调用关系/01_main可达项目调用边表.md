@@ -1,6 +1,6 @@
 # main 可达项目调用边表
 
-项目直接调用边：2756。多调用点保留在同一 caller/callee 边记录中。
+项目直接调用边：2761。多调用点保留在同一 caller/callee 边记录中。
 
 | 边 ID | 调用方 | 被调方 | 调用点 | 类别 | 实参 | 可达条件 | 解析来源 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -614,7 +614,7 @@
 | E0804 | F0199 | F0339 | <code>海中鱼巣/核心/索引仓库.cpp:405</code> | direct_const_member | <code>this=&许可</code> | 事务接线已接域且许可有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0805 | F0199 | F0376 | <code>海中鱼巣/核心/索引仓库.cpp:405</code> | direct_const_member+direct-member | <code>this,令牌=许可.读取令牌()</code> | 事务接线已接域且许可有效；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
 | E0807 | F0199 | F0377 | <code>海中鱼巣/核心/索引仓库.cpp:414</code> | loop_direct_const_member | <code>this=&节点_,节点=候选</code> | 未接域路径每个候选 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0808 | F0203 | F0378 | <code>海中鱼巣/适配/SQL数据库适配.cpp:330</code> | direct_free+direct-free+direct-free | <code>字段=配置_.服务器</code> | 总是；服务器字段可用；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
+| E0808 | F0203 | F0378 | <code>海中鱼巣/适配/SQL数据库适配.cpp:330</code> | direct_free+source_audited | <code>第一次字段=配置_.服务器；第二次字段=配置_.数据库</code> | 第一次总是调用；仅第一次返回true时调用第二次 | 当前源码逐调用点与Clang AST左到右短路表达式复核 |
 | E0810 | F0203 | F0202 | <code>海中鱼巣/适配/SQL数据库适配.cpp:332, 海中鱼巣/适配/SQL数据库适配.cpp:339</code> | direct_free+direct-free+direct-free | <code>L"数据库配置准入",固定诊断</code> | 任一配置准入失败；master连接打开失败；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
 | E0825 | F0203 | F0215 | <code>海中鱼巣/适配/SQL数据库适配.cpp:337-348, 海中鱼巣/适配/SQL数据库适配.cpp:350-379</code> | implicit_destructor | <code>this=&主连接</code> | 主连接作用域任一路径退出；函数任一路径退出 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0812 | F0203 | F0204 | <code>海中鱼巣/适配/SQL数据库适配.cpp:337, 海中鱼巣/适配/SQL数据库适配.cpp:350</code> | direct_constructor+constructor+constructor | <code>无</code> | 配置准入通过；建库SQL成功；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
@@ -1149,8 +1149,8 @@
 | E1802 | F0374 | F0632 | <code>海中鱼巣/核心/节点仓库.cpp:469</code> | direct_free_internal_linkage+direct-free | <code>事务接线_,令牌</code> | 函数进入；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
 | RCE1681 | F0375 | R0600 | <code>海中鱼巣/核心/结构事务接线.数据.h:28</code> | direct-operator | <code>未单独冻结；读取源码调用点</code> | 移动构造函数体委托移动赋值 | 专项源码静态类型与实际装配人工复核 |
 | RCE0162 | F0376 | R0120 | <code>海中鱼巣/核心/索引仓库.cpp:419</code> | same_module+direct-free | <code>未单独冻结；读取源码调用点</code> | 调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | 逐边源码/静态类型审计 PASS；专项源码静态类型与实际装配人工复核 |
-| RCE0163 | F0377 | F0630 | <code>海中鱼巣/核心/节点仓库.cpp:444</code> | direct-member | <code>未单独冻结；读取源码调用点</code> | 调用方可达且 libclang 直接引用项目定义；源码位置复核 | 专项源码静态类型与实际装配人工复核 |
-| RCE0164 | F0377 | F0190 | <code>海中鱼巣/核心/节点仓库.cpp:446</code> | direct-member | <code>未单独冻结；读取源码调用点</code> | 调用方可达且 libclang 直接引用项目定义；源码位置复核 | 专项源码静态类型与实际装配人工复核 |
+| RCE0163 | F0377 | F0630 | <code>海中鱼巣/核心/节点仓库.cpp:444</code> | direct_const_member+source_audited | <code>this=F0377接收者, 节点=节点, 令牌=RCE1740返回引用</code> | RCE1739返回true且RCE1740完成后调用；RCE1739返回false时短路不调用 | 当前源码、接收者静态类型、二实参重载与&amp;&amp;左到右顺序复核 |
+| RCE0164 | F0377 | F0190 | <code>海中鱼巣/核心/节点仓库.cpp:446</code> | direct_const_member+source_audited | <code>this=F0377接收者, 节点=节点</code> | RCE1737返回false；源码上同时覆盖完全未接域与接线不完整形态 | 当前源码、接收者静态类型与单实参重载复核 |
 | RCE0165 | F0381 | F0207 | <code>海中鱼巣/适配/SQL数据库适配.cpp:251</code> | constructor | <code>未单独冻结；读取源码调用点</code> | 调用方可达且 libclang 直接引用项目定义；源码位置复核 | 专项源码静态类型与实际装配人工复核 |
 | RCE0166 | F0381 | F0208 | <code>海中鱼巣/适配/SQL数据库适配.cpp:252</code> | field_type_hint+direct-member | <code>未单独冻结；读取源码调用点</code> | 调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | 逐边源码/静态类型审计 PASS；专项源码静态类型与实际装配人工复核 |
 | RCE0167 | F0381 | F0209 | <code>海中鱼巣/适配/SQL数据库适配.cpp:257, 海中鱼巣/适配/SQL数据库适配.cpp:261</code> | field_type_hint+direct-member+direct-member | <code>未单独冻结；读取源码调用点</code> | 调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | 逐边源码/静态类型审计 PASS；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
@@ -1868,7 +1868,7 @@
 | RCE0763 | R0214 | R0222 | <code>海中鱼巣/领域/任务服务.h:482, 海中鱼巣/领域/任务服务.h:486</code> | direct-const-member | <code>未单独冻结；读取源码调用点</code> | 需求入口及每个来源节点类型复核 | 专项源码静态类型与实际装配人工复核 |
 | RCE0764 | R0214 | R0088 | <code>海中鱼巣/领域/任务服务.h:485</code> | direct-const-member | <code>未单独冻结；读取源码调用点</code> | 需求类型匹配 | 专项源码静态类型与实际装配人工复核 |
 | RCE0765 | R0214 | R0213 | <code>海中鱼巣/领域/任务服务.h:489</code> | direct-const-member | <code>未单独冻结；读取源码调用点</code> | 来源节点为任务 | 专项源码静态类型与实际装配人工复核 |
-| RCE0766 | R0214 | F0051 | <code>海中鱼巣/领域/任务服务.h:490</code> | direct-free | <code>未单独冻结；读取源码调用点</code> | 承接材料存在；来源需求等于需求节点 | 专项源码静态类型与实际装配人工复核 |
+| RCE0766 | R0214 | F0051 | <code>海中鱼巣/领域/任务服务.h:490, 海中鱼巣/领域/任务服务.h:503</code> | direct_free+standard_library_callback+source_audited | <code>line490: 承接材料-&gt;来源需求, 需求节点；line503: std::unique相邻节点句柄对</code> | line490在承接材料存在时调用；line503在任务组排序完成后由std::unique零到多次调用 | 当前源码直接比较、标准算法默认相等合同、节点句柄静态类型与RCB0003复核 |
 | RCE0767 | R0214 | R0215 | <code>海中鱼巣/领域/任务服务.h:494</code> | standard-library-callback | <code>未单独冻结；读取源码调用点</code> | std::sort 注册的唯一比较回调 | 专项源码静态类型与实际装配人工复核 |
 | RCE0768 | R0216 | R0218 | <code>海中鱼巣/领域/任务服务.h:517</code> | direct-const-member | <code>未单独冻结；读取源码调用点</code> | 入口 | 专项源码静态类型与实际装配人工复核 |
 | RCE0769 | R0216 | R0220 | <code>海中鱼巣/领域/任务服务.h:520</code> | direct-const-member | <code>未单独冻结；读取源码调用点</code> | 任务承接壳完整；四参数顺序重载 | 专项源码静态类型与实际装配人工复核 |
@@ -2760,3 +2760,8 @@
 | RCE1734 | F0369 | F0190 | <code>海中鱼巣/领域/概念图服务.h:927</code> | direct_const_member | <code>this=&节点_, 节点</code> | F0369进入 | 当前源码逐调用点复核 |
 | RCE1735 | F0370 | F0051 | <code>海中鱼巣/领域/概念图服务.h:1034</code> | direct_free_operator | <code>实例, 概念</code> | 实例与概念粗类别读取完成后进入写前短路判断 | 当前源码逐调用点复核 |
 | RCE1736 | F0376 | F0630 | <code>海中鱼巣/核心/索引仓库.cpp:427</code> | direct_const_member+source_audited | <code>this=&节点_, 候选, 令牌</code> | 共享令牌有效；候选快照已形成；逐候选循环 | 当前源码逐调用点、接收者类型与重载复核 |
+| RCE1737 | F0377 | F0336 | <code>海中鱼巣/核心/节点仓库.cpp:442</code> | direct_const_member+source_audited | <code>this=&事务接线_</code> | F0377进入 | 当前源码逐调用点、Clang AST候选与同仓接域调用模式复核 |
+| RCE1738 | F0377 | F0397 | <code>海中鱼巣/核心/节点仓库.cpp:443</code> | resolved_function_pointer+source_audited | <code>状态=事务接线_.运行期状态</code> | RCE1737返回true | 当前源码逐调用点、现行接线装配与既有RCE0042同域绑定复核 |
+| RCE1739 | F0377 | F0338 | <code>海中鱼巣/核心/节点仓库.cpp:444</code> | direct_const_member+source_audited | <code>this=&许可</code> | RCE1738已形成局部许可 | 当前源码逐调用点与Clang AST短路表达式复核 |
+| RCE1740 | F0377 | F0339 | <code>海中鱼巣/核心/节点仓库.cpp:444</code> | direct_const_member+source_audited | <code>this=&许可</code> | RCE1739返回true；逻辑与右侧开始求值 | 当前源码逐调用点与Clang AST左到右短路顺序复核 |
+| RCE1741 | F0377 | F0345 | <code>海中鱼巣/核心/节点仓库.cpp:443-445</code> | implicit_destructor+source_audited | <code>this=&许可</code> | RCE1738已形成许可；返回值求值完成或异常展开 | 当前源码作用域、C++ RAII与既有E0790同域生命周期复核 |

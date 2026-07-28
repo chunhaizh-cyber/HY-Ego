@@ -16,7 +16,7 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1154,
-  "project_call_edge_count": 2756,
+  "project_call_edge_count": 2761,
   "functions": [
     {
       "function_id": "F0001",
@@ -7777,6 +7777,7 @@
         "F0324",
         "F0331",
         "F0332",
+        "F0377",
         "F0442",
         "F0443",
         "F0444",
@@ -7846,6 +7847,7 @@
         "F0239",
         "F0331",
         "F0332",
+        "F0377",
         "F0631",
         "R0102",
         "R0106",
@@ -7885,6 +7887,7 @@
         "F0239",
         "F0331",
         "F0332",
+        "F0377",
         "R0102",
         "R0106",
         "R0116",
@@ -8057,6 +8060,7 @@
         "F0239",
         "F0331",
         "F0332",
+        "F0377",
         "F0387",
         "F0575",
         "F0578",
@@ -8922,7 +8926,7 @@
     {
       "function_id": "F0377",
       "complete_signature": "bool 海中鱼巣::节点仓库::节点是否有效(海中鱼巣::节点句柄 节点) const",
-      "callable_type": "Function",
+      "callable_type": "Method",
       "category": "Function/Method",
       "module_identity": "全局模块片段/源文件定义",
       "file": "海中鱼巣/核心/节点仓库.cpp",
@@ -8941,6 +8945,11 @@
       ],
       "callees": [
         "F0190",
+        "F0336",
+        "F0338",
+        "F0339",
+        "F0345",
+        "F0397",
         "F0630"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0199；调用点=海中鱼巣/核心/索引仓库.cpp:414",
@@ -9436,6 +9445,7 @@
         "F0239",
         "F0331",
         "F0332",
+        "F0377",
         "R0402"
       ],
       "callees": [

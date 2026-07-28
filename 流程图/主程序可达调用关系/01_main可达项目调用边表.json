@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1154,
-  "project_call_edge_count": 2756,
-  "edge_count": 2756,
+  "project_call_edge_count": 2761,
+  "edge_count": 2761,
   "edges": [
     {
       "edge_id": "E0002",
@@ -9366,12 +9366,12 @@
       "callsites": [
         "海中鱼巣/适配/SQL数据库适配.cpp:330"
       ],
-      "call_category": "direct_free+direct-free+direct-free",
-      "arguments": "字段=配置_.服务器",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "服务器字段可用",
-      "reachable_condition": "总是；服务器字段可用；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_free+source_audited",
+      "arguments": "第一次字段=配置_.服务器；第二次字段=配置_.数据库",
+      "argument_resolution": "同一源码行两个直接调用点，完整实参与左到右短路顺序逐项复核",
+      "return_binding": "服务器字段可用bool；数据库字段可用bool",
+      "reachable_condition": "第一次总是调用；仅第一次返回true时调用第二次",
+      "resolution_source": "当前源码逐调用点与Clang AST左到右短路表达式复核",
       "current_root_reachable": true
     },
     {
@@ -17548,12 +17548,12 @@
       "callsites": [
         "海中鱼巣/核心/节点仓库.cpp:444"
       ],
-      "call_category": "direct-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_const_member+source_audited",
+      "arguments": "this=F0377接收者, 节点=节点, 令牌=RCE1740返回引用",
+      "argument_resolution": "当前源码、接收者静态类型与二实参 const 重载逐调用点复核",
+      "return_binding": "接域分支返回bool",
+      "reachable_condition": "RCE1739返回true且RCE1740完成后调用；RCE1739返回false时短路不调用",
+      "resolution_source": "当前源码、接收者静态类型、二实参重载与&&左到右顺序复核",
       "current_root_reachable": true
     },
     {
@@ -17563,12 +17563,12 @@
       "callsites": [
         "海中鱼巣/核心/节点仓库.cpp:446"
       ],
-      "call_category": "direct-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_const_member+source_audited",
+      "arguments": "this=F0377接收者, 节点=节点",
+      "argument_resolution": "当前源码、接收者静态类型与单实参 const 重载逐调用点复核",
+      "return_binding": "std::optional<节点记录>，随后由X02297 has_value形成F0377返回bool",
+      "reachable_condition": "RCE1737返回false；源码上同时覆盖完全未接域与接线不完整形态",
+      "resolution_source": "当前源码、接收者静态类型与单实参重载复核",
       "current_root_reachable": true
     },
     {
@@ -28550,14 +28550,15 @@
       "caller": "R0214",
       "callee": "F0051",
       "callsites": [
-        "海中鱼巣/领域/任务服务.h:490"
+        "海中鱼巣/领域/任务服务.h:490",
+        "海中鱼巣/领域/任务服务.h:503"
       ],
-      "call_category": "direct-free",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "承接材料存在；来源需求等于需求节点",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_free+standard_library_callback+source_audited",
+      "arguments": "line490: 承接材料->来源需求, 需求节点；line503: std::unique相邻节点句柄对",
+      "argument_resolution": "line490由源码直接相等表达式绑定；line503由std::unique默认相等谓词静态绑定同一节点句柄operator==",
+      "return_binding": "line490 bool进入if短路条件；line503 bool由std::unique消费",
+      "reachable_condition": "line490在承接材料存在时调用；line503在任务组排序完成后由std::unique零到多次调用",
+      "resolution_source": "当前源码直接比较、标准算法默认相等合同、节点句柄静态类型与RCB0003复核",
       "current_root_reachable": true
     },
     {
@@ -42355,6 +42356,81 @@
       "return_binding": "候选节点当前有效bool",
       "reachable_condition": "共享令牌有效；候选快照已形成；逐候选循环",
       "resolution_source": "当前源码逐调用点、接收者类型与重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1737",
+      "caller": "F0377",
+      "callee": "F0336",
+      "callsites": [
+        "海中鱼巣/核心/节点仓库.cpp:442"
+      ],
+      "call_category": "direct_const_member+source_audited",
+      "arguments": "this=&事务接线_",
+      "argument_resolution": "接收者静态类型与无参 const 成员函数逐调用点复核",
+      "return_binding": "事务接线是否已接域bool",
+      "reachable_condition": "F0377进入",
+      "resolution_source": "当前源码逐调用点、Clang AST候选与同仓接域调用模式复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1738",
+      "caller": "F0377",
+      "callee": "F0397",
+      "callsites": [
+        "海中鱼巣/核心/节点仓库.cpp:443"
+      ],
+      "call_category": "resolved_function_pointer+source_audited",
+      "arguments": "状态=事务接线_.运行期状态",
+      "argument_resolution": "结构事务接线共享许可函数指针在当前生产装配唯一绑定F0397",
+      "return_binding": "结构事务许可",
+      "reachable_condition": "RCE1737返回true",
+      "resolution_source": "当前源码逐调用点、现行接线装配与既有RCE0042同域绑定复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1739",
+      "caller": "F0377",
+      "callee": "F0338",
+      "callsites": [
+        "海中鱼巣/核心/节点仓库.cpp:444"
+      ],
+      "call_category": "direct_const_member+source_audited",
+      "arguments": "this=&许可",
+      "argument_resolution": "局部许可静态类型与无参 const 成员函数逐调用点复核",
+      "return_binding": "许可是否有效bool",
+      "reachable_condition": "RCE1738已形成局部许可",
+      "resolution_source": "当前源码逐调用点与Clang AST短路表达式复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1740",
+      "caller": "F0377",
+      "callee": "F0339",
+      "callsites": [
+        "海中鱼巣/核心/节点仓库.cpp:444"
+      ],
+      "call_category": "direct_const_member+source_audited",
+      "arguments": "this=&许可",
+      "argument_resolution": "局部许可静态类型与无参 const 成员函数逐调用点复核",
+      "return_binding": "结构事务令牌const引用",
+      "reachable_condition": "RCE1739返回true；逻辑与右侧开始求值",
+      "resolution_source": "当前源码逐调用点与Clang AST左到右短路顺序复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1741",
+      "caller": "F0377",
+      "callee": "F0345",
+      "callsites": [
+        "海中鱼巣/核心/节点仓库.cpp:443-445"
+      ],
+      "call_category": "implicit_destructor+source_audited",
+      "arguments": "this=&许可",
+      "argument_resolution": "局部结构事务许可离开接域分支作用域时隐式析构",
+      "return_binding": "void",
+      "reachable_condition": "RCE1738已形成许可；返回值求值完成或异常展开",
+      "resolution_source": "当前源码作用域、C++ RAII与既有E0790同域生命周期复核",
       "current_root_reachable": true
     }
   ]

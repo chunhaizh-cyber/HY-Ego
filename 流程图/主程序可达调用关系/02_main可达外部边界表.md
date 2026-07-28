@@ -1,6 +1,6 @@
 # main 可达外部边界表
 
-外部边界记录：1628。本表不把外部函数升级为项目函数身份。
+外部边界记录：1629。本表不把外部函数升级为项目函数身份。
 
 | ID | 调用方 | 类别 | 外部签名/边界 | 调用点 | 调用次数 | 可达条件 | 解析来源 |
 | --- | --- | --- | --- | --- | ---: | --- | --- |
@@ -1634,7 +1634,7 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | RCB0001 | R0214 | R0215 | <code>std::sort</code> | <code>海中鱼巣/领域/任务服务.h:494</code> | 任务组排序期间零到多次调用 | 源码 lambda 注册点与局部静态类型复核 |
 | RCB0002 | R0088 | R0090 | <code>std::sort</code> | <code>海中鱼巣/核心/关系仓库.cpp:884</code> | 来源候选排序期间零到多次调用 | 源码 lambda 注册点与局部静态类型复核 |
-| RCB0003 | R0214 | F0051 | <code>std::unique</code> | <code>海中鱼巣/领域/任务服务.h:503</code> | 标准算法相邻去重期间零到多次比较 | 标准算法合同；源码没有直接项目调用表达式，不计 direct 边 |
+| RCB0003 | R0214 | F0051 | <code>std::unique</code> | <code>海中鱼巣/领域/任务服务.h:503</code> | 标准算法相邻去重期间零到多次比较 | 标准算法默认相等合同与节点句柄静态类型复核；项目回调事实聚合登记于RCE0766 |
 | RCB0004 | R0313 | R0309 | <code>std::sort</code> | <code>海中鱼巣/领域/控制面板服务.h:626</code> | 节点句柄组排序期间零到多次调用 | 源码具名函数/lambda 注册点与静态类型复核 |
 | RCB0005 | R0321 | R0322 | <code>std::sort</code> | <code>海中鱼巣/领域/控制面板服务.h:773</code> | 概念根登记排序期间零到多次调用 | 源码具名函数/lambda 注册点与静态类型复核 |
 | RCB0006 | R0321 | R0323 | <code>std::all_of</code> | <code>海中鱼巣/领域/控制面板服务.h:808</code> | 概念根选项完整性复核期间零到多次调用 | 源码具名函数/lambda 注册点与静态类型复核 |
@@ -1668,3 +1668,4 @@
 | X02294 | F0370 | Standard library synchronization | <code>std::lock_guard<std::mutex>::lock_guard(std::mutex&) / ~lock_guard()</code> | <code>海中鱼巣/领域/概念图服务.h:1031-1042</code> | 1 | F0370进入后构造图写锁守卫；正常返回或异常展开时析构 | 逐调用点源码与RAII作用域复核 |
 | X02295 | F0370 | Standard library optional | <code>bool std::optional<海中鱼巣::概念根类别>::has_value() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:1035, 海中鱼巣/领域/概念图服务.h:1036</code> | 2 | 实例与概念不相同时按左到右短路次序观察两个类别 optional | 逐调用点源码与标准库静态类型复核 |
 | X02296 | F0370 | Standard library optional | <code>const 海中鱼巣::概念根类别& std::optional<海中鱼巣::概念根类别>::value() const &</code> | <code>海中鱼巣/领域/概念图服务.h:1037</code> | 2 | 两个类别 optional 均有值后按左到右顺序取值比较 | 逐调用点源码与标准库静态类型复核 |
+| X02297 | F0377 | Standard library optional | <code>bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept</code> | <code>海中鱼巣/核心/节点仓库.cpp:446</code> | 1 | RCE1737返回false且RCE0164已返回节点记录optional | 当前源码逐调用点与标准库静态类型复核 |
