@@ -1,0 +1,2844 @@
+{
+  "schema_version": 1,
+  "code_commit": "9d2061ed1d3cc0ab9c72bdd9997463d755da0137",
+  "scope": "main-current-reachable-exclusions",
+  "excluded_function_count": 76,
+  "rejected_candidate_edge_count": 323,
+  "excluded_functions": [
+    {
+      "function_id": "F0012",
+      "signature": "海中鱼巣::程序运行结果 海中鱼巣::运行D455真实样本专项()",
+      "file": "海中鱼巣/启动.应用程序.ixx",
+      "definition_line": 420,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0036",
+      "signature": "bool 海中鱼巣::记录调试日志(std::wstring_view 调试切片名, std::wstring_view 模块, std::wstring_view 入口, std::wstring_view 内容)",
+      "file": "海中鱼巣/核心/日志系统.h",
+      "definition_line": 298,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0038",
+      "signature": "海中鱼巣::自检单元结果 海中鱼巣::运行D455真实样本自检()",
+      "file": "海中鱼巣/适配/自检.D455真实样本.ixx",
+      "definition_line": 21,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0095",
+      "signature": "bool 海中鱼巣::写入日志(海中鱼巣::日志类别 类别, std::wstring_view 模块, std::wstring_view 入口, std::wstring_view 内容, std::wstring_view 调试切片名 = {})",
+      "file": "海中鱼巣/核心/日志系统.h",
+      "definition_line": 218,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0100",
+      "signature": "海中鱼巣::D455采集配置 海中鱼巣::生成D455默认采集配置(std::uint32_t 超时毫秒 = 2000)",
+      "file": "海中鱼巣/适配/协议.D455采样材料.ixx",
+      "definition_line": 169,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0101",
+      "signature": "std::unique_ptr<海中鱼巣::D455帧来源> 海中鱼巣::创建并打开D455相机采集器(海中鱼巣::D455采集配置 配置, 海中鱼巣::D455操作结果& 打开结果)",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 746,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0102",
+      "signature": "海中鱼巣::D455采集状态快照 海中鱼巣::D455相机采集器::读取状态快照() const",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 713,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0103",
+      "signature": "bool 海中鱼巣::D455设备身份有效(const 海中鱼巣::D455设备身份材料& 身份) noexcept",
+      "file": "海中鱼巣/适配/协议.D455采样材料.ixx",
+      "definition_line": 219,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0104",
+      "signature": "bool 海中鱼巣::D455采集配置有效(const 海中鱼巣::D455采集配置& 配置) noexcept",
+      "file": "海中鱼巣/适配/协议.D455采样材料.ixx",
+      "definition_line": 196,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0105",
+      "signature": "海中鱼巣::D455帧材料缓存::D455帧材料缓存(海中鱼巣::D455帧材料缓存配置 配置) noexcept",
+      "file": "海中鱼巣/线程/缓存.D455帧材料.ixx",
+      "definition_line": 119,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0106",
+      "signature": "海中鱼巣::D455采样材料上行桥::D455采样材料上行桥(海中鱼巣::D455帧来源& 帧来源, 海中鱼巣::D455帧材料缓存& 缓存) noexcept",
+      "file": "海中鱼巣/线程/上行桥.D455采样材料.ixx",
+      "definition_line": 50,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0107",
+      "signature": "海中鱼巣::D455材料上行结果 海中鱼巣::D455采样材料上行桥::上行一次(const 海中鱼巣::D455材料上行请求& 请求)",
+      "file": "海中鱼巣/线程/上行桥.D455采样材料.ixx",
+      "definition_line": 54,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0108",
+      "signature": "bool 海中鱼巣::D455同步帧材料有效(const 海中鱼巣::D455同步帧材料& 材料) noexcept",
+      "file": "海中鱼巣/适配/协议.D455采样材料.ixx",
+      "definition_line": 298,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0109",
+      "signature": "bool 海中鱼巣::D455相机内参有效(const 海中鱼巣::D455相机内参材料& 内参) noexcept",
+      "file": "海中鱼巣/适配/协议.D455采样材料.ixx",
+      "definition_line": 226,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0110",
+      "signature": "bool 海中鱼巣::D455相机外参有效(const 海中鱼巣::D455相机外参材料& 外参) noexcept",
+      "file": "海中鱼巣/适配/协议.D455采样材料.ixx",
+      "definition_line": 244,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0111",
+      "signature": "海中鱼巣::D455缓存读取结果 海中鱼巣::D455帧材料缓存::按编号版本读取(海中鱼巣::D455帧材料句柄 句柄) const",
+      "file": "海中鱼巣/线程/缓存.D455帧材料.ixx",
+      "definition_line": 228,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0112",
+      "signature": "void 海中鱼巣::D455相机采集器::请求停止() noexcept",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 690,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0113",
+      "signature": "海中鱼巣::D455采集结果 海中鱼巣::D455相机采集器::采样一次(std::uint32_t 超时毫秒)",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 590,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0114",
+      "signature": "void 海中鱼巣::D455帧材料缓存::停止接收() noexcept",
+      "file": "海中鱼巣/线程/缓存.D455帧材料.ixx",
+      "definition_line": 290,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0115",
+      "signature": "void 海中鱼巣::D455相机采集器::关闭() noexcept",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 698,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0116",
+      "signature": "海中鱼巣::D455缓存快照 海中鱼巣::D455帧材料缓存::读取缓存快照() const",
+      "file": "海中鱼巣/线程/缓存.D455帧材料.ixx",
+      "definition_line": 271,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0117",
+      "signature": "海中鱼巣::D455相机采集器::~D455相机采集器()",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 431,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0177",
+      "signature": "bool 海中鱼巣::概念图初始化服务::确保根<海中鱼巣::概念图初始化服务::初始化四个根()::<lambda@初始化.概念图.ixx:105>>(海中鱼巣::概念根初始化项&, 海中鱼巣::概念根类别, std::uint64_t, lambda@105)",
+      "file": "海中鱼巣/领域/初始化.概念图.ixx",
+      "definition_line": 144,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0178",
+      "signature": "bool 海中鱼巣::概念图初始化服务::确保根<海中鱼巣::概念图初始化服务::初始化四个根()::<lambda@初始化.概念图.ixx:107>>(海中鱼巣::概念根初始化项&, 海中鱼巣::概念根类别, std::uint64_t, lambda@107)",
+      "file": "海中鱼巣/领域/初始化.概念图.ixx",
+      "definition_line": 144,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0179",
+      "signature": "bool 海中鱼巣::概念图初始化服务::确保根<海中鱼巣::概念图初始化服务::初始化四个根()::<lambda@初始化.概念图.ixx:109>>(海中鱼巣::概念根初始化项&, 海中鱼巣::概念根类别, std::uint64_t, lambda@109)",
+      "file": "海中鱼巣/领域/初始化.概念图.ixx",
+      "definition_line": 144,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0269",
+      "signature": "std::wstring 海中鱼巣::当前日志时间文本()",
+      "file": "海中鱼巣/核心/日志系统.h",
+      "definition_line": 114,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0271",
+      "signature": "std::string 海中鱼巣::转为UTF8(std::wstring_view 文本)",
+      "file": "海中鱼巣/核心/日志系统.h",
+      "definition_line": 202,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0294",
+      "signature": "海中鱼巣::D455相机采集器::D455相机采集器(海中鱼巣::D455采集配置 配置)",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 427,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0295",
+      "signature": "海中鱼巣::D455操作结果 海中鱼巣::D455相机采集器::打开()",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 440,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0296",
+      "signature": "bool 海中鱼巣::D455流配置有效(const 海中鱼巣::D455流配置& 配置) noexcept",
+      "file": "海中鱼巣/适配/协议.D455采样材料.ixx",
+      "definition_line": 179,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0298",
+      "signature": "海中鱼巣::D455帧材料缓存::D455候选准备结果 海中鱼巣::D455帧材料缓存::准备帧材料候选(std::shared_ptr<const 海中鱼巣::D455同步帧材料> 材料, std::uint64_t 当前单调时间戳)",
+      "file": "海中鱼巣/线程/缓存.D455帧材料.ixx",
+      "definition_line": 131,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0299",
+      "signature": "bool 海中鱼巣::D455帧材料句柄::有效() const noexcept",
+      "file": "海中鱼巣/线程/缓存.D455帧材料.ixx",
+      "definition_line": 45,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0300",
+      "signature": "海中鱼巣::D455缓存读取结果 海中鱼巣::D455帧材料缓存::读取候选(const 海中鱼巣::D455帧材料缓存::D455帧材料候选& 候选) const",
+      "file": "海中鱼巣/线程/缓存.D455帧材料.ixx",
+      "definition_line": 182,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0301",
+      "signature": "std::uint64_t 海中鱼巣::计算D455同步帧字节数(const 海中鱼巣::D455同步帧材料& 材料) noexcept",
+      "file": "海中鱼巣/适配/协议.D455采样材料.ixx",
+      "definition_line": 291,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0302",
+      "signature": "bool 海中鱼巣::D455采样材料上行桥::同一材料(const 海中鱼巣::D455同步帧材料& 左, const 海中鱼巣::D455同步帧材料& 右) noexcept",
+      "file": "海中鱼巣/线程/上行桥.D455采样材料.ixx",
+      "definition_line": 154,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0303",
+      "signature": "海中鱼巣::D455材料上行结果 海中鱼巣::D455采样材料上行桥::撤销后返回(海中鱼巣::D455帧材料句柄 句柄, 海中鱼巣::D455上行拒绝原因 原因, 海中鱼巣::D455缓存拒绝原因 缓存原因)",
+      "file": "海中鱼巣/线程/上行桥.D455采样材料.ixx",
+      "definition_line": 168,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0304",
+      "signature": "std::uint64_t 海中鱼巣::计算D455材料摘要(const 海中鱼巣::D455同步帧材料& 材料) noexcept",
+      "file": "海中鱼巣/适配/协议.D455采样材料.ixx",
+      "definition_line": 337,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0305",
+      "signature": "海中鱼巣::D455缓存变更结果 海中鱼巣::D455帧材料缓存::确认发布帧材料(const 海中鱼巣::D455帧材料缓存::D455帧材料候选& 候选)",
+      "file": "海中鱼巣/线程/缓存.D455帧材料.ixx",
+      "definition_line": 195,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0306",
+      "signature": "bool 海中鱼巣::D455图像平面有效(const 海中鱼巣::D455图像平面材料& 平面) noexcept",
+      "file": "海中鱼巣/适配/协议.D455采样材料.ixx",
+      "definition_line": 264,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0307",
+      "signature": "rs2_error** 海中鱼巣::{匿名命名空间}::SDK错误槽::接收() noexcept",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 54,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0308",
+      "signature": "bool 海中鱼巣::{匿名命名空间}::SDK错误槽::失败() const noexcept",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 58,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0309",
+      "signature": "海中鱼巣::{匿名命名空间}::SDK错误槽::~SDK错误槽() noexcept",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 48,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0310",
+      "signature": "void 海中鱼巣::{匿名命名空间}::帧释放器::operator()(rs2_frame* 值) const noexcept",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 75,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0311",
+      "signature": "bool 海中鱼巣::{匿名命名空间}::读取帧流身份(const rs2_frame* 帧, rs2_stream& 类型, int& 流索引)",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 297,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0312",
+      "signature": "std::uint64_t 海中鱼巣::{匿名命名空间}::当前单调时间戳微秒()",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 178,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0313",
+      "signature": "bool 海中鱼巣::{匿名命名空间}::复制图像平面(const rs2_frame* 帧, 海中鱼巣::D455流类型 类型, std::uint32_t 流索引, 海中鱼巣::D455像素格式 格式, float 深度比例, 海中鱼巣::D455图像平面材料& 材料)",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 312,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0314",
+      "signature": "bool 海中鱼巣::{匿名命名空间}::读取外参(const rs2_frame* 来源帧, const rs2_frame* 目标帧, 海中鱼巣::D455流类型 来源类型, std::uint32_t 来源索引, 海中鱼巣::D455流类型 目标类型, std::uint32_t 目标索引, 海中鱼巣::D455相机外参材料& 材料)",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 379,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0315",
+      "signature": "std::uint64_t 海中鱼巣::{匿名命名空间}::计算标定摘要(const 海中鱼巣::D455同步帧材料& 材料)",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 404,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0316",
+      "signature": "海中鱼巣::{匿名命名空间}::SDK错误槽::SDK错误槽()",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 44,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0317",
+      "signature": "void 海中鱼巣::{匿名命名空间}::管线释放器::operator()(rs2_pipeline* 值) const noexcept",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 69,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0318",
+      "signature": "void 海中鱼巣::{匿名命名空间}::上下文释放器::operator()(rs2_context* 值) const noexcept",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 66,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0319",
+      "signature": "海中鱼巣::D455帧来源::~D455帧来源() noexcept",
+      "file": "海中鱼巣/适配/协议.D455采样材料.ixx",
+      "definition_line": 162,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0594",
+      "signature": "海中鱼巣::D455操作结果 海中鱼巣::D455相机采集器::打开失败(海中鱼巣::D455采集拒绝原因 原因, bool 追根因) noexcept",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 719,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0595",
+      "signature": "std::string 海中鱼巣::{匿名命名空间}::读取设备信息(const rs2_device* 设备, rs2_camera_info 信息, bool& 调用成功)",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 88,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0596",
+      "signature": "bool 海中鱼巣::{匿名命名空间}::是D455设备(const rs2_device* 设备, bool& 调用成功)",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 107,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0597",
+      "signature": "海中鱼巣::D455设备身份材料 海中鱼巣::{匿名命名空间}::转换设备身份(const rs2_device* 设备, bool& 调用成功)",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 113,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0598",
+      "signature": "bool 海中鱼巣::{匿名命名空间}::读取深度比例(const rs2_device* 设备, float& 深度比例)",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 264,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0599",
+      "signature": "bool 海中鱼巣::D455相机采集器::打开()::<lambda@采集器.D455相机.ixx:539>::operator()(const 海中鱼巣::D455流配置& 流) const",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 539,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0600",
+      "signature": "bool 海中鱼巣::{匿名命名空间}::复核实际流配置(rs2_pipeline_profile* 管线配置, const 海中鱼巣::D455采集配置& 请求)",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 230,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0601",
+      "signature": "void 海中鱼巣::{匿名命名空间}::设备列表释放器::operator()(rs2_device_list* 值) const noexcept",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 67,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0602",
+      "signature": "void 海中鱼巣::{匿名命名空间}::设备释放器::operator()(rs2_device* 值) const noexcept",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 68,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0603",
+      "signature": "void 海中鱼巣::{匿名命名空间}::配置释放器::operator()(rs2_config* 值) const noexcept",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 70,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0604",
+      "signature": "void 海中鱼巣::{匿名命名空间}::管线配置释放器::operator()(rs2_pipeline_profile* 值) const noexcept",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 71,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0605",
+      "signature": "bool 海中鱼巣::D455帧材料缓存::已过期(const 海中鱼巣::D455同步帧材料& 材料, std::uint64_t 当前单调时间戳) const noexcept",
+      "file": "海中鱼巣/线程/缓存.D455帧材料.ixx",
+      "definition_line": 309,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0606",
+      "signature": "海中鱼巣::D455帧材料缓存::D455帧材料候选::D455帧材料候选(const 海中鱼巣::D455帧材料缓存* 所属缓存, 海中鱼巣::D455帧材料句柄 句柄, std::uint64_t 能力编号) noexcept",
+      "file": "海中鱼巣/线程/缓存.D455帧材料.ixx",
+      "definition_line": 100,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0607",
+      "signature": "海中鱼巣::D455帧材料缓存::D455帧材料候选::D455帧材料候选(海中鱼巣::D455帧材料缓存::D455帧材料候选&& 来源) noexcept",
+      "file": "海中鱼巣/线程/缓存.D455帧材料.ixx",
+      "definition_line": 82,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0608",
+      "signature": "const 海中鱼巣::D455帧材料缓存::条目* 海中鱼巣::D455帧材料缓存::查找候选条目(const 海中鱼巣::D455帧材料缓存::D455帧材料候选& 候选) const noexcept",
+      "file": "海中鱼巣/线程/缓存.D455帧材料.ixx",
+      "definition_line": 314,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0609",
+      "signature": "海中鱼巣::D455缓存变更结果 海中鱼巣::D455帧材料缓存::精确撤销帧材料(海中鱼巣::D455帧材料句柄 句柄)",
+      "file": "海中鱼巣/线程/缓存.D455帧材料.ixx",
+      "definition_line": 208,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0610",
+      "signature": "void 海中鱼巣::计算D455材料摘要(const 海中鱼巣::D455同步帧材料&)::<lambda@协议.D455采样材料.ixx:339>::operator()(std::uint64_t 数值) const",
+      "file": "海中鱼巣/适配/协议.D455采样材料.ixx",
+      "definition_line": 339,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0611",
+      "signature": "海中鱼巣::D455帧材料缓存::条目* 海中鱼巣::D455帧材料缓存::查找候选条目(const 海中鱼巣::D455帧材料缓存::D455帧材料候选& 候选) noexcept",
+      "file": "海中鱼巣/线程/缓存.D455帧材料.ixx",
+      "definition_line": 327,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0612",
+      "signature": "std::uint32_t 海中鱼巣::D455格式每像素字节数(海中鱼巣::D455像素格式 格式) noexcept",
+      "file": "海中鱼巣/适配/协议.D455采样材料.ixx",
+      "definition_line": 206,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0613",
+      "signature": "bool 海中鱼巣::{匿名命名空间}::读取流配置(const rs2_stream_profile* 流配置, 海中鱼巣::D455流配置& 结果)",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 183,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0614",
+      "signature": "海中鱼巣::D455时间戳域 海中鱼巣::{匿名命名空间}::转换时间戳域(rs2_timestamp_domain 时间戳域) noexcept",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 140,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0615",
+      "signature": "海中鱼巣::D455相机内参材料 海中鱼巣::{匿名命名空间}::转换内参(const rs2_intrinsics& 内参)",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 149,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0616",
+      "signature": "海中鱼巣::D455相机外参材料 海中鱼巣::{匿名命名空间}::转换外参(const rs2_extrinsics& 外参, 海中鱼巣::D455流类型 来源类型, std::uint32_t 来源索引, 海中鱼巣::D455流类型 目标类型, std::uint32_t 目标索引)",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 162,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0617",
+      "signature": "void 海中鱼巣::{匿名命名空间}::计算标定摘要(const 海中鱼巣::D455同步帧材料&)::<lambda@采集器.D455相机.ixx:406>::operator()(std::uint64_t 数值) const",
+      "file": "海中鱼巣/适配/采集器.D455相机.ixx",
+      "definition_line": 406,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    }
+  ],
+  "rejected_candidate_edges": [
+    {
+      "candidate_edge_id": "ME0273",
+      "caller": "F0024",
+      "callee": "F0469",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=初始化.成功"
+    },
+    {
+      "candidate_edge_id": "ME0274",
+      "caller": "F0024",
+      "callee": "F0223",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=窗口.运行"
+    },
+    {
+      "candidate_edge_id": "ME0276",
+      "caller": "F0282",
+      "callee": "MF2435",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=开始"
+    },
+    {
+      "candidate_edge_id": "ME0277",
+      "caller": "F0282",
+      "callee": "F0279",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=夹具.执行查询"
+    },
+    {
+      "candidate_edge_id": "ME0278",
+      "caller": "F0282",
+      "callee": "MF2712",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=夹具.读取关系仓库().重挂关系并返回新句柄"
+    },
+    {
+      "candidate_edge_id": "ME0279",
+      "caller": "F0282",
+      "callee": "MF0704",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=夹具.读取关系仓库"
+    },
+    {
+      "candidate_edge_id": "ME0280",
+      "caller": "F0097",
+      "callee": "MF2728",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=夹具.读取关系仓库().有效关系数量"
+    },
+    {
+      "candidate_edge_id": "ME0282",
+      "caller": "F0037",
+      "callee": "MF2722",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=std::declval<const 关系仓库&>().获取关系记录组"
+    },
+    {
+      "candidate_edge_id": "ME0283",
+      "caller": "F0037",
+      "callee": "MF2724",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=std::declval<const 关系仓库&>().获取来源关系记录组"
+    },
+    {
+      "candidate_edge_id": "ME0284",
+      "caller": "F0037",
+      "callee": "MF2725",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=std::declval<const 关系仓库&>().获取节点相关关系记录组"
+    },
+    {
+      "candidate_edge_id": "ME0285",
+      "caller": "F0037",
+      "callee": "F0273",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=无效夹具.构建"
+    },
+    {
+      "candidate_edge_id": "ME0286",
+      "caller": "F0037",
+      "callee": "MF0626",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=报告.完整"
+    },
+    {
+      "candidate_edge_id": "ME0374",
+      "caller": "F0015",
+      "callee": "F0068",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=请求.有效"
+    },
+    {
+      "candidate_edge_id": "ME0777",
+      "caller": "F0254",
+      "callee": "F0028",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=结果.成功"
+    },
+    {
+      "candidate_edge_id": "ME0778",
+      "caller": "F0255",
+      "callee": "F0028",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=结果.成功"
+    },
+    {
+      "candidate_edge_id": "ME0779",
+      "caller": "F0256",
+      "callee": "F0028",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=结果.成功"
+    },
+    {
+      "candidate_edge_id": "ME0780",
+      "caller": "F0257",
+      "callee": "F0028",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=结果.成功"
+    },
+    {
+      "candidate_edge_id": "ME0781",
+      "caller": "F0259",
+      "callee": "F0028",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=结果.成功"
+    },
+    {
+      "candidate_edge_id": "ME0782",
+      "caller": "F0260",
+      "callee": "F0028",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=结果.成功"
+    },
+    {
+      "candidate_edge_id": "ME0783",
+      "caller": "F0261",
+      "callee": "F0028",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=结果.成功"
+    },
+    {
+      "candidate_edge_id": "ME0784",
+      "caller": "F0262",
+      "callee": "F0028",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=结果.成功"
+    },
+    {
+      "candidate_edge_id": "ME0785",
+      "caller": "F0263",
+      "callee": "F0028",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=结果.成功"
+    },
+    {
+      "candidate_edge_id": "ME0786",
+      "caller": "F0264",
+      "callee": "F0028",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=结果.成功"
+    },
+    {
+      "candidate_edge_id": "ME0789",
+      "caller": "F0265",
+      "callee": "F0028",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=结果.成功"
+    },
+    {
+      "candidate_edge_id": "ME0976",
+      "caller": "F0007",
+      "callee": "F0469",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=初始化.成功"
+    },
+    {
+      "candidate_edge_id": "ME0977",
+      "caller": "F0010",
+      "callee": "F0469",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=初始化.成功"
+    },
+    {
+      "candidate_edge_id": "ME1052",
+      "caller": "F0013",
+      "callee": "F0071",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=配置.有效"
+    },
+    {
+      "candidate_edge_id": "ME1366",
+      "caller": "F0218",
+      "callee": "MF1417",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=节点.读取节点"
+    },
+    {
+      "candidate_edge_id": "ME1367",
+      "caller": "F0218",
+      "callee": "MF2718",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系.获取子节点"
+    },
+    {
+      "candidate_edge_id": "ME1368",
+      "caller": "F0022",
+      "callee": "F0469",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=初始化.成功"
+    },
+    {
+      "candidate_edge_id": "ME1369",
+      "caller": "F0018",
+      "callee": "F0042",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=端口.完整"
+    },
+    {
+      "candidate_edge_id": "ME1883",
+      "caller": "F0328",
+      "callee": "MF2727",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.存在目标关系"
+    },
+    {
+      "candidate_edge_id": "ME1890",
+      "caller": "F0335",
+      "callee": "F0622",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=主信息_.创建主信息"
+    },
+    {
+      "candidate_edge_id": "ME1891",
+      "caller": "F0335",
+      "callee": "F0623",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=节点_.创建节点"
+    },
+    {
+      "candidate_edge_id": "ME1937",
+      "caller": "F0239",
+      "callee": "MF1467",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=许可.有效"
+    },
+    {
+      "candidate_edge_id": "ME1938",
+      "caller": "F0073",
+      "callee": "F0134",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=参数.有效"
+    },
+    {
+      "candidate_edge_id": "ME1939",
+      "caller": "F0073",
+      "callee": "F0028",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=结果.成功"
+    },
+    {
+      "candidate_edge_id": "ME1940",
+      "caller": "F0075",
+      "callee": "F0134",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=参数.有效"
+    },
+    {
+      "candidate_edge_id": "ME1941",
+      "caller": "F0075",
+      "callee": "F0028",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=结果.成功"
+    },
+    {
+      "candidate_edge_id": "ME2012",
+      "caller": "F0273",
+      "callee": "F0622",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=主信息_.创建主信息"
+    },
+    {
+      "candidate_edge_id": "ME2013",
+      "caller": "F0273",
+      "callee": "F0623",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=节点_.创建节点"
+    },
+    {
+      "candidate_edge_id": "ME2014",
+      "caller": "F0273",
+      "callee": "MF2728",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.有效关系数量"
+    },
+    {
+      "candidate_edge_id": "ME2015",
+      "caller": "F0279",
+      "callee": "MF2722",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.获取关系记录组"
+    },
+    {
+      "candidate_edge_id": "ME2016",
+      "caller": "F0279",
+      "callee": "MF2724",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.获取来源关系记录组"
+    },
+    {
+      "candidate_edge_id": "ME2017",
+      "caller": "F0279",
+      "callee": "MF2726",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.存在关系"
+    },
+    {
+      "candidate_edge_id": "ME2018",
+      "caller": "F0279",
+      "callee": "MF2727",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.存在目标关系"
+    },
+    {
+      "candidate_edge_id": "ME2019",
+      "caller": "F0279",
+      "callee": "MF2725",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.获取节点相关关系记录组"
+    },
+    {
+      "candidate_edge_id": "ME2020",
+      "caller": "F0279",
+      "callee": "MF2708",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.获取关系审计记录组"
+    },
+    {
+      "candidate_edge_id": "ME2022",
+      "caller": "F0284",
+      "callee": "MF2710",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.删除关系"
+    },
+    {
+      "candidate_edge_id": "ME2023",
+      "caller": "F0287",
+      "callee": "MF2710",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.删除关系"
+    },
+    {
+      "candidate_edge_id": "ME2024",
+      "caller": "F0285",
+      "callee": "MF2709",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.失效关系"
+    },
+    {
+      "candidate_edge_id": "ME2025",
+      "caller": "F0286",
+      "callee": "MF2712",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.重挂关系并返回新句柄"
+    },
+    {
+      "candidate_edge_id": "ME2026",
+      "caller": "F0286",
+      "callee": "MF2710",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.删除关系"
+    },
+    {
+      "candidate_edge_id": "ME2031",
+      "caller": "F0569",
+      "callee": "MF2709",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.失效关系"
+    },
+    {
+      "candidate_edge_id": "ME2032",
+      "caller": "F0569",
+      "callee": "MF0765",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=失效.完整"
+    },
+    {
+      "candidate_edge_id": "ME2033",
+      "caller": "F0569",
+      "callee": "MF2710",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.删除关系"
+    },
+    {
+      "candidate_edge_id": "ME2034",
+      "caller": "F0569",
+      "callee": "MF2712",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.重挂关系并返回新句柄"
+    },
+    {
+      "candidate_edge_id": "ME2035",
+      "caller": "F0099",
+      "callee": "F0593",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=指标.完整"
+    },
+    {
+      "candidate_edge_id": "ME2057",
+      "caller": "F0016",
+      "callee": "F0189",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=概念图.成功"
+    },
+    {
+      "candidate_edge_id": "ME2069",
+      "caller": "MF0783",
+      "callee": "MF0633",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=项.完整"
+    },
+    {
+      "candidate_edge_id": "ME2072",
+      "caller": "F0356",
+      "callee": "MF2723",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.获取来源节点组"
+    },
+    {
+      "candidate_edge_id": "ME2074",
+      "caller": "F0357",
+      "callee": "MF2203",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=状态.读取状态值"
+    },
+    {
+      "candidate_edge_id": "ME2076",
+      "caller": "F0182",
+      "callee": "MF2728",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.有效关系数量"
+    },
+    {
+      "candidate_edge_id": "ME2077",
+      "caller": "F0371",
+      "callee": "MF2721",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.获取目标节点组"
+    },
+    {
+      "candidate_edge_id": "ME2078",
+      "caller": "F0372",
+      "callee": "MF2723",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.获取来源节点组"
+    },
+    {
+      "candidate_edge_id": "ME2143",
+      "caller": "F0359",
+      "callee": "MF2722",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.获取关系记录组"
+    },
+    {
+      "candidate_edge_id": "ME2145",
+      "caller": "F0359",
+      "callee": "MF2710",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.删除关系"
+    },
+    {
+      "candidate_edge_id": "ME2149",
+      "caller": "F0361",
+      "callee": "MF2710",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.删除关系"
+    },
+    {
+      "candidate_edge_id": "ME2176",
+      "caller": "F0362",
+      "callee": "MF0563",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=关系材料.完整"
+    },
+    {
+      "candidate_edge_id": "ME2220",
+      "caller": "F0467",
+      "callee": "F0168",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=句柄有效"
+    },
+    {
+      "candidate_edge_id": "ME2226",
+      "caller": "F0251",
+      "callee": "F0134",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=初始化参数.有效"
+    },
+    {
+      "candidate_edge_id": "ME2227",
+      "caller": "F0251",
+      "callee": "MF1983",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=角色.完整"
+    },
+    {
+      "candidate_edge_id": "ME2228",
+      "caller": "F0247",
+      "callee": "F0134",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=参数.有效"
+    },
+    {
+      "candidate_edge_id": "ME2229",
+      "caller": "MF0938",
+      "callee": "MF0783",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=视图.完整"
+    },
+    {
+      "candidate_edge_id": "ME2230",
+      "caller": "F0076",
+      "callee": "MF1949",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=材料.完整"
+    },
+    {
+      "candidate_edge_id": "ME2283",
+      "caller": "F0441",
+      "callee": "MF1467",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=许可.有效"
+    },
+    {
+      "candidate_edge_id": "ME2305",
+      "caller": "F0376",
+      "callee": "MF1467",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=许可.有效"
+    },
+    {
+      "candidate_edge_id": "ME2333",
+      "caller": "F0462",
+      "callee": "MF1256",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=系统角色.完整"
+    },
+    {
+      "candidate_edge_id": "ME2334",
+      "caller": "F0462",
+      "callee": "F0134",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=参数.有效"
+    },
+    {
+      "candidate_edge_id": "ME2335",
+      "caller": "F0462",
+      "callee": "F0028",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=结果.成功"
+    },
+    {
+      "candidate_edge_id": "ME2336",
+      "caller": "F0461",
+      "callee": "MF1256",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=系统角色.完整"
+    },
+    {
+      "candidate_edge_id": "ME2342",
+      "caller": "MF1059",
+      "callee": "MF1877",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=身份.当前可读"
+    },
+    {
+      "candidate_edge_id": "ME2461",
+      "caller": "F0233",
+      "callee": "MF0162",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.90; lexical=结构事务内部::取得许可"
+    },
+    {
+      "candidate_edge_id": "ME2462",
+      "caller": "F0233",
+      "callee": "MF0159",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.90; lexical=结构事务内部::验证令牌"
+    },
+    {
+      "candidate_edge_id": "ME2463",
+      "caller": "F0233",
+      "callee": "MF0160",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.90; lexical=结构事务内部::标记撤销失败隔离"
+    },
+    {
+      "candidate_edge_id": "ME2476",
+      "caller": "F0366",
+      "callee": "F0622",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=主信息_.创建主信息"
+    },
+    {
+      "candidate_edge_id": "ME2477",
+      "caller": "F0366",
+      "callee": "F0623",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=节点_.创建节点"
+    },
+    {
+      "candidate_edge_id": "ME2479",
+      "caller": "F0366",
+      "callee": "MF1918",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=主信息_.主信息是否有效"
+    },
+    {
+      "candidate_edge_id": "ME2508",
+      "caller": "MF1256",
+      "callee": "F0168",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=句柄有效"
+    },
+    {
+      "candidate_edge_id": "ME2513",
+      "caller": "F0245",
+      "callee": "MF2218",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=主体.完整"
+    },
+    {
+      "candidate_edge_id": "ME2514",
+      "caller": "F0241",
+      "callee": "F0134",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=参数.有效"
+    },
+    {
+      "candidate_edge_id": "ME2516",
+      "caller": "F0074",
+      "callee": "MF1256",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=清单.完整"
+    },
+    {
+      "candidate_edge_id": "ME2596",
+      "caller": "F0047",
+      "callee": "F0220",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=语素.成功"
+    },
+    {
+      "candidate_edge_id": "ME2597",
+      "caller": "F0044",
+      "callee": "F0349",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=执行初始化"
+    },
+    {
+      "candidate_edge_id": "ME2598",
+      "caller": "F0637",
+      "callee": "MF1219",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=冻结结果.批次.批次序号"
+    },
+    {
+      "candidate_edge_id": "ME2599",
+      "caller": "F0637",
+      "callee": "MF1340",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=标记治理失败"
+    },
+    {
+      "candidate_edge_id": "ME2600",
+      "caller": "F0637",
+      "callee": "MF1221",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=冻结结果.批次.读取消息组"
+    },
+    {
+      "candidate_edge_id": "ME2666",
+      "caller": "MF1409",
+      "callee": "MF2721",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.获取目标节点组"
+    },
+    {
+      "candidate_edge_id": "ME2699",
+      "caller": "MF1491",
+      "callee": "MF2448",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=名称.成功"
+    },
+    {
+      "candidate_edge_id": "ME2700",
+      "caller": "MF1491",
+      "callee": "MF2584",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=类型.成功"
+    },
+    {
+      "candidate_edge_id": "ME2701",
+      "caller": "F0633",
+      "callee": "F0028",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=结果.成功"
+    },
+    {
+      "candidate_edge_id": "ME2835",
+      "caller": "F0496",
+      "callee": "MF2721",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.获取目标节点组"
+    },
+    {
+      "candidate_edge_id": "ME2836",
+      "caller": "F0497",
+      "callee": "MF2721",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.获取目标节点组"
+    },
+    {
+      "candidate_edge_id": "ME3009",
+      "caller": "F0622",
+      "callee": "F0336",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=事务接线_.已接域"
+    },
+    {
+      "candidate_edge_id": "ME3010",
+      "caller": "F0622",
+      "callee": "MF1467",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=许可.有效"
+    },
+    {
+      "candidate_edge_id": "ME3011",
+      "caller": "F0622",
+      "callee": "F0339",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=许可.读取令牌"
+    },
+    {
+      "candidate_edge_id": "ME3027",
+      "caller": "F0439",
+      "callee": "F0336",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=事务接线_.已接域"
+    },
+    {
+      "candidate_edge_id": "ME3028",
+      "caller": "F0439",
+      "callee": "MF1467",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=许可.有效"
+    },
+    {
+      "candidate_edge_id": "ME3029",
+      "caller": "F0439",
+      "callee": "F0339",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=许可.读取令牌"
+    },
+    {
+      "candidate_edge_id": "ME3050",
+      "caller": "MF1918",
+      "callee": "F0336",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=事务接线_.已接域"
+    },
+    {
+      "candidate_edge_id": "ME3051",
+      "caller": "MF1918",
+      "callee": "MF1467",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=许可.有效"
+    },
+    {
+      "candidate_edge_id": "ME3052",
+      "caller": "MF1918",
+      "callee": "F0339",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=许可.读取令牌"
+    },
+    {
+      "candidate_edge_id": "ME3057",
+      "caller": "F0383",
+      "callee": "F0336",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=事务接线_.已接域"
+    },
+    {
+      "candidate_edge_id": "ME3058",
+      "caller": "F0383",
+      "callee": "MF1467",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=许可.有效"
+    },
+    {
+      "candidate_edge_id": "ME3059",
+      "caller": "F0383",
+      "callee": "F0339",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=许可.读取令牌"
+    },
+    {
+      "candidate_edge_id": "ME3083",
+      "caller": "F0367",
+      "callee": "MF1918",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=主信息_.主信息是否有效"
+    },
+    {
+      "candidate_edge_id": "ME3243",
+      "caller": "MF2232",
+      "callee": "MF1883",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=规格.完整"
+    },
+    {
+      "candidate_edge_id": "ME3244",
+      "caller": "MF2232",
+      "callee": "MF1880",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=规格.读取幂等主键"
+    },
+    {
+      "candidate_edge_id": "ME3334",
+      "caller": "F0043",
+      "callee": "MF2232",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=状态.创建抽象状态"
+    },
+    {
+      "candidate_edge_id": "ME3335",
+      "caller": "F0043",
+      "callee": "MF2709",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=失效关系"
+    },
+    {
+      "candidate_edge_id": "ME3336",
+      "caller": "F0162",
+      "callee": "F0623",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=节点_.创建节点"
+    },
+    {
+      "candidate_edge_id": "ME3337",
+      "caller": "F0162",
+      "callee": "F0622",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=主信息_.创建主信息"
+    },
+    {
+      "candidate_edge_id": "ME3369",
+      "caller": "F0160",
+      "callee": "MF2203",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=状态.读取状态值"
+    },
+    {
+      "candidate_edge_id": "ME3388",
+      "caller": "F0164",
+      "callee": "MF2232",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=状态.创建抽象状态"
+    },
+    {
+      "candidate_edge_id": "ME3393",
+      "caller": "F0330",
+      "callee": "MF2721",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.获取目标节点组"
+    },
+    {
+      "candidate_edge_id": "ME3394",
+      "caller": "F0330",
+      "callee": "MF1409",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=唯一目标"
+    },
+    {
+      "candidate_edge_id": "ME3396",
+      "caller": "F0327",
+      "callee": "MF2203",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=状态.读取状态值"
+    },
+    {
+      "candidate_edge_id": "ME3430",
+      "caller": "F0516",
+      "callee": "F0622",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=主信息_.创建主信息"
+    },
+    {
+      "candidate_edge_id": "ME3431",
+      "caller": "F0516",
+      "callee": "F0623",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=节点_.创建节点"
+    },
+    {
+      "candidate_edge_id": "ME3432",
+      "caller": "F0516",
+      "callee": "MF1918",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=主信息_.主信息是否有效"
+    },
+    {
+      "candidate_edge_id": "ME3433",
+      "caller": "F0365",
+      "callee": "F0622",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=主信息_.创建主信息"
+    },
+    {
+      "candidate_edge_id": "ME3434",
+      "caller": "F0365",
+      "callee": "F0623",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=节点_.创建节点"
+    },
+    {
+      "candidate_edge_id": "ME3436",
+      "caller": "F0365",
+      "callee": "MF1918",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=主信息_.主信息是否有效"
+    },
+    {
+      "candidate_edge_id": "ME3549",
+      "caller": "F0455",
+      "callee": "F0134",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=参数.有效"
+    },
+    {
+      "candidate_edge_id": "ME3550",
+      "caller": "F0455",
+      "callee": "MF1983",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=根角色.完整"
+    },
+    {
+      "candidate_edge_id": "ME3551",
+      "caller": "F0454",
+      "callee": "MF1256",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=清单.完整"
+    },
+    {
+      "candidate_edge_id": "ME3553",
+      "caller": "F0454",
+      "callee": "F0134",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=参数.有效"
+    },
+    {
+      "candidate_edge_id": "ME3575",
+      "caller": "F0368",
+      "callee": "MF1918",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=主信息_.主信息是否有效"
+    },
+    {
+      "candidate_edge_id": "ME3715",
+      "caller": "F0623",
+      "callee": "MF1467",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=许可.有效"
+    },
+    {
+      "candidate_edge_id": "ME3737",
+      "caller": "F0346",
+      "callee": "MF1467",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=许可.有效"
+    },
+    {
+      "candidate_edge_id": "ME3755",
+      "caller": "F0630",
+      "callee": "MF1467",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=许可.有效"
+    },
+    {
+      "candidate_edge_id": "ME3756",
+      "caller": "F0374",
+      "callee": "MF1467",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=许可.有效"
+    },
+    {
+      "candidate_edge_id": "ME3772",
+      "caller": "F0440",
+      "callee": "F0343",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=节点有效_"
+    },
+    {
+      "candidate_edge_id": "ME3775",
+      "caller": "MF2708",
+      "callee": "F0168",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=句柄有效"
+    },
+    {
+      "candidate_edge_id": "ME3776",
+      "caller": "MF2708",
+      "callee": "F0341",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.90; lexical=关系类型已定义"
+    },
+    {
+      "candidate_edge_id": "ME3777",
+      "caller": "MF2708",
+      "callee": "MF0485",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.90; lexical=关系状态可审计"
+    },
+    {
+      "candidate_edge_id": "ME3778",
+      "caller": "MF2709",
+      "callee": "F0168",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=句柄有效"
+    },
+    {
+      "candidate_edge_id": "ME3779",
+      "caller": "MF2709",
+      "callee": "F0343",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=节点有效_"
+    },
+    {
+      "candidate_edge_id": "ME3780",
+      "caller": "MF2709",
+      "callee": "F0184",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=追根因检查"
+    },
+    {
+      "candidate_edge_id": "ME3781",
+      "caller": "MF2709",
+      "callee": "MF1884",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=结果.完整"
+    },
+    {
+      "candidate_edge_id": "ME3783",
+      "caller": "MF2712",
+      "callee": "F0168",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=句柄有效"
+    },
+    {
+      "candidate_edge_id": "ME3784",
+      "caller": "MF2712",
+      "callee": "F0343",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=节点有效_"
+    },
+    {
+      "candidate_edge_id": "ME3785",
+      "caller": "MF2712",
+      "callee": "F0184",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=追根因检查"
+    },
+    {
+      "candidate_edge_id": "ME3798",
+      "caller": "MF2718",
+      "callee": "F0343",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=节点有效_"
+    },
+    {
+      "candidate_edge_id": "ME3803",
+      "caller": "MF2721",
+      "callee": "F0343",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=节点有效_"
+    },
+    {
+      "candidate_edge_id": "ME3804",
+      "caller": "MF2721",
+      "callee": "F0341",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.90; lexical=关系类型已定义"
+    },
+    {
+      "candidate_edge_id": "ME3805",
+      "caller": "MF2722",
+      "callee": "F0343",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=节点有效_"
+    },
+    {
+      "candidate_edge_id": "ME3806",
+      "caller": "MF2722",
+      "callee": "F0341",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.90; lexical=关系类型已定义"
+    },
+    {
+      "candidate_edge_id": "ME3807",
+      "caller": "MF2723",
+      "callee": "F0343",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=节点有效_"
+    },
+    {
+      "candidate_edge_id": "ME3808",
+      "caller": "MF2723",
+      "callee": "F0341",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.90; lexical=关系类型已定义"
+    },
+    {
+      "candidate_edge_id": "ME3809",
+      "caller": "MF2724",
+      "callee": "F0343",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=节点有效_"
+    },
+    {
+      "candidate_edge_id": "ME3810",
+      "caller": "MF2724",
+      "callee": "F0341",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.90; lexical=关系类型已定义"
+    },
+    {
+      "candidate_edge_id": "ME3811",
+      "caller": "MF2725",
+      "callee": "F0343",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=节点有效_"
+    },
+    {
+      "candidate_edge_id": "ME3812",
+      "caller": "MF2726",
+      "callee": "F0343",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=节点有效_"
+    },
+    {
+      "candidate_edge_id": "ME3813",
+      "caller": "MF2726",
+      "callee": "F0341",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.90; lexical=关系类型已定义"
+    },
+    {
+      "candidate_edge_id": "ME3814",
+      "caller": "MF2727",
+      "callee": "F0343",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=节点有效_"
+    },
+    {
+      "candidate_edge_id": "ME3815",
+      "caller": "MF2727",
+      "callee": "F0341",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.90; lexical=关系类型已定义"
+    },
+    {
+      "candidate_edge_id": "ME3816",
+      "caller": "MF2728",
+      "callee": "F0343",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=节点有效_"
+    },
+    {
+      "candidate_edge_id": "ME3870",
+      "caller": "MF2746",
+      "callee": "MF0770",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=输入.完整"
+    },
+    {
+      "candidate_edge_id": "ME3973",
+      "caller": "F0054",
+      "callee": "MF1639",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.85; lexical=节点.有效节点数量"
+    },
+    {
+      "candidate_edge_id": "ME3974",
+      "caller": "F0054",
+      "callee": "MF2728",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系.有效关系数量"
+    },
+    {
+      "candidate_edge_id": "ME3975",
+      "caller": "F0054",
+      "callee": "F0376",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=索引.有效主键数量"
+    },
+    {
+      "candidate_edge_id": "ME3993",
+      "caller": "F0635",
+      "callee": "MF2726",
+      "reason": "源码静态接收者、重载、直接调用者或当前装配复核不成立",
+      "evidence": "fresh codebase-memory MCP; confidence=0.75; lexical=关系_.存在关系"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0174",
+      "caller_location": "海中鱼巣/领域/任务服务.h:738",
+      "callee_location": "海中鱼巣/领域/任务服务.h:722",
+      "reason": "唯一目标是局部变量名，不存在三参数重载调用",
+      "evidence": "任务服务.h:744-745"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0175",
+      "caller_location": "海中鱼巣/领域/控制面板服务.h:1060",
+      "callee_location": "海中鱼巣/领域/控制面板服务.h:588",
+      "reason": "调用点属于1064局部排序 lambda，不属于外层函数",
+      "evidence": "控制面板服务.h:1064-1070"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0176",
+      "caller_location": "海中鱼巣/领域/控制面板服务.h:1396",
+      "callee_location": "海中鱼巣/领域/控制面板服务.h:1200",
+      "reason": "调用点静态解析为 optional 追加节点叶项重载，不是具体句柄重载",
+      "evidence": "控制面板服务.h:1421-1443"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0177",
+      "caller_location": "海中鱼巣/领域/任务服务.h:480",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:1554",
+      "reason": "二参调用命中无令牌来源节点组重载",
+      "evidence": "任务服务.h:485"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0178",
+      "caller_location": "海中鱼巣/领域/任务服务.h:738",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:1542",
+      "reason": "三参和二参调用均不命中四参令牌重载",
+      "evidence": "任务服务.h:744-745"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0179",
+      "caller_location": "海中鱼巣/领域/任务服务.h:759",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:1542",
+      "reason": "二参调用不命中四参令牌重载",
+      "evidence": "任务服务.h:764"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0180",
+      "caller_location": "海中鱼巣/领域/任务服务.h:759",
+      "callee_location": "海中鱼巣/领域/数据操作.状态动态.ixx:210",
+      "reason": "接收者为状态服务，实际调用状态服务::读取状态值",
+      "evidence": "任务服务.h:770"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0181",
+      "caller_location": "海中鱼巣/领域/因果服务.h:99",
+      "callee_location": "海中鱼巣/核心/主信息仓库.cpp:53",
+      "reason": "当前函数体不存在该调用，属于旧函数体残影",
+      "evidence": "因果服务.h:99-105"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0182",
+      "caller_location": "海中鱼巣/领域/因果服务.h:99",
+      "callee_location": "海中鱼巣/核心/主信息仓库.cpp:371",
+      "reason": "当前函数体不存在该调用，属于旧函数体残影",
+      "evidence": "因果服务.h:99-105"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0183",
+      "caller_location": "海中鱼巣/领域/因果服务.h:99",
+      "callee_location": "海中鱼巣/核心/容错检查.h:55",
+      "reason": "当前函数体不存在该调用，属于旧函数体残影",
+      "evidence": "因果服务.h:99-105"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0184",
+      "caller_location": "海中鱼巣/领域/因果服务.h:99",
+      "callee_location": "海中鱼巣/核心/节点仓库.cpp:74",
+      "reason": "当前函数体不存在该调用，属于旧函数体残影",
+      "evidence": "因果服务.h:99-105"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0185",
+      "caller_location": "海中鱼巣/领域/方法服务.h:946",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:1542",
+      "reason": "二参调用不命中四参令牌重载",
+      "evidence": "方法服务.h:950"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0186",
+      "caller_location": "海中鱼巣/领域/方法服务.h:1362",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:1546",
+      "reason": "二参调用不命中三参令牌重载",
+      "evidence": "方法服务.h:1377,1394"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0187",
+      "caller_location": "海中鱼巣/领域/方法服务.h:1362",
+      "callee_location": "海中鱼巣/领域/二次特征服务.h:25",
+      "reason": "材料静态类型为方法登记项材料",
+      "evidence": "方法服务.h:1423"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0188",
+      "caller_location": "海中鱼巣/领域/方法服务.h:1673",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:1639",
+      "reason": "三参调用不命中四参令牌重载",
+      "evidence": "方法服务.h:1676"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0189",
+      "caller_location": "海中鱼巣/领域/方法服务.h:1680",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:1639",
+      "reason": "三参调用不命中四参令牌重载",
+      "evidence": "方法服务.h:1683"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0190",
+      "caller_location": "海中鱼巣/领域/方法服务.h:1687",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:1542",
+      "reason": "二参调用不命中四参令牌重载",
+      "evidence": "方法服务.h:1693"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0191",
+      "caller_location": "海中鱼巣/领域/方法服务.h:1732",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:1542",
+      "reason": "三参调用不命中四参令牌重载",
+      "evidence": "方法服务.h:1738"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0192",
+      "caller_location": "海中鱼巣/领域/方法服务.h:1811",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:1639",
+      "reason": "三参调用不命中四参令牌重载",
+      "evidence": "方法服务.h:1815"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0193",
+      "caller_location": "海中鱼巣/领域/方法服务.h:1818",
+      "callee_location": "海中鱼巣/领域/数据操作.状态动态.ixx:210",
+      "reason": "接收者为状态服务，实际调用状态服务::读取状态值",
+      "evidence": "方法服务.h:1826"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0194",
+      "caller_location": "海中鱼巣/领域/概念图服务.h:3177",
+      "callee_location": "海中鱼巣/领域/二次特征服务.h:25",
+      "reason": "材料静态类型为概念生命周期材料",
+      "evidence": "概念图服务.h:3217"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0195",
+      "caller_location": "海中鱼巣/领域/需求服务.h:292",
+      "callee_location": "海中鱼巣/领域/数据操作.状态动态.ixx:475",
+      "reason": "接收者为状态服务，实际调用状态服务::创建抽象状态",
+      "evidence": "需求服务.h:306"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0196",
+      "caller_location": "海中鱼巣/领域/需求服务.h:704",
+      "callee_location": "海中鱼巣/领域/数据操作.状态动态.ixx:231",
+      "reason": "接收者为状态服务，实际调用状态服务::读取发生时间戳",
+      "evidence": "需求服务.h:716"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0197",
+      "caller_location": "海中鱼巣/领域/数据操作.概念活动.ixx:42",
+      "callee_location": "海中鱼巣/领域/初始化.需求.ixx:28",
+      "reason": "参数静态类型为概念活动初始化参数",
+      "evidence": "数据操作.概念活动.ixx:49"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0198",
+      "caller_location": "海中鱼巣/领域/数据操作.概念活动.ixx:131",
+      "callee_location": "海中鱼巣/领域/初始化.需求.ixx:28",
+      "reason": "参数静态类型为概念活动初始化参数",
+      "evidence": "数据操作.概念活动.ixx:135"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0199",
+      "caller_location": "海中鱼巣/领域/数据操作.概念活动.ixx:131",
+      "callee_location": "海中鱼巣/领域/概念图服务.h:681",
+      "reason": "局部视图静态类型为概念活动重建视图",
+      "evidence": "数据操作.概念活动.ixx:181"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0200",
+      "caller_location": "海中鱼巣/领域/数据操作.概念活动.ixx:211",
+      "callee_location": "海中鱼巣/领域/控制面板服务.h:200",
+      "reason": "根静态类型为系统角色身份材料",
+      "evidence": "数据操作.概念活动.ixx:230"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0201",
+      "caller_location": "海中鱼巣/领域/数据操作.概念活动.ixx:288",
+      "callee_location": "海中鱼巣/领域/控制面板服务.h:200",
+      "reason": "根静态类型为系统角色身份材料",
+      "evidence": "数据操作.概念活动.ixx:293"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0202",
+      "caller_location": "海中鱼巣/领域/数据操作.系统角色.ixx:42",
+      "callee_location": "海中鱼巣/领域/初始化.需求.ixx:28",
+      "reason": "参数静态类型为系统角色初始化参数",
+      "evidence": "数据操作.系统角色.ixx:43"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0203",
+      "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:2798",
+      "callee_location": "海中鱼巣/启动.生产运行期.ixx:37",
+      "reason": "结果静态类型为带值结构写入结果<关系句柄>",
+      "evidence": "数据操作.需求任务方法.ixx:2810"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0204",
+      "caller_location": "海中鱼巣/核心/索引仓库.cpp:298",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
+      "reason": "函数内没有许可对象或该调用点",
+      "evidence": "索引仓库.cpp:298-302"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0205",
+      "caller_location": "海中鱼巣/核心/会话.结构写入.ixx:234",
+      "callee_location": "海中鱼巣/启动.生产运行期.ixx:37",
+      "reason": "结果静态类型为带值结构写入结果<主信息未发布候选>",
+      "evidence": "会话.结构写入.ixx:239"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0206",
+      "caller_location": "海中鱼巣/核心/主信息仓库.cpp:312",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:77",
+      "reason": "函数内没有已接域调用",
+      "evidence": "主信息仓库.cpp:312-321"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0207",
+      "caller_location": "海中鱼巣/核心/主信息仓库.cpp:312",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
+      "reason": "函数内没有许可对象或有效调用",
+      "evidence": "主信息仓库.cpp:312-321"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0208",
+      "caller_location": "海中鱼巣/核心/主信息仓库.cpp:312",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:42",
+      "reason": "函数直接消费形参令牌，不读取许可",
+      "evidence": "主信息仓库.cpp:312-321"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0209",
+      "caller_location": "海中鱼巣/核心/节点仓库.cpp:350",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
+      "reason": "函数内没有许可对象或有效调用",
+      "evidence": "节点仓库.cpp:350-359"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0210",
+      "caller_location": "海中鱼巣/领域/初始化.系统角色.ixx:285",
+      "callee_location": "海中鱼巣/领域/二次特征服务.h:25",
+      "reason": "四处材料静态类型均不是关系实例完成材料",
+      "evidence": "初始化.系统角色.ixx:291,309,318,332"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0211",
+      "caller_location": "海中鱼巣/领域/初始化.系统角色.ixx:337",
+      "callee_location": "海中鱼巣/领域/二次特征服务.h:25",
+      "reason": "三处材料静态类型分别为特征定义/槽位/原始值式材料",
+      "evidence": "初始化.系统角色.ixx:364,370,377"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0212",
+      "caller_location": "海中鱼巣/领域/初始化.系统角色.ixx:403",
+      "callee_location": "海中鱼巣/领域/二次特征服务.h:25",
+      "reason": "材料静态类型为方法登记根材料",
+      "evidence": "初始化.系统角色.ixx:419"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0213",
+      "caller_location": "海中鱼巣/领域/初始化.系统角色.ixx:434",
+      "callee_location": "海中鱼巣/领域/数据操作.状态动态.ixx:270",
+      "reason": "主体静态类型为系统角色主体材料",
+      "evidence": "初始化.系统角色.ixx:437"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0214",
+      "caller_location": "海中鱼巣/领域/初始化.系统角色.ixx:479",
+      "callee_location": "海中鱼巣/领域/数据操作.概念图结构.ixx:139",
+      "reason": "值静态类型为特征原始值式材料",
+      "evidence": "初始化.系统角色.ixx:498"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0215",
+      "caller_location": "海中鱼巣/领域/控制面板服务.h:1060",
+      "callee_location": "海中鱼巣/领域/参与者.特征批次发布记录.ixx:49",
+      "reason": "循环项静态类型为抽象树投影项",
+      "evidence": "控制面板服务.h:1090"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0216",
+      "caller_location": "海中鱼巣/领域/控制面板服务.h:761",
+      "callee_location": "海中鱼巣/领域/概念图服务.h:641",
+      "reason": "读取结果静态类型为抽象树读取结果",
+      "evidence": "控制面板服务.h:831"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0217",
+      "caller_location": "海中鱼巣/领域/控制面板服务.h:761",
+      "callee_location": "海中鱼巣/领域/控制面板服务.h:200",
+      "reason": "调用点属于808局部 all_of lambda，正确 lambda 边已经存在",
+      "evidence": "控制面板服务.h:808-810"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0218",
+      "caller_location": "海中鱼巣/启动.应用程序.ixx:444",
+      "callee_location": "海中鱼巣/启动.应用程序.ixx:420",
+      "reason": "Debug|x64 下 D455 能力关闭，参数解析在进入运行海中鱼巣前拒绝该模式",
+      "evidence": "启动.程序入口.ixx:63-66"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0219",
+      "caller_location": "海中鱼巣/领域/动态服务.h:339",
+      "callee_location": "海中鱼巣/领域/动态服务.h:321",
+      "reason": "无令牌调用实际命中315行重载",
+      "evidence": "动态服务.h:340"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0220",
+      "caller_location": "海中鱼巣/领域/动态服务.h:339",
+      "callee_location": "海中鱼巣/领域/状态服务.h:317",
+      "reason": "调用属于本类读取唯一引用目标，不属于状态服务",
+      "evidence": "动态服务.h:343-344"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0221",
+      "caller_location": "海中鱼巣/领域/动态服务.h:339",
+      "callee_location": "海中鱼巣/领域/状态服务.h:193",
+      "reason": "调用属于本类读取发生时间戳，不属于状态服务",
+      "evidence": "动态服务.h:351"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0222",
+      "caller_location": "海中鱼巣/领域/动态服务.h:339",
+      "callee_location": "海中鱼巣/核心/句柄.h:135",
+      "reason": "实参静态类型为节点句柄，不命中关系句柄重载",
+      "evidence": "动态服务.h:358"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0223",
+      "caller_location": "海中鱼巣/领域/动态服务.h:512",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:1542",
+      "reason": "三参调用不命中四参令牌重载",
+      "evidence": "动态服务.h:514"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0224",
+      "caller_location": "海中鱼巣/领域/动态服务.h:528",
+      "callee_location": "海中鱼巣/核心/节点仓库.cpp:250",
+      "reason": "一参调用不命中令牌重载",
+      "evidence": "动态服务.h:532"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0225",
+      "caller_location": "海中鱼巣/领域/动态服务.h:528",
+      "callee_location": "海中鱼巣/核心/主信息仓库.cpp:446",
+      "reason": "一参调用不命中三参令牌重载",
+      "evidence": "动态服务.h:536"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0226",
+      "caller_location": "海中鱼巣/领域/动态服务.h:555",
+      "callee_location": "海中鱼巣/领域/状态服务.h:312",
+      "reason": "调用属于本类节点类型匹配，不属于状态服务",
+      "evidence": "动态服务.h:556"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0227",
+      "caller_location": "海中鱼巣/领域/概念图服务.h:681",
+      "callee_location": "海中鱼巣/核心/句柄.h:135",
+      "reason": "实参静态类型为节点句柄，不命中关系句柄重载",
+      "evidence": "概念图服务.h:685"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0228",
+      "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:189",
+      "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:62",
+      "reason": "身份字段静态类型为高级节点身份",
+      "evidence": "数据操作.需求任务方法.ixx:190"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0229",
+      "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:1022",
+      "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:92",
+      "reason": "局部规格静态类型为方法登记根写入规格",
+      "evidence": "数据操作.需求任务方法.ixx:1029"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0230",
+      "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:1159",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
+      "reason": "许可静态类型为结构事务许可；另一处有效是本类调用",
+      "evidence": "数据操作.需求任务方法.ixx:1160,1162"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0231",
+      "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:1619",
+      "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:92",
+      "reason": "形参静态类型为方法登记根写入规格",
+      "evidence": "数据操作.需求任务方法.ixx:1620"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0232",
+      "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:2756",
+      "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:62",
+      "reason": "读取结果静态类型为高级节点身份",
+      "evidence": "数据操作.需求任务方法.ixx:2760"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0233",
+      "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:3465",
+      "callee_location": "海中鱼巣/领域/概念图服务.h:318",
+      "reason": "形参静态类型为方法登记根材料",
+      "evidence": "数据操作.需求任务方法.ixx:3468"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0234",
+      "caller_location": "海中鱼巣/领域/数据操作.概念活动.ixx:42",
+      "callee_location": "海中鱼巣/领域/系统角色清单.数据.h:116",
+      "reason": "调用点接收者分别为系统角色清单、抽象状态规格和候选材料",
+      "evidence": "数据操作.概念活动.ixx:49,50,119,125"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0235",
+      "caller_location": "海中鱼巣/领域/数据操作.概念活动.ixx:131",
+      "callee_location": "海中鱼巣/领域/系统角色清单.数据.h:116",
+      "reason": "调用点接收者分别为系统角色清单和概念活动重建视图",
+      "evidence": "数据操作.概念活动.ixx:135,181"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0236",
+      "caller_location": "海中鱼巣/领域/数据操作.概念活动.ixx:131",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
+      "reason": "许可静态类型为结构事务许可",
+      "evidence": "数据操作.概念活动.ixx:150"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0237",
+      "caller_location": "海中鱼巣/领域/数据操作.状态动态.ixx:406",
+      "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:92",
+      "reason": "规格静态类型为抽象状态写入规格",
+      "evidence": "数据操作.状态动态.ixx:409"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0238",
+      "caller_location": "海中鱼巣/领域/数据操作.状态动态.ixx:406",
+      "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:88",
+      "reason": "接收者静态类型为抽象状态写入规格",
+      "evidence": "数据操作.状态动态.ixx:412"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0239",
+      "caller_location": "海中鱼巣/领域/数据操作.轻量因果.ixx:125",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
+      "reason": "许可静态类型为结构事务许可；另一处有效是本类调用",
+      "evidence": "数据操作.轻量因果.ixx:126,128"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0240",
+      "caller_location": "海中鱼巣/领域/数据操作.系统角色.ixx:42",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
+      "reason": "许可静态类型为结构事务许可；另一处有效是本类/参数调用",
+      "evidence": "数据操作.系统角色.ixx:43,47"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0241",
+      "caller_location": "海中鱼巣/领域/数据操作.系统角色.ixx:124",
+      "callee_location": "海中鱼巣/领域/数据操作.状态动态.ixx:270",
+      "reason": "形参静态类型为系统角色主体材料",
+      "evidence": "数据操作.系统角色.ixx:126"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0242",
+      "caller_location": "海中鱼巣/领域/数据操作.系统角色.ixx:229",
+      "callee_location": "海中鱼巣/领域/数据操作.概念图结构.ixx:332",
+      "reason": "形参静态类型为系统角色身份材料",
+      "evidence": "数据操作.系统角色.ixx:232"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0243",
+      "caller_location": "海中鱼巣/领域/数据操作.系统角色.ixx:243",
+      "callee_location": "海中鱼巣/领域/数据操作.概念图结构.ixx:332",
+      "reason": "形参静态类型为系统角色身份材料",
+      "evidence": "数据操作.系统角色.ixx:246"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0244",
+      "caller_location": "海中鱼巣/领域/数据操作.系统角色.ixx:281",
+      "callee_location": "海中鱼巣/领域/二次特征服务.h:25",
+      "reason": "形参静态类型为系统角色关系材料",
+      "evidence": "数据操作.系统角色.ixx:284"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0245",
+      "caller_location": "海中鱼巣/领域/数据操作.系统角色.ixx:374",
+      "callee_location": "海中鱼巣/领域/数据操作.状态动态.ixx:270",
+      "reason": "接收者分别为系统角色主体材料和系统角色清单",
+      "evidence": "数据操作.系统角色.ixx:375,407"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0246",
+      "caller_location": "海中鱼巣/领域/数据操作.系统角色.ixx:374",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
+      "reason": "许可静态类型为结构事务许可",
+      "evidence": "数据操作.系统角色.ixx:377"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0247",
+      "caller_location": "海中鱼巣/领域/数据操作.系统角色.ixx:374",
+      "callee_location": "海中鱼巣/领域/系统角色清单.数据.h:116",
+      "reason": "接收者分别为系统角色主体材料和系统角色清单",
+      "evidence": "数据操作.系统角色.ixx:375,407"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0248",
+      "caller_location": "海中鱼巣/领域/数据操作.状态动态.ixx:95",
+      "callee_location": "海中鱼巣/核心/句柄.h:135",
+      "reason": "场景与主体静态类型为节点句柄",
+      "evidence": "数据操作.状态动态.ixx:97"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0249",
+      "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:86",
+      "callee_location": "海中鱼巣/核心/句柄.h:135",
+      "reason": "特征定义为节点句柄、主信息为主信息句柄",
+      "evidence": "数据操作.特征体系.ixx:88"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0250",
+      "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:102",
+      "callee_location": "海中鱼巣/核心/句柄.h:135",
+      "reason": "宿主/定义/槽位为节点句柄、主信息为主信息句柄",
+      "evidence": "数据操作.特征体系.ixx:104-105"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0251",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1031",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:13",
+      "reason": "令牌薄包装只验证令牌并调用无令牌重载",
+      "evidence": "关系仓库.cpp:1031-1034"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0252",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1031",
+      "callee_location": "海中鱼巣/核心/句柄.h:135",
+      "reason": "函数体不存在关系句柄有效调用",
+      "evidence": "关系仓库.cpp:1031-1034"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0253",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1031",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:179",
+      "reason": "令牌薄包装不直接复核节点有效",
+      "evidence": "关系仓库.cpp:1031-1034"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0254",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1031",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "令牌薄包装不调用读取当前关系令牌",
+      "evidence": "关系仓库.cpp:1031-1034"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0255",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1031",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:17",
+      "reason": "令牌薄包装不直接复核用途观察角色",
+      "evidence": "关系仓库.cpp:1031-1034"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0256",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1031",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:21",
+      "reason": "令牌薄包装不直接复核用途观察目标类型",
+      "evidence": "关系仓库.cpp:1031-1034"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0257",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1394",
+      "callee_location": "海中鱼巣/领域/方法召回索引.h:32",
+      "reason": "能力静态类型为已发布关系变更能力",
+      "evidence": "关系仓库.cpp:1405"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0258",
+      "caller_location": "海中鱼巣/核心/索引仓库.cpp:127",
+      "callee_location": "海中鱼巣/核心/索引所有权.数据.h:122",
+      "reason": "调用位于相邻120行重载，不属于127行 caller",
+      "evidence": "索引仓库.cpp:124"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0259",
+      "caller_location": "海中鱼巣/核心/会话.结构写入.ixx:262",
+      "callee_location": "海中鱼巣/启动.生产运行期.ixx:37",
+      "reason": "结果静态类型为带值结构写入结果<节点未发布候选>",
+      "evidence": "会话.结构写入.ixx:267"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0260",
+      "caller_location": "海中鱼巣/核心/会话.结构写入.ixx:262",
+      "callee_location": "海中鱼巣/核心/仓库.节点直接身份.ixx:99",
+      "reason": "候选静态类型为节点未发布候选",
+      "evidence": "会话.结构写入.ixx:277"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0261",
+      "caller_location": "海中鱼巣/核心/会话.结构写入.ixx:372",
+      "callee_location": "海中鱼巣/启动.生产运行期.ixx:37",
+      "reason": "结果静态类型为结构化节点挂载结果",
+      "evidence": "会话.结构写入.ixx:382"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0262",
+      "caller_location": "海中鱼巣/核心/会话.结构写入.ixx:451",
+      "callee_location": "海中鱼巣/启动.生产运行期.ixx:37",
+      "reason": "结果静态类型为结构写入结果",
+      "evidence": "会话.结构写入.ixx:454"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0263",
+      "caller_location": "海中鱼巣/核心/索引所有权.数据.h:97",
+      "callee_location": "海中鱼巣/核心/句柄.h:135",
+      "reason": "目标静态类型为节点句柄",
+      "evidence": "索引所有权.数据.h:98"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0264",
+      "caller_location": "海中鱼巣/核心/索引所有权.数据.h:102",
+      "callee_location": "海中鱼巣/核心/句柄.h:135",
+      "reason": "目标静态类型为节点句柄",
+      "evidence": "索引所有权.数据.h:103"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0265",
+      "caller_location": "海中鱼巣/领域/数据操作.状态动态.ixx:90",
+      "callee_location": "海中鱼巣/核心/句柄.h:135",
+      "reason": "状态节点和主信息分别为节点句柄与主信息句柄",
+      "evidence": "数据操作.状态动态.ixx:92"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0266",
+      "caller_location": "海中鱼巣/领域/概念图服务.h:665",
+      "callee_location": "海中鱼巣/核心/句柄.h:135",
+      "reason": "概念静态类型为节点句柄",
+      "evidence": "概念图服务.h:666"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0267",
+      "caller_location": "海中鱼巣/领域/初始化.需求.ixx:115",
+      "callee_location": "海中鱼巣/启动.生产运行期.ixx:37",
+      "reason": "结果的静态类型为单根需求初始化结果",
+      "evidence": "初始化.需求.ixx:167"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0268",
+      "caller_location": "海中鱼巣/领域/初始化.语素.ixx:172",
+      "callee_location": "海中鱼巣/启动选项.数据.h:39",
+      "reason": "项的静态类型为语素初始化显示项，真实目标为该类型的成功函数",
+      "evidence": "初始化.语素.ixx:184"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0269",
+      "caller_location": "海中鱼巣/核心/执行器.结构写入.ixx:113",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:240",
+      "reason": "同名模板辅助函数跨执行器类型误配",
+      "evidence": "执行器.结构写入.ixx:153 静态目标是同类模板辅助函数 :397"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0270",
+      "caller_location": "海中鱼巣/核心/执行器.结构写入.ixx:113",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:251",
+      "reason": "同名模板辅助函数跨执行器类型误配",
+      "evidence": "执行器.结构写入.ixx:171 静态目标是同类模板辅助函数 :420"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0271",
+      "caller_location": "海中鱼巣/核心/执行器.结构写入.ixx:113",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:269",
+      "reason": "同名模板辅助函数跨执行器类型误配",
+      "evidence": "执行器.结构写入.ixx:181 静态目标是同类模板辅助函数 :430"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0272",
+      "caller_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:30",
+      "callee_location": "海中鱼巣/核心/句柄.h:135",
+      "reason": "句柄有效重载静态类型错误",
+      "evidence": "line 31 两个实参分别为节点句柄和主信息句柄，不是关系句柄"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0273",
+      "caller_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:82",
+      "callee_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:101",
+      "reason": "局部 lambda 调用者误挂外层函数",
+      "evidence": "line 85 位于 line 84—86 的 find_if 谓词 lambda 内"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0274",
+      "caller_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:204",
+      "callee_location": "海中鱼巣/领域/特征值服务.h:679",
+      "reason": "查找 Vec 记录重载 const 性错误",
+      "evidence": "服务_ 为非 const 引用且 caller 非 const，应命中 line 673"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0275",
+      "caller_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:204",
+      "callee_location": "海中鱼巣/领域/特征值服务.h:691",
+      "reason": "查找 I64 记录重载 const 性错误",
+      "evidence": "服务_ 为非 const 引用且 caller 非 const，应命中 line 685"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0276",
+      "caller_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:244",
+      "callee_location": "海中鱼巣/核心/句柄.h:135",
+      "reason": "句柄有效重载静态类型错误",
+      "evidence": "line 247 实参为节点句柄，不是关系句柄"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0277",
+      "caller_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:62",
+      "callee_location": "海中鱼巣/核心/句柄.h:135",
+      "reason": "句柄有效重载静态类型错误",
+      "evidence": "line 63 实参为节点句柄，不是关系句柄"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0278",
+      "caller_location": "海中鱼巣/核心/执行器.结构写入.ixx:113",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "执行器.结构写入.ixx:116,120 分属当前执行器::有效与结构事务许可::有效"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0279",
+      "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:1110",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "需求任务方法.ixx:1111,1113 分属当前数据操作::有效与结构事务许可::有效"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0280",
+      "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:2001",
+      "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:62",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "需求任务方法.ixx:2006,2030 静态类型为高级节点身份"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0281",
+      "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:2451",
+      "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:62",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "需求任务方法.ixx:2457 静态类型为高级节点身份"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0282",
+      "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:2876",
+      "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:92",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "需求任务方法.ixx:2882 静态类型为完整需求写入规格"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0283",
+      "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:2876",
+      "callee_location": "海中鱼巣/领域/数据操作.状态动态.ixx:187",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "需求任务方法.ixx:2896 位于 lambda 且静态类型为状态写入参与结果"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0284",
+      "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:2876",
+      "callee_location": "海中鱼巣/核心/会话.结构写入.ixx:647",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "需求任务方法.ixx:2915 位于 lambda，不是外层直接调用"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0285",
+      "caller_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:240",
+      "callee_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:105",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "两套事务参与者继承层级不同；节点直接身份自检路径当前未接入 main"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0286",
+      "caller_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:251",
+      "callee_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:175",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "两套事务参与者继承层级不同；节点直接身份自检路径当前未接入 main"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0287",
+      "caller_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:269",
+      "callee_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:183",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "两套事务参与者继承层级不同；节点直接身份自检路径当前未接入 main"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0288",
+      "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:563",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "特征体系.ixx:564,566 分属当前数据操作::有效与结构事务许可::有效"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0289",
+      "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:593",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "特征体系.ixx:594,596 分属当前数据操作::有效与结构事务许可::有效"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0290",
+      "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:602",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "特征体系.ixx:603,605 分属当前数据操作::有效与结构事务许可::有效"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0291",
+      "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:609",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "特征体系.ixx:610,612 分属当前数据操作::有效与结构事务许可::有效"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0292",
+      "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:832",
+      "callee_location": "海中鱼巣/核心/会话.结构写入.ixx:647",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "特征体系.ixx:897 位于 lambda@885"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0293",
+      "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1079",
+      "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:62",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "特征体系.ixx:1086 静态类型为特征节点身份"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0294",
+      "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1106",
+      "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:62",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "特征体系.ixx:1113,1140 静态类型为特征节点身份"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0295",
+      "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1194",
+      "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:62",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "特征体系.ixx:1213 静态类型为特征节点身份"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0296",
+      "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1310",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "特征体系.ixx:1311,1313 分属当前数据操作::有效与结构事务许可::有效"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0297",
+      "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1310",
+      "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:62",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "特征体系.ixx:1317 静态类型为特征节点身份"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0298",
+      "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1499",
+      "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:88",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "槽位规格静态类型读取自身幂等主键"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0299",
+      "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1525",
+      "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:88",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "初始值规格静态类型读取自身幂等主键"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0300",
+      "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1562",
+      "callee_location": "海中鱼巣/领域/二次特征服务.h:25",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "材料形参静态类型为特征槽位值式材料"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0301",
+      "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1562",
+      "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:88",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "槽位规格静态类型读取自身幂等主键"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0302",
+      "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1570",
+      "callee_location": "海中鱼巣/领域/二次特征服务.h:25",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "材料形参静态类型为特征原始值式材料"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0303",
+      "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1570",
+      "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:88",
+      "reason": "候选静态接收者、调用者或继承层级不成立",
+      "evidence": "初始值规格静态类型读取自身幂等主键"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0304",
+      "caller_location": "海中鱼巣/核心/执行器.结构写入.ixx:366",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
+      "reason": "许可静态类型为结构事务许可",
+      "evidence": "执行器.结构写入.ixx:367"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0305",
+      "caller_location": "海中鱼巣/领域/概念活动状态.数据.h:104",
+      "callee_location": "海中鱼巣/领域/服务.概念图结构.ixx:19",
+      "reason": "根身份静态类型为系统角色身份材料",
+      "evidence": "概念活动状态.数据.h:105"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0306",
+      "caller_location": "海中鱼巣/核心/会话.结构写入.ixx:845",
+      "callee_location": "海中鱼巣/启动.生产运行期.ixx:37",
+      "reason": "结果静态类型为结构写入结果",
+      "evidence": "会话.结构写入.ixx:852,859,866"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0307",
+      "caller_location": "海中鱼巣/核心/节点仓库.cpp:146",
+      "callee_location": "海中鱼巣/核心/仓库.节点直接身份.ixx:99",
+      "reason": "候选静态类型为节点未发布候选",
+      "evidence": "节点仓库.cpp:149"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0308",
+      "caller_location": "海中鱼巣/核心/节点仓库.cpp:204",
+      "callee_location": "海中鱼巣/核心/仓库.节点直接身份.ixx:99",
+      "reason": "候选静态类型为节点未发布候选",
+      "evidence": "节点仓库.cpp:207"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0309",
+      "caller_location": "海中鱼巣/核心/主信息仓库.cpp:169",
+      "callee_location": "海中鱼巣/启动.生产运行期.ixx:37",
+      "reason": "结果静态类型为结构写入结果",
+      "evidence": "主信息仓库.cpp:194"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0310",
+      "caller_location": "海中鱼巣/核心/节点仓库.cpp:204",
+      "callee_location": "海中鱼巣/启动.生产运行期.ixx:37",
+      "reason": "结果静态类型为结构写入结果",
+      "evidence": "节点仓库.cpp:229"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0311",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1365",
+      "callee_location": "海中鱼巣/领域/方法召回索引.h:32",
+      "reason": "能力静态类型为已发布关系变更能力",
+      "evidence": "关系仓库.cpp:1375"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0312",
+      "caller_location": "海中鱼巣/领域/数据操作.状态动态.ixx:376",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
+      "reason": "许可静态类型为结构事务许可",
+      "evidence": "数据操作.状态动态.ixx:379"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0313",
+      "caller_location": "海中鱼巣/核心/索引仓库.cpp:357",
+      "callee_location": "海中鱼巣/核心/句柄.h:135",
+      "reason": "预期节点静态类型为节点句柄",
+      "evidence": "索引仓库.cpp:366"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0314",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:127",
+      "callee_location": "海中鱼巣/核心/句柄.h:135",
+      "reason": "写前/写后源目标静态类型均为节点句柄",
+      "evidence": "关系仓库.cpp:138-141"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0315",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1434",
+      "callee_location": "海中鱼巣/核心/句柄.h:135",
+      "reason": "宏入口没有关系句柄有效调用",
+      "evidence": "关系仓库.cpp:1434-1437"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0316",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1434",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:45",
+      "reason": "宏入口没有关系状态审计调用",
+      "evidence": "关系仓库.cpp:1434-1437"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0317",
+      "caller_location": "海中鱼巣/核心/主信息仓库.cpp:408",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:77",
+      "reason": "已接域判断位于被调验证共享令牌内部",
+      "evidence": "主信息仓库.cpp:409"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0318",
+      "caller_location": "海中鱼巣/核心/主信息仓库.cpp:408",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
+      "reason": "函数体不存在该许可类型或调用",
+      "evidence": "主信息仓库.cpp:408-420"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0319",
+      "caller_location": "海中鱼巣/核心/主信息仓库.cpp:408",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:42",
+      "reason": "函数体不存在许可对象或读取令牌调用",
+      "evidence": "主信息仓库.cpp:408-420"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0320",
+      "caller_location": "海中鱼巣/领域/数据操作.概念活动.ixx:42",
+      "callee_location": "海中鱼巣/核心/会话.结构写入.ixx:290",
+      "reason": "调用点属于63行非平凡 lambda",
+      "evidence": "数据操作.概念活动.ixx:87"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0321",
+      "caller_location": "海中鱼巣/领域/数据操作.概念活动.ixx:42",
+      "callee_location": "海中鱼巣/核心/会话.结构写入.ixx:647",
+      "reason": "调用点属于63行非平凡 lambda",
+      "evidence": "数据操作.概念活动.ixx:119"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0322",
+      "caller_location": "海中鱼巣/领域/数据操作.系统角色.ixx:124",
+      "callee_location": "海中鱼巣/核心/会话.结构写入.ixx:647",
+      "reason": "调用点属于132行非平凡 lambda",
+      "evidence": "数据操作.系统角色.ixx:152"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0323",
+      "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:1619",
+      "callee_location": "海中鱼巣/核心/会话.结构写入.ixx:647",
+      "reason": "调用点属于1632行非平凡 lambda",
+      "evidence": "数据操作.需求任务方法.ixx:1647"
+    }
+  ],
+  "configuration_exclusions": [
+    {
+      "identity": "--d455-real-sample-exit / E0013",
+      "reason": "Debug|x64 默认 EnableD455RealSense=false，参数解析阶段拒绝"
+    },
+    {
+      "identity": "E0205",
+      "reason": "当前唯一调用语境动态迭代次数为0"
+    },
+    {
+      "identity": "入口/数据库/性能/D455调试日志边",
+      "reason": "对应调试日志宏在当前配置关闭"
+    },
+    {
+      "identity": "F0637治理邮箱分支",
+      "reason": "普通应用使用三参自我线程构造，治理邮箱为空；五参构造仅存在于无入口自检"
+    },
+    {
+      "identity": "特征批次写入、批次参与包与特征体系分层自检",
+      "reason": "当前 main 的完整自检只登记入口初始化14项及 F27/F29；生产与其它入口均未调用提交特征批次，故不得由通用参与者模板虚调用反向伪造批次参与者可达性"
+    },
+    {
+      "identity": "显式 = default 且无用户函数体的特殊成员",
+      "reason": "不建立独立项目函数身份；其成员初始化、析构和异常展开只在存在显式源码调用时登记边界"
+    }
+  ],
+  "extraction_diagnostics": [
+    {
+      "tool": "Clang模块候选",
+      "result": "46成功、8 AST导出失败、102依赖PCM不可用、1存在诊断；只作候选，不据此删减源码事实"
+    },
+    {
+      "tool": "Clang CPP候选",
+      "result": "9文件、8成功、1存在诊断；只作候选"
+    },
+    {
+      "tool": "fresh codebase-memory MCP",
+      "result": "3384 Function/Method，9798 CALLS；低置信和 field_type_hint 必须经源码裁决"
+    }
+  ]
+}
