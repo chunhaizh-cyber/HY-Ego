@@ -1412,9 +1412,9 @@
     {"id":"F0344","layer":6,"signature":"海中鱼巣::{匿名命名空间@关系仓库.cpp}::关系令牌范围::~关系令牌范围() noexcept","file":"海中鱼巣/核心/关系仓库.cpp","definition_line":68,"status":"已完成","chart":"L6/CF-L6-0023_关系令牌范围析构_现状流程图.md"},
     {"id":"F0345","layer":6,"signature":"海中鱼巣::结构事务许可::~结构事务许可() noexcept","file":"海中鱼巣/核心/结构事务接线.数据.h","definition_line":40,"status":"已完成","chart":"L6/CF-L6-0024_结构事务许可析构_现状流程图.md"},
     {"id":"F0346","layer":6,"signature":"std::optional<海中鱼巣::节点记录> 海中鱼巣::节点仓库::读取节点(海中鱼巣::节点句柄 节点, const 海中鱼巣::结构事务令牌& 令牌) const","file":"海中鱼巣/核心/节点仓库.cpp","definition_line":250,"status":"已完成","chart":"L6/CF-L6-0025_节点仓库读取节点令牌重载_现状流程图.md"},
-    {"id":"F0347","layer":6,"signature":"bool 海中鱼巣::{匿名命名空间@关系仓库.cpp}::用途观察角色有效(std::int64_t 角色)","file":"海中鱼巣/核心/关系仓库.cpp","definition_line":17,"status":"待处理","chart":null},
-    {"id":"F0348","layer":6,"signature":"bool 海中鱼巣::{匿名命名空间@关系仓库.cpp}::用途观察目标类型有效(std::int64_t 角色, 海中鱼巣::节点类型 类型)","file":"海中鱼巣/核心/关系仓库.cpp","definition_line":21,"status":"待处理","chart":null},
-    {"id":"F0349","layer":6,"signature":"void 海中鱼巣::自我线程::执行初始化(const 海中鱼巣::自我根需求初始化参数& 参数)","file":"海中鱼巣/线程/自我线程.ixx","definition_line":291,"status":"待处理","chart":null},
+    {"id":"F0347","layer":6,"signature":"bool 海中鱼巣::{匿名命名空间@关系仓库.cpp}::用途观察角色有效(std::int64_t 角色)","file":"海中鱼巣/核心/关系仓库.cpp","definition_line":17,"status":"已完成","chart":"L6/CF-L6-0026_用途观察角色有效_现状流程图.md"},
+    {"id":"F0348","layer":6,"signature":"bool 海中鱼巣::{匿名命名空间@关系仓库.cpp}::用途观察目标类型有效(std::int64_t 角色, 海中鱼巣::节点类型 类型)","file":"海中鱼巣/核心/关系仓库.cpp","definition_line":21,"status":"已完成","chart":"L6/CF-L6-0027_用途观察目标类型有效_现状流程图.md"},
+    {"id":"F0349","layer":6,"signature":"void 海中鱼巣::自我线程::执行初始化(const 海中鱼巣::自我根需求初始化参数& 参数)","file":"海中鱼巣/线程/自我线程.ixx","definition_line":291,"status":"已完成","chart":"L6/CF-L6-0028_自我线程执行初始化_现状流程图.md"},
     {"id":"F0350","layer":6,"signature":"bool 海中鱼巣::单根需求初始化结果::成功() const","file":"海中鱼巣/领域/初始化.需求.ixx","definition_line":47,"status":"待处理","chart":null},
     {"id":"F0351","layer":6,"signature":"bool 海中鱼巣::概念图初始化服务::名称关系可读(const 海中鱼巣::概念根初始化项& 项) const","file":"海中鱼巣/领域/初始化.概念图.ixx","definition_line":212,"status":"待处理","chart":null},
     {"id":"F0352","layer":6,"signature":"std::optional<海中鱼巣::概念根登记材料> 海中鱼巣::概念图服务::读取概念根(海中鱼巣::概念根类别 类别) const","file":"海中鱼巣/领域/概念图服务.h","definition_line":892,"status":"待处理","chart":null},
@@ -1697,7 +1697,13 @@
     {"id":"F0629","layer":7,"signature":"std::optional<海中鱼巣::节点句柄> 海中鱼巣::方法服务::读取唯一目标(海中鱼巣::节点句柄 源节点, 海中鱼巣::关系类型 类型, 海中鱼巣::节点类型 目标类型) const","file":"海中鱼巣/领域/方法服务.h","definition_line":1707,"status":"待处理","chart":null},
     {"id":"F0630","layer":7,"signature":"bool 海中鱼巣::节点仓库::节点是否有效(海中鱼巣::节点句柄 节点, const 海中鱼巣::结构事务令牌& 令牌) const","file":"海中鱼巣/核心/节点仓库.cpp","definition_line":449,"status":"待处理","chart":null},
     {"id":"F0631","layer":7,"signature":"void 海中鱼巣::结构事务许可::释放() noexcept","file":"海中鱼巣/核心/结构事务接线.数据.h","definition_line":59,"status":"待处理","chart":null},
-    {"id":"F0632","layer":7,"signature":"bool 海中鱼巣::{匿名命名空间@节点仓库.cpp}::验证共享令牌(const 海中鱼巣::结构事务接线& 接线, const 海中鱼巣::结构事务令牌& 令牌)","file":"海中鱼巣/核心/节点仓库.cpp","definition_line":23,"status":"待处理","chart":null}
+    {"id":"F0632","layer":7,"signature":"bool 海中鱼巣::{匿名命名空间@节点仓库.cpp}::验证共享令牌(const 海中鱼巣::结构事务接线& 接线, const 海中鱼巣::结构事务令牌& 令牌)","file":"海中鱼巣/核心/节点仓库.cpp","definition_line":23,"status":"待处理","chart":null},
+    {"id":"F0633","layer":7,"signature":"海中鱼巣::语素初始化结果 海中鱼巣::语素初始化服务::初始化基础显示语素()","file":"海中鱼巣/领域/初始化.语素.ixx","definition_line":144,"status":"待处理","chart":null},
+    {"id":"F0634","layer":7,"signature":"void 海中鱼巣::自我线程::标记初始化失败()","file":"海中鱼巣/线程/自我线程.ixx","definition_line":438,"status":"待处理","chart":null},
+    {"id":"F0635","layer":7,"signature":"海中鱼巣::世界树初始化结果 海中鱼巣::世界树初始化服务::初始化自我世界树()","file":"海中鱼巣/领域/初始化.世界树.ixx","definition_line":50,"status":"待处理","chart":null},
+    {"id":"F0636","layer":7,"signature":"海中鱼巣::自我根需求初始化结果 海中鱼巣::需求初始化服务::初始化两个根需求(const 海中鱼巣::世界树初始化结果& 世界树结果, const 海中鱼巣::自我根需求初始化参数& 参数)","file":"海中鱼巣/领域/初始化.需求.ixx","definition_line":73,"status":"待处理","chart":null},
+    {"id":"F0637","layer":7,"signature":"void 海中鱼巣::自我线程::执行治理循环(const 海中鱼巣::自我线程初始化快照& 治理初始化快照)","file":"海中鱼巣/线程/自我线程.ixx","definition_line":352,"status":"待处理","chart":null},
+    {"id":"F0638","layer":7,"signature":"bool 海中鱼巣::自我线程::执行初始化(const 海中鱼巣::自我根需求初始化参数&)::<lambda@自我线程.ixx:343-345>::operator()() const","file":"海中鱼巣/线程/自我线程.ixx","definition_line":343,"status":"待处理","chart":null}
   ],
   "calls": [
     {
@@ -3638,7 +3644,18 @@
     {"id":"E1829","caller":"F0579","callee":"F0345","location":"海中鱼巣/核心/关系仓库.cpp:981（宏展开120完整表达式末）","arguments":"this=&已移空临时许可","return_binding":"void","condition":"取得共享许可返回值已移动进optional","type":"implicit_destructor"},
     {"id":"E1830","caller":"F0579","callee":"F0345","location":"海中鱼巣/核心/关系仓库.cpp:980-994","arguments":"this=&自动许可.value()","return_binding":"void","condition":"正常或异常退出且自动许可已承载；F0344之后","type":"implicit_destructor"},
     {"id":"E1831","caller":"F0580","callee":"F0345","location":"海中鱼巣/核心/关系仓库.cpp:997（宏展开120完整表达式末）","arguments":"this=&已移空临时许可","return_binding":"void","condition":"取得共享许可返回值已移动进optional","type":"implicit_destructor"},
-    {"id":"E1832","caller":"F0580","callee":"F0345","location":"海中鱼巣/核心/关系仓库.cpp:996-1010","arguments":"this=&自动许可.value()","return_binding":"void","condition":"正常或异常退出且自动许可已承载；F0344之后","type":"implicit_destructor"}
+    {"id":"E1832","caller":"F0580","callee":"F0345","location":"海中鱼巣/核心/关系仓库.cpp:996-1010","arguments":"this=&自动许可.value()","return_binding":"void","condition":"正常或异常退出且自动许可已承载；F0344之后","type":"implicit_destructor"},
+    {"id":"E1833","caller":"F0349","callee":"F0633","location":"海中鱼巣/线程/自我线程.ixx:303","arguments":"this=&语素初始化_","return_binding":"语素结果","condition":"首次停止请求为false","type":"direct_member"},
+    {"id":"E1834","caller":"F0349","callee":"F0173","location":"海中鱼巣/线程/自我线程.ixx:304","arguments":"this=&语素结果","return_binding":"语素结果成功bool","condition":"E1833返回后","type":"direct_const_member"},
+    {"id":"E1835","caller":"F0349","callee":"F0634","location":"海中鱼巣/线程/自我线程.ixx:305","arguments":"this=当前自我线程","return_binding":"void","condition":"语素结果不成功","type":"direct_member"},
+    {"id":"E1836","caller":"F0349","callee":"F0635","location":"海中鱼巣/线程/自我线程.ixx:308","arguments":"this=&世界树初始化_","return_binding":"世界树结果","condition":"语素结果成功","type":"direct_member"},
+    {"id":"E1837","caller":"F0349","callee":"F0174","location":"海中鱼巣/线程/自我线程.ixx:309","arguments":"this=&世界树结果","return_binding":"世界树结果成功bool","condition":"E1836返回后","type":"direct_const_member"},
+    {"id":"E1838","caller":"F0349","callee":"F0634","location":"海中鱼巣/线程/自我线程.ixx:310","arguments":"this=当前自我线程","return_binding":"void","condition":"世界树结果不成功","type":"direct_member"},
+    {"id":"E1839","caller":"F0349","callee":"F0636","location":"海中鱼巣/线程/自我线程.ixx:313","arguments":"this=&需求初始化_,世界树结果,参数","return_binding":"根需求结果","condition":"世界树结果成功","type":"direct_member"},
+    {"id":"E1840","caller":"F0349","callee":"F0047","location":"海中鱼巣/线程/自我线程.ixx:315","arguments":"this=&新快照","return_binding":"初始化快照成功bool","condition":"根需求结果返回并构造新快照后","type":"direct_const_member"},
+    {"id":"E1841","caller":"F0349","callee":"F0634","location":"海中鱼巣/线程/自我线程.ixx:316","arguments":"this=当前自我线程","return_binding":"void","condition":"新快照不成功","type":"direct_member"},
+    {"id":"E1842","caller":"F0349","callee":"F0637","location":"海中鱼巣/线程/自我线程.ixx:339","arguments":"this=当前自我线程,治理初始化快照","return_binding":"void","condition":"快照已发布、停止请求为false且治理邮箱非空","type":"direct_member"},
+    {"id":"E1843","caller":"F0349","callee":"F0638","location":"海中鱼巣/线程/自我线程.ixx:343-345","arguments":"捕获this","return_binding":"停止谓词bool","condition":"condition_variable::wait初检或唤醒后，可重复","type":"condition_variable_predicate"}
   ],
   "external_boundaries": [
     {
@@ -4610,7 +4627,9 @@
     {"id":"X0368","signature":"std::shared_ptr<void>::operator bool() const noexcept运行期状态存储指针检查边界","caller":"F0338","locations":["海中鱼巣/核心/结构事务接线.数据.h:41"],"call_count":1,"queued":false},
     {"id":"X0369","signature":"节点句柄按值实参的编译器隐式复制构造与条件运算符所选bool返回物化边界","caller":"F0343","locations":["海中鱼巣/核心/关系仓库.cpp:181"],"call_count":2,"queued":false},
     {"id":"X0370","signature":"析构函数体后释放许可回调指针与结构事务令牌平凡销毁、std::shared_ptr<void>析构边界","caller":"F0345","locations":["海中鱼巣/核心/结构事务接线.数据.h:40"],"call_count":3,"queued":false},
-    {"id":"X0371","signature":"std::shared_lock<std::shared_mutex>构造析构、节点表find/end与迭代器访问、std::optional空值/节点记录值式构造及RAII生命周期边界","caller":"F0346","locations":["海中鱼巣/核心/节点仓库.cpp:251-256"],"call_count":10,"queued":false}
+    {"id":"X0371","signature":"std::shared_lock<std::shared_mutex>构造析构、节点表find/end与迭代器访问、std::optional空值/节点记录值式构造及RAII生命周期边界","caller":"F0346","locations":["海中鱼巣/核心/节点仓库.cpp:251-256"],"call_count":10,"queued":false},
+    {"id":"X0372","signature":"std::atomic默认seq_cst load/store、condition_variable notify_all/wait、lock_guard/unique_lock生命周期、optional移动赋值、std::move与显式unlock边界","caller":"F0349","locations":["海中鱼巣/线程/自我线程.ixx:292-349"],"call_count":23,"queued":false},
+    {"id":"X0373","signature":"std::atomic<bool>::load默认memory_order_seq_cst边界","caller":"F0638","locations":["海中鱼巣/线程/自我线程.ixx:344"],"call_count":1,"queued":false}
   ],
   "unresolved_calls": [
     {"id":"U0001","caller":"F0167","location":"海中鱼巣/核心/关系仓库.cpp:185（关系共享许可范围宏展开）","expression":"事务接线_.取得共享许可(事务接线_.运行期状态)","reason":"运行期可替换函数指针；静态调用点无法唯一裁决实际项目源码目标","known_contract":"结构事务许可(const std::shared_ptr<void>&)","status":"未解析调用"},
