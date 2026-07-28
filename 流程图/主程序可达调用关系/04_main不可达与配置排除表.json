@@ -2,8 +2,8 @@
   "schema_version": 1,
   "code_commit": "2b5e1ea547986ece688988452c6b92e50a6cce23",
   "scope": "main-current-reachable-exclusions",
-  "excluded_function_count": 74,
-  "rejected_candidate_edge_count": 545,
+  "excluded_function_count": 75,
+  "rejected_candidate_edge_count": 546,
   "excluded_functions": [
     {
       "function_id": "F0012",
@@ -522,6 +522,13 @@
       "file": "海中鱼巣/线程/自我线程.ixx",
       "definition_line": 352,
       "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "R0250",
+      "signature": "bool 海中鱼巣::动态服务::动态是否实例动态(节点句柄 动态节点, const 结构事务令牌& 令牌) const",
+      "file": "海中鱼巣/领域/动态服务.h",
+      "definition_line": 321,
+      "reason": "F0366 在动态服务.h:294 仅传入一个节点句柄，实际匹配 R0610；两参数事务令牌重载在当前 main 可达闭包中无调用方"
     }
   ],
   "rejected_candidate_edges": [
@@ -4339,6 +4346,13 @@
       "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
       "reason": "调用点不在登记调用方源码文件与函数定义范围内",
       "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "ME3994",
+      "caller": "F0366",
+      "callee": "R0250",
+      "reason": "调用点仅有一个节点句柄实参，不能匹配要求结构事务令牌的两参数重载",
+      "evidence": "海中鱼巣/领域/动态服务.h:294；一参数定义 315-319；两参数定义 321-325；fresh codebase-memory MCP 同名候选经源码重载复核"
     }
   ],
   "configuration_exclusions": [
