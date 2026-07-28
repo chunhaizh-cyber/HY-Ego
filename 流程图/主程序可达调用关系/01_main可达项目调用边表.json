@@ -3,7 +3,7 @@
   "scope": "main-current-reachable",
   "root": "F0001",
   "root_signature": "int main(int 参数数量, char* 参数组[])",
-  "code_commit": "e9217875d43872e11666aa28a2c71274ec5dcb86",
+  "code_commit": "dabb2b7483eb2f3dd72dbe309de7baf61689ee31",
   "old_graph_blob": "527f20b7f125d97c3f0cdaf9a650c905d0255203",
   "old_graph_frozen_commit": "a48a70b2d678dea64dd8228adb4f26f0badd9506",
   "configuration": "Debug|x64",
@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1162,
-  "project_call_edge_count": 2752,
-  "edge_count": 2752,
+  "project_call_edge_count": 2751,
+  "edge_count": 2751,
   "edges": [
     {
       "edge_id": "E0002",
@@ -18029,21 +18029,6 @@
       "return_binding": null,
       "reachable_condition": "调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核",
       "resolution_source": "逐边源码/静态类型审计 PASS；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE1682",
-      "caller": "F0389",
-      "callee": "F0396",
-      "callsites": [
-        "海中鱼巣/界面/控制面板窗口.cpp:435"
-      ],
-      "call_category": "resolved-function-pointer-callback",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "窗口类注册成功后，创建窗口与消息派发由 Windows 调用已登记窗口过程",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {

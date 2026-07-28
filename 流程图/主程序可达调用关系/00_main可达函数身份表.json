@@ -3,7 +3,7 @@
   "scope": "main-current-reachable",
   "root": "F0001",
   "root_signature": "int main(int 参数数量, char* 参数组[])",
-  "code_commit": "e9217875d43872e11666aa28a2c71274ec5dcb86",
+  "code_commit": "dabb2b7483eb2f3dd72dbe309de7baf61689ee31",
   "old_graph_blob": "527f20b7f125d97c3f0cdaf9a650c905d0255203",
   "old_graph_frozen_commit": "a48a70b2d678dea64dd8228adb4f26f0badd9506",
   "configuration": "Debug|x64",
@@ -16,7 +16,7 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1162,
-  "project_call_edge_count": 2752,
+  "project_call_edge_count": 2751,
   "functions": [
     {
       "function_id": "F0001",
@@ -9204,8 +9204,7 @@
         "F0223"
       ],
       "callees": [
-        "F0393",
-        "F0396"
+        "F0393"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0223；调用点=海中鱼巣/界面/控制面板窗口.cpp:1553",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -9379,8 +9378,7 @@
       "overload_identity": "LRESULT CALLBACK 海中鱼巣::控制面板窗口::窗口实现::窗口过程(HWND 窗口, UINT 消息, WPARAM 参数一, LPARAM 参数二)",
       "shortest_depth": 6,
       "callers": [
-        "F0223",
-        "F0389"
+        "F0223"
       ],
       "callees": [
         "R0151",
