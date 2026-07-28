@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "code_commit": "9d2061ed1d3cc0ab9c72bdd9997463d755da0137",
+  "code_commit": "e9217875d43872e11666aa28a2c71274ec5dcb86",
   "scope": "main-current-reachable-exclusions",
-  "excluded_function_count": 76,
-  "rejected_candidate_edge_count": 323,
+  "excluded_function_count": 74,
+  "rejected_candidate_edge_count": 545,
   "excluded_functions": [
     {
       "function_id": "F0012",
@@ -157,27 +157,6 @@
       "signature": "海中鱼巣::D455相机采集器::~D455相机采集器()",
       "file": "海中鱼巣/适配/采集器.D455相机.ixx",
       "definition_line": 431,
-      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
-    },
-    {
-      "function_id": "F0177",
-      "signature": "bool 海中鱼巣::概念图初始化服务::确保根<海中鱼巣::概念图初始化服务::初始化四个根()::<lambda@初始化.概念图.ixx:105>>(海中鱼巣::概念根初始化项&, 海中鱼巣::概念根类别, std::uint64_t, lambda@105)",
-      "file": "海中鱼巣/领域/初始化.概念图.ixx",
-      "definition_line": 144,
-      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
-    },
-    {
-      "function_id": "F0178",
-      "signature": "bool 海中鱼巣::概念图初始化服务::确保根<海中鱼巣::概念图初始化服务::初始化四个根()::<lambda@初始化.概念图.ixx:107>>(海中鱼巣::概念根初始化项&, 海中鱼巣::概念根类别, std::uint64_t, lambda@107)",
-      "file": "海中鱼巣/领域/初始化.概念图.ixx",
-      "definition_line": 144,
-      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
-    },
-    {
-      "function_id": "F0179",
-      "signature": "bool 海中鱼巣::概念图初始化服务::确保根<海中鱼巣::概念图初始化服务::初始化四个根()::<lambda@初始化.概念图.ixx:109>>(海中鱼巣::概念根初始化项&, 海中鱼巣::概念根类别, std::uint64_t, lambda@109)",
-      "file": "海中鱼巣/领域/初始化.概念图.ixx",
-      "definition_line": 144,
       "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
     },
     {
@@ -535,6 +514,13 @@
       "signature": "void 海中鱼巣::{匿名命名空间}::计算标定摘要(const 海中鱼巣::D455同步帧材料&)::<lambda@采集器.D455相机.ixx:406>::operator()(std::uint64_t 数值) const",
       "file": "海中鱼巣/适配/采集器.D455相机.ixx",
       "definition_line": 406,
+      "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
+    },
+    {
+      "function_id": "F0637",
+      "signature": "void 海中鱼巣::自我线程::执行治理循环(const 海中鱼巣::自我线程初始化快照& 治理初始化快照)",
+      "file": "海中鱼巣/线程/自我线程.ixx",
+      "definition_line": 352,
       "reason": "应用当前 Debug|x64 配置、实际装配与已裁决调用边后不在 F0001 可达闭包"
     }
   ],
@@ -1752,1053 +1738,2607 @@
     },
     {
       "candidate_edge_id": "AUDIT-REJECT-0174",
+      "caller_location": "海中鱼巣/线程/自我线程.ixx:291",
+      "callee_location": "海中鱼巣/线程/自我线程.ixx:352",
+      "reason": "普通应用只构造三参自我线程，治理邮箱恒为空，339 行短路分支当前不可满足",
+      "evidence": "装配.普通应用.ixx:74；自我线程.ixx:338-340"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0175",
       "caller_location": "海中鱼巣/领域/任务服务.h:738",
       "callee_location": "海中鱼巣/领域/任务服务.h:722",
       "reason": "唯一目标是局部变量名，不存在三参数重载调用",
       "evidence": "任务服务.h:744-745"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0175",
+      "candidate_edge_id": "AUDIT-REJECT-0176",
       "caller_location": "海中鱼巣/领域/控制面板服务.h:1060",
       "callee_location": "海中鱼巣/领域/控制面板服务.h:588",
       "reason": "调用点属于1064局部排序 lambda，不属于外层函数",
       "evidence": "控制面板服务.h:1064-1070"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0176",
+      "candidate_edge_id": "AUDIT-REJECT-0177",
       "caller_location": "海中鱼巣/领域/控制面板服务.h:1396",
       "callee_location": "海中鱼巣/领域/控制面板服务.h:1200",
       "reason": "调用点静态解析为 optional 追加节点叶项重载，不是具体句柄重载",
       "evidence": "控制面板服务.h:1421-1443"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0177",
+      "candidate_edge_id": "AUDIT-REJECT-0178",
       "caller_location": "海中鱼巣/领域/任务服务.h:480",
       "callee_location": "海中鱼巣/核心/关系仓库.cpp:1554",
       "reason": "二参调用命中无令牌来源节点组重载",
       "evidence": "任务服务.h:485"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0178",
+      "candidate_edge_id": "AUDIT-REJECT-0179",
       "caller_location": "海中鱼巣/领域/任务服务.h:738",
       "callee_location": "海中鱼巣/核心/关系仓库.cpp:1542",
       "reason": "三参和二参调用均不命中四参令牌重载",
       "evidence": "任务服务.h:744-745"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0179",
+      "candidate_edge_id": "AUDIT-REJECT-0180",
       "caller_location": "海中鱼巣/领域/任务服务.h:759",
       "callee_location": "海中鱼巣/核心/关系仓库.cpp:1542",
       "reason": "二参调用不命中四参令牌重载",
       "evidence": "任务服务.h:764"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0180",
+      "candidate_edge_id": "AUDIT-REJECT-0181",
       "caller_location": "海中鱼巣/领域/任务服务.h:759",
       "callee_location": "海中鱼巣/领域/数据操作.状态动态.ixx:210",
       "reason": "接收者为状态服务，实际调用状态服务::读取状态值",
       "evidence": "任务服务.h:770"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0181",
+      "candidate_edge_id": "AUDIT-REJECT-0182",
       "caller_location": "海中鱼巣/领域/因果服务.h:99",
       "callee_location": "海中鱼巣/核心/主信息仓库.cpp:53",
       "reason": "当前函数体不存在该调用，属于旧函数体残影",
       "evidence": "因果服务.h:99-105"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0182",
+      "candidate_edge_id": "AUDIT-REJECT-0183",
       "caller_location": "海中鱼巣/领域/因果服务.h:99",
       "callee_location": "海中鱼巣/核心/主信息仓库.cpp:371",
       "reason": "当前函数体不存在该调用，属于旧函数体残影",
       "evidence": "因果服务.h:99-105"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0183",
+      "candidate_edge_id": "AUDIT-REJECT-0184",
       "caller_location": "海中鱼巣/领域/因果服务.h:99",
       "callee_location": "海中鱼巣/核心/容错检查.h:55",
       "reason": "当前函数体不存在该调用，属于旧函数体残影",
       "evidence": "因果服务.h:99-105"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0184",
+      "candidate_edge_id": "AUDIT-REJECT-0185",
       "caller_location": "海中鱼巣/领域/因果服务.h:99",
       "callee_location": "海中鱼巣/核心/节点仓库.cpp:74",
       "reason": "当前函数体不存在该调用，属于旧函数体残影",
       "evidence": "因果服务.h:99-105"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0185",
+      "candidate_edge_id": "AUDIT-REJECT-0186",
       "caller_location": "海中鱼巣/领域/方法服务.h:946",
       "callee_location": "海中鱼巣/核心/关系仓库.cpp:1542",
       "reason": "二参调用不命中四参令牌重载",
       "evidence": "方法服务.h:950"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0186",
+      "candidate_edge_id": "AUDIT-REJECT-0187",
       "caller_location": "海中鱼巣/领域/方法服务.h:1362",
       "callee_location": "海中鱼巣/核心/关系仓库.cpp:1546",
       "reason": "二参调用不命中三参令牌重载",
       "evidence": "方法服务.h:1377,1394"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0187",
+      "candidate_edge_id": "AUDIT-REJECT-0188",
       "caller_location": "海中鱼巣/领域/方法服务.h:1362",
       "callee_location": "海中鱼巣/领域/二次特征服务.h:25",
       "reason": "材料静态类型为方法登记项材料",
       "evidence": "方法服务.h:1423"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0188",
+      "candidate_edge_id": "AUDIT-REJECT-0189",
       "caller_location": "海中鱼巣/领域/方法服务.h:1673",
       "callee_location": "海中鱼巣/核心/关系仓库.cpp:1639",
       "reason": "三参调用不命中四参令牌重载",
       "evidence": "方法服务.h:1676"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0189",
+      "candidate_edge_id": "AUDIT-REJECT-0190",
       "caller_location": "海中鱼巣/领域/方法服务.h:1680",
       "callee_location": "海中鱼巣/核心/关系仓库.cpp:1639",
       "reason": "三参调用不命中四参令牌重载",
       "evidence": "方法服务.h:1683"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0190",
+      "candidate_edge_id": "AUDIT-REJECT-0191",
       "caller_location": "海中鱼巣/领域/方法服务.h:1687",
       "callee_location": "海中鱼巣/核心/关系仓库.cpp:1542",
       "reason": "二参调用不命中四参令牌重载",
       "evidence": "方法服务.h:1693"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0191",
+      "candidate_edge_id": "AUDIT-REJECT-0192",
       "caller_location": "海中鱼巣/领域/方法服务.h:1732",
       "callee_location": "海中鱼巣/核心/关系仓库.cpp:1542",
       "reason": "三参调用不命中四参令牌重载",
       "evidence": "方法服务.h:1738"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0192",
+      "candidate_edge_id": "AUDIT-REJECT-0193",
       "caller_location": "海中鱼巣/领域/方法服务.h:1811",
       "callee_location": "海中鱼巣/核心/关系仓库.cpp:1639",
       "reason": "三参调用不命中四参令牌重载",
       "evidence": "方法服务.h:1815"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0193",
+      "candidate_edge_id": "AUDIT-REJECT-0194",
       "caller_location": "海中鱼巣/领域/方法服务.h:1818",
       "callee_location": "海中鱼巣/领域/数据操作.状态动态.ixx:210",
       "reason": "接收者为状态服务，实际调用状态服务::读取状态值",
       "evidence": "方法服务.h:1826"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0194",
+      "candidate_edge_id": "AUDIT-REJECT-0195",
       "caller_location": "海中鱼巣/领域/概念图服务.h:3177",
       "callee_location": "海中鱼巣/领域/二次特征服务.h:25",
       "reason": "材料静态类型为概念生命周期材料",
       "evidence": "概念图服务.h:3217"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0195",
+      "candidate_edge_id": "AUDIT-REJECT-0196",
       "caller_location": "海中鱼巣/领域/需求服务.h:292",
       "callee_location": "海中鱼巣/领域/数据操作.状态动态.ixx:475",
       "reason": "接收者为状态服务，实际调用状态服务::创建抽象状态",
       "evidence": "需求服务.h:306"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0196",
+      "candidate_edge_id": "AUDIT-REJECT-0197",
       "caller_location": "海中鱼巣/领域/需求服务.h:704",
       "callee_location": "海中鱼巣/领域/数据操作.状态动态.ixx:231",
       "reason": "接收者为状态服务，实际调用状态服务::读取发生时间戳",
       "evidence": "需求服务.h:716"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0197",
+      "candidate_edge_id": "AUDIT-REJECT-0198",
       "caller_location": "海中鱼巣/领域/数据操作.概念活动.ixx:42",
       "callee_location": "海中鱼巣/领域/初始化.需求.ixx:28",
       "reason": "参数静态类型为概念活动初始化参数",
       "evidence": "数据操作.概念活动.ixx:49"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0198",
+      "candidate_edge_id": "AUDIT-REJECT-0199",
       "caller_location": "海中鱼巣/领域/数据操作.概念活动.ixx:131",
       "callee_location": "海中鱼巣/领域/初始化.需求.ixx:28",
       "reason": "参数静态类型为概念活动初始化参数",
       "evidence": "数据操作.概念活动.ixx:135"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0199",
+      "candidate_edge_id": "AUDIT-REJECT-0200",
       "caller_location": "海中鱼巣/领域/数据操作.概念活动.ixx:131",
       "callee_location": "海中鱼巣/领域/概念图服务.h:681",
       "reason": "局部视图静态类型为概念活动重建视图",
       "evidence": "数据操作.概念活动.ixx:181"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0200",
+      "candidate_edge_id": "AUDIT-REJECT-0201",
       "caller_location": "海中鱼巣/领域/数据操作.概念活动.ixx:211",
       "callee_location": "海中鱼巣/领域/控制面板服务.h:200",
       "reason": "根静态类型为系统角色身份材料",
       "evidence": "数据操作.概念活动.ixx:230"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0201",
+      "candidate_edge_id": "AUDIT-REJECT-0202",
       "caller_location": "海中鱼巣/领域/数据操作.概念活动.ixx:288",
       "callee_location": "海中鱼巣/领域/控制面板服务.h:200",
       "reason": "根静态类型为系统角色身份材料",
       "evidence": "数据操作.概念活动.ixx:293"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0202",
+      "candidate_edge_id": "AUDIT-REJECT-0203",
       "caller_location": "海中鱼巣/领域/数据操作.系统角色.ixx:42",
       "callee_location": "海中鱼巣/领域/初始化.需求.ixx:28",
       "reason": "参数静态类型为系统角色初始化参数",
       "evidence": "数据操作.系统角色.ixx:43"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0203",
+      "candidate_edge_id": "AUDIT-REJECT-0204",
       "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:2798",
       "callee_location": "海中鱼巣/启动.生产运行期.ixx:37",
       "reason": "结果静态类型为带值结构写入结果<关系句柄>",
       "evidence": "数据操作.需求任务方法.ixx:2810"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0204",
+      "candidate_edge_id": "AUDIT-REJECT-0205",
       "caller_location": "海中鱼巣/核心/索引仓库.cpp:298",
       "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
       "reason": "函数内没有许可对象或该调用点",
       "evidence": "索引仓库.cpp:298-302"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0205",
+      "candidate_edge_id": "AUDIT-REJECT-0206",
       "caller_location": "海中鱼巣/核心/会话.结构写入.ixx:234",
       "callee_location": "海中鱼巣/启动.生产运行期.ixx:37",
       "reason": "结果静态类型为带值结构写入结果<主信息未发布候选>",
       "evidence": "会话.结构写入.ixx:239"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0206",
+      "candidate_edge_id": "AUDIT-REJECT-0207",
       "caller_location": "海中鱼巣/核心/主信息仓库.cpp:312",
       "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:77",
       "reason": "函数内没有已接域调用",
       "evidence": "主信息仓库.cpp:312-321"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0207",
+      "candidate_edge_id": "AUDIT-REJECT-0208",
       "caller_location": "海中鱼巣/核心/主信息仓库.cpp:312",
       "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
       "reason": "函数内没有许可对象或有效调用",
       "evidence": "主信息仓库.cpp:312-321"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0208",
+      "candidate_edge_id": "AUDIT-REJECT-0209",
       "caller_location": "海中鱼巣/核心/主信息仓库.cpp:312",
       "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:42",
       "reason": "函数直接消费形参令牌，不读取许可",
       "evidence": "主信息仓库.cpp:312-321"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0209",
+      "candidate_edge_id": "AUDIT-REJECT-0210",
       "caller_location": "海中鱼巣/核心/节点仓库.cpp:350",
       "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
       "reason": "函数内没有许可对象或有效调用",
       "evidence": "节点仓库.cpp:350-359"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0210",
+      "candidate_edge_id": "AUDIT-REJECT-0211",
       "caller_location": "海中鱼巣/领域/初始化.系统角色.ixx:285",
       "callee_location": "海中鱼巣/领域/二次特征服务.h:25",
       "reason": "四处材料静态类型均不是关系实例完成材料",
       "evidence": "初始化.系统角色.ixx:291,309,318,332"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0211",
+      "candidate_edge_id": "AUDIT-REJECT-0212",
       "caller_location": "海中鱼巣/领域/初始化.系统角色.ixx:337",
       "callee_location": "海中鱼巣/领域/二次特征服务.h:25",
       "reason": "三处材料静态类型分别为特征定义/槽位/原始值式材料",
       "evidence": "初始化.系统角色.ixx:364,370,377"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0212",
+      "candidate_edge_id": "AUDIT-REJECT-0213",
       "caller_location": "海中鱼巣/领域/初始化.系统角色.ixx:403",
       "callee_location": "海中鱼巣/领域/二次特征服务.h:25",
       "reason": "材料静态类型为方法登记根材料",
       "evidence": "初始化.系统角色.ixx:419"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0213",
+      "candidate_edge_id": "AUDIT-REJECT-0214",
       "caller_location": "海中鱼巣/领域/初始化.系统角色.ixx:434",
       "callee_location": "海中鱼巣/领域/数据操作.状态动态.ixx:270",
       "reason": "主体静态类型为系统角色主体材料",
       "evidence": "初始化.系统角色.ixx:437"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0214",
+      "candidate_edge_id": "AUDIT-REJECT-0215",
       "caller_location": "海中鱼巣/领域/初始化.系统角色.ixx:479",
       "callee_location": "海中鱼巣/领域/数据操作.概念图结构.ixx:139",
       "reason": "值静态类型为特征原始值式材料",
       "evidence": "初始化.系统角色.ixx:498"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0215",
+      "candidate_edge_id": "AUDIT-REJECT-0216",
       "caller_location": "海中鱼巣/领域/控制面板服务.h:1060",
       "callee_location": "海中鱼巣/领域/参与者.特征批次发布记录.ixx:49",
       "reason": "循环项静态类型为抽象树投影项",
       "evidence": "控制面板服务.h:1090"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0216",
+      "candidate_edge_id": "AUDIT-REJECT-0217",
       "caller_location": "海中鱼巣/领域/控制面板服务.h:761",
       "callee_location": "海中鱼巣/领域/概念图服务.h:641",
       "reason": "读取结果静态类型为抽象树读取结果",
       "evidence": "控制面板服务.h:831"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0217",
+      "candidate_edge_id": "AUDIT-REJECT-0218",
       "caller_location": "海中鱼巣/领域/控制面板服务.h:761",
       "callee_location": "海中鱼巣/领域/控制面板服务.h:200",
       "reason": "调用点属于808局部 all_of lambda，正确 lambda 边已经存在",
       "evidence": "控制面板服务.h:808-810"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0218",
+      "candidate_edge_id": "AUDIT-REJECT-0219",
       "caller_location": "海中鱼巣/启动.应用程序.ixx:444",
       "callee_location": "海中鱼巣/启动.应用程序.ixx:420",
       "reason": "Debug|x64 下 D455 能力关闭，参数解析在进入运行海中鱼巣前拒绝该模式",
       "evidence": "启动.程序入口.ixx:63-66"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0219",
+      "candidate_edge_id": "AUDIT-REJECT-0220",
       "caller_location": "海中鱼巣/领域/动态服务.h:339",
       "callee_location": "海中鱼巣/领域/动态服务.h:321",
       "reason": "无令牌调用实际命中315行重载",
       "evidence": "动态服务.h:340"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0220",
+      "candidate_edge_id": "AUDIT-REJECT-0221",
       "caller_location": "海中鱼巣/领域/动态服务.h:339",
       "callee_location": "海中鱼巣/领域/状态服务.h:317",
       "reason": "调用属于本类读取唯一引用目标，不属于状态服务",
       "evidence": "动态服务.h:343-344"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0221",
+      "candidate_edge_id": "AUDIT-REJECT-0222",
       "caller_location": "海中鱼巣/领域/动态服务.h:339",
       "callee_location": "海中鱼巣/领域/状态服务.h:193",
       "reason": "调用属于本类读取发生时间戳，不属于状态服务",
       "evidence": "动态服务.h:351"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0222",
+      "candidate_edge_id": "AUDIT-REJECT-0223",
       "caller_location": "海中鱼巣/领域/动态服务.h:339",
       "callee_location": "海中鱼巣/核心/句柄.h:135",
       "reason": "实参静态类型为节点句柄，不命中关系句柄重载",
       "evidence": "动态服务.h:358"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0223",
+      "candidate_edge_id": "AUDIT-REJECT-0224",
       "caller_location": "海中鱼巣/领域/动态服务.h:512",
       "callee_location": "海中鱼巣/核心/关系仓库.cpp:1542",
       "reason": "三参调用不命中四参令牌重载",
       "evidence": "动态服务.h:514"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0224",
+      "candidate_edge_id": "AUDIT-REJECT-0225",
       "caller_location": "海中鱼巣/领域/动态服务.h:528",
       "callee_location": "海中鱼巣/核心/节点仓库.cpp:250",
       "reason": "一参调用不命中令牌重载",
       "evidence": "动态服务.h:532"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0225",
+      "candidate_edge_id": "AUDIT-REJECT-0226",
       "caller_location": "海中鱼巣/领域/动态服务.h:528",
       "callee_location": "海中鱼巣/核心/主信息仓库.cpp:446",
       "reason": "一参调用不命中三参令牌重载",
       "evidence": "动态服务.h:536"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0226",
+      "candidate_edge_id": "AUDIT-REJECT-0227",
       "caller_location": "海中鱼巣/领域/动态服务.h:555",
       "callee_location": "海中鱼巣/领域/状态服务.h:312",
       "reason": "调用属于本类节点类型匹配，不属于状态服务",
       "evidence": "动态服务.h:556"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0227",
+      "candidate_edge_id": "AUDIT-REJECT-0228",
       "caller_location": "海中鱼巣/领域/概念图服务.h:681",
       "callee_location": "海中鱼巣/核心/句柄.h:135",
       "reason": "实参静态类型为节点句柄，不命中关系句柄重载",
       "evidence": "概念图服务.h:685"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0228",
+      "candidate_edge_id": "AUDIT-REJECT-0229",
       "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:189",
       "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:62",
       "reason": "身份字段静态类型为高级节点身份",
       "evidence": "数据操作.需求任务方法.ixx:190"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0229",
+      "candidate_edge_id": "AUDIT-REJECT-0230",
       "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:1022",
       "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:92",
       "reason": "局部规格静态类型为方法登记根写入规格",
       "evidence": "数据操作.需求任务方法.ixx:1029"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0230",
+      "candidate_edge_id": "AUDIT-REJECT-0231",
       "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:1159",
       "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
       "reason": "许可静态类型为结构事务许可；另一处有效是本类调用",
       "evidence": "数据操作.需求任务方法.ixx:1160,1162"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0231",
+      "candidate_edge_id": "AUDIT-REJECT-0232",
       "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:1619",
       "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:92",
       "reason": "形参静态类型为方法登记根写入规格",
       "evidence": "数据操作.需求任务方法.ixx:1620"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0232",
+      "candidate_edge_id": "AUDIT-REJECT-0233",
       "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:2756",
       "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:62",
       "reason": "读取结果静态类型为高级节点身份",
       "evidence": "数据操作.需求任务方法.ixx:2760"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0233",
+      "candidate_edge_id": "AUDIT-REJECT-0234",
       "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:3465",
       "callee_location": "海中鱼巣/领域/概念图服务.h:318",
       "reason": "形参静态类型为方法登记根材料",
       "evidence": "数据操作.需求任务方法.ixx:3468"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0234",
+      "candidate_edge_id": "AUDIT-REJECT-0235",
       "caller_location": "海中鱼巣/领域/数据操作.概念活动.ixx:42",
       "callee_location": "海中鱼巣/领域/系统角色清单.数据.h:116",
       "reason": "调用点接收者分别为系统角色清单、抽象状态规格和候选材料",
       "evidence": "数据操作.概念活动.ixx:49,50,119,125"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0235",
+      "candidate_edge_id": "AUDIT-REJECT-0236",
       "caller_location": "海中鱼巣/领域/数据操作.概念活动.ixx:131",
       "callee_location": "海中鱼巣/领域/系统角色清单.数据.h:116",
       "reason": "调用点接收者分别为系统角色清单和概念活动重建视图",
       "evidence": "数据操作.概念活动.ixx:135,181"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0236",
+      "candidate_edge_id": "AUDIT-REJECT-0237",
       "caller_location": "海中鱼巣/领域/数据操作.概念活动.ixx:131",
       "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
       "reason": "许可静态类型为结构事务许可",
       "evidence": "数据操作.概念活动.ixx:150"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0237",
+      "candidate_edge_id": "AUDIT-REJECT-0238",
       "caller_location": "海中鱼巣/领域/数据操作.状态动态.ixx:406",
       "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:92",
       "reason": "规格静态类型为抽象状态写入规格",
       "evidence": "数据操作.状态动态.ixx:409"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0238",
+      "candidate_edge_id": "AUDIT-REJECT-0239",
       "caller_location": "海中鱼巣/领域/数据操作.状态动态.ixx:406",
       "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:88",
       "reason": "接收者静态类型为抽象状态写入规格",
       "evidence": "数据操作.状态动态.ixx:412"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0239",
+      "candidate_edge_id": "AUDIT-REJECT-0240",
       "caller_location": "海中鱼巣/领域/数据操作.轻量因果.ixx:125",
       "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
       "reason": "许可静态类型为结构事务许可；另一处有效是本类调用",
       "evidence": "数据操作.轻量因果.ixx:126,128"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0240",
+      "candidate_edge_id": "AUDIT-REJECT-0241",
       "caller_location": "海中鱼巣/领域/数据操作.系统角色.ixx:42",
       "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
       "reason": "许可静态类型为结构事务许可；另一处有效是本类/参数调用",
       "evidence": "数据操作.系统角色.ixx:43,47"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0241",
+      "candidate_edge_id": "AUDIT-REJECT-0242",
       "caller_location": "海中鱼巣/领域/数据操作.系统角色.ixx:124",
       "callee_location": "海中鱼巣/领域/数据操作.状态动态.ixx:270",
       "reason": "形参静态类型为系统角色主体材料",
       "evidence": "数据操作.系统角色.ixx:126"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0242",
+      "candidate_edge_id": "AUDIT-REJECT-0243",
       "caller_location": "海中鱼巣/领域/数据操作.系统角色.ixx:229",
       "callee_location": "海中鱼巣/领域/数据操作.概念图结构.ixx:332",
       "reason": "形参静态类型为系统角色身份材料",
       "evidence": "数据操作.系统角色.ixx:232"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0243",
+      "candidate_edge_id": "AUDIT-REJECT-0244",
       "caller_location": "海中鱼巣/领域/数据操作.系统角色.ixx:243",
       "callee_location": "海中鱼巣/领域/数据操作.概念图结构.ixx:332",
       "reason": "形参静态类型为系统角色身份材料",
       "evidence": "数据操作.系统角色.ixx:246"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0244",
+      "candidate_edge_id": "AUDIT-REJECT-0245",
       "caller_location": "海中鱼巣/领域/数据操作.系统角色.ixx:281",
       "callee_location": "海中鱼巣/领域/二次特征服务.h:25",
       "reason": "形参静态类型为系统角色关系材料",
       "evidence": "数据操作.系统角色.ixx:284"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0245",
+      "candidate_edge_id": "AUDIT-REJECT-0246",
       "caller_location": "海中鱼巣/领域/数据操作.系统角色.ixx:374",
       "callee_location": "海中鱼巣/领域/数据操作.状态动态.ixx:270",
       "reason": "接收者分别为系统角色主体材料和系统角色清单",
       "evidence": "数据操作.系统角色.ixx:375,407"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0246",
+      "candidate_edge_id": "AUDIT-REJECT-0247",
       "caller_location": "海中鱼巣/领域/数据操作.系统角色.ixx:374",
       "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
       "reason": "许可静态类型为结构事务许可",
       "evidence": "数据操作.系统角色.ixx:377"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0247",
+      "candidate_edge_id": "AUDIT-REJECT-0248",
       "caller_location": "海中鱼巣/领域/数据操作.系统角色.ixx:374",
       "callee_location": "海中鱼巣/领域/系统角色清单.数据.h:116",
       "reason": "接收者分别为系统角色主体材料和系统角色清单",
       "evidence": "数据操作.系统角色.ixx:375,407"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0248",
+      "candidate_edge_id": "AUDIT-REJECT-0249",
       "caller_location": "海中鱼巣/领域/数据操作.状态动态.ixx:95",
       "callee_location": "海中鱼巣/核心/句柄.h:135",
       "reason": "场景与主体静态类型为节点句柄",
       "evidence": "数据操作.状态动态.ixx:97"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0249",
+      "candidate_edge_id": "AUDIT-REJECT-0250",
       "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:86",
       "callee_location": "海中鱼巣/核心/句柄.h:135",
       "reason": "特征定义为节点句柄、主信息为主信息句柄",
       "evidence": "数据操作.特征体系.ixx:88"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0250",
+      "candidate_edge_id": "AUDIT-REJECT-0251",
       "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:102",
       "callee_location": "海中鱼巣/核心/句柄.h:135",
       "reason": "宿主/定义/槽位为节点句柄、主信息为主信息句柄",
       "evidence": "数据操作.特征体系.ixx:104-105"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0251",
+      "candidate_edge_id": "AUDIT-REJECT-0252",
       "caller_location": "海中鱼巣/核心/关系仓库.cpp:1031",
       "callee_location": "海中鱼巣/核心/关系仓库.cpp:13",
       "reason": "令牌薄包装只验证令牌并调用无令牌重载",
       "evidence": "关系仓库.cpp:1031-1034"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0252",
+      "candidate_edge_id": "AUDIT-REJECT-0253",
       "caller_location": "海中鱼巣/核心/关系仓库.cpp:1031",
       "callee_location": "海中鱼巣/核心/句柄.h:135",
       "reason": "函数体不存在关系句柄有效调用",
       "evidence": "关系仓库.cpp:1031-1034"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0253",
+      "candidate_edge_id": "AUDIT-REJECT-0254",
       "caller_location": "海中鱼巣/核心/关系仓库.cpp:1031",
       "callee_location": "海中鱼巣/核心/关系仓库.cpp:179",
       "reason": "令牌薄包装不直接复核节点有效",
       "evidence": "关系仓库.cpp:1031-1034"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0254",
+      "candidate_edge_id": "AUDIT-REJECT-0255",
       "caller_location": "海中鱼巣/核心/关系仓库.cpp:1031",
       "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
       "reason": "令牌薄包装不调用读取当前关系令牌",
       "evidence": "关系仓库.cpp:1031-1034"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0255",
+      "candidate_edge_id": "AUDIT-REJECT-0256",
       "caller_location": "海中鱼巣/核心/关系仓库.cpp:1031",
       "callee_location": "海中鱼巣/核心/关系仓库.cpp:17",
       "reason": "令牌薄包装不直接复核用途观察角色",
       "evidence": "关系仓库.cpp:1031-1034"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0256",
+      "candidate_edge_id": "AUDIT-REJECT-0257",
       "caller_location": "海中鱼巣/核心/关系仓库.cpp:1031",
       "callee_location": "海中鱼巣/核心/关系仓库.cpp:21",
       "reason": "令牌薄包装不直接复核用途观察目标类型",
       "evidence": "关系仓库.cpp:1031-1034"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0257",
+      "candidate_edge_id": "AUDIT-REJECT-0258",
       "caller_location": "海中鱼巣/核心/关系仓库.cpp:1394",
       "callee_location": "海中鱼巣/领域/方法召回索引.h:32",
       "reason": "能力静态类型为已发布关系变更能力",
       "evidence": "关系仓库.cpp:1405"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0258",
+      "candidate_edge_id": "AUDIT-REJECT-0259",
       "caller_location": "海中鱼巣/核心/索引仓库.cpp:127",
       "callee_location": "海中鱼巣/核心/索引所有权.数据.h:122",
       "reason": "调用位于相邻120行重载，不属于127行 caller",
       "evidence": "索引仓库.cpp:124"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0259",
+      "candidate_edge_id": "AUDIT-REJECT-0260",
       "caller_location": "海中鱼巣/核心/会话.结构写入.ixx:262",
       "callee_location": "海中鱼巣/启动.生产运行期.ixx:37",
       "reason": "结果静态类型为带值结构写入结果<节点未发布候选>",
       "evidence": "会话.结构写入.ixx:267"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0260",
+      "candidate_edge_id": "AUDIT-REJECT-0261",
       "caller_location": "海中鱼巣/核心/会话.结构写入.ixx:262",
       "callee_location": "海中鱼巣/核心/仓库.节点直接身份.ixx:99",
       "reason": "候选静态类型为节点未发布候选",
       "evidence": "会话.结构写入.ixx:277"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0261",
+      "candidate_edge_id": "AUDIT-REJECT-0262",
       "caller_location": "海中鱼巣/核心/会话.结构写入.ixx:372",
       "callee_location": "海中鱼巣/启动.生产运行期.ixx:37",
       "reason": "结果静态类型为结构化节点挂载结果",
       "evidence": "会话.结构写入.ixx:382"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0262",
+      "candidate_edge_id": "AUDIT-REJECT-0263",
       "caller_location": "海中鱼巣/核心/会话.结构写入.ixx:451",
       "callee_location": "海中鱼巣/启动.生产运行期.ixx:37",
       "reason": "结果静态类型为结构写入结果",
       "evidence": "会话.结构写入.ixx:454"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0263",
+      "candidate_edge_id": "AUDIT-REJECT-0264",
       "caller_location": "海中鱼巣/核心/索引所有权.数据.h:97",
       "callee_location": "海中鱼巣/核心/句柄.h:135",
       "reason": "目标静态类型为节点句柄",
       "evidence": "索引所有权.数据.h:98"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0264",
+      "candidate_edge_id": "AUDIT-REJECT-0265",
       "caller_location": "海中鱼巣/核心/索引所有权.数据.h:102",
       "callee_location": "海中鱼巣/核心/句柄.h:135",
       "reason": "目标静态类型为节点句柄",
       "evidence": "索引所有权.数据.h:103"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0265",
+      "candidate_edge_id": "AUDIT-REJECT-0266",
       "caller_location": "海中鱼巣/领域/数据操作.状态动态.ixx:90",
       "callee_location": "海中鱼巣/核心/句柄.h:135",
       "reason": "状态节点和主信息分别为节点句柄与主信息句柄",
       "evidence": "数据操作.状态动态.ixx:92"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0266",
+      "candidate_edge_id": "AUDIT-REJECT-0267",
       "caller_location": "海中鱼巣/领域/概念图服务.h:665",
       "callee_location": "海中鱼巣/核心/句柄.h:135",
       "reason": "概念静态类型为节点句柄",
       "evidence": "概念图服务.h:666"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0267",
+      "candidate_edge_id": "AUDIT-REJECT-0268",
       "caller_location": "海中鱼巣/领域/初始化.需求.ixx:115",
       "callee_location": "海中鱼巣/启动.生产运行期.ixx:37",
       "reason": "结果的静态类型为单根需求初始化结果",
       "evidence": "初始化.需求.ixx:167"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0268",
+      "candidate_edge_id": "AUDIT-REJECT-0269",
       "caller_location": "海中鱼巣/领域/初始化.语素.ixx:172",
       "callee_location": "海中鱼巣/启动选项.数据.h:39",
       "reason": "项的静态类型为语素初始化显示项，真实目标为该类型的成功函数",
       "evidence": "初始化.语素.ixx:184"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0269",
+      "candidate_edge_id": "AUDIT-REJECT-0270",
+      "caller_location": "海中鱼巣/领域/初始化.概念图.ixx:98",
+      "callee_location": "海中鱼巣/领域/初始化.概念图.ixx:144",
+      "reason": "四个模板实例不能合并为 lambda@111 单一身份",
+      "evidence": "初始化.概念图.ixx:104-111"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0271",
+      "caller_location": "海中鱼巣/领域/初始化.概念图.ixx:98",
+      "callee_location": "海中鱼巣/领域/初始化.概念图.ixx:105",
+      "reason": "lambda 表达式在调用点形成闭包对象，不等于调用 lambda 函数体",
+      "evidence": "初始化.概念图.ixx:105"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0272",
+      "caller_location": "海中鱼巣/领域/初始化.概念图.ixx:98",
+      "callee_location": "海中鱼巣/领域/初始化.概念图.ixx:107",
+      "reason": "lambda 表达式在调用点形成闭包对象，不等于调用 lambda 函数体",
+      "evidence": "初始化.概念图.ixx:107"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0273",
+      "caller_location": "海中鱼巣/领域/初始化.概念图.ixx:98",
+      "callee_location": "海中鱼巣/领域/初始化.概念图.ixx:109",
+      "reason": "lambda 表达式在调用点形成闭包对象，不等于调用 lambda 函数体",
+      "evidence": "初始化.概念图.ixx:109"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0274",
+      "caller_location": "海中鱼巣/领域/初始化.概念图.ixx:98",
+      "callee_location": "海中鱼巣/领域/初始化.概念图.ixx:111",
+      "reason": "lambda 表达式在调用点形成闭包对象，不等于调用 lambda 函数体",
+      "evidence": "初始化.概念图.ixx:111"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0275",
+      "caller_location": "海中鱼巣/领域/初始化.概念图.ixx:144",
+      "callee_location": "海中鱼巣/领域/初始化.概念图.ixx:105",
+      "reason": "lambda@111 模板实例不调用其它三个 lambda",
+      "evidence": "确保根模板实例按回调静态类型一一对应"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0276",
+      "caller_location": "海中鱼巣/领域/初始化.概念图.ixx:144",
+      "callee_location": "海中鱼巣/领域/初始化.概念图.ixx:107",
+      "reason": "lambda@111 模板实例不调用其它三个 lambda",
+      "evidence": "确保根模板实例按回调静态类型一一对应"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0277",
+      "caller_location": "海中鱼巣/领域/初始化.概念图.ixx:144",
+      "callee_location": "海中鱼巣/领域/初始化.概念图.ixx:109",
+      "reason": "lambda@111 模板实例不调用其它三个 lambda",
+      "evidence": "确保根模板实例按回调静态类型一一对应"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0278",
+      "caller_location": "海中鱼巣/领域/概念图服务.h:981",
+      "callee_location": "海中鱼巣/领域/概念图服务.h:3177",
+      "reason": "1007 只有一个节点句柄实参，静态解析为无令牌读取概念生命周期重载",
+      "evidence": "概念图服务.h:1007"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0279",
+      "caller_location": "海中鱼巣/领域/概念图服务.h:1861",
+      "callee_location": "海中鱼巣/领域/概念图服务.h:3177",
+      "reason": "1866 只有一个节点句柄实参，静态解析为无令牌读取概念生命周期重载",
+      "evidence": "概念图服务.h:1866"
+    },
+    {
+      "candidate_edge_id": "AUDIT-REJECT-0280",
       "caller_location": "海中鱼巣/核心/执行器.结构写入.ixx:113",
       "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:240",
       "reason": "同名模板辅助函数跨执行器类型误配",
       "evidence": "执行器.结构写入.ixx:153 静态目标是同类模板辅助函数 :397"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0270",
+      "candidate_edge_id": "AUDIT-REJECT-0281",
       "caller_location": "海中鱼巣/核心/执行器.结构写入.ixx:113",
       "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:251",
       "reason": "同名模板辅助函数跨执行器类型误配",
       "evidence": "执行器.结构写入.ixx:171 静态目标是同类模板辅助函数 :420"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0271",
+      "candidate_edge_id": "AUDIT-REJECT-0282",
       "caller_location": "海中鱼巣/核心/执行器.结构写入.ixx:113",
       "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:269",
       "reason": "同名模板辅助函数跨执行器类型误配",
       "evidence": "执行器.结构写入.ixx:181 静态目标是同类模板辅助函数 :430"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0272",
+      "candidate_edge_id": "AUDIT-REJECT-0283",
       "caller_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:30",
       "callee_location": "海中鱼巣/核心/句柄.h:135",
       "reason": "句柄有效重载静态类型错误",
       "evidence": "line 31 两个实参分别为节点句柄和主信息句柄，不是关系句柄"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0273",
+      "candidate_edge_id": "AUDIT-REJECT-0284",
       "caller_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:82",
       "callee_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:101",
       "reason": "局部 lambda 调用者误挂外层函数",
       "evidence": "line 85 位于 line 84—86 的 find_if 谓词 lambda 内"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0274",
+      "candidate_edge_id": "AUDIT-REJECT-0285",
       "caller_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:204",
       "callee_location": "海中鱼巣/领域/特征值服务.h:679",
       "reason": "查找 Vec 记录重载 const 性错误",
       "evidence": "服务_ 为非 const 引用且 caller 非 const，应命中 line 673"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0275",
+      "candidate_edge_id": "AUDIT-REJECT-0286",
       "caller_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:204",
       "callee_location": "海中鱼巣/领域/特征值服务.h:691",
       "reason": "查找 I64 记录重载 const 性错误",
       "evidence": "服务_ 为非 const 引用且 caller 非 const，应命中 line 685"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0276",
+      "candidate_edge_id": "AUDIT-REJECT-0287",
       "caller_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:244",
       "callee_location": "海中鱼巣/核心/句柄.h:135",
       "reason": "句柄有效重载静态类型错误",
       "evidence": "line 247 实参为节点句柄，不是关系句柄"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0277",
+      "candidate_edge_id": "AUDIT-REJECT-0288",
       "caller_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:62",
       "callee_location": "海中鱼巣/核心/句柄.h:135",
       "reason": "句柄有效重载静态类型错误",
       "evidence": "line 63 实参为节点句柄，不是关系句柄"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0278",
+      "candidate_edge_id": "AUDIT-REJECT-0289",
       "caller_location": "海中鱼巣/核心/执行器.结构写入.ixx:113",
       "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "执行器.结构写入.ixx:116,120 分属当前执行器::有效与结构事务许可::有效"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0279",
+      "candidate_edge_id": "AUDIT-REJECT-0290",
       "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:1110",
       "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "需求任务方法.ixx:1111,1113 分属当前数据操作::有效与结构事务许可::有效"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0280",
+      "candidate_edge_id": "AUDIT-REJECT-0291",
       "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:2001",
       "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:62",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "需求任务方法.ixx:2006,2030 静态类型为高级节点身份"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0281",
+      "candidate_edge_id": "AUDIT-REJECT-0292",
       "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:2451",
       "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:62",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "需求任务方法.ixx:2457 静态类型为高级节点身份"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0282",
+      "candidate_edge_id": "AUDIT-REJECT-0293",
       "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:2876",
       "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:92",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "需求任务方法.ixx:2882 静态类型为完整需求写入规格"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0283",
+      "candidate_edge_id": "AUDIT-REJECT-0294",
       "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:2876",
       "callee_location": "海中鱼巣/领域/数据操作.状态动态.ixx:187",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "需求任务方法.ixx:2896 位于 lambda 且静态类型为状态写入参与结果"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0284",
+      "candidate_edge_id": "AUDIT-REJECT-0295",
       "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:2876",
       "callee_location": "海中鱼巣/核心/会话.结构写入.ixx:647",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "需求任务方法.ixx:2915 位于 lambda，不是外层直接调用"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0285",
+      "candidate_edge_id": "AUDIT-REJECT-0296",
       "caller_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:240",
       "callee_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:105",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "两套事务参与者继承层级不同；节点直接身份自检路径当前未接入 main"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0286",
+      "candidate_edge_id": "AUDIT-REJECT-0297",
       "caller_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:251",
       "callee_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:175",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "两套事务参与者继承层级不同；节点直接身份自检路径当前未接入 main"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0287",
+      "candidate_edge_id": "AUDIT-REJECT-0298",
       "caller_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:269",
       "callee_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:183",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "两套事务参与者继承层级不同；节点直接身份自检路径当前未接入 main"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0288",
+      "candidate_edge_id": "AUDIT-REJECT-0299",
       "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:563",
       "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "特征体系.ixx:564,566 分属当前数据操作::有效与结构事务许可::有效"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0289",
+      "candidate_edge_id": "AUDIT-REJECT-0300",
       "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:593",
       "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "特征体系.ixx:594,596 分属当前数据操作::有效与结构事务许可::有效"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0290",
+      "candidate_edge_id": "AUDIT-REJECT-0301",
       "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:602",
       "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "特征体系.ixx:603,605 分属当前数据操作::有效与结构事务许可::有效"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0291",
+      "candidate_edge_id": "AUDIT-REJECT-0302",
       "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:609",
       "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "特征体系.ixx:610,612 分属当前数据操作::有效与结构事务许可::有效"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0292",
+      "candidate_edge_id": "AUDIT-REJECT-0303",
       "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:832",
       "callee_location": "海中鱼巣/核心/会话.结构写入.ixx:647",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "特征体系.ixx:897 位于 lambda@885"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0293",
+      "candidate_edge_id": "AUDIT-REJECT-0304",
       "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1079",
       "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:62",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "特征体系.ixx:1086 静态类型为特征节点身份"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0294",
+      "candidate_edge_id": "AUDIT-REJECT-0305",
       "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1106",
       "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:62",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "特征体系.ixx:1113,1140 静态类型为特征节点身份"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0295",
+      "candidate_edge_id": "AUDIT-REJECT-0306",
       "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1194",
       "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:62",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "特征体系.ixx:1213 静态类型为特征节点身份"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0296",
+      "candidate_edge_id": "AUDIT-REJECT-0307",
       "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1310",
       "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "特征体系.ixx:1311,1313 分属当前数据操作::有效与结构事务许可::有效"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0297",
+      "candidate_edge_id": "AUDIT-REJECT-0308",
       "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1310",
       "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:62",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "特征体系.ixx:1317 静态类型为特征节点身份"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0298",
+      "candidate_edge_id": "AUDIT-REJECT-0309",
       "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1499",
       "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:88",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "槽位规格静态类型读取自身幂等主键"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0299",
+      "candidate_edge_id": "AUDIT-REJECT-0310",
       "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1525",
       "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:88",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "初始值规格静态类型读取自身幂等主键"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0300",
+      "candidate_edge_id": "AUDIT-REJECT-0311",
       "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1562",
       "callee_location": "海中鱼巣/领域/二次特征服务.h:25",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "材料形参静态类型为特征槽位值式材料"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0301",
+      "candidate_edge_id": "AUDIT-REJECT-0312",
       "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1562",
       "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:88",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "槽位规格静态类型读取自身幂等主键"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0302",
+      "candidate_edge_id": "AUDIT-REJECT-0313",
       "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1570",
       "callee_location": "海中鱼巣/领域/二次特征服务.h:25",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "材料形参静态类型为特征原始值式材料"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0303",
+      "candidate_edge_id": "AUDIT-REJECT-0314",
       "caller_location": "海中鱼巣/领域/数据操作.特征体系.ixx:1570",
       "callee_location": "海中鱼巣/领域/数据操作.存在场景.ixx:88",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "初始值规格静态类型读取自身幂等主键"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0304",
+      "candidate_edge_id": "AUDIT-REJECT-0315",
       "caller_location": "海中鱼巣/核心/执行器.结构写入.ixx:366",
       "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
       "reason": "许可静态类型为结构事务许可",
       "evidence": "执行器.结构写入.ixx:367"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0305",
+      "candidate_edge_id": "AUDIT-REJECT-0316",
       "caller_location": "海中鱼巣/领域/概念活动状态.数据.h:104",
       "callee_location": "海中鱼巣/领域/服务.概念图结构.ixx:19",
       "reason": "根身份静态类型为系统角色身份材料",
       "evidence": "概念活动状态.数据.h:105"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0306",
+      "candidate_edge_id": "AUDIT-REJECT-0317",
       "caller_location": "海中鱼巣/核心/会话.结构写入.ixx:845",
       "callee_location": "海中鱼巣/启动.生产运行期.ixx:37",
       "reason": "结果静态类型为结构写入结果",
       "evidence": "会话.结构写入.ixx:852,859,866"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0307",
+      "candidate_edge_id": "AUDIT-REJECT-0318",
       "caller_location": "海中鱼巣/核心/节点仓库.cpp:146",
       "callee_location": "海中鱼巣/核心/仓库.节点直接身份.ixx:99",
       "reason": "候选静态类型为节点未发布候选",
       "evidence": "节点仓库.cpp:149"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0308",
+      "candidate_edge_id": "AUDIT-REJECT-0319",
       "caller_location": "海中鱼巣/核心/节点仓库.cpp:204",
       "callee_location": "海中鱼巣/核心/仓库.节点直接身份.ixx:99",
       "reason": "候选静态类型为节点未发布候选",
       "evidence": "节点仓库.cpp:207"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0309",
+      "candidate_edge_id": "AUDIT-REJECT-0320",
       "caller_location": "海中鱼巣/核心/主信息仓库.cpp:169",
       "callee_location": "海中鱼巣/启动.生产运行期.ixx:37",
       "reason": "结果静态类型为结构写入结果",
       "evidence": "主信息仓库.cpp:194"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0310",
+      "candidate_edge_id": "AUDIT-REJECT-0321",
       "caller_location": "海中鱼巣/核心/节点仓库.cpp:204",
       "callee_location": "海中鱼巣/启动.生产运行期.ixx:37",
       "reason": "结果静态类型为结构写入结果",
       "evidence": "节点仓库.cpp:229"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0311",
+      "candidate_edge_id": "AUDIT-REJECT-0322",
       "caller_location": "海中鱼巣/核心/关系仓库.cpp:1365",
       "callee_location": "海中鱼巣/领域/方法召回索引.h:32",
       "reason": "能力静态类型为已发布关系变更能力",
       "evidence": "关系仓库.cpp:1375"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0312",
+      "candidate_edge_id": "AUDIT-REJECT-0323",
       "caller_location": "海中鱼巣/领域/数据操作.状态动态.ixx:376",
       "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
       "reason": "许可静态类型为结构事务许可",
       "evidence": "数据操作.状态动态.ixx:379"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0313",
+      "candidate_edge_id": "AUDIT-REJECT-0324",
       "caller_location": "海中鱼巣/核心/索引仓库.cpp:357",
       "callee_location": "海中鱼巣/核心/句柄.h:135",
       "reason": "预期节点静态类型为节点句柄",
       "evidence": "索引仓库.cpp:366"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0314",
+      "candidate_edge_id": "AUDIT-REJECT-0325",
       "caller_location": "海中鱼巣/核心/关系仓库.cpp:127",
       "callee_location": "海中鱼巣/核心/句柄.h:135",
       "reason": "写前/写后源目标静态类型均为节点句柄",
       "evidence": "关系仓库.cpp:138-141"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0315",
+      "candidate_edge_id": "AUDIT-REJECT-0326",
       "caller_location": "海中鱼巣/核心/关系仓库.cpp:1434",
       "callee_location": "海中鱼巣/核心/句柄.h:135",
       "reason": "宏入口没有关系句柄有效调用",
       "evidence": "关系仓库.cpp:1434-1437"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0316",
+      "candidate_edge_id": "AUDIT-REJECT-0327",
       "caller_location": "海中鱼巣/核心/关系仓库.cpp:1434",
       "callee_location": "海中鱼巣/核心/关系仓库.cpp:45",
       "reason": "宏入口没有关系状态审计调用",
       "evidence": "关系仓库.cpp:1434-1437"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0317",
+      "candidate_edge_id": "AUDIT-REJECT-0328",
       "caller_location": "海中鱼巣/核心/主信息仓库.cpp:408",
       "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:77",
       "reason": "已接域判断位于被调验证共享令牌内部",
       "evidence": "主信息仓库.cpp:409"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0318",
+      "candidate_edge_id": "AUDIT-REJECT-0329",
       "caller_location": "海中鱼巣/核心/主信息仓库.cpp:408",
       "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:32",
       "reason": "函数体不存在该许可类型或调用",
       "evidence": "主信息仓库.cpp:408-420"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0319",
+      "candidate_edge_id": "AUDIT-REJECT-0330",
       "caller_location": "海中鱼巣/核心/主信息仓库.cpp:408",
       "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:42",
       "reason": "函数体不存在许可对象或读取令牌调用",
       "evidence": "主信息仓库.cpp:408-420"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0320",
+      "candidate_edge_id": "AUDIT-REJECT-0331",
       "caller_location": "海中鱼巣/领域/数据操作.概念活动.ixx:42",
       "callee_location": "海中鱼巣/核心/会话.结构写入.ixx:290",
       "reason": "调用点属于63行非平凡 lambda",
       "evidence": "数据操作.概念活动.ixx:87"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0321",
+      "candidate_edge_id": "AUDIT-REJECT-0332",
       "caller_location": "海中鱼巣/领域/数据操作.概念活动.ixx:42",
       "callee_location": "海中鱼巣/核心/会话.结构写入.ixx:647",
       "reason": "调用点属于63行非平凡 lambda",
       "evidence": "数据操作.概念活动.ixx:119"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0322",
+      "candidate_edge_id": "AUDIT-REJECT-0333",
       "caller_location": "海中鱼巣/领域/数据操作.系统角色.ixx:124",
       "callee_location": "海中鱼巣/核心/会话.结构写入.ixx:647",
       "reason": "调用点属于132行非平凡 lambda",
       "evidence": "数据操作.系统角色.ixx:152"
     },
     {
-      "candidate_edge_id": "AUDIT-REJECT-0323",
+      "candidate_edge_id": "AUDIT-REJECT-0334",
       "caller_location": "海中鱼巣/领域/数据操作.需求任务方法.ixx:1619",
       "callee_location": "海中鱼巣/核心/会话.结构写入.ixx:647",
       "reason": "调用点属于1632行非平凡 lambda",
       "evidence": "数据操作.需求任务方法.ixx:1647"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0335",
+      "caller_location": "海中鱼巣/启动.程序运行宿主.ixx:45",
+      "callee_location": "海中鱼巣/启动.应用程序.ixx:287",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/启动.程序运行宿主.ixx:49/53/56"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0336",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:590",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:48",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:608,682"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0337",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:590",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:75",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:611,682"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0338",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:590",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:48",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:624,682"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0339",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:590",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:75",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:629,682"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0340",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:590",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:75",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:630,682"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0341",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:590",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:75",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:631,682"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0342",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:590",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:75",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:632,682"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0343",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:431",
+      "callee_location": "海中鱼巣/适配/协议.D455采样材料.ixx:162",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:433;协议.D455采样材料.ixx:162"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0344",
+      "caller_location": "海中鱼巣/核心/节点仓库.cpp:43",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:82",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/节点仓库.cpp:45（左操作数）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0345",
+      "caller_location": "海中鱼巣/核心/节点仓库.cpp:43",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:82",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/节点仓库.cpp:45（右操作数）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0346",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1012",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:77",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1013（宏展开119）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0347",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1012",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1013（宏展开119）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0348",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1012",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:28",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1013（宏展开120）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0349",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1012",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:40",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1013（宏展开120完整表达式末）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0350",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1012",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:41",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1013（宏展开121）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0351",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1012",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:42",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1013（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0352",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1012",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1013（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0353",
+      "caller_location": "海中鱼巣/界面/控制面板窗口.cpp:1551",
+      "callee_location": "海中鱼巣/界面/控制面板窗口.cpp:1595",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/界面/控制面板窗口.cpp:1578,1595"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0354",
+      "caller_location": "海中鱼巣/生产运行期配置.数据.h:64",
+      "callee_location": "海中鱼巣/领域/系统角色清单.数据.h:80",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/生产运行期配置.数据.h:68（左操作数）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0355",
+      "caller_location": "海中鱼巣/生产运行期配置.数据.h:64",
+      "callee_location": "海中鱼巣/领域/系统角色清单.数据.h:80",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/生产运行期配置.数据.h:68（右操作数）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0356",
+      "caller_location": "海中鱼巣/领域/系统角色清单.数据.h:264",
+      "callee_location": "海中鱼巣/领域/系统角色清单.数据.h:212",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/领域/系统角色清单.数据.h:217,264"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0357",
+      "caller_location": "海中鱼巣/领域/系统角色清单.数据.h:264",
+      "callee_location": "海中鱼巣/领域/系统角色清单.数据.h:140",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/领域/系统角色清单.数据.h:218,264"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0358",
+      "caller_location": "海中鱼巣/领域/系统角色清单.数据.h:264",
+      "callee_location": "海中鱼巣/领域/系统角色清单.数据.h:140",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/领域/系统角色清单.数据.h:219,264"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0359",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:440",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:68",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:474,508"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0360",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:440",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:68",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:565,584"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0361",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:440",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:48",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:564,584"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0362",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:440",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:71",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:555,584"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0363",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:440",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:48",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:554,584"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0364",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:440",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:48",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:534,584"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0365",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:440",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:70",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:530,584"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0366",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:440",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:48",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:529,584"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0367",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:440",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:48",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:527,584"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0368",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:440",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:68",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:471,584"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0369",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:440",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:48",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:465,584"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0370",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:440",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:67",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:461,584"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0371",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:440",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:48",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:460,584"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0372",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:440",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:48",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:455,584"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0373",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:539",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:54",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:544"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0374",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:539",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:58",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:545"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0375",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:539",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:48",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:540-546"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0376",
+      "caller_location": "海中鱼巣/适配/采集器.D455相机.ixx:539",
+      "callee_location": "海中鱼巣/适配/采集器.D455相机.ixx:44",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/适配/采集器.D455相机.ixx:540"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0377",
+      "caller_location": "海中鱼巣/核心/结构事务接线.数据.h:82",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:72",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/结构事务接线.数据.h:83（左操作数）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0378",
+      "caller_location": "海中鱼巣/核心/结构事务接线.数据.h:82",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:77",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/结构事务接线.数据.h:83（右操作数）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0379",
+      "caller_location": "海中鱼巣/核心/节点仓库.cpp:16",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:77",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/节点仓库.cpp:17（左操作数）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0380",
+      "caller_location": "海中鱼巣/核心/节点仓库.cpp:16",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:77",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/节点仓库.cpp:17（右操作数）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0381",
+      "caller_location": "海中鱼巣/核心/节点仓库.cpp:16",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:77",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/节点仓库.cpp:18（左操作数）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0382",
+      "caller_location": "海中鱼巣/核心/节点仓库.cpp:16",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:77",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/节点仓库.cpp:18（右操作数）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0383",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:81",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:77",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:82（左操作数）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0384",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:81",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:77",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:82（右操作数）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0385",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:81",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:77",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:83（左操作数）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0386",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:81",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:77",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:83（右操作数）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0387",
+      "caller_location": "海中鱼巣/核心/索引仓库.cpp:12",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:77",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/索引仓库.cpp:13（左操作数）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0388",
+      "caller_location": "海中鱼巣/核心/索引仓库.cpp:12",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:77",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/索引仓库.cpp:13（右操作数）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0389",
+      "caller_location": "海中鱼巣/核心/索引仓库.cpp:12",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:77",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/索引仓库.cpp:14（左操作数）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0390",
+      "caller_location": "海中鱼巣/核心/索引仓库.cpp:12",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:77",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/索引仓库.cpp:14（右操作数）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0391",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:277",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:278（宏展开119）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0392",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:295",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:296（宏展开119）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0393",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:314",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:317（宏展开119）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0394",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:339",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:340（宏展开119）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0395",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:409",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:410（宏展开119）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0396",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:431",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:435（宏展开119）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0397",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:733",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:734（宏展开119）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0398",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:790",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:791（宏展开119）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0399",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:823",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:824（宏展开119）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0400",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:843",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:844（宏展开119）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0401",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:919",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:920（宏展开119）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0402",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:949",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:950（宏展开119）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0403",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:980",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:981（宏展开119）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0404",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:996",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:997（宏展开119）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0405",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:277",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:41",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:278（宏展开121）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0406",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:295",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:41",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:296（宏展开121）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0407",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:314",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:41",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:317（宏展开121）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0408",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:339",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:41",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:340（宏展开121）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0409",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:409",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:41",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:410（宏展开121）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0410",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:431",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:41",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:435（宏展开121）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0411",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:733",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:41",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:734（宏展开121）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0412",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:790",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:41",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:791（宏展开121）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0413",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:823",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:41",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:824（宏展开121）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0414",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:843",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:41",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:844（宏展开121）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0415",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:919",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:41",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:920（宏展开121）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0416",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:949",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:41",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:950（宏展开121）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0417",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:980",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:41",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:981（宏展开121）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0418",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:996",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:41",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:997（宏展开121）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0419",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:277",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:42",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:278（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0420",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:295",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:42",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:296（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0421",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:314",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:42",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:317（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0422",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:339",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:42",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:340（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0423",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:409",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:42",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:410（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0424",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:431",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:42",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:435（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0425",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:733",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:42",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:734（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0426",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:790",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:42",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:791（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0427",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:823",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:42",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:824（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0428",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:843",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:42",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:844（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0429",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:919",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:42",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:920（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0430",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:949",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:42",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:950（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0431",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:980",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:42",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:981（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0432",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:996",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:42",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:997（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0433",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:277",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:278（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0434",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:295",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:296（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0435",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:314",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:317（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0436",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:339",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:340（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0437",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:409",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:410（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0438",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:431",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:435（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0439",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:733",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:734（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0440",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:790",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:791（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0441",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:823",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:824（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0442",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:843",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:844（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0443",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:919",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:920（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0444",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:949",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:950（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0445",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:980",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:981（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0446",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:996",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:997（宏展开122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0447",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1430",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1431（宏展开1029）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0448",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:184",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:40",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:185（宏展开120完整表达式末）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0449",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:277",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:40",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:278（宏展开120完整表达式末）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0450",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:295",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:40",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:296（宏展开120完整表达式末）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0451",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:314",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:40",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:317（宏展开120完整表达式末）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0452",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:339",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:40",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:340（宏展开120完整表达式末）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0453",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:409",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:40",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:410（宏展开120完整表达式末）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0454",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:431",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:40",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:435（宏展开120完整表达式末）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0455",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:733",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:40",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:734（宏展开120完整表达式末）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0456",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:790",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:40",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:791（宏展开120完整表达式末）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0457",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:823",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:40",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:824（宏展开120完整表达式末）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0458",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:843",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:40",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:844（宏展开120完整表达式末）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0459",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:919",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:40",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:920（宏展开120完整表达式末）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0460",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:949",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:40",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:950（宏展开120完整表达式末）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0461",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:980",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:40",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:981（宏展开120完整表达式末）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0462",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:996",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:40",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:997（宏展开120完整表达式末）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0463",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:865",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:77",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:866（宏定义119）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0464",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:865",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:866（宏定义119）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0465",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:865",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:41",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:866（宏定义121）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0466",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:865",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:42",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:866（宏定义122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0467",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:865",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:866（宏定义122）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0468",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:865",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:40",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:866（宏定义120完整表达式末）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0469",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:865",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:68",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:865-896（作用域退出）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0470",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:865",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:40",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:865-896（作用域退出）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0471",
+      "caller_location": "海中鱼巣/核心/执行器.结构写入.ixx:74",
+      "callee_location": "海中鱼巣/核心/结构事务接线.数据.h:40",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/执行器.结构写入.ixx:76-111（作用域退出）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0472",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1031",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:68",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1031-1034（作用域退出）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0473",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:865",
+      "callee_location": "海中鱼巣/核心/协调.结构事务.ixx:152",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:866（宏定义120）"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0474",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:184",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0475",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:277",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0476",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:295",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0477",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:314",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0478",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:339",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0479",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:409",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0480",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:426",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0481",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:431",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0482",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:481",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0483",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:548",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0484",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:661",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0485",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:733",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0486",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:760",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0487",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:781",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0488",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:790",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0489",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:823",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0490",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:843",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0491",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:865",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0492",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:898",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0493",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:919",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0494",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:949",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0495",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:980",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0496",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:996",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0497",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1012",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:74",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:119"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0498",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1031",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0499",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1031",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0500",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1430",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0501",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1430",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0502",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1434",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0503",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1434",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0504",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1438",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0505",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1438",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0506",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1442",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0507",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1442",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0508",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1446",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0509",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1446",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0510",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1506",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0511",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1506",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0512",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1510",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0513",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1510",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0514",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1514",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0515",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1514",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0516",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1518",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0517",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1518",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0518",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1522",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0519",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1522",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0520",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1526",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0521",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1526",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0522",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1530",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0523",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1530",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0524",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1534",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0525",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1534",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0526",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1538",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0527",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1538",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0528",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1542",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0529",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1542",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0530",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1546",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0531",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1546",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0532",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1550",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0533",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1550",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0534",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1554",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0535",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1554",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0536",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1558",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0537",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1558",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0538",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1562",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0539",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1562",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0540",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1639",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0541",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1639",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0542",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1643",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0543",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1643",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0544",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1647",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:87",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1028"
+    },
+    {
+      "candidate_edge_id": "CALLSITE-RANGE-REJECT-0545",
+      "caller_location": "海中鱼巣/核心/关系仓库.cpp:1647",
+      "callee_location": "海中鱼巣/核心/关系仓库.cpp:64",
+      "reason": "调用点不在登记调用方源码文件与函数定义范围内",
+      "evidence": "海中鱼巣/核心/关系仓库.cpp:1029"
     }
   ],
   "configuration_exclusions": [
@@ -2823,8 +4363,8 @@
       "reason": "当前 main 的完整自检只登记入口初始化14项及 F27/F29；生产与其它入口均未调用提交特征批次，故不得由通用参与者模板虚调用反向伪造批次参与者可达性"
     },
     {
-      "identity": "显式 = default 且无用户函数体的特殊成员",
-      "reason": "不建立独立项目函数身份；其成员初始化、析构和异常展开只在存在显式源码调用时登记边界"
+      "identity": "无当前调用证据的平凡 / 默认化特殊成员",
+      "reason": "不因存在声明而自动建立项目函数身份；实际参与当前调用链的默认构造、移动或比较函数单独登记"
     }
   ],
   "extraction_diagnostics": [

@@ -3,7 +3,7 @@
   "scope": "main-current-reachable",
   "root": "F0001",
   "root_signature": "int main(int 参数数量, char* 参数组[])",
-  "code_commit": "9d2061ed1d3cc0ab9c72bdd9997463d755da0137",
+  "code_commit": "e9217875d43872e11666aa28a2c71274ec5dcb86",
   "old_graph_blob": "527f20b7f125d97c3f0cdaf9a650c905d0255203",
   "old_graph_frozen_commit": "a48a70b2d678dea64dd8228adb4f26f0badd9506",
   "configuration": "Debug|x64",
@@ -15,9 +15,9 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1154,
-  "project_call_edge_count": 2793,
-  "edge_count": 2793,
+  "function_count": 1162,
+  "project_call_edge_count": 2752,
+  "edge_count": 2752,
   "edges": [
     {
       "edge_id": "E0002",
@@ -2628,21 +2628,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E0093",
-      "caller": "F0025",
-      "callee": "F0067",
-      "callsites": [
-        "海中鱼巣/启动.程序运行宿主.ixx:49/53/56"
-      ],
-      "call_category": "callback_invoke_resolved_test",
-      "arguments": "信号常量, 对应原处理器",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "丢弃",
-      "reachable_condition": "安装函数实例来自入口端口合同自检且对应信号已安装",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E0095",
       "caller": "F0027",
       "callee": "F0069",
@@ -4660,36 +4645,18 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E0282",
+      "edge_id": "RCE1633",
       "caller": "F0048",
-      "callee": "F0180",
+      "callee": "F0177",
       "callsites": [
-        "海中鱼巣/领域/初始化.概念图.ixx:104-105",
-        "海中鱼巣/领域/初始化.概念图.ixx:106-107",
-        "海中鱼巣/领域/初始化.概念图.ixx:108-109",
-        "海中鱼巣/领域/初始化.概念图.ixx:110-111"
+        "海中鱼巣/领域/初始化.概念图.ixx:104-105"
       ],
       "call_category": "direct_member_template_instance",
-      "arguments": "存在根项,存在类别,存在根稳定键,F0185",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "存在根确保结果",
-      "reachable_condition": "无完整已发布结果；存在根确保成功；动态根确保成功；关系根确保成功",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E0283",
-      "caller": "F0048",
-      "callee": "F0185",
-      "callsites": [
-        "海中鱼巣/领域/初始化.概念图.ixx:105"
-      ],
-      "call_category": "callback_bind",
-      "arguments": "捕获this并绑定到F0177创建参数",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "节点句柄回调",
-      "reachable_condition": "构造F0177实参",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "初始化四个根按源码顺序调用 F0177；对应 lambda@105",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -4708,18 +4675,18 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E0285",
+      "edge_id": "RCE1634",
       "caller": "F0048",
-      "callee": "F0186",
+      "callee": "F0178",
       "callsites": [
-        "海中鱼巣/领域/初始化.概念图.ixx:107"
+        "海中鱼巣/领域/初始化.概念图.ixx:106-107"
       ],
-      "call_category": "callback_bind",
-      "arguments": "捕获this并绑定到F0178创建参数",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "节点句柄回调",
-      "reachable_condition": "构造F0178实参",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
+      "call_category": "direct_member_template_instance",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "初始化四个根按源码顺序调用 F0178；对应 lambda@107",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -4738,18 +4705,18 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E0287",
+      "edge_id": "RCE1635",
       "caller": "F0048",
-      "callee": "F0187",
+      "callee": "F0179",
       "callsites": [
-        "海中鱼巣/领域/初始化.概念图.ixx:109"
+        "海中鱼巣/领域/初始化.概念图.ixx:108-109"
       ],
-      "call_category": "callback_bind",
-      "arguments": "捕获this并绑定到F0179创建参数",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "节点句柄回调",
-      "reachable_condition": "构造F0179实参",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
+      "call_category": "direct_member_template_instance",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "初始化四个根按源码顺序调用 F0179；对应 lambda@109",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -4768,18 +4735,18 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E0289",
+      "edge_id": "E0282",
       "caller": "F0048",
-      "callee": "F0188",
+      "callee": "F0180",
       "callsites": [
-        "海中鱼巣/领域/初始化.概念图.ixx:111"
+        "海中鱼巣/领域/初始化.概念图.ixx:110-111"
       ],
-      "call_category": "callback_bind",
-      "arguments": "捕获this并绑定到F0180创建参数",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "节点句柄回调",
-      "reachable_condition": "构造F0180实参",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
+      "call_category": "direct_member_template_instance",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "初始化四个根按源码顺序调用 F0180；对应 lambda@111",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -7328,16 +7295,14 @@
       "caller": "F0136",
       "callee": "F0321",
       "callsites": [
-        "海中鱼巣/核心/节点仓库.cpp:45",
-        "海中鱼巣/核心/节点仓库.cpp:45（右操作数）",
-        "海中鱼巣/核心/节点仓库.cpp:45（左操作数）"
+        "海中鱼巣/核心/节点仓库.cpp:45"
       ],
-      "call_category": "direct_const_member+unique_name",
-      "arguments": "this=&事务接线_",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "当前仓库接线形态有效",
-      "reachable_condition": "全部成员初始化成功；当前仓库接线形态有效；调用方可达且源码分支条件成立",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "unique_name",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
       "current_root_reachable": true
     },
     {
@@ -7707,25 +7672,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E0647",
-      "caller": "F0167",
-      "callee": "F0337",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:119",
-        "海中鱼巣/核心/关系仓库.cpp:185",
-        "海中鱼巣/核心/关系仓库.cpp:205",
-        "海中鱼巣/核心/关系仓库.cpp:212",
-        "海中鱼巣/核心/关系仓库.cpp:220"
-      ],
-      "call_category": "direct_free+direct-free+direct-free+direct-free+direct-free",
-      "arguments": "*this",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "当前关系令牌指针",
-      "reachable_condition": "已接域；任务方法选择类型；方法动作场景类型；用途观察证据角色类型；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E0662",
       "caller": "F0167",
       "callee": "F0344",
@@ -7745,14 +7691,13 @@
       "caller": "F0167",
       "callee": "F0345",
       "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:185-275",
-        "海中鱼巣/核心/关系仓库.cpp:185（宏展开120完整表达式末）"
+        "海中鱼巣/核心/关系仓库.cpp:185-275"
       ],
-      "call_category": "direct_destructor+implicit_destructor",
+      "call_category": "direct_destructor",
       "arguments": "自动许可",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "void",
-      "reachable_condition": "已取得许可离开作用域；取得共享许可返回值已移动进optional",
+      "reachable_condition": "已取得许可离开作用域",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
       "current_root_reachable": true
     },
@@ -7769,6 +7714,24 @@
       "return_binding": "已接域bool",
       "reachable_condition": "许可宏进入",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "E0647",
+      "caller": "F0167",
+      "callee": "F0337",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:185",
+        "海中鱼巣/核心/关系仓库.cpp:205",
+        "海中鱼巣/核心/关系仓库.cpp:212",
+        "海中鱼巣/核心/关系仓库.cpp:220"
+      ],
+      "call_category": "direct_free+direct-free+direct-free+direct-free",
+      "arguments": "*this",
+      "argument_resolution": "候选工具实参并经调用点定位",
+      "return_binding": "当前关系令牌指针",
+      "reachable_condition": "已接域；任务方法选择类型；方法动作场景类型；用途观察证据角色类型；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核",
+      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -8181,6 +8144,276 @@
       "current_root_reachable": true
     },
     {
+      "edge_id": "RCE1636",
+      "caller": "F0177",
+      "callee": "R0531",
+      "callsites": [
+        "海中鱼巣/领域/初始化.概念图.ixx:150"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "函数进入读取同类别已登记根",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1637",
+      "caller": "F0177",
+      "callee": "F0185",
+      "callsites": [
+        "海中鱼巣/领域/初始化.概念图.ixx:161"
+      ],
+      "call_category": "callback_invoke",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "不存在已登记根时调用本实例绑定的创建回调",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1638",
+      "caller": "F0177",
+      "callee": "F0163",
+      "callsites": [
+        "海中鱼巣/领域/初始化.概念图.ixx:162"
+      ],
+      "call_category": "direct_free",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "创建回调返回后复核根节点句柄",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1639",
+      "caller": "F0177",
+      "callee": "F0356",
+      "callsites": [
+        "海中鱼巣/领域/初始化.概念图.ixx:165"
+      ],
+      "call_category": "direct_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "根节点有效后登记概念根",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1640",
+      "caller": "F0177",
+      "callee": "F0184",
+      "callsites": [
+        "海中鱼巣/领域/初始化.概念图.ixx:166-167"
+      ],
+      "call_category": "direct_free",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "登记完成后复核发布读回",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1641",
+      "caller": "F0177",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/初始化.概念图.ixx:166"
+      ],
+      "call_category": "operator",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "登记结果有值后比较根节点",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1642",
+      "caller": "F0178",
+      "callee": "R0531",
+      "callsites": [
+        "海中鱼巣/领域/初始化.概念图.ixx:150"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "函数进入读取同类别已登记根",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1643",
+      "caller": "F0178",
+      "callee": "F0186",
+      "callsites": [
+        "海中鱼巣/领域/初始化.概念图.ixx:161"
+      ],
+      "call_category": "callback_invoke",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "不存在已登记根时调用本实例绑定的创建回调",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1644",
+      "caller": "F0178",
+      "callee": "F0163",
+      "callsites": [
+        "海中鱼巣/领域/初始化.概念图.ixx:162"
+      ],
+      "call_category": "direct_free",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "创建回调返回后复核根节点句柄",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1645",
+      "caller": "F0178",
+      "callee": "F0356",
+      "callsites": [
+        "海中鱼巣/领域/初始化.概念图.ixx:165"
+      ],
+      "call_category": "direct_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "根节点有效后登记概念根",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1646",
+      "caller": "F0178",
+      "callee": "F0184",
+      "callsites": [
+        "海中鱼巣/领域/初始化.概念图.ixx:166-167"
+      ],
+      "call_category": "direct_free",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "登记完成后复核发布读回",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1647",
+      "caller": "F0178",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/初始化.概念图.ixx:166"
+      ],
+      "call_category": "operator",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "登记结果有值后比较根节点",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1648",
+      "caller": "F0179",
+      "callee": "R0531",
+      "callsites": [
+        "海中鱼巣/领域/初始化.概念图.ixx:150"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "函数进入读取同类别已登记根",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1649",
+      "caller": "F0179",
+      "callee": "F0187",
+      "callsites": [
+        "海中鱼巣/领域/初始化.概念图.ixx:161"
+      ],
+      "call_category": "callback_invoke",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "不存在已登记根时调用本实例绑定的创建回调",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1650",
+      "caller": "F0179",
+      "callee": "F0163",
+      "callsites": [
+        "海中鱼巣/领域/初始化.概念图.ixx:162"
+      ],
+      "call_category": "direct_free",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "创建回调返回后复核根节点句柄",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1651",
+      "caller": "F0179",
+      "callee": "F0356",
+      "callsites": [
+        "海中鱼巣/领域/初始化.概念图.ixx:165"
+      ],
+      "call_category": "direct_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "根节点有效后登记概念根",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1652",
+      "caller": "F0179",
+      "callee": "F0184",
+      "callsites": [
+        "海中鱼巣/领域/初始化.概念图.ixx:166-167"
+      ],
+      "call_category": "direct_free",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "登记完成后复核发布读回",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1653",
+      "caller": "F0179",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/初始化.概念图.ixx:166"
+      ],
+      "call_category": "operator",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "登记结果有值后比较根节点",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
       "edge_id": "E0714",
       "caller": "F0180",
       "callee": "F0352",
@@ -8196,48 +8429,18 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E0715",
+      "edge_id": "RCE1654",
       "caller": "F0180",
-      "callee": "F0185",
+      "callee": "R0531",
       "callsites": [
-        "海中鱼巣/领域/初始化.概念图.ixx:161"
+        "海中鱼巣/领域/初始化.概念图.ixx:150"
       ],
-      "call_category": "callback_invoke",
-      "arguments": "创建回调，无参数",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "根节点",
-      "reachable_condition": "不存在已登记根",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E0721",
-      "caller": "F0180",
-      "callee": "F0186",
-      "callsites": [
-        "海中鱼巣/领域/初始化.概念图.ixx:161"
-      ],
-      "call_category": "callback_invoke",
-      "arguments": "创建回调，无参数",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "动态根节点",
-      "reachable_condition": "动态根未登记",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E0727",
-      "caller": "F0180",
-      "callee": "F0187",
-      "callsites": [
-        "海中鱼巣/领域/初始化.概念图.ixx:161"
-      ],
-      "call_category": "callback_invoke",
-      "arguments": "创建回调，无参数",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "关系根节点",
-      "reachable_condition": "关系根未登记",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "函数进入读取同类别已登记根",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -8251,8 +8454,8 @@
       "arguments": "创建回调，无参数",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "因果根节点",
-      "reachable_condition": "因果根未登记",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
+      "reachable_condition": "因果根未登记；不存在已登记根时调用本实例绑定的创建回调",
+      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -8266,8 +8469,8 @@
       "arguments": "根节点",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "根有效bool",
-      "reachable_condition": "创建回调返回；F0186返回；F0187返回；F0188返回",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
+      "reachable_condition": "创建回调返回；F0186返回；F0187返回；F0188返回；创建回调返回后复核根节点句柄",
+      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -8281,8 +8484,8 @@
       "arguments": "this=&概念图_,材料={存在,固定稳定键,根节点}",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "登记结果optional",
-      "reachable_condition": "根节点有效",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
+      "reachable_condition": "根节点有效；根节点有效后登记概念根",
+      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -8296,8 +8499,8 @@
       "arguments": "登记有值且同根,L\"概念根创建后登记不符合内部预期。\"",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "检查通过bool",
-      "reachable_condition": "登记完成；条件真假均调用",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
+      "reachable_condition": "登记完成；条件真假均调用；登记完成后复核发布读回",
+      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -8307,12 +8510,12 @@
       "callsites": [
         "海中鱼巣/领域/初始化.概念图.ixx:166"
       ],
-      "call_category": "direct_operator",
+      "call_category": "direct_operator+operator",
       "arguments": "登记结果.value(),根节点",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "同根bool",
-      "reachable_condition": "登记结果有值",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
+      "reachable_condition": "登记结果有值；登记结果有值后比较根节点",
+      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -8468,21 +8671,6 @@
       "return_binding": "生命周期optional",
       "reachable_condition": "四根确保全部成功后的逐根读回",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0039",
-      "caller": "F0182",
-      "callee": "R0520",
-      "callsites": [
-        "海中鱼巣/领域/概念图服务.h:1007"
-      ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
       "current_root_reachable": true
     },
     {
@@ -9081,50 +9269,18 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E0794",
+      "edge_id": "E0801",
       "caller": "F0198",
       "callee": "F0345",
       "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1013-1025",
-        "海中鱼巣/核心/关系仓库.cpp:1013（宏展开120完整表达式末）"
+        "海中鱼巣/核心/关系仓库.cpp:1013-1025"
       ],
       "call_category": "implicit_destructor",
-      "arguments": "this=&已移空临时许可",
+      "arguments": "this=&自动许可.value()",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "void",
-      "reachable_condition": "U0005返回值已移动进optional；退出且自动许可已承载；F0344之后",
+      "reachable_condition": "退出且自动许可已承载；F0344之后",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E0791",
-      "caller": "F0198",
-      "callee": "F0336",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1013（宏展开119）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&事务接线_",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "已接域bool",
-      "reachable_condition": "函数进入",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E0792",
-      "caller": "F0198",
-      "callee": "F0337",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1013（宏展开119）",
-        "海中鱼巣/核心/关系仓库.cpp:119"
-      ],
-      "call_category": "direct_free+direct-free",
-      "arguments": "*this",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "当前关系令牌指针",
-      "reachable_condition": "已接域；调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -9132,59 +9288,14 @@
       "caller": "F0198",
       "callee": "F0375",
       "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1013（宏展开120）"
+        "海中鱼巣/核心/关系仓库.cpp:1013"
       ],
-      "call_category": "move_constructor",
-      "arguments": "U0005返回临时许可",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "optional内自动许可",
-      "reachable_condition": "已接域且无当前关系令牌",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E0795",
-      "caller": "F0198",
-      "callee": "F0338",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1013（宏展开121）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "许可有效bool",
-      "reachable_condition": "自动许可已承载",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E0796",
-      "caller": "F0198",
-      "callee": "F0339",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1013（宏展开122）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "令牌const引用",
-      "reachable_condition": "许可有效",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E0797",
-      "caller": "F0198",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1013（宏展开122）"
-      ],
-      "call_category": "constructor",
-      "arguments": "*this,自动许可令牌",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "optional内关系令牌范围",
-      "reachable_condition": "许可有效",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
+      "call_category": "move-constructor+macro-expanded-move-constructor",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "共享许可宏的 optional.emplace 以许可临时量构造承载值；关系共享许可范围宏在 line 120 以 optional.emplace 接收函数返回值并移动构造结构事务许可",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -9960,14 +10071,14 @@
       "caller": "F0223",
       "callee": "F0396",
       "callsites": [
-        "海中鱼巣/界面/控制面板窗口.cpp:1578,1595"
+        "海中鱼巣/界面/控制面板窗口.cpp:1578"
       ],
-      "call_category": "external_callback",
-      "arguments": "窗口消息参数",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "LRESULT经Win32调度",
-      "reachable_condition": "DispatchMessageW或同步窗口API回调",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
+      "call_category": "resolved-win32-callback",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "窗口过程已由注册窗口类在 line 435 登记为 WNDPROC；消息循环调用 DispatchMessageW 后由 Win32 同步调度",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -10035,15 +10146,14 @@
       "caller": "F0227",
       "callee": "F0230",
       "callsites": [
-        "海中鱼巣/生产运行期配置.数据.h:68（右操作数）",
-        "海中鱼巣/生产运行期配置.数据.h:68（左操作数）"
+        "海中鱼巣/生产运行期配置.数据.h:68"
       ],
       "call_category": "direct_const_member",
-      "arguments": "this=&this->系统角色",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "左稳定键组",
-      "reachable_condition": "前五项字段比较均相等；与右操作数的求值先后未固定；前五项字段比较均相等；与左操作数的求值先后未固定",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "配置比较在基础字段相等后读取左侧与右侧系统角色稳定键组",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -11165,14 +11275,14 @@
       "caller": "F0244",
       "callee": "F0456",
       "callsites": [
-        "海中鱼巣/领域/系统角色清单.数据.h:217,264"
+        "海中鱼巣/领域/系统角色清单.数据.h:264"
       ],
-      "call_category": "defaulted_const_member",
-      "arguments": "this=&this->主体,右=&右.主体",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "主体相等",
-      "reachable_condition": "版本相等",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
+      "call_category": "implicit-defaulted-member+defaulted-member-comparison",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "默认比较依次比较主体字段；系统角色清单默认等值比较逐成员比较主体材料",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -11180,15 +11290,14 @@
       "caller": "F0244",
       "callee": "F0457",
       "callsites": [
-        "海中鱼巣/领域/系统角色清单.数据.h:218,264",
-        "海中鱼巣/领域/系统角色清单.数据.h:219,264"
+        "海中鱼巣/领域/系统角色清单.数据.h:264"
       ],
-      "call_category": "defaulted_const_member",
-      "arguments": "this=&this->世界根到场景关系,右=&右.世界根到场景关系",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "第一关系相等",
-      "reachable_condition": "E0949返回true；E0950返回true",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
+      "call_category": "implicit-defaulted-member+defaulted-member-comparison",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "默认比较依次比较两项关系材料字段；系统角色清单默认等值比较逐成员比较两项系统角色关系材料",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -15298,15 +15407,14 @@
       "caller": "F0321",
       "callee": "F0336",
       "callsites": [
-        "海中鱼巣/核心/结构事务接线.数据.h:83",
-        "海中鱼巣/核心/结构事务接线.数据.h:83（右操作数）"
+        "海中鱼巣/核心/结构事务接线.数据.h:83"
       ],
-      "call_category": "direct_const_member+unique_name",
-      "arguments": "同一隐式const this",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "完整接域bool并决定最终返回",
-      "reachable_condition": "F0618返回false；调用方可达且源码分支条件成立",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "unique_name",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
       "current_root_reachable": true
     },
     {
@@ -15314,15 +15422,14 @@
       "caller": "F0321",
       "callee": "F0618",
       "callsites": [
-        "海中鱼巣/核心/结构事务接线.数据.h:83",
-        "海中鱼巣/核心/结构事务接线.数据.h:83（左操作数）"
+        "海中鱼巣/核心/结构事务接线.数据.h:83"
       ],
-      "call_category": "direct_const_member+unique_name",
-      "arguments": "同一隐式const this",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "完全未接域bool",
-      "reachable_condition": "函数进入；总是求值；调用方可达且源码分支条件成立",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "unique_name",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
       "current_root_reachable": true
     },
     {
@@ -15331,18 +15438,14 @@
       "callee": "F0336",
       "callsites": [
         "海中鱼巣/核心/节点仓库.cpp:17",
-        "海中鱼巣/核心/节点仓库.cpp:17（右操作数）",
-        "海中鱼巣/核心/节点仓库.cpp:17（左操作数）",
-        "海中鱼巣/核心/节点仓库.cpp:18",
-        "海中鱼巣/核心/节点仓库.cpp:18（右操作数）",
-        "海中鱼巣/核心/节点仓库.cpp:18（左操作数）"
+        "海中鱼巣/核心/节点仓库.cpp:18"
       ],
-      "call_category": "direct_const_member+unique_name",
-      "arguments": "this=&左",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "左首次接域bool",
-      "reachable_condition": "函数进入；总是求值；左首次接域为false；双方未接域提前返回条件不成立；左二次接域为true；调用方可达且源码分支条件成立",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "unique_name",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
       "current_root_reachable": true
     },
     {
@@ -15351,18 +15454,14 @@
       "callee": "F0336",
       "callsites": [
         "海中鱼巣/核心/关系仓库.cpp:82",
-        "海中鱼巣/核心/关系仓库.cpp:82（右操作数）",
-        "海中鱼巣/核心/关系仓库.cpp:82（左操作数）",
-        "海中鱼巣/核心/关系仓库.cpp:83",
-        "海中鱼巣/核心/关系仓库.cpp:83（右操作数）",
-        "海中鱼巣/核心/关系仓库.cpp:83（左操作数）"
+        "海中鱼巣/核心/关系仓库.cpp:83"
       ],
-      "call_category": "direct_const_member+unique_name",
-      "arguments": "this=&左",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "左首次接域bool",
-      "reachable_condition": "函数进入；总是求值；左首次接域为false；双方未接域提前返回条件不成立；左二次接域为true；调用方可达且源码分支条件成立",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "unique_name",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
       "current_root_reachable": true
     },
     {
@@ -15371,18 +15470,14 @@
       "callee": "F0336",
       "callsites": [
         "海中鱼巣/核心/索引仓库.cpp:13",
-        "海中鱼巣/核心/索引仓库.cpp:13（右操作数）",
-        "海中鱼巣/核心/索引仓库.cpp:13（左操作数）",
-        "海中鱼巣/核心/索引仓库.cpp:14",
-        "海中鱼巣/核心/索引仓库.cpp:14（右操作数）",
-        "海中鱼巣/核心/索引仓库.cpp:14（左操作数）"
+        "海中鱼巣/核心/索引仓库.cpp:14"
       ],
-      "call_category": "direct_const_member+unique_name",
-      "arguments": "this=&左",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "左首次接域bool",
-      "reachable_condition": "函数进入；总是求值；左首次接域为false；双方未接域提前返回条件不成立；左二次接域为true；调用方可达且源码分支条件成立",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "unique_name",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
       "current_root_reachable": true
     },
     {
@@ -16102,21 +16197,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1842",
-      "caller": "F0349",
-      "callee": "F0637",
-      "callsites": [
-        "海中鱼巣/线程/自我线程.ixx:339"
-      ],
-      "call_category": "direct_member+unique_name",
-      "arguments": "this=当前自我线程,治理初始化快照",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "void",
-      "reachable_condition": "快照已发布、停止请求为false且治理邮箱非空；调用方可达且源码分支条件成立",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E1843",
       "caller": "F0349",
       "callee": "F0638",
@@ -16290,21 +16370,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0109",
-      "caller": "F0353",
-      "callee": "R0520",
-      "callsites": [
-        "海中鱼巣/领域/概念图服务.h:1866"
-      ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E1857",
       "caller": "F0354",
       "callee": "F0641",
@@ -16365,18 +16430,33 @@
       "current_root_reachable": true
     },
     {
+      "edge_id": "RCE1655",
+      "caller": "F0356",
+      "callee": "F0190",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:850"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "函数进入读取根节点记录",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
       "edge_id": "RCE0110",
       "caller": "F0356",
       "callee": "R0521",
       "callsites": [
         "海中鱼巣/领域/概念图服务.h:851"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "call_category": "direct_static",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "reachable_condition": "根记录存在时映射根类别",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -16386,12 +16466,44 @@
       "callsites": [
         "海中鱼巣/领域/概念图服务.h:852"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "call_category": "direct_static",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "reachable_condition": "入口短路首先复核根类别",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1656",
+      "caller": "F0356",
+      "callee": "R0088",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:860"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "入口通过并取得图写锁后读取上位来源节点",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1657",
+      "caller": "F0356",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:870",
+        "海中鱼巣/领域/概念图服务.h:875",
+        "海中鱼巣/领域/概念图服务.h:885"
+      ],
+      "call_category": "operator",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "稳定键前置成立后比较根节点；发布读回前三项成立后比较根节点",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -16402,12 +16514,12 @@
         "海中鱼巣/领域/概念图服务.h:880",
         "海中鱼巣/领域/概念图服务.h:881"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "call_category": "direct_static",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "reachable_condition": "唯一性遍历完成后写入并读回根登记槽",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -16417,12 +16529,12 @@
       "callsites": [
         "海中鱼巣/领域/概念图服务.h:882"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "call_category": "direct_free",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
+      "reachable_condition": "发布后读回完整条件形成",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -16436,8 +16548,8 @@
       "arguments": "this=&节点_,状态节点",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "状态记录optional",
-      "reachable_condition": "F0357函数进入",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
+      "reachable_condition": "F0357函数进入；函数进入读取状态节点记录",
+      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -16451,8 +16563,8 @@
       "arguments": "this=&状态,状态节点",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "状态值optional",
-      "reachable_condition": "E1707节点记录读取完成；不要求记录有值，且位于if短路判断之前",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
+      "reachable_condition": "E1707节点记录读取完成；不要求记录有值，且位于if短路判断之前；节点记录读取完成后无条件读取状态值",
+      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -16462,12 +16574,12 @@
       "callsites": [
         "海中鱼巣/领域/概念图服务.h:940"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "call_category": "direct_static",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "reachable_condition": "入口短路首先复核生命周期阶段",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -16477,12 +16589,12 @@
       "callsites": [
         "海中鱼巣/领域/概念图服务.h:945"
       ],
-      "call_category": "direct_const_member+unique_name",
+      "call_category": "direct_const_member",
       "arguments": "this=&状态,状态节点",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "状态是否实例状态bool",
-      "reachable_condition": "阶段有效、节点可读且类型为状态、状态值存在并匹配阶段；调用方可达且源码分支条件成立",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；全项目唯一函数名并经调用方源码范围复核",
+      "reachable_condition": "阶段有效、节点可读且类型为状态、状态值存在并匹配阶段；阶段、节点类型和状态值前置全部成立",
+      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -16492,12 +16604,29 @@
       "callsites": [
         "海中鱼巣/领域/概念图服务.h:950"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "call_category": "direct_static",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "reachable_condition": "取得生命周期状态独占锁后计算槽索引",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1658",
+      "caller": "F0357",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:953",
+        "海中鱼巣/领域/概念图服务.h:956",
+        "海中鱼巣/领域/概念图服务.h:962"
+      ],
+      "call_category": "operator",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "各 optional has_value 前置成立后比较状态节点句柄",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -16507,12 +16636,12 @@
       "callsites": [
         "海中鱼巣/领域/概念图服务.h:962"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "call_category": "direct_free",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
+      "reachable_condition": "发布后读回完整条件形成",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -16522,11 +16651,11 @@
       "callsites": [
         "海中鱼巣/领域/概念图服务.h:3005"
       ],
-      "call_category": "direct-const-member",
+      "call_category": "direct_const_member+direct-const-member",
       "arguments": "",
       "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "optional 状态有值后复核节点有效；单实参无令牌重载",
+      "reachable_condition": "逐个已登记状态复核节点有效；optional 状态有值后复核节点有效；单实参无令牌重载",
       "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
@@ -16541,7 +16670,22 @@
       "arguments": "",
       "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "std::sort 注册同类静态比较函数",
+      "reachable_condition": "std::sort 按需调用具名节点句柄小于；std::sort 注册同类静态比较函数",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1659",
+      "caller": "F0358",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3011"
+      ],
+      "call_category": "standard-library-callback",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "std::adjacent_find 默认相等谓词按需比较节点句柄",
       "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
@@ -16552,12 +16696,12 @@
       "callsites": [
         "海中鱼巣/领域/概念图服务.h:3047"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "reachable_condition": "函数进入读取概念类别",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -16567,12 +16711,12 @@
       "callsites": [
         "海中鱼巣/领域/概念图服务.h:3048"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "call_category": "direct_static",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "reachable_condition": "预期阶段有值时复核阶段有效",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -16582,12 +16726,27 @@
       "callsites": [
         "海中鱼巣/领域/概念图服务.h:3054"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "reachable_condition": "预期阶段有值时读取预期状态",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1660",
+      "caller": "F0359",
+      "callee": "F0575",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3060"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "入口通过后读取概念生命周期关系组",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -16603,27 +16762,105 @@
         "海中鱼巣/领域/概念图服务.h:3121",
         "海中鱼巣/领域/概念图服务.h:3128"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "call_category": "direct_free",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
+      "reachable_condition": "各具名内部一致性与清理结果检查按源码短路成立",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0123",
+      "edge_id": "RCE1661",
       "caller": "F0359",
-      "callee": "R0519",
+      "callee": "R0605",
       "callsites": [
         "海中鱼巣/领域/概念图服务.h:3067"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "reachable_condition": "已有唯一关系时读取非令牌生命周期阶段",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1662",
+      "caller": "F0359",
+      "callee": "R0606",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3078"
+      ],
+      "call_category": "standard-library-callback",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "std::count_if 注册并调用非平凡完整匹配 lambda",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1663",
+      "caller": "F0359",
+      "callee": "R0607",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3095"
+      ],
+      "call_category": "standard-library-callback",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "std::find_if 注册并调用非平凡编号版本匹配 lambda",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1664",
+      "caller": "F0359",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3111",
+        "海中鱼巣/领域/概念图服务.h:3124",
+        "海中鱼巣/领域/概念图服务.h:3125"
+      ],
+      "call_category": "operator",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "any_of 简单 lambda 或写后读回短路前置成立后比较节点句柄",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1665",
+      "caller": "F0359",
+      "callee": "F0167",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3119"
+      ],
+      "call_category": "direct_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "允许创建、预期状态存在且无残留登记",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1666",
+      "caller": "F0359",
+      "callee": "F0587",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3120",
+        "海中鱼巣/领域/概念图服务.h:3129"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "创建后无条件读回；删除失败后再次读回",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -16634,12 +16871,137 @@
         "海中鱼巣/领域/概念图服务.h:3121",
         "海中鱼巣/领域/概念图服务.h:3127"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "call_category": "direct_free",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "reachable_condition": "写后读回检查及失败清理前复核关系句柄",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1667",
+      "caller": "F0359",
+      "callee": "F0590",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3129"
+      ],
+      "call_category": "direct_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "新关系句柄有效且写后检查失败",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1668",
+      "caller": "F0360",
+      "callee": "F0575",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3140"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "函数进入读取概念生命周期关系组",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1669",
+      "caller": "F0360",
+      "callee": "F0184",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3144",
+        "海中鱼巣/领域/概念图服务.h:3149",
+        "海中鱼巣/领域/概念图服务.h:3165",
+        "海中鱼巣/领域/概念图服务.h:3170"
+      ],
+      "call_category": "direct_free",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "唯一关系、阶段、登记一致性和最终命中检查",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1670",
+      "caller": "F0360",
+      "callee": "R0605",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3148"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "唯一记录已借用后读取非令牌生命周期阶段",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1671",
+      "caller": "F0360",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3154",
+        "海中鱼巣/领域/概念图服务.h:3162",
+        "海中鱼巣/领域/概念图服务.h:3163"
+      ],
+      "call_category": "operator",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "登记/记录节点比较按短路顺序执行",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1672",
+      "caller": "F0360",
+      "callee": "F0587",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3157"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "登记概念与状态匹配后读取登记关系",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1673",
+      "caller": "F0360",
+      "callee": "R0608",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3174"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "组合生命周期材料后复核完整",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1674",
+      "caller": "F0361",
+      "callee": "R0598",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3226"
+      ],
+      "call_category": "operator",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "std::find_if 简单 lambda 比较登记关系与待清理关系",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -16649,11 +17011,11 @@
       "callsites": [
         "海中鱼巣/领域/概念图服务.h:3231"
       ],
-      "call_category": "direct-member",
+      "call_category": "direct_member+direct-member",
       "arguments": "",
       "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "反向清理已登记生命周期关系；单实参写重载",
+      "reachable_condition": "生命周期登记命中后删除待清理关系；反向清理已登记生命周期关系；单实参写重载",
       "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
@@ -16664,11 +17026,11 @@
       "callsites": [
         "海中鱼巣/领域/概念图服务.h:3232"
       ],
-      "call_category": "direct-const-member",
+      "call_category": "direct_const_member+direct-const-member",
       "arguments": "",
       "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "删除失败后复核关系已不可读；单实参无令牌重载",
+      "reachable_condition": "删除返回 false 后复核关系已不可读；删除失败后复核关系已不可读；单实参无令牌重载",
       "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
@@ -16679,12 +17041,36 @@
       "callsites": [
         "海中鱼巣/领域/概念图服务.h:4202"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "reachable_condition": "逐根复核概念根登记",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1675",
+      "caller": "F0362",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:4203",
+        "海中鱼巣/领域/概念图服务.h:4216",
+        "海中鱼巣/领域/概念图服务.h:4235",
+        "海中鱼巣/领域/概念图服务.h:4236",
+        "海中鱼巣/领域/概念图服务.h:4267",
+        "海中鱼巣/领域/概念图服务.h:4270",
+        "海中鱼巣/领域/概念图服务.h:4281",
+        "海中鱼巣/领域/概念图服务.h:4285",
+        "海中鱼巣/领域/概念图服务.h:4290",
+        "海中鱼巣/领域/概念图服务.h:4296"
+      ],
+      "call_category": "operator+standard-library-callback",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "std::find/unique 默认比较、显式端点比较和简单 any_of lambda 比较节点句柄",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -16694,27 +17080,27 @@
       "callsites": [
         "海中鱼巣/领域/概念图服务.h:4208"
       ],
-      "call_category": "unique_name",
+      "call_category": "direct_const_member",
       "arguments": "",
       "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "reachable_condition": "根与概念集合通过后复核生命周期状态登记完整",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0129",
+      "edge_id": "RCE1676",
       "caller": "F0362",
-      "callee": "R0520",
+      "callee": "F0360",
       "callsites": [
         "海中鱼巣/领域/概念图服务.h:4212"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "reachable_condition": "逐个快照概念读取非令牌生命周期材料",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -16725,12 +17111,12 @@
         "海中鱼巣/领域/概念图服务.h:4223",
         "海中鱼巣/领域/概念图服务.h:4249"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "reachable_condition": "读取签名概念与实例来源概念类别",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -16740,12 +17126,42 @@
       "callsites": [
         "海中鱼巣/领域/概念图服务.h:4226"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "call_category": "direct_static",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
+      "reachable_condition": "类别匹配前置后规范化签名",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1677",
+      "caller": "F0362",
+      "callee": "F0587",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:4231"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "逐个快照关系读取当前关系记录",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1678",
+      "caller": "F0362",
+      "callee": "R0604",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:4232"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "读取关系后复核概念活动关系材料完整",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -16758,12 +17174,12 @@
         "海中鱼巣/领域/概念图服务.h:4250",
         "海中鱼巣/领域/概念图服务.h:4259"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "call_category": "direct_static",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "reachable_condition": "按关系角色从快照读取源或目标概念签名",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -16773,12 +17189,27 @@
       "callsites": [
         "海中鱼巣/领域/概念图服务.h:4244"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "call_category": "direct_static",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
+      "reachable_condition": "上下位两份签名均存在后复核一般性",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1679",
+      "caller": "F0362",
+      "callee": "F0190",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:4258"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "其它关系角色读取目标材料节点",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -16788,12 +17219,27 @@
       "callsites": [
         "海中鱼巣/领域/概念图服务.h:4261"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "call_category": "direct_static",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "reachable_condition": "源签名和目标材料记录存在后复核类型",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1680",
+      "caller": "F0362",
+      "callee": "R0518",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:4295"
+      ],
+      "call_category": "standard-library-callback",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "std::sort 按需调用具名节点句柄小于",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -17222,6 +17668,21 @@
       "current_root_reachable": true
     },
     {
+      "edge_id": "RCE1681",
+      "caller": "F0375",
+      "callee": "R0600",
+      "callsites": [
+        "海中鱼巣/核心/结构事务接线.数据.h:28"
+      ],
+      "call_category": "direct-operator",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "移动构造函数体委托移动赋值",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
       "edge_id": "RCE0162",
       "caller": "F0376",
       "callee": "R0120",
@@ -17434,22 +17895,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1699",
-      "caller": "F0387",
-      "callee": "F0337",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:119",
-        "海中鱼巣/核心/关系仓库.cpp:734（宏展开119）"
-      ],
-      "call_category": "direct_free+direct-free",
-      "arguments": "*this",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "当前关系令牌指针",
-      "reachable_condition": "已接域；调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E1790",
       "caller": "F0387",
       "callee": "F0344",
@@ -17465,63 +17910,17 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1817",
+      "edge_id": "E1818",
       "caller": "F0387",
       "callee": "F0345",
       "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:733-758",
-        "海中鱼巣/核心/关系仓库.cpp:734（宏展开120完整表达式末）"
+        "海中鱼巣/核心/关系仓库.cpp:733-758"
       ],
       "call_category": "implicit_destructor",
-      "arguments": "this=&已移空临时许可",
+      "arguments": "this=&自动许可.value()",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "void",
-      "reachable_condition": "取得共享许可返回值已移动进optional；正常或异常退出且自动许可已承载；F0344之后",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1715",
-      "caller": "F0387",
-      "callee": "F0338",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:734（宏展开121）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "许可有效bool",
-      "reachable_condition": "已接域且当前关系令牌为空；自动许可已承载",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1729",
-      "caller": "F0387",
-      "callee": "F0339",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:734（宏展开122）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "const结构事务令牌引用",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1743",
-      "caller": "F0387",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:734（宏展开122）"
-      ],
-      "call_category": "constructor",
-      "arguments": "*this,自动许可->读取令牌()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "optional内关系令牌范围",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
+      "reachable_condition": "正常或异常退出且自动许可已承载；F0344之后",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
       "current_root_reachable": true
     },
@@ -17630,6 +18029,21 @@
       "return_binding": null,
       "reachable_condition": "调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核",
       "resolution_source": "逐边源码/静态类型审计 PASS；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1682",
+      "caller": "F0389",
+      "callee": "F0396",
+      "callsites": [
+        "海中鱼巣/界面/控制面板窗口.cpp:435"
+      ],
+      "call_category": "resolved-function-pointer-callback",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "窗口类注册成功后，创建窗口与消息派发由 Windows 调用已登记窗口过程",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -18021,37 +18435,6 @@
       "return_binding": null,
       "reachable_condition": "调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核",
       "resolution_source": "逐边源码/静态类型审计 PASS；专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0208",
-      "caller": "F0440",
-      "callee": "R0089",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1028"
-      ],
-      "call_category": "direct-free",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1751",
-      "caller": "F0440",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1029",
-        "海中鱼巣/核心/关系仓库.cpp:1431（宏展开1029）"
-      ],
-      "call_category": "direct_constructor+constructor",
-      "arguments": "*this,令牌",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "局部关系令牌范围",
-      "reachable_condition": "共享令牌验证通过；调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -18592,8 +18975,8 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0243",
-      "caller": "F0465",
+      "edge_id": "RCE1683",
+      "caller": "F0466",
       "callee": "R0538",
       "callsites": [
         "海中鱼巣/领域/概念活动状态.数据.h:138"
@@ -18602,7 +18985,7 @@
       "arguments": "",
       "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "根材料比较需要复核给定活跃角色",
+      "reachable_condition": "重建视图逐根复核给定活跃角色",
       "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
@@ -20332,22 +20715,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1702",
-      "caller": "F0575",
-      "callee": "F0337",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:119",
-        "海中鱼巣/核心/关系仓库.cpp:844（宏展开119）"
-      ],
-      "call_category": "direct_free+direct-free",
-      "arguments": "*this",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "当前关系令牌指针",
-      "reachable_condition": "已接域；调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E1793",
       "caller": "F0575",
       "callee": "F0344",
@@ -20363,63 +20730,17 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1823",
+      "edge_id": "E1824",
       "caller": "F0575",
       "callee": "F0345",
       "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:843-863",
-        "海中鱼巣/核心/关系仓库.cpp:844（宏展开120完整表达式末）"
+        "海中鱼巣/核心/关系仓库.cpp:843-863"
       ],
       "call_category": "implicit_destructor",
-      "arguments": "this=&已移空临时许可",
+      "arguments": "this=&自动许可.value()",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "void",
-      "reachable_condition": "取得共享许可返回值已移动进optional；正常或异常退出且自动许可已承载；F0344之后",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1718",
-      "caller": "F0575",
-      "callee": "F0338",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:844（宏展开121）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "许可有效bool",
-      "reachable_condition": "已接域且当前关系令牌为空；自动许可已承载",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1732",
-      "caller": "F0575",
-      "callee": "F0339",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:844（宏展开122）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "const结构事务令牌引用",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1746",
-      "caller": "F0575",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:844（宏展开122）"
-      ],
-      "call_category": "constructor",
-      "arguments": "*this,自动许可->读取令牌()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "optional内关系令牌范围",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
+      "reachable_condition": "正常或异常退出且自动许可已承载；F0344之后",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
       "current_root_reachable": true
     },
@@ -20470,22 +20791,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1703",
-      "caller": "F0578",
-      "callee": "F0337",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:119",
-        "海中鱼巣/核心/关系仓库.cpp:920（宏展开119）"
-      ],
-      "call_category": "direct_free+direct-free",
-      "arguments": "*this",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "当前关系令牌指针",
-      "reachable_condition": "已接域；调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E1794",
       "caller": "F0578",
       "callee": "F0344",
@@ -20501,63 +20806,17 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1825",
+      "edge_id": "E1826",
       "caller": "F0578",
       "callee": "F0345",
       "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:919-947",
-        "海中鱼巣/核心/关系仓库.cpp:920（宏展开120完整表达式末）"
+        "海中鱼巣/核心/关系仓库.cpp:919-947"
       ],
       "call_category": "implicit_destructor",
-      "arguments": "this=&已移空临时许可",
+      "arguments": "this=&自动许可.value()",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "void",
-      "reachable_condition": "取得共享许可返回值已移动进optional；正常或异常退出且自动许可已承载；F0344之后",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1719",
-      "caller": "F0578",
-      "callee": "F0338",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:920（宏展开121）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "许可有效bool",
-      "reachable_condition": "已接域且当前关系令牌为空；自动许可已承载",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1733",
-      "caller": "F0578",
-      "callee": "F0339",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:920（宏展开122）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "const结构事务令牌引用",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1747",
-      "caller": "F0578",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:920（宏展开122）"
-      ],
-      "call_category": "constructor",
-      "arguments": "*this,自动许可->读取令牌()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "optional内关系令牌范围",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
+      "reachable_condition": "正常或异常退出且自动许可已承载；F0344之后",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
       "current_root_reachable": true
     },
@@ -20593,22 +20852,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1705",
-      "caller": "F0579",
-      "callee": "F0337",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:119",
-        "海中鱼巣/核心/关系仓库.cpp:981（宏展开119）"
-      ],
-      "call_category": "direct_free+direct-free",
-      "arguments": "*this",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "当前关系令牌指针",
-      "reachable_condition": "已接域；调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E1796",
       "caller": "F0579",
       "callee": "F0344",
@@ -20624,63 +20867,17 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1829",
+      "edge_id": "E1830",
       "caller": "F0579",
       "callee": "F0345",
       "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:980-994",
-        "海中鱼巣/核心/关系仓库.cpp:981（宏展开120完整表达式末）"
+        "海中鱼巣/核心/关系仓库.cpp:980-994"
       ],
       "call_category": "implicit_destructor",
-      "arguments": "this=&已移空临时许可",
+      "arguments": "this=&自动许可.value()",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "void",
-      "reachable_condition": "取得共享许可返回值已移动进optional；正常或异常退出且自动许可已承载；F0344之后",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1721",
-      "caller": "F0579",
-      "callee": "F0338",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:981（宏展开121）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "许可有效bool",
-      "reachable_condition": "已接域且当前关系令牌为空；自动许可已承载",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1735",
-      "caller": "F0579",
-      "callee": "F0339",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:981（宏展开122）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "const结构事务令牌引用",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1749",
-      "caller": "F0579",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:981（宏展开122）"
-      ],
-      "call_category": "constructor",
-      "arguments": "*this,自动许可->读取令牌()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "optional内关系令牌范围",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
+      "reachable_condition": "正常或异常退出且自动许可已承载；F0344之后",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
       "current_root_reachable": true
     },
@@ -20731,22 +20928,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1706",
-      "caller": "F0580",
-      "callee": "F0337",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:119",
-        "海中鱼巣/核心/关系仓库.cpp:997（宏展开119）"
-      ],
-      "call_category": "direct_free+direct-free",
-      "arguments": "*this",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "当前关系令牌指针",
-      "reachable_condition": "已接域；调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E1797",
       "caller": "F0580",
       "callee": "F0344",
@@ -20762,63 +20943,17 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1831",
+      "edge_id": "E1832",
       "caller": "F0580",
       "callee": "F0345",
       "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:996-1010",
-        "海中鱼巣/核心/关系仓库.cpp:997（宏展开120完整表达式末）"
+        "海中鱼巣/核心/关系仓库.cpp:996-1010"
       ],
       "call_category": "implicit_destructor",
-      "arguments": "this=&已移空临时许可",
+      "arguments": "this=&自动许可.value()",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "void",
-      "reachable_condition": "取得共享许可返回值已移动进optional；正常或异常退出且自动许可已承载；F0344之后",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1722",
-      "caller": "F0580",
-      "callee": "F0338",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:997（宏展开121）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "许可有效bool",
-      "reachable_condition": "已接域且当前关系令牌为空；自动许可已承载",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1736",
-      "caller": "F0580",
-      "callee": "F0339",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:997（宏展开122）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "const结构事务令牌引用",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1750",
-      "caller": "F0580",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:997（宏展开122）"
-      ],
-      "call_category": "constructor",
-      "arguments": "*this,自动许可->读取令牌()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "optional内关系令牌范围",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
+      "reachable_condition": "正常或异常退出且自动许可已承载；F0344之后",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
       "current_root_reachable": true
     },
@@ -20838,22 +20973,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1704",
-      "caller": "F0581",
-      "callee": "F0337",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:119",
-        "海中鱼巣/核心/关系仓库.cpp:950（宏展开119）"
-      ],
-      "call_category": "direct_free+direct-free",
-      "arguments": "*this",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "当前关系令牌指针",
-      "reachable_condition": "已接域；调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E1795",
       "caller": "F0581",
       "callee": "F0344",
@@ -20869,63 +20988,17 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1827",
+      "edge_id": "E1828",
       "caller": "F0581",
       "callee": "F0345",
       "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:949-978",
-        "海中鱼巣/核心/关系仓库.cpp:950（宏展开120完整表达式末）"
+        "海中鱼巣/核心/关系仓库.cpp:949-978"
       ],
       "call_category": "implicit_destructor",
-      "arguments": "this=&已移空临时许可",
+      "arguments": "this=&自动许可.value()",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "void",
-      "reachable_condition": "取得共享许可返回值已移动进optional；正常或异常退出且自动许可已承载；F0344之后",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1720",
-      "caller": "F0581",
-      "callee": "F0338",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:950（宏展开121）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "许可有效bool",
-      "reachable_condition": "已接域且当前关系令牌为空；自动许可已承载",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1734",
-      "caller": "F0581",
-      "callee": "F0339",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:950（宏展开122）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "const结构事务令牌引用",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1748",
-      "caller": "F0581",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:950（宏展开122）"
-      ],
-      "call_category": "constructor",
-      "arguments": "*this,自动许可->读取令牌()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "optional内关系令牌范围",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
+      "reachable_condition": "正常或异常退出且自动许可已承载；F0344之后",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
       "current_root_reachable": true
     },
@@ -20947,22 +21020,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1695",
-      "caller": "F0582",
-      "callee": "F0337",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:119",
-        "海中鱼巣/核心/关系仓库.cpp:317（宏展开119）"
-      ],
-      "call_category": "direct_free+direct-free",
-      "arguments": "*this",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "当前关系令牌指针",
-      "reachable_condition": "已接域；调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E1786",
       "caller": "F0582",
       "callee": "F0344",
@@ -20978,63 +21035,17 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1809",
+      "edge_id": "E1810",
       "caller": "F0582",
       "callee": "F0345",
       "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:314-337",
-        "海中鱼巣/核心/关系仓库.cpp:317（宏展开120完整表达式末）"
+        "海中鱼巣/核心/关系仓库.cpp:314-337"
       ],
       "call_category": "implicit_destructor",
-      "arguments": "this=&已移空临时许可",
+      "arguments": "this=&自动许可.value()",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "void",
-      "reachable_condition": "取得共享许可返回值已移动进optional；正常或异常退出且自动许可已承载；F0344之后",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1711",
-      "caller": "F0582",
-      "callee": "F0338",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:317（宏展开121）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "许可有效bool",
-      "reachable_condition": "已接域且当前关系令牌为空；自动许可已承载",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1725",
-      "caller": "F0582",
-      "callee": "F0339",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:317（宏展开122）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "const结构事务令牌引用",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1739",
-      "caller": "F0582",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:317（宏展开122）"
-      ],
-      "call_category": "constructor",
-      "arguments": "*this,自动许可->读取令牌()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "optional内关系令牌范围",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
+      "reachable_condition": "正常或异常退出且自动许可已承载；F0344之后",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
       "current_root_reachable": true
     },
@@ -21129,22 +21140,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1698",
-      "caller": "F0586",
-      "callee": "F0337",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:119",
-        "海中鱼巣/核心/关系仓库.cpp:435（宏展开119）"
-      ],
-      "call_category": "direct_free+direct-free",
-      "arguments": "*this",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "当前关系令牌指针",
-      "reachable_condition": "已接域；调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E1789",
       "caller": "F0586",
       "callee": "F0344",
@@ -21160,63 +21155,17 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1815",
+      "edge_id": "E1816",
       "caller": "F0586",
       "callee": "F0345",
       "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:431-479",
-        "海中鱼巣/核心/关系仓库.cpp:435（宏展开120完整表达式末）"
+        "海中鱼巣/核心/关系仓库.cpp:431-479"
       ],
       "call_category": "implicit_destructor",
-      "arguments": "this=&已移空临时许可",
+      "arguments": "this=&自动许可.value()",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "void",
-      "reachable_condition": "取得共享许可返回值已移动进optional；正常或异常退出且自动许可已承载；F0344之后",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1714",
-      "caller": "F0586",
-      "callee": "F0338",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:435（宏展开121）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "许可有效bool",
-      "reachable_condition": "已接域且当前关系令牌为空；自动许可已承载",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1728",
-      "caller": "F0586",
-      "callee": "F0339",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:435（宏展开122）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "const结构事务令牌引用",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1742",
-      "caller": "F0586",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:435（宏展开122）"
-      ],
-      "call_category": "constructor",
-      "arguments": "*this,自动许可->读取令牌()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "optional内关系令牌范围",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
+      "reachable_condition": "正常或异常退出且自动许可已承载；F0344之后",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
       "current_root_reachable": true
     },
@@ -21236,22 +21185,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1693",
-      "caller": "F0587",
-      "callee": "F0337",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:119",
-        "海中鱼巣/核心/关系仓库.cpp:278（宏展开119）"
-      ],
-      "call_category": "direct_free+direct-free",
-      "arguments": "*this",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "当前关系令牌指针",
-      "reachable_condition": "已接域；调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E1784",
       "caller": "F0587",
       "callee": "F0344",
@@ -21267,63 +21200,17 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1805",
+      "edge_id": "E1806",
       "caller": "F0587",
       "callee": "F0345",
       "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:277-293",
-        "海中鱼巣/核心/关系仓库.cpp:278（宏展开120完整表达式末）"
+        "海中鱼巣/核心/关系仓库.cpp:277-293"
       ],
       "call_category": "implicit_destructor",
-      "arguments": "this=&已移空临时许可",
+      "arguments": "this=&自动许可.value()",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "void",
-      "reachable_condition": "取得共享许可返回值已移动进optional；正常或异常退出且自动许可已承载；F0344之后",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1709",
-      "caller": "F0587",
-      "callee": "F0338",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:278（宏展开121）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "许可有效bool",
-      "reachable_condition": "已接域且当前关系令牌为空；自动许可已承载",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1723",
-      "caller": "F0587",
-      "callee": "F0339",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:278（宏展开122）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "const结构事务令牌引用",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1737",
-      "caller": "F0587",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:278（宏展开122）"
-      ],
-      "call_category": "constructor",
-      "arguments": "*this,自动许可->读取令牌()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "optional内关系令牌范围",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
+      "reachable_condition": "正常或异常退出且自动许可已承载；F0344之后",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
       "current_root_reachable": true
     },
@@ -21343,22 +21230,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1694",
-      "caller": "F0589",
-      "callee": "F0337",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:119",
-        "海中鱼巣/核心/关系仓库.cpp:296（宏展开119）"
-      ],
-      "call_category": "direct_free+direct-free",
-      "arguments": "*this",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "当前关系令牌指针",
-      "reachable_condition": "已接域；调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E1785",
       "caller": "F0589",
       "callee": "F0344",
@@ -21374,63 +21245,17 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1807",
+      "edge_id": "E1808",
       "caller": "F0589",
       "callee": "F0345",
       "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:295-312",
-        "海中鱼巣/核心/关系仓库.cpp:296（宏展开120完整表达式末）"
+        "海中鱼巣/核心/关系仓库.cpp:295-312"
       ],
       "call_category": "implicit_destructor",
-      "arguments": "this=&已移空临时许可",
+      "arguments": "this=&自动许可.value()",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "void",
-      "reachable_condition": "取得共享许可返回值已移动进optional；正常或异常退出且自动许可已承载；F0344之后",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1710",
-      "caller": "F0589",
-      "callee": "F0338",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:296（宏展开121）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "许可有效bool",
-      "reachable_condition": "已接域且当前关系令牌为空；自动许可已承载",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1724",
-      "caller": "F0589",
-      "callee": "F0339",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:296（宏展开122）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "const结构事务令牌引用",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1738",
-      "caller": "F0589",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:296（宏展开122）"
-      ],
-      "call_category": "constructor",
-      "arguments": "*this,自动许可->读取令牌()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "optional内关系令牌范围",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
+      "reachable_condition": "正常或异常退出且自动许可已承载；F0344之后",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
       "current_root_reachable": true
     },
@@ -21450,22 +21275,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1697",
-      "caller": "F0590",
-      "callee": "F0337",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:119",
-        "海中鱼巣/核心/关系仓库.cpp:410（宏展开119）"
-      ],
-      "call_category": "direct_free+direct-free",
-      "arguments": "*this",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "当前关系令牌指针",
-      "reachable_condition": "已接域；调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E1788",
       "caller": "F0590",
       "callee": "F0344",
@@ -21481,80 +21290,18 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1813",
+      "edge_id": "E1814",
       "caller": "F0590",
       "callee": "F0345",
       "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:409-424",
-        "海中鱼巣/核心/关系仓库.cpp:410（宏展开120完整表达式末）"
+        "海中鱼巣/核心/关系仓库.cpp:409-424"
       ],
       "call_category": "implicit_destructor",
-      "arguments": "this=&已移空临时许可",
+      "arguments": "this=&自动许可.value()",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "void",
-      "reachable_condition": "取得共享许可返回值已移动进optional；正常或异常退出且自动许可已承载；F0344之后",
+      "reachable_condition": "正常或异常退出且自动许可已承载；F0344之后",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1713",
-      "caller": "F0590",
-      "callee": "F0338",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:410（宏展开121）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "许可有效bool",
-      "reachable_condition": "已接域且当前关系令牌为空；自动许可已承载",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1727",
-      "caller": "F0590",
-      "callee": "F0339",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:410（宏展开122）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "const结构事务令牌引用",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1741",
-      "caller": "F0590",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:410（宏展开122）"
-      ],
-      "call_category": "constructor",
-      "arguments": "*this,自动许可->读取令牌()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "optional内关系令牌范围",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1696",
-      "caller": "F0591",
-      "callee": "F0337",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:119",
-        "海中鱼巣/核心/关系仓库.cpp:340（宏展开119）"
-      ],
-      "call_category": "direct_free+direct-free",
-      "arguments": "*this",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "当前关系令牌指针",
-      "reachable_condition": "已接域；调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -21573,63 +21320,17 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1811",
+      "edge_id": "E1812",
       "caller": "F0591",
       "callee": "F0345",
       "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:339-407",
-        "海中鱼巣/核心/关系仓库.cpp:340（宏展开120完整表达式末）"
+        "海中鱼巣/核心/关系仓库.cpp:339-407"
       ],
       "call_category": "implicit_destructor",
-      "arguments": "this=&已移空临时许可",
+      "arguments": "this=&自动许可.value()",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "void",
-      "reachable_condition": "取得共享许可返回值已移动进optional；正常或异常退出且自动许可已承载；F0344之后",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1712",
-      "caller": "F0591",
-      "callee": "F0338",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:340（宏展开121）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "许可有效bool",
-      "reachable_condition": "已接域且当前关系令牌为空；自动许可已承载",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1726",
-      "caller": "F0591",
-      "callee": "F0339",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:340（宏展开122）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "const结构事务令牌引用",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1740",
-      "caller": "F0591",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:340（宏展开122）"
-      ],
-      "call_category": "constructor",
-      "arguments": "*this,自动许可->读取令牌()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "optional内关系令牌范围",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
+      "reachable_condition": "正常或异常退出且自动许可已承载；F0344之后",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
       "current_root_reachable": true
     },
@@ -21667,6 +21368,21 @@
       "current_root_reachable": true
     },
     {
+      "edge_id": "RCE1684",
+      "caller": "F0592",
+      "callee": "R0598",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.h:134"
+      ],
+      "call_category": "operator",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "已在目标状态分支比较当前与原关系句柄；状态为已在目标状态、前一转换分支未短路且原状态为已失效时比较当前关系与原关系",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
       "edge_id": "RCE0273",
       "caller": "F0619",
       "callee": "F0383",
@@ -21697,22 +21413,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1701",
-      "caller": "F0620",
-      "callee": "F0337",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:119",
-        "海中鱼巣/核心/关系仓库.cpp:824（宏展开119）"
-      ],
-      "call_category": "direct_free+direct-free",
-      "arguments": "*this",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "当前关系令牌指针",
-      "reachable_condition": "已接域；调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E1792",
       "caller": "F0620",
       "callee": "F0344",
@@ -21728,63 +21428,17 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1821",
+      "edge_id": "E1822",
       "caller": "F0620",
       "callee": "F0345",
       "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:823-841",
-        "海中鱼巣/核心/关系仓库.cpp:824（宏展开120完整表达式末）"
+        "海中鱼巣/核心/关系仓库.cpp:823-841"
       ],
       "call_category": "implicit_destructor",
-      "arguments": "this=&已移空临时许可",
+      "arguments": "this=&自动许可.value()",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "void",
-      "reachable_condition": "取得共享许可返回值已移动进optional；正常或异常退出且自动许可已承载；F0344之后",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1717",
-      "caller": "F0620",
-      "callee": "F0338",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:824（宏展开121）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "许可有效bool",
-      "reachable_condition": "已接域且当前关系令牌为空；自动许可已承载",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1731",
-      "caller": "F0620",
-      "callee": "F0339",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:824（宏展开122）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "const结构事务令牌引用",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1745",
-      "caller": "F0620",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:824（宏展开122）"
-      ],
-      "call_category": "constructor",
-      "arguments": "*this,自动许可->读取令牌()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "optional内关系令牌范围",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
+      "reachable_condition": "正常或异常退出且自动许可已承载；F0344之后",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
       "current_root_reachable": true
     },
@@ -21820,22 +21474,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1700",
-      "caller": "F0621",
-      "callee": "F0337",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:119",
-        "海中鱼巣/核心/关系仓库.cpp:791（宏展开119）"
-      ],
-      "call_category": "direct_free+direct-free",
-      "arguments": "*this",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "当前关系令牌指针",
-      "reachable_condition": "已接域；调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E1791",
       "caller": "F0621",
       "callee": "F0344",
@@ -21851,63 +21489,17 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "E1819",
+      "edge_id": "E1820",
       "caller": "F0621",
       "callee": "F0345",
       "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:790-821",
-        "海中鱼巣/核心/关系仓库.cpp:791（宏展开120完整表达式末）"
+        "海中鱼巣/核心/关系仓库.cpp:790-821"
       ],
       "call_category": "implicit_destructor",
-      "arguments": "this=&已移空临时许可",
+      "arguments": "this=&自动许可.value()",
       "argument_resolution": "候选工具实参并经调用点定位",
       "return_binding": "void",
-      "reachable_condition": "取得共享许可返回值已移动进optional；正常或异常退出且自动许可已承载；F0344之后",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1716",
-      "caller": "F0621",
-      "callee": "F0338",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:791（宏展开121）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "许可有效bool",
-      "reachable_condition": "已接域且当前关系令牌为空；自动许可已承载",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1730",
-      "caller": "F0621",
-      "callee": "F0339",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:791（宏展开122）"
-      ],
-      "call_category": "direct_const_member",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "const结构事务令牌引用",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "E1744",
-      "caller": "F0621",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:791（宏展开122）"
-      ],
-      "call_category": "constructor",
-      "arguments": "*this,自动许可->读取令牌()",
-      "argument_resolution": "候选工具实参并经调用点定位",
-      "return_binding": "optional内关系令牌范围",
-      "reachable_condition": "已接域、当前关系令牌为空且自动许可有效",
+      "reachable_condition": "正常或异常退出且自动许可已承载；F0344之后",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
       "current_root_reachable": true
     },
@@ -24254,49 +23846,32 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0423",
-      "caller": "R0065",
-      "callee": "R0089",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1028",
-        "海中鱼巣/核心/关系仓库.cpp:1032"
-      ],
-      "call_category": "direct-free",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "令牌薄包装入口；调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "RCE0424",
       "caller": "R0065",
       "callee": "F0340",
       "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1029",
         "海中鱼巣/核心/关系仓库.cpp:1032"
       ],
       "call_category": "constructor",
       "arguments": "",
       "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "共享令牌有效后建立令牌范围；调用方可达且 libclang 直接引用项目定义；源码位置复核",
+      "reachable_condition": "共享令牌有效后建立令牌范围",
       "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0425",
+      "edge_id": "RCE0423",
       "caller": "R0065",
-      "callee": "F0344",
+      "callee": "R0089",
       "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1031-1034（作用域退出）"
+        "海中鱼巣/核心/关系仓库.cpp:1032"
       ],
-      "call_category": "implicit-destructor",
+      "call_category": "direct-free",
       "arguments": "",
       "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "令牌范围析构",
+      "reachable_condition": "令牌薄包装入口",
       "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
@@ -24868,29 +24443,13 @@
       "caller": "R0073",
       "callee": "R0089",
       "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1028",
         "海中鱼巣/核心/关系仓库.cpp:1435"
       ],
       "call_category": "direct-free",
       "arguments": "",
       "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "令牌读取入口；调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0463",
-      "caller": "R0073",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1029"
-      ],
-      "call_category": "constructor",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
+      "reachable_condition": "令牌读取入口",
       "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
@@ -24910,36 +24469,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0465",
-      "caller": "R0074",
-      "callee": "R0089",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1028"
-      ],
-      "call_category": "direct-free",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0466",
-      "caller": "R0074",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1029"
-      ],
-      "call_category": "constructor",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "RCE0467",
       "caller": "R0074",
       "callee": "F0582",
@@ -24947,36 +24476,6 @@
         "海中鱼巣/核心/关系仓库.cpp:1440"
       ],
       "call_category": "direct-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0468",
-      "caller": "R0075",
-      "callee": "R0089",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1028"
-      ],
-      "call_category": "direct-free",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0469",
-      "caller": "R0075",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1029"
-      ],
-      "call_category": "constructor",
       "arguments": "",
       "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
@@ -25048,36 +24547,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0474",
-      "caller": "R0077",
-      "callee": "R0089",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1028"
-      ],
-      "call_category": "direct-free",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0475",
-      "caller": "R0077",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1029"
-      ],
-      "call_category": "constructor",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "RCE0476",
       "caller": "R0077",
       "callee": "F0620",
@@ -25093,36 +24562,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0477",
-      "caller": "R0078",
-      "callee": "R0089",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1028"
-      ],
-      "call_category": "direct-free",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0478",
-      "caller": "R0078",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1029"
-      ],
-      "call_category": "constructor",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "RCE0479",
       "caller": "R0078",
       "callee": "F0575",
@@ -25130,36 +24569,6 @@
         "海中鱼巣/核心/关系仓库.cpp:1548"
       ],
       "call_category": "direct-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0480",
-      "caller": "R0079",
-      "callee": "R0089",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1028"
-      ],
-      "call_category": "direct-free",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0481",
-      "caller": "R0079",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1029"
-      ],
-      "call_category": "constructor",
       "arguments": "",
       "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
@@ -25198,36 +24607,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0484",
-      "caller": "R0081",
-      "callee": "R0089",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1028"
-      ],
-      "call_category": "direct-free",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0485",
-      "caller": "R0081",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1029"
-      ],
-      "call_category": "constructor",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "RCE0486",
       "caller": "R0081",
       "callee": "F0579",
@@ -25243,36 +24622,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0487",
-      "caller": "R0082",
-      "callee": "R0089",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1028"
-      ],
-      "call_category": "direct-free",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0488",
-      "caller": "R0082",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1029"
-      ],
-      "call_category": "constructor",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "RCE0489",
       "caller": "R0082",
       "callee": "F0580",
@@ -25280,36 +24629,6 @@
         "海中鱼巣/核心/关系仓库.cpp:1645"
       ],
       "call_category": "direct-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0490",
-      "caller": "R0083",
-      "callee": "R0089",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1028"
-      ],
-      "call_category": "direct-free",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0491",
-      "caller": "R0083",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1029"
-      ],
-      "call_category": "constructor",
       "arguments": "",
       "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
@@ -25390,128 +24709,6 @@
       "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
       "reachable_condition": "父链目标比较和循环检测",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0497",
-      "caller": "R0088",
-      "callee": "F0337",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:119",
-        "海中鱼巣/核心/关系仓库.cpp:866（宏定义119）"
-      ],
-      "call_category": "direct-free",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "已接域；调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0498",
-      "caller": "R0088",
-      "callee": "F0344",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:865-896（作用域退出）"
-      ],
-      "call_category": "implicit-destructor",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "自动令牌范围析构",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0499",
-      "caller": "R0088",
-      "callee": "F0345",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:865-896（作用域退出）",
-        "海中鱼巣/核心/关系仓库.cpp:866（宏定义120完整表达式末）"
-      ],
-      "call_category": "implicit-destructor",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "共享许可临时量析构；自动许可析构",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0500",
-      "caller": "R0088",
-      "callee": "F0336",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:866（宏定义119）"
-      ],
-      "call_category": "direct-const-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "许可宏入口",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0501",
-      "caller": "R0088",
-      "callee": "F0397",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:866（宏定义120）"
-      ],
-      "call_category": "resolved-function-pointer",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "已接域且当前关系令牌为空；生产运行期唯一正式共享许可目标",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0502",
-      "caller": "R0088",
-      "callee": "F0338",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:866（宏定义121）"
-      ],
-      "call_category": "direct-const-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "自动许可已承载",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0503",
-      "caller": "R0088",
-      "callee": "F0339",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:866（宏定义122）"
-      ],
-      "call_category": "direct-const-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "自动许可有效",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0504",
-      "caller": "R0088",
-      "callee": "F0340",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:866（宏定义122）"
-      ],
-      "call_category": "constructor",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "自动许可有效",
       "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
@@ -25802,6 +24999,21 @@
       "current_root_reachable": true
     },
     {
+      "edge_id": "RCE1685",
+      "caller": "R0102",
+      "callee": "R0391",
+      "callsites": [
+        "海中鱼巣/核心/执行器.结构写入.ixx:124"
+      ],
+      "call_category": "resolved-std-function-callback",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "本次执行调用语境由 海中鱼巣/领域/数据操作.特征体系.ixx:832 注册该回调",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
       "edge_id": "RCE0524",
       "caller": "R0102",
       "callee": "R0109",
@@ -26007,21 +25219,6 @@
       "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
       "reachable_condition": "旧结构写入执行器按结构写入事务参与者静态层级完成发布",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0537",
-      "caller": "R0103",
-      "callee": "R0391",
-      "callsites": [
-        "海中鱼巣/核心/执行器.结构写入.ixx:124"
-      ],
-      "call_category": "resolved-std-function-callback",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "本次执行调用语境由 海中鱼巣/领域/数据操作.特征体系.ixx:832 注册该回调",
       "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
@@ -26277,21 +25474,6 @@
       "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
       "reachable_condition": "执行入口",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0555",
-      "caller": "R0116",
-      "callee": "F0345",
-      "callsites": [
-        "海中鱼巣/核心/执行器.结构写入.ixx:76-111（作用域退出）"
-      ],
-      "call_category": "scope-exit-destructor",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "局部结构事务许可在所有正常或异常退出路径析构",
       "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
@@ -27007,6 +26189,21 @@
       "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
       "reachable_condition": "物理键和目标句柄有效后复核所有者声明",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1686",
+      "caller": "R0137",
+      "callee": "R0599",
+      "callsites": [
+        "海中鱼巣/核心/结构事务接线.数据.h:47"
+      ],
+      "call_category": "constructor",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "创建工厂先默认构造结果对象",
       "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
@@ -29861,22 +29058,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0788",
-      "caller": "R0229",
-      "callee": "R0226",
-      "callsites": [
-        "海中鱼巣/领域/初始化.系统角色.ixx:221",
-        "海中鱼巣/领域/初始化.系统角色.ixx:228"
-      ],
-      "call_category": "direct-static-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "特征结果状态静态类型为特征体系业务状态",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "RCE0789",
       "caller": "R0229",
       "callee": "R0369",
@@ -29889,6 +29070,22 @@
       "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
       "reachable_condition": "两个返回值静态类型均为特征体系业务结果",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1687",
+      "caller": "R0229",
+      "callee": "R0601",
+      "callsites": [
+        "海中鱼巣/领域/初始化.系统角色.ixx:221",
+        "海中鱼巣/领域/初始化.系统角色.ixx:228"
+      ],
+      "call_category": "direct-static-member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "特征结果状态静态类型为特征体系业务状态",
       "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
@@ -29939,21 +29136,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0793",
-      "caller": "R0229",
-      "callee": "R0227",
-      "callsites": [
-        "海中鱼巣/领域/初始化.系统角色.ixx:234"
-      ],
-      "call_category": "direct-static-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "需求结果状态静态类型为需求任务方法业务状态",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "RCE0794",
       "caller": "R0229",
       "callee": "R0465",
@@ -29969,9 +29151,24 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0795",
+      "edge_id": "RCE1688",
       "caller": "R0229",
-      "callee": "R0228",
+      "callee": "R0602",
+      "callsites": [
+        "海中鱼巣/领域/初始化.系统角色.ixx:234"
+      ],
+      "call_category": "direct-static-member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "需求结果状态静态类型为需求任务方法业务状态",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1689",
+      "caller": "R0229",
+      "callee": "R0603",
       "callsites": [
         "海中鱼巣/领域/初始化.系统角色.ixx:235"
       ],
@@ -41257,51 +40454,18 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE1522",
-      "caller": "R0520",
-      "callee": "R0078",
+      "edge_id": "RCE1690",
+      "caller": "R0523",
+      "callee": "F0051",
       "callsites": [
-        "海中鱼巣/领域/概念图服务.h:3180"
+        "海中鱼巣/领域/概念图服务.h:3775"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "call_category": "operator",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE1523",
-      "caller": "R0520",
-      "callee": "F0184",
-      "callsites": [
-        "海中鱼巣/领域/概念图服务.h:3185",
-        "海中鱼巣/领域/概念图服务.h:3191",
-        "海中鱼巣/领域/概念图服务.h:3206",
-        "海中鱼巣/领域/概念图服务.h:3212"
-      ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE1524",
-      "caller": "R0520",
-      "callee": "R0519",
-      "callsites": [
-        "海中鱼巣/领域/概念图服务.h:3190"
-      ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "reachable_condition": "逐份签名材料比较概念节点",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -41501,6 +40665,21 @@
       "argument_resolution": "未单独冻结；读取源码调用点",
       "return_binding": null,
       "reachable_condition": "逐个抽象树投影项复核完整性",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1691",
+      "caller": "R0531",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:922"
+      ],
+      "call_category": "operator",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "概念根登记槽有值后比较登记根节点",
       "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
@@ -42957,6 +42136,177 @@
       "return_binding": null,
       "reachable_condition": "调用方可达且源码分支条件成立",
       "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1692",
+      "caller": "R0600",
+      "callee": "F0631",
+      "callsites": [
+        "海中鱼巣/核心/结构事务接线.数据.h:31"
+      ],
+      "call_category": "unique_name+direct-member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "调用方可达且源码分支条件成立；非自赋值分支先释放当前许可",
+      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合；专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1693",
+      "caller": "R0604",
+      "callee": "F0168",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:244",
+        "海中鱼巣/领域/概念图服务.h:245",
+        "海中鱼巣/领域/概念图服务.h:246"
+      ],
+      "call_category": "unique_name+direct_free",
+      "arguments": null,
+      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
+      "return_binding": null,
+      "reachable_condition": "调用方可达且源码分支条件成立；复核关系句柄有效",
+      "resolution_source": "全项目唯一函数名并经调用方源码范围复核；专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1694",
+      "caller": "R0604",
+      "callee": "F0163",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:245",
+        "海中鱼巣/领域/概念图服务.h:246"
+      ],
+      "call_category": "direct_free",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "依次复核源节点和目标节点句柄有效",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1695",
+      "caller": "R0605",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3019"
+      ],
+      "call_category": "operator",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "登记槽有值后比较状态节点",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1696",
+      "caller": "R0605",
+      "callee": "F0377",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3020"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "登记状态等于输入后复核节点仍有效",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1697",
+      "caller": "R0606",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3079",
+        "海中鱼巣/领域/概念图服务.h:3087",
+        "海中鱼巣/领域/概念图服务.h:3088"
+      ],
+      "call_category": "operator",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "lambda 先比较登记概念和状态，再比较读回端点",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1698",
+      "caller": "R0606",
+      "callee": "F0587",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3082"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "登记概念和状态均匹配后读取登记关系",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1699",
+      "caller": "R0607",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3096"
+      ],
+      "call_category": "operator",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "lambda 比较登记概念和状态",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1700",
+      "caller": "R0607",
+      "callee": "F0587",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3099"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "登记概念和状态均匹配后读取登记关系",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1701",
+      "caller": "R0608",
+      "callee": "F0163",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:56",
+        "海中鱼巣/领域/概念图服务.h:59"
+      ],
+      "call_category": "direct_free",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "复核概念和状态节点句柄",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1702",
+      "caller": "R0608",
+      "callee": "F0168",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:60"
+      ],
+      "call_category": "direct_free",
+      "arguments": "",
+      "argument_resolution": "未单独冻结；读取源码调用点",
+      "return_binding": null,
+      "reachable_condition": "阶段和两个节点句柄前置成立后复核关系句柄",
+      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     }
   ]

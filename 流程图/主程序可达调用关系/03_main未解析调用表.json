@@ -3,7 +3,7 @@
   "scope": "main-current-reachable",
   "root": "F0001",
   "root_signature": "int main(int 参数数量, char* 参数组[])",
-  "code_commit": "9d2061ed1d3cc0ab9c72bdd9997463d755da0137",
+  "code_commit": "e9217875d43872e11666aa28a2c71274ec5dcb86",
   "old_graph_blob": "527f20b7f125d97c3f0cdaf9a650c905d0255203",
   "old_graph_frozen_commit": "a48a70b2d678dea64dd8228adb4f26f0badd9506",
   "configuration": "Debug|x64",
@@ -15,8 +15,8 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1154,
-  "project_call_edge_count": 2793,
+  "function_count": 1162,
+  "project_call_edge_count": 2752,
   "unresolved_count": 0,
   "unresolved_calls": []
 }
