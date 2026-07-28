@@ -1415,12 +1415,12 @@
     {"id":"F0347","layer":6,"signature":"bool 海中鱼巣::{匿名命名空间@关系仓库.cpp}::用途观察角色有效(std::int64_t 角色)","file":"海中鱼巣/核心/关系仓库.cpp","definition_line":17,"status":"已完成","chart":"L6/CF-L6-0026_用途观察角色有效_现状流程图.md"},
     {"id":"F0348","layer":6,"signature":"bool 海中鱼巣::{匿名命名空间@关系仓库.cpp}::用途观察目标类型有效(std::int64_t 角色, 海中鱼巣::节点类型 类型)","file":"海中鱼巣/核心/关系仓库.cpp","definition_line":21,"status":"已完成","chart":"L6/CF-L6-0027_用途观察目标类型有效_现状流程图.md"},
     {"id":"F0349","layer":6,"signature":"void 海中鱼巣::自我线程::执行初始化(const 海中鱼巣::自我根需求初始化参数& 参数)","file":"海中鱼巣/线程/自我线程.ixx","definition_line":291,"status":"已完成","chart":"L6/CF-L6-0028_自我线程执行初始化_现状流程图.md"},
-    {"id":"F0350","layer":6,"signature":"bool 海中鱼巣::单根需求初始化结果::成功() const","file":"海中鱼巣/领域/初始化.需求.ixx","definition_line":47,"status":"待处理","chart":null},
-    {"id":"F0351","layer":6,"signature":"bool 海中鱼巣::概念图初始化服务::名称关系可读(const 海中鱼巣::概念根初始化项& 项) const","file":"海中鱼巣/领域/初始化.概念图.ixx","definition_line":212,"status":"待处理","chart":null},
-    {"id":"F0352","layer":6,"signature":"std::optional<海中鱼巣::概念根登记材料> 海中鱼巣::概念图服务::读取概念根(海中鱼巣::概念根类别 类别) const","file":"海中鱼巣/领域/概念图服务.h","definition_line":892,"status":"待处理","chart":null},
-    {"id":"F0353","layer":6,"signature":"std::optional<海中鱼巣::概念生命周期材料> 海中鱼巣::概念图服务::读取概念生命周期(海中鱼巣::节点句柄 概念) const","file":"海中鱼巣/领域/概念图服务.h","definition_line":1861,"status":"待处理","chart":null},
-    {"id":"F0354","layer":6,"signature":"std::optional<海中鱼巣::节点句柄> 海中鱼巣::概念图服务::读取生命周期状态(海中鱼巣::概念生命周期阶段 阶段) const","file":"海中鱼巣/领域/概念图服务.h","definition_line":969,"status":"待处理","chart":null},
-    {"id":"F0355","layer":6,"signature":"std::vector<海中鱼巣::概念根登记材料> 海中鱼巣::概念图服务::读取全部概念根() const","file":"海中鱼巣/领域/概念图服务.h","definition_line":904,"status":"待处理","chart":null},
+    {"id":"F0350","layer":6,"signature":"bool 海中鱼巣::单根需求初始化结果::成功() const","file":"海中鱼巣/领域/初始化.需求.ixx","definition_line":47,"status":"已完成","chart":"L6/CF-L6-0029_单根需求初始化结果成功_现状流程图.md"},
+    {"id":"F0351","layer":6,"signature":"bool 海中鱼巣::概念图初始化服务::名称关系可读(const 海中鱼巣::概念根初始化项& 项) const","file":"海中鱼巣/领域/初始化.概念图.ixx","definition_line":212,"status":"已完成","chart":"L6/CF-L6-0030_概念图初始化服务名称关系可读_现状流程图.md"},
+    {"id":"F0352","layer":6,"signature":"std::optional<海中鱼巣::概念根登记材料> 海中鱼巣::概念图服务::读取概念根(海中鱼巣::概念根类别 类别) const","file":"海中鱼巣/领域/概念图服务.h","definition_line":892,"status":"已完成","chart":"L6/CF-L6-0031_概念图服务读取概念根_现状流程图.md"},
+    {"id":"F0353","layer":6,"signature":"std::optional<海中鱼巣::概念生命周期材料> 海中鱼巣::概念图服务::读取概念生命周期(海中鱼巣::节点句柄 概念) const","file":"海中鱼巣/领域/概念图服务.h","definition_line":1861,"status":"已完成","chart":"L6/CF-L6-0032_概念图服务读取概念生命周期_现状流程图.md"},
+    {"id":"F0354","layer":6,"signature":"std::optional<海中鱼巣::节点句柄> 海中鱼巣::概念图服务::读取生命周期状态(海中鱼巣::概念生命周期阶段 阶段) const","file":"海中鱼巣/领域/概念图服务.h","definition_line":969,"status":"已完成","chart":"L6/CF-L6-0033_概念图服务读取生命周期状态_现状流程图.md"},
+    {"id":"F0355","layer":6,"signature":"std::vector<海中鱼巣::概念根登记材料> 海中鱼巣::概念图服务::读取全部概念根() const","file":"海中鱼巣/领域/概念图服务.h","definition_line":904,"status":"已完成","chart":"L6/CF-L6-0034_概念图服务读取全部概念根_现状流程图.md"},
     {"id":"F0356","layer":6,"signature":"std::optional<海中鱼巣::节点句柄> 海中鱼巣::概念图服务::登记概念根(const 海中鱼巣::概念根登记材料& 材料)","file":"海中鱼巣/领域/概念图服务.h","definition_line":849,"status":"待处理","chart":null},
     {"id":"F0357","layer":6,"signature":"std::optional<海中鱼巣::节点句柄> 海中鱼巣::概念图服务::登记生命周期状态(海中鱼巣::概念生命周期阶段 阶段, 海中鱼巣::节点句柄 状态节点, const 海中鱼巣::状态服务& 状态)","file":"海中鱼巣/领域/概念图服务.h","definition_line":934,"status":"待处理","chart":null},
     {"id":"F0358","layer":6,"signature":"bool 海中鱼巣::概念图服务::生命周期状态登记完整() const","file":"海中鱼巣/领域/概念图服务.h","definition_line":3000,"status":"待处理","chart":null},
@@ -1703,7 +1703,11 @@
     {"id":"F0635","layer":7,"signature":"海中鱼巣::世界树初始化结果 海中鱼巣::世界树初始化服务::初始化自我世界树()","file":"海中鱼巣/领域/初始化.世界树.ixx","definition_line":50,"status":"待处理","chart":null},
     {"id":"F0636","layer":7,"signature":"海中鱼巣::自我根需求初始化结果 海中鱼巣::需求初始化服务::初始化两个根需求(const 海中鱼巣::世界树初始化结果& 世界树结果, const 海中鱼巣::自我根需求初始化参数& 参数)","file":"海中鱼巣/领域/初始化.需求.ixx","definition_line":73,"status":"待处理","chart":null},
     {"id":"F0637","layer":7,"signature":"void 海中鱼巣::自我线程::执行治理循环(const 海中鱼巣::自我线程初始化快照& 治理初始化快照)","file":"海中鱼巣/线程/自我线程.ixx","definition_line":352,"status":"待处理","chart":null},
-    {"id":"F0638","layer":7,"signature":"bool 海中鱼巣::自我线程::执行初始化(const 海中鱼巣::自我根需求初始化参数&)::<lambda@自我线程.ixx:343-345>::operator()() const","file":"海中鱼巣/线程/自我线程.ixx","definition_line":343,"status":"待处理","chart":null}
+    {"id":"F0638","layer":7,"signature":"bool 海中鱼巣::自我线程::执行初始化(const 海中鱼巣::自我根需求初始化参数&)::<lambda@自我线程.ixx:343-345>::operator()() const","file":"海中鱼巣/线程/自我线程.ixx","definition_line":343,"status":"待处理","chart":null},
+    {"id":"F0639","layer":7,"signature":"bool 海中鱼巣::概念图服务::根类别有效(海中鱼巣::概念根类别 类别)","file":"海中鱼巣/领域/概念图服务.h","definition_line":2816,"status":"待处理","chart":null},
+    {"id":"F0640","layer":7,"signature":"std::size_t 海中鱼巣::概念图服务::根类别索引(海中鱼巣::概念根类别 类别)","file":"海中鱼巣/领域/概念图服务.h","definition_line":2820,"status":"待处理","chart":null},
+    {"id":"F0641","layer":7,"signature":"bool 海中鱼巣::概念图服务::生命周期阶段有效(海中鱼巣::概念生命周期阶段 阶段)","file":"海中鱼巣/领域/概念图服务.h","definition_line":2824,"status":"待处理","chart":null},
+    {"id":"F0642","layer":7,"signature":"std::size_t 海中鱼巣::概念图服务::生命周期阶段索引(海中鱼巣::概念生命周期阶段 阶段)","file":"海中鱼巣/领域/概念图服务.h","definition_line":2829,"status":"待处理","chart":null}
   ],
   "calls": [
     {
@@ -3655,7 +3659,24 @@
     {"id":"E1840","caller":"F0349","callee":"F0047","location":"海中鱼巣/线程/自我线程.ixx:315","arguments":"this=&新快照","return_binding":"初始化快照成功bool","condition":"根需求结果返回并构造新快照后","type":"direct_const_member"},
     {"id":"E1841","caller":"F0349","callee":"F0634","location":"海中鱼巣/线程/自我线程.ixx:316","arguments":"this=当前自我线程","return_binding":"void","condition":"新快照不成功","type":"direct_member"},
     {"id":"E1842","caller":"F0349","callee":"F0637","location":"海中鱼巣/线程/自我线程.ixx:339","arguments":"this=当前自我线程,治理初始化快照","return_binding":"void","condition":"快照已发布、停止请求为false且治理邮箱非空","type":"direct_member"},
-    {"id":"E1843","caller":"F0349","callee":"F0638","location":"海中鱼巣/线程/自我线程.ixx:343-345","arguments":"捕获this","return_binding":"停止谓词bool","condition":"condition_variable::wait初检或唤醒后，可重复","type":"condition_variable_predicate"}
+    {"id":"E1843","caller":"F0349","callee":"F0638","location":"海中鱼巣/线程/自我线程.ixx:343-345","arguments":"捕获this","return_binding":"停止谓词bool","condition":"condition_variable::wait初检或唤醒后，可重复","type":"condition_variable_predicate"},
+    {"id":"E1844","caller":"F0350","callee":"F0163","location":"海中鱼巣/领域/初始化.需求.ixx:48","arguments":"this->特征定义","return_binding":"特征定义句柄有效bool","condition":"函数进入","type":"direct_free"},
+    {"id":"E1845","caller":"F0350","callee":"F0363","location":"海中鱼巣/领域/初始化.需求.ixx:49","arguments":"this=&语素入口结果","return_binding":"语素入口结果成功bool","condition":"E1844返回true","type":"direct_const_member"},
+    {"id":"E1846","caller":"F0350","callee":"F0163","location":"海中鱼巣/领域/初始化.需求.ixx:50","arguments":"this->实例特征槽位","return_binding":"实例特征槽位句柄有效bool","condition":"E1845返回true","type":"direct_free"},
+    {"id":"E1847","caller":"F0350","callee":"F0163","location":"海中鱼巣/领域/初始化.需求.ixx:51","arguments":"this->当前特征值","return_binding":"当前特征值句柄有效bool","condition":"E1846返回true","type":"direct_free"},
+    {"id":"E1848","caller":"F0350","callee":"F0163","location":"海中鱼巣/领域/初始化.需求.ixx:52","arguments":"this->根需求","return_binding":"根需求句柄有效bool","condition":"E1847返回true","type":"direct_free"},
+    {"id":"E1849","caller":"F0350","callee":"F0163","location":"海中鱼巣/领域/初始化.需求.ixx:53","arguments":"this->目标状态","return_binding":"目标状态句柄有效bool","condition":"E1848返回true","type":"direct_free"},
+    {"id":"E1850","caller":"F0351","callee":"F0496","location":"海中鱼巣/领域/初始化.概念图.ixx:213","arguments":"this=&语素_,项.名称语素入口.语素入口","return_binding":"入口绑定目标组","condition":"函数进入","type":"direct_const_member"},
+    {"id":"E1851","caller":"F0351","callee":"F0497","location":"海中鱼巣/领域/初始化.概念图.ixx:214","arguments":"this=&语素_,项.名称语素入口.语素入口","return_binding":"入口概念追溯组","condition":"E1850返回后","type":"direct_const_member"},
+    {"id":"E1852","caller":"F0352","callee":"F0639","location":"海中鱼巣/领域/概念图服务.h:893","arguments":"类别","return_binding":"类别有效bool","condition":"函数进入","type":"direct_static"},
+    {"id":"E1853","caller":"F0352","callee":"F0640","location":"海中鱼巣/领域/概念图服务.h:897","arguments":"类别","return_binding":"根登记数组索引","condition":"E1852返回true且已取得根登记共享锁","type":"direct_static"},
+    {"id":"E1854","caller":"F0352","callee":"F0377","location":"海中鱼巣/领域/概念图服务.h:898","arguments":"this=&节点_,材料->根节点","return_binding":"根节点有效bool","condition":"登记槽有值","type":"direct_const_member"},
+    {"id":"E1855","caller":"F0353","callee":"F0369","location":"海中鱼巣/领域/概念图服务.h:1863","arguments":"this=当前概念图服务,概念","return_binding":"概念类别optional","condition":"已取得活动图共享锁","type":"direct_const_member"},
+    {"id":"E1856","caller":"F0353","callee":"F0360","location":"海中鱼巣/领域/概念图服务.h:1866","arguments":"this=当前概念图服务,概念","return_binding":"生命周期optional","condition":"E1855返回有值且仍持活动图共享锁","type":"direct_const_member"},
+    {"id":"E1857","caller":"F0354","callee":"F0641","location":"海中鱼巣/领域/概念图服务.h:970","arguments":"阶段","return_binding":"阶段有效bool","condition":"函数进入","type":"direct_static"},
+    {"id":"E1858","caller":"F0354","callee":"F0642","location":"海中鱼巣/领域/概念图服务.h:974","arguments":"阶段","return_binding":"生命周期状态数组索引","condition":"E1857返回true且已取得生命周期状态共享锁","type":"direct_static"},
+    {"id":"E1859","caller":"F0354","callee":"F0377","location":"海中鱼巣/领域/概念图服务.h:975","arguments":"this=&节点_,状态.value()","return_binding":"状态节点有效bool","condition":"登记optional有值","type":"direct_const_member"},
+    {"id":"E1860","caller":"F0355","callee":"F0377","location":"海中鱼巣/领域/概念图服务.h:909","arguments":"this=&节点_,材料->根节点","return_binding":"当前登记根节点有效bool","condition":"每个有值登记槽；循环中至多四次","type":"direct_const_member"}
   ],
   "external_boundaries": [
     {
@@ -4629,7 +4650,12 @@
     {"id":"X0370","signature":"析构函数体后释放许可回调指针与结构事务令牌平凡销毁、std::shared_ptr<void>析构边界","caller":"F0345","locations":["海中鱼巣/核心/结构事务接线.数据.h:40"],"call_count":3,"queued":false},
     {"id":"X0371","signature":"std::shared_lock<std::shared_mutex>构造析构、节点表find/end与迭代器访问、std::optional空值/节点记录值式构造及RAII生命周期边界","caller":"F0346","locations":["海中鱼巣/核心/节点仓库.cpp:251-256"],"call_count":10,"queued":false},
     {"id":"X0372","signature":"std::atomic默认seq_cst load/store、condition_variable notify_all/wait、lock_guard/unique_lock生命周期、optional移动赋值、std::move与显式unlock边界","caller":"F0349","locations":["海中鱼巣/线程/自我线程.ixx:292-349"],"call_count":23,"queued":false},
-    {"id":"X0373","signature":"std::atomic<bool>::load默认memory_order_seq_cst边界","caller":"F0638","locations":["海中鱼巣/线程/自我线程.ixx:344"],"call_count":1,"queued":false}
+    {"id":"X0373","signature":"std::atomic<bool>::load默认memory_order_seq_cst边界","caller":"F0638","locations":["海中鱼巣/线程/自我线程.ixx:344"],"call_count":1,"queued":false},
+    {"id":"X0374","signature":"两个局部vector值式生命周期、两次std::find及配套begin/end和迭代器比较边界","caller":"F0351","locations":["海中鱼巣/领域/初始化.概念图.ixx:213-216"],"call_count":10,"queued":false},
+    {"id":"X0375","signature":"std::shared_lock构造析构、固定数组operator[]与optional has_value/operator->边界","caller":"F0352","locations":["海中鱼巣/领域/概念图服务.h:896-902"],"call_count":5,"queued":false},
+    {"id":"X0376","signature":"std::shared_lock构造析构、optional has_value与值式返回生命周期边界","caller":"F0353","locations":["海中鱼巣/领域/概念图服务.h:1862-1867"],"call_count":4,"queued":false},
+    {"id":"X0377","signature":"std::shared_lock构造析构、固定数组operator[]、optional has_value/value/空值与返回副本生命周期边界","caller":"F0354","locations":["海中鱼巣/领域/概念图服务.h:971-979"],"call_count":7,"queued":false},
+    {"id":"X0378","signature":"vector构造析构/reserve/push_back、shared_lock构造析构、array范围迭代及optional访问生命周期边界","caller":"F0355","locations":["海中鱼巣/领域/概念图服务.h:905-914"],"call_count":15,"queued":false}
   ],
   "unresolved_calls": [
     {"id":"U0001","caller":"F0167","location":"海中鱼巣/核心/关系仓库.cpp:185（关系共享许可范围宏展开）","expression":"事务接线_.取得共享许可(事务接线_.运行期状态)","reason":"运行期可替换函数指针；静态调用点无法唯一裁决实际项目源码目标","known_contract":"结构事务许可(const std::shared_ptr<void>&)","status":"未解析调用"},
