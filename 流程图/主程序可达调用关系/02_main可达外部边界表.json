@@ -17,7 +17,7 @@
   ],
   "function_count": 1267,
   "project_call_edge_count": 3189,
-  "external_count": 1811,
+  "external_count": 1813,
   "callback_registration_count": 34,
   "external_boundaries": [
     {
@@ -21770,9 +21770,9 @@
       "signature": "bool std::optional<海中鱼巣::关系句柄>::has_value() const noexcept",
       "caller": "F0455",
       "locations": [
-        "海中鱼巣/领域/初始化.系统角色.ixx:90,156"
+        "海中鱼巣/领域/初始化.系统角色.ixx:90"
       ],
-      "call_count": 2,
+      "call_count": 1,
       "queued": false,
       "boundary_category": "Standard library optional",
       "reachable_condition": "调用方从 F0001 可达且对应源码表达式成立",
@@ -24143,6 +24143,35 @@
       "boundary_category": "Compiler-generated operator",
       "reachable_condition": "调用方从 F0001 可达且对应源码表达式成立",
       "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02486",
+      "signature": "bool std::optional<海中鱼巣::系统角色主体材料>::has_value() const noexcept",
+      "caller": "F0455",
+      "locations": [
+        "海中鱼巣/领域/初始化.系统角色.ixx:156"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "写后预检成功且主体材料已形成",
+      "resolution_source": "optional<系统角色主体材料>具体模板实例与第156行短路顺序复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02487",
+      "signature": "const 海中鱼巣::系统角色主体材料& std::optional<海中鱼巣::系统角色主体材料>::operator*() const&",
+      "caller": "F0455",
+      "locations": [
+        "海中鱼巣/领域/初始化.系统角色.ixx:156",
+        "海中鱼巣/领域/初始化.系统角色.ixx:160"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "X02486确认主体存在；第160行沿前序复核通过路径再次解引用",
+      "resolution_source": "optional<系统角色主体材料>具体模板实例、短路门禁和两处解引用复核",
       "current_root_reachable": true
     }
   ],

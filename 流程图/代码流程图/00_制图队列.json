@@ -5,17 +5,17 @@
   "root_signature": "int main(int 参数数量, char* 参数组[])",
   "configuration": "Debug|x64",
   "source_code_commit": "3920a74638264f9f539d50f32f3c9fe5fb1982ab",
-  "source_relation_publish_commit": "747223647b2cc5796db66a048009d78fa4d96ed7",
-  "generated_from_commit": "3920a74638264f9f539d50f32f3c9fe5fb1982ab",
+  "source_relation_publish_commit": "5cc7036de0decad163293a0b77c4789f068fd73a",
+  "generated_from_commit": "5cc7036de0decad163293a0b77c4789f068fd73a",
   "source_identity_path": "流程图/主程序可达调用关系/00_main可达函数身份表.json",
-  "source_identity_blob": "f3a71c939201c8e3b63a3c3174e3b1ad5679214a",
+  "source_identity_blob": "f60e05e76f5244db2d6b1a60479238942c051358",
   "source_edge_path": "流程图/主程序可达调用关系/01_main可达项目调用边表.json",
-  "source_edge_blob": "33a8ee2638f5c975cab747983bce3f2a5c144bdb",
+  "source_edge_blob": "759f9209f55f2b70f4a85fd6a90a4fdf90583efd",
   "source_external_path": "流程图/主程序可达调用关系/02_main可达外部边界表.json",
-  "source_external_blob": "94be7fe4905e51bb83d87e5e8b6c625c3e4e198d",
+  "source_external_blob": "2a750b0ff52c5cff2ccf2672941649245148b1a2",
   "current_reachable_function_count": 1267,
-  "chart_completed_count": 388,
-  "chart_pending_count": 879,
+  "chart_completed_count": 402,
+  "chart_pending_count": 865,
   "historical_unreachable_chart_count": 49,
   "queue_order": "正式身份表稳定身份顺序；shortest_depth只记录main最短调用深度，不参与既有drawing_order重排",
   "entries": [
@@ -3611,6 +3611,7 @@
         "F0075",
         "F0077",
         "F0454",
+        "F0455",
         "R0616"
       ],
       "callee_ids": [
@@ -3622,7 +3623,8 @@
         "E0456",
         "E0470",
         "RCE0220",
-        "RCE1789"
+        "RCE1789",
+        "RCE2173"
       ],
       "outgoing_project_edge_ids": [
         "E0449"
@@ -16717,9 +16719,9 @@
         "X01089",
         "X01090"
       ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L5/CF-L5-0203_索引仓库按主键查节点令牌重载_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L5/CF-L5-0203_索引仓库按主键查节点令牌重载_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L5"
     },
     {
@@ -16765,9 +16767,9 @@
         "RCE1849"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0281_存在场景数据操作有效_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0281_存在场景数据操作有效_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -16813,9 +16815,9 @@
         "RCE1850"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0282_状态动态数据操作有效_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0282_状态动态数据操作有效_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -16863,9 +16865,9 @@
         "RCE1851"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0283_特征体系数据操作有效_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0283_特征体系数据操作有效_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -16897,9 +16899,9 @@
         "RCE1852"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0284_语素基础数据操作有效_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0284_语素基础数据操作有效_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -16935,9 +16937,9 @@
         "RCE1853"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0285_轻量因果数据操作有效_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0285_轻量因果数据操作有效_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -16971,9 +16973,9 @@
         "RCE1854"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0286_概念图结构数据操作有效_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0286_概念图结构数据操作有效_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -17013,9 +17015,9 @@
         "RCE1857"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0287_需求任务方法数据操作有效_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0287_需求任务方法数据操作有效_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -17051,9 +17053,9 @@
         "RCE1858"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0288_系统角色数据操作有效_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0288_系统角色数据操作有效_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -17091,9 +17093,9 @@
         "RCE1860"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L5/CF-L5-0204_概念活动数据操作有效_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L5/CF-L5-0204_概念活动数据操作有效_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L5"
     },
     {
@@ -17123,9 +17125,9 @@
         "RCE1861"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0289_概念活动业务服务有效_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0289_概念活动业务服务有效_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -17161,9 +17163,9 @@
         "RCE1862"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L5/CF-L5-0205_系统角色初始化器有效_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L5/CF-L5-0205_系统角色初始化器有效_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L5"
     },
     {
@@ -17233,9 +17235,9 @@
         "RCE1773"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0290_系统角色初始化器复核_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0290_系统角色初始化器复核_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -17256,11 +17258,14 @@
         "F0243"
       ],
       "callee_ids": [
+        "F0074",
         "F0228",
         "R0229",
         "R0231",
         "R0232",
         "R0236",
+        "R0369",
+        "R0370",
         "R0409",
         "R0422",
         "F0452",
@@ -17269,6 +17274,7 @@
         "R0565",
         "R0601",
         "R0602",
+        "R0603",
         "R0616",
         "R0617",
         "R0618",
@@ -17336,17 +17342,23 @@
         "RCE1876",
         "RCE1877",
         "RCE1878",
-        "RCE1879"
+        "RCE1879",
+        "RCE2170",
+        "RCE2171",
+        "RCE2172",
+        "RCE2173"
       ],
       "external_boundary_ids": [
         "X02314",
         "X02315",
         "X02316",
-        "X02317"
+        "X02317",
+        "X02486",
+        "X02487"
       ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0291_系统角色初始化器初始化_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0291_系统角色初始化器初始化_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -36997,11 +37009,13 @@
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0229；调用点=海中鱼巣/领域/初始化.系统角色.ixx:221,海中鱼巣/领域/初始化.系统角色.ixx:228",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "caller_ids": [
-        "R0229"
+        "R0229",
+        "F0455"
       ],
       "callee_ids": [],
       "incoming_project_edge_ids": [
-        "RCE0789"
+        "RCE0789",
+        "RCE2170"
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
@@ -37025,11 +37039,13 @@
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0229；调用点=海中鱼巣/领域/初始化.系统角色.ixx:222,海中鱼巣/领域/初始化.系统角色.ixx:229",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "caller_ids": [
-        "R0229"
+        "R0229",
+        "F0455"
       ],
       "callee_ids": [],
       "incoming_project_edge_ids": [
-        "RCE0790"
+        "RCE0790",
+        "RCE2171"
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
@@ -45191,22 +45207,24 @@
       "drawing_order": 1146,
       "function_id": "R0603",
       "shortest_depth": 8,
-      "complete_signature": "bool 海中鱼巣::系统角色初始化器::状态已提交<海中鱼巣::需求任务方法业务状态>(海中鱼巣::需求任务方法业务状态 状态)",
+      "complete_signature": "bool 海中鱼巣::系统角色初始化器::状态已提交<海中鱼巣::需求任务方法业务状态>(海中鱼巣::需求任务方法业务状态 状态) noexcept",
       "callable_type": "Method",
       "category": "Template Method",
       "module_identity": "初始化.系统角色",
       "file": "海中鱼巣/领域/初始化.系统角色.ixx",
       "definition_line": 205,
       "definition_end_line": 207,
-      "overload_identity": "bool 海中鱼巣::系统角色初始化器::状态已提交<海中鱼巣::需求任务方法业务状态>(海中鱼巣::需求任务方法业务状态 状态)",
+      "overload_identity": "bool 海中鱼巣::系统角色初始化器::状态已提交<海中鱼巣::需求任务方法业务状态>(海中鱼巣::需求任务方法业务状态 状态) noexcept",
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0229；调用点=海中鱼巣/领域/初始化.系统角色.ixx:235",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "caller_ids": [
-        "R0229"
+        "R0229",
+        "F0455"
       ],
       "callee_ids": [],
       "incoming_project_edge_ids": [
-        "RCE1689"
+        "RCE1689",
+        "RCE2172"
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],

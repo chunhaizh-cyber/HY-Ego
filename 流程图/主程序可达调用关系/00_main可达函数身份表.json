@@ -16,7 +16,7 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1267,
-  "project_call_edge_count": 3189,
+  "project_call_edge_count": 3193,
   "functions": [
     {
       "function_id": "F0001",
@@ -2214,6 +2214,7 @@
         "F0075",
         "F0077",
         "F0454",
+        "F0455",
         "R0616"
       ],
       "callees": [
@@ -10929,11 +10930,14 @@
         "F0243"
       ],
       "callees": [
+        "F0074",
         "F0228",
         "R0229",
         "R0231",
         "R0232",
         "R0236",
+        "R0369",
+        "R0370",
         "R0409",
         "R0422",
         "F0452",
@@ -10942,6 +10946,7 @@
         "R0565",
         "R0601",
         "R0602",
+        "R0603",
         "R0616",
         "R0617",
         "R0618",
@@ -23918,7 +23923,8 @@
       "overload_identity": "bool 海中鱼巣::特征体系业务结果::成功() const noexcept",
       "shortest_depth": 8,
       "callers": [
-        "R0229"
+        "R0229",
+        "F0455"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0229；调用点=海中鱼巣/领域/初始化.系统角色.ixx:221,海中鱼巣/领域/初始化.系统角色.ixx:228",
@@ -23939,7 +23945,8 @@
       "overload_identity": "bool 海中鱼巣::特征体系业务结果::改变了结构() const noexcept",
       "shortest_depth": 8,
       "callers": [
-        "R0229"
+        "R0229",
+        "F0455"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0229；调用点=海中鱼巣/领域/初始化.系统角色.ixx:222,海中鱼巣/领域/初始化.系统角色.ixx:229",
@@ -29549,17 +29556,18 @@
     },
     {
       "function_id": "R0603",
-      "complete_signature": "bool 海中鱼巣::系统角色初始化器::状态已提交<海中鱼巣::需求任务方法业务状态>(海中鱼巣::需求任务方法业务状态 状态)",
+      "complete_signature": "bool 海中鱼巣::系统角色初始化器::状态已提交<海中鱼巣::需求任务方法业务状态>(海中鱼巣::需求任务方法业务状态 状态) noexcept",
       "callable_type": "Method",
       "category": "Template Method",
       "module_identity": "初始化.系统角色",
       "file": "海中鱼巣/领域/初始化.系统角色.ixx",
       "definition_line": 205,
       "definition_end_line": 207,
-      "overload_identity": "bool 海中鱼巣::系统角色初始化器::状态已提交<海中鱼巣::需求任务方法业务状态>(海中鱼巣::需求任务方法业务状态 状态)",
+      "overload_identity": "bool 海中鱼巣::系统角色初始化器::状态已提交<海中鱼巣::需求任务方法业务状态>(海中鱼巣::需求任务方法业务状态 状态) noexcept",
       "shortest_depth": 8,
       "callers": [
-        "R0229"
+        "R0229",
+        "F0455"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0229；调用点=海中鱼巣/领域/初始化.系统角色.ixx:235",

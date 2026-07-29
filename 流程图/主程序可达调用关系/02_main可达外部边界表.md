@@ -1,6 +1,6 @@
 # main 可达外部边界表
 
-代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；外部边界：1811；回调登记：34。
+代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；外部边界：1813；回调登记：34。
 
 ## 外部边界
 
@@ -1647,7 +1647,7 @@
 | X02313 | F0439 | Standard library associative-container iterator | <code>const std::pair&lt;const std::uint64_t, 海中鱼巣::主信息记录&gt;* std::_List_const_iterator&lt;主信息表值类型&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/核心/主信息仓库.cpp:216</code> | 1 | X01086确认位置不等于X02312返回end；读取位置-&gt;second | 位置静态类型、条件表达式短路与MSVC const_iterator接口复核 |
 | X02314 | F0455 | Standard library mutex | <code>std::lock_guard&lt;std::mutex&gt;::lock_guard(std::mutex&)</code> | <code>海中鱼巣/领域/初始化.系统角色.ixx:67</code> | 1 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X02315 | F0455 | Standard library mutex | <code>std::lock_guard&lt;std::mutex&gt;::~lock_guard()</code> | <code>海中鱼巣/领域/初始化.系统角色.ixx:67-173</code> | 1 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
-| X02316 | F0455 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::关系句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/初始化.系统角色.ixx:90,156</code> | 2 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02316 | F0455 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::关系句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/初始化.系统角色.ixx:90</code> | 1 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X02317 | F0455 | Standard library optional | <code>const 海中鱼巣::关系句柄& std::optional&lt;海中鱼巣::关系句柄&gt;::operator*() const&</code> | <code>海中鱼巣/领域/初始化.系统角色.ixx:95</code> | 1 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X02318 | R0116 | Standard library callback | <code>std::function&lt;void(海中鱼巣::结构写入会话&)&gt;::operator bool() const noexcept</code> | <code>海中鱼巣/核心/执行器.结构写入.ixx:75</code> | 1 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X02319 | R0116 | Raw function pointer | <code>海中鱼巣::结构事务许可 (*)(const std::shared_ptr&lt;void&gt;&) 原始函数指针调用</code> | <code>海中鱼巣/核心/执行器.结构写入.ixx:76</code> | 1 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
@@ -1817,6 +1817,8 @@
 | X02483 | R0638 | Standard library | <code>std::optional&lt;海中鱼巣::主键绑定记录&gt;::operator-&gt;() const</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:616</code> | 1 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X02484 | R0638 | Standard library | <code>std::optional&lt;海中鱼巣::主键绑定记录&gt;::operator*() const&</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:617</code> | 1 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X02485 | R0638 | Compiler-generated operator | <code>海中鱼巣::主键绑定记录::operator==（编译器生成）</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:617-621</code> | 1 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02486 | F0455 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::系统角色主体材料&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/初始化.系统角色.ixx:156</code> | 1 | 写后预检成功且主体材料已形成 | optional&lt;系统角色主体材料&gt;具体模板实例与第156行短路顺序复核 |
+| X02487 | F0455 | Standard library optional | <code>const 海中鱼巣::系统角色主体材料& std::optional&lt;海中鱼巣::系统角色主体材料&gt;::operator*() const&</code> | <code>海中鱼巣/领域/初始化.系统角色.ixx:156, 海中鱼巣/领域/初始化.系统角色.ixx:160</code> | 2 | X02486确认主体存在；第160行沿前序复核通过路径再次解引用 | optional&lt;系统角色主体材料&gt;具体模板实例、短路门禁和两处解引用复核 |
 
 ## 回调登记
 
@@ -1857,4 +1859,4 @@
 | RCB0033 | R0689 | R0696 | std::function同步回调 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:147</code> | R0116 同步调度于海中鱼巣/核心/执行器.结构写入.ixx:82；来源复核通过 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
 | RCB0034 | R0701 | R0708 | std::function同步回调 | <code>海中鱼巣/领域/数据操作.特征体系.ixx:941</code> | R0116 同步调度于海中鱼巣/核心/执行器.结构写入.ixx:82；组成项及写前复核通过 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
 
-统计：1811 个外部边界身份；34 个项目回调登记。标准库、操作系统和第三方函数不进入项目函数身份表。
+统计：1813 个外部边界身份；34 个项目回调登记。标准库、操作系统和第三方函数不进入项目函数身份表。

@@ -16,7 +16,7 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1267,
-  "project_call_edge_count": 3189,
+  "project_call_edge_count": 3193,
   "unresolved_count": 0,
   "unresolved_calls": []
 }

@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1267,
-  "project_call_edge_count": 3189,
-  "edge_count": 3189,
+  "project_call_edge_count": 3193,
+  "edge_count": 3193,
   "edges": [
     {
       "edge_id": "E0002",
@@ -48970,6 +48970,67 @@
       "return_binding": "被调函数结果按当前调用表达式接收或用于条件判断",
       "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
       "resolution_source": "当前源码定义、调用点与静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2170",
+      "caller": "F0455",
+      "callee": "R0369",
+      "callsites": [
+        "海中鱼巣/领域/初始化.系统角色.ixx:136"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "概念关系根.成功()",
+      "argument_resolution": "F0455 局部结果静态类型与模板实参复核",
+      "return_binding": "bool结果进入失败判断或改变了结构累计表达式",
+      "reachable_condition": "F0455 前序创建步骤成功并执行到对应源码行",
+      "resolution_source": "初始化.系统角色.ixx:136-150 源码表达式与现有稳定身份复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2171",
+      "caller": "F0455",
+      "callee": "R0370",
+      "callsites": [
+        "海中鱼巣/领域/初始化.系统角色.ixx:137"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "概念关系根.改变了结构()",
+      "argument_resolution": "F0455 局部结果静态类型与模板实参复核",
+      "return_binding": "bool结果进入失败判断或改变了结构累计表达式",
+      "reachable_condition": "F0455 前序创建步骤成功并执行到对应源码行",
+      "resolution_source": "初始化.系统角色.ixx:136-150 源码表达式与现有稳定身份复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2172",
+      "caller": "F0455",
+      "callee": "R0603",
+      "callsites": [
+        "海中鱼巣/领域/初始化.系统角色.ixx:150"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "状态已提交(方法登记根.状态)",
+      "argument_resolution": "F0455 局部结果静态类型与模板实参复核",
+      "return_binding": "bool结果进入失败判断或改变了结构累计表达式",
+      "reachable_condition": "F0455 前序创建步骤成功并执行到对应源码行",
+      "resolution_source": "初始化.系统角色.ixx:136-150 源码表达式与现有稳定身份复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2173",
+      "caller": "F0455",
+      "callee": "F0074",
+      "callsites": [
+        "海中鱼巣/领域/初始化.系统角色.ixx:161",
+        "海中鱼巣/领域/初始化.系统角色.ixx:166"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "拓扑；最终复核",
+      "argument_resolution": "两个局部变量静态类型均为系统角色初始化结果",
+      "return_binding": "成功bool进入提前返回判断",
+      "reachable_condition": "拓扑发布或最终复核结果已形成",
+      "resolution_source": "初始化.系统角色.ixx:161,166 与 F0074 完整签名复核",
       "current_root_reachable": true
     }
   ]

@@ -6,7 +6,7 @@
   "current_reachable_edge_table": "流程图/主程序可达调用关系/01_main可达项目调用边表.json",
   "current_reachable_code_commit": "3920a74638264f9f539d50f32f3c9fe5fb1982ab",
   "current_reachable_function_count": 1267,
-  "current_reachable_project_call_edge_count": 3189,
+  "current_reachable_project_call_edge_count": 3193,
   "projection_function_count": 653,
   "projection_chart_completed_count": 361,
   "projection_chart_pending_count": 292,
