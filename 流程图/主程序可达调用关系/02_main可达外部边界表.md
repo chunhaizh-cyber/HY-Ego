@@ -1,6 +1,6 @@
 # main 可达外部边界表
 
-代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；外部边界：1847；回调登记：34。
+代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；外部边界：1851；回调登记：34。
 
 ## 外部边界
 
@@ -1853,6 +1853,10 @@
 | X02519 | R0728 | Standard library optional | <code>const 海中鱼巣::节点记录* std::optional&lt;海中鱼巣::节点记录&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/语素服务.h:254</code> | 1 | X02518确认节点记录存在后读取类型字段 | optional&lt;节点记录&gt;具体模板实例、短路门禁与类型字段访问复核 |
 | X02520 | F0495 | Standard library container | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator std::vector&lt;海中鱼巣::节点句柄&gt;::begin() const noexcept / end() const noexcept</code> | <code>海中鱼巣/自检.入口初始化.ixx:177, 海中鱼巣/自检.入口初始化.ixx:178</code> | 6 | 第一次查找必达；第二次只在第一次命中时到达 | 两个const vector局部变量、两处std::find实参及两处结果比较复核 |
 | X02521 | F0495 | Standard library iterator | <code>bool operator!=(std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator, std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator) noexcept</code> | <code>海中鱼巣/自检.入口初始化.ixx:177, 海中鱼巣/自检.入口初始化.ixx:178</code> | 2 | 每次std::find返回后与对应end比较；第二次受第一组命中短路 | std::find具体返回迭代器、对应end调用和两处!=表达式复核 |
+| X02522 | F0523 | Standard library unordered_map | <code>std::unordered_map&lt;std::uint64_t, 海中鱼巣::节点记录&gt;::iterator std::unordered_map&lt;std::uint64_t, 海中鱼巣::节点记录&gt;::find(const std::uint64_t&amp;)</code> | <code>海中鱼巣/核心/节点仓库.cpp:337</code> | 1 | 事务接线未接域且独占锁已形成 | 节点表静态类型、find实参与调用位置复核 |
+| X02523 | F0523 | Standard library unordered_map | <code>std::unordered_map&lt;std::uint64_t, 海中鱼巣::节点记录&gt;::iterator std::unordered_map&lt;std::uint64_t, 海中鱼巣::节点记录&gt;::end() noexcept</code> | <code>海中鱼巣/核心/节点仓库.cpp:338</code> | 1 | X02522已形成查找迭代器 | 节点表静态类型、end调用与X01100比较实参复核 |
+| X02524 | F0523 | Standard library iterator | <code>std::pair&lt;const std::uint64_t, 海中鱼巣::节点记录&gt;* std::unordered_map&lt;std::uint64_t, 海中鱼巣::节点记录&gt;::iterator::operator-&gt;() const noexcept</code> | <code>海中鱼巣/核心/节点仓库.cpp:341</code> | 1 | X01100确认查找迭代器不等于end | unordered_map迭代器静态类型与second成员访问复核 |
+| X02525 | F0523 | Standard library RAII | <code>std::unique_lock&lt;std::shared_mutex&gt;::~unique_lock() noexcept</code> | <code>海中鱼巣/核心/节点仓库.cpp:336-348</code> | 1 | X01099形成锁后经早退、正常返回或异常展开退出 | 局部unique_lock词法作用域、早退与正常退出路径复核 |
 
 
 ## 回调登记
@@ -1894,4 +1898,4 @@
 | RCB0033 | R0689 | R0696 | std::function同步回调 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:147</code> | R0116 同步调度于海中鱼巣/核心/执行器.结构写入.ixx:82；来源复核通过 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
 | RCB0034 | R0701 | R0708 | std::function同步回调 | <code>海中鱼巣/领域/数据操作.特征体系.ixx:941</code> | R0116 同步调度于海中鱼巣/核心/执行器.结构写入.ixx:82；组成项及写前复核通过 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
 
-统计：1847 个外部边界身份；34 个项目回调登记。标准库、操作系统和第三方函数不进入项目函数身份表。
+统计：1851 个外部边界身份；34 个项目回调登记。标准库、操作系统和第三方函数不进入项目函数身份表。

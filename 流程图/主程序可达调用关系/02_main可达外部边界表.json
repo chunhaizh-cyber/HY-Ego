@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1270,
-  "project_call_edge_count": 3228,
-  "external_count": 1847,
+  "project_call_edge_count": 3233,
+  "external_count": 1851,
   "callback_registration_count": 34,
   "external_boundaries": [
     {
@@ -24657,6 +24657,62 @@
       "boundary_category": "Standard library iterator",
       "reachable_condition": "每次std::find返回后与对应容器end迭代器比较；第二次受第一组命中短路",
       "resolution_source": "std::find具体返回迭代器、对应end调用和两处!=表达式复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02522",
+      "signature": "std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::iterator std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::find(const std::uint64_t&)",
+      "caller": "F0523",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:337"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library unordered_map",
+      "reachable_condition": "事务接线未接域且独占锁已形成",
+      "resolution_source": "节点表静态类型、find实参与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02523",
+      "signature": "std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::iterator std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::end() noexcept",
+      "caller": "F0523",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:338"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library unordered_map",
+      "reachable_condition": "X02522已形成查找迭代器",
+      "resolution_source": "节点表静态类型、end调用与X01100比较实参复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02524",
+      "signature": "std::pair<const std::uint64_t, 海中鱼巣::节点记录>* std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::iterator::operator->() const noexcept",
+      "caller": "F0523",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:341"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "X01100确认查找迭代器不等于end",
+      "resolution_source": "unordered_map迭代器静态类型与second成员访问复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02525",
+      "signature": "std::unique_lock<std::shared_mutex>::~unique_lock() noexcept",
+      "caller": "F0523",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:336-348"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library RAII",
+      "reachable_condition": "X01099成功形成锁后，未接域路径经任一早退、正常返回或异常展开退出",
+      "resolution_source": "局部unique_lock词法作用域、早退与正常退出路径复核",
       "current_root_reachable": true
     }
   ],

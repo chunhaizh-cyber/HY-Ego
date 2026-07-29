@@ -1,6 +1,6 @@
 # main 可达项目调用边表
 
-代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；项目调用边：3228。
+代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；项目调用边：3233。
 
 | 边 ID | 调用方 | 被调方 | 调用点 | 类别 | 参数绑定 | 结果绑定 | 可达条件 | 解析依据 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -3232,5 +3232,10 @@
 | RCE2206 | F0516 | F0331 | <code>海中鱼巣/领域/存在服务.h:94</code> | source-audited-overload-direct | 主信息仓库零参数接收者 | 主信息句柄 | F0516入口后必达 | 零实参精确匹配无令牌创建主信息 F0331 |
 | RCE2207 | F0516 | F0332 | <code>海中鱼巣/领域/存在服务.h:95</code> | source-audited-overload-direct | 节点类型::存在；主信息句柄 | 节点句柄 | 主信息句柄已形成 | 两实参精确匹配无令牌创建节点 F0332 |
 | RCE2208 | F0516 | F0624 | <code>海中鱼巣/领域/存在服务.h:97</code> | source-audited-overload-direct | 记录-&gt;主信息 | bool短路判断 | 读取存在返回有值 | 单实参精确匹配无令牌主信息有效性读取 F0624 |
+| RCE2209 | F0523 | F0336 | <code>海中鱼巣/核心/节点仓库.cpp:332</code> | source-audited-direct-const-member | 事务接线接收者 | 已接域bool | F0523入口后必达 | 静态接收者与零实参成员复核 |
+| RCE2210 | F0523 | F0398 | <code>海中鱼巣/核心/节点仓库.cpp:333</code> | source-audited-resolved-function-pointer | 运行期状态 | 结构事务许可 | RCE2209返回true | 生产装配下独占许可函数指针唯一目标 |
+| RCE2211 | F0523 | F0338 | <code>海中鱼巣/核心/节点仓库.cpp:334</code> | source-audited-direct-const-member | 许可接收者 | 许可有效bool | RCE2210已形成许可 | 静态接收者与短路顺序复核 |
+| RCE2212 | F0523 | F0339 | <code>海中鱼巣/核心/节点仓库.cpp:334</code> | source-audited-direct-const-member | 许可接收者 | const结构事务令牌引用 | RCE2211返回true | 静态接收者、令牌实参与短路顺序复核 |
+| RCE2213 | F0523 | F0345 | <code>海中鱼巣/核心/节点仓库.cpp:333-335</code> | source-audited-implicit-destructor | 局部许可 | void | RCE2210已形成许可 | 局部许可生命周期与非平凡析构身份复核 |
 
-统计：3228 条项目源码调用边；每个 caller/callee pair 只保留一个稳定边身份并合并全部调用点。
+统计：3233 条项目源码调用边；每个 caller/callee pair 只保留一个稳定边身份并合并全部调用点。

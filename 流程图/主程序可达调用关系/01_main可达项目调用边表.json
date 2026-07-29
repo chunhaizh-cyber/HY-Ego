@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1270,
-  "project_call_edge_count": 3228,
-  "edge_count": 3228,
+  "project_call_edge_count": 3233,
+  "edge_count": 3233,
   "edges": [
     {
       "edge_id": "E0002",
@@ -49484,6 +49484,71 @@
       "return_binding": "bool进入短路判断",
       "reachable_condition": "读取存在返回有值",
       "resolution_source": "存在服务.h:97 接收者静态类型、单实参与短路条件复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2209",
+      "caller": "F0523",
+      "callee": "F0336",
+      "callsites": ["海中鱼巣/核心/节点仓库.cpp:332"],
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=&事务接线_",
+      "argument_resolution": "结构事务接线静态接收者与零实参成员复核",
+      "return_binding": "已接域bool进入分支判断",
+      "reachable_condition": "F0523入口后必达",
+      "resolution_source": "节点仓库.cpp:332 静态接收者、成员签名与分支顺序复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2210",
+      "caller": "F0523",
+      "callee": "F0398",
+      "callsites": ["海中鱼巣/核心/节点仓库.cpp:333"],
+      "call_category": "source-audited-resolved-function-pointer",
+      "arguments": "状态=事务接线_.运行期状态",
+      "argument_resolution": "生产装配下取得独占许可函数指针唯一绑定协调器生成接线第153行 lambda",
+      "return_binding": "结构事务许可绑定为许可",
+      "reachable_condition": "RCE2209返回true",
+      "resolution_source": "结构事务接线字段、协调器生成接线与生产装配唯一独占许可目标复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2211",
+      "caller": "F0523",
+      "callee": "F0338",
+      "callsites": ["海中鱼巣/核心/节点仓库.cpp:334"],
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=&许可",
+      "argument_resolution": "结构事务许可静态接收者与零实参成员复核",
+      "return_binding": "许可有效bool进入短路判断",
+      "reachable_condition": "RCE2210已形成许可",
+      "resolution_source": "节点仓库.cpp:334 静态接收者与逻辑与短路顺序复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2212",
+      "caller": "F0523",
+      "callee": "F0339",
+      "callsites": ["海中鱼巣/核心/节点仓库.cpp:334"],
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=&许可",
+      "argument_resolution": "结构事务许可静态接收者与零实参令牌读取成员复核",
+      "return_binding": "const结构事务令牌引用传给R0147",
+      "reachable_condition": "RCE2211返回true；逻辑与右侧开始求值",
+      "resolution_source": "节点仓库.cpp:334 静态接收者、实参绑定与短路顺序复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2213",
+      "caller": "F0523",
+      "callee": "F0345",
+      "callsites": ["海中鱼巣/核心/节点仓库.cpp:333-335"],
+      "call_category": "source-audited-implicit-destructor",
+      "arguments": "this=&许可",
+      "argument_resolution": "局部结构事务许可词法作用域与非平凡析构身份复核",
+      "return_binding": "void",
+      "reachable_condition": "RCE2210已形成许可；返回值求值完成或许可形成后的异常展开",
+      "resolution_source": "节点仓库.cpp:333-335 局部许可生命周期与已登记F0345析构身份复核",
       "current_root_reachable": true
     }
   ]
