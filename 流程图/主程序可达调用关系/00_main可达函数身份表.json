@@ -16,7 +16,7 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1155,
-  "project_call_edge_count": 2778,
+  "project_call_edge_count": 2779,
   "functions": [
     {
       "function_id": "F0001",
@@ -9763,7 +9763,9 @@
       "callers": [
         "F0238"
       ],
-      "callees": [],
+      "callees": [
+        "R0114"
+      ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0238；调用点=海中鱼巣/装配.运行期业务.ixx:75-76",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
@@ -17606,6 +17608,7 @@
         "F0406",
         "F0407",
         "F0408",
+        "F0409",
         "F0410"
       ],
       "callees": [],

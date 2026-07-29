@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1155,
-  "project_call_edge_count": 2778,
-  "edge_count": 2778,
+  "project_call_edge_count": 2779,
+  "edge_count": 2779,
   "edges": [
     {
       "edge_id": "E0002",
@@ -42686,6 +42686,21 @@
       "return_binding": "成员执行器_",
       "reachable_condition": "F0406成员接线和四仓库引用完成初始化",
       "resolution_source": "当前源码第102行成员初始化器、成员声明与R0114构造函数签名专项复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1759",
+      "caller": "F0409",
+      "callee": "R0114",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:35"
+      ],
+      "call_category": "constructor+source-audited",
+      "arguments": "接线=接线_,主信息=&主信息_,节点=&节点_,关系=&关系_,索引=&索引_",
+      "argument_resolution": "成员初始化器静态目标与R0114完整构造签名复核",
+      "return_binding": "成员执行器_",
+      "reachable_condition": "F0409成员接线、四仓库引用和关系仓库编号完成初始化",
+      "resolution_source": "当前源码第35行成员初始化器、成员声明与R0114构造函数签名专项复核",
       "current_root_reachable": true
     }
   ]
