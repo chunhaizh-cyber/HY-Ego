@@ -15,8 +15,8 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1280,
-  "project_call_edge_count": 3436,
+  "function_count": 1287,
+  "project_call_edge_count": 3463,
   "functions": [
     {
       "function_id": "F0001",
@@ -802,8 +802,7 @@
         "F0076",
         "F0077",
         "F0078",
-        "F0079",
-        "R0001"
+        "F0079"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0008；调用点=海中鱼巣/启动.应用程序.ixx:38",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -1594,6 +1593,20 @@
         "F0463",
         "F0495",
         "F0551",
+        "F0571",
+        "F0572",
+        "F0573",
+        "F0574",
+        "F0575",
+        "F0578",
+        "F0579",
+        "F0580",
+        "F0581",
+        "F0582",
+        "F0586",
+        "F0588",
+        "F0620",
+        "F0621",
         "R0064",
         "R0068",
         "R0086",
@@ -1624,20 +1637,7 @@
         "R0703",
         "R0705",
         "R0715",
-        "F0571",
-        "F0572",
-        "F0573",
-        "F0574",
-        "F0575",
-        "F0578",
-        "F0579",
-        "F0580",
-        "F0581",
-        "F0582",
-        "F0586",
-        "F0588",
-        "F0620",
-        "F0621"
+        "R0744"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0015；调用点=海中鱼巣/领域/初始化.系统.ixx:115",
@@ -2090,8 +2090,7 @@
       "overload_identity": "海中鱼巣::运行期上下文租约 海中鱼巣::运行期上下文宿主::读取租约() const",
       "shortest_depth": 4,
       "callers": [
-        "F0027",
-        "R0001"
+        "F0027"
       ],
       "callees": [
         "F0226"
@@ -3893,6 +3892,10 @@
         "F0364",
         "F0459",
         "F0467",
+        "F0582",
+        "F0586",
+        "F0592",
+        "F0636",
         "R0026",
         "R0030",
         "R0031",
@@ -3952,10 +3955,8 @@
         "R0709",
         "R0712",
         "R0714",
-        "F0582",
-        "F0586",
-        "F0592",
-        "F0636"
+        "R0741",
+        "R0744"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0043；调用点=海中鱼巣/领域/方法服务.h:271,海中鱼巣/领域/方法服务.h:278",
@@ -4041,10 +4042,10 @@
         "F0287",
         "F0359",
         "F0364",
-        "R0065",
         "F0566",
         "F0568",
         "F0635",
+        "R0065",
         "R0738"
       ],
       "callees": [
@@ -4103,9 +4104,10 @@
         "F0566",
         "F0568",
         "F0585",
+        "F0589",
+        "F0591",
         "F0592",
         "F0635",
-        "R0015",
         "R0025",
         "R0032",
         "R0047",
@@ -4161,8 +4163,6 @@
         "R0604",
         "R0608",
         "R0644",
-        "F0589",
-        "F0591",
         "R0738"
       ],
       "callees": [],
@@ -4603,6 +4603,8 @@
         "F0366",
         "F0367",
         "F0368",
+        "F0586",
+        "F0591",
         "F0636",
         "R0068",
         "R0249",
@@ -4628,9 +4630,7 @@
         "R0695",
         "R0706",
         "R0731",
-        "R0732",
-        "F0586",
-        "F0591"
+        "R0732"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0048；调用点=海中鱼巣/领域/初始化.概念图.ixx:135,海中鱼巣/领域/初始化.概念图.ixx:135-136",
@@ -7667,9 +7667,9 @@
         "F0327",
         "F0357",
         "F0551",
+        "F0636",
         "R0221",
-        "R0487",
-        "F0636"
+        "R0487"
       ],
       "callees": [
         "F0190",
@@ -7902,17 +7902,6 @@
         "F0450",
         "F0523",
         "F0544",
-        "F0632",
-        "R0002",
-        "R0005",
-        "R0089",
-        "R0091",
-        "R0115",
-        "R0120",
-        "R0121",
-        "R0145",
-        "R0580",
-        "R0730",
         "F0578",
         "F0579",
         "F0580",
@@ -7928,7 +7917,18 @@
         "F0621",
         "F0624",
         "F0627",
-        "F0628"
+        "F0628",
+        "F0632",
+        "R0002",
+        "R0005",
+        "R0089",
+        "R0091",
+        "R0115",
+        "R0120",
+        "R0121",
+        "R0145",
+        "R0580",
+        "R0730"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0197；调用点=海中鱼巣/核心/节点仓库.cpp:454",
@@ -7997,6 +7997,22 @@
         "F0387",
         "F0523",
         "F0544",
+        "F0578",
+        "F0579",
+        "F0580",
+        "F0581",
+        "F0582",
+        "F0586",
+        "F0587",
+        "F0589",
+        "F0590",
+        "F0591",
+        "F0619",
+        "F0620",
+        "F0621",
+        "F0624",
+        "F0627",
+        "F0628",
         "F0631",
         "R0102",
         "R0106",
@@ -8016,23 +8032,7 @@
         "R0690",
         "R0704",
         "R0717",
-        "R0730",
-        "F0578",
-        "F0579",
-        "F0580",
-        "F0581",
-        "F0582",
-        "F0586",
-        "F0587",
-        "F0589",
-        "F0590",
-        "F0591",
-        "F0619",
-        "F0620",
-        "F0621",
-        "F0624",
-        "F0627",
-        "F0628"
+        "R0730"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0197；调用点=海中鱼巣/核心/节点仓库.cpp:456",
@@ -8066,6 +8066,22 @@
         "F0387",
         "F0523",
         "F0544",
+        "F0578",
+        "F0579",
+        "F0580",
+        "F0581",
+        "F0582",
+        "F0586",
+        "F0587",
+        "F0589",
+        "F0590",
+        "F0591",
+        "F0619",
+        "F0620",
+        "F0621",
+        "F0624",
+        "F0627",
+        "F0628",
         "R0102",
         "R0106",
         "R0116",
@@ -8089,23 +8105,7 @@
         "R0690",
         "R0704",
         "R0717",
-        "R0730",
-        "F0578",
-        "F0579",
-        "F0580",
-        "F0581",
-        "F0582",
-        "F0586",
-        "F0587",
-        "F0589",
-        "F0590",
-        "F0591",
-        "F0619",
-        "F0620",
-        "F0621",
-        "F0624",
-        "F0627",
-        "F0628"
+        "R0730"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0197；调用点=海中鱼巣/核心/节点仓库.cpp:456",
@@ -8129,7 +8129,6 @@
         "F0167",
         "F0387",
         "F0440",
-        "R0065",
         "F0578",
         "F0579",
         "F0580",
@@ -8141,7 +8140,8 @@
         "F0590",
         "F0591",
         "F0620",
-        "F0621"
+        "F0621",
+        "R0065"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0167；调用点=海中鱼巣/核心/关系仓库.cpp:185",
@@ -8293,8 +8293,12 @@
         "F0589",
         "F0590",
         "F0591",
+        "F0619",
         "F0620",
         "F0621",
+        "F0624",
+        "F0627",
+        "F0628",
         "R0626",
         "R0648",
         "R0649",
@@ -8303,11 +8307,7 @@
         "R0690",
         "R0704",
         "R0717",
-        "R0730",
-        "F0619",
-        "F0624",
-        "F0627",
-        "F0628"
+        "R0730"
       ],
       "callees": [
         "F0631"
@@ -9720,9 +9720,6 @@
         "F0384",
         "F0387",
         "F0544",
-        "R0402",
-        "R0626",
-        "R0730",
         "F0578",
         "F0579",
         "F0580",
@@ -9738,7 +9735,10 @@
         "F0621",
         "F0624",
         "F0627",
-        "F0628"
+        "F0628",
+        "R0402",
+        "R0626",
+        "R0730"
       ],
       "callees": [
         "R0101"
@@ -9789,6 +9789,7 @@
         "F0233",
         "F0239",
         "F0632",
+        "R0002",
         "R0089",
         "R0120"
       ],
@@ -9814,6 +9815,7 @@
       "shortest_depth": 6,
       "callers": [
         "F0233",
+        "R0005",
         "R0091",
         "R0121"
       ],
@@ -13806,6 +13808,7 @@
         "F0273",
         "F0363",
         "F0467",
+        "R0015",
         "R0028",
         "R0029",
         "R0267",
@@ -13819,7 +13822,8 @@
         "R0683",
         "R0687",
         "R0700",
-        "R0714"
+        "R0714",
+        "R0745"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0273；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:162",
@@ -13843,9 +13847,9 @@
         "F0273"
       ],
       "callees": [
+        "F0167",
         "F0168",
-        "F0568",
-        "F0167"
+        "F0568"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0273；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:170",
       "reachability_class": "main 参数自检/专项模式可达",
@@ -13890,10 +13894,10 @@
         "F0566"
       ],
       "callees": [
-        "F0168",
-        "R0140",
         "F0167",
-        "F0587"
+        "F0168",
+        "F0587",
+        "R0140"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0273；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:180",
       "reachability_class": "main 参数自检/专项模式可达",
@@ -14064,11 +14068,11 @@
         "R0477"
       ],
       "callees": [
+        "F0051",
         "F0341",
         "F0343",
         "F0344",
-        "F0345",
-        "F0051"
+        "F0345"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0279；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:299",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -14140,18 +14144,18 @@
         "R0079"
       ],
       "callees": [
+        "F0051",
+        "F0336",
+        "F0337",
+        "F0338",
+        "F0339",
+        "F0340",
         "F0341",
         "F0343",
         "F0344",
         "F0345",
-        "F0336",
-        "F0337",
-        "F0397",
         "F0375",
-        "F0338",
-        "F0339",
-        "F0340",
-        "F0051"
+        "F0397"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0279；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:304",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -14173,26 +14177,26 @@
       "callers": [
         "F0279",
         "F0554",
+        "F0635",
         "R0081",
         "R0480",
         "R0481",
         "R0486",
-        "F0635",
         "R0738"
       ],
       "callees": [
+        "F0051",
+        "F0336",
+        "F0337",
+        "F0338",
+        "F0339",
+        "F0340",
         "F0341",
         "F0343",
         "F0344",
         "F0345",
-        "F0336",
-        "F0337",
-        "F0397",
         "F0375",
-        "F0338",
-        "F0339",
-        "F0340",
-        "F0051"
+        "F0397"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0279；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:309",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -14220,18 +14224,18 @@
         "R0610"
       ],
       "callees": [
+        "F0051",
+        "F0336",
+        "F0337",
+        "F0338",
+        "F0339",
+        "F0340",
         "F0341",
         "F0343",
         "F0344",
         "F0345",
-        "F0336",
-        "F0337",
-        "F0397",
         "F0375",
-        "F0338",
-        "F0339",
-        "F0340",
-        "F0051"
+        "F0397"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0279；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:314",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -14254,17 +14258,17 @@
         "F0279"
       ],
       "callees": [
-        "F0343",
-        "F0344",
-        "F0345",
+        "F0051",
         "F0336",
         "F0337",
-        "F0397",
-        "F0375",
         "F0338",
         "F0339",
         "F0340",
-        "F0051"
+        "F0343",
+        "F0344",
+        "F0345",
+        "F0375",
+        "F0397"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0279；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:319",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -14288,19 +14292,19 @@
         "R0074"
       ],
       "callees": [
-        "F0341",
-        "F0344",
-        "F0345",
-        "R0085",
+        "F0051",
+        "F0163",
         "F0336",
         "F0337",
-        "F0397",
-        "F0375",
         "F0338",
         "F0339",
         "F0340",
-        "F0163",
-        "F0051"
+        "F0341",
+        "F0344",
+        "F0345",
+        "F0375",
+        "F0397",
+        "R0085"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0279；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:323",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -14395,19 +14399,19 @@
         "F0584"
       ],
       "callees": [
-        "F0343",
-        "F0344",
-        "F0345",
+        "F0051",
+        "F0163",
+        "F0184",
         "F0336",
         "F0337",
-        "F0397",
-        "F0375",
         "F0338",
         "F0339",
         "F0340",
-        "F0163",
-        "F0184",
-        "F0051"
+        "F0343",
+        "F0344",
+        "F0345",
+        "F0375",
+        "F0397"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0286；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:410",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -14437,23 +14441,23 @@
         "F0361",
         "F0362",
         "F0440",
-        "F0569",
-        "R0606",
-        "R0607",
         "F0568",
-        "F0585"
+        "F0569",
+        "F0585",
+        "R0606",
+        "R0607"
       ],
       "callees": [
+        "F0336",
+        "F0337",
+        "F0338",
+        "F0339",
+        "F0340",
         "F0343",
         "F0344",
         "F0345",
-        "F0336",
-        "F0337",
-        "F0397",
         "F0375",
-        "F0338",
-        "F0339",
-        "F0340"
+        "F0397"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0283；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:254,海中鱼巣/核心/自检.关系仓库性能基线.ixx:262",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -14503,17 +14507,17 @@
         "R0073"
       ],
       "callees": [
-        "F0344",
-        "F0345",
-        "R0085",
+        "F0168",
         "F0336",
         "F0337",
-        "F0397",
-        "F0375",
         "F0338",
         "F0339",
         "F0340",
-        "F0168"
+        "F0344",
+        "F0345",
+        "F0375",
+        "F0397",
+        "R0085"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0283；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:258,海中鱼巣/核心/自检.关系仓库性能基线.ixx:263",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -14542,15 +14546,15 @@
         "R0075"
       ],
       "callees": [
-        "F0344",
-        "F0345",
         "F0336",
         "F0337",
-        "F0397",
-        "F0375",
         "F0338",
         "F0339",
-        "F0340"
+        "F0340",
+        "F0344",
+        "F0345",
+        "F0375",
+        "F0397"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0284；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:351",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -14574,18 +14578,18 @@
         "F0569"
       ],
       "callees": [
-        "F0343",
-        "F0344",
-        "F0345",
+        "F0168",
+        "F0184",
         "F0336",
         "F0337",
-        "F0397",
-        "F0375",
         "F0338",
         "F0339",
         "F0340",
-        "F0168",
-        "F0184",
+        "F0343",
+        "F0344",
+        "F0345",
+        "F0375",
+        "F0397",
         "F0592"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0285；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:389",
@@ -14611,9 +14615,9 @@
         "F0591"
       ],
       "callees": [
+        "F0163",
         "F0168",
-        "R0598",
-        "F0163"
+        "R0598"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0285；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:392",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -14683,12 +14687,12 @@
       ],
       "callees": [
         "F0217",
-        "F0383",
         "F0336",
-        "F0397",
         "F0338",
         "F0339",
-        "F0345"
+        "F0345",
+        "F0383",
+        "F0397"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0329；调用点=海中鱼巣/领域/状态服务.h:190",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -14714,18 +14718,18 @@
         "R0483"
       ],
       "callees": [
+        "F0051",
+        "F0336",
+        "F0337",
+        "F0338",
+        "F0339",
+        "F0340",
         "F0341",
         "F0343",
         "F0344",
         "F0345",
-        "F0336",
-        "F0337",
-        "F0397",
         "F0375",
-        "F0338",
-        "F0339",
-        "F0340",
-        "F0051"
+        "F0397"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0330；调用点=海中鱼巣/领域/方法服务.h:1717",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -14756,18 +14760,18 @@
         "R0494"
       ],
       "callees": [
+        "F0051",
+        "F0336",
+        "F0337",
+        "F0338",
+        "F0339",
+        "F0340",
         "F0341",
         "F0343",
         "F0344",
         "F0345",
-        "F0336",
-        "F0337",
-        "F0397",
         "F0375",
-        "F0338",
-        "F0339",
-        "F0340",
-        "F0051"
+        "F0397"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0371；调用点=海中鱼巣/领域/概念图服务.h:1045",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -14856,13 +14860,13 @@
         "R0737"
       ],
       "callees": [
-        "F0384",
-        "R0009",
         "F0336",
         "F0338",
         "F0339",
         "F0345",
-        "F0397"
+        "F0384",
+        "F0397",
+        "R0009"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0516；调用点=海中鱼巣/领域/存在服务.h:97",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -14883,7 +14887,9 @@
       "shortest_depth": 7,
       "callers": [
         "F0332",
-        "F0623"
+        "F0623",
+        "R0745",
+        "R0746"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0332；调用点=海中鱼巣/核心/节点仓库.cpp:58",
@@ -14928,13 +14934,13 @@
         "F0335"
       ],
       "callees": [
-        "F0628",
-        "R0010",
         "F0336",
         "F0338",
         "F0339",
         "F0345",
-        "F0397"
+        "F0397",
+        "F0628",
+        "R0010"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0335；调用点=海中鱼巣/领域/状态服务.h:301",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -14958,12 +14964,12 @@
         "F0627"
       ],
       "callees": [
-        "R0010",
         "F0336",
         "F0338",
         "F0339",
         "F0345",
-        "F0397"
+        "F0397",
+        "R0010"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0335；调用点=海中鱼巣/领域/状态服务.h:305",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -15074,7 +15080,8 @@
         "F0374",
         "F0623",
         "R0141",
-        "R0143"
+        "R0143",
+        "R0746"
       ],
       "callees": [
         "F0336",
@@ -15101,9 +15108,9 @@
         "F0349"
       ],
       "callees": [
+        "F0173",
         "R0241",
-        "R0246",
-        "F0173"
+        "R0246"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0349；调用点=海中鱼巣/线程/自我线程.ixx:303",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -15148,14 +15155,14 @@
       ],
       "callees": [
         "F0059",
+        "F0167",
         "F0168",
+        "F0579",
         "R0203",
         "R0223",
         "R0225",
         "R0275",
         "R0277",
-        "F0167",
-        "F0579",
         "R0733",
         "R0734",
         "R0735",
@@ -15183,14 +15190,14 @@
       ],
       "callees": [
         "F0134",
-        "F0184",
-        "F0328",
-        "R0249",
         "F0163",
         "F0165",
         "F0174",
+        "F0184",
+        "F0328",
         "F0329",
-        "F0350"
+        "F0350",
+        "R0249"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0349；调用点=海中鱼巣/线程/自我线程.ixx:313",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -15309,29 +15316,6 @@
       "current_root_reachable": true
     },
     {
-      "function_id": "R0001",
-      "complete_signature": "运行期上下文租约 海中鱼巣::生产运行期会话::读取租约() const",
-      "callable_type": "Method",
-      "category": "Function/Method",
-      "module_identity": "启动.生产运行期",
-      "file": "海中鱼巣/启动.生产运行期.ixx",
-      "definition_line": 125,
-      "definition_end_line": 127,
-      "overload_identity": "运行期上下文租约 海中鱼巣::生产运行期会话::读取租约() const",
-      "shortest_depth": 4,
-      "callers": [
-        "F0027"
-      ],
-      "callees": [
-        "F0069"
-      ],
-      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0027；调用点=海中鱼巣/启动.生产运行期.ixx:56,海中鱼巣/启动.生产运行期.ixx:103",
-      "reachability_class": "main 生产、公共启动或控制面板路径可达",
-      "test_or_self_check_path": false,
-      "legacy_or_unwired": false,
-      "current_root_reachable": true
-    },
-    {
       "function_id": "R0002",
       "complete_signature": "bool 海中鱼巣::{匿名命名空间@主信息仓库.cpp}::验证共享令牌(const 结构事务接线& 接线, const 结构事务令牌& 令牌)",
       "callable_type": "Function",
@@ -15351,7 +15335,8 @@
         "R0013"
       ],
       "callees": [
-        "F0336"
+        "F0336",
+        "F0399"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0439；调用点=海中鱼巣/核心/主信息仓库.cpp:213",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -15395,16 +15380,15 @@
       "definition_line": 141,
       "definition_end_line": 167,
       "overload_identity": "海中鱼巣::核心未发布候选操作状态 海中鱼巣::主信息仓库::撤销未发布候选(海中鱼巣::主信息未发布候选& 候选, const 海中鱼巣::结构事务令牌& 令牌)",
-      "shortest_depth": 8,
+      "shortest_depth": 11,
       "callers": [
-        "R0006",
-        "R0008"
+        "R0006"
       ],
       "callees": [
         "R0002",
         "R0007"
       ],
-      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0008；调用点=海中鱼巣/核心/主信息仓库.cpp:313",
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0006；调用点=海中鱼巣/核心/主信息仓库.cpp:186",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
       "legacy_or_unwired": false,
@@ -15428,7 +15412,8 @@
         "R0011"
       ],
       "callees": [
-        "F0336"
+        "F0336",
+        "F0400"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0008；调用点=海中鱼巣/核心/主信息仓库.cpp:313",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -15448,6 +15433,7 @@
       "overload_identity": "海中鱼巣::结构写入结果 海中鱼巣::主信息仓库::结构化撤销未发布候选(海中鱼巣::主信息未发布候选& 候选, const 海中鱼巣::结构事务令牌& 令牌)",
       "shortest_depth": 10,
       "callers": [
+        "R0021",
         "R0062"
       ],
       "callees": [
@@ -15473,7 +15459,7 @@
       "definition_line": 19,
       "definition_end_line": 22,
       "overload_identity": "bool 海中鱼巣::{匿名命名空间@主信息仓库.cpp}::令牌一致(const 海中鱼巣::结构事务令牌& 左, const 海中鱼巣::结构事务令牌& 右)",
-      "shortest_depth": 9,
+      "shortest_depth": 11,
       "callers": [
         "R0003",
         "R0004",
@@ -15481,7 +15467,7 @@
         "R0013"
       ],
       "callees": [],
-      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0004；调用点=海中鱼巣/核心/主信息仓库.cpp:146",
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0003；调用点=海中鱼巣/核心/主信息仓库.cpp:120",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
       "legacy_or_unwired": false,
@@ -15505,7 +15491,6 @@
         "R0574"
       ],
       "callees": [
-        "R0004",
         "R0005"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0574；调用点=海中鱼巣/领域/语素服务.h:386",
@@ -15530,7 +15515,9 @@
         "F0624",
         "R0206",
         "R0242",
-        "R0731"
+        "R0731",
+        "R0745",
+        "R0746"
       ],
       "callees": [
         "F0439"
@@ -15675,10 +15662,11 @@
       "overload_identity": "bool 海中鱼巣::主信息未发布候选::完整() const",
       "shortest_depth": 11,
       "callers": [
+        "R0021",
         "R0028"
       ],
       "callees": [
-        "F0168"
+        "F0565"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0028；调用点=海中鱼巣/核心/会话.结构写入.ixx:478",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -15822,10 +15810,13 @@
         "R0696"
       ],
       "callees": [
+        "R0006",
         "R0011",
         "R0014",
+        "R0015",
         "R0044",
-        "R0052"
+        "R0052",
+        "R0739"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0634；调用点=海中鱼巣/领域/数据操作.存在场景.ixx:638",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -15855,7 +15846,12 @@
       ],
       "callees": [
         "R0044",
-        "R0052"
+        "R0052",
+        "R0144",
+        "R0148",
+        "R0740",
+        "R0741",
+        "R0745"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0634；调用点=海中鱼巣/领域/数据操作.存在场景.ixx:641",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -15888,7 +15884,9 @@
         "R0044",
         "R0052",
         "R0066",
-        "R0076"
+        "R0076",
+        "R0642",
+        "R0742"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0341；调用点=海中鱼巣/领域/数据操作.概念活动.ixx:87",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -15915,7 +15913,9 @@
         "R0052",
         "R0054",
         "R0068",
-        "R0076"
+        "R0076",
+        "R0742",
+        "R0743"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0418；调用点=海中鱼巣/领域/数据操作.系统角色.ixx:319",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -18879,7 +18879,10 @@
         "R0642",
         "R0656",
         "R0678",
-        "R0696"
+        "R0696",
+        "R0739",
+        "R0740",
+        "R0743"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0116；调用点=海中鱼巣/核心/执行器.结构写入.ixx:99",
@@ -19017,6 +19020,7 @@
       "overload_identity": "海中鱼巣::结构写入结果 海中鱼巣::节点仓库::结构化撤销未发布候选(海中鱼巣::节点未发布候选& 候选, const 海中鱼巣::结构事务令牌& 令牌)",
       "shortest_depth": 10,
       "callers": [
+        "R0022",
         "R0062"
       ],
       "callees": [
@@ -19046,7 +19050,8 @@
       "callers": [
         "R0142",
         "R0144",
-        "R0147"
+        "R0147",
+        "R0745"
       ],
       "callees": [
         "F0336"
@@ -19122,8 +19127,10 @@
       "overload_identity": "海中鱼巣::节点句柄 海中鱼巣::节点未发布候选::读取节点() const",
       "shortest_depth": 11,
       "callers": [
+        "R0022",
         "R0142",
-        "R0144"
+        "R0144",
+        "R0745"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0142；调用点=海中鱼巣/核心/节点仓库.cpp:149",
@@ -30962,6 +30969,7 @@
       "overload_identity": "bool 海中鱼巣::带值结构写入结果<海中鱼巣::关系句柄>::成功() const noexcept",
       "shortest_depth": 10,
       "callers": [
+        "R0023",
         "R0634",
         "R0655",
         "R0656",
@@ -33409,6 +33417,198 @@
         "R0276"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0736；调用点=海中鱼巣/领域/世界服务.h:74",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0739",
+      "complete_signature": "bool 海中鱼巣::带值结构写入结果<海中鱼巣::主信息未发布候选>::成功() const noexcept",
+      "callable_type": "Template Method Instance",
+      "category": "Template Method Instance",
+      "module_identity": "结果.结构写入",
+      "file": "海中鱼巣/核心/结果.结构写入.h",
+      "definition_line": 43,
+      "definition_end_line": 45,
+      "overload_identity": "bool 海中鱼巣::带值结构写入结果<海中鱼巣::主信息未发布候选>::成功() const noexcept",
+      "shortest_depth": 11,
+      "callers": [
+        "R0021"
+      ],
+      "callees": [
+        "R0138"
+      ],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0021；调用点=海中鱼巣/核心/会话.结构写入.ixx:239",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0740",
+      "complete_signature": "bool 海中鱼巣::带值结构写入结果<海中鱼巣::节点未发布候选>::成功() const noexcept",
+      "callable_type": "Template Method Instance",
+      "category": "Template Method Instance",
+      "module_identity": "结果.结构写入",
+      "file": "海中鱼巣/核心/结果.结构写入.h",
+      "definition_line": 43,
+      "definition_end_line": 45,
+      "overload_identity": "bool 海中鱼巣::带值结构写入结果<海中鱼巣::节点未发布候选>::成功() const noexcept",
+      "shortest_depth": 11,
+      "callers": [
+        "R0022"
+      ],
+      "callees": [
+        "R0138"
+      ],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0022；调用点=海中鱼巣/核心/会话.结构写入.ixx:267",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0741",
+      "complete_signature": "bool 海中鱼巣::节点未发布候选::完整() const",
+      "callable_type": "Method",
+      "category": "Method",
+      "module_identity": "头文件内联/模板定义",
+      "file": "海中鱼巣/核心/节点仓库.h",
+      "definition_line": 39,
+      "definition_end_line": 43,
+      "overload_identity": "bool 海中鱼巣::节点未发布候选::完整() const",
+      "shortest_depth": 11,
+      "callers": [
+        "R0022"
+      ],
+      "callees": [
+        "F0163"
+      ],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0022；调用点=海中鱼巣/核心/会话.结构写入.ixx:281",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0742",
+      "complete_signature": "bool 海中鱼巣::结构写入结果::改变了结构() const noexcept",
+      "callable_type": "Method",
+      "category": "Method",
+      "module_identity": "结果.结构写入",
+      "file": "海中鱼巣/核心/结果.结构写入.h",
+      "definition_line": 33,
+      "definition_end_line": 35,
+      "overload_identity": "bool 海中鱼巣::结构写入结果::改变了结构() const noexcept",
+      "shortest_depth": 11,
+      "callers": [
+        "R0023",
+        "R0024"
+      ],
+      "callees": [],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0023；调用点=海中鱼巣/核心/会话.结构写入.ixx:307",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0743",
+      "complete_signature": "bool 海中鱼巣::结构化节点挂载结果::成功() const noexcept",
+      "callable_type": "Method",
+      "category": "Method",
+      "module_identity": "头文件内联/模板定义",
+      "file": "海中鱼巣/核心/关系仓库.h",
+      "definition_line": 175,
+      "definition_end_line": 177,
+      "overload_identity": "bool 海中鱼巣::结构化节点挂载结果::成功() const noexcept",
+      "shortest_depth": 12,
+      "callers": [
+        "R0024"
+      ],
+      "callees": [
+        "R0138",
+        "R0744"
+      ],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0024；调用点=海中鱼巣/核心/会话.结构写入.ixx:382",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0744",
+      "complete_signature": "bool 海中鱼巣::节点挂载结果::关系已确定() const",
+      "callable_type": "Method",
+      "category": "Method",
+      "module_identity": "头文件内联/模板定义",
+      "file": "海中鱼巣/核心/关系仓库.h",
+      "definition_line": 155,
+      "definition_end_line": 167,
+      "overload_identity": "bool 海中鱼巣::节点挂载结果::关系已确定() const",
+      "shortest_depth": 13,
+      "callers": [
+        "R0743"
+      ],
+      "callees": [
+        "F0051",
+        "F0163"
+      ],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0743；调用点=海中鱼巣/核心/关系仓库.h:176",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0745",
+      "complete_signature": "海中鱼巣::带值结构写入结果<海中鱼巣::节点未发布候选> 海中鱼巣::节点仓库::结构化创建节点未发布候选(海中鱼巣::节点类型 类型, 海中鱼巣::主信息句柄 主信息, const 海中鱼巣::结构事务令牌& 令牌)",
+      "callable_type": "Method",
+      "category": "Method",
+      "module_identity": "全局模块片段/源文件定义",
+      "file": "海中鱼巣/核心/节点仓库.cpp",
+      "definition_line": 83,
+      "definition_end_line": 107,
+      "overload_identity": "海中鱼巣::带值结构写入结果<海中鱼巣::节点未发布候选> 海中鱼巣::节点仓库::结构化创建节点未发布候选(海中鱼巣::节点类型 类型, 海中鱼巣::主信息句柄 主信息, const 海中鱼巣::结构事务令牌& 令牌)",
+      "shortest_depth": 11,
+      "callers": [
+        "R0022"
+      ],
+      "callees": [
+        "F0565",
+        "F0625",
+        "R0009",
+        "R0145",
+        "R0148",
+        "R0746"
+      ],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0022；调用点=海中鱼巣/核心/会话.结构写入.ixx:265",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0746",
+      "complete_signature": "std::optional<海中鱼巣::节点未发布候选> 海中鱼巣::节点仓库::创建节点未发布候选(海中鱼巣::节点类型 类型, 海中鱼巣::主信息句柄 主信息, const 海中鱼巣::结构事务令牌& 令牌)",
+      "callable_type": "Method",
+      "category": "Method",
+      "module_identity": "全局模块片段/源文件定义",
+      "file": "海中鱼巣/核心/节点仓库.cpp",
+      "definition_line": 109,
+      "definition_end_line": 123,
+      "overload_identity": "std::optional<海中鱼巣::节点未发布候选> 海中鱼巣::节点仓库::创建节点未发布候选(海中鱼巣::节点类型 类型, 海中鱼巣::主信息句柄 主信息, const 海中鱼巣::结构事务令牌& 令牌)",
+      "shortest_depth": 12,
+      "callers": [
+        "R0745"
+      ],
+      "callees": [
+        "F0625",
+        "F0632",
+        "R0009"
+      ],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0745；调用点=海中鱼巣/核心/节点仓库.cpp:98",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
       "legacy_or_unwired": false,

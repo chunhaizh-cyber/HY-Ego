@@ -15,9 +15,9 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1280,
-  "project_call_edge_count": 3436,
-  "external_count": 2062,
+  "function_count": 1287,
+  "project_call_edge_count": 3463,
+  "external_count": 2125,
   "callback_registration_count": 34,
   "external_boundaries": [
     {
@@ -10799,287 +10799,287 @@
     {
       "id": "X01339",
       "caller": "R0004",
-      "signature": "unique_lock(std::shared_mutex &) :: void (std::shared_mutex &)",
+      "signature": "std::unique_lock<std::shared_mutex>::unique_lock(std::shared_mutex&)",
       "locations": [
         "海中鱼巣/核心/主信息仓库.cpp:156"
       ],
       "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "boundary_category": "Standard library lock",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
       "id": "X01340",
       "caller": "R0004",
-      "signature": "operator==(const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主信息记录>>>> &) :: bool (const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主信息记录>>>> &) const noexcept",
+      "signature": "bool std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator::operator==(const std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator&) const noexcept",
       "locations": [
         "海中鱼巣/核心/主信息仓库.cpp:158"
       ],
       "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "boundary_category": "Standard library container",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
       "id": "X01341",
       "caller": "R0004",
-      "signature": "_List_iterator(const _List_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主信息记录>>>> &) :: void (const _List_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主信息记录>>>> &) noexcept",
+      "signature": "std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator::iterator(const std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator&) noexcept",
       "locations": [
         "海中鱼巣/核心/主信息仓库.cpp:164"
       ],
       "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "boundary_category": "Standard library container",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
       "id": "X01342",
       "caller": "R0004",
-      "signature": "erase<>(iterator) :: iterator (iterator) noexcept(_Nothrow_hash<std::_Umap_traits<unsigned long long, 海中鱼巣::主信息记录, std::_Uhash_compare<unsigned long long, std::hash<unsigned long long>, std::equal_to<unsigned long long>>, std::allocator<std::pair<const unsigned long long, 海中鱼巣::主信息记录>>, false>, key_type>)",
+      "signature": "std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::erase(std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator)",
       "locations": [
         "海中鱼巣/核心/主信息仓库.cpp:164"
       ],
       "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "boundary_category": "Standard library container",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
       "id": "X01343",
       "caller": "R0008",
-      "signature": "unique_lock(std::shared_mutex &) :: void (std::shared_mutex &)",
+      "signature": "std::unique_lock<std::shared_mutex>::unique_lock(std::shared_mutex&)",
       "locations": [
         "海中鱼巣/核心/主信息仓库.cpp:314"
       ],
       "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "boundary_category": "Standard library lock",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
       "id": "X01344",
       "caller": "R0008",
-      "signature": "operator==(const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主信息记录>>>> &) :: bool (const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主信息记录>>>> &) const noexcept",
+      "signature": "bool std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator::operator==(const std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator&) const noexcept",
       "locations": [
         "海中鱼巣/核心/主信息仓库.cpp:316"
       ],
       "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "boundary_category": "Standard library container",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
       "id": "X01345",
       "caller": "R0010",
-      "signature": "unique_lock(std::shared_mutex &) :: void (std::shared_mutex &)",
+      "signature": "std::unique_lock<std::shared_mutex>::unique_lock(std::shared_mutex&)",
       "locations": [
         "海中鱼巣/核心/主信息仓库.cpp:410"
       ],
       "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "boundary_category": "Standard library lock",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
       "id": "X01346",
       "caller": "R0010",
-      "signature": "operator==(const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主信息记录>>>> &) :: bool (const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主信息记录>>>> &) const noexcept",
+      "signature": "bool std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator::operator==(const std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator&) const noexcept",
       "locations": [
         "海中鱼巣/核心/主信息仓库.cpp:412"
       ],
       "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "boundary_category": "Standard library container",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
       "id": "X01347",
       "caller": "R0010",
-      "signature": "operator[](const size_type) :: std::optional<long long> &(const size_type) noexcept",
+      "signature": "std::optional<std::int64_t>& std::vector<std::optional<std::int64_t>>::operator[](std::size_t) noexcept",
       "locations": [
         "海中鱼巣/核心/主信息仓库.cpp:418"
       ],
       "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "boundary_category": "Standard library container",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
       "id": "X01348",
       "caller": "R0010",
-      "signature": "operator=(optional<long long> &&) :: optional<long long> &(optional<long long> &&) noexcept",
+      "signature": "std::optional<std::int64_t>& std::optional<std::int64_t>::operator=(std::optional<std::int64_t>&&) noexcept",
       "locations": [
         "海中鱼巣/核心/主信息仓库.cpp:418"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
       "id": "X01349",
       "caller": "R0010",
-      "signature": "optional<>(long long &) :: void (long long &) noexcept(is_nothrow_constructible_v<long long, long long &>)",
+      "signature": "std::optional<std::int64_t>::optional(std::int64_t&)",
       "locations": [
         "海中鱼巣/核心/主信息仓库.cpp:418"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
       "id": "X01350",
       "caller": "R0011",
-      "signature": "std::move(...)",
+      "signature": "海中鱼巣::主信息未发布候选&& std::move<海中鱼巣::主信息未发布候选&>(海中鱼巣::主信息未发布候选&) noexcept",
       "locations": [
         "海中鱼巣/核心/主信息仓库.cpp:76"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立",
-      "resolution_source": "最终 caller 源码范围 + std 限定名调用语法复核",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
       "id": "X01351",
       "caller": "R0012",
-      "signature": "unique_lock(std::shared_mutex &) :: void (std::shared_mutex &)",
+      "signature": "std::unique_lock<std::shared_mutex>::unique_lock(std::shared_mutex&)",
       "locations": [
         "海中鱼巣/核心/主信息仓库.cpp:83"
       ],
       "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "boundary_category": "Standard library lock",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
       "id": "X01352",
       "caller": "R0012",
-      "signature": "optional<>(海中鱼巣::主信息未发布候选 &&) :: void (海中鱼巣::主信息未发布候选 &&) noexcept(is_nothrow_constructible_v<海中鱼巣::主信息未发布候选, 海中鱼巣::主信息未发布候选>)",
+      "signature": "std::optional<海中鱼巣::主信息未发布候选>::optional(海中鱼巣::主信息未发布候选&&)",
       "locations": [
         "海中鱼巣/核心/主信息仓库.cpp:87"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
       "id": "X01353",
       "caller": "R0013",
-      "signature": "shared_lock(mutex_type &) :: void (mutex_type &)",
+      "signature": "std::shared_lock<std::shared_mutex>::shared_lock(std::shared_mutex&)",
       "locations": [
         "海中鱼巣/核心/主信息仓库.cpp:99"
       ],
       "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "boundary_category": "Standard library lock",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
       "id": "X01354",
       "caller": "R0013",
-      "signature": "operator==(const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主信息记录>>>> &) :: bool (const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主信息记录>>>> &) const noexcept",
+      "signature": "bool std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator::operator==(const std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator&) const noexcept",
       "locations": [
         "海中鱼巣/核心/主信息仓库.cpp:101"
       ],
       "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "boundary_category": "Standard library container",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
       "id": "X01355",
       "caller": "R0021",
-      "signature": "move :: remove_reference_t<海中鱼巣::主信息未发布候选 &> &&(海中鱼巣::主信息未发布候选 &) noexcept",
+      "signature": "海中鱼巣::主信息未发布候选&& std::move<海中鱼巣::主信息未发布候选&>(海中鱼巣::主信息未发布候选&) noexcept",
       "locations": [
         "海中鱼巣/核心/会话.结构写入.ixx:248"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全模块Clang候选-4c89f990.json",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
       "id": "X01356",
       "caller": "R0021",
-      "signature": "move :: remove_reference_t<海中鱼巣::主信息未发布候选 &> &&(海中鱼巣::主信息未发布候选 &) noexcept",
+      "signature": "海中鱼巣::主信息未发布候选&& std::move<海中鱼巣::主信息未发布候选&>(海中鱼巣::主信息未发布候选&) noexcept",
       "locations": [
         "海中鱼巣/核心/会话.结构写入.ixx:251"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全模块Clang候选-4c89f990.json",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
       "id": "X01357",
       "caller": "R0022",
-      "signature": "move :: remove_reference_t<海中鱼巣::节点未发布候选 &> &&(海中鱼巣::节点未发布候选 &) noexcept",
+      "signature": "海中鱼巣::节点未发布候选&& std::move<海中鱼巣::节点未发布候选&>(海中鱼巣::节点未发布候选&) noexcept",
       "locations": [
         "海中鱼巣/核心/会话.结构写入.ixx:276"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全模块Clang候选-4c89f990.json",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
       "id": "X01358",
       "caller": "R0022",
-      "signature": "move :: remove_reference_t<海中鱼巣::节点未发布候选 &> &&(海中鱼巣::节点未发布候选 &) noexcept",
+      "signature": "海中鱼巣::节点未发布候选&& std::move<海中鱼巣::节点未发布候选&>(海中鱼巣::节点未发布候选&) noexcept",
       "locations": [
         "海中鱼巣/核心/会话.结构写入.ixx:279"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全模块Clang候选-4c89f990.json",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
       "id": "X01359",
       "caller": "R0023",
-      "signature": "move :: remove_reference_t<海中鱼巣::带值结构写入结果<海中鱼巣::关系句柄> &> &&(海中鱼巣::带值结构写入结果<海中鱼巣::关系句柄> &) noexcept",
+      "signature": "海中鱼巣::带值结构写入结果<海中鱼巣::关系句柄>&& std::move<海中鱼巣::带值结构写入结果<海中鱼巣::关系句柄>&>(海中鱼巣::带值结构写入结果<海中鱼巣::关系句柄>&) noexcept",
       "locations": [
         "海中鱼巣/核心/会话.结构写入.ixx:302"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全模块Clang候选-4c89f990.json",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
       "id": "X01360",
       "caller": "R0024",
-      "signature": "move :: remove_reference_t<海中鱼巣::已发布关系变更能力 &> &&(海中鱼巣::已发布关系变更能力 &) noexcept",
+      "signature": "海中鱼巣::已发布关系变更能力&& std::move<海中鱼巣::已发布关系变更能力&>(海中鱼巣::已发布关系变更能力&) noexcept",
       "locations": [
         "海中鱼巣/核心/会话.结构写入.ixx:404"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全模块Clang候选-4c89f990.json",
+      "reachable_condition": "执行到对应源码行",
+      "resolution_source": "本批源码容器、锁、可选值静态类型与操作复核",
       "current_root_reachable": true
     },
     {
@@ -27742,6 +27742,895 @@
       "queued": false,
       "boundary_category": "Standard library optional",
       "reachable_condition": "读取节点类型和主信息句柄",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02738",
+      "caller": "R0004",
+      "signature": "std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::find(const std::uint64_t&)",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:157"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "按候选主信息编号定位记录",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02739",
+      "caller": "R0004",
+      "signature": "std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::end() noexcept",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:158"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "取得主信息表尾后迭代器",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02740",
+      "caller": "R0004",
+      "signature": "std::pair<const std::uint64_t, 海中鱼巣::主信息记录>* std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator::operator->() const noexcept",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:160-161"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "读取已定位记录的版本与状态",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02741",
+      "caller": "R0004",
+      "signature": "std::unique_lock<std::shared_mutex>::~unique_lock() noexcept",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:156-167"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lock",
+      "reachable_condition": "离开独占锁作用域或异常展开",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02742",
+      "caller": "R0008",
+      "signature": "std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::find(const std::uint64_t&)",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:315"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "按主信息编号定位记录",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02743",
+      "caller": "R0008",
+      "signature": "std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::end() noexcept",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:316"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "取得主信息表尾后迭代器",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02744",
+      "caller": "R0008",
+      "signature": "std::pair<const std::uint64_t, 海中鱼巣::主信息记录>* std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator::operator->() const noexcept",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:317"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "取得已定位主信息记录引用",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02745",
+      "caller": "R0008",
+      "signature": "std::unique_lock<std::shared_mutex>::~unique_lock() noexcept",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:314-322"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lock",
+      "reachable_condition": "离开独占锁作用域或异常展开",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02746",
+      "caller": "R0009",
+      "signature": "bool std::optional<海中鱼巣::主信息记录>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:372"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "判断读取结果是否有值",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02747",
+      "caller": "R0010",
+      "signature": "std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::find(const std::uint64_t&)",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:411"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "按主信息编号定位记录",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02748",
+      "caller": "R0010",
+      "signature": "std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::end() noexcept",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:412"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "取得主信息表尾后迭代器",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02749",
+      "caller": "R0010",
+      "signature": "std::pair<const std::uint64_t, 海中鱼巣::主信息记录>* std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator::operator->() const noexcept",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:413"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "取得已定位主信息记录引用",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02750",
+      "caller": "R0010",
+      "signature": "std::vector<std::optional<std::int64_t>>::size_type std::vector<std::optional<std::int64_t>>::max_size() const noexcept",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:415"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "复核值索引不超过容器最大容量",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02751",
+      "caller": "R0010",
+      "signature": "std::vector<std::optional<std::int64_t>>::size_type std::vector<std::optional<std::int64_t>>::size() const noexcept",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:417"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "判断值容器是否需要扩展",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02752",
+      "caller": "R0010",
+      "signature": "void std::vector<std::optional<std::int64_t>>::resize(std::size_t)",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:417"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "按值索引扩展值容器",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02753",
+      "caller": "R0010",
+      "signature": "std::unique_lock<std::shared_mutex>::~unique_lock() noexcept",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:410-420"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lock",
+      "reachable_condition": "离开独占锁作用域或异常展开",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02754",
+      "caller": "R0011",
+      "signature": "bool std::optional<海中鱼巣::主信息未发布候选>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:70"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "判断候选创建结果是否有值",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02755",
+      "caller": "R0011",
+      "signature": "海中鱼巣::主信息未发布候选* std::optional<海中鱼巣::主信息未发布候选>::operator->() noexcept",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:74"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "读取候选对象",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02756",
+      "caller": "R0011",
+      "signature": "海中鱼巣::主信息未发布候选& std::optional<海中鱼巣::主信息未发布候选>::operator*() & noexcept",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:76"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "解引用候选对象供移动",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02757",
+      "caller": "R0011",
+      "signature": "海中鱼巣::主信息未发布候选& std::optional<海中鱼巣::主信息未发布候选>::emplace(海中鱼巣::主信息未发布候选&&)",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:76"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "把候选移动构造到结果值",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02758",
+      "caller": "R0012",
+      "signature": "std::pair<std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator, bool> std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::emplace(std::uint64_t&, 海中鱼巣::主信息记录&)",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:86"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "插入未发布主信息记录",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02759",
+      "caller": "R0012",
+      "signature": "std::unique_lock<std::shared_mutex>::~unique_lock() noexcept",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:83-88"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lock",
+      "reachable_condition": "离开独占锁作用域或异常展开",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02760",
+      "caller": "R0013",
+      "signature": "std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::find(const std::uint64_t&)",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:100"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "按候选主信息编号定位记录",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02761",
+      "caller": "R0013",
+      "signature": "std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::end() noexcept",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:101"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "取得主信息表尾后迭代器",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02762",
+      "caller": "R0013",
+      "signature": "std::pair<const std::uint64_t, 海中鱼巣::主信息记录>* std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录>::iterator::operator->() const noexcept",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:103-104"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "读取已定位记录的版本与状态",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02763",
+      "caller": "R0013",
+      "signature": "std::shared_lock<std::shared_mutex>::~shared_lock() noexcept",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:99-109"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lock",
+      "reachable_condition": "离开共享锁作用域或异常展开",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02764",
+      "caller": "R0018",
+      "signature": "std::optional<海中鱼巣::节点类型>::optional(std::nullopt_t) noexcept",
+      "locations": [
+        "海中鱼巣/核心/会话.结构写入.ixx:1041"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "会话_ == nullptr 时形成空返回",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02765",
+      "caller": "R0019",
+      "signature": "std::optional<海中鱼巣::主信息句柄>::optional(std::nullopt_t) noexcept",
+      "locations": [
+        "海中鱼巣/核心/会话.结构写入.ixx:1045"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "会话_ == nullptr 时形成空返回",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02766",
+      "caller": "R0020",
+      "signature": "std::optional<std::int64_t>::optional(std::nullopt_t) noexcept",
+      "locations": [
+        "海中鱼巣/核心/会话.结构写入.ixx:1051"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "会话_ == nullptr 时形成空返回",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02767",
+      "caller": "R0021",
+      "signature": "bool std::optional<海中鱼巣::主信息未发布候选>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/核心/会话.结构写入.ixx:243"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "RCE2419 返回 true 后判断候选值",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02768",
+      "caller": "R0021",
+      "signature": "海中鱼巣::主信息未发布候选& std::optional<海中鱼巣::主信息未发布候选>::operator*() & noexcept",
+      "locations": [
+        "海中鱼巣/核心/会话.结构写入.ixx:248"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "候选有值后解引用供移动",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02769",
+      "caller": "R0021",
+      "signature": "海中鱼巣::结构写入会话::主信息候选记录& std::vector<海中鱼巣::结构写入会话::主信息候选记录>::emplace_back<海中鱼巣::主信息未发布候选>(海中鱼巣::主信息未发布候选&&)",
+      "locations": [
+        "海中鱼巣/核心/会话.结构写入.ixx:251"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "把候选移动构造到主信息候选组",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02770",
+      "caller": "R0021",
+      "signature": "海中鱼巣::主信息句柄& std::optional<海中鱼巣::主信息句柄>::emplace<海中鱼巣::主信息句柄&>(海中鱼巣::主信息句柄&)",
+      "locations": [
+        "海中鱼巣/核心/会话.结构写入.ixx:258"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "成功登记候选后形成输出值",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02771",
+      "caller": "R0022",
+      "signature": "bool std::optional<海中鱼巣::节点未发布候选>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/核心/会话.结构写入.ixx:271"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "RCE2422 返回 true 后判断候选值",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02772",
+      "caller": "R0022",
+      "signature": "海中鱼巣::节点未发布候选& std::optional<海中鱼巣::节点未发布候选>::operator*() & noexcept",
+      "locations": [
+        "海中鱼巣/核心/会话.结构写入.ixx:276"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "候选有值后解引用供移动",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02773",
+      "caller": "R0022",
+      "signature": "海中鱼巣::结构写入会话::节点候选记录& std::vector<海中鱼巣::结构写入会话::节点候选记录>::emplace_back<海中鱼巣::节点未发布候选>(海中鱼巣::节点未发布候选&&)",
+      "locations": [
+        "海中鱼巣/核心/会话.结构写入.ixx:279"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "把候选移动构造到节点候选组",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02774",
+      "caller": "R0022",
+      "signature": "海中鱼巣::节点句柄& std::optional<海中鱼巣::节点句柄>::emplace<海中鱼巣::节点句柄&>(海中鱼巣::节点句柄&)",
+      "locations": [
+        "海中鱼巣/核心/会话.结构写入.ixx:286"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "成功登记候选后形成输出值",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02775",
+      "caller": "R0023",
+      "signature": "海中鱼巣::关系句柄& std::optional<海中鱼巣::关系句柄>::operator*() & noexcept",
+      "locations": [
+        "海中鱼巣/核心/会话.结构写入.ixx:309",
+        "海中鱼巣/核心/会话.结构写入.ixx:311"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "解引用输出关系供登记或补偿删除",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02776",
+      "caller": "R0023",
+      "signature": "void std::vector<海中鱼巣::结构写入会话::关系写入记录>::push_back(海中鱼巣::结构写入会话::关系写入记录&&)",
+      "locations": [
+        "海中鱼巣/核心/会话.结构写入.ixx:309"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "把新关系登记到关系写集",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02777",
+      "caller": "R0024",
+      "signature": "std::optional<海中鱼巣::关系句柄>::optional(std::nullopt_t) noexcept",
+      "locations": [
+        "海中鱼巣/核心/会话.结构写入.ixx:376",
+        "海中鱼巣/核心/会话.结构写入.ixx:378"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "值初始化挂载结果的可选旧父/父关系",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02778",
+      "caller": "R0024",
+      "signature": "bool std::optional<海中鱼巣::关系句柄>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/核心/会话.结构写入.ixx:388",
+        "海中鱼巣/核心/会话.结构写入.ixx:410",
+        "海中鱼巣/核心/会话.结构写入.ixx:411"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "判断父关系是否存在",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02779",
+      "caller": "R0024",
+      "signature": "海中鱼巣::关系句柄& std::optional<海中鱼巣::关系句柄>::operator*() & noexcept",
+      "locations": [
+        "海中鱼巣/核心/会话.结构写入.ixx:390",
+        "海中鱼巣/核心/会话.结构写入.ixx:392"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "解引用父关系供登记或补偿删除",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02780",
+      "caller": "R0024",
+      "signature": "void std::vector<海中鱼巣::结构写入会话::关系写入记录>::push_back(海中鱼巣::结构写入会话::关系写入记录&&)",
+      "locations": [
+        "海中鱼巣/核心/会话.结构写入.ixx:390"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "把新建父关系登记到关系写集",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02781",
+      "caller": "R0024",
+      "signature": "bool std::optional<海中鱼巣::已发布关系变更能力>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/核心/会话.结构写入.ixx:403"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "重挂分支判断变更能力是否存在",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02782",
+      "caller": "R0024",
+      "signature": "海中鱼巣::已发布关系变更能力& std::optional<海中鱼巣::已发布关系变更能力>::operator*() & noexcept",
+      "locations": [
+        "海中鱼巣/核心/会话.结构写入.ixx:404"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "解引用变更能力供移动登记",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02783",
+      "caller": "R0024",
+      "signature": "海中鱼巣::关系句柄* std::optional<海中鱼巣::关系句柄>::operator->() noexcept",
+      "locations": [
+        "海中鱼巣/核心/会话.结构写入.ixx:410",
+        "海中鱼巣/核心/会话.结构写入.ixx:411"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "读取可选父关系编号与版本",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02784",
+      "caller": "R0739",
+      "signature": "bool std::optional<海中鱼巣::主信息未发布候选>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/核心/结果.结构写入.h:44"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "结构写入结果成功后检查模板值存在",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02785",
+      "caller": "R0740",
+      "signature": "bool std::optional<海中鱼巣::节点未发布候选>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/核心/结果.结构写入.h:44"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "结构写入结果成功后检查模板值存在",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02786",
+      "caller": "R0744",
+      "signature": "bool std::optional<海中鱼巣::关系句柄>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/核心/关系仓库.h:156"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "节点与新父句柄有效且互异后检查父关系",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02787",
+      "caller": "R0744",
+      "signature": "bool std::optional<海中鱼巣::节点句柄>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/核心/关系仓库.h:160",
+        "海中鱼巣/核心/关系仓库.h:163"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "已创建/已重挂分支检查旧父节点",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02788",
+      "caller": "R0744",
+      "signature": "const 海中鱼巣::节点句柄& std::optional<海中鱼巣::节点句柄>::value() const &",
+      "locations": [
+        "海中鱼巣/核心/关系仓库.h:163"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "已重挂且旧父存在时读取旧父节点",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02789",
+      "caller": "R0744",
+      "signature": "bool std::operator==<海中鱼巣::节点句柄>(const std::optional<海中鱼巣::节点句柄>&, const std::optional<海中鱼巣::节点句柄>&)",
+      "locations": [
+        "海中鱼巣/核心/关系仓库.h:166"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "已在目标父分支比较旧父节点与新父节点可选值",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02790",
+      "caller": "R0744",
+      "signature": "std::optional<海中鱼巣::节点句柄>::optional(const 海中鱼巣::节点句柄&)",
+      "locations": [
+        "海中鱼巣/核心/关系仓库.h:166"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "从新父节点构造比较用可选值",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02791",
+      "caller": "R0745",
+      "signature": "bool std::optional<海中鱼巣::节点未发布候选>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:99"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "判断节点候选创建结果是否有值",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02792",
+      "caller": "R0745",
+      "signature": "海中鱼巣::节点未发布候选* std::optional<海中鱼巣::节点未发布候选>::operator->() noexcept",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:103"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "读取节点候选对象",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02793",
+      "caller": "R0745",
+      "signature": "海中鱼巣::节点未发布候选&& std::move<海中鱼巣::节点未发布候选&>(海中鱼巣::节点未发布候选&) noexcept",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:105"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "移动节点候选到结果值",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02794",
+      "caller": "R0745",
+      "signature": "海中鱼巣::节点未发布候选& std::optional<海中鱼巣::节点未发布候选>::operator*() & noexcept",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:105"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "解引用节点候选供移动",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02795",
+      "caller": "R0745",
+      "signature": "海中鱼巣::节点未发布候选& std::optional<海中鱼巣::节点未发布候选>::emplace(海中鱼巣::节点未发布候选&&)",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:105"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "把节点候选移动构造到结果值",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02796",
+      "caller": "R0746",
+      "signature": "std::optional<海中鱼巣::节点未发布候选>::optional(std::nullopt_t) noexcept",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:116"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "入口检查失败时形成空返回",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02797",
+      "caller": "R0746",
+      "signature": "std::unique_lock<std::shared_mutex>::unique_lock(std::shared_mutex&)",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:118"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lock",
+      "reachable_condition": "取得节点仓库独占锁",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02798",
+      "caller": "R0746",
+      "signature": "std::pair<std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::iterator, bool> std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::emplace(std::uint64_t&, 海中鱼巣::节点记录&)",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:121"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "插入未发布节点记录",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02799",
+      "caller": "R0746",
+      "signature": "std::optional<海中鱼巣::节点未发布候选>::optional(海中鱼巣::节点未发布候选&&)",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:122"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "从节点未发布候选构造返回可选值",
+      "resolution_source": "本批源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02800",
+      "caller": "R0746",
+      "signature": "std::unique_lock<std::shared_mutex>::~unique_lock() noexcept",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:118-123"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lock",
+      "reachable_condition": "离开独占锁作用域或异常展开",
       "resolution_source": "本批源码逐调用点与标准库静态类型复核",
       "current_root_reachable": true
     }
