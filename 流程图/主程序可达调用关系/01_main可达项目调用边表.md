@@ -1,6 +1,6 @@
 # main 可达项目调用边表
 
-代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；项目调用边：3221。
+代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；项目调用边：3225。
 
 | 边 ID | 调用方 | 被调方 | 调用点 | 类别 | 参数绑定 | 结果绑定 | 可达条件 | 解析依据 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -1267,8 +1267,8 @@
 | E1060 | F0495 | F0496 | <code>海中鱼巣/自检.入口初始化.ixx:175</code> | captured_member_direct | 上下文.语素隐式this,根.名称语素入口.语素入口 | 绑定 | F0257调用绑定可读 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1061 | F0495 | F0497 | <code>海中鱼巣/自检.入口初始化.ixx:176</code> | captured_member_direct | 上下文.语素隐式this,根.名称语素入口.语素入口 | 追溯 | F0257调用绑定可读 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1062 | F0495 | F0051 | <code>海中鱼巣/自检.入口初始化.ixx:177, 海中鱼巣/自检.入口初始化.ixx:178</code> | std_find_element_compare | 绑定组元素,根.根节点 | 句柄相等位 | 第一组std::find逐元素调用0..n次；E1062所在第一组命中后，第二组std::find逐元素调用0..n次 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| RCE0250 | F0496 | R0568 | <code>海中鱼巣/领域/语素服务.h:189</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| RCE0251 | F0497 | R0568 | <code>海中鱼巣/领域/语素服务.h:196</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
+| RCE0250 | F0496 | R0728 | <code>海中鱼巣/领域/语素服务.h:189</code> | source-audited-overload-corrected | 单实参语素入口 | bool进入入口类型门禁 | F0496入口后必达 | 单实参精确匹配无令牌 R0728 |
+| RCE0251 | F0497 | R0728 | <code>海中鱼巣/领域/语素服务.h:196</code> | source-audited-overload-corrected | 单实参语素入口 | bool进入入口类型门禁 | F0497入口后必达 | 单实参精确匹配无令牌 R0728 |
 | E1087 | F0498 | F0043 | <code>海中鱼巣/自检.入口初始化.ixx:199</code> | captured_member_direct | 上下文.方法隐式this,键,上下文.状态 | 原样返回 | F0015调用方法登记根回调 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1088 | F0499 | F0044 | <code>海中鱼巣/自检.入口初始化.ixx:200</code> | captured_member_direct | 上下文.自我线程实例隐式this,参数 | 原样返回 | F0015调用自我线程启动回调 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1089 | F0500 | F0045 | <code>海中鱼巣/自检.入口初始化.ixx:201</code> | captured_member_direct | 上下文.自我线程实例隐式this,时限 | 原样返回 | F0015调用等待初始化回调 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -3225,5 +3225,9 @@
 | RCE2199 | F0466 | F0467 | <code>海中鱼巣/领域/概念活动状态.数据.h:128, 海中鱼巣/领域/概念活动状态.数据.h:129</code> | source-audited-direct-const-member | 三个状态角色元素 | 三个bool短路门禁 | 按源码左到右短路 | 静态接收者复核 |
 | RCE2200 | F0468 | F0197 | <code>海中鱼巣/自检.入口初始化.ixx:60</code> | source-audited-direct-const-member | 节点仓库零参数接收者 | uint64_t转size_t写入节点数量 | 装配成功 | 接收者与零参数重载复核 |
 | RCE2201 | R0727 | R0563 | <code>海中鱼巣/领域/系统角色清单.数据.h:153, 海中鱼巣/领域/系统角色清单.数据.h:154</code> | source-audited-direct-const-member | 五个身份材料 | 五个bool短路门禁 | 按源码左到右短路 | 静态接收者复核 |
+| RCE2202 | F0496 | F0621 | <code>海中鱼巣/领域/语素服务.h:192</code> | source-audited-overload-direct | 语素入口；语素对应信息 | 目标节点组 | 入口类型门禁通过 | 两实参精确匹配无令牌无顺序号 F0621 |
+| RCE2203 | F0497 | F0621 | <code>海中鱼巣/领域/语素服务.h:199</code> | source-audited-overload-direct | 语素入口；语素概念追溯 | 目标节点组 | 入口类型门禁通过 | 两实参精确匹配无令牌无顺序号 F0621 |
+| RCE2204 | R0728 | F0190 | <code>海中鱼巣/领域/语素服务.h:253</code> | source-audited-overload-direct | 节点句柄值 | optional节点记录 | R0728入口后必达 | 单实参精确匹配无令牌 F0190 |
+| RCE2205 | R0568 | F0346 | <code>海中鱼巣/领域/语素服务.h:258</code> | source-audited-overload-direct | 节点句柄值；令牌 | optional节点记录 | R0568入口后必达 | 双实参精确匹配带令牌 F0346 |
 
-统计：3221 条项目源码调用边；每个 caller/callee pair 只保留一个稳定边身份并合并全部调用点。
+统计：3225 条项目源码调用边；每个 caller/callee pair 只保留一个稳定边身份并合并全部调用点。

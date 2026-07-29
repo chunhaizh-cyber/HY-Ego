@@ -1,6 +1,6 @@
 # main 可达外部边界表
 
-代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；外部边界：1843；回调登记：34。
+代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；外部边界：1847；回调登记：34。
 
 ## 外部边界
 
@@ -718,8 +718,8 @@
 | X01094 | F0466 | Standard library container | <code>std::array&lt;海中鱼巣::概念活动根材料,4&gt;::size_type std::array&lt;海中鱼巣::概念活动根材料,4&gt;::size() const noexcept</code> | <code>海中鱼巣/领域/概念活动状态.数据.h:135</code> | 1 | 形成根材料循环上界 | 专项源码外部边界复核 |
 | X01095 | F0466 | Standard library container | <code>const 海中鱼巣::概念活动根材料& std::array&lt;海中鱼巣::概念活动根材料, 4&gt;::operator[](std::size_t) const noexcept</code> | <code>海中鱼巣/领域/概念活动状态.数据.h:137, 海中鱼巣/领域/概念活动状态.数据.h:138</code> | 2 | 逐根复核重建视图 | const 重建视图方法、根数组具体模板实例与两个静态下标表达式复核 |
 | X01096 | F0468 | Standard library | <code>std::move(...)</code> | <code>海中鱼巣/自检.入口初始化.ixx:70</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
-| X02273 | F0495 | Standard library | <code>std::find(...)</code> | <code>海中鱼巣/自检.入口初始化.ixx:177</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
-| X02274 | F0495 | Standard library | <code>std::find(...)</code> | <code>海中鱼巣/自检.入口初始化.ixx:178</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
+| X02273 | F0495 | Standard library algorithm | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator std::find&lt;std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator, 海中鱼巣::节点句柄&gt;(std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator, std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator, const 海中鱼巣::节点句柄&amp;)</code> | <code>海中鱼巣/自检.入口初始化.ixx:177</code> | 1 | F0495已形成绑定目标组并进入第一次查找 | 绑定静态类型、const局部变量、具体迭代器和值类型与第177行std::find复核 |
+| X02274 | F0495 | Standard library algorithm | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator std::find&lt;std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator, 海中鱼巣::节点句柄&gt;(std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator, std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator, const 海中鱼巣::节点句柄&amp;)</code> | <code>海中鱼巣/自检.入口初始化.ixx:178</code> | 1 | 第一次绑定目标查找命中后进入第二次查找 | 追溯静态类型、const局部变量、具体迭代器和值类型与第178行std::find复核 |
 | X01097 | F0516 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::节点记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/存在服务.h:97</code> | 1 | 创建后读回节点并复核有值 | 专项源码外部边界复核 |
 | X01098 | F0516 | Standard library optional | <code>const 海中鱼巣::节点记录* std::optional&lt;海中鱼巣::节点记录&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/存在服务.h:97</code> | 1 | 创建后节点读回有值 | 专项源码外部边界复核 |
 | X01099 | F0523 | Standard library | <code>unique_lock(std::shared_mutex &) :: void (std::shared_mutex &)</code> | <code>海中鱼巣/核心/节点仓库.cpp:336</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
@@ -1849,6 +1849,10 @@
 | X02515 | F0468 | Standard library function | <code>void std::function&lt;void(std::string_view, std::uintptr_t, 海中鱼巣::入口初始化自检初始计数)&gt;::operator()(std::string_view, std::uintptr_t, 海中鱼巣::入口初始化自检初始计数) const</code> | <code>海中鱼巣/自检.入口初始化.ixx:65-68</code> | 1 | X02514确认观察回调存在 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X02516 | F0468 | Standard library unique_ptr | <code>海中鱼巣::普通应用上下文* std::unique_ptr&lt;海中鱼巣::普通应用上下文, std::default_delete&lt;海中鱼巣::普通应用上下文&gt;&gt;::get() const noexcept</code> | <code>海中鱼巣/自检.入口初始化.ixx:67</code> | 1 | 观察回调存在并形成第二实参 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X02517 | F0469 | Standard library unique_ptr | <code>bool std::operator!=&lt;海中鱼巣::普通应用上下文, std::default_delete&lt;海中鱼巣::普通应用上下文&gt;&gt;(const std::unique_ptr&lt;海中鱼巣::普通应用上下文, std::default_delete&lt;海中鱼巣::普通应用上下文&gt;&gt;&, std::nullptr_t) noexcept</code> | <code>海中鱼巣/自检.入口初始化.ixx:48</code> | 1 | 状态等于已构造后由短路合取调用 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02518 | R0728 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::节点记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/语素服务.h:254</code> | 1 | R0728完成无令牌节点读取后判断记录是否存在 | optional&lt;节点记录&gt;具体模板实例与第254行短路顺序复核 |
+| X02519 | R0728 | Standard library optional | <code>const 海中鱼巣::节点记录* std::optional&lt;海中鱼巣::节点记录&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/语素服务.h:254</code> | 1 | X02518确认节点记录存在后读取类型字段 | optional&lt;节点记录&gt;具体模板实例、短路门禁与类型字段访问复核 |
+| X02520 | F0495 | Standard library container | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator std::vector&lt;海中鱼巣::节点句柄&gt;::begin() const noexcept / end() const noexcept</code> | <code>海中鱼巣/自检.入口初始化.ixx:177, 海中鱼巣/自检.入口初始化.ixx:178</code> | 6 | 第一次查找必达；第二次只在第一次命中时到达 | 两个const vector局部变量、两处std::find实参及两处结果比较复核 |
+| X02521 | F0495 | Standard library iterator | <code>bool operator!=(std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator, std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator) noexcept</code> | <code>海中鱼巣/自检.入口初始化.ixx:177, 海中鱼巣/自检.入口初始化.ixx:178</code> | 2 | 每次std::find返回后与对应end比较；第二次受第一组命中短路 | std::find具体返回迭代器、对应end调用和两处!=表达式复核 |
 
 
 ## 回调登记
@@ -1890,4 +1894,4 @@
 | RCB0033 | R0689 | R0696 | std::function同步回调 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:147</code> | R0116 同步调度于海中鱼巣/核心/执行器.结构写入.ixx:82；来源复核通过 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
 | RCB0034 | R0701 | R0708 | std::function同步回调 | <code>海中鱼巣/领域/数据操作.特征体系.ixx:941</code> | R0116 同步调度于海中鱼巣/核心/执行器.结构写入.ixx:82；组成项及写前复核通过 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
 
-统计：1843 个外部边界身份；34 个项目回调登记。标准库、操作系统和第三方函数不进入项目函数身份表。
+统计：1847 个外部边界身份；34 个项目回调登记。标准库、操作系统和第三方函数不进入项目函数身份表。

@@ -15,9 +15,9 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1269,
-  "project_call_edge_count": 3221,
-  "edge_count": 3221,
+  "function_count": 1270,
+  "project_call_edge_count": 3225,
+  "edge_count": 3225,
   "edges": [
     {
       "edge_id": "E0002",
@@ -19330,31 +19330,31 @@
     {
       "edge_id": "RCE0250",
       "caller": "F0496",
-      "callee": "R0568",
+      "callee": "R0728",
       "callsites": [
         "海中鱼巣/领域/语素服务.h:189"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-overload-corrected",
+      "arguments": "this=&当前语素服务；节点句柄值=语素入口",
+      "argument_resolution": "单实参调用精确匹配无令牌 R0728，不匹配双参数 R0568",
+      "return_binding": "bool进入入口类型门禁",
+      "reachable_condition": "F0496入口后必达",
+      "resolution_source": "语素服务.h:189 调用实参数量与两个重载完整签名复核",
       "current_root_reachable": true
     },
     {
       "edge_id": "RCE0251",
       "caller": "F0497",
-      "callee": "R0568",
+      "callee": "R0728",
       "callsites": [
         "海中鱼巣/领域/语素服务.h:196"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-overload-corrected",
+      "arguments": "this=&当前语素服务；节点句柄值=语素入口",
+      "argument_resolution": "单实参调用精确匹配无令牌 R0728，不匹配双参数 R0568",
+      "return_binding": "bool进入入口类型门禁",
+      "reachable_condition": "F0497入口后必达",
+      "resolution_source": "语素服务.h:196 调用实参数量与两个重载完整签名复核",
       "current_root_reachable": true
     },
     {
@@ -49393,6 +49393,58 @@
       "return_binding": "五个 bool 进入短路完整性判断",
       "reachable_condition": "按源码左到右短路",
       "resolution_source": "系统角色清单.数据.h:153-154 静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2202",
+      "caller": "F0496",
+      "callee": "F0621",
+      "callsites": ["海中鱼巣/领域/语素服务.h:192"],
+      "call_category": "source-audited-overload-direct",
+      "arguments": "this=&关系_；源节点=语素入口；类型=语素对应信息",
+      "argument_resolution": "两实参调用精确匹配无令牌、无顺序号 F0621",
+      "return_binding": "目标节点组按值返回",
+      "reachable_condition": "R0728确认节点是语素入口",
+      "resolution_source": "语素服务.h:192 接收者静态类型、实参数量与关系类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2203",
+      "caller": "F0497",
+      "callee": "F0621",
+      "callsites": ["海中鱼巣/领域/语素服务.h:199"],
+      "call_category": "source-audited-overload-direct",
+      "arguments": "this=&关系_；源节点=语素入口；类型=语素概念追溯",
+      "argument_resolution": "两实参调用精确匹配无令牌、无顺序号 F0621",
+      "return_binding": "目标节点组按值返回",
+      "reachable_condition": "R0728确认节点是语素入口",
+      "resolution_source": "语素服务.h:199 接收者静态类型、实参数量与关系类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2204",
+      "caller": "R0728",
+      "callee": "F0190",
+      "callsites": ["海中鱼巣/领域/语素服务.h:253"],
+      "call_category": "source-audited-overload-direct",
+      "arguments": "this=&节点_；节点=节点句柄值",
+      "argument_resolution": "单实参调用精确匹配无令牌 F0190",
+      "return_binding": "optional节点记录绑定为记录",
+      "reachable_condition": "R0728入口后必达",
+      "resolution_source": "语素服务.h:253 接收者静态类型与单实参重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2205",
+      "caller": "R0568",
+      "callee": "F0346",
+      "callsites": ["海中鱼巣/领域/语素服务.h:258"],
+      "call_category": "source-audited-overload-direct",
+      "arguments": "this=&节点_；节点=节点句柄值；令牌=令牌",
+      "argument_resolution": "双实参调用精确匹配节点仓库带令牌读取重载 F0346",
+      "return_binding": "optional节点记录绑定为记录",
+      "reachable_condition": "R0568入口后必达",
+      "resolution_source": "语素服务.h:258 接收者静态类型、双实参与令牌重载复核",
       "current_root_reachable": true
     }
   ]

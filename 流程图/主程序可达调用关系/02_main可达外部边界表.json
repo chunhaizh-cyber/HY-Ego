@@ -15,9 +15,9 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1269,
-  "project_call_edge_count": 3221,
-  "external_count": 1843,
+  "function_count": 1270,
+  "project_call_edge_count": 3225,
+  "external_count": 1847,
   "callback_registration_count": 34,
   "external_boundaries": [
     {
@@ -3922,27 +3922,27 @@
     {
       "id": "X00533",
       "caller": "F0191",
-      "signature": "std::find(...)",
+      "signature": "std::vector<海中鱼巣::节点句柄>::const_iterator std::find<std::vector<海中鱼巣::节点句柄>::const_iterator, 海中鱼巣::节点句柄>(std::vector<海中鱼巣::节点句柄>::const_iterator, std::vector<海中鱼巣::节点句柄>::const_iterator, const 海中鱼巣::节点句柄&)",
       "locations": [
         "海中鱼巣/领域/概念图服务.h:4419"
       ],
       "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立",
-      "resolution_source": "最终 caller 源码范围 + std 限定名调用语法复核",
+      "boundary_category": "Standard library algorithm",
+      "reachable_condition": "F0495已形成绑定目标组并进入第一次查找",
+      "resolution_source": "绑定静态类型、const局部变量、具体迭代器和值类型与第177行std::find复核",
       "current_root_reachable": true
     },
     {
       "id": "X00534",
       "caller": "F0191",
-      "signature": "std::find(...)",
+      "signature": "std::vector<海中鱼巣::节点句柄>::const_iterator std::find<std::vector<海中鱼巣::节点句柄>::const_iterator, 海中鱼巣::节点句柄>(std::vector<海中鱼巣::节点句柄>::const_iterator, std::vector<海中鱼巣::节点句柄>::const_iterator, const 海中鱼巣::节点句柄&)",
       "locations": [
         "海中鱼巣/领域/概念图服务.h:4420"
       ],
       "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立",
-      "resolution_source": "最终 caller 源码范围 + std 限定名调用语法复核",
+      "boundary_category": "Standard library algorithm",
+      "reachable_condition": "第一次绑定目标查找命中后进入第二次查找",
+      "resolution_source": "追溯静态类型、const局部变量、具体迭代器和值类型与第178行std::find复核",
       "current_root_reachable": true
     },
     {
@@ -24599,6 +24599,64 @@
       "boundary_category": "Standard library unique_ptr",
       "reachable_condition": "状态等于已构造后由短路合取调用",
       "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02518",
+      "signature": "bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept",
+      "caller": "R0728",
+      "locations": [
+        "海中鱼巣/领域/语素服务.h:254"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "R0728完成无令牌节点读取后判断记录是否存在",
+      "resolution_source": "optional<节点记录>具体模板实例与第254行短路顺序复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02519",
+      "signature": "const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept",
+      "caller": "R0728",
+      "locations": [
+        "海中鱼巣/领域/语素服务.h:254"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "X02518确认节点记录存在后读取类型字段",
+      "resolution_source": "optional<节点记录>具体模板实例、短路门禁与类型字段访问复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02520",
+      "signature": "std::vector<海中鱼巣::节点句柄>::const_iterator std::vector<海中鱼巣::节点句柄>::begin() const noexcept / end() const noexcept",
+      "caller": "F0495",
+      "locations": [
+        "海中鱼巣/自检.入口初始化.ixx:177",
+        "海中鱼巣/自检.入口初始化.ixx:178"
+      ],
+      "call_count": 6,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "第一次查找必达；第二次查找仅在第一次命中时到达；每次查找形成begin和end且比较结果再次读取end",
+      "resolution_source": "两个const vector<节点句柄>局部变量、两处std::find实参及两处结果比较复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02521",
+      "signature": "bool operator!=(std::vector<海中鱼巣::节点句柄>::const_iterator, std::vector<海中鱼巣::节点句柄>::const_iterator) noexcept",
+      "caller": "F0495",
+      "locations": [
+        "海中鱼巣/自检.入口初始化.ixx:177",
+        "海中鱼巣/自检.入口初始化.ixx:178"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "每次std::find返回后与对应容器end迭代器比较；第二次受第一组命中短路",
+      "resolution_source": "std::find具体返回迭代器、对应end调用和两处!=表达式复核",
       "current_root_reachable": true
     }
   ],
