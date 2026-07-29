@@ -17,7 +17,7 @@
   ],
   "function_count": 1155,
   "project_call_edge_count": 2776,
-  "external_count": 1640,
+  "external_count": 1641,
   "callback_registration_count": 27,
   "external_boundaries": [
     {
@@ -21744,6 +21744,20 @@
       "boundary_category": "Standard library string",
       "reachable_condition": "F0208确认语句句柄可用；形成X01004的第二实参",
       "resolution_source": "当前源码调用点、SQL文本静态类型与std::wstring连续存储接口复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02310",
+      "caller": "F0393",
+      "signature": "bool std::wstring::empty() const noexcept",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1528"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library string",
+      "reachable_condition": "F0393已把追根因错误写为true；判断失败阶段是否尚未记录",
+      "resolution_source": "当前源码调用点、失败阶段静态类型与同表std::wstring::empty先例复核",
       "current_root_reachable": true
     }
   ],

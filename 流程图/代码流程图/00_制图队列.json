@@ -12,10 +12,10 @@
   "source_edge_path": "流程图/主程序可达调用关系/01_main可达项目调用边表.json",
   "source_edge_blob": "561d9031ba1c62c5ba1bdd5adc63530358371b77",
   "source_external_path": "流程图/主程序可达调用关系/02_main可达外部边界表.json",
-  "source_external_blob": "0ceaa3e51ea0774cd4ab8335b7d68c4fa83373ad",
+  "source_external_blob": "909994a27c84317a5e4ecd1e9e1b5cca9fd131f9",
   "current_reachable_function_count": 1155,
-  "chart_completed_count": 334,
-  "chart_pending_count": 821,
+  "chart_completed_count": 338,
+  "chart_pending_count": 817,
   "historical_unreachable_chart_count": 49,
   "queue_order": "正式身份表稳定身份顺序；shortest_depth只记录main最短调用深度，不参与既有drawing_order重排",
   "entries": [
@@ -14957,11 +14957,12 @@
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [
         "X01048",
-        "X01049"
+        "X01049",
+        "X02310"
       ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0217_控制面板窗口标记追根因错误_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0217_控制面板窗口标记追根因错误_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -14992,9 +14993,9 @@
         "X01050",
         "X01051"
       ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0218_控制面板窗口销毁字体_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0218_控制面板窗口销毁字体_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -15024,9 +15025,9 @@
       "external_boundary_ids": [
         "X01052"
       ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0219_控制面板窗口销毁快捷键表_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0219_控制面板窗口销毁快捷键表_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -15086,9 +15087,9 @@
         "X01066",
         "X01067"
       ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0220_控制面板窗口窗口过程_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0220_控制面板窗口窗口过程_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {

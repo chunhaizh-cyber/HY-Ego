@@ -1,6 +1,6 @@
 # main 可达外部边界表
 
-外部边界记录：1640。本表不把外部函数升级为项目函数身份。
+外部边界记录：1641。本表不把外部函数升级为项目函数身份。
 
 | ID | 调用方 | 类别 | 外部签名/边界 | 调用点 | 调用次数 | 可达条件 | 解析来源 |
 | --- | --- | --- | --- | --- | ---: | --- | --- |
@@ -1680,3 +1680,4 @@
 | X02307 | F0380 | Standard library string_view iterator | <code>const wchar_t&amp; std::_String_view_iterator&lt;std::char_traits&lt;wchar_t&gt;&gt;::operator*() const noexcept</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:104</code> | 1 | 范围循环仍有下一代码单元 | 当前HEAD Clang AST候选、范围循环源码与迭代器静态类型复核 |
 | X02308 | F0380 | Standard library string | <code>void std::wstring::push_back(wchar_t)</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:105, 海中鱼巣/适配/SQL数据库适配.cpp:107</code> | 2 | 每个输入代码单元先追加一次；当前代码单元为右方括号时再追加一次 | 当前HEAD Clang AST候选、两个源码调用点与std::wstring静态类型复核 |
 | X02309 | F0381 | Standard library string | <code>wchar_t* std::wstring::data() noexcept</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:258</code> | 1 | F0208确认语句句柄可用；形成X01004的第二实参 | 当前源码调用点、SQL文本静态类型与std::wstring连续存储接口复核 |
+| X02310 | F0393 | Standard library string | <code>bool std::wstring::empty() const noexcept</code> | <code>海中鱼巣/界面/控制面板窗口.cpp:1528</code> | 1 | F0393已把追根因错误写为true；判断失败阶段是否尚未记录 | 当前源码调用点、失败阶段静态类型与同表std::wstring::empty先例复核 |
