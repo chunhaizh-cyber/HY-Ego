@@ -8,14 +8,14 @@
   "source_relation_publish_commit": "04b66401f3aed237bb89bf885a63e2b3d0a877dc",
   "generated_from_commit": "04b66401f3aed237bb89bf885a63e2b3d0a877dc",
   "source_identity_path": "流程图/主程序可达调用关系/00_main可达函数身份表.json",
-  "source_identity_blob": "9468757e6cf14c2de97334797ba14ed66638a1f4",
+  "source_identity_blob": "a8bcabf8cf999be514c9aa74bb930fbeb70b4506",
   "source_edge_path": "流程图/主程序可达调用关系/01_main可达项目调用边表.json",
-  "source_edge_blob": "28951b593de72d205f23de4d0b2cb597d7d136b1",
+  "source_edge_blob": "5a36546e391feac0c36030b6e9bcd8a82171d76e",
   "source_external_path": "流程图/主程序可达调用关系/02_main可达外部边界表.json",
-  "source_external_blob": "2f462e95d7b34b657d29f274c8e35271e3d0610c",
+  "source_external_blob": "dc28d200dc836fb181b0afdbacc2b310898c9325",
   "current_reachable_function_count": 1270,
-  "chart_completed_count": 445,
-  "chart_pending_count": 825,
+  "chart_completed_count": 465,
+  "chart_pending_count": 805,
   "historical_unreachable_chart_count": 49,
   "queue_order": "正式身份表稳定身份顺序；shortest_depth只记录main最短调用深度，不参与既有drawing_order重排",
   "entries": [
@@ -12279,6 +12279,7 @@
         "F0335",
         "F0365",
         "F0366",
+        "F0516",
         "R0611"
       ],
       "callee_ids": [
@@ -12295,6 +12296,7 @@
         "E1686",
         "RCE1709",
         "RCE1713",
+        "RCE2206",
         "RCE1729"
       ],
       "outgoing_project_edge_ids": [
@@ -12334,6 +12336,7 @@
         "F0335",
         "F0365",
         "F0366",
+        "F0516",
         "R0611"
       ],
       "callee_ids": [
@@ -12352,6 +12355,7 @@
         "E1691",
         "RCE1710",
         "RCE1714",
+        "RCE2207",
         "RCE1730"
       ],
       "outgoing_project_edge_ids": [
@@ -18993,9 +18997,9 @@
         "E1087"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L4/CF-L4-0108_概念图重复初始化结构不变自检方法登记根lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L4/CF-L4-0108_概念图重复初始化结构不变自检方法登记根lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L4"
     },
     {
@@ -19025,9 +19029,9 @@
         "E1088"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L4/CF-L4-0109_概念图重复初始化结构不变自检启动lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L4/CF-L4-0109_概念图重复初始化结构不变自检启动lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L4"
     },
     {
@@ -19057,9 +19061,9 @@
         "E1089"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L4/CF-L4-0110_概念图重复初始化结构不变自检等待lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L4/CF-L4-0110_概念图重复初始化结构不变自检等待lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L4"
     },
     {
@@ -19089,9 +19093,9 @@
         "E1090"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L4/CF-L4-0111_概念图重复初始化结构不变自检快照lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L4/CF-L4-0111_概念图重复初始化结构不变自检快照lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L4"
     },
     {
@@ -19121,9 +19125,9 @@
         "E1091"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L4/CF-L4-0112_概念图重复初始化结构不变自检初始化四根lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L4/CF-L4-0112_概念图重复初始化结构不变自检初始化四根lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L4"
     },
     {
@@ -19153,9 +19157,9 @@
         "E1092"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L4/CF-L4-0113_概念图重复初始化结构不变自检读取归属lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L4/CF-L4-0113_概念图重复初始化结构不变自检读取归属lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L4"
     },
     {
@@ -19185,9 +19189,9 @@
         "E1106"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L4/CF-L4-0114_自我存在实例根支持自检方法登记根lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L4/CF-L4-0114_自我存在实例根支持自检方法登记根lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L4"
     },
     {
@@ -19217,9 +19221,9 @@
         "E1107"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L4/CF-L4-0115_自我存在实例根支持自检启动lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L4/CF-L4-0115_自我存在实例根支持自检启动lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L4"
     },
     {
@@ -19249,9 +19253,9 @@
         "E1108"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L4/CF-L4-0116_自我存在实例根支持自检等待lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L4/CF-L4-0116_自我存在实例根支持自检等待lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L4"
     },
     {
@@ -19281,9 +19285,9 @@
         "E1109"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L4/CF-L4-0117_自我存在实例根支持自检快照lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L4/CF-L4-0117_自我存在实例根支持自检快照lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L4"
     },
     {
@@ -19313,9 +19317,9 @@
         "E1110"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L4/CF-L4-0118_自我存在实例根支持自检初始化四根lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L4/CF-L4-0118_自我存在实例根支持自检初始化四根lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L4"
     },
     {
@@ -19345,9 +19349,9 @@
         "E1111"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L4/CF-L4-0119_自我存在实例根支持自检确保存在实例根支持lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L4/CF-L4-0119_自我存在实例根支持自检确保存在实例根支持lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L4"
     },
     {
@@ -19377,9 +19381,9 @@
         "E1128"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L4/CF-L4-0120_多存在实例根支持自检方法登记根lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L4/CF-L4-0120_多存在实例根支持自检方法登记根lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L4"
     },
     {
@@ -19409,9 +19413,9 @@
         "E1129"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L4/CF-L4-0121_多存在实例根支持自检启动lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L4/CF-L4-0121_多存在实例根支持自检启动lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L4"
     },
     {
@@ -19441,9 +19445,9 @@
         "E1130"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L4/CF-L4-0122_多存在实例根支持自检等待lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L4/CF-L4-0122_多存在实例根支持自检等待lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L4"
     },
     {
@@ -19473,9 +19477,9 @@
         "E1131"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L4/CF-L4-0123_多存在实例根支持自检快照lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L4/CF-L4-0123_多存在实例根支持自检快照lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L4"
     },
     {
@@ -19505,9 +19509,9 @@
         "E1132"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L4/CF-L4-0124_多存在实例根支持自检概念图初始化lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L4/CF-L4-0124_多存在实例根支持自检概念图初始化lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L4"
     },
     {
@@ -19537,9 +19541,9 @@
         "E1133"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L4/CF-L4-0125_多存在实例根支持自检存在实例根支持lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L4/CF-L4-0125_多存在实例根支持自检存在实例根支持lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L4"
     },
     {
@@ -19561,22 +19565,28 @@
         "F0261"
       ],
       "callee_ids": [
-        "R0609"
+        "F0331",
+        "F0332",
+        "R0609",
+        "F0624"
       ],
       "incoming_project_edge_ids": [
         "E1116",
         "E1137"
       ],
       "outgoing_project_edge_ids": [
-        "RCE1723"
+        "RCE2206",
+        "RCE2207",
+        "RCE1723",
+        "RCE2208"
       ],
       "external_boundary_ids": [
         "X01097",
         "X01098"
       ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L5/CF-L5-0212_存在服务创建实际存在_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L5/CF-L5-0212_存在服务创建实际存在_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L5"
     },
     {
@@ -19606,9 +19616,9 @@
         "E1156"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L4/CF-L4-0126_存在根支持拒绝自检方法登记根lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L4/CF-L4-0126_存在根支持拒绝自检方法登记根lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L4"
     },
     {
@@ -22581,7 +22591,7 @@
     {
       "drawing_order": 542,
       "function_id": "F0624",
-      "shortest_depth": 7,
+      "shortest_depth": 6,
       "complete_signature": "bool 海中鱼巣::主信息仓库::主信息是否有效(海中鱼巣::主信息句柄 主信息) const",
       "callable_type": "Function",
       "category": "Function/Method",
@@ -22590,7 +22600,7 @@
       "definition_line": 363,
       "definition_end_line": 369,
       "overload_identity": "bool 海中鱼巣::主信息仓库::主信息是否有效(海中鱼巣::主信息句柄 主信息) const",
-      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0332；调用点=海中鱼巣/核心/节点仓库.cpp:58",
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0516；调用点=海中鱼巣/领域/存在服务.h:97",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "caller_ids": [
         "F0332",
@@ -22598,6 +22608,7 @@
         "F0366",
         "F0367",
         "F0368",
+        "F0516",
         "R0611"
       ],
       "callee_ids": [
@@ -22610,6 +22621,7 @@
         "RCE1717",
         "RCE1719",
         "RCE1728",
+        "RCE2208",
         "RCE1732"
       ],
       "outgoing_project_edge_ids": [
@@ -23545,7 +23557,7 @@
     {
       "drawing_order": 568,
       "function_id": "R0009",
-      "shortest_depth": 8,
+      "shortest_depth": 7,
       "complete_signature": "bool 海中鱼巣::主信息仓库::主信息是否有效(主信息句柄 主信息, const 结构事务令牌& 令牌) const",
       "callable_type": "Method",
       "category": "Function/Method",
@@ -23554,7 +23566,7 @@
       "definition_line": 371,
       "definition_end_line": 373,
       "overload_identity": "bool 海中鱼巣::主信息仓库::主信息是否有效(主信息句柄 主信息, const 结构事务令牌& 令牌) const",
-      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0623；调用点=海中鱼巣/核心/节点仓库.cpp:75",
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0624；调用点=海中鱼巣/核心/主信息仓库.cpp:366",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "caller_ids": [
         "R0206",
@@ -23578,7 +23590,7 @@
       "chart_status": "待绘制",
       "chart_path": null,
       "mapping_path": null,
-      "target_layer_directory": "流程图/代码流程图/L8"
+      "target_layer_directory": "流程图/代码流程图/L7"
     },
     {
       "drawing_order": 569,
@@ -50100,7 +50112,7 @@
       "chart_status": "已制图",
       "chart_path": "流程图/代码流程图/L7/CF-L7-0004_系统根需求角色材料完整_现状流程图.md",
       "mapping_path": "流程图/代码流程图/L7/CF-L7-0004_系统根需求角色材料完整_逐行代码映射表.md",
-      "target_layer_directory": "流程图/代码流程图/L7"
+      "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
       "drawing_order": 1270,

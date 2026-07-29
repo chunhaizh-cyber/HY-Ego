@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1270,
-  "project_call_edge_count": 3225,
-  "edge_count": 3225,
+  "project_call_edge_count": 3228,
+  "edge_count": 3228,
   "edges": [
     {
       "edge_id": "E0002",
@@ -49445,6 +49445,45 @@
       "return_binding": "optional节点记录绑定为记录",
       "reachable_condition": "R0568入口后必达",
       "resolution_source": "语素服务.h:258 接收者静态类型、双实参与令牌重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2206",
+      "caller": "F0516",
+      "callee": "F0331",
+      "callsites": ["海中鱼巣/领域/存在服务.h:94"],
+      "call_category": "source-audited-overload-direct",
+      "arguments": "this=&主信息_；无显式实参",
+      "argument_resolution": "零实参调用精确匹配无令牌创建主信息重载 F0331",
+      "return_binding": "主信息句柄绑定为主信息句柄",
+      "reachable_condition": "F0516入口后必达",
+      "resolution_source": "存在服务.h:94 接收者静态类型与零实参重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2207",
+      "caller": "F0516",
+      "callee": "F0332",
+      "callsites": ["海中鱼巣/领域/存在服务.h:95"],
+      "call_category": "source-audited-overload-direct",
+      "arguments": "this=&节点_；类型=节点类型::存在；主信息=主信息句柄",
+      "argument_resolution": "两实参调用精确匹配无令牌创建节点重载 F0332",
+      "return_binding": "节点句柄绑定为存在",
+      "reachable_condition": "主信息句柄已形成",
+      "resolution_source": "存在服务.h:95 接收者静态类型与两实参重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2208",
+      "caller": "F0516",
+      "callee": "F0624",
+      "callsites": ["海中鱼巣/领域/存在服务.h:97"],
+      "call_category": "source-audited-overload-direct",
+      "arguments": "this=&主信息_；主信息=记录->主信息",
+      "argument_resolution": "单实参调用精确匹配无令牌主信息有效性读取重载 F0624",
+      "return_binding": "bool进入短路判断",
+      "reachable_condition": "读取存在返回有值",
+      "resolution_source": "存在服务.h:97 接收者静态类型、单实参与短路条件复核",
       "current_root_reachable": true
     }
   ]

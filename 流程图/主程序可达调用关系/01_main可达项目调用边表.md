@@ -1,6 +1,6 @@
 # main 可达项目调用边表
 
-代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；项目调用边：3225。
+代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；项目调用边：3228。
 
 | 边 ID | 调用方 | 被调方 | 调用点 | 类别 | 参数绑定 | 结果绑定 | 可达条件 | 解析依据 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -3229,5 +3229,8 @@
 | RCE2203 | F0497 | F0621 | <code>海中鱼巣/领域/语素服务.h:199</code> | source-audited-overload-direct | 语素入口；语素概念追溯 | 目标节点组 | 入口类型门禁通过 | 两实参精确匹配无令牌无顺序号 F0621 |
 | RCE2204 | R0728 | F0190 | <code>海中鱼巣/领域/语素服务.h:253</code> | source-audited-overload-direct | 节点句柄值 | optional节点记录 | R0728入口后必达 | 单实参精确匹配无令牌 F0190 |
 | RCE2205 | R0568 | F0346 | <code>海中鱼巣/领域/语素服务.h:258</code> | source-audited-overload-direct | 节点句柄值；令牌 | optional节点记录 | R0568入口后必达 | 双实参精确匹配带令牌 F0346 |
+| RCE2206 | F0516 | F0331 | <code>海中鱼巣/领域/存在服务.h:94</code> | source-audited-overload-direct | 主信息仓库零参数接收者 | 主信息句柄 | F0516入口后必达 | 零实参精确匹配无令牌创建主信息 F0331 |
+| RCE2207 | F0516 | F0332 | <code>海中鱼巣/领域/存在服务.h:95</code> | source-audited-overload-direct | 节点类型::存在；主信息句柄 | 节点句柄 | 主信息句柄已形成 | 两实参精确匹配无令牌创建节点 F0332 |
+| RCE2208 | F0516 | F0624 | <code>海中鱼巣/领域/存在服务.h:97</code> | source-audited-overload-direct | 记录-&gt;主信息 | bool短路判断 | 读取存在返回有值 | 单实参精确匹配无令牌主信息有效性读取 F0624 |
 
-统计：3225 条项目源码调用边；每个 caller/callee pair 只保留一个稳定边身份并合并全部调用点。
+统计：3228 条项目源码调用边；每个 caller/callee pair 只保留一个稳定边身份并合并全部调用点。
