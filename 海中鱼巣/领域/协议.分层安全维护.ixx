@@ -144,12 +144,12 @@ struct 安全权限材料缺口 final {
 struct 安全输入版本快照 final {
     std::uint64_t 图版本 = 0;
     std::uint64_t 事实截止版本 = 0;
-    std::uint64_t 任务集合版本 = 0;
-    std::uint64_t 值集合版本 = 0;
-    std::uint64_t 阈值集合版本 = 0;
-    std::uint32_t 维护规则版本 = 0;
-    std::uint32_t 权限规则版本 = 0;
-    std::uint32_t 排序规则版本 = 0;
+    std::optional<std::uint64_t> 任务集合版本;
+    std::optional<std::uint64_t> 值集合版本;
+    std::optional<std::uint64_t> 阈值集合版本;
+    std::optional<std::uint32_t> 维护规则版本;
+    std::optional<std::uint32_t> 权限规则版本;
+    std::optional<std::uint32_t> 排序规则版本;
 };
 
 struct 安全直接因果边快照 final {
@@ -353,10 +353,39 @@ struct 安全维护结果 final {
     std::optional<安全维护载荷> 载荷;
 };
 
-struct 安全组层快照 final {
+struct 安全权限层来源选择 final {
     节点句柄 来源需求;
+    节点句柄 维护族;
+    节点句柄 来源因果信息;
+    节点句柄 最终安全结果;
+    std::uint64_t 期望当前值版本 = 0;
+};
+
+struct 安全组层输入快照 final {
+    节点句柄 来源需求;
+    节点句柄 维护族;
     节点句柄 来源因果信息;
     节点句柄 目标安全结果;
+    节点句柄 最终安全结果;
+    std::int64_t 精确深度 = 0;
+    std::int64_t 优先级组 = 0;
+    std::int64_t 当前值 = 0;
+    std::int64_t 值域下界 = 0;
+    std::int64_t 值域上界 = 0;
+    std::int64_t 低位阈值 = 0;
+    std::int64_t 高位阈值 = 0;
+    std::uint64_t 图版本 = 0;
+    std::uint64_t 值版本 = 0;
+    std::uint64_t 阈值版本 = 0;
+    std::uint32_t 规则版本 = 0;
+};
+
+struct 安全组层快照 final {
+    节点句柄 来源需求;
+    节点句柄 维护族;
+    节点句柄 来源因果信息;
+    节点句柄 目标安全结果;
+    节点句柄 最终安全结果;
     std::int64_t 精确深度 = 0;
     std::int64_t 优先级组 = 0;
     std::int64_t 当前值 = 0;
@@ -374,6 +403,7 @@ struct 安全组层快照 final {
 struct 权限读取请求 final {
     节点句柄 自我;
     节点句柄 适用场景;
+    std::vector<安全权限层来源选择> 安全层来源选择组;
     std::uint64_t 事实截止版本 = 0;
     std::uint64_t 图版本 = 0;
     std::uint32_t 权限规则版本 = 0;
@@ -389,6 +419,7 @@ struct 权限读取载荷 final {
     std::vector<std::int64_t> 受影响组;
     std::int64_t 五组已形成权限总量 = 0;
     std::vector<安全组层快照> 全部安全组层快照;
+    std::vector<安全权限层来源选择> 未归层来源组;
     安全输入版本快照 全部来源版本;
     std::uint32_t 权限规则版本 = 0;
 };
@@ -462,8 +493,12 @@ struct 安全任务来源权限 final {
 
 struct 任务权限请求 final {
     节点句柄 自我;
+    节点句柄 适用场景;
     节点句柄 任务稳定句柄;
+    std::vector<安全权限层来源选择> 安全层来源选择组;
     std::uint64_t 事实截止版本 = 0;
+    std::uint64_t 图版本 = 0;
+    std::uint64_t 任务集合版本 = 0;
     std::uint32_t 权限规则版本 = 0;
 };
 
@@ -486,8 +521,11 @@ struct 任务权限结果 final {
 struct 任务排序请求 final {
     节点句柄 自我;
     节点句柄 适用场景;
+    std::vector<安全权限层来源选择> 安全层来源选择组;
     std::vector<安全任务执行候选快照> 候选任务组;
     std::uint64_t 事实截止版本 = 0;
+    std::uint64_t 图版本 = 0;
+    std::uint64_t 任务集合版本 = 0;
     std::uint32_t 权限规则版本 = 0;
     std::uint32_t 排序规则版本 = 0;
 };
@@ -533,6 +571,11 @@ struct 安全维护事实来源请求 final {
 };
 
 struct 安全维护事实来源载荷 final {
+    节点句柄 自我;
+    节点句柄 维护族;
+    节点句柄 适用场景;
+    std::uint64_t 当前值版本 = 0;
+    std::uint64_t 事实截止版本 = 0;
     安全层定义快照 定义;
     安全层当前快照 当前;
     std::vector<安全事件快照> 安全事件组;
@@ -556,6 +599,10 @@ struct 安全任务事实来源请求 final {
 };
 
 struct 安全任务事实来源载荷 final {
+    节点句柄 自我;
+    节点句柄 适用场景;
+    std::uint64_t 事实截止版本 = 0;
+    std::uint64_t 任务集合版本 = 0;
     std::vector<任务安全关联快照> 任务安全关联组;
     std::vector<安全任务执行候选快照> 任务执行候选组;
     std::vector<安全后果严重度材料> 后果严重度材料组;
