@@ -15,9 +15,9 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1270,
-  "project_call_edge_count": 3233,
-  "edge_count": 3233,
+  "function_count": 1274,
+  "project_call_edge_count": 3278,
+  "edge_count": 3278,
   "edges": [
     {
       "edge_id": "E0002",
@@ -49035,7 +49035,9 @@
       "edge_id": "RCE2174",
       "caller": "F0458",
       "callee": "F0459",
-      "callsites": ["海中鱼巣/领域/系统角色清单.数据.h:190"],
+      "callsites": [
+        "海中鱼巣/领域/系统角色清单.数据.h:190"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this=&场景接纳自我关系",
       "argument_resolution": "字段静态类型为系统角色关系材料",
@@ -49048,7 +49050,10 @@
       "edge_id": "RCE2175",
       "caller": "F0458",
       "callee": "R0727",
-      "callsites": ["海中鱼巣/领域/系统角色清单.数据.h:190", "海中鱼巣/领域/系统角色清单.数据.h:191"],
+      "callsites": [
+        "海中鱼巣/领域/系统角色清单.数据.h:190",
+        "海中鱼巣/领域/系统角色清单.数据.h:191"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this=&安全根需求；this=&服务根需求",
       "argument_resolution": "两个字段静态类型均为系统根需求角色材料",
@@ -49061,7 +49066,11 @@
       "edge_id": "RCE2176",
       "caller": "F0458",
       "callee": "F0051",
-      "callsites": ["海中鱼巣/领域/系统角色清单.数据.h:202", "海中鱼巣/领域/系统角色清单.数据.h:207", "海中鱼巣/领域/系统角色清单.数据.h:208"],
+      "callsites": [
+        "海中鱼巣/领域/系统角色清单.数据.h:202",
+        "海中鱼巣/领域/系统角色清单.数据.h:207",
+        "海中鱼巣/领域/系统角色清单.数据.h:208"
+      ],
       "call_category": "source-audited-direct-operator",
       "arguments": "节点句柄左右值",
       "argument_resolution": "三处比较两侧静态类型均为节点句柄",
@@ -49074,7 +49083,9 @@
       "edge_id": "RCE2177",
       "caller": "F0458",
       "callee": "R0615",
-      "callsites": ["海中鱼巣/领域/系统角色清单.数据.h:203"],
+      "callsites": [
+        "海中鱼巣/领域/系统角色清单.数据.h:203"
+      ],
       "call_category": "source-audited-direct-operator",
       "arguments": "身份组左右主信息句柄",
       "argument_resolution": "两侧静态类型均为主信息句柄",
@@ -49087,7 +49098,9 @@
       "edge_id": "RCE2178",
       "caller": "F0459",
       "callee": "F0163",
-      "callsites": ["海中鱼巣/领域/系统角色清单.数据.h:134"],
+      "callsites": [
+        "海中鱼巣/领域/系统角色清单.数据.h:134"
+      ],
       "call_category": "source-audited-direct-free",
       "arguments": "源节点；目标节点",
       "argument_resolution": "两个实参静态类型均为节点句柄",
@@ -49100,7 +49113,9 @@
       "edge_id": "RCE2179",
       "caller": "F0461",
       "callee": "F0451",
-      "callsites": ["海中鱼巣/领域/服务.概念活动.ixx:71"],
+      "callsites": [
+        "海中鱼巣/领域/服务.概念活动.ixx:71"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this=&当前概念活动业务服务",
       "argument_resolution": "同类无参 const 成员",
@@ -49113,7 +49128,9 @@
       "edge_id": "RCE2180",
       "caller": "F0461",
       "callee": "F0245",
-      "callsites": ["海中鱼巣/领域/服务.概念活动.ixx:71"],
+      "callsites": [
+        "海中鱼巣/领域/服务.概念活动.ixx:71"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this=&系统角色",
       "argument_resolution": "参数静态类型为系统角色清单",
@@ -49126,7 +49143,9 @@
       "edge_id": "RCE2181",
       "caller": "F0461",
       "callee": "F0251",
-      "callsites": ["海中鱼巣/领域/服务.概念活动.ixx:71"],
+      "callsites": [
+        "海中鱼巣/领域/服务.概念活动.ixx:71"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this=&预期材料",
       "argument_resolution": "参数静态类型为概念活动材料",
@@ -49139,7 +49158,9 @@
       "edge_id": "RCE2182",
       "caller": "F0461",
       "callee": "F0250",
-      "callsites": ["海中鱼巣/领域/服务.概念活动.ixx:72"],
+      "callsites": [
+        "海中鱼巣/领域/服务.概念活动.ixx:72"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this=活动材料_所含材料；右=预期材料",
       "argument_resolution": "optional 解引用后的具体材料类型复核",
@@ -49152,7 +49173,9 @@
       "edge_id": "RCE2183",
       "caller": "F0461",
       "callee": "F0464",
-      "callsites": ["海中鱼巣/领域/服务.概念活动.ixx:76"],
+      "callsites": [
+        "海中鱼巣/领域/服务.概念活动.ixx:76"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this=&预期材料.重建视图；右=重建.视图",
       "argument_resolution": "两侧静态类型均为概念活动重建视图",
@@ -49165,7 +49188,9 @@
       "edge_id": "RCE2184",
       "caller": "F0462",
       "callee": "F0451",
-      "callsites": ["海中鱼巣/领域/服务.概念活动.ixx:32"],
+      "callsites": [
+        "海中鱼巣/领域/服务.概念活动.ixx:32"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this=&当前概念活动业务服务",
       "argument_resolution": "同类无参 const 成员",
@@ -49178,7 +49203,9 @@
       "edge_id": "RCE2185",
       "caller": "F0462",
       "callee": "F0245",
-      "callsites": ["海中鱼巣/领域/服务.概念活动.ixx:32"],
+      "callsites": [
+        "海中鱼巣/领域/服务.概念活动.ixx:32"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this=&系统角色",
       "argument_resolution": "参数静态类型为系统角色清单",
@@ -49191,7 +49218,9 @@
       "edge_id": "RCE2186",
       "caller": "F0462",
       "callee": "F0229",
-      "callsites": ["海中鱼巣/领域/服务.概念活动.ixx:32"],
+      "callsites": [
+        "海中鱼巣/领域/服务.概念活动.ixx:32"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this=&参数",
       "argument_resolution": "参数静态类型为概念活动初始化参数",
@@ -49204,7 +49233,9 @@
       "edge_id": "RCE2187",
       "caller": "F0462",
       "callee": "F0247",
-      "callsites": ["海中鱼巣/领域/服务.概念活动.ixx:35"],
+      "callsites": [
+        "海中鱼巣/领域/服务.概念活动.ixx:35"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this=活动材料_所含材料；参数=F0462参数",
       "argument_resolution": "optional 成员访问后的具体材料类型复核",
@@ -49217,7 +49248,10 @@
       "edge_id": "RCE2188",
       "caller": "F0462",
       "callee": "R0539",
-      "callsites": ["海中鱼巣/领域/服务.概念活动.ixx:39", "海中鱼巣/领域/服务.概念活动.ixx:40"],
+      "callsites": [
+        "海中鱼巣/领域/服务.概念活动.ixx:39",
+        "海中鱼巣/领域/服务.概念活动.ixx:40"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this=&重建",
       "argument_resolution": "局部静态类型为概念活动重建结果",
@@ -49230,7 +49264,9 @@
       "edge_id": "RCE2189",
       "caller": "F0462",
       "callee": "F0464",
-      "callsites": ["海中鱼巣/领域/服务.概念活动.ixx:39"],
+      "callsites": [
+        "海中鱼巣/领域/服务.概念活动.ixx:39"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this=&活动材料_->重建视图；右=重建.视图",
       "argument_resolution": "两侧静态类型均为概念活动重建视图",
@@ -49243,7 +49279,11 @@
       "edge_id": "RCE2190",
       "caller": "F0462",
       "callee": "R0511",
-      "callsites": ["海中鱼巣/领域/服务.概念活动.ixx:47", "海中鱼巣/领域/服务.概念活动.ixx:50", "海中鱼巣/领域/服务.概念活动.ixx:53"],
+      "callsites": [
+        "海中鱼巣/领域/服务.概念活动.ixx:47",
+        "海中鱼巣/领域/服务.概念活动.ixx:50",
+        "海中鱼巣/领域/服务.概念活动.ixx:53"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "活跃、冷却、退役三份创建抽象状态请求",
       "argument_resolution": "状态服务_静态类型与三份值式请求复核",
@@ -49256,7 +49296,9 @@
       "edge_id": "RCE2191",
       "caller": "F0462",
       "callee": "R0510",
-      "callsites": ["海中鱼巣/领域/服务.概念活动.ixx:56"],
+      "callsites": [
+        "海中鱼巣/领域/服务.概念活动.ixx:56"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this依次为活跃规格、冷却规格、退役规格",
       "argument_resolution": "三个局部静态类型均为抽象状态规格结果",
@@ -49269,7 +49311,9 @@
       "edge_id": "RCE2192",
       "caller": "F0462",
       "callee": "F0076",
-      "callsites": ["海中鱼巣/领域/服务.概念活动.ixx:61"],
+      "callsites": [
+        "海中鱼巣/领域/服务.概念活动.ixx:61"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this=&结果",
       "argument_resolution": "局部静态类型为概念活动初始化结果",
@@ -49282,7 +49326,9 @@
       "edge_id": "RCE2193",
       "caller": "F0462",
       "callee": "R0726",
-      "callsites": ["海中鱼巣/领域/服务.概念活动.ixx:61"],
+      "callsites": [
+        "海中鱼巣/领域/服务.概念活动.ixx:61"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this=&结果",
       "argument_resolution": "局部静态类型为概念活动初始化结果",
@@ -49295,7 +49341,9 @@
       "edge_id": "RCE2194",
       "caller": "F0463",
       "callee": "F0051",
-      "callsites": ["海中鱼巣/领域/概念活动状态.数据.h:70"],
+      "callsites": [
+        "海中鱼巣/领域/概念活动状态.数据.h:70"
+      ],
       "call_category": "compiler-generated-defaulted-member-compare",
       "arguments": "左右状态节点句柄",
       "argument_resolution": "默认比较成员静态类型为节点句柄",
@@ -49308,7 +49356,9 @@
       "edge_id": "RCE2195",
       "caller": "F0463",
       "callee": "R0615",
-      "callsites": ["海中鱼巣/领域/概念活动状态.数据.h:70"],
+      "callsites": [
+        "海中鱼巣/领域/概念活动状态.数据.h:70"
+      ],
       "call_category": "compiler-generated-defaulted-member-compare",
       "arguments": "左右主信息句柄",
       "argument_resolution": "默认比较成员静态类型为主信息句柄",
@@ -49321,7 +49371,9 @@
       "edge_id": "RCE2196",
       "caller": "F0464",
       "callee": "F0463",
-      "callsites": ["海中鱼巣/领域/概念活动状态.数据.h:144"],
+      "callsites": [
+        "海中鱼巣/领域/概念活动状态.数据.h:144"
+      ],
       "call_category": "standard-template-element-compare",
       "arguments": "两侧状态角色数组对应元素",
       "argument_resolution": "std::array 元素静态类型为概念活动状态角色材料",
@@ -49334,7 +49386,9 @@
       "edge_id": "RCE2197",
       "caller": "F0465",
       "callee": "R0613",
-      "callsites": ["海中鱼巣/领域/概念活动状态.数据.h:116"],
+      "callsites": [
+        "海中鱼巣/领域/概念活动状态.数据.h:116"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "左右根身份材料",
       "argument_resolution": "两侧静态类型为系统角色身份材料",
@@ -49347,7 +49401,9 @@
       "edge_id": "RCE2198",
       "caller": "F0465",
       "callee": "F0457",
-      "callsites": ["海中鱼巣/领域/概念活动状态.数据.h:119"],
+      "callsites": [
+        "海中鱼巣/领域/概念活动状态.数据.h:119"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "左右活跃关系材料",
       "argument_resolution": "两侧静态类型为系统角色关系材料",
@@ -49360,7 +49416,10 @@
       "edge_id": "RCE2199",
       "caller": "F0466",
       "callee": "F0467",
-      "callsites": ["海中鱼巣/领域/概念活动状态.数据.h:128", "海中鱼巣/领域/概念活动状态.数据.h:129"],
+      "callsites": [
+        "海中鱼巣/领域/概念活动状态.数据.h:128",
+        "海中鱼巣/领域/概念活动状态.数据.h:129"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "状态角色组第0、第1、第2元素",
       "argument_resolution": "三个数组元素静态类型均为概念活动状态角色材料",
@@ -49373,7 +49432,9 @@
       "edge_id": "RCE2200",
       "caller": "F0468",
       "callee": "F0197",
-      "callsites": ["海中鱼巣/自检.入口初始化.ixx:60"],
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:60"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this=&装配.上下文->节点；无显式参数",
       "argument_resolution": "接收者静态类型为节点仓库",
@@ -49386,7 +49447,10 @@
       "edge_id": "RCE2201",
       "caller": "R0727",
       "callee": "R0563",
-      "callsites": ["海中鱼巣/领域/系统角色清单.数据.h:153", "海中鱼巣/领域/系统角色清单.数据.h:154"],
+      "callsites": [
+        "海中鱼巣/领域/系统角色清单.数据.h:153",
+        "海中鱼巣/领域/系统角色清单.数据.h:154"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "五个系统角色身份材料接收者，无显式参数",
       "argument_resolution": "五个字段静态类型均为系统角色身份材料",
@@ -49399,7 +49463,9 @@
       "edge_id": "RCE2202",
       "caller": "F0496",
       "callee": "F0621",
-      "callsites": ["海中鱼巣/领域/语素服务.h:192"],
+      "callsites": [
+        "海中鱼巣/领域/语素服务.h:192"
+      ],
       "call_category": "source-audited-overload-direct",
       "arguments": "this=&关系_；源节点=语素入口；类型=语素对应信息",
       "argument_resolution": "两实参调用精确匹配无令牌、无顺序号 F0621",
@@ -49412,7 +49478,9 @@
       "edge_id": "RCE2203",
       "caller": "F0497",
       "callee": "F0621",
-      "callsites": ["海中鱼巣/领域/语素服务.h:199"],
+      "callsites": [
+        "海中鱼巣/领域/语素服务.h:199"
+      ],
       "call_category": "source-audited-overload-direct",
       "arguments": "this=&关系_；源节点=语素入口；类型=语素概念追溯",
       "argument_resolution": "两实参调用精确匹配无令牌、无顺序号 F0621",
@@ -49425,7 +49493,9 @@
       "edge_id": "RCE2204",
       "caller": "R0728",
       "callee": "F0190",
-      "callsites": ["海中鱼巣/领域/语素服务.h:253"],
+      "callsites": [
+        "海中鱼巣/领域/语素服务.h:253"
+      ],
       "call_category": "source-audited-overload-direct",
       "arguments": "this=&节点_；节点=节点句柄值",
       "argument_resolution": "单实参调用精确匹配无令牌 F0190",
@@ -49438,7 +49508,9 @@
       "edge_id": "RCE2205",
       "caller": "R0568",
       "callee": "F0346",
-      "callsites": ["海中鱼巣/领域/语素服务.h:258"],
+      "callsites": [
+        "海中鱼巣/领域/语素服务.h:258"
+      ],
       "call_category": "source-audited-overload-direct",
       "arguments": "this=&节点_；节点=节点句柄值；令牌=令牌",
       "argument_resolution": "双实参调用精确匹配节点仓库带令牌读取重载 F0346",
@@ -49451,7 +49523,9 @@
       "edge_id": "RCE2206",
       "caller": "F0516",
       "callee": "F0331",
-      "callsites": ["海中鱼巣/领域/存在服务.h:94"],
+      "callsites": [
+        "海中鱼巣/领域/存在服务.h:94"
+      ],
       "call_category": "source-audited-overload-direct",
       "arguments": "this=&主信息_；无显式实参",
       "argument_resolution": "零实参调用精确匹配无令牌创建主信息重载 F0331",
@@ -49464,7 +49538,9 @@
       "edge_id": "RCE2207",
       "caller": "F0516",
       "callee": "F0332",
-      "callsites": ["海中鱼巣/领域/存在服务.h:95"],
+      "callsites": [
+        "海中鱼巣/领域/存在服务.h:95"
+      ],
       "call_category": "source-audited-overload-direct",
       "arguments": "this=&节点_；类型=节点类型::存在；主信息=主信息句柄",
       "argument_resolution": "两实参调用精确匹配无令牌创建节点重载 F0332",
@@ -49477,7 +49553,9 @@
       "edge_id": "RCE2208",
       "caller": "F0516",
       "callee": "F0624",
-      "callsites": ["海中鱼巣/领域/存在服务.h:97"],
+      "callsites": [
+        "海中鱼巣/领域/存在服务.h:97"
+      ],
       "call_category": "source-audited-overload-direct",
       "arguments": "this=&主信息_；主信息=记录->主信息",
       "argument_resolution": "单实参调用精确匹配无令牌主信息有效性读取重载 F0624",
@@ -49490,7 +49568,9 @@
       "edge_id": "RCE2209",
       "caller": "F0523",
       "callee": "F0336",
-      "callsites": ["海中鱼巣/核心/节点仓库.cpp:332"],
+      "callsites": [
+        "海中鱼巣/核心/节点仓库.cpp:332"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this=&事务接线_",
       "argument_resolution": "结构事务接线静态接收者与零实参成员复核",
@@ -49503,7 +49583,9 @@
       "edge_id": "RCE2210",
       "caller": "F0523",
       "callee": "F0398",
-      "callsites": ["海中鱼巣/核心/节点仓库.cpp:333"],
+      "callsites": [
+        "海中鱼巣/核心/节点仓库.cpp:333"
+      ],
       "call_category": "source-audited-resolved-function-pointer",
       "arguments": "状态=事务接线_.运行期状态",
       "argument_resolution": "生产装配下取得独占许可函数指针唯一绑定协调器生成接线第153行 lambda",
@@ -49516,7 +49598,9 @@
       "edge_id": "RCE2211",
       "caller": "F0523",
       "callee": "F0338",
-      "callsites": ["海中鱼巣/核心/节点仓库.cpp:334"],
+      "callsites": [
+        "海中鱼巣/核心/节点仓库.cpp:334"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this=&许可",
       "argument_resolution": "结构事务许可静态接收者与零实参成员复核",
@@ -49529,7 +49613,9 @@
       "edge_id": "RCE2212",
       "caller": "F0523",
       "callee": "F0339",
-      "callsites": ["海中鱼巣/核心/节点仓库.cpp:334"],
+      "callsites": [
+        "海中鱼巣/核心/节点仓库.cpp:334"
+      ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this=&许可",
       "argument_resolution": "结构事务许可静态接收者与零实参令牌读取成员复核",
@@ -49542,13 +49628,704 @@
       "edge_id": "RCE2213",
       "caller": "F0523",
       "callee": "F0345",
-      "callsites": ["海中鱼巣/核心/节点仓库.cpp:333-335"],
+      "callsites": [
+        "海中鱼巣/核心/节点仓库.cpp:333-335"
+      ],
       "call_category": "source-audited-implicit-destructor",
       "arguments": "this=&许可",
       "argument_resolution": "局部结构事务许可词法作用域与非平凡析构身份复核",
       "return_binding": "void",
       "reachable_condition": "RCE2210已形成许可；返回值求值完成或许可形成后的异常展开",
       "resolution_source": "节点仓库.cpp:333-335 局部许可生命周期与已登记F0345析构身份复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2214",
+      "caller": "F0544",
+      "callee": "F0336",
+      "callsites": [
+        "海中鱼巣/核心/索引仓库.cpp:173"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&事务接线_",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "已接域bool",
+      "reachable_condition": "F0544进入后首先判断接域",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2215",
+      "caller": "F0544",
+      "callee": "F0397",
+      "callsites": [
+        "海中鱼巣/核心/索引仓库.cpp:174"
+      ],
+      "call_category": "resolved-function-pointer",
+      "arguments": "this=&事务接线_,事务接线_.运行期状态",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "结构事务许可",
+      "reachable_condition": "RCE2214返回true；生产接线唯一共享许可目标",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2216",
+      "caller": "F0544",
+      "callee": "F0338",
+      "callsites": [
+        "海中鱼巣/核心/索引仓库.cpp:175"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&许可",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "许可有效bool",
+      "reachable_condition": "RCE2215返回许可",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2217",
+      "caller": "F0544",
+      "callee": "F0339",
+      "callsites": [
+        "海中鱼巣/核心/索引仓库.cpp:175"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&许可",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "const结构事务令牌&",
+      "reachable_condition": "RCE2216返回true",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2218",
+      "caller": "F0544",
+      "callee": "F0345",
+      "callsites": [
+        "海中鱼巣/核心/索引仓库.cpp:173-176"
+      ],
+      "call_category": "compiler_implicit_destructor",
+      "arguments": "this=&许可",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "",
+      "reachable_condition": "接域分支任一返回或异常展开退出局部许可作用域",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2219",
+      "caller": "F0544",
+      "callee": "F0377",
+      "callsites": [
+        "海中鱼巣/核心/索引仓库.cpp:185"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&节点_,候选",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "节点有效bool",
+      "reachable_condition": "未接域、主键非零、索引命中并释放共享锁后",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2220",
+      "caller": "F0552",
+      "callee": "R0729",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:561"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this,需求节点,节点类型::需求",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "类型匹配bool",
+      "reachable_condition": "F0552进入",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2221",
+      "caller": "F0552",
+      "callee": "R0582",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:564"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this,需求节点",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "主体optional",
+      "reachable_condition": "RCE2220返回true",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2222",
+      "caller": "F0552",
+      "callee": "R0583",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:565"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this,需求节点",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "目标宿主optional",
+      "reachable_condition": "RCE2221返回后",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2223",
+      "caller": "F0552",
+      "callee": "R0584",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:566"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this,需求节点",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "场景optional",
+      "reachable_condition": "RCE2222返回后",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2224",
+      "caller": "F0552",
+      "callee": "R0581",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:567"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this,需求节点",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "目标状态optional",
+      "reachable_condition": "RCE2223返回后",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2225",
+      "caller": "R0579",
+      "callee": "R0729",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:295",
+        "海中鱼巣/领域/需求服务.h:296",
+        "海中鱼巣/领域/需求服务.h:297"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this,自我存在/需求场景/目标特征,对应节点类型",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "类型匹配bool",
+      "reachable_condition": "R0579入口短路按源码顺序执行",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2226",
+      "caller": "R0581",
+      "callee": "R0729",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:354",
+        "海中鱼巣/领域/需求服务.h:360"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this,需求节点或候选目标,需求/状态类型",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "类型匹配bool",
+      "reachable_condition": "R0581入口及候选过滤路径",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2227",
+      "caller": "R0587",
+      "callee": "R0729",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:705"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this,需求节点,节点类型::需求",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "类型匹配bool",
+      "reachable_condition": "R0587进入",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2228",
+      "caller": "R0593",
+      "callee": "R0729",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:770",
+        "海中鱼巣/领域/需求服务.h:773"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this,需求节点/父需求,节点类型::需求",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "类型匹配bool",
+      "reachable_condition": "R0593入口与父需求门禁",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2229",
+      "caller": "R0596",
+      "callee": "R0729",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:979"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this,结算状态,节点类型::状态",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "类型匹配bool",
+      "reachable_condition": "R0596进入",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2230",
+      "caller": "R0597",
+      "callee": "R0729",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:988",
+        "海中鱼巣/领域/需求服务.h:994"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this,结算状态/目标,状态或目标类型",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "类型匹配bool",
+      "reachable_condition": "R0597入口与候选过滤路径",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2231",
+      "caller": "R0576",
+      "callee": "R0729",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:1007",
+        "海中鱼巣/领域/需求服务.h:1013"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this,需求节点/目标,需求或目标类型",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "类型匹配bool",
+      "reachable_condition": "R0576入口与候选过滤路径",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2232",
+      "caller": "R0577",
+      "callee": "R0729",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:1027",
+        "海中鱼巣/领域/需求服务.h:1031"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this,结算状态/目标,状态或目标类型",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "类型匹配bool",
+      "reachable_condition": "R0577入口与候选过滤路径",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2233",
+      "caller": "R0729",
+      "callee": "F0190",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:1039"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&节点_,节点句柄值",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "节点记录optional",
+      "reachable_condition": "R0729进入",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2234",
+      "caller": "F0554",
+      "callee": "F0621",
+      "callsites": [
+        "海中鱼巣/领域/特征服务.h:266"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=关系_,宿主节点,关系类型::归属",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "候选组",
+      "reachable_condition": "关系指针非空且宿主/特征类型前置通过",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2235",
+      "caller": "F0554",
+      "callee": "F0579",
+      "callsites": [
+        "海中鱼巣/领域/特征服务.h:268"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=关系_,关系类型::模板,候选,特征类型",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "关系存在bool",
+      "reachable_condition": "当前候选经RCE0256确认为特征",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2236",
+      "caller": "F0555",
+      "callee": "R0730",
+      "callsites": [
+        "海中鱼巣/领域/特征服务.h:367"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=特征值_,特征值节点",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "I64值optional",
+      "reachable_condition": "RCE0257返回true且特征值指针非空",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2237",
+      "caller": "R0730",
+      "callee": "F0321",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:269"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&事务接线_",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "接线形态有效bool",
+      "reachable_condition": "R0730进入",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2238",
+      "caller": "R0730",
+      "callee": "F0336",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:272"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&事务接线_",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "已接域bool",
+      "reachable_condition": "RCE2237返回true",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2239",
+      "caller": "R0730",
+      "callee": "F0397",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:273"
+      ],
+      "call_category": "resolved-function-pointer",
+      "arguments": "this=&事务接线_,事务接线_.运行期状态",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "结构事务许可",
+      "reachable_condition": "RCE2238返回true；生产接线唯一共享许可目标",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2240",
+      "caller": "R0730",
+      "callee": "F0338",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:274"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&许可",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "许可有效bool",
+      "reachable_condition": "RCE2239返回许可",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2241",
+      "caller": "R0730",
+      "callee": "F0339",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:275"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&许可",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "const结构事务令牌&",
+      "reachable_condition": "RCE2240返回true",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2242",
+      "caller": "R0730",
+      "callee": "R0731",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:277"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this,特征值节点,令牌",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "节点记录optional",
+      "reachable_condition": "接线形态有效且接域许可有效或未接域",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2243",
+      "caller": "R0730",
+      "callee": "R0732",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:283"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this,特征值节点,节点记录值->主信息,令牌",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "原始值状态",
+      "reachable_condition": "RCE2242返回有值且共享锁已取得",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2244",
+      "caller": "R0730",
+      "callee": "F0345",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:268-288"
+      ],
+      "call_category": "compiler_implicit_destructor",
+      "arguments": "this=&许可",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "",
+      "reachable_condition": "函数任一返回或异常展开退出许可作用域",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2245",
+      "caller": "R0731",
+      "callee": "F0346",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:601"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&节点_,特征值节点,*令牌",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "节点记录optional",
+      "reachable_condition": "令牌指针非空",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2246",
+      "caller": "R0731",
+      "callee": "F0190",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:602"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&节点_,特征值节点",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "节点记录optional",
+      "reachable_condition": "令牌指针为空",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2247",
+      "caller": "R0731",
+      "callee": "R0009",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:607"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&主信息_,记录->主信息,*令牌",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "主信息有效bool",
+      "reachable_condition": "节点记录类型有效且令牌非空",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2248",
+      "caller": "R0731",
+      "callee": "F0624",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:608"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&主信息_,记录->主信息",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "主信息有效bool",
+      "reachable_condition": "节点记录类型有效且令牌为空",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2249",
+      "caller": "R0731",
+      "callee": "F0184",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:609"
+      ],
+      "call_category": "direct_free_function",
+      "arguments": "主信息有效,固定说明",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "追根因检查bool",
+      "reachable_condition": "主信息有效判定完成",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2250",
+      "caller": "R0732",
+      "callee": "R0554",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:620"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this,特征值节点",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "Vec记录数量",
+      "reachable_condition": "R0732进入",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2251",
+      "caller": "R0732",
+      "callee": "R0556",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:621"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this,特征值节点",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "I64版本记录数量",
+      "reachable_condition": "RCE2250返回后",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2252",
+      "caller": "R0732",
+      "callee": "F0184",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:622",
+        "海中鱼巣/领域/特征值服务.h:623",
+        "海中鱼巣/领域/特征值服务.h:630",
+        "海中鱼巣/领域/特征值服务.h:634",
+        "海中鱼巣/领域/特征值服务.h:642",
+        "海中鱼巣/领域/特征值服务.h:646",
+        "海中鱼巣/领域/特征值服务.h:650",
+        "海中鱼巣/领域/特征值服务.h:666"
+      ],
+      "call_category": "direct_free_function",
+      "arguments": "各结构一致性条件,对应固定说明",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "追根因检查bool",
+      "reachable_condition": "按源码短路与分支顺序执行",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2253",
+      "caller": "R0732",
+      "callee": "R0548",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:627"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this,特征值节点",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "Vec const_iterator",
+      "reachable_condition": "记录数量检查通过",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2254",
+      "caller": "R0732",
+      "callee": "R0552",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:628"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this,特征值节点",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "I64版本 const_iterator",
+      "reachable_condition": "RCE2253返回后",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2255",
+      "caller": "R0732",
+      "callee": "R0544",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:630"
+      ],
+      "call_category": "direct_static",
+      "arguments": "*Vec位置",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "Vec记录内部一致bool",
+      "reachable_condition": "Vec位置不等于cend",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2256",
+      "caller": "R0732",
+      "callee": "R0545",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:634"
+      ],
+      "call_category": "direct_static",
+      "arguments": "*I64版本位置",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "I64版本记录内部一致bool",
+      "reachable_condition": "I64版本位置不等于cend",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2257",
+      "caller": "R0732",
+      "callee": "F0383",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:639"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&主信息_,主信息句柄值,0,*令牌",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "I64值optional",
+      "reachable_condition": "令牌指针非空且前序一致性检查通过",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2258",
+      "caller": "R0732",
+      "callee": "F0619",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:640"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&主信息_,主信息句柄值",
+      "argument_resolution": "源码静态接收者、完整重载与实参逐项复核",
+      "return_binding": "I64值optional",
+      "reachable_condition": "令牌指针为空且前序一致性检查通过",
+      "resolution_source": "本批源码逐调用点与静态接收者复核",
       "current_root_reachable": true
     }
   ]

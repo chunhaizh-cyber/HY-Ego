@@ -1,62 +1,62 @@
 # main 可达项目调用边表
 
-代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；项目调用边：3233。
+代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；项目调用边：3278。
 
 | 边 ID | 调用方 | 被调方 | 调用点 | 类别 | 参数绑定 | 结果绑定 | 可达条件 | 解析依据 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| E0002 | F0001 | F0003 | <code>海中鱼巣/入口.cpp:10</code> | direct_const_member | this=&解析 | 解析成功 | after E0001 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0002 | F0001 | F0003 | <code>海中鱼巣/入口.cpp:10</code> | direct_const_member | this=&amp;解析 | 解析成功 | after E0001 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0003 | F0001 | F0004 | <code>海中鱼巣/入口.cpp:11, 海中鱼巣/入口.cpp:14</code> | direct_free_function+unique_name | 解析, nullptr | 进程退出码 | 解析成功 == false；after E0004；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E0004 | F0001 | F0005 | <code>海中鱼巣/入口.cpp:13</code> | direct_free_function+unique_name | 解析.选项 | 运行 | 解析成功 == true；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E0001 | F0001 | F0002 | <code>海中鱼巣/入口.cpp:9</code> | direct_free_function+unique_name | 参数数量, 参数组 | 解析 | always；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0006 | F0004 | F0003 | <code>海中鱼巣/启动.程序入口.ixx:74</code> | direct_const_member | this=&解析 | 解析成功 | always | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0007 | F0004 | F0006 | <code>海中鱼巣/启动.程序入口.ixx:80</code> | direct_const_member | this=运行 | 运行成功 | 解析已接受 && 运行 != nullptr | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0006 | F0004 | F0003 | <code>海中鱼巣/启动.程序入口.ixx:74</code> | direct_const_member | this=&amp;解析 | 解析成功 | always | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0007 | F0004 | F0006 | <code>海中鱼巣/启动.程序入口.ixx:80</code> | direct_const_member | this=运行 | 运行成功 | 解析已接受 &amp;&amp; 运行 != nullptr | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0008 | F0005 | F0007 | <code>海中鱼巣/启动.应用程序.ixx:448</code> | direct_free_function | 选项.模式 | 普通结果 | 普通控制面板 \|\| 无窗口常驻 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0009 | F0005 | F0008 | <code>海中鱼巣/启动.应用程序.ixx:450</code> | direct_free_function |  | 生产结果 | 生产运行期 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0010 | F0005 | F0009 | <code>海中鱼巣/启动.应用程序.ixx:452</code> | direct_free_function |  | 自检结果 | 完整自检 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0011 | F0005 | F0010 | <code>海中鱼巣/启动.应用程序.ixx:454</code> | direct_free_function | 覆盖端口=nullptr | 数据库结果 | 数据库专项 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0012 | F0005 | F0011 | <code>海中鱼巣/启动.应用程序.ixx:456</code> | direct_free_function |  | 性能结果 | 关系仓库性能专项 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0022 | F0007 | F0021 | <code>海中鱼巣/启动.应用程序.ixx:101</code> | direct_free_function+unique_name | *装配.上下文, *信号.租约 | 运行结果 | 信号成功 && 无窗口常驻；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0022 | F0007 | F0021 | <code>海中鱼巣/启动.应用程序.ixx:101</code> | direct_free_function+unique_name | *装配.上下文, *信号.租约 | 运行结果 | 信号成功 &amp;&amp; 无窗口常驻；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E0026 | F0007 | F0025 | <code>海中鱼巣/启动.应用程序.ixx:102, 海中鱼巣/启动.应用程序.ixx:107, 海中鱼巣/启动.应用程序.ixx:110</code> | compiler_implicit_destructor | this=信号.租约.get() |  | 无窗口宿主返回后；投影失败返回前；控制面板宿主返回后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0023 | F0007 | F0022 | <code>海中鱼巣/启动.应用程序.ixx:103</code> | direct_free_function+unique_name | *装配.上下文, 初始化 | 投影 | 信号成功 && 普通控制面板；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0024 | F0007 | F0023 | <code>海中鱼巣/启动.应用程序.ixx:104</code> | direct_const_member | this=&投影 | 投影成功 | after E0023 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0023 | F0007 | F0022 | <code>海中鱼巣/启动.应用程序.ixx:103</code> | direct_free_function+unique_name | *装配.上下文, 初始化 | 投影 | 信号成功 &amp;&amp; 普通控制面板；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0024 | F0007 | F0023 | <code>海中鱼巣/启动.应用程序.ixx:104</code> | direct_const_member | this=&amp;投影 | 投影成功 | after E0023 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0025 | F0007 | F0024 | <code>海中鱼巣/启动.应用程序.ixx:108</code> | direct_free_function+unique_name | 上下文, 初始化, 投影, 审计, 信号租约 | 运行结果 | 投影成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E0014 | F0007 | F0013 | <code>海中鱼巣/启动.应用程序.ixx:51</code> | direct_free_function+unique_name | 配置 | 装配 | 普通模式有效；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0015 | F0007 | F0014 | <code>海中鱼巣/启动.应用程序.ixx:52</code> | direct_const_member | this=&装配 | 装配成功 | after E0014 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0015 | F0007 | F0014 | <code>海中鱼巣/启动.应用程序.ixx:52</code> | direct_const_member | this=&amp;装配 | 装配成功 | after E0014 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0001 | F0007 | F0045 | <code>海中鱼巣/启动.应用程序.ixx:59</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0002 | F0007 | F0046 | <code>海中鱼巣/启动.应用程序.ixx:60</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0003 | F0007 | F0048 | <code>海中鱼巣/启动.应用程序.ixx:61</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | E0016 | F0007 | F0015 | <code>海中鱼巣/启动.应用程序.ixx:64</code> | direct_free_function+unique_name | 系统端口, 初始化请求 | 初始化 | 装配成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0017 | F0007 | F0016 | <code>海中鱼巣/启动.应用程序.ixx:66</code> | direct_const_member | this=&初始化 | 初始化成功 | after E0016 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0017 | F0007 | F0016 | <code>海中鱼巣/启动.应用程序.ixx:66</code> | direct_const_member | this=&amp;初始化 | 初始化成功 | after E0016 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0018 | F0007 | F0017 | <code>海中鱼巣/启动.应用程序.ixx:67</code> | lambda_direct | 捕获初始化 | 失败阶段 | 初始化失败 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0004 | F0007 | F0053 | <code>海中鱼巣/启动.应用程序.ixx:82</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0005 | F0007 | F0054 | <code>海中鱼巣/启动.应用程序.ixx:87</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | E0019 | F0007 | F0018 | <code>海中鱼巣/启动.应用程序.ixx:95</code> | direct_free_function+unique_name | 审计端口, 最佳努力 | 审计 | 初始化成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E0020 | F0007 | F0019 | <code>海中鱼巣/启动.应用程序.ixx:96</code> | direct_free_function+unique_name | 默认安装函数 | 信号 | after E0019；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0021 | F0007 | F0020 | <code>海中鱼巣/启动.应用程序.ixx:97</code> | direct_const_member | this=&信号 | 信号成功 | after E0020 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0021 | F0007 | F0020 | <code>海中鱼巣/启动.应用程序.ixx:97</code> | direct_const_member | this=&amp;信号 | 信号成功 | after E0020 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0029 | F0008 | F0026 | <code>海中鱼巣/启动.应用程序.ixx:37</code> | direct_constructor |  | 会话 | always | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0030 | F0008 | F0027 | <code>海中鱼巣/启动.应用程序.ixx:38</code> | direct_member | this=&会话, 生产运行期启动请求{} | 结果 | always | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0031 | F0008 | F0028 | <code>海中鱼巣/启动.应用程序.ixx:39</code> | direct_const_member | this=&结果 | 启动成功 | after E0030 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0030 | F0008 | F0027 | <code>海中鱼巣/启动.应用程序.ixx:38</code> | direct_member | this=&amp;会话, 生产运行期启动请求{} | 结果 | always | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0031 | F0008 | F0028 | <code>海中鱼巣/启动.应用程序.ixx:39</code> | direct_const_member | this=&amp;结果 | 启动成功 | after E0030 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0032 | F0009 | F0029 | <code>海中鱼巣/启动.应用程序.ixx:381</code> | direct_free_function+unique_name | 运行器, 空配置 | 入口登记成功 | always；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0033 | F0009 | F0030 | <code>海中鱼巣/启动.应用程序.ixx:382-383, 海中鱼巣/启动.应用程序.ixx:384-385</code> | direct_member | this=&运行器, 150, F27编号名称, 回调 | 端口登记成功 | 入口登记成功；入口登记成功 && 端口登记成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0033 | F0009 | F0030 | <code>海中鱼巣/启动.应用程序.ixx:382-383, 海中鱼巣/启动.应用程序.ixx:384-385</code> | direct_member | this=&amp;运行器, 150, F27编号名称, 回调 | 端口登记成功 | 入口登记成功；入口登记成功 &amp;&amp; 端口登记成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0036 | F0009 | F0032 | <code>海中鱼巣/启动.应用程序.ixx:383</code> | callback_bind+lsp_direct | 无捕获转发回调 | F27回调槽 | 端口自检登记；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；LSP 直接解析并经源码调用词复核 |
 | E0037 | F0009 | F0033 | <code>海中鱼巣/启动.应用程序.ixx:385</code> | callback_bind+lsp_direct | 无捕获转发回调 | F29回调槽 | 隔离自检登记；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；LSP 直接解析并经源码调用词复核 |
-| E0035 | F0009 | F0031 | <code>海中鱼巣/启动.应用程序.ixx:390</code> | direct_member+unique_name | this=&运行器 | 批次 | 三段登记均成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0035 | F0009 | F0031 | <code>海中鱼巣/启动.应用程序.ixx:390</code> | direct_member+unique_name | this=&amp;运行器 | 批次 | 三段登记均成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E0040 | F0010 | F0013 | <code>海中鱼巣/启动.应用程序.ixx:114</code> | direct_free_function+unique_name | 配置 | 装配 | always；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0041 | F0010 | F0014 | <code>海中鱼巣/启动.应用程序.ixx:115</code> | direct_const_member | this=&装配 | 装配成功 | after E0040 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0041 | F0010 | F0014 | <code>海中鱼巣/启动.应用程序.ixx:115</code> | direct_const_member | this=&amp;装配 | 装配成功 | after E0040 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0006 | F0010 | F0045 | <code>海中鱼巣/启动.应用程序.ixx:123</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0007 | F0010 | F0046 | <code>海中鱼巣/启动.应用程序.ixx:124</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0008 | F0010 | F0048 | <code>海中鱼巣/启动.应用程序.ixx:125</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | E0042 | F0010 | F0015 | <code>海中鱼巣/启动.应用程序.ixx:128, 海中鱼巣/启动.应用程序.ixx:128-129</code> | direct_free_function+unique_name | 系统端口, 初始化请求 | 初始化 | 装配成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0043 | F0010 | F0016 | <code>海中鱼巣/启动.应用程序.ixx:130</code> | direct_const_member | this=&初始化 | 初始化成功 | after E0042 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0043 | F0010 | F0016 | <code>海中鱼巣/启动.应用程序.ixx:130</code> | direct_const_member | this=&amp;初始化 | 初始化成功 | after E0042 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0044 | F0010 | F0034 | <code>海中鱼巣/启动.应用程序.ixx:131-140</code> | lambda_direct | 捕获初始化 | 失败阶段 | 初始化失败 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0009 | F0010 | F0053 | <code>海中鱼巣/启动.应用程序.ixx:146</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0010 | F0010 | F0054 | <code>海中鱼巣/启动.应用程序.ixx:151</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | E0045 | F0010 | F0018 | <code>海中鱼巣/启动.应用程序.ixx:159, 海中鱼巣/启动.应用程序.ixx:159-161</code> | direct_free_function+unique_name | 选中端口, 必须往返一致 | 审计 | 初始化成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0046 | F0010 | F0035 | <code>海中鱼巣/启动.应用程序.ixx:163, 海中鱼巣/启动.应用程序.ixx:167</code> | direct_const_member | this=&审计 | 摘要成功 | after E0045；always after summary | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0046 | F0010 | F0035 | <code>海中鱼巣/启动.应用程序.ixx:163, 海中鱼巣/启动.应用程序.ixx:167</code> | direct_const_member | this=&amp;审计 | 摘要成功 | after E0045；always after summary | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0050 | F0011 | F0037 | <code>海中鱼巣/启动.应用程序.ixx:402</code> | direct_free_function+unique_name |  | 结果 | 性能能力宏开启；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0054 | F0013 | F0039 | <code>海中鱼巣/装配.普通应用.ixx:129</code> | direct_const_member | this=&配置 | 配置有效 | always | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0055 | F0013 | F0040 | <code>海中鱼巣/装配.普通应用.ixx:133</code> | external_template_project_constructor | this=新分配存储 | 完整上下文 | 配置有效 && make_unique分配成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0061 | F0015 | F0046 | <code>海中鱼巣/领域/初始化.系统.ixx:100</code> | callback_invoke_resolved_normal |  | 快照候选 | 等待回调返回 && 正常生产端口绑定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0054 | F0013 | F0039 | <code>海中鱼巣/装配.普通应用.ixx:129</code> | direct_const_member | this=&amp;配置 | 配置有效 | always | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0055 | F0013 | F0040 | <code>海中鱼巣/装配.普通应用.ixx:133</code> | external_template_project_constructor | this=新分配存储 | 完整上下文 | 配置有效 &amp;&amp; make_unique分配成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0061 | F0015 | F0046 | <code>海中鱼巣/领域/初始化.系统.ixx:100</code> | callback_invoke_resolved_normal |  | 快照候选 | 等待回调返回 &amp;&amp; 正常生产端口绑定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0197 | F0015 | F0123 | <code>海中鱼巣/领域/初始化.系统.ixx:100</code> | callback_invoke_resolved_test |  | 快照候选 | 端口绑定来自F0032且等待回调已执行；四轮 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0989 | F0015 | F0473 | <code>海中鱼巣/领域/初始化.系统.ixx:100</code> | callback_invoke_resolved_test |  | 初始化快照候选 | 端口绑定来自F0254；等待回调已执行 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1008 | F0015 | F0480 | <code>海中鱼巣/领域/初始化.系统.ixx:100</code> | callback_invoke_resolved_test |  | 初始化快照候选 | 端口绑定来自F0255；等待回调已执行 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -71,8 +71,8 @@
 | E1218 | F0015 | F0541 | <code>海中鱼巣/领域/初始化.系统.ixx:100</code> | callback_invoke_resolved_test |  | 初始化快照候选 | 端口绑定来自F0264；等待回调已执行 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1238 | F0015 | F0548 | <code>海中鱼巣/领域/初始化.系统.ixx:100</code> | callback_invoke_resolved_test |  | 初始化快照候选 | 端口绑定来自F0265；等待回调已执行 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1271 | F0015 | F0559 | <code>海中鱼巣/领域/初始化.系统.ixx:100</code> | callback_invoke_resolved_test |  | 初始化快照候选 | 端口绑定来自F0266；等待回调已执行 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0062 | F0015 | F0047 | <code>海中鱼巣/领域/初始化.系统.ixx:103</code> | direct_const_member | this=快照对象 | 快照成功 | 等待成功 && 快照有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0063 | F0015 | F0048 | <code>海中鱼巣/领域/初始化.系统.ixx:107</code> | callback_invoke_resolved_normal |  | 概念图候选 | 快照成功 && 正常生产端口绑定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0062 | F0015 | F0047 | <code>海中鱼巣/领域/初始化.系统.ixx:103</code> | direct_const_member | this=快照对象 | 快照成功 | 等待成功 &amp;&amp; 快照有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0063 | F0015 | F0048 | <code>海中鱼巣/领域/初始化.系统.ixx:107</code> | callback_invoke_resolved_normal |  | 概念图候选 | 快照成功 &amp;&amp; 正常生产端口绑定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0198 | F0015 | F0124 | <code>海中鱼巣/领域/初始化.系统.ixx:107</code> | callback_invoke_resolved_test |  | 概念图候选 | 端口绑定来自F0032且快照成功；两轮 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0990 | F0015 | F0474 | <code>海中鱼巣/领域/初始化.系统.ixx:107</code> | callback_invoke_resolved_test |  | 概念图初始化结果 | 端口绑定来自F0254；等待和快照验收成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1009 | F0015 | F0481 | <code>海中鱼巣/领域/初始化.系统.ixx:107</code> | callback_invoke_resolved_test |  | 概念图初始化结果 | 端口绑定来自F0255；等待和快照验收成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -87,8 +87,8 @@
 | E1219 | F0015 | F0542 | <code>海中鱼巣/领域/初始化.系统.ixx:107</code> | callback_invoke_resolved_test |  | 概念图初始化结果 | 端口绑定来自F0264；等待和快照验收成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1239 | F0015 | F0549 | <code>海中鱼巣/领域/初始化.系统.ixx:107</code> | callback_invoke_resolved_test |  | 概念图初始化结果 | 端口绑定来自F0265；等待和快照验收成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1272 | F0015 | F0560 | <code>海中鱼巣/领域/初始化.系统.ixx:107</code> | callback_invoke_resolved_test |  | 概念图初始化结果 | 端口绑定来自F0266；等待和快照验收成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0064 | F0015 | F0049 | <code>海中鱼巣/领域/初始化.系统.ixx:108</code> | direct_const_member | this=&结果.概念图 | 概念图成功 | after E0063 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0065 | F0015 | F0050 | <code>海中鱼巣/领域/初始化.系统.ixx:112-113</code> | callback_invoke_resolved_normal | 自我存在节点 | 支持候选 | 概念图成功 && 正常生产端口绑定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0064 | F0015 | F0049 | <code>海中鱼巣/领域/初始化.系统.ixx:108</code> | direct_const_member | this=&amp;结果.概念图 | 概念图成功 | after E0063 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0065 | F0015 | F0050 | <code>海中鱼巣/领域/初始化.系统.ixx:112-113</code> | callback_invoke_resolved_normal | 自我存在节点 | 支持候选 | 概念图成功 &amp;&amp; 正常生产端口绑定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0199 | F0015 | F0125 | <code>海中鱼巣/领域/初始化.系统.ixx:112-113</code> | callback_invoke_resolved_test | 自我存在节点 | 支持候选 | 端口绑定来自F0032且概念图成功；失败点5一轮 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0991 | F0015 | F0475 | <code>海中鱼巣/领域/初始化.系统.ixx:112-113</code> | callback_invoke_resolved_test | 自我存在节点 | 存在根支持候选 | 端口绑定来自F0254；概念图初始化成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1010 | F0015 | F0482 | <code>海中鱼巣/领域/初始化.系统.ixx:112-113</code> | callback_invoke_resolved_test | 自我存在节点 | 存在根支持候选 | 端口绑定来自F0255；概念图初始化成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -104,8 +104,8 @@
 | E1240 | F0015 | F0550 | <code>海中鱼巣/领域/初始化.系统.ixx:112-113</code> | callback_invoke_resolved_test | 自我存在节点 | 存在根支持候选 | 端口绑定来自F0265；概念图初始化成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1273 | F0015 | F0561 | <code>海中鱼巣/领域/初始化.系统.ixx:112-113</code> | callback_invoke_resolved_test | 自我存在节点 | 存在根支持候选 | 端口绑定来自F0266；概念图初始化成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0066 | F0015 | F0051 | <code>海中鱼巣/领域/初始化.系统.ixx:115</code> | direct_operator | 支持根, 存在根 | 根相等 | 支持有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0056 | F0015 | F0041 | <code>海中鱼巣/领域/初始化.系统.ixx:79</code> | direct_const_member | this=&请求 | 请求有效 | always | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0057 | F0015 | F0042 | <code>海中鱼巣/领域/初始化.系统.ixx:83</code> | direct_const_member | this=&端口 | 端口完整 | 请求有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0056 | F0015 | F0041 | <code>海中鱼巣/领域/初始化.系统.ixx:79</code> | direct_const_member | this=&amp;请求 | 请求有效 | always | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0057 | F0015 | F0042 | <code>海中鱼巣/领域/初始化.系统.ixx:83</code> | direct_const_member | this=&amp;端口 | 端口完整 | 请求有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0058 | F0015 | F0043 | <code>海中鱼巣/领域/初始化.系统.ixx:88</code> | callback_invoke_resolved_normal | 请求.方法登记根稳定键, 状态服务 | 方法根候选 | 正常生产端口绑定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0194 | F0015 | F0120 | <code>海中鱼巣/领域/初始化.系统.ixx:88</code> | callback_invoke_resolved_test | 请求.方法登记根稳定键 | 方法根候选 | 端口绑定来自F0032；六轮 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0986 | F0015 | F0470 | <code>海中鱼巣/领域/初始化.系统.ixx:88</code> | callback_invoke_resolved_test | 请求.方法登记根稳定键 | 方法登记根候选 | 端口绑定来自F0254；请求和端口有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -121,7 +121,7 @@
 | E1215 | F0015 | F0538 | <code>海中鱼巣/领域/初始化.系统.ixx:88</code> | callback_invoke_resolved_test | 请求.方法登记根稳定键 | 方法登记根候选 | 端口绑定来自F0264；请求和端口有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1235 | F0015 | F0545 | <code>海中鱼巣/领域/初始化.系统.ixx:88</code> | callback_invoke_resolved_test | 请求.方法登记根稳定键 | 方法登记根候选 | 端口绑定来自F0265；请求和端口有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1268 | F0015 | F0556 | <code>海中鱼巣/领域/初始化.系统.ixx:88</code> | callback_invoke_resolved_test | 请求.方法登记根稳定键 | 方法登记根候选 | 端口绑定来自F0266；请求和端口有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0059 | F0015 | F0044 | <code>海中鱼巣/领域/初始化.系统.ixx:93</code> | callback_invoke_resolved_normal | 请求.根需求参数 | 启动候选 | 方法根有值 && 正常生产端口绑定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0059 | F0015 | F0044 | <code>海中鱼巣/领域/初始化.系统.ixx:93</code> | callback_invoke_resolved_normal | 请求.根需求参数 | 启动候选 | 方法根有值 &amp;&amp; 正常生产端口绑定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0195 | F0015 | F0121 | <code>海中鱼巣/领域/初始化.系统.ixx:93</code> | callback_invoke_resolved_test | 请求.根需求参数 | 启动候选 | 端口绑定来自F0032且方法根有值；五轮 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0987 | F0015 | F0471 | <code>海中鱼巣/领域/初始化.系统.ixx:93</code> | callback_invoke_resolved_test | 请求.根需求参数 | 启动结果 | 端口绑定来自F0254；方法登记根有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1006 | F0015 | F0478 | <code>海中鱼巣/领域/初始化.系统.ixx:93</code> | callback_invoke_resolved_test | 请求.根需求参数 | 启动结果 | 端口绑定来自F0255；方法登记根有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -136,7 +136,7 @@
 | E1216 | F0015 | F0539 | <code>海中鱼巣/领域/初始化.系统.ixx:93</code> | callback_invoke_resolved_test | 请求.根需求参数 | 启动结果 | 端口绑定来自F0264；方法登记根有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1236 | F0015 | F0546 | <code>海中鱼巣/领域/初始化.系统.ixx:93</code> | callback_invoke_resolved_test | 请求.根需求参数 | 启动结果 | 端口绑定来自F0265；方法登记根有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1269 | F0015 | F0557 | <code>海中鱼巣/领域/初始化.系统.ixx:93</code> | callback_invoke_resolved_test | 请求.根需求参数 | 启动结果 | 端口绑定来自F0266；方法登记根有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0060 | F0015 | F0045 | <code>海中鱼巣/领域/初始化.系统.ixx:98-99</code> | callback_invoke_resolved_normal | 10000ms | 已等待 | 首次启动成功 && 正常生产端口绑定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0060 | F0015 | F0045 | <code>海中鱼巣/领域/初始化.系统.ixx:98-99</code> | callback_invoke_resolved_normal | 10000ms | 已等待 | 首次启动成功 &amp;&amp; 正常生产端口绑定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0196 | F0015 | F0122 | <code>海中鱼巣/领域/初始化.系统.ixx:98-99</code> | callback_invoke_resolved_test | 10000ms | 已等待 | 端口绑定来自F0032且启动成功；四轮 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0988 | F0015 | F0472 | <code>海中鱼巣/领域/初始化.系统.ixx:98-99</code> | callback_invoke_resolved_test | 10000ms | 等待结果 | 端口绑定来自F0254；启动成功且非复用 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1007 | F0015 | F0479 | <code>海中鱼巣/领域/初始化.系统.ixx:98-99</code> | callback_invoke_resolved_test | 10000ms | 等待结果 | 端口绑定来自F0255；启动成功且非复用 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -151,9 +151,9 @@
 | E1217 | F0015 | F0540 | <code>海中鱼巣/领域/初始化.系统.ixx:98-99</code> | callback_invoke_resolved_test | 10000ms | 等待结果 | 端口绑定来自F0264；启动成功且非复用 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1237 | F0015 | F0547 | <code>海中鱼巣/领域/初始化.系统.ixx:98-99</code> | callback_invoke_resolved_test | 10000ms | 等待结果 | 端口绑定来自F0265；启动成功且非复用 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1270 | F0015 | F0558 | <code>海中鱼巣/领域/初始化.系统.ixx:98-99</code> | callback_invoke_resolved_test | 10000ms | 等待结果 | 端口绑定来自F0266；启动成功且非复用 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0067 | F0016 | F0047 | <code>海中鱼巣/领域/初始化.系统.ixx:69</code> | direct_const_member | this=自我初始化快照 | 快照成功 | 状态已初始化 && 方法根有值 && 快照有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0068 | F0016 | F0049 | <code>海中鱼巣/领域/初始化.系统.ixx:70</code> | direct_const_member | this=&概念图 | 概念图成功 | 前项全部为真 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0069 | F0018 | F0052 | <code>海中鱼巣/适配/审计.数据库启动.ixx:59</code> | direct_const_member | this=&端口 | 端口完整 | always | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0067 | F0016 | F0047 | <code>海中鱼巣/领域/初始化.系统.ixx:69</code> | direct_const_member | this=自我初始化快照 | 快照成功 | 状态已初始化 &amp;&amp; 方法根有值 &amp;&amp; 快照有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0068 | F0016 | F0049 | <code>海中鱼巣/领域/初始化.系统.ixx:70</code> | direct_const_member | this=&amp;概念图 | 概念图成功 | 前项全部为真 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0069 | F0018 | F0052 | <code>海中鱼巣/适配/审计.数据库启动.ixx:59</code> | direct_const_member | this=&amp;端口 | 端口完整 | always | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0070 | F0018 | F0053 | <code>海中鱼巣/适配/审计.数据库启动.ixx:62</code> | callback_invoke_resolved_normal | 生产命名空间规格 | 命名空间候选 | 正常生产端口绑定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0206 | F0018 | F0126 | <code>海中鱼巣/适配/审计.数据库启动.ixx:62</code> | callback_invoke_resolved_test |  | 命名空间候选 | 端口来自F0032；写失败与不一致路径各一次 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0071 | F0018 | F0054 | <code>海中鱼巣/适配/审计.数据库启动.ixx:72</code> | callback_invoke_resolved_normal | 命名空间, 三仓库 | 快照 | 正常生产端口绑定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -161,37 +161,37 @@
 | E0072 | F0018 | F0055 | <code>海中鱼巣/适配/审计.数据库启动.ixx:73</code> | callback_invoke_resolved_normal | 快照, 启动结构统计说明 | 写入 | 正常生产端口绑定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0208 | F0018 | F0128 | <code>海中鱼巣/适配/审计.数据库启动.ixx:73</code> | callback_invoke_resolved_test | 快照, 启动结构统计说明 | 默认写失败结果 | 写入失败端口路径 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0209 | F0018 | F0129 | <code>海中鱼巣/适配/审计.数据库启动.ixx:73</code> | callback_invoke_resolved_test | 快照, 启动结构统计说明 | 成功写入替身结果 | F0010覆盖端口来自F0032 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0073 | F0018 | F0056 | <code>海中鱼巣/适配/审计.数据库启动.ixx:78</code> | callback_invoke_resolved_normal | 1 | 读回 | 写入成功 && 正常生产端口绑定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0073 | F0018 | F0056 | <code>海中鱼巣/适配/审计.数据库启动.ixx:78</code> | callback_invoke_resolved_normal | 1 | 读回 | 写入成功 &amp;&amp; 正常生产端口绑定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0210 | F0018 | F0130 | <code>海中鱼巣/适配/审计.数据库启动.ixx:78</code> | callback_invoke_resolved_test | 1 | 单记录读回替身 | F0010覆盖端口来自F0032且写入成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0074 | F0019 | F0057 | <code>海中鱼巣/启动.程序运行宿主.ixx:116</code> | external_template_project_constructor | this=新分配存储 | 新租约 | 前置通过 && make_unique分配成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0075 | F0019 | F0058 | <code>海中鱼巣/启动.程序运行宿主.ixx:118, 海中鱼巣/启动.程序运行宿主.ixx:123, 海中鱼巣/启动.程序运行宿主.ixx:129</code> | callback_register | SIGINT回调地址 | 注册槽 | 安装SIGINT；安装SIGTERM；Windows编译 && 安装SIGBREAK | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0074 | F0019 | F0057 | <code>海中鱼巣/启动.程序运行宿主.ixx:116</code> | external_template_project_constructor | this=新分配存储 | 新租约 | 前置通过 &amp;&amp; make_unique分配成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0075 | F0019 | F0058 | <code>海中鱼巣/启动.程序运行宿主.ixx:118, 海中鱼巣/启动.程序运行宿主.ixx:123, 海中鱼巣/启动.程序运行宿主.ixx:129</code> | callback_register | SIGINT回调地址 | 注册槽 | 安装SIGINT；安装SIGTERM；Windows编译 &amp;&amp; 安装SIGBREAK | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0211 | F0019 | F0067 | <code>海中鱼巣/启动.程序运行宿主.ixx:118, 海中鱼巣/启动.程序运行宿主.ixx:123</code> | callback_invoke_resolved_test | SIGINT, 接收程序停止信号 | SIG_DFL | 安装函数实例来自F0032首次调用；安装函数实例来自F0032且SIGINT安装成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0076 | F0019 | F0025 | <code>海中鱼巣/启动.程序运行宿主.ixx:120, 海中鱼巣/启动.程序运行宿主.ixx:125, 海中鱼巣/启动.程序运行宿主.ixx:131, 海中鱼巣/启动.程序运行宿主.ixx:137-139</code> | compiler_implicit_destructor | this=租约 |  | SIGINT安装失败；SIGTERM安装失败；SIGBREAK安装失败；已构造租约后的异常展开 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0082 | F0022 | F0016 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:262</code> | direct_const_member | this=&初始化 | 初始化成功 | always | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0082 | F0022 | F0016 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:262</code> | direct_const_member | this=&amp;初始化 | 初始化成功 | always | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0083 | F0022 | F0059 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:267</code> | direct_const_member+unique_name | 快照.世界树.自我存在节点 | 坐标 | 初始化成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E0084 | F0022 | F0060 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:268-269</code> | direct_free_function | 上下文.节点, 上下文.关系, 快照.世界树, 快照.语素, 坐标 | 结果.世界树 | 初始化成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0085 | F0022 | F0061 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:274</code> | direct_free_function | 快照.语素, 初始化.概念图 | 结果.语素树 | 世界树可展示且只读 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0086 | F0024 | F0016 | <code>海中鱼巣/启动.程序运行宿主.ixx:148</code> | direct_const_member | this=&初始化 | 初始化成功 | always | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0087 | F0024 | F0023 | <code>海中鱼巣/启动.程序运行宿主.ixx:148</code> | direct_const_member_short_circuit | this=&投影 | 投影成功 | 初始化成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0086 | F0024 | F0016 | <code>海中鱼巣/启动.程序运行宿主.ixx:148</code> | direct_const_member | this=&amp;初始化 | 初始化成功 | always | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0087 | F0024 | F0023 | <code>海中鱼巣/启动.程序运行宿主.ixx:148</code> | direct_const_member_short_circuit | this=&amp;投影 | 投影成功 | 初始化成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0088 | F0024 | F0062 | <code>海中鱼巣/启动.程序运行宿主.ixx:153-164</code> | direct_constructor | 上下文八项引用, 投影两树, 两个根需求句柄 | 控制面板 | 初始化和投影成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0089 | F0024 | F0063 | <code>海中鱼巣/启动.程序运行宿主.ixx:165</code> | direct_constructor | 控制面板, 上下文.数据库, 审计.快照 | 窗口 | after E0088 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0090 | F0024 | F0064 | <code>海中鱼巣/启动.程序运行宿主.ixx:166</code> | direct_member | this=&窗口, &信号.停止请求 | 窗口结果 | after E0089 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0091 | F0024 | F0065 | <code>海中鱼巣/启动.程序运行宿主.ixx:172</code> | compiler_implicit_destructor | this=&窗口 |  | 函数返回前 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0095 | F0027 | F0069 | <code>海中鱼巣/启动.生产运行期.ixx:103, 海中鱼巣/启动.生产运行期.ixx:56</code> | direct_const_member | this=&宿主_ | 当前租约 | 请求有效且已取得启动锁；发布状态被协议允许 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0096 | F0027 | F0066 | <code>海中鱼巣/启动.生产运行期.ixx:104, 海中鱼巣/启动.生产运行期.ixx:57</code> | direct_const_member | this=&当前租约 | 租约有效 | after E0095；after E0106 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0108 | F0027 | F0079 | <code>海中鱼巣/启动.生产运行期.ixx:106</code> | direct_const_member | this=&当前租约 | 已发布上下文只读指针 | 租约有效且发布状态为已发布 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0094 | F0027 | F0068 | <code>海中鱼巣/启动.生产运行期.ixx:51</code> | direct_const_member | this=&请求 | 请求有效 | always | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0090 | F0024 | F0064 | <code>海中鱼巣/启动.程序运行宿主.ixx:166</code> | direct_member | this=&amp;窗口, &amp;信号.停止请求 | 窗口结果 | after E0089 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0091 | F0024 | F0065 | <code>海中鱼巣/启动.程序运行宿主.ixx:172</code> | compiler_implicit_destructor | this=&amp;窗口 |  | 函数返回前 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0095 | F0027 | F0069 | <code>海中鱼巣/启动.生产运行期.ixx:103, 海中鱼巣/启动.生产运行期.ixx:56</code> | direct_const_member | this=&amp;宿主_ | 当前租约 | 请求有效且已取得启动锁；发布状态被协议允许 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0096 | F0027 | F0066 | <code>海中鱼巣/启动.生产运行期.ixx:104, 海中鱼巣/启动.生产运行期.ixx:57</code> | direct_const_member | this=&amp;当前租约 | 租约有效 | after E0095；after E0106 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0108 | F0027 | F0079 | <code>海中鱼巣/启动.生产运行期.ixx:106</code> | direct_const_member | this=&amp;当前租约 | 已发布上下文只读指针 | 租约有效且发布状态为已发布 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0094 | F0027 | F0068 | <code>海中鱼巣/启动.生产运行期.ixx:51</code> | direct_const_member | this=&amp;请求 | 请求有效 | always | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0011 | F0027 | R0001 | <code>海中鱼巣/启动.生产运行期.ixx:56, 海中鱼巣/启动.生产运行期.ixx:103</code> | suffix_match |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E0097 | F0027 | F0070 | <code>海中鱼巣/启动.生产运行期.ixx:66</code> | direct_free_function+unique_name |  | 配置 | 无现有有效租约；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0098 | F0027 | F0071 | <code>海中鱼巣/启动.生产运行期.ixx:67</code> | direct_const_member | this=&配置 | 配置有效 | after E0097 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0098 | F0027 | F0071 | <code>海中鱼巣/启动.生产运行期.ixx:67</code> | direct_const_member | this=&amp;配置 | 配置有效 | after E0097 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0099 | F0027 | F0072 | <code>海中鱼巣/启动.生产运行期.ixx:71</code> | external_template_project_constructor | 配置.域编号, 配置.仓库编号, 配置.动作键 | 候选共享对象 | 配置有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0100 | F0027 | F0073 | <code>海中鱼巣/启动.生产运行期.ixx:72</code> | direct_member | this=候选.get(), 配置.系统角色 | 系统角色结果 | 候选构造完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0101 | F0027 | F0074 | <code>海中鱼巣/启动.生产运行期.ixx:73</code> | direct_const_member | this=&系统角色结果 | 系统角色成功 | after E0100 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0101 | F0027 | F0074 | <code>海中鱼巣/启动.生产运行期.ixx:73</code> | direct_const_member | this=&amp;系统角色结果 | 系统角色成功 | after E0100 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0102 | F0027 | F0075 | <code>海中鱼巣/启动.生产运行期.ixx:79</code> | direct_member | this=候选.get(), 配置.概念活动 | 概念活动结果 | 系统角色初始化成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0103 | F0027 | F0076 | <code>海中鱼巣/启动.生产运行期.ixx:80</code> | direct_const_member | this=&概念活动结果 | 概念活动成功 | after E0102 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0103 | F0027 | F0076 | <code>海中鱼巣/启动.生产运行期.ixx:80</code> | direct_const_member | this=&amp;概念活动结果 | 概念活动成功 | after E0102 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0104 | F0027 | F0077 | <code>海中鱼巣/启动.生产运行期.ixx:86</code> | direct_const_member | this=候选.get() | 候选完整 | 概念活动初始化成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0105 | F0027 | F0078 | <code>海中鱼巣/启动.生产运行期.ixx:93</code> | direct_member+unique_name | this=&宿主_, 候选共享所有权副本 | 发布状态 | 候选完整；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0092 | F0028 | F0066 | <code>海中鱼巣/启动.生产运行期.ixx:40</code> | direct_const_member | this=&租约 | 租约有效结果 | 状态为已启动或已有当前上下文 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0105 | F0027 | F0078 | <code>海中鱼巣/启动.生产运行期.ixx:93</code> | direct_member+unique_name | this=&amp;宿主_, 候选共享所有权副本 | 发布状态 | 候选完整；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0092 | F0028 | F0066 | <code>海中鱼巣/启动.生产运行期.ixx:40</code> | direct_const_member | this=&amp;租约 | 租约有效结果 | 状态为已启动或已有当前上下文 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0109 | F0029 | F0030 | <code>海中鱼巣/自检.入口初始化.ixx:485-486, 海中鱼巣/自检.入口初始化.ixx:487-488, 海中鱼巣/自检.入口初始化.ixx:489-490, 海中鱼巣/自检.入口初始化.ixx:491-492, 海中鱼巣/自检.入口初始化.ixx:493-494, 海中鱼巣/自检.入口初始化.ixx:495-496, 海中鱼巣/自检.入口初始化.ixx:497-498, 海中鱼巣/自检.入口初始化.ixx:499-500, 海中鱼巣/自检.入口初始化.ixx:501-502, 海中鱼巣/自检.入口初始化.ixx:503-504, 海中鱼巣/自检.入口初始化.ixx:505-506, 海中鱼巣/自检.入口初始化.ixx:507-508, 海中鱼巣/自检.入口初始化.ixx:509-510, 海中鱼巣/自检.入口初始化.ixx:511-512</code> | direct_member | 10, S01编号名称, F0080回调 | S01登记结果 | always；S01成功；S01-S02成功；S01-S03成功；S01-S04成功；S01-S05成功；S01-S06成功；S01-S07成功；S01-S08成功；S01-S09成功；S01-S10成功；S01-S11成功；S01-S12成功；S01-S13成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0123 | F0029 | F0080 | <code>海中鱼巣/自检.入口初始化.ixx:486</code> | callback_bind | 配置按值捕获 | S01回调槽 | 构造S01登记参数 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0012 | F0029 | F0254 | <code>海中鱼巣/自检.入口初始化.ixx:486</code> | same_module |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
@@ -239,20 +239,20 @@
 | E0150 | F0031 | F0092 | <code>海中鱼巣/自检.运行器.ixx:80</code> | callback_invoke | S13登记回调 | 单元 | 执行到S13 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0151 | F0031 | F0093 | <code>海中鱼巣/自检.运行器.ixx:80</code> | callback_invoke | S14登记回调 | 单元 | 执行到S14 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0182 | F0032 | F0013 | <code>海中鱼巣/启动.应用程序.ixx:197</code> | direct_free_function+unique_name | 配置 | 装配 | 六轮各一次；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0183 | F0032 | F0014 | <code>海中鱼巣/启动.应用程序.ixx:198</code> | direct_const_member | this=&装配 | 装配成功 | 每轮装配后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0183 | F0032 | F0014 | <code>海中鱼巣/启动.应用程序.ixx:198</code> | direct_const_member | this=&amp;装配 | 装配成功 | 每轮装配后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0026 | F0032 | F0045 | <code>海中鱼巣/启动.应用程序.ixx:221</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0027 | F0032 | F0046 | <code>海中鱼巣/启动.应用程序.ixx:227</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0028 | F0032 | F0048 | <code>海中鱼巣/启动.应用程序.ixx:233</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | E0184 | F0032 | F0015 | <code>海中鱼巣/启动.应用程序.ixx:242, 海中鱼巣/启动.应用程序.ixx:242-243</code> | direct_free_function+unique_name | 故障注入端口, {配置.方法登记根稳定键,配置.根需求参数} | 结果 | 装配成功；六轮；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0185 | F0032 | F0131 | <code>海中鱼巣/启动.应用程序.ixx:246</code> | compiler_implicit_member_destructor | this=&上下文.自我线程实例 |  | 每轮上下文作用域退出；成员已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0185 | F0032 | F0131 | <code>海中鱼巣/启动.应用程序.ixx:246</code> | compiler_implicit_member_destructor | this=&amp;上下文.自我线程实例 |  | 每轮上下文作用域退出；成员已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0186 | F0032 | F0018 | <code>海中鱼巣/启动.应用程序.ixx:260-261, 海中鱼巣/启动.应用程序.ixx:261</code> | direct_free_function+unique_name | 写入失败端口, 数据库审计要求::最佳努力 | 写入失败 | 六轮结束；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0187 | F0032 | F0010 | <code>海中鱼巣/启动.应用程序.ixx:280</code> | direct_free_function+lsp_direct | &不一致端口 | 专项 | 写入失败状态验收后；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；LSP 直接解析并经源码调用词复核 |
+| E0187 | F0032 | F0010 | <code>海中鱼巣/启动.应用程序.ixx:280</code> | direct_free_function+lsp_direct | &amp;不一致端口 | 专项 | 写入失败状态验收后；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；LSP 直接解析并经源码调用词复核 |
 | E0188 | F0032 | F0019 | <code>海中鱼巣/启动.应用程序.ixx:293, 海中鱼巣/启动.应用程序.ixx:294</code> | direct_free_function+unique_name | F0067信号安装替身 | 信号失败 | 数据库验收后；after E0188；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0190 | F0032 | F0020 | <code>海中鱼巣/启动.应用程序.ixx:296, 海中鱼巣/启动.应用程序.ixx:301</code> | direct_const_member | this=&信号失败 | 成功谓词并取反 | 状态为SIGTERM失败；前置短路项全部为真 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0190 | F0032 | F0020 | <code>海中鱼巣/启动.应用程序.ixx:296, 海中鱼巣/启动.应用程序.ixx:301</code> | direct_const_member | this=&amp;信号失败 | 成功谓词并取反 | 状态为SIGTERM失败；前置短路项全部为真 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0193 | F0032 | F0025 | <code>海中鱼巣/启动.应用程序.ixx:320</code> | compiler_implicit_destructor | this=后续可安装.租约.get() |  | 根函数退出且租约存在 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0213 | F0033 | F0132 | <code>海中鱼巣/启动.应用程序.ixx:327-333</code> | callback_bind | 捕获第一编号组,第一地址全非零,第一初始为零 | 第一配置.观察回调 | 构造第一配置 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0214 | F0033 | F0029 | <code>海中鱼巣/启动.应用程序.ixx:335, 海中鱼巣/启动.应用程序.ixx:353</code> | direct_free_function+unique_name | 第一运行器,第一配置 | 第一登记 | always；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0215 | F0033 | F0031 | <code>海中鱼巣/启动.应用程序.ixx:336, 海中鱼巣/启动.应用程序.ixx:354</code> | direct_member+unique_name | this=&第一运行器 | 第一批次 | 第一登记结果无论真假；第二登记结果无论真假；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0215 | F0033 | F0031 | <code>海中鱼巣/启动.应用程序.ixx:336, 海中鱼巣/启动.应用程序.ixx:354</code> | direct_member+unique_name | this=&amp;第一运行器 | 第一批次 | 第一登记结果无论真假；第二登记结果无论真假；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E0216 | F0033 | F0133 | <code>海中鱼巣/启动.应用程序.ixx:350-351</code> | callback_bind | 捕获第二观察数量 | 第二配置.观察回调 | 构造第二配置 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0153 | F0037 | F0096 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:877-880</code> | lambda_direct |  | 无效参数写前拒绝 | try开始后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0154 | F0037 | F0097 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:885</code> | direct_free_function | 规模 | 规模报告 | 对1000/10000/100000各一次 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -260,7 +260,7 @@
 | E0155 | F0037 | F0098 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:902-911</code> | standard_algorithm_callback | 当前规模报告 | 参考模型及查询、写入、并发结果一致判定 | all_of遍历且尚未失败 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0180 | F0037 | F0119 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:912-915</code> | standard_algorithm_callback | 当前规模报告 | 指标数量与并发吞吐判定 | all_of遍历且尚未失败 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0156 | F0037 | F0099 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:922</code> | trivial_adapter_direct | 当前规模报告 | 报告完整判定 | all_of遍历且尚未失败 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0220 | F0039 | F0134 | <code>海中鱼巣/装配.普通应用.ixx:48</code> | direct_const_member | this=&根需求参数 | 配置有效短路右项 | 方法登记根稳定键!=0 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0220 | F0039 | F0134 | <code>海中鱼巣/装配.普通应用.ixx:48</code> | direct_const_member | this=&amp;根需求参数 | 配置有效短路右项 | 方法登记根稳定键!=0 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0221 | F0040 | F0135 | <code>海中鱼巣/装配.普通应用.ixx:54-55</code> | member_constructor | 1, 默认结构事务接线 | 主信息 | 构造开始 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0222 | F0040 | F0136 | <code>海中鱼巣/装配.普通应用.ixx:55</code> | member_constructor | 主信息,1,默认接线 | 节点 | E0221成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0223 | F0040 | F0137 | <code>海中鱼巣/装配.普通应用.ixx:56</code> | member_constructor | 节点,1,默认接线 | 关系 | 前序成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -286,7 +286,7 @@
 | E0243 | F0040 | F0157 | <code>海中鱼巣/装配.普通应用.ixx:76</code> | member_constructor | 主信息,节点,关系 | 方法 | 前序成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0244 | F0040 | F0158 | <code>海中鱼巣/装配.普通应用.ixx:77</code> | static_member_direct |  | SQL数据库配置临时值 | 统计和显示已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0245 | F0040 | F0159 | <code>海中鱼巣/装配.普通应用.ixx:77</code> | member_constructor | 移动F0158返回配置 | 数据库 | E0244成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0246 | F0041 | F0134 | <code>海中鱼巣/领域/初始化.系统.ixx:24</code> | direct_const_member | this=&根需求参数 | 请求有效短路右项 | 方法登记根稳定键!=0 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0246 | F0041 | F0134 | <code>海中鱼巣/领域/初始化.系统.ixx:24</code> | direct_const_member | this=&amp;根需求参数 | 请求有效短路右项 | 方法登记根稳定键!=0 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0247 | F0043 | F0160 | <code>海中鱼巣/领域/方法服务.h:263, 海中鱼巣/领域/方法服务.h:295</code> | direct_const_member+unique_name | this, 状态 | 既有登记根完整性 | 已有材料且稳定键相同；私有材料与仓库编号已发布；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E0248 | F0043 | F0161 | <code>海中鱼巣/领域/方法服务.h:264, 海中鱼巣/领域/方法服务.h:273, 海中鱼巣/领域/方法服务.h:280, 海中鱼巣/领域/方法服务.h:289, 海中鱼巣/领域/方法服务.h:298</code> | direct_member_template_instance | 锁, 重复初始化异常说明 | void | 既有同键登记根不完整；登记根无效或角色绑定失败；状态无效或相同；关系无效或仓库编号不同；发布后完整性失败且私有发布已撤回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0249 | F0043 | F0162 | <code>海中鱼巣/领域/方法服务.h:270</code> | direct_member+unique_name | this | 登记根 | 无既有材料；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
@@ -297,27 +297,27 @@
 | E0257 | F0043 | F0051 | <code>海中鱼巣/领域/方法服务.h:279</code> | direct_free_operator | 活跃状态, 失效状态 | 状态句柄相等性 | 两个状态均有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0259 | F0043 | F0167 | <code>海中鱼巣/领域/方法服务.h:283-284, 海中鱼巣/领域/方法服务.h:285-286</code> | direct_member | 关系类型::模板, 登记根, 活跃状态, 40 | 活跃关系 | 两个状态有效且不同；活跃关系调用返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0266 | F0044 | F0046 | <code>海中鱼巣/线程/自我线程.ixx:183</code> | direct_const_member+unique_name | this | 已有快照 | 进入启动；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| E0267 | F0044 | F0047 | <code>海中鱼巣/线程/自我线程.ixx:184</code> | direct_const_member | this=&*已有快照 | 已有快照成功性 | 已有快照有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0267 | F0044 | F0047 | <code>海中鱼巣/线程/自我线程.ixx:184</code> | direct_const_member | this=&amp;*已有快照 | 已有快照成功性 | 已有快照有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0268 | F0044 | F0169 | <code>海中鱼巣/线程/自我线程.ixx:188, 海中鱼巣/线程/自我线程.ixx:191, 海中鱼巣/线程/自我线程.ixx:196, 海中鱼巣/线程/自我线程.ixx:210</code> | direct_static_member+suffix_match | 自我线程拒绝原因::重复启动 | 拒绝结果 | 状态非未启动或线程可汇合；参数无效；邮箱与处理器接入状态不一致；捕获std::system_error；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| E0269 | F0044 | F0134 | <code>海中鱼巣/线程/自我线程.ixx:190</code> | direct_const_member | this=&参数 | 参数有效性 | 非重复启动 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0269 | F0044 | F0134 | <code>海中鱼巣/线程/自我线程.ixx:190</code> | direct_const_member | this=&amp;参数 | 参数有效性 | 非重复启动 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0272 | F0044 | F0170 | <code>海中鱼巣/线程/自我线程.ixx:201</code> | direct_member+unique_name | this | void | 全部准入通过；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E0273 | F0044 | F0171 | <code>海中鱼巣/线程/自我线程.ixx:204-206</code> | thread_callback | 捕获this与参数副本 | void异步回调 | std::thread构造成功后异步调度 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0275 | F0045 | F0172 | <code>海中鱼巣/线程/自我线程.ixx:217-224</code> | condition_variable_predicate | 捕获this | wait_for终止谓词 | wait_for初检或唤醒后，可重复 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0276 | F0045 | F0047 | <code>海中鱼巣/线程/自我线程.ixx:227</code> | direct_const_member | this=&*初始化快照 | 初始化快照成功性 | 等待结束且快照有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0277 | F0047 | F0173 | <code>海中鱼巣/线程/自我线程.ixx:57</code> | direct_const_member | this=&语素 | 语素初始化成功性 | 进入快照成功检查 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0278 | F0047 | F0174 | <code>海中鱼巣/线程/自我线程.ixx:58</code> | direct_const_member | this=&世界树 | 世界树初始化成功性 | 语素初始化成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0279 | F0047 | F0175 | <code>海中鱼巣/线程/自我线程.ixx:59</code> | direct_const_member | this=&根需求 | 根需求初始化成功性 | 语素和世界树初始化成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0280 | F0048 | F0049 | <code>海中鱼巣/领域/初始化.概念图.ixx:100, 海中鱼巣/领域/初始化.概念图.ixx:135</code> | direct_const_member | this=&已发布结果_ | 已发布结果完整性 | 取得初始化锁；四根名称均成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0276 | F0045 | F0047 | <code>海中鱼巣/线程/自我线程.ixx:227</code> | direct_const_member | this=&amp;*初始化快照 | 初始化快照成功性 | 等待结束且快照有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0277 | F0047 | F0173 | <code>海中鱼巣/线程/自我线程.ixx:57</code> | direct_const_member | this=&amp;语素 | 语素初始化成功性 | 进入快照成功检查 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0278 | F0047 | F0174 | <code>海中鱼巣/线程/自我线程.ixx:58</code> | direct_const_member | this=&amp;世界树 | 世界树初始化成功性 | 语素初始化成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0279 | F0047 | F0175 | <code>海中鱼巣/线程/自我线程.ixx:59</code> | direct_const_member | this=&amp;根需求 | 根需求初始化成功性 | 语素和世界树初始化成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0280 | F0048 | F0049 | <code>海中鱼巣/领域/初始化.概念图.ixx:100, 海中鱼巣/领域/初始化.概念图.ixx:135</code> | direct_const_member | this=&amp;已发布结果_ | 已发布结果完整性 | 取得初始化锁；四根名称均成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0281 | F0048 | F0176 | <code>海中鱼巣/领域/初始化.概念图.ixx:101, 海中鱼巣/领域/初始化.概念图.ixx:135</code> | direct_const_member+unique_name | 已发布结果_ | 已发布结构可读性 | 已发布结果成功；候选成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE1633 | F0048 | F0177 | <code>海中鱼巣/领域/初始化.概念图.ixx:104-105</code> | direct_member_template_instance |  |  | 初始化四个根按源码顺序调用 F0177；对应 lambda@105 | 专项源码静态类型与实际装配人工复核 |
 | RCE1634 | F0048 | F0178 | <code>海中鱼巣/领域/初始化.概念图.ixx:106-107</code> | direct_member_template_instance |  |  | 初始化四个根按源码顺序调用 F0178；对应 lambda@107 | 专项源码静态类型与实际装配人工复核 |
 | RCE1635 | F0048 | F0179 | <code>海中鱼巣/领域/初始化.概念图.ixx:108-109</code> | direct_member_template_instance |  |  | 初始化四个根按源码顺序调用 F0179；对应 lambda@109 | 专项源码静态类型与实际装配人工复核 |
 | E0282 | F0048 | F0180 | <code>海中鱼巣/领域/初始化.概念图.ixx:110-111</code> | direct_member_template_instance |  |  | 初始化四个根按源码顺序调用 F0180；对应 lambda@111 | 专项源码静态类型与实际装配人工复核 |
 | E0290 | F0048 | F0181 | <code>海中鱼巣/领域/初始化.概念图.ixx:115, 海中鱼巣/领域/初始化.概念图.ixx:115-117, 海中鱼巣/领域/初始化.概念图.ixx:118, 海中鱼巣/领域/初始化.概念图.ixx:118-120, 海中鱼巣/领域/初始化.概念图.ixx:121, 海中鱼巣/领域/初始化.概念图.ixx:121-123</code> | direct_member+unique_name | 活跃状态槽,概念生命周期阶段::活跃 | 活跃状态确保结果 | 四根均确保成功；活跃状态确保成功；冷却状态确保成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| E0293 | F0048 | F0182 | <code>海中鱼巣/领域/初始化.概念图.ixx:124</code> | direct_member+unique_name | this=&概念图_ | 活动生命周期初始化结果 | 三个状态均确保成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0293 | F0048 | F0182 | <code>海中鱼巣/领域/初始化.概念图.ixx:124</code> | direct_member+unique_name | this=&amp;概念图_ | 活动生命周期初始化结果 | 三个状态均确保成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E0294 | F0048 | F0183 | <code>海中鱼巣/领域/初始化.概念图.ixx:128, 海中鱼巣/领域/初始化.概念图.ixx:129, 海中鱼巣/领域/初始化.概念图.ixx:130, 海中鱼巣/领域/初始化.概念图.ixx:131</code> | direct_member+unique_name | 存在根项,L存在 | 存在根名称结果 | 生命周期初始化成功；存在根名称成功；动态根名称成功；关系根名称成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E0300 | F0048 | F0184 | <code>海中鱼巣/领域/初始化.概念图.ixx:135, 海中鱼巣/领域/初始化.概念图.ixx:135-136</code> | direct_free+unique_name | 候选成功且结构仍可读,具名说明 | 最终内部检查 | 名称阶段成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0301 | F0049 | F0189 | <code>海中鱼巣/领域/初始化.概念图.ixx:50, 海中鱼巣/领域/初始化.概念图.ixx:51, 海中鱼巣/领域/初始化.概念图.ixx:52, 海中鱼巣/领域/初始化.概念图.ixx:53</code> | direct_const_member | this=&存在根 | 存在根项成功性 | 进入结果检查；存在根项成功；存在和动态根项成功；前三根项成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0301 | F0049 | F0189 | <code>海中鱼巣/领域/初始化.概念图.ixx:50, 海中鱼巣/领域/初始化.概念图.ixx:51, 海中鱼巣/领域/初始化.概念图.ixx:52, 海中鱼巣/领域/初始化.概念图.ixx:53</code> | direct_const_member | this=&amp;存在根 | 存在根项成功性 | 进入结果检查；存在根项成功；存在和动态根项成功；前三根项成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0305 | F0049 | F0163 | <code>海中鱼巣/领域/初始化.概念图.ixx:54, 海中鱼巣/领域/初始化.概念图.ixx:55, 海中鱼巣/领域/初始化.概念图.ixx:56</code> | direct_free | 活跃状态 | 活跃状态有效性 | 四根项成功；活跃状态有效；前两个状态有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0033 | F0049 | F0168 | <code>海中鱼巣/领域/初始化.概念图.ixx:54, 海中鱼巣/领域/初始化.概念图.ixx:55, 海中鱼巣/领域/初始化.概念图.ixx:56</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | E0308 | F0049 | F0051 | <code>海中鱼巣/领域/初始化.概念图.ixx:57, 海中鱼巣/领域/初始化.概念图.ixx:58, 海中鱼巣/领域/初始化.概念图.ixx:59</code> | rewritten_not_equal | 活跃状态,冷却状态 | 相等性并对!=取反 | 三个状态有效；活跃与冷却不同；活跃分别与另两状态不同 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -328,9 +328,9 @@
 | E0315 | F0053 | F0194 | <code>海中鱼巣/领域/统计服务.h:249</code> | direct_const_member+unique_name | 值类型 | 缓存值类型有效性 | 来源和两个版本有效；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E0316 | F0053 | F0195 | <code>海中鱼巣/领域/统计服务.h:250</code> | direct_const_member+unique_name | 失效条件 | 缓存失效条件有效性 | 前五项有效；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E0320 | F0054 | F0196 | <code>海中鱼巣/领域/统计服务.h:692</code> | direct_const_member+unique_name | 命名空间,节点数,关系数,索引数 | 结构统计快照 | 全部实参求值完成；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| E0317 | F0054 | F0197 | <code>海中鱼巣/领域/统计服务.h:692</code> | indeterminately_sequenced_argument | this=&节点 | 节点数 | F0196实参求值，三计数调用顺序不确定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0318 | F0054 | F0198 | <code>海中鱼巣/领域/统计服务.h:692</code> | indeterminately_sequenced_argument | this=&关系 | 关系数 | F0196实参求值，三计数调用顺序不确定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0319 | F0054 | F0199 | <code>海中鱼巣/领域/统计服务.h:692</code> | indeterminately_sequenced_argument | this=&索引 | 索引数 | F0196实参求值，三计数调用顺序不确定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0317 | F0054 | F0197 | <code>海中鱼巣/领域/统计服务.h:692</code> | indeterminately_sequenced_argument | this=&amp;节点 | 节点数 | F0196实参求值，三计数调用顺序不确定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0318 | F0054 | F0198 | <code>海中鱼巣/领域/统计服务.h:692</code> | indeterminately_sequenced_argument | this=&amp;关系 | 关系数 | F0196实参求值，三计数调用顺序不确定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0319 | F0054 | F0199 | <code>海中鱼巣/领域/统计服务.h:692</code> | indeterminately_sequenced_argument | this=&amp;索引 | 索引数 | F0196实参求值，三计数调用顺序不确定 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0321 | F0055 | F0200 | <code>海中鱼巣/适配/SQL数据库适配.cpp:382</code> | direct_free+direct-free | 快照 | 写入准入短路条件 | 总准入首项；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
 | E0322 | F0055 | F0201 | <code>海中鱼巣/适配/SQL数据库适配.cpp:383</code> | direct_free+direct-free+direct-free+direct-free | 快照.节点数 | 写入准入短路条件 | 前置准入均通过；节点数可写入；关系数可写入；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
 | E0325 | F0055 | F0202 | <code>海中鱼巣/适配/SQL数据库适配.cpp:384, 海中鱼巣/适配/SQL数据库适配.cpp:394</code> | direct_free+direct-free+direct-free | L"结构统计审计写入准入",L"快照命名空间、来源入口或结构数量不符合写入约束。" | 函数返回 | 任一写入准入失败；连接打开失败；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
@@ -365,11 +365,11 @@
 | E0392 | F0056 | F0216 | <code>海中鱼巣/适配/SQL数据库适配.cpp:516, 海中鱼巣/适配/SQL数据库适配.cpp:517</code> | direct_free+direct-free+direct-free | 句柄,2,记录.记录时间 | 列转换短路条件 | 第一列转换成功；前两列转换成功；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
 | E0408 | F0059 | F0190 | <code>海中鱼巣/领域/初始化.世界树.ixx:89</code> | direct_const_member | 自我存在节点 | 记录 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0409 | F0059 | F0217 | <code>海中鱼巣/领域/初始化.世界树.ixx:93, 海中鱼巣/领域/初始化.世界树.ixx:94, 海中鱼巣/领域/初始化.世界树.ixx:95</code> | direct_const_member | 记录-&gt;主信息,0 | 横向 | 记录存在且节点类型为存在；横向读取完成；纵向读取完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0413 | F0060 | F0173 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:135</code> | direct_const_member | this=&语素初始化读数 | 语素初始化前置 | 世界树初始化成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0412 | F0060 | F0174 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:135</code> | direct_const_member | this=&初始化结果 | 世界树初始化前置 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0413 | F0060 | F0173 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:135</code> | direct_const_member | this=&amp;语素初始化读数 | 语素初始化前置 | 世界树初始化成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0412 | F0060 | F0174 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:135</code> | direct_const_member | this=&amp;初始化结果 | 世界树初始化前置 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0414 | F0060 | F0218 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:139, 海中鱼巣/界面/投影.控制面板启动.ixx:139-141</code> | direct_free+lsp_direct | 节点,关系,世界树根节点,初始化结果,语素初始化读数,自我相对坐标,当前父链 | 根材料 | 两项初始化成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；LSP 直接解析并经源码调用词复核 |
-| E0416 | F0061 | F0049 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:192</code> | direct_const_member | this=&概念图初始化读数 | 概念图初始化前置 | 语素初始化成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0415 | F0061 | F0173 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:192</code> | direct_const_member | this=&语素初始化读数 | 语素初始化前置 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0416 | F0061 | F0049 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:192</code> | direct_const_member | this=&amp;概念图初始化读数 | 概念图初始化前置 | 语素初始化成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0415 | F0061 | F0173 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:192</code> | direct_const_member | this=&amp;语素初始化读数 | 语素初始化前置 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0417 | F0061 | F0219 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:196, 海中鱼巣/界面/投影.控制面板启动.ixx:214</code> | direct_free+lsp_direct | 语素类型,语素类型 | 根材料 | 初始化前置通过；当前语素子项成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；LSP 直接解析并经源码调用词复核 |
 | E0418 | F0061 | F0220 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:210</code> | direct_const_member | this=*子项 | 语素子项循环准入 | 当前子项指针非空 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0420 | F0061 | F0189 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:221</code> | direct_const_member | this=*概念 | 概念循环准入 | 当前概念指针非空 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -383,12 +383,12 @@
 | RCE0035 | F0071 | F0452 | <code>海中鱼巣/生产运行期配置.数据.h:77, 海中鱼巣/生产运行期配置.数据.h:79</code> | field_type_hint |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
 | E0427 | F0071 | F0070 | <code>海中鱼巣/生产运行期配置.数据.h:78</code> | direct_free | 无 | 固定配置 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0428 | F0071 | F0227 | <code>海中鱼巣/生产运行期配置.数据.h:78</code> | direct_const_member | 固定配置 | 首项等值条件 | 固定配置已形成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0429 | F0071 | F0228 | <code>海中鱼巣/生产运行期配置.数据.h:79</code> | direct_const_member | this=&系统角色 | 第二项短路条件 | 配置与固定配置相等 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0430 | F0071 | F0229 | <code>海中鱼巣/生产运行期配置.数据.h:79</code> | direct_const_member | this=&概念活动 | 第三项短路条件 | 系统角色有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0431 | F0071 | F0230 | <code>海中鱼巣/生产运行期配置.数据.h:82</code> | direct_const_member | this=&系统角色 | 系统键组 | 三个前置均通过 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0432 | F0071 | F0231 | <code>海中鱼巣/生产运行期配置.数据.h:83</code> | direct_const_member | this=&概念活动 | 活动键组 | 系统键组已读取 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0429 | F0071 | F0228 | <code>海中鱼巣/生产运行期配置.数据.h:79</code> | direct_const_member | this=&amp;系统角色 | 第二项短路条件 | 配置与固定配置相等 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0430 | F0071 | F0229 | <code>海中鱼巣/生产运行期配置.数据.h:79</code> | direct_const_member | this=&amp;概念活动 | 第三项短路条件 | 系统角色有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0431 | F0071 | F0230 | <code>海中鱼巣/生产运行期配置.数据.h:82</code> | direct_const_member | this=&amp;系统角色 | 系统键组 | 三个前置均通过 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0432 | F0071 | F0231 | <code>海中鱼巣/生产运行期配置.数据.h:83</code> | direct_const_member | this=&amp;概念活动 | 活动键组 | 系统键组已读取 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0433 | F0072 | F0232 | <code>海中鱼巣/启动.运行期上下文.ixx:45</code> | direct_constructor | 域编号 | 协调器_ | 成员初始化开始 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0434 | F0072 | F0233 | <code>海中鱼巣/启动.运行期上下文.ixx:46</code> | direct_member | this=&协调器_ | 接线_ | 协调器_构造完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0434 | F0072 | F0233 | <code>海中鱼巣/启动.运行期上下文.ixx:46</code> | direct_member | this=&amp;协调器_ | 接线_ | 协调器_构造完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0435 | F0072 | F0135 | <code>海中鱼巣/启动.运行期上下文.ixx:47</code> | direct_constructor | 仓库编号,接线_副本 | 主信息_ | 接线_初始化完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0436 | F0072 | F0136 | <code>海中鱼巣/启动.运行期上下文.ixx:48</code> | direct_constructor | 主信息_,仓库编号,接线_副本 | 节点_ | 主信息_构造完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0437 | F0072 | F0137 | <code>海中鱼巣/启动.运行期上下文.ixx:49</code> | direct_constructor | 节点_,仓库编号,接线_副本 | 关系_ | 节点_构造完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -396,35 +396,35 @@
 | E0439 | F0072 | F0238 | <code>海中鱼巣/启动.运行期上下文.ixx:51-52</code> | direct_constructor | 接线_,主信息_,节点_,关系_,索引_,仓库编号,稳定动作键 | 业务装配_ | 四仓库构造完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0443 | F0073 | F0241 | <code>海中鱼巣/启动.运行期上下文.ixx:100</code> | direct_const_member | this=*系统角色清单_,参数 | 幂等参数匹配 | 缓存存在且持有系统角色锁 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0444 | F0073 | F0242 | <code>海中鱼巣/启动.运行期上下文.ixx:103</code> | direct_const_member | *系统角色清单_ | 当前 | 缓存存在且参数匹配，仍持锁 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0445 | F0073 | F0074 | <code>海中鱼巣/启动.运行期上下文.ixx:104, 海中鱼巣/启动.运行期上下文.ixx:109</code> | direct_const_member | this=&当前 | 是否改写幂等读回 | 缓存复核已返回；下层初始化已返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0445 | F0073 | F0074 | <code>海中鱼巣/启动.运行期上下文.ixx:104, 海中鱼巣/启动.运行期上下文.ixx:109</code> | direct_const_member | this=&amp;当前 | 是否改写幂等读回 | 缓存复核已返回；下层初始化已返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0446 | F0073 | F0243 | <code>海中鱼巣/启动.运行期上下文.ixx:108</code> | direct_member | 参数 | 结果 | 首次缓存为空且第一把锁已释放 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0448 | F0073 | F0244 | <code>海中鱼巣/启动.运行期上下文.ixx:111</code> | defaulted_const_member | this=*系统角色清单_,结果.清单 | 并发缓存一致性 | 第二次加锁后缓存存在 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0442 | F0073 | F0228 | <code>海中鱼巣/启动.运行期上下文.ixx:96</code> | direct_const_member | this=&参数 | 第三项准入 | 业务装配完整 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0442 | F0073 | F0228 | <code>海中鱼巣/启动.运行期上下文.ixx:96</code> | direct_const_member | this=&amp;参数 | 第三项准入 | 业务装配完整 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0440 | F0073 | F0239 | <code>海中鱼巣/启动.运行期上下文.ixx:96</code> | direct_const_member+unique_name | this | 首项准入 | 函数进入；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| E0441 | F0073 | F0240 | <code>海中鱼巣/启动.运行期上下文.ixx:96</code> | direct_const_member | this=&业务装配_ | 第二项准入 | 结构核心完整 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0449 | F0074 | F0245 | <code>海中鱼巣/领域/系统角色清单.数据.h:297</code> | direct_const_member | this=&清单 | 函数返回值 | 状态为已提交或幂等读回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0452 | F0075 | F0229 | <code>海中鱼巣/启动.运行期上下文.ixx:130</code> | direct_const_member | this=&参数 | 第三项准入 | 业务装配完整 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0441 | F0073 | F0240 | <code>海中鱼巣/启动.运行期上下文.ixx:96</code> | direct_const_member | this=&amp;业务装配_ | 第二项准入 | 结构核心完整 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0449 | F0074 | F0245 | <code>海中鱼巣/领域/系统角色清单.数据.h:297</code> | direct_const_member | this=&amp;清单 | 函数返回值 | 状态为已提交或幂等读回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0452 | F0075 | F0229 | <code>海中鱼巣/启动.运行期上下文.ixx:130</code> | direct_const_member | this=&amp;参数 | 第三项准入 | 业务装配完整 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0450 | F0075 | F0239 | <code>海中鱼巣/启动.运行期上下文.ixx:130</code> | direct_const_member+unique_name | this | 首项准入 | 函数进入；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| E0451 | F0075 | F0240 | <code>海中鱼巣/启动.运行期上下文.ixx:130</code> | direct_const_member | this=&业务装配_ | 第二项准入 | 结构核心完整 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0451 | F0075 | F0240 | <code>海中鱼巣/启动.运行期上下文.ixx:130</code> | direct_const_member | this=&amp;业务装配_ | 第二项准入 | 结构核心完整 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0453 | F0075 | F0246 | <code>海中鱼巣/启动.运行期上下文.ixx:131</code> | direct_const_member+unique_name | this | 清单 | 三项准入通过；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| E0454 | F0075 | F0245 | <code>海中鱼巣/启动.运行期上下文.ixx:132</code> | direct_const_member | this=&清单.value | 清单完整性 | 清单存在 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0456 | F0075 | F0074 | <code>海中鱼巣/启动.运行期上下文.ixx:133</code> | direct_const_member | this=&系统角色复核临时结果 | 系统角色准入 | 复核已返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0454 | F0075 | F0245 | <code>海中鱼巣/启动.运行期上下文.ixx:132</code> | direct_const_member | this=&amp;清单.value | 清单完整性 | 清单存在 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0456 | F0075 | F0074 | <code>海中鱼巣/启动.运行期上下文.ixx:133</code> | direct_const_member | this=&amp;系统角色复核临时结果 | 系统角色准入 | 复核已返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0455 | F0075 | F0242 | <code>海中鱼巣/启动.运行期上下文.ixx:133</code> | direct_const_member | *清单 | 系统角色复核临时结果 | 清单完整 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0457 | F0075 | F0247 | <code>海中鱼巣/启动.运行期上下文.ixx:137</code> | direct_const_member | this=*概念活动材料_,参数 | 缓存参数匹配 | 持锁且缓存存在 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0458 | F0075 | F0248 | <code>海中鱼巣/启动.运行期上下文.ixx:140</code> | direct_const_member+unique_name | *清单,*概念活动材料_ | 当前 | 缓存参数匹配，仍持锁；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0459 | F0075 | F0076 | <code>海中鱼巣/启动.运行期上下文.ixx:141, 海中鱼巣/启动.运行期上下文.ixx:146</code> | direct_const_member | this=&当前 | 是否改写幂等读回 | 缓存复核已返回；下层初始化已返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0459 | F0075 | F0076 | <code>海中鱼巣/启动.运行期上下文.ixx:141, 海中鱼巣/启动.运行期上下文.ixx:146</code> | direct_const_member | this=&amp;当前 | 是否改写幂等读回 | 缓存复核已返回；下层初始化已返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0460 | F0075 | F0249 | <code>海中鱼巣/启动.运行期上下文.ixx:145</code> | direct_member | *清单,参数 | 结果 | 缓存为空且第一把锁已释放 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0462 | F0075 | F0250 | <code>海中鱼巣/启动.运行期上下文.ixx:148</code> | direct_const_member | this=*概念活动材料_,结果.材料 | 并发缓存一致性 | 第二次加锁后缓存存在 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0463 | F0076 | F0251 | <code>海中鱼巣/领域/概念活动状态.数据.h:213</code> | direct_const_member | this=&材料 | 函数返回值 | 状态为已提交或幂等读回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0463 | F0076 | F0251 | <code>海中鱼巣/领域/概念活动状态.数据.h:213</code> | direct_const_member | this=&amp;材料 | 函数返回值 | 状态为已提交或幂等读回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0464 | F0077 | F0246 | <code>海中鱼巣/启动.运行期上下文.ixx:75</code> | direct_const_member+unique_name | this | 清单 | 函数进入；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E0465 | F0077 | F0252 | <code>海中鱼巣/启动.运行期上下文.ixx:76</code> | direct_const_member+unique_name | this | 活动 | 清单已读取；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E0466 | F0077 | F0239 | <code>海中鱼巣/启动.运行期上下文.ixx:77</code> | direct_const_member+unique_name | this | 第一项短路条件 | 两份材料均已读取；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| E0467 | F0077 | F0240 | <code>海中鱼巣/启动.运行期上下文.ixx:77</code> | direct_const_member | this=&业务装配_ | 第二项短路条件 | 结构核心完整 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0470 | F0077 | F0074 | <code>海中鱼巣/启动.运行期上下文.ixx:78</code> | direct_const_member | this=&系统角色复核临时结果 | 系统角色复核条件 | 系统角色复核已返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0467 | F0077 | F0240 | <code>海中鱼巣/启动.运行期上下文.ixx:77</code> | direct_const_member | this=&amp;业务装配_ | 第二项短路条件 | 结构核心完整 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0470 | F0077 | F0074 | <code>海中鱼巣/启动.运行期上下文.ixx:78</code> | direct_const_member | this=&amp;系统角色复核临时结果 | 系统角色复核条件 | 系统角色复核已返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0469 | F0077 | F0242 | <code>海中鱼巣/启动.运行期上下文.ixx:78</code> | direct_const_member | *清单 | 系统角色复核临时结果 | 清单完整 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0468 | F0077 | F0245 | <code>海中鱼巣/启动.运行期上下文.ixx:78</code> | direct_const_member | this=&清单.value | 清单完整性 | 装配完整且清单存在 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0471 | F0077 | F0251 | <code>海中鱼巣/启动.运行期上下文.ixx:79</code> | direct_const_member | this=&活动.value | 活动完整性 | 系统角色复核成功且活动存在 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0473 | F0077 | F0076 | <code>海中鱼巣/启动.运行期上下文.ixx:80</code> | direct_const_member | this=&概念活动复核临时结果 | 函数返回值 | 概念活动复核已返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0468 | F0077 | F0245 | <code>海中鱼巣/启动.运行期上下文.ixx:78</code> | direct_const_member | this=&amp;清单.value | 清单完整性 | 装配完整且清单存在 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0471 | F0077 | F0251 | <code>海中鱼巣/启动.运行期上下文.ixx:79</code> | direct_const_member | this=&amp;活动.value | 活动完整性 | 系统角色复核成功且活动存在 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0473 | F0077 | F0076 | <code>海中鱼巣/启动.运行期上下文.ixx:80</code> | direct_const_member | this=&amp;概念活动复核临时结果 | 函数返回值 | 概念活动复核已返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0472 | F0077 | F0248 | <code>海中鱼巣/启动.运行期上下文.ixx:80</code> | direct_const_member+unique_name | *清单,*活动 | 概念活动复核临时结果 | 活动完整；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E0474 | F0078 | F0239 | <code>海中鱼巣/启动.运行期上下文.ixx:213</code> | direct_const_member | this=候选.get() | 结构核心预检 | 候选非空 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0475 | F0078 | F0253 | <code>海中鱼巣/启动.运行期上下文.ixx:216</code> | direct_const_member | this=候选.get() | 服务装配预检 | 结构核心完整 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -444,31 +444,31 @@
 | E0503 | F0092 | F0266 | <code>海中鱼巣/自检.入口初始化.ixx:510</code> | direct_free | 捕获配置 | 结果 | 回调执行 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0505 | F0093 | F0267 | <code>海中鱼巣/自检.入口初始化.ixx:512</code> | direct_free | 捕获配置 | 结果 | 回调执行 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0511 | F0096 | F0272 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:878</code> | constructor | 0,固定随机种子 | 无效夹具 | F0096执行 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0512 | F0096 | F0273 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:879</code> | direct_member_nonvirtual | this=&无效夹具 | 构建成功并取反为F0096返回值 | 夹具构造成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0512 | F0096 | F0273 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:879</code> | direct_member_nonvirtual | this=&amp;无效夹具 | 构建成功并取反为F0096返回值 | 夹具构造成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0513 | F0097 | F0272 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:761</code> | constructor | 规模,固定随机种子 | 夹具 | 报告基本字段已写 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0514 | F0097 | F0273 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:763</code> | direct_member_nonvirtual+unique_name | this=&夹具 | 构建成功 | 构建开始时间已记录；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0515 | F0097 | F0274 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:766</code> | direct_member_nonvirtual+unique_name | this=&夹具 | 报告.结构签名 | 夹具构建成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0516 | F0097 | F0275 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:767</code> | direct_member_nonvirtual | this=&夹具 | 报告.初始当前记录数量 | 结构签名已读取 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0517 | F0097 | F0276 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:768</code> | direct_member_nonvirtual | this=&夹具 | 报告.分布完整 | 初始数量已读取 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0518 | F0097 | F0277 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:769</code> | direct_member_nonvirtual+unique_name | this=&夹具 | 报告.结构边界完整 | 分布结果已读取；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0519 | F0097 | F0278 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:771</code> | direct_member_nonvirtual+unique_name | this=&夹具 | 查询定义组 | 夹具摘要字段已读取；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0520 | F0097 | F0279 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:782, 海中鱼巣/核心/自检.关系仓库性能基线.ixx:788</code> | direct_member_nonvirtual+unique_name | this=&夹具,定义 | 临时测量.正确 | 预热批内循环；正式批内循环；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0514 | F0097 | F0273 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:763</code> | direct_member_nonvirtual+unique_name | this=&amp;夹具 | 构建成功 | 构建开始时间已记录；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0515 | F0097 | F0274 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:766</code> | direct_member_nonvirtual+unique_name | this=&amp;夹具 | 报告.结构签名 | 夹具构建成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0516 | F0097 | F0275 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:767</code> | direct_member_nonvirtual | this=&amp;夹具 | 报告.初始当前记录数量 | 结构签名已读取 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0517 | F0097 | F0276 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:768</code> | direct_member_nonvirtual | this=&amp;夹具 | 报告.分布完整 | 初始数量已读取 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0518 | F0097 | F0277 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:769</code> | direct_member_nonvirtual+unique_name | this=&amp;夹具 | 报告.结构边界完整 | 分布结果已读取；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0519 | F0097 | F0278 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:771</code> | direct_member_nonvirtual+unique_name | this=&amp;夹具 | 查询定义组 | 夹具摘要字段已读取；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0520 | F0097 | F0279 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:782, 海中鱼巣/核心/自检.关系仓库性能基线.ixx:788</code> | direct_member_nonvirtual+unique_name | this=&amp;夹具,定义 | 临时测量.正确 | 预热批内循环；正式批内循环；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E0522 | F0097 | F0280 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:797</code> | direct_free | 本轮汇总样本,0.50 | 报告.轮中位数纳秒[轮] | 本轮全部查询测量完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0523 | F0097 | F0281 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:801-805</code> | direct_free | 查询名称,查询样本,初始当前记录数量,累计正确 | 追加到报告.查询指标组 | 指标索引有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0524 | F0097 | F0282 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:812</code> | direct_free | 夹具,查询定义组[1],报告.查询指标组[1].中位数纳秒 | 报告.并发 | 查询指标形成完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0525 | F0097 | F0283 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:813</code> | direct_member_nonvirtual+unique_name | this=&夹具 | 报告.参考模型一致 | 并发基线返回；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0526 | F0097 | F0284 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:815</code> | direct_member_nonvirtual+unique_name | this=&夹具 | 追加创建指标 | 参考模型一致位已计算，不要求为true；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0527 | F0097 | F0285 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:816</code> | direct_member_nonvirtual+unique_name | this=&夹具 | 追加失效指标 | 创建测量完成；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0528 | F0097 | F0286 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:817</code> | direct_member_nonvirtual+unique_name | this=&夹具 | 追加重挂指标 | 失效测量完成；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0529 | F0097 | F0287 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:818</code> | direct_member_nonvirtual+unique_name | this=&夹具 | 追加删除指标 | 重挂测量完成；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0531 | F0097 | F0198 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:819</code> | direct_member_nonvirtual | this=&夹具关系仓库 | 有效数量并与规模比较 | 关系仓库引用已取得 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0530 | F0097 | F0288 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:819</code> | direct_member_nonvirtual | this=&夹具 | 关系仓库左值引用 | 四项写入测量完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0525 | F0097 | F0283 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:813</code> | direct_member_nonvirtual+unique_name | this=&amp;夹具 | 报告.参考模型一致 | 并发基线返回；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0526 | F0097 | F0284 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:815</code> | direct_member_nonvirtual+unique_name | this=&amp;夹具 | 追加创建指标 | 参考模型一致位已计算，不要求为true；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0527 | F0097 | F0285 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:816</code> | direct_member_nonvirtual+unique_name | this=&amp;夹具 | 追加失效指标 | 创建测量完成；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0528 | F0097 | F0286 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:817</code> | direct_member_nonvirtual+unique_name | this=&amp;夹具 | 追加重挂指标 | 失效测量完成；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0529 | F0097 | F0287 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:818</code> | direct_member_nonvirtual+unique_name | this=&amp;夹具 | 追加删除指标 | 重挂测量完成；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0531 | F0097 | F0198 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:819</code> | direct_member_nonvirtual | this=&amp;夹具关系仓库 | 有效数量并与规模比较 | 关系仓库引用已取得 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0530 | F0097 | F0288 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:819</code> | direct_member_nonvirtual | this=&amp;夹具 | 关系仓库左值引用 | 四项写入测量完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0036 | F0097 | R0139 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:819</code> | field_type_hint |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
 | E0532 | F0098 | F0289 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:904-906</code> | external_callback | 当前查询分位指标const引用 | 查询all_of谓词bool | 参考模型一致且标准算法遍历未短路 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0533 | F0098 | F0290 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:907-909</code> | external_callback | 当前写入分位指标const引用 | 写入all_of谓词bool | 参考模型与查询指标一致且标准算法遍历未短路 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0534 | F0099 | F0291 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:741-743</code> | external_callback | 当前查询分位指标const引用 | 查询all_of谓词bool | 基础字段和查询写入指标数量门禁通过且算法未短路 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0535 | F0099 | F0292 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:744-746</code> | external_callback | 当前写入分位指标const引用 | 写入all_of谓词bool | 基础字段和两组数量门禁通过、查询指标全部完整且算法未短路 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0536 | F0099 | F0293 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:747</code> | direct_const_member | this=&并发 | 并发完整bool | 查询和写入指标全部完整 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0536 | F0099 | F0293 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:747</code> | direct_const_member | this=&amp;并发 | 并发完整bool | 查询和写入指标全部完整 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0200 | F0120 | F0043 | <code>海中鱼巣/启动.应用程序.ixx:209</code> | captured_member_direct+direct_member | 键, 上下文.状态 | 方法登记根材料候选 | 失败点!=0；实际五轮；失败点 != 0 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0201 | F0121 | F0044 | <code>海中鱼巣/启动.应用程序.ixx:215</code> | captured_member_direct+direct_member | 参数 | 自我线程操作结果 | 失败点!=1；实际四轮；失败点 != 1 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0202 | F0122 | F0045 | <code>海中鱼巣/启动.应用程序.ixx:221</code> | captured_member_direct+direct_member | 时限 | 等待结果 | 失败点!=2；实际三轮；失败点 != 2 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -486,10 +486,10 @@
 | E0625 | F0160 | F0326 | <code>海中鱼巣/领域/方法服务.h:1337</code> | direct_member | *登记根材料_ | 材料完整bool | optional有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0626 | F0160 | F0327 | <code>海中鱼巣/领域/方法服务.h:1338</code> | direct_member+unique_name | 登记根材料_-&gt;登记根,状态 | 登记根角色状态 | 材料完整且仓库编号非零；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E0627 | F0160 | F0328 | <code>海中鱼巣/领域/方法服务.h:1339, 海中鱼巣/领域/方法服务.h:1340</code> | direct_member+unique_name | 登记根材料_-&gt;活跃状态 | 活跃是否实例bool | 登记根角色匹配；活跃不是实例状态；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0629 | F0160 | F0329 | <code>海中鱼巣/领域/方法服务.h:1343, 海中鱼巣/领域/方法服务.h:1344</code> | direct_member | this=&状态,登记根材料_-&gt;活跃状态；this=&状态,登记根材料_-&gt;失效状态 | 活跃状态值；失效状态值 | 1337—1340前置全部通过；1343读取活跃状态值后，1344无条件读取失效状态值；第二次不依赖第一次返回内容 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0631 | F0160 | F0330 | <code>海中鱼巣/领域/方法服务.h:1345-1346, 海中鱼巣/领域/方法服务.h:1347-1348</code> | direct_member | this=&方法服务,登记根材料_-&gt;登记根,关系类型::模板,节点类型::状态,根活跃状态顺序号；this=&方法服务,登记根材料_-&gt;登记根,关系类型::模板,节点类型::状态,根失效状态顺序号 | 活跃状态目标；失效状态目标 | E0629两次状态值读取完成；1345—1346读取活跃状态目标后，1347—1348无条件读取失效状态目标；第二次不依赖第一次返回内容 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0629 | F0160 | F0329 | <code>海中鱼巣/领域/方法服务.h:1343, 海中鱼巣/领域/方法服务.h:1344</code> | direct_member | this=&amp;状态,登记根材料_-&gt;活跃状态；this=&amp;状态,登记根材料_-&gt;失效状态 | 活跃状态值；失效状态值 | 1337—1340前置全部通过；1343读取活跃状态值后，1344无条件读取失效状态值；第二次不依赖第一次返回内容 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0631 | F0160 | F0330 | <code>海中鱼巣/领域/方法服务.h:1345-1346, 海中鱼巣/领域/方法服务.h:1347-1348</code> | direct_member | this=&amp;方法服务,登记根材料_-&gt;登记根,关系类型::模板,节点类型::状态,根活跃状态顺序号；this=&amp;方法服务,登记根材料_-&gt;登记根,关系类型::模板,节点类型::状态,根失效状态顺序号 | 活跃状态目标；失效状态目标 | E0629两次状态值读取完成；1345—1346读取活跃状态目标后，1347—1348无条件读取失效状态目标；第二次不依赖第一次返回内容 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0633 | F0161 | F0184 | <code>海中鱼巣/领域/方法服务.h:1304</code> | direct_free | false,说明 | 检查结果后丢弃 | 可能的解锁已完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0634 | F0162 | F0331 | <code>海中鱼巣/领域/方法服务.h:310</code> | direct_member | this=&主信息_ | 新主信息 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0634 | F0162 | F0331 | <code>海中鱼巣/领域/方法服务.h:310</code> | direct_member | this=&amp;主信息_ | 新主信息 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0635 | F0162 | F0332 | <code>海中鱼巣/领域/方法服务.h:310</code> | direct_member | 节点类型::方法,新主信息 | 新方法节点 | 主信息创建调用完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0636 | F0164 | F0333 | <code>海中鱼巣/领域/方法服务.h:1645</code> | direct_member | 方法节点,节点类型::方法 | 类型匹配bool | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0637 | F0164 | F0334 | <code>海中鱼巣/领域/方法服务.h:1645</code> | direct_member+unique_name | 角色 | 角色有效bool | 方法节点类型匹配；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
@@ -521,15 +521,15 @@
 | E0700 | F0174 | F0168 | <code>海中鱼巣/领域/初始化.世界树.ixx:34, 海中鱼巣/领域/初始化.世界树.ixx:35, 海中鱼巣/领域/初始化.世界树.ixx:36, 海中鱼巣/领域/初始化.世界树.ixx:37, 海中鱼巣/领域/初始化.世界树.ixx:38, 海中鱼巣/领域/初始化.世界树.ixx:39</code> | direct_free+unique_name | 根到场景关系 | 关系有效bool | 自我节点有效；根场景关系有效；父子关系有效；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E0705 | F0175 | F0163 | <code>海中鱼巣/领域/初始化.需求.ixx:63</code> | direct_free | 概念命名目标状态 | 目标状态句柄有效bool | 两个单根需求均成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0037 | F0175 | F0168 | <code>海中鱼巣/领域/初始化.需求.ixx:63</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
-| E0703 | F0175 | F0350 | <code>海中鱼巣/领域/初始化.需求.ixx:63</code> | direct_const_member | this=&安全根需求 | 安全根需求成功bool | 函数进入；安全根需求成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0703 | F0175 | F0350 | <code>海中鱼巣/领域/初始化.需求.ixx:63</code> | direct_const_member | this=&amp;安全根需求 | 安全根需求成功bool | 函数进入；安全根需求成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0706 | F0176 | F0189 | <code>海中鱼巣/领域/初始化.概念图.ixx:224</code> | direct_const_member | this=根 | 根项成功bool | 当前根指针非空 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0707 | F0176 | F0351 | <code>海中鱼巣/领域/初始化.概念图.ixx:224</code> | direct_const_member+unique_name | this=概念图初始化服务,*根 | 名称关系可读bool | 当前根项成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| E0708 | F0176 | F0352 | <code>海中鱼巣/领域/初始化.概念图.ixx:227</code> | direct_const_member+unique_name | this=&概念图_,类别=根-&gt;根类别 | 登记optional | 根项与名称关系均有效；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0709 | F0176 | F0353 | <code>海中鱼巣/领域/初始化.概念图.ixx:233</code> | direct_const_member+unique_name | this=&概念图_,概念=根-&gt;根节点 | 生命周期optional | 登记材料匹配；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0710 | F0176 | F0354 | <code>海中鱼巣/领域/初始化.概念图.ixx:246</code> | direct_const_member+unique_name | this=&概念图_,阶段 | 已登记optional | 进入当前状态循环项；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0711 | F0176 | F0329 | <code>海中鱼巣/领域/初始化.概念图.ixx:247</code> | direct_const_member | this=&状态_,状态节点 | 状态值optional | 读取生命周期状态之后无条件执行 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0712 | F0176 | F0328 | <code>海中鱼巣/领域/初始化.概念图.ixx:252</code> | direct_const_member+unique_name | this=&状态_,状态节点 | 实例状态bool | 登记与状态值前四项均匹配；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0713 | F0176 | F0355 | <code>海中鱼巣/领域/初始化.概念图.ixx:256</code> | direct_const_member+unique_name | this=&概念图_ | 全部概念根临时vector | 四根与三状态循环均完成；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0708 | F0176 | F0352 | <code>海中鱼巣/领域/初始化.概念图.ixx:227</code> | direct_const_member+unique_name | this=&amp;概念图_,类别=根-&gt;根类别 | 登记optional | 根项与名称关系均有效；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0709 | F0176 | F0353 | <code>海中鱼巣/领域/初始化.概念图.ixx:233</code> | direct_const_member+unique_name | this=&amp;概念图_,概念=根-&gt;根节点 | 生命周期optional | 登记材料匹配；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0710 | F0176 | F0354 | <code>海中鱼巣/领域/初始化.概念图.ixx:246</code> | direct_const_member+unique_name | this=&amp;概念图_,阶段 | 已登记optional | 进入当前状态循环项；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0711 | F0176 | F0329 | <code>海中鱼巣/领域/初始化.概念图.ixx:247</code> | direct_const_member | this=&amp;状态_,状态节点 | 状态值optional | 读取生命周期状态之后无条件执行 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0712 | F0176 | F0328 | <code>海中鱼巣/领域/初始化.概念图.ixx:252</code> | direct_const_member+unique_name | this=&amp;状态_,状态节点 | 实例状态bool | 登记与状态值前四项均匹配；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0713 | F0176 | F0355 | <code>海中鱼巣/领域/初始化.概念图.ixx:256</code> | direct_const_member+unique_name | this=&amp;概念图_ | 全部概念根临时vector | 四根与三状态循环均完成；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | RCE1636 | F0177 | R0531 | <code>海中鱼巣/领域/初始化.概念图.ixx:150</code> | direct_const_member |  |  | 函数进入读取同类别已登记根 | 专项源码静态类型与实际装配人工复核 |
 | RCE1637 | F0177 | F0185 | <code>海中鱼巣/领域/初始化.概念图.ixx:161</code> | callback_invoke |  |  | 不存在已登记根时调用本实例绑定的创建回调 | 专项源码静态类型与实际装配人工复核 |
 | RCE1638 | F0177 | F0163 | <code>海中鱼巣/领域/初始化.概念图.ixx:162</code> | direct_free |  |  | 创建回调返回后复核根节点句柄 | 专项源码静态类型与实际装配人工复核 |
@@ -548,46 +548,46 @@
 | RCE1651 | F0179 | F0356 | <code>海中鱼巣/领域/初始化.概念图.ixx:165</code> | direct_member |  |  | 根节点有效后登记概念根 | 专项源码静态类型与实际装配人工复核 |
 | RCE1652 | F0179 | F0184 | <code>海中鱼巣/领域/初始化.概念图.ixx:166-167</code> | direct_free |  |  | 登记完成后复核发布读回 | 专项源码静态类型与实际装配人工复核 |
 | RCE1653 | F0179 | F0051 | <code>海中鱼巣/领域/初始化.概念图.ixx:166</code> | operator |  |  | 登记结果有值后比较根节点 | 专项源码静态类型与实际装配人工复核 |
-| E0714 | F0180 | F0352 | <code>海中鱼巣/领域/初始化.概念图.ixx:150</code> | direct_const_member | this=&概念图_,类别=存在 | 已登记optional | 函数进入；F0177成功后进入F0178；F0177和F0178成功后进入F0179；前三根均成功后进入F0180 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0714 | F0180 | F0352 | <code>海中鱼巣/领域/初始化.概念图.ixx:150</code> | direct_const_member | this=&amp;概念图_,类别=存在 | 已登记optional | 函数进入；F0177成功后进入F0178；F0177和F0178成功后进入F0179；前三根均成功后进入F0180 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE1654 | F0180 | R0531 | <code>海中鱼巣/领域/初始化.概念图.ixx:150</code> | direct_const_member |  |  | 函数进入读取同类别已登记根 | 专项源码静态类型与实际装配人工复核 |
 | E0733 | F0180 | F0188 | <code>海中鱼巣/领域/初始化.概念图.ixx:161</code> | callback_invoke | 创建回调，无参数 | 因果根节点 | 因果根未登记；不存在已登记根时调用本实例绑定的创建回调 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
 | E0716 | F0180 | F0163 | <code>海中鱼巣/领域/初始化.概念图.ixx:162</code> | direct_free | 根节点 | 根有效bool | 创建回调返回；F0186返回；F0187返回；F0188返回；创建回调返回后复核根节点句柄 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
-| E0717 | F0180 | F0356 | <code>海中鱼巣/领域/初始化.概念图.ixx:165</code> | direct_member | this=&概念图_,材料={存在,固定稳定键,根节点} | 登记结果optional | 根节点有效；根节点有效后登记概念根 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
+| E0717 | F0180 | F0356 | <code>海中鱼巣/领域/初始化.概念图.ixx:165</code> | direct_member | this=&amp;概念图_,材料={存在,固定稳定键,根节点} | 登记结果optional | 根节点有效；根节点有效后登记概念根 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
 | E0719 | F0180 | F0184 | <code>海中鱼巣/领域/初始化.概念图.ixx:166-167</code> | direct_free | 登记有值且同根,L"概念根创建后登记不符合内部预期。" | 检查通过bool | 登记完成；条件真假均调用；登记完成后复核发布读回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
 | E0718 | F0180 | F0051 | <code>海中鱼巣/领域/初始化.概念图.ixx:166</code> | direct_operator+operator | 登记结果.value(),根节点 | 同根bool | 登记结果有值；登记结果有值后比较根节点 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
-| E0738 | F0181 | F0354 | <code>海中鱼巣/领域/初始化.概念图.ixx:187</code> | direct_const_member+unique_name | this=&概念图_,阶段 | 已登记optional | 函数进入；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0738 | F0181 | F0354 | <code>海中鱼巣/领域/初始化.概念图.ixx:187</code> | direct_const_member+unique_name | this=&amp;概念图_,阶段 | 已登记optional | 函数进入；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E0739 | F0181 | F0163 | <code>海中鱼巣/领域/初始化.概念图.ixx:192, 海中鱼巣/领域/初始化.概念图.ixx:195</code> | direct_free | 状态节点 | 候选句柄有效bool | 无已登记状态 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0038 | F0181 | F0168 | <code>海中鱼巣/领域/初始化.概念图.ixx:192, 海中鱼巣/领域/初始化.概念图.ixx:195</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
-| E0740 | F0181 | F0165 | <code>海中鱼巣/领域/初始化.概念图.ixx:193</code> | direct_member | this=&状态_,状态值=int64(阶段) | 新状态节点并写回 | 无登记且候选句柄无效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0742 | F0181 | F0357 | <code>海中鱼巣/领域/初始化.概念图.ixx:198</code> | direct_member+unique_name | this=&概念图_,阶段,状态节点,状态_ | 登记结果optional | 状态节点有效；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0740 | F0181 | F0165 | <code>海中鱼巣/领域/初始化.概念图.ixx:193</code> | direct_member | this=&amp;状态_,状态值=int64(阶段) | 新状态节点并写回 | 无登记且候选句柄无效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0742 | F0181 | F0357 | <code>海中鱼巣/领域/初始化.概念图.ixx:198</code> | direct_member+unique_name | this=&amp;概念图_,阶段,状态节点,状态_ | 登记结果optional | 状态节点有效；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E0743 | F0181 | F0051 | <code>海中鱼巣/领域/初始化.概念图.ixx:199</code> | direct_operator | 登记结果.value(),状态节点 | 同状态bool | 登记结果有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0744 | F0181 | F0184 | <code>海中鱼巣/领域/初始化.概念图.ixx:199, 海中鱼巣/领域/初始化.概念图.ixx:199-200, 海中鱼巣/领域/初始化.概念图.ixx:205, 海中鱼巣/领域/初始化.概念图.ixx:205-209</code> | direct_free+unique_name | 登记有值且同状态,固定说明 | 登记检查bool | 登记尝试后总调用；读回状态值后总调用；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0745 | F0181 | F0329 | <code>海中鱼巣/领域/初始化.概念图.ixx:204</code> | direct_const_member | this=&状态_,状态节点 | 状态值optional | 复用或登记路径汇合 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0746 | F0181 | F0328 | <code>海中鱼巣/领域/初始化.概念图.ixx:208</code> | direct_const_member+unique_name | this=&状态_,状态节点 | 实例状态bool | 状态值存在且等于阶段；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0745 | F0181 | F0329 | <code>海中鱼巣/领域/初始化.概念图.ixx:204</code> | direct_const_member | this=&amp;状态_,状态节点 | 状态值optional | 复用或登记路径汇合 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0746 | F0181 | F0328 | <code>海中鱼巣/领域/初始化.概念图.ixx:208</code> | direct_const_member+unique_name | this=&amp;状态_,状态节点 | 实例状态bool | 状态值存在且等于阶段；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E0752 | F0182 | F0360 | <code>海中鱼巣/领域/概念图服务.h:1007</code> | direct_const_member | 根节点 | 生命周期optional | 四根确保全部成功后的逐根读回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0753 | F0182 | F0361 | <code>海中鱼巣/领域/概念图服务.h:1016</code> | direct_member+unique_name | 本轮新增关系组 | 清理完成bool | 任一确保或读回失败；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E0755 | F0182 | F0184 | <code>海中鱼巣/领域/概念图服务.h:1017, 海中鱼巣/领域/概念图服务.h:1017-1019, 海中鱼巣/领域/概念图服务.h:1023, 海中鱼巣/领域/概念图服务.h:1023-1024</code> | direct_free+unique_name | 清理完成且关系数恢复,固定说明 | 诊断bool并丢弃 | 失败清理路径总调用；活动快照存在；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0750 | F0182 | F0198 | <code>海中鱼巣/领域/概念图服务.h:1018, 海中鱼巣/领域/概念图服务.h:992</code> | direct_const_member | this=&关系_ | 原关系数量 | 根数量等于4且双锁已取得；清理函数返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0750 | F0182 | F0198 | <code>海中鱼巣/领域/概念图服务.h:1018, 海中鱼巣/领域/概念图服务.h:992</code> | direct_const_member | this=&amp;关系_ | 原关系数量 | 根数量等于4且双锁已取得；清理函数返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0756 | F0182 | F0362 | <code>海中鱼巣/领域/概念图服务.h:1023</code> | direct_const_member+unique_name | 活动快照_.value() | 快照有效bool | 全部就绪且活动快照存在；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E0748 | F0182 | F0358 | <code>海中鱼巣/领域/概念图服务.h:982</code> | direct_const_member+unique_name | this | 登记完整bool | 函数进入；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E0749 | F0182 | F0355 | <code>海中鱼巣/领域/概念图服务.h:985</code> | direct_const_member+unique_name | this | 根组vector | 生命周期状态登记完整；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| E0751 | F0182 | F0359 | <code>海中鱼巣/领域/概念图服务.h:996, 海中鱼巣/领域/概念图服务.h:996-1000</code> | direct_member+unique_name | 根节点,活跃,true,本轮新增关系组& | 生命周期关系optional | 逐根确保循环；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| E0758 | F0183 | F0363 | <code>海中鱼巣/领域/初始化.概念图.ixx:177, 海中鱼巣/领域/初始化.概念图.ixx:182</code> | direct_const_member | this=&项.名称语素入口 | 已有材料成功bool | 函数进入；创建和字段写入后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0751 | F0182 | F0359 | <code>海中鱼巣/领域/概念图服务.h:996, 海中鱼巣/领域/概念图服务.h:996-1000</code> | direct_member+unique_name | 根节点,活跃,true,本轮新增关系组&amp; | 生命周期关系optional | 逐根确保循环；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
+| E0758 | F0183 | F0363 | <code>海中鱼巣/领域/初始化.概念图.ixx:177, 海中鱼巣/领域/初始化.概念图.ixx:182</code> | direct_const_member | this=&amp;项.名称语素入口 | 已有材料成功bool | 函数进入；创建和字段写入后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0759 | F0183 | F0351 | <code>海中鱼巣/领域/初始化.概念图.ixx:178, 海中鱼巣/领域/初始化.概念图.ixx:182</code> | direct_const_member+unique_name | this=概念图初始化服务,项 | 已有名称关系可读bool并返回 | 已有名称材料成功；新材料成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| E0760 | F0183 | F0364 | <code>海中鱼巣/领域/初始化.概念图.ixx:180</code> | direct_member+unique_name | this=&语素_,名称,项.根节点,项.根节点,0 | 创建结果并写项.名称语素入口 | 无成功名称材料；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0760 | F0183 | F0364 | <code>海中鱼巣/领域/初始化.概念图.ixx:180</code> | direct_member+unique_name | this=&amp;语素_,名称,项.根节点,项.根节点,0 | 创建结果并写项.名称语素入口 | 无成功名称材料；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E0763 | F0183 | F0184 | <code>海中鱼巣/领域/初始化.概念图.ixx:182, 海中鱼巣/领域/初始化.概念图.ixx:182-183</code> | direct_free+unique_name | 新材料成功且关系可读,固定说明 | 检查bool并返回 | 创建路径总调用；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0765 | F0185 | F0365 | <code>海中鱼巣/领域/初始化.概念图.ixx:105</code> | lambda_direct | this=&捕获this-&gt;存在_,无显式参数 | 存在根节点并作为lambda返回 | F0177未读到存在根登记 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0766 | F0186 | F0366 | <code>海中鱼巣/领域/初始化.概念图.ixx:107</code> | lambda_direct | this=&捕获this-&gt;动态_,无显式参数 | 动态根节点并作为lambda返回 | F0180链到达F0178且F0178未读到动态根登记 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0767 | F0187 | F0367 | <code>海中鱼巣/领域/初始化.概念图.ixx:109</code> | lambda_direct | this=&捕获this-&gt;二次特征_,无显式参数 | 关系概念根句柄并作为lambda返回 | F0179到达且未读到关系根登记 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0768 | F0188 | F0368 | <code>海中鱼巣/领域/初始化.概念图.ixx:111</code> | lambda_direct | this=&捕获this-&gt;因果_,无显式参数 | 因果概念根句柄并作为lambda返回 | F0180到达且未读到因果根登记 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0765 | F0185 | F0365 | <code>海中鱼巣/领域/初始化.概念图.ixx:105</code> | lambda_direct | this=&amp;捕获this-&gt;存在_,无显式参数 | 存在根节点并作为lambda返回 | F0177未读到存在根登记 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0766 | F0186 | F0366 | <code>海中鱼巣/领域/初始化.概念图.ixx:107</code> | lambda_direct | this=&amp;捕获this-&gt;动态_,无显式参数 | 动态根节点并作为lambda返回 | F0180链到达F0178且F0178未读到动态根登记 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0767 | F0187 | F0367 | <code>海中鱼巣/领域/初始化.概念图.ixx:109</code> | lambda_direct | this=&amp;捕获this-&gt;二次特征_,无显式参数 | 关系概念根句柄并作为lambda返回 | F0179到达且未读到关系根登记 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0768 | F0188 | F0368 | <code>海中鱼巣/领域/初始化.概念图.ixx:111</code> | lambda_direct | this=&amp;捕获this-&gt;因果_,无显式参数 | 因果概念根句柄并作为lambda返回 | F0180到达且未读到因果根登记 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0769 | F0189 | F0163 | <code>海中鱼巣/领域/初始化.概念图.ixx:34</code> | direct_free | 根节点 | 根句柄有效bool | 类别范围和稳定键均通过 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0040 | F0189 | F0168 | <code>海中鱼巣/领域/初始化.概念图.ixx:34</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
-| E0770 | F0189 | F0363 | <code>海中鱼巣/领域/初始化.概念图.ixx:35</code> | direct_const_member | this=&名称语素入口 | 名称材料成功bool | 根句柄有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0771 | F0190 | F0336 | <code>海中鱼巣/核心/节点仓库.cpp:234</code> | direct_const_member | this=&事务接线_ | 已接域bool | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0775 | F0190 | F0345 | <code>海中鱼巣/核心/节点仓库.cpp:235-237</code> | implicit_destructor | this=&许可 | void | 已接域路径退出；返回对象形成之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0770 | F0189 | F0363 | <code>海中鱼巣/领域/初始化.概念图.ixx:35</code> | direct_const_member | this=&amp;名称语素入口 | 名称材料成功bool | 根句柄有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0771 | F0190 | F0336 | <code>海中鱼巣/核心/节点仓库.cpp:234</code> | direct_const_member | this=&amp;事务接线_ | 已接域bool | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0775 | F0190 | F0345 | <code>海中鱼巣/核心/节点仓库.cpp:235-237</code> | implicit_destructor | this=&amp;许可 | void | 已接域路径退出；返回对象形成之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0041 | F0190 | F0397 | <code>海中鱼巣/核心/节点仓库.cpp:235</code> | resolved-function-pointer |  |  | 事务接线已接域；生产运行期唯一正式共享许可目标 | 专项源码静态类型与实际装配人工复核 |
-| E0772 | F0190 | F0338 | <code>海中鱼巣/核心/节点仓库.cpp:236</code> | direct_const_member | this=&许可 | 许可有效bool | 已接域且许可对象已形成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0773 | F0190 | F0339 | <code>海中鱼巣/核心/节点仓库.cpp:236</code> | direct_const_member | this=&许可 | 结构事务令牌const引用 | 许可有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0772 | F0190 | F0338 | <code>海中鱼巣/核心/节点仓库.cpp:236</code> | direct_const_member | this=&amp;许可 | 许可有效bool | 已接域且许可对象已形成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0773 | F0190 | F0339 | <code>海中鱼巣/核心/节点仓库.cpp:236</code> | direct_const_member | this=&amp;许可 | 结构事务令牌const引用 | 许可有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0774 | F0190 | F0346 | <code>海中鱼巣/核心/节点仓库.cpp:236</code> | direct_const_member+direct-member | this=节点仓库,节点,许可令牌 | 节点记录optional返回对象 | 许可有效；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
 | E0776 | F0191 | F0369 | <code>海中鱼巣/领域/概念图服务.h:4406</code> | direct_const_member+unique_name | this,实例 | 实例类别optional | 函数进入；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E0777 | F0191 | F0352 | <code>海中鱼巣/领域/概念图服务.h:4407</code> | direct_const_member+unique_name | this,类别 | 根材料optional | F0369调用后无条件执行；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
@@ -597,31 +597,31 @@
 | E0781 | F0191 | F0372 | <code>海中鱼巣/领域/概念图服务.h:4418</code> | direct_const_member+unique_name | this,根材料-&gt;根节点 | 根来源组 | 实例目标组读取后；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E0784 | F0191 | F0184 | <code>海中鱼巣/领域/概念图服务.h:4421</code> | direct_free+unique_name | 双向可读,固定说明 | 检查bool | 两次find组合条件形成后；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E0785 | F0196 | F0373 | <code>海中鱼巣/领域/统计服务.h:258</code> | direct_const_member+unique_name | this,命名空间 | 通用命名空间有效bool | 函数进入；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| E0786 | F0197 | F0336 | <code>海中鱼巣/核心/节点仓库.cpp:454</code> | direct_const_member | this=&事务接线_ | 已接域bool | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0790 | F0197 | F0345 | <code>海中鱼巣/核心/节点仓库.cpp:455-457</code> | implicit_destructor | this=&许可 | void | 接域路径退出；返回值形成后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0786 | F0197 | F0336 | <code>海中鱼巣/核心/节点仓库.cpp:454</code> | direct_const_member | this=&amp;事务接线_ | 已接域bool | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0790 | F0197 | F0345 | <code>海中鱼巣/核心/节点仓库.cpp:455-457</code> | implicit_destructor | this=&amp;许可 | void | 接域路径退出；返回值形成后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0042 | F0197 | F0397 | <code>海中鱼巣/核心/节点仓库.cpp:455</code> | resolved-function-pointer |  |  | 事务接线已接域；生产运行期唯一正式共享许可目标 | 专项源码静态类型与实际装配人工复核 |
-| E0787 | F0197 | F0338 | <code>海中鱼巣/核心/节点仓库.cpp:456</code> | direct_const_member | this=&许可 | 许可有效bool | 已接域且许可对象形成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0788 | F0197 | F0339 | <code>海中鱼巣/核心/节点仓库.cpp:456</code> | direct_const_member | this=&许可 | 令牌const引用 | 许可有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0787 | F0197 | F0338 | <code>海中鱼巣/核心/节点仓库.cpp:456</code> | direct_const_member | this=&amp;许可 | 许可有效bool | 已接域且许可对象形成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0788 | F0197 | F0339 | <code>海中鱼巣/核心/节点仓库.cpp:456</code> | direct_const_member | this=&amp;许可 | 令牌const引用 | 许可有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0789 | F0197 | F0374 | <code>海中鱼巣/核心/节点仓库.cpp:456</code> | direct_const_member+direct-member | this,许可令牌 | 令牌路径有效节点数量 | 许可有效；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
-| E0800 | F0198 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:1013-1025</code> | implicit_destructor | this=&自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0801 | F0198 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:1013-1025</code> | implicit_destructor | this=&自动许可.value() | void | 退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0800 | F0198 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:1013-1025</code> | implicit_destructor | this=&amp;自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0801 | F0198 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:1013-1025</code> | implicit_destructor | this=&amp;自动许可.value() | void | 退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0793 | F0198 | F0375 | <code>海中鱼巣/核心/关系仓库.cpp:1013</code> | move-constructor+macro-expanded-move-constructor |  |  | 共享许可宏的 optional.emplace 以许可临时量构造承载值；关系共享许可范围宏在 line 120 以 optional.emplace 接收函数返回值并移动构造结构事务许可 | 专项源码静态类型与实际装配人工复核 |
 | E0798 | F0198 | F0343 | <code>海中鱼巣/核心/关系仓库.cpp:1019, 海中鱼巣/核心/关系仓库.cpp:1020</code> | direct_const_member+direct-member+direct-member | this,记录.源节点 | 源节点有效bool | 记录状态有效；记录状态和源节点均有效；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
-| E0802 | F0199 | F0336 | <code>海中鱼巣/核心/索引仓库.cpp:403</code> | direct_const_member | this=&事务接线_ | 是否已接域 | 总是 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0806 | F0199 | F0345 | <code>海中鱼巣/核心/索引仓库.cpp:404-406</code> | implicit_destructor | this=&许可 | void | 接域分支退出 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0802 | F0199 | F0336 | <code>海中鱼巣/核心/索引仓库.cpp:403</code> | direct_const_member | this=&amp;事务接线_ | 是否已接域 | 总是 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0806 | F0199 | F0345 | <code>海中鱼巣/核心/索引仓库.cpp:404-406</code> | implicit_destructor | this=&amp;许可 | void | 接域分支退出 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0043 | F0199 | F0397 | <code>海中鱼巣/核心/索引仓库.cpp:404</code> | resolved-function-pointer |  |  | 事务接线已接域；生产运行期唯一正式共享许可目标 | 专项源码静态类型与实际装配人工复核 |
-| E0803 | F0199 | F0338 | <code>海中鱼巣/核心/索引仓库.cpp:405</code> | direct_const_member | this=&许可 | 许可是否有效 | 事务接线已接域 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0804 | F0199 | F0339 | <code>海中鱼巣/核心/索引仓库.cpp:405</code> | direct_const_member | this=&许可 | 结构事务令牌const引用 | 事务接线已接域且许可有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0803 | F0199 | F0338 | <code>海中鱼巣/核心/索引仓库.cpp:405</code> | direct_const_member | this=&amp;许可 | 许可是否有效 | 事务接线已接域 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0804 | F0199 | F0339 | <code>海中鱼巣/核心/索引仓库.cpp:405</code> | direct_const_member | this=&amp;许可 | 结构事务令牌const引用 | 事务接线已接域且许可有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0805 | F0199 | F0376 | <code>海中鱼巣/核心/索引仓库.cpp:405</code> | direct_const_member+direct-member | this,令牌=许可.读取令牌() | 有效主键数量 | 事务接线已接域且许可有效；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
-| E0807 | F0199 | F0377 | <code>海中鱼巣/核心/索引仓库.cpp:414</code> | loop_direct_const_member | this=&节点_,节点=候选 | 候选节点是否有效 | 未接域路径每个候选 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0807 | F0199 | F0377 | <code>海中鱼巣/核心/索引仓库.cpp:414</code> | loop_direct_const_member | this=&amp;节点_,节点=候选 | 候选节点是否有效 | 未接域路径每个候选 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0808 | F0203 | F0378 | <code>海中鱼巣/适配/SQL数据库适配.cpp:330</code> | direct_free+source_audited | 第一次字段=配置_.服务器；第二次字段=配置_.数据库 | 服务器字段可用bool；数据库字段可用bool | 第一次总是调用；仅第一次返回true时调用第二次 | 当前源码逐调用点与Clang AST左到右短路表达式复核 |
 | E0810 | F0203 | F0202 | <code>海中鱼巣/适配/SQL数据库适配.cpp:332, 海中鱼巣/适配/SQL数据库适配.cpp:339</code> | direct_free+direct-free+direct-free | L"数据库配置准入",固定诊断 | 函数返回 | 任一配置准入失败；master连接打开失败；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
-| E0825 | F0203 | F0215 | <code>海中鱼巣/适配/SQL数据库适配.cpp:337-348, 海中鱼巣/适配/SQL数据库适配.cpp:350-379</code> | implicit_destructor | this=&主连接 | void | 主连接作用域任一路径退出；函数任一路径退出 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0825 | F0203 | F0215 | <code>海中鱼巣/适配/SQL数据库适配.cpp:337-348, 海中鱼巣/适配/SQL数据库适配.cpp:350-379</code> | implicit_destructor | this=&amp;主连接 | void | 主连接作用域任一路径退出；函数任一路径退出 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0812 | F0203 | F0204 | <code>海中鱼巣/适配/SQL数据库适配.cpp:337, 海中鱼巣/适配/SQL数据库适配.cpp:350</code> | direct_constructor+constructor+constructor | 无 | 主连接 | 配置准入通过；建库SQL成功；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
 | E0814 | F0203 | F0205 | <code>海中鱼巣/适配/SQL数据库适配.cpp:338, 海中鱼巣/适配/SQL数据库适配.cpp:351</code> | direct_member+direct-member+direct-member | 配置_,L"master",诊断 | 主连接打开结果并写诊断 | 配置准入通过；建库SQL成功；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
 | E0816 | F0203 | F0379 | <code>海中鱼巣/适配/SQL数据库适配.cpp:341</code> | direct_free+direct-free | 文本=配置_.数据库 | 数据库字符串 | master连接打开成功；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
 | E0817 | F0203 | F0380 | <code>海中鱼巣/适配/SQL数据库适配.cpp:342</code> | direct_free+direct-free | 文本=配置_.数据库 | 数据库标识符 | 数据库字符串已形成；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
-| E0818 | F0203 | F0206 | <code>海中鱼巣/适配/SQL数据库适配.cpp:345, 海中鱼巣/适配/SQL数据库适配.cpp:375</code> | indeterminately_sequenced_argument+direct-member+direct-member | this=&主连接 | 建库SQL连接句柄实参 | 建库SQL已形成；与move实参求值顺序不固定；建表SQL已形成；与move实参求值顺序不固定；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
+| E0818 | F0203 | F0206 | <code>海中鱼巣/适配/SQL数据库适配.cpp:345, 海中鱼巣/适配/SQL数据库适配.cpp:375</code> | indeterminately_sequenced_argument+direct-member+direct-member | this=&amp;主连接 | 建库SQL连接句柄实参 | 建库SQL已形成；与move实参求值顺序不固定；建表SQL已形成；与move实参求值顺序不固定；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
 | E0819 | F0203 | F0381 | <code>海中鱼巣/适配/SQL数据库适配.cpp:345, 海中鱼巣/适配/SQL数据库适配.cpp:375</code> | direct_free+direct-free+direct-free | 主连接句柄,std::move(建库SQL),诊断 | 建库SQL执行结果并写诊断 | 全部实参求值完成；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
 | E0822 | F0203 | F0212 | <code>海中鱼巣/适配/SQL数据库适配.cpp:346, 海中鱼巣/适配/SQL数据库适配.cpp:352, 海中鱼巣/适配/SQL数据库适配.cpp:376</code> | direct_free+direct-free+direct-free+direct-free | L"初始化数据库",std::move(诊断),0 | 函数返回 | 建库SQL失败；数据连接打开失败；建表SQL失败；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
 | E0827 | F0205 | F0382 | <code>海中鱼巣/适配/SQL数据库适配.cpp:133</code> | direct_member+suffix_match+direct-member | this | void | 总是；调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合；专项源码静态类型与实际装配人工复核 |
@@ -632,24 +632,24 @@
 | E0836 | F0213 | F0210 | <code>海中鱼巣/适配/SQL数据库适配.cpp:301</code> | direct_free+lsp_direct+direct-free | SQLGetData结果 | 整数列读取成功 | 总是；调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；LSP 直接解析并经源码调用词复核；专项源码静态类型与实际装配人工复核 |
 | E0837 | F0215 | F0382 | <code>海中鱼巣/适配/SQL数据库适配.cpp:126</code> | direct_member+suffix_match+direct-member | this | void | 总是；调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合；专项源码静态类型与实际装配人工复核 |
 | E0838 | F0216 | F0210 | <code>海中鱼巣/适配/SQL数据库适配.cpp:290</code> | direct_free+lsp_direct+direct-free | SQLGetData结果 | 文本列读取成功 | 总是；调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；LSP 直接解析并经源码调用词复核；专项源码静态类型与实际装配人工复核 |
-| E0839 | F0217 | F0336 | <code>海中鱼巣/核心/主信息仓库.cpp:431</code> | direct_const_member | this=&事务接线_ | 是否已接域 | 总是 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0843 | F0217 | F0345 | <code>海中鱼巣/核心/主信息仓库.cpp:432-434</code> | implicit_destructor | this=&许可 | void | 接域分支退出 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0839 | F0217 | F0336 | <code>海中鱼巣/核心/主信息仓库.cpp:431</code> | direct_const_member | this=&amp;事务接线_ | 是否已接域 | 总是 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0843 | F0217 | F0345 | <code>海中鱼巣/核心/主信息仓库.cpp:432-434</code> | implicit_destructor | this=&amp;许可 | void | 接域分支退出 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0044 | F0217 | F0397 | <code>海中鱼巣/核心/主信息仓库.cpp:432</code> | resolved-function-pointer |  |  | 事务接线已接域；生产运行期唯一正式共享许可目标 | 专项源码静态类型与实际装配人工复核 |
-| E0840 | F0217 | F0338 | <code>海中鱼巣/核心/主信息仓库.cpp:433</code> | direct_const_member | this=&许可 | 许可是否有效 | 已接域 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0841 | F0217 | F0339 | <code>海中鱼巣/核心/主信息仓库.cpp:433</code> | direct_const_member | this=&许可 | 令牌const引用 | 许可有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0840 | F0217 | F0338 | <code>海中鱼巣/核心/主信息仓库.cpp:433</code> | direct_const_member | this=&amp;许可 | 许可是否有效 | 已接域 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0841 | F0217 | F0339 | <code>海中鱼巣/核心/主信息仓库.cpp:433</code> | direct_const_member | this=&amp;许可 | 令牌const引用 | 许可有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0842 | F0217 | F0383 | <code>海中鱼巣/核心/主信息仓库.cpp:433</code> | direct_const_member+direct-member | 主信息,值索引,许可令牌 | 委托optional | 许可有效；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
 | E0844 | F0217 | F0384 | <code>海中鱼巣/核心/主信息仓库.cpp:435</code> | direct_const_member+direct-member | this,主信息 | 记录快照 | 未接域；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
 | E0850 | F0218 | F0386 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:103, 海中鱼巣/界面/投影.控制面板启动.ixx:103-108</code> | direct_free+lsp_direct | 当前节点,显示语义.value(),选定坐标optional | 材料.显示名称 | 全部实参求值完成；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；LSP 直接解析并经源码调用词复核 |
 | E0846 | F0218 | F0051 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:106, 海中鱼巣/界面/投影.控制面板启动.ixx:79</code> | algorithm_callback+indeterminately_sequenced_argument | 父链元素,当前节点 | std::find相等回调 | 句柄有效且深度未超；生成显示名称实参求值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0851 | F0218 | F0387 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:111</code> | direct_const_member | this=&关系,当前节点 | 子节点组 | 当前节点已压入父链 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0851 | F0218 | F0387 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:111</code> | direct_const_member | this=&amp;关系,当前节点 | 子节点组 | 当前节点已压入父链 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0852 | F0218 | F0218 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:116-117</code> | recursive | 同一只读依赖,子节点,同一父链引用 | 子材料 | 每个排序后子节点 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0845 | F0218 | F0163 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:78</code> | direct_free | 当前节点 | 句柄有效 | 总是 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0045 | F0218 | F0168 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:78</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
-| E0847 | F0218 | F0190 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:82</code> | direct_const_member | this=&节点,当前节点 | 节点记录 | 不在父链 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0847 | F0218 | F0190 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:82</code> | direct_const_member | this=&amp;节点,当前节点 | 节点记录 | 不在父链 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0848 | F0218 | F0385 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:86-87, 海中鱼巣/界面/投影.控制面板启动.ixx:87</code> | direct_free+lsp_direct | 当前节点,记录.类型,初始化结果,语素初始化读数 | 显示语义 | 节点记录存在；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；LSP 直接解析并经源码调用词复核 |
 | E0853 | F0220 | F0163 | <code>海中鱼巣/领域/初始化.语素.ixx:25</code> | direct_free | 基础信息 | 基础信息句柄形态有效 | 总是 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0046 | F0220 | F0168 | <code>海中鱼巣/领域/初始化.语素.ixx:25</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
-| E0854 | F0220 | F0363 | <code>海中鱼巣/领域/初始化.语素.ixx:26</code> | direct_const_member | this=&语素入口结果 | 语素入口结果成功 | 基础信息句柄形态有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0854 | F0220 | F0363 | <code>海中鱼巣/领域/初始化.语素.ixx:26</code> | direct_const_member | this=&amp;语素入口结果 | 语素入口结果成功 | 基础信息句柄形态有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0855 | F0223 | F0388 | <code>海中鱼巣/界面/控制面板窗口.cpp:1553</code> | direct_member+unique_name+direct-member | this,false | 只读材料成功 | 总是；调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合；专项源码静态类型与实际装配人工复核 |
 | E0856 | F0223 | F0389 | <code>海中鱼巣/界面/控制面板窗口.cpp:1553</code> | direct_member+unique_name+direct-member | this | 窗口类注册成功 | 只读材料成功；调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合；专项源码静态类型与实际装配人工复核 |
 | E0857 | F0223 | F0390 | <code>海中鱼巣/界面/控制面板窗口.cpp:1553</code> | direct_member+unique_name+direct-member | this | 主窗口创建成功 | 前两项成功；调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合；专项源码静态类型与实际装配人工复核 |
@@ -662,7 +662,7 @@
 | E0865 | F0224 | F0395 | <code>海中鱼巣/界面/控制面板窗口.cpp:310</code> | direct_member+unique_name+direct-member | this | void | 总是；调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合；专项源码静态类型与实际装配人工复核 |
 | E0866 | F0224 | F0394 | <code>海中鱼巣/界面/控制面板窗口.cpp:311</code> | direct_member+unique_name+direct-member | this | void | 快捷键清理完成；调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合；专项源码静态类型与实际装配人工复核 |
 | E0867 | F0227 | F0230 | <code>海中鱼巣/生产运行期配置.数据.h:68</code> | direct_const_member |  |  | 配置比较在基础字段相等后读取左侧与右侧系统角色稳定键组 | 专项源码静态类型与实际装配人工复核 |
-| E0952 | F0227 | F0460 | <code>海中鱼巣/生产运行期配置.数据.h:74</code> | defaulted_const_member | this=&this-&gt;概念活动,右=&右.概念活动 | 概念活动相等 | 前十一项配置比较均为true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0952 | F0227 | F0460 | <code>海中鱼巣/生产运行期配置.数据.h:74</code> | defaulted_const_member | this=&amp;this-&gt;概念活动,右=&amp;右.概念活动 | 概念活动相等 | 前十一项配置比较均为true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0869 | F0228 | F0230 | <code>海中鱼巣/领域/系统角色清单.数据.h:98</code> | direct_const_member+suffix_match | this | 键组 | 版本与四项数值前置均通过；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E0870 | F0229 | F0231 | <code>海中鱼巣/领域/概念活动状态.数据.h:46</code> | direct_const_member | this | 键组 | 总是 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0871 | F0233 | F0397 | <code>海中鱼巣/核心/协调.结构事务.ixx:152</code> | callback_bind | 无捕获lambda转换函数指针 | 接线.取得共享许可 | 状态_非空 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -706,193 +706,193 @@
 | E0907 | F0238 | F0429 | <code>海中鱼巣/装配.运行期业务.ixx:97</code> | direct_constructor | 语素服务_,语素基础数据操作_ | 语素概念入口组合器_ | P28完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0908 | F0238 | F0430 | <code>海中鱼巣/装配.运行期业务.ixx:98</code> | direct_constructor | 概念图结构服务_ | 概念结构发布组合器_ | P29完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0909 | F0238 | F0431 | <code>海中鱼巣/装配.运行期业务.ixx:99</code> | direct_constructor | 需求服务_,任务服务_,方法召回服务_ | 需求任务方法组合器_ | P30完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0915 | F0239 | F0336 | <code>海中鱼巣/启动.运行期上下文.ixx:60</code> | direct_const_member+unique_name | this=&接线_ | 已接域 | 仓库编号_非零；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0916 | F0239 | F0437 | <code>海中鱼巣/启动.运行期上下文.ixx:61</code> | direct_const_member+unique_name | this=&协调器_ | 协调器域编号 | 已接域；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0917 | F0239 | F0438 | <code>海中鱼巣/启动.运行期上下文.ixx:62</code> | direct_const_member | this=&节点_ | 节点仓库编号 | 协调器域编号等于接线域编号 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0915 | F0239 | F0336 | <code>海中鱼巣/启动.运行期上下文.ixx:60</code> | direct_const_member+unique_name | this=&amp;接线_ | 已接域 | 仓库编号_非零；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0916 | F0239 | F0437 | <code>海中鱼巣/启动.运行期上下文.ixx:61</code> | direct_const_member+unique_name | this=&amp;协调器_ | 协调器域编号 | 已接域；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0917 | F0239 | F0438 | <code>海中鱼巣/启动.运行期上下文.ixx:62</code> | direct_const_member | this=&amp;节点_ | 节点仓库编号 | 协调器域编号等于接线域编号 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0918 | F0239 | F0397 | <code>海中鱼巣/启动.运行期上下文.ixx:65</code> | callback_invoke_resolved_normal | 接线_.运行期状态 | 许可 | 四项入口条件通过 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0919 | F0239 | F0338 | <code>海中鱼巣/启动.运行期上下文.ixx:66</code> | direct_const_member | this=&许可 | 许可有效 | 许可构造完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0920 | F0239 | F0339 | <code>海中鱼巣/启动.运行期上下文.ixx:67, 海中鱼巣/启动.运行期上下文.ixx:68, 海中鱼巣/启动.运行期上下文.ixx:69, 海中鱼巣/启动.运行期上下文.ixx:70, 海中鱼巣/启动.运行期上下文.ixx:71</code> | direct_const_member+unique_name | this=&许可 | 令牌引用01 | 许可有效；共享路径验证通过；主信息读取为空；节点读取为空；关系读取为空；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E0919 | F0239 | F0338 | <code>海中鱼巣/启动.运行期上下文.ixx:66</code> | direct_const_member | this=&amp;许可 | 许可有效 | 许可构造完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0920 | F0239 | F0339 | <code>海中鱼巣/启动.运行期上下文.ixx:67, 海中鱼巣/启动.运行期上下文.ixx:68, 海中鱼巣/启动.运行期上下文.ixx:69, 海中鱼巣/启动.运行期上下文.ixx:70, 海中鱼巣/启动.运行期上下文.ixx:71</code> | direct_const_member+unique_name | this=&amp;许可 | 令牌引用01 | 许可有效；共享路径验证通过；主信息读取为空；节点读取为空；关系读取为空；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E0921 | F0239 | F0399 | <code>海中鱼巣/启动.运行期上下文.ixx:67</code> | callback_invoke_resolved_normal | 接线_.运行期状态,令牌引用01 | 共享路径验证结果 | 令牌读取完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0923 | F0239 | F0439 | <code>海中鱼巣/启动.运行期上下文.ixx:68</code> | direct_const_member | 空主信息句柄,令牌引用02 | 主信息读取结果 | 令牌读取完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0925 | F0239 | F0346 | <code>海中鱼巣/启动.运行期上下文.ixx:69</code> | direct_const_member | 空节点句柄,令牌引用03 | 节点读取结果 | 令牌读取完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0927 | F0239 | F0440 | <code>海中鱼巣/启动.运行期上下文.ixx:70</code> | direct_const_member | 空关系句柄,令牌引用04 | 关系读取结果 | 令牌读取完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0930 | F0239 | F0345 | <code>海中鱼巣/启动.运行期上下文.ixx:71-72</code> | direct_destructor | this=&许可 | 释放共享许可 | 返回表达式求值完成或异常离开 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0930 | F0239 | F0345 | <code>海中鱼巣/启动.运行期上下文.ixx:71-72</code> | direct_destructor | this=&amp;许可 | 释放共享许可 | 返回表达式求值完成或异常离开 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0929 | F0239 | F0441 | <code>海中鱼巣/启动.运行期上下文.ixx:71</code> | direct_const_member+unique_name | 主键0,令牌引用05 | 索引读取结果 | 令牌读取完成；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0931 | F0240 | F0442 | <code>海中鱼巣/装配.运行期业务.ixx:125</code> | direct_const_member | this=&存在场景数据操作_ | 第一项完整条件 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0932 | F0240 | F0443 | <code>海中鱼巣/装配.运行期业务.ixx:126</code> | direct_const_member | this=&状态动态数据操作_ | 第二项完整条件 | E0931返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0933 | F0240 | F0444 | <code>海中鱼巣/装配.运行期业务.ixx:127</code> | direct_const_member | this=&特征体系数据操作_ | 第三项完整条件 | E0932返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0934 | F0240 | F0445 | <code>海中鱼巣/装配.运行期业务.ixx:128</code> | direct_const_member | this=&语素基础数据操作_ | 第四项完整条件 | E0933返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0935 | F0240 | F0446 | <code>海中鱼巣/装配.运行期业务.ixx:129</code> | direct_const_member | this=&轻量因果数据操作_ | 第五项完整条件 | E0934返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0936 | F0240 | F0447 | <code>海中鱼巣/装配.运行期业务.ixx:130</code> | direct_const_member | this=&概念图结构数据操作_ | 第六项完整条件 | E0935返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0937 | F0240 | F0448 | <code>海中鱼巣/装配.运行期业务.ixx:131</code> | direct_const_member | this=&需求任务方法数据操作_ | 第七项完整条件 | E0936返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0938 | F0240 | F0449 | <code>海中鱼巣/装配.运行期业务.ixx:132</code> | direct_const_member | this=&系统角色数据操作_ | 第八项完整条件 | E0937返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0939 | F0240 | F0450 | <code>海中鱼巣/装配.运行期业务.ixx:133</code> | direct_const_member | this=&概念活动数据操作_ | 第九项完整条件 | E0938返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0940 | F0240 | F0451 | <code>海中鱼巣/装配.运行期业务.ixx:134</code> | direct_const_member | this=&概念活动服务_ | 第十项完整条件 | E0939返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0941 | F0240 | F0452 | <code>海中鱼巣/装配.运行期业务.ixx:135</code> | direct_const_member | this=&系统角色初始化器_ | 第十一项完整条件 | E0940返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0942 | F0240 | F0453 | <code>海中鱼巣/装配.运行期业务.ixx:137</code> | direct_const_member | this=&业务操作_ | 最终完整条件 | E0941返回true且稳定动作键_非零 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0944 | F0241 | F0228 | <code>海中鱼巣/领域/系统角色清单.数据.h:235</code> | direct_const_member | this=&参数 | 参数有效 | E0943返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0943 | F0241 | F0245 | <code>海中鱼巣/领域/系统角色清单.数据.h:235</code> | direct_const_member | this=&当前清单 | 清单完整 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0945 | F0242 | F0240 | <code>海中鱼巣/装配.运行期业务.ixx:153</code> | direct_const_member | this=&当前运行期业务装配 | 装配完整 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0946 | F0242 | F0454 | <code>海中鱼巣/装配.运行期业务.ixx:153</code> | direct_const_member | this=&系统角色初始化器_,清单=const只读借用 | 复核结果 | E0945返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0947 | F0243 | F0240 | <code>海中鱼巣/装配.运行期业务.ixx:149</code> | direct_const_member | this=&当前运行期业务装配 | 装配完整 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0948 | F0243 | F0455 | <code>海中鱼巣/装配.运行期业务.ixx:149</code> | direct_member | this=&系统角色初始化器_,参数=const只读借用 | 初始化结果 | E0947返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0931 | F0240 | F0442 | <code>海中鱼巣/装配.运行期业务.ixx:125</code> | direct_const_member | this=&amp;存在场景数据操作_ | 第一项完整条件 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0932 | F0240 | F0443 | <code>海中鱼巣/装配.运行期业务.ixx:126</code> | direct_const_member | this=&amp;状态动态数据操作_ | 第二项完整条件 | E0931返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0933 | F0240 | F0444 | <code>海中鱼巣/装配.运行期业务.ixx:127</code> | direct_const_member | this=&amp;特征体系数据操作_ | 第三项完整条件 | E0932返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0934 | F0240 | F0445 | <code>海中鱼巣/装配.运行期业务.ixx:128</code> | direct_const_member | this=&amp;语素基础数据操作_ | 第四项完整条件 | E0933返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0935 | F0240 | F0446 | <code>海中鱼巣/装配.运行期业务.ixx:129</code> | direct_const_member | this=&amp;轻量因果数据操作_ | 第五项完整条件 | E0934返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0936 | F0240 | F0447 | <code>海中鱼巣/装配.运行期业务.ixx:130</code> | direct_const_member | this=&amp;概念图结构数据操作_ | 第六项完整条件 | E0935返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0937 | F0240 | F0448 | <code>海中鱼巣/装配.运行期业务.ixx:131</code> | direct_const_member | this=&amp;需求任务方法数据操作_ | 第七项完整条件 | E0936返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0938 | F0240 | F0449 | <code>海中鱼巣/装配.运行期业务.ixx:132</code> | direct_const_member | this=&amp;系统角色数据操作_ | 第八项完整条件 | E0937返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0939 | F0240 | F0450 | <code>海中鱼巣/装配.运行期业务.ixx:133</code> | direct_const_member | this=&amp;概念活动数据操作_ | 第九项完整条件 | E0938返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0940 | F0240 | F0451 | <code>海中鱼巣/装配.运行期业务.ixx:134</code> | direct_const_member | this=&amp;概念活动服务_ | 第十项完整条件 | E0939返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0941 | F0240 | F0452 | <code>海中鱼巣/装配.运行期业务.ixx:135</code> | direct_const_member | this=&amp;系统角色初始化器_ | 第十一项完整条件 | E0940返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0942 | F0240 | F0453 | <code>海中鱼巣/装配.运行期业务.ixx:137</code> | direct_const_member | this=&amp;业务操作_ | 最终完整条件 | E0941返回true且稳定动作键_非零 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0944 | F0241 | F0228 | <code>海中鱼巣/领域/系统角色清单.数据.h:235</code> | direct_const_member | this=&amp;参数 | 参数有效 | E0943返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0943 | F0241 | F0245 | <code>海中鱼巣/领域/系统角色清单.数据.h:235</code> | direct_const_member | this=&amp;当前清单 | 清单完整 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0945 | F0242 | F0240 | <code>海中鱼巣/装配.运行期业务.ixx:153</code> | direct_const_member | this=&amp;当前运行期业务装配 | 装配完整 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0946 | F0242 | F0454 | <code>海中鱼巣/装配.运行期业务.ixx:153</code> | direct_const_member | this=&amp;系统角色初始化器_,清单=const只读借用 | 复核结果 | E0945返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0947 | F0243 | F0240 | <code>海中鱼巣/装配.运行期业务.ixx:149</code> | direct_const_member | this=&amp;当前运行期业务装配 | 装配完整 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0948 | F0243 | F0455 | <code>海中鱼巣/装配.运行期业务.ixx:149</code> | direct_member | this=&amp;系统角色初始化器_,参数=const只读借用 | 初始化结果 | E0947返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0949 | F0244 | F0456 | <code>海中鱼巣/领域/系统角色清单.数据.h:264</code> | implicit-defaulted-member+defaulted-member-comparison |  |  | 默认比较依次比较主体字段；系统角色清单默认等值比较逐成员比较主体材料 | 专项源码静态类型与实际装配人工复核 |
 | E0950 | F0244 | F0457 | <code>海中鱼巣/领域/系统角色清单.数据.h:264</code> | implicit-defaulted-member+defaulted-member-comparison |  |  | 默认比较依次比较两项关系材料字段；系统角色清单默认等值比较逐成员比较两项系统角色关系材料 | 专项源码静态类型与实际装配人工复核 |
-| E0953 | F0245 | F0458 | <code>海中鱼巣/领域/系统角色清单.数据.h:222</code> | direct_const_member | this=&主体 | 主体完整 | 版本相等 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0954 | F0245 | F0459 | <code>海中鱼巣/领域/系统角色清单.数据.h:223</code> | direct_const_member | this=&世界根到场景关系 | 第一关系完整 | E0953返回true；E0954返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0953 | F0245 | F0458 | <code>海中鱼巣/领域/系统角色清单.数据.h:222</code> | direct_const_member | this=&amp;主体 | 主体完整 | 版本相等 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0954 | F0245 | F0459 | <code>海中鱼巣/领域/系统角色清单.数据.h:223</code> | direct_const_member | this=&amp;世界根到场景关系 | 第一关系完整 | E0953返回true；E0954返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0956 | F0245 | F0051 | <code>海中鱼巣/领域/系统角色清单.数据.h:225, 海中鱼巣/领域/系统角色清单.数据.h:226, 海中鱼巣/领域/系统角色清单.数据.h:229, 海中鱼巣/领域/系统角色清单.数据.h:230</code> | direct_free_operator | 世界根到场景关系.源节点,主体.世界根.节点 | 第一关系源端点相等 | E0955返回true且第一关系类型正确；E0956返回true；第一关系顺序号和第二关系类型正确；E0958返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0961 | F0247 | F0229 | <code>海中鱼巣/领域/概念活动状态.数据.h:183</code> | direct_const_member | this=&参数 | 参数有效 | E0960返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0960 | F0247 | F0251 | <code>海中鱼巣/领域/概念活动状态.数据.h:183</code> | direct_const_member | this=&当前材料 | 材料完整 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0962 | F0247 | F0460 | <code>海中鱼巣/领域/概念活动状态.数据.h:183</code> | defaulted_const_member | this=&初始化参数,右=&参数 | 参数相等 | E0961返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0963 | F0248 | F0240 | <code>海中鱼巣/装配.运行期业务.ixx:166</code> | direct_const_member | this=&当前装配 | 装配完整 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0964 | F0248 | F0461 | <code>海中鱼巣/装配.运行期业务.ixx:166</code> | direct_const_member | this=&概念活动服务_,系统角色,预期材料=&材料 | 下层结果 | E0963返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0965 | F0249 | F0240 | <code>海中鱼巣/装配.运行期业务.ixx:159</code> | direct_const_member | this=&当前装配 | 装配完整 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0966 | F0249 | F0462 | <code>海中鱼巣/装配.运行期业务.ixx:159</code> | direct_member | this=&概念活动服务_,系统角色,参数 | 下层结果 | E0965返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0967 | F0250 | F0460 | <code>海中鱼巣/领域/概念活动状态.数据.h:188</code> | defaulted_const_member | this=&初始化参数,右=&右.初始化参数 | 参数相等 | 材料版本和活动版本相等 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0968 | F0250 | F0463 | <code>海中鱼巣/领域/概念活动状态.数据.h:188</code> | std_array_element_compare | this=&状态角色组[元素],右=&右.状态角色组[元素] | 状态角色组相等 | E0967返回true；由X0180按元素短路0..3次 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0969 | F0250 | F0464 | <code>海中鱼巣/领域/概念活动状态.数据.h:189</code> | direct_const_member | this=&重建视图,右=&右.重建视图 | 重建视图相等 | E0968聚合结果为true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0970 | F0250 | F0465 | <code>海中鱼巣/领域/概念活动状态.数据.h:191</code> | direct_const_member | this=&根组[索引],右=&右.根组[索引] | 全部根材料相等 | E0969返回true；循环短路0..4次 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0971 | F0251 | F0229 | <code>海中鱼巣/领域/概念活动状态.数据.h:162</code> | direct_const_member | this=&初始化参数 | 初始化参数有效 | 材料版本正确且活动版本非零 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0972 | F0251 | F0466 | <code>海中鱼巣/领域/概念活动状态.数据.h:162</code> | direct_const_member | this=&重建视图 | 重建视图完整 | E0971返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0973 | F0251 | F0463 | <code>海中鱼巣/领域/概念活动状态.数据.h:163</code> | std_array_element_compare | this=&状态角色组[元素],右=&重建视图.状态角色组[元素] | 两组状态角色相等 | E0972返回true；由X0182按元素短路0..3次 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0974 | F0251 | F0231 | <code>海中鱼巣/领域/概念活动状态.数据.h:164</code> | direct_const_member | this=&初始化参数 | 稳定键组副本 | E0973聚合结果为true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0975 | F0251 | F0465 | <code>海中鱼巣/领域/概念活动状态.数据.h:169</code> | direct_const_member | this=&根组[索引],右=&重建视图.根组[索引] | 全部根投影相等 | 三项稳定键一致；循环短路0..4次 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0976 | F0251 | F0467 | <code>海中鱼巣/领域/概念活动状态.数据.h:173</code> | direct_const_member | this=&当前状态角色 | 全部状态角色完整 | 根投影均相等；范围遍历短路0..3次 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0977 | F0253 | F0240 | <code>海中鱼巣/启动.运行期上下文.ixx:84</code> | direct_const_member | this=&业务装配_ | 根函数布尔返回 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0999 | F0254 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:100</code> | compiler_implicit_member_destructor | this=&环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0961 | F0247 | F0229 | <code>海中鱼巣/领域/概念活动状态.数据.h:183</code> | direct_const_member | this=&amp;参数 | 参数有效 | E0960返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0960 | F0247 | F0251 | <code>海中鱼巣/领域/概念活动状态.数据.h:183</code> | direct_const_member | this=&amp;当前材料 | 材料完整 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0962 | F0247 | F0460 | <code>海中鱼巣/领域/概念活动状态.数据.h:183</code> | defaulted_const_member | this=&amp;初始化参数,右=&amp;参数 | 参数相等 | E0961返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0963 | F0248 | F0240 | <code>海中鱼巣/装配.运行期业务.ixx:166</code> | direct_const_member | this=&amp;当前装配 | 装配完整 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0964 | F0248 | F0461 | <code>海中鱼巣/装配.运行期业务.ixx:166</code> | direct_const_member | this=&amp;概念活动服务_,系统角色,预期材料=&amp;材料 | 下层结果 | E0963返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0965 | F0249 | F0240 | <code>海中鱼巣/装配.运行期业务.ixx:159</code> | direct_const_member | this=&amp;当前装配 | 装配完整 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0966 | F0249 | F0462 | <code>海中鱼巣/装配.运行期业务.ixx:159</code> | direct_member | this=&amp;概念活动服务_,系统角色,参数 | 下层结果 | E0965返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0967 | F0250 | F0460 | <code>海中鱼巣/领域/概念活动状态.数据.h:188</code> | defaulted_const_member | this=&amp;初始化参数,右=&amp;右.初始化参数 | 参数相等 | 材料版本和活动版本相等 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0968 | F0250 | F0463 | <code>海中鱼巣/领域/概念活动状态.数据.h:188</code> | std_array_element_compare | this=&amp;状态角色组[元素],右=&amp;右.状态角色组[元素] | 状态角色组相等 | E0967返回true；由X0180按元素短路0..3次 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0969 | F0250 | F0464 | <code>海中鱼巣/领域/概念活动状态.数据.h:189</code> | direct_const_member | this=&amp;重建视图,右=&amp;右.重建视图 | 重建视图相等 | E0968聚合结果为true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0970 | F0250 | F0465 | <code>海中鱼巣/领域/概念活动状态.数据.h:191</code> | direct_const_member | this=&amp;根组[索引],右=&amp;右.根组[索引] | 全部根材料相等 | E0969返回true；循环短路0..4次 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0971 | F0251 | F0229 | <code>海中鱼巣/领域/概念活动状态.数据.h:162</code> | direct_const_member | this=&amp;初始化参数 | 初始化参数有效 | 材料版本正确且活动版本非零 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0972 | F0251 | F0466 | <code>海中鱼巣/领域/概念活动状态.数据.h:162</code> | direct_const_member | this=&amp;重建视图 | 重建视图完整 | E0971返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0973 | F0251 | F0463 | <code>海中鱼巣/领域/概念活动状态.数据.h:163</code> | std_array_element_compare | this=&amp;状态角色组[元素],右=&amp;重建视图.状态角色组[元素] | 两组状态角色相等 | E0972返回true；由X0182按元素短路0..3次 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0974 | F0251 | F0231 | <code>海中鱼巣/领域/概念活动状态.数据.h:164</code> | direct_const_member | this=&amp;初始化参数 | 稳定键组副本 | E0973聚合结果为true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0975 | F0251 | F0465 | <code>海中鱼巣/领域/概念活动状态.数据.h:169</code> | direct_const_member | this=&amp;根组[索引],右=&amp;重建视图.根组[索引] | 全部根投影相等 | 三项稳定键一致；循环短路0..4次 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0976 | F0251 | F0467 | <code>海中鱼巣/领域/概念活动状态.数据.h:173</code> | direct_const_member | this=&amp;当前状态角色 | 全部状态角色完整 | 根投影均相等；范围遍历短路0..3次 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0977 | F0253 | F0240 | <code>海中鱼巣/启动.运行期上下文.ixx:84</code> | direct_const_member | this=&amp;业务装配_ | 根函数布尔返回 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0999 | F0254 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:100</code> | compiler_implicit_member_destructor | this=&amp;环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0978 | F0254 | F0468 | <code>海中鱼巣/自检.入口初始化.ixx:75</code> | direct_free | 配置,编号 | 环境 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E0979 | F0254 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:76</code> | direct_const_member | this=&环境 | 通过 | E0978返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0979 | F0254 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:76</code> | direct_const_member | this=&amp;环境 | 通过 | E0978返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0047 | F0254 | F0045 | <code>海中鱼巣/自检.入口初始化.ixx:82</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0048 | F0254 | F0046 | <code>海中鱼巣/自检.入口初始化.ixx:83</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0049 | F0254 | F0048 | <code>海中鱼巣/自检.入口初始化.ixx:84</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | E0980 | F0254 | F0015 | <code>海中鱼巣/自检.入口初始化.ixx:87</code> | direct_free+unique_name | 端口,{方法登记根稳定键,根需求参数} | 结果 | 环境成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E0981 | F0254 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:92</code> | direct_const_member | this=&结果 | 初始化成功 | 环境成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E0981 | F0254 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:92</code> | direct_const_member | this=&amp;结果 | 初始化成功 | 环境成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0982 | F0254 | F0476 | <code>海中鱼巣/自检.入口初始化.ixx:93, 海中鱼巣/自检.入口初始化.ixx:94, 海中鱼巣/自检.入口初始化.ixx:95, 海中鱼巣/自检.入口初始化.ixx:96</code> | local_lambda_direct | 存在根,节点类型::存在 | 存在根类型匹配 | E0981返回true；E0982返回true；E0983返回true；E0984返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1000 | F0255 | F0468 | <code>海中鱼巣/自检.入口初始化.ixx:104</code> | direct_free | 配置,编号 | 环境 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1001 | F0255 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:105</code> | direct_const_member | this=&环境 | 通过 | E1000返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1001 | F0255 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:105</code> | direct_const_member | this=&amp;环境 | 通过 | E1000返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0050 | F0255 | F0045 | <code>海中鱼巣/自检.入口初始化.ixx:111</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0051 | F0255 | F0046 | <code>海中鱼巣/自检.入口初始化.ixx:112</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0052 | F0255 | F0048 | <code>海中鱼巣/自检.入口初始化.ixx:113</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | E1002 | F0255 | F0015 | <code>海中鱼巣/自检.入口初始化.ixx:116</code> | direct_free+unique_name | 端口,{方法登记根稳定键,根需求参数} | 结果 | 环境成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E1003 | F0255 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:118</code> | direct_const_member | this=&结果 | 初始化成功 | 环境成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1003 | F0255 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:118</code> | direct_const_member | this=&amp;结果 | 初始化成功 | 环境成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1004 | F0255 | F0355 | <code>海中鱼巣/自检.入口初始化.ixx:118</code> | direct_const_member+unique_name | 上下文.概念图隐式this | 根登记组 | E1003返回true；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E1017 | F0255 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:128</code> | compiler_implicit_member_destructor | this=&环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1017 | F0255 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:128</code> | compiler_implicit_member_destructor | this=&amp;环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1018 | F0256 | F0468 | <code>海中鱼巣/自检.入口初始化.ixx:132</code> | direct_free | 配置,编号 | 环境 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1019 | F0256 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:133</code> | direct_const_member | this=&环境 | 通过 | E1018返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1019 | F0256 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:133</code> | direct_const_member | this=&amp;环境 | 通过 | E1018返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0053 | F0256 | F0045 | <code>海中鱼巣/自检.入口初始化.ixx:139</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0054 | F0256 | F0046 | <code>海中鱼巣/自检.入口初始化.ixx:140</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0055 | F0256 | F0048 | <code>海中鱼巣/自检.入口初始化.ixx:141</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | E1020 | F0256 | F0015 | <code>海中鱼巣/自检.入口初始化.ixx:144</code> | direct_free+unique_name | 端口,{方法登记根稳定键,根需求参数} | 结果 | 环境成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E1021 | F0256 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:145, 海中鱼巣/自检.入口初始化.ixx:150</code> | direct_const_member | this=&结果 | 别名分支初始化成功 | 环境成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1021 | F0256 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:145, 海中鱼巣/自检.入口初始化.ixx:150</code> | direct_const_member | this=&amp;结果 | 别名分支初始化成功 | 环境成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1022 | F0256 | F0364 | <code>海中鱼巣/自检.入口初始化.ixx:146, 海中鱼巣/自检.入口初始化.ixx:146-147</code> | direct_member+unique_name | L实体,存在根.根节点,存在根.根节点；第4形参主键采用默认值0 | 别名 | E1021返回true；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E1023 | F0256 | F0352 | <code>海中鱼巣/自检.入口初始化.ixx:149</code> | direct_const_member+unique_name | 概念根类别::存在 | 读回 | 环境成功；不依赖E1021/E1022结果；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E1025 | F0256 | F0363 | <code>海中鱼巣/自检.入口初始化.ixx:150</code> | direct_const_member | this=&别名 | 别名成功 | E1024返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1025 | F0256 | F0363 | <code>海中鱼巣/自检.入口初始化.ixx:150</code> | direct_const_member | this=&amp;别名 | 别名成功 | E1024返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1026 | F0256 | F0051 | <code>海中鱼巣/自检.入口初始化.ixx:152</code> | direct_free_operator | 读回.根节点,结果.概念图.存在根.根节点 | 节点句柄相等 | 读回有值且前项均true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1039 | F0256 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:157</code> | compiler_implicit_member_destructor | this=&环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1039 | F0256 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:157</code> | compiler_implicit_member_destructor | this=&amp;环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1040 | F0257 | F0468 | <code>海中鱼巣/自检.入口初始化.ixx:161</code> | direct_free | 配置,编号 | 环境 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1041 | F0257 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:162</code> | direct_const_member | this=&环境 | 通过 | E1040返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1041 | F0257 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:162</code> | direct_const_member | this=&amp;环境 | 通过 | E1040返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0056 | F0257 | F0045 | <code>海中鱼巣/自检.入口初始化.ixx:168</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0057 | F0257 | F0046 | <code>海中鱼巣/自检.入口初始化.ixx:169</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0058 | F0257 | F0048 | <code>海中鱼巣/自检.入口初始化.ixx:170</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | E1042 | F0257 | F0015 | <code>海中鱼巣/自检.入口初始化.ixx:173</code> | direct_free+unique_name | 端口,{方法登记根稳定键,根需求参数} | 结果 | 环境成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | RCE0059 | F0257 | F0496 | <code>海中鱼巣/自检.入口初始化.ixx:175</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0060 | F0257 | F0497 | <code>海中鱼巣/自检.入口初始化.ixx:176</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
-| E1043 | F0257 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:180</code> | direct_const_member | this=&结果 | 初始化成功 | 环境成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1043 | F0257 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:180</code> | direct_const_member | this=&amp;结果 | 初始化成功 | 环境成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1044 | F0257 | F0495 | <code>海中鱼巣/自检.入口初始化.ixx:185, 海中鱼巣/自检.入口初始化.ixx:186</code> | local_lambda_direct | 存在根 | 绑定可读 | E1043及四个预置名称比较均为true；E1044返回true；E1045返回true；E1046返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1064 | F0257 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:190</code> | compiler_implicit_member_destructor | this=&环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1064 | F0257 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:190</code> | compiler_implicit_member_destructor | this=&amp;环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1065 | F0258 | F0468 | <code>海中鱼巣/自检.入口初始化.ixx:194</code> | direct_free | 配置,编号 | 环境 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1066 | F0258 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:195</code> | direct_const_member | this=&环境 | 通过 | E1065返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1066 | F0258 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:195</code> | direct_const_member | this=&amp;环境 | 通过 | E1065返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0061 | F0258 | F0045 | <code>海中鱼巣/自检.入口初始化.ixx:201</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0062 | F0258 | F0046 | <code>海中鱼巣/自检.入口初始化.ixx:202</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
-| E1071 | F0258 | F0048 | <code>海中鱼巣/自检.入口初始化.ixx:203, 海中鱼巣/自检.入口初始化.ixx:210</code> | direct_member+unique_name | this=&上下文.概念图初始化 | 再次 | 环境成功；不依赖首次成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E1071 | F0258 | F0048 | <code>海中鱼巣/自检.入口初始化.ixx:203, 海中鱼巣/自检.入口初始化.ixx:210</code> | direct_member+unique_name | this=&amp;上下文.概念图初始化 | 再次 | 环境成功；不依赖首次成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E1067 | F0258 | F0015 | <code>海中鱼巣/自检.入口初始化.ixx:206</code> | direct_free+unique_name | 端口,{方法登记根稳定键,根需求参数} | 首次 | 环境成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E1068 | F0258 | F0197 | <code>海中鱼巣/自检.入口初始化.ixx:207, 海中鱼巣/自检.入口初始化.ixx:216</code> | direct_const_member | this=&上下文.节点 | 前节点 | 环境成功；不依赖首次成功；E1077返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1069 | F0258 | F0198 | <code>海中鱼巣/自检.入口初始化.ixx:208, 海中鱼巣/自检.入口初始化.ixx:217</code> | direct_const_member | this=&上下文.关系 | 前关系 | E1068返回；前节点等于后节点 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1068 | F0258 | F0197 | <code>海中鱼巣/自检.入口初始化.ixx:207, 海中鱼巣/自检.入口初始化.ixx:216</code> | direct_const_member | this=&amp;上下文.节点 | 前节点 | 环境成功；不依赖首次成功；E1077返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1069 | F0258 | F0198 | <code>海中鱼巣/自检.入口初始化.ixx:208, 海中鱼巣/自检.入口初始化.ixx:217</code> | direct_const_member | this=&amp;上下文.关系 | 前关系 | E1068返回；前节点等于后节点 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0063 | F0258 | R0083 | <code>海中鱼巣/自检.入口初始化.ixx:208, 海中鱼巣/自检.入口初始化.ixx:217</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
-| E1070 | F0258 | F0199 | <code>海中鱼巣/自检.入口初始化.ixx:209, 海中鱼巣/自检.入口初始化.ixx:218</code> | direct_const_member | this=&上下文.索引 | 前索引 | E1069返回；前关系等于后关系 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1072 | F0258 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:211</code> | direct_const_member | this=&首次 | 首次成功 | E1071返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1073 | F0258 | F0049 | <code>海中鱼巣/自检.入口初始化.ixx:211</code> | direct_const_member | this=&再次 | 再次成功 | E1072返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1070 | F0258 | F0199 | <code>海中鱼巣/自检.入口初始化.ixx:209, 海中鱼巣/自检.入口初始化.ixx:218</code> | direct_const_member | this=&amp;上下文.索引 | 前索引 | E1069返回；前关系等于后关系 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1072 | F0258 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:211</code> | direct_const_member | this=&amp;首次 | 首次成功 | E1071返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1073 | F0258 | F0049 | <code>海中鱼巣/自检.入口初始化.ixx:211</code> | direct_const_member | this=&amp;再次 | 再次成功 | E1072返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1074 | F0258 | F0051 | <code>海中鱼巣/自检.入口初始化.ixx:212, 海中鱼巣/自检.入口初始化.ixx:213, 海中鱼巣/自检.入口初始化.ixx:214, 海中鱼巣/自检.入口初始化.ixx:215</code> | direct_operator | 再次.存在根.根节点,首次.概念图.存在根.根节点 | 句柄相等 | E1073返回true；E1074返回true；E1075返回true；E1076返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1093 | F0258 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:222</code> | compiler_implicit_member_destructor | this=&环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1093 | F0258 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:222</code> | compiler_implicit_member_destructor | this=&amp;环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1094 | F0259 | F0468 | <code>海中鱼巣/自检.入口初始化.ixx:226</code> | direct_free | 配置,编号 | 环境 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1095 | F0259 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:227</code> | direct_const_member | this=&环境 | 通过 | E1094返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1095 | F0259 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:227</code> | direct_const_member | this=&amp;环境 | 通过 | E1094返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0065 | F0259 | F0045 | <code>海中鱼巣/自检.入口初始化.ixx:233</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0066 | F0259 | F0046 | <code>海中鱼巣/自检.入口初始化.ixx:234</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0067 | F0259 | F0048 | <code>海中鱼巣/自检.入口初始化.ixx:235</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | E1096 | F0259 | F0015 | <code>海中鱼巣/自检.入口初始化.ixx:238</code> | direct_free+unique_name | 端口,{方法登记根稳定键,根需求参数} | 结果 | 环境成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E1097 | F0259 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:239</code> | direct_const_member | this=&结果 | 初始化成功 | 环境成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1097 | F0259 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:239</code> | direct_const_member | this=&amp;结果 | 初始化成功 | 环境成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1098 | F0259 | F0051 | <code>海中鱼巣/自检.入口初始化.ixx:240</code> | std_optional_element_compare | 结果.自我存在根支持.value(),结果.概念图.存在根.根节点 | 句柄相等 | E1097返回true且两侧optional均有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1099 | F0259 | F0371 | <code>海中鱼巣/自检.入口初始化.ixx:241, 海中鱼巣/自检.入口初始化.ixx:241-242</code> | direct_const_member+unique_name | this=&上下文.概念图,结果.自我初始化-&gt;世界树.自我存在节点 | 支持概念组 | E1098返回true；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E1112 | F0259 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:246</code> | compiler_implicit_member_destructor | this=&环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1099 | F0259 | F0371 | <code>海中鱼巣/自检.入口初始化.ixx:241, 海中鱼巣/自检.入口初始化.ixx:241-242</code> | direct_const_member+unique_name | this=&amp;上下文.概念图,结果.自我初始化-&gt;世界树.自我存在节点 | 支持概念组 | E1098返回true；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E1112 | F0259 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:246</code> | compiler_implicit_member_destructor | this=&amp;环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1113 | F0260 | F0468 | <code>海中鱼巣/自检.入口初始化.ixx:250</code> | direct_free | 配置,编号 | 环境 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1114 | F0260 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:251</code> | direct_const_member | this=&环境 | 通过 | E1113返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1114 | F0260 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:251</code> | direct_const_member | this=&amp;环境 | 通过 | E1113返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0068 | F0260 | F0045 | <code>海中鱼巣/自检.入口初始化.ixx:257</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0069 | F0260 | F0046 | <code>海中鱼巣/自检.入口初始化.ixx:258</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0070 | F0260 | F0048 | <code>海中鱼巣/自检.入口初始化.ixx:259</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | E1115 | F0260 | F0015 | <code>海中鱼巣/自检.入口初始化.ixx:262</code> | direct_free+unique_name | 端口,{方法登记根稳定键,根需求参数} | 结果 | 环境成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E1116 | F0260 | F0516 | <code>海中鱼巣/自检.入口初始化.ixx:263</code> | direct_member | this=&上下文.存在 | 第二实例 | 环境成功；不依赖E1115成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1117 | F0260 | F0050 | <code>海中鱼巣/自检.入口初始化.ixx:264</code> | direct_member | this=&上下文.概念图,第二实例 | 支持 | E1116返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1118 | F0260 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:265</code> | direct_const_member | this=&结果 | 初始化成功 | E1117返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1116 | F0260 | F0516 | <code>海中鱼巣/自检.入口初始化.ixx:263</code> | direct_member | this=&amp;上下文.存在 | 第二实例 | 环境成功；不依赖E1115成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1117 | F0260 | F0050 | <code>海中鱼巣/自检.入口初始化.ixx:264</code> | direct_member | this=&amp;上下文.概念图,第二实例 | 支持 | E1116返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1118 | F0260 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:265</code> | direct_const_member | this=&amp;结果 | 初始化成功 | E1117返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1119 | F0260 | F0051 | <code>海中鱼巣/自检.入口初始化.ixx:265</code> | std_optional_element_compare | 支持.value(),结果.概念图.存在根.根节点 | 句柄相等 | E1118返回true且支持有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1120 | F0260 | F0372 | <code>海中鱼巣/自检.入口初始化.ixx:266</code> | direct_const_member+unique_name | this=&上下文.概念图,结果.概念图.存在根.根节点 | 实例组 | E1119返回true；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E1121 | F0260 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:270</code> | compiler_implicit_member_destructor | this=&环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1120 | F0260 | F0372 | <code>海中鱼巣/自检.入口初始化.ixx:266</code> | direct_const_member+unique_name | this=&amp;上下文.概念图,结果.概念图.存在根.根节点 | 实例组 | E1119返回true；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E1121 | F0260 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:270</code> | compiler_implicit_member_destructor | this=&amp;环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1134 | F0261 | F0468 | <code>海中鱼巣/自检.入口初始化.ixx:274</code> | direct_free | 配置,编号 | 环境 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1135 | F0261 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:275</code> | direct_const_member | this=&环境 | 通过 | E1134返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1135 | F0261 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:275</code> | direct_const_member | this=&amp;环境 | 通过 | E1134返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0071 | F0261 | F0045 | <code>海中鱼巣/自检.入口初始化.ixx:281</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0072 | F0261 | F0046 | <code>海中鱼巣/自检.入口初始化.ixx:282</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0073 | F0261 | F0048 | <code>海中鱼巣/自检.入口初始化.ixx:283</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | E1136 | F0261 | F0015 | <code>海中鱼巣/自检.入口初始化.ixx:286</code> | direct_free+unique_name | 端口,{方法登记根稳定键,根需求参数} | 结果 | 环境成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E1137 | F0261 | F0516 | <code>海中鱼巣/自检.入口初始化.ixx:287</code> | direct_member | this=&上下文.存在 | 已删除 | 环境成功；不依赖E1136成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1138 | F0261 | F0523 | <code>海中鱼巣/自检.入口初始化.ixx:288</code> | direct_member | this=&上下文.节点,已删除 | 已删除准备 | E1137返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1137 | F0261 | F0516 | <code>海中鱼巣/自检.入口初始化.ixx:287</code> | direct_member | this=&amp;上下文.存在 | 已删除 | 环境成功；不依赖E1136成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1138 | F0261 | F0523 | <code>海中鱼巣/自检.入口初始化.ixx:288</code> | direct_member | this=&amp;上下文.节点,已删除 | 已删除准备 | E1137返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0074 | F0261 | R0147 | <code>海中鱼巣/自检.入口初始化.ixx:288</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
-| E1139 | F0261 | F0197 | <code>海中鱼巣/自检.入口初始化.ixx:289, 海中鱼巣/自检.入口初始化.ixx:297</code> | direct_const_member | this=&上下文.节点 | 前节点 | E1138返回；E1145返回true且三个拒绝optional均为空 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1140 | F0261 | F0198 | <code>海中鱼巣/自检.入口初始化.ixx:290, 海中鱼巣/自检.入口初始化.ixx:298</code> | direct_const_member | this=&上下文.关系 | 前关系 | E1139返回；E1146等于前节点 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1139 | F0261 | F0197 | <code>海中鱼巣/自检.入口初始化.ixx:289, 海中鱼巣/自检.入口初始化.ixx:297</code> | direct_const_member | this=&amp;上下文.节点 | 前节点 | E1138返回；E1145返回true且三个拒绝optional均为空 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1140 | F0261 | F0198 | <code>海中鱼巣/自检.入口初始化.ixx:290, 海中鱼巣/自检.入口初始化.ixx:298</code> | direct_const_member | this=&amp;上下文.关系 | 前关系 | E1139返回；E1146等于前节点 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0075 | F0261 | R0083 | <code>海中鱼巣/自检.入口初始化.ixx:290, 海中鱼巣/自检.入口初始化.ixx:298</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
-| E1141 | F0261 | F0199 | <code>海中鱼巣/自检.入口初始化.ixx:291, 海中鱼巣/自检.入口初始化.ixx:299</code> | direct_const_member | this=&上下文.索引 | 前索引 | E1140返回；E1147等于前关系 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1142 | F0261 | F0050 | <code>海中鱼巣/自检.入口初始化.ixx:292, 海中鱼巣/自检.入口初始化.ixx:293, 海中鱼巣/自检.入口初始化.ixx:294</code> | direct_member | this=&上下文.概念图,结果.概念图.存在根.根节点 | 根拒绝 | E1141返回；E1142返回；E1143返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1145 | F0261 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:295</code> | direct_const_member | this=&结果 | 初始化成功 | 三次拒绝调用均已返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1149 | F0261 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:303</code> | compiler_implicit_member_destructor | this=&环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1141 | F0261 | F0199 | <code>海中鱼巣/自检.入口初始化.ixx:291, 海中鱼巣/自检.入口初始化.ixx:299</code> | direct_const_member | this=&amp;上下文.索引 | 前索引 | E1140返回；E1147等于前关系 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1142 | F0261 | F0050 | <code>海中鱼巣/自检.入口初始化.ixx:292, 海中鱼巣/自检.入口初始化.ixx:293, 海中鱼巣/自检.入口初始化.ixx:294</code> | direct_member | this=&amp;上下文.概念图,结果.概念图.存在根.根节点 | 根拒绝 | E1141返回；E1142返回；E1143返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1145 | F0261 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:295</code> | direct_const_member | this=&amp;结果 | 初始化成功 | 三次拒绝调用均已返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1149 | F0261 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:303</code> | compiler_implicit_member_destructor | this=&amp;环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1162 | F0262 | F0468 | <code>海中鱼巣/自检.入口初始化.ixx:307</code> | direct_free | 配置,编号 | 环境 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1163 | F0262 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:308</code> | direct_const_member | this=&环境 | 通过 | E1162返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1163 | F0262 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:308</code> | direct_const_member | this=&amp;环境 | 通过 | E1162返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0077 | F0262 | F0045 | <code>海中鱼巣/自检.入口初始化.ixx:314</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0078 | F0262 | F0046 | <code>海中鱼巣/自检.入口初始化.ixx:315</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0079 | F0262 | F0048 | <code>海中鱼巣/自检.入口初始化.ixx:316</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | E1164 | F0262 | F0015 | <code>海中鱼巣/自检.入口初始化.ixx:319</code> | direct_free+unique_name | 端口,{方法登记根稳定键,根需求参数} | 结果 | 环境成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E1165 | F0262 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:320</code> | direct_const_member | this=&结果 | 初始化成功 | E1164返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1166 | F0262 | F0530 | <code>海中鱼巣/自检.入口初始化.ixx:320</code> | direct_const_member | this=&上下文.自我线程实例 | 已进入 | E1165返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1167 | F0262 | F0531 | <code>海中鱼巣/自检.入口初始化.ixx:321</code> | direct_const_member | this=&上下文.自我线程实例 | 线程状态 | E1166返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1168 | F0262 | F0197 | <code>海中鱼巣/自检.入口初始化.ixx:322</code> | direct_const_member | this=&上下文.节点 | 节点数量 | E1167返回运行中 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1169 | F0262 | F0198 | <code>海中鱼巣/自检.入口初始化.ixx:323</code> | direct_const_member | this=&上下文.关系 | 关系数量 | E1168大于初始节点数量 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1165 | F0262 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:320</code> | direct_const_member | this=&amp;结果 | 初始化成功 | E1164返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1166 | F0262 | F0530 | <code>海中鱼巣/自检.入口初始化.ixx:320</code> | direct_const_member | this=&amp;上下文.自我线程实例 | 已进入 | E1165返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1167 | F0262 | F0531 | <code>海中鱼巣/自检.入口初始化.ixx:321</code> | direct_const_member | this=&amp;上下文.自我线程实例 | 线程状态 | E1166返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1168 | F0262 | F0197 | <code>海中鱼巣/自检.入口初始化.ixx:322</code> | direct_const_member | this=&amp;上下文.节点 | 节点数量 | E1167返回运行中 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1169 | F0262 | F0198 | <code>海中鱼巣/自检.入口初始化.ixx:323</code> | direct_const_member | this=&amp;上下文.关系 | 关系数量 | E1168大于初始节点数量 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0080 | F0262 | R0083 | <code>海中鱼巣/自检.入口初始化.ixx:323</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
-| E1170 | F0262 | F0199 | <code>海中鱼巣/自检.入口初始化.ixx:324</code> | direct_const_member | this=&上下文.索引 | 索引数量 | E1169大于初始关系数量 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1171 | F0262 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:328</code> | compiler_implicit_member_destructor | this=&环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1170 | F0262 | F0199 | <code>海中鱼巣/自检.入口初始化.ixx:324</code> | direct_const_member | this=&amp;上下文.索引 | 索引数量 | E1169大于初始关系数量 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1171 | F0262 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:328</code> | compiler_implicit_member_destructor | this=&amp;环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1184 | F0263 | F0468 | <code>海中鱼巣/自检.入口初始化.ixx:332</code> | direct_free | 配置,编号 | 环境 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1185 | F0263 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:333</code> | direct_const_member | this=&环境 | 通过 | E1184返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1185 | F0263 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:333</code> | direct_const_member | this=&amp;环境 | 通过 | E1184返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0082 | F0263 | F0045 | <code>海中鱼巣/自检.入口初始化.ixx:339</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0083 | F0263 | F0046 | <code>海中鱼巣/自检.入口初始化.ixx:340</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0084 | F0263 | F0048 | <code>海中鱼巣/自检.入口初始化.ixx:341</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | E1186 | F0263 | F0015 | <code>海中鱼巣/自检.入口初始化.ixx:344</code> | direct_free+unique_name | 端口,{默认方法登记根稳定键,默认根需求参数} | 结果 | 环境成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E1187 | F0263 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:346, 海中鱼巣/自检.入口初始化.ixx:349</code> | direct_const_member | this=&结果 | 坐标读取门 | E1186返回且E1186结果已在345行无保护value访问；坐标optional已经形成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1188 | F0263 | F0059 | <code>海中鱼巣/自检.入口初始化.ixx:347</code> | direct_const_member+unique_name | this=&上下文.世界树初始化,快照.世界树.自我存在节点 | 坐标 | E1187返回true；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E1190 | F0263 | F0173 | <code>海中鱼巣/自检.入口初始化.ixx:349</code> | direct_const_member | this=&快照.语素 | 语素成功 | E1189返回true且初始化代次等于1 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1191 | F0263 | F0174 | <code>海中鱼巣/自检.入口初始化.ixx:354</code> | direct_const_member | this=&快照.世界树 | 世界树成功 | E1190及四个名称比较均为true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1192 | F0263 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:359</code> | compiler_implicit_member_destructor | this=&环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1187 | F0263 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:346, 海中鱼巣/自检.入口初始化.ixx:349</code> | direct_const_member | this=&amp;结果 | 坐标读取门 | E1186返回且E1186结果已在345行无保护value访问；坐标optional已经形成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1188 | F0263 | F0059 | <code>海中鱼巣/自检.入口初始化.ixx:347</code> | direct_const_member+unique_name | this=&amp;上下文.世界树初始化,快照.世界树.自我存在节点 | 坐标 | E1187返回true；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E1190 | F0263 | F0173 | <code>海中鱼巣/自检.入口初始化.ixx:349</code> | direct_const_member | this=&amp;快照.语素 | 语素成功 | E1189返回true且初始化代次等于1 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1191 | F0263 | F0174 | <code>海中鱼巣/自检.入口初始化.ixx:354</code> | direct_const_member | this=&amp;快照.世界树 | 世界树成功 | E1190及四个名称比较均为true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1192 | F0263 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:359</code> | compiler_implicit_member_destructor | this=&amp;环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1205 | F0264 | F0468 | <code>海中鱼巣/自检.入口初始化.ixx:363</code> | direct_free | 配置,编号 | 环境 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0085 | F0264 | F0189 | <code>海中鱼巣/自检.入口初始化.ixx:364, 海中鱼巣/自检.入口初始化.ixx:380</code> | field_type_hint |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
-| E1206 | F0264 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:364</code> | direct_const_member | this=&环境 | 通过 | E1205返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1206 | F0264 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:364</code> | direct_const_member | this=&amp;环境 | 通过 | E1205返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0086 | F0264 | F0045 | <code>海中鱼巣/自检.入口初始化.ixx:371</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0087 | F0264 | F0046 | <code>海中鱼巣/自检.入口初始化.ixx:372</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0088 | F0264 | F0048 | <code>海中鱼巣/自检.入口初始化.ixx:373</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | E1207 | F0264 | F0015 | <code>海中鱼巣/自检.入口初始化.ixx:376</code> | direct_free+unique_name | 端口,{固定配置.方法登记根稳定键,固定配置.根需求参数} | 结果 | 环境成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | RCE0089 | F0264 | F0441 | <code>海中鱼巣/自检.入口初始化.ixx:378, 海中鱼巣/自检.入口初始化.ixx:379</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
-| E1208 | F0264 | F0544 | <code>海中鱼巣/自检.入口初始化.ixx:378, 海中鱼巣/自检.入口初始化.ixx:379</code> | direct_const_member | this=&上下文.索引,固定配置.根需求参数.安全值语素稳定键 | 安全索引 | E1207返回且377行已无保护解引用自我初始化；E1208返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1210 | F0264 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:380</code> | direct_const_member | this=&结果 | 初始化成功 | 两次索引读取已返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1211 | F0264 | F0175 | <code>海中鱼巣/自检.入口初始化.ixx:380</code> | direct_const_member | this=&根 | 根需求初始化成功 | E1210返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1208 | F0264 | F0544 | <code>海中鱼巣/自检.入口初始化.ixx:378, 海中鱼巣/自检.入口初始化.ixx:379</code> | direct_const_member | this=&amp;上下文.索引,固定配置.根需求参数.安全值语素稳定键 | 安全索引 | E1207返回且377行已无保护解引用自我初始化；E1208返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1210 | F0264 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:380</code> | direct_const_member | this=&amp;结果 | 初始化成功 | 两次索引读取已返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1211 | F0264 | F0175 | <code>海中鱼巣/自检.入口初始化.ixx:380</code> | direct_const_member | this=&amp;根 | 根需求初始化成功 | E1210返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1212 | F0264 | F0051 | <code>海中鱼巣/自检.入口初始化.ixx:381, 海中鱼巣/自检.入口初始化.ixx:382</code> | std_optional_element_compare | 安全索引.value(),根.安全根需求.语素入口结果.语素入口 | 安全句柄相等 | E1211返回true且optional两侧有值；E1212返回true且optional两侧有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1214 | F0264 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:386</code> | compiler_implicit_member_destructor | this=&环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1214 | F0264 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:386</code> | compiler_implicit_member_destructor | this=&amp;环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1227 | F0265 | F0468 | <code>海中鱼巣/自检.入口初始化.ixx:390</code> | direct_free | 配置,编号 | 环境 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0090 | F0265 | F0350 | <code>海中鱼巣/自检.入口初始化.ixx:391, 海中鱼巣/自检.入口初始化.ixx:406, 海中鱼巣/自检.入口初始化.ixx:417</code> | field_type_hint |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
-| E1228 | F0265 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:391</code> | direct_const_member | this=&环境 | 通过 | E1227返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1228 | F0265 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:391</code> | direct_const_member | this=&amp;环境 | 通过 | E1227返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0091 | F0265 | F0045 | <code>海中鱼巣/自检.入口初始化.ixx:397</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0092 | F0265 | F0046 | <code>海中鱼巣/自检.入口初始化.ixx:398</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0093 | F0265 | F0048 | <code>海中鱼巣/自检.入口初始化.ixx:399</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
@@ -901,41 +901,41 @@
 | RCE0095 | F0265 | F0553 | <code>海中鱼巣/自检.入口初始化.ixx:407</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0096 | F0265 | F0554 | <code>海中鱼巣/自检.入口初始化.ixx:409</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0097 | F0265 | F0555 | <code>海中鱼巣/自检.入口初始化.ixx:412</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
-| E1230 | F0265 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:417</code> | direct_const_member | this=&结果 | 初始化成功 | 403行已无保护解引用自我初始化且F0551已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1230 | F0265 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:417</code> | direct_const_member | this=&amp;结果 | 初始化成功 | 403行已无保护解引用自我初始化且F0551已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1231 | F0265 | F0551 | <code>海中鱼巣/自检.入口初始化.ixx:417, 海中鱼巣/自检.入口初始化.ixx:418</code> | local_lambda_direct | 根.安全根需求,1,10 | 安全根完整 | E1230返回true；E1231返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1233 | F0265 | F0051 | <code>海中鱼巣/自检.入口初始化.ixx:419</code> | rewritten_not_equal | 根.安全根需求.根需求,根.服务根需求.根需求 | 句柄相等后取反 | E1232返回true；C++20把!=重写为==后取反 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1234 | F0265 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:423</code> | compiler_implicit_member_destructor | this=&环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1234 | F0265 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:423</code> | compiler_implicit_member_destructor | this=&amp;环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1255 | F0266 | F0468 | <code>海中鱼巣/自检.入口初始化.ixx:427</code> | direct_free | 配置,编号 | 环境 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1256 | F0266 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:428</code> | direct_const_member | this=&环境 | 通过 | E1255返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1256 | F0266 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:428</code> | direct_const_member | this=&amp;环境 | 通过 | E1255返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0098 | F0266 | F0045 | <code>海中鱼巣/自检.入口初始化.ixx:435</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0099 | F0266 | F0046 | <code>海中鱼巣/自检.入口初始化.ixx:436</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0100 | F0266 | F0048 | <code>海中鱼巣/自检.入口初始化.ixx:437</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | E1257 | F0266 | F0015 | <code>海中鱼巣/自检.入口初始化.ixx:440</code> | direct_free+unique_name | 端口,{固定配置.方法登记根稳定键,固定配置.根需求参数} | 首次 | 环境成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E1258 | F0266 | F0197 | <code>海中鱼巣/自检.入口初始化.ixx:441, 海中鱼巣/自检.入口初始化.ixx:448</code> | direct_const_member | this=&上下文.节点 | 前节点 | E1257返回，不要求成功；E1263等于运行中 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1259 | F0266 | F0198 | <code>海中鱼巣/自检.入口初始化.ixx:442, 海中鱼巣/自检.入口初始化.ixx:449</code> | direct_const_member | this=&上下文.关系 | 前关系 | E1258返回；E1264等于前节点 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1258 | F0266 | F0197 | <code>海中鱼巣/自检.入口初始化.ixx:441, 海中鱼巣/自检.入口初始化.ixx:448</code> | direct_const_member | this=&amp;上下文.节点 | 前节点 | E1257返回，不要求成功；E1263等于运行中 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1259 | F0266 | F0198 | <code>海中鱼巣/自检.入口初始化.ixx:442, 海中鱼巣/自检.入口初始化.ixx:449</code> | direct_const_member | this=&amp;上下文.关系 | 前关系 | E1258返回；E1264等于前节点 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0101 | F0266 | R0083 | <code>海中鱼巣/自检.入口初始化.ixx:442, 海中鱼巣/自检.入口初始化.ixx:449</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
-| E1260 | F0266 | F0199 | <code>海中鱼巣/自检.入口初始化.ixx:443, 海中鱼巣/自检.入口初始化.ixx:450</code> | direct_const_member | this=&上下文.索引 | 前索引 | E1259返回；E1265等于前关系 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1261 | F0266 | F0044 | <code>海中鱼巣/自检.入口初始化.ixx:444</code> | direct_member | this=&上下文.自我线程实例,固定配置.根需求参数 | 再次 | E1260返回，不要求首次成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1262 | F0266 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:445</code> | direct_const_member | this=&首次 | 首次成功 | E1261返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1263 | F0266 | F0531 | <code>海中鱼巣/自检.入口初始化.ixx:447</code> | direct_const_member | this=&上下文.自我线程实例 | 当前状态 | 首次成功且再次成功、复用并拒绝原因为重复启动 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1267 | F0266 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:454</code> | compiler_implicit_member_destructor | this=&环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1260 | F0266 | F0199 | <code>海中鱼巣/自检.入口初始化.ixx:443, 海中鱼巣/自检.入口初始化.ixx:450</code> | direct_const_member | this=&amp;上下文.索引 | 前索引 | E1259返回；E1265等于前关系 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1261 | F0266 | F0044 | <code>海中鱼巣/自检.入口初始化.ixx:444</code> | direct_member | this=&amp;上下文.自我线程实例,固定配置.根需求参数 | 再次 | E1260返回，不要求首次成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1262 | F0266 | F0016 | <code>海中鱼巣/自检.入口初始化.ixx:445</code> | direct_const_member | this=&amp;首次 | 首次成功 | E1261返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1263 | F0266 | F0531 | <code>海中鱼巣/自检.入口初始化.ixx:447</code> | direct_const_member | this=&amp;上下文.自我线程实例 | 当前状态 | 首次成功且再次成功、复用并拒绝原因为重复启动 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1267 | F0266 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:454</code> | compiler_implicit_member_destructor | this=&amp;环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1280 | F0267 | F0468 | <code>海中鱼巣/自检.入口初始化.ixx:459</code> | direct_free | 配置,编号 | 环境 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1281 | F0267 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:460</code> | direct_const_member | this=&环境 | 通过 | E1280返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1282 | F0267 | F0044 | <code>海中鱼巣/自检.入口初始化.ixx:464-465, 海中鱼巣/自检.入口初始化.ixx:466-468</code> | direct_member | this=&上下文.自我线程实例,{0,服务值语素稳定键,1,10,1,10} | 零键 | 环境成功；E1282返回后无条件执行 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1284 | F0267 | F0530 | <code>海中鱼巣/自检.入口初始化.ixx:471</code> | direct_const_member | this=&上下文.自我线程实例 | 已进入 | 两个拒绝结果均完全符合 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1285 | F0267 | F0531 | <code>海中鱼巣/自检.入口初始化.ixx:472</code> | direct_const_member | this=&上下文.自我线程实例 | 当前状态 | E1284返回false | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1286 | F0267 | F0562 | <code>海中鱼巣/自检.入口初始化.ixx:473</code> | direct_const_member | this=&上下文.自我线程实例 | 可收口 | E1285等于未启动 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1287 | F0267 | F0197 | <code>海中鱼巣/自检.入口初始化.ixx:474</code> | direct_const_member | this=&上下文.节点 | 节点数量 | E1286返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1288 | F0267 | F0198 | <code>海中鱼巣/自检.入口初始化.ixx:475</code> | direct_const_member | this=&上下文.关系 | 关系数量 | E1287等于环境初始节点数量 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1281 | F0267 | F0469 | <code>海中鱼巣/自检.入口初始化.ixx:460</code> | direct_const_member | this=&amp;环境 | 通过 | E1280返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1282 | F0267 | F0044 | <code>海中鱼巣/自检.入口初始化.ixx:464-465, 海中鱼巣/自检.入口初始化.ixx:466-468</code> | direct_member | this=&amp;上下文.自我线程实例,{0,服务值语素稳定键,1,10,1,10} | 零键 | 环境成功；E1282返回后无条件执行 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1284 | F0267 | F0530 | <code>海中鱼巣/自检.入口初始化.ixx:471</code> | direct_const_member | this=&amp;上下文.自我线程实例 | 已进入 | 两个拒绝结果均完全符合 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1285 | F0267 | F0531 | <code>海中鱼巣/自检.入口初始化.ixx:472</code> | direct_const_member | this=&amp;上下文.自我线程实例 | 当前状态 | E1284返回false | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1286 | F0267 | F0562 | <code>海中鱼巣/自检.入口初始化.ixx:473</code> | direct_const_member | this=&amp;上下文.自我线程实例 | 可收口 | E1285等于未启动 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1287 | F0267 | F0197 | <code>海中鱼巣/自检.入口初始化.ixx:474</code> | direct_const_member | this=&amp;上下文.节点 | 节点数量 | E1286返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1288 | F0267 | F0198 | <code>海中鱼巣/自检.入口初始化.ixx:475</code> | direct_const_member | this=&amp;上下文.关系 | 关系数量 | E1287等于环境初始节点数量 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0103 | F0267 | R0083 | <code>海中鱼巣/自检.入口初始化.ixx:475</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
-| E1289 | F0267 | F0199 | <code>海中鱼巣/自检.入口初始化.ixx:476</code> | direct_const_member | this=&上下文.索引 | 索引数量 | E1288等于环境初始关系数量 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1290 | F0267 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:480</code> | compiler_implicit_member_destructor | this=&环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1289 | F0267 | F0199 | <code>海中鱼巣/自检.入口初始化.ixx:476</code> | direct_const_member | this=&amp;上下文.索引 | 索引数量 | E1288等于环境初始关系数量 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1290 | F0267 | F0131 | <code>海中鱼巣/自检.入口初始化.ixx:480</code> | compiler_implicit_member_destructor | this=&amp;环境.上下文-&gt;自我线程实例 |  | 隔离环境作用域退出且上下文已构造 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1291 | F0268 | F0563 | <code>海中鱼巣/核心/日志系统.h:101, 海中鱼巣/核心/日志系统.h:104, 海中鱼巣/核心/日志系统.h:107, 海中鱼巣/核心/日志系统.h:109, 海中鱼巣/核心/日志系统.h:88, 海中鱼巣/核心/日志系统.h:90, 海中鱼巣/核心/日志系统.h:92, 海中鱼巣/核心/日志系统.h:98</code> | direct_free+lsp_direct |  | 根路径临时值 | 类别为逻辑错误；类别为运行；类别为事件；切片合法且等于SELF_TEST_ENTRY_INITIALIZATION；切片合法且等于SELF_TEST_DATABASE；切片合法且等于SELF_TEST_WAREHOUSE_PERFORMANCE；切片合法且等于SELF_TEST_D455；切片合法但不等于四个预置名；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；LSP 直接解析并经源码调用词复核 |
 | E1294 | F0268 | F0564 | <code>海中鱼巣/核心/日志系统.h:94</code> | direct_free+lsp_direct | 调试切片名 | 可用 | 类别为调试；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；LSP 直接解析并经源码调用词复核 |
 | E1300 | F0272 | F0135 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:148</code> | member_constructor | 790000+有效关系规模,默认结构事务接线 | 主信息_ | 规模和随机状态成员已初始化 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1301 | F0272 | F0136 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:149</code> | member_constructor | 主信息_,791000+有效关系规模,默认结构事务接线 | 节点_ | 主信息_构造完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1302 | F0272 | F0137 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:150</code> | member_constructor | 节点_,792000+有效关系规模,默认结构事务接线 | 关系_ | 节点_构造完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1303 | F0273 | F0331 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:161</code> | direct_member_nonvirtual | this=&主信息_ | 共用主信息 | 规模准入通过 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1303 | F0273 | F0331 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:161</code> | direct_member_nonvirtual | this=&amp;主信息_ | 共用主信息 | 规模准入通过 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1312 | F0273 | F0168 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:162, 海中鱼巣/核心/自检.关系仓库性能基线.ixx:166, 海中鱼巣/核心/自检.关系仓库性能基线.ixx:180</code> | direct_free+unique_name | E1311返回关系 | 句柄有效 | 添加关系返回；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E1304 | F0273 | F0565 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:162</code> | direct_free | 共用主信息 | 句柄有效 | 主信息创建返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1305 | F0273 | F0332 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:165</code> | direct_member_nonvirtual | 基础信息,共用主信息 | 节点 | 节点循环每轮 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -944,7 +944,7 @@
 | E1308 | F0273 | F0567 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:176, 海中鱼巣/核心/自检.关系仓库性能基线.ixx:177, 海中鱼巣/核心/自检.关系仓库性能基线.ixx:179</code> | direct_member_nonvirtual+unique_name | this | 源随机值 | 随机填充循环每次尝试；源随机值形成；源目标索引不同；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E1311 | F0273 | F0568 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:180</code> | direct_member_nonvirtual+unique_name | 引用,源索引,目标索引,顺序号,true | 关系句柄 | 非自环随机候选；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E1313 | F0273 | F0569 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:186</code> | direct_member_nonvirtual+unique_name | this | 固定变更成功 | 参考表数量达到目标；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| E1314 | F0273 | F0198 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:188</code> | direct_const_member | this=&关系_ | 有效关系数量 | 固定变更成功并写摘要 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1314 | F0273 | F0198 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:188</code> | direct_const_member | this=&amp;关系_ | 有效关系数量 | 固定变更成功并写摘要 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1315 | F0273 | F0277 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:189</code> | direct_const_member+unique_name | this | 结构边界完整 | 有效关系数量等于规模；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E1316 | F0273 | F0283 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:190</code> | direct_const_member+unique_name | this | 参考表当前状态一致 | 有效关系数量等于有效关系规模_且验证结构边界返回true；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E1317 | F0274 | F0570 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:208, 海中鱼巣/核心/自检.关系仓库性能基线.ixx:209, 海中鱼巣/核心/自检.关系仓库性能基线.ixx:210, 海中鱼巣/核心/自检.关系仓库性能基线.ixx:211, 海中鱼巣/核心/自检.关系仓库性能基线.ixx:212, 海中鱼巣/核心/自检.关系仓库性能基线.ixx:213, 海中鱼巣/核心/自检.关系仓库性能基线.ixx:214</code> | local_lambda_direct | 记录.关系编号 |  | 每条排序记录；E1317完成；E1318完成；E1319完成；E1320完成；E1321完成；E1322完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -965,7 +965,7 @@
 | E1352 | F0279 | F0581 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:319</code> | direct_const_member | 定义.源节点 | 实际记录组 | 节点相关 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1355 | F0279 | F0582 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:323</code> | direct_const_member | 定义.源节点,定义.类型 | 实际记录组 | 当前审计或未声明值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1358 | F0281 | F0280 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:107, 海中鱼巣/核心/自检.关系仓库性能基线.ixx:108, 海中鱼巣/核心/自检.关系仓库性能基线.ixx:109</code> | direct_free | 样本,0.50 | 分位指标.中位数纳秒 | 名称、样本数量和候选上界字段已初始化；E1358正常返回；E1359正常返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1361 | F0282 | F0583 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:644</code> | direct_const_member+unique_name | this=&夹具 | 写材料组const借用 | 进入并发基线；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E1361 | F0282 | F0583 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:644</code> | direct_const_member+unique_name | this=&amp;夹具 | 写材料组const借用 | 进入并发基线；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E1362 | F0282 | F0584 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:658-687</code> | thread_callback | 线程索引按值；写材料组、线程读取样本、开始、窗口结束、正确、夹具、密集正向、完成操作数量、最终关系组按引用捕获 | void异步回调 | 每次std::thread构造成功后异步调度 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1363 | F0282 | F0585 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:695</code> | direct_member_nonvirtual+unique_name | 索引,最终关系组[索引] | 本项更新正确 | 全部工作线程已join；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E1364 | F0282 | F0280 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:702</code> | direct_free | 合并样本,0.50 | 并发中位数 | 线程样本合并完成 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -982,7 +982,7 @@
 | E1382 | F0285 | F0168 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:384</code> | direct_free+unique_name | 新关系 | 句柄有效位 | 创建关系返回；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E1383 | F0285 | F0591 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:389</code> | direct_member_nonvirtual | 新关系 | 失效结果 | 新关系句柄有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1384 | F0285 | F0589 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:391</code> | direct_const_member | 失效结果.当前关系 | 审计optional | 失效入口返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1385 | F0285 | F0592 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:392</code> | direct_const_member | this=&失效结果 | 完整位 | 累计正确仍为true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1385 | F0285 | F0592 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:392</code> | direct_const_member | this=&amp;失效结果 | 完整位 | 累计正确仍为true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1386 | F0285 | F0587 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:394</code> | direct_const_member | 新关系 | 旧句柄普通读取optional | 累计正确、结果完整且审计状态已失效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1387 | F0285 | F0576 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:395</code> | direct_free | 结束-开始 | 失效耗时纳秒 | 正式轮且创建成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1388 | F0285 | F0281 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:397</code> | direct_free | "失效",样本,初始当前记录数量_+660,正确 | 返回分位指标 | 全部循环结束 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -999,8 +999,8 @@
 | E1400 | F0287 | F0587 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:371</code> | direct_const_member | 新关系 | 删除后记录optional | 累计正确且删除成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1401 | F0287 | F0576 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:372</code> | direct_free | 结束-开始 | 删除耗时纳秒 | 正式轮且创建成功；不要求删除成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1402 | F0287 | F0281 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:374</code> | direct_free | "删除",样本,初始当前记录数量_+440,正确 | 返回分位指标 | 全部循环结束 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1403 | F0291 | F0593 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:742</code> | direct_const_member | this=&指标 | 查询指标完整位 | F0291回调执行 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1404 | F0292 | F0593 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:745</code> | direct_const_member | this=&指标 | 写入指标完整位 | F0292回调执行 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1403 | F0291 | F0593 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:742</code> | direct_const_member | this=&amp;指标 | 查询指标完整位 | F0291回调执行 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1404 | F0292 | F0593 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:745</code> | direct_const_member | this=&amp;指标 | 写入指标完整位 | F0292回调执行 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1639 | F0321 | F0336 | <code>海中鱼巣/核心/结构事务接线.数据.h:83</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E1638 | F0321 | F0618 | <code>海中鱼巣/核心/结构事务接线.数据.h:83</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E1640 | F0322 | F0336 | <code>海中鱼巣/核心/节点仓库.cpp:17, 海中鱼巣/核心/节点仓库.cpp:18</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
@@ -1009,65 +1009,65 @@
 | E1652 | F0326 | F0163 | <code>海中鱼巣/领域/方法服务.h:139, 海中鱼巣/领域/方法服务.h:140, 海中鱼巣/领域/方法服务.h:141</code> | direct_free | 登记根 | 登记根句柄有效bool | 稳定非名称键非零；登记根句柄有效；活跃状态句柄有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0105 | F0326 | F0168 | <code>海中鱼巣/领域/方法服务.h:139, 海中鱼巣/领域/方法服务.h:140, 海中鱼巣/领域/方法服务.h:141</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | E1655 | F0326 | F0051 | <code>海中鱼巣/领域/方法服务.h:142, 海中鱼巣/领域/方法服务.h:143, 海中鱼巣/领域/方法服务.h:144</code> | direct_free_operator | 登记根,活跃状态 | 登记根与活跃状态相等bool并取反 | 三个句柄均有效；登记根与活跃状态不等；登记根分别与两个状态不等 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1658 | F0327 | F0333 | <code>海中鱼巣/领域/方法服务.h:1748</code> | direct_const_member | this=&方法服务,方法节点,节点类型::方法 | 方法节点类型匹配bool | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1659 | F0327 | F0330 | <code>海中鱼巣/领域/方法服务.h:1751</code> | direct_const_member | this=&方法服务,方法节点,关系类型::模板,节点类型::状态,方法角色顺序号 | 角色状态节点optional | 方法节点类型匹配 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1660 | F0327 | F0329 | <code>海中鱼巣/领域/方法服务.h:1755</code> | direct_const_member | this=&状态,角色状态节点.value() | 角色状态I64 optional | 角色状态目标存在且唯一 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1661 | F0327 | F0334 | <code>海中鱼巣/领域/方法服务.h:1760</code> | direct_const_member+unique_name | this=&方法服务,角色 | 方法角色白名单有效bool | 角色状态I64存在并完成枚举转换；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| E1662 | F0328 | F0190 | <code>海中鱼巣/领域/状态服务.h:206</code> | direct_const_member | this=&节点_,状态节点 | 节点记录optional | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1663 | F0328 | F0580 | <code>海中鱼巣/领域/状态服务.h:208</code> | direct_const_member | this=&关系_,关系类型::运行期临时,状态节点 | 存在有效目标临时关系bool并决定最终返回 | 节点记录存在且类型为状态 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1665 | F0329 | F0190 | <code>海中鱼巣/领域/状态服务.h:186</code> | direct_const_member | this=&节点_,状态节点 | 节点记录optional | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1666 | F0329 | F0619 | <code>海中鱼巣/领域/状态服务.h:190</code> | direct_const_member | this=&主信息_,记录-&gt;主信息 | 零号I64值optional并直接返回 | 节点记录存在且类型为状态 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1668 | F0330 | F0333 | <code>海中鱼巣/领域/方法服务.h:1713, 海中鱼巣/领域/方法服务.h:1721</code> | direct_const_member | 1713:this=&方法服务,源节点,节点类型::方法；1721:this=&方法服务,目标,目标类型 | 1713:源节点类型匹配bool；1721:目标节点类型匹配bool | 1713函数进入时调用一次；1721仅在源节点类型匹配并取得目标组后，对每个目标调用0..N次 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1669 | F0330 | F0620 | <code>海中鱼巣/领域/方法服务.h:1717</code> | direct_const_member | this=&关系_,源节点,类型,顺序号.value() | 目标节点组 | 源节点类型匹配且顺序号有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1670 | F0330 | F0621 | <code>海中鱼巣/领域/方法服务.h:1718</code> | direct_const_member | this=&关系_,源节点,类型 | 目标节点组 | 源节点类型匹配且顺序号为空 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1672 | F0331 | F0336 | <code>海中鱼巣/核心/主信息仓库.cpp:39</code> | direct_const_member | this=&事务接线_ | 接域bool | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| RCE0106 | F0331 | F0397 | <code>海中鱼巣/核心/主信息仓库.cpp:40</code> | resolved-function-pointer | this=&事务接线_,事务接线_.运行期状态 | 结构事务许可 | 事务接线已接域；生产运行期唯一正式共享许可目标 | 专项源码静态类型与实际装配人工复核 |
-| E1676 | F0331 | F0345 | <code>海中鱼巣/核心/主信息仓库.cpp:40-42</code> | implicit_destructor | this=&许可 | void | 仅事务接线已接域且许可对象已在40行形成；正常路径在41行返回对象形成后析构，异常路径在许可形成后的展开阶段析构；不覆盖43—50未接域分支 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1673 | F0331 | F0338 | <code>海中鱼巣/核心/主信息仓库.cpp:41</code> | direct_const_member | this=&许可 | 许可有效bool | U0008已形成许可对象 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1674 | F0331 | F0339 | <code>海中鱼巣/核心/主信息仓库.cpp:41</code> | direct_const_member | this=&许可 | const结构事务令牌借用 | 许可有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1675 | F0331 | F0622 | <code>海中鱼巣/核心/主信息仓库.cpp:41</code> | direct_member | this=&主信息仓库,许可.读取令牌() | 主信息句柄返回对象 | 许可有效且E1674已取得令牌借用；调用方可达且libclang直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
-| E1677 | F0332 | F0336 | <code>海中鱼巣/核心/节点仓库.cpp:54</code> | direct_const_member | this=&事务接线_ | 接域bool | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1658 | F0327 | F0333 | <code>海中鱼巣/领域/方法服务.h:1748</code> | direct_const_member | this=&amp;方法服务,方法节点,节点类型::方法 | 方法节点类型匹配bool | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1659 | F0327 | F0330 | <code>海中鱼巣/领域/方法服务.h:1751</code> | direct_const_member | this=&amp;方法服务,方法节点,关系类型::模板,节点类型::状态,方法角色顺序号 | 角色状态节点optional | 方法节点类型匹配 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1660 | F0327 | F0329 | <code>海中鱼巣/领域/方法服务.h:1755</code> | direct_const_member | this=&amp;状态,角色状态节点.value() | 角色状态I64 optional | 角色状态目标存在且唯一 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1661 | F0327 | F0334 | <code>海中鱼巣/领域/方法服务.h:1760</code> | direct_const_member+unique_name | this=&amp;方法服务,角色 | 方法角色白名单有效bool | 角色状态I64存在并完成枚举转换；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
+| E1662 | F0328 | F0190 | <code>海中鱼巣/领域/状态服务.h:206</code> | direct_const_member | this=&amp;节点_,状态节点 | 节点记录optional | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1663 | F0328 | F0580 | <code>海中鱼巣/领域/状态服务.h:208</code> | direct_const_member | this=&amp;关系_,关系类型::运行期临时,状态节点 | 存在有效目标临时关系bool并决定最终返回 | 节点记录存在且类型为状态 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1665 | F0329 | F0190 | <code>海中鱼巣/领域/状态服务.h:186</code> | direct_const_member | this=&amp;节点_,状态节点 | 节点记录optional | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1666 | F0329 | F0619 | <code>海中鱼巣/领域/状态服务.h:190</code> | direct_const_member | this=&amp;主信息_,记录-&gt;主信息 | 零号I64值optional并直接返回 | 节点记录存在且类型为状态 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1668 | F0330 | F0333 | <code>海中鱼巣/领域/方法服务.h:1713, 海中鱼巣/领域/方法服务.h:1721</code> | direct_const_member | 1713:this=&amp;方法服务,源节点,节点类型::方法；1721:this=&amp;方法服务,目标,目标类型 | 1713:源节点类型匹配bool；1721:目标节点类型匹配bool | 1713函数进入时调用一次；1721仅在源节点类型匹配并取得目标组后，对每个目标调用0..N次 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1669 | F0330 | F0620 | <code>海中鱼巣/领域/方法服务.h:1717</code> | direct_const_member | this=&amp;关系_,源节点,类型,顺序号.value() | 目标节点组 | 源节点类型匹配且顺序号有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1670 | F0330 | F0621 | <code>海中鱼巣/领域/方法服务.h:1718</code> | direct_const_member | this=&amp;关系_,源节点,类型 | 目标节点组 | 源节点类型匹配且顺序号为空 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1672 | F0331 | F0336 | <code>海中鱼巣/核心/主信息仓库.cpp:39</code> | direct_const_member | this=&amp;事务接线_ | 接域bool | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| RCE0106 | F0331 | F0397 | <code>海中鱼巣/核心/主信息仓库.cpp:40</code> | resolved-function-pointer | this=&amp;事务接线_,事务接线_.运行期状态 | 结构事务许可 | 事务接线已接域；生产运行期唯一正式共享许可目标 | 专项源码静态类型与实际装配人工复核 |
+| E1676 | F0331 | F0345 | <code>海中鱼巣/核心/主信息仓库.cpp:40-42</code> | implicit_destructor | this=&amp;许可 | void | 仅事务接线已接域且许可对象已在40行形成；正常路径在41行返回对象形成后析构，异常路径在许可形成后的展开阶段析构；不覆盖43—50未接域分支 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1673 | F0331 | F0338 | <code>海中鱼巣/核心/主信息仓库.cpp:41</code> | direct_const_member | this=&amp;许可 | 许可有效bool | U0008已形成许可对象 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1674 | F0331 | F0339 | <code>海中鱼巣/核心/主信息仓库.cpp:41</code> | direct_const_member | this=&amp;许可 | const结构事务令牌借用 | 许可有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1675 | F0331 | F0622 | <code>海中鱼巣/核心/主信息仓库.cpp:41</code> | direct_member | this=&amp;主信息仓库,许可.读取令牌() | 主信息句柄返回对象 | 许可有效且E1674已取得令牌借用；调用方可达且libclang直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
+| E1677 | F0332 | F0336 | <code>海中鱼巣/核心/节点仓库.cpp:54</code> | direct_const_member | this=&amp;事务接线_ | 接域bool | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0107 | F0332 | F0397 | <code>海中鱼巣/核心/节点仓库.cpp:55</code> | resolved-function-pointer |  |  | 事务接线已接域；生产运行期唯一正式共享许可目标 | 专项源码静态类型与实际装配人工复核 |
-| E1681 | F0332 | F0345 | <code>海中鱼巣/核心/节点仓库.cpp:56-57</code> | implicit_destructor | this=&许可 | void | 接域分支返回对象形成后或许可形成后的异常展开 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1678 | F0332 | F0338 | <code>海中鱼巣/核心/节点仓库.cpp:56</code> | direct_const_member | this=&许可 | 许可有效bool | U0009已形成许可对象 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1679 | F0332 | F0339 | <code>海中鱼巣/核心/节点仓库.cpp:56</code> | direct_const_member | this=&许可 | const结构事务令牌借用 | 许可有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1680 | F0332 | F0623 | <code>海中鱼巣/核心/节点仓库.cpp:56</code> | direct_member+direct-member | this=&节点仓库,类型,主信息,许可.读取令牌() | 节点句柄返回对象 | 许可有效且令牌借用已取得；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
-| E1682 | F0332 | F0624 | <code>海中鱼巣/核心/节点仓库.cpp:58</code> | direct_const_member | this=&主信息_,主信息 | 主信息有效bool | 未接域路径 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1681 | F0332 | F0345 | <code>海中鱼巣/核心/节点仓库.cpp:56-57</code> | implicit_destructor | this=&amp;许可 | void | 接域分支返回对象形成后或许可形成后的异常展开 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1678 | F0332 | F0338 | <code>海中鱼巣/核心/节点仓库.cpp:56</code> | direct_const_member | this=&amp;许可 | 许可有效bool | U0009已形成许可对象 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1679 | F0332 | F0339 | <code>海中鱼巣/核心/节点仓库.cpp:56</code> | direct_const_member | this=&amp;许可 | const结构事务令牌借用 | 许可有效 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1680 | F0332 | F0623 | <code>海中鱼巣/核心/节点仓库.cpp:56</code> | direct_member+direct-member | this=&amp;节点仓库,类型,主信息,许可.读取令牌() | 节点句柄返回对象 | 许可有效且令牌借用已取得；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
+| E1682 | F0332 | F0624 | <code>海中鱼巣/核心/节点仓库.cpp:58</code> | direct_const_member | this=&amp;主信息_,主信息 | 主信息有效bool | 未接域路径 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1683 | F0332 | F0625 | <code>海中鱼巣/核心/节点仓库.cpp:58</code> | direct_free_internal_linkage+direct-free | 类型 | 类型已定义bool | 主信息有效；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
-| E1684 | F0333 | F0190 | <code>海中鱼巣/领域/方法服务.h:1835</code> | direct_const_member | this=&节点_,节点句柄值 | optional节点记录 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1685 | F0335 | F0626 | <code>海中鱼巣/领域/状态服务.h:297</code> | direct_const_member+suffix_match | this=&状态服务,发生时间戳.value() | 时间戳可用bool | 发生时间戳有值；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| E1686 | F0335 | F0331 | <code>海中鱼巣/领域/状态服务.h:300</code> | direct_member | this=&主信息_ | 主信息句柄 | 时间戳未提供或校验通过 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1684 | F0333 | F0190 | <code>海中鱼巣/领域/方法服务.h:1835</code> | direct_const_member | this=&amp;节点_,节点句柄值 | optional节点记录 | 函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1685 | F0335 | F0626 | <code>海中鱼巣/领域/状态服务.h:297</code> | direct_const_member+suffix_match | this=&amp;状态服务,发生时间戳.value() | 时间戳可用bool | 发生时间戳有值；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
+| E1686 | F0335 | F0331 | <code>海中鱼巣/领域/状态服务.h:300</code> | direct_member | this=&amp;主信息_ | 主信息句柄 | 时间戳未提供或校验通过 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1688 | F0335 | F0184 | <code>海中鱼巣/领域/状态服务.h:301, 海中鱼巣/领域/状态服务.h:305, 海中鱼巣/领域/状态服务.h:305-306</code> | direct_free+unique_name | 状态值写入bool,L"创建状态节点时状态值写入不及预期。" | 检查通过bool | F0627返回后；真假均调用；F0628返回后；真假均调用；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E1687 | F0335 | F0627 | <code>海中鱼巣/领域/状态服务.h:301</code> | direct_member | this=&主信息_,主信息句柄,状态值 | 状态值写入bool | F0331返回后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1689 | F0335 | F0628 | <code>海中鱼巣/领域/状态服务.h:305</code> | direct_member | this=&主信息_,主信息句柄,发生时间戳槽位,static_cast&lt;I64&gt;(发生时间戳.value()) | 时间戳写入bool | 状态值写入检查通过且发生时间戳有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1691 | F0335 | F0332 | <code>海中鱼巣/领域/状态服务.h:309</code> | direct_member | this=&节点_,节点类型::状态,主信息句柄 | 状态节点句柄并直接返回 | 状态值及可选时间戳写入检查通过 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1687 | F0335 | F0627 | <code>海中鱼巣/领域/状态服务.h:301</code> | direct_member | this=&amp;主信息_,主信息句柄,状态值 | 状态值写入bool | F0331返回后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1689 | F0335 | F0628 | <code>海中鱼巣/领域/状态服务.h:305</code> | direct_member | this=&amp;主信息_,主信息句柄,发生时间戳槽位,static_cast&lt;I64&gt;(发生时间戳.value()) | 时间戳写入bool | 状态值写入检查通过且发生时间戳有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1691 | F0335 | F0332 | <code>海中鱼巣/领域/状态服务.h:309</code> | direct_member | this=&amp;节点_,节点类型::状态,主信息句柄 | 状态节点句柄并直接返回 | 状态值及可选时间戳写入检查通过 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1692 | F0343 | F0337 | <code>海中鱼巣/核心/关系仓库.cpp:180</code> | direct_free+direct-free | 仓库 | 当前关系令牌指针 | 函数进入；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
-| E1783 | F0343 | F0377 | <code>海中鱼巣/核心/关系仓库.cpp:181</code> | direct_const_member | this=&节点_,节点 | 节点有效bool | 当前关系令牌为空 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1782 | F0343 | F0630 | <code>海中鱼巣/核心/关系仓库.cpp:181</code> | direct_const_member | this=&节点_,节点,*令牌 | 节点有效bool | 当前关系令牌非空 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1783 | F0343 | F0377 | <code>海中鱼巣/核心/关系仓库.cpp:181</code> | direct_const_member | this=&amp;节点_,节点 | 节点有效bool | 当前关系令牌为空 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1782 | F0343 | F0630 | <code>海中鱼巣/核心/关系仓库.cpp:181</code> | direct_const_member | this=&amp;节点_,节点,*令牌 | 节点有效bool | 当前关系令牌非空 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1799 | F0345 | F0631 | <code>海中鱼巣/核心/结构事务接线.数据.h:40</code> | direct_member+unique_name | this | void | 析构函数进入；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E1801 | F0346 | F0632 | <code>海中鱼巣/核心/节点仓库.cpp:251</code> | direct_free_internal_linkage+direct-free | 事务接线_,令牌 | 共享令牌有效bool | 函数进入；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
-| E1833 | F0349 | F0633 | <code>海中鱼巣/线程/自我线程.ixx:303</code> | direct_member+unique_name | this=&语素初始化_ | 语素结果 | 首次停止请求为false；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E1834 | F0349 | F0173 | <code>海中鱼巣/线程/自我线程.ixx:304</code> | direct_const_member | this=&语素结果 | 语素结果成功bool | E1833返回后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1833 | F0349 | F0633 | <code>海中鱼巣/线程/自我线程.ixx:303</code> | direct_member+unique_name | this=&amp;语素初始化_ | 语素结果 | 首次停止请求为false；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E1834 | F0349 | F0173 | <code>海中鱼巣/线程/自我线程.ixx:304</code> | direct_const_member | this=&amp;语素结果 | 语素结果成功bool | E1833返回后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1835 | F0349 | F0634 | <code>海中鱼巣/线程/自我线程.ixx:305, 海中鱼巣/线程/自我线程.ixx:310, 海中鱼巣/线程/自我线程.ixx:316</code> | direct_member+unique_name | this=当前自我线程 | void | 语素结果不成功；世界树结果不成功；新快照不成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| E1836 | F0349 | F0635 | <code>海中鱼巣/线程/自我线程.ixx:308</code> | direct_member+unique_name | this=&世界树初始化_ | 世界树结果 | 语素结果成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E1837 | F0349 | F0174 | <code>海中鱼巣/线程/自我线程.ixx:309</code> | direct_const_member | this=&世界树结果 | 世界树结果成功bool | E1836返回后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1839 | F0349 | F0636 | <code>海中鱼巣/线程/自我线程.ixx:313</code> | direct_member+unique_name | this=&需求初始化_,世界树结果,参数 | 根需求结果 | 世界树结果成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E1840 | F0349 | F0047 | <code>海中鱼巣/线程/自我线程.ixx:315</code> | direct_const_member | this=&新快照 | 初始化快照成功bool | 根需求结果返回并构造新快照后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1836 | F0349 | F0635 | <code>海中鱼巣/线程/自我线程.ixx:308</code> | direct_member+unique_name | this=&amp;世界树初始化_ | 世界树结果 | 语素结果成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E1837 | F0349 | F0174 | <code>海中鱼巣/线程/自我线程.ixx:309</code> | direct_const_member | this=&amp;世界树结果 | 世界树结果成功bool | E1836返回后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1839 | F0349 | F0636 | <code>海中鱼巣/线程/自我线程.ixx:313</code> | direct_member+unique_name | this=&amp;需求初始化_,世界树结果,参数 | 根需求结果 | 世界树结果成功；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E1840 | F0349 | F0047 | <code>海中鱼巣/线程/自我线程.ixx:315</code> | direct_const_member | this=&amp;新快照 | 初始化快照成功bool | 根需求结果返回并构造新快照后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1843 | F0349 | F0638 | <code>海中鱼巣/线程/自我线程.ixx:343-345</code> | condition_variable_predicate | 捕获this | 停止谓词bool | condition_variable::wait初检或唤醒后，可重复 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1844 | F0350 | F0163 | <code>海中鱼巣/领域/初始化.需求.ixx:48, 海中鱼巣/领域/初始化.需求.ixx:50, 海中鱼巣/领域/初始化.需求.ixx:51, 海中鱼巣/领域/初始化.需求.ixx:52, 海中鱼巣/领域/初始化.需求.ixx:53</code> | direct_free | this-&gt;特征定义 | 特征定义句柄有效bool | 函数进入；E1845返回true；E1846返回true；E1847返回true；E1848返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0108 | F0350 | F0168 | <code>海中鱼巣/领域/初始化.需求.ixx:48, 海中鱼巣/领域/初始化.需求.ixx:50, 海中鱼巣/领域/初始化.需求.ixx:51, 海中鱼巣/领域/初始化.需求.ixx:52, 海中鱼巣/领域/初始化.需求.ixx:53</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
-| E1845 | F0350 | F0363 | <code>海中鱼巣/领域/初始化.需求.ixx:49</code> | direct_const_member | this=&语素入口结果 | 语素入口结果成功bool | E1844返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1850 | F0351 | F0496 | <code>海中鱼巣/领域/初始化.概念图.ixx:213</code> | direct_const_member+unique_name | this=&语素_,项.名称语素入口.语素入口 | 入口绑定目标组 | 函数进入；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| E1851 | F0351 | F0497 | <code>海中鱼巣/领域/初始化.概念图.ixx:214</code> | direct_const_member+unique_name | this=&语素_,项.名称语素入口.语素入口 | 入口概念追溯组 | E1850返回后；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E1845 | F0350 | F0363 | <code>海中鱼巣/领域/初始化.需求.ixx:49</code> | direct_const_member | this=&amp;语素入口结果 | 语素入口结果成功bool | E1844返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1850 | F0351 | F0496 | <code>海中鱼巣/领域/初始化.概念图.ixx:213</code> | direct_const_member+unique_name | this=&amp;语素_,项.名称语素入口.语素入口 | 入口绑定目标组 | 函数进入；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E1851 | F0351 | F0497 | <code>海中鱼巣/领域/初始化.概念图.ixx:214</code> | direct_const_member+unique_name | this=&amp;语素_,项.名称语素入口.语素入口 | 入口概念追溯组 | E1850返回后；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | E1852 | F0352 | F0639 | <code>海中鱼巣/领域/概念图服务.h:893</code> | direct_static+unique_name | 类别 | 类别有效bool | 函数进入；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E1853 | F0352 | F0640 | <code>海中鱼巣/领域/概念图服务.h:897</code> | direct_static+unique_name | 类别 | 根登记数组索引 | E1852返回true且已取得根登记共享锁；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| E1854 | F0352 | F0377 | <code>海中鱼巣/领域/概念图服务.h:898</code> | direct_const_member | this=&节点_,材料-&gt;根节点 | 根节点有效bool | 登记槽有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1854 | F0352 | F0377 | <code>海中鱼巣/领域/概念图服务.h:898</code> | direct_const_member | this=&amp;节点_,材料-&gt;根节点 | 根节点有效bool | 登记槽有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1855 | F0353 | F0369 | <code>海中鱼巣/领域/概念图服务.h:1863</code> | direct_const_member+unique_name | this=当前概念图服务,概念 | 概念类别optional | 已取得活动图共享锁；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E1856 | F0353 | F0360 | <code>海中鱼巣/领域/概念图服务.h:1866</code> | direct_const_member | this=当前概念图服务,概念 | 生命周期optional | E1855返回有值且仍持活动图共享锁 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1857 | F0354 | F0641 | <code>海中鱼巣/领域/概念图服务.h:970</code> | direct_static+unique_name | 阶段 | 阶段有效bool | 函数进入；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | E1858 | F0354 | F0642 | <code>海中鱼巣/领域/概念图服务.h:974</code> | direct_static+unique_name | 阶段 | 生命周期状态数组索引 | E1857返回true且已取得生命周期状态共享锁；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| E1859 | F0354 | F0377 | <code>海中鱼巣/领域/概念图服务.h:975</code> | direct_const_member | this=&节点_,状态.value() | 状态节点有效bool | 登记optional有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1860 | F0355 | F0377 | <code>海中鱼巣/领域/概念图服务.h:909</code> | direct_const_member | this=&节点_,材料-&gt;根节点 | 当前登记根节点有效bool | 每个有值登记槽；循环中至多四次 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1859 | F0354 | F0377 | <code>海中鱼巣/领域/概念图服务.h:975</code> | direct_const_member | this=&amp;节点_,状态.value() | 状态节点有效bool | 登记optional有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1860 | F0355 | F0377 | <code>海中鱼巣/领域/概念图服务.h:909</code> | direct_const_member | this=&amp;节点_,材料-&gt;根节点 | 当前登记根节点有效bool | 每个有值登记槽；循环中至多四次 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE1655 | F0356 | F0190 | <code>海中鱼巣/领域/概念图服务.h:850</code> | direct_const_member |  |  | 函数进入读取根节点记录 | 专项源码静态类型与实际装配人工复核 |
 | RCE0110 | F0356 | R0521 | <code>海中鱼巣/领域/概念图服务.h:851</code> | direct_static |  |  | 根记录存在时映射根类别 | 专项源码静态类型与实际装配人工复核 |
 | RCE0111 | F0356 | F0639 | <code>海中鱼巣/领域/概念图服务.h:852</code> | direct_static |  |  | 入口短路首先复核根类别 | 专项源码静态类型与实际装配人工复核 |
@@ -1075,10 +1075,10 @@
 | RCE1657 | F0356 | F0051 | <code>海中鱼巣/领域/概念图服务.h:870, 海中鱼巣/领域/概念图服务.h:875, 海中鱼巣/领域/概念图服务.h:885</code> | operator |  |  | 稳定键前置成立后比较根节点；发布读回前三项成立后比较根节点 | 专项源码静态类型与实际装配人工复核 |
 | RCE0112 | F0356 | F0640 | <code>海中鱼巣/领域/概念图服务.h:880, 海中鱼巣/领域/概念图服务.h:881</code> | direct_static |  |  | 唯一性遍历完成后写入并读回根登记槽 | 专项源码静态类型与实际装配人工复核 |
 | RCE0113 | F0356 | F0184 | <code>海中鱼巣/领域/概念图服务.h:882</code> | direct_free |  |  | 发布后读回完整条件形成 | 专项源码静态类型与实际装配人工复核 |
-| E1707 | F0357 | F0190 | <code>海中鱼巣/领域/概念图服务.h:938</code> | direct_const_member | this=&节点_,状态节点 | 状态记录optional | F0357函数进入；函数进入读取状态节点记录 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
-| E1667 | F0357 | F0329 | <code>海中鱼巣/领域/概念图服务.h:939</code> | direct_const_member | this=&状态,状态节点 | 状态值optional | E1707节点记录读取完成；不要求记录有值，且位于if短路判断之前；节点记录读取完成后无条件读取状态值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
+| E1707 | F0357 | F0190 | <code>海中鱼巣/领域/概念图服务.h:938</code> | direct_const_member | this=&amp;节点_,状态节点 | 状态记录optional | F0357函数进入；函数进入读取状态节点记录 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
+| E1667 | F0357 | F0329 | <code>海中鱼巣/领域/概念图服务.h:939</code> | direct_const_member | this=&amp;状态,状态节点 | 状态值optional | E1707节点记录读取完成；不要求记录有值，且位于if短路判断之前；节点记录读取完成后无条件读取状态值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
 | RCE0114 | F0357 | F0641 | <code>海中鱼巣/领域/概念图服务.h:940</code> | direct_static |  |  | 入口短路首先复核生命周期阶段 | 专项源码静态类型与实际装配人工复核 |
-| E1664 | F0357 | F0328 | <code>海中鱼巣/领域/概念图服务.h:945</code> | direct_const_member | this=&状态,状态节点 | 状态是否实例状态bool | 阶段有效、节点可读且类型为状态、状态值存在并匹配阶段；阶段、节点类型和状态值前置全部成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
+| E1664 | F0357 | F0328 | <code>海中鱼巣/领域/概念图服务.h:945</code> | direct_const_member | this=&amp;状态,状态节点 | 状态是否实例状态bool | 阶段有效、节点可读且类型为状态、状态值存在并匹配阶段；阶段、节点类型和状态值前置全部成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
 | RCE0115 | F0357 | F0642 | <code>海中鱼巣/领域/概念图服务.h:950</code> | direct_static |  |  | 取得生命周期状态独占锁后计算槽索引 | 专项源码静态类型与实际装配人工复核 |
 | RCE1658 | F0357 | F0051 | <code>海中鱼巣/领域/概念图服务.h:953, 海中鱼巣/领域/概念图服务.h:956, 海中鱼巣/领域/概念图服务.h:962</code> | operator |  |  | 各 optional has_value 前置成立后比较状态节点句柄 | 专项源码静态类型与实际装配人工复核 |
 | RCE0116 | F0357 | F0184 | <code>海中鱼巣/领域/概念图服务.h:962</code> | direct_free |  |  | 发布后读回完整条件形成 | 专项源码静态类型与实际装配人工复核 |
@@ -1121,21 +1121,21 @@
 | RCE0134 | F0362 | R0522 | <code>海中鱼巣/领域/概念图服务.h:4261</code> | direct_static |  |  | 源签名和目标材料记录存在后复核类型 | 专项源码静态类型与实际装配人工复核 |
 | RCE1680 | F0362 | R0518 | <code>海中鱼巣/领域/概念图服务.h:4295</code> | standard-library-callback |  |  | std::sort 按需调用具名节点句柄小于 | 专项源码静态类型与实际装配人工复核 |
 | RCE0135 | F0363 | F0168 | <code>海中鱼巣/领域/语素服务.h:37, 海中鱼巣/领域/语素服务.h:38</code> | direct_free | 对应关系；概念关系 | 对应关系句柄有效bool；概念关系句柄有效bool | F0163@35 与 F0565@36 均返回 true 后调用对应关系；对应关系也返回 true 后调用概念关系 | 源码逐行与重载类型审计 PASS |
-| RCE0136 | F0364 | R0571 | <code>海中鱼巣/领域/语素服务.h:101</code> | direct_const_member | this=&语素服务,对应信息节点 | 对应信息可绑定bool | R0575@96 返回可作为最小词单元 | 源码逐行与静态接收者审计 PASS |
-| RCE0137 | F0364 | R0572 | <code>海中鱼巣/领域/语素服务.h:106</code> | direct_const_member | this=&语素服务,概念节点 | 概念节点可追溯bool | R0571@101 返回 true | 源码逐行、实参数量与重载类型审计 PASS |
-| RCE0138 | F0364 | R0573 | <code>海中鱼巣/领域/语素服务.h:111</code> | direct_member | this=&语素服务,对应信息节点,主键 | 语素入口创建结果 | R0572@106 返回 true | 源码逐行与静态接收者审计 PASS |
+| RCE0136 | F0364 | R0571 | <code>海中鱼巣/领域/语素服务.h:101</code> | direct_const_member | this=&amp;语素服务,对应信息节点 | 对应信息可绑定bool | R0575@96 返回可作为最小词单元 | 源码逐行与静态接收者审计 PASS |
+| RCE0137 | F0364 | R0572 | <code>海中鱼巣/领域/语素服务.h:106</code> | direct_const_member | this=&amp;语素服务,概念节点 | 概念节点可追溯bool | R0571@101 返回 true | 源码逐行、实参数量与重载类型审计 PASS |
+| RCE0138 | F0364 | R0573 | <code>海中鱼巣/领域/语素服务.h:111</code> | direct_member | this=&amp;语素服务,对应信息节点,主键 | 语素入口创建结果 | R0572@106 返回 true | 源码逐行与静态接收者审计 PASS |
 | RCE0139 | F0364 | F0168 | <code>海中鱼巣/领域/语素服务.h:116</code> | direct_free | 概念关系 | 概念关系句柄有效bool | F0167@115 已返回概念关系 | 源码逐行与重载类型审计 PASS |
-| RCE0140 | F0364 | F0497 | <code>海中鱼巣/领域/语素服务.h:116</code> | direct_const_member | this=&语素服务,结果.语素入口 | 概念追溯目标组 | F0168@116 返回 true；逻辑与短路继续 | 源码逐行与短路顺序审计 PASS |
-| RCE0141 | F0364 | R0570 | <code>海中鱼巣/领域/语素服务.h:116</code> | direct_const_member | this=&语素服务,F0497返回的概念追溯目标组,概念节点 | 目标组包含概念节点bool | F0168@116 返回 true 且 F0497 已返回目标组 | 源码逐行与短路顺序审计 PASS |
-| RCE0142 | F0364 | R0574 | <code>海中鱼巣/领域/语素服务.h:119</code> | direct_member | this=&语素服务,结果 | void | 概念关系无效，或概念追溯目标组不包含概念节点 | 源码逐行与失败分支审计 PASS |
-| RCE0143 | F0364 | R0575 | <code>海中鱼巣/领域/语素服务.h:96</code> | direct_const_member | this=&语素服务,文本 | 语素准入状态 | F0364函数进入 | 源码逐行与静态接收者审计 PASS |
+| RCE0140 | F0364 | F0497 | <code>海中鱼巣/领域/语素服务.h:116</code> | direct_const_member | this=&amp;语素服务,结果.语素入口 | 概念追溯目标组 | F0168@116 返回 true；逻辑与短路继续 | 源码逐行与短路顺序审计 PASS |
+| RCE0141 | F0364 | R0570 | <code>海中鱼巣/领域/语素服务.h:116</code> | direct_const_member | this=&amp;语素服务,F0497返回的概念追溯目标组,概念节点 | 目标组包含概念节点bool | F0168@116 返回 true 且 F0497 已返回目标组 | 源码逐行与短路顺序审计 PASS |
+| RCE0142 | F0364 | R0574 | <code>海中鱼巣/领域/语素服务.h:119</code> | direct_member | this=&amp;语素服务,结果 | void | 概念关系无效，或概念追溯目标组不包含概念节点 | 源码逐行与失败分支审计 PASS |
+| RCE0143 | F0364 | R0575 | <code>海中鱼巣/领域/语素服务.h:96</code> | direct_const_member | this=&amp;语素服务,文本 | 语素准入状态 | F0364函数进入 | 源码逐行与静态接收者审计 PASS |
 | RCE0144 | F0365 | F0184 | <code>海中鱼巣/领域/存在服务.h:107</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
 | RCE0145 | F0366 | F0184 | <code>海中鱼巣/领域/动态服务.h:290</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
 | RCE0146 | F0366 | R0610 | <code>海中鱼巣/领域/动态服务.h:294</code> | unique_name | this, 根节点 | 实例动态判定并取反进入概念根读回条件 | 记录存在、类型为动态、主信息有效且普通动态材料不存在 | 逐调用点源码复核：海中鱼巣/领域/动态服务.h:294 仅传入一个节点句柄，匹配 R0610；排除两参数事务重载 R0250 |
 | RCE0147 | F0367 | R0206 | <code>海中鱼巣/领域/二次特征服务.h:50</code> | suffix_match |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE0148 | F0367 | F0184 | <code>海中鱼巣/领域/二次特征服务.h:52</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0149 | F0367 | R0204 | <code>海中鱼巣/领域/二次特征服务.h:55</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| RCE0151 | F0368 | F0184 | <code>海中鱼巣/领域/因果服务.h:59</code> | unique_name | this=&因果服务, 记录.has_value() && 记录-&gt;类型==因果引用 && 主信息_.主信息是否有效(记录-&gt;主信息), 固定说明 | 后验检查bool并取反进入失败分支 | 记录读取返回后总是形成短路条件并调用 | 当前源码逐调用点与静态接收者复核 |
+| RCE0151 | F0368 | F0184 | <code>海中鱼巣/领域/因果服务.h:59</code> | unique_name | this=&amp;因果服务, 记录.has_value() &amp;&amp; 记录-&gt;类型==因果引用 &amp;&amp; 主信息_.主信息是否有效(记录-&gt;主信息), 固定说明 | 后验检查bool并取反进入失败分支 | 记录读取返回后总是形成短路条件并调用 | 当前源码逐调用点与静态接收者复核 |
 | RCE0152 | F0369 | R0521 | <code>海中鱼巣/领域/概念图服务.h:931</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE0153 | F0370 | F0369 | <code>海中鱼巣/领域/概念图服务.h:1032, 海中鱼巣/领域/概念图服务.h:1033</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE0154 | F0370 | R0531 | <code>海中鱼巣/领域/概念图服务.h:1038</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
@@ -1149,7 +1149,7 @@
 | E1802 | F0374 | F0632 | <code>海中鱼巣/核心/节点仓库.cpp:469</code> | direct_free_internal_linkage+direct-free | 事务接线_,令牌 | 共享令牌有效bool | 函数进入；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
 | RCE1681 | F0375 | R0600 | <code>海中鱼巣/核心/结构事务接线.数据.h:28</code> | direct-operator |  |  | 移动构造函数体委托移动赋值 | 专项源码静态类型与实际装配人工复核 |
 | RCE0162 | F0376 | R0120 | <code>海中鱼巣/核心/索引仓库.cpp:419</code> | same_module+direct-free |  |  | 调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | 逐边源码/静态类型审计 PASS；专项源码静态类型与实际装配人工复核 |
-| RCE0163 | F0377 | F0630 | <code>海中鱼巣/核心/节点仓库.cpp:444</code> | direct_const_member+source_audited | this=F0377接收者, 节点=节点, 令牌=RCE1740返回引用 | 接域分支返回bool | RCE1739返回true且RCE1740完成后调用；RCE1739返回false时短路不调用 | 当前源码、接收者静态类型、二实参重载与&&左到右顺序复核 |
+| RCE0163 | F0377 | F0630 | <code>海中鱼巣/核心/节点仓库.cpp:444</code> | direct_const_member+source_audited | this=F0377接收者, 节点=节点, 令牌=RCE1740返回引用 | 接域分支返回bool | RCE1739返回true且RCE1740完成后调用；RCE1739返回false时短路不调用 | 当前源码、接收者静态类型、二实参重载与&amp;&amp;左到右顺序复核 |
 | RCE0164 | F0377 | F0190 | <code>海中鱼巣/核心/节点仓库.cpp:446</code> | direct_const_member+source_audited | this=F0377接收者, 节点=节点 | std::optional&lt;节点记录&gt;，随后由X02297 has_value形成F0377返回bool | RCE1737返回false；源码上同时覆盖完全未接域与接线不完整形态 | 当前源码、接收者静态类型与单实参重载复核 |
 | RCE0165 | F0381 | F0207 | <code>海中鱼巣/适配/SQL数据库适配.cpp:251</code> | constructor |  |  | 调用方可达且 libclang 直接引用项目定义；源码位置复核 | 专项源码静态类型与实际装配人工复核 |
 | RCE0166 | F0381 | F0208 | <code>海中鱼巣/适配/SQL数据库适配.cpp:252</code> | field_type_hint+direct-member |  |  | 调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | 逐边源码/静态类型审计 PASS；专项源码静态类型与实际装配人工复核 |
@@ -1162,8 +1162,8 @@
 | RCE0173 | F0385 | R0149 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:49</code> | lsp_direct |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
 | RCE0174 | F0385 | R0248 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:49</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0175 | F0385 | R0240 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:50</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
-| E1790 | F0387 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:733-758</code> | implicit_destructor | this=&自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1818 | F0387 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:734, 海中鱼巣/核心/关系仓库.cpp:733-758</code> | implicit_destructor | this=&取得共享许可返回的已移空临时许可; this=&自动许可.value() | void | 共享许可返回临时量经RCE1756移动构造后的完整表达式末；或正常/异常退出且自动许可已承载，后者严格发生在F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；当前宏展开与C++临时量/RAII生命周期复核 |
+| E1790 | F0387 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:733-758</code> | implicit_destructor | this=&amp;自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1818 | F0387 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:734, 海中鱼巣/核心/关系仓库.cpp:733-758</code> | implicit_destructor | this=&amp;取得共享许可返回的已移空临时许可; this=&amp;自动许可.value() | void | 共享许可返回临时量经RCE1756移动构造后的完整表达式末；或正常/异常退出且自动许可已承载，后者严格发生在F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；当前宏展开与C++临时量/RAII生命周期复核 |
 | E1765 | F0387 | F0343 | <code>海中鱼巣/核心/关系仓库.cpp:736, 海中鱼巣/核心/关系仓库.cpp:753</code> | direct_const_member+direct-member+direct-member | this,父节点 | 父节点有效bool | 函数入口许可范围建立；当前记录匹配父节点；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
 | RCE0176 | F0388 | R0202 | <code>海中鱼巣/界面/控制面板窗口.cpp:387</code> | same_module+direct-free |  |  | 调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | 逐边源码/静态类型审计 PASS；专项源码静态类型与实际装配人工复核 |
 | RCE0177 | F0388 | R0304 | <code>海中鱼巣/界面/控制面板窗口.cpp:387</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
@@ -1197,7 +1197,7 @@
 | RCE0205 | F0408 | R0114 | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:875</code> | constructor |  |  | 需求任务方法数据操作构造其结构写入执行器 | 专项源码静态类型与实际装配人工复核 |
 | RCE0206 | F0410 | R0114 | <code>海中鱼巣/领域/数据操作.概念活动.ixx:34</code> | constructor |  |  | 概念活动数据操作构造其结构写入执行器 | 专项源码静态类型与实际装配人工复核 |
 | RCE0207 | F0439 | R0002 | <code>海中鱼巣/核心/主信息仓库.cpp:213</code> | same_module+direct-free |  |  | 调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | 逐边源码/静态类型审计 PASS；专项源码静态类型与实际装配人工复核 |
-| E1798 | F0440 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:1430-1433</code> | implicit_destructor | this=&令牌范围 | void | 共享令牌验证通过且范围已构造，随后正常或异常退出 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1798 | F0440 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:1430-1433</code> | implicit_destructor | this=&amp;令牌范围 | void | 共享令牌验证通过且范围已构造，随后正常或异常退出 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0209 | F0440 | F0587 | <code>海中鱼巣/核心/关系仓库.cpp:1432</code> | direct-member |  |  | 调用方可达且 libclang 直接引用项目定义；源码位置复核 | 专项源码静态类型与实际装配人工复核 |
 | RCE0210 | F0441 | R0120 | <code>海中鱼巣/核心/索引仓库.cpp:189</code> | same_module+direct-free |  |  | 调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | 逐边源码/静态类型审计 PASS；专项源码静态类型与实际装配人工复核 |
 | RCE0211 | F0442 | F0336 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:154</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
@@ -1209,7 +1209,7 @@
 | RCE0217 | F0448 | F0336 | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:878</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
 | RCE0218 | F0449 | F0336 | <code>海中鱼巣/领域/数据操作.系统角色.ixx:39</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
 | RCE0219 | F0450 | F0336 | <code>海中鱼巣/领域/数据操作.概念活动.ixx:38</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
-| RCE0220 | F0454 | F0074 | <code>海中鱼巣/领域/初始化.系统角色.ixx:178</code> | direct_const_member+source-corrected | this=&结构 | 成功bool | F0454入口有效性与清单完整性通过，复核系统角色返回后 | F0454局部变量静态类型、F0074重载与源码调用点复核；纠正旧R0330误绑 |
+| RCE0220 | F0454 | F0074 | <code>海中鱼巣/领域/初始化.系统角色.ixx:178</code> | direct_const_member+source-corrected | this=&amp;结构 | 成功bool | F0454入口有效性与清单完整性通过，复核系统角色返回后 | F0454局部变量静态类型、F0074重载与源码调用点复核；纠正旧R0330误绑 |
 | RCE0221 | F0454 | R0239 | <code>海中鱼巣/领域/初始化.系统角色.ixx:179</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE0222 | F0454 | R0236 | <code>海中鱼巣/领域/初始化.系统角色.ixx:180</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE0223 | F0455 | R0229 | <code>海中鱼巣/领域/初始化.系统角色.ixx:103, 海中鱼巣/领域/初始化.系统角色.ixx:111</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
@@ -1221,7 +1221,7 @@
 | RCE0229 | F0455 | R0232 | <code>海中鱼巣/领域/初始化.系统角色.ixx:72</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE0230 | F0455 | R0496 | <code>海中鱼巣/领域/初始化.系统角色.ixx:77</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0231 | F0455 | R0565 | <code>海中鱼巣/领域/初始化.系统角色.ixx:86, 海中鱼巣/领域/初始化.系统角色.ixx:87</code> | direct_const_member |  |  | 系统角色初始化读取写前预检中的既有身份与稳定键 | 专项源码静态类型与实际装配人工复核 |
-| RCE0232 | F0458 | R0563 | <code>海中鱼巣/领域/系统角色清单.数据.h:189, 海中鱼巣/领域/系统角色清单.数据.h:191, 海中鱼巣/领域/系统角色清单.数据.h:192, 海中鱼巣/领域/系统角色清单.数据.h:193, 海中鱼巣/领域/系统角色清单.数据.h:194, 海中鱼巣/领域/系统角色清单.数据.h:199</code> | source-audited-direct-const-member | 十二个系统角色身份材料接收者 | bool进入短路完整性判断 | 按源码从左到右短路；循环调用仅在前置门禁通过后发生 | 系统角色清单.数据.h:189-199 逐调用点静态接收者复核 |
+| RCE0232 | F0458 | R0563 | <code>海中鱼巣/领域/系统角色清单.数据.h:189, 海中鱼巣/领域/系统角色清单.数据.h:191, 海中鱼巣/领域/系统角色清单.数据.h:192, 海中鱼巣/领域/系统角色清单.数据.h:193, 海中鱼巣/领域/系统角色清单.数据.h:194, 海中鱼巣/领域/系统角色清单.数据.h:199</code> | source-audited-direct-const-member | 十二个系统角色身份材料接收者，无显式参数 | bool进入短路完整性判断 | 按源码从左到右短路；循环调用仅在前置完整性门禁通过后发生 | 系统角色清单.数据.h:189-199 逐调用点静态接收者复核 |
 | RCE0233 | F0458 | R0564 | <code>海中鱼巣/领域/系统角色清单.数据.h:196</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE0234 | F0459 | F0168 | <code>海中鱼巣/领域/系统角色清单.数据.h:134</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
 | RCE0235 | F0461 | R0331 | <code>海中鱼巣/领域/服务.概念活动.ixx:73</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
@@ -1237,7 +1237,7 @@
 | RCE0245 | F0467 | F0565 | <code>海中鱼巣/领域/概念活动状态.数据.h:65</code> | direct-free |  |  | 主信息静态类型为主信息句柄 | 专项源码静态类型与实际装配人工复核 |
 | RCE0246 | F0468 | F0013 | <code>海中鱼巣/自检.入口初始化.ixx:55</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0247 | F0468 | F0014 | <code>海中鱼巣/自检.入口初始化.ixx:56</code> | field_type_hint |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
-| RCE0248 | F0468 | F0198 | <code>海中鱼巣/自检.入口初始化.ixx:61</code> | source-audited-direct-const-member | this=&装配.上下文-&gt;关系；无显式参数 | uint64_t 转 size_t 写入关系数量 | 装配成功且节点数量读取完成 | 接收者静态类型与零参数重载复核 |
+| RCE0248 | F0468 | F0198 | <code>海中鱼巣/自检.入口初始化.ixx:61</code> | source-audited-direct-const-member | this=&amp;装配.上下文-&gt;关系；无显式参数 | uint64_t 转为 size_t 后写入计数.关系数量 | 装配成功且前一项节点数量读取完成 | 自检.入口初始化.ixx:61 接收者静态类型与零参数重载复核 |
 | RCE0249 | F0468 | F0199 | <code>海中鱼巣/自检.入口初始化.ixx:62</code> | direct_const_member+source_audited |  | 有效主键数量 | 调用方可达且初始化仓库自检路径进入数量读取 | 当前源码调用点、接收者类型与重载复核 |
 | E0992 | F0470 | F0043 | <code>海中鱼巣/自检.入口初始化.ixx:80</code> | captured_member_direct | 上下文.方法隐式this,键,上下文.状态 | 方法登记根候选 | F0015调用对应端口 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0993 | F0471 | F0044 | <code>海中鱼巣/自检.入口初始化.ixx:81</code> | captured_member_direct | 上下文.自我线程实例隐式this,参数 | 自我线程操作结果 | F0015调用对应端口 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -1267,8 +1267,8 @@
 | E1060 | F0495 | F0496 | <code>海中鱼巣/自检.入口初始化.ixx:175</code> | captured_member_direct | 上下文.语素隐式this,根.名称语素入口.语素入口 | 绑定 | F0257调用绑定可读 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1061 | F0495 | F0497 | <code>海中鱼巣/自检.入口初始化.ixx:176</code> | captured_member_direct | 上下文.语素隐式this,根.名称语素入口.语素入口 | 追溯 | F0257调用绑定可读 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1062 | F0495 | F0051 | <code>海中鱼巣/自检.入口初始化.ixx:177, 海中鱼巣/自检.入口初始化.ixx:178</code> | std_find_element_compare | 绑定组元素,根.根节点 | 句柄相等位 | 第一组std::find逐元素调用0..n次；E1062所在第一组命中后，第二组std::find逐元素调用0..n次 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| RCE0250 | F0496 | R0728 | <code>海中鱼巣/领域/语素服务.h:189</code> | source-audited-overload-corrected | 单实参语素入口 | bool进入入口类型门禁 | F0496入口后必达 | 单实参精确匹配无令牌 R0728 |
-| RCE0251 | F0497 | R0728 | <code>海中鱼巣/领域/语素服务.h:196</code> | source-audited-overload-corrected | 单实参语素入口 | bool进入入口类型门禁 | F0497入口后必达 | 单实参精确匹配无令牌 R0728 |
+| RCE0250 | F0496 | R0728 | <code>海中鱼巣/领域/语素服务.h:189</code> | source-audited-overload-corrected | this=&amp;当前语素服务；节点句柄值=语素入口 | bool进入入口类型门禁 | F0496入口后必达 | 语素服务.h:189 调用实参数量与两个重载完整签名复核 |
+| RCE0251 | F0497 | R0728 | <code>海中鱼巣/领域/语素服务.h:196</code> | source-audited-overload-corrected | this=&amp;当前语素服务；节点句柄值=语素入口 | bool进入入口类型门禁 | F0497入口后必达 | 语素服务.h:196 调用实参数量与两个重载完整签名复核 |
 | E1087 | F0498 | F0043 | <code>海中鱼巣/自检.入口初始化.ixx:199</code> | captured_member_direct | 上下文.方法隐式this,键,上下文.状态 | 原样返回 | F0015调用方法登记根回调 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1088 | F0499 | F0044 | <code>海中鱼巣/自检.入口初始化.ixx:200</code> | captured_member_direct | 上下文.自我线程实例隐式this,参数 | 原样返回 | F0015调用自我线程启动回调 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1089 | F0500 | F0045 | <code>海中鱼巣/自检.入口初始化.ixx:201</code> | captured_member_direct | 上下文.自我线程实例隐式this,时限 | 原样返回 | F0015调用等待初始化回调 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -1319,13 +1319,13 @@
 | E1244 | F0548 | F0046 | <code>海中鱼巣/自检.入口初始化.ixx:398</code> | captured_member_direct | 上下文.自我线程实例隐式this | 原样返回 | F0015调用读取快照回调 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1245 | F0549 | F0048 | <code>海中鱼巣/自检.入口初始化.ixx:399</code> | captured_member_direct | 上下文.概念图初始化隐式this | 原样返回 | F0015调用概念图四根初始化回调 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1246 | F0550 | F0050 | <code>海中鱼巣/自检.入口初始化.ixx:400</code> | captured_member_direct | 上下文.概念图隐式this,实例 | 原样返回 | F0015调用存在实例根支持回调 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1247 | F0551 | F0552 | <code>海中鱼巣/自检.入口初始化.ixx:405</code> | captured_member_direct | this=&上下文.需求,单根.根需求 | 承接 | F0551进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1248 | F0551 | F0350 | <code>海中鱼巣/自检.入口初始化.ixx:406</code> | direct_const_member | this=&单根 | 单根成功 | E1247返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1247 | F0551 | F0552 | <code>海中鱼巣/自检.入口初始化.ixx:405</code> | captured_member_direct | this=&amp;上下文.需求,单根.根需求 | 承接 | F0551进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1248 | F0551 | F0350 | <code>海中鱼巣/自检.入口初始化.ixx:406</code> | direct_const_member | this=&amp;单根 | 单根成功 | E1247返回 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1250 | F0551 | F0051 | <code>海中鱼巣/自检.入口初始化.ixx:407-408, 海中鱼巣/自检.入口初始化.ixx:409-411</code> | std_optional_element_compare | 目标特征候选.value(),单根.特征定义 | 句柄相等 | E1249返回optional有值；E1251返回optional有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1249 | F0551 | F0553 | <code>海中鱼巣/自检.入口初始化.ixx:407</code> | captured_member_direct | this=&上下文.需求,单根.根需求 | 目标特征候选 | E1248返回true且承接有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1251 | F0551 | F0554 | <code>海中鱼巣/自检.入口初始化.ixx:409-410</code> | captured_member_direct | this=&上下文.特征,结果.自我初始化-&gt;世界树.自我存在节点,单根.特征定义 | 槽位候选 | E1250返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1253 | F0551 | F0555 | <code>海中鱼巣/自检.入口初始化.ixx:412</code> | captured_member_direct | this=&上下文.特征,单根.实例特征槽位,单根.当前特征值 | 当前值候选 | E1252返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1254 | F0551 | F0329 | <code>海中鱼巣/自检.入口初始化.ixx:414</code> | captured_member_direct | this=&上下文.状态,单根.目标状态 | 目标值候选 | E1253等于当前参数 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1249 | F0551 | F0553 | <code>海中鱼巣/自检.入口初始化.ixx:407</code> | captured_member_direct | this=&amp;上下文.需求,单根.根需求 | 目标特征候选 | E1248返回true且承接有值 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1251 | F0551 | F0554 | <code>海中鱼巣/自检.入口初始化.ixx:409-410</code> | captured_member_direct | this=&amp;上下文.特征,结果.自我初始化-&gt;世界树.自我存在节点,单根.特征定义 | 槽位候选 | E1250返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1253 | F0551 | F0555 | <code>海中鱼巣/自检.入口初始化.ixx:412</code> | captured_member_direct | this=&amp;上下文.特征,单根.实例特征槽位,单根.当前特征值 | 当前值候选 | E1252返回true | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1254 | F0551 | F0329 | <code>海中鱼巣/自检.入口初始化.ixx:414</code> | captured_member_direct | this=&amp;上下文.状态,单根.目标状态 | 目标值候选 | E1253等于当前参数 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0254 | F0553 | R0576 | <code>海中鱼巣/领域/需求服务.h:544, 海中鱼巣/领域/需求服务.h:548</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE0255 | F0554 | R0559 | <code>海中鱼巣/领域/特征服务.h:263</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE0256 | F0554 | R0561 | <code>海中鱼巣/领域/特征服务.h:263, 海中鱼巣/领域/特征服务.h:268</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
@@ -1346,58 +1346,58 @@
 | RCE0265 | F0569 | F0590 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:518</code> | direct-member |  |  | 固定删除变更；单实参写重载 | 专项源码静态类型与实际装配人工复核 |
 | RCE0266 | F0569 | F0586 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:524</code> | direct-member |  |  | 固定重挂并返回新句柄 | 专项源码静态类型与实际装配人工复核 |
 | RCE0267 | F0569 | F0587 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:527</code> | direct-const-member |  |  | 按重挂返回句柄读回 | 专项源码静态类型与实际装配人工复核 |
-| E1793 | F0575 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:843-863</code> | implicit_destructor | this=&自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1824 | F0575 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:843-863</code> | implicit_destructor | this=&自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1793 | F0575 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:843-863</code> | implicit_destructor | this=&amp;自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1824 | F0575 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:843-863</code> | implicit_destructor | this=&amp;自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1755 | F0575 | F0341 | <code>海中鱼巣/核心/关系仓库.cpp:846</code> | direct_free+direct-free | 类型 | 关系类型有效bool | 源节点当前有效；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
 | E1771 | F0575 | F0343 | <code>海中鱼巣/核心/关系仓库.cpp:846, 海中鱼巣/核心/关系仓库.cpp:855</code> | direct_const_member+direct-member+direct-member | this,源节点 | 源节点有效bool | 函数入口许可范围建立；记录有效且类型和源节点匹配；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
 | RCE0268 | F0577 | F0588 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:61</code> | same_module |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
-| E1794 | F0578 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:919-947</code> | implicit_destructor | this=&自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1826 | F0578 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:919-947</code> | implicit_destructor | this=&自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1794 | F0578 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:919-947</code> | implicit_destructor | this=&amp;自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1826 | F0578 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:919-947</code> | implicit_destructor | this=&amp;自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1756 | F0578 | F0341 | <code>海中鱼巣/核心/关系仓库.cpp:922</code> | direct_free+direct-free | 类型 | 关系类型有效bool | 目标节点当前有效；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
 | E1773 | F0578 | F0343 | <code>海中鱼巣/核心/关系仓库.cpp:922, 海中鱼巣/核心/关系仓库.cpp:939</code> | direct_const_member+direct-member+direct-member | this,目标节点 | 目标节点有效bool | 函数入口许可范围建立；当前记录类型和目标节点匹配；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
-| E1796 | F0579 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:980-994</code> | implicit_destructor | this=&自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1830 | F0579 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:980-994</code> | implicit_destructor | this=&自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1796 | F0579 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:980-994</code> | implicit_destructor | this=&amp;自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1830 | F0579 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:980-994</code> | implicit_destructor | this=&amp;自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1757 | F0579 | F0341 | <code>海中鱼巣/核心/关系仓库.cpp:982</code> | direct_free+direct-free | 类型 | 关系类型有效bool | 源、目标节点均当前有效；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
 | E1778 | F0579 | F0343 | <code>海中鱼巣/核心/关系仓库.cpp:982</code> | direct_const_member+direct-member+direct-member | this,源节点 | 源节点有效bool | 函数入口许可范围建立；源节点有效；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
 | E1780 | F0580 | F0343 | <code>海中鱼巣/核心/关系仓库.cpp:1005, 海中鱼巣/核心/关系仓库.cpp:998</code> | direct_const_member+direct-member+direct-member | this,目标节点 | 目标节点有效bool | 函数入口许可范围建立；记录有效且类型和目标节点匹配；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
-| E1797 | F0580 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:996-1010</code> | implicit_destructor | this=&自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1832 | F0580 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:996-1010</code> | implicit_destructor | this=&自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1797 | F0580 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:996-1010</code> | implicit_destructor | this=&amp;自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1832 | F0580 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:996-1010</code> | implicit_destructor | this=&amp;自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1758 | F0580 | F0341 | <code>海中鱼巣/核心/关系仓库.cpp:998</code> | direct_free+direct-free | 类型 | 关系类型有效bool | 目标节点当前有效；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
-| E1795 | F0581 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:949-978</code> | implicit_destructor | this=&自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1828 | F0581 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:949-978</code> | implicit_destructor | this=&自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1795 | F0581 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:949-978</code> | implicit_destructor | this=&amp;自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1828 | F0581 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:949-978</code> | implicit_destructor | this=&amp;自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1775 | F0581 | F0343 | <code>海中鱼巣/核心/关系仓库.cpp:952, 海中鱼巣/核心/关系仓库.cpp:970, 海中鱼巣/核心/关系仓库.cpp:971</code> | direct_const_member+lambda_direct_const_member+lambda_direct_const_member+direct-member+direct-member+direct-member | this,节点 | 输入节点有效bool | 函数入口许可范围建立；lambda处理当前有效记录；记录源节点有效；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
-| E1786 | F0582 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:314-337</code> | implicit_destructor | this=&自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1810 | F0582 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:314-337</code> | implicit_destructor | this=&自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1786 | F0582 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:314-337</code> | implicit_destructor | this=&amp;自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1810 | F0582 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:314-337</code> | implicit_destructor | this=&amp;自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1752 | F0582 | F0341 | <code>海中鱼巣/核心/关系仓库.cpp:319</code> | direct_free+direct-free | 类型 | 关系类型有效bool | 源节点句柄有效；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
 | RCE0269 | F0582 | R0085 | <code>海中鱼巣/核心/关系仓库.cpp:326</code> | direct-free |  |  | 调用方可达且 libclang 直接引用项目定义；源码位置复核 | 专项源码静态类型与实际装配人工复核 |
-| E1365 | F0584 | F0279 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:666</code> | lambda_direct_const_member | this=&夹具,密集正向 | 测量 | 窗口内且正确位为true的九读循环 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1365 | F0584 | F0279 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:666</code> | lambda_direct_const_member | this=&amp;夹具,密集正向 | 测量 | 窗口内且正确位为true的九读循环 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1367 | F0584 | F0586 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:676-677</code> | lambda_direct_member | 写材料.关系,写材料.源节点,新目标 | 新关系optional | 关系仓库借用已取得 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1366 | F0584 | F0288 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:676</code> | lambda_direct_member | this=&夹具 | 关系仓库非const借用 | 九次读取成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1366 | F0584 | F0288 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:676</code> | lambda_direct_member | this=&amp;夹具 | 关系仓库非const借用 | 九次读取成功 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0270 | F0585 | F0168 | <code>海中鱼巣/核心/自检.关系仓库性能基线.ixx:333</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
-| E1789 | F0586 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:431-479</code> | implicit_destructor | this=&自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1816 | F0586 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:431-479</code> | implicit_destructor | this=&自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1789 | F0586 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:431-479</code> | implicit_destructor | this=&amp;自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1816 | F0586 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:431-479</code> | implicit_destructor | this=&amp;自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1763 | F0586 | F0343 | <code>海中鱼巣/核心/关系仓库.cpp:441</code> | direct_member+direct-member+direct-member | this,新源节点 | 新源节点有效bool | 新端点句柄有效；新源节点有效；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
-| E1784 | F0587 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:277-293</code> | implicit_destructor | this=&自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1806 | F0587 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:277-293</code> | implicit_destructor | this=&自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1784 | F0587 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:277-293</code> | implicit_destructor | this=&amp;自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1806 | F0587 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:277-293</code> | implicit_destructor | this=&amp;自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1759 | F0587 | F0343 | <code>海中鱼巣/核心/关系仓库.cpp:289</code> | direct_const_member+direct-member+direct-member | this,记录.源节点 | 源节点有效bool | 记录当前有效且前置形状通过；源节点有效；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
-| E1785 | F0589 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:295-312</code> | implicit_destructor | this=&自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1808 | F0589 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:295-312</code> | implicit_destructor | this=&自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1785 | F0589 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:295-312</code> | implicit_destructor | this=&amp;自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1808 | F0589 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:295-312</code> | implicit_destructor | this=&amp;自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0271 | F0589 | R0085 | <code>海中鱼巣/核心/关系仓库.cpp:308</code> | direct-free |  |  | 调用方可达且 libclang 直接引用项目定义；源码位置复核 | 专项源码静态类型与实际装配人工复核 |
-| E1788 | F0590 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:409-424</code> | implicit_destructor | this=&自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1814 | F0590 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:409-424</code> | implicit_destructor | this=&自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1787 | F0591 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:339-407</code> | implicit_destructor | this=&自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1812 | F0591 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:339-407</code> | implicit_destructor | this=&自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1788 | F0590 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:409-424</code> | implicit_destructor | this=&amp;自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1814 | F0590 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:409-424</code> | implicit_destructor | this=&amp;自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1787 | F0591 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:339-407</code> | implicit_destructor | this=&amp;自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1812 | F0591 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:339-407</code> | implicit_destructor | this=&amp;自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1761 | F0591 | F0343 | <code>海中鱼巣/核心/关系仓库.cpp:366</code> | direct_member+direct-member+direct-member | this,记录.源节点 | 源节点有效bool | 记录存在且状态转换准入通过；源节点有效；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
 | RCE0272 | F0592 | F0168 | <code>海中鱼巣/核心/关系仓库.h:116, 海中鱼巣/核心/关系仓库.h:117, 海中鱼巣/核心/关系仓库.h:118, 海中鱼巣/核心/关系仓库.h:119</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
 | RCE1684 | F0592 | R0598 | <code>海中鱼巣/核心/关系仓库.h:134</code> | operator |  |  | 已在目标状态分支比较当前与原关系句柄；状态为已在目标状态、前一转换分支未短路且原状态为已失效时比较当前关系与原关系 | 专项源码静态类型与实际装配人工复核 |
 | RCE0273 | F0619 | F0383 | <code>海中鱼巣/核心/主信息仓库.cpp:425</code> | direct-member |  |  | 调用方可达且 libclang 直接引用项目定义；源码位置复核 | 专项源码静态类型与实际装配人工复核 |
 | RCE0274 | F0619 | F0217 | <code>海中鱼巣/核心/主信息仓库.cpp:427</code> | direct-member |  |  | 调用方可达且 libclang 直接引用项目定义；源码位置复核 | 专项源码静态类型与实际装配人工复核 |
-| E1792 | F0620 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:823-841</code> | implicit_destructor | this=&自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1822 | F0620 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:823-841</code> | implicit_destructor | this=&自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1792 | F0620 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:823-841</code> | implicit_destructor | this=&amp;自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1822 | F0620 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:823-841</code> | implicit_destructor | this=&amp;自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1754 | F0620 | F0341 | <code>海中鱼巣/核心/关系仓库.cpp:826</code> | direct_free+direct-free | 类型 | 关系类型有效bool | 源节点当前有效；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
 | E1769 | F0620 | F0343 | <code>海中鱼巣/核心/关系仓库.cpp:826, 海中鱼巣/核心/关系仓库.cpp:833</code> | direct_const_member+direct-member+direct-member | this,源节点 | 源节点有效bool | 函数入口许可范围建立；记录有效且类型、源节点和顺序号匹配；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
-| E1791 | F0621 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:790-821</code> | implicit_destructor | this=&自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1820 | F0621 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:790-821</code> | implicit_destructor | this=&自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1791 | F0621 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:790-821</code> | implicit_destructor | this=&amp;自动令牌范围.value() | void | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1820 | F0621 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:790-821</code> | implicit_destructor | this=&amp;自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1753 | F0621 | F0341 | <code>海中鱼巣/核心/关系仓库.cpp:798</code> | direct_free+direct-free | 类型 | 关系类型有效bool | 源节点当前有效；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
 | E1767 | F0621 | F0343 | <code>海中鱼巣/核心/关系仓库.cpp:798, 海中鱼巣/核心/关系仓库.cpp:805</code> | direct_const_member+direct-member+direct-member | this,源节点 | 源节点有效bool | 函数入口许可范围建立；记录有效且类型和源节点匹配；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
 | RCE0275 | F0622 | R0002 | <code>海中鱼巣/核心/主信息仓库.cpp:54</code> | same_module+direct-free |  |  | 调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | 逐边源码/静态类型审计 PASS；专项源码静态类型与实际装配人工复核 |
@@ -1409,11 +1409,11 @@
 | RCE0280 | F0627 | R0010 | <code>海中鱼巣/核心/主信息仓库.cpp:378</code> | direct-member |  |  | 调用方可达且 libclang 直接引用项目定义；源码位置复核 | 专项源码静态类型与实际装配人工复核 |
 | RCE0281 | F0627 | F0628 | <code>海中鱼巣/核心/主信息仓库.cpp:380</code> | direct-member |  |  | 调用方可达且 libclang 直接引用项目定义；源码位置复核 | 专项源码静态类型与实际装配人工复核 |
 | RCE0282 | F0628 | R0010 | <code>海中鱼巣/核心/主信息仓库.cpp:386</code> | direct-member |  |  | 调用方可达且 libclang 直接引用项目定义；源码位置复核 | 专项源码静态类型与实际装配人工复核 |
-| E1708 | F0629 | F0330 | <code>海中鱼巣/领域/方法服务.h:1708</code> | direct_const_member | this=&方法服务,源节点,类型,目标类型,std::nullopt | 唯一目标optional并直接返回 | F0629函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1708 | F0629 | F0330 | <code>海中鱼巣/领域/方法服务.h:1708</code> | direct_const_member | this=&amp;方法服务,源节点,类型,目标类型,std::nullopt | 唯一目标optional并直接返回 | F0629函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | RCE0283 | F0630 | F0346 | <code>海中鱼巣/核心/节点仓库.cpp:450</code> | suffix_match+direct-member |  |  | 调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | 同一具名类型内直接调用；源码调用词与定义范围闭合；专项源码静态类型与实际装配人工复核 |
 | RCE0284 | F0631 | F0338 | <code>海中鱼巣/核心/结构事务接线.数据.h:59</code> | suffix_match |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE0285 | F0631 | R0100 | <code>海中鱼巣/核心/结构事务接线.数据.h:59</code> | source-audited |  |  | 许可有效且保存的释放函数指针唯一 | 专项源码静态类型与实际装配人工复核 |
-| E1804 | F0632 | F0336 | <code>海中鱼巣/核心/节点仓库.cpp:24</code> | direct_const_member+unique_name | this=&接线 | 接线已接域bool | 函数进入；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
+| E1804 | F0632 | F0336 | <code>海中鱼巣/核心/节点仓库.cpp:24</code> | direct_const_member+unique_name | this=&amp;接线 | 接线已接域bool | 函数进入；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
 | RCE0286 | F0632 | F0399 | <code>海中鱼巣/核心/节点仓库.cpp:24</code> | resolved-function-pointer |  |  | 接线已接域；生产运行期唯一共享验证目标 | 专项源码静态类型与实际装配人工复核 |
 | RCE0287 | F0633 | R0241 | <code>海中鱼巣/领域/初始化.语素.ixx:146, 海中鱼巣/领域/初始化.语素.ixx:147, 海中鱼巣/领域/初始化.语素.ixx:148, 海中鱼巣/领域/初始化.语素.ixx:149, 海中鱼巣/领域/初始化.语素.ixx:150, 海中鱼巣/领域/初始化.语素.ixx:151, 海中鱼巣/领域/初始化.语素.ixx:152, 海中鱼巣/领域/初始化.语素.ixx:153, 海中鱼巣/领域/初始化.语素.ixx:154, 海中鱼巣/领域/初始化.语素.ixx:155, 海中鱼巣/领域/初始化.语素.ixx:156, 海中鱼巣/领域/初始化.语素.ixx:157, 海中鱼巣/领域/初始化.语素.ixx:158, 海中鱼巣/领域/初始化.语素.ixx:159, 海中鱼巣/领域/初始化.语素.ixx:160, 海中鱼巣/领域/初始化.语素.ixx:161, 海中鱼巣/领域/初始化.语素.ixx:162, 海中鱼巣/领域/初始化.语素.ixx:163</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE0288 | F0633 | R0246 | <code>海中鱼巣/领域/初始化.语素.ixx:165</code> | suffix_match |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
@@ -1882,19 +1882,19 @@
 | RCE0777 | R0220 | F0621 | <code>海中鱼巣/领域/任务服务.h:745</code> | source-audited |  |  | 顺序号无值；两实参仓库重载 | 专项源码静态类型与实际装配人工复核 |
 | RCE0778 | R0221 | R0222 | <code>海中鱼巣/领域/任务服务.h:761, 海中鱼巣/领域/任务服务.h:767</code> | direct-const-member |  |  | 任务及每个关系目标类型复核 | 专项源码静态类型与实际装配人工复核 |
 | RCE0779 | R0221 | F0621 | <code>海中鱼巣/领域/任务服务.h:764</code> | source-audited |  |  | 任务类型匹配 | 专项源码静态类型与实际装配人工复核 |
-| RCE0780 | R0221 | F0329 | <code>海中鱼巣/领域/任务服务.h:770</code> | source-audited | this=&状态,目标 | 状态值optional | 遍历任务引用目标且目标类型为状态 | 专项源码静态类型与实际装配人工复核 |
-| RCE0781 | R0222 | F0190 | <code>海中鱼巣/领域/任务服务.h:784</code> | source-audited | this=&方法服务,方法首节点,关系类型::引用,节点类型::任务,来源任务顺序号 | 来源任务节点optional并直接返回 | 入口 | 专项源码静态类型与实际装配人工复核 |
+| RCE0780 | R0221 | F0329 | <code>海中鱼巣/领域/任务服务.h:770</code> | source-audited | this=&amp;状态,目标 | 状态值optional | 遍历任务引用目标且目标类型为状态 | 专项源码静态类型与实际装配人工复核 |
+| RCE0781 | R0222 | F0190 | <code>海中鱼巣/领域/任务服务.h:784</code> | source-audited | this=&amp;方法服务,方法首节点,关系类型::引用,节点类型::任务,来源任务顺序号 | 来源任务节点optional并直接返回 | 入口 | 专项源码静态类型与实际装配人工复核 |
 | RCE0782 | R0224 | R0147 | <code>海中鱼巣/领域/初始化.世界树.ixx:132</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0783 | R0224 | R0008 | <code>海中鱼巣/领域/初始化.世界树.ixx:133</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0784 | R0225 | F0168 | <code>海中鱼巣/领域/初始化.世界树.ixx:137, 海中鱼巣/领域/初始化.世界树.ixx:140, 海中鱼巣/领域/初始化.世界树.ixx:143</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0785 | R0225 | R0075 | <code>海中鱼巣/领域/初始化.世界树.ixx:138, 海中鱼巣/领域/初始化.世界树.ixx:141, 海中鱼巣/领域/初始化.世界树.ixx:144</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0786 | R0225 | R0224 | <code>海中鱼巣/领域/初始化.世界树.ixx:146, 海中鱼巣/领域/初始化.世界树.ixx:147, 海中鱼巣/领域/初始化.世界树.ixx:148</code> | suffix_match |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| RCE0787 | R0229 | R0501 | <code>海中鱼巣/领域/初始化.系统角色.ixx:220</code> | direct-const-member | this=&方法服务,方法首节点,关系类型::引用,节点类型::方法,父方法顺序号 | 父方法节点optional并直接返回 | 特征服务字段静态类型为特征业务服务& | 专项源码静态类型与实际装配人工复核 |
-| RCE0789 | R0229 | R0369 | <code>海中鱼巣/领域/初始化.系统角色.ixx:221, 海中鱼巣/领域/初始化.系统角色.ixx:228</code> | direct-const-member | this=&方法服务,动作入口节点,关系类型::引用,节点类型::场景,动作输入规格顺序号 | 动作输入规格场景optional并直接返回 | 两个返回值静态类型均为特征体系业务结果 | 专项源码静态类型与实际装配人工复核 |
-| RCE1687 | R0229 | R0601 | <code>海中鱼巣/领域/初始化.系统角色.ixx:221, 海中鱼巣/领域/初始化.系统角色.ixx:228</code> | direct-static-member | this=&方法服务,动作入口节点,关系类型::引用,节点类型::场景,动作输出规格顺序号 | 动作输出规格场景optional并直接返回 | 特征结果状态静态类型为特征体系业务状态 | 专项源码静态类型与实际装配人工复核 |
-| RCE0790 | R0229 | R0370 | <code>海中鱼巣/领域/初始化.系统角色.ixx:222, 海中鱼巣/领域/初始化.系统角色.ixx:229</code> | direct-const-member | this=&方法服务,动作入口节点,关系类型::模板,节点类型::状态,动作入口状态顺序号 | 状态节点optional | 两个返回值静态类型均为特征体系业务结果 | 专项源码静态类型与实际装配人工复核 |
-| RCE0791 | R0229 | R0566 | <code>海中鱼巣/领域/初始化.系统角色.ixx:224</code> | direct-const-member |  |  | 特征状态组合器字段静态类型为特征状态组合器& | 专项源码静态类型与实际装配人工复核 |
-| RCE0792 | R0229 | R0514 | <code>海中鱼巣/领域/初始化.系统角色.ixx:231</code> | direct-const-member |  |  | 需求服务字段静态类型为需求业务服务& | 专项源码静态类型与实际装配人工复核 |
+| RCE0787 | R0229 | R0501 | <code>海中鱼巣/领域/初始化.系统角色.ixx:220</code> | direct-const-member | this=&amp;方法服务,方法首节点,关系类型::引用,节点类型::方法,父方法顺序号 | 父方法节点optional并直接返回 | 特征服务字段静态类型为特征业务服务&amp; | 专项源码静态类型与实际装配人工复核 |
+| RCE0789 | R0229 | R0369 | <code>海中鱼巣/领域/初始化.系统角色.ixx:221, 海中鱼巣/领域/初始化.系统角色.ixx:228</code> | direct-const-member | this=&amp;方法服务,动作入口节点,关系类型::引用,节点类型::场景,动作输入规格顺序号 | 动作输入规格场景optional并直接返回 | 两个返回值静态类型均为特征体系业务结果 | 专项源码静态类型与实际装配人工复核 |
+| RCE1687 | R0229 | R0601 | <code>海中鱼巣/领域/初始化.系统角色.ixx:221, 海中鱼巣/领域/初始化.系统角色.ixx:228</code> | direct-static-member | this=&amp;方法服务,动作入口节点,关系类型::引用,节点类型::场景,动作输出规格顺序号 | 动作输出规格场景optional并直接返回 | 特征结果状态静态类型为特征体系业务状态 | 专项源码静态类型与实际装配人工复核 |
+| RCE0790 | R0229 | R0370 | <code>海中鱼巣/领域/初始化.系统角色.ixx:222, 海中鱼巣/领域/初始化.系统角色.ixx:229</code> | direct-const-member | this=&amp;方法服务,动作入口节点,关系类型::模板,节点类型::状态,动作入口状态顺序号 | 状态节点optional | 两个返回值静态类型均为特征体系业务结果 | 专项源码静态类型与实际装配人工复核 |
+| RCE0791 | R0229 | R0566 | <code>海中鱼巣/领域/初始化.系统角色.ixx:224</code> | direct-const-member |  |  | 特征状态组合器字段静态类型为特征状态组合器&amp; | 专项源码静态类型与实际装配人工复核 |
+| RCE0792 | R0229 | R0514 | <code>海中鱼巣/领域/初始化.系统角色.ixx:231</code> | direct-const-member |  |  | 需求服务字段静态类型为需求业务服务&amp; | 专项源码静态类型与实际装配人工复核 |
 | RCE0794 | R0229 | R0465 | <code>海中鱼巣/领域/初始化.系统角色.ixx:234</code> | direct-const-member |  |  | 需求返回值静态类型为需求提交结果 | 专项源码静态类型与实际装配人工复核 |
 | RCE1688 | R0229 | R0602 | <code>海中鱼巣/领域/初始化.系统角色.ixx:234</code> | direct-static-member |  |  | 需求结果状态静态类型为需求任务方法业务状态 | 专项源码静态类型与实际装配人工复核 |
 | RCE1689 | R0229 | R0603 | <code>海中鱼巣/领域/初始化.系统角色.ixx:235</code> | direct-static-member |  |  | 需求结果状态静态类型为需求任务方法业务状态 | 专项源码静态类型与实际装配人工复核 |
@@ -2163,7 +2163,7 @@
 | RCE1076 | R0340 | R0339 | <code>海中鱼巣/领域/数据操作.概念活动.ixx:126</code> | suffix_match |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE1077 | R0340 | R0333 | <code>海中鱼巣/领域/数据操作.概念活动.ixx:57</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE1078 | R0340 | R0332 | <code>海中鱼巣/领域/数据操作.概念活动.ixx:59</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| RCE1079 | R0340 | R0116 | <code>海中鱼巣/领域/数据操作.概念活动.ixx:63</code> | direct-const-member |  |  | 外层入口前置通过并形成 std::function&lt;void(结构写入会话&)&gt; | 专项源码静态类型与实际装配人工复核 |
+| RCE1079 | R0340 | R0116 | <code>海中鱼巣/领域/数据操作.概念活动.ixx:63</code> | direct-const-member |  |  | 外层入口前置通过并形成 std::function&lt;void(结构写入会话&amp;)&gt; | 专项源码静态类型与实际装配人工复核 |
 | RCE1080 | R0341 | R0337 | <code>海中鱼巣/领域/数据操作.概念活动.ixx:110</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合；专项复核改挂到非平凡业务 lambda |
 | RCE1081 | R0341 | R0041 | <code>海中鱼巣/领域/数据操作.概念活动.ixx:119</code> | direct-member |  |  | 候选材料完整后请求提交 | 专项源码静态类型与实际装配人工复核；专项复核改挂到非平凡业务 lambda |
 | RCE1082 | R0341 | R0335 | <code>海中鱼巣/领域/数据操作.概念活动.ixx:64</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合；专项复核改挂到非平凡业务 lambda |
@@ -2368,7 +2368,7 @@
 | RCE1281 | R0407 | R0406 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:96</code> | direct_const_member |  |  | 抽象状态完整性首先复核当前可读 | 专项源码静态类型与实际装配人工复核 |
 | RCE1282 | R0407 | F0163 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:97</code> | direct |  |  | 抽象状态要求场景和主体节点句柄均无效 | 专项源码静态类型与实际装配人工复核 |
 | RCE1283 | R0407 | R0404 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:98</code> | direct_const_member |  |  | 抽象状态要求三份关系值式证据均不完整 | 专项源码静态类型与实际装配人工复核 |
-| RCE1284 | R0409 | R0116 | <code>海中鱼巣/领域/数据操作.系统角色.ixx:132</code> | direct-const-member |  |  | 外层入口前置通过并形成 std::function&lt;void(结构写入会话&)&gt; | 专项源码静态类型与实际装配人工复核 |
+| RCE1284 | R0409 | R0116 | <code>海中鱼巣/领域/数据操作.系统角色.ixx:132</code> | direct-const-member |  |  | 外层入口前置通过并形成 std::function&lt;void(结构写入会话&amp;)&gt; | 专项源码静态类型与实际装配人工复核 |
 | RCE1285 | R0409 | R0421 | <code>海中鱼巣/领域/数据操作.系统角色.ixx:172</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE1286 | R0410 | R0415 | <code>海中鱼巣/领域/数据操作.系统角色.ixx:133</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合；专项复核改挂到非平凡业务 lambda |
 | RCE1287 | R0410 | R0417 | <code>海中鱼巣/领域/数据操作.系统角色.ixx:134</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合；专项复核改挂到非平凡业务 lambda |
@@ -2425,7 +2425,7 @@
 | RCE1338 | R0432 | R0430 | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:1621, 海中鱼巣/领域/数据操作.需求任务方法.ixx:1649</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE1339 | R0432 | R0460 | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:1623, 海中鱼巣/领域/数据操作.需求任务方法.ixx:1650</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE1340 | R0432 | R0461 | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:1628</code> | suffix_match |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| RCE1341 | R0432 | R0116 | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:1632</code> | direct-const-member |  |  | 外层入口前置通过并形成 std::function&lt;void(结构写入会话&)&gt; | 专项源码静态类型与实际装配人工复核 |
+| RCE1341 | R0432 | R0116 | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:1632</code> | direct-const-member |  |  | 外层入口前置通过并形成 std::function&lt;void(结构写入会话&amp;)&gt; | 专项源码静态类型与实际装配人工复核 |
 | RCE1342 | R0432 | R0462 | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:1658</code> | suffix_match |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE1343 | R0433 | R0451 | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:1634</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合；专项复核改挂到非平凡业务 lambda |
 | RCE1344 | R0433 | R0403 | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:1635, 海中鱼巣/领域/数据操作.需求任务方法.ixx:1636, 海中鱼巣/领域/数据操作.需求任务方法.ixx:1637</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核；专项复核改挂到非平凡业务 lambda |
@@ -2510,7 +2510,7 @@
 | RCE1423 | R0458 | R0457 | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:3312</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE1424 | R0459 | R0434 | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:3382</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE1425 | R0460 | R0456 | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:3468</code> | direct-const-member |  |  | 当前静态类型为方法登记根材料 | 专项源码静态类型与实际装配人工复核 |
-| RCE1426 | R0460 | R0402 | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:3469, 海中鱼巣/领域/数据操作.需求任务方法.ixx:3470, 海中鱼巣/领域/数据操作.需求任务方法.ixx:3471</code> | direct-const-member |  |  | 状态数据操作字段静态类型为状态动态数据操作& | 专项源码静态类型与实际装配人工复核 |
+| RCE1426 | R0460 | R0402 | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:3469, 海中鱼巣/领域/数据操作.需求任务方法.ixx:3470, 海中鱼巣/领域/数据操作.需求任务方法.ixx:3471</code> | direct-const-member |  |  | 状态数据操作字段静态类型为状态动态数据操作&amp; | 专项源码静态类型与实际装配人工复核 |
 | RCE1427 | R0460 | R0407 | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:3472</code> | direct-const-member |  |  | 角色/活跃/失效返回类型均为状态值式材料 | 专项源码静态类型与实际装配人工复核 |
 | RCE1428 | R0460 | R0399 | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:3473, 海中鱼巣/领域/数据操作.需求任务方法.ixx:3474, 海中鱼巣/领域/数据操作.需求任务方法.ixx:3475</code> | direct-const-member |  |  | 三字段静态类型均为抽象状态写入规格 | 专项源码静态类型与实际装配人工复核 |
 | RCE1429 | R0460 | R0400 | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:3476, 海中鱼巣/领域/数据操作.需求任务方法.ixx:3477, 海中鱼巣/领域/数据操作.需求任务方法.ixx:3478</code> | direct-const-member |  |  | 三份规格字段静态类型为抽象状态写入规格 | 专项源码静态类型与实际装配人工复核 |
@@ -2570,7 +2570,7 @@
 | RCE1483 | R0486 | F0579 | <code>海中鱼巣/领域/方法服务.h:1815</code> | direct-const-member |  |  | 动作入口关系准入；无令牌重载 | 专项源码静态类型与实际装配人工复核 |
 | RCE1484 | R0487 | F0327 | <code>海中鱼巣/领域/方法服务.h:1819</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE1485 | R0487 | F0330 | <code>海中鱼巣/领域/方法服务.h:1822</code> | direct-const-member |  |  | 四参数读取动作入口状态；顺序号1 | 专项源码静态类型与实际装配人工复核 |
-| RCE1486 | R0487 | F0329 | <code>海中鱼巣/领域/方法服务.h:1826</code> | direct-const-member | this=&状态,状态节点.value() | 动作入口状态I64值optional | 四参数唯一状态目标存在 | 专项源码静态类型与实际装配人工复核 |
+| RCE1486 | R0487 | F0329 | <code>海中鱼巣/领域/方法服务.h:1826</code> | direct-const-member | this=&amp;状态,状态节点.value() | 动作入口状态I64值optional | 四参数唯一状态目标存在 | 专项源码静态类型与实际装配人工复核 |
 | RCE1487 | R0487 | R0484 | <code>海中鱼巣/领域/方法服务.h:1831</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE1488 | R0488 | R0477 | <code>海中鱼巣/领域/方法服务.h:455</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE1489 | R0489 | R0479 | <code>海中鱼巣/领域/方法服务.h:871</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
@@ -2659,8 +2659,8 @@
 | RCE1573 | R0566 | R0567 | <code>海中鱼巣/领域/组合.特征状态.ixx:36, 海中鱼巣/领域/组合.特征状态.ixx:39</code> | suffix_match |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE1574 | R0566 | R0503 | <code>海中鱼巣/领域/组合.特征状态.ixx:37</code> | unique_name+direct-const-member |  |  | 调用方可达且源码分支条件成立；形成初始特征值规格 | 全项目唯一函数名并经调用方源码范围复核；专项源码静态类型与实际装配人工复核 |
 | RCE1575 | R0566 | R0389 | <code>海中鱼巣/领域/组合.特征状态.ixx:40</code> | direct-const-member |  |  | 两份规格成功后创建槽位并发布初始状态 | 专项源码静态类型与实际装配人工复核 |
-| RCE1576 | R0571 | F0580 | <code>海中鱼巣/领域/语素服务.h:287, 海中鱼巣/领域/语素服务.h:288</code> | direct_const_member | this=&关系_,关系类型::运行期临时,节点句柄值 | 是否存在运行期临时目标关系bool | 节点记录存在，且类型为状态或动态时按逻辑或短路调用 | 源码逐行、实参数量与重载类型审计 PASS |
-| RCE1577 | R0572 | F0580 | <code>海中鱼巣/领域/语素服务.h:304, 海中鱼巣/领域/语素服务.h:305</code> | direct_const_member | this=&关系_,关系类型::运行期临时,节点句柄值 | 是否存在运行期临时目标关系bool | 节点记录存在，且类型为状态或动态时按逻辑或短路调用 | 源码逐行、实参数量与重载类型审计 PASS |
+| RCE1576 | R0571 | F0580 | <code>海中鱼巣/领域/语素服务.h:287, 海中鱼巣/领域/语素服务.h:288</code> | direct_const_member | this=&amp;关系_,关系类型::运行期临时,节点句柄值 | 是否存在运行期临时目标关系bool | 节点记录存在，且类型为状态或动态时按逻辑或短路调用 | 源码逐行、实参数量与重载类型审计 PASS |
+| RCE1577 | R0572 | F0580 | <code>海中鱼巣/领域/语素服务.h:304, 海中鱼巣/领域/语素服务.h:305</code> | direct_const_member | this=&amp;关系_,关系类型::运行期临时,节点句柄值 | 是否存在运行期临时目标关系bool | 节点记录存在，且类型为状态或动态时按逻辑或短路调用 | 源码逐行、实参数量与重载类型审计 PASS |
 | RCE1578 | R0573 | F0441 | <code>海中鱼巣/领域/语素服务.h:331, 海中鱼巣/领域/语素服务.h:362</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE1579 | R0573 | F0622 | <code>海中鱼巣/领域/语素服务.h:335</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE1580 | R0573 | F0168 | <code>海中鱼巣/领域/语素服务.h:336, 海中鱼巣/领域/语素服务.h:341, 海中鱼巣/领域/语素服务.h:347</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
@@ -2727,62 +2727,62 @@
 | RCE1700 | R0607 | F0587 | <code>海中鱼巣/领域/概念图服务.h:3099</code> | direct_const_member |  |  | 登记概念和状态均匹配后读取登记关系 | 专项源码静态类型与实际装配人工复核 |
 | RCE1701 | R0608 | F0163 | <code>海中鱼巣/领域/概念图服务.h:56, 海中鱼巣/领域/概念图服务.h:59</code> | direct_free |  |  | 复核概念和状态节点句柄 | 专项源码静态类型与实际装配人工复核 |
 | RCE1702 | R0608 | F0168 | <code>海中鱼巣/领域/概念图服务.h:60</code> | direct_free |  |  | 阶段和两个节点句柄前置成立后复核关系句柄 | 专项源码静态类型与实际装配人工复核 |
-| RCE1703 | R0571 | F0190 | <code>海中鱼巣/领域/语素服务.h:279</code> | direct_const_member | this=&节点_,节点句柄值 | 节点记录optional | R0571函数进入 | 源码逐行、实参数量与重载类型审计 PASS |
-| RCE1704 | R0572 | F0190 | <code>海中鱼巣/领域/语素服务.h:297</code> | direct_const_member | this=&节点_,节点句柄值 | 节点记录optional | R0572函数进入 | 源码逐行、实参数量与重载类型审计 PASS |
+| RCE1703 | R0571 | F0190 | <code>海中鱼巣/领域/语素服务.h:279</code> | direct_const_member | this=&amp;节点_,节点句柄值 | 节点记录optional | R0571函数进入 | 源码逐行、实参数量与重载类型审计 PASS |
+| RCE1704 | R0572 | F0190 | <code>海中鱼巣/领域/语素服务.h:297</code> | direct_const_member | this=&amp;节点_,节点句柄值 | 节点记录optional | R0572函数进入 | 源码逐行、实参数量与重载类型审计 PASS |
 | RCE1705 | F0363 | F0163 | <code>海中鱼巣/领域/语素服务.h:35</code> | direct_free | 语素入口 | 语素入口句柄有效bool | F0363函数进入 | 源码逐行与重载类型审计 PASS |
 | RCE1706 | F0363 | F0565 | <code>海中鱼巣/领域/语素服务.h:36</code> | direct_free | 主信息 | 主信息句柄有效bool | F0163@35 返回 true；逻辑与短路继续 | 源码逐行与重载类型审计 PASS |
 | RCE1707 | F0364 | F0163 | <code>海中鱼巣/领域/语素服务.h:112</code> | direct_free | 结果.语素入口 | 语素入口句柄有效bool | R0573@111 已返回语素入口创建结果 | 源码逐行与重载类型审计 PASS |
-| RCE1708 | F0364 | F0167 | <code>海中鱼巣/领域/语素服务.h:115</code> | direct_member | this=&关系_,关系类型::语素概念追溯,结果.语素入口,概念节点,默认顺序号0 | 概念关系 | F0163@112 返回 true | 源码逐行、默认实参与重载类型审计 PASS |
-| RCE1709 | F0365 | F0331 | <code>海中鱼巣/领域/存在服务.h:104</code> | direct_member_nonvirtual | this=&主信息_ | 主信息句柄 | F0365进入 | 源码静态接收者与零参数重载复核 |
-| RCE1710 | F0365 | F0332 | <code>海中鱼巣/领域/存在服务.h:105</code> | direct_member_nonvirtual | this=&节点_, 节点类型::存在, 主信息句柄 | 根节点 | 主信息句柄已创建 | 源码静态接收者与二参数重载复核 |
+| RCE1708 | F0364 | F0167 | <code>海中鱼巣/领域/语素服务.h:115</code> | direct_member | this=&amp;关系_,关系类型::语素概念追溯,结果.语素入口,概念节点,默认顺序号0 | 概念关系 | F0163@112 返回 true | 源码逐行、默认实参与重载类型审计 PASS |
+| RCE1709 | F0365 | F0331 | <code>海中鱼巣/领域/存在服务.h:104</code> | direct_member_nonvirtual | this=&amp;主信息_ | 主信息句柄 | F0365进入 | 源码静态接收者与零参数重载复核 |
+| RCE1710 | F0365 | F0332 | <code>海中鱼巣/领域/存在服务.h:105</code> | direct_member_nonvirtual | this=&amp;节点_, 节点类型::存在, 主信息句柄 | 根节点 | 主信息句柄已创建 | 源码静态接收者与二参数重载复核 |
 | RCE1711 | F0365 | R0609 | <code>海中鱼巣/领域/存在服务.h:106</code> | direct_const_member | this, 根节点 | 记录 | 根节点已创建 | 同一具名类型一参数重载与定义范围复核 |
-| RCE1712 | F0365 | F0624 | <code>海中鱼巣/领域/存在服务.h:107</code> | direct_const_member | this=&主信息_, 记录-&gt;主信息 | 主信息有效判定 | 记录存在 | 源码静态接收者与一参数重载复核 |
-| RCE1713 | F0366 | F0331 | <code>海中鱼巣/领域/动态服务.h:286</code> | direct_member_nonvirtual | this=&主信息_ | 主信息句柄 | F0366进入 | 源码静态接收者与零参数重载复核 |
-| RCE1714 | F0366 | F0332 | <code>海中鱼巣/领域/动态服务.h:287</code> | direct_member_nonvirtual | this=&节点_, 节点类型::动态, 主信息句柄 | 根节点 | 主信息句柄已创建 | 源码静态接收者与二参数重载复核 |
-| RCE1715 | F0366 | F0190 | <code>海中鱼巣/领域/动态服务.h:288</code> | direct_const_member | this=&节点_, 根节点 | 记录 | 根节点已创建 | 源码静态接收者与一参数重载复核 |
-| RCE1716 | F0366 | F0619 | <code>海中鱼巣/领域/动态服务.h:289</code> | direct_const_member | this=&主信息_, 记录-&gt;主信息 | 普通动态材料 | 记录存在 | 源码静态接收者与一参数重载复核 |
-| RCE1717 | F0366 | F0624 | <code>海中鱼巣/领域/动态服务.h:292</code> | direct_const_member | this=&主信息_, 记录-&gt;主信息 | 主信息有效判定 | 记录存在且类型为动态 | 源码静态接收者与一参数重载复核 |
-| RCE1718 | F0367 | F0190 | <code>海中鱼巣/领域/二次特征服务.h:51</code> | direct_const_member | this=&节点_, 根节点 | 记录 | 根节点已创建 | 源码静态接收者与一参数重载复核 |
-| RCE1719 | F0367 | F0624 | <code>海中鱼巣/领域/二次特征服务.h:54</code> | direct_const_member | this=&主信息_, 记录-&gt;主信息 | 主信息有效判定 | 记录存在且类型为二次特征 | 源码静态接收者与一参数重载复核 |
-| RCE1720 | R0609 | F0190 | <code>海中鱼巣/领域/存在服务.h:132</code> | direct_const_member | this=&节点_, 存在节点 | 记录 | R0609进入 | 源码静态接收者与一参数重载复核 |
-| RCE1721 | R0610 | F0190 | <code>海中鱼巣/领域/动态服务.h:316</code> | direct_const_member | this=&节点_, 动态节点 | 记录 | R0610进入 | 源码静态接收者与一参数重载复核 |
-| RCE1722 | R0610 | F0580 | <code>海中鱼巣/领域/动态服务.h:318</code> | direct_const_member | this=&关系_, 关系类型::运行期临时, 动态节点 | 存在目标关系判定 | 记录存在且类型为动态 | 源码静态接收者与二参数重载复核 |
+| RCE1712 | F0365 | F0624 | <code>海中鱼巣/领域/存在服务.h:107</code> | direct_const_member | this=&amp;主信息_, 记录-&gt;主信息 | 主信息有效判定 | 记录存在 | 源码静态接收者与一参数重载复核 |
+| RCE1713 | F0366 | F0331 | <code>海中鱼巣/领域/动态服务.h:286</code> | direct_member_nonvirtual | this=&amp;主信息_ | 主信息句柄 | F0366进入 | 源码静态接收者与零参数重载复核 |
+| RCE1714 | F0366 | F0332 | <code>海中鱼巣/领域/动态服务.h:287</code> | direct_member_nonvirtual | this=&amp;节点_, 节点类型::动态, 主信息句柄 | 根节点 | 主信息句柄已创建 | 源码静态接收者与二参数重载复核 |
+| RCE1715 | F0366 | F0190 | <code>海中鱼巣/领域/动态服务.h:288</code> | direct_const_member | this=&amp;节点_, 根节点 | 记录 | 根节点已创建 | 源码静态接收者与一参数重载复核 |
+| RCE1716 | F0366 | F0619 | <code>海中鱼巣/领域/动态服务.h:289</code> | direct_const_member | this=&amp;主信息_, 记录-&gt;主信息 | 普通动态材料 | 记录存在 | 源码静态接收者与一参数重载复核 |
+| RCE1717 | F0366 | F0624 | <code>海中鱼巣/领域/动态服务.h:292</code> | direct_const_member | this=&amp;主信息_, 记录-&gt;主信息 | 主信息有效判定 | 记录存在且类型为动态 | 源码静态接收者与一参数重载复核 |
+| RCE1718 | F0367 | F0190 | <code>海中鱼巣/领域/二次特征服务.h:51</code> | direct_const_member | this=&amp;节点_, 根节点 | 记录 | 根节点已创建 | 源码静态接收者与一参数重载复核 |
+| RCE1719 | F0367 | F0624 | <code>海中鱼巣/领域/二次特征服务.h:54</code> | direct_const_member | this=&amp;主信息_, 记录-&gt;主信息 | 主信息有效判定 | 记录存在且类型为二次特征 | 源码静态接收者与一参数重载复核 |
+| RCE1720 | R0609 | F0190 | <code>海中鱼巣/领域/存在服务.h:132</code> | direct_const_member | this=&amp;节点_, 存在节点 | 记录 | R0609进入 | 源码静态接收者与一参数重载复核 |
+| RCE1721 | R0610 | F0190 | <code>海中鱼巣/领域/动态服务.h:316</code> | direct_const_member | this=&amp;节点_, 动态节点 | 记录 | R0610进入 | 源码静态接收者与一参数重载复核 |
+| RCE1722 | R0610 | F0580 | <code>海中鱼巣/领域/动态服务.h:318</code> | direct_const_member | this=&amp;关系_, 关系类型::运行期临时, 动态节点 | 存在目标关系判定 | 记录存在且类型为动态 | 源码静态接收者与二参数重载复核 |
 | RCE1723 | F0516 | R0609 | <code>海中鱼巣/领域/存在服务.h:96</code> | direct_const_member | this, 存在 | 记录 | 存在节点已创建 | 同一具名类型一参数重载与定义范围复核 |
 | RCE1724 | R0277 | R0609 | <code>海中鱼巣/领域/存在服务.h:140</code> | direct_const_member | this, 存在节点 | 存在记录有值判定 | R0277进入 | 同一具名类型一参数重载与定义范围复核 |
-| RCE1726 | F0368 | R0611 | <code>海中鱼巣/领域/因果服务.h:57</code> | direct_member_nonvirtual | this=&因果服务, 无显式参数 | 根节点 | F0368进入 | 当前源码重载与调用点复核 |
-| RCE1727 | F0368 | F0190 | <code>海中鱼巣/领域/因果服务.h:58</code> | direct_const_member | this=&节点_, 根节点 | 记录 | R0611返回后 | 当前源码逐调用点复核 |
-| RCE1728 | F0368 | F0624 | <code>海中鱼巣/领域/因果服务.h:61</code> | direct_const_member | this=&主信息_, 记录-&gt;主信息 | 主信息有效bool | 记录存在且类型为因果引用 | 当前源码逐调用点复核 |
-| RCE1729 | R0611 | F0331 | <code>海中鱼巣/领域/因果服务.h:45</code> | direct_member_nonvirtual | this=&主信息_ | 主信息句柄 | R0611进入 | 当前源码逐调用点复核 |
-| RCE1730 | R0611 | F0332 | <code>海中鱼巣/领域/因果服务.h:46</code> | direct_member_nonvirtual | this=&节点_, 节点类型::因果引用, 主信息句柄 | 因果引用 | 主信息句柄已创建 | 当前源码逐调用点复核 |
-| RCE1731 | R0611 | F0190 | <code>海中鱼巣/领域/因果服务.h:47</code> | direct_const_member | this=&节点_, 因果引用 | 记录 | 因果引用节点已创建 | 当前源码逐调用点复核 |
-| RCE1732 | R0611 | F0624 | <code>海中鱼巣/领域/因果服务.h:49</code> | direct_const_member | this=&主信息_, 记录-&gt;主信息 | 主信息有效bool | 记录存在且类型为因果引用 | 当前源码逐调用点复核 |
-| RCE1733 | R0611 | F0184 | <code>海中鱼巣/领域/因果服务.h:48-50</code> | direct_free_function | 记录.has_value() && 记录-&gt;类型==因果引用 && 主信息_.主信息是否有效(记录-&gt;主信息), 固定说明 | 后验检查bool并取反进入失败分支 | 记录读取返回后总是形成条件并调用 | 当前源码逐调用点复核 |
-| RCE1734 | F0369 | F0190 | <code>海中鱼巣/领域/概念图服务.h:927</code> | direct_const_member | this=&节点_, 节点 | 记录 | F0369进入 | 当前源码逐调用点复核 |
+| RCE1726 | F0368 | R0611 | <code>海中鱼巣/领域/因果服务.h:57</code> | direct_member_nonvirtual | this=&amp;因果服务, 无显式参数 | 根节点 | F0368进入 | 当前源码重载与调用点复核 |
+| RCE1727 | F0368 | F0190 | <code>海中鱼巣/领域/因果服务.h:58</code> | direct_const_member | this=&amp;节点_, 根节点 | 记录 | R0611返回后 | 当前源码逐调用点复核 |
+| RCE1728 | F0368 | F0624 | <code>海中鱼巣/领域/因果服务.h:61</code> | direct_const_member | this=&amp;主信息_, 记录-&gt;主信息 | 主信息有效bool | 记录存在且类型为因果引用 | 当前源码逐调用点复核 |
+| RCE1729 | R0611 | F0331 | <code>海中鱼巣/领域/因果服务.h:45</code> | direct_member_nonvirtual | this=&amp;主信息_ | 主信息句柄 | R0611进入 | 当前源码逐调用点复核 |
+| RCE1730 | R0611 | F0332 | <code>海中鱼巣/领域/因果服务.h:46</code> | direct_member_nonvirtual | this=&amp;节点_, 节点类型::因果引用, 主信息句柄 | 因果引用 | 主信息句柄已创建 | 当前源码逐调用点复核 |
+| RCE1731 | R0611 | F0190 | <code>海中鱼巣/领域/因果服务.h:47</code> | direct_const_member | this=&amp;节点_, 因果引用 | 记录 | 因果引用节点已创建 | 当前源码逐调用点复核 |
+| RCE1732 | R0611 | F0624 | <code>海中鱼巣/领域/因果服务.h:49</code> | direct_const_member | this=&amp;主信息_, 记录-&gt;主信息 | 主信息有效bool | 记录存在且类型为因果引用 | 当前源码逐调用点复核 |
+| RCE1733 | R0611 | F0184 | <code>海中鱼巣/领域/因果服务.h:48-50</code> | direct_free_function | 记录.has_value() &amp;&amp; 记录-&gt;类型==因果引用 &amp;&amp; 主信息_.主信息是否有效(记录-&gt;主信息), 固定说明 | 后验检查bool并取反进入失败分支 | 记录读取返回后总是形成条件并调用 | 当前源码逐调用点复核 |
+| RCE1734 | F0369 | F0190 | <code>海中鱼巣/领域/概念图服务.h:927</code> | direct_const_member | this=&amp;节点_, 节点 | 记录 | F0369进入 | 当前源码逐调用点复核 |
 | RCE1735 | F0370 | F0051 | <code>海中鱼巣/领域/概念图服务.h:1034</code> | direct_free_operator | 实例, 概念 | 完整句柄相同bool | 实例与概念粗类别读取完成后进入写前短路判断 | 当前源码逐调用点复核 |
-| RCE1736 | F0376 | F0630 | <code>海中鱼巣/核心/索引仓库.cpp:427</code> | direct_const_member+source_audited | this=&节点_, 候选, 令牌 | 候选节点当前有效bool | 共享令牌有效；候选快照已形成；逐候选循环 | 当前源码逐调用点、接收者类型与重载复核 |
-| RCE1737 | F0377 | F0336 | <code>海中鱼巣/核心/节点仓库.cpp:442</code> | direct_const_member+source_audited | this=&事务接线_ | 事务接线是否已接域bool | F0377进入 | 当前源码逐调用点、Clang AST候选与同仓接域调用模式复核 |
+| RCE1736 | F0376 | F0630 | <code>海中鱼巣/核心/索引仓库.cpp:427</code> | direct_const_member+source_audited | this=&amp;节点_, 候选, 令牌 | 候选节点当前有效bool | 共享令牌有效；候选快照已形成；逐候选循环 | 当前源码逐调用点、接收者类型与重载复核 |
+| RCE1737 | F0377 | F0336 | <code>海中鱼巣/核心/节点仓库.cpp:442</code> | direct_const_member+source_audited | this=&amp;事务接线_ | 事务接线是否已接域bool | F0377进入 | 当前源码逐调用点、Clang AST候选与同仓接域调用模式复核 |
 | RCE1738 | F0377 | F0397 | <code>海中鱼巣/核心/节点仓库.cpp:443</code> | resolved_function_pointer+source_audited | 状态=事务接线_.运行期状态 | 结构事务许可 | RCE1737返回true | 当前源码逐调用点、现行接线装配与既有RCE0042同域绑定复核 |
-| RCE1739 | F0377 | F0338 | <code>海中鱼巣/核心/节点仓库.cpp:444</code> | direct_const_member+source_audited | this=&许可 | 许可是否有效bool | RCE1738已形成局部许可 | 当前源码逐调用点与Clang AST短路表达式复核 |
-| RCE1740 | F0377 | F0339 | <code>海中鱼巣/核心/节点仓库.cpp:444</code> | direct_const_member+source_audited | this=&许可 | 结构事务令牌const引用 | RCE1739返回true；逻辑与右侧开始求值 | 当前源码逐调用点与Clang AST左到右短路顺序复核 |
-| RCE1741 | F0377 | F0345 | <code>海中鱼巣/核心/节点仓库.cpp:443-445</code> | implicit_destructor+source_audited | this=&许可 | void | RCE1738已形成许可；返回值求值完成或异常展开 | 当前源码作用域、C++ RAII与既有E0790同域生命周期复核 |
-| RCE1742 | F0381 | F0214 | <code>海中鱼巣/适配/SQL数据库适配.cpp:251-265</code> | implicit_destructor+source_audited | this=&语句 | void | F0207已完成局部语句构造；随后正常返回或异常展开 | 当前源码作用域、C++ RAII与F0214已定义析构逐行复核 |
-| RCE1743 | F0384 | F0336 | <code>海中鱼巣/核心/主信息仓库.cpp:199</code> | direct_const_member+source_audited | this=&事务接线_ | 已接域bool | F0384进入 | 当前源码单行控制流、静态接收者与同仓调用模式复核 |
+| RCE1739 | F0377 | F0338 | <code>海中鱼巣/核心/节点仓库.cpp:444</code> | direct_const_member+source_audited | this=&amp;许可 | 许可是否有效bool | RCE1738已形成局部许可 | 当前源码逐调用点与Clang AST短路表达式复核 |
+| RCE1740 | F0377 | F0339 | <code>海中鱼巣/核心/节点仓库.cpp:444</code> | direct_const_member+source_audited | this=&amp;许可 | 结构事务令牌const引用 | RCE1739返回true；逻辑与右侧开始求值 | 当前源码逐调用点与Clang AST左到右短路顺序复核 |
+| RCE1741 | F0377 | F0345 | <code>海中鱼巣/核心/节点仓库.cpp:443-445</code> | implicit_destructor+source_audited | this=&amp;许可 | void | RCE1738已形成许可；返回值求值完成或异常展开 | 当前源码作用域、C++ RAII与既有E0790同域生命周期复核 |
+| RCE1742 | F0381 | F0214 | <code>海中鱼巣/适配/SQL数据库适配.cpp:251-265</code> | implicit_destructor+source_audited | this=&amp;语句 | void | F0207已完成局部语句构造；随后正常返回或异常展开 | 当前源码作用域、C++ RAII与F0214已定义析构逐行复核 |
+| RCE1743 | F0384 | F0336 | <code>海中鱼巣/核心/主信息仓库.cpp:199</code> | direct_const_member+source_audited | this=&amp;事务接线_ | 已接域bool | F0384进入 | 当前源码单行控制流、静态接收者与同仓调用模式复核 |
 | RCE1744 | F0384 | F0397 | <code>海中鱼巣/核心/主信息仓库.cpp:199</code> | resolved_function_pointer+source_audited | 状态=事务接线_.运行期状态 | 局部结构事务许可 | RCE1743返回true | 当前源码、现行接线装配与既有同域函数指针绑定复核 |
-| RCE1745 | F0384 | F0338 | <code>海中鱼巣/核心/主信息仓库.cpp:199</code> | direct_const_member+source_audited | this=&许可 | 许可有效bool | RCE1744已形成局部许可 | 当前源码三元表达式左到右求值与静态接收者复核 |
-| RCE1746 | F0384 | F0339 | <code>海中鱼巣/核心/主信息仓库.cpp:199</code> | direct_const_member+source_audited | this=&许可 | 结构事务令牌const引用 | RCE1745返回true；三元表达式选择读取分支 | 当前源码三元表达式条件分支与静态接收者复核 |
-| RCE1747 | F0384 | F0345 | <code>海中鱼巣/核心/主信息仓库.cpp:199</code> | implicit_destructor+source_audited | this=&许可 | void | RCE1744已形成许可；返回值求值完成或异常展开 | 当前源码单行作用域、C++ RAII与同仓许可生命周期复核 |
-| RCE1748 | F0385 | F0173 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:45</code> | direct_const_member+source_audited | this=&语素初始化读数 | 语素初始化结果是否成功bool | F0385进入；false时第46行返回std::nullopt | 当前源码逐调用点、静态接收者类型与F0173完整签名复核 |
+| RCE1745 | F0384 | F0338 | <code>海中鱼巣/核心/主信息仓库.cpp:199</code> | direct_const_member+source_audited | this=&amp;许可 | 许可有效bool | RCE1744已形成局部许可 | 当前源码三元表达式左到右求值与静态接收者复核 |
+| RCE1746 | F0384 | F0339 | <code>海中鱼巣/核心/主信息仓库.cpp:199</code> | direct_const_member+source_audited | this=&amp;许可 | 结构事务令牌const引用 | RCE1745返回true；三元表达式选择读取分支 | 当前源码三元表达式条件分支与静态接收者复核 |
+| RCE1747 | F0384 | F0345 | <code>海中鱼巣/核心/主信息仓库.cpp:199</code> | implicit_destructor+source_audited | this=&amp;许可 | void | RCE1744已形成许可；返回值求值完成或异常展开 | 当前源码单行作用域、C++ RAII与同仓许可生命周期复核 |
+| RCE1748 | F0385 | F0173 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:45</code> | direct_const_member+source_audited | this=&amp;语素初始化读数 | 语素初始化结果是否成功bool | F0385进入；false时第46行返回std::nullopt | 当前源码逐调用点、静态接收者类型与F0173完整签名复核 |
 | RCE1749 | F0388 | R0612 | <code>海中鱼巣/界面/控制面板窗口.cpp:394-401</code> | standard_algorithm_callback+source_audited | 材料=std::all_of当前遍历元素const引用 | 当前树视图材料是否满足三项展示边界bool | F0388执行X01021；std::all_of对尚未短路的当前元素调用谓词 | 当前源码397-401行lambda正文、标准算法回调语义与R0612身份复核 |
-| RCE1750 | F0387 | F0336 | <code>海中鱼巣/核心/关系仓库.cpp:734</code> | direct_const_member+macro_expanded+source_audited | this=&事务接线_ | 事务接线是否已接域bool | F0387进入并展开关系共享许可范围宏 | 当前源码宏定义116-123行、调用点734行与同宏调用模式复核 |
+| RCE1750 | F0387 | F0336 | <code>海中鱼巣/核心/关系仓库.cpp:734</code> | direct_const_member+macro_expanded+source_audited | this=&amp;事务接线_ | 事务接线是否已接域bool | F0387进入并展开关系共享许可范围宏 | 当前源码宏定义116-123行、调用点734行与同宏调用模式复核 |
 | RCE1751 | F0387 | F0337 | <code>海中鱼巣/核心/关系仓库.cpp:734</code> | direct_free+macro_expanded+source_audited | 仓库=*this | 当前关系令牌指针 | RCE1750返回true；逻辑与右侧开始求值 | 当前源码宏定义116-123行、调用点734行与F0337完整签名复核 |
 | RCE1752 | F0387 | F0397 | <code>海中鱼巣/核心/关系仓库.cpp:734</code> | resolved_function_pointer+macro_expanded+source_audited | 状态=事务接线_.运行期状态 | 临时结构事务许可 | RCE1750返回true且RCE1751返回nullptr | 当前源码宏展开、现行生产装配与既有同域函数指针绑定复核 |
-| RCE1753 | F0387 | F0338 | <code>海中鱼巣/核心/关系仓库.cpp:734</code> | direct_const_member+macro_expanded+source_audited | this=&自动许可.value() | 许可是否有效bool | RCE1752返回许可并经RCE1756移动构造完成 | 当前源码宏定义120-121行、调用点734行与F0338签名复核 |
-| RCE1754 | F0387 | F0339 | <code>海中鱼巣/核心/关系仓库.cpp:734</code> | direct_const_member+macro_expanded+source_audited | this=&自动许可.value() | 结构事务令牌const引用 | RCE1753返回true | 当前源码宏定义121-122行、调用点734行与F0339签名复核 |
+| RCE1753 | F0387 | F0338 | <code>海中鱼巣/核心/关系仓库.cpp:734</code> | direct_const_member+macro_expanded+source_audited | this=&amp;自动许可.value() | 许可是否有效bool | RCE1752返回许可并经RCE1756移动构造完成 | 当前源码宏定义120-121行、调用点734行与F0338签名复核 |
+| RCE1754 | F0387 | F0339 | <code>海中鱼巣/核心/关系仓库.cpp:734</code> | direct_const_member+macro_expanded+source_audited | this=&amp;自动许可.value() | 结构事务令牌const引用 | RCE1753返回true | 当前源码宏定义121-122行、调用点734行与F0339签名复核 |
 | RCE1755 | F0387 | F0340 | <code>海中鱼巣/核心/关系仓库.cpp:734</code> | direct_constructor+macro_expanded+source_audited | 仓库=*this,令牌=RCE1754返回const引用 | 自动令牌范围承载值 | RCE1753返回true且RCE1754已取得令牌引用 | 当前源码宏定义122行、调用点734行与F0340完整构造签名复核 |
 | RCE1756 | F0387 | F0375 | <code>海中鱼巣/核心/关系仓库.cpp:734</code> | move-constructor+macro-expanded-move-constructor | 其它=RCE1752返回的临时结构事务许可 | 自动许可optional中的结构事务许可 | RCE1752返回临时许可；进入optional.emplace承载值构造 | 当前源码宏定义120行、调用点734行、F0375签名与既有E0793同宏先例复核 |
-| RCE1757 | F0402 | R0114 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:150</code> | constructor+source-audited | 接线=接线_,主信息=&主信息_,节点=&节点_,关系=&关系_,索引=&索引_ | 成员执行器_ | F0402成员接线、四仓库引用和关系仓库编号完成初始化 | 当前源码第150行成员初始化器、成员声明与R0114构造函数签名专项复核 |
-| RCE1758 | F0406 | R0114 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:102</code> | constructor+source-audited | 接线=接线_,主信息=&主信息_,节点=&节点_,关系=&关系_,索引=&索引_ | 成员执行器_ | F0406成员接线和四仓库引用完成初始化 | 当前源码第102行成员初始化器、成员声明与R0114构造函数签名专项复核 |
-| RCE1759 | F0409 | R0114 | <code>海中鱼巣/领域/数据操作.系统角色.ixx:35</code> | constructor+source-audited | 接线=接线_,主信息=&主信息_,节点=&节点_,关系=&关系_,索引=&索引_ | 成员执行器_ | F0409成员接线、四仓库引用和关系仓库编号完成初始化 | 当前源码第35行成员初始化器、成员声明与R0114构造函数签名专项复核 |
+| RCE1757 | F0402 | R0114 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:150</code> | constructor+source-audited | 接线=接线_,主信息=&amp;主信息_,节点=&amp;节点_,关系=&amp;关系_,索引=&amp;索引_ | 成员执行器_ | F0402成员接线、四仓库引用和关系仓库编号完成初始化 | 当前源码第150行成员初始化器、成员声明与R0114构造函数签名专项复核 |
+| RCE1758 | F0406 | R0114 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:102</code> | constructor+source-audited | 接线=接线_,主信息=&amp;主信息_,节点=&amp;节点_,关系=&amp;关系_,索引=&amp;索引_ | 成员执行器_ | F0406成员接线和四仓库引用完成初始化 | 当前源码第102行成员初始化器、成员声明与R0114构造函数签名专项复核 |
+| RCE1759 | F0409 | R0114 | <code>海中鱼巣/领域/数据操作.系统角色.ixx:35</code> | constructor+source-audited | 接线=接线_,主信息=&amp;主信息_,节点=&amp;节点_,关系=&amp;关系_,索引=&amp;索引_ | 成员执行器_ | F0409成员接线、四仓库引用和关系仓库编号完成初始化 | 当前源码第35行成员初始化器、成员声明与R0114构造函数签名专项复核 |
 | RCE1760 | F0440 | R0089 | <code>海中鱼巣/核心/关系仓库.cpp:1431</code> | direct-free+macro-expanded+source-audited | 接线=事务接线_,令牌=F0440形参 | 共享令牌是否有效bool | F0440进入；false立即返回std::nullopt | 宏体1028行、展开点1431行与R0089完整签名复核 |
 | RCE1761 | F0440 | F0340 | <code>海中鱼巣/核心/关系仓库.cpp:1431</code> | direct-constructor+macro-expanded+source-audited | 仓库=*this,令牌=F0440形参 | 局部关系令牌范围 | RCE1760返回true | 宏体1029行、展开点1431行与F0340构造签名复核 |
 | RCE1762 | F0456 | R0613 | <code>海中鱼巣/领域/系统角色清单.数据.h:212</code> | defaulted-member-comparison+source-audited | 11个系统角色身份材料字段按声明顺序比较 | 主体身份字段相等bool | 首字段必达，后续字段仅当前序全部相等；静态11次 | defaulted operator==成员顺序、字段类型与R0613签名复核 |
@@ -2794,51 +2794,51 @@
 | RCE1768 | F0457 | R0598 | <code>海中鱼巣/领域/系统角色清单.数据.h:140</code> | defaulted-member-comparison+source-audited | 关系字段 | 关系句柄相等bool | F0457进入，首字段必达 | defaulted operator==字段类型与R0598重载复核 |
 | RCE1769 | F0457 | F0051 | <code>海中鱼巣/领域/系统角色清单.数据.h:140</code> | defaulted-member-comparison+source-audited | 源节点、目标节点 | 节点句柄相等bool | 关系句柄及前序字段相等后按顺序短路；静态2次 | defaulted operator==字段类型与F0051重载复核 |
 | RCE1770 | F0454 | F0452 | <code>海中鱼巣/领域/初始化.系统角色.ixx:176</code> | direct_const_member | this | 被调函数结果按当前调用表达式接收或用于条件判断 | always at function entry | 同一具名类型内直接调用；首层漏边候选 |
-| RCE1771 | F0454 | F0245 | <code>海中鱼巣/领域/初始化.系统角色.ixx:176</code> | direct_const_member | this=&清单 | 被调函数结果按当前调用表达式接收或用于条件判断 | F0452返回true后短路求值 | 清单静态类型为系统角色清单；首层漏边候选 |
-| RCE1772 | F0454 | R0616 | <code>海中鱼巣/领域/初始化.系统角色.ixx:177</code> | direct_const_member | this=&数据操作_, 清单=const只读借用 | 被调函数结果按当前调用表达式接收或用于条件判断 | 初始化器有效且清单完整 | 成员静态类型为系统角色数据操作；新函数候选 |
-| RCE1773 | F0454 | F0228 | <code>海中鱼巣/领域/初始化.系统角色.ixx:180</code> | direct_const_member | this=&参数 | 被调函数结果按当前调用表达式接收或用于条件判断 | LF_B001成功且R0239已形成参数 | 参数静态类型为系统角色初始化参数；首层漏边候选 |
+| RCE1771 | F0454 | F0245 | <code>海中鱼巣/领域/初始化.系统角色.ixx:176</code> | direct_const_member | this=&amp;清单 | 被调函数结果按当前调用表达式接收或用于条件判断 | F0452返回true后短路求值 | 清单静态类型为系统角色清单；首层漏边候选 |
+| RCE1772 | F0454 | R0616 | <code>海中鱼巣/领域/初始化.系统角色.ixx:177</code> | direct_const_member | this=&amp;数据操作_, 清单=const只读借用 | 被调函数结果按当前调用表达式接收或用于条件判断 | 初始化器有效且清单完整 | 成员静态类型为系统角色数据操作；新函数候选 |
+| RCE1773 | F0454 | F0228 | <code>海中鱼巣/领域/初始化.系统角色.ixx:180</code> | direct_const_member | this=&amp;参数 | 被调函数结果按当前调用表达式接收或用于条件判断 | LF_B001成功且R0239已形成参数 | 参数静态类型为系统角色初始化参数；首层漏边候选 |
 | RCE1774 | F0455 | F0452 | <code>海中鱼巣/领域/初始化.系统角色.ixx:68</code> | direct_const_member | this | 被调函数结果按当前调用表达式接收或用于条件判断 | 取得初始化互斥锁后 | 同一具名类型内直接调用；首层漏边候选 |
-| RCE1775 | F0455 | F0228 | <code>海中鱼巣/领域/初始化.系统角色.ixx:68</code> | direct_const_member | this=&参数 | 被调函数结果按当前调用表达式接收或用于条件判断 | F0452返回true后短路求值 | 参数静态类型为系统角色初始化参数；首层漏边候选 |
-| RCE1776 | F0455 | R0617 | <code>海中鱼巣/领域/初始化.系统角色.ixx:71, 海中鱼巣/领域/初始化.系统角色.ixx:153</code> | direct_const_member | this=&写前 或 this=&写后 | 被调函数结果按当前调用表达式接收或用于条件判断 | 每次R0422预检返回后 | 结果静态类型为系统角色预检结果 |
-| RCE1777 | F0455 | R0618 | <code>海中鱼巣/领域/初始化.系统角色.ixx:78</code> | direct_const_member | this=&世界根 | 被调函数结果按当前调用表达式接收或用于条件判断 | R0496返回后 | 结果静态类型为语义基础业务结果 |
-| RCE1778 | F0455 | R0619 | <code>海中鱼巣/领域/初始化.系统角色.ixx:79</code> | direct_const_member | this=&世界根 | 被调函数结果按当前调用表达式接收或用于条件判断 | LF_B003返回true | 结果静态类型为语义基础业务结果 |
+| RCE1775 | F0455 | F0228 | <code>海中鱼巣/领域/初始化.系统角色.ixx:68</code> | direct_const_member | this=&amp;参数 | 被调函数结果按当前调用表达式接收或用于条件判断 | F0452返回true后短路求值 | 参数静态类型为系统角色初始化参数；首层漏边候选 |
+| RCE1776 | F0455 | R0617 | <code>海中鱼巣/领域/初始化.系统角色.ixx:71, 海中鱼巣/领域/初始化.系统角色.ixx:153</code> | direct_const_member | this=&amp;写前 或 this=&amp;写后 | 被调函数结果按当前调用表达式接收或用于条件判断 | 每次R0422预检返回后 | 结果静态类型为系统角色预检结果 |
+| RCE1777 | F0455 | R0618 | <code>海中鱼巣/领域/初始化.系统角色.ixx:78</code> | direct_const_member | this=&amp;世界根 | 被调函数结果按当前调用表达式接收或用于条件判断 | R0496返回后 | 结果静态类型为语义基础业务结果 |
+| RCE1778 | F0455 | R0619 | <code>海中鱼巣/领域/初始化.系统角色.ixx:79</code> | direct_const_member | this=&amp;世界根 | 被调函数结果按当前调用表达式接收或用于条件判断 | LF_B003返回true | 结果静态类型为语义基础业务结果 |
 | RCE1779 | F0455 | R0620 | <code>海中鱼巣/领域/初始化.系统角色.ixx:78</code> | template_instance | 状态=世界根.状态 | 被调函数结果按当前调用表达式接收或用于条件判断 | LF_B003返回false | 实参静态类型冻结模板实例为语义基础业务状态 |
-| RCE1780 | F0455 | R0621 | <code>海中鱼巣/领域/初始化.系统角色.ixx:81</code> | direct_const_member | this=&场景服务_, 请求={参数.自我场景主键} | 被调函数结果按当前调用表达式接收或用于条件判断 | 世界根创建成功 | 成员静态类型为场景业务服务 |
-| RCE1781 | F0455 | R0622 | <code>海中鱼巣/领域/初始化.系统角色.ixx:82, 海中鱼巣/领域/初始化.系统角色.ixx:100, 海中鱼巣/领域/初始化.系统角色.ixx:120</code> | direct_const_member | this=&自我场景 或 this=&自我存在 或 this=&概念存在根 | 被调函数结果按当前调用表达式接收或用于条件判断 | 各存在场景业务调用返回后 | 三个结果静态类型均为存在场景业务结果 |
-| RCE1782 | F0455 | R0623 | <code>海中鱼巣/领域/初始化.系统角色.ixx:83, 海中鱼巣/领域/初始化.系统角色.ixx:101, 海中鱼巣/领域/初始化.系统角色.ixx:121</code> | direct_const_member | this=&自我场景 或 this=&自我存在 或 this=&概念存在根 | 被调函数结果按当前调用表达式接收或用于条件判断 | 对应LF_B007返回true | 三个结果静态类型均为存在场景业务结果 |
+| RCE1780 | F0455 | R0621 | <code>海中鱼巣/领域/初始化.系统角色.ixx:81</code> | direct_const_member | this=&amp;场景服务_, 请求={参数.自我场景主键} | 被调函数结果按当前调用表达式接收或用于条件判断 | 世界根创建成功 | 成员静态类型为场景业务服务 |
+| RCE1781 | F0455 | R0622 | <code>海中鱼巣/领域/初始化.系统角色.ixx:82, 海中鱼巣/领域/初始化.系统角色.ixx:100, 海中鱼巣/领域/初始化.系统角色.ixx:120</code> | direct_const_member | this=&amp;自我场景 或 this=&amp;自我存在 或 this=&amp;概念存在根 | 被调函数结果按当前调用表达式接收或用于条件判断 | 各存在场景业务调用返回后 | 三个结果静态类型均为存在场景业务结果 |
+| RCE1782 | F0455 | R0623 | <code>海中鱼巣/领域/初始化.系统角色.ixx:83, 海中鱼巣/领域/初始化.系统角色.ixx:101, 海中鱼巣/领域/初始化.系统角色.ixx:121</code> | direct_const_member | this=&amp;自我场景 或 this=&amp;自我存在 或 this=&amp;概念存在根 | 被调函数结果按当前调用表达式接收或用于条件判断 | 对应LF_B007返回true | 三个结果静态类型均为存在场景业务结果 |
 | RCE1783 | F0455 | R0624 | <code>海中鱼巣/领域/初始化.系统角色.ixx:82, 海中鱼巣/领域/初始化.系统角色.ixx:100, 海中鱼巣/领域/初始化.系统角色.ixx:120</code> | template_instance | 状态=自我场景.状态 或 自我存在.状态 或 概念存在根.状态 | 被调函数结果按当前调用表达式接收或用于条件判断 | 对应LF_B007返回false | 实参静态类型冻结模板实例为存在场景业务状态 |
 | RCE1784 | F0455 | R0625 | <code>海中鱼巣/领域/初始化.系统角色.ixx:88, 海中鱼巣/领域/初始化.系统角色.ixx:89</code> | direct_const_member | this=已有自我场景 或 this=已有自我存在 | 被调函数结果按当前调用表达式接收或用于条件判断 | 对应R0565查找结果非nullptr | 指针目标静态类型为系统角色键占用材料 |
-| RCE1785 | F0455 | R0616 | <code>海中鱼巣/领域/初始化.系统角色.ixx:165</code> | direct_const_member | this=&数据操作_, 清单=拓扑.清单 | 被调函数结果按当前调用表达式接收或用于条件判断 | 拓扑发布成功且全部语义复核通过 | 成员静态类型为系统角色数据操作 |
+| RCE1785 | F0455 | R0616 | <code>海中鱼巣/领域/初始化.系统角色.ixx:165</code> | direct_const_member | this=&amp;数据操作_, 清单=拓扑.清单 | 被调函数结果按当前调用表达式接收或用于条件判断 | 拓扑发布成功且全部语义复核通过 | 成员静态类型为系统角色数据操作 |
 | RCE1786 | R0616 | F0449 | <code>海中鱼巣/领域/数据操作.系统角色.ixx:182</code> | direct_const_member | this | 被调函数结果按当前调用表达式接收或用于条件判断 | always at function entry | 同一具名类型内直接调用 |
-| RCE1787 | R0616 | F0245 | <code>海中鱼巣/领域/数据操作.系统角色.ixx:182</code> | direct_const_member | this=&清单 | 被调函数结果按当前调用表达式接收或用于条件判断 | F0449返回true后短路求值 | 清单静态类型为系统角色清单 |
+| RCE1787 | R0616 | F0245 | <code>海中鱼巣/领域/数据操作.系统角色.ixx:182</code> | direct_const_member | this=&amp;清单 | 被调函数结果按当前调用表达式接收或用于条件判断 | F0449返回true后短路求值 | 清单静态类型为系统角色清单 |
 | RCE1788 | R0616 | R0421 | <code>海中鱼巣/领域/数据操作.系统角色.ixx:183</code> | direct_const_member | this, 主体=清单.主体 | 被调函数结果按当前调用表达式接收或用于条件判断 | 数据操作有效且清单完整 | 同一具名类型内直接调用 |
-| RCE1789 | R0616 | F0074 | <code>海中鱼巣/领域/数据操作.系统角色.ixx:184</code> | direct_const_member | this=&当前 | 被调函数结果按当前调用表达式接收或用于条件判断 | R0421返回后 | 当前静态类型为系统角色初始化结果 |
+| RCE1789 | R0616 | F0074 | <code>海中鱼巣/领域/数据操作.系统角色.ixx:184</code> | direct_const_member | this=&amp;当前 | 被调函数结果按当前调用表达式接收或用于条件判断 | R0421返回后 | 当前静态类型为系统角色初始化结果 |
 | RCE1790 | R0616 | F0244 | <code>海中鱼巣/领域/数据操作.系统角色.ixx:185</code> | operator | 左=当前.清单, 右=清单 | 被调函数结果按当前调用表达式接收或用于条件判断 | F0074返回true | 两侧静态类型均为系统角色清单 |
 | RCE1791 | R0625 | F0163 | <code>海中鱼巣/领域/系统角色清单.数据.h:274</code> | direct_free_function | 节点 | 被调函数结果按当前调用表达式接收或用于条件判断 | always | 节点静态类型为节点句柄 |
-| RCE1792 | R0621 | R0626 | <code>海中鱼巣/领域/服务.场景.ixx:30</code> | direct_const_member | this=&数据操作_, 主键=请求.幂等主键 | 被调函数结果按当前调用表达式接收或用于条件判断 | 请求主键非0 | 成员静态类型为存在场景数据操作 |
-| RCE1793 | R0621 | R0627 | <code>海中鱼巣/领域/服务.场景.ixx:32</code> | direct_const_member | this=&数据操作_, 主键=请求.幂等主键 | 被调函数结果按当前调用表达式接收或用于条件判断 | LF_B011返回未找到 | 成员静态类型为存在场景数据操作 |
+| RCE1792 | R0621 | R0626 | <code>海中鱼巣/领域/服务.场景.ixx:30</code> | direct_const_member | this=&amp;数据操作_, 主键=请求.幂等主键 | 被调函数结果按当前调用表达式接收或用于条件判断 | 请求主键非0 | 成员静态类型为存在场景数据操作 |
+| RCE1793 | R0621 | R0627 | <code>海中鱼巣/领域/服务.场景.ixx:32</code> | direct_const_member | this=&amp;数据操作_, 主键=请求.幂等主键 | 被调函数结果按当前调用表达式接收或用于条件判断 | LF_B011返回未找到 | 成员静态类型为存在场景数据操作 |
 | RCE1794 | R0621 | R0628 | <code>海中鱼巣/领域/服务.场景.ixx:35</code> | direct_static_member | 状态=当前身份.状态 | 被调函数结果按当前调用表达式接收或用于条件判断 | 读取状态既非未找到也非已找到 | 同一具名类型内直接调用 |
 | RCE1795 | R0626 | F0442 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:168</code> | direct_const_member | this | 被调函数结果按当前调用表达式接收或用于条件判断 | always at function entry | 同一具名类型内直接调用 |
 | RCE1796 | R0626 | F0397 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:169</code> | function_pointer_target | 状态=接线_.运行期状态 | 被调函数结果按当前调用表达式接收或用于条件判断 | F0442返回true且主键非0；生产接线 | 生产装配下取得共享许可函数指针唯一目标 |
-| RCE1797 | R0626 | F0338 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:170</code> | direct_const_member | this=&许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | 共享许可已形成 | 许可静态类型为结构事务许可 |
-| RCE1798 | R0626 | F0441 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:171</code> | direct_const_member | this=&索引_, 主键, 令牌=许可.读取令牌() | 被调函数结果按当前调用表达式接收或用于条件判断 | 许可有效 | 参数静态类型锁定令牌重载 |
-| RCE1799 | R0626 | F0339 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:171, 海中鱼巣/领域/数据操作.存在场景.ixx:173</code> | direct_const_member | this=&许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | 许可有效；第二次还要求索引命中 | 许可静态类型为结构事务许可 |
+| RCE1797 | R0626 | F0338 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:170</code> | direct_const_member | this=&amp;许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | 共享许可已形成 | 许可静态类型为结构事务许可 |
+| RCE1798 | R0626 | F0441 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:171</code> | direct_const_member | this=&amp;索引_, 主键, 令牌=许可.读取令牌() | 被调函数结果按当前调用表达式接收或用于条件判断 | 许可有效 | 参数静态类型锁定令牌重载 |
+| RCE1799 | R0626 | F0339 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:171, 海中鱼巣/领域/数据操作.存在场景.ixx:173</code> | direct_const_member | this=&amp;许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | 许可有效；第二次还要求索引命中 | 许可静态类型为结构事务许可 |
 | RCE1800 | R0626 | R0630 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:173</code> | direct_const_member | this, 节点=*节点, 令牌=许可.读取令牌() | 被调函数结果按当前调用表达式接收或用于条件判断 | 许可有效且索引命中 | 同一具名类型内直接调用 |
-| RCE1801 | R0626 | F0345 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:169-174</code> | compiler_implicit_destructor | this=&许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | 许可形成后的所有正常、提前返回与异常退出路径 | 局部变量静态类型为结构事务许可 |
+| RCE1801 | R0626 | F0345 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:169-174</code> | compiler_implicit_destructor | this=&amp;许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | 许可形成后的所有正常、提前返回与异常退出路径 | 局部变量静态类型为结构事务许可 |
 | RCE1802 | R0627 | R0626 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:290</code> | direct_const_member | this, 主键 | 被调函数结果按当前调用表达式接收或用于条件判断 | 主键非0 | 同一具名类型内直接调用 |
 | RCE1803 | R0627 | R0629 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:297</code> | direct_static_member | 状态=当前身份.状态 | 被调函数结果按当前调用表达式接收或用于条件判断 | 读取状态既非已找到也非未找到 | 同一具名类型内直接调用 |
 | RCE1804 | R0627 | R0633 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:299</code> | direct_const_member | this, 主键, 类型=节点类型::场景, 来源=std::nullopt | 被调函数结果按当前调用表达式接收或用于条件判断 | LF_B011返回未找到 | 同一具名类型内直接调用 |
 | RCE1805 | R0630 | F0163 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:446</code> | direct_free_function | 节点 | 被调函数结果按当前调用表达式接收或用于条件判断 | always at function entry | 节点静态类型为节点句柄 |
-| RCE1806 | R0630 | F0346 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:447, 海中鱼巣/领域/数据操作.存在场景.ixx:461</code> | direct_const_member | this=&节点_, 节点或引用.目标节点, 令牌 | 被调函数结果按当前调用表达式接收或用于条件判断 | 入口句柄有效；第二次位于存在引用循环 | 参数静态类型锁定令牌重载 |
-| RCE1807 | R0630 | F0439 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:449</code> | direct_const_member | this=&主信息_, 主信息=记录-&gt;主信息, 令牌 | 被调函数结果按当前调用表达式接收或用于条件判断 | 节点记录可读 | 参数静态类型锁定令牌重载 |
+| RCE1806 | R0630 | F0346 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:447, 海中鱼巣/领域/数据操作.存在场景.ixx:461</code> | direct_const_member | this=&amp;节点_, 节点或引用.目标节点, 令牌 | 被调函数结果按当前调用表达式接收或用于条件判断 | 入口句柄有效；第二次位于存在引用循环 | 参数静态类型锁定令牌重载 |
+| RCE1807 | R0630 | F0439 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:449</code> | direct_const_member | this=&amp;主信息_, 主信息=记录-&gt;主信息, 令牌 | 被调函数结果按当前调用表达式接收或用于条件判断 | 节点记录可读 | 参数静态类型锁定令牌重载 |
 | RCE1808 | R0630 | R0631 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:450, 海中鱼巣/领域/数据操作.存在场景.ixx:463, 海中鱼巣/领域/数据操作.存在场景.ixx:467, 海中鱼巣/领域/数据操作.存在场景.ixx:475</code> | direct_const_member | this, 节点, 具名说明 | 被调函数结果按当前调用表达式接收或用于条件判断 | 主信息不可读、来源节点不可读、重复来源或关系权威读回不一致 | 同一具名类型内直接调用 |
-| RCE1809 | R0630 | R0078 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:459</code> | direct_const_member | this=&关系_, 源节点=节点, 类型=引用, 令牌 | 被调函数结果按当前调用表达式接收或用于条件判断 | 节点类型为存在 | 参数静态类型锁定令牌重载 |
+| RCE1809 | R0630 | R0078 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:459</code> | direct_const_member | this=&amp;关系_, 源节点=节点, 类型=引用, 令牌 | 被调函数结果按当前调用表达式接收或用于条件判断 | 节点类型为存在 | 参数静态类型锁定令牌重载 |
 | RCE1810 | R0630 | R0632 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:465</code> | direct_static_member | 类型=来源记录-&gt;类型 | 被调函数结果按当前调用表达式接收或用于条件判断 | 引用目标节点可读 | 同一具名类型内直接调用 |
-| RCE1811 | R0630 | F0440 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:470</code> | direct_const_member | this=&关系_, 关系=关系句柄值, 令牌 | 被调函数结果按当前调用表达式接收或用于条件判断 | 来源类型匹配且尚无其它虚拟来源 | 参数静态类型锁定令牌重载 |
+| RCE1811 | R0630 | F0440 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:470</code> | direct_const_member | this=&amp;关系_, 关系=关系句柄值, 令牌 | 被调函数结果按当前调用表达式接收或用于条件判断 | 来源类型匹配且尚无其它虚拟来源 | 参数静态类型锁定令牌重载 |
 | RCE1812 | R0631 | F0184 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:484</code> | direct_free_function | 条件=false, 说明 | 被调函数结果按当前调用表达式接收或用于条件判断 | LF_B016被调用 | 全项目唯一具名函数 |
 | RCE1813 | R0633 | F0442 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:623</code> | direct_const_member | this | 被调函数结果按当前调用表达式接收或用于条件判断 | always at function entry | 同一具名类型内直接调用 |
 | RCE1814 | R0633 | F0163 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:625</code> | direct_free_function | *来源 | 被调函数结果按当前调用表达式接收或用于条件判断 | 来源.has_value()且类型为存在 | 来源载荷静态类型为节点句柄；F0455场景路径不可满足 |
-| RCE1815 | R0633 | R0116 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:633</code> | direct_const_member | this=&执行器_, 回调=LF_B019经std::function转换 | 被调函数结果按当前调用表达式接收或用于条件判断 | 入口材料通过 | 成员静态类型为结构写入执行器 |
+| RCE1815 | R0633 | R0116 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:633</code> | direct_const_member | this=&amp;执行器_, 回调=LF_B019经std::function转换 | 被调函数结果按当前调用表达式接收或用于条件判断 | 入口材料通过 | 成员静态类型为结构写入执行器 |
 | RCE1816 | R0116 | R0634 | <code>海中鱼巣/核心/执行器.结构写入.ixx:82</code> | std_function_callback | 会话 | 被调函数结果按当前调用表达式接收或用于条件判断 | R0116接收的回调来自LF_B018:633并完成会话构造 | std::function目标对象静态来源锁定LF_B019 |
 | RCE1817 | R0633 | R0626 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:665</code> | direct_const_member | this, 主键 | 被调函数结果按当前调用表达式接收或用于条件判断 | R0116未返回已提交且来源未发生版本漂移 | 同一具名类型内直接调用 |
 | RCE1818 | R0633 | R0635 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:670</code> | direct_static_member | 材料=当前身份 | 被调函数结果按当前调用表达式接收或用于条件判断 | 写后已找到且来源无值 | 同一具名类型内直接调用 |
@@ -2847,30 +2847,30 @@
 | RCE1821 | R0633 | R0639 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:682</code> | direct_static_member | 结果=结构结果 | 被调函数结果按当前调用表达式接收或用于条件判断 | 写后仍未找到 | 同一具名类型内直接调用 |
 | RCE1822 | R0634 | R0037 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:634, 海中鱼巣/领域/数据操作.存在场景.ixx:652</code> | direct_member | 会话, 节点=*来源 或 新节点 | 被调函数结果按当前调用表达式接收或用于条件判断 | 第一处仅来源有值；第二处在候选创建与主键绑定成功后 | 会话静态类型为结构写入会话 |
 | RCE1823 | R0634 | R0021 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:638</code> | direct_member | 会话 | 被调函数结果按当前调用表达式接收或用于条件判断 | 来源为空或来源节点可读 | 会话静态类型为结构写入会话 |
-| RCE1824 | R0634 | R0640 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:639</code> | template_instance | this=&主信息结果 | 被调函数结果按当前调用表达式接收或用于条件判断 | R0021返回后 | 返回静态类型冻结值类型为主信息句柄 |
+| RCE1824 | R0634 | R0640 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:639</code> | template_instance | this=&amp;主信息结果 | 被调函数结果按当前调用表达式接收或用于条件判断 | R0021返回后 | 返回静态类型冻结值类型为主信息句柄 |
 | RCE1825 | R0634 | R0022 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:641</code> | direct_member | 会话, 类型, 新主信息 | 被调函数结果按当前调用表达式接收或用于条件判断 | LF_B025返回true | 会话静态类型为结构写入会话 |
-| RCE1826 | R0634 | R0641 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:642</code> | template_instance | this=&节点结果 | 被调函数结果按当前调用表达式接收或用于条件判断 | R0022返回后 | 返回静态类型冻结值类型为节点句柄 |
+| RCE1826 | R0634 | R0641 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:642</code> | template_instance | this=&amp;节点结果 | 被调函数结果按当前调用表达式接收或用于条件判断 | R0022返回后 | 返回静态类型冻结值类型为节点句柄 |
 | RCE1827 | R0634 | R0129 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:644</code> | direct_free_function | 最终物理键=主键, 目标=新节点, 所有者=存在场景, 探测序号=0 | 被调函数结果按当前调用表达式接收或用于条件判断 | LF_B026返回true | 全项目唯一具名函数 |
 | RCE1828 | R0634 | R0027 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:644-645</code> | direct_member | 会话, 请求=R0129结果 | 被调函数结果按当前调用表达式接收或用于条件判断 | LF_B026返回true | 会话静态类型为结构写入会话 |
 | RCE1829 | R0634 | R0138 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:645</code> | direct_const_member | this=R0027临时返回结果 | 被调函数结果按当前调用表达式接收或用于条件判断 | R0027返回后 | 返回静态类型为结构写入结果 |
 | RCE1830 | R0634 | R0023 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:647</code> | direct_member | 会话, 类型=引用, 源节点=新节点, 目标节点=*来源, 顺序号=0 | 被调函数结果按当前调用表达式接收或用于条件判断 | 主键绑定成功且来源有值 | 会话静态类型为结构写入会话；F0455场景路径不可满足 |
-| RCE1831 | R0634 | R0642 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:648</code> | template_instance | this=&关系结果 | 被调函数结果按当前调用表达式接收或用于条件判断 | R0023返回后；来源有值 | 返回静态类型冻结值类型为关系句柄；F0455场景路径不可满足 |
+| RCE1831 | R0634 | R0642 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:648</code> | template_instance | this=&amp;关系结果 | 被调函数结果按当前调用表达式接收或用于条件判断 | R0023返回后；来源有值 | 返回静态类型冻结值类型为关系句柄；F0455场景路径不可满足 |
 | RCE1832 | R0634 | R0036 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:651</code> | direct_member | 会话, 主信息=新主信息 | 被调函数结果按当前调用表达式接收或用于条件判断 | 候选创建与绑定步骤均未提前返回 | 会话静态类型为结构写入会话 |
 | RCE1833 | R0634 | R0638 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:653</code> | direct_member | 会话, 主键, 预期节点=新节点 | 被调函数结果按当前调用表达式接收或用于条件判断 | R0036与R0037均返回true | 两参数重载由实参静态类型唯一锁定 |
 | RCE1834 | R0634 | R0038 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:654</code> | direct_member | 会话, 关系=新关系 | 被调函数结果按当前调用表达式接收或用于条件判断 | 来源有值且LF_B023返回true | 会话静态类型为结构写入会话；F0455场景路径不可满足 |
 | RCE1835 | R0634 | R0041 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:655</code> | direct_member | 会话 | 被调函数结果按当前调用表达式接收或用于条件判断 | 完整读回为true | 会话静态类型为结构写入会话 |
-| RCE1836 | R0635 | R0637 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:418</code> | direct_const_member | this=&材料 | 被调函数结果按当前调用表达式接收或用于条件判断 | always | 材料静态类型为节点身份材料 |
-| RCE1837 | R0636 | R0637 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:423</code> | direct_const_member | this=&材料 | 被调函数结果按当前调用表达式接收或用于条件判断 | always | 材料静态类型为节点身份材料 |
+| RCE1836 | R0635 | R0637 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:418</code> | direct_const_member | this=&amp;材料 | 被调函数结果按当前调用表达式接收或用于条件判断 | always | 材料静态类型为节点身份材料 |
+| RCE1837 | R0636 | R0637 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:423</code> | direct_const_member | this=&amp;材料 | 被调函数结果按当前调用表达式接收或用于条件判断 | always | 材料静态类型为节点身份材料 |
 | RCE1838 | R0637 | F0163 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:63</code> | direct_free_function | 节点 | 被调函数结果按当前调用表达式接收或用于条件判断 | 状态为已找到后短路求值 | 节点静态类型为节点句柄 |
 | RCE1839 | R0638 | R0043 | <code>海中鱼巣/核心/会话.结构写入.ixx:607</code> | direct_const_member | this | 被调函数结果按当前调用表达式接收或用于条件判断 | always at function entry | 同一具名类型内直接调用 |
 | RCE1840 | R0638 | F0051 | <code>海中鱼巣/核心/会话.结构写入.ixx:610, 海中鱼巣/核心/会话.结构写入.ixx:616, 海中鱼巣/核心/会话.结构写入.ixx:627</code> | operator | 节点句柄逐处比较 | 被调函数结果按当前调用表达式接收或用于条件判断 | 当前线程可访问；按写集遍历、仓库记录判断与成功后标记分支求值 | 两侧静态类型均为节点句柄 |
-| RCE1841 | R0638 | R0124 | <code>海中鱼巣/核心/会话.结构写入.ixx:615</code> | direct_const_member | this=&索引_, 主键, 令牌_ | 被调函数结果按当前调用表达式接收或用于条件判断 | 写集扫描完成 | 参数静态类型锁定令牌重载 |
+| RCE1841 | R0638 | R0124 | <code>海中鱼巣/核心/会话.结构写入.ixx:615</code> | direct_const_member | this=&amp;索引_, 主键, 令牌_ | 被调函数结果按当前调用表达式接收或用于条件判断 | 写集扫描完成 | 参数静态类型锁定令牌重载 |
 | RCE1842 | R0638 | R0127 | <code>海中鱼巣/核心/会话.结构写入.ixx:617</code> | operator | 左=*当前记录, 右=由写入记录形成的主键绑定记录 | 被调函数结果按当前调用表达式接收或用于条件判断 | 仓库记录存在且节点匹配，且本会话存在写入记录 | 两侧静态类型均为主键绑定记录 |
 | RCE1843 | R0638 | R0052 | <code>海中鱼巣/核心/会话.结构写入.ixx:623</code> | direct_member | this, 结果={内部不一致,主键,预期节点.版本号,0} | 被调函数结果按当前调用表达式接收或用于条件判断 | 完整主键绑定匹配失败 | 同一具名类型内直接调用 |
 | RCE1844 | R0639 | F0184 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:525, 海中鱼巣/领域/数据操作.存在场景.ixx:528, 海中鱼巣/领域/数据操作.存在场景.ixx:531</code> | direct_free_function | 条件=false, 对应具名说明 | 被调函数结果按当前调用表达式接收或用于条件判断 | 结构状态为入口拒绝、内部不一致或其它不允许的收口状态 | 全项目唯一具名函数 |
-| RCE1845 | R0640 | R0138 | <code>海中鱼巣/核心/结果.结构写入.h:44</code> | direct_const_member | this=&操作 | 被调函数结果按当前调用表达式接收或用于条件判断 | always as first conjunct | 操作静态类型为结构写入结果 |
-| RCE1846 | R0641 | R0138 | <code>海中鱼巣/核心/结果.结构写入.h:44</code> | direct_const_member | this=&操作 | 被调函数结果按当前调用表达式接收或用于条件判断 | always as first conjunct | 操作静态类型为结构写入结果 |
-| RCE1847 | R0642 | R0138 | <code>海中鱼巣/核心/结果.结构写入.h:44</code> | direct_const_member | this=&操作 | 被调函数结果按当前调用表达式接收或用于条件判断 | always as first conjunct；F0455场景路径的来源分支不可满足 | 操作静态类型为结构写入结果 |
+| RCE1845 | R0640 | R0138 | <code>海中鱼巣/核心/结果.结构写入.h:44</code> | direct_const_member | this=&amp;操作 | 被调函数结果按当前调用表达式接收或用于条件判断 | always as first conjunct | 操作静态类型为结构写入结果 |
+| RCE1846 | R0641 | R0138 | <code>海中鱼巣/核心/结果.结构写入.h:44</code> | direct_const_member | this=&amp;操作 | 被调函数结果按当前调用表达式接收或用于条件判断 | always as first conjunct | 操作静态类型为结构写入结果 |
+| RCE1847 | R0642 | R0138 | <code>海中鱼巣/核心/结果.结构写入.h:44</code> | direct_const_member | this=&amp;操作 | 被调函数结果按当前调用表达式接收或用于条件判断 | always as first conjunct；F0455场景路径的来源分支不可满足 | 操作静态类型为结构写入结果 |
 | RCE1848 | F0441 | F0630 | <code>海中鱼巣/核心/索引仓库.cpp:197</code> | source-audited-direct | 按源码实参与静态类型绑定 | 被调函数结果按当前调用表达式接收或用于条件判断 | 调用方从 F0001 可达且对应源码分支成立 | 当前源码定义、调用点与静态类型复核 |
 | RCE1849 | F0442 | R0115 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:154</code> | source-audited-direct | 按源码实参与静态类型绑定 | 被调函数结果按当前调用表达式接收或用于条件判断 | 调用方从 F0001 可达且对应源码分支成立 | 当前源码定义、调用点与静态类型复核 |
 | RCE1850 | F0443 | R0115 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:325</code> | source-audited-direct | 按源码实参与静态类型绑定 | 被调函数结果按当前调用表达式接收或用于条件判断 | 调用方从 F0001 可达且对应源码分支成立 | 当前源码定义、调用点与静态类型复核 |
@@ -2886,19 +2886,19 @@
 | RCE1860 | F0450 | R0115 | <code>海中鱼巣/领域/数据操作.概念活动.ixx:39</code> | source-audited-direct | 按源码实参与静态类型绑定 | 被调函数结果按当前调用表达式接收或用于条件判断 | 调用方从 F0001 可达且对应源码分支成立 | 当前源码定义、调用点与静态类型复核 |
 | RCE1861 | F0451 | F0450 | <code>海中鱼巣/领域/服务.概念活动.ixx:26</code> | source-audited-direct | 按源码实参与静态类型绑定 | 被调函数结果按当前调用表达式接收或用于条件判断 | 调用方从 F0001 可达且对应源码分支成立 | 当前源码定义、调用点与静态类型复核 |
 | RCE1862 | F0452 | F0449 | <code>海中鱼巣/领域/初始化.系统角色.ixx:64</code> | source-audited-direct | 按源码实参与静态类型绑定 | 被调函数结果按当前调用表达式接收或用于条件判断 | 调用方从 F0001 可达且对应源码分支成立 | 当前源码定义、调用点与静态类型复核 |
-| RCE1863 | F0455 | R0643 | <code>海中鱼巣/领域/初始化.系统角色.ixx:97</code> | direct_member | this=&存在场景组合器_, 请求={自我场景.场景,参数.自我存在主键} | 被调函数结果按当前调用表达式接收或用于条件判断 | 写前未同时提供已占用自我场景、自我存在和接纳关系 | static type and source callsite audited |
-| RCE1864 | F0455 | R0646 | <code>海中鱼巣/领域/初始化.系统角色.ixx:119</code> | direct_member | this=&存在服务_, 请求={参数.概念存在根主键} | 被调函数结果按当前调用表达式接收或用于条件判断 | initialization reaches concept-root creation | static type and source callsite audited |
-| RCE1865 | F0455 | R0657 | <code>海中鱼巣/领域/初始化.系统角色.ixx:123</code> | direct_member | this=&动态服务_, 请求={参数.概念动态根主键,参数.动态根材料} | 被调函数结果按当前调用表达式接收或用于条件判断 | concept existence root succeeded | static type and source callsite audited |
-| RCE1866 | F0455 | R0658 | <code>海中鱼巣/领域/初始化.系统角色.ixx:125</code> | direct_const_member | this=&概念动态根 | 被调函数结果按当前调用表达式接收或用于条件判断 | abstract-dynamic call returned | result static type audited |
-| RCE1867 | F0455 | R0659 | <code>海中鱼巣/领域/初始化.系统角色.ixx:126</code> | direct_const_member | this=&概念动态根 | 被调函数结果按当前调用表达式接收或用于条件判断 | abstract-dynamic result succeeded | result static type audited |
-| RCE1868 | F0455 | R0680 | <code>海中鱼巣/领域/初始化.系统角色.ixx:128</code> | direct_member | this=&轻量因果服务_, 请求={参数.概念因果根主键,概念动态根.动态材料.动态节点} | 被调函数结果按当前调用表达式接收或用于条件判断 | concept dynamic root succeeded | static type and source callsite audited |
-| RCE1869 | F0455 | R0681 | <code>海中鱼巣/领域/初始化.系统角色.ixx:130</code> | direct_const_member | this=&概念因果根 | 被调函数结果按当前调用表达式接收或用于条件判断 | light-causal call returned | result static type audited |
-| RCE1870 | F0455 | R0682 | <code>海中鱼巣/领域/初始化.系统角色.ixx:131</code> | direct_const_member | this=&概念因果根 | 被调函数结果按当前调用表达式接收或用于条件判断 | light-causal result succeeded | result static type audited |
-| RCE1871 | F0455 | R0697 | <code>海中鱼巣/领域/初始化.系统角色.ixx:133</code> | direct_member | this=&二次特征服务_, 请求={参数.概念关系根主键,{概念存在根.存在,概念因果根.因果.因果引用}} | 被调函数结果按当前调用表达式接收或用于条件判断 | concept causal root succeeded | static type and source callsite audited |
-| RCE1872 | F0455 | R0711 | <code>海中鱼巣/领域/初始化.系统角色.ixx:139</code> | direct_member | this=&概念图结构服务_, four root identities | 被调函数结果按当前调用表达式接收或用于条件判断 | concept secondary root succeeded | static type and source callsite audited |
-| RCE1873 | F0455 | R0716 | <code>海中鱼巣/领域/初始化.系统角色.ixx:144</code> | direct_const_member | this=&根角色 | 被调函数结果按当前调用表达式接收或用于条件判断 | root-role verification returned | result static type audited |
-| RCE1874 | F0455 | R0721 | <code>海中鱼巣/领域/初始化.系统角色.ixx:149</code> | direct_const_member | this=&方法登记根 | 被调函数结果按当前调用表达式接收或用于条件判断 | method-root creation returned | result static type audited |
-| RCE1875 | F0455 | R0722 | <code>海中鱼巣/领域/初始化.系统角色.ixx:169</code> | direct_const_member | this=&拓扑 | 被调函数结果按当前调用表达式接收或用于条件判断 | world-topology publish succeeded and semantic reread passed | result static type audited |
+| RCE1863 | F0455 | R0643 | <code>海中鱼巣/领域/初始化.系统角色.ixx:97</code> | direct_member | this=&amp;存在场景组合器_, 请求={自我场景.场景,参数.自我存在主键} | 被调函数结果按当前调用表达式接收或用于条件判断 | 写前未同时提供已占用自我场景、自我存在和接纳关系 | static type and source callsite audited |
+| RCE1864 | F0455 | R0646 | <code>海中鱼巣/领域/初始化.系统角色.ixx:119</code> | direct_member | this=&amp;存在服务_, 请求={参数.概念存在根主键} | 被调函数结果按当前调用表达式接收或用于条件判断 | initialization reaches concept-root creation | static type and source callsite audited |
+| RCE1865 | F0455 | R0657 | <code>海中鱼巣/领域/初始化.系统角色.ixx:123</code> | direct_member | this=&amp;动态服务_, 请求={参数.概念动态根主键,参数.动态根材料} | 被调函数结果按当前调用表达式接收或用于条件判断 | concept existence root succeeded | static type and source callsite audited |
+| RCE1866 | F0455 | R0658 | <code>海中鱼巣/领域/初始化.系统角色.ixx:125</code> | direct_const_member | this=&amp;概念动态根 | 被调函数结果按当前调用表达式接收或用于条件判断 | abstract-dynamic call returned | result static type audited |
+| RCE1867 | F0455 | R0659 | <code>海中鱼巣/领域/初始化.系统角色.ixx:126</code> | direct_const_member | this=&amp;概念动态根 | 被调函数结果按当前调用表达式接收或用于条件判断 | abstract-dynamic result succeeded | result static type audited |
+| RCE1868 | F0455 | R0680 | <code>海中鱼巣/领域/初始化.系统角色.ixx:128</code> | direct_member | this=&amp;轻量因果服务_, 请求={参数.概念因果根主键,概念动态根.动态材料.动态节点} | 被调函数结果按当前调用表达式接收或用于条件判断 | concept dynamic root succeeded | static type and source callsite audited |
+| RCE1869 | F0455 | R0681 | <code>海中鱼巣/领域/初始化.系统角色.ixx:130</code> | direct_const_member | this=&amp;概念因果根 | 被调函数结果按当前调用表达式接收或用于条件判断 | light-causal call returned | result static type audited |
+| RCE1870 | F0455 | R0682 | <code>海中鱼巣/领域/初始化.系统角色.ixx:131</code> | direct_const_member | this=&amp;概念因果根 | 被调函数结果按当前调用表达式接收或用于条件判断 | light-causal result succeeded | result static type audited |
+| RCE1871 | F0455 | R0697 | <code>海中鱼巣/领域/初始化.系统角色.ixx:133</code> | direct_member | this=&amp;二次特征服务_, 请求={参数.概念关系根主键,{概念存在根.存在,概念因果根.因果.因果引用}} | 被调函数结果按当前调用表达式接收或用于条件判断 | concept causal root succeeded | static type and source callsite audited |
+| RCE1872 | F0455 | R0711 | <code>海中鱼巣/领域/初始化.系统角色.ixx:139</code> | direct_member | this=&amp;概念图结构服务_, four root identities | 被调函数结果按当前调用表达式接收或用于条件判断 | concept secondary root succeeded | static type and source callsite audited |
+| RCE1873 | F0455 | R0716 | <code>海中鱼巣/领域/初始化.系统角色.ixx:144</code> | direct_const_member | this=&amp;根角色 | 被调函数结果按当前调用表达式接收或用于条件判断 | root-role verification returned | result static type audited |
+| RCE1874 | F0455 | R0721 | <code>海中鱼巣/领域/初始化.系统角色.ixx:149</code> | direct_const_member | this=&amp;方法登记根 | 被调函数结果按当前调用表达式接收或用于条件判断 | method-root creation returned | result static type audited |
+| RCE1875 | F0455 | R0722 | <code>海中鱼巣/领域/初始化.系统角色.ixx:169</code> | direct_const_member | this=&amp;拓扑 | 被调函数结果按当前调用表达式接收或用于条件判断 | world-topology publish succeeded and semantic reread passed | result static type audited |
 | RCE1876 | F0455 | R0660 | <code>海中鱼巣/领域/初始化.系统角色.ixx:125</code> | function_template_specialization | 概念动态根.状态 | 被调函数结果按当前调用表达式接收或用于条件判断 | abstract-dynamic result is non-success | 状态动态业务状态 specialization selected |
 | RCE1877 | F0455 | R0725 | <code>海中鱼巣/领域/初始化.系统角色.ixx:130</code> | function_template_specialization | 概念因果根.状态 | 被调函数结果按当前调用表达式接收或用于条件判断 | light-causal result is non-success | 轻量因果业务状态 specialization selected |
 | RCE1878 | F0455 | R0601 | <code>海中鱼巣/领域/初始化.系统角色.ixx:136</code> | function_template_specialization | 概念关系根.状态 | 被调函数结果按当前调用表达式接收或用于条件判断 | secondary-feature result is non-success | 特征体系业务状态 specialization selected |
@@ -2909,7 +2909,7 @@
 | RCE1883 | R0643 | R0626 | <code>海中鱼巣/领域/组合.存在场景.ixx:33</code> | direct_member | 请求.存在幂等主键 | 被调函数结果按当前调用表达式接收或用于条件判断 | scene identity is readable and scene-typed | member static type audited |
 | RCE1884 | R0643 | R0652 | <code>海中鱼巣/领域/组合.存在场景.ixx:35</code> | direct_member | 请求.场景,请求.存在幂等主键 | 被调函数结果按当前调用表达式接收或用于条件判断 | existence key not found | member static type audited |
 | RCE1885 | R0643 | R0649 | <code>海中鱼巣/领域/组合.存在场景.ixx:47</code> | direct_member | 请求.场景,存在材料.节点 | 被调函数结果按当前调用表达式接收或用于条件判断 | existing identity is a non-virtual actual existence | member static type audited |
-| RCE1886 | R0643 | R0644 | <code>海中鱼巣/领域/组合.存在场景.ixx:48</code> | direct_const_member | this=&当前归属 | 被调函数结果按当前调用表达式接收或用于条件判断 | membership read returned | value static type audited |
+| RCE1886 | R0643 | R0644 | <code>海中鱼巣/领域/组合.存在场景.ixx:48</code> | direct_const_member | this=&amp;当前归属 | 被调函数结果按当前调用表达式接收或用于条件判断 | membership read returned | value static type audited |
 | RCE1887 | R0643 | R0651 | <code>海中鱼巣/领域/组合.存在场景.ixx:55</code> | direct_member | 请求.场景,存在材料.节点 | 被调函数结果按当前调用表达式接收或用于条件判断 | membership not found | member static type audited |
 | RCE1888 | R0644 | F0168 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:75</code> | direct_free | *归属关系 | 被调函数结果按当前调用表达式接收或用于条件判断 | status is 已找到 and optional relationship exists | relationship-handle overload is exact |
 | RCE1889 | R0646 | R0626 | <code>海中鱼巣/领域/服务.存在.ixx:54</code> | direct_member | 请求.幂等主键 | 被调函数结果按当前调用表达式接收或用于条件判断 | nonzero key | member static type audited |
@@ -2917,14 +2917,14 @@
 | RCE1891 | R0646 | R0647 | <code>海中鱼巣/领域/服务.存在.ixx:59</code> | direct_static_member | 当前身份.状态 | 被调函数结果按当前调用表达式接收或用于条件判断 | read is neither found nor not-found | same class unique helper |
 | RCE1892 | R0648 | F0442 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:177</code> | direct_const_member | this | 被调函数结果按当前调用表达式接收或用于条件判断 | entry evaluation | same class existing stable identity |
 | RCE1893 | R0648 | F0163 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:177</code> | direct_free | 节点 | 被调函数结果按当前调用表达式接收或用于条件判断 | entry evaluation | node-handle overload is exact |
-| RCE1894 | R0648 | F0338 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:179</code> | direct_const_member | this=&许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | shared permit acquired | permit static type audited |
-| RCE1895 | R0648 | F0339 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:180</code> | direct_const_member | this=&许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | permit valid | permit static type audited |
+| RCE1894 | R0648 | F0338 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:179</code> | direct_const_member | this=&amp;许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | shared permit acquired | permit static type audited |
+| RCE1895 | R0648 | F0339 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:180</code> | direct_const_member | this=&amp;许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | permit valid | permit static type audited |
 | RCE1896 | R0648 | R0630 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:180</code> | direct_member | 节点,许可.读取令牌() | 被调函数结果按当前调用表达式接收或用于条件判断 | permit valid | same class helper |
 | RCE1897 | R0648 | F0345 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:181</code> | implicit_destructor | 许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | function scope exits after permit acquisition | licensed permit local lifetime |
 | RCE1898 | R0649 | F0442 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:187</code> | direct_const_member | this | 被调函数结果按当前调用表达式接收或用于条件判断 | entry evaluation | same class existing stable identity |
 | RCE1899 | R0649 | F0163 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:187</code> | direct_free | 场景/存在 | 被调函数结果按当前调用表达式接收或用于条件判断 | entry evaluation | node-handle overload is exact |
-| RCE1900 | R0649 | F0338 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:190</code> | direct_const_member | this=&许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | shared permit acquired | permit static type audited |
-| RCE1901 | R0649 | F0339 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:194</code> | direct_const_member | this=&许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | permit valid | permit static type audited |
+| RCE1900 | R0649 | F0338 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:190</code> | direct_const_member | this=&amp;许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | shared permit acquired | permit static type audited |
+| RCE1901 | R0649 | F0339 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:194</code> | direct_const_member | this=&amp;许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | permit valid | permit static type audited |
 | RCE1902 | R0649 | R0630 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:195, 海中鱼巣/领域/数据操作.存在场景.ixx:196</code> | direct_member | 场景/存在,令牌 | 被调函数结果按当前调用表达式接收或用于条件判断 | permit valid | same class helper |
 | RCE1903 | R0649 | R0653 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:199</code> | direct_static_member | 场景材料.状态,存在材料.状态 | 被调函数结果按当前调用表达式接收或用于条件判断 | either identity read failed | same class helper |
 | RCE1904 | R0649 | R0078 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:207</code> | direct_const_member | 场景,关系类型::归属,令牌 | 被调函数结果按当前调用表达式接收或用于条件判断 | both endpoint identities accepted | token overload is exact |
@@ -2948,7 +2948,7 @@
 | RCE1922 | R0655 | R0037 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:321</code> | direct_member | 场景/存在 | 被调函数结果按当前调用表达式接收或用于条件判断 | callback executing | session static type audited |
 | RCE1923 | R0655 | R0023 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:325</code> | direct_member | 关系类型::归属,场景,存在 | 被调函数结果按当前调用表达式接收或用于条件判断 | both endpoints readable | session static type audited |
 | RCE1924 | R0655 | R0038 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:328</code> | direct_member | 新关系 | 被调函数结果按当前调用表达式接收或用于条件判断 | relationship candidate created | session static type audited |
-| RCE1925 | R0655 | R0041 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:328</code> | direct_member | this=&会话 | 被调函数结果按当前调用表达式接收或用于条件判断 | new relationship readable | session static type audited |
+| RCE1925 | R0655 | R0041 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:328</code> | direct_member | this=&amp;会话 | 被调函数结果按当前调用表达式接收或用于条件判断 | new relationship readable | session static type audited |
 | RCE1926 | R0651 | R0639 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:342</code> | direct_static_member | 结构结果 | 被调函数结果按当前调用表达式接收或用于条件判断 | write not committed and no idempotent readback | same class helper |
 | RCE1927 | R0652 | F0442 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:348</code> | direct_const_member | this | 被调函数结果按当前调用表达式接收或用于条件判断 | entry evaluation | same class stable identity |
 | RCE1928 | R0652 | F0163 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:348</code> | direct_free | 场景 | 被调函数结果按当前调用表达式接收或用于条件判断 | entry evaluation | node-handle overload is exact |
@@ -2960,7 +2960,7 @@
 | RCE1934 | R0652 | R0116 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:366</code> | direct_const_member | callback=F0455C_L002 | 被调函数结果按当前调用表达式接收或用于条件判断 | identity not found | non-participant execute overload is exact |
 | RCE1935 | R0116 | R0656 | <code>海中鱼巣/核心/执行器.结构写入.ixx:82</code> | callback_invoke | 会话 | 被调函数结果按当前调用表达式接收或用于条件判断 | R0116 invoked with callback formed at 数据操作.存在场景.ixx:366 | callback object provenance audited |
 | RCE1936 | R0656 | R0037 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:367, 海中鱼巣/领域/数据操作.存在场景.ixx:383</code> | direct_member | 场景/新存在 | 被调函数结果按当前调用表达式接收或用于条件判断 | callback executing | session static type audited |
-| RCE1937 | R0656 | R0021 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:371</code> | direct_member | this=&会话 | 被调函数结果按当前调用表达式接收或用于条件判断 | scene still readable | session static type audited |
+| RCE1937 | R0656 | R0021 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:371</code> | direct_member | this=&amp;会话 | 被调函数结果按当前调用表达式接收或用于条件判断 | scene still readable | session static type audited |
 | RCE1938 | R0656 | R0022 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:374</code> | direct_member | 节点类型::存在,新主信息 | 被调函数结果按当前调用表达式接收或用于条件判断 | main-information candidate created | session static type audited |
 | RCE1939 | R0656 | R0129 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:377</code> | direct_free | 存在主键,新存在,索引所有者::存在场景 | 被调函数结果按当前调用表达式接收或用于条件判断 | node candidate created | existing unique helper |
 | RCE1940 | R0656 | R0027 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:377</code> | direct_member | formed index binding request | 被调函数结果按当前调用表达式接收或用于条件判断 | node candidate created | session static type audited |
@@ -2968,7 +2968,7 @@
 | RCE1942 | R0656 | R0036 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:382</code> | direct_member | 新主信息 | 被调函数结果按当前调用表达式接收或用于条件判断 | candidate set formed | session static type audited |
 | RCE1943 | R0656 | R0638 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:384</code> | direct_member | 存在主键,新存在 | 被调函数结果按当前调用表达式接收或用于条件判断 | candidate set formed | two-argument session overload audited |
 | RCE1944 | R0656 | R0038 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:385</code> | direct_member | 新关系 | 被调函数结果按当前调用表达式接收或用于条件判断 | candidate set formed | session static type audited |
-| RCE1945 | R0656 | R0041 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:386</code> | direct_member | this=&会话 | 被调函数结果按当前调用表达式接收或用于条件判断 | all candidates authoritatively readable | session static type audited |
+| RCE1945 | R0656 | R0041 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:386</code> | direct_member | this=&amp;会话 | 被调函数结果按当前调用表达式接收或用于条件判断 | all candidates authoritatively readable | session static type audited |
 | RCE1946 | R0652 | R0649 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:396</code> | direct_member | 场景,当前身份.节点 | 被调函数结果按当前调用表达式接收或用于条件判断 | fallback identity found and actual | same class member |
 | RCE1947 | R0652 | R0644 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:397</code> | direct_const_member | 当前归属 | 被调函数结果按当前调用表达式接收或用于条件判断 | fallback membership read returned | value static type audited |
 | RCE1948 | R0652 | R0639 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:409</code> | direct_static_member | 结构结果 | 被调函数结果按当前调用表达式接收或用于条件判断 | write not committed and no identity readback | same class helper |
@@ -2978,15 +2978,15 @@
 | RCE1952 | R0661 | F0163 | <code>海中鱼巣/领域/服务.动态.ixx:62</code> | direct_free | 动态节点 | 被调函数结果按当前调用表达式接收或用于条件判断 | entry evaluation | node-handle overload is exact |
 | RCE1953 | R0661 | R0663 | <code>海中鱼巣/领域/服务.动态.ixx:63</code> | direct_member | 动态节点 | 被调函数结果按当前调用表达式接收或用于条件判断 | node handle valid | member static type audited |
 | RCE1954 | R0662 | F0443 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:384</code> | direct_const_member | this | 被调函数结果按当前调用表达式接收或用于条件判断 | entry evaluation | same class stable identity |
-| RCE1955 | R0662 | F0338 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:386</code> | direct_const_member | this=&许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | shared permit acquired | permit static type audited |
+| RCE1955 | R0662 | F0338 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:386</code> | direct_const_member | this=&amp;许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | shared permit acquired | permit static type audited |
 | RCE1956 | R0662 | F0441 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:387</code> | direct_const_member | 主键,许可.读取令牌() | 被调函数结果按当前调用表达式接收或用于条件判断 | permit valid | token overload is exact |
-| RCE1957 | R0662 | F0339 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:387, 海中鱼巣/领域/数据操作.状态动态.ixx:389</code> | direct_const_member | this=&许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | permit valid | permit static type audited |
+| RCE1957 | R0662 | F0339 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:387, 海中鱼巣/领域/数据操作.状态动态.ixx:389</code> | direct_const_member | this=&amp;许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | permit valid | permit static type audited |
 | RCE1958 | R0662 | R0669 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:389</code> | direct_member | *节点,主键,许可.读取令牌() | 被调函数结果按当前调用表达式接收或用于条件判断 | primary-key lookup found a node | same class helper |
 | RCE1959 | R0662 | F0345 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:390</code> | implicit_destructor | 许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | function scope exits | licensed permit local lifetime |
 | RCE1960 | R0663 | F0443 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:393</code> | direct_const_member | this | 被调函数结果按当前调用表达式接收或用于条件判断 | entry evaluation | same class stable identity |
 | RCE1961 | R0663 | F0163 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:393</code> | direct_free | 动态节点 | 被调函数结果按当前调用表达式接收或用于条件判断 | entry evaluation | node-handle overload is exact |
-| RCE1962 | R0663 | F0338 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:395</code> | direct_const_member | this=&许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | shared permit acquired | permit static type audited |
-| RCE1963 | R0663 | F0339 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:396</code> | direct_const_member | this=&许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | permit valid | permit static type audited |
+| RCE1962 | R0663 | F0338 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:395</code> | direct_const_member | this=&amp;许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | shared permit acquired | permit static type audited |
+| RCE1963 | R0663 | F0339 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:396</code> | direct_const_member | this=&amp;许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | permit valid | permit static type audited |
 | RCE1964 | R0663 | R0669 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:396</code> | direct_member | 动态节点,std::nullopt,许可.读取令牌() | 被调函数结果按当前调用表达式接收或用于条件判断 | permit valid | same class helper |
 | RCE1965 | R0663 | F0345 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:397</code> | implicit_destructor | 许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | function scope exits | licensed permit local lifetime |
 | RCE1966 | R0664 | F0163 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:72</code> | direct_free | 节点 | 被调函数结果按当前调用表达式接收或用于条件判断 | status is 已找到 | node-handle overload is exact |
@@ -3007,7 +3007,7 @@
 | RCE1981 | R0668 | R0676 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:527</code> | direct_static_member | 写前.状态 | 被调函数结果按当前调用表达式接收或用于条件判断 | pre-read neither found nor not-found/type mismatch | same class helper |
 | RCE1982 | R0668 | R0116 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:531</code> | direct_const_member | callback=F0455C_L004 | 被调函数结果按当前调用表达式接收或用于条件判断 | no existing dynamic | non-participant execute overload is exact |
 | RCE1983 | R0116 | R0678 | <code>海中鱼巣/核心/执行器.结构写入.ixx:82</code> | callback_invoke | 会话 | 被调函数结果按当前调用表达式接收或用于条件判断 | R0116 invoked with callback formed at 数据操作.状态动态.ixx:531 | callback object provenance audited |
-| RCE1984 | R0678 | R0021 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:532</code> | direct_member | this=&会话 | 被调函数结果按当前调用表达式接收或用于条件判断 | callback executing | session static type audited |
+| RCE1984 | R0678 | R0021 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:532</code> | direct_member | this=&amp;会话 | 被调函数结果按当前调用表达式接收或用于条件判断 | callback executing | session static type audited |
 | RCE1985 | R0678 | R0028 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:535</code> | direct_member | 新主信息,动态材料槽位,动态材料 | 被调函数结果按当前调用表达式接收或用于条件判断 | main-information candidate created | session static type audited |
 | RCE1986 | R0678 | R0022 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:536</code> | direct_member | 节点类型::动态,新主信息 | 被调函数结果按当前调用表达式接收或用于条件判断 | I64 candidate written | session static type audited |
 | RCE1987 | R0678 | R0129 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:539</code> | direct_free | 主键,新动态,索引所有者::状态动态 | 被调函数结果按当前调用表达式接收或用于条件判断 | node candidate created | existing unique helper |
@@ -3016,7 +3016,7 @@
 | RCE1990 | R0678 | R0029 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:542</code> | direct_member | 新主信息,动态材料槽位,动态材料 | 被调函数结果按当前调用表达式接收或用于条件判断 | candidate set formed | session static type audited |
 | RCE1991 | R0678 | R0037 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:543</code> | direct_member | 新动态 | 被调函数结果按当前调用表达式接收或用于条件判断 | candidate set formed | session static type audited |
 | RCE1992 | R0678 | R0638 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:544</code> | direct_member | 主键,新动态 | 被调函数结果按当前调用表达式接收或用于条件判断 | candidate set formed | two-argument session overload audited |
-| RCE1993 | R0678 | R0041 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:545</code> | direct_member | this=&会话 | 被调函数结果按当前调用表达式接收或用于条件判断 | complete readback | session static type audited |
+| RCE1993 | R0678 | R0041 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:545</code> | direct_member | this=&amp;会话 | 被调函数结果按当前调用表达式接收或用于条件判断 | complete readback | session static type audited |
 | RCE1994 | R0668 | R0674 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:547</code> | direct_member | 结构结果,主键,动态材料 | 被调函数结果按当前调用表达式接收或用于条件判断 | write callback returned | same class helper |
 | RCE1995 | R0669 | R0392 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:1210, 海中鱼巣/领域/数据操作.状态动态.ixx:1250, 海中鱼巣/领域/数据操作.状态动态.ixx:1299</code> | direct_member | dynamic/endpoint node,令牌 | 被调函数结果按当前调用表达式接收或用于条件判断 | licensed dynamic material read | same class existing helper |
 | RCE1996 | R0669 | R0723 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:1220</code> | direct_const_member | 动态节点,令牌 | 被调函数结果按当前调用表达式接收或用于条件判断 | dynamic node identity accepted | token overload definition audited |
@@ -3074,14 +3074,14 @@
 | RCE2048 | R0696 | R0686 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:151</code> | direct_const_member | 规格 | 被调函数结果按当前调用表达式接收或用于条件判断 | callback executing | captured specification static type audited |
 | RCE2049 | R0696 | R0030 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:148</code> | direct_member | 来源动态 | 被调函数结果按当前调用表达式接收或用于条件判断 | callback executing | session static type audited |
 | RCE2050 | R0696 | R0031 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:150</code> | direct_member | 来源动态 | 被调函数结果按当前调用表达式接收或用于条件判断 | callback executing | session static type audited |
-| RCE2051 | R0696 | R0021 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:155</code> | direct_member | this=&会话 | 被调函数结果按当前调用表达式接收或用于条件判断 | source snapshot matches | session static type audited |
+| RCE2051 | R0696 | R0021 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:155</code> | direct_member | this=&amp;会话 | 被调函数结果按当前调用表达式接收或用于条件判断 | source snapshot matches | session static type audited |
 | RCE2052 | R0696 | R0022 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:158</code> | direct_member | 节点类型::因果引用,新主信息 | 被调函数结果按当前调用表达式接收或用于条件判断 | main-information candidate complete | session static type audited |
 | RCE2053 | R0696 | R0129 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:161</code> | direct_free | 规格 key,新因果引用,索引所有者::轻量因果 | 被调函数结果按当前调用表达式接收或用于条件判断 | node candidate complete | existing unique helper |
 | RCE2054 | R0696 | R0027 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:161</code> | direct_member | formed index binding request | 被调函数结果按当前调用表达式接收或用于条件判断 | node candidate complete | session static type audited |
 | RCE2055 | R0696 | R0036 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:163</code> | direct_member | 新主信息 | 被调函数结果按当前调用表达式接收或用于条件判断 | candidate set formed | session static type audited |
 | RCE2056 | R0696 | R0037 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:163</code> | direct_member | 新因果引用 | 被调函数结果按当前调用表达式接收或用于条件判断 | candidate set formed | session static type audited |
 | RCE2057 | R0696 | R0638 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:164</code> | direct_member | 规格 key,新因果引用 | 被调函数结果按当前调用表达式接收或用于条件判断 | candidate set formed | two-argument session overload audited |
-| RCE2058 | R0696 | R0041 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:165</code> | direct_member | this=&会话 | 被调函数结果按当前调用表达式接收或用于条件判断 | complete readback | session static type audited |
+| RCE2058 | R0696 | R0041 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:165</code> | direct_member | this=&amp;会话 | 被调函数结果按当前调用表达式接收或用于条件判断 | complete readback | session static type audited |
 | RCE2059 | R0689 | R0695 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:177</code> | direct_static_member | 结构结果,当前.状态 | 被调函数结果按当前调用表达式接收或用于条件判断 | no complete post-write material and no source drift | same class helper |
 | RCE2060 | R0690 | F0338 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:185</code> | direct_const_member | 许可 | 被调函数结果按当前调用表达式接收或用于条件判断 | shared permit acquired | permit static type audited |
 | RCE2061 | R0690 | F0346 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:186</code> | direct_const_member | 来源动态,许可.读取令牌() | 被调函数结果按当前调用表达式接收或用于条件判断 | permit valid | token overload is exact |
@@ -3119,7 +3119,7 @@
 | RCE2093 | R0708 | R0358 | <code>海中鱼巣/领域/数据操作.特征体系.ixx:951</code> | direct_static_member | 会话,二次特征,主键,output handles | 被调函数结果按当前调用表达式接收或用于条件判断 | all component types accepted | same class existing helper |
 | RCE2094 | R0708 | R0023 | <code>海中鱼巣/领域/数据操作.特征体系.ixx:954</code> | direct_member | 引用,新二次特征,component,index | 被调函数结果按当前调用表达式接收或用于条件判断 | secondary node created | session static type audited |
 | RCE2095 | R0708 | R0038 | <code>海中鱼巣/领域/数据操作.特征体系.ixx:957</code> | direct_member | *关系结果.值 | 被调函数结果按当前调用表达式接收或用于条件判断 | relationship candidate created | session static type audited |
-| RCE2096 | R0708 | R0041 | <code>海中鱼巣/领域/数据操作.特征体系.ixx:959</code> | direct_member | this=&会话 | 被调函数结果按当前调用表达式接收或用于条件判断 | all relationship candidates readable | session static type audited |
+| RCE2096 | R0708 | R0041 | <code>海中鱼巣/领域/数据操作.特征体系.ixx:959</code> | direct_member | this=&amp;会话 | 被调函数结果按当前调用表达式接收或用于条件判断 | all relationship candidates readable | session static type audited |
 | RCE2097 | R0701 | R0368 | <code>海中鱼巣/领域/数据操作.特征体系.ixx:973</code> | direct_static_member | 结构结果 | 被调函数结果按当前调用表达式接收或用于条件判断 | no success/readback/drift closure | same class existing helper |
 | RCE2098 | R0703 | F0163 | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1015</code> | direct_free | 组成项组[左] | 被调函数结果按当前调用表达式接收或用于条件判断 | component loop | node-handle overload is exact |
 | RCE2099 | R0703 | F0051 | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1017</code> | operator | component node handles | 被调函数结果按当前调用表达式接收或用于条件判断 | duplicate scan | node-handle equality overload is exact |
@@ -3197,45 +3197,90 @@
 | RCE2171 | F0455 | R0370 | <code>海中鱼巣/领域/初始化.系统角色.ixx:137</code> | source-audited-direct | 概念关系根.改变了结构() | bool结果进入失败判断或改变了结构累计表达式 | F0455 前序创建步骤成功并执行到对应源码行 | 初始化.系统角色.ixx:136-150 源码表达式与现有稳定身份复核 |
 | RCE2172 | F0455 | R0603 | <code>海中鱼巣/领域/初始化.系统角色.ixx:150</code> | source-audited-direct | 状态已提交(方法登记根.状态) | bool结果进入失败判断或改变了结构累计表达式 | F0455 前序创建步骤成功并执行到对应源码行 | 初始化.系统角色.ixx:136-150 源码表达式与现有稳定身份复核 |
 | RCE2173 | F0455 | F0074 | <code>海中鱼巣/领域/初始化.系统角色.ixx:161, 海中鱼巣/领域/初始化.系统角色.ixx:166</code> | source-audited-direct | 拓扑；最终复核 | 成功bool进入提前返回判断 | 拓扑发布或最终复核结果已形成 | 初始化.系统角色.ixx:161,166 与 F0074 完整签名复核 |
-| RCE2174 | F0458 | F0459 | <code>海中鱼巣/领域/系统角色清单.数据.h:190</code> | source-audited-direct-const-member | 场景接纳自我关系 | bool进入入口门禁 | 前三个身份完整 | 静态接收者复核 |
-| RCE2175 | F0458 | R0727 | <code>海中鱼巣/领域/系统角色清单.数据.h:190, 海中鱼巣/领域/系统角色清单.数据.h:191</code> | source-audited-direct-const-member | 安全根需求；服务根需求 | 两个bool进入短路门禁 | 按源码左到右短路 | 静态接收者复核 |
-| RCE2176 | F0458 | F0051 | <code>海中鱼巣/领域/系统角色清单.数据.h:202, 海中鱼巣/领域/系统角色清单.数据.h:207, 海中鱼巣/领域/系统角色清单.数据.h:208</code> | source-audited-direct-operator | 节点句柄左右值 | bool进入重复性或归属判断 | 对应表达式可达 | 操作数静态类型复核 |
-| RCE2177 | F0458 | R0615 | <code>海中鱼巣/领域/系统角色清单.数据.h:203</code> | source-audited-direct-operator | 主信息句柄左右值 | bool进入重复性判断 | 同对前两项不相等 | 操作数静态类型复核 |
-| RCE2178 | F0459 | F0163 | <code>海中鱼巣/领域/系统角色清单.数据.h:134</code> | source-audited-direct-free | 源节点；目标节点 | 两个bool进入短路门禁 | 关系句柄有效 | 两个实参静态类型复核 |
-| RCE2179 | F0461 | F0451 | <code>海中鱼巣/领域/服务.概念活动.ixx:71</code> | source-audited-direct-const-member | 当前服务 | bool入口门禁 | 取得活动锁 | 源码复核 |
-| RCE2180 | F0461 | F0245 | <code>海中鱼巣/领域/服务.概念活动.ixx:71</code> | source-audited-direct-const-member | 系统角色 | bool入口门禁 | 服务有效 | 静态接收者复核 |
-| RCE2181 | F0461 | F0251 | <code>海中鱼巣/领域/服务.概念活动.ixx:71</code> | source-audited-direct-const-member | 预期材料 | bool入口门禁 | 前两项通过 | 静态接收者复核 |
-| RCE2182 | F0461 | F0250 | <code>海中鱼巣/领域/服务.概念活动.ixx:72</code> | source-audited-direct-const-member | 缓存材料；预期材料 | bool入口门禁 | optional 有值 | 静态接收者复核 |
-| RCE2183 | F0461 | F0464 | <code>海中鱼巣/领域/服务.概念活动.ixx:76</code> | source-audited-direct-const-member | 预期视图；重建视图 | bool决定内部不一致 | 重建成功 | 静态接收者复核 |
-| RCE2184 | F0462 | F0451 | <code>海中鱼巣/领域/服务.概念活动.ixx:32</code> | source-audited-direct-const-member | 当前服务 | bool入口门禁 | 取得活动锁 | 源码复核 |
-| RCE2185 | F0462 | F0245 | <code>海中鱼巣/领域/服务.概念活动.ixx:32</code> | source-audited-direct-const-member | 系统角色 | bool入口门禁 | 服务有效 | 静态接收者复核 |
-| RCE2186 | F0462 | F0229 | <code>海中鱼巣/领域/服务.概念活动.ixx:32</code> | source-audited-direct-const-member | 初始化参数 | bool入口门禁 | 前两项通过 | 静态接收者复核 |
-| RCE2187 | F0462 | F0247 | <code>海中鱼巣/领域/服务.概念活动.ixx:35</code> | source-audited-direct-const-member | 缓存材料；参数 | bool决定幂等冲突 | optional 有值 | 静态接收者复核 |
-| RCE2188 | F0462 | R0539 | <code>海中鱼巣/领域/服务.概念活动.ixx:39, 海中鱼巣/领域/服务.概念活动.ixx:40</code> | source-audited-direct-const-member | 重建 | bool进入判断或三元式 | 重建结果已形成 | 静态接收者复核 |
-| RCE2189 | F0462 | F0464 | <code>海中鱼巣/领域/服务.概念活动.ixx:39</code> | source-audited-direct-const-member | 缓存视图；重建视图 | bool一致性判断 | 重建成功 | 静态接收者复核 |
-| RCE2190 | F0462 | R0511 | <code>海中鱼巣/领域/服务.概念活动.ixx:47, 海中鱼巣/领域/服务.概念活动.ixx:50, 海中鱼巣/领域/服务.概念活动.ixx:53</code> | source-audited-direct-const-member | 三份抽象状态请求 | 三份规格结果 | 无缓存材料 | 静态接收者与请求类型复核 |
-| RCE2191 | F0462 | R0510 | <code>海中鱼巣/领域/服务.概念活动.ixx:56</code> | source-audited-direct-const-member | 三份规格结果 | 三个bool短路门禁 | 三份结果已形成 | 静态接收者复核 |
-| RCE2192 | F0462 | F0076 | <code>海中鱼巣/领域/服务.概念活动.ixx:61</code> | source-audited-direct-const-member | 结果 | bool完整性门禁 | 初始化结果已形成 | 静态接收者复核 |
-| RCE2193 | F0462 | R0726 | <code>海中鱼巣/领域/服务.概念活动.ixx:61</code> | source-audited-direct-const-member | 结果 | bool要求改变结构 | F0076 返回 true | 新身份定义复核 |
-| RCE2194 | F0463 | F0051 | <code>海中鱼巣/领域/概念活动状态.数据.h:70</code> | compiler-generated-defaulted-member-compare | 左右状态节点 | bool逐字段比较 | 前序字段相等 | 默认化比较成员类型复核 |
-| RCE2195 | F0463 | R0615 | <code>海中鱼巣/领域/概念活动状态.数据.h:70</code> | compiler-generated-defaulted-member-compare | 左右主信息 | bool逐字段比较 | 前序字段相等 | 默认化比较成员类型复核 |
-| RCE2196 | F0464 | F0463 | <code>海中鱼巣/领域/概念活动状态.数据.h:144</code> | standard-template-element-compare | 状态角色数组对应元素 | 元素bool由array短路编排 | 数组比较期间动态一至三次 | 模板元素类型复核 |
-| RCE2197 | F0465 | R0613 | <code>海中鱼巣/领域/概念活动状态.数据.h:116</code> | source-audited-direct-const-member | 左右根身份 | bool短路比较 | 类别相等 | 静态类型复核 |
-| RCE2198 | F0465 | F0457 | <code>海中鱼巣/领域/概念活动状态.数据.h:119</code> | source-audited-direct-const-member | 左右活跃关系 | bool最终比较 | 前序字段与签名一致 | 静态类型复核 |
-| RCE2199 | F0466 | F0467 | <code>海中鱼巣/领域/概念活动状态.数据.h:128, 海中鱼巣/领域/概念活动状态.数据.h:129</code> | source-audited-direct-const-member | 三个状态角色元素 | 三个bool短路门禁 | 按源码左到右短路 | 静态接收者复核 |
-| RCE2200 | F0468 | F0197 | <code>海中鱼巣/自检.入口初始化.ixx:60</code> | source-audited-direct-const-member | 节点仓库零参数接收者 | uint64_t转size_t写入节点数量 | 装配成功 | 接收者与零参数重载复核 |
-| RCE2201 | R0727 | R0563 | <code>海中鱼巣/领域/系统角色清单.数据.h:153, 海中鱼巣/领域/系统角色清单.数据.h:154</code> | source-audited-direct-const-member | 五个身份材料 | 五个bool短路门禁 | 按源码左到右短路 | 静态接收者复核 |
-| RCE2202 | F0496 | F0621 | <code>海中鱼巣/领域/语素服务.h:192</code> | source-audited-overload-direct | 语素入口；语素对应信息 | 目标节点组 | 入口类型门禁通过 | 两实参精确匹配无令牌无顺序号 F0621 |
-| RCE2203 | F0497 | F0621 | <code>海中鱼巣/领域/语素服务.h:199</code> | source-audited-overload-direct | 语素入口；语素概念追溯 | 目标节点组 | 入口类型门禁通过 | 两实参精确匹配无令牌无顺序号 F0621 |
-| RCE2204 | R0728 | F0190 | <code>海中鱼巣/领域/语素服务.h:253</code> | source-audited-overload-direct | 节点句柄值 | optional节点记录 | R0728入口后必达 | 单实参精确匹配无令牌 F0190 |
-| RCE2205 | R0568 | F0346 | <code>海中鱼巣/领域/语素服务.h:258</code> | source-audited-overload-direct | 节点句柄值；令牌 | optional节点记录 | R0568入口后必达 | 双实参精确匹配带令牌 F0346 |
-| RCE2206 | F0516 | F0331 | <code>海中鱼巣/领域/存在服务.h:94</code> | source-audited-overload-direct | 主信息仓库零参数接收者 | 主信息句柄 | F0516入口后必达 | 零实参精确匹配无令牌创建主信息 F0331 |
-| RCE2207 | F0516 | F0332 | <code>海中鱼巣/领域/存在服务.h:95</code> | source-audited-overload-direct | 节点类型::存在；主信息句柄 | 节点句柄 | 主信息句柄已形成 | 两实参精确匹配无令牌创建节点 F0332 |
-| RCE2208 | F0516 | F0624 | <code>海中鱼巣/领域/存在服务.h:97</code> | source-audited-overload-direct | 记录-&gt;主信息 | bool短路判断 | 读取存在返回有值 | 单实参精确匹配无令牌主信息有效性读取 F0624 |
-| RCE2209 | F0523 | F0336 | <code>海中鱼巣/核心/节点仓库.cpp:332</code> | source-audited-direct-const-member | 事务接线接收者 | 已接域bool | F0523入口后必达 | 静态接收者与零实参成员复核 |
-| RCE2210 | F0523 | F0398 | <code>海中鱼巣/核心/节点仓库.cpp:333</code> | source-audited-resolved-function-pointer | 运行期状态 | 结构事务许可 | RCE2209返回true | 生产装配下独占许可函数指针唯一目标 |
-| RCE2211 | F0523 | F0338 | <code>海中鱼巣/核心/节点仓库.cpp:334</code> | source-audited-direct-const-member | 许可接收者 | 许可有效bool | RCE2210已形成许可 | 静态接收者与短路顺序复核 |
-| RCE2212 | F0523 | F0339 | <code>海中鱼巣/核心/节点仓库.cpp:334</code> | source-audited-direct-const-member | 许可接收者 | const结构事务令牌引用 | RCE2211返回true | 静态接收者、令牌实参与短路顺序复核 |
-| RCE2213 | F0523 | F0345 | <code>海中鱼巣/核心/节点仓库.cpp:333-335</code> | source-audited-implicit-destructor | 局部许可 | void | RCE2210已形成许可 | 局部许可生命周期与非平凡析构身份复核 |
+| RCE2174 | F0458 | F0459 | <code>海中鱼巣/领域/系统角色清单.数据.h:190</code> | source-audited-direct-const-member | this=&amp;场景接纳自我关系 | bool进入入口短路判断 | 前三个身份材料完整 | 系统角色清单.数据.h:190 静态接收者复核 |
+| RCE2175 | F0458 | R0727 | <code>海中鱼巣/领域/系统角色清单.数据.h:190, 海中鱼巣/领域/系统角色清单.数据.h:191</code> | source-audited-direct-const-member | this=&amp;安全根需求；this=&amp;服务根需求 | bool进入入口短路判断 | 按源码左到右短路 | 系统角色清单.数据.h:190-191 静态接收者复核 |
+| RCE2176 | F0458 | F0051 | <code>海中鱼巣/领域/系统角色清单.数据.h:202, 海中鱼巣/领域/系统角色清单.数据.h:207, 海中鱼巣/领域/系统角色清单.数据.h:208</code> | source-audited-direct-operator | 节点句柄左右值 | bool进入重复性或归属关系判断 | 循环或最终关系复核到达对应表达式 | 系统角色清单.数据.h:202,207-208 操作数静态类型复核 |
+| RCE2177 | F0458 | R0615 | <code>海中鱼巣/领域/系统角色清单.数据.h:203</code> | source-audited-direct-operator | 身份组左右主信息句柄 | bool进入重复性判断 | 同对稳定主键和节点句柄均不相等 | 系统角色清单.数据.h:203 操作数静态类型复核 |
+| RCE2178 | F0459 | F0163 | <code>海中鱼巣/领域/系统角色清单.数据.h:134</code> | source-audited-direct-free | 源节点；目标节点 | 两个 bool 进入短路完整性判断 | 关系句柄有效后按源码短路调用 | 系统角色清单.数据.h:134 实参静态类型复核 |
+| RCE2179 | F0461 | F0451 | <code>海中鱼巣/领域/服务.概念活动.ixx:71</code> | source-audited-direct-const-member | this=&amp;当前概念活动业务服务 | bool进入入口短路门禁 | 取得活动锁后必达 | 服务.概念活动.ixx:71 源码复核 |
+| RCE2180 | F0461 | F0245 | <code>海中鱼巣/领域/服务.概念活动.ixx:71</code> | source-audited-direct-const-member | this=&amp;系统角色 | bool进入入口短路门禁 | F0451 返回 true | 服务.概念活动.ixx:71 源码复核 |
+| RCE2181 | F0461 | F0251 | <code>海中鱼巣/领域/服务.概念活动.ixx:71</code> | source-audited-direct-const-member | this=&amp;预期材料 | bool进入入口短路门禁 | 前两项入口门禁通过 | 服务.概念活动.ixx:71 源码复核 |
+| RCE2182 | F0461 | F0250 | <code>海中鱼巣/领域/服务.概念活动.ixx:72</code> | source-audited-direct-const-member | this=活动材料_所含材料；右=预期材料 | bool进入入口短路门禁 | 活动材料_有值 | 服务.概念活动.ixx:72 静态接收者复核 |
+| RCE2183 | F0461 | F0464 | <code>海中鱼巣/领域/服务.概念活动.ixx:76</code> | source-audited-direct-const-member | this=&amp;预期材料.重建视图；右=重建.视图 | bool决定内部不一致返回 | 重建结果成功 | 服务.概念活动.ixx:76 静态接收者复核 |
+| RCE2184 | F0462 | F0451 | <code>海中鱼巣/领域/服务.概念活动.ixx:32</code> | source-audited-direct-const-member | this=&amp;当前概念活动业务服务 | bool进入入口短路门禁 | 取得活动锁后必达 | 服务.概念活动.ixx:32 源码复核 |
+| RCE2185 | F0462 | F0245 | <code>海中鱼巣/领域/服务.概念活动.ixx:32</code> | source-audited-direct-const-member | this=&amp;系统角色 | bool进入入口短路门禁 | F0451 返回 true | 服务.概念活动.ixx:32 源码复核 |
+| RCE2186 | F0462 | F0229 | <code>海中鱼巣/领域/服务.概念活动.ixx:32</code> | source-audited-direct-const-member | this=&amp;参数 | bool进入入口短路门禁 | 前两项入口门禁通过 | 服务.概念活动.ixx:32 源码复核 |
+| RCE2187 | F0462 | F0247 | <code>海中鱼巣/领域/服务.概念活动.ixx:35</code> | source-audited-direct-const-member | this=活动材料_所含材料；参数=F0462参数 | bool决定幂等冲突返回 | 活动材料_有值 | 服务.概念活动.ixx:35 静态接收者复核 |
+| RCE2188 | F0462 | R0539 | <code>海中鱼巣/领域/服务.概念活动.ixx:39, 海中鱼巣/领域/服务.概念活动.ixx:40</code> | source-audited-direct-const-member | this=&amp;重建 | bool进入短路判断或三元表达式 | 重建结果已形成；第40行仅失败或视图不等分支 | 服务.概念活动.ixx:39-40 源码复核 |
+| RCE2189 | F0462 | F0464 | <code>海中鱼巣/领域/服务.概念活动.ixx:39</code> | source-audited-direct-const-member | this=&amp;活动材料_-&gt;重建视图；右=重建.视图 | bool进入幂等读回一致性判断 | 重建结果成功 | 服务.概念活动.ixx:39 静态接收者复核 |
+| RCE2190 | F0462 | R0511 | <code>海中鱼巣/领域/服务.概念活动.ixx:47, 海中鱼巣/领域/服务.概念活动.ixx:50, 海中鱼巣/领域/服务.概念活动.ixx:53</code> | source-audited-direct-const-member | 活跃、冷却、退役三份创建抽象状态请求 | 依次绑定活跃规格、冷却规格、退役规格 | 活动材料_无值 | 服务.概念活动.ixx:47-55 源码复核 |
+| RCE2191 | F0462 | R0510 | <code>海中鱼巣/领域/服务.概念活动.ixx:56</code> | source-audited-direct-const-member | this依次为活跃规格、冷却规格、退役规格 | 三个 bool 进入短路门禁 | 无缓存且三份规格结果已形成 | 服务.概念活动.ixx:56 静态接收者复核 |
+| RCE2192 | F0462 | F0076 | <code>海中鱼巣/领域/服务.概念活动.ixx:61</code> | source-audited-direct-const-member | this=&amp;结果 | bool进入结果完整性门禁 | 初始化全新活动返回 | 服务.概念活动.ixx:61 静态接收者复核 |
+| RCE2193 | F0462 | R0726 | <code>海中鱼巣/领域/服务.概念活动.ixx:61</code> | source-audited-direct-const-member | this=&amp;结果 | bool要求本次结果确实改变结构 | F0076 返回 true | 服务.概念活动.ixx:61 与新身份定义复核 |
+| RCE2194 | F0463 | F0051 | <code>海中鱼巣/领域/概念活动状态.数据.h:70</code> | compiler-generated-defaulted-member-compare | 左右状态节点句柄 | bool进入逐字段短路比较 | 前序阶段和稳定主键字段相等 | 默认化 operator== 成员顺序与句柄静态类型复核 |
+| RCE2195 | F0463 | R0615 | <code>海中鱼巣/领域/概念活动状态.数据.h:70</code> | compiler-generated-defaulted-member-compare | 左右主信息句柄 | bool进入逐字段短路比较 | 前序阶段、稳定主键和状态节点字段相等 | 默认化 operator== 成员顺序与句柄静态类型复核 |
+| RCE2196 | F0464 | F0463 | <code>海中鱼巣/领域/概念活动状态.数据.h:144</code> | standard-template-element-compare | 两侧状态角色数组对应元素 | 元素 bool 由 array 等值比较短路编排 | 入口后数组比较期间动态调用一至三次 | 概念活动状态.数据.h:144 模板元素类型复核 |
+| RCE2197 | F0465 | R0613 | <code>海中鱼巣/领域/概念活动状态.数据.h:116</code> | source-audited-direct-const-member | 左右根身份材料 | bool进入短路相等判断 | 类别相等 | 概念活动状态.数据.h:116 静态类型复核 |
+| RCE2198 | F0465 | F0457 | <code>海中鱼巣/领域/概念活动状态.数据.h:119</code> | source-audited-direct-const-member | 左右活跃关系材料 | bool作为最终相等结果 | 类别、根身份及两份规范签名均一致 | 概念活动状态.数据.h:119 静态类型复核 |
+| RCE2199 | F0466 | F0467 | <code>海中鱼巣/领域/概念活动状态.数据.h:128, 海中鱼巣/领域/概念活动状态.数据.h:129</code> | source-audited-direct-const-member | 状态角色组第0、第1、第2元素 | 三个 bool 进入短路完整性门禁 | 第一个必达，后两个按前序 true 短路到达 | 概念活动状态.数据.h:128-129 静态接收者复核 |
+| RCE2200 | F0468 | F0197 | <code>海中鱼巣/自检.入口初始化.ixx:60</code> | source-audited-direct-const-member | this=&amp;装配.上下文-&gt;节点；无显式参数 | uint64_t 转为 size_t 后写入计数.节点数量 | 装配成功 | 自检.入口初始化.ixx:60 接收者与零参数重载复核 |
+| RCE2201 | R0727 | R0563 | <code>海中鱼巣/领域/系统角色清单.数据.h:153, 海中鱼巣/领域/系统角色清单.数据.h:154</code> | source-audited-direct-const-member | 五个系统角色身份材料接收者，无显式参数 | 五个 bool 进入短路完整性判断 | 按源码左到右短路 | 系统角色清单.数据.h:153-154 静态接收者复核 |
+| RCE2202 | F0496 | F0621 | <code>海中鱼巣/领域/语素服务.h:192</code> | source-audited-overload-direct | this=&amp;关系_；源节点=语素入口；类型=语素对应信息 | 目标节点组按值返回 | R0728确认节点是语素入口 | 语素服务.h:192 接收者静态类型、实参数量与关系类型复核 |
+| RCE2203 | F0497 | F0621 | <code>海中鱼巣/领域/语素服务.h:199</code> | source-audited-overload-direct | this=&amp;关系_；源节点=语素入口；类型=语素概念追溯 | 目标节点组按值返回 | R0728确认节点是语素入口 | 语素服务.h:199 接收者静态类型、实参数量与关系类型复核 |
+| RCE2204 | R0728 | F0190 | <code>海中鱼巣/领域/语素服务.h:253</code> | source-audited-overload-direct | this=&amp;节点_；节点=节点句柄值 | optional节点记录绑定为记录 | R0728入口后必达 | 语素服务.h:253 接收者静态类型与单实参重载复核 |
+| RCE2205 | R0568 | F0346 | <code>海中鱼巣/领域/语素服务.h:258</code> | source-audited-overload-direct | this=&amp;节点_；节点=节点句柄值；令牌=令牌 | optional节点记录绑定为记录 | R0568入口后必达 | 语素服务.h:258 接收者静态类型、双实参与令牌重载复核 |
+| RCE2206 | F0516 | F0331 | <code>海中鱼巣/领域/存在服务.h:94</code> | source-audited-overload-direct | this=&amp;主信息_；无显式实参 | 主信息句柄绑定为主信息句柄 | F0516入口后必达 | 存在服务.h:94 接收者静态类型与零实参重载复核 |
+| RCE2207 | F0516 | F0332 | <code>海中鱼巣/领域/存在服务.h:95</code> | source-audited-overload-direct | this=&amp;节点_；类型=节点类型::存在；主信息=主信息句柄 | 节点句柄绑定为存在 | 主信息句柄已形成 | 存在服务.h:95 接收者静态类型与两实参重载复核 |
+| RCE2208 | F0516 | F0624 | <code>海中鱼巣/领域/存在服务.h:97</code> | source-audited-overload-direct | this=&amp;主信息_；主信息=记录-&gt;主信息 | bool进入短路判断 | 读取存在返回有值 | 存在服务.h:97 接收者静态类型、单实参与短路条件复核 |
+| RCE2209 | F0523 | F0336 | <code>海中鱼巣/核心/节点仓库.cpp:332</code> | source-audited-direct-const-member | this=&amp;事务接线_ | 已接域bool进入分支判断 | F0523入口后必达 | 节点仓库.cpp:332 静态接收者、成员签名与分支顺序复核 |
+| RCE2210 | F0523 | F0398 | <code>海中鱼巣/核心/节点仓库.cpp:333</code> | source-audited-resolved-function-pointer | 状态=事务接线_.运行期状态 | 结构事务许可绑定为许可 | RCE2209返回true | 结构事务接线字段、协调器生成接线与生产装配唯一独占许可目标复核 |
+| RCE2211 | F0523 | F0338 | <code>海中鱼巣/核心/节点仓库.cpp:334</code> | source-audited-direct-const-member | this=&amp;许可 | 许可有效bool进入短路判断 | RCE2210已形成许可 | 节点仓库.cpp:334 静态接收者与逻辑与短路顺序复核 |
+| RCE2212 | F0523 | F0339 | <code>海中鱼巣/核心/节点仓库.cpp:334</code> | source-audited-direct-const-member | this=&amp;许可 | const结构事务令牌引用传给R0147 | RCE2211返回true；逻辑与右侧开始求值 | 节点仓库.cpp:334 静态接收者、实参绑定与短路顺序复核 |
+| RCE2213 | F0523 | F0345 | <code>海中鱼巣/核心/节点仓库.cpp:333-335</code> | source-audited-implicit-destructor | this=&amp;许可 | void | RCE2210已形成许可；返回值求值完成或许可形成后的异常展开 | 节点仓库.cpp:333-335 局部许可生命周期与已登记F0345析构身份复核 |
+| RCE2214 | F0544 | F0336 | <code>海中鱼巣/核心/索引仓库.cpp:173</code> | direct_const_member | this=&amp;事务接线_ | 已接域bool | F0544进入后首先判断接域 | 本批源码逐调用点与静态接收者复核 |
+| RCE2215 | F0544 | F0397 | <code>海中鱼巣/核心/索引仓库.cpp:174</code> | resolved-function-pointer | this=&amp;事务接线_,事务接线_.运行期状态 | 结构事务许可 | RCE2214返回true；生产接线唯一共享许可目标 | 本批源码逐调用点与静态接收者复核 |
+| RCE2216 | F0544 | F0338 | <code>海中鱼巣/核心/索引仓库.cpp:175</code> | direct_const_member | this=&amp;许可 | 许可有效bool | RCE2215返回许可 | 本批源码逐调用点与静态接收者复核 |
+| RCE2217 | F0544 | F0339 | <code>海中鱼巣/核心/索引仓库.cpp:175</code> | direct_const_member | this=&amp;许可 | const结构事务令牌&amp; | RCE2216返回true | 本批源码逐调用点与静态接收者复核 |
+| RCE2218 | F0544 | F0345 | <code>海中鱼巣/核心/索引仓库.cpp:173-176</code> | compiler_implicit_destructor | this=&amp;许可 |  | 接域分支任一返回或异常展开退出局部许可作用域 | 本批源码逐调用点与静态接收者复核 |
+| RCE2219 | F0544 | F0377 | <code>海中鱼巣/核心/索引仓库.cpp:185</code> | direct_const_member | this=&amp;节点_,候选 | 节点有效bool | 未接域、主键非零、索引命中并释放共享锁后 | 本批源码逐调用点与静态接收者复核 |
+| RCE2220 | F0552 | R0729 | <code>海中鱼巣/领域/需求服务.h:561</code> | direct_const_member | this,需求节点,节点类型::需求 | 类型匹配bool | F0552进入 | 本批源码逐调用点与静态接收者复核 |
+| RCE2221 | F0552 | R0582 | <code>海中鱼巣/领域/需求服务.h:564</code> | direct_const_member | this,需求节点 | 主体optional | RCE2220返回true | 本批源码逐调用点与静态接收者复核 |
+| RCE2222 | F0552 | R0583 | <code>海中鱼巣/领域/需求服务.h:565</code> | direct_const_member | this,需求节点 | 目标宿主optional | RCE2221返回后 | 本批源码逐调用点与静态接收者复核 |
+| RCE2223 | F0552 | R0584 | <code>海中鱼巣/领域/需求服务.h:566</code> | direct_const_member | this,需求节点 | 场景optional | RCE2222返回后 | 本批源码逐调用点与静态接收者复核 |
+| RCE2224 | F0552 | R0581 | <code>海中鱼巣/领域/需求服务.h:567</code> | direct_const_member | this,需求节点 | 目标状态optional | RCE2223返回后 | 本批源码逐调用点与静态接收者复核 |
+| RCE2225 | R0579 | R0729 | <code>海中鱼巣/领域/需求服务.h:295, 海中鱼巣/领域/需求服务.h:296, 海中鱼巣/领域/需求服务.h:297</code> | direct_const_member | this,自我存在/需求场景/目标特征,对应节点类型 | 类型匹配bool | R0579入口短路按源码顺序执行 | 本批源码逐调用点与静态接收者复核 |
+| RCE2226 | R0581 | R0729 | <code>海中鱼巣/领域/需求服务.h:354, 海中鱼巣/领域/需求服务.h:360</code> | direct_const_member | this,需求节点或候选目标,需求/状态类型 | 类型匹配bool | R0581入口及候选过滤路径 | 本批源码逐调用点与静态接收者复核 |
+| RCE2227 | R0587 | R0729 | <code>海中鱼巣/领域/需求服务.h:705</code> | direct_const_member | this,需求节点,节点类型::需求 | 类型匹配bool | R0587进入 | 本批源码逐调用点与静态接收者复核 |
+| RCE2228 | R0593 | R0729 | <code>海中鱼巣/领域/需求服务.h:770, 海中鱼巣/领域/需求服务.h:773</code> | direct_const_member | this,需求节点/父需求,节点类型::需求 | 类型匹配bool | R0593入口与父需求门禁 | 本批源码逐调用点与静态接收者复核 |
+| RCE2229 | R0596 | R0729 | <code>海中鱼巣/领域/需求服务.h:979</code> | direct_const_member | this,结算状态,节点类型::状态 | 类型匹配bool | R0596进入 | 本批源码逐调用点与静态接收者复核 |
+| RCE2230 | R0597 | R0729 | <code>海中鱼巣/领域/需求服务.h:988, 海中鱼巣/领域/需求服务.h:994</code> | direct_const_member | this,结算状态/目标,状态或目标类型 | 类型匹配bool | R0597入口与候选过滤路径 | 本批源码逐调用点与静态接收者复核 |
+| RCE2231 | R0576 | R0729 | <code>海中鱼巣/领域/需求服务.h:1007, 海中鱼巣/领域/需求服务.h:1013</code> | direct_const_member | this,需求节点/目标,需求或目标类型 | 类型匹配bool | R0576入口与候选过滤路径 | 本批源码逐调用点与静态接收者复核 |
+| RCE2232 | R0577 | R0729 | <code>海中鱼巣/领域/需求服务.h:1027, 海中鱼巣/领域/需求服务.h:1031</code> | direct_const_member | this,结算状态/目标,状态或目标类型 | 类型匹配bool | R0577入口与候选过滤路径 | 本批源码逐调用点与静态接收者复核 |
+| RCE2233 | R0729 | F0190 | <code>海中鱼巣/领域/需求服务.h:1039</code> | direct_const_member | this=&amp;节点_,节点句柄值 | 节点记录optional | R0729进入 | 本批源码逐调用点与静态接收者复核 |
+| RCE2234 | F0554 | F0621 | <code>海中鱼巣/领域/特征服务.h:266</code> | direct_const_member | this=关系_,宿主节点,关系类型::归属 | 候选组 | 关系指针非空且宿主/特征类型前置通过 | 本批源码逐调用点与静态接收者复核 |
+| RCE2235 | F0554 | F0579 | <code>海中鱼巣/领域/特征服务.h:268</code> | direct_const_member | this=关系_,关系类型::模板,候选,特征类型 | 关系存在bool | 当前候选经RCE0256确认为特征 | 本批源码逐调用点与静态接收者复核 |
+| RCE2236 | F0555 | R0730 | <code>海中鱼巣/领域/特征服务.h:367</code> | direct_const_member | this=特征值_,特征值节点 | I64值optional | RCE0257返回true且特征值指针非空 | 本批源码逐调用点与静态接收者复核 |
+| RCE2237 | R0730 | F0321 | <code>海中鱼巣/领域/特征值服务.h:269</code> | direct_const_member | this=&amp;事务接线_ | 接线形态有效bool | R0730进入 | 本批源码逐调用点与静态接收者复核 |
+| RCE2238 | R0730 | F0336 | <code>海中鱼巣/领域/特征值服务.h:272</code> | direct_const_member | this=&amp;事务接线_ | 已接域bool | RCE2237返回true | 本批源码逐调用点与静态接收者复核 |
+| RCE2239 | R0730 | F0397 | <code>海中鱼巣/领域/特征值服务.h:273</code> | resolved-function-pointer | this=&amp;事务接线_,事务接线_.运行期状态 | 结构事务许可 | RCE2238返回true；生产接线唯一共享许可目标 | 本批源码逐调用点与静态接收者复核 |
+| RCE2240 | R0730 | F0338 | <code>海中鱼巣/领域/特征值服务.h:274</code> | direct_const_member | this=&amp;许可 | 许可有效bool | RCE2239返回许可 | 本批源码逐调用点与静态接收者复核 |
+| RCE2241 | R0730 | F0339 | <code>海中鱼巣/领域/特征值服务.h:275</code> | direct_const_member | this=&amp;许可 | const结构事务令牌&amp; | RCE2240返回true | 本批源码逐调用点与静态接收者复核 |
+| RCE2242 | R0730 | R0731 | <code>海中鱼巣/领域/特征值服务.h:277</code> | direct_const_member | this,特征值节点,令牌 | 节点记录optional | 接线形态有效且接域许可有效或未接域 | 本批源码逐调用点与静态接收者复核 |
+| RCE2243 | R0730 | R0732 | <code>海中鱼巣/领域/特征值服务.h:283</code> | direct_const_member | this,特征值节点,节点记录值-&gt;主信息,令牌 | 原始值状态 | RCE2242返回有值且共享锁已取得 | 本批源码逐调用点与静态接收者复核 |
+| RCE2244 | R0730 | F0345 | <code>海中鱼巣/领域/特征值服务.h:268-288</code> | compiler_implicit_destructor | this=&amp;许可 |  | 函数任一返回或异常展开退出许可作用域 | 本批源码逐调用点与静态接收者复核 |
+| RCE2245 | R0731 | F0346 | <code>海中鱼巣/领域/特征值服务.h:601</code> | direct_const_member | this=&amp;节点_,特征值节点,*令牌 | 节点记录optional | 令牌指针非空 | 本批源码逐调用点与静态接收者复核 |
+| RCE2246 | R0731 | F0190 | <code>海中鱼巣/领域/特征值服务.h:602</code> | direct_const_member | this=&amp;节点_,特征值节点 | 节点记录optional | 令牌指针为空 | 本批源码逐调用点与静态接收者复核 |
+| RCE2247 | R0731 | R0009 | <code>海中鱼巣/领域/特征值服务.h:607</code> | direct_const_member | this=&amp;主信息_,记录-&gt;主信息,*令牌 | 主信息有效bool | 节点记录类型有效且令牌非空 | 本批源码逐调用点与静态接收者复核 |
+| RCE2248 | R0731 | F0624 | <code>海中鱼巣/领域/特征值服务.h:608</code> | direct_const_member | this=&amp;主信息_,记录-&gt;主信息 | 主信息有效bool | 节点记录类型有效且令牌为空 | 本批源码逐调用点与静态接收者复核 |
+| RCE2249 | R0731 | F0184 | <code>海中鱼巣/领域/特征值服务.h:609</code> | direct_free_function | 主信息有效,固定说明 | 追根因检查bool | 主信息有效判定完成 | 本批源码逐调用点与静态接收者复核 |
+| RCE2250 | R0732 | R0554 | <code>海中鱼巣/领域/特征值服务.h:620</code> | direct_const_member | this,特征值节点 | Vec记录数量 | R0732进入 | 本批源码逐调用点与静态接收者复核 |
+| RCE2251 | R0732 | R0556 | <code>海中鱼巣/领域/特征值服务.h:621</code> | direct_const_member | this,特征值节点 | I64版本记录数量 | RCE2250返回后 | 本批源码逐调用点与静态接收者复核 |
+| RCE2252 | R0732 | F0184 | <code>海中鱼巣/领域/特征值服务.h:622, 海中鱼巣/领域/特征值服务.h:623, 海中鱼巣/领域/特征值服务.h:630, 海中鱼巣/领域/特征值服务.h:634, 海中鱼巣/领域/特征值服务.h:642, 海中鱼巣/领域/特征值服务.h:646, 海中鱼巣/领域/特征值服务.h:650, 海中鱼巣/领域/特征值服务.h:666</code> | direct_free_function | 各结构一致性条件,对应固定说明 | 追根因检查bool | 按源码短路与分支顺序执行 | 本批源码逐调用点与静态接收者复核 |
+| RCE2253 | R0732 | R0548 | <code>海中鱼巣/领域/特征值服务.h:627</code> | direct_const_member | this,特征值节点 | Vec const_iterator | 记录数量检查通过 | 本批源码逐调用点与静态接收者复核 |
+| RCE2254 | R0732 | R0552 | <code>海中鱼巣/领域/特征值服务.h:628</code> | direct_const_member | this,特征值节点 | I64版本 const_iterator | RCE2253返回后 | 本批源码逐调用点与静态接收者复核 |
+| RCE2255 | R0732 | R0544 | <code>海中鱼巣/领域/特征值服务.h:630</code> | direct_static | *Vec位置 | Vec记录内部一致bool | Vec位置不等于cend | 本批源码逐调用点与静态接收者复核 |
+| RCE2256 | R0732 | R0545 | <code>海中鱼巣/领域/特征值服务.h:634</code> | direct_static | *I64版本位置 | I64版本记录内部一致bool | I64版本位置不等于cend | 本批源码逐调用点与静态接收者复核 |
+| RCE2257 | R0732 | F0383 | <code>海中鱼巣/领域/特征值服务.h:639</code> | direct_const_member | this=&amp;主信息_,主信息句柄值,0,*令牌 | I64值optional | 令牌指针非空且前序一致性检查通过 | 本批源码逐调用点与静态接收者复核 |
+| RCE2258 | R0732 | F0619 | <code>海中鱼巣/领域/特征值服务.h:640</code> | direct_const_member | this=&amp;主信息_,主信息句柄值 | I64值optional | 令牌指针为空且前序一致性检查通过 | 本批源码逐调用点与静态接收者复核 |
 
-统计：3233 条项目源码调用边；每个 caller/callee pair 只保留一个稳定边身份并合并全部调用点。
+统计：3278 条项目源码调用边；每个 caller/callee pair 只保留一个稳定边身份并合并全部调用点。
