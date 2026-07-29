@@ -239,3 +239,38 @@ SIGTERM 的旧验证夹具错误已纠正，产品在 Debug CRT 主线程上下�
 ### 结论
 
 V14 已由本轮两次正式机械复验闭合。关系仓库性能专项仍稳定复现不一致退出码，导致计划第 7 节完整矩阵不能闭合；依据“任一验证失败不得提交完成”，本续段结果为 `ENVIRONMENT-BLOCKED` WIP，不证明 #380 完成。是否请求设计包修订：否。
+
+## v0.3 第四次续段验证
+
+### 身份与 S0
+
+- plan blob：`024c51c780705425c70009ba03a1c2404361b7e3`。
+- 计划索引 blob：`1282d6dd96304499b2299fe99d73c909933c62f3`。
+- 计划段起点：`473620aabbdeca2ee0b783604c77dd5c586b692d`。
+- S0 时 `main == origin/main`、divergence `0/0`、index clean；#380
+  允许代码 / 工程文件与实际接口相对最近断点零变化，验证资源无占用。
+
+### 当轮结果
+
+1. `msbuild .\海中鱼巣.vcxproj /t:Rebuild /p:Configuration=Debug
+   /p:Platform=x64 /m /v:minimal`
+   - 结果：通过，生成 `x64\Debug\海中鱼巣.exe`。
+2. 同一全关 Debug 构建连续两轮
+   `.\x64\Debug\海中鱼巣.exe
+   --warehouse-performance-self-test-exit`
+   - 第 1 轮：约 398—427 秒之间自然结束，`exit 1`；stdout / stderr
+     为空。
+   - 第 2 轮：第 311 秒轮询时已自然结束，`exit 1`；stdout / stderr
+     为空。
+   - 两轮均无强制终止、无日志宏、无门限变更和无来源代码修改。
+
+### 裁决
+
+本轮把上一轮的 `exit 1 / exit 0` 高方差证据收敛为连续两轮稳定失败，
+因此不能再把剩余问题表述为“尚未证明稳定性”，而应表述为“性能专项
+验收稳定不通过”。计划第 7 节要求该专项通过，任一失败禁止提交完成；
+性能专项实现和门限不属于 #380 白名单，执行侧也不能在本计划内追改。
+
+结果为 `PERFORMANCE-VALIDATION-FAILED-OUTSIDE-SCOPE` WIP，不证明
+#380 完成。是否请求 #380 设计包修订：否；请求计划支撑把 #380 保持
+非执行状态，等待具名性能专项来源修复 / 归因结果后再恢复验证。

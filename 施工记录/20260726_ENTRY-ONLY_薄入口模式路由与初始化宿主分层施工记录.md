@@ -188,3 +188,41 @@ Windows 控制台事件可机械发送 SIGINT 和 SIGBREAK，但没有映射为 
 - 关系仓库性能专项同一构建连续得到 `exit 1 / exit 0`，属于验证结果不稳定；任一验证失败不得提交“完成”。
 - 结果：`ENVIRONMENT-BLOCKED`。
 - 是否请求设计包修订：否。
+
+## v0.3 第四次续段 PERFORMANCE-VALIDATION-FAILED
+
+- plan blob：`024c51c780705425c70009ba03a1c2404361b7e3`。
+- 计划索引 blob：`1282d6dd96304499b2299fe99d73c909933c62f3`。
+- 计划段起点：`473620aabbdeca2ee0b783604c77dd5c586b692d`。
+- S0 时 `main == origin/main`、divergence `0/0`、index clean；#377 v0.7
+  已有 `SOURCE-CANDIDATE-COMPLETE` 结果提交，#379、#352、#359 均为
+  `待激活`，故 #380 是继续门禁中的唯一剩余可执行候选。
+- 最近 #380 记录断点 `48a8a0a730f6fc9aef307b95abeee4f38a75826e`
+  到本轮 S0，14 个允许代码 / 工程文件与 C01—C42 零变化；本轮未修改
+  产品代码。工作区流程图维护智能体的具名未跟踪 Markdown 保持原样，
+  未清理、未暂存、未提交。
+
+### 当轮机械复核
+
+1. 四日志宏全关 Debug x64 `/m` Rebuild 通过，生成当前
+   `x64/Debug/海中鱼巣.exe`。
+2. 对同一构建连续两次运行
+   `--warehouse-performance-self-test-exit`：
+   - 第 1 轮在约 398—427 秒之间自然结束，`exit 1`，stdout / stderr
+     均为空；
+   - 第 2 轮在第 311 秒轮询时已自然结束，`exit 1`，stdout / stderr
+     均为空。
+3. 两轮均未强制终止、未改变超时、未打开性能日志宏、未修改性能来源
+   或降低门限。
+
+### 收口
+
+旧的同构建 `exit 1 / exit 0` 波动本轮没有重现；当前机械事实是全关
+Debug 构建连续两轮稳定 `exit 1`。这闭合了“是否仍不稳定”的诊断，但
+没有闭合计划第 7 节性能专项必须通过的验收。性能专项实现、门限和失败
+归因来源均在 #380 白名单外，执行侧不得修改。
+
+结果：`PERFORMANCE-VALIDATION-FAILED-OUTSIDE-SCOPE`。不声明 #380
+完成；是否请求 #380 设计包修订：否。请求计划支撑把 #380 置为等待
+外部性能专项来源修复 / 归因结果的状态，不以重复执行或单次偶然成功
+覆盖连续失败。
