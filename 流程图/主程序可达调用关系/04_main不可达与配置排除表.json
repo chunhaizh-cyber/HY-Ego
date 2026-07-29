@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "code_commit": "2b5e1ea547986ece688988452c6b92e50a6cce23",
+  "code_commit": "3920a74638264f9f539d50f32f3c9fe5fb1982ab",
   "scope": "main-current-reachable-exclusions",
-  "excluded_function_count": 85,
+  "excluded_function_count": 86,
   "rejected_candidate_edge_count": 546,
   "excluded_functions": [
     {
@@ -599,6 +599,13 @@
       "file": "海中鱼巣/领域/因果服务.h",
       "definition_line": 99,
       "reason": "F0368:57 实际绑定无参数 R0611；原双参数 R0274 及其唯一后继链在当前 Debug|x64 main 可达调用图中无其它可达调用方"
+    },
+    {
+      "function_id": "R0330",
+      "signature": "bool 海中鱼巣::概念图结构业务结果::成功() const noexcept",
+      "file": "海中鱼巣/领域/数据操作.概念图结构.ixx",
+      "definition_line": 181,
+      "reason": "RCE0220 静态类型误绑校正后没有其它当前 main 可达调用方"
     }
   ],
   "rejected_candidate_edges": [
@@ -2558,21 +2565,21 @@
     {
       "candidate_edge_id": "AUDIT-REJECT-0280",
       "caller_location": "海中鱼巣/核心/执行器.结构写入.ixx:113",
-      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:240",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:297",
       "reason": "同名模板辅助函数跨执行器类型误配",
       "evidence": "执行器.结构写入.ixx:153 静态目标是同类模板辅助函数 :397"
     },
     {
       "candidate_edge_id": "AUDIT-REJECT-0281",
       "caller_location": "海中鱼巣/核心/执行器.结构写入.ixx:113",
-      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:251",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:308",
       "reason": "同名模板辅助函数跨执行器类型误配",
       "evidence": "执行器.结构写入.ixx:171 静态目标是同类模板辅助函数 :420"
     },
     {
       "candidate_edge_id": "AUDIT-REJECT-0282",
       "caller_location": "海中鱼巣/核心/执行器.结构写入.ixx:113",
-      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:269",
+      "callee_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:326",
       "reason": "同名模板辅助函数跨执行器类型误配",
       "evidence": "执行器.结构写入.ixx:181 静态目标是同类模板辅助函数 :430"
     },
@@ -2669,21 +2676,21 @@
     },
     {
       "candidate_edge_id": "AUDIT-REJECT-0296",
-      "caller_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:240",
+      "caller_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:297",
       "callee_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:105",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "两套事务参与者继承层级不同；节点直接身份自检路径当前未接入 main"
     },
     {
       "candidate_edge_id": "AUDIT-REJECT-0297",
-      "caller_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:251",
+      "caller_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:308",
       "callee_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:175",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "两套事务参与者继承层级不同；节点直接身份自检路径当前未接入 main"
     },
     {
       "candidate_edge_id": "AUDIT-REJECT-0298",
-      "caller_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:269",
+      "caller_location": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:326",
       "callee_location": "海中鱼巣/领域/参与者.特征值原始材料.ixx:183",
       "reason": "候选静态接收者、调用者或继承层级不成立",
       "evidence": "两套事务参与者继承层级不同；节点直接身份自检路径当前未接入 main"
@@ -4453,6 +4460,18 @@
     {
       "identity": "语素服务::节点是可作为概念追溯目标(节点句柄, const 结构事务令牌&) const @ 海中鱼巣/领域/语素服务.h:310-326",
       "reason": "当前 main 可达调用点只绑定一参数重载；带结构事务令牌重载没有当前可达调用方，不得由同名候选误连"
+    },
+    {
+      "identity": "R0330 概念图结构业务结果::成功()",
+      "reason": "旧 RCE0220 把 F0454 的系统角色初始化结果误绑到本函数；校正为 F0074 后无其它当前可达调用方，退出 F0001 闭包"
+    },
+    {
+      "identity": "SAFETY-P1 分层安全维护与任务权限模块组",
+      "reason": "10 个新增模块未列入 vcxproj，且无当前装配、import、调用或自检注册，不进入 Debug|x64 的 F0001 闭包"
+    },
+    {
+      "identity": "节点直接身份仅参与者事务链",
+      "reason": "新核心入口只由未纳入工程的 SAFETY-P1 模块和无入口核心自检调用，不进入 F0001 闭包"
     }
   ],
   "extraction_diagnostics": [
