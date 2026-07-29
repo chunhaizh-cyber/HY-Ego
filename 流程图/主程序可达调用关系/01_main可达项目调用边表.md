@@ -1,6 +1,6 @@
 # main 可达项目调用边表
 
-代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；项目调用边：3393。
+代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；项目调用边：3436。
 
 | 边 ID | 调用方 | 被调方 | 调用点 | 类别 | 参数绑定 | 结果绑定 | 可达条件 | 解析依据 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -1400,23 +1400,23 @@
 | E1820 | F0621 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:790-821</code> | implicit_destructor | this=&amp;自动许可.value() | void | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E1753 | F0621 | F0341 | <code>海中鱼巣/核心/关系仓库.cpp:798</code> | direct_free+direct-free | 类型 | 关系类型有效bool | 源节点当前有效；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
 | E1767 | F0621 | F0343 | <code>海中鱼巣/核心/关系仓库.cpp:798, 海中鱼巣/核心/关系仓库.cpp:805</code> | direct_const_member+direct-member+direct-member | this,源节点；this,记录.目标节点 | 输入源与候选目标当前有效bool | 入口校验；记录状态/类型/源均匹配后复核目标 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
-| RCE0275 | F0622 | R0002 | <code>海中鱼巣/核心/主信息仓库.cpp:54</code> | same_module+direct-free |  |  | 调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | 逐边源码/静态类型审计 PASS；专项源码静态类型与实际装配人工复核 |
-| RCE0276 | F0623 | F0625 | <code>海中鱼巣/核心/节点仓库.cpp:75</code> | same_module+direct-free |  |  | 调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | 逐边源码/静态类型审计 PASS；专项源码静态类型与实际装配人工复核 |
+| RCE0275 | F0622 | R0002 | <code>海中鱼巣/核心/主信息仓库.cpp:54</code> | same_module+direct-free | 事务接线_,令牌 | 共享路径令牌有效bool | F0622函数进入 | 本批源码逐调用点与静态接收者复核 |
+| RCE0276 | F0623 | F0625 | <code>海中鱼巣/核心/节点仓库.cpp:75</code> | same_module+direct-free | 类型 | 节点类型已定义bool | 共享令牌与主信息有效后按短路顺序求值 | 本批源码逐调用点与静态接收者复核 |
 | E1803 | F0623 | F0632 | <code>海中鱼巣/核心/节点仓库.cpp:75</code> | direct_free_internal_linkage+direct-free | 事务接线_,令牌 | 共享令牌有效bool | 函数进入；后继与主信息有效和节点类型门禁短路；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核 |
-| RCE0277 | F0623 | R0009 | <code>海中鱼巣/核心/节点仓库.cpp:75</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
-| RCE0278 | F0624 | R0009 | <code>海中鱼巣/核心/主信息仓库.cpp:366</code> | direct-member |  |  | 调用方可达且 libclang 直接引用项目定义；源码位置复核 | 专项源码静态类型与实际装配人工复核 |
-| RCE0279 | F0624 | F0384 | <code>海中鱼巣/核心/主信息仓库.cpp:368</code> | direct-member |  |  | 调用方可达且 libclang 直接引用项目定义；源码位置复核 | 专项源码静态类型与实际装配人工复核 |
-| RCE0280 | F0627 | R0010 | <code>海中鱼巣/核心/主信息仓库.cpp:378</code> | direct-member |  |  | 调用方可达且 libclang 直接引用项目定义；源码位置复核 | 专项源码静态类型与实际装配人工复核 |
-| RCE0281 | F0627 | F0628 | <code>海中鱼巣/核心/主信息仓库.cpp:380</code> | direct-member |  |  | 调用方可达且 libclang 直接引用项目定义；源码位置复核 | 专项源码静态类型与实际装配人工复核 |
-| RCE0282 | F0628 | R0010 | <code>海中鱼巣/核心/主信息仓库.cpp:386</code> | direct-member |  |  | 调用方可达且 libclang 直接引用项目定义；源码位置复核 | 专项源码静态类型与实际装配人工复核 |
+| RCE0277 | F0623 | R0009 | <code>海中鱼巣/核心/节点仓库.cpp:75</code> | unique_name | this=&amp;主信息_,主信息,令牌 | 主信息有效bool | 共享令牌有效后按短路顺序求值 | 本批源码逐调用点与静态接收者复核 |
+| RCE0278 | F0624 | R0009 | <code>海中鱼巣/核心/主信息仓库.cpp:366</code> | direct-member | this=this,主信息,许可.读取令牌() | 主信息有效bool | 已接域且许可有效 | 本批源码逐调用点与静态接收者复核 |
+| RCE0279 | F0624 | F0384 | <code>海中鱼巣/核心/主信息仓库.cpp:368</code> | direct-member | this=this,主信息 | 主信息记录optional | 事务接线未接域 | 本批源码逐调用点与静态接收者复核 |
+| RCE0280 | F0627 | R0010 | <code>海中鱼巣/核心/主信息仓库.cpp:378</code> | direct-member | this=this,主信息,0,值,许可.读取令牌() | 写入成功bool | 已接域且许可有效 | 本批源码逐调用点与静态接收者复核 |
+| RCE0281 | F0627 | F0628 | <code>海中鱼巣/核心/主信息仓库.cpp:380</code> | direct-member | this=this,主信息,0,值 | 写入成功bool | 事务接线未接域 | 本批源码逐调用点与静态接收者复核 |
+| RCE0282 | F0628 | R0010 | <code>海中鱼巣/核心/主信息仓库.cpp:386</code> | direct-member | this=this,主信息,值索引,值,许可.读取令牌() | 写入成功bool | 已接域且许可有效 | 本批源码逐调用点与静态接收者复核 |
 | E1708 | F0629 | F0330 | <code>海中鱼巣/领域/方法服务.h:1708</code> | direct_const_member | this=&amp;方法服务,源节点,类型,目标类型,std::nullopt | 唯一目标optional并直接返回 | F0629函数进入 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| RCE0283 | F0630 | F0346 | <code>海中鱼巣/核心/节点仓库.cpp:450</code> | suffix_match+direct-member |  |  | 调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | 同一具名类型内直接调用；源码调用词与定义范围闭合；专项源码静态类型与实际装配人工复核 |
-| RCE0284 | F0631 | F0338 | <code>海中鱼巣/核心/结构事务接线.数据.h:59</code> | suffix_match |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| RCE0285 | F0631 | R0100 | <code>海中鱼巣/核心/结构事务接线.数据.h:59</code> | source-audited |  |  | 许可有效且保存的释放函数指针唯一 | 专项源码静态类型与实际装配人工复核 |
+| RCE0283 | F0630 | F0346 | <code>海中鱼巣/核心/节点仓库.cpp:450</code> | suffix_match+direct-member | this=this,节点,令牌 | 节点记录optional | F0630函数进入 | 本批源码逐调用点与静态接收者复核 |
+| RCE0284 | F0631 | F0338 | <code>海中鱼巣/核心/结构事务接线.数据.h:59</code> | suffix_match | this=this | 许可有效bool | F0631函数进入 | 本批源码逐调用点与静态接收者复核 |
+| RCE0285 | F0631 | R0100 | <code>海中鱼巣/核心/结构事务接线.数据.h:59</code> | source-audited | 运行期状态_,令牌_ | void | RCE0284返回true | 本批源码函数指针字段、唯一装配目标与调用点复核 |
 | E1804 | F0632 | F0336 | <code>海中鱼巣/核心/节点仓库.cpp:24</code> | direct_const_member+unique_name | this=&amp;接线 | 接线已接域bool | 函数进入；调用方可达且源码分支条件成立 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；全项目唯一函数名并经调用方源码范围复核 |
-| RCE0286 | F0632 | F0399 | <code>海中鱼巣/核心/节点仓库.cpp:24</code> | resolved-function-pointer |  |  | 接线已接域；生产运行期唯一共享验证目标 | 专项源码静态类型与实际装配人工复核 |
-| RCE0287 | F0633 | R0241 | <code>海中鱼巣/领域/初始化.语素.ixx:146, 海中鱼巣/领域/初始化.语素.ixx:147, 海中鱼巣/领域/初始化.语素.ixx:148, 海中鱼巣/领域/初始化.语素.ixx:149, 海中鱼巣/领域/初始化.语素.ixx:150, 海中鱼巣/领域/初始化.语素.ixx:151, 海中鱼巣/领域/初始化.语素.ixx:152, 海中鱼巣/领域/初始化.语素.ixx:153, 海中鱼巣/领域/初始化.语素.ixx:154, 海中鱼巣/领域/初始化.语素.ixx:155, 海中鱼巣/领域/初始化.语素.ixx:156, 海中鱼巣/领域/初始化.语素.ixx:157, 海中鱼巣/领域/初始化.语素.ixx:158, 海中鱼巣/领域/初始化.语素.ixx:159, 海中鱼巣/领域/初始化.语素.ixx:160, 海中鱼巣/领域/初始化.语素.ixx:161, 海中鱼巣/领域/初始化.语素.ixx:162, 海中鱼巣/领域/初始化.语素.ixx:163</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
-| RCE0288 | F0633 | R0246 | <code>海中鱼巣/领域/初始化.语素.ixx:165</code> | suffix_match |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
+| RCE0286 | F0632 | F0399 | <code>海中鱼巣/核心/节点仓库.cpp:24</code> | resolved-function-pointer | 接线.运行期状态,令牌 | 共享路径令牌有效bool | E1804返回true | 本批源码函数指针字段、唯一装配目标与调用点复核 |
+| RCE0287 | F0633 | R0241 | <code>海中鱼巣/领域/初始化.语素.ixx:146, 海中鱼巣/领域/初始化.语素.ixx:147, 海中鱼巣/领域/初始化.语素.ixx:148, 海中鱼巣/领域/初始化.语素.ixx:149, 海中鱼巣/领域/初始化.语素.ixx:150, 海中鱼巣/领域/初始化.语素.ixx:151, 海中鱼巣/领域/初始化.语素.ixx:152, 海中鱼巣/领域/初始化.语素.ixx:153, 海中鱼巣/领域/初始化.语素.ixx:154, 海中鱼巣/领域/初始化.语素.ixx:155, 海中鱼巣/领域/初始化.语素.ixx:156, 海中鱼巣/领域/初始化.语素.ixx:157, 海中鱼巣/领域/初始化.语素.ixx:158, 海中鱼巣/领域/初始化.语素.ixx:159, 海中鱼巣/领域/初始化.语素.ixx:160, 海中鱼巣/领域/初始化.语素.ixx:161, 海中鱼巣/领域/初始化.语素.ixx:162, 海中鱼巣/领域/初始化.语素.ixx:163</code> | unique_name | L"节点"…L"二次"（18项） | 18项语素初始化显示项 | 按146—163行顺序逐项执行 | 本批源码逐调用点与静态接收者复核 |
+| RCE0288 | F0633 | R0246 | <code>海中鱼巣/领域/初始化.语素.ixx:165</code> | suffix_match | 结果 | void | RCE2393返回false | 本批源码逐调用点与静态接收者复核 |
 | RCE0289 | F0635 | R0203 | <code>海中鱼巣/领域/初始化.世界树.ixx:54</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
 | RCE0290 | F0635 | R0275 | <code>海中鱼巣/领域/初始化.世界树.ixx:56</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
 | RCE0291 | F0635 | R0277 | <code>海中鱼巣/领域/初始化.世界树.ixx:57</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
@@ -1425,9 +1425,9 @@
 | RCE0294 | F0635 | R0223 | <code>海中鱼巣/领域/初始化.世界树.ixx:68</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE0295 | F0635 | F0059 | <code>海中鱼巣/领域/初始化.世界树.ixx:73</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE0296 | F0636 | F0184 | <code>海中鱼巣/领域/初始化.需求.ixx:104</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
-| RCE0297 | F0636 | F0168 | <code>海中鱼巣/领域/初始化.需求.ixx:105</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
+| RCE0297 | F0636 | F0163 | <code>海中鱼巣/领域/初始化.需求.ixx:105</code> | direct_free+overload_resolved | 结果.概念命名目标状态 | 节点句柄有效bool | 追根因复核表达式进入且按短路顺序求值 | 本批源码逐调用点、实参静态类型与完整重载复核 |
 | RCE0298 | F0636 | F0328 | <code>海中鱼巣/领域/初始化.需求.ixx:107</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
-| RCE0299 | F0636 | F0134 | <code>海中鱼巣/领域/初始化.需求.ixx:76, 海中鱼巣/领域/初始化.需求.ixx:105</code> | field_type_hint |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
+| RCE0299 | F0636 | F0134 | <code>海中鱼巣/领域/初始化.需求.ixx:76</code> | direct_const_member | this=&amp;参数 | 参数有效bool | 世界树结果成功后按短路顺序求值 | 本批源码逐调用点与静态接收者复核 |
 | RCE0300 | F0636 | R0249 | <code>海中鱼巣/领域/初始化.需求.ixx:81, 海中鱼巣/领域/初始化.需求.ixx:92</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE0301 | R0001 | F0069 | <code>海中鱼巣/启动.生产运行期.ixx:126</code> | direct-const-member |  |  | 生产运行期会话读取当前宿主持有的运行期上下文租约 | 专项源码静态类型与实际装配人工复核 |
 | RCE0302 | R0002 | F0336 | <code>海中鱼巣/核心/主信息仓库.cpp:12</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
@@ -3397,3 +3397,46 @@
 | RCE2371 | F0621 | F0339 | <code>海中鱼巣/核心/关系仓库.cpp:791</code> | direct_const_member+macro_expanded+source_audited | this=&amp;自动许可.value() | 结构事务令牌const引用 | RCE2370返回true | 当前源码宏定义116-123行、调用点791行与已发布F0387同宏先例复核 |
 | RCE2372 | F0621 | F0340 | <code>海中鱼巣/核心/关系仓库.cpp:791</code> | direct_constructor+macro_expanded+source_audited | 仓库=*this,令牌=RCE2371返回const引用 | 自动令牌范围承载值 | RCE2370返回true且RCE2371已取得令牌引用 | 当前源码宏定义116-123行、调用点791行与已发布F0387同宏先例复核 |
 | RCE2373 | F0621 | F0051 | <code>海中鱼巣/核心/关系仓库.cpp:804</code> | source-audited-direct-call | 记录.源节点,源节点 | 节点相等bool | 记录有效且类型匹配 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2374 | F0636 | F0174 | <code>海中鱼巣/领域/初始化.需求.ixx:76</code> | direct_const_member | this=&amp;世界树结果 | 世界树初始化成功bool | 函数进入 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2375 | F0636 | F0350 | <code>海中鱼巣/领域/初始化.需求.ixx:88, 海中鱼巣/领域/初始化.需求.ixx:99</code> | direct_const_member | this=&amp;结果.安全根需求 / this=&amp;结果.服务根需求 | 单根需求初始化成功bool | 对应RCE0300返回后 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2376 | F0636 | F0165 | <code>海中鱼巣/领域/初始化.需求.ixx:102</code> | direct_member | this=&amp;状态_,1 | 概念命名目标状态节点句柄 | 两个根需求均成功 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2377 | F0636 | F0329 | <code>海中鱼巣/领域/初始化.需求.ixx:103</code> | direct_const_member | this=&amp;状态_,结果.概念命名目标状态 | 状态值optional&lt;int64_t&gt; | RCE2376完成 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2378 | F0624 | F0336 | <code>海中鱼巣/核心/主信息仓库.cpp:364</code> | direct_const_member | this=&amp;事务接线_ | 已接域bool | F0624函数进入 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2379 | F0624 | F0397 | <code>海中鱼巣/核心/主信息仓库.cpp:365</code> | resolved_function_pointer | 事务接线_.运行期状态 | 结构事务许可 | RCE2378返回true | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2380 | F0624 | F0338 | <code>海中鱼巣/核心/主信息仓库.cpp:366</code> | direct_const_member | this=&amp;许可 | 许可有效bool | RCE2379完成 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2381 | F0624 | F0339 | <code>海中鱼巣/核心/主信息仓库.cpp:366</code> | direct_const_member | this=&amp;许可 | 结构事务令牌const引用 | RCE2380返回true | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2382 | F0624 | F0345 | <code>海中鱼巣/核心/主信息仓库.cpp:364-367</code> | compiler_implicit_destructor | this=&amp;许可 | void | 接域分支离开许可作用域或异常展开 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2383 | F0627 | F0336 | <code>海中鱼巣/核心/主信息仓库.cpp:376</code> | direct_const_member | this=&amp;事务接线_ | 已接域bool | F0627函数进入 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2384 | F0627 | F0397 | <code>海中鱼巣/核心/主信息仓库.cpp:377</code> | resolved_function_pointer | 事务接线_.运行期状态 | 结构事务许可 | RCE2383返回true | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2385 | F0627 | F0338 | <code>海中鱼巣/核心/主信息仓库.cpp:378</code> | direct_const_member | this=&amp;许可 | 许可有效bool | RCE2384完成 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2386 | F0627 | F0339 | <code>海中鱼巣/核心/主信息仓库.cpp:378</code> | direct_const_member | this=&amp;许可 | 结构事务令牌const引用 | RCE2385返回true | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2387 | F0627 | F0345 | <code>海中鱼巣/核心/主信息仓库.cpp:376-379</code> | compiler_implicit_destructor | this=&amp;许可 | void | 接域分支离开许可作用域或异常展开 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2388 | F0628 | F0336 | <code>海中鱼巣/核心/主信息仓库.cpp:384</code> | direct_const_member | this=&amp;事务接线_ | 已接域bool | F0628函数进入 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2389 | F0628 | F0397 | <code>海中鱼巣/核心/主信息仓库.cpp:385</code> | resolved_function_pointer | 事务接线_.运行期状态 | 结构事务许可 | RCE2388返回true | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2390 | F0628 | F0338 | <code>海中鱼巣/核心/主信息仓库.cpp:386</code> | direct_const_member | this=&amp;许可 | 许可有效bool | RCE2389完成 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2391 | F0628 | F0339 | <code>海中鱼巣/核心/主信息仓库.cpp:386</code> | direct_const_member | this=&amp;许可 | 结构事务令牌const引用 | RCE2390返回true | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2392 | F0628 | F0345 | <code>海中鱼巣/核心/主信息仓库.cpp:384-387</code> | compiler_implicit_destructor | this=&amp;许可 | void | 接域分支离开许可作用域或异常展开 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2393 | F0633 | F0173 | <code>海中鱼巣/领域/初始化.语素.ixx:164</code> | direct_const_member | this=&amp;结果 | 语素初始化成功bool | 18项显示语素创建完成 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2394 | F0635 | R0733 | <code>海中鱼巣/领域/初始化.世界树.ixx:52</code> | direct_member | this=&amp;世界_ | 世界树根基础信息节点句柄 | F0635函数进入 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2395 | F0635 | R0734 | <code>海中鱼巣/领域/初始化.世界树.ixx:53</code> | direct_member | this=&amp;世界_ | 自我所在场景节点句柄 | RCE2394完成 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2396 | F0635 | R0735 | <code>海中鱼巣/领域/初始化.世界树.ixx:55</code> | direct_const_member | this=this,结果.世界树根节点,节点类型::基础信息 | 节点类型匹配bool | 三类根节点创建完成 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2397 | F0635 | F0167 | <code>海中鱼巣/领域/初始化.世界树.ixx:62, 海中鱼巣/领域/初始化.世界树.ixx:63</code> | direct_member | this=&amp;关系_,普通父子+对应源目标 | 两条普通父子关系句柄 | 三类根节点验证通过 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2398 | F0635 | R0736 | <code>海中鱼巣/领域/初始化.世界树.ixx:64</code> | direct_member | this=&amp;世界_,结果.自我所在场景,结果.自我存在节点 | 场景接纳自我关系句柄 | RCE2397两次调用完成 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2399 | F0635 | F0579 | <code>海中鱼巣/领域/初始化.世界树.ixx:78, 海中鱼巣/领域/初始化.世界树.ixx:79, 海中鱼巣/领域/初始化.世界树.ixx:80</code> | direct_const_member | this=&amp;关系_,普通父子/归属+对应源目标 | 关系存在bool | 坐标读回存在且三轴均为零后按短路顺序求值 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2400 | R0241 | R0733 | <code>海中鱼巣/领域/初始化.语素.ixx:177</code> | direct_member | this=&amp;世界_ | 基础信息节点句柄 | 文本准入为可作为最小词单元 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2401 | R0733 | F0331 | <code>海中鱼巣/领域/世界服务.h:40</code> | direct_member | this=&amp;主信息_ | 主信息句柄 | R0733函数进入 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2402 | R0733 | F0332 | <code>海中鱼巣/领域/世界服务.h:41</code> | direct_member | this=&amp;节点_,节点类型::基础信息,主信息句柄 | 基础信息节点句柄 | RCE2401完成 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2403 | R0733 | F0190 | <code>海中鱼巣/领域/世界服务.h:42</code> | direct_const_member | this=&amp;节点_,基础信息 | 节点记录optional | RCE2402完成 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2404 | R0733 | F0624 | <code>海中鱼巣/领域/世界服务.h:44</code> | direct_const_member | this=&amp;主信息_,记录-&gt;主信息 | 主信息有效bool | RCE2403有值且节点类型为基础信息 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2405 | R0734 | R0737 | <code>海中鱼巣/领域/世界服务.h:55</code> | direct_member | this=&amp;场景_ | 场景节点句柄 | R0734函数进入 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2406 | R0735 | F0190 | <code>海中鱼巣/领域/初始化.世界树.ixx:122</code> | direct_const_member | this=&amp;节点_,节点值 | 节点记录optional | R0735函数进入 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2407 | R0735 | F0624 | <code>海中鱼巣/领域/初始化.世界树.ixx:123</code> | direct_const_member | this=&amp;主信息_,记录-&gt;主信息 | 主信息有效bool | 记录存在且类型匹配 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2408 | R0736 | R0738 | <code>海中鱼巣/领域/世界服务.h:74</code> | direct_member | this=&amp;场景_,场景,存在 | 归属关系句柄 | R0736函数进入 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2409 | R0737 | F0331 | <code>海中鱼巣/领域/场景服务.h:17</code> | direct_member | this=&amp;主信息_ | 主信息句柄 | R0737函数进入 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2410 | R0737 | F0332 | <code>海中鱼巣/领域/场景服务.h:18</code> | direct_member | this=&amp;节点_,节点类型::场景,主信息句柄 | 场景节点句柄 | RCE2409完成 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2411 | R0737 | F0190 | <code>海中鱼巣/领域/场景服务.h:19</code> | direct_const_member | this=&amp;节点_,场景 | 节点记录optional | RCE2410完成 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2412 | R0737 | F0624 | <code>海中鱼巣/领域/场景服务.h:21</code> | direct_const_member | this=&amp;主信息_,记录-&gt;主信息 | 主信息有效bool | RCE2411有值且节点类型为场景 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2413 | R0738 | R0276 | <code>海中鱼巣/领域/场景服务.h:28</code> | direct_const_member | this=this,场景/存在,节点类型::场景/存在 | 节点类型匹配bool | 按短路顺序验证两个节点 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2414 | R0738 | F0167 | <code>海中鱼巣/领域/场景服务.h:31</code> | direct_member | this=&amp;关系_,关系类型::归属,场景,存在 | 归属关系句柄 | 两个节点类型匹配 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2415 | R0738 | F0168 | <code>海中鱼巣/领域/场景服务.h:32</code> | direct_free+overload_resolved | 关系 | 关系句柄有效bool | RCE2414完成 | 本批当前源码逐调用点与正式身份表复核 |
+| RCE2416 | R0738 | F0579 | <code>海中鱼巣/领域/场景服务.h:32</code> | direct_const_member | this=&amp;关系_,关系类型::归属,场景,存在 | 关系存在bool | RCE2415返回true | 本批当前源码逐调用点与正式身份表复核 |

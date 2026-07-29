@@ -1,6 +1,6 @@
 # main 可达外部边界表
 
-代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；外部边界：2036；回调登记：34。
+代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；外部边界：2062；回调登记：34。
 
 ## 外部边界
 
@@ -805,7 +805,7 @@
 | X01202 | F0623 | Standard library | <code>unique_lock(std::shared_mutex &amp;) :: void (std::shared_mutex &amp;)</code> | <code>海中鱼巣/核心/节点仓库.cpp:76</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
 | X01203 | F0626 | Standard library numeric limit | <code>static constexpr std::int64_t std::numeric_limits&lt;std::int64_t&gt;::max() noexcept</code> | <code>海中鱼巣/领域/状态服务.h:293</code> | 1 | 发生时间戳上界复核 | 专项源码外部边界复核 |
 | X01204 | F0628 | Standard library | <code>unique_lock(std::shared_mutex &amp;) :: void (std::shared_mutex &amp;)</code> | <code>海中鱼巣/核心/主信息仓库.cpp:388</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
-| X01205 | F0628 | Standard library | <code>operator==(const _List_const_iterator&lt;std::_List_val&lt;std::_List_simple_types&lt;std::pair&lt;const unsigned long long, 海中鱼巣::主信息记录&gt;&gt;&gt;&gt; &amp;) :: bool (const _List_const_iterator&lt;std::_List_val&lt;std::_List_simple_types&lt;std::pair&lt;const unsigned long long, 海中鱼巣::主信息记录&gt;&gt;&gt;&gt; &amp;) const noexcept</code> | <code>海中鱼巣/核心/主信息仓库.cpp:390</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
+| X01205 | F0628 | Standard library container | <code>bool std::unordered_map&lt;std::uint64_t, 海中鱼巣::主信息记录&gt;::iterator::operator==(const std::unordered_map&lt;std::uint64_t, 海中鱼巣::主信息记录&gt;::iterator&amp;) const noexcept</code> | <code>海中鱼巣/核心/主信息仓库.cpp:390</code> | 1 | find结果与end迭代器比较 | 本批源码容器静态类型与迭代器操作复核 |
 | X01206 | F0628 | Standard library | <code>operator[](const size_type) :: std::optional&lt;long long&gt; &amp;(const size_type) noexcept</code> | <code>海中鱼巣/核心/主信息仓库.cpp:404</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
 | X01207 | F0628 | Standard library | <code>operator=(optional&lt;long long&gt; &amp;&amp;) :: optional&lt;long long&gt; &amp;(optional&lt;long long&gt; &amp;&amp;) noexcept</code> | <code>海中鱼巣/核心/主信息仓库.cpp:404</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
 | X01208 | F0628 | Standard library | <code>optional&lt;&gt;(long long &amp;) :: void (long long &amp;) noexcept(is_nothrow_constructible_v&lt;long long, long long &amp;&gt;)</code> | <code>海中鱼巣/核心/主信息仓库.cpp:404</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
@@ -2042,44 +2042,68 @@
 | X02709 | F0621 | Standard library | <code>海中鱼巣::关系仓库::获取目标节点组(海中鱼巣::节点句柄,海中鱼巣::关系类型) const::目标候选&amp; std::vector&lt;海中鱼巣::关系仓库::获取目标节点组(海中鱼巣::节点句柄,海中鱼巣::关系类型) const::目标候选&gt;::iterator::operator*() const</code> | <code>海中鱼巣/核心/关系仓库.cpp:817</code> | 1 | 对应源码表达式执行 | 本批源码逐调用点与标准库静态类型复核 |
 | X02710 | F0621 | Standard library | <code>void std::vector&lt;海中鱼巣::节点句柄&gt;::push_back(const 海中鱼巣::节点句柄&amp;)</code> | <code>海中鱼巣/核心/关系仓库.cpp:818</code> | 1 | 对应源码表达式执行 | 本批源码逐调用点与标准库静态类型复核 |
 | X02711 | F0621 | Standard library lock | <code>std::shared_lock&lt;std::shared_mutex&gt;::~shared_lock() noexcept</code> | <code>海中鱼巣/核心/关系仓库.cpp:801-821</code> | 1 | 函数离开共享锁作用域 | 本批源码逐调用点与标准库静态类型复核 |
+| X02712 | F0636 | Standard library string view | <code>constexpr std::basic_string_view&lt;wchar_t&gt;::basic_string_view(const wchar_t*) noexcept</code> | <code>海中鱼巣/领域/初始化.需求.ixx:82, 海中鱼巣/领域/初始化.需求.ixx:93</code> | 2 | 宽字符串字面量绑定初始化单根需求的std::wstring_view形参 | 本批源码逐调用点与标准库静态类型复核 |
+| X02713 | F0636 | Standard library optional | <code>std::optional&lt;std::int64_t&gt;::optional(std::int64_t&amp;&amp;)</code> | <code>海中鱼巣/领域/初始化.需求.ixx:106</code> | 1 | 构造期望状态值optional后参与相等比较 | 本批源码逐调用点与标准库静态类型复核 |
+| X02714 | F0622 | Standard library container | <code>std::pair&lt;std::unordered_map&lt;std::uint64_t, 海中鱼巣::主信息记录&gt;::iterator, bool&gt; std::unordered_map&lt;std::uint64_t, 海中鱼巣::主信息记录&gt;::emplace&lt;std::uint64_t&amp;, 海中鱼巣::主信息记录&amp;&gt;(std::uint64_t&amp;, 海中鱼巣::主信息记录&amp;)</code> | <code>海中鱼巣/核心/主信息仓库.cpp:58</code> | 1 | 形成编号与主信息记录键值并插入主信息表 | 本批源码逐调用点与标准库静态类型复核 |
+| X02715 | F0622 | Standard library lock | <code>std::unique_lock&lt;std::shared_mutex&gt;::~unique_lock() noexcept</code> | <code>海中鱼巣/核心/主信息仓库.cpp:55-60</code> | 1 | 函数离开独占锁作用域或异常展开 | 本批源码逐调用点与标准库静态类型复核 |
+| X02716 | F0623 | Standard library container | <code>std::pair&lt;std::unordered_map&lt;std::uint64_t, 海中鱼巣::节点记录&gt;::iterator, bool&gt; std::unordered_map&lt;std::uint64_t, 海中鱼巣::节点记录&gt;::emplace&lt;std::uint64_t&amp;, 海中鱼巣::节点记录&amp;&gt;(std::uint64_t&amp;, 海中鱼巣::节点记录&amp;)</code> | <code>海中鱼巣/核心/节点仓库.cpp:79</code> | 1 | 形成编号与节点记录键值并插入节点表 | 本批源码逐调用点与标准库静态类型复核 |
+| X02717 | F0623 | Standard library lock | <code>std::unique_lock&lt;std::shared_mutex&gt;::~unique_lock() noexcept</code> | <code>海中鱼巣/核心/节点仓库.cpp:76-81</code> | 1 | 函数离开独占锁作用域或异常展开 | 本批源码逐调用点与标准库静态类型复核 |
+| X02718 | F0624 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::主信息记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/核心/主信息仓库.cpp:368</code> | 1 | 未接域读取主信息后判断记录是否存在 | 本批源码逐调用点与标准库静态类型复核 |
+| X02719 | F0628 | Standard library container | <code>std::unordered_map&lt;std::uint64_t, 海中鱼巣::主信息记录&gt;::iterator std::unordered_map&lt;std::uint64_t, 海中鱼巣::主信息记录&gt;::find(const std::uint64_t&amp;)</code> | <code>海中鱼巣/核心/主信息仓库.cpp:389</code> | 1 | 按主信息编号定位当前记录 | 本批源码逐调用点与标准库静态类型复核 |
+| X02720 | F0628 | Standard library container | <code>std::unordered_map&lt;std::uint64_t, 海中鱼巣::主信息记录&gt;::iterator std::unordered_map&lt;std::uint64_t, 海中鱼巣::主信息记录&gt;::end() noexcept</code> | <code>海中鱼巣/核心/主信息仓库.cpp:390</code> | 1 | 取得主信息表尾后迭代器 | 本批源码逐调用点与标准库静态类型复核 |
+| X02721 | F0628 | Standard library container | <code>std::pair&lt;const std::uint64_t, 海中鱼巣::主信息记录&gt;* std::unordered_map&lt;std::uint64_t, 海中鱼巣::主信息记录&gt;::iterator::operator-&gt;() const noexcept</code> | <code>海中鱼巣/核心/主信息仓库.cpp:393</code> | 1 | 解引用已定位主信息表迭代器 | 本批源码逐调用点与标准库静态类型复核 |
+| X02722 | F0628 | Standard library container | <code>std::vector&lt;std::optional&lt;std::int64_t&gt;&gt;::size_type std::vector&lt;std::optional&lt;std::int64_t&gt;&gt;::max_size() const noexcept</code> | <code>海中鱼巣/核心/主信息仓库.cpp:397</code> | 1 | 取得值容器最大元素数并复核值索引 | 本批源码逐调用点与标准库静态类型复核 |
+| X02723 | F0628 | Standard library container | <code>std::vector&lt;std::optional&lt;std::int64_t&gt;&gt;::size_type std::vector&lt;std::optional&lt;std::int64_t&gt;&gt;::size() const noexcept</code> | <code>海中鱼巣/核心/主信息仓库.cpp:401</code> | 1 | 判断值容器是否需要扩展 | 本批源码逐调用点与标准库静态类型复核 |
+| X02724 | F0628 | Standard library container | <code>void std::vector&lt;std::optional&lt;std::int64_t&gt;&gt;::resize(std::size_t)</code> | <code>海中鱼巣/核心/主信息仓库.cpp:402</code> | 1 | 按值索引扩展值容器 | 本批源码逐调用点与标准库静态类型复核 |
+| X02725 | F0628 | Standard library lock | <code>std::unique_lock&lt;std::shared_mutex&gt;::~unique_lock() noexcept</code> | <code>海中鱼巣/核心/主信息仓库.cpp:388-405</code> | 1 | 函数离开独占锁作用域或异常展开 | 本批源码逐调用点与标准库静态类型复核 |
+| X02726 | F0630 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::节点记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/核心/节点仓库.cpp:450</code> | 1 | 读取带令牌节点记录后判断是否存在 | 本批源码逐调用点与标准库静态类型复核 |
+| X02727 | F0631 | Standard library smart pointer | <code>void std::shared_ptr&lt;void&gt;::reset() noexcept</code> | <code>海中鱼巣/核心/结构事务接线.数据.h:59</code> | 1 | 释放许可完成并清空令牌与函数指针后释放运行期状态引用 | 本批源码逐调用点与标准库静态类型复核 |
+| X02728 | F0633 | Standard library string view | <code>constexpr std::basic_string_view&lt;wchar_t&gt;::basic_string_view(const wchar_t*) noexcept</code> | <code>海中鱼巣/领域/初始化.语素.ixx:146, 海中鱼巣/领域/初始化.语素.ixx:147, 海中鱼巣/领域/初始化.语素.ixx:148, 海中鱼巣/领域/初始化.语素.ixx:149, 海中鱼巣/领域/初始化.语素.ixx:150, 海中鱼巣/领域/初始化.语素.ixx:151, 海中鱼巣/领域/初始化.语素.ixx:152, 海中鱼巣/领域/初始化.语素.ixx:153, 海中鱼巣/领域/初始化.语素.ixx:154, 海中鱼巣/领域/初始化.语素.ixx:155, 海中鱼巣/领域/初始化.语素.ixx:156, 海中鱼巣/领域/初始化.语素.ixx:157, 海中鱼巣/领域/初始化.语素.ixx:158, 海中鱼巣/领域/初始化.语素.ixx:159, 海中鱼巣/领域/初始化.语素.ixx:160, 海中鱼巣/领域/初始化.语素.ixx:161, 海中鱼巣/领域/初始化.语素.ixx:162, 海中鱼巣/领域/初始化.语素.ixx:163</code> | 18 | 18个宽字符串字面量依次绑定创建显示项的std::wstring_view形参 | 本批源码逐调用点与标准库静态类型复核 |
+| X02729 | F0635 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::世界树相对坐标&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/初始化.世界树.ixx:74</code> | 1 | 判断自我相对坐标读回是否存在 | 本批源码逐调用点与标准库静态类型复核 |
+| X02730 | F0635 | Standard library optional | <code>const 海中鱼巣::世界树相对坐标* std::optional&lt;海中鱼巣::世界树相对坐标&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/初始化.世界树.ixx:75, 海中鱼巣/领域/初始化.世界树.ixx:76, 海中鱼巣/领域/初始化.世界树.ixx:77</code> | 3 | 按短路顺序读取横向、纵向和垂向坐标 | 本批源码逐调用点与标准库静态类型复核 |
+| X02731 | F0635 | Standard library optional | <code>const 海中鱼巣::世界树相对坐标&amp; std::optional&lt;海中鱼巣::世界树相对坐标&gt;::value() const &amp;</code> | <code>海中鱼巣/领域/初始化.世界树.ixx:84</code> | 1 | 全部读回检查通过后取得坐标值 | 本批源码逐调用点与标准库静态类型复核 |
+| X02732 | R0733 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::节点记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/世界服务.h:43</code> | 1 | 判断基础信息节点记录是否存在 | 本批源码逐调用点与标准库静态类型复核 |
+| X02733 | R0733 | Standard library optional | <code>const 海中鱼巣::节点记录* std::optional&lt;海中鱼巣::节点记录&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/世界服务.h:43, 海中鱼巣/领域/世界服务.h:44</code> | 2 | 读取节点类型和主信息句柄 | 本批源码逐调用点与标准库静态类型复核 |
+| X02734 | R0735 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::节点记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/初始化.世界树.ixx:123</code> | 1 | 判断待匹配节点记录是否存在 | 本批源码逐调用点与标准库静态类型复核 |
+| X02735 | R0735 | Standard library optional | <code>const 海中鱼巣::节点记录* std::optional&lt;海中鱼巣::节点记录&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/初始化.世界树.ixx:123</code> | 2 | 读取节点类型和主信息句柄 | 本批源码逐调用点与标准库静态类型复核 |
+| X02736 | R0737 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::节点记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/场景服务.h:20</code> | 1 | 判断场景节点记录是否存在 | 本批源码逐调用点与标准库静态类型复核 |
+| X02737 | R0737 | Standard library optional | <code>const 海中鱼巣::节点记录* std::optional&lt;海中鱼巣::节点记录&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/场景服务.h:20, 海中鱼巣/领域/场景服务.h:21</code> | 2 | 读取节点类型和主信息句柄 | 本批源码逐调用点与标准库静态类型复核 |
 
-## 具名项目回调登记
+## 回调登记
 
-| 回调 ID | 注册方 | 回调目标 | 外部调度器 | 注册位置 | 调用条件 | 解析依据 |
+| ID | 登记方 | 回调目标 | 外部算法/边界 | 登记位置 | 条件 | 解析依据 |
 | --- | --- | --- | --- | --- | --- | --- |
-| RCB0001 | R0214 | R0215 | std::sort | <code>海中鱼巣/领域/任务服务.h:494</code> | 任务组排序期间零到多次调用 | 源码 lambda 注册点与局部静态类型复核 |
-| RCB0002 | R0088 | R0090 | std::sort | <code>海中鱼巣/核心/关系仓库.cpp:884</code> | 来源候选排序期间零到多次调用 | 源码 lambda 注册点与局部静态类型复核 |
-| RCB0003 | R0214 | F0051 | std::unique | <code>海中鱼巣/领域/任务服务.h:503</code> | 标准算法相邻去重期间零到多次比较 | 标准算法默认相等合同与节点句柄静态类型复核；项目回调事实聚合登记于RCE0766 |
-| RCB0004 | R0313 | R0309 | std::sort | <code>海中鱼巣/领域/控制面板服务.h:626</code> | 节点句柄组排序期间零到多次调用 | 源码具名函数/lambda 注册点与静态类型复核 |
-| RCB0005 | R0321 | R0322 | std::sort | <code>海中鱼巣/领域/控制面板服务.h:773</code> | 概念根登记排序期间零到多次调用 | 源码具名函数/lambda 注册点与静态类型复核 |
-| RCB0006 | R0321 | R0323 | std::all_of | <code>海中鱼巣/领域/控制面板服务.h:808</code> | 概念根选项完整性复核期间零到多次调用 | 源码具名函数/lambda 注册点与静态类型复核 |
-| RCB0007 | R0279 | R0280 | std::sort | <code>海中鱼巣/领域/控制面板服务.h:1064</code> | 概念投影项排序期间零到多次调用 | 源码具名函数/lambda 注册点与静态类型复核 |
-| RCB0008 | R0284 | R0285 | std::sort | <code>海中鱼巣/领域/控制面板服务.h:1266</code> | 方法来源任务组排序期间零到多次调用 | 源码具名函数/lambda 注册点与静态类型复核 |
-| RCB0009 | R0292 | R0293 | std::sort | <code>海中鱼巣/领域/控制面板服务.h:1615</code> | 方法来源任务组排序期间零到多次调用 | 源码具名函数/lambda 注册点与静态类型复核 |
-| RCB0010 | R0294 | R0295 | std::sort | <code>海中鱼巣/领域/控制面板服务.h:1663</code> | 子节点组排序期间零到多次调用 | 源码具名函数/lambda 注册点与静态类型复核 |
-| RCB0011 | R0296 | R0297 | std::sort | <code>海中鱼巣/领域/控制面板服务.h:1682</code> | 根节点组排序期间零到多次调用 | 源码具名函数/lambda 注册点与静态类型复核 |
-| RCB0012 | R0528 | R0529 | std::all_of | <code>海中鱼巣/领域/概念图服务.h:688</code> | 抽象树投影项完整性复核期间零到多次调用 | 源码局部 lambda 注册点与静态类型复核 |
-| RCB0013 | R0068 | R0069 | std::all_of | <code>海中鱼巣/核心/关系仓库.cpp:1250</code> | 写前父链节点组端点复核期间零到多次调用 | 源码局部 lambda 注册点与静态类型复核 |
-| RCB0014 | R0340 | R0341 | std::function&lt;void(结构写入会话&amp;)&gt; / 结构写入执行器::执行 | <code>海中鱼巣/领域/数据操作.概念活动.ixx:63</code> | 外层前置通过并调用单回调执行重载 | 源码实参静态类型、执行重载签名与执行器 line 82 调度复核 |
-| RCB0015 | R0409 | R0410 | std::function&lt;void(结构写入会话&amp;)&gt; / 结构写入执行器::执行 | <code>海中鱼巣/领域/数据操作.系统角色.ixx:132</code> | 外层前置通过并调用单回调执行重载 | 源码实参静态类型、执行重载签名与执行器 line 82 调度复核 |
-| RCB0016 | R0432 | R0433 | std::function&lt;void(结构写入会话&amp;)&gt; / 结构写入执行器::执行 | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:1632</code> | 外层前置通过并调用单回调执行重载 | 源码实参静态类型、执行重载签名与执行器 line 82 调度复核 |
-| RCB0017 | F0358 | R0518 | std::sort | <code>海中鱼巣/领域/概念图服务.h:3010</code> | 概念节点候选排序期间零到多次调用 | 源码静态函数实参与完整签名复核 |
-| RCB0018 | F0389 | F0396 | Win32 WNDPROC / RegisterClassExW + DispatchMessageW | <code>海中鱼巣/界面/控制面板窗口.cpp:435</code> | 注册窗口类成功后，Win32 在创建窗口及消息分发期间同步调用 | WNDCLASSEXW::lpfnWndProc 赋值、RegisterClassExW 注册、DispatchMessageW 调度与静态窗口过程定义复核 |
-| RCB0019 | R0389 | R0391 | std::function&lt;void(结构写入会话&amp;)&gt; / 结构写入执行器::执行&lt;参与者类型&gt; | <code>海中鱼巣/领域/数据操作.特征体系.ixx:885</code> | 外层前置通过并调用单参与者模板执行重载；模板转入多参与者重载后在 line 124 调度 | 源码 lambda 范围、外层函数、实参静态类型、执行重载与调度点复核 |
-| RCB0020 | R0454 | R0455 | std::function&lt;void(结构写入会话&amp;)&gt; / 结构写入执行器::执行 | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:2892</code> | 外层前置通过并调用单回调执行重载；执行器在 line 82 调度 | 源码 lambda 范围、外层函数、实参静态类型、执行重载与调度点复核 |
-| RCB0021 | R0270 | R0271 | std::find_if | <code>海中鱼巣/领域/参与者.特征值原始材料.ixx:84</code> | 登记初始材料已通过阶段与字段自洽门禁；算法遍历零到多项待发布材料 | 源码局部 lambda 范围、find_if 第三实参和静态材料类型复核 |
-| RCB0022 | R0546 | R0547 | std::find_if | <code>海中鱼巣/领域/特征值服务.h:674</code> | 非 const Vec 记录查找期间零到多次调用 | 源码标准算法第三实参、局部 lambda 范围与记录静态类型复核 |
-| RCB0023 | R0548 | R0549 | std::find_if | <code>海中鱼巣/领域/特征值服务.h:680</code> | const Vec 记录查找期间零到多次调用 | 源码标准算法第三实参、局部 lambda 范围与记录静态类型复核 |
-| RCB0024 | R0550 | R0551 | std::find_if | <code>海中鱼巣/领域/特征值服务.h:686</code> | 非 const I64 记录查找期间零到多次调用 | 源码标准算法第三实参、局部 lambda 范围与记录静态类型复核 |
-| RCB0025 | R0552 | R0553 | std::find_if | <code>海中鱼巣/领域/特征值服务.h:692</code> | const I64 记录查找期间零到多次调用 | 源码标准算法第三实参、局部 lambda 范围与记录静态类型复核 |
-| RCB0026 | R0554 | R0555 | std::count_if | <code>海中鱼巣/领域/特征值服务.h:699</code> | Vec 记录计数期间每项调用一次 | 源码标准算法第三实参、局部 lambda 范围与记录静态类型复核 |
-| RCB0027 | R0556 | R0557 | std::count_if | <code>海中鱼巣/领域/特征值服务.h:706</code> | I64 记录计数期间每项调用一次 | 源码标准算法第三实参、局部 lambda 范围与记录静态类型复核 |
-| RCB0028 | R0651 | R0655 | std::function同步回调 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:320</code> | R0116 同步调度于海中鱼巣/核心/执行器.结构写入.ixx:82；前置及写前归属复核通过 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
-| RCB0029 | R0652 | R0656 | std::function同步回调 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:366</code> | R0116 同步调度于海中鱼巣/核心/执行器.结构写入.ixx:82；写前未找到 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
-| RCB0030 | R0633 | R0634 | std::function同步回调 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:633</code> | R0116 同步调度于海中鱼巣/核心/执行器.结构写入.ixx:82；创建身份入口通过 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
-| RCB0031 | R0668 | R0678 | std::function同步回调 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:531</code> | R0116 同步调度于海中鱼巣/核心/执行器.结构写入.ixx:82；写前未找到 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
-| RCB0032 | R0670 | R0679 | 本函数内具名局部lambda直接调用 | <code>海中鱼巣/领域/数据操作.状态动态.ixx:1180-1190</code> | 局部直接调度于1191、1192；第二次受第一次返回true短路 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
-| RCB0033 | R0689 | R0696 | std::function同步回调 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:147</code> | R0116 同步调度于海中鱼巣/核心/执行器.结构写入.ixx:82；来源复核通过 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
-| RCB0034 | R0701 | R0708 | std::function同步回调 | <code>海中鱼巣/领域/数据操作.特征体系.ixx:941</code> | R0116 同步调度于海中鱼巣/核心/执行器.结构写入.ixx:82；组成项及写前复核通过 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
-
-统计：2036 个外部边界身份；34 个项目回调登记。标准库、操作系统和第三方函数不进入项目函数身份表。
+| RCB0001 | R0214 | R0215 | <code>std::sort</code> | <code>海中鱼巣/领域/任务服务.h:494</code> | 任务组排序期间零到多次调用 | 源码 lambda 注册点与局部静态类型复核 |
+| RCB0002 | R0088 | R0090 | <code>std::sort</code> | <code>海中鱼巣/核心/关系仓库.cpp:884</code> | 来源候选排序期间零到多次调用 | 源码 lambda 注册点与局部静态类型复核 |
+| RCB0003 | R0214 | F0051 | <code>std::unique</code> | <code>海中鱼巣/领域/任务服务.h:503</code> | 标准算法相邻去重期间零到多次比较 | 标准算法默认相等合同与节点句柄静态类型复核；项目回调事实聚合登记于RCE0766 |
+| RCB0004 | R0313 | R0309 | <code>std::sort</code> | <code>海中鱼巣/领域/控制面板服务.h:626</code> | 节点句柄组排序期间零到多次调用 | 源码具名函数/lambda 注册点与静态类型复核 |
+| RCB0005 | R0321 | R0322 | <code>std::sort</code> | <code>海中鱼巣/领域/控制面板服务.h:773</code> | 概念根登记排序期间零到多次调用 | 源码具名函数/lambda 注册点与静态类型复核 |
+| RCB0006 | R0321 | R0323 | <code>std::all_of</code> | <code>海中鱼巣/领域/控制面板服务.h:808</code> | 概念根选项完整性复核期间零到多次调用 | 源码具名函数/lambda 注册点与静态类型复核 |
+| RCB0007 | R0279 | R0280 | <code>std::sort</code> | <code>海中鱼巣/领域/控制面板服务.h:1064</code> | 概念投影项排序期间零到多次调用 | 源码具名函数/lambda 注册点与静态类型复核 |
+| RCB0008 | R0284 | R0285 | <code>std::sort</code> | <code>海中鱼巣/领域/控制面板服务.h:1266</code> | 方法来源任务组排序期间零到多次调用 | 源码具名函数/lambda 注册点与静态类型复核 |
+| RCB0009 | R0292 | R0293 | <code>std::sort</code> | <code>海中鱼巣/领域/控制面板服务.h:1615</code> | 方法来源任务组排序期间零到多次调用 | 源码具名函数/lambda 注册点与静态类型复核 |
+| RCB0010 | R0294 | R0295 | <code>std::sort</code> | <code>海中鱼巣/领域/控制面板服务.h:1663</code> | 子节点组排序期间零到多次调用 | 源码具名函数/lambda 注册点与静态类型复核 |
+| RCB0011 | R0296 | R0297 | <code>std::sort</code> | <code>海中鱼巣/领域/控制面板服务.h:1682</code> | 根节点组排序期间零到多次调用 | 源码具名函数/lambda 注册点与静态类型复核 |
+| RCB0012 | R0528 | R0529 | <code>std::all_of</code> | <code>海中鱼巣/领域/概念图服务.h:688</code> | 抽象树投影项完整性复核期间零到多次调用 | 源码局部 lambda 注册点与静态类型复核 |
+| RCB0013 | R0068 | R0069 | <code>std::all_of</code> | <code>海中鱼巣/核心/关系仓库.cpp:1250</code> | 写前父链节点组端点复核期间零到多次调用 | 源码局部 lambda 注册点与静态类型复核 |
+| RCB0014 | R0340 | R0341 | <code>std::function&lt;void(结构写入会话&amp;)&gt; / 结构写入执行器::执行</code> | <code>海中鱼巣/领域/数据操作.概念活动.ixx:63</code> | 外层前置通过并调用单回调执行重载 | 源码实参静态类型、执行重载签名与执行器 line 82 调度复核 |
+| RCB0015 | R0409 | R0410 | <code>std::function&lt;void(结构写入会话&amp;)&gt; / 结构写入执行器::执行</code> | <code>海中鱼巣/领域/数据操作.系统角色.ixx:132</code> | 外层前置通过并调用单回调执行重载 | 源码实参静态类型、执行重载签名与执行器 line 82 调度复核 |
+| RCB0016 | R0432 | R0433 | <code>std::function&lt;void(结构写入会话&amp;)&gt; / 结构写入执行器::执行</code> | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:1632</code> | 外层前置通过并调用单回调执行重载 | 源码实参静态类型、执行重载签名与执行器 line 82 调度复核 |
+| RCB0017 | F0358 | R0518 | <code>std::sort</code> | <code>海中鱼巣/领域/概念图服务.h:3010</code> | 概念节点候选排序期间零到多次调用 | 源码静态函数实参与完整签名复核 |
+| RCB0018 | F0389 | F0396 | <code>Win32 WNDPROC / RegisterClassExW + DispatchMessageW</code> | <code>海中鱼巣/界面/控制面板窗口.cpp:435</code> | 注册窗口类成功后，Win32 在创建窗口及消息分发期间同步调用 | WNDCLASSEXW::lpfnWndProc 赋值、RegisterClassExW 注册、DispatchMessageW 调度与静态窗口过程定义复核 |
+| RCB0019 | R0389 | R0391 | <code>std::function&lt;void(结构写入会话&amp;)&gt; / 结构写入执行器::执行&lt;参与者类型&gt;</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:885</code> | 外层前置通过并调用单参与者模板执行重载；模板转入多参与者重载后在 line 124 调度 | 源码 lambda 范围、外层函数、实参静态类型、执行重载与调度点复核 |
+| RCB0020 | R0454 | R0455 | <code>std::function&lt;void(结构写入会话&amp;)&gt; / 结构写入执行器::执行</code> | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:2892</code> | 外层前置通过并调用单回调执行重载；执行器在 line 82 调度 | 源码 lambda 范围、外层函数、实参静态类型、执行重载与调度点复核 |
+| RCB0021 | R0270 | R0271 | <code>std::find_if</code> | <code>海中鱼巣/领域/参与者.特征值原始材料.ixx:84</code> | 登记初始材料已通过阶段与字段自洽门禁；算法遍历零到多项待发布材料 | 源码局部 lambda 范围、find_if 第三实参和静态材料类型复核 |
+| RCB0022 | R0546 | R0547 | <code>std::find_if</code> | <code>海中鱼巣/领域/特征值服务.h:674</code> | 非 const Vec 记录查找期间零到多次调用 | 源码标准算法第三实参、局部 lambda 范围与记录静态类型复核 |
+| RCB0023 | R0548 | R0549 | <code>std::find_if</code> | <code>海中鱼巣/领域/特征值服务.h:680</code> | const Vec 记录查找期间零到多次调用 | 源码标准算法第三实参、局部 lambda 范围与记录静态类型复核 |
+| RCB0024 | R0550 | R0551 | <code>std::find_if</code> | <code>海中鱼巣/领域/特征值服务.h:686</code> | 非 const I64 记录查找期间零到多次调用 | 源码标准算法第三实参、局部 lambda 范围与记录静态类型复核 |
+| RCB0025 | R0552 | R0553 | <code>std::find_if</code> | <code>海中鱼巣/领域/特征值服务.h:692</code> | const I64 记录查找期间零到多次调用 | 源码标准算法第三实参、局部 lambda 范围与记录静态类型复核 |
+| RCB0026 | R0554 | R0555 | <code>std::count_if</code> | <code>海中鱼巣/领域/特征值服务.h:699</code> | Vec 记录计数期间每项调用一次 | 源码标准算法第三实参、局部 lambda 范围与记录静态类型复核 |
+| RCB0027 | R0556 | R0557 | <code>std::count_if</code> | <code>海中鱼巣/领域/特征值服务.h:706</code> | I64 记录计数期间每项调用一次 | 源码标准算法第三实参、局部 lambda 范围与记录静态类型复核 |
+| RCB0028 | R0651 | R0655 | <code>std::function同步回调</code> | <code>海中鱼巣/领域/数据操作.存在场景.ixx:320</code> | R0116 同步调度于海中鱼巣/核心/执行器.结构写入.ixx:82；前置及写前归属复核通过 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
+| RCB0029 | R0652 | R0656 | <code>std::function同步回调</code> | <code>海中鱼巣/领域/数据操作.存在场景.ixx:366</code> | R0116 同步调度于海中鱼巣/核心/执行器.结构写入.ixx:82；写前未找到 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
+| RCB0030 | R0633 | R0634 | <code>std::function同步回调</code> | <code>海中鱼巣/领域/数据操作.存在场景.ixx:633</code> | R0116 同步调度于海中鱼巣/核心/执行器.结构写入.ixx:82；创建身份入口通过 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
+| RCB0031 | R0668 | R0678 | <code>std::function同步回调</code> | <code>海中鱼巣/领域/数据操作.状态动态.ixx:531</code> | R0116 同步调度于海中鱼巣/核心/执行器.结构写入.ixx:82；写前未找到 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
+| RCB0032 | R0670 | R0679 | <code>本函数内具名局部lambda直接调用</code> | <code>海中鱼巣/领域/数据操作.状态动态.ixx:1180-1190</code> | 局部直接调度于1191、1192；第二次受第一次返回true短路 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
+| RCB0033 | R0689 | R0696 | <code>std::function同步回调</code> | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:147</code> | R0116 同步调度于海中鱼巣/核心/执行器.结构写入.ixx:82；来源复核通过 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
+| RCB0034 | R0701 | R0708 | <code>std::function同步回调</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:941</code> | R0116 同步调度于海中鱼巣/核心/执行器.结构写入.ixx:82；组成项及写前复核通过 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
