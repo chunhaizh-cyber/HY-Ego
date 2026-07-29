@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1155,
-  "project_call_edge_count": 2776,
-  "edge_count": 2776,
+  "project_call_edge_count": 2777,
+  "edge_count": 2777,
   "edges": [
     {
       "edge_id": "E0002",
@@ -42656,6 +42656,21 @@
       "return_binding": "自动许可optional中的结构事务许可",
       "reachable_condition": "RCE1752返回临时许可；进入optional.emplace承载值构造",
       "resolution_source": "当前源码宏定义120行、调用点734行、F0375签名与既有E0793同宏先例复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1757",
+      "caller": "F0402",
+      "callee": "R0114",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.存在场景.ixx:150"
+      ],
+      "call_category": "constructor+source-audited",
+      "arguments": "接线=接线_,主信息=&主信息_,节点=&节点_,关系=&关系_,索引=&索引_",
+      "argument_resolution": "成员初始化器静态目标与R0114完整构造签名复核",
+      "return_binding": "成员执行器_",
+      "reachable_condition": "F0402成员接线、四仓库引用和关系仓库编号完成初始化",
+      "resolution_source": "当前源码第150行成员初始化器、成员声明与R0114构造函数签名专项复核",
       "current_root_reachable": true
     }
   ]

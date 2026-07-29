@@ -1,6 +1,6 @@
 # main 可达外部边界表
 
-外部边界记录：1637。本表不把外部函数升级为项目函数身份。
+外部边界记录：1636。本表不把外部函数升级为项目函数身份。
 
 | ID | 调用方 | 类别 | 外部签名/边界 | 调用点 | 调用次数 | 可达条件 | 解析来源 |
 | --- | --- | --- | --- | --- | ---: | --- | --- |
@@ -692,7 +692,6 @@
 | X01065 | F0396 | Windows/System | <code>KillTimer(HWND, UINT_PTR) :: BOOL (HWND, UINT_PTR)</code> | <code>海中鱼巣/界面/控制面板窗口.cpp:1687</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
 | X01066 | F0396 | Windows/System | <code>PostQuitMessage(int) :: void (int)</code> | <code>海中鱼巣/界面/控制面板窗口.cpp:1690</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
 | X01067 | F0396 | Windows/System | <code>DefWindowProcW(HWND, UINT, WPARAM, LPARAM) :: LRESULT (HWND, UINT, WPARAM, LPARAM)</code> | <code>海中鱼巣/界面/控制面板窗口.cpp:1695</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
-| X01072 | F0401 | Standard library | <code>标记撤销失败隔离 :: bool (const std::shared_ptr<void> &, const 结构事务令牌 &)</code> | <code>海中鱼巣/核心/协调.结构事务.ixx:156</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全模块Clang候选-4c89f990.json |
 | X01073 | F0402 | Standard library | <code>std::move(...)</code> | <code>海中鱼巣/领域/数据操作.存在场景.ixx:144</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
 | X01074 | F0403 | Standard library utility | <code>海中鱼巣::结构事务接线&& std::move(海中鱼巣::结构事务接线&) noexcept</code> | <code>海中鱼巣/领域/数据操作.状态动态.ixx:319</code> | 1 | 构造状态动态数据操作并转移接线值 | 专项源码外部边界复核 |
 | X01075 | F0404 | Standard library utility | <code>海中鱼巣::结构事务接线&& std::move(海中鱼巣::结构事务接线&) noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:466</code> | 1 | 构造特征体系数据操作并转移接线值 | 专项源码外部边界复核 |

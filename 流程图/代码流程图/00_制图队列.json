@@ -8,14 +8,14 @@
   "source_relation_publish_commit": "2c38ec4017e38b2e541b93c8c9ae038856f849c7",
   "generated_from_commit": "7342125cb3aa42b81a2c01393ca86abd383ec387",
   "source_identity_path": "流程图/主程序可达调用关系/00_main可达函数身份表.json",
-  "source_identity_blob": "2db4bce45c8422a8a36f97ef9e10418108bb1728",
+  "source_identity_blob": "fd0969cba3136a29d44fd474e93f774279afbede",
   "source_edge_path": "流程图/主程序可达调用关系/01_main可达项目调用边表.json",
-  "source_edge_blob": "561d9031ba1c62c5ba1bdd5adc63530358371b77",
+  "source_edge_blob": "a7a4021766240b18cfa9f17af35e6924b466f47a",
   "source_external_path": "流程图/主程序可达调用关系/02_main可达外部边界表.json",
-  "source_external_blob": "b8f2d5d583ac9eee91fd84e9374b4cbd5784f048",
+  "source_external_blob": "c07088eb38428b87cb5200fa8d29c11a05564d0f",
   "current_reachable_function_count": 1155,
-  "chart_completed_count": 342,
-  "chart_pending_count": 813,
+  "chart_completed_count": 346,
+  "chart_pending_count": 809,
   "historical_unreachable_chart_count": 49,
   "queue_order": "正式身份表稳定身份顺序；shortest_depth只记录main最短调用深度，不参与既有drawing_order重排",
   "entries": [
@@ -15284,12 +15284,10 @@
       "outgoing_project_edge_ids": [
         "RCE0198"
       ],
-      "external_boundary_ids": [
-        "X01072"
-      ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "external_boundary_ids": [],
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0224_结构事务接线标记撤销失败隔离lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0224_结构事务接线标记撤销失败隔离lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -15309,17 +15307,21 @@
       "caller_ids": [
         "F0238"
       ],
-      "callee_ids": [],
+      "callee_ids": [
+        "R0114"
+      ],
       "incoming_project_edge_ids": [
         "E0880"
       ],
-      "outgoing_project_edge_ids": [],
+      "outgoing_project_edge_ids": [
+        "RCE1757"
+      ],
       "external_boundary_ids": [
         "X01073"
       ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0225_存在场景数据操作构造_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0225_存在场景数据操作构造_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -15351,9 +15353,9 @@
       "external_boundary_ids": [
         "X01074"
       ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0226_状态动态数据操作构造_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0226_状态动态数据操作构造_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -15389,9 +15391,9 @@
       "external_boundary_ids": [
         "X01075"
       ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0227_特征体系数据操作构造_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0227_特征体系数据操作构造_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -27147,6 +27149,7 @@
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0403；调用点=海中鱼巣/领域/数据操作.状态动态.ixx:321",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "caller_ids": [
+        "F0402",
         "F0403",
         "F0404",
         "F0405",
@@ -27156,6 +27159,7 @@
       ],
       "callee_ids": [],
       "incoming_project_edge_ids": [
+        "RCE1757",
         "RCE0199",
         "RCE0200",
         "RCE0203",
