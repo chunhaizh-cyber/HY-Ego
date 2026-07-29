@@ -14,8 +14,8 @@
   "source_external_path": "流程图/主程序可达调用关系/02_main可达外部边界表.json",
   "source_external_blob": "0ceaa3e51ea0774cd4ab8335b7d68c4fa83373ad",
   "current_reachable_function_count": 1155,
-  "chart_completed_count": 330,
-  "chart_pending_count": 825,
+  "chart_completed_count": 334,
+  "chart_pending_count": 821,
   "historical_unreachable_chart_count": 49,
   "queue_order": "正式身份表稳定身份顺序；shortest_depth只记录main最短调用深度，不参与既有drawing_order重排",
   "entries": [
@@ -14775,9 +14775,9 @@
         "X01032",
         "X01033"
       ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0213_控制面板窗口注册窗口类_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0213_控制面板窗口注册窗口类_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -14811,9 +14811,9 @@
         "X01035",
         "X01036"
       ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0214_控制面板窗口创建主窗口_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0214_控制面板窗口创建主窗口_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -14855,9 +14855,9 @@
         "X01044",
         "X01045"
       ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0215_控制面板窗口创建菜单栏_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0215_控制面板窗口创建菜单栏_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -14890,9 +14890,9 @@
         "X01046",
         "X01047"
       ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0216_控制面板窗口创建快捷键表_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0216_控制面板窗口创建快捷键表_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
