@@ -1,64 +1,102 @@
 {
   "schema_version": 1,
   "catalog_kind": "current-capability-evidence",
-  "frozen_commit": "0502bcbc13202f97d0d4b4ddefd8476d6deb6c1a",
+  "frozen_commit": "64a2d63eca4a76b7282f3f8807aa6fea5b0f66a1",
   "source_graph": {
     "identity_path": "流程图/主程序可达调用关系/00_main可达函数身份表.json",
     "edge_path": "流程图/主程序可达调用关系/01_main可达项目调用边表.json",
     "knowledge_graph_path": "流程图/代码流程图/00_调用知识图谱.json",
     "embedded_code_commit": "3920a74638264f9f539d50f32f3c9fe5fb1982ab",
-    "currentity_method": "逐文件核对 embedded_code_commit 到 frozen_commit 的 Git 差异为零；函数身份、调用边与流程图只读取 frozen_commit 已发布 Git 树，未使用工作区 WIP；当前不可达历史图不计入活动制图完成、活动候选覆盖或稳定能力完成证据",
+    "currentity_method": "逐文件核对embedded_code_commit到frozen_commit的Git差异为零；函数身份、调用边、制图队列、源码、现状图和逐行映射只读取frozen_commit已发布Git树；流程图缺失只记录证据缺口，不阻断能力索引；当前不可达历史图不计入活动完成证据",
     "verified_unchanged_files": [
       "海中鱼巣/入口.cpp",
-      "海中鱼巣/启动.程序入口.ixx",
       "海中鱼巣/启动.应用程序.ixx",
-      "海中鱼巣/装配.普通应用.ixx",
-      "海中鱼巣/领域/初始化.系统.ixx",
-      "海中鱼巣/适配/审计.数据库启动.ixx",
       "海中鱼巣/启动.生产运行期.ixx",
+      "海中鱼巣/启动.程序入口.ixx",
       "海中鱼巣/启动.程序运行宿主.ixx",
+      "海中鱼巣/启动.运行期上下文.ixx",
+      "海中鱼巣/核心/主信息仓库.cpp",
+      "海中鱼巣/核心/主信息仓库.h",
+      "海中鱼巣/核心/会话.结构写入.ixx",
+      "海中鱼巣/核心/关系仓库.cpp",
+      "海中鱼巣/核心/关系仓库.h",
+      "海中鱼巣/核心/协调.结构事务.ixx",
+      "海中鱼巣/核心/执行器.结构写入.ixx",
+      "海中鱼巣/核心/索引仓库.cpp",
+      "海中鱼巣/核心/节点仓库.cpp",
+      "海中鱼巣/核心/节点仓库.h",
       "海中鱼巣/界面/投影.控制面板启动.ixx",
       "海中鱼巣/界面/控制面板窗口.cpp",
-      "海中鱼巣/领域/方法服务.h",
       "海中鱼巣/线程/自我线程.ixx",
-      "海中鱼巣/领域/初始化.概念图.ixx",
-      "海中鱼巣/领域/初始化.语素.ixx",
+      "海中鱼巣/装配.普通应用.ixx",
+      "海中鱼巣/装配.运行期业务.ixx",
+      "海中鱼巣/适配/SQL数据库适配.cpp",
+      "海中鱼巣/适配/审计.数据库启动.ixx",
+      "海中鱼巣/领域/世界服务.h",
+      "海中鱼巣/领域/二次特征服务.h",
+      "海中鱼巣/领域/任务服务.h",
       "海中鱼巣/领域/初始化.世界树.ixx",
+      "海中鱼巣/领域/初始化.概念图.ixx",
+      "海中鱼巣/领域/初始化.系统.ixx",
+      "海中鱼巣/领域/初始化.系统角色.ixx",
+      "海中鱼巣/领域/初始化.语素.ixx",
       "海中鱼巣/领域/初始化.需求.ixx",
-      "海中鱼巣/核心/节点仓库.cpp",
-      "海中鱼巣/核心/索引仓库.cpp",
-      "海中鱼巣/领域/需求服务.h",
-      "海中鱼巣/领域/特征服务.h",
+      "海中鱼巣/领域/动态服务.h",
+      "海中鱼巣/领域/因果服务.h",
+      "海中鱼巣/领域/场景服务.h",
+      "海中鱼巣/领域/存在服务.h",
       "海中鱼巣/领域/控制面板服务.h",
-      "海中鱼巣/核心/关系仓库.cpp",
-      "海中鱼巣/核心/主信息仓库.cpp",
-      "海中鱼巣/核心/会话.结构写入.ixx"
+      "海中鱼巣/领域/数据操作.存在场景.ixx",
+      "海中鱼巣/领域/数据操作.概念活动.ixx",
+      "海中鱼巣/领域/数据操作.特征体系.ixx",
+      "海中鱼巣/领域/数据操作.状态动态.ixx",
+      "海中鱼巣/领域/数据操作.系统角色.ixx",
+      "海中鱼巣/领域/数据操作.轻量因果.ixx",
+      "海中鱼巣/领域/方法服务.h",
+      "海中鱼巣/领域/显示服务.h",
+      "海中鱼巣/领域/服务.二次特征.ixx",
+      "海中鱼巣/领域/服务.动态.ixx",
+      "海中鱼巣/领域/服务.场景.ixx",
+      "海中鱼巣/领域/服务.基础信息.ixx",
+      "海中鱼巣/领域/服务.存在.ixx",
+      "海中鱼巣/领域/服务.方法.ixx",
+      "海中鱼巣/领域/服务.概念图结构.ixx",
+      "海中鱼巣/领域/服务.概念活动.ixx",
+      "海中鱼巣/领域/服务.特征.ixx",
+      "海中鱼巣/领域/服务.状态.ixx",
+      "海中鱼巣/领域/服务.轻量因果.ixx",
+      "海中鱼巣/领域/服务.需求.ixx",
+      "海中鱼巣/领域/概念图服务.h",
+      "海中鱼巣/领域/特征值服务.h",
+      "海中鱼巣/领域/特征服务.h",
+      "海中鱼巣/领域/状态服务.h",
+      "海中鱼巣/领域/组合.存在场景.ixx",
+      "海中鱼巣/领域/组合.特征状态.ixx",
+      "海中鱼巣/领域/统计服务.h",
+      "海中鱼巣/领域/语素服务.h",
+      "海中鱼巣/领域/需求服务.h"
     ]
   },
   "selection_scope": {
     "root": "main-current-reachable",
     "included": [
+      "全部main当前可达函数身份均已完成候选扫描",
       "公开启动与组合入口",
-      "领域初始化入口",
-      "线程与运行期宿主入口",
-      "仓库只读入口",
-      "结构写入会话入口",
-      "控制面板只读材料入口"
+      "领域初始化、领域服务与只读查询入口",
+      "仓库、结构写入会话和事务协调入口",
+      "线程、数据库、控制面板与外部适配边界"
     ],
     "excluded": [
-      "构造函数和析构函数",
-      "简单访问器和运算符",
-      "lambda与纯内部辅助函数",
-      "只在自检内部使用的辅助函数",
-      "main不可达或当前调用身份未冻结的入口",
+      "构造、析构、运算符、lambda、简单访问器和内部实现默认不单独登记能力，但已在候选队列逐项标记非独立理由",
+      "只在自检或专项模式可达的函数逐项标记已排除",
       "当前不可达历史图及其对应的非活动函数证据"
     ],
     "reuse_decision": "不在本目录裁决"
   },
-  "entry_count": 22,
+  "entry_count": 45,
   "status_summary": {
     "已实现待验证": 14,
-    "候选待复核": 8
+    "候选待复核": 31
   },
   "entries": [
     {
@@ -1250,8 +1288,8 @@
           "file": "海中鱼巣/核心/会话.结构写入.ixx",
           "definition_line": 234,
           "shortest_depth": 10,
-          "chart": null,
-          "mapping": null
+          "chart": "流程图/代码流程图/L10/CF-L10-0003_结构写入会话创建主信息候选_现状流程图.md",
+          "mapping": "流程图/代码流程图/L10/CF-L10-0003_结构写入会话创建主信息候选_逐行代码映射表.md"
         },
         {
           "function_id": "R0022",
@@ -1259,8 +1297,8 @@
           "file": "海中鱼巣/核心/会话.结构写入.ixx",
           "definition_line": 262,
           "shortest_depth": 10,
-          "chart": null,
-          "mapping": null
+          "chart": "流程图/代码流程图/L10/CF-L10-0004_结构写入会话创建节点候选_现状流程图.md",
+          "mapping": "流程图/代码流程图/L10/CF-L10-0004_结构写入会话创建节点候选_逐行代码映射表.md"
         },
         {
           "function_id": "R0023",
@@ -1268,8 +1306,8 @@
           "file": "海中鱼巣/核心/会话.结构写入.ixx",
           "definition_line": 290,
           "shortest_depth": 10,
-          "chart": null,
-          "mapping": null
+          "chart": "流程图/代码流程图/L10/CF-L10-0005_结构写入会话创建关系_现状流程图.md",
+          "mapping": "流程图/代码流程图/L10/CF-L10-0005_结构写入会话创建关系_逐行代码映射表.md"
         },
         {
           "function_id": "R0027",
@@ -1508,7 +1546,7 @@
       "domain": "控制面板只读投影",
       "purpose_summary": "从普通系统初始化结果及当前仓库读取世界树相对坐标，生成世界树和语素树的值式只读启动材料，并聚合为控制面板启动投影。",
       "implementation_status": "已实现待验证",
-      "status_basis": "F0022、F0059、F0060、F0061均在main控制面板路径可达且有单函数图和逐行映射；四个入口均零业务写入，但存在坐标兼容槽、跨读取时点、固定来源版本和失败形状差异，故只登记当前投影实现并保留验证缺口。",
+      "status_basis": "F0022、F0059、F0060、F0061均在main控制面板路径可达且有单函数图和逐行映射；四个入口均零业务写入，但存在坐标兼容槽、跨读取时点、固定来源版本和失败形状差异，故只登记当前投影实现并保留验证缺口。；本轮按64a2d63e已发布身份补充同合同提供函数F0385、F0386、R0149。",
       "provider_entries": [
         {
           "function_id": "F0022",
@@ -1545,6 +1583,33 @@
           "shortest_depth": 4,
           "chart": "流程图/代码流程图/L4/CF-L4-0025_生成控制面板语素树结构材料_现状流程图.md",
           "mapping": "流程图/代码流程图/L4/CF-L4-0025_生成控制面板语素树结构材料_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0385",
+          "complete_signature": "std::optional<海中鱼巣::语素节点显示语义材料> 海中鱼巣::读取世界树节点显示语义(海中鱼巣::节点句柄 节点值, 海中鱼巣::节点类型 类型, const 海中鱼巣::世界树初始化结果& 初始化结果, const 海中鱼巣::语素初始化结果& 语素初始化读数)",
+          "file": "海中鱼巣/界面/投影.控制面板启动.ixx",
+          "definition_line": 40,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0209_读取世界树节点显示语义_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0209_读取世界树节点显示语义_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0386",
+          "complete_signature": "std::wstring 海中鱼巣::生成世界树节点显示名称(海中鱼巣::节点句柄 节点值, const 海中鱼巣::语素节点显示语义材料& 显示语义, const std::optional<海中鱼巣::世界树相对坐标>& 自我相对坐标)",
+          "file": "海中鱼巣/界面/投影.控制面板启动.ixx",
+          "definition_line": 55,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0210_生成世界树节点显示名称_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0210_生成世界树节点显示名称_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0149",
+          "complete_signature": "世界树名称语素角色 海中鱼巣::读取世界树节点名称角色( 节点句柄 节点值, const 世界树初始化结果& 初始化结果) noexcept",
+          "file": "海中鱼巣/界面/投影.控制面板启动.ixx",
+          "definition_line": 25,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
         }
       ],
       "inputs": [
@@ -1634,7 +1699,7 @@
       "domain": "控制面板运行宿主",
       "purpose_summary": "在初始化与只读投影成功后构造控制面板服务和窗口，把停止请求交给窗口实现并映射结构化窗口结果为程序运行结果。",
       "implementation_status": "已实现待验证",
-      "status_basis": "F0024与F0064均在main普通控制面板路径可达且有单函数图和逐行映射；F0064是对非平凡F0223窗口实现的薄转发，本条目只证明当前宿主和公开转发入口存在，本轮未运行窗口消息循环。",
+      "status_basis": "F0024与F0064均在main普通控制面板路径可达且有单函数图和逐行映射；F0064是对非平凡F0223窗口实现的薄转发，本条目只证明当前宿主和公开转发入口存在，本轮未运行窗口消息循环。；本轮按64a2d63e已发布身份补充同合同提供函数F0223。",
       "provider_entries": [
         {
           "function_id": "F0024",
@@ -1653,6 +1718,15 @@
           "shortest_depth": 4,
           "chart": "流程图/代码流程图/L4/CF-L4-0028_控制面板窗口_运行_现状流程图.md",
           "mapping": "流程图/代码流程图/L4/CF-L4-0028_控制面板窗口_运行_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0223",
+          "complete_signature": "海中鱼巣::控制面板窗口运行结果 海中鱼巣::控制面板窗口::窗口实现::运行(const volatile std::sig_atomic_t*)",
+          "file": "海中鱼巣/界面/控制面板窗口.cpp",
+          "definition_line": 1551,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0103_控制面板窗口实现运行_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0103_控制面板窗口实现运行_逐行代码映射表.md"
         }
       ],
       "inputs": [
@@ -2446,6 +2520,4236 @@
         "与现行领域类型化记录和特征值写入合同不等价",
         "未接域扩容异常缺少结构化回滚",
         "本轮未运行值写入、容量和异常专项"
+      ]
+    },
+    {
+      "capability_id": "CAP-0023",
+      "name": "运行期上下文租约、系统材料与首次发布",
+      "domain": "运行期上下文",
+      "purpose_summary": "在运行期上下文租约内初始化系统角色和概念活动，读取已发布材料，并尝试一次性发布全新上下文。",
+      "implementation_status": "候选待复核",
+      "status_basis": "7个提供函数均在64a2d63e的main当前可达身份表中；7个已有现状图和逐行映射，0个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "F0069",
+          "complete_signature": "海中鱼巣::运行期上下文租约 海中鱼巣::运行期上下文宿主::读取租约() const",
+          "file": "海中鱼巣/启动.运行期上下文.ixx",
+          "definition_line": 233,
+          "shortest_depth": 4,
+          "chart": "流程图/代码流程图/L4/CF-L4-0033_运行期上下文宿主_读取租约_现状流程图.md",
+          "mapping": "流程图/代码流程图/L4/CF-L4-0033_运行期上下文宿主_读取租约_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0073",
+          "complete_signature": "海中鱼巣::系统角色初始化结果 海中鱼巣::运行期上下文::初始化系统角色(const 海中鱼巣::系统角色初始化参数&)",
+          "file": "海中鱼巣/启动.运行期上下文.ixx",
+          "definition_line": 95,
+          "shortest_depth": 4,
+          "chart": "流程图/代码流程图/L4/CF-L4-0037_运行期上下文_初始化系统角色_现状流程图.md",
+          "mapping": "流程图/代码流程图/L4/CF-L4-0037_运行期上下文_初始化系统角色_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0075",
+          "complete_signature": "海中鱼巣::概念活动初始化结果 海中鱼巣::运行期上下文::初始化概念活动(const 海中鱼巣::概念活动初始化参数&)",
+          "file": "海中鱼巣/启动.运行期上下文.ixx",
+          "definition_line": 129,
+          "shortest_depth": 4,
+          "chart": "流程图/代码流程图/L4/CF-L4-0039_运行期上下文_初始化概念活动_现状流程图.md",
+          "mapping": "流程图/代码流程图/L4/CF-L4-0039_运行期上下文_初始化概念活动_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0078",
+          "complete_signature": "海中鱼巣::运行期上下文发布状态 海中鱼巣::运行期上下文宿主::尝试首次发布全新上下文(std::shared_ptr<海中鱼巣::运行期上下文> 候选)",
+          "file": "海中鱼巣/启动.运行期上下文.ixx",
+          "definition_line": 208,
+          "shortest_depth": 4,
+          "chart": "流程图/代码流程图/L4/CF-L4-0042_运行期上下文宿主_尝试首次发布全新上下文_现状流程图.md",
+          "mapping": "流程图/代码流程图/L4/CF-L4-0042_运行期上下文宿主_尝试首次发布全新上下文_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0079",
+          "complete_signature": "const 海中鱼巣::运行期上下文* 海中鱼巣::运行期上下文租约::读取() const",
+          "file": "海中鱼巣/启动.运行期上下文.ixx",
+          "definition_line": 196,
+          "shortest_depth": 4,
+          "chart": "流程图/代码流程图/L4/CF-L4-0043_运行期上下文租约_读取_现状流程图.md",
+          "mapping": "流程图/代码流程图/L4/CF-L4-0043_运行期上下文租约_读取_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0246",
+          "complete_signature": "std::optional<海中鱼巣::系统角色清单> 海中鱼巣::运行期上下文::读取系统角色材料() const",
+          "file": "海中鱼巣/启动.运行期上下文.ixx",
+          "definition_line": 118,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0122_运行期上下文读取系统角色材料_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0122_运行期上下文读取系统角色材料_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0252",
+          "complete_signature": "std::optional<海中鱼巣::概念活动材料> 海中鱼巣::运行期上下文::读取概念活动材料() const",
+          "file": "海中鱼巣/启动.运行期上下文.ixx",
+          "definition_line": 155,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0128_运行期上下文读取概念活动材料_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0128_运行期上下文读取概念活动材料_逐行代码映射表.md"
+        }
+      ],
+      "inputs": [
+        "运行期上下文租约",
+        "系统角色与概念活动初始化参数",
+        "首次发布请求"
+      ],
+      "preconditions": [
+        "运行期上下文及其结构核心已经装配",
+        "初始化与读取发生在有效租约和当前发布版本内"
+      ],
+      "outputs": [
+        "运行期上下文材料",
+        "系统角色材料",
+        "概念活动材料",
+        "首次发布结果"
+      ],
+      "state_reads": [
+        "当前运行期上下文",
+        "系统角色清单",
+        "概念活动材料与发布状态"
+      ],
+      "state_writes": [
+        "初始化产生的系统角色与概念活动结构",
+        "首次发布指针或版本"
+      ],
+      "side_effects": [
+        "可能触发系统角色和概念活动初始化",
+        "成功时发布全新运行期上下文"
+      ],
+      "transaction_contract": "首次发布必须维持租约唯一性；领域结构写入仍由下层结构事务承担。",
+      "logic_results": [
+        "材料存在并返回",
+        "初始化或首次发布成功",
+        "租约、结构或版本不满足时拒绝"
+      ],
+      "internal_error_boundaries": [
+        "租约漂移、重复发布或结构核心不完整属于内部一致性边界"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/启动.运行期上下文.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4070_子规范_权威结构快照恢复候选与运行期原子发布.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/8120_子规范_程序入口启动模式与运行宿主边界_20260726.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "只作为运行期上下文生命周期和材料读取候选，不证明所有领域服务均已完成生产接线。",
+      "known_gaps": [
+        "没有同基线首次发布竞争与恢复运行验证",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0024",
+      "name": "SQL数据库适配配置、连接与关闭",
+      "domain": "数据库适配",
+      "purpose_summary": "从环境形成SQL配置，初始化并打开数据库适配，查询可用性并关闭连接资源。",
+      "implementation_status": "候选待复核",
+      "status_basis": "5个提供函数均在64a2d63e的main当前可达身份表中；5个已有现状图和逐行映射，0个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "F0158",
+          "complete_signature": "海中鱼巣::SQL数据库配置 海中鱼巣::SQL数据库适配::从环境创建配置()",
+          "file": "海中鱼巣/适配/SQL数据库适配.cpp",
+          "definition_line": 314,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0039_从环境创建SQL配置_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0039_从环境创建SQL配置_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0203",
+          "complete_signature": "海中鱼巣::数据库操作结果 海中鱼巣::SQL数据库适配::初始化数据库() const",
+          "file": "海中鱼巣/适配/SQL数据库适配.cpp",
+          "definition_line": 329,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0083_SQL初始化数据库_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0083_SQL初始化数据库_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0205",
+          "complete_signature": "bool (anonymous namespace)::ODBC连接::打开(const 海中鱼巣::SQL数据库配置& 配置, std::wstring_view 数据库, std::wstring& 诊断)",
+          "file": "海中鱼巣/适配/SQL数据库适配.cpp",
+          "definition_line": 132,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0085_ODBC连接打开_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0085_ODBC连接打开_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0208",
+          "complete_signature": "bool (anonymous namespace)::ODBC语句::可用() const",
+          "file": "海中鱼巣/适配/SQL数据库适配.cpp",
+          "definition_line": 238,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0088_ODBC语句可用_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0088_ODBC语句可用_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0382",
+          "complete_signature": "void 海中鱼巣::{匿名命名空间@SQL数据库适配.cpp}::ODBC连接::关闭()",
+          "file": "海中鱼巣/适配/SQL数据库适配.cpp",
+          "definition_line": 201,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0206_ODBC连接关闭_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0206_ODBC连接关闭_逐行代码映射表.md"
+        }
+      ],
+      "inputs": [
+        "环境配置字段",
+        "数据库连接配置"
+      ],
+      "preconditions": [
+        "配置字段满足适配器要求",
+        "ODBC运行环境和目标数据库可访问"
+      ],
+      "outputs": [
+        "数据库配置",
+        "初始化或打开结果",
+        "可用性状态"
+      ],
+      "state_reads": [
+        "环境变量",
+        "ODBC连接与诊断状态"
+      ],
+      "state_writes": [
+        "适配器连接状态和句柄"
+      ],
+      "side_effects": [
+        "建立或关闭ODBC连接",
+        "失败时形成诊断材料"
+      ],
+      "transaction_contract": "本能力管理连接资源，不替代领域结构事务或数据库业务事务。",
+      "logic_results": [
+        "配置形成",
+        "连接可用",
+        "逻辑内配置失败或连接失败",
+        "关闭完成"
+      ],
+      "internal_error_boundaries": [
+        "ODBC内部错误和不可解释诊断进入追根因边界"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/适配/SQL数据库适配.cpp",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4050_子规范_入口拒绝逻辑内结果与内部逻辑错误.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "只登记现有SQL适配生命周期；不证明数据库恢复、迁移或生产业务写入完成。",
+      "known_gaps": [
+        "缺少同基线真实SQL Server连接与故障注入验证",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0025",
+      "name": "主信息仓库未发布候选与带令牌生命周期",
+      "domain": "主信息仓库",
+      "purpose_summary": "在结构事务令牌约束下创建、读取、确认、撤销、删除主信息候选并写入I64槽值。",
+      "implementation_status": "候选待复核",
+      "status_basis": "15个提供函数均在64a2d63e的main当前可达身份表中；15个已有现状图和逐行映射，0个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "F0217",
+          "complete_signature": "std::optional<std::int64_t> 海中鱼巣::主信息仓库::读取I64值(海中鱼巣::主信息句柄 主信息, std::uint64_t 值索引) const",
+          "file": "海中鱼巣/核心/主信息仓库.cpp",
+          "definition_line": 430,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0097_主信息仓库读取I64值索引重载_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0097_主信息仓库读取I64值索引重载_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0331",
+          "complete_signature": "海中鱼巣::主信息句柄 海中鱼巣::主信息仓库::创建主信息()",
+          "file": "海中鱼巣/核心/主信息仓库.cpp",
+          "definition_line": 38,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0011_主信息仓库创建主信息_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0011_主信息仓库创建主信息_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0383",
+          "complete_signature": "std::optional<std::int64_t> 海中鱼巣::主信息仓库::读取I64值(海中鱼巣::主信息句柄 主信息, std::uint64_t 值索引, const 海中鱼巣::结构事务令牌& 令牌) const",
+          "file": "海中鱼巣/核心/主信息仓库.cpp",
+          "definition_line": 446,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0207_主信息仓库读取I64值令牌重载_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0207_主信息仓库读取I64值令牌重载_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0384",
+          "complete_signature": "std::optional<海中鱼巣::主信息记录> 海中鱼巣::主信息仓库::读取主信息(海中鱼巣::主信息句柄 主信息) const",
+          "file": "海中鱼巣/核心/主信息仓库.cpp",
+          "definition_line": 198,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0208_主信息仓库读取主信息无令牌重载_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0208_主信息仓库读取主信息无令牌重载_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0439",
+          "complete_signature": "std::optional<海中鱼巣::主信息记录> 海中鱼巣::主信息仓库::读取主信息(海中鱼巣::主信息句柄 主信息, const 海中鱼巣::结构事务令牌& 令牌) const",
+          "file": "海中鱼巣/核心/主信息仓库.cpp",
+          "definition_line": 212,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0262_主信息仓库读取主信息令牌重载_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0262_主信息仓库读取主信息令牌重载_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0003",
+          "complete_signature": "结构写入结果 海中鱼巣::主信息仓库::结构化确认未发布候选( 主信息未发布候选& 候选, const 结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/主信息仓库.cpp",
+          "definition_line": 111,
+          "shortest_depth": 10,
+          "chart": "流程图/代码流程图/L10/CF-L10-0001_主信息仓库结构化确认未发布候选_现状流程图.md",
+          "mapping": "流程图/代码流程图/L10/CF-L10-0001_主信息仓库结构化确认未发布候选_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0004",
+          "complete_signature": "海中鱼巣::核心未发布候选操作状态 海中鱼巣::主信息仓库::撤销未发布候选(海中鱼巣::主信息未发布候选& 候选, const 海中鱼巣::结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/主信息仓库.cpp",
+          "definition_line": 141,
+          "shortest_depth": 11,
+          "chart": "流程图/代码流程图/L11/CF-L11-0007_主信息仓库撤销未发布候选_现状流程图.md",
+          "mapping": "流程图/代码流程图/L11/CF-L11-0007_主信息仓库撤销未发布候选_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0006",
+          "complete_signature": "海中鱼巣::结构写入结果 海中鱼巣::主信息仓库::结构化撤销未发布候选(海中鱼巣::主信息未发布候选& 候选, const 海中鱼巣::结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/主信息仓库.cpp",
+          "definition_line": 169,
+          "shortest_depth": 10,
+          "chart": "流程图/代码流程图/L10/CF-L10-0002_主信息仓库结构化撤销未发布候选_现状流程图.md",
+          "mapping": "流程图/代码流程图/L10/CF-L10-0002_主信息仓库结构化撤销未发布候选_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0008",
+          "complete_signature": "bool 海中鱼巣::主信息仓库::删除主信息(主信息句柄 主信息, const 结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/主信息仓库.cpp",
+          "definition_line": 312,
+          "shortest_depth": 7,
+          "chart": "流程图/代码流程图/L7/CF-L7-0019_主信息仓库删除主信息带令牌重载_现状流程图.md",
+          "mapping": "流程图/代码流程图/L7/CF-L7-0019_主信息仓库删除主信息带令牌重载_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0009",
+          "complete_signature": "bool 海中鱼巣::主信息仓库::主信息是否有效(主信息句柄 主信息, const 结构事务令牌& 令牌) const",
+          "file": "海中鱼巣/核心/主信息仓库.cpp",
+          "definition_line": 371,
+          "shortest_depth": 7,
+          "chart": "流程图/代码流程图/L7/CF-L7-0020_主信息仓库主信息是否有效带令牌重载_现状流程图.md",
+          "mapping": "流程图/代码流程图/L7/CF-L7-0020_主信息仓库主信息是否有效带令牌重载_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0010",
+          "complete_signature": "bool 海中鱼巣::主信息仓库::写入I64值(海中鱼巣::主信息句柄 主信息, std::uint64_t 值索引, std::int64_t 值, const 海中鱼巣::结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/主信息仓库.cpp",
+          "definition_line": 408,
+          "shortest_depth": 8,
+          "chart": "流程图/代码流程图/L8/CF-L8-0004_主信息仓库写入I64值带令牌重载_现状流程图.md",
+          "mapping": "流程图/代码流程图/L8/CF-L8-0004_主信息仓库写入I64值带令牌重载_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0011",
+          "complete_signature": "带值结构写入结果<主信息未发布候选> 海中鱼巣::主信息仓库::结构化创建主信息未发布候选( const 结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/主信息仓库.cpp",
+          "definition_line": 62,
+          "shortest_depth": 11,
+          "chart": "流程图/代码流程图/L11/CF-L11-0002_主信息仓库结构化创建主信息未发布候选_现状流程图.md",
+          "mapping": "流程图/代码流程图/L11/CF-L11-0002_主信息仓库结构化创建主信息未发布候选_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0012",
+          "complete_signature": "std::optional<主信息未发布候选> 海中鱼巣::主信息仓库::创建主信息未发布候选( const 结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/主信息仓库.cpp",
+          "definition_line": 80,
+          "shortest_depth": 12,
+          "chart": "流程图/代码流程图/L12/CF-L12-0002_主信息仓库创建主信息未发布候选_现状流程图.md",
+          "mapping": "流程图/代码流程图/L12/CF-L12-0002_主信息仓库创建主信息未发布候选_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0013",
+          "complete_signature": "核心未发布候选操作状态 海中鱼巣::主信息仓库::确认未发布候选( 主信息未发布候选& 候选, const 结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/主信息仓库.cpp",
+          "definition_line": 90,
+          "shortest_depth": 11,
+          "chart": "流程图/代码流程图/L11/CF-L11-0003_主信息仓库确认未发布候选_现状流程图.md",
+          "mapping": "流程图/代码流程图/L11/CF-L11-0003_主信息仓库确认未发布候选_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0014",
+          "complete_signature": "主信息句柄 海中鱼巣::主信息未发布候选::读取主信息() const",
+          "file": "海中鱼巣/核心/主信息仓库.h",
+          "definition_line": 42,
+          "shortest_depth": 11,
+          "chart": "流程图/代码流程图/L11/CF-L11-0004_主信息未发布候选读取主信息_现状流程图.md",
+          "mapping": "流程图/代码流程图/L11/CF-L11-0004_主信息未发布候选读取主信息_逐行代码映射表.md"
+        }
+      ],
+      "inputs": [
+        "结构事务令牌",
+        "主信息候选或句柄",
+        "I64槽位和值"
+      ],
+      "preconditions": [
+        "令牌属于当前仓库接线且许可类型满足操作要求",
+        "候选和句柄属于当前仓库代次"
+      ],
+      "outputs": [
+        "主信息未发布候选",
+        "结构写入结果",
+        "有效性或读取结果"
+      ],
+      "state_reads": [
+        "主信息记录、候选状态、事务令牌与接线"
+      ],
+      "state_writes": [
+        "未发布主信息候选",
+        "I64槽值",
+        "确认、撤销或删除状态"
+      ],
+      "side_effects": [
+        "改变主信息仓库候选或已发布记录"
+      ],
+      "transaction_contract": "候选创建、确认、撤销和删除必须服从4040不透明结构事务及令牌许可。",
+      "logic_results": [
+        "创建、确认、撤销、删除或写值成功",
+        "无效令牌、失效句柄或状态冲突"
+      ],
+      "internal_error_boundaries": [
+        "前置成立后候选状态、令牌代次或仓库记录不一致属于内部错误"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/核心/主信息仓库.cpp",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/核心/主信息仓库.h",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4010_子规范_统一仓库稳定句柄与通用关系索引边界.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4040_子规范_不透明结构事务候选确认撤销与最后发布.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "不得与领域类型化记录等价；新业务仍须经领域服务或数据操作层裁决。",
+      "known_gaps": [
+        "本轮未运行主信息候选并发与撤销专项",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0026",
+      "name": "结构写入会话材料读取、重挂与失败收口",
+      "domain": "结构写入会话",
+      "purpose_summary": "在单个结构写入会话中读取候选和已发布材料、挂载或重挂节点、登记关系变更并收口失败与读回状态。",
+      "implementation_status": "候选待复核",
+      "status_basis": "16个提供函数均在64a2d63e的main当前可达身份表中；1个已有现状图和逐行映射，15个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "R0024",
+          "complete_signature": "节点挂载结果 海中鱼巣::结构写入会话::挂载或重挂节点(节点句柄 节点, 节点句柄 新父节点)",
+          "file": "海中鱼巣/核心/会话.结构写入.ixx",
+          "definition_line": 372,
+          "shortest_depth": 11,
+          "chart": "流程图/代码流程图/L11/CF-L11-0006_结构写入会话挂载或重挂节点_现状流程图.md",
+          "mapping": "流程图/代码流程图/L11/CF-L11-0006_结构写入会话挂载或重挂节点_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0025",
+          "complete_signature": "std::optional<关系记录> 海中鱼巣::结构写入会话::读取关系审计(关系句柄 当前关系) const",
+          "file": "海中鱼巣/核心/会话.结构写入.ixx",
+          "definition_line": 416,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0026",
+          "complete_signature": "std::vector<关系记录> 海中鱼巣::结构写入会话::读取关系审计记录组( 节点句柄 源节点, 关系类型 类型) const",
+          "file": "海中鱼巣/核心/会话.结构写入.ixx",
+          "definition_line": 423,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0030",
+          "complete_signature": "std::optional<节点类型> 海中鱼巣::结构写入会话::读取节点类型(节点句柄 节点) const",
+          "file": "海中鱼巣/核心/会话.结构写入.ixx",
+          "definition_line": 524,
+          "shortest_depth": 10,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0031",
+          "complete_signature": "std::optional<主信息句柄> 海中鱼巣::结构写入会话::读取节点主信息(节点句柄 节点) const",
+          "file": "海中鱼巣/核心/会话.结构写入.ixx",
+          "definition_line": 530,
+          "shortest_depth": 10,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0032",
+          "complete_signature": "std::optional<std::int64_t> 海中鱼巣::结构写入会话::读取I64值(主信息句柄 主信息, std::uint64_t 槽位) const",
+          "file": "海中鱼巣/核心/会话.结构写入.ixx",
+          "definition_line": 536,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0033",
+          "complete_signature": "std::vector<std::uint64_t> 海中鱼巣::结构写入会话::读取节点主键组(节点句柄 节点) const",
+          "file": "海中鱼巣/核心/会话.结构写入.ixx",
+          "definition_line": 541,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0034",
+          "complete_signature": "std::vector<关系记录> 海中鱼巣::结构写入会话::读取关系记录组(节点句柄 源节点, 关系类型 类型) const",
+          "file": "海中鱼巣/核心/会话.结构写入.ixx",
+          "definition_line": 546,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0035",
+          "complete_signature": "std::vector<关系记录> 海中鱼巣::结构写入会话::读取来源关系记录组( 节点句柄 目标节点, 关系类型 类型) const",
+          "file": "海中鱼巣/核心/会话.结构写入.ixx",
+          "definition_line": 551,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0039",
+          "complete_signature": "explicit 海中鱼巣::结构提交准备只读视图::结构提交准备只读视图(const 海中鱼巣::结构写入会话& 会话)",
+          "file": "海中鱼巣/核心/会话.结构写入.ixx",
+          "definition_line": 63,
+          "shortest_depth": 13,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0052",
+          "complete_signature": "void 海中鱼巣::结构写入会话::记录失败(const 结构写入结果& 结果)",
+          "file": "海中鱼巣/核心/会话.结构写入.ixx",
+          "definition_line": 784,
+          "shortest_depth": 10,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0053",
+          "complete_signature": "void 海中鱼巣::结构写入会话::标记关系审计已读回(const 关系记录& 当前记录) const",
+          "file": "海中鱼巣/核心/会话.结构写入.ixx",
+          "definition_line": 798,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0054",
+          "complete_signature": "bool 海中鱼巣::结构写入会话::登记关系变更能力(已发布关系变更能力 能力)",
+          "file": "海中鱼巣/核心/会话.结构写入.ixx",
+          "definition_line": 813,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0055",
+          "complete_signature": "bool 海中鱼巣::结构写入会话::写集已完整读回() const",
+          "file": "海中鱼巣/核心/会话.结构写入.ixx",
+          "definition_line": 830,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0059",
+          "complete_signature": "海中鱼巣::结构写入结果 海中鱼巣::结构写入会话::读取首次失败() const",
+          "file": "海中鱼巣/核心/会话.结构写入.ixx",
+          "definition_line": 843,
+          "shortest_depth": 9,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0063",
+          "complete_signature": "结构物理主键读取结果 海中鱼巣::结构写入会话::读取物理主键当前绑定(std::uint64_t 主键)",
+          "file": "海中鱼巣/核心/会话.结构写入.ixx",
+          "definition_line": 99,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        }
+      ],
+      "inputs": [
+        "节点、主信息、关系句柄",
+        "重挂目标父节点",
+        "会话内失败或能力材料"
+      ],
+      "preconditions": [
+        "当前线程拥有可访问且可继续写入的会话",
+        "读取对象属于会话候选或当前已发布结构"
+      ],
+      "outputs": [
+        "提交准备只读视图",
+        "候选或已发布材料",
+        "节点挂载结果",
+        "首次失败"
+      ],
+      "state_reads": [
+        "会话写集、候选表、仓库记录、关系审计和主键绑定"
+      ],
+      "state_writes": [
+        "节点父关系",
+        "关系变更能力登记",
+        "失败与读回标记"
+      ],
+      "side_effects": [
+        "可能改变会话内写集和节点关系",
+        "记录提交准备与失败状态"
+      ],
+      "transaction_contract": "所有写入留在会话内，只有完成读回与确认后才能进入最后发布。",
+      "logic_results": [
+        "读取成功",
+        "重挂成功或无变化",
+        "显式失败并保留首次失败"
+      ],
+      "internal_error_boundaries": [
+        "会话线程、写集、候选身份或读回状态不一致属于内部错误"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/核心/会话.结构写入.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4040_子规范_不透明结构事务候选确认撤销与最后发布.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4050_子规范_入口拒绝逻辑内结果与内部逻辑错误.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "只作为结构事务材料和会话操作能力，不授权领域层直接绕过领域服务写仓库。",
+      "known_gaps": [
+        "部分提供函数仍缺单函数图；未运行全参与者失败矩阵",
+        "缺少现状图或逐行映射：R0025、R0026、R0030、R0031、R0032、R0033、R0034、R0035、R0039、R0052、R0053、R0054、R0055、R0059、R0063",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0027",
+      "name": "结构事务许可协调、执行与撤销隔离",
+      "domain": "结构事务",
+      "purpose_summary": "取得和释放结构事务许可，执行参与者准备、确认、发布和逆序撤销，并在撤销失败时隔离。",
+      "implementation_status": "候选待复核",
+      "status_basis": "4个提供函数均在64a2d63e的main当前可达身份表中；0个已有现状图和逐行映射，4个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "R0099",
+          "complete_signature": "bool 海中鱼巣::结构事务内部::标记撤销失败隔离(const std::shared_ptr<void>& 状态, const 结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/协调.结构事务.ixx",
+          "definition_line": 58,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0100",
+          "complete_signature": "void 海中鱼巣::结构事务内部::释放许可(const std::shared_ptr<void>& 状态, const 结构事务令牌& 令牌) noexcept",
+          "file": "海中鱼巣/核心/协调.结构事务.ixx",
+          "definition_line": 66,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0101",
+          "complete_signature": "结构事务许可 海中鱼巣::结构事务内部::取得许可(const std::shared_ptr<void>& 状态, 结构许可类型 类型)",
+          "file": "海中鱼巣/核心/协调.结构事务.ixx",
+          "definition_line": 84,
+          "shortest_depth": 6,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0114",
+          "complete_signature": "海中鱼巣::结构写入执行器::结构写入执行器(海中鱼巣::结构事务接线 接线, 海中鱼巣::主信息仓库* 主信息, 海中鱼巣::节点仓库* 节点, 海中鱼巣::关系仓库* 关系, 海中鱼巣::索引仓库* 索引)",
+          "file": "海中鱼巣/核心/执行器.结构写入.ixx",
+          "definition_line": 60,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        }
+      ],
+      "inputs": [
+        "结构事务接线",
+        "参与者组",
+        "事务许可与执行请求"
+      ],
+      "preconditions": [
+        "参与者组和接线完整",
+        "许可顺序及线程所有权满足协调合同"
+      ],
+      "outputs": [
+        "结构写入执行结果",
+        "许可取得或释放状态",
+        "撤销隔离状态"
+      ],
+      "state_reads": [
+        "参与者阶段、许可状态和首次失败"
+      ],
+      "state_writes": [
+        "参与者事务阶段",
+        "撤销结果与隔离状态"
+      ],
+      "side_effects": [
+        "协调多个结构参与者的原子准备、确认、发布或撤销"
+      ],
+      "transaction_contract": "最后发布前任一失败必须逆序撤销；撤销失败进入隔离，禁止伪成功。",
+      "logic_results": [
+        "事务成功发布",
+        "准备或确认失败并撤销",
+        "撤销失败隔离"
+      ],
+      "internal_error_boundaries": [
+        "参与者顺序、许可所有权或隔离后继续使用属于内部不一致"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/核心/协调.结构事务.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/核心/执行器.结构写入.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4040_子规范_不透明结构事务候选确认撤销与最后发布.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "这是底层结构事务协调能力，不等于任一领域业务事务已经接通。",
+      "known_gaps": [
+        "未运行跨参与者失败注入和撤销失败隔离专项",
+        "缺少现状图或逐行映射：R0099、R0100、R0101、R0114",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0028",
+      "name": "节点仓库未发布候选、读取与退役",
+      "domain": "节点仓库",
+      "purpose_summary": "创建节点未发布候选，并在令牌约束下确认、撤销、读取或删除节点。",
+      "implementation_status": "候选待复核",
+      "status_basis": "10个提供函数均在64a2d63e的main当前可达身份表中；2个已有现状图和逐行映射，8个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "F0332",
+          "complete_signature": "海中鱼巣::节点句柄 海中鱼巣::节点仓库::创建节点(海中鱼巣::节点类型 类型, 海中鱼巣::主信息句柄 主信息)",
+          "file": "海中鱼巣/核心/节点仓库.cpp",
+          "definition_line": 53,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0012_节点仓库创建节点_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0012_节点仓库创建节点_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0523",
+          "complete_signature": "bool 海中鱼巣::节点仓库::删除节点(海中鱼巣::节点句柄 节点)",
+          "file": "海中鱼巣/核心/节点仓库.cpp",
+          "definition_line": 331,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0213_节点仓库删除节点无令牌重载_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0213_节点仓库删除节点无令牌重载_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0141",
+          "complete_signature": "核心未发布候选操作状态 海中鱼巣::节点仓库::确认未发布候选( 节点未发布候选& 候选, const 结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/节点仓库.cpp",
+          "definition_line": 125,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0142",
+          "complete_signature": "结构写入结果 海中鱼巣::节点仓库::结构化确认未发布候选( 节点未发布候选& 候选, const 结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/节点仓库.cpp",
+          "definition_line": 146,
+          "shortest_depth": 10,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0143",
+          "complete_signature": "海中鱼巣::核心未发布候选操作状态 海中鱼巣::节点仓库::撤销未发布候选(海中鱼巣::节点未发布候选& 候选, const 海中鱼巣::结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/节点仓库.cpp",
+          "definition_line": 176,
+          "shortest_depth": 6,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0144",
+          "complete_signature": "海中鱼巣::结构写入结果 海中鱼巣::节点仓库::结构化撤销未发布候选(海中鱼巣::节点未发布候选& 候选, const 海中鱼巣::结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/节点仓库.cpp",
+          "definition_line": 204,
+          "shortest_depth": 10,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0147",
+          "complete_signature": "bool 海中鱼巣::节点仓库::删除节点(节点句柄 节点, const 结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/节点仓库.cpp",
+          "definition_line": 350,
+          "shortest_depth": 5,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0148",
+          "complete_signature": "海中鱼巣::节点句柄 海中鱼巣::节点未发布候选::读取节点() const",
+          "file": "海中鱼巣/核心/节点仓库.h",
+          "definition_line": 38,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0745",
+          "complete_signature": "海中鱼巣::带值结构写入结果<海中鱼巣::节点未发布候选> 海中鱼巣::节点仓库::结构化创建节点未发布候选(海中鱼巣::节点类型 类型, 海中鱼巣::主信息句柄 主信息, const 海中鱼巣::结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/节点仓库.cpp",
+          "definition_line": 83,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0746",
+          "complete_signature": "std::optional<海中鱼巣::节点未发布候选> 海中鱼巣::节点仓库::创建节点未发布候选(海中鱼巣::节点类型 类型, 海中鱼巣::主信息句柄 主信息, const 海中鱼巣::结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/节点仓库.cpp",
+          "definition_line": 109,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        }
+      ],
+      "inputs": [
+        "节点类型",
+        "主信息句柄",
+        "节点候选或稳定句柄",
+        "结构事务令牌"
+      ],
+      "preconditions": [
+        "主信息和节点身份属于当前仓库代次",
+        "写操作具有匹配许可"
+      ],
+      "outputs": [
+        "节点未发布候选",
+        "节点记录",
+        "结构写入或删除结果"
+      ],
+      "state_reads": [
+        "节点记录、候选状态、令牌和仓库代次"
+      ],
+      "state_writes": [
+        "节点候选、确认/撤销状态和退役标记"
+      ],
+      "side_effects": [
+        "创建、确认、撤销或删除节点记录"
+      ],
+      "transaction_contract": "节点身份变化必须进入不透明结构事务并与主信息、索引和关系参与者协调。",
+      "logic_results": [
+        "候选创建、确认、撤销、读取或删除成功",
+        "身份无效或许可拒绝"
+      ],
+      "internal_error_boundaries": [
+        "已验证前置下节点和主信息代次错配属于内部错误"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/核心/节点仓库.cpp",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/核心/节点仓库.h",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4010_子规范_统一仓库稳定句柄与通用关系索引边界.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4040_子规范_不透明结构事务候选确认撤销与最后发布.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "只登记节点直接身份底座；不替代领域类型和领域记录合同。",
+      "known_gaps": [
+        "R0745、R0746缺现状图；未运行候选退役专项",
+        "缺少现状图或逐行映射：R0141、R0142、R0143、R0144、R0147、R0148、R0745、R0746",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0029",
+      "name": "索引仓库主键绑定、读取与严格删除",
+      "domain": "索引仓库",
+      "purpose_summary": "在结构事务内绑定物理主键，读取绑定记录和节点主键组，并删除或严格删除绑定。",
+      "implementation_status": "候选待复核",
+      "status_basis": "5个提供函数均在64a2d63e的main当前可达身份表中；0个已有现状图和逐行映射，5个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "R0119",
+          "complete_signature": "结构写入结果 海中鱼巣::索引仓库::结构化绑定主键( const 索引绑定请求& 请求, const 结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/索引仓库.cpp",
+          "definition_line": 127,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0123",
+          "complete_signature": "bool 海中鱼巣::索引仓库::删除主键(std::uint64_t 主键, const 结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/索引仓库.cpp",
+          "definition_line": 298,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0124",
+          "complete_signature": "std::optional<主键绑定记录> 海中鱼巣::索引仓库::读取主键绑定记录( std::uint64_t 主键, const 结构事务令牌& 令牌) const",
+          "file": "海中鱼巣/核心/索引仓库.cpp",
+          "definition_line": 304,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0125",
+          "complete_signature": "结构写入结果 海中鱼巣::索引仓库::严格删除主键( std::uint64_t 主键, 节点句柄 预期节点, const 结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/索引仓库.cpp",
+          "definition_line": 357,
+          "shortest_depth": 10,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0723",
+          "complete_signature": "std::vector<std::uint64_t> 海中鱼巣::索引仓库::读取节点主键组(海中鱼巣::节点句柄 节点, const 海中鱼巣::结构事务令牌& 令牌) const",
+          "file": "海中鱼巣/核心/索引仓库.cpp",
+          "definition_line": 214,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        }
+      ],
+      "inputs": [
+        "物理主键",
+        "节点句柄",
+        "结构事务令牌"
+      ],
+      "preconditions": [
+        "主键和值域合法",
+        "节点当前有效且许可匹配"
+      ],
+      "outputs": [
+        "绑定结果",
+        "主键绑定记录",
+        "节点主键组",
+        "删除结果"
+      ],
+      "state_reads": [
+        "主键到节点的当前绑定和反向主键组"
+      ],
+      "state_writes": [
+        "主键绑定或删除记录"
+      ],
+      "side_effects": [
+        "改变索引仓库绑定状态"
+      ],
+      "transaction_contract": "绑定和删除必须与节点及其它结构参与者同事务确认和撤销。",
+      "logic_results": [
+        "绑定、读取或删除成功",
+        "冲突、无绑定或许可拒绝"
+      ],
+      "internal_error_boundaries": [
+        "唯一绑定或反向索引在前置成立后不一致属于内部错误"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/核心/索引仓库.cpp",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4010_子规范_统一仓库稳定句柄与通用关系索引边界.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4040_子规范_不透明结构事务候选确认撤销与最后发布.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "物理主键索引不自动等价于领域幂等主键或业务身份。",
+      "known_gaps": [
+        "未运行绑定冲突、严格删除和反向索引专项",
+        "缺少现状图或逐行映射：R0119、R0123、R0124、R0125、R0723",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0030",
+      "name": "关系仓库结构化创建、重挂、审计与删除",
+      "domain": "关系仓库",
+      "purpose_summary": "创建和结构化创建关系，挂载或重挂节点，确认或撤销关系变更，读取审计与正反向记录并删除关系。",
+      "implementation_status": "候选待复核",
+      "status_basis": "21个提供函数均在64a2d63e的main当前可达身份表中；2个已有现状图和逐行映射，19个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "F0167",
+          "complete_signature": "海中鱼巣::关系句柄 海中鱼巣::关系仓库::创建关系(海中鱼巣::关系类型 类型, 海中鱼巣::节点句柄 源节点, 海中鱼巣::节点句柄 目标节点, std::int64_t 顺序号)",
+          "file": "海中鱼巣/核心/关系仓库.cpp",
+          "definition_line": 184,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0047_创建关系_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0047_创建关系_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0440",
+          "complete_signature": "std::optional<海中鱼巣::关系记录> 海中鱼巣::关系仓库::读取关系(海中鱼巣::关系句柄 关系, const 海中鱼巣::结构事务令牌& 令牌) const",
+          "file": "海中鱼巣/核心/关系仓库.cpp",
+          "definition_line": 1430,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0263_关系仓库读取关系令牌重载_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0263_关系仓库读取关系令牌重载_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0065",
+          "complete_signature": "关系句柄 海中鱼巣::关系仓库::创建关系(关系类型 类型, 节点句柄 源节点, 节点句柄 目标节点, std::int64_t 顺序号, const 结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/关系仓库.cpp",
+          "definition_line": 1031,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0066",
+          "complete_signature": "带值结构写入结果<关系句柄> 海中鱼巣::关系仓库::结构化创建关系( 关系类型 类型, 节点句柄 源节点, 节点句柄 目标节点, std::int64_t 顺序号, const 结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/关系仓库.cpp",
+          "definition_line": 1035,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0068",
+          "complete_signature": "结构化节点挂载结果 海中鱼巣::关系仓库::结构化挂载或重挂节点( 节点句柄 节点, 节点句柄 新父节点, const 结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/关系仓库.cpp",
+          "definition_line": 1215,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0071",
+          "complete_signature": "结构写入结果 海中鱼巣::关系仓库::结构化确认已发布关系变更( 已发布关系变更能力& 能力, const 结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/关系仓库.cpp",
+          "definition_line": 1365,
+          "shortest_depth": 10,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0072",
+          "complete_signature": "结构写入结果 海中鱼巣::关系仓库::结构化撤销已发布关系变更( 已发布关系变更能力& 能力, const 结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/关系仓库.cpp",
+          "definition_line": 1394,
+          "shortest_depth": 10,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0073",
+          "complete_signature": "std::optional<海中鱼巣::关系记录> 海中鱼巣::关系仓库::读取关系审计(海中鱼巣::关系句柄 当前关系, const 海中鱼巣::结构事务令牌& 令牌) const",
+          "file": "海中鱼巣/核心/关系仓库.cpp",
+          "definition_line": 1434,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0074",
+          "complete_signature": "std::vector<关系记录> 海中鱼巣::关系仓库::获取关系审计记录组(节点句柄 源节点, 关系类型 类型, const 结构事务令牌& 令牌) const",
+          "file": "海中鱼巣/核心/关系仓库.cpp",
+          "definition_line": 1438,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0075",
+          "complete_signature": "bool 海中鱼巣::关系仓库::删除关系(关系句柄 关系, const 结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/关系仓库.cpp",
+          "definition_line": 1446,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0076",
+          "complete_signature": "结构写入结果 海中鱼巣::关系仓库::严格删除关系( 关系句柄 关系, const 结构事务令牌& 令牌)",
+          "file": "海中鱼巣/核心/关系仓库.cpp",
+          "definition_line": 1450,
+          "shortest_depth": 10,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0077",
+          "complete_signature": "std::vector<节点句柄> 海中鱼巣::关系仓库::获取目标节点组(节点句柄 源节点, 关系类型 类型, std::int64_t 顺序号, const 结构事务令牌& 令牌) const",
+          "file": "海中鱼巣/核心/关系仓库.cpp",
+          "definition_line": 1542,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0078",
+          "complete_signature": "std::vector<关系记录> 海中鱼巣::关系仓库::获取关系记录组(节点句柄 源节点, 关系类型 类型, const 结构事务令牌& 令牌) const",
+          "file": "海中鱼巣/核心/关系仓库.cpp",
+          "definition_line": 1546,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0079",
+          "complete_signature": "std::vector<关系记录> 海中鱼巣::关系仓库::获取来源关系记录组(节点句柄 目标节点, 关系类型 类型, const 结构事务令牌& 令牌) const",
+          "file": "海中鱼巣/核心/关系仓库.cpp",
+          "definition_line": 1558,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0081",
+          "complete_signature": "bool 海中鱼巣::关系仓库::存在关系(关系类型 类型, 节点句柄 源节点, 节点句柄 目标节点, const 结构事务令牌& 令牌) const",
+          "file": "海中鱼巣/核心/关系仓库.cpp",
+          "definition_line": 1639,
+          "shortest_depth": 9,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0082",
+          "complete_signature": "bool 海中鱼巣::关系仓库::存在目标关系(关系类型 类型, 节点句柄 目标节点, const 结构事务令牌& 令牌) const",
+          "file": "海中鱼巣/核心/关系仓库.cpp",
+          "definition_line": 1643,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0083",
+          "complete_signature": "std::uint64_t 海中鱼巣::关系仓库::有效关系数量(const 结构事务令牌& 令牌) const",
+          "file": "海中鱼巣/核心/关系仓库.cpp",
+          "definition_line": 1647,
+          "shortest_depth": 5,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0093",
+          "complete_signature": "海中鱼巣::已发布关系变更能力::已发布关系变更能力(海中鱼巣::已发布关系变更能力&& 其它) noexcept",
+          "file": "海中鱼巣/核心/关系仓库.h",
+          "definition_line": 42,
+          "shortest_depth": 13,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0094",
+          "complete_signature": "关系记录 海中鱼巣::已发布关系变更能力::读取写前记录() const",
+          "file": "海中鱼巣/核心/关系仓库.h",
+          "definition_line": 57,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0095",
+          "complete_signature": "关系记录 海中鱼巣::已发布关系变更能力::读取写后记录() const",
+          "file": "海中鱼巣/核心/关系仓库.h",
+          "definition_line": 58,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0096",
+          "complete_signature": "海中鱼巣::已发布关系变更能力::已发布关系变更能力(std::uint64_t 仓库编号, 海中鱼巣::结构事务令牌 令牌, 海中鱼巣::关系记录 写前记录, 海中鱼巣::关系记录 写后记录, 海中鱼巣::已发布关系变更种类 种类) noexcept",
+          "file": "海中鱼巣/核心/关系仓库.h",
+          "definition_line": 65,
+          "shortest_depth": 13,
+          "chart": null,
+          "mapping": null
+        }
+      ],
+      "inputs": [
+        "关系类型",
+        "源节点、目标节点和顺序号",
+        "关系句柄或节点",
+        "结构事务令牌"
+      ],
+      "preconditions": [
+        "端点节点和关系类型有效",
+        "写操作拥有匹配许可且关系阶段允许变更"
+      ],
+      "outputs": [
+        "关系句柄或结构写入结果",
+        "审计记录",
+        "正反向关系记录组",
+        "删除结果"
+      ],
+      "state_reads": [
+        "关系记录、审计、目标与来源索引、发布前后记录"
+      ],
+      "state_writes": [
+        "关系记录、父子挂载、关系审计和失效/删除状态"
+      ],
+      "side_effects": [
+        "创建、重挂、确认、撤销、失效或删除关系"
+      ],
+      "transaction_contract": "关系变更能力必须记录写前写后材料并参与最后发布和可逆撤销。",
+      "logic_results": [
+        "关系创建或变更成功",
+        "已存在、无变化、未找到或许可拒绝",
+        "审计材料返回"
+      ],
+      "internal_error_boundaries": [
+        "父链、正反向索引或审计阶段不一致属于内部错误"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/核心/关系仓库.cpp",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/核心/关系仓库.h",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4010_子规范_统一仓库稳定句柄与通用关系索引边界.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4040_子规范_不透明结构事务候选确认撤销与最后发布.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "关系仓库只承载结构关系；领域关系语义仍由正式领域规范和服务裁决。",
+      "known_gaps": [
+        "部分入口缺单函数图；未运行可逆换代和父链专项",
+        "缺少现状图或逐行映射：R0065、R0066、R0068、R0071、R0072、R0073、R0074、R0075、R0076、R0077、R0078、R0079、R0081、R0082、R0083、R0093、R0094、R0095、R0096",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0031",
+      "name": "系统角色拓扑初始化、复核与清单读取",
+      "domain": "系统角色",
+      "purpose_summary": "初始化并复核系统角色、根需求组和世界拓扑，形成并读取当前系统角色清单。",
+      "implementation_status": "候选待复核",
+      "status_basis": "12个提供函数均在64a2d63e的main当前可达身份表中；4个已有现状图和逐行映射，8个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "F0242",
+          "complete_signature": "海中鱼巣::系统角色初始化结果 海中鱼巣::运行期业务装配::复核系统角色(const 海中鱼巣::系统角色清单& 清单) const",
+          "file": "海中鱼巣/装配.运行期业务.ixx",
+          "definition_line": 152,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0118_运行期业务装配复核系统角色_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0118_运行期业务装配复核系统角色_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0243",
+          "complete_signature": "海中鱼巣::系统角色初始化结果 海中鱼巣::运行期业务装配::初始化系统角色(const 海中鱼巣::系统角色初始化参数& 参数)",
+          "file": "海中鱼巣/装配.运行期业务.ixx",
+          "definition_line": 148,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0119_运行期业务装配初始化系统角色_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0119_运行期业务装配初始化系统角色_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0454",
+          "complete_signature": "海中鱼巣::系统角色初始化结果 海中鱼巣::系统角色初始化器::复核(const 海中鱼巣::系统角色清单& 清单) const",
+          "file": "海中鱼巣/领域/初始化.系统角色.ixx",
+          "definition_line": 175,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0290_系统角色初始化器复核_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0290_系统角色初始化器复核_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0455",
+          "complete_signature": "海中鱼巣::系统角色初始化结果 海中鱼巣::系统角色初始化器::初始化(const 海中鱼巣::系统角色初始化参数& 参数)",
+          "file": "海中鱼巣/领域/初始化.系统角色.ixx",
+          "definition_line": 66,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0291_系统角色初始化器初始化_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0291_系统角色初始化器初始化_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0229",
+          "complete_signature": "根需求创建结果 海中鱼巣::系统角色初始化器::创建根需求组( std::uint64_t 特征定义主键, std::uint64_t 实例槽位主键, std::uint64_t 当前特征值主键, std::uint64_t 目标状态主键, std::uint64_t 根需求主键, 节点句柄 自我存在, 节点句柄 自我场景, std::int64_t 当前值, std::int64_t 目标值) const",
+          "file": "海中鱼巣/领域/初始化.系统角色.ixx",
+          "definition_line": 209,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0237",
+          "complete_signature": "bool 海中鱼巣::系统角色初始化器::复核根需求组( const 系统角色初始化参数& 参数, const 系统角色主体材料& 主体, bool 安全组) const",
+          "file": "海中鱼巣/领域/初始化.系统角色.ixx",
+          "definition_line": 479,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0238",
+          "complete_signature": "bool 海中鱼巣::系统角色初始化器::复核抽象状态( const 系统角色身份材料& 身份, std::int64_t 预期值) const",
+          "file": "海中鱼巣/领域/初始化.系统角色.ixx",
+          "definition_line": 514,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0239",
+          "complete_signature": "static 系统角色初始化参数 海中鱼巣::系统角色初始化器::从清单形成参数(const 系统角色清单& 清单) noexcept",
+          "file": "海中鱼巣/领域/初始化.系统角色.ixx",
+          "definition_line": 522,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0409",
+          "complete_signature": "系统角色初始化结果 海中鱼巣::系统角色数据操作::发布世界拓扑( const 系统角色主体材料& 主体) const",
+          "file": "海中鱼巣/领域/数据操作.系统角色.ixx",
+          "definition_line": 124,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0421",
+          "complete_signature": "系统角色初始化结果 海中鱼巣::系统角色数据操作::读取当前清单(const 系统角色主体材料& 主体) const",
+          "file": "海中鱼巣/领域/数据操作.系统角色.ixx",
+          "definition_line": 374,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0422",
+          "complete_signature": "系统角色预检结果 海中鱼巣::系统角色数据操作::预检稳定键(const 系统角色初始化参数& 参数) const",
+          "file": "海中鱼巣/领域/数据操作.系统角色.ixx",
+          "definition_line": 42,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0616",
+          "complete_signature": "海中鱼巣::系统角色初始化结果 海中鱼巣::系统角色数据操作::复核系统角色(const 海中鱼巣::系统角色清单& 清单) const",
+          "file": "海中鱼巣/领域/数据操作.系统角色.ixx",
+          "definition_line": 181,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        }
+      ],
+      "inputs": [
+        "系统角色初始化参数",
+        "稳定键和预期角色材料"
+      ],
+      "preconditions": [
+        "结构核心和所需领域服务已经装配",
+        "稳定键及角色类型满足正式规范"
+      ],
+      "outputs": [
+        "系统角色清单",
+        "复核或初始化结果"
+      ],
+      "state_reads": [
+        "当前系统角色身份、关系和抽象状态"
+      ],
+      "state_writes": [
+        "系统角色节点、稳定键、父子关系和根需求组"
+      ],
+      "side_effects": [
+        "可能创建或补齐系统角色拓扑"
+      ],
+      "transaction_contract": "初始化写入应通过结构写入会话原子发布；复核只读。",
+      "logic_results": [
+        "已有结构复核通过",
+        "全新初始化成功",
+        "材料冲突或结构不一致"
+      ],
+      "internal_error_boundaries": [
+        "稳定键唯一性或角色语义在前置成立后冲突属于内部错误"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/装配.运行期业务.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/初始化.系统角色.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/数据操作.系统角色.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/3100_根规范_需求_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4010_子规范_统一仓库稳定句柄与通用关系索引边界.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "只证明现有系统角色初始化实现入口，不证明完整自我循环或成熟阶段。",
+      "known_gaps": [
+        "缺少同基线全新与既有结构双路径运行验证",
+        "缺少现状图或逐行映射：R0229、R0237、R0238、R0239、R0409、R0421、R0422、R0616",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0032",
+      "name": "概念活动复核、初始化与活动视图重建",
+      "domain": "概念活动",
+      "purpose_summary": "复核或初始化概念活动根结构，并从当前结构重建活动概念视图和根身份组。",
+      "implementation_status": "候选待复核",
+      "status_basis": "7个提供函数均在64a2d63e的main当前可达身份表中；4个已有现状图和逐行映射，3个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "F0248",
+          "complete_signature": "海中鱼巣::概念活动初始化结果 海中鱼巣::运行期业务装配::复核概念活动(const 海中鱼巣::系统角色清单& 系统角色, const 海中鱼巣::概念活动材料& 材料) const",
+          "file": "海中鱼巣/装配.运行期业务.ixx",
+          "definition_line": 163,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0124_运行期业务装配复核概念活动_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0124_运行期业务装配复核概念活动_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0249",
+          "complete_signature": "海中鱼巣::概念活动初始化结果 海中鱼巣::运行期业务装配::初始化概念活动(const 海中鱼巣::系统角色清单& 系统角色, const 海中鱼巣::概念活动初始化参数& 参数)",
+          "file": "海中鱼巣/装配.运行期业务.ixx",
+          "definition_line": 156,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0125_运行期业务装配初始化概念活动_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0125_运行期业务装配初始化概念活动_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0461",
+          "complete_signature": "海中鱼巣::概念活动初始化结果 海中鱼巣::概念活动业务服务::复核(const 海中鱼巣::系统角色清单& 系统角色, const 海中鱼巣::概念活动材料& 预期材料) const",
+          "file": "海中鱼巣/领域/服务.概念活动.ixx",
+          "definition_line": 67,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0295_概念活动业务服务复核_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0295_概念活动业务服务复核_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0462",
+          "complete_signature": "海中鱼巣::概念活动初始化结果 海中鱼巣::概念活动业务服务::初始化(const 海中鱼巣::系统角色清单& 系统角色, const 海中鱼巣::概念活动初始化参数& 参数)",
+          "file": "海中鱼巣/领域/服务.概念活动.ixx",
+          "definition_line": 28,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0296_概念活动业务服务初始化_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0296_概念活动业务服务初始化_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0331",
+          "complete_signature": "概念活动重建结果 海中鱼巣::概念活动数据操作::重建活动视图( const 系统角色清单& 系统角色, const 概念活动初始化参数& 参数, const std::array<概念签名材料, 4>& 签名组) const",
+          "file": "海中鱼巣/领域/数据操作.概念活动.ixx",
+          "definition_line": 131,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0332",
+          "complete_signature": "static std::array<const 系统角色身份材料*, 4> 海中鱼巣::概念活动数据操作::读取根身份组( const 系统角色清单& 系统角色) noexcept",
+          "file": "海中鱼巣/领域/数据操作.概念活动.ixx",
+          "definition_line": 187,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0340",
+          "complete_signature": "概念活动初始化结果 海中鱼巣::概念活动数据操作::初始化全新活动( const 系统角色清单& 系统角色, const 概念活动初始化参数& 参数, const 抽象状态写入规格& 活跃规格, const 抽象状态写入规格& 冷却规格, const 抽象状态写入规格& 退役规格, const std::array<概念签名材料, 4>& 签名组) const",
+          "file": "海中鱼巣/领域/数据操作.概念活动.ixx",
+          "definition_line": 42,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        }
+      ],
+      "inputs": [
+        "系统角色清单",
+        "概念活动初始化参数或预期材料"
+      ],
+      "preconditions": [
+        "概念根、生命周期状态和系统角色材料可读"
+      ],
+      "outputs": [
+        "概念活动初始化结果",
+        "活动视图和根身份组"
+      ],
+      "state_reads": [
+        "概念根、生命周期、关系和活动签名"
+      ],
+      "state_writes": [
+        "全新概念活动根和关系"
+      ],
+      "side_effects": [
+        "初始化路径可能创建概念活动结构；重建路径只读"
+      ],
+      "transaction_contract": "全新活动初始化必须通过结构写入会话发布；视图重建不得写权威结构。",
+      "logic_results": [
+        "复核通过",
+        "初始化成功",
+        "结构缺失或签名冲突"
+      ],
+      "internal_error_boundaries": [
+        "规范根签名或生命周期在正式前置下不一致属于内部错误"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/装配.运行期业务.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/服务.概念活动.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/数据操作.概念活动.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/7140_子规范_概念身份生命周期退役删除与活动投影分账.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "活动视图是当前结构投影，不证明概念自动生长或业务闭环完成。",
+      "known_gaps": [
+        "未运行活动视图重建和全新初始化专项",
+        "缺少现状图或逐行映射：R0331、R0332、R0340",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0033",
+      "name": "世界树、语素显示与根需求初始化",
+      "domain": "基础初始化",
+      "purpose_summary": "初始化世界树零点、节点类型名称与语素显示项，并初始化单个根需求。",
+      "implementation_status": "候选待复核",
+      "status_basis": "5个提供函数均在64a2d63e的main当前可达身份表中；0个已有现状图和逐行映射，5个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "R0223",
+          "complete_signature": "bool 海中鱼巣::世界树初始化服务::写入自我相对坐标零点(节点句柄 自我存在节点)",
+          "file": "海中鱼巣/领域/初始化.世界树.ixx",
+          "definition_line": 111,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0240",
+          "complete_signature": "const 语素初始化显示项& 海中鱼巣::语素初始化结果::读取节点类型名称(节点类型 类型) const",
+          "file": "海中鱼巣/领域/初始化.语素.ixx",
+          "definition_line": 102,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0241",
+          "complete_signature": "语素初始化显示项 海中鱼巣::语素初始化服务::创建显示项(std::wstring_view 文本)",
+          "file": "海中鱼巣/领域/初始化.语素.ixx",
+          "definition_line": 172,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0248",
+          "complete_signature": "const 语素初始化显示项& 海中鱼巣::语素初始化结果::读取世界树名称(世界树名称语素角色 角色) const",
+          "file": "海中鱼巣/领域/初始化.语素.ixx",
+          "definition_line": 88,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0249",
+          "complete_signature": "单根需求初始化结果 海中鱼巣::需求初始化服务::初始化单根需求( std::wstring_view 概念文本, std::uint64_t 语素稳定键, std::int64_t 当前值, std::int64_t 目标值, 节点句柄 自我存在, 节点句柄 自我场景)",
+          "file": "海中鱼巣/领域/初始化.需求.ixx",
+          "definition_line": 115,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        }
+      ],
+      "inputs": [
+        "世界树、语素和根需求初始化材料"
+      ],
+      "preconditions": [
+        "所需系统角色、节点类型和语素服务已装配"
+      ],
+      "outputs": [
+        "初始化结果",
+        "节点类型名称和世界树名称材料"
+      ],
+      "state_reads": [
+        "世界树根、节点类型、语素关系和系统角色"
+      ],
+      "state_writes": [
+        "相对坐标零点、显示项、语素关系和根需求"
+      ],
+      "side_effects": [
+        "可能创建基础世界、语素和需求结构"
+      ],
+      "transaction_contract": "初始化写入应在结构会话内原子确认、撤销和发布。",
+      "logic_results": [
+        "已有结构匹配",
+        "初始化成功",
+        "材料冲突或读取失败"
+      ],
+      "internal_error_boundaries": [
+        "已存在结构与正式身份冲突属于内部错误"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/初始化.世界树.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/初始化.语素.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/初始化.需求.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/1140_根规范_存在节点_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/1150_根规范_场景节点_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/2210_根规范_语素入口_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/3100_根规范_需求_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "只登记基础初始化入口，不证明世界认知、语言理解或需求循环完成。",
+      "known_gaps": [
+        "初始化函数组的运行回滚验证不足",
+        "缺少现状图或逐行映射：R0223、R0240、R0241、R0248、R0249",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0034",
+      "name": "存在与场景创建、归属和接纳",
+      "domain": "存在与场景",
+      "purpose_summary": "创建存在概念根、基础信息、场景与实际存在，读取存在或场景归属，并把存在接纳到场景。",
+      "implementation_status": "候选待复核",
+      "status_basis": "16个提供函数均在64a2d63e的main当前可达身份表中；2个已有现状图和逐行映射，14个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "F0365",
+          "complete_signature": "海中鱼巣::节点句柄 海中鱼巣::存在服务::创建存在概念根()",
+          "file": "海中鱼巣/领域/存在服务.h",
+          "definition_line": 103,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0044_存在服务创建存在概念根_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0044_存在服务创建存在概念根_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0516",
+          "complete_signature": "海中鱼巣::节点句柄 海中鱼巣::存在服务::创建实际存在()",
+          "file": "海中鱼巣/领域/存在服务.h",
+          "definition_line": 93,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0212_存在服务创建实际存在_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0212_存在服务创建实际存在_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0203",
+          "complete_signature": "节点句柄 海中鱼巣::世界服务::创建存在()",
+          "file": "海中鱼巣/领域/世界服务.h",
+          "definition_line": 50,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0275",
+          "complete_signature": "bool 海中鱼巣::场景服务::场景是否有效(节点句柄 场景) const",
+          "file": "海中鱼巣/领域/场景服务.h",
+          "definition_line": 52,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0277",
+          "complete_signature": "bool 海中鱼巣::存在服务::存在是否有效(节点句柄 存在节点) const",
+          "file": "海中鱼巣/领域/存在服务.h",
+          "definition_line": 139,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0609",
+          "complete_signature": "std::optional<海中鱼巣::节点记录> 海中鱼巣::存在服务::读取存在(海中鱼巣::节点句柄 存在节点) const",
+          "file": "海中鱼巣/领域/存在服务.h",
+          "definition_line": 131,
+          "shortest_depth": 6,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0621",
+          "complete_signature": "海中鱼巣::存在场景业务结果 海中鱼巣::场景业务服务::创建场景(const 海中鱼巣::创建场景请求& 请求) const",
+          "file": "海中鱼巣/领域/服务.场景.ixx",
+          "definition_line": 28,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0643",
+          "complete_signature": "海中鱼巣::存在场景业务结果 海中鱼巣::存在场景组合器::在已有场景中创建并接纳实际存在(const 海中鱼巣::已有场景创建并接纳实际存在请求& 请求) const",
+          "file": "海中鱼巣/领域/组合.存在场景.ixx",
+          "definition_line": 24,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0646",
+          "complete_signature": "海中鱼巣::存在场景业务结果 海中鱼巣::存在业务服务::创建实际存在(const 海中鱼巣::创建实际存在请求& 请求) const",
+          "file": "海中鱼巣/领域/服务.存在.ixx",
+          "definition_line": 52,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0648",
+          "complete_signature": "海中鱼巣::节点身份材料 海中鱼巣::存在场景数据操作::读取节点身份(海中鱼巣::节点句柄 节点) const",
+          "file": "海中鱼巣/领域/数据操作.存在场景.ixx",
+          "definition_line": 176,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0649",
+          "complete_signature": "海中鱼巣::场景归属材料 海中鱼巣::存在场景数据操作::读取场景归属(海中鱼巣::节点句柄 场景, 海中鱼巣::节点句柄 存在) const",
+          "file": "海中鱼巣/领域/数据操作.存在场景.ixx",
+          "definition_line": 183,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0733",
+          "complete_signature": "海中鱼巣::节点句柄 海中鱼巣::世界服务::创建基础信息()",
+          "file": "海中鱼巣/领域/世界服务.h",
+          "definition_line": 39,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0734",
+          "complete_signature": "海中鱼巣::节点句柄 海中鱼巣::世界服务::创建场景()",
+          "file": "海中鱼巣/领域/世界服务.h",
+          "definition_line": 54,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0736",
+          "complete_signature": "海中鱼巣::关系句柄 海中鱼巣::世界服务::接纳存在(海中鱼巣::节点句柄 场景, 海中鱼巣::节点句柄 存在)",
+          "file": "海中鱼巣/领域/世界服务.h",
+          "definition_line": 73,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0737",
+          "complete_signature": "海中鱼巣::节点句柄 海中鱼巣::场景服务::创建场景()",
+          "file": "海中鱼巣/领域/场景服务.h",
+          "definition_line": 16,
+          "shortest_depth": 9,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0738",
+          "complete_signature": "海中鱼巣::关系句柄 海中鱼巣::场景服务::接纳存在(海中鱼巣::节点句柄 场景, 海中鱼巣::节点句柄 存在)",
+          "file": "海中鱼巣/领域/场景服务.h",
+          "definition_line": 27,
+          "shortest_depth": 9,
+          "chart": null,
+          "mapping": null
+        }
+      ],
+      "inputs": [
+        "存在、场景和基础信息创建请求",
+        "场景与存在句柄"
+      ],
+      "preconditions": [
+        "节点类型和身份有效",
+        "归属关系及幂等主键满足请求合同"
+      ],
+      "outputs": [
+        "存在或场景句柄",
+        "归属材料",
+        "接纳关系句柄或业务结果"
+      ],
+      "state_reads": [
+        "存在身份、场景身份和当前归属关系"
+      ],
+      "state_writes": [
+        "存在、场景、基础信息节点及归属关系"
+      ],
+      "side_effects": [
+        "创建存在或场景并建立场景归属"
+      ],
+      "transaction_contract": "多节点与关系创建应在结构写入会话内原子发布。",
+      "logic_results": [
+        "创建成功",
+        "已有幂等结果",
+        "无效请求、冲突或读取失败"
+      ],
+      "internal_error_boundaries": [
+        "存在、场景与归属结构在已验证前置下不一致属于内部错误"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/存在服务.h",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/世界服务.h",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/场景服务.h",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/服务.场景.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/组合.存在场景.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/服务.存在.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/数据操作.存在场景.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/1140_根规范_存在节点_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/1150_根规范_场景节点_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/7100_子规范_存在概念与实例创建最小闭环_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "不证明观察、体素、外设或自我场景认知已经接入。",
+      "known_gaps": [
+        "R0733—R0738缺现状图；未运行创建与接纳专项",
+        "缺少现状图或逐行映射：R0203、R0275、R0277、R0609、R0621、R0643、R0646、R0648、R0649、R0733、R0734、R0736、R0737、R0738",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0035",
+      "name": "特征定义、特征值、槽位与二次特征",
+      "domain": "特征体系",
+      "purpose_summary": "创建和读取特征定义，写入I64特征值，创建并发布槽位初始状态，以及创建和读取组合二次特征。",
+      "implementation_status": "候选待复核",
+      "status_basis": "13个提供函数均在64a2d63e的main当前可达身份表中；1个已有现状图和逐行映射，12个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "F0367",
+          "complete_signature": "海中鱼巣::节点句柄 海中鱼巣::二次特征服务::创建关系概念根()",
+          "file": "海中鱼巣/领域/二次特征服务.h",
+          "definition_line": 49,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0046_二次特征服务创建关系概念根_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0046_二次特征服务创建关系概念根_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0204",
+          "complete_signature": "std::vector<节点句柄> 海中鱼巣::二次特征服务::读取组成项(节点句柄 二次特征) const",
+          "file": "海中鱼巣/领域/二次特征服务.h",
+          "definition_line": 106,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0206",
+          "complete_signature": "节点句柄 海中鱼巣::二次特征服务::创建二次特征()",
+          "file": "海中鱼巣/领域/二次特征服务.h",
+          "definition_line": 38,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0501",
+          "complete_signature": "海中鱼巣::特征体系业务结果 海中鱼巣::特征业务服务::创建特征定义(const 海中鱼巣::创建特征定义请求& 请求) const",
+          "file": "海中鱼巣/领域/服务.特征.ixx",
+          "definition_line": 111,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0504",
+          "complete_signature": "特征定义值式材料 海中鱼巣::特征业务服务::读取特征定义(节点句柄 特征定义) const",
+          "file": "海中鱼巣/领域/服务.特征.ixx",
+          "definition_line": 232,
+          "shortest_depth": 10,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0560",
+          "complete_signature": "节点句柄 海中鱼巣::特征服务::创建特征类型()",
+          "file": "海中鱼巣/领域/特征服务.h",
+          "definition_line": 216,
+          "shortest_depth": 9,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0562",
+          "complete_signature": "bool 海中鱼巣::特征服务::写入I64特征值(节点句柄 特征节点, 节点句柄 特征值节点, std::int64_t 值)",
+          "file": "海中鱼巣/领域/特征服务.h",
+          "definition_line": 356,
+          "shortest_depth": 9,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0566",
+          "complete_signature": "海中鱼巣::特征体系业务结果 海中鱼巣::特征状态组合器::创建槽位并发布初始状态(const 海中鱼巣::创建槽位并发布初始状态请求& 请求) const",
+          "file": "海中鱼巣/领域/组合.特征状态.ixx",
+          "definition_line": 29,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0697",
+          "complete_signature": "海中鱼巣::特征体系业务结果 海中鱼巣::二次特征业务服务::创建组合二次特征(const 海中鱼巣::创建组合二次特征请求& 请求) const",
+          "file": "海中鱼巣/领域/服务.二次特征.ixx",
+          "definition_line": 24,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0701",
+          "complete_signature": "海中鱼巣::特征体系业务结果 海中鱼巣::特征体系数据操作::创建组合二次特征(std::uint64_t 主键, const std::vector<海中鱼巣::节点句柄>& 有序组成项组) const",
+          "file": "海中鱼巣/领域/数据操作.特征体系.ixx",
+          "definition_line": 918,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0704",
+          "complete_signature": "海中鱼巣::二次特征值式材料 海中鱼巣::特征体系数据操作::读取主键二次特征(std::uint64_t 主键) const",
+          "file": "海中鱼巣/领域/数据操作.特征体系.ixx",
+          "definition_line": 651,
+          "shortest_depth": 9,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0730",
+          "complete_signature": "std::optional<std::int64_t> 海中鱼巣::特征值服务::读取I64值(海中鱼巣::节点句柄 特征值节点) const",
+          "file": "海中鱼巣/领域/特征值服务.h",
+          "definition_line": 268,
+          "shortest_depth": 6,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0731",
+          "complete_signature": "std::optional<海中鱼巣::节点记录> 海中鱼巣::特征值服务::读取有效特征值节点(海中鱼巣::节点句柄 特征值节点, const 海中鱼巣::结构事务令牌* 令牌 = nullptr) const",
+          "file": "海中鱼巣/领域/特征值服务.h",
+          "definition_line": 597,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        }
+      ],
+      "inputs": [
+        "特征定义、槽位、原始值和二次特征请求",
+        "宿主、定义和值节点句柄"
+      ],
+      "preconditions": [
+        "宿主类型、原始值类型和特征定义满足正式约束",
+        "幂等主键与结构许可有效"
+      ],
+      "outputs": [
+        "特征体系业务结果",
+        "特征定义或值式材料",
+        "I64值或有效值节点"
+      ],
+      "state_reads": [
+        "特征定义、宿主槽位、当前值、原始材料和组成项"
+      ],
+      "state_writes": [
+        "特征定义、实例槽位、初始值、批次发布记录和二次特征关系"
+      ],
+      "side_effects": [
+        "创建或更新特征体系结构"
+      ],
+      "transaction_contract": "槽位、初始值和发布记录必须在同一结构事务内一致发布。",
+      "logic_results": [
+        "创建或读取成功",
+        "幂等命中",
+        "规格拒绝、读取失败或结构冲突"
+      ],
+      "internal_error_boundaries": [
+        "定义、槽位、值和发布记录在正式前置下不一致属于内部错误"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/二次特征服务.h",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/服务.特征.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/特征服务.h",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/组合.特征状态.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/服务.二次特征.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/数据操作.特征体系.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/特征值服务.h",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/1120_根规范_抽象特征_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/1130_根规范_特征节点_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/1180_根规范_二次特征_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/2100_根规范_特征值_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4170_子规范_特征批次发布记录与幂等账.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "不得把当前特征接口直接解释成某个新业务的可复用特征合同。",
+      "known_gaps": [
+        "R0730、R0731缺现状图；未运行跨类型原始值和批次发布专项",
+        "缺少现状图或逐行映射：R0204、R0206、R0501、R0504、R0560、R0562、R0566、R0697、R0701、R0704、R0730、R0731",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0036",
+      "name": "抽象状态与动态创建和材料读取",
+      "domain": "状态与动态",
+      "purpose_summary": "创建抽象状态和抽象动态，形成状态写入规格，并读取状态值与动态材料。",
+      "implementation_status": "候选待复核",
+      "status_basis": "8个提供函数均在64a2d63e的main当前可达身份表中；3个已有现状图和逐行映射，5个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "F0165",
+          "complete_signature": "海中鱼巣::节点句柄 海中鱼巣::状态服务::创建抽象状态(std::int64_t 状态值)",
+          "file": "海中鱼巣/领域/状态服务.h",
+          "definition_line": 157,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0046_创建抽象状态_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0046_创建抽象状态_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0329",
+          "complete_signature": "std::optional<std::int64_t> 海中鱼巣::状态服务::读取状态值(海中鱼巣::节点句柄 状态节点) const",
+          "file": "海中鱼巣/领域/状态服务.h",
+          "definition_line": 185,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L6/CF-L6-0009_状态服务读取状态值_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0009_状态服务读取状态值_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0366",
+          "complete_signature": "海中鱼巣::节点句柄 海中鱼巣::动态服务::创建动态概念根()",
+          "file": "海中鱼巣/领域/动态服务.h",
+          "definition_line": 285,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0045_动态服务创建动态概念根_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0045_动态服务创建动态概念根_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0511",
+          "complete_signature": "抽象状态规格结果 海中鱼巣::状态业务服务::形成抽象状态写入规格(const 创建抽象状态请求& 请求) const",
+          "file": "海中鱼巣/领域/服务.状态.ixx",
+          "definition_line": 81,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0610",
+          "complete_signature": "bool 海中鱼巣::动态服务::动态是否实例动态(海中鱼巣::节点句柄 动态节点) const",
+          "file": "海中鱼巣/领域/动态服务.h",
+          "definition_line": 315,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0657",
+          "complete_signature": "海中鱼巣::状态动态业务结果 海中鱼巣::动态业务服务::创建抽象动态(const 海中鱼巣::创建抽象动态请求& 请求) const",
+          "file": "海中鱼巣/领域/服务.动态.ixx",
+          "definition_line": 34,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0661",
+          "complete_signature": "海中鱼巣::动态值式材料 海中鱼巣::动态业务服务::读取动态材料(海中鱼巣::节点句柄 动态节点) const",
+          "file": "海中鱼巣/领域/服务.动态.ixx",
+          "definition_line": 61,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0668",
+          "complete_signature": "海中鱼巣::状态动态业务结果 海中鱼巣::状态动态数据操作::创建抽象动态(std::uint64_t 主键, std::int64_t 动态材料) const",
+          "file": "海中鱼巣/领域/数据操作.状态动态.ixx",
+          "definition_line": 516,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        }
+      ],
+      "inputs": [
+        "状态或动态创建请求",
+        "状态、动态及动作入口句柄"
+      ],
+      "preconditions": [
+        "节点类型、来源动作和状态材料满足正式合同"
+      ],
+      "outputs": [
+        "状态节点或规格",
+        "动态业务结果",
+        "状态值和动态材料"
+      ],
+      "state_reads": [
+        "状态记录、动态记录、来源动作和主键信息"
+      ],
+      "state_writes": [
+        "抽象状态、抽象动态及其关系和类型化记录"
+      ],
+      "side_effects": [
+        "创建状态或动态结构"
+      ],
+      "transaction_contract": "状态与动态写入必须在结构事务内发布；读取不写机器事实。",
+      "logic_results": [
+        "创建或读取成功",
+        "规格拒绝、幂等命中或读取失败"
+      ],
+      "internal_error_boundaries": [
+        "状态、动态与来源动作在前置成立后不一致属于内部错误"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/状态服务.h",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/动态服务.h",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/服务.状态.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/服务.动态.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/数据操作.状态动态.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/1160_根规范_状态节点_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/1170_根规范_动态节点_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4210_子规范_动态信息分层获取与聚合_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "不证明状态转换因果、任务执行或自我循环已经闭合。",
+      "known_gaps": [
+        "缺少同基线状态动态创建、幂等与读取专项",
+        "缺少现状图或逐行映射：R0511、R0610、R0657、R0661、R0668",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0037",
+      "name": "轻量因果引用创建与读取",
+      "domain": "因果",
+      "purpose_summary": "创建因果概念根和轻量因果引用，读取主键因果材料并记录因果引用。",
+      "implementation_status": "候选待复核",
+      "status_basis": "5个提供函数均在64a2d63e的main当前可达身份表中；1个已有现状图和逐行映射，4个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "F0368",
+          "complete_signature": "海中鱼巣::节点句柄 海中鱼巣::因果服务::创建因果概念根()",
+          "file": "海中鱼巣/领域/因果服务.h",
+          "definition_line": 56,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0047_因果服务创建因果概念根_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0047_因果服务创建因果概念根_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0512",
+          "complete_signature": "轻量因果值式材料 海中鱼巣::轻量因果业务服务::读取主键轻量因果(std::uint64_t 主键) const",
+          "file": "海中鱼巣/领域/服务.轻量因果.ixx",
+          "definition_line": 50,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0611",
+          "complete_signature": "海中鱼巣::节点句柄 海中鱼巣::因果服务::记录因果引用()",
+          "file": "海中鱼巣/领域/因果服务.h",
+          "definition_line": 44,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0680",
+          "complete_signature": "海中鱼巣::轻量因果业务结果 海中鱼巣::轻量因果业务服务::创建轻量因果(const 海中鱼巣::创建轻量因果请求& 请求) const",
+          "file": "海中鱼巣/领域/服务.轻量因果.ixx",
+          "definition_line": 25,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0689",
+          "complete_signature": "海中鱼巣::轻量因果业务结果 海中鱼巣::轻量因果数据操作::创建轻量因果(const 海中鱼巣::轻量因果写入规格& 规格) const",
+          "file": "海中鱼巣/领域/数据操作.轻量因果.ixx",
+          "definition_line": 134,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        }
+      ],
+      "inputs": [
+        "轻量因果创建请求",
+        "来源动态、主信息与因果主键"
+      ],
+      "preconditions": [
+        "来源动态和引用端点有效",
+        "幂等主键与因果用途满足正式合同"
+      ],
+      "outputs": [
+        "轻量因果业务结果或值式材料"
+      ],
+      "state_reads": [
+        "来源动态、状态和已有因果引用"
+      ],
+      "state_writes": [
+        "轻量因果节点、关系和引用记录"
+      ],
+      "side_effects": [
+        "创建并登记轻量因果引用"
+      ],
+      "transaction_contract": "因果节点和引用关系必须原子发布，失败不得留下可读半结构。",
+      "logic_results": [
+        "创建成功",
+        "幂等命中",
+        "来源无效、读取冲突或结构失败"
+      ],
+      "internal_error_boundaries": [
+        "来源动态和因果引用在前置成立后不一致属于内部错误"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/因果服务.h",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/服务.轻量因果.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/数据操作.轻量因果.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/1190_根规范_因果_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4220_子规范_动作动态与因果账本边界_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4310_子规范_因果补完与因果信息用法_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "轻量因果引用不等价于完整因果补完、概率裁决或任务优先级结论。",
+      "known_gaps": [
+        "未运行因果幂等、来源冲突和撤销专项",
+        "缺少现状图或逐行映射：R0512、R0611、R0680、R0689",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0038",
+      "name": "需求创建、承接、树结构与结算材料读取",
+      "domain": "需求",
+      "purpose_summary": "创建完整目标状态需求和自我目标需求，读取需求目标、主体、场景、承接、树后续和正式结算材料。",
+      "implementation_status": "候选待复核",
+      "status_basis": "20个提供函数均在64a2d63e的main当前可达身份表中；0个已有现状图和逐行映射，20个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "R0514",
+          "complete_signature": "海中鱼巣::需求提交结果 海中鱼巣::需求业务服务::创建完整目标状态需求(const 海中鱼巣::创建完整目标状态需求请求& 请求) const",
+          "file": "海中鱼巣/领域/服务.需求.ixx",
+          "definition_line": 88,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0576",
+          "complete_signature": "std::optional<节点句柄> 海中鱼巣::需求服务::读取唯一需求目标(节点句柄 需求节点, 关系类型 类型, 节点类型 目标类型, std::int64_t 顺序号) const",
+          "file": "海中鱼巣/领域/需求服务.h",
+          "definition_line": 1005,
+          "shortest_depth": 6,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0577",
+          "complete_signature": "std::vector<节点句柄> 海中鱼巣::需求服务::读取结算目标组(节点句柄 结算状态, 关系类型 类型, 节点类型 目标类型, std::int64_t 顺序号) const",
+          "file": "海中鱼巣/领域/需求服务.h",
+          "definition_line": 1024,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0578",
+          "complete_signature": "节点句柄 海中鱼巣::需求服务::创建需求()",
+          "file": "海中鱼巣/领域/需求服务.h",
+          "definition_line": 131,
+          "shortest_depth": 10,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0579",
+          "complete_signature": "节点句柄 海中鱼巣::需求服务::创建自我目标状态需求(节点句柄 自我存在, 节点句柄 需求场景, 节点句柄 目标特征, 特征服务& 特征, 节点句柄 当前特征值, 状态服务& 状态, std::int64_t 目标状态值)",
+          "file": "海中鱼巣/领域/需求服务.h",
+          "definition_line": 292,
+          "shortest_depth": 9,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0580",
+          "complete_signature": "bool 海中鱼巣::需求服务::需求是否有效(节点句柄 需求节点,const 结构事务令牌& 令牌) const",
+          "file": "海中鱼巣/领域/需求服务.h",
+          "definition_line": 348,
+          "shortest_depth": 6,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0581",
+          "complete_signature": "std::optional<节点句柄> 海中鱼巣::需求服务::读取需求目标状态(节点句柄 需求节点) const",
+          "file": "海中鱼巣/领域/需求服务.h",
+          "definition_line": 353,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0582",
+          "complete_signature": "std::optional<节点句柄> 海中鱼巣::需求服务::读取需求主体(节点句柄 需求节点) const",
+          "file": "海中鱼巣/领域/需求服务.h",
+          "definition_line": 513,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0583",
+          "complete_signature": "std::optional<节点句柄> 海中鱼巣::需求服务::读取需求目标宿主(节点句柄 需求节点) const",
+          "file": "海中鱼巣/领域/需求服务.h",
+          "definition_line": 517,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0584",
+          "complete_signature": "std::optional<节点句柄> 海中鱼巣::需求服务::读取需求场景(节点句柄 需求节点) const",
+          "file": "海中鱼巣/领域/需求服务.h",
+          "definition_line": 539,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0585",
+          "complete_signature": "std::optional<节点句柄> 海中鱼巣::需求服务::读取需求当前特征状态材料(节点句柄 需求节点) const",
+          "file": "海中鱼巣/领域/需求服务.h",
+          "definition_line": 551,
+          "shortest_depth": 10,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0586",
+          "complete_signature": "std::optional<需求承接材料> 海中鱼巣::需求服务::读取需求承接材料(节点句柄 d,const 结构事务令牌& t) const",
+          "file": "海中鱼巣/领域/需求服务.h",
+          "definition_line": 576,
+          "shortest_depth": 5,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0587",
+          "complete_signature": "std::optional<节点句柄> 海中鱼巣::需求服务::读取最近结算记录(节点句柄 需求节点, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/需求服务.h",
+          "definition_line": 704,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0588",
+          "complete_signature": "std::optional<节点句柄> 海中鱼巣::需求服务::读取结算来源任务(节点句柄 结算状态) const",
+          "file": "海中鱼巣/领域/需求服务.h",
+          "definition_line": 748,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0589",
+          "complete_signature": "std::optional<节点句柄> 海中鱼巣::需求服务::读取结算目标状态(节点句柄 结算状态) const",
+          "file": "海中鱼巣/领域/需求服务.h",
+          "definition_line": 752,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0590",
+          "complete_signature": "std::optional<节点句柄> 海中鱼巣::需求服务::读取结算实际状态(节点句柄 结算状态) const",
+          "file": "海中鱼巣/领域/需求服务.h",
+          "definition_line": 756,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0591",
+          "complete_signature": "std::vector<节点句柄> 海中鱼巣::需求服务::读取结算动态证据(节点句柄 结算状态) const",
+          "file": "海中鱼巣/领域/需求服务.h",
+          "definition_line": 760,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0592",
+          "complete_signature": "std::optional<节点句柄> 海中鱼巣::需求服务::读取结算因果引用(节点句柄 结算状态) const",
+          "file": "海中鱼巣/领域/需求服务.h",
+          "definition_line": 764,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0593",
+          "complete_signature": "需求树后续结构材料 海中鱼巣::需求服务::读取需求树后续结构材料(节点句柄 需求节点, 节点句柄 父需求 = {}) const",
+          "file": "海中鱼巣/领域/需求服务.h",
+          "definition_line": 769,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0597",
+          "complete_signature": "std::optional<节点句柄> 海中鱼巣::需求服务::读取唯一结算目标(节点句柄 结算状态, 关系类型 类型, 节点类型 目标类型, std::int64_t 顺序号) const",
+          "file": "海中鱼巣/领域/需求服务.h",
+          "definition_line": 986,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        }
+      ],
+      "inputs": [
+        "需求创建请求",
+        "需求、任务、状态、动态和因果句柄"
+      ],
+      "preconditions": [
+        "唯一目标状态、主体和场景材料满足需求合同"
+      ],
+      "outputs": [
+        "需求提交结果",
+        "需求及承接材料",
+        "结算记录与树结构材料"
+      ],
+      "state_reads": [
+        "需求目标、主体、宿主、场景、任务承接、结算和树关系"
+      ],
+      "state_writes": [
+        "新需求、目标关系、承接或结算关联"
+      ],
+      "side_effects": [
+        "创建需求及其目标状态关系"
+      ],
+      "transaction_contract": "需求创建与关系写入必须原子发布；只读材料不得改变需求状态。",
+      "logic_results": [
+        "创建或读取成功",
+        "无唯一材料、已存在、无结算或结构冲突"
+      ],
+      "internal_error_boundaries": [
+        "唯一目标、承接和结算材料在正式前置下不一致属于内部错误"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/服务.需求.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/需求服务.h",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/3100_根规范_需求_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/5100_子规范_需求下级规则_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/5160_子规范_需求正式结算记录与唯一结论.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "不证明需求已经进入任务筹办、执行或完成闭环。",
+      "known_gaps": [
+        "多数需求读取入口缺单函数图；未运行创建、承接和结算矩阵",
+        "缺少现状图或逐行映射：R0514、R0576、R0577、R0578、R0579、R0580、R0581、R0582、R0583、R0584、R0585、R0586、R0587、R0588、R0589、R0590、R0591、R0592、R0593、R0597",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0039",
+      "name": "任务来源、目标、状态与方法选择材料读取",
+      "domain": "任务",
+      "purpose_summary": "读取任务来源需求、虚拟存在、运行场景、目标状态、生命周期状态、承接材料、实际结果与所选方法。",
+      "implementation_status": "候选待复核",
+      "status_basis": "14个提供函数均在64a2d63e的main当前可达身份表中；0个已有现状图和逐行映射，14个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "R0207",
+          "complete_signature": "std::optional<海中鱼巣::节点句柄> 海中鱼巣::任务服务::读取任务来源需求(海中鱼巣::节点句柄 任务节点, const 海中鱼巣::状态服务& 状态) const",
+          "file": "海中鱼巣/领域/任务服务.h",
+          "definition_line": 413,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0208",
+          "complete_signature": "std::optional<海中鱼巣::节点句柄> 海中鱼巣::任务服务::读取任务虚拟存在(海中鱼巣::节点句柄 任务节点, const 海中鱼巣::状态服务& 状态) const",
+          "file": "海中鱼巣/领域/任务服务.h",
+          "definition_line": 420,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0209",
+          "complete_signature": "std::optional<海中鱼巣::节点句柄> 海中鱼巣::任务服务::读取任务运行场景(海中鱼巣::节点句柄 任务节点, const 海中鱼巣::状态服务& 状态) const",
+          "file": "海中鱼巣/领域/任务服务.h",
+          "definition_line": 427,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0210",
+          "complete_signature": "std::optional<海中鱼巣::节点句柄> 海中鱼巣::任务服务::读取任务目标状态(海中鱼巣::节点句柄 任务节点, const 海中鱼巣::状态服务& 状态) const",
+          "file": "海中鱼巣/领域/任务服务.h",
+          "definition_line": 434,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0211",
+          "complete_signature": "std::optional<海中鱼巣::节点句柄> 海中鱼巣::任务服务::读取任务创建状态(海中鱼巣::节点句柄 任务节点, const 海中鱼巣::状态服务& 状态) const",
+          "file": "海中鱼巣/领域/任务服务.h",
+          "definition_line": 441,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0212",
+          "complete_signature": "std::optional<海中鱼巣::节点句柄> 海中鱼巣::任务服务::读取任务完成状态(海中鱼巣::节点句柄 任务节点, const 海中鱼巣::状态服务& 状态) const",
+          "file": "海中鱼巣/领域/任务服务.h",
+          "definition_line": 448,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0213",
+          "complete_signature": "std::optional<海中鱼巣::任务承接材料> 海中鱼巣::任务服务::读取任务承接材料(海中鱼巣::节点句柄 任务节点, const 海中鱼巣::状态服务& 状态) const",
+          "file": "海中鱼巣/领域/任务服务.h",
+          "definition_line": 455,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0214",
+          "complete_signature": "std::vector<海中鱼巣::节点句柄> 海中鱼巣::任务服务::读取需求承接任务组(海中鱼巣::节点句柄 需求节点, const 海中鱼巣::状态服务& 状态) const",
+          "file": "海中鱼巣/领域/任务服务.h",
+          "definition_line": 480,
+          "shortest_depth": 10,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0215",
+          "complete_signature": "bool 海中鱼巣::任务服务::读取需求承接任务组(海中鱼巣::节点句柄, const 海中鱼巣::状态服务&) const::<lambda@任务服务.h:494>::operator()(const 海中鱼巣::节点句柄& 左, const 海中鱼巣::节点句柄& 右) const",
+          "file": "海中鱼巣/领域/任务服务.h",
+          "definition_line": 494,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0216",
+          "complete_signature": "std::optional<海中鱼巣::节点句柄> 海中鱼巣::任务服务::读取任务实际结果状态(海中鱼巣::节点句柄 任务节点, const 海中鱼巣::状态服务& 状态) const",
+          "file": "海中鱼巣/领域/任务服务.h",
+          "definition_line": 516,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0217",
+          "complete_signature": "std::optional<海中鱼巣::节点句柄> 海中鱼巣::任务服务::读取任务选择方法(海中鱼巣::节点句柄 任务节点, const 海中鱼巣::状态服务& 状态) const",
+          "file": "海中鱼巣/领域/任务服务.h",
+          "definition_line": 543,
+          "shortest_depth": 10,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0219",
+          "complete_signature": "std::optional<海中鱼巣::节点句柄> 海中鱼巣::任务服务::读取唯一目标(海中鱼巣::节点句柄 源节点, 海中鱼巣::关系类型 类型, 海中鱼巣::节点类型 目标类型) const",
+          "file": "海中鱼巣/领域/任务服务.h",
+          "definition_line": 734,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0220",
+          "complete_signature": "std::optional<海中鱼巣::节点句柄> 海中鱼巣::任务服务::读取唯一目标(海中鱼巣::节点句柄 源节点, 海中鱼巣::关系类型 类型, 海中鱼巣::节点类型 目标类型, std::optional<std::int64_t> 顺序号) const",
+          "file": "海中鱼巣/领域/任务服务.h",
+          "definition_line": 738,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0221",
+          "complete_signature": "std::optional<海中鱼巣::节点句柄> 海中鱼巣::任务服务::读取唯一任务状态(海中鱼巣::节点句柄 任务节点, const 海中鱼巣::状态服务& 状态, 海中鱼巣::任务生命周期状态 生命周期状态) const",
+          "file": "海中鱼巣/领域/任务服务.h",
+          "definition_line": 759,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        }
+      ],
+      "inputs": [
+        "任务句柄或任务承接壳"
+      ],
+      "preconditions": [
+        "任务当前有效且来源需求与生命周期结构可读"
+      ],
+      "outputs": [
+        "任务承接、目标、状态、结果和方法选择材料"
+      ],
+      "state_reads": [
+        "任务到需求、场景、状态、结果和方法的关系"
+      ],
+      "state_writes": [
+        "无"
+      ],
+      "side_effects": [
+        "无权威结构写入"
+      ],
+      "transaction_contract": "只读投影；不得隐式创建、筹办或结算任务。",
+      "logic_results": [
+        "材料存在并返回",
+        "候选为空或结构不完整"
+      ],
+      "internal_error_boundaries": [
+        "正式任务在前置成立后缺少唯一目标或生命周期材料属于内部错误"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/任务服务.h",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/3200_根规范_任务_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/5200_子规范_任务根据需求初始化_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/5230_子规范_任务筹办与执行边界_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "只登记任务材料读取，不证明筹办、执行调度或结果结算已经实现。",
+      "known_gaps": [
+        "提供函数缺单函数图与同基线任务读取专项",
+        "缺少现状图或逐行映射：R0207、R0208、R0209、R0210、R0211、R0212、R0213、R0214、R0215、R0216、R0217、R0219、R0220、R0221",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0040",
+      "name": "方法登记、角色状态与候选结构读取",
+      "domain": "方法",
+      "purpose_summary": "登记方法和角色状态，创建或读取方法登记根，并读取方法候选、关系、条件、结果、场景和动作入口材料。",
+      "implementation_status": "候选待复核",
+      "status_basis": "32个提供函数均在64a2d63e的main当前可达身份表中；5个已有现状图和逐行映射，27个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "F0162",
+          "complete_signature": "海中鱼巣::节点句柄 海中鱼巣::方法服务::登记方法()",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 309,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0043_登记方法_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0043_登记方法_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0164",
+          "complete_signature": "bool 海中鱼巣::方法服务::绑定方法角色状态(海中鱼巣::节点句柄 方法节点, 海中鱼巣::方法角色状态 角色, 海中鱼巣::状态服务& 状态)",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1644,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0045_绑定方法角色状态_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0045_绑定方法角色状态_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0327",
+          "complete_signature": "海中鱼巣::方法角色状态 海中鱼巣::方法服务::读取方法角色状态值(海中鱼巣::节点句柄 方法节点, const 海中鱼巣::状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1747,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0007_读取方法角色状态值_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0007_读取方法角色状态值_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0330",
+          "complete_signature": "std::optional<海中鱼巣::节点句柄> 海中鱼巣::方法服务::读取唯一目标(海中鱼巣::节点句柄 源节点, 海中鱼巣::关系类型 类型, 海中鱼巣::节点类型 目标类型, std::optional<std::int64_t> 顺序号) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1711,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0010_方法服务读取唯一目标四参数_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0010_方法服务读取唯一目标四参数_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0629",
+          "complete_signature": "std::optional<海中鱼巣::节点句柄> 海中鱼巣::方法服务::读取唯一目标(海中鱼巣::节点句柄 源节点, 海中鱼巣::关系类型 类型, 海中鱼巣::节点类型 目标类型) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1707,
+          "shortest_depth": 12,
+          "chart": "流程图/代码流程图/L12/CF-L12-0001_方法服务读取唯一目标_现状流程图.md",
+          "mapping": "流程图/代码流程图/L12/CF-L12-0001_方法服务读取唯一目标_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0468",
+          "complete_signature": "std::optional<方法候选材料> 海中鱼巣::方法服务::读取方法候选材料(节点句柄 方法首节点, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1008,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0469",
+          "complete_signature": "std::optional<节点句柄> 海中鱼巣::方法服务::读取来源任务(节点句柄 方法首节点, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1045,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0470",
+          "complete_signature": "std::optional<节点句柄> 海中鱼巣::方法服务::读取父方法(节点句柄 方法首节点, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1062,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0471",
+          "complete_signature": "std::vector<节点句柄> 海中鱼巣::方法服务::读取前置方法组(节点句柄 方法首节点, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1078,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0472",
+          "complete_signature": "std::vector<节点句柄> 海中鱼巣::方法服务::读取后续方法组(节点句柄 方法首节点, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1091,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0473",
+          "complete_signature": "方法关系材料 海中鱼巣::方法服务::读取方法关系材料(节点句柄 方法首节点, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1095,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0474",
+          "complete_signature": "std::optional<节点句柄> 海中鱼巣::方法服务::读取动作输入规格(节点句柄 动作入口节点) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1209,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0475",
+          "complete_signature": "std::optional<节点句柄> 海中鱼巣::方法服务::读取动作输出规格(节点句柄 动作入口节点) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1213,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0476",
+          "complete_signature": "bool 海中鱼巣::方法服务::方法首基础结构完整(节点句柄 方法节点, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1357,
+          "shortest_depth": 15,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0479",
+          "complete_signature": "bool 海中鱼巣::方法服务::有效方法首(节点句柄 方法节点, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1668,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0480",
+          "complete_signature": "bool 海中鱼巣::方法服务::有效方法条件节点(节点句柄 方法首节点, 节点句柄 方法条件节点, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1673,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0481",
+          "complete_signature": "bool 海中鱼巣::方法服务::有效方法结果节点(节点句柄 方法首节点, 节点句柄 方法结果节点, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1680,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0482",
+          "complete_signature": "std::vector<节点句柄> 海中鱼巣::方法服务::读取方法角色节点集合(节点句柄 方法首节点, 方法角色状态 角色, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1687,
+          "shortest_depth": 13,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0483",
+          "complete_signature": "std::vector<节点句柄> 海中鱼巣::方法服务::读取方法关系目标组(节点句柄 方法首节点, std::int64_t 顺序号, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1732,
+          "shortest_depth": 13,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0484",
+          "complete_signature": "bool 海中鱼巣::方法服务::动作入口状态有效(动作入口状态 状态值) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1780,
+          "shortest_depth": 14,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0485",
+          "complete_signature": "bool 海中鱼巣::方法服务::有效动作入口角色(节点句柄 动作入口节点, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1806,
+          "shortest_depth": 14,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0486",
+          "complete_signature": "bool 海中鱼巣::方法服务::有效动作入口(节点句柄 方法首节点, 节点句柄 动作入口节点, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1811,
+          "shortest_depth": 13,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0487",
+          "complete_signature": "std::optional<动作入口状态> 海中鱼巣::方法服务::读取动作入口状态(节点句柄 动作入口节点, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 1818,
+          "shortest_depth": 13,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0488",
+          "complete_signature": "std::optional<方法登记项材料> 海中鱼巣::方法服务::读取方法登记项( 节点句柄 方法首节点, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 452,
+          "shortest_depth": 13,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0489",
+          "complete_signature": "std::optional<节点句柄> 海中鱼巣::方法服务::读取方法虚拟存在(节点句柄 方法节点, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 870,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0490",
+          "complete_signature": "std::vector<节点句柄> 海中鱼巣::方法服务::读取方法条件节点集合(节点句柄 方法首节点, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 877,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0491",
+          "complete_signature": "std::vector<节点句柄> 海中鱼巣::方法服务::读取方法结果节点集合(节点句柄 方法首节点, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 881,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0492",
+          "complete_signature": "std::optional<节点句柄> 海中鱼巣::方法服务::读取方法条件场景(节点句柄 方法首节点, 节点句柄 方法条件节点, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 901,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0493",
+          "complete_signature": "std::optional<节点句柄> 海中鱼巣::方法服务::读取方法结果场景(节点句柄 方法首节点, 节点句柄 方法结果节点, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 909,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0494",
+          "complete_signature": "std::optional<节点句柄> 海中鱼巣::方法服务::读取方法动作入口(节点句柄 方法首节点, const 状态服务& 状态) const",
+          "file": "海中鱼巣/领域/方法服务.h",
+          "definition_line": 946,
+          "shortest_depth": 12,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0497",
+          "complete_signature": "方法登记根材料 海中鱼巣::方法业务服务::读取主键登记根(std::uint64_t 主键) const",
+          "file": "海中鱼巣/领域/服务.方法.ixx",
+          "definition_line": 213,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0499",
+          "complete_signature": "方法提交结果 海中鱼巣::方法业务服务::创建登记根(const 创建方法登记根请求& 请求) const",
+          "file": "海中鱼巣/领域/服务.方法.ixx",
+          "definition_line": 79,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        }
+      ],
+      "inputs": [
+        "方法登记或创建请求",
+        "方法、任务、条件、结果与动作入口句柄"
+      ],
+      "preconditions": [
+        "方法首、角色和关系材料满足方法正式合同"
+      ],
+      "outputs": [
+        "方法提交结果",
+        "登记根或方法候选材料",
+        "条件结果和动作规格"
+      ],
+      "state_reads": [
+        "方法登记项、角色状态、父子方法、条件、结果、场景和动作入口"
+      ],
+      "state_writes": [
+        "方法登记结构、角色状态和登记根"
+      ],
+      "side_effects": [
+        "登记方法或创建方法登记根"
+      ],
+      "transaction_contract": "方法登记相关结构写入必须原子发布；候选读取不改变权威结构。",
+      "logic_results": [
+        "登记或读取成功",
+        "重复、结构不完整、候选为空或冲突"
+      ],
+      "internal_error_boundaries": [
+        "方法首、角色和条件结果关系在正式前置下不一致属于内部错误"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/方法服务.h",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/服务.方法.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/3300_根规范_方法_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/5300_子规范_方法登记选择与执行规则_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/5320_子规范_本能函数实现与返回边界_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "方法候选和登记材料不证明方法已选择、执行、学习或晋级。",
+      "known_gaps": [
+        "多数方法读取入口缺现状图；未运行登记与候选召回专项",
+        "缺少现状图或逐行映射：R0468、R0469、R0470、R0471、R0472、R0473、R0474、R0475、R0476、R0479、R0480、R0481、R0482、R0483、R0484、R0485、R0486、R0487、R0488、R0489、R0490、R0491、R0492、R0493、R0494、R0497、R0499",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0041",
+      "name": "语义基础身份与语素概念入口",
+      "domain": "语素与语义基础",
+      "purpose_summary": "创建基础信息身份和语素概念入口，读取入口绑定与追溯关系，并判断或清理本轮语素入口。",
+      "implementation_status": "候选待复核",
+      "status_basis": "7个提供函数均在64a2d63e的main当前可达身份表中；3个已有现状图和逐行映射，4个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "F0364",
+          "complete_signature": "海中鱼巣::语素概念入口创建结果 海中鱼巣::语素服务::创建概念入口并保留收口材料(std::wstring_view 文本, 海中鱼巣::节点句柄 对应信息节点, 海中鱼巣::节点句柄 概念节点, std::uint64_t 主键 = 0)",
+          "file": "海中鱼巣/领域/语素服务.h",
+          "definition_line": 91,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L6/CF-L6-0043_语素服务创建概念入口并保留收口材料_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0043_语素服务创建概念入口并保留收口材料_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0496",
+          "complete_signature": "std::vector<海中鱼巣::节点句柄> 海中鱼巣::语素服务::读取入口绑定目标组(海中鱼巣::节点句柄 语素入口) const",
+          "file": "海中鱼巣/领域/语素服务.h",
+          "definition_line": 188,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0210_语素服务读取入口绑定目标组_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0210_语素服务读取入口绑定目标组_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0497",
+          "complete_signature": "std::vector<海中鱼巣::节点句柄> 海中鱼巣::语素服务::读取入口概念追溯组(海中鱼巣::节点句柄 语素入口) const",
+          "file": "海中鱼巣/领域/语素服务.h",
+          "definition_line": 195,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0211_语素服务读取入口概念追溯组_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0211_语素服务读取入口概念追溯组_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0496",
+          "complete_signature": "语义基础业务结果 海中鱼巣::基础信息业务服务::创建基础信息身份(const 创建基础信息身份请求& 请求) const",
+          "file": "海中鱼巣/领域/服务.基础信息.ixx",
+          "definition_line": 22,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0568",
+          "complete_signature": "bool 海中鱼巣::语素服务::节点是语素入口(节点句柄 节点句柄值, const 结构事务令牌& 令牌) const",
+          "file": "海中鱼巣/领域/语素服务.h",
+          "definition_line": 257,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0573",
+          "complete_signature": "语素入口创建结果 海中鱼巣::语素服务::创建语素入口并保留收口材料(节点句柄 对应信息节点, std::uint64_t 主键)",
+          "file": "海中鱼巣/领域/语素服务.h",
+          "definition_line": 328,
+          "shortest_depth": 6,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0575",
+          "complete_signature": "语素准入状态 海中鱼巣::语素服务::判断文本是否可作为最小词单元(std::wstring_view 文本) const",
+          "file": "海中鱼巣/领域/语素服务.h",
+          "definition_line": 57,
+          "shortest_depth": 6,
+          "chart": null,
+          "mapping": null
+        }
+      ],
+      "inputs": [
+        "基础信息或语素入口请求",
+        "文本、对应信息节点和概念节点"
+      ],
+      "preconditions": [
+        "文本和节点类型满足语素入口准入",
+        "主键和对应关系可唯一解释"
+      ],
+      "outputs": [
+        "语义基础业务结果",
+        "语素概念入口创建结果",
+        "绑定和追溯节点组"
+      ],
+      "state_reads": [
+        "语素入口、对应信息和概念追溯关系"
+      ],
+      "state_writes": [
+        "基础信息身份、语素入口及对应/追溯关系"
+      ],
+      "side_effects": [
+        "可能创建或清理语素入口结构"
+      ],
+      "transaction_contract": "入口节点和关系必须同事务发布或撤销。",
+      "logic_results": [
+        "创建或读取成功",
+        "文本拒绝、已有入口、关系冲突或清理结果"
+      ],
+      "internal_error_boundaries": [
+        "入口、对应信息和概念追溯在正式前置下不一致属于内部错误"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/语素服务.h",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/服务.基础信息.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/2200_根规范_词_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/2210_根规范_语素入口_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/7200_子规范_基础信息语素信息关系整合_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "不证明自然语言分词、文章理解或语言记录闭环已经完成。",
+      "known_gaps": [
+        "未运行语素入口创建、重复和清理专项",
+        "缺少现状图或逐行映射：R0496、R0568、R0573、R0575",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0042",
+      "name": "概念根、生命周期、实例支持与抽象树投影",
+      "domain": "概念图",
+      "purpose_summary": "登记和读取概念根及生命周期，绑定实例支持概念，并生成活动概念抽象树只读投影。",
+      "implementation_status": "候选待复核",
+      "status_basis": "19个提供函数均在64a2d63e的main当前可达身份表中；12个已有现状图和逐行映射，7个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "F0182",
+          "complete_signature": "bool 海中鱼巣::概念图服务::初始化活动概念生命周期()",
+          "file": "海中鱼巣/领域/概念图服务.h",
+          "definition_line": 981,
+          "shortest_depth": 4,
+          "chart": "流程图/代码流程图/L5/CF-L5-0062_概念图服务初始化活动概念生命周期_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0062_概念图服务初始化活动概念生命周期_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0191",
+          "complete_signature": "std::optional<海中鱼巣::节点句柄> 海中鱼巣::概念图服务::确保实例支持对应根(海中鱼巣::节点句柄 实例, 海中鱼巣::概念根类别 类别)",
+          "file": "海中鱼巣/领域/概念图服务.h",
+          "definition_line": 4405,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0071_概念图服务确保实例支持对应根_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0071_概念图服务确保实例支持对应根_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0352",
+          "complete_signature": "std::optional<海中鱼巣::概念根登记材料> 海中鱼巣::概念图服务::读取概念根(海中鱼巣::概念根类别 类别) const",
+          "file": "海中鱼巣/领域/概念图服务.h",
+          "definition_line": 892,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L6/CF-L6-0031_概念图服务读取概念根_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0031_概念图服务读取概念根_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0353",
+          "complete_signature": "std::optional<海中鱼巣::概念生命周期材料> 海中鱼巣::概念图服务::读取概念生命周期(海中鱼巣::节点句柄 概念) const",
+          "file": "海中鱼巣/领域/概念图服务.h",
+          "definition_line": 1861,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L6/CF-L6-0032_概念图服务读取概念生命周期_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0032_概念图服务读取概念生命周期_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0354",
+          "complete_signature": "std::optional<海中鱼巣::节点句柄> 海中鱼巣::概念图服务::读取生命周期状态(海中鱼巣::概念生命周期阶段 阶段) const",
+          "file": "海中鱼巣/领域/概念图服务.h",
+          "definition_line": 969,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L6/CF-L6-0033_概念图服务读取生命周期状态_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0033_概念图服务读取生命周期状态_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0355",
+          "complete_signature": "std::vector<海中鱼巣::概念根登记材料> 海中鱼巣::概念图服务::读取全部概念根() const",
+          "file": "海中鱼巣/领域/概念图服务.h",
+          "definition_line": 904,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L6/CF-L6-0034_概念图服务读取全部概念根_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0034_概念图服务读取全部概念根_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0356",
+          "complete_signature": "std::optional<海中鱼巣::节点句柄> 海中鱼巣::概念图服务::登记概念根(const 海中鱼巣::概念根登记材料& 材料)",
+          "file": "海中鱼巣/领域/概念图服务.h",
+          "definition_line": 849,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L6/CF-L6-0035_概念图服务登记概念根_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0035_概念图服务登记概念根_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0357",
+          "complete_signature": "std::optional<海中鱼巣::节点句柄> 海中鱼巣::概念图服务::登记生命周期状态(海中鱼巣::概念生命周期阶段 阶段, 海中鱼巣::节点句柄 状态节点, const 海中鱼巣::状态服务& 状态)",
+          "file": "海中鱼巣/领域/概念图服务.h",
+          "definition_line": 934,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L6/CF-L6-0036_概念图服务登记生命周期状态_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0036_概念图服务登记生命周期状态_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0369",
+          "complete_signature": "std::optional<海中鱼巣::概念根类别> 海中鱼巣::概念图服务::读取节点概念类别(海中鱼巣::节点句柄 节点) const",
+          "file": "海中鱼巣/领域/概念图服务.h",
+          "definition_line": 926,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0048_概念图服务读取节点概念类别_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0048_概念图服务读取节点概念类别_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0370",
+          "complete_signature": "bool 海中鱼巣::概念图服务::绑定实例支持概念(海中鱼巣::节点句柄 实例, 海中鱼巣::节点句柄 概念)",
+          "file": "海中鱼巣/领域/概念图服务.h",
+          "definition_line": 1030,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0049_概念图服务绑定实例支持概念_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0049_概念图服务绑定实例支持概念_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0371",
+          "complete_signature": "std::vector<海中鱼巣::节点句柄> 海中鱼巣::概念图服务::读取实例支持概念(海中鱼巣::节点句柄 实例) const",
+          "file": "海中鱼巣/领域/概念图服务.h",
+          "definition_line": 1044,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0195_概念图服务读取实例支持概念_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0195_概念图服务读取实例支持概念_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0372",
+          "complete_signature": "std::vector<海中鱼巣::节点句柄> 海中鱼巣::概念图服务::读取支持概念的实例(海中鱼巣::节点句柄 概念) const",
+          "file": "海中鱼巣/领域/概念图服务.h",
+          "definition_line": 1048,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0196_概念图服务读取支持概念的实例_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0196_概念图服务读取支持概念的实例_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0515",
+          "complete_signature": "std::uint64_t 海中鱼巣::概念图服务::读取活动图版本() const",
+          "file": "海中鱼巣/领域/概念图服务.h",
+          "definition_line": 1536,
+          "shortest_depth": 10,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0516",
+          "complete_signature": "std::vector<节点句柄> 海中鱼巣::概念图服务::读取活动概念根组() const",
+          "file": "海中鱼巣/领域/概念图服务.h",
+          "definition_line": 1541,
+          "shortest_depth": 10,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0517",
+          "complete_signature": "抽象树读取结果 海中鱼巣::概念图服务::读取抽象树视图并返回结果( 节点句柄 根概念, std::size_t 节点预算 = 4096, std::size_t 深度预算 = 128) const",
+          "file": "海中鱼巣/领域/概念图服务.h",
+          "definition_line": 2430,
+          "shortest_depth": 10,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0525",
+          "complete_signature": "static 抽象树读取结果 海中鱼巣::概念图服务::生成抽象树视图( const 概念活动快照& 快照, 节点句柄 根概念, std::size_t 节点预算, std::size_t 深度预算)",
+          "file": "海中鱼巣/领域/概念图服务.h",
+          "definition_line": 4331,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0526",
+          "complete_signature": "bool 海中鱼巣::概念图服务::幂等创建专用关系(关系类型 类型, 节点句柄 源节点, 节点句柄 目标节点)",
+          "file": "海中鱼巣/领域/概念图服务.h",
+          "definition_line": 4401,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0531",
+          "complete_signature": "bool 海中鱼巣::概念图服务::节点是否已登记概念根(节点句柄 节点) const",
+          "file": "海中鱼巣/领域/概念图服务.h",
+          "definition_line": 916,
+          "shortest_depth": 5,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0711",
+          "complete_signature": "海中鱼巣::概念根角色组值式材料 海中鱼巣::概念图结构业务服务::复核根角色组(const 海中鱼巣::复核概念根角色请求& 请求) const",
+          "file": "海中鱼巣/领域/服务.概念图结构.ixx",
+          "definition_line": 83,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        }
+      ],
+      "inputs": [
+        "概念根类别",
+        "概念或实例句柄",
+        "生命周期阶段",
+        "抽象树读取请求"
+      ],
+      "preconditions": [
+        "概念根和生命周期角色有效",
+        "实例支持关系类型满足正式合同"
+      ],
+      "outputs": [
+        "概念根、生命周期与活动图材料",
+        "抽象树视图",
+        "绑定结果"
+      ],
+      "state_reads": [
+        "概念根、生命周期、实例支持和活动图版本"
+      ],
+      "state_writes": [
+        "概念根登记、生命周期状态和实例支持关系"
+      ],
+      "side_effects": [
+        "登记概念结构或建立实例支持关系；树投影只读"
+      ],
+      "transaction_contract": "结构登记和绑定必须在关系与节点事务内一致发布；投影不得写权威结构。",
+      "logic_results": [
+        "登记、绑定或读取成功",
+        "已存在、无材料、冲突或投影失败"
+      ],
+      "internal_error_boundaries": [
+        "概念根唯一性、生命周期和双向支持关系不一致属于内部错误"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/概念图服务.h",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/服务.概念图结构.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/7140_子规范_概念身份生命周期退役删除与活动投影分账.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4010_子规范_统一仓库稳定句柄与通用关系索引边界.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "抽象树是当前结构投影，不证明自动生长、抽象推理或新业务复用。",
+      "known_gaps": [
+        "部分抽象树和根角色入口缺现状图；未运行投影版本漂移专项",
+        "缺少现状图或逐行映射：R0515、R0516、R0517、R0525、R0526、R0531、R0711",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0043",
+      "name": "控制面板六类树、总览与按需只读投影",
+      "domain": "控制面板投影",
+      "purpose_summary": "生成世界树、语素树、需求树、任务树、方法树、概念根树、六类树候选和只读总览材料。",
+      "implementation_status": "候选待复核",
+      "status_basis": "23个提供函数均在64a2d63e的main当前可达身份表中；3个已有现状图和逐行映射，20个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "F0218",
+          "complete_signature": "std::optional<海中鱼巣::控制面板树节点材料> 海中鱼巣::生成控制面板世界树节点材料(const 海中鱼巣::节点仓库&, const 海中鱼巣::关系仓库&, 海中鱼巣::节点句柄, const 海中鱼巣::世界树初始化结果&, const 海中鱼巣::语素初始化结果&, const std::optional<海中鱼巣::世界树相对坐标>&, std::vector<海中鱼巣::节点句柄>&)",
+          "file": "海中鱼巣/界面/投影.控制面板启动.ixx",
+          "definition_line": 70,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0098_生成控制面板世界树节点材料_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0098_生成控制面板世界树节点材料_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0219",
+          "complete_signature": "海中鱼巣::控制面板树节点材料 海中鱼巣::生成语素树显示节点材料(const 海中鱼巣::语素初始化显示项&, const 海中鱼巣::语素初始化显示项&)",
+          "file": "海中鱼巣/界面/投影.控制面板启动.ixx",
+          "definition_line": 154,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0099_生成语素树显示节点材料_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0099_生成语素树显示节点材料_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0221",
+          "complete_signature": "海中鱼巣::控制面板树节点材料 海中鱼巣::生成概念名称语素树显示节点材料(const 海中鱼巣::概念根初始化项&, const 海中鱼巣::语素初始化显示项&)",
+          "file": "海中鱼巣/界面/投影.控制面板启动.ixx",
+          "definition_line": 171,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0101_生成概念名称语素树显示节点材料_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0101_生成概念名称语素树显示节点材料_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0278",
+          "complete_signature": "std::optional<控制面板树结构材料> 海中鱼巣::控制面板服务::生成语素树( const std::vector<节点句柄>& 当前页根组, 控制面板请求状态& 状态) const",
+          "file": "海中鱼巣/领域/控制面板服务.h",
+          "definition_line": 1016,
+          "shortest_depth": 9,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0283",
+          "complete_signature": "std::optional<std::vector<节点句柄>> 海中鱼巣::控制面板服务::发现任务根组( 控制面板请求状态& 状态) const",
+          "file": "海中鱼巣/领域/控制面板服务.h",
+          "definition_line": 1207,
+          "shortest_depth": 9,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0284",
+          "complete_signature": "std::optional<std::vector<节点句柄>> 海中鱼巣::控制面板服务::发现方法根组( const std::vector<节点句柄>& 任务根组, std::vector<std::pair<节点句柄, 节点句柄>>& 方法来源任务组, 控制面板请求状态& 状态) const",
+          "file": "海中鱼巣/领域/控制面板服务.h",
+          "definition_line": 1241,
+          "shortest_depth": 9,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0286",
+          "complete_signature": "std::optional<控制面板树节点材料> 海中鱼巣::控制面板服务::生成需求根( 节点句柄 需求节点, 控制面板请求状态& 状态) const",
+          "file": "海中鱼巣/领域/控制面板服务.h",
+          "definition_line": 1286,
+          "shortest_depth": 10,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0287",
+          "complete_signature": "std::optional<控制面板树结构材料> 海中鱼巣::控制面板服务::生成需求树( std::vector<节点句柄> 根组, 控制面板请求状态& 状态) const",
+          "file": "海中鱼巣/领域/控制面板服务.h",
+          "definition_line": 1370,
+          "shortest_depth": 9,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0288",
+          "complete_signature": "std::optional<控制面板树节点材料> 海中鱼巣::控制面板服务::生成任务根( 节点句柄 任务节点, 控制面板请求状态& 状态) const",
+          "file": "海中鱼巣/领域/控制面板服务.h",
+          "definition_line": 1396,
+          "shortest_depth": 10,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0289",
+          "complete_signature": "std::optional<控制面板树结构材料> 海中鱼巣::控制面板服务::生成任务树( std::vector<节点句柄> 任务根组, 控制面板请求状态& 状态) const",
+          "file": "海中鱼巣/领域/控制面板服务.h",
+          "definition_line": 1452,
+          "shortest_depth": 9,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0290",
+          "complete_signature": "std::optional<控制面板树节点材料> 海中鱼巣::控制面板服务::生成方法节点( 节点句柄 方法节点, 控制面板树关系角色 关系角色, std::vector<节点句柄>& 当前路径, 控制面板请求状态& 状态, std::size_t 深度预算) const",
+          "file": "海中鱼巣/领域/控制面板服务.h",
+          "definition_line": 1478,
+          "shortest_depth": 10,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0292",
+          "complete_signature": "std::optional<控制面板树结构材料> 海中鱼巣::控制面板服务::生成方法树( std::vector<节点句柄> 方法根组, std::vector<std::pair<节点句柄, 节点句柄>> 方法来源任务组, 控制面板请求状态& 状态, std::size_t 深度预算) const",
+          "file": "海中鱼巣/领域/控制面板服务.h",
+          "definition_line": 1598,
+          "shortest_depth": 9,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0304",
+          "complete_signature": "控制面板材料 海中鱼巣::控制面板服务::生成只读总览材料(const 控制面板请求& 请求) const",
+          "file": "海中鱼巣/领域/控制面板服务.h",
+          "definition_line": 279,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0305",
+          "complete_signature": "控制面板树视图材料 海中鱼巣::控制面板服务::生成树视图候选材料(控制面板树分类 分类) const",
+          "file": "海中鱼巣/领域/控制面板服务.h",
+          "definition_line": 293,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0306",
+          "complete_signature": "std::array<控制面板树视图材料, 6> 海中鱼巣::控制面板服务::生成六类树视图候选材料() const",
+          "file": "海中鱼巣/领域/控制面板服务.h",
+          "definition_line": 300,
+          "shortest_depth": 7,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0308",
+          "complete_signature": "控制面板操作请求材料 海中鱼巣::控制面板服务::生成操作请求壳(const 控制面板请求& 请求) const",
+          "file": "海中鱼巣/领域/控制面板服务.h",
+          "definition_line": 554,
+          "shortest_depth": 9,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0318",
+          "complete_signature": "std::vector<节点句柄> 海中鱼巣::控制面板服务::读取预绑定根组( const 控制面板树结构材料& 树, 控制面板树分类 预期分类, 控制面板请求状态& 状态) const",
+          "file": "海中鱼巣/领域/控制面板服务.h",
+          "definition_line": 681,
+          "shortest_depth": 9,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0319",
+          "complete_signature": "static 控制面板按需树候选材料 海中鱼巣::控制面板服务::拒绝按需树候选( const 控制面板按需树请求& 请求, 控制面板请求状态 状态)",
+          "file": "海中鱼巣/领域/控制面板服务.h",
+          "definition_line": 712,
+          "shortest_depth": 9,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0320",
+          "complete_signature": "控制面板按需树候选材料 海中鱼巣::控制面板服务::完成按需树候选( const 控制面板按需树请求& 请求, 控制面板树结构材料 树, std::vector<控制面板概念根选项> 概念根选项组, std::optional<节点句柄> 当前概念根, std::uint64_t 概念活动版本, std::optional<控制面板根页游标> 下一页游标) const",
+          "file": "海中鱼巣/领域/控制面板服务.h",
+          "definition_line": 724,
+          "shortest_depth": 9,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0321",
+          "complete_signature": "控制面板按需树候选材料 海中鱼巣::控制面板服务::生成当前概念根树( const 控制面板按需树请求& 请求) const",
+          "file": "海中鱼巣/领域/控制面板服务.h",
+          "definition_line": 761,
+          "shortest_depth": 9,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0324",
+          "complete_signature": "控制面板树节点材料 海中鱼巣::控制面板服务::生成节点材料( 节点句柄 节点值, 控制面板树关系角色 关系角色, std::vector<节点句柄> 名称入口组 = {}, std::wstring 显示名称 = {}, bool 重复投影 = false) const",
+          "file": "海中鱼巣/领域/控制面板服务.h",
+          "definition_line": 872,
+          "shortest_depth": 11,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0326",
+          "complete_signature": "std::optional<控制面板树结构材料> 海中鱼巣::控制面板服务::生成世界树( const std::vector<节点句柄>& 当前页根组, 控制面板请求状态& 状态) const",
+          "file": "海中鱼巣/领域/控制面板服务.h",
+          "definition_line": 935,
+          "shortest_depth": 9,
+          "chart": null,
+          "mapping": null
+        },
+        {
+          "function_id": "R0328",
+          "complete_signature": "bool 海中鱼巣::控制面板服务::扩展语素真实关系(控制面板树节点材料& 节点材料) const",
+          "file": "海中鱼巣/领域/控制面板服务.h",
+          "definition_line": 974,
+          "shortest_depth": 10,
+          "chart": null,
+          "mapping": null
+        }
+      ],
+      "inputs": [
+        "控制面板只读请求",
+        "预绑定根组和分类请求"
+      ],
+      "preconditions": [
+        "运行期只读服务和当前结构已发布",
+        "请求只允许读取和投影"
+      ],
+      "outputs": [
+        "只读总览、树视图候选、操作请求壳和显示节点材料"
+      ],
+      "state_reads": [
+        "世界、语素、需求、任务、方法、概念根和关系结构"
+      ],
+      "state_writes": [
+        "无权威机器事实写入"
+      ],
+      "side_effects": [
+        "形成内存只读投影和人读显示材料"
+      ],
+      "transaction_contract": "只读投影绑定同一已发布版本；不得创建、修复或恢复业务结构。",
+      "logic_results": [
+        "候选或总览生成",
+        "按需请求拒绝、候选为空或结构不完整"
+      ],
+      "internal_error_boundaries": [
+        "同一投影版本内结构自相矛盾属于内部错误"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/界面/投影.控制面板启动.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/控制面板服务.h",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4020_子规范_领域类型化数据记录与组合读取投影边界.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/7130_子规范_自我内部世界成员特征与事实读取投影.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "控制面板只是只读投影，不具备创建、修复、恢复或裁决机器事实的权限。",
+      "known_gaps": [
+        "多数按需投影函数缺现状图；未运行六类树同版本专项",
+        "缺少现状图或逐行映射：R0278、R0283、R0284、R0286、R0287、R0288、R0289、R0290、R0292、R0304、R0305、R0306、R0308、R0318、R0319、R0320、R0321、R0324、R0326、R0328",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0044",
+      "name": "自我线程治理拒绝、初始化执行与状态读取",
+      "domain": "自我线程",
+      "purpose_summary": "执行自我线程初始化，拒绝不允许的消息，重置治理读数，并读取线程进入和当前状态。",
+      "implementation_status": "候选待复核",
+      "status_basis": "5个提供函数均在64a2d63e的main当前可达身份表中；5个已有现状图和逐行映射，0个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "F0169",
+          "complete_signature": "海中鱼巣::自我线程操作结果 海中鱼巣::自我线程::拒绝(海中鱼巣::自我线程拒绝原因 原因)",
+          "file": "海中鱼巣/线程/自我线程.ixx",
+          "definition_line": 272,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0049_自我线程拒绝_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0049_自我线程拒绝_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0170",
+          "complete_signature": "void 海中鱼巣::自我线程::重置治理读数()",
+          "file": "海中鱼巣/线程/自我线程.ixx",
+          "definition_line": 276,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0050_重置治理读数_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0050_重置治理读数_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0349",
+          "complete_signature": "void 海中鱼巣::自我线程::执行初始化(const 海中鱼巣::自我根需求初始化参数& 参数)",
+          "file": "海中鱼巣/线程/自我线程.ixx",
+          "definition_line": 291,
+          "shortest_depth": 6,
+          "chart": "流程图/代码流程图/L6/CF-L6-0028_自我线程执行初始化_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0028_自我线程执行初始化_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0530",
+          "complete_signature": "bool 海中鱼巣::自我线程::线程已进入() const",
+          "file": "海中鱼巣/线程/自我线程.ixx",
+          "definition_line": 142,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0214_自我线程线程已进入_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0214_自我线程线程已进入_逐行代码映射表.md"
+        },
+        {
+          "function_id": "F0531",
+          "complete_signature": "海中鱼巣::自我线程状态 海中鱼巣::自我线程::当前状态() const",
+          "file": "海中鱼巣/线程/自我线程.ixx",
+          "definition_line": 138,
+          "shortest_depth": 5,
+          "chart": "流程图/代码流程图/L5/CF-L5-0215_自我线程当前状态_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0215_自我线程当前状态_逐行代码映射表.md"
+        }
+      ],
+      "inputs": [
+        "线程初始化上下文",
+        "治理消息或拒绝原因"
+      ],
+      "preconditions": [
+        "线程对象已经唯一启动",
+        "初始化快照和运行期上下文可读"
+      ],
+      "outputs": [
+        "线程进入状态、当前状态和拒绝结果"
+      ],
+      "state_reads": [
+        "线程生命周期、初始化快照和治理读数"
+      ],
+      "state_writes": [
+        "线程状态和治理读数"
+      ],
+      "side_effects": [
+        "推进或拒绝线程治理路径"
+      ],
+      "transaction_contract": "线程状态更新不得替代领域结构事务；初始化失败不得伪装运行成功。",
+      "logic_results": [
+        "初始化进入",
+        "消息拒绝",
+        "状态读取或重置完成"
+      ],
+      "internal_error_boundaries": [
+        "重复进入、状态倒退或快照不一致属于内部错误"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/线程/自我线程.ixx",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/8100_子规范_自我线程与任务管理线程权责边界_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/8110_子规范_线程生命周期状态上报与控制面板线程信息_20260720.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "线程进入和状态读取不证明自我内部循环、苏醒或成熟完成。",
+      "known_gaps": [
+        "未运行并发启动、消息拒绝和状态上报专项",
+        "本轮未构建、未运行程序或业务自检"
+      ]
+    },
+    {
+      "capability_id": "CAP-0045",
+      "name": "非权威统计快照与只读展示材料",
+      "domain": "统计与显示",
+      "purpose_summary": "创建非权威统计快照结构，并从已发布事实生成只读展示材料。",
+      "implementation_status": "候选待复核",
+      "status_basis": "2个提供函数均在64a2d63e的main当前可达身份表中；1个已有现状图和逐行映射，1个仍缺图；本轮完成源码、身份、调用和规范静态归档，未运行专项。",
+      "provider_entries": [
+        {
+          "function_id": "F0196",
+          "complete_signature": "海中鱼巣::结构统计快照 海中鱼巣::统计服务::创建统计快照结构(海中鱼巣::缓存命名空间 命名空间, std::uint64_t 节点数, std::uint64_t 关系数, std::uint64_t 索引数) const",
+          "file": "海中鱼巣/领域/统计服务.h",
+          "definition_line": 256,
+          "shortest_depth": 4,
+          "chart": "流程图/代码流程图/L5/CF-L5-0076_统计服务创建统计快照结构_现状流程图.md",
+          "mapping": "流程图/代码流程图/L5/CF-L5-0076_统计服务创建统计快照结构_逐行代码映射表.md"
+        },
+        {
+          "function_id": "R0495",
+          "complete_signature": "显示材料 海中鱼巣::显示服务::生成只读展示材料(const 显示请求& 请求) const",
+          "file": "海中鱼巣/领域/显示服务.h",
+          "definition_line": 53,
+          "shortest_depth": 8,
+          "chart": null,
+          "mapping": null
+        }
+      ],
+      "inputs": [
+        "统计来源材料或只读展示请求"
+      ],
+      "preconditions": [
+        "来源结构和版本可读",
+        "缓存和展示材料不得参与机器事实裁决"
+      ],
+      "outputs": [
+        "统计快照结构",
+        "只读展示材料"
+      ],
+      "state_reads": [
+        "已发布结构、缓存来源和展示所需材料"
+      ],
+      "state_writes": [
+        "非权威统计缓存或内存展示材料"
+      ],
+      "side_effects": [
+        "可能更新可确定重建的非权威缓存"
+      ],
+      "transaction_contract": "非权威缓存不进入权威结构事务；展示路径只读。",
+      "logic_results": [
+        "快照或展示材料生成",
+        "来源不可用或版本漂移"
+      ],
+      "internal_error_boundaries": [
+        "把缓存或展示材料反写为机器事实属于禁止边界"
+      ],
+      "evidence": [
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/统计服务.h",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "源码",
+          "path": "海中鱼巣/领域/显示服务.h",
+          "locator": "提供函数定义行见provider_entries",
+          "status": "冻结提交存在且代码事实版本到目录基线零差异"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4060_子规范_非权威缓存统计失效与确定重建.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        },
+        {
+          "kind": "正式规范",
+          "path": "规范/4020_子规范_领域类型化数据记录与组合读取投影边界.md",
+          "locator": "与本能力领域和边界相关条款",
+          "status": "边界依据；不单独证明实现符合或运行验证"
+        }
+      ],
+      "reuse_boundary": "统计和显示材料均非权威，不证明业务结构完成或验证通过。",
+      "known_gaps": [
+        "未运行缓存失效、确定重建和展示版本一致性专项",
+        "缺少现状图或逐行映射：R0495",
+        "本轮未构建、未运行程序或业务自检"
       ]
     }
   ]
