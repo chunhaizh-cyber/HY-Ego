@@ -14,8 +14,8 @@
   "source_external_path": "流程图/主程序可达调用关系/02_main可达外部边界表.json",
   "source_external_blob": "d399633a5b5fb1880835465ae468bbf6829433df",
   "current_reachable_function_count": 1158,
-  "chart_completed_count": 381,
-  "chart_pending_count": 777,
+  "chart_completed_count": 388,
+  "chart_pending_count": 770,
   "historical_unreachable_chart_count": 49,
   "queue_order": "正式身份表稳定身份顺序；shortest_depth只记录main最短调用深度，不参与既有drawing_order重排",
   "entries": [
@@ -16435,9 +16435,9 @@
         "X02312",
         "X02313"
       ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0262_主信息仓库读取主信息令牌重载_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0262_主信息仓库读取主信息令牌重载_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -16475,9 +16475,9 @@
         "RCE1761"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0263_关系仓库读取关系令牌重载_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0263_关系仓库读取关系令牌重载_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -17057,9 +17057,9 @@
         "RCE1764"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0279_系统角色主体材料相等运算符_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0279_系统角色主体材料相等运算符_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -17093,9 +17093,9 @@
         "RCE1769"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0280_系统角色关系材料相等运算符_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0280_系统角色关系材料相等运算符_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -44992,9 +44992,9 @@
         "RCE1767"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L7/CF-L7-0001_系统角色身份材料相等运算符_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L7/CF-L7-0001_系统角色身份材料相等运算符_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L7"
     },
     {
@@ -45024,9 +45024,9 @@
         "RCE1765"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L7/CF-L7-0002_系统根需求角色材料相等运算符_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L7/CF-L7-0002_系统根需求角色材料相等运算符_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L7"
     },
     {
@@ -45052,9 +45052,9 @@
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L8/CF-L8-0001_主信息句柄相等运算符_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L8/CF-L8-0001_主信息句柄相等运算符_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L8"
     }
   ]
