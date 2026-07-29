@@ -16,7 +16,7 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1274,
-  "project_call_edge_count": 3278,
+  "project_call_edge_count": 3286,
   "functions": [
     {
       "function_id": "F0001",
@@ -1623,7 +1623,12 @@
         "R0700",
         "R0703",
         "R0705",
-        "R0715"
+        "R0715",
+        "F0571",
+        "F0572",
+        "F0573",
+        "F0574",
+        "F0575"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0015；调用点=海中鱼巣/领域/初始化.系统.ixx:115",
@@ -4022,7 +4027,9 @@
         "F0287",
         "F0359",
         "F0364",
-        "R0065"
+        "R0065",
+        "F0566",
+        "F0568"
       ],
       "callees": [
         "F0163",
@@ -13702,7 +13709,8 @@
       ],
       "callees": [
         "F0168",
-        "F0568"
+        "F0568",
+        "F0167"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0273；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:170",
       "reachability_class": "main 参数自检/专项模式可达",
@@ -13748,7 +13756,9 @@
       ],
       "callees": [
         "F0168",
-        "R0140"
+        "R0140",
+        "F0167",
+        "F0587"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0273；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:180",
       "reachability_class": "main 参数自检/专项模式可达",
@@ -13820,7 +13830,9 @@
         "F0277",
         "F0278"
       ],
-      "callees": [],
+      "callees": [
+        "F0051"
+      ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0277；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:235,海中鱼巣/核心/自检.关系仓库性能基线.ixx:236",
       "reachability_class": "main 参数自检/专项模式可达",
       "test_or_self_check_path": true,
@@ -13842,7 +13854,9 @@
         "F0277",
         "F0278"
       ],
-      "callees": [],
+      "callees": [
+        "F0051"
+      ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0277；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:237,海中鱼巣/核心/自检.关系仓库性能基线.ixx:238",
       "reachability_class": "main 参数自检/专项模式可达",
       "test_or_self_check_path": true,
@@ -13864,7 +13878,9 @@
         "F0277",
         "F0278"
       ],
-      "callees": [],
+      "callees": [
+        "F0051"
+      ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0277；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:239,海中鱼巣/核心/自检.关系仓库性能基线.ixx:240,海中鱼巣/核心/自检.关系仓库性能基线.ixx:241",
       "reachability_class": "main 参数自检/专项模式可达",
       "test_or_self_check_path": true,
@@ -13885,7 +13901,9 @@
       "callers": [
         "F0278"
       ],
-      "callees": [],
+      "callees": [
+        "F0051"
+      ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0278；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:287,海中鱼巣/核心/自检.关系仓库性能基线.ixx:289",
       "reachability_class": "main 参数自检/专项模式可达",
       "test_or_self_check_path": true,
@@ -13914,7 +13932,8 @@
         "F0341",
         "F0343",
         "F0344",
-        "F0345"
+        "F0345",
+        "F0051"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0279；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:299",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -14231,7 +14250,8 @@
         "F0440",
         "F0569",
         "R0606",
-        "R0607"
+        "R0607",
+        "F0568"
       ],
       "callees": [
         "F0343",

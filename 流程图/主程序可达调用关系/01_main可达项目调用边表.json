@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1274,
-  "project_call_edge_count": 3278,
-  "edge_count": 3278,
+  "project_call_edge_count": 3286,
+  "edge_count": 3286,
   "edges": [
     {
       "edge_id": "E0002",
@@ -20372,7 +20372,7 @@
       "callsites": [
         "海中鱼巣/核心/自检.关系仓库性能基线.ixx:459",
         "海中鱼巣/核心/自检.关系仓库性能基线.ixx:460",
-        "海中鱼巣/核心/自检.关系仓库性能基线.ixx:470",
+        "海中鱼巣/核心/自检.关系仓库性能基线.ixx:470-471",
         "海中鱼巣/核心/自检.关系仓库性能基线.ixx:475",
         "海中鱼巣/核心/自检.关系仓库性能基线.ixx:478",
         "海中鱼巣/核心/自检.关系仓库性能基线.ixx:481",
@@ -20383,14 +20383,14 @@
         "海中鱼巣/核心/自检.关系仓库性能基线.ixx:490",
         "海中鱼巣/核心/自检.关系仓库性能基线.ixx:491",
         "海中鱼巣/核心/自检.关系仓库性能基线.ixx:492",
-        "海中鱼巣/核心/自检.关系仓库性能基线.ixx:498"
+        "海中鱼巣/核心/自检.关系仓库性能基线.ixx:498-499"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
+      "call_category": "source-audited-direct-member",
+      "arguments": "this,固定关系类型/源索引/目标索引/顺序号/引用键跟踪标志",
+      "argument_resolution": "14处源码调用逐项复核；循环实参按当前迭代变量绑定",
+      "return_binding": "固定关系句柄候选",
+      "reachable_condition": "对应固定结构顺序或循环分支到达",
+      "resolution_source": "本批逐调用点与同类成员函数唯一身份复核",
       "current_root_reachable": true
     },
     {
@@ -20413,12 +20413,12 @@
         "海中鱼巣/核心/自检.关系仓库性能基线.ixx:495",
         "海中鱼巣/核心/自检.关系仓库性能基线.ixx:500"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
+      "call_category": "source-audited-direct-free-function",
+      "arguments": "各次F0568或F0167返回的关系句柄",
+      "argument_resolution": "源码强类型关系句柄重载与短路顺序复核",
+      "return_binding": "关系句柄有效bool",
+      "reachable_condition": "每项固定关系创建后按源码顺序立即检查",
+      "resolution_source": "本批逐调用点与强类型重载复核",
       "current_root_reachable": true
     },
     {
@@ -20428,12 +20428,12 @@
       "callsites": [
         "海中鱼巣/核心/自检.关系仓库性能基线.ixx:445"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
+      "call_category": "source-audited-direct-member",
+      "arguments": "this,源索引,目标索引",
+      "argument_resolution": "源码成员接收者与两项size_t实参复核",
+      "return_binding": "引用键uint64",
+      "reachable_condition": "源目标索引范围检查通过",
+      "resolution_source": "本批源码逐调用点与唯一成员身份复核",
       "current_root_reachable": true
     },
     {
@@ -20443,12 +20443,12 @@
       "callsites": [
         "海中鱼巣/核心/自检.关系仓库性能基线.ixx:448"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
+      "call_category": "source-audited-direct-free-function",
+      "arguments": "关系",
+      "argument_resolution": "源码关系句柄强类型重载复核",
+      "return_binding": "关系句柄有效bool",
+      "reachable_condition": "RCE2260已返回关系句柄候选",
+      "resolution_source": "本批源码逐调用点与强类型重载复核",
       "current_root_reachable": true
     },
     {
@@ -20458,12 +20458,12 @@
       "callsites": [
         "海中鱼巣/核心/自检.关系仓库性能基线.ixx:511"
       ],
-      "call_category": "direct-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "固定失效变更",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-member",
+      "arguments": "this=&关系_,待失效关系_",
+      "argument_resolution": "源码静态接收者与关系句柄实参复核",
+      "return_binding": "关系状态变更材料",
+      "reachable_condition": "F0569入口后首先执行",
+      "resolution_source": "本批源码逐调用点复核",
       "current_root_reachable": true
     },
     {
@@ -20473,12 +20473,12 @@
       "callsites": [
         "海中鱼巣/核心/自检.关系仓库性能基线.ixx:512"
       ],
-      "call_category": "direct-const-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "读取失效返回材料",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=&失效",
+      "argument_resolution": "源码静态接收者与零实参成员复核",
+      "return_binding": "变更材料完整bool",
+      "reachable_condition": "RCE0262已返回失效材料",
+      "resolution_source": "本批源码逐调用点复核",
       "current_root_reachable": true
     },
     {
@@ -20488,12 +20488,12 @@
       "callsites": [
         "海中鱼巣/核心/自检.关系仓库性能基线.ixx:513"
       ],
-      "call_category": "direct-const-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "按失效后的当前关系读取审计",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=&关系_,失效.当前关系",
+      "argument_resolution": "源码静态接收者与无令牌审计读取重载复核",
+      "return_binding": "失效关系记录optional",
+      "reachable_condition": "RCE0263返回true",
+      "resolution_source": "本批源码逐调用点与完整重载复核",
       "current_root_reachable": true
     },
     {
@@ -20503,12 +20503,12 @@
       "callsites": [
         "海中鱼巣/核心/自检.关系仓库性能基线.ixx:518"
       ],
-      "call_category": "direct-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "固定删除变更；单实参写重载",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-member",
+      "arguments": "this=&关系_,待删除关系_",
+      "argument_resolution": "源码静态接收者与关系句柄实参复核",
+      "return_binding": "删除成功bool",
+      "reachable_condition": "X01113已命中参考表删除前记录",
+      "resolution_source": "本批源码逐调用点复核",
       "current_root_reachable": true
     },
     {
@@ -20518,12 +20518,12 @@
       "callsites": [
         "海中鱼巣/核心/自检.关系仓库性能基线.ixx:524"
       ],
-      "call_category": "direct-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "固定重挂并返回新句柄",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-member",
+      "arguments": "this=&关系_,待重挂关系_,节点组_[954],节点组_[956]",
+      "argument_resolution": "源码静态接收者与三实参完整重载复核",
+      "return_binding": "新关系句柄optional",
+      "reachable_condition": "失效与删除参考投影均已完成",
+      "resolution_source": "本批源码逐调用点与完整重载复核",
       "current_root_reachable": true
     },
     {
@@ -20533,12 +20533,12 @@
       "callsites": [
         "海中鱼巣/核心/自检.关系仓库性能基线.ixx:527"
       ],
-      "call_category": "direct-const-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "按重挂返回句柄读回",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=&关系_,*重挂",
+      "argument_resolution": "源码静态接收者与无令牌读取重载复核",
+      "return_binding": "重挂后关系记录optional",
+      "reachable_condition": "X02577返回true",
+      "resolution_source": "本批源码逐调用点与完整重载复核",
       "current_root_reachable": true
     },
     {
@@ -20609,12 +20609,12 @@
       "callsites": [
         "海中鱼巣/核心/自检.关系仓库性能基线.ixx:61"
       ],
-      "call_category": "same_module",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
+      "call_category": "source-audited-direct-free-function",
+      "arguments": "左[索引],右[索引]",
+      "argument_resolution": "源码两项关系记录const引用与循环索引复核",
+      "return_binding": "当前记录一致bool",
+      "reachable_condition": "左右记录组大小相等且当前索引在范围内",
+      "resolution_source": "本批源码逐调用点与同命名空间函数身份复核",
       "current_root_reachable": true
     },
     {
@@ -50326,6 +50326,127 @@
       "return_binding": "I64值optional",
       "reachable_condition": "令牌指针为空且前序一致性检查通过",
       "resolution_source": "本批源码逐调用点与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2259",
+      "caller": "F0566",
+      "callee": "F0167",
+      "callsites": [
+        "海中鱼巣/核心/自检.关系仓库性能基线.ixx:463"
+      ],
+      "call_category": "source-audited-direct-member",
+      "arguments": "this=&关系_,关系类型::普通父子,节点组_[1001],节点组_[1002],默认顺序号0",
+      "argument_resolution": "源码静态接收者、三项显式实参与默认顺序号复核",
+      "return_binding": "第二次普通父挂载关系句柄候选",
+      "reachable_condition": "前两项固定普通父关系均已形成有效句柄",
+      "resolution_source": "本批源码逐调用点与完整重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2260",
+      "caller": "F0568",
+      "callee": "F0167",
+      "callsites": [
+        "海中鱼巣/核心/自检.关系仓库性能基线.ixx:447"
+      ],
+      "call_category": "source-audited-direct-member",
+      "arguments": "this=&关系_,类型,节点组_[源索引],节点组_[目标索引],顺序号",
+      "argument_resolution": "源码静态接收者、四实参完整重载与索引取值复核",
+      "return_binding": "关系句柄候选",
+      "reachable_condition": "源目标索引有效且引用键未重复",
+      "resolution_source": "本批源码逐调用点与完整重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2261",
+      "caller": "F0568",
+      "callee": "F0587",
+      "callsites": [
+        "海中鱼巣/核心/自检.关系仓库性能基线.ixx:452"
+      ],
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=&关系_,关系",
+      "argument_resolution": "源码静态接收者与无令牌重载复核",
+      "return_binding": "关系记录optional",
+      "reachable_condition": "RCE2260已返回有效关系句柄",
+      "resolution_source": "本批源码逐调用点与完整重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2262",
+      "caller": "F0571",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/核心/自检.关系仓库性能基线.ixx:562"
+      ],
+      "call_category": "source-audited-direct-free-operator",
+      "arguments": "记录.目标节点,目标节点",
+      "argument_resolution": "源码两侧节点句柄静态类型复核",
+      "return_binding": "目标节点相等bool",
+      "reachable_condition": "当前参考记录状态与关系类型均匹配",
+      "resolution_source": "本批源码逐调用点与强类型运算符复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2263",
+      "caller": "F0572",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/核心/自检.关系仓库性能基线.ixx:543"
+      ],
+      "call_category": "source-audited-direct-free-operator",
+      "arguments": "记录.源节点,源节点",
+      "argument_resolution": "源码两侧节点句柄静态类型复核",
+      "return_binding": "源节点相等bool",
+      "reachable_condition": "当前参考记录状态与关系类型均匹配",
+      "resolution_source": "本批源码逐调用点与强类型运算符复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2264",
+      "caller": "F0573",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/核心/自检.关系仓库性能基线.ixx:595",
+        "海中鱼巣/核心/自检.关系仓库性能基线.ixx:596"
+      ],
+      "call_category": "source-audited-direct-free-operator",
+      "arguments": "记录.源节点/记录.目标节点,源节点/目标节点",
+      "argument_resolution": "源码两组节点句柄静态类型与短路顺序复核",
+      "return_binding": "源/目标节点相等bool",
+      "reachable_condition": "当前参考记录有效且关系类型匹配；目标比较受源比较短路",
+      "resolution_source": "本批源码逐调用点与强类型运算符复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2265",
+      "caller": "F0574",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/核心/自检.关系仓库性能基线.ixx:577"
+      ],
+      "call_category": "source-audited-direct-free-operator",
+      "arguments": "记录.源节点/记录.目标节点,节点",
+      "argument_resolution": "同一源码行两次节点句柄比较与逻辑或短路复核",
+      "return_binding": "源或目标节点相等bool",
+      "reachable_condition": "当前参考记录状态为有效；第二次比较受第一次结果短路",
+      "resolution_source": "本批源码逐调用点与强类型运算符复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2266",
+      "caller": "F0575",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:854"
+      ],
+      "call_category": "source-audited-direct-free-operator",
+      "arguments": "记录.源节点,源节点",
+      "argument_resolution": "源码两侧节点句柄静态类型复核",
+      "return_binding": "源节点相等bool",
+      "reachable_condition": "记录有效且关系类型匹配",
+      "resolution_source": "本批源码逐调用点与强类型运算符复核",
       "current_root_reachable": true
     }
   ]
