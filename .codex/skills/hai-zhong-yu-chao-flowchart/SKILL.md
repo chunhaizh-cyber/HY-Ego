@@ -1,6 +1,6 @@
 ---
 name: hai-zhong-yu-chao-flowchart
-description: Create Markdown-only single-function flowchart artifacts with Mermaid fenced blocks for the current 海中鱼巣 Git repository when the user asks to 画流程图, 生成流程图, 绘制流程图, or diagram an implementation function, service lifecycle, boundary, root-cause chain, migration route, or plan. Require one root function with explicit parameters and result per implementation-facing chart, nodes that are only named function calls or concrete in-function instructions, the current task tree to be a plan agent creating a new plan package or a plan-support agent revising an existing package after a named execution-side design problem, formal governing evidence for implementation-facing charts, and non-authoritative labels for conceptual diagrams.
+description: Create Markdown-only single-function flowchart artifacts with Mermaid fenced blocks for the current 海中鱼巣 Git repository when the user asks to 画流程图, 生成流程图, 绘制流程图, or diagram an implementation function, service lifecycle, boundary, root-cause chain, migration route, or plan. Require one root function with explicit parameters and result per implementation-facing chart, nodes that are only named function calls or concrete in-function instructions, and a task tree that owns either a plan design package or the formally transferred current-code graph maintenance slice. Require formal governing evidence for implementation-facing charts and non-authoritative labels for conceptual diagrams.
 ---
 
 # 海中鱼巣流程图落盘
@@ -9,7 +9,7 @@ description: Create Markdown-only single-function flowchart artifacts with Merma
 
 1. 先遵守仓库根目录 `AGENTS.md`，不在技能内复制其权威顺序、角色权限或机器硬规则。
 2. 用 `git rev-parse --show-toplevel` 解析当前仓库根目录；只有用户明确指定另一个现存项目路径时才改用该路径。不得硬编码盘符、旧项目名或路径别名。
-3. 交互智能体可按用户直接指令取得明确流程图切片并直接落盘；计划智能体或计划支撑智能体只在自己默认拥有的设计包内落盘。计划智能体只为创建尚未进入既有计划登记 / 修订范围的新计划形成所需流程图且不得修改计划索引；计划支撑智能体默认登记计划索引，接管新计划登记或执行侧具名修订请求后，必须在当前包原目标内直接新建或修改全部必要流程图，不得因流程图缺失把工作交回计划智能体。计划选择、S0 PASS 和正常执行不触发自动窗口的流程图写入。执行智能体只返回事实，不写流程图。
+3. 交互智能体可按用户直接指令取得明确流程图切片并直接落盘；计划智能体或计划支撑智能体只在自己默认拥有的设计包内落盘；流程图与知识图谱维护智能体只在正式移交的当前代码图谱维护切片内，把现状单函数流程图写入 `流程图/代码流程图/**`。计划智能体只为创建尚未进入既有计划登记 / 修订范围的新计划形成目标相关流程图且不得修改计划索引或全项目共享当前代码图谱；计划支撑智能体默认登记计划索引，接管新计划登记或执行侧具名修订请求后，必须在当前包原目标内直接新建或修改全部必要目标流程图，不得因流程图缺失把工作交回计划智能体或维护智能体。计划选择、S0 PASS 和正常执行不触发自动窗口的流程图写入。执行智能体只返回事实，不写流程图。
 4. 实现、服务边界、生命周期、迁移、根因或活动计划流程图必须先读取 `规范/规范目录.md`、相关现行正式规范、有效设计或计划以及必要的当前代码证据。依据缺失、冲突、过期或设计包所有权不符时停止落盘。
 5. 纯概念图可以不依赖实现依据，但必须在标题、说明和关键边界中同时标明 `概念草图 / 非正式 / 非权威 / 不得作为施工依据`。概念图不会因生成、评审或用户确认自动成为规范、详细设计、计划或代码许可。
 
@@ -49,13 +49,15 @@ N05【指令-返回】返回 逻辑内空候选
 
 ## 路径与命名
 
-在解析出的仓库根目录下写入：
+局部设计包流程图在解析出的仓库根目录下按其现行设计包合同写入；没有更精确合同且属于通用落盘时使用：
 
 ```text
 流程图/YYYYMMDD_<函数名或函数主题>_函数流程图_v0.1.md
 ```
 
 同一主题已存在时递增版本；用户明确要求修订某个现存 Markdown 文件时原地更新。不得新建、更新、同步、配对或验证 HTML。历史 HTML 只作非权威旧载体原地保留，不随 Markdown 修订。
+
+流程图与知识图谱维护智能体不使用上述通用顶层路径；它按 `hai-zhong-yu-chao-flowchart-code-correction` 的代码函数图谱重建合同，只在 `流程图/代码流程图/**` 写现状单函数流程图、逐行映射及配套队列 / 清单，并在 `流程图/主程序可达调用关系/**` 维护聚合调用事实。
 
 ## Markdown 最小结构
 
