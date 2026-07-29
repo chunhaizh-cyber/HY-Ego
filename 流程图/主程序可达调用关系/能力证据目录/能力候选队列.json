@@ -1,0 +1,274 @@
+{
+  "schema_version": 1,
+  "queue_kind": "current-capability-candidate-queue",
+  "published_graph_commit": "a582776d1bd78ab88d972e32fbaece594eb43512",
+  "source_code_commit": "3920a74638264f9f539d50f32f3c9fe5fb1982ab",
+  "source_policy": "只读取 published_graph_commit 已发布 Git 树；不读取工作区中的其它维护者 WIP",
+  "source_identity": {
+    "path": "流程图/主程序可达调用关系/00_main可达函数身份表.json",
+    "blob": "56de78dd5143cb999ca57b7c3b22a9873cb698b3"
+  },
+  "source_edges": {
+    "path": "流程图/主程序可达调用关系/01_main可达项目调用边表.json",
+    "blob": "8ee3461c5c12db83c56a36bb06bc28e1bcb615e4"
+  },
+  "source_external_boundaries": {
+    "path": "流程图/主程序可达调用关系/02_main可达外部边界表.json",
+    "blob": "5b461665a63cf724837e05710ba9540d5dd96fe8"
+  },
+  "source_drawing_queue": {
+    "path": "流程图/代码流程图/00_制图队列.json",
+    "blob": "70f915bf697311f47cd37315ab7ddf3eaa3135a9"
+  },
+  "source_catalog_file": "流程图/主程序可达调用关系/能力证据目录/当前能力证据目录.json",
+  "allowed_statuses": [
+    "待识别",
+    "待补流程图",
+    "待补规范证据",
+    "待补合同",
+    "待补验证",
+    "已登记",
+    "非独立能力",
+    "已排除"
+  ],
+  "source_function_count": 1274,
+  "source_chart_completed_count": 505,
+  "source_chart_pending_count": 769,
+  "queued_function_count": 105,
+  "not_yet_enqueued_function_count": 1169,
+  "stable_capability_entry_count": 12,
+  "registered_provider_function_count": 28,
+  "registered_provider_link_count": 28,
+  "dedup_relation_count": 12,
+  "status_summary": {
+    "待识别": 73,
+    "待补流程图": 4,
+    "已登记": 28
+  },
+  "scan_batches": [
+    {
+      "batch_id": "SYSTEMATIC-0001",
+      "scope": "drawing_order 1-64",
+      "function_count": 64
+    },
+    {
+      "batch_id": "GRAPH-REFRESH-a582776d",
+      "scope": "已发布制图批次 F0538-F0557 与新增身份 R0729-R0732",
+      "function_count": 24
+    },
+    {
+      "batch_id": "STABLE-PROVIDER-BACKFILL",
+      "scope": "不在前两批中的既有稳定能力提供函数",
+      "function_count": 17
+    }
+  ],
+  "reason_codes": {
+    "NEEDS_CAPABILITY_IDENTIFICATION": "已发布身份与现状图存在；尚未完成独立能力准入、完整合同核对和去重",
+    "MISSING_PUBLISHED_SINGLE_FUNCTION_CHART": "已发布身份存在；published_graph_commit 中没有现状单函数图或逐行映射",
+    "REGISTERED_PROVIDER": "已与当前稳定能力条目建立提供函数去重关系；不等于验证通过、规范符合或新业务可复用"
+  },
+  "continuation": {
+    "next_systematic_drawing_order": 65,
+    "next_systematic_function_id": "F0068",
+    "last_consumed_graph_batch": "F0538-F0557",
+    "new_identity_batch": "R0729-R0732",
+    "upstream_next_chart_function_id": "F0558"
+  },
+  "dedup_relations": [
+    {
+      "capability_id": "CAP-0001",
+      "provider_function_ids": [
+        "F0002",
+        "F0005"
+      ]
+    },
+    {
+      "capability_id": "CAP-0002",
+      "provider_function_ids": [
+        "F0013"
+      ]
+    },
+    {
+      "capability_id": "CAP-0003",
+      "provider_function_ids": [
+        "F0015"
+      ]
+    },
+    {
+      "capability_id": "CAP-0004",
+      "provider_function_ids": [
+        "F0018"
+      ]
+    },
+    {
+      "capability_id": "CAP-0005",
+      "provider_function_ids": [
+        "F0027"
+      ]
+    },
+    {
+      "capability_id": "CAP-0006",
+      "provider_function_ids": [
+        "F0043"
+      ]
+    },
+    {
+      "capability_id": "CAP-0007",
+      "provider_function_ids": [
+        "F0044",
+        "F0045",
+        "F0046"
+      ]
+    },
+    {
+      "capability_id": "CAP-0008",
+      "provider_function_ids": [
+        "F0048"
+      ]
+    },
+    {
+      "capability_id": "CAP-0009",
+      "provider_function_ids": [
+        "F0190",
+        "F0346"
+      ]
+    },
+    {
+      "capability_id": "CAP-0010",
+      "provider_function_ids": [
+        "R0307"
+      ]
+    },
+    {
+      "capability_id": "CAP-0011",
+      "provider_function_ids": [
+        "F0621",
+        "F0575",
+        "R0088",
+        "F0578",
+        "F0581"
+      ]
+    },
+    {
+      "capability_id": "CAP-0012",
+      "provider_function_ids": [
+        "R0021",
+        "R0022",
+        "R0023",
+        "R0027",
+        "R0028",
+        "R0041",
+        "R0060",
+        "R0061",
+        "R0062"
+      ]
+    }
+  ],
+  "entries": [
+    {"drawing_order": 1, "function_id": "F0001", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 2, "function_id": "F0002", "source_chart_status": "已制图", "status": "已登记", "linked_capability_ids": ["CAP-0001"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 3, "function_id": "F0003", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 4, "function_id": "F0004", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 5, "function_id": "F0005", "source_chart_status": "已制图", "status": "已登记", "linked_capability_ids": ["CAP-0001"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 6, "function_id": "F0006", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 7, "function_id": "F0007", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 8, "function_id": "F0008", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 9, "function_id": "F0009", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 10, "function_id": "F0010", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 11, "function_id": "F0011", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 12, "function_id": "F0013", "source_chart_status": "已制图", "status": "已登记", "linked_capability_ids": ["CAP-0002"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 13, "function_id": "F0014", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 14, "function_id": "F0015", "source_chart_status": "已制图", "status": "已登记", "linked_capability_ids": ["CAP-0003"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 15, "function_id": "F0016", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 16, "function_id": "F0017", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 17, "function_id": "F0018", "source_chart_status": "已制图", "status": "已登记", "linked_capability_ids": ["CAP-0004"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 18, "function_id": "F0019", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 19, "function_id": "F0020", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 20, "function_id": "F0021", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 21, "function_id": "F0022", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 22, "function_id": "F0023", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 23, "function_id": "F0024", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 24, "function_id": "F0025", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 25, "function_id": "F0026", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 26, "function_id": "F0027", "source_chart_status": "已制图", "status": "已登记", "linked_capability_ids": ["CAP-0005"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 27, "function_id": "F0028", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 28, "function_id": "F0029", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 29, "function_id": "F0030", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 30, "function_id": "F0031", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 31, "function_id": "F0032", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 32, "function_id": "F0033", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 33, "function_id": "F0034", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 34, "function_id": "F0035", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 35, "function_id": "F0037", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 36, "function_id": "F0039", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 37, "function_id": "F0040", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 38, "function_id": "F0041", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 39, "function_id": "F0042", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 40, "function_id": "F0043", "source_chart_status": "已制图", "status": "已登记", "linked_capability_ids": ["CAP-0006"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 41, "function_id": "F0044", "source_chart_status": "已制图", "status": "已登记", "linked_capability_ids": ["CAP-0007"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 42, "function_id": "F0045", "source_chart_status": "已制图", "status": "已登记", "linked_capability_ids": ["CAP-0007"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 43, "function_id": "F0046", "source_chart_status": "已制图", "status": "已登记", "linked_capability_ids": ["CAP-0007"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 44, "function_id": "F0047", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 45, "function_id": "F0048", "source_chart_status": "已制图", "status": "已登记", "linked_capability_ids": ["CAP-0008"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 46, "function_id": "F0049", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 47, "function_id": "F0050", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 48, "function_id": "F0051", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 49, "function_id": "F0052", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 50, "function_id": "F0053", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 51, "function_id": "F0054", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 52, "function_id": "F0055", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 53, "function_id": "F0056", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 54, "function_id": "F0057", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 55, "function_id": "F0058", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 56, "function_id": "F0059", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 57, "function_id": "F0060", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 58, "function_id": "F0061", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 59, "function_id": "F0062", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 60, "function_id": "F0063", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 61, "function_id": "F0064", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 62, "function_id": "F0065", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 63, "function_id": "F0066", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 64, "function_id": "F0067", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 167, "function_id": "F0190", "source_chart_status": "已制图", "status": "已登记", "linked_capability_ids": ["CAP-0009"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 288, "function_id": "F0346", "source_chart_status": "已制图", "status": "已登记", "linked_capability_ids": ["CAP-0009"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 480, "function_id": "F0538", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 481, "function_id": "F0539", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 482, "function_id": "F0540", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 483, "function_id": "F0541", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 484, "function_id": "F0542", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 485, "function_id": "F0543", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 486, "function_id": "F0544", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 487, "function_id": "F0545", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 488, "function_id": "F0546", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 489, "function_id": "F0547", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 490, "function_id": "F0548", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 491, "function_id": "F0549", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 492, "function_id": "F0550", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 493, "function_id": "F0551", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 494, "function_id": "F0552", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 495, "function_id": "F0553", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 496, "function_id": "F0554", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 497, "function_id": "F0555", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 498, "function_id": "F0556", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 499, "function_id": "F0557", "source_chart_status": "已制图", "status": "待识别", "linked_capability_ids": [], "reason_code": "NEEDS_CAPABILITY_IDENTIFICATION"},
+    {"drawing_order": 517, "function_id": "F0575", "source_chart_status": "待绘制", "status": "已登记", "linked_capability_ids": ["CAP-0011"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 520, "function_id": "F0578", "source_chart_status": "待绘制", "status": "已登记", "linked_capability_ids": ["CAP-0011"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 523, "function_id": "F0581", "source_chart_status": "待绘制", "status": "已登记", "linked_capability_ids": ["CAP-0011"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 539, "function_id": "F0621", "source_chart_status": "待绘制", "status": "已登记", "linked_capability_ids": ["CAP-0011"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 580, "function_id": "R0021", "source_chart_status": "待绘制", "status": "已登记", "linked_capability_ids": ["CAP-0012"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 581, "function_id": "R0022", "source_chart_status": "待绘制", "status": "已登记", "linked_capability_ids": ["CAP-0012"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 582, "function_id": "R0023", "source_chart_status": "待绘制", "status": "已登记", "linked_capability_ids": ["CAP-0012"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 586, "function_id": "R0027", "source_chart_status": "待绘制", "status": "已登记", "linked_capability_ids": ["CAP-0012"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 587, "function_id": "R0028", "source_chart_status": "待绘制", "status": "已登记", "linked_capability_ids": ["CAP-0012"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 600, "function_id": "R0041", "source_chart_status": "待绘制", "status": "已登记", "linked_capability_ids": ["CAP-0012"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 619, "function_id": "R0060", "source_chart_status": "待绘制", "status": "已登记", "linked_capability_ids": ["CAP-0012"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 620, "function_id": "R0061", "source_chart_status": "待绘制", "status": "已登记", "linked_capability_ids": ["CAP-0012"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 621, "function_id": "R0062", "source_chart_status": "待绘制", "status": "已登记", "linked_capability_ids": ["CAP-0012"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 647, "function_id": "R0088", "source_chart_status": "待绘制", "status": "已登记", "linked_capability_ids": ["CAP-0011"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 852, "function_id": "R0307", "source_chart_status": "待绘制", "status": "已登记", "linked_capability_ids": ["CAP-0010"], "reason_code": "REGISTERED_PROVIDER"},
+    {"drawing_order": 1271, "function_id": "R0729", "source_chart_status": "待绘制", "status": "待补流程图", "linked_capability_ids": [], "reason_code": "MISSING_PUBLISHED_SINGLE_FUNCTION_CHART"},
+    {"drawing_order": 1272, "function_id": "R0730", "source_chart_status": "待绘制", "status": "待补流程图", "linked_capability_ids": [], "reason_code": "MISSING_PUBLISHED_SINGLE_FUNCTION_CHART"},
+    {"drawing_order": 1273, "function_id": "R0731", "source_chart_status": "待绘制", "status": "待补流程图", "linked_capability_ids": [], "reason_code": "MISSING_PUBLISHED_SINGLE_FUNCTION_CHART"},
+    {"drawing_order": 1274, "function_id": "R0732", "source_chart_status": "待绘制", "status": "待补流程图", "linked_capability_ids": [], "reason_code": "MISSING_PUBLISHED_SINGLE_FUNCTION_CHART"}
+  ]
+}

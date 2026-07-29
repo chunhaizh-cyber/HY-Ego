@@ -1,0 +1,325 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "海中鱼巣当前能力证据目录",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "catalog_kind",
+    "frozen_commit",
+    "source_graph",
+    "selection_scope",
+    "entry_count",
+    "status_summary",
+    "entries"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "catalog_kind": {
+      "const": "current-capability-evidence"
+    },
+    "frozen_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "source_graph": {
+      "$ref": "#/$defs/source_graph"
+    },
+    "selection_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "included",
+        "excluded",
+        "reuse_decision"
+      ],
+      "properties": {
+        "root": {
+          "const": "main-current-reachable"
+        },
+        "included": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "excluded": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reuse_decision": {
+          "const": "不在本目录裁决"
+        }
+      }
+    },
+    "entry_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "status_summary": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/capability_entry"
+      }
+    }
+  },
+  "$defs": {
+    "source_graph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity_path",
+        "edge_path",
+        "knowledge_graph_path",
+        "embedded_code_commit",
+        "currentity_method",
+        "verified_unchanged_files"
+      ],
+      "properties": {
+        "identity_path": {
+          "type": "string"
+        },
+        "edge_path": {
+          "type": "string"
+        },
+        "knowledge_graph_path": {
+          "type": "string"
+        },
+        "embedded_code_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "currentity_method": {
+          "type": "string"
+        },
+        "verified_unchanged_files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "function_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "function_id",
+        "complete_signature",
+        "file",
+        "definition_line",
+        "shortest_depth",
+        "chart",
+        "mapping"
+      ],
+      "properties": {
+        "function_id": {
+          "type": "string"
+        },
+        "complete_signature": {
+          "type": "string"
+        },
+        "file": {
+          "type": "string"
+        },
+        "definition_line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "shortest_depth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "chart": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mapping": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "evidence_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "path",
+        "locator",
+        "status"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "源码",
+            "调用关系",
+            "现状流程图",
+            "正式规范",
+            "自检入口",
+            "验证记录",
+            "Git差异证明"
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "locator": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "capability_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capability_id",
+        "name",
+        "domain",
+        "purpose_summary",
+        "implementation_status",
+        "status_basis",
+        "provider_entries",
+        "inputs",
+        "preconditions",
+        "outputs",
+        "state_reads",
+        "state_writes",
+        "side_effects",
+        "transaction_contract",
+        "logic_results",
+        "internal_error_boundaries",
+        "evidence",
+        "reuse_boundary",
+        "known_gaps"
+      ],
+      "properties": {
+        "capability_id": {
+          "type": "string",
+          "pattern": "^CAP-[0-9]{4}$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "domain": {
+          "type": "string",
+          "minLength": 1
+        },
+        "purpose_summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "implementation_status": {
+          "enum": [
+            "候选待复核",
+            "部分实现",
+            "已实现待验证",
+            "已验证",
+            "接口骨架",
+            "已退出"
+          ]
+        },
+        "status_basis": {
+          "type": "string",
+          "minLength": 1
+        },
+        "provider_entries": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/function_ref"
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "preconditions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "state_reads": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "state_writes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "side_effects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "transaction_contract": {
+          "type": "string"
+        },
+        "logic_results": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "internal_error_boundaries": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/evidence_ref"
+          }
+        },
+        "reuse_boundary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "known_gaps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
