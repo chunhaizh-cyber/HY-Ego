@@ -16,7 +16,7 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1286,
-  "project_call_edge_count": 3536,
+  "project_call_edge_count": 3546,
   "functions": [
     {
       "function_id": "F0001",
@@ -1616,6 +1616,7 @@
         "R0086",
         "R0087",
         "R0088",
+        "R0119",
         "R0125",
         "R0127",
         "R0214",
@@ -2800,8 +2801,7 @@
         "F0285",
         "F0286",
         "F0287",
-        "F0288",
-        "R0139"
+        "F0288"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0037；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:885",
       "reachability_class": "main 参数自检/专项模式可达",
@@ -7927,7 +7927,8 @@
         "R0121",
         "R0145",
         "R0580",
-        "R0730"
+        "R0730",
+        "R0750"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0197；调用点=海中鱼巣/核心/节点仓库.cpp:454",
@@ -8033,7 +8034,8 @@
         "R0690",
         "R0704",
         "R0717",
-        "R0730"
+        "R0730",
+        "R0750"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0197；调用点=海中鱼巣/核心/节点仓库.cpp:456",
@@ -8107,7 +8109,8 @@
         "R0690",
         "R0704",
         "R0717",
-        "R0730"
+        "R0730",
+        "R0750"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0197；调用点=海中鱼巣/核心/节点仓库.cpp:456",
@@ -8320,6 +8323,7 @@
         "F0628",
         "R0088",
         "R0102",
+        "R0116",
         "R0626",
         "R0648",
         "R0649",
@@ -8328,7 +8332,8 @@
         "R0690",
         "R0704",
         "R0717",
-        "R0730"
+        "R0730",
+        "R0750"
       ],
       "callees": [
         "F0631"
@@ -9770,7 +9775,8 @@
         "R0088",
         "R0402",
         "R0626",
-        "R0730"
+        "R0730",
+        "R0750"
       ],
       "callees": [
         "R0101"
@@ -15061,7 +15067,6 @@
         "R0069",
         "R0076",
         "R0119",
-        "R0123",
         "R0125",
         "R0723"
       ],
@@ -18205,7 +18210,8 @@
         "R0102"
       ],
       "callees": [
-        "R0111"
+        "R0111",
+        "R0138"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0102；调用点=海中鱼巣/核心/执行器.结构写入.ixx:126,海中鱼巣/核心/执行器.结构写入.ixx:135,海中鱼巣/核心/执行器.结构写入.ixx:142,海中鱼巣/核心/执行器.结构写入.ixx:155,海中鱼巣/核心/执行器.结构写入.ixx:164,海中鱼巣/核心/执行器.结构写入.ixx:173",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -18394,6 +18400,7 @@
       "callees": [
         "F0338",
         "F0339",
+        "F0345",
         "F0398",
         "R0042",
         "R0056",
@@ -18416,7 +18423,8 @@
         "R0656",
         "R0678",
         "R0696",
-        "R0708"
+        "R0708",
+        "R0749"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0340；调用点=海中鱼巣/领域/数据操作.概念活动.ixx:63",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -18439,9 +18447,11 @@
         "R0027"
       ],
       "callees": [
+        "F0051",
         "F0630",
         "R0121",
         "R0122",
+        "R0127",
         "R0128"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0027；调用点=海中鱼巣/核心/会话.结构写入.ixx:453",
@@ -18536,12 +18546,11 @@
       "definition_line": 298,
       "definition_end_line": 302,
       "overload_identity": "bool 海中鱼巣::索引仓库::删除主键(std::uint64_t 主键, const 结构事务令牌& 令牌)",
-      "shortest_depth": 7,
+      "shortest_depth": 8,
       "callers": [
-        "R0574"
+        "R0750"
       ],
       "callees": [
-        "F0630",
         "R0120",
         "R0126"
       ],
@@ -18617,7 +18626,8 @@
       "shortest_depth": 8,
       "callers": [
         "R0123",
-        "R0125"
+        "R0125",
+        "R0750"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0123；调用点=海中鱼巣/核心/索引仓库.cpp:301",
@@ -18639,6 +18649,7 @@
       "shortest_depth": 11,
       "callers": [
         "R0040",
+        "R0119",
         "R0122",
         "R0638"
       ],
@@ -18908,6 +18919,7 @@
         "R0060",
         "R0062",
         "R0102",
+        "R0109",
         "R0116",
         "R0144",
         "R0634",
@@ -18925,27 +18937,6 @@
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0116；调用点=海中鱼巣/核心/执行器.结构写入.ixx:99",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
-      "legacy_or_unwired": false,
-      "current_root_reachable": true
-    },
-    {
-      "function_id": "R0139",
-      "complete_signature": "const 关系仓库& 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::读取关系仓库() const",
-      "callable_type": "Method",
-      "category": "Function/Method",
-      "module_identity": "自检.关系仓库性能基线",
-      "file": "海中鱼巣/核心/自检.关系仓库性能基线.ixx",
-      "definition_line": 329,
-      "definition_end_line": 329,
-      "overload_identity": "const 关系仓库& 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::读取关系仓库() const",
-      "shortest_depth": 5,
-      "callers": [
-        "F0097"
-      ],
-      "callees": [],
-      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0097；调用点=海中鱼巣/核心/自检.关系仓库性能基线.ixx:819",
-      "reachability_class": "main 参数自检/专项模式可达",
-      "test_or_self_check_path": true,
       "legacy_or_unwired": false,
       "current_root_reachable": true
     },
@@ -29327,8 +29318,8 @@
         "F0441",
         "R0008",
         "R0075",
-        "R0123",
-        "R0147"
+        "R0147",
+        "R0750"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0364；调用点=海中鱼巣/领域/语素服务.h:119",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -29950,7 +29941,7 @@
       "definition_line": 25,
       "definition_end_line": 25,
       "overload_identity": "海中鱼巣::结构事务许可::结构事务许可()",
-      "shortest_depth": 8,
+      "shortest_depth": 7,
       "callers": [
         "R0101",
         "R0137"
@@ -33718,12 +33709,42 @@
       "definition_line": 75,
       "definition_end_line": 75,
       "overload_identity": "海中鱼巣::结构写入会话::~结构写入会话()",
-      "shortest_depth": 12,
+      "shortest_depth": 9,
       "callers": [
-        "R0102"
+        "R0102",
+        "R0116"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0102；调用点=海中鱼巣/核心/执行器.结构写入.ixx:122-183，局部会话成功构造后任一正常、早退或异常退出",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0750",
+      "complete_signature": "bool 海中鱼巣::索引仓库::删除主键(std::uint64_t 主键)",
+      "callable_type": "Method",
+      "category": "Function/Method",
+      "module_identity": "全局模块片段/源文件定义",
+      "file": "海中鱼巣/核心/索引仓库.cpp",
+      "definition_line": 288,
+      "definition_end_line": 296,
+      "overload_identity": "bool 海中鱼巣::索引仓库::删除主键(std::uint64_t 主键)",
+      "shortest_depth": 7,
+      "callers": [
+        "R0574"
+      ],
+      "callees": [
+        "F0336",
+        "F0338",
+        "F0339",
+        "F0345",
+        "F0397",
+        "R0123",
+        "R0126"
+      ],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0574；调用点=海中鱼巣/领域/语素服务.h:376，单实参调用",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
       "legacy_or_unwired": false,

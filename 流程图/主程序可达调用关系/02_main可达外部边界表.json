@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1286,
-  "project_call_edge_count": 3536,
-  "external_count": 2301,
+  "project_call_edge_count": 3546,
+  "external_count": 2357,
   "callback_registration_count": 34,
   "external_boundaries": [
     {
@@ -13663,404 +13663,404 @@
     {
       "id": "X01571",
       "caller": "R0119",
-      "signature": "unique_lock(std::shared_mutex &) :: void (std::shared_mutex &)",
+      "signature": "std::unique_lock<std::shared_mutex>::unique_lock(std::shared_mutex&)",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:139"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01572",
       "caller": "R0119",
-      "signature": "operator==(const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主键绑定记录>>>> &) :: bool (const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主键绑定记录>>>> &) const noexcept",
+      "signature": "bool std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator::operator==(const std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator&) const noexcept",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:141"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01573",
       "caller": "R0119",
-      "signature": "operator==(const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, std::vector<unsigned long long>>>>> &) :: bool (const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, std::vector<unsigned long long>>>>> &) const noexcept",
+      "signature": "bool std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator::operator==(const std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator&) const noexcept",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:153"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01574",
       "caller": "R0119",
-      "signature": "find<>(std::_Vector_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>>, const std::_Vector_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>>, const unsigned long long &) :: std::_Vector_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>> (std::_Vector_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>>, const std::_Vector_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>>, const unsigned long long &)",
+      "signature": "std::vector<std::uint64_t>::iterator std::find<std::vector<std::uint64_t>::iterator,std::uint64_t>(std::vector<std::uint64_t>::iterator,std::vector<std::uint64_t>::iterator,const std::uint64_t&)",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:154"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01575",
       "caller": "R0119",
-      "signature": "operator==(const _Vector_const_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>> &) :: bool (const _Vector_const_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>> &) const noexcept",
+      "signature": "bool std::vector<std::uint64_t>::iterator::operator==(const std::vector<std::uint64_t>::iterator&) const noexcept",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:154"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01576",
       "caller": "R0122",
-      "signature": "operator==(const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主键绑定记录>>>> &) :: bool (const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主键绑定记录>>>> &) const noexcept",
+      "signature": "bool std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator::operator==(const std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator&) const noexcept",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:34"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01577",
       "caller": "R0122",
-      "signature": "_List_iterator(const _List_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, std::vector<unsigned long long>>>>> &) :: void (const _List_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, std::vector<unsigned long long>>>>> &) noexcept",
+      "signature": "std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator::iterator(const std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator&) noexcept",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:50"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01578",
       "caller": "R0122",
-      "signature": "erase<>(iterator) :: iterator (iterator) noexcept(_Nothrow_hash<std::_Umap_traits<unsigned long long, std::vector<unsigned long long>, std::_Uhash_compare<unsigned long long, std::hash<unsigned long long>, std::equal_to<unsigned long long>>, std::allocator<std::pair<const unsigned long long, std::vector<unsigned long long>>>, false>, key_type>)",
+      "signature": "std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::erase(std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator)",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:50"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01579",
       "caller": "R0122",
-      "signature": "_List_iterator(const _List_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, std::vector<unsigned long long>>>>> &) :: void (const _List_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, std::vector<unsigned long long>>>>> &) noexcept",
+      "signature": "std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator::iterator(const std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator&) noexcept",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:58"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01580",
       "caller": "R0122",
-      "signature": "erase<>(iterator) :: iterator (iterator) noexcept(_Nothrow_hash<std::_Umap_traits<unsigned long long, std::vector<unsigned long long>, std::_Uhash_compare<unsigned long long, std::hash<unsigned long long>, std::equal_to<unsigned long long>>, std::allocator<std::pair<const unsigned long long, std::vector<unsigned long long>>>, false>, key_type>)",
+      "signature": "std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::erase(std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator)",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:58"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01581",
       "caller": "R0123",
-      "signature": "unique_lock(std::shared_mutex &) :: void (std::shared_mutex &)",
+      "signature": "std::unique_lock<std::shared_mutex>::unique_lock(std::shared_mutex&)",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:300"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01582",
       "caller": "R0124",
-      "signature": "shared_lock(mutex_type &) :: void (mutex_type &)",
+      "signature": "std::shared_lock<std::shared_mutex>::shared_lock(std::shared_mutex&)",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:308"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01583",
       "caller": "R0124",
-      "signature": "operator==(const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主键绑定记录>>>> &) :: bool (const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主键绑定记录>>>> &) const noexcept",
+      "signature": "bool std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::const_iterator::operator==(const std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::const_iterator&) const noexcept",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:310"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01584",
       "caller": "R0124",
-      "signature": "optional<>(const 海中鱼巣::主键绑定记录 &) :: void (const 海中鱼巣::主键绑定记录 &) noexcept(is_nothrow_constructible_v<海中鱼巣::主键绑定记录, const 海中鱼巣::主键绑定记录 &>)",
+      "signature": "std::optional<海中鱼巣::主键绑定记录>::optional(const 海中鱼巣::主键绑定记录&)",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:311"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01585",
       "caller": "R0125",
-      "signature": "unique_lock(std::shared_mutex &) :: void (std::shared_mutex &)",
+      "signature": "std::unique_lock<std::shared_mutex>::unique_lock(std::shared_mutex&)",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:369"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01586",
       "caller": "R0125",
-      "signature": "operator==(const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主键绑定记录>>>> &) :: bool (const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主键绑定记录>>>> &) const noexcept",
+      "signature": "bool std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator::operator==(const std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator&) const noexcept",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:371"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01587",
       "caller": "R0125",
-      "signature": "operator==(const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, std::vector<unsigned long long>>>>> &) :: bool (const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, std::vector<unsigned long long>>>>> &) const noexcept",
+      "signature": "bool std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator::operator==(const std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator&) const noexcept",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:387"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01588",
       "caller": "R0125",
-      "signature": "find<>(std::_Vector_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>>, const std::_Vector_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>>, const unsigned long long &) :: std::_Vector_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>> (std::_Vector_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>>, const std::_Vector_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>>, const unsigned long long &)",
+      "signature": "std::vector<std::uint64_t>::iterator std::find<std::vector<std::uint64_t>::iterator,std::uint64_t>(std::vector<std::uint64_t>::iterator,std::vector<std::uint64_t>::iterator,const std::uint64_t&)",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:388"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01589",
       "caller": "R0125",
-      "signature": "operator==(const _Vector_const_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>> &) :: bool (const _Vector_const_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>> &) const noexcept",
+      "signature": "bool std::vector<std::uint64_t>::iterator::operator==(const std::vector<std::uint64_t>::iterator&) const noexcept",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:388"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01590",
       "caller": "R0126",
-      "signature": "operator==(const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主键绑定记录>>>> &) :: bool (const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主键绑定记录>>>> &) const noexcept",
+      "signature": "bool std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator::operator==(const std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator&) const noexcept",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:73"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01591",
       "caller": "R0126",
-      "signature": "operator==(const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, std::vector<unsigned long long>>>>> &) :: bool (const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, std::vector<unsigned long long>>>>> &) const noexcept",
+      "signature": "bool std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator::operator==(const std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator&) const noexcept",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:76"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01592",
       "caller": "R0126",
-      "signature": "std::logic_error(...)",
+      "signature": "std::logic_error::logic_error(const char*)",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:77"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立",
-      "resolution_source": "最终 caller 源码范围 + std 限定名调用语法复核",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01593",
       "caller": "R0126",
-      "signature": "find<>(std::_Vector_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>>, const std::_Vector_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>>, const unsigned long long &) :: std::_Vector_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>> (std::_Vector_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>>, const std::_Vector_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>>, const unsigned long long &)",
+      "signature": "std::vector<std::uint64_t>::iterator std::find<std::vector<std::uint64_t>::iterator,std::uint64_t>(std::vector<std::uint64_t>::iterator,std::vector<std::uint64_t>::iterator,const std::uint64_t&)",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:80"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01594",
       "caller": "R0126",
-      "signature": "operator==(const _Vector_const_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>> &) :: bool (const _Vector_const_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>> &) const noexcept",
+      "signature": "bool std::vector<std::uint64_t>::iterator::operator==(const std::vector<std::uint64_t>::iterator&) const noexcept",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:81"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01595",
       "caller": "R0126",
-      "signature": "std::logic_error(...)",
+      "signature": "std::logic_error::logic_error(const char*)",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:82"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立",
-      "resolution_source": "最终 caller 源码范围 + std 限定名调用语法复核",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01596",
       "caller": "R0126",
-      "signature": "_List_iterator(const _List_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主键绑定记录>>>> &) :: void (const _List_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::主键绑定记录>>>> &) noexcept",
+      "signature": "std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator::iterator(const std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator&) noexcept",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:84"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01597",
       "caller": "R0126",
-      "signature": "erase<>(iterator) :: iterator (iterator) noexcept(_Nothrow_hash<std::_Umap_traits<unsigned long long, 海中鱼巣::主键绑定记录, std::_Uhash_compare<unsigned long long, std::hash<unsigned long long>, std::equal_to<unsigned long long>>, std::allocator<std::pair<const unsigned long long, 海中鱼巣::主键绑定记录>>, false>, key_type>)",
+      "signature": "std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::erase(std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator)",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:84"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01598",
       "caller": "R0126",
-      "signature": "_Vector_const_iterator(const _Vector_const_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>> &) :: void (const _Vector_const_iterator<std::_Vector_val<std::_Simple_types<unsigned long long>>> &) noexcept",
+      "signature": "std::vector<std::uint64_t>::const_iterator::const_iterator(const std::vector<std::uint64_t>::const_iterator&) noexcept",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:85"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01599",
       "caller": "R0126",
-      "signature": "_List_iterator(const _List_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, std::vector<unsigned long long>>>>> &) :: void (const _List_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, std::vector<unsigned long long>>>>> &) noexcept",
+      "signature": "std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator::iterator(const std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator&) noexcept",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:86"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01600",
       "caller": "R0126",
-      "signature": "erase<>(iterator) :: iterator (iterator) noexcept(_Nothrow_hash<std::_Umap_traits<unsigned long long, std::vector<unsigned long long>, std::_Uhash_compare<unsigned long long, std::hash<unsigned long long>, std::equal_to<unsigned long long>>, std::allocator<std::pair<const unsigned long long, std::vector<unsigned long long>>>, false>, key_type>)",
+      "signature": "std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::erase(std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator)",
       "locations": [
         "海中鱼巣/核心/索引仓库.cpp:86"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
       "id": "X01601",
       "caller": "R0137",
-      "signature": "std::move(...)",
+      "signature": "std::remove_reference_t<std::shared_ptr<void>&>&& std::move<std::shared_ptr<void>&>(std::shared_ptr<void>&) noexcept",
       "locations": [
         "海中鱼巣/核心/结构事务接线.数据.h:48"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立",
-      "resolution_source": "最终 caller 源码范围 + std 限定名调用语法复核",
+      "resolution_source": "本批源码静态容器类型、迭代器类别和具体模板实例复核",
       "current_root_reachable": true
     },
     {
@@ -21678,20 +21678,6 @@
       "call_count": 1,
       "queued": false,
       "boundary_category": "Standard library callback",
-      "reachable_condition": "调用方从 F0001 可达且对应源码表达式成立",
-      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X02319",
-      "signature": "海中鱼巣::结构事务许可 (*)(const std::shared_ptr<void>&) 原始函数指针调用",
-      "caller": "R0116",
-      "locations": [
-        "海中鱼巣/核心/执行器.结构写入.ixx:76"
-      ],
-      "call_count": 1,
-      "queued": false,
-      "boundary_category": "Raw function pointer",
       "reachable_condition": "调用方从 F0001 可达且对应源码表达式成立",
       "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
       "current_root_reachable": true
@@ -31196,6 +31182,829 @@
       "boundary_category": "Standard library or external boundary",
       "reachable_condition": "调用方从 F0001 可达且对应源码表达式或隐式生命周期成立",
       "resolution_source": "本批源码静态类型、表达式语境与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02992",
+      "signature": "海中鱼巣::结构事务接线::结构事务接线(海中鱼巣::结构事务接线&&)",
+      "caller": "R0114",
+      "locations": [
+        "海中鱼巣/核心/执行器.结构写入.ixx:66"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Compiler-generated lifecycle",
+      "reachable_condition": "构造执行器成员接线_时从按值参数隐式移动构造",
+      "resolution_source": "本批源码初始化列表与非平凡特殊成员生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02993",
+      "signature": "海中鱼巣::结构事务接线::~结构事务接线()",
+      "caller": "R0114",
+      "locations": [
+        "海中鱼巣/核心/执行器.结构写入.ixx:60-67"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Compiler-generated lifecycle",
+      "reachable_condition": "按值参数接线成功构造后退出构造函数作用域",
+      "resolution_source": "本批源码按值参数生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03047",
+      "signature": "std::shared_ptr<void>& std::shared_ptr<void>::operator=(std::shared_ptr<void>&&) noexcept",
+      "caller": "R0137",
+      "locations": [
+        "海中鱼巣/核心/结构事务接线.数据.h:48"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library smart pointer",
+      "reachable_condition": "结构事务许可创建时把运行期状态移动赋给结果成员",
+      "resolution_source": "本批源码静态类型、移动赋值和现状图复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03048",
+      "signature": "std::shared_ptr<void>::~shared_ptr() noexcept",
+      "caller": "R0137",
+      "locations": [
+        "海中鱼巣/核心/结构事务接线.数据.h:43-52"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library smart pointer",
+      "reachable_condition": "按值参数运行期状态构造后退出函数作用域",
+      "resolution_source": "本批源码按值参数生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02994",
+      "signature": "std::unique_lock<std::shared_mutex>::~unique_lock() noexcept",
+      "caller": "R0119",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:139-170"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0119可达且局部锁已构造后退出作用域",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02995",
+      "signature": "std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::find(const std::uint64_t&)",
+      "caller": "R0119",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:140"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0119可达且执行到对应容器调用",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02996",
+      "signature": "std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::end() noexcept",
+      "caller": "R0119",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:141"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0119可达且执行到对应容器调用",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02997",
+      "signature": "std::pair<const std::uint64_t,海中鱼巣::主键绑定记录>* std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator::operator->() const noexcept",
+      "caller": "R0119",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:142",
+        "海中鱼巣/核心/索引仓库.cpp:145",
+        "海中鱼巣/核心/索引仓库.cpp:146",
+        "海中鱼巣/核心/索引仓库.cpp:147",
+        "海中鱼巣/核心/索引仓库.cpp:148"
+      ],
+      "call_count": 5,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0119可达且现有迭代器有效分支执行",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02998",
+      "signature": "std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::find(const std::uint64_t&)",
+      "caller": "R0119",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:152"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0119可达且执行到对应容器调用",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02999",
+      "signature": "std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::end() noexcept",
+      "caller": "R0119",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:153"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0119可达且执行到对应容器调用",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03000",
+      "signature": "std::pair<const std::uint64_t,std::vector<std::uint64_t>>* std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator::operator->() const noexcept",
+      "caller": "R0119",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:154",
+        "海中鱼巣/核心/索引仓库.cpp:155"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0119可达且反向位置迭代器有效分支执行",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03001",
+      "signature": "std::vector<std::uint64_t>::iterator std::vector<std::uint64_t>::begin() noexcept",
+      "caller": "R0119",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:154"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0119可达且执行到反向主键组查找",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03002",
+      "signature": "std::vector<std::uint64_t>::iterator std::vector<std::uint64_t>::end() noexcept",
+      "caller": "R0119",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:154",
+        "海中鱼巣/核心/索引仓库.cpp:155"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0119可达且执行到反向主键组查找或结果比较",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03003",
+      "signature": "bool std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::contains(const std::uint64_t&) const",
+      "caller": "R0119",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:163"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0119可达且绑定失败分支裁决永久保留键",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03004",
+      "signature": "std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::find(const std::uint64_t&)",
+      "caller": "R0122",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:33"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0122可达且执行到对应容器调用",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03005",
+      "signature": "std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::end() noexcept",
+      "caller": "R0122",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:34"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0122可达且执行到对应容器调用",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03006",
+      "signature": "std::pair<const std::uint64_t,海中鱼巣::主键绑定记录>* std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator::operator->() const noexcept",
+      "caller": "R0122",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:34",
+        "海中鱼巣/核心/索引仓库.cpp:52"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0122可达且对应迭代器有效分支执行",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03007",
+      "signature": "bool std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::contains(const std::uint64_t&) const",
+      "caller": "R0122",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:35"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0122可达且执行到永久保留键判断",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03008",
+      "signature": "std::pair<std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator,bool> std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::emplace<const std::uint64_t&,const 海中鱼巣::主键绑定记录&>(const std::uint64_t&,const 海中鱼巣::主键绑定记录&)",
+      "caller": "R0122",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:39",
+        "海中鱼巣/核心/索引仓库.cpp:47"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0122可达且执行到永久键或正向记录插入",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03009",
+      "signature": "std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator&& std::get<0>(std::pair<std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator,bool>&&)",
+      "caller": "R0122",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:39",
+        "海中鱼巣/核心/索引仓库.cpp:47"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0122可达且解构插入结果",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03010",
+      "signature": "bool&& std::get<1>(std::pair<std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator,bool>&&)",
+      "caller": "R0122",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:39",
+        "海中鱼巣/核心/索引仓库.cpp:47"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0122可达且解构插入结果",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03011",
+      "signature": "std::pair<std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator,bool> std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::try_emplace<>(const std::uint64_t&)",
+      "caller": "R0122",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:44"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0122可达且建立或取得反向主键组",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03012",
+      "signature": "std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator&& std::get<0>(std::pair<std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator,bool>&&)",
+      "caller": "R0122",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:44"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0122可达且解构反向组插入结果",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03013",
+      "signature": "bool&& std::get<1>(std::pair<std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator,bool>&&)",
+      "caller": "R0122",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:44"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0122可达且解构反向组插入结果",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03014",
+      "signature": "std::pair<const std::uint64_t,std::vector<std::uint64_t>>* std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator::operator->() const noexcept",
+      "caller": "R0122",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:45",
+        "海中鱼巣/核心/索引仓库.cpp:49",
+        "海中鱼巣/核心/索引仓库.cpp:50",
+        "海中鱼巣/核心/索引仓库.cpp:55",
+        "海中鱼巣/核心/索引仓库.cpp:56",
+        "海中鱼巣/核心/索引仓库.cpp:58"
+      ],
+      "call_count": 7,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0122可达且反向位置迭代器有效",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03015",
+      "signature": "void std::vector<std::uint64_t>::push_back(const std::uint64_t&)",
+      "caller": "R0122",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:45"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0122可达且向反向主键组追加键",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03016",
+      "signature": "void std::vector<std::uint64_t>::pop_back()",
+      "caller": "R0122",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:49",
+        "海中鱼巣/核心/索引仓库.cpp:56"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0122可达且后续插入失败时回滚反向键",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03017",
+      "signature": "bool std::vector<std::uint64_t>::empty() const noexcept",
+      "caller": "R0122",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:50",
+        "海中鱼巣/核心/索引仓库.cpp:55",
+        "海中鱼巣/核心/索引仓库.cpp:58"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0122可达且复核反向主键组是否为空",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03018",
+      "signature": "std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::size_type std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::erase(const std::uint64_t&)",
+      "caller": "R0122",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:51",
+        "海中鱼巣/核心/索引仓库.cpp:62"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0122可达且失败回滚或提交后移除永久键",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03019",
+      "signature": "std::uint64_t& std::vector<std::uint64_t>::back() noexcept",
+      "caller": "R0122",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:55"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0122可达且回滚前复核末尾键",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03020",
+      "signature": "std::unique_lock<std::shared_mutex>::unique_lock(std::shared_mutex&)",
+      "caller": "R0750",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:294"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0750可达且未接域主键非零后构造独占锁",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03021",
+      "signature": "std::unique_lock<std::shared_mutex>::~unique_lock() noexcept",
+      "caller": "R0750",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:294-296"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0750局部锁已构造后退出作用域",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03022",
+      "signature": "std::unique_lock<std::shared_mutex>::~unique_lock() noexcept",
+      "caller": "R0123",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:300-302"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0123局部锁已构造后退出作用域",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03023",
+      "signature": "std::shared_lock<std::shared_mutex>::~shared_lock() noexcept",
+      "caller": "R0124",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:308-312"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0124局部共享锁已构造后退出作用域",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03024",
+      "signature": "std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::const_iterator std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::find(const std::uint64_t&) const",
+      "caller": "R0124",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:309"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0124可达且令牌与主键有效",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03025",
+      "signature": "std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::const_iterator std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::end() const noexcept",
+      "caller": "R0124",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:310"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0124可达且比较主键查找结果",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03026",
+      "signature": "const std::pair<const std::uint64_t,海中鱼巣::主键绑定记录>* std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::const_iterator::operator->() const noexcept",
+      "caller": "R0124",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:311"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0124可达且主键位置存在",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03027",
+      "signature": "std::unique_lock<std::shared_mutex>::~unique_lock() noexcept",
+      "caller": "R0125",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:369-400"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0125局部独占锁已构造后退出作用域",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03028",
+      "signature": "std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::find(const std::uint64_t&)",
+      "caller": "R0125",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:370"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0125可达且输入前置通过",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03029",
+      "signature": "std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::end() noexcept",
+      "caller": "R0125",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:371"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0125可达且比较主键查找结果",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03030",
+      "signature": "std::pair<const std::uint64_t,海中鱼巣::主键绑定记录>* std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator::operator->() const noexcept",
+      "caller": "R0125",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:375",
+        "海中鱼巣/核心/索引仓库.cpp:376",
+        "海中鱼巣/核心/索引仓库.cpp:377",
+        "海中鱼巣/核心/索引仓库.cpp:378"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0125可达且主键位置存在",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03031",
+      "signature": "std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::find(const std::uint64_t&)",
+      "caller": "R0125",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:386"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0125可达且预期节点与记录一致",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03032",
+      "signature": "std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::end() noexcept",
+      "caller": "R0125",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:387"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0125可达且比较反向查找结果",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03033",
+      "signature": "std::pair<const std::uint64_t,std::vector<std::uint64_t>>* std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator::operator->() const noexcept",
+      "caller": "R0125",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:388",
+        "海中鱼巣/核心/索引仓库.cpp:389"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0125可达且反向位置有效分支执行",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03034",
+      "signature": "std::vector<std::uint64_t>::iterator std::vector<std::uint64_t>::begin() noexcept",
+      "caller": "R0125",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:388"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0125可达且查找反向主键",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03035",
+      "signature": "std::vector<std::uint64_t>::iterator std::vector<std::uint64_t>::end() noexcept",
+      "caller": "R0125",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:388",
+        "海中鱼巣/核心/索引仓库.cpp:389"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0125可达且查找或比较反向主键位置",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03036",
+      "signature": "std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::size_type std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::erase(const std::uint64_t&)",
+      "caller": "R0125",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:397"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0125可达且主键删除提交后移除永久键",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03037",
+      "signature": "std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::find(const std::uint64_t&)",
+      "caller": "R0126",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:72"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0126可达且执行正向主键查找",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03038",
+      "signature": "std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::end() noexcept",
+      "caller": "R0126",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:73"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0126可达且比较正向主键位置",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03039",
+      "signature": "std::pair<const std::uint64_t,海中鱼巣::主键绑定记录>* std::unordered_map<std::uint64_t,海中鱼巣::主键绑定记录>::iterator::operator->() const noexcept",
+      "caller": "R0126",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:74"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0126可达且正向主键位置存在",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03040",
+      "signature": "std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::find(const std::uint64_t&)",
+      "caller": "R0126",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:75"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0126可达且读取反向主键组",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03041",
+      "signature": "std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::end() noexcept",
+      "caller": "R0126",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:76"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0126可达且比较反向主键组位置",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03042",
+      "signature": "std::pair<const std::uint64_t,std::vector<std::uint64_t>>* std::unordered_map<std::uint64_t,std::vector<std::uint64_t>>::iterator::operator->() const noexcept",
+      "caller": "R0126",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:79"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0126可达且反向主键组存在",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03043",
+      "signature": "std::vector<std::uint64_t>::iterator std::vector<std::uint64_t>::begin() noexcept",
+      "caller": "R0126",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:80"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0126可达且查找待删除主键",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03044",
+      "signature": "std::vector<std::uint64_t>::iterator std::vector<std::uint64_t>::end() noexcept",
+      "caller": "R0126",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:80",
+        "海中鱼巣/核心/索引仓库.cpp:81"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0126可达且查找或比较待删除主键位置",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03045",
+      "signature": "std::vector<std::uint64_t>::iterator std::vector<std::uint64_t>::erase(std::vector<std::uint64_t>::const_iterator)",
+      "caller": "R0126",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:85"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0126可达且待删除主键位置存在",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03046",
+      "signature": "bool std::vector<std::uint64_t>::empty() const noexcept",
+      "caller": "R0126",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:86"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0126可达且删除主键后复核反向组是否为空",
+      "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
       "current_root_reachable": true
     }
   ],

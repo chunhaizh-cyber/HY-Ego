@@ -2,7 +2,7 @@
   "schema_version": 1,
   "code_commit": "3920a74638264f9f539d50f32f3c9fe5fb1982ab",
   "scope": "main-current-reachable-exclusions",
-  "excluded_function_count": 90,
+  "excluded_function_count": 91,
   "rejected_candidate_edge_count": 546,
   "excluded_functions": [
     {
@@ -634,6 +634,13 @@
       "file": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx",
       "definition_line": 106,
       "reason": "唯一调用方 R0118 因 RCE0521 静态接收者校正退出当前闭包，随反向闭包退出"
+    },
+    {
+      "function_id": "R0139",
+      "signature": "const 关系仓库& 海中鱼巣::关系仓库性能基线内部::隔离关系夹具::读取关系仓库() const",
+      "file": "海中鱼巣/核心/自检.关系仓库性能基线.ixx",
+      "definition_line": 329,
+      "reason": "自检.关系仓库性能基线.ixx:819 的夹具为非 const，实际绑定非 const 重载 F0288；const 重载没有其它当前 main 可达调用方"
     }
   ],
   "rejected_candidate_edges": [
