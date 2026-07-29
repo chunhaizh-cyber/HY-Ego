@@ -1,6 +1,6 @@
 # main 可达外部边界与回调表
 
-代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；外部边界：3005；具名回调：48。
+代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；外部边界：3039；具名回调：48。
 
 ## 外部边界
 
@@ -1463,7 +1463,7 @@
 | X02146 | R0331 | Standard library | <code>std::move(...)</code> | <code>海中鱼巣/领域/数据操作.概念活动.ixx:182</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
 | X02147 | R0337 | Standard library | <code>std::move(...)</code> | <code>海中鱼巣/领域/数据操作.概念活动.ixx:285</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
 | X02148 | R0340 | Standard library | <code>std::move(...)</code> | <code>海中鱼巣/领域/数据操作.概念活动.ixx:128</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
-| X02149 | R0362 | Standard library | <code>std::move(...)</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1542</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
+| X02149 | R0362 | Standard library | <code>海中鱼巣::特征值初始原始材料&amp;&amp; std::move&lt;海中鱼巣::特征值初始原始材料&amp;&gt;(海中鱼巣::特征值初始原始材料&amp;) noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1542</code> | 1 | 材料已由 R0376—R0379 返回值构造 | 冻结源码调用点、材料静态类型与 std::move 模板实例复核 |
 | X02150 | R0380 | Standard library optional | <code>bool std::optional&lt;std::int64_t&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:302, 海中鱼巣/领域/数据操作.特征体系.ixx:304, 海中鱼巣/领域/数据操作.特征体系.ixx:307</code> | 3 | 按初始特征原始值类型复核 I64 | 专项源码外部边界复核 |
 | X02151 | R0380 | Standard library container | <code>bool std::vector&lt;std::int64_t&gt;::empty() const noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:302, 海中鱼巣/领域/数据操作.特征体系.ixx:304, 海中鱼巣/领域/数据操作.特征体系.ixx:307</code> | 3 | 按初始特征原始值类型复核 VecI64 | 专项源码外部边界复核 |
 | X02152 | R0380 | Standard library container | <code>bool std::vector&lt;std::uint64_t&gt;::empty() const noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:302, 海中鱼巣/领域/数据操作.特征体系.ixx:305, 海中鱼巣/领域/数据操作.特征体系.ixx:307</code> | 3 | 按初始特征原始值类型复核 VecU64 | 专项源码外部边界复核 |
@@ -3011,10 +3011,44 @@
 | X03712 | R0353 | Standard library container | <code>std::vector&lt;海中鱼巣::关系记录&gt;::size() const noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1320</code> | 1 | 调用方可达且对应调用表达式或隐式生命周期成立 | 冻结源码逐调用点、静态类型和图映射复核 |
 | X03713 | R0353 | Standard library container | <code>const 海中鱼巣::关系记录&amp; std::vector&lt;海中鱼巣::关系记录&gt;::front() const</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1321</code> | 1 | 调用方可达且对应调用表达式或隐式生命周期成立 | 冻结源码逐调用点、静态类型和图映射复核 |
 | X03714 | R0353 | Standard library lifetime | <code>std::vector&lt;海中鱼巣::关系记录&gt;::~vector()</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1319-1328</code> | 1 | 调用方可达且对应调用表达式或隐式生命周期成立 | 冻结源码逐调用点、静态类型和图映射复核 |
+| X03715 | R0358 | Standard library optional | <code>const 海中鱼巣::主信息句柄&amp; std::optional&lt;海中鱼巣::主信息句柄&gt;::operator*() const&amp; noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1448</code> | 1 | R0640 返回 true 后解引用主结果值 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03716 | R0358 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::主信息句柄&gt;::~optional()</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1446-1456</code> | 1 | 主结果已构造后的任一返回路径释放其 optional 值成员 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03717 | R0358 | Standard library optional | <code>const 海中鱼巣::节点句柄&amp; std::optional&lt;海中鱼巣::节点句柄&gt;::operator*() const&amp; noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1451</code> | 1 | R0641 返回 true 后解引用节点结果值 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03718 | R0358 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::节点句柄&gt;::~optional()</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1449-1456</code> | 1 | 节点结果已构造后的任一返回路径释放其 optional 值成员 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03719 | R0359 | Standard library optional | <code>std::optional&lt;海中鱼巣::节点类型&gt;::optional(const 海中鱼巣::节点类型&amp;)</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1463</code> | 1 | R0388 与 R0390 均返回 true 后构造宿主预期类型 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03720 | R0359 | Standard library optional | <code>std::optional&lt;海中鱼巣::节点类型&gt;::optional(海中鱼巣::节点类型&amp;&amp;)</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1465</code> | 1 | 前序宿主节点类型与主信息比较均为 true 后构造特征类型 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03721 | R0359 | Standard library optional | <code>bool std::operator==(const std::optional&lt;海中鱼巣::节点类型&gt;&amp;, const std::optional&lt;海中鱼巣::节点类型&gt;&amp;)</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1463, 海中鱼巣/领域/数据操作.特征体系.ixx:1465</code> | 2 | 按 &amp;&amp; 顺序分别在前序项全部为 true 时比较节点类型 optional | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03722 | R0359 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::节点类型&gt;::~optional()</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1463, 海中鱼巣/领域/数据操作.特征体系.ixx:1465</code> | 4 | 两行各释放读取返回临时与预期临时 optional | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03723 | R0359 | Standard library optional | <code>std::optional&lt;海中鱼巣::主信息句柄&gt;::optional(const 海中鱼巣::主信息句柄&amp;)</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1464, 海中鱼巣/领域/数据操作.特征体系.ixx:1466</code> | 2 | 按 &amp;&amp; 顺序分别构造宿主与定义预期主信息 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03724 | R0359 | Standard library optional | <code>bool std::operator==(const std::optional&lt;海中鱼巣::主信息句柄&gt;&amp;, const std::optional&lt;海中鱼巣::主信息句柄&gt;&amp;)</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1464, 海中鱼巣/领域/数据操作.特征体系.ixx:1466</code> | 2 | 按 &amp;&amp; 顺序分别比较宿主与定义主信息 optional | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03725 | R0359 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::主信息句柄&gt;::~optional()</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1464, 海中鱼巣/领域/数据操作.特征体系.ixx:1466</code> | 4 | 两行各释放读取返回临时与预期临时 optional | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03726 | R0359 | Standard library container | <code>bool std::vector&lt;海中鱼巣::关系记录&gt;::empty() const noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1468</code> | 1 | 前序全部验证项为 true 且 R0034 已返回模板关系组 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03727 | R0359 | Standard library lifetime | <code>std::vector&lt;海中鱼巣::关系记录&gt;::~vector()</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1468</code> | 1 | empty() 判定完成后释放 R0034 返回的临时 vector | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03728 | R0360 | Standard library iterator | <code>std::vector&lt;海中鱼巣::关系记录&gt;::iterator std::vector&lt;海中鱼巣::关系记录&gt;::begin() noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1475</code> | 1 | R0034 返回外层非 const 临时 vector 后建立范围遍历 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03729 | R0360 | Standard library iterator | <code>std::vector&lt;海中鱼巣::关系记录&gt;::iterator std::vector&lt;海中鱼巣::关系记录&gt;::end() noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1475</code> | 1 | R0034 返回外层非 const 临时 vector 后建立范围遍历终点 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03730 | R0360 | Standard library iterator | <code>bool std::vector&lt;海中鱼巣::关系记录&gt;::iterator::operator!=(const iterator&amp;) const noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1475</code> | 1 | 外层范围 for 每轮含终止轮比较当前位置与 end | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03731 | R0360 | Standard library iterator | <code>海中鱼巣::关系记录&amp; std::vector&lt;海中鱼巣::关系记录&gt;::iterator::operator*() const noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1475</code> | 1 | 外层迭代器不等于 end 后绑定宿主关系只读引用 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03732 | R0360 | Standard library iterator | <code>std::vector&lt;海中鱼巣::关系记录&gt;::iterator&amp; std::vector&lt;海中鱼巣::关系记录&gt;::iterator::operator++() noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1475</code> | 1 | 当前外层循环体未返回后推进迭代器 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03733 | R0360 | Standard library optional | <code>std::optional&lt;海中鱼巣::节点类型&gt;::optional(海中鱼巣::节点类型&amp;&amp;)</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1476-1477</code> | 1 | 外层迭代取得宿主关系后构造特征类型 optional | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03734 | R0360 | Standard library optional | <code>bool std::operator!=(const std::optional&lt;海中鱼巣::节点类型&gt;&amp;, const std::optional&lt;海中鱼巣::节点类型&gt;&amp;)</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1476-1477</code> | 1 | R0030 返回 optional 后与特征类型 optional 比较 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03735 | R0360 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::节点类型&gt;::~optional()</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1476-1477</code> | 2 | 比较后释放读取返回临时与预期临时 optional | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03736 | R0360 | Standard library iterator | <code>std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator std::vector&lt;海中鱼巣::关系记录&gt;::begin() const noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1479</code> | 1 | 目标类型为特征且 const 模板组已形成后建立内层遍历 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03737 | R0360 | Standard library iterator | <code>std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator std::vector&lt;海中鱼巣::关系记录&gt;::end() const noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1479</code> | 1 | const 模板组已形成后建立内层遍历终点 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03738 | R0360 | Standard library iterator | <code>bool std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator!=(const const_iterator&amp;) const noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1479</code> | 1 | 内层范围 for 每轮含终止轮比较当前位置与 end | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03739 | R0360 | Standard library iterator | <code>const 海中鱼巣::关系记录&amp; std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator*() const noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1479</code> | 1 | 内层迭代器不等于 end 后绑定模板记录只读引用 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03740 | R0360 | Standard library iterator | <code>std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator&amp; std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator++() noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1479</code> | 1 | 当前内层循环体未返回后推进迭代器 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03741 | R0360 | Standard library lifetime | <code>std::vector&lt;海中鱼巣::关系记录&gt;::~vector()</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1475-1482, 海中鱼巣/领域/数据操作.特征体系.ixx:1478-1481</code> | 2 | 分别在内层组和外层临时关系组作用域结束或早退时释放 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03742 | R0361 | Standard library optional | <code>const 海中鱼巣::关系句柄&amp; std::optional&lt;海中鱼巣::关系句柄&gt;::operator*() const&amp; noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1513, 海中鱼巣/领域/数据操作.特征体系.ixx:1520, 海中鱼巣/领域/数据操作.特征体系.ixx:1521</code> | 4 | 两个关系结果均成功；各调用点按关系可读短路与输出赋值顺序到达 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03743 | R0361 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::关系句柄&gt;::~optional()</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1507-1522, 海中鱼巣/领域/数据操作.特征体系.ixx:1510-1522</code> | 2 | 两个关系结果构造后的任一返回路径分别释放 optional 值成员 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03744 | R0362 | Standard library optional | <code>const std::int64_t&amp; std::optional&lt;std::int64_t&gt;::operator*() const&amp; noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1538, 海中鱼巣/领域/数据操作.特征体系.ixx:1545</code> | 2 | 原始类型为 I64，且按候选写入或候选复核短路到达 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03745 | R0362 | Standard library optional | <code>const 海中鱼巣::关系句柄&amp; std::optional&lt;海中鱼巣::关系句柄&gt;::operator*() const&amp; noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1543, 海中鱼巣/领域/数据操作.特征体系.ixx:1553</code> | 2 | 关系创建与材料登记成功；1553 还要求完整为 true | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03746 | R0364 | Standard library | <code>bool std::operator==(const std::optional&lt;std::int64_t&gt;&amp;, const std::optional&lt;std::int64_t&gt;&amp;)</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1575</code> | 1 | 材料完整、主键和原始类型匹配且版本为 1 | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03747 | R0364 | Standard library | <code>bool std::operator==(const std::vector&lt;std::int64_t&gt;&amp;, const std::vector&lt;std::int64_t&gt;&amp;)</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1576</code> | 1 | 前序含 I64 相等的全部项为 true | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
+| X03748 | R0364 | Standard library | <code>bool std::operator==(const std::vector&lt;std::uint64_t&gt;&amp;, const std::vector&lt;std::uint64_t&gt;&amp;)</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1577</code> | 1 | 前序含 VecI64 相等的全部项为 true | 冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核 |
 
 ## 回调登记
 
-| 回调 ID | 注册调用方 | 回调目标 | 外部算法 / 调度器 | 注册位置 | 触发条件 | 解析依据 |
+| ID | 调用方 | 回调函数 | 外部算法/入口 | 登记位置 | 调用条件 | 解析依据 |
 | --- | --- | --- | --- | --- | --- | --- |
 | RCB0001 | R0214 | R0215 | <code>std::sort</code> | <code>海中鱼巣/领域/任务服务.h:494</code> | 任务组排序期间零到多次调用 | 源码 lambda 注册点与局部静态类型复核 |
 | RCB0002 | R0088 | R0090 | <code>std::sort</code> | <code>海中鱼巣/核心/关系仓库.cpp:884</code> | 来源候选排序期间零到多次调用 | 源码 lambda 注册点与局部静态类型复核 |

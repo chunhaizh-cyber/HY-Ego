@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1333,
-  "project_call_edge_count": 3770,
-  "edge_count": 3770,
+  "project_call_edge_count": 3777,
+  "edge_count": 3777,
   "edges": [
     {
       "edge_id": "E0002",
@@ -33884,12 +33884,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1446"
       ],
-      "call_category": "unique_name",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "direct_member",
+      "arguments": "this=&会话",
+      "argument_resolution": "会话静态类型为结构写入会话，精确落到 R0021",
+      "return_binding": "带值结构写入结果<主信息句柄>绑定主结果",
+      "reachable_condition": "进入函数并完成形参绑定后",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -33899,12 +33899,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1449"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "会话形参创建节点候选",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_member",
+      "arguments": "this=&会话; 类型, 新主信息",
+      "argument_resolution": "会话静态类型及实参精确绑定 R0022",
+      "return_binding": "带值结构写入结果<节点句柄>绑定节点结果",
+      "reachable_condition": "R0640 返回 true 且新主信息已赋值",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -33912,14 +33912,14 @@
       "caller": "R0358",
       "callee": "R0027",
       "callsites": [
-        "海中鱼巣/领域/数据操作.特征体系.ixx:1452"
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1452-1453"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "会话形参绑定索引请求",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_member",
+      "arguments": "this=&会话; 形成索引绑定请求(...)",
+      "argument_resolution": "会话静态类型与 R0129 返回请求类型精确绑定 R0027",
+      "return_binding": "结构写入结果临时值供 R0138 检查成功",
+      "reachable_condition": "R0129 已形成特征体系索引绑定请求",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -33927,14 +33927,14 @@
       "caller": "R0358",
       "callee": "R0129",
       "callsites": [
-        "海中鱼巣/领域/数据操作.特征体系.ixx:1452"
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1452-1453"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "direct_free_function",
+      "arguments": "主键, 新节点, 索引所有者::特征体系, 0",
+      "argument_resolution": "四个实参按 R0129 完整签名绑定，顺序号使用默认语义 0",
+      "return_binding": "索引绑定请求直接传给 R0027",
+      "reachable_condition": "R0641 返回 true 且新节点已赋值",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -33944,12 +33944,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1454"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "direct_member",
+      "arguments": "this=&会话; 新主信息",
+      "argument_resolution": "会话与主信息句柄静态类型精确绑定 R0036",
+      "return_binding": "bool 作为最终 && 第一项",
+      "reachable_condition": "绑定主键成功",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -33959,27 +33959,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1454"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE1151",
-      "caller": "R0358",
-      "callee": "R0040",
-      "callsites": [
-        "海中鱼巣/领域/数据操作.特征体系.ixx:1455"
-      ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "direct_member",
+      "arguments": "this=&会话; 新节点",
+      "argument_resolution": "会话与节点句柄静态类型精确绑定 R0037",
+      "return_binding": "bool 作为最终 && 第二项",
+      "reachable_condition": "R0036 返回 true",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -33989,12 +33974,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1462"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "定义形参静态类型复核完整",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_const_member",
+      "arguments": "this=&定义",
+      "argument_resolution": "定义静态类型为 const 特征定义值式材料&，精确绑定 R0390",
+      "return_binding": "bool 作为 && 第二项",
+      "reachable_condition": "R0388 返回 true",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34005,12 +33990,12 @@
         "海中鱼巣/领域/数据操作.特征体系.ixx:1463",
         "海中鱼巣/领域/数据操作.特征体系.ixx:1465"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "direct_member",
+      "arguments": "this=&会话; 宿主.节点; this=&会话; 定义.特征定义",
+      "argument_resolution": "两个节点句柄实参分别精确绑定 R0030",
+      "return_binding": "两个 std::optional<节点类型> 分别参与相等比较",
+      "reachable_condition": "按 && 顺序分别在前序项全部为 true 时到达",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34021,27 +34006,12 @@
         "海中鱼巣/领域/数据操作.特征体系.ixx:1464",
         "海中鱼巣/领域/数据操作.特征体系.ixx:1466"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE1155",
-      "caller": "R0359",
-      "callee": "R0040",
-      "callsites": [
-        "海中鱼巣/领域/数据操作.特征体系.ixx:1467"
-      ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "direct_member",
+      "arguments": "this=&会话; 宿主.节点; this=&会话; 定义.特征定义",
+      "argument_resolution": "两个节点句柄实参分别精确绑定 R0031",
+      "return_binding": "两个 std::optional<主信息句柄> 分别参与相等比较",
+      "reachable_condition": "按 && 顺序分别在前序项全部为 true 时到达",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34051,12 +34021,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1468"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "direct_member",
+      "arguments": "this=&会话; 定义.特征定义, 关系类型::模板",
+      "argument_resolution": "会话、节点句柄与关系类型精确绑定 R0034",
+      "return_binding": "std::vector<关系记录> 临时值供 empty() 检查",
+      "reachable_condition": "R0638 返回 true",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34067,12 +34037,12 @@
         "海中鱼巣/领域/数据操作.特征体系.ixx:1475",
         "海中鱼巣/领域/数据操作.特征体系.ixx:1478"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "direct_member",
+      "arguments": "this=&会话; 宿主, 关系类型::归属; this=&会话; 宿主关系.目标节点, 关系类型::模板",
+      "argument_resolution": "两组节点句柄/关系类型实参分别精确绑定 R0034",
+      "return_binding": "外层临时 vector 供范围遍历；内层 vector 绑定 const 模板组",
+      "reachable_condition": "入口即取外层组；内层仅目标节点类型为特征时到达",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34082,12 +34052,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1476"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "direct_member",
+      "arguments": "this=&会话; 宿主关系.目标节点",
+      "argument_resolution": "会话与节点句柄静态类型精确绑定 R0030",
+      "return_binding": "std::optional<节点类型> 与特征类型 optional 比较",
+      "reachable_condition": "外层范围遍历取得当前宿主关系",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34095,14 +34065,14 @@
       "caller": "R0361",
       "callee": "R0358",
       "callsites": [
-        "海中鱼巣/领域/数据操作.特征体系.ixx:1505"
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1505-1506"
       ],
-      "call_category": "suffix_match",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "direct_static_member",
+      "arguments": "会话, 节点类型::特征, 规格.读取幂等主键(), 新主信息, 新槽位",
+      "argument_resolution": "同类静态函数及五项实参/两个输出引用精确绑定 R0358",
+      "return_binding": "bool 取反用于 R0361 失败返回 false",
+      "reachable_condition": "R0361 进入首个写入步骤",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34113,12 +34083,12 @@
         "海中鱼巣/领域/数据操作.特征体系.ixx:1506",
         "海中鱼巣/领域/数据操作.特征体系.ixx:1515"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "槽位规格静态类型读取幂等主键",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_const_member",
+      "arguments": "this=&规格",
+      "argument_resolution": "两处接收者均为 const 特征槽位写入规格&，精确绑定 R0371",
+      "return_binding": "uint64_t 分别供 R0358 主键与输出幂等主键",
+      "reachable_condition": "入口写入步骤；输出赋值仅完整关系复核成功后",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34126,15 +34096,15 @@
       "caller": "R0361",
       "callee": "R0023",
       "callsites": [
-        "海中鱼巣/领域/数据操作.特征体系.ixx:1507",
-        "海中鱼巣/领域/数据操作.特征体系.ixx:1510"
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1507-1508",
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1510-1511"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "会话形参创建槽位关系",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_member",
+      "arguments": "this=&会话; 关系类型::归属, 规格.读取宿主(), 新槽位; this=&会话; 关系类型::模板, 新槽位, 规格.读取特征定义()",
+      "argument_resolution": "两组三元关系实参精确绑定 R0023",
+      "return_binding": "两个带值结构写入结果<关系句柄>分别绑定宿主关系与模板关系",
+      "reachable_condition": "R0358 成功；模板关系仅宿主关系成功后",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34145,12 +34115,12 @@
         "海中鱼巣/领域/数据操作.特征体系.ixx:1508",
         "海中鱼巣/领域/数据操作.特征体系.ixx:1516"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "槽位规格静态类型读取宿主",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_const_member",
+      "arguments": "this=&规格",
+      "argument_resolution": "两处接收者均为 const 特征槽位写入规格&，精确绑定 R0372",
+      "return_binding": "节点句柄分别作为宿主关系源节点与输出宿主",
+      "reachable_condition": "按调用顺序到达",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34161,12 +34131,12 @@
         "海中鱼巣/领域/数据操作.特征体系.ixx:1511",
         "海中鱼巣/领域/数据操作.特征体系.ixx:1517"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "槽位规格静态类型读取特征定义",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_const_member",
+      "arguments": "this=&规格",
+      "argument_resolution": "两处接收者均为 const 特征槽位写入规格&，精确绑定 R0373",
+      "return_binding": "节点句柄分别作为模板关系目标节点与输出特征定义",
+      "reachable_condition": "按调用顺序到达",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34176,12 +34146,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1513"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "direct_member",
+      "arguments": "this=&会话; *宿主关系.值; this=&会话; *模板关系.值",
+      "argument_resolution": "两个解引用关系句柄分别精确绑定 R0038",
+      "return_binding": "两个 bool 参与 ||/&& 短路检查",
+      "reachable_condition": "两个带值关系结果均成功；第二次另受第一次关系可读返回 true",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34189,14 +34159,14 @@
       "caller": "R0362",
       "callee": "R0358",
       "callsites": [
-        "海中鱼巣/领域/数据操作.特征体系.ixx:1533"
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1533-1534"
       ],
-      "call_category": "suffix_match",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "direct_static_member",
+      "arguments": "会话, 节点类型::特征值, 规格.读取幂等主键(), 新主信息, 新值",
+      "argument_resolution": "同类静态函数及五项实参/两个输出引用精确绑定 R0358",
+      "return_binding": "bool 取反用于失败返回 false",
+      "reachable_condition": "进入 R0362 写入步骤",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34207,12 +34177,12 @@
         "海中鱼巣/领域/数据操作.特征体系.ixx:1534",
         "海中鱼巣/领域/数据操作.特征体系.ixx:1549"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "初始值规格静态类型读取幂等主键",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_const_member",
+      "arguments": "this=&规格",
+      "argument_resolution": "两处接收者均为 const 初始特征值写入规格&，精确绑定 R0375",
+      "return_binding": "uint64_t 分别供 R0358 主键和输出幂等主键",
+      "reachable_condition": "入口写入步骤；1549 仅完整复核成功后",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34222,12 +34192,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1535"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "会话形参创建当前值关系",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_member",
+      "arguments": "this=&会话; 关系类型::归属, 实例槽位, 新值",
+      "argument_resolution": "会话与三项关系实参精确绑定 R0023",
+      "return_binding": "带值结构写入结果<关系句柄>绑定当前关系",
+      "reachable_condition": "R0358 成功后",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34240,12 +34210,12 @@
         "海中鱼巣/领域/数据操作.特征体系.ixx:1544",
         "海中鱼巣/领域/数据操作.特征体系.ixx:1554"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "初始值规格静态类型读取原始类型",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_const_member",
+      "arguments": "this=&规格",
+      "argument_resolution": "四处接收者均为 const 初始特征值写入规格&，精确绑定 R0376",
+      "return_binding": "特征值原始类型分别用于 I64 分支、材料构造、复核分支与输出",
+      "reachable_condition": "按前序短路与赋值顺序到达",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34255,12 +34225,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1538"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "direct_member",
+      "arguments": "this=&会话; 新主信息, 0, *规格.读取I64值()",
+      "argument_resolution": "会话、主信息句柄、版本与 I64 引用精确绑定 R0028",
+      "return_binding": "结构写入结果临时值供 R0138 检查成功",
+      "reachable_condition": "原始类型为 I64",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34273,12 +34243,12 @@
         "海中鱼巣/领域/数据操作.特征体系.ixx:1545",
         "海中鱼巣/领域/数据操作.特征体系.ixx:1556"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "初始值规格静态类型读取 I64 值",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_const_member",
+      "arguments": "this=&规格",
+      "argument_resolution": "四处接收者均为 const 初始特征值写入规格&，精确绑定 R0377",
+      "return_binding": "const optional<int64_t>& 分别供候选写入解引用、材料构造、候选匹配解引用与输出",
+      "reachable_condition": "按前序短路与赋值顺序到达",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34289,12 +34259,12 @@
         "海中鱼巣/领域/数据操作.特征体系.ixx:1541",
         "海中鱼巣/领域/数据操作.特征体系.ixx:1557"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "初始值规格静态类型读取 VecI64 值",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_const_member",
+      "arguments": "this=&规格",
+      "argument_resolution": "两处接收者均为 const 初始特征值写入规格&，精确绑定 R0378",
+      "return_binding": "const vector<int64_t>& 供材料构造和输出",
+      "reachable_condition": "按赋值顺序到达",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34305,12 +34275,12 @@
         "海中鱼巣/领域/数据操作.特征体系.ixx:1541",
         "海中鱼巣/领域/数据操作.特征体系.ixx:1558"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "初始值规格静态类型读取 VecU64 值",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_const_member",
+      "arguments": "this=&规格",
+      "argument_resolution": "两处接收者均为 const 初始特征值写入规格&，精确绑定 R0379",
+      "return_binding": "const vector<uint64_t>& 供材料构造和输出",
+      "reachable_condition": "按赋值顺序到达",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34320,12 +34290,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1542"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "direct_member",
+      "arguments": "this=&参与者; std::move(材料)",
+      "argument_resolution": "参与者静态类型与材料右值精确绑定 R0270",
+      "return_binding": "bool 取反用于登记失败返回 false",
+      "reachable_condition": "材料已构造",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34335,12 +34305,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1543"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "direct_member",
+      "arguments": "this=&会话; *当前关系.值",
+      "argument_resolution": "会话与解引用关系句柄精确绑定 R0038",
+      "return_binding": "bool 绑定完整",
+      "reachable_condition": "材料登记成功",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34350,12 +34320,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1545"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "direct_member",
+      "arguments": "this=&会话; 新主信息, 0, *规格.读取I64值()",
+      "argument_resolution": "会话、主信息句柄、版本与 I64 引用精确绑定 R0029",
+      "return_binding": "bool 作为 && 左项并与完整合并",
+      "reachable_condition": "原始类型为 I64",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34365,12 +34335,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1565"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "材料形参静态类型为特征槽位值式材料",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_const_member",
+      "arguments": "this=&材料",
+      "argument_resolution": "材料静态类型为 const 特征槽位值式材料&，精确绑定 R0343",
+      "return_binding": "bool 作为 && 首项",
+      "reachable_condition": "进入返回表达式",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34380,12 +34350,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1565"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "槽位规格静态类型读取幂等主键",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_const_member",
+      "arguments": "this=&规格",
+      "argument_resolution": "规格静态类型为 const 特征槽位写入规格&，精确绑定 R0371",
+      "return_binding": "uint64_t 与材料幂等主键比较",
+      "reachable_condition": "材料完整",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34395,12 +34365,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1566"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "槽位规格静态类型读取宿主",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_const_member",
+      "arguments": "this=&规格",
+      "argument_resolution": "规格静态类型为 const 特征槽位写入规格&，精确绑定 R0372",
+      "return_binding": "节点句柄与材料宿主比较",
+      "reachable_condition": "材料完整且幂等主键相等",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34410,12 +34380,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1567"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "槽位规格静态类型读取特征定义",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_const_member",
+      "arguments": "this=&规格",
+      "argument_resolution": "规格静态类型为 const 特征槽位写入规格&，精确绑定 R0373",
+      "return_binding": "节点句柄与材料特征定义比较",
+      "reachable_condition": "前序宿主比较为 true",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34425,12 +34395,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1573"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "材料形参静态类型为特征原始值式材料",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_const_member",
+      "arguments": "this=&材料",
+      "argument_resolution": "材料静态类型为 const 特征原始值式材料&，精确绑定 R0352",
+      "return_binding": "bool 作为 && 首项",
+      "reachable_condition": "进入返回表达式",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34440,12 +34410,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1573"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "初始值规格静态类型读取幂等主键",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_const_member",
+      "arguments": "this=&规格",
+      "argument_resolution": "规格静态类型精确绑定 R0375",
+      "return_binding": "uint64_t 与材料幂等主键比较",
+      "reachable_condition": "材料完整",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34455,12 +34425,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1574"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "初始值规格静态类型读取原始类型",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_const_member",
+      "arguments": "this=&规格",
+      "argument_resolution": "规格静态类型精确绑定 R0376",
+      "return_binding": "原始类型与材料类型比较",
+      "reachable_condition": "材料完整且主键相等",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34470,12 +34440,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1575"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "初始值规格静态类型读取 I64 值",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_const_member",
+      "arguments": "this=&规格",
+      "argument_resolution": "规格静态类型精确绑定 R0377",
+      "return_binding": "const optional<int64_t>& 供标准库相等比较",
+      "reachable_condition": "完整、主键、原始类型匹配且版本为 1",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34485,12 +34455,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1576"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "初始值规格静态类型读取 VecI64 值",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_const_member",
+      "arguments": "this=&规格",
+      "argument_resolution": "规格静态类型精确绑定 R0378",
+      "return_binding": "const vector<int64_t>& 供标准库相等比较",
+      "reachable_condition": "前序含 I64 相等的全部项为 true",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34500,12 +34470,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1577"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "初始值规格静态类型读取 VecU64 值",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "direct_const_member",
+      "arguments": "this=&规格",
+      "argument_resolution": "规格静态类型精确绑定 R0379",
+      "return_binding": "const vector<uint64_t>& 供标准库相等比较",
+      "reachable_condition": "前序含 VecI64 相等的全部项为 true",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -34517,12 +34487,12 @@
         "海中鱼巣/领域/数据操作.特征体系.ixx:1653",
         "海中鱼巣/领域/数据操作.特征体系.ixx:1656"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "direct_free_function",
+      "arguments": "false, L\"特征体系业务准入后结构会话未形成提交决定。\"; false, L\"特征体系结构写入或参与者收口内部不一致。\"; false, L\"特征体系结构会话返回不允许的收口状态。\"",
+      "argument_resolution": "三处 bool 与 const wchar_t* 实参分别按 F0184 完整签名绑定",
+      "return_binding": "三处 bool 返回值均以 (void) 显式丢弃",
+      "reachable_condition": "结果状态分别为入口拒绝、内部不一致及 switch default",
+      "resolution_source": "冻结源码 3920a746 + 1643-1657 行逐调用点、同命名空间自由函数与 F0184 完整签名复核",
       "current_root_reachable": true
     },
     {
@@ -35048,12 +35018,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:840"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "direct_static_member",
+      "arguments": "宿主身份, 定义",
+      "argument_resolution": "R0389 局部宿主身份与定义分别按 const 引用精确绑定 R0366",
+      "return_binding": "R0366 的特征体系业务结果直接作为 R0389 当前 return 返回",
+      "reachable_condition": "!宿主身份.当前可读() || !定义.完整()",
+      "resolution_source": "冻结源码 3920a746 + 调用方 837-840 行、同类静态成员与 R0366 完整签名复核",
       "current_root_reachable": true
     },
     {
@@ -35131,12 +35101,12 @@
         "海中鱼巣/领域/数据操作.特征体系.ixx:865",
         "海中鱼巣/领域/数据操作.特征体系.ixx:905"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "direct_static_member",
+      "arguments": "已有槽位, 槽位规格; 并发槽位, 槽位规格; 当前槽位, 槽位规格",
+      "argument_resolution": "三组特征槽位材料与写入规格精确绑定 R0363",
+      "return_binding": "bool 作为后续 R0364 的短路左项",
+      "reachable_condition": "分别位于幂等读、并发读与写后复核分支",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -35148,12 +35118,12 @@
         "海中鱼巣/领域/数据操作.特征体系.ixx:865",
         "海中鱼巣/领域/数据操作.特征体系.ixx:905"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "direct_static_member",
+      "arguments": "当前值, 值规格; 并发值, 值规格; 当前值, 值规格",
+      "argument_resolution": "三组原始值材料与写入规格精确绑定 R0364",
+      "return_binding": "bool 作为组合匹配结果",
+      "reachable_condition": "对应 R0363 匹配返回 true 后",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -35165,12 +35135,12 @@
         "海中鱼巣/领域/数据操作.特征体系.ixx:866",
         "海中鱼巣/领域/数据操作.特征体系.ixx:906"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "direct_static_member",
+      "arguments": "幂等读回, 已有槽位, 当前值; 幂等读回, 并发槽位, 并发值; (结构结果已提交?已提交:幂等读回), 当前槽位, 当前值",
+      "argument_resolution": "三组三项材料按完整签名精确绑定 R0365",
+      "return_binding": "特征体系业务结果直接从调用方返回",
+      "reachable_condition": "分别在对应两项匹配成功时到达",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -35180,12 +35150,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:854"
       ],
-      "call_category": "suffix_match",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "direct_static_member",
+      "arguments": "已有槽位.状态",
+      "argument_resolution": "特征体系读取状态按值精确绑定 R0367",
+      "return_binding": "R0367 结果直接作为 R0389 当前 return 返回",
+      "reachable_condition": "已有槽位.状态 != 特征体系读取状态::未找到，且前序已有槽位.完整()分支未返回",
+      "resolution_source": "冻结源码 3920a746 + 调用方 844-854 行、同类静态成员与 R0367 完整签名复核",
       "current_root_reachable": true
     },
     {
@@ -35255,12 +35225,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:915"
       ],
-      "call_category": "suffix_match",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "direct_static_member",
+      "arguments": "结构结果",
+      "argument_resolution": "结构写入结果按 const 引用精确绑定 R0368",
+      "return_binding": "R0368 结果直接作为 R0389 当前 return 返回",
+      "reachable_condition": "写后槽位/原始值组合匹配不成立、当前槽位状态非已找到，且版本已经漂移为 false",
+      "resolution_source": "冻结源码 3920a746 + 调用方 883-915 行、同类静态成员与 R0368 完整签名复核",
       "current_root_reachable": true
     },
     {
@@ -35300,12 +35270,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:886"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合；机械发现后经源码范围改挂到非平凡结构写入 lambda",
+      "call_category": "direct_static_member",
+      "arguments": "会话, 宿主身份, 定义",
+      "argument_resolution": "同类静态函数及三个实参静态类型精确绑定 R0359",
+      "return_binding": "bool 作为 if 中首个否定项",
+      "reachable_condition": "执行器进入结构写入 lambda",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -35313,14 +35283,14 @@
       "caller": "R0391",
       "callee": "R0360",
       "callsites": [
-        "海中鱼巣/领域/数据操作.特征体系.ixx:887"
+        "海中鱼巣/领域/数据操作.特征体系.ixx:887-888"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合；机械发现后经源码范围改挂到非平凡结构写入 lambda",
+      "call_category": "direct_static_member",
+      "arguments": "会话, 槽位规格.读取宿主(), 槽位规格.读取特征定义()",
+      "argument_resolution": "同类静态函数与三项实参静态类型精确绑定 R0360",
+      "return_binding": "bool 作为 || 第二项并取反控制拒绝",
+      "reachable_condition": "R0359 返回 true 后",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -35330,12 +35300,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:893"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合；机械发现后经源码范围改挂到非平凡结构写入 lambda",
+      "call_category": "direct_static_member",
+      "arguments": "会话, 槽位规格, 新槽位",
+      "argument_resolution": "同类静态函数与输入规格/输出引用精确绑定 R0361",
+      "return_binding": "bool 取反用于 lambda 提前返回",
+      "reachable_condition": "验证宿主定义通过且不存在并发槽位",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -35345,12 +35315,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:895"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合；机械发现后经源码范围改挂到非平凡结构写入 lambda",
+      "call_category": "direct_static_member",
+      "arguments": "会话, 参与者, 新槽位.实例槽位, 值规格, 新值",
+      "argument_resolution": "同类静态函数及参与者/实例槽位/规格/输出引用精确绑定 R0362",
+      "return_binding": "bool 取反用于 R0391 lambda 提前返回",
+      "reachable_condition": "槽位候选写入成功",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -47382,11 +47352,11 @@
         "海中鱼巣/领域/数据操作.特征体系.ixx:937"
       ],
       "call_category": "direct_static_member",
-      "arguments": "read status",
-      "argument_resolution": "same class existing helper",
-      "return_binding": "被调函数结果按当前调用表达式接收或用于条件判断",
-      "reachable_condition": "component/pre-read failure",
-      "resolution_source": "same class existing helper",
+      "arguments": "身份.状态; 写前.状态",
+      "argument_resolution": "两处特征体系读取状态分别按值精确绑定 R0367",
+      "return_binding": "两处 R0367 结果均直接作为 R0701 当前 return 返回",
+      "reachable_condition": "924: 当前循环项读取后身份不可读；937: 写前状态既非未找到也非类型不匹配",
+      "resolution_source": "冻结源码 3920a746 + 调用方 918-937 行、同类静态成员与 R0367 完整签名复核",
       "current_root_reachable": true
     },
     {
@@ -47517,14 +47487,14 @@
       "caller": "R0708",
       "callee": "R0358",
       "callsites": [
-        "海中鱼巣/领域/数据操作.特征体系.ixx:951"
+        "海中鱼巣/领域/数据操作.特征体系.ixx:951-952"
       ],
       "call_category": "direct_static_member",
-      "arguments": "会话,二次特征,主键,output handles",
-      "argument_resolution": "same class existing helper",
-      "return_binding": "被调函数结果按当前调用表达式接收或用于条件判断",
-      "reachable_condition": "all component types accepted",
-      "resolution_source": "same class existing helper",
+      "arguments": "会话, 节点类型::二次特征, 主键, 新主信息, 新二次特征",
+      "argument_resolution": "同类静态函数及五项实参/两个输出引用精确绑定 R0358",
+      "return_binding": "bool 取反用于 R0708 lambda 提前返回",
+      "reachable_condition": "有序组成项全部类型可读且允许",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -47581,10 +47551,10 @@
       ],
       "call_category": "direct_static_member",
       "arguments": "结构结果",
-      "argument_resolution": "same class existing helper",
-      "return_binding": "被调函数结果按当前调用表达式接收或用于条件判断",
-      "reachable_condition": "no success/readback/drift closure",
-      "resolution_source": "same class existing helper",
+      "argument_resolution": "结构写入结果按 const 引用精确绑定 R0368",
+      "return_binding": "R0368 结果直接作为 R0701 当前 return 返回",
+      "reachable_condition": "当前完整且有序组成项匹配不成立、当前状态既非已找到也非类型不匹配，且版本已经漂移为 false",
+      "resolution_source": "冻结源码 3920a746 + 调用方 940-973 行、同类静态成员与 R0368 完整签名复核",
       "current_root_reachable": true
     },
     {
@@ -48609,12 +48579,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1455"
       ],
-      "call_category": "source-audited-reverse-closure",
-      "arguments": "按源码实参与静态类型绑定",
-      "argument_resolution": "当前源码静态类型与重载集合复核",
-      "return_binding": "被调函数结果按当前调用表达式接收或用于条件判断",
-      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
-      "resolution_source": "当前源码定义、调用点与静态类型复核",
+      "call_category": "direct_member",
+      "arguments": "this=&会话; 主键, 新节点",
+      "argument_resolution": "双参数重载静态类型精确落到 R0638；取代停用误边 RCE1151",
+      "return_binding": "bool 作为最终返回表达式第三项",
+      "reachable_condition": "R0036 与 R0037 均返回 true",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -48624,12 +48594,12 @@
       "callsites": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1467"
       ],
-      "call_category": "source-audited-reverse-closure",
-      "arguments": "按源码实参与静态类型绑定",
-      "argument_resolution": "当前源码静态类型与重载集合复核",
-      "return_binding": "被调函数结果按当前调用表达式接收或用于条件判断",
-      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
-      "resolution_source": "当前源码定义、调用点与静态类型复核",
+      "call_category": "direct_member",
+      "arguments": "this=&会话; 定义.幂等主键, 定义.特征定义",
+      "argument_resolution": "双参数重载静态类型精确落到 R0638；取代停用误边 RCE1155",
+      "return_binding": "bool 作为 && 倒数第二项",
+      "reachable_condition": "前序宿主/定义类型与主信息比较全部为 true",
+      "resolution_source": "冻结源码 3920a746 + 当前调用点、静态类型、完整签名与短路条件复核",
       "current_root_reachable": true
     },
     {
@@ -57741,6 +57711,143 @@
       "return_binding": "bool",
       "reachable_condition": "主键非零且两个节点句柄均有效",
       "resolution_source": "冻结源码 3920a746 + R0374 现状图与逐行映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2768",
+      "caller": "R0358",
+      "callee": "R0640",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1447"
+      ],
+      "call_category": "function_template_specialization",
+      "arguments": "this=&主结果",
+      "argument_resolution": "主结果静态类型为带值结构写入结果<主信息句柄>，精确落到 R0640",
+      "return_binding": "bool 绑定主结果成功判断，取反后失败返回 false",
+      "reachable_condition": "R0021 已返回主结果",
+      "resolution_source": "冻结源码调用点、接收者静态类型与模板实例复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2769",
+      "caller": "R0358",
+      "callee": "R0641",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1450"
+      ],
+      "call_category": "function_template_specialization",
+      "arguments": "this=&节点结果",
+      "argument_resolution": "节点结果静态类型为带值结构写入结果<节点句柄>，精确落到 R0641",
+      "return_binding": "bool 绑定节点结果成功判断，取反后失败返回 false",
+      "reachable_condition": "R0022 已返回节点结果",
+      "resolution_source": "冻结源码调用点、接收者静态类型与模板实例复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2770",
+      "caller": "R0358",
+      "callee": "R0138",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1453"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&会话.绑定主键(...)返回的结构写入结果",
+      "argument_resolution": "R0027 返回静态类型为结构写入结果，临时结果直接调用成功()",
+      "return_binding": "bool 取反用于绑定失败短路返回",
+      "reachable_condition": "R0129 已形成请求且 R0027 已返回结果",
+      "resolution_source": "冻结源码调用点、R0027 返回类型与成员调用复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2771",
+      "caller": "R0359",
+      "callee": "R0388",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1462"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&宿主",
+      "argument_resolution": "宿主静态类型为 const 特征节点身份&，精确落到 R0388",
+      "return_binding": "bool 作为 && 首项，失败时短路返回 false",
+      "reachable_condition": "进入返回表达式即调用",
+      "resolution_source": "冻结源码调用点、接收者静态类型与唯一成员签名复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2772",
+      "caller": "R0360",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1480"
+      ],
+      "call_category": "direct_free_operator",
+      "arguments": "模板.目标节点, 特征定义",
+      "argument_resolution": "两侧静态类型均为节点句柄，精确落到节点句柄 operator== F0051",
+      "return_binding": "bool；为 true 时立即返回 true",
+      "reachable_condition": "外层目标节点类型为特征且内层模板迭代取得当前记录",
+      "resolution_source": "冻结源码调用点、两侧静态类型与运算符重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2773",
+      "caller": "R0361",
+      "callee": "R0642",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1509",
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1512"
+      ],
+      "call_category": "function_template_specialization",
+      "arguments": "this=&宿主关系; this=&模板关系",
+      "argument_resolution": "两个接收者静态类型均为带值结构写入结果<关系句柄>，精确落到 R0642",
+      "return_binding": "bool 分别绑定宿主关系/模板关系成功判断，取反后失败返回 false",
+      "reachable_condition": "对应 R0023 已返回带值关系结果",
+      "resolution_source": "冻结源码两个调用点、接收者静态类型与模板实例复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2774",
+      "caller": "R0362",
+      "callee": "R0642",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1536"
+      ],
+      "call_category": "function_template_specialization",
+      "arguments": "this=&当前关系",
+      "argument_resolution": "当前关系静态类型为带值结构写入结果<关系句柄>，精确落到 R0642",
+      "return_binding": "bool 并取反用于失败短路",
+      "reachable_condition": "R0023 返回关系候选结果后",
+      "resolution_source": "冻结源码调用点、局部变量静态类型与模板实例复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2775",
+      "caller": "R0362",
+      "callee": "R0138",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1538"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&会话.写入候选I64值(...)返回临时结果",
+      "argument_resolution": "R0028 返回静态类型为结构写入结果，临时结果直接调用成功()",
+      "return_binding": "bool 并取反用于失败短路",
+      "reachable_condition": "原始类型为 I64 且规格 I64 optional 已解引用",
+      "resolution_source": "冻结源码调用点、R0028 返回类型与成员调用复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2776",
+      "caller": "R0363",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1566",
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1567"
+      ],
+      "call_category": "direct_free_operator",
+      "arguments": "材料.宿主, 规格.读取宿主(); 材料.特征定义, 规格.读取特征定义()",
+      "argument_resolution": "两组调用的两侧静态类型均为节点句柄，精确落到节点句柄 operator== F0051",
+      "return_binding": "bool 分别参与宿主与特征定义的 && 短路比较",
+      "reachable_condition": "材料完整、幂等主键相等，且按短路顺序到达各比较项",
+      "resolution_source": "冻结源码两个调用点、字段/返回静态类型与运算符重载复核",
       "current_root_reachable": true
     }
   ]

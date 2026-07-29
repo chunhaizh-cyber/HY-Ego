@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1333,
-  "project_call_edge_count": 3770,
-  "external_count": 3005,
+  "project_call_edge_count": 3777,
+  "external_count": 3039,
   "callback_registration_count": 48,
   "external_boundaries": [
     {
@@ -19301,14 +19301,14 @@
     {
       "id": "X02149",
       "caller": "R0362",
-      "signature": "std::move(...)",
+      "signature": "海中鱼巣::特征值初始原始材料&& std::move<海中鱼巣::特征值初始原始材料&>(海中鱼巣::特征值初始原始材料&) noexcept",
       "locations": [
         "海中鱼巣/领域/数据操作.特征体系.ixx:1542"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立",
-      "resolution_source": "最终 caller 源码范围 + std 限定名调用语法复核",
+      "reachable_condition": "材料已由 R0376—R0379 返回值构造",
+      "resolution_source": "冻结源码调用点、材料静态类型与 std::move 模板实例复核",
       "current_root_reachable": true
     },
     {
@@ -41378,6 +41378,493 @@
       "boundary_category": "Standard library lifetime",
       "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
       "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03715",
+      "signature": "const 海中鱼巣::主信息句柄& std::optional<海中鱼巣::主信息句柄>::operator*() const& noexcept",
+      "caller": "R0358",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1448"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "R0640 返回 true 后解引用主结果值",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03716",
+      "signature": "std::optional<海中鱼巣::主信息句柄>::~optional()",
+      "caller": "R0358",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1446-1456"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "主结果已构造后的任一返回路径释放其 optional 值成员",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03717",
+      "signature": "const 海中鱼巣::节点句柄& std::optional<海中鱼巣::节点句柄>::operator*() const& noexcept",
+      "caller": "R0358",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1451"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "R0641 返回 true 后解引用节点结果值",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03718",
+      "signature": "std::optional<海中鱼巣::节点句柄>::~optional()",
+      "caller": "R0358",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1449-1456"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "节点结果已构造后的任一返回路径释放其 optional 值成员",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03719",
+      "signature": "std::optional<海中鱼巣::节点类型>::optional(const 海中鱼巣::节点类型&)",
+      "caller": "R0359",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1463"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "R0388 与 R0390 均返回 true 后构造宿主预期类型",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03720",
+      "signature": "std::optional<海中鱼巣::节点类型>::optional(海中鱼巣::节点类型&&)",
+      "caller": "R0359",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1465"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "前序宿主节点类型与主信息比较均为 true 后构造特征类型",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03721",
+      "signature": "bool std::operator==(const std::optional<海中鱼巣::节点类型>&, const std::optional<海中鱼巣::节点类型>&)",
+      "caller": "R0359",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1463",
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1465"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "按 && 顺序分别在前序项全部为 true 时比较节点类型 optional",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03722",
+      "signature": "std::optional<海中鱼巣::节点类型>::~optional()",
+      "caller": "R0359",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1463",
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1465"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "两行各释放读取返回临时与预期临时 optional",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03723",
+      "signature": "std::optional<海中鱼巣::主信息句柄>::optional(const 海中鱼巣::主信息句柄&)",
+      "caller": "R0359",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1464",
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1466"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "按 && 顺序分别构造宿主与定义预期主信息",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03724",
+      "signature": "bool std::operator==(const std::optional<海中鱼巣::主信息句柄>&, const std::optional<海中鱼巣::主信息句柄>&)",
+      "caller": "R0359",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1464",
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1466"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "按 && 顺序分别比较宿主与定义主信息 optional",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03725",
+      "signature": "std::optional<海中鱼巣::主信息句柄>::~optional()",
+      "caller": "R0359",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1464",
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1466"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "两行各释放读取返回临时与预期临时 optional",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03726",
+      "signature": "bool std::vector<海中鱼巣::关系记录>::empty() const noexcept",
+      "caller": "R0359",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1468"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "前序全部验证项为 true 且 R0034 已返回模板关系组",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03727",
+      "signature": "std::vector<海中鱼巣::关系记录>::~vector()",
+      "caller": "R0359",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1468"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "empty() 判定完成后释放 R0034 返回的临时 vector",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03728",
+      "signature": "std::vector<海中鱼巣::关系记录>::iterator std::vector<海中鱼巣::关系记录>::begin() noexcept",
+      "caller": "R0360",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1475"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "R0034 返回外层非 const 临时 vector 后建立范围遍历",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03729",
+      "signature": "std::vector<海中鱼巣::关系记录>::iterator std::vector<海中鱼巣::关系记录>::end() noexcept",
+      "caller": "R0360",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1475"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "R0034 返回外层非 const 临时 vector 后建立范围遍历终点",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03730",
+      "signature": "bool std::vector<海中鱼巣::关系记录>::iterator::operator!=(const iterator&) const noexcept",
+      "caller": "R0360",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1475"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "外层范围 for 每轮含终止轮比较当前位置与 end",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03731",
+      "signature": "海中鱼巣::关系记录& std::vector<海中鱼巣::关系记录>::iterator::operator*() const noexcept",
+      "caller": "R0360",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1475"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "外层迭代器不等于 end 后绑定宿主关系只读引用",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03732",
+      "signature": "std::vector<海中鱼巣::关系记录>::iterator& std::vector<海中鱼巣::关系记录>::iterator::operator++() noexcept",
+      "caller": "R0360",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1475"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "当前外层循环体未返回后推进迭代器",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03733",
+      "signature": "std::optional<海中鱼巣::节点类型>::optional(海中鱼巣::节点类型&&)",
+      "caller": "R0360",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1476-1477"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "外层迭代取得宿主关系后构造特征类型 optional",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03734",
+      "signature": "bool std::operator!=(const std::optional<海中鱼巣::节点类型>&, const std::optional<海中鱼巣::节点类型>&)",
+      "caller": "R0360",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1476-1477"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "R0030 返回 optional 后与特征类型 optional 比较",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03735",
+      "signature": "std::optional<海中鱼巣::节点类型>::~optional()",
+      "caller": "R0360",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1476-1477"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "比较后释放读取返回临时与预期临时 optional",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03736",
+      "signature": "std::vector<海中鱼巣::关系记录>::const_iterator std::vector<海中鱼巣::关系记录>::begin() const noexcept",
+      "caller": "R0360",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1479"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "目标类型为特征且 const 模板组已形成后建立内层遍历",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03737",
+      "signature": "std::vector<海中鱼巣::关系记录>::const_iterator std::vector<海中鱼巣::关系记录>::end() const noexcept",
+      "caller": "R0360",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1479"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "const 模板组已形成后建立内层遍历终点",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03738",
+      "signature": "bool std::vector<海中鱼巣::关系记录>::const_iterator::operator!=(const const_iterator&) const noexcept",
+      "caller": "R0360",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1479"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "内层范围 for 每轮含终止轮比较当前位置与 end",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03739",
+      "signature": "const 海中鱼巣::关系记录& std::vector<海中鱼巣::关系记录>::const_iterator::operator*() const noexcept",
+      "caller": "R0360",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1479"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "内层迭代器不等于 end 后绑定模板记录只读引用",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03740",
+      "signature": "std::vector<海中鱼巣::关系记录>::const_iterator& std::vector<海中鱼巣::关系记录>::const_iterator::operator++() noexcept",
+      "caller": "R0360",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1479"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "当前内层循环体未返回后推进迭代器",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03741",
+      "signature": "std::vector<海中鱼巣::关系记录>::~vector()",
+      "caller": "R0360",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1475-1482",
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1478-1481"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "分别在内层组和外层临时关系组作用域结束或早退时释放",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03742",
+      "signature": "const 海中鱼巣::关系句柄& std::optional<海中鱼巣::关系句柄>::operator*() const& noexcept",
+      "caller": "R0361",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1513",
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1520",
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1521"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "两个关系结果均成功；各调用点按关系可读短路与输出赋值顺序到达",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03743",
+      "signature": "std::optional<海中鱼巣::关系句柄>::~optional()",
+      "caller": "R0361",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1507-1522",
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1510-1522"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "两个关系结果构造后的任一返回路径分别释放 optional 值成员",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03744",
+      "signature": "const std::int64_t& std::optional<std::int64_t>::operator*() const& noexcept",
+      "caller": "R0362",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1538",
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1545"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "原始类型为 I64，且按候选写入或候选复核短路到达",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03745",
+      "signature": "const 海中鱼巣::关系句柄& std::optional<海中鱼巣::关系句柄>::operator*() const& noexcept",
+      "caller": "R0362",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1543",
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1553"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "关系创建与材料登记成功；1553 还要求完整为 true",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03746",
+      "signature": "bool std::operator==(const std::optional<std::int64_t>&, const std::optional<std::int64_t>&)",
+      "caller": "R0364",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1575"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "材料完整、主键和原始类型匹配且版本为 1",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03747",
+      "signature": "bool std::operator==(const std::vector<std::int64_t>&, const std::vector<std::int64_t>&)",
+      "caller": "R0364",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1576"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "前序含 I64 相等的全部项为 true",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03748",
+      "signature": "bool std::operator==(const std::vector<std::uint64_t>&, const std::vector<std::uint64_t>&)",
+      "caller": "R0364",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1577"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "前序含 VecI64 相等的全部项为 true",
+      "resolution_source": "冻结源码调用点、接收者/实参静态类型、隐式生命周期与标准库重载复核",
       "current_root_reachable": true
     }
   ],
