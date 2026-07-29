@@ -17,7 +17,7 @@
   ],
   "function_count": 1154,
   "project_call_edge_count": 2761,
-  "external_count": 1629,
+  "external_count": 1640,
   "callback_registration_count": 27,
   "external_boundaries": [
     {
@@ -8355,7 +8355,7 @@
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；执行到按值返回且 NRVO 未发生时调用移动构造",
       "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
       "current_root_reachable": true
     },
@@ -8381,7 +8381,7 @@
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；执行到按值返回且 NRVO 未发生时调用移动构造",
       "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
       "current_root_reachable": true
     },
@@ -21587,6 +21587,162 @@
       "boundary_category": "Standard library optional",
       "reachable_condition": "RCE1737返回false且RCE0164已返回节点记录optional",
       "resolution_source": "当前源码逐调用点与标准库静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02298",
+      "caller": "F0378",
+      "signature": "bool std::wstring_view::empty() const noexcept",
+      "locations": [
+        "海中鱼巣/适配/SQL数据库适配.cpp:67"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library string_view",
+      "reachable_condition": "F0378进入后首先观察字段是否为空",
+      "resolution_source": "当前HEAD Clang AST候选、源码调用点与std::wstring_view静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02299",
+      "caller": "F0378",
+      "signature": "std::wstring_view::size_type std::wstring_view::size() const noexcept",
+      "locations": [
+        "海中鱼巣/适配/SQL数据库适配.cpp:67"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library string_view",
+      "reachable_condition": "X02298返回false后按逻辑或短路规则观察字段长度",
+      "resolution_source": "当前HEAD Clang AST候选、源码调用点与std::wstring_view静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02300",
+      "caller": "F0378",
+      "signature": "const wchar_t& std::_String_view_iterator<std::char_traits<wchar_t>>::operator*() const noexcept",
+      "locations": [
+        "海中鱼巣/适配/SQL数据库适配.cpp:70"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library string_view iterator",
+      "reachable_condition": "长度门通过且范围循环仍有下一代码单元",
+      "resolution_source": "当前HEAD Clang AST候选、范围循环源码与迭代器静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02301",
+      "caller": "F0379",
+      "signature": "void std::wstring::reserve(std::wstring::size_type)",
+      "locations": [
+        "海中鱼巣/适配/SQL数据库适配.cpp:91"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library string",
+      "reachable_condition": "X02302已返回输入长度",
+      "resolution_source": "当前HEAD Clang AST候选、源码调用点与std::wstring静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02302",
+      "caller": "F0379",
+      "signature": "std::wstring_view::size_type std::wstring_view::size() const noexcept",
+      "locations": [
+        "海中鱼巣/适配/SQL数据库适配.cpp:91"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library string_view",
+      "reachable_condition": "X00999已形成局部结果字符串",
+      "resolution_source": "当前HEAD Clang AST候选、源码调用点与std::wstring_view静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02303",
+      "caller": "F0379",
+      "signature": "const wchar_t& std::_String_view_iterator<std::char_traits<wchar_t>>::operator*() const noexcept",
+      "locations": [
+        "海中鱼巣/适配/SQL数据库适配.cpp:92"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library string_view iterator",
+      "reachable_condition": "范围循环仍有下一代码单元",
+      "resolution_source": "当前HEAD Clang AST候选、范围循环源码与迭代器静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02304",
+      "caller": "F0379",
+      "signature": "void std::wstring::push_back(wchar_t)",
+      "locations": [
+        "海中鱼巣/适配/SQL数据库适配.cpp:93",
+        "海中鱼巣/适配/SQL数据库适配.cpp:95"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library string",
+      "reachable_condition": "每个输入代码单元先追加一次；当前代码单元为单引号时再追加一次",
+      "resolution_source": "当前HEAD Clang AST候选、两个源码调用点与std::wstring静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02305",
+      "caller": "F0380",
+      "signature": "void std::wstring::reserve(std::wstring::size_type)",
+      "locations": [
+        "海中鱼巣/适配/SQL数据库适配.cpp:103"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library string",
+      "reachable_condition": "X02306已返回输入长度",
+      "resolution_source": "当前HEAD Clang AST候选、源码调用点与std::wstring静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02306",
+      "caller": "F0380",
+      "signature": "std::wstring_view::size_type std::wstring_view::size() const noexcept",
+      "locations": [
+        "海中鱼巣/适配/SQL数据库适配.cpp:103"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library string_view",
+      "reachable_condition": "X01001已形成局部结果字符串",
+      "resolution_source": "当前HEAD Clang AST候选、源码调用点与std::wstring_view静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02307",
+      "caller": "F0380",
+      "signature": "const wchar_t& std::_String_view_iterator<std::char_traits<wchar_t>>::operator*() const noexcept",
+      "locations": [
+        "海中鱼巣/适配/SQL数据库适配.cpp:104"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library string_view iterator",
+      "reachable_condition": "范围循环仍有下一代码单元",
+      "resolution_source": "当前HEAD Clang AST候选、范围循环源码与迭代器静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02308",
+      "caller": "F0380",
+      "signature": "void std::wstring::push_back(wchar_t)",
+      "locations": [
+        "海中鱼巣/适配/SQL数据库适配.cpp:105",
+        "海中鱼巣/适配/SQL数据库适配.cpp:107"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library string",
+      "reachable_condition": "每个输入代码单元先追加一次；当前代码单元为右方括号时再追加一次",
+      "resolution_source": "当前HEAD Clang AST候选、两个源码调用点与std::wstring静态类型复核",
       "current_root_reachable": true
     }
   ],

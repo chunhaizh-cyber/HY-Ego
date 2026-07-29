@@ -1,6 +1,6 @@
 # main 可达外部边界表
 
-外部边界记录：1629。本表不把外部函数升级为项目函数身份。
+外部边界记录：1640。本表不把外部函数升级为项目函数身份。
 
 | ID | 调用方 | 类别 | 外部签名/边界 | 调用点 | 调用次数 | 可达条件 | 解析来源 |
 | --- | --- | --- | --- | --- | ---: | --- | --- |
@@ -625,9 +625,9 @@
 | X00997 | F0374 | Standard library | <code>shared_lock(mutex_type &) :: void (mutex_type &)</code> | <code>海中鱼巣/核心/节点仓库.cpp:470</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
 | X00998 | F0376 | Standard library | <code>shared_lock(mutex_type &) :: void (mutex_type &)</code> | <code>海中鱼巣/核心/索引仓库.cpp:422</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
 | X00999 | F0379 | Standard library | <code>basic_string() :: void () noexcept(is_nothrow_default_constructible_v<_Alty>)</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:90</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
-| X01000 | F0379 | Standard library | <code>basic_string(basic_string<wchar_t> &&) :: void (basic_string<wchar_t> &&) noexcept</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:98</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
+| X01000 | F0379 | Standard library | <code>basic_string(basic_string<wchar_t> &&) :: void (basic_string<wchar_t> &&) noexcept</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:98</code> | 1 | 调用方已在 F0001 可达闭包内；执行到按值返回且 NRVO 未发生时调用移动构造 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
 | X01001 | F0380 | Standard library | <code>basic_string() :: void () noexcept(is_nothrow_default_constructible_v<_Alty>)</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:102</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
-| X01002 | F0380 | Standard library | <code>basic_string(basic_string<wchar_t> &&) :: void (basic_string<wchar_t> &&) noexcept</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:110</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
+| X01002 | F0380 | Standard library | <code>basic_string(basic_string<wchar_t> &&) :: void (basic_string<wchar_t> &&) noexcept</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:110</code> | 1 | 调用方已在 F0001 可达闭包内；执行到按值返回且 NRVO 未发生时调用移动构造 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
 | X01003 | F0381 | Standard library | <code>operator=(const wchar_t *const) :: basic_string<wchar_t> &(const wchar_t *const)</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:253</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
 | X01004 | F0381 | SQL/ODBC | <code>SQLExecDirectW(SQLHSTMT, SQLWCHAR *, SQLINTEGER) :: SQLRETURN (SQLHSTMT, SQLWCHAR *, SQLINTEGER)</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:256</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
 | X01005 | F0381 | Standard library | <code>operator=(basic_string<wchar_t> &&) :: basic_string<wchar_t> &(basic_string<wchar_t> &&) noexcept(_Choose_pocma_v<_Alty> != _Pocma_values::_No_propagate_allocators)</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:261</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
@@ -1669,3 +1669,14 @@
 | X02295 | F0370 | Standard library optional | <code>bool std::optional<海中鱼巣::概念根类别>::has_value() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:1035, 海中鱼巣/领域/概念图服务.h:1036</code> | 2 | 实例与概念不相同时按左到右短路次序观察两个类别 optional | 逐调用点源码与标准库静态类型复核 |
 | X02296 | F0370 | Standard library optional | <code>const 海中鱼巣::概念根类别& std::optional<海中鱼巣::概念根类别>::value() const &</code> | <code>海中鱼巣/领域/概念图服务.h:1037</code> | 2 | 两个类别 optional 均有值后按左到右顺序取值比较 | 逐调用点源码与标准库静态类型复核 |
 | X02297 | F0377 | Standard library optional | <code>bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept</code> | <code>海中鱼巣/核心/节点仓库.cpp:446</code> | 1 | RCE1737返回false且RCE0164已返回节点记录optional | 当前源码逐调用点与标准库静态类型复核 |
+| X02298 | F0378 | Standard library string_view | <code>bool std::wstring_view::empty() const noexcept</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:67</code> | 1 | F0378进入后首先观察字段是否为空 | 当前HEAD Clang AST候选、源码调用点与std::wstring_view静态类型复核 |
+| X02299 | F0378 | Standard library string_view | <code>std::wstring_view::size_type std::wstring_view::size() const noexcept</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:67</code> | 1 | X02298返回false后按逻辑或短路规则观察字段长度 | 当前HEAD Clang AST候选、源码调用点与std::wstring_view静态类型复核 |
+| X02300 | F0378 | Standard library string_view iterator | <code>const wchar_t&amp; std::_String_view_iterator&lt;std::char_traits&lt;wchar_t&gt;&gt;::operator*() const noexcept</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:70</code> | 1 | 长度门通过且范围循环仍有下一代码单元 | 当前HEAD Clang AST候选、范围循环源码与迭代器静态类型复核 |
+| X02301 | F0379 | Standard library string | <code>void std::wstring::reserve(std::wstring::size_type)</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:91</code> | 1 | X02302已返回输入长度 | 当前HEAD Clang AST候选、源码调用点与std::wstring静态类型复核 |
+| X02302 | F0379 | Standard library string_view | <code>std::wstring_view::size_type std::wstring_view::size() const noexcept</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:91</code> | 1 | X00999已形成局部结果字符串 | 当前HEAD Clang AST候选、源码调用点与std::wstring_view静态类型复核 |
+| X02303 | F0379 | Standard library string_view iterator | <code>const wchar_t&amp; std::_String_view_iterator&lt;std::char_traits&lt;wchar_t&gt;&gt;::operator*() const noexcept</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:92</code> | 1 | 范围循环仍有下一代码单元 | 当前HEAD Clang AST候选、范围循环源码与迭代器静态类型复核 |
+| X02304 | F0379 | Standard library string | <code>void std::wstring::push_back(wchar_t)</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:93, 海中鱼巣/适配/SQL数据库适配.cpp:95</code> | 2 | 每个输入代码单元先追加一次；当前代码单元为单引号时再追加一次 | 当前HEAD Clang AST候选、两个源码调用点与std::wstring静态类型复核 |
+| X02305 | F0380 | Standard library string | <code>void std::wstring::reserve(std::wstring::size_type)</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:103</code> | 1 | X02306已返回输入长度 | 当前HEAD Clang AST候选、源码调用点与std::wstring静态类型复核 |
+| X02306 | F0380 | Standard library string_view | <code>std::wstring_view::size_type std::wstring_view::size() const noexcept</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:103</code> | 1 | X01001已形成局部结果字符串 | 当前HEAD Clang AST候选、源码调用点与std::wstring_view静态类型复核 |
+| X02307 | F0380 | Standard library string_view iterator | <code>const wchar_t&amp; std::_String_view_iterator&lt;std::char_traits&lt;wchar_t&gt;&gt;::operator*() const noexcept</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:104</code> | 1 | 范围循环仍有下一代码单元 | 当前HEAD Clang AST候选、范围循环源码与迭代器静态类型复核 |
+| X02308 | F0380 | Standard library string | <code>void std::wstring::push_back(wchar_t)</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:105, 海中鱼巣/适配/SQL数据库适配.cpp:107</code> | 2 | 每个输入代码单元先追加一次；当前代码单元为右方括号时再追加一次 | 当前HEAD Clang AST候选、两个源码调用点与std::wstring静态类型复核 |
