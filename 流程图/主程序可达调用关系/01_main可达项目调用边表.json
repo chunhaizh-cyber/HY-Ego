@@ -25939,7 +25939,6 @@
       "caller": "R0142",
       "callee": "R0141",
       "callsites": [
-        "海中鱼巣/核心/节点仓库.cpp:146",
         "海中鱼巣/核心/节点仓库.cpp:167"
       ],
       "call_category": "suffix_match+direct-const-member+direct-member",
@@ -26030,7 +26029,6 @@
       "caller": "R0144",
       "callee": "R0143",
       "callsites": [
-        "海中鱼巣/核心/节点仓库.cpp:204",
         "海中鱼巣/核心/节点仓库.cpp:221"
       ],
       "call_category": "suffix_match+direct-const-member+direct-member",
@@ -26114,21 +26112,6 @@
       "return_binding": null,
       "reachable_condition": "调用方可达且源码分支条件成立",
       "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0617",
-      "caller": "R0147",
-      "callee": "R0143",
-      "callsites": [
-        "海中鱼巣/核心/节点仓库.cpp:351"
-      ],
-      "call_category": "direct-const-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "令牌删除重载委托撤销候选",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
       "current_root_reachable": true
     },
     {
@@ -54354,6 +54337,21 @@
       "return_binding": "bool直接作为无接域路径返回值",
       "reachable_condition": "仓库未接域、主键非零并取得独占锁",
       "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2535",
+      "caller": "R0145",
+      "callee": "F0400",
+      "callsites": [
+        "海中鱼巣/核心/节点仓库.cpp:28"
+      ],
+      "call_category": "resolved-function-pointer",
+      "arguments": "接线.运行期状态, 令牌",
+      "argument_resolution": "结构事务接线函数指针字段按当前装配唯一解析",
+      "return_binding": "独占令牌有效 bool",
+      "reachable_condition": "RCE0616 返回 true；&& 短路第二项",
+      "resolution_source": "本批源码接线字段、生产结构事务协调器唯一目标与现状单函数图复核",
       "current_root_reachable": true
     }
   ]

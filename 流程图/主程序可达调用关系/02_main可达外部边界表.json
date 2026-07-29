@@ -17,7 +17,7 @@
   ],
   "function_count": 1286,
   "project_call_edge_count": 3546,
-  "external_count": 2357,
+  "external_count": 2420,
   "callback_registration_count": 34,
   "external_boundaries": [
     {
@@ -14079,7 +14079,7 @@
     {
       "id": "X01603",
       "caller": "R0141",
-      "signature": "operator==(const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::节点记录>>>> &) :: bool (const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::节点记录>>>> &) const noexcept",
+      "signature": "bool std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::iterator::operator==(const std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::iterator&) const noexcept",
       "locations": [
         "海中鱼巣/核心/节点仓库.cpp:136"
       ],
@@ -14105,7 +14105,7 @@
     {
       "id": "X01605",
       "caller": "R0143",
-      "signature": "operator==(const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::节点记录>>>> &) :: bool (const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::节点记录>>>> &) const noexcept",
+      "signature": "bool std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::iterator::operator==(const std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::iterator&) const noexcept",
       "locations": [
         "海中鱼巣/核心/节点仓库.cpp:193"
       ],
@@ -14118,7 +14118,7 @@
     {
       "id": "X01606",
       "caller": "R0143",
-      "signature": "_List_iterator(const _List_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::节点记录>>>> &) :: void (const _List_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::节点记录>>>> &) noexcept",
+      "signature": "std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::iterator::iterator(const std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::iterator&) noexcept",
       "locations": [
         "海中鱼巣/核心/节点仓库.cpp:199"
       ],
@@ -14157,7 +14157,7 @@
     {
       "id": "X01609",
       "caller": "R0147",
-      "signature": "operator==(const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::节点记录>>>> &) :: bool (const _List_const_iterator<std::_List_val<std::_List_simple_types<std::pair<const unsigned long long, 海中鱼巣::节点记录>>>> &) const noexcept",
+      "signature": "bool std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::iterator::operator==(const std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::iterator&) const noexcept",
       "locations": [
         "海中鱼巣/核心/节点仓库.cpp:354"
       ],
@@ -16188,19 +16188,6 @@
       "current_root_reachable": true
     },
     {
-      "id": "X01765",
-      "caller": "R0170",
-      "signature": "日志文件路径(日志类别, std::wstring_view) :: std::filesystem::path (日志类别, std::wstring_view)",
-      "locations": [
-        "海中鱼巣/界面/控制面板窗口.cpp:173"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
-      "current_root_reachable": true
-    },
-    {
       "id": "X01766",
       "caller": "R0170",
       "signature": "basic_string(const wchar_t *const) :: void (const wchar_t *const)",
@@ -16305,29 +16292,20 @@
       "current_root_reachable": true
     },
     {
-      "id": "X01774",
-      "caller": "R0171",
-      "signature": "日志文件路径(日志类别, std::wstring_view) :: std::filesystem::path (日志类别, std::wstring_view)",
-      "locations": [
-        "海中鱼巣/界面/控制面板窗口.cpp:193"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
-      "current_root_reachable": true
-    },
-    {
       "id": "X01775",
       "caller": "R0171",
       "signature": "operator<<<>(basic_ostream<wchar_t, std::char_traits<wchar_t>> &, const wchar_t *) :: basic_ostream<wchar_t, std::char_traits<wchar_t>> &(basic_ostream<wchar_t, std::char_traits<wchar_t>> &, const wchar_t *)",
       "locations": [
-        "海中鱼巣/界面/控制面板窗口.cpp:194"
+        "海中鱼巣/界面/控制面板窗口.cpp:194",
+        "海中鱼巣/界面/控制面板窗口.cpp:195",
+        "海中鱼巣/界面/控制面板窗口.cpp:197",
+        "海中鱼巣/界面/控制面板窗口.cpp:198",
+        "海中鱼巣/界面/控制面板窗口.cpp:199"
       ],
-      "call_count": 1,
+      "call_count": 5,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
+      "resolution_source": "wostringstream 静态类型与五个 const wchar_t* 插入表达式复核",
       "current_root_reachable": true
     },
     {
@@ -32005,6 +31983,929 @@
       "boundary_category": "Standard library",
       "reachable_condition": "R0126可达且删除主键后复核反向组是否为空",
       "resolution_source": "本批源码调用点、容器静态类型与RAII作用域复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03049",
+      "signature": "std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::iterator std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::find(const std::uint64_t&)",
+      "caller": "R0141",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:135"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library unordered_map",
+      "reachable_condition": "共享锁已形成并按候选节点编号查找",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03050",
+      "signature": "std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::iterator std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::end() noexcept",
+      "caller": "R0141",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:136"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library unordered_map",
+      "reachable_condition": "X03049已形成查找迭代器",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03051",
+      "signature": "std::pair<const std::uint64_t, 海中鱼巣::节点记录>* std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::iterator::operator->() const noexcept",
+      "caller": "R0141",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:138",
+        "海中鱼巣/核心/节点仓库.cpp:139"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "查找迭代器不等于end后读取节点记录字段",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03052",
+      "signature": "std::shared_lock<std::shared_mutex>::~shared_lock() noexcept",
+      "caller": "R0141",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:134-144"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library RAII",
+      "reachable_condition": "共享锁形成后经任一返回或作用域退出释放",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03053",
+      "signature": "std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::iterator std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::find(const std::uint64_t&)",
+      "caller": "R0143",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:192"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library unordered_map",
+      "reachable_condition": "独占锁已形成并按候选节点编号查找",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03054",
+      "signature": "std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::iterator std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::end() noexcept",
+      "caller": "R0143",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:193"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library unordered_map",
+      "reachable_condition": "X03053已形成查找迭代器",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03055",
+      "signature": "std::pair<const std::uint64_t, 海中鱼巣::节点记录>* std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::iterator::operator->() const noexcept",
+      "caller": "R0143",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:195",
+        "海中鱼巣/核心/节点仓库.cpp:196"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "查找迭代器不等于end后读取节点记录字段",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03056",
+      "signature": "std::unique_lock<std::shared_mutex>::~unique_lock() noexcept",
+      "caller": "R0143",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:191-202"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library RAII",
+      "reachable_condition": "独占锁形成后经任一返回或作用域退出释放",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03057",
+      "signature": "std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::iterator std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::find(const std::uint64_t&)",
+      "caller": "R0147",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:353"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library unordered_map",
+      "reachable_condition": "独占锁已形成并按节点编号查找",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03058",
+      "signature": "std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::iterator std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::end() noexcept",
+      "caller": "R0147",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:354"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library unordered_map",
+      "reachable_condition": "X03057已形成查找迭代器",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03059",
+      "signature": "std::pair<const std::uint64_t, 海中鱼巣::节点记录>* std::unordered_map<std::uint64_t, 海中鱼巣::节点记录>::iterator::operator->() const noexcept",
+      "caller": "R0147",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:355"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "查找迭代器不等于end后读取节点记录字段",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03060",
+      "signature": "std::unique_lock<std::shared_mutex>::~unique_lock() noexcept",
+      "caller": "R0147",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:352-360"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library RAII",
+      "reachable_condition": "独占锁形成后经任一返回或作用域退出释放",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03061",
+      "signature": "std::size_t std::array<std::pair<const wchar_t*, int>, 6>::size() const noexcept",
+      "caller": "R0151",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1114"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library array",
+      "reachable_condition": "创建数据库列后进入列插入循环",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03062",
+      "signature": "std::pair<const wchar_t*, int>& std::array<std::pair<const wchar_t*, int>, 6>::operator[](std::size_t) noexcept",
+      "caller": "R0151",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1117",
+        "海中鱼巣/界面/控制面板窗口.cpp:1118"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library array",
+      "reachable_condition": "列索引小于X03061返回数量",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03063",
+      "signature": "std::size_t std::vector<海中鱼巣::节点句柄>::size() const noexcept",
+      "caller": "R0153",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1171"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "节点详情分支形成名称入口数量人读文本",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03064",
+      "signature": "std::size_t std::vector<海中鱼巣::控制面板树节点材料>::size() const noexcept",
+      "caller": "R0153",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1173",
+        "海中鱼巣/界面/控制面板窗口.cpp:1190"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "节点详情或树分类详情分支形成数量人读文本",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03065",
+      "signature": "std::size_t std::array<const wchar_t*, 6>::size() const noexcept",
+      "caller": "R0153",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1183"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library array",
+      "reachable_condition": "树项分类索引边界复核",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03066",
+      "signature": "std::size_t std::vector<std::optional<海中鱼巣::控制面板根页游标>>::size() const noexcept",
+      "caller": "R0153",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1198"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "树分类详情分支形成上一页可用人读文本",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03067",
+      "signature": "bool std::optional<海中鱼巣::控制面板根页游标>::has_value() const noexcept",
+      "caller": "R0153",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1200"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "树分类详情分支形成下一页可用人读文本",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03068",
+      "signature": "std::wstring std::basic_ostringstream<wchar_t>::str() const",
+      "caller": "R0153",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1208"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library stream",
+      "reachable_condition": "详情文本已经完成拼接并准备送入窗口控件",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03069",
+      "signature": "const wchar_t* std::wstring::c_str() const noexcept",
+      "caller": "R0153",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1208"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library string",
+      "reachable_condition": "X03068返回临时字符串并在完整表达式内读取字符指针",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03070",
+      "signature": "bool std::wstring::empty() const noexcept",
+      "caller": "R0155",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1216"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library string",
+      "reachable_condition": "数据库审计查询失败并选择失败阶段人读文本",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03071",
+      "signature": "const wchar_t* std::wstring::c_str() const noexcept",
+      "caller": "R0155",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1217",
+        "海中鱼巣/界面/控制面板窗口.cpp:1222"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library string",
+      "reachable_condition": "已形成数据库标题状态文本并同步送入窗口控件",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03072",
+      "signature": "std::size_t std::vector<海中鱼巣::数据库审计记录>::size() const noexcept",
+      "caller": "R0155",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1220",
+        "海中鱼巣/界面/控制面板窗口.cpp:1223"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "查询成功后形成记录数量文本并控制列表循环",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03073",
+      "signature": "const 海中鱼巣::数据库审计记录& std::vector<海中鱼巣::数据库审计记录>::operator[](std::size_t) const",
+      "caller": "R0155",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1224"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "记录索引小于X03072返回数量",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03074",
+      "signature": "std::wstring& std::array<std::wstring, 6>::operator[](std::size_t) noexcept",
+      "caller": "R0155",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1236",
+        "海中鱼巣/界面/控制面板窗口.cpp:1242"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library array",
+      "reachable_condition": "文本列索引在0至X03076返回数量内",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03075",
+      "signature": "wchar_t* std::wstring::data() noexcept",
+      "caller": "R0155",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1236",
+        "海中鱼巣/界面/控制面板窗口.cpp:1242"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library string",
+      "reachable_condition": "读取列表项或列文本的可写字符指针",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03076",
+      "signature": "std::size_t std::array<std::wstring, 6>::size() const noexcept",
+      "caller": "R0155",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1241"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library array",
+      "reachable_condition": "控制数据库列表列写入循环",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03077",
+      "signature": "void std::vector<海中鱼巣::控制面板树项引用>::clear() noexcept",
+      "caller": "R0158",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1375"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "新页重建失败并恢复上一快照时清空当前树项引用",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03078",
+      "signature": "std::size_t std::vector<海中鱼巣::控制面板概念根选项>::size() const noexcept",
+      "caller": "R0160",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1392"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "概念树根选择入口索引边界复核",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03079",
+      "signature": "const 海中鱼巣::控制面板概念根选项& std::vector<海中鱼巣::控制面板概念根选项>::operator[](std::size_t) const",
+      "caller": "R0160",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1396"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "选项索引通过X03078边界复核",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03080",
+      "signature": "bool std::optional<海中鱼巣::控制面板根页游标>::has_value() const noexcept",
+      "caller": "R0161",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1405"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "进入下一页切换时复核下一页游标是否存在",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03081",
+      "signature": "std::size_t std::vector<std::optional<海中鱼巣::控制面板根页游标>>::size() const noexcept",
+      "caller": "R0163",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1419"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "进入上一页切换时复核历史深度",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03082",
+      "signature": "void std::vector<std::optional<海中鱼巣::控制面板根页游标>>::pop_back() noexcept",
+      "caller": "R0163",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1423"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "X03081返回数量大于1后移除当前页",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03083",
+      "signature": "bool std::optional<海中鱼巣::控制面板根页游标>::has_value() const noexcept",
+      "caller": "R0164",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1439"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "游标失效逻辑拒绝后复核当前页游标存在",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03084",
+      "signature": "void std::vector<海中鱼巣::控制面板树项引用>::clear() noexcept",
+      "caller": "R0164",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:1456"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "刷新后的新树重建失败并恢复上一快照",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03085",
+      "signature": "bool std::filesystem::path::empty() const noexcept",
+      "caller": "R0170",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:174"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library filesystem",
+      "reachable_condition": "读取日志路径后复核是否可用",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03086",
+      "signature": "std::wstring std::operator+(const wchar_t*, const std::wstring&)",
+      "caller": "R0170",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:189"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library string",
+      "reachable_condition": "文件大小读取成功后形成状态人读文本首段",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03087",
+      "signature": "bool std::filesystem::path::empty() const noexcept",
+      "caller": "R0171",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:196"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library filesystem",
+      "reachable_condition": "形成日志文件行时选择路径不可用或路径文本",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03088",
+      "signature": "std::wostream& std::operator<<(std::wostream&, const std::wstring&)",
+      "caller": "R0171",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:196",
+        "海中鱼巣/界面/控制面板窗口.cpp:198"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library stream",
+      "reachable_condition": "向日志状态人读文本插入路径或日志状态字符串",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03089",
+      "signature": "bool std::wstring::empty() const noexcept",
+      "caller": "R0174",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:222"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library string",
+      "reachable_condition": "树节点显示语义复核显示名称非空",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03090",
+      "signature": "bool std::vector<海中鱼巣::控制面板树节点材料>::empty() const noexcept",
+      "caller": "R0175",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:239"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "树结构显示语义复核真实根组非空",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03091",
+      "signature": "bool std::optional<海中鱼巣::节点句柄>::has_value() const noexcept",
+      "caller": "R0176",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:345",
+        "海中鱼巣/界面/控制面板窗口.cpp:358"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "按概念树或其它分类复核当前概念根存在性",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03092",
+      "signature": "std::size_t std::vector<海中鱼巣::控制面板概念根选项>::size() const noexcept",
+      "caller": "R0176",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:347"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "概念树候选要求四项根选项",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03093",
+      "signature": "bool std::vector<海中鱼巣::控制面板概念根选项>::empty() const noexcept",
+      "caller": "R0176",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:360"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "非概念树候选要求概念根选项为空",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03094",
+      "signature": "const 海中鱼巣::节点句柄& std::optional<海中鱼巣::节点句柄>::value() const &",
+      "caller": "R0176",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:354"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "X03091确认当前概念根存在后比较根节点",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03095",
+      "signature": "bool std::optional<海中鱼巣::控制面板根页游标>::has_value() const noexcept",
+      "caller": "R0176",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:362"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "复核按需候选是否携带下一页游标",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03096",
+      "signature": "const 海中鱼巣::控制面板根页游标& std::optional<海中鱼巣::控制面板根页游标>::value() const &",
+      "caller": "R0176",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:363"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "X03095确认游标存在后读取游标字段",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03097",
+      "signature": "std::size_t std::array<const wchar_t*, 6>::size() const noexcept",
+      "caller": "R0178",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:518"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library array",
+      "reachable_condition": "信息树分页读取导航项数量",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03098",
+      "signature": "std::size_t std::array<const wchar_t*, 4>::size() const noexcept",
+      "caller": "R0178",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:520",
+        "海中鱼巣/界面/控制面板窗口.cpp:522"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library array",
+      "reachable_condition": "日志或系统分页读取导航项数量",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03099",
+      "signature": "std::size_t std::array<const wchar_t*, 6>::size() const noexcept",
+      "caller": "R0180",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:542"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library array",
+      "reachable_condition": "信息树分页复核导航索引",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03100",
+      "signature": "std::size_t std::array<const wchar_t*, 4>::size() const noexcept",
+      "caller": "R0180",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:544",
+        "海中鱼巣/界面/控制面板窗口.cpp:546"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library array",
+      "reachable_condition": "日志或系统分页复核导航索引",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03101",
+      "signature": "const wchar_t* const& std::array<const wchar_t*, 6>::operator[](std::size_t) const noexcept",
+      "caller": "R0180",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:542"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library array",
+      "reachable_condition": "信息树导航索引小于X03099返回数量",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03102",
+      "signature": "const wchar_t* const& std::array<const wchar_t*, 4>::operator[](std::size_t) const noexcept",
+      "caller": "R0180",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:544",
+        "海中鱼巣/界面/控制面板窗口.cpp:546"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library array",
+      "reachable_condition": "日志或系统导航索引小于X03100返回数量",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03103",
+      "signature": "void std::vector<海中鱼巣::控制面板树项引用>::push_back(const 海中鱼巣::控制面板树项引用&)",
+      "caller": "R0184",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:582"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "追加新的树项引用材料",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03104",
+      "signature": "std::size_t std::vector<海中鱼巣::控制面板树项引用>::size() const noexcept",
+      "caller": "R0184",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:583"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "追加后形成1基引用序号",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03105",
+      "signature": "std::size_t std::vector<海中鱼巣::控制面板树项引用>::size() const noexcept",
+      "caller": "R0185",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:591"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "把1基引用序号转换为索引后复核边界",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03106",
+      "signature": "const 海中鱼巣::控制面板树项引用& std::vector<海中鱼巣::控制面板树项引用>::operator[](std::size_t) const",
+      "caller": "R0185",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:594"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "引用索引通过X03105边界复核",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03107",
+      "signature": "const wchar_t* std::wstring::c_str() const noexcept",
+      "caller": "R0187",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:606"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library string",
+      "reachable_condition": "形成树节点插入材料时读取显示名称字符指针",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03108",
+      "signature": "std::size_t std::array<const wchar_t*, 6>::size() const noexcept",
+      "caller": "R0188",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:623"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library array",
+      "reachable_condition": "分类树根插入入口复核分类索引",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03109",
+      "signature": "const wchar_t* const& std::array<const wchar_t*, 6>::operator[](std::size_t) const noexcept",
+      "caller": "R0188",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:631"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library array",
+      "reachable_condition": "分类索引通过X03108边界复核",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03110",
+      "signature": "std::size_t std::array<const wchar_t*, 6>::size() const noexcept",
+      "caller": "R0189",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:642"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library array",
+      "reachable_condition": "重建当前树视图入口复核当前分类索引",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03111",
+      "signature": "void std::vector<海中鱼巣::控制面板树项引用>::clear() noexcept",
+      "caller": "R0189",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:655"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "删除旧树控件项后清空引用投影",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03112",
+      "signature": "bool std::vector<海中鱼巣::控制面板树节点材料>::empty() const noexcept",
+      "caller": "R0189",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:665"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "复核当前分类真实根页非空",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03113",
+      "signature": "bool std::vector<海中鱼巣::控制面板树项引用>::empty() const noexcept",
+      "caller": "R0189",
+      "locations": [
+        "海中鱼巣/界面/控制面板窗口.cpp:675"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "插入分类根与真实根后复核引用投影非空",
+      "resolution_source": "本批现状单函数图、逐行映射、源码静态类型与调用位置复核",
       "current_root_reachable": true
     }
   ],
