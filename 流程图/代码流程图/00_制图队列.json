@@ -8,14 +8,14 @@
   "source_relation_publish_commit": "2c38ec4017e38b2e541b93c8c9ae038856f849c7",
   "generated_from_commit": "7342125cb3aa42b81a2c01393ca86abd383ec387",
   "source_identity_path": "流程图/主程序可达调用关系/00_main可达函数身份表.json",
-  "source_identity_blob": "cd7008018f314ae48f15758d230248f2d94f3ddc",
+  "source_identity_blob": "19df1d46283a3922a3f808a66144090e38bd9ec2",
   "source_edge_path": "流程图/主程序可达调用关系/01_main可达项目调用边表.json",
-  "source_edge_blob": "ecffcbed39a9c49ae5159ee683a9840c6d3595ce",
+  "source_edge_blob": "2122b3af7a378fbaa0182495f51a294526cbb992",
   "source_external_path": "流程图/主程序可达调用关系/02_main可达外部边界表.json",
-  "source_external_blob": "3234c05ad99a136af5396c865bc4a3489740a04b",
-  "current_reachable_function_count": 1155,
+  "source_external_blob": "d399633a5b5fb1880835465ae468bbf6829433df",
+  "current_reachable_function_count": 1158,
   "chart_completed_count": 381,
-  "chart_pending_count": 774,
+  "chart_pending_count": 777,
   "historical_unreachable_chart_count": 49,
   "queue_order": "正式身份表稳定身份顺序；shortest_depth只记录main最短调用深度，不参与既有drawing_order重排",
   "entries": [
@@ -2594,6 +2594,7 @@
         "F0360",
         "F0362",
         "F0370",
+        "F0457",
         "F0495",
         "F0551",
         "R0064",
@@ -2616,7 +2617,8 @@
         "R0557",
         "R0605",
         "R0606",
-        "R0607"
+        "R0607",
+        "R0613"
       ],
       "callee_ids": [],
       "incoming_project_edge_ids": [
@@ -2668,7 +2670,9 @@
         "RCE1695",
         "RCE1697",
         "RCE1699",
-        "RCE1735"
+        "RCE1735",
+        "RCE1766",
+        "RCE1769"
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
@@ -12654,13 +12658,15 @@
       "caller_ids": [
         "F0167",
         "F0387",
+        "F0440",
         "R0065"
       ],
       "callee_ids": [],
       "incoming_project_edge_ids": [
         "E0650",
         "RCE0424",
-        "RCE1755"
+        "RCE1755",
+        "RCE1761"
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
@@ -16424,7 +16430,10 @@
       "external_boundary_ids": [
         "X01085",
         "X01086",
-        "X01087"
+        "X01087",
+        "X02311",
+        "X02312",
+        "X02313"
       ],
       "chart_status": "待绘制",
       "chart_path": null,
@@ -16450,8 +16459,10 @@
         "R0038"
       ],
       "callee_ids": [
+        "F0340",
         "F0344",
-        "F0587"
+        "F0587",
+        "R0089"
       ],
       "incoming_project_edge_ids": [
         "E0927",
@@ -16459,7 +16470,9 @@
       ],
       "outgoing_project_edge_ids": [
         "E1798",
-        "RCE0209"
+        "RCE0209",
+        "RCE1760",
+        "RCE1761"
       ],
       "external_boundary_ids": [],
       "chart_status": "待绘制",
@@ -17030,11 +17043,19 @@
       "caller_ids": [
         "F0244"
       ],
-      "callee_ids": [],
+      "callee_ids": [
+        "F0457",
+        "R0613",
+        "R0614"
+      ],
       "incoming_project_edge_ids": [
         "E0949"
       ],
-      "outgoing_project_edge_ids": [],
+      "outgoing_project_edge_ids": [
+        "RCE1762",
+        "RCE1763",
+        "RCE1764"
+      ],
       "external_boundary_ids": [],
       "chart_status": "待绘制",
       "chart_path": null,
@@ -17056,13 +17077,21 @@
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0244；调用点=海中鱼巣/领域/系统角色清单.数据.h:264",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "caller_ids": [
-        "F0244"
+        "F0244",
+        "F0456"
       ],
-      "callee_ids": [],
+      "callee_ids": [
+        "F0051",
+        "R0598"
+      ],
       "incoming_project_edge_ids": [
-        "E0950"
+        "E0950",
+        "RCE1763"
       ],
-      "outgoing_project_edge_ids": [],
+      "outgoing_project_edge_ids": [
+        "RCE1768",
+        "RCE1769"
+      ],
       "external_boundary_ids": [],
       "chart_status": "待绘制",
       "chart_path": null,
@@ -26244,6 +26273,7 @@
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0073；调用点=海中鱼巣/核心/关系仓库.cpp:1435",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "caller_ids": [
+        "F0440",
         "R0065",
         "R0073"
       ],
@@ -26253,7 +26283,8 @@
       ],
       "incoming_project_edge_ids": [
         "RCE0423",
-        "RCE0462"
+        "RCE0462",
+        "RCE1760"
       ],
       "outgoing_project_edge_ids": [
         "RCE0509",
@@ -44449,12 +44480,14 @@
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "caller_ids": [
         "F0361",
+        "F0457",
         "F0592"
       ],
       "callee_ids": [],
       "incoming_project_edge_ids": [
         "RCE1674",
-        "RCE1684"
+        "RCE1684",
+        "RCE1768"
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
@@ -44927,6 +44960,102 @@
       "chart_path": null,
       "mapping_path": null,
       "target_layer_directory": "流程图/代码流程图/L7"
+    },
+    {
+      "drawing_order": 1156,
+      "function_id": "R0613",
+      "shortest_depth": 7,
+      "complete_signature": "bool 海中鱼巣::系统角色身份材料::operator==(const 海中鱼巣::系统角色身份材料&) const",
+      "callable_type": "Method",
+      "category": "Operator",
+      "module_identity": "头文件内联/模板定义",
+      "file": "海中鱼巣/领域/系统角色清单.数据.h",
+      "definition_line": 122,
+      "definition_end_line": 122,
+      "overload_identity": "bool 海中鱼巣::系统角色身份材料::operator==(const 海中鱼巣::系统角色身份材料&) const",
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0456；调用点=海中鱼巣/领域/系统角色清单.数据.h:212",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "caller_ids": [
+        "F0456",
+        "R0614"
+      ],
+      "callee_ids": [
+        "F0051",
+        "R0615"
+      ],
+      "incoming_project_edge_ids": [
+        "RCE1762",
+        "RCE1765"
+      ],
+      "outgoing_project_edge_ids": [
+        "RCE1766",
+        "RCE1767"
+      ],
+      "external_boundary_ids": [],
+      "chart_status": "待绘制",
+      "chart_path": null,
+      "mapping_path": null,
+      "target_layer_directory": "流程图/代码流程图/L7"
+    },
+    {
+      "drawing_order": 1157,
+      "function_id": "R0614",
+      "shortest_depth": 7,
+      "complete_signature": "bool 海中鱼巣::系统根需求角色材料::operator==(const 海中鱼巣::系统根需求角色材料&) const",
+      "callable_type": "Method",
+      "category": "Operator",
+      "module_identity": "头文件内联/模板定义",
+      "file": "海中鱼巣/领域/系统角色清单.数据.h",
+      "definition_line": 157,
+      "definition_end_line": 157,
+      "overload_identity": "bool 海中鱼巣::系统根需求角色材料::operator==(const 海中鱼巣::系统根需求角色材料&) const",
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0456；调用点=海中鱼巣/领域/系统角色清单.数据.h:212",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "caller_ids": [
+        "F0456"
+      ],
+      "callee_ids": [
+        "R0613"
+      ],
+      "incoming_project_edge_ids": [
+        "RCE1764"
+      ],
+      "outgoing_project_edge_ids": [
+        "RCE1765"
+      ],
+      "external_boundary_ids": [],
+      "chart_status": "待绘制",
+      "chart_path": null,
+      "mapping_path": null,
+      "target_layer_directory": "流程图/代码流程图/L7"
+    },
+    {
+      "drawing_order": 1158,
+      "function_id": "R0615",
+      "shortest_depth": 8,
+      "complete_signature": "bool 海中鱼巣::operator==(const 海中鱼巣::主信息句柄& 左, const 海中鱼巣::主信息句柄& 右)",
+      "callable_type": "Operator",
+      "category": "Operator",
+      "module_identity": "头文件内联/模板定义",
+      "file": "海中鱼巣/核心/句柄.h",
+      "definition_line": 143,
+      "definition_end_line": 145,
+      "overload_identity": "bool 海中鱼巣::operator==(const 海中鱼巣::主信息句柄& 左, const 海中鱼巣::主信息句柄& 右)",
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0613；调用点=海中鱼巣/领域/系统角色清单.数据.h:122",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "caller_ids": [
+        "R0613"
+      ],
+      "callee_ids": [],
+      "incoming_project_edge_ids": [
+        "RCE1767"
+      ],
+      "outgoing_project_edge_ids": [],
+      "external_boundary_ids": [],
+      "chart_status": "待绘制",
+      "chart_path": null,
+      "mapping_path": null,
+      "target_layer_directory": "流程图/代码流程图/L8"
     }
   ]
 }

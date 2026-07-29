@@ -15,9 +15,9 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1155,
-  "project_call_edge_count": 2779,
-  "edge_count": 2779,
+  "function_count": 1158,
+  "project_call_edge_count": 2789,
+  "edge_count": 2789,
   "edges": [
     {
       "edge_id": "E0002",
@@ -42701,6 +42701,156 @@
       "return_binding": "成员执行器_",
       "reachable_condition": "F0409成员接线、四仓库引用和关系仓库编号完成初始化",
       "resolution_source": "当前源码第35行成员初始化器、成员声明与R0114构造函数签名专项复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1760",
+      "caller": "F0440",
+      "callee": "R0089",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:1431"
+      ],
+      "call_category": "direct-free+macro-expanded+source-audited",
+      "arguments": "接线=事务接线_,令牌=F0440形参",
+      "argument_resolution": "当前源码静态类型、默认比较展开或宏展开逐项复核",
+      "return_binding": "共享令牌是否有效bool",
+      "reachable_condition": "F0440进入；false立即返回std::nullopt",
+      "resolution_source": "宏体1028行、展开点1431行与R0089完整签名复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1761",
+      "caller": "F0440",
+      "callee": "F0340",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:1431"
+      ],
+      "call_category": "direct-constructor+macro-expanded+source-audited",
+      "arguments": "仓库=*this,令牌=F0440形参",
+      "argument_resolution": "当前源码静态类型、默认比较展开或宏展开逐项复核",
+      "return_binding": "局部关系令牌范围",
+      "reachable_condition": "RCE1760返回true",
+      "resolution_source": "宏体1029行、展开点1431行与F0340构造签名复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1762",
+      "caller": "F0456",
+      "callee": "R0613",
+      "callsites": [
+        "海中鱼巣/领域/系统角色清单.数据.h:212"
+      ],
+      "call_category": "defaulted-member-comparison+source-audited",
+      "arguments": "11个系统角色身份材料字段按声明顺序比较",
+      "argument_resolution": "当前源码静态类型、默认比较展开或宏展开逐项复核",
+      "return_binding": "主体身份字段相等bool",
+      "reachable_condition": "首字段必达，后续字段仅当前序全部相等；静态11次",
+      "resolution_source": "defaulted operator==成员顺序、字段类型与R0613签名复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1763",
+      "caller": "F0456",
+      "callee": "F0457",
+      "callsites": [
+        "海中鱼巣/领域/系统角色清单.数据.h:212"
+      ],
+      "call_category": "defaulted-member-comparison+source-audited",
+      "arguments": "场景接纳自我关系",
+      "argument_resolution": "当前源码静态类型、默认比较展开或宏展开逐项复核",
+      "return_binding": "关系材料相等bool",
+      "reachable_condition": "前三个身份字段相等后；静态1次",
+      "resolution_source": "defaulted operator==成员顺序与F0457签名复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1764",
+      "caller": "F0456",
+      "callee": "R0614",
+      "callsites": [
+        "海中鱼巣/领域/系统角色清单.数据.h:212"
+      ],
+      "call_category": "defaulted-member-comparison+source-audited",
+      "arguments": "安全根需求、服务根需求",
+      "argument_resolution": "当前源码静态类型、默认比较展开或宏展开逐项复核",
+      "return_binding": "根需求角色材料相等bool",
+      "reachable_condition": "前序字段相等后按声明顺序；静态2次",
+      "resolution_source": "defaulted operator==成员顺序与R0614签名复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1765",
+      "caller": "R0614",
+      "callee": "R0613",
+      "callsites": [
+        "海中鱼巣/领域/系统角色清单.数据.h:157"
+      ],
+      "call_category": "defaulted-member-comparison+source-audited",
+      "arguments": "特征定义、实例槽位、当前特征值、目标状态、根需求",
+      "argument_resolution": "当前源码静态类型、默认比较展开或宏展开逐项复核",
+      "return_binding": "身份材料相等bool",
+      "reachable_condition": "每次R0614按声明顺序短路；静态5次",
+      "resolution_source": "defaulted operator==成员顺序与R0613签名复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1766",
+      "caller": "R0613",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/系统角色清单.数据.h:122"
+      ],
+      "call_category": "defaulted-member-comparison+source-audited",
+      "arguments": "节点字段",
+      "argument_resolution": "当前源码静态类型、默认比较展开或宏展开逐项复核",
+      "return_binding": "节点句柄相等bool",
+      "reachable_condition": "前三个内建字段相等后",
+      "resolution_source": "defaulted operator==字段类型与F0051重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1767",
+      "caller": "R0613",
+      "callee": "R0615",
+      "callsites": [
+        "海中鱼巣/领域/系统角色清单.数据.h:122"
+      ],
+      "call_category": "defaulted-member-comparison+source-audited",
+      "arguments": "主信息字段",
+      "argument_resolution": "当前源码静态类型、默认比较展开或宏展开逐项复核",
+      "return_binding": "主信息句柄相等bool",
+      "reachable_condition": "前序内建字段与节点句柄均相等后",
+      "resolution_source": "defaulted operator==字段类型与R0615重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1768",
+      "caller": "F0457",
+      "callee": "R0598",
+      "callsites": [
+        "海中鱼巣/领域/系统角色清单.数据.h:140"
+      ],
+      "call_category": "defaulted-member-comparison+source-audited",
+      "arguments": "关系字段",
+      "argument_resolution": "当前源码静态类型、默认比较展开或宏展开逐项复核",
+      "return_binding": "关系句柄相等bool",
+      "reachable_condition": "F0457进入，首字段必达",
+      "resolution_source": "defaulted operator==字段类型与R0598重载复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1769",
+      "caller": "F0457",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/系统角色清单.数据.h:140"
+      ],
+      "call_category": "defaulted-member-comparison+source-audited",
+      "arguments": "源节点、目标节点",
+      "argument_resolution": "当前源码静态类型、默认比较展开或宏展开逐项复核",
+      "return_binding": "节点句柄相等bool",
+      "reachable_condition": "关系句柄及前序字段相等后按顺序短路；静态2次",
+      "resolution_source": "defaulted operator==字段类型与F0051重载复核",
       "current_root_reachable": true
     }
   ]

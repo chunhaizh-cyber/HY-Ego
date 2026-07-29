@@ -1,6 +1,6 @@
 # main 可达项目调用边表
 
-项目直接调用边：2779。多调用点保留在同一 caller/callee 边记录中。
+项目直接调用边：2789。多调用点保留在同一 caller/callee 边记录中。
 
 | 边 ID | 调用方 | 被调方 | 调用点 | 类别 | 实参 | 可达条件 | 解析来源 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -2783,3 +2783,13 @@
 | RCE1757 | F0402 | R0114 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:150</code> | constructor+source-audited | <code>接线=接线_,主信息=&主信息_,节点=&节点_,关系=&关系_,索引=&索引_</code> | F0402成员接线、四仓库引用和关系仓库编号完成初始化 | 当前源码第150行成员初始化器、成员声明与R0114构造函数签名专项复核 |
 | RCE1758 | F0406 | R0114 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:102</code> | constructor+source-audited | <code>接线=接线_,主信息=&主信息_,节点=&节点_,关系=&关系_,索引=&索引_</code> | F0406成员接线和四仓库引用完成初始化 | 当前源码第102行成员初始化器、成员声明与R0114构造函数签名专项复核 |
 | RCE1759 | F0409 | R0114 | <code>海中鱼巣/领域/数据操作.系统角色.ixx:35</code> | constructor+source-audited | <code>接线=接线_,主信息=&主信息_,节点=&节点_,关系=&关系_,索引=&索引_</code> | F0409成员接线、四仓库引用和关系仓库编号完成初始化 | 当前源码第35行成员初始化器、成员声明与R0114构造函数签名专项复核 |
+| RCE1760 | F0440 | R0089 | <code>海中鱼巣/核心/关系仓库.cpp:1431</code> | direct-free+macro-expanded+source-audited | <code>接线=事务接线_,令牌=F0440形参</code> | F0440进入；false立即返回std::nullopt | 宏体1028行、展开点1431行与R0089完整签名复核 |
+| RCE1761 | F0440 | F0340 | <code>海中鱼巣/核心/关系仓库.cpp:1431</code> | direct-constructor+macro-expanded+source-audited | <code>仓库=*this,令牌=F0440形参</code> | RCE1760返回true | 宏体1029行、展开点1431行与F0340构造签名复核 |
+| RCE1762 | F0456 | R0613 | <code>海中鱼巣/领域/系统角色清单.数据.h:212</code> | defaulted-member-comparison+source-audited | <code>11个系统角色身份材料字段按声明顺序比较</code> | 首字段必达，后续字段仅当前序全部相等；静态11次 | defaulted operator==成员顺序、字段类型与R0613签名复核 |
+| RCE1763 | F0456 | F0457 | <code>海中鱼巣/领域/系统角色清单.数据.h:212</code> | defaulted-member-comparison+source-audited | <code>场景接纳自我关系</code> | 前三个身份字段相等后；静态1次 | defaulted operator==成员顺序与F0457签名复核 |
+| RCE1764 | F0456 | R0614 | <code>海中鱼巣/领域/系统角色清单.数据.h:212</code> | defaulted-member-comparison+source-audited | <code>安全根需求、服务根需求</code> | 前序字段相等后按声明顺序；静态2次 | defaulted operator==成员顺序与R0614签名复核 |
+| RCE1765 | R0614 | R0613 | <code>海中鱼巣/领域/系统角色清单.数据.h:157</code> | defaulted-member-comparison+source-audited | <code>特征定义、实例槽位、当前特征值、目标状态、根需求</code> | 每次R0614按声明顺序短路；静态5次 | defaulted operator==成员顺序与R0613签名复核 |
+| RCE1766 | R0613 | F0051 | <code>海中鱼巣/领域/系统角色清单.数据.h:122</code> | defaulted-member-comparison+source-audited | <code>节点字段</code> | 前三个内建字段相等后 | defaulted operator==字段类型与F0051重载复核 |
+| RCE1767 | R0613 | R0615 | <code>海中鱼巣/领域/系统角色清单.数据.h:122</code> | defaulted-member-comparison+source-audited | <code>主信息字段</code> | 前序内建字段与节点句柄均相等后 | defaulted operator==字段类型与R0615重载复核 |
+| RCE1768 | F0457 | R0598 | <code>海中鱼巣/领域/系统角色清单.数据.h:140</code> | defaulted-member-comparison+source-audited | <code>关系字段</code> | F0457进入，首字段必达 | defaulted operator==字段类型与R0598重载复核 |
+| RCE1769 | F0457 | F0051 | <code>海中鱼巣/领域/系统角色清单.数据.h:140</code> | defaulted-member-comparison+source-audited | <code>源节点、目标节点</code> | 关系句柄及前序字段相等后按顺序短路；静态2次 | defaulted operator==字段类型与F0051重载复核 |

@@ -15,8 +15,8 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1155,
-  "project_call_edge_count": 2779,
+  "function_count": 1158,
+  "project_call_edge_count": 2789,
   "functions": [
     {
       "function_id": "F0001",
@@ -1589,6 +1589,7 @@
         "F0360",
         "F0362",
         "F0370",
+        "F0457",
         "F0495",
         "F0551",
         "R0064",
@@ -1611,7 +1612,8 @@
         "R0557",
         "R0605",
         "R0606",
-        "R0607"
+        "R0607",
+        "R0613"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0015；调用点=海中鱼巣/领域/初始化.系统.ixx:115",
@@ -7934,6 +7936,7 @@
       "callers": [
         "F0167",
         "F0387",
+        "F0440",
         "R0065"
       ],
       "callees": [],
@@ -10425,8 +10428,10 @@
         "R0038"
       ],
       "callees": [
+        "F0340",
         "F0344",
-        "F0587"
+        "F0587",
+        "R0089"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0239；调用点=海中鱼巣/启动.运行期上下文.ixx:70",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -10824,7 +10829,11 @@
       "callers": [
         "F0244"
       ],
-      "callees": [],
+      "callees": [
+        "F0457",
+        "R0613",
+        "R0614"
+      ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0244；调用点=海中鱼巣/领域/系统角色清单.数据.h:264",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
@@ -10843,9 +10852,13 @@
       "overload_identity": "bool 海中鱼巣::系统角色关系材料::operator==(const 海中鱼巣::系统角色关系材料&) const",
       "shortest_depth": 6,
       "callers": [
-        "F0244"
+        "F0244",
+        "F0456"
       ],
-      "callees": [],
+      "callees": [
+        "F0051",
+        "R0598"
+      ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0244；调用点=海中鱼巣/领域/系统角色清单.数据.h:264",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
@@ -16997,6 +17010,7 @@
       "overload_identity": "bool 海中鱼巣::{匿名命名空间@关系仓库.cpp}::验证共享令牌(const 海中鱼巣::结构事务接线& 接线, const 海中鱼巣::结构事务令牌& 令牌)",
       "shortest_depth": 9,
       "callers": [
+        "F0440",
         "R0065",
         "R0073"
       ],
@@ -29164,6 +29178,7 @@
       "shortest_depth": 6,
       "callers": [
         "F0361",
+        "F0457",
         "F0592"
       ],
       "callees": [],
@@ -29493,6 +29508,75 @@
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0388；调用点=海中鱼巣/界面/控制面板窗口.cpp:394-401",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0613",
+      "complete_signature": "bool 海中鱼巣::系统角色身份材料::operator==(const 海中鱼巣::系统角色身份材料&) const",
+      "callable_type": "Method",
+      "category": "Operator",
+      "module_identity": "头文件内联/模板定义",
+      "file": "海中鱼巣/领域/系统角色清单.数据.h",
+      "definition_line": 122,
+      "definition_end_line": 122,
+      "overload_identity": "bool 海中鱼巣::系统角色身份材料::operator==(const 海中鱼巣::系统角色身份材料&) const",
+      "shortest_depth": 7,
+      "callers": [
+        "F0456",
+        "R0614"
+      ],
+      "callees": [
+        "F0051",
+        "R0615"
+      ],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0456；调用点=海中鱼巣/领域/系统角色清单.数据.h:212",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0614",
+      "complete_signature": "bool 海中鱼巣::系统根需求角色材料::operator==(const 海中鱼巣::系统根需求角色材料&) const",
+      "callable_type": "Method",
+      "category": "Operator",
+      "module_identity": "头文件内联/模板定义",
+      "file": "海中鱼巣/领域/系统角色清单.数据.h",
+      "definition_line": 157,
+      "definition_end_line": 157,
+      "overload_identity": "bool 海中鱼巣::系统根需求角色材料::operator==(const 海中鱼巣::系统根需求角色材料&) const",
+      "shortest_depth": 7,
+      "callers": [
+        "F0456"
+      ],
+      "callees": [
+        "R0613"
+      ],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0456；调用点=海中鱼巣/领域/系统角色清单.数据.h:212",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0615",
+      "complete_signature": "bool 海中鱼巣::operator==(const 海中鱼巣::主信息句柄& 左, const 海中鱼巣::主信息句柄& 右)",
+      "callable_type": "Operator",
+      "category": "Operator",
+      "module_identity": "头文件内联/模板定义",
+      "file": "海中鱼巣/核心/句柄.h",
+      "definition_line": 143,
+      "definition_end_line": 145,
+      "overload_identity": "bool 海中鱼巣::operator==(const 海中鱼巣::主信息句柄& 左, const 海中鱼巣::主信息句柄& 右)",
+      "shortest_depth": 8,
+      "callers": [
+        "R0613"
+      ],
+      "callees": [],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0613；调用点=海中鱼巣/领域/系统角色清单.数据.h:122",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
       "legacy_or_unwired": false,

@@ -1,6 +1,6 @@
 # main 可达外部边界表
 
-外部边界记录：1636。本表不把外部函数升级为项目函数身份。
+外部边界记录：1639。本表不把外部函数升级为项目函数身份。
 
 | ID | 调用方 | 类别 | 外部签名/边界 | 调用点 | 调用次数 | 可达条件 | 解析来源 |
 | --- | --- | --- | --- | --- | ---: | --- | --- |
@@ -1676,3 +1676,6 @@
 | X02308 | F0380 | Standard library string | <code>void std::wstring::push_back(wchar_t)</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:105, 海中鱼巣/适配/SQL数据库适配.cpp:107</code> | 2 | 每个输入代码单元先追加一次；当前代码单元为右方括号时再追加一次 | 当前HEAD Clang AST候选、两个源码调用点与std::wstring静态类型复核 |
 | X02309 | F0381 | Standard library string | <code>wchar_t* std::wstring::data() noexcept</code> | <code>海中鱼巣/适配/SQL数据库适配.cpp:258</code> | 1 | F0208确认语句句柄可用；形成X01004的第二实参 | 当前源码调用点、SQL文本静态类型与std::wstring连续存储接口复核 |
 | X02310 | F0393 | Standard library string | <code>bool std::wstring::empty() const noexcept</code> | <code>海中鱼巣/界面/控制面板窗口.cpp:1528</code> | 1 | F0393已把追根因错误写为true；判断失败阶段是否尚未记录 | 当前源码调用点、失败阶段静态类型与同表std::wstring::empty先例复核 |
+| X02311 | F0439 | Standard library associative container | <code>std::unordered_map&lt;std::uint64_t, 海中鱼巣::主信息记录, std::hash&lt;std::uint64_t&gt;, std::equal_to&lt;std::uint64_t&gt;, std::allocator&lt;std::pair&lt;const std::uint64_t, 海中鱼巣::主信息记录&gt;&gt;&gt;::const_iterator std::unordered_map&lt;std::uint64_t, 海中鱼巣::主信息记录, std::hash&lt;std::uint64_t&gt;, std::equal_to&lt;std::uint64_t&gt;, std::allocator&lt;std::pair&lt;const std::uint64_t, 海中鱼巣::主信息记录&gt;&gt;&gt;::find(const std::uint64_t&amp;) const</code> | <code>海中鱼巣/核心/主信息仓库.cpp:215</code> | 1 | RCE0207验证令牌通过且共享锁已构造；结果绑定局部位置 | 容器静态类型、源码调用点与MSVC const find接口复核 |
+| X02312 | F0439 | Standard library associative container | <code>std::unordered_map&lt;std::uint64_t, 海中鱼巣::主信息记录, std::hash&lt;std::uint64_t&gt;, std::equal_to&lt;std::uint64_t&gt;, std::allocator&lt;std::pair&lt;const std::uint64_t, 海中鱼巣::主信息记录&gt;&gt;&gt;::const_iterator std::unordered_map&lt;std::uint64_t, 海中鱼巣::主信息记录, std::hash&lt;std::uint64_t&gt;, std::equal_to&lt;std::uint64_t&gt;, std::allocator&lt;std::pair&lt;const std::uint64_t, 海中鱼巣::主信息记录&gt;&gt;&gt;::end() const noexcept</code> | <code>海中鱼巣/核心/主信息仓库.cpp:216</code> | 1 | X02311已返回位置；形成X01086迭代器比较右操作数 | 容器静态类型、源码调用点与MSVC const end接口复核 |
+| X02313 | F0439 | Standard library associative-container iterator | <code>const std::pair&lt;const std::uint64_t, 海中鱼巣::主信息记录&gt;* std::_List_const_iterator&lt;主信息表值类型&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/核心/主信息仓库.cpp:216</code> | 1 | X01086确认位置不等于X02312返回end；读取位置->second | 位置静态类型、条件表达式短路与MSVC const_iterator接口复核 |

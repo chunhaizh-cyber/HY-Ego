@@ -15,9 +15,9 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1155,
-  "project_call_edge_count": 2779,
-  "external_count": 1636,
+  "function_count": 1158,
+  "project_call_edge_count": 2789,
+  "external_count": 1639,
   "callback_registration_count": 27,
   "external_boundaries": [
     {
@@ -21693,6 +21693,48 @@
       "boundary_category": "Standard library string",
       "reachable_condition": "F0393已把追根因错误写为true；判断失败阶段是否尚未记录",
       "resolution_source": "当前源码调用点、失败阶段静态类型与同表std::wstring::empty先例复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02311",
+      "signature": "std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录, std::hash<std::uint64_t>, std::equal_to<std::uint64_t>, std::allocator<std::pair<const std::uint64_t, 海中鱼巣::主信息记录>>>::const_iterator std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录, std::hash<std::uint64_t>, std::equal_to<std::uint64_t>, std::allocator<std::pair<const std::uint64_t, 海中鱼巣::主信息记录>>>::find(const std::uint64_t&) const",
+      "caller": "F0439",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:215"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library associative container",
+      "reachable_condition": "RCE0207验证令牌通过且共享锁已构造；结果绑定局部位置",
+      "resolution_source": "容器静态类型、源码调用点与MSVC const find接口复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02312",
+      "signature": "std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录, std::hash<std::uint64_t>, std::equal_to<std::uint64_t>, std::allocator<std::pair<const std::uint64_t, 海中鱼巣::主信息记录>>>::const_iterator std::unordered_map<std::uint64_t, 海中鱼巣::主信息记录, std::hash<std::uint64_t>, std::equal_to<std::uint64_t>, std::allocator<std::pair<const std::uint64_t, 海中鱼巣::主信息记录>>>::end() const noexcept",
+      "caller": "F0439",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:216"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library associative container",
+      "reachable_condition": "X02311已返回位置；形成X01086迭代器比较右操作数",
+      "resolution_source": "容器静态类型、源码调用点与MSVC const end接口复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02313",
+      "signature": "const std::pair<const std::uint64_t, 海中鱼巣::主信息记录>* std::_List_const_iterator<主信息表值类型>::operator->() const noexcept",
+      "caller": "F0439",
+      "locations": [
+        "海中鱼巣/核心/主信息仓库.cpp:216"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library associative-container iterator",
+      "reachable_condition": "X01086确认位置不等于X02312返回end；读取位置->second",
+      "resolution_source": "位置静态类型、条件表达式短路与MSVC const_iterator接口复核",
       "current_root_reachable": true
     }
   ],
