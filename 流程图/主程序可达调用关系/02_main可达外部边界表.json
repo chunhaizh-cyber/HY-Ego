@@ -15,10 +15,10 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1325,
-  "project_call_edge_count": 3717,
-  "external_count": 2525,
-  "callback_registration_count": 38,
+  "function_count": 1331,
+  "project_call_edge_count": 3755,
+  "external_count": 2751,
+  "callback_registration_count": 43,
   "external_boundaries": [
     {
       "id": "X00001",
@@ -18441,19 +18441,6 @@
       "current_root_reachable": true
     },
     {
-      "id": "X02074",
-      "caller": "R0271",
-      "signature": "std::find_if(...)",
-      "locations": [
-        "海中鱼巣/领域/参与者.特征值原始材料.ixx:84"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立",
-      "resolution_source": "最终 caller 源码范围 + std 限定名调用语法复核",
-      "current_root_reachable": true
-    },
-    {
       "id": "X02075",
       "caller": "R0276",
       "signature": "bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept",
@@ -18558,19 +18545,6 @@
       "current_root_reachable": true
     },
     {
-      "id": "X02083",
-      "caller": "R0280",
-      "signature": "std::sort(...)",
-      "locations": [
-        "海中鱼巣/领域/控制面板服务.h:1064"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立",
-      "resolution_source": "最终 caller 源码范围 + std 限定名调用语法复核",
-      "current_root_reachable": true
-    },
-    {
       "id": "X02084",
       "caller": "R0281",
       "signature": "bool std::optional<海中鱼巣::节点句柄>::has_value() const noexcept",
@@ -18641,19 +18615,6 @@
       "signature": "std::unique(...)",
       "locations": [
         "海中鱼巣/领域/控制面板服务.h:1276"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立",
-      "resolution_source": "最终 caller 源码范围 + std 限定名调用语法复核",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X02090",
-      "caller": "R0285",
-      "signature": "std::sort(...)",
-      "locations": [
-        "海中鱼巣/领域/控制面板服务.h:1266"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
@@ -34398,6 +34359,3372 @@
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
       "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
       "current_root_reachable": true
+    },
+    {
+      "id": "X03226",
+      "caller": "R0260",
+      "signature": "std::vector<海中鱼巣::特征值初始原始材料>::const_iterator std::vector<海中鱼巣::特征值初始原始材料>::begin() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:110",
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:128",
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:141",
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:150"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "R0260 可达且进入待发布材料组的范围 for 遍历",
+      "resolution_source": "冻结源码静态类型、范围 for 展开与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03227",
+      "caller": "R0260",
+      "signature": "std::vector<海中鱼巣::特征值初始原始材料>::const_iterator std::vector<海中鱼巣::特征值初始原始材料>::end() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:110",
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:128",
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:141",
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:150"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library vector",
+      "reachable_condition": "R0260 可达且形成待发布材料组的范围 for 终点",
+      "resolution_source": "冻结源码静态类型、范围 for 展开与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03228",
+      "caller": "R0260",
+      "signature": "bool std::vector<海中鱼巣::特征值初始原始材料>::const_iterator::operator!=(const const_iterator&) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:110",
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:128",
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:141",
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:150"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library vector iterator",
+      "reachable_condition": "R0260 可达且范围 for 比较当前材料位置与终点",
+      "resolution_source": "冻结源码静态类型、范围 for 展开与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03229",
+      "caller": "R0260",
+      "signature": "const 海中鱼巣::特征值初始原始材料& std::vector<海中鱼巣::特征值初始原始材料>::const_iterator::operator*() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:110",
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:128",
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:141",
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:150"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library vector iterator",
+      "reachable_condition": "R0260 可达且范围 for 解引用当前材料位置",
+      "resolution_source": "冻结源码静态类型、范围 for 展开与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03230",
+      "caller": "R0260",
+      "signature": "std::vector<海中鱼巣::特征值初始原始材料>::const_iterator& std::vector<海中鱼巣::特征值初始原始材料>::const_iterator::operator++() noexcept",
+      "locations": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:110",
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:128",
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:141",
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:150"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library vector iterator",
+      "reachable_condition": "R0260 可达且范围 for 推进当前材料位置",
+      "resolution_source": "冻结源码静态类型、范围 for 展开与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03231",
+      "caller": "R0260",
+      "signature": "std::unique_lock<std::shared_mutex>::~unique_lock() noexcept",
+      "locations": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:125-173"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library synchronization",
+      "reachable_condition": "R0260 可达且局部独占锁已构造后经任一退出或作用域结束析构",
+      "resolution_source": "冻结源码静态类型、RAII 作用域与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03232",
+      "caller": "R0264",
+      "signature": "bool std::vector<海中鱼巣::节点句柄>::reverse_iterator::operator!=(const reverse_iterator&) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:206",
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:214"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library vector reverse iterator",
+      "reachable_condition": "R0264 可达且比较两组逆序撤销位置与终点",
+      "resolution_source": "冻结源码静态类型、逆序迭代器表达式与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03233",
+      "caller": "R0264",
+      "signature": "海中鱼巣::节点句柄& std::vector<海中鱼巣::节点句柄>::reverse_iterator::operator*() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:207",
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:215"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library vector reverse iterator",
+      "reachable_condition": "R0264 可达且解引用逆序撤销位置以查找服务记录",
+      "resolution_source": "冻结源码静态类型、逆序迭代器表达式与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03234",
+      "caller": "R0264",
+      "signature": "std::vector<海中鱼巣::节点句柄>::reverse_iterator& std::vector<海中鱼巣::节点句柄>::reverse_iterator::operator++() noexcept",
+      "locations": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:206",
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:214"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library vector reverse iterator",
+      "reachable_condition": "R0264 可达且推进两组逆序撤销位置",
+      "resolution_source": "冻结源码静态类型、逆序迭代器表达式与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03235",
+      "caller": "R0264",
+      "signature": "bool std::vector<海中鱼巣::特征值服务::Vec原始值记录>::iterator::operator==(const iterator&) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:208"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector iterator",
+      "reachable_condition": "R0264 可达且比较 Vec 记录位置与容器终点",
+      "resolution_source": "冻结源码静态类型、迭代器表达式与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03236",
+      "caller": "R0264",
+      "signature": "海中鱼巣::特征值服务::Vec原始值记录* std::vector<海中鱼巣::特征值服务::Vec原始值记录>::iterator::operator->() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:208"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector iterator",
+      "reachable_condition": "R0264 可达且 Vec 记录位置有效后读取容器版本",
+      "resolution_source": "冻结源码静态类型、迭代器表达式与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03237",
+      "caller": "R0264",
+      "signature": "bool std::vector<海中鱼巣::特征值服务::I64版本记录>::iterator::operator==(const iterator&) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:216"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector iterator",
+      "reachable_condition": "R0264 可达且比较 I64 版本记录位置与容器终点",
+      "resolution_source": "冻结源码静态类型、迭代器表达式与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03238",
+      "caller": "R0264",
+      "signature": "海中鱼巣::特征值服务::I64版本记录* std::vector<海中鱼巣::特征值服务::I64版本记录>::iterator::operator->() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:216"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector iterator",
+      "reachable_condition": "R0264 可达且 I64 版本记录位置有效后读取原始值版本",
+      "resolution_source": "冻结源码静态类型、迭代器表达式与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03239",
+      "caller": "R0266",
+      "signature": "bool std::vector<海中鱼巣::特征值服务::I64版本记录>::const_iterator::operator==(const const_iterator&) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:262"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector iterator",
+      "reachable_condition": "R0266 可达且比较 I64 版本记录位置与 const 容器终点",
+      "resolution_source": "冻结源码静态类型、迭代器表达式与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03240",
+      "caller": "R0266",
+      "signature": "const 海中鱼巣::特征值服务::I64版本记录& std::vector<海中鱼巣::特征值服务::I64版本记录>::const_iterator::operator*() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:262"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector iterator",
+      "reachable_condition": "R0266 可达且 I64 版本记录位置有效后解引用记录进行一致性复核",
+      "resolution_source": "冻结源码静态类型、迭代器表达式与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03241",
+      "caller": "R0266",
+      "signature": "const 海中鱼巣::特征值服务::I64版本记录* std::vector<海中鱼巣::特征值服务::I64版本记录>::const_iterator::operator->() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:268"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector iterator",
+      "reachable_condition": "R0266 可达且 I64 版本记录有效后读取原始值版本",
+      "resolution_source": "冻结源码静态类型、迭代器表达式与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03242",
+      "caller": "R0266",
+      "signature": "bool std::vector<海中鱼巣::特征值服务::Vec原始值记录>::const_iterator::operator==(const const_iterator&) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:273"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector iterator",
+      "reachable_condition": "R0266 可达且比较 Vec 记录位置与 const 容器终点",
+      "resolution_source": "冻结源码静态类型、迭代器表达式与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03243",
+      "caller": "R0266",
+      "signature": "const 海中鱼巣::特征值服务::Vec原始值记录& std::vector<海中鱼巣::特征值服务::Vec原始值记录>::const_iterator::operator*() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:273"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector iterator",
+      "reachable_condition": "R0266 可达且 Vec 记录位置有效后解引用记录进行一致性复核",
+      "resolution_source": "冻结源码静态类型、迭代器表达式与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03244",
+      "caller": "R0266",
+      "signature": "const 海中鱼巣::特征值服务::Vec原始值记录* std::vector<海中鱼巣::特征值服务::Vec原始值记录>::const_iterator::operator->() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:278",
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:279",
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:280",
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:281"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library vector iterator",
+      "reachable_condition": "R0266 可达且 Vec 记录有效后读取类型、版本和两个值向量",
+      "resolution_source": "冻结源码静态类型、迭代器表达式与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03245",
+      "caller": "R0266",
+      "signature": "std::shared_lock<std::shared_mutex>::~shared_lock() noexcept",
+      "locations": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:249-284"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library synchronization",
+      "reachable_condition": "R0266 可达且局部共享锁已构造后经任一退出或作用域结束析构",
+      "resolution_source": "冻结源码静态类型、RAII 作用域与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03246",
+      "caller": "R0270",
+      "signature": "bool std::vector<海中鱼巣::特征值初始原始材料>::const_iterator::operator!=(const const_iterator&) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:87"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector iterator",
+      "reachable_condition": "R0270 可达且比较重复材料查找结果与 const 容器终点",
+      "resolution_source": "冻结源码静态类型、迭代器表达式与现状图逐项复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03247",
+      "caller": "R0331",
+      "signature": "std::array<std::uint64_t, 3>::size() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:139"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03248",
+      "caller": "R0331",
+      "signature": "const std::uint64_t& std::array<std::uint64_t, 3>::operator[](std::size_t) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:140"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03249",
+      "caller": "R0331",
+      "signature": "static_cast<海中鱼巣::运行期概念生命周期阶段>(std::size_t)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:141"
+      ],
+      "call_count": 1,
+      "boundary_category": "Language conversion",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03250",
+      "caller": "R0331",
+      "signature": "海中鱼巣::概念活动状态角色材料& std::array<海中鱼巣::概念活动状态角色材料, 3>::operator[](std::size_t) noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:146",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:164"
+      ],
+      "call_count": 2,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03251",
+      "caller": "R0331",
+      "signature": "海中鱼巣::共享结构许可 (*海中鱼巣::共享结构许可接线::取得共享许可)(海中鱼巣::共享结构状态&)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:149"
+      ],
+      "call_count": 1,
+      "boundary_category": "Function pointer dispatch",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03252",
+      "caller": "R0331",
+      "signature": "std::array<const 海中鱼巣::系统角色身份材料*, 4>::size() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:153"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03253",
+      "caller": "R0331",
+      "signature": "const 海中鱼巣::系统角色身份材料* const& std::array<const 海中鱼巣::系统角色身份材料*, 4>::operator[](std::size_t) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:155",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:159",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:163",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:176"
+      ],
+      "call_count": 4,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03254",
+      "caller": "R0331",
+      "signature": "static_cast<海中鱼巣::概念根类别>(std::size_t)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:154"
+      ],
+      "call_count": 1,
+      "boundary_category": "Language conversion",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03255",
+      "caller": "R0331",
+      "signature": "std::vector<海中鱼巣::关系记录>::size() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:160"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03256",
+      "caller": "R0331",
+      "signature": "const 海中鱼巣::关系记录& std::vector<海中鱼巣::关系记录>::front() const",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:161"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03257",
+      "caller": "R0331",
+      "signature": "std::vector<海中鱼巣::关系记录>::~vector()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:158-180"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library lifetime",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03258",
+      "caller": "R0331",
+      "signature": "std::optional<海中鱼巣::关系审计记录>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:170"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03259",
+      "caller": "R0331",
+      "signature": "const 海中鱼巣::关系审计记录* std::optional<海中鱼巣::关系审计记录>::operator->() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:170",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:171"
+      ],
+      "call_count": 3,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03260",
+      "caller": "R0331",
+      "signature": "海中鱼巣::概念活动根材料& std::array<海中鱼巣::概念活动根材料, 4>::operator[](std::size_t) noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:174"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03261",
+      "caller": "R0331",
+      "signature": "const 海中鱼巣::概念签名材料& std::array<海中鱼巣::概念签名材料, 4>::operator[](std::size_t) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:177"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03262",
+      "caller": "R0331",
+      "signature": "std::optional<海中鱼巣::关系审计记录>::~optional()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:169-180"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library lifetime",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03263",
+      "caller": "R0333",
+      "signature": "std::array<海中鱼巣::概念签名材料, 4>::size() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:197"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03264",
+      "caller": "R0333",
+      "signature": "const 海中鱼巣::概念签名材料& std::array<海中鱼巣::概念签名材料, 4>::operator[](std::size_t) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:199"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03265",
+      "caller": "R0333",
+      "signature": "static_cast<海中鱼巣::概念根类别>(std::size_t)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:199"
+      ],
+      "call_count": 1,
+      "boundary_category": "Language conversion",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03266",
+      "caller": "R0335",
+      "signature": "std::array<std::uint64_t, 3>::begin() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:216"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03267",
+      "caller": "R0335",
+      "signature": "std::array<std::uint64_t, 3>::end() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:216"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03268",
+      "caller": "R0335",
+      "signature": "std::array<const 海中鱼巣::系统角色身份材料*, 4>::size() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:224"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03269",
+      "caller": "R0335",
+      "signature": "const 海中鱼巣::系统角色身份材料* const& std::array<const 海中鱼巣::系统角色身份材料*, 4>::operator[](std::size_t) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:225"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03270",
+      "caller": "R0335",
+      "signature": "static_cast<海中鱼巣::概念根类别>(std::size_t)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:226"
+      ],
+      "call_count": 1,
+      "boundary_category": "Language conversion",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03271",
+      "caller": "R0335",
+      "signature": "std::optional<海中鱼巣::节点句柄>::optional(const 海中鱼巣::节点句柄&)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:233"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03272",
+      "caller": "R0335",
+      "signature": "bool std::operator!=(const std::optional<海中鱼巣::节点句柄>&, const std::optional<海中鱼巣::节点句柄>&)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:233"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03273",
+      "caller": "R0335",
+      "signature": "std::optional<海中鱼巣::节点句柄>::~optional()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:217-223",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:227-244",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:233"
+      ],
+      "call_count": 3,
+      "boundary_category": "Standard library lifetime",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03274",
+      "caller": "R0335",
+      "signature": "std::optional<海中鱼巣::节点类型>::optional(const 海中鱼巣::节点类型&)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:234"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03275",
+      "caller": "R0335",
+      "signature": "bool std::operator!=(const std::optional<海中鱼巣::节点类型>&, const std::optional<海中鱼巣::节点类型>&)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:234"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03276",
+      "caller": "R0335",
+      "signature": "std::optional<海中鱼巣::节点类型>::~optional()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:228-244",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:234"
+      ],
+      "call_count": 2,
+      "boundary_category": "Standard library lifetime",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03277",
+      "caller": "R0335",
+      "signature": "std::optional<海中鱼巣::主信息句柄>::optional(const 海中鱼巣::主信息句柄&)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:235"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03278",
+      "caller": "R0335",
+      "signature": "bool std::operator!=(const std::optional<海中鱼巣::主信息句柄>&, const std::optional<海中鱼巣::主信息句柄>&)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:235"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03279",
+      "caller": "R0335",
+      "signature": "std::optional<海中鱼巣::主信息句柄>::~optional()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:229-244",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:235"
+      ],
+      "call_count": 2,
+      "boundary_category": "Standard library lifetime",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03280",
+      "caller": "R0335",
+      "signature": "std::vector<海中鱼巣::关系审计记录>::empty() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:240"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03281",
+      "caller": "R0335",
+      "signature": "std::vector<海中鱼巣::关系审计记录>::~vector()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:239-244"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library lifetime",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03282",
+      "caller": "R0336",
+      "signature": "std::optional<海中鱼巣::关系审计记录>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:255"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03283",
+      "caller": "R0336",
+      "signature": "const 海中鱼巣::关系审计记录* std::optional<海中鱼巣::关系审计记录>::operator->() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:255",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:256",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:257",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:258",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:259"
+      ],
+      "call_count": 7,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03284",
+      "caller": "R0336",
+      "signature": "std::optional<海中鱼巣::关系审计记录>::~optional()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:254-262"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library lifetime",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03285",
+      "caller": "R0336",
+      "signature": "std::optional<海中鱼巣::系统角色关系材料>::optional(std::nullopt_t) noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:259"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03286",
+      "caller": "R0336",
+      "signature": "std::optional<海中鱼巣::系统角色关系材料>::optional(海中鱼巣::系统角色关系材料&&)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:260-261"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03287",
+      "caller": "R0337",
+      "signature": "std::vector<海中鱼巣::关系记录>::size() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:272"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03288",
+      "caller": "R0337",
+      "signature": "const 海中鱼巣::关系记录& std::vector<海中鱼巣::关系记录>::front() const",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:273"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03289",
+      "caller": "R0337",
+      "signature": "static_cast<std::int64_t>(海中鱼巣::概念根类别)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:274"
+      ],
+      "call_count": 1,
+      "boundary_category": "Language conversion",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03290",
+      "caller": "R0337",
+      "signature": "std::optional<海中鱼巣::概念活动根材料>::optional(std::nullopt_t) noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:272",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:277",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:282",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:285"
+      ],
+      "call_count": 4,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03291",
+      "caller": "R0337",
+      "signature": "std::vector<海中鱼巣::关系记录>::~vector()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:270-286"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library lifetime",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03292",
+      "caller": "R0337",
+      "signature": "std::optional<海中鱼巣::系统角色关系材料>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:282"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03293",
+      "caller": "R0337",
+      "signature": "const 海中鱼巣::系统角色关系材料& std::optional<海中鱼巣::系统角色关系材料>::operator*() const& noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:283"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03294",
+      "caller": "R0337",
+      "signature": "std::optional<海中鱼巣::系统角色关系材料>::~optional()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:280-286"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library lifetime",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03295",
+      "caller": "R0337",
+      "signature": "std::optional<海中鱼巣::概念活动根材料>::optional(海中鱼巣::概念活动根材料&&)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:285"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03296",
+      "caller": "R0338",
+      "signature": "std::optional<海中鱼巣::节点记录>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:295"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03297",
+      "caller": "R0338",
+      "signature": "const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:295",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:296"
+      ],
+      "call_count": 2,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03298",
+      "caller": "R0338",
+      "signature": "std::optional<海中鱼巣::主信息记录>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:297"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03299",
+      "caller": "R0338",
+      "signature": "std::optional<海中鱼巣::节点句柄>::optional(const 海中鱼巣::节点句柄&)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:298-299"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03300",
+      "caller": "R0338",
+      "signature": "bool std::operator==(const std::optional<海中鱼巣::节点句柄>&, const std::optional<海中鱼巣::节点句柄>&)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:298-299"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03301",
+      "caller": "R0338",
+      "signature": "std::optional<海中鱼巣::节点记录>::~optional()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:292-300"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library lifetime",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03302",
+      "caller": "R0338",
+      "signature": "std::optional<海中鱼巣::主信息记录>::~optional()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:297-300"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library lifetime",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03303",
+      "caller": "R0338",
+      "signature": "std::optional<海中鱼巣::节点句柄>::~optional()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:298-300"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library lifetime",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03304",
+      "caller": "R0340",
+      "signature": "static_cast<std::int64_t>(海中鱼巣::运行期概念生命周期阶段)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:54",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:55",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:56"
+      ],
+      "call_count": 3,
+      "boundary_category": "Language conversion",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03305",
+      "caller": "R0340",
+      "signature": "std::function<void(海中鱼巣::结构写入会话&)>::function<具名lambda>(具名lambda)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:63"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library callback wrapper",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03306",
+      "caller": "R0340",
+      "signature": "std::function<void(海中鱼巣::结构写入会话&)>::~function()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:63-120"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library lifetime",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03307",
+      "caller": "R0341",
+      "signature": "std::array<海中鱼巣::概念活动状态角色材料, 3>& std::array<海中鱼巣::概念活动状态角色材料, 3>::operator=(std::array<海中鱼巣::概念活动状态角色材料, 3>&&) noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:80-83"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03308",
+      "caller": "R0341",
+      "signature": "std::array<const 海中鱼巣::系统角色身份材料*, 4>::size() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:85",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:109"
+      ],
+      "call_count": 2,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03309",
+      "caller": "R0341",
+      "signature": "static_cast<海中鱼巣::概念根类别>(std::size_t)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:86",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:111"
+      ],
+      "call_count": 2,
+      "boundary_category": "Language conversion",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03310",
+      "caller": "R0341",
+      "signature": "const 海中鱼巣::系统角色身份材料* const& std::array<const 海中鱼巣::系统角色身份材料*, 4>::operator[](std::size_t) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:89",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:97",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:105",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:112"
+      ],
+      "call_count": 4,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03311",
+      "caller": "R0341",
+      "signature": "海中鱼巣::概念活动状态角色材料& std::array<海中鱼巣::概念活动状态角色材料, 3>::operator[](std::size_t) noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:90",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:98",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:112"
+      ],
+      "call_count": 3,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03312",
+      "caller": "R0341",
+      "signature": "static_cast<std::int64_t>(std::size_t)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:91",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:99"
+      ],
+      "call_count": 2,
+      "boundary_category": "Language conversion",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03313",
+      "caller": "R0341",
+      "signature": "const 海中鱼巣::关系句柄& std::optional<海中鱼巣::关系句柄>::operator*() const& noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:97"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03314",
+      "caller": "R0341",
+      "signature": "std::optional<海中鱼巣::系统角色关系材料>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:100"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03315",
+      "caller": "R0341",
+      "signature": "海中鱼巣::概念活动根材料& std::array<海中鱼巣::概念活动根材料, 4>::operator[](std::size_t) noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:104",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:117"
+      ],
+      "call_count": 2,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03316",
+      "caller": "R0341",
+      "signature": "const 海中鱼巣::概念签名材料& std::array<海中鱼巣::概念签名材料, 4>::operator[](std::size_t) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:105",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:112"
+      ],
+      "call_count": 2,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03317",
+      "caller": "R0341",
+      "signature": "const 海中鱼巣::系统角色关系材料& std::optional<海中鱼巣::系统角色关系材料>::operator*() const& noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:105"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03318",
+      "caller": "R0341",
+      "signature": "std::optional<海中鱼巣::关系句柄>::~optional()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:87-106"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library lifetime",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03319",
+      "caller": "R0341",
+      "signature": "std::optional<海中鱼巣::系统角色关系材料>::~optional()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:96-106"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library lifetime",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03320",
+      "caller": "R0341",
+      "signature": "std::array<海中鱼巣::概念活动状态角色材料, 3>& std::array<海中鱼巣::概念活动状态角色材料, 3>::operator=(const std::array<海中鱼巣::概念活动状态角色材料, 3>&)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:108"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03321",
+      "caller": "R0341",
+      "signature": "std::optional<海中鱼巣::概念活动根材料>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:113"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03322",
+      "caller": "R0341",
+      "signature": "const 海中鱼巣::概念活动根材料& std::optional<海中鱼巣::概念活动根材料>::operator*() const& noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:117"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03323",
+      "caller": "R0341",
+      "signature": "std::optional<海中鱼巣::概念活动根材料>::~optional()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:110-118"
+      ],
+      "call_count": 1,
+      "boundary_category": "Standard library lifetime",
+      "queued": false,
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03324",
+      "caller": "R0278",
+      "signature": "bool std::vector<海中鱼巣::控制面板树节点材料>::empty() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1025",
+        "海中鱼巣/领域/控制面板服务.h:1043"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03325",
+      "caller": "R0278",
+      "signature": "void std::vector<海中鱼巣::控制面板树节点材料>::clear() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1030"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03326",
+      "caller": "R0278",
+      "signature": "std::vector<海中鱼巣::节点句柄>::const_iterator std::vector<海中鱼巣::节点句柄>::begin() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1032"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03327",
+      "caller": "R0278",
+      "signature": "std::vector<海中鱼巣::节点句柄>::const_iterator std::vector<海中鱼巣::节点句柄>::end() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1032"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03328",
+      "caller": "R0278",
+      "signature": "bool std::vector<海中鱼巣::节点句柄>::const_iterator::operator!=(const const_iterator&) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1032"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03329",
+      "caller": "R0278",
+      "signature": "const 海中鱼巣::节点句柄& std::vector<海中鱼巣::节点句柄>::const_iterator::operator*() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1032"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03330",
+      "caller": "R0278",
+      "signature": "std::vector<海中鱼巣::节点句柄>::const_iterator& std::vector<海中鱼巣::节点句柄>::const_iterator::operator++() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1032"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03331",
+      "caller": "R0278",
+      "signature": "std::vector<海中鱼巣::控制面板树节点材料>::iterator std::vector<海中鱼巣::控制面板树节点材料>::begin() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1034",
+        "海中鱼巣/领域/控制面板服务.h:1047"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03332",
+      "caller": "R0278",
+      "signature": "std::vector<海中鱼巣::控制面板树节点材料>::iterator std::vector<海中鱼巣::控制面板树节点材料>::end() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1034",
+        "海中鱼巣/领域/控制面板服务.h:1037",
+        "海中鱼巣/领域/控制面板服务.h:1047"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03333",
+      "caller": "R0278",
+      "signature": "bool std::vector<海中鱼巣::控制面板树节点材料>::iterator::operator==(const iterator&) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1037"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03334",
+      "caller": "R0278",
+      "signature": "海中鱼巣::控制面板树节点材料& std::vector<海中鱼巣::控制面板树节点材料>::iterator::operator*() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1041",
+        "海中鱼巣/领域/控制面板服务.h:1047"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03335",
+      "caller": "R0278",
+      "signature": "bool std::vector<海中鱼巣::控制面板树节点材料>::iterator::operator!=(const iterator&) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1047"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03336",
+      "caller": "R0278",
+      "signature": "std::vector<海中鱼巣::控制面板树节点材料>::iterator& std::vector<海中鱼巣::控制面板树节点材料>::iterator::operator++() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1047"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03337",
+      "caller": "R0278",
+      "signature": "void std::vector<海中鱼巣::控制面板树节点材料>::push_back(const 海中鱼巣::控制面板树节点材料&)",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1041"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03338",
+      "caller": "R0278",
+      "signature": "std::size_t std::vector<海中鱼巣::控制面板树节点材料>::size() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1043"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03339",
+      "caller": "R0278",
+      "signature": "std::size_t std::vector<海中鱼巣::节点句柄>::size() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1043"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03340",
+      "caller": "R0279",
+      "signature": "std::vector<海中鱼巣::抽象树投影项>::iterator std::vector<海中鱼巣::抽象树投影项>::begin() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1064"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03341",
+      "caller": "R0279",
+      "signature": "std::vector<海中鱼巣::抽象树投影项>::iterator std::vector<海中鱼巣::抽象树投影项>::end() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1064"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03342",
+      "caller": "R0279",
+      "signature": "bool std::vector<海中鱼巣::抽象树投影项>::empty() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1070"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03343",
+      "caller": "R0279",
+      "signature": "海中鱼巣::抽象树投影项& std::vector<海中鱼巣::抽象树投影项>::front() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1071",
+        "海中鱼巣/领域/控制面板服务.h:1072",
+        "海中鱼巣/领域/控制面板服务.h:1073",
+        "海中鱼巣/领域/控制面板服务.h:1078",
+        "海中鱼巣/领域/控制面板服务.h:1080",
+        "海中鱼巣/领域/控制面板服务.h:1082"
+      ],
+      "call_count": 6,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03344",
+      "caller": "R0279",
+      "signature": "std::size_t std::vector<海中鱼巣::节点句柄>::size() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1072",
+        "海中鱼巣/领域/控制面板服务.h:1096",
+        "海中鱼巣/领域/控制面板服务.h:1097",
+        "海中鱼巣/领域/控制面板服务.h:1105"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03345",
+      "caller": "R0279",
+      "signature": "std::size_t std::vector<海中鱼巣::抽象树投影项>::size() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1088"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03346",
+      "caller": "R0279",
+      "signature": "海中鱼巣::抽象树投影项& std::vector<海中鱼巣::抽象树投影项>::operator[](std::size_t) noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1089"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03347",
+      "caller": "R0279",
+      "signature": "const 海中鱼巣::节点句柄& std::vector<海中鱼巣::节点句柄>::front() const",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1092"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03348",
+      "caller": "R0279",
+      "signature": "const 海中鱼巣::节点句柄& std::vector<海中鱼巣::节点句柄>::operator[](std::size_t) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1098",
+        "海中鱼巣/领域/控制面板服务.h:1109"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03349",
+      "caller": "R0279",
+      "signature": "std::vector<海中鱼巣::控制面板树节点材料>::iterator std::vector<海中鱼巣::控制面板树节点材料>::begin() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1107",
+        "海中鱼巣/领域/控制面板服务.h:1119"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03350",
+      "caller": "R0279",
+      "signature": "std::vector<海中鱼巣::控制面板树节点材料>::iterator std::vector<海中鱼巣::控制面板树节点材料>::end() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1107",
+        "海中鱼巣/领域/控制面板服务.h:1112",
+        "海中鱼巣/领域/控制面板服务.h:1119"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03351",
+      "caller": "R0279",
+      "signature": "bool std::vector<海中鱼巣::控制面板树节点材料>::iterator::operator==(const iterator&) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1112"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03352",
+      "caller": "R0279",
+      "signature": "海中鱼巣::控制面板树节点材料& std::vector<海中鱼巣::控制面板树节点材料>::iterator::operator*() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1116"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03353",
+      "caller": "R0279",
+      "signature": "void std::vector<海中鱼巣::控制面板树节点材料>::push_back(海中鱼巣::控制面板树节点材料&&)",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1137"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03354",
+      "caller": "R0282",
+      "signature": "std::optional<海中鱼巣::节点句柄>::optional(const 海中鱼巣::节点句柄&)",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1204"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03355",
+      "caller": "R0282",
+      "signature": "std::optional<海中鱼巣::节点句柄>::~optional() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1204"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03356",
+      "caller": "R0283",
+      "signature": "std::array<海中鱼巣::节点句柄,2>::iterator std::array<海中鱼巣::节点句柄,2>::begin() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1209"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03357",
+      "caller": "R0283",
+      "signature": "std::array<海中鱼巣::节点句柄,2>::iterator std::array<海中鱼巣::节点句柄,2>::end() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1209"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03358",
+      "caller": "R0283",
+      "signature": "std::vector<海中鱼巣::节点句柄>::vector(std::array<海中鱼巣::节点句柄,2>::iterator,std::array<海中鱼巣::节点句柄,2>::iterator)",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1209"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03359",
+      "caller": "R0283",
+      "signature": "std::size_t std::vector<海中鱼巣::节点句柄>::size() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1210",
+        "海中鱼巣/领域/控制面板服务.h:1212"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03360",
+      "caller": "R0283",
+      "signature": "std::vector<海中鱼巣::节点句柄>::vector() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1216"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03361",
+      "caller": "R0283",
+      "signature": "std::vector<海中鱼巣::节点句柄>::iterator std::vector<海中鱼巣::节点句柄>::begin() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1217",
+        "海中鱼巣/领域/控制面板服务.h:1223"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03362",
+      "caller": "R0283",
+      "signature": "std::vector<海中鱼巣::节点句柄>::iterator std::vector<海中鱼巣::节点句柄>::end() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1217",
+        "海中鱼巣/领域/控制面板服务.h:1223"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03363",
+      "caller": "R0283",
+      "signature": "bool std::vector<海中鱼巣::节点句柄>::iterator::operator!=(const iterator&) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1217",
+        "海中鱼巣/领域/控制面板服务.h:1223"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03364",
+      "caller": "R0283",
+      "signature": "海中鱼巣::节点句柄& std::vector<海中鱼巣::节点句柄>::iterator::operator*() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1217",
+        "海中鱼巣/领域/控制面板服务.h:1223"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03365",
+      "caller": "R0283",
+      "signature": "std::vector<海中鱼巣::节点句柄>::iterator& std::vector<海中鱼巣::节点句柄>::iterator::operator++() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1217",
+        "海中鱼巣/领域/控制面板服务.h:1223"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03366",
+      "caller": "R0283",
+      "signature": "bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1225"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03367",
+      "caller": "R0283",
+      "signature": "const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1225"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03368",
+      "caller": "R0283",
+      "signature": "void std::vector<海中鱼巣::节点句柄>::push_back(const 海中鱼巣::节点句柄&)",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1229"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03369",
+      "caller": "R0283",
+      "signature": "bool std::vector<海中鱼巣::节点句柄>::empty() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1233"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03370",
+      "caller": "R0284",
+      "signature": "std::vector<海中鱼巣::节点句柄>::vector() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1245"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03371",
+      "caller": "R0284",
+      "signature": "void std::vector<std::pair<海中鱼巣::节点句柄, 海中鱼巣::节点句柄>>::clear() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1246"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03372",
+      "caller": "R0284",
+      "signature": "std::vector<海中鱼巣::节点句柄>::const_iterator std::vector<海中鱼巣::节点句柄>::begin() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1247"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03373",
+      "caller": "R0284",
+      "signature": "std::vector<海中鱼巣::节点句柄>::const_iterator std::vector<海中鱼巣::节点句柄>::end() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1247"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03374",
+      "caller": "R0284",
+      "signature": "bool std::vector<海中鱼巣::节点句柄>::const_iterator::operator!=(const const_iterator&) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1247"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03375",
+      "caller": "R0284",
+      "signature": "const 海中鱼巣::节点句柄& std::vector<海中鱼巣::节点句柄>::const_iterator::operator*() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1247"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03376",
+      "caller": "R0284",
+      "signature": "std::vector<海中鱼巣::节点句柄>::const_iterator& std::vector<海中鱼巣::节点句柄>::const_iterator::operator++() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1247"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03377",
+      "caller": "R0284",
+      "signature": "bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1249",
+        "海中鱼巣/领域/控制面板服务.h:1258"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03378",
+      "caller": "R0284",
+      "signature": "const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1249",
+        "海中鱼巣/领域/控制面板服务.h:1258"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03379",
+      "caller": "R0284",
+      "signature": "bool std::optional<海中鱼巣::节点句柄>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1254"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03380",
+      "caller": "R0284",
+      "signature": "const 海中鱼巣::节点句柄& std::optional<海中鱼巣::节点句柄>::value() const &",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1257",
+        "海中鱼巣/领域/控制面板服务.h:1262",
+        "海中鱼巣/领域/控制面板服务.h:1263"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03381",
+      "caller": "R0284",
+      "signature": "void std::vector<海中鱼巣::节点句柄>::push_back(const 海中鱼巣::节点句柄&)",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1262"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03382",
+      "caller": "R0284",
+      "signature": "void std::vector<std::pair<海中鱼巣::节点句柄, 海中鱼巣::节点句柄>>::push_back(std::pair<海中鱼巣::节点句柄, 海中鱼巣::节点句柄>&&)",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1263"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03383",
+      "caller": "R0284",
+      "signature": "std::vector<std::pair<海中鱼巣::节点句柄, 海中鱼巣::节点句柄>>::iterator std::vector<std::pair<海中鱼巣::节点句柄, 海中鱼巣::节点句柄>>::begin() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1266",
+        "海中鱼巣/领域/控制面板服务.h:1276"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03384",
+      "caller": "R0284",
+      "signature": "std::vector<std::pair<海中鱼巣::节点句柄, 海中鱼巣::节点句柄>>::iterator std::vector<std::pair<海中鱼巣::节点句柄, 海中鱼巣::节点句柄>>::end() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1266",
+        "海中鱼巣/领域/控制面板服务.h:1276",
+        "海中鱼巣/领域/控制面板服务.h:1277"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03385",
+      "caller": "R0284",
+      "signature": "std::vector<std::pair<海中鱼巣::节点句柄, 海中鱼巣::节点句柄>>::iterator std::vector<std::pair<海中鱼巣::节点句柄, 海中鱼巣::节点句柄>>::erase(iterator,iterator)",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1275"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03386",
+      "caller": "R0284",
+      "signature": "bool std::vector<海中鱼巣::节点句柄>::empty() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1278"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03387",
+      "caller": "R0286",
+      "signature": "bool std::optional<海中鱼巣::需求承接材料>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1301"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03388",
+      "caller": "R0286",
+      "signature": "const 海中鱼巣::需求承接材料* std::optional<海中鱼巣::需求承接材料>::operator->() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1308",
+        "海中鱼巣/领域/控制面板服务.h:1309",
+        "海中鱼巣/领域/控制面板服务.h:1310",
+        "海中鱼巣/领域/控制面板服务.h:1311"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03389",
+      "caller": "R0286",
+      "signature": "bool std::optional<海中鱼巣::节点句柄>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1302",
+        "海中鱼巣/领域/控制面板服务.h:1303",
+        "海中鱼巣/领域/控制面板服务.h:1304",
+        "海中鱼巣/领域/控制面板服务.h:1305",
+        "海中鱼巣/领域/控制面板服务.h:1306",
+        "海中鱼巣/领域/控制面板服务.h:1328",
+        "海中鱼巣/领域/控制面板服务.h:1350"
+      ],
+      "call_count": 7,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03390",
+      "caller": "R0286",
+      "signature": "const 海中鱼巣::节点句柄& std::optional<海中鱼巣::节点句柄>::value() const &",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1307",
+        "海中鱼巣/领域/控制面板服务.h:1308",
+        "海中鱼巣/领域/控制面板服务.h:1309",
+        "海中鱼巣/领域/控制面板服务.h:1310",
+        "海中鱼巣/领域/控制面板服务.h:1311",
+        "海中鱼巣/领域/控制面板服务.h:1329",
+        "海中鱼巣/领域/控制面板服务.h:1330",
+        "海中鱼巣/领域/控制面板服务.h:1331",
+        "海中鱼巣/领域/控制面板服务.h:1332",
+        "海中鱼巣/领域/控制面板服务.h:1333",
+        "海中鱼巣/领域/控制面板服务.h:1334"
+      ],
+      "call_count": 11,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03391",
+      "caller": "R0286",
+      "signature": "bool std::vector<海中鱼巣::节点句柄>::empty() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1340"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03392",
+      "caller": "R0286",
+      "signature": "std::vector<海中鱼巣::节点句柄>::iterator std::vector<海中鱼巣::节点句柄>::begin() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1344",
+        "海中鱼巣/领域/控制面板服务.h:1360"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03393",
+      "caller": "R0286",
+      "signature": "std::vector<海中鱼巣::节点句柄>::iterator std::vector<海中鱼巣::节点句柄>::end() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1344",
+        "海中鱼巣/领域/控制面板服务.h:1360"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03394",
+      "caller": "R0286",
+      "signature": "bool std::vector<海中鱼巣::节点句柄>::iterator::operator!=(const iterator&) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1344",
+        "海中鱼巣/领域/控制面板服务.h:1360"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03395",
+      "caller": "R0286",
+      "signature": "海中鱼巣::节点句柄& std::vector<海中鱼巣::节点句柄>::iterator::operator*() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1344",
+        "海中鱼巣/领域/控制面板服务.h:1360"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03396",
+      "caller": "R0286",
+      "signature": "std::vector<海中鱼巣::节点句柄>::iterator& std::vector<海中鱼巣::节点句柄>::iterator::operator++() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1344",
+        "海中鱼巣/领域/控制面板服务.h:1360"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03397",
+      "caller": "R0286",
+      "signature": "void std::vector<海中鱼巣::控制面板树节点材料>::push_back(海中鱼巣::控制面板树节点材料&&)",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1355"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03398",
+      "caller": "R0287",
+      "signature": "bool std::vector<海中鱼巣::节点句柄>::empty() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1375"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03399",
+      "caller": "R0287",
+      "signature": "std::vector<海中鱼巣::节点句柄>::iterator std::vector<海中鱼巣::节点句柄>::begin() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1385"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03400",
+      "caller": "R0287",
+      "signature": "std::vector<海中鱼巣::节点句柄>::iterator std::vector<海中鱼巣::节点句柄>::end() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1385"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03401",
+      "caller": "R0287",
+      "signature": "bool std::vector<海中鱼巣::节点句柄>::iterator::operator!=(const iterator&) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1385"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03402",
+      "caller": "R0287",
+      "signature": "海中鱼巣::节点句柄& std::vector<海中鱼巣::节点句柄>::iterator::operator*() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1385"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03403",
+      "caller": "R0287",
+      "signature": "std::vector<海中鱼巣::节点句柄>::iterator& std::vector<海中鱼巣::节点句柄>::iterator::operator++() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1385"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03404",
+      "caller": "R0287",
+      "signature": "bool std::optional<海中鱼巣::控制面板树节点材料>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1387"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03405",
+      "caller": "R0287",
+      "signature": "海中鱼巣::控制面板树节点材料& std::optional<海中鱼巣::控制面板树节点材料>::value() &",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1390"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03406",
+      "caller": "R0287",
+      "signature": "void std::vector<海中鱼巣::控制面板树节点材料>::push_back(海中鱼巣::控制面板树节点材料&&)",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1390"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03407",
+      "caller": "R0288",
+      "signature": "bool std::optional<海中鱼巣::任务承接材料>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1405"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03408",
+      "caller": "R0288",
+      "signature": "const 海中鱼巣::任务承接材料* std::optional<海中鱼巣::任务承接材料>::operator->() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1411",
+        "海中鱼巣/领域/控制面板服务.h:1412",
+        "海中鱼巣/领域/控制面板服务.h:1413",
+        "海中鱼巣/领域/控制面板服务.h:1414",
+        "海中鱼巣/领域/控制面板服务.h:1415"
+      ],
+      "call_count": 5,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03409",
+      "caller": "R0288",
+      "signature": "bool std::optional<海中鱼巣::节点句柄>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1406",
+        "海中鱼巣/领域/控制面板服务.h:1407",
+        "海中鱼巣/领域/控制面板服务.h:1408",
+        "海中鱼巣/领域/控制面板服务.h:1409",
+        "海中鱼巣/领域/控制面板服务.h:1410",
+        "海中鱼巣/领域/控制面板服务.h:1432",
+        "海中鱼巣/领域/控制面板服务.h:1437",
+        "海中鱼巣/领域/控制面板服务.h:1442"
+      ],
+      "call_count": 8,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03410",
+      "caller": "R0288",
+      "signature": "const 海中鱼巣::节点句柄& std::optional<海中鱼巣::节点句柄>::value() const &",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1411",
+        "海中鱼巣/领域/控制面板服务.h:1412",
+        "海中鱼巣/领域/控制面板服务.h:1413",
+        "海中鱼巣/领域/控制面板服务.h:1414",
+        "海中鱼巣/领域/控制面板服务.h:1415"
+      ],
+      "call_count": 5,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03411",
+      "caller": "R0289",
+      "signature": "bool std::vector<海中鱼巣::节点句柄>::empty() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1457"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03412",
+      "caller": "R0289",
+      "signature": "std::vector<海中鱼巣::节点句柄>::iterator std::vector<海中鱼巣::节点句柄>::begin() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1467"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03413",
+      "caller": "R0289",
+      "signature": "std::vector<海中鱼巣::节点句柄>::iterator std::vector<海中鱼巣::节点句柄>::end() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1467"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03414",
+      "caller": "R0289",
+      "signature": "bool std::vector<海中鱼巣::节点句柄>::iterator::operator!=(const iterator&) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1467"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03415",
+      "caller": "R0289",
+      "signature": "海中鱼巣::节点句柄& std::vector<海中鱼巣::节点句柄>::iterator::operator*() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1467"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03416",
+      "caller": "R0289",
+      "signature": "std::vector<海中鱼巣::节点句柄>::iterator& std::vector<海中鱼巣::节点句柄>::iterator::operator++() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1467"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03417",
+      "caller": "R0289",
+      "signature": "bool std::optional<海中鱼巣::控制面板树节点材料>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1469"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03418",
+      "caller": "R0289",
+      "signature": "海中鱼巣::控制面板树节点材料& std::optional<海中鱼巣::控制面板树节点材料>::value() &",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1472"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03419",
+      "caller": "R0289",
+      "signature": "void std::vector<海中鱼巣::控制面板树节点材料>::push_back(海中鱼巣::控制面板树节点材料&&)",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1472"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03420",
+      "caller": "R0290",
+      "signature": "std::size_t std::vector<海中鱼巣::节点句柄>::size() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1484"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03421",
+      "caller": "R0290",
+      "signature": "std::vector<海中鱼巣::节点句柄>::iterator std::vector<海中鱼巣::节点句柄>::begin() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1488"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03422",
+      "caller": "R0290",
+      "signature": "std::vector<海中鱼巣::节点句柄>::iterator std::vector<海中鱼巣::节点句柄>::end() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1488"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03423",
+      "caller": "R0290",
+      "signature": "bool std::vector<海中鱼巣::节点句柄>::iterator::operator!=(const iterator&) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1488"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03424",
+      "caller": "R0290",
+      "signature": "bool std::optional<海中鱼巣::方法候选材料>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1497"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03425",
+      "caller": "R0290",
+      "signature": "const 海中鱼巣::方法候选材料* std::optional<海中鱼巣::方法候选材料>::operator->() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1497",
+        "海中鱼巣/领域/控制面板服务.h:1503",
+        "海中鱼巣/领域/控制面板服务.h:1509",
+        "海中鱼巣/领域/控制面板服务.h:1510",
+        "海中鱼巣/领域/控制面板服务.h:1536",
+        "海中鱼巣/领域/控制面板服务.h:1542",
+        "海中鱼巣/领域/控制面板服务.h:1543"
+      ],
+      "call_count": 7,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03426",
+      "caller": "R0290",
+      "signature": "void std::vector<海中鱼巣::节点句柄>::push_back(const 海中鱼巣::节点句柄&)",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1507"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03427",
+      "caller": "R0290",
+      "signature": "std::vector<海中鱼巣::节点句柄>::iterator std::vector<海中鱼巣::节点句柄>::begin() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1513",
+        "海中鱼巣/领域/控制面板服务.h:1524",
+        "海中鱼巣/领域/控制面板服务.h:1581",
+        "海中鱼巣/领域/控制面板服务.h:1587"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03428",
+      "caller": "R0290",
+      "signature": "std::vector<海中鱼巣::节点句柄>::iterator std::vector<海中鱼巣::节点句柄>::end() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1513",
+        "海中鱼巣/领域/控制面板服务.h:1524",
+        "海中鱼巣/领域/控制面板服务.h:1581",
+        "海中鱼巣/领域/控制面板服务.h:1587"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03429",
+      "caller": "R0290",
+      "signature": "bool std::vector<海中鱼巣::节点句柄>::iterator::operator!=(const iterator&) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1513",
+        "海中鱼巣/领域/控制面板服务.h:1524",
+        "海中鱼巣/领域/控制面板服务.h:1581",
+        "海中鱼巣/领域/控制面板服务.h:1587"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03430",
+      "caller": "R0290",
+      "signature": "海中鱼巣::节点句柄& std::vector<海中鱼巣::节点句柄>::iterator::operator*() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1513",
+        "海中鱼巣/领域/控制面板服务.h:1524",
+        "海中鱼巣/领域/控制面板服务.h:1581",
+        "海中鱼巣/领域/控制面板服务.h:1587"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03431",
+      "caller": "R0290",
+      "signature": "std::vector<海中鱼巣::节点句柄>::iterator& std::vector<海中鱼巣::节点句柄>::iterator::operator++() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1513",
+        "海中鱼巣/领域/控制面板服务.h:1524",
+        "海中鱼巣/领域/控制面板服务.h:1581",
+        "海中鱼巣/领域/控制面板服务.h:1587"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03432",
+      "caller": "R0290",
+      "signature": "void std::vector<海中鱼巣::节点句柄>::pop_back() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1518",
+        "海中鱼巣/领域/控制面板服务.h:1529",
+        "海中鱼巣/领域/控制面板服务.h:1538",
+        "海中鱼巣/领域/控制面板服务.h:1546",
+        "海中鱼巣/领域/控制面板服务.h:1552",
+        "海中鱼巣/领域/控制面板服务.h:1561",
+        "海中鱼巣/领域/控制面板服务.h:1576",
+        "海中鱼巣/领域/控制面板服务.h:1583",
+        "海中鱼巣/领域/控制面板服务.h:1589",
+        "海中鱼巣/领域/控制面板服务.h:1593"
+      ],
+      "call_count": 10,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03433",
+      "caller": "R0290",
+      "signature": "void std::vector<海中鱼巣::控制面板树节点材料>::push_back(海中鱼巣::控制面板树节点材料&&)",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1522",
+        "海中鱼巣/领域/控制面板服务.h:1533",
+        "海中鱼巣/领域/控制面板服务.h:1556"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03434",
+      "caller": "R0290",
+      "signature": "bool std::optional<海中鱼巣::节点句柄>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1544",
+        "海中鱼巣/领域/控制面板服务.h:1550",
+        "海中鱼巣/领域/控制面板服务.h:1559",
+        "海中鱼巣/领域/控制面板服务.h:1574"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03435",
+      "caller": "R0290",
+      "signature": "海中鱼巣::节点句柄& std::optional<海中鱼巣::节点句柄>::value() &",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1575"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03436",
+      "caller": "R0292",
+      "signature": "bool std::vector<海中鱼巣::节点句柄>::empty() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1605"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03437",
+      "caller": "R0292",
+      "signature": "std::vector<std::pair<海中鱼巣::节点句柄, 海中鱼巣::节点句柄>>::iterator std::vector<std::pair<海中鱼巣::节点句柄, 海中鱼巣::节点句柄>>::begin() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1615",
+        "海中鱼巣/领域/控制面板服务.h:1625",
+        "海中鱼巣/领域/控制面板服务.h:1636"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03438",
+      "caller": "R0292",
+      "signature": "std::vector<std::pair<海中鱼巣::节点句柄, 海中鱼巣::节点句柄>>::iterator std::vector<std::pair<海中鱼巣::节点句柄, 海中鱼巣::节点句柄>>::end() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1615",
+        "海中鱼巣/领域/控制面板服务.h:1625",
+        "海中鱼巣/领域/控制面板服务.h:1628",
+        "海中鱼巣/领域/控制面板服务.h:1636"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03439",
+      "caller": "R0292",
+      "signature": "std::vector<std::pair<海中鱼巣::节点句柄, 海中鱼巣::节点句柄>>::iterator std::vector<std::pair<海中鱼巣::节点句柄, 海中鱼巣::节点句柄>>::erase(iterator,iterator)",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1624"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03440",
+      "caller": "R0292",
+      "signature": "std::vector<海中鱼巣::节点句柄>::iterator std::vector<海中鱼巣::节点句柄>::begin() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1629"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03441",
+      "caller": "R0292",
+      "signature": "std::vector<海中鱼巣::节点句柄>::iterator std::vector<海中鱼巣::节点句柄>::end() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1629"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03442",
+      "caller": "R0292",
+      "signature": "bool std::vector<海中鱼巣::节点句柄>::iterator::operator!=(const iterator&) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1629"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03443",
+      "caller": "R0292",
+      "signature": "海中鱼巣::节点句柄& std::vector<海中鱼巣::节点句柄>::iterator::operator*() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1629"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03444",
+      "caller": "R0292",
+      "signature": "std::vector<海中鱼巣::节点句柄>::iterator& std::vector<海中鱼巣::节点句柄>::iterator::operator++() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1629"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03445",
+      "caller": "R0292",
+      "signature": "std::vector<海中鱼巣::节点句柄>::vector() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1630"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03446",
+      "caller": "R0292",
+      "signature": "bool std::optional<海中鱼巣::控制面板树节点材料>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1633"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03447",
+      "caller": "R0292",
+      "signature": "海中鱼巣::控制面板树节点材料* std::optional<海中鱼巣::控制面板树节点材料>::operator->() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1641"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03448",
+      "caller": "R0292",
+      "signature": "海中鱼巣::控制面板树节点材料& std::optional<海中鱼巣::控制面板树节点材料>::value() &",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1648",
+        "海中鱼巣/领域/控制面板服务.h:1653"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03449",
+      "caller": "R0292",
+      "signature": "bool std::vector<std::pair<海中鱼巣::节点句柄, 海中鱼巣::节点句柄>>::iterator::operator!=(const iterator&) const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1636"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03450",
+      "caller": "R0292",
+      "signature": "std::pair<海中鱼巣::节点句柄, 海中鱼巣::节点句柄>& std::vector<std::pair<海中鱼巣::节点句柄, 海中鱼巣::节点句柄>>::iterator::operator*() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1636"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03451",
+      "caller": "R0292",
+      "signature": "std::vector<std::pair<海中鱼巣::节点句柄, 海中鱼巣::节点句柄>>::iterator& std::vector<std::pair<海中鱼巣::节点句柄, 海中鱼巣::节点句柄>>::iterator::operator++() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1636"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03452",
+      "caller": "R0292",
+      "signature": "std::vector<海中鱼巣::控制面板树节点材料>::iterator std::vector<海中鱼巣::控制面板树节点材料>::begin() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1641"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03453",
+      "caller": "R0292",
+      "signature": "std::vector<海中鱼巣::控制面板树节点材料>::iterator std::vector<海中鱼巣::控制面板树节点材料>::end() noexcept",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1641"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03454",
+      "caller": "R0292",
+      "signature": "void std::vector<海中鱼巣::控制面板树节点材料>::push_back(海中鱼巣::控制面板树节点材料&&)",
+      "locations": [
+        "海中鱼巣/领域/控制面板服务.h:1653"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
+      "resolution_source": "冻结源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
     }
   ],
   "callback_registrations": [
@@ -34742,6 +38069,51 @@
       "registration_location": "海中鱼巣/领域/数据操作.语素基础.ixx:340",
       "condition": "R0116 同步调度于海中鱼巣/核心/执行器.结构写入.ixx:82；基础信息写前未找到",
       "resolution_source": "源码 lambda 定义、包装点、执行器调度点与静态签名复核"
+    },
+    {
+      "callback_id": "RCB0039",
+      "caller": "R0278",
+      "callback": "R0790",
+      "external_algorithm": "std::find_if",
+      "registration_location": "海中鱼巣/领域/控制面板服务.h:1033",
+      "condition": "生成语素树按当前页根逐项查找期间零到多次调用",
+      "resolution_source": "源码 lambda 定义、标准算法注册点与静态参数类型复核"
+    },
+    {
+      "callback_id": "RCB0040",
+      "caller": "R0279",
+      "callback": "R0791",
+      "external_algorithm": "std::find_if",
+      "registration_location": "海中鱼巣/领域/控制面板服务.h:1106",
+      "condition": "概念路径子项查找期间零到多次调用",
+      "resolution_source": "源码 lambda 定义、标准算法注册点与静态参数类型复核"
+    },
+    {
+      "callback_id": "RCB0041",
+      "caller": "R0279",
+      "callback": "R0792",
+      "external_algorithm": "std::any_of",
+      "registration_location": "海中鱼巣/领域/控制面板服务.h:1118",
+      "condition": "概念子项重复检测期间零到多次调用",
+      "resolution_source": "源码 lambda 定义、标准算法注册点与静态参数类型复核"
+    },
+    {
+      "callback_id": "RCB0042",
+      "caller": "R0292",
+      "callback": "R0793",
+      "external_algorithm": "std::unique",
+      "registration_location": "海中鱼巣/领域/控制面板服务.h:1625",
+      "condition": "方法来源任务组相邻去重期间零到多次调用",
+      "resolution_source": "源码 lambda 定义、标准算法注册点与静态参数类型复核"
+    },
+    {
+      "callback_id": "RCB0043",
+      "caller": "R0292",
+      "callback": "R0794",
+      "external_algorithm": "std::any_of",
+      "registration_location": "海中鱼巣/领域/控制面板服务.h:1640",
+      "condition": "方法来源子项重复检测期间零到多次调用",
+      "resolution_source": "源码 lambda 定义、标准算法注册点与静态参数类型复核"
     }
   ]
 }

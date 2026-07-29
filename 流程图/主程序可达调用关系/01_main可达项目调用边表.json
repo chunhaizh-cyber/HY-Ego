@@ -15,9 +15,9 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1325,
-  "project_call_edge_count": 3717,
-  "edge_count": 3717,
+  "function_count": 1331,
+  "project_call_edge_count": 3755,
+  "edge_count": 3755,
   "edges": [
     {
       "edge_id": "E0002",
@@ -30188,22 +30188,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0899",
-      "caller": "R0279",
-      "callee": "F0168",
-      "callsites": [
-        "海中鱼巣/领域/控制面板服务.h:1083",
-        "海中鱼巣/领域/控制面板服务.h:1133"
-      ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "RCE0900",
       "caller": "R0279",
       "callee": "R0527",
@@ -30585,22 +30569,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0925",
-      "caller": "R0286",
-      "callee": "F0168",
-      "callsites": [
-        "海中鱼巣/领域/控制面板服务.h:1317",
-        "海中鱼巣/领域/控制面板服务.h:1336"
-      ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "RCE0926",
       "caller": "R0286",
       "callee": "R0281",
@@ -30926,21 +30894,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0947",
-      "caller": "R0288",
-      "callee": "F0168",
-      "callsites": [
-        "海中鱼巣/领域/控制面板服务.h:1420"
-      ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "RCE0948",
       "caller": "R0288",
       "callee": "R0281",
@@ -31088,25 +31041,6 @@
       "return_binding": null,
       "reachable_condition": "控制面板按需树路径；字段静态类型/重载专项复核",
       "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0957",
-      "caller": "R0290",
-      "callee": "F0168",
-      "callsites": [
-        "海中鱼巣/领域/控制面板服务.h:1490",
-        "海中鱼巣/领域/控制面板服务.h:1502",
-        "海中鱼巣/领域/控制面板服务.h:1516",
-        "海中鱼巣/领域/控制面板服务.h:1527",
-        "海中鱼巣/领域/控制面板服务.h:1537"
-      ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
       "current_root_reachable": true
     },
     {
@@ -56938,6 +56872,651 @@
       "return_binding": "被调函数结果按当前调用表达式接收或用于条件判断",
       "reachable_condition": "调用方可达且源码分支条件成立",
       "resolution_source": "冻结源码 3920a746 + 当前静态接收者/重载/调用点专项复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2707",
+      "caller": "R0276",
+      "callee": "F0190",
+      "callsites": [
+        "海中鱼巣/领域/控制面板服务.h:58"
+      ],
+      "call_category": "direct_member",
+      "arguments": "场景",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "读取节点结果",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2708",
+      "caller": "R0278",
+      "callee": "R0790",
+      "callsites": [
+        "海中鱼巣/领域/控制面板服务.h:1033"
+      ],
+      "call_category": "standard-library-callback",
+      "arguments": "根谓词",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2709",
+      "caller": "R0790",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/控制面板服务.h:1035"
+      ],
+      "call_category": "direct_operator",
+      "arguments": "根.节点, 当前根",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2710",
+      "caller": "R0279",
+      "callee": "R0791",
+      "callsites": [
+        "海中鱼巣/领域/控制面板服务.h:1106"
+      ],
+      "call_category": "standard-library-callback",
+      "arguments": "子项谓词",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2711",
+      "caller": "R0791",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/控制面板服务.h:1109"
+      ],
+      "call_category": "direct_operator",
+      "arguments": "候选.节点, 项.路径[路径索引]",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2712",
+      "caller": "R0279",
+      "callee": "R0792",
+      "callsites": [
+        "海中鱼巣/领域/控制面板服务.h:1118"
+      ],
+      "call_category": "standard-library-callback",
+      "arguments": "重复谓词",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2713",
+      "caller": "R0792",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/控制面板服务.h:1121"
+      ],
+      "call_category": "direct_operator",
+      "arguments": "候选.节点, 项.概念",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2714",
+      "caller": "R0292",
+      "callee": "R0793",
+      "callsites": [
+        "海中鱼巣/领域/控制面板服务.h:1625"
+      ],
+      "call_category": "standard-library-callback",
+      "arguments": "去重谓词",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2715",
+      "caller": "R0793",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/控制面板服务.h:1626",
+        "海中鱼巣/领域/控制面板服务.h:1626"
+      ],
+      "call_category": "direct_operator",
+      "arguments": "左.first/second, 右.first/second",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool（两次短路比较）",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2716",
+      "caller": "R0292",
+      "callee": "R0794",
+      "callsites": [
+        "海中鱼巣/领域/控制面板服务.h:1640"
+      ],
+      "call_category": "standard-library-callback",
+      "arguments": "来源谓词",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2717",
+      "caller": "R0794",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/控制面板服务.h:1644"
+      ],
+      "call_category": "direct_operator",
+      "arguments": "子节点.节点, 来源.second",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2718",
+      "caller": "R0331",
+      "callee": "F0450",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:135"
+      ],
+      "call_category": "direct_member",
+      "arguments": "this；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2719",
+      "caller": "R0331",
+      "callee": "F0245",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:135"
+      ],
+      "call_category": "direct_member",
+      "arguments": "系统角色；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2720",
+      "caller": "R0331",
+      "callee": "F0229",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:135"
+      ],
+      "call_category": "direct_member",
+      "arguments": "参数；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2721",
+      "caller": "R0331",
+      "callee": "F0397",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:149"
+      ],
+      "call_category": "resolved_function_pointer",
+      "arguments": "接线_.运行期状态；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "共享许可",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2722",
+      "caller": "R0331",
+      "callee": "F0338",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:150"
+      ],
+      "call_category": "direct_member",
+      "arguments": "许可；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2723",
+      "caller": "R0331",
+      "callee": "F0466",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:181"
+      ],
+      "call_category": "direct_member",
+      "arguments": "视图；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2724",
+      "caller": "R0331",
+      "callee": "F0345",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:149-184"
+      ],
+      "call_category": "implicit_destructor",
+      "arguments": "许可；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "无",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2725",
+      "caller": "R0335",
+      "callee": "R0563",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:230"
+      ],
+      "call_category": "direct_member",
+      "arguments": "根；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2726",
+      "caller": "R0335",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:233"
+      ],
+      "call_category": "implicit_underlying_equality",
+      "arguments": "绑定.节点, optional<节点句柄>{根.节点}；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2727",
+      "caller": "R0335",
+      "callee": "R0615",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:235"
+      ],
+      "call_category": "implicit_underlying_equality",
+      "arguments": "主信息, optional<主信息句柄>{根.主信息}；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2728",
+      "caller": "R0337",
+      "callee": "R0538",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:284"
+      ],
+      "call_category": "direct_member",
+      "arguments": "输出, 活跃角色；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2729",
+      "caller": "R0338",
+      "callee": "F0346",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:292"
+      ],
+      "call_category": "direct_member",
+      "arguments": "根.节点,令牌；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "optional<节点记录>",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2730",
+      "caller": "R0338",
+      "callee": "R0563",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:293"
+      ],
+      "call_category": "direct_member",
+      "arguments": "根；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2731",
+      "caller": "R0338",
+      "callee": "R0615",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:296"
+      ],
+      "call_category": "operator_equality",
+      "arguments": "节点记录值->主信息,根.主信息；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2732",
+      "caller": "R0338",
+      "callee": "F0439",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:297"
+      ],
+      "call_category": "direct_member",
+      "arguments": "根.主信息,令牌；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "主信息记录",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2733",
+      "caller": "R0338",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:298-299"
+      ],
+      "call_category": "implicit_underlying_equality",
+      "arguments": "按主键查节点结果,optional<节点句柄>{根.节点}；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2734",
+      "caller": "R0340",
+      "callee": "F0450",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:49"
+      ],
+      "call_category": "direct_member",
+      "arguments": "this；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2735",
+      "caller": "R0340",
+      "callee": "F0245",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:49"
+      ],
+      "call_category": "direct_member",
+      "arguments": "系统角色；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2736",
+      "caller": "R0340",
+      "callee": "F0229",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:49"
+      ],
+      "call_category": "direct_member",
+      "arguments": "参数；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2737",
+      "caller": "R0340",
+      "callee": "R0795",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:50"
+      ],
+      "call_category": "direct_member",
+      "arguments": "活跃规格、冷却规格、退役规格；调用次数=3",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool（三次）",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2738",
+      "caller": "R0340",
+      "callee": "R0399",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:51",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:52",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:53"
+      ],
+      "call_category": "direct_member",
+      "arguments": "三个写入规格；调用次数=3",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "幂等主键（三次）",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2739",
+      "caller": "R0340",
+      "callee": "R0400",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:54",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:55",
+        "海中鱼巣/领域/数据操作.概念活动.ixx:56"
+      ],
+      "call_category": "direct_member",
+      "arguments": "三个写入规格；调用次数=3",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "状态值（三次）",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2740",
+      "caller": "R0340",
+      "callee": "F0251",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:125"
+      ],
+      "call_category": "direct_member",
+      "arguments": "候选材料；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2741",
+      "caller": "R0341",
+      "callee": "R0401",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:72"
+      ],
+      "call_category": "direct_member",
+      "arguments": "活跃、冷却、退役写入结果；调用次数=3",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool（三处）",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2742",
+      "caller": "R0341",
+      "callee": "R0642",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:92"
+      ],
+      "call_category": "direct_member",
+      "arguments": "关系结果；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2743",
+      "caller": "R0341",
+      "callee": "F0251",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.概念活动.ixx:119"
+      ],
+      "call_category": "direct_member",
+      "arguments": "候选材料；调用次数=1",
+      "argument_resolution": "本批源码静态接收者、重载签名、实参与调用位置逐项复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且源码分支条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状单函数图、逐行映射与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2744",
+      "caller": "R0279",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/控制面板服务.h:1073",
+        "海中鱼巣/领域/控制面板服务.h:1092",
+        "海中鱼巣/领域/控制面板服务.h:1098"
+      ],
+      "call_category": "direct_operator",
+      "arguments": "投影根/路径节点句柄比较",
+      "argument_resolution": "本批源码静态类型与C++20 !=反转operator==语境逐调用点复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且相应短路条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状图与映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2745",
+      "caller": "R0286",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/控制面板服务.h:1307",
+        "海中鱼巣/领域/控制面板服务.h:1308",
+        "海中鱼巣/领域/控制面板服务.h:1309",
+        "海中鱼巣/领域/控制面板服务.h:1310",
+        "海中鱼巣/领域/控制面板服务.h:1311"
+      ],
+      "call_category": "direct_operator",
+      "arguments": "需求句柄与承接材料句柄逐字段比较",
+      "argument_resolution": "本批源码静态类型与C++20 !=反转operator==语境逐调用点复核",
+      "return_binding": "bool（五次）",
+      "reachable_condition": "调用方可达且相应短路条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状图与映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2746",
+      "caller": "R0288",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/控制面板服务.h:1411",
+        "海中鱼巣/领域/控制面板服务.h:1412",
+        "海中鱼巣/领域/控制面板服务.h:1413",
+        "海中鱼巣/领域/控制面板服务.h:1414",
+        "海中鱼巣/领域/控制面板服务.h:1415"
+      ],
+      "call_category": "direct_operator",
+      "arguments": "任务句柄与承接材料句柄逐字段比较",
+      "argument_resolution": "本批源码静态类型与C++20 !=反转operator==语境逐调用点复核",
+      "return_binding": "bool（五次）",
+      "reachable_condition": "调用方可达且相应短路条件成立",
+      "resolution_source": "冻结源码 3920a746 + 本批现状图与映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2747",
+      "caller": "R0290",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/控制面板服务.h:1497"
+      ],
+      "call_category": "direct_operator",
+      "arguments": "方法候选首节点, 方法节点",
+      "argument_resolution": "本批源码静态类型与C++20 !=反转operator==语境逐调用点复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且候选材料存在",
+      "resolution_source": "冻结源码 3920a746 + 本批现状图与映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2748",
+      "caller": "R0292",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/控制面板服务.h:1637"
+      ],
+      "call_category": "direct_operator",
+      "arguments": "来源.first, 方法节点",
+      "argument_resolution": "本批源码静态类型与C++20 !=反转operator==语境逐调用点复核",
+      "return_binding": "bool",
+      "reachable_condition": "调用方可达且遍历方法来源任务组",
+      "resolution_source": "冻结源码 3920a746 + 本批现状图与映射复核",
       "current_root_reachable": true
     }
   ]
