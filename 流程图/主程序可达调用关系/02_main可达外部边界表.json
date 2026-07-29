@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1154,
-  "project_call_edge_count": 2761,
-  "external_count": 1640,
+  "project_call_edge_count": 2767,
+  "external_count": 1641,
   "callback_registration_count": 27,
   "external_boundaries": [
     {
@@ -21743,6 +21743,20 @@
       "boundary_category": "Standard library string",
       "reachable_condition": "每个输入代码单元先追加一次；当前代码单元为右方括号时再追加一次",
       "resolution_source": "当前HEAD Clang AST候选、两个源码调用点与std::wstring静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02309",
+      "caller": "F0381",
+      "signature": "wchar_t* std::wstring::data() noexcept",
+      "locations": [
+        "海中鱼巣/适配/SQL数据库适配.cpp:258"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library string",
+      "reachable_condition": "F0208确认语句句柄可用；形成X01004的第二实参",
+      "resolution_source": "当前源码调用点、SQL文本静态类型与std::wstring连续存储接口复核",
       "current_root_reachable": true
     }
   ],

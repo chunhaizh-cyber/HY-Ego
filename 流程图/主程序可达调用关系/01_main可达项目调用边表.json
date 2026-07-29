@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1154,
-  "project_call_edge_count": 2761,
-  "edge_count": 2761,
+  "project_call_edge_count": 2767,
+  "edge_count": 2767,
   "edges": [
     {
       "edge_id": "E0002",
@@ -42431,6 +42431,96 @@
       "return_binding": "void",
       "reachable_condition": "RCE1738已形成许可；返回值求值完成或异常展开",
       "resolution_source": "当前源码作用域、C++ RAII与既有E0790同域生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1742",
+      "caller": "F0381",
+      "callee": "F0214",
+      "callsites": [
+        "海中鱼巣/适配/SQL数据库适配.cpp:251-265"
+      ],
+      "call_category": "implicit_destructor+source_audited",
+      "arguments": "this=&语句",
+      "argument_resolution": "局部ODBC语句在函数作用域结束、任一return或异常展开时隐式析构",
+      "return_binding": "void",
+      "reachable_condition": "F0207已完成局部语句构造；随后正常返回或异常展开",
+      "resolution_source": "当前源码作用域、C++ RAII与F0214已定义析构逐行复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1743",
+      "caller": "F0384",
+      "callee": "F0336",
+      "callsites": [
+        "海中鱼巣/核心/主信息仓库.cpp:199"
+      ],
+      "call_category": "direct_const_member+source_audited",
+      "arguments": "this=&事务接线_",
+      "argument_resolution": "成员接收者静态类型与无参const成员函数逐调用点复核",
+      "return_binding": "已接域bool",
+      "reachable_condition": "F0384进入",
+      "resolution_source": "当前源码单行控制流、静态接收者与同仓调用模式复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1744",
+      "caller": "F0384",
+      "callee": "F0397",
+      "callsites": [
+        "海中鱼巣/核心/主信息仓库.cpp:199"
+      ],
+      "call_category": "resolved_function_pointer+source_audited",
+      "arguments": "状态=事务接线_.运行期状态",
+      "argument_resolution": "取得共享许可函数指针按现行生产接线唯一解析",
+      "return_binding": "局部结构事务许可",
+      "reachable_condition": "RCE1743返回true",
+      "resolution_source": "当前源码、现行接线装配与既有同域函数指针绑定复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1745",
+      "caller": "F0384",
+      "callee": "F0338",
+      "callsites": [
+        "海中鱼巣/核心/主信息仓库.cpp:199"
+      ],
+      "call_category": "direct_const_member+source_audited",
+      "arguments": "this=&许可",
+      "argument_resolution": "局部许可静态类型与无参const成员函数逐调用点复核",
+      "return_binding": "许可有效bool",
+      "reachable_condition": "RCE1744已形成局部许可",
+      "resolution_source": "当前源码三元表达式左到右求值与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1746",
+      "caller": "F0384",
+      "callee": "F0339",
+      "callsites": [
+        "海中鱼巣/核心/主信息仓库.cpp:199"
+      ],
+      "call_category": "direct_const_member+source_audited",
+      "arguments": "this=&许可",
+      "argument_resolution": "局部许可静态类型与无参const成员函数逐调用点复核",
+      "return_binding": "结构事务令牌const引用",
+      "reachable_condition": "RCE1745返回true；三元表达式选择读取分支",
+      "resolution_source": "当前源码三元表达式条件分支与静态接收者复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1747",
+      "caller": "F0384",
+      "callee": "F0345",
+      "callsites": [
+        "海中鱼巣/核心/主信息仓库.cpp:199"
+      ],
+      "call_category": "implicit_destructor+source_audited",
+      "arguments": "this=&许可",
+      "argument_resolution": "局部结构事务许可离开接域分支作用域时隐式析构",
+      "return_binding": "void",
+      "reachable_condition": "RCE1744已形成许可；返回值求值完成或异常展开",
+      "resolution_source": "当前源码单行作用域、C++ RAII与同仓许可生命周期复核",
       "current_root_reachable": true
     }
   ]

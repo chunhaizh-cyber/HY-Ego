@@ -1,6 +1,6 @@
 # main 可达项目调用边表
 
-项目直接调用边：2761。多调用点保留在同一 caller/callee 边记录中。
+项目直接调用边：2767。多调用点保留在同一 caller/callee 边记录中。
 
 | 边 ID | 调用方 | 被调方 | 调用点 | 类别 | 实参 | 可达条件 | 解析来源 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -2765,3 +2765,9 @@
 | RCE1739 | F0377 | F0338 | <code>海中鱼巣/核心/节点仓库.cpp:444</code> | direct_const_member+source_audited | <code>this=&许可</code> | RCE1738已形成局部许可 | 当前源码逐调用点与Clang AST短路表达式复核 |
 | RCE1740 | F0377 | F0339 | <code>海中鱼巣/核心/节点仓库.cpp:444</code> | direct_const_member+source_audited | <code>this=&许可</code> | RCE1739返回true；逻辑与右侧开始求值 | 当前源码逐调用点与Clang AST左到右短路顺序复核 |
 | RCE1741 | F0377 | F0345 | <code>海中鱼巣/核心/节点仓库.cpp:443-445</code> | implicit_destructor+source_audited | <code>this=&许可</code> | RCE1738已形成许可；返回值求值完成或异常展开 | 当前源码作用域、C++ RAII与既有E0790同域生命周期复核 |
+| RCE1742 | F0381 | F0214 | <code>海中鱼巣/适配/SQL数据库适配.cpp:251-265</code> | implicit_destructor+source_audited | <code>this=&语句</code> | F0207已完成局部语句构造；随后正常返回或异常展开 | 当前源码作用域、C++ RAII与F0214已定义析构逐行复核 |
+| RCE1743 | F0384 | F0336 | <code>海中鱼巣/核心/主信息仓库.cpp:199</code> | direct_const_member+source_audited | <code>this=&事务接线_</code> | F0384进入 | 当前源码单行控制流、静态接收者与同仓调用模式复核 |
+| RCE1744 | F0384 | F0397 | <code>海中鱼巣/核心/主信息仓库.cpp:199</code> | resolved_function_pointer+source_audited | <code>状态=事务接线_.运行期状态</code> | RCE1743返回true | 当前源码、现行接线装配与既有同域函数指针绑定复核 |
+| RCE1745 | F0384 | F0338 | <code>海中鱼巣/核心/主信息仓库.cpp:199</code> | direct_const_member+source_audited | <code>this=&许可</code> | RCE1744已形成局部许可 | 当前源码三元表达式左到右求值与静态接收者复核 |
+| RCE1746 | F0384 | F0339 | <code>海中鱼巣/核心/主信息仓库.cpp:199</code> | direct_const_member+source_audited | <code>this=&许可</code> | RCE1745返回true；三元表达式选择读取分支 | 当前源码三元表达式条件分支与静态接收者复核 |
+| RCE1747 | F0384 | F0345 | <code>海中鱼巣/核心/主信息仓库.cpp:199</code> | implicit_destructor+source_audited | <code>this=&许可</code> | RCE1744已形成许可；返回值求值完成或异常展开 | 当前源码单行作用域、C++ RAII与同仓许可生命周期复核 |
