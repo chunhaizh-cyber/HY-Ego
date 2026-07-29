@@ -151,3 +151,40 @@ Windows 控制台事件可机械发送 SIGINT 和 SIGBREAK，但没有映射为 
 - 未闭合 V14 无效 SQL UI 收口和稳定性能专项结果，不声明 #380 完成。
 - 结果：`ENVIRONMENT-BLOCKED`。
 - 是否请求设计包修订：否。
+
+## v0.3 第三次续段 ENVIRONMENT-BLOCKED
+
+- plan blob：`024c51c780705425c70009ba03a1c2404361b7e3`。
+- 计划索引 blob：`d5bcf2f500a342d4007d4c03b4a7e74747fbe519`。
+- 计划段起点：`42129cd1ddccfafabd69331325124afbd59434b8`。
+- S0 时 `main == origin/main == 42129cd1ddccfafabd69331325124afbd59434b8`，divergence `0/0`，index clean；#380 仍为唯一可执行候选。
+- 从最近 #380 WIP `2934596b9f673d01a3b72d468942f6912bf4cda4` 到 S0，14 个目标代码 / 工程文件与两份专属记录零变化；本续段未修改产品代码。
+- 验证期间 `main/origin/main` 前移到 `2c38ec4017e38b2e541b93c8c9ae038856f849c7`；新提交只修改流程图维护材料，未触碰 #380 允许文件、计划、接口或两份专属记录。发布前按新 HEAD 重新复核本切片。
+
+### V14 后续机械复验
+
+两轮均只在精确子进程环境设置 `HY_EGO_SQL_SERVER=tcp:127.0.0.1,1`，等待取得非零窗口句柄，调用 `CloseMainWindow()`，等待自然退出，并在夹具收口时清理环境变量：
+
+1. 第 1 轮约 16.441 秒结束：窗口约 16.262 秒出现，`CloseMainWindow()` 返回 true，关闭后约 173 毫秒 `exit 0`。
+2. 第 2 轮约 16.361 秒结束：窗口约 16.113 秒出现，`CloseMainWindow()` 返回 true，关闭后约 241 毫秒 `exit 0`。
+
+当轮两次均在 180 秒边界内受控 `exit 0`。旧“等待 90 / 180 秒仍不退出”保留为历史高延迟 / 高方差证据，不再作为本续段 V14 阻断。
+
+### 关系仓库性能专项稳定性
+
+四宏全关 fresh Debug x64 Rebuild 通过，0 warning、0 error。对同一构建、同一 `--warehouse-performance-self-test-exit` 命令连续运行两轮：
+
+1. 第 1 轮约 266.443 秒，`exit 1`，stderr 为空。
+2. 第 2 轮约 296.350 秒，`exit 0`，stderr 为空。
+
+同一构建和命令得到不一致退出码，稳定性门禁未闭合。性能专项来源、阈值和相关代码均不在 #380 白名单，本续段未修改来源、未降低门限，也不以第二轮通过覆盖第一轮失败。
+
+### 本轮收口
+
+- `git diff --check` 通过；严格规范检查 `101/101`。
+- 四宏全关 Debug x64 fresh Rebuild 通过，0 warning、0 error。
+- 入口领域关键字和 stdout/stderr/printf 旁路扫描零命中；自检 import 只有设计允许的 `启动.应用程序.ixx` 两项。
+- V14 固定无效 SQL UI 当轮两次受控 `exit 0`，旧 V14 阻断已由当轮机械证据推翻。
+- 关系仓库性能专项同一构建连续得到 `exit 1 / exit 0`，属于验证结果不稳定；任一验证失败不得提交“完成”。
+- 结果：`ENVIRONMENT-BLOCKED`。
+- 是否请求设计包修订：否。
