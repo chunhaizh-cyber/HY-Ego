@@ -1,10 +1,10 @@
-# main 可达外部边界表
+# main 可达外部边界与回调表
 
-代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；外部边界：2125；回调登记：34。
+代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；外部边界：2171；具名回调：34。
 
 ## 外部边界
 
-| ID | 调用方 | 类别 | 完整边界签名 | 位置 | 静态次数 | 可达条件 | 解析依据 |
+| ID | 调用方 | 类别 | 完整签名 | 位置 | 次数 | 可达条件 | 解析依据 |
 | --- | --- | --- | --- | --- | ---: | --- | --- |
 | X00001 | F0002 | Standard library or external boundary | <code>std::basic_string_view&lt;char&gt;::basic_string_view(const char*)</code> | <code>海中鱼巣/启动.程序入口.ixx:29</code> | 1 | 调用方从 F0001 可达且对应源码分支成立 | HEAD 已发布图谱；当前代码自冻结提交零差异 |
 | X00002 | F0002 | Standard library or external boundary | <code>std::operator==(std::basic_string_view&lt;char&gt;, std::basic_string_view&lt;char&gt;) noexcept</code> | <code>海中鱼巣/启动.程序入口.ixx:31, 海中鱼巣/启动.程序入口.ixx:33, 海中鱼巣/启动.程序入口.ixx:35, 海中鱼巣/启动.程序入口.ixx:37, 海中鱼巣/启动.程序入口.ixx:39, 海中鱼巣/启动.程序入口.ixx:41, 海中鱼巣/启动.程序入口.ixx:48</code> | 7 | 调用方从 F0001 可达且对应源码分支成立 | HEAD 已发布图谱；当前代码自冻结提交零差异 |
@@ -2131,6 +2131,52 @@
 | X02798 | R0746 | Standard library container | <code>std::pair&lt;std::unordered_map&lt;std::uint64_t, 海中鱼巣::节点记录&gt;::iterator, bool&gt; std::unordered_map&lt;std::uint64_t, 海中鱼巣::节点记录&gt;::emplace(std::uint64_t&amp;, 海中鱼巣::节点记录&amp;)</code> | <code>海中鱼巣/核心/节点仓库.cpp:121</code> | 1 | 插入未发布节点记录 | 本批源码逐调用点与标准库静态类型复核 |
 | X02799 | R0746 | Standard library optional | <code>std::optional&lt;海中鱼巣::节点未发布候选&gt;::optional(海中鱼巣::节点未发布候选&amp;&amp;)</code> | <code>海中鱼巣/核心/节点仓库.cpp:122</code> | 1 | 从节点未发布候选构造返回可选值 | 本批源码逐调用点与标准库静态类型复核 |
 | X02800 | R0746 | Standard library lock | <code>std::unique_lock&lt;std::shared_mutex&gt;::~unique_lock() noexcept</code> | <code>海中鱼巣/核心/节点仓库.cpp:118-123</code> | 1 | 离开独占锁作用域或异常展开 | 本批源码逐调用点与标准库静态类型复核 |
+| X02801 | R0025 | Standard library or external boundary | <code>bool std::optional&lt;关系记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:419</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02802 | R0025 | Standard library or external boundary | <code>const 关系记录&amp; std::optional&lt;关系记录&gt;::operator*() const&amp; noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:419</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02803 | R0026 | Standard library or external boundary | <code>关系记录&amp; std::vector&lt;关系记录&gt;::iterator::operator*() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:428</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02804 | R0027 | Standard library or external boundary | <code>void std::vector&lt;结构写入会话::索引绑定记录&gt;::push_back(结构写入会话::索引绑定记录&amp;&amp;)</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:460</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02805 | R0028 | Standard library or external boundary | <code>结构写入会话::主信息候选记录&amp; std::vector&lt;结构写入会话::主信息候选记录&gt;::iterator::operator*() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:477</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02806 | R0028 | Standard library or external boundary | <code>结构写入会话::候选I64写入记录&amp; std::vector&lt;结构写入会话::候选I64写入记录&gt;::iterator::operator*() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:485</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02807 | R0028 | Standard library or external boundary | <code>void std::vector&lt;结构写入会话::候选I64写入记录&gt;::push_back(结构写入会话::候选I64写入记录&amp;&amp;)</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:497</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02808 | R0029 | Standard library or external boundary | <code>结构写入会话::候选I64写入记录&amp; std::vector&lt;结构写入会话::候选I64写入记录&gt;::iterator::operator*() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:511</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02809 | R0029 | Standard library or external boundary | <code>std::optional&lt;std::int64_t&gt;::optional(const std::int64_t&amp;)</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:514</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02810 | R0030 | Standard library or external boundary | <code>bool std::optional&lt;节点记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:527</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02811 | R0030 | Standard library or external boundary | <code>const 节点记录* std::optional&lt;节点记录&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:527</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02812 | R0030 | Standard library or external boundary | <code>std::optional&lt;节点类型&gt;::optional(const 节点类型&amp;)</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:527</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02813 | R0031 | Standard library or external boundary | <code>bool std::optional&lt;节点记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:533</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02814 | R0031 | Standard library or external boundary | <code>const 节点记录* std::optional&lt;节点记录&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:533</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02815 | R0031 | Standard library or external boundary | <code>std::optional&lt;主信息句柄&gt;::optional(const 主信息句柄&amp;)</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:533</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02816 | R0036 | Standard library or external boundary | <code>bool std::optional&lt;海中鱼巣::主信息记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:568</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02817 | R0036 | Standard library or external boundary | <code>std::optional&lt;海中鱼巣::主信息记录&gt;::~optional()</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:568</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02818 | R0036 | Standard library or external boundary | <code>海中鱼巣::结构写入会话::主信息候选记录&amp; std::vector&lt;海中鱼巣::结构写入会话::主信息候选记录&gt;::iterator::operator*() const</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:573</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02819 | R0037 | Standard library or external boundary | <code>bool std::optional&lt;海中鱼巣::节点记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:579</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02821 | R0037 | Standard library or external boundary | <code>海中鱼巣::结构写入会话::节点候选记录&amp; std::vector&lt;海中鱼巣::结构写入会话::节点候选记录&gt;::iterator::operator*() const</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:584</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02822 | R0038 | Standard library or external boundary | <code>bool std::optional&lt;海中鱼巣::关系记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:590</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02824 | R0038 | Standard library or external boundary | <code>海中鱼巣::结构写入会话::关系写入记录&amp; std::vector&lt;海中鱼巣::结构写入会话::关系写入记录&gt;::iterator::operator*() const</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:595</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02825 | R0038 | Standard library or external boundary | <code>海中鱼巣::结构写入会话::已发布关系变更记录&amp; std::vector&lt;海中鱼巣::结构写入会话::已发布关系变更记录&gt;::iterator::operator*() const</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:596</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02826 | R0040 | Standard library or external boundary | <code>std::optional&lt;海中鱼巣::主键绑定记录&gt;::optional(海中鱼巣::主键绑定记录&amp;&amp;)</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:635, 海中鱼巣/核心/会话.结构写入.ixx:636</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02828 | R0040 | Standard library or external boundary | <code>海中鱼巣::结构写入会话::索引绑定记录&amp; std::vector&lt;海中鱼巣::结构写入会话::索引绑定记录&gt;::iterator::operator*() const</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:641</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02830 | R0041 | Standard library or external boundary | <code>bool std::optional&lt;海中鱼巣::结构写入结果&gt;::has_value() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:648</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02831 | R0044 | Standard library or external boundary | <code>bool std::optional&lt;结构写入结果&gt;::has_value() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:734</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02832 | R0045 | Standard library or external boundary | <code>bool std::optional&lt;结构写入结果&gt;::has_value() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:739</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02833 | R0046 | Standard library or external boundary | <code>bool std::optional&lt;结构写入结果&gt;::has_value() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:744</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02834 | R0046 | Standard library or external boundary | <code>bool std::vector&lt;主信息候选记录&gt;::empty() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:745</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02835 | R0046 | Standard library or external boundary | <code>bool std::vector&lt;节点候选记录&gt;::empty() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:745</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02836 | R0046 | Standard library or external boundary | <code>bool std::vector&lt;关系写入记录&gt;::empty() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:745</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02837 | R0046 | Standard library or external boundary | <code>bool std::vector&lt;已发布关系变更记录&gt;::empty() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:746</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02838 | R0046 | Standard library or external boundary | <code>bool std::vector&lt;索引绑定记录&gt;::empty() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:746</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02839 | R0046 | Standard library or external boundary | <code>bool std::vector&lt;候选I64写入记录&gt;::empty() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:746</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02840 | R0047 | Standard library or external boundary | <code>const 主信息候选记录&amp; std::vector&lt;主信息候选记录&gt;::const_iterator::operator*() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:751</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02841 | R0048 | Standard library or external boundary | <code>const 节点候选记录&amp; std::vector&lt;节点候选记录&gt;::const_iterator::operator*() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:759</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02842 | R0049 | Standard library or external boundary | <code>std::optional&lt;节点类型&gt;::optional(std::nullopt_t) noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:766, 海中鱼巣/核心/会话.结构写入.ixx:768</code> | 2 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02843 | R0049 | Standard library or external boundary | <code>bool std::optional&lt;节点记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:768</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02844 | R0049 | Standard library or external boundary | <code>const 节点记录* std::optional&lt;节点记录&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:768</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02845 | R0049 | Standard library or external boundary | <code>std::optional&lt;节点类型&gt;::optional(const 节点类型&amp;)</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:768</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02847 | R0050 | Standard library or external boundary | <code>std::optional&lt;主信息句柄&gt;::optional(std::nullopt_t) noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:772, 海中鱼巣/核心/会话.结构写入.ixx:774</code> | 2 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02848 | R0050 | Standard library or external boundary | <code>bool std::optional&lt;节点记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:774</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02849 | R0050 | Standard library or external boundary | <code>const 节点记录* std::optional&lt;节点记录&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:774</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02850 | R0050 | Standard library or external boundary | <code>std::optional&lt;主信息句柄&gt;::optional(const 主信息句柄&amp;)</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:774</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
+| X02852 | R0051 | Standard library or external boundary | <code>std::optional&lt;std::int64_t&gt;::optional(std::nullopt_t) noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:780</code> | 1 | 调用方从 F0001 可达且对应源码表达式或隐式生命周期成立 | 本批源码静态类型、表达式语境与现状图逐项复核 |
 
 ## 回调登记
 
