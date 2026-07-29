@@ -1,6 +1,6 @@
 # main 可达项目调用边表
 
-项目直接调用边：2777。多调用点保留在同一 caller/callee 边记录中。
+项目直接调用边：2778。多调用点保留在同一 caller/callee 边记录中。
 
 | 边 ID | 调用方 | 被调方 | 调用点 | 类别 | 实参 | 可达条件 | 解析来源 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -2781,3 +2781,4 @@
 | RCE1755 | F0387 | F0340 | <code>海中鱼巣/核心/关系仓库.cpp:734</code> | direct_constructor+macro_expanded+source_audited | <code>仓库=*this,令牌=RCE1754返回const引用</code> | RCE1753返回true且RCE1754已取得令牌引用 | 当前源码宏定义122行、调用点734行与F0340完整构造签名复核 |
 | RCE1756 | F0387 | F0375 | <code>海中鱼巣/核心/关系仓库.cpp:734</code> | move-constructor+macro-expanded-move-constructor | <code>其它=RCE1752返回的临时结构事务许可</code> | RCE1752返回临时许可；进入optional.emplace承载值构造 | 当前源码宏定义120行、调用点734行、F0375签名与既有E0793同宏先例复核 |
 | RCE1757 | F0402 | R0114 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:150</code> | constructor+source-audited | <code>接线=接线_,主信息=&主信息_,节点=&节点_,关系=&关系_,索引=&索引_</code> | F0402成员接线、四仓库引用和关系仓库编号完成初始化 | 当前源码第150行成员初始化器、成员声明与R0114构造函数签名专项复核 |
+| RCE1758 | F0406 | R0114 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:102</code> | constructor+source-audited | <code>接线=接线_,主信息=&主信息_,节点=&节点_,关系=&关系_,索引=&索引_</code> | F0406成员接线和四仓库引用完成初始化 | 当前源码第102行成员初始化器、成员声明与R0114构造函数签名专项复核 |
