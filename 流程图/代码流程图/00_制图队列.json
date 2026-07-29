@@ -14,8 +14,8 @@
   "source_external_path": "流程图/主程序可达调用关系/02_main可达外部边界表.json",
   "source_external_blob": "3234c05ad99a136af5396c865bc4a3489740a04b",
   "current_reachable_function_count": 1155,
-  "chart_completed_count": 370,
-  "chart_pending_count": 785,
+  "chart_completed_count": 374,
+  "chart_pending_count": 781,
   "historical_unreachable_chart_count": 49,
   "queue_order": "正式身份表稳定身份顺序；shortest_depth只记录main最短调用深度，不参与既有drawing_order重排",
   "entries": [
@@ -16127,9 +16127,9 @@
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0252_语素概念入口组合器构造_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0252_语素概念入口组合器构造_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -16155,9 +16155,9 @@
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0253_概念结构发布组合器构造_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0253_概念结构发布组合器构造_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -16183,9 +16183,9 @@
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0254_需求任务方法组合器构造_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0254_需求任务方法组合器构造_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -16211,9 +16211,9 @@
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0255_任务执行组合器构造_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0255_任务执行组合器构造_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
