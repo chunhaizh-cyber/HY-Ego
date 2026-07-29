@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "catalog_kind": "current-capability-evidence",
-  "frozen_commit": "711f200665a0e25e2a5801f144c6ad70b42cc787",
+  "frozen_commit": "37feabb47bf83e25f33ce1e86fddd1b041c2c658",
   "source_graph": {
     "identity_path": "流程图/主程序可达调用关系/00_main可达函数身份表.json",
     "edge_path": "流程图/主程序可达调用关系/01_main可达项目调用边表.json",
     "knowledge_graph_path": "流程图/代码流程图/00_调用知识图谱.json",
     "embedded_code_commit": "3920a74638264f9f539d50f32f3c9fe5fb1982ab",
-    "currentity_method": "逐文件核对 embedded_code_commit 到 frozen_commit 的 Git 差异为零；函数身份、调用边与流程图只读取 frozen_commit 已发布 Git 树，未使用工作区 WIP",
+    "currentity_method": "逐文件核对 embedded_code_commit 到 frozen_commit 的 Git 差异为零；函数身份、调用边与流程图只读取 frozen_commit 已发布 Git 树，未使用工作区 WIP；当前不可达历史图不计入活动制图完成、活动候选覆盖或稳定能力完成证据",
     "verified_unchanged_files": [
       "海中鱼巣/启动.程序入口.ixx",
       "海中鱼巣/启动.应用程序.ixx",
@@ -39,7 +39,8 @@
       "简单访问器和运算符",
       "lambda与纯内部辅助函数",
       "只在自检内部使用的辅助函数",
-      "main不可达或当前调用身份未冻结的入口"
+      "main不可达或当前调用身份未冻结的入口",
+      "当前不可达历史图及其对应的非活动函数证据"
     ],
     "reuse_decision": "不在本目录裁决"
   },
@@ -488,7 +489,7 @@
       "provider_entries": [
         {
           "function_id": "F0043",
-          "complete_signature": "std::optional<海中鱼巣::方法登记根材料> 海中鱼巣::方法服务::初始化方法登记根(std::uint64_t 稳定非名称键, 海中鱼巣::状态服务& 状态)",
+          "complete_signature": "std::optional<海中鱼巣::方法登记根材料> 海中鱼巣::方法服务::初始化方法登记根(std::uint64_t, 海中鱼巣::状态服务&)",
           "file": "海中鱼巣/领域/方法服务.h",
           "definition_line": 254,
           "shortest_depth": 4,
@@ -575,7 +576,7 @@
       "provider_entries": [
         {
           "function_id": "F0044",
-          "complete_signature": "海中鱼巣::自我线程操作结果 海中鱼巣::自我线程::启动(const 海中鱼巣::自我根需求初始化参数& 参数)",
+          "complete_signature": "海中鱼巣::自我线程操作结果 海中鱼巣::自我线程::启动(const 海中鱼巣::自我根需求初始化参数&)",
           "file": "海中鱼巣/线程/自我线程.ixx",
           "definition_line": 182,
           "shortest_depth": 4,
@@ -584,7 +585,7 @@
         },
         {
           "function_id": "F0045",
-          "complete_signature": "bool 海中鱼巣::自我线程::等待初始化完成(std::chrono::milliseconds 最长等待) const",
+          "complete_signature": "bool 海中鱼巣::自我线程::等待初始化完成(std::chrono::milliseconds) const",
           "file": "海中鱼巣/线程/自我线程.ixx",
           "definition_line": 215,
           "shortest_depth": 3,
@@ -847,7 +848,7 @@
       "provider_entries": [
         {
           "function_id": "R0307",
-          "complete_signature": "控制面板按需树候选材料 海中鱼巣::控制面板服务::生成当前分类真实树只读材料(const 控制面板按需树请求& 请求) const",
+          "complete_signature": "控制面板按需树候选材料 海中鱼巣::控制面板服务::生成当前分类真实树只读材料( const 控制面板按需树请求& 请求) const",
           "file": "海中鱼巣/领域/控制面板服务.h",
           "definition_line": 311,
           "shortest_depth": 8,
@@ -911,7 +912,7 @@
       "domain": "关系仓库兼容路径",
       "purpose_summary": "在当前main可达旧关系仓库中按源节点读取目标与关系、按目标节点读取来源与关系，并枚举节点相关关系。",
       "implementation_status": "候选待复核",
-      "status_basis": "五个入口均为main生产或控制面板路径可达且源码存在；F0575已完成单函数图和逐行映射，其余四个入口仍待制图；该文件属于节点直接迁移前的旧关系仓库路径。",
+      "status_basis": "五个入口均为main生产或控制面板路径可达且源码存在；F0575、F0578、F0581、F0621已完成单函数图和逐行映射，R0088仍待制图；该文件属于节点直接迁移前的旧关系仓库路径，四份现状图不证明其与节点直接正式关系接口等价。",
       "provider_entries": [
         {
           "function_id": "F0621",
@@ -919,8 +920,8 @@
           "file": "海中鱼巣/核心/关系仓库.cpp",
           "definition_line": 790,
           "shortest_depth": 6,
-          "chart": null,
-          "mapping": null
+          "chart": "流程图/代码流程图/L6/CF-L6-0334_关系仓库获取目标节点组_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0334_关系仓库获取目标节点组_逐行代码映射表.md"
         },
         {
           "function_id": "F0575",
@@ -946,8 +947,8 @@
           "file": "海中鱼巣/核心/关系仓库.cpp",
           "definition_line": 919,
           "shortest_depth": 6,
-          "chart": null,
-          "mapping": null
+          "chart": "流程图/代码流程图/L6/CF-L6-0317_关系仓库获取来源关系记录组_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0317_关系仓库获取来源关系记录组_逐行代码映射表.md"
         },
         {
           "function_id": "F0581",
@@ -955,8 +956,8 @@
           "file": "海中鱼巣/核心/关系仓库.cpp",
           "definition_line": 949,
           "shortest_depth": 6,
-          "chart": null,
-          "mapping": null
+          "chart": "流程图/代码流程图/L6/CF-L6-0320_关系仓库获取节点相关关系记录组_现状流程图.md",
+          "mapping": "流程图/代码流程图/L6/CF-L6-0320_关系仓库获取节点相关关系记录组_逐行代码映射表.md"
         }
       ],
       "inputs": [
@@ -964,7 +965,7 @@
         "可选关系类型"
       ],
       "preconditions": [
-        "节点句柄与关系类型有效，精确拒绝与端点复核待单函数图核对"
+        "F0575、F0578、F0581、F0621已证明许可拒绝或入口无效时返回空vector，并按各自方向复核当前有效端点；R0088的精确拒绝与端点复核仍待单函数图核对"
       ],
       "outputs": [
         "目标节点组",
@@ -977,14 +978,18 @@
       ],
       "state_writes": [],
       "side_effects": [
-        "F0575已证明只建立共享许可、关系表共享锁和局部结果vector；其余四个入口的精确只读资源路径待核"
+        "F0575、F0578、F0581、F0621只建立共享许可、关系令牌范围、关系表共享锁和局部vector；F0581在释放关系表锁后复核两端点，F0621则在锁窗口内完成扫描、排序和结果构造；R0088的精确只读资源路径待核"
       ],
       "transaction_contract": "普通读取应只返回有效关系值式副本；旧仓库路径与节点直接正式关系仓库的迁移边界必须由目标设计复核。",
       "logic_results": [
-        "F0575返回按关系编号升序的零项或多项关系记录值式副本；其余四个入口的排序、去重和错域行为待核"
+        "F0575按源节点返回目标端当前有效的关系记录，并按关系编号升序",
+        "F0578按目标节点返回源端当前有效的关系记录，并按关系编号升序",
+        "F0581返回输入节点相关且两端当前有效的关系记录，并按关系编号升序",
+        "F0621按源节点返回目标节点组，并按顺序号、关系编号升序",
+        "上述空vector同时覆盖许可拒绝、入口无效和无候选，不能单独证明关系不存在；R0088的排序、去重和错域行为待核"
       ],
       "internal_error_boundaries": [
-        "待补F0621、R0088、F0578、F0581四个函数的单函数图和逐行映射",
+        "待补R0088的单函数图和逐行映射；四个已制图入口的许可、锁、容器或被调查询异常均不转换为空结果",
         "不能把旧仓库能力自动视为节点直接正式关系接口"
       ],
       "evidence": [
@@ -1007,6 +1012,24 @@
           "status": "已发布；仅覆盖按源关系记录组入口"
         },
         {
+          "kind": "现状流程图",
+          "path": "流程图/代码流程图/L6/CF-L6-0317_关系仓库获取来源关系记录组_现状流程图.md",
+          "locator": "F0578完整函数及配对逐行映射",
+          "status": "已发布；覆盖按目标关系记录组入口"
+        },
+        {
+          "kind": "现状流程图",
+          "path": "流程图/代码流程图/L6/CF-L6-0320_关系仓库获取节点相关关系记录组_现状流程图.md",
+          "locator": "F0581完整函数及配对逐行映射",
+          "status": "已发布；覆盖节点相关关系记录组入口"
+        },
+        {
+          "kind": "现状流程图",
+          "path": "流程图/代码流程图/L6/CF-L6-0334_关系仓库获取目标节点组_现状流程图.md",
+          "locator": "F0621完整函数及配对逐行映射",
+          "status": "已发布；覆盖按源目标节点组入口"
+        },
+        {
           "kind": "正式规范",
           "path": "规范/4010_子规范_统一仓库稳定句柄与通用关系索引边界.md",
           "locator": "第6.3节",
@@ -1015,7 +1038,7 @@
       ],
       "reuse_boundary": "这是当前旧关系仓库的实现证据，不是新节点直接正式关系仓库的接口保证；新设计必须先核对结构域、句柄、排序、端点有效性和迁移所有权。",
       "known_gaps": [
-        "F0621、R0088、F0578、F0581四个入口没有完成的单函数图",
+        "R0088入口没有完成的单函数图和逐行映射",
         "与节点直接正式关系仓库的等价性未证明",
         "当前图谱不能证明全部专用关系角色读取合同"
       ]
@@ -1048,7 +1071,7 @@
         },
         {
           "function_id": "R0023",
-          "complete_signature": "带值结构写入结果<关系句柄> 海中鱼巣::结构写入会话::创建关系(关系类型 类型, 节点句柄 源节点, 节点句柄 目标节点, std::int64_t 顺序号 = 0)",
+          "complete_signature": "带值结构写入结果<关系句柄> 海中鱼巣::结构写入会话::创建关系( 关系类型 类型, 节点句柄 源节点, 节点句柄 目标节点, std::int64_t 顺序号 = 0)",
           "file": "海中鱼巣/核心/会话.结构写入.ixx",
           "definition_line": 290,
           "shortest_depth": 10,
@@ -1066,7 +1089,7 @@
         },
         {
           "function_id": "R0028",
-          "complete_signature": "结构写入结果 海中鱼巣::结构写入会话::写入候选I64值(主信息句柄 主信息, std::uint64_t 槽位, std::int64_t 预期值)",
+          "complete_signature": "结构写入结果 海中鱼巣::结构写入会话::写入候选I64值( 主信息句柄 主信息, std::uint64_t 槽位, std::int64_t 预期值)",
           "file": "海中鱼巣/核心/会话.结构写入.ixx",
           "definition_line": 469,
           "shortest_depth": 10,
