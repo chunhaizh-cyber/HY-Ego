@@ -1,6 +1,6 @@
 ---
 name: hai-zhong-yu-chao-flowchart
-description: Create Markdown-only single-function flowchart artifacts with Mermaid fenced blocks for the current 海中鱼巣 Git repository when the user asks to 画流程图, 生成流程图, 绘制流程图, or diagram an implementation function, service lifecycle, boundary, root-cause chain, migration route, or plan. Require one root function with explicit parameters and result per implementation-facing chart, nodes that are only named function calls or concrete in-function instructions, and a task tree that owns either a plan design package or the formally transferred current-code graph maintenance slice. Require formal governing evidence for implementation-facing charts and non-authoritative labels for conceptual diagrams.
+description: Create Markdown Mermaid business-flow or single-function flowchart artifacts for the current 海中鱼巣 repository. Formal business charts freeze one business loop and map nodes to required capabilities; implementation charts freeze exactly one function. Require the owning interaction, plan, plan-support, or current-code maintenance slice and formal evidence.
 ---
 
 # 海中鱼巣流程图落盘
@@ -15,6 +15,19 @@ description: Create Markdown-only single-function flowchart artifacts with Merma
 
 ## 专用流程
 
+目标业务流程图使用：
+
+```text
+固定业务目标与完成边界
+-> 冻结输入、输出、前置、步骤、分支、事实读写和非成功结果
+-> 为每个业务节点建立所需能力合同
+-> 查询当前能力证据并裁决复用 / 组合 / 适配 / 扩展 / 新建
+-> 映射目标函数组、详细设计和验证
+-> 生成包含 Mermaid fenced block 的 Markdown
+```
+
+目标 / 现状单函数流程图使用：
+
 ```text
 固定对象与用途
 -> 区分正式依据、当前事实、假设和待核项
@@ -27,6 +40,14 @@ description: Create Markdown-only single-function flowchart artifacts with Merma
 ```
 
 从代码反推时，使用限定范围的 `rg` 和短读取；函数事实只作证据，流程边界按现行正式规范和服务逻辑组织。不得把日志、显示、线程、返回码或草稿文本画成机器事实。
+
+## 业务流程图合同
+
+1. 一份正式业务流程图只对应一个业务闭环，不要求与一个函数或一份代码流程图对应。
+2. 必须记录业务输入、输出、前置条件、完成条件、每个节点的事实读写、事务边界、逻辑内返回和验证点。
+3. 节点可以是业务操作或能力合同，但不得直接伪写成当前已经存在的函数。每个节点必须在配套映射表中绑定候选能力、复用 / 新建裁决和目标函数组。
+4. 一张业务图可以映射多份单函数施工图；一个共享函数可以被多张业务图引用。业务流程图不能替代详细设计或单函数合同。
+5. 业务流程图、业务—能力—函数映射、详细设计和计划必须互相引用；任何未裁决节点都保持设计缺口。
 
 ## 单函数与节点合同
 
@@ -52,12 +73,13 @@ N05【指令-返回】返回 逻辑内空候选
 局部设计包流程图在解析出的仓库根目录下按其现行设计包合同写入；没有更精确合同且属于通用落盘时使用：
 
 ```text
+流程图/YYYYMMDD_<业务主题>_业务流程图_v0.1.md
 流程图/YYYYMMDD_<函数名或函数主题>_函数流程图_v0.1.md
 ```
 
 同一主题已存在时递增版本；用户明确要求修订某个现存 Markdown 文件时原地更新。不得新建、更新、同步、配对或验证 HTML。历史 HTML 只作非权威旧载体原地保留，不随 Markdown 修订。
 
-流程图与知识图谱维护智能体不使用上述通用顶层路径；它按 `hai-zhong-yu-chao-flowchart-code-correction` 的代码函数图谱重建合同，只在 `流程图/代码流程图/**` 写现状单函数流程图、逐行映射及配套队列 / 清单，并在 `流程图/主程序可达调用关系/**` 维护聚合调用事实。
+流程图与知识图谱维护智能体不使用上述通用顶层路径；它按 `hai-zhong-yu-chao-flowchart-code-correction` 的代码函数图谱重建合同，只在 `流程图/代码流程图/**` 写现状单函数流程图、逐行映射及配套队列 / 清单，并在 `流程图/主程序可达调用关系/**` 中除 `能力证据目录/**` 外维护聚合调用事实。
 
 ## Markdown 最小结构
 
@@ -113,7 +135,7 @@ flowchart TD
 ## 验证
 
 1. 确认 `.md` 存在并包含 Mermaid fenced block；不存在新增或同步的 HTML。
-2. 确认一图只有一个根函数，函数完整签名、全部参数与返回结果没有省略。
+2. 业务图确认一图一个业务闭环且业务—能力—函数映射完整；单函数图确认一图只有一个根函数，函数完整签名、全部参数与返回结果没有省略。
 3. 确认每个执行节点只属于函数调用或本函数内具体指令；每个调用节点均有参数 / 结果绑定，复杂被调函数均有双向引用的独立流程图。
 4. 确认模块 / 服务 / 阶段未被画成执行节点，全部边有条件或材料，全部返回路径有具名结果。
 5. 确认图中每项正式规则均能回指当前依据；概念项均保持非权威标记。非函数概念图不能充当代码实施类有效流程图。
