@@ -17,7 +17,7 @@
   ],
   "function_count": 1155,
   "project_call_edge_count": 2776,
-  "external_count": 1641,
+  "external_count": 1637,
   "callback_registration_count": 27,
   "external_boundaries": [
     {
@@ -9215,58 +9215,6 @@
       "boundary_category": "Windows/System",
       "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
       "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X01068",
-      "caller": "F0397",
-      "signature": "取得许可 :: 结构事务许可 (const std::shared_ptr<void> &, 结构许可类型)",
-      "locations": [
-        "海中鱼巣/核心/协调.结构事务.ixx:152"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全模块Clang候选-4c89f990.json",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X01069",
-      "caller": "F0398",
-      "signature": "取得许可 :: 结构事务许可 (const std::shared_ptr<void> &, 结构许可类型)",
-      "locations": [
-        "海中鱼巣/核心/协调.结构事务.ixx:153"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全模块Clang候选-4c89f990.json",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X01070",
-      "caller": "F0399",
-      "signature": "验证令牌 :: bool (const std::shared_ptr<void> &, const 结构事务令牌 &, bool)",
-      "locations": [
-        "海中鱼巣/核心/协调.结构事务.ixx:154"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全模块Clang候选-4c89f990.json",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X01071",
-      "caller": "F0400",
-      "signature": "验证令牌 :: bool (const std::shared_ptr<void> &, const 结构事务令牌 &, bool)",
-      "locations": [
-        "海中鱼巣/核心/协调.结构事务.ixx:155"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；对应源码调用表达式成立",
-      "resolution_source": "Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全模块Clang候选-4c89f990.json",
       "current_root_reachable": true
     },
     {

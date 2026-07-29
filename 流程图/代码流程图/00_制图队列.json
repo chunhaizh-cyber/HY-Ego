@@ -12,10 +12,10 @@
   "source_edge_path": "流程图/主程序可达调用关系/01_main可达项目调用边表.json",
   "source_edge_blob": "561d9031ba1c62c5ba1bdd5adc63530358371b77",
   "source_external_path": "流程图/主程序可达调用关系/02_main可达外部边界表.json",
-  "source_external_blob": "909994a27c84317a5e4ecd1e9e1b5cca9fd131f9",
+  "source_external_blob": "b8f2d5d583ac9eee91fd84e9374b4cbd5784f048",
   "current_reachable_function_count": 1155,
-  "chart_completed_count": 338,
-  "chart_pending_count": 817,
+  "chart_completed_count": 342,
+  "chart_pending_count": 813,
   "historical_unreachable_chart_count": 49,
   "queue_order": "正式身份表稳定身份顺序；shortest_depth只记录main最短调用深度，不参与既有drawing_order重排",
   "entries": [
@@ -15140,12 +15140,10 @@
       "outgoing_project_edge_ids": [
         "RCE0194"
       ],
-      "external_boundary_ids": [
-        "X01068"
-      ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "external_boundary_ids": [],
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L5/CF-L5-0202_结构事务接线取得共享许可lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L5/CF-L5-0202_结构事务接线取得共享许可lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L5"
     },
     {
@@ -15176,12 +15174,10 @@
       "outgoing_project_edge_ids": [
         "RCE0195"
       ],
-      "external_boundary_ids": [
-        "X01069"
-      ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "external_boundary_ids": [],
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0221_结构事务接线取得独占许可lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0221_结构事务接线取得独占许可lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -15218,12 +15214,10 @@
       "outgoing_project_edge_ids": [
         "RCE0196"
       ],
-      "external_boundary_ids": [
-        "X01070"
-      ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "external_boundary_ids": [],
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0222_结构事务接线验证共享令牌lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0222_结构事务接线验证共享令牌lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -15256,12 +15250,10 @@
       "outgoing_project_edge_ids": [
         "RCE0197"
       ],
-      "external_boundary_ids": [
-        "X01071"
-      ],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "external_boundary_ids": [],
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0223_结构事务接线验证独占令牌lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0223_结构事务接线验证独占令牌lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
