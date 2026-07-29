@@ -15,9 +15,9 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1289,
-  "project_call_edge_count": 3518,
-  "edge_count": 3518,
+  "function_count": 1286,
+  "project_call_edge_count": 3536,
+  "edge_count": 3536,
   "edges": [
     {
       "edge_id": "E0002",
@@ -12289,17 +12289,17 @@
     {
       "edge_id": "RCE0063",
       "caller": "F0258",
-      "callee": "R0083",
+      "callee": "F0198",
       "callsites": [
         "海中鱼巣/自检.入口初始化.ixx:208",
         "海中鱼巣/自检.入口初始化.ixx:217"
       ],
       "call_category": "unique_name",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "arguments": "this=&上下文.关系",
+      "argument_resolution": "本批源码静态类型、参数、结果和调用语境逐调用点复核",
+      "return_binding": "std::uint64_t",
+      "reachable_condition": "当前可达调用点为零实参有效关系数量重载",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
       "current_root_reachable": true
     },
     {
@@ -12882,17 +12882,17 @@
     {
       "edge_id": "RCE0075",
       "caller": "F0261",
-      "callee": "R0083",
+      "callee": "F0198",
       "callsites": [
         "海中鱼巣/自检.入口初始化.ixx:290",
         "海中鱼巣/自检.入口初始化.ixx:298"
       ],
       "call_category": "unique_name",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "arguments": "this=&上下文.关系",
+      "argument_resolution": "本批源码静态类型、参数、结果和调用语境逐调用点复核",
+      "return_binding": "std::uint64_t",
+      "reachable_condition": "当前可达调用点为零实参有效关系数量重载",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
       "current_root_reachable": true
     },
     {
@@ -13126,16 +13126,16 @@
     {
       "edge_id": "RCE0080",
       "caller": "F0262",
-      "callee": "R0083",
+      "callee": "F0198",
       "callsites": [
         "海中鱼巣/自检.入口初始化.ixx:323"
       ],
       "call_category": "unique_name",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "arguments": "this=&上下文.关系",
+      "argument_resolution": "本批源码静态类型、参数、结果和调用语境逐调用点复核",
+      "return_binding": "std::uint64_t",
+      "reachable_condition": "当前可达调用点为零实参有效关系数量重载",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
       "current_root_reachable": true
     },
     {
@@ -13886,17 +13886,17 @@
     {
       "edge_id": "RCE0101",
       "caller": "F0266",
-      "callee": "R0083",
+      "callee": "F0198",
       "callsites": [
         "海中鱼巣/自检.入口初始化.ixx:442",
         "海中鱼巣/自检.入口初始化.ixx:449"
       ],
       "call_category": "unique_name",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "arguments": "this=&上下文.关系",
+      "argument_resolution": "本批源码静态类型、参数、结果和调用语境逐调用点复核",
+      "return_binding": "std::uint64_t",
+      "reachable_condition": "当前可达调用点为零实参有效关系数量重载",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
       "current_root_reachable": true
     },
     {
@@ -14099,16 +14099,16 @@
     {
       "edge_id": "RCE0103",
       "caller": "F0267",
-      "callee": "R0083",
+      "callee": "F0198",
       "callsites": [
         "海中鱼巣/自检.入口初始化.ixx:475"
       ],
       "call_category": "unique_name",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "arguments": "this=&上下文.关系",
+      "argument_resolution": "本批源码静态类型、参数、结果和调用语境逐调用点复核",
+      "return_binding": "std::uint64_t",
+      "reachable_condition": "当前可达调用点为零实参有效关系数量重载",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
       "current_root_reachable": true
     },
     {
@@ -24379,41 +24379,11 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0486",
-      "caller": "R0081",
-      "callee": "F0579",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1641"
-      ],
-      "call_category": "direct-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "RCE0489",
       "caller": "R0082",
       "callee": "F0580",
       "callsites": [
         "海中鱼巣/核心/关系仓库.cpp:1645"
-      ],
-      "call_category": "direct-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且 libclang 直接引用项目定义；源码位置复核",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0492",
-      "caller": "R0083",
-      "callee": "F0198",
-      "callsites": [
-        "海中鱼巣/核心/关系仓库.cpp:1649"
       ],
       "call_category": "direct-member",
       "arguments": "",
@@ -24728,16 +24698,16 @@
     {
       "edge_id": "RCE0521",
       "caller": "R0102",
-      "callee": "R0118",
+      "callee": "F0398",
       "callsites": [
         "海中鱼巣/核心/执行器.结构写入.ixx:119"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "resolved-function-pointer",
+      "arguments": "状态=接线_.运行期状态",
+      "argument_resolution": "本批源码静态类型、参数、结果和调用语境逐调用点复核",
+      "return_binding": "结构事务许可，绑定局部许可",
+      "reachable_condition": "有效、有效参与者组和回调operator bool全部通过；生产接线唯一绑定协调.结构事务.ixx:153",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
       "current_root_reachable": true
     },
     {
@@ -25496,21 +25466,6 @@
       "return_binding": null,
       "reachable_condition": "确认返回后复核成功",
       "resolution_source": "专项源码静态类型与实际装配人工复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0572",
-      "caller": "R0118",
-      "callee": "R0117",
-      "callsites": [
-        "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:114"
-      ],
-      "call_category": "suffix_match",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
       "current_root_reachable": true
     },
     {
@@ -39968,16 +39923,16 @@
     {
       "edge_id": "RCE1525",
       "caller": "R0524",
-      "callee": "R0081",
+      "callee": "F0579",
       "callsites": [
         "海中鱼巣/领域/概念图服务.h:3941"
       ],
       "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "arguments": "this=this, 类型=类型, 源节点=源节点, 目标节点=目标节点",
+      "argument_resolution": "本批源码静态类型、参数、结果和调用语境逐调用点复核",
+      "return_binding": "bool",
+      "reachable_condition": "确保专用关系_已加锁先查既有关系分支；三实参无令牌重载",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
       "current_root_reachable": true
     },
     {
@@ -53926,6 +53881,328 @@
       "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
       "return_binding": "void",
       "reachable_condition": "F0340构造成功后的所有退出",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2502",
+      "caller": "R0079",
+      "callee": "R0089",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:1559"
+      ],
+      "call_category": "direct-free(macro-expanded)",
+      "arguments": "接线=事务接线_, 令牌=令牌",
+      "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
+      "return_binding": "bool",
+      "reachable_condition": "进入函数即执行关系令牌入口；false返回空vector",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2503",
+      "caller": "R0079",
+      "callee": "F0340",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:1559"
+      ],
+      "call_category": "direct-constructor(macro-expanded)",
+      "arguments": "仓库=*this, 令牌=令牌",
+      "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
+      "return_binding": "局部关系令牌范围",
+      "reachable_condition": "RCE2502=true",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2504",
+      "caller": "R0079",
+      "callee": "F0344",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:1559-1561"
+      ],
+      "call_category": "implicit-destructor/lifecycle",
+      "arguments": "this=&令牌范围",
+      "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
+      "return_binding": "void",
+      "reachable_condition": "F0340构造成功后的所有退出",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2505",
+      "caller": "R0082",
+      "callee": "R0089",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:1644"
+      ],
+      "call_category": "direct-free(macro-expanded)",
+      "arguments": "接线=事务接线_, 令牌=令牌",
+      "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
+      "return_binding": "bool",
+      "reachable_condition": "进入函数即执行关系令牌入口；false返回false",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2506",
+      "caller": "R0082",
+      "callee": "F0340",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:1644"
+      ],
+      "call_category": "direct-constructor(macro-expanded)",
+      "arguments": "仓库=*this, 令牌=令牌",
+      "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
+      "return_binding": "局部关系令牌范围",
+      "reachable_condition": "RCE2505=true",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2507",
+      "caller": "R0082",
+      "callee": "F0344",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:1644-1646"
+      ],
+      "call_category": "implicit-destructor/lifecycle",
+      "arguments": "this=&令牌范围",
+      "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
+      "return_binding": "void",
+      "reachable_condition": "F0340构造成功后的所有退出",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2508",
+      "caller": "R0088",
+      "callee": "F0336",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:866"
+      ],
+      "call_category": "direct-const-member(macro-expanded)",
+      "arguments": "this=&事务接线_",
+      "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
+      "return_binding": "bool",
+      "reachable_condition": "进入共享许可宏；false短路",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2509",
+      "caller": "R0088",
+      "callee": "F0337",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:866"
+      ],
+      "call_category": "direct-free(macro-expanded)",
+      "arguments": "仓库=*this",
+      "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
+      "return_binding": "const 结构事务令牌*",
+      "reachable_condition": "F0336=true；非空时沿已有令牌语境",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2510",
+      "caller": "R0088",
+      "callee": "F0397",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:866"
+      ],
+      "call_category": "std-function-target/lambda-call(macro-expanded)",
+      "arguments": "状态=事务接线_.运行期状态",
+      "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
+      "return_binding": "结构事务许可临时值",
+      "reachable_condition": "F0336=true且F0337=nullptr",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2511",
+      "caller": "R0088",
+      "callee": "F0375",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:866"
+      ],
+      "call_category": "direct-move-constructor(macro-expanded)",
+      "arguments": "其它=RCE2510结果",
+      "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
+      "return_binding": "optional内结构事务许可",
+      "reachable_condition": "RCE2510返回后emplace",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2512",
+      "caller": "R0088",
+      "callee": "F0338",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:866"
+      ],
+      "call_category": "direct-const-member(macro-expanded)",
+      "arguments": "this=&自动许可.value()",
+      "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
+      "return_binding": "bool",
+      "reachable_condition": "自动许可已持值；false返回空vector",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2513",
+      "caller": "R0088",
+      "callee": "F0339",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:866"
+      ],
+      "call_category": "direct-const-member(macro-expanded)",
+      "arguments": "this=&自动许可.value()",
+      "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
+      "return_binding": "const 结构事务令牌&",
+      "reachable_condition": "RCE2512=true",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2514",
+      "caller": "R0088",
+      "callee": "F0340",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:866"
+      ],
+      "call_category": "direct-constructor-via-optional-emplace(macro-expanded)",
+      "arguments": "仓库=*this, 令牌=RCE2513引用",
+      "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
+      "return_binding": "optional内关系令牌范围",
+      "reachable_condition": "RCE2512=true且RCE2513完成",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2515",
+      "caller": "R0088",
+      "callee": "F0344",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:866-896"
+      ],
+      "call_category": "implicit-destructor/lifecycle",
+      "arguments": "this=&自动令牌范围.value()",
+      "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
+      "return_binding": "void",
+      "reachable_condition": "RCE2514成功后的所有退出",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2516",
+      "caller": "R0088",
+      "callee": "F0345",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:866-896"
+      ],
+      "call_category": "implicit-destructor/lifecycle",
+      "arguments": "this=&自动许可.value()",
+      "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
+      "return_binding": "void",
+      "reachable_condition": "RCE2511成功后的所有退出",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2517",
+      "caller": "R0101",
+      "callee": "R0599",
+      "callsites": [
+        "海中鱼巣/核心/协调.结构事务.ixx:87",
+        "海中鱼巣/核心/协调.结构事务.ixx:96",
+        "海中鱼巣/核心/协调.结构事务.ixx:99",
+        "海中鱼巣/核心/协调.结构事务.ixx:104",
+        "海中鱼巣/核心/协调.结构事务.ixx:116",
+        "海中鱼巣/核心/协调.结构事务.ixx:129"
+      ],
+      "call_category": "constructor",
+      "arguments": "无",
+      "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
+      "return_binding": "空结构事务许可返回对象",
+      "reachable_condition": "入口无效、域隔离、同线程已有许可、登记失败、锁异常或锁后隔离",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2518",
+      "caller": "R0102",
+      "callee": "R0042",
+      "callsites": [
+        "海中鱼巣/核心/执行器.结构写入.ixx:122"
+      ],
+      "call_category": "constructor",
+      "arguments": "主信息=*主信息_, 节点=*节点_, 关系=*关系_, 索引=*索引_, 令牌=许可.读取令牌()",
+      "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
+      "return_binding": "局部结构写入会话",
+      "reachable_condition": "许可有效",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2519",
+      "caller": "R0102",
+      "callee": "R0138",
+      "callsites": [
+        "海中鱼巣/核心/执行器.结构写入.ixx:154",
+        "海中鱼巣/核心/执行器.结构写入.ixx:163",
+        "海中鱼巣/核心/执行器.结构写入.ixx:172"
+      ],
+      "call_category": "direct-const-member",
+      "arguments": "this=&准备结果 / &会话确认 / &参与者确认",
+      "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
+      "return_binding": "bool并取反",
+      "reachable_condition": "各准备或确认结果已形成",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2520",
+      "caller": "R0102",
+      "callee": "F0345",
+      "callsites": [
+        "海中鱼巣/核心/执行器.结构写入.ixx:119-183"
+      ],
+      "call_category": "compiler_implicit_destructor",
+      "arguments": "this=&许可",
+      "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
+      "return_binding": "void",
+      "reachable_condition": "许可已构造后的所有正常、早退或异常退出",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2521",
+      "caller": "R0102",
+      "callee": "R0749",
+      "callsites": [
+        "海中鱼巣/核心/执行器.结构写入.ixx:122-183"
+      ],
+      "call_category": "compiler_implicit_destructor",
+      "arguments": "this=&会话",
+      "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
+      "return_binding": "void",
+      "reachable_condition": "会话成功构造后的所有退出，逆构造序先于许可析构",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE2522",
+      "caller": "R0102",
+      "callee": "R0056",
+      "callsites": [
+        "海中鱼巣/核心/执行器.结构写入.ixx:140"
+      ],
+      "call_category": "direct-const-member",
+      "arguments": "this=&会话",
+      "argument_resolution": "本批源码静态类型、实参和短路语境逐调用点复核",
+      "return_binding": "bool并取反进入未提交撤销分支",
+      "reachable_condition": "回调正常且会话无失败",
       "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
       "current_root_reachable": true
     }

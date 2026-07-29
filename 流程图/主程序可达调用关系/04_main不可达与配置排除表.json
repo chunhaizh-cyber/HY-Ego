@@ -2,7 +2,7 @@
   "schema_version": 1,
   "code_commit": "3920a74638264f9f539d50f32f3c9fe5fb1982ab",
   "scope": "main-current-reachable-exclusions",
-  "excluded_function_count": 86,
+  "excluded_function_count": 90,
   "rejected_candidate_edge_count": 546,
   "excluded_functions": [
     {
@@ -606,6 +606,34 @@
       "file": "海中鱼巣/领域/数据操作.概念图结构.ixx",
       "definition_line": 181,
       "reason": "RCE0220 静态类型误绑校正后没有其它当前 main 可达调用方"
+    },
+    {
+      "function_id": "R0081",
+      "signature": "bool 海中鱼巣::关系仓库::存在关系(关系类型 类型, 节点句柄 源节点, 节点句柄 目标节点, const 结构事务令牌& 令牌) const",
+      "file": "海中鱼巣/核心/关系仓库.cpp",
+      "definition_line": 1639,
+      "reason": "唯一当前可达候选调用点 RCE1525 实际绑定三实参无令牌重载 F0579；令牌重载没有当前 main 可达调用方"
+    },
+    {
+      "function_id": "R0083",
+      "signature": "std::uint64_t 海中鱼巣::关系仓库::有效关系数量(const 结构事务令牌& 令牌) const",
+      "file": "海中鱼巣/核心/关系仓库.cpp",
+      "definition_line": 1647,
+      "reason": "RCE0063、RCE0075、RCE0080、RCE0101、RCE0103 的当前可达调用点均为零实参无令牌重载 F0198；令牌重载仅见当前不可达专项自检"
+    },
+    {
+      "function_id": "R0118",
+      "signature": "节点直接身份结构事务许可 海中鱼巣::节点直接身份结构事务域::取得独占许可()",
+      "file": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx",
+      "definition_line": 113,
+      "reason": "RCE0521 静态接收者校正为生产接线唯一绑定的 F0398 后，没有其它当前 main 可达调用方"
+    },
+    {
+      "function_id": "R0117",
+      "signature": "bool 海中鱼巣::节点直接身份结构事务域::已隔离() const noexcept",
+      "file": "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx",
+      "definition_line": 106,
+      "reason": "唯一调用方 R0118 因 RCE0521 静态接收者校正退出当前闭包，随反向闭包退出"
     }
   ],
   "rejected_candidate_edges": [
