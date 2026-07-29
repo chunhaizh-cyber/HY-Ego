@@ -14,8 +14,8 @@
   "source_external_path": "流程图/主程序可达调用关系/02_main可达外部边界表.json",
   "source_external_blob": "3234c05ad99a136af5396c865bc4a3489740a04b",
   "current_reachable_function_count": 1155,
-  "chart_completed_count": 362,
-  "chart_pending_count": 793,
+  "chart_completed_count": 366,
+  "chart_pending_count": 789,
   "historical_unreachable_chart_count": 49,
   "queue_order": "正式身份表稳定身份顺序；shortest_depth只记录main最短调用深度，不参与既有drawing_order重排",
   "entries": [
@@ -15903,9 +15903,9 @@
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0244_概念图结构业务服务构造_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0244_概念图结构业务服务构造_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -15931,9 +15931,9 @@
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0245_需求业务服务构造_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0245_需求业务服务构造_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -15959,9 +15959,9 @@
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0246_任务业务服务构造_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0246_任务业务服务构造_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -15987,9 +15987,9 @@
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": null,
-      "mapping_path": null,
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0247_方法业务服务构造_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0247_方法业务服务构造_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
