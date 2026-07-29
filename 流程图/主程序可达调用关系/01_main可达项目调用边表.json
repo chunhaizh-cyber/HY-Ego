@@ -15,9 +15,9 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1154,
-  "project_call_edge_count": 2767,
-  "edge_count": 2767,
+  "function_count": 1155,
+  "project_call_edge_count": 2776,
+  "edge_count": 2776,
   "edges": [
     {
       "edge_id": "E0002",
@@ -17682,7 +17682,6 @@
       "caller": "F0385",
       "callee": "R0247",
       "callsites": [
-        "海中鱼巣/界面/投影.控制面板启动.ixx:45",
         "海中鱼巣/界面/投影.控制面板启动.ixx:52"
       ],
       "call_category": "field_type_hint",
@@ -17758,14 +17757,15 @@
       "caller": "F0387",
       "callee": "F0345",
       "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:734",
         "海中鱼巣/核心/关系仓库.cpp:733-758"
       ],
       "call_category": "implicit_destructor",
-      "arguments": "this=&自动许可.value()",
-      "argument_resolution": "候选工具实参并经调用点定位",
+      "arguments": "this=&取得共享许可返回的已移空临时许可; this=&自动许可.value()",
+      "argument_resolution": "宏展开完整表达式临时量与函数作用域自动许可生命周期逐项复核",
       "return_binding": "void",
-      "reachable_condition": "正常或异常退出且自动许可已承载；F0344之后",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
+      "reachable_condition": "共享许可返回临时量经RCE1756移动构造后的完整表达式末；或正常/异常退出且自动许可已承载，后者严格发生在F0344之后",
+      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核；当前宏展开与C++临时量/RAII生命周期复核",
       "current_root_reachable": true
     },
     {
@@ -42521,6 +42521,141 @@
       "return_binding": "void",
       "reachable_condition": "RCE1744已形成许可；返回值求值完成或异常展开",
       "resolution_source": "当前源码单行作用域、C++ RAII与同仓许可生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1748",
+      "caller": "F0385",
+      "callee": "F0173",
+      "callsites": [
+        "海中鱼巣/界面/投影.控制面板启动.ixx:45"
+      ],
+      "call_category": "direct_const_member+source_audited",
+      "arguments": "this=&语素初始化读数",
+      "argument_resolution": "静态接收者为const语素初始化结果，唯一匹配无参const成员函数",
+      "return_binding": "语素初始化结果是否成功bool",
+      "reachable_condition": "F0385进入；false时第46行返回std::nullopt",
+      "resolution_source": "当前源码逐调用点、静态接收者类型与F0173完整签名复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1749",
+      "caller": "F0388",
+      "callee": "R0612",
+      "callsites": [
+        "海中鱼巣/界面/控制面板窗口.cpp:394-401"
+      ],
+      "call_category": "standard_algorithm_callback+source_audited",
+      "arguments": "材料=std::all_of当前遍历元素const引用",
+      "argument_resolution": "局部lambda定义、std::all_of谓词实参和固定数组迭代范围逐行复核",
+      "return_binding": "当前树视图材料是否满足三项展示边界bool",
+      "reachable_condition": "F0388执行X01021；std::all_of对尚未短路的当前元素调用谓词",
+      "resolution_source": "当前源码397-401行lambda正文、标准算法回调语义与R0612身份复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1750",
+      "caller": "F0387",
+      "callee": "F0336",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:734"
+      ],
+      "call_category": "direct_const_member+macro_expanded+source_audited",
+      "arguments": "this=&事务接线_",
+      "argument_resolution": "关系共享许可范围宏第119行静态接收者与无参const成员函数复核",
+      "return_binding": "事务接线是否已接域bool",
+      "reachable_condition": "F0387进入并展开关系共享许可范围宏",
+      "resolution_source": "当前源码宏定义116-123行、调用点734行与同宏调用模式复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1751",
+      "caller": "F0387",
+      "callee": "F0337",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:734"
+      ],
+      "call_category": "direct_free+macro_expanded+source_audited",
+      "arguments": "仓库=*this",
+      "argument_resolution": "关系共享许可范围宏第119行匿名命名空间具名函数与实参类型复核",
+      "return_binding": "当前关系令牌指针",
+      "reachable_condition": "RCE1750返回true；逻辑与右侧开始求值",
+      "resolution_source": "当前源码宏定义116-123行、调用点734行与F0337完整签名复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1752",
+      "caller": "F0387",
+      "callee": "F0397",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:734"
+      ],
+      "call_category": "resolved_function_pointer+macro_expanded+source_audited",
+      "arguments": "状态=事务接线_.运行期状态",
+      "argument_resolution": "取得共享许可函数指针按当前生产运行期接线唯一解析到F0397",
+      "return_binding": "临时结构事务许可",
+      "reachable_condition": "RCE1750返回true且RCE1751返回nullptr",
+      "resolution_source": "当前源码宏展开、现行生产装配与既有同域函数指针绑定复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1753",
+      "caller": "F0387",
+      "callee": "F0338",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:734"
+      ],
+      "call_category": "direct_const_member+macro_expanded+source_audited",
+      "arguments": "this=&自动许可.value()",
+      "argument_resolution": "optional承载值静态类型与无参const成员函数复核",
+      "return_binding": "许可是否有效bool",
+      "reachable_condition": "RCE1752返回许可并经RCE1756移动构造完成",
+      "resolution_source": "当前源码宏定义120-121行、调用点734行与F0338签名复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1754",
+      "caller": "F0387",
+      "callee": "F0339",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:734"
+      ],
+      "call_category": "direct_const_member+macro_expanded+source_audited",
+      "arguments": "this=&自动许可.value()",
+      "argument_resolution": "optional承载值静态类型与无参const成员函数复核",
+      "return_binding": "结构事务令牌const引用",
+      "reachable_condition": "RCE1753返回true",
+      "resolution_source": "当前源码宏定义121-122行、调用点734行与F0339签名复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1755",
+      "caller": "F0387",
+      "callee": "F0340",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:734"
+      ],
+      "call_category": "direct_constructor+macro_expanded+source_audited",
+      "arguments": "仓库=*this,令牌=RCE1754返回const引用",
+      "argument_resolution": "optional.emplace实参类型与关系令牌范围二参数构造函数复核",
+      "return_binding": "自动令牌范围承载值",
+      "reachable_condition": "RCE1753返回true且RCE1754已取得令牌引用",
+      "resolution_source": "当前源码宏定义122行、调用点734行与F0340完整构造签名复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE1756",
+      "caller": "F0387",
+      "callee": "F0375",
+      "callsites": [
+        "海中鱼巣/核心/关系仓库.cpp:734"
+      ],
+      "call_category": "move-constructor+macro-expanded-move-constructor",
+      "arguments": "其它=RCE1752返回的临时结构事务许可",
+      "argument_resolution": "optional.emplace以许可临时量构造承载值；与F0198同宏E0793调用语义复核",
+      "return_binding": "自动许可optional中的结构事务许可",
+      "reachable_condition": "RCE1752返回临时许可；进入optional.emplace承载值构造",
+      "resolution_source": "当前源码宏定义120行、调用点734行、F0375签名与既有E0793同宏先例复核",
       "current_root_reachable": true
     }
   ]

@@ -15,8 +15,8 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1154,
-  "project_call_edge_count": 2767,
+  "function_count": 1155,
+  "project_call_edge_count": 2776,
   "functions": [
     {
       "function_id": "F0001",
@@ -4207,7 +4207,8 @@
         "F0060",
         "F0061",
         "F0263",
-        "F0349"
+        "F0349",
+        "F0385"
       ],
       "callees": [
         "F0220"
@@ -7780,6 +7781,7 @@
         "F0332",
         "F0377",
         "F0384",
+        "F0387",
         "F0442",
         "F0443",
         "F0444",
@@ -7820,7 +7822,8 @@
       "shortest_depth": 6,
       "callers": [
         "F0167",
-        "F0343"
+        "F0343",
+        "F0387"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0167；调用点=海中鱼巣/核心/关系仓库.cpp:185,海中鱼巣/核心/关系仓库.cpp:205,海中鱼巣/核心/关系仓库.cpp:212,海中鱼巣/核心/关系仓库.cpp:220",
@@ -7851,6 +7854,7 @@
         "F0332",
         "F0377",
         "F0384",
+        "F0387",
         "F0631",
         "R0102",
         "R0106",
@@ -7892,6 +7896,7 @@
         "F0332",
         "F0377",
         "F0384",
+        "F0387",
         "R0102",
         "R0106",
         "R0116",
@@ -7928,6 +7933,7 @@
       "shortest_depth": 6,
       "callers": [
         "F0167",
+        "F0387",
         "R0065"
       ],
       "callees": [],
@@ -8893,7 +8899,8 @@
       "overload_identity": "海中鱼巣::结构事务许可::结构事务许可(海中鱼巣::结构事务许可&& 其它) noexcept",
       "shortest_depth": 5,
       "callers": [
-        "F0198"
+        "F0198",
+        "F0387"
       ],
       "callees": [
         "R0600"
@@ -9131,19 +9138,20 @@
     },
     {
       "function_id": "F0385",
-      "complete_signature": "std::optional<海中鱼巣::语素节点显示语义材料> 海中鱼巣::读取世界树节点显示语义(海中鱼巣::节点句柄 当前节点, 海中鱼巣::节点类型 当前类型, const 海中鱼巣::世界树初始化结果& 初始化结果, const 海中鱼巣::语素初始化结果& 语素初始化读数)",
+      "complete_signature": "std::optional<海中鱼巣::语素节点显示语义材料> 海中鱼巣::读取世界树节点显示语义(海中鱼巣::节点句柄 节点值, 海中鱼巣::节点类型 类型, const 海中鱼巣::世界树初始化结果& 初始化结果, const 海中鱼巣::语素初始化结果& 语素初始化读数)",
       "callable_type": "Function",
       "category": "Function/Method",
       "module_identity": "投影.控制面板启动",
       "file": "海中鱼巣/界面/投影.控制面板启动.ixx",
       "definition_line": 40,
       "definition_end_line": 53,
-      "overload_identity": "std::optional<海中鱼巣::语素节点显示语义材料> 海中鱼巣::读取世界树节点显示语义(海中鱼巣::节点句柄 当前节点, 海中鱼巣::节点类型 当前类型, const 海中鱼巣::世界树初始化结果& 初始化结果, const 海中鱼巣::语素初始化结果& 语素初始化读数)",
+      "overload_identity": "std::optional<海中鱼巣::语素节点显示语义材料> 海中鱼巣::读取世界树节点显示语义(海中鱼巣::节点句柄 节点值, 海中鱼巣::节点类型 类型, const 海中鱼巣::世界树初始化结果& 初始化结果, const 海中鱼巣::语素初始化结果& 语素初始化读数)",
       "shortest_depth": 6,
       "callers": [
         "F0218"
       ],
       "callees": [
+        "F0173",
         "R0149",
         "R0240",
         "R0247",
@@ -9191,9 +9199,16 @@
         "F0218"
       ],
       "callees": [
+        "F0336",
+        "F0337",
+        "F0338",
+        "F0339",
+        "F0340",
         "F0343",
         "F0344",
-        "F0345"
+        "F0345",
+        "F0375",
+        "F0397"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0218；调用点=海中鱼巣/界面/投影.控制面板启动.ixx:111",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -9221,7 +9236,8 @@
         "R0176",
         "R0202",
         "R0304",
-        "R0306"
+        "R0306",
+        "R0612"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0223；调用点=海中鱼巣/界面/控制面板窗口.cpp:1553",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -9458,6 +9474,7 @@
         "F0332",
         "F0377",
         "F0384",
+        "F0387",
         "R0402"
       ],
       "callees": [
@@ -29446,6 +29463,27 @@
         "F0624"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0368；调用点=海中鱼巣/领域/因果服务.h:57",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0612",
+      "complete_signature": "bool 海中鱼巣::控制面板窗口::窗口实现::读取只读材料(bool)::<lambda@控制面板窗口.cpp:397>::operator()(const 海中鱼巣::控制面板树视图材料& 材料) const",
+      "callable_type": "Function",
+      "category": "Function/Method",
+      "module_identity": "全局模块片段/源文件定义",
+      "file": "海中鱼巣/界面/控制面板窗口.cpp",
+      "definition_line": 397,
+      "definition_end_line": 401,
+      "overload_identity": "bool 海中鱼巣::控制面板窗口::窗口实现::读取只读材料(bool)::<lambda@控制面板窗口.cpp:397>::operator()(const 海中鱼巣::控制面板树视图材料& 材料) const",
+      "shortest_depth": 7,
+      "callers": [
+        "F0388"
+      ],
+      "callees": [],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0388；调用点=海中鱼巣/界面/控制面板窗口.cpp:394-401",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
       "legacy_or_unwired": false,

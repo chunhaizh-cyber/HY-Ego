@@ -1,6 +1,6 @@
 # main 可达项目调用边表
 
-项目直接调用边：2767。多调用点保留在同一 caller/callee 边记录中。
+项目直接调用边：2776。多调用点保留在同一 caller/callee 边记录中。
 
 | 边 ID | 调用方 | 被调方 | 调用点 | 类别 | 实参 | 可达条件 | 解析来源 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -1158,12 +1158,12 @@
 | RCE0169 | F0381 | F0211 | <code>海中鱼巣/适配/SQL数据库适配.cpp:261</code> | lsp_direct+direct-free | <code>未单独冻结；读取源码调用点</code> | 调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | 逐边源码/静态类型审计 PASS；专项源码静态类型与实际装配人工复核 |
 | RCE0170 | F0383 | F0439 | <code>海中鱼巣/核心/主信息仓库.cpp:447</code> | suffix_match+direct-member | <code>未单独冻结；读取源码调用点</code> | 调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | 同一具名类型内直接调用；源码调用词与定义范围闭合；专项源码静态类型与实际装配人工复核 |
 | RCE0171 | F0384 | F0439 | <code>海中鱼巣/核心/主信息仓库.cpp:199</code> | direct-member | <code>未单独冻结；读取源码调用点</code> | 调用方可达且 libclang 直接引用项目定义；源码位置复核 | 专项源码静态类型与实际装配人工复核 |
-| RCE0172 | F0385 | R0247 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:45, 海中鱼巣/界面/投影.控制面板启动.ixx:52</code> | field_type_hint | <code>未单独冻结；读取源码调用点</code> | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
+| RCE0172 | F0385 | R0247 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:52</code> | field_type_hint | <code>未单独冻结；读取源码调用点</code> | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
 | RCE0173 | F0385 | R0149 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:49</code> | lsp_direct | <code>未单独冻结；读取源码调用点</code> | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
 | RCE0174 | F0385 | R0248 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:49</code> | unique_name | <code>未单独冻结；读取源码调用点</code> | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0175 | F0385 | R0240 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:50</code> | unique_name | <code>未单独冻结；读取源码调用点</code> | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | E1790 | F0387 | F0344 | <code>海中鱼巣/核心/关系仓库.cpp:733-758</code> | implicit_destructor | <code>this=&自动令牌范围.value()</code> | 正常或异常退出且自动令牌范围已承载 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
-| E1818 | F0387 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:733-758</code> | implicit_destructor | <code>this=&自动许可.value()</code> | 正常或异常退出且自动许可已承载；F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
+| E1818 | F0387 | F0345 | <code>海中鱼巣/核心/关系仓库.cpp:734, 海中鱼巣/核心/关系仓库.cpp:733-758</code> | implicit_destructor | <code>this=&取得共享许可返回的已移空临时许可; this=&自动许可.value()</code> | 共享许可返回临时量经RCE1756移动构造后的完整表达式末；或正常/异常退出且自动许可已承载，后者严格发生在F0344之后 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；当前宏展开与C++临时量/RAII生命周期复核 |
 | E1765 | F0387 | F0343 | <code>海中鱼巣/核心/关系仓库.cpp:736, 海中鱼巣/核心/关系仓库.cpp:753</code> | direct_const_member+direct-member+direct-member | <code>this,父节点</code> | 函数入口许可范围建立；当前记录匹配父节点；调用方可达且 libclang 直接引用项目定义；源码位置复核；调用方可达且 libclang 直接引用项目定义；源码位置复核 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核；专项源码静态类型与实际装配人工复核；专项源码静态类型与实际装配人工复核 |
 | RCE0176 | F0388 | R0202 | <code>海中鱼巣/界面/控制面板窗口.cpp:387</code> | same_module+direct-free | <code>未单独冻结；读取源码调用点</code> | 调用方可达且源码分支条件成立；调用方可达且 libclang 直接引用项目定义；源码位置复核 | 逐边源码/静态类型审计 PASS；专项源码静态类型与实际装配人工复核 |
 | RCE0177 | F0388 | R0304 | <code>海中鱼巣/界面/控制面板窗口.cpp:387</code> | unique_name | <code>未单独冻结；读取源码调用点</code> | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
@@ -2771,3 +2771,12 @@
 | RCE1745 | F0384 | F0338 | <code>海中鱼巣/核心/主信息仓库.cpp:199</code> | direct_const_member+source_audited | <code>this=&许可</code> | RCE1744已形成局部许可 | 当前源码三元表达式左到右求值与静态接收者复核 |
 | RCE1746 | F0384 | F0339 | <code>海中鱼巣/核心/主信息仓库.cpp:199</code> | direct_const_member+source_audited | <code>this=&许可</code> | RCE1745返回true；三元表达式选择读取分支 | 当前源码三元表达式条件分支与静态接收者复核 |
 | RCE1747 | F0384 | F0345 | <code>海中鱼巣/核心/主信息仓库.cpp:199</code> | implicit_destructor+source_audited | <code>this=&许可</code> | RCE1744已形成许可；返回值求值完成或异常展开 | 当前源码单行作用域、C++ RAII与同仓许可生命周期复核 |
+| RCE1748 | F0385 | F0173 | <code>海中鱼巣/界面/投影.控制面板启动.ixx:45</code> | direct_const_member+source_audited | <code>this=&语素初始化读数</code> | F0385进入；false时第46行返回std::nullopt | 当前源码逐调用点、静态接收者类型与F0173完整签名复核 |
+| RCE1749 | F0388 | R0612 | <code>海中鱼巣/界面/控制面板窗口.cpp:394-401</code> | standard_algorithm_callback+source_audited | <code>材料=std::all_of当前遍历元素const引用</code> | F0388执行X01021；std::all_of对尚未短路的当前元素调用谓词 | 当前源码397-401行lambda正文、标准算法回调语义与R0612身份复核 |
+| RCE1750 | F0387 | F0336 | <code>海中鱼巣/核心/关系仓库.cpp:734</code> | direct_const_member+macro_expanded+source_audited | <code>this=&事务接线_</code> | F0387进入并展开关系共享许可范围宏 | 当前源码宏定义116-123行、调用点734行与同宏调用模式复核 |
+| RCE1751 | F0387 | F0337 | <code>海中鱼巣/核心/关系仓库.cpp:734</code> | direct_free+macro_expanded+source_audited | <code>仓库=*this</code> | RCE1750返回true；逻辑与右侧开始求值 | 当前源码宏定义116-123行、调用点734行与F0337完整签名复核 |
+| RCE1752 | F0387 | F0397 | <code>海中鱼巣/核心/关系仓库.cpp:734</code> | resolved_function_pointer+macro_expanded+source_audited | <code>状态=事务接线_.运行期状态</code> | RCE1750返回true且RCE1751返回nullptr | 当前源码宏展开、现行生产装配与既有同域函数指针绑定复核 |
+| RCE1753 | F0387 | F0338 | <code>海中鱼巣/核心/关系仓库.cpp:734</code> | direct_const_member+macro_expanded+source_audited | <code>this=&自动许可.value()</code> | RCE1752返回许可并经RCE1756移动构造完成 | 当前源码宏定义120-121行、调用点734行与F0338签名复核 |
+| RCE1754 | F0387 | F0339 | <code>海中鱼巣/核心/关系仓库.cpp:734</code> | direct_const_member+macro_expanded+source_audited | <code>this=&自动许可.value()</code> | RCE1753返回true | 当前源码宏定义121-122行、调用点734行与F0339签名复核 |
+| RCE1755 | F0387 | F0340 | <code>海中鱼巣/核心/关系仓库.cpp:734</code> | direct_constructor+macro_expanded+source_audited | <code>仓库=*this,令牌=RCE1754返回const引用</code> | RCE1753返回true且RCE1754已取得令牌引用 | 当前源码宏定义122行、调用点734行与F0340完整构造签名复核 |
+| RCE1756 | F0387 | F0375 | <code>海中鱼巣/核心/关系仓库.cpp:734</code> | move-constructor+macro-expanded-move-constructor | <code>其它=RCE1752返回的临时结构事务许可</code> | RCE1752返回临时许可；进入optional.emplace承载值构造 | 当前源码宏定义120行、调用点734行、F0375签名与既有E0793同宏先例复核 |
