@@ -15,9 +15,9 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1267,
-  "project_call_edge_count": 3189,
-  "external_count": 1813,
+  "function_count": 1269,
+  "project_call_edge_count": 3221,
+  "external_count": 1843,
   "callback_registration_count": 34,
   "external_boundaries": [
     {
@@ -9454,14 +9454,14 @@
     {
       "id": "X01091",
       "caller": "F0461",
-      "signature": "std::move(...)",
+      "signature": "constexpr std::remove_reference_t<海中鱼巣::概念活动材料&>&& std::move<海中鱼巣::概念活动材料&>(海中鱼巣::概念活动材料&) noexcept",
       "locations": [
         "海中鱼巣/领域/服务.概念活动.ixx:81"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立",
-      "resolution_source": "最终 caller 源码范围 + std 限定名调用语法复核",
+      "resolution_source": "概念活动材料具体模板实参、显式 std::move 调用与成功返回路径复核",
       "current_root_reachable": true
     },
     {
@@ -9480,7 +9480,7 @@
     {
       "id": "X01093",
       "caller": "F0466",
-      "signature": "海中鱼巣::概念活动状态角色材料& std::array<海中鱼巣::概念活动状态角色材料,3>::operator[](std::size_t)",
+      "signature": "const 海中鱼巣::概念活动状态角色材料& std::array<海中鱼巣::概念活动状态角色材料, 3>::operator[](std::size_t) const noexcept",
       "locations": [
         "海中鱼巣/领域/概念活动状态.数据.h:128",
         "海中鱼巣/领域/概念活动状态.数据.h:129",
@@ -9492,7 +9492,7 @@
       "call_count": 7,
       "boundary_category": "Standard library container",
       "reachable_condition": "逐角色复核重建视图",
-      "resolution_source": "专项源码外部边界复核",
+      "resolution_source": "const 重建视图方法、状态角色数组具体模板实例与七个静态下标表达式复核",
       "current_root_reachable": true
     },
     {
@@ -9511,7 +9511,7 @@
     {
       "id": "X01095",
       "caller": "F0466",
-      "signature": "海中鱼巣::概念活动根材料& std::array<海中鱼巣::概念活动根材料,4>::operator[](std::size_t)",
+      "signature": "const 海中鱼巣::概念活动根材料& std::array<海中鱼巣::概念活动根材料, 4>::operator[](std::size_t) const noexcept",
       "locations": [
         "海中鱼巣/领域/概念活动状态.数据.h:137",
         "海中鱼巣/领域/概念活动状态.数据.h:138"
@@ -9519,7 +9519,7 @@
       "call_count": 2,
       "boundary_category": "Standard library container",
       "reachable_condition": "逐根复核重建视图",
-      "resolution_source": "专项源码外部边界复核",
+      "resolution_source": "const 重建视图方法、根数组具体模板实例与两个静态下标表达式复核",
       "current_root_reachable": true
     },
     {
@@ -24172,6 +24172,433 @@
       "boundary_category": "Standard library optional",
       "reachable_condition": "X02486确认主体存在；第160行沿前序复核通过路径再次解引用",
       "resolution_source": "optional<系统角色主体材料>具体模板实例、短路门禁和两处解引用复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02488",
+      "signature": "bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept",
+      "caller": "F0476",
+      "locations": [
+        "海中鱼巣/自检.入口初始化.ixx:90"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "F0476完成节点读取后判断记录是否存在",
+      "resolution_source": "optional<节点记录>具体模板实例与第90行短路顺序复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02489",
+      "signature": "const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept",
+      "caller": "F0476",
+      "locations": [
+        "海中鱼巣/自检.入口初始化.ixx:90"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "X02488确认节点记录存在后读取类型字段",
+      "resolution_source": "optional<节点记录>具体模板实例、短路门禁与类型字段访问复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02490",
+      "signature": "const 海中鱼巣::系统角色身份材料* const& std::array<const 海中鱼巣::系统角色身份材料*, 21>::front() const noexcept",
+      "caller": "F0458",
+      "locations": [
+        "海中鱼巣/领域/系统角色清单.数据.h:197"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library array",
+      "reachable_condition": "入口完整性检查通过且身份组已形成",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02491",
+      "signature": "constexpr std::size_t std::array<const 海中鱼巣::系统角色身份材料*, 21>::size() const noexcept",
+      "caller": "F0458",
+      "locations": [
+        "海中鱼巣/领域/系统角色清单.数据.h:198",
+        "海中鱼巣/领域/系统角色清单.数据.h:200"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library array",
+      "reachable_condition": "外层或内层循环条件求值",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02492",
+      "signature": "const 海中鱼巣::系统角色身份材料* const& std::array<const 海中鱼巣::系统角色身份材料*, 21>::operator[](std::size_t) const noexcept",
+      "caller": "F0458",
+      "locations": [
+        "海中鱼巣/领域/系统角色清单.数据.h:199",
+        "海中鱼巣/领域/系统角色清单.数据.h:201",
+        "海中鱼巣/领域/系统角色清单.数据.h:202",
+        "海中鱼巣/领域/系统角色清单.数据.h:203"
+      ],
+      "call_count": 8,
+      "queued": false,
+      "boundary_category": "Standard library array",
+      "reachable_condition": "对应循环及短路表达式到达",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02493",
+      "signature": "std::lock_guard<std::mutex>::lock_guard(std::mutex&)",
+      "caller": "F0461",
+      "locations": [
+        "海中鱼巣/领域/服务.概念活动.ixx:70"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library RAII",
+      "reachable_condition": "F0461入口后必达",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02494",
+      "signature": "std::lock_guard<std::mutex>::~lock_guard()",
+      "caller": "F0461",
+      "locations": [
+        "海中鱼巣/领域/服务.概念活动.ixx:70-82"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library RAII",
+      "reachable_condition": "构造成功后的所有正常返回与异常展开路径",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02495",
+      "signature": "bool std::optional<海中鱼巣::概念活动材料>::has_value() const noexcept",
+      "caller": "F0461",
+      "locations": [
+        "海中鱼巣/领域/服务.概念活动.ixx:72"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "F0451、F0245、F0251均返回true",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02496",
+      "signature": "const 海中鱼巣::概念活动材料* std::optional<海中鱼巣::概念活动材料>::operator->() const noexcept",
+      "caller": "F0461",
+      "locations": [
+        "海中鱼巣/领域/服务.概念活动.ixx:72"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "X02495确认缓存材料存在",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02497",
+      "signature": "海中鱼巣::概念活动材料::概念活动材料(const 海中鱼巣::概念活动材料&)",
+      "caller": "F0461",
+      "locations": [
+        "海中鱼巣/领域/服务.概念活动.ixx:79"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Compiler/Lifetime",
+      "reachable_condition": "入口门禁、重建成功和视图一致均成立",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02498",
+      "signature": "海中鱼巣::概念活动重建视图& 海中鱼巣::概念活动重建视图::operator=(const 海中鱼巣::概念活动重建视图&)",
+      "caller": "F0461",
+      "locations": [
+        "海中鱼巣/领域/服务.概念活动.ixx:80"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Compiler/Lifetime",
+      "reachable_condition": "局部输出已复制形成",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02499",
+      "signature": "海中鱼巣::概念活动材料::概念活动材料(海中鱼巣::概念活动材料&&)",
+      "caller": "F0461",
+      "locations": [
+        "海中鱼巣/领域/服务.概念活动.ixx:81"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Compiler/Lifetime",
+      "reachable_condition": "成功返回路径形成结果材料",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02500",
+      "signature": "std::lock_guard<std::mutex>::lock_guard(std::mutex&)",
+      "caller": "F0462",
+      "locations": [
+        "海中鱼巣/领域/服务.概念活动.ixx:31"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library RAII",
+      "reachable_condition": "F0462入口后必达",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02501",
+      "signature": "std::lock_guard<std::mutex>::~lock_guard()",
+      "caller": "F0462",
+      "locations": [
+        "海中鱼巣/领域/服务.概念活动.ixx:31-65"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library RAII",
+      "reachable_condition": "构造成功后的所有正常返回与异常展开路径",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02502",
+      "signature": "bool std::optional<海中鱼巣::概念活动材料>::has_value() const noexcept",
+      "caller": "F0462",
+      "locations": [
+        "海中鱼巣/领域/服务.概念活动.ixx:34"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "入口三项门禁通过且签名组已形成",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02503",
+      "signature": "海中鱼巣::概念活动材料* std::optional<海中鱼巣::概念活动材料>::operator->() noexcept",
+      "caller": "F0462",
+      "locations": [
+        "海中鱼巣/领域/服务.概念活动.ixx:35",
+        "海中鱼巣/领域/服务.概念活动.ixx:39"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "X02502确认缓存存在；第39行还要求参数匹配并完成重建",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02504",
+      "signature": "海中鱼巣::概念活动材料& std::optional<海中鱼巣::概念活动材料>::operator*() & noexcept",
+      "caller": "F0462",
+      "locations": [
+        "海中鱼巣/领域/服务.概念活动.ixx:42"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "缓存存在、参数匹配、重建成功且视图一致",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02505",
+      "signature": "海中鱼巣::抽象状态写入规格& std::optional<海中鱼巣::抽象状态写入规格>::operator*() & noexcept",
+      "caller": "F0462",
+      "locations": [
+        "海中鱼巣/领域/服务.概念活动.ixx:60"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "无缓存且三个规格结果均成功",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02506",
+      "signature": "std::optional<海中鱼巣::概念活动材料>& std::optional<海中鱼巣::概念活动材料>::operator=<海中鱼巣::概念活动材料&>(海中鱼巣::概念活动材料&)",
+      "caller": "F0462",
+      "locations": [
+        "海中鱼巣/领域/服务.概念活动.ixx:63"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "初始化成功、改变结构且版本为初始版本",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02507",
+      "signature": "海中鱼巣::概念活动材料::概念活动材料(const 海中鱼巣::概念活动材料&)",
+      "caller": "F0462",
+      "locations": [
+        "海中鱼巣/领域/服务.概念活动.ixx:42"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Compiler/Lifetime",
+      "reachable_condition": "缓存幂等读回一致性检查通过",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02508",
+      "signature": "海中鱼巣::概念活动重建视图& 海中鱼巣::概念活动重建视图::operator=(const 海中鱼巣::概念活动重建视图&)",
+      "caller": "F0462",
+      "locations": [
+        "海中鱼巣/领域/服务.概念活动.ixx:43"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Compiler/Lifetime",
+      "reachable_condition": "局部输出复制形成后写入重建视图",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02509",
+      "signature": "海中鱼巣::概念活动材料::概念活动材料(海中鱼巣::概念活动材料&&)",
+      "caller": "F0462",
+      "locations": [
+        "海中鱼巣/领域/服务.概念活动.ixx:44"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Compiler/Lifetime",
+      "reachable_condition": "缓存幂等读回成功返回路径",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02510",
+      "signature": "bool std::operator==<海中鱼巣::概念活动状态角色材料, 3>(const std::array<海中鱼巣::概念活动状态角色材料, 3>&, const std::array<海中鱼巣::概念活动状态角色材料, 3>&)",
+      "caller": "F0464",
+      "locations": [
+        "海中鱼巣/领域/概念活动状态.数据.h:144"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library array",
+      "reachable_condition": "F0464入口后比较两侧状态角色数组",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02511",
+      "signature": "constexpr std::array<海中鱼巣::概念活动根材料, 4>::size_type std::array<海中鱼巣::概念活动根材料, 4>::size() const noexcept",
+      "caller": "F0464",
+      "locations": [
+        "海中鱼巣/领域/概念活动状态.数据.h:145"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library array",
+      "reachable_condition": "状态角色数组相等后进入循环条件",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02512",
+      "signature": "constexpr const 海中鱼巣::概念活动根材料& std::array<海中鱼巣::概念活动根材料, 4>::operator[](std::size_t) const",
+      "caller": "F0464",
+      "locations": [
+        "海中鱼巣/领域/概念活动状态.数据.h:146"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library array",
+      "reachable_condition": "当前循环索引小于数组size",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02513",
+      "signature": "海中鱼巣::普通应用上下文* std::unique_ptr<海中鱼巣::普通应用上下文, std::default_delete<海中鱼巣::普通应用上下文>>::operator->() const noexcept",
+      "caller": "F0468",
+      "locations": [
+        "海中鱼巣/自检.入口初始化.ixx:60",
+        "海中鱼巣/自检.入口初始化.ixx:61",
+        "海中鱼巣/自检.入口初始化.ixx:62"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library unique_ptr",
+      "reachable_condition": "普通应用装配成功后依次读取三个仓库数量",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02514",
+      "signature": "std::function<void(std::string_view, std::uintptr_t, 海中鱼巣::入口初始化自检初始计数)>::operator bool() const noexcept",
+      "caller": "F0468",
+      "locations": [
+        "海中鱼巣/自检.入口初始化.ixx:64"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library function",
+      "reachable_condition": "装配成功且三项计数读取完成",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02515",
+      "signature": "void std::function<void(std::string_view, std::uintptr_t, 海中鱼巣::入口初始化自检初始计数)>::operator()(std::string_view, std::uintptr_t, 海中鱼巣::入口初始化自检初始计数) const",
+      "caller": "F0468",
+      "locations": [
+        "海中鱼巣/自检.入口初始化.ixx:65-68"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library function",
+      "reachable_condition": "X02514确认观察回调存在",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02516",
+      "signature": "海中鱼巣::普通应用上下文* std::unique_ptr<海中鱼巣::普通应用上下文, std::default_delete<海中鱼巣::普通应用上下文>>::get() const noexcept",
+      "caller": "F0468",
+      "locations": [
+        "海中鱼巣/自检.入口初始化.ixx:67"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library unique_ptr",
+      "reachable_condition": "观察回调存在并形成第二实参",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X02517",
+      "signature": "bool std::operator!=<海中鱼巣::普通应用上下文, std::default_delete<海中鱼巣::普通应用上下文>>(const std::unique_ptr<海中鱼巣::普通应用上下文, std::default_delete<海中鱼巣::普通应用上下文>>&, std::nullptr_t) noexcept",
+      "caller": "F0469",
+      "locations": [
+        "海中鱼巣/自检.入口初始化.ixx:48"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library unique_ptr",
+      "reachable_condition": "状态等于已构造后由短路合取调用",
+      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
       "current_root_reachable": true
     }
   ],

@@ -1,6 +1,6 @@
 # main 可达外部边界表
 
-代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；外部边界：1813；回调登记：34。
+代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；外部边界：1843；回调登记：34。
 
 ## 外部边界
 
@@ -712,11 +712,11 @@
 | X01088 | F0441 | Standard library | <code>shared_lock(mutex_type &) :: void (mutex_type &)</code> | <code>海中鱼巣/核心/索引仓库.cpp:192</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
 | X01089 | F0441 | Standard library | <code>operator==(const _List_const_iterator&lt;std::_List_val&lt;std::_List_simple_types&lt;std::pair&lt;const unsigned long long, 海中鱼巣::主键绑定记录&gt;&gt;&gt;&gt; &) :: bool (const _List_const_iterator&lt;std::_List_val&lt;std::_List_simple_types&lt;std::pair&lt;const unsigned long long, 海中鱼巣::主键绑定记录&gt;&gt;&gt;&gt; &) const noexcept</code> | <code>海中鱼巣/核心/索引仓库.cpp:194</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
 | X01090 | F0441 | Standard library | <code>optional&lt;&gt;(海中鱼巣::节点句柄 &) :: void (海中鱼巣::节点句柄 &) noexcept(is_nothrow_constructible_v&lt;海中鱼巣::节点句柄, 海中鱼巣::节点句柄 &&gt;)</code> | <code>海中鱼巣/核心/索引仓库.cpp:197</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | Clang AST 候选 + 最终 caller 身份、外部类别和源码位置复核；海中鱼巣-main可达-全部Cpp候选-9d2061ed.json |
-| X01091 | F0461 | Standard library | <code>std::move(...)</code> | <code>海中鱼巣/领域/服务.概念活动.ixx:81</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
+| X01091 | F0461 | Standard library | <code>constexpr std::remove_reference_t&lt;海中鱼巣::概念活动材料&&gt;&& std::move&lt;海中鱼巣::概念活动材料&&gt;(海中鱼巣::概念活动材料&) noexcept</code> | <code>海中鱼巣/领域/服务.概念活动.ixx:81</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 概念活动材料具体模板实参、显式 std::move 调用与成功返回路径复核 |
 | X01092 | F0462 | Standard library | <code>std::move(...)</code> | <code>海中鱼巣/领域/服务.概念活动.ixx:44</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
-| X01093 | F0466 | Standard library container | <code>海中鱼巣::概念活动状态角色材料& std::array&lt;海中鱼巣::概念活动状态角色材料,3&gt;::operator[](std::size_t)</code> | <code>海中鱼巣/领域/概念活动状态.数据.h:128, 海中鱼巣/领域/概念活动状态.数据.h:129, 海中鱼巣/领域/概念活动状态.数据.h:130, 海中鱼巣/领域/概念活动状态.数据.h:131, 海中鱼巣/领域/概念活动状态.数据.h:132, 海中鱼巣/领域/概念活动状态.数据.h:138</code> | 7 | 逐角色复核重建视图 | 专项源码外部边界复核 |
+| X01093 | F0466 | Standard library container | <code>const 海中鱼巣::概念活动状态角色材料& std::array&lt;海中鱼巣::概念活动状态角色材料, 3&gt;::operator[](std::size_t) const noexcept</code> | <code>海中鱼巣/领域/概念活动状态.数据.h:128, 海中鱼巣/领域/概念活动状态.数据.h:129, 海中鱼巣/领域/概念活动状态.数据.h:130, 海中鱼巣/领域/概念活动状态.数据.h:131, 海中鱼巣/领域/概念活动状态.数据.h:132, 海中鱼巣/领域/概念活动状态.数据.h:138</code> | 7 | 逐角色复核重建视图 | const 重建视图方法、状态角色数组具体模板实例与七个静态下标表达式复核 |
 | X01094 | F0466 | Standard library container | <code>std::array&lt;海中鱼巣::概念活动根材料,4&gt;::size_type std::array&lt;海中鱼巣::概念活动根材料,4&gt;::size() const noexcept</code> | <code>海中鱼巣/领域/概念活动状态.数据.h:135</code> | 1 | 形成根材料循环上界 | 专项源码外部边界复核 |
-| X01095 | F0466 | Standard library container | <code>海中鱼巣::概念活动根材料& std::array&lt;海中鱼巣::概念活动根材料,4&gt;::operator[](std::size_t)</code> | <code>海中鱼巣/领域/概念活动状态.数据.h:137, 海中鱼巣/领域/概念活动状态.数据.h:138</code> | 2 | 逐根复核重建视图 | 专项源码外部边界复核 |
+| X01095 | F0466 | Standard library container | <code>const 海中鱼巣::概念活动根材料& std::array&lt;海中鱼巣::概念活动根材料, 4&gt;::operator[](std::size_t) const noexcept</code> | <code>海中鱼巣/领域/概念活动状态.数据.h:137, 海中鱼巣/领域/概念活动状态.数据.h:138</code> | 2 | 逐根复核重建视图 | const 重建视图方法、根数组具体模板实例与两个静态下标表达式复核 |
 | X01096 | F0468 | Standard library | <code>std::move(...)</code> | <code>海中鱼巣/自检.入口初始化.ixx:70</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
 | X02273 | F0495 | Standard library | <code>std::find(...)</code> | <code>海中鱼巣/自检.入口初始化.ixx:177</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
 | X02274 | F0495 | Standard library | <code>std::find(...)</code> | <code>海中鱼巣/自检.入口初始化.ixx:178</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
@@ -1819,6 +1819,37 @@
 | X02485 | R0638 | Compiler-generated operator | <code>海中鱼巣::主键绑定记录::operator==（编译器生成）</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:617-621</code> | 1 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X02486 | F0455 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::系统角色主体材料&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/初始化.系统角色.ixx:156</code> | 1 | 写后预检成功且主体材料已形成 | optional&lt;系统角色主体材料&gt;具体模板实例与第156行短路顺序复核 |
 | X02487 | F0455 | Standard library optional | <code>const 海中鱼巣::系统角色主体材料& std::optional&lt;海中鱼巣::系统角色主体材料&gt;::operator*() const&</code> | <code>海中鱼巣/领域/初始化.系统角色.ixx:156, 海中鱼巣/领域/初始化.系统角色.ixx:160</code> | 2 | X02486确认主体存在；第160行沿前序复核通过路径再次解引用 | optional&lt;系统角色主体材料&gt;具体模板实例、短路门禁和两处解引用复核 |
+| X02488 | F0476 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::节点记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/自检.入口初始化.ixx:90</code> | 1 | F0476完成节点读取后判断记录是否存在 | optional&lt;节点记录&gt;具体模板实例与第90行短路顺序复核 |
+| X02489 | F0476 | Standard library optional | <code>const 海中鱼巣::节点记录* std::optional&lt;海中鱼巣::节点记录&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/自检.入口初始化.ixx:90</code> | 1 | X02488确认节点记录存在后读取类型字段 | optional&lt;节点记录&gt;具体模板实例、短路门禁与类型字段访问复核 |
+| X02490 | F0458 | Standard library array | <code>const 海中鱼巣::系统角色身份材料* const& std::array&lt;const 海中鱼巣::系统角色身份材料*, 21&gt;::front() const noexcept</code> | <code>海中鱼巣/领域/系统角色清单.数据.h:197</code> | 1 | 入口完整性检查通过且身份组已形成 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02491 | F0458 | Standard library array | <code>constexpr std::size_t std::array&lt;const 海中鱼巣::系统角色身份材料*, 21&gt;::size() const noexcept</code> | <code>海中鱼巣/领域/系统角色清单.数据.h:198, 海中鱼巣/领域/系统角色清单.数据.h:200</code> | 2 | 外层或内层循环条件求值 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02492 | F0458 | Standard library array | <code>const 海中鱼巣::系统角色身份材料* const& std::array&lt;const 海中鱼巣::系统角色身份材料*, 21&gt;::operator[](std::size_t) const noexcept</code> | <code>海中鱼巣/领域/系统角色清单.数据.h:199, 海中鱼巣/领域/系统角色清单.数据.h:201, 海中鱼巣/领域/系统角色清单.数据.h:202, 海中鱼巣/领域/系统角色清单.数据.h:203</code> | 8 | 对应循环及短路表达式到达 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02493 | F0461 | Standard library RAII | <code>std::lock_guard&lt;std::mutex&gt;::lock_guard(std::mutex&)</code> | <code>海中鱼巣/领域/服务.概念活动.ixx:70</code> | 1 | F0461入口后必达 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02494 | F0461 | Standard library RAII | <code>std::lock_guard&lt;std::mutex&gt;::~lock_guard()</code> | <code>海中鱼巣/领域/服务.概念活动.ixx:70-82</code> | 1 | 构造成功后的所有正常返回与异常展开路径 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02495 | F0461 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::概念活动材料&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/服务.概念活动.ixx:72</code> | 1 | F0451、F0245、F0251均返回true | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02496 | F0461 | Standard library optional | <code>const 海中鱼巣::概念活动材料* std::optional&lt;海中鱼巣::概念活动材料&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/服务.概念活动.ixx:72</code> | 1 | X02495确认缓存材料存在 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02497 | F0461 | Compiler/Lifetime | <code>海中鱼巣::概念活动材料::概念活动材料(const 海中鱼巣::概念活动材料&)</code> | <code>海中鱼巣/领域/服务.概念活动.ixx:79</code> | 1 | 入口门禁、重建成功和视图一致均成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02498 | F0461 | Compiler/Lifetime | <code>海中鱼巣::概念活动重建视图& 海中鱼巣::概念活动重建视图::operator=(const 海中鱼巣::概念活动重建视图&)</code> | <code>海中鱼巣/领域/服务.概念活动.ixx:80</code> | 1 | 局部输出已复制形成 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02499 | F0461 | Compiler/Lifetime | <code>海中鱼巣::概念活动材料::概念活动材料(海中鱼巣::概念活动材料&&)</code> | <code>海中鱼巣/领域/服务.概念活动.ixx:81</code> | 1 | 成功返回路径形成结果材料 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02500 | F0462 | Standard library RAII | <code>std::lock_guard&lt;std::mutex&gt;::lock_guard(std::mutex&)</code> | <code>海中鱼巣/领域/服务.概念活动.ixx:31</code> | 1 | F0462入口后必达 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02501 | F0462 | Standard library RAII | <code>std::lock_guard&lt;std::mutex&gt;::~lock_guard()</code> | <code>海中鱼巣/领域/服务.概念活动.ixx:31-65</code> | 1 | 构造成功后的所有正常返回与异常展开路径 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02502 | F0462 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::概念活动材料&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/服务.概念活动.ixx:34</code> | 1 | 入口三项门禁通过且签名组已形成 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02503 | F0462 | Standard library optional | <code>海中鱼巣::概念活动材料* std::optional&lt;海中鱼巣::概念活动材料&gt;::operator-&gt;() noexcept</code> | <code>海中鱼巣/领域/服务.概念活动.ixx:35, 海中鱼巣/领域/服务.概念活动.ixx:39</code> | 2 | X02502确认缓存存在；第39行还要求参数匹配并完成重建 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02504 | F0462 | Standard library optional | <code>海中鱼巣::概念活动材料& std::optional&lt;海中鱼巣::概念活动材料&gt;::operator*() & noexcept</code> | <code>海中鱼巣/领域/服务.概念活动.ixx:42</code> | 1 | 缓存存在、参数匹配、重建成功且视图一致 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02505 | F0462 | Standard library optional | <code>海中鱼巣::抽象状态写入规格& std::optional&lt;海中鱼巣::抽象状态写入规格&gt;::operator*() & noexcept</code> | <code>海中鱼巣/领域/服务.概念活动.ixx:60</code> | 3 | 无缓存且三个规格结果均成功 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02506 | F0462 | Standard library optional | <code>std::optional&lt;海中鱼巣::概念活动材料&gt;& std::optional&lt;海中鱼巣::概念活动材料&gt;::operator=&lt;海中鱼巣::概念活动材料&&gt;(海中鱼巣::概念活动材料&)</code> | <code>海中鱼巣/领域/服务.概念活动.ixx:63</code> | 1 | 初始化成功、改变结构且版本为初始版本 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02507 | F0462 | Compiler/Lifetime | <code>海中鱼巣::概念活动材料::概念活动材料(const 海中鱼巣::概念活动材料&)</code> | <code>海中鱼巣/领域/服务.概念活动.ixx:42</code> | 1 | 缓存幂等读回一致性检查通过 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02508 | F0462 | Compiler/Lifetime | <code>海中鱼巣::概念活动重建视图& 海中鱼巣::概念活动重建视图::operator=(const 海中鱼巣::概念活动重建视图&)</code> | <code>海中鱼巣/领域/服务.概念活动.ixx:43</code> | 1 | 局部输出复制形成后写入重建视图 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02509 | F0462 | Compiler/Lifetime | <code>海中鱼巣::概念活动材料::概念活动材料(海中鱼巣::概念活动材料&&)</code> | <code>海中鱼巣/领域/服务.概念活动.ixx:44</code> | 1 | 缓存幂等读回成功返回路径 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02510 | F0464 | Standard library array | <code>bool std::operator==&lt;海中鱼巣::概念活动状态角色材料, 3&gt;(const std::array&lt;海中鱼巣::概念活动状态角色材料, 3&gt;&, const std::array&lt;海中鱼巣::概念活动状态角色材料, 3&gt;&)</code> | <code>海中鱼巣/领域/概念活动状态.数据.h:144</code> | 1 | F0464入口后比较两侧状态角色数组 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02511 | F0464 | Standard library array | <code>constexpr std::array&lt;海中鱼巣::概念活动根材料, 4&gt;::size_type std::array&lt;海中鱼巣::概念活动根材料, 4&gt;::size() const noexcept</code> | <code>海中鱼巣/领域/概念活动状态.数据.h:145</code> | 1 | 状态角色数组相等后进入循环条件 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02512 | F0464 | Standard library array | <code>constexpr const 海中鱼巣::概念活动根材料& std::array&lt;海中鱼巣::概念活动根材料, 4&gt;::operator[](std::size_t) const</code> | <code>海中鱼巣/领域/概念活动状态.数据.h:146</code> | 2 | 当前循环索引小于数组size | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02513 | F0468 | Standard library unique_ptr | <code>海中鱼巣::普通应用上下文* std::unique_ptr&lt;海中鱼巣::普通应用上下文, std::default_delete&lt;海中鱼巣::普通应用上下文&gt;&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/自检.入口初始化.ixx:60, 海中鱼巣/自检.入口初始化.ixx:61, 海中鱼巣/自检.入口初始化.ixx:62</code> | 3 | 普通应用装配成功后依次读取三个仓库数量 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02514 | F0468 | Standard library function | <code>std::function&lt;void(std::string_view, std::uintptr_t, 海中鱼巣::入口初始化自检初始计数)&gt;::operator bool() const noexcept</code> | <code>海中鱼巣/自检.入口初始化.ixx:64</code> | 1 | 装配成功且三项计数读取完成 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02515 | F0468 | Standard library function | <code>void std::function&lt;void(std::string_view, std::uintptr_t, 海中鱼巣::入口初始化自检初始计数)&gt;::operator()(std::string_view, std::uintptr_t, 海中鱼巣::入口初始化自检初始计数) const</code> | <code>海中鱼巣/自检.入口初始化.ixx:65-68</code> | 1 | X02514确认观察回调存在 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02516 | F0468 | Standard library unique_ptr | <code>海中鱼巣::普通应用上下文* std::unique_ptr&lt;海中鱼巣::普通应用上下文, std::default_delete&lt;海中鱼巣::普通应用上下文&gt;&gt;::get() const noexcept</code> | <code>海中鱼巣/自检.入口初始化.ixx:67</code> | 1 | 观察回调存在并形成第二实参 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02517 | F0469 | Standard library unique_ptr | <code>bool std::operator!=&lt;海中鱼巣::普通应用上下文, std::default_delete&lt;海中鱼巣::普通应用上下文&gt;&gt;(const std::unique_ptr&lt;海中鱼巣::普通应用上下文, std::default_delete&lt;海中鱼巣::普通应用上下文&gt;&gt;&, std::nullptr_t) noexcept</code> | <code>海中鱼巣/自检.入口初始化.ixx:48</code> | 1 | 状态等于已构造后由短路合取调用 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+
 
 ## 回调登记
 
@@ -1859,4 +1890,4 @@
 | RCB0033 | R0689 | R0696 | std::function同步回调 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:147</code> | R0116 同步调度于海中鱼巣/核心/执行器.结构写入.ixx:82；来源复核通过 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
 | RCB0034 | R0701 | R0708 | std::function同步回调 | <code>海中鱼巣/领域/数据操作.特征体系.ixx:941</code> | R0116 同步调度于海中鱼巣/核心/执行器.结构写入.ixx:82；组成项及写前复核通过 | 源码 lambda 定义、包装点、直接或间接调度点与静态签名复核 |
 
-统计：1813 个外部边界身份；34 个项目回调登记。标准库、操作系统和第三方函数不进入项目函数身份表。
+统计：1843 个外部边界身份；34 个项目回调登记。标准库、操作系统和第三方函数不进入项目函数身份表。

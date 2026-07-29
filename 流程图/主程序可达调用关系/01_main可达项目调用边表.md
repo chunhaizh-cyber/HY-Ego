@@ -1,6 +1,6 @@
 # main 可达项目调用边表
 
-代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；项目调用边：3193。
+代码基线：<code>3920a74638264f9f539d50f32f3c9fe5fb1982ab</code>；配置：<code>Debug\|x64</code>；项目调用边：3221。
 
 | 边 ID | 调用方 | 被调方 | 调用点 | 类别 | 参数绑定 | 结果绑定 | 可达条件 | 解析依据 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -1221,7 +1221,7 @@
 | RCE0229 | F0455 | R0232 | <code>海中鱼巣/领域/初始化.系统角色.ixx:72</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE0230 | F0455 | R0496 | <code>海中鱼巣/领域/初始化.系统角色.ixx:77</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0231 | F0455 | R0565 | <code>海中鱼巣/领域/初始化.系统角色.ixx:86, 海中鱼巣/领域/初始化.系统角色.ixx:87</code> | direct_const_member |  |  | 系统角色初始化读取写前预检中的既有身份与稳定键 | 专项源码静态类型与实际装配人工复核 |
-| RCE0232 | F0458 | R0456 | <code>海中鱼巣/领域/系统角色清单.数据.h:188, 海中鱼巣/领域/系统角色清单.数据.h:189, 海中鱼巣/领域/系统角色清单.数据.h:190, 海中鱼巣/领域/系统角色清单.数据.h:191, 海中鱼巣/领域/系统角色清单.数据.h:192, 海中鱼巣/领域/系统角色清单.数据.h:193, 海中鱼巣/领域/系统角色清单.数据.h:194, 海中鱼巣/领域/系统角色清单.数据.h:199</code> | field_type_hint |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
+| RCE0232 | F0458 | R0563 | <code>海中鱼巣/领域/系统角色清单.数据.h:189, 海中鱼巣/领域/系统角色清单.数据.h:191, 海中鱼巣/领域/系统角色清单.数据.h:192, 海中鱼巣/领域/系统角色清单.数据.h:193, 海中鱼巣/领域/系统角色清单.数据.h:194, 海中鱼巣/领域/系统角色清单.数据.h:199</code> | source-audited-direct-const-member | 十二个系统角色身份材料接收者 | bool进入短路完整性判断 | 按源码从左到右短路；循环调用仅在前置门禁通过后发生 | 系统角色清单.数据.h:189-199 逐调用点静态接收者复核 |
 | RCE0233 | F0458 | R0564 | <code>海中鱼巣/领域/系统角色清单.数据.h:196</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 同一具名类型内直接调用；源码调用词与定义范围闭合 |
 | RCE0234 | F0459 | F0168 | <code>海中鱼巣/领域/系统角色清单.数据.h:134</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
 | RCE0235 | F0461 | R0331 | <code>海中鱼巣/领域/服务.概念活动.ixx:73</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
@@ -1237,7 +1237,7 @@
 | RCE0245 | F0467 | F0565 | <code>海中鱼巣/领域/概念活动状态.数据.h:65</code> | direct-free |  |  | 主信息静态类型为主信息句柄 | 专项源码静态类型与实际装配人工复核 |
 | RCE0246 | F0468 | F0013 | <code>海中鱼巣/自检.入口初始化.ixx:55</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
 | RCE0247 | F0468 | F0014 | <code>海中鱼巣/自检.入口初始化.ixx:56</code> | field_type_hint |  |  | 调用方可达且源码分支条件成立 | 逐边源码/静态类型审计 PASS |
-| RCE0248 | F0468 | R0083 | <code>海中鱼巣/自检.入口初始化.ixx:61</code> | unique_name |  |  | 调用方可达且源码分支条件成立 | 全项目唯一函数名并经调用方源码范围复核 |
+| RCE0248 | F0468 | F0198 | <code>海中鱼巣/自检.入口初始化.ixx:61</code> | source-audited-direct-const-member | this=&装配.上下文-&gt;关系；无显式参数 | uint64_t 转 size_t 写入关系数量 | 装配成功且节点数量读取完成 | 接收者静态类型与零参数重载复核 |
 | RCE0249 | F0468 | F0199 | <code>海中鱼巣/自检.入口初始化.ixx:62</code> | direct_const_member+source_audited |  | 有效主键数量 | 调用方可达且初始化仓库自检路径进入数量读取 | 当前源码调用点、接收者类型与重载复核 |
 | E0992 | F0470 | F0043 | <code>海中鱼巣/自检.入口初始化.ixx:80</code> | captured_member_direct | 上下文.方法隐式this,键,上下文.状态 | 方法登记根候选 | F0015调用对应端口 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
 | E0993 | F0471 | F0044 | <code>海中鱼巣/自检.入口初始化.ixx:81</code> | captured_member_direct | 上下文.自我线程实例隐式this,参数 | 自我线程操作结果 | F0015调用对应端口 | HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug\|x64 条件复核 |
@@ -3197,5 +3197,33 @@
 | RCE2171 | F0455 | R0370 | <code>海中鱼巣/领域/初始化.系统角色.ixx:137</code> | source-audited-direct | 概念关系根.改变了结构() | bool结果进入失败判断或改变了结构累计表达式 | F0455 前序创建步骤成功并执行到对应源码行 | 初始化.系统角色.ixx:136-150 源码表达式与现有稳定身份复核 |
 | RCE2172 | F0455 | R0603 | <code>海中鱼巣/领域/初始化.系统角色.ixx:150</code> | source-audited-direct | 状态已提交(方法登记根.状态) | bool结果进入失败判断或改变了结构累计表达式 | F0455 前序创建步骤成功并执行到对应源码行 | 初始化.系统角色.ixx:136-150 源码表达式与现有稳定身份复核 |
 | RCE2173 | F0455 | F0074 | <code>海中鱼巣/领域/初始化.系统角色.ixx:161, 海中鱼巣/领域/初始化.系统角色.ixx:166</code> | source-audited-direct | 拓扑；最终复核 | 成功bool进入提前返回判断 | 拓扑发布或最终复核结果已形成 | 初始化.系统角色.ixx:161,166 与 F0074 完整签名复核 |
+| RCE2174 | F0458 | F0459 | <code>海中鱼巣/领域/系统角色清单.数据.h:190</code> | source-audited-direct-const-member | 场景接纳自我关系 | bool进入入口门禁 | 前三个身份完整 | 静态接收者复核 |
+| RCE2175 | F0458 | R0727 | <code>海中鱼巣/领域/系统角色清单.数据.h:190, 海中鱼巣/领域/系统角色清单.数据.h:191</code> | source-audited-direct-const-member | 安全根需求；服务根需求 | 两个bool进入短路门禁 | 按源码左到右短路 | 静态接收者复核 |
+| RCE2176 | F0458 | F0051 | <code>海中鱼巣/领域/系统角色清单.数据.h:202, 海中鱼巣/领域/系统角色清单.数据.h:207, 海中鱼巣/领域/系统角色清单.数据.h:208</code> | source-audited-direct-operator | 节点句柄左右值 | bool进入重复性或归属判断 | 对应表达式可达 | 操作数静态类型复核 |
+| RCE2177 | F0458 | R0615 | <code>海中鱼巣/领域/系统角色清单.数据.h:203</code> | source-audited-direct-operator | 主信息句柄左右值 | bool进入重复性判断 | 同对前两项不相等 | 操作数静态类型复核 |
+| RCE2178 | F0459 | F0163 | <code>海中鱼巣/领域/系统角色清单.数据.h:134</code> | source-audited-direct-free | 源节点；目标节点 | 两个bool进入短路门禁 | 关系句柄有效 | 两个实参静态类型复核 |
+| RCE2179 | F0461 | F0451 | <code>海中鱼巣/领域/服务.概念活动.ixx:71</code> | source-audited-direct-const-member | 当前服务 | bool入口门禁 | 取得活动锁 | 源码复核 |
+| RCE2180 | F0461 | F0245 | <code>海中鱼巣/领域/服务.概念活动.ixx:71</code> | source-audited-direct-const-member | 系统角色 | bool入口门禁 | 服务有效 | 静态接收者复核 |
+| RCE2181 | F0461 | F0251 | <code>海中鱼巣/领域/服务.概念活动.ixx:71</code> | source-audited-direct-const-member | 预期材料 | bool入口门禁 | 前两项通过 | 静态接收者复核 |
+| RCE2182 | F0461 | F0250 | <code>海中鱼巣/领域/服务.概念活动.ixx:72</code> | source-audited-direct-const-member | 缓存材料；预期材料 | bool入口门禁 | optional 有值 | 静态接收者复核 |
+| RCE2183 | F0461 | F0464 | <code>海中鱼巣/领域/服务.概念活动.ixx:76</code> | source-audited-direct-const-member | 预期视图；重建视图 | bool决定内部不一致 | 重建成功 | 静态接收者复核 |
+| RCE2184 | F0462 | F0451 | <code>海中鱼巣/领域/服务.概念活动.ixx:32</code> | source-audited-direct-const-member | 当前服务 | bool入口门禁 | 取得活动锁 | 源码复核 |
+| RCE2185 | F0462 | F0245 | <code>海中鱼巣/领域/服务.概念活动.ixx:32</code> | source-audited-direct-const-member | 系统角色 | bool入口门禁 | 服务有效 | 静态接收者复核 |
+| RCE2186 | F0462 | F0229 | <code>海中鱼巣/领域/服务.概念活动.ixx:32</code> | source-audited-direct-const-member | 初始化参数 | bool入口门禁 | 前两项通过 | 静态接收者复核 |
+| RCE2187 | F0462 | F0247 | <code>海中鱼巣/领域/服务.概念活动.ixx:35</code> | source-audited-direct-const-member | 缓存材料；参数 | bool决定幂等冲突 | optional 有值 | 静态接收者复核 |
+| RCE2188 | F0462 | R0539 | <code>海中鱼巣/领域/服务.概念活动.ixx:39, 海中鱼巣/领域/服务.概念活动.ixx:40</code> | source-audited-direct-const-member | 重建 | bool进入判断或三元式 | 重建结果已形成 | 静态接收者复核 |
+| RCE2189 | F0462 | F0464 | <code>海中鱼巣/领域/服务.概念活动.ixx:39</code> | source-audited-direct-const-member | 缓存视图；重建视图 | bool一致性判断 | 重建成功 | 静态接收者复核 |
+| RCE2190 | F0462 | R0511 | <code>海中鱼巣/领域/服务.概念活动.ixx:47, 海中鱼巣/领域/服务.概念活动.ixx:50, 海中鱼巣/领域/服务.概念活动.ixx:53</code> | source-audited-direct-const-member | 三份抽象状态请求 | 三份规格结果 | 无缓存材料 | 静态接收者与请求类型复核 |
+| RCE2191 | F0462 | R0510 | <code>海中鱼巣/领域/服务.概念活动.ixx:56</code> | source-audited-direct-const-member | 三份规格结果 | 三个bool短路门禁 | 三份结果已形成 | 静态接收者复核 |
+| RCE2192 | F0462 | F0076 | <code>海中鱼巣/领域/服务.概念活动.ixx:61</code> | source-audited-direct-const-member | 结果 | bool完整性门禁 | 初始化结果已形成 | 静态接收者复核 |
+| RCE2193 | F0462 | R0726 | <code>海中鱼巣/领域/服务.概念活动.ixx:61</code> | source-audited-direct-const-member | 结果 | bool要求改变结构 | F0076 返回 true | 新身份定义复核 |
+| RCE2194 | F0463 | F0051 | <code>海中鱼巣/领域/概念活动状态.数据.h:70</code> | compiler-generated-defaulted-member-compare | 左右状态节点 | bool逐字段比较 | 前序字段相等 | 默认化比较成员类型复核 |
+| RCE2195 | F0463 | R0615 | <code>海中鱼巣/领域/概念活动状态.数据.h:70</code> | compiler-generated-defaulted-member-compare | 左右主信息 | bool逐字段比较 | 前序字段相等 | 默认化比较成员类型复核 |
+| RCE2196 | F0464 | F0463 | <code>海中鱼巣/领域/概念活动状态.数据.h:144</code> | standard-template-element-compare | 状态角色数组对应元素 | 元素bool由array短路编排 | 数组比较期间动态一至三次 | 模板元素类型复核 |
+| RCE2197 | F0465 | R0613 | <code>海中鱼巣/领域/概念活动状态.数据.h:116</code> | source-audited-direct-const-member | 左右根身份 | bool短路比较 | 类别相等 | 静态类型复核 |
+| RCE2198 | F0465 | F0457 | <code>海中鱼巣/领域/概念活动状态.数据.h:119</code> | source-audited-direct-const-member | 左右活跃关系 | bool最终比较 | 前序字段与签名一致 | 静态类型复核 |
+| RCE2199 | F0466 | F0467 | <code>海中鱼巣/领域/概念活动状态.数据.h:128, 海中鱼巣/领域/概念活动状态.数据.h:129</code> | source-audited-direct-const-member | 三个状态角色元素 | 三个bool短路门禁 | 按源码左到右短路 | 静态接收者复核 |
+| RCE2200 | F0468 | F0197 | <code>海中鱼巣/自检.入口初始化.ixx:60</code> | source-audited-direct-const-member | 节点仓库零参数接收者 | uint64_t转size_t写入节点数量 | 装配成功 | 接收者与零参数重载复核 |
+| RCE2201 | R0727 | R0563 | <code>海中鱼巣/领域/系统角色清单.数据.h:153, 海中鱼巣/领域/系统角色清单.数据.h:154</code> | source-audited-direct-const-member | 五个身份材料 | 五个bool短路门禁 | 按源码左到右短路 | 静态接收者复核 |
 
-统计：3193 条项目源码调用边；每个 caller/callee pair 只保留一个稳定边身份并合并全部调用点。
+统计：3221 条项目源码调用边；每个 caller/callee pair 只保留一个稳定边身份并合并全部调用点。
