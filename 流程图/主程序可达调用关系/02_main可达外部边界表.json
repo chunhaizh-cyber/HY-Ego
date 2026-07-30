@@ -15,9 +15,9 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1335,
-  "project_call_edge_count": 3816,
-  "external_count": 3088,
+  "function_count": 1340,
+  "project_call_edge_count": 3883,
+  "external_count": 3265,
   "callback_registration_count": 48,
   "external_boundaries": [
     {
@@ -19409,27 +19409,27 @@
     {
       "id": "X02163",
       "caller": "R0427",
-      "signature": "std::move(...)",
+      "signature": "std::move<海中鱼巣::抽象状态写入规格&>(海中鱼巣::抽象状态写入规格&)",
       "locations": [
         "海中鱼巣/领域/数据操作.需求任务方法.ixx:1028"
       ],
-      "call_count": 1,
+      "call_count": 3,
       "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立",
-      "resolution_source": "最终 caller 源码范围 + std 限定名调用语法复核",
+      "reachable_condition": "R0427构造局部方法登记根写入规格并移动三个抽象状态规格",
+      "resolution_source": "冻结源码实参静态类型、具体模板实例与同行三次调用复核",
       "current_root_reachable": true
     },
     {
       "id": "X02164",
       "caller": "R0427",
-      "signature": "std::move(...)",
+      "signature": "std::move<海中鱼巣::方法登记根写入规格&>(海中鱼巣::方法登记根写入规格&)",
       "locations": [
         "海中鱼巣/领域/数据操作.需求任务方法.ixx:1030"
       ],
       "call_count": 1,
       "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立",
-      "resolution_source": "最终 caller 源码范围 + std 限定名调用语法复核",
+      "reachable_condition": "局部规格完整并构造非空optional返回材料",
+      "resolution_source": "冻结源码实参静态类型与具体模板实例复核",
       "current_root_reachable": true
     },
     {
@@ -42598,6 +42598,2592 @@
       "boundary_category": "Standard library",
       "reachable_condition": "节点结果已经构造后离开作用域",
       "resolution_source": "冻结源码局部对象生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03810",
+      "signature": "static_cast<std::uint64_t>(std::int64_t)",
+      "caller": "R0408",
+      "locations": [
+        "海中鱼巣/领域/数据操作.状态动态.ixx:968",
+        "海中鱼巣/领域/数据操作.状态动态.ixx:969"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Compiler or language boundary",
+      "reachable_condition": "调用方可达且对应调用表达式成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03826",
+      "signature": "std::function<void(海中鱼巣::结构写入会话&)>::function<发布世界拓扑lambda>(lambda&&)",
+      "caller": "R0409",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:132"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03827",
+      "signature": "std::function<void(海中鱼巣::结构写入会话&)>::~function()",
+      "caller": "R0409",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:132-157"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03828",
+      "signature": "bool std::optional<海中鱼巣::系统角色数据操作::关系与变化>::has_value() const noexcept",
+      "caller": "R0410",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:142",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:148"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03829",
+      "signature": "海中鱼巣::系统角色数据操作::关系与变化* std::optional<海中鱼巣::系统角色数据操作::关系与变化>::operator->() noexcept",
+      "caller": "R0410",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:143",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:149"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03830",
+      "signature": "std::optional<海中鱼巣::系统角色数据操作::关系与变化>::~optional()",
+      "caller": "R0410",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:139-157",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:145-157"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03831",
+      "signature": "const 海中鱼巣::系统角色键占用材料* std::array<海中鱼巣::系统角色键占用材料, 21>::begin() const noexcept",
+      "caller": "R0412",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:225"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03832",
+      "signature": "const 海中鱼巣::系统角色键占用材料* std::array<海中鱼巣::系统角色键占用材料, 21>::end() const noexcept",
+      "caller": "R0412",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:225"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03833",
+      "signature": "bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept",
+      "caller": "R0413",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:234"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03834",
+      "signature": "const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept",
+      "caller": "R0413",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:234-235"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03835",
+      "signature": "std::optional<海中鱼巣::节点记录>::~optional()",
+      "caller": "R0413",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:233-241"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03836",
+      "signature": "bool std::optional<海中鱼巣::主信息记录>::has_value() const noexcept",
+      "caller": "R0413",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:236"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03837",
+      "signature": "std::optional<海中鱼巣::主信息记录>::~optional()",
+      "caller": "R0413",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:236"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03838",
+      "signature": "std::optional<海中鱼巣::节点句柄>::optional(海中鱼巣::节点句柄&&)",
+      "caller": "R0413",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:238"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03839",
+      "signature": "bool std::optional<海中鱼巣::节点句柄>::operator==(const std::optional<海中鱼巣::节点句柄>&) const",
+      "caller": "R0413",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:237-238"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03840",
+      "signature": "std::optional<海中鱼巣::节点句柄>::~optional()",
+      "caller": "R0413",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:237-238"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03841",
+      "signature": "std::vector<std::uint64_t>::vector(std::initializer_list<std::uint64_t>)",
+      "caller": "R0413",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:240"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03842",
+      "signature": "bool std::vector<std::uint64_t>::operator==(const std::vector<std::uint64_t>&) const",
+      "caller": "R0413",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:239-240"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03843",
+      "signature": "std::vector<std::uint64_t>::~vector()",
+      "caller": "R0413",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:239-240"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03844",
+      "signature": "std::optional<海中鱼巣::节点类型>::optional(海中鱼巣::节点类型&&)",
+      "caller": "R0414",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:247"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03845",
+      "signature": "bool std::optional<海中鱼巣::节点类型>::operator==(const std::optional<海中鱼巣::节点类型>&) const",
+      "caller": "R0414",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:247"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03846",
+      "signature": "std::optional<海中鱼巣::节点类型>::~optional()",
+      "caller": "R0414",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:247"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03847",
+      "signature": "std::optional<海中鱼巣::主信息句柄>::optional(海中鱼巣::主信息句柄&&)",
+      "caller": "R0414",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:248"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03848",
+      "signature": "bool std::optional<海中鱼巣::主信息句柄>::operator==(const std::optional<海中鱼巣::主信息句柄>&) const",
+      "caller": "R0414",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:248"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03849",
+      "signature": "std::optional<海中鱼巣::主信息句柄>::~optional()",
+      "caller": "R0414",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:248"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03850",
+      "signature": "std::vector<std::uint64_t>::vector(std::initializer_list<std::uint64_t>)",
+      "caller": "R0414",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:251"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03851",
+      "signature": "bool std::vector<std::uint64_t>::operator==(const std::vector<std::uint64_t>&) const",
+      "caller": "R0414",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:250-251"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03852",
+      "signature": "std::vector<std::uint64_t>::~vector()",
+      "caller": "R0414",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:250-251"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03853",
+      "signature": "std::array<const 海中鱼巣::系统角色身份材料*, 21>::iterator std::array<const 海中鱼巣::系统角色身份材料*, 21>::begin() noexcept",
+      "caller": "R0415",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:258"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03854",
+      "signature": "std::array<const 海中鱼巣::系统角色身份材料*, 21>::iterator std::array<const 海中鱼巣::系统角色身份材料*, 21>::end() noexcept",
+      "caller": "R0415",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:258"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03855",
+      "signature": "std::optional<海中鱼巣::关系记录>::~optional()",
+      "caller": "R0416",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:271-279"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03856",
+      "signature": "std::optional<海中鱼巣::系统角色关系材料>::optional(std::nullopt_t) noexcept",
+      "caller": "R0416",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:275"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03857",
+      "signature": "std::optional<海中鱼巣::系统角色关系材料>::optional(海中鱼巣::系统角色关系材料&&)",
+      "caller": "R0416",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:277-278"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03858",
+      "signature": "bool std::optional<海中鱼巣::关系记录>::has_value() const noexcept",
+      "caller": "R0417",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:286"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03859",
+      "signature": "const 海中鱼巣::关系记录* std::optional<海中鱼巣::关系记录>::operator->() const noexcept",
+      "caller": "R0417",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:286-288"
+      ],
+      "call_count": 5,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03860",
+      "signature": "std::optional<海中鱼巣::关系记录>::~optional()",
+      "caller": "R0417",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:285-290"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03861",
+      "signature": "std::vector<海中鱼巣::关系记录>::size_type std::vector<海中鱼巣::关系记录>::size() const noexcept",
+      "caller": "R0418",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:299",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:303"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03862",
+      "signature": "const 海中鱼巣::关系记录& std::vector<海中鱼巣::关系记录>::front() const",
+      "caller": "R0418",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:304"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03863",
+      "signature": "std::vector<海中鱼巣::关系记录>::~vector()",
+      "caller": "R0418",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:298-336"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03864",
+      "signature": "std::optional<海中鱼巣::系统角色数据操作::关系与变化>::optional(std::nullopt_t) noexcept",
+      "caller": "R0418",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:301",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:308",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:313",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:323",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:331"
+      ],
+      "call_count": 5,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03865",
+      "signature": "std::optional<海中鱼巣::系统角色数据操作::关系与变化>::optional(海中鱼巣::系统角色数据操作::关系与变化&&)",
+      "caller": "R0418",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:315-316",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:333-335"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03866",
+      "signature": "bool std::optional<海中鱼巣::关系句柄>::has_value() const noexcept",
+      "caller": "R0418",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:320"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03867",
+      "signature": "海中鱼巣::关系句柄& std::optional<海中鱼巣::关系句柄>::operator*() & noexcept",
+      "caller": "R0418",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:325",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:329",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:334"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03868",
+      "signature": "std::optional<海中鱼巣::关系句柄>::~optional()",
+      "caller": "R0418",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:319-336"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03869",
+      "signature": "bool std::optional<海中鱼巣::关系记录>::has_value() const noexcept",
+      "caller": "R0418",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:326"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03870",
+      "signature": "const 海中鱼巣::关系记录* std::optional<海中鱼巣::关系记录>::operator->() const noexcept",
+      "caller": "R0418",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:326-328"
+      ],
+      "call_count": 5,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03871",
+      "signature": "std::optional<海中鱼巣::关系记录>::~optional()",
+      "caller": "R0418",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:325-336"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03872",
+      "signature": "std::vector<海中鱼巣::关系记录>::size_type std::vector<海中鱼巣::关系记录>::size() const noexcept",
+      "caller": "R0419",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:344"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03873",
+      "signature": "const 海中鱼巣::关系记录& std::vector<海中鱼巣::关系记录>::front() const",
+      "caller": "R0419",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:345"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03874",
+      "signature": "std::vector<海中鱼巣::关系记录>::~vector()",
+      "caller": "R0419",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:342-353"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03875",
+      "signature": "std::optional<海中鱼巣::系统角色关系材料>::optional(std::nullopt_t) noexcept",
+      "caller": "R0419",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:344",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:348"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03876",
+      "signature": "std::vector<海中鱼巣::关系记录>::iterator std::vector<海中鱼巣::关系记录>::begin() noexcept",
+      "caller": "R0420",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:360"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03877",
+      "signature": "std::vector<海中鱼巣::关系记录>::iterator std::vector<海中鱼巣::关系记录>::end() noexcept",
+      "caller": "R0420",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:360"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03878",
+      "signature": "bool std::vector<海中鱼巣::关系记录>::iterator::operator!=(const iterator&) const",
+      "caller": "R0420",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:360"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03879",
+      "signature": "海中鱼巣::关系记录& std::vector<海中鱼巣::关系记录>::iterator::operator*() const",
+      "caller": "R0420",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:360"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03880",
+      "signature": "std::vector<海中鱼巣::关系记录>::iterator& std::vector<海中鱼巣::关系记录>::iterator::operator++()",
+      "caller": "R0420",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:360"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03881",
+      "signature": "std::vector<海中鱼巣::关系记录>::~vector()",
+      "caller": "R0420",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:360-372"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03882",
+      "signature": "bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept",
+      "caller": "R0420",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:362"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03883",
+      "signature": "const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept",
+      "caller": "R0420",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:363-364"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03884",
+      "signature": "std::optional<海中鱼巣::节点记录>::~optional()",
+      "caller": "R0420",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:361-370"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03885",
+      "signature": "std::vector<海中鱼巣::节点句柄>::const_iterator std::vector<海中鱼巣::节点句柄>::begin() const noexcept",
+      "caller": "R0420",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:365",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:367"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03886",
+      "signature": "std::vector<海中鱼巣::节点句柄>::const_iterator std::vector<海中鱼巣::节点句柄>::end() const noexcept",
+      "caller": "R0420",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:365",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:367"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03887",
+      "signature": "void std::vector<海中鱼巣::节点句柄>::push_back(const 海中鱼巣::节点句柄&)",
+      "caller": "R0420",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:369"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03888",
+      "signature": "std::vector<海中鱼巣::节点句柄>::~vector()",
+      "caller": "R0420",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:359-372"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03889",
+      "signature": "海中鱼巣::结构事务许可 (*)(const std::shared_ptr<void>&) 原始共享许可函数指针调用",
+      "caller": "R0421",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:376"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03890",
+      "signature": "std::array<const 海中鱼巣::系统角色身份材料*, 21>::iterator std::array<const 海中鱼巣::系统角色身份材料*, 21>::begin() noexcept",
+      "caller": "R0421",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:379"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03891",
+      "signature": "std::array<const 海中鱼巣::系统角色身份材料*, 21>::iterator std::array<const 海中鱼巣::系统角色身份材料*, 21>::end() noexcept",
+      "caller": "R0421",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:379"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03892",
+      "signature": "std::vector<海中鱼巣::节点句柄>::vector(std::initializer_list<海中鱼巣::节点句柄>)",
+      "caller": "R0421",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:386"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03893",
+      "signature": "std::vector<海中鱼巣::节点句柄>::vector()",
+      "caller": "R0421",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:389"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03894",
+      "signature": "std::vector<海中鱼巣::节点句柄>::~vector()",
+      "caller": "R0421",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:384-390"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03895",
+      "signature": "bool std::optional<海中鱼巣::系统角色关系材料>::has_value() const noexcept",
+      "caller": "R0421",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:395",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:402"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03896",
+      "signature": "海中鱼巣::系统角色关系材料& std::optional<海中鱼巣::系统角色关系材料>::operator*() & noexcept",
+      "caller": "R0421",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:395",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:406"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03897",
+      "signature": "std::optional<海中鱼巣::系统角色关系材料>::~optional()",
+      "caller": "R0421",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:392-410"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03898",
+      "signature": "海中鱼巣::结构事务许可 (*)(const std::shared_ptr<void>&) 原始共享许可函数指针调用",
+      "caller": "R0422",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:46"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03899",
+      "signature": "bool std::optional<海中鱼巣::节点句柄>::has_value() const noexcept",
+      "caller": "R0422",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:54"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03900",
+      "signature": "海中鱼巣::节点句柄& std::optional<海中鱼巣::节点句柄>::operator*() & noexcept",
+      "caller": "R0422",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:55",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:68",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:73"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03901",
+      "caller": "R0423",
+      "boundary_category": "Raw function pointer",
+      "signature": "海中鱼巣::结构事务许可 (*)(const std::shared_ptr<void>&) 原始函数指针调用",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:127"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03902",
+      "caller": "R0423",
+      "boundary_category": "Standard library optional",
+      "signature": "bool std::optional<海中鱼巣::节点句柄>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:130"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03903",
+      "caller": "R0423",
+      "boundary_category": "Standard library optional",
+      "signature": "const 海中鱼巣::节点句柄& std::optional<海中鱼巣::节点句柄>::operator*() const& noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:131"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03904",
+      "caller": "R0423",
+      "boundary_category": "Standard library lifetime",
+      "signature": "std::optional<海中鱼巣::节点句柄>::~optional()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:129-132"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03905",
+      "caller": "R0424",
+      "boundary_category": "Standard library container",
+      "signature": "std::vector<std::uint64_t>::size() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:206"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03906",
+      "caller": "R0424",
+      "boundary_category": "Standard library container",
+      "signature": "const std::uint64_t& std::vector<std::uint64_t>::front() const",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:206",
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:207",
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:208",
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:211"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03907",
+      "caller": "R0424",
+      "boundary_category": "Standard library optional",
+      "signature": "bool std::optional<std::uint64_t>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:207"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03908",
+      "caller": "R0424",
+      "boundary_category": "Standard library optional",
+      "signature": "std::uint64_t& std::optional<std::uint64_t>::operator*() & noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:207"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03909",
+      "caller": "R0424",
+      "boundary_category": "Standard library optional",
+      "signature": "std::optional<海中鱼巣::节点句柄>::optional(const 海中鱼巣::节点句柄&)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:208"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03910",
+      "caller": "R0424",
+      "boundary_category": "Standard library optional",
+      "signature": "bool std::operator!=(const std::optional<海中鱼巣::节点句柄>&, const std::optional<海中鱼巣::节点句柄>&)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:208"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03911",
+      "caller": "R0424",
+      "boundary_category": "Standard library lifetime",
+      "signature": "std::optional<海中鱼巣::节点句柄>::~optional()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:208"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03912",
+      "caller": "R0424",
+      "boundary_category": "Standard library optional",
+      "signature": "std::optional<std::uint64_t>::optional(const std::uint64_t&)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:211"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03913",
+      "caller": "R0424",
+      "boundary_category": "Standard library lifetime",
+      "signature": "std::vector<std::uint64_t>::~vector()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:205-212"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03914",
+      "caller": "R0424",
+      "boundary_category": "Standard library lifetime",
+      "signature": "std::optional<std::uint64_t>::~optional()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:201-212"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03915",
+      "caller": "R0424",
+      "boundary_category": "Standard library optional",
+      "signature": "std::optional<std::uint64_t>::optional(std::nullopt_t) noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:206",
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:207",
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:209"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03916",
+      "caller": "R0425",
+      "boundary_category": "Standard library optional",
+      "signature": "bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:221"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03917",
+      "caller": "R0425",
+      "boundary_category": "Standard library optional",
+      "signature": "const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:225",
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:229",
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:238"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03918",
+      "caller": "R0425",
+      "boundary_category": "Standard library lifetime",
+      "signature": "std::optional<海中鱼巣::节点记录>::~optional()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:220-240"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03919",
+      "caller": "R0425",
+      "boundary_category": "Standard library optional",
+      "signature": "bool std::optional<海中鱼巣::主信息记录>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:229"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03920",
+      "caller": "R0425",
+      "boundary_category": "Standard library lifetime",
+      "signature": "std::optional<海中鱼巣::主信息记录>::~optional()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:229"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03921",
+      "caller": "R0425",
+      "boundary_category": "Standard library optional",
+      "signature": "bool std::optional<std::uint64_t>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:233"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03922",
+      "caller": "R0425",
+      "boundary_category": "Standard library optional",
+      "signature": "const std::uint64_t& std::optional<std::uint64_t>::operator*() const& noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:237"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03923",
+      "caller": "R0425",
+      "boundary_category": "Standard library lifetime",
+      "signature": "std::optional<std::uint64_t>::~optional()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:214-240",
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:232-240"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03931",
+      "caller": "R0429",
+      "signature": "bool std::optional<海中鱼巣::节点句柄>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1115"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "主键索引查询已返回需求optional",
+      "resolution_source": "冻结源码具体optional实例、接收者静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03932",
+      "caller": "R0429",
+      "signature": "const 海中鱼巣::节点句柄& std::optional<海中鱼巣::节点句柄>::operator*() const& noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1116"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "需求optional有值",
+      "resolution_source": "冻结源码具体optional实例、const接收者与解引用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03933",
+      "caller": "R0429",
+      "signature": "std::optional<海中鱼巣::节点句柄>::~optional()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1114-1122"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "需求optional已构造后离开作用域",
+      "resolution_source": "冻结源码局部对象静态类型与RAII生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03934",
+      "caller": "R0430",
+      "signature": "bool std::optional<海中鱼巣::节点句柄>::has_value() const noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1164"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "主键索引查询已返回根optional",
+      "resolution_source": "冻结源码具体optional实例、接收者静态类型与调用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03935",
+      "caller": "R0430",
+      "signature": "const 海中鱼巣::节点句柄& std::optional<海中鱼巣::节点句柄>::operator*() const& noexcept",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1165"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "根optional有值",
+      "resolution_source": "冻结源码具体optional实例、const接收者与解引用位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03936",
+      "caller": "R0430",
+      "signature": "std::optional<海中鱼巣::节点句柄>::~optional()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1163-1166"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "根optional已构造后离开作用域",
+      "resolution_source": "冻结源码局部对象静态类型与RAII生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03937",
+      "caller": "R0432",
+      "signature": "std::function<void(海中鱼巣::结构写入会话&)>::function<lambda>(lambda)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1632"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "R0432进入结构事务执行并把R0433 lambda适配为回调",
+      "resolution_source": "冻结源码目标参数类型、lambda签名与临时对象构造复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03938",
+      "caller": "R0432",
+      "signature": "std::function<void(海中鱼巣::结构写入会话&)>::~function()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1632-1648"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "临时std::function已构造且R0116调用完成或异常展开",
+      "resolution_source": "冻结源码临时对象静态类型与完整表达式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03939",
+      "caller": "R0433",
+      "signature": "std::vector<海中鱼巣::关系句柄>::vector()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1642"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "三份状态材料复核通过并构造局部关系句柄容器",
+      "resolution_source": "冻结源码局部对象静态类型与默认构造复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03940",
+      "caller": "R0433",
+      "signature": "std::vector<海中鱼巣::关系句柄>::~vector()",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1642-1648"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "局部关系句柄容器已构造后回调返回或异常展开",
+      "resolution_source": "冻结源码局部对象静态类型与RAII生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03941",
+      "caller": "R0433",
+      "signature": "static_cast<std::int64_t>(海中鱼巣::分层方法角色)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1639"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Language conversion",
+      "reachable_condition": "角色状态写入成功并复核状态值",
+      "resolution_source": "冻结源码源枚举类型、目标整数类型与转换位置复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03942",
+      "caller": "R0433",
+      "signature": "static_cast<std::int64_t>(海中鱼巣::分层方法生命周期)",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1640",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1641"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Language conversion",
+      "reachable_condition": "活跃与失效状态写入成功并复核状态值",
+      "resolution_source": "冻结源码源枚举类型、目标整数类型与两处转换复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03981",
+      "signature": "std::optional<海中鱼巣::节点句柄>::~optional()",
+      "caller": "R0422",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:53-75"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03982",
+      "signature": "bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept",
+      "caller": "R0422",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:56"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03983",
+      "signature": "const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept",
+      "caller": "R0422",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:60",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:64",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:74"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03984",
+      "signature": "std::optional<海中鱼巣::节点记录>::~optional()",
+      "caller": "R0422",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:55-75"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03985",
+      "signature": "bool std::optional<海中鱼巣::主信息记录>::has_value() const noexcept",
+      "caller": "R0422",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:64"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03986",
+      "signature": "std::optional<海中鱼巣::主信息记录>::~optional()",
+      "caller": "R0422",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:64-75"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03987",
+      "signature": "std::vector<std::uint64_t>::vector(std::initializer_list<std::uint64_t>)",
+      "caller": "R0422",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:69"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03988",
+      "signature": "bool std::vector<std::uint64_t>::operator!=(const std::vector<std::uint64_t>&) const",
+      "caller": "R0422",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:69"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03989",
+      "signature": "std::vector<std::uint64_t>::~vector()",
+      "caller": "R0422",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:68-75"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03990",
+      "signature": "std::vector<海中鱼巣::节点句柄>::vector()",
+      "caller": "R0422",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:80"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03991",
+      "signature": "void std::vector<海中鱼巣::节点句柄>::push_back(const 海中鱼巣::节点句柄&)",
+      "caller": "R0422",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:82",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:85"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03992",
+      "signature": "std::vector<海中鱼巣::节点句柄>::~vector()",
+      "caller": "R0422",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:80-122"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03993",
+      "signature": "std::vector<海中鱼巣::节点句柄>::vector(std::initializer_list<海中鱼巣::节点句柄>)",
+      "caller": "R0422",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:92"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03994",
+      "signature": "std::vector<海中鱼巣::关系记录>::size_type std::vector<海中鱼巣::关系记录>::size() const noexcept",
+      "caller": "R0422",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:100",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:101",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:110"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03995",
+      "signature": "const 海中鱼巣::关系记录& std::vector<海中鱼巣::关系记录>::front() const",
+      "caller": "R0422",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:103",
+        "海中鱼巣/领域/数据操作.系统角色.ixx:111"
+      ],
+      "call_count": 7,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03996",
+      "signature": "std::vector<海中鱼巣::关系记录>::~vector()",
+      "caller": "R0422",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:98-122"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03997",
+      "signature": "bool std::optional<海中鱼巣::关系记录>::has_value() const noexcept",
+      "caller": "R0422",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:113"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X03998",
+      "signature": "std::optional<海中鱼巣::关系记录>::~optional()",
+      "caller": "R0422",
+      "locations": [
+        "海中鱼巣/领域/数据操作.系统角色.ixx:113"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方可达且对应调用表达式或隐式生命周期成立",
+      "resolution_source": "冻结源码逐调用点、静态类型和图映射复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04021",
+      "signature": "bool std::optional<海中鱼巣::节点记录>::has_value() const noexcept",
+      "caller": "R0435",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1942"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04022",
+      "signature": "const 海中鱼巣::节点记录* std::optional<海中鱼巣::节点记录>::operator->() const noexcept",
+      "caller": "R0435",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1946",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1958",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1959"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04023",
+      "signature": "std::optional<海中鱼巣::节点记录>::~optional()",
+      "caller": "R0435",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1941-1961"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04024",
+      "signature": "bool std::optional<海中鱼巣::主信息记录>::has_value() const noexcept",
+      "caller": "R0435",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1946"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04025",
+      "signature": "std::optional<海中鱼巣::主信息记录>::~optional()",
+      "caller": "R0435",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1946"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04026",
+      "signature": "std::vector<std::uint64_t>::size() const noexcept",
+      "caller": "R0435",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1951"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04027",
+      "signature": "const std::uint64_t& std::vector<std::uint64_t>::front() const",
+      "caller": "R0435",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1951",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1952",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1957"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04028",
+      "signature": "std::vector<std::uint64_t>::~vector()",
+      "caller": "R0435",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1950-1961"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04029",
+      "signature": "bool std::optional<std::uint64_t>::has_value() const noexcept",
+      "caller": "R0435",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1952"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04030",
+      "signature": "const std::uint64_t& std::optional<std::uint64_t>::operator*() const& noexcept",
+      "caller": "R0435",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1952"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04031",
+      "signature": "std::optional<std::uint64_t>::~optional()",
+      "caller": "R0435",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1934-1961"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04032",
+      "signature": "bool std::optional<海中鱼巣::关系记录>::has_value() const noexcept",
+      "caller": "R0436",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1973"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04033",
+      "signature": "const 海中鱼巣::关系记录* std::optional<海中鱼巣::关系记录>::operator->() const noexcept",
+      "caller": "R0436",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1973",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1974",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1975",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1976"
+      ],
+      "call_count": 7,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04034",
+      "signature": "std::optional<海中鱼巣::关系记录>::~optional()",
+      "caller": "R0436",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1970-1980"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04035",
+      "signature": "std::optional<海中鱼巣::高级关系证据>::optional(std::nullopt_t) noexcept",
+      "caller": "R0436",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1968",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1976"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04036",
+      "signature": "std::optional<海中鱼巣::高级关系证据>::optional(海中鱼巣::高级关系证据&&)",
+      "caller": "R0436",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1977-1979"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04037",
+      "signature": "bool std::optional<海中鱼巣::高级关系证据>::has_value() const noexcept",
+      "caller": "R0437",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1985"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04038",
+      "signature": "std::optional<海中鱼巣::高级关系证据>& std::optional<海中鱼巣::高级关系证据>::operator=(const 海中鱼巣::高级关系证据&)",
+      "caller": "R0437",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:1986"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04039",
+      "signature": "bool std::optional<std::int64_t>::has_value() const noexcept",
+      "caller": "R0440",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2015",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2016"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04040",
+      "signature": "const std::int64_t& std::optional<std::int64_t>::operator*() const& noexcept",
+      "caller": "R0440",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2015",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2016",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2017",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2018",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2019",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2020",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2062",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2063"
+      ],
+      "call_count": 10,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04041",
+      "signature": "std::optional<std::int64_t>::~optional()",
+      "caller": "R0440",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2009-2072"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04042",
+      "signature": "std::vector<海中鱼巣::关系记录>::iterator std::vector<海中鱼巣::关系记录>::begin() noexcept",
+      "caller": "R0440",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2026",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2046"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04043",
+      "signature": "std::vector<海中鱼巣::关系记录>::iterator std::vector<海中鱼巣::关系记录>::end() noexcept",
+      "caller": "R0440",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2026",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2046"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04044",
+      "signature": "bool std::vector<海中鱼巣::关系记录>::iterator::operator!=(const iterator&) const noexcept",
+      "caller": "R0440",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2026",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2046"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04045",
+      "signature": "海中鱼巣::关系记录& std::vector<海中鱼巣::关系记录>::iterator::operator*() const noexcept",
+      "caller": "R0440",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2026",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2046"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04046",
+      "signature": "std::vector<海中鱼巣::关系记录>::iterator& std::vector<海中鱼巣::关系记录>::iterator::operator++() noexcept",
+      "caller": "R0440",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2026",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2046"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04047",
+      "signature": "std::vector<海中鱼巣::关系记录>::~vector()",
+      "caller": "R0440",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2026-2040",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2046-2054"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04048",
+      "signature": "bool std::optional<海中鱼巣::高级关系证据>::has_value() const noexcept",
+      "caller": "R0440",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2028",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2041",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2050",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2055"
+      ],
+      "call_count": 6,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04049",
+      "signature": "const 海中鱼巣::高级关系证据& std::optional<海中鱼巣::高级关系证据>::operator*() const& noexcept",
+      "caller": "R0440",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2032",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2036",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2053"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04050",
+      "signature": "海中鱼巣::高级关系证据& std::optional<海中鱼巣::高级关系证据>::operator*() & noexcept",
+      "caller": "R0440",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2066",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2067",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2068"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04051",
+      "signature": "海中鱼巣::高级关系证据* std::optional<海中鱼巣::高级关系证据>::operator->() noexcept",
+      "caller": "R0440",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2047",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2064",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2065"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04052",
+      "signature": "std::optional<海中鱼巣::高级关系证据>& std::optional<海中鱼巣::高级关系证据>::operator=(const 海中鱼巣::高级关系证据&)",
+      "caller": "R0440",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2053"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04053",
+      "signature": "std::optional<海中鱼巣::高级关系证据>::~optional()",
+      "caller": "R0440",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2024-2072",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2025-2072",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2027-2040",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2045-2072",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2049-2054"
+      ],
+      "call_count": 5,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04054",
+      "signature": "bool std::optional<海中鱼巣::高级关系证据>::has_value() const noexcept",
+      "caller": "R0441",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2081",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2098",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2150",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2151",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2166"
+      ],
+      "call_count": 7,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04055",
+      "signature": "const 海中鱼巣::高级关系证据& std::optional<海中鱼巣::高级关系证据>::operator*() const& noexcept",
+      "caller": "R0441",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2104",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2109",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2114",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2131",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2145"
+      ],
+      "call_count": 5,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04056",
+      "signature": "海中鱼巣::高级关系证据& std::optional<海中鱼巣::高级关系证据>::operator*() & noexcept",
+      "caller": "R0441",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2157",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2159",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2161",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2163",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2165",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2168"
+      ],
+      "call_count": 6,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04057",
+      "signature": "海中鱼巣::高级关系证据* std::optional<海中鱼巣::高级关系证据>::operator->() noexcept",
+      "caller": "R0441",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2099",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2100",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2158",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2160",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2162",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2164",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2167"
+      ],
+      "call_count": 7,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04058",
+      "signature": "std::optional<海中鱼巣::高级关系证据>& std::optional<海中鱼巣::高级关系证据>::operator=(const 海中鱼巣::高级关系证据&)",
+      "caller": "R0441",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2168"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04059",
+      "signature": "std::optional<海中鱼巣::高级关系证据>::~optional()",
+      "caller": "R0441",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2080-2182",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2092-2182",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2093-2182",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2094-2182",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2097-2120",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2122-2182",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2125-2134",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2136-2182",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2139-2148"
+      ],
+      "call_count": 9,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04060",
+      "signature": "std::vector<海中鱼巣::关系记录>::iterator std::vector<海中鱼巣::关系记录>::begin() noexcept",
+      "caller": "R0441",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2095",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2123",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2137"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04061",
+      "signature": "std::vector<海中鱼巣::关系记录>::iterator std::vector<海中鱼巣::关系记录>::end() noexcept",
+      "caller": "R0441",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2095",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2123",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2137"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04062",
+      "signature": "bool std::vector<海中鱼巣::关系记录>::iterator::operator!=(const iterator&) const noexcept",
+      "caller": "R0441",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2095",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2123",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2137"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04063",
+      "signature": "海中鱼巣::关系记录& std::vector<海中鱼巣::关系记录>::iterator::operator*() const noexcept",
+      "caller": "R0441",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2095",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2123",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2137"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04064",
+      "signature": "std::vector<海中鱼巣::关系记录>::iterator& std::vector<海中鱼巣::关系记录>::iterator::operator++() noexcept",
+      "caller": "R0441",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2095",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2123",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2137"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04065",
+      "signature": "std::vector<海中鱼巣::关系记录>::~vector()",
+      "caller": "R0441",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2095-2120",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2123-2134",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2137-2148"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04066",
+      "signature": "std::optional<海中鱼巣::节点句柄>::optional(const 海中鱼巣::节点句柄&)",
+      "caller": "R0441",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2175"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04067",
+      "signature": "bool std::operator!=(const std::optional<海中鱼巣::节点句柄>&, const std::optional<海中鱼巣::节点句柄>&)",
+      "caller": "R0441",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2175"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04068",
+      "signature": "std::optional<海中鱼巣::节点句柄>::~optional()",
+      "caller": "R0441",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:2175"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library or external boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应源码分支成立",
+      "resolution_source": "冻结源码逐行复核；当前代码自冻结提交零差异",
       "current_root_reachable": true
     }
   ],
