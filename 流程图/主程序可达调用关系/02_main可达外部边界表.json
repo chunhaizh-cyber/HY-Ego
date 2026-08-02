@@ -17,7 +17,7 @@
   ],
   "function_count": 1383,
   "project_call_edge_count": 4103,
-  "external_count": 3743,
+  "external_count": 3752,
   "callback_registration_count": 59,
   "external_boundaries": [
     {
@@ -52187,6 +52187,132 @@
       "queued": false,
       "boundary_category": "Standard library iterator",
       "reachable_condition": "两次范围循环处理当前记录后推进游标",
+      "resolution_source": "本批逐函数源码表达式、静态类型与范围循环展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04853",
+      "signature": "constexpr std::optional<海中鱼巣::节点句柄>::optional(std::nullopt_t) noexcept",
+      "caller": "R0650",
+      "locations": [
+        "海中鱼巣/领域/数据操作.存在场景.ixx:267"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "主键未命中且读取状态为未找到，创建实际存在身份时形成无来源参数",
+      "resolution_source": "本批逐函数源码表达式、静态类型与范围循环展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04854",
+      "signature": "std::optional<海中鱼巣::关系值式证据>::optional() noexcept",
+      "caller": "R0670",
+      "locations": [
+        "海中鱼巣/领域/数据操作.状态动态.ixx:1161,1162"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "进入来源动作角色读取后分别默认构造角色关系和入口关系空值",
+      "resolution_source": "本批逐函数源码表达式、静态类型与范围循环展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04855",
+      "signature": "bool std::vector<海中鱼巣::关系记录>::const_iterator::operator!=(const const_iterator&) const",
+      "caller": "R0670",
+      "locations": [
+        "海中鱼巣/领域/数据操作.状态动态.ixx:1163,1174"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "遍历来源动作模板关系记录组时判断是否到达末尾",
+      "resolution_source": "本批逐函数源码表达式、静态类型与范围循环展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04856",
+      "signature": "const 海中鱼巣::关系记录& std::vector<海中鱼巣::关系记录>::const_iterator::operator*() const",
+      "caller": "R0670",
+      "locations": [
+        "海中鱼巣/领域/数据操作.状态动态.ixx:1163"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "范围循环仍有模板关系记录时读取当前记录",
+      "resolution_source": "本批逐函数源码表达式、静态类型与范围循环展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04857",
+      "signature": "std::vector<海中鱼巣::关系记录>::const_iterator& std::vector<海中鱼巣::关系记录>::const_iterator::operator++()",
+      "caller": "R0670",
+      "locations": [
+        "海中鱼巣/领域/数据操作.状态动态.ixx:1174"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "当前模板关系记录处理完成后推进范围循环",
+      "resolution_source": "本批逐函数源码表达式、静态类型与范围循环展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04858",
+      "signature": "std::optional<海中鱼巣::关系值式证据>::optional() noexcept",
+      "caller": "R0669",
+      "locations": [
+        "海中鱼巣/领域/数据操作.状态动态.ixx:1245,1246,1264,1275"
+      ],
+      "call_count": 8,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "实例动态关系读取时默认构造主体、场景、临时关系空值，并为五个因果槽默认构造空 optional",
+      "resolution_source": "本批逐函数源码表达式、静态类型与范围循环展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04859",
+      "signature": "bool std::vector<海中鱼巣::关系记录>::const_iterator::operator!=(const const_iterator&) const",
+      "caller": "R0669",
+      "locations": [
+        "海中鱼巣/领域/数据操作.状态动态.ixx:1247,1259,1265,1272,1276,1285"
+      ],
+      "call_count": 6,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "三次遍历实例动态引用、场景临时和因果来源关系记录组时判断是否到达末尾",
+      "resolution_source": "本批逐函数源码表达式、静态类型与范围循环展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04860",
+      "signature": "const 海中鱼巣::关系记录& std::vector<海中鱼巣::关系记录>::const_iterator::operator*() const",
+      "caller": "R0669",
+      "locations": [
+        "海中鱼巣/领域/数据操作.状态动态.ixx:1247,1265,1276"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "三次范围循环仍有关系记录时读取当前记录",
+      "resolution_source": "本批逐函数源码表达式、静态类型与范围循环展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04861",
+      "signature": "std::vector<海中鱼巣::关系记录>::const_iterator& std::vector<海中鱼巣::关系记录>::const_iterator::operator++()",
+      "caller": "R0669",
+      "locations": [
+        "海中鱼巣/领域/数据操作.状态动态.ixx:1259,1272,1285"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "三次范围循环处理当前关系记录后推进游标",
       "resolution_source": "本批逐函数源码表达式、静态类型与范围循环展开复核",
       "current_root_reachable": true
     }

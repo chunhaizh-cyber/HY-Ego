@@ -1,6 +1,6 @@
 # main 可达外部边界与回调表
 
-代码基线：<code>03a8b7ac099ccea83e57f2696e2290b7bcdfacaf</code>；配置：<code>Debug\|x64</code>；外部边界：3743；具名回调：59。
+代码基线：<code>03a8b7ac099ccea83e57f2696e2290b7bcdfacaf</code>；配置：<code>Debug\|x64</code>；外部边界：3752；具名回调：59。
 
 ## 外部边界
 
@@ -3749,6 +3749,15 @@
 | X04850 | R0638 | Standard library iterator | <code>bool std::vector&lt;海中鱼巣::索引绑定记录&gt;::iterator::operator!=(const iterator&amp;) const</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:609,626</code> | 2 | 两次遍历非const索引写集时判断是否到达末尾 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
 | X04851 | R0638 | Standard library iterator | <code>海中鱼巣::索引绑定记录&amp; std::vector&lt;海中鱼巣::索引绑定记录&gt;::iterator::operator*() const</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:609,626</code> | 2 | 两次范围循环仍有记录时读取当前索引写集项 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
 | X04852 | R0638 | Standard library iterator | <code>std::vector&lt;海中鱼巣::索引绑定记录&gt;::iterator&amp; std::vector&lt;海中鱼巣::索引绑定记录&gt;::iterator::operator++()</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:609,626</code> | 2 | 两次范围循环处理当前记录后推进游标 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04853 | R0650 | Standard library optional | <code>constexpr std::optional&lt;海中鱼巣::节点句柄&gt;::optional(std::nullopt_t) noexcept</code> | <code>海中鱼巣/领域/数据操作.存在场景.ixx:267</code> | 1 | 主键未命中且读取状态为未找到，创建实际存在身份时形成无来源参数 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04854 | R0670 | Standard library optional | <code>std::optional&lt;海中鱼巣::关系值式证据&gt;::optional() noexcept</code> | <code>海中鱼巣/领域/数据操作.状态动态.ixx:1161,1162</code> | 2 | 进入来源动作角色读取后分别默认构造角色关系和入口关系空值 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04855 | R0670 | Standard library iterator | <code>bool std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator!=(const const_iterator&amp;) const</code> | <code>海中鱼巣/领域/数据操作.状态动态.ixx:1163,1174</code> | 2 | 遍历来源动作模板关系记录组时判断是否到达末尾 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04856 | R0670 | Standard library iterator | <code>const 海中鱼巣::关系记录&amp; std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator*() const</code> | <code>海中鱼巣/领域/数据操作.状态动态.ixx:1163</code> | 1 | 范围循环仍有模板关系记录时读取当前记录 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04857 | R0670 | Standard library iterator | <code>std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator&amp; std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator++()</code> | <code>海中鱼巣/领域/数据操作.状态动态.ixx:1174</code> | 1 | 当前模板关系记录处理完成后推进范围循环 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04858 | R0669 | Standard library optional | <code>std::optional&lt;海中鱼巣::关系值式证据&gt;::optional() noexcept</code> | <code>海中鱼巣/领域/数据操作.状态动态.ixx:1245,1246,1264,1275</code> | 8 | 实例动态关系读取时默认构造主体、场景、临时关系空值，并为五个因果槽默认构造空 optional | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04859 | R0669 | Standard library iterator | <code>bool std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator!=(const const_iterator&amp;) const</code> | <code>海中鱼巣/领域/数据操作.状态动态.ixx:1247,1259,1265,1272,1276,1285</code> | 6 | 三次遍历实例动态引用、场景临时和因果来源关系记录组时判断是否到达末尾 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04860 | R0669 | Standard library iterator | <code>const 海中鱼巣::关系记录&amp; std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator*() const</code> | <code>海中鱼巣/领域/数据操作.状态动态.ixx:1247,1265,1276</code> | 3 | 三次范围循环仍有关系记录时读取当前记录 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04861 | R0669 | Standard library iterator | <code>std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator&amp; std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator++()</code> | <code>海中鱼巣/领域/数据操作.状态动态.ixx:1259,1272,1285</code> | 3 | 三次范围循环处理当前关系记录后推进游标 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
 
 ## 回调登记
 

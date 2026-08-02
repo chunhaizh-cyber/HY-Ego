@@ -12,10 +12,10 @@
   "source_edge_path": "流程图/主程序可达调用关系/01_main可达项目调用边表.json",
   "source_edge_blob": "bb56b411dd2da5e58a4d9ad73ad4869e6a2fa2b3",
   "source_external_path": "流程图/主程序可达调用关系/02_main可达外部边界表.json",
-  "source_external_blob": "c9fb147bb88f64b86a89612a0ac2ffaaed8a7bc7",
+  "source_external_blob": "8a5d4fc13c71e736018c6eeeb01566dfea86f7fb",
   "current_reachable_function_count": 1383,
-  "chart_completed_count": 1189,
-  "chart_pending_count": 194,
+  "chart_completed_count": 1213,
+  "chart_pending_count": 170,
   "historical_unreachable_chart_count": 52,
   "queue_order": "正式身份表稳定身份顺序；shortest_depth只记录main最短调用深度，不参与既有drawing_order重排",
   "entries": [
@@ -51076,10 +51076,12 @@
         "RCE1911",
         "RCE1912"
       ],
-      "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "external_boundary_ids": [
+        "X04853"
+      ],
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L8/CF-L8-0095_存在场景创建实际存在_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L8/CF-L8-0095_存在场景创建实际存在_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L8"
     },
     {
@@ -51131,9 +51133,9 @@
         "X02337",
         "X02338"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L8/CF-L8-0096_存在场景创建场景归属_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L8/CF-L8-0096_存在场景创建场景归属_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L8"
     },
     {
@@ -51187,9 +51189,9 @@
         "X02341",
         "X02342"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L8/CF-L8-0097_已有场景创建并接纳实际存在_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L8/CF-L8-0097_已有场景创建并接纳实际存在_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L8"
     },
     {
@@ -51217,9 +51219,9 @@
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L9/CF-L9-0093_存在场景合并读取失败_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L9/CF-L9-0093_存在场景合并读取失败_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L9"
     },
     {
@@ -51249,9 +51251,9 @@
         "RCE1950"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L9/CF-L9-0094_存在场景归属内部不一致_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L9/CF-L9-0094_存在场景归属内部不一致_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L9"
     },
     {
@@ -51291,9 +51293,9 @@
       "external_boundary_ids": [
         "X02339"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L9/CF-L9-0095_存在场景创建场景归属写入lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L9/CF-L9-0095_存在场景创建场景归属写入lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L9"
     },
     {
@@ -51353,9 +51355,9 @@
         "X02344",
         "X02345"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L9/CF-L9-0096_已有场景创建接纳写入lambda_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L9/CF-L9-0096_已有场景创建接纳写入lambda_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L9"
     },
     {
@@ -51385,9 +51387,9 @@
         "RCE1951"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L7/CF-L7-0111_动态业务服务创建抽象动态_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L7/CF-L7-0111_动态业务服务创建抽象动态_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L7"
     },
     {
@@ -51413,9 +51415,9 @@
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L7/CF-L7-0112_状态动态业务结果成功_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L7/CF-L7-0112_状态动态业务结果成功_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L7"
     },
     {
@@ -51441,9 +51443,9 @@
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L7/CF-L7-0113_状态动态业务结果改变了结构_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L7/CF-L7-0113_状态动态业务结果改变了结构_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L7"
     },
     {
@@ -51471,9 +51473,9 @@
       "external_boundary_ids": [
         "X02369"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L7/CF-L7-0114_系统角色初始化器映射状态动态业务状态_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L7/CF-L7-0114_系统角色初始化器映射状态动态业务状态_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L7"
     },
     {
@@ -51505,9 +51507,9 @@
         "RCE1953"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L8/CF-L8-0098_动态业务服务读取动态材料_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L8/CF-L8-0098_动态业务服务读取动态材料_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L8"
     },
     {
@@ -51555,9 +51557,9 @@
         "X02376",
         "X02377"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L9/CF-L9-0097_状态动态读取主键动态材料_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L9/CF-L9-0097_状态动态读取主键动态材料_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L9"
     },
     {
@@ -51600,9 +51602,9 @@
         "X02378",
         "X02379"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L9/CF-L9-0098_状态动态读取动态材料_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L9/CF-L9-0098_状态动态读取动态材料_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L9"
     },
     {
@@ -51638,9 +51640,9 @@
         "RCE1967"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L11/CF-L11-0113_节点值式身份当前可读_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L11/CF-L11-0113_节点值式身份当前可读_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L11"
     },
     {
@@ -51674,9 +51676,9 @@
         "RCE1970"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L11/CF-L11-0114_来源动作角色材料是动作入口_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L11/CF-L11-0114_来源动作角色材料是动作入口_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L11"
     },
     {
@@ -51710,9 +51712,9 @@
         "RCE1972"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L9/CF-L9-0099_动态值式材料当前可读_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L9/CF-L9-0099_动态值式材料当前可读_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L9"
     },
     {
@@ -51748,9 +51750,9 @@
       "external_boundary_ids": [
         "X02380"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L8/CF-L8-0099_动态值式材料完整实例动态_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L8/CF-L8-0099_动态值式材料完整实例动态_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L8"
     },
     {
@@ -51795,9 +51797,9 @@
         "X02381",
         "X02382"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L8/CF-L8-0100_创建抽象动态_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L8/CF-L8-0100_创建抽象动态_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L8"
     },
     {
@@ -51863,11 +51865,15 @@
         "X02394",
         "X02395",
         "X02396",
-        "X02397"
+        "X02397",
+        "X04858",
+        "X04859",
+        "X04860",
+        "X04861"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L10/CF-L10-0112_读取动态材料已许可_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L10/CF-L10-0112_读取动态材料已许可_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L10"
     },
     {
@@ -51908,11 +51914,15 @@
         "X02398",
         "X02399",
         "X02400",
-        "X02401"
+        "X02401",
+        "X04854",
+        "X04855",
+        "X04856",
+        "X04857"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L11/CF-L11-0115_读取来源动作角色已许可_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L11/CF-L11-0115_读取来源动作角色已许可_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L11"
     },
     {
@@ -51942,9 +51952,9 @@
         "RCE2015"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L11/CF-L11-0116_动态内部不一致_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L11/CF-L11-0116_动态内部不一致_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L11"
     },
     {
@@ -51974,9 +51984,9 @@
         "RCE2016"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L12/CF-L12-0052_来源动作内部不一致_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L12/CF-L12-0052_来源动作内部不一致_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L12"
     },
     {
@@ -52008,9 +52018,9 @@
         "RCE2017"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L9/CF-L9-0100_匹配抽象动态_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L9/CF-L9-0100_匹配抽象动态_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L9"
     },
     {
