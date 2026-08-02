@@ -119,6 +119,14 @@ def 读取图谱(根目录: Path, 配置: dict) -> tuple[dict, dict, dict, dict]
     return tuple(读取JSON(根目录 / Path(输入[键])) for 键 in ("函数身份表", "项目调用边表", "外部边界表", "制图队列"))
 
 
+def 断言图谱输入已提交(根目录: Path, 配置: dict) -> None:
+    路径组 = list(配置["图谱输入"].values())
+    输出 = 运行Git(["status", "--porcelain=v1", "-z", "--", *路径组], 根目录)
+    if 输出:
+        变更 = [项.decode("utf-8", errors="replace") for 项 in 输出.split(b"\0") if 项]
+        raise 维护错误(f"正式图谱输入存在未提交 WIP，禁止作为自动候选基线: {'; '.join(变更)}")
+
+
 def 形成输入身份(根目录: Path, 配置路径: Path, 配置: dict, 基线提交: str) -> dict:
     输入 = 配置["图谱输入"]
     图谱哈希 = {
@@ -419,6 +427,7 @@ def 执行维护(
     状态根目录 = 根目录 / Path(配置["本地状态目录"])
     租约目录 = 取得租约(状态根目录, f"{模式}:{配置路径}")
     try:
+        断言图谱输入已提交(根目录, 配置)
         身份表, 边表, _外部边界表, 队列 = 读取图谱(根目录, 配置)
         基线提交 = 身份表.get("code_commit")
         if not 基线提交:
