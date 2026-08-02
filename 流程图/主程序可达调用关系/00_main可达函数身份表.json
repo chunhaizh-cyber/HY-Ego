@@ -15,8 +15,8 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1383,
-  "project_call_edge_count": 4104,
+  "function_count": 1384,
+  "project_call_edge_count": 4107,
   "functions": [
     {
       "function_id": "F0001",
@@ -30463,7 +30463,8 @@
       "shortest_depth": 7,
       "callers": [
         "R0137",
-        "R0101"
+        "R0101",
+        "R0730"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0101；调用点=海中鱼巣/核心/协调.结构事务.ixx:87,海中鱼巣/核心/协调.结构事务.ixx:96,海中鱼巣/核心/协调.结构事务.ixx:99,海中鱼巣/核心/协调.结构事务.ixx:104,海中鱼巣/核心/协调.结构事务.ixx:116,海中鱼巣/核心/协调.结构事务.ixx:129",
@@ -30484,7 +30485,8 @@
       "overload_identity": "海中鱼巣::结构事务许可& 海中鱼巣::结构事务许可::operator=(海中鱼巣::结构事务许可&& 其它) noexcept",
       "shortest_depth": 6,
       "callers": [
-        "F0375"
+        "F0375",
+        "R0730"
       ],
       "callees": [
         "F0631"
@@ -33790,7 +33792,9 @@
         "F0339",
         "R0731",
         "R0732",
-        "F0345"
+        "F0345",
+        "R0599",
+        "R0600"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0555；调用点=海中鱼巣/领域/特征服务.h:367",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -34177,7 +34181,8 @@
         "F0625",
         "R0009",
         "R0746",
-        "R0148"
+        "R0148",
+        "R0892"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0022；调用点=海中鱼巣/核心/会话.结构写入.ixx:265",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -36904,6 +36909,27 @@
         "R0133"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0889；调用点=海中鱼巣/核心/索引仓库.cpp:110",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0892",
+      "complete_signature": "海中鱼巣::节点未发布候选::节点未发布候选(海中鱼巣::节点未发布候选&& 其它) noexcept",
+      "callable_type": "Method",
+      "category": "Constructor",
+      "module_identity": "头文件内联/模板定义",
+      "file": "海中鱼巣/核心/节点仓库.h",
+      "definition_line": 29,
+      "definition_end_line": 35,
+      "overload_identity": "海中鱼巣::节点未发布候选::节点未发布候选(海中鱼巣::节点未发布候选&& 其它) noexcept",
+      "shortest_depth": 12,
+      "callers": [
+        "R0745"
+      ],
+      "callees": [],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0745；调用点=海中鱼巣/核心/节点仓库.cpp:105",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
       "legacy_or_unwired": false,

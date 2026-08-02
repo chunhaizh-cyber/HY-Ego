@@ -5,17 +5,17 @@
   "root_signature": "int main(int 参数数量, char* 参数组[])",
   "configuration": "Debug|x64",
   "source_code_commit": "03a8b7ac099ccea83e57f2696e2290b7bcdfacaf",
-  "source_relation_publish_commit": "7cbd2167eb5f6d495f48657a0e5badb07c52a358",
+  "source_relation_publish_commit": "8632fb891fb3beea255aff1946c07b0fe975ef2b",
   "generated_from_commit": "03a8b7ac099ccea83e57f2696e2290b7bcdfacaf",
   "source_identity_path": "流程图/主程序可达调用关系/00_main可达函数身份表.json",
-  "source_identity_blob": "8b4e3fe6bc2de8c1853cdf10a6dd37484db4984f",
+  "source_identity_blob": "dd0f6cb175b052766093cbb98ec39d0fc324d7c6",
   "source_edge_path": "流程图/主程序可达调用关系/01_main可达项目调用边表.json",
-  "source_edge_blob": "3f63668a0559b908018059151b9a0c9f02013676",
+  "source_edge_blob": "abee93f91790b20509a664aab8e9f358c824acce",
   "source_external_path": "流程图/主程序可达调用关系/02_main可达外部边界表.json",
-  "source_external_blob": "225936be9d4d6382d1371c98b3c07190f4c25b71",
-  "current_reachable_function_count": 1383,
-  "chart_completed_count": 1261,
-  "chart_pending_count": 122,
+  "source_external_blob": "90b49ea8fd82c3cb30f8a81feaea5127d96098a0",
+  "current_reachable_function_count": 1384,
+  "chart_completed_count": 1282,
+  "chart_pending_count": 102,
   "historical_unreachable_chart_count": 52,
   "queue_order": "正式身份表稳定身份顺序；shortest_depth只记录main最短调用深度，不参与既有drawing_order重排",
   "entries": [
@@ -49067,12 +49067,14 @@
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "caller_ids": [
         "R0137",
-        "R0101"
+        "R0101",
+        "R0730"
       ],
       "callee_ids": [],
       "incoming_project_edge_ids": [
         "RCE1686",
-        "RCE2517"
+        "RCE2517",
+        "RCE3326"
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [
@@ -49098,13 +49100,15 @@
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0375；调用点=海中鱼巣/核心/结构事务接线.数据.h:28",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "caller_ids": [
-        "F0375"
+        "F0375",
+        "R0730"
       ],
       "callee_ids": [
         "F0631"
       ],
       "incoming_project_edge_ids": [
-        "RCE1681"
+        "RCE1681",
+        "RCE3327"
       ],
       "outgoing_project_edge_ids": [
         "RCE1692"
@@ -53890,9 +53894,9 @@
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L7/CF-L7-0122_系统角色初始化结果改变了结构_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L7/CF-L7-0122_系统角色初始化结果改变了结构_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L7"
     },
     {
@@ -53951,11 +53955,13 @@
         "X02474",
         "X02475",
         "X02476",
-        "X02477"
+        "X02477",
+        "X04898",
+        "X04899"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L8/CF-L8-0108_索引仓库读取节点主键组_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L8/CF-L8-0108_索引仓库读取节点主键组_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L8"
     },
     {
@@ -53981,9 +53987,9 @@
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L9/CF-L9-0127_轻量因果写入规格构造_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L9/CF-L9-0127_轻量因果写入规格构造_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L9"
     },
     {
@@ -54011,9 +54017,9 @@
       "external_boundary_ids": [
         "X02372"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L7/CF-L7-0123_系统角色初始化器映射轻量因果业务状态_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L7/CF-L7-0123_系统角色初始化器映射轻量因果业务状态_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L7"
     },
     {
@@ -54108,7 +54114,8 @@
       ],
       "external_boundary_ids": [
         "X02518",
-        "X02519"
+        "X02519",
+        "X04900"
       ],
       "chart_status": "已制图",
       "chart_path": "流程图/代码流程图/L6/CF-L6-0302_语素服务节点是语素入口无令牌重载_现状流程图.md",
@@ -54159,11 +54166,12 @@
       ],
       "external_boundary_ids": [
         "X02543",
-        "X02544"
+        "X02544",
+        "X04901"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L7/CF-L7-0127_需求服务节点类型匹配_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L7/CF-L7-0127_需求服务节点类型匹配_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L7"
     },
     {
@@ -54191,7 +54199,9 @@
         "F0339",
         "R0731",
         "R0732",
-        "F0345"
+        "F0345",
+        "R0599",
+        "R0600"
       ],
       "incoming_project_edge_ids": [
         "RCE2236"
@@ -54204,17 +54214,23 @@
         "RCE2241",
         "RCE2242",
         "RCE2243",
-        "RCE2244"
+        "RCE2244",
+        "RCE3326",
+        "RCE3327"
       ],
       "external_boundary_ids": [
         "X02545",
         "X02546",
         "X02547",
-        "X02548"
+        "X02548",
+        "X04902",
+        "X04903",
+        "X04904",
+        "X04905"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L7/CF-L7-0128_特征值服务读取I64值_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L7/CF-L7-0128_特征值服务读取I64值_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L7"
     },
     {
@@ -54263,11 +54279,14 @@
       ],
       "external_boundary_ids": [
         "X02549",
-        "X02550"
+        "X02550",
+        "X04906",
+        "X04907",
+        "X04908"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L8/CF-L8-0109_读取有效特征值节点_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L8/CF-L8-0109_读取有效特征值节点_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L8"
     },
     {
@@ -54332,11 +54351,13 @@
         "X02557",
         "X02558",
         "X02559",
-        "X02560"
+        "X02560",
+        "X04909",
+        "X04910"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L8/CF-L8-0110_读取原始值状态已加锁_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L8/CF-L8-0110_读取原始值状态已加锁_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L8"
     },
     {
@@ -54375,11 +54396,12 @@
       ],
       "external_boundary_ids": [
         "X02732",
-        "X02733"
+        "X02733",
+        "X04911"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L8/CF-L8-0111_世界服务创建基础信息_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L8/CF-L8-0111_世界服务创建基础信息_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L8"
     },
     {
@@ -54409,9 +54431,9 @@
         "RCE2405"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L8/CF-L8-0112_世界服务创建场景_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L8/CF-L8-0112_世界服务创建场景_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L8"
     },
     {
@@ -54444,11 +54466,12 @@
       ],
       "external_boundary_ids": [
         "X02734",
-        "X02735"
+        "X02735",
+        "X04912"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L8/CF-L8-0113_世界树初始化服务节点类型匹配_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L8/CF-L8-0113_世界树初始化服务节点类型匹配_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L8"
     },
     {
@@ -54478,9 +54501,9 @@
         "RCE2408"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L8/CF-L8-0114_世界服务接纳存在_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L8/CF-L8-0114_世界服务接纳存在_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L8"
     },
     {
@@ -54517,11 +54540,12 @@
       ],
       "external_boundary_ids": [
         "X02736",
-        "X02737"
+        "X02737",
+        "X04913"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L9/CF-L9-0128_场景服务创建场景_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L9/CF-L9-0128_场景服务创建场景_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L9"
     },
     {
@@ -54559,9 +54583,9 @@
         "RCE2416"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L6/CF-L6-0371_场景服务接纳存在_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L6/CF-L6-0371_场景服务接纳存在_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
     },
     {
@@ -54593,9 +54617,9 @@
       "external_boundary_ids": [
         "X02784"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L11/CF-L11-0119_带值结构写入结果主信息未发布候选成功_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L11/CF-L11-0119_带值结构写入结果主信息未发布候选成功_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L11"
     },
     {
@@ -54627,9 +54651,9 @@
       "external_boundary_ids": [
         "X02785"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L11/CF-L11-0120_带值结构写入结果节点未发布候选成功_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L11/CF-L11-0120_带值结构写入结果节点未发布候选成功_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L11"
     },
     {
@@ -54661,9 +54685,9 @@
         "RCE2432"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L11/CF-L11-0121_节点未发布候选完整_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L11/CF-L11-0121_节点未发布候选完整_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L11"
     },
     {
@@ -54693,9 +54717,9 @@
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L11/CF-L11-0122_结构写入结果改变了结构_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L11/CF-L11-0122_结构写入结果改变了结构_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L11"
     },
     {
@@ -54727,9 +54751,9 @@
         "RCE2434"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L12/CF-L12-0054_结构化节点挂载结果成功_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L12/CF-L12-0054_结构化节点挂载结果成功_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L12"
     },
     {
@@ -54765,11 +54789,12 @@
         "X02787",
         "X02788",
         "X02789",
-        "X02790"
+        "X02790",
+        "X04914"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L13/CF-L13-0025_节点挂载结果关系已确定_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L13/CF-L13-0025_节点挂载结果关系已确定_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L13"
     },
     {
@@ -54795,7 +54820,8 @@
         "F0625",
         "R0009",
         "R0746",
-        "R0148"
+        "R0148",
+        "R0892"
       ],
       "incoming_project_edge_ids": [
         "RCE2437"
@@ -54806,18 +54832,20 @@
         "RCE2440",
         "RCE2441",
         "RCE2442",
-        "RCE2443"
+        "RCE2443",
+        "RCE3328"
       ],
       "external_boundary_ids": [
         "X02791",
         "X02792",
         "X02793",
         "X02794",
-        "X02795"
+        "X02795",
+        "X04915"
       ],
-      "chart_status": "待绘制",
-      "chart_path": "",
-      "mapping_path": "",
+      "chart_status": "已制图",
+      "chart_path": "流程图/代码流程图/L11/CF-L11-0123_结构化创建节点未发布候选_现状流程图.md",
+      "mapping_path": "流程图/代码流程图/L11/CF-L11-0123_结构化创建节点未发布候选_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L11"
     },
     {
@@ -58986,6 +59014,34 @@
       ],
       "external_boundary_ids": [],
       "target_layer_directory": "流程图/代码流程图/L8",
+      "chart_status": "待绘制",
+      "chart_path": "",
+      "mapping_path": ""
+    },
+    {
+      "drawing_order": 1384,
+      "function_id": "R0892",
+      "shortest_depth": 12,
+      "complete_signature": "海中鱼巣::节点未发布候选::节点未发布候选(海中鱼巣::节点未发布候选&& 其它) noexcept",
+      "callable_type": "Method",
+      "category": "Constructor",
+      "module_identity": "头文件内联/模板定义",
+      "file": "海中鱼巣/核心/节点仓库.h",
+      "definition_line": 29,
+      "definition_end_line": 35,
+      "overload_identity": "海中鱼巣::节点未发布候选::节点未发布候选(海中鱼巣::节点未发布候选&& 其它) noexcept",
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0745；调用点=海中鱼巣/核心/节点仓库.cpp:105",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "caller_ids": [
+        "R0745"
+      ],
+      "callee_ids": [],
+      "incoming_project_edge_ids": [
+        "RCE3328"
+      ],
+      "outgoing_project_edge_ids": [],
+      "external_boundary_ids": [],
+      "target_layer_directory": "流程图/代码流程图/L12",
       "chart_status": "待绘制",
       "chart_path": "",
       "mapping_path": ""

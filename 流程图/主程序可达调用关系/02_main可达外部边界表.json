@@ -15,9 +15,9 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1383,
-  "project_call_edge_count": 4104,
-  "external_count": 3788,
+  "function_count": 1384,
+  "project_call_edge_count": 4107,
+  "external_count": 3806,
   "callback_registration_count": 59,
   "external_boundaries": [
     {
@@ -52818,6 +52818,265 @@
       "boundary_category": "Standard library assignment",
       "reachable_condition": "把已读取特征关系证据写入对应证据槽位",
       "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04898",
+      "signature": "std::vector<std::uint64_t>::vector() noexcept",
+      "caller": "R0723",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:217",
+        "海中鱼巣/核心/索引仓库.cpp:220"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library construction",
+      "reachable_condition": "默认构造主键结果组与主键索引缺失分支的空结果组",
+      "resolution_source": "本批现状图、逐行映射与源码静态类型、构造/析构及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04899",
+      "signature": "bool std::unordered_map<std::uint64_t, std::vector<std::uint64_t>>::const_iterator::operator==(const const_iterator&) const",
+      "caller": "R0723",
+      "locations": [
+        "海中鱼巣/核心/索引仓库.cpp:220"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "比较主键索引查找结果与容器末尾",
+      "resolution_source": "本批现状图、逐行映射与源码静态类型、构造/析构及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04900",
+      "signature": "std::optional<海中鱼巣::节点记录>::~optional() noexcept",
+      "caller": "R0728",
+      "locations": [
+        "海中鱼巣/领域/语素服务.h:253-255"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "节点记录临时 optional 在函数返回时释放",
+      "resolution_source": "本批现状图、逐行映射与源码静态类型、构造/析构及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04901",
+      "signature": "std::optional<海中鱼巣::节点记录>::~optional() noexcept",
+      "caller": "R0729",
+      "locations": [
+        "海中鱼巣/领域/需求服务.h:1039-1041"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "节点记录临时 optional 在函数返回时释放",
+      "resolution_source": "本批现状图、逐行映射与源码静态类型、构造/析构及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04902",
+      "signature": "std::optional<海中鱼巣::节点记录>::~optional() noexcept",
+      "caller": "R0730",
+      "locations": [
+        "海中鱼巣/领域/特征值服务.h:277-288"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "节点记录局部 optional 在函数返回或作用域结束时释放",
+      "resolution_source": "本批现状图、逐行映射与源码静态类型、构造/析构及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04903",
+      "signature": "std::optional<std::int64_t>::optional(std::nullopt_t) noexcept",
+      "caller": "R0730",
+      "locations": [
+        "海中鱼巣/领域/特征值服务.h:269",
+        "海中鱼巣/领域/特征值服务.h:274",
+        "海中鱼巣/领域/特征值服务.h:279",
+        "海中鱼巣/领域/特征值服务.h:285"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library construction",
+      "reachable_condition": "四个拒绝或不一致分支构造空 I64 optional 返回值",
+      "resolution_source": "本批现状图、逐行映射与源码静态类型、构造/析构及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04904",
+      "signature": "std::optional<std::int64_t>::optional(const std::optional<std::int64_t>&)",
+      "caller": "R0730",
+      "locations": [
+        "海中鱼巣/领域/特征值服务.h:287"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library construction",
+      "reachable_condition": "复制原始值状态中的 I64 optional 形成返回值",
+      "resolution_source": "本批现状图、逐行映射与源码静态类型、构造/析构及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04905",
+      "signature": "std::optional<std::int64_t>::~optional() noexcept",
+      "caller": "R0730",
+      "locations": [
+        "海中鱼巣/领域/特征值服务.h:283-288",
+        "海中鱼巣/领域/特征值服务.h:287-288"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "原始值状态与返回临时 I64 optional 在函数结束时释放",
+      "resolution_source": "本批现状图、逐行映射与源码静态类型、构造/析构及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04906",
+      "signature": "std::optional<海中鱼巣::节点记录>::optional(std::nullopt_t) noexcept",
+      "caller": "R0731",
+      "locations": [
+        "海中鱼巣/领域/特征值服务.h:604",
+        "海中鱼巣/领域/特征值服务.h:610"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library construction",
+      "reachable_condition": "节点读取拒绝分支构造空节点记录 optional",
+      "resolution_source": "本批现状图、逐行映射与源码静态类型、构造/析构及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04907",
+      "signature": "std::optional<海中鱼巣::节点记录>::optional(std::optional<海中鱼巣::节点记录>&&) noexcept",
+      "caller": "R0731",
+      "locations": [
+        "海中鱼巣/领域/特征值服务.h:612"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library construction",
+      "reachable_condition": "移动节点读取结果形成返回 optional",
+      "resolution_source": "本批现状图、逐行映射与源码静态类型、构造/析构及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04908",
+      "signature": "std::optional<海中鱼巣::节点记录>::~optional() noexcept",
+      "caller": "R0731",
+      "locations": [
+        "海中鱼巣/领域/特征值服务.h:600-613"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "节点记录局部 optional 在函数返回或作用域结束时释放",
+      "resolution_source": "本批现状图、逐行映射与源码静态类型、构造/析构及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04909",
+      "signature": "std::optional<std::int64_t>::optional() noexcept",
+      "caller": "R0732",
+      "locations": [
+        "海中鱼巣/领域/特征值服务.h:619"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library construction",
+      "reachable_condition": "默认构造原始值状态中的空 I64 optional",
+      "resolution_source": "本批现状图、逐行映射与源码静态类型、构造/析构及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04910",
+      "signature": "std::optional<std::int64_t>::~optional() noexcept",
+      "caller": "R0732",
+      "locations": [
+        "海中鱼巣/领域/特征值服务.h:619-671",
+        "海中鱼巣/领域/特征值服务.h:638-671"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "原始值状态局部和返回对象中的 I64 optional 生命周期结束",
+      "resolution_source": "本批现状图、逐行映射与源码静态类型、构造/析构及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04911",
+      "signature": "std::optional<海中鱼巣::节点记录>::~optional() noexcept",
+      "caller": "R0733",
+      "locations": [
+        "海中鱼巣/领域/世界服务.h:20-26"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "节点记录读取临时 optional 在函数返回时释放",
+      "resolution_source": "本批现状图、逐行映射与源码静态类型、构造/析构及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04912",
+      "signature": "std::optional<海中鱼巣::节点记录>::~optional() noexcept",
+      "caller": "R0735",
+      "locations": [
+        "海中鱼巣/领域/初始化.世界树.ixx:122-124"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "节点记录读取临时 optional 在函数返回时释放",
+      "resolution_source": "本批现状图、逐行映射与源码静态类型、构造/析构及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04913",
+      "signature": "std::optional<海中鱼巣::节点记录>::~optional() noexcept",
+      "caller": "R0737",
+      "locations": [
+        "海中鱼巣/领域/场景服务.h:19-25"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "节点记录读取临时 optional 在函数返回时释放",
+      "resolution_source": "本批现状图、逐行映射与源码静态类型、构造/析构及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04914",
+      "signature": "std::optional<海中鱼巣::节点句柄>::~optional() noexcept",
+      "caller": "R0744",
+      "locations": [
+        "海中鱼巣/核心/关系仓库.h:166"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "主体句柄读取临时 optional 在比较完成后释放",
+      "resolution_source": "本批现状图、逐行映射与源码静态类型、构造/析构及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04915",
+      "signature": "std::optional<海中鱼巣::节点未发布候选>::~optional() noexcept",
+      "caller": "R0745",
+      "locations": [
+        "海中鱼巣/核心/节点仓库.cpp:98-107"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "局部节点未发布候选 optional 在返回或作用域结束时释放",
+      "resolution_source": "本批现状图、逐行映射与源码静态类型、构造/析构及生命周期复核",
       "current_root_reachable": true
     }
   ],
