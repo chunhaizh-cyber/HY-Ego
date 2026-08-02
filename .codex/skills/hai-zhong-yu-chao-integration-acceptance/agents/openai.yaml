@@ -1,0 +1,4 @@
+interface:
+  display_name: "海中鱼巣集成验收"
+  short_description: "验证已提交服务切片的正式入口、权威终态、独立读回与结论边界"
+  default_prompt: "Use $hai-zhong-yu-chao-integration-acceptance to validate a named committed service slice without overstating completion."

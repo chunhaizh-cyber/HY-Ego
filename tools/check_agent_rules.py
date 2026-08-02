@@ -21,6 +21,14 @@ from pathlib import Path
     ".codex/rules/多工作树并发与集成规则.md",
 )
 
+必需技能 = (
+    ".codex/skills/hai-zhong-yu-chao-integration-acceptance/SKILL.md",
+)
+
+必需工具 = (
+    "tools/check_integration_acceptance.py",
+)
+
 已退出混放路径 = (
     "规范/设计执行双窗口交互规范.md",
     "规范/多工作树并发与集成规范.md",
@@ -67,6 +75,14 @@ def 检查() -> list[str]:
         if not (根目录 / 路径文本).is_file():
             错误.append(f"缺少代理规则: {路径文本}")
 
+    for 路径文本 in 必需技能:
+        if not (根目录 / 路径文本).is_file():
+            错误.append(f"缺少必需技能: {路径文本}")
+
+    for 路径文本 in 必需工具:
+        if not (根目录 / 路径文本).is_file():
+            错误.append(f"缺少必需工具: {路径文本}")
+
     for 路径文本 in 已退出混放路径:
         if (根目录 / 路径文本).exists():
             错误.append(f"代理规则仍混放在项目规范目录: {路径文本}")
@@ -85,6 +101,12 @@ def 检查() -> list[str]:
         for 路径文本 in 必需代理规则:
             if 路径文本 not in 入口文本:
                 错误.append(f"AGENTS.md 未引用代理规则: {路径文本}")
+        for 路径文本 in 必需技能:
+            if 路径文本 not in 入口文本:
+                错误.append(f"AGENTS.md 未引用必需技能: {路径文本}")
+        for 路径文本 in 必需工具:
+            if 路径文本 not in 入口文本:
+                错误.append(f"AGENTS.md 未引用必需工具: {路径文本}")
 
     if 计划索引.is_file():
         索引文本 = 读取文本(计划索引)
