@@ -1,6 +1,6 @@
 # main 可达外部边界与回调表
 
-代码基线：<code>03a8b7ac099ccea83e57f2696e2290b7bcdfacaf</code>；配置：<code>Debug\|x64</code>；外部边界：3758；具名回调：59。
+代码基线：<code>03a8b7ac099ccea83e57f2696e2290b7bcdfacaf</code>；配置：<code>Debug\|x64</code>；外部边界：3788；具名回调：59。
 
 ## 外部边界
 
@@ -1758,7 +1758,7 @@
 | X02465 | R0708 | Standard library | <code>std::optional&lt;海中鱼巣::关系句柄&gt;::operator*() const&amp;</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:957</code> | 1 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X02466 | R0717 | Raw function pointer | <code>海中鱼巣::结构事务许可 (*)(const std::shared_ptr&lt;void&gt;&amp;) 原始函数指针调用</code> | <code>海中鱼巣/领域/数据操作.概念图结构.ixx:274</code> | 1 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X02467 | R0720 | Standard library | <code>std::vector&lt;std::uint64_t&gt;::vector(std::initializer_list) / operator!= / ~vector</code> | <code>海中鱼巣/领域/数据操作.概念图结构.ixx:416</code> | 3 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
-| X02468 | R0720 | Standard library | <code>std::optional&lt;海中鱼巣::节点句柄&gt; 值构造 / std::operator!= / 析构</code> | <code>海中鱼巣/领域/数据操作.概念图结构.ixx:417-418</code> | 3 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02468 | R0720 | Standard library | <code>std::optional&lt;海中鱼巣::节点句柄&gt;::optional(const 海中鱼巣::节点句柄&amp;) / bool std::operator!=&lt;海中鱼巣::节点句柄&gt; / std::optional&lt;海中鱼巣::节点句柄&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/数据操作.概念图结构.ixx:417-418</code> | 4 | 调用方从 F0001 可达且对应源码表达式成立 | 本批逐函数源码表达式、静态类型与两个临时 optional 生命周期复核 |
 | X02469 | R0720 | Standard library | <code>std::vector&lt;海中鱼巣::关系记录&gt;::empty() const</code> | <code>海中鱼巣/领域/数据操作.概念图结构.ixx:423,429</code> | 2 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X02470 | R0723 | Standard library | <code>std::shared_lock&lt;std::shared_mutex&gt;::shared_lock(std::shared_mutex&amp;)</code> | <code>海中鱼巣/核心/索引仓库.cpp:218</code> | 1 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X02471 | R0723 | Standard library | <code>std::shared_lock&lt;std::shared_mutex&gt;::~shared_lock()</code> | <code>海中鱼巣/核心/索引仓库.cpp:223</code> | 1 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
@@ -3765,6 +3765,37 @@
 | X04865 | R0696 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::节点类型&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:149</code> | 2 | 节点类型读取返回临时与预期临时完成比较后释放 | 本批逐函数源码表达式、临时对象静态类型与生命周期展开复核 |
 | X04866 | R0696 | Standard library construction | <code>std::optional&lt;海中鱼巣::主信息句柄&gt;::optional(海中鱼巣::主信息句柄&amp;&amp;)</code> | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:151</code> | 1 | 构造主信息句柄预期值临时 optional 参与写前比较 | 本批逐函数源码表达式、临时对象静态类型与生命周期展开复核 |
 | X04867 | R0696 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::主信息句柄&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:151</code> | 2 | 主信息句柄读取返回临时与预期临时完成比较后释放 | 本批逐函数源码表达式、临时对象静态类型与生命周期展开复核 |
+
+| X04868 | R0720 | Standard library | <code>std::optional&lt;海中鱼巣::节点记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/数据操作.概念图结构.ixx:403</code> | 1 | 节点记录读取后判断是否存在 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04869 | R0720 | Standard library | <code>std::optional&lt;海中鱼巣::节点记录&gt;::operator-&gt;() const</code> | <code>海中鱼巣/领域/数据操作.概念图结构.ixx:407,411,433</code> | 3 | 节点记录存在后读取类型、主信息和主键 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04870 | R0720 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::节点记录&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/数据操作.概念图结构.ixx:402-435</code> | 1 | 局部节点记录 optional 在函数返回或作用域结束时释放 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04871 | R0720 | Standard library | <code>std::optional&lt;海中鱼巣::主信息记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/数据操作.概念图结构.ixx:411</code> | 1 | 主信息记录读取后判断是否存在 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04872 | R0720 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::主信息记录&gt;::~optional()</code> | <code>海中鱼巣/领域/数据操作.概念图结构.ixx:411</code> | 1 | 主信息记录临时 optional 完成读取后释放 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04873 | R0720 | Standard library lifetime | <code>std::vector&lt;std::uint64_t&gt;::~vector()</code> | <code>海中鱼巣/领域/数据操作.概念图结构.ixx:415-435</code> | 1 | 局部主键组在函数返回或作用域结束时释放 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04874 | R0720 | Standard library lifetime | <code>std::vector&lt;海中鱼巣::关系记录&gt;::~vector()</code> | <code>海中鱼巣/领域/数据操作.概念图结构.ixx:422-423,428-429</code> | 2 | 两次关系读取返回的临时关系组完成判定后释放 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04875 | R0701 | Standard library iterator | <code>bool std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator::operator!=(const std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator&amp;) const</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:922,926</code> | 2 | 有序组成项范围循环开始与推进后比较游标 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04876 | R0701 | Standard library iterator | <code>const 海中鱼巣::节点句柄&amp; std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator::operator*() const</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:922</code> | 1 | 范围循环仍有组成项时读取当前节点句柄 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04877 | R0701 | Standard library iterator | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator&amp; std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator::operator++()</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:926</code> | 1 | 处理当前组成项后推进范围循环游标 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04878 | R0701 | Standard library lifetime | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::~vector() noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:928-973,961-973</code> | 2 | 写前与当前二次特征材料中的节点句柄组随材料释放 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04879 | R0701 | Standard library lifetime | <code>std::vector&lt;海中鱼巣::特征关系证据&gt;::~vector() noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:928-973,961-973</code> | 2 | 写前与当前二次特征材料中的关系证据组随材料释放 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04880 | R0704 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::节点句柄&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:655-658</code> | 1 | 主键索引读取临时 optional 完成判定后释放 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04881 | R0705 | Standard library lifetime | <code>std::optional&lt;std::uint64_t&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1345-1384</code> | 1 | 局部实际主键 optional 在返回或作用域结束时释放 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04882 | R0705 | Standard library lifetime | <code>std::vector&lt;海中鱼巣::关系记录&gt;::~vector() noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1347-1384</code> | 1 | 局部关系记录组在返回或作用域结束时释放 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04883 | R0705 | Standard library lifetime | <code>std::vector&lt;std::optional&lt;海中鱼巣::节点句柄&gt;&gt;::~vector() noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1349-1384</code> | 1 | 局部组成项槽位组在返回或作用域结束时释放 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04884 | R0705 | Standard library lifetime | <code>std::vector&lt;std::optional&lt;海中鱼巣::特征关系证据&gt;&gt;::~vector() noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1350-1384</code> | 1 | 局部证据槽位组在返回或作用域结束时释放 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04885 | R0705 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::特征关系证据&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1357-1370</code> | 1 | 循环内关系证据临时 optional 在当轮结束或提前返回时释放 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04886 | R0705 | Standard library lifetime | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::~vector() noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1334-1384</code> | 1 | 输出材料的有序组成项组在非成功返回或对象销毁时释放 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04887 | R0705 | Standard library lifetime | <code>std::vector&lt;海中鱼巣::特征关系证据&gt;::~vector() noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1334-1384</code> | 1 | 输出材料的组成关系组在非成功返回或对象销毁时释放 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04888 | R0705 | Standard library iterator | <code>bool std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator!=(const std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator&amp;) const</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1351,1370</code> | 2 | 关系记录范围循环开始与推进后比较游标 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04889 | R0705 | Standard library iterator | <code>const 海中鱼巣::关系记录&amp; std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator*() const</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1351</code> | 1 | 范围循环仍有关系记录时读取当前记录 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04890 | R0705 | Standard library iterator | <code>std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator&amp; std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator++()</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1370</code> | 1 | 处理当前关系记录后推进游标 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04891 | R0705 | Standard library iterator | <code>bool std::vector&lt;std::optional&lt;海中鱼巣::节点句柄&gt;&gt;::const_iterator::operator!=(const std::vector&lt;std::optional&lt;海中鱼巣::节点句柄&gt;&gt;::const_iterator&amp;) const</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1363,1367</code> | 2 | 组成项槽位范围循环开始与推进后比较游标 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04892 | R0705 | Standard library iterator | <code>const std::optional&lt;海中鱼巣::节点句柄&gt;&amp; std::vector&lt;std::optional&lt;海中鱼巣::节点句柄&gt;&gt;::const_iterator::operator*() const</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1363</code> | 1 | 范围循环仍有槽位时读取当前 optional | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04893 | R0705 | Standard library iterator | <code>std::vector&lt;std::optional&lt;海中鱼巣::节点句柄&gt;&gt;::const_iterator&amp; std::vector&lt;std::optional&lt;海中鱼巣::节点句柄&gt;&gt;::const_iterator::operator++()</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1367</code> | 1 | 处理当前组成项槽位后推进游标 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04894 | R0708 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::节点类型&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:943-948</code> | 1 | 每轮组成项类型读取临时 optional 在当轮结束或提前返回时释放 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04895 | R0705 | Standard library construction | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::vector() noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1334</code> | 1 | 默认构造输出材料的有序组成项组 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04896 | R0705 | Standard library construction | <code>std::vector&lt;海中鱼巣::特征关系证据&gt;::vector() noexcept</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1334</code> | 1 | 默认构造输出材料的组成关系组 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
+| X04897 | R0705 | Standard library assignment | <code>std::optional&lt;海中鱼巣::特征关系证据&gt;&amp; std::optional&lt;海中鱼巣::特征关系证据&gt;::operator=(const 海中鱼巣::特征关系证据&amp;)</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1369</code> | 1 | 把已读取特征关系证据写入对应证据槽位 | 本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核 |
 
 ## 回调登记
 

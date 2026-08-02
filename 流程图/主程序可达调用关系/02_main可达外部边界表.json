@@ -17,7 +17,7 @@
   ],
   "function_count": 1383,
   "project_call_edge_count": 4104,
-  "external_count": 3758,
+  "external_count": 3788,
   "callback_registration_count": 59,
   "external_boundaries": [
     {
@@ -23377,16 +23377,16 @@
     },
     {
       "id": "X02468",
-      "signature": "std::optional<海中鱼巣::节点句柄> 值构造 / std::operator!= / 析构",
+      "signature": "std::optional<海中鱼巣::节点句柄>::optional(const 海中鱼巣::节点句柄&) / bool std::operator!=<海中鱼巣::节点句柄> / std::optional<海中鱼巣::节点句柄>::~optional() noexcept",
       "caller": "R0720",
       "locations": [
         "海中鱼巣/领域/数据操作.概念图结构.ixx:417-418"
       ],
-      "call_count": 3,
+      "call_count": 4,
       "queued": false,
       "boundary_category": "Standard library",
       "reachable_condition": "调用方从 F0001 可达且对应源码表达式成立",
-      "resolution_source": "当前源码静态类型、具体模板实例、操作符与调用位置复核",
+      "resolution_source": "本批逐函数源码表达式、静态类型与两个临时 optional 生命周期复核",
       "current_root_reachable": true
     },
     {
@@ -52398,6 +52398,426 @@
       "boundary_category": "Standard library lifetime",
       "reachable_condition": "主信息句柄读取返回临时与预期临时完成比较后释放",
       "resolution_source": "本批逐函数源码表达式、临时对象静态类型与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04868",
+      "signature": "std::optional<海中鱼巣::节点记录>::has_value() const noexcept",
+      "caller": "R0720",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念图结构.ixx:403"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "节点记录读取后判断是否存在",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04869",
+      "signature": "std::optional<海中鱼巣::节点记录>::operator->() const",
+      "caller": "R0720",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念图结构.ixx:407,411,433"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "节点记录存在后读取类型、主信息和主键",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04870",
+      "signature": "std::optional<海中鱼巣::节点记录>::~optional() noexcept",
+      "caller": "R0720",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念图结构.ixx:402-435"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "局部节点记录 optional 在函数返回或作用域结束时释放",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04871",
+      "signature": "std::optional<海中鱼巣::主信息记录>::has_value() const noexcept",
+      "caller": "R0720",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念图结构.ixx:411"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library",
+      "reachable_condition": "主信息记录读取后判断是否存在",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04872",
+      "signature": "std::optional<海中鱼巣::主信息记录>::~optional()",
+      "caller": "R0720",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念图结构.ixx:411"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "主信息记录临时 optional 完成读取后释放",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04873",
+      "signature": "std::vector<std::uint64_t>::~vector()",
+      "caller": "R0720",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念图结构.ixx:415-435"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "局部主键组在函数返回或作用域结束时释放",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04874",
+      "signature": "std::vector<海中鱼巣::关系记录>::~vector()",
+      "caller": "R0720",
+      "locations": [
+        "海中鱼巣/领域/数据操作.概念图结构.ixx:422-423,428-429"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "两次关系读取返回的临时关系组完成判定后释放",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04875",
+      "signature": "bool std::vector<海中鱼巣::节点句柄>::const_iterator::operator!=(const std::vector<海中鱼巣::节点句柄>::const_iterator&) const",
+      "caller": "R0701",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:922,926"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "有序组成项范围循环开始与推进后比较游标",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04876",
+      "signature": "const 海中鱼巣::节点句柄& std::vector<海中鱼巣::节点句柄>::const_iterator::operator*() const",
+      "caller": "R0701",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:922"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "范围循环仍有组成项时读取当前节点句柄",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04877",
+      "signature": "std::vector<海中鱼巣::节点句柄>::const_iterator& std::vector<海中鱼巣::节点句柄>::const_iterator::operator++()",
+      "caller": "R0701",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:926"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "处理当前组成项后推进范围循环游标",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04878",
+      "signature": "std::vector<海中鱼巣::节点句柄>::~vector() noexcept",
+      "caller": "R0701",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:928-973,961-973"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "写前与当前二次特征材料中的节点句柄组随材料释放",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04879",
+      "signature": "std::vector<海中鱼巣::特征关系证据>::~vector() noexcept",
+      "caller": "R0701",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:928-973,961-973"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "写前与当前二次特征材料中的关系证据组随材料释放",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04880",
+      "signature": "std::optional<海中鱼巣::节点句柄>::~optional() noexcept",
+      "caller": "R0704",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:655-658"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "主键索引读取临时 optional 完成判定后释放",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04881",
+      "signature": "std::optional<std::uint64_t>::~optional() noexcept",
+      "caller": "R0705",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1345-1384"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "局部实际主键 optional 在返回或作用域结束时释放",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04882",
+      "signature": "std::vector<海中鱼巣::关系记录>::~vector() noexcept",
+      "caller": "R0705",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1347-1384"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "局部关系记录组在返回或作用域结束时释放",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04883",
+      "signature": "std::vector<std::optional<海中鱼巣::节点句柄>>::~vector() noexcept",
+      "caller": "R0705",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1349-1384"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "局部组成项槽位组在返回或作用域结束时释放",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04884",
+      "signature": "std::vector<std::optional<海中鱼巣::特征关系证据>>::~vector() noexcept",
+      "caller": "R0705",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1350-1384"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "局部证据槽位组在返回或作用域结束时释放",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04885",
+      "signature": "std::optional<海中鱼巣::特征关系证据>::~optional() noexcept",
+      "caller": "R0705",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1357-1370"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "循环内关系证据临时 optional 在当轮结束或提前返回时释放",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04886",
+      "signature": "std::vector<海中鱼巣::节点句柄>::~vector() noexcept",
+      "caller": "R0705",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1334-1384"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "输出材料的有序组成项组在非成功返回或对象销毁时释放",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04887",
+      "signature": "std::vector<海中鱼巣::特征关系证据>::~vector() noexcept",
+      "caller": "R0705",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1334-1384"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "输出材料的组成关系组在非成功返回或对象销毁时释放",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04888",
+      "signature": "bool std::vector<海中鱼巣::关系记录>::const_iterator::operator!=(const std::vector<海中鱼巣::关系记录>::const_iterator&) const",
+      "caller": "R0705",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1351,1370"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "关系记录范围循环开始与推进后比较游标",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04889",
+      "signature": "const 海中鱼巣::关系记录& std::vector<海中鱼巣::关系记录>::const_iterator::operator*() const",
+      "caller": "R0705",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1351"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "范围循环仍有关系记录时读取当前记录",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04890",
+      "signature": "std::vector<海中鱼巣::关系记录>::const_iterator& std::vector<海中鱼巣::关系记录>::const_iterator::operator++()",
+      "caller": "R0705",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1370"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "处理当前关系记录后推进游标",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04891",
+      "signature": "bool std::vector<std::optional<海中鱼巣::节点句柄>>::const_iterator::operator!=(const std::vector<std::optional<海中鱼巣::节点句柄>>::const_iterator&) const",
+      "caller": "R0705",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1363,1367"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "组成项槽位范围循环开始与推进后比较游标",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04892",
+      "signature": "const std::optional<海中鱼巣::节点句柄>& std::vector<std::optional<海中鱼巣::节点句柄>>::const_iterator::operator*() const",
+      "caller": "R0705",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1363"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "范围循环仍有槽位时读取当前 optional",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04893",
+      "signature": "std::vector<std::optional<海中鱼巣::节点句柄>>::const_iterator& std::vector<std::optional<海中鱼巣::节点句柄>>::const_iterator::operator++()",
+      "caller": "R0705",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1367"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "处理当前组成项槽位后推进游标",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04894",
+      "signature": "std::optional<海中鱼巣::节点类型>::~optional() noexcept",
+      "caller": "R0708",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:943-948"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "每轮组成项类型读取临时 optional 在当轮结束或提前返回时释放",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04895",
+      "signature": "std::vector<海中鱼巣::节点句柄>::vector() noexcept",
+      "caller": "R0705",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1334"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library construction",
+      "reachable_condition": "默认构造输出材料的有序组成项组",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04896",
+      "signature": "std::vector<海中鱼巣::特征关系证据>::vector() noexcept",
+      "caller": "R0705",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1334"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library construction",
+      "reachable_condition": "默认构造输出材料的组成关系组",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04897",
+      "signature": "std::optional<海中鱼巣::特征关系证据>& std::optional<海中鱼巣::特征关系证据>::operator=(const 海中鱼巣::特征关系证据&)",
+      "caller": "R0705",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:1369"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library assignment",
+      "reachable_condition": "把已读取特征关系证据写入对应证据槽位",
+      "resolution_source": "本批逐函数源码表达式、静态类型、范围循环与生命周期展开复核",
       "current_root_reachable": true
     }
   ],
