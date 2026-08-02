@@ -60,16 +60,10 @@ def 提取_markdown_mermaid(图文本: str) -> str:
     return 匹配.group(1).strip() if 匹配 else ""
 
 
-def 提取_html_mermaid(图文本: str) -> str:
-    匹配 = re.search(r'<div\s+class=["\']mermaid["\']>\s*(.*?)\s*</div>', 图文本, re.S)
-    return 匹配.group(1).strip() if 匹配 else ""
-
-
 def 检查必需文件(参数: argparse.Namespace) -> list[检查项]:
     结果: list[检查项] = []
     必需路径 = {
         "现状流程图 Markdown": 参数.flowchart_md,
-        "现状流程图 HTML": 参数.flowchart_html,
         "逐行代码映射表": 参数.mapping,
         "输入契约与调用语境表": 参数.contract,
         "非成功返回二分审查表": 参数.non_success,
@@ -97,27 +91,18 @@ def 检查短语(路径文本: str, 短语列表: list[str], 名称: str) -> lis
 
 def 检查流程图(参数: argparse.Namespace) -> list[检查项]:
     结果: list[检查项] = []
-    if not 路径存在(参数.flowchart_md) or not 路径存在(参数.flowchart_html):
+    if not 路径存在(参数.flowchart_md):
         return 结果
 
     md文本 = 读取文本(参数.flowchart_md)
-    html文本 = 读取文本(参数.flowchart_html)
 
     for 短语 in ["图类型：现状流程图", "逐行映射表", "```mermaid"]:
         if 短语 not in md文本:
             结果.append(检查项("ERROR", 参数.flowchart_md, f"现状流程图 Markdown 缺少: {短语}"))
 
-    if "cdn.jsdelivr.net/npm/mermaid" not in html文本:
-        结果.append(检查项("ERROR", 参数.flowchart_html, "现状流程图 HTML 缺少 Mermaid CDN import"))
-
     md图 = 提取_markdown_mermaid(md文本)
-    html图 = 提取_html_mermaid(html文本)
     if not md图:
         结果.append(检查项("ERROR", 参数.flowchart_md, "未找到 Mermaid fenced block"))
-    if not html图:
-        结果.append(检查项("ERROR", 参数.flowchart_html, "未找到 Mermaid div"))
-    if md图 and html图 and md图 != html图:
-        结果.append(检查项("ERROR", 参数.flowchart_html, "HTML Mermaid 图文本与 Markdown 不一致"))
 
     return 结果
 
@@ -232,7 +217,6 @@ def 自检() -> int:
         临时目录 = Path(临时目录文本)
         图 = "flowchart TD\n    A[\"开始\"] --> B[\"结束\"]"
         md = 写入临时文件(临时目录, "现状流程图.md", f"# 图\n\n图类型：现状流程图\n逐行映射表：映射.md\n\n```mermaid\n{图}\n```\n")
-        html = 写入临时文件(临时目录, "现状流程图.html", f"<div class=\"mermaid\">\n{图}\n</div><script type=\"module\">import mermaid from \"https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs\";</script>")
         mapping = 写入临时文件(临时目录, "映射.md", "| 文件 | 行号 | 代码行为 | 流程图节点 | 行为类型 | 结构变化 | 权威性 | 非成功口径 | 纠偏建议 |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n")
         contract = 写入临时文件(临时目录, "契约.md", "| 入口 | 调用方 | 输入字段 | 输入来源 | 上游是否保证有效 | 允许逻辑内返回 | 追根因触发条件 | 结构变化 | 验证方式 |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n")
         non_success = 写入临时文件(临时目录, "二分.md", "| 节点 | 代码位置 | 返回条件 | 输入语境 | 是否上游保证有效 | 结构是否变化 | 设计是否允许 | 二分口径 | 追根因解决 | 逻辑内返回 |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n")
@@ -242,7 +226,7 @@ def 自检() -> int:
 
         参数 = argparse.Namespace(
             flowchart_md=md,
-            flowchart_html=html,
+            flowchart_html=None,
             mapping=mapping,
             contract=contract,
             non_success=non_success,
@@ -260,7 +244,7 @@ def 自检() -> int:
 def 构建参数() -> argparse.Namespace:
     解析器 = argparse.ArgumentParser(description="检查流程图驱动代码纠偏产物是否完整")
     解析器.add_argument("--flowchart-md", help="现状流程图 Markdown 路径")
-    解析器.add_argument("--flowchart-html", help="现状流程图 HTML 路径")
+    解析器.add_argument("--flowchart-html", help="已退出的兼容参数；HTML 不再是正式流程图必需项")
     解析器.add_argument("--mapping", help="逐行代码映射表路径")
     解析器.add_argument("--contract", help="输入契约与调用语境表路径")
     解析器.add_argument("--non-success", help="非成功返回二分审查表路径")
