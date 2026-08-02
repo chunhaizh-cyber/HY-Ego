@@ -3,7 +3,7 @@
   "scope": "main-current-reachable",
   "root": "F0001",
   "root_signature": "int main(int 参数数量, char* 参数组[])",
-  "code_commit": "3920a74638264f9f539d50f32f3c9fe5fb1982ab",
+  "code_commit": "0a93526882cb33c61c2fbb04ecad1aeaddcfe225",
   "old_graph_blob": "527f20b7f125d97c3f0cdaf9a650c905d0255203",
   "old_graph_frozen_commit": "a48a70b2d678dea64dd8228adb4f26f0badd9506",
   "configuration": "Debug|x64",
@@ -15,9 +15,9 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1342,
-  "project_call_edge_count": 3912,
-  "edge_count": 3912,
+  "function_count": 1374,
+  "project_call_edge_count": 4030,
+  "edge_count": 4030,
   "edges": [
     {
       "edge_id": "E0002",
@@ -2844,26 +2844,27 @@
       "caller": "F0029",
       "callee": "F0030",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:485-486",
-        "海中鱼巣/自检.入口初始化.ixx:487-488",
-        "海中鱼巣/自检.入口初始化.ixx:489-490",
-        "海中鱼巣/自检.入口初始化.ixx:491-492",
-        "海中鱼巣/自检.入口初始化.ixx:493-494",
-        "海中鱼巣/自检.入口初始化.ixx:495-496",
-        "海中鱼巣/自检.入口初始化.ixx:497-498",
-        "海中鱼巣/自检.入口初始化.ixx:499-500",
-        "海中鱼巣/自检.入口初始化.ixx:501-502",
-        "海中鱼巣/自检.入口初始化.ixx:503-504",
-        "海中鱼巣/自检.入口初始化.ixx:505-506",
-        "海中鱼巣/自检.入口初始化.ixx:507-508",
-        "海中鱼巣/自检.入口初始化.ixx:509-510",
-        "海中鱼巣/自检.入口初始化.ixx:511-512"
+        "海中鱼巣/自检.入口初始化.ixx:658-659",
+        "海中鱼巣/自检.入口初始化.ixx:660-661",
+        "海中鱼巣/自检.入口初始化.ixx:662-663",
+        "海中鱼巣/自检.入口初始化.ixx:664-665",
+        "海中鱼巣/自检.入口初始化.ixx:666-667",
+        "海中鱼巣/自检.入口初始化.ixx:668-669",
+        "海中鱼巣/自检.入口初始化.ixx:670-671",
+        "海中鱼巣/自检.入口初始化.ixx:672-673",
+        "海中鱼巣/自检.入口初始化.ixx:674-675",
+        "海中鱼巣/自检.入口初始化.ixx:676-677",
+        "海中鱼巣/自检.入口初始化.ixx:678-679",
+        "海中鱼巣/自检.入口初始化.ixx:680-681",
+        "海中鱼巣/自检.入口初始化.ixx:682-683",
+        "海中鱼巣/自检.入口初始化.ixx:684-685",
+        "海中鱼巣/自检.入口初始化.ixx:686-687"
       ],
       "call_category": "direct_member",
-      "arguments": "10, S01编号名称, F0080回调",
-      "argument_resolution": "候选工具实参并经调用点定位",
+      "arguments": "S01-S15顺序、编号、名称与对应回调",
+      "argument_resolution": "15个登记调用点与15个稳定回调身份逐项复核",
       "return_binding": "S01登记结果",
-      "reachable_condition": "always；S01成功；S01-S02成功；S01-S03成功；S01-S04成功；S01-S05成功；S01-S06成功；S01-S07成功；S01-S08成功；S01-S09成功；S01-S10成功；S01-S11成功；S01-S12成功；S01-S13成功",
+      "reachable_condition": "前序登记均成功时继续；S15要求S01-S14均成功",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
       "current_root_reachable": true
     },
@@ -2872,7 +2873,7 @@
       "caller": "F0029",
       "callee": "F0080",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:486"
+        "海中鱼巣/自检.入口初始化.ixx:659"
       ],
       "call_category": "callback_bind",
       "arguments": "配置按值捕获",
@@ -2883,26 +2884,11 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0012",
-      "caller": "F0029",
-      "callee": "F0254",
-      "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:486"
-      ],
-      "call_category": "same_module",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E0124",
       "caller": "F0029",
       "callee": "F0081",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:488"
+        "海中鱼巣/自检.入口初始化.ixx:661"
       ],
       "call_category": "callback_bind",
       "arguments": "配置按值捕获",
@@ -2913,26 +2899,11 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0013",
-      "caller": "F0029",
-      "callee": "F0255",
-      "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:488"
-      ],
-      "call_category": "same_module",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E0125",
       "caller": "F0029",
       "callee": "F0082",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:490"
+        "海中鱼巣/自检.入口初始化.ixx:663"
       ],
       "call_category": "callback_bind",
       "arguments": "配置按值捕获",
@@ -2943,26 +2914,11 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0014",
-      "caller": "F0029",
-      "callee": "F0256",
-      "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:490"
-      ],
-      "call_category": "same_module",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E0126",
       "caller": "F0029",
       "callee": "F0083",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:492"
+        "海中鱼巣/自检.入口初始化.ixx:665"
       ],
       "call_category": "callback_bind",
       "arguments": "配置按值捕获",
@@ -2973,26 +2929,11 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0015",
-      "caller": "F0029",
-      "callee": "F0257",
-      "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:492"
-      ],
-      "call_category": "same_module",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E0127",
       "caller": "F0029",
       "callee": "F0084",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:494"
+        "海中鱼巣/自检.入口初始化.ixx:667"
       ],
       "call_category": "callback_bind",
       "arguments": "配置按值捕获",
@@ -3003,26 +2944,11 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0016",
-      "caller": "F0029",
-      "callee": "F0258",
-      "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:494"
-      ],
-      "call_category": "same_module",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E0128",
       "caller": "F0029",
       "callee": "F0085",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:496"
+        "海中鱼巣/自检.入口初始化.ixx:669"
       ],
       "call_category": "callback_bind",
       "arguments": "配置按值捕获",
@@ -3033,26 +2959,11 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0017",
-      "caller": "F0029",
-      "callee": "F0259",
-      "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:496"
-      ],
-      "call_category": "same_module",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E0129",
       "caller": "F0029",
       "callee": "F0086",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:498"
+        "海中鱼巣/自检.入口初始化.ixx:671"
       ],
       "call_category": "callback_bind",
       "arguments": "配置按值捕获",
@@ -3063,26 +2974,11 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0018",
-      "caller": "F0029",
-      "callee": "F0260",
-      "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:498"
-      ],
-      "call_category": "same_module",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E0130",
       "caller": "F0029",
       "callee": "F0087",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:500"
+        "海中鱼巣/自检.入口初始化.ixx:673"
       ],
       "call_category": "callback_bind",
       "arguments": "配置按值捕获",
@@ -3093,26 +2989,11 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0019",
-      "caller": "F0029",
-      "callee": "F0261",
-      "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:500"
-      ],
-      "call_category": "same_module",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E0131",
       "caller": "F0029",
       "callee": "F0088",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:502"
+        "海中鱼巣/自检.入口初始化.ixx:675"
       ],
       "call_category": "callback_bind",
       "arguments": "配置按值捕获",
@@ -3123,26 +3004,11 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0020",
-      "caller": "F0029",
-      "callee": "F0262",
-      "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:502"
-      ],
-      "call_category": "same_module",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E0132",
       "caller": "F0029",
       "callee": "F0089",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:504"
+        "海中鱼巣/自检.入口初始化.ixx:677"
       ],
       "call_category": "callback_bind",
       "arguments": "配置按值捕获",
@@ -3153,26 +3019,11 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0021",
-      "caller": "F0029",
-      "callee": "F0263",
-      "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:504"
-      ],
-      "call_category": "same_module",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E0133",
       "caller": "F0029",
       "callee": "F0090",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:506"
+        "海中鱼巣/自检.入口初始化.ixx:679"
       ],
       "call_category": "callback_bind",
       "arguments": "配置按值捕获",
@@ -3183,26 +3034,11 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0022",
-      "caller": "F0029",
-      "callee": "F0264",
-      "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:506"
-      ],
-      "call_category": "same_module",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E0134",
       "caller": "F0029",
       "callee": "F0091",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:508"
+        "海中鱼巣/自检.入口初始化.ixx:681"
       ],
       "call_category": "callback_bind",
       "arguments": "配置按值捕获",
@@ -3213,26 +3049,11 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0023",
-      "caller": "F0029",
-      "callee": "F0265",
-      "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:508"
-      ],
-      "call_category": "same_module",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E0135",
       "caller": "F0029",
       "callee": "F0092",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:510"
+        "海中鱼巣/自检.入口初始化.ixx:683"
       ],
       "call_category": "callback_bind",
       "arguments": "配置按值捕获",
@@ -3243,26 +3064,11 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE0024",
-      "caller": "F0029",
-      "callee": "F0266",
-      "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:510"
-      ],
-      "call_category": "same_module",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "E0136",
       "caller": "F0029",
       "callee": "F0093",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:512"
+        "海中鱼巣/自检.入口初始化.ixx:685"
       ],
       "call_category": "callback_bind",
       "arguments": "配置按值捕获",
@@ -3270,21 +3076,6 @@
       "return_binding": "S14回调槽",
       "reachable_condition": "S01-S13成功",
       "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE0025",
-      "caller": "F0029",
-      "callee": "F0267",
-      "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:512"
-      ],
-      "call_category": "same_module",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "逐边源码/静态类型审计 PASS",
       "current_root_reachable": true
     },
     {
@@ -4126,11 +3917,11 @@
         "海中鱼巣/装配.普通应用.ixx:69"
       ],
       "call_category": "member_constructor",
-      "arguments": "主信息,节点,存在,场景,特征,状态,动态,二次特征,因果",
-      "argument_resolution": "候选工具实参并经调用点定位",
+      "arguments": "主信息,节点,存在,场景",
+      "argument_resolution": "当前四依赖构造签名与装配调用点逐项复核",
       "return_binding": "世界",
       "reachable_condition": "前序成功",
-      "resolution_source": "HEAD 已发布图谱；源码自冻结提交至当前基线零差异；Debug|x64 条件复核",
+      "resolution_source": "世界服务当前源码与装配调用点复核",
       "current_root_reachable": true
     },
     {
@@ -6513,7 +6304,7 @@
       "caller": "F0080",
       "callee": "F0254",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:486"
+        "海中鱼巣/自检.入口初始化.ixx:659"
       ],
       "call_category": "direct_free",
       "arguments": "捕获配置",
@@ -6528,7 +6319,7 @@
       "caller": "F0081",
       "callee": "F0255",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:488"
+        "海中鱼巣/自检.入口初始化.ixx:661"
       ],
       "call_category": "direct_free",
       "arguments": "捕获配置",
@@ -6543,7 +6334,7 @@
       "caller": "F0082",
       "callee": "F0256",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:490"
+        "海中鱼巣/自检.入口初始化.ixx:663"
       ],
       "call_category": "direct_free",
       "arguments": "捕获配置",
@@ -6558,7 +6349,7 @@
       "caller": "F0083",
       "callee": "F0257",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:492"
+        "海中鱼巣/自检.入口初始化.ixx:665"
       ],
       "call_category": "direct_free",
       "arguments": "捕获配置",
@@ -6573,7 +6364,7 @@
       "caller": "F0084",
       "callee": "F0258",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:494"
+        "海中鱼巣/自检.入口初始化.ixx:667"
       ],
       "call_category": "direct_free",
       "arguments": "捕获配置",
@@ -6588,7 +6379,7 @@
       "caller": "F0085",
       "callee": "F0259",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:496"
+        "海中鱼巣/自检.入口初始化.ixx:669"
       ],
       "call_category": "direct_free",
       "arguments": "捕获配置",
@@ -6603,7 +6394,7 @@
       "caller": "F0086",
       "callee": "F0260",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:498"
+        "海中鱼巣/自检.入口初始化.ixx:671"
       ],
       "call_category": "direct_free",
       "arguments": "捕获配置",
@@ -6618,7 +6409,7 @@
       "caller": "F0087",
       "callee": "F0261",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:500"
+        "海中鱼巣/自检.入口初始化.ixx:673"
       ],
       "call_category": "direct_free",
       "arguments": "捕获配置",
@@ -6633,7 +6424,7 @@
       "caller": "F0088",
       "callee": "F0262",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:502"
+        "海中鱼巣/自检.入口初始化.ixx:675"
       ],
       "call_category": "direct_free",
       "arguments": "捕获配置",
@@ -6648,7 +6439,7 @@
       "caller": "F0089",
       "callee": "F0263",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:504"
+        "海中鱼巣/自检.入口初始化.ixx:677"
       ],
       "call_category": "direct_free",
       "arguments": "捕获配置",
@@ -6663,7 +6454,7 @@
       "caller": "F0090",
       "callee": "F0264",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:506"
+        "海中鱼巣/自检.入口初始化.ixx:679"
       ],
       "call_category": "direct_free",
       "arguments": "捕获配置",
@@ -6678,7 +6469,7 @@
       "caller": "F0091",
       "callee": "F0265",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:508"
+        "海中鱼巣/自检.入口初始化.ixx:681"
       ],
       "call_category": "direct_free",
       "arguments": "捕获配置",
@@ -6693,7 +6484,7 @@
       "caller": "F0092",
       "callee": "F0266",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:510"
+        "海中鱼巣/自检.入口初始化.ixx:683"
       ],
       "call_category": "direct_free",
       "arguments": "捕获配置",
@@ -6708,7 +6499,7 @@
       "caller": "F0093",
       "callee": "F0267",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:512"
+        "海中鱼巣/自检.入口初始化.ixx:685"
       ],
       "call_category": "direct_free",
       "arguments": "捕获配置",
@@ -11532,7 +11323,7 @@
       "caller": "F0254",
       "callee": "F0131",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:100"
+        "海中鱼巣/自检.入口初始化.ixx:101"
       ],
       "call_category": "compiler_implicit_member_destructor",
       "arguments": "this=&环境.上下文->自我线程实例",
@@ -11547,7 +11338,7 @@
       "caller": "F0254",
       "callee": "F0468",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:75"
+        "海中鱼巣/自检.入口初始化.ixx:76"
       ],
       "call_category": "direct_free",
       "arguments": "配置,编号",
@@ -11562,7 +11353,7 @@
       "caller": "F0254",
       "callee": "F0469",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:76"
+        "海中鱼巣/自检.入口初始化.ixx:77"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&环境",
@@ -11577,7 +11368,7 @@
       "caller": "F0254",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:82"
+        "海中鱼巣/自检.入口初始化.ixx:83"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -11592,7 +11383,7 @@
       "caller": "F0254",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:83"
+        "海中鱼巣/自检.入口初始化.ixx:84"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -11607,7 +11398,7 @@
       "caller": "F0254",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:84"
+        "海中鱼巣/自检.入口初始化.ixx:85"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -11622,7 +11413,7 @@
       "caller": "F0254",
       "callee": "F0015",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:87"
+        "海中鱼巣/自检.入口初始化.ixx:88"
       ],
       "call_category": "direct_free+unique_name",
       "arguments": "端口,{方法登记根稳定键,根需求参数}",
@@ -11637,7 +11428,7 @@
       "caller": "F0254",
       "callee": "F0016",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:92"
+        "海中鱼巣/自检.入口初始化.ixx:93"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&结果",
@@ -11652,10 +11443,10 @@
       "caller": "F0254",
       "callee": "F0476",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:93",
         "海中鱼巣/自检.入口初始化.ixx:94",
         "海中鱼巣/自检.入口初始化.ixx:95",
-        "海中鱼巣/自检.入口初始化.ixx:96"
+        "海中鱼巣/自检.入口初始化.ixx:96",
+        "海中鱼巣/自检.入口初始化.ixx:97"
       ],
       "call_category": "local_lambda_direct",
       "arguments": "存在根,节点类型::存在",
@@ -11670,7 +11461,7 @@
       "caller": "F0255",
       "callee": "F0468",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:104"
+        "海中鱼巣/自检.入口初始化.ixx:105"
       ],
       "call_category": "direct_free",
       "arguments": "配置,编号",
@@ -11685,7 +11476,7 @@
       "caller": "F0255",
       "callee": "F0469",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:105"
+        "海中鱼巣/自检.入口初始化.ixx:106"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&环境",
@@ -11700,7 +11491,7 @@
       "caller": "F0255",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:111"
+        "海中鱼巣/自检.入口初始化.ixx:112"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -11715,7 +11506,7 @@
       "caller": "F0255",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:112"
+        "海中鱼巣/自检.入口初始化.ixx:113"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -11730,7 +11521,7 @@
       "caller": "F0255",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:113"
+        "海中鱼巣/自检.入口初始化.ixx:114"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -11745,7 +11536,7 @@
       "caller": "F0255",
       "callee": "F0015",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:116"
+        "海中鱼巣/自检.入口初始化.ixx:117"
       ],
       "call_category": "direct_free+unique_name",
       "arguments": "端口,{方法登记根稳定键,根需求参数}",
@@ -11760,7 +11551,7 @@
       "caller": "F0255",
       "callee": "F0016",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:118"
+        "海中鱼巣/自检.入口初始化.ixx:119"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&结果",
@@ -11775,7 +11566,7 @@
       "caller": "F0255",
       "callee": "F0355",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:118"
+        "海中鱼巣/自检.入口初始化.ixx:119"
       ],
       "call_category": "direct_const_member+unique_name",
       "arguments": "上下文.概念图隐式this",
@@ -11790,7 +11581,7 @@
       "caller": "F0255",
       "callee": "F0131",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:128"
+        "海中鱼巣/自检.入口初始化.ixx:129"
       ],
       "call_category": "compiler_implicit_member_destructor",
       "arguments": "this=&环境.上下文->自我线程实例",
@@ -11805,7 +11596,7 @@
       "caller": "F0256",
       "callee": "F0468",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:132"
+        "海中鱼巣/自检.入口初始化.ixx:133"
       ],
       "call_category": "direct_free",
       "arguments": "配置,编号",
@@ -11820,7 +11611,7 @@
       "caller": "F0256",
       "callee": "F0469",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:133"
+        "海中鱼巣/自检.入口初始化.ixx:134"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&环境",
@@ -11835,7 +11626,7 @@
       "caller": "F0256",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:139"
+        "海中鱼巣/自检.入口初始化.ixx:140"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -11850,7 +11641,7 @@
       "caller": "F0256",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:140"
+        "海中鱼巣/自检.入口初始化.ixx:141"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -11865,7 +11656,7 @@
       "caller": "F0256",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:141"
+        "海中鱼巣/自检.入口初始化.ixx:142"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -11880,7 +11671,7 @@
       "caller": "F0256",
       "callee": "F0015",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:144"
+        "海中鱼巣/自检.入口初始化.ixx:145"
       ],
       "call_category": "direct_free+unique_name",
       "arguments": "端口,{方法登记根稳定键,根需求参数}",
@@ -11895,8 +11686,8 @@
       "caller": "F0256",
       "callee": "F0016",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:145",
-        "海中鱼巣/自检.入口初始化.ixx:150"
+        "海中鱼巣/自检.入口初始化.ixx:146",
+        "海中鱼巣/自检.入口初始化.ixx:151"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&结果",
@@ -11911,8 +11702,8 @@
       "caller": "F0256",
       "callee": "F0364",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:146",
-        "海中鱼巣/自检.入口初始化.ixx:146-147"
+        "海中鱼巣/自检.入口初始化.ixx:147",
+        "海中鱼巣/自检.入口初始化.ixx:147-148"
       ],
       "call_category": "direct_member+unique_name",
       "arguments": "L实体,存在根.根节点,存在根.根节点；第4形参主键采用默认值0",
@@ -11927,7 +11718,7 @@
       "caller": "F0256",
       "callee": "F0352",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:149"
+        "海中鱼巣/自检.入口初始化.ixx:150"
       ],
       "call_category": "direct_const_member+unique_name",
       "arguments": "概念根类别::存在",
@@ -11942,7 +11733,7 @@
       "caller": "F0256",
       "callee": "F0363",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:150"
+        "海中鱼巣/自检.入口初始化.ixx:151"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&别名",
@@ -11957,7 +11748,7 @@
       "caller": "F0256",
       "callee": "F0051",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:152"
+        "海中鱼巣/自检.入口初始化.ixx:153"
       ],
       "call_category": "direct_free_operator",
       "arguments": "读回.根节点,结果.概念图.存在根.根节点",
@@ -11972,7 +11763,7 @@
       "caller": "F0256",
       "callee": "F0131",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:157"
+        "海中鱼巣/自检.入口初始化.ixx:158"
       ],
       "call_category": "compiler_implicit_member_destructor",
       "arguments": "this=&环境.上下文->自我线程实例",
@@ -11987,7 +11778,7 @@
       "caller": "F0257",
       "callee": "F0468",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:161"
+        "海中鱼巣/自检.入口初始化.ixx:162"
       ],
       "call_category": "direct_free",
       "arguments": "配置,编号",
@@ -12002,7 +11793,7 @@
       "caller": "F0257",
       "callee": "F0469",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:162"
+        "海中鱼巣/自检.入口初始化.ixx:163"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&环境",
@@ -12017,7 +11808,7 @@
       "caller": "F0257",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:168"
+        "海中鱼巣/自检.入口初始化.ixx:169"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -12032,7 +11823,7 @@
       "caller": "F0257",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:169"
+        "海中鱼巣/自检.入口初始化.ixx:170"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -12047,7 +11838,7 @@
       "caller": "F0257",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:170"
+        "海中鱼巣/自检.入口初始化.ixx:171"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -12062,7 +11853,7 @@
       "caller": "F0257",
       "callee": "F0015",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:173"
+        "海中鱼巣/自检.入口初始化.ixx:174"
       ],
       "call_category": "direct_free+unique_name",
       "arguments": "端口,{方法登记根稳定键,根需求参数}",
@@ -12077,7 +11868,7 @@
       "caller": "F0257",
       "callee": "F0496",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:175"
+        "海中鱼巣/自检.入口初始化.ixx:176"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -12092,7 +11883,7 @@
       "caller": "F0257",
       "callee": "F0497",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:176"
+        "海中鱼巣/自检.入口初始化.ixx:177"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -12107,7 +11898,7 @@
       "caller": "F0257",
       "callee": "F0016",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:180"
+        "海中鱼巣/自检.入口初始化.ixx:181"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&结果",
@@ -12122,8 +11913,8 @@
       "caller": "F0257",
       "callee": "F0495",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:185",
-        "海中鱼巣/自检.入口初始化.ixx:186"
+        "海中鱼巣/自检.入口初始化.ixx:186",
+        "海中鱼巣/自检.入口初始化.ixx:187"
       ],
       "call_category": "local_lambda_direct",
       "arguments": "存在根",
@@ -12138,7 +11929,7 @@
       "caller": "F0257",
       "callee": "F0131",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:190"
+        "海中鱼巣/自检.入口初始化.ixx:191"
       ],
       "call_category": "compiler_implicit_member_destructor",
       "arguments": "this=&环境.上下文->自我线程实例",
@@ -12153,7 +11944,7 @@
       "caller": "F0258",
       "callee": "F0468",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:194"
+        "海中鱼巣/自检.入口初始化.ixx:195"
       ],
       "call_category": "direct_free",
       "arguments": "配置,编号",
@@ -12168,7 +11959,7 @@
       "caller": "F0258",
       "callee": "F0469",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:195"
+        "海中鱼巣/自检.入口初始化.ixx:196"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&环境",
@@ -12183,7 +11974,7 @@
       "caller": "F0258",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:201"
+        "海中鱼巣/自检.入口初始化.ixx:202"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -12198,7 +11989,7 @@
       "caller": "F0258",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:202"
+        "海中鱼巣/自检.入口初始化.ixx:203"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -12213,8 +12004,8 @@
       "caller": "F0258",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:203",
-        "海中鱼巣/自检.入口初始化.ixx:210"
+        "海中鱼巣/自检.入口初始化.ixx:204",
+        "海中鱼巣/自检.入口初始化.ixx:211"
       ],
       "call_category": "direct_member+unique_name",
       "arguments": "this=&上下文.概念图初始化",
@@ -12229,7 +12020,7 @@
       "caller": "F0258",
       "callee": "F0015",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:206"
+        "海中鱼巣/自检.入口初始化.ixx:207"
       ],
       "call_category": "direct_free+unique_name",
       "arguments": "端口,{方法登记根稳定键,根需求参数}",
@@ -12244,8 +12035,8 @@
       "caller": "F0258",
       "callee": "F0197",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:207",
-        "海中鱼巣/自检.入口初始化.ixx:216"
+        "海中鱼巣/自检.入口初始化.ixx:208",
+        "海中鱼巣/自检.入口初始化.ixx:217"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.节点",
@@ -12260,8 +12051,8 @@
       "caller": "F0258",
       "callee": "F0198",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:208",
-        "海中鱼巣/自检.入口初始化.ixx:217"
+        "海中鱼巣/自检.入口初始化.ixx:209",
+        "海中鱼巣/自检.入口初始化.ixx:218"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.关系",
@@ -12276,8 +12067,8 @@
       "caller": "F0258",
       "callee": "F0198",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:208",
-        "海中鱼巣/自检.入口初始化.ixx:217"
+        "海中鱼巣/自检.入口初始化.ixx:209",
+        "海中鱼巣/自检.入口初始化.ixx:218"
       ],
       "call_category": "unique_name",
       "arguments": "this=&上下文.关系",
@@ -12292,8 +12083,8 @@
       "caller": "F0258",
       "callee": "F0199",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:209",
-        "海中鱼巣/自检.入口初始化.ixx:218"
+        "海中鱼巣/自检.入口初始化.ixx:210",
+        "海中鱼巣/自检.入口初始化.ixx:219"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.索引",
@@ -12308,7 +12099,7 @@
       "caller": "F0258",
       "callee": "F0016",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:211"
+        "海中鱼巣/自检.入口初始化.ixx:212"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&首次",
@@ -12323,7 +12114,7 @@
       "caller": "F0258",
       "callee": "F0049",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:211"
+        "海中鱼巣/自检.入口初始化.ixx:212"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&再次",
@@ -12338,10 +12129,10 @@
       "caller": "F0258",
       "callee": "F0051",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:212",
         "海中鱼巣/自检.入口初始化.ixx:213",
         "海中鱼巣/自检.入口初始化.ixx:214",
-        "海中鱼巣/自检.入口初始化.ixx:215"
+        "海中鱼巣/自检.入口初始化.ixx:215",
+        "海中鱼巣/自检.入口初始化.ixx:216"
       ],
       "call_category": "direct_operator",
       "arguments": "再次.存在根.根节点,首次.概念图.存在根.根节点",
@@ -12356,7 +12147,7 @@
       "caller": "F0258",
       "callee": "F0131",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:222"
+        "海中鱼巣/自检.入口初始化.ixx:223"
       ],
       "call_category": "compiler_implicit_member_destructor",
       "arguments": "this=&环境.上下文->自我线程实例",
@@ -12371,7 +12162,7 @@
       "caller": "F0259",
       "callee": "F0468",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:226"
+        "海中鱼巣/自检.入口初始化.ixx:227"
       ],
       "call_category": "direct_free",
       "arguments": "配置,编号",
@@ -12386,7 +12177,7 @@
       "caller": "F0259",
       "callee": "F0469",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:227"
+        "海中鱼巣/自检.入口初始化.ixx:228"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&环境",
@@ -12401,7 +12192,7 @@
       "caller": "F0259",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:233"
+        "海中鱼巣/自检.入口初始化.ixx:234"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -12416,7 +12207,7 @@
       "caller": "F0259",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:234"
+        "海中鱼巣/自检.入口初始化.ixx:235"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -12431,7 +12222,7 @@
       "caller": "F0259",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:235"
+        "海中鱼巣/自检.入口初始化.ixx:236"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -12446,7 +12237,7 @@
       "caller": "F0259",
       "callee": "F0015",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:238"
+        "海中鱼巣/自检.入口初始化.ixx:239"
       ],
       "call_category": "direct_free+unique_name",
       "arguments": "端口,{方法登记根稳定键,根需求参数}",
@@ -12461,7 +12252,7 @@
       "caller": "F0259",
       "callee": "F0016",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:239"
+        "海中鱼巣/自检.入口初始化.ixx:240"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&结果",
@@ -12476,7 +12267,7 @@
       "caller": "F0259",
       "callee": "F0051",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:240"
+        "海中鱼巣/自检.入口初始化.ixx:241"
       ],
       "call_category": "std_optional_element_compare",
       "arguments": "结果.自我存在根支持.value(),结果.概念图.存在根.根节点",
@@ -12491,8 +12282,8 @@
       "caller": "F0259",
       "callee": "F0371",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:241",
-        "海中鱼巣/自检.入口初始化.ixx:241-242"
+        "海中鱼巣/自检.入口初始化.ixx:242",
+        "海中鱼巣/自检.入口初始化.ixx:242-243"
       ],
       "call_category": "direct_const_member+unique_name",
       "arguments": "this=&上下文.概念图,结果.自我初始化->世界树.自我存在节点",
@@ -12507,7 +12298,7 @@
       "caller": "F0259",
       "callee": "F0131",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:246"
+        "海中鱼巣/自检.入口初始化.ixx:247"
       ],
       "call_category": "compiler_implicit_member_destructor",
       "arguments": "this=&环境.上下文->自我线程实例",
@@ -12522,7 +12313,7 @@
       "caller": "F0260",
       "callee": "F0468",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:250"
+        "海中鱼巣/自检.入口初始化.ixx:251"
       ],
       "call_category": "direct_free",
       "arguments": "配置,编号",
@@ -12537,7 +12328,7 @@
       "caller": "F0260",
       "callee": "F0469",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:251"
+        "海中鱼巣/自检.入口初始化.ixx:252"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&环境",
@@ -12552,7 +12343,7 @@
       "caller": "F0260",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:257"
+        "海中鱼巣/自检.入口初始化.ixx:258"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -12567,7 +12358,7 @@
       "caller": "F0260",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:258"
+        "海中鱼巣/自检.入口初始化.ixx:259"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -12582,7 +12373,7 @@
       "caller": "F0260",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:259"
+        "海中鱼巣/自检.入口初始化.ixx:260"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -12597,7 +12388,7 @@
       "caller": "F0260",
       "callee": "F0015",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:262"
+        "海中鱼巣/自检.入口初始化.ixx:263"
       ],
       "call_category": "direct_free+unique_name",
       "arguments": "端口,{方法登记根稳定键,根需求参数}",
@@ -12612,7 +12403,7 @@
       "caller": "F0260",
       "callee": "F0516",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:263"
+        "海中鱼巣/自检.入口初始化.ixx:264"
       ],
       "call_category": "direct_member",
       "arguments": "this=&上下文.存在",
@@ -12627,7 +12418,7 @@
       "caller": "F0260",
       "callee": "F0050",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:264"
+        "海中鱼巣/自检.入口初始化.ixx:265"
       ],
       "call_category": "direct_member",
       "arguments": "this=&上下文.概念图,第二实例",
@@ -12642,7 +12433,7 @@
       "caller": "F0260",
       "callee": "F0016",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:265"
+        "海中鱼巣/自检.入口初始化.ixx:266"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&结果",
@@ -12657,7 +12448,7 @@
       "caller": "F0260",
       "callee": "F0051",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:265"
+        "海中鱼巣/自检.入口初始化.ixx:266"
       ],
       "call_category": "std_optional_element_compare",
       "arguments": "支持.value(),结果.概念图.存在根.根节点",
@@ -12672,7 +12463,7 @@
       "caller": "F0260",
       "callee": "F0372",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:266"
+        "海中鱼巣/自检.入口初始化.ixx:267"
       ],
       "call_category": "direct_const_member+unique_name",
       "arguments": "this=&上下文.概念图,结果.概念图.存在根.根节点",
@@ -12687,7 +12478,7 @@
       "caller": "F0260",
       "callee": "F0131",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:270"
+        "海中鱼巣/自检.入口初始化.ixx:271"
       ],
       "call_category": "compiler_implicit_member_destructor",
       "arguments": "this=&环境.上下文->自我线程实例",
@@ -12702,7 +12493,7 @@
       "caller": "F0261",
       "callee": "F0468",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:274"
+        "海中鱼巣/自检.入口初始化.ixx:275"
       ],
       "call_category": "direct_free",
       "arguments": "配置,编号",
@@ -12717,7 +12508,7 @@
       "caller": "F0261",
       "callee": "F0469",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:275"
+        "海中鱼巣/自检.入口初始化.ixx:276"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&环境",
@@ -12732,7 +12523,7 @@
       "caller": "F0261",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:281"
+        "海中鱼巣/自检.入口初始化.ixx:282"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -12747,7 +12538,7 @@
       "caller": "F0261",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:282"
+        "海中鱼巣/自检.入口初始化.ixx:283"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -12762,7 +12553,7 @@
       "caller": "F0261",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:283"
+        "海中鱼巣/自检.入口初始化.ixx:284"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -12777,7 +12568,7 @@
       "caller": "F0261",
       "callee": "F0015",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:286"
+        "海中鱼巣/自检.入口初始化.ixx:287"
       ],
       "call_category": "direct_free+unique_name",
       "arguments": "端口,{方法登记根稳定键,根需求参数}",
@@ -12792,7 +12583,7 @@
       "caller": "F0261",
       "callee": "F0516",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:287"
+        "海中鱼巣/自检.入口初始化.ixx:288"
       ],
       "call_category": "direct_member",
       "arguments": "this=&上下文.存在",
@@ -12807,7 +12598,7 @@
       "caller": "F0261",
       "callee": "F0523",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:288"
+        "海中鱼巣/自检.入口初始化.ixx:289"
       ],
       "call_category": "direct_member",
       "arguments": "this=&上下文.节点,已删除",
@@ -12822,7 +12613,7 @@
       "caller": "F0261",
       "callee": "R0147",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:288"
+        "海中鱼巣/自检.入口初始化.ixx:289"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -12837,8 +12628,8 @@
       "caller": "F0261",
       "callee": "F0197",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:289",
-        "海中鱼巣/自检.入口初始化.ixx:297"
+        "海中鱼巣/自检.入口初始化.ixx:290",
+        "海中鱼巣/自检.入口初始化.ixx:298"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.节点",
@@ -12853,8 +12644,8 @@
       "caller": "F0261",
       "callee": "F0198",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:290",
-        "海中鱼巣/自检.入口初始化.ixx:298"
+        "海中鱼巣/自检.入口初始化.ixx:291",
+        "海中鱼巣/自检.入口初始化.ixx:299"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.关系",
@@ -12869,8 +12660,8 @@
       "caller": "F0261",
       "callee": "F0198",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:290",
-        "海中鱼巣/自检.入口初始化.ixx:298"
+        "海中鱼巣/自检.入口初始化.ixx:291",
+        "海中鱼巣/自检.入口初始化.ixx:299"
       ],
       "call_category": "unique_name",
       "arguments": "this=&上下文.关系",
@@ -12885,8 +12676,8 @@
       "caller": "F0261",
       "callee": "F0199",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:291",
-        "海中鱼巣/自检.入口初始化.ixx:299"
+        "海中鱼巣/自检.入口初始化.ixx:292",
+        "海中鱼巣/自检.入口初始化.ixx:300"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.索引",
@@ -12901,9 +12692,9 @@
       "caller": "F0261",
       "callee": "F0050",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:292",
         "海中鱼巣/自检.入口初始化.ixx:293",
-        "海中鱼巣/自检.入口初始化.ixx:294"
+        "海中鱼巣/自检.入口初始化.ixx:294",
+        "海中鱼巣/自检.入口初始化.ixx:295"
       ],
       "call_category": "direct_member",
       "arguments": "this=&上下文.概念图,结果.概念图.存在根.根节点",
@@ -12918,7 +12709,7 @@
       "caller": "F0261",
       "callee": "F0016",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:295"
+        "海中鱼巣/自检.入口初始化.ixx:296"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&结果",
@@ -12933,7 +12724,7 @@
       "caller": "F0261",
       "callee": "F0131",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:303"
+        "海中鱼巣/自检.入口初始化.ixx:304"
       ],
       "call_category": "compiler_implicit_member_destructor",
       "arguments": "this=&环境.上下文->自我线程实例",
@@ -12948,7 +12739,7 @@
       "caller": "F0262",
       "callee": "F0468",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:307"
+        "海中鱼巣/自检.入口初始化.ixx:308"
       ],
       "call_category": "direct_free",
       "arguments": "配置,编号",
@@ -12963,7 +12754,7 @@
       "caller": "F0262",
       "callee": "F0469",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:308"
+        "海中鱼巣/自检.入口初始化.ixx:309"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&环境",
@@ -12978,7 +12769,7 @@
       "caller": "F0262",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:314"
+        "海中鱼巣/自检.入口初始化.ixx:315"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -12993,7 +12784,7 @@
       "caller": "F0262",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:315"
+        "海中鱼巣/自检.入口初始化.ixx:316"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -13008,7 +12799,7 @@
       "caller": "F0262",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:316"
+        "海中鱼巣/自检.入口初始化.ixx:317"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -13023,7 +12814,7 @@
       "caller": "F0262",
       "callee": "F0015",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:319"
+        "海中鱼巣/自检.入口初始化.ixx:320"
       ],
       "call_category": "direct_free+unique_name",
       "arguments": "端口,{方法登记根稳定键,根需求参数}",
@@ -13038,7 +12829,7 @@
       "caller": "F0262",
       "callee": "F0016",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:320"
+        "海中鱼巣/自检.入口初始化.ixx:321"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&结果",
@@ -13053,7 +12844,7 @@
       "caller": "F0262",
       "callee": "F0530",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:320"
+        "海中鱼巣/自检.入口初始化.ixx:321"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.自我线程实例",
@@ -13068,7 +12859,7 @@
       "caller": "F0262",
       "callee": "F0531",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:321"
+        "海中鱼巣/自检.入口初始化.ixx:322"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.自我线程实例",
@@ -13083,7 +12874,7 @@
       "caller": "F0262",
       "callee": "F0197",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:322"
+        "海中鱼巣/自检.入口初始化.ixx:323"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.节点",
@@ -13098,7 +12889,7 @@
       "caller": "F0262",
       "callee": "F0198",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:323"
+        "海中鱼巣/自检.入口初始化.ixx:324"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.关系",
@@ -13113,7 +12904,7 @@
       "caller": "F0262",
       "callee": "F0198",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:323"
+        "海中鱼巣/自检.入口初始化.ixx:324"
       ],
       "call_category": "unique_name",
       "arguments": "this=&上下文.关系",
@@ -13128,7 +12919,7 @@
       "caller": "F0262",
       "callee": "F0199",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:324"
+        "海中鱼巣/自检.入口初始化.ixx:325"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.索引",
@@ -13143,7 +12934,7 @@
       "caller": "F0262",
       "callee": "F0131",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:328"
+        "海中鱼巣/自检.入口初始化.ixx:329"
       ],
       "call_category": "compiler_implicit_member_destructor",
       "arguments": "this=&环境.上下文->自我线程实例",
@@ -13158,7 +12949,7 @@
       "caller": "F0263",
       "callee": "F0468",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:332"
+        "海中鱼巣/自检.入口初始化.ixx:333"
       ],
       "call_category": "direct_free",
       "arguments": "配置,编号",
@@ -13173,7 +12964,7 @@
       "caller": "F0263",
       "callee": "F0469",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:333"
+        "海中鱼巣/自检.入口初始化.ixx:334"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&环境",
@@ -13188,7 +12979,7 @@
       "caller": "F0263",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:339"
+        "海中鱼巣/自检.入口初始化.ixx:340"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -13203,7 +12994,7 @@
       "caller": "F0263",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:340"
+        "海中鱼巣/自检.入口初始化.ixx:341"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -13218,7 +13009,7 @@
       "caller": "F0263",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:341"
+        "海中鱼巣/自检.入口初始化.ixx:342"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -13233,7 +13024,7 @@
       "caller": "F0263",
       "callee": "F0015",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:344"
+        "海中鱼巣/自检.入口初始化.ixx:345"
       ],
       "call_category": "direct_free+unique_name",
       "arguments": "端口,{默认方法登记根稳定键,默认根需求参数}",
@@ -13248,8 +13039,8 @@
       "caller": "F0263",
       "callee": "F0016",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:346",
-        "海中鱼巣/自检.入口初始化.ixx:349"
+        "海中鱼巣/自检.入口初始化.ixx:347",
+        "海中鱼巣/自检.入口初始化.ixx:350"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&结果",
@@ -13264,7 +13055,7 @@
       "caller": "F0263",
       "callee": "F0059",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:347"
+        "海中鱼巣/自检.入口初始化.ixx:348"
       ],
       "call_category": "direct_const_member+unique_name",
       "arguments": "this=&上下文.世界树初始化,快照.世界树.自我存在节点",
@@ -13279,7 +13070,7 @@
       "caller": "F0263",
       "callee": "F0173",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:349"
+        "海中鱼巣/自检.入口初始化.ixx:350"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&快照.语素",
@@ -13294,7 +13085,7 @@
       "caller": "F0263",
       "callee": "F0174",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:354"
+        "海中鱼巣/自检.入口初始化.ixx:355"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&快照.世界树",
@@ -13309,7 +13100,7 @@
       "caller": "F0263",
       "callee": "F0131",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:359"
+        "海中鱼巣/自检.入口初始化.ixx:360"
       ],
       "call_category": "compiler_implicit_member_destructor",
       "arguments": "this=&环境.上下文->自我线程实例",
@@ -13324,7 +13115,7 @@
       "caller": "F0264",
       "callee": "F0468",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:363"
+        "海中鱼巣/自检.入口初始化.ixx:364"
       ],
       "call_category": "direct_free",
       "arguments": "配置,编号",
@@ -13339,8 +13130,8 @@
       "caller": "F0264",
       "callee": "F0189",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:364",
-        "海中鱼巣/自检.入口初始化.ixx:380"
+        "海中鱼巣/自检.入口初始化.ixx:365",
+        "海中鱼巣/自检.入口初始化.ixx:381"
       ],
       "call_category": "field_type_hint",
       "arguments": "",
@@ -13355,7 +13146,7 @@
       "caller": "F0264",
       "callee": "F0469",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:364"
+        "海中鱼巣/自检.入口初始化.ixx:365"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&环境",
@@ -13370,7 +13161,7 @@
       "caller": "F0264",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:371"
+        "海中鱼巣/自检.入口初始化.ixx:372"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -13385,7 +13176,7 @@
       "caller": "F0264",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:372"
+        "海中鱼巣/自检.入口初始化.ixx:373"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -13400,7 +13191,7 @@
       "caller": "F0264",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:373"
+        "海中鱼巣/自检.入口初始化.ixx:374"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -13415,7 +13206,7 @@
       "caller": "F0264",
       "callee": "F0015",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:376"
+        "海中鱼巣/自检.入口初始化.ixx:377"
       ],
       "call_category": "direct_free+unique_name",
       "arguments": "端口,{固定配置.方法登记根稳定键,固定配置.根需求参数}",
@@ -13430,8 +13221,8 @@
       "caller": "F0264",
       "callee": "F0441",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:378",
-        "海中鱼巣/自检.入口初始化.ixx:379"
+        "海中鱼巣/自检.入口初始化.ixx:379",
+        "海中鱼巣/自检.入口初始化.ixx:380"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -13446,8 +13237,8 @@
       "caller": "F0264",
       "callee": "F0544",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:378",
-        "海中鱼巣/自检.入口初始化.ixx:379"
+        "海中鱼巣/自检.入口初始化.ixx:379",
+        "海中鱼巣/自检.入口初始化.ixx:380"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.索引,固定配置.根需求参数.安全值语素稳定键",
@@ -13462,7 +13253,7 @@
       "caller": "F0264",
       "callee": "F0016",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:380"
+        "海中鱼巣/自检.入口初始化.ixx:381"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&结果",
@@ -13477,7 +13268,7 @@
       "caller": "F0264",
       "callee": "F0175",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:380"
+        "海中鱼巣/自检.入口初始化.ixx:381"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&根",
@@ -13492,8 +13283,8 @@
       "caller": "F0264",
       "callee": "F0051",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:381",
-        "海中鱼巣/自检.入口初始化.ixx:382"
+        "海中鱼巣/自检.入口初始化.ixx:382",
+        "海中鱼巣/自检.入口初始化.ixx:383"
       ],
       "call_category": "std_optional_element_compare",
       "arguments": "安全索引.value(),根.安全根需求.语素入口结果.语素入口",
@@ -13508,7 +13299,7 @@
       "caller": "F0264",
       "callee": "F0131",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:386"
+        "海中鱼巣/自检.入口初始化.ixx:387"
       ],
       "call_category": "compiler_implicit_member_destructor",
       "arguments": "this=&环境.上下文->自我线程实例",
@@ -13523,7 +13314,7 @@
       "caller": "F0265",
       "callee": "F0468",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:390"
+        "海中鱼巣/自检.入口初始化.ixx:391"
       ],
       "call_category": "direct_free",
       "arguments": "配置,编号",
@@ -13538,9 +13329,9 @@
       "caller": "F0265",
       "callee": "F0350",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:391",
-        "海中鱼巣/自检.入口初始化.ixx:406",
-        "海中鱼巣/自检.入口初始化.ixx:417"
+        "海中鱼巣/自检.入口初始化.ixx:392",
+        "海中鱼巣/自检.入口初始化.ixx:407",
+        "海中鱼巣/自检.入口初始化.ixx:418"
       ],
       "call_category": "field_type_hint",
       "arguments": "",
@@ -13555,7 +13346,7 @@
       "caller": "F0265",
       "callee": "F0469",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:391"
+        "海中鱼巣/自检.入口初始化.ixx:392"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&环境",
@@ -13570,7 +13361,7 @@
       "caller": "F0265",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:397"
+        "海中鱼巣/自检.入口初始化.ixx:398"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -13585,7 +13376,7 @@
       "caller": "F0265",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:398"
+        "海中鱼巣/自检.入口初始化.ixx:399"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -13600,7 +13391,7 @@
       "caller": "F0265",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:399"
+        "海中鱼巣/自检.入口初始化.ixx:400"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -13615,7 +13406,7 @@
       "caller": "F0265",
       "callee": "F0015",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:402"
+        "海中鱼巣/自检.入口初始化.ixx:403"
       ],
       "call_category": "direct_free+unique_name",
       "arguments": "端口,{默认方法登记根稳定键,默认根需求参数}",
@@ -13630,7 +13421,7 @@
       "caller": "F0265",
       "callee": "R0586",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:405"
+        "海中鱼巣/自检.入口初始化.ixx:406"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -13645,7 +13436,7 @@
       "caller": "F0265",
       "callee": "F0553",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:407"
+        "海中鱼巣/自检.入口初始化.ixx:408"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -13660,7 +13451,7 @@
       "caller": "F0265",
       "callee": "F0554",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:409"
+        "海中鱼巣/自检.入口初始化.ixx:410"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -13675,7 +13466,7 @@
       "caller": "F0265",
       "callee": "F0555",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:412"
+        "海中鱼巣/自检.入口初始化.ixx:413"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -13690,7 +13481,7 @@
       "caller": "F0265",
       "callee": "F0016",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:417"
+        "海中鱼巣/自检.入口初始化.ixx:418"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&结果",
@@ -13705,8 +13496,8 @@
       "caller": "F0265",
       "callee": "F0551",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:417",
-        "海中鱼巣/自检.入口初始化.ixx:418"
+        "海中鱼巣/自检.入口初始化.ixx:418",
+        "海中鱼巣/自检.入口初始化.ixx:419"
       ],
       "call_category": "local_lambda_direct",
       "arguments": "根.安全根需求,1,10",
@@ -13721,7 +13512,7 @@
       "caller": "F0265",
       "callee": "F0051",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:419"
+        "海中鱼巣/自检.入口初始化.ixx:420"
       ],
       "call_category": "rewritten_not_equal",
       "arguments": "根.安全根需求.根需求,根.服务根需求.根需求",
@@ -13736,7 +13527,7 @@
       "caller": "F0265",
       "callee": "F0131",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:423"
+        "海中鱼巣/自检.入口初始化.ixx:424"
       ],
       "call_category": "compiler_implicit_member_destructor",
       "arguments": "this=&环境.上下文->自我线程实例",
@@ -13751,7 +13542,7 @@
       "caller": "F0266",
       "callee": "F0468",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:427"
+        "海中鱼巣/自检.入口初始化.ixx:428"
       ],
       "call_category": "direct_free",
       "arguments": "配置,编号",
@@ -13766,7 +13557,7 @@
       "caller": "F0266",
       "callee": "F0469",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:428"
+        "海中鱼巣/自检.入口初始化.ixx:429"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&环境",
@@ -13781,7 +13572,7 @@
       "caller": "F0266",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:435"
+        "海中鱼巣/自检.入口初始化.ixx:436"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -13796,7 +13587,7 @@
       "caller": "F0266",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:436"
+        "海中鱼巣/自检.入口初始化.ixx:437"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -13811,7 +13602,7 @@
       "caller": "F0266",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:437"
+        "海中鱼巣/自检.入口初始化.ixx:438"
       ],
       "call_category": "unique_name",
       "arguments": "",
@@ -13826,7 +13617,7 @@
       "caller": "F0266",
       "callee": "F0015",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:440"
+        "海中鱼巣/自检.入口初始化.ixx:441"
       ],
       "call_category": "direct_free+unique_name",
       "arguments": "端口,{固定配置.方法登记根稳定键,固定配置.根需求参数}",
@@ -13841,8 +13632,8 @@
       "caller": "F0266",
       "callee": "F0197",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:441",
-        "海中鱼巣/自检.入口初始化.ixx:448"
+        "海中鱼巣/自检.入口初始化.ixx:442",
+        "海中鱼巣/自检.入口初始化.ixx:449"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.节点",
@@ -13857,8 +13648,8 @@
       "caller": "F0266",
       "callee": "F0198",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:442",
-        "海中鱼巣/自检.入口初始化.ixx:449"
+        "海中鱼巣/自检.入口初始化.ixx:443",
+        "海中鱼巣/自检.入口初始化.ixx:450"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.关系",
@@ -13873,8 +13664,8 @@
       "caller": "F0266",
       "callee": "F0198",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:442",
-        "海中鱼巣/自检.入口初始化.ixx:449"
+        "海中鱼巣/自检.入口初始化.ixx:443",
+        "海中鱼巣/自检.入口初始化.ixx:450"
       ],
       "call_category": "unique_name",
       "arguments": "this=&上下文.关系",
@@ -13889,8 +13680,8 @@
       "caller": "F0266",
       "callee": "F0199",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:443",
-        "海中鱼巣/自检.入口初始化.ixx:450"
+        "海中鱼巣/自检.入口初始化.ixx:444",
+        "海中鱼巣/自检.入口初始化.ixx:451"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.索引",
@@ -13905,7 +13696,7 @@
       "caller": "F0266",
       "callee": "F0044",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:444"
+        "海中鱼巣/自检.入口初始化.ixx:445"
       ],
       "call_category": "direct_member",
       "arguments": "this=&上下文.自我线程实例,固定配置.根需求参数",
@@ -13920,7 +13711,7 @@
       "caller": "F0266",
       "callee": "F0016",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:445"
+        "海中鱼巣/自检.入口初始化.ixx:446"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&首次",
@@ -13935,7 +13726,7 @@
       "caller": "F0266",
       "callee": "F0531",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:447"
+        "海中鱼巣/自检.入口初始化.ixx:448"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.自我线程实例",
@@ -13950,7 +13741,7 @@
       "caller": "F0266",
       "callee": "F0131",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:454"
+        "海中鱼巣/自检.入口初始化.ixx:455"
       ],
       "call_category": "compiler_implicit_member_destructor",
       "arguments": "this=&环境.上下文->自我线程实例",
@@ -13965,7 +13756,7 @@
       "caller": "F0267",
       "callee": "F0468",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:459"
+        "海中鱼巣/自检.入口初始化.ixx:460"
       ],
       "call_category": "direct_free",
       "arguments": "配置,编号",
@@ -13980,7 +13771,7 @@
       "caller": "F0267",
       "callee": "F0469",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:460"
+        "海中鱼巣/自检.入口初始化.ixx:461"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&环境",
@@ -13995,8 +13786,8 @@
       "caller": "F0267",
       "callee": "F0044",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:464-465",
-        "海中鱼巣/自检.入口初始化.ixx:466-468"
+        "海中鱼巣/自检.入口初始化.ixx:465-466",
+        "海中鱼巣/自检.入口初始化.ixx:467-469"
       ],
       "call_category": "direct_member",
       "arguments": "this=&上下文.自我线程实例,{0,服务值语素稳定键,1,10,1,10}",
@@ -14011,7 +13802,7 @@
       "caller": "F0267",
       "callee": "F0530",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:471"
+        "海中鱼巣/自检.入口初始化.ixx:472"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.自我线程实例",
@@ -14026,7 +13817,7 @@
       "caller": "F0267",
       "callee": "F0531",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:472"
+        "海中鱼巣/自检.入口初始化.ixx:473"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.自我线程实例",
@@ -14041,7 +13832,7 @@
       "caller": "F0267",
       "callee": "F0562",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:473"
+        "海中鱼巣/自检.入口初始化.ixx:474"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.自我线程实例",
@@ -14056,7 +13847,7 @@
       "caller": "F0267",
       "callee": "F0197",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:474"
+        "海中鱼巣/自检.入口初始化.ixx:475"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.节点",
@@ -14071,7 +13862,7 @@
       "caller": "F0267",
       "callee": "F0198",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:475"
+        "海中鱼巣/自检.入口初始化.ixx:476"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.关系",
@@ -14086,7 +13877,7 @@
       "caller": "F0267",
       "callee": "F0198",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:475"
+        "海中鱼巣/自检.入口初始化.ixx:476"
       ],
       "call_category": "unique_name",
       "arguments": "this=&上下文.关系",
@@ -14101,7 +13892,7 @@
       "caller": "F0267",
       "callee": "F0199",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:476"
+        "海中鱼巣/自检.入口初始化.ixx:477"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&上下文.索引",
@@ -14116,7 +13907,7 @@
       "caller": "F0267",
       "callee": "F0131",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:480"
+        "海中鱼巣/自检.入口初始化.ixx:481"
       ],
       "call_category": "compiler_implicit_member_destructor",
       "arguments": "this=&环境.上下文->自我线程实例",
@@ -18820,7 +18611,7 @@
       "caller": "F0468",
       "callee": "F0013",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:55"
+        "海中鱼巣/自检.入口初始化.ixx:56"
       ],
       "call_category": "unique_name",
       "arguments": null,
@@ -18835,7 +18626,7 @@
       "caller": "F0468",
       "callee": "F0014",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:56"
+        "海中鱼巣/自检.入口初始化.ixx:57"
       ],
       "call_category": "field_type_hint",
       "arguments": "",
@@ -18850,7 +18641,7 @@
       "caller": "F0468",
       "callee": "F0198",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:61"
+        "海中鱼巣/自检.入口初始化.ixx:62"
       ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this=&装配.上下文->关系；无显式参数",
@@ -18865,7 +18656,7 @@
       "caller": "F0468",
       "callee": "F0199",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:62"
+        "海中鱼巣/自检.入口初始化.ixx:63"
       ],
       "call_category": "direct_const_member+source_audited",
       "arguments": "",
@@ -18880,7 +18671,7 @@
       "caller": "F0470",
       "callee": "F0043",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:80"
+        "海中鱼巣/自检.入口初始化.ixx:81"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.方法隐式this,键,上下文.状态",
@@ -18895,7 +18686,7 @@
       "caller": "F0471",
       "callee": "F0044",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:81"
+        "海中鱼巣/自检.入口初始化.ixx:82"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,参数",
@@ -18910,7 +18701,7 @@
       "caller": "F0472",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:82"
+        "海中鱼巣/自检.入口初始化.ixx:83"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,时限",
@@ -18925,7 +18716,7 @@
       "caller": "F0473",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:83"
+        "海中鱼巣/自检.入口初始化.ixx:84"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this",
@@ -18940,7 +18731,7 @@
       "caller": "F0474",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:84"
+        "海中鱼巣/自检.入口初始化.ixx:85"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图初始化隐式this",
@@ -18955,7 +18746,7 @@
       "caller": "F0475",
       "callee": "F0050",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:85"
+        "海中鱼巣/自检.入口初始化.ixx:86"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图隐式this,实例",
@@ -18970,7 +18761,7 @@
       "caller": "F0476",
       "callee": "F0190",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:89"
+        "海中鱼巣/自检.入口初始化.ixx:90"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.节点隐式this,根.根节点",
@@ -18985,7 +18776,7 @@
       "caller": "F0477",
       "callee": "F0043",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:109"
+        "海中鱼巣/自检.入口初始化.ixx:110"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.方法隐式this,键,上下文.状态",
@@ -19000,7 +18791,7 @@
       "caller": "F0478",
       "callee": "F0044",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:110"
+        "海中鱼巣/自检.入口初始化.ixx:111"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,参数",
@@ -19015,7 +18806,7 @@
       "caller": "F0479",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:111"
+        "海中鱼巣/自检.入口初始化.ixx:112"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,时限",
@@ -19030,7 +18821,7 @@
       "caller": "F0480",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:112"
+        "海中鱼巣/自检.入口初始化.ixx:113"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this",
@@ -19045,7 +18836,7 @@
       "caller": "F0481",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:113"
+        "海中鱼巣/自检.入口初始化.ixx:114"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图初始化隐式this",
@@ -19060,7 +18851,7 @@
       "caller": "F0482",
       "callee": "F0050",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:114"
+        "海中鱼巣/自检.入口初始化.ixx:115"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图隐式this,实例",
@@ -19075,7 +18866,7 @@
       "caller": "F0483",
       "callee": "F0043",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:137"
+        "海中鱼巣/自检.入口初始化.ixx:138"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.方法隐式this,键,上下文.状态",
@@ -19090,7 +18881,7 @@
       "caller": "F0484",
       "callee": "F0044",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:138"
+        "海中鱼巣/自检.入口初始化.ixx:139"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,参数",
@@ -19105,7 +18896,7 @@
       "caller": "F0485",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:139"
+        "海中鱼巣/自检.入口初始化.ixx:140"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,时限",
@@ -19120,7 +18911,7 @@
       "caller": "F0486",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:140"
+        "海中鱼巣/自检.入口初始化.ixx:141"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this",
@@ -19135,7 +18926,7 @@
       "caller": "F0487",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:141"
+        "海中鱼巣/自检.入口初始化.ixx:142"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图初始化隐式this",
@@ -19150,7 +18941,7 @@
       "caller": "F0488",
       "callee": "F0050",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:142"
+        "海中鱼巣/自检.入口初始化.ixx:143"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图隐式this,实例",
@@ -19165,7 +18956,7 @@
       "caller": "F0489",
       "callee": "F0043",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:166"
+        "海中鱼巣/自检.入口初始化.ixx:167"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.方法隐式this,键,上下文.状态",
@@ -19180,7 +18971,7 @@
       "caller": "F0490",
       "callee": "F0044",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:167"
+        "海中鱼巣/自检.入口初始化.ixx:168"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,参数",
@@ -19195,7 +18986,7 @@
       "caller": "F0491",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:168"
+        "海中鱼巣/自检.入口初始化.ixx:169"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,时限",
@@ -19210,7 +19001,7 @@
       "caller": "F0492",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:169"
+        "海中鱼巣/自检.入口初始化.ixx:170"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this",
@@ -19225,7 +19016,7 @@
       "caller": "F0493",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:170"
+        "海中鱼巣/自检.入口初始化.ixx:171"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图初始化隐式this",
@@ -19240,7 +19031,7 @@
       "caller": "F0494",
       "callee": "F0050",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:171"
+        "海中鱼巣/自检.入口初始化.ixx:172"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图隐式this,实例",
@@ -19255,7 +19046,7 @@
       "caller": "F0495",
       "callee": "F0496",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:175"
+        "海中鱼巣/自检.入口初始化.ixx:176"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.语素隐式this,根.名称语素入口.语素入口",
@@ -19270,7 +19061,7 @@
       "caller": "F0495",
       "callee": "F0497",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:176"
+        "海中鱼巣/自检.入口初始化.ixx:177"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.语素隐式this,根.名称语素入口.语素入口",
@@ -19285,8 +19076,8 @@
       "caller": "F0495",
       "callee": "F0051",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:177",
-        "海中鱼巣/自检.入口初始化.ixx:178"
+        "海中鱼巣/自检.入口初始化.ixx:178",
+        "海中鱼巣/自检.入口初始化.ixx:179"
       ],
       "call_category": "std_find_element_compare",
       "arguments": "绑定组元素,根.根节点",
@@ -19331,7 +19122,7 @@
       "caller": "F0498",
       "callee": "F0043",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:199"
+        "海中鱼巣/自检.入口初始化.ixx:200"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.方法隐式this,键,上下文.状态",
@@ -19346,7 +19137,7 @@
       "caller": "F0499",
       "callee": "F0044",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:200"
+        "海中鱼巣/自检.入口初始化.ixx:201"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,参数",
@@ -19361,7 +19152,7 @@
       "caller": "F0500",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:201"
+        "海中鱼巣/自检.入口初始化.ixx:202"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,时限",
@@ -19376,7 +19167,7 @@
       "caller": "F0501",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:202"
+        "海中鱼巣/自检.入口初始化.ixx:203"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this",
@@ -19391,7 +19182,7 @@
       "caller": "F0502",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:203"
+        "海中鱼巣/自检.入口初始化.ixx:204"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图初始化隐式this",
@@ -19406,7 +19197,7 @@
       "caller": "F0503",
       "callee": "F0050",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:204"
+        "海中鱼巣/自检.入口初始化.ixx:205"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图隐式this,实例",
@@ -19421,7 +19212,7 @@
       "caller": "F0504",
       "callee": "F0043",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:231"
+        "海中鱼巣/自检.入口初始化.ixx:232"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.方法隐式this,键,上下文.状态",
@@ -19436,7 +19227,7 @@
       "caller": "F0505",
       "callee": "F0044",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:232"
+        "海中鱼巣/自检.入口初始化.ixx:233"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,参数",
@@ -19451,7 +19242,7 @@
       "caller": "F0506",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:233"
+        "海中鱼巣/自检.入口初始化.ixx:234"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,时限",
@@ -19466,7 +19257,7 @@
       "caller": "F0507",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:234"
+        "海中鱼巣/自检.入口初始化.ixx:235"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this",
@@ -19481,7 +19272,7 @@
       "caller": "F0508",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:235"
+        "海中鱼巣/自检.入口初始化.ixx:236"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图初始化隐式this",
@@ -19496,7 +19287,7 @@
       "caller": "F0509",
       "callee": "F0050",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:236"
+        "海中鱼巣/自检.入口初始化.ixx:237"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图隐式this,实例",
@@ -19511,7 +19302,7 @@
       "caller": "F0510",
       "callee": "F0043",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:255"
+        "海中鱼巣/自检.入口初始化.ixx:256"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.方法隐式this,键,上下文.状态",
@@ -19526,7 +19317,7 @@
       "caller": "F0511",
       "callee": "F0044",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:256"
+        "海中鱼巣/自检.入口初始化.ixx:257"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,参数",
@@ -19541,7 +19332,7 @@
       "caller": "F0512",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:257"
+        "海中鱼巣/自检.入口初始化.ixx:258"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,时限",
@@ -19556,7 +19347,7 @@
       "caller": "F0513",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:258"
+        "海中鱼巣/自检.入口初始化.ixx:259"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this",
@@ -19571,7 +19362,7 @@
       "caller": "F0514",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:259"
+        "海中鱼巣/自检.入口初始化.ixx:260"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图初始化隐式this",
@@ -19586,7 +19377,7 @@
       "caller": "F0515",
       "callee": "F0050",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:260"
+        "海中鱼巣/自检.入口初始化.ixx:261"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图隐式this,实例",
@@ -19601,7 +19392,7 @@
       "caller": "F0517",
       "callee": "F0043",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:279"
+        "海中鱼巣/自检.入口初始化.ixx:280"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.方法隐式this,键,上下文.状态",
@@ -19616,7 +19407,7 @@
       "caller": "F0518",
       "callee": "F0044",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:280"
+        "海中鱼巣/自检.入口初始化.ixx:281"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,参数",
@@ -19631,7 +19422,7 @@
       "caller": "F0519",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:281"
+        "海中鱼巣/自检.入口初始化.ixx:282"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,时限",
@@ -19646,7 +19437,7 @@
       "caller": "F0520",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:282"
+        "海中鱼巣/自检.入口初始化.ixx:283"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this",
@@ -19661,7 +19452,7 @@
       "caller": "F0521",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:283"
+        "海中鱼巣/自检.入口初始化.ixx:284"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图初始化隐式this",
@@ -19676,7 +19467,7 @@
       "caller": "F0522",
       "callee": "F0050",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:284"
+        "海中鱼巣/自检.入口初始化.ixx:285"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图隐式this,实例",
@@ -19706,7 +19497,7 @@
       "caller": "F0524",
       "callee": "F0043",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:312"
+        "海中鱼巣/自检.入口初始化.ixx:313"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.方法隐式this,键,上下文.状态",
@@ -19721,7 +19512,7 @@
       "caller": "F0525",
       "callee": "F0044",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:313"
+        "海中鱼巣/自检.入口初始化.ixx:314"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,参数",
@@ -19736,7 +19527,7 @@
       "caller": "F0526",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:314"
+        "海中鱼巣/自检.入口初始化.ixx:315"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,时限",
@@ -19751,7 +19542,7 @@
       "caller": "F0527",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:315"
+        "海中鱼巣/自检.入口初始化.ixx:316"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this",
@@ -19766,7 +19557,7 @@
       "caller": "F0528",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:316"
+        "海中鱼巣/自检.入口初始化.ixx:317"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图初始化隐式this",
@@ -19781,7 +19572,7 @@
       "caller": "F0529",
       "callee": "F0050",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:317"
+        "海中鱼巣/自检.入口初始化.ixx:318"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图隐式this,实例",
@@ -19796,7 +19587,7 @@
       "caller": "F0532",
       "callee": "F0043",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:337"
+        "海中鱼巣/自检.入口初始化.ixx:338"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.方法隐式this,键,上下文.状态",
@@ -19811,7 +19602,7 @@
       "caller": "F0533",
       "callee": "F0044",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:338"
+        "海中鱼巣/自检.入口初始化.ixx:339"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,参数",
@@ -19826,7 +19617,7 @@
       "caller": "F0534",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:339"
+        "海中鱼巣/自检.入口初始化.ixx:340"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,时限",
@@ -19841,7 +19632,7 @@
       "caller": "F0535",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:340"
+        "海中鱼巣/自检.入口初始化.ixx:341"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this",
@@ -19856,7 +19647,7 @@
       "caller": "F0536",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:341"
+        "海中鱼巣/自检.入口初始化.ixx:342"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图初始化隐式this",
@@ -19871,7 +19662,7 @@
       "caller": "F0537",
       "callee": "F0050",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:342"
+        "海中鱼巣/自检.入口初始化.ixx:343"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图隐式this,实例",
@@ -19886,7 +19677,7 @@
       "caller": "F0538",
       "callee": "F0043",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:369"
+        "海中鱼巣/自检.入口初始化.ixx:370"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.方法隐式this,键,上下文.状态",
@@ -19901,7 +19692,7 @@
       "caller": "F0539",
       "callee": "F0044",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:370"
+        "海中鱼巣/自检.入口初始化.ixx:371"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,参数",
@@ -19916,7 +19707,7 @@
       "caller": "F0540",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:371"
+        "海中鱼巣/自检.入口初始化.ixx:372"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,时限",
@@ -19931,7 +19722,7 @@
       "caller": "F0541",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:372"
+        "海中鱼巣/自检.入口初始化.ixx:373"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this",
@@ -19946,7 +19737,7 @@
       "caller": "F0542",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:373"
+        "海中鱼巣/自检.入口初始化.ixx:374"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图初始化隐式this",
@@ -19961,7 +19752,7 @@
       "caller": "F0543",
       "callee": "F0050",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:374"
+        "海中鱼巣/自检.入口初始化.ixx:375"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图隐式this,实例",
@@ -19991,7 +19782,7 @@
       "caller": "F0545",
       "callee": "F0043",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:395"
+        "海中鱼巣/自检.入口初始化.ixx:396"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.方法隐式this,键,上下文.状态",
@@ -20006,7 +19797,7 @@
       "caller": "F0546",
       "callee": "F0044",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:396"
+        "海中鱼巣/自检.入口初始化.ixx:397"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,参数",
@@ -20021,7 +19812,7 @@
       "caller": "F0547",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:397"
+        "海中鱼巣/自检.入口初始化.ixx:398"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,时限",
@@ -20036,7 +19827,7 @@
       "caller": "F0548",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:398"
+        "海中鱼巣/自检.入口初始化.ixx:399"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this",
@@ -20051,7 +19842,7 @@
       "caller": "F0549",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:399"
+        "海中鱼巣/自检.入口初始化.ixx:400"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图初始化隐式this",
@@ -20066,7 +19857,7 @@
       "caller": "F0550",
       "callee": "F0050",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:400"
+        "海中鱼巣/自检.入口初始化.ixx:401"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图隐式this,实例",
@@ -20081,7 +19872,7 @@
       "caller": "F0551",
       "callee": "F0552",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:405"
+        "海中鱼巣/自检.入口初始化.ixx:406"
       ],
       "call_category": "captured_member_direct",
       "arguments": "this=&上下文.需求,单根.根需求",
@@ -20096,7 +19887,7 @@
       "caller": "F0551",
       "callee": "F0350",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:406"
+        "海中鱼巣/自检.入口初始化.ixx:407"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&单根",
@@ -20111,8 +19902,8 @@
       "caller": "F0551",
       "callee": "F0051",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:407-408",
-        "海中鱼巣/自检.入口初始化.ixx:409-411"
+        "海中鱼巣/自检.入口初始化.ixx:408-409",
+        "海中鱼巣/自检.入口初始化.ixx:410-412"
       ],
       "call_category": "std_optional_element_compare",
       "arguments": "目标特征候选.value(),单根.特征定义",
@@ -20127,7 +19918,7 @@
       "caller": "F0551",
       "callee": "F0553",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:407"
+        "海中鱼巣/自检.入口初始化.ixx:408"
       ],
       "call_category": "captured_member_direct",
       "arguments": "this=&上下文.需求,单根.根需求",
@@ -20142,7 +19933,7 @@
       "caller": "F0551",
       "callee": "F0554",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:409-410"
+        "海中鱼巣/自检.入口初始化.ixx:410-411"
       ],
       "call_category": "captured_member_direct",
       "arguments": "this=&上下文.特征,结果.自我初始化->世界树.自我存在节点,单根.特征定义",
@@ -20157,7 +19948,7 @@
       "caller": "F0551",
       "callee": "F0555",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:412"
+        "海中鱼巣/自检.入口初始化.ixx:413"
       ],
       "call_category": "captured_member_direct",
       "arguments": "this=&上下文.特征,单根.实例特征槽位,单根.当前特征值",
@@ -20172,7 +19963,7 @@
       "caller": "F0551",
       "callee": "F0329",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:414"
+        "海中鱼巣/自检.入口初始化.ixx:415"
       ],
       "call_category": "captured_member_direct",
       "arguments": "this=&上下文.状态,单根.目标状态",
@@ -20249,7 +20040,7 @@
       "caller": "F0556",
       "callee": "F0043",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:433"
+        "海中鱼巣/自检.入口初始化.ixx:434"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.方法隐式this,键,上下文.状态",
@@ -20264,7 +20055,7 @@
       "caller": "F0557",
       "callee": "F0044",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:434"
+        "海中鱼巣/自检.入口初始化.ixx:435"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,参数",
@@ -20279,7 +20070,7 @@
       "caller": "F0558",
       "callee": "F0045",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:435"
+        "海中鱼巣/自检.入口初始化.ixx:436"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this,时限",
@@ -20294,7 +20085,7 @@
       "caller": "F0559",
       "callee": "F0046",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:436"
+        "海中鱼巣/自检.入口初始化.ixx:437"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.自我线程实例隐式this",
@@ -20309,7 +20100,7 @@
       "caller": "F0560",
       "callee": "F0048",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:437"
+        "海中鱼巣/自检.入口初始化.ixx:438"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图初始化隐式this",
@@ -20324,7 +20115,7 @@
       "caller": "F0561",
       "callee": "F0050",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:438"
+        "海中鱼巣/自检.入口初始化.ixx:439"
       ],
       "call_category": "captured_member_direct",
       "arguments": "上下文.概念图隐式this,实例",
@@ -38549,12 +38340,12 @@
         "海中鱼巣/领域/方法服务.h:157",
         "海中鱼巣/领域/方法服务.h:158"
       ],
-      "call_category": "direct-const-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "登记项节点句柄字段完整",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-free-overload",
+      "arguments": "调用1:登记根；调用2:方法首",
+      "argument_resolution": "两个字段静态类型均为节点句柄，与 F0163 完整签名复核",
+      "return_binding": "两个 bool 按源码顺序进入短路合取",
+      "reachable_condition": "R0478 进入后依次执行，第二调用要求第一调用返回 true",
+      "resolution_source": "方法服务.h blob 839dd462；156-164 行逐调用点复核",
       "current_root_reachable": true
     },
     {
@@ -38562,33 +38353,15 @@
       "caller": "R0478",
       "callee": "F0168",
       "callsites": [
-        "海中鱼巣/领域/方法服务.h:157",
-        "海中鱼巣/领域/方法服务.h:158",
         "海中鱼巣/领域/方法服务.h:159",
         "海中鱼巣/领域/方法服务.h:160"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE1460",
-      "caller": "R0478",
-      "callee": "F0565",
-      "callsites": [
-        "海中鱼巣/领域/方法服务.h:159",
-        "海中鱼巣/领域/方法服务.h:160"
-      ],
-      "call_category": "direct-const-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "登记项关系句柄字段完整",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-free-overload",
+      "arguments": "调用1:登记关系；调用2:生命周期关系",
+      "argument_resolution": "两个字段静态类型均为关系句柄，与 F0168 完整签名复核",
+      "return_binding": "两个 bool 按源码顺序进入短路合取",
+      "reachable_condition": "前序节点句柄均有效后依次执行",
+      "resolution_source": "方法服务.h blob 839dd462；156-164 行逐调用点复核",
       "current_root_reachable": true
     },
     {
@@ -38598,12 +38371,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1669"
       ],
-      "call_category": "suffix_match",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 方法首节点=方法节点, 状态",
+      "argument_resolution": "同一方法服务接收者、完整实参与 R0488 签名复核",
+      "return_binding": "std::optional<方法登记项材料> 绑定到 const 局部登记项",
+      "reachable_condition": "R0479 进入后无条件执行",
+      "resolution_source": "方法服务.h blob 839dd462；1668-1671 行复核",
       "current_root_reachable": true
     },
     {
@@ -38613,12 +38386,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1674"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 方法节点=方法首节点, 状态",
+      "argument_resolution": "完整实参与 R0479 签名复核",
+      "return_binding": "bool 作为短路合取第一项",
+      "reachable_condition": "R0480 进入后首先执行",
+      "resolution_source": "方法服务.h blob 839dd462；1673-1678 行复核",
       "current_root_reachable": true
     },
     {
@@ -38628,12 +38401,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1675"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 方法节点=方法条件节点, 状态",
+      "argument_resolution": "完整实参与 F0327 签名复核",
+      "return_binding": "方法角色状态与 方法条件 比较",
+      "reachable_condition": "R0479 返回 true",
+      "resolution_source": "方法服务.h blob 839dd462；1675 行复核",
       "current_root_reachable": true
     },
     {
@@ -38643,12 +38416,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1676"
       ],
-      "call_category": "direct-const-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "条件节点准入；无令牌重载",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=&关系_, 类型=模板, 源节点=方法首节点, 目标节点=方法条件节点",
+      "argument_resolution": "关系仓库接收者与三参数重载复核",
+      "return_binding": "bool 作为短路合取第三项",
+      "reachable_condition": "方法角色为方法条件",
+      "resolution_source": "方法服务.h blob 839dd462；1676 行复核",
       "current_root_reachable": true
     },
     {
@@ -38658,12 +38431,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1677"
       ],
-      "call_category": "direct-const-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "条件节点关系存在；三参数读取唯一目标",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 源节点=方法条件节点, 类型=引用, 目标类型=场景",
+      "argument_resolution": "三参数重载与枚举常量复核",
+      "return_binding": "临时 optional 立即用于 has_value 判断",
+      "reachable_condition": "模板关系存在",
+      "resolution_source": "方法服务.h blob 839dd462；1677 行复核",
       "current_root_reachable": true
     },
     {
@@ -38673,12 +38446,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1681"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 方法节点=方法首节点, 状态",
+      "argument_resolution": "完整实参与 R0479 签名复核",
+      "return_binding": "bool 作为短路合取第一项",
+      "reachable_condition": "R0481 进入后首先执行",
+      "resolution_source": "方法服务.h blob 839dd462；1680-1685 行复核",
       "current_root_reachable": true
     },
     {
@@ -38688,12 +38461,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1682"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 方法节点=方法结果节点, 状态",
+      "argument_resolution": "完整实参与 F0327 签名复核",
+      "return_binding": "方法角色状态与 方法结果 比较",
+      "reachable_condition": "R0479 返回 true",
+      "resolution_source": "方法服务.h blob 839dd462；1682 行复核",
       "current_root_reachable": true
     },
     {
@@ -38703,12 +38476,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1683"
       ],
-      "call_category": "direct-const-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "结果节点准入；无令牌重载",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=&关系_, 类型=模板, 源节点=方法首节点, 目标节点=方法结果节点",
+      "argument_resolution": "关系仓库接收者与三参数重载复核",
+      "return_binding": "bool 作为短路合取第三项",
+      "reachable_condition": "方法角色为方法结果",
+      "resolution_source": "方法服务.h blob 839dd462；1683 行复核",
       "current_root_reachable": true
     },
     {
@@ -38718,12 +38491,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1684"
       ],
-      "call_category": "direct-const-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "结果节点关系存在；三参数读取唯一目标",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 源节点=方法结果节点, 类型=引用, 目标类型=场景",
+      "argument_resolution": "三参数重载与枚举常量复核",
+      "return_binding": "临时 optional 立即用于 has_value 判断",
+      "reachable_condition": "模板关系存在",
+      "resolution_source": "方法服务.h blob 839dd462；1684 行复核",
       "current_root_reachable": true
     },
     {
@@ -38733,12 +38506,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1690"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 角色",
+      "argument_resolution": "枚举实参与 F0334 签名复核",
+      "return_binding": "bool 作为入口短路判断第二项",
+      "reachable_condition": "R0479 返回 true",
+      "resolution_source": "方法服务.h blob 839dd462；1690 行复核",
       "current_root_reachable": true
     },
     {
@@ -38748,12 +38521,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1690"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 方法节点=方法首节点, 状态",
+      "argument_resolution": "完整实参与 R0479 签名复核",
+      "return_binding": "bool 作为入口短路判断第一项",
+      "reachable_condition": "R0482 完成空结果组构造后",
+      "resolution_source": "方法服务.h blob 839dd462；1690 行复核",
       "current_root_reachable": true
     },
     {
@@ -38763,12 +38536,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1693"
       ],
-      "call_category": "direct-const-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "读取方法角色节点；二实参无令牌重载",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=&关系_, 源节点=方法首节点, 类型=模板",
+      "argument_resolution": "关系仓库接收者与二参数重载复核",
+      "return_binding": "std::vector<节点句柄> 绑定到 const 目标组",
+      "reachable_condition": "入口方法首和角色均有效",
+      "resolution_source": "方法服务.h blob 839dd462；1693 行复核",
       "current_root_reachable": true
     },
     {
@@ -38778,12 +38551,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1695"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 方法节点=目标, 状态",
+      "argument_resolution": "循环目标与完整签名复核",
+      "return_binding": "方法角色状态与入口角色比较",
+      "reachable_condition": "F0333 返回 true",
+      "resolution_source": "方法服务.h blob 839dd462；1695 行复核",
       "current_root_reachable": true
     },
     {
@@ -38793,12 +38566,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1695"
       ],
-      "call_category": "direct-const-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "逐个目标验证节点类型",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 节点句柄值=目标, 类型=方法",
+      "argument_resolution": "循环目标与枚举实参复核",
+      "return_binding": "bool 作为候选筛选第一项",
+      "reachable_condition": "范围循环当前目标已绑定",
+      "resolution_source": "方法服务.h blob 839dd462；1695 行复核",
       "current_root_reachable": true
     },
     {
@@ -38808,12 +38581,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1698"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 方法首节点, 方法条件节点=目标, 状态",
+      "argument_resolution": "方法条件分支完整实参与 R0480 签名复核",
+      "return_binding": "bool 决定保留或跳过目标",
+      "reachable_condition": "入口角色为方法条件且通用筛选通过",
+      "resolution_source": "方法服务.h blob 839dd462；1698 行复核",
       "current_root_reachable": true
     },
     {
@@ -38823,12 +38596,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1699"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 方法首节点, 方法结果节点=目标, 状态",
+      "argument_resolution": "方法结果分支完整实参与 R0481 签名复核",
+      "return_binding": "bool 决定保留或跳过目标",
+      "reachable_condition": "入口角色为方法结果且通用筛选通过",
+      "resolution_source": "方法服务.h blob 839dd462；1699 行复核",
       "current_root_reachable": true
     },
     {
@@ -38839,12 +38612,12 @@
         "海中鱼巣/领域/方法服务.h:1735",
         "海中鱼巣/领域/方法服务.h:1740"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "调用1:方法节点=方法首节点,状态；调用2:方法节点=目标,状态",
+      "argument_resolution": "入口与循环候选两个调用点逐项复核",
+      "return_binding": "调用1决定空返回；调用2决定是否追加目标",
+      "reachable_condition": "调用1在入口执行；调用2在每轮目标绑定后执行",
+      "resolution_source": "方法服务.h blob 839dd462；1732-1745 行复核",
       "current_root_reachable": true
     },
     {
@@ -38854,12 +38627,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1738"
       ],
-      "call_category": "direct-const-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "按顺序读取方法关系目标；三实参无令牌重载",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=&关系_, 源节点=方法首节点, 类型=引用, 顺序号",
+      "argument_resolution": "关系仓库接收者与三参数重载复核",
+      "return_binding": "std::vector<节点句柄> 绑定到 const 目标组",
+      "reachable_condition": "入口方法首有效",
+      "resolution_source": "方法服务.h blob 839dd462；1738 行复核",
       "current_root_reachable": true
     },
     {
@@ -38869,12 +38642,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1807"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 方法节点=动作入口节点, 状态",
+      "argument_resolution": "完整实参与 F0327 签名复核",
+      "return_binding": "方法角色状态与 动作入口 比较",
+      "reachable_condition": "R0485 进入后首先执行",
+      "resolution_source": "方法服务.h blob 839dd462；1806-1809 行复核",
       "current_root_reachable": true
     },
     {
@@ -38884,12 +38657,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1808"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 动作入口节点, 状态",
+      "argument_resolution": "完整实参与 R0487 签名复核",
+      "return_binding": "临时 optional 立即用于 has_value 判断",
+      "reachable_condition": "节点角色为动作入口",
+      "resolution_source": "方法服务.h blob 839dd462；1808 行复核",
       "current_root_reachable": true
     },
     {
@@ -38899,12 +38672,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1812"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 方法节点=方法首节点, 状态",
+      "argument_resolution": "完整实参与 R0479 签名复核",
+      "return_binding": "bool 作为短路合取第一项",
+      "reachable_condition": "R0486 进入后首先执行",
+      "resolution_source": "方法服务.h blob 839dd462；1811-1816 行复核",
       "current_root_reachable": true
     },
     {
@@ -38914,12 +38687,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1813"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 动作入口节点, 状态",
+      "argument_resolution": "完整实参与 R0485 签名复核",
+      "return_binding": "bool 作为短路合取第二项",
+      "reachable_condition": "R0479 返回 true",
+      "resolution_source": "方法服务.h blob 839dd462；1813 行复核",
       "current_root_reachable": true
     },
     {
@@ -38929,12 +38702,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1815"
       ],
-      "call_category": "direct-const-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "动作入口关系准入；无令牌重载",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=&关系_, 类型=引用, 源节点=方法首节点, 目标节点=动作入口节点",
+      "argument_resolution": "关系仓库接收者与三参数重载复核",
+      "return_binding": "bool 作为最终短路合取结果",
+      "reachable_condition": "入口角色有效且两个节点不同",
+      "resolution_source": "方法服务.h blob 839dd462；1815 行复核",
       "current_root_reachable": true
     },
     {
@@ -38944,12 +38717,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1819"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 方法节点=动作入口节点, 状态",
+      "argument_resolution": "完整实参与 F0327 签名复核",
+      "return_binding": "方法角色状态与 动作入口 比较",
+      "reachable_condition": "R0487 进入后首先执行",
+      "resolution_source": "方法服务.h blob 839dd462；1818-1832 行复核",
       "current_root_reachable": true
     },
     {
@@ -38959,12 +38732,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1822"
       ],
-      "call_category": "direct-const-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "四参数读取动作入口状态；顺序号1",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 源节点=动作入口节点, 类型=模板, 目标类型=状态, 顺序号=optional<int64_t>{动作入口状态顺序号1}",
+      "argument_resolution": "四参数重载、枚举与顺序号常量复核",
+      "return_binding": "std::optional<节点句柄> 绑定到 const 状态节点",
+      "reachable_condition": "节点角色为动作入口",
+      "resolution_source": "方法服务.h blob 839dd462；1822 行复核",
       "current_root_reachable": true
     },
     {
@@ -38974,12 +38747,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1826"
       ],
-      "call_category": "direct-const-member",
-      "arguments": "this=&状态,状态节点.value()",
-      "argument_resolution": "源码调用点与状态服务重载复核",
-      "return_binding": "动作入口状态I64值optional",
-      "reachable_condition": "四参数唯一状态目标存在",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=&状态, 状态节点=状态节点.value()",
+      "argument_resolution": "状态服务接收者、const optional value 与 F0329 签名复核",
+      "return_binding": "std::optional<std::int64_t> 绑定到 const 状态值",
+      "reachable_condition": "状态节点 optional 有值",
+      "resolution_source": "方法服务.h blob 839dd462；1826 行复核",
       "current_root_reachable": true
     },
     {
@@ -38989,12 +38762,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:1831"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 状态值=入口状态",
+      "argument_resolution": "静态转换后的枚举实参与 R0484 签名复核",
+      "return_binding": "bool 决定构造有值或空动作入口状态 optional",
+      "reachable_condition": "状态值 optional 有值并已转换枚举",
+      "resolution_source": "方法服务.h blob 839dd462；1830-1831 行复核",
       "current_root_reachable": true
     },
     {
@@ -39004,12 +38777,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:455"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 方法首节点, 状态, 已知登记关系=默认 std::nullopt",
+      "argument_resolution": "共享锁作用域、两项显式实参与默认第三参数复核",
+      "return_binding": "std::optional<方法登记项材料> 直接作为 R0488 返回值",
+      "reachable_condition": "shared_lock 已成功构造",
+      "resolution_source": "方法服务.h blob 839dd462；452-456 行复核",
       "current_root_reachable": true
     },
     {
@@ -39019,12 +38792,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:871"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 方法节点, 状态",
+      "argument_resolution": "完整实参与 R0479 签名复核",
+      "return_binding": "bool 决定空返回或继续读取引用",
+      "reachable_condition": "R0489 进入后首先执行",
+      "resolution_source": "方法服务.h blob 839dd462；870-875 行复核",
       "current_root_reachable": true
     },
     {
@@ -39034,12 +38807,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:874"
       ],
-      "call_category": "direct-const-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "方法基础结构完整；三参数读取唯一目标",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 源节点=方法节点, 类型=引用, 目标类型=存在",
+      "argument_resolution": "三参数重载与枚举常量复核",
+      "return_binding": "std::optional<节点句柄> 直接作为 R0489 返回值",
+      "reachable_condition": "R0479 返回 true",
+      "resolution_source": "方法服务.h blob 839dd462；874 行复核",
       "current_root_reachable": true
     },
     {
@@ -39049,12 +38822,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:878"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 方法首节点, 角色=方法角色状态::方法条件, 状态",
+      "argument_resolution": "冻结源码静态接收者、完整实参与角色枚举逐项复核",
+      "return_binding": "std::vector<节点句柄> 直接作为 R0490 返回值",
+      "reachable_condition": "R0490 进入后无条件执行",
+      "resolution_source": "方法服务.h blob 839dd462；877-879 行与 R0482 完整签名复核",
       "current_root_reachable": true
     },
     {
@@ -39064,12 +38837,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:882"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 方法首节点, 角色=方法角色状态::方法结果, 状态",
+      "argument_resolution": "冻结源码静态接收者、完整实参与角色枚举逐项复核",
+      "return_binding": "std::vector<节点句柄> 直接作为 R0491 返回值",
+      "reachable_condition": "R0491 进入后无条件执行",
+      "resolution_source": "方法服务.h blob 839dd462；881-883 行与 R0482 完整签名复核",
       "current_root_reachable": true
     },
     {
@@ -39079,12 +38852,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:903"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 方法首节点, 方法条件节点, 状态",
+      "argument_resolution": "冻结源码静态接收者、三个实参与 R0480 完整签名复核",
+      "return_binding": "bool 经逻辑非运算决定空 optional 或继续读取",
+      "reachable_condition": "R0492 进入后首先执行",
+      "resolution_source": "方法服务.h blob 839dd462；901-907 行与 R0480 完整签名复核",
       "current_root_reachable": true
     },
     {
@@ -39094,12 +38867,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:906"
       ],
-      "call_category": "source-audited",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "方法条件节点前置校验通过",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 源节点=方法条件节点, 类型=关系类型::引用, 目标类型=节点类型::场景",
+      "argument_resolution": "冻结源码三参数重载、两个枚举实参与 F0629 完整签名复核",
+      "return_binding": "std::optional<节点句柄> 直接作为 R0492 返回值",
+      "reachable_condition": "R0480 返回 true",
+      "resolution_source": "方法服务.h blob 839dd462；906 行与 F0629 三参数签名复核",
       "current_root_reachable": true
     },
     {
@@ -39109,12 +38882,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:911"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 方法首节点, 方法结果节点, 状态",
+      "argument_resolution": "冻结源码静态接收者、三个实参与 R0481 完整签名复核",
+      "return_binding": "bool 经逻辑非运算决定空 optional 或继续读取",
+      "reachable_condition": "R0493 进入后首先执行",
+      "resolution_source": "方法服务.h blob 839dd462；909-915 行与 R0481 完整签名复核",
       "current_root_reachable": true
     },
     {
@@ -39124,12 +38897,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:914"
       ],
-      "call_category": "direct-const-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "结果节点有效；三参数读取唯一目标",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 源节点=方法结果节点, 类型=关系类型::引用, 目标类型=节点类型::场景",
+      "argument_resolution": "冻结源码三参数重载、两个枚举实参与 F0629 完整签名复核",
+      "return_binding": "std::optional<节点句柄> 直接作为 R0493 返回值",
+      "reachable_condition": "R0481 返回 true",
+      "resolution_source": "方法服务.h blob 839dd462；914 行与 F0629 三参数签名复核",
       "current_root_reachable": true
     },
     {
@@ -39139,12 +38912,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:947"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 方法节点=方法首节点, 状态",
+      "argument_resolution": "冻结源码静态接收者、完整实参与 R0479 签名复核",
+      "return_binding": "bool 经逻辑非运算决定空 optional 或继续扫描",
+      "reachable_condition": "R0494 进入后首先执行",
+      "resolution_source": "方法服务.h blob 839dd462；946-966 行与 R0479 完整签名复核",
       "current_root_reachable": true
     },
     {
@@ -39154,12 +38927,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:950"
       ],
-      "call_category": "direct-const-member",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
-      "reachable_condition": "读取动作入口；二实参无令牌重载",
-      "resolution_source": "专项源码静态类型与实际装配人工复核",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=&关系_, 源节点=方法首节点, 类型=关系类型::引用",
+      "argument_resolution": "冻结源码关系仓库静态接收者、二参数重载与枚举实参复核",
+      "return_binding": "std::vector<节点句柄> 绑定到 const 局部目标组",
+      "reachable_condition": "R0479 返回 true",
+      "resolution_source": "方法服务.h blob 839dd462；950 行与 F0621 完整签名复核",
       "current_root_reachable": true
     },
     {
@@ -39169,12 +38942,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:953"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 方法首节点, 动作入口节点=目标, 状态",
+      "argument_resolution": "冻结源码静态接收者、本轮循环目标与 R0486 完整签名复核",
+      "return_binding": "bool 经逻辑非运算决定跳过本轮或继续读取状态",
+      "reachable_condition": "目标组当前迭代器未到末尾",
+      "resolution_source": "方法服务.h blob 839dd462；952-955 行与 R0486 完整签名复核",
       "current_root_reachable": true
     },
     {
@@ -39184,12 +38957,12 @@
       "callsites": [
         "海中鱼巣/领域/方法服务.h:956"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=this, 动作入口节点=目标, 状态",
+      "argument_resolution": "冻结源码静态接收者、本轮循环目标与 R0487 完整签名复核",
+      "return_binding": "std::optional<动作入口状态> 绑定到 const 局部入口状态",
+      "reachable_condition": "R0486 返回 true",
+      "resolution_source": "方法服务.h blob 839dd462；956-959 行与 R0487 完整签名复核",
       "current_root_reachable": true
     },
     {
@@ -39199,12 +38972,12 @@
       "callsites": [
         "海中鱼巣/领域/服务.方法.ixx:214"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=&数据操作_, 主键",
+      "argument_resolution": "冻结源码字段静态类型、条件运算符真分支与 R0430 完整签名复核",
+      "return_binding": "方法登记根材料直接作为 R0497 返回值",
+      "reachable_condition": "主键 != 0",
+      "resolution_source": "服务.方法.ixx blob 74a839fe；213-215 行与 R0430 完整签名复核",
       "current_root_reachable": true
     },
     {
@@ -39214,12 +38987,12 @@
       "callsites": [
         "海中鱼巣/领域/服务.方法.ixx:100"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=&数据操作_, 根主键=请求.根幂等主键, 角色状态=move(*角色.规格), 活跃状态=move(*活跃.规格), 失效状态=move(*失效.规格)",
+      "argument_resolution": "冻结源码 100-102 行跨行完整实参、字段静态类型、移动表达式与 R0427 完整签名复核",
+      "return_binding": "std::optional<方法登记根写入规格> 绑定到 const 局部写入规格",
+      "reachable_condition": "三个 R0510 成功检查均返回 true",
+      "resolution_source": "服务.方法.ixx blob 74a839fe；100-102 行与 R0427 完整签名复核",
       "current_root_reachable": true
     },
     {
@@ -39229,12 +39002,12 @@
       "callsites": [
         "海中鱼巣/领域/服务.方法.ixx:104"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=&数据操作_, 规格=*写入规格",
+      "argument_resolution": "冻结源码字段静态类型、const optional 解引用与 R0432 完整签名复核",
+      "return_binding": "方法提交结果作为条件运算符真分支并直接返回",
+      "reachable_condition": "写入规格.has_value() 返回 true",
+      "resolution_source": "服务.方法.ixx blob 74a839fe；103-105 行与 R0432 完整签名复核",
       "current_root_reachable": true
     },
     {
@@ -39244,12 +39017,12 @@
       "callsites": [
         "海中鱼巣/领域/服务.方法.ixx:98"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "call_category": "source-audited-static-member",
+      "arguments": "角色.状态, 活跃.状态, 失效.状态",
+      "argument_resolution": "冻结源码三个抽象状态规格结果字段与 R0498 三枚举签名复核",
+      "return_binding": "需求任务方法业务状态用于构造方法提交结果并立即返回",
+      "reachable_condition": "R0510 对三个规格结果的短路检查未全部成功",
+      "resolution_source": "服务.方法.ixx blob 74a839fe；97-99 行与 R0498 完整签名复核",
       "current_root_reachable": true
     },
     {
@@ -48938,7 +48711,7 @@
       "caller": "F0468",
       "callee": "F0197",
       "callsites": [
-        "海中鱼巣/自检.入口初始化.ixx:60"
+        "海中鱼巣/自检.入口初始化.ixx:61"
       ],
       "call_category": "source-audited-direct-const-member",
       "arguments": "this=&装配.上下文->节点；无显式参数",
@@ -51974,7 +51747,7 @@
       "caller": "R0733",
       "callee": "F0331",
       "callsites": [
-        "海中鱼巣/领域/世界服务.h:40"
+        "海中鱼巣/领域/世界服务.h:18"
       ],
       "call_category": "direct_member",
       "arguments": "this=&主信息_",
@@ -51989,7 +51762,7 @@
       "caller": "R0733",
       "callee": "F0332",
       "callsites": [
-        "海中鱼巣/领域/世界服务.h:41"
+        "海中鱼巣/领域/世界服务.h:19"
       ],
       "call_category": "direct_member",
       "arguments": "this=&节点_,节点类型::基础信息,主信息句柄",
@@ -52004,7 +51777,7 @@
       "caller": "R0733",
       "callee": "F0190",
       "callsites": [
-        "海中鱼巣/领域/世界服务.h:42"
+        "海中鱼巣/领域/世界服务.h:20"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&节点_,基础信息",
@@ -52019,7 +51792,7 @@
       "caller": "R0733",
       "callee": "F0624",
       "callsites": [
-        "海中鱼巣/领域/世界服务.h:44"
+        "海中鱼巣/领域/世界服务.h:22"
       ],
       "call_category": "direct_const_member",
       "arguments": "this=&主信息_,记录->主信息",
@@ -52034,7 +51807,7 @@
       "caller": "R0734",
       "callee": "R0737",
       "callsites": [
-        "海中鱼巣/领域/世界服务.h:55"
+        "海中鱼巣/领域/世界服务.h:33"
       ],
       "call_category": "direct_member",
       "arguments": "this=&场景_",
@@ -52079,7 +51852,7 @@
       "caller": "R0736",
       "callee": "R0738",
       "callsites": [
-        "海中鱼巣/领域/世界服务.h:74"
+        "海中鱼巣/领域/世界服务.h:37"
       ],
       "call_category": "direct_member",
       "arguments": "this=&场景_,场景,存在",
@@ -53950,7 +53723,7 @@
       "caller": "R0203",
       "callee": "F0516",
       "callsites": [
-        "海中鱼巣/领域/世界服务.h:51"
+        "海中鱼巣/领域/世界服务.h:29"
       ],
       "call_category": "direct_member",
       "arguments": "this=&存在_",
@@ -56192,12 +55965,12 @@
       "callsites": [
         "海中鱼巣/领域/服务.基础信息.ixx:24"
       ],
-      "call_category": "direct_const_member",
-      "arguments": "请求.幂等主键",
-      "argument_resolution": "当前源码静态接收者、重载签名与调用点逐项复核",
-      "return_binding": "被调函数结果按当前调用表达式接收或用于条件判断",
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "冻结源码 3920a746 + 当前静态接收者/重载/调用点专项复核",
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=&数据操作_, 主键=请求.幂等主键",
+      "argument_resolution": "冻结源码字段静态类型、uint64_t 实参与 R0783 完整签名复核",
+      "return_binding": "语义基础业务结果直接作为 R0496 返回值",
+      "reachable_condition": "请求.幂等主键非零",
+      "resolution_source": "服务.基础信息.ixx blob 06952da7；22-25 行与 R0783 完整签名复核",
       "current_root_reachable": true
     },
     {
@@ -59928,6 +59701,2028 @@
       "return_binding": "六个 bool 分别进入精确关系判断、循环筛选、允许目标判断或生命周期状态三元选择",
       "reachable_condition": "对应 optional 或循环记录已形成且前序短路条件允许执行该比较",
       "resolution_source": "方法服务.h blob 839dd462；1362-1424 行、F0051 身份与本批图映射交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3113",
+      "caller": "R0486",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/方法服务.h:1814"
+      ],
+      "call_category": "direct-free-operator",
+      "arguments": "方法首节点, 动作入口节点",
+      "argument_resolution": "两个操作数静态类型均为节点句柄，与 F0051 唯一完整签名复核",
+      "return_binding": "bool 经逻辑取反后作为短路合取第三项",
+      "reachable_condition": "R0479 与 R0485 均返回 true",
+      "resolution_source": "方法服务.h blob 839dd462；1814 行和 F0051 身份复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3114",
+      "caller": "R0499",
+      "callee": "R0511",
+      "callsites": [
+        "海中鱼巣/领域/服务.方法.ixx:94",
+        "海中鱼巣/领域/服务.方法.ixx:95",
+        "海中鱼巣/领域/服务.方法.ixx:96"
+      ],
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "调用1:this=&状态服务_, 请求=角色请求；调用2:this=&状态服务_, 请求=活跃请求；调用3:this=&状态服务_, 请求=失效请求",
+      "argument_resolution": "冻结源码三个静态类型为状态业务服务& 的直接调用点与 R0511 完整签名复核",
+      "return_binding": "三个抽象状态规格结果分别绑定到角色、活跃、失效局部变量",
+      "reachable_condition": "R0499 入口四主键检查通过后依次执行",
+      "resolution_source": "服务.方法.ixx blob 74a839fe；94-96 行、R0511 身份与本批图映射交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3115",
+      "caller": "R0499",
+      "callee": "R0510",
+      "callsites": [
+        "海中鱼巣/领域/服务.方法.ixx:97"
+      ],
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "调用1:this=&角色；调用2:this=&活跃；调用3:this=&失效",
+      "argument_resolution": "冻结源码三个短路成员调用、三个局部变量静态类型与 R0510 完整签名复核",
+      "return_binding": "三个 bool 按从左到右短路顺序决定是否进入规格失败分支",
+      "reachable_condition": "R0511 的三个规格结果局部变量均已构造",
+      "resolution_source": "服务.方法.ixx blob 74a839fe；97 行、R0510 身份与本批图映射交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3116",
+      "caller": "R0501",
+      "callee": "R0876",
+      "callsites": [
+        "海中鱼巣/领域/服务.特征.ixx:113"
+      ],
+      "call_category": "source-audited-direct-const-member",
+      "arguments": "this=&数据操作_, 主键=请求.幂等主键",
+      "argument_resolution": "冻结源码字段静态类型、uint64_t 实参与数据操作定义签名复核",
+      "return_binding": "特征体系业务结果直接作为 R0501 返回值",
+      "reachable_condition": "请求.幂等主键非零",
+      "resolution_source": "服务.特征.ixx blob 7620a4c6；111-114 行与数据操作.特征体系.ixx:691-719 交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3117",
+      "caller": "F0029",
+      "callee": "R0858",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:686-687"
+      ],
+      "call_category": "callback_bind",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3118",
+      "caller": "F0031",
+      "callee": "R0858",
+      "callsites": [
+        "海中鱼巣/自检.运行器.ixx:80"
+      ],
+      "call_category": "callback_invoke",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3119",
+      "caller": "R0858",
+      "callee": "R0847",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:687"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3120",
+      "caller": "R0847",
+      "callee": "F0468",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:490"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3121",
+      "caller": "R0847",
+      "callee": "F0469",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:491",
+        "海中鱼巣/自检.入口初始化.ixx:492"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3122",
+      "caller": "R0847",
+      "callee": "F0015",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:503-504"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3123",
+      "caller": "R0847",
+      "callee": "F0016",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:505",
+        "海中鱼巣/自检.入口初始化.ixx:507"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3124",
+      "caller": "R0847",
+      "callee": "R0560",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:509",
+        "海中鱼巣/自检.入口初始化.ixx:510",
+        "海中鱼巣/自检.入口初始化.ixx:511"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3125",
+      "caller": "R0847",
+      "callee": "R0561",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:512",
+        "海中鱼巣/自检.入口初始化.ixx:513",
+        "海中鱼巣/自检.入口初始化.ixx:514"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3126",
+      "caller": "R0847",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:515",
+        "海中鱼巣/自检.入口初始化.ixx:516",
+        "海中鱼巣/自检.入口初始化.ixx:517"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3127",
+      "caller": "R0847",
+      "callee": "F0516",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:545"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3128",
+      "caller": "R0847",
+      "callee": "R0738",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:547"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3129",
+      "caller": "R0847",
+      "callee": "F0050",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:548"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3130",
+      "caller": "R0847",
+      "callee": "R0277",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:550"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3131",
+      "caller": "R0847",
+      "callee": "F0168",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:551"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3132",
+      "caller": "R0847",
+      "callee": "F0579",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:552-553"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3133",
+      "caller": "R0847",
+      "callee": "R0855",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:559",
+        "海中鱼巣/自检.入口初始化.ixx:562",
+        "海中鱼巣/自检.入口初始化.ixx:563",
+        "海中鱼巣/自检.入口初始化.ixx:564",
+        "海中鱼巣/自检.入口初始化.ixx:615"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3134",
+      "caller": "R0847",
+      "callee": "R0856",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:566",
+        "海中鱼巣/自检.入口初始化.ixx:567",
+        "海中鱼巣/自检.入口初始化.ixx:568"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3135",
+      "caller": "R0847",
+      "callee": "R0762",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:573-574"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3136",
+      "caller": "R0847",
+      "callee": "R0763",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:575-576"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3137",
+      "caller": "R0847",
+      "callee": "R0860",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:579-581",
+        "海中鱼巣/自检.入口初始化.ixx:582-584"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3138",
+      "caller": "R0847",
+      "callee": "R0862",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:585-587"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3139",
+      "caller": "R0847",
+      "callee": "R0861",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:589-590",
+        "海中鱼巣/自检.入口初始化.ixx:591-592"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3140",
+      "caller": "R0847",
+      "callee": "R0863",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:593-594"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3141",
+      "caller": "R0847",
+      "callee": "R0859",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:596"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3142",
+      "caller": "R0847",
+      "callee": "R0868",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:608-609",
+        "海中鱼巣/自检.入口初始化.ixx:621-623"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3143",
+      "caller": "R0847",
+      "callee": "R0869",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:616-618"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3144",
+      "caller": "R0847",
+      "callee": "F0163",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:619"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3145",
+      "caller": "R0847",
+      "callee": "R0870",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:629"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3146",
+      "caller": "R0847",
+      "callee": "R0857",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:641-643"
+      ],
+      "call_category": "standard-library-callback",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3147",
+      "caller": "R0847",
+      "callee": "F0131",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:483-653"
+      ],
+      "call_category": "compiler_implicit_member_destructor",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3148",
+      "caller": "F0015",
+      "callee": "R0848",
+      "callsites": [
+        "海中鱼巣/领域/初始化.系统.ixx:88"
+      ],
+      "call_category": "callback_invoke_resolved_test",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3149",
+      "caller": "F0015",
+      "callee": "R0849",
+      "callsites": [
+        "海中鱼巣/领域/初始化.系统.ixx:93"
+      ],
+      "call_category": "callback_invoke_resolved_test",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3150",
+      "caller": "F0015",
+      "callee": "R0850",
+      "callsites": [
+        "海中鱼巣/领域/初始化.系统.ixx:98-99"
+      ],
+      "call_category": "callback_invoke_resolved_test",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3151",
+      "caller": "F0015",
+      "callee": "R0851",
+      "callsites": [
+        "海中鱼巣/领域/初始化.系统.ixx:100"
+      ],
+      "call_category": "callback_invoke_resolved_test",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3152",
+      "caller": "F0015",
+      "callee": "R0852",
+      "callsites": [
+        "海中鱼巣/领域/初始化.系统.ixx:107"
+      ],
+      "call_category": "callback_invoke_resolved_test",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3153",
+      "caller": "F0015",
+      "callee": "R0853",
+      "callsites": [
+        "海中鱼巣/领域/初始化.系统.ixx:112-113"
+      ],
+      "call_category": "callback_invoke_resolved_test",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3154",
+      "caller": "R0848",
+      "callee": "F0043",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:496"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3155",
+      "caller": "R0849",
+      "callee": "F0044",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:497"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3156",
+      "caller": "R0850",
+      "callee": "F0045",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:498"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3157",
+      "caller": "R0851",
+      "callee": "F0046",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:499"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3158",
+      "caller": "R0852",
+      "callee": "F0048",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:500"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3159",
+      "caller": "R0853",
+      "callee": "F0050",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:501"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3160",
+      "caller": "R0855",
+      "callee": "R0854",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:528"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3161",
+      "caller": "R0856",
+      "callee": "R0854",
+      "callsites": [
+        "海中鱼巣/自检.入口初始化.ixx:531"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3162",
+      "caller": "R0859",
+      "callee": "R0559",
+      "callsites": [
+        "海中鱼巣/领域/特征服务.h:277"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3163",
+      "caller": "R0859",
+      "callee": "F0621",
+      "callsites": [
+        "海中鱼巣/领域/特征服务.h:280"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3164",
+      "caller": "R0859",
+      "callee": "R0561",
+      "callsites": [
+        "海中鱼巣/领域/特征服务.h:282"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3165",
+      "caller": "R0859",
+      "callee": "R0779",
+      "callsites": [
+        "海中鱼巣/领域/特征服务.h:282"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3166",
+      "caller": "R0860",
+      "callee": "R0558",
+      "callsites": [
+        "海中鱼巣/领域/特征服务.h:374"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3167",
+      "caller": "R0860",
+      "callee": "R0864",
+      "callsites": [
+        "海中鱼巣/领域/特征服务.h:380"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3168",
+      "caller": "R0861",
+      "callee": "R0558",
+      "callsites": [
+        "海中鱼巣/领域/特征服务.h:386"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3169",
+      "caller": "R0861",
+      "callee": "R0865",
+      "callsites": [
+        "海中鱼巣/领域/特征服务.h:389"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3170",
+      "caller": "R0862",
+      "callee": "R0558",
+      "callsites": [
+        "海中鱼巣/领域/特征服务.h:396"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3171",
+      "caller": "R0862",
+      "callee": "R0866",
+      "callsites": [
+        "海中鱼巣/领域/特征服务.h:402"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3172",
+      "caller": "R0863",
+      "callee": "R0558",
+      "callsites": [
+        "海中鱼巣/领域/特征服务.h:408"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3173",
+      "caller": "R0863",
+      "callee": "R0867",
+      "callsites": [
+        "海中鱼巣/领域/特征服务.h:411"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3174",
+      "caller": "R0864",
+      "callee": "F0321",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:291"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3175",
+      "caller": "R0864",
+      "callee": "F0336",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:294"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3176",
+      "caller": "R0864",
+      "callee": "F0398",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:295"
+      ],
+      "call_category": "resolved-function-pointer",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3177",
+      "caller": "R0864",
+      "callee": "F0338",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:296"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3178",
+      "caller": "R0864",
+      "callee": "F0339",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:297"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3179",
+      "caller": "R0864",
+      "callee": "R0731",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:299"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3180",
+      "caller": "R0864",
+      "callee": "R0543",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:300"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3181",
+      "caller": "R0864",
+      "callee": "R0732",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:310",
+        "海中鱼巣/领域/特征值服务.h:336"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3182",
+      "caller": "R0864",
+      "callee": "R0546",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:321"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3183",
+      "caller": "R0864",
+      "callee": "F0184",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:322-324",
+        "海中鱼巣/领域/特征值服务.h:337-344"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3184",
+      "caller": "R0864",
+      "callee": "F0345",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:292-345"
+      ],
+      "call_category": "compiler_implicit_destructor",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3185",
+      "caller": "R0865",
+      "callee": "F0321",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:348"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3186",
+      "caller": "R0865",
+      "callee": "F0336",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:351"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3187",
+      "caller": "R0865",
+      "callee": "F0397",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:352"
+      ],
+      "call_category": "resolved-function-pointer",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3188",
+      "caller": "R0865",
+      "callee": "F0338",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:353"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3189",
+      "caller": "R0865",
+      "callee": "F0339",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:354"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3190",
+      "caller": "R0865",
+      "callee": "R0731",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:356"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3191",
+      "caller": "R0865",
+      "callee": "R0732",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:362"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3192",
+      "caller": "R0865",
+      "callee": "F0345",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:349-367"
+      ],
+      "call_category": "compiler_implicit_destructor",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3193",
+      "caller": "R0866",
+      "callee": "F0321",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:370"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3194",
+      "caller": "R0866",
+      "callee": "F0336",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:373"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3195",
+      "caller": "R0866",
+      "callee": "F0398",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:374"
+      ],
+      "call_category": "resolved-function-pointer",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3196",
+      "caller": "R0866",
+      "callee": "F0338",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:375"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3197",
+      "caller": "R0866",
+      "callee": "F0339",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:376"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3198",
+      "caller": "R0866",
+      "callee": "R0731",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:378"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3199",
+      "caller": "R0866",
+      "callee": "R0543",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:379"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3200",
+      "caller": "R0866",
+      "callee": "R0732",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:389",
+        "海中鱼巣/领域/特征值服务.h:415"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3201",
+      "caller": "R0866",
+      "callee": "R0546",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:400"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3202",
+      "caller": "R0866",
+      "callee": "F0184",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:401-403",
+        "海中鱼巣/领域/特征值服务.h:416-423"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3203",
+      "caller": "R0866",
+      "callee": "F0345",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:371-424"
+      ],
+      "call_category": "compiler_implicit_destructor",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3204",
+      "caller": "R0867",
+      "callee": "F0321",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:427"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3205",
+      "caller": "R0867",
+      "callee": "F0336",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:430"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3206",
+      "caller": "R0867",
+      "callee": "F0397",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:431"
+      ],
+      "call_category": "resolved-function-pointer",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3207",
+      "caller": "R0867",
+      "callee": "F0338",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:432"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3208",
+      "caller": "R0867",
+      "callee": "F0339",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:433"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3209",
+      "caller": "R0867",
+      "callee": "R0731",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:435"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3210",
+      "caller": "R0867",
+      "callee": "R0732",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:441"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3211",
+      "caller": "R0867",
+      "callee": "F0345",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:428-446"
+      ],
+      "call_category": "compiler_implicit_destructor",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3212",
+      "caller": "R0868",
+      "callee": "R0874",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:227"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3213",
+      "caller": "R0868",
+      "callee": "F0621",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:230"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3214",
+      "caller": "R0869",
+      "callee": "R0874",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:133"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3215",
+      "caller": "R0869",
+      "callee": "F0626",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:134"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3216",
+      "caller": "R0869",
+      "callee": "F0335",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:137"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3217",
+      "caller": "R0869",
+      "callee": "F0163",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:138"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3218",
+      "caller": "R0869",
+      "callee": "F0168",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:144"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3219",
+      "caller": "R0869",
+      "callee": "F0184",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:138-145",
+        "海中鱼巣/领域/状态服务.h:149-151"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3220",
+      "caller": "R0869",
+      "callee": "F0167",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:141",
+        "海中鱼巣/领域/状态服务.h:142",
+        "海中鱼巣/领域/状态服务.h:143"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3221",
+      "caller": "R0869",
+      "callee": "R0870",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:148"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3222",
+      "caller": "R0870",
+      "callee": "F0328",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:240"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3223",
+      "caller": "R0870",
+      "callee": "R0872",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:243"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3224",
+      "caller": "R0870",
+      "callee": "R0873",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:244"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3225",
+      "caller": "R0870",
+      "callee": "F0329",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:245"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3226",
+      "caller": "R0870",
+      "callee": "R0871",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:246"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3227",
+      "caller": "R0871",
+      "callee": "F0190",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:194"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3228",
+      "caller": "R0871",
+      "callee": "F0217",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:198"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3229",
+      "caller": "R0872",
+      "callee": "F0328",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:212"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3230",
+      "caller": "R0872",
+      "callee": "R0875",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:215"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3231",
+      "caller": "R0873",
+      "callee": "F0328",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:219"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3232",
+      "caller": "R0873",
+      "callee": "R0875",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:222"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3233",
+      "caller": "R0874",
+      "callee": "F0190",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:313"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3234",
+      "caller": "R0875",
+      "callee": "F0621",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:318"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3235",
+      "caller": "R0875",
+      "callee": "R0874",
+      "callsites": [
+        "海中鱼巣/领域/状态服务.h:321"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3236",
+      "caller": "R0876",
+      "callee": "F0444",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:692"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3237",
+      "caller": "R0876",
+      "callee": "R0765",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:693"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3238",
+      "caller": "R0876",
+      "callee": "R0390",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:694"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3239",
+      "caller": "R0876",
+      "callee": "R0877",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:694",
+        "海中鱼巣/领域/数据操作.特征体系.ixx:710"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3240",
+      "caller": "R0876",
+      "callee": "R0367",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:700"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3241",
+      "caller": "R0876",
+      "callee": "R0116",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:702-707"
+      ],
+      "call_category": "callback_bind",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3242",
+      "caller": "R0876",
+      "callee": "R0368",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:718"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3243",
+      "caller": "R0116",
+      "callee": "R0878",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:702-707"
+      ],
+      "call_category": "callback_invoke_resolved",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3244",
+      "caller": "R0878",
+      "callee": "R0358",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:705"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3245",
+      "caller": "R0878",
+      "callee": "R0041",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:706"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "按列示调用点的当前源码实参绑定",
+      "argument_resolution": "当前源码静态接收者、完整签名、重载与调用语境逐点复核",
+      "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
+      "reachable_condition": "调用方当前可达且列示源码分支条件成立",
+      "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
       "current_root_reachable": true
     }
   ]

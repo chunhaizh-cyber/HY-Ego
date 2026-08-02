@@ -1,11 +1,11 @@
 # CF-L4-0086 `概念图四根创建自检等待 lambda` 现状流程图
 
 图类型：现状流程图
-代码版本：`5cc7036de0decad163293a0b77c4789f068fd73a`
-源码 blob：`95681cdeef7ab705cf391738b05b36ca4fafc608`
-覆盖文件：`海中鱼巣/自检.入口初始化.ixx:82`
+代码版本：`0a93526882cb33c61c2fbb04ecad1aeaddcfe225`
+源码 blob：`59de05d5ba3594942c819c9ec50e3d0ebc6cb9bd`
+覆盖文件：`海中鱼巣/自检.入口初始化.ixx:83`
 唯一根函数：F0472
-完整签名：`bool 海中鱼巣::运行概念图四根创建自检(const 海中鱼巣::入口初始化自检运行配置&)::<lambda@自检.入口初始化.ixx:82>::operator()(std::chrono::milliseconds 时限) const`
+完整签名：`bool 海中鱼巣::运行概念图四根创建自检(const 海中鱼巣::入口初始化自检运行配置&)::<lambda@自检.入口初始化.ixx:83>::operator()(std::chrono::milliseconds 时限) const`
 参数：闭包按引用借用外层 `上下文`；`时限` 按值传入；返回：原样返回等待结果
 已登记调用方：F0015 经 E0988
 直接项目函数：F0045/E0994
