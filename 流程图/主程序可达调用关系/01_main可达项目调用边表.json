@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1383,
-  "project_call_edge_count": 4102,
-  "edge_count": 4102,
+  "project_call_edge_count": 4103,
+  "edge_count": 4103,
   "edges": [
     {
       "edge_id": "E0002",
@@ -62808,6 +62808,22 @@
       "return_binding": "节点记录可选值",
       "reachable_condition": "R0594入口后",
       "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3324",
+      "caller": "R0630",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.存在场景.ixx:473",
+        "海中鱼巣/领域/数据操作.存在场景.ixx:474"
+      ],
+      "call_category": "operator",
+      "arguments": "左=当前关系->源节点/目标节点；右=节点/引用.目标节点",
+      "argument_resolution": "两侧静态类型均为节点句柄；精确绑定F0051节点句柄相等重载",
+      "return_binding": "bool参与来源关系完整句柄权威读回一致性判断",
+      "reachable_condition": "当前关系有值且关系类型为引用",
+      "resolution_source": "本批逐函数源码静态类型、完整签名与调用点复核",
       "current_root_reachable": true
     }
   ]

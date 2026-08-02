@@ -16,7 +16,7 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1383,
-  "project_call_edge_count": 4102,
+  "project_call_edge_count": 4103,
   "functions": [
     {
       "function_id": "F0001",
@@ -1702,7 +1702,8 @@
         "R0574",
         "R0583",
         "R0587",
-        "R0593"
+        "R0593",
+        "R0630"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0015；调用点=海中鱼巣/领域/初始化.系统.ixx:115",
@@ -31211,7 +31212,8 @@
         "R0631",
         "R0078",
         "R0632",
-        "F0440"
+        "F0440",
+        "F0051"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0626；调用点=海中鱼巣/领域/数据操作.存在场景.ixx:173",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",

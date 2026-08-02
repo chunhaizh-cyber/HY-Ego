@@ -1,6 +1,6 @@
 # main 可达外部边界与回调表
 
-代码基线：<code>03a8b7ac099ccea83e57f2696e2290b7bcdfacaf</code>；配置：<code>Debug\|x64</code>；外部边界：3730；具名回调：59。
+代码基线：<code>03a8b7ac099ccea83e57f2696e2290b7bcdfacaf</code>；配置：<code>Debug\|x64</code>；外部边界：3743；具名回调：59。
 
 ## 外部边界
 
@@ -1771,11 +1771,10 @@
 | X02478 | R0640 | Standard library | <code>std::optional&lt;海中鱼巣::主信息句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/核心/结果.结构写入.h:44</code> | 1 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X02479 | R0641 | Standard library | <code>std::optional&lt;海中鱼巣::节点句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/核心/结果.结构写入.h:44</code> | 1 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X02480 | R0642 | Standard library | <code>std::optional&lt;海中鱼巣::关系句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/核心/结果.结构写入.h:44</code> | 1 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
-| X02481 | R0638 | Standard library | <code>std::vector&lt;海中鱼巣::索引绑定记录&gt;::begin() / end()</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:609,626</code> | 4 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X02481 | R0638 | Standard library | <code>std::vector&lt;海中鱼巣::索引绑定记录&gt;::iterator std::vector&lt;海中鱼巣::索引绑定记录&gt;::begin() noexcept / end() noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:609,626</code> | 4 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X02482 | R0638 | Standard library | <code>std::optional&lt;海中鱼巣::主键绑定记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:616</code> | 1 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X02483 | R0638 | Standard library | <code>std::optional&lt;海中鱼巣::主键绑定记录&gt;::operator-&gt;() const</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:616</code> | 1 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X02484 | R0638 | Standard library | <code>std::optional&lt;海中鱼巣::主键绑定记录&gt;::operator*() const&amp;</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:617</code> | 1 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
-| X02485 | R0638 | Compiler-generated operator | <code>海中鱼巣::主键绑定记录::operator==（编译器生成）</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:617-621</code> | 1 | 调用方从 F0001 可达且对应源码表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X02486 | F0455 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::系统角色主体材料&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/初始化.系统角色.ixx:156</code> | 1 | 写后预检成功且主体材料已形成 | optional&lt;系统角色主体材料&gt;具体模板实例与第156行短路顺序复核 |
 | X02487 | F0455 | Standard library optional | <code>const 海中鱼巣::系统角色主体材料&amp; std::optional&lt;海中鱼巣::系统角色主体材料&gt;::operator*() const&amp;</code> | <code>海中鱼巣/领域/初始化.系统角色.ixx:156, 海中鱼巣/领域/初始化.系统角色.ixx:160</code> | 2 | X02486确认主体存在；第160行沿前序复核通过路径再次解引用 | optional&lt;系统角色主体材料&gt;具体模板实例、短路门禁和两处解引用复核 |
 | X02488 | F0476 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::节点记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/自检.入口初始化.ixx:91</code> | 1 | F0476完成节点读取后判断记录是否存在 | optional&lt;节点记录&gt;具体模板实例与第90行短路顺序复核 |
@@ -3736,6 +3735,20 @@
 | X04836 | R0609 | Standard library lifecycle | <code>std::optional&lt;海中鱼巣::节点记录&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/存在服务.h:132-137</code> | 1 | 局部节点记录 optional 已构造并离开函数作用域；不把可省略返回拷贝伪造成稳定边 | 本批逐函数源码表达式、静态类型与生命周期复核 |
 | X04837 | R0610 | Standard library lifecycle | <code>std::optional&lt;海中鱼巣::节点记录&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/动态服务.h:316-319</code> | 1 | 局部节点记录 optional 已构造并在实例动态判断返回后离开作用域 | 本批逐函数源码表达式、静态类型与生命周期复核 |
 | X04838 | R0611 | Standard library lifecycle | <code>std::optional&lt;海中鱼巣::节点记录&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/因果服务.h:47-54</code> | 1 | 局部节点记录 optional 已构造并经读回成功或内部错误返回离开作用域 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04839 | R0646 | Standard library optional | <code>std::optional&lt;海中鱼巣::节点句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/服务.存在.ixx:62</code> | 1 | 当前身份类型为存在并检查虚拟来源是否有值 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04840 | R0646 | Standard library optional | <code>std::optional&lt;海中鱼巣::关系句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/服务.存在.ixx:63</code> | 1 | 当前身份类型为存在、虚拟来源无值并检查来源关系是否有值 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04841 | R0649 | Standard library optional | <code>constexpr std::optional&lt;海中鱼巣::关系记录&gt;::optional() noexcept</code> | <code>海中鱼巣/领域/数据操作.存在场景.ixx:208</code> | 1 | 两端身份可读且类型分别为场景和存在，形成空命中 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04842 | R0649 | Standard library iterator | <code>bool std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator!=(const const_iterator&amp;) const</code> | <code>海中鱼巣/领域/数据操作.存在场景.ixx:209,215</code> | 2 | 遍历当前归属关系记录组时判断是否到达末尾 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04843 | R0649 | Standard library iterator | <code>const 海中鱼巣::关系记录&amp; std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator*() const</code> | <code>海中鱼巣/领域/数据操作.存在场景.ixx:209</code> | 1 | 范围循环仍有记录时读取当前关系记录 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04844 | R0649 | Standard library iterator | <code>std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator&amp; std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator++()</code> | <code>海中鱼巣/领域/数据操作.存在场景.ixx:215</code> | 1 | 当前关系记录处理完成后推进范围循环 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04845 | R0627 | Standard library optional | <code>constexpr std::optional&lt;海中鱼巣::节点句柄&gt;::optional(std::nullopt_t) noexcept</code> | <code>海中鱼巣/领域/数据操作.存在场景.ixx:299</code> | 1 | 主键未命中且读取状态为未找到，创建场景身份时形成无来源参数 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04846 | R0630 | Standard library iterator | <code>bool std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator!=(const const_iterator&amp;) const</code> | <code>海中鱼巣/领域/数据操作.存在场景.ixx:460</code> | 1 | 遍历引用关系记录组时判断是否到达末尾 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04847 | R0630 | Standard library iterator | <code>const 海中鱼巣::关系记录&amp; std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator*() const</code> | <code>海中鱼巣/领域/数据操作.存在场景.ixx:460</code> | 1 | 范围循环仍有引用记录时读取当前记录 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04848 | R0630 | Standard library iterator | <code>std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator&amp; std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator++()</code> | <code>海中鱼巣/领域/数据操作.存在场景.ixx:460</code> | 1 | 当前引用记录处理完成后推进范围循环 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04849 | R0636 | Standard library optional | <code>constexpr std::optional&lt;海中鱼巣::节点句柄&gt;::optional(const 海中鱼巣::节点句柄&amp;)</code> | <code>海中鱼巣/领域/数据操作.存在场景.ixx:424</code> | 1 | 材料当前可读且类型为存在，构造来源句柄可选值参与相等比较 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04850 | R0638 | Standard library iterator | <code>bool std::vector&lt;海中鱼巣::索引绑定记录&gt;::iterator::operator!=(const iterator&amp;) const</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:609,626</code> | 2 | 两次遍历非const索引写集时判断是否到达末尾 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04851 | R0638 | Standard library iterator | <code>海中鱼巣::索引绑定记录&amp; std::vector&lt;海中鱼巣::索引绑定记录&gt;::iterator::operator*() const</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:609,626</code> | 2 | 两次范围循环仍有记录时读取当前索引写集项 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+| X04852 | R0638 | Standard library iterator | <code>std::vector&lt;海中鱼巣::索引绑定记录&gt;::iterator&amp; std::vector&lt;海中鱼巣::索引绑定记录&gt;::iterator::operator++()</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:609,626</code> | 2 | 两次范围循环处理当前记录后推进游标 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
 
 ## 回调登记
 
