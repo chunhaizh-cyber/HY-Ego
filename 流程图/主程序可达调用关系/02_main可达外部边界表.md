@@ -1,6 +1,6 @@
 # main 可达外部边界与回调表
 
-代码基线：<code>0a93526882cb33c61c2fbb04ecad1aeaddcfe225</code>；配置：<code>Debug\|x64</code>；外部边界：3625；具名回调：59。
+代码基线：<code>0a93526882cb33c61c2fbb04ecad1aeaddcfe225</code>；配置：<code>Debug\|x64</code>；外部边界：3666；具名回调：59。
 
 ## 外部边界
 
@@ -1535,7 +1535,6 @@
 | X02238 | R0552 | Standard library algorithm | <code>std::find_if(I64版本记录表_.cbegin(), I64版本记录表_.cend(), &lt;lambda@特征值服务.h:692&gt;)</code> | <code>海中鱼巣/领域/特征值服务.h:692</code> | 1 | 查找首个匹配节点身份的 const I64 记录 | 专项源码外部边界复核 |
 | X02239 | R0552 | Standard library container | <code>std::vector&lt;海中鱼巣::特征值服务::I64版本记录&gt;::const_iterator std::vector&lt;海中鱼巣::特征值服务::I64版本记录&gt;::cbegin() const noexcept</code> | <code>海中鱼巣/领域/特征值服务.h:692</code> | 1 | 形成 const I64 记录查找区间起点 | 专项源码外部边界复核 |
 | X02240 | R0552 | Standard library container | <code>std::vector&lt;海中鱼巣::特征值服务::I64版本记录&gt;::const_iterator std::vector&lt;海中鱼巣::特征值服务::I64版本记录&gt;::cend() const noexcept</code> | <code>海中鱼巣/领域/特征值服务.h:692</code> | 1 | 形成 const I64 记录查找区间终点 | 专项源码外部边界复核 |
-| X02241 | R0553 | Standard library | <code>std::find_if(...)</code> | <code>海中鱼巣/领域/特征值服务.h:692</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
 | X02242 | R0554 | Standard library algorithm | <code>std::count_if(Vec记录表_.cbegin(), Vec记录表_.cend(), &lt;lambda@特征值服务.h:699&gt;)</code> | <code>海中鱼巣/领域/特征值服务.h:698</code> | 1 | 计算指定节点的 Vec 记录数量 | 专项源码外部边界复核 |
 | X02243 | R0554 | Standard library container | <code>std::vector&lt;海中鱼巣::特征值服务::Vec原始值记录&gt;::const_iterator std::vector&lt;海中鱼巣::特征值服务::Vec原始值记录&gt;::cbegin() const noexcept</code> | <code>海中鱼巣/领域/特征值服务.h:699</code> | 1 | 形成 Vec 记录计数区间起点 | 专项源码外部边界复核 |
 | X02244 | R0554 | Standard library container | <code>std::vector&lt;海中鱼巣::特征值服务::Vec原始值记录&gt;::const_iterator std::vector&lt;海中鱼巣::特征值服务::Vec原始值记录&gt;::cend() const noexcept</code> | <code>海中鱼巣/领域/特征值服务.h:699</code> | 1 | 形成 Vec 记录计数区间终点 | 专项源码外部边界复核 |
@@ -1546,8 +1545,6 @@
 | X02249 | R0559 | Standard library optional | <code>const 海中鱼巣::节点记录* std::optional&lt;海中鱼巣::节点记录&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/特征服务.h:1214, 海中鱼巣/领域/特征服务.h:1215, 海中鱼巣/领域/特征服务.h:1216, 海中鱼巣/领域/特征服务.h:1217, 海中鱼巣/领域/特征服务.h:1218</code> | 5 | 节点记录有值后复核允许类型 | 专项源码外部边界复核 |
 | X02250 | R0565 | Standard library container | <code>std::array&lt;海中鱼巣::系统角色键占用材料, 海中鱼巣::系统角色稳定键数量&gt;::const_iterator begin() const noexcept</code> | <code>海中鱼巣/领域/系统角色清单.数据.h:285</code> | 1 | 查找系统角色稳定键用途时开始范围迭代 | 专项源码外部边界复核 |
 | X02251 | R0565 | Standard library container | <code>std::array&lt;海中鱼巣::系统角色键占用材料, 海中鱼巣::系统角色稳定键数量&gt;::const_iterator end() const noexcept</code> | <code>海中鱼巣/领域/系统角色清单.数据.h:285</code> | 1 | 查找系统角色稳定键用途时形成范围末端 | 专项源码外部边界复核 |
-| X02252 | R0568 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::节点记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/语素服务.h:259</code> | 1 | 令牌读取语素入口节点后复核记录有值 | 专项源码外部边界复核 |
-| X02253 | R0568 | Standard library optional | <code>const 海中鱼巣::节点记录* std::optional&lt;海中鱼巣::节点记录&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/语素服务.h:259</code> | 1 | 节点记录有值后读取类型 | 专项源码外部边界复核 |
 | X02254 | R0575 | Standard library | <code>std::iswspace(...)</code> | <code>海中鱼巣/领域/语素服务.h:63</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
 | X02255 | R0581 | Standard library member | <code>constexpr bool std::optional&lt;海中鱼巣::节点句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:363</code> | 1 | 遍历到状态类型目标 | 专项源码外部边界复核 |
 | X02256 | R0583 | Standard library member | <code>constexpr bool std::optional&lt;海中鱼巣::节点句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:520, 海中鱼巣/领域/需求服务.h:524</code> | 2 | 普通目标宿主/自我主体查询已返回 | 专项源码外部边界复核 |
@@ -3631,6 +3628,50 @@
 | X04721 | R0886 | Standard library container | <code>std::vector&lt;std::uint64_t&gt;::const_iterator std::vector&lt;std::uint64_t&gt;::begin() const noexcept</code> | <code>海中鱼巣/领域/概念图算法.h:667, 海中鱼巣/领域/概念图算法.h:667</code> | 2 | 调用方可达且执行到列示位置 | 本批逐行源码、静态类型、标准库合同或隐式生命周期复核 |
 | X04722 | R0886 | Standard library container | <code>std::vector&lt;std::uint64_t&gt;::const_iterator std::vector&lt;std::uint64_t&gt;::end() const noexcept</code> | <code>海中鱼巣/领域/概念图算法.h:667, 海中鱼巣/领域/概念图算法.h:667</code> | 2 | 调用方可达且执行到列示位置 | 本批逐行源码、静态类型、标准库合同或隐式生命周期复核 |
 | X04723 | R0532 | Compiler-generated lifetime | <code>海中鱼巣::概念签名材料::~概念签名材料()</code> | <code>海中鱼巣/领域/概念图算法.h:228-243</code> | 1 | 局部结果完成复制构造后离开函数；每次函数调用实际析构一次 | 局部结果对象、非平凡 vector 成员与编译器生成特殊成员生命周期复核 |
+| X04724 | R0559 | Compiler-generated lifetime | <code>std::optional&lt;节点记录&gt;::~optional()</code> | <code>海中鱼巣/领域/特征服务.h:1210-1219</code> | 1 | 局部节点记录离开函数作用域 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04725 | R0565 | Standard library iterator | <code>std::array&lt;const 系统角色键占用材料*, 系统角色稳定键数量&gt;::const_iterator::operator!=</code> | <code>海中鱼巣/领域/系统角色清单.数据.h:285</code> | 1 | 范围循环每次判断 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04726 | R0565 | Standard library iterator | <code>std::array&lt;const 系统角色键占用材料*, 系统角色稳定键数量&gt;::const_iterator::operator*</code> | <code>海中鱼巣/领域/系统角色清单.数据.h:285</code> | 1 | 范围循环当前项 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04727 | R0565 | Standard library iterator | <code>std::array&lt;const 系统角色键占用材料*, 系统角色稳定键数量&gt;::const_iterator::operator++</code> | <code>海中鱼巣/领域/系统角色清单.数据.h:285</code> | 1 | 当前项未命中后 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04728 | R0566 | Standard library optional | <code>const 特征槽位写入规格&amp; std::optional&lt;特征槽位写入规格&gt;::operator*() const &amp;</code> | <code>海中鱼巣/领域/组合.特征状态.ixx:40</code> | 1 | 两份规格成功后形成调用实参 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04729 | R0566 | Standard library optional | <code>const 初始特征值写入规格&amp; std::optional&lt;初始特征值写入规格&gt;::operator*() const &amp;</code> | <code>海中鱼巣/领域/组合.特征状态.ixx:40</code> | 1 | 两份规格成功后形成调用实参 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04730 | R0566 | Compiler-generated lifetime | <code>初始特征值规格结果::~初始特征值规格结果()</code> | <code>海中鱼巣/领域/组合.特征状态.ixx:37-41</code> | 1 | 值规格局部对象在所有离开路径释放 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04731 | R0570 | Standard library iterator | <code>std::vector&lt;节点句柄&gt;::const_iterator std::vector&lt;节点句柄&gt;::begin() const</code> | <code>海中鱼巣/领域/语素服务.h:270</code> | 1 | 进入范围循环 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04732 | R0570 | Standard library iterator | <code>std::vector&lt;节点句柄&gt;::const_iterator std::vector&lt;节点句柄&gt;::end() const</code> | <code>海中鱼巣/领域/语素服务.h:270</code> | 1 | 进入范围循环 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04733 | R0570 | Standard library iterator | <code>std::vector&lt;节点句柄&gt;::const_iterator::operator!=</code> | <code>海中鱼巣/领域/语素服务.h:270</code> | 1 | 每轮判断是否到达末端 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04734 | R0570 | Standard library iterator | <code>std::vector&lt;节点句柄&gt;::const_iterator::operator*</code> | <code>海中鱼巣/领域/语素服务.h:270</code> | 1 | 每轮绑定当前节点 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04735 | R0570 | Standard library iterator | <code>std::vector&lt;节点句柄&gt;::const_iterator::operator++</code> | <code>海中鱼巣/领域/语素服务.h:270</code> | 1 | 当前节点未命中后 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04736 | R0571 | Standard library optional | <code>bool std::optional&lt;节点记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/语素服务.h:280</code> | 1 | 读取节点后 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04737 | R0571 | Standard library optional | <code>const 节点记录* std::optional&lt;节点记录&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/语素服务.h:283-288</code> | 1 | 节点记录有值后的短路读取 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04738 | R0571 | Compiler-generated lifetime | <code>std::optional&lt;节点记录&gt;::~optional()</code> | <code>海中鱼巣/领域/语素服务.h:279-294</code> | 1 | 局部节点记录离开函数作用域 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04739 | R0572 | Standard library optional | <code>bool std::optional&lt;节点记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/语素服务.h:298</code> | 1 | 读取节点后 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04740 | R0572 | Standard library optional | <code>const 节点记录* std::optional&lt;节点记录&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/语素服务.h:301-305</code> | 1 | 节点记录有值后的短路读取 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04741 | R0572 | Compiler-generated lifetime | <code>std::optional&lt;节点记录&gt;::~optional()</code> | <code>海中鱼巣/领域/语素服务.h:297-308</code> | 1 | 局部节点记录离开函数作用域 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04742 | R0573 | Standard library optional | <code>bool std::optional&lt;节点句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/语素服务.h:331, 海中鱼巣/领域/语素服务.h:362</code> | 2 | 主键查询结果判有值 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04743 | R0573 | Standard library optional | <code>节点句柄&amp; std::optional&lt;节点句柄&gt;::value() &amp;</code> | <code>海中鱼巣/领域/语素服务.h:362</code> | 1 | 创建后主键读回有值 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04744 | R0573 | Compiler-generated lifetime | <code>std::optional&lt;节点句柄&gt;::~optional()</code> | <code>海中鱼巣/领域/语素服务.h:331, 海中鱼巣/领域/语素服务.h:362</code> | 3 | 三个按主键查询临时结果在完整表达式末释放 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04745 | R0574 | Standard library optional | <code>bool std::optional&lt;节点句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/语素服务.h:375</code> | 1 | 主键查询后 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04746 | R0574 | Standard library optional | <code>const 节点句柄&amp; std::optional&lt;节点句柄&gt;::value() const &amp;</code> | <code>海中鱼巣/领域/语素服务.h:375</code> | 1 | 查询有值后比较节点 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04747 | R0574 | Compiler-generated lifetime | <code>std::optional&lt;节点句柄&gt;::~optional()</code> | <code>海中鱼巣/领域/语素服务.h:374-378</code> | 1 | 当前节点局部对象离开分支作用域 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04748 | R0575 | Standard library string_view | <code>bool std::wstring_view::empty() const noexcept</code> | <code>海中鱼巣/领域/语素服务.h:249</code> | 1 | 入口判断文本是否为空 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04749 | R0575 | Standard library string_view iterator | <code>std::wstring_view::const_iterator std::wstring_view::begin() const noexcept</code> | <code>海中鱼巣/领域/语素服务.h:252</code> | 1 | 进入范围循环 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04750 | R0575 | Standard library string_view iterator | <code>std::wstring_view::const_iterator std::wstring_view::end() const noexcept</code> | <code>海中鱼巣/领域/语素服务.h:252</code> | 1 | 进入范围循环 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04751 | R0575 | Standard library string_view iterator | <code>std::wstring_view::const_iterator::operator!=</code> | <code>海中鱼巣/领域/语素服务.h:252</code> | 1 | 每轮判断是否到达末端 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04752 | R0575 | Standard library string_view iterator | <code>std::wstring_view::const_iterator::operator*</code> | <code>海中鱼巣/领域/语素服务.h:252</code> | 1 | 每轮读取字符 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04753 | R0575 | Standard library string_view iterator | <code>std::wstring_view::const_iterator::operator++</code> | <code>海中鱼巣/领域/语素服务.h:252</code> | 1 | 当前字符完成判断后 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04754 | R0888 | Standard library optional | <code>bool std::optional&lt;节点记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/特征值服务.h:222</code> | 1 | 读取有效特征值节点后 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04755 | R0888 | Standard library optional | <code>const 节点记录* std::optional&lt;节点记录&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/特征值服务.h:227, 海中鱼巣/领域/特征值服务.h:248, 海中鱼巣/领域/特征值服务.h:249, 海中鱼巣/领域/特征值服务.h:259</code> | 4 | 节点记录有值后读取主信息 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04756 | R0888 | Compiler-generated lifetime | <code>std::optional&lt;节点记录&gt;::~optional()</code> | <code>海中鱼巣/领域/特征值服务.h:221-266</code> | 1 | 节点记录值离开函数作用域 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04757 | R0888 | Standard library lock | <code>std::unique_lock&lt;std::shared_mutex&gt;::unique_lock(std::shared_mutex&amp;)</code> | <code>海中鱼巣/领域/特征值服务.h:226</code> | 1 | 入口与节点有效性检查通过 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04758 | R0888 | Standard library lock | <code>std::unique_lock&lt;std::shared_mutex&gt;::~unique_lock()</code> | <code>海中鱼巣/领域/特征值服务.h:226-266</code> | 1 | 离开原始值写锁作用域 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04759 | R0888 | Standard library vector | <code>std::vector&lt;I64版本记录&gt;::iterator std::vector&lt;I64版本记录&gt;::end() noexcept</code> | <code>海中鱼巣/领域/特征值服务.h:243, 海中鱼巣/领域/特征值服务.h:253</code> | 2 | 判断版本位置是否存在 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04760 | R0888 | Standard library iterator | <code>std::vector&lt;I64版本记录&gt;::iterator::operator!=</code> | <code>海中鱼巣/领域/特征值服务.h:243</code> | 1 | 核对版本记录存在性 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04761 | R0888 | Standard library vector | <code>void std::vector&lt;I64版本记录&gt;::push_back(I64版本记录&amp;&amp;)</code> | <code>海中鱼巣/领域/特征值服务.h:254</code> | 1 | 尚无版本记录 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04762 | R0888 | Standard library iterator | <code>I64版本记录* std::vector&lt;I64版本记录&gt;::iterator::operator-&gt;() const</code> | <code>海中鱼巣/领域/特征值服务.h:256</code> | 1 | 已有版本记录时更新版本 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04763 | R0888 | Standard library limits | <code>static constexpr std::uint64_t std::numeric_limits&lt;std::uint64_t&gt;::max() noexcept</code> | <code>海中鱼巣/领域/特征值服务.h:234</code> | 1 | 已有I64原始值时检查版本上限 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04764 | R0889 | Standard library lock | <code>std::unique_lock&lt;std::shared_mutex&gt;::unique_lock(std::shared_mutex&amp;)</code> | <code>海中鱼巣/核心/索引仓库.cpp:108</code> | 1 | 未接域入口有效 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04765 | R0889 | Standard library lock | <code>std::unique_lock&lt;std::shared_mutex&gt;::~unique_lock()</code> | <code>海中鱼巣/核心/索引仓库.cpp:108-111</code> | 1 | 离开未接域写锁作用域 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04766 | R0890 | Standard library lock | <code>std::unique_lock&lt;std::shared_mutex&gt;::unique_lock(std::shared_mutex&amp;)</code> | <code>海中鱼巣/核心/索引仓库.cpp:115</code> | 1 | 令牌与入口材料有效 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04767 | R0890 | Standard library lock | <code>std::unique_lock&lt;std::shared_mutex&gt;::~unique_lock()</code> | <code>海中鱼巣/核心/索引仓库.cpp:115-118</code> | 1 | 离开带令牌写锁作用域 | 本批逐函数源码表达式、静态类型与生命周期复核 |
 
 ## 回调登记
 
