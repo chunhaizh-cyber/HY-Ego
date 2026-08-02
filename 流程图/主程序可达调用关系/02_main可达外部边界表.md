@@ -1,6 +1,6 @@
 # main 可达外部边界与回调表
 
-代码基线：<code>03a8b7ac099ccea83e57f2696e2290b7bcdfacaf</code>；配置：<code>Debug\|x64</code>；外部边界：3713；具名回调：59。
+代码基线：<code>03a8b7ac099ccea83e57f2696e2290b7bcdfacaf</code>；配置：<code>Debug\|x64</code>；外部边界：3730；具名回调：59。
 
 ## 外部边界
 
@@ -3719,6 +3719,23 @@
 | X04819 | R0597 | Standard library optional | <code>constexpr bool std::optional&lt;海中鱼巣::节点句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:997</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
 | X04820 | R0597 | Standard library optional | <code>std::optional&lt;海中鱼巣::节点句柄&gt;&amp; std::optional&lt;海中鱼巣::节点句柄&gt;::operator=(const 海中鱼巣::节点句柄&amp;)</code> | <code>海中鱼巣/领域/需求服务.h:1000</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
 | X04821 | R0599 | Standard library smart pointer | <code>std::shared_ptr&lt;void&gt;::shared_ptr() noexcept</code> | <code>海中鱼巣/核心/结构事务接线.数据.h:25</code> | 1 | 调用方可达且默认构造成员运行期状态 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04822 | R0603 | Compiler conversion | <code>static_cast&lt;std::uint8_t&gt;(海中鱼巣::需求任务方法业务状态)</code> | <code>海中鱼巣/领域/初始化.系统角色.ixx:206</code> | 1 | 状态已提交判断执行并把业务状态转换为底层整数 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04823 | R0605 | Standard library RAII | <code>std::shared_lock&lt;std::shared_mutex&gt;::shared_lock(std::shared_mutex&amp;)</code> | <code>海中鱼巣/领域/概念图服务.h:3015</code> | 1 | 读取生命周期阶段时取得生命周期状态共享锁 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04824 | R0605 | Standard library RAII | <code>std::shared_lock&lt;std::shared_mutex&gt;::~shared_lock() noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3015-3025</code> | 1 | 共享锁构造成功后经匹配返回、空结果返回或异常展开离开函数作用域 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04825 | R0605 | Standard library container | <code>constexpr std::size_t std::array&lt;std::optional&lt;海中鱼巣::节点句柄&gt;, 3&gt;::size() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3016</code> | 1 | 生命周期状态数组循环判断执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04826 | R0605 | Standard library container | <code>const std::optional&lt;海中鱼巣::节点句柄&gt;&amp; std::array&lt;std::optional&lt;海中鱼巣::节点句柄&gt;, 3&gt;::operator[](std::size_t) const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3017</code> | 1 | 生命周期状态数组循环进入当前索引 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04827 | R0605 | Standard library optional | <code>constexpr bool std::optional&lt;海中鱼巣::节点句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3018</code> | 1 | 读取当前生命周期状态槽位时检查是否有值 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04828 | R0605 | Standard library optional | <code>constexpr const 海中鱼巣::节点句柄&amp; std::optional&lt;海中鱼巣::节点句柄&gt;::value() const &amp;</code> | <code>海中鱼巣/领域/概念图服务.h:3019</code> | 1 | 当前生命周期状态槽位有值 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04829 | R0605 | Compiler conversion | <code>static_cast&lt;海中鱼巣::概念生命周期阶段&gt;(std::size_t)</code> | <code>海中鱼巣/领域/概念图服务.h:3021</code> | 1 | 状态节点、登记槽位与节点有效性均匹配 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04830 | R0605 | Standard library optional | <code>std::optional&lt;海中鱼巣::概念生命周期阶段&gt;::optional(海中鱼巣::概念生命周期阶段&amp;&amp;)</code> | <code>海中鱼巣/领域/概念图服务.h:3021</code> | 1 | 阶段转换完成并形成非空 optional 返回结果 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04831 | R0606 | Standard library optional | <code>constexpr bool std::optional&lt;海中鱼巣::关系记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3083</code> | 1 | 生命周期关系登记的关系记录读回完成 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04832 | R0606 | Standard library optional | <code>const 海中鱼巣::关系记录* std::optional&lt;海中鱼巣::关系记录&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3084, 海中鱼巣/领域/概念图服务.h:3085, 海中鱼巣/领域/概念图服务.h:3086, 海中鱼巣/领域/概念图服务.h:3087, 海中鱼巣/领域/概念图服务.h:3088</code> | 5 | 生命周期关系读回 optional 有值并逐字段匹配 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04833 | R0607 | Standard library optional | <code>constexpr bool std::optional&lt;海中鱼巣::关系记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3100</code> | 1 | 生命周期关系登记的关系记录读回完成 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04834 | R0607 | Standard library optional | <code>const 海中鱼巣::关系记录* std::optional&lt;海中鱼巣::关系记录&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3101, 海中鱼巣/领域/概念图服务.h:3102</code> | 2 | 生命周期关系读回 optional 有值并匹配编号与版本 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04835 | R0609 | Standard library optional | <code>constexpr std::optional&lt;海中鱼巣::节点记录&gt;::optional(std::nullopt_t) noexcept</code> | <code>海中鱼巣/领域/存在服务.h:134</code> | 1 | 节点记录无值或节点类型不是存在 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04836 | R0609 | Standard library lifecycle | <code>std::optional&lt;海中鱼巣::节点记录&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/存在服务.h:132-137</code> | 1 | 局部节点记录 optional 已构造并离开函数作用域；不把可省略返回拷贝伪造成稳定边 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04837 | R0610 | Standard library lifecycle | <code>std::optional&lt;海中鱼巣::节点记录&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/动态服务.h:316-319</code> | 1 | 局部节点记录 optional 已构造并在实例动态判断返回后离开作用域 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04838 | R0611 | Standard library lifecycle | <code>std::optional&lt;海中鱼巣::节点记录&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/因果服务.h:47-54</code> | 1 | 局部节点记录 optional 已构造并经读回成功或内部错误返回离开作用域 | 本批逐函数源码表达式、静态类型与生命周期复核 |
 
 ## 回调登记
 
