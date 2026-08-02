@@ -15,8 +15,8 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1376,
-  "project_call_edge_count": 4044,
+  "function_count": 1382,
+  "project_call_edge_count": 4057,
   "functions": [
     {
       "function_id": "F0001",
@@ -1604,7 +1604,7 @@
         "R0523",
         "R0527",
         "R0528",
-        "R0531",
+        "R0882",
         "R0547",
         "R0549",
         "R0551",
@@ -1694,7 +1694,9 @@
         "R0847",
         "R0502",
         "R0881",
-        "R0525"
+        "R0525",
+        "R0534",
+        "R0538"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0015；调用点=海中鱼巣/领域/初始化.系统.ixx:115",
@@ -3997,6 +3999,8 @@
         "R0514",
         "R0527",
         "R0528",
+        "R0544",
+        "R0545",
         "R0604",
         "R0608",
         "F0363",
@@ -4048,7 +4052,8 @@
         "R0846",
         "R0844",
         "R0847",
-        "R0869"
+        "R0869",
+        "R0885"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0043；调用点=海中鱼巣/领域/方法服务.h:271,海中鱼巣/领域/方法服务.h:278",
@@ -4216,8 +4221,6 @@
         "R0435",
         "R0478",
         "R0524",
-        "R0544",
-        "R0545",
         "R0566",
         "R0573",
         "R0574",
@@ -9390,7 +9393,8 @@
         "F0355",
         "F0358",
         "R0605",
-        "F0544"
+        "F0544",
+        "R0531"
       ],
       "callees": [
         "F0630",
@@ -11712,7 +11716,8 @@
       "shortest_depth": 6,
       "callers": [
         "F0251",
-        "R0331"
+        "R0331",
+        "R0539"
       ],
       "callees": [
         "R0538",
@@ -28701,16 +28706,17 @@
       "definition_line": 681,
       "definition_end_line": 691,
       "overload_identity": "bool 海中鱼巣::抽象树视图材料::完整() const",
-      "shortest_depth": 12,
+      "shortest_depth": 11,
       "callers": [
-        "R0525"
+        "R0525",
+        "R0530"
       ],
       "callees": [
         "F0163",
         "F0051",
         "R0529"
       ],
-      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0525；调用点=海中鱼巣/领域/概念图服务.h:4395",
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0530；调用点=海中鱼巣/领域/概念图服务.h:762",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
       "legacy_or_unwired": false,
@@ -28726,7 +28732,7 @@
       "definition_line": 688,
       "definition_end_line": 690,
       "overload_identity": "bool 海中鱼巣::抽象树视图材料::完整() const::<lambda@概念图服务.h:688>::operator()(const 海中鱼巣::抽象树投影项& 项) const",
-      "shortest_depth": 13,
+      "shortest_depth": 12,
       "callers": [
         "R0528"
       ],
@@ -28753,7 +28759,9 @@
       "callers": [
         "R0321"
       ],
-      "callees": [],
+      "callees": [
+        "R0528"
+      ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0321；调用点=海中鱼巣/领域/控制面板服务.h:831",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
@@ -28780,7 +28788,8 @@
         "F0370"
       ],
       "callees": [
-        "F0051"
+        "F0377",
+        "R0882"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0177；调用点=海中鱼巣/领域/初始化.概念图.ixx:150",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -28805,7 +28814,9 @@
       ],
       "callees": [
         "R0534",
-        "R0535"
+        "R0535",
+        "R0883",
+        "R0886"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0362；调用点=海中鱼巣/领域/概念图服务.h:4226",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -28852,7 +28863,9 @@
         "R0532",
         "R0535"
       ],
-      "callees": [],
+      "callees": [
+        "F0051"
+      ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0532；调用点=海中鱼巣/领域/概念图算法.h:233",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
@@ -28921,7 +28934,8 @@
         "R0533"
       ],
       "callees": [
-        "R0536"
+        "R0536",
+        "R0886"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0533；调用点=海中鱼巣/领域/概念图算法.h:258",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -28950,7 +28964,8 @@
         "R0540",
         "R0541",
         "R0542",
-        "F0459"
+        "F0459",
+        "F0051"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0466；调用点=海中鱼巣/领域/概念活动状态.数据.h:138",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -28973,7 +28988,9 @@
         "F0461",
         "F0462"
       ],
-      "callees": [],
+      "callees": [
+        "F0466"
+      ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0461；调用点=海中鱼巣/领域/服务.概念活动.ixx:75",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
@@ -29088,7 +29105,7 @@
         "R0732"
       ],
       "callees": [
-        "F0168",
+        "F0163",
         "R0543"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0732；调用点=海中鱼巣/领域/特征值服务.h:630",
@@ -29113,7 +29130,7 @@
         "R0732"
       ],
       "callees": [
-        "F0168"
+        "F0163"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0732；调用点=海中鱼巣/领域/特征值服务.h:634",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -36633,6 +36650,143 @@
         "F0051"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0524；调用点=海中鱼巣/领域/概念图服务.h:3936-3940",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0882",
+      "complete_signature": "bool 海中鱼巣::概念图服务::节点是否已登记概念根(海中鱼巣::节点句柄 节点) const::<lambda@概念图服务.h:921>::operator()(const std::optional<海中鱼巣::概念根登记材料>& 材料) const",
+      "callable_type": "Lambda",
+      "category": "Lambda",
+      "module_identity": "头文件内联/模板定义",
+      "file": "海中鱼巣/领域/概念图服务.h",
+      "definition_line": 921,
+      "definition_end_line": 923,
+      "overload_identity": "bool 海中鱼巣::概念图服务::节点是否已登记概念根(海中鱼巣::节点句柄 节点) const::<lambda@概念图服务.h:921>::operator()(const std::optional<海中鱼巣::概念根登记材料>& 材料) const",
+      "shortest_depth": 6,
+      "callers": [
+        "R0531"
+      ],
+      "callees": [
+        "F0051"
+      ],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0531；调用点=海中鱼巣/领域/概念图服务.h:921-923",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0883",
+      "complete_signature": "bool 海中鱼巣::概念签名材料::完整() const",
+      "callable_type": "Method",
+      "category": "Function/Method",
+      "module_identity": "头文件内联/模板定义",
+      "file": "海中鱼巣/领域/概念图算法.h",
+      "definition_line": 89,
+      "definition_end_line": 96,
+      "overload_identity": "bool 海中鱼巣::概念签名材料::完整() const",
+      "shortest_depth": 7,
+      "callers": [
+        "R0532"
+      ],
+      "callees": [
+        "R0884"
+      ],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0532；调用点=海中鱼巣/领域/概念图算法.h:225",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0884",
+      "complete_signature": "bool 海中鱼巣::概念签名材料::完整() const::<lambda@概念图算法.h:93>::operator()(const 海中鱼巣::概念约束材料& 约束) const",
+      "callable_type": "Lambda",
+      "category": "Lambda",
+      "module_identity": "头文件内联/模板定义",
+      "file": "海中鱼巣/领域/概念图算法.h",
+      "definition_line": 93,
+      "definition_end_line": 95,
+      "overload_identity": "bool 海中鱼巣::概念签名材料::完整() const::<lambda@概念图算法.h:93>::operator()(const 海中鱼巣::概念约束材料& 约束) const",
+      "shortest_depth": 8,
+      "callers": [
+        "R0883"
+      ],
+      "callees": [
+        "R0885"
+      ],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0883；调用点=海中鱼巣/领域/概念图算法.h:93-95",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0885",
+      "complete_signature": "bool 海中鱼巣::概念约束材料::完整() const",
+      "callable_type": "Method",
+      "category": "Function/Method",
+      "module_identity": "头文件内联/模板定义",
+      "file": "海中鱼巣/领域/概念图算法.h",
+      "definition_line": 59,
+      "definition_end_line": 81,
+      "overload_identity": "bool 海中鱼巣::概念约束材料::完整() const",
+      "shortest_depth": 9,
+      "callers": [
+        "R0884"
+      ],
+      "callees": [
+        "F0163"
+      ],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0884；调用点=海中鱼巣/领域/概念图算法.h:94",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0886",
+      "complete_signature": "static bool 海中鱼巣::概念图算法::约束小于(const 海中鱼巣::概念约束材料& 左, const 海中鱼巣::概念约束材料& 右)",
+      "callable_type": "Method",
+      "category": "Function/Method",
+      "module_identity": "头文件内联/模板定义",
+      "file": "海中鱼巣/领域/概念图算法.h",
+      "definition_line": 640,
+      "definition_end_line": 668,
+      "overload_identity": "static bool 海中鱼巣::概念图算法::约束小于(const 海中鱼巣::概念约束材料& 左, const 海中鱼巣::概念约束材料& 右)",
+      "shortest_depth": 7,
+      "callers": [
+        "R0532",
+        "R0537"
+      ],
+      "callees": [
+        "R0887"
+      ],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0532；调用点=海中鱼巣/领域/概念图算法.h:229",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0887",
+      "complete_signature": "static bool 海中鱼巣::概念图算法::节点句柄小于(const 海中鱼巣::节点句柄& 左, const 海中鱼巣::节点句柄& 右)",
+      "callable_type": "Method",
+      "category": "Function/Method",
+      "module_identity": "头文件内联/模板定义",
+      "file": "海中鱼巣/领域/概念图算法.h",
+      "definition_line": 615,
+      "definition_end_line": 623,
+      "overload_identity": "static bool 海中鱼巣::概念图算法::节点句柄小于(const 海中鱼巣::节点句柄& 左, const 海中鱼巣::节点句柄& 右)",
+      "shortest_depth": 8,
+      "callers": [
+        "R0886"
+      ],
+      "callees": [],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0886；调用点=海中鱼巣/领域/概念图算法.h:647,海中鱼巣/领域/概念图算法.h:650",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
       "legacy_or_unwired": false,

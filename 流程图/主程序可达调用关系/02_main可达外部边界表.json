@@ -15,10 +15,10 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1376,
-  "project_call_edge_count": 4044,
-  "external_count": 3580,
-  "callback_registration_count": 55,
+  "function_count": 1382,
+  "project_call_edge_count": 4057,
+  "external_count": 3625,
+  "callback_registration_count": 59,
   "external_boundaries": [
     {
       "id": "X00001",
@@ -20005,19 +20005,6 @@
       "current_root_reachable": true
     },
     {
-      "id": "X02218",
-      "caller": "R0529",
-      "signature": "std::all_of(...)",
-      "locations": [
-        "海中鱼巣/领域/概念图服务.h:688"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立",
-      "resolution_source": "最终 caller 源码范围 + std 限定名调用语法复核",
-      "current_root_reachable": true
-    },
-    {
       "id": "X02219",
       "caller": "R0530",
       "signature": "bool std::optional<海中鱼巣::抽象树视图材料>::has_value() const noexcept",
@@ -20046,53 +20033,53 @@
     {
       "id": "X02221",
       "caller": "R0531",
-      "signature": "std::any_of(...)",
+      "signature": "bool std::any_of(std::array<std::optional<海中鱼巣::概念根登记材料>, 4>::const_iterator, std::array<std::optional<海中鱼巣::概念根登记材料>, 4>::const_iterator, R0882)",
       "locations": [
         "海中鱼巣/领域/概念图服务.h:921"
       ],
       "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立",
-      "resolution_source": "最终 caller 源码范围 + std 限定名调用语法复核",
+      "boundary_category": "Standard library algorithm",
+      "reachable_condition": "节点有效且根登记共享锁已取得",
+      "resolution_source": "概念图服务.h:921 静态容器类型、算法实参与回调范围复核",
       "current_root_reachable": true
     },
     {
       "id": "X02222",
       "caller": "R0532",
-      "signature": "std::sort(...)",
+      "signature": "void std::sort(std::vector<海中鱼巣::概念约束材料>::iterator, std::vector<海中鱼巣::概念约束材料>::iterator, R0886)",
       "locations": [
         "海中鱼巣/领域/概念图算法.h:229"
       ],
       "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立",
-      "resolution_source": "最终 caller 源码范围 + std 限定名调用语法复核",
+      "boundary_category": "Standard library algorithm",
+      "reachable_condition": "输入签名完整且局部结果已复制",
+      "resolution_source": "概念图算法.h:229 容器静态类型与比较器函数指针复核",
       "current_root_reachable": true
     },
     {
       "id": "X02223",
       "caller": "R0532",
-      "signature": "std::move(...)",
+      "signature": "std::vector<海中鱼巣::概念约束材料>&& std::move(std::vector<海中鱼巣::概念约束材料>&) noexcept",
       "locations": [
         "海中鱼巣/领域/概念图算法.h:241"
       ],
       "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立",
-      "resolution_source": "最终 caller 源码范围 + std 限定名调用语法复核",
+      "boundary_category": "Standard library utility",
+      "reachable_condition": "规范约束组已形成",
+      "resolution_source": "概念图算法.h:241 显式 std::move 与静态类型复核",
       "current_root_reachable": true
     },
     {
       "id": "X02224",
       "caller": "R0537",
-      "signature": "std::includes(...)",
+      "signature": "bool std::includes(std::vector<海中鱼巣::概念约束材料>::const_iterator, std::vector<海中鱼巣::概念约束材料>::const_iterator, std::vector<海中鱼巣::概念约束材料>::const_iterator, std::vector<海中鱼巣::概念约束材料>::const_iterator, R0886)",
       "locations": [
         "海中鱼巣/领域/概念图算法.h:690"
       ],
       "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立",
-      "resolution_source": "最终 caller 源码范围 + std 限定名调用语法复核",
+      "boundary_category": "Standard library algorithm",
+      "reachable_condition": "类别和版本相同且两个签名不相同",
+      "resolution_source": "概念图算法.h:690-693 两组 const 迭代器与比较器函数指针复核",
       "current_root_reachable": true
     },
     {
@@ -20104,8 +20091,8 @@
       ],
       "call_count": 1,
       "boundary_category": "Standard library container",
-      "reachable_condition": "类别和版本有效后复核约束非空",
-      "resolution_source": "专项源码外部边界复核",
+      "reachable_condition": "类别范围和签名版本均有效后复核约束组为空",
+      "resolution_source": "概念活动状态.数据.h:95 静态容器类型与 empty 调用复核",
       "current_root_reachable": true
     },
     {
@@ -20148,19 +20135,6 @@
       "current_root_reachable": true
     },
     {
-      "id": "X02229",
-      "caller": "R0547",
-      "signature": "std::find_if(...)",
-      "locations": [
-        "海中鱼巣/领域/特征值服务.h:674"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立",
-      "resolution_source": "最终 caller 源码范围 + std 限定名调用语法复核",
-      "current_root_reachable": true
-    },
-    {
       "id": "X02230",
       "caller": "R0548",
       "signature": "std::find_if(Vec记录表_.cbegin(), Vec记录表_.cend(), <lambda@特征值服务.h:680>)",
@@ -20200,19 +20174,6 @@
       "current_root_reachable": true
     },
     {
-      "id": "X02233",
-      "caller": "R0549",
-      "signature": "std::find_if(...)",
-      "locations": [
-        "海中鱼巣/领域/特征值服务.h:680"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立",
-      "resolution_source": "最终 caller 源码范围 + std 限定名调用语法复核",
-      "current_root_reachable": true
-    },
-    {
       "id": "X02234",
       "caller": "R0550",
       "signature": "std::find_if(I64版本记录表_.begin(), I64版本记录表_.end(), <lambda@特征值服务.h:686>)",
@@ -20249,19 +20210,6 @@
       "boundary_category": "Standard library container",
       "reachable_condition": "形成非 const I64 记录查找区间终点",
       "resolution_source": "专项源码外部边界复核",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X02237",
-      "caller": "R0551",
-      "signature": "std::find_if(...)",
-      "locations": [
-        "海中鱼巣/领域/特征值服务.h:686"
-      ],
-      "call_count": 1,
-      "boundary_category": "Standard library",
-      "reachable_condition": "调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立",
-      "resolution_source": "最终 caller 源码范围 + std 限定名调用语法复核",
       "current_root_reachable": true
     },
     {
@@ -49858,6 +49806,716 @@
       "resolution_source": "当前源码静态类型、限定名或隐式生命周期复核",
       "current_root_reachable": true,
       "id": "X04674"
+    },
+    {
+      "id": "X04675",
+      "signature": "std::shared_lock<std::shared_mutex>::shared_lock(std::shared_mutex&)",
+      "caller": "R0531",
+      "locations": [
+        "海中鱼巣/领域/概念图服务.h:920"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library RAII",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04676",
+      "signature": "std::array<std::optional<海中鱼巣::概念根登记材料>, 4>::const_iterator std::array<std::optional<海中鱼巣::概念根登记材料>, 4>::begin() const noexcept",
+      "caller": "R0531",
+      "locations": [
+        "海中鱼巣/领域/概念图服务.h:921"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04677",
+      "signature": "std::array<std::optional<海中鱼巣::概念根登记材料>, 4>::const_iterator std::array<std::optional<海中鱼巣::概念根登记材料>, 4>::end() const noexcept",
+      "caller": "R0531",
+      "locations": [
+        "海中鱼巣/领域/概念图服务.h:921"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04678",
+      "signature": "std::shared_lock<std::shared_mutex>::~shared_lock() noexcept",
+      "caller": "R0531",
+      "locations": [
+        "海中鱼巣/领域/概念图服务.h:920-924"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library RAII",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04679",
+      "signature": "bool std::optional<海中鱼巣::概念根登记材料>::has_value() const noexcept",
+      "caller": "R0882",
+      "locations": [
+        "海中鱼巣/领域/概念图服务.h:922"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04680",
+      "signature": "const 海中鱼巣::概念根登记材料* std::optional<海中鱼巣::概念根登记材料>::operator->() const noexcept",
+      "caller": "R0882",
+      "locations": [
+        "海中鱼巣/领域/概念图服务.h:922"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04681",
+      "signature": "std::optional<海中鱼巣::概念签名材料>::optional(std::nullopt_t) noexcept",
+      "caller": "R0532",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:226",
+        "海中鱼巣/领域/概念图算法.h:235"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04682",
+      "signature": "海中鱼巣::概念签名材料::概念签名材料(const 海中鱼巣::概念签名材料&)",
+      "caller": "R0532",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:228"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Compiler implicit special member",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04683",
+      "signature": "std::vector<海中鱼巣::概念约束材料>::vector() noexcept",
+      "caller": "R0532",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:230"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04684",
+      "signature": "std::vector<海中鱼巣::概念约束材料>::size_type std::vector<海中鱼巣::概念约束材料>::size() const noexcept",
+      "caller": "R0532",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:231"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04685",
+      "signature": "void std::vector<海中鱼巣::概念约束材料>::reserve(size_type)",
+      "caller": "R0532",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:231"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04686",
+      "signature": "std::vector<海中鱼巣::概念约束材料>::iterator std::vector<海中鱼巣::概念约束材料>::begin() noexcept",
+      "caller": "R0532",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:229",
+        "海中鱼巣/领域/概念图算法.h:232"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04687",
+      "signature": "std::vector<海中鱼巣::概念约束材料>::iterator std::vector<海中鱼巣::概念约束材料>::end() noexcept",
+      "caller": "R0532",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:229",
+        "海中鱼巣/领域/概念图算法.h:232"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04688",
+      "signature": "bool std::vector<海中鱼巣::概念约束材料>::iterator::operator!=(const iterator&) const noexcept",
+      "caller": "R0532",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:232"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04689",
+      "signature": "海中鱼巣::概念约束材料& std::vector<海中鱼巣::概念约束材料>::iterator::operator*() const noexcept",
+      "caller": "R0532",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:232"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04690",
+      "signature": "std::vector<海中鱼巣::概念约束材料>::iterator& std::vector<海中鱼巣::概念约束材料>::iterator::operator++() noexcept",
+      "caller": "R0532",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:232"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library iterator",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04691",
+      "signature": "bool std::vector<海中鱼巣::概念约束材料>::empty() const noexcept",
+      "caller": "R0532",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:233"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04692",
+      "signature": "海中鱼巣::概念约束材料& std::vector<海中鱼巣::概念约束材料>::back() noexcept",
+      "caller": "R0532",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:233",
+        "海中鱼巣/领域/概念图算法.h:234"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04693",
+      "signature": "void std::vector<海中鱼巣::概念约束材料>::push_back(const 海中鱼巣::概念约束材料&)",
+      "caller": "R0532",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:239"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04694",
+      "signature": "std::vector<海中鱼巣::概念约束材料>& std::vector<海中鱼巣::概念约束材料>::operator=(std::vector<海中鱼巣::概念约束材料>&&) noexcept",
+      "caller": "R0532",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:241"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04695",
+      "signature": "std::optional<海中鱼巣::概念签名材料>::optional(海中鱼巣::概念签名材料&&)",
+      "caller": "R0532",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:242"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04696",
+      "signature": "std::vector<海中鱼巣::概念约束材料>::~vector()",
+      "caller": "R0532",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:230-243"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04697",
+      "signature": "bool std::optional<海中鱼巣::概念签名材料>::has_value() const noexcept",
+      "caller": "R0533",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:256",
+        "海中鱼巣/领域/概念图算法.h:257"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04698",
+      "signature": "const 海中鱼巣::概念签名材料& std::optional<海中鱼巣::概念签名材料>::value() const &",
+      "caller": "R0533",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:258",
+        "海中鱼巣/领域/概念图算法.h:258"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04699",
+      "signature": "std::optional<海中鱼巣::概念签名材料>::~optional()",
+      "caller": "R0533",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:254-262",
+        "海中鱼巣/领域/概念图算法.h:255-262"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04700",
+      "signature": "bool std::operator==(const std::vector<std::int64_t>&, const std::vector<std::int64_t>&)",
+      "caller": "R0535",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:636"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04701",
+      "signature": "bool std::operator==(const std::vector<std::uint64_t>&, const std::vector<std::uint64_t>&)",
+      "caller": "R0535",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:637"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04702",
+      "signature": "std::vector<海中鱼巣::概念约束材料>::size_type std::vector<海中鱼巣::概念约束材料>::size() const noexcept",
+      "caller": "R0536",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:673",
+        "海中鱼巣/领域/概念图算法.h:673",
+        "海中鱼巣/领域/概念图算法.h:676"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04703",
+      "signature": "const 海中鱼巣::概念约束材料& std::vector<海中鱼巣::概念约束材料>::operator[](size_type) const noexcept",
+      "caller": "R0536",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:677",
+        "海中鱼巣/领域/概念图算法.h:677"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04704",
+      "signature": "std::vector<海中鱼巣::概念约束材料>::const_iterator std::vector<海中鱼巣::概念约束材料>::begin() const noexcept",
+      "caller": "R0537",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:691",
+        "海中鱼巣/领域/概念图算法.h:692"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04705",
+      "signature": "std::vector<海中鱼巣::概念约束材料>::const_iterator std::vector<海中鱼巣::概念约束材料>::end() const noexcept",
+      "caller": "R0537",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:691",
+        "海中鱼巣/领域/概念图算法.h:692"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04706",
+      "signature": "std::vector<std::int64_t>::size_type std::vector<std::int64_t>::size() const noexcept",
+      "caller": "R0544",
+      "locations": [
+        "海中鱼巣/领域/特征值服务.h:585"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04707",
+      "signature": "bool std::vector<std::uint64_t>::empty() const noexcept",
+      "caller": "R0544",
+      "locations": [
+        "海中鱼巣/领域/特征值服务.h:585"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04708",
+      "signature": "std::vector<std::uint64_t>::size_type std::vector<std::uint64_t>::size() const noexcept",
+      "caller": "R0544",
+      "locations": [
+        "海中鱼巣/领域/特征值服务.h:588"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04709",
+      "signature": "bool std::vector<std::int64_t>::empty() const noexcept",
+      "caller": "R0544",
+      "locations": [
+        "海中鱼巣/领域/特征值服务.h:588"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04710",
+      "signature": "bool std::all_of(std::vector<海中鱼巣::概念约束材料>::const_iterator, std::vector<海中鱼巣::概念约束材料>::const_iterator, R0884)",
+      "caller": "R0883",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:93"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library algorithm",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04711",
+      "signature": "std::vector<海中鱼巣::概念约束材料>::const_iterator std::vector<海中鱼巣::概念约束材料>::begin() const noexcept",
+      "caller": "R0883",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:93"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04712",
+      "signature": "std::vector<海中鱼巣::概念约束材料>::const_iterator std::vector<海中鱼巣::概念约束材料>::end() const noexcept",
+      "caller": "R0883",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:93"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04713",
+      "signature": "bool std::vector<std::int64_t>::empty() const noexcept",
+      "caller": "R0885",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:69",
+        "海中鱼巣/领域/概念图算法.h:71",
+        "海中鱼巣/领域/概念图算法.h:73",
+        "海中鱼巣/领域/概念图算法.h:75",
+        "海中鱼巣/领域/概念图算法.h:77"
+      ],
+      "call_count": 5,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04714",
+      "signature": "bool std::vector<std::uint64_t>::empty() const noexcept",
+      "caller": "R0885",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:69",
+        "海中鱼巣/领域/概念图算法.h:71",
+        "海中鱼巣/领域/概念图算法.h:73",
+        "海中鱼巣/领域/概念图算法.h:75",
+        "海中鱼巣/领域/概念图算法.h:77"
+      ],
+      "call_count": 5,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04715",
+      "signature": "bool std::operator==(const std::vector<std::int64_t>&, const std::vector<std::int64_t>&)",
+      "caller": "R0886",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:662"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04716",
+      "signature": "bool std::operator==(const std::vector<std::uint64_t>&, const std::vector<std::uint64_t>&)",
+      "caller": "R0886",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:665"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04717",
+      "signature": "bool std::lexicographical_compare(std::vector<std::int64_t>::const_iterator, std::vector<std::int64_t>::const_iterator, std::vector<std::int64_t>::const_iterator, std::vector<std::int64_t>::const_iterator)",
+      "caller": "R0886",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:663-664"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library algorithm",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04718",
+      "signature": "bool std::lexicographical_compare(std::vector<std::uint64_t>::const_iterator, std::vector<std::uint64_t>::const_iterator, std::vector<std::uint64_t>::const_iterator, std::vector<std::uint64_t>::const_iterator)",
+      "caller": "R0886",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:666-667"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library algorithm",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04719",
+      "signature": "std::vector<std::int64_t>::const_iterator std::vector<std::int64_t>::begin() const noexcept",
+      "caller": "R0886",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:664",
+        "海中鱼巣/领域/概念图算法.h:664"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04720",
+      "signature": "std::vector<std::int64_t>::const_iterator std::vector<std::int64_t>::end() const noexcept",
+      "caller": "R0886",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:664",
+        "海中鱼巣/领域/概念图算法.h:664"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04721",
+      "signature": "std::vector<std::uint64_t>::const_iterator std::vector<std::uint64_t>::begin() const noexcept",
+      "caller": "R0886",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:667",
+        "海中鱼巣/领域/概念图算法.h:667"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04722",
+      "signature": "std::vector<std::uint64_t>::const_iterator std::vector<std::uint64_t>::end() const noexcept",
+      "caller": "R0886",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:667",
+        "海中鱼巣/领域/概念图算法.h:667"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "调用方可达且执行到列示位置",
+      "resolution_source": "本批逐行源码、静态类型、标准库合同或隐式生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04723",
+      "signature": "海中鱼巣::概念签名材料::~概念签名材料()",
+      "caller": "R0532",
+      "locations": [
+        "海中鱼巣/领域/概念图算法.h:228-243"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Compiler-generated lifetime",
+      "reachable_condition": "局部结果完成复制构造后离开函数；每次函数调用实际析构一次",
+      "resolution_source": "局部结果对象、非平凡 vector 成员与编译器生成特殊成员生命周期复核",
+      "current_root_reachable": true
     }
   ],
   "callback_registrations": [
@@ -50355,6 +51013,42 @@
       "registration_location": "海中鱼巣/领域/概念图服务.h:4386",
       "condition": "当前路径环检查期间零到多次节点句柄相等比较",
       "resolution_source": "源码算法实参、回调身份与容器元素静态类型复核"
+    },
+    {
+      "callback_id": "RCB0056",
+      "caller": "R0531",
+      "callback": "R0882",
+      "external_algorithm": "std::any_of",
+      "registration_location": "海中鱼巣/领域/概念图服务.h:921",
+      "condition": "根登记组遍历期间零到多次调用",
+      "resolution_source": "源码局部 lambda 注册点、array 元素静态类型与函数范围复核"
+    },
+    {
+      "callback_id": "RCB0057",
+      "caller": "R0532",
+      "callback": "R0886",
+      "external_algorithm": "std::sort",
+      "registration_location": "海中鱼巣/领域/概念图算法.h:229",
+      "condition": "规范化签名的局部约束组排序期间零到多次调用",
+      "resolution_source": "源码具名静态函数实参、容器元素静态类型与完整签名复核"
+    },
+    {
+      "callback_id": "RCB0058",
+      "caller": "R0537",
+      "callback": "R0886",
+      "external_algorithm": "std::includes",
+      "registration_location": "海中鱼巣/领域/概念图算法.h:690-693",
+      "condition": "比较一般签名约束是否被具体签名包含期间零到多次调用",
+      "resolution_source": "源码具名静态函数实参、const 迭代器静态类型与完整签名复核"
+    },
+    {
+      "callback_id": "RCB0059",
+      "caller": "R0883",
+      "callback": "R0884",
+      "external_algorithm": "std::all_of",
+      "registration_location": "海中鱼巣/领域/概念图算法.h:93-95",
+      "condition": "概念签名约束组完整性复核期间零到多次调用",
+      "resolution_source": "源码局部 lambda 注册点与概念约束材料静态类型复核"
     }
   ]
 }
