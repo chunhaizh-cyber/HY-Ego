@@ -16,7 +16,7 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1383,
-  "project_call_edge_count": 4103,
+  "project_call_edge_count": 4104,
   "functions": [
     {
       "function_id": "F0001",
@@ -32632,7 +32632,8 @@
       "overload_identity": "std::uint64_t 海中鱼巣::轻量因果写入规格::读取幂等主键() const noexcept",
       "shortest_depth": 9,
       "callers": [
-        "R0689"
+        "R0689",
+        "R0696"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0689；调用点=海中鱼巣/领域/数据操作.轻量因果.ixx:140,海中鱼巣/领域/数据操作.轻量因果.ixx:162,海中鱼巣/领域/数据操作.轻量因果.ixx:164,海中鱼巣/领域/数据操作.轻量因果.ixx:168",
@@ -32938,7 +32939,8 @@
         "R0041",
         "R0640",
         "R0641",
-        "R0138"
+        "R0138",
+        "R0684"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0116；调用点=海中鱼巣/核心/执行器.结构写入.ixx:82",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",

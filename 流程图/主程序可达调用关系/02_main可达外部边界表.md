@@ -1,6 +1,6 @@
 # main 可达外部边界与回调表
 
-代码基线：<code>03a8b7ac099ccea83e57f2696e2290b7bcdfacaf</code>；配置：<code>Debug\|x64</code>；外部边界：3752；具名回调：59。
+代码基线：<code>03a8b7ac099ccea83e57f2696e2290b7bcdfacaf</code>；配置：<code>Debug\|x64</code>；外部边界：3758；具名回调：59。
 
 ## 外部边界
 
@@ -3758,6 +3758,13 @@
 | X04859 | R0669 | Standard library iterator | <code>bool std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator!=(const const_iterator&amp;) const</code> | <code>海中鱼巣/领域/数据操作.状态动态.ixx:1247,1259,1265,1272,1276,1285</code> | 6 | 三次遍历实例动态引用、场景临时和因果来源关系记录组时判断是否到达末尾 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
 | X04860 | R0669 | Standard library iterator | <code>const 海中鱼巣::关系记录&amp; std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator*() const</code> | <code>海中鱼巣/领域/数据操作.状态动态.ixx:1247,1265,1276</code> | 3 | 三次范围循环仍有关系记录时读取当前记录 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
 | X04861 | R0669 | Standard library iterator | <code>std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator&amp; std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator++()</code> | <code>海中鱼巣/领域/数据操作.状态动态.ixx:1259,1272,1285</code> | 3 | 三次范围循环处理当前关系记录后推进游标 | 本批逐函数源码表达式、静态类型与范围循环展开复核 |
+
+| X04862 | R0690 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::节点记录&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:186-194</code> | 1 | 函数返回或局部作用域结束时释放节点记录 optional | 本批逐函数源码表达式、临时对象静态类型与生命周期展开复核 |
+| X04863 | R0690 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::主信息记录&gt;::~optional()</code> | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:191</code> | 1 | 主信息读取临时 optional 完成存在性判断后释放 | 本批逐函数源码表达式、临时对象静态类型与生命周期展开复核 |
+| X04864 | R0696 | Standard library construction | <code>std::optional&lt;海中鱼巣::节点类型&gt;::optional(海中鱼巣::节点类型&amp;&amp;)</code> | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:149</code> | 1 | 构造节点类型预期值临时 optional 参与写前比较 | 本批逐函数源码表达式、临时对象静态类型与生命周期展开复核 |
+| X04865 | R0696 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::节点类型&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:149</code> | 2 | 节点类型读取返回临时与预期临时完成比较后释放 | 本批逐函数源码表达式、临时对象静态类型与生命周期展开复核 |
+| X04866 | R0696 | Standard library construction | <code>std::optional&lt;海中鱼巣::主信息句柄&gt;::optional(海中鱼巣::主信息句柄&amp;&amp;)</code> | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:151</code> | 1 | 构造主信息句柄预期值临时 optional 参与写前比较 | 本批逐函数源码表达式、临时对象静态类型与生命周期展开复核 |
+| X04867 | R0696 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::主信息句柄&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:151</code> | 2 | 主信息句柄读取返回临时与预期临时完成比较后释放 | 本批逐函数源码表达式、临时对象静态类型与生命周期展开复核 |
 
 ## 回调登记
 

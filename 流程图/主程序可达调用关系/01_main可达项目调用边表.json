@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1383,
-  "project_call_edge_count": 4103,
-  "edge_count": 4103,
+  "project_call_edge_count": 4104,
+  "edge_count": 4104,
   "edges": [
     {
       "edge_id": "E0002",
@@ -46179,16 +46179,14 @@
       "callee": "R0684",
       "callsites": [
         "海中鱼巣/领域/数据操作.轻量因果.ixx:140",
-        "海中鱼巣/领域/数据操作.轻量因果.ixx:162",
-        "海中鱼巣/领域/数据操作.轻量因果.ixx:164",
         "海中鱼巣/领域/数据操作.轻量因果.ixx:168"
       ],
       "call_category": "direct_const_member",
       "arguments": "规格",
-      "argument_resolution": "value static type audited",
+      "argument_resolution": "外层规格静态类型与 const 成员重载复核；lambda 内调用已拆为 RCE3325",
       "return_binding": "被调函数结果按当前调用表达式接收或用于条件判断",
-      "reachable_condition": "idempotent read/write/readback",
-      "resolution_source": "value static type audited",
+      "reachable_condition": "外层创建函数在写前读取或写后读回幂等主键",
+      "resolution_source": "本批逐函数源码函数范围、静态接收者与调用点拆账复核",
       "current_root_reachable": true
     },
     {
@@ -62824,6 +62822,22 @@
       "return_binding": "bool参与来源关系完整句柄权威读回一致性判断",
       "reachable_condition": "当前关系有值且关系类型为引用",
       "resolution_source": "本批逐函数源码静态类型、完整签名与调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3325",
+      "caller": "R0696",
+      "callee": "R0684",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:162",
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:164"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&规格",
+      "argument_resolution": "捕获规格静态类型与 const 成员重载复核",
+      "return_binding": "幂等主键值分别传入绑定请求与绑定匹配读回",
+      "reachable_condition": "轻量因果结构写入回调已形成节点候选",
+      "resolution_source": "本批逐函数源码函数范围、静态接收者、完整签名与调用点拆账复核",
       "current_root_reachable": true
     }
   ]

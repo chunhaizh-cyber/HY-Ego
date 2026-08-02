@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1383,
-  "project_call_edge_count": 4103,
-  "external_count": 3752,
+  "project_call_edge_count": 4104,
+  "external_count": 3758,
   "callback_registration_count": 59,
   "external_boundaries": [
     {
@@ -52314,6 +52314,90 @@
       "boundary_category": "Standard library iterator",
       "reachable_condition": "三次范围循环处理当前关系记录后推进游标",
       "resolution_source": "本批逐函数源码表达式、静态类型与范围循环展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04862",
+      "signature": "std::optional<海中鱼巣::节点记录>::~optional() noexcept",
+      "caller": "R0690",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:186-194"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "函数返回或局部作用域结束时释放节点记录 optional",
+      "resolution_source": "本批逐函数源码表达式、临时对象静态类型与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04863",
+      "signature": "std::optional<海中鱼巣::主信息记录>::~optional()",
+      "caller": "R0690",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:191"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "主信息读取临时 optional 完成存在性判断后释放",
+      "resolution_source": "本批逐函数源码表达式、临时对象静态类型与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04864",
+      "signature": "std::optional<海中鱼巣::节点类型>::optional(海中鱼巣::节点类型&&)",
+      "caller": "R0696",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:149"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library construction",
+      "reachable_condition": "构造节点类型预期值临时 optional 参与写前比较",
+      "resolution_source": "本批逐函数源码表达式、临时对象静态类型与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04865",
+      "signature": "std::optional<海中鱼巣::节点类型>::~optional() noexcept",
+      "caller": "R0696",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:149"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "节点类型读取返回临时与预期临时完成比较后释放",
+      "resolution_source": "本批逐函数源码表达式、临时对象静态类型与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04866",
+      "signature": "std::optional<海中鱼巣::主信息句柄>::optional(海中鱼巣::主信息句柄&&)",
+      "caller": "R0696",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:151"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library construction",
+      "reachable_condition": "构造主信息句柄预期值临时 optional 参与写前比较",
+      "resolution_source": "本批逐函数源码表达式、临时对象静态类型与生命周期展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04867",
+      "signature": "std::optional<海中鱼巣::主信息句柄>::~optional() noexcept",
+      "caller": "R0696",
+      "locations": [
+        "海中鱼巣/领域/数据操作.轻量因果.ixx:151"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "主信息句柄读取返回临时与预期临时完成比较后释放",
+      "resolution_source": "本批逐函数源码表达式、临时对象静态类型与生命周期展开复核",
       "current_root_reachable": true
     }
   ],

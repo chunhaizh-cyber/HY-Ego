@@ -1,6 +1,6 @@
 # main 可达项目调用边表
 
-代码基线：<code>03a8b7ac099ccea83e57f2696e2290b7bcdfacaf</code>；配置：<code>Debug\|x64</code>；项目调用边：4103。
+代码基线：<code>03a8b7ac099ccea83e57f2696e2290b7bcdfacaf</code>；配置：<code>Debug\|x64</code>；项目调用边：4104。
 
 | 边 ID | 调用方 | 被调方 | 调用点 | 类别 | 参数绑定 | 结果绑定 | 可达条件 | 解析依据 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -3012,7 +3012,7 @@
 | RCE2037 | R0689 | R0686 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:137, 海中鱼巣/领域/数据操作.轻量因果.ixx:151</code> | direct_const_member | 规格 | 被调函数结果按当前调用表达式接收或用于条件判断 | source verification/write callback | value static type audited |
 | RCE2038 | R0689 | R0690 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:136</code> | direct_member | 规格 source node/main-information | 被调函数结果按当前调用表达式接收或用于条件判断 | entry accepted | same class helper |
 | RCE2039 | R0689 | R0693 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:138</code> | direct_static_member | 来源状态 | 被调函数结果按当前调用表达式接收或用于条件判断 | source state not found-success | same class helper |
-| RCE2040 | R0689 | R0684 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:140, 海中鱼巣/领域/数据操作.轻量因果.ixx:162, 海中鱼巣/领域/数据操作.轻量因果.ixx:164, 海中鱼巣/领域/数据操作.轻量因果.ixx:168</code> | direct_const_member | 规格 | 被调函数结果按当前调用表达式接收或用于条件判断 | idempotent read/write/readback | value static type audited |
+| RCE2040 | R0689 | R0684 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:140, 海中鱼巣/领域/数据操作.轻量因果.ixx:168</code> | direct_const_member | 规格 | 被调函数结果按当前调用表达式接收或用于条件判断 | 外层创建函数在写前读取或写后读回幂等主键 | 本批逐函数源码函数范围、静态接收者与调用点拆账复核；lambda 内调用已拆为 RCE3325 |
 | RCE2041 | R0689 | R0423 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:140, 海中鱼巣/领域/数据操作.轻量因果.ixx:168</code> | direct_member | 规格.幂等主键 | 被调函数结果按当前调用表达式接收或用于条件判断 | pre-write and post-write read | same class existing stable identity |
 | RCE2042 | R0689 | R0683 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:141, 海中鱼巣/领域/数据操作.轻量因果.ixx:169</code> | direct_const_member | 写前/当前 | 被调函数结果按当前调用表达式接收或用于条件判断 | read returned material | value static type audited |
 | RCE2043 | R0689 | R0692 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:141, 海中鱼巣/领域/数据操作.轻量因果.ixx:170</code> | direct_static_member | business status,material | 被调函数结果按当前调用表达式接收或用于条件判断 | complete pre-read/readback | same class helper |
@@ -4107,3 +4107,4 @@
 | RCE3322 | R0593 | F0051 | <code>海中鱼巣/领域/需求服务.h:773</code> | source-audited-direct | 左=父需求；右=需求节点 | bool参与自环拒绝判断 | 父需求句柄有效且父需求类型匹配 | 本批逐函数源码静态类型、完整签名、调用点与当前 Debug\|x64 可达闭包复核 |
 | RCE3323 | R0594 | F0346 | <code>海中鱼巣/领域/需求服务.h:816</code> | source-audited-direct | this=&amp;节点_；节点=节点句柄值；令牌 | 节点记录可选值 | R0594入口后 | 本批逐函数源码静态类型、完整签名、调用点与当前 Debug\|x64 可达闭包复核 |
 | RCE3324 | R0630 | F0051 | <code>海中鱼巣/领域/数据操作.存在场景.ixx:473, 海中鱼巣/领域/数据操作.存在场景.ixx:474</code> | operator | 左=当前关系-&gt;源节点/目标节点；右=节点/引用.目标节点 | bool参与来源关系完整句柄权威读回一致性判断 | 当前关系有值且关系类型为引用 | 本批逐函数源码静态类型、完整签名与调用点复核 |
+| RCE3325 | R0696 | R0684 | <code>海中鱼巣/领域/数据操作.轻量因果.ixx:162, 海中鱼巣/领域/数据操作.轻量因果.ixx:164</code> | direct_const_member | this=&amp;规格 | 幂等主键值分别传入绑定请求与绑定匹配读回 | 轻量因果结构写入回调已形成节点候选 | 本批逐函数源码函数范围、静态接收者、完整签名与调用点拆账复核 |
