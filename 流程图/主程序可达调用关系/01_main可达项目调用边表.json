@@ -15,9 +15,9 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1384,
-  "project_call_edge_count": 4107,
-  "edge_count": 4107,
+  "function_count": 1385,
+  "project_call_edge_count": 4109,
+  "edge_count": 4109,
   "edges": [
     {
       "edge_id": "E0002",
@@ -62883,6 +62883,36 @@
       "return_binding": "结果.值内的节点未发布候选",
       "reachable_condition": "节点未发布候选存在并写入已提交结果",
       "resolution_source": "本批现状图、逐行映射与源码显式特殊成员调用复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3329",
+      "caller": "R0746",
+      "callee": "R0893",
+      "callsites": [
+        "海中鱼巣/核心/节点仓库.cpp:122"
+      ],
+      "call_category": "constructor",
+      "arguments": "仓库=this, 令牌=令牌, 节点={仓库编号_, 编号, 记录.版本号}",
+      "argument_resolution": "私有三参数构造签名、友元仓库上下文与三个实参静态类型复核",
+      "return_binding": "节点未发布候选临时量",
+      "reachable_condition": "节点已插入且版本存在，形成未发布候选返回值",
+      "resolution_source": "本批现状图、逐行映射与源码构造表达式复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3330",
+      "caller": "R0746",
+      "callee": "R0892",
+      "callsites": [
+        "海中鱼巣/核心/节点仓库.cpp:122"
+      ],
+      "call_category": "constructor",
+      "arguments": "其它=R0893形成的节点未发布候选临时量",
+      "argument_resolution": "optional值构造实参静态类型与显式移动构造签名复核",
+      "return_binding": "返回optional内的节点未发布候选值",
+      "reachable_condition": "R0893候选构造完成并转换为optional返回值",
+      "resolution_source": "本批现状图、逐行映射与源码返回值生命周期复核",
       "current_root_reachable": true
     }
   ]

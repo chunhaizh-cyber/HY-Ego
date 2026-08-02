@@ -1,6 +1,6 @@
 # main 可达外部边界与回调表
 
-代码基线：<code>03a8b7ac099ccea83e57f2696e2290b7bcdfacaf</code>；配置：<code>Debug\|x64</code>；外部边界：3806；具名回调：59。
+代码基线：<code>03a8b7ac099ccea83e57f2696e2290b7bcdfacaf</code>；配置：<code>Debug\|x64</code>；外部边界：3821；具名回调：59。
 
 ## 外部边界
 
@@ -2458,7 +2458,7 @@
 | X03174 | R0767 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::节点句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/数据操作.状态动态.ixx:372</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X03175 | R0767 | Standard library optional | <code>const 海中鱼巣::节点句柄&amp; std::optional&lt;海中鱼巣::节点句柄&gt;::operator*() const&amp; noexcept</code> | <code>海中鱼巣/领域/数据操作.状态动态.ixx:373</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X03176 | R0771 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::节点记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/数据操作.语素基础.ixx:516</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
-| X03177 | R0771 | Standard library optional | <code>const 海中鱼巣::节点记录* std::optional&lt;海中鱼巣::节点记录&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/数据操作.语素基础.ixx:520, 海中鱼巣/领域/数据操作.语素基础.ixx:523</code> | 2 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
+| X03177 | R0771 | Standard library optional | <code>const 海中鱼巣::节点记录* std::optional&lt;海中鱼巣::节点记录&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/数据操作.语素基础.ixx:520, 海中鱼巣/领域/数据操作.语素基础.ixx:523, 海中鱼巣/领域/数据操作.语素基础.ixx:529, 海中鱼巣/领域/数据操作.语素基础.ixx:531</code> | 4 | 节点记录存在后读取主信息、识别角色并形成当前身份结果 | 本批逐行源码范围、optional静态类型与全部operator-&gt;调用点精确化复核 |
 | X03178 | R0771 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::主信息记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/数据操作.语素基础.ixx:520</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X03179 | R0773 | Standard library vector | <code>std::size_t std::vector&lt;std::uint64_t&gt;::size() const noexcept</code> | <code>海中鱼巣/领域/数据操作.语素基础.ixx:548</code> | 1 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
 | X03180 | R0773 | Standard library vector | <code>const std::uint64_t&amp; std::vector&lt;std::uint64_t&gt;::front() const</code> | <code>海中鱼巣/领域/数据操作.语素基础.ixx:548, 海中鱼巣/领域/数据操作.语素基础.ixx:549, 海中鱼巣/领域/数据操作.语素基础.ixx:550, 海中鱼巣/领域/数据操作.语素基础.ixx:553</code> | 4 | 调用方已在 F0001 可达闭包内；对应源码调用表达式成立 | 当前源码静态类型、具体模板实例、操作符与调用位置复核 |
@@ -3814,6 +3814,22 @@
 | X04913 | R0737 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::节点记录&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/场景服务.h:19-25</code> | 1 | 节点记录读取临时 optional 在函数返回时释放 | 本批现状图、逐行映射与源码静态类型、构造/析构及生命周期复核 |
 | X04914 | R0744 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::节点句柄&gt;::~optional() noexcept</code> | <code>海中鱼巣/核心/关系仓库.h:166</code> | 1 | 主体句柄读取临时 optional 在比较完成后释放 | 本批现状图、逐行映射与源码静态类型、构造/析构及生命周期复核 |
 | X04915 | R0745 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::节点未发布候选&gt;::~optional() noexcept</code> | <code>海中鱼巣/核心/节点仓库.cpp:98-107</code> | 1 | 局部节点未发布候选 optional 在返回或作用域结束时释放 | 本批现状图、逐行映射与源码静态类型、构造/析构及生命周期复核 |
+| X04916 | R0749 | Standard library lifetime | <code>std::vector&lt;海中鱼巣::结构写入会话::候选I64写入记录&gt;::~vector() noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:75</code> | 1 | 逆序释放候选I64写入记录组 | 本批现状图、逐行映射与源码静态类型、聚合构造及逆序生命周期复核 |
+| X04917 | R0749 | Standard library lifetime | <code>std::vector&lt;海中鱼巣::结构写入会话::索引绑定记录&gt;::~vector() noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:75</code> | 1 | 逆序释放索引绑定记录组 | 本批现状图、逐行映射与源码静态类型、聚合构造及逆序生命周期复核 |
+| X04918 | R0749 | Standard library lifetime | <code>std::vector&lt;海中鱼巣::结构写入会话::已发布关系变更记录&gt;::~vector() noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:75</code> | 1 | 逆序释放已发布关系变更记录组 | 本批现状图、逐行映射与源码静态类型、聚合构造及逆序生命周期复核 |
+| X04919 | R0749 | Standard library lifetime | <code>std::vector&lt;海中鱼巣::结构写入会话::关系写入记录&gt;::~vector() noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:75</code> | 1 | 逆序释放关系写入记录组 | 本批现状图、逐行映射与源码静态类型、聚合构造及逆序生命周期复核 |
+| X04920 | R0749 | Standard library lifetime | <code>std::vector&lt;海中鱼巣::结构写入会话::节点候选记录&gt;::~vector() noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:75</code> | 1 | 逆序释放节点候选记录组 | 本批现状图、逐行映射与源码静态类型、聚合构造及逆序生命周期复核 |
+| X04921 | R0749 | Standard library lifetime | <code>std::vector&lt;海中鱼巣::结构写入会话::主信息候选记录&gt;::~vector() noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:75</code> | 1 | 逆序释放主信息候选记录组 | 本批现状图、逐行映射与源码静态类型、聚合构造及逆序生命周期复核 |
+| X04922 | R0749 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::结构写入结果&gt;::~optional() noexcept</code> | <code>海中鱼巣/核心/会话.结构写入.ixx:75</code> | 1 | 逆序释放可选结构写入结果 | 本批现状图、逐行映射与源码静态类型、聚合构造及逆序生命周期复核 |
+| X04923 | R0754 | Standard library construction | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::vector() noexcept</code> | <code>海中鱼巣/领域/服务.二次特征.ixx:46</code> | 1 | 主键为0时聚合值初始化空有序组成项组 | 本批现状图、逐行映射与源码静态类型、聚合构造及逆序生命周期复核 |
+| X04924 | R0754 | Standard library construction | <code>std::vector&lt;海中鱼巣::特征关系证据&gt;::vector() noexcept</code> | <code>海中鱼巣/领域/服务.二次特征.ixx:46</code> | 1 | 主键为0时聚合值初始化空组成关系证据组 | 本批现状图、逐行映射与源码静态类型、聚合构造及逆序生命周期复核 |
+| X04925 | R0762 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::节点句柄&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/特征服务.h:244</code> | 1 | 读取宿主特征槽位返回临时optional完成has_value判断后释放 | 本批现状图、逐行映射与源码静态类型、聚合构造及逆序生命周期复核 |
+| X04926 | R0764 | Standard library construction | <code>std::optional&lt;std::uint64_t&gt;::optional(const std::uint64_t&amp;)</code> | <code>海中鱼巣/领域/数据操作.语素基础.ixx:254</code> | 1 | 把主键转换为期望主键optional值式参数 | 本批现状图、逐行映射与源码静态类型、聚合构造及逆序生命周期复核 |
+| X04927 | R0764 | Standard library lifetime | <code>std::optional&lt;std::uint64_t&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/数据操作.语素基础.ixx:254</code> | 1 | 调用结束释放期望主键optional值式参数 | 本批现状图、逐行映射与源码静态类型、聚合构造及逆序生命周期复核 |
+| X04928 | R0764 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::节点句柄&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/数据操作.语素基础.ixx:252-255</code> | 1 | 局部目标optional在任一返回路径释放 | 本批现状图、逐行映射与源码静态类型、聚合构造及逆序生命周期复核 |
+| X04929 | R0771 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::主信息记录&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/数据操作.语素基础.ixx:520</code> | 1 | 主信息读取临时optional完成存在性判断后释放 | 本批现状图、逐行映射与源码静态类型、聚合构造及逆序生命周期复核 |
+| X04930 | R0771 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::节点记录&gt;::~optional() noexcept</code> | <code>海中鱼巣/领域/数据操作.语素基础.ixx:515-533</code> | 1 | 局部节点记录optional在版本漂移、拒绝或成功返回时释放 | 本批现状图、逐行映射与源码静态类型、聚合构造及逆序生命周期复核 |
+
 
 
 ## 回调登记
