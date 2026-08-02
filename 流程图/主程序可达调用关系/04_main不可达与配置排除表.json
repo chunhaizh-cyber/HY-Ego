@@ -2,7 +2,7 @@
   "schema_version": 1,
   "code_commit": "03a8b7ac099ccea83e57f2696e2290b7bcdfacaf",
   "scope": "main-current-reachable-exclusions",
-  "excluded_function_count": 94,
+  "excluded_function_count": 96,
   "rejected_candidate_edge_count": 546,
   "excluded_functions": [
     {
@@ -662,6 +662,20 @@
       "file": "海中鱼巣/核心/索引所有权.数据.h",
       "definition_line": 109,
       "reason": "校正伪前驱后失去全部 F0001 当前可达调用链；保留为历史/未接线定义，不计入当前可达闭包"
+    },
+    {
+      "function_id": "R0586",
+      "signature": "std::optional<需求承接材料> 海中鱼巣::需求服务::读取需求承接材料(节点句柄 d,const 结构事务令牌& t) const",
+      "file": "海中鱼巣/领域/需求服务.h",
+      "definition_line": 576,
+      "reason": "RCE0094、RCE0847、RCE0917、RCE1602、RCE1625 的当前调用点均为单实参无令牌重载 F0552；带令牌重载只位于未接线任务专项自检或令牌任务服务岛，无 F0001 当前可达前驱"
+    },
+    {
+      "function_id": "R0595",
+      "signature": "std::optional<节点句柄> 海中鱼巣::需求服务::读取唯一需求目标_令牌( 节点句柄 需求节点, 关系类型 类型, 节点类型 目标类型, std::int64_t 顺序号, const 结构事务令牌& 令牌) const",
+      "file": "海中鱼巣/领域/需求服务.h",
+      "definition_line": 820,
+      "reason": "唯一已登记可达调用方 R0586 已因重载校正退出；其它源码调用只位于同一未接线带令牌需求服务岛，无 F0001 当前可达前驱"
     }
   ],
   "rejected_candidate_edges": [

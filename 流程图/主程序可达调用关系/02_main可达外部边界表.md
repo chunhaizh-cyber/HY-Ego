@@ -1,6 +1,6 @@
 # main 可达外部边界与回调表
 
-代码基线：<code>03a8b7ac099ccea83e57f2696e2290b7bcdfacaf</code>；配置：<code>Debug\|x64</code>；外部边界：3666；具名回调：59。
+代码基线：<code>03a8b7ac099ccea83e57f2696e2290b7bcdfacaf</code>；配置：<code>Debug\|x64</code>；外部边界：3713；具名回调：59。
 
 ## 外部边界
 
@@ -1549,7 +1549,7 @@
 | X02255 | R0581 | Standard library member | <code>constexpr bool std::optional&lt;海中鱼巣::节点句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:363</code> | 1 | 遍历到状态类型目标 | 专项源码外部边界复核 |
 | X02256 | R0583 | Standard library member | <code>constexpr bool std::optional&lt;海中鱼巣::节点句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:520, 海中鱼巣/领域/需求服务.h:524</code> | 2 | 普通目标宿主/自我主体查询已返回 | 专项源码外部边界复核 |
 | X02257 | R0583 | Standard library member | <code>constexpr const 海中鱼巣::节点句柄&amp; std::optional&lt;海中鱼巣::节点句柄&gt;::value() const &amp;</code> | <code>海中鱼巣/领域/需求服务.h:527</code> | 1 | 自我主体有值 | 专项源码外部边界复核 |
-| X02258 | R0585 | Standard library member | <code>constexpr bool std::optional&lt;海中鱼巣::需求当前特征状态材料&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:554</code> | 1 | 完整入口当前材料查询已返回 | 专项源码外部边界复核 |
+| X02258 | R0585 | Standard library member | <code>constexpr bool std::optional&lt;海中鱼巣::节点句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:554</code> | 1 | 完整入口当前材料查询已返回 | 专项源码外部边界复核 |
 | X02259 | R0587 | Standard library member | <code>constexpr bool std::optional&lt;海中鱼巣::节点记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:718</code> | 1 | 当前关系目标结算记录完整 | 专项源码外部边界复核 |
 | X02260 | R0587 | Standard library member | <code>constexpr bool std::optional&lt;std::uint64_t&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:718</code> | 1 | 当前关系目标结算记录完整 | 专项源码外部边界复核 |
 | X02261 | R0587 | Standard library member | <code>constexpr bool std::optional&lt;海中鱼巣::关系记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:722, 海中鱼巣/领域/需求服务.h:728, 海中鱼巣/领域/需求服务.h:742</code> | 3 | 计算首候选、同序冲突与最终存在性 | 专项源码外部边界复核 |
@@ -3672,6 +3672,53 @@
 | X04765 | R0889 | Standard library lock | <code>std::unique_lock&lt;std::shared_mutex&gt;::~unique_lock()</code> | <code>海中鱼巣/核心/索引仓库.cpp:108-111</code> | 1 | 离开未接域写锁作用域 | 本批逐函数源码表达式、静态类型与生命周期复核 |
 | X04766 | R0890 | Standard library lock | <code>std::unique_lock&lt;std::shared_mutex&gt;::unique_lock(std::shared_mutex&amp;)</code> | <code>海中鱼巣/核心/索引仓库.cpp:115</code> | 1 | 令牌与入口材料有效 | 本批逐函数源码表达式、静态类型与生命周期复核 |
 | X04767 | R0890 | Standard library lock | <code>std::unique_lock&lt;std::shared_mutex&gt;::~unique_lock()</code> | <code>海中鱼巣/核心/索引仓库.cpp:115-118</code> | 1 | 离开带令牌写锁作用域 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04768 | R0576 | Standard library container | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator std::vector&lt;海中鱼巣::节点句柄&gt;::begin() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:1012</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04769 | R0576 | Standard library container | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator std::vector&lt;海中鱼巣::节点句柄&gt;::end() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:1012</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04770 | R0576 | Standard library container | <code>bool std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator::operator!=(const_iterator) const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:1012</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04771 | R0576 | Standard library container | <code>const 海中鱼巣::节点句柄&amp; std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator::operator*() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:1012</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04772 | R0576 | Standard library container | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator&amp; std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator::operator++() noexcept</code> | <code>海中鱼巣/领域/需求服务.h:1012</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04773 | R0576 | Standard library optional | <code>constexpr bool std::optional&lt;海中鱼巣::节点句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:1016</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04774 | R0576 | Standard library optional | <code>std::optional&lt;海中鱼巣::节点句柄&gt;&amp; std::optional&lt;海中鱼巣::节点句柄&gt;::operator=(const 海中鱼巣::节点句柄&amp;)</code> | <code>海中鱼巣/领域/需求服务.h:1019</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04775 | R0577 | Standard library container | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::iterator std::vector&lt;海中鱼巣::节点句柄&gt;::begin() noexcept</code> | <code>海中鱼巣/领域/需求服务.h:1030</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04776 | R0577 | Standard library container | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::iterator std::vector&lt;海中鱼巣::节点句柄&gt;::end() noexcept</code> | <code>海中鱼巣/领域/需求服务.h:1030</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04777 | R0577 | Standard library container | <code>bool std::vector&lt;海中鱼巣::节点句柄&gt;::iterator::operator!=(const iterator&amp;) const</code> | <code>海中鱼巣/领域/需求服务.h:1030</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04778 | R0577 | Standard library container | <code>海中鱼巣::节点句柄&amp; std::vector&lt;海中鱼巣::节点句柄&gt;::iterator::operator*() const</code> | <code>海中鱼巣/领域/需求服务.h:1030</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04779 | R0577 | Standard library container | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::iterator&amp; std::vector&lt;海中鱼巣::节点句柄&gt;::iterator::operator++()</code> | <code>海中鱼巣/领域/需求服务.h:1030</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04780 | R0577 | Standard library container | <code>void std::vector&lt;海中鱼巣::节点句柄&gt;::push_back(const 海中鱼巣::节点句柄&amp;)</code> | <code>海中鱼巣/领域/需求服务.h:1032</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04781 | R0579 | Standard library optional | <code>constexpr bool std::optional&lt;海中鱼巣::节点句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:301</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04782 | R0579 | Standard library optional | <code>constexpr const 海中鱼巣::节点句柄&amp; std::optional&lt;海中鱼巣::节点句柄&gt;::value() const &amp;</code> | <code>海中鱼巣/领域/需求服务.h:302</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04783 | R0579 | Standard library optional | <code>constexpr bool std::optional&lt;std::int64_t&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:302</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04784 | R0579 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::需求承接材料&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:332</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04785 | R0579 | Standard library optional | <code>const 海中鱼巣::需求承接材料* std::optional&lt;海中鱼巣::需求承接材料&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:333, 海中鱼巣/领域/需求服务.h:334, 海中鱼巣/领域/需求服务.h:335, 海中鱼巣/领域/需求服务.h:336</code> | 4 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04786 | R0579 | Standard library optional | <code>std::optional&lt;海中鱼巣::节点句柄&gt;::optional(const 海中鱼巣::节点句柄&amp;)</code> | <code>海中鱼巣/领域/需求服务.h:337, 海中鱼巣/领域/需求服务.h:338</code> | 2 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04787 | R0579 | Standard library optional | <code>bool std::operator==(const std::optional&lt;海中鱼巣::节点句柄&gt;&amp;, const std::optional&lt;海中鱼巣::节点句柄&gt;&amp;)</code> | <code>海中鱼巣/领域/需求服务.h:337, 海中鱼巣/领域/需求服务.h:338</code> | 2 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04788 | R0581 | Standard library container | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator std::vector&lt;海中鱼巣::节点句柄&gt;::begin() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:359</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04789 | R0581 | Standard library container | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator std::vector&lt;海中鱼巣::节点句柄&gt;::end() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:359</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04790 | R0581 | Standard library container | <code>bool std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator::operator!=(const_iterator) const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:359</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04791 | R0581 | Standard library container | <code>const 海中鱼巣::节点句柄&amp; std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator::operator*() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:359</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04792 | R0581 | Standard library container | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator&amp; std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator::operator++() noexcept</code> | <code>海中鱼巣/领域/需求服务.h:359</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04793 | R0581 | Standard library optional | <code>std::optional&lt;海中鱼巣::节点句柄&gt;&amp; std::optional&lt;海中鱼巣::节点句柄&gt;::operator=(const 海中鱼巣::节点句柄&amp;)</code> | <code>海中鱼巣/领域/需求服务.h:366</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04794 | R0583 | Standard library container | <code>std::vector&lt;海中鱼巣::关系记录&gt;::iterator std::vector&lt;海中鱼巣::关系记录&gt;::begin() noexcept</code> | <code>海中鱼巣/领域/需求服务.h:527</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04795 | R0583 | Standard library container | <code>std::vector&lt;海中鱼巣::关系记录&gt;::iterator std::vector&lt;海中鱼巣::关系记录&gt;::end() noexcept</code> | <code>海中鱼巣/领域/需求服务.h:527</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04796 | R0583 | Standard library container | <code>bool std::vector&lt;海中鱼巣::关系记录&gt;::iterator::operator!=(const iterator&amp;) const</code> | <code>海中鱼巣/领域/需求服务.h:527</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04797 | R0583 | Standard library container | <code>海中鱼巣::关系记录&amp; std::vector&lt;海中鱼巣::关系记录&gt;::iterator::operator*() const</code> | <code>海中鱼巣/领域/需求服务.h:527</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04798 | R0583 | Standard library container | <code>std::vector&lt;海中鱼巣::关系记录&gt;::iterator&amp; std::vector&lt;海中鱼巣::关系记录&gt;::iterator::operator++()</code> | <code>海中鱼巣/领域/需求服务.h:527</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04799 | R0587 | Standard library container | <code>std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator std::vector&lt;海中鱼巣::关系记录&gt;::begin() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:712</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04800 | R0587 | Standard library container | <code>std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator std::vector&lt;海中鱼巣::关系记录&gt;::end() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:712</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04801 | R0587 | Standard library container | <code>bool std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator!=(const const_iterator&amp;) const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:712</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04802 | R0587 | Standard library container | <code>const 海中鱼巣::关系记录&amp; std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator*() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:712</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04803 | R0587 | Standard library container | <code>std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator&amp; std::vector&lt;海中鱼巣::关系记录&gt;::const_iterator::operator++() noexcept</code> | <code>海中鱼巣/领域/需求服务.h:712</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04804 | R0587 | Standard library optional | <code>std::optional&lt;海中鱼巣::关系记录&gt;&amp; std::optional&lt;海中鱼巣::关系记录&gt;::operator=(const 海中鱼巣::关系记录&amp;)</code> | <code>海中鱼巣/领域/需求服务.h:737</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04812 | R0596 | Standard library optional | <code>constexpr bool std::optional&lt;海中鱼巣::节点句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:980, 海中鱼巣/领域/需求服务.h:981, 海中鱼巣/领域/需求服务.h:982</code> | 3 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04813 | R0596 | Standard library container | <code>bool std::vector&lt;海中鱼巣::节点句柄&gt;::empty() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:983</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04814 | R0597 | Standard library container | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator std::vector&lt;海中鱼巣::节点句柄&gt;::begin() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:993</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04815 | R0597 | Standard library container | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator std::vector&lt;海中鱼巣::节点句柄&gt;::end() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:993</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04816 | R0597 | Standard library container | <code>bool std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator::operator!=(const_iterator) const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:993</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04817 | R0597 | Standard library container | <code>const 海中鱼巣::节点句柄&amp; std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator::operator*() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:993</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04818 | R0597 | Standard library container | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator&amp; std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator::operator++() noexcept</code> | <code>海中鱼巣/领域/需求服务.h:993</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04819 | R0597 | Standard library optional | <code>constexpr bool std::optional&lt;海中鱼巣::节点句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/需求服务.h:997</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04820 | R0597 | Standard library optional | <code>std::optional&lt;海中鱼巣::节点句柄&gt;&amp; std::optional&lt;海中鱼巣::节点句柄&gt;::operator=(const 海中鱼巣::节点句柄&amp;)</code> | <code>海中鱼巣/领域/需求服务.h:1000</code> | 1 | 调用方可达且对应源码表达式执行 | 本批逐函数源码表达式、静态类型与生命周期复核 |
+| X04821 | R0599 | Standard library smart pointer | <code>std::shared_ptr&lt;void&gt;::shared_ptr() noexcept</code> | <code>海中鱼巣/核心/结构事务接线.数据.h:25</code> | 1 | 调用方可达且默认构造成员运行期状态 | 本批逐函数源码表达式、静态类型与生命周期复核 |
 
 ## 回调登记
 

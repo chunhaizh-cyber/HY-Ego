@@ -15,9 +15,9 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1385,
-  "project_call_edge_count": 4096,
-  "edge_count": 4096,
+  "function_count": 1383,
+  "project_call_edge_count": 4102,
+  "edge_count": 4102,
   "edges": [
     {
       "edge_id": "E0002",
@@ -13419,16 +13419,16 @@
     {
       "edge_id": "RCE0094",
       "caller": "F0265",
-      "callee": "R0586",
+      "callee": "F0552",
       "callsites": [
         "海中鱼巣/自检.入口初始化.ixx:406"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
+      "call_category": "source-audited-direct",
+      "arguments": "this=&上下文.需求；需求节点=单根.根需求",
+      "argument_resolution": "逐行源码与单实参无令牌重载复核",
+      "return_binding": "需求承接材料可选值",
       "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
       "current_root_reachable": true
     },
     {
@@ -27781,7 +27781,7 @@
     {
       "edge_id": "RCE0743",
       "caller": "R0204",
-      "callee": "R0077",
+      "callee": "F0620",
       "callsites": [
         "海中鱼巣/领域/二次特征服务.h:111"
       ],
@@ -29409,16 +29409,16 @@
     {
       "edge_id": "RCE0847",
       "caller": "R0249",
-      "callee": "R0586",
+      "callee": "F0552",
       "callsites": [
         "海中鱼巣/领域/初始化.需求.ixx:164"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
+      "call_category": "source-audited-direct",
+      "arguments": "this=&需求_；需求节点=结果.根需求",
+      "argument_resolution": "逐行源码与单实参无令牌重载复核",
+      "return_binding": "需求承接材料可选值",
       "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
       "current_root_reachable": true
     },
     {
@@ -30180,16 +30180,16 @@
     {
       "edge_id": "RCE0917",
       "caller": "R0286",
-      "callee": "R0586",
+      "callee": "F0552",
       "callsites": [
         "海中鱼巣/领域/控制面板服务.h:1294"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
+      "call_category": "source-audited-direct",
+      "arguments": "this=&需求_；需求节点",
+      "argument_resolution": "逐行源码与单实参无令牌重载复核",
+      "return_binding": "需求承接材料可选值",
       "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
       "current_root_reachable": true
     },
     {
@@ -39959,10 +39959,10 @@
       "callsites": [
         "海中鱼巣/领域/特征服务.h:357"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
+      "call_category": "source-audited-direct",
+      "arguments": "this=&关系_；源节点=需求节点；类型；顺序号",
+      "argument_resolution": "逐行源码、接收者静态类型、三实参与完整重载复核",
+      "return_binding": "目标节点组",
       "reachable_condition": "调用方可达且源码分支条件成立",
       "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
       "current_root_reachable": true
@@ -40346,52 +40346,52 @@
       "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
       "return_binding": null,
       "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
       "current_root_reachable": true
     },
     {
       "edge_id": "RCE1594",
       "caller": "R0577",
-      "callee": "R0077",
+      "callee": "F0620",
       "callsites": [
         "海中鱼巣/领域/需求服务.h:1030"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
+      "call_category": "source-audited-direct",
+      "arguments": "this=&关系_；源节点=结算状态；类型；顺序号",
+      "argument_resolution": "逐行源码、接收者静态类型、三实参与完整重载复核",
+      "return_binding": "目标节点组",
       "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
       "current_root_reachable": true
     },
     {
       "edge_id": "RCE1595",
       "caller": "R0578",
-      "callee": "F0622",
+      "callee": "F0331",
       "callsites": [
         "海中鱼巣/领域/需求服务.h:132"
       ],
-      "call_category": "unique_name",
-      "arguments": "",
-      "argument_resolution": "未单独冻结；读取源码调用点",
-      "return_binding": null,
+      "call_category": "source-audited-direct",
+      "arguments": "this=&主信息_；无",
+      "argument_resolution": "逐行源码、接收者静态类型与无令牌重载复核",
+      "return_binding": "主信息句柄传给F0332",
       "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
       "current_root_reachable": true
     },
     {
       "edge_id": "RCE1596",
       "caller": "R0578",
-      "callee": "F0623",
+      "callee": "F0332",
       "callsites": [
         "海中鱼巣/领域/需求服务.h:132"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
+      "call_category": "source-audited-direct",
+      "arguments": "this=&节点_；类型=需求；主信息=F0331返回值",
+      "argument_resolution": "逐行源码、接收者静态类型与无令牌两参数重载复核",
+      "return_binding": "需求节点句柄直接返回",
       "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
       "current_root_reachable": true
     },
     {
@@ -40429,8 +40429,6 @@
       "caller": "R0579",
       "callee": "F0168",
       "callsites": [
-        "海中鱼巣/领域/需求服务.h:307",
-        "海中鱼巣/领域/需求服务.h:311",
         "海中鱼巣/领域/需求服务.h:321",
         "海中鱼巣/领域/需求服务.h:322",
         "海中鱼巣/领域/需求服务.h:323",
@@ -40482,14 +40480,14 @@
     {
       "edge_id": "RCE1602",
       "caller": "R0579",
-      "callee": "R0586",
+      "callee": "F0552",
       "callsites": [
         "海中鱼巣/领域/需求服务.h:331"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
+      "call_category": "source-audited-direct",
+      "arguments": "this；需求节点",
+      "argument_resolution": "逐行源码与单实参无令牌重载复核",
+      "return_binding": "需求承接材料可选值",
       "reachable_condition": "调用方可达且源码分支条件成立",
       "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
       "current_root_reachable": true
@@ -40557,16 +40555,16 @@
     {
       "edge_id": "RCE1607",
       "caller": "R0581",
-      "callee": "R0077",
+      "callee": "F0621",
       "callsites": [
         "海中鱼巣/领域/需求服务.h:357"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
+      "call_category": "source-audited-direct",
+      "arguments": "this=&关系_；源节点=需求节点；类型=模板",
+      "argument_resolution": "逐行源码、接收者静态类型、两实参与完整重载复核",
+      "return_binding": "目标节点组",
       "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
       "current_root_reachable": true
     },
     {
@@ -40617,16 +40615,16 @@
     {
       "edge_id": "RCE1611",
       "caller": "R0583",
-      "callee": "R0078",
+      "callee": "F0575",
       "callsites": [
         "海中鱼巣/领域/需求服务.h:527"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
+      "call_category": "source-audited-direct",
+      "arguments": "this=&关系_；源节点=自我主体.value()；类型=引用",
+      "argument_resolution": "逐行源码、接收者静态类型、两实参与无令牌重载复核",
+      "return_binding": "关系记录组",
       "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
       "current_root_reachable": true
     },
     {
@@ -40661,51 +40659,18 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE1614",
-      "caller": "R0586",
-      "callee": "R0580",
-      "callsites": [
-        "海中鱼巣/领域/需求服务.h:577"
-      ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE1615",
-      "caller": "R0586",
-      "callee": "R0595",
-      "callsites": [
-        "海中鱼巣/领域/需求服务.h:578",
-        "海中鱼巣/领域/需求服务.h:579",
-        "海中鱼巣/领域/需求服务.h:580",
-        "海中鱼巣/领域/需求服务.h:581"
-      ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "RCE1616",
       "caller": "R0587",
-      "callee": "R0078",
+      "callee": "F0575",
       "callsites": [
         "海中鱼巣/领域/需求服务.h:708"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
+      "call_category": "source-audited-direct",
+      "arguments": "this=&关系_；源节点=需求节点；类型=归属",
+      "argument_resolution": "逐行源码、接收者静态类型、两实参与无令牌重载复核",
+      "return_binding": "关系记录组",
       "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
       "current_root_reachable": true
     },
     {
@@ -40801,16 +40766,16 @@
     {
       "edge_id": "RCE1623",
       "caller": "R0593",
-      "callee": "F0168",
+      "callee": "F0163",
       "callsites": [
         "海中鱼巣/领域/需求服务.h:773"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
+      "call_category": "source-audited-direct",
+      "arguments": "父需求",
+      "argument_resolution": "逐行源码与节点句柄重载复核",
+      "return_binding": "bool参与父需求短路判断",
       "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
       "current_root_reachable": true
     },
     {
@@ -40831,47 +40796,16 @@
     {
       "edge_id": "RCE1625",
       "caller": "R0593",
-      "callee": "R0586",
+      "callee": "F0552",
       "callsites": [
         "海中鱼巣/领域/需求服务.h:780"
       ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
+      "call_category": "source-audited-direct",
+      "arguments": "this；需求节点",
+      "argument_resolution": "逐行源码与单实参无令牌重载复核",
+      "return_binding": "需求承接材料可选值",
       "reachable_condition": "调用方可达且源码分支条件成立",
       "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE1626",
-      "caller": "R0595",
-      "callee": "R0594",
-      "callsites": [
-        "海中鱼巣/领域/需求服务.h:826",
-        "海中鱼巣/领域/需求服务.h:831"
-      ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE1627",
-      "caller": "R0595",
-      "callee": "R0077",
-      "callsites": [
-        "海中鱼巣/领域/需求服务.h:830"
-      ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
       "current_root_reachable": true
     },
     {
@@ -62719,6 +62653,162 @@
       "argument_resolution": "逐行源码、接收者静态类型、实参与完整重载复核",
       "return_binding": "未知兼容索引所有者声明写入请求",
       "reachable_condition": "R0891形成聚合返回值",
+      "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3314",
+      "caller": "R0579",
+      "callee": "F0165",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:306"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "this=&状态；状态值=目标状态值",
+      "argument_resolution": "逐行源码、接收者静态类型与完整签名复核",
+      "return_binding": "目标状态节点句柄",
+      "reachable_condition": "入口节点类型和当前特征值检查通过",
+      "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3315",
+      "caller": "R0579",
+      "callee": "F0163",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:307",
+        "海中鱼巣/领域/需求服务.h:311"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "目标状态节点句柄；需求节点句柄",
+      "argument_resolution": "逐行源码与节点句柄重载复核",
+      "return_binding": "bool分别传给追根因检查",
+      "reachable_condition": "对应创建调用返回后",
+      "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3316",
+      "caller": "R0579",
+      "callee": "F0167",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:314",
+        "海中鱼巣/领域/需求服务.h:316",
+        "海中鱼巣/领域/需求服务.h:317",
+        "海中鱼巣/领域/需求服务.h:318",
+        "海中鱼巣/领域/需求服务.h:319",
+        "海中鱼巣/领域/需求服务.h:320"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "this=&关系_；引用/模板关系类型；需求、自我存在、场景、特征、当前值或目标状态端点；对应顺序号或默认0",
+      "argument_resolution": "逐行源码、接收者静态类型与无令牌四参数重载复核",
+      "return_binding": "六个关系句柄",
+      "reachable_condition": "需求节点创建成功",
+      "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3317",
+      "caller": "R0580",
+      "callee": "F0400",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:349"
+      ],
+      "call_category": "source-audited-resolved-function-pointer",
+      "arguments": "接线_.运行期状态；令牌",
+      "argument_resolution": "结构事务协调器::生成接线把验证独占令牌唯一注册为协调器第155行lambda",
+      "return_binding": "bool参与短路",
+      "reachable_condition": "接线_.已接域()为真",
+      "resolution_source": "本批逐函数源码、接线注册点、函数指针静态签名与当前装配复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3318",
+      "caller": "R0583",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:528"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "左=记录.目标节点；右=需求节点",
+      "argument_resolution": "逐行源码与节点句柄相等重载复核",
+      "return_binding": "bool参与关系记录匹配",
+      "reachable_condition": "普通目标宿主缺失且自我主体可读",
+      "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3319",
+      "caller": "R0587",
+      "callee": "R0871",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:716"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "this=&状态；状态节点=记录.目标节点",
+      "argument_resolution": "逐行源码、接收者静态类型与完整签名复核",
+      "return_binding": "发生时间戳可选值",
+      "reachable_condition": "关系记录指向完整结算记录",
+      "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3320",
+      "caller": "R0587",
+      "callee": "F0190",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:717"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "this=&节点_；节点=记录.目标节点",
+      "argument_resolution": "逐行源码、接收者静态类型与无令牌重载复核",
+      "return_binding": "节点记录可选值",
+      "reachable_condition": "关系记录指向完整结算记录",
+      "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3321",
+      "caller": "R0587",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:732"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "左=记录.目标节点；右=最近关系->目标节点",
+      "argument_resolution": "逐行源码与节点句柄相等重载复核",
+      "return_binding": "bool取反后参与无法区分判断",
+      "reachable_condition": "已有最近关系且时间戳、顺序号、创建序号均相同",
+      "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3322",
+      "caller": "R0593",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:773"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "左=父需求；右=需求节点",
+      "argument_resolution": "逐行源码与节点句柄相等重载复核",
+      "return_binding": "bool参与自环拒绝判断",
+      "reachable_condition": "父需求句柄有效且父需求类型匹配",
+      "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3323",
+      "caller": "R0594",
+      "callee": "F0346",
+      "callsites": [
+        "海中鱼巣/领域/需求服务.h:816"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "this=&节点_；节点=节点句柄值；令牌",
+      "argument_resolution": "逐行源码、接收者静态类型与带结构事务令牌重载复核",
+      "return_binding": "节点记录可选值",
+      "reachable_condition": "R0594入口后",
       "resolution_source": "本批逐函数源码静态类型、完整签名、调用点与当前 Debug|x64 可达闭包复核",
       "current_root_reachable": true
     }
