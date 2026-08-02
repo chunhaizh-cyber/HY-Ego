@@ -1,6 +1,6 @@
 # main 可达外部边界与回调表
 
-代码基线：<code>0a93526882cb33c61c2fbb04ecad1aeaddcfe225</code>；配置：<code>Debug\|x64</code>；外部边界：3503；具名回调：49。
+代码基线：<code>0a93526882cb33c61c2fbb04ecad1aeaddcfe225</code>；配置：<code>Debug\|x64</code>；外部边界：3580；具名回调：55。
 
 ## 外部边界
 
@@ -1492,7 +1492,7 @@
 | X02186 | R0511 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::抽象状态写入规格&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/服务.状态.ixx:84</code> | 1 | 形成规格后复核有值 | 专项源码外部边界复核 |
 | X02187 | R0511 | Standard library optional | <code>const 海中鱼巣::抽象状态写入规格&amp; std::optional&lt;海中鱼巣::抽象状态写入规格&gt;::operator*() const &amp;</code> | <code>海中鱼巣/领域/服务.状态.ixx:87</code> | 1 | 规格有值后读出规格 | 专项源码外部边界复核 |
 | X02188 | R0511 | Standard library optional | <code>std::optional&lt;海中鱼巣::抽象状态写入规格&gt;&amp; std::optional&lt;海中鱼巣::抽象状态写入规格&gt;::operator=(const 海中鱼巣::抽象状态写入规格&amp;)</code> | <code>海中鱼巣/领域/服务.状态.ixx:87</code> | 1 | 把已验证规格写入结果 | 专项源码外部边界复核 |
-| X02189 | R0514 | Standard library | <code>std::move(...)</code> | <code>海中鱼巣/领域/服务.需求.ixx:102</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
+| X02189 | R0514 | Standard library | <code>海中鱼巣::抽象状态写入规格&amp;&amp; std::move(海中鱼巣::抽象状态写入规格&amp;) noexcept</code> | <code>海中鱼巣/领域/服务.需求.ixx:102</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 本批容器值类型、算法实参、迭代器和重载逐调用点复核 |
 | X02190 | R0515 | Standard library synchronization | <code>std::shared_lock&lt;std::shared_mutex&gt;::shared_lock(std::shared_mutex&amp;)</code> | <code>海中鱼巣/领域/概念图服务.h:1537</code> | 1 | 读取活动图版本时取得共享锁 | 专项源码外部边界复核 |
 | X02191 | R0515 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::概念活动快照&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:1538</code> | 1 | 共享锁内复核快照有值 | 专项源码外部边界复核 |
 | X02192 | R0515 | Standard library optional | <code>const 海中鱼巣::概念活动快照* std::optional&lt;海中鱼巣::概念活动快照&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:1538</code> | 1 | 快照有值后读取图版本 | 专项源码外部边界复核 |
@@ -1500,17 +1500,17 @@
 | X02194 | R0516 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::概念活动快照&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:1543</code> | 1 | 共享锁内复核快照有值 | 专项源码外部边界复核 |
 | X02195 | R0516 | Standard library optional | <code>const 海中鱼巣::概念活动快照* std::optional&lt;海中鱼巣::概念活动快照&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:1543</code> | 1 | 快照有值后读取根组 | 专项源码外部边界复核 |
 | X02196 | R0516 | Standard library container | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::vector()</code> | <code>海中鱼巣/领域/概念图服务.h:1543</code> | 1 | 无活动快照时构造空根组 | 专项源码外部边界复核 |
-| X02202 | R0524 | Standard library | <code>std::find_if(...)</code> | <code>海中鱼巣/领域/概念图服务.h:3936</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
-| X02203 | R0525 | Standard library | <code>std::find(...)</code> | <code>海中鱼巣/领域/概念图服务.h:4339</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
-| X02204 | R0525 | Standard library | <code>std::move(...)</code> | <code>海中鱼巣/领域/概念图服务.h:4354</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
-| X02205 | R0525 | Standard library | <code>std::find(...)</code> | <code>海中鱼巣/领域/概念图服务.h:4364</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
-| X02206 | R0525 | Standard library | <code>std::sort(...)</code> | <code>海中鱼巣/领域/概念图服务.h:4383</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
-| X02207 | R0525 | Standard library | <code>std::unique(...)</code> | <code>海中鱼巣/领域/概念图服务.h:4384</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
-| X02208 | R0525 | Standard library | <code>std::find(...)</code> | <code>海中鱼巣/领域/概念图服务.h:4386</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
-| X02209 | R0525 | Standard library | <code>std::move(...)</code> | <code>海中鱼巣/领域/概念图服务.h:4392</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 最终 caller 源码范围 + std 限定名调用语法复核 |
+| X02202 | R0524 | Standard library | <code>std::find_if(std::vector&lt;海中鱼巣::概念图清理准备包::专用关系登记材料&gt;::iterator, std::vector&lt;海中鱼巣::概念图清理准备包::专用关系登记材料&gt;::iterator, R0881)</code> | <code>海中鱼巣/领域/概念图服务.h:3936</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 本批容器值类型、算法实参、迭代器和重载逐调用点复核 |
+| X02203 | R0525 | Standard library | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator std::find(std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator, std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator, const 海中鱼巣::节点句柄&amp;)</code> | <code>海中鱼巣/领域/概念图服务.h:4339</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 本批容器值类型、算法实参、迭代器和重载逐调用点复核 |
+| X02204 | R0525 | Standard library | <code>海中鱼巣::抽象树待投影材料&amp;&amp; std::move(海中鱼巣::抽象树待投影材料&amp;) noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4354</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 本批容器值类型、算法实参、迭代器和重载逐调用点复核 |
+| X02205 | R0525 | Standard library | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::iterator std::find(std::vector&lt;海中鱼巣::节点句柄&gt;::iterator, std::vector&lt;海中鱼巣::节点句柄&gt;::iterator, const 海中鱼巣::节点句柄&amp;)</code> | <code>海中鱼巣/领域/概念图服务.h:4364</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 本批容器值类型、算法实参、迭代器和重载逐调用点复核 |
+| X02206 | R0525 | Standard library | <code>void std::sort(std::vector&lt;海中鱼巣::节点句柄&gt;::iterator, std::vector&lt;海中鱼巣::节点句柄&gt;::iterator, R0518)</code> | <code>海中鱼巣/领域/概念图服务.h:4383</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 本批容器值类型、算法实参、迭代器和重载逐调用点复核 |
+| X02207 | R0525 | Standard library | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::iterator std::unique(std::vector&lt;海中鱼巣::节点句柄&gt;::iterator, std::vector&lt;海中鱼巣::节点句柄&gt;::iterator)</code> | <code>海中鱼巣/领域/概念图服务.h:4384</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 本批容器值类型、算法实参、迭代器和重载逐调用点复核 |
+| X02208 | R0525 | Standard library | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::iterator std::find(std::vector&lt;海中鱼巣::节点句柄&gt;::iterator, std::vector&lt;海中鱼巣::节点句柄&gt;::iterator, const 海中鱼巣::节点句柄&amp;)</code> | <code>海中鱼巣/领域/概念图服务.h:4386</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 本批容器值类型、算法实参、迭代器和重载逐调用点复核 |
+| X02209 | R0525 | Standard library | <code>std::vector&lt;海中鱼巣::节点句柄&gt;&amp;&amp; std::move(std::vector&lt;海中鱼巣::节点句柄&gt;&amp;) noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4392</code> | 1 | 调用方已在 F0001 可达闭包内；源码显式限定名调用执行到该行时成立 | 本批容器值类型、算法实参、迭代器和重载逐调用点复核 |
 | X02210 | R0527 | Standard library container | <code>bool std::vector&lt;海中鱼巣::节点句柄&gt;::empty() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:669</code> | 1 | 概念句柄和根类别有效后复核路径非空 | 专项源码外部边界复核 |
 | X02211 | R0527 | Standard library container | <code>const 海中鱼巣::节点句柄&amp; std::vector&lt;海中鱼巣::节点句柄&gt;::back() const</code> | <code>海中鱼巣/领域/概念图服务.h:670</code> | 1 | 路径非空 | 专项源码外部边界复核 |
-| X02212 | R0527 | Standard library container | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::size_type size() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:671</code> | 1 | 路径末尾等于概念 | 专项源码外部边界复核 |
+| X02212 | R0527 | Standard library container | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::size_type std::vector&lt;海中鱼巣::节点句柄&gt;::size() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:671</code> | 1 | 路径末尾等于概念 | 本批容器值类型、算法实参、迭代器和重载逐调用点复核 |
 | X02213 | R0528 | Standard library container | <code>bool std::vector&lt;海中鱼巣::抽象树投影项&gt;::empty() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:686</code> | 1 | 根类别和根概念前置成立 | 专项源码外部边界复核 |
 | X02214 | R0528 | Standard library container | <code>const 海中鱼巣::抽象树投影项&amp; std::vector&lt;海中鱼巣::抽象树投影项&gt;::front() const</code> | <code>海中鱼巣/领域/概念图服务.h:687</code> | 1 | 投影项组非空 | 专项源码外部边界复核 |
 | X02215 | R0528 | Standard library | <code>bool std::all_of(投影项组.begin(), 投影项组.end(), &lt;lambda@概念图服务.h:688&gt;)</code> | <code>海中鱼巣/领域/概念图服务.h:688</code> | 1 | 投影项组非空且首项概念匹配根概念 | 专项源码外部边界复核 |
@@ -3509,6 +3509,83 @@
 | X04595 | R0876 | Standard library lifetime | <code>std::function&lt;void(海中鱼巣::结构写入会话&amp;)&gt;::~function()</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:702-707</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
 | X04596 | R0877 | Standard library | <code>std::optional&lt;海中鱼巣::特征定义值式材料&gt;&amp; std::optional&lt;海中鱼巣::特征定义值式材料&gt;::operator=(const 海中鱼巣::特征定义值式材料&amp;)</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:1585</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
 | X04597 | R0878 | Compiler-generated callback lifetime | <code>R0878::~R0878()</code> | <code>海中鱼巣/领域/数据操作.特征体系.ixx:702-707</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04598 | R0502 | Standard library | <code>bool std::optional&lt;海中鱼巣::特征槽位写入规格&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/服务.特征.ixx:128</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04599 | R0502 | Standard library | <code>const 海中鱼巣::特征槽位写入规格&amp; std::optional&lt;海中鱼巣::特征槽位写入规格&gt;::operator*() const &amp;</code> | <code>海中鱼巣/领域/服务.特征.ixx:131</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04600 | R0502 | Standard library | <code>std::optional&lt;海中鱼巣::特征槽位写入规格&gt;&amp; std::optional&lt;海中鱼巣::特征槽位写入规格&gt;::operator=(const 海中鱼巣::特征槽位写入规格&amp;)</code> | <code>海中鱼巣/领域/服务.特征.ixx:131</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04601 | R0502 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::特征槽位写入规格&gt;::~optional()</code> | <code>海中鱼巣/领域/服务.特征.ixx:126-133</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04602 | R0503 | Standard library | <code>bool std::optional&lt;海中鱼巣::初始特征值写入规格&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/服务.特征.ixx:142</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04603 | R0503 | Standard library | <code>const 海中鱼巣::初始特征值写入规格&amp; std::optional&lt;海中鱼巣::初始特征值写入规格&gt;::operator*() const &amp;</code> | <code>海中鱼巣/领域/服务.特征.ixx:145</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04604 | R0503 | Standard library | <code>std::optional&lt;海中鱼巣::初始特征值写入规格&gt;&amp; std::optional&lt;海中鱼巣::初始特征值写入规格&gt;::operator=(const 海中鱼巣::初始特征值写入规格&amp;)</code> | <code>海中鱼巣/领域/服务.特征.ixx:145</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04605 | R0503 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::初始特征值写入规格&gt;::~optional()</code> | <code>海中鱼巣/领域/服务.特征.ixx:139-147</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04606 | R0511 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::抽象状态写入规格&gt;::~optional()</code> | <code>海中鱼巣/领域/服务.状态.ixx:83-89</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04607 | R0879 | Standard library | <code>海中鱼巣::抽象状态写入规格&amp;&amp; std::move(海中鱼巣::抽象状态写入规格&amp;) noexcept</code> | <code>海中鱼巣/领域/数据操作.状态动态.ixx:333</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04608 | R0879 | Standard library | <code>std::optional&lt;海中鱼巣::抽象状态写入规格&gt;::optional(海中鱼巣::抽象状态写入规格&amp;&amp;)</code> | <code>海中鱼巣/领域/数据操作.状态动态.ixx:333</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04609 | R0879 | Standard library | <code>std::optional&lt;海中鱼巣::抽象状态写入规格&gt;::optional(std::nullopt_t) noexcept</code> | <code>海中鱼巣/领域/数据操作.状态动态.ixx:334</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04610 | R0514 | Standard library | <code>海中鱼巣::抽象状态写入规格&amp; std::optional&lt;海中鱼巣::抽象状态写入规格&gt;::operator*() &amp;</code> | <code>海中鱼巣/领域/服务.需求.ixx:102</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04611 | R0514 | Standard library | <code>bool std::optional&lt;海中鱼巣::完整需求写入规格&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/服务.需求.ixx:103</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04612 | R0514 | Standard library | <code>const 海中鱼巣::完整需求写入规格&amp; std::optional&lt;海中鱼巣::完整需求写入规格&gt;::operator*() const &amp;</code> | <code>海中鱼巣/领域/服务.需求.ixx:104</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04613 | R0514 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::完整需求写入规格&gt;::~optional()</code> | <code>海中鱼巣/领域/服务.需求.ixx:99-106</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04614 | R0515 | Standard library RAII | <code>std::shared_lock&lt;std::shared_mutex&gt;::~shared_lock() noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:1537-1539</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04615 | R0516 | Standard library RAII | <code>std::shared_lock&lt;std::shared_mutex&gt;::~shared_lock() noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:1542-1544</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04616 | R0516 | Standard library | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::vector(const std::vector&lt;海中鱼巣::节点句柄&gt;&amp;)</code> | <code>海中鱼巣/领域/概念图服务.h:1543</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04617 | R0517 | Standard library synchronization | <code>std::shared_lock&lt;std::shared_mutex&gt;::shared_lock(std::shared_mutex&amp;)</code> | <code>海中鱼巣/领域/概念图服务.h:2434</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04618 | R0517 | Standard library RAII | <code>std::shared_lock&lt;std::shared_mutex&gt;::~shared_lock() noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:2434-2439</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04619 | R0517 | Standard library | <code>bool std::optional&lt;海中鱼巣::概念活动快照&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:2435</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04620 | R0517 | Standard library | <code>const 海中鱼巣::概念活动快照&amp; std::optional&lt;海中鱼巣::概念活动快照&gt;::value() const &amp;</code> | <code>海中鱼巣/领域/概念图服务.h:2438</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04621 | R0517 | Standard library | <code>std::optional&lt;海中鱼巣::抽象树视图材料&gt;::optional(std::nullopt_t) noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:2436</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04622 | R0521 | Standard library | <code>std::optional&lt;海中鱼巣::概念根类别&gt;::optional(海中鱼巣::概念根类别)</code> | <code>海中鱼巣/领域/概念图服务.h:3245, 海中鱼巣/领域/概念图服务.h:3247, 海中鱼巣/领域/概念图服务.h:3249, 海中鱼巣/领域/概念图服务.h:3251</code> | 4 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04623 | R0521 | Standard library | <code>std::optional&lt;海中鱼巣::概念根类别&gt;::optional(std::nullopt_t) noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3253</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04624 | R0523 | Standard library | <code>std::vector&lt;海中鱼巣::概念活动签名材料&gt;::const_iterator std::vector&lt;海中鱼巣::概念活动签名材料&gt;::begin() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3774</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04625 | R0523 | Standard library | <code>std::vector&lt;海中鱼巣::概念活动签名材料&gt;::const_iterator std::vector&lt;海中鱼巣::概念活动签名材料&gt;::end() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3774</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04626 | R0523 | Standard library | <code>bool std::vector&lt;海中鱼巣::概念活动签名材料&gt;::const_iterator::operator!=(const const_iterator&amp;) const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3774</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04627 | R0523 | Standard library | <code>const 海中鱼巣::概念活动签名材料&amp; std::vector&lt;海中鱼巣::概念活动签名材料&gt;::const_iterator::operator*() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3774</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04628 | R0523 | Standard library | <code>std::vector&lt;海中鱼巣::概念活动签名材料&gt;::const_iterator&amp; std::vector&lt;海中鱼巣::概念活动签名材料&gt;::const_iterator::operator++() noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3774</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04629 | R0523 | Standard library | <code>std::optional&lt;海中鱼巣::概念签名材料&gt;::optional(const 海中鱼巣::概念签名材料&amp;)</code> | <code>海中鱼巣/领域/概念图服务.h:3776</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04630 | R0523 | Standard library | <code>std::optional&lt;海中鱼巣::概念签名材料&gt;::optional(std::nullopt_t) noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3779</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04631 | R0524 | Standard library | <code>std::vector&lt;海中鱼巣::概念图清理准备包::专用关系登记材料&gt;::iterator std::vector&lt;海中鱼巣::概念图清理准备包::专用关系登记材料&gt;::begin() noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3937</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04632 | R0524 | Standard library | <code>std::vector&lt;海中鱼巣::概念图清理准备包::专用关系登记材料&gt;::iterator std::vector&lt;海中鱼巣::概念图清理准备包::专用关系登记材料&gt;::end() noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3937, 海中鱼巣/领域/概念图服务.h:3942</code> | 2 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04633 | R0524 | Standard library | <code>bool std::vector&lt;海中鱼巣::概念图清理准备包::专用关系登记材料&gt;::iterator::operator==(const iterator&amp;) const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3942</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04634 | R0524 | Standard library | <code>海中鱼巣::概念图清理准备包::专用关系登记材料* std::vector&lt;海中鱼巣::概念图清理准备包::专用关系登记材料&gt;::iterator::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3946, 海中鱼巣/领域/概念图服务.h:3954</code> | 2 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04635 | R0524 | Standard library | <code>bool std::optional&lt;海中鱼巣::关系记录&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3947, 海中鱼巣/领域/概念图服务.h:3959</code> | 2 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04636 | R0524 | Standard library | <code>const 海中鱼巣::关系记录* std::optional&lt;海中鱼巣::关系记录&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3948, 海中鱼巣/领域/概念图服务.h:3949, 海中鱼巣/领域/概念图服务.h:3950, 海中鱼巣/领域/概念图服务.h:3960, 海中鱼巣/领域/概念图服务.h:3961, 海中鱼巣/领域/概念图服务.h:3962</code> | 6 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04637 | R0524 | Standard library lifetime | <code>std::optional&lt;海中鱼巣::关系记录&gt;::~optional()</code> | <code>海中鱼巣/领域/概念图服务.h:3946-3955, 海中鱼巣/领域/概念图服务.h:3957-3968</code> | 2 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04638 | R0524 | Standard library | <code>std::optional&lt;海中鱼巣::关系句柄&gt;::optional(std::nullopt_t) noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:3944, 海中鱼巣/领域/概念图服务.h:3952, 海中鱼巣/领域/概念图服务.h:3964</code> | 3 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04639 | R0524 | Standard library | <code>std::optional&lt;海中鱼巣::关系句柄&gt;::optional(海中鱼巣::关系句柄)</code> | <code>海中鱼巣/领域/概念图服务.h:3954, 海中鱼巣/领域/概念图服务.h:3967</code> | 2 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04640 | R0524 | Standard library | <code>void std::vector&lt;海中鱼巣::概念图清理准备包::专用关系登记材料&gt;::push_back(海中鱼巣::概念图清理准备包::专用关系登记材料&amp;&amp;)</code> | <code>海中鱼巣/领域/概念图服务.h:3966</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04641 | R0881 | Compiler-generated callback lifetime | <code>R0881::~R0881()</code> | <code>海中鱼巣/领域/概念图服务.h:3936-3940</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04642 | R0525 | Standard library | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator std::vector&lt;海中鱼巣::节点句柄&gt;::begin() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4339</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04643 | R0525 | Standard library | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator std::vector&lt;海中鱼巣::节点句柄&gt;::end() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4339</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04644 | R0525 | Standard library | <code>bool std::optional&lt;海中鱼巣::概念签名材料&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4343</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04645 | R0525 | Standard library | <code>const 海中鱼巣::概念签名材料* std::optional&lt;海中鱼巣::概念签名材料&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4343, 海中鱼巣/领域/概念图服务.h:4349</code> | 2 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04646 | R0525 | Standard library | <code>std::optional&lt;海中鱼巣::概念签名材料&gt;::~optional()</code> | <code>海中鱼巣/领域/概念图服务.h:4342</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04647 | R0525 | Standard library | <code>std::optional&lt;海中鱼巣::抽象树视图材料&gt;::optional(std::nullopt_t) noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4337, 海中鱼巣/领域/概念图服务.h:4340, 海中鱼巣/领域/概念图服务.h:4345, 海中鱼巣/领域/概念图服务.h:4358, 海中鱼巣/领域/概念图服务.h:4362, 海中鱼巣/领域/概念图服务.h:4388, 海中鱼巣/领域/概念图服务.h:4396</code> | 7 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04648 | R0525 | Standard library | <code>std::vector&lt;海中鱼巣::抽象树待投影材料&gt;::vector(std::initializer_list&lt;海中鱼巣::抽象树待投影材料&gt;)</code> | <code>海中鱼巣/领域/概念图服务.h:4351</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04649 | R0525 | Standard library | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::vector() noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4352, 海中鱼巣/领域/概念图服务.h:4377</code> | 2 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04650 | R0525 | Standard library | <code>bool std::vector&lt;海中鱼巣::抽象树待投影材料&gt;::empty() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4353</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04651 | R0525 | Standard library | <code>海中鱼巣::抽象树待投影材料&amp; std::vector&lt;海中鱼巣::抽象树待投影材料&gt;::back() noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4354</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04652 | R0525 | Standard library | <code>void std::vector&lt;海中鱼巣::抽象树待投影材料&gt;::pop_back()</code> | <code>海中鱼巣/领域/概念图服务.h:4355</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04653 | R0525 | Standard library | <code>bool std::vector&lt;海中鱼巣::节点句柄&gt;::empty() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4356</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04654 | R0525 | Standard library | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::size_type std::vector&lt;海中鱼巣::节点句柄&gt;::size() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4360, 海中鱼巣/领域/概念图服务.h:4373</code> | 2 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04655 | R0525 | Standard library | <code>std::vector&lt;海中鱼巣::抽象树投影项&gt;::size_type std::vector&lt;海中鱼巣::抽象树投影项&gt;::size() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4361</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04656 | R0525 | Standard library | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::iterator std::vector&lt;海中鱼巣::节点句柄&gt;::begin() noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4364, 海中鱼巣/领域/概念图服务.h:4383, 海中鱼巣/领域/概念图服务.h:4384, 海中鱼巣/领域/概念图服务.h:4386</code> | 4 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04657 | R0525 | Standard library | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::iterator std::vector&lt;海中鱼巣::节点句柄&gt;::end() noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4364, 海中鱼巣/领域/概念图服务.h:4365, 海中鱼巣/领域/概念图服务.h:4383, 海中鱼巣/领域/概念图服务.h:4384, 海中鱼巣/领域/概念图服务.h:4384, 海中鱼巣/领域/概念图服务.h:4386, 海中鱼巣/领域/概念图服务.h:4386</code> | 7 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04658 | R0525 | Standard library | <code>void std::vector&lt;海中鱼巣::节点句柄&gt;::push_back(const 海中鱼巣::节点句柄&amp;)</code> | <code>海中鱼巣/领域/概念图服务.h:4367, 海中鱼巣/领域/概念图服务.h:4380, 海中鱼巣/领域/概念图服务.h:4391</code> | 3 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04659 | R0525 | Standard library | <code>void std::vector&lt;海中鱼巣::抽象树投影项&gt;::push_back(海中鱼巣::抽象树投影项&amp;&amp;)</code> | <code>海中鱼巣/领域/概念图服务.h:4369</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04660 | R0525 | Standard library | <code>std::vector&lt;海中鱼巣::概念活动关系材料&gt;::const_iterator std::vector&lt;海中鱼巣::概念活动关系材料&gt;::begin() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4378</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04661 | R0525 | Standard library | <code>std::vector&lt;海中鱼巣::概念活动关系材料&gt;::const_iterator std::vector&lt;海中鱼巣::概念活动关系材料&gt;::end() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4378</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04662 | R0525 | Standard library | <code>bool std::vector&lt;海中鱼巣::概念活动关系材料&gt;::const_iterator::operator!=(const const_iterator&amp;) const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4378</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04663 | R0525 | Standard library | <code>const 海中鱼巣::概念活动关系材料&amp; std::vector&lt;海中鱼巣::概念活动关系材料&gt;::const_iterator::operator*() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4378</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04664 | R0525 | Standard library | <code>std::vector&lt;海中鱼巣::概念活动关系材料&gt;::const_iterator&amp; std::vector&lt;海中鱼巣::概念活动关系材料&gt;::const_iterator::operator++() noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4378</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04665 | R0525 | Standard library | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::iterator std::vector&lt;海中鱼巣::节点句柄&gt;::erase(iterator, iterator)</code> | <code>海中鱼巣/领域/概念图服务.h:4384</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04666 | R0525 | Standard library | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::reverse_iterator std::vector&lt;海中鱼巣::节点句柄&gt;::rbegin() noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4385-4392</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04667 | R0525 | Standard library | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::reverse_iterator std::vector&lt;海中鱼巣::节点句柄&gt;::rend() noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4385-4392</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04668 | R0525 | Standard library | <code>bool std::reverse_iterator&lt;std::vector&lt;海中鱼巣::节点句柄&gt;::iterator&gt;::operator!=(const reverse_iterator&amp;) const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4385-4392</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04669 | R0525 | Standard library | <code>海中鱼巣::节点句柄&amp; std::reverse_iterator&lt;std::vector&lt;海中鱼巣::节点句柄&gt;::iterator&gt;::operator*() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4385-4392</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04670 | R0525 | Standard library | <code>std::reverse_iterator&lt;std::vector&lt;海中鱼巣::节点句柄&gt;::iterator&gt;&amp; std::reverse_iterator&lt;std::vector&lt;海中鱼巣::节点句柄&gt;::iterator&gt;::operator++() noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4385-4392</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04671 | R0525 | Standard library | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::vector(const std::vector&lt;海中鱼巣::节点句柄&gt;&amp;)</code> | <code>海中鱼巣/领域/概念图服务.h:4390</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04672 | R0525 | Standard library | <code>void std::vector&lt;海中鱼巣::抽象树待投影材料&gt;::push_back(海中鱼巣::抽象树待投影材料&amp;&amp;)</code> | <code>海中鱼巣/领域/概念图服务.h:4392</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04673 | R0525 | Standard library | <code>std::optional&lt;海中鱼巣::抽象树视图材料&gt;::optional(海中鱼巣::抽象树视图材料)</code> | <code>海中鱼巣/领域/概念图服务.h:4398</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
+| X04674 | R0526 | Standard library | <code>bool std::optional&lt;海中鱼巣::关系句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/概念图服务.h:4402</code> | 1 | 调用方可达且执行到列示位置 | 当前源码静态类型、限定名或隐式生命周期复核 |
 
 ## 回调登记
 
@@ -3563,3 +3640,9 @@
 | RCB0047 | R0321 | R0796 | <code>std::find_if</code> | <code>海中鱼巣/领域/控制面板服务.h:817</code> | current root lookup invokes the predicate zero or more times | 源码具名函数/lambda 注册点、模板实参与静态类型复核 |
 | RCB0048 | R0326 | R0797 | <code>std::find_if</code> | <code>海中鱼巣/领域/控制面板服务.h:952</code> | requested root lookup invokes the predicate zero or more times | 源码具名函数/lambda 注册点、模板实参与静态类型复核 |
 | RCB0049 | R0847 | R0857 | <code>std::all_of</code> | <code>海中鱼巣/自检.入口初始化.ixx:641-643</code> | 统计十个存在各自状态数量时，对数组元素零到多次调用谓词 | 源码 lambda 注册点、模板实参与局部静态类型复核 |
+| RCB0050 | R0524 | R0881 | <code>std::find_if</code> | <code>海中鱼巣/领域/概念图服务.h:3936-3940</code> | 专用关系登记组查找期间零到多次调用 | 源码算法实参、回调身份与容器元素静态类型复核 |
+| RCB0051 | R0525 | F0051 | <code>std::find</code> | <code>海中鱼巣/领域/概念图服务.h:4339</code> | 活动根查找期间零到多次节点句柄相等比较 | 源码算法实参、回调身份与容器元素静态类型复核 |
+| RCB0052 | R0525 | F0051 | <code>std::find</code> | <code>海中鱼巣/领域/概念图服务.h:4364</code> | 已投影概念查找期间零到多次节点句柄相等比较 | 源码算法实参、回调身份与容器元素静态类型复核 |
+| RCB0053 | R0525 | R0518 | <code>std::sort</code> | <code>海中鱼巣/领域/概念图服务.h:4383</code> | 下位组排序期间零到多次严格小于比较 | 源码算法实参、回调身份与容器元素静态类型复核 |
+| RCB0054 | R0525 | F0051 | <code>std::unique</code> | <code>海中鱼巣/领域/概念图服务.h:4384</code> | 下位组相邻去重期间零到多次节点句柄相等比较 | 源码算法实参、回调身份与容器元素静态类型复核 |
+| RCB0055 | R0525 | F0051 | <code>std::find</code> | <code>海中鱼巣/领域/概念图服务.h:4386</code> | 当前路径环检查期间零到多次节点句柄相等比较 | 源码算法实参、回调身份与容器元素静态类型复核 |

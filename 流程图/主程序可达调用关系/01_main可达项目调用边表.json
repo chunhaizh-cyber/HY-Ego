@@ -15,9 +15,9 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1374,
-  "project_call_edge_count": 4030,
-  "edge_count": 4030,
+  "function_count": 1376,
+  "project_call_edge_count": 4044,
+  "edge_count": 4044,
   "edges": [
     {
       "edge_id": "E0002",
@@ -39028,32 +39028,32 @@
     {
       "edge_id": "RCE1505",
       "caller": "R0502",
-      "callee": "F0168",
+      "callee": "F0163",
       "callsites": [
         "海中鱼巣/领域/服务.特征.ixx:118",
         "海中鱼巣/领域/服务.特征.ixx:119"
       ],
       "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
+      "arguments": "this=请求.宿主 / this=请求.特征定义",
+      "argument_resolution": "本批源码静态接收者、参数和重载逐调用点复核",
+      "return_binding": "句柄有效性 bool",
       "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
       "current_root_reachable": true
     },
     {
       "edge_id": "RCE1506",
       "caller": "R0502",
-      "callee": "R0504",
+      "callee": "R0798",
       "callsites": [
         "海中鱼巣/领域/服务.特征.ixx:121"
       ],
       "call_category": "suffix_match",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
+      "arguments": "this=&数据操作_, 特征定义=请求.特征定义",
+      "argument_resolution": "本批源码静态接收者、参数和重载逐调用点复核",
+      "return_binding": "特征定义值式材料 定义",
       "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
       "current_root_reachable": true
     },
     {
@@ -39147,21 +39147,6 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE1513",
-      "caller": "R0504",
-      "callee": "F0168",
-      "callsites": [
-        "海中鱼巣/领域/服务.特征.ixx:233"
-      ],
-      "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
-      "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "RCE1514",
       "caller": "R0512",
       "callee": "R0423",
@@ -39194,18 +39179,20 @@
     {
       "edge_id": "RCE1516",
       "caller": "R0514",
-      "callee": "F0168",
+      "callee": "F0163",
       "callsites": [
         "海中鱼巣/领域/服务.需求.ixx:91",
+        "海中鱼巣/领域/服务.需求.ixx:91",
+        "海中鱼巣/领域/服务.需求.ixx:92",
         "海中鱼巣/领域/服务.需求.ixx:92",
         "海中鱼巣/领域/服务.需求.ixx:93"
       ],
       "call_category": "unique_name",
-      "arguments": null,
-      "argument_resolution": "候选工具实参载荷截断，未将损坏文本写成事实；精确调用点已冻结，需读源码取得实参",
-      "return_binding": null,
+      "arguments": "this=主体/目标宿主/场景/目标特征/当前特征状态材料",
+      "argument_resolution": "本批源码静态接收者、参数和重载逐调用点复核",
+      "return_binding": "五项节点句柄有效性 bool",
       "reachable_condition": "调用方可达且源码分支条件成立",
-      "resolution_source": "全项目唯一函数名并经调用方源码范围复核",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
       "current_root_reachable": true
     },
     {
@@ -61723,6 +61710,236 @@
       "return_binding": "被调结果按源码用于局部绑定、条件判断、回调或直接返回",
       "reachable_condition": "调用方当前可达且列示源码分支条件成立",
       "resolution_source": "当前源码 blob、正式身份表与递归闭包逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3246",
+      "caller": "R0502",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/服务.特征.ixx:119"
+      ],
+      "call_category": "operator",
+      "arguments": "宿主=请求.宿主, 特征定义=请求.特征定义",
+      "argument_resolution": "本批现状单函数图、逐行映射与源码静态类型逐调用点复核",
+      "return_binding": "不相等 bool",
+      "reachable_condition": "前置句柄校验短路求值",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3247",
+      "caller": "R0502",
+      "callee": "R0383",
+      "callsites": [
+        "海中鱼巣/领域/服务.特征.ixx:120"
+      ],
+      "call_category": "direct_member",
+      "arguments": "this=&数据操作_, 目标=请求.宿主",
+      "argument_resolution": "本批现状单函数图、逐行映射与源码静态类型逐调用点复核",
+      "return_binding": "特征节点身份 宿主",
+      "reachable_condition": "入口参数校验通过",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3248",
+      "caller": "R0502",
+      "callee": "R0388",
+      "callsites": [
+        "海中鱼巣/领域/服务.特征.ixx:122"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&宿主",
+      "argument_resolution": "本批现状单函数图、逐行映射与源码静态类型逐调用点复核",
+      "return_binding": "当前可读 bool",
+      "reachable_condition": "宿主材料已读取",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3249",
+      "caller": "R0508",
+      "callee": "R0374",
+      "callsites": [
+        "海中鱼巣/领域/服务.特征.ixx:85"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=规格.operator->()",
+      "argument_resolution": "本批现状单函数图、逐行映射与源码静态类型逐调用点复核",
+      "return_binding": "规格完整 bool",
+      "reachable_condition": "状态已形成且 optional 有值",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3250",
+      "caller": "R0509",
+      "callee": "R0380",
+      "callsites": [
+        "海中鱼巣/领域/服务.特征.ixx:94"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=规格.operator->()",
+      "argument_resolution": "本批现状单函数图、逐行映射与源码静态类型逐调用点复核",
+      "return_binding": "规格完整 bool",
+      "reachable_condition": "状态已形成且 optional 有值",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3251",
+      "caller": "R0510",
+      "callee": "R0795",
+      "callsites": [
+        "海中鱼巣/领域/服务.状态.ixx:52"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=规格.operator->()",
+      "argument_resolution": "本批现状单函数图、逐行映射与源码静态类型逐调用点复核",
+      "return_binding": "规格完整 bool",
+      "reachable_condition": "状态已形成且 optional 有值",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3252",
+      "caller": "R0511",
+      "callee": "R0879",
+      "callsites": [
+        "海中鱼巣/领域/服务.状态.ixx:83"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&数据操作_, 幂等主键=请求.幂等主键, 状态值=请求.状态值",
+      "argument_resolution": "本批现状单函数图、逐行映射与源码静态类型逐调用点复核",
+      "return_binding": "optional<抽象状态写入规格> 规格",
+      "reachable_condition": "幂等主键非零",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3253",
+      "caller": "R0879",
+      "callee": "R0880",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.状态动态.ixx:331"
+      ],
+      "call_category": "direct_constructor",
+      "arguments": "幂等主键, 状态值",
+      "argument_resolution": "本批现状单函数图、逐行映射与源码静态类型逐调用点复核",
+      "return_binding": "抽象状态写入规格 规格",
+      "reachable_condition": "调用方可达",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3254",
+      "caller": "R0879",
+      "callee": "R0795",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.状态动态.ixx:332"
+      ],
+      "call_category": "direct_const_member",
+      "arguments": "this=&规格",
+      "argument_resolution": "本批现状单函数图、逐行映射与源码静态类型逐调用点复核",
+      "return_binding": "完整 bool",
+      "reachable_condition": "规格已构造",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3255",
+      "caller": "R0524",
+      "callee": "F0587",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3946",
+        "海中鱼巣/领域/概念图服务.h:3957"
+      ],
+      "call_category": "direct_member",
+      "arguments": "this=&关系_, 关系=已登记->关系 / 新关系",
+      "argument_resolution": "本批现状单函数图、逐行映射与源码静态类型逐调用点复核",
+      "return_binding": "optional<关系记录> 记录",
+      "reachable_condition": "已有关系读回或新建关系读回",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3256",
+      "caller": "R0524",
+      "callee": "F0167",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3956"
+      ],
+      "call_category": "direct_member",
+      "arguments": "this=&关系_, 类型, 源节点, 目标节点, 顺序号=0",
+      "argument_resolution": "本批现状单函数图、逐行映射与源码静态类型逐调用点复核",
+      "return_binding": "关系句柄 新关系",
+      "reachable_condition": "关系尚不存在",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3257",
+      "caller": "R0524",
+      "callee": "R0881",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3936-3940"
+      ],
+      "call_category": "standard_algorithm_callback",
+      "arguments": "当前专用关系登记材料；捕获类型和两个节点",
+      "argument_resolution": "本批现状单函数图、逐行映射与源码静态类型逐调用点复核",
+      "return_binding": "find_if 谓词 bool",
+      "reachable_condition": "std::find_if 遍历期间零到多次同步调用",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3258",
+      "caller": "R0881",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:3939",
+        "海中鱼巣/领域/概念图服务.h:3939"
+      ],
+      "call_category": "operator",
+      "arguments": "材料.源节点==源节点；材料.目标节点==目标节点",
+      "argument_resolution": "本批现状单函数图、逐行映射与源码静态类型逐调用点复核",
+      "return_binding": "两项短路相等 bool",
+      "reachable_condition": "find_if 谓词执行",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3259",
+      "caller": "R0525",
+      "callee": "R0518",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:4383"
+      ],
+      "call_category": "standard_algorithm_callback",
+      "arguments": "左,右=下位组排序元素",
+      "argument_resolution": "本批现状单函数图、逐行映射与源码静态类型逐调用点复核",
+      "return_binding": "严格小于 bool",
+      "reachable_condition": "std::sort 同步比较期间零到多次调用",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3260",
+      "caller": "R0525",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/概念图服务.h:4339",
+        "海中鱼巣/领域/概念图服务.h:4364",
+        "海中鱼巣/领域/概念图服务.h:4384",
+        "海中鱼巣/领域/概念图服务.h:4386"
+      ],
+      "call_category": "standard_algorithm_callback",
+      "arguments": "节点句柄元素与查找值/相邻元素",
+      "argument_resolution": "本批现状单函数图、逐行映射与源码静态类型逐调用点复核",
+      "return_binding": "相等 bool",
+      "reachable_condition": "三处 std::find 和一处 std::unique 同步比较",
+      "resolution_source": "本批现状单函数图、逐行映射与源码调用点交叉复核",
       "current_root_reachable": true
     }
   ]
