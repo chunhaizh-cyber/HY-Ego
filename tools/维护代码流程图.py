@@ -420,11 +420,12 @@ def 执行维护(
     配置路径: Path,
     模式: str,
     发布前回调: Callable[[], None] | None = None,
+    状态目录覆盖: Path | None = None,
 ) -> tuple[str, Path | None]:
     配置 = 读取JSON(配置路径)
     if 模式 not in 配置.get("模式", {}):
         raise 维护错误(f"未知维护模式: {模式}")
-    状态根目录 = 根目录 / Path(配置["本地状态目录"])
+    状态根目录 = 状态目录覆盖.resolve() if 状态目录覆盖 else 根目录 / Path(配置["本地状态目录"])
     租约目录 = 取得租约(状态根目录, f"{模式}:{配置路径}")
     try:
         断言图谱输入已提交(根目录, 配置)
@@ -588,6 +589,7 @@ def 构建参数() -> argparse.Namespace:
     解析器 = argparse.ArgumentParser(description="生成不可覆盖的代码流程图增量维护候选")
     解析器.add_argument("--配置", "--config", dest="配置", default=str(默认配置路径))
     解析器.add_argument("--模式", "--mode", dest="模式", choices=("event", "daily", "full"), default="event")
+    解析器.add_argument("--状态目录", dest="状态目录", help="覆盖本地运行状态目录；维护智能体可使用仓库外目录")
     解析器.add_argument("--self-test", action="store_true", dest="自检")
     return 解析器.parse_args()
 
@@ -598,7 +600,8 @@ def 主函数() -> int:
         return 自检()
     配置路径 = Path(参数.配置).resolve()
     try:
-        状态, 路径 = 执行维护(仓库根目录, 配置路径, 参数.模式)
+        状态目录 = Path(参数.状态目录) if 参数.状态目录 else None
+        状态, 路径 = 执行维护(仓库根目录, 配置路径, 参数.模式, 状态目录覆盖=状态目录)
     except 维护错误 as 异常:
         print(f"代码流程图自动维护: BLOCKED: {异常}", file=sys.stderr)
         return 3
