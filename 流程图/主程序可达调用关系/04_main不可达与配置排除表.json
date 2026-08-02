@@ -2,7 +2,7 @@
   "schema_version": 1,
   "code_commit": "3920a74638264f9f539d50f32f3c9fe5fb1982ab",
   "scope": "main-current-reachable-exclusions",
-  "excluded_function_count": 91,
+  "excluded_function_count": 94,
   "rejected_candidate_edge_count": 546,
   "excluded_functions": [
     {
@@ -641,6 +641,27 @@
       "file": "海中鱼巣/核心/自检.关系仓库性能基线.ixx",
       "definition_line": 329,
       "reason": "自检.关系仓库性能基线.ixx:819 的夹具为非 const，实际绑定非 const 重载 F0288；const 重载没有其它当前 main 可达调用方"
+    },
+    {
+      "function_id": "R0040",
+      "signature": "bool 海中鱼巣::结构写入会话::主键绑定匹配(const 索引绑定请求& 请求)",
+      "file": "海中鱼巣/核心/会话.结构写入.ixx",
+      "definition_line": 632,
+      "reason": "校正伪前驱后失去全部 F0001 当前可达调用链；保留为历史/未接线定义，不计入当前可达闭包"
+    },
+    {
+      "function_id": "R0329",
+      "signature": "bool 海中鱼巣::虚拟存在写入规格::完整() const noexcept",
+      "file": "海中鱼巣/领域/数据操作.存在场景.ixx",
+      "definition_line": 92,
+      "reason": "校正伪前驱后失去全部 F0001 当前可达调用链；保留为历史/未接线定义，不计入当前可达闭包"
+    },
+    {
+      "function_id": "R0747",
+      "signature": "bool 海中鱼巣::operator==(const 海中鱼巣::索引绑定请求& 左, const 海中鱼巣::索引绑定请求& 右) noexcept",
+      "file": "海中鱼巣/核心/索引所有权.数据.h",
+      "definition_line": 109,
+      "reason": "校正伪前驱后失去全部 F0001 当前可达调用链；保留为历史/未接线定义，不计入当前可达闭包"
     }
   ],
   "rejected_candidate_edges": [
