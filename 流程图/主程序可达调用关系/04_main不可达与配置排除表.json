@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "code_commit": "3920a74638264f9f539d50f32f3c9fe5fb1982ab",
+  "code_commit": "03a8b7ac099ccea83e57f2696e2290b7bcdfacaf",
   "scope": "main-current-reachable-exclusions",
   "excluded_function_count": 94,
   "rejected_candidate_edge_count": 546,
@@ -4528,6 +4528,10 @@
     {
       "identity": "节点直接身份仅参与者事务链",
       "reason": "新核心入口只由未纳入工程的 SAFETY-P1 模块和无入口核心自检调用，不进入 F0001 闭包"
+    },
+    {
+      "identity": "WORLD-TREE-P1A1 节点直接记录仓与共享合同模块组",
+      "reason": "代码提交 03a8b7ac 已登记三个仓库模块和共享合同头，但唯一实际消费者是未接线的节点直接身份结构写入专项自检；运行节点直接身份结构写入自检全项目无调用点，F0001 不存在入向前驱，因此只记模块级配置排除，不分配函数身份且不计入排除函数数"
     }
   ],
   "extraction_diagnostics": [
