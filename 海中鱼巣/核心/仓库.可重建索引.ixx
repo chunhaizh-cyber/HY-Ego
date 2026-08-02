@@ -2,6 +2,7 @@
 module;
 
 #include "句柄.h"
+#include "节点直接结构合同.数据.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -19,25 +20,6 @@ import 海中鱼巣.核心.仓库.节点直接身份;
 import 海中鱼巣.核心.仓库.正式关系;
 
 export namespace 海中鱼巣 {
-
-struct 索引物理键 {
-    std::uint64_t 所有者身份 = 0;
-    std::uint32_t 命名域 = 0;
-    std::uint32_t 键格式版本 = 0;
-    std::uint32_t 探测规则版本 = 0;
-    std::uint64_t 键值 = 0;
-};
-
-inline bool 索引物理键完整(const 索引物理键& 键) noexcept {
-    return 键.所有者身份 != 0 && 键.命名域 != 0 && 键.键格式版本 != 0
-        && 键.探测规则版本 != 0 && 键.键值 != 0;
-}
-
-inline bool operator==(const 索引物理键& 左, const 索引物理键& 右) noexcept {
-    return 左.所有者身份 == 右.所有者身份 && 左.命名域 == 右.命名域
-        && 左.键格式版本 == 右.键格式版本 && 左.探测规则版本 == 右.探测规则版本
-        && 左.键值 == 右.键值;
-}
 
 enum class 索引目标种类 : std::uint8_t {
     节点 = 1,

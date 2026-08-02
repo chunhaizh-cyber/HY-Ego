@@ -2,6 +2,7 @@
 module;
 
 #include "句柄.h"
+#include "节点直接结构合同.数据.h"
 
 #include <algorithm>
 #include <array>
@@ -42,6 +43,7 @@ enum class 正式关系操作状态 : std::uint32_t {
 };
 
 struct 正式关系记录 {
+    关系稳定主键 稳定主键;
     std::uint64_t 关系编号 = 0;
     关系类型 类型 = 关系类型::普通父子;
     节点句柄 源节点;
@@ -52,7 +54,8 @@ struct 正式关系记录 {
 };
 
 inline bool 正式关系记录完整(const 正式关系记录& 记录) noexcept {
-    return 记录.关系编号 != 0
+    return 关系稳定主键完整(记录.稳定主键)
+        && 记录.关系编号 != 0
         && 句柄有效(记录.源节点)
         && 句柄有效(记录.目标节点)
         && 记录.版本号 != 0
@@ -175,6 +178,37 @@ struct 正式关系审计材料 {
     std::vector<正式关系记录> 历史记录组;
 };
 
+enum class 稳定关系当前读取状态 : std::uint8_t {
+    当前有效 = 1, 当前已失效 = 2, 未占用 = 3, 历史占用 = 4, 内部不一致 = 5
+};
+
+struct 稳定关系当前读取结果 {
+    稳定关系当前读取状态 状态 = 稳定关系当前读取状态::未占用;
+    std::optional<正式关系记录> 记录;
+};
+
+enum class 稳定关系组读取状态 : std::uint8_t {
+    已读取 = 1, 入口拒绝 = 2, 内部不一致 = 3
+};
+
+struct 稳定关系组读取结果 {
+    稳定关系组读取状态 状态 = 稳定关系组读取状态::入口拒绝;
+    std::vector<正式关系记录> 关系组;
+};
+
+struct 关系稳定主键高水位 {
+    关系稳定主键命名域 命名域 = 关系稳定主键命名域::无效;
+    std::uint64_t 高水位 = 0;
+};
+
+struct 关系稳定主键历史占用 { 关系稳定主键 稳定主键; };
+
+struct 正式关系仓库权威材料 {
+    std::vector<关系稳定主键高水位> 每域高水位;
+    std::vector<关系稳定主键历史占用> 历史占用;
+    std::vector<正式关系记录> 记录组;
+};
+
 class 正式关系仓库 {
 public:
     正式关系仓库(
@@ -195,6 +229,7 @@ public:
         节点句柄 源节点,
         节点句柄 目标节点,
         std::int64_t 顺序号,
+        关系稳定主键 计划稳定主键,
         std::uint64_t 事务序号) {
         正式关系写入结果 结果;
         const auto 类型数值 = static_cast<std::uint32_t>(类型);
@@ -220,6 +255,16 @@ public:
         }
 
         std::unique_lock 锁(仓库锁_);
+        const auto 命名域 = static_cast<std::uint64_t>(关系稳定主键命名域::正式关系);
+        const auto 高水位位置 = 每域高水位_.find(命名域);
+        const auto 当前高水位 = 高水位位置 == 每域高水位_.end() ? 0 : 高水位位置->second;
+        if (!关系稳定主键完整(计划稳定主键)
+            || 当前高水位 == std::numeric_limits<std::uint64_t>::max()
+            || 计划稳定主键.键值 != 当前高水位 + 1
+            || 主键占用表_.find(计划稳定主键) != 主键占用表_.end()) {
+            结果.状态 = 正式关系操作状态::入口拒绝_版本漂移;
+            return 结果;
+        }
         for (const auto& [编号, 条目] : 关系表_) {
             if ((! 条目.已发布 && 条目.候选事务序号 != 事务序号)
                 || 条目.当前记录.状态 != 记录状态::有效 || 条目.当前记录.类型 != 类型) continue;
@@ -246,14 +291,26 @@ public:
             return 结果;
         }
         const auto 关系编号 = 下个关系编号_++;
-        正式关系记录 写后{关系编号, 类型, 源节点, 目标节点, 顺序号, 1, 记录状态::有效};
+        正式关系记录 写后{计划稳定主键, 关系编号, 类型, 源节点, 目标节点, 顺序号, 1, 记录状态::有效};
         try {
             auto [位置, 已有] = 关系表_.emplace(关系编号, 关系条目{写后, {}, false, 事务序号});
             if (!已有) {
                 结果.状态 = 正式关系操作状态::内部不一致;
                 return 结果;
             }
+            auto [占用位置, 占用已加入] = 主键占用表_.emplace(
+                计划稳定主键, 主键占用条目{关系编号, false});
+            if (!占用已加入) {
+                关系表_.erase(位置);
+                结果.状态 = 正式关系操作状态::内部不一致;
+                return 结果;
+            }
+            每域高水位_[命名域] = 计划稳定主键.键值;
         } catch (...) {
+            关系表_.erase(关系编号);
+            主键占用表_.erase(计划稳定主键);
+            if (当前高水位 == 0) 每域高水位_.erase(命名域);
+            else 每域高水位_[命名域] = 当前高水位;
             结果.状态 = 正式关系操作状态::内部不一致;
             return 结果;
         }
@@ -297,6 +354,81 @@ public:
         if (!节点_.读取节点(记录->源节点, 事务序号).has_value()
             || !节点_.读取节点(记录->目标节点, 事务序号).has_value()) return std::nullopt;
         return 记录;
+    }
+
+    稳定关系当前读取结果 读取稳定主键当前关系(关系稳定主键 稳定主键) const {
+        return 读取稳定主键当前关系核心_(稳定主键, std::nullopt);
+    }
+
+    稳定关系当前读取结果 读取稳定主键当前关系(
+        关系稳定主键 稳定主键,
+        std::uint64_t 事务序号) const {
+        if (事务序号 == 0) return {稳定关系当前读取状态::内部不一致, std::nullopt};
+        return 读取稳定主键当前关系核心_(稳定主键, 事务序号);
+    }
+
+    std::uint64_t 读取命名域高水位(关系稳定主键命名域 命名域) const {
+        if (命名域 != 关系稳定主键命名域::正式关系) return 0;
+        std::shared_lock 锁(仓库锁_);
+        const auto 位置 = 每域高水位_.find(static_cast<std::uint64_t>(命名域));
+        return 位置 == 每域高水位_.end() ? 0 : 位置->second;
+    }
+
+    稳定关系组读取结果 读取有效源关系组(节点句柄 源节点, 关系类型 类型) const {
+        return 读取有效关系组核心_(源节点, 类型, 关系枚举方向::源, std::nullopt);
+    }
+
+    稳定关系组读取结果 读取有效源关系组(
+        节点句柄 源节点, 关系类型 类型, std::uint64_t 事务序号) const {
+        if (事务序号 == 0) return {};
+        return 读取有效关系组核心_(源节点, 类型, 关系枚举方向::源, 事务序号);
+    }
+
+    稳定关系组读取结果 读取有效目标关系组(节点句柄 目标节点, 关系类型 类型) const {
+        return 读取有效关系组核心_(目标节点, 类型, 关系枚举方向::目标, std::nullopt);
+    }
+
+    稳定关系组读取结果 读取有效目标关系组(
+        节点句柄 目标节点, 关系类型 类型, std::uint64_t 事务序号) const {
+        if (事务序号 == 0) return {};
+        return 读取有效关系组核心_(目标节点, 类型, 关系枚举方向::目标, 事务序号);
+    }
+
+    稳定关系组读取结果 读取有效相关关系组(节点句柄 节点) const {
+        return 读取有效关系组核心_(节点, 关系类型::普通父子, 关系枚举方向::相关, std::nullopt);
+    }
+
+    稳定关系组读取结果 读取有效相关关系组(节点句柄 节点, std::uint64_t 事务序号) const {
+        if (事务序号 == 0) return {};
+        return 读取有效关系组核心_(节点, 关系类型::普通父子, 关系枚举方向::相关, 事务序号);
+    }
+
+    正式关系仓库权威材料 导出权威状态() const {
+        正式关系仓库权威材料 材料;
+        std::shared_lock 锁(仓库锁_);
+        for (const auto& [命名域, 高水位] : 每域高水位_) {
+            材料.每域高水位.push_back({static_cast<关系稳定主键命名域>(命名域), 高水位});
+        }
+        for (const auto& [稳定主键, 占用] : 主键占用表_) {
+            (void)占用;
+            材料.历史占用.push_back({稳定主键});
+        }
+        for (const auto& [编号, 条目] : 关系表_) {
+            (void)编号;
+            if (!条目.已发布) continue;
+            材料.记录组.insert(材料.记录组.end(), 条目.历史记录组.begin(), 条目.历史记录组.end());
+            材料.记录组.push_back(条目.当前记录);
+        }
+        std::sort(材料.每域高水位.begin(), 材料.每域高水位.end(), [](const auto& 左, const auto& 右) {
+            return static_cast<std::uint64_t>(左.命名域) < static_cast<std::uint64_t>(右.命名域);
+        });
+        std::sort(材料.历史占用.begin(), 材料.历史占用.end(), [](const auto& 左, const auto& 右) {
+            if (左.稳定主键.命名域 != 右.稳定主键.命名域)
+                return 左.稳定主键.命名域 < 右.稳定主键.命名域;
+            return 左.稳定主键.键值 < 右.稳定主键.键值;
+        });
+        std::sort(材料.记录组.begin(), 材料.记录组.end(), 关系稳定顺序_);
+        return 材料;
     }
 
     std::optional<正式关系审计材料> 读取关系审计(关系句柄 关系) const {
@@ -377,7 +509,17 @@ public:
             return 正式关系操作状态::内部不一致;
         }
         if (候选.种类_ == 正式关系候选种类::新关系) {
+            const auto 稳定主键 = 位置->second.当前记录.稳定主键;
+            const auto 占用位置 = 主键占用表_.find(稳定主键);
+            if (占用位置 == 主键占用表_.end() || 占用位置->second.曾发布
+                || 占用位置->second.关系编号 != 位置->second.当前记录.关系编号) {
+                return 正式关系操作状态::内部不一致;
+            }
             关系表_.erase(位置);
+            主键占用表_.erase(占用位置);
+            const auto 命名域 = 稳定主键.命名域;
+            if (稳定主键.键值 <= 1) 每域高水位_.erase(命名域);
+            else 每域高水位_[命名域] = 稳定主键.键值 - 1;
         } else {
             if (!候选.写前记录_.has_value() || 位置->second.历史记录组.empty()
                 || !记录相同_(位置->second.历史记录组.back(), 候选.写前记录_.value())) {
@@ -398,17 +540,38 @@ public:
         const auto 位置 = 关系表_.find(候选.写后记录_.关系编号);
         if (位置 == 关系表_.end() || 位置->second.已发布
             || 位置->second.候选事务序号 != 事务序号) return;
+        if (候选.种类_ == 正式关系候选种类::新关系) {
+            const auto 占用位置 = 主键占用表_.find(位置->second.当前记录.稳定主键);
+            if (占用位置 == 主键占用表_.end()
+                || 占用位置->second.关系编号 != 位置->second.当前记录.关系编号) return;
+            占用位置->second.曾发布 = true;
+        }
         位置->second.已发布 = true;
         位置->second.候选事务序号 = 0;
         候选.阶段_ = 正式关系候选阶段::已发布;
     }
 
 private:
+    enum class 关系枚举方向 : std::uint8_t { 源, 目标, 相关 };
+
     struct 关系条目 {
         正式关系记录 当前记录;
         std::vector<正式关系记录> 历史记录组;
         bool 已发布 = false;
         std::uint64_t 候选事务序号 = 0;
+    };
+
+    struct 关系稳定主键哈希 {
+        std::size_t operator()(const 关系稳定主键& 主键) const noexcept {
+            const auto 左 = static_cast<std::size_t>(主键.命名域 ^ (主键.命名域 >> 32));
+            const auto 右 = static_cast<std::size_t>(主键.键值 ^ (主键.键值 >> 32));
+            return 左 ^ (右 + static_cast<std::size_t>(0x9E3779B9U) + (左 << 6) + (左 >> 2));
+        }
+    };
+
+    struct 主键占用条目 {
+        std::uint64_t 关系编号 = 0;
+        bool 曾发布 = false;
     };
 
     using 关系位置 = std::unordered_map<std::uint64_t, 关系条目>::const_iterator;
@@ -429,6 +592,103 @@ private:
             && (!事务序号.has_value() || 位置->second.候选事务序号 != 事务序号.value())) return std::nullopt;
         if (!允许非有效 && 位置->second.当前记录.状态 != 记录状态::有效) return std::nullopt;
         return 位置->second.当前记录;
+    }
+
+    稳定关系当前读取结果 读取稳定主键当前关系核心_(
+        关系稳定主键 稳定主键,
+        std::optional<std::uint64_t> 事务序号) const {
+        稳定关系当前读取结果 结果;
+        if (!关系稳定主键完整(稳定主键)) return 结果;
+        std::shared_lock 锁(仓库锁_);
+        const auto 占用位置 = 主键占用表_.find(稳定主键);
+        if (占用位置 == 主键占用表_.end()) return 结果;
+        const auto 位置 = 关系表_.find(占用位置->second.关系编号);
+        if (位置 == 关系表_.end()) {
+            结果.状态 = 占用位置->second.曾发布
+                ? 稳定关系当前读取状态::历史占用
+                : 稳定关系当前读取状态::内部不一致;
+            return 结果;
+        }
+        const auto& 条目 = 位置->second;
+        if (条目.当前记录.稳定主键 != 稳定主键) {
+            结果.状态 = 稳定关系当前读取状态::内部不一致;
+            return 结果;
+        }
+        if (!条目.已发布
+            && (!事务序号.has_value() || 条目.候选事务序号 != *事务序号)) {
+            结果.状态 = 占用位置->second.曾发布
+                ? 稳定关系当前读取状态::历史占用
+                : 稳定关系当前读取状态::未占用;
+            return 结果;
+        }
+        结果.记录 = 条目.当前记录;
+        结果.状态 = 条目.当前记录.状态 == 记录状态::有效
+            ? 稳定关系当前读取状态::当前有效
+            : 稳定关系当前读取状态::当前已失效;
+        return 结果;
+    }
+
+    static bool 关系稳定顺序_(const 正式关系记录& 左, const 正式关系记录& 右) noexcept {
+        if (左.稳定主键.命名域 != 右.稳定主键.命名域)
+            return 左.稳定主键.命名域 < 右.稳定主键.命名域;
+        if (左.稳定主键.键值 != 右.稳定主键.键值)
+            return 左.稳定主键.键值 < 右.稳定主键.键值;
+        return 左.版本号 < 右.版本号;
+    }
+
+    稳定关系组读取结果 读取有效关系组核心_(
+        节点句柄 节点,
+        关系类型 类型,
+        关系枚举方向 方向,
+        std::optional<std::uint64_t> 事务序号) const {
+        稳定关系组读取结果 结果;
+        const auto 类型数值 = static_cast<std::uint32_t>(类型);
+        if (!句柄有效(节点) || 类型数值 >= 正式关系类型ABI数量
+            || (事务序号.has_value() && *事务序号 == 0)) return 结果;
+        const auto 节点记录 = 事务序号.has_value()
+            ? 节点_.读取节点(节点, *事务序号)
+            : 节点_.读取节点(节点);
+        if (!节点记录.has_value()) return 结果;
+        {
+            std::shared_lock 锁(仓库锁_);
+            for (const auto& [编号, 条目] : 关系表_) {
+                (void)编号;
+                if (!条目.已发布
+                    && (!事务序号.has_value() || 条目.候选事务序号 != *事务序号)) continue;
+                const auto& 记录 = 条目.当前记录;
+                if (记录.状态 != 记录状态::有效) continue;
+                if (方向 != 关系枚举方向::相关 && 记录.类型 != 类型) continue;
+                const bool 匹配 = 方向 == 关系枚举方向::源 ? 记录.源节点 == 节点
+                    : 方向 == 关系枚举方向::目标 ? 记录.目标节点 == 节点
+                    : 记录.源节点 == 节点 || 记录.目标节点 == 节点;
+                if (!匹配) continue;
+                const auto 占用 = 主键占用表_.find(记录.稳定主键);
+                const auto 高水位 = 每域高水位_.find(记录.稳定主键.命名域);
+                if (占用 == 主键占用表_.end() || 占用->second.关系编号 != 记录.关系编号
+                    || 高水位 == 每域高水位_.end() || 高水位->second < 记录.稳定主键.键值) {
+                    return {稳定关系组读取状态::内部不一致, {}};
+                }
+                结果.关系组.push_back(记录);
+            }
+        }
+        for (const auto& 记录 : 结果.关系组) {
+            const auto 源 = 事务序号.has_value()
+                ? 节点_.读取节点(记录.源节点, *事务序号)
+                : 节点_.读取节点(记录.源节点);
+            const auto 目标 = 事务序号.has_value()
+                ? 节点_.读取节点(记录.目标节点, *事务序号)
+                : 节点_.读取节点(记录.目标节点);
+            if (!源.has_value() || !目标.has_value()) {
+                return {稳定关系组读取状态::内部不一致, {}};
+            }
+        }
+        std::sort(结果.关系组.begin(), 结果.关系组.end(), 关系稳定顺序_);
+        for (std::size_t 序号 = 1; 序号 < 结果.关系组.size(); ++序号) {
+            if (结果.关系组[序号 - 1].稳定主键 == 结果.关系组[序号].稳定主键)
+                return {稳定关系组读取状态::内部不一致, {}};
+        }
+        结果.状态 = 稳定关系组读取状态::已读取;
+        return 结果;
     }
 
     bool 子链包含节点_已加锁(
@@ -464,7 +724,8 @@ private:
     }
 
     static bool 记录相同_(const 正式关系记录& 左, const 正式关系记录& 右) noexcept {
-        return 左.关系编号 == 右.关系编号 && 左.类型 == 右.类型
+        return 左.稳定主键 == 右.稳定主键
+            && 左.关系编号 == 右.关系编号 && 左.类型 == 右.类型
             && 左.源节点 == 右.源节点 && 左.目标节点 == 右.目标节点
             && 左.顺序号 == 右.顺序号 && 左.版本号 == 右.版本号 && 左.状态 == 右.状态;
     }
@@ -569,6 +830,8 @@ private:
     std::uint64_t 下个关系编号_ = 1;
     mutable std::shared_mutex 仓库锁_;
     std::unordered_map<std::uint64_t, 关系条目> 关系表_;
+    std::unordered_map<关系稳定主键, 主键占用条目, 关系稳定主键哈希> 主键占用表_;
+    std::unordered_map<std::uint64_t, std::uint64_t> 每域高水位_;
 };
 
 }

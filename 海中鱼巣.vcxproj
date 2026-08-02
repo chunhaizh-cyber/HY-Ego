@@ -265,6 +265,9 @@
     <ClCompile Include="海中鱼巣\核心\仓库.节点直接身份.ixx" />
     <ClCompile Include="海中鱼巣\核心\仓库.正式关系.ixx" />
     <ClCompile Include="海中鱼巣\核心\仓库.可重建索引.ixx" />
+    <ClCompile Include="海中鱼巣\核心\仓库.节点直接类型合同.ixx" />
+    <ClCompile Include="海中鱼巣\核心\仓库.节点直接类型化值.ixx" />
+    <ClCompile Include="海中鱼巣\核心\仓库.节点直接事务幂等.ixx" />
     <ClCompile Include="海中鱼巣\核心\会话.节点直接身份结构写入.ixx" />
     <ClCompile Include="海中鱼巣\核心\执行器.节点直接身份结构写入.ixx" />
     <ClCompile Include="海中鱼巣\核心\冻结.节点直接身份结构.ixx" />
@@ -343,6 +346,7 @@
     <ClInclude Include="海中鱼巣\界面\控制面板窗口.h" />
     <ClInclude Include="海中鱼巣\适配\SQL数据库适配.h" />
     <ClInclude Include="海中鱼巣\核心\句柄.h" />
+    <ClInclude Include="海中鱼巣\核心\节点直接结构合同.数据.h" />
     <ClInclude Include="海中鱼巣\核心\日志系统.h" />
     <ClInclude Include="海中鱼巣\核心\事件日志段服务.h" />
     <ClInclude Include="海中鱼巣\核心\容错检查.h" />
