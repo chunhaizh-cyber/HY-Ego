@@ -253,6 +253,7 @@
     <ClCompile Include="海中鱼巣\入口.cpp" />
     <ClCompile Include="海中鱼巣\界面\控制面板窗口.cpp" />
     <ClCompile Include="海中鱼巣\适配\SQL数据库适配.cpp" />
+    <ClCompile Include="海中鱼巣\适配\SQL.节点直接持久证据.ixx" />
     <ClCompile Include="海中鱼巣\核心\主信息仓库.cpp" />
     <ClCompile Include="海中鱼巣\核心\节点仓库.cpp" />
     <ClCompile Include="海中鱼巣\核心\关系仓库.cpp" />
@@ -274,6 +275,7 @@
     <ClCompile Include="海中鱼巣\核心\服务.节点直接结构.ixx" />
     <ClCompile Include="海中鱼巣\核心\数据操作.节点直接类型化结构.ixx" />
     <ClCompile Include="海中鱼巣\核心\服务.节点直接类型化结构提交.ixx" />
+    <ClCompile Include="海中鱼巣\核心\服务.节点直接结构恢复.ixx" />
     <ClCompile Include="海中鱼巣\核心\冻结.节点直接身份结构.ixx" />
     <ClCompile Include="海中鱼巣\核心\自检.节点直接身份结构写入.ixx" />
     <ClCompile Include="海中鱼巣\核心\自检.结构事务.ixx" />

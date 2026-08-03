@@ -9,16 +9,21 @@ module;
 #include <atomic>
 #include <Windows.h>
 #include <bcrypt.h>
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <shared_mutex>
 #include <span>
+#include <tuple>
 #include <type_traits>
 #include <utility>
+#include <variant>
+#include <vector>
 #include "节点直接类型化结构事务.数据.h"
 
 #pragma comment(lib, "bcrypt.lib")
@@ -418,8 +423,213 @@ public:
     }
 
     节点直接恢复数据操作结果 执行节点直接恢复事务(
-        const 节点直接恢复数据操作规格&) const {
-        return {};
+        const 节点直接恢复数据操作规格& 规格) const {
+        节点直接恢复数据操作结果 结果;
+        if (!有效() || 规格.请求.合同版本 != 1 || 规格.请求.材料格式版本 != 2
+            || !节点直接事务幂等身份完整(规格.请求.安装实例身份)
+            || 规格.请求.恢复事实截止代次 == 0) return 结果;
+        auto 许可 = 事务域_->取得恢复独占许可();
+        if (!许可.有效() || 许可.读取已发布代次() != 0) {
+            结果.状态 = 节点直接恢复数据操作状态::版本漂移;
+            return 结果;
+        }
+
+        auto 节点键小于 = [](节点稳定主键 左, 节点稳定主键 右) {
+            return 左.命名域 != 右.命名域 ? 左.命名域 < 右.命名域 : 左.键值 < 右.键值;
+        };
+        auto 关系键小于 = [](关系稳定主键 左, 关系稳定主键 右) {
+            return 左.命名域 != 右.命名域 ? 左.命名域 < 右.命名域 : 左.键值 < 右.键值;
+        };
+        try {
+            节点直接身份仓库权威材料 节点材料;
+            节点材料.仓库编号 = 节点_->仓库编号();
+            std::vector<std::pair<节点稳定主键, 节点类型>> 节点键组;
+            for (const auto& 占用 : 规格.请求.历史占用组) {
+                if (占用.种类 != 节点直接恢复占用种类::节点) continue;
+                节点稳定主键 键{占用.命名域, 占用.键值};
+                if (!稳定主键有效(键) || 占用.节点类型见证 == 节点类型::未分类) {
+                    结果.状态 = 节点直接恢复数据操作状态::材料不完整; return 结果;
+                }
+                节点键组.push_back({键, 占用.节点类型见证});
+            }
+            for (const auto& 历史 : 规格.请求.节点历史组) {
+                if (!节点稳定身份见证完整(历史.身份)) {
+                    结果.状态 = 节点直接恢复数据操作状态::材料不完整; return 结果;
+                }
+                节点键组.push_back({历史.身份.稳定主键, 历史.身份.类型});
+            }
+            std::sort(节点键组.begin(), 节点键组.end(), [&](const auto& 左, const auto& 右) {
+                return 节点键小于(左.first, 右.first);
+            });
+            std::vector<std::pair<节点稳定主键, 节点类型>> 唯一节点键组;
+            for (const auto& 项 : 节点键组) {
+                if (!唯一节点键组.empty() && 唯一节点键组.back().first == 项.first) {
+                    if (唯一节点键组.back().second != 项.second) {
+                        结果.状态 = 节点直接恢复数据操作状态::身份冲突; return 结果;
+                    }
+                } else 唯一节点键组.push_back(项);
+            }
+            if (唯一节点键组.size() == std::numeric_limits<std::uint64_t>::max()) {
+                结果.状态 = 节点直接恢复数据操作状态::版本漂移; return 结果;
+            }
+            std::vector<节点直接恢复节点内部投影> 节点投影组;
+            for (std::size_t 序号 = 0; 序号 < 唯一节点键组.size(); ++序号) {
+                const auto& [键, 类型] = 唯一节点键组[序号];
+                std::vector<节点直接恢复节点记录> 历史组;
+                for (const auto& 历史 : 规格.请求.节点历史组)
+                    if (历史.身份.稳定主键 == 键) 历史组.push_back(历史);
+                std::sort(历史组.begin(), 历史组.end(), [](const auto& 左, const auto& 右) {
+                    return 左.身份.身份版本 < 右.身份.身份版本;
+                });
+                for (std::size_t 版本序号 = 0; 版本序号 < 历史组.size(); ++版本序号) {
+                    if (历史组[版本序号].身份.身份版本 != 版本序号 + 1
+                        || 历史组[版本序号].身份.类型 != 类型
+                        || (版本序号 + 1 < 历史组.size() && 历史组[版本序号].当前有效)) {
+                        结果.状态 = 节点直接恢复数据操作状态::版本漂移; return 结果;
+                    }
+                }
+                const auto 本地编号 = static_cast<std::uint64_t>(序号 + 1);
+                节点材料.历史占用.push_back({键, 类型, 本地编号, true});
+                if (!历史组.empty()) {
+                    const auto& 最大版本 = 历史组.back();
+                    节点材料.记录组.push_back({本地编号, 键, 类型, 最大版本.身份.身份版本,
+                        最大版本.当前有效 ? 记录状态::有效 : 记录状态::已删除, 本地编号});
+                    节点投影组.push_back({最大版本.身份,
+                        {节点材料.仓库编号, 本地编号, 最大版本.身份.身份版本}, 最大版本.当前有效});
+                }
+            }
+            节点材料.下个节点编号 = static_cast<std::uint64_t>(唯一节点键组.size() + 1);
+            节点材料.下个创建序号 = 节点材料.下个节点编号;
+            for (const auto& 高水位 : 规格.请求.高水位组)
+                if (高水位.种类 == 节点直接恢复占用种类::节点)
+                    节点材料.每域高水位.push_back({高水位.命名域, 高水位.高水位});
+
+            auto 解析节点 = [&](const 节点稳定身份见证& 身份) -> std::optional<节点句柄> {
+                const auto 位置 = std::find_if(节点投影组.begin(), 节点投影组.end(),
+                    [&](const auto& 项) { return 项.身份 == 身份; });
+                return 位置 == 节点投影组.end() ? std::nullopt
+                    : std::optional<节点句柄>{位置->内部句柄};
+            };
+
+            节点直接类型合同仓库权威材料 合同材料;
+            合同材料.记录组 = 规格.请求.类型合同历史组;
+            for (const auto& 高水位 : 规格.请求.高水位组)
+                if (高水位.种类 == 节点直接恢复占用种类::类型合同)
+                    合同材料.每域高水位.push_back({高水位.命名域, 高水位.高水位});
+            for (const auto& 占用 : 规格.请求.历史占用组)
+                if (占用.种类 == 节点直接恢复占用种类::类型合同)
+                    合同材料.历史占用.push_back({{占用.命名域, 占用.键值}});
+
+            节点直接类型化值仓库权威材料 值材料;
+            值材料.记录组 = 规格.请求.类型化值历史组;
+            for (const auto& 高水位 : 规格.请求.高水位组)
+                if (高水位.种类 == 节点直接恢复占用种类::类型化值记录)
+                    值材料.每域高水位.push_back({高水位.命名域, 高水位.高水位});
+            for (const auto& 占用 : 规格.请求.历史占用组)
+                if (占用.种类 == 节点直接恢复占用种类::类型化值记录)
+                    值材料.历史占用.push_back({{占用.命名域, 占用.键值}});
+
+            正式关系仓库权威材料 关系材料;
+            for (const auto& 高水位 : 规格.请求.高水位组)
+                if (高水位.种类 == 节点直接恢复占用种类::关系)
+                    关系材料.每域高水位.push_back({static_cast<关系稳定主键命名域>(高水位.命名域), 高水位.高水位});
+            for (const auto& 占用 : 规格.请求.历史占用组)
+                if (占用.种类 == 节点直接恢复占用种类::关系)
+                    关系材料.历史占用.push_back({{占用.命名域, 占用.键值}});
+            auto 关系历史组 = 规格.请求.关系历史组;
+            std::sort(关系历史组.begin(), 关系历史组.end(), [&](const auto& 左, const auto& 右) {
+                if (左.身份.稳定主键 != 右.身份.稳定主键)
+                    return 关系键小于(左.身份.稳定主键, 右.身份.稳定主键);
+                return 左.身份.关系版本 < 右.身份.关系版本;
+            });
+            std::vector<std::pair<关系稳定主键, std::uint64_t>> 关系编号映射;
+            for (const auto& 历史 : 关系历史组) {
+                auto 映射 = std::find_if(关系编号映射.begin(), 关系编号映射.end(),
+                    [&](const auto& 项) { return 项.first == 历史.身份.稳定主键; });
+                if (映射 == 关系编号映射.end()) {
+                    关系编号映射.push_back({历史.身份.稳定主键, 关系编号映射.size() + 1});
+                    映射 = std::prev(关系编号映射.end());
+                }
+                const auto 源 = 解析节点(历史.身份.源端);
+                const auto 目标 = 解析节点(历史.身份.目标端);
+                if (!源 || !目标) { 结果.状态 = 节点直接恢复数据操作状态::关系矛盾; return 结果; }
+                关系材料.记录组.push_back({历史.身份.稳定主键, 映射->second, 历史.身份.类型,
+                    *源, *目标, 历史.身份.角色或顺序, 历史.身份.关系版本,
+                    历史.当前有效 ? 记录状态::有效 : 记录状态::已失效});
+            }
+            auto 解析关系 = [&](const 关系稳定身份见证& 身份) -> std::optional<关系句柄> {
+                const auto 映射 = std::find_if(关系编号映射.begin(), 关系编号映射.end(),
+                    [&](const auto& 项) { return 项.first == 身份.稳定主键; });
+                return 映射 == 关系编号映射.end() ? std::nullopt
+                    : std::optional<关系句柄>{{关系_->仓库编号(), 映射->second, 身份.关系版本}};
+            };
+
+            可重建索引权威材料 索引材料;
+            for (const auto& 索引 : 规格.请求.索引历史组) {
+                if (!索引.当前) continue;
+                if (索引.节点目标) {
+                    const auto 句柄 = 解析节点(*索引.节点目标);
+                    if (!句柄) { 结果.状态 = 节点直接恢复数据操作状态::关系矛盾; return 结果; }
+                    索引材料.记录组.push_back({索引.键, 索引目标种类::节点, *句柄, {}});
+                } else if (索引.关系目标) {
+                    const auto 句柄 = 解析关系(*索引.关系目标);
+                    if (!句柄) { 结果.状态 = 节点直接恢复数据操作状态::关系矛盾; return 结果; }
+                    索引材料.记录组.push_back({索引.键, 索引目标种类::关系, {}, *句柄});
+                } else { 结果.状态 = 节点直接恢复数据操作状态::材料不完整; return 结果; }
+            }
+
+            节点直接事务幂等仓库恢复材料 幂等材料;
+            幂等材料.记录组 = 规格.请求.幂等历史组;
+            for (const auto& 侧账 : 规格.请求.持久证据状态组)
+                幂等材料.持久证据侧账组.push_back({侧账.幂等身份, 侧账.尝试序号, 侧账.状态});
+
+            auto 节点建立 = 节点_->结构化建立恢复未发布候选(节点材料, 许可.事务序号());
+            if (!节点建立.候选) { 结果.状态 = 节点直接恢复数据操作状态::身份冲突; return 结果; }
+            auto 合同建立 = 类型合同_->结构化建立恢复未发布候选(std::move(合同材料), 许可.事务序号());
+            if (!合同建立.候选) { (void)节点_->撤销恢复候选(*节点建立.候选, 许可.事务序号()); 结果.状态 = 节点直接恢复数据操作状态::身份冲突; return 结果; }
+            auto 值建立 = 类型化值_->结构化建立恢复未发布候选(std::move(值材料), 许可.事务序号());
+            if (!值建立.候选) { (void)类型合同_->撤销恢复候选(*合同建立.候选, 许可.事务序号()); (void)节点_->撤销恢复候选(*节点建立.候选, 许可.事务序号()); 结果.状态 = 节点直接恢复数据操作状态::身份冲突; return 结果; }
+            auto 关系建立 = 关系_->结构化建立恢复未发布候选(std::move(关系材料), 许可.事务序号());
+            if (!关系建立.候选) { (void)类型化值_->撤销恢复候选(*值建立.候选, 许可.事务序号()); (void)类型合同_->撤销恢复候选(*合同建立.候选, 许可.事务序号()); (void)节点_->撤销恢复候选(*节点建立.候选, 许可.事务序号()); 结果.状态 = 节点直接恢复数据操作状态::关系矛盾; return 结果; }
+            auto 索引建立 = 索引_->结构化建立恢复未发布候选(std::move(索引材料), 许可.事务序号());
+            if (!索引建立.候选) { (void)关系_->撤销恢复候选(*关系建立.候选, 许可.事务序号()); (void)类型化值_->撤销恢复候选(*值建立.候选, 许可.事务序号()); (void)类型合同_->撤销恢复候选(*合同建立.候选, 许可.事务序号()); (void)节点_->撤销恢复候选(*节点建立.候选, 许可.事务序号()); 结果.状态 = 节点直接恢复数据操作状态::关系矛盾; return 结果; }
+            auto 幂等建立 = 幂等_->结构化建立恢复未发布候选(std::move(幂等材料), 许可.事务序号());
+            if (!幂等建立.候选) { (void)索引_->撤销恢复候选(*索引建立.候选, 许可.事务序号()); (void)关系_->撤销恢复候选(*关系建立.候选, 许可.事务序号()); (void)类型化值_->撤销恢复候选(*值建立.候选, 许可.事务序号()); (void)类型合同_->撤销恢复候选(*合同建立.候选, 许可.事务序号()); (void)节点_->撤销恢复候选(*节点建立.候选, 许可.事务序号()); 结果.状态 = 节点直接恢复数据操作状态::材料不完整; return 结果; }
+
+            const bool 确认完整 = 节点_->确认恢复候选(*节点建立.候选, 许可.事务序号()) == 节点直接恢复仓操作状态::已确认待发布
+                && 类型合同_->确认恢复候选(*合同建立.候选, 许可.事务序号()) == 节点直接恢复仓操作状态::已确认待发布
+                && 类型化值_->确认恢复候选(*值建立.候选, 许可.事务序号()) == 节点直接恢复仓操作状态::已确认待发布
+                && 关系_->确认恢复候选(*关系建立.候选, 许可.事务序号()) == 节点直接恢复仓操作状态::已确认待发布
+                && 索引_->确认恢复候选(*索引建立.候选, 许可.事务序号()) == 节点直接恢复仓操作状态::已确认待发布
+                && 幂等_->确认恢复候选(*幂等建立.候选, 许可.事务序号()) == 节点直接恢复仓操作状态::已确认待发布;
+            if (!确认完整) {
+                (void)幂等_->撤销恢复候选(*幂等建立.候选, 许可.事务序号());
+                (void)索引_->撤销恢复候选(*索引建立.候选, 许可.事务序号());
+                (void)关系_->撤销恢复候选(*关系建立.候选, 许可.事务序号());
+                (void)类型化值_->撤销恢复候选(*值建立.候选, 许可.事务序号());
+                (void)类型合同_->撤销恢复候选(*合同建立.候选, 许可.事务序号());
+                (void)节点_->撤销恢复候选(*节点建立.候选, 许可.事务序号());
+                结果.状态 = 节点直接恢复数据操作状态::内部不一致; return 结果;
+            }
+            const bool 发布完整 = 节点_->完成发布恢复候选(*节点建立.候选, 许可.事务序号()) == 节点直接恢复仓操作状态::已发布
+                && 类型合同_->完成发布恢复候选(*合同建立.候选, 许可.事务序号()) == 节点直接恢复仓操作状态::已发布
+                && 类型化值_->完成发布恢复候选(*值建立.候选, 许可.事务序号()) == 节点直接恢复仓操作状态::已发布
+                && 关系_->完成发布恢复候选(*关系建立.候选, 许可.事务序号()) == 节点直接恢复仓操作状态::已发布
+                && 索引_->完成发布恢复候选(*索引建立.候选, 许可.事务序号()) == 节点直接恢复仓操作状态::已发布
+                && 幂等_->完成发布恢复候选(*幂等建立.候选, 许可.事务序号()) == 节点直接恢复仓操作状态::已发布;
+            if (!发布完整 || !事务域_->从零设置恢复事实截止代次并开放(
+                    许可, 规格.请求.恢复事实截止代次)) {
+                许可.标记隔离();
+                结果.状态 = 节点直接恢复数据操作状态::内部不一致; return 结果;
+            }
+            结果.状态 = 节点直接恢复数据操作状态::已恢复;
+            结果.事实截止代次 = 规格.请求.恢复事实截止代次;
+            return 结果;
+        } catch (...) {
+            许可.标记隔离();
+            结果.状态 = 节点直接恢复数据操作状态::资源失败;
+            return 结果;
+        }
     }
 
     inline 节点直接身份结构写入结果 执行仅参与者事务(
@@ -516,35 +726,43 @@ private:
             && 追加无符号_(输出, 值.身份版本, 4);
     }
 
+    static bool 追加索引键_(std::vector<std::uint8_t>& 输出, const 索引物理键& 值) {
+        return 追加无符号_(输出, 值.所有者身份, 8)
+            && 追加无符号_(输出, 值.命名域, 4)
+            && 追加无符号_(输出, 值.键格式版本, 4)
+            && 追加无符号_(输出, 值.探测规则版本, 4)
+            && 追加无符号_(输出, 值.键值, 8);
+    }
+
     static bool 追加端点_(std::vector<std::uint8_t>& 输出, const 节点直接节点端点引用& 值) {
-        if (!追加字节_(输出, static_cast<std::uint8_t>(值.index() + 1))) return false;
         return std::visit([&](const auto& 项) -> bool {
             using 类型 = std::decay_t<decltype(项)>;
-            if constexpr (std::is_same_v<类型, 节点稳定身份见证>) return 追加节点见证_(输出, 项);
-            else return 追加字节_(输出, static_cast<std::uint8_t>(项.种类))
+            if constexpr (std::is_same_v<类型, 节点稳定身份见证>)
+                return 追加字节_(输出, 1) && 追加节点见证_(输出, 项);
+            else return 追加字节_(输出, 2) && 追加字节_(输出, static_cast<std::uint8_t>(项.种类))
                 && 追加无符号_(输出, 项.值, 8);
         }, 值);
     }
 
     static bool 追加类型化值材料_(std::vector<std::uint8_t>& 输出, const 类型化值材料& 材料) {
-        if (!追加字节_(输出, static_cast<std::uint8_t>(材料.index() + 1))) return false;
         return std::visit([&](const auto& 值) -> bool {
             using 类型 = std::decay_t<decltype(值)>;
-            if constexpr (std::is_same_v<类型, std::int64_t>) return 追加无符号_(输出, static_cast<std::uint64_t>(值), 8);
-            else if constexpr (std::is_same_v<类型, std::uint64_t>) return 追加无符号_(输出, 值, 8);
-            else if constexpr (std::is_same_v<类型, I64区间材料>) return 追加无符号_(输出, static_cast<std::uint64_t>(值.下界), 8)
+            if constexpr (std::is_same_v<类型, std::int64_t>) return 追加字节_(输出, 1) && 追加无符号_(输出, static_cast<std::uint64_t>(值), 8);
+            else if constexpr (std::is_same_v<类型, std::uint64_t>) return 追加字节_(输出, 2) && 追加无符号_(输出, 值, 8);
+            else if constexpr (std::is_same_v<类型, I64区间材料>) return 追加字节_(输出, 3) && 追加无符号_(输出, static_cast<std::uint64_t>(值.下界), 8)
                 && 追加无符号_(输出, static_cast<std::uint64_t>(值.上界), 8);
             else if constexpr (std::is_same_v<类型, std::vector<std::int64_t>>
                 || std::is_same_v<类型, std::vector<std::uint64_t>>) {
-                if (值.size() > 最大向量项目数_ || !追加无符号_(输出, 值.size(), 8)) return false;
+                constexpr std::uint8_t 标签 = std::is_same_v<类型, std::vector<std::int64_t>> ? 4 : 5;
+                if (!追加字节_(输出, 标签) || 值.size() > 最大向量项目数_ || !追加无符号_(输出, 值.size(), 8)) return false;
                 for (const auto 项 : 值) if (!追加无符号_(输出, static_cast<std::uint64_t>(项), 8)) return false;
                 return true;
             } else if constexpr (std::is_same_v<类型, 稳定身份有序组材料>) {
-                if (值.项目组.size() > 最大向量项目数_ || !追加无符号_(输出, 值.项目组.size(), 8)) return false;
+                if (!追加字节_(输出, 6) || 值.项目组.size() > 最大向量项目数_ || !追加无符号_(输出, 值.项目组.size(), 8)) return false;
                 for (const auto& 项 : 值.项目组) if (!追加节点见证_(输出, 项)) return false;
                 return true;
             } else {
-                if (!追加稳定主键_(输出, 值.材料身份)
+                if (!追加字节_(输出, 7) || !追加稳定主键_(输出, 值.材料身份)
                     || !追加无符号_(输出, 值.格式版本, 4)
                     || !追加无符号_(输出, 值.字节数, 8)) return false;
                 for (const auto 字节 : 值.SHA256) if (!追加字节_(输出, 字节)) return false;
@@ -554,32 +772,122 @@ private:
     }
 
     static bool 追加类型合同值域_(std::vector<std::uint8_t>& 输出, const 类型合同值域& 值域) {
-        if (!追加字节_(输出, static_cast<std::uint8_t>(值域.index() + 1))) return false;
         return std::visit([&](const auto& 值) -> bool {
             using 类型 = std::decay_t<decltype(值)>;
-            if constexpr (std::is_same_v<类型, I64标量值域> || std::is_same_v<类型, I64区间材料>)
-                return 追加无符号_(输出, static_cast<std::uint64_t>(值.下界), 8)
+            if constexpr (std::is_same_v<类型, I64标量值域>)
+                return 追加字节_(输出, 1) && 追加无符号_(输出, static_cast<std::uint64_t>(值.下界), 8)
                     && 追加无符号_(输出, static_cast<std::uint64_t>(值.上界), 8);
             else if constexpr (std::is_same_v<类型, U64标量值域>)
-                return 追加无符号_(输出, 值.下界, 8) && 追加无符号_(输出, 值.上界, 8);
+                return 追加字节_(输出, 2) && 追加无符号_(输出, 值.下界, 8) && 追加无符号_(输出, 值.上界, 8);
+            else if constexpr (std::is_same_v<类型, I64区间材料>)
+                return 追加字节_(输出, 3) && 追加无符号_(输出, static_cast<std::uint64_t>(值.下界), 8)
+                    && 追加无符号_(输出, static_cast<std::uint64_t>(值.上界), 8);
             else if constexpr (std::is_same_v<类型, I64有序组值域>)
-                return 追加无符号_(输出, static_cast<std::uint64_t>(值.元素下界), 8)
+                return 追加字节_(输出, 4) && 追加无符号_(输出, static_cast<std::uint64_t>(值.元素下界), 8)
                     && 追加无符号_(输出, static_cast<std::uint64_t>(值.元素上界), 8)
                     && 追加无符号_(输出, 值.最少项目数, 8) && 追加无符号_(输出, 值.最多项目数, 8);
             else if constexpr (std::is_same_v<类型, U64有序组值域>)
-                return 追加无符号_(输出, 值.元素下界, 8) && 追加无符号_(输出, 值.元素上界, 8)
+                return 追加字节_(输出, 5) && 追加无符号_(输出, 值.元素下界, 8) && 追加无符号_(输出, 值.元素上界, 8)
                     && 追加无符号_(输出, 值.最少项目数, 8) && 追加无符号_(输出, 值.最多项目数, 8);
             else if constexpr (std::is_same_v<类型, 稳定身份有序组值域>) {
-                if (值.允许节点类型稳定值组.size() > 最大向量项目数_
+                if (!追加字节_(输出, 6) || 值.允许节点类型稳定值组.size() > 最大向量项目数_
                     || !追加无符号_(输出, 值.允许节点类型稳定值组.size(), 8)) return false;
                 for (const auto 项 : 值.允许节点类型稳定值组) if (!追加无符号_(输出, 项, 8)) return false;
                 return 追加无符号_(输出, 值.最少项目数, 8) && 追加无符号_(输出, 值.最多项目数, 8);
-            } else return 追加无符号_(输出, 值.格式版本, 4)
+            } else return 追加字节_(输出, 7) && 追加无符号_(输出, 值.格式版本, 4)
                 && 追加无符号_(输出, 值.最少字节数, 8) && 追加无符号_(输出, 值.最多字节数, 8);
         }, 值域);
     }
 
-    static 节点直接写集编码结果 编码写集_(const 节点直接类型化结构数据操作请求& 请求) {
+    std::optional<std::vector<节点直接计划身份映射项>> 形成计划身份映射_(
+        const 节点直接类型化结构数据操作请求& 请求) const {
+        std::vector<const 节点直接节点创建项*> 节点项组;
+        std::vector<const 节点直接关系创建项*> 关系项组;
+        std::vector<const 节点直接类型化值发布项*> 值项组;
+        std::vector<节点直接写集局部身份> 已用局部身份;
+        auto 登记局部身份 = [&](节点直接写集局部身份 身份, 节点直接写集局部身份种类 期望种类) {
+            if (身份.种类 != 期望种类 || 身份.值 == 0
+                || std::find(已用局部身份.begin(), 已用局部身份.end(), 身份) != 已用局部身份.end()) return false;
+            已用局部身份.push_back(身份);
+            return true;
+        };
+        for (const auto& 写项 : 请求.写项组) {
+            if (const auto* 项 = std::get_if<节点直接节点创建项>(&写项)) {
+                if (!登记局部身份(项->局部身份, 节点直接写集局部身份种类::节点)
+                    || !节点直接身份仓库::命名域已定义(项->命名域)
+                    || !节点直接身份仓库::命名域与节点类型匹配(项->命名域, 项->类型)) return std::nullopt;
+                节点项组.push_back(项);
+            } else if (const auto* 项 = std::get_if<节点直接关系创建项>(&写项)) {
+                if (!登记局部身份(项->局部身份, 节点直接写集局部身份种类::关系)) return std::nullopt;
+                关系项组.push_back(项);
+            } else if (const auto* 项 = std::get_if<节点直接类型化值发布项>(&写项)) {
+                if (!登记局部身份(项->值记录局部身份, 节点直接写集局部身份种类::类型化值记录)) return std::nullopt;
+                值项组.push_back(项);
+            }
+        }
+        std::sort(节点项组.begin(), 节点项组.end(), [](const auto* 左, const auto* 右) {
+            if (左->命名域 != 右->命名域)
+                return static_cast<std::uint64_t>(左->命名域) < static_cast<std::uint64_t>(右->命名域);
+            return 左->局部身份.值 < 右->局部身份.值;
+        });
+        std::sort(关系项组.begin(), 关系项组.end(), [](const auto* 左, const auto* 右) {
+            return 左->局部身份.值 < 右->局部身份.值;
+        });
+        std::sort(值项组.begin(), 值项组.end(), [](const auto* 左, const auto* 右) {
+            return 左->值记录局部身份.值 < 右->值记录局部身份.值;
+        });
+        std::vector<节点直接计划身份映射项> 映射;
+        try { 映射.reserve(节点项组.size() + 关系项组.size() + 值项组.size()); }
+        catch (...) { return std::nullopt; }
+        std::uint64_t 当前命名域 = 0;
+        std::uint64_t 当前计划键 = 0;
+        for (const auto* 项 : 节点项组) {
+            const auto 命名域 = static_cast<std::uint64_t>(项->命名域);
+            if (命名域 != 当前命名域) {
+                当前命名域 = 命名域;
+                当前计划键 = 节点_->读取命名域高水位(项->命名域);
+            }
+            if (当前计划键 == std::numeric_limits<std::uint64_t>::max()) return std::nullopt;
+            映射.push_back({项->局部身份, 命名域, ++当前计划键, 1});
+        }
+        当前计划键 = 关系_->读取命名域高水位(关系稳定主键命名域::正式关系);
+        for (const auto* 项 : 关系项组) {
+            if (当前计划键 == std::numeric_limits<std::uint64_t>::max()) return std::nullopt;
+            映射.push_back({项->局部身份,
+                static_cast<std::uint64_t>(关系稳定主键命名域::正式关系), ++当前计划键, 1});
+        }
+        当前计划键 = 类型化值_->读取命名域高水位(
+            static_cast<std::uint64_t>(类型化值记录稳定身份命名域::通用类型化值记录));
+        for (const auto* 项 : 值项组) {
+            if (当前计划键 == std::numeric_limits<std::uint64_t>::max()) return std::nullopt;
+            const auto 初始版本 = 项->预期当前值记录版本
+                ? (*项->预期当前值记录版本 == std::numeric_limits<std::uint64_t>::max()
+                    ? 0 : *项->预期当前值记录版本 + 1)
+                : 1;
+            if (初始版本 == 0) return std::nullopt;
+            映射.push_back({项->值记录局部身份,
+                static_cast<std::uint64_t>(类型化值记录稳定身份命名域::通用类型化值记录),
+                ++当前计划键, 初始版本});
+        }
+        std::sort(映射.begin(), 映射.end(), [](const auto& 左, const auto& 右) {
+            if (左.局部身份.种类 != 右.局部身份.种类)
+                return static_cast<std::uint8_t>(左.局部身份.种类) < static_cast<std::uint8_t>(右.局部身份.种类);
+            return 左.局部身份.值 < 右.局部身份.值;
+        });
+        return 映射;
+    }
+
+    static const 节点直接计划身份映射项* 查找计划身份_(
+        const std::vector<节点直接计划身份映射项>& 映射,
+        节点直接写集局部身份 身份) noexcept {
+        const auto 位置 = std::find_if(映射.begin(), 映射.end(), [&](const auto& 项) { return 项.局部身份 == 身份; });
+        return 位置 == 映射.end() ? nullptr : &*位置;
+    }
+
+    static 节点直接写集编码结果 编码写集_(
+        const 节点直接类型化结构数据操作请求& 请求,
+        std::uint64_t 预计后继代次,
+        const std::vector<节点直接计划身份映射项>& 计划身份映射) {
         节点直接写集编码结果 结果;
         if (请求.写项组.size() > 最大向量项目数_ || 请求.读回规格.项目组.size() > 最大向量项目数_) {
             结果.状态 = 节点直接材料转换状态::入口拒绝;
@@ -587,25 +895,46 @@ private:
         }
         try {
             auto& 输出 = 结果.材料;
-            if (!追加无符号_(输出, 请求.合同版本, 4)
+            if (!追加无符号_(输出, 2, 4)
+                || !追加无符号_(输出, 请求.合同版本, 4)
                 || !追加无符号_(输出, 请求.写集规则版本, 4)
                 || !追加无符号_(输出, 请求.安装实例身份.命名域, 8)
                 || !追加无符号_(输出, 请求.安装实例身份.键值, 8)
                 || !追加无符号_(输出, 请求.幂等身份.命名域, 8)
                 || !追加无符号_(输出, 请求.幂等身份.键值, 8)
-                || !追加无符号_(输出, 请求.预期事实截止代次, 8)
-                || !追加无符号_(输出, 请求.写项组.size(), 8)) {
+                || !追加无符号_(输出, 请求.预期事实截止代次, 8)) {
+                结果.状态 = 节点直接材料转换状态::入口拒绝;
+                return 结果;
+            }
+            for (const auto 字节 : 请求.请求意图摘要) if (!追加字节_(输出, 字节)) {
+                结果.状态 = 节点直接材料转换状态::入口拒绝; return 结果;
+            }
+            for (const auto 字节 : 请求.执行证据摘要) if (!追加字节_(输出, 字节)) {
+                结果.状态 = 节点直接材料转换状态::入口拒绝; return 结果;
+            }
+            if (!追加无符号_(输出, 预计后继代次, 8)
+                || !追加无符号_(输出, 计划身份映射.size(), 8)) {
+                结果.状态 = 节点直接材料转换状态::入口拒绝;
+                return 结果;
+            }
+            for (const auto& 映射 : 计划身份映射) {
+                if (!追加字节_(输出, static_cast<std::uint8_t>(映射.局部身份.种类))
+                    || !追加无符号_(输出, 映射.局部身份.值, 8)
+                    || !追加无符号_(输出, 映射.稳定身份命名域, 8)
+                    || !追加无符号_(输出, 映射.计划键, 8)
+                    || !追加无符号_(输出, 映射.初始版本, 8)) {
+                    结果.状态 = 节点直接材料转换状态::入口拒绝; return 结果;
+                }
+            }
+            if (!追加无符号_(输出, 请求.写项组.size(), 8)) {
                 结果.状态 = 节点直接材料转换状态::入口拒绝;
                 return 结果;
             }
             for (const auto& 写项 : 请求.写项组) {
-                if (!追加字节_(输出, static_cast<std::uint8_t>(写项.index() + 1))) {
-                    结果.状态 = 节点直接材料转换状态::入口拒绝; return 结果;
-                }
                 const bool 成功 = std::visit([&](const auto& 项) -> bool {
                     using 类型 = std::decay_t<decltype(项)>;
                     if constexpr (std::is_same_v<类型, 节点直接类型合同发布项>) {
-                        if (!追加无符号_(输出, 项.合同身份.命名域, 8) || !追加无符号_(输出, 项.合同身份.键值, 8)
+                        if (!追加字节_(输出, 1) || !追加无符号_(输出, 项.合同身份.命名域, 8) || !追加无符号_(输出, 项.合同身份.键值, 8)
                             || !追加无符号_(输出, 项.命名空间.命名域, 8) || !追加无符号_(输出, 项.命名空间.键值, 8)
                             || !追加无符号_(输出, 项.合同版本, 4) || !追加字节_(输出, static_cast<std::uint8_t>(项.表示))
                             || !追加类型合同值域_(输出, 项.值域) || !追加无符号_(输出, 项.所有者服务.命名域, 8)
@@ -616,43 +945,44 @@ private:
                             || !追加字节_(输出, static_cast<std::uint8_t>(兼容.操作)) || !追加字节_(输出, static_cast<std::uint8_t>(兼容.方向))) return false;
                         return true;
                     } else if constexpr (std::is_same_v<类型, 节点直接节点创建项>)
-                        return 追加字节_(输出, static_cast<std::uint8_t>(项.局部身份.种类)) && 追加无符号_(输出, 项.局部身份.值, 8)
+                        return 追加字节_(输出, 2) && 追加字节_(输出, static_cast<std::uint8_t>(项.局部身份.种类)) && 追加无符号_(输出, 项.局部身份.值, 8)
+                            && 追加无符号_(输出, static_cast<std::uint64_t>(项.命名域), 8)
                             && 追加无符号_(输出, static_cast<std::uint64_t>(项.类型), 4);
                     else if constexpr (std::is_same_v<类型, 节点直接关系创建项>)
-                        return 追加字节_(输出, static_cast<std::uint8_t>(项.局部身份.种类)) && 追加无符号_(输出, 项.局部身份.值, 8)
+                        return 追加字节_(输出, 3) && 追加字节_(输出, static_cast<std::uint8_t>(项.局部身份.种类)) && 追加无符号_(输出, 项.局部身份.值, 8)
                             && 追加无符号_(输出, static_cast<std::uint64_t>(项.类型), 4) && 追加端点_(输出, 项.源端)
                             && 追加端点_(输出, 项.目标端) && 追加无符号_(输出, static_cast<std::uint64_t>(项.角色或顺序), 8);
                     else if constexpr (std::is_same_v<类型, 节点直接关系失效项>)
-                        return 追加无符号_(输出, 项.预期当前.稳定主键.命名域, 8) && 追加无符号_(输出, 项.预期当前.稳定主键.键值, 8)
+                        return 追加字节_(输出, 4) && 追加无符号_(输出, 项.预期当前.稳定主键.命名域, 8) && 追加无符号_(输出, 项.预期当前.稳定主键.键值, 8)
                             && 追加无符号_(输出, static_cast<std::uint64_t>(项.预期当前.类型), 4) && 追加无符号_(输出, 项.预期当前.关系版本, 4)
                             && 追加节点见证_(输出, 项.预期当前.源端) && 追加节点见证_(输出, 项.预期当前.目标端)
                             && 追加无符号_(输出, static_cast<std::uint64_t>(项.预期当前.角色或顺序), 8);
                     else if constexpr (std::is_same_v<类型, 节点直接类型化值发布项>) {
-                        if (!追加端点_(输出, 项.所属身份) || !追加无符号_(输出, 项.类型合同身份.命名域, 8)
+                        if (!追加字节_(输出, 5) || !追加端点_(输出, 项.所属身份) || !追加无符号_(输出, 项.类型合同身份.命名域, 8)
                             || !追加无符号_(输出, 项.类型合同身份.键值, 8) || !追加无符号_(输出, 项.类型合同版本, 4)
                             || !追加字节_(输出, static_cast<std::uint8_t>(项.值记录局部身份.种类)) || !追加无符号_(输出, 项.值记录局部身份.值, 8)
                             || !追加字节_(输出, 项.预期当前值记录版本.has_value() ? 1 : 0)
                             || (项.预期当前值记录版本 && !追加无符号_(输出, *项.预期当前值记录版本, 8))
-                            || !追加类型化值材料_(输出, 项.材料) || !追加字节_(输出, static_cast<std::uint8_t>(项.来源.index() + 1))) return false;
+                            || !追加类型化值材料_(输出, 项.材料)) return false;
                         return std::visit([&](const auto& 来源) -> bool {
                             using 来源类型 = std::decay_t<decltype(来源)>;
-                            if constexpr (std::is_same_v<来源类型, 节点直接节点端点引用>) return 追加端点_(输出, 来源);
-                            else return 追加无符号_(输出, 来源.命名域, 8) && 追加无符号_(输出, 来源.键值, 8);
+                            if constexpr (std::is_same_v<来源类型, 节点直接节点端点引用>) return 追加字节_(输出, 1) && 追加端点_(输出, 来源);
+                            else return 追加字节_(输出, 2) && 追加无符号_(输出, 来源.命名域, 8) && 追加无符号_(输出, 来源.键值, 8);
                         }, 项.来源);
                     } else if constexpr (std::is_same_v<类型, 节点直接类型化值退役项>)
-                        return 追加节点见证_(输出, 项.所属身份) && 追加无符号_(输出, 项.类型合同身份.命名域, 8)
+                        return 追加字节_(输出, 6) && 追加节点见证_(输出, 项.所属身份) && 追加无符号_(输出, 项.类型合同身份.命名域, 8)
                             && 追加无符号_(输出, 项.类型合同身份.键值, 8) && 追加无符号_(输出, 项.类型合同版本, 4)
                             && 追加无符号_(输出, 项.值记录身份.命名域, 8) && 追加无符号_(输出, 项.值记录身份.键值, 8)
                             && 追加无符号_(输出, 项.预期值记录版本, 8);
                     else if constexpr (std::is_same_v<类型, 节点直接索引创建项>)
-                        return 追加无符号_(输出, 项.键.所有者身份, 8) && 追加无符号_(输出, 项.键.命名域, 4)
+                        return 追加字节_(输出, 7) && 追加无符号_(输出, 项.键.所有者身份, 8) && 追加无符号_(输出, 项.键.命名域, 4)
                             && 追加无符号_(输出, 项.键.键格式版本, 4) && 追加无符号_(输出, 项.键.探测规则版本, 4)
                             && 追加无符号_(输出, 项.键.键值, 8) && 追加端点_(输出, 项.目标);
                     else if constexpr (std::is_same_v<类型, 节点直接索引移除项>)
-                        return 追加无符号_(输出, 项.键.所有者身份, 8) && 追加无符号_(输出, 项.键.命名域, 4)
+                        return 追加字节_(输出, 8) && 追加无符号_(输出, 项.键.所有者身份, 8) && 追加无符号_(输出, 项.键.命名域, 4)
                             && 追加无符号_(输出, 项.键.键格式版本, 4) && 追加无符号_(输出, 项.键.探测规则版本, 4)
                             && 追加无符号_(输出, 项.键.键值, 8) && 追加节点见证_(输出, 项.预期目标);
-                    else return 追加节点见证_(输出, 项.预期当前);
+                    else return 追加字节_(输出, 9) && 追加节点见证_(输出, 项.预期当前);
                 }, 写项);
                 if (!成功) { 结果.状态 = 节点直接材料转换状态::入口拒绝; return 结果; }
             }
@@ -661,17 +991,16 @@ private:
             }
             for (const auto& 项 : 请求.读回规格.项目组) {
                 if (!追加字节_(输出, static_cast<std::uint8_t>(项.种类))
-                    || !追加字节_(输出, static_cast<std::uint8_t>(项.身份.index() + 1))
                     || !追加无符号_(输出, 项.预期版本, 8)) {
                     结果.状态 = 节点直接材料转换状态::入口拒绝; return 结果;
                 }
                 const bool 成功 = std::visit([&](const auto& 身份) -> bool {
                     using 类型 = std::decay_t<decltype(身份)>;
-                    if constexpr (std::is_same_v<类型, 节点直接写集局部身份>) return 追加字节_(输出, static_cast<std::uint8_t>(身份.种类)) && 追加无符号_(输出, 身份.值, 8);
-                    else if constexpr (std::is_same_v<类型, 节点稳定主键>) return 追加稳定主键_(输出, 身份);
+                    if constexpr (std::is_same_v<类型, 节点直接写集局部身份>) return 追加字节_(输出, 1) && 追加字节_(输出, static_cast<std::uint8_t>(身份.种类)) && 追加无符号_(输出, 身份.值, 8);
+                    else if constexpr (std::is_same_v<类型, 节点稳定主键>) return 追加字节_(输出, 2) && 追加稳定主键_(输出, 身份);
                     else if constexpr (std::is_same_v<类型, 关系稳定主键> || std::is_same_v<类型, 类型化值记录稳定身份>)
-                        return 追加无符号_(输出, 身份.命名域, 8) && 追加无符号_(输出, 身份.键值, 8);
-                    else return 追加无符号_(输出, 身份.所有者身份, 8) && 追加无符号_(输出, 身份.命名域, 4)
+                        return 追加字节_(输出, std::is_same_v<类型, 关系稳定主键> ? 3 : 4) && 追加无符号_(输出, 身份.命名域, 8) && 追加无符号_(输出, 身份.键值, 8);
+                    else return 追加字节_(输出, 5) && 追加无符号_(输出, 身份.所有者身份, 8) && 追加无符号_(输出, 身份.命名域, 4)
                         && 追加无符号_(输出, 身份.键格式版本, 4) && 追加无符号_(输出, 身份.探测规则版本, 4)
                         && 追加无符号_(输出, 身份.键值, 8);
                 }, 项.身份);
@@ -713,18 +1042,404 @@ private:
             记录.类型化值组, 记录.索引组};
     }
 
+    static bool 局部身份有效_(
+        节点直接写集局部身份 身份,
+        节点直接写集局部身份种类 期望种类) noexcept {
+        return 身份.种类 == 期望种类 && 身份.值 != 0;
+    }
+
+    static bool 端点引用静态完整_(const 节点直接节点端点引用& 引用) noexcept {
+        if (const auto* 见证 = std::get_if<节点稳定身份见证>(&引用))
+            return 节点稳定身份见证完整(*见证);
+        return 局部身份有效_(std::get<节点直接写集局部身份>(引用),
+            节点直接写集局部身份种类::节点);
+    }
+
+    static bool 类型合同值域静态完整_(const 类型合同值域& 值域) noexcept {
+        return std::visit([](const auto& 值) noexcept {
+            using 类型 = std::decay_t<decltype(值)>;
+            if constexpr (std::is_same_v<类型, I64标量值域>
+                || std::is_same_v<类型, U64标量值域>
+                || std::is_same_v<类型, I64区间材料>) return 值.下界 <= 值.上界;
+            else if constexpr (std::is_same_v<类型, I64有序组值域>
+                || std::is_same_v<类型, U64有序组值域>) {
+                return 值.元素下界 <= 值.元素上界 && 值.最少项目数 <= 值.最多项目数;
+            } else if constexpr (std::is_same_v<类型, 稳定身份有序组值域>) {
+                return 值.最少项目数 <= 值.最多项目数
+                    && !值.允许节点类型稳定值组.empty();
+            } else return 值.格式版本 != 0 && 值.最少字节数 <= 值.最多字节数;
+        }, 值域);
+    }
+
+    static bool 表示与值域匹配_(
+        类型化值表示种类 表示,
+        const 类型合同值域& 值域) noexcept {
+        return std::visit([&](const auto& 值) noexcept {
+            using 类型 = std::decay_t<decltype(值)>;
+            if constexpr (std::is_same_v<类型, I64标量值域>)
+                return 表示 == 类型化值表示种类::I64标量;
+            else if constexpr (std::is_same_v<类型, U64标量值域>)
+                return 表示 == 类型化值表示种类::U64标量;
+            else if constexpr (std::is_same_v<类型, I64区间材料>)
+                return 表示 == 类型化值表示种类::I64区间;
+            else if constexpr (std::is_same_v<类型, I64有序组值域>)
+                return 表示 == 类型化值表示种类::I64有序组;
+            else if constexpr (std::is_same_v<类型, U64有序组值域>)
+                return 表示 == 类型化值表示种类::U64有序组;
+            else if constexpr (std::is_same_v<类型, 稳定身份有序组值域>)
+                return 表示 == 类型化值表示种类::稳定身份有序组;
+            else return 表示 == 类型化值表示种类::独立材料引用;
+        }, 值域);
+    }
+
+    static bool 类型化值材料静态完整_(const 类型化值材料& 材料) noexcept {
+        return std::visit([](const auto& 值) noexcept {
+            using 类型 = std::decay_t<decltype(值)>;
+            if constexpr (std::is_same_v<类型, I64区间材料>) return 值.下界 <= 值.上界;
+            else if constexpr (std::is_same_v<类型, std::vector<std::int64_t>>
+                || std::is_same_v<类型, std::vector<std::uint64_t>>) {
+                return 值.size() <= 最大向量项目数_;
+            } else if constexpr (std::is_same_v<类型, 稳定身份有序组材料>) {
+                return 值.项目组.size() <= 最大向量项目数_
+                    && std::all_of(值.项目组.begin(), 值.项目组.end(), 节点稳定身份见证完整);
+            } else if constexpr (std::is_same_v<类型, 独立材料引用>) {
+                return 稳定主键有效(值.材料身份) && 值.格式版本 != 0 && 值.字节数 != 0
+                    && std::any_of(值.SHA256.begin(), 值.SHA256.end(), [](auto 字节) { return 字节 != 0; });
+            } else return true;
+        }, 材料);
+    }
+
+    static bool 类型化值材料符合合同_(
+        const 类型化值材料& 材料,
+        const 类型合同读回& 合同) noexcept {
+        if (!表示与值域匹配_(合同.表示, 合同.值域)
+            || 材料.index() != 合同.值域.index()) return false;
+        return std::visit([&](const auto& 值) noexcept {
+            using 类型 = std::decay_t<decltype(值)>;
+            if constexpr (std::is_same_v<类型, std::int64_t>) {
+                const auto& 值域 = std::get<I64标量值域>(合同.值域);
+                return 值 >= 值域.下界 && 值 <= 值域.上界;
+            } else if constexpr (std::is_same_v<类型, std::uint64_t>) {
+                const auto& 值域 = std::get<U64标量值域>(合同.值域);
+                return 值 >= 值域.下界 && 值 <= 值域.上界;
+            } else if constexpr (std::is_same_v<类型, I64区间材料>) {
+                const auto& 值域 = std::get<I64区间材料>(合同.值域);
+                return 值.下界 >= 值域.下界 && 值.上界 <= 值域.上界;
+            } else if constexpr (std::is_same_v<类型, std::vector<std::int64_t>>) {
+                const auto& 值域 = std::get<I64有序组值域>(合同.值域);
+                if (值.size() < 值域.最少项目数 || 值.size() > 值域.最多项目数) return false;
+                return std::all_of(值.begin(), 值.end(), [&](auto 项) {
+                    return 项 >= 值域.元素下界 && 项 <= 值域.元素上界;
+                });
+            } else if constexpr (std::is_same_v<类型, std::vector<std::uint64_t>>) {
+                const auto& 值域 = std::get<U64有序组值域>(合同.值域);
+                if (值.size() < 值域.最少项目数 || 值.size() > 值域.最多项目数) return false;
+                return std::all_of(值.begin(), 值.end(), [&](auto 项) {
+                    return 项 >= 值域.元素下界 && 项 <= 值域.元素上界;
+                });
+            } else if constexpr (std::is_same_v<类型, 稳定身份有序组材料>) {
+                const auto& 值域 = std::get<稳定身份有序组值域>(合同.值域);
+                if (值.项目组.size() < 值域.最少项目数 || 值.项目组.size() > 值域.最多项目数)
+                    return false;
+                return std::all_of(值.项目组.begin(), 值.项目组.end(), [&](const auto& 项) {
+                    const auto 稳定值 = static_cast<std::uint64_t>(项.类型);
+                    return std::find(值域.允许节点类型稳定值组.begin(),
+                        值域.允许节点类型稳定值组.end(), 稳定值)
+                        != 值域.允许节点类型稳定值组.end();
+                });
+            } else {
+                const auto& 值域 = std::get<独立材料引用值域>(合同.值域);
+                return 值.格式版本 == 值域.格式版本
+                    && 值.字节数 >= 值域.最少字节数 && 值.字节数 <= 值域.最多字节数;
+            }
+        }, 材料);
+    }
+
+    static bool 请求静态完整_(const 节点直接类型化结构数据操作请求& 请求) noexcept {
+        if (请求.写项组.size() > 最大向量项目数_
+            || 请求.读回规格.项目组.size() > 最大向量项目数_) return false;
+        std::vector<节点直接写集局部身份> 局部身份组;
+        auto 登记局部身份 = [&](节点直接写集局部身份 身份,
+            节点直接写集局部身份种类 期望种类) {
+            if (!局部身份有效_(身份, 期望种类)
+                || std::find(局部身份组.begin(), 局部身份组.end(), 身份) != 局部身份组.end()) return false;
+            局部身份组.push_back(身份);
+            return true;
+        };
+        for (const auto& 写项 : 请求.写项组) {
+            const bool 完整 = std::visit([&](const auto& 项) {
+                using 类型 = std::decay_t<decltype(项)>;
+                if constexpr (std::is_same_v<类型, 节点直接类型合同发布项>) {
+                    if (!类型合同稳定身份完整(项.合同身份)
+                        || 项.命名空间.命名域 == 0 || 项.命名空间.键值 == 0
+                        || 项.合同版本 == 0 || 项.表示 == 类型化值表示种类::未定义
+                        || static_cast<std::uint8_t>(项.表示) > 7
+                        || !表示与值域匹配_(项.表示, 项.值域)
+                        || !类型合同值域静态完整_(项.值域)
+                        || !服务稳定身份完整(项.所有者服务)
+                        || 项.生命周期 != 类型合同生命周期状态::当前可写
+                        || 项.直接兼容组.size() > 最大向量项目数_) return false;
+                    for (std::size_t 序号 = 0; 序号 < 项.直接兼容组.size(); ++序号) {
+                        const auto& 兼容 = 项.直接兼容组[序号];
+                        if (!类型合同稳定身份完整(兼容.另一合同身份) || 兼容.另一合同版本 == 0
+                            || static_cast<std::uint8_t>(兼容.操作) < 1 || static_cast<std::uint8_t>(兼容.操作) > 4
+                            || static_cast<std::uint8_t>(兼容.方向) < 1 || static_cast<std::uint8_t>(兼容.方向) > 3) return false;
+                        for (std::size_t 既有序号 = 0; 既有序号 < 序号; ++既有序号)
+                            if (项.直接兼容组[既有序号] == 兼容) return false;
+                    }
+                    return true;
+                } else if constexpr (std::is_same_v<类型, 节点直接节点创建项>) {
+                    return 登记局部身份(项.局部身份, 节点直接写集局部身份种类::节点)
+                        && 节点直接身份仓库::命名域已定义(项.命名域)
+                        && 节点直接身份仓库::命名域与节点类型匹配(项.命名域, 项.类型);
+                } else if constexpr (std::is_same_v<类型, 节点直接关系创建项>) {
+                    return 登记局部身份(项.局部身份, 节点直接写集局部身份种类::关系)
+                        && static_cast<std::uint32_t>(项.类型) < 正式关系类型ABI数量
+                        && 端点引用静态完整_(项.源端) && 端点引用静态完整_(项.目标端);
+                } else if constexpr (std::is_same_v<类型, 节点直接关系失效项>) {
+                    return 关系稳定主键完整(项.预期当前.稳定主键)
+                        && 项.预期当前.关系版本 != 0
+                        && 节点稳定身份见证完整(项.预期当前.源端)
+                        && 节点稳定身份见证完整(项.预期当前.目标端);
+                } else if constexpr (std::is_same_v<类型, 节点直接类型化值发布项>) {
+                    const bool 来源完整 = std::visit([](const auto& 来源) {
+                        using 来源类型 = std::decay_t<decltype(来源)>;
+                        if constexpr (std::is_same_v<来源类型, 节点直接节点端点引用>)
+                            return 端点引用静态完整_(来源);
+                        else return 服务稳定身份完整(来源);
+                    }, 项.来源);
+                    return 端点引用静态完整_(项.所属身份)
+                        && 类型合同稳定身份完整(项.类型合同身份) && 项.类型合同版本 != 0
+                        && 登记局部身份(项.值记录局部身份, 节点直接写集局部身份种类::类型化值记录)
+                        && (!项.预期当前值记录版本 || *项.预期当前值记录版本 != 0)
+                        && 类型化值材料静态完整_(项.材料) && 来源完整;
+                } else if constexpr (std::is_same_v<类型, 节点直接类型化值退役项>) {
+                    return 节点稳定身份见证完整(项.所属身份)
+                        && 类型合同稳定身份完整(项.类型合同身份) && 项.类型合同版本 != 0
+                        && 类型化值记录稳定身份完整(项.值记录身份) && 项.预期值记录版本 != 0;
+                } else if constexpr (std::is_same_v<类型, 节点直接索引创建项>) {
+                    return 索引物理键完整(项.键) && 端点引用静态完整_(项.目标);
+                } else if constexpr (std::is_same_v<类型, 节点直接索引移除项>) {
+                    return 索引物理键完整(项.键) && 节点稳定身份见证完整(项.预期目标);
+                } else return 节点稳定身份见证完整(项.预期当前);
+            }, 写项);
+            if (!完整) return false;
+        }
+        auto 局部身份已登记 = [&](节点直接写集局部身份 身份) {
+            return std::find(局部身份组.begin(), 局部身份组.end(), 身份) != 局部身份组.end();
+        };
+        for (const auto& 写项 : 请求.写项组) {
+            const bool 引用存在 = std::visit([&](const auto& 项) {
+                using 类型 = std::decay_t<decltype(项)>;
+                if constexpr (std::is_same_v<类型, 节点直接关系创建项>) {
+                    const auto 本地存在 = [&](const auto& 端点) {
+                        const auto* 本地 = std::get_if<节点直接写集局部身份>(&端点);
+                        return 本地 == nullptr || 局部身份已登记(*本地);
+                    };
+                    return 本地存在(项.源端) && 本地存在(项.目标端);
+                } else if constexpr (std::is_same_v<类型, 节点直接类型化值发布项>) {
+                    const auto* 所属本地 = std::get_if<节点直接写集局部身份>(&项.所属身份);
+                    if (所属本地 != nullptr && !局部身份已登记(*所属本地)) return false;
+                    if (const auto* 节点来源 = std::get_if<节点直接节点端点引用>(&项.来源)) {
+                        const auto* 来源本地 = std::get_if<节点直接写集局部身份>(节点来源);
+                        if (来源本地 != nullptr && !局部身份已登记(*来源本地)) return false;
+                    }
+                    return true;
+                } else if constexpr (std::is_same_v<类型, 节点直接索引创建项>) {
+                    const auto* 本地 = std::get_if<节点直接写集局部身份>(&项.目标);
+                    return 本地 == nullptr || 局部身份已登记(*本地);
+                } else return true;
+            }, 写项);
+            if (!引用存在) return false;
+        }
+        for (std::size_t 序号 = 0; 序号 < 请求.写项组.size(); ++序号) {
+            const 索引物理键* 键 = nullptr;
+            std::visit([&](const auto& 项) {
+                using 类型 = std::decay_t<decltype(项)>;
+                if constexpr (std::is_same_v<类型, 节点直接索引创建项>
+                    || std::is_same_v<类型, 节点直接索引移除项>) 键 = &项.键;
+            }, 请求.写项组[序号]);
+            if (键 == nullptr) continue;
+            for (std::size_t 既有序号 = 0; 既有序号 < 序号; ++既有序号) {
+                const 索引物理键* 既有键 = nullptr;
+                std::visit([&](const auto& 项) {
+                    using 类型 = std::decay_t<decltype(项)>;
+                    if constexpr (std::is_same_v<类型, 节点直接索引创建项>
+                        || std::is_same_v<类型, 节点直接索引移除项>) 既有键 = &项.键;
+                }, 请求.写项组[既有序号]);
+                if (既有键 != nullptr && *既有键 == *键) return false;
+            }
+        }
+        for (std::size_t 读回序号 = 0; 读回序号 < 请求.读回规格.项目组.size(); ++读回序号) {
+            const auto& 读回 = 请求.读回规格.项目组[读回序号];
+            const bool 完整 = std::visit([&](const auto& 身份) {
+                using 类型 = std::decay_t<decltype(身份)>;
+                if constexpr (std::is_same_v<类型, 节点直接写集局部身份>) {
+                    if (!局部身份已登记(身份) || 读回.预期版本 == 0) return false;
+                    if (读回.种类 == 节点直接发布后读回对象种类::当前节点)
+                        return 身份.种类 == 节点直接写集局部身份种类::节点;
+                    if (读回.种类 == 节点直接发布后读回对象种类::当前关系)
+                        return 身份.种类 == 节点直接写集局部身份种类::关系;
+                    return 读回.种类 == 节点直接发布后读回对象种类::当前类型化值
+                        && 身份.种类 == 节点直接写集局部身份种类::类型化值记录;
+                } else if constexpr (std::is_same_v<类型, 节点稳定主键>) {
+                    return 读回.种类 == 节点直接发布后读回对象种类::当前节点
+                        && 稳定主键有效(身份) && 读回.预期版本 != 0;
+                } else if constexpr (std::is_same_v<类型, 关系稳定主键>) {
+                    return (读回.种类 == 节点直接发布后读回对象种类::当前关系
+                            || 读回.种类 == 节点直接发布后读回对象种类::已失效关系)
+                        && 关系稳定主键完整(身份) && 读回.预期版本 != 0;
+                } else if constexpr (std::is_same_v<类型, 类型化值记录稳定身份>) {
+                    return 读回.种类 == 节点直接发布后读回对象种类::当前类型化值
+                        && 类型化值记录稳定身份完整(身份) && 读回.预期版本 != 0;
+                } else return (读回.种类 == 节点直接发布后读回对象种类::当前索引
+                        || 读回.种类 == 节点直接发布后读回对象种类::已移除索引)
+                    && 索引物理键完整(身份) && 读回.预期版本 == 0;
+            }, 读回.身份);
+            if (!完整) return false;
+            const auto* 索引键 = std::get_if<索引物理键>(&读回.身份);
+            if (索引键 == nullptr) continue;
+            for (std::size_t 既有序号 = 0; 既有序号 < 读回序号; ++既有序号) {
+                const auto& 既有 = 请求.读回规格.项目组[既有序号];
+                const auto* 既有键 = std::get_if<索引物理键>(&既有.身份);
+                if (既有键 != nullptr && 既有.种类 == 读回.种类 && *既有键 == *索引键) return false;
+            }
+            std::size_t 配对数 = 0;
+            for (const auto& 写项 : 请求.写项组) {
+                if (读回.种类 == 节点直接发布后读回对象种类::当前索引) {
+                    const auto* 创建 = std::get_if<节点直接索引创建项>(&写项);
+                    if (创建 != nullptr && 创建->键 == *索引键) ++配对数;
+                } else {
+                    const auto* 移除 = std::get_if<节点直接索引移除项>(&写项);
+                    if (移除 != nullptr && 移除->键 == *索引键) ++配对数;
+                }
+            }
+            if (配对数 != 1) return false;
+        }
+        return true;
+    }
+
+    bool 请求动态准备前完整_(
+        const 节点直接类型化结构数据操作请求& 请求,
+        std::uint64_t 事务序号,
+        std::uint64_t 当前代次) const {
+        auto 节点见证当前 = [&](const 节点稳定身份见证& 见证) {
+            const auto 当前 = 节点_->读取稳定主键当前身份(见证.稳定主键, 事务序号);
+            return 当前.状态 == 稳定主键当前身份状态::当前有效
+                && 当前.当前记录 && 当前.当前记录->类型 == 见证.类型
+                && 当前.当前记录->版本号 == 见证.身份版本;
+        };
+        auto 查找合同 = [&](类型合同稳定身份 身份, std::uint32_t 版本)
+            -> std::optional<类型合同读回> {
+            const auto 已发布 = 类型合同_->读取精确合同(身份, 版本);
+            if (已发布) return 已发布;
+            for (const auto& 写项 : 请求.写项组) {
+                const auto* 项 = std::get_if<节点直接类型合同发布项>(&写项);
+                if (项 != nullptr && 项->合同身份 == 身份 && 项->合同版本 == 版本) {
+                    return 类型合同读回{项->合同身份, 项->命名空间, 项->合同版本,
+                        项->表示, 项->值域, 项->所有者服务, 项->生命周期,
+                        项->直接兼容组, 当前代次 + 1, 当前代次 + 1};
+                }
+            }
+            return std::nullopt;
+        };
+        for (const auto& 写项 : 请求.写项组) {
+            const bool 完整 = std::visit([&](const auto& 项) {
+                using 类型 = std::decay_t<decltype(项)>;
+                if constexpr (std::is_same_v<类型, 节点直接关系创建项>) {
+                    const auto 验证端点 = [&](const auto& 端点) {
+                        const auto* 见证 = std::get_if<节点稳定身份见证>(&端点);
+                        return 见证 == nullptr || 节点见证当前(*见证);
+                    };
+                    return 验证端点(项.源端) && 验证端点(项.目标端);
+                } else if constexpr (std::is_same_v<类型, 节点直接关系失效项>) {
+                    const auto 当前 = 关系_->读取稳定主键当前关系(
+                        项.预期当前.稳定主键, 事务序号);
+                    if (当前.状态 != 稳定关系当前读取状态::当前有效 || !当前.记录
+                        || 当前.记录->类型 != 项.预期当前.类型
+                        || 当前.记录->版本号 != 项.预期当前.关系版本
+                        || 当前.记录->顺序号 != 项.预期当前.角色或顺序) return false;
+                    const auto 源记录 = 节点_->读取节点(当前.记录->源节点, 事务序号);
+                    const auto 目标记录 = 节点_->读取节点(当前.记录->目标节点, 事务序号);
+                    return 源记录 && 目标记录
+                        && 源记录->稳定主键 == 项.预期当前.源端.稳定主键
+                        && 源记录->类型 == 项.预期当前.源端.类型
+                        && 源记录->版本号 == 项.预期当前.源端.身份版本
+                        && 目标记录->稳定主键 == 项.预期当前.目标端.稳定主键
+                        && 目标记录->类型 == 项.预期当前.目标端.类型
+                        && 目标记录->版本号 == 项.预期当前.目标端.身份版本;
+                } else if constexpr (std::is_same_v<类型, 节点直接类型化值发布项>) {
+                    const auto 合同 = 查找合同(项.类型合同身份, 项.类型合同版本);
+                    if (!合同 || 合同->生命周期 != 类型合同生命周期状态::当前可写
+                        || !类型化值材料符合合同_(项.材料, *合同)) return false;
+                    const auto* 所属见证 = std::get_if<节点稳定身份见证>(&项.所属身份);
+                    if (所属见证 != nullptr && !节点见证当前(*所属见证)) return false;
+                    if (const auto* 来源节点 = std::get_if<节点直接节点端点引用>(&项.来源)) {
+                        const auto* 来源见证 = std::get_if<节点稳定身份见证>(来源节点);
+                        if (来源见证 != nullptr && !节点见证当前(*来源见证)) return false;
+                    }
+                    if (所属见证 == nullptr) return !项.预期当前值记录版本.has_value();
+                    const auto 当前组 = 类型化值_->读取所属身份当前值组(所属见证->稳定主键);
+                    const auto 位置 = std::find_if(当前组.begin(), 当前组.end(), [&](const auto& 当前) {
+                        return 当前.类型合同身份 == 项.类型合同身份
+                            && 当前.类型合同版本 == 项.类型合同版本;
+                    });
+                    return 项.预期当前值记录版本
+                        ? 位置 != 当前组.end()
+                            && 位置->值记录版本 == *项.预期当前值记录版本
+                        : 位置 == 当前组.end();
+                } else if constexpr (std::is_same_v<类型, 节点直接类型化值退役项>) {
+                    if (!节点见证当前(项.所属身份)) return false;
+                    const auto 当前组 = 类型化值_->读取所属身份当前值组(项.所属身份.稳定主键);
+                    return std::any_of(当前组.begin(), 当前组.end(), [&](const auto& 当前) {
+                        return 当前.类型合同身份 == 项.类型合同身份
+                            && 当前.类型合同版本 == 项.类型合同版本
+                            && 当前.值记录身份 == 项.值记录身份
+                            && 当前.值记录版本 == 项.预期值记录版本;
+                    });
+                } else if constexpr (std::is_same_v<类型, 节点直接索引创建项>) {
+                    const auto* 见证 = std::get_if<节点稳定身份见证>(&项.目标);
+                    return 见证 == nullptr || 节点见证当前(*见证);
+                } else if constexpr (std::is_same_v<类型, 节点直接索引移除项>) {
+                    const auto 当前 = 索引_->读取索引物理键(项.键, 事务序号);
+                    if (!当前 || 当前->目标种类 != 索引目标种类::节点
+                        || !节点见证当前(项.预期目标)) return false;
+                    const auto 目标 = 节点_->读取节点(当前->节点, 事务序号);
+                    return 目标 && 目标->稳定主键 == 项.预期目标.稳定主键
+                        && 目标->类型 == 项.预期目标.类型
+                        && 目标->版本号 == 项.预期目标.身份版本;
+                } else if constexpr (std::is_same_v<类型, 节点直接节点删除项>) {
+                    return 节点见证当前(项.预期当前);
+                } else return true;
+            }, 写项);
+            if (!完整) return false;
+        }
+        return true;
+    }
+
     节点直接类型化结构数据操作结果 执行类型化结构事务_(
         const 节点直接类型化结构数据操作请求& 请求,
         bool 允许空域治理) const {
         节点直接类型化结构数据操作结果 结果;
         if (!类型化结构有效() || 请求.合同版本 != 节点直接结构服务合同版本
-            || 请求.写集规则版本 != 1
+            || 请求.写集规则版本 != 2
             || !节点直接事务幂等身份完整(请求.安装实例身份)
             || !节点直接事务幂等身份完整(请求.幂等身份)
             || !摘要非零_(请求.请求意图摘要) || !摘要非零_(请求.执行证据摘要)
+            || !请求静态完整_(请求)
             || (!允许空域治理 && (请求.预期事实截止代次 == 0 || 请求.写项组.empty()))) {
             结果.状态 = 节点直接类型化结构数据操作状态::入口拒绝;
             return 结果;
+        }
+        for (const auto& 写项 : 请求.写项组) {
+            const auto* 节点项 = std::get_if<节点直接节点创建项>(&写项);
+            if (节点项 != nullptr
+                && (!节点直接身份仓库::命名域已定义(节点项->命名域)
+                    || !节点直接身份仓库::命名域与节点类型匹配(
+                        节点项->命名域, 节点项->类型))) {
+                结果.状态 = 节点直接类型化结构数据操作状态::入口拒绝;
+                return 结果;
+            }
         }
         auto 许可 = 事务域_->取得独占许可();
         if (!许可.有效()) {
@@ -732,11 +1447,6 @@ private:
             return 结果;
         }
         const auto 当前代次 = 许可.读取已发布代次();
-        if ((!允许空域治理 && 当前代次 != 请求.预期事实截止代次)
-            || (允许空域治理 && 当前代次 != 0)) {
-            结果.状态 = 节点直接类型化结构数据操作状态::版本漂移;
-            return 结果;
-        }
         const auto 既有 = 幂等_->读取(请求.幂等身份);
         if (既有) {
             if (既有->请求意图摘要 == 请求.请求意图摘要
@@ -746,7 +1456,26 @@ private:
                 : 节点直接类型化结构数据操作状态::幂等冲突;
             return 结果;
         }
-        const auto 编码 = 编码写集_(请求);
+        if ((!允许空域治理 && 当前代次 != 请求.预期事实截止代次)
+            || (允许空域治理 && 当前代次 != 0)) {
+            结果.状态 = 节点直接类型化结构数据操作状态::版本漂移;
+            return 结果;
+        }
+        if (!请求动态准备前完整_(请求, 许可.事务序号(), 当前代次)) {
+            结果.状态 = 节点直接类型化结构数据操作状态::入口拒绝;
+            return 结果;
+        }
+        if (当前代次 == std::numeric_limits<std::uint64_t>::max()) {
+            许可.标记隔离();
+            结果.状态 = 节点直接类型化结构数据操作状态::内部不一致;
+            return 结果;
+        }
+        const auto 计划身份映射 = 形成计划身份映射_(请求);
+        if (!计划身份映射) {
+            结果.状态 = 节点直接类型化结构数据操作状态::入口拒绝;
+            return 结果;
+        }
+        const auto 编码 = 编码写集_(请求, 当前代次 + 1, *计划身份映射);
         if (编码.状态 != 节点直接材料转换状态::成功) {
             结果.状态 = 编码.状态 == 节点直接材料转换状态::资源失败
                 ? 节点直接类型化结构数据操作状态::资源失败
@@ -761,7 +1490,7 @@ private:
         节点直接持久准备请求 准备请求;
         准备请求.安装实例身份 = 请求.安装实例身份;
         准备请求.事务身份 = 请求.幂等身份;
-        准备请求.材料格式版本 = 1;
+        准备请求.材料格式版本 = 2;
         准备请求.请求意图摘要 = 请求.请求意图摘要;
         准备请求.执行证据摘要 = 请求.执行证据摘要;
         准备请求.写集材料 = 编码.材料;
@@ -804,7 +1533,1552 @@ private:
             return 结果;
         }
 
-        // 业务候选施工在后续固定顺序段接续；在形成任何候选前先持久见证本轮安全撤销。
+        if (允许空域治理 && 请求.写项组.empty() && 请求.读回规格.项目组.empty()
+            && 计划身份映射->empty()) {
+            节点直接事务幂等记录 计划记录;
+            计划记录.安装实例身份 = 请求.安装实例身份;
+            计划记录.幂等身份 = 请求.幂等身份;
+            计划记录.请求意图摘要 = 请求.请求意图摘要;
+            计划记录.执行证据摘要 = 请求.执行证据摘要;
+            计划记录.材料格式版本 = 2;
+            计划记录.写集规则版本 = 2;
+            计划记录.写集材料 = 编码.材料;
+            计划记录.状态 = 节点直接事务幂等记录状态::待发布;
+            计划记录.发布代次 = 当前代次 + 1;
+            计划记录.结果摘要 = 写集摘要.摘要;
+
+            auto 幂等候选结果 = 幂等_->结构化建立记录未发布候选(
+                计划记录, 许可.事务序号());
+            if (幂等候选结果.状态 != 节点直接仓候选操作状态::已形成候选
+                || !幂等候选结果.候选) {
+                const auto 首次状态 = 幂等候选结果.状态 == 节点直接仓候选操作状态::资源失败
+                    ? 节点直接类型化结构数据操作状态::资源失败
+                    : 节点直接类型化结构数据操作状态::内部不一致;
+                节点直接持久撤销见证请求 撤销请求;
+                撤销请求.安装实例身份 = 请求.安装实例身份;
+                撤销请求.事务身份 = 请求.幂等身份;
+                撤销请求.尝试序号 = 尝试序号;
+                撤销请求.请求意图摘要 = 请求.请求意图摘要;
+                撤销请求.执行证据摘要 = 请求.执行证据摘要;
+                撤销请求.写集材料摘要 = 写集摘要.摘要;
+                const auto 撤销见证 = 持久证据_->标记已撤销未发布(撤销请求);
+                if ((撤销见证.状态 == 节点直接持久端口状态::已撤销未发布
+                        || 撤销见证.状态 == 节点直接持久端口状态::精确同义)
+                    && 撤销见证.尝试序号 == 尝试序号
+                    && 幂等_->清除临时持久证据侧账(请求.幂等身份, 尝试序号)) {
+                    结果.状态 = 首次状态;
+                    return 结果;
+                }
+                许可.标记隔离();
+                结果.状态 = 节点直接类型化结构数据操作状态::内部不一致;
+                return 结果;
+            }
+            auto& 幂等候选 = *幂等候选结果.候选;
+            if (幂等_->确认候选(幂等候选, 许可.事务序号())
+                    != 节点直接仓候选操作状态::已确认待发布
+                || 幂等_->完成发布(幂等候选, 许可.事务序号())
+                    != 节点直接仓候选操作状态::已发布
+                || !事务域_->推进普通已发布代次(许可, 当前代次)) {
+                许可.标记隔离();
+                结果.状态 = 节点直接类型化结构数据操作状态::内部不一致;
+                return 结果;
+            }
+
+            节点直接持久发布见证请求 发布请求;
+            发布请求.安装实例身份 = 请求.安装实例身份;
+            发布请求.事务身份 = 请求.幂等身份;
+            发布请求.尝试序号 = 尝试序号;
+            发布请求.请求意图摘要 = 请求.请求意图摘要;
+            发布请求.执行证据摘要 = 请求.执行证据摘要;
+            发布请求.发布代次 = 当前代次 + 1;
+            发布请求.结果摘要 = 计划记录.结果摘要;
+            const auto 发布见证 = 持久证据_->标记已发布(发布请求);
+            结果.状态 = 节点直接类型化结构数据操作状态::已提交;
+            结果.发布代次 = 当前代次 + 1;
+            if ((发布见证.状态 == 节点直接持久端口状态::已见证
+                    || 发布见证.状态 == 节点直接持久端口状态::精确同义)
+                && 发布见证.尝试序号 == 尝试序号
+                && 幂等_->单调记录持久证据状态(
+                    请求.幂等身份, 尝试序号, 持久证据状态::已与内存代次一致)) {
+                结果.持久状态 = 持久证据状态::已与内存代次一致;
+            } else if (发布见证.状态 == 节点直接持久端口状态::结果未知
+                || 发布见证.状态 == 节点直接持久端口状态::资源失败) {
+                (void)幂等_->单调记录持久证据状态(
+                    请求.幂等身份, 尝试序号, 持久证据状态::持久化结果未知);
+                结果.持久状态 = 持久证据状态::持久化结果未知;
+            } else {
+                (void)幂等_->单调记录持久证据状态(
+                    请求.幂等身份, 尝试序号, 持久证据状态::持久证据损坏);
+                许可.标记隔离();
+                结果.状态 = 节点直接类型化结构数据操作状态::内部不一致;
+                结果.持久状态 = 持久证据状态::持久证据损坏;
+            }
+            return 结果;
+        }
+
+        const bool 仅含类型合同 = !请求.写项组.empty()
+            && 请求.读回规格.项目组.empty()
+            && std::all_of(请求.写项组.begin(), 请求.写项组.end(), [](const auto& 写项) {
+                return std::holds_alternative<节点直接类型合同发布项>(写项);
+            });
+        if (仅含类型合同) {
+            std::vector<类型合同读回> 计划合同组;
+            std::vector<节点直接类型合同候选> 合同候选组;
+            bool 候选完整 = true;
+            节点直接类型化结构数据操作状态 首次失败 = 节点直接类型化结构数据操作状态::内部不一致;
+            try {
+                计划合同组.reserve(请求.写项组.size());
+                合同候选组.reserve(请求.写项组.size());
+                for (const auto& 写项 : 请求.写项组) {
+                    const auto& 项 = std::get<节点直接类型合同发布项>(写项);
+                    计划合同组.push_back({项.合同身份, 项.命名空间, 项.合同版本,
+                        项.表示, 项.值域, 项.所有者服务, 项.生命周期,
+                        项.直接兼容组, 当前代次 + 1, 当前代次 + 1});
+                }
+                std::sort(计划合同组.begin(), 计划合同组.end(), [](const auto& 左, const auto& 右) {
+                    if (左.合同身份.命名域 != 右.合同身份.命名域)
+                        return 左.合同身份.命名域 < 右.合同身份.命名域;
+                    if (左.合同身份.键值 != 右.合同身份.键值)
+                        return 左.合同身份.键值 < 右.合同身份.键值;
+                    return 左.合同版本 < 右.合同版本;
+                });
+                for (const auto& 计划合同 : 计划合同组) {
+                    auto 建立 = 类型合同_->结构化发布合同未发布候选(
+                        计划合同, 许可.事务序号());
+                    if (建立.状态 != 节点直接仓候选操作状态::已形成候选 || !建立.候选) {
+                        候选完整 = false;
+                        首次失败 = 建立.状态 == 节点直接仓候选操作状态::资源失败
+                            ? 节点直接类型化结构数据操作状态::资源失败
+                            : 建立.状态 == 节点直接仓候选操作状态::版本漂移
+                                ? 节点直接类型化结构数据操作状态::版本漂移
+                                : 节点直接类型化结构数据操作状态::入口拒绝;
+                        break;
+                    }
+                    合同候选组.push_back(std::move(*建立.候选));
+                }
+            } catch (...) {
+                候选完整 = false;
+                首次失败 = 节点直接类型化结构数据操作状态::资源失败;
+            }
+
+            auto 撤销合同候选 = [&]() noexcept {
+                bool 完整 = true;
+                for (std::size_t 序号 = 合同候选组.size(); 序号 > 0; --序号) {
+                    完整 = 类型合同_->撤销候选(合同候选组[序号 - 1], 许可.事务序号())
+                        == 节点直接仓候选操作状态::已撤销 && 完整;
+                }
+                return 完整;
+            };
+            if (候选完整) {
+                for (auto& 候选 : 合同候选组) {
+                    if (类型合同_->确认候选(候选, 许可.事务序号())
+                        != 节点直接仓候选操作状态::已确认待发布) {
+                        候选完整 = false;
+                        break;
+                    }
+                }
+            }
+
+            if (候选完整) {
+                节点直接事务幂等记录 计划记录;
+                计划记录.安装实例身份 = 请求.安装实例身份;
+                计划记录.幂等身份 = 请求.幂等身份;
+                计划记录.请求意图摘要 = 请求.请求意图摘要;
+                计划记录.执行证据摘要 = 请求.执行证据摘要;
+                计划记录.材料格式版本 = 2;
+                计划记录.写集规则版本 = 2;
+                计划记录.写集材料 = 编码.材料;
+                计划记录.状态 = 节点直接事务幂等记录状态::待发布;
+                计划记录.发布代次 = 当前代次 + 1;
+                计划记录.结果摘要 = 写集摘要.摘要;
+                auto 幂等建立 = 幂等_->结构化建立记录未发布候选(计划记录, 许可.事务序号());
+                if (幂等建立.状态 == 节点直接仓候选操作状态::已形成候选 && 幂等建立.候选
+                    && 幂等_->确认候选(*幂等建立.候选, 许可.事务序号())
+                        == 节点直接仓候选操作状态::已确认待发布) {
+                    bool 发布完整 = true;
+                    for (auto& 候选 : 合同候选组) {
+                        发布完整 = 类型合同_->完成发布(候选, 许可.事务序号())
+                            == 节点直接仓候选操作状态::已发布 && 发布完整;
+                    }
+                    发布完整 = 幂等_->完成发布(*幂等建立.候选, 许可.事务序号())
+                        == 节点直接仓候选操作状态::已发布 && 发布完整;
+                    发布完整 = 事务域_->推进普通已发布代次(许可, 当前代次) && 发布完整;
+                    bool 读回一致 = 发布完整;
+                    for (const auto& 计划合同 : 计划合同组) {
+                        const auto 当前 = 类型合同_->读取精确合同(
+                            计划合同.合同身份, 计划合同.合同版本);
+                        读回一致 = 当前 && *当前 == 计划合同 && 读回一致;
+                    }
+                    if (!读回一致) 许可.标记隔离();
+                    结果 = 形成幂等读回_(计划记录);
+                    结果.状态 = 读回一致
+                        ? 节点直接类型化结构数据操作状态::已提交
+                        : 节点直接类型化结构数据操作状态::内部不一致;
+                    节点直接持久发布见证请求 发布请求;
+                    发布请求.安装实例身份 = 请求.安装实例身份;
+                    发布请求.事务身份 = 请求.幂等身份;
+                    发布请求.尝试序号 = 尝试序号;
+                    发布请求.请求意图摘要 = 请求.请求意图摘要;
+                    发布请求.执行证据摘要 = 请求.执行证据摘要;
+                    发布请求.发布代次 = 当前代次 + 1;
+                    发布请求.结果摘要 = 计划记录.结果摘要;
+                    const auto 发布见证 = 持久证据_->标记已发布(发布请求);
+                    if ((发布见证.状态 == 节点直接持久端口状态::已见证
+                            || 发布见证.状态 == 节点直接持久端口状态::精确同义)
+                        && 发布见证.尝试序号 == 尝试序号
+                        && 幂等_->单调记录持久证据状态(
+                            请求.幂等身份, 尝试序号, 持久证据状态::已与内存代次一致)) {
+                        结果.持久状态 = 持久证据状态::已与内存代次一致;
+                    } else if (发布见证.状态 == 节点直接持久端口状态::结果未知
+                        || 发布见证.状态 == 节点直接持久端口状态::资源失败) {
+                        (void)幂等_->单调记录持久证据状态(
+                            请求.幂等身份, 尝试序号, 持久证据状态::持久化结果未知);
+                        结果.持久状态 = 持久证据状态::持久化结果未知;
+                    } else {
+                        (void)幂等_->单调记录持久证据状态(
+                            请求.幂等身份, 尝试序号, 持久证据状态::持久证据损坏);
+                        许可.标记隔离();
+                        结果.状态 = 节点直接类型化结构数据操作状态::内部不一致;
+                        结果.持久状态 = 持久证据状态::持久证据损坏;
+                    }
+                    return 结果;
+                }
+                候选完整 = false;
+                首次失败 = 幂等建立.状态 == 节点直接仓候选操作状态::资源失败
+                    ? 节点直接类型化结构数据操作状态::资源失败
+                    : 节点直接类型化结构数据操作状态::内部不一致;
+            }
+
+            const bool 已完整撤销 = 撤销合同候选();
+            节点直接持久撤销见证请求 撤销请求;
+            撤销请求.安装实例身份 = 请求.安装实例身份;
+            撤销请求.事务身份 = 请求.幂等身份;
+            撤销请求.尝试序号 = 尝试序号;
+            撤销请求.请求意图摘要 = 请求.请求意图摘要;
+            撤销请求.执行证据摘要 = 请求.执行证据摘要;
+            撤销请求.写集材料摘要 = 写集摘要.摘要;
+            const auto 撤销见证 = 持久证据_->标记已撤销未发布(撤销请求);
+            if (已完整撤销
+                && (撤销见证.状态 == 节点直接持久端口状态::已撤销未发布
+                    || 撤销见证.状态 == 节点直接持久端口状态::精确同义)
+                && 撤销见证.尝试序号 == 尝试序号
+                && 幂等_->清除临时持久证据侧账(请求.幂等身份, 尝试序号)) {
+                结果.状态 = 首次失败;
+                return 结果;
+            }
+            许可.标记隔离();
+            结果.状态 = 节点直接类型化结构数据操作状态::内部不一致;
+            return 结果;
+        }
+
+        const bool 仅含关系失效 = !请求.写项组.empty()
+            && std::all_of(请求.写项组.begin(), 请求.写项组.end(), [](const auto& 写项) {
+                return std::holds_alternative<节点直接关系失效项>(写项);
+            })
+            && std::all_of(请求.读回规格.项目组.begin(), 请求.读回规格.项目组.end(),
+                [](const auto& 读回) {
+                    return 读回.种类 == 节点直接发布后读回对象种类::已失效关系
+                        && std::holds_alternative<关系稳定主键>(读回.身份);
+                });
+        if (仅含关系失效) {
+            std::vector<const 节点直接关系失效项*> 失效项组;
+            std::vector<关系稳定身份见证> 失效后见证组;
+            std::vector<正式关系候选> 关系候选组;
+            bool 候选完整 = true;
+            节点直接类型化结构数据操作状态 首次失败 =
+                节点直接类型化结构数据操作状态::内部不一致;
+            try {
+                失效项组.reserve(请求.写项组.size());
+                失效后见证组.reserve(请求.写项组.size());
+                关系候选组.reserve(请求.写项组.size());
+                for (const auto& 写项 : 请求.写项组)
+                    失效项组.push_back(&std::get<节点直接关系失效项>(写项));
+                std::sort(失效项组.begin(), 失效项组.end(), [](const auto* 左, const auto* 右) {
+                    if (左->预期当前.稳定主键.命名域 != 右->预期当前.稳定主键.命名域)
+                        return 左->预期当前.稳定主键.命名域 < 右->预期当前.稳定主键.命名域;
+                    return 左->预期当前.稳定主键.键值 < 右->预期当前.稳定主键.键值;
+                });
+                for (std::size_t 序号 = 1; 序号 < 失效项组.size(); ++序号) {
+                    if (失效项组[序号 - 1]->预期当前.稳定主键
+                        == 失效项组[序号]->预期当前.稳定主键) {
+                        候选完整 = false;
+                        首次失败 = 节点直接类型化结构数据操作状态::入口拒绝;
+                        break;
+                    }
+                }
+            } catch (...) {
+                候选完整 = false;
+                首次失败 = 节点直接类型化结构数据操作状态::资源失败;
+            }
+            for (const auto* 项 : 失效项组) {
+                if (!候选完整) break;
+                const auto 当前 = 关系_->读取稳定主键当前关系(
+                    项->预期当前.稳定主键, 许可.事务序号());
+                if (当前.状态 != 稳定关系当前读取状态::当前有效 || !当前.记录
+                    || 当前.记录->版本号 == std::numeric_limits<std::uint32_t>::max()) {
+                    候选完整 = false;
+                    首次失败 = 节点直接类型化结构数据操作状态::版本漂移;
+                    break;
+                }
+                const auto 句柄 = 形成正式关系句柄(关系_->仓库编号(), *当前.记录);
+                auto 建立 = 关系_->结构化失效已发布关系(句柄, 许可.事务序号());
+                if (建立.状态 != 正式关系操作状态::已变更候选 || !建立.候选) {
+                    候选完整 = false;
+                    首次失败 = 建立.状态 == 正式关系操作状态::入口拒绝_版本漂移
+                        ? 节点直接类型化结构数据操作状态::版本漂移
+                        : 建立.状态 == 正式关系操作状态::内部不一致
+                            ? 节点直接类型化结构数据操作状态::内部不一致
+                            : 节点直接类型化结构数据操作状态::入口拒绝;
+                    break;
+                }
+                auto 失效后 = 项->预期当前;
+                ++失效后.关系版本;
+                失效后见证组.push_back(失效后);
+                关系候选组.push_back(std::move(*建立.候选));
+            }
+            auto 撤销关系候选 = [&]() noexcept {
+                bool 完整 = true;
+                for (std::size_t 序号 = 关系候选组.size(); 序号 > 0; --序号)
+                    完整 = 关系_->撤销候选(关系候选组[序号 - 1], 许可.事务序号())
+                        == 正式关系操作状态::已撤销 && 完整;
+                return 完整;
+            };
+            if (候选完整) {
+                for (auto& 候选 : 关系候选组) {
+                    if (关系_->确认候选(候选, 许可.事务序号())
+                        != 正式关系操作状态::已确认待发布) {
+                        候选完整 = false;
+                        break;
+                    }
+                }
+            }
+            if (候选完整) {
+                节点直接事务幂等记录 计划记录;
+                计划记录.安装实例身份 = 请求.安装实例身份;
+                计划记录.幂等身份 = 请求.幂等身份;
+                计划记录.请求意图摘要 = 请求.请求意图摘要;
+                计划记录.执行证据摘要 = 请求.执行证据摘要;
+                计划记录.材料格式版本 = 2;
+                计划记录.写集规则版本 = 2;
+                计划记录.写集材料 = 编码.材料;
+                计划记录.状态 = 节点直接事务幂等记录状态::待发布;
+                计划记录.发布代次 = 当前代次 + 1;
+                bool 读回规格完整 = true;
+                for (const auto& 读回 : 请求.读回规格.项目组) {
+                    const auto 稳定主键 = std::get<关系稳定主键>(读回.身份);
+                    const auto 位置 = std::find_if(失效后见证组.begin(), 失效后见证组.end(),
+                        [&](const auto& 见证) { return 见证.稳定主键 == 稳定主键; });
+                    if (位置 == 失效后见证组.end() || 读回.预期版本 != 位置->关系版本) {
+                        读回规格完整 = false;
+                        break;
+                    }
+                    计划记录.关系组.push_back(*位置);
+                }
+                计划记录.结果摘要 = 写集摘要.摘要;
+                auto 幂等建立 = 读回规格完整
+                    ? 幂等_->结构化建立记录未发布候选(计划记录, 许可.事务序号())
+                    : 节点直接事务幂等候选结果{};
+                if (幂等建立.状态 == 节点直接仓候选操作状态::已形成候选
+                    && 幂等建立.候选
+                    && 幂等_->确认候选(*幂等建立.候选, 许可.事务序号())
+                        == 节点直接仓候选操作状态::已确认待发布) {
+                    for (auto& 候选 : 关系候选组) 关系_->完成发布(候选, 许可.事务序号());
+                    bool 发布完整 = std::all_of(关系候选组.begin(), 关系候选组.end(),
+                        [](const auto& 候选) { return 候选.读取阶段() == 正式关系候选阶段::已发布; });
+                    发布完整 = 幂等_->完成发布(*幂等建立.候选, 许可.事务序号())
+                        == 节点直接仓候选操作状态::已发布 && 发布完整;
+                    发布完整 = 事务域_->推进普通已发布代次(许可, 当前代次) && 发布完整;
+                    for (const auto& 见证 : 失效后见证组) {
+                        const auto 当前 = 关系_->读取稳定主键当前关系(
+                            见证.稳定主键, 许可.事务序号());
+                        发布完整 = 当前.状态 == 稳定关系当前读取状态::当前已失效
+                            && 当前.记录 && 当前.记录->版本号 == 见证.关系版本
+                            && 发布完整;
+                    }
+                    结果 = 形成幂等读回_(计划记录);
+                    结果.状态 = 发布完整
+                        ? 节点直接类型化结构数据操作状态::已提交
+                        : 节点直接类型化结构数据操作状态::内部不一致;
+                    if (!发布完整) 许可.标记隔离();
+                    节点直接持久发布见证请求 发布请求;
+                    发布请求.安装实例身份 = 请求.安装实例身份;
+                    发布请求.事务身份 = 请求.幂等身份;
+                    发布请求.尝试序号 = 尝试序号;
+                    发布请求.请求意图摘要 = 请求.请求意图摘要;
+                    发布请求.执行证据摘要 = 请求.执行证据摘要;
+                    发布请求.发布代次 = 当前代次 + 1;
+                    发布请求.结果摘要 = 计划记录.结果摘要;
+                    const auto 发布见证 = 持久证据_->标记已发布(发布请求);
+                    if ((发布见证.状态 == 节点直接持久端口状态::已见证
+                            || 发布见证.状态 == 节点直接持久端口状态::精确同义)
+                        && 发布见证.尝试序号 == 尝试序号
+                        && 幂等_->单调记录持久证据状态(
+                            请求.幂等身份, 尝试序号, 持久证据状态::已与内存代次一致)) {
+                        结果.持久状态 = 持久证据状态::已与内存代次一致;
+                    } else if (发布见证.状态 == 节点直接持久端口状态::结果未知
+                        || 发布见证.状态 == 节点直接持久端口状态::资源失败) {
+                        (void)幂等_->单调记录持久证据状态(
+                            请求.幂等身份, 尝试序号, 持久证据状态::持久化结果未知);
+                        结果.持久状态 = 持久证据状态::持久化结果未知;
+                    } else {
+                        (void)幂等_->单调记录持久证据状态(
+                            请求.幂等身份, 尝试序号, 持久证据状态::持久证据损坏);
+                        许可.标记隔离();
+                        结果.状态 = 节点直接类型化结构数据操作状态::内部不一致;
+                        结果.持久状态 = 持久证据状态::持久证据损坏;
+                    }
+                    return 结果;
+                }
+                候选完整 = false;
+                首次失败 = 幂等建立.状态 == 节点直接仓候选操作状态::资源失败
+                    ? 节点直接类型化结构数据操作状态::资源失败
+                    : 节点直接类型化结构数据操作状态::内部不一致;
+            }
+            const bool 已完整撤销 = 撤销关系候选();
+            节点直接持久撤销见证请求 撤销请求;
+            撤销请求.安装实例身份 = 请求.安装实例身份;
+            撤销请求.事务身份 = 请求.幂等身份;
+            撤销请求.尝试序号 = 尝试序号;
+            撤销请求.请求意图摘要 = 请求.请求意图摘要;
+            撤销请求.执行证据摘要 = 请求.执行证据摘要;
+            撤销请求.写集材料摘要 = 写集摘要.摘要;
+            const auto 撤销见证 = 已完整撤销
+                ? 持久证据_->标记已撤销未发布(撤销请求)
+                : 节点直接持久端口结果{};
+            if (已完整撤销
+                && (撤销见证.状态 == 节点直接持久端口状态::已撤销未发布
+                    || 撤销见证.状态 == 节点直接持久端口状态::精确同义)
+                && 撤销见证.尝试序号 == 尝试序号
+                && 幂等_->清除临时持久证据侧账(请求.幂等身份, 尝试序号)) {
+                结果.状态 = 首次失败;
+                return 结果;
+            }
+            许可.标记隔离();
+            结果.状态 = 节点直接类型化结构数据操作状态::内部不一致;
+            return 结果;
+        }
+
+        const bool 仅含类型化值退役 = !请求.写项组.empty()
+            && 请求.读回规格.项目组.empty()
+            && std::all_of(请求.写项组.begin(), 请求.写项组.end(), [](const auto& 写项) {
+                return std::holds_alternative<节点直接类型化值退役项>(写项);
+            });
+        if (仅含类型化值退役) {
+            std::vector<const 节点直接类型化值退役项*> 退役项组;
+            std::vector<类型化值读回> 退役前值组;
+            std::vector<节点直接类型化值候选> 退役候选组;
+            bool 候选完整 = true;
+            节点直接类型化结构数据操作状态 首次失败 =
+                节点直接类型化结构数据操作状态::内部不一致;
+            try {
+                退役项组.reserve(请求.写项组.size());
+                退役前值组.reserve(请求.写项组.size());
+                退役候选组.reserve(请求.写项组.size());
+                for (const auto& 写项 : 请求.写项组)
+                    退役项组.push_back(&std::get<节点直接类型化值退役项>(写项));
+                std::sort(退役项组.begin(), 退役项组.end(), [](const auto* 左, const auto* 右) {
+                    if (左->值记录身份.命名域 != 右->值记录身份.命名域)
+                        return 左->值记录身份.命名域 < 右->值记录身份.命名域;
+                    return 左->值记录身份.键值 < 右->值记录身份.键值;
+                });
+                for (std::size_t 序号 = 1; 序号 < 退役项组.size(); ++序号) {
+                    if (退役项组[序号 - 1]->值记录身份 == 退役项组[序号]->值记录身份) {
+                        候选完整 = false;
+                        首次失败 = 节点直接类型化结构数据操作状态::入口拒绝;
+                        break;
+                    }
+                }
+            } catch (...) {
+                候选完整 = false;
+                首次失败 = 节点直接类型化结构数据操作状态::资源失败;
+            }
+            for (const auto* 项 : 退役项组) {
+                if (!候选完整) break;
+                const auto 当前组 = 类型化值_->读取所属身份当前值组(项->所属身份.稳定主键);
+                const auto 位置 = std::find_if(当前组.begin(), 当前组.end(), [&](const auto& 当前) {
+                    return 当前.类型合同身份 == 项->类型合同身份
+                        && 当前.类型合同版本 == 项->类型合同版本
+                        && 当前.值记录身份 == 项->值记录身份
+                        && 当前.值记录版本 == 项->预期值记录版本;
+                });
+                if (位置 == 当前组.end()) {
+                    候选完整 = false;
+                    首次失败 = 节点直接类型化结构数据操作状态::版本漂移;
+                    break;
+                }
+                auto 建立 = 类型化值_->结构化退役值未发布候选(
+                    *位置, 当前代次 + 1, 许可.事务序号());
+                if (建立.状态 != 节点直接仓候选操作状态::已形成候选 || !建立.候选) {
+                    候选完整 = false;
+                    首次失败 = 建立.状态 == 节点直接仓候选操作状态::资源失败
+                        ? 节点直接类型化结构数据操作状态::资源失败
+                        : 建立.状态 == 节点直接仓候选操作状态::版本漂移
+                            ? 节点直接类型化结构数据操作状态::版本漂移
+                            : 节点直接类型化结构数据操作状态::入口拒绝;
+                    break;
+                }
+                退役前值组.push_back(*位置);
+                退役候选组.push_back(std::move(*建立.候选));
+            }
+            auto 撤销退役候选 = [&]() noexcept {
+                bool 完整 = true;
+                for (std::size_t 序号 = 退役候选组.size(); 序号 > 0; --序号)
+                    完整 = 类型化值_->撤销候选(退役候选组[序号 - 1], 许可.事务序号())
+                        == 节点直接仓候选操作状态::已撤销 && 完整;
+                return 完整;
+            };
+            if (候选完整) {
+                for (auto& 候选 : 退役候选组) {
+                    if (类型化值_->确认候选(候选, 许可.事务序号())
+                        != 节点直接仓候选操作状态::已确认待发布) {
+                        候选完整 = false;
+                        break;
+                    }
+                }
+            }
+            if (候选完整) {
+                节点直接事务幂等记录 计划记录;
+                计划记录.安装实例身份 = 请求.安装实例身份;
+                计划记录.幂等身份 = 请求.幂等身份;
+                计划记录.请求意图摘要 = 请求.请求意图摘要;
+                计划记录.执行证据摘要 = 请求.执行证据摘要;
+                计划记录.材料格式版本 = 2;
+                计划记录.写集规则版本 = 2;
+                计划记录.写集材料 = 编码.材料;
+                计划记录.状态 = 节点直接事务幂等记录状态::待发布;
+                计划记录.发布代次 = 当前代次 + 1;
+                计划记录.结果摘要 = 写集摘要.摘要;
+                auto 幂等建立 = 幂等_->结构化建立记录未发布候选(
+                    计划记录, 许可.事务序号());
+                if (幂等建立.状态 == 节点直接仓候选操作状态::已形成候选
+                    && 幂等建立.候选
+                    && 幂等_->确认候选(*幂等建立.候选, 许可.事务序号())
+                        == 节点直接仓候选操作状态::已确认待发布) {
+                    bool 发布完整 = true;
+                    for (auto& 候选 : 退役候选组)
+                        发布完整 = 类型化值_->完成发布(候选, 许可.事务序号())
+                            == 节点直接仓候选操作状态::已发布 && 发布完整;
+                    发布完整 = 幂等_->完成发布(*幂等建立.候选, 许可.事务序号())
+                        == 节点直接仓候选操作状态::已发布 && 发布完整;
+                    发布完整 = 事务域_->推进普通已发布代次(许可, 当前代次) && 发布完整;
+                    bool 读回一致 = 发布完整;
+                    for (const auto& 退役前值 : 退役前值组) {
+                        const auto 当前组 = 类型化值_->读取所属身份当前值组(
+                            退役前值.所属身份.稳定主键);
+                        读回一致 = std::none_of(当前组.begin(), 当前组.end(), [&](const auto& 当前) {
+                            return 当前.值记录身份 == 退役前值.值记录身份;
+                        }) && 读回一致;
+                    }
+                    结果 = 形成幂等读回_(计划记录);
+                    结果.状态 = 读回一致
+                        ? 节点直接类型化结构数据操作状态::已提交
+                        : 节点直接类型化结构数据操作状态::内部不一致;
+                    if (!读回一致) 许可.标记隔离();
+                    节点直接持久发布见证请求 发布请求;
+                    发布请求.安装实例身份 = 请求.安装实例身份;
+                    发布请求.事务身份 = 请求.幂等身份;
+                    发布请求.尝试序号 = 尝试序号;
+                    发布请求.请求意图摘要 = 请求.请求意图摘要;
+                    发布请求.执行证据摘要 = 请求.执行证据摘要;
+                    发布请求.发布代次 = 当前代次 + 1;
+                    发布请求.结果摘要 = 计划记录.结果摘要;
+                    const auto 发布见证 = 持久证据_->标记已发布(发布请求);
+                    if ((发布见证.状态 == 节点直接持久端口状态::已见证
+                            || 发布见证.状态 == 节点直接持久端口状态::精确同义)
+                        && 发布见证.尝试序号 == 尝试序号
+                        && 幂等_->单调记录持久证据状态(
+                            请求.幂等身份, 尝试序号, 持久证据状态::已与内存代次一致)) {
+                        结果.持久状态 = 持久证据状态::已与内存代次一致;
+                    } else if (发布见证.状态 == 节点直接持久端口状态::结果未知
+                        || 发布见证.状态 == 节点直接持久端口状态::资源失败) {
+                        (void)幂等_->单调记录持久证据状态(
+                            请求.幂等身份, 尝试序号, 持久证据状态::持久化结果未知);
+                        结果.持久状态 = 持久证据状态::持久化结果未知;
+                    } else {
+                        (void)幂等_->单调记录持久证据状态(
+                            请求.幂等身份, 尝试序号, 持久证据状态::持久证据损坏);
+                        许可.标记隔离();
+                        结果.状态 = 节点直接类型化结构数据操作状态::内部不一致;
+                        结果.持久状态 = 持久证据状态::持久证据损坏;
+                    }
+                    return 结果;
+                }
+                候选完整 = false;
+                首次失败 = 幂等建立.状态 == 节点直接仓候选操作状态::资源失败
+                    ? 节点直接类型化结构数据操作状态::资源失败
+                    : 节点直接类型化结构数据操作状态::内部不一致;
+            }
+            const bool 已完整撤销 = 撤销退役候选();
+            节点直接持久撤销见证请求 撤销请求;
+            撤销请求.安装实例身份 = 请求.安装实例身份;
+            撤销请求.事务身份 = 请求.幂等身份;
+            撤销请求.尝试序号 = 尝试序号;
+            撤销请求.请求意图摘要 = 请求.请求意图摘要;
+            撤销请求.执行证据摘要 = 请求.执行证据摘要;
+            撤销请求.写集材料摘要 = 写集摘要.摘要;
+            const auto 撤销见证 = 已完整撤销
+                ? 持久证据_->标记已撤销未发布(撤销请求)
+                : 节点直接持久端口结果{};
+            if (已完整撤销
+                && (撤销见证.状态 == 节点直接持久端口状态::已撤销未发布
+                    || 撤销见证.状态 == 节点直接持久端口状态::精确同义)
+                && 撤销见证.尝试序号 == 尝试序号
+                && 幂等_->清除临时持久证据侧账(请求.幂等身份, 尝试序号)) {
+                结果.状态 = 首次失败;
+                return 结果;
+            }
+            许可.标记隔离();
+            结果.状态 = 节点直接类型化结构数据操作状态::内部不一致;
+            return 结果;
+        }
+
+        const bool 仅含类型化值发布 = !请求.写项组.empty()
+            && std::all_of(请求.写项组.begin(), 请求.写项组.end(), [](const auto& 写项) {
+                return std::holds_alternative<节点直接类型化值发布项>(写项);
+            });
+        const bool 读回仅含本次类型化值 = std::all_of(
+            请求.读回规格.项目组.begin(), 请求.读回规格.项目组.end(), [](const auto& 项) {
+                if (项.种类 != 节点直接发布后读回对象种类::当前类型化值
+                    || !std::holds_alternative<节点直接写集局部身份>(项.身份)) return false;
+                return std::get<节点直接写集局部身份>(项.身份).种类
+                    == 节点直接写集局部身份种类::类型化值记录;
+            });
+        if (仅含类型化值发布 && 读回仅含本次类型化值) {
+            struct 值结果项 {
+                节点直接写集局部身份 局部身份;
+                类型化值读回 见证;
+            };
+            std::vector<const 节点直接类型化值发布项*> 值项组;
+            std::vector<值结果项> 值结果组;
+            std::vector<节点直接类型化值候选> 值候选组;
+            bool 候选完整 = true;
+            节点直接类型化结构数据操作状态 首次失败 =
+                节点直接类型化结构数据操作状态::内部不一致;
+            try {
+                值项组.reserve(请求.写项组.size());
+                值结果组.reserve(请求.写项组.size());
+                值候选组.reserve(请求.写项组.size());
+                for (const auto& 写项 : 请求.写项组)
+                    值项组.push_back(&std::get<节点直接类型化值发布项>(写项));
+                std::sort(值项组.begin(), 值项组.end(), [](const auto* 左, const auto* 右) {
+                    return 左->值记录局部身份.值 < 右->值记录局部身份.值;
+                });
+            } catch (...) {
+                候选完整 = false;
+                首次失败 = 节点直接类型化结构数据操作状态::资源失败;
+            }
+
+            auto 解析已发布节点 = [&](const 节点直接节点端点引用& 引用)
+                -> std::optional<节点稳定身份见证> {
+                const auto* 见证 = std::get_if<节点稳定身份见证>(&引用);
+                if (见证 == nullptr) return std::nullopt;
+                const auto 当前 = 节点_->读取稳定主键当前身份(
+                    见证->稳定主键, 许可.事务序号());
+                if (当前.状态 != 稳定主键当前身份状态::当前有效
+                    || !当前.当前记录 || 当前.当前记录->类型 != 见证->类型
+                    || 当前.当前记录->版本号 != 见证->身份版本) return std::nullopt;
+                return *见证;
+            };
+            std::vector<std::tuple<节点稳定主键, 类型合同稳定身份, std::uint32_t>> 已用合同键;
+            if (候选完整) {
+                try { 已用合同键.reserve(值项组.size()); }
+                catch (...) {
+                    候选完整 = false;
+                    首次失败 = 节点直接类型化结构数据操作状态::资源失败;
+                }
+            }
+            for (const auto* 项 : 值项组) {
+                if (!候选完整) break;
+                const auto* 映射 = 查找计划身份_(*计划身份映射, 项->值记录局部身份);
+                const auto 所属身份 = 解析已发布节点(项->所属身份);
+                const auto 合同 = 类型合同_->读取精确合同(项->类型合同身份, 项->类型合同版本);
+                if (映射 == nullptr || !所属身份 || !合同
+                    || 合同->生命周期 != 类型合同生命周期状态::当前可写
+                    || !类型化值材料符合合同_(项->材料, *合同)) {
+                    候选完整 = false;
+                    首次失败 = 节点直接类型化结构数据操作状态::入口拒绝;
+                    break;
+                }
+                const auto 合同键 = std::tuple{
+                    所属身份->稳定主键, 项->类型合同身份, 项->类型合同版本};
+                if (std::find(已用合同键.begin(), 已用合同键.end(), 合同键)
+                    != 已用合同键.end()) {
+                    候选完整 = false;
+                    首次失败 = 节点直接类型化结构数据操作状态::入口拒绝;
+                    break;
+                }
+                已用合同键.push_back(合同键);
+                类型化值来源见证 来源;
+                if (const auto* 节点来源 = std::get_if<节点直接节点端点引用>(&项->来源)) {
+                    const auto 来源见证 = 解析已发布节点(*节点来源);
+                    if (!来源见证) {
+                        候选完整 = false;
+                        首次失败 = 节点直接类型化结构数据操作状态::入口拒绝;
+                        break;
+                    }
+                    来源 = *来源见证;
+                } else {
+                    来源 = std::get<服务稳定身份>(项->来源);
+                }
+                const auto 当前组 = 类型化值_->读取所属身份当前值组(所属身份->稳定主键);
+                const auto 当前位置 = std::find_if(当前组.begin(), 当前组.end(), [&](const auto& 当前) {
+                    return 当前.类型合同身份 == 项->类型合同身份
+                        && 当前.类型合同版本 == 项->类型合同版本;
+                });
+                if ((项->预期当前值记录版本.has_value()
+                        && (当前位置 == 当前组.end()
+                            || 当前位置->值记录版本 != *项->预期当前值记录版本))
+                    || (!项->预期当前值记录版本.has_value() && 当前位置 != 当前组.end())) {
+                    候选完整 = false;
+                    首次失败 = 节点直接类型化结构数据操作状态::版本漂移;
+                    break;
+                }
+                类型化值读回 计划值{
+                    *所属身份,
+                    项->类型合同身份,
+                    项->类型合同版本,
+                    {映射->稳定身份命名域, 映射->计划键},
+                    映射->初始版本,
+                    true,
+                    项->材料,
+                    来源,
+                    项->预期当前值记录版本,
+                    当前代次 + 1,
+                    当前代次 + 1};
+                auto 建立 = 类型化值_->结构化发布值未发布候选(计划值, 许可.事务序号());
+                if (建立.状态 != 节点直接仓候选操作状态::已形成候选 || !建立.候选) {
+                    候选完整 = false;
+                    首次失败 = 建立.状态 == 节点直接仓候选操作状态::资源失败
+                        ? 节点直接类型化结构数据操作状态::资源失败
+                        : 建立.状态 == 节点直接仓候选操作状态::版本漂移
+                            ? 节点直接类型化结构数据操作状态::版本漂移
+                            : 节点直接类型化结构数据操作状态::入口拒绝;
+                    break;
+                }
+                值结果组.push_back({项->值记录局部身份, 计划值});
+                值候选组.push_back(std::move(*建立.候选));
+            }
+
+            auto 撤销值候选 = [&]() noexcept {
+                bool 完整 = true;
+                for (std::size_t 序号 = 值候选组.size(); 序号 > 0; --序号)
+                    完整 = 类型化值_->撤销候选(值候选组[序号 - 1], 许可.事务序号())
+                        == 节点直接仓候选操作状态::已撤销 && 完整;
+                return 完整;
+            };
+            if (候选完整) {
+                for (auto& 候选 : 值候选组) {
+                    if (类型化值_->确认候选(候选, 许可.事务序号())
+                        != 节点直接仓候选操作状态::已确认待发布) {
+                        候选完整 = false;
+                        break;
+                    }
+                }
+            }
+            if (候选完整) {
+                节点直接事务幂等记录 计划记录;
+                计划记录.安装实例身份 = 请求.安装实例身份;
+                计划记录.幂等身份 = 请求.幂等身份;
+                计划记录.请求意图摘要 = 请求.请求意图摘要;
+                计划记录.执行证据摘要 = 请求.执行证据摘要;
+                计划记录.材料格式版本 = 2;
+                计划记录.写集规则版本 = 2;
+                计划记录.写集材料 = 编码.材料;
+                计划记录.状态 = 节点直接事务幂等记录状态::待发布;
+                计划记录.发布代次 = 当前代次 + 1;
+                std::vector<std::uint8_t> 结果材料 = 编码.材料;
+                bool 结果完整 = true;
+                for (const auto& 读回 : 请求.读回规格.项目组) {
+                    const auto 局部 = std::get<节点直接写集局部身份>(读回.身份);
+                    const auto 位置 = std::find_if(值结果组.begin(), 值结果组.end(),
+                        [&](const auto& 项) { return 项.局部身份 == 局部; });
+                    if (位置 == 值结果组.end() || 读回.预期版本 != 位置->见证.值记录版本) {
+                        结果完整 = false;
+                        break;
+                    }
+                    计划记录.类型化值组.push_back(位置->见证);
+                    结果完整 = 追加无符号_(结果材料, 位置->见证.值记录身份.命名域, 8)
+                        && 追加无符号_(结果材料, 位置->见证.值记录身份.键值, 8)
+                        && 追加无符号_(结果材料, 位置->见证.值记录版本, 8)
+                        && 结果完整;
+                }
+                const auto 结果摘要 = 结果完整 ? 计算SHA256_(结果材料) : 节点直接摘要计算结果{};
+                if (结果摘要.状态 == 节点直接材料转换状态::成功)
+                    计划记录.结果摘要 = 结果摘要.摘要;
+                auto 幂等建立 = 结果摘要.状态 == 节点直接材料转换状态::成功
+                    ? 幂等_->结构化建立记录未发布候选(计划记录, 许可.事务序号())
+                    : 节点直接事务幂等候选结果{};
+                if (幂等建立.状态 == 节点直接仓候选操作状态::已形成候选
+                    && 幂等建立.候选
+                    && 幂等_->确认候选(*幂等建立.候选, 许可.事务序号())
+                        == 节点直接仓候选操作状态::已确认待发布) {
+                    bool 发布完整 = true;
+                    for (auto& 候选 : 值候选组)
+                        发布完整 = 类型化值_->完成发布(候选, 许可.事务序号())
+                            == 节点直接仓候选操作状态::已发布 && 发布完整;
+                    发布完整 = 幂等_->完成发布(*幂等建立.候选, 许可.事务序号())
+                        == 节点直接仓候选操作状态::已发布 && 发布完整;
+                    发布完整 = 事务域_->推进普通已发布代次(许可, 当前代次) && 发布完整;
+                    bool 读回一致 = 发布完整;
+                    for (const auto& 项 : 值结果组) {
+                        const auto 当前组 = 类型化值_->读取所属身份当前值组(项.见证.所属身份.稳定主键);
+                        读回一致 = std::find(当前组.begin(), 当前组.end(), 项.见证)
+                            != 当前组.end() && 读回一致;
+                    }
+                    结果 = 形成幂等读回_(计划记录);
+                    结果.状态 = 读回一致
+                        ? 节点直接类型化结构数据操作状态::已提交
+                        : 节点直接类型化结构数据操作状态::内部不一致;
+                    if (!读回一致) 许可.标记隔离();
+                    节点直接持久发布见证请求 发布请求;
+                    发布请求.安装实例身份 = 请求.安装实例身份;
+                    发布请求.事务身份 = 请求.幂等身份;
+                    发布请求.尝试序号 = 尝试序号;
+                    发布请求.请求意图摘要 = 请求.请求意图摘要;
+                    发布请求.执行证据摘要 = 请求.执行证据摘要;
+                    发布请求.发布代次 = 当前代次 + 1;
+                    发布请求.结果摘要 = 计划记录.结果摘要;
+                    const auto 发布见证 = 持久证据_->标记已发布(发布请求);
+                    if ((发布见证.状态 == 节点直接持久端口状态::已见证
+                            || 发布见证.状态 == 节点直接持久端口状态::精确同义)
+                        && 发布见证.尝试序号 == 尝试序号
+                        && 幂等_->单调记录持久证据状态(
+                            请求.幂等身份, 尝试序号, 持久证据状态::已与内存代次一致)) {
+                        结果.持久状态 = 持久证据状态::已与内存代次一致;
+                    } else if (发布见证.状态 == 节点直接持久端口状态::结果未知
+                        || 发布见证.状态 == 节点直接持久端口状态::资源失败) {
+                        (void)幂等_->单调记录持久证据状态(
+                            请求.幂等身份, 尝试序号, 持久证据状态::持久化结果未知);
+                        结果.持久状态 = 持久证据状态::持久化结果未知;
+                    } else {
+                        (void)幂等_->单调记录持久证据状态(
+                            请求.幂等身份, 尝试序号, 持久证据状态::持久证据损坏);
+                        许可.标记隔离();
+                        结果.状态 = 节点直接类型化结构数据操作状态::内部不一致;
+                        结果.持久状态 = 持久证据状态::持久证据损坏;
+                    }
+                    return 结果;
+                }
+                候选完整 = false;
+                首次失败 = 幂等建立.状态 == 节点直接仓候选操作状态::资源失败
+                    ? 节点直接类型化结构数据操作状态::资源失败
+                    : 节点直接类型化结构数据操作状态::内部不一致;
+            }
+            const bool 已完整撤销 = 撤销值候选();
+            节点直接持久撤销见证请求 撤销请求;
+            撤销请求.安装实例身份 = 请求.安装实例身份;
+            撤销请求.事务身份 = 请求.幂等身份;
+            撤销请求.尝试序号 = 尝试序号;
+            撤销请求.请求意图摘要 = 请求.请求意图摘要;
+            撤销请求.执行证据摘要 = 请求.执行证据摘要;
+            撤销请求.写集材料摘要 = 写集摘要.摘要;
+            const auto 撤销见证 = 已完整撤销
+                ? 持久证据_->标记已撤销未发布(撤销请求)
+                : 节点直接持久端口结果{};
+            if (已完整撤销
+                && (撤销见证.状态 == 节点直接持久端口状态::已撤销未发布
+                    || 撤销见证.状态 == 节点直接持久端口状态::精确同义)
+                && 撤销见证.尝试序号 == 尝试序号
+                && 幂等_->清除临时持久证据侧账(请求.幂等身份, 尝试序号)) {
+                结果.状态 = 首次失败;
+                return 结果;
+            }
+            许可.标记隔离();
+            结果.状态 = 节点直接类型化结构数据操作状态::内部不一致;
+            return 结果;
+        }
+
+        const bool 仅含索引和节点删除 = !请求.写项组.empty()
+            && std::all_of(请求.写项组.begin(), 请求.写项组.end(), [](const auto& 写项) {
+                return std::holds_alternative<节点直接索引创建项>(写项)
+                    || std::holds_alternative<节点直接索引移除项>(写项)
+                    || std::holds_alternative<节点直接节点删除项>(写项);
+            });
+        const bool 读回仅含索引 = std::all_of(
+            请求.读回规格.项目组.begin(), 请求.读回规格.项目组.end(), [](const auto& 项) {
+                return (项.种类 == 节点直接发布后读回对象种类::当前索引
+                        || 项.种类 == 节点直接发布后读回对象种类::已移除索引)
+                    && std::holds_alternative<索引物理键>(项.身份) && 项.预期版本 == 0;
+            });
+        if (仅含索引和节点删除 && 读回仅含索引) {
+            struct 索引操作计划 {
+                索引物理键 键;
+                节点稳定身份见证 节点目标;
+                bool 是移除 = false;
+            };
+            std::vector<const 节点直接类型化结构写项*> 索引项组;
+            std::vector<const 节点直接节点删除项*> 删除项组;
+            for (const auto& 写项 : 请求.写项组) {
+                if (const auto* 删除项 = std::get_if<节点直接节点删除项>(&写项)) 删除项组.push_back(删除项);
+                else 索引项组.push_back(&写项);
+            }
+            std::sort(索引项组.begin(), 索引项组.end(), [](const auto* 左项, const auto* 右项) {
+                const auto 取键 = [](const auto& 写项) -> const 索引物理键& {
+                    if (const auto* 创建 = std::get_if<节点直接索引创建项>(&写项)) return 创建->键;
+                    return std::get<节点直接索引移除项>(写项).键;
+                };
+                const auto& 左 = 取键(*左项);
+                const auto& 右 = 取键(*右项);
+                return std::tie(左.所有者身份, 左.命名域, 左.键格式版本, 左.探测规则版本, 左.键值)
+                    < std::tie(右.所有者身份, 右.命名域, 右.键格式版本, 右.探测规则版本, 右.键值);
+            });
+            std::sort(删除项组.begin(), 删除项组.end(), [](const auto* 左, const auto* 右) {
+                return std::tie(左->预期当前.稳定主键.命名域, 左->预期当前.稳定主键.键值)
+                    < std::tie(右->预期当前.稳定主键.命名域, 右->预期当前.稳定主键.键值);
+            });
+            std::vector<可重建索引候选> 候选组;
+            std::vector<节点直接身份删除未发布候选> 删除候选组;
+            std::vector<索引操作计划> 计划组;
+            std::vector<节点稳定身份见证> 删除结果组;
+            bool 候选完整 = true;
+            节点直接类型化结构数据操作状态 首次失败 = 节点直接类型化结构数据操作状态::内部不一致;
+            try {
+                候选组.reserve(索引项组.size());
+                删除候选组.reserve(删除项组.size());
+                计划组.reserve(索引项组.size());
+                删除结果组.reserve(删除项组.size());
+            } catch (...) {
+                候选完整 = false;
+                首次失败 = 节点直接类型化结构数据操作状态::资源失败;
+            }
+            for (const auto* 写项 : 索引项组) {
+                if (!候选完整) break;
+                if (const auto* 创建项 = std::get_if<节点直接索引创建项>(写项)) {
+                    const auto& 见证 = std::get<节点稳定身份见证>(创建项->目标);
+                    const auto 当前 = 节点_->读取稳定主键当前身份(见证.稳定主键, 许可.事务序号());
+                    if (当前.状态 != 稳定主键当前身份状态::当前有效 || !当前.当前身份) {
+                        候选完整 = false;
+                        首次失败 = 节点直接类型化结构数据操作状态::入口拒绝;
+                        break;
+                    }
+                    auto 创建 = 索引_->结构化创建索引候选(
+                        {创建项->键, 索引目标种类::节点, *当前.当前身份, {}}, 许可.事务序号());
+                    if (创建.状态 != 可重建索引操作状态::已创建候选 || !创建.候选) {
+                        候选完整 = false;
+                        首次失败 = 创建.状态 == 可重建索引操作状态::内部不一致
+                            ? 节点直接类型化结构数据操作状态::内部不一致
+                            : 节点直接类型化结构数据操作状态::入口拒绝;
+                        break;
+                    }
+                    计划组.push_back({创建项->键, 见证, false});
+                    候选组.push_back(std::move(*创建.候选));
+                } else {
+                    const auto& 移除项 = std::get<节点直接索引移除项>(*写项);
+                    auto 移除 = 索引_->结构化移除索引候选(
+                        移除项.键, 移除项.预期目标, 许可.事务序号());
+                    if (移除.状态 != 可重建索引操作状态::已创建候选 || !移除.候选) {
+                        候选完整 = false;
+                        首次失败 = 移除.状态 == 可重建索引操作状态::内部不一致
+                            ? 节点直接类型化结构数据操作状态::内部不一致
+                            : 节点直接类型化结构数据操作状态::入口拒绝;
+                        break;
+                    }
+                    计划组.push_back({移除项.键, 移除项.预期目标, true});
+                    候选组.push_back(std::move(*移除.候选));
+                }
+            }
+            for (const auto* 删除项 : 删除项组) {
+                if (!候选完整) break;
+                const auto 当前 = 节点_->读取稳定主键当前身份(
+                    删除项->预期当前.稳定主键, 许可.事务序号());
+                if (当前.状态 != 稳定主键当前身份状态::当前有效 || !当前.当前身份
+                    || !当前.当前记录 || 当前.当前记录->类型 != 删除项->预期当前.类型
+                    || 当前.当前记录->版本号 != 删除项->预期当前.身份版本) {
+                    候选完整 = false;
+                    首次失败 = 节点直接类型化结构数据操作状态::入口拒绝;
+                    break;
+                }
+                auto 删除 = 节点_->结构化删除节点未发布候选(*当前.当前身份, 许可.事务序号());
+                if (删除.状态 != 节点直接身份写入状态::已形成候选 || !删除.候选) {
+                    候选完整 = false;
+                    首次失败 = 删除.状态 == 节点直接身份写入状态::资源失败
+                        ? 节点直接类型化结构数据操作状态::资源失败
+                        : 删除.状态 == 节点直接身份写入状态::版本漂移
+                            ? 节点直接类型化结构数据操作状态::版本漂移
+                            : 节点直接类型化结构数据操作状态::内部不一致;
+                    break;
+                }
+                删除结果组.push_back({删除项->预期当前.稳定主键,
+                    删除项->预期当前.类型, 删除项->预期当前.身份版本 + 1});
+                删除候选组.push_back(std::move(*删除.候选));
+            }
+            if (候选完整) {
+                for (auto& 候选 : 候选组) {
+                    if (索引_->确认候选(候选, 许可.事务序号())
+                        != 可重建索引操作状态::已确认待发布) {
+                        候选完整 = false;
+                        break;
+                    }
+                }
+            }
+            if (候选完整) {
+                for (auto& 候选 : 删除候选组) {
+                    if (节点_->确认节点删除候选(候选, 许可.事务序号()).状态
+                        != 节点直接身份写入状态::已确认待发布) {
+                        候选完整 = false;
+                        break;
+                    }
+                }
+            }
+
+            节点直接事务幂等记录 计划记录;
+            bool 结果可编码 = 候选完整;
+            if (候选完整) {
+                计划记录.安装实例身份 = 请求.安装实例身份;
+                计划记录.幂等身份 = 请求.幂等身份;
+                计划记录.请求意图摘要 = 请求.请求意图摘要;
+                计划记录.执行证据摘要 = 请求.执行证据摘要;
+                计划记录.材料格式版本 = 2;
+                计划记录.写集规则版本 = 2;
+                计划记录.写集材料 = 编码.材料;
+                计划记录.状态 = 节点直接事务幂等记录状态::待发布;
+                计划记录.发布代次 = 当前代次 + 1;
+                for (const auto& 读回项 : 请求.读回规格.项目组) {
+                    const auto& 键 = std::get<索引物理键>(读回项.身份);
+                    const auto 位置 = std::find_if(计划组.begin(), 计划组.end(),
+                        [&](const auto& 项) { return 项.键 == 键; });
+                    const bool 要求移除 = 读回项.种类 == 节点直接发布后读回对象种类::已移除索引;
+                    if (位置 == 计划组.end() || 位置->是移除 != 要求移除) {
+                        结果可编码 = false;
+                        break;
+                    }
+                    计划记录.索引组.push_back({键, !要求移除, 位置->节点目标, std::nullopt});
+                }
+                std::vector<std::uint8_t> 结果材料 = 编码.材料;
+                结果可编码 = 结果可编码 && 追加无符号_(结果材料, 计划记录.索引组.size(), 8);
+                for (const auto& 项 : 计划记录.索引组) {
+                    结果可编码 = 结果可编码 && 追加索引键_(结果材料, 项.键)
+                        && 追加字节_(结果材料, 项.当前 ? 1 : 0)
+                        && 项.节点目标.has_value() && 追加节点见证_(结果材料, *项.节点目标)
+                        && 追加字节_(结果材料, 0);
+                }
+                const auto 摘要 = 结果可编码 ? 计算SHA256_(结果材料) : 节点直接摘要计算结果{};
+                结果可编码 = 结果可编码 && 摘要.状态 == 节点直接材料转换状态::成功;
+                if (结果可编码) 计划记录.结果摘要 = 摘要.摘要;
+            }
+
+            std::optional<节点直接事务幂等候选> 幂等候选;
+            if (结果可编码) {
+                auto 建立 = 幂等_->结构化建立记录未发布候选(计划记录, 许可.事务序号());
+                if (建立.状态 == 节点直接仓候选操作状态::已形成候选 && 建立.候选
+                    && 幂等_->确认候选(*建立.候选, 许可.事务序号())
+                        == 节点直接仓候选操作状态::已确认待发布) {
+                    幂等候选.emplace(std::move(*建立.候选));
+                } else {
+                    候选完整 = false;
+                    首次失败 = 建立.状态 == 节点直接仓候选操作状态::资源失败
+                        ? 节点直接类型化结构数据操作状态::资源失败
+                        : 节点直接类型化结构数据操作状态::内部不一致;
+                }
+            } else {
+                候选完整 = false;
+            }
+
+            if (候选完整 && 幂等候选) {
+                for (auto& 候选 : 候选组) 索引_->完成发布(候选, 许可.事务序号());
+                for (auto& 候选 : 删除候选组) 节点_->完成发布节点删除候选(候选, 许可.事务序号());
+                if (幂等_->完成发布(*幂等候选, 许可.事务序号())
+                        != 节点直接仓候选操作状态::已发布
+                    || !事务域_->推进普通已发布代次(许可, 当前代次)) {
+                    许可.标记隔离();
+                    结果.状态 = 节点直接类型化结构数据操作状态::内部不一致;
+                    return 结果;
+                }
+                bool 发布后读回一致 = true;
+                for (const auto& 项 : 计划组) {
+                    const auto 当前 = 索引_->读取索引物理键(项.键, 许可.事务序号());
+                    if (项.是移除) {
+                        发布后读回一致 = !当前 && 发布后读回一致;
+                    } else if (!当前 || 当前->目标种类 != 索引目标种类::节点) {
+                        发布后读回一致 = false;
+                    } else {
+                        const auto 节点记录 = 节点_->读取节点(当前->节点, 许可.事务序号());
+                        发布后读回一致 = 节点记录
+                            && 节点记录->稳定主键 == 项.节点目标.稳定主键
+                            && 节点记录->类型 == 项.节点目标.类型
+                            && 节点记录->版本号 == 项.节点目标.身份版本
+                            && 发布后读回一致;
+                    }
+                }
+                for (const auto& 见证 : 删除结果组) {
+                    const auto 当前 = 节点_->读取稳定主键当前身份(
+                        见证.稳定主键, 许可.事务序号());
+                    发布后读回一致 = 当前.状态 == 稳定主键当前身份状态::历史占用
+                        && !当前.当前身份 && !当前.当前记录
+                        && 发布后读回一致;
+                }
+                结果 = 形成幂等读回_(计划记录);
+                结果.状态 = 发布后读回一致
+                    ? 节点直接类型化结构数据操作状态::已提交
+                    : 节点直接类型化结构数据操作状态::内部不一致;
+                if (!发布后读回一致) 许可.标记隔离();
+                节点直接持久发布见证请求 发布请求;
+                发布请求.安装实例身份 = 请求.安装实例身份;
+                发布请求.事务身份 = 请求.幂等身份;
+                发布请求.尝试序号 = 尝试序号;
+                发布请求.请求意图摘要 = 请求.请求意图摘要;
+                发布请求.执行证据摘要 = 请求.执行证据摘要;
+                发布请求.发布代次 = 当前代次 + 1;
+                发布请求.结果摘要 = 计划记录.结果摘要;
+                const auto 发布见证 = 持久证据_->标记已发布(发布请求);
+                if ((发布见证.状态 == 节点直接持久端口状态::已见证
+                        || 发布见证.状态 == 节点直接持久端口状态::精确同义)
+                    && 发布见证.尝试序号 == 尝试序号
+                    && 幂等_->单调记录持久证据状态(
+                        请求.幂等身份, 尝试序号, 持久证据状态::已与内存代次一致)) {
+                    结果.持久状态 = 持久证据状态::已与内存代次一致;
+                } else if (发布见证.状态 == 节点直接持久端口状态::结果未知
+                    || 发布见证.状态 == 节点直接持久端口状态::资源失败) {
+                    (void)幂等_->单调记录持久证据状态(
+                        请求.幂等身份, 尝试序号, 持久证据状态::持久化结果未知);
+                    结果.持久状态 = 持久证据状态::持久化结果未知;
+                } else {
+                    (void)幂等_->单调记录持久证据状态(
+                        请求.幂等身份, 尝试序号, 持久证据状态::持久证据损坏);
+                    许可.标记隔离();
+                    结果.状态 = 节点直接类型化结构数据操作状态::内部不一致;
+                    结果.持久状态 = 持久证据状态::持久证据损坏;
+                }
+                return 结果;
+            }
+
+            bool 已完整撤销 = true;
+            for (std::size_t 序号 = 删除候选组.size(); 序号 > 0; --序号)
+                已完整撤销 = 节点_->撤销节点删除候选(
+                    删除候选组[序号 - 1], 许可.事务序号()).状态
+                    == 节点直接身份写入状态::已撤销 && 已完整撤销;
+            for (std::size_t 序号 = 候选组.size(); 序号 > 0; --序号)
+                已完整撤销 = 索引_->撤销候选(候选组[序号 - 1], 许可.事务序号())
+                    == 可重建索引操作状态::已撤销 && 已完整撤销;
+            节点直接持久撤销见证请求 撤销请求;
+            撤销请求.安装实例身份 = 请求.安装实例身份;
+            撤销请求.事务身份 = 请求.幂等身份;
+            撤销请求.尝试序号 = 尝试序号;
+            撤销请求.请求意图摘要 = 请求.请求意图摘要;
+            撤销请求.执行证据摘要 = 请求.执行证据摘要;
+            撤销请求.写集材料摘要 = 写集摘要.摘要;
+            const auto 撤销见证 = 已完整撤销
+                ? 持久证据_->标记已撤销未发布(撤销请求)
+                : 节点直接持久端口结果{};
+            if (已完整撤销
+                && (撤销见证.状态 == 节点直接持久端口状态::已撤销未发布
+                    || 撤销见证.状态 == 节点直接持久端口状态::精确同义)
+                && 撤销见证.尝试序号 == 尝试序号
+                && 幂等_->清除临时持久证据侧账(请求.幂等身份, 尝试序号)) {
+                结果.状态 = 首次失败;
+                return 结果;
+            }
+            许可.标记隔离();
+            结果.状态 = 节点直接类型化结构数据操作状态::内部不一致;
+            return 结果;
+        }
+
+        const bool 仅含节点关系和索引创建 = !请求.写项组.empty()
+            && std::all_of(请求.写项组.begin(), 请求.写项组.end(), [](const auto& 写项) {
+                return std::holds_alternative<节点直接节点创建项>(写项)
+                    || std::holds_alternative<节点直接关系创建项>(写项)
+                    || std::holds_alternative<节点直接索引创建项>(写项);
+            });
+        const bool 读回仅含本次节点关系和当前索引 = std::all_of(
+            请求.读回规格.项目组.begin(), 请求.读回规格.项目组.end(), [](const auto& 项) {
+                if (const auto* 身份 = std::get_if<节点直接写集局部身份>(&项.身份)) {
+                    return (项.种类 == 节点直接发布后读回对象种类::当前节点
+                            && 身份->种类 == 节点直接写集局部身份种类::节点)
+                        || (项.种类 == 节点直接发布后读回对象种类::当前关系
+                            && 身份->种类 == 节点直接写集局部身份种类::关系);
+                }
+                return 项.种类 == 节点直接发布后读回对象种类::当前索引
+                    && std::holds_alternative<索引物理键>(项.身份) && 项.预期版本 == 0;
+            });
+        if (仅含节点关系和索引创建 && 读回仅含本次节点关系和当前索引) {
+            struct 节点计划结果 {
+                节点直接写集局部身份 局部身份;
+                节点句柄 句柄;
+                节点稳定身份见证 见证;
+            };
+            struct 关系计划结果 {
+                节点直接写集局部身份 局部身份;
+                关系句柄 句柄;
+                关系稳定身份见证 见证;
+                节点句柄 源端句柄;
+                节点句柄 目标端句柄;
+            };
+            struct 索引计划结果 {
+                索引物理键 键;
+                节点稳定身份见证 节点目标;
+            };
+            std::vector<const 节点直接节点创建项*> 节点项组;
+            std::vector<const 节点直接关系创建项*> 关系项组;
+            std::vector<const 节点直接索引创建项*> 索引项组;
+            for (const auto& 写项 : 请求.写项组) {
+                if (const auto* 项 = std::get_if<节点直接节点创建项>(&写项)) 节点项组.push_back(项);
+                else if (const auto* 项 = std::get_if<节点直接关系创建项>(&写项)) 关系项组.push_back(项);
+                else 索引项组.push_back(&std::get<节点直接索引创建项>(写项));
+            }
+            const auto 按计划键排序 = [&](const auto* 左, const auto* 右) {
+                const auto* 左映射 = 查找计划身份_(*计划身份映射,
+                    std::is_same_v<std::decay_t<decltype(*左)>, 节点直接节点创建项>
+                        ? 左->局部身份 : 左->局部身份);
+                const auto* 右映射 = 查找计划身份_(*计划身份映射,
+                    std::is_same_v<std::decay_t<decltype(*右)>, 节点直接节点创建项>
+                        ? 右->局部身份 : 右->局部身份);
+                return 左映射 != nullptr && 右映射 != nullptr
+                    && (左映射->稳定身份命名域 != 右映射->稳定身份命名域
+                        ? 左映射->稳定身份命名域 < 右映射->稳定身份命名域
+                        : 左映射->计划键 < 右映射->计划键);
+            };
+            std::sort(节点项组.begin(), 节点项组.end(), 按计划键排序);
+            std::sort(关系项组.begin(), 关系项组.end(), 按计划键排序);
+            std::sort(索引项组.begin(), 索引项组.end(), [](const auto* 左, const auto* 右) {
+                return std::tie(左->键.所有者身份, 左->键.命名域, 左->键.键格式版本,
+                        左->键.探测规则版本, 左->键.键值)
+                    < std::tie(右->键.所有者身份, 右->键.命名域, 右->键.键格式版本,
+                        右->键.探测规则版本, 右->键.键值);
+            });
+
+            std::vector<节点直接身份未发布候选> 节点候选组;
+            std::vector<正式关系候选> 关系候选组;
+            std::vector<可重建索引候选> 索引候选组;
+            std::vector<节点计划结果> 节点结果组;
+            std::vector<关系计划结果> 关系结果组;
+            std::vector<索引计划结果> 索引结果组;
+            节点直接类型化结构数据操作状态 首次失败 = 节点直接类型化结构数据操作状态::内部不一致;
+            bool 候选完整 = true;
+            try {
+                节点候选组.reserve(节点项组.size());
+                关系候选组.reserve(关系项组.size());
+                索引候选组.reserve(索引项组.size());
+                节点结果组.reserve(节点项组.size());
+                关系结果组.reserve(关系项组.size());
+                索引结果组.reserve(索引项组.size());
+            } catch (...) {
+                候选完整 = false;
+                首次失败 = 节点直接类型化结构数据操作状态::资源失败;
+            }
+
+            auto 查找节点计划 = [&](节点直接写集局部身份 身份) -> const 节点计划结果* {
+                const auto 位置 = std::find_if(节点结果组.begin(), 节点结果组.end(),
+                    [&](const auto& 项) { return 项.局部身份 == 身份; });
+                return 位置 == 节点结果组.end() ? nullptr : &*位置;
+            };
+            auto 解析节点端点 = [&](const 节点直接节点端点引用& 引用)
+                -> std::optional<std::pair<节点句柄, 节点稳定身份见证>> {
+                if (const auto* 局部 = std::get_if<节点直接写集局部身份>(&引用)) {
+                    const auto* 计划 = 查找节点计划(*局部);
+                    if (计划 == nullptr) return std::nullopt;
+                    return std::pair{计划->句柄, 计划->见证};
+                }
+                const auto& 见证 = std::get<节点稳定身份见证>(引用);
+                const auto 当前 = 节点_->读取稳定主键当前身份(见证.稳定主键, 许可.事务序号());
+                if (当前.状态 != 稳定主键当前身份状态::当前有效 || !当前.当前身份 || !当前.当前记录
+                    || 当前.当前记录->类型 != 见证.类型 || 当前.当前记录->版本号 != 见证.身份版本) {
+                    return std::nullopt;
+                }
+                return std::pair{*当前.当前身份, 见证};
+            };
+
+            if (候选完整) {
+                for (const auto* 项 : 节点项组) {
+                    const auto* 映射 = 查找计划身份_(*计划身份映射, 项->局部身份);
+                    if (映射 == nullptr || 映射->稳定身份命名域 != static_cast<std::uint64_t>(项->命名域)) {
+                        候选完整 = false;
+                        首次失败 = 节点直接类型化结构数据操作状态::入口拒绝;
+                        break;
+                    }
+                    const 节点稳定主键 稳定主键{映射->稳定身份命名域, 映射->计划键};
+                    auto 创建 = 节点_->结构化创建节点未发布候选(项->类型, 稳定主键, 许可.事务序号());
+                    if (创建.状态 != 节点直接身份写入状态::已形成候选 || !创建.候选) {
+                        候选完整 = false;
+                        首次失败 = 创建.状态 == 节点直接身份写入状态::资源失败
+                            ? 节点直接类型化结构数据操作状态::资源失败
+                            : 创建.状态 == 节点直接身份写入状态::版本漂移
+                                ? 节点直接类型化结构数据操作状态::版本漂移
+                                : 节点直接类型化结构数据操作状态::入口拒绝;
+                        break;
+                    }
+                    节点结果组.push_back({项->局部身份, 创建.当前身份, {稳定主键, 项->类型, 1}});
+                    节点候选组.push_back(std::move(*创建.候选));
+                }
+            }
+            if (候选完整) {
+                for (const auto* 项 : 关系项组) {
+                    const auto* 映射 = 查找计划身份_(*计划身份映射, 项->局部身份);
+                    const auto 源端 = 解析节点端点(项->源端);
+                    const auto 目标端 = 解析节点端点(项->目标端);
+                    if (映射 == nullptr || !源端 || !目标端) {
+                        候选完整 = false;
+                        首次失败 = 节点直接类型化结构数据操作状态::入口拒绝;
+                        break;
+                    }
+                    const 关系稳定主键 稳定主键{映射->稳定身份命名域, 映射->计划键};
+                    auto 创建 = 关系_->结构化创建关系未发布候选(
+                        项->类型, 源端->first, 目标端->first, 项->角色或顺序,
+                        稳定主键, 许可.事务序号());
+                    if ((创建.状态 != 正式关系操作状态::已创建候选
+                            && 创建.状态 != 正式关系操作状态::已变更候选)
+                        || !创建.候选 || !创建.当前关系) {
+                        候选完整 = false;
+                        首次失败 = 创建.状态 == 正式关系操作状态::内部不一致
+                            ? 节点直接类型化结构数据操作状态::内部不一致
+                            : 创建.状态 == 正式关系操作状态::入口拒绝_版本漂移
+                                ? 节点直接类型化结构数据操作状态::版本漂移
+                                : 节点直接类型化结构数据操作状态::入口拒绝;
+                        break;
+                    }
+                    关系结果组.push_back({项->局部身份, *创建.当前关系,
+                        {稳定主键, 项->类型, 1, 源端->second, 目标端->second, 项->角色或顺序},
+                        源端->first, 目标端->first});
+                    关系候选组.push_back(std::move(*创建.候选));
+                }
+            }
+            if (候选完整) {
+                for (const auto* 项 : 索引项组) {
+                    const auto 目标 = 解析节点端点(项->目标);
+                    if (!目标) {
+                        候选完整 = false;
+                        首次失败 = 节点直接类型化结构数据操作状态::入口拒绝;
+                        break;
+                    }
+                    auto 创建 = 索引_->结构化创建索引候选(
+                        {项->键, 索引目标种类::节点, 目标->first, {}}, 许可.事务序号());
+                    if (创建.状态 != 可重建索引操作状态::已创建候选 || !创建.候选) {
+                        候选完整 = false;
+                        首次失败 = 创建.状态 == 可重建索引操作状态::内部不一致
+                            ? 节点直接类型化结构数据操作状态::内部不一致
+                            : 节点直接类型化结构数据操作状态::入口拒绝;
+                        break;
+                    }
+                    索引结果组.push_back({项->键, 目标->second});
+                    索引候选组.push_back(std::move(*创建.候选));
+                }
+            }
+
+            auto 撤销业务候选 = [&]() noexcept {
+                bool 完整 = true;
+                for (std::size_t 序号 = 索引候选组.size(); 序号 > 0; --序号)
+                    完整 = 索引_->撤销候选(索引候选组[序号 - 1], 许可.事务序号())
+                        == 可重建索引操作状态::已撤销 && 完整;
+                for (std::size_t 序号 = 关系候选组.size(); 序号 > 0; --序号)
+                    完整 = 关系_->撤销候选(关系候选组[序号 - 1], 许可.事务序号())
+                        == 正式关系操作状态::已撤销 && 完整;
+                for (std::size_t 序号 = 节点候选组.size(); 序号 > 0; --序号)
+                    完整 = 节点_->撤销节点候选(节点候选组[序号 - 1], 许可.事务序号()).状态
+                        == 节点直接身份写入状态::已撤销 && 完整;
+                return 完整;
+            };
+
+            if (候选完整) {
+                for (auto& 候选 : 节点候选组) {
+                    if (节点_->确认节点候选(候选, 许可.事务序号()).状态
+                        != 节点直接身份写入状态::已确认待发布) {
+                        候选完整 = false; break;
+                    }
+                }
+            }
+            if (候选完整) {
+                for (auto& 候选 : 关系候选组) {
+                    if (关系_->确认候选(候选, 许可.事务序号())
+                        != 正式关系操作状态::已确认待发布) {
+                        候选完整 = false; break;
+                    }
+                }
+            }
+            if (候选完整) {
+                for (auto& 候选 : 索引候选组) {
+                    if (索引_->确认候选(候选, 许可.事务序号())
+                        != 可重建索引操作状态::已确认待发布) {
+                        候选完整 = false; break;
+                    }
+                }
+            }
+
+            if (候选完整) {
+                std::vector<std::uint8_t> 结果材料 = 编码.材料;
+                bool 结果可编码 = 追加无符号_(结果材料, 节点结果组.size(), 8);
+                for (const auto& 项 : 节点结果组) 结果可编码 = 结果可编码 && 追加节点见证_(结果材料, 项.见证);
+                结果可编码 = 结果可编码 && 追加无符号_(结果材料, 关系结果组.size(), 8);
+                for (const auto& 项 : 关系结果组) {
+                    结果可编码 = 结果可编码
+                        && 追加无符号_(结果材料, 项.见证.稳定主键.命名域, 8)
+                        && 追加无符号_(结果材料, 项.见证.稳定主键.键值, 8)
+                        && 追加无符号_(结果材料, static_cast<std::uint32_t>(项.见证.类型), 4)
+                        && 追加无符号_(结果材料, 项.见证.关系版本, 4)
+                        && 追加节点见证_(结果材料, 项.见证.源端)
+                        && 追加节点见证_(结果材料, 项.见证.目标端)
+                        && 追加无符号_(结果材料, static_cast<std::uint64_t>(项.见证.角色或顺序), 8);
+                }
+                结果可编码 = 结果可编码 && 追加无符号_(结果材料, 索引结果组.size(), 8);
+                for (const auto& 项 : 索引结果组) {
+                    结果可编码 = 结果可编码 && 追加索引键_(结果材料, 项.键)
+                        && 追加无符号_(结果材料, 1, 1)
+                        && 追加节点见证_(结果材料, 项.节点目标)
+                        && 追加无符号_(结果材料, 0, 1);
+                }
+                const auto 结果摘要 = 结果可编码 ? 计算SHA256_(结果材料) : 节点直接摘要计算结果{};
+                节点直接事务幂等记录 计划记录;
+                计划记录.安装实例身份 = 请求.安装实例身份;
+                计划记录.幂等身份 = 请求.幂等身份;
+                计划记录.请求意图摘要 = 请求.请求意图摘要;
+                计划记录.执行证据摘要 = 请求.执行证据摘要;
+                计划记录.材料格式版本 = 2;
+                计划记录.写集规则版本 = 2;
+                计划记录.写集材料 = 编码.材料;
+                计划记录.状态 = 节点直接事务幂等记录状态::待发布;
+                计划记录.发布代次 = 当前代次 + 1;
+                if (结果摘要.状态 == 节点直接材料转换状态::成功) 计划记录.结果摘要 = 结果摘要.摘要;
+                for (const auto& 读回项 : 请求.读回规格.项目组) {
+                    if (读回项.种类 == 节点直接发布后读回对象种类::当前节点) {
+                        const auto 局部身份 = std::get<节点直接写集局部身份>(读回项.身份);
+                        const auto 位置 = std::find_if(节点结果组.begin(), 节点结果组.end(),
+                            [&](const auto& 项) { return 项.局部身份 == 局部身份; });
+                        if (位置 == 节点结果组.end() || 读回项.预期版本 != 位置->见证.身份版本) {
+                            结果可编码 = false;
+                            break;
+                        }
+                        计划记录.节点组.push_back(位置->见证);
+                    } else if (读回项.种类 == 节点直接发布后读回对象种类::当前关系) {
+                        const auto 局部身份 = std::get<节点直接写集局部身份>(读回项.身份);
+                        const auto 位置 = std::find_if(关系结果组.begin(), 关系结果组.end(),
+                            [&](const auto& 项) { return 项.局部身份 == 局部身份; });
+                        if (位置 == 关系结果组.end() || 读回项.预期版本 != 位置->见证.关系版本) {
+                            结果可编码 = false;
+                            break;
+                        }
+                        计划记录.关系组.push_back(位置->见证);
+                    } else {
+                        const auto& 键 = std::get<索引物理键>(读回项.身份);
+                        const auto 位置 = std::find_if(索引结果组.begin(), 索引结果组.end(),
+                            [&](const auto& 项) { return 项.键 == 键; });
+                        if (位置 == 索引结果组.end() || 读回项.预期版本 != 0) {
+                            结果可编码 = false;
+                            break;
+                        }
+                        计划记录.索引组.push_back({位置->键, true, 位置->节点目标, std::nullopt});
+                    }
+                }
+                auto 幂等结果 = 结果摘要.状态 == 节点直接材料转换状态::成功
+                        && 结果可编码
+                    ? 幂等_->结构化建立记录未发布候选(计划记录, 许可.事务序号())
+                    : 节点直接事务幂等候选结果{};
+                if (幂等结果.状态 == 节点直接仓候选操作状态::已形成候选 && 幂等结果.候选
+                    && 幂等_->确认候选(*幂等结果.候选, 许可.事务序号())
+                        == 节点直接仓候选操作状态::已确认待发布) {
+                    for (auto& 候选 : 节点候选组) 节点_->完成发布节点候选(候选, 许可.事务序号());
+                    for (auto& 候选 : 关系候选组) 关系_->完成发布(候选, 许可.事务序号());
+                    for (auto& 候选 : 索引候选组) 索引_->完成发布(候选, 许可.事务序号());
+                    if (幂等_->完成发布(*幂等结果.候选, 许可.事务序号())
+                            == 节点直接仓候选操作状态::已发布
+                        && 事务域_->推进普通已发布代次(许可, 当前代次)) {
+                        结果 = 形成幂等读回_(计划记录);
+                        结果.状态 = 节点直接类型化结构数据操作状态::已提交;
+                        bool 发布后读回一致 = true;
+                        for (const auto& 项 : 节点结果组) {
+                            const auto 当前 = 节点_->读取稳定主键当前身份(
+                                项.见证.稳定主键, 许可.事务序号());
+                            发布后读回一致 = 当前.状态 == 稳定主键当前身份状态::当前有效
+                                && 当前.当前身份 && 当前.当前记录
+                                && *当前.当前身份 == 项.句柄
+                                && 当前.当前记录->稳定主键 == 项.见证.稳定主键
+                                && 当前.当前记录->类型 == 项.见证.类型
+                                && 当前.当前记录->版本号 == 项.见证.身份版本
+                                && 当前.当前记录->状态 == 记录状态::有效
+                                && 发布后读回一致;
+                        }
+                        for (const auto& 项 : 关系结果组) {
+                            const auto 当前 = 关系_->读取稳定主键当前关系(
+                                项.见证.稳定主键, 许可.事务序号());
+                            发布后读回一致 = 当前.状态 == 稳定关系当前读取状态::当前有效
+                                && 当前.记录
+                                && 当前.记录->稳定主键 == 项.见证.稳定主键
+                                && 当前.记录->类型 == 项.见证.类型
+                                && 当前.记录->版本号 == 项.见证.关系版本
+                                && 当前.记录->源节点 == 项.源端句柄
+                                && 当前.记录->目标节点 == 项.目标端句柄
+                                && 当前.记录->顺序号 == 项.见证.角色或顺序
+                                && 当前.记录->状态 == 记录状态::有效
+                                && 发布后读回一致;
+                        }
+                        for (const auto& 项 : 索引结果组) {
+                            const auto 当前 = 索引_->读取索引物理键(项.键, 许可.事务序号());
+                            if (!当前 || 当前->目标种类 != 索引目标种类::节点) {
+                                发布后读回一致 = false;
+                                continue;
+                            }
+                            const auto 节点记录 = 节点_->读取节点(当前->节点, 许可.事务序号());
+                            发布后读回一致 = 节点记录
+                                && 节点记录->稳定主键 == 项.节点目标.稳定主键
+                                && 节点记录->类型 == 项.节点目标.类型
+                                && 节点记录->版本号 == 项.节点目标.身份版本
+                                && 发布后读回一致;
+                        }
+                        if (!发布后读回一致) {
+                            许可.标记隔离();
+                            结果.状态 = 节点直接类型化结构数据操作状态::内部不一致;
+                        }
+                        节点直接持久发布见证请求 发布请求;
+                        发布请求.安装实例身份 = 请求.安装实例身份;
+                        发布请求.事务身份 = 请求.幂等身份;
+                        发布请求.尝试序号 = 尝试序号;
+                        发布请求.请求意图摘要 = 请求.请求意图摘要;
+                        发布请求.执行证据摘要 = 请求.执行证据摘要;
+                        发布请求.发布代次 = 当前代次 + 1;
+                        发布请求.结果摘要 = 计划记录.结果摘要;
+                        const auto 发布见证 = 持久证据_->标记已发布(发布请求);
+                        if ((发布见证.状态 == 节点直接持久端口状态::已见证
+                                || 发布见证.状态 == 节点直接持久端口状态::精确同义)
+                            && 发布见证.尝试序号 == 尝试序号
+                            && 幂等_->单调记录持久证据状态(
+                                请求.幂等身份, 尝试序号, 持久证据状态::已与内存代次一致)) {
+                            结果.持久状态 = 持久证据状态::已与内存代次一致;
+                        } else if (发布见证.状态 == 节点直接持久端口状态::结果未知
+                            || 发布见证.状态 == 节点直接持久端口状态::资源失败) {
+                            (void)幂等_->单调记录持久证据状态(
+                                请求.幂等身份, 尝试序号, 持久证据状态::持久化结果未知);
+                            结果.持久状态 = 持久证据状态::持久化结果未知;
+                        } else {
+                            (void)幂等_->单调记录持久证据状态(
+                                请求.幂等身份, 尝试序号, 持久证据状态::持久证据损坏);
+                            许可.标记隔离();
+                            结果.状态 = 节点直接类型化结构数据操作状态::内部不一致;
+                            结果.持久状态 = 持久证据状态::持久证据损坏;
+                        }
+                        return 结果;
+                    }
+                    许可.标记隔离();
+                    结果.状态 = 节点直接类型化结构数据操作状态::内部不一致;
+                    return 结果;
+                }
+                候选完整 = false;
+                首次失败 = 幂等结果.状态 == 节点直接仓候选操作状态::资源失败
+                    ? 节点直接类型化结构数据操作状态::资源失败
+                    : 节点直接类型化结构数据操作状态::内部不一致;
+            }
+
+            const bool 已完整撤销 = 撤销业务候选();
+            节点直接持久撤销见证请求 撤销请求;
+            撤销请求.安装实例身份 = 请求.安装实例身份;
+            撤销请求.事务身份 = 请求.幂等身份;
+            撤销请求.尝试序号 = 尝试序号;
+            撤销请求.请求意图摘要 = 请求.请求意图摘要;
+            撤销请求.执行证据摘要 = 请求.执行证据摘要;
+            撤销请求.写集材料摘要 = 写集摘要.摘要;
+            const auto 撤销见证 = 已完整撤销
+                ? 持久证据_->标记已撤销未发布(撤销请求)
+                : 节点直接持久端口结果{};
+            if (已完整撤销
+                && (撤销见证.状态 == 节点直接持久端口状态::已撤销未发布
+                    || 撤销见证.状态 == 节点直接持久端口状态::精确同义)
+                && 撤销见证.尝试序号 == 尝试序号
+                && 幂等_->清除临时持久证据侧账(请求.幂等身份, 尝试序号)) {
+                结果.状态 = 首次失败;
+                return 结果;
+            }
+            许可.标记隔离();
+            结果.状态 = 节点直接类型化结构数据操作状态::内部不一致;
+            return 结果;
+        }
+
+        // 非空业务候选链在后续固定顺序段接续；在形成任何候选前先持久见证本轮安全撤销。
         节点直接持久撤销见证请求 撤销请求;
         撤销请求.安装实例身份 = 请求.安装实例身份;
         撤销请求.事务身份 = 请求.幂等身份;

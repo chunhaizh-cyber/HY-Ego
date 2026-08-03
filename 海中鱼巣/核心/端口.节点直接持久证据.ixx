@@ -19,7 +19,7 @@ enum class 节点直接持久端口状态 : std::uint8_t {
 struct 节点直接持久准备请求 {
     节点直接事务幂等身份 安装实例身份;
     节点直接事务幂等身份 事务身份;
-    std::uint32_t 材料格式版本 = 1;
+    std::uint32_t 材料格式版本 = 2;
     std::array<std::uint8_t, 32> 请求意图摘要{};
     std::array<std::uint8_t, 32> 执行证据摘要{};
     std::vector<std::uint8_t> 写集材料;
