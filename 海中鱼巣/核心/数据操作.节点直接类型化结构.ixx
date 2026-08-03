@@ -5,6 +5,7 @@ module;
 
 #include <algorithm>
 #include <limits>
+#include <span>
 
 export module 海中鱼巣.核心.数据操作.节点直接类型化结构;
 
@@ -26,7 +27,14 @@ public:
 
     节点直接类型化结构数据操作结果 提交(
         const 节点直接类型化结构数据操作请求& 请求) const {
-        return 执行器_.执行节点直接类型化结构事务({请求});
+        const std::span<节点直接类型化结构事务参与者* const> 空参与者组;
+        return 提交带参与者事务(请求, 空参与者组);
+    }
+
+    节点直接类型化结构数据操作结果 提交带参与者事务(
+        const 节点直接类型化结构数据操作请求& 请求,
+        std::span<节点直接类型化结构事务参与者* const> 参与者组) const {
+        return 执行器_.执行节点直接类型化结构事务({请求}, 参与者组);
     }
 
     节点直接持久见证数据操作结果 执行持久发布见证重试(
