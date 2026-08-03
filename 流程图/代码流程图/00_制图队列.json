@@ -14,8 +14,8 @@
   "source_external_path": "流程图/主程序可达调用关系/02_main可达外部边界表.json",
   "source_external_blob": "4aefe4aaacf4b25577cdff362fd2ee64965ba899",
   "current_reachable_function_count": 1993,
-  "chart_completed_count": 1407,
-  "chart_pending_count": 586,
+  "chart_completed_count": 1412,
+  "chart_pending_count": 581,
   "historical_unreachable_chart_count": 52,
   "queue_order": "正式身份表稳定身份顺序；shortest_depth只记录main最短调用深度，不参与既有drawing_order重排",
   "entries": [
@@ -66623,7 +66623,7 @@
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
+      "chart_status": "已制图",
       "chart_path": "流程图/代码流程图/L5/CF-L5-0245_节点直接类型化结构提交服务_现状流程图.md",
       "mapping_path": "流程图/代码流程图/L5/CF-L5-0245_节点直接类型化结构提交服务_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L5"
@@ -66657,7 +66657,7 @@
         "RCE3357"
       ],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
+      "chart_status": "已制图",
       "chart_path": "流程图/代码流程图/L6/CF-L6-0407_提交_现状流程图.md",
       "mapping_path": "流程图/代码流程图/L6/CF-L6-0407_提交_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L6"
@@ -66685,7 +66685,7 @@
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
+      "chart_status": "已制图",
       "chart_path": "流程图/代码流程图/L7/CF-L7-0167_映射结果_现状流程图.md",
       "mapping_path": "流程图/代码流程图/L7/CF-L7-0167_映射结果_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L7"
@@ -66715,7 +66715,7 @@
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
+      "chart_status": "已制图",
       "chart_path": "流程图/代码流程图/L5/CF-L5-0246_节点直接持久证据写入端口_现状流程图.md",
       "mapping_path": "流程图/代码流程图/L5/CF-L5-0246_节点直接持久证据写入端口_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L5"
@@ -66743,7 +66743,7 @@
       ],
       "outgoing_project_edge_ids": [],
       "external_boundary_ids": [],
-      "chart_status": "待绘制",
+      "chart_status": "已制图",
       "chart_path": "流程图/代码流程图/L5/CF-L5-0247_节点直接恢复材料读取端口_现状流程图.md",
       "mapping_path": "流程图/代码流程图/L5/CF-L5-0247_节点直接恢复材料读取端口_逐行代码映射表.md",
       "target_layer_directory": "流程图/代码流程图/L5"
