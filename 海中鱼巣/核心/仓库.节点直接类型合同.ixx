@@ -6,10 +6,12 @@ module;
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <mutex>
 #include <optional>
 #include <shared_mutex>
 #include <utility>
+#include <unordered_map>
 #include <vector>
 
 export module 海中鱼巣.核心.仓库.节点直接类型合同;
@@ -80,8 +82,17 @@ public:
                 : 节点直接仓候选操作状态::内部不一致;
             return 结果;
         }
+        const auto 命名域 = 计划合同.合同身份.命名域;
+        const auto 高水位位置 = 每域高水位_.find(命名域);
+        const auto 当前高水位 = 高水位位置 == 每域高水位_.end() ? 0 : 高水位位置->second;
+        if (当前高水位 == std::numeric_limits<std::uint64_t>::max()
+            || 计划合同.合同身份.键值 != 当前高水位 + 1) {
+            结果.状态 = 节点直接仓候选操作状态::版本漂移;
+            return 结果;
+        }
         try {
             记录组_.push_back({计划合同, false, 事务序号});
+            每域高水位_[命名域] = 计划合同.合同身份.键值;
             结果.候选.emplace(节点直接类型合同候选{
                 this, 事务序号, 计划合同.合同身份, 计划合同.合同版本});
             结果.状态 = 节点直接仓候选操作状态::已形成候选;
@@ -90,6 +101,8 @@ public:
             if (新位置 != 记录组_.end() && !新位置->已发布 && 新位置->事务序号 == 事务序号) {
                 记录组_.erase(新位置);
             }
+            if (当前高水位 == 0) 每域高水位_.erase(命名域);
+            else 每域高水位_[命名域] = 当前高水位;
             结果.状态 = 节点直接仓候选操作状态::资源失败;
         }
         return 结果;
@@ -123,7 +136,15 @@ public:
         if (位置 == 记录组_.end() || 位置->已发布 || 位置->事务序号 != 事务序号) {
             return 节点直接仓候选操作状态::内部不一致;
         }
+        const auto 命名域 = 候选.合同身份_.命名域;
+        const auto 高水位位置 = 每域高水位_.find(命名域);
+        if (高水位位置 == 每域高水位_.end()
+            || 高水位位置->second != 候选.合同身份_.键值) {
+            return 节点直接仓候选操作状态::内部不一致;
+        }
         记录组_.erase(位置);
+        if (候选.合同身份_.键值 == 1) 每域高水位_.erase(命名域);
+        else 高水位位置->second = 候选.合同身份_.键值 - 1;
         候选.阶段_ = 节点直接仓候选阶段::已撤销;
         return 节点直接仓候选操作状态::已撤销;
     }
@@ -142,11 +163,41 @@ public:
             }
             位置->已发布 = true;
             位置->事务序号 = 0;
+            历史占用_.push_back({候选.合同身份_});
             候选.阶段_ = 节点直接仓候选阶段::已发布;
             return 节点直接仓候选操作状态::已发布;
         } catch (...) {
             return 节点直接仓候选操作状态::内部不一致;
         }
+    }
+
+    std::uint64_t 读取命名域高水位(std::uint64_t 命名域) const noexcept {
+        try {
+            std::shared_lock 锁(仓库锁_);
+            const auto 位置 = 每域高水位_.find(命名域);
+            return 位置 == 每域高水位_.end() ? 0 : 位置->second;
+        } catch (...) { return 0; }
+    }
+
+    节点直接类型合同仓库权威材料 导出权威状态() const {
+        std::shared_lock 锁(仓库锁_);
+        节点直接类型合同仓库权威材料 材料;
+        for (const auto& [命名域, 高水位] : 每域高水位_) 材料.每域高水位.push_back({命名域, 高水位});
+        材料.历史占用 = 历史占用_;
+        for (const auto& 条目 : 记录组_) if (条目.已发布) 材料.记录组.push_back(条目.记录);
+        std::sort(材料.每域高水位.begin(), 材料.每域高水位.end(), [](const auto& 左, const auto& 右) {
+            return 左.命名域 < 右.命名域;
+        });
+        std::sort(材料.历史占用.begin(), 材料.历史占用.end(), [](const auto& 左, const auto& 右) {
+            return 左.身份.命名域 != 右.身份.命名域 ? 左.身份.命名域 < 右.身份.命名域
+                : 左.身份.键值 < 右.身份.键值;
+        });
+        std::sort(材料.记录组.begin(), 材料.记录组.end(), [](const auto& 左, const auto& 右) {
+            if (左.合同身份.命名域 != 右.合同身份.命名域) return 左.合同身份.命名域 < 右.合同身份.命名域;
+            if (左.合同身份.键值 != 右.合同身份.键值) return 左.合同身份.键值 < 右.合同身份.键值;
+            return 左.合同版本 < 右.合同版本;
+        });
+        return 材料;
     }
 
 private:
@@ -188,6 +239,8 @@ private:
     friend class 节点直接类型合同候选;
     mutable std::shared_mutex 仓库锁_;
     std::vector<条目> 记录组_;
+    std::unordered_map<std::uint64_t, std::uint64_t> 每域高水位_;
+    std::vector<类型合同稳定身份历史占用> 历史占用_;
 };
 
 std::optional<类型合同读回> 节点直接类型合同候选::读取候选合同() const {

@@ -333,10 +333,22 @@
     <ClCompile Include="海中鱼巣\核心\仓库.节点直接事务幂等.ixx">
       <Filter>核心</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\端口.节点直接持久证据.ixx">
+      <Filter>核心</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\核心\会话.节点直接身份结构写入.ixx">
       <Filter>核心</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\核心\执行器.节点直接身份结构写入.ixx">
+      <Filter>核心</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\服务.节点直接结构.ixx">
+      <Filter>核心</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\数据操作.节点直接类型化结构.ixx">
+      <Filter>核心</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\服务.节点直接类型化结构提交.ixx">
       <Filter>核心</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\核心\冻结.节点直接身份结构.ixx">
@@ -558,6 +570,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\核心\节点直接结构合同.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\核心\节点直接类型化结构事务.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\核心\日志系统.h">

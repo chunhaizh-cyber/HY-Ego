@@ -60,29 +60,63 @@ public:
             : std::nullopt;
     }
 
-    持久证据状态 读取持久证据状态(节点直接事务幂等身份 身份) const noexcept {
+    std::optional<节点直接持久证据侧账记录> 读取持久证据侧账(
+        节点直接事务幂等身份 身份) const noexcept {
         try {
             std::shared_lock 锁(侧账锁_);
             const auto 位置 = 查找侧账_(身份);
-            return 位置 == 侧账组_.end() ? 持久证据状态::不适用 : 位置->状态;
+            return 位置 == 侧账组_.end()
+                ? std::nullopt : std::optional<节点直接持久证据侧账记录>{*位置};
         } catch (...) {
-            return 持久证据状态::持久证据损坏;
+            return std::nullopt;
         }
+    }
+
+    持久证据状态 读取持久证据状态(节点直接事务幂等身份 身份) const noexcept {
+        const auto 侧账 = 读取持久证据侧账(身份);
+        return 侧账 ? 侧账->状态 : 持久证据状态::不适用;
+    }
+
+    bool 建立临时持久证据侧账(
+        节点直接事务幂等身份 身份, std::uint64_t 尝试序号) {
+        if (!节点直接事务幂等身份完整(身份) || 尝试序号 == 0) return false;
+        std::unique_lock 锁(侧账锁_);
+        if (查找侧账_(身份) != 侧账组_.end()) return false;
+        侧账组_.push_back({身份, 尝试序号, 持久证据状态::待持久化});
+        return true;
+    }
+
+    bool 清除临时持久证据侧账(
+        节点直接事务幂等身份 身份, std::uint64_t 尝试序号) noexcept {
+        try {
+            std::unique_lock 锁(侧账锁_);
+            const auto 位置 = 查找侧账_(身份);
+            if (位置 == 侧账组_.end() || 位置->尝试序号 != 尝试序号
+                || 位置->状态 != 持久证据状态::待持久化) return false;
+            侧账组_.erase(位置);
+            return true;
+        } catch (...) { return false; }
     }
 
     bool 单调记录持久证据状态(
         节点直接事务幂等身份 身份,
         持久证据状态 状态) noexcept {
-        if (!节点直接事务幂等身份完整(身份)) return false;
+        const auto 侧账 = 读取持久证据侧账(身份);
+        return 侧账 && 单调记录持久证据状态(身份, 侧账->尝试序号, 状态);
+    }
+
+    bool 单调记录持久证据状态(
+        节点直接事务幂等身份 身份,
+        std::uint64_t 尝试序号,
+        持久证据状态 状态) noexcept {
+        if (!节点直接事务幂等身份完整(身份) || 尝试序号 == 0) return false;
         try {
             std::unique_lock 锁(侧账锁_);
             auto 位置 = 查找侧账_(身份);
             if (位置 == 侧账组_.end()) {
-                if (状态 == 持久证据状态::不适用) return true;
-                if (状态 != 持久证据状态::待持久化) return false;
-                侧账组_.push_back({身份, 状态});
-                return true;
+                return false;
             }
+            if (位置->尝试序号 != 尝试序号) return false;
             if (位置->状态 == 状态) return true;
             const bool 允许 = (位置->状态 == 持久证据状态::待持久化
                     && (状态 == 持久证据状态::已与内存代次一致
@@ -97,6 +131,28 @@ public:
         } catch (...) {
             return false;
         }
+    }
+
+    节点直接事务幂等仓库恢复材料 导出恢复材料() const {
+        节点直接事务幂等仓库恢复材料 材料;
+        std::shared_lock 记录锁(记录锁_);
+        std::shared_lock 侧账锁(侧账锁_);
+        for (const auto& 条目 : 记录组_) {
+            if (条目.已发布 && 条目.记录.状态 == 节点直接事务幂等记录状态::已发布)
+                材料.记录组.push_back(条目.记录);
+        }
+        材料.持久证据侧账组 = 侧账组_;
+        std::sort(材料.记录组.begin(), 材料.记录组.end(), [](const auto& 左, const auto& 右) {
+            return 左.幂等身份.命名域 != 右.幂等身份.命名域
+                ? 左.幂等身份.命名域 < 右.幂等身份.命名域
+                : 左.幂等身份.键值 < 右.幂等身份.键值;
+        });
+        std::sort(材料.持久证据侧账组.begin(), 材料.持久证据侧账组.end(), [](const auto& 左, const auto& 右) {
+            return 左.幂等身份.命名域 != 右.幂等身份.命名域
+                ? 左.幂等身份.命名域 < 右.幂等身份.命名域
+                : 左.幂等身份.键值 < 右.幂等身份.键值;
+        });
+        return 材料;
     }
 
     节点直接事务幂等候选结果 结构化建立记录未发布候选(
@@ -177,7 +233,7 @@ public:
 
 private:
     struct 记录条目 { 节点直接事务幂等记录 记录; bool 已发布 = false; std::uint64_t 事务序号 = 0; };
-    struct 侧账条目 { 节点直接事务幂等身份 身份; 持久证据状态 状态 = 持久证据状态::不适用; };
+    using 侧账条目 = 节点直接持久证据侧账记录;
     using 记录位置 = std::vector<记录条目>::iterator;
     using 只读记录位置 = std::vector<记录条目>::const_iterator;
     using 侧账位置 = std::vector<侧账条目>::iterator;
@@ -201,10 +257,10 @@ private:
         return std::find_if(记录组_.cbegin(), 记录组_.cend(), [&](const 记录条目& 值) { return 值.记录.幂等身份 == 身份; });
     }
     侧账位置 查找侧账_(节点直接事务幂等身份 身份) {
-        return std::find_if(侧账组_.begin(), 侧账组_.end(), [&](const 侧账条目& 值) { return 值.身份 == 身份; });
+        return std::find_if(侧账组_.begin(), 侧账组_.end(), [&](const 侧账条目& 值) { return 值.幂等身份 == 身份; });
     }
     只读侧账位置 查找侧账_(节点直接事务幂等身份 身份) const {
-        return std::find_if(侧账组_.cbegin(), 侧账组_.cend(), [&](const 侧账条目& 值) { return 值.身份 == 身份; });
+        return std::find_if(侧账组_.cbegin(), 侧账组_.cend(), [&](const 侧账条目& 值) { return 值.幂等身份 == 身份; });
     }
     bool 候选匹配_(const 节点直接事务幂等候选& 候选, std::uint64_t 事务序号,
         节点直接仓候选阶段 阶段) const noexcept {
