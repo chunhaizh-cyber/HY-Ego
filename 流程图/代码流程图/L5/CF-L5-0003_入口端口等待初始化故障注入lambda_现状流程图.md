@@ -1,10 +1,11 @@
 # CF-L5-0003 `入口端口等待初始化故障注入 lambda` 现状流程图
 
 图类型：现状流程图
-代码版本：`a48a70b2d678dea64dd8228adb4f26f0badd9506`
-覆盖文件：`海中鱼巣/启动.应用程序.ixx:217-222`
+代码版本：`4b80f1617dd70ec7a19e1a34efa9da768dce8927`
+源码 blob：`d2581161faef19cb494366ee32886ae2b12ee190`
+覆盖文件：`海中鱼巣/启动.应用程序.ixx:220-225`
 唯一根函数：F0122
-完整签名：`bool 海中鱼巣::运行入口端口合同自检()::<lambda@启动.应用程序.ixx:217>::operator()(std::chrono::milliseconds 时限) const`
+完整签名：`bool 海中鱼巣::运行入口端口合同自检()::<lambda@启动.应用程序.ixx:219>::operator()(std::chrono::milliseconds 时限) const`
 参数：时限按值；返回：失败点2时 false，否则返回真实等待结果
 
 ```mermaid

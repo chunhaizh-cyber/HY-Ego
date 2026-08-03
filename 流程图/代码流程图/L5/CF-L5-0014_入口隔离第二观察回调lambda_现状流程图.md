@@ -1,10 +1,11 @@
 # CF-L5-0014 `入口隔离第二观察回调 lambda` 现状流程图
 
 图类型：现状流程图
-代码版本：`a48a70b2d678dea64dd8228adb4f26f0badd9506`
-覆盖文件：`海中鱼巣/启动.应用程序.ixx:350-351`
+代码版本：`4b80f1617dd70ec7a19e1a34efa9da768dce8927`
+源码 blob：`d2581161faef19cb494366ee32886ae2b12ee190`
+覆盖文件：`海中鱼巣/启动.应用程序.ixx:353-354`
 唯一根函数：F0133
-完整签名：`void 海中鱼巣::运行入口隔离合同自检()::<lambda@启动.应用程序.ixx:350>::operator()(std::string_view 编号, std::uintptr_t 地址, 海中鱼巣::入口初始化自检初始计数 计数) const`
+完整签名：`void 海中鱼巣::运行入口隔离合同自检()::<lambda@启动.应用程序.ixx:352>::operator()(std::string_view 编号, std::uintptr_t 地址, 海中鱼巣::入口初始化自检初始计数 计数) const`
 参数：源码三个参数均未具名且未读取；返回：void
 
 ```mermaid

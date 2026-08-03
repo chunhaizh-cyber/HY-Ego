@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "code_commit": "03a8b7ac099ccea83e57f2696e2290b7bcdfacaf",
+  "code_commit": "4b80f1617dd70ec7a19e1a34efa9da768dce8927",
   "scope": "main-current-reachable-exclusions",
   "excluded_function_count": 96,
   "rejected_candidate_edge_count": 546,
@@ -4560,6 +4560,11 @@
     {
       "tool": "fresh codebase-memory MCP",
       "result": "3384 Function/Method，9798 CALLS；低置信和 field_type_hint 必须经源码裁决"
+    },
+    {
+      "tool": "WORLD-TREE-3242 candidate payload cross-audit",
+      "result": "P1A2=241, repo=156, four=149, P1A3F=19；候选仅经稳定身份与源码端点复核后纳入",
+      "authority": "候选工具只用于发现；正式表由冻结源码、BFS与正反投影闭合"
     }
   ]
 }
