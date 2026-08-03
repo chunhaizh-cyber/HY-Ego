@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1386,
-  "project_call_edge_count": 4118,
-  "edge_count": 4118,
+  "project_call_edge_count": 4128,
+  "edge_count": 4128,
   "edges": [
     {
       "edge_id": "E0002",
@@ -61112,7 +61112,8 @@
       "caller": "R0868",
       "callee": "R0874",
       "callsites": [
-        "海中鱼巣/领域/状态服务.h:227"
+        "海中鱼巣/领域/状态服务.h:227",
+        "海中鱼巣/领域/状态服务.h:232"
       ],
       "call_category": "source-audited-direct",
       "arguments": "按列示调用点的当前源码实参绑定",
@@ -63061,6 +63062,156 @@
       "return_binding": "六个bool分别进入因果或主返回短路判断",
       "reachable_condition": "对应节点句柄有效且按源码前序条件成立",
       "resolution_source": "本批现状图、逐行映射与数据操作.需求任务方法.ixx blob 16ac9534复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3340",
+      "caller": "R0864",
+      "callee": "R0599",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:292"
+      ],
+      "call_category": "constructor",
+      "arguments": "无",
+      "argument_resolution": "局部变量静态类型与结构事务许可默认构造签名复核",
+      "return_binding": "局部结构事务许可 许可",
+      "reachable_condition": "进入R0864且接线形态有效",
+      "resolution_source": "本批现状图、逐行映射与源码生命周期逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3341",
+      "caller": "R0864",
+      "callee": "R0600",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:295"
+      ],
+      "call_category": "direct-operator",
+      "arguments": "this=&许可, 其它=事务接线_.取得独占许可()临时",
+      "argument_resolution": "赋值左值与右值静态类型、移动赋值完整签名复核",
+      "return_binding": "许可覆盖为取得的独占许可",
+      "reachable_condition": "事务接线已接域并取得独占许可",
+      "resolution_source": "本批现状图、逐行映射与源码生命周期逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3342",
+      "caller": "R0865",
+      "callee": "R0599",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:349"
+      ],
+      "call_category": "constructor",
+      "arguments": "无",
+      "argument_resolution": "局部变量静态类型与结构事务许可默认构造签名复核",
+      "return_binding": "局部结构事务许可 许可",
+      "reachable_condition": "进入R0865且接线形态有效",
+      "resolution_source": "本批现状图、逐行映射与源码生命周期逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3343",
+      "caller": "R0865",
+      "callee": "R0600",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:352"
+      ],
+      "call_category": "direct-operator",
+      "arguments": "this=&许可, 其它=事务接线_.取得共享许可()临时",
+      "argument_resolution": "赋值左值与右值静态类型、移动赋值完整签名复核",
+      "return_binding": "许可覆盖为取得的共享许可",
+      "reachable_condition": "事务接线已接域并取得共享许可",
+      "resolution_source": "本批现状图、逐行映射与源码生命周期逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3344",
+      "caller": "R0866",
+      "callee": "R0599",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:371"
+      ],
+      "call_category": "constructor",
+      "arguments": "无",
+      "argument_resolution": "局部变量静态类型与结构事务许可默认构造签名复核",
+      "return_binding": "局部结构事务许可 许可",
+      "reachable_condition": "进入R0866且接线形态有效",
+      "resolution_source": "本批现状图、逐行映射与源码生命周期逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3345",
+      "caller": "R0866",
+      "callee": "R0600",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:374"
+      ],
+      "call_category": "direct-operator",
+      "arguments": "this=&许可, 其它=事务接线_.取得独占许可()临时",
+      "argument_resolution": "赋值左值与右值静态类型、移动赋值完整签名复核",
+      "return_binding": "许可覆盖为取得的独占许可",
+      "reachable_condition": "事务接线已接域并取得独占许可",
+      "resolution_source": "本批现状图、逐行映射与源码生命周期逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3346",
+      "caller": "R0867",
+      "callee": "R0599",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:428"
+      ],
+      "call_category": "constructor",
+      "arguments": "无",
+      "argument_resolution": "局部变量静态类型与结构事务许可默认构造签名复核",
+      "return_binding": "局部结构事务许可 许可",
+      "reachable_condition": "进入R0867且接线形态有效",
+      "resolution_source": "本批现状图、逐行映射与源码生命周期逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3347",
+      "caller": "R0867",
+      "callee": "R0600",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:431"
+      ],
+      "call_category": "direct-operator",
+      "arguments": "this=&许可, 其它=事务接线_.取得共享许可()临时",
+      "argument_resolution": "赋值左值与右值静态类型、移动赋值完整签名复核",
+      "return_binding": "许可覆盖为取得的共享许可",
+      "reachable_condition": "事务接线已接域并取得共享许可",
+      "resolution_source": "本批现状图、逐行映射与源码生命周期逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3348",
+      "caller": "R0888",
+      "callee": "R0599",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:214"
+      ],
+      "call_category": "constructor",
+      "arguments": "无",
+      "argument_resolution": "局部变量静态类型与结构事务许可默认构造签名复核",
+      "return_binding": "局部结构事务许可 许可",
+      "reachable_condition": "进入R0888且接线形态有效",
+      "resolution_source": "本批现状图、逐行映射与源码生命周期逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3349",
+      "caller": "R0888",
+      "callee": "R0600",
+      "callsites": [
+        "海中鱼巣/领域/特征值服务.h:217"
+      ],
+      "call_category": "direct-operator",
+      "arguments": "this=&许可, 其它=事务接线_.取得独占许可()临时",
+      "argument_resolution": "赋值左值与右值静态类型、移动赋值完整签名复核",
+      "return_binding": "许可覆盖为取得的独占许可",
+      "reachable_condition": "事务接线已接域并取得独占许可",
+      "resolution_source": "本批现状图、逐行映射与源码生命周期逐调用点复核",
       "current_root_reachable": true
     }
   ]
