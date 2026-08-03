@@ -5,9 +5,11 @@ module;
 #include "节点直接结构合同.数据.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <mutex>
+#include <new>
 #include <optional>
 #include <shared_mutex>
 #include <unordered_map>
@@ -106,6 +108,31 @@ struct 可重建索引写入结果 {
 struct 可重建索引权威材料 {
     std::vector<可重建索引记录> 记录组;
 };
+
+enum class 可重建索引精确读取状态 : std::uint8_t {
+    已读取 = 1,
+    未找到 = 2,
+    入口拒绝 = 3,
+    资源失败 = 4,
+    内部不一致 = 5
+};
+
+struct 可重建索引精确读取结果 {
+    可重建索引精确读取状态 状态 = 可重建索引精确读取状态::入口拒绝;
+    std::optional<可重建索引记录> 当前记录;
+};
+
+#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
+struct 可重建索引精确读取测试异常 {};
+
+enum class 可重建索引精确读取内部损坏测试种类 : std::uint8_t {
+    已发布候选事务序号非零 = 1,
+    记录键错配 = 2,
+    反向绑定缺失 = 3,
+    反向绑定重复 = 4,
+    目标权威不可读 = 5
+};
+#endif
 
 class 可重建索引恢复候选 final {
 public:
@@ -227,11 +254,89 @@ public:
         return 结果;
     }
 
-    std::optional<可重建索引记录> 读取索引物理键(const 索引物理键& 键) const {
-        auto 记录 = 读取索引物理键核心_(键, std::nullopt);
-        return 记录.has_value() && 目标权威可读_(记录.value(), std::nullopt)
-            ? 记录 : std::nullopt;
+    可重建索引精确读取结果 读取索引物理键结构化(
+        const 索引物理键& 键) const {
+        if (!索引物理键完整(键)) return {};
+        try {
+#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
+            const auto 故障 = 测试_下次结构化精确读取故障_.exchange(
+                0, std::memory_order_acq_rel);
+            if (故障 == 1) throw std::bad_alloc{};
+            if (故障 == 2) throw 可重建索引精确读取测试异常{};
+#endif
+            可重建索引记录 记录;
+            {
+                std::shared_lock 锁(仓库锁_);
+                const auto 位置 = 正向绑定_.find(键);
+                if (位置 == 正向绑定_.end() || !位置->second.已发布) {
+                    return {可重建索引精确读取状态::未找到, std::nullopt};
+                }
+                if (
+#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
+                    故障 == 3 ||
+#endif
+                    位置->second.候选事务序号 != 0
+                    || !可重建索引记录完整(位置->second.记录)
+#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
+                    || 故障 == 4
+#endif
+                    || !(位置->second.记录.物理键 == 键)) {
+                    return {可重建索引精确读取状态::内部不一致, std::nullopt};
+                }
+                const auto 目标 = 形成目标标识_(位置->second.记录);
+                const auto 反向位置 = 反向绑定_.find(目标);
+                if (
+#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
+                    故障 == 5 ||
+#endif
+                    反向位置 == 反向绑定_.end()
+#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
+                    || 故障 == 6
+#endif
+                    || std::count(反向位置->second.begin(), 反向位置->second.end(), 键) != 1) {
+                    return {可重建索引精确读取状态::内部不一致, std::nullopt};
+                }
+                记录 = 位置->second.记录;
+            }
+            if (
+#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
+                故障 == 7 ||
+#endif
+                !目标权威可读_(记录, std::nullopt)) {
+                return {可重建索引精确读取状态::内部不一致, std::nullopt};
+            }
+            return {可重建索引精确读取状态::已读取, 记录};
+        } catch (const std::bad_alloc&) {
+            return {可重建索引精确读取状态::资源失败, std::nullopt};
+        } catch (...) {
+            return {可重建索引精确读取状态::内部不一致, std::nullopt};
+        }
     }
+
+    std::optional<可重建索引记录> 读取索引物理键(const 索引物理键& 键) const {
+        auto 结果 = 读取索引物理键结构化(键);
+        return 结果.状态 == 可重建索引精确读取状态::已读取
+            ? std::move(结果.当前记录) : std::nullopt;
+    }
+
+#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
+    void 测试_令下次结构化精确读取抛出资源异常() noexcept {
+        测试_下次结构化精确读取故障_.store(1, std::memory_order_release);
+    }
+
+    void 测试_令下次结构化精确读取抛出其它异常() noexcept {
+        测试_下次结构化精确读取故障_.store(2, std::memory_order_release);
+    }
+
+    bool 测试_令下次结构化精确读取模拟内部损坏(
+        可重建索引精确读取内部损坏测试种类 种类) noexcept {
+        const auto 值 = static_cast<std::uint8_t>(种类);
+        if (值 < 1 || 值 > 5) return false;
+        测试_下次结构化精确读取故障_.store(
+            static_cast<std::uint8_t>(2 + 值), std::memory_order_release);
+        return true;
+    }
+#endif
 
     std::optional<可重建索引记录> 读取索引物理键(
         const 索引物理键& 键,
@@ -540,6 +645,9 @@ private:
     std::unordered_map<索引物理键, 索引条目, 索引物理键哈希> 正向绑定_;
     std::unordered_map<索引目标标识, std::vector<索引物理键>, 索引目标哈希> 反向绑定_;
     std::uint64_t 恢复事务序号_ = 0;
+#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
+    mutable std::atomic<std::uint8_t> 测试_下次结构化精确读取故障_{0};
+#endif
 };
 
 }
