@@ -16,9 +16,9 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1993,
-  "project_call_edge_count": 5322,
-  "external_count": 5101,
-  "callback_registration_count": 213,
+  "project_call_edge_count": 5327,
+  "external_count": 5132,
+  "callback_registration_count": 219,
   "external_boundaries": [
     {
       "id": "X00001",
@@ -3635,7 +3635,7 @@
       "signature": "bool 海中鱼巣::operator==(const _Vector_const_iterator<std::_Vector_val<std::_Simple_types<海中鱼巣::节点直接事务幂等仓库::记录条目>>> &) const noexcept",
       "caller": "R1315",
       "locations": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:83"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:87"
       ],
       "call_count": 1,
       "queued": false,
@@ -3649,7 +3649,7 @@
       "signature": "std::end <bound member function type>",
       "caller": "R1315",
       "locations": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:83"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:87"
       ],
       "call_count": 1,
       "queued": false,
@@ -3663,9 +3663,10 @@
       "signature": "pointer 海中鱼巣::operator->() const noexcept",
       "caller": "R1315",
       "locations": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:83"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:87",
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:88"
       ],
-      "call_count": 1,
+      "call_count": 2,
       "queued": false,
       "boundary_category": "standard_library_or_runtime",
       "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
@@ -9872,7 +9873,7 @@
     },
     {
       "id": "X06120",
-      "signature": "std::unordered_map<Key, T, ...>::find(...)（cv/参数重载待顶层绑定）",
+      "signature": "std::unordered_map<索引物理键, 索引条目, 索引物理键哈希>::iterator std::unordered_map<索引物理键, 索引条目, 索引物理键哈希>::find(const 索引物理键&)",
       "caller": "R1163",
       "locations": [
         "海中鱼巣/核心/仓库.可重建索引.ixx:187"
@@ -9881,12 +9882,12 @@
       "queued": false,
       "boundary_category": "standard_library_or_external_boundary",
       "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=top_level_binding_required",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact_source_receiver_and_argument",
       "current_root_reachable": true
     },
     {
       "id": "X06121",
-      "signature": "std::unordered_map<Key, T, ...>::end(...)（cv/参数重载待顶层绑定）",
+      "signature": "std::unordered_map<索引物理键, 索引条目, 索引物理键哈希>::iterator std::unordered_map<索引物理键, 索引条目, 索引物理键哈希>::end() noexcept",
       "caller": "R1163",
       "locations": [
         "海中鱼巣/核心/仓库.可重建索引.ixx:188"
@@ -9895,12 +9896,12 @@
       "queued": false,
       "boundary_category": "standard_library_or_external_boundary",
       "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=top_level_binding_required",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact_source_receiver",
       "current_root_reachable": true
     },
     {
       "id": "X06122",
-      "signature": "std::vector<T>::push_back(const T&) / push_back(T&&)（实参值类别待顶层绑定）",
+      "signature": "void std::vector<索引物理键>::push_back(const 索引物理键&)",
       "caller": "R1163",
       "locations": [
         "海中鱼巣/核心/仓库.可重建索引.ixx:200"
@@ -9909,12 +9910,12 @@
       "queued": false,
       "boundary_category": "standard_library_or_external_boundary",
       "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=top_level_binding_required",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact_source_receiver_argument_and_value_category",
       "current_root_reachable": true
     },
     {
       "id": "X06123",
-      "signature": "std::unordered_map<Key, T, ...>::emplace(Args&&...)",
+      "signature": "std::pair<std::unordered_map<索引物理键, 索引条目, 索引物理键哈希>::iterator, bool> std::unordered_map<索引物理键, 索引条目, 索引物理键哈希>::emplace<索引物理键&, 索引条目>(索引物理键&, 索引条目&&)",
       "caller": "R1163",
       "locations": [
         "海中鱼巣/核心/仓库.可重建索引.ixx:202"
@@ -9928,7 +9929,7 @@
     },
     {
       "id": "X06124",
-      "signature": "std::vector<T>::pop_back()",
+      "signature": "void std::vector<索引物理键>::pop_back()",
       "caller": "R1163",
       "locations": [
         "海中鱼巣/核心/仓库.可重建索引.ixx:204",
@@ -9943,7 +9944,7 @@
     },
     {
       "id": "X06125",
-      "signature": "std::optional<T>::emplace(Args&&...)",
+      "signature": "可重建索引候选& std::optional<可重建索引候选>::emplace<可重建索引候选>(可重建索引候选&&)",
       "caller": "R1163",
       "locations": [
         "海中鱼巣/核心/仓库.可重建索引.ixx:218"
@@ -9957,7 +9958,7 @@
     },
     {
       "id": "X06126",
-      "signature": "std::unordered_map<Key, T, ...>::find(...)（cv/参数重载待顶层绑定）",
+      "signature": "std::unordered_map<索引物理键, 索引条目, 索引物理键哈希>::iterator std::unordered_map<索引物理键, 索引条目, 索引物理键哈希>::find(const 索引物理键&)",
       "caller": "R1164",
       "locations": [
         "海中鱼巣/核心/仓库.可重建索引.ixx:244"
@@ -9966,12 +9967,12 @@
       "queued": false,
       "boundary_category": "standard_library_or_external_boundary",
       "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=top_level_binding_required",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact_source_receiver_and_argument",
       "current_root_reachable": true
     },
     {
       "id": "X06127",
-      "signature": "std::unordered_map<Key, T, ...>::end(...)（cv/参数重载待顶层绑定）",
+      "signature": "std::unordered_map<索引物理键, 索引条目, 索引物理键哈希>::iterator std::unordered_map<索引物理键, 索引条目, 索引物理键哈希>::end() noexcept",
       "caller": "R1164",
       "locations": [
         "海中鱼巣/核心/仓库.可重建索引.ixx:245"
@@ -9980,12 +9981,12 @@
       "queued": false,
       "boundary_category": "standard_library_or_external_boundary",
       "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=top_level_binding_required",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact_source_receiver",
       "current_root_reachable": true
     },
     {
       "id": "X06128",
-      "signature": "std::optional<T>::emplace(Args&&...)",
+      "signature": "可重建索引候选& std::optional<可重建索引候选>::emplace<可重建索引候选>(可重建索引候选&&)",
       "caller": "R1164",
       "locations": [
         "海中鱼巣/核心/仓库.可重建索引.ixx:253"
@@ -10892,7 +10893,7 @@
     },
     {
       "id": "X05564",
-      "signature": "std::vector<T>::push_back(const T&) / push_back(T&&)（实参值类别待顶层绑定）",
+      "signature": "void std::vector<节点写入项>::push_back(节点写入项&&)",
       "caller": "R1244",
       "locations": [
         "海中鱼巣/核心/会话.节点直接身份结构写入.ixx:119"
@@ -10901,7 +10902,7 @@
       "queued": false,
       "boundary_category": "standard_library_or_external_boundary",
       "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=needs_top_level_binding",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact_source_receiver_argument_and_value_category",
       "current_root_reachable": true
     },
     {
@@ -10964,7 +10965,7 @@
     },
     {
       "id": "X05570",
-      "signature": "std::vector<T>::push_back(const T&) / push_back(T&&)（实参值类别待顶层绑定）",
+      "signature": "void std::vector<索引写入项>::push_back(索引写入项&&)",
       "caller": "R1248",
       "locations": [
         "海中鱼巣/核心/会话.节点直接身份结构写入.ixx:204"
@@ -10973,7 +10974,7 @@
       "queued": false,
       "boundary_category": "standard_library_or_external_boundary",
       "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=needs_top_level_binding",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact_source_receiver_argument_and_value_category",
       "current_root_reachable": true
     },
     {
@@ -21952,7 +21953,7 @@
       "signature": "std::operator bool <bound member function type>",
       "caller": "R1317",
       "locations": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:104"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:106"
       ],
       "call_count": 1,
       "queued": false,
@@ -21966,7 +21967,7 @@
       "signature": "std::operator-> const 海中鱼巣::节点直接持久证据侧账记录 *() const noexcept",
       "caller": "R1317",
       "locations": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:104"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:106"
       ],
       "call_count": 1,
       "queued": false,
@@ -21980,7 +21981,7 @@
       "signature": "bool 海中鱼巣::operator==(const _Vector_const_iterator<std::_Vector_val<std::_Simple_types<海中鱼巣::节点直接持久证据侧账记录>>> &) const noexcept",
       "caller": "R1318",
       "locations": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:109"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:113"
       ],
       "call_count": 1,
       "queued": false,
@@ -21994,7 +21995,7 @@
       "signature": "std::end <bound member function type>",
       "caller": "R1318",
       "locations": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:109"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:113"
       ],
       "call_count": 1,
       "queued": false,
@@ -22008,7 +22009,7 @@
       "signature": "std::push_back <bound member function type>",
       "caller": "R1318",
       "locations": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:109"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:114"
       ],
       "call_count": 1,
       "queued": false,
@@ -22022,7 +22023,7 @@
       "signature": "bool 海中鱼巣::operator==(const _Vector_const_iterator<std::_Vector_val<std::_Simple_types<海中鱼巣::节点直接持久证据侧账记录>>> &) const noexcept",
       "caller": "R1319",
       "locations": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:118"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:123"
       ],
       "call_count": 1,
       "queued": false,
@@ -22036,7 +22037,7 @@
       "signature": "std::end <bound member function type>",
       "caller": "R1319",
       "locations": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:118"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:123"
       ],
       "call_count": 1,
       "queued": false,
@@ -22050,9 +22051,9 @@
       "signature": "pointer 海中鱼巣::operator->() const noexcept",
       "caller": "R1319",
       "locations": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:118"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:123"
       ],
-      "call_count": 1,
+      "call_count": 2,
       "queued": false,
       "boundary_category": "standard_library_or_runtime",
       "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
@@ -22078,7 +22079,7 @@
       "signature": "std::operator bool <bound member function type>",
       "caller": "R1320",
       "locations": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:130"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:134"
       ],
       "call_count": 1,
       "queued": false,
@@ -22092,7 +22093,7 @@
       "signature": "std::operator-> const 海中鱼巣::节点直接持久证据侧账记录 *() const noexcept",
       "caller": "R1320",
       "locations": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:130"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:134"
       ],
       "call_count": 1,
       "queued": false,
@@ -22351,62 +22352,6 @@
       "boundary_category": "standard_library_or_runtime",
       "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
       "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact_ast",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X05866",
-      "signature": "bool 海中鱼巣::operator==(const _Vector_const_iterator<std::_Vector_val<std::_Simple_types<海中鱼巣::节点直接事务幂等仓库::记录条目>>> &) const noexcept",
-      "caller": "R1331",
-      "locations": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:300"
-      ],
-      "call_count": 1,
-      "queued": false,
-      "boundary_category": "standard_library_or_runtime",
-      "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact_ast",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X05867",
-      "signature": "std::end <bound member function type>",
-      "caller": "R1331",
-      "locations": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:300"
-      ],
-      "call_count": 1,
-      "queued": false,
-      "boundary_category": "standard_library_or_runtime",
-      "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=spelling_only",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X05868",
-      "signature": "pointer 海中鱼巣::operator->() const noexcept",
-      "caller": "R1331",
-      "locations": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:300"
-      ],
-      "call_count": 1,
-      "queued": false,
-      "boundary_category": "standard_library_or_runtime",
-      "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact_ast",
-      "current_root_reachable": true
-    },
-    {
-      "id": "X05869",
-      "signature": "std::erase <bound member function type>",
-      "caller": "R1331",
-      "locations": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:311"
-      ],
-      "call_count": 1,
-      "queued": false,
-      "boundary_category": "standard_library_or_runtime",
-      "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=spelling_only",
       "current_root_reachable": true
     },
     {
@@ -33734,12 +33679,14 @@
     },
     {
       "id": "X05465",
-      "signature": "std::array<T, N>::size() const noexcept",
+      "signature": "std::array<具名正式关系准入, 正式关系类型ABI数量>::size() const noexcept / operator[](std::size_t) const",
       "caller": "R1190",
       "locations": [
-        "海中鱼巣/核心/仓库.正式关系.ixx:98"
+        "海中鱼巣/核心/仓库.正式关系.ixx:98",
+        "海中鱼巣/核心/仓库.正式关系.ixx:99",
+        "海中鱼巣/核心/仓库.正式关系.ixx:100"
       ],
-      "call_count": 1,
+      "call_count": 3,
       "queued": false,
       "boundary_category": "standard_library_or_external_boundary",
       "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
@@ -33934,7 +33881,7 @@
       "signature": "std::end <bound member function type>",
       "caller": "R1316",
       "locations": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:92"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:97"
       ],
       "call_count": 1,
       "queued": false,
@@ -33948,7 +33895,7 @@
       "signature": "reference 海中鱼巣::operator*() const noexcept",
       "caller": "R1316",
       "locations": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:92"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:98"
       ],
       "call_count": 1,
       "queued": false,
@@ -44300,7 +44247,7 @@
       "signature": "std::move remove_reference_t<海中鱼巣::节点直接事务幂等仓库恢复材料 &> &&(海中鱼巣::节点直接事务幂等仓库恢复材料 &) noexcept",
       "caller": "R1313",
       "locations": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:56"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:57"
       ],
       "call_count": 1,
       "queued": false,
@@ -44314,7 +44261,7 @@
       "signature": "std::move remove_reference_t<海中鱼巣::节点直接事务幂等仓库恢复材料 &> &&(海中鱼巣::节点直接事务幂等仓库恢复材料 &) noexcept",
       "caller": "R1314",
       "locations": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:67"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:69"
       ],
       "call_count": 1,
       "queued": false,
@@ -71673,6 +71620,508 @@
       "reachable_condition": "调用方从 F0001 可达且对应源码表达式或隐式生命周期成立",
       "resolution_source": "本批源码静态类型、表达式语境与现状图逐项复核",
       "current_root_reachable": true
+    },
+    {
+      "id": "X06211",
+      "signature": "bool std::optional<海中鱼巣::节点直接身份未发布候选>::has_value() const noexcept",
+      "caller": "R1502",
+      "locations": [
+        "海中鱼巣/核心/仓库.节点直接身份.ixx:239"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06212",
+      "signature": "海中鱼巣::节点直接身份未发布候选& std::optional<海中鱼巣::节点直接身份未发布候选>::operator*() & noexcept",
+      "caller": "R1244",
+      "locations": [
+        "海中鱼巣/核心/会话.节点直接身份结构写入.ixx:117"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06213",
+      "signature": "std::vector<节点写入项>::begin/end、迭代比较、解引用与递增",
+      "caller": "R1245",
+      "locations": [
+        "海中鱼巣/核心/会话.节点直接身份结构写入.ixx:135-137"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06214",
+      "signature": "海中鱼巣::正式关系记录* std::optional<海中鱼巣::正式关系记录>::operator->() noexcept",
+      "caller": "R1247",
+      "locations": [
+        "海中鱼巣/核心/会话.节点直接身份结构写入.ixx:177"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06215",
+      "signature": "std::optional<可重建索引记录>::operator=(const std::optional<可重建索引记录>&)",
+      "caller": "R1248",
+      "locations": [
+        "海中鱼巣/核心/会话.节点直接身份结构写入.ixx:196"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06216",
+      "signature": "海中鱼巣::可重建索引候选& std::optional<海中鱼巣::可重建索引候选>::operator*() & noexcept",
+      "caller": "R1248",
+      "locations": [
+        "海中鱼巣/核心/会话.节点直接身份结构写入.ixx:202"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06217",
+      "signature": "std::vector<索引写入项>::begin/end、迭代比较、解引用与递增",
+      "caller": "R1249",
+      "locations": [
+        "海中鱼巣/核心/会话.节点直接身份结构写入.ixx:219-221"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06218",
+      "signature": "std::optional<海中鱼巣::节点句柄>& std::optional<海中鱼巣::节点句柄>::operator=<海中鱼巣::节点句柄&>(海中鱼巣::节点句柄&)",
+      "caller": "R1244",
+      "locations": [
+        "海中鱼巣/核心/会话.节点直接身份结构写入.ixx:115"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06219",
+      "signature": "std::unique_lock<std::shared_mutex>::unique_lock(std::shared_mutex&)",
+      "caller": "R1163",
+      "locations": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:186"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06220",
+      "signature": "std::optional<可重建索引记录>::operator=(const 可重建索引记录&)",
+      "caller": "R1163",
+      "locations": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:191",
+        "海中鱼巣/核心/仓库.可重建索引.ixx:217"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06221",
+      "signature": "std::unordered_map<索引目标标识, std::vector<索引物理键>, 目标标识哈希>::operator[](const 索引目标标识&)",
+      "caller": "R1163",
+      "locations": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:199"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06222",
+      "signature": "std::optional<节点句柄>::operator bool() const noexcept",
+      "caller": "R1164",
+      "locations": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:233"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06223",
+      "signature": "std::optional<节点句柄>::operator*() const",
+      "caller": "R1164",
+      "locations": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:237",
+        "海中鱼巣/核心/仓库.可重建索引.ixx:247"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06224",
+      "signature": "std::optional<节点直接身份记录>::operator bool() const noexcept",
+      "caller": "R1164",
+      "locations": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:238"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06225",
+      "signature": "std::optional<节点直接身份记录>::operator->() const",
+      "caller": "R1164",
+      "locations": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:238",
+        "海中鱼巣/核心/仓库.可重建索引.ixx:239"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06226",
+      "signature": "std::shared_lock<std::shared_mutex>::shared_lock(std::shared_mutex&)",
+      "caller": "R1164",
+      "locations": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:243"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06227",
+      "signature": "std::optional<可重建索引记录>::operator=(const 可重建索引记录&)",
+      "caller": "R1164",
+      "locations": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:252"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且冻结源码对应表达式成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核；精度=exact",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06228",
+      "signature": "std::unique_lock<std::shared_mutex>::~unique_lock() noexcept",
+      "caller": "R1163",
+      "locations": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:220"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且独占锁局部对象离开作用域",
+      "resolution_source": "4b80f161 冻结源码逐行与非平凡 RAII 生命周期复核；精度=exact_implicit_lifetime",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06229",
+      "signature": "std::shared_lock<std::shared_mutex>::~shared_lock() noexcept",
+      "caller": "R1164",
+      "locations": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:255"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且共享锁局部对象离开作用域",
+      "resolution_source": "4b80f161 冻结源码逐行与非平凡 RAII 生命周期复核；精度=exact_implicit_lifetime",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06230",
+      "signature": "bool std::operator!=(const std::unordered_map<索引物理键, 索引条目, 索引物理键哈希>::iterator&, const std::unordered_map<索引物理键, 索引条目, 索引物理键哈希>::iterator&)",
+      "caller": "R1163",
+      "locations": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:188"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且正向表查找结果参与尾迭代器比较",
+      "resolution_source": "4b80f161 冻结源码静态接收者与表达式复核；精度=exact_source_iterator_operation",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06231",
+      "signature": "std::unordered_map<索引物理键, 索引条目, 索引物理键哈希>::iterator::pointer std::unordered_map<索引物理键, 索引条目, 索引物理键哈希>::iterator::operator->() const noexcept",
+      "caller": "R1163",
+      "locations": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:189",
+        "海中鱼巣/核心/仓库.可重建索引.ixx:191"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且查找结果已确认不是尾迭代器",
+      "resolution_source": "4b80f161 冻结源码静态接收者与表达式复核；精度=exact_source_iterator_operation",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06232",
+      "signature": "bool std::operator==(const std::unordered_map<索引物理键, 索引条目, 索引物理键哈希>::iterator&, const std::unordered_map<索引物理键, 索引条目, 索引物理键哈希>::iterator&)",
+      "caller": "R1164",
+      "locations": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:245"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且正向表查找结果参与尾迭代器比较",
+      "resolution_source": "4b80f161 冻结源码静态接收者与表达式复核；精度=exact_source_iterator_operation",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06233",
+      "signature": "std::unordered_map<索引物理键, 索引条目, 索引物理键哈希>::iterator::pointer std::unordered_map<索引物理键, 索引条目, 索引物理键哈希>::iterator::operator->() const noexcept",
+      "caller": "R1164",
+      "locations": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:245",
+        "海中鱼巣/核心/仓库.可重建索引.ixx:246",
+        "海中鱼巣/核心/仓库.可重建索引.ixx:247",
+        "海中鱼巣/核心/仓库.可重建索引.ixx:252",
+        "海中鱼巣/核心/仓库.可重建索引.ixx:253"
+      ],
+      "call_count": 5,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且查找结果已确认不是尾迭代器",
+      "resolution_source": "4b80f161 冻结源码静态接收者与表达式复核；精度=exact_source_iterator_operation",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06234",
+      "signature": "std::shared_lock<std::shared_mutex>::shared_lock(std::shared_mutex&)",
+      "caller": "R1315",
+      "locations": [
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:85"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且身份完整性前置成立",
+      "resolution_source": "4b80f161 冻结源码逐行与锁类型复核；精度=exact",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06235",
+      "signature": "std::shared_lock<std::shared_mutex>::~shared_lock() noexcept",
+      "caller": "R1315",
+      "locations": [
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:90"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且共享锁局部对象离开作用域",
+      "resolution_source": "4b80f161 冻结源码逐行与非平凡 RAII 生命周期复核；精度=exact_implicit_lifetime",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06236",
+      "signature": "std::optional<节点直接事务幂等记录>::optional(std::nullopt_t) / std::optional<节点直接事务幂等记录>::optional(const 节点直接事务幂等记录&)",
+      "caller": "R1315",
+      "locations": [
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:84",
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:88",
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:89"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应返回分支成立",
+      "resolution_source": "4b80f161 冻结源码返回表达式与 optional 构造复核；精度=exact_source_expression_group",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06237",
+      "signature": "std::shared_lock<std::shared_mutex>::shared_lock(std::shared_mutex&)",
+      "caller": "R1316",
+      "locations": [
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:95"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且进入 try 区",
+      "resolution_source": "4b80f161 冻结源码逐行与锁类型复核；精度=exact",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06238",
+      "signature": "std::shared_lock<std::shared_mutex>::~shared_lock() noexcept",
+      "caller": "R1316",
+      "locations": [
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:102"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且共享锁局部对象经返回或异常离开作用域",
+      "resolution_source": "4b80f161 冻结源码逐行与非平凡 RAII 生命周期复核；精度=exact_implicit_lifetime",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06239",
+      "signature": "std::optional<节点直接持久证据侧账记录>::optional(std::nullopt_t) / std::optional<节点直接持久证据侧账记录>::optional(const 节点直接持久证据侧账记录&)",
+      "caller": "R1316",
+      "locations": [
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:97",
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:98",
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:100"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且对应返回或异常分支成立",
+      "resolution_source": "4b80f161 冻结源码返回表达式与 optional 构造复核；精度=exact_source_expression_group",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06240",
+      "signature": "std::optional<节点直接持久证据侧账记录>::~optional() noexcept",
+      "caller": "R1317",
+      "locations": [
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:107"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且局部侧账值离开作用域",
+      "resolution_source": "4b80f161 冻结源码局部值非平凡生命周期复核；精度=exact_implicit_lifetime",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06241",
+      "signature": "std::unique_lock<std::shared_mutex>::unique_lock(std::shared_mutex&)",
+      "caller": "R1318",
+      "locations": [
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:112"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且入口材料完整",
+      "resolution_source": "4b80f161 冻结源码逐行与锁类型复核；精度=exact",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06242",
+      "signature": "std::unique_lock<std::shared_mutex>::~unique_lock() noexcept",
+      "caller": "R1318",
+      "locations": [
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:116"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且独占锁局部对象离开作用域",
+      "resolution_source": "4b80f161 冻结源码逐行与非平凡 RAII 生命周期复核；精度=exact_implicit_lifetime",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06243",
+      "signature": "std::unique_lock<std::shared_mutex>::unique_lock(std::shared_mutex&)",
+      "caller": "R1319",
+      "locations": [
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:121"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且进入 try 区",
+      "resolution_source": "4b80f161 冻结源码逐行与锁类型复核；精度=exact",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06244",
+      "signature": "std::unique_lock<std::shared_mutex>::~unique_lock() noexcept",
+      "caller": "R1319",
+      "locations": [
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:128"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且独占锁局部对象经返回或异常离开作用域",
+      "resolution_source": "4b80f161 冻结源码逐行与非平凡 RAII 生命周期复核；精度=exact_implicit_lifetime",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X06245",
+      "signature": "std::optional<节点直接持久证据侧账记录>::~optional() noexcept",
+      "caller": "R1320",
+      "locations": [
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:135"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "standard_library_or_external_boundary",
+      "reachable_condition": "调用方从 F0001 可达且局部侧账值离开作用域",
+      "resolution_source": "4b80f161 冻结源码局部值非平凡生命周期复核；精度=exact_implicit_lifetime",
+      "current_root_reachable": true
     }
   ],
   "callback_registrations": [
@@ -73591,6 +74040,60 @@
       "external_algorithm": "std::count_if",
       "registration_location": "海中鱼巣/领域/自检.节点直接世界结构骨架.ixx:223",
       "condition": "七项验收遍历期间零到多次调用",
+      "resolution_source": "4b80f161 冻结源码回调注册点与目标完整签名复核"
+    },
+    {
+      "callback_id": "RCB0214",
+      "caller": "R1163",
+      "callback": "R1179",
+      "external_algorithm": "正向绑定_.find/emplace 哈希回调",
+      "registration_location": "海中鱼巣/核心/仓库.可重建索引.ixx:187,202",
+      "condition": "unordered_map key hashing invokes the bound project functor zero or more times",
+      "resolution_source": "4b80f161 冻结源码回调注册点与目标完整签名复核"
+    },
+    {
+      "callback_id": "RCB0215",
+      "caller": "R1163",
+      "callback": "R1291",
+      "external_algorithm": "正向绑定_.find/emplace 等值回调",
+      "registration_location": "海中鱼巣/核心/仓库.可重建索引.ixx:187,202",
+      "condition": "unordered_map collision/key equality invokes the bound project comparison zero or more times",
+      "resolution_source": "4b80f161 冻结源码回调注册点与目标完整签名复核"
+    },
+    {
+      "callback_id": "RCB0216",
+      "caller": "R1163",
+      "callback": "R1181",
+      "external_algorithm": "反向绑定_.operator[] 哈希回调",
+      "registration_location": "海中鱼巣/核心/仓库.可重建索引.ixx:199",
+      "condition": "unordered_map key hashing invokes the bound project functor zero or more times",
+      "resolution_source": "4b80f161 冻结源码回调注册点与目标完整签名复核"
+    },
+    {
+      "callback_id": "RCB0217",
+      "caller": "R1163",
+      "callback": "R1180",
+      "external_algorithm": "反向绑定_.operator[] 等值回调",
+      "registration_location": "海中鱼巣/核心/仓库.可重建索引.ixx:199",
+      "condition": "unordered_map collision/key equality invokes the bound project comparison zero or more times",
+      "resolution_source": "4b80f161 冻结源码回调注册点与目标完整签名复核"
+    },
+    {
+      "callback_id": "RCB0218",
+      "caller": "R1164",
+      "callback": "R1179",
+      "external_algorithm": "正向绑定_.find 哈希回调",
+      "registration_location": "海中鱼巣/核心/仓库.可重建索引.ixx:244",
+      "condition": "unordered_map key hashing invokes the bound project functor zero or more times",
+      "resolution_source": "4b80f161 冻结源码回调注册点与目标完整签名复核"
+    },
+    {
+      "callback_id": "RCB0219",
+      "caller": "R1164",
+      "callback": "R1291",
+      "external_algorithm": "正向绑定_.find 等值回调",
+      "registration_location": "海中鱼巣/核心/仓库.可重建索引.ixx:244",
+      "condition": "unordered_map collision/key equality invokes the bound project comparison zero or more times",
       "resolution_source": "4b80f161 冻结源码回调注册点与目标完整签名复核"
     }
   ]

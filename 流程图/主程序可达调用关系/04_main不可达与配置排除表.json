@@ -2,7 +2,7 @@
   "schema_version": 1,
   "code_commit": "4b80f1617dd70ec7a19e1a34efa9da768dce8927",
   "scope": "main-current-reachable-exclusions",
-  "excluded_function_count": 96,
+  "excluded_function_count": 97,
   "rejected_candidate_edge_count": 546,
   "excluded_functions": [
     {
@@ -676,6 +676,13 @@
       "file": "海中鱼巣/领域/需求服务.h",
       "definition_line": 820,
       "reason": "唯一已登记可达调用方 R0586 已因重载校正退出；其它源码调用只位于同一未接线带令牌需求服务岛，无 F0001 当前可达前驱"
+    },
+    {
+      "function_id": "R1331",
+      "signature": "节点直接仓候选操作状态 海中鱼巣::节点直接事务幂等仓库::撤销候选(节点直接事务幂等候选&, std::uint64_t)",
+      "file": "海中鱼巣/核心/仓库.节点直接事务幂等.ixx",
+      "definition_line": 300,
+      "reason": "RCE4315 的会话索引撤销静态接收者实际为可重建索引仓库 R1169，不是幂等仓库；删除伪前驱后本重载无 F0001 当前可达调用方"
     }
   ],
   "rejected_candidate_edges": [

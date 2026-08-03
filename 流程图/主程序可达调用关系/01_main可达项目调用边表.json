@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1993,
-  "project_call_edge_count": 5322,
-  "edge_count": 5322,
+  "project_call_edge_count": 5327,
+  "edge_count": 5327,
   "edges": [
     {
       "edge_id": "E0001",
@@ -9755,14 +9755,14 @@
     },
     {
       "edge_id": "RCE4150",
-      "caller": "R0897",
+      "caller": "R1248",
       "callee": "R1156",
       "callsites": [
-        "海中鱼巣/核心/自检.节点直接身份结构写入.ixx:1496-1499"
+        "海中鱼巣/核心/会话.节点直接身份结构写入.ixx:202"
       ],
-      "call_category": "经验证世界树P1A1记录仓 / 验证P1A2节点关系事务或其构造/容器实例化链可达",
+      "call_category": "direct_or_implicit_move_constructor",
       "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "按冻结源码接收或直接返回",
       "reachable_condition": "调用方可达且对应源码分支成立",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -9770,29 +9770,14 @@
     },
     {
       "edge_id": "RCE4151",
-      "caller": "R0897",
+      "caller": "R1163",
       "callee": "R1158",
       "callsites": [
-        "海中鱼巣/核心/自检.节点直接身份结构写入.ixx:1496-1499"
+        "海中鱼巣/核心/仓库.可重建索引.ixx:218"
       ],
-      "call_category": "经验证世界树P1A1记录仓 / 验证P1A2节点关系事务或其构造/容器实例化链可达",
+      "call_category": "direct_constructor",
       "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
-      "return_binding": "按冻结源码接收或直接返回",
-      "reachable_condition": "调用方可达且对应源码分支成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE4152",
-      "caller": "R0897",
-      "callee": "R1159",
-      "callsites": [
-        "海中鱼巣/核心/自检.节点直接身份结构写入.ixx:1496-1499"
-      ],
-      "call_category": "经验证世界树P1A1记录仓 / 验证P1A2节点关系事务或其构造/容器实例化链可达",
-      "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "按冻结源码接收或直接返回",
       "reachable_condition": "调用方可达且对应源码分支成立",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -9800,14 +9785,14 @@
     },
     {
       "edge_id": "RCE4153",
-      "caller": "R0897",
+      "caller": "R1174",
       "callee": "R1160",
       "callsites": [
-        "海中鱼巣/核心/自检.节点直接身份结构写入.ixx:1496-1499"
+        "海中鱼巣/核心/仓库.可重建索引.ixx:492"
       ],
-      "call_category": "经验证世界树P1A1记录仓 / 验证P1A2节点关系事务或其构造/容器实例化链可达",
+      "call_category": "direct_or_implicit_move_constructor",
       "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "按冻结源码接收或直接返回",
       "reachable_condition": "调用方可达且对应源码分支成立",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -9815,44 +9800,14 @@
     },
     {
       "edge_id": "RCE4154",
-      "caller": "R0897",
+      "caller": "R1174",
       "callee": "R1161",
       "callsites": [
-        "海中鱼巣/核心/自检.节点直接身份结构写入.ixx:1496-1499"
+        "海中鱼巣/核心/仓库.可重建索引.ixx:492"
       ],
-      "call_category": "经验证世界树P1A1记录仓 / 验证P1A2节点关系事务或其构造/容器实例化链可达",
+      "call_category": "direct_constructor",
       "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
-      "return_binding": "按冻结源码接收或直接返回",
-      "reachable_condition": "调用方可达且对应源码分支成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE4155",
-      "caller": "R0897",
-      "callee": "R1162",
-      "callsites": [
-        "海中鱼巣/核心/自检.节点直接身份结构写入.ixx:1496-1499"
-      ],
-      "call_category": "经验证世界树P1A1记录仓 / 验证P1A2节点关系事务或其构造/容器实例化链可达",
-      "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
-      "return_binding": "按冻结源码接收或直接返回",
-      "reachable_condition": "调用方可达且对应源码分支成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE4161",
-      "caller": "R0897",
-      "callee": "R1164",
-      "callsites": [
-        "海中鱼巣/核心/自检.节点直接身份结构写入.ixx:1496-1499"
-      ],
-      "call_category": "经验证世界树P1A1记录仓 / 验证P1A2节点关系事务或其构造/容器实例化链可达",
-      "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "按冻结源码接收或直接返回",
       "reachable_condition": "调用方可达且对应源码分支成立",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -9997,81 +9952,6 @@
       "edge_id": "RCE4192",
       "caller": "R0897",
       "callee": "R1181",
-      "callsites": [
-        "海中鱼巣/核心/自检.节点直接身份结构写入.ixx:1496-1499"
-      ],
-      "call_category": "经验证世界树P1A1记录仓 / 验证P1A2节点关系事务或其构造/容器实例化链可达",
-      "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
-      "return_binding": "按冻结源码接收或直接返回",
-      "reachable_condition": "调用方可达且对应源码分支成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE3916",
-      "caller": "R0897",
-      "callee": "R1191",
-      "callsites": [
-        "海中鱼巣/核心/自检.节点直接身份结构写入.ixx:1496-1499"
-      ],
-      "call_category": "经验证世界树P1A1记录仓 / 验证P1A2节点关系事务或其构造/容器实例化链可达",
-      "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
-      "return_binding": "按冻结源码接收或直接返回",
-      "reachable_condition": "调用方可达且对应源码分支成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE3918",
-      "caller": "R0897",
-      "callee": "R1193",
-      "callsites": [
-        "海中鱼巣/核心/自检.节点直接身份结构写入.ixx:1496-1499"
-      ],
-      "call_category": "经验证世界树P1A1记录仓 / 验证P1A2节点关系事务或其构造/容器实例化链可达",
-      "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
-      "return_binding": "按冻结源码接收或直接返回",
-      "reachable_condition": "调用方可达且对应源码分支成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE3921",
-      "caller": "R0897",
-      "callee": "R1195",
-      "callsites": [
-        "海中鱼巣/核心/自检.节点直接身份结构写入.ixx:1496-1499"
-      ],
-      "call_category": "经验证世界树P1A1记录仓 / 验证P1A2节点关系事务或其构造/容器实例化链可达",
-      "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
-      "return_binding": "按冻结源码接收或直接返回",
-      "reachable_condition": "调用方可达且对应源码分支成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE3922",
-      "caller": "R0897",
-      "callee": "R1196",
-      "callsites": [
-        "海中鱼巣/核心/自检.节点直接身份结构写入.ixx:1496-1499"
-      ],
-      "call_category": "经验证世界树P1A1记录仓 / 验证P1A2节点关系事务或其构造/容器实例化链可达",
-      "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
-      "return_binding": "按冻结源码接收或直接返回",
-      "reachable_condition": "调用方可达且对应源码分支成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE3923",
-      "caller": "R0897",
-      "callee": "R1197",
       "callsites": [
         "海中鱼巣/核心/自检.节点直接身份结构写入.ixx:1496-1499"
       ],
@@ -11063,11 +10943,11 @@
       "caller": "R1315",
       "callee": "R1286",
       "callsites": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:83"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:84"
       ],
       "call_category": "direct_project_call",
       "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "按冻结源码接收或直接返回",
       "reachable_condition": "调用方可达且对应源码分支成立",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -11078,11 +10958,11 @@
       "caller": "R1315",
       "callee": "R1339",
       "callsites": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:83"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:86"
       ],
       "call_category": "direct_project_call",
       "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "按冻结源码接收或直接返回",
       "reachable_condition": "调用方可达且对应源码分支成立",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -23522,46 +23402,15 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE4375",
-      "caller": "R1163",
-      "callee": "R1440",
-      "callsites": [
-        "海中鱼巣/核心/仓库.可重建索引.ixx:205"
-      ],
-      "call_category": "frozen_reachability_predecessor",
-      "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
-      "return_binding": "按冻结源码接收或直接返回",
-      "reachable_condition": "调用方可达且对应源码分支成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE4377",
-      "caller": "R1163",
-      "callee": "R1441",
-      "callsites": [
-        "海中鱼巣/核心/仓库.可重建索引.ixx:205"
-      ],
-      "call_category": "frozen_reachability_predecessor",
-      "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
-      "return_binding": "按冻结源码接收或直接返回",
-      "reachable_condition": "调用方可达且对应源码分支成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "RCE4082",
       "caller": "R1164",
       "callee": "R1283",
       "callsites": [
-        "海中鱼巣/核心/仓库.可重建索引.ixx:204",
         "海中鱼巣/核心/仓库.可重建索引.ixx:231"
       ],
       "call_category": "direct",
       "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "按冻结源码接收或直接返回",
       "reachable_condition": "调用方可达且对应源码分支成立",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -23572,12 +23421,11 @@
       "caller": "R1164",
       "callee": "R1292",
       "callsites": [
-        "海中鱼巣/核心/仓库.可重建索引.ixx:204",
         "海中鱼巣/核心/仓库.可重建索引.ixx:231"
       ],
       "call_category": "direct",
       "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "按冻结源码接收或直接返回",
       "reachable_condition": "调用方可达且对应源码分支成立",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -23586,13 +23434,13 @@
     {
       "edge_id": "RCE4160",
       "caller": "R1164",
-      "callee": "R1437",
+      "callee": "R1438",
       "callsites": [
         "海中鱼巣/核心/仓库.可重建索引.ixx:237"
       ],
       "call_category": "direct",
       "arguments": "当前身份",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "返回值由源码当前语句接收或直接返回",
       "reachable_condition": "按源码所在顺序或分支",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -23601,13 +23449,13 @@
     {
       "edge_id": "RCE4159",
       "caller": "R1164",
-      "callee": "R1440",
+      "callee": "R1441",
       "callsites": [
         "海中鱼巣/核心/仓库.可重建索引.ixx:232"
       ],
       "call_category": "direct",
       "arguments": "预期目标.稳定主键",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "返回值由源码当前语句接收或直接返回",
       "reachable_condition": "按源码所在顺序或分支",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -23775,21 +23623,6 @@
       "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "返回值由源码当前语句接收或直接返回",
       "reachable_condition": "按源码所在顺序或分支",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE4147",
-      "caller": "R1174",
-      "callee": "R1155",
-      "callsites": [
-        "海中鱼巣/核心/仓库.可重建索引.ixx:474"
-      ],
-      "call_category": "direct",
-      "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
-      "return_binding": "按冻结源码接收或直接返回",
-      "reachable_condition": "调用方可达且对应源码分支成立",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
       "current_root_reachable": true
     },
@@ -24127,13 +23960,13 @@
     {
       "edge_id": "RCE4004",
       "caller": "R1244",
-      "callee": "R1242",
+      "callee": "R1502",
       "callsites": [
         "海中鱼巣/核心/会话.节点直接身份结构写入.ixx:106"
       ],
       "call_category": "direct",
       "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "按冻结源码接收或直接返回",
       "reachable_condition": "调用方可达且对应源码分支成立",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -24338,13 +24171,13 @@
     {
       "edge_id": "RCE4005",
       "caller": "R1248",
-      "callee": "R1242",
+      "callee": "R1159",
       "callsites": [
         "海中鱼巣/核心/会话.节点直接身份结构写入.ixx:197"
       ],
       "call_category": "direct",
       "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "按冻结源码接收或直接返回",
       "reachable_condition": "调用方可达且对应源码分支成立",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -24393,51 +24226,6 @@
       "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "返回值由源码当前语句接收或直接返回",
       "reachable_condition": "按源码所在顺序或分支",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE4315",
-      "caller": "R1248",
-      "callee": "R1331",
-      "callsites": [
-        "海中鱼巣/核心/会话.节点直接身份结构写入.ixx:206"
-      ],
-      "call_category": "frozen_reachability_predecessor",
-      "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
-      "return_binding": "按冻结源码接收或直接返回",
-      "reachable_condition": "调用方可达且对应源码分支成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE4268",
-      "caller": "R1248",
-      "callee": "R1353",
-      "callsites": [
-        "海中鱼巣/核心/会话.节点直接身份结构写入.ixx:206"
-      ],
-      "call_category": "frozen_reachability_predecessor",
-      "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
-      "return_binding": "按冻结源码接收或直接返回",
-      "reachable_condition": "调用方可达且对应源码分支成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE4240",
-      "caller": "R1248",
-      "callee": "R1385",
-      "callsites": [
-        "海中鱼巣/核心/会话.节点直接身份结构写入.ixx:206"
-      ],
-      "call_category": "frozen_reachability_predecessor",
-      "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
-      "return_binding": "按冻结源码接收或直接返回",
-      "reachable_condition": "调用方可达且对应源码分支成立",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
       "current_root_reachable": true
     },
@@ -36954,11 +36742,12 @@
       "caller": "R1155",
       "callee": "F0163",
       "callsites": [
-        "海中鱼巣/核心/仓库.可重建索引.ixx:41"
+        "海中鱼巣/核心/仓库.可重建索引.ixx:41",
+        "海中鱼巣/核心/仓库.可重建索引.ixx:44"
       ],
       "call_category": "direct",
       "arguments": "记录节点句柄",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "有效性布尔值",
       "reachable_condition": "目标种类节点",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -36969,11 +36758,12 @@
       "caller": "R1155",
       "callee": "F0168",
       "callsites": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:41",
         "海中鱼巣/核心/仓库.可重建索引.ixx:44"
       ],
       "call_category": "direct",
       "arguments": "记录关系句柄",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "有效性布尔值",
       "reachable_condition": "目标种类关系",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -36984,12 +36774,11 @@
       "caller": "R1155",
       "callee": "R1292",
       "callsites": [
-        "海中鱼巣/核心/仓库.可重建索引.ixx:37",
         "海中鱼巣/核心/仓库.可重建索引.ixx:39"
       ],
       "call_category": "direct",
       "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "按冻结源码接收或直接返回",
       "reachable_condition": "调用方可达且对应源码分支成立",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -37882,11 +37671,11 @@
       "caller": "R1317",
       "callee": "R1316",
       "callsites": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:104"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:105"
       ],
       "call_category": "frozen_reachability_predecessor",
       "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "按冻结源码接收或直接返回",
       "reachable_condition": "调用方可达且对应源码分支成立",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -37897,11 +37686,11 @@
       "caller": "R1318",
       "callee": "R1286",
       "callsites": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:109"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:111"
       ],
       "call_category": "direct_project_call",
       "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "按冻结源码接收或直接返回",
       "reachable_condition": "调用方可达且对应源码分支成立",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -37912,11 +37701,11 @@
       "caller": "R1318",
       "callee": "R1340",
       "callsites": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:109"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:113"
       ],
       "call_category": "direct_project_call",
       "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "按冻结源码接收或直接返回",
       "reachable_condition": "调用方可达且对应源码分支成立",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -37927,11 +37716,11 @@
       "caller": "R1319",
       "callee": "R1340",
       "callsites": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:118"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:122"
       ],
       "call_category": "direct_project_call",
       "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "按冻结源码接收或直接返回",
       "reachable_condition": "调用方可达且对应源码分支成立",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -37942,11 +37731,11 @@
       "caller": "R1320",
       "callee": "R1316",
       "callsites": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:130"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:133"
       ],
       "call_category": "frozen_reachability_predecessor",
       "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "按冻结源码接收或直接返回",
       "reachable_condition": "调用方可达且对应源码分支成立",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -37957,11 +37746,11 @@
       "caller": "R1320",
       "callee": "R1321",
       "callsites": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:130"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:134"
       ],
       "call_category": "direct_project_call",
       "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "按冻结源码接收或直接返回",
       "reachable_condition": "调用方可达且对应源码分支成立",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -38093,21 +37882,6 @@
       "callee": "R1342",
       "callsites": [
         "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:287"
-      ],
-      "call_category": "direct_project_call",
-      "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
-      "return_binding": "按冻结源码接收或直接返回",
-      "reachable_condition": "调用方可达且对应源码分支成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核",
-      "current_root_reachable": true
-    },
-    {
-      "edge_id": "RCE4314",
-      "caller": "R1331",
-      "callee": "R1338",
-      "callsites": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:300"
       ],
       "call_category": "direct_project_call",
       "arguments": "按冻结源码实参传递",
@@ -47000,13 +46774,13 @@
     {
       "edge_id": "RCE4016",
       "caller": "R1245",
-      "callee": "R1437",
+      "callee": "R1408",
       "callsites": [
         "海中鱼巣/核心/会话.节点直接身份结构写入.ixx:136"
       ],
       "call_category": "direct",
       "arguments": "节点",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "返回值由源码当前语句接收或直接返回",
       "reachable_condition": "按源码所在顺序或分支",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -47403,30 +47177,15 @@
       "current_root_reachable": true
     },
     {
-      "edge_id": "RCE4290",
-      "caller": "R1311",
-      "callee": "R1312",
-      "callsites": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:22"
-      ],
-      "call_category": "frozen_reachability_predecessor",
-      "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
-      "return_binding": "按冻结源码接收或直接返回",
-      "reachable_condition": "调用方可达且对应源码分支成立",
-      "resolution_source": "4b80f161 冻结源码逐调用点复核",
-      "current_root_reachable": true
-    },
-    {
       "edge_id": "RCE4294",
       "caller": "R1316",
       "callee": "R1341",
       "callsites": [
-        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:92"
+        "海中鱼巣/核心/仓库.节点直接事务幂等.ixx:96"
       ],
       "call_category": "direct_project_call",
       "arguments": "按冻结源码实参传递",
-      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
       "return_binding": "按冻结源码接收或直接返回",
       "reachable_condition": "调用方可达且对应源码分支成立",
       "resolution_source": "4b80f161 冻结源码逐调用点复核",
@@ -81828,6 +81587,325 @@
       "return_binding": null,
       "reachable_condition": "调用方可达且源码分支条件成立",
       "resolution_source": "同一具名类型内直接调用；源码调用词与定义范围闭合",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE4544",
+      "caller": "R1245",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/核心/会话.节点直接身份结构写入.ixx:136"
+      ],
+      "call_category": "rewritten_operator_call",
+      "arguments": "候选节点句柄、输入节点句柄",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
+      "return_binding": "相等布尔值",
+      "reachable_condition": "调用方可达且对应源码分支成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE4545",
+      "caller": "R1249",
+      "callee": "R1291",
+      "callsites": [
+        "海中鱼巣/核心/会话.节点直接身份结构写入.ixx:220"
+      ],
+      "call_category": "rewritten_operator_call",
+      "arguments": "候选物理键、输入物理键",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
+      "return_binding": "相等布尔值",
+      "reachable_condition": "调用方可达且对应源码分支成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE4546",
+      "caller": "R1203",
+      "callee": "R1191",
+      "callsites": [
+        "海中鱼巣/核心/仓库.正式关系.ixx:348-349"
+      ],
+      "call_category": "direct_or_implicit_move_constructor",
+      "arguments": "按冻结源码实参传递",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
+      "return_binding": "按冻结源码接收或直接返回",
+      "reachable_condition": "调用方可达且对应源码分支成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE4547",
+      "caller": "R1240",
+      "callee": "R1191",
+      "callsites": [
+        "海中鱼巣/核心/仓库.正式关系.ixx:990-991"
+      ],
+      "call_category": "direct_or_implicit_move_constructor",
+      "arguments": "按冻结源码实参传递",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
+      "return_binding": "按冻结源码接收或直接返回",
+      "reachable_condition": "调用方可达且对应源码分支成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE4548",
+      "caller": "R1265",
+      "callee": "R1191",
+      "callsites": [
+        "海中鱼巣/核心/会话.节点直接身份结构写入.ixx:331",
+        "海中鱼巣/核心/会话.节点直接身份结构写入.ixx:334"
+      ],
+      "call_category": "direct_or_implicit_move_constructor",
+      "arguments": "按冻结源码实参传递",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
+      "return_binding": "按冻结源码接收或直接返回",
+      "reachable_condition": "调用方可达且对应源码分支成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE4549",
+      "caller": "R1006",
+      "callee": "R1191",
+      "callsites": [
+        "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:1837",
+        "海中鱼巣/核心/执行器.节点直接身份结构写入.ixx:2831"
+      ],
+      "call_category": "direct_or_implicit_move_constructor",
+      "arguments": "按冻结源码实参传递",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
+      "return_binding": "按冻结源码接收或直接返回",
+      "reachable_condition": "调用方可达且对应源码分支成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE4550",
+      "caller": "R1147",
+      "callee": "R1194",
+      "callsites": [
+        "海中鱼巣/核心/自检.节点直接身份结构写入.ixx:943"
+      ],
+      "call_category": "direct",
+      "arguments": "按冻结源码实参传递",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
+      "return_binding": "按冻结源码接收或直接返回",
+      "reachable_condition": "调用方可达且对应源码分支成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE4551",
+      "caller": "R1203",
+      "callee": "R1195",
+      "callsites": [
+        "海中鱼巣/核心/仓库.正式关系.ixx:348-349"
+      ],
+      "call_category": "direct_constructor",
+      "arguments": "按冻结源码实参传递",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
+      "return_binding": "按冻结源码接收或直接返回",
+      "reachable_condition": "调用方可达且对应源码分支成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE4552",
+      "caller": "R1240",
+      "callee": "R1195",
+      "callsites": [
+        "海中鱼巣/核心/仓库.正式关系.ixx:990-991"
+      ],
+      "call_category": "direct_constructor",
+      "arguments": "按冻结源码实参传递",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
+      "return_binding": "按冻结源码接收或直接返回",
+      "reachable_condition": "调用方可达且对应源码分支成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE4553",
+      "caller": "R1265",
+      "callee": "R1196",
+      "callsites": [
+        "海中鱼巣/核心/会话.节点直接身份结构写入.ixx:325"
+      ],
+      "call_category": "direct",
+      "arguments": "按冻结源码实参传递",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
+      "return_binding": "按冻结源码接收或直接返回",
+      "reachable_condition": "调用方可达且对应源码分支成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE4554",
+      "caller": "R1217",
+      "callee": "R1197",
+      "callsites": [
+        "海中鱼巣/核心/仓库.正式关系.ixx:481"
+      ],
+      "call_category": "direct_or_implicit_move_constructor",
+      "arguments": "按冻结源码实参传递",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
+      "return_binding": "按冻结源码接收或直接返回",
+      "reachable_condition": "调用方可达且对应源码分支成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE4555",
+      "caller": "R1164",
+      "callee": "R1158",
+      "callsites": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:253"
+      ],
+      "call_category": "direct_constructor",
+      "arguments": "按冻结源码实参传递",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
+      "return_binding": "按冻结源码接收或直接返回",
+      "reachable_condition": "调用方可达且对应源码分支成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE4556",
+      "caller": "R1164",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:247"
+      ],
+      "call_category": "rewritten_operator_call",
+      "arguments": "既有节点句柄、当前身份",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
+      "return_binding": "相等布尔值",
+      "reachable_condition": "调用方可达且对应源码分支成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE4557",
+      "caller": "R1163",
+      "callee": "R1179",
+      "callsites": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:187",
+        "海中鱼巣/核心/仓库.可重建索引.ixx:202"
+      ],
+      "call_category": "standard_container_callback",
+      "arguments": "正向表物理键",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
+      "return_binding": "哈希值",
+      "reachable_condition": "调用方可达且对应源码分支成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE4558",
+      "caller": "R1163",
+      "callee": "R1291",
+      "callsites": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:187",
+        "海中鱼巣/核心/仓库.可重建索引.ixx:202"
+      ],
+      "call_category": "standard_container_callback",
+      "arguments": "正向表物理键",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
+      "return_binding": "等值布尔值",
+      "reachable_condition": "调用方可达且对应源码分支成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE4559",
+      "caller": "R1163",
+      "callee": "R1181",
+      "callsites": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:199"
+      ],
+      "call_category": "standard_container_callback",
+      "arguments": "反向表目标标识",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
+      "return_binding": "哈希值",
+      "reachable_condition": "调用方可达且对应源码分支成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE4560",
+      "caller": "R1163",
+      "callee": "R1180",
+      "callsites": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:199"
+      ],
+      "call_category": "standard_container_callback",
+      "arguments": "反向表目标标识",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
+      "return_binding": "等值布尔值",
+      "reachable_condition": "调用方可达且对应源码分支成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE4561",
+      "caller": "R1164",
+      "callee": "R1179",
+      "callsites": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:244"
+      ],
+      "call_category": "standard_container_callback",
+      "arguments": "正向表物理键",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
+      "return_binding": "哈希值",
+      "reachable_condition": "调用方可达且对应源码分支成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE4562",
+      "caller": "R1164",
+      "callee": "R1291",
+      "callsites": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:244"
+      ],
+      "call_category": "standard_container_callback",
+      "arguments": "正向表物理键",
+      "argument_resolution": "4b80f161 冻结源码静态接收者、完整签名与调用点复核",
+      "return_binding": "等值布尔值",
+      "reachable_condition": "调用方可达且对应源码分支成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE4563",
+      "caller": "R1163",
+      "callee": "R1156",
+      "callsites": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:218"
+      ],
+      "call_category": "implicit_move_construction",
+      "arguments": "可重建索引候选临时对象",
+      "argument_resolution": "4b80f161 冻结源码 optional::emplace 转发语境与移动构造复核",
+      "return_binding": "结果.候选所持有的可重建索引候选",
+      "reachable_condition": "调用方可达且已完成正向表候选插入",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE4564",
+      "caller": "R1164",
+      "callee": "R1156",
+      "callsites": [
+        "海中鱼巣/核心/仓库.可重建索引.ixx:253"
+      ],
+      "call_category": "implicit_move_construction",
+      "arguments": "标记为移除的可重建索引候选临时对象",
+      "argument_resolution": "4b80f161 冻结源码 optional::emplace 转发语境与移动构造复核",
+      "return_binding": "结果.候选所持有的可重建索引候选",
+      "reachable_condition": "调用方可达且索引移除前置全部成立",
+      "resolution_source": "4b80f161 冻结源码逐调用点复核",
       "current_root_reachable": true
     }
   ],
