@@ -16,7 +16,7 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1386,
-  "project_call_edge_count": 4111,
+  "project_call_edge_count": 4118,
   "functions": [
     {
       "function_id": "F0001",
@@ -4067,7 +4067,9 @@
         "R0563",
         "R0573",
         "R0574",
-        "R0579"
+        "R0579",
+        "R0840",
+        "R0841"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0043；调用点=海中鱼巣/领域/方法服务.h:271,海中鱼巣/领域/方法服务.h:278",
@@ -25361,7 +25363,8 @@
       "callers": [
         "R0401",
         "R0669",
-        "R0440"
+        "R0440",
+        "R0841"
       ],
       "callees": [
         "F0163",
@@ -26311,7 +26314,8 @@
         "R0446",
         "R0448",
         "R0450",
-        "R0844"
+        "R0844",
+        "R0840"
       ],
       "callees": [
         "F0163",
@@ -35553,7 +35557,9 @@
         "R0456",
         "R0447",
         "R0843",
-        "R0844"
+        "R0844",
+        "R0840",
+        "R0841"
       ],
       "callees": [
         "R0831"
@@ -35627,7 +35633,12 @@
       "callers": [
         "R0441"
       ],
-      "callees": [],
+      "callees": [
+        "R0428",
+        "F0163",
+        "R0830",
+        "R0843"
+      ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0441；调用点=海中鱼巣/领域/数据操作.需求任务方法.ixx:2173",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
@@ -35648,7 +35659,11 @@
       "callers": [
         "R0441"
       ],
-      "callees": [],
+      "callees": [
+        "R0393",
+        "F0163",
+        "R0830"
+      ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0441；调用点=海中鱼巣/领域/数据操作.需求任务方法.ixx:2178",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
@@ -35688,7 +35703,8 @@
       "overload_identity": "bool 海中鱼巣::任务生命周期材料::当前() const noexcept",
       "shortest_depth": 14,
       "callers": [
-        "R0444"
+        "R0444",
+        "R0840"
       ],
       "callees": [
         "R0846",

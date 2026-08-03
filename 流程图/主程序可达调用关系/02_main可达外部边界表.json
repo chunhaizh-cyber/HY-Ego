@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1386,
-  "project_call_edge_count": 4111,
-  "external_count": 3834,
+  "project_call_edge_count": 4118,
+  "external_count": 3844,
   "callback_registration_count": 59,
   "external_boundaries": [
     {
@@ -53475,6 +53475,152 @@
       "boundary_category": "Standard library lifetime",
       "reachable_condition": "类型候选组在范围遍历或提前返回后释放",
       "resolution_source": "本批现状图、逐行映射与冻结源码静态类型、调用语境及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04944",
+      "signature": "bool std::optional<海中鱼巣::节点句柄>::has_value() const noexcept",
+      "caller": "R0841",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:132",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:133"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "R0841进入后比较因果节点与因果关系可选值存在性；两者均空时继续主材料检查",
+      "resolution_source": "本批现状图、逐行映射与冻结源码静态类型、调用语境复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04945",
+      "signature": "bool std::optional<海中鱼巣::高级关系证据>::has_value() const noexcept",
+      "caller": "R0841",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:132"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "R0841进入后比较因果关系与因果节点可选值存在性",
+      "resolution_source": "本批现状图、逐行映射与冻结源码静态类型、调用语境复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04946",
+      "signature": "const 海中鱼巣::节点句柄& std::optional<海中鱼巣::节点句柄>::operator*() const noexcept",
+      "caller": "R0841",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:134",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:137"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "因果节点与因果关系均有值后，读取因果节点用于有效性和目标节点比较",
+      "resolution_source": "本批现状图、逐行映射与冻结源码静态类型、调用语境复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04947",
+      "signature": "const 海中鱼巣::高级关系证据* std::optional<海中鱼巣::高级关系证据>::operator->() const noexcept",
+      "caller": "R0841",
+      "locations": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:134",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:135",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:136",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:137",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:138"
+      ],
+      "call_count": 5,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "因果节点与因果关系均有值后，读取因果关系有效性及四个字段",
+      "resolution_source": "本批现状图、逐行映射与冻结源码静态类型、调用语境复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04948",
+      "signature": "void std::array<bool, 7>::fill(const bool&)",
+      "caller": "R0847",
+      "locations": [
+        "海中鱼巣/自检.入口初始化.ixx:647"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library array",
+      "reachable_condition": "配置强制失败编号等于 ENTRY-ONLY-S15",
+      "resolution_source": "本批现状图、逐行映射与冻结源码具体 array 实例复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04949",
+      "signature": "std::optional<海中鱼巣::节点句柄> 值构造并执行 std::operator==",
+      "caller": "R0847",
+      "locations": [
+        "海中鱼巣/自检.入口初始化.ixx:554-555"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "十存在循环中比较概念支持与初始化存在根可选句柄",
+      "resolution_source": "本批现状图、逐行映射与冻结源码 optional 模板实参、构造和比较语境复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04950",
+      "signature": "std::optional<std::vector<std::int64_t>> 值构造并执行 std::operator==",
+      "caller": "R0847",
+      "locations": [
+        "海中鱼巣/自检.入口初始化.ixx:597-600"
+      ],
+      "call_count": 4,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "十存在循环中分别比较轮廓和坐标 I64 向量读回值",
+      "resolution_source": "本批现状图、逐行映射与冻结源码 optional/vector 模板实参、构造和比较语境复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04951",
+      "signature": "std::optional<std::vector<std::uint64_t>> 值构造并执行 std::operator==",
+      "caller": "R0847",
+      "locations": [
+        "海中鱼巣/自检.入口初始化.ixx:601-602"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library optional",
+      "reachable_condition": "十存在循环中比较尺寸 U64 向量读回值",
+      "resolution_source": "本批现状图、逐行映射与冻结源码 optional/vector 模板实参、构造和比较语境复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04952",
+      "signature": "std::vector<海中鱼巣::节点句柄>::const_iterator& std::vector<海中鱼巣::节点句柄>::const_iterator::operator++()",
+      "caller": "R0859",
+      "locations": [
+        "海中鱼巣/领域/特征服务.h:281"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library container",
+      "reachable_condition": "候选组范围循环完成一次循环体后递增迭代器",
+      "resolution_source": "本批现状图、逐行映射与冻结源码范围循环 const_iterator 展开复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04953",
+      "signature": "std::vector<海中鱼巣::节点句柄>::~vector() noexcept",
+      "caller": "R0859",
+      "locations": [
+        "海中鱼巣/领域/特征服务.h:280-286"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "候选组范围循环完成或函数离开前释放局部候选组",
+      "resolution_source": "本批现状图、逐行映射与冻结源码局部容器生命周期复核",
       "current_root_reachable": true
     }
   ],

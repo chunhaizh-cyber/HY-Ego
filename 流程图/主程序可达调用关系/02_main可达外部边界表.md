@@ -1,6 +1,6 @@
 # main 可达外部边界与回调表
 
-代码基线：<code>03a8b7ac099ccea83e57f2696e2290b7bcdfacaf</code>；配置：<code>Debug\|x64</code>；外部边界：3834；具名回调：59。
+代码基线：<code>03a8b7ac099ccea83e57f2696e2290b7bcdfacaf</code>；配置：<code>Debug\|x64</code>；外部边界：3844；具名回调：59。
 
 ## 外部边界
 
@@ -3842,6 +3842,16 @@
 | X04941 | R0777 | Standard library lifetime | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::~vector() noexcept</code> | <code>海中鱼巣/领域/特征服务.h:1244-1266, 海中鱼巣/领域/特征服务.h:1245-1266</code> | 2 | 候选组与当前值组在类型拒绝或各返回路径逆序释放 | 本批现状图、逐行映射与冻结源码静态类型、调用语境及生命周期复核 |
 | X04942 | R0778 | Standard library lifetime | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::~vector() noexcept</code> | <code>海中鱼巣/领域/特征服务.h:1272-1276</code> | 1 | 宿主候选组在 any_of 判断后释放 | 本批现状图、逐行映射与冻结源码静态类型、调用语境及生命周期复核 |
 | X04943 | R0779 | Standard library lifetime | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::~vector() noexcept</code> | <code>海中鱼巣/领域/特征服务.h:1282-1289</code> | 1 | 类型候选组在范围遍历或提前返回后释放 | 本批现状图、逐行映射与冻结源码静态类型、调用语境及生命周期复核 |
+| X04944 | R0841 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::节点句柄&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:132, 海中鱼巣/领域/数据操作.需求任务方法.ixx:133</code> | 2 | 比较因果节点与因果关系可选值存在性；两者均空时继续主材料检查 | 本批现状图、逐行映射与冻结源码静态类型、调用语境复核 |
+| X04945 | R0841 | Standard library optional | <code>bool std::optional&lt;海中鱼巣::高级关系证据&gt;::has_value() const noexcept</code> | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:132</code> | 1 | 比较因果关系与因果节点可选值存在性 | 本批现状图、逐行映射与冻结源码静态类型、调用语境复核 |
+| X04946 | R0841 | Standard library optional | <code>const 海中鱼巣::节点句柄&amp; std::optional&lt;海中鱼巣::节点句柄&gt;::operator*() const noexcept</code> | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:134, 海中鱼巣/领域/数据操作.需求任务方法.ixx:137</code> | 2 | 两项可选值均有值后读取因果节点 | 本批现状图、逐行映射与冻结源码静态类型、调用语境复核 |
+| X04947 | R0841 | Standard library optional | <code>const 海中鱼巣::高级关系证据* std::optional&lt;海中鱼巣::高级关系证据&gt;::operator-&gt;() const noexcept</code> | <code>海中鱼巣/领域/数据操作.需求任务方法.ixx:134, 海中鱼巣/领域/数据操作.需求任务方法.ixx:135, 海中鱼巣/领域/数据操作.需求任务方法.ixx:136, 海中鱼巣/领域/数据操作.需求任务方法.ixx:137, 海中鱼巣/领域/数据操作.需求任务方法.ixx:138</code> | 5 | 两项可选值均有值后读取因果关系有效性及四个字段 | 本批现状图、逐行映射与冻结源码静态类型、调用语境复核 |
+| X04948 | R0847 | Standard library array | <code>void std::array&lt;bool, 7&gt;::fill(const bool&amp;)</code> | <code>海中鱼巣/自检.入口初始化.ixx:647</code> | 1 | 强制失败编号等于 ENTRY-ONLY-S15 | 本批现状图、逐行映射与冻结源码具体 array 实例复核 |
+| X04949 | R0847 | Standard library optional | <code>std::optional&lt;海中鱼巣::节点句柄&gt; 值构造并执行 std::operator==</code> | <code>海中鱼巣/自检.入口初始化.ixx:554-555</code> | 2 | 十存在循环中比较概念支持与初始化存在根可选句柄 | 本批现状图、逐行映射与冻结源码 optional 模板实参、构造和比较语境复核 |
+| X04950 | R0847 | Standard library optional | <code>std::optional&lt;std::vector&lt;std::int64_t&gt;&gt; 值构造并执行 std::operator==</code> | <code>海中鱼巣/自检.入口初始化.ixx:597-600</code> | 4 | 十存在循环中分别比较轮廓和坐标 I64 向量读回值 | 本批现状图、逐行映射与冻结源码 optional/vector 模板实参、构造和比较语境复核 |
+| X04951 | R0847 | Standard library optional | <code>std::optional&lt;std::vector&lt;std::uint64_t&gt;&gt; 值构造并执行 std::operator==</code> | <code>海中鱼巣/自检.入口初始化.ixx:601-602</code> | 2 | 十存在循环中比较尺寸 U64 向量读回值 | 本批现状图、逐行映射与冻结源码 optional/vector 模板实参、构造和比较语境复核 |
+| X04952 | R0859 | Standard library container | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator&amp; std::vector&lt;海中鱼巣::节点句柄&gt;::const_iterator::operator++()</code> | <code>海中鱼巣/领域/特征服务.h:281</code> | 1 | 候选组范围循环完成一次循环体后递增迭代器 | 本批现状图、逐行映射与冻结源码范围循环 const_iterator 展开复核 |
+| X04953 | R0859 | Standard library lifetime | <code>std::vector&lt;海中鱼巣::节点句柄&gt;::~vector() noexcept</code> | <code>海中鱼巣/领域/特征服务.h:280-286</code> | 1 | 候选组范围循环完成或函数离开前释放局部候选组 | 本批现状图、逐行映射与冻结源码局部容器生命周期复核 |
 
 ## 回调登记
 

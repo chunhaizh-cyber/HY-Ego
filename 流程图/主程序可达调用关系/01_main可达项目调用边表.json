@@ -16,8 +16,8 @@
     "--warehouse-performance-self-test-exit"
   ],
   "function_count": 1386,
-  "project_call_edge_count": 4111,
-  "edge_count": 4111,
+  "project_call_edge_count": 4118,
+  "edge_count": 4118,
   "edges": [
     {
       "edge_id": "E0002",
@@ -62943,6 +62943,124 @@
       "return_binding": "bool 取反后参与身份反查一致性判断",
       "reachable_condition": "期望主键存在，且 F0441 返回有值节点句柄",
       "resolution_source": "本批现状图、逐行映射与 optional 底层比较静态类型复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3333",
+      "caller": "R0840",
+      "callee": "R0428",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:272"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "this=&身份",
+      "argument_resolution": "冻结源码静态接收者、完整签名与调用点复核",
+      "return_binding": "bool进入完整承接短路判断",
+      "reachable_condition": "状态等于已找到",
+      "resolution_source": "本批现状图、逐行映射与数据操作.需求任务方法.ixx blob 16ac9534复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3334",
+      "caller": "R0840",
+      "callee": "F0163",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:273",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:274"
+      ],
+      "call_category": "direct-free-overload",
+      "arguments": "来源需求、虚拟存在、场景、目标状态四个节点句柄",
+      "argument_resolution": "节点句柄静态类型与 F0163 重载签名逐调用点复核",
+      "return_binding": "四个bool进入完整承接短路判断",
+      "reachable_condition": "身份当前可读且类型为任务",
+      "resolution_source": "本批现状图、逐行映射与数据操作.需求任务方法.ixx blob 16ac9534复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3335",
+      "caller": "R0840",
+      "callee": "R0830",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:275",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:276",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:277"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "this依次绑定需求拥有任务、任务来源需求、虚拟存在、场景、目标状态五条关系证据",
+      "argument_resolution": "五个高级关系证据静态接收者与 R0830 完整签名逐调用点复核",
+      "return_binding": "五个bool进入完整承接短路判断",
+      "reachable_condition": "前序身份和节点句柄检查均为真",
+      "resolution_source": "本批现状图、逐行映射与数据操作.需求任务方法.ixx blob 16ac9534复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3336",
+      "caller": "R0840",
+      "callee": "R0843",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:277"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "this=&当前生命周期",
+      "argument_resolution": "任务生命周期材料静态接收者与 R0843 完整签名复核",
+      "return_binding": "bool作为完整承接短路末项",
+      "reachable_condition": "五条关系证据均当前有效",
+      "resolution_source": "本批现状图、逐行映射与数据操作.需求任务方法.ixx blob 16ac9534复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3337",
+      "caller": "R0841",
+      "callee": "R0393",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:139"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "this=&结算状态",
+      "argument_resolution": "状态值式材料静态接收者与 R0393 完整签名复核",
+      "return_binding": "bool进入完整性短路判断",
+      "reachable_condition": "因果引用与因果引用关系存在性一致且内容有效",
+      "resolution_source": "本批现状图、逐行映射与数据操作.需求任务方法.ixx blob 16ac9534复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3338",
+      "caller": "R0841",
+      "callee": "F0163",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:134",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:141",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:146",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:150",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:154",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:158"
+      ],
+      "call_category": "direct-free-overload",
+      "arguments": "因果引用、需求、来源任务、目标状态、实际状态、动态证据六个节点句柄",
+      "argument_resolution": "节点句柄静态类型与 F0163 重载签名逐调用点复核",
+      "return_binding": "六个bool分别进入因果或主返回短路判断",
+      "reachable_condition": "按源码从因果可选值分支或主返回前序条件逐项成立",
+      "resolution_source": "本批现状图、逐行映射与数据操作.需求任务方法.ixx blob 16ac9534复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3339",
+      "caller": "R0841",
+      "callee": "R0830",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:134",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:141",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:146",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:150",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:154",
+        "海中鱼巣/领域/数据操作.需求任务方法.ixx:158"
+      ],
+      "call_category": "source-audited-direct",
+      "arguments": "this依次绑定因果引用、需求归属、来源任务、目标状态、实际状态、动态证据六条关系证据",
+      "argument_resolution": "高级关系证据静态接收者与 R0830 完整签名逐调用点复核",
+      "return_binding": "六个bool分别进入因果或主返回短路判断",
+      "reachable_condition": "对应节点句柄有效且按源码前序条件成立",
+      "resolution_source": "本批现状图、逐行映射与数据操作.需求任务方法.ixx blob 16ac9534复核",
       "current_root_reachable": true
     }
   ]
