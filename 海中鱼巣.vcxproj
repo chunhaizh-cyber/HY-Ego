@@ -276,6 +276,11 @@
     <ClCompile Include="海中鱼巣\核心\数据操作.节点直接类型化结构.ixx" />
     <ClCompile Include="海中鱼巣\核心\服务.节点直接类型化结构提交.ixx" />
     <ClCompile Include="海中鱼巣\核心\服务.节点直接结构恢复.ixx" />
+    <ClCompile Include="海中鱼巣\领域\服务.节点直接世界结构.ixx" />
+    <ClCompile Include="海中鱼巣\领域\服务.节点直接存在.ixx" />
+    <ClCompile Include="海中鱼巣\领域\服务.节点直接场景.ixx" />
+    <ClCompile Include="海中鱼巣\领域\服务.节点直接世界引导.ixx" />
+    <ClCompile Include="海中鱼巣\领域\自检.节点直接世界结构骨架.ixx" />
     <ClCompile Include="海中鱼巣\核心\冻结.节点直接身份结构.ixx" />
     <ClCompile Include="海中鱼巣\核心\自检.节点直接身份结构写入.ixx" />
     <ClCompile Include="海中鱼巣\核心\自检.结构事务.ixx" />
@@ -354,6 +359,7 @@
     <ClInclude Include="海中鱼巣\核心\句柄.h" />
     <ClInclude Include="海中鱼巣\核心\节点直接结构合同.数据.h" />
     <ClInclude Include="海中鱼巣\核心\节点直接类型化结构事务.数据.h" />
+    <ClInclude Include="海中鱼巣\领域\世界树事实.数据.h" />
     <ClInclude Include="海中鱼巣\核心\日志系统.h" />
     <ClInclude Include="海中鱼巣\核心\事件日志段服务.h" />
     <ClInclude Include="海中鱼巣\核心\容错检查.h" />
