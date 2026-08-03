@@ -345,6 +345,9 @@
     <ClCompile Include="海中鱼巣\核心\执行器.节点直接身份结构写入.ixx">
       <Filter>核心</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\冻结.节点直接类型化值.ixx">
+      <Filter>核心</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\核心\服务.节点直接结构.ixx">
       <Filter>核心</Filter>
     </ClCompile>
@@ -373,6 +376,9 @@
       <Filter>领域</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\核心\自检.节点直接结构查询.ixx">
+      <Filter>核心</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\自检.节点直接统一冻结骨架.ixx">
       <Filter>核心</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\核心\冻结.节点直接身份结构.ixx">

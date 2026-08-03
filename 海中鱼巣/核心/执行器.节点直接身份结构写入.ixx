@@ -40,6 +40,50 @@ import 海中鱼巣.核心.仓库.节点直接事务幂等;
 export namespace 海中鱼巣 {
 
 class 节点直接身份结构写入执行器;
+class 节点直接身份结构事务域;
+
+inline constexpr std::uint32_t 节点直接统一冻结规则版本 = 1;
+
+struct 节点直接统一冻结见证 final {
+    std::uint64_t 运行期域身份 = 0;
+    std::uint64_t 已发布代次 = 0;
+    std::uint32_t 冻结规则版本 = 0;
+    friend bool operator==(const 节点直接统一冻结见证&,
+        const 节点直接统一冻结见证&) = default;
+};
+
+enum class 节点直接统一冻结状态 : std::uint8_t {
+    已形成 = 1,
+    入口拒绝 = 2,
+    许可拒绝 = 3,
+    许可竞争 = 4,
+    资源失败 = 5,
+    未实现 = 6,
+    内部不一致 = 7
+};
+
+class 节点直接统一冻结许可 final {
+public:
+    节点直接统一冻结许可() noexcept = default;
+    节点直接统一冻结许可(const 节点直接统一冻结许可&) = delete;
+    节点直接统一冻结许可& operator=(const 节点直接统一冻结许可&) = delete;
+    节点直接统一冻结许可(节点直接统一冻结许可&&) noexcept = default;
+    节点直接统一冻结许可& operator=(节点直接统一冻结许可&&) noexcept = default;
+    ~节点直接统一冻结许可() noexcept = default;
+
+    bool 有效() const noexcept { return false; }
+    节点直接统一冻结见证 读取见证() const noexcept { return {}; }
+
+private:
+    friend class 节点直接身份结构事务域;
+    struct 私有状态 final {};
+    std::unique_ptr<私有状态> 状态_;
+};
+
+struct 节点直接统一冻结许可取得结果 final {
+    节点直接统一冻结状态 状态 = 节点直接统一冻结状态::未实现;
+    std::optional<节点直接统一冻结许可> 许可;
+};
 
 enum class 节点直接混合原子写自检阶段 : std::uint8_t {
     关闭 = 0,
@@ -170,6 +214,16 @@ public:
 
     bool 已隔离() const noexcept {
         return 隔离标记_->load(std::memory_order_acquire);
+    }
+
+    节点直接统一冻结许可取得结果 取得统一冻结许可(
+        std::uint32_t) const {
+        return {};
+    }
+
+    bool 冻结许可属于本域(
+        const 节点直接统一冻结许可&) const noexcept {
+        return false;
     }
 
 private:

@@ -272,6 +272,7 @@
     <ClCompile Include="海中鱼巣\核心\端口.节点直接持久证据.ixx" />
     <ClCompile Include="海中鱼巣\核心\会话.节点直接身份结构写入.ixx" />
     <ClCompile Include="海中鱼巣\核心\执行器.节点直接身份结构写入.ixx" />
+    <ClCompile Include="海中鱼巣\核心\冻结.节点直接类型化值.ixx" />
     <ClCompile Include="海中鱼巣\核心\服务.节点直接结构.ixx" />
     <ClCompile Include="海中鱼巣\核心\数据操作.节点直接类型化结构.ixx" />
     <ClCompile Include="海中鱼巣\核心\服务.节点直接类型化结构提交.ixx" />
@@ -282,6 +283,7 @@
     <ClCompile Include="海中鱼巣\领域\服务.节点直接世界引导.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.节点直接世界结构骨架.ixx" />
     <ClCompile Include="海中鱼巣\核心\自检.节点直接结构查询.ixx" />
+    <ClCompile Include="海中鱼巣\核心\自检.节点直接统一冻结骨架.ixx" />
     <ClCompile Include="海中鱼巣\核心\冻结.节点直接身份结构.ixx" />
     <ClCompile Include="海中鱼巣\核心\自检.节点直接身份结构写入.ixx" />
     <ClCompile Include="海中鱼巣\核心\自检.结构事务.ixx" />
