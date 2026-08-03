@@ -15,8 +15,8 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1385,
-  "project_call_edge_count": 4109,
+  "function_count": 1386,
+  "project_call_edge_count": 4111,
   "functions": [
     {
       "function_id": "F0001",
@@ -1703,7 +1703,8 @@
         "R0583",
         "R0587",
         "R0593",
-        "R0630"
+        "R0630",
+        "R0773"
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=F0015；调用点=海中鱼巣/领域/初始化.系统.ixx:115",
@@ -34882,7 +34883,8 @@
       ],
       "callees": [
         "R0723",
-        "F0441"
+        "F0441",
+        "F0051"
       ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0774；调用点=海中鱼巣/领域/数据操作.语素基础.ixx:586",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
@@ -35526,7 +35528,9 @@
       "callers": [
         "R0389"
       ],
-      "callees": [],
+      "callees": [
+        "R0894"
+      ],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0389；调用点=海中鱼巣/领域/数据操作.特征体系.ixx:884-916",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
@@ -36954,6 +36958,27 @@
       ],
       "callees": [],
       "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0746；调用点=海中鱼巣/核心/节点仓库.cpp:122",
+      "reachability_class": "main 生产、公共启动或控制面板路径可达",
+      "test_or_self_check_path": false,
+      "legacy_or_unwired": false,
+      "current_root_reachable": true
+    },
+    {
+      "function_id": "R0894",
+      "complete_signature": "virtual 海中鱼巣::结构写入事务参与者::~结构写入事务参与者()",
+      "callable_type": "Method",
+      "category": "Destructor",
+      "module_identity": "执行器.结构写入",
+      "file": "海中鱼巣/核心/执行器.结构写入.ixx",
+      "definition_line": 26,
+      "definition_end_line": 26,
+      "overload_identity": "virtual 海中鱼巣::结构写入事务参与者::~结构写入事务参与者()",
+      "shortest_depth": 11,
+      "callers": [
+        "R0799"
+      ],
+      "callees": [],
+      "reachability_basis": "从 F0001 经前驱边到达；直接前驱=R0799；调用点=海中鱼巣/领域/参与者.特征值原始材料.ixx:80",
       "reachability_class": "main 生产、公共启动或控制面板路径可达",
       "test_or_self_check_path": false,
       "legacy_or_unwired": false,

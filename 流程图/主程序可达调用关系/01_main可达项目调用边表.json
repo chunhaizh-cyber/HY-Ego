@@ -15,9 +15,9 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1385,
-  "project_call_edge_count": 4109,
-  "edge_count": 4109,
+  "function_count": 1386,
+  "project_call_edge_count": 4111,
+  "edge_count": 4111,
   "edges": [
     {
       "edge_id": "E0002",
@@ -62913,6 +62913,36 @@
       "return_binding": "返回optional内的节点未发布候选值",
       "reachable_condition": "R0893候选构造完成并转换为optional返回值",
       "resolution_source": "本批现状图、逐行映射与源码返回值生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3331",
+      "caller": "R0799",
+      "callee": "R0894",
+      "callsites": [
+        "海中鱼巣/领域/参与者.特征值原始材料.ixx:80"
+      ],
+      "call_category": "implicit_base_destructor",
+      "arguments": "this=R0799 派生对象的结构写入事务参与者基类子对象",
+      "argument_resolution": "派生析构结束后的 C++ 基类子对象隐式析构顺序与虚析构定义复核",
+      "return_binding": "无",
+      "reachable_condition": "R0799 派生析构正文结束，基类子对象按析构顺序销毁",
+      "resolution_source": "本批现状图、逐行映射与冻结源码特殊成员生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "edge_id": "RCE3332",
+      "caller": "R0773",
+      "callee": "F0051",
+      "callsites": [
+        "海中鱼巣/领域/数据操作.语素基础.ixx:550"
+      ],
+      "call_category": "implicit-underlying-equality",
+      "arguments": "左=*F0441反查节点；右=目标",
+      "argument_resolution": "std::optional<节点句柄> 的 operator!= 在双方有值时调用底层节点句柄相等运算",
+      "return_binding": "bool 取反后参与身份反查一致性判断",
+      "reachable_condition": "期望主键存在，且 F0441 返回有值节点句柄",
+      "resolution_source": "本批现状图、逐行映射与 optional 底层比较静态类型复核",
       "current_root_reachable": true
     }
   ]

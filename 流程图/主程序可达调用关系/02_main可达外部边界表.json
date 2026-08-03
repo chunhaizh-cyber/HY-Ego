@@ -15,9 +15,9 @@
     "--database-self-test-exit",
     "--warehouse-performance-self-test-exit"
   ],
-  "function_count": 1385,
-  "project_call_edge_count": 4109,
-  "external_count": 3821,
+  "function_count": 1386,
+  "project_call_edge_count": 4111,
+  "external_count": 3834,
   "callback_registration_count": 59,
   "external_boundaries": [
     {
@@ -53289,6 +53289,192 @@
       "boundary_category": "Standard library lifetime",
       "reachable_condition": "局部节点记录optional在版本漂移、拒绝或成功返回时释放",
       "resolution_source": "本批现状图、逐行映射与源码静态类型、聚合构造及逆序生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04931",
+      "signature": "std::optional<std::uint64_t>::~optional() noexcept",
+      "caller": "R0798",
+      "locations": [
+        "海中鱼巣/领域/数据操作.特征体系.ixx:574"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "R0348 的值式期望主键参数在调用完成后结束生命周期",
+      "resolution_source": "本批现状图、逐行映射与冻结源码静态类型、调用语境及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04932",
+      "signature": "std::optional<海中鱼巣::主信息句柄>::~optional() noexcept",
+      "caller": "R0785",
+      "locations": [
+        "海中鱼巣/领域/数据操作.语素基础.ixx:683-693"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "局部主结果的值子对象在早退或函数退出时释放",
+      "resolution_source": "本批现状图、逐行映射与冻结源码静态类型、调用语境及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04933",
+      "signature": "std::optional<海中鱼巣::节点句柄>::~optional() noexcept",
+      "caller": "R0785",
+      "locations": [
+        "海中鱼巣/领域/数据操作.语素基础.ixx:686-693"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "局部节点结果的值子对象在早退或函数退出时释放",
+      "resolution_source": "本批现状图、逐行映射与冻结源码静态类型、调用语境及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04934",
+      "signature": "std::optional<std::uint64_t>::optional(const std::uint64_t&)",
+      "caller": "R0773",
+      "locations": [
+        "海中鱼巣/领域/数据操作.语素基础.ixx:553"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library optional construction",
+      "reachable_condition": "主键组首值形成有值 optional 返回",
+      "resolution_source": "本批现状图、逐行映射与冻结源码静态类型、调用语境及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04935",
+      "signature": "std::vector<std::uint64_t>::~vector() noexcept",
+      "caller": "R0773",
+      "locations": [
+        "海中鱼巣/领域/数据操作.语素基础.ixx:547-554"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "局部主键组在任一返回路径释放",
+      "resolution_source": "本批现状图、逐行映射与冻结源码静态类型、调用语境及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04936",
+      "signature": "std::optional<std::uint64_t>::~optional() noexcept",
+      "caller": "R0773",
+      "locations": [
+        "海中鱼巣/领域/数据操作.语素基础.ixx:543-554"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "按值参数期望主键在函数退出时释放",
+      "resolution_source": "本批现状图、逐行映射与冻结源码静态类型、调用语境及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04937",
+      "signature": "std::optional<std::uint64_t>::optional(std::nullopt_t) noexcept",
+      "caller": "R0773",
+      "locations": [
+        "海中鱼巣/领域/数据操作.语素基础.ixx:548",
+        "海中鱼巣/领域/数据操作.语素基础.ixx:549",
+        "海中鱼巣/领域/数据操作.语素基础.ixx:551"
+      ],
+      "call_count": 3,
+      "queued": false,
+      "boundary_category": "Standard library optional construction",
+      "reachable_condition": "空主键组、期望主键冲突或反查身份不一致时形成空返回",
+      "resolution_source": "本批现状图、逐行映射与冻结源码静态类型、调用语境及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04938",
+      "signature": "std::optional<std::uint64_t>::~optional() noexcept",
+      "caller": "R0774",
+      "locations": [
+        "海中鱼巣/领域/数据操作.语素基础.ixx:571-592",
+        "海中鱼巣/领域/数据操作.语素基础.ixx:586-592"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "按值参数期望主键与局部主键按已构造范围逆序释放",
+      "resolution_source": "本批现状图、逐行映射与冻结源码静态类型、调用语境及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04939",
+      "signature": "std::optional<海中鱼巣::节点记录>::~optional() noexcept",
+      "caller": "R0776",
+      "locations": [
+        "海中鱼巣/领域/特征服务.h:1205-1207"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "局部节点记录 optional 在类型判断完成后释放",
+      "resolution_source": "本批现状图、逐行映射与冻结源码静态类型、调用语境及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04940",
+      "signature": "std::vector<海中鱼巣::节点句柄>::vector() noexcept",
+      "caller": "R0777",
+      "locations": [
+        "海中鱼巣/领域/特征服务.h:1244"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library vector construction",
+      "reachable_condition": "默认构造当前值组",
+      "resolution_source": "本批现状图、逐行映射与冻结源码静态类型、调用语境及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04941",
+      "signature": "std::vector<海中鱼巣::节点句柄>::~vector() noexcept",
+      "caller": "R0777",
+      "locations": [
+        "海中鱼巣/领域/特征服务.h:1244-1266",
+        "海中鱼巣/领域/特征服务.h:1245-1266"
+      ],
+      "call_count": 2,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "候选组与当前值组在类型拒绝或各返回路径逆序释放",
+      "resolution_source": "本批现状图、逐行映射与冻结源码静态类型、调用语境及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04942",
+      "signature": "std::vector<海中鱼巣::节点句柄>::~vector() noexcept",
+      "caller": "R0778",
+      "locations": [
+        "海中鱼巣/领域/特征服务.h:1272-1276"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "宿主候选组在 any_of 判断后释放",
+      "resolution_source": "本批现状图、逐行映射与冻结源码静态类型、调用语境及生命周期复核",
+      "current_root_reachable": true
+    },
+    {
+      "id": "X04943",
+      "signature": "std::vector<海中鱼巣::节点句柄>::~vector() noexcept",
+      "caller": "R0779",
+      "locations": [
+        "海中鱼巣/领域/特征服务.h:1282-1289"
+      ],
+      "call_count": 1,
+      "queued": false,
+      "boundary_category": "Standard library lifetime",
+      "reachable_condition": "类型候选组在范围遍历或提前返回后释放",
+      "resolution_source": "本批现状图、逐行映射与冻结源码静态类型、调用语境及生命周期复核",
       "current_root_reachable": true
     }
   ],
