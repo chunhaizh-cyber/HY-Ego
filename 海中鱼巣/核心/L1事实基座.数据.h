@@ -50,6 +50,7 @@ struct 属性槽 final {
 struct 节点事实 final {
     稳定编码 编码;
     节点种类 种类 = 节点种类::普通;
+    std::optional<值表示种类> 属性类型表示;
     std::uint64_t 创建事实代次 = 0;
     std::optional<std::uint64_t> 退出事实代次;
     std::vector<属性槽> 当前属性;
@@ -174,6 +175,7 @@ struct L1审计记录 final {
 };
 struct L1审计读取结果 final {
     L1读取状态 状态 = L1读取状态::入口拒绝;
+    写集幂等键 幂等键;
     std::vector<L1审计记录> 记录组;
 };
 struct L1完整快照 final {
@@ -182,6 +184,7 @@ struct L1完整快照 final {
     std::vector<关系事实> 当前关系;
     std::vector<值事实> 当前值;
     std::vector<稳定编码> 永久占用编码;
+    friend bool operator==(const L1完整快照&, const L1完整快照&) = default;
 };
 struct L1完整快照结果 final {
     L1读取状态 状态 = L1读取状态::入口拒绝;
