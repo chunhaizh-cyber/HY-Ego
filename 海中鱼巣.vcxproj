@@ -174,6 +174,9 @@
     <ClCompile Include="海中鱼巣\自检.运行期上下文.ixx" />
     <ClCompile Include="海中鱼巣\自检.主装配事务.ixx" />
     <ClCompile Include="海中鱼巣\自检.系统角色初始化.ixx" />
+    <ClCompile Include="海中鱼巣\核心\仓库.L1事实基座.ixx" />
+    <ClCompile Include="海中鱼巣\核心\服务.L1事实基座.ixx" />
+    <ClCompile Include="海中鱼巣\核心\自检.L1事实基座.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.概念活动所有权.ixx" />
     <ClCompile Include="海中鱼巣\自检.运行期组合分层.ixx" />
     <ClCompile Include="海中鱼巣\自检.运行期兼容请求.ixx" />
@@ -362,6 +365,7 @@
     <ClInclude Include="海中鱼巣\核心\句柄.h" />
     <ClInclude Include="海中鱼巣\核心\节点直接结构合同.数据.h" />
     <ClInclude Include="海中鱼巣\核心\节点直接类型化结构事务.数据.h" />
+    <ClInclude Include="海中鱼巣\核心\L1事实基座.数据.h" />
     <ClInclude Include="海中鱼巣\领域\世界树事实.数据.h" />
     <ClInclude Include="海中鱼巣\核心\日志系统.h" />
     <ClInclude Include="海中鱼巣\核心\事件日志段服务.h" />
