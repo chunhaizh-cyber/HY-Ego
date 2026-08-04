@@ -46,7 +46,7 @@ public:
 
             auto 候选 = 构造候选(请求.指定快照, 请求.规则版本);
 #ifdef _DEBUG
-            if (损坏下一候选_.exchange(false)) 候选.节点种类[1].push_back({});
+            if (损坏下一候选_.exchange(false)) 候选.关系源[{0, 1}].push_back({1});
 #endif
             if (!候选完整(候选, 请求.指定快照))
                 return {L1索引维护状态::内部不一致, 请求.来源事实代次, 请求.规则版本, 开始序号};
@@ -119,13 +119,19 @@ public:
                 || 请求.规则版本 != L1可重建索引规则版本 || !键完整(请求.键)) return {};
             std::uint64_t 来源 = 0;
             std::uint64_t 捕获序号 = 0;
+            std::uint32_t 捕获合同版本 = 0;
+            std::uint32_t 捕获数据版本 = 0;
             std::vector<稳定编码> 候选;
             {
                 std::shared_lock<std::shared_mutex> 锁(锁_);
-                if (!视图_ || 视图_->规则版本 != 请求.规则版本)
+                if (!视图_ || 视图_->合同版本 != L1可重建索引合同版本
+                    || 视图_->数据版本 != 索引数据版本_
+                    || 视图_->规则版本 != 请求.规则版本)
                     return {L1索引读取状态::索引不可用, 0, 0, {}};
                 来源 = 视图_->来源事实代次;
                 捕获序号 = 视图_->视图序号;
+                捕获合同版本 = 视图_->合同版本;
+                捕获数据版本 = 视图_->数据版本;
                 候选 = 取得候选(*视图_, 请求.键);
             }
             std::vector<L1事实副本> 事实组;
@@ -161,6 +167,7 @@ public:
             {
                 std::shared_lock<std::shared_mutex> 锁(锁_);
                 if (!视图_ || 视图_->视图序号 != 捕获序号
+                    || 视图_->合同版本 != 捕获合同版本 || 视图_->数据版本 != 捕获数据版本
                     || 视图_->来源事实代次 != 来源 || 视图_->规则版本 != 请求.规则版本)
                     return {L1索引读取状态::索引不可用, 来源, 请求.规则版本, {}};
             }
@@ -175,8 +182,11 @@ public:
 #endif
 
 private:
+    static constexpr std::uint32_t 索引数据版本_ = 1;
     using 双编码键 = std::pair<std::uint64_t, std::uint64_t>;
     struct L1索引视图 final {
+        std::uint32_t 合同版本 = L1可重建索引合同版本;
+        std::uint32_t 数据版本 = 索引数据版本_;
         std::uint64_t 来源事实代次 = 0;
         std::uint32_t 规则版本 = L1可重建索引规则版本;
         std::uint64_t 视图序号 = 0;
@@ -256,6 +266,8 @@ private:
     }
     static L1索引视图 构造候选(const L1完整快照& 快照, std::uint32_t 规则版本) {
         L1索引视图 候选;
+        候选.合同版本 = L1可重建索引合同版本;
+        候选.数据版本 = 索引数据版本_;
         候选.来源事实代次 = 快照.事实代次;
         候选.规则版本 = 规则版本;
         for (const auto& 节点 : 快照.当前节点)
@@ -278,23 +290,45 @@ private:
         }
         return true;
     }
+    static bool 节点种类映射键完整(
+        const std::map<std::uint8_t, std::vector<稳定编码>>& 映射) noexcept {
+        for (const auto& [键, _] : 映射)
+            if (!节点种类有效(static_cast<节点种类>(键))) return false;
+        return true;
+    }
+    static bool 双编码映射键完整(const auto& 映射) noexcept {
+        for (const auto& [键, _] : 映射)
+            if (键.first == 0 || 键.second == 0) return false;
+        return true;
+    }
     static bool 内容相同(const L1索引视图& 左, const L1索引视图& 右) noexcept {
-        return 左.来源事实代次 == 右.来源事实代次 && 左.规则版本 == 右.规则版本
+        return 左.合同版本 == 右.合同版本 && 左.数据版本 == 右.数据版本
+            && 左.来源事实代次 == 右.来源事实代次 && 左.规则版本 == 右.规则版本
             && 左.节点种类 == 右.节点种类 && 左.关系源 == 右.关系源
             && 左.关系目标 == 右.关系目标 && 左.当前属性值 == 右.当前属性值;
     }
     static bool 候选完整(const L1索引视图& 候选, const L1完整快照& 快照) {
-        if (候选.来源事实代次 != 快照.事实代次 || 候选.规则版本 != L1可重建索引规则版本
+        if (候选.合同版本 != L1可重建索引合同版本 || 候选.数据版本 != 索引数据版本_
+            || 候选.来源事实代次 != 快照.事实代次 || 候选.规则版本 != L1可重建索引规则版本
             || !组完整(候选.节点种类) || !组完整(候选.关系源)
-            || !组完整(候选.关系目标) || !组完整(候选.当前属性值)) return false;
+            || !组完整(候选.关系目标) || !组完整(候选.当前属性值)
+            || !节点种类映射键完整(候选.节点种类)
+            || !双编码映射键完整(候选.关系源)
+            || !双编码映射键完整(候选.关系目标)
+            || !双编码映射键完整(候选.当前属性值)) return false;
         std::unordered_set<std::uint64_t> 编码组;
-        for (const auto& 节点 : 快照.当前节点)
+        for (const auto& 节点 : 快照.当前节点) {
             if (!有效(节点.编码) || 节点.编码.值 == 0 || !节点种类有效(节点.种类)
                 || !编码组.insert(节点.编码.值).second) return false;
+            for (const auto& 槽 : 节点.当前属性)
+                if (!有效(槽.属性类型节点) || !有效(槽.当前值)) return false;
+        }
         for (const auto& 关系 : 快照.当前关系)
-            if (!有效(关系.编码) || !编码组.insert(关系.编码.值).second) return false;
+            if (!有效(关系.编码) || !有效(关系.源节点) || !有效(关系.目标节点)
+                || !有效(关系.关系类型节点) || !编码组.insert(关系.编码.值).second) return false;
         for (const auto& 值 : 快照.当前值)
-            if (!有效(值.编码) || !编码组.insert(值.编码.值).second) return false;
+            if (!有效(值.编码) || !有效(值.所属节点) || !有效(值.属性类型节点)
+                || !有效(值.来源节点) || !编码组.insert(值.编码.值).second) return false;
         const auto 期望 = 构造候选(快照, 候选.规则版本);
         return 内容相同(候选, 期望);
     }
