@@ -4,6 +4,8 @@
 #include "../核心/L1事实基座.数据.h"
 #endif
 
+#include "世界操作.数据.h"
+
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -11,13 +13,13 @@
 
 namespace 海中鱼巣 {
 
-inline constexpr std::uint32_t 世界登记合同版本 = 1;
+inline constexpr std::uint32_t 世界登记合同版本 = 2;
 inline constexpr std::uint32_t 世界登记规则版本 = 1;
 
 struct 世界结构登记 final {
     std::uint32_t 合同版本 = 世界登记合同版本;
     std::uint32_t 世界规则版本 = 世界登记规则版本;
-    写集幂等键 首次幂等键;
+    世界操作幂等身份 首次幂等身份;
     std::uint64_t 已验证事实代次 = 0;
     稳定编码 服务身份;
     稳定编码 场景标记属性类型;
@@ -30,7 +32,7 @@ struct 世界结构登记 final {
 struct 世界登记建立请求 final {
     std::uint32_t 合同版本 = 世界登记合同版本;
     std::uint32_t 世界规则版本 = 世界登记规则版本;
-    写集幂等键 幂等键;
+    世界操作幂等身份 幂等身份;
     std::uint64_t 期望事实代次 = 0;
     friend bool operator==(const 世界登记建立请求&, const 世界登记建立请求&) = default;
 };
@@ -50,7 +52,7 @@ struct 世界登记结果 final {
 inline bool 世界登记建立请求有效(const 世界登记建立请求& 请求) noexcept {
     return 请求.合同版本 == 世界登记合同版本
         && 请求.世界规则版本 == 世界登记规则版本
-        && 有效(请求.幂等键);
+        && 世界操作幂等身份有效(请求.幂等身份);
 }
 
 inline bool 世界结构登记完整(const 世界结构登记& 登记) noexcept {
@@ -60,7 +62,8 @@ inline bool 世界结构登记完整(const 世界结构登记& 登记) noexcept 
         登记.世界根场景};
     if (登记.合同版本 != 世界登记合同版本
         || 登记.世界规则版本 != 世界登记规则版本
-        || !有效(登记.首次幂等键) || 登记.已验证事实代次 == 0) {
+        || !世界操作幂等身份有效(登记.首次幂等身份)
+        || 登记.已验证事实代次 == 0) {
         return false;
     }
     for (std::size_t i = 0; i < 编码组.size(); ++i) {
