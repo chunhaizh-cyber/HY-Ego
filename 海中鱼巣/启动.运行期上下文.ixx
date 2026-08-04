@@ -16,7 +16,10 @@ module;
 export module 海中鱼巣.启动.运行期上下文;
 
 export import 海中鱼巣.核心.服务.L1事实基座;
+export import 海中鱼巣.领域.服务.世界登记;
+export import 海中鱼巣.领域.服务.L1场景结构;
 export import 海中鱼巣.领域.服务.L1特征定义;
+export import 海中鱼巣.领域.服务.L1实例特征;
 
 import 海中鱼巣.核心.协调.结构事务;
 import 海中鱼巣.装配.运行期业务;
@@ -54,7 +57,10 @@ public:
           业务装配_(
               接线_, 主信息_, 节点_, 关系_, 索引_, 仓库编号, 稳定动作键),
           L1事实基座_(主信息_, 节点_, 关系_, 索引_, 仓库编号),
+          世界登记服务_(L1事实基座服务_),
+          L1场景结构服务_(L1事实基座服务_, 世界登记服务_),
           L1特征定义服务_(L1事实基座服务_),
+          L1实例特征服务_(L1事实基座服务_, L1场景结构服务_, L1特征定义服务_),
           仓库编号_(仓库编号) {
     }
 
@@ -202,6 +208,12 @@ public:
     const L1事实基座服务& 读取L1事实基座服务() const noexcept { return L1事实基座服务_; }
     L1特征定义服务& 读取L1特征定义服务() noexcept { return L1特征定义服务_; }
     const L1特征定义服务& 读取L1特征定义服务() const noexcept { return L1特征定义服务_; }
+    世界登记服务& 读取世界登记服务() noexcept { return 世界登记服务_; }
+    const 世界登记服务& 读取世界登记服务() const noexcept { return 世界登记服务_; }
+    L1场景结构服务& 读取L1场景结构服务() noexcept { return L1场景结构服务_; }
+    const L1场景结构服务& 读取L1场景结构服务() const noexcept { return L1场景结构服务_; }
+    L1实例特征服务& 读取L1实例特征服务() noexcept { return L1实例特征服务_; }
+    const L1实例特征服务& 读取L1实例特征服务() const noexcept { return L1实例特征服务_; }
 private:
     结构事务协调器 协调器_;
     结构事务接线 接线_;
@@ -211,7 +223,10 @@ private:
     索引仓库 索引_;
     L1事实基座 L1事实基座_;
     L1事实基座服务 L1事实基座服务_;
+    世界登记服务 世界登记服务_;
+    L1场景结构服务 L1场景结构服务_;
     L1特征定义服务 L1特征定义服务_;
+    L1实例特征服务 L1实例特征服务_;
     运行期业务装配 业务装配_;
     std::uint64_t 仓库编号_ = 0;
     mutable std::mutex 系统角色锁_;

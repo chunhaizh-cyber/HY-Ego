@@ -54,6 +54,35 @@ bool 映射唯一(const L1写入结果& 结果) noexcept {
     return true;
 }
 
+bool 非空快照完整(const L1完整快照& 快照) noexcept {
+    if (快照.事实代次 == 0 || 快照.当前节点.empty()) return false;
+    std::vector<稳定编码> 编码组;
+    编码组.reserve(快照.当前节点.size() + 快照.当前关系.size()
+        + 快照.当前值.size());
+    for (const auto& 节点 : 快照.当前节点) {
+        if (!有效(节点.编码) || 节点.创建事实代次 == 0
+            || 节点.创建事实代次 > 快照.事实代次 || 节点.退出事实代次) return false;
+        编码组.push_back(节点.编码);
+    }
+    for (const auto& 关系 : 快照.当前关系) {
+        if (!有效(关系.编码) || !有效(关系.源节点) || !有效(关系.目标节点)
+            || !有效(关系.关系类型节点) || 关系.创建事实代次 == 0
+            || 关系.创建事实代次 > 快照.事实代次 || 关系.退出事实代次) return false;
+        编码组.push_back(关系.编码);
+    }
+    for (const auto& 值 : 快照.当前值) {
+        if (!有效(值.编码) || !有效(值.所属节点) || !有效(值.属性类型节点)
+            || !有效(值.来源节点) || !原始材料完整(值.材料)
+            || 值.创建事实代次 == 0 || 值.创建事实代次 > 快照.事实代次
+            || 值.退出事实代次) return false;
+        编码组.push_back(值.编码);
+    }
+    std::sort(编码组.begin(), 编码组.end());
+    if (std::adjacent_find(编码组.begin(), 编码组.end()) != 编码组.end()) return false;
+    for (const auto 编码 : 快照.永久占用编码) if (!有效(编码)) return false;
+    return true;
+}
+
 特征定义状态 映射写入状态(L1写入状态 状态) noexcept {
     switch (状态) {
     case L1写入状态::成功: return 特征定义状态::已提交;
@@ -103,11 +132,12 @@ public:
             if (初始.状态 != L1读取状态::成功 || !初始.快照.has_value()) {
                 return {映射读取结果(初始.状态), std::nullopt};
             }
+            const bool 全空 = 初始.快照->当前节点.empty()
+                && 初始.快照->当前关系.empty()
+                && 初始.快照->当前值.empty()
+                && 初始.快照->永久占用编码.empty();
             if (初始.快照->事实代次 != 请求.期望事实代次
-                || !初始.快照->当前节点.empty()
-                || !初始.快照->当前关系.empty()
-                || !初始.快照->当前值.empty()
-                || !初始.快照->永久占用编码.empty()) {
+                || (!全空 && !L1特征定义内部::非空快照完整(*初始.快照))) {
                 return {};
             }
 
