@@ -14,6 +14,7 @@ module;
 #include <utility>
 #include <variant>
 #include <vector>
+#include <type_traits>
 
 #define L1_FACT_BASE_NO_INCLUDES
 
@@ -38,6 +39,10 @@ public:
 
             std::unique_lock<std::shared_mutex> 锁(锁_);
             if (状态_.隔离) return {L1写入状态::内部不一致, 状态_.事实代次, {}};
+            if (!状态完整(状态_)) {
+                状态_.隔离 = true;
+                return {L1写入状态::内部不一致, 状态_.事实代次, {}};
+            }
             const auto 既有 = 状态_.幂等账.find(请求.幂等键.值);
             if (既有 != 状态_.幂等账.end()) {
                 if (既有->second.规范化写集 == *规范化) {
@@ -226,9 +231,29 @@ public:
         try {
             std::unique_lock<std::shared_mutex> 锁(锁_);
             if (状态_.隔离) return {L1恢复状态::内部不一致, 状态_.事实代次};
-            if (候选_.has_value() || 材料.当前快照.事实代次 != 期望 || 期望 != 状态_.事实代次) return {L1恢复状态::事实代次漂移, 状态_.事实代次};
+            if (候选_.has_value()) return {L1恢复状态::入口拒绝, 状态_.事实代次};
+#ifdef _DEBUG
+            if (下一建立前状态损坏_) {
+                下一建立前状态损坏_ = false;
+                状态_.下个编码 = 0;
+            }
+#endif
+            if (!状态完整(状态_)) {
+                状态_.隔离 = true;
+                return {L1恢复状态::内部不一致, 状态_.事实代次};
+            }
+            if (材料.当前快照.事实代次 != 期望 || 期望 != 状态_.事实代次) return {L1恢复状态::事实代次漂移, 状态_.事实代次};
             状态 值;
             if (!恢复材料转状态(材料, 值) || !状态完整(值)) return {L1恢复状态::材料不完整, 状态_.事实代次};
+#ifdef _DEBUG
+            if (下一候选构造结果损坏_) {
+                下一候选构造结果损坏_ = false;
+                值.当前值.emplace(0, 值事实{});
+                if (状态完整(值)) return {L1恢复状态::内部不一致, 状态_.事实代次};
+                状态_.隔离 = true;
+                return {L1恢复状态::内部不一致, 状态_.事实代次};
+            }
+#endif
             候选_ = 候选状态{std::move(值), 状态_.事实代次};
             return {L1恢复状态::候选已建立, 状态_.事实代次};
         } catch (const std::bad_alloc&) { return {L1恢复状态::资源失败, 0}; }
@@ -240,17 +265,29 @@ public:
             if (状态_.隔离) return {L1恢复状态::内部不一致, 状态_.事实代次};
             if (!候选_) return {L1恢复状态::无候选, 状态_.事实代次};
             if (候选_->基线 != 状态_.事实代次) { 候选_.reset(); return {L1恢复状态::事实代次漂移, 状态_.事实代次}; }
+            if (!状态完整(状态_)) {
+                状态_.隔离 = true;
+                return {L1恢复状态::内部不一致, 状态_.事实代次};
+            }
             状态 值 = 候选_->值;
             if (!状态完整(值)) {
                 候选_.reset(); 状态_.隔离 = true;
                 return {L1恢复状态::内部不一致, 状态_.事实代次};
             }
             值.事实代次 = 状态_.事实代次 + 1;
-            if (!值.幂等账.empty()) {
-                const auto 键 = 值.幂等账.begin()->second.幂等键;
-                记录审计(值, 键, L1审计事件::恢复发布, L1写入状态::成功, 值.事实代次, {});
-            }
+            if (!状态完整(值)) { 候选_.reset(); 状态_.隔离 = true; return {L1恢复状态::内部不一致, 状态_.事实代次}; }
             std::swap(状态_, 值); 候选_.reset();
+#ifdef _DEBUG
+            if (下一发布后读回不一致_) {
+                下一发布后读回不一致_ = false;
+                状态_.下个编码 = 0;
+            }
+#endif
+            const auto 快照 = 构造快照(状态_);
+            if (!快照 || 快照->事实代次 != 状态_.事实代次 || !状态完整(状态_)) {
+                状态_.隔离 = true;
+                return {L1恢复状态::内部不一致, 状态_.事实代次};
+            }
             return {L1恢复状态::恢复已发布, 状态_.事实代次};
         } catch (const std::bad_alloc&) { return {L1恢复状态::资源失败, 0}; }
         catch (...) { return {L1恢复状态::内部不一致, 0}; }
@@ -262,6 +299,12 @@ public:
             候选_.reset(); return {L1恢复状态::候选已撤销, 状态_.事实代次};
         } catch (...) { return {L1恢复状态::内部不一致, 0}; }
     }
+
+#ifdef _DEBUG
+    void 自检_破坏下一次建立前当前状态不变量() noexcept { 下一建立前状态损坏_ = true; }
+    void 自检_破坏下一次候选构造结果() noexcept { 下一候选构造结果损坏_ = true; }
+    void 自检_使下一次发布后权威读回不一致() noexcept { 下一发布后读回不一致_ = true; }
+#endif
 
 private:
     struct 状态 {
@@ -325,13 +368,18 @@ private:
                 || !属性排序唯一(节点.当前属性) || !插入(编码)) return false;
         }
         for (const auto& [编码, 关系] : 值.当前关系) {
-            if (!插入(编码) || !值.当前节点.contains(关系.源节点.值)
+            if (!插入(编码) || 关系.编码.值 != 编码 || 关系.创建事实代次 == 0
+                || 关系.创建事实代次 > 值.事实代次 || 关系.退出事实代次
+                || !值.当前节点.contains(关系.源节点.值)
                 || !值.当前节点.contains(关系.目标节点.值)
                 || !值.当前节点.contains(关系.关系类型节点.值)
-                || 关系.退出事实代次) return false;
+                || !有效(关系.源节点) || !有效(关系.目标节点) || !有效(关系.关系类型节点)) return false;
         }
         for (const auto& [编码, 事实] : 值.当前值) {
-            if (!插入(编码) || !值.当前节点.contains(事实.所属节点.值) || !值.当前节点.contains(事实.来源节点.值)) return false;
+            if (!插入(编码) || 事实.编码.值 != 编码 || 事实.创建事实代次 == 0
+                || 事实.创建事实代次 > 值.事实代次 || 事实.退出事实代次
+                || !有效(事实.所属节点) || !有效(事实.属性类型节点) || !有效(事实.来源节点)
+                || !值.当前节点.contains(事实.所属节点.值) || !值.当前节点.contains(事实.来源节点.值)) return false;
             const auto 类型 = 值.当前节点.find(事实.属性类型节点.值);
             if (类型 == 值.当前节点.end() || 类型->second.种类 != 节点种类::属性类型
                 || !类型->second.属性类型表示 || !表示匹配(*类型->second.属性类型表示, 事实.材料)) return false;
@@ -344,15 +392,72 @@ private:
                 || 当前值 == 值.当前值.end() || 当前值->second.所属节点.值 != 编码
                 || 当前值->second.属性类型节点 != 槽.属性类型节点) return false;
         }
+        std::unordered_set<std::uint64_t> 节点全集;
+        for (const auto& [编码, 事实] : 值.当前节点) 节点全集.insert(编码);
         for (const auto& [编码, 历史] : 值.历史) {
-            if (编码 == 0 || 全部.contains(编码)) return false;
-            bool 已退出 = std::visit([](const auto& 事实) { return 事实.退出事实代次.has_value(); }, 历史.事实);
-            if (!已退出) return false;
+            const auto 历史编码 = std::visit([](const auto& 事实) { return 事实.编码.值; }, 历史.事实);
+            if (编码 == 0 || 全部.contains(编码) || 历史编码 != 编码) return false;
+            全部.insert(编码);
+            bool 有效历史 = std::visit([&](const auto& 事实) {
+                if (!事实.退出事实代次 || 事实.创建事实代次 == 0
+                    || 事实.创建事实代次 > *事实.退出事实代次
+                    || *事实.退出事实代次 > 值.事实代次 || 事实.编码.值 != 编码) return false;
+                using T = std::decay_t<decltype(事实)>;
+                if constexpr (std::is_same_v<T, 节点事实>) { 节点全集.insert(编码); return true; }
+                else return true;
+            }, 历史.事实);
+            if (!有效历史) return false;
+        }
+        auto 节点存在 = [&](稳定编码 编码) { return 有效(编码) && 节点全集.contains(编码.值); };
+        for (const auto& [_, 关系历史] : 值.历史) {
+            if (const auto* 关系 = std::get_if<关系事实>(&关系历史.事实))
+                if (!节点存在(关系->源节点) || !节点存在(关系->目标节点) || !节点存在(关系->关系类型节点)) return false;
+            if (const auto* 事实 = std::get_if<值事实>(&关系历史.事实)) {
+                if (!节点存在(事实->所属节点) || !节点存在(事实->来源节点) || !节点存在(事实->属性类型节点)) return false;
+                const auto 类型 = 值.当前节点.find(事实->属性类型节点.值);
+                if (类型 != 值.当前节点.end() && (类型->second.种类 != 节点种类::属性类型 || !类型->second.属性类型表示 || !表示匹配(*类型->second.属性类型表示, 事实->材料))) return false;
+            }
         }
         for (const auto 编码 : 全部) if (!值.永久占用.contains(编码)) return false;
-        for (const auto 编码 : 值.永久占用) if (编码 == 0) return false;
-        for (const auto& [键, 账] : 值.幂等账)
-            if (键 == 0 || !有效(账.幂等键) || 账.幂等键.值 != 键 || 账.首次结果.状态 != L1写入状态::成功) return false;
+        if (值.永久占用.size() != 全部.size()) return false;
+        for (const auto 编码 : 值.永久占用) if (编码 == 0 || !全部.contains(编码)) return false;
+        std::uint64_t 最大编码 = 0;
+        for (const auto 编码 : 值.永久占用) 最大编码 = std::max(最大编码, 编码);
+        if (值.下个编码 == 0 || 值.下个编码 <= 最大编码) return false;
+        for (const auto& [键, 账] : 值.幂等账) {
+            if (键 == 0 || !有效(账.幂等键) || 账.幂等键.值 != 键 || 账.规范化写集.幂等键.值 != 键
+                || 账.首次结果.状态 != L1写入状态::成功 || 账.首次结果.事实代次 == 0 || 账.首次结果.事实代次 > 值.事实代次
+                || 规范化写集(账.规范化写集) != std::optional<L1写集请求>(账.规范化写集)) return false;
+            std::unordered_set<std::uint32_t> 本地;
+            if (!请求结构有效(账.规范化写集, 本地)) return false;
+            std::unordered_map<std::uint32_t, bool> 新键;
+            for (const auto& 项 : 账.规范化写集.节点) 新键[项.本地键.值] = true;
+            for (const auto& 项 : 账.规范化写集.关系) 新键[项.本地键.值] = true;
+            for (const auto& 项 : 账.规范化写集.值) 新键[项.本地键.值] = true;
+            if (账.首次结果.新编码映射.size() != 新键.size()) return false;
+            for (const auto& [本地, 编码] : 账.首次结果.新编码映射) {
+                if (!新键.contains(本地.值) || !全部.contains(编码.值)) return false;
+                bool 创建匹配 = false;
+                if (const auto it = 值.当前节点.find(编码.值); it != 值.当前节点.end()) 创建匹配 = it->second.创建事实代次 == 账.首次结果.事实代次;
+                if (const auto it = 值.当前关系.find(编码.值); it != 值.当前关系.end()) 创建匹配 = it->second.创建事实代次 == 账.首次结果.事实代次;
+                if (const auto it = 值.当前值.find(编码.值); it != 值.当前值.end()) 创建匹配 = it->second.创建事实代次 == 账.首次结果.事实代次;
+                if (const auto it = 值.历史.find(编码.值); it != 值.历史.end()) 创建匹配 = std::visit([&](const auto& 事实) { return 事实.创建事实代次 == 账.首次结果.事实代次; }, it->second.事实);
+                if (!创建匹配) return false;
+            }
+            const auto 审计 = 值.审计.find(键);
+            if (审计 == 值.审计.end()) return false;
+            std::size_t 成功数 = 0;
+            for (std::size_t i = 0; i < 审计->second.size(); ++i) {
+                const auto& 记录 = 审计->second[i];
+                if (记录.幂等键.值 != 键 || 记录.事件序号 != i + 1) return false;
+                if (记录.事件 == L1审计事件::提交成功) {
+                    ++成功数;
+                    if (记录.结果状态 != 账.首次结果.状态 || 记录.事实代次 != 账.首次结果.事实代次 || 记录.新编码映射 != 账.首次结果.新编码映射) return false;
+                }
+            }
+            if (成功数 != 1) return false;
+        }
+        for (const auto& [键, 记录组] : 值.审计) if (!值.幂等账.contains(键) || 记录组.empty()) return false;
         return !值.隔离;
     }
     static bool 恢复材料转状态(const L1恢复材料& 材料, 状态& 输出) {
@@ -366,8 +471,16 @@ private:
         for (const auto& 事实 : 材料.历史值) if (!输出.历史.emplace(事实.编码.值, L1历史事实副本{事实.编码, 事实, false}).second) return false;
         for (const auto& 账 : 材料.幂等账) if (!有效(账.幂等键) || !输出.幂等账.emplace(账.幂等键.值, 账).second) return false;
         for (const auto& 记录 : 材料.审计记录) { if (!有效(记录.幂等键)) return false; 输出.审计[记录.幂等键.值].push_back(记录); }
-        std::uint64_t 最大 = 0; for (const auto 编码 : 输出.永久占用) 最大 = std::max(最大, 编码); 输出.下个编码 = 最大 + 1;
+        std::uint64_t 最大 = 0; for (const auto 编码 : 输出.永久占用) 最大 = std::max(最大, 编码); 输出.下个编码 = 最大 == (std::numeric_limits<std::uint64_t>::max)() ? 0 : 最大 + 1;
         return true;
+    }
+    static std::optional<L1完整快照> 构造快照(const 状态& 值) {
+        L1完整快照 快照; 快照.事实代次 = 值.事实代次;
+        for (const auto& [_, 事实] : 值.当前节点) 快照.当前节点.push_back(事实);
+        for (const auto& [_, 事实] : 值.当前关系) 快照.当前关系.push_back(事实);
+        for (const auto& [_, 事实] : 值.当前值) 快照.当前值.push_back(事实);
+        for (const auto 编码 : 值.永久占用) 快照.永久占用编码.push_back({编码});
+        排序(快照); return 快照;
     }
     template<class T> L1读取结果 读取当前(稳定编码 编码, const std::unordered_map<std::uint64_t, T>& 表) const {
         if (!有效(编码)) return {};
@@ -392,6 +505,11 @@ private:
     mutable std::shared_mutex 锁_;
     状态 状态_;
     std::optional<候选状态> 候选_;
+#ifdef _DEBUG
+    bool 下一建立前状态损坏_ = false;
+    bool 下一候选构造结果损坏_ = false;
+    bool 下一发布后读回不一致_ = false;
+#endif
 };
 
 } // namespace 海中鱼巣
