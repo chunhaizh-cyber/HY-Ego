@@ -24,7 +24,6 @@ export module 海中鱼巣.自检.系统角色初始化;
 #ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
 import 海中鱼巣.核心.执行器.结构写入;
 import 海中鱼巣.领域.数据操作.系统角色;
-import 海中鱼巣.领域.初始化.世界树;
 import 海中鱼巣.领域.初始化.语素;
 import 海中鱼巣.领域.初始化.概念图;
 import 海中鱼巣.领域.初始化.需求;
@@ -194,7 +193,6 @@ bool 身份类型匹配(
         decltype(std::declval<const 系统角色数据操作&>().预检稳定键(
             std::declval<const 系统角色初始化参数&>())),
         系统角色预检结果>);
-    static_assert(std::is_default_constructible_v<世界树初始化结果>);
     static_assert(std::is_default_constructible_v<语素初始化结果>);
     static_assert(std::is_default_constructible_v<概念图初始化结果>);
     static_assert(std::is_default_constructible_v<自我根需求初始化结果>);
