@@ -50,11 +50,38 @@ public:
           索引_(节点_, 接线_),
           业务装配_(
               接线_, 主信息_, 节点_, 关系_, 索引_, 仓库编号, 稳定动作键),
+          世界仓库门面_(主信息_, 节点_, 关系_, 索引_, 仓库编号),
           仓库编号_(仓库编号) {
     }
 
     运行期上下文(const 运行期上下文&) = delete;
     运行期上下文& operator=(const 运行期上下文&) = delete;
+
+    // 运行期世界仓库统一访问口：用于迁移到世界统一服务层时的推荐入口
+    class 世界仓库门面 {
+    public:
+        世界仓库门面(主信息仓库& 主信息, 节点仓库& 节点, 关系仓库& 关系,
+            索引仓库& 索引, std::uint64_t 仓库编号) noexcept
+            : 主信息_(主信息), 节点_(节点), 关系_(关系), 索引_(索引),
+              仓库编号_(仓库编号) {}
+
+        std::uint64_t 仓库编号() const noexcept { return 仓库编号_; }
+        主信息仓库& 读取主信息仓库() noexcept { return 主信息_; }
+        节点仓库& 读取节点仓库() noexcept { return 节点_; }
+        关系仓库& 读取关系仓库() noexcept { return 关系_; }
+        索引仓库& 读取索引仓库() noexcept { return 索引_; }
+        const 主信息仓库& 读取主信息仓库() const noexcept { return 主信息_; }
+        const 节点仓库& 读取节点仓库() const noexcept { return 节点_; }
+        const 关系仓库& 读取关系仓库() const noexcept { return 关系_; }
+        const 索引仓库& 读取索引仓库() const noexcept { return 索引_; }
+
+    private:
+        主信息仓库& 主信息_;
+        节点仓库& 节点_;
+        关系仓库& 关系_;
+        索引仓库& 索引_;
+        std::uint64_t 仓库编号_ = 0;
+    };
 
     bool 结构核心完整() const {
         if (仓库编号_ == 0 || !接线_.已接域()
@@ -165,15 +192,8 @@ public:
     }
 
     const 结构事务接线& 读取接线() const { return 接线_; }
-    主信息仓库& 读取主信息仓库() { return 主信息_; }
-    节点仓库& 读取节点仓库() { return 节点_; }
-    关系仓库& 读取关系仓库() { return 关系_; }
-    索引仓库& 读取索引仓库() { return 索引_; }
-    const 主信息仓库& 读取主信息仓库() const { return 主信息_; }
-    const 节点仓库& 读取节点仓库() const { return 节点_; }
-    const 关系仓库& 读取关系仓库() const { return 关系_; }
-    const 索引仓库& 读取索引仓库() const { return 索引_; }
-
+    世界仓库门面& 读取世界仓库() noexcept { return 世界仓库门面_; }
+    const 世界仓库门面& 读取世界仓库() const noexcept { return 世界仓库门面_; }
 private:
     结构事务协调器 协调器_;
     结构事务接线 接线_;
@@ -181,6 +201,7 @@ private:
     节点仓库 节点_;
     关系仓库 关系_;
     索引仓库 索引_;
+    世界仓库门面 世界仓库门面_;
     运行期业务装配 业务装配_;
     std::uint64_t 仓库编号_ = 0;
     mutable std::mutex 系统角色锁_;
