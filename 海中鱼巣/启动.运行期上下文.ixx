@@ -15,6 +15,8 @@ module;
 
 export module 海中鱼巣.启动.运行期上下文;
 
+export import 海中鱼巣.核心.服务.L1事实基座;
+
 import 海中鱼巣.核心.协调.结构事务;
 import 海中鱼巣.装配.运行期业务;
 import 海中鱼巣.领域.组合.运行期只读查询;
@@ -194,6 +196,8 @@ public:
     const 结构事务接线& 读取接线() const { return 接线_; }
     L1事实基座& 读取L1事实基座() noexcept { return L1事实基座_; }
     const L1事实基座& 读取L1事实基座() const noexcept { return L1事实基座_; }
+    L1事实基座服务& 读取L1事实基座服务() noexcept { return L1事实基座服务_; }
+    const L1事实基座服务& 读取L1事实基座服务() const noexcept { return L1事实基座服务_; }
 private:
     结构事务协调器 协调器_;
     结构事务接线 接线_;
@@ -202,6 +206,7 @@ private:
     关系仓库 关系_;
     索引仓库 索引_;
     L1事实基座 L1事实基座_;
+    L1事实基座服务 L1事实基座服务_;
     运行期业务装配 业务装配_;
     std::uint64_t 仓库编号_ = 0;
     mutable std::mutex 系统角色锁_;
