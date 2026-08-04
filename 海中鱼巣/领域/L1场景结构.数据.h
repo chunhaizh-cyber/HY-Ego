@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef L1场景结构数据已导入公共事实
+#include "../核心/L1公共事实.数据.h"
+#endif
+
 #include <array>
 #include <cstdint>
 #include <optional>

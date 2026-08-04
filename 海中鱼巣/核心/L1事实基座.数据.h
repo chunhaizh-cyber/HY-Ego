@@ -10,13 +10,11 @@
 #include <vector>
 #endif
 
-namespace 海中鱼巣 {
+#ifndef L1_PUBLIC_FACT_NO_INCLUDES
+#include "L1公共事实.数据.h"
+#endif
 
-struct 稳定编码 final {
-    std::uint64_t 值 = 0;
-    friend bool operator==(const 稳定编码&, const 稳定编码&) = default;
-    friend bool operator<(const 稳定编码& 左, const 稳定编码& 右) noexcept { return 左.值 < 右.值; }
-};
+namespace 海中鱼巣 {
 
 struct 写集本地键 final {
     std::uint32_t 值 = 0;
@@ -38,7 +36,6 @@ using 事实引用 = std::variant<稳定编码, 写集本地键>;
 using 原始值材料 = std::variant<std::int64_t, std::vector<std::int64_t>,
     std::vector<std::uint64_t>, 独立材料引用>;
 
-enum class 节点种类 : std::uint8_t { 普通 = 1, 属性类型 = 2 };
 enum class 值表示种类 : std::uint8_t { I64 = 1, I64组 = 2, U64组 = 3, 独立材料引用 = 4 };
 
 struct 属性槽 final {
@@ -108,6 +105,7 @@ struct 属性槽变更项 final {
     friend bool operator==(const 属性槽变更项&, const 属性槽变更项&) = default;
 };
 struct L1写集请求 final {
+    std::uint32_t 合同版本 = 1;
     std::uint64_t 期望事实代次 = 0;
     写集幂等键 幂等键;
     std::vector<节点新建项> 节点;
@@ -213,7 +211,6 @@ struct L1恢复结果 final {
     std::uint64_t 事实代次 = 0;
 };
 
-inline bool 有效(稳定编码 编码) noexcept { return 编码.值 != 0; }
 inline bool 有效(写集本地键 键) noexcept { return 键.值 != 0; }
 inline bool 有效(写集幂等键 键) noexcept { return 键.值 != 0; }
 

@@ -11,7 +11,8 @@ module;
 
 export module 海中鱼巣.领域.服务.世界登记;
 
-export import 海中鱼巣.核心.服务.L1事实基座;
+export import 海中鱼巣.核心.合同.L1公共事实;
+import 海中鱼巣.核心.服务.L1事实基座;
 
 #define 世界登记数据已导入L1
 export {
@@ -48,7 +49,7 @@ public:
                 return {世界登记状态::幂等冲突, std::nullopt};
             }
 
-            const auto 初始 = L1_.读取完整快照();
+            const auto 初始 = L1_.读取完整快照({});
             if (初始.状态 != L1读取状态::成功 || !初始.快照.has_value()) {
                 return {映射读取失败(初始.状态), std::nullopt};
             }
@@ -99,7 +100,7 @@ public:
                 return {世界登记状态::内部不一致, std::nullopt};
             }
 
-            const auto 读回 = L1_.读取完整快照();
+            const auto 读回 = L1_.读取完整快照({});
             if (读回.状态 != L1读取状态::成功 || !读回.快照.has_value()) {
                 return {读回.状态 == L1读取状态::事实代次漂移
                         ? 世界登记状态::事实代次漂移

@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef 世界登记数据已导入L1
-#include "../核心/L1事实基座.数据.h"
+#include "../核心/L1公共事实.数据.h"
 #endif
 
 #include "世界操作.数据.h"

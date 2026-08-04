@@ -18,10 +18,7 @@ module;
 #define L1_FACT_BASE_NO_INCLUDES
 
 export module 海中鱼巣.核心.仓库.L1事实基座;
-
-export {
-#include "L1事实基座.数据.h"
-}
+import 海中鱼巣.核心.合同.L1事实基座;
 
 export namespace 海中鱼巣 {
 
