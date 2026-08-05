@@ -182,6 +182,7 @@
     <ClCompile Include="海中鱼巣\领域\组合.L1实际存在场景.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.L1实际存在.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L1状态.ixx" />
+    <ClCompile Include="海中鱼巣\领域\组合.后继状态规格.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.L1状态.ixx" />
     <ClCompile Include="海中鱼巣\自检.主装配事务.ixx" />
     <ClCompile Include="海中鱼巣\自检.系统角色初始化.ixx" />

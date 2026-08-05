@@ -19,6 +19,9 @@
     <ClCompile Include="海中鱼巣\领域\服务.L1状态.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\组合.后继状态规格.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\自检.L1状态.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
