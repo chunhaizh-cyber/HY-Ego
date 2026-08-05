@@ -178,6 +178,9 @@
     <ClCompile Include="海中鱼巣\领域\自检.L1实例特征.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.特征比较.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.特征比较.ixx" />
+    <ClCompile Include="海中鱼巣\领域\服务.L1实际存在.ixx" />
+    <ClCompile Include="海中鱼巣\领域\组合.L1实际存在场景.ixx" />
+    <ClCompile Include="海中鱼巣\领域\自检.L1实际存在.ixx" />
     <ClCompile Include="海中鱼巣\自检.主装配事务.ixx" />
     <ClCompile Include="海中鱼巣\自检.系统角色初始化.ixx" />
     <ClCompile Include="海中鱼巣\核心\合同.L1公共事实.ixx" />
@@ -410,6 +413,7 @@
     <ClInclude Include="海中鱼巣\领域\L1特征定义.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L1实例特征.数据.h" />
     <ClInclude Include="海中鱼巣\领域\特征比较.数据.h" />
+    <ClInclude Include="海中鱼巣\领域\L1实际存在.数据.h" />
     <ClInclude Include="海中鱼巣\领域\因果服务.h" />
     <ClInclude Include="海中鱼巣\领域\概念图算法.h" />
     <ClInclude Include="海中鱼巣\领域\概念图服务.h" />

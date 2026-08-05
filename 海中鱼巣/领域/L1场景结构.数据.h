@@ -79,6 +79,41 @@ struct 初始场景结果 final {
     friend bool operator==(const 初始场景结果&, const 初始场景结果&) = default;
 };
 
+struct 初始场景接纳规格请求 final {
+    初始场景读取请求 场景;
+    std::uint64_t 期望事实代次 = 0;
+    friend bool operator==(const 初始场景接纳规格请求&, const 初始场景接纳规格请求&) = default;
+};
+struct 初始场景接纳规格 final {
+    std::uint64_t 事实截止代次 = 0;
+    世界结构节点身份见证 场景;
+    世界结构节点身份见证 直接成员关系类型;
+    friend bool operator==(const 初始场景接纳规格&, const 初始场景接纳规格&) = default;
+};
+struct 初始场景接纳规格结果 final {
+    世界结构状态 状态 = 世界结构状态::入口拒绝;
+    std::optional<初始场景接纳规格> 规格;
+    friend bool operator==(const 初始场景接纳规格结果&, const 初始场景接纳规格结果&) = default;
+};
+struct 初始场景接纳读取请求 final {
+    初始场景读取请求 场景;
+    稳定编码 成员;
+    稳定编码 归属关系;
+    friend bool operator==(const 初始场景接纳读取请求&, const 初始场景接纳读取请求&) = default;
+};
+struct 初始场景接纳事实 final {
+    std::uint64_t 事实截止代次 = 0;
+    世界结构节点身份见证 场景;
+    世界结构节点身份见证 成员;
+    世界结构关系身份见证 归属关系;
+    friend bool operator==(const 初始场景接纳事实&, const 初始场景接纳事实&) = default;
+};
+struct 初始场景接纳结果 final {
+    世界结构状态 状态 = 世界结构状态::入口拒绝;
+    std::optional<初始场景接纳事实> 事实;
+    friend bool operator==(const 初始场景接纳结果&, const 初始场景接纳结果&) = default;
+};
+
 inline bool 世界结构节点见证有效(const 世界结构节点身份见证& 见证) noexcept {
     return 有效(见证.编码);
 }
@@ -113,6 +148,26 @@ inline bool 初始场景事实完整(const 初始场景事实& 事实) noexcept 
         && 事实.直接父关系.角色或顺序 == 0
         && 事实.场景标记.I64值 == 1
         && 事实.场景标记.创建事实代次 == 事实.事实截止代次;
+}
+
+inline bool 初始场景接纳规格完整(const 初始场景接纳规格& 规格) noexcept {
+    return 规格.事实截止代次 != 0
+        && 世界结构节点见证有效(规格.场景)
+        && 世界结构节点见证有效(规格.直接成员关系类型)
+        && 规格.场景.类型 == 节点种类::普通
+        && 规格.直接成员关系类型.类型 == 节点种类::普通;
+}
+
+inline bool 初始场景接纳事实完整(const 初始场景接纳事实& 事实) noexcept {
+    return 事实.事实截止代次 != 0
+        && 世界结构节点见证有效(事实.场景)
+        && 世界结构节点见证有效(事实.成员)
+        && 世界结构关系见证有效(事实.归属关系)
+        && 事实.场景.类型 == 节点种类::普通
+        && 事实.成员.类型 == 节点种类::普通
+        && 事实.归属关系.源端 == 事实.场景
+        && 事实.归属关系.目标端 == 事实.成员
+        && 事实.归属关系.角色或顺序 == 0;
 }
 
 } // namespace 海中鱼巣
