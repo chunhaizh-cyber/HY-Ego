@@ -690,10 +690,10 @@ private:
                 || std::get<std::vector<std::uint64_t>>(时间->材料).front() == 0)
                 return 选择失败(I64相邻前状态选择状态::内部不一致);
             const auto 发生时间 = std::get<std::vector<std::uint64_t>>(时间->材料).front();
+            if (发生时间 >= 请求.拟发布后状态发生时间) continue;
             const auto [已有时间, 新增] = 时间状态.try_emplace(发生时间, 状态编码);
             if (!新增 && 已有时间->second != 状态编码)
                 return 选择失败(I64相邻前状态选择状态::冲突);
-            if (发生时间 >= 请求.拟发布后状态发生时间) continue;
 
             const auto* 见证节点 = 找当前节点(快照, 角色[3]->目标节点);
             if (!见证节点 || 见证节点->种类 != 节点种类::普通)
