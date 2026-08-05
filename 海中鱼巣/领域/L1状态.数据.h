@@ -153,6 +153,40 @@ struct 实际存在I64基准状态结果 final {
     std::optional<实际存在I64基准状态事实> 事实;
 };
 
+inline constexpr std::uint32_t I64相邻前状态选择规则版本 = 1;
+
+enum class I64相邻前状态选择状态 : std::uint8_t {
+    已选择 = 1, 无前状态 = 2, 入口拒绝 = 3, 未找到 = 4, 冲突 = 5,
+    版本漂移 = 6, 许可拒绝 = 7, 资源失败 = 8, 内部不一致 = 9
+};
+
+struct I64相邻前状态选择请求 final {
+    std::uint32_t 合同版本 = L1状态合同版本;
+    std::uint32_t 规则版本 = L1状态规则版本;
+    std::uint32_t 选择规则版本 = I64相邻前状态选择规则版本;
+    std::uint64_t 业务查询身份 = 0;
+    稳定编码 主体;
+    稳定编码 实例槽;
+    std::uint64_t 拟发布后状态发生时间 = 0;
+};
+
+struct I64相邻前状态选择证据 final {
+    std::uint32_t 选择规则版本 = I64相邻前状态选择规则版本;
+    std::uint64_t 业务查询身份 = 0;
+    std::uint64_t 读取事实截止代次 = 0;
+    稳定编码 主体;
+    稳定编码 实例槽;
+    std::uint64_t 拟发布后状态发生时间 = 0;
+    稳定编码 前状态;
+    std::uint64_t 前状态发生时间 = 0;
+};
+
+struct I64相邻前状态选择结果 final {
+    I64相邻前状态选择状态 状态 = I64相邻前状态选择状态::入口拒绝;
+    std::optional<实际存在I64基准状态事实> 前状态;
+    std::optional<I64相邻前状态选择证据> 选择证据;
+};
+
 inline bool 状态操作幂等身份有效(状态操作幂等身份 身份) noexcept {
     return 身份.值 != 0 && 身份.值 <= 0x00FF'FFFF'FFFF'FFFFULL;
 }
