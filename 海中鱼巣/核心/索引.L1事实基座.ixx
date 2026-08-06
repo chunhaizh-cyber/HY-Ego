@@ -28,6 +28,10 @@ public:
     L1事实可重建索引(const L1事实可重建索引&) = delete;
     L1事实可重建索引& operator=(const L1事实可重建索引&) = delete;
 
+    [[nodiscard]] L1可重建索引提供者身份 读取提供者身份() const noexcept {
+        return {};
+    }
+
     L1索引维护结果 从指定快照确定重建(const L1索引重建请求& 请求) {
         try {
             if (!重建请求有效(请求)) return {};

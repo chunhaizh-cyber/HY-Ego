@@ -12,6 +12,14 @@ namespace 海中鱼巣 {
 
 inline constexpr std::uint32_t L1场景结构合同版本 = 2;
 
+struct L1场景结构提供者身份凭证 final {
+    稳定编码 稳定身份{0x4C31534300000001ULL};
+    std::uint32_t 合同版本 = L1场景结构合同版本;
+    std::uint32_t 规则版本 = 1;
+    friend bool operator==(const L1场景结构提供者身份凭证&,
+        const L1场景结构提供者身份凭证&) = default;
+};
+
 struct 世界结构节点身份见证 final {
     稳定编码 编码;
     节点种类 类型 = 节点种类::普通;

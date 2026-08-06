@@ -10,6 +10,13 @@ namespace 海中鱼巣 {
 inline constexpr std::uint32_t L1可重建索引合同版本 = 1;
 inline constexpr std::uint32_t L1可重建索引规则版本 = 1;
 
+struct L1可重建索引提供者身份 final {
+    稳定编码 稳定身份{0x4C31495800000001ULL};
+    std::uint32_t 合同版本 = L1可重建索引合同版本;
+    std::uint32_t 规则版本 = L1可重建索引规则版本;
+    friend bool operator==(const L1可重建索引提供者身份&, const L1可重建索引提供者身份&) = default;
+};
+
 struct L1节点种类索引键 final {
     节点种类 种类 = 节点种类::普通;
     friend bool operator==(const L1节点种类索引键&, const L1节点种类索引键&) = default;
