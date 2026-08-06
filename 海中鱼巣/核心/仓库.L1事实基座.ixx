@@ -1,6 +1,7 @@
 module;
 
 #include <algorithm>
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -294,15 +295,53 @@ public:
         if (it == 状态_.审计.end()) return {L1读取状态::未找到, 幂等键, {}};
         return {L1读取状态::成功, 幂等键, it->second};
     }
+    // 诊断责任：向上送出；结构化状态由最终调用责任边界处理。
     L1完整快照结果 读取完整快照() const {
-        std::shared_lock<std::shared_mutex> 锁(锁_);
-        if (状态_.隔离) return {L1读取状态::内部不一致, std::nullopt};
-        L1完整快照 快照; 快照.事实代次 = 状态_.事实代次;
-        for (const auto& [_, 事实] : 状态_.当前节点) 快照.当前节点.push_back(事实);
-        for (const auto& [_, 事实] : 状态_.当前关系) 快照.当前关系.push_back(事实);
-        for (const auto& [_, 事实] : 状态_.当前值) 快照.当前值.push_back(事实);
-        for (const auto 编码 : 状态_.永久占用) 快照.永久占用编码.push_back({编码});
-        排序(快照); return {L1读取状态::成功, std::move(快照)};
+        try {
+            std::shared_lock<std::shared_mutex> 锁(锁_);
+            if (状态_.隔离 || !状态完整(状态_))
+                return {L1读取状态::内部不一致, std::nullopt};
+            const auto 快照 = 构造快照(状态_);
+            if (!快照) return {L1读取状态::内部不一致, std::nullopt};
+            return {L1读取状态::成功, std::move(*快照)};
+        } catch (const std::bad_alloc&) {
+            return {L1读取状态::资源失败, std::nullopt};
+        } catch (...) {
+            return {L1读取状态::内部不一致, std::nullopt};
+        }
+    }
+    // 诊断责任：向上送出；竞争、资源失败和内部不一致均由结构化状态携带。
+    L1完整快照结果 尝试读取完整快照() const {
+        try {
+            std::shared_lock<std::shared_mutex> 锁(锁_, std::try_to_lock);
+            if (!锁.owns_lock()) return {L1读取状态::许可拒绝, std::nullopt};
+            if (状态_.隔离 || !状态完整(状态_))
+                return {L1读取状态::内部不一致, std::nullopt};
+#ifdef _DEBUG
+            if (下一非阻塞快照资源失败_.exchange(false)) throw std::bad_alloc{};
+            if (下一非阻塞快照内部异常_.exchange(false)) throw 1;
+#endif
+            const auto 快照 = 构造快照(状态_);
+            if (!快照) return {L1读取状态::内部不一致, std::nullopt};
+            return {L1读取状态::成功, std::move(*快照)};
+        } catch (const std::bad_alloc&) {
+            return {L1读取状态::资源失败, std::nullopt};
+        } catch (...) {
+            return {L1读取状态::内部不一致, std::nullopt};
+        }
+    }
+    // 诊断责任：向上送出；只复制同一共享许可内的权威事实代次。
+    L1事实代次读取结果 尝试读取当前事实代次() const {
+        try {
+            std::shared_lock<std::shared_mutex> 锁(锁_, std::try_to_lock);
+            if (!锁.owns_lock()) return {L1读取状态::许可拒绝, 0};
+            if (状态_.隔离 || !状态完整(状态_))
+                return {L1读取状态::内部不一致, 0};
+            if (状态_.事实代次 == 0) return {L1读取状态::未找到, 0};
+            return {L1读取状态::成功, 状态_.事实代次};
+        } catch (...) {
+            return {L1读取状态::内部不一致, 0};
+        }
     }
     L1恢复材料导出结果 导出恢复材料() const {
         try {
@@ -435,6 +474,22 @@ public:
     }
 
 #ifdef _DEBUG
+    // 诊断责任：无适用错误分支；仅为本模块并发自检稳定占用既有锁。
+    void 自检_持有独占许可(std::atomic<bool>& 已持有,
+        const std::atomic<bool>& 释放) noexcept {
+        std::unique_lock<std::shared_mutex> 锁(锁_);
+        已持有.store(true, std::memory_order_release);
+        已持有.notify_one();
+        while (!释放.load(std::memory_order_acquire)) 释放.wait(false, std::memory_order_acquire);
+    }
+    // 诊断责任：无适用错误分支；只设置一次性Debug故障注入标志。
+    void 自检_使下一次非阻塞快照资源失败() noexcept {
+        下一非阻塞快照资源失败_.store(true, std::memory_order_release);
+    }
+    // 诊断责任：无适用错误分支；只设置一次性Debug故障注入标志。
+    void 自检_使下一次非阻塞快照内部异常() noexcept {
+        下一非阻塞快照内部异常_.store(true, std::memory_order_release);
+    }
     void 自检_使下一次提交后权威读回不一致() noexcept { 下一提交后读回不一致_ = true; }
     void 自检_破坏当前状态用于恢复导出() noexcept {
         std::unique_lock<std::shared_mutex> 锁(锁_); 状态_.下个编码 = 0;
@@ -796,6 +851,8 @@ private:
     状态 状态_;
     std::optional<候选状态> 候选_;
 #ifdef _DEBUG
+    mutable std::atomic<bool> 下一非阻塞快照资源失败_ = false;
+    mutable std::atomic<bool> 下一非阻塞快照内部异常_ = false;
     bool 下一建立前状态损坏_ = false;
     bool 下一候选构造结果损坏_ = false;
     bool 下一发布后读回不一致_ = false;

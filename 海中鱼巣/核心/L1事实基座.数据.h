@@ -370,7 +370,8 @@ struct L1写入结果 final {
 
 enum class L1读取状态 : std::uint8_t {
     成功 = 1, 入口拒绝 = 2, 未找到 = 3, 已退出 = 4,
-    属性未设置 = 5, 事实代次漂移 = 6, 资源失败 = 7, 内部不一致 = 8
+    属性未设置 = 5, 事实代次漂移 = 6, 资源失败 = 7, 内部不一致 = 8,
+    许可拒绝 = 9
 };
 using L1事实副本 = std::variant<节点事实, 关系事实, 值事实>;
 struct L1读取结果 final {
@@ -432,6 +433,13 @@ struct L1完整快照 final {
 struct L1完整快照结果 final {
     L1读取状态 状态 = L1读取状态::入口拒绝;
     std::optional<L1完整快照> 快照;
+};
+struct L1事实代次读取结果 final {
+    L1读取状态 状态 = L1读取状态::入口拒绝;
+    std::uint64_t 事实截止代次 = 0;
+    // 诊断责任：无适用错误分支；默认比较只比较纯值结果。
+    friend bool operator==(const L1事实代次读取结果&,
+        const L1事实代次读取结果&) = default;
 };
 struct L1幂等账记录 final {
     写集幂等键 幂等键;

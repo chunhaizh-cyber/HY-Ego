@@ -84,6 +84,12 @@ struct L1审计读取请求 final {
 struct L1完整快照读取请求 final {
     std::uint32_t 合同版本 = L1事实基座合同版本;
 };
+struct L1事实代次读取请求 final {
+    std::uint32_t 合同版本 = L1事实基座合同版本;
+    // 诊断责任：无适用错误分支；默认比较只比较纯值请求。
+    friend bool operator==(const L1事实代次读取请求&,
+        const L1事实代次读取请求&) = default;
+};
 struct L1恢复材料导出请求 final {
     std::uint32_t 合同版本 = L1事实基座合同版本;
 };
