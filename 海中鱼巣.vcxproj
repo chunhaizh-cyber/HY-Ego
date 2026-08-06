@@ -188,6 +188,8 @@
     <ClCompile Include="海中鱼巣\领域\自检.L1动态.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.状态动态原子发布.ixx" />
     <ClCompile Include="海中鱼巣\领域\自检.状态动态原子发布.ixx" />
+    <ClCompile Include="海中鱼巣\领域\服务.L1方法登记根当前读取.ixx" />
+    <ClCompile Include="海中鱼巣\领域\自检.L1方法登记根当前读取.ixx" />
     <ClCompile Include="海中鱼巣\自检.主装配事务.ixx" />
     <ClCompile Include="海中鱼巣\自检.系统角色初始化.ixx" />
     <ClCompile Include="海中鱼巣\核心\合同.L1公共事实.ixx" />
@@ -396,6 +398,7 @@
     <ClInclude Include="海中鱼巣\领域\世界登记.数据.h" />
     <ClInclude Include="海中鱼巣\领域\世界操作.数据.h" />
     <ClInclude Include="海中鱼巣\领域\世界树事实.数据.h" />
+    <ClInclude Include="海中鱼巣\领域\L1方法登记根当前读取.数据.h" />
     <ClInclude Include="海中鱼巣\核心\日志系统.h" />
     <ClInclude Include="海中鱼巣\核心\事件日志段服务.h" />
     <ClInclude Include="海中鱼巣\核心\容错检查.h" />
