@@ -11,6 +11,8 @@ inline constexpr std::uint32_t L1动态合同版本 = 1;
 inline constexpr std::uint32_t L1动态规则版本 = 1;
 inline constexpr std::uint32_t 状态迁移动能规格版本 = 1;
 inline constexpr std::uint32_t 状态迁移动能比较证据版本 = 1;
+inline constexpr std::uint32_t 状态迁移动能规格提供者证据合同版本 = 1;
+inline constexpr std::uint32_t 状态迁移动能规格提供者证据规则版本 = 1;
 inline constexpr std::uint64_t L1动态登记幂等域 = 0x0FULL;
 inline constexpr std::uint32_t L1动态登记操作标签 = 0x15000F01U;
 inline constexpr std::uint8_t L1动态登记意图组 = 7;
@@ -90,10 +92,52 @@ struct 状态迁移动能写入规格 final {
         const 状态迁移动能写入规格&) = default;
 };
 
+struct 状态迁移动能规格提供者身份凭证 final {
+    稳定编码 稳定身份{0x4C31445000000001ULL};
+    std::uint32_t 合同版本 = 状态迁移动能规格提供者证据合同版本;
+    std::uint32_t 规则版本 = 状态迁移动能规格提供者证据规则版本;
+    friend bool operator==(const 状态迁移动能规格提供者身份凭证&,
+        const 状态迁移动能规格提供者身份凭证&) = default;
+};
+
+enum class 状态迁移动能规格写前事实种类 : std::uint8_t {
+    节点 = 1, 关系 = 2, 值 = 3
+};
+
+enum class 状态迁移动能规格写前事实副本来源 : std::uint8_t {
+    动态登记当前事实 = 1,
+    P13传递当前事实 = 2,
+    P13传递历史事实 = 3
+};
+
+struct 状态迁移动能规格写前事实身份 final {
+    状态迁移动能规格写前事实种类 种类 = 状态迁移动能规格写前事实种类::节点;
+    稳定编码 身份;
+    std::uint64_t 观察事实代次 = 0;
+    状态迁移动能规格写前事实副本来源 副本来源 =
+        状态迁移动能规格写前事实副本来源::动态登记当前事实;
+    friend bool operator==(const 状态迁移动能规格写前事实身份&,
+        const 状态迁移动能规格写前事实身份&) = default;
+};
+
+struct 状态迁移动能规格提供者证据凭证 final {
+    std::uint32_t 合同版本 = 状态迁移动能规格提供者证据合同版本;
+    std::uint32_t 规则版本 = 状态迁移动能规格提供者证据规则版本;
+    状态迁移动能规格提供者身份凭证 直接提供者;
+    std::uint32_t 直接调用次数 = 1;
+    std::uint32_t 去重后提供者见证数量 = 1;
+    std::uint64_t 共同事实截止代次 = 0;
+    L1动态结构登记 动态登记;
+    std::vector<状态迁移动能规格写前事实身份> 写前事实身份组;
+    std::vector<L1事实副本> 写前事实副本组;
+    std::uint32_t 去重后写前事实见证数量 = 0;
+};
+
 struct 状态迁移动能规格结果 final {
     L1动态状态 状态 = L1动态状态::入口拒绝;
     状态迁移动能规格原因 原因 = 状态迁移动能规格原因::无;
     std::optional<状态迁移动能写入规格> 规格;
+    std::optional<状态迁移动能规格提供者证据凭证> 提供者证据;
 };
 
 struct 状态迁移动能读取请求 final {
