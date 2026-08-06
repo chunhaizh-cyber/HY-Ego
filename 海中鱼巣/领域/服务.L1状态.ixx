@@ -694,7 +694,8 @@ public:
             L1状态内部::散列加入(摘要, 材料.迁移具名关系数值);
             L1状态内部::散列加入(摘要, static_cast<std::uint64_t>(材料.差异));
             规格.确定性摘要 = 摘要 == 0 ? 1 : 摘要;
-            return {I64后继状态规格形成状态::已形成, std::move(规格)};
+            return {I64后继状态规格形成状态::已形成,
+                std::move(规格), *登记_};
         } catch (const std::bad_alloc&) {
             return {I64后继状态规格形成状态::资源失败, std::nullopt};
         } catch (...) {

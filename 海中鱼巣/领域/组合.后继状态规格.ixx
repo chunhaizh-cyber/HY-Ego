@@ -1,9 +1,13 @@
 module;
 
+#include <algorithm>
 #include <cstdint>
 #include <new>
 #include <optional>
+#include <type_traits>
 #include <utility>
+#include <variant>
+#include <vector>
 
 export module 海中鱼巣.领域.组合.后继状态规格;
 
@@ -11,6 +15,56 @@ export import 海中鱼巣.领域.服务.特征比较;
 import 海中鱼巣.核心.服务.L1事实基座;
 
 export namespace 海中鱼巣 {
+
+inline constexpr std::uint32_t 后继状态规格提供者证据合同版本 = 1;
+inline constexpr std::uint32_t 后继状态规格提供者证据规则版本 = 1;
+
+struct 后继状态规格提供者身份凭证 final {
+    稳定编码 稳定身份{0x4C31535000000001ULL};
+    std::uint32_t 合同版本 = 后继状态规格提供者证据合同版本;
+    std::uint32_t 规则版本 = 后继状态规格提供者证据规则版本;
+    friend bool operator==(const 后继状态规格提供者身份凭证&,
+        const 后继状态规格提供者身份凭证&) = default;
+};
+
+inline 后继状态规格提供者身份凭证 读取后继状态规格提供者身份() noexcept {
+    return {};
+}
+
+enum class 后继状态规格写前事实种类 : std::uint8_t {
+    节点 = 1, 关系 = 2, 值 = 3
+};
+
+enum class 后继状态规格写前事实副本来源 : std::uint8_t {
+    最终G1当前事实 = 1, P12前状态历史事实 = 2
+};
+
+struct 后继状态规格写前事实身份 final {
+    后继状态规格写前事实种类 种类 = 后继状态规格写前事实种类::节点;
+    稳定编码 身份;
+    std::uint64_t 观察事实代次 = 0;
+    后继状态规格写前事实副本来源 副本来源 =
+        后继状态规格写前事实副本来源::最终G1当前事实;
+    friend bool operator==(const 后继状态规格写前事实身份&,
+        const 后继状态规格写前事实身份&) = default;
+};
+
+struct 后继状态规格提供者证据凭证 final {
+    std::uint32_t 合同版本 = 后继状态规格提供者证据合同版本;
+    std::uint32_t 规则版本 = 后继状态规格提供者证据规则版本;
+    后继状态规格提供者身份凭证 直接提供者;
+    std::uint32_t 直接调用次数 = 1;
+    std::uint32_t 去重后提供者见证数量 = 1;
+    std::uint64_t 共同事实截止代次 = 0;
+    L1状态结构登记 状态登记;
+    I64状态迁移后当前见证 后当前;
+    实际存在I64基准状态事实 前状态;
+    I64相邻前状态选择证据 前态选择;
+    特征比较结果 比较;
+    std::vector<后继状态规格写前事实身份> 写前事实身份组;
+    std::vector<L1事实副本> 写前事实副本组;
+    std::uint32_t 去重后写前事实见证数量 = 0;
+};
 
 struct 实际存在I64后继状态规格请求 final {
     std::uint32_t 合同版本 = L1状态合同版本;
@@ -39,12 +93,13 @@ struct 实际存在I64后继状态规格结果 final {
     I64后继状态规格状态 状态 = I64后继状态规格状态::入口拒绝;
     std::optional<实际存在I64后继状态写入规格> 状态规格;
     std::optional<后继状态迁移纯值证据> 迁移证据;
+    std::optional<后继状态规格提供者证据凭证> 提供者证据;
 };
 
 namespace 后继状态规格内部 {
 
 实际存在I64后继状态规格结果 失败(I64后继状态规格状态 状态) noexcept {
-    return {状态, std::nullopt, std::nullopt};
+    return {状态, std::nullopt, std::nullopt, std::nullopt};
 }
 
 I64后继状态规格状态 映射L1状态(L1读取状态 状态) noexcept {
@@ -121,6 +176,273 @@ bool 比较成功完整(const I64状态迁移比较结果& 结果) noexcept {
             && 关系 == 特征比较具名关系::状态迁移增加)
         || (!*结果.等价 && 排序 == 1 && 差异 < 0
             && 关系 == 特征比较具名关系::状态迁移减少);
+}
+
+bool 匹配见证(const 节点事实& 事实, const 状态节点见证& 见证) noexcept {
+    return 事实.编码 == 见证.编码 && 事实.创建事实代次 == 见证.创建事实代次
+        && 事实.退出事实代次 == 见证.退出事实代次;
+}
+
+bool 匹配见证(const 关系事实& 事实, const 状态关系见证& 见证) noexcept {
+    return 事实.编码 == 见证.编码 && 事实.源节点 == 见证.源
+        && 事实.目标节点 == 见证.目标 && 事实.关系类型节点 == 见证.关系类型
+        && 事实.角色或顺序 == 见证.顺序号
+        && 事实.创建事实代次 == 见证.创建事实代次
+        && 事实.退出事实代次 == 见证.退出事实代次;
+}
+
+bool 匹配见证(const 值事实& 事实, const 状态I64事实见证& 见证) noexcept {
+    const auto* 材料 = std::get_if<std::int64_t>(&事实.材料);
+    return 材料 && 事实.编码 == 见证.编码 && 事实.所属节点 == 见证.所属节点
+        && 事实.属性类型节点 == 见证.属性类型 && *材料 == 见证.材料
+        && 事实.来源节点 == 见证.来源节点
+        && 事实.创建事实代次 == 见证.创建事实代次
+        && 事实.退出事实代次 == 见证.退出事实代次;
+}
+
+bool 匹配见证(const 值事实& 事实, const 状态U64组事实见证& 见证) noexcept {
+    const auto* 材料 = std::get_if<std::vector<std::uint64_t>>(&事实.材料);
+    return 材料 && 事实.编码 == 见证.编码 && 事实.所属节点 == 见证.所属节点
+        && 事实.属性类型节点 == 见证.属性类型 && *材料 == 见证.材料
+        && 事实.来源节点 == 见证.来源节点
+        && 事实.创建事实代次 == 见证.创建事实代次
+        && 事实.退出事实代次 == 见证.退出事实代次;
+}
+
+const 状态节点见证* 找P12节点见证(
+    const 实际存在I64基准状态事实& 前, 稳定编码 身份) noexcept {
+    const 状态节点见证* 组[] = {&前.状态, &前.场景, &前.主体,
+        &前.特征, &前.特征值, &前.来源存在};
+    const 状态节点见证* 结果 = nullptr;
+    for (const auto* 见证 : 组) if (见证->编码 == 身份) {
+        if (结果) return nullptr;
+        结果 = 见证;
+    }
+    return 结果;
+}
+
+const 状态关系见证* 找P12关系见证(
+    const 实际存在I64基准状态事实& 前, 稳定编码 身份) noexcept {
+    const 状态关系见证* 组[] = {&前.主体关系, &前.场景关系, &前.特征关系,
+        &前.值关系, &前.来源存在关系};
+    const 状态关系见证* 结果 = nullptr;
+    for (const auto* 见证 : 组) if (见证->编码 == 身份) {
+        if (结果) return nullptr;
+        结果 = 见证;
+    }
+    return 结果;
+}
+
+bool P12值见证匹配(const 值事实& 事实,
+    const 实际存在I64基准状态事实& 前, bool 要求退出) noexcept {
+    const 状态I64事实见证* I64组[] = {&前.状态资格, &前.特征值见证资格,
+        &前.采样I64值, &前.被采样P8值};
+    const 状态U64组事实见证* U64组[] = {&前.发生时间, &前.被采样P8值引用};
+    bool 命中 = false;
+    for (const auto* 见证 : I64组) if (见证->编码 == 事实.编码) {
+        if (命中 || (要求退出 && (!见证->退出事实代次
+            || *见证->退出事实代次 > 前.读取事实截止代次))) return false;
+        命中 = 匹配见证(事实, *见证);
+    }
+    for (const auto* 见证 : U64组) if (见证->编码 == 事实.编码) {
+        if (命中 || (要求退出 && (!见证->退出事实代次
+            || *见证->退出事实代次 > 前.读取事实截止代次))) return false;
+        命中 = 匹配见证(事实, *见证);
+    }
+    return 命中;
+}
+
+bool P12当前副本匹配(const L1事实副本& 副本,
+    const 实际存在I64基准状态事实& 前) noexcept {
+    return std::visit([&](const auto& 事实) {
+        using T = std::decay_t<decltype(事实)>;
+        if constexpr (std::is_same_v<T, 节点事实>) {
+            const auto* 见证 = 找P12节点见证(前, 事实.编码);
+            return !见证 || (!见证->退出事实代次 && 匹配见证(事实, *见证));
+        } else if constexpr (std::is_same_v<T, 关系事实>) {
+            const auto* 见证 = 找P12关系见证(前, 事实.编码);
+            return !见证 || (!见证->退出事实代次 && 匹配见证(事实, *见证));
+        } else {
+            const bool 列出 = P12值见证匹配(事实, 前, false);
+            const bool 退出 = [&] {
+                const 状态I64事实见证* I64组[] = {&前.状态资格, &前.特征值见证资格,
+                    &前.采样I64值, &前.被采样P8值};
+                const 状态U64组事实见证* U64组[] = {&前.发生时间, &前.被采样P8值引用};
+                for (const auto* 见证 : I64组) if (见证->编码 == 事实.编码)
+                    return 见证->退出事实代次.has_value();
+                for (const auto* 见证 : U64组) if (见证->编码 == 事实.编码)
+                    return 见证->退出事实代次.has_value();
+                return false;
+            }();
+            return !退出 && (列出 || [&] {
+                const 状态I64事实见证* I64组[] = {&前.状态资格, &前.特征值见证资格,
+                    &前.采样I64值, &前.被采样P8值};
+                const 状态U64组事实见证* U64组[] = {&前.发生时间, &前.被采样P8值引用};
+                for (const auto* 见证 : I64组) if (见证->编码 == 事实.编码) return false;
+                for (const auto* 见证 : U64组) if (见证->编码 == 事实.编码) return false;
+                return true;
+            }());
+        }
+    }, 副本);
+}
+
+bool P12历史副本匹配(const L1事实副本& 副本,
+    const 实际存在I64基准状态事实& 前) noexcept {
+    return std::visit([&](const auto& 事实) {
+        using T = std::decay_t<decltype(事实)>;
+        if constexpr (std::is_same_v<T, 节点事实>) {
+            const auto* 见证 = 找P12节点见证(前, 事实.编码);
+            return 见证 && 见证->退出事实代次
+                && *见证->退出事实代次 <= 前.读取事实截止代次
+                && 匹配见证(事实, *见证);
+        } else if constexpr (std::is_same_v<T, 关系事实>) {
+            const auto* 见证 = 找P12关系见证(前, 事实.编码);
+            return 见证 && 见证->退出事实代次
+                && *见证->退出事实代次 <= 前.读取事实截止代次
+                && 匹配见证(事实, *见证);
+        } else return P12值见证匹配(事实, 前, true);
+    }, 副本);
+}
+
+template<class T>
+const T* 找唯一当前(const std::vector<T>& 组, 稳定编码 身份) noexcept {
+    const T* 结果 = nullptr;
+    for (const auto& 事实 : 组) if (事实.编码 == 身份) {
+        if (结果) return nullptr;
+        结果 = &事实;
+    }
+    return 结果;
+}
+
+std::size_t 当前同编码数量(const L1完整快照& 快照, 稳定编码 身份) noexcept {
+    std::size_t 数量 = 0;
+    for (const auto& 事实 : 快照.当前节点) if (事实.编码 == 身份) ++数量;
+    for (const auto& 事实 : 快照.当前关系) if (事实.编码 == 身份) ++数量;
+    for (const auto& 事实 : 快照.当前值) if (事实.编码 == 身份) ++数量;
+    return 数量;
+}
+
+bool 包含节点身份(const std::vector<后继状态规格写前事实身份>& 组,
+    稳定编码 身份) noexcept {
+    return std::any_of(组.begin(), 组.end(), [&](const auto& 项) {
+        return 项.种类 == 后继状态规格写前事实种类::节点 && 项.身份 == 身份;
+    });
+}
+
+bool 写集非本地引用已覆盖(const L1写集请求& 写集,
+    const std::vector<后继状态规格写前事实身份>& 组) noexcept {
+    const auto 覆盖 = [&](const 事实引用& 引用) {
+        const auto* 编码 = std::get_if<稳定编码>(&引用);
+        return !编码 || 包含节点身份(组, *编码);
+    };
+    for (const auto& 项 : 写集.关系)
+        if (!覆盖(项.源节点) || !覆盖(项.目标节点) || !覆盖(项.关系类型节点)) return false;
+    for (const auto& 项 : 写集.值)
+        if (!覆盖(项.所属节点) || !覆盖(项.属性类型节点) || !覆盖(项.来源节点)) return false;
+    for (const auto& 项 : 写集.属性槽变更)
+        if (!覆盖(项.所属节点) || !覆盖(项.属性类型节点)) return false;
+    return true;
+}
+
+std::optional<后继状态规格提供者证据凭证> 形成提供者证据(
+    L1事实基座服务& L1, const L1完整快照& G1,
+    const L1状态结构登记& 登记, const I64状态迁移完整输入见证& 输入,
+    const I64相邻前状态选择证据& 选择, const 特征比较结果& 比较,
+    const 实际存在I64后继状态写入规格& 规格) {
+    后继状态规格提供者证据凭证 凭证;
+    凭证.共同事实截止代次 = G1.事实代次;
+    凭证.状态登记 = 登记;
+    凭证.后当前 = 输入.后当前;
+    凭证.前状态 = 输入.前状态;
+    凭证.前态选择 = 选择;
+    凭证.比较 = 比较;
+    auto 加入 = [&](后继状态规格写前事实种类 种类, 稳定编码 身份) {
+        if (!有效(身份)) return false;
+        凭证.写前事实身份组.push_back({种类, 身份, G1.事实代次,
+            后继状态规格写前事实副本来源::最终G1当前事实});
+        return true;
+    };
+    const 稳定编码 登记节点[] = {登记.服务身份, 登记.关系19状态组成关系类型,
+        登记.状态节点资格属性类型, 登记.状态发生时间属性类型,
+        登记.状态特征值见证资格属性类型, 登记.被采样P8值引用属性类型,
+        登记.状态采样I64值属性类型};
+    for (const auto 身份 : 登记节点) if (!加入(后继状态规格写前事实种类::节点, 身份)) return std::nullopt;
+    const auto& 后 = 输入.后当前;
+    const 稳定编码 后节点[] = {后.主体, 后.当前场景, 后.实例槽, 后.特征定义,
+        后.当前值.属性类型, 后.当前值.来源节点, 比较.实际单位,
+        比较.实际维度, 比较.实际分量角色, 比较.注册身份,
+        比较.左输入回执->来源节点, 比较.右输入回执->来源节点};
+    for (const auto 身份 : 后节点) if (!加入(后继状态规格写前事实种类::节点, 身份)) return std::nullopt;
+    const 稳定编码 后关系[] = {后.当前场景归属关系, 后.宿主关系, 后.定义关系};
+    for (const auto 身份 : 后关系) if (!加入(后继状态规格写前事实种类::关系, 身份)) return std::nullopt;
+    if (!加入(后继状态规格写前事实种类::值, 后.当前值.编码)
+        || !加入(后继状态规格写前事实种类::值, 比较.左输入回执->事实身份)
+        || !加入(后继状态规格写前事实种类::值, 比较.右输入回执->事实身份)) return std::nullopt;
+    const auto& 前 = 输入.前状态;
+    const 稳定编码 前节点[] = {前.状态.编码, 前.场景.编码, 前.主体.编码,
+        前.特征.编码, 前.特征值.编码, 前.来源存在.编码};
+    for (const auto 身份 : 前节点) if (!加入(后继状态规格写前事实种类::节点, 身份)) return std::nullopt;
+    const 稳定编码 前关系[] = {前.主体关系.编码, 前.场景关系.编码,
+        前.特征关系.编码, 前.值关系.编码, 前.来源存在关系.编码};
+    for (const auto 身份 : 前关系) if (!加入(后继状态规格写前事实种类::关系, 身份)) return std::nullopt;
+    const 稳定编码 前值[] = {前.状态资格.编码, 前.发生时间.编码,
+        前.特征值见证资格.编码, 前.被采样P8值引用.编码,
+        前.采样I64值.编码, 前.被采样P8值.编码};
+    for (const auto 身份 : 前值) if (!加入(后继状态规格写前事实种类::值, 身份)) return std::nullopt;
+    if (选择.主体 != 后.主体 || 选择.实例槽 != 后.实例槽
+        || 选择.前状态 != 前.状态.编码 || 选择.读取事实截止代次 != G1.事实代次
+        || 比较.事实截止代次 != G1.事实代次) return std::nullopt;
+    std::sort(凭证.写前事实身份组.begin(), 凭证.写前事实身份组.end(),
+        [](const auto& 左, const auto& 右) {
+            const auto 左种类 = static_cast<std::uint8_t>(左.种类);
+            const auto 右种类 = static_cast<std::uint8_t>(右.种类);
+            return 左种类 != 右种类 ? 左种类 < 右种类 : 左.身份 < 右.身份;
+        });
+    for (std::size_t i = 1; i < 凭证.写前事实身份组.size(); ++i) {
+        const auto& 前项 = 凭证.写前事实身份组[i - 1];
+        const auto& 当前 = 凭证.写前事实身份组[i];
+        if (前项.身份 == 当前.身份 && 前项.种类 != 当前.种类) return std::nullopt;
+    }
+    凭证.写前事实身份组.erase(std::unique(凭证.写前事实身份组.begin(),
+        凭证.写前事实身份组.end(), [](const auto& 左, const auto& 右) {
+            return 左.种类 == 右.种类 && 左.身份 == 右.身份;
+        }), 凭证.写前事实身份组.end());
+    if (凭证.写前事实身份组.empty()
+        || !写集非本地引用已覆盖(规格.写集, 凭证.写前事实身份组)) return std::nullopt;
+    for (auto& 身份 : 凭证.写前事实身份组) {
+        if (当前同编码数量(G1, 身份.身份) > 1) return std::nullopt;
+        std::optional<L1事实副本> 副本;
+        if (身份.种类 == 后继状态规格写前事实种类::节点) {
+            if (const auto* 事实 = 找唯一当前(G1.当前节点, 身份.身份)) 副本 = *事实;
+        } else if (身份.种类 == 后继状态规格写前事实种类::关系) {
+            if (const auto* 事实 = 找唯一当前(G1.当前关系, 身份.身份)) 副本 = *事实;
+        } else if (const auto* 事实 = 找唯一当前(G1.当前值, 身份.身份)) 副本 = *事实;
+        if (副本) {
+            if (!P12当前副本匹配(*副本, 前)) return std::nullopt;
+        } else {
+            const auto 历史 = L1.读取历史事实({L1事实基座合同版本, 身份.身份});
+            if (历史.状态 != L1读取状态::成功 || !历史.历史
+                || 历史.历史->查询编码 != 身份.身份 || 历史.历史->当前有效
+                || !P12历史副本匹配(历史.历史->事实, 前)) return std::nullopt;
+            副本 = 历史.历史->事实;
+            身份.副本来源 = 后继状态规格写前事实副本来源::P12前状态历史事实;
+        }
+        const bool 种类匹配 = std::visit([&](const auto& 事实) {
+            using T = std::decay_t<decltype(事实)>;
+            if constexpr (std::is_same_v<T, 节点事实>)
+                return 身份.种类 == 后继状态规格写前事实种类::节点;
+            if constexpr (std::is_same_v<T, 关系事实>)
+                return 身份.种类 == 后继状态规格写前事实种类::关系;
+            return 身份.种类 == 后继状态规格写前事实种类::值;
+        }, *副本);
+        if (!种类匹配) return std::nullopt;
+        凭证.写前事实副本组.push_back(std::move(*副本));
+    }
+    凭证.去重后写前事实见证数量 =
+        static_cast<std::uint32_t>(凭证.写前事实身份组.size());
+    if (凭证.写前事实身份组.size() != 凭证.写前事实副本组.size()
+        || 凭证.去重后写前事实见证数量 == 0) return std::nullopt;
+    return 凭证;
 }
 
 } // namespace 后继状态规格内部
@@ -248,7 +570,8 @@ bool 比较成功完整(const I64状态迁移比较结果& 结果) noexcept {
             材料.等价 = *比较结果.等价;
             材料.差异 = 比较结果.比较.差异材料->值;
             const auto 形成 = 状态.形成已校准实际存在I64后继状态规格(材料);
-            if (形成.状态 != I64后继状态规格形成状态::已形成 || !形成.规格) {
+            if (形成.状态 != I64后继状态规格形成状态::已形成
+                || !形成.规格 || !形成.状态登记证据) {
                 switch (形成.状态) {
                 case I64后继状态规格形成状态::入口拒绝:
                     return 失败(I64后继状态规格状态::入口拒绝);
@@ -260,10 +583,33 @@ bool 比较成功完整(const I64状态迁移比较结果& 结果) noexcept {
                     return 失败(I64后继状态规格状态::内部不一致);
                 }
             }
+            auto 提供者证据 = 形成提供者证据(L1, *G1.快照,
+                *形成.状态登记证据, 输入, *P12.选择证据,
+                比较结果.比较, *形成.规格);
+            const auto G2 = L1.读取完整快照({});
+            if (G2.状态 != L1读取状态::成功 || !G2.快照)
+                return 失败(映射L1状态(G2.状态));
+            if (G2.快照->事实代次 != G) {
+                if (尝试 == 0) continue;
+                return 失败(I64后继状态规格状态::版本漂移);
+            }
+            if (!提供者证据
+                || 提供者证据->直接提供者 != 读取后继状态规格提供者身份()
+                || 提供者证据->直接调用次数 != 1
+                || 提供者证据->去重后提供者见证数量 != 1
+                || 提供者证据->共同事实截止代次 != G
+                || 形成.规格->事实截止代次 != G
+                || 形成.规格->写集.期望事实代次 != G
+                || 提供者证据->写前事实身份组.size()
+                    != 提供者证据->写前事实副本组.size()
+                || 提供者证据->去重后写前事实见证数量
+                    != 提供者证据->写前事实身份组.size()
+                || 提供者证据->去重后写前事实见证数量 == 0)
+                return 失败(I64后继状态规格状态::内部不一致);
             后继状态迁移纯值证据 证据{*P12.选择证据,
                 比较结果.比较, *比较结果.等价, 输入};
             return {I64后继状态规格状态::已形成,
-                std::move(形成.规格), std::move(证据)};
+                std::move(形成.规格), std::move(证据), std::move(提供者证据)};
         }
         return 失败(I64后继状态规格状态::版本漂移);
     } catch (const std::bad_alloc&) {

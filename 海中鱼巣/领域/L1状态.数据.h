@@ -250,6 +250,7 @@ struct 实际存在I64后继状态写入规格 final {
 struct 实际存在I64后继状态规格形成结果 final {
     I64后继状态规格形成状态 状态 = I64后继状态规格形成状态::入口拒绝;
     std::optional<实际存在I64后继状态写入规格> 规格;
+    std::optional<L1状态结构登记> 状态登记证据;
 };
 
 inline bool 状态操作幂等身份有效(状态操作幂等身份 身份) noexcept {
