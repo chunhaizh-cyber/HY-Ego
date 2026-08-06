@@ -581,6 +581,7 @@ public:
         catch (...) { return {L1基准状态状态::内部不一致, std::nullopt}; }
     }
 
+    // PRE1-诊断责任：向上送出；结构化形成状态由P13公开组合边界继续传播。
     实际存在I64后继状态规格形成结果 形成已校准实际存在I64后继状态规格(
         const 已校准实际存在I64后继状态材料& 材料) const {
         std::lock_guard<std::recursive_mutex> 锁(锁_);

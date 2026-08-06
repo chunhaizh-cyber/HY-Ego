@@ -1,10 +1,13 @@
 module;
 
+#include "../核心/日志系统.h"
+
 #include <algorithm>
 #include <array>
 #include <atomic>
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <thread>
 #include <type_traits>
 #include <variant>
@@ -245,6 +248,7 @@ std::array<bool, 14> 运行P12矩阵() {
     return 验收;
 }
 
+// PRE1-诊断责任：无适用错误分支；纯值专项验收谓词。
 bool 提供者证据组有效(const 后继状态规格提供者证据凭证& 证据,
     std::uint32_t 期望数量 = 34) noexcept {
     if (证据.合同版本 != 1 || 证据.规则版本 != 1
@@ -285,6 +289,7 @@ bool 提供者证据组有效(const 后继状态规格提供者证据凭证& 证
     return 当前数量 == 33 && 历史数量 == 1;
 }
 
+// PRE1-诊断责任：本地记录；顺序360可达的PRE1专项最终人读观察边界。
 std::array<bool, 24> 运行P13矩阵() {
     std::array<bool, 24> 验收{};
     try {
@@ -561,6 +566,31 @@ std::array<bool, 24> 运行P13矩阵() {
             && !旧当前结果.提供者证据 && !未知当前结果.提供者证据
             && !不可比较结果.提供者证据 && !直接拒绝.状态登记证据;
     } catch (...) {
+    }
+    std::size_t 失败数量 = 0;
+    for (const bool 通过 : 验收) if (!通过) ++失败数量;
+    try {
+        std::wstring 内容 = L"观察标识=L1-SIMPLIFY-P16-PRE1-STATE-SPEC-PROVIDER-EVIDENCE-S01；结果=";
+        内容 += 失败数量 == 0 ? L"通过" : L"失败";
+        内容 += L"；验收项数=" + std::to_wstring(验收.size());
+        内容 += L"；失败项数=" + std::to_wstring(失败数量);
+        内容 += L"；提供者身份=0x4C31535000000001；直接调用次数=1；去重提供者数量=1";
+        内容 += L"；写前事实见证数量=34；当前副本=33；历史副本=1";
+        内容 += L"；成功状态=增加/等价/减少/精确重复";
+        内容 += L"；拒绝状态=无前状态/入口拒绝/未找到/不可比较；拒绝载荷=全空";
+        内容 += L"；正式接线=不适用；正式读回=不适用";
+        (void)记录运行日志(L"L1-SIMPLIFY-P16-PRE1-STATE-SPEC-PROVIDER-EVIDENCE",
+            L"运行P13矩阵", 内容);
+        if (失败数量 != 0) {
+            const std::wstring 错误内容 =
+                L"观察标识=L1-SIMPLIFY-P16-PRE1-STATE-SPEC-PROVIDER-EVIDENCE-S01；失败项数="
+                + std::to_wstring(失败数量) + L"；请核对结构化专项结果";
+            (void)记录逻辑错误日志(
+                L"L1-SIMPLIFY-P16-PRE1-STATE-SPEC-PROVIDER-EVIDENCE",
+                L"运行P13矩阵", 错误内容);
+        }
+    } catch (...) {
+        // 日志是尽力人读投影；日志失败不得改变结构化自检结果。
     }
     return 验收;
 }
