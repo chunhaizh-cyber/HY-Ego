@@ -23,10 +23,12 @@ export {
 
 namespace 海中鱼巣::L1动态内部 {
 
+// P14-诊断责任：无适用错误分支；最终责任边界：调用服务。
 写集幂等键 映射登记幂等键(动态操作幂等身份 身份) noexcept {
     return {(L1动态登记幂等域 << 56) | 身份.值};
 }
 
+// P14-诊断责任：向上送出；最终责任边界：建立登记调用边。
 L1领域意图凭证 形成登记意图凭证(const L1动态登记请求& 请求) {
     std::vector<std::uint8_t> 编码{'H','Z','Y','-','L','1','G','7'};
     L1确定性编码内部::写U32(编码, L1请求意图格式版本);
@@ -40,6 +42,7 @@ L1领域意图凭证 形成登记意图凭证(const L1动态登记请求& 请求
         L1确定性编码内部::哈希(std::move(编码)), {}};
 }
 
+// P14-诊断责任：向上送出；最终责任边界：建立登记调用边。
 L1动态状态 映射写入状态(L1写入状态 状态) noexcept {
     switch (状态) {
     case L1写入状态::成功: return L1动态状态::已登记;
@@ -54,6 +57,7 @@ L1动态状态 映射写入状态(L1写入状态 状态) noexcept {
     }
 }
 
+// P14-诊断责任：向上送出；最终责任边界：读回调用边。
 L1动态状态 映射读取状态(L1读取状态 状态) noexcept {
     switch (状态) {
     case L1读取状态::未找到:
@@ -66,6 +70,7 @@ L1动态状态 映射读取状态(L1读取状态 状态) noexcept {
     }
 }
 
+// P14-诊断责任：向上送出；最终责任边界：上游结果调用边。
 L1动态状态 映射上游状态(I64后继状态规格状态 状态) noexcept {
     switch (状态) {
     case I64后继状态规格状态::无前状态: return L1动态状态::无需形成;
@@ -80,6 +85,7 @@ L1动态状态 映射上游状态(I64后继状态规格状态 状态) noexcept {
     }
 }
 
+// P14-诊断责任：无适用错误分支；最终责任边界：调用服务。
 std::optional<稳定编码> 查找映射(
     const std::vector<std::pair<写集本地键, 稳定编码>>& 映射, std::uint32_t 本地键) noexcept {
     std::optional<稳定编码> 找到;
@@ -91,6 +97,7 @@ std::optional<稳定编码> 查找映射(
     return 找到;
 }
 
+// P14-诊断责任：无适用错误分支；最终责任边界：调用服务。
 bool 映射完整唯一(const std::vector<std::pair<写集本地键, 稳定编码>>& 映射,
     std::uint32_t 数量) noexcept {
     if (映射.size() != 数量) return false;
@@ -105,6 +112,7 @@ bool 映射完整唯一(const std::vector<std::pair<写集本地键, 稳定编�
     return true;
 }
 
+// P14-诊断责任：向上送出；最终责任边界：读回调用边。
 template<class T, class 读取当前函数>
 bool 读取当前或历史(const L1事实基座服务& L1, 稳定编码 编码,
     std::uint64_t 当前代次, 读取当前函数&& 读取当前,
@@ -143,24 +151,28 @@ bool 读取当前或历史(const L1事实基座服务& L1, 稳定编码 编码,
     return true;
 }
 
+// P14-诊断责任：向上送出；最终责任边界：读回调用边。
 bool 读取节点(const L1事实基座服务& L1, 稳定编码 编码, std::uint64_t 代次,
     节点事实& 输出, L1动态状态& 失败) {
     return 读取当前或历史<节点事实>(L1, 编码, 代次,
         [&] { return L1.读取当前节点({L1事实基座合同版本, 编码}); }, 输出, 失败);
 }
 
+// P14-诊断责任：向上送出；最终责任边界：读回调用边。
 bool 读取关系(const L1事实基座服务& L1, 稳定编码 编码, std::uint64_t 代次,
     关系事实& 输出, L1动态状态& 失败) {
     return 读取当前或历史<关系事实>(L1, 编码, 代次,
         [&] { return L1.读取当前关系({L1事实基座合同版本, 编码}); }, 输出, 失败);
 }
 
+// P14-诊断责任：向上送出；最终责任边界：读回调用边。
 bool 读取值(const L1事实基座服务& L1, 稳定编码 编码, std::uint64_t 代次,
     值事实& 输出, L1动态状态& 失败) {
     return 读取当前或历史<值事实>(L1, 编码, 代次,
         [&] { return L1.读取当前值({L1事实基座合同版本, 编码}); }, 输出, 失败);
 }
 
+// P14-诊断责任：无适用错误分支；最终责任边界：调用服务。
 bool 属性槽精确(const 节点事实& 节点, 稳定编码 类型, 稳定编码 值) noexcept {
     std::size_t 数量 = 0;
     for (const auto& 槽 : 节点.当前属性) {
@@ -171,6 +183,7 @@ bool 属性槽精确(const 节点事实& 节点, 稳定编码 类型, 稳定编�
     return 数量 == 1;
 }
 
+// P14-诊断责任：无适用错误分支；最终责任边界：调用服务。
 bool checked差异(std::int64_t 旧值, std::int64_t 新值, std::int64_t& 差异) noexcept {
     if ((旧值 > 0 && 新值 < std::numeric_limits<std::int64_t>::min() + 旧值)
         || (旧值 < 0 && 新值 > std::numeric_limits<std::int64_t>::max() + 旧值))
@@ -179,10 +192,12 @@ bool checked差异(std::int64_t 旧值, std::int64_t 新值, std::int64_t& 差�
     return true;
 }
 
+// P14-诊断责任：无适用错误分支；最终责任边界：调用服务。
 std::uint8_t 三态编码(std::int8_t 三态) noexcept {
     return 三态 < 0 ? 1 : 三态 == 0 ? 2 : 3;
 }
 
+// P14-诊断责任：无适用错误分支；最终责任边界：调用服务。
 template<class T>
 void 散列加入(std::uint64_t& 摘要, T 值) noexcept {
     for (std::size_t i = 0; i < sizeof(T); ++i) {
@@ -191,8 +206,10 @@ void 散列加入(std::uint64_t& 摘要, T 值) noexcept {
     }
 }
 
+// P14-诊断责任：无适用错误分支；最终责任边界：调用服务。
 void 散列加入(std::uint64_t& 摘要, 稳定编码 编码) noexcept { 散列加入(摘要, 编码.值); }
 
+// P14-诊断责任：无适用错误分支；最终责任边界：调用服务。
 bool 节点类型符合(const 节点事实& 节点, std::size_t 索引) noexcept {
     if (索引 < 2) return 节点.种类 == 节点种类::普通 && !节点.属性类型表示;
     const std::array<值表示种类, 8> 表示{值表示种类::I64, 值表示种类::I64,
@@ -208,10 +225,12 @@ export namespace 海中鱼巣 {
 
 class L1动态服务 final {
 public:
+    // P14-诊断责任：无适用错误分支；最终责任边界：构造调用边。
     explicit L1动态服务(L1事实基座服务& L1) noexcept : L1_(L1) {}
     L1动态服务(const L1动态服务&) = delete;
     L1动态服务& operator=(const L1动态服务&) = delete;
 
+    // P14-诊断责任：向上送出；最终责任边界：当前自检边界或未来合法消费者。
     L1动态登记结果 建立登记(const L1动态登记请求& 请求) {
         std::lock_guard<std::recursive_mutex> 锁(锁_);
         try {
@@ -288,6 +307,7 @@ public:
         }
     }
 
+    // P14-诊断责任：向上送出；最终责任边界：当前自检边界或未来合法消费者。
     L1动态登记结果 读取当前登记() const {
         std::lock_guard<std::recursive_mutex> 锁(锁_);
         try {
@@ -316,6 +336,7 @@ public:
         }
     }
 
+    // P14-诊断责任：向上送出；最终责任边界：当前自检边界或未来合法消费者。
     状态迁移动能规格结果 形成状态迁移动能规格(
         const 实际存在I64后继状态规格结果& 后继状态) const {
         try {
@@ -480,6 +501,7 @@ public:
         }
     }
 
+    // P14-诊断责任：向上送出；最终责任边界：当前自检边界或未来合法消费者。
     状态迁移动能结果 读取状态迁移动能(const 状态迁移动能读取请求& 请求) const {
         if (!状态迁移动能读取请求有效(请求)) return {};
         try {
@@ -624,6 +646,7 @@ public:
     }
 
 private:
+    // P14-诊断责任：向上送出；最终责任边界：建立登记调用边。
     std::optional<L1动态结构登记> 从映射读回登记(动态操作幂等身份 身份,
         std::uint64_t 事实代次,
         const std::vector<std::pair<写集本地键, 稳定编码>>& 映射) const {
