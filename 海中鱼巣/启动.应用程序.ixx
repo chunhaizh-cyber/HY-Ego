@@ -518,8 +518,24 @@ namespace 海中鱼巣 {
         报告.总通过, 报告.验收.size(), 报告.失败数量};
 }
 
+// R1-诊断责任：本地记录；最终责任边界：R1专项结构化结果和程序退出码。
 自检单元结果 运行L1方法登记根当前读取专项自检() {
     const auto 报告 = 运行L1方法登记根当前读取自检();
+    std::wstring 内容 = L"观察标识=L1-SIMPLIFY-METHOD-ROOT-R1-S01；结果=";
+    内容 += 报告.总通过 ? L"通过" : L"失败";
+    内容 += L"；验收项数=" + std::to_wstring(报告.验收.size());
+    内容 += L"；失败项数=" + std::to_wstring(报告.失败数量);
+    内容 += L"；状态映射运行数量=" + std::to_wstring(报告.状态映射运行数量);
+    内容 += L"；最大P17调用次数=" + std::to_wstring(报告.最大P17调用次数);
+    内容 += 报告.零写验证 ? L"；零写验证=1" : L"；零写验证=0";
+    内容 += L"；事实截止=" + std::to_wstring(报告.观察事实截止代次);
+    内容 += L"；正式接线=否";
+    (void)记录运行日志(L"L1-SIMPLIFY-METHOD-ROOT-R1-CURRENT-READ",
+        L"运行L1方法登记根当前读取专项自检", 内容);
+    if (!报告.总通过) {
+        (void)记录逻辑错误日志(L"L1-SIMPLIFY-METHOD-ROOT-R1-CURRENT-READ",
+            L"运行L1方法登记根当前读取专项自检", 内容);
+    }
     return {"L1-SIMPLIFY-METHOD-ROOT-R1-S01", "方法登记根正式当前读取",
         报告.总通过, 报告.验收.size(), 报告.失败数量};
 }
