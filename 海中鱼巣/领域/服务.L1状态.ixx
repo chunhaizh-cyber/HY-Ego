@@ -731,6 +731,32 @@ public:
         }
     }
 
+    // P16-诊断责任：向上送出；只做所有者冻结的0x53局部键到读取DTO机械映射。
+    后继状态读回请求形成结果 从后继状态新编码映射形成读取请求(
+        const std::vector<std::pair<写集本地键, 稳定编码>>& 映射) const {
+        try {
+            std::array<稳定编码, 12> 编码组{};
+            std::array<std::uint32_t, 12> 数量{};
+            for (const auto& [键, 编码] : 映射) {
+                if (键.值 < 0x53000001U || 键.值 > 0x5300000CU) continue;
+                const auto 索引 = static_cast<std::size_t>(键.值 - 0x53000001U);
+                ++数量[索引];
+                编码组[索引] = 编码;
+            }
+            for (std::size_t i = 0; i < 编码组.size(); ++i)
+                if (数量[i] != 1 || !有效(编码组[i]))
+                    return {后继状态读回请求形成状态::内部不一致, std::nullopt};
+            return {后继状态读回请求形成状态::已形成,
+                实际存在I64基准状态读取请求{L1状态合同版本, L1状态规则版本,
+                    编码组[0], 编码组[1], 编码组[2], 编码组[3], 编码组[4], 编码组[5],
+                    编码组[6], 编码组[7], 编码组[8], 编码组[9], 编码组[10], 编码组[11]}};
+        } catch (const std::bad_alloc&) {
+            return {后继状态读回请求形成状态::内部不一致, std::nullopt};
+        } catch (...) {
+            return {后继状态读回请求形成状态::内部不一致, std::nullopt};
+        }
+    }
+
 private:
     static I64相邻前状态选择结果 选择失败(I64相邻前状态选择状态 状态) noexcept {
         return {状态, std::nullopt, std::nullopt};

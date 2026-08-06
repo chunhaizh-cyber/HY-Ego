@@ -253,6 +253,15 @@ struct 实际存在I64后继状态规格形成结果 final {
     std::optional<L1状态结构登记> 状态登记证据;
 };
 
+enum class 后继状态读回请求形成状态 : std::uint8_t {
+    已形成 = 1, 入口拒绝 = 2, 内部不一致 = 3
+};
+
+struct 后继状态读回请求形成结果 final {
+    后继状态读回请求形成状态 状态 = 后继状态读回请求形成状态::入口拒绝;
+    std::optional<实际存在I64基准状态读取请求> 请求;
+};
+
 inline bool 状态操作幂等身份有效(状态操作幂等身份 身份) noexcept {
     return 身份.值 != 0 && 身份.值 <= 0x00FF'FFFF'FFFF'FFFFULL;
 }
