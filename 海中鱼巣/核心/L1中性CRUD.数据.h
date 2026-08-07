@@ -170,6 +170,14 @@ struct L1中性事实代次读取请求 final {
         const L1中性事实代次读取请求&) = default;
 };
 
+struct L1中性目标关系读取请求 final {
+    std::uint32_t 合同版本 = L1中性CRUD合同版本;
+    稳定编码 目标节点;
+    稳定编码 关系类型节点;
+    friend bool operator==(const L1中性目标关系读取请求&,
+        const L1中性目标关系读取请求&) = default;
+};
+
 template<class 事实类型>
 struct L1中性具名事实读取结果 final {
     L1中性读取状态 状态 = L1中性读取状态::入口拒绝;
@@ -184,6 +192,17 @@ struct L1中性具名事实读取结果 final {
 using L1中性节点读取结果 = L1中性具名事实读取结果<L1中性节点事实>;
 using L1中性关系读取结果 = L1中性具名事实读取结果<L1中性关系事实>;
 using L1中性值读取结果 = L1中性具名事实读取结果<L1中性值事实>;
+
+struct L1中性目标关系读取结果 final {
+    L1中性读取状态 状态 = L1中性读取状态::入口拒绝;
+    std::uint32_t 合同版本 = L1中性CRUD合同版本;
+    稳定编码 目标节点;
+    稳定编码 关系类型节点;
+    std::uint64_t 读取事实代次 = 0;
+    std::vector<L1中性关系事实> 关系组;
+    friend bool operator==(const L1中性目标关系读取结果&,
+        const L1中性目标关系读取结果&) = default;
+};
 
 struct L1中性属性读取结果 final {
     L1中性读取状态 状态 = L1中性读取状态::入口拒绝;

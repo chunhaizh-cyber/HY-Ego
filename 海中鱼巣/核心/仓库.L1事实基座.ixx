@@ -150,8 +150,12 @@ public:
                 if (!类型) return 中性写入结果(请求, 失败, 状态_.事实代次, false,
                     L1中性重试边界::修正请求后可重试);
                 const auto 编码 = 映射[关系偏移 + i].second;
-                候选.当前关系.emplace(编码.值, 关系事实{编码, *源, *目标, *类型,
-                    项.角色或顺序, 新代次, std::nullopt});
+                const 关系事实 事实{编码, *源, *目标, *类型,
+                    项.角色或顺序, 新代次, std::nullopt};
+                if (!候选.当前关系.emplace(编码.值, 事实).second
+                    || !插入当前目标关系索引(候选, 事实))
+                    return 中性写入结果(请求, L1中性写入状态::内部不一致,
+                        状态_.事实代次, false, L1中性重试边界::原幂等键读回收敛);
                 候选.永久占用.insert(编码.值);
             }
 
@@ -195,7 +199,9 @@ public:
                     候选.当前节点.erase(it); return true;
                 }
                 if (auto it = 候选.当前关系.find(编码.值); it != 候选.当前关系.end()) {
-                    auto 事实 = it->second; 事实.退出事实代次 = 新代次;
+                    const auto 当前事实 = it->second;
+                    if (!删除当前目标关系索引(候选, 当前事实)) return false;
+                    auto 事实 = 当前事实; 事实.退出事实代次 = 新代次;
                     候选.历史[编码.值] = {编码, 事实, false};
                     候选.当前关系.erase(it); return true;
                 }
@@ -411,8 +417,10 @@ public:
                 const auto 类型 = 解析(项.关系类型节点);
                 if (!源 || !目标 || !类型) return {};
                 const auto 编码 = 映射[关系偏移 + i].second;
-                候选.当前关系.emplace(编码.值,
-                    关系事实{编码, *源, *目标, *类型, 项.角色或顺序, 新代次, std::nullopt});
+                const 关系事实 事实{编码, *源, *目标, *类型,
+                    项.角色或顺序, 新代次, std::nullopt};
+                if (!候选.当前关系.emplace(编码.值, 事实).second
+                    || !插入当前目标关系索引(候选, 事实)) return {};
                 候选.永久占用.insert(编码.值);
             }
             const std::size_t 值偏移 = 关系偏移 + 规范化->关系.size();
@@ -434,7 +442,9 @@ public:
                     候选.历史[编码.值] = {编码, 事实, false}; 候选.当前节点.erase(it); return true;
                 }
                 if (auto it = 候选.当前关系.find(编码.值); it != 候选.当前关系.end()) {
-                    auto 事实 = it->second; 事实.退出事实代次 = 新代次;
+                    const auto 当前事实 = it->second;
+                    if (!删除当前目标关系索引(候选, 当前事实)) return false;
+                    auto 事实 = 当前事实; 事实.退出事实代次 = 新代次;
                     候选.历史[编码.值] = {编码, 事实, false}; 候选.当前关系.erase(it); return true;
                 }
                 if (auto it = 候选.当前值.find(编码.值); it != 候选.当前值.end()) {
@@ -534,6 +544,56 @@ public:
     L1读取结果 读取当前节点(稳定编码 编码) const { return 读取当前(编码, 状态_.当前节点); }
     L1读取结果 读取当前关系(稳定编码 编码) const { return 读取当前(编码, 状态_.当前关系); }
     L1读取结果 读取当前值(稳定编码 编码) const { return 读取当前(编码, 状态_.当前值); }
+    L1中性目标关系读取结果 读取中性当前目标关系组(
+        const L1中性目标关系读取请求& 请求) const {
+        L1中性目标关系读取结果 结果{L1中性读取状态::入口拒绝,
+            L1中性CRUD合同版本, 请求.目标节点, 请求.关系类型节点, 0, {}};
+        if (请求.合同版本 != L1中性CRUD合同版本
+            || !有效(请求.目标节点) || !有效(请求.关系类型节点)) return 结果;
+        std::shared_lock<std::shared_mutex> 锁(锁_);
+        if (状态_.隔离) {
+            结果.状态 = L1中性读取状态::内部不一致;
+            return 结果;
+        }
+        const auto 目标 = 状态_.当前目标关系索引.find(请求.目标节点.值);
+        if (目标 == 状态_.当前目标关系索引.end()) {
+            结果.状态 = L1中性读取状态::成功;
+            结果.读取事实代次 = 状态_.事实代次;
+            return 结果;
+        }
+        const auto 类型 = 目标->second.find(请求.关系类型节点.值);
+        if (类型 == 目标->second.end()) {
+            结果.状态 = L1中性读取状态::成功;
+            结果.读取事实代次 = 状态_.事实代次;
+            return 结果;
+        }
+        if (状态_.事实代次 == 0 || 类型->second.empty()) {
+            结果.状态 = L1中性读取状态::内部不一致;
+            return 结果;
+        }
+        结果.关系组.reserve(类型->second.size());
+        std::uint64_t 前一编码 = 0;
+        for (const auto 编码 : 类型->second) {
+            const auto 关系 = 状态_.当前关系.find(编码);
+            if (编码 == 0 || 编码 <= 前一编码 || 关系 == 状态_.当前关系.end()
+                || 关系->second.编码.值 != 编码
+                || 关系->second.目标节点 != 请求.目标节点
+                || 关系->second.关系类型节点 != 请求.关系类型节点
+                || 关系->second.退出事实代次.has_value()) {
+                结果.状态 = L1中性读取状态::内部不一致;
+                结果.关系组.clear();
+                return 结果;
+            }
+            const auto& 事实 = 关系->second;
+            结果.关系组.push_back({事实.编码, 事实.源节点, 事实.目标节点,
+                事实.关系类型节点, 事实.角色或顺序, 事实.创建事实代次,
+                事实.退出事实代次});
+            前一编码 = 编码;
+        }
+        结果.状态 = L1中性读取状态::成功;
+        结果.读取事实代次 = 状态_.事实代次;
+        return 结果;
+    }
     L1属性读取结果 读取当前属性(稳定编码 节点, 稳定编码 类型) const {
         if (!有效(节点) || !有效(类型)) return {};
         std::shared_lock<std::shared_mutex> 锁(锁_);
@@ -740,6 +800,9 @@ private:
         std::uint64_t 下个编码 = 1;
         std::unordered_map<std::uint64_t, 节点事实> 当前节点;
         std::unordered_map<std::uint64_t, 关系事实> 当前关系;
+        std::unordered_map<std::uint64_t,
+            std::unordered_map<std::uint64_t, std::vector<std::uint64_t>>>
+            当前目标关系索引;
         std::unordered_map<std::uint64_t, 值事实> 当前值;
         std::unordered_map<std::uint64_t, L1历史事实副本> 历史;
         std::unordered_set<std::uint64_t> 永久占用;
@@ -756,6 +819,39 @@ private:
         std::uint64_t 基线 = 0;
         bool 中性发布前建立 = false;
     };
+
+    // 诊断责任：向上送出；分配异常由调用方公开边界映射。
+    static bool 插入当前目标关系索引(状态& 值, const 关系事实& 事实) {
+        if (!有效(事实.编码) || !有效(事实.目标节点)
+            || !有效(事实.关系类型节点) || 事实.退出事实代次) return false;
+        auto& 编码组 = 值.当前目标关系索引[事实.目标节点.值][事实.关系类型节点.值];
+        const auto 位置 = std::lower_bound(编码组.begin(), 编码组.end(), 事实.编码.值);
+        if (位置 != 编码组.end() && *位置 == 事实.编码.值) return false;
+        编码组.insert(位置, 事实.编码.值);
+        return true;
+    }
+
+    // 诊断责任：无适用错误分支；只删除候选状态中的一个派生索引编码。
+    static bool 删除当前目标关系索引(状态& 值, const 关系事实& 事实) noexcept {
+        const auto 目标 = 值.当前目标关系索引.find(事实.目标节点.值);
+        if (目标 == 值.当前目标关系索引.end()) return false;
+        const auto 类型 = 目标->second.find(事实.关系类型节点.值);
+        if (类型 == 目标->second.end()) return false;
+        const auto 位置 = std::lower_bound(类型->second.begin(), 类型->second.end(), 事实.编码.值);
+        if (位置 == 类型->second.end() || *位置 != 事实.编码.值) return false;
+        类型->second.erase(位置);
+        if (类型->second.empty()) 目标->second.erase(类型);
+        if (目标->second.empty()) 值.当前目标关系索引.erase(目标);
+        return true;
+    }
+
+    // 诊断责任：向上送出；只从本状态权威当前关系纯派生非权威索引。
+    static bool 派生当前目标关系索引(状态& 值) {
+        值.当前目标关系索引.clear();
+        for (const auto& [_, 事实] : 值.当前关系)
+            if (!插入当前目标关系索引(值, 事实)) return false;
+        return true;
+    }
 
     // 诊断责任：向上送出；分配异常由提交中性写集统一映射。
     static L1中性写入结果 中性写入结果(const L1中性写集请求& 请求,
@@ -1098,6 +1194,25 @@ private:
                 || !值.当前节点.contains(关系.关系类型节点.值)
                 || !有效(关系.源节点) || !有效(关系.目标节点) || !有效(关系.关系类型节点)) return false;
         }
+        std::unordered_set<std::uint64_t> 已索引关系;
+        for (const auto& [目标编码, 类型组] : 值.当前目标关系索引) {
+            if (目标编码 == 0 || 类型组.empty()) return false;
+            for (const auto& [类型编码, 编码组] : 类型组) {
+                if (类型编码 == 0 || 编码组.empty()) return false;
+                std::uint64_t 前一编码 = 0;
+                for (const auto 关系编码 : 编码组) {
+                    const auto 关系 = 值.当前关系.find(关系编码);
+                    if (关系编码 == 0 || 关系编码 <= 前一编码
+                        || !已索引关系.insert(关系编码).second
+                        || 关系 == 值.当前关系.end()
+                        || 关系->second.目标节点.值 != 目标编码
+                        || 关系->second.关系类型节点.值 != 类型编码
+                        || 关系->second.退出事实代次) return false;
+                    前一编码 = 关系编码;
+                }
+            }
+        }
+        if (已索引关系.size() != 值.当前关系.size()) return false;
         for (const auto& [编码, 事实] : 值.当前值) {
             if (!插入(编码) || 事实.编码.值 != 编码 || 事实.创建事实代次 == 0
                 || 事实.创建事实代次 > 值.事实代次 || 事实.退出事实代次
@@ -1270,6 +1385,7 @@ private:
         for (const auto& 记录 : 材料.领域结果见证记录组)
             if (!有效(记录.幂等键)
                 || !输出.领域结果见证状态组.emplace(记录.幂等键.值, 记录).second) return false;
+        if (!派生当前目标关系索引(输出)) return false;
         std::uint64_t 最大 = 0; for (const auto 编码 : 输出.永久占用) 最大 = std::max(最大, 编码); 输出.下个编码 = 最大 == (std::numeric_limits<std::uint64_t>::max)() ? 0 : 最大 + 1;
         return true;
     }
