@@ -315,11 +315,6 @@ std::optional<主键绑定记录> 索引仓库::读取主键绑定记录(
     if (!验证共享令牌(事务接线_, 令牌)) {
         return {主键绑定组读取状态::入口拒绝, {}};
     }
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-    if (下一次主键绑定组资源失败_.exchange(false)) {
-        return {主键绑定组读取状态::资源失败, {}};
-    }
-#endif
     主键绑定组读取结果 输出{主键绑定组读取状态::已形成, {}};
     std::shared_lock<std::shared_mutex> 锁(仓库锁_);
     try {
@@ -496,35 +491,5 @@ std::uint64_t 索引仓库::有效主键数量(const 结构事务令牌& 令牌)
     return {仓库权威导出状态::已形成, std::move(材料)};
 }
 
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-void 索引仓库::自检注入下一次主键绑定组资源失败() {
-    下一次主键绑定组资源失败_.store(true);
-}
-
-bool 索引仓库::自检删除反向绑定(
-    std::uint64_t 主键,
-    节点句柄 节点,
-    const 结构事务令牌& 令牌) {
-    if (!验证独占令牌(事务接线_, 令牌) || 主键 == 0 || !句柄有效(节点)) return false;
-    std::unique_lock<std::shared_mutex> 锁(仓库锁_);
-    const auto 位置 = 节点主键组_.find(节点.节点编号);
-    if (位置 == 节点主键组_.end()) return false;
-    const auto 主键位置 = std::find(位置->second.begin(), 位置->second.end(), 主键);
-    if (主键位置 == 位置->second.end()) return false;
-    位置->second.erase(主键位置);
-    if (位置->second.empty()) 节点主键组_.erase(位置);
-    return true;
-}
-
-bool 索引仓库::自检追加反向绑定(
-    std::uint64_t 主键,
-    节点句柄 节点,
-    const 结构事务令牌& 令牌) {
-    if (!验证独占令牌(事务接线_, 令牌) || 主键 == 0 || !句柄有效(节点)) return false;
-    std::unique_lock<std::shared_mutex> 锁(仓库锁_);
-    节点主键组_[节点.节点编号].push_back(主键);
-    return true;
-}
-#endif
 
 }

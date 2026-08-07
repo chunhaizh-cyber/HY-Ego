@@ -850,13 +850,6 @@ private:
     分层方法生命周期 目标生命周期_ = 分层方法生命周期::未定义;
 };
 
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-struct 需求任务方法故障自检结果 {
-    需求任务方法业务状态 状态 = 需求任务方法业务状态::入口拒绝;
-    std::size_t 已执行写点 = 0;
-    bool 故障已命中 = false;
-};
-#endif
 
 class 需求任务方法数据操作 final {
 public:
@@ -1212,9 +1205,6 @@ public:
 
     需求提交结果 创建完整目标状态需求(const 完整需求写入规格& 规格) const {
         return 创建完整目标状态需求_实现(规格
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-            , nullptr
-#endif
         );
     }
 
@@ -1348,9 +1338,6 @@ public:
 
     任务提交结果 迁移任务生命周期(const 任务生命周期写入规格& 规格) const {
         return 迁移任务生命周期_实现(规格
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-            , nullptr
-#endif
         );
     }
 
@@ -1764,63 +1751,6 @@ public:
             *动作.输入场景, *动作.输出场景};
     }
 
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-    特征批次结果 执行特征批次同层参与调试(
-        特征体系数据操作& 特征数据操作,
-        const 特征批次变更规格& 规格) const {
-        auto 参与包 = 特征批次同层授权桥::形成参与包(特征数据操作, 规格);
-        if (!参与包) return {};
-        const auto 预读 = 特征批次同层授权桥::读取候选结果(*参与包);
-        if (预读.状态 != 特征批次提交状态::入口拒绝) return 预读;
-        const auto 结构结果 = 特征批次同层授权桥::执行参与包(
-            *this, *参与包, [](结构写入会话&) { return true; });
-        auto 输出 = 特征批次同层授权桥::读取候选结果(*参与包);
-        if (输出.成功()) {
-            if (结构结果.状态 == 结构写入状态::已提交
-                || 结构结果.状态 == 结构写入状态::候选已确认) {
-                输出.状态 = 特征批次提交状态::已提交;
-            }
-            return 输出;
-        }
-        if (输出.状态 != 特征批次提交状态::入口拒绝) return 输出;
-        switch (结构结果.状态) {
-        case 结构写入状态::许可拒绝:
-            输出.状态 = 特征批次提交状态::许可拒绝;
-            break;
-        case 结构写入状态::版本漂移:
-            输出.状态 = 特征批次提交状态::版本漂移;
-            break;
-        default:
-            输出.状态 = 特征批次提交状态::内部不一致;
-            break;
-        }
-        return 输出;
-    }
-
-    需求任务方法故障自检结果 执行完整需求固定故障自检(
-        const 完整需求写入规格& 规格,
-        std::size_t 故障写点) const {
-        固定故障控制 控制{故障写点};
-        const auto 结果 = 创建完整目标状态需求_实现(规格, &控制);
-        return {结果.状态, 控制.已执行写点, 控制.故障已命中};
-    }
-
-    需求任务方法故障自检结果 执行任务生命周期固定故障自检(
-        const 任务生命周期写入规格& 规格,
-        std::size_t 故障写点) const {
-        固定故障控制 控制{故障写点};
-        const auto 结果 = 迁移任务生命周期_实现(规格, &控制);
-        return {结果.状态, 控制.已执行写点, 控制.故障已命中};
-    }
-
-    需求任务方法故障自检结果 执行方法动作入口固定故障自检(
-        const 方法动作入口写入规格& 规格,
-        std::size_t 故障写点) const {
-        固定故障控制 控制{故障写点};
-        const auto 结果 = 创建方法规格_实现(规格, &控制);
-        return {结果.状态, 控制.已执行写点, 控制.故障已命中};
-    }
-#endif
 
 private:
     friend class 特征批次同层授权桥;
@@ -1868,23 +1798,6 @@ private:
         已请求提交 = 5
     };
 
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-    struct 固定故障控制 {
-        std::size_t 目标写点 = 0;
-        std::size_t 已执行写点 = 0;
-        bool 故障已命中 = false;
-    };
-
-    static bool 命中固定故障(固定故障控制* 控制) noexcept {
-        if (控制 == nullptr) return false;
-        ++控制->已执行写点;
-        if (控制->目标写点 != 0 && 控制->已执行写点 == 控制->目标写点) {
-            控制->故障已命中 = true;
-            return true;
-        }
-        return false;
-    }
-#endif
 
     static bool 节点稳定小于(const 节点句柄& 左, const 节点句柄& 右) noexcept {
         if (左.仓库编号 != 右.仓库编号) return 左.仓库编号 < 右.仓库编号;
@@ -2771,27 +2684,15 @@ private:
         std::uint64_t 主键,
         主信息句柄& 新主信息,
         节点句柄& 新节点
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-        , 固定故障控制* 故障 = nullptr
-#endif
     ) const {
         const auto 主结果 = 会话.创建主信息候选();
         if (!主结果.成功()) return false;
         新主信息 = *主结果.值;
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-        if (命中固定故障(故障)) return false;
-#endif
         const auto 节点结果 = 会话.创建节点候选(类型, 新主信息);
         if (!节点结果.成功()) return false;
         新节点 = *节点结果.值;
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-        if (命中固定故障(故障)) return false;
-#endif
         if (!会话.绑定主键(形成索引绑定请求(
             主键, 新节点, 索引所有者::需求任务方法)).成功()) return false;
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-        if (命中固定故障(故障)) return false;
-#endif
         return true;
     }
 
@@ -2802,18 +2703,12 @@ private:
         节点句柄 目标节点,
         std::int64_t 顺序号,
         std::vector<关系句柄>& 写入关系
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-        , 固定故障控制* 故障 = nullptr
-#endif
     ) const {
         const auto 结果 = 会话.创建关系(类型, 源节点, 目标节点, 顺序号);
         if (!结果.成功()) return false;
         if (std::find(写入关系.begin(), 写入关系.end(), *结果.值) == 写入关系.end()) {
             写入关系.push_back(*结果.值);
         }
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-        if (命中固定故障(故障)) return false;
-#endif
         return 会话.关系可读(*结果.值);
     }
 
@@ -2827,57 +2722,30 @@ private:
         节点句柄 当前特征状态材料,
         节点句柄 目标状态,
         std::vector<关系句柄>& 写入关系
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-        , 固定故障控制* 故障 = nullptr
-#endif
     ) const {
         if (!追加关系_会话(会话, 关系类型::引用, 需求, 主体, 需求主体顺序号, 写入关系
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-                , 故障
-#endif
             )) return false;
         const bool 宿主已写 = 主体 == 目标宿主
             ? 追加关系_会话(会话, 关系类型::引用, 目标宿主, 需求,
                 需求目标宿主顺序号, 写入关系
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-                , 故障
-#endif
             )
             : 追加关系_会话(会话, 关系类型::引用, 需求, 目标宿主,
                 需求目标宿主顺序号, 写入关系
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-                , 故障
-#endif
             );
         return 宿主已写
             && 追加关系_会话(会话, 关系类型::引用, 需求, 场景, 需求场景顺序号, 写入关系
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-                , 故障
-#endif
             )
             && 追加关系_会话(会话, 关系类型::引用, 需求, 目标特征, 需求目标特征顺序号, 写入关系
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-                , 故障
-#endif
             )
             && 追加关系_会话(会话, 关系类型::引用, 需求, 当前特征状态材料,
                 需求当前特征状态顺序号, 写入关系
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-                , 故障
-#endif
             )
             && 追加关系_会话(会话, 关系类型::模板, 需求, 目标状态, 0, 写入关系
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-                , 故障
-#endif
             );
     }
 
     需求提交结果 创建完整目标状态需求_实现(
         const 完整需求写入规格& 规格
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-        , 固定故障控制* 故障
-#endif
     ) const {
         if (!规格.完整()) return {};
         const auto 写前 = 读取主键需求(规格.需求主键_);
@@ -2894,22 +2762,13 @@ private:
                     规格.目标特征_, 规格.当前特征状态材料_, {})) return;
             const auto 状态 = 状态数据操作_.写入抽象状态_会话(会话, 规格.目标状态规格_);
             if (!状态.成功()) return;
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-            if (命中固定故障(故障)) return;
-#endif
             主信息句柄 新主信息;
             if (!写入身份_会话(会话, 节点类型::需求, 规格.需求主键_, 新主信息, 新需求
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-                    , 故障
-#endif
                 )) return;
             std::vector<关系句柄> 写入关系;
             if (!写入需求关系组_会话(会话, 新需求, 规格.主体_, 规格.目标宿主_,
                     规格.场景_, 规格.目标特征_, 规格.当前特征状态材料_,
                     状态.材料.状态节点, 写入关系
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-                    , 故障
-#endif
                 )) return;
             if (会话.主信息可读(新主信息) && 会话.节点可读(新需求)
                 && 会话.主键绑定匹配(规格.需求主键_, 新需求)) (void)会话.请求提交();
@@ -2928,9 +2787,6 @@ private:
 
     任务提交结果 迁移任务生命周期_实现(
         const 任务生命周期写入规格& 规格
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-        , 固定故障控制* 故障
-#endif
     ) const {
         if (!规格.完整()) return {};
         const auto 写前 = 读取任务(规格.任务_);
@@ -2946,16 +2802,10 @@ private:
             const auto 新状态 = 状态数据操作_.写入实例状态_会话(会话, 规格.状态规格_);
             if (!新状态.成功()
                 || 新状态.材料.状态值 != static_cast<std::int64_t>(规格.目标阶段_)) return;
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-            if (命中固定故障(故障)) return;
-#endif
             std::vector<关系句柄> 写入关系;
             if (!追加关系_会话(会话, 关系类型::任务生命周期, 规格.任务_,
                     新状态.材料.状态节点,
                     static_cast<std::int64_t>(规格.预期当前版本_ + 1), 写入关系
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-                    , 故障
-#endif
                 )) return;
             if (规格.目标阶段_ == 分层任务生命周期阶段::筹办中
                 && 写前.当前生命周期.阶段 == 分层任务生命周期阶段::待重筹办
@@ -2965,26 +2815,17 @@ private:
                 if (!失效投影.成功()) return;
                 const auto 投影审计 = 会话.读取关系审计(*失效投影.值);
                 if (!投影审计.has_value() || 投影审计->状态 != 记录状态::已失效) return;
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-                if (命中固定故障(故障)) return;
-#endif
                 const auto 失效发布 = 会话.失效已发布关系(
                     写前.当前选择->发布关系.关系);
                 if (!失效发布.成功()) return;
                 const auto 发布审计 = 会话.读取关系审计(*失效发布.值);
                 if (!发布审计.has_value() || 发布审计->状态 != 记录状态::已失效) return;
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-                if (命中固定故障(故障)) return;
-#endif
             }
             const auto 失效旧生命周期 = 会话.失效已发布关系(规格.预期当前关系_);
             if (!失效旧生命周期.成功()) return;
             const auto 生命周期审计 = 会话.读取关系审计(*失效旧生命周期.值);
             if (!生命周期审计.has_value()
                 || 生命周期审计->状态 != 记录状态::已失效) return;
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-            if (命中固定故障(故障)) return;
-#endif
             (void)会话.请求提交();
         });
         const auto 当前 = 读取任务(规格.任务_);
@@ -3018,18 +2859,12 @@ private:
 
     方法提交结果 创建方法规格_实现(
         const 方法动作入口写入规格& 规格
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-        , 固定故障控制* 故障 = nullptr
-#endif
         ) const {
         if (!规格.完整()) return {};
         return 创建方法规格共用(
             规格.动作主键_, 规格.方法首_, 分层方法角色::动作入口,
             {}, {}, {}, 规格.动作主键_, 规格.角色状态_,
             规格.入口状态_, 规格.输入场景_, 规格.输出场景_
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-            , 故障
-#endif
         );
     }
 
@@ -3045,9 +2880,6 @@ private:
         std::optional<抽象状态写入规格> 入口状态规格,
         节点句柄 输入场景,
         节点句柄 输出场景
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-        , 固定故障控制* 故障 = nullptr
-#endif
         ) const {
         const auto 写前身份 = 读取主键身份(主键);
         if (写前身份.状态 == 需求任务方法读取状态::已找到) {
@@ -3095,14 +2927,8 @@ private:
                         入口状态.材料.状态节点, 1, 写入关系)
                     || !追加关系_会话(会话, 关系类型::方法动作场景,
                         新规格, 输入场景, 1, 写入关系)) return;
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-                if (命中固定故障(故障)) return;
-#endif
                 if (!追加关系_会话(会话, 关系类型::方法动作场景,
                         新规格, 输出场景, 2, 写入关系)) return;
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-                if (命中固定故障(故障)) return;
-#endif
             } else {
                 const auto 目标状态值 = 读取会话抽象状态值(会话, 目标状态);
                 if (!目标状态值.has_value()

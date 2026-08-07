@@ -76,24 +76,16 @@
 
   <PropertyGroup>
     <EnableD455RealSense Condition="'$(EnableD455RealSense)'==''">false</EnableD455RealSense>
-    <EnableEntryInitializationSelfTestDebugLog Condition="'$(EnableEntryInitializationSelfTestDebugLog)'==''">false</EnableEntryInitializationSelfTestDebugLog>
-    <EnableDatabaseSelfTestDebugLog Condition="'$(EnableDatabaseSelfTestDebugLog)'==''">false</EnableDatabaseSelfTestDebugLog>
-    <EnableWarehousePerformanceSelfTestDebugLog Condition="'$(EnableWarehousePerformanceSelfTestDebugLog)'==''">false</EnableWarehousePerformanceSelfTestDebugLog>
-    <EnableD455SelfTestDebugLog Condition="'$(EnableD455SelfTestDebugLog)'==''">false</EnableD455SelfTestDebugLog>
     <D455VcpkgRoot Condition="'$(VcpkgRoot)'!=''">$(VcpkgRoot)</D455VcpkgRoot>
     <D455VcpkgRoot Condition="'$(D455VcpkgRoot)'=='' and '$(VCPKG_ROOT)'!=''">$(VCPKG_ROOT)</D455VcpkgRoot>
     <D455RealSensePreprocessorDefinitions Condition="'$(EnableD455RealSense)'=='true' and '$(Platform)'=='x64'">HY_EGO_ENABLE_D455_REALSENSE;</D455RealSensePreprocessorDefinitions>
-    <EntryInitializationSelfTestDebugDefinition Condition="'$(EnableEntryInitializationSelfTestDebugLog)'=='true'">HY_EGO_DEBUG_LOG_SELF_TEST_ENTRY_INITIALIZATION;</EntryInitializationSelfTestDebugDefinition>
-    <DatabaseSelfTestDebugDefinition Condition="'$(EnableDatabaseSelfTestDebugLog)'=='true'">HY_EGO_DEBUG_LOG_SELF_TEST_DATABASE;</DatabaseSelfTestDebugDefinition>
-    <WarehousePerformanceSelfTestDebugDefinition Condition="'$(EnableWarehousePerformanceSelfTestDebugLog)'=='true'">HY_EGO_DEBUG_LOG_SELF_TEST_WAREHOUSE_PERFORMANCE;</WarehousePerformanceSelfTestDebugDefinition>
-    <D455SelfTestDebugDefinition Condition="'$(EnableD455SelfTestDebugLog)'=='true'">HY_EGO_DEBUG_LOG_SELF_TEST_D455;</D455SelfTestDebugDefinition>
   </PropertyGroup>
 
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;$(EntryInitializationSelfTestDebugDefinition)$(DatabaseSelfTestDebugDefinition)$(WarehousePerformanceSelfTestDebugDefinition)$(D455SelfTestDebugDefinition)%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -109,7 +101,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;$(EntryInitializationSelfTestDebugDefinition)$(DatabaseSelfTestDebugDefinition)$(WarehousePerformanceSelfTestDebugDefinition)$(D455SelfTestDebugDefinition)%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -123,7 +115,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST;$(D455RealSensePreprocessorDefinitions)$(EntryInitializationSelfTestDebugDefinition)$(DatabaseSelfTestDebugDefinition)$(WarehousePerformanceSelfTestDebugDefinition)$(D455SelfTestDebugDefinition)%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;$(D455RealSensePreprocessorDefinitions)%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(EnableD455RealSense)'=='true'">$(D455VcpkgRoot)\installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -142,7 +134,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;$(D455RealSensePreprocessorDefinitions)$(EntryInitializationSelfTestDebugDefinition)$(DatabaseSelfTestDebugDefinition)$(WarehousePerformanceSelfTestDebugDefinition)$(D455SelfTestDebugDefinition)%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;$(D455RealSensePreprocessorDefinitions)%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(EnableD455RealSense)'=='true'">$(D455VcpkgRoot)\installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -163,52 +155,28 @@
     <ClCompile Include="海中鱼巣\界面\投影.控制面板启动.ixx" />
     <ClCompile Include="海中鱼巣\适配\审计.数据库启动.ixx" />
     <ClCompile Include="海中鱼巣\启动.程序运行宿主.ixx" />
-    <ClCompile Include="海中鱼巣\自检.入口初始化.ixx" />
     <ClCompile Include="海中鱼巣\启动.应用程序.ixx" />
-    <ClCompile Include="海中鱼巣\自检.运行器.ixx" />
-    <ClCompile Include="海中鱼巣\自检.性能门禁分离.ixx" />
     <ClCompile Include="海中鱼巣\装配.运行期业务.ixx" />
     <ClCompile Include="海中鱼巣\启动.运行期上下文.ixx" />
     <ClCompile Include="海中鱼巣\启动.生产运行期.ixx" />
-    <ClCompile Include="海中鱼巣\自检.生产运行期首发.ixx" />
-    <ClCompile Include="海中鱼巣\自检.运行期上下文.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L1特征定义.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.L1特征定义.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L1实例特征.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.L1实例特征.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.特征比较.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.特征比较.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L1实际存在.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.L1实际存在场景.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.L1实际存在.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L1状态.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.后继状态规格.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.L1状态.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L1动态.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.L1动态.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.状态动态原子发布.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.状态动态原子发布.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L1方法登记根当前读取.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.L1方法登记根当前读取.ixx" />
-    <ClCompile Include="海中鱼巣\自检.主装配事务.ixx" />
-    <ClCompile Include="海中鱼巣\自检.系统角色初始化.ixx" />
     <ClCompile Include="海中鱼巣\核心\合同.L1公共事实.ixx" />
     <ClCompile Include="海中鱼巣\核心\合同.L1事实基座.ixx" />
     <ClCompile Include="海中鱼巣\核心\仓库.L1事实基座.ixx" />
     <ClCompile Include="海中鱼巣\核心\服务.L1事实基座.ixx" />
-    <ClCompile Include="海中鱼巣\核心\自检.L1事实基座.ixx" />
     <ClCompile Include="海中鱼巣\核心\合同.L1可重建索引.ixx" />
     <ClCompile Include="海中鱼巣\核心\索引.L1事实基座.ixx" />
-    <ClCompile Include="海中鱼巣\核心\自检.L1可重建索引.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.世界登记.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.世界登记.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L1场景结构.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.L1场景结构.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.概念活动所有权.ixx" />
-    <ClCompile Include="海中鱼巣\自检.运行期组合分层.ixx" />
-    <ClCompile Include="海中鱼巣\自检.运行期兼容请求.ixx" />
-    <ClCompile Include="海中鱼巣\自检.服务写入兼容边界.ixx" />
-    <ClCompile Include="海中鱼巣\自检.控制面板按需投影.ixx" />
     <ClCompile Include="海中鱼巣\线程\运行消息协议.ixx" />
     <ClCompile Include="海中鱼巣\适配\协议.D455采样材料.ixx" />
     <ClCompile Include="海中鱼巣\适配\采集器.D455相机.ixx">
@@ -216,10 +184,6 @@
     </ClCompile>
     <ClCompile Include="海中鱼巣\线程\缓存.D455帧材料.ixx" />
     <ClCompile Include="海中鱼巣\线程\上行桥.D455采样材料.ixx" />
-    <ClCompile Include="海中鱼巣\线程\自检.D455采样材料.ixx" />
-    <ClCompile Include="海中鱼巣\适配\自检.D455真实样本.ixx">
-      <ExcludedFromBuild Condition="'$(Platform)'!='x64' or '$(EnableD455RealSense)'!='true'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="海中鱼巣\线程\自我治理消息协议.ixx" />
     <ClCompile Include="海中鱼巣\线程\协议.任务执行请求.ixx" />
     <ClCompile Include="海中鱼巣\线程\任务结果回执协议.ixx" />
@@ -235,17 +199,10 @@
     <ClCompile Include="海中鱼巣\领域\算法.用途事件.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.用途事件.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.用途事件.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.用途事件.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.因果完整结构键.ixx" />
     <ClCompile Include="海中鱼巣\领域\材料.用途观察.ixx" />
     <ClCompile Include="海中鱼巣\领域\算法.用途观察.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.用途观察.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据操作.用途观察.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.用途观察.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.用途观察结构.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.动态模式.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.动态聚类.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.因果模式.ixx" />
     <ClCompile Include="海中鱼巣\线程\有界自我治理队列.ixx" />
     <ClCompile Include="海中鱼巣\线程\有界运行消息队列.ixx" />
     <ClCompile Include="海中鱼巣\线程\运行宿主线程.ixx" />
@@ -253,28 +210,10 @@
     <ClCompile Include="海中鱼巣\线程\路由.任务执行调度.ixx" />
     <ClCompile Include="海中鱼巣\线程\路由.任务结果治理.ixx" />
     <ClCompile Include="海中鱼巣\线程\任务工作线程.ixx" />
-    <ClCompile Include="海中鱼巣\线程\自检.任务执行调度.ixx" />
-    <ClCompile Include="海中鱼巣\线程\自检.任务结果结算.ixx" />
     <ClCompile Include="海中鱼巣\线程\任务管理上行桥.ixx" />
     <ClCompile Include="海中鱼巣\线程\上行桥.概念命名治理.ixx" />
     <ClCompile Include="海中鱼巣\线程\路由.概念命名治理.ixx" />
-    <ClCompile Include="海中鱼巣\线程\自检.概念命名治理.ixx" />
-    <ClCompile Include="海中鱼巣\线程\自检.概念命名需求.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.概念生命周期.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.概念删除候选.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.概念清理适配.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.概念安全删除.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.概念安全删除.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.概念删除后验.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.概念命名目标.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.任务生命周期初态.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.任务生命周期迁移.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.任务筹办选择.ixx" />
-    <ClCompile Include="海中鱼巣\线程\自检.自我治理闭环.ixx" />
-    <ClCompile Include="海中鱼巣\线程\自检.自我治理多轮.ixx" />
-    <ClCompile Include="海中鱼巣\线程\自检.自我治理回执.ixx" />
-    <ClCompile Include="海中鱼巣\线程\自检.运行线程.ixx" />
-    <ClCompile Include="海中鱼巣\线程\自检.自我治理协议.ixx" />
     <ClCompile Include="海中鱼巣\线程\自我治理领域路由.ixx" />
     <ClCompile Include="海中鱼巣\线程\缓存统计线程.ixx" />
     <ClCompile Include="海中鱼巣\线程\事件日志线程.ixx" />
@@ -311,31 +250,17 @@
     <ClCompile Include="海中鱼巣\领域\服务.节点直接存在.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.节点直接场景.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.节点直接世界引导.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.节点直接世界结构骨架.ixx" />
-    <ClCompile Include="海中鱼巣\核心\自检.节点直接结构查询.ixx" />
-    <ClCompile Include="海中鱼巣\核心\自检.节点直接统一冻结骨架.ixx" />
     <ClCompile Include="海中鱼巣\核心\冻结.节点直接身份结构.ixx" />
-    <ClCompile Include="海中鱼巣\核心\自检.节点直接身份结构写入.ixx" />
-    <ClCompile Include="海中鱼巣\核心\自检.结构事务.ixx" />
-    <ClCompile Include="海中鱼巣\核心\自检.未发布身份候选.ixx" />
-    <ClCompile Include="海中鱼巣\核心\自检.仓库统一合同.ixx" />
-    <ClCompile Include="海中鱼巣\核心\自检.索引所有者声明.ixx" />
-    <ClCompile Include="海中鱼巣\核心\自检.仓库权威导出.ixx" />
-    <ClCompile Include="海中鱼巣\核心\自检.结构写入会话.ixx" />
-    <ClCompile Include="海中鱼巣\核心\自检.关系仓库性能基线.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据操作.存在场景.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.存在.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.场景.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.存在场景.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.存在场景分层.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据操作.状态动态.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.状态.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据操作.概念活动.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.概念活动.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.动态.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.状态动态.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.状态动态分层.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.存在状态同会话参与.ixx" />
     <ClCompile Include="海中鱼巣\领域\桥接.特征批次同层授权.ixx" />
     <ClCompile Include="海中鱼巣\领域\参与者.特征值原始材料.ixx" />
     <ClCompile Include="海中鱼巣\领域\参与者.特征批次发布记录.ixx" />
@@ -343,19 +268,15 @@
     <ClCompile Include="海中鱼巣\领域\服务.特征.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.二次特征.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.特征状态.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.特征体系分层.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.特征值原始材料事务.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据操作.语素基础.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.基础信息.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.语素.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.语素概念入口.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据操作.轻量因果.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.轻量因果.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.语义基础分层.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据操作.概念图结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.概念图结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.概念结构发布.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.概念图结构分层.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据操作.需求任务方法.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据操作.系统角色.ixx" />
     <ClCompile Include="海中鱼巣\领域\初始化.系统角色.ixx" />
@@ -372,8 +293,6 @@
     <ClCompile Include="海中鱼巣\领域\组合.任务结果结算.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.运行期只读查询.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.运行期业务操作.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.需求任务方法分层.ixx" />
-    <ClCompile Include="海中鱼巣\领域\自检.方法动作场景关系.ixx" />
     <ClCompile Include="海中鱼巣\线程\路由.运行期业务请求.ixx" />
     <ClCompile Include="海中鱼巣\适配\查询.运行期只读.ixx" />
   </ItemGroup>

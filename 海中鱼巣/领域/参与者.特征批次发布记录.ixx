@@ -141,34 +141,6 @@ public:
     特征批次发布记录账(特征批次发布记录账&&) = delete;
     特征批次发布记录账& operator=(特征批次发布记录账&&) = delete;
 
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-    bool 自检注入已发布记录(特征批次发布记录 记录) {
-        if (!记录.批次.有效()) return false;
-        std::unique_lock<std::shared_mutex> 锁(锁_, std::try_to_lock);
-        if (!锁.owns_lock()) return false;
-        for (const auto& 已有 : 记录组_) {
-            if (已有.记录.批次 == 记录.批次) return false;
-        }
-        try {
-            记录组_.push_back({std::move(记录), true});
-        } catch (...) {
-            return false;
-        }
-        return true;
-    }
-
-    template <typename 调用类型>
-    bool 自检独占期间(调用类型&& 调用) {
-        std::unique_lock<std::shared_mutex> 锁(锁_, std::try_to_lock);
-        if (!锁.owns_lock()) return false;
-        try {
-            std::forward<调用类型>(调用)();
-        } catch (...) {
-            return false;
-        }
-        return true;
-    }
-#endif
 
 private:
     friend class 特征批次发布记录账访问器;

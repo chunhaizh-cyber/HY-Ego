@@ -440,9 +440,6 @@ public:
         std::size_t 单类节点预算 = 4096,
         std::size_t 总节点预算 = 16384,
         std::size_t 深度预算 = 128) const {
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-        六类入口调用次数_.fetch_add(1, std::memory_order_relaxed);
-#endif
         const auto 请求状态 = 判定请求状态(请求);
         if (请求状态 != 控制面板请求状态::可展示) {
             return 拒绝六树候选(请求状态);
@@ -537,19 +534,6 @@ public:
         return 结果;
     }
 
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-    std::uint64_t 读取六类入口调用次数用于自检() const {
-        return 六类入口调用次数_.load(std::memory_order_relaxed);
-    }
-
-    std::array<std::uint64_t, 6> 读取分类构造调用次数用于自检() const {
-        std::array<std::uint64_t, 6> 结果{};
-        for (std::size_t 索引 = 0; 索引 < 结果.size(); ++索引) {
-            结果[索引] = 分类构造调用次数_[索引].load(std::memory_order_relaxed);
-        }
-        return 结果;
-    }
-#endif
 
     控制面板操作请求材料 生成操作请求壳(const 控制面板请求& 请求) const {
         const auto 状态 = 判定请求状态(请求);
@@ -628,14 +612,7 @@ private:
     }
 
     void 记录分类构造调用(控制面板树分类 分类) const {
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-        const auto 索引 = static_cast<std::size_t>(分类);
-        if (索引 < 分类构造调用次数_.size()) {
-            分类构造调用次数_[索引].fetch_add(1, std::memory_order_relaxed);
-        }
-#else
         (void)分类;
-#endif
     }
 
     static const wchar_t* 概念根类别文本(概念根类别 类别) {
@@ -1797,10 +1774,6 @@ private:
     控制面板树结构材料 语素树结构材料_;
     std::array<节点句柄, 2> 根需求组_;
     mutable std::atomic<std::uint64_t> 候选序号_{0};
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-    mutable std::atomic<std::uint64_t> 六类入口调用次数_{0};
-    mutable std::array<std::atomic<std::uint64_t>, 6> 分类构造调用次数_{};
-#endif
 };
 
 }

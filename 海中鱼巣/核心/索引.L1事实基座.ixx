@@ -49,9 +49,6 @@ public:
                 return {L1索引维护状态::事实代次漂移, 请求.来源事实代次, 请求.规则版本, 开始序号};
 
             auto 候选 = 构造候选(请求.指定快照, 请求.规则版本);
-#ifdef _DEBUG
-            if (损坏下一候选_.exchange(false)) 候选.关系源[{0, 1}].push_back({1});
-#endif
             if (!候选完整(候选, 请求.指定快照))
                 return {L1索引维护状态::内部不一致, 请求.来源事实代次, 请求.规则版本, 开始序号};
 
@@ -181,9 +178,6 @@ public:
         catch (...) { return {L1索引读取状态::内部不一致, 0, 0, {}}; }
     }
 
-#ifdef _DEBUG
-    void 自检_损坏下一次重建候选() noexcept { 损坏下一候选_.store(true); }
-#endif
 
 private:
     static constexpr std::uint32_t 索引数据版本_ = 1;
@@ -400,9 +394,6 @@ private:
     mutable std::shared_mutex 锁_;
     std::unique_ptr<const L1索引视图> 视图_;
     std::uint64_t 视图序号_ = 0;
-#ifdef _DEBUG
-    std::atomic_bool 损坏下一候选_ = false;
-#endif
 };
 
 } // namespace 海中鱼巣

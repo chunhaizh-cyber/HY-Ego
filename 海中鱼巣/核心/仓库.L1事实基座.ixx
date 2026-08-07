@@ -242,12 +242,8 @@ public:
                 L1领域结果见证记录{请求.幂等键, 新代次, *领域结果见证,
                     领域结果见证摘要});
             std::swap(状态_, 候选);
-            bool 注入读回不一致 = false;
-#ifdef _DEBUG
-            if (下一提交后读回不一致_) { 下一提交后读回不一致_ = false; 注入读回不一致 = true; }
-#endif
-            const auto 权威读回 = 注入读回不一致 ? std::optional<L1通用发布后读回结果>{}
-                : 执行读回计划(状态_, 规范化->发布后读回计划, 映射, 新代次);
+            const auto 权威读回 =
+                执行读回计划(状态_, 规范化->发布后读回计划, 映射, 新代次);
             if (权威读回 && *权威读回 == *读回 && 状态完整(状态_)) return 结果;
             状态_.隔离 = true;
             const L1失败见证身份 身份{请求.幂等键,
@@ -317,10 +313,6 @@ public:
             if (!锁.owns_lock()) return {L1读取状态::许可拒绝, std::nullopt};
             if (状态_.隔离 || !状态完整(状态_))
                 return {L1读取状态::内部不一致, std::nullopt};
-#ifdef _DEBUG
-            if (下一非阻塞快照资源失败_.exchange(false)) throw std::bad_alloc{};
-            if (下一非阻塞快照内部异常_.exchange(false)) throw 1;
-#endif
             const auto 快照 = 构造快照(状态_);
             if (!快照) return {L1读取状态::内部不一致, std::nullopt};
             return {L1读取状态::成功, std::move(*快照)};
@@ -401,12 +393,6 @@ public:
         try {
             std::unique_lock<std::shared_mutex> 锁(锁_);
             if (候选_.has_value()) return {L1恢复状态::入口拒绝, 状态_.事实代次};
-#ifdef _DEBUG
-            if (下一建立前状态损坏_) {
-                下一建立前状态损坏_ = false;
-                状态_.下个编码 = 0;
-            }
-#endif
             if (!状态完整(状态_)) {
                 状态_.隔离 = true;
                 return {L1恢复状态::内部不一致, 状态_.事实代次};
@@ -414,15 +400,6 @@ public:
             if (材料.当前快照.事实代次 != 期望 || 期望 != 状态_.事实代次) return {L1恢复状态::事实代次漂移, 状态_.事实代次};
             状态 值;
             if (!恢复材料转状态(材料, 值) || !状态完整(值)) return {L1恢复状态::材料不完整, 状态_.事实代次};
-#ifdef _DEBUG
-            if (下一候选构造结果损坏_) {
-                下一候选构造结果损坏_ = false;
-                值.当前值.emplace(0, 值事实{});
-                if (状态完整(值)) return {L1恢复状态::内部不一致, 状态_.事实代次};
-                状态_.隔离 = true;
-                return {L1恢复状态::内部不一致, 状态_.事实代次};
-            }
-#endif
             候选_ = 候选状态{std::move(值), 状态_.事实代次};
             return {L1恢复状态::候选已建立, 状态_.事实代次};
         } catch (const std::bad_alloc&) { return {L1恢复状态::资源失败, 0}; }
@@ -448,12 +425,6 @@ public:
             if (!状态完整(值)) { 候选_.reset(); 状态_.隔离 = true; return {L1恢复状态::内部不一致, 状态_.事实代次}; }
             const auto 预期快照 = 构造快照(值);
             std::swap(状态_, 值); 候选_.reset();
-#ifdef _DEBUG
-            if (下一发布后读回不一致_) {
-                下一发布后读回不一致_ = false;
-                状态_.下个编码 = 0;
-            }
-#endif
             const auto 快照 = 构造快照(状态_);
             const bool 恢复状态完整 = 状态完整(状态_);
             if (!快照 || !预期快照 || *快照 != *预期快照
@@ -473,34 +444,6 @@ public:
         } catch (...) { return {L1恢复状态::内部不一致, 0}; }
     }
 
-#ifdef _DEBUG
-    // 诊断责任：无适用错误分支；仅为本模块并发自检稳定占用既有锁。
-    void 自检_持有独占许可(std::atomic<bool>& 已持有,
-        const std::atomic<bool>& 释放) noexcept {
-        std::unique_lock<std::shared_mutex> 锁(锁_);
-        已持有.store(true, std::memory_order_release);
-        已持有.notify_one();
-        while (!释放.load(std::memory_order_acquire)) 释放.wait(false, std::memory_order_acquire);
-    }
-    // 诊断责任：无适用错误分支；只设置一次性Debug故障注入标志。
-    void 自检_使下一次非阻塞快照资源失败() noexcept {
-        下一非阻塞快照资源失败_.store(true, std::memory_order_release);
-    }
-    // 诊断责任：无适用错误分支；只设置一次性Debug故障注入标志。
-    void 自检_使下一次非阻塞快照内部异常() noexcept {
-        下一非阻塞快照内部异常_.store(true, std::memory_order_release);
-    }
-    void 自检_使下一次提交后权威读回不一致() noexcept { 下一提交后读回不一致_ = true; }
-    void 自检_破坏当前状态用于恢复导出() noexcept {
-        std::unique_lock<std::shared_mutex> 锁(锁_); 状态_.下个编码 = 0;
-    }
-    void 自检_制造隔离见证矛盾用于恢复导出() noexcept {
-        std::unique_lock<std::shared_mutex> 锁(锁_); 状态_.隔离 = !状态_.隔离;
-    }
-    void 自检_破坏下一次建立前当前状态不变量() noexcept { 下一建立前状态损坏_ = true; }
-    void 自检_破坏下一次候选构造结果() noexcept { 下一候选构造结果损坏_ = true; }
-    void 自检_使下一次发布后权威读回不一致() noexcept { 下一发布后读回不一致_ = true; }
-#endif
 
 private:
     struct 状态 {
@@ -850,14 +793,6 @@ private:
     mutable std::shared_mutex 锁_;
     状态 状态_;
     std::optional<候选状态> 候选_;
-#ifdef _DEBUG
-    mutable std::atomic<bool> 下一非阻塞快照资源失败_ = false;
-    mutable std::atomic<bool> 下一非阻塞快照内部异常_ = false;
-    bool 下一建立前状态损坏_ = false;
-    bool 下一候选构造结果损坏_ = false;
-    bool 下一发布后读回不一致_ = false;
-    bool 下一提交后读回不一致_ = false;
-#endif
 };
 
 } // namespace 海中鱼巣

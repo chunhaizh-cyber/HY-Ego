@@ -194,13 +194,6 @@ struct 状态动态业务结果 {
     }
 };
 
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-struct 状态动态故障自检结果 {
-    状态动态业务状态 状态 = 状态动态业务状态::入口拒绝;
-    std::size_t 已执行写点 = 0;
-    bool 故障已命中 = false;
-};
-#endif
 
 class 抽象状态写入规格 final {
 public:
@@ -612,26 +605,9 @@ public:
         节点句柄 来源动作 = {}) const {
         return 使用已有前状态创建后状态并记录动态_实现(
             前状态, 后规格, 动态主键, 被改变目标, 来源动作
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-            , nullptr
-#endif
         );
     }
 
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-    状态动态故障自检结果 执行已有前状态固定故障自检(
-        节点句柄 前状态,
-        const 实例状态写入规格& 后规格,
-        std::uint64_t 动态主键,
-        节点句柄 被改变目标,
-        节点句柄 来源动作,
-        std::size_t 故障写点) const {
-        固定故障控制 控制{故障写点};
-        const auto 结果 = 使用已有前状态创建后状态并记录动态_实现(
-            前状态, 后规格, 动态主键, 被改变目标, 来源动作, &控制);
-        return {结果.状态, 控制.已执行写点, 控制.故障已命中};
-    }
-#endif
 
     状态动态业务结果 创建状态并记录动态(
         const 实例状态写入规格& 前规格,
@@ -747,23 +723,6 @@ private:
     static constexpr std::int64_t 后状态顺序号 = 3;
     static constexpr std::int64_t 来源动作顺序号 = 4;
 
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-    struct 固定故障控制 {
-        std::size_t 目标写点 = 0;
-        std::size_t 已执行写点 = 0;
-        bool 故障已命中 = false;
-    };
-
-    static bool 命中固定故障(固定故障控制* 控制) noexcept {
-        if (控制 == nullptr) return false;
-        ++控制->已执行写点;
-        if (控制->目标写点 != 0 && 控制->目标写点 == 控制->已执行写点) {
-            控制->故障已命中 = true;
-            return true;
-        }
-        return false;
-    }
-#endif
 
     状态动态业务结果 使用已有前状态创建后状态并记录动态_实现(
         节点句柄 前状态,
@@ -771,9 +730,6 @@ private:
         std::uint64_t 动态主键,
         节点句柄 被改变目标,
         节点句柄 来源动作
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-        , 固定故障控制* 故障
-#endif
     ) const {
         if (!有效() || !句柄有效(前状态) || !后规格.完整()
             || 动态主键 == 0 || 动态主键 == 后规格.读取幂等主键()
@@ -834,23 +790,12 @@ private:
             const auto 后参与结果 = 写入实例状态_会话(会话, 后规格);
             if (!后参与结果.成功()) return;
             新后状态 = 后参与结果.材料;
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-            if (命中固定故障(故障)) return;
-#endif
             if (!写入实例动态_会话(
                     会话, 动态主键, *会话前材料, 新后状态,
                     被改变目标, 来源动作, 新动态)) return;
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-            if (命中固定故障(故障)) return;
-#endif
             (void)会话.请求提交();
         });
         if (版本已经漂移) return {状态动态业务状态::版本漂移};
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-        if (故障 != nullptr && 故障->故障已命中) {
-            return {状态动态业务状态::入口拒绝};
-        }
-#endif
 
         const auto 当前后状态 = 读取主键状态材料(后规格.读取幂等主键());
         const auto 当前动态 = 读取主键动态材料(动态主键);

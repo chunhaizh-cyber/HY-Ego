@@ -222,23 +222,6 @@ private:
     std::int64_t 顺序号_ = 0;
 };
 
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-inline constexpr char 概念图结构固定故障标记[] = "concept-structure-write-fault";
-
-struct 概念关系固定故障项 {
-    关系类型 类型 = 关系类型::普通父子;
-    概念结构根类别 根类别 = 概念结构根类别::未定义;
-    节点句柄 源节点;
-    节点句柄 目标节点;
-    std::int64_t 顺序号 = 0;
-};
-
-struct 概念关系固定故障自检结果 {
-    概念图结构业务结果 业务结果;
-    std::size_t 已写入数量 = 0;
-    bool 故障已命中 = false;
-};
-#endif
 
 class 概念图结构数据操作 final {
 public:
@@ -296,24 +279,6 @@ public:
         return 创建关系组_实现(根角色组, 写入组, std::nullopt, nullptr, nullptr);
     }
 
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-    概念关系固定故障自检结果 执行固定写点故障自检(
-        const 概念根角色组& 根角色组,
-        const std::vector<概念关系固定故障项>& 请求组,
-        std::size_t 故障写点) const {
-        std::vector<概念关系写入规格> 写入组;
-        写入组.reserve(请求组.size());
-        for (const auto& 请求 : 请求组) {
-            写入组.push_back(概念关系写入规格(
-                请求.类型, 请求.根类别, 请求.源节点, 请求.目标节点, 请求.顺序号));
-        }
-        std::size_t 已写入数量 = 0;
-        bool 故障已命中 = false;
-        auto 业务结果 = 创建关系组_实现(
-            根角色组, 写入组, 故障写点, &已写入数量, &故障已命中);
-        return {std::move(业务结果), 已写入数量, 故障已命中};
-    }
-#endif
 
 private:
     enum class 归根复核状态 : std::uint8_t {

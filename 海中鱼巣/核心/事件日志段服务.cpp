@@ -72,9 +72,8 @@ bool 含点路径段(const std::filesystem::path& 路径) {
     }
 
     const auto 正式目录 = (日志目录路径() / L"事件段").lexically_normal();
-    const auto 自检目录 = (正式目录 / L"自检").lexically_normal();
     const auto 请求目录 = 配置.日志根目录.lexically_normal();
-    if (!路径文本相同(请求目录, 正式目录) && !路径文本相同(请求目录, 自检目录)) {
+    if (!路径文本相同(请求目录, 正式目录)) {
         结果.材料.拒绝原因 = 事件段拒绝原因::路径越界;
         return 结果;
     }

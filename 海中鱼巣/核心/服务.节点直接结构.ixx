@@ -66,23 +66,9 @@ bool 类型化值记录完整_(const 类型化值读回& 值) noexcept {
 
 export namespace 海中鱼巣 {
 
-#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
-struct 节点直接当前索引查询测试异常 {};
-
-enum class 节点直接当前索引读取内部损坏测试种类 : std::uint8_t {
-    节点目标权威读回缺失 = 1,
-    关系目标权威读回缺失 = 2,
-    关系端点见证不可形成 = 3
-};
-#endif
 
 class 节点直接结构查询服务;
 
-#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
-bool 自检验证两级投影类型化值完整性(const 类型化值读回& 值) noexcept;
-void 自检注入下一次两级投影资源失败(节点直接结构查询服务& 服务) noexcept;
-void 自检注入下一次目标角色源投影资源失败(节点直接结构查询服务& 服务) noexcept;
-#endif
 
 class 节点直接结构查询服务 final {
 public:
@@ -177,12 +163,6 @@ public:
             return {{节点直接结构服务状态::入口拒绝, 0}, {}};
         }
         try {
-#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
-            const auto 故障 = 测试_下次当前索引读取故障_.exchange(
-                0, std::memory_order_acq_rel);
-            if (故障 == 1) throw std::bad_alloc{};
-            if (故障 == 2) throw 节点直接当前索引查询测试异常{};
-#endif
             auto 许可 = 事务域_.取得读取许可();
             if (!许可.有效()) {
                 return {{节点直接结构服务状态::许可拒绝, 0}, {}};
@@ -209,37 +189,18 @@ public:
             const auto& 记录 = *内部.当前记录;
             if (记录.目标种类 == 索引目标种类::节点
                 && 句柄有效(记录.节点) && !句柄有效(记录.关系)) {
-#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
-                if (故障 == 4 || 故障 == 5) {
-                    return {{节点直接结构服务状态::内部不一致, 0}, {}};
-                }
-#endif
                 auto 节点记录 = 节点_.读取节点(记录.节点);
-#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
-                if (故障 == 3) 节点记录.reset();
-#endif
                 if (!节点记录) {
                     return {{节点直接结构服务状态::内部不一致, 0}, {}};
                 }
                 读回.节点目标 = 形成节点见证_(*节点记录);
             } else if (记录.目标种类 == 索引目标种类::关系
                 && 句柄有效(记录.关系) && !句柄有效(记录.节点)) {
-#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
-                if (故障 == 3) {
-                    return {{节点直接结构服务状态::内部不一致, 0}, {}};
-                }
-#endif
                 auto 关系记录 = 关系_.读取关系(记录.关系);
-#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
-                if (故障 == 4) 关系记录.reset();
-#endif
                 if (!关系记录) {
                     return {{节点直接结构服务状态::内部不一致, 0}, {}};
                 }
                 读回.关系目标 = 形成关系见证_(*关系记录);
-#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
-                if (故障 == 5) 读回.关系目标.reset();
-#endif
                 if (!读回.关系目标) {
                     return {{节点直接结构服务状态::内部不一致, 0}, {}};
                 }
@@ -254,24 +215,6 @@ public:
         }
     }
 
-#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
-    void 测试_令下次当前索引读取抛出资源异常() noexcept {
-        测试_下次当前索引读取故障_.store(1, std::memory_order_release);
-    }
-
-    void 测试_令下次当前索引读取抛出其它异常() noexcept {
-        测试_下次当前索引读取故障_.store(2, std::memory_order_release);
-    }
-
-    bool 测试_令下次当前索引读取模拟内部损坏(
-        节点直接当前索引读取内部损坏测试种类 种类) noexcept {
-        const auto 值 = static_cast<std::uint8_t>(种类);
-        if (值 < 1 || 值 > 3) return false;
-        测试_下次当前索引读取故障_.store(
-            static_cast<std::uint8_t>(2 + 值), std::memory_order_release);
-        return true;
-    }
-#endif
 
     节点直接类型合同读取结果 读取精确类型合同(
         类型合同稳定身份 合同身份, std::uint32_t 合同版本) const {
@@ -340,15 +283,6 @@ private:
     可重建索引仓库& 索引_;
     节点直接类型合同仓库& 类型合同_;
     节点直接类型化值仓库& 类型化值_;
-#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
-    mutable std::atomic<std::uint8_t> 测试_下次当前索引读取故障_{0};
-    mutable bool 自检下一次两级投影资源失败_ = false;
-    mutable bool 自检下一次目标角色源投影资源失败_ = false;
-    friend void 自检注入下一次两级投影资源失败(
-        节点直接结构查询服务& 服务) noexcept;
-    friend void 自检注入下一次目标角色源投影资源失败(
-        节点直接结构查询服务& 服务) noexcept;
-#endif
 };
 
 std::optional<关系稳定身份见证> 节点直接结构查询服务::形成当前关系见证_(
@@ -454,12 +388,6 @@ std::optional<关系稳定身份见证> 节点直接结构查询服务::形成�
                 return 空结果(节点直接结构服务状态::入口拒绝);
             }
         }
-#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
-        if (自检下一次两级投影资源失败_) {
-            自检下一次两级投影资源失败_ = false;
-            throw std::bad_alloc{};
-        }
-#endif
         auto 必须节点组 = 请求.必须节点组;
         auto 根节点组 = 请求.根节点组;
         std::sort(必须节点组.begin(), 必须节点组.end(), 节点顺序);
@@ -699,12 +627,6 @@ std::optional<关系稳定身份见证> 节点直接结构查询服务::形成�
                 }
             }
         }
-#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
-        if (自检下一次目标角色源投影资源失败_) {
-            自检下一次目标角色源投影资源失败_ = false;
-            throw std::bad_alloc{};
-        }
-#endif
         auto 必须节点组 = 请求.必须节点组;
         auto 筛选组 = 请求.筛选组;
         std::sort(必须节点组.begin(), 必须节点组.end(), 节点顺序);
@@ -844,18 +766,5 @@ std::optional<关系稳定身份见证> 节点直接结构查询服务::形成�
     }
 }
 
-#if defined(HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST)
-bool 自检验证两级投影类型化值完整性(const 类型化值读回& 值) noexcept {
-    return 类型化值记录完整_(值);
-}
-
-void 自检注入下一次两级投影资源失败(节点直接结构查询服务& 服务) noexcept {
-    服务.自检下一次两级投影资源失败_ = true;
-}
-
-void 自检注入下一次目标角色源投影资源失败(节点直接结构查询服务& 服务) noexcept {
-    服务.自检下一次目标角色源投影资源失败_ = true;
-}
-#endif
 
 } // namespace 海中鱼巣

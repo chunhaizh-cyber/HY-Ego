@@ -7,9 +7,6 @@
 #include "权威冻结材料.数据.h"
 #include "../领域/概念安全删除提交能力.数据.h"
 
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-#include <atomic>
-#endif
 #include <cstdint>
 #include <mutex>
 #include <optional>
@@ -138,9 +135,6 @@ public:
     仓库权威导出结果<节点仓库权威材料> 导出权威状态(
         const 结构事务令牌& 令牌) const;
 
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-    void 自检注入下一次节点记录组资源失败();
-#endif
 
 private:
     friend class 领域::概念安全删除编排器;
@@ -157,9 +151,6 @@ private:
     std::uint64_t 下个创建序号_ = 1;
     mutable std::shared_mutex 仓库锁_;
     std::unordered_map<std::uint64_t, 节点记录> 节点表_;
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-    mutable std::atomic<bool> 下一次节点记录组资源失败_{false};
-#endif
 };
 
 }

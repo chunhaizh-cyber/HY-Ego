@@ -9,9 +9,6 @@
 #include "../领域/概念安全删除提交能力.数据.h"
 
 #include <algorithm>
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-#include <atomic>
-#endif
 #include <cstdint>
 #include <mutex>
 #include <optional>
@@ -101,17 +98,6 @@ public:
     仓库权威导出结果<索引仓库权威材料> 导出权威状态(
         const 结构事务令牌& 令牌) const;
 
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-    void 自检注入下一次主键绑定组资源失败();
-    bool 自检删除反向绑定(
-        std::uint64_t 主键,
-        节点句柄 节点,
-        const 结构事务令牌& 令牌);
-    bool 自检追加反向绑定(
-        std::uint64_t 主键,
-        节点句柄 节点,
-        const 结构事务令牌& 令牌);
-#endif
 
 private:
     friend class 领域::概念安全删除编排器;
@@ -125,9 +111,6 @@ private:
     std::unordered_map<std::uint64_t, 主键绑定记录> 主键索引_;
     std::unordered_map<std::uint64_t, std::vector<std::uint64_t>> 节点主键组_;
     std::unordered_map<std::uint64_t, 主键绑定记录> 永久保留主键组_;
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-    mutable std::atomic<bool> 下一次主键绑定组资源失败_{false};
-#endif
 };
 
 }

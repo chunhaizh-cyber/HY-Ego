@@ -365,11 +365,6 @@ bool 节点仓库::删除节点(节点句柄 节点, const 结构事务令牌& �
     if (!验证共享令牌(事务接线_, 令牌) || !节点类型已定义(类型)) {
         return {节点记录组读取状态::入口拒绝, {}};
     }
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-    if (下一次节点记录组资源失败_.exchange(false)) {
-        return {节点记录组读取状态::资源失败, {}};
-    }
-#endif
     节点记录组读取结果 输出{节点记录组读取状态::已形成, {}};
     std::shared_lock<std::shared_mutex> 锁(仓库锁_);
     try {
@@ -393,11 +388,6 @@ bool 节点仓库::删除节点(节点句柄 节点, const 结构事务令牌& �
     return 输出;
 }
 
-#ifdef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-void 节点仓库::自检注入下一次节点记录组资源失败() {
-    下一次节点记录组资源失败_.store(true);
-}
-#endif
 
 结构写入结果 节点仓库::严格删除节点(
     节点句柄 节点,

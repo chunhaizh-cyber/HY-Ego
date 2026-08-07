@@ -32,14 +32,6 @@ export namespace 海中鱼巣 {
             当前模式 = 启动模式::无窗口常驻;
         } else if (参数 == "--runtime-context") {
             当前模式 = 启动模式::生产运行期;
-        } else if (参数 == "--self-test-exit") {
-            当前模式 = 启动模式::完整自检;
-        } else if (参数 == "--database-self-test-exit") {
-            当前模式 = 启动模式::数据库专项;
-        } else if (参数 == "--warehouse-performance-self-test-exit") {
-            当前模式 = 启动模式::关系仓库性能专项;
-        } else if (参数 == "--d455-real-sample-exit") {
-            当前模式 = 启动模式::D455真实样本专项;
         } else {
             return {启动选项解析状态::未知参数, {}, static_cast<std::size_t>(参数索引)};
         }
@@ -55,16 +47,6 @@ export namespace 海中鱼巣 {
         模式 = 当前模式;
     }
 
-#ifndef HY_EGO_ENABLE_STRUCTURE_COMMIT_FAULT_SELF_TEST
-    if (模式 == 启动模式::关系仓库性能专项) {
-        return {启动选项解析状态::构建能力未启用, {}, 参数数量 > 1 ? 1U : 0U};
-    }
-#endif
-#ifndef HY_EGO_ENABLE_D455_REALSENSE
-    if (模式 == 启动模式::D455真实样本专项) {
-        return {启动选项解析状态::构建能力未启用, {}, 参数数量 > 1 ? 1U : 0U};
-    }
-#endif
     return {启动选项解析状态::已接受, {模式}, 0};
 }
 
