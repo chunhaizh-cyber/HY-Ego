@@ -10,6 +10,7 @@ namespace 海中鱼巣 {
 inline constexpr std::uint32_t L1状态合同版本 = 1;
 inline constexpr std::uint32_t L1状态规则版本 = 1;
 inline constexpr std::uint64_t L1状态登记幂等域 = 0x0CULL;
+inline constexpr std::uint64_t L1首个基准状态幂等域 = 0x0DULL;
 inline constexpr std::int64_t 状态节点资格值 = 1;
 inline constexpr std::int64_t 状态特征值见证资格值 = 1;
 
