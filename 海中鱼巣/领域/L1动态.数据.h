@@ -14,9 +14,6 @@ inline constexpr std::uint32_t 状态迁移动能比较证据版本 = 1;
 inline constexpr std::uint32_t 状态迁移动能规格提供者证据合同版本 = 1;
 inline constexpr std::uint32_t 状态迁移动能规格提供者证据规则版本 = 1;
 inline constexpr std::uint64_t L1动态登记幂等域 = 0x0FULL;
-inline constexpr std::uint32_t L1动态登记操作标签 = 0x15000F01U;
-inline constexpr std::uint8_t L1动态登记意图组 = 7;
-inline constexpr std::uint8_t L1动态登记入口变体 = 3;
 
 enum class L1动态状态 : std::uint8_t {
     已登记 = 1, 已读取 = 2, 已形成 = 3, 无需形成 = 4,
