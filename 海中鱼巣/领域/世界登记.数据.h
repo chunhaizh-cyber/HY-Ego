@@ -13,13 +13,15 @@
 
 namespace 海中鱼巣 {
 
-inline constexpr std::uint32_t 世界登记合同版本 = 2;
+inline constexpr std::uint32_t 世界登记合同版本 = 3;
 inline constexpr std::uint32_t 世界登记规则版本 = 1;
+inline constexpr std::uint64_t 世界登记中性幂等域 = 0x01ULL;
 
 struct 世界结构登记 final {
     std::uint32_t 合同版本 = 世界登记合同版本;
     std::uint32_t 世界规则版本 = 世界登记规则版本;
     世界操作幂等身份 首次幂等身份;
+    std::uint64_t 首次中性写集幂等键 = 0;
     std::uint64_t 已验证事实代次 = 0;
     稳定编码 服务身份;
     稳定编码 场景标记属性类型;
@@ -47,14 +49,20 @@ struct 世界登记结果 final {
     世界登记状态 状态 = 世界登记状态::入口拒绝;
     std::optional<世界结构登记> 登记;
     friend bool operator==(const 世界登记结果&, const 世界登记结果&) = default;
+
+    // 诊断责任：无适用错误分支；纯值状态与登记完整性判断。
+    bool 成功() const noexcept;
 };
 
+// 诊断责任：无适用错误分支；纯值请求完整性判断。
 inline bool 世界登记建立请求有效(const 世界登记建立请求& 请求) noexcept {
     return 请求.合同版本 == 世界登记合同版本
         && 请求.世界规则版本 == 世界登记规则版本
-        && 世界操作幂等身份有效(请求.幂等身份);
+        && 世界操作幂等身份有效(请求.幂等身份)
+        && 请求.期望事实代次 == 0;
 }
 
+// 诊断责任：无适用错误分支；纯值登记完整性判断。
 inline bool 世界结构登记完整(const 世界结构登记& 登记) noexcept {
     const std::array<稳定编码, 5> 编码组{
         登记.服务身份, 登记.场景标记属性类型,
@@ -63,6 +71,8 @@ inline bool 世界结构登记完整(const 世界结构登记& 登记) noexcept 
     if (登记.合同版本 != 世界登记合同版本
         || 登记.世界规则版本 != 世界登记规则版本
         || !世界操作幂等身份有效(登记.首次幂等身份)
+        || 登记.首次中性写集幂等键
+            != ((世界登记中性幂等域 << 56) | 登记.首次幂等身份.值)
         || 登记.已验证事实代次 == 0) {
         return false;
     }
@@ -72,6 +82,13 @@ inline bool 世界结构登记完整(const 世界结构登记& 登记) noexcept 
             if (编码组[i] == 编码组[j]) return false;
     }
     return true;
+}
+
+inline bool 世界登记结果::成功() const noexcept {
+    return (状态 == 世界登记状态::已提交
+            || 状态 == 世界登记状态::幂等读回
+            || 状态 == 世界登记状态::已读取)
+        && 登记.has_value() && 世界结构登记完整(*登记);
 }
 
 } // namespace 海中鱼巣
