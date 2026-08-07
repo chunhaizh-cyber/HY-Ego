@@ -5,7 +5,7 @@
 
 namespace 海中鱼巣 {
 
-inline constexpr std::uint32_t L1实际存在合同版本 = 1;
+inline constexpr std::uint32_t L1实际存在合同版本 = 2;
 inline constexpr std::uint32_t L1实际存在规则版本 = 1;
 inline constexpr std::int64_t 实际存在资格值 = 1;
 
@@ -41,6 +41,7 @@ struct 实际存在登记请求 final {
 struct 实际存在登记结果 final {
     实际存在状态 状态 = 实际存在状态::入口拒绝;
     std::optional<实际存在结构登记> 登记;
+    bool 成功() const noexcept;
     friend bool operator==(const 实际存在登记结果&, const 实际存在登记结果&) = default;
 };
 
@@ -127,6 +128,13 @@ inline bool 实际存在操作幂等身份有效(实际存在操作幂等身份 
     return 身份.值 != 0 && 身份.值 <= 0x00FF'FFFF'FFFF'FFFFULL;
 }
 
+inline bool 实际存在登记请求有效(const 实际存在登记请求& 请求) noexcept {
+    return 请求.合同版本 == L1实际存在合同版本
+        && 请求.规则版本 == L1实际存在规则版本
+        && 实际存在操作幂等身份有效(请求.幂等身份)
+        && 请求.期望事实代次 != 0;
+}
+
 inline bool 实际存在结构登记完整(const 实际存在结构登记& 登记) noexcept {
     return 登记.合同版本 == L1实际存在合同版本
         && 登记.规则版本 == L1实际存在规则版本
@@ -134,6 +142,13 @@ inline bool 实际存在结构登记完整(const 实际存在结构登记& 登�
         && 登记.事实截止代次 != 0 && 有效(登记.服务身份)
         && 有效(登记.实际存在资格属性类型)
         && 登记.服务身份 != 登记.实际存在资格属性类型;
+}
+
+inline bool 实际存在登记结果::成功() const noexcept {
+    return (状态 == 实际存在状态::已提交
+            || 状态 == 实际存在状态::幂等读回
+            || 状态 == 实际存在状态::已读取)
+        && 登记.has_value() && 实际存在结构登记完整(*登记);
 }
 
 inline bool 实际存在写入规格完整(const 实际存在写入规格& 规格) noexcept {
