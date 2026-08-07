@@ -45,6 +45,7 @@ public:
         : 运行期上下文(域编号, 仓库编号, 1) {
     }
 
+    // 诊断责任：向上送出；构造失败以异常交由生产装配边界统一处理。
     运行期上下文(
         std::uint64_t 域编号,
         std::uint64_t 仓库编号,
@@ -287,7 +288,9 @@ public:
     const 世界登记服务& 读取世界登记服务() const noexcept { return 世界登记服务_; }
     L1场景结构服务& 读取L1场景结构服务() noexcept { return L1场景结构服务_; }
     const L1场景结构服务& 读取L1场景结构服务() const noexcept { return L1场景结构服务_; }
+    // 诊断责任：无适用错误分支；返回本上下文拥有的既有服务引用。
     L1实际存在服务& 读取L1实际存在服务() noexcept { return L1实际存在服务_; }
+    // 诊断责任：无适用错误分支；返回本上下文拥有的既有只读服务引用。
     const L1实际存在服务& 读取L1实际存在服务() const noexcept { return L1实际存在服务_; }
     L1实例特征服务& 读取L1实例特征服务() noexcept { return L1实例特征服务_; }
     const L1实例特征服务& 读取L1实例特征服务() const noexcept { return L1实例特征服务_; }
