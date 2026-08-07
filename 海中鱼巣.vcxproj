@@ -171,6 +171,7 @@
     <ClCompile Include="海中鱼巣\领域\服务.L1方法登记根当前读取.ixx" />
     <ClCompile Include="海中鱼巣\核心\合同.L1公共事实.ixx" />
     <ClCompile Include="海中鱼巣\核心\合同.L1事实基座.ixx" />
+    <ClCompile Include="海中鱼巣\核心\合同.L1中性CRUD.ixx" />
     <ClCompile Include="海中鱼巣\核心\仓库.L1事实基座.ixx" />
     <ClCompile Include="海中鱼巣\核心\服务.L1事实基座.ixx" />
     <ClCompile Include="海中鱼巣\核心\合同.L1可重建索引.ixx" />
@@ -313,6 +314,7 @@
     <ClInclude Include="海中鱼巣\核心\节点直接类型化结构事务.数据.h" />
     <ClInclude Include="海中鱼巣\核心\L1公共事实.数据.h" />
     <ClInclude Include="海中鱼巣\核心\L1事实基座.数据.h" />
+    <ClInclude Include="海中鱼巣\核心\L1中性CRUD.数据.h" />
     <ClInclude Include="海中鱼巣\核心\L1可重建索引.数据.h" />
     <ClInclude Include="海中鱼巣\领域\世界登记.数据.h" />
     <ClInclude Include="海中鱼巣\领域\世界操作.数据.h" />

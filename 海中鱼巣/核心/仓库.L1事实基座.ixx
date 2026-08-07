@@ -21,6 +21,7 @@ module;
 
 export module 海中鱼巣.核心.仓库.L1事实基座;
 import 海中鱼巣.核心.合同.L1事实基座;
+import 海中鱼巣.核心.合同.L1中性CRUD;
 
 export namespace 海中鱼巣 {
 
@@ -29,6 +30,272 @@ public:
     L1事实基座仓库() = default;
     L1事实基座仓库(const L1事实基座仓库&) = delete;
     L1事实基座仓库& operator=(const L1事实基座仓库&) = delete;
+
+    // 诊断责任：向上送出；全部非成功均由中性结构化状态携带。
+    L1中性写入结果 提交中性写集(const L1中性写集请求& 请求) {
+        try {
+            const auto 规范化 = 规范化中性写集(请求);
+            if (!规范化 || 请求.合同版本 != L1中性CRUD合同版本
+                || !有效(请求.幂等键)
+                || (请求.节点.empty() && 请求.关系.empty() && 请求.值.empty()
+                    && 请求.属性槽变更.empty() && 请求.退出事实.empty()))
+                return 中性写入结果(请求, L1中性写入状态::入口拒绝, 0, false,
+                    L1中性重试边界::修正请求后可重试);
+
+            std::unordered_set<std::uint32_t> 本地键;
+            if (!中性请求结构有效(*规范化, 本地键))
+                return 中性写入结果(请求, L1中性写入状态::入口拒绝, 0, false,
+                    L1中性重试边界::修正请求后可重试);
+
+            std::unique_lock<std::shared_mutex> 锁(锁_);
+            if (状态_.隔离 || !状态完整(状态_))
+                return 中性写入结果(请求, L1中性写入状态::内部不一致,
+                    状态_.事实代次, false, L1中性重试边界::原幂等键读回收敛);
+
+            const auto 中性既有 = 状态_.中性幂等账.find(请求.幂等键.值);
+            if (中性既有 != 状态_.中性幂等账.end()) {
+                if (中性既有->second.首次规范化写集 == *规范化) {
+                    auto 结果 = 中性既有->second.首次结果;
+                    结果.状态 = L1中性写入状态::精确重复;
+                    结果.是否形成内存权威发布 = false;
+                    结果.重试边界 = L1中性重试边界::原幂等键读回收敛;
+                    return 结果;
+                }
+                return 中性写入结果(请求, L1中性写入状态::幂等冲突,
+                    状态_.事实代次, false, L1中性重试边界::修正请求后可重试);
+            }
+            if (状态_.幂等账.contains(请求.幂等键.值))
+                return 中性写入结果(请求, L1中性写入状态::幂等冲突,
+                    状态_.事实代次, false, L1中性重试边界::修正请求后可重试);
+            if (请求.期望事实代次 != 状态_.事实代次)
+                return 中性写入结果(请求, L1中性写入状态::事实代次漂移,
+                    状态_.事实代次, false, L1中性重试边界::原请求可重试);
+
+            状态 候选 = 状态_;
+            std::vector<std::pair<L1中性写集本地键, 稳定编码>> 映射;
+            映射.reserve(规范化->节点.size() + 规范化->关系.size() + 规范化->值.size());
+            auto 分配 = [&]() -> std::optional<稳定编码> {
+                while (候选.下个编码 != 0 && 候选.永久占用.contains(候选.下个编码))
+                    ++候选.下个编码;
+                if (候选.下个编码 == 0) return std::nullopt;
+                const 稳定编码 编码{候选.下个编码++};
+                return 编码;
+            };
+            for (const auto& 项 : 规范化->节点) {
+                const auto 编码 = 分配();
+                if (!编码) return 中性写入结果(请求, L1中性写入状态::资源失败,
+                    状态_.事实代次, false, L1中性重试边界::原请求可重试);
+                映射.emplace_back(项.本地键, *编码);
+            }
+            for (const auto& 项 : 规范化->关系) {
+                const auto 编码 = 分配();
+                if (!编码) return 中性写入结果(请求, L1中性写入状态::资源失败,
+                    状态_.事实代次, false, L1中性重试边界::原请求可重试);
+                映射.emplace_back(项.本地键, *编码);
+            }
+            for (const auto& 项 : 规范化->值) {
+                const auto 编码 = 分配();
+                if (!编码) return 中性写入结果(请求, L1中性写入状态::资源失败,
+                    状态_.事实代次, false, L1中性重试边界::原请求可重试);
+                映射.emplace_back(项.本地键, *编码);
+            }
+
+            auto 解析节点 = [&](const L1中性事实引用& 引用,
+                L1中性写入状态& 失败) -> std::optional<稳定编码> {
+                return std::visit([&](const auto& 值) -> std::optional<稳定编码> {
+                    using 类型 = std::decay_t<decltype(值)>;
+                    if constexpr (std::is_same_v<类型, 稳定编码>) {
+                        if (!有效(值)) { 失败 = L1中性写入状态::入口拒绝; return std::nullopt; }
+                        if (状态_.当前节点.contains(值.值)) return 值;
+                        if (状态_.历史.contains(值.值)) 失败 = L1中性写入状态::已退出;
+                        else if (状态_.当前关系.contains(值.值) || 状态_.当前值.contains(值.值))
+                            失败 = L1中性写入状态::入口拒绝;
+                        else 失败 = L1中性写入状态::未找到;
+                        return std::nullopt;
+                    } else {
+                        for (std::size_t i = 0; i < 规范化->节点.size(); ++i)
+                            if (规范化->节点[i].本地键 == 值) return 映射[i].second;
+                        失败 = L1中性写入状态::入口拒绝;
+                        return std::nullopt;
+                    }
+                }, 引用);
+            };
+            auto 查映射 = [&](L1中性写集本地键 键) -> std::optional<稳定编码> {
+                for (const auto& [本地, 编码] : 映射) if (本地 == 键) return 编码;
+                return std::nullopt;
+            };
+            const auto 新代次 = 状态_.事实代次 + 1;
+
+            for (std::size_t i = 0; i < 规范化->节点.size(); ++i) {
+                const auto& 项 = 规范化->节点[i];
+                if ((项.种类 == 节点种类::属性类型) != 项.属性类型表示.has_value())
+                    return 中性写入结果(请求, L1中性写入状态::入口拒绝,
+                        状态_.事实代次, false, L1中性重试边界::修正请求后可重试);
+                候选.当前节点.emplace(映射[i].second.值, 节点事实{映射[i].second,
+                    项.种类, 转换值表示种类(项.属性类型表示), 新代次, std::nullopt, {}});
+                候选.永久占用.insert(映射[i].second.值);
+            }
+
+            const std::size_t 关系偏移 = 规范化->节点.size();
+            for (std::size_t i = 0; i < 规范化->关系.size(); ++i) {
+                const auto& 项 = 规范化->关系[i];
+                L1中性写入状态 失败 = L1中性写入状态::入口拒绝;
+                const auto 源 = 解析节点(项.源节点, 失败);
+                if (!源) return 中性写入结果(请求, 失败, 状态_.事实代次, false,
+                    L1中性重试边界::修正请求后可重试);
+                const auto 目标 = 解析节点(项.目标节点, 失败);
+                if (!目标) return 中性写入结果(请求, 失败, 状态_.事实代次, false,
+                    L1中性重试边界::修正请求后可重试);
+                const auto 类型 = 解析节点(项.关系类型节点, 失败);
+                if (!类型) return 中性写入结果(请求, 失败, 状态_.事实代次, false,
+                    L1中性重试边界::修正请求后可重试);
+                const auto 编码 = 映射[关系偏移 + i].second;
+                候选.当前关系.emplace(编码.值, 关系事实{编码, *源, *目标, *类型,
+                    项.角色或顺序, 新代次, std::nullopt});
+                候选.永久占用.insert(编码.值);
+            }
+
+            const std::size_t 值偏移 = 关系偏移 + 规范化->关系.size();
+            for (std::size_t i = 0; i < 规范化->值.size(); ++i) {
+                const auto& 项 = 规范化->值[i];
+                L1中性写入状态 失败 = L1中性写入状态::入口拒绝;
+                const auto 所属 = 解析节点(项.所属节点, 失败);
+                if (!所属) return 中性写入结果(请求, 失败, 状态_.事实代次, false,
+                    L1中性重试边界::修正请求后可重试);
+                const auto 类型编码 = 解析节点(项.属性类型节点, 失败);
+                if (!类型编码) return 中性写入结果(请求, 失败, 状态_.事实代次, false,
+                    L1中性重试边界::修正请求后可重试);
+                const auto 来源 = 解析节点(项.来源节点, 失败);
+                if (!来源) return 中性写入结果(请求, 失败, 状态_.事实代次, false,
+                    L1中性重试边界::修正请求后可重试);
+                const auto 类型节点 = 候选.当前节点.find(类型编码->值);
+                const auto 材料 = 转换原始材料(项.材料);
+                if (!材料 || 类型节点 == 候选.当前节点.end()
+                    || 类型节点->second.种类 != 节点种类::属性类型
+                    || !类型节点->second.属性类型表示
+                    || !表示匹配(*类型节点->second.属性类型表示, *材料))
+                    return 中性写入结果(请求, L1中性写入状态::入口拒绝,
+                        状态_.事实代次, false, L1中性重试边界::修正请求后可重试);
+                if (const auto* 引用 = std::get_if<独立材料引用>(&*材料);
+                    引用 && !状态_.当前节点.contains(引用->编码.值))
+                    return 中性写入结果(请求,
+                        状态_.历史.contains(引用->编码.值)
+                            ? L1中性写入状态::已退出 : L1中性写入状态::未找到,
+                        状态_.事实代次, false, L1中性重试边界::修正请求后可重试);
+                const auto 编码 = 映射[值偏移 + i].second;
+                候选.当前值.emplace(编码.值, 值事实{编码, *所属, *类型编码,
+                    *材料, *来源, 新代次, std::nullopt});
+                候选.永久占用.insert(编码.值);
+            }
+
+            auto 退出一个 = [&](稳定编码 编码) {
+                if (auto it = 候选.当前节点.find(编码.值); it != 候选.当前节点.end()) {
+                    auto 事实 = it->second; 事实.退出事实代次 = 新代次;
+                    候选.历史[编码.值] = {编码, 事实, false};
+                    候选.当前节点.erase(it); return true;
+                }
+                if (auto it = 候选.当前关系.find(编码.值); it != 候选.当前关系.end()) {
+                    auto 事实 = it->second; 事实.退出事实代次 = 新代次;
+                    候选.历史[编码.值] = {编码, 事实, false};
+                    候选.当前关系.erase(it); return true;
+                }
+                if (auto it = 候选.当前值.find(编码.值); it != 候选.当前值.end()) {
+                    auto 事实 = it->second; 事实.退出事实代次 = 新代次;
+                    候选.历史[编码.值] = {编码, 事实, false};
+                    候选.当前值.erase(it);
+                    for (auto& [_, 节点] : 候选.当前节点)
+                        节点.当前属性.erase(std::remove_if(节点.当前属性.begin(),
+                            节点.当前属性.end(), [&](const 属性槽& 槽) {
+                                return 槽.当前值 == 编码;
+                            }), 节点.当前属性.end());
+                    return true;
+                }
+                return false;
+            };
+            for (const auto 编码 : 规范化->退出事实) {
+                if (!状态_.当前节点.contains(编码.值)
+                    && !状态_.当前关系.contains(编码.值)
+                    && !状态_.当前值.contains(编码.值))
+                    return 中性写入结果(请求,
+                        状态_.历史.contains(编码.值)
+                            ? L1中性写入状态::已退出 : L1中性写入状态::未找到,
+                        状态_.事实代次, false, L1中性重试边界::修正请求后可重试);
+            }
+            for (const auto 编码 : 规范化->退出事实)
+                if (!退出一个(编码))
+                    return 中性写入结果(请求, L1中性写入状态::内部不一致,
+                        状态_.事实代次, false, L1中性重试边界::原幂等键读回收敛);
+
+            for (const auto& 项 : 规范化->属性槽变更) {
+                L1中性写入状态 失败 = L1中性写入状态::入口拒绝;
+                const auto 所属 = 解析节点(项.所属节点, 失败);
+                if (!所属) return 中性写入结果(请求, 失败, 状态_.事实代次, false,
+                    L1中性重试边界::修正请求后可重试);
+                const auto 类型 = 解析节点(项.属性类型节点, 失败);
+                if (!类型) return 中性写入结果(请求, 失败, 状态_.事实代次, false,
+                    L1中性重试边界::修正请求后可重试);
+                const auto 新值编码 = 查映射(项.新当前值);
+                const auto 新值 = 新值编码 ? 候选.当前值.find(新值编码->值)
+                    : 候选.当前值.end();
+                auto 节点 = 候选.当前节点.find(所属->值);
+                if (!新值编码 || 新值 == 候选.当前值.end()
+                    || 节点 == 候选.当前节点.end()
+                    || 新值->second.所属节点 != *所属
+                    || 新值->second.属性类型节点 != *类型)
+                    return 中性写入结果(请求, L1中性写入状态::入口拒绝,
+                        状态_.事实代次, false, L1中性重试边界::修正请求后可重试);
+                auto& 槽组 = 节点->second.当前属性;
+                auto 槽 = std::find_if(槽组.begin(), 槽组.end(), [&](const 属性槽& 值) {
+                    return 值.属性类型节点 == *类型;
+                });
+                if (槽 != 槽组.end()) {
+                    const auto 旧值编码 = 槽->当前值;
+                    if (auto 旧值 = 候选.当前值.find(旧值编码.值);
+                        旧值 != 候选.当前值.end()) {
+                        auto 历史值 = 旧值->second;
+                        历史值.退出事实代次 = 新代次;
+                        候选.历史[旧值编码.值] = {旧值编码, 历史值, false};
+                        候选.当前值.erase(旧值);
+                    }
+                    槽->当前值 = *新值编码;
+                } else 槽组.push_back({*类型, *新值编码});
+                std::sort(槽组.begin(), 槽组.end(), [](const 属性槽& 左, const 属性槽& 右) {
+                    return 左.属性类型节点 < 右.属性类型节点;
+                });
+            }
+
+            候选.事实代次 = 新代次;
+            std::sort(映射.begin(), 映射.end(), [](const auto& 左, const auto& 右) {
+                return 左.first < 右.first;
+            });
+            if (!中性候选读回完整(候选, *规范化, 映射, 新代次)
+                || !状态完整(候选))
+                return 中性写入结果(请求, L1中性写入状态::入口拒绝,
+                    状态_.事实代次, false, L1中性重试边界::修正请求后可重试);
+
+            auto 结果 = 中性写入结果(请求, L1中性写入状态::成功, 新代次, true,
+                L1中性重试边界::不适用, 映射);
+            候选.中性幂等账.emplace(请求.幂等键.值,
+                中性幂等记录{*规范化, 新代次, 映射, 结果});
+            if (!状态完整(候选))
+                return 中性写入结果(请求, L1中性写入状态::内部不一致,
+                    状态_.事实代次, false, L1中性重试边界::原幂等键读回收敛);
+
+            std::swap(状态_, 候选);
+            if (!中性候选读回完整(状态_, *规范化, 映射, 新代次)) {
+                状态_.隔离 = true;
+                return 中性写入结果(请求, L1中性写入状态::内部不一致,
+                    新代次, true, L1中性重试边界::原幂等键读回收敛);
+            }
+            return 结果;
+        } catch (const std::bad_alloc&) {
+            return 中性写入结果(请求, L1中性写入状态::资源失败, 0, false,
+                L1中性重试边界::原请求可重试);
+        } catch (...) {
+            return 中性写入结果(请求, L1中性写入状态::内部不一致, 0, false,
+                L1中性重试边界::原幂等键读回收敛);
+        }
+    }
 
     L1幂等探测结果 探测幂等(const L1幂等探测请求& 请求) const {
         if (请求.合同版本 != L1事实基座合同版本
@@ -52,6 +319,7 @@ public:
             请求.幂等键, std::move(首次)};
     }
 
+    // 诊断责任：向上送出；legacy结构化结果保留全部失败分类。
     L1写入结果 提交(const L1写集请求& 请求) {
         try {
             const auto 规范化 = 规范化写集(请求);
@@ -78,6 +346,8 @@ public:
                 状态_.隔离 = true;
                 return {L1写入状态::内部不一致, 状态_.事实代次, {}};
             }
+            if (状态_.中性幂等账.contains(请求.幂等键.值))
+                return {L1写入状态::幂等冲突, 状态_.事实代次, {}};
             const auto 既有 = 状态_.幂等账.find(请求.幂等键.值);
             if (既有 != 状态_.幂等账.end()) {
                 if (既有->second.请求意图摘要 == 请求.请求意图摘要) {
@@ -335,9 +605,13 @@ public:
             return {L1读取状态::内部不一致, 0};
         }
     }
+    // 诊断责任：向上送出；中性账守门与导出失败均结构化返回。
     L1恢复材料导出结果 导出恢复材料() const {
         try {
             std::shared_lock<std::shared_mutex> 锁(锁_);
+            if (!状态_.中性幂等账.empty())
+                return {L1恢复材料导出状态::入口拒绝, 状态_.事实代次,
+                    状态_.隔离, std::nullopt};
             if (!状态完整(状态_)
                 || 状态_.隔离 != 状态_.当前隔离见证身份.has_value())
                 return {L1恢复材料导出状态::内部不一致, 状态_.事实代次,
@@ -389,9 +663,12 @@ public:
             return {L1恢复材料导出状态::内部不一致, 0, false, std::nullopt};
         }
     }
+    // 诊断责任：向上送出；中性账守门与候选失败均结构化返回。
     L1恢复结果 建立恢复候选(const L1恢复材料& 材料, std::uint64_t 期望) {
         try {
             std::unique_lock<std::shared_mutex> 锁(锁_);
+            if (!状态_.中性幂等账.empty())
+                return {L1恢复状态::入口拒绝, 状态_.事实代次};
             if (候选_.has_value()) return {L1恢复状态::入口拒绝, 状态_.事实代次};
             if (!状态完整(状态_)) {
                 状态_.隔离 = true;
@@ -400,14 +677,17 @@ public:
             if (材料.当前快照.事实代次 != 期望 || 期望 != 状态_.事实代次) return {L1恢复状态::事实代次漂移, 状态_.事实代次};
             状态 值;
             if (!恢复材料转状态(材料, 值) || !状态完整(值)) return {L1恢复状态::材料不完整, 状态_.事实代次};
-            候选_ = 候选状态{std::move(值), 状态_.事实代次};
+            候选_ = 候选状态{std::move(值), 状态_.事实代次, true};
             return {L1恢复状态::候选已建立, 状态_.事实代次};
         } catch (const std::bad_alloc&) { return {L1恢复状态::资源失败, 0}; }
         catch (...) { return {L1恢复状态::内部不一致, 0}; }
     }
+    // 诊断责任：向上送出；中性账守门与确认失败均结构化返回。
     L1恢复结果 确认恢复候选() {
         try {
             std::unique_lock<std::shared_mutex> 锁(锁_);
+            if (!状态_.中性幂等账.empty())
+                return {L1恢复状态::入口拒绝, 状态_.事实代次};
             if (!候选_) return {L1恢复状态::无候选, 状态_.事实代次};
             if (候选_->基线 != 状态_.事实代次) { 候选_.reset(); return {L1恢复状态::事实代次漂移, 状态_.事实代次}; }
             if (!状态完整(状态_)) {
@@ -436,16 +716,25 @@ public:
         } catch (const std::bad_alloc&) { return {L1恢复状态::资源失败, 0}; }
         catch (...) { return {L1恢复状态::内部不一致, 0}; }
     }
+    // 诊断责任：向上送出；撤销许可与异常均结构化返回。
     L1恢复结果 撤销恢复候选() noexcept {
         try {
             std::unique_lock<std::shared_mutex> 锁(锁_);
             if (!候选_) return {L1恢复状态::无候选, 状态_.事实代次};
+            if (!状态_.中性幂等账.empty() && !候选_->中性发布前建立)
+                return {L1恢复状态::入口拒绝, 状态_.事实代次};
             候选_.reset(); return {L1恢复状态::候选已撤销, 状态_.事实代次};
         } catch (...) { return {L1恢复状态::内部不一致, 0}; }
     }
 
 
 private:
+    struct 中性幂等记录 {
+        L1中性写集请求 首次规范化写集;
+        std::uint64_t 首次发布事实代次 = 0;
+        std::vector<std::pair<L1中性写集本地键, 稳定编码>> 首次新编码映射;
+        L1中性写入结果 首次结果;
+    };
     struct 状态 {
         std::uint64_t 事实代次 = 0;
         std::uint64_t 下个编码 = 1;
@@ -455,13 +744,208 @@ private:
         std::unordered_map<std::uint64_t, L1历史事实副本> 历史;
         std::unordered_set<std::uint64_t> 永久占用;
         std::unordered_map<std::uint64_t, L1幂等账记录> 幂等账;
+        std::unordered_map<std::uint64_t, 中性幂等记录> 中性幂等账;
         std::unordered_map<std::uint64_t, std::vector<L1审计记录>> 审计;
         std::unordered_map<std::uint64_t, L1领域结果见证记录> 领域结果见证状态组;
         std::vector<L1发布后读回失败见证> 失败见证;
         std::optional<L1失败见证身份> 当前隔离见证身份;
         bool 隔离 = false;
     };
-    struct 候选状态 { 状态 值; std::uint64_t 基线 = 0; };
+    struct 候选状态 {
+        状态 值;
+        std::uint64_t 基线 = 0;
+        bool 中性发布前建立 = false;
+    };
+
+    // 诊断责任：向上送出；分配异常由提交中性写集统一映射。
+    static L1中性写入结果 中性写入结果(const L1中性写集请求& 请求,
+        L1中性写入状态 状态值, std::uint64_t 代次, bool 已发布,
+        L1中性重试边界 重试,
+        std::vector<std::pair<L1中性写集本地键, 稳定编码>> 映射 = {}) {
+        return {状态值, L1中性CRUD合同版本, 请求.幂等键, 代次,
+            已发布, 重试, std::move(映射)};
+    }
+
+    // 诊断责任：无适用错误分支；纯值排序键转换。
+    static std::uint64_t 中性引用排序键(const L1中性事实引用& 引用) {
+        return std::visit([](const auto& 值) -> std::uint64_t {
+            using 类型 = std::decay_t<decltype(值)>;
+            if constexpr (std::is_same_v<类型, 稳定编码>) return 值.值;
+            else return (1ULL << 63) | 值.值;
+        }, 引用);
+    }
+
+    // 诊断责任：无适用错误分支；纯值有效性判断。
+    static bool 中性引用有效(const L1中性事实引用& 引用) noexcept {
+        return std::visit([](const auto& 值) noexcept { return 有效(值); }, 引用);
+    }
+
+    // 诊断责任：向上送出；分配异常由提交中性写集统一映射。
+    static std::optional<L1中性写集请求> 规范化中性写集(
+        const L1中性写集请求& 请求) {
+        L1中性写集请求 结果 = 请求;
+        std::sort(结果.节点.begin(), 结果.节点.end(), [](const auto& 左, const auto& 右) {
+            return 左.本地键 < 右.本地键;
+        });
+        std::sort(结果.关系.begin(), 结果.关系.end(), [](const auto& 左, const auto& 右) {
+            return 左.本地键 < 右.本地键;
+        });
+        std::sort(结果.值.begin(), 结果.值.end(), [](const auto& 左, const auto& 右) {
+            return 左.本地键 < 右.本地键;
+        });
+        std::sort(结果.属性槽变更.begin(), 结果.属性槽变更.end(), [](const auto& 左,
+            const auto& 右) {
+            const auto 左所属 = 中性引用排序键(左.所属节点);
+            const auto 右所属 = 中性引用排序键(右.所属节点);
+            if (左所属 != 右所属) return 左所属 < 右所属;
+            const auto 左类型 = 中性引用排序键(左.属性类型节点);
+            const auto 右类型 = 中性引用排序键(右.属性类型节点);
+            if (左类型 != 右类型) return 左类型 < 右类型;
+            return 左.新当前值 < 右.新当前值;
+        });
+        std::sort(结果.退出事实.begin(), 结果.退出事实.end());
+        return 结果;
+    }
+
+    // 诊断责任：向上送出；分配异常由提交中性写集统一映射。
+    static bool 中性请求结构有效(const L1中性写集请求& 请求,
+        std::unordered_set<std::uint32_t>& 本地键) {
+        auto 登记 = [&](L1中性写集本地键 键) {
+            return 有效(键) && 本地键.insert(键.值).second;
+        };
+        for (const auto& 项 : 请求.节点) {
+            if (!登记(项.本地键)
+                || ((项.种类 == 节点种类::属性类型) != 项.属性类型表示.has_value()))
+                return false;
+        }
+        for (const auto& 项 : 请求.关系)
+            if (!登记(项.本地键) || !中性引用有效(项.源节点)
+                || !中性引用有效(项.目标节点) || !中性引用有效(项.关系类型节点))
+                return false;
+        for (const auto& 项 : 请求.值)
+            if (!登记(项.本地键) || !中性引用有效(项.所属节点)
+                || !中性引用有效(项.属性类型节点) || !中性引用有效(项.来源节点)
+                || !L1中性原始材料完整(项.材料)) return false;
+        std::unordered_set<std::uint64_t> 退出;
+        for (const auto 编码 : 请求.退出事实)
+            if (!有效(编码) || !退出.insert(编码.值).second) return false;
+        for (std::size_t i = 0; i < 请求.属性槽变更.size(); ++i) {
+            const auto& 项 = 请求.属性槽变更[i];
+            if (!中性引用有效(项.所属节点) || !中性引用有效(项.属性类型节点)
+                || !有效(项.新当前值)) return false;
+            if (i != 0) {
+                const auto& 前 = 请求.属性槽变更[i - 1];
+                if (前.所属节点 == 项.所属节点 && 前.属性类型节点 == 项.属性类型节点)
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    // 诊断责任：无适用错误分支；纯值枚举转换。
+    static std::optional<值表示种类> 转换值表示种类(
+        const std::optional<L1中性值表示种类>& 值) noexcept {
+        if (!值) return std::nullopt;
+        return static_cast<值表示种类>(static_cast<std::uint8_t>(*值));
+    }
+
+    // 诊断责任：向上送出；分配异常由提交中性写集统一映射。
+    static std::optional<原始值材料> 转换原始材料(const L1中性原始值材料& 材料) {
+        return std::visit([](const auto& 值) -> std::optional<原始值材料> {
+            using 类型 = std::decay_t<decltype(值)>;
+            if constexpr (std::is_same_v<类型, L1中性独立材料引用>)
+                return 原始值材料{独立材料引用{值.编码}};
+            else return 原始值材料{值};
+        }, 材料);
+    }
+
+    // 诊断责任：无适用错误分支；纯值材料比较。
+    static bool 中性材料等于(const 原始值材料& 实际,
+        const L1中性原始值材料& 期望) noexcept {
+        return std::visit([&](const auto& 值) noexcept -> bool {
+            using 类型 = std::decay_t<decltype(值)>;
+            if constexpr (std::is_same_v<类型, L1中性独立材料引用>) {
+                const auto* 实际引用 = std::get_if<独立材料引用>(&实际);
+                return 实际引用 && 实际引用->编码 == 值.编码;
+            } else {
+                const auto* 实际值 = std::get_if<类型>(&实际);
+                return 实际值 && *实际值 == 值;
+            }
+        }, 期望);
+    }
+
+    // 诊断责任：无适用错误分支；只读候选并返回结构化真假。
+    static bool 中性候选读回完整(const 状态& 值,
+        const L1中性写集请求& 请求,
+        const std::vector<std::pair<L1中性写集本地键, 稳定编码>>& 映射,
+        std::uint64_t 发布代次) noexcept {
+        const auto 查映射 = [&](L1中性写集本地键 键) -> std::optional<稳定编码> {
+            for (const auto& [本地, 编码] : 映射) if (本地 == 键) return 编码;
+            return std::nullopt;
+        };
+        const auto 解析 = [&](const L1中性事实引用& 引用) -> std::optional<稳定编码> {
+            return std::visit([&](const auto& 项) -> std::optional<稳定编码> {
+                using 类型 = std::decay_t<decltype(项)>;
+                if constexpr (std::is_same_v<类型, 稳定编码>) return 项;
+                else return 查映射(项);
+            }, 引用);
+        };
+        for (const auto& 项 : 请求.节点) {
+            const auto 编码 = 查映射(项.本地键);
+            if (!编码) return false;
+            const auto it = 值.当前节点.find(编码->值);
+            if (it == 值.当前节点.end() || it->second.编码 != *编码
+                || it->second.种类 != 项.种类
+                || it->second.属性类型表示 != 转换值表示种类(项.属性类型表示)
+                || it->second.创建事实代次 != 发布代次 || it->second.退出事实代次)
+                return false;
+        }
+        for (const auto& 项 : 请求.关系) {
+            const auto 编码 = 查映射(项.本地键);
+            const auto 源 = 解析(项.源节点), 目标 = 解析(项.目标节点),
+                类型 = 解析(项.关系类型节点);
+            if (!编码 || !源 || !目标 || !类型) return false;
+            const auto it = 值.当前关系.find(编码->值);
+            if (it == 值.当前关系.end() || it->second.源节点 != *源
+                || it->second.目标节点 != *目标 || it->second.关系类型节点 != *类型
+                || it->second.角色或顺序 != 项.角色或顺序
+                || it->second.创建事实代次 != 发布代次 || it->second.退出事实代次)
+                return false;
+        }
+        for (const auto& 项 : 请求.值) {
+            const auto 编码 = 查映射(项.本地键);
+            const auto 所属 = 解析(项.所属节点), 类型 = 解析(项.属性类型节点),
+                来源 = 解析(项.来源节点);
+            if (!编码 || !所属 || !类型 || !来源) return false;
+            const auto it = 值.当前值.find(编码->值);
+            if (it == 值.当前值.end() || it->second.所属节点 != *所属
+                || it->second.属性类型节点 != *类型 || it->second.来源节点 != *来源
+                || !中性材料等于(it->second.材料, 项.材料)
+                || it->second.创建事实代次 != 发布代次 || it->second.退出事实代次)
+                return false;
+        }
+        for (const auto& 项 : 请求.属性槽变更) {
+            const auto 所属 = 解析(项.所属节点), 类型 = 解析(项.属性类型节点),
+                当前 = 查映射(项.新当前值);
+            if (!所属 || !类型 || !当前) return false;
+            const auto 节点 = 值.当前节点.find(所属->值);
+            if (节点 == 值.当前节点.end()) return false;
+            const auto 槽 = std::find_if(节点->second.当前属性.begin(),
+                节点->second.当前属性.end(), [&](const 属性槽& 值项) {
+                    return 值项.属性类型节点 == *类型;
+                });
+            if (槽 == 节点->second.当前属性.end() || 槽->当前值 != *当前) return false;
+        }
+        for (const auto 编码 : 请求.退出事实) {
+            const auto it = 值.历史.find(编码.值);
+            if (it == 值.历史.end()) return false;
+            const bool 匹配 = std::visit([&](const auto& 事实) {
+                return 事实.编码 == 编码 && 事实.退出事实代次 == 发布代次;
+            }, it->second.事实);
+            if (!匹配) return false;
+        }
+        return 值.事实代次 == 发布代次;
+    }
 
     static std::uint64_t 引用排序键(const 事实引用& 引用) {
         return std::visit([](const auto& 值) -> std::uint64_t {
@@ -664,7 +1148,8 @@ private:
         for (const auto 编码 : 值.永久占用) 最大编码 = std::max(最大编码, 编码);
         if (值.下个编码 == 0 || 值.下个编码 <= 最大编码) return false;
         for (const auto& [键, 账] : 值.幂等账) {
-            if (键 == 0 || !幂等记录完整(账) || 账.幂等键.值 != 键 || 账.首次规范化写集.幂等键.值 != 键
+            if (值.中性幂等账.contains(键) || 键 == 0 || !幂等记录完整(账)
+                || 账.幂等键.值 != 键 || 账.首次规范化写集.幂等键.值 != 键
                 || 账.首次发布事实代次 > 值.事实代次
                 || 规范化写集(账.首次规范化写集) != std::optional<L1写集请求>(账.首次规范化写集)) return false;
             std::unordered_set<std::uint32_t> 本地;
@@ -708,6 +1193,42 @@ private:
                         账.首次发布事实代次, *账.首次领域结果见证,
                         账.领域结果见证摘要}) return false;
             } else if (结果见证 != 值.领域结果见证状态组.end()) return false;
+        }
+        for (const auto& [键, 账] : 值.中性幂等账) {
+            if (键 == 0 || 值.幂等账.contains(键)
+                || 账.首次规范化写集.合同版本 != L1中性CRUD合同版本
+                || 账.首次规范化写集.幂等键.值 != 键
+                || 账.首次发布事实代次 == 0 || 账.首次发布事实代次 > 值.事实代次
+                || 规范化中性写集(账.首次规范化写集)
+                    != std::optional<L1中性写集请求>(账.首次规范化写集)
+                || 账.首次结果.状态 != L1中性写入状态::成功
+                || 账.首次结果.合同版本 != L1中性CRUD合同版本
+                || 账.首次结果.幂等键.值 != 键
+                || 账.首次结果.事实代次 != 账.首次发布事实代次
+                || !账.首次结果.是否形成内存权威发布
+                || 账.首次结果.重试边界 != L1中性重试边界::不适用
+                || 账.首次结果.新编码映射 != 账.首次新编码映射)
+                return false;
+            std::unordered_set<std::uint32_t> 本地;
+            if (!中性请求结构有效(账.首次规范化写集, 本地)
+                || 账.首次新编码映射.size() != 本地.size()) return false;
+            for (std::size_t i = 0; i < 账.首次新编码映射.size(); ++i) {
+                const auto& [本地键, 编码] = 账.首次新编码映射[i];
+                if (!本地.contains(本地键.值) || !全部.contains(编码.值)
+                    || (i != 0 && !(账.首次新编码映射[i - 1].first < 本地键))) return false;
+                bool 创建匹配 = false;
+                if (const auto it = 值.当前节点.find(编码.值); it != 值.当前节点.end())
+                    创建匹配 = it->second.创建事实代次 == 账.首次发布事实代次;
+                if (const auto it = 值.当前关系.find(编码.值); it != 值.当前关系.end())
+                    创建匹配 = it->second.创建事实代次 == 账.首次发布事实代次;
+                if (const auto it = 值.当前值.find(编码.值); it != 值.当前值.end())
+                    创建匹配 = it->second.创建事实代次 == 账.首次发布事实代次;
+                if (const auto it = 值.历史.find(编码.值); it != 值.历史.end())
+                    创建匹配 = std::visit([&](const auto& 事实) {
+                        return 事实.创建事实代次 == 账.首次发布事实代次;
+                    }, it->second.事实);
+                if (!创建匹配) return false;
+            }
         }
         for (const auto& [键, 记录] : 值.领域结果见证状态组)
             if (键 == 0 || !值.幂等账.contains(键)
