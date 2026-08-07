@@ -163,6 +163,7 @@
     <ClCompile Include="海中鱼巣\领域\服务.L1实例特征.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.特征比较.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L1实际存在.ixx" />
+    <ClCompile Include="海中鱼巣\领域\服务.初始场景实际存在原子发布.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.L1实际存在场景.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L1状态.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.后继状态规格.ixx" />

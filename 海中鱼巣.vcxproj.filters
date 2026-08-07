@@ -7,6 +7,9 @@
     <ClCompile Include="海中鱼巣\领域\服务.L1实际存在.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\服务.初始场景实际存在原子发布.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\组合.L1实际存在场景.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
