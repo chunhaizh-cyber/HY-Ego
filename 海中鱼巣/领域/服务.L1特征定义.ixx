@@ -113,8 +113,14 @@ public:
     L1特征定义服务(const L1特征定义服务&) = delete;
     L1特征定义服务& operator=(const L1特征定义服务&) = delete;
 
+    // 诊断责任：向上送出；兼容入口只转发同对象的正式 const 写重载。
     // 诊断责任：向上送出；所有失败由结构化特征定义状态返回。
     特征定义登记结果 建立登记(const 特征定义登记请求& 请求) {
+        return static_cast<const L1特征定义服务&>(*this).建立登记(请求);
+    }
+
+    // 诊断责任：向上送出；所有失败由结构化特征定义状态返回。
+    特征定义登记结果 建立登记(const 特征定义登记请求& 请求) const {
         std::lock_guard<std::mutex> 锁(锁_);
         try {
             if (!特征定义登记请求有效(请求) || 请求.期望事实代次 == 0)
@@ -179,8 +185,14 @@ public:
         }
     }
 
+    // 诊断责任：向上送出；兼容入口只转发同对象的正式 const 写重载。
     // 诊断责任：向上送出；所有失败由结构化特征定义状态返回。
     I64特征定义结果 建立I64特征定义(const I64特征定义建立请求& 请求) {
+        return static_cast<const L1特征定义服务&>(*this).建立I64特征定义(请求);
+    }
+
+    // 诊断责任：向上送出；所有失败由结构化特征定义状态返回。
+    I64特征定义结果 建立I64特征定义(const I64特征定义建立请求& 请求) const {
         std::lock_guard<std::mutex> 锁(锁_);
         try {
             if (!I64特征定义建立请求有效(请求) || 请求.期望事实代次 == 0)
@@ -492,7 +504,7 @@ private:
 
     L1事实基座服务& L1_;
     mutable std::mutex 锁_;
-    std::optional<std::array<稳定编码, 4>> 登记定位_;
+    mutable std::optional<std::array<稳定编码, 4>> 登记定位_;
 };
 
 } // namespace 海中鱼巣
