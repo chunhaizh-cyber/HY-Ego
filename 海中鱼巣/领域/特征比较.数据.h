@@ -7,6 +7,7 @@ namespace 海中鱼巣 {
 
 inline constexpr std::uint32_t 特征比较合同版本 = 1;
 inline constexpr std::uint32_t 特征比较规则版本 = 1;
+inline constexpr std::uint64_t 特征比较登记幂等域 = 0x08ULL;
 
 enum class 特征比较状态 : std::uint8_t { 已比较 = 1, 未注册 = 2, 入口拒绝 = 3, 版本漂移 = 4,
     许可拒绝 = 5, 资源失败 = 6, 内部不一致 = 7, 未实现 = 8 };
