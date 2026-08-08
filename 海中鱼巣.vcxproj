@@ -161,6 +161,7 @@
     <ClCompile Include="海中鱼巣\启动.生产运行期.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L1特征定义.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L1实例特征.ixx" />
+    <ClCompile Include="海中鱼巣\领域\服务.L1自我结构登记.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.特征比较.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L1实际存在.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.初始场景实际存在原子发布.ixx" />
@@ -344,6 +345,7 @@
     <ClInclude Include="海中鱼巣\领域\特征服务.h" />
     <ClInclude Include="海中鱼巣\领域\L1特征定义.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L1实例特征.数据.h" />
+    <ClInclude Include="海中鱼巣\领域\L1自我结构登记.数据.h" />
     <ClInclude Include="海中鱼巣\领域\特征比较.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L1实际存在.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L1状态.数据.h" />
