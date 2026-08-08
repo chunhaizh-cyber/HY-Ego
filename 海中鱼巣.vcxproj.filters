@@ -10,6 +10,18 @@
     <ClCompile Include="海中鱼巣\领域\服务.L1自我结构登记.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\服务.L1完整自我存在准入.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\服务.L1完整自我场景准入.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\数据操作.L1完整自我发布.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\组合.L1完整自我.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\服务.初始场景实际存在原子发布.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -55,6 +67,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\L1自我结构登记.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\L1完整自我.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\L1状态.数据.h">
