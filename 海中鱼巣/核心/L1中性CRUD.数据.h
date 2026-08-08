@@ -250,6 +250,125 @@ struct L1中性事实代次读取结果 final {
         const L1中性事实代次读取结果&) = default;
 };
 
+inline constexpr std::uint32_t L1中性一致当前读取合同版本 = 1;
+
+enum class L1中性一致当前读取状态 : std::uint8_t {
+    成功 = 1, 入口拒绝 = 2, 许可拒绝 = 3,
+    事实代次漂移 = 4, 资源失败 = 5, 内部不一致 = 6
+};
+
+enum class L1中性一致当前读取项目状态 : std::uint8_t {
+    成功 = 1, 未找到 = 2, 已退出 = 3,
+    属性未设置 = 4, 种类不匹配 = 5
+};
+
+struct L1中性一致属性值选择项 final {
+    稳定编码 节点;
+    稳定编码 属性类型;
+    friend bool operator==(const L1中性一致属性值选择项&,
+        const L1中性一致属性值选择项&) = default;
+};
+
+struct L1中性一致源关系组选择项 final {
+    稳定编码 源节点;
+    稳定编码 关系类型节点;
+    friend bool operator==(const L1中性一致源关系组选择项&,
+        const L1中性一致源关系组选择项&) = default;
+};
+
+struct L1中性一致目标关系组选择项 final {
+    稳定编码 目标节点;
+    稳定编码 关系类型节点;
+    friend bool operator==(const L1中性一致目标关系组选择项&,
+        const L1中性一致目标关系组选择项&) = default;
+};
+
+struct L1中性一致当前读取请求 final {
+    std::uint32_t 合同版本 = L1中性一致当前读取合同版本;
+    std::uint64_t 期望事实代次 = 0;
+    std::vector<稳定编码> 节点;
+    std::vector<稳定编码> 关系;
+    std::vector<稳定编码> 值;
+    std::vector<L1中性一致属性值选择项> 属性值;
+    std::vector<L1中性一致源关系组选择项> 源关系组;
+    std::vector<L1中性一致目标关系组选择项> 目标关系组;
+    friend bool operator==(const L1中性一致当前读取请求&,
+        const L1中性一致当前读取请求&) = default;
+};
+
+template<class 事实类型>
+struct L1中性一致具名事实读取结果项 final {
+    稳定编码 查询编码;
+    L1中性一致当前读取项目状态 状态 =
+        L1中性一致当前读取项目状态::未找到;
+    std::optional<事实类型> 事实;
+    friend bool operator==(const L1中性一致具名事实读取结果项&,
+        const L1中性一致具名事实读取结果项&) = default;
+};
+
+using L1中性一致节点读取结果项 =
+    L1中性一致具名事实读取结果项<L1中性节点事实>;
+using L1中性一致关系读取结果项 =
+    L1中性一致具名事实读取结果项<L1中性关系事实>;
+using L1中性一致值读取结果项 =
+    L1中性一致具名事实读取结果项<L1中性值事实>;
+
+struct L1中性一致属性值投影 final {
+    L1中性属性槽 属性槽;
+    L1中性值事实 当前值事实;
+    friend bool operator==(const L1中性一致属性值投影&,
+        const L1中性一致属性值投影&) = default;
+};
+
+struct L1中性一致属性值读取结果项 final {
+    稳定编码 节点;
+    稳定编码 属性类型;
+    L1中性一致当前读取项目状态 状态 =
+        L1中性一致当前读取项目状态::未找到;
+    std::optional<L1中性一致属性值投影> 投影;
+    friend bool operator==(const L1中性一致属性值读取结果项&,
+        const L1中性一致属性值读取结果项&) = default;
+};
+
+struct L1中性一致关系对端投影 final {
+    L1中性关系事实 关系;
+    L1中性节点事实 对端节点;
+    friend bool operator==(const L1中性一致关系对端投影&,
+        const L1中性一致关系对端投影&) = default;
+};
+
+struct L1中性一致源关系组读取结果项 final {
+    稳定编码 源节点;
+    稳定编码 关系类型节点;
+    std::vector<L1中性一致关系对端投影> 成员;
+    friend bool operator==(const L1中性一致源关系组读取结果项&,
+        const L1中性一致源关系组读取结果项&) = default;
+};
+
+struct L1中性一致目标关系组读取结果项 final {
+    稳定编码 目标节点;
+    稳定编码 关系类型节点;
+    std::vector<L1中性一致关系对端投影> 成员;
+    friend bool operator==(const L1中性一致目标关系组读取结果项&,
+        const L1中性一致目标关系组读取结果项&) = default;
+};
+
+struct L1中性一致当前读取结果 final {
+    L1中性一致当前读取状态 状态 =
+        L1中性一致当前读取状态::入口拒绝;
+    std::uint32_t 合同版本 = L1中性一致当前读取合同版本;
+    std::uint64_t 期望事实代次 = 0;
+    std::uint64_t 读取事实代次 = 0;
+    std::vector<L1中性一致节点读取结果项> 节点;
+    std::vector<L1中性一致关系读取结果项> 关系;
+    std::vector<L1中性一致值读取结果项> 值;
+    std::vector<L1中性一致属性值读取结果项> 属性值;
+    std::vector<L1中性一致源关系组读取结果项> 源关系组;
+    std::vector<L1中性一致目标关系组读取结果项> 目标关系组;
+    friend bool operator==(const L1中性一致当前读取结果&,
+        const L1中性一致当前读取结果&) = default;
+};
+
 // 诊断责任：无适用错误分支；纯值有效性判断。
 inline bool 有效(L1中性写集本地键 键) noexcept { return 键.值 != 0; }
 // 诊断责任：无适用错误分支；纯值有效性判断。

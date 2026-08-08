@@ -10,6 +10,7 @@ module;
 #include <new>
 #include <optional>
 #include <shared_mutex>
+#include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -27,9 +28,173 @@ export namespace 海中鱼巣 {
 
 class L1事实基座仓库 final {
 public:
+    enum class 一致当前事实种类 : std::uint8_t {
+        节点 = 1, 关系 = 2, 值 = 3
+    };
+
+    struct 一致具名事实内部结果项 final {
+        稳定编码 查询编码;
+        L1中性一致当前读取项目状态 状态 =
+            L1中性一致当前读取项目状态::未找到;
+        std::optional<L1事实副本> 事实;
+    };
+
+    struct 一致属性值内部投影 final {
+        属性槽 属性槽值;
+        值事实 当前值事实;
+    };
+
+    struct 一致属性值内部结果项 final {
+        稳定编码 节点;
+        稳定编码 属性类型;
+        L1中性一致当前读取项目状态 状态 =
+            L1中性一致当前读取项目状态::未找到;
+        std::optional<一致属性值内部投影> 投影;
+    };
+
+    struct 一致关系对端内部投影 final {
+        关系事实 关系;
+        节点事实 对端节点;
+    };
+
+    struct 一致源关系组内部结果项 final {
+        稳定编码 源节点;
+        稳定编码 关系类型节点;
+        std::vector<一致关系对端内部投影> 成员;
+    };
+
+    struct 一致目标关系组内部结果项 final {
+        稳定编码 目标节点;
+        稳定编码 关系类型节点;
+        std::vector<一致关系对端内部投影> 成员;
+    };
+
+    struct 一致当前读取内部结果 final {
+        L1中性一致当前读取状态 状态 =
+            L1中性一致当前读取状态::入口拒绝;
+        std::uint64_t 读取事实代次 = 0;
+        std::vector<一致具名事实内部结果项> 节点;
+        std::vector<一致具名事实内部结果项> 关系;
+        std::vector<一致具名事实内部结果项> 值;
+        std::vector<一致属性值内部结果项> 属性值;
+        std::vector<一致源关系组内部结果项> 源关系组;
+        std::vector<一致目标关系组内部结果项> 目标关系组;
+    };
+
     L1事实基座仓库() = default;
     L1事实基座仓库(const L1事实基座仓库&) = delete;
     L1事实基座仓库& operator=(const L1事实基座仓库&) = delete;
+
+    // 诊断责任：向上送出；许可、资源与局部结构矛盾均由中性结构化状态携带。
+    一致当前读取内部结果 尝试读取一致当前内部投影(
+        const L1中性一致当前读取请求& 请求) const {
+        const auto 失败 = [](L1中性一致当前读取状态 状态,
+            std::uint64_t 代次 = 0) {
+            一致当前读取内部结果 结果;
+            结果.状态 = 状态;
+            结果.读取事实代次 = 代次;
+            return 结果;
+        };
+        try {
+            if (!一致当前请求有效(请求))
+                return 失败(L1中性一致当前读取状态::入口拒绝);
+
+            std::shared_lock<std::shared_mutex> 锁(锁_, std::try_to_lock);
+            if (!锁.owns_lock())
+                return 失败(L1中性一致当前读取状态::许可拒绝);
+            if (状态_.隔离 || 状态_.事实代次 == 0)
+                return 失败(L1中性一致当前读取状态::内部不一致);
+            if (状态_.事实代次 != 请求.期望事实代次)
+                return 失败(L1中性一致当前读取状态::事实代次漂移,
+                    状态_.事实代次);
+
+            一致当前读取内部结果 结果;
+            结果.状态 = L1中性一致当前读取状态::成功;
+            结果.读取事实代次 = 状态_.事实代次;
+            结果.节点.reserve(请求.节点.size());
+            结果.关系.reserve(请求.关系.size());
+            结果.值.reserve(请求.值.size());
+            结果.属性值.reserve(请求.属性值.size());
+            结果.源关系组.reserve(请求.源关系组.size());
+            结果.目标关系组.reserve(请求.目标关系组.size());
+
+            for (const auto 编码 : 请求.节点) {
+                auto 项 = 读取一致具名当前事实(状态_, 编码,
+                    一致当前事实种类::节点);
+                if (!项) return 失败(L1中性一致当前读取状态::内部不一致);
+                结果.节点.push_back(std::move(*项));
+            }
+            for (const auto 编码 : 请求.关系) {
+                auto 项 = 读取一致具名当前事实(状态_, 编码,
+                    一致当前事实种类::关系);
+                if (!项) return 失败(L1中性一致当前读取状态::内部不一致);
+                结果.关系.push_back(std::move(*项));
+            }
+            for (const auto 编码 : 请求.值) {
+                auto 项 = 读取一致具名当前事实(状态_, 编码,
+                    一致当前事实种类::值);
+                if (!项) return 失败(L1中性一致当前读取状态::内部不一致);
+                结果.值.push_back(std::move(*项));
+            }
+
+            for (const auto& 选择 : 请求.属性值) {
+                一致属性值内部结果项 项{选择.节点, 选择.属性类型,
+                    L1中性一致当前读取项目状态::未找到, std::nullopt};
+                const auto 节点项 = 读取一致具名当前事实(状态_, 选择.节点,
+                    一致当前事实种类::节点);
+                if (!节点项)
+                    return 失败(L1中性一致当前读取状态::内部不一致);
+                if (节点项->状态 != L1中性一致当前读取项目状态::成功) {
+                    项.状态 = 节点项->状态;
+                    结果.属性值.push_back(std::move(项));
+                    continue;
+                }
+                const auto* 节点 = 节点项->事实
+                    ? std::get_if<节点事实>(&*节点项->事实) : nullptr;
+                if (!节点)
+                    return 失败(L1中性一致当前读取状态::内部不一致);
+                const auto 槽 = std::lower_bound(节点->当前属性.begin(),
+                    节点->当前属性.end(), 选择.属性类型,
+                    [](const 属性槽& 左, 稳定编码 右) {
+                        return 左.属性类型节点 < 右;
+                    });
+                if (槽 == 节点->当前属性.end()
+                    || 槽->属性类型节点 != 选择.属性类型) {
+                    项.状态 = L1中性一致当前读取项目状态::属性未设置;
+                    结果.属性值.push_back(std::move(项));
+                    continue;
+                }
+                const auto 当前值 = 状态_.当前值.find(槽->当前值.值);
+                if (当前值 == 状态_.当前值.end()
+                    || !一致当前值局部完整(状态_, 当前值->first, 当前值->second)
+                    || 当前值->second.所属节点 != 选择.节点
+                    || 当前值->second.属性类型节点 != 选择.属性类型)
+                    return 失败(L1中性一致当前读取状态::内部不一致);
+                项.状态 = L1中性一致当前读取项目状态::成功;
+                项.投影 = 一致属性值内部投影{*槽, 当前值->second};
+                结果.属性值.push_back(std::move(项));
+            }
+
+            for (const auto& 选择 : 请求.源关系组) {
+                auto 项 = 读取一致源关系组(状态_, 选择);
+                if (!项) return 失败(L1中性一致当前读取状态::内部不一致);
+                结果.源关系组.push_back(std::move(*项));
+            }
+            for (const auto& 选择 : 请求.目标关系组) {
+                auto 项 = 读取一致目标关系组(状态_, 选择);
+                if (!项) return 失败(L1中性一致当前读取状态::内部不一致);
+                结果.目标关系组.push_back(std::move(*项));
+            }
+
+            return 结果;
+        } catch (const std::bad_alloc&) {
+            return 失败(L1中性一致当前读取状态::资源失败);
+        } catch (const std::length_error&) {
+            return 失败(L1中性一致当前读取状态::资源失败);
+        } catch (...) {
+            return 失败(L1中性一致当前读取状态::内部不一致);
+        }
+    }
 
     // 诊断责任：向上送出；全部非成功均由中性结构化状态携带。
     L1中性写入结果 提交中性写集(const L1中性写集请求& 请求) {
@@ -636,6 +801,284 @@ private:
         std::uint64_t 基线 = 0;
         bool 中性发布前建立 = false;
     };
+
+    // 诊断责任：向上送出；临时唯一性集合分配异常由公开仓库入口映射。
+    static bool 一致当前请求有效(const L1中性一致当前读取请求& 请求) {
+        if (请求.合同版本 != L1中性一致当前读取合同版本
+            || 请求.期望事实代次 == 0
+            || (请求.节点.empty() && 请求.关系.empty() && 请求.值.empty()
+                && 请求.属性值.empty() && 请求.源关系组.empty()
+                && 请求.目标关系组.empty())) return false;
+
+        std::unordered_set<std::uint64_t> 具名编码;
+        const auto 登记编码 = [&](稳定编码 编码) {
+            return 有效(编码) && 具名编码.insert(编码.值).second;
+        };
+        for (const auto 编码 : 请求.节点) if (!登记编码(编码)) return false;
+        for (const auto 编码 : 请求.关系) if (!登记编码(编码)) return false;
+        for (const auto 编码 : 请求.值) if (!登记编码(编码)) return false;
+
+        std::vector<std::pair<std::uint64_t, std::uint64_t>> 属性键;
+        std::vector<std::pair<std::uint64_t, std::uint64_t>> 源关系键;
+        std::vector<std::pair<std::uint64_t, std::uint64_t>> 目标关系键;
+        属性键.reserve(请求.属性值.size());
+        源关系键.reserve(请求.源关系组.size());
+        目标关系键.reserve(请求.目标关系组.size());
+        const auto 登记组合 = [](auto& 组, 稳定编码 左, 稳定编码 右) {
+            if (!有效(左) || !有效(右)) return false;
+            const auto 键 = std::pair{左.值, 右.值};
+            if (std::find(组.begin(), 组.end(), 键) != 组.end()) return false;
+            组.push_back(键);
+            return true;
+        };
+        for (const auto& 项 : 请求.属性值)
+            if (!登记组合(属性键, 项.节点, 项.属性类型)) return false;
+        for (const auto& 项 : 请求.源关系组)
+            if (!登记组合(源关系键, 项.源节点, 项.关系类型节点)) return false;
+        for (const auto& 项 : 请求.目标关系组)
+            if (!登记组合(目标关系键, 项.目标节点, 项.关系类型节点)) return false;
+        return true;
+    }
+
+    // 诊断责任：无适用错误分支；只检查一个编码在当前或历史账中的唯一占用。
+    static bool 一致编码唯一当前(const 状态& 值, std::uint64_t 编码,
+        一致当前事实种类 种类) noexcept {
+        const std::size_t 当前数量 = (值.当前节点.contains(编码) ? 1U : 0U)
+            + (值.当前关系.contains(编码) ? 1U : 0U)
+            + (值.当前值.contains(编码) ? 1U : 0U);
+        const bool 期望存在 = 种类 == 一致当前事实种类::节点
+            ? 值.当前节点.contains(编码)
+            : 种类 == 一致当前事实种类::关系
+                ? 值.当前关系.contains(编码) : 值.当前值.contains(编码);
+        return 当前数量 == 1 && 期望存在 && !值.历史.contains(编码);
+    }
+
+    // 诊断责任：无适用错误分支；只核对当前节点自身生命周期与结构种类。
+    static bool 一致当前节点基本完整(const 状态& 值, std::uint64_t 键,
+        const 节点事实& 事实) noexcept {
+        const bool 种类和表示有效 = 事实.种类 == 节点种类::普通
+            ? !事实.属性类型表示
+            : 事实.种类 == 节点种类::属性类型 && 事实.属性类型表示
+                && (*事实.属性类型表示 == 值表示种类::I64
+                    || *事实.属性类型表示 == 值表示种类::I64组
+                    || *事实.属性类型表示 == 值表示种类::U64组
+                    || *事实.属性类型表示 == 值表示种类::独立材料引用);
+        return 键 != 0 && 事实.编码.值 == 键 && 有效(事实.编码)
+            && 事实.创建事实代次 != 0 && 事实.创建事实代次 <= 值.事实代次
+            && !事实.退出事实代次 && 种类和表示有效;
+    }
+
+    // 诊断责任：无适用错误分支；只核对具名值及其直接节点和类型引用。
+    static bool 一致当前值局部完整(const 状态& 值, std::uint64_t 键,
+        const 值事实& 事实) noexcept {
+        if (!一致编码唯一当前(值, 键, 一致当前事实种类::值)
+            || 事实.编码.值 != 键 || 事实.创建事实代次 == 0
+            || 事实.创建事实代次 > 值.事实代次 || 事实.退出事实代次
+            || !有效(事实.所属节点) || !有效(事实.属性类型节点)
+            || !有效(事实.来源节点)) return false;
+        const auto 所属 = 值.当前节点.find(事实.所属节点.值);
+        const auto 类型 = 值.当前节点.find(事实.属性类型节点.值);
+        const auto 来源 = 值.当前节点.find(事实.来源节点.值);
+        if (所属 == 值.当前节点.end() || 类型 == 值.当前节点.end()
+            || 来源 == 值.当前节点.end()
+            || !一致编码唯一当前(值, 所属->first, 一致当前事实种类::节点)
+            || !一致编码唯一当前(值, 类型->first, 一致当前事实种类::节点)
+            || !一致编码唯一当前(值, 来源->first, 一致当前事实种类::节点)
+            || !一致当前节点基本完整(值, 所属->first, 所属->second)
+            || !一致当前节点基本完整(值, 类型->first, 类型->second)
+            || !一致当前节点基本完整(值, 来源->first, 来源->second)
+            || 类型->second.种类 != 节点种类::属性类型
+            || !类型->second.属性类型表示
+            || !表示匹配(*类型->second.属性类型表示, 事实.材料)) return false;
+        if (const auto* 引用 = std::get_if<独立材料引用>(&事实.材料)) {
+            const auto 材料节点 = 值.当前节点.find(引用->编码.值);
+            if (!有效(引用->编码) || 材料节点 == 值.当前节点.end()
+                || !一致编码唯一当前(值, 材料节点->first,
+                    一致当前事实种类::节点)
+                || !一致当前节点基本完整(值, 材料节点->first,
+                    材料节点->second)) return false;
+        }
+        return true;
+    }
+
+    // 诊断责任：无适用错误分支；只核对具名节点和其直接属性槽闭包。
+    static bool 一致当前节点局部完整(const 状态& 值, std::uint64_t 键,
+        const 节点事实& 事实) noexcept {
+        if (!一致编码唯一当前(值, 键, 一致当前事实种类::节点)
+            || !一致当前节点基本完整(值, 键, 事实)) return false;
+        std::uint64_t 前一属性类型 = 0;
+        for (const auto& 槽 : 事实.当前属性) {
+            if (!有效(槽.属性类型节点) || !有效(槽.当前值)
+                || 槽.属性类型节点.值 <= 前一属性类型) return false;
+            const auto 类型 = 值.当前节点.find(槽.属性类型节点.值);
+            const auto 当前值 = 值.当前值.find(槽.当前值.值);
+            if (类型 == 值.当前节点.end() || 当前值 == 值.当前值.end()
+                || 类型->second.种类 != 节点种类::属性类型
+                || !类型->second.属性类型表示
+                || !一致当前节点基本完整(值, 类型->first, 类型->second)
+                || !一致编码唯一当前(值, 类型->first,
+                    一致当前事实种类::节点)
+                || !一致当前值局部完整(值, 当前值->first, 当前值->second)
+                || 当前值->second.所属节点 != 事实.编码
+                || 当前值->second.属性类型节点 != 槽.属性类型节点
+                || !表示匹配(*类型->second.属性类型表示,
+                    当前值->second.材料)) return false;
+            前一属性类型 = 槽.属性类型节点.值;
+        }
+        return true;
+    }
+
+    // 诊断责任：无适用错误分支；只核对具名关系及直接端点和类型节点。
+    static bool 一致当前关系局部完整(const 状态& 值, std::uint64_t 键,
+        const 关系事实& 事实) noexcept {
+        if (!一致编码唯一当前(值, 键, 一致当前事实种类::关系)
+            || 事实.编码.值 != 键 || 事实.创建事实代次 == 0
+            || 事实.创建事实代次 > 值.事实代次 || 事实.退出事实代次
+            || !有效(事实.源节点) || !有效(事实.目标节点)
+            || !有效(事实.关系类型节点)) return false;
+        const auto 源 = 值.当前节点.find(事实.源节点.值);
+        const auto 目标 = 值.当前节点.find(事实.目标节点.值);
+        const auto 类型 = 值.当前节点.find(事实.关系类型节点.值);
+        return 源 != 值.当前节点.end() && 目标 != 值.当前节点.end()
+            && 类型 != 值.当前节点.end()
+            && 一致编码唯一当前(值, 源->first, 一致当前事实种类::节点)
+            && 一致编码唯一当前(值, 目标->first, 一致当前事实种类::节点)
+            && 一致编码唯一当前(值, 类型->first, 一致当前事实种类::节点)
+            && 一致当前节点基本完整(值, 源->first, 源->second)
+            && 一致当前节点基本完整(值, 目标->first, 目标->second)
+            && 一致当前节点基本完整(值, 类型->first, 类型->second)
+            && 类型->second.种类 == 节点种类::普通
+            && !类型->second.属性类型表示;
+    }
+
+    // 诊断责任：无适用错误分支；只按单编码历史记录判定退出或种类不匹配。
+    static std::optional<L1中性一致当前读取项目状态> 一致当前缺失状态(
+        const 状态& 值, 稳定编码 编码, 一致当前事实种类 期望种类) noexcept {
+        const std::size_t 当前数量 = (值.当前节点.contains(编码.值) ? 1U : 0U)
+            + (值.当前关系.contains(编码.值) ? 1U : 0U)
+            + (值.当前值.contains(编码.值) ? 1U : 0U);
+        const auto 历史 = 值.历史.find(编码.值);
+        if (当前数量 != 0) {
+            if (当前数量 != 1 || 历史 != 值.历史.end()) return std::nullopt;
+            return L1中性一致当前读取项目状态::种类不匹配;
+        }
+        if (历史 == 值.历史.end())
+            return L1中性一致当前读取项目状态::未找到;
+        if (历史->second.当前有效 || 历史->second.查询编码 != 编码)
+            return std::nullopt;
+        一致当前事实种类 历史种类 = 一致当前事实种类::节点;
+        const bool 历史完整 = std::visit([&](const auto& 事实) {
+            using 类型 = std::decay_t<decltype(事实)>;
+            if constexpr (std::is_same_v<类型, 节点事实>)
+                历史种类 = 一致当前事实种类::节点;
+            else if constexpr (std::is_same_v<类型, 关系事实>)
+                历史种类 = 一致当前事实种类::关系;
+            else 历史种类 = 一致当前事实种类::值;
+            return 事实.编码 == 编码 && 事实.创建事实代次 != 0
+                && 事实.退出事实代次
+                && 事实.创建事实代次 <= *事实.退出事实代次
+                && *事实.退出事实代次 <= 值.事实代次;
+        }, 历史->second.事实);
+        if (!历史完整) return std::nullopt;
+        return 历史种类 == 期望种类
+            ? L1中性一致当前读取项目状态::已退出
+            : L1中性一致当前读取项目状态::种类不匹配;
+    }
+
+    // 诊断责任：向上送出；事实副本分配异常由公开仓库入口映射。
+    static std::optional<一致具名事实内部结果项> 读取一致具名当前事实(
+        const 状态& 值, 稳定编码 编码, 一致当前事实种类 种类) {
+        一致具名事实内部结果项 结果{编码,
+            L1中性一致当前读取项目状态::未找到, std::nullopt};
+        if (种类 == 一致当前事实种类::节点) {
+            const auto it = 值.当前节点.find(编码.值);
+            if (it != 值.当前节点.end()) {
+                if (!一致当前节点局部完整(值, it->first, it->second))
+                    return std::nullopt;
+                结果.状态 = L1中性一致当前读取项目状态::成功;
+                结果.事实 = L1事实副本{it->second};
+                return 结果;
+            }
+        } else if (种类 == 一致当前事实种类::关系) {
+            const auto it = 值.当前关系.find(编码.值);
+            if (it != 值.当前关系.end()) {
+                if (!一致当前关系局部完整(值, it->first, it->second))
+                    return std::nullopt;
+                结果.状态 = L1中性一致当前读取项目状态::成功;
+                结果.事实 = L1事实副本{it->second};
+                return 结果;
+            }
+        } else {
+            const auto it = 值.当前值.find(编码.值);
+            if (it != 值.当前值.end()) {
+                if (!一致当前值局部完整(值, it->first, it->second))
+                    return std::nullopt;
+                结果.状态 = L1中性一致当前读取项目状态::成功;
+                结果.事实 = L1事实副本{it->second};
+                return 结果;
+            }
+        }
+        const auto 状态 = 一致当前缺失状态(值, 编码, 种类);
+        if (!状态) return std::nullopt;
+        结果.状态 = *状态;
+        return 结果;
+    }
+
+    // 诊断责任：向上送出；关系与对端副本分配异常由公开仓库入口映射。
+    static std::optional<一致源关系组内部结果项> 读取一致源关系组(
+        const 状态& 值, const L1中性一致源关系组选择项& 选择) {
+        一致源关系组内部结果项 结果{选择.源节点, 选择.关系类型节点, {}};
+        const auto 源 = 值.当前源关系索引.find(选择.源节点.值);
+        if (源 == 值.当前源关系索引.end()) return 结果;
+        const auto 类型 = 源->second.find(选择.关系类型节点.值);
+        if (类型 == 源->second.end()) return 结果;
+        if (类型->second.empty()) return std::nullopt;
+        结果.成员.reserve(类型->second.size());
+        std::uint64_t 前一编码 = 0;
+        for (const auto 编码 : 类型->second) {
+            const auto 关系 = 值.当前关系.find(编码);
+            if (编码 == 0 || 编码 <= 前一编码 || 关系 == 值.当前关系.end()
+                || !一致当前关系局部完整(值, 编码, 关系->second)
+                || 关系->second.源节点 != 选择.源节点
+                || 关系->second.关系类型节点 != 选择.关系类型节点)
+                return std::nullopt;
+            const auto 对端 = 值.当前节点.find(关系->second.目标节点.值);
+            if (对端 == 值.当前节点.end()
+                || !一致当前节点局部完整(值, 对端->first, 对端->second))
+                return std::nullopt;
+            结果.成员.push_back({关系->second, 对端->second});
+            前一编码 = 编码;
+        }
+        return 结果;
+    }
+
+    // 诊断责任：向上送出；关系与对端副本分配异常由公开仓库入口映射。
+    static std::optional<一致目标关系组内部结果项> 读取一致目标关系组(
+        const 状态& 值, const L1中性一致目标关系组选择项& 选择) {
+        一致目标关系组内部结果项 结果{选择.目标节点, 选择.关系类型节点, {}};
+        const auto 目标 = 值.当前目标关系索引.find(选择.目标节点.值);
+        if (目标 == 值.当前目标关系索引.end()) return 结果;
+        const auto 类型 = 目标->second.find(选择.关系类型节点.值);
+        if (类型 == 目标->second.end()) return 结果;
+        if (类型->second.empty()) return std::nullopt;
+        结果.成员.reserve(类型->second.size());
+        std::uint64_t 前一编码 = 0;
+        for (const auto 编码 : 类型->second) {
+            const auto 关系 = 值.当前关系.find(编码);
+            if (编码 == 0 || 编码 <= 前一编码 || 关系 == 值.当前关系.end()
+                || !一致当前关系局部完整(值, 编码, 关系->second)
+                || 关系->second.目标节点 != 选择.目标节点
+                || 关系->second.关系类型节点 != 选择.关系类型节点)
+                return std::nullopt;
+            const auto 对端 = 值.当前节点.find(关系->second.源节点.值);
+            if (对端 == 值.当前节点.end()
+                || !一致当前节点局部完整(值, 对端->first, 对端->second))
+                return std::nullopt;
+            结果.成员.push_back({关系->second, 对端->second});
+            前一编码 = 编码;
+        }
+        return 结果;
+    }
 
     // 诊断责任：向上送出；分配异常由调用方公开边界映射。
     static bool 插入当前源关系索引(状态& 值, const 关系事实& 事实) {
