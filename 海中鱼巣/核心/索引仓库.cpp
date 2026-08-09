@@ -223,68 +223,6 @@ std::vector<std::uint64_t> 索引仓库::读取节点主键组(
     return 结果;
 }
 
-std::optional<节点主键删除准备包> 索引仓库::准备节点主键删除包(
-    节点句柄 节点,
-    const std::vector<std::uint64_t>& 精确主键组,
-    const 结构事务令牌& 令牌) const {
-    if (!验证独占令牌(事务接线_, 令牌)
-        || !节点_.节点是否有效(节点, 令牌)
-        || 令牌.许可序号 == 0) return std::nullopt;
-    std::vector<std::uint64_t> 当前主键组;
-    {
-        std::shared_lock<std::shared_mutex> 锁(仓库锁_);
-        const auto 位置 = 节点主键组_.find(节点.节点编号);
-        if (位置 != 节点主键组_.end()) 当前主键组 = 位置->second;
-    }
-    auto 预期主键组 = 精确主键组;
-    std::sort(当前主键组.begin(), 当前主键组.end());
-    std::sort(预期主键组.begin(), 预期主键组.end());
-    if (当前主键组 != 预期主键组) return std::nullopt;
-    节点主键删除准备包 包{节点, std::move(当前主键组), 令牌.许可序号};
-    return 包.完整() ? std::optional<节点主键删除准备包>{std::move(包)} : std::nullopt;
-}
-
-void 索引仓库::提交节点主键删除包(
-    const 节点主键删除准备包& 包,
-    const 结构事务令牌& 令牌,
-    const 概念安全删除提交会话& 会话) {
-    if (!验证独占令牌(事务接线_, 令牌)
-        || !包.完整()
-        || !会话.有效()
-        || 会话.读取运行期状态() != 事务接线_.运行期状态
-        || 会话.读取目标() != 包.目标
-        || 会话.读取写集身份() != 包.写集身份
-        || 包.写集身份 != 令牌.许可序号
-        || 会话.读取阶段() != 概念安全删除提交阶段::索引) {
-        throw std::logic_error("概念安全删除索引提交能力不匹配");
-    }
-    std::unique_lock<std::shared_mutex> 锁(仓库锁_);
-    const auto 反向位置 = 节点主键组_.find(包.目标.节点编号);
-    const std::size_t 当前数量 = 反向位置 == 节点主键组_.end() ? 0 : 反向位置->second.size();
-    if (当前数量 != 包.主键组.size()) {
-        throw std::logic_error("概念安全删除索引提交前反向主键漂移");
-    }
-    for (const auto 主键 : 包.主键组) {
-        if (反向位置 == 节点主键组_.end()
-            || std::find(反向位置->second.begin(), 反向位置->second.end(), 主键)
-                == 反向位置->second.end()) {
-            throw std::logic_error("概念安全删除索引提交前反向主键漂移");
-        }
-        const auto 位置 = 主键索引_.find(主键);
-        if (位置 == 主键索引_.end() || 位置->second.节点 != 包.目标) {
-            throw std::logic_error("概念安全删除索引提交前主键漂移");
-        }
-        if (位置->second.所有者声明.键保留策略 == 索引键保留策略::删除后永久保留) {
-            const auto 保留位置 = 永久保留主键组_.find(主键);
-            if (保留位置 == 永久保留主键组_.end() || 保留位置->second != 位置->second) {
-                throw std::logic_error("概念安全删除索引提交前永久键保留漂移");
-            }
-        }
-    }
-    for (const auto 主键 : 包.主键组) 主键索引_.erase(主键);
-    if (反向位置 != 节点主键组_.end()) 节点主键组_.erase(反向位置);
-}
-
 bool 索引仓库::删除主键(std::uint64_t 主键) {
     if (事务接线_.已接域()) {
         auto 许可 = 事务接线_.取得共享许可(事务接线_.运行期状态);

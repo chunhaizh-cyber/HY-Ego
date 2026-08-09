@@ -216,7 +216,6 @@
   <ItemGroup>
     <ClInclude Include="海中鱼巣\启动选项.数据.h" />
     <ClInclude Include="海中鱼巣\程序运行结果.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\概念安全删除提交能力.数据.h" />
     <ClInclude Include="海中鱼巣\生产运行期配置.数据.h" />
     <ClInclude Include="海中鱼巣\领域\系统角色清单.数据.h" />
     <ClInclude Include="海中鱼巣\领域\概念活动状态.数据.h" />

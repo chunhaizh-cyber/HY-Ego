@@ -205,41 +205,8 @@ struct 概念用途观察材料 {
     }
 };
 
-struct 概念缓存清理准备包 {
-    节点句柄 目标概念;
-    std::vector<概念用途观察材料> 用途观察组;
-    std::uint64_t 写集身份 = 0;
-
-    bool 完整() const {
-        return 句柄有效(目标概念)
-            && 写集身份 != 0
-            && std::all_of(用途观察组.begin(), 用途观察组.end(), [this](const auto& 材料) {
-                return 材料.完整() && 材料.概念 == 目标概念 && !材料.可裁决业务事实;
-            });
-    }
-};
-
 class 统计服务 {
 public:
-    std::optional<概念缓存清理准备包> 准备概念缓存清理包(
-        节点句柄 目标概念,
-        const 结构事务令牌& 令牌) const {
-        if (!句柄有效(目标概念)
-            || 令牌.类型 != 结构许可类型::独占
-            || 令牌.许可序号 == 0) return std::nullopt;
-        概念缓存清理准备包 包;
-        包.目标概念 = 目标概念;
-        包.写集身份 = 令牌.许可序号;
-        {
-            std::shared_lock<std::shared_mutex> 锁(概念用途缓存锁_);
-            包.用途观察组.reserve(概念用途缓存_.size());
-            for (const auto& 条目 : 概念用途缓存_) {
-                if (条目.second.概念 == 目标概念) 包.用途观察组.push_back(条目.second);
-            }
-        }
-        return 包.完整() ? std::optional<概念缓存清理准备包>{std::move(包)} : std::nullopt;
-    }
-
     缓存命名空间 定义缓存命名空间(缓存类型 类型, 来源结构类型 来源, std::uint64_t 来源版本,
         std::uint64_t 规则版本, 缓存值类型 值类型, bool 可持久化, 缓存失效条件 失效条件) const {
         if (!缓存类型有效(类型)
@@ -768,8 +735,6 @@ public:
     }
 
 private:
-    friend class 领域::概念安全删除编排器;
-
     struct 概念用途缓存键 {
         缓存命名空间 命名空间;
         节点句柄 概念;
@@ -812,82 +777,6 @@ private:
                 && 左.用途 == 右.用途;
         }
     };
-
-    struct 概念用途缓存冻结上下文 {
-        explicit 概念用途缓存冻结上下文(std::shared_mutex& 锁)
-            : 锁定(锁, std::try_to_lock) {
-        }
-
-        概念用途缓存冻结上下文(const 概念用途缓存冻结上下文&) = delete;
-        概念用途缓存冻结上下文& operator=(const 概念用途缓存冻结上下文&) = delete;
-        概念用途缓存冻结上下文(概念用途缓存冻结上下文&&) noexcept = default;
-        概念用途缓存冻结上下文& operator=(概念用途缓存冻结上下文&&) noexcept = default;
-
-        bool 已锁定() const { return 锁定.owns_lock(); }
-
-        std::unique_lock<std::shared_mutex> 锁定;
-    };
-
-    std::optional<概念用途缓存冻结上下文> 尝试冻结概念用途缓存() {
-        概念用途缓存冻结上下文 上下文(概念用途缓存锁_);
-        return 上下文.已锁定()
-            ? std::optional<概念用途缓存冻结上下文>{std::move(上下文)}
-            : std::nullopt;
-    }
-
-    std::optional<概念缓存清理准备包> 准备概念缓存清理包_已加锁(
-        节点句柄 目标概念,
-        const 结构事务令牌& 令牌,
-        const 概念用途缓存冻结上下文& 上下文) const {
-        if (!上下文.已锁定()
-            || !句柄有效(目标概念)
-            || 令牌.类型 != 结构许可类型::独占
-            || 令牌.许可序号 == 0) return std::nullopt;
-        概念缓存清理准备包 包;
-        包.目标概念 = 目标概念;
-        包.写集身份 = 令牌.许可序号;
-        包.用途观察组.reserve(概念用途缓存_.size());
-        for (const auto& 条目 : 概念用途缓存_) {
-            if (条目.second.概念 == 目标概念) 包.用途观察组.push_back(条目.second);
-        }
-        return 包.完整() ? std::optional<概念缓存清理准备包>{std::move(包)} : std::nullopt;
-    }
-
-    void 提交概念缓存清理包_已加锁(
-        const 概念缓存清理准备包& 包,
-        const 结构事务令牌& 令牌,
-        const 概念安全删除提交会话& 会话,
-        const 概念用途缓存冻结上下文& 上下文) {
-        if (!上下文.已锁定()
-            || !包.完整()
-            || !会话.有效()
-            || 会话.读取目标() != 包.目标概念
-            || 会话.读取写集身份() != 包.写集身份
-            || 包.写集身份 != 令牌.许可序号
-            || 令牌.类型 != 结构许可类型::独占
-            || 会话.读取阶段() != 概念安全删除提交阶段::统计缓存) {
-            throw std::logic_error("概念安全删除缓存提交能力不匹配");
-        }
-        std::size_t 当前目标数量 = 0;
-        for (const auto& 条目 : 概念用途缓存_) {
-            if (条目.second.概念 == 包.目标概念) ++当前目标数量;
-        }
-        if (当前目标数量 != 包.用途观察组.size()) {
-            throw std::logic_error("概念安全删除缓存提交前目标键集合漂移");
-        }
-        for (const auto& 材料 : 包.用途观察组) {
-            const 概念用途缓存键 键{材料.命名空间, 材料.概念, 材料.用途};
-            const auto 位置 = 概念用途缓存_.find(键);
-            if (位置 == 概念用途缓存_.end()
-                || !概念用途观察材料相同(位置->second, 材料)) {
-                throw std::logic_error("概念安全删除缓存提交前精确键漂移");
-            }
-        }
-        for (const auto& 材料 : 包.用途观察组) {
-            const 概念用途缓存键 键{材料.命名空间, 材料.概念, 材料.用途};
-            概念用途缓存_.erase(键);
-        }
-    }
 
     static bool 节点句柄小于(const 节点句柄& 左, const 节点句柄& 右) {
         if (左.仓库编号 != 右.仓库编号) {
