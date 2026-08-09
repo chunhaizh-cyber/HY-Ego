@@ -42,8 +42,6 @@ struct 普通应用配置 {
         0x0001'0001'0000'0002ULL,
         1, 10, 1, 10
     };
-    bool 启用数据库审计 = true;
-
     bool 有效() const noexcept {
         return 方法登记根稳定键 != 0 && 根需求参数.有效();
     }

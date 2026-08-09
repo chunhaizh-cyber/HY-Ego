@@ -84,9 +84,6 @@
     <ClCompile Include="海中鱼巣\界面\投影.控制面板启动.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\适配\审计.数据库启动.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="海中鱼巣\启动.程序运行宿主.ixx">
       <Filter>源文件</Filter>
     </ClCompile>

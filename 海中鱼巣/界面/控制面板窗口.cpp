@@ -82,14 +82,12 @@ const std::array<const wchar_t*, 4> 日志信息导航名称{
 enum class 系统信息导航 : std::uint32_t {
     线程信息 = 0,
     仓库信息 = 1,
-    数据库审计 = 2,
-    控制面板信息 = 3
+    控制面板信息 = 2
 };
 
-const std::array<const wchar_t*, 4> 系统信息导航名称{
+const std::array<const wchar_t*, 3> 系统信息导航名称{
     L"线程信息",
     L"仓库信息",
-    L"数据库审计",
     L"控制面板信息"
 };
 
@@ -257,7 +255,6 @@ struct 控制面板树项引用 {
 
 struct 控制面板窗口::窗口实现 {
     const 控制面板服务& 控制面板;
-    const SQL数据库适配& 数据库;
     控制面板窗口快照 当前快照;
     const volatile std::sig_atomic_t* 停止请求 = nullptr;
 
@@ -274,7 +271,6 @@ struct 控制面板窗口::窗口实现 {
     HWND 索引数文本 = nullptr;
     HWND 详情文本 = nullptr;
     HWND 数据库标题文本 = nullptr;
-    HWND 数据库列表 = nullptr;
     HWND 刷新按钮 = nullptr;
     HWND 操作请求按钮 = nullptr;
     HWND 关闭按钮 = nullptr;
@@ -300,9 +296,8 @@ struct 控制面板窗口::窗口实现 {
     bool 窗口类由本次注册 = false;
     std::wstring 失败阶段;
 
-    窗口实现(const 控制面板服务& 面板服务, const SQL数据库适配& 数据库适配,
-        结构统计快照 启动结构统计)
-        : 控制面板(面板服务), 数据库(数据库适配) {
+    窗口实现(const 控制面板服务& 面板服务, 结构统计快照 启动结构统计)
+        : 控制面板(面板服务) {
         当前快照.启动结构统计 = 启动结构统计;
     }
 
@@ -413,10 +408,6 @@ struct 控制面板窗口::窗口实现 {
             当前快照.当前概念根,
             当前快照.当前页游标,
             允许保留旧快照);
-    }
-
-    void 读取数据库审计材料() {
-        当前快照.数据库审计查询 = 数据库.读取最近结构统计审计(50);
     }
 
     bool 注册窗口类() {
@@ -767,7 +758,6 @@ struct 控制面板窗口::窗口实现 {
         const bool 系统信息页 = 当前分页 == 控制面板分页::系统信息;
         const bool 日志信息页 = 当前分页 == 控制面板分页::日志信息;
         const bool 仓库信息页 = 系统信息页 && 当前系统信息是(系统信息导航::仓库信息);
-        const bool 数据库审计页 = 系统信息页 && 当前系统信息是(系统信息导航::数据库审计);
         const bool 概念树页 = 信息树页 && 当前快照.当前分类 == 控制面板树分类::概念树;
         显示控件(导航栏, true);
         显示控件(树视图, 信息树页);
@@ -778,8 +768,7 @@ struct 控制面板窗口::窗口实现 {
         显示控件(关系数文本, 仓库信息页);
         显示控件(索引数文本, 仓库信息页);
         显示控件(详情文本, true);
-        显示控件(数据库标题文本, 日志信息页 || 数据库审计页);
-        显示控件(数据库列表, 数据库审计页);
+        显示控件(数据库标题文本, 日志信息页);
     }
 
     void 更新系统信息页() const {
@@ -815,13 +804,6 @@ struct 控制面板窗口::窗口实现 {
                 << L"\r\n";
             文本 << L"\r\n"
                 << L"显示边界：树项和仓库统计只做人读；节点、关系、索引仍以内存仓库结构为准。";
-        } else if (当前系统信息是(系统信息导航::数据库审计)) {
-            SetWindowTextW(数据库标题文本, L"数据库审计投影 | 只读，不裁决运行期事实");
-            文本 << L"数据库审计"
-                << L"\r\n\r\n"
-                << L"下方列表显示最近结构统计审计记录。"
-                << L"\r\n"
-                << L"数据库只作人读审计投影，不直接裁决运行期事实。";
         } else {
             文本 << L"控制面板信息"
                 << L"\r\n\r\n"
@@ -889,9 +871,6 @@ struct 控制面板窗口::窗口实现 {
             break;
         case 控制面板分页::系统信息:
             更新系统信息页();
-            if (当前系统信息是(系统信息导航::数据库审计)) {
-                更新数据库控件();
-            }
             break;
         case 控制面板分页::日志信息:
             更新日志页();
@@ -1016,7 +995,7 @@ struct 控制面板窗口::窗口实现 {
 
         标题文本 = CreateWindowExW(0, L"STATIC", L"海中鱼巣控制面板",
             WS_CHILD | WS_VISIBLE | SS_LEFT, 0, 0, 0, 0, 主窗口, nullptr, GetModuleHandleW(nullptr), nullptr);
-        边界文本 = CreateWindowExW(0, L"STATIC", L"只读模式 | 内存事实：显示服务 | 数据库：审计投影，不裁决事实",
+        边界文本 = CreateWindowExW(0, L"STATIC", L"只读模式 | 内存事实：显示服务 | 不裁决运行期事实",
             WS_CHILD | WS_VISIBLE | SS_LEFT, 0, 0, 0, 0, 主窗口, nullptr, GetModuleHandleW(nullptr), nullptr);
         导航栏 = CreateWindowExW(
             WS_EX_CLIENTEDGE, L"LISTBOX", L"",
@@ -1050,12 +1029,8 @@ struct 控制面板窗口::窗口实现 {
             WS_EX_CLIENTEDGE, L"EDIT", L"",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL | ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY,
             0, 0, 0, 0, 主窗口, nullptr, GetModuleHandleW(nullptr), nullptr);
-        数据库标题文本 = CreateWindowExW(0, L"STATIC", L"数据库审计投影",
+        数据库标题文本 = CreateWindowExW(0, L"STATIC", L"日志信息",
             WS_CHILD | WS_VISIBLE | SS_LEFT, 0, 0, 0, 0, 主窗口, nullptr, GetModuleHandleW(nullptr), nullptr);
-        数据库列表 = CreateWindowExW(
-            WS_EX_CLIENTEDGE, WC_LISTVIEWW, L"",
-            WS_CHILD | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS,
-            0, 0, 0, 0, 主窗口, nullptr, GetModuleHandleW(nullptr), nullptr);
         刷新按钮 = CreateWindowExW(0, L"BUTTON", L"刷新",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
             0, 0, 0, 0, 主窗口,
@@ -1076,7 +1051,7 @@ struct 控制面板窗口::窗口实现 {
         if (标题文本 == nullptr || 边界文本 == nullptr || 导航栏 == nullptr || 树视图 == nullptr
             || 概念根下拉 == nullptr || 上一根页按钮 == nullptr || 下一根页按钮 == nullptr
             || 节点数文本 == nullptr || 关系数文本 == nullptr || 索引数文本 == nullptr
-            || 详情文本 == nullptr || 数据库标题文本 == nullptr || 数据库列表 == nullptr
+            || 详情文本 == nullptr || 数据库标题文本 == nullptr
             || 刷新按钮 == nullptr || 操作请求按钮 == nullptr
             || 关闭按钮 == nullptr || 状态栏 == nullptr) {
             标记追根因错误(L"控制面板必需控件创建失败");
@@ -1086,7 +1061,7 @@ struct 控制面板窗口::窗口实现 {
         SendMessageW(标题文本, WM_SETFONT, reinterpret_cast<WPARAM>(标题字体), TRUE);
         for (HWND 控件 : {边界文本, 导航栏, 树视图, 概念根下拉, 上一根页按钮, 下一根页按钮,
                  节点数文本, 关系数文本, 索引数文本,
-                 详情文本, 数据库标题文本, 数据库列表, 刷新按钮, 操作请求按钮, 关闭按钮, 状态栏}) {
+                 详情文本, 数据库标题文本, 刷新按钮, 操作请求按钮, 关闭按钮, 状态栏}) {
             SendMessageW(控件, WM_SETFONT, reinterpret_cast<WPARAM>(正文字体), TRUE);
         }
 
@@ -1098,30 +1073,7 @@ struct 控制面板窗口::窗口实现 {
         }
         更新根页按钮状态();
 
-        ListView_SetExtendedListViewStyle(数据库列表, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_DOUBLEBUFFER);
-        const std::array<std::pair<const wchar_t*, int>, 6> 数据库列{
-            std::pair{L"编号", 72},
-            std::pair{L"时间", 170},
-            std::pair{L"来源", 160},
-            std::pair{L"节点", 80},
-            std::pair{L"关系", 80},
-            std::pair{L"索引", 80}
-        };
-        for (std::size_t 索引 = 0; 索引 < 数据库列.size(); ++索引) {
-            LVCOLUMNW 列{};
-            列.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
-            列.pszText = const_cast<wchar_t*>(数据库列[索引].first);
-            列.cx = 数据库列[索引].second;
-            列.iSubItem = static_cast<int>(索引);
-            if (ListView_InsertColumn(数据库列表, static_cast<int>(索引), &列) == -1) {
-                标记追根因错误(L"控制面板数据库审计列表列创建失败");
-                return false;
-            }
-        }
-
-        读取数据库审计材料();
         更新总览控件();
-        更新数据库控件();
         更新当前分页内容();
         更新菜单状态();
         应用分页控件可见性();
@@ -1199,45 +1151,9 @@ struct 控制面板窗口::窗口实现 {
         } else {
             文本 << L"请在信息树中选择具体节点。"
                 << L"\r\n"
-                << L"右侧栏只显示节点只读材料；仓库数量和数据库审计已移动到系统信息页。";
+                << L"右侧栏只显示节点只读材料；仓库数量已移动到系统信息页。";
         }
         SetWindowTextW(详情文本, 文本.str().c_str());
-    }
-
-    void 更新数据库控件() const {
-        ListView_DeleteAllItems(数据库列表);
-        const auto& 查询 = 当前快照.数据库审计查询;
-        if (!查询.操作.成功) {
-            const std::wstring 状态 = L"数据库审计投影不可用 | "
-                + (查询.操作.失败阶段.empty() ? std::wstring(L"未知阶段") : 查询.操作.失败阶段);
-            SetWindowTextW(数据库标题文本, 状态.c_str());
-            return;
-        }
-        const std::wstring 状态 = L"数据库审计投影 | 最近 " + std::to_wstring(查询.记录组.size())
-            + L" 条 | 只读，不裁决运行期事实";
-        SetWindowTextW(数据库标题文本, 状态.c_str());
-        for (std::size_t 索引 = 0; 索引 < 查询.记录组.size(); ++索引) {
-            const auto& 记录 = 查询.记录组[索引];
-            std::array<std::wstring, 6> 文本组{
-                std::to_wstring(记录.审计编号),
-                记录.记录时间,
-                记录.来源入口,
-                std::to_wstring(记录.节点数),
-                std::to_wstring(记录.关系数),
-                std::to_wstring(记录.索引数)
-            };
-            LVITEMW 项{};
-            项.mask = LVIF_TEXT;
-            项.iItem = static_cast<int>(索引);
-            项.pszText = 文本组[0].data();
-            const int 项编号 = ListView_InsertItem(数据库列表, &项);
-            if (项编号 < 0) {
-                continue;
-            }
-            for (int 列号 = 1; 列号 < static_cast<int>(文本组.size()); ++列号) {
-                ListView_SetItemText(数据库列表, 项编号, 列号, 文本组[列号].data());
-            }
-        }
     }
 
     void 布局控件() const {
@@ -1265,22 +1181,6 @@ struct 控制面板窗口::窗口实现 {
 
         MoveWindow(标题文本, 边距, 10, 宽度 - 2 * 边距, 32, TRUE);
         MoveWindow(边界文本, 边距, 42, 宽度 - 2 * 边距, 24, TRUE);
-
-        auto 设置数据库列宽 = [&](int 列表宽度) {
-            if (数据库列表 == nullptr) {
-                return;
-            }
-            const int 编号列宽 = 64;
-            const int 时间列宽 = 190;
-            const int 数量列宽 = 72;
-            const int 来源列宽 = std::max(160, 列表宽度 - 编号列宽 - 时间列宽 - 3 * 数量列宽 - 20);
-            ListView_SetColumnWidth(数据库列表, 0, 编号列宽);
-            ListView_SetColumnWidth(数据库列表, 1, 时间列宽);
-            ListView_SetColumnWidth(数据库列表, 2, 来源列宽);
-            ListView_SetColumnWidth(数据库列表, 3, 数量列宽);
-            ListView_SetColumnWidth(数据库列表, 4, 数量列宽);
-            ListView_SetColumnWidth(数据库列表, 5, 数量列宽);
-        };
 
         const int 导航栏宽度 = std::clamp(宽度 / 6, 150, 210);
         const int 导航栏左边 = 边距;
@@ -1324,14 +1224,6 @@ struct 控制面板窗口::窗口实现 {
                     页面宽度 - 2 * (单统计宽度 + 统计间距), 统计高度, TRUE);
                 const int 详情顶部 = 内容顶部 + 统计高度 + 12;
                 MoveWindow(详情文本, 页面左边, 详情顶部, 页面宽度, std::max(180, 内容底部 - 详情顶部), TRUE);
-            } else if (当前系统信息是(系统信息导航::数据库审计)) {
-                const int 详情高度 = 110;
-                const int 数据库标题顶部 = 内容顶部 + 详情高度 + 10;
-                const int 数据库列表顶部 = 数据库标题顶部 + 数据库标题高度;
-                MoveWindow(详情文本, 页面左边, 内容顶部, 页面宽度, 详情高度, TRUE);
-                MoveWindow(数据库标题文本, 页面左边, 数据库标题顶部, 页面宽度, 数据库标题高度, TRUE);
-                MoveWindow(数据库列表, 页面左边, 数据库列表顶部, 页面宽度, std::max(90, 内容底部 - 数据库列表顶部), TRUE);
-                设置数据库列宽(页面宽度);
             } else {
                 MoveWindow(详情文本, 页面左边, 内容顶部, 页面宽度, std::max(180, 内容底部 - 内容顶部), TRUE);
             }
@@ -1457,14 +1349,11 @@ struct 控制面板窗口::窗口实现 {
             return false;
         }
         更新根页按钮状态();
-        读取数据库审计材料();
         更新总览控件();
         更新当前分页内容();
         应用分页控件可见性();
         布局控件();
-        设置状态栏文本(当前快照.数据库审计查询.操作.成功
-            ? L"当前分类按需页和数据库审计投影已刷新；权威结构未改变"
-            : L"当前分类按需页已刷新；数据库审计投影不可用；权威结构未改变");
+        设置状态栏文本(L"当前分类按需页已刷新；权威结构未改变");
         return true;
     }
 
@@ -1692,10 +1581,9 @@ struct 控制面板窗口::窗口实现 {
     }
 };
 
-控制面板窗口::控制面板窗口(const 控制面板服务& 控制面板, const SQL数据库适配& 数据库,
+控制面板窗口::控制面板窗口(const 控制面板服务& 控制面板,
     结构统计快照 启动结构统计)
-    : 实现(std::make_unique<窗口实现>(
-        控制面板, 数据库, 启动结构统计)) {
+    : 实现(std::make_unique<窗口实现>(控制面板, 启动结构统计)) {
 }
 
 控制面板窗口::~控制面板窗口() = default;
