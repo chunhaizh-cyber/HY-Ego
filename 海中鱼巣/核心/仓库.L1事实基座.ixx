@@ -590,37 +590,6 @@ public:
         if (auto it = 状态_.历史.find(编码.值); it != 状态_.历史.end()) return {L1读取状态::成功, it->second};
         return {L1读取状态::未找到, std::nullopt};
     }
-    // 诊断责任：向上送出；结构化状态由最终调用责任边界处理。
-    L1完整快照结果 读取完整快照() const {
-        try {
-            std::shared_lock<std::shared_mutex> 锁(锁_);
-            if (状态_.隔离 || !状态完整(状态_))
-                return {L1读取状态::内部不一致, std::nullopt};
-            const auto 快照 = 构造快照(状态_);
-            if (!快照) return {L1读取状态::内部不一致, std::nullopt};
-            return {L1读取状态::成功, std::move(*快照)};
-        } catch (const std::bad_alloc&) {
-            return {L1读取状态::资源失败, std::nullopt};
-        } catch (...) {
-            return {L1读取状态::内部不一致, std::nullopt};
-        }
-    }
-    // 诊断责任：向上送出；竞争、资源失败和内部不一致均由结构化状态携带。
-    L1完整快照结果 尝试读取完整快照() const {
-        try {
-            std::shared_lock<std::shared_mutex> 锁(锁_, std::try_to_lock);
-            if (!锁.owns_lock()) return {L1读取状态::许可拒绝, std::nullopt};
-            if (状态_.隔离 || !状态完整(状态_))
-                return {L1读取状态::内部不一致, std::nullopt};
-            const auto 快照 = 构造快照(状态_);
-            if (!快照) return {L1读取状态::内部不一致, std::nullopt};
-            return {L1读取状态::成功, std::move(*快照)};
-        } catch (const std::bad_alloc&) {
-            return {L1读取状态::资源失败, std::nullopt};
-        } catch (...) {
-            return {L1读取状态::内部不一致, std::nullopt};
-        }
-    }
     // 诊断责任：向上送出；只复制同一共享许可内的权威事实代次。
     L1事实代次读取结果 尝试读取当前事实代次() const {
         try {
@@ -1339,14 +1308,6 @@ private:
         }
         return true;
     }
-    static std::optional<L1完整快照> 构造快照(const 状态& 值) {
-        L1完整快照 快照; 快照.事实代次 = 值.事实代次;
-        for (const auto& [_, 事实] : 值.当前节点) 快照.当前节点.push_back(事实);
-        for (const auto& [_, 事实] : 值.当前关系) 快照.当前关系.push_back(事实);
-        for (const auto& [_, 事实] : 值.当前值) 快照.当前值.push_back(事实);
-        for (const auto 编码 : 值.永久占用) 快照.永久占用编码.push_back({编码});
-        排序(快照); return 快照;
-    }
     template<class T> L1读取结果 读取当前(稳定编码 编码, const std::unordered_map<std::uint64_t, T>& 表) const {
         if (!有效(编码)) return {};
         std::shared_lock<std::shared_mutex> 锁(锁_);
@@ -1355,14 +1316,6 @@ private:
         if (it != 表.end()) return {L1读取状态::成功, 状态_.事实代次, L1事实副本{it->second}};
         return {状态_.历史.contains(编码.值) ? L1读取状态::已退出 : L1读取状态::未找到, 0, std::nullopt};
     }
-    static void 排序(L1完整快照& 快照) {
-        auto 编码排序 = [](const auto& 左, const auto& 右) { return 左.编码 < 右.编码; };
-        std::sort(快照.当前节点.begin(), 快照.当前节点.end(), 编码排序);
-        std::sort(快照.当前关系.begin(), 快照.当前关系.end(), 编码排序);
-        std::sort(快照.当前值.begin(), 快照.当前值.end(), 编码排序);
-        std::sort(快照.永久占用编码.begin(), 快照.永久占用编码.end());
-    }
-
     mutable std::shared_mutex 锁_;
     状态 状态_;
 };

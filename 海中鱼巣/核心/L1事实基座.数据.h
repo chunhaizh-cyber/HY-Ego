@@ -336,18 +336,6 @@ struct L1历史读取结果 final {
     std::optional<L1历史事实副本> 历史;
 };
 
-struct L1完整快照 final {
-    std::uint64_t 事实代次 = 0;
-    std::vector<节点事实> 当前节点;
-    std::vector<关系事实> 当前关系;
-    std::vector<值事实> 当前值;
-    std::vector<稳定编码> 永久占用编码;
-    friend bool operator==(const L1完整快照&, const L1完整快照&) = default;
-};
-struct L1完整快照结果 final {
-    L1读取状态 状态 = L1读取状态::入口拒绝;
-    std::optional<L1完整快照> 快照;
-};
 struct L1事实代次读取结果 final {
     L1读取状态 状态 = L1读取状态::入口拒绝;
     std::uint64_t 事实截止代次 = 0;
