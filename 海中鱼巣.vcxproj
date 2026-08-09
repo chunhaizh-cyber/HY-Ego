@@ -247,11 +247,9 @@
     <ClCompile Include="海中鱼巣\核心\服务.节点直接结构.ixx" />
     <ClCompile Include="海中鱼巣\核心\数据操作.节点直接类型化结构.ixx" />
     <ClCompile Include="海中鱼巣\核心\服务.节点直接类型化结构提交.ixx" />
-    <ClCompile Include="海中鱼巣\核心\服务.节点直接结构恢复.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.节点直接世界结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.节点直接存在.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.节点直接场景.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.节点直接世界引导.ixx" />
     <ClCompile Include="海中鱼巣\核心\冻结.节点直接身份结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据操作.存在场景.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.存在.ixx" />

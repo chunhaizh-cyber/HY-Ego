@@ -300,9 +300,6 @@
     <ClCompile Include="海中鱼巣\核心\服务.节点直接类型化结构提交.ixx">
       <Filter>核心</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\服务.节点直接结构恢复.ixx">
-      <Filter>核心</Filter>
-    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\服务.节点直接世界结构.ixx">
       <Filter>领域</Filter>
     </ClCompile>
@@ -310,9 +307,6 @@
       <Filter>领域</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\服务.节点直接场景.ixx">
-      <Filter>领域</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\服务.节点直接世界引导.ixx">
       <Filter>领域</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\核心\冻结.节点直接身份结构.ixx">
