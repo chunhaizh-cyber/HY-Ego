@@ -196,19 +196,6 @@ struct 稳定关系组读取结果 {
     std::vector<正式关系记录> 关系组;
 };
 
-struct 关系稳定主键高水位 {
-    关系稳定主键命名域 命名域 = 关系稳定主键命名域::无效;
-    std::uint64_t 高水位 = 0;
-};
-
-struct 关系稳定主键历史占用 { 关系稳定主键 稳定主键; };
-
-struct 正式关系仓库权威材料 {
-    std::vector<关系稳定主键高水位> 每域高水位;
-    std::vector<关系稳定主键历史占用> 历史占用;
-    std::vector<正式关系记录> 记录组;
-};
-
 class 正式关系仓库 {
 public:
     正式关系仓库(
@@ -403,34 +390,6 @@ public:
         return 读取有效关系组核心_(节点, 关系类型::普通父子, 关系枚举方向::相关, 事务序号);
     }
 
-    正式关系仓库权威材料 导出权威状态() const {
-        正式关系仓库权威材料 材料;
-        std::shared_lock 锁(仓库锁_);
-        for (const auto& [命名域, 高水位] : 每域高水位_) {
-            材料.每域高水位.push_back({static_cast<关系稳定主键命名域>(命名域), 高水位});
-        }
-        for (const auto& [稳定主键, 占用] : 主键占用表_) {
-            (void)占用;
-            材料.历史占用.push_back({稳定主键});
-        }
-        for (const auto& [编号, 条目] : 关系表_) {
-            (void)编号;
-            if (!条目.已发布) continue;
-            材料.记录组.insert(材料.记录组.end(), 条目.历史记录组.begin(), 条目.历史记录组.end());
-            材料.记录组.push_back(条目.当前记录);
-        }
-        std::sort(材料.每域高水位.begin(), 材料.每域高水位.end(), [](const auto& 左, const auto& 右) {
-            return static_cast<std::uint64_t>(左.命名域) < static_cast<std::uint64_t>(右.命名域);
-        });
-        std::sort(材料.历史占用.begin(), 材料.历史占用.end(), [](const auto& 左, const auto& 右) {
-            if (左.稳定主键.命名域 != 右.稳定主键.命名域)
-                return 左.稳定主键.命名域 < 右.稳定主键.命名域;
-            return 左.稳定主键.键值 < 右.稳定主键.键值;
-        });
-        std::sort(材料.记录组.begin(), 材料.记录组.end(), 关系稳定顺序_);
-        return 材料;
-    }
-
     std::optional<正式关系审计材料> 读取关系审计(关系句柄 关系) const {
         std::shared_lock 锁(仓库锁_);
         const auto 位置 = 关系表_.find(关系.关系编号);
@@ -446,21 +405,6 @@ public:
         if (!句柄属于当前记录_(关系, 位置)
             || (!位置->second.已发布 && 位置->second.候选事务序号 != 事务序号)) return std::nullopt;
         return 正式关系审计材料{位置->second.当前记录, 位置->second.历史记录组};
-    }
-
-    std::vector<正式关系记录> 读取全部关系审计() const {
-        std::vector<正式关系记录> 结果;
-        std::shared_lock 锁(仓库锁_);
-        for (const auto& [编号, 条目] : 关系表_) {
-            if (!条目.已发布) continue;
-            结果.insert(结果.end(), 条目.历史记录组.begin(), 条目.历史记录组.end());
-            结果.push_back(条目.当前记录);
-        }
-        std::sort(结果.begin(), 结果.end(), [] (const auto& 左, const auto& 右) {
-            if (左.关系编号 != 右.关系编号) return 左.关系编号 < 右.关系编号;
-            return 左.版本号 < 右.版本号;
-        });
-        return 结果;
     }
 
     std::vector<正式关系记录> 读取有效关系组(

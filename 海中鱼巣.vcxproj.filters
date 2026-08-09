@@ -216,12 +216,6 @@
     <ClCompile Include="海中鱼巣\线程\自我治理领域路由.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\线程\缓存统计线程.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\线程\事件日志线程.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="海中鱼巣\线程\外设采样材料线程.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -244,9 +238,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\核心\写入事务.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\事件日志段服务.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\核心\协调.结构事务.ixx">
@@ -308,9 +299,6 @@
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\服务.节点直接场景.ixx">
       <Filter>领域</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\冻结.节点直接身份结构.ixx">
-      <Filter>核心</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\数据操作.存在场景.ixx">
       <Filter>源文件</Filter>
@@ -492,9 +480,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\核心\日志系统.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="海中鱼巣\核心\事件日志段服务.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\核心\容错检查.h">

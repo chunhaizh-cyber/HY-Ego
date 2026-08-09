@@ -58,27 +58,6 @@ struct 稳定主键当前身份读取结果 {
     std::optional<节点直接身份记录> 当前记录;
 };
 
-struct 节点稳定主键高水位 {
-    std::uint64_t 命名域 = 0;
-    std::uint64_t 键值 = 0;
-};
-
-struct 节点稳定主键历史占用 {
-    节点稳定主键 稳定主键;
-    节点类型 类型 = 节点类型::未分类;
-    std::uint64_t 节点编号 = 0;
-    bool 曾发布 = false;
-};
-
-struct 节点直接身份仓库权威材料 {
-    std::uint64_t 仓库编号 = 0;
-    std::uint64_t 下个节点编号 = 0;
-    std::uint64_t 下个创建序号 = 0;
-    std::vector<节点稳定主键高水位> 每域高水位;
-    std::vector<节点稳定主键历史占用> 历史占用;
-    std::vector<节点直接身份记录> 记录组;
-};
-
 class 节点直接身份仓库;
 
 class 节点直接身份未发布候选 {
@@ -677,43 +656,6 @@ public:
         std::shared_lock<std::shared_mutex> 锁(仓库锁_);
         const auto 位置 = 每域高水位_.find(static_cast<std::uint64_t>(命名域));
         return 位置 == 每域高水位_.end() ? 0 : 位置->second;
-    }
-
-    节点直接身份仓库权威材料 导出权威状态() const {
-        std::shared_lock<std::shared_mutex> 锁(仓库锁_);
-        节点直接身份仓库权威材料 材料;
-        材料.仓库编号 = 仓库编号_;
-        材料.下个节点编号 = 下个节点编号_;
-        材料.下个创建序号 = 下个创建序号_;
-        材料.每域高水位.reserve(每域高水位_.size());
-        材料.历史占用.reserve(主键占用表_.size());
-        材料.记录组.reserve(节点表_.size());
-        for (const auto& [命名域, 键值] : 每域高水位_) {
-            材料.每域高水位.push_back({命名域, 键值});
-        }
-        for (const auto& [稳定主键, 占用] : 主键占用表_) {
-            材料.历史占用.push_back({稳定主键, 占用.类型, 占用.节点编号, 占用.曾发布});
-        }
-        for (const auto& [节点编号, 条目] : 节点表_) {
-            (void)节点编号;
-            if (条目.已发布) 材料.记录组.push_back(条目.记录);
-        }
-        std::sort(材料.每域高水位.begin(), 材料.每域高水位.end(),
-            [](const 节点稳定主键高水位& 左, const 节点稳定主键高水位& 右) {
-                return 左.命名域 < 右.命名域;
-            });
-        std::sort(材料.历史占用.begin(), 材料.历史占用.end(),
-            [](const 节点稳定主键历史占用& 左, const 节点稳定主键历史占用& 右) {
-                if (左.稳定主键.命名域 != 右.稳定主键.命名域) {
-                    return 左.稳定主键.命名域 < 右.稳定主键.命名域;
-                }
-                return 左.稳定主键.键值 < 右.稳定主键.键值;
-            });
-        std::sort(材料.记录组.begin(), 材料.记录组.end(),
-            [](const 节点直接身份记录& 左, const 节点直接身份记录& 右) {
-                return 左.节点编号 < 右.节点编号;
-            });
-        return 材料;
     }
 
 private:

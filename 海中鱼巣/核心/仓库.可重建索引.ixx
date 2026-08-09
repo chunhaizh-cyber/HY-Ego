@@ -105,10 +105,6 @@ struct 可重建索引写入结果 {
     }
 };
 
-struct 可重建索引权威材料 {
-    std::vector<可重建索引记录> 记录组;
-};
-
 enum class 可重建索引精确读取状态 : std::uint8_t {
     已读取 = 1,
     未找到 = 2,
@@ -383,18 +379,6 @@ public:
         正向绑定_.swap(新正向);
         反向绑定_.swap(新反向);
         return true;
-    }
-
-    可重建索引权威材料 导出可丢弃加速材料() const {
-        可重建索引权威材料 材料;
-        std::shared_lock 锁(仓库锁_);
-        for (const auto& [键, 条目] : 正向绑定_) if (条目.已发布) 材料.记录组.push_back(条目.记录);
-        std::sort(材料.记录组.begin(), 材料.记录组.end(), [] (const auto& 左, const auto& 右) {
-            if (左.物理键.所有者身份 != 右.物理键.所有者身份) return 左.物理键.所有者身份 < 右.物理键.所有者身份;
-            if (左.物理键.命名域 != 右.物理键.命名域) return 左.物理键.命名域 < 右.物理键.命名域;
-            return 左.物理键.键值 < 右.物理键.键值;
-        });
-        return 材料;
     }
 
 private:
