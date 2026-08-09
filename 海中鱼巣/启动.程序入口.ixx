@@ -30,8 +30,6 @@ export namespace 海中鱼巣 {
         启动模式 当前模式{};
         if (参数 == "--headless") {
             当前模式 = 启动模式::无窗口常驻;
-        } else if (参数 == "--runtime-context") {
-            当前模式 = 启动模式::生产运行期;
         } else {
             return {启动选项解析状态::未知参数, {}, static_cast<std::size_t>(参数索引)};
         }
