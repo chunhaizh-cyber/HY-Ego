@@ -5,7 +5,6 @@
 #include "节点仓库.h"
 #include "结果.结构写入.h"
 #include "索引所有权.数据.h"
-#include "权威冻结材料.数据.h"
 #include "../领域/概念安全删除提交能力.数据.h"
 
 #include <algorithm>
@@ -95,9 +94,6 @@ public:
         const 结构事务令牌& 令牌);
     std::uint64_t 有效主键数量() const;
     std::uint64_t 有效主键数量(const 结构事务令牌& 令牌) const;
-    仓库权威导出结果<索引仓库权威材料> 导出权威状态(
-        const 结构事务令牌& 令牌) const;
-
 
 private:
     friend class 领域::概念安全删除编排器;

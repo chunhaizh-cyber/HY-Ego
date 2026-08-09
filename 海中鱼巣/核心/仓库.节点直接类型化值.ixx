@@ -258,27 +258,6 @@ public:
         } catch (...) { return 0; }
     }
 
-    节点直接类型化值仓库权威材料 导出权威状态() const {
-        std::shared_lock 锁(仓库锁_);
-        节点直接类型化值仓库权威材料 材料;
-        for (const auto& [命名域, 高水位] : 每域高水位_) 材料.每域高水位.push_back({命名域, 高水位});
-        材料.历史占用 = 历史占用_;
-        for (const auto& 条目 : 记录组_) if (条目.已发布) 材料.记录组.push_back(条目.记录);
-        std::sort(材料.每域高水位.begin(), 材料.每域高水位.end(), [](const auto& 左, const auto& 右) {
-            return 左.命名域 < 右.命名域;
-        });
-        std::sort(材料.历史占用.begin(), 材料.历史占用.end(), [](const auto& 左, const auto& 右) {
-            return 左.身份.命名域 != 右.身份.命名域 ? 左.身份.命名域 < 右.身份.命名域
-                : 左.身份.键值 < 右.身份.键值;
-        });
-        std::sort(材料.记录组.begin(), 材料.记录组.end(), [](const auto& 左, const auto& 右) {
-            return 左.值记录身份.命名域 != 右.值记录身份.命名域
-                ? 左.值记录身份.命名域 < 右.值记录身份.命名域
-                : 左.值记录身份.键值 < 右.值记录身份.键值;
-        });
-        return 材料;
-    }
-
 private:
     struct 条目 {
         类型化值读回 记录;

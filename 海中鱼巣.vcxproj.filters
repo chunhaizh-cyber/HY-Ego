@@ -279,9 +279,6 @@
     <ClCompile Include="海中鱼巣\核心\执行器.节点直接身份结构写入.ixx">
       <Filter>核心</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\冻结.节点直接类型化值.ixx">
-      <Filter>核心</Filter>
-    </ClCompile>
     <ClCompile Include="海中鱼巣\核心\服务.节点直接结构.ixx">
       <Filter>核心</Filter>
     </ClCompile>
@@ -456,9 +453,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\核心\索引所有权.数据.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="海中鱼巣\核心\权威冻结材料.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\核心\句柄.h">

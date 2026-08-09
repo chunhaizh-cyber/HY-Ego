@@ -261,16 +261,7 @@ struct 类型合同读回 {
     friend bool operator==(const 类型合同读回&, const 类型合同读回&) = default;
 };
 
-struct 类型合同稳定身份高水位 {
-    std::uint64_t 命名域 = 0;
-    std::uint64_t 高水位 = 0;
-};
 struct 类型合同稳定身份历史占用 { 类型合同稳定身份 身份; };
-struct 节点直接类型合同仓库权威材料 {
-    std::vector<类型合同稳定身份高水位> 每域高水位;
-    std::vector<类型合同稳定身份历史占用> 历史占用;
-    std::vector<类型合同读回> 记录组;
-};
 
 struct 类型化值读回 {
     节点稳定身份见证 所属身份;
@@ -287,16 +278,7 @@ struct 类型化值读回 {
     friend bool operator==(const 类型化值读回&, const 类型化值读回&) = default;
 };
 
-struct 类型化值记录稳定身份高水位 {
-    std::uint64_t 命名域 = 0;
-    std::uint64_t 高水位 = 0;
-};
 struct 类型化值记录稳定身份历史占用 { 类型化值记录稳定身份 身份; };
-struct 节点直接类型化值仓库权威材料 {
-    std::vector<类型化值记录稳定身份高水位> 每域高水位;
-    std::vector<类型化值记录稳定身份历史占用> 历史占用;
-    std::vector<类型化值读回> 记录组;
-};
 
 struct 可重建索引读回 {
     索引物理键 键;
