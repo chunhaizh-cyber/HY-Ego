@@ -123,9 +123,6 @@ public:
     std::optional<节点删除准备包> 准备节点删除包(节点句柄 节点, const 结构事务令牌& 令牌) const;
     bool 删除节点(节点句柄 节点);
     bool 删除节点(节点句柄 节点, const 结构事务令牌& 令牌);
-    结构写入结果 严格删除节点(
-        节点句柄 节点,
-        const 结构事务令牌& 令牌);
     bool 节点是否有效(节点句柄 节点) const;
     bool 节点是否有效(节点句柄 节点, const 结构事务令牌& 令牌) const;
     std::uint64_t 有效节点数量() const;
