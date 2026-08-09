@@ -12,8 +12,8 @@ module;
 
 export module 海中鱼巣.核心.服务.L1事实基座;
 
-export import 海中鱼巣.核心.合同.L1事实基座;
 export import 海中鱼巣.核心.合同.L1中性CRUD;
+import 海中鱼巣.核心.合同.L1事实基座;
 import 海中鱼巣.核心.仓库.L1事实基座;
 
 namespace {

@@ -1,12 +1,8 @@
 module;
 
 #include <cstdint>
-#include <array>
-#include <algorithm>
+#include <cstddef>
 #include <optional>
-#include <string_view>
-#include <type_traits>
-#include <utility>
 #include <variant>
 #include <vector>
 
