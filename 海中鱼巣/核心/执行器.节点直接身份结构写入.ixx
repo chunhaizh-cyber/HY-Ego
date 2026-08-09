@@ -86,10 +86,6 @@ struct 节点直接统一冻结许可取得结果 final {
     std::optional<节点直接统一冻结许可> 许可;
 };
 
-enum class 节点直接身份结构事务域启动模式 : std::uint8_t {
-    兼容既有直接开放 = 1, 等待恢复 = 2
-};
-
 class 节点直接身份结构读取许可 final {
 public:
     节点直接身份结构读取许可() = default;
@@ -99,8 +95,7 @@ public:
     节点直接身份结构读取许可& operator=(节点直接身份结构读取许可&&) noexcept = default;
 
     bool 有效() const noexcept {
-        return 锁_.owns_lock() && 普通入口开放_->load(std::memory_order_acquire)
-            && !隔离标记_->load(std::memory_order_acquire);
+        return 锁_.owns_lock() && !隔离标记_->load(std::memory_order_acquire);
     }
 
     std::uint64_t 读取已发布代次() const noexcept {
@@ -113,17 +108,14 @@ private:
     节点直接身份结构读取许可(
         std::shared_ptr<std::shared_mutex> 互斥,
         std::shared_ptr<std::atomic_bool> 隔离标记,
-        std::shared_ptr<std::atomic_bool> 普通入口开放,
         std::shared_ptr<std::atomic_uint64_t> 当前已发布代次)
-        : 隔离标记_(std::move(隔离标记)), 普通入口开放_(std::move(普通入口开放)),
+        : 隔离标记_(std::move(隔离标记)),
           当前已发布代次_(std::move(当前已发布代次)), 锁_(*互斥, std::try_to_lock),
           互斥_(std::move(互斥)) {
-        if (锁_.owns_lock() && (!普通入口开放_->load(std::memory_order_acquire)
-                || 隔离标记_->load(std::memory_order_acquire))) 锁_.unlock();
+        if (锁_.owns_lock() && 隔离标记_->load(std::memory_order_acquire)) 锁_.unlock();
     }
 
     std::shared_ptr<std::atomic_bool> 隔离标记_ = std::make_shared<std::atomic_bool>(true);
-    std::shared_ptr<std::atomic_bool> 普通入口开放_ = std::make_shared<std::atomic_bool>(false);
     std::shared_ptr<std::atomic_uint64_t> 当前已发布代次_ = std::make_shared<std::atomic_uint64_t>(0);
     std::shared_lock<std::shared_mutex> 锁_;
     std::shared_ptr<std::shared_mutex> 互斥_;
@@ -178,12 +170,9 @@ private:
 
 class 节点直接身份结构事务域 final {
 public:
-    explicit 节点直接身份结构事务域(
-        节点直接身份结构事务域启动模式 模式 = 节点直接身份结构事务域启动模式::兼容既有直接开放)
+    节点直接身份结构事务域()
         : 互斥_(std::make_shared<std::shared_mutex>()),
           隔离标记_(std::make_shared<std::atomic_bool>(false)),
-          普通入口开放_(std::make_shared<std::atomic_bool>(
-              模式 == 节点直接身份结构事务域启动模式::兼容既有直接开放)),
           当前已发布代次_(std::make_shared<std::atomic_uint64_t>(0)) {
     }
 
@@ -192,7 +181,7 @@ public:
 
     节点直接身份结构读取许可 取得读取许可() const {
         return 节点直接身份结构读取许可(
-            互斥_, 隔离标记_, 普通入口开放_, 当前已发布代次_);
+            互斥_, 隔离标记_, 当前已发布代次_);
     }
 
     bool 已隔离() const noexcept {
@@ -213,7 +202,7 @@ private:
     friend class 节点直接身份结构写入执行器;
 
     节点直接身份结构事务许可 取得独占许可() {
-        if (已隔离() || !普通入口开放_->load(std::memory_order_acquire)) return {};
+        if (已隔离()) return {};
         const auto 事务序号 = 下一事务序号_.fetch_add(1, std::memory_order_relaxed);
         return 节点直接身份结构事务许可(
             互斥_, 隔离标记_, 当前已发布代次_, 事务序号);
@@ -221,7 +210,7 @@ private:
     bool 推进普通已发布代次(
         节点直接身份结构事务许可& 许可,
         std::uint64_t 预期当前代次) noexcept {
-        if (!许可.有效() || !普通入口开放_->load(std::memory_order_acquire)
+        if (!许可.有效()
             || 预期当前代次 == std::numeric_limits<std::uint64_t>::max()) return false;
         return 当前已发布代次_->compare_exchange_strong(
             预期当前代次, 预期当前代次 + 1,
@@ -229,7 +218,6 @@ private:
     }
     std::shared_ptr<std::shared_mutex> 互斥_;
     std::shared_ptr<std::atomic_bool> 隔离标记_;
-    std::shared_ptr<std::atomic_bool> 普通入口开放_;
     std::shared_ptr<std::atomic_uint64_t> 当前已发布代次_;
     std::atomic_uint64_t 下一事务序号_{1};
 };
