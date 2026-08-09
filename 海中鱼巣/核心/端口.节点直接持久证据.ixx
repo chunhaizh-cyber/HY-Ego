@@ -54,29 +54,4 @@ public:
     virtual 节点直接持久端口结果 标记已撤销未发布(const 节点直接持久撤销见证请求& 请求) = 0;
 };
 
-enum class 节点直接安装实例证据状态 : std::uint8_t {
-    确认从未发布 = 1, 存在事务证据 = 2, 未登记 = 3, 资源失败 = 4, 损坏 = 5
-};
-struct 节点直接持久事务证据 {
-    节点直接事务幂等身份 事务身份;
-    std::uint64_t 尝试序号 = 0;
-    std::uint32_t 材料格式版本 = 0;
-    std::array<std::uint8_t, 32> 请求意图摘要{};
-    std::array<std::uint8_t, 32> 执行证据摘要{};
-    std::vector<std::uint8_t> 写集材料;
-    节点直接持久端口状态 状态 = 节点直接持久端口状态::未找到;
-    std::optional<std::uint64_t> 发布代次;
-    std::optional<std::array<std::uint8_t, 32>> 结果摘要;
-};
-struct 节点直接恢复材料读取结果 {
-    节点直接安装实例证据状态 安装状态 = 节点直接安装实例证据状态::未登记;
-    std::vector<节点直接持久事务证据> 事务组;
-};
-class 节点直接恢复材料读取端口 {
-public:
-    virtual ~节点直接恢复材料读取端口() = default;
-    virtual 节点直接恢复材料读取结果 读取安装实例(
-        节点直接事务幂等身份 安装实例身份) = 0;
-};
-
 } // namespace 海中鱼巣
