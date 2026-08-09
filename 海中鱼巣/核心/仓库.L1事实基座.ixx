@@ -229,9 +229,6 @@ public:
                 return 中性写入结果(请求, L1中性写入状态::幂等冲突,
                     状态_.事实代次, false, L1中性重试边界::修正请求后可重试);
             }
-            if (状态_.幂等账.contains(请求.幂等键.值))
-                return 中性写入结果(请求, L1中性写入状态::幂等冲突,
-                    状态_.事实代次, false, L1中性重试边界::修正请求后可重试);
             if (请求.期望事实代次 != 状态_.事实代次)
                 return 中性写入结果(请求, L1中性写入状态::事实代次漂移,
                     状态_.事实代次, false, L1中性重试边界::原请求可重试);
@@ -593,13 +590,6 @@ public:
         if (auto it = 状态_.历史.find(编码.值); it != 状态_.历史.end()) return {L1读取状态::成功, it->second};
         return {L1读取状态::未找到, std::nullopt};
     }
-    L1审计读取结果 读取审计(写集幂等键 幂等键) const {
-        if (!有效(幂等键)) return {};
-        std::shared_lock<std::shared_mutex> 锁(锁_);
-            const auto it = 状态_.审计.find(幂等键.值);
-        if (it == 状态_.审计.end()) return {L1读取状态::未找到, 幂等键, {}};
-        return {L1读取状态::成功, 幂等键, it->second};
-    }
     // 诊断责任：向上送出；结构化状态由最终调用责任边界处理。
     L1完整快照结果 读取完整快照() const {
         try {
@@ -644,129 +634,6 @@ public:
             return {L1读取状态::内部不一致, 0};
         }
     }
-    // 诊断责任：向上送出；中性账守门与导出失败均结构化返回。
-    L1恢复材料导出结果 导出恢复材料() const {
-        try {
-            std::shared_lock<std::shared_mutex> 锁(锁_);
-            if (!状态_.中性幂等账.empty())
-                return {L1恢复材料导出状态::入口拒绝, 状态_.事实代次,
-                    状态_.隔离, std::nullopt};
-            if (!状态完整(状态_)
-                || 状态_.隔离 != 状态_.当前隔离见证身份.has_value())
-                return {L1恢复材料导出状态::内部不一致, 状态_.事实代次,
-                    状态_.隔离, std::nullopt};
-            L1恢复材料 材料;
-            const auto 快照 = 构造快照(状态_);
-            if (!快照) return {L1恢复材料导出状态::内部不一致,
-                状态_.事实代次, 状态_.隔离, std::nullopt};
-            材料.当前快照 = *快照;
-            for (const auto& [_, 历史] : 状态_.历史) {
-                std::visit([&](const auto& 事实) {
-                    using T = std::decay_t<decltype(事实)>;
-                    if constexpr (std::is_same_v<T, 节点事实>) 材料.历史节点.push_back(事实);
-                    else if constexpr (std::is_same_v<T, 关系事实>) 材料.历史关系.push_back(事实);
-                    else 材料.历史值.push_back(事实);
-                }, 历史.事实);
-            }
-            auto 按编码 = [](const auto& 左, const auto& 右) { return 左.编码 < 右.编码; };
-            std::sort(材料.历史节点.begin(), 材料.历史节点.end(), 按编码);
-            std::sort(材料.历史关系.begin(), 材料.历史关系.end(), 按编码);
-            std::sort(材料.历史值.begin(), 材料.历史值.end(), 按编码);
-            for (const auto& [_, 账] : 状态_.幂等账) 材料.幂等账.push_back(账);
-            std::sort(材料.幂等账.begin(), 材料.幂等账.end(),
-                [](const auto& 左, const auto& 右) { return 左.幂等键.值 < 右.幂等键.值; });
-            for (const auto& [_, 记录组] : 状态_.审计)
-                材料.审计记录.insert(材料.审计记录.end(), 记录组.begin(), 记录组.end());
-            std::sort(材料.审计记录.begin(), 材料.审计记录.end(),
-                [](const auto& 左, const auto& 右) {
-                    return 左.幂等键 != 右.幂等键 ? 左.幂等键.值 < 右.幂等键.值
-                        : 左.事件序号 < 右.事件序号;
-                });
-            材料.发布后读回失败见证组 = 状态_.失败见证;
-            std::sort(材料.发布后读回失败见证组.begin(), 材料.发布后读回失败见证组.end(),
-                [](const auto& 左, const auto& 右) {
-                    return 左.身份.幂等键 != 右.身份.幂等键
-                        ? 左.身份.幂等键.值 < 右.身份.幂等键.值
-                        : 左.身份.审计事件序号 < 右.身份.审计事件序号;
-                });
-            材料.当前隔离见证身份 = 状态_.当前隔离见证身份;
-            for (const auto& [_, 记录] : 状态_.领域结果见证状态组)
-                材料.领域结果见证记录组.push_back(记录);
-            std::sort(材料.领域结果见证记录组.begin(), 材料.领域结果见证记录组.end(),
-                [](const auto& 左, const auto& 右) { return 左.幂等键.值 < 右.幂等键.值; });
-            return {L1恢复材料导出状态::成功, 状态_.事实代次,
-                状态_.隔离, std::move(材料)};
-        } catch (const std::bad_alloc&) {
-            return {L1恢复材料导出状态::资源失败, 0, false, std::nullopt};
-        } catch (...) {
-            return {L1恢复材料导出状态::内部不一致, 0, false, std::nullopt};
-        }
-    }
-    // 诊断责任：向上送出；中性账守门与候选失败均结构化返回。
-    L1恢复结果 建立恢复候选(const L1恢复材料& 材料, std::uint64_t 期望) {
-        try {
-            std::unique_lock<std::shared_mutex> 锁(锁_);
-            if (!状态_.中性幂等账.empty())
-                return {L1恢复状态::入口拒绝, 状态_.事实代次};
-            if (候选_.has_value()) return {L1恢复状态::入口拒绝, 状态_.事实代次};
-            if (!状态完整(状态_)) {
-                状态_.隔离 = true;
-                return {L1恢复状态::内部不一致, 状态_.事实代次};
-            }
-            if (材料.当前快照.事实代次 != 期望 || 期望 != 状态_.事实代次) return {L1恢复状态::事实代次漂移, 状态_.事实代次};
-            状态 值;
-            if (!恢复材料转状态(材料, 值) || !状态完整(值)) return {L1恢复状态::材料不完整, 状态_.事实代次};
-            候选_ = 候选状态{std::move(值), 状态_.事实代次, true};
-            return {L1恢复状态::候选已建立, 状态_.事实代次};
-        } catch (const std::bad_alloc&) { return {L1恢复状态::资源失败, 0}; }
-        catch (...) { return {L1恢复状态::内部不一致, 0}; }
-    }
-    // 诊断责任：向上送出；中性账守门与确认失败均结构化返回。
-    L1恢复结果 确认恢复候选() {
-        try {
-            std::unique_lock<std::shared_mutex> 锁(锁_);
-            if (!状态_.中性幂等账.empty())
-                return {L1恢复状态::入口拒绝, 状态_.事实代次};
-            if (!候选_) return {L1恢复状态::无候选, 状态_.事实代次};
-            if (候选_->基线 != 状态_.事实代次) { 候选_.reset(); return {L1恢复状态::事实代次漂移, 状态_.事实代次}; }
-            if (!状态完整(状态_)) {
-                状态_.隔离 = true;
-                return {L1恢复状态::内部不一致, 状态_.事实代次};
-            }
-            状态 值 = 候选_->值;
-            if (!状态完整(值)) {
-                候选_.reset(); 状态_.隔离 = true;
-                return {L1恢复状态::内部不一致, 状态_.事实代次};
-            }
-            值.事实代次 = 状态_.事实代次 + 1;
-            值.隔离 = false;
-            值.当前隔离见证身份.reset();
-            if (!状态完整(值)) { 候选_.reset(); 状态_.隔离 = true; return {L1恢复状态::内部不一致, 状态_.事实代次}; }
-            const auto 预期快照 = 构造快照(值);
-            std::swap(状态_, 值); 候选_.reset();
-            const auto 快照 = 构造快照(状态_);
-            const bool 恢复状态完整 = 状态完整(状态_);
-            if (!快照 || !预期快照 || *快照 != *预期快照
-                || 快照->事实代次 != 状态_.事实代次 || !恢复状态完整) {
-                状态_.隔离 = true;
-                return {L1恢复状态::内部不一致, 状态_.事实代次};
-            }
-            return {L1恢复状态::恢复已发布, 状态_.事实代次};
-        } catch (const std::bad_alloc&) { return {L1恢复状态::资源失败, 0}; }
-        catch (...) { return {L1恢复状态::内部不一致, 0}; }
-    }
-    // 诊断责任：向上送出；撤销许可与异常均结构化返回。
-    L1恢复结果 撤销恢复候选() noexcept {
-        try {
-            std::unique_lock<std::shared_mutex> 锁(锁_);
-            if (!候选_) return {L1恢复状态::无候选, 状态_.事实代次};
-            if (!状态_.中性幂等账.empty() && !候选_->中性发布前建立)
-                return {L1恢复状态::入口拒绝, 状态_.事实代次};
-            候选_.reset(); return {L1恢复状态::候选已撤销, 状态_.事实代次};
-        } catch (...) { return {L1恢复状态::内部不一致, 0}; }
-    }
-
-
 private:
     struct 中性幂等记录 {
         L1中性写集请求 首次规范化写集;
@@ -788,18 +655,8 @@ private:
         std::unordered_map<std::uint64_t, 值事实> 当前值;
         std::unordered_map<std::uint64_t, L1历史事实副本> 历史;
         std::unordered_set<std::uint64_t> 永久占用;
-        std::unordered_map<std::uint64_t, L1幂等账记录> 幂等账;
         std::unordered_map<std::uint64_t, 中性幂等记录> 中性幂等账;
-        std::unordered_map<std::uint64_t, std::vector<L1审计记录>> 审计;
-        std::unordered_map<std::uint64_t, L1领域结果见证记录> 领域结果见证状态组;
-        std::vector<L1发布后读回失败见证> 失败见证;
-        std::optional<L1失败见证身份> 当前隔离见证身份;
         bool 隔离 = false;
-    };
-    struct 候选状态 {
-        状态 值;
-        std::uint64_t 基线 = 0;
-        bool 中性发布前建立 = false;
     };
 
     // 诊断责任：向上送出；临时唯一性集合分配异常由公开仓库入口映射。
@@ -1336,68 +1193,11 @@ private:
         return 值.事实代次 == 发布代次;
     }
 
-    static std::uint64_t 引用排序键(const 事实引用& 引用) {
-        return std::visit([](const auto& 值) -> std::uint64_t {
-            using T = std::decay_t<decltype(值)>;
-            if constexpr (std::is_same_v<T, 稳定编码>) return 值.值;
-            else return (1ULL << 63) | 值.值;
-        }, 引用);
-    }
-    static std::optional<L1写集请求> 规范化写集(const L1写集请求& 请求) {
-        L1写集请求 结果 = 请求;
-        std::sort(结果.节点.begin(), 结果.节点.end(), [](const auto& 左, const auto& 右) { return 左.本地键 < 右.本地键; });
-        std::sort(结果.关系.begin(), 结果.关系.end(), [](const auto& 左, const auto& 右) { return 左.本地键 < 右.本地键; });
-        std::sort(结果.值.begin(), 结果.值.end(), [](const auto& 左, const auto& 右) { return 左.本地键 < 右.本地键; });
-        std::sort(结果.属性槽变更.begin(), 结果.属性槽变更.end(), [](const auto& 左, const auto& 右) {
-            const auto 左键 = 引用排序键(左.所属节点); const auto 右键 = 引用排序键(右.所属节点);
-            if (左键 != 右键) return 左键 < 右键;
-            const auto 左类型 = 引用排序键(左.属性类型节点); const auto 右类型 = 引用排序键(右.属性类型节点);
-            if (左类型 != 右类型) return 左类型 < 右类型;
-            return 左.新当前值 < 右.新当前值;
-        });
-        std::sort(结果.退出事实.begin(), 结果.退出事实.end());
-        return 结果;
-    }
-    static bool 请求结构有效(const L1写集请求& 请求, std::unordered_set<std::uint32_t>& 本地键) {
-        auto 登记 = [&](写集本地键 键) { return 有效(键) && 本地键.insert(键.值).second; };
-        for (const auto& 项 : 请求.节点) if (!登记(项.本地键)) return false;
-        for (const auto& 项 : 请求.关系) if (!登记(项.本地键)) return false;
-        for (const auto& 项 : 请求.值) if (!登记(项.本地键) || !原始材料完整(项.材料)) return false;
-        std::unordered_set<std::uint64_t> 退出;
-        for (const auto 编码 : 请求.退出事实) if (!有效(编码) || !退出.insert(编码.值).second) return false;
-        for (const auto& 项 : 请求.属性槽变更) if (!有效(项.新当前值)) return false;
-        return true;
-    }
     static bool 表示匹配(值表示种类 表示, const 原始值材料& 材料) {
         return (表示 == 值表示种类::I64 && std::holds_alternative<std::int64_t>(材料))
             || (表示 == 值表示种类::I64组 && std::holds_alternative<std::vector<std::int64_t>>(材料))
             || (表示 == 值表示种类::U64组 && std::holds_alternative<std::vector<std::uint64_t>>(材料))
             || (表示 == 值表示种类::独立材料引用 && std::holds_alternative<独立材料引用>(材料));
-    }
-    static bool 幂等记录完整(const L1幂等账记录& 账) {
-        if (!(有效(账.幂等键) && 账.摘要合同版本 == L1幂等摘要合同版本
-            && 完整(账.请求意图摘要) && 完整(账.首次执行证据摘要)
-            && 账.首次发布事实代次 != 0
-            && 账.首次完整读回.状态 == L1通用发布后读回状态::成功
-            && 账.首次完整读回.发布事实代次 == 账.首次发布事实代次
-            && !账.首次完整读回.项目组.empty() && 完整(账.确定性结果摘要)
-            && 账.首次执行证据材料
-            && L1执行证据材料基本完整(*账.首次执行证据材料, 账.首次规范化写集)
-            && 账.首次执行证据材料->材料摘要 == 账.首次规范化写集.执行证据材料->材料摘要)) return false;
-        L1写入结果 结果{L1写入状态::成功, 账.首次发布事实代次,
-            账.首次新编码映射, 账.首次完整读回, 账.发布后失败见证,
-            账.确定性结果摘要版本, 账.确定性结果摘要, 账.首次领域结果见证};
-        if (账.确定性结果摘要版本 == L1确定性结果摘要版本)
-            return !账.首次领域结果见证 && !完整(账.领域结果见证摘要)
-                && 账.确定性结果摘要 == 形成L1确定性结果摘要(账.首次规范化写集, 结果);
-        if (账.确定性结果摘要版本 != L1确定性结果摘要版本E01
-            || !账.首次领域结果见证 || !账.首次规范化写集.领域结果见证计划
-            || 账.领域结果见证摘要 != 形成L1领域结果见证摘要(*账.首次领域结果见证)) return false;
-        const auto 重算见证 = 形成L1领域结果见证(*账.首次规范化写集.领域结果见证计划,
-            账.首次规范化写集, 账.首次新编码映射, 账.首次发布事实代次);
-        return 重算见证 && *重算见证 == *账.首次领域结果见证
-            && 账.确定性结果摘要 == 形成L1确定性结果摘要(账.首次规范化写集,
-                结果, 账.确定性结果摘要版本, 账.领域结果见证摘要);
     }
     static bool 状态完整(const 状态& 值) {
         std::unordered_set<std::uint64_t> 全部;
@@ -1502,56 +1302,8 @@ private:
         std::uint64_t 最大编码 = 0;
         for (const auto 编码 : 值.永久占用) 最大编码 = std::max(最大编码, 编码);
         if (值.下个编码 == 0 || 值.下个编码 <= 最大编码) return false;
-        for (const auto& [键, 账] : 值.幂等账) {
-            if (值.中性幂等账.contains(键) || 键 == 0 || !幂等记录完整(账)
-                || 账.幂等键.值 != 键 || 账.首次规范化写集.幂等键.值 != 键
-                || 账.首次发布事实代次 > 值.事实代次
-                || 规范化写集(账.首次规范化写集) != std::optional<L1写集请求>(账.首次规范化写集)) return false;
-            std::unordered_set<std::uint32_t> 本地;
-            if (!请求结构有效(账.首次规范化写集, 本地)) return false;
-            std::unordered_map<std::uint32_t, bool> 新键;
-            for (const auto& 项 : 账.首次规范化写集.节点) 新键[项.本地键.值] = true;
-            for (const auto& 项 : 账.首次规范化写集.关系) 新键[项.本地键.值] = true;
-            for (const auto& 项 : 账.首次规范化写集.值) 新键[项.本地键.值] = true;
-            if (账.首次新编码映射.size() != 新键.size()) return false;
-            for (const auto& [本地, 编码] : 账.首次新编码映射) {
-                if (!新键.contains(本地.值) || !全部.contains(编码.值)) return false;
-                bool 创建匹配 = false;
-                if (const auto it = 值.当前节点.find(编码.值); it != 值.当前节点.end()) 创建匹配 = it->second.创建事实代次 == 账.首次发布事实代次;
-                if (const auto it = 值.当前关系.find(编码.值); it != 值.当前关系.end()) 创建匹配 = it->second.创建事实代次 == 账.首次发布事实代次;
-                if (const auto it = 值.当前值.find(编码.值); it != 值.当前值.end()) 创建匹配 = it->second.创建事实代次 == 账.首次发布事实代次;
-                if (const auto it = 值.历史.find(编码.值); it != 值.历史.end()) 创建匹配 = std::visit([&](const auto& 事实) { return 事实.创建事实代次 == 账.首次发布事实代次; }, it->second.事实);
-                if (!创建匹配) return false;
-            }
-            const auto 审计 = 值.审计.find(键);
-            if (审计 == 值.审计.end()) return false;
-            std::size_t 成功数 = 0;
-            for (std::size_t i = 0; i < 审计->second.size(); ++i) {
-                const auto& 记录 = 审计->second[i];
-                if (记录.幂等键.值 != 键 || 记录.事件序号 != i + 1) return false;
-                if (记录.事件 == L1审计事件::提交成功) {
-                    ++成功数;
-                    if (记录.结果状态 != L1写入状态::成功 || 记录.事实代次 != 账.首次发布事实代次 || 记录.新编码映射 != 账.首次新编码映射
-                        || 记录.请求意图摘要 != 账.请求意图摘要 || 记录.首次执行证据摘要 != 账.首次执行证据摘要
-                        || 记录.确定性结果摘要 != 账.确定性结果摘要
-                        || 记录.首次执行证据材料 != 账.首次执行证据材料
-                        || 记录.确定性结果摘要版本 != 账.确定性结果摘要版本
-                        || 记录.领域结果见证摘要 != 账.领域结果见证摘要
-                        || 记录.首次领域结果见证 != 账.首次领域结果见证) return false;
-                }
-            }
-            if (成功数 != 1) return false;
-            const auto 结果见证 = 值.领域结果见证状态组.find(键);
-            if (账.首次领域结果见证) {
-                if (结果见证 == 值.领域结果见证状态组.end()
-                    || 结果见证->second != L1领域结果见证记录{账.幂等键,
-                        账.首次发布事实代次, *账.首次领域结果见证,
-                        账.领域结果见证摘要}) return false;
-            } else if (结果见证 != 值.领域结果见证状态组.end()) return false;
-        }
         for (const auto& [键, 账] : 值.中性幂等账) {
-            if (键 == 0 || 值.幂等账.contains(键)
-                || 账.首次规范化写集.合同版本 != L1中性CRUD合同版本
+            if (键 == 0 || 账.首次规范化写集.合同版本 != L1中性CRUD合同版本
                 || 账.首次规范化写集.幂等键.值 != 键
                 || 账.首次发布事实代次 == 0 || 账.首次发布事实代次 > 值.事实代次
                 || 规范化中性写集(账.首次规范化写集)
@@ -1585,49 +1337,6 @@ private:
                 if (!创建匹配) return false;
             }
         }
-        for (const auto& [键, 记录] : 值.领域结果见证状态组)
-            if (键 == 0 || !值.幂等账.contains(键)
-                || 记录.幂等键.值 != 键 || 记录.发布事实代次 == 0
-                || 记录.结果见证摘要 != 形成L1领域结果见证摘要(记录.结果见证)) return false;
-        for (const auto& [键, 记录组] : 值.审计) if (!值.幂等账.contains(键) || 记录组.empty()) return false;
-        for (const auto& 见证 : 值.失败见证) {
-            if (!有效(见证.身份.幂等键) || 见证.身份.审计事件序号 == 0
-                || 见证.发布事实代次 == 0 || 见证.发布事实代次 > 值.事实代次) return false;
-            const auto 账 = 值.幂等账.find(见证.身份.幂等键.值);
-            const auto 审计 = 值.审计.find(见证.身份.幂等键.值);
-            if (账 == 值.幂等账.end() || 审计 == 值.审计.end()
-                || 账->second.发布后失败见证 != 见证.身份
-                || 见证.身份.审计事件序号 > 审计->second.size()) return false;
-            const auto& 记录 = 审计->second[见证.身份.审计事件序号 - 1];
-            if (记录.事件 != L1审计事件::发布后读回失败隔离
-                || !记录.失败见证 || *记录.失败见证 != 见证) return false;
-        }
-        if (值.当前隔离见证身份
-            && std::none_of(值.失败见证.begin(), 值.失败见证.end(), [&](const auto& 见证) {
-                return 见证.身份 == *值.当前隔离见证身份; })) return false;
-        if (值.隔离 != 值.当前隔离见证身份.has_value()) return false;
-        return true;
-    }
-    static bool 恢复材料转状态(const L1恢复材料& 材料, 状态& 输出) {
-        输出.事实代次 = 材料.当前快照.事实代次;
-        for (const auto& 事实 : 材料.当前快照.当前节点) if (!输出.当前节点.emplace(事实.编码.值, 事实).second) return false;
-        for (const auto& 事实 : 材料.当前快照.当前关系) if (!输出.当前关系.emplace(事实.编码.值, 事实).second) return false;
-        for (const auto& 事实 : 材料.当前快照.当前值) if (!输出.当前值.emplace(事实.编码.值, 事实).second) return false;
-        for (const auto 编码 : 材料.当前快照.永久占用编码) if (!输出.永久占用.insert(编码.值).second) return false;
-        for (const auto& 事实 : 材料.历史节点) if (!输出.历史.emplace(事实.编码.值, L1历史事实副本{事实.编码, 事实, false}).second) return false;
-        for (const auto& 事实 : 材料.历史关系) if (!输出.历史.emplace(事实.编码.值, L1历史事实副本{事实.编码, 事实, false}).second) return false;
-        for (const auto& 事实 : 材料.历史值) if (!输出.历史.emplace(事实.编码.值, L1历史事实副本{事实.编码, 事实, false}).second) return false;
-        for (const auto& 账 : 材料.幂等账) if (!有效(账.幂等键) || !输出.幂等账.emplace(账.幂等键.值, 账).second) return false;
-        for (const auto& 记录 : 材料.审计记录) { if (!有效(记录.幂等键)) return false; 输出.审计[记录.幂等键.值].push_back(记录); }
-        输出.失败见证 = 材料.发布后读回失败见证组;
-        输出.当前隔离见证身份 = 材料.当前隔离见证身份;
-        输出.隔离 = 输出.当前隔离见证身份.has_value();
-        for (const auto& 记录 : 材料.领域结果见证记录组)
-            if (!有效(记录.幂等键)
-                || !输出.领域结果见证状态组.emplace(记录.幂等键.值, 记录).second) return false;
-        if (!派生当前源关系索引(输出)
-            || !派生当前目标关系索引(输出)) return false;
-        std::uint64_t 最大 = 0; for (const auto 编码 : 输出.永久占用) 最大 = std::max(最大, 编码); 输出.下个编码 = 最大 == (std::numeric_limits<std::uint64_t>::max)() ? 0 : 最大 + 1;
         return true;
     }
     static std::optional<L1完整快照> 构造快照(const 状态& 值) {
@@ -1656,7 +1365,6 @@ private:
 
     mutable std::shared_mutex 锁_;
     状态 状态_;
-    std::optional<候选状态> 候选_;
 };
 
 } // namespace 海中鱼巣

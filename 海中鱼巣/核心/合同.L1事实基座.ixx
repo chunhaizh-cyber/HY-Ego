@@ -34,10 +34,6 @@ struct L1属性读取请求 final {
     稳定编码 节点;
     稳定编码 属性类型;
 };
-struct L1审计读取请求 final {
-    std::uint32_t 合同版本 = L1事实基座合同版本;
-    写集幂等键 幂等键;
-};
 struct L1完整快照读取请求 final {
     std::uint32_t 合同版本 = L1事实基座合同版本;
 };
@@ -47,16 +43,4 @@ struct L1事实代次读取请求 final {
     friend bool operator==(const L1事实代次读取请求&,
         const L1事实代次读取请求&) = default;
 };
-struct L1恢复材料导出请求 final {
-    std::uint32_t 合同版本 = L1事实基座合同版本;
-};
-struct L1恢复候选建立请求 final {
-    std::uint32_t 合同版本 = L1事实基座合同版本;
-    L1恢复材料 材料;
-    std::uint64_t 期望事实代次 = 0;
-};
-struct L1恢复候选操作请求 final {
-    std::uint32_t 合同版本 = L1事实基座合同版本;
-};
-
 } // namespace 海中鱼巣

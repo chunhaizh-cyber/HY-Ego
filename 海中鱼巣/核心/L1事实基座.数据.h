@@ -202,13 +202,6 @@ enum class L1执行证据模式 : std::uint8_t {
     空仓纯G0 = 1, 事实互证 = 2, 空仓领域首次 = 3
 };
 
-struct L1提供者身份凭证 final {
-    稳定编码 稳定身份{0x4C31464200000001ULL};
-    std::uint32_t 合同版本 = 2;
-    std::uint32_t 规则版本 = 0;
-    friend bool operator==(const L1提供者身份凭证&, const L1提供者身份凭证&) = default;
-};
-
 struct L1提供者版本见证 final {
     稳定编码 提供者身份;
     std::uint32_t 合同版本 = 0;
@@ -317,57 +310,6 @@ struct L1属性读取副本 final {
     friend bool operator==(const L1属性读取副本&, const L1属性读取副本&) = default;
 };
 
-enum class L1通用发布后读回状态 : std::uint8_t { 成功 = 1, 未执行 = 2, 内部不一致 = 3 };
-using L1通用发布后读回副本 = std::variant<节点事实, 关系事实, 值事实, L1属性读取副本>;
-struct L1通用发布后读回项目 final {
-    L1通用读回对象种类 种类 = L1通用读回对象种类::节点;
-    L1通用发布后读回副本 副本;
-    friend bool operator==(const L1通用发布后读回项目&, const L1通用发布后读回项目&) = default;
-};
-struct L1通用发布后读回结果 final {
-    L1通用发布后读回状态 状态 = L1通用发布后读回状态::未执行;
-    std::uint64_t 发布事实代次 = 0;
-    std::vector<L1通用发布后读回项目> 项目组;
-    friend bool operator==(const L1通用发布后读回结果&, const L1通用发布后读回结果&) = default;
-};
-
-struct L1失败见证身份 final {
-    写集幂等键 幂等键;
-    std::uint64_t 审计事件序号 = 0;
-    friend bool operator==(const L1失败见证身份&, const L1失败见证身份&) = default;
-};
-enum class L1发布后读回失败原因 : std::uint8_t {
-    映射缺失 = 1, 映射重复 = 2, 对象缺失 = 3, 对象种类不符 = 4,
-    中性字段不符 = 5, 生命周期不符 = 6, 发布代次不符 = 7,
-    计划覆盖不符 = 8, 内部异常 = 9
-};
-struct L1发布后读回失败见证 final {
-    L1失败见证身份 身份;
-    std::uint64_t 发布事实代次 = 0;
-    std::uint32_t 失败项目索引 = 0;
-    L1通用读回对象种类 对象种类 = L1通用读回对象种类::节点;
-    L1发布后读回失败原因 原因 = L1发布后读回失败原因::内部异常;
-    std::uint64_t 计划证据摘要 = 0;
-    std::uint64_t 实际证据摘要 = 0;
-    friend bool operator==(const L1发布后读回失败见证&, const L1发布后读回失败见证&) = default;
-};
-
-enum class L1写入状态 : std::uint8_t {
-    成功 = 1, 精确重复 = 2, 入口拒绝 = 3, 未找到 = 4, 已退出 = 5,
-    事实代次漂移 = 6, 幂等冲突 = 7, 资源失败 = 8, 内部不一致 = 9
-};
-struct L1写入结果 final {
-    L1写入状态 状态 = L1写入状态::入口拒绝;
-    std::uint64_t 事实代次 = 0;
-    std::vector<std::pair<写集本地键, 稳定编码>> 新编码映射;
-    L1通用发布后读回结果 发布后读回;
-    std::optional<L1失败见证身份> 失败见证身份;
-    std::uint32_t 确定性结果摘要版本 = L1确定性结果摘要版本;
-    L1确定性摘要 确定性结果摘要;
-    std::optional<L1领域结果见证段> 领域结果见证;
-    friend bool operator==(const L1写入结果&, const L1写入结果&) = default;
-};
-
 enum class L1读取状态 : std::uint8_t {
     成功 = 1, 入口拒绝 = 2, 未找到 = 3, 已退出 = 4,
     属性未设置 = 5, 事实代次漂移 = 6, 资源失败 = 7, 内部不一致 = 8,
@@ -394,34 +336,6 @@ struct L1历史读取结果 final {
     std::optional<L1历史事实副本> 历史;
 };
 
-enum class L1审计事件 : std::uint8_t {
-    提交成功 = 1, 精确重复 = 2, 幂等冲突 = 3, 候选撤销 = 4,
-    恢复候选建立 = 5, 恢复候选撤销 = 6, 恢复发布 = 7, 恢复拒绝 = 8,
-    发布后读回失败隔离 = 9
-};
-struct L1审计记录 final {
-    写集幂等键 幂等键;
-    std::uint64_t 事件序号 = 0;
-    L1审计事件 事件 = L1审计事件::候选撤销;
-    L1写入状态 结果状态 = L1写入状态::入口拒绝;
-    std::uint64_t 事实代次 = 0;
-    std::vector<std::pair<写集本地键, 稳定编码>> 新编码映射;
-    std::uint32_t 摘要合同版本 = L1幂等摘要合同版本;
-    L1确定性摘要 请求意图摘要;
-    L1确定性摘要 首次执行证据摘要;
-    L1确定性摘要 确定性结果摘要;
-    std::optional<L1发布后读回失败见证> 失败见证;
-    std::optional<L1执行证据材料> 首次执行证据材料;
-    std::uint32_t 确定性结果摘要版本 = L1确定性结果摘要版本;
-    L1确定性摘要 领域结果见证摘要;
-    std::optional<L1领域结果见证段> 首次领域结果见证;
-    friend bool operator==(const L1审计记录&, const L1审计记录&) = default;
-};
-struct L1审计读取结果 final {
-    L1读取状态 状态 = L1读取状态::入口拒绝;
-    写集幂等键 幂等键;
-    std::vector<L1审计记录> 记录组;
-};
 struct L1完整快照 final {
     std::uint64_t 事实代次 = 0;
     std::vector<节点事实> 当前节点;
@@ -441,54 +355,6 @@ struct L1事实代次读取结果 final {
     friend bool operator==(const L1事实代次读取结果&,
         const L1事实代次读取结果&) = default;
 };
-struct L1幂等账记录 final {
-    写集幂等键 幂等键;
-    std::uint32_t 摘要合同版本 = L1幂等摘要合同版本;
-    L1确定性摘要 请求意图摘要;
-    L1确定性摘要 首次执行证据摘要;
-    std::uint64_t 首次发布事实代次 = 0;
-    L1写集请求 首次规范化写集;
-    std::vector<std::pair<写集本地键, 稳定编码>> 首次新编码映射;
-    L1通用发布后读回结果 首次完整读回;
-    L1确定性摘要 确定性结果摘要;
-    std::optional<L1失败见证身份> 发布后失败见证;
-    std::optional<L1执行证据材料> 首次执行证据材料;
-    std::uint32_t 确定性结果摘要版本 = L1确定性结果摘要版本;
-    L1确定性摘要 领域结果见证摘要;
-    std::optional<L1领域结果见证段> 首次领域结果见证;
-    friend bool operator==(const L1幂等账记录&, const L1幂等账记录&) = default;
-};
-struct L1恢复材料 final {
-    L1完整快照 当前快照;
-    std::vector<节点事实> 历史节点;
-    std::vector<关系事实> 历史关系;
-    std::vector<值事实> 历史值;
-    std::vector<L1审计记录> 审计记录;
-    std::vector<L1幂等账记录> 幂等账;
-    std::vector<L1发布后读回失败见证> 发布后读回失败见证组;
-    std::optional<L1失败见证身份> 当前隔离见证身份;
-    std::vector<L1领域结果见证记录> 领域结果见证记录组;
-    friend bool operator==(const L1恢复材料&, const L1恢复材料&) = default;
-};
-enum class L1恢复材料导出状态 : std::uint8_t {
-    成功 = 1, 入口拒绝 = 2, 资源失败 = 3, 内部不一致 = 4
-};
-struct L1恢复材料导出结果 final {
-    L1恢复材料导出状态 状态 = L1恢复材料导出状态::入口拒绝;
-    std::uint64_t 事实代次 = 0;
-    bool 当前隔离 = false;
-    std::optional<L1恢复材料> 材料;
-};
-enum class L1恢复状态 : std::uint8_t {
-    候选已建立 = 1, 恢复已发布 = 2, 候选已撤销 = 3, 无候选 = 4,
-    入口拒绝 = 5, 材料不完整 = 6, 事实代次漂移 = 7,
-    资源失败 = 8, 内部不一致 = 9
-};
-struct L1恢复结果 final {
-    L1恢复状态 状态 = L1恢复状态::入口拒绝;
-    std::uint64_t 事实代次 = 0;
-};
-
 inline bool 有效(写集本地键 键) noexcept { return 键.值 != 0; }
 inline bool 有效(写集幂等键 键) noexcept { return 键.值 != 0; }
 
@@ -883,38 +749,6 @@ inline bool 完成L1执行证据(L1写集请求& 请求, L1执行证据材料 �
     请求.执行证据摘要 = 形成L1写集摘要(
         请求.执行证据材料->业务操作标签, 请求, true);
     return 完整(请求.执行证据摘要);
-}
-
-inline L1确定性摘要 形成L1确定性结果摘要(const L1写集请求& 请求,
-    const L1写入结果& 结果, std::uint32_t 版本 = L1确定性结果摘要版本,
-    L1确定性摘要 领域结果见证摘要 = {}) {
-    std::vector<std::uint8_t> 编码{'H','Z','Y','-','L','1','R','S'};
-    L1确定性编码内部::写U32(编码,版本);
-    L1确定性编码内部::写U32(编码,请求.合同版本);
-    L1确定性编码内部::写U32(编码,请求.摘要合同版本);
-    L1确定性编码内部::写U64(编码,请求.幂等键.值);
-    编码.insert(编码.end(),请求.请求意图摘要.字节.begin(),请求.请求意图摘要.字节.end());
-    编码.insert(编码.end(),请求.执行证据摘要.字节.begin(),请求.执行证据摘要.字节.end());
-    L1确定性编码内部::写U64(编码,结果.事实代次);
-    L1确定性编码内部::写U64(编码,结果.新编码映射.size());
-    for(const auto& [键,值]:结果.新编码映射){L1确定性编码内部::写U64(编码,键.值);L1确定性编码内部::写U64(编码,值.值);}
-    L1确定性编码内部::写U64(编码,结果.发布后读回.项目组.size());
-    for(const auto& 项:结果.发布后读回.项目组){L1确定性编码内部::写U8(编码,static_cast<std::uint8_t>(项.种类));std::visit([&](const auto& f){using T=std::decay_t<decltype(f)>;if constexpr(std::is_same_v<T,L1属性读取副本>){L1确定性编码内部::写U64(编码,f.节点.值);L1确定性编码内部::写U64(编码,f.属性类型节点.值);L1确定性编码内部::写U64(编码,f.当前值.值);}else{L1确定性编码内部::写U64(编码,f.编码.值);L1确定性编码内部::写U64(编码,f.创建事实代次);L1确定性编码内部::写U64(编码,f.退出事实代次.value_or(0));}},项.副本);}
-    if (版本 == L1确定性结果摘要版本E01) {
-        if (!完整(领域结果见证摘要)) return {};
-        编码.insert(编码.end(), 领域结果见证摘要.字节.begin(), 领域结果见证摘要.字节.end());
-    } else if (版本 != L1确定性结果摘要版本) return {};
-    return L1确定性编码内部::哈希(std::move(编码));
-}
-
-inline L1幂等账记录 形成L1恢复幂等账记录(const L1写集请求& 请求,
-    const L1写入结果& 结果) {
-    return {请求.幂等键,请求.摘要合同版本,请求.请求意图摘要,请求.执行证据摘要,
-        结果.事实代次,请求,结果.新编码映射,结果.发布后读回,
-        形成L1确定性结果摘要(请求,结果),结果.失败见证身份,请求.执行证据材料,
-        结果.确定性结果摘要版本,
-        结果.领域结果见证 ? 形成L1领域结果见证摘要(*结果.领域结果见证) : L1确定性摘要{},
-        结果.领域结果见证};
 }
 
 } // namespace 海中鱼巣
