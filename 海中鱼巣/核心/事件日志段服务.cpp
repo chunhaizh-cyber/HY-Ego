@@ -380,7 +380,6 @@ bool 写入临时文件(const std::filesystem::path& 路径, const std::vector<s
         材料.摘要 = 摘要.value();
         材料.类别 = static_cast<事件类别>(类别值);
         材料.写入结果 = static_cast<事件写入结果>(结果值);
-        材料.请求裁决运行期事实 = false;
         if (!事件材料是否可写入(材料)) {
             return 拒绝(事件段拒绝原因::帧材料无效);
         }

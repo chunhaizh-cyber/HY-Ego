@@ -60,7 +60,6 @@ struct 事件材料 {
     std::uint64_t 结构事件顺序号 = 0;
     std::uint64_t 结构事件时间戳 = 0;
     std::wstring 摘要;
-    bool 请求裁决运行期事实 = false;
 };
 
 inline std::filesystem::path 日志目录路径() {
@@ -181,8 +180,7 @@ inline bool 事件材料是否可写入(const 事件材料& 材料) {
     return !材料.入口名称.empty()
         && 事件类别有效(材料.类别)
         && 事件写入结果有效(材料.写入结果)
-        && 事件材料含结构材料(材料)
-        && !材料.请求裁决运行期事实;
+        && 事件材料含结构材料(材料);
 }
 
 inline std::string 转为UTF8(std::wstring_view 文本) {
@@ -249,10 +247,6 @@ inline bool 记录运行日志(std::wstring_view 模块, std::wstring_view 入�
 
 inline bool 记录事件日志(std::wstring_view 模块, std::wstring_view 入口, std::wstring_view 内容) {
     return 写入日志(日志类别::事件, 模块, 入口, 内容);
-}
-
-inline bool 事件日志可裁决运行期事实(const 事件材料&) {
-    return false;
 }
 
 inline bool 记录结构事件日志(const 事件材料& 材料) {
