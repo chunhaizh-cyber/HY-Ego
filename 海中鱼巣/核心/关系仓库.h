@@ -55,8 +55,6 @@ public:
     bool 处于可撤销阶段() const;
     关系记录 读取写前记录() const { return 写前记录_; }
     关系记录 读取写后记录() const { return 写后记录_; }
-    已发布关系变更种类 读取种类() const { return 种类_; }
-
 private:
     friend class 关系仓库;
     enum class 阶段 : std::uint8_t { 持有, 已确认, 已撤销, 已移动 };
