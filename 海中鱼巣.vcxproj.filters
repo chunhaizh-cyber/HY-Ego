@@ -234,9 +234,6 @@
     <ClCompile Include="海中鱼巣\核心\索引仓库.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\写入事务.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="海中鱼巣\核心\协调.结构事务.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -245,54 +242,6 @@
     </ClCompile>
     <ClCompile Include="海中鱼巣\核心\执行器.结构写入.ixx">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\仓库.节点直接身份.ixx">
-      <Filter>核心</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\仓库.正式关系.ixx">
-      <Filter>核心</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\仓库.可重建索引.ixx">
-      <Filter>核心</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\仓库.节点直接类型合同.ixx">
-      <Filter>核心</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\仓库.节点直接类型化值.ixx">
-      <Filter>核心</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\仓库.节点直接事务幂等.ixx">
-      <Filter>核心</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\端口.节点直接持久证据.ixx">
-      <Filter>核心</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\适配\SQL.节点直接持久证据.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\会话.节点直接身份结构写入.ixx">
-      <Filter>核心</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\执行器.节点直接身份结构写入.ixx">
-      <Filter>核心</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\服务.节点直接结构.ixx">
-      <Filter>核心</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\数据操作.节点直接类型化结构.ixx">
-      <Filter>核心</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\服务.节点直接类型化结构提交.ixx">
-      <Filter>核心</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\服务.节点直接世界结构.ixx">
-      <Filter>领域</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\服务.节点直接存在.ixx">
-      <Filter>领域</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\服务.节点直接场景.ixx">
-      <Filter>领域</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\数据操作.存在场景.ixx">
       <Filter>源文件</Filter>
@@ -455,19 +404,10 @@
     <ClInclude Include="海中鱼巣\核心\句柄.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="海中鱼巣\核心\节点直接结构合同.数据.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="海中鱼巣\核心\节点直接类型化结构事务.数据.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="海中鱼巣\核心\L1事实基座.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\核心\L1中性CRUD.数据.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="海中鱼巣\领域\世界树事实.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\核心\日志系统.h">
@@ -489,9 +429,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\核心\索引仓库.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="海中鱼巣\核心\写入事务.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\世界服务.h">
