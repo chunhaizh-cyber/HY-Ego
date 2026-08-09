@@ -45,7 +45,6 @@ struct 事件日志线程消费结果 {
     bool 裸写仓库 = false;
     bool 裁决业务事实 = false;
     bool 修复结构 = false;
-    bool 恢复运行期结构 = false;
     bool 只产生审计或缓存材料 = false;
     事件日志线程拒绝原因 拒绝原因 = 事件日志线程拒绝原因::无;
     运行消息 消费消息;
@@ -130,7 +129,7 @@ public:
             return 消费拒绝(事件日志线程拒绝原因::非事件日志消息);
         }
 
-        return {!模拟写入失败, 模拟写入失败, false, false, false, false, false, true,
+        return {!模拟写入失败, 模拟写入失败, false, false, false, false, true,
             事件日志线程拒绝原因::无, 出队.消息};
     }
 
@@ -185,7 +184,7 @@ private:
     }
 
     事件日志线程消费结果 消费拒绝(事件日志线程拒绝原因 原因) const {
-        return {false, true, false, false, false, false, false, false, 原因, {}};
+        return {false, true, false, false, false, false, false, 原因, {}};
     }
 };
 

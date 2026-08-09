@@ -45,7 +45,6 @@ struct 缓存统计线程消费结果 {
     bool 裸写仓库 = false;
     bool 裁决业务事实 = false;
     bool 修复结构 = false;
-    bool 恢复运行期结构 = false;
     bool 只产生审计或缓存材料 = false;
     缓存统计线程拒绝原因 拒绝原因 = 缓存统计线程拒绝原因::无;
     运行消息 消费消息;
@@ -130,7 +129,7 @@ public:
             return 消费拒绝(缓存统计线程拒绝原因::非缓存刷新消息);
         }
 
-        return {true, false, false, false, false, false, false, true,
+        return {true, false, false, false, false, false, true,
             缓存统计线程拒绝原因::无, 出队.消息};
     }
 
@@ -185,7 +184,7 @@ private:
     }
 
     缓存统计线程消费结果 消费拒绝(缓存统计线程拒绝原因 原因) const {
-        return {false, true, false, false, false, false, false, false, 原因, {}};
+        return {false, true, false, false, false, false, false, 原因, {}};
     }
 };
 
