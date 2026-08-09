@@ -34,18 +34,12 @@ enum class 事件日志线程拒绝原因 : std::uint32_t {
 struct 事件日志线程操作结果 {
     bool 成功 = false;
     bool 局部失败 = true;
-    bool 写业务事实 = false;
     事件日志线程拒绝原因 拒绝原因 = 事件日志线程拒绝原因::无;
 };
 
 struct 事件日志线程消费结果 {
     bool 成功 = false;
     bool 局部失败 = true;
-    bool 写业务事实 = false;
-    bool 裸写仓库 = false;
-    bool 裁决业务事实 = false;
-    bool 修复结构 = false;
-    bool 只产生审计或缓存材料 = false;
     事件日志线程拒绝原因 拒绝原因 = 事件日志线程拒绝原因::无;
     运行消息 消费消息;
 };
@@ -99,7 +93,7 @@ public:
                 std::this_thread::yield();
             }
         });
-        return {true, false, false, 事件日志线程拒绝原因::无};
+        return {true, false, 事件日志线程拒绝原因::无};
     }
 
     事件日志线程操作结果 发送事件日志消息(const 运行消息& 消息) {
@@ -113,7 +107,7 @@ public:
         if (!入队.已入队) {
             return 拒绝(事件日志线程拒绝原因::事件消息入队失败);
         }
-        return {true, false, false, 事件日志线程拒绝原因::无};
+        return {true, false, 事件日志线程拒绝原因::无};
     }
 
     事件日志线程消费结果 消费一次(bool 模拟写入失败) {
@@ -129,8 +123,7 @@ public:
             return 消费拒绝(事件日志线程拒绝原因::非事件日志消息);
         }
 
-        return {!模拟写入失败, 模拟写入失败, false, false, false, false, true,
-            事件日志线程拒绝原因::无, 出队.消息};
+        return {!模拟写入失败, 模拟写入失败, 事件日志线程拒绝原因::无, 出队.消息};
     }
 
     事件日志线程操作结果 请求停止并发送停止消息(
@@ -158,7 +151,7 @@ public:
 
         状态.store(事件日志线程状态::正在停止);
         请求停止.store(true);
-        return {true, false, false, 事件日志线程拒绝原因::无};
+        return {true, false, 事件日志线程拒绝原因::无};
     }
 
     事件日志线程操作结果 收口等待() {
@@ -169,7 +162,7 @@ public:
             || 状态.load() == 事件日志线程状态::运行中) {
             状态.store(事件日志线程状态::已停止);
         }
-        return {true, false, false, 事件日志线程拒绝原因::无};
+        return {true, false, 事件日志线程拒绝原因::无};
     }
 
 private:
@@ -180,11 +173,11 @@ private:
     std::thread 线程;
 
     事件日志线程操作结果 拒绝(事件日志线程拒绝原因 原因) const {
-        return {false, true, false, 原因};
+        return {false, true, 原因};
     }
 
     事件日志线程消费结果 消费拒绝(事件日志线程拒绝原因 原因) const {
-        return {false, true, false, false, false, false, false, 原因, {}};
+        return {false, true, 原因, {}};
     }
 };
 
