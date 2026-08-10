@@ -158,21 +158,6 @@
     <ClInclude Include="海中鱼巣\程序运行结果.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="海中鱼巣\生产运行期配置.数据.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="海中鱼巣\领域\系统角色清单.数据.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="海中鱼巣\领域\概念活动状态.数据.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="海中鱼巣\核心\结构事务接线.数据.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="海中鱼巣\核心\索引所有权.数据.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="海中鱼巣\核心\句柄.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -186,12 +171,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\核心\容错检查.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="海中鱼巣\核心\结果.结构写入.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="海中鱼巣\领域\概念图算法.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
