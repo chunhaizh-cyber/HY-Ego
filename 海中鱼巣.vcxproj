@@ -194,7 +194,6 @@
     <ClCompile Include="海中鱼巣\线程\任务管理线程.ixx" />
     <ClCompile Include="海中鱼巣\线程\外设采样材料线程.ixx" />
     <ClCompile Include="海中鱼巣\入口.cpp" />
-    <ClCompile Include="海中鱼巣\领域\桥接.特征批次同层授权.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="海中鱼巣\启动选项.数据.h" />
