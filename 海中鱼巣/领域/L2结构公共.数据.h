@@ -1,0 +1,127 @@
+#pragma once
+
+#ifndef L2_STRUCTURE_COMMON_NO_INCLUDES
+#include <cstdint>
+#include <optional>
+#include <variant>
+#include <vector>
+#include "../核心/L1公共事实.数据.h"
+#endif
+
+namespace 海中鱼巣 {
+
+inline constexpr std::uint32_t L2结构合同版本 = 1;
+
+struct L2结构幂等身份 final {
+    std::uint64_t 值 = 0;
+    friend bool operator==(const L2结构幂等身份&,
+        const L2结构幂等身份&) = default;
+};
+
+#define 定义L2强类型身份(类型名) \
+    struct 类型名 final { \
+        稳定编码 值; \
+        explicit 类型名(稳定编码 编码 = {}) noexcept : 值(编码) {} \
+        friend bool operator==(const 类型名&, const 类型名&) = default; \
+    }
+
+定义L2强类型身份(L2场景身份);
+定义L2强类型身份(L2存在身份);
+定义L2强类型身份(L2特征定义身份);
+定义L2强类型身份(L2特征实例身份);
+定义L2强类型身份(L2状态身份);
+定义L2强类型身份(L2动态身份);
+定义L2强类型身份(L2因果身份);
+
+#undef 定义L2强类型身份
+
+enum class L2读取类别 : std::uint8_t { 当前 = 1, 历史 = 2 };
+
+enum class L2结构状态 : std::uint8_t {
+    已提交 = 1,
+    精确重复 = 2,
+    已读取 = 3,
+    未实现 = 4,
+    入口拒绝 = 5,
+    许可拒绝 = 6,
+    未找到 = 7,
+    已退出 = 8,
+    属性未设置 = 9,
+    事实代次漂移 = 10,
+    幂等冲突 = 11,
+    引用冲突 = 12,
+    资源失败 = 13,
+    内部不一致 = 14
+};
+
+struct L2结构请求头 final {
+    std::uint32_t 合同版本 = L2结构合同版本;
+    std::uint64_t 期望事实代次 = 0;
+    friend bool operator==(const L2结构请求头&, const L2结构请求头&) = default;
+};
+
+struct L2结构结果头 final {
+    std::uint32_t 合同版本 = L2结构合同版本;
+    L2结构状态 状态 = L2结构状态::入口拒绝;
+    std::uint64_t 事实截止代次 = 0;
+    std::optional<std::uint64_t> 变更事实代次;
+    friend bool operator==(const L2结构结果头&, const L2结构结果头&) = default;
+};
+
+struct L2有序身份引用 final {
+    std::uint64_t 顺序 = 0;
+    稳定编码 目标;
+    friend bool operator==(const L2有序身份引用&,
+        const L2有序身份引用&) = default;
+};
+
+struct L2独立材料引用 final {
+    稳定编码 编码;
+    friend bool operator==(const L2独立材料引用&,
+        const L2独立材料引用&) = default;
+};
+
+using L2原始值材料 = std::variant<std::int64_t, std::vector<std::int64_t>,
+    std::vector<std::uint64_t>, L2独立材料引用>;
+
+struct L2属性提交项 final {
+    稳定编码 属性类型身份;
+    L2原始值材料 原始值材料;
+    稳定编码 来源稳定编码;
+    friend bool operator==(const L2属性提交项&, const L2属性提交项&) = default;
+};
+
+struct L2属性事实 final {
+    稳定编码 属性类型身份;
+    稳定编码 值稳定编码;
+    L2原始值材料 类型化不可变材料;
+    稳定编码 来源稳定编码;
+    std::uint64_t 创建事实代次 = 0;
+    std::optional<std::uint64_t> 退出事实代次;
+    friend bool operator==(const L2属性事实&, const L2属性事实&) = default;
+};
+
+struct L2生命周期 final {
+    std::uint64_t 创建事实代次 = 0;
+    std::optional<std::uint64_t> 退出事实代次;
+    friend bool operator==(const L2生命周期&, const L2生命周期&) = default;
+};
+
+// 诊断责任：无适用错误分支；纯值合同版本判断不读取事实。
+inline bool L2结构请求头合同有效(const L2结构请求头& 请求头) noexcept {
+    return 请求头.合同版本 == L2结构合同版本;
+}
+
+// 诊断责任：无适用错误分支；纯值幂等身份判断不读取事实。
+inline bool L2结构幂等身份有效(L2结构幂等身份 身份) noexcept {
+    return 身份.值 != 0;
+}
+
+// 诊断责任：无适用错误分支；纯值生命周期判断不读取事实。
+inline bool L2生命周期完整(const L2生命周期& 生命周期) noexcept {
+    return 生命周期.创建事实代次 != 0
+        && (!生命周期.退出事实代次
+            || *生命周期.退出事实代次 >= 生命周期.创建事实代次);
+}
+
+} // namespace 海中鱼巣
