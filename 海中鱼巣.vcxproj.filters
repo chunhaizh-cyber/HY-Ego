@@ -69,6 +69,9 @@
     <ClCompile Include="海中鱼巣\核心\合同.L1中性CRUD.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\合同.L1所有者范围CRUD.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\线程\运行消息协议.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -123,6 +126,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\核心\L1事实基座.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\核心\L1所有者范围CRUD.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\核心\L1中性CRUD.数据.h">

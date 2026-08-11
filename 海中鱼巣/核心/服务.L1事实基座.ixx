@@ -3,9 +3,12 @@ module;
 #include <cstdint>
 #include <algorithm>
 #include <new>
+#include <memory>
+#include <mutex>
 #include <optional>
 #include <stdexcept>
 #include <type_traits>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 #include <utility>
@@ -13,6 +16,7 @@ module;
 export module 海中鱼巣.核心.服务.L1事实基座;
 
 export import 海中鱼巣.核心.合同.L1中性CRUD;
+export import 海中鱼巣.核心.合同.L1所有者范围CRUD;
 import 海中鱼巣.核心.合同.L1事实基座;
 import 海中鱼巣.核心.仓库.L1事实基座;
 
@@ -94,13 +98,23 @@ std::uint64_t 中性事实适用代次(const L1事实副本& 事实) noexcept {
     }, 事实);
 }
 
+struct L1事实基座实例状态 final {
+    L1事实基座仓库 仓库;
+    std::mutex 端口锁;
+    std::unordered_set<std::uint64_t> 活动端口所有者;
+};
+
 } // namespace
 
 export namespace 海中鱼巣 {
 
+class L1所有者范围签发器;
+class L1所有者范围写端口;
+class L1事实基座运行包;
+
 class L1事实基座服务 final {
 public:
-    L1事实基座服务() = default;
+    L1事实基座服务() = delete;
     L1事实基座服务(const L1事实基座服务&) = delete;
     L1事实基座服务& operator=(const L1事实基座服务&) = delete;
 
@@ -439,8 +453,249 @@ public:
             读取.事实截止代次};
     }
 
+    L1所有者范围当前读取结果 读取所有者范围当前节点(
+        const L1所有者范围事实读取请求& 请求) const {
+        return 仓库_.读取所有者范围当前节点(请求);
+    }
+
+    L1所有者范围当前读取结果 读取所有者范围当前关系(
+        const L1所有者范围事实读取请求& 请求) const {
+        return 仓库_.读取所有者范围当前关系(请求);
+    }
+
+    L1所有者范围当前读取结果 读取所有者范围当前值(
+        const L1所有者范围事实读取请求& 请求) const {
+        return 仓库_.读取所有者范围当前值(请求);
+    }
+
+    L1所有者范围源关系组读取结果 读取所有者范围当前源关系组(
+        const L1所有者范围源关系组读取请求& 请求) const {
+        return 仓库_.读取所有者范围当前源关系组(请求);
+    }
+
+    L1所有者范围目标关系组读取结果 读取所有者范围当前目标关系组(
+        const L1所有者范围目标关系组读取请求& 请求) const {
+        return 仓库_.读取所有者范围当前目标关系组(请求);
+    }
+
+    L1所有者范围历史关系组读取结果 读取所有者范围历史关系组(
+        const L1所有者范围历史关系组读取请求& 请求) const {
+        return 仓库_.读取所有者范围历史关系组(请求);
+    }
+
+    L1所有者范围历史属性值组读取结果 读取所有者范围历史属性值组(
+        const L1所有者范围历史属性值组读取请求& 请求) const {
+        return 仓库_.读取所有者范围历史属性值组(请求);
+    }
+
+    L1所有者范围历史读取结果 读取所有者范围历史事实(
+        const L1所有者范围事实读取请求& 请求) const {
+        return 仓库_.读取所有者范围历史事实(请求);
+    }
+
+    L1所有者范围一致当前读取结果 尝试读取所有者范围一致当前投影(
+        const L1所有者范围一致当前读取请求& 请求) const {
+        return 仓库_.尝试读取所有者范围一致当前投影(请求);
+    }
+
+    L1结构所有者当前读取结果 读取当前结构所有者(
+        const L1结构所有者读取请求& 请求) const {
+        return 仓库_.读取当前结构所有者(请求);
+    }
+
+    L1结构所有者历史读取结果 读取历史结构所有者(
+        const L1结构所有者读取请求& 请求) const {
+        return 仓库_.读取历史结构所有者(请求);
+    }
+
 private:
-    L1事实基座仓库 仓库_;
+    explicit L1事实基座服务(L1事实基座仓库& 仓库) noexcept : 仓库_(仓库) {}
+
+    friend class L1事实基座运行包;
+    friend class L1所有者范围写端口;
+    L1事实基座仓库& 仓库_;
 };
+
+class L1所有者范围写端口 final {
+public:
+    L1所有者范围写端口() = delete;
+    L1所有者范围写端口(const L1所有者范围写端口&) = delete;
+    L1所有者范围写端口& operator=(const L1所有者范围写端口&) = delete;
+
+    L1所有者范围写端口(L1所有者范围写端口&& 来源) noexcept
+        : 状态_(std::move(来源.状态_)), 所有者_(来源.所有者_), 持有租约_(来源.持有租约_) {
+        来源.所有者_ = {};
+        来源.持有租约_ = false;
+    }
+
+    L1所有者范围写端口& operator=(L1所有者范围写端口&& 来源) noexcept {
+        if (this == &来源) return *this;
+        释放租约();
+        状态_ = std::move(来源.状态_);
+        所有者_ = 来源.所有者_;
+        持有租约_ = 来源.持有租约_;
+        来源.所有者_ = {};
+        来源.持有租约_ = false;
+        return *this;
+    }
+
+    ~L1所有者范围写端口() { 释放租约(); }
+
+    L1结构所有者身份 所有者身份() const noexcept { return 所有者_; }
+
+    bool 有效() const noexcept {
+        const auto 状态 = 状态_.lock();
+        if (!状态 || !持有租约_ || !海中鱼巣::有效(所有者_)) return false;
+        try {
+            std::lock_guard<std::mutex> 锁(状态->端口锁);
+            return 状态->活动端口所有者.contains(所有者_.编码.值);
+        } catch (...) {
+            return false;
+        }
+    }
+
+    bool 绑定于(const L1事实基座服务& 服务) const noexcept {
+        const auto 状态 = 状态_.lock();
+        return 状态 && 有效() && &状态->仓库 == &服务.仓库_;
+    }
+
+    L1所有者范围写入结果 提交所有者范围中性写集(
+        const L1所有者范围写集请求& 请求) {
+        const auto 状态 = 状态_.lock();
+        if (!状态 || !有效())
+            return {L1所有者范围写入状态::许可拒绝,
+                L1所有者范围CRUD合同版本, 所有者_, 请求.写入幂等身份,
+                0, false, L1所有者范围重试边界::修正请求后可重试, {}};
+        return 状态->仓库.提交所有者范围中性写集(所有者_, 请求);
+    }
+
+private:
+    L1所有者范围写端口(std::weak_ptr<L1事实基座实例状态> 状态,
+        L1结构所有者身份 所有者) noexcept
+        : 状态_(std::move(状态)), 所有者_(所有者), 持有租约_(true) {}
+
+    void 释放租约() noexcept {
+        if (!持有租约_) return;
+        if (const auto 状态 = 状态_.lock()) {
+            try {
+                std::lock_guard<std::mutex> 锁(状态->端口锁);
+                状态->活动端口所有者.erase(所有者_.编码.值);
+            } catch (...) {}
+        }
+        持有租约_ = false;
+        所有者_ = {};
+        状态_.reset();
+    }
+
+    friend class L1所有者范围签发器;
+    std::weak_ptr<L1事实基座实例状态> 状态_;
+    L1结构所有者身份 所有者_;
+    bool 持有租约_ = false;
+};
+
+struct L1所有者范围交付 final {
+    L1所有者范围建立结果 建立结果;
+    std::optional<L1所有者范围写端口> 写入端口;
+};
+
+class L1所有者范围签发器 final {
+public:
+    L1所有者范围签发器() = delete;
+    L1所有者范围签发器(const L1所有者范围签发器&) = delete;
+    L1所有者范围签发器& operator=(const L1所有者范围签发器&) = delete;
+
+    L1所有者范围交付 建立所有者范围(
+        const L1所有者范围建立请求& 请求) {
+        L1所有者范围交付 交付;
+        const auto 状态 = 状态_.lock();
+        if (!状态) {
+            交付.建立结果 = {L1所有者范围管理状态::许可拒绝,
+                L1所有者范围CRUD合同版本, 请求.建立幂等身份,
+                std::nullopt, 0, false,
+                L1所有者范围重试边界::修正请求后可重试};
+            return 交付;
+        }
+        交付.建立结果 = 状态->仓库.建立所有者范围(请求);
+        const bool 可交付 = 交付.建立结果.状态 == L1所有者范围管理状态::成功
+            || 交付.建立结果.状态 == L1所有者范围管理状态::精确重复;
+        if (!可交付 || !交付.建立结果.所有者事实
+            || 交付.建立结果.所有者事实->退出事实代次)
+            return 交付;
+        const auto 所有者 = 交付.建立结果.所有者事实->所有者;
+        const auto 当前 = 状态->仓库.读取当前结构所有者(
+            {L1所有者范围CRUD合同版本, 所有者});
+        if (当前.状态 != L1所有者范围读取状态::成功
+            || !当前.所有者事实
+            || 当前.所有者事实->所有者 != 所有者
+            || 当前.所有者事实->退出事实代次)
+            return 交付;
+        try {
+            std::lock_guard<std::mutex> 锁(状态->端口锁);
+            if (!状态->活动端口所有者.insert(所有者.编码.值).second)
+                return 交付;
+            交付.写入端口 = L1所有者范围写端口{状态, 所有者};
+            return 交付;
+        } catch (...) {
+            std::lock_guard<std::mutex> 锁(状态->端口锁);
+            状态->活动端口所有者.erase(所有者.编码.值);
+            return 交付;
+        }
+    }
+
+    L1所有者范围退出结果 退出所有者范围(
+        const L1所有者范围退出请求& 请求) {
+        const auto 状态 = 状态_.lock();
+        if (!状态)
+            return {L1所有者范围管理状态::许可拒绝,
+                L1所有者范围CRUD合同版本, 请求.建立幂等身份,
+                std::nullopt, 0, false,
+                L1所有者范围重试边界::修正请求后可重试};
+        {
+            std::lock_guard<std::mutex> 锁(状态->端口锁);
+            if (状态->活动端口所有者.contains(请求.所有者.编码.值))
+                return {L1所有者范围管理状态::引用冲突,
+                    L1所有者范围CRUD合同版本, 请求.建立幂等身份,
+                    std::nullopt, 0, false,
+                    L1所有者范围重试边界::修正请求后可重试};
+        }
+        return 状态->仓库.退出所有者范围(请求);
+    }
+
+private:
+    explicit L1所有者范围签发器(
+        std::weak_ptr<L1事实基座实例状态> 状态) noexcept
+        : 状态_(std::move(状态)) {}
+
+    friend class L1事实基座运行包;
+    std::weak_ptr<L1事实基座实例状态> 状态_;
+};
+
+class L1事实基座运行包 final {
+public:
+    L1事实基座运行包() = delete;
+    L1事实基座运行包(const L1事实基座运行包&) = delete;
+    L1事实基座运行包& operator=(const L1事实基座运行包&) = delete;
+    L1事实基座运行包(L1事实基座运行包&&) noexcept = default;
+    L1事实基座运行包& operator=(L1事实基座运行包&&) noexcept = default;
+
+    L1事实基座服务& 读取服务() noexcept { return *服务_; }
+    const L1事实基座服务& 读取服务() const noexcept { return *服务_; }
+    L1所有者范围签发器& 所有者范围签发器() noexcept { return *签发器_; }
+
+private:
+    explicit L1事实基座运行包(std::shared_ptr<L1事实基座实例状态> 状态)
+        : 状态_(std::move(状态)),
+          服务_(new L1事实基座服务(状态_->仓库)),
+          签发器_(new L1所有者范围签发器(状态_)) {}
+
+    friend L1事实基座运行包 建立L1事实基座运行包();
+    std::shared_ptr<L1事实基座实例状态> 状态_;
+    std::unique_ptr<L1事实基座服务> 服务_;
+    std::unique_ptr<L1所有者范围签发器> 签发器_;
+};
+
+L1事实基座运行包 建立L1事实基座运行包() {
+    return L1事实基座运行包{std::make_shared<L1事实基座实例状态>()};
+}
 
 } // namespace 海中鱼巣

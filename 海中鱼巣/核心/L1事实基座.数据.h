@@ -12,6 +12,10 @@
 #include "L1公共事实.数据.h"
 #endif
 
+#ifndef L1_OWNER_SCOPED_CRUD_NO_INCLUDES
+#include "L1所有者范围CRUD.数据.h"
+#endif
+
 namespace 海中鱼巣 {
 
 struct 独立材料引用 final {
@@ -39,6 +43,7 @@ struct 节点事实 final {
     std::uint64_t 创建事实代次 = 0;
     std::optional<std::uint64_t> 退出事实代次;
     std::vector<属性槽> 当前属性;
+    L1结构所有者身份 写入所有者;
     friend bool operator==(const 节点事实&, const 节点事实&) = default;
 };
 
@@ -50,6 +55,7 @@ struct 关系事实 final {
     std::int64_t 角色或顺序 = 0;
     std::uint64_t 创建事实代次 = 0;
     std::optional<std::uint64_t> 退出事实代次;
+    L1结构所有者身份 写入所有者;
     friend bool operator==(const 关系事实&, const 关系事实&) = default;
 };
 
@@ -61,6 +67,7 @@ struct 值事实 final {
     稳定编码 来源节点;
     std::uint64_t 创建事实代次 = 0;
     std::optional<std::uint64_t> 退出事实代次;
+    L1结构所有者身份 写入所有者;
     friend bool operator==(const 值事实&, const 值事实&) = default;
 };
 

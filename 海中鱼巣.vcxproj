@@ -160,6 +160,7 @@
     <ClCompile Include="海中鱼巣\领域\服务.L2特征结构.ixx" />
     <ClCompile Include="海中鱼巣\核心\合同.L1公共事实.ixx" />
     <ClCompile Include="海中鱼巣\核心\合同.L1事实基座.ixx" />
+    <ClCompile Include="海中鱼巣\核心\合同.L1所有者范围CRUD.ixx" />
     <ClCompile Include="海中鱼巣\核心\合同.L1中性CRUD.ixx" />
     <ClCompile Include="海中鱼巣\核心\仓库.L1事实基座.ixx" />
     <ClCompile Include="海中鱼巣\核心\服务.L1事实基座.ixx" />
@@ -186,6 +187,7 @@
     <ClInclude Include="海中鱼巣\核心\句柄.h" />
     <ClInclude Include="海中鱼巣\核心\L1公共事实.数据.h" />
     <ClInclude Include="海中鱼巣\核心\L1事实基座.数据.h" />
+    <ClInclude Include="海中鱼巣\核心\L1所有者范围CRUD.数据.h" />
     <ClInclude Include="海中鱼巣\核心\L1中性CRUD.数据.h" />
     <ClInclude Include="海中鱼巣\核心\日志系统.h" />
     <ClInclude Include="海中鱼巣\核心\容错检查.h" />
