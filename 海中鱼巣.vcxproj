@@ -153,8 +153,6 @@
     <ClCompile Include="海中鱼巣\装配.普通应用.ixx" />
     <ClCompile Include="海中鱼巣\启动.程序运行宿主.ixx" />
     <ClCompile Include="海中鱼巣\启动.应用程序.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.L1特征定义.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.L1实例特征.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L1自我结构登记.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L1实际存在.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.初始场景实际存在原子发布.ixx" />
@@ -194,8 +192,6 @@
     <ClInclude Include="海中鱼巣\领域\世界操作.数据.h" />
     <ClInclude Include="海中鱼巣\核心\日志系统.h" />
     <ClInclude Include="海中鱼巣\核心\容错检查.h" />
-    <ClInclude Include="海中鱼巣\领域\L1特征定义.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\L1实例特征.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L1自我结构登记.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L1实际存在.数据.h" />
   </ItemGroup>
