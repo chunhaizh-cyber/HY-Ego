@@ -38,6 +38,64 @@ struct L2场景事实 final {
     friend bool operator==(const L2场景事实&, const L2场景事实&) = default;
 };
 
+inline constexpr std::uint32_t L2场景关系类型登记规则版本 = 1;
+
+struct L2场景父子关系类型身份 final {
+    稳定编码 值;
+    friend bool operator==(const L2场景父子关系类型身份&,
+        const L2场景父子关系类型身份&) = default;
+};
+
+struct L2场景成员关系类型身份 final {
+    稳定编码 值;
+    friend bool operator==(const L2场景成员关系类型身份&,
+        const L2场景成员关系类型身份&) = default;
+};
+
+enum class L2场景关系类型登记状态 : std::uint8_t {
+    已提交 = 1,
+    精确重复 = 2,
+    已读取 = 3,
+    登记未加载 = 4,
+    入口拒绝 = 5,
+    许可拒绝 = 6,
+    事实代次漂移 = 7,
+    幂等冲突 = 8,
+    资源失败 = 9,
+    内部不一致 = 10
+};
+
+struct L2场景关系类型登记请求 final {
+    L2结构请求头 请求头;
+    std::uint32_t 规则版本 = L2场景关系类型登记规则版本;
+    L2结构幂等身份 幂等身份{1};
+    friend bool operator==(const L2场景关系类型登记请求&,
+        const L2场景关系类型登记请求&) = default;
+};
+
+struct L2场景关系类型登记 final {
+    std::uint32_t 合同版本 = L2结构合同版本;
+    std::uint32_t 规则版本 = L2场景关系类型登记规则版本;
+    L2结构幂等身份 首次幂等身份{1};
+    std::uint64_t 首次期望事实代次 = 0;
+    std::uint64_t 建立事实代次 = 0;
+    std::uint64_t 事实截止代次 = 0;
+    L2场景父子关系类型身份 父子关系类型;
+    L2场景成员关系类型身份 成员关系类型;
+    friend bool operator==(const L2场景关系类型登记&,
+        const L2场景关系类型登记&) = default;
+};
+
+struct L2场景关系类型登记结果 final {
+    L2场景关系类型登记状态 状态 =
+        L2场景关系类型登记状态::入口拒绝;
+    std::uint64_t 事实截止代次 = 0;
+    std::optional<L2场景关系类型登记> 登记;
+    bool 成功() const noexcept;
+    friend bool operator==(const L2场景关系类型登记结果&,
+        const L2场景关系类型登记结果&) = default;
+};
+
 struct L2场景节点新增请求 final {
     L2结构请求头 请求头;
     L2结构幂等身份 幂等身份;
@@ -87,6 +145,40 @@ inline bool L2场景S1事实完整(const L2场景事实& 场景) noexcept {
     return 有效(场景.身份.值) && L2生命周期完整(场景.生命周期)
         && 场景.固定属性.empty() && 场景.直接子场景.empty()
         && 场景.直接成员.empty();
+}
+
+// 诊断责任：无适用错误分支；纯值请求判断不读取事实。
+inline bool L2场景关系类型登记请求有效(
+    const L2场景关系类型登记请求& 请求) noexcept {
+    return L2结构请求头合同有效(请求.请求头)
+        && 请求.规则版本 == L2场景关系类型登记规则版本
+        && 请求.幂等身份.值 == 1
+        && 请求.请求头.期望事实代次 != ~std::uint64_t{0};
+}
+
+// 诊断责任：无适用错误分支；只判断登记值式投影的完整形状。
+inline bool L2场景关系类型登记完整(
+    const L2场景关系类型登记& 登记) noexcept {
+    return 登记.合同版本 == L2结构合同版本
+        && 登记.规则版本 == L2场景关系类型登记规则版本
+        && 登记.首次幂等身份.值 == 1
+        && 登记.首次期望事实代次 != ~std::uint64_t{0}
+        && 登记.建立事实代次 == 登记.首次期望事实代次 + 1
+        && 登记.建立事实代次 != 0
+        && 登记.事实截止代次 >= 登记.建立事实代次
+        && 有效(登记.父子关系类型.值)
+        && 有效(登记.成员关系类型.值)
+        && 登记.父子关系类型.值 != 登记.成员关系类型.值;
+}
+
+// 诊断责任：无适用错误分支；只判断成功状态与完整登记是否一致。
+inline bool L2场景关系类型登记结果::成功() const noexcept {
+    const bool 成功状态 = 状态 == L2场景关系类型登记状态::已提交
+        || 状态 == L2场景关系类型登记状态::精确重复
+        || 状态 == L2场景关系类型登记状态::已读取;
+    return 成功状态 && 登记.has_value()
+        && L2场景关系类型登记完整(*登记)
+        && 事实截止代次 == 登记->事实截止代次;
 }
 
 } // namespace 海中鱼巣
