@@ -1,16 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="海中鱼巣\领域\服务.L1实际存在.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\服务.L1自我结构登记.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\服务.初始场景实际存在原子发布.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\组合.L1实际存在场景.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
     <Filter Include="源文件">
@@ -30,9 +21,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="海中鱼巣\领域\L1实际存在.数据.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="海中鱼巣\领域\L1自我结构登记.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>

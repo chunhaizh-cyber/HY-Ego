@@ -154,16 +154,11 @@
     <ClCompile Include="海中鱼巣\启动.程序运行宿主.ixx" />
     <ClCompile Include="海中鱼巣\启动.应用程序.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L1自我结构登记.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.L1实际存在.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.初始场景实际存在原子发布.ixx" />
-    <ClCompile Include="海中鱼巣\领域\组合.L1实际存在场景.ixx" />
     <ClCompile Include="海中鱼巣\核心\合同.L1公共事实.ixx" />
     <ClCompile Include="海中鱼巣\核心\合同.L1事实基座.ixx" />
     <ClCompile Include="海中鱼巣\核心\合同.L1中性CRUD.ixx" />
     <ClCompile Include="海中鱼巣\核心\仓库.L1事实基座.ixx" />
     <ClCompile Include="海中鱼巣\核心\服务.L1事实基座.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.世界登记.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.L1场景结构.ixx" />
     <ClCompile Include="海中鱼巣\线程\运行消息协议.ixx" />
     <ClCompile Include="海中鱼巣\适配\协议.D455采样材料.ixx" />
     <ClCompile Include="海中鱼巣\适配\采集器.D455相机.ixx">
@@ -188,12 +183,9 @@
     <ClInclude Include="海中鱼巣\核心\L1公共事实.数据.h" />
     <ClInclude Include="海中鱼巣\核心\L1事实基座.数据.h" />
     <ClInclude Include="海中鱼巣\核心\L1中性CRUD.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\世界登记.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\世界操作.数据.h" />
     <ClInclude Include="海中鱼巣\核心\日志系统.h" />
     <ClInclude Include="海中鱼巣\核心\容错检查.h" />
     <ClInclude Include="海中鱼巣\领域\L1自我结构登记.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\L1实际存在.数据.h" />
   </ItemGroup>
   <Target Name="验证D455RealSense构建输入" BeforeTargets="PrepareForBuild"
           Condition="'$(EnableD455RealSense)'=='true' and '$(Platform)'=='x64'">
