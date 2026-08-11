@@ -156,12 +156,9 @@
     <ClCompile Include="海中鱼巣\领域\服务.L1特征定义.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L1实例特征.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L1自我结构登记.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.特征比较.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L1实际存在.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.初始场景实际存在原子发布.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.L1实际存在场景.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.L1状态.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.L1动态.ixx" />
     <ClCompile Include="海中鱼巣\核心\合同.L1公共事实.ixx" />
     <ClCompile Include="海中鱼巣\核心\合同.L1事实基座.ixx" />
     <ClCompile Include="海中鱼巣\核心\合同.L1中性CRUD.ixx" />
@@ -200,10 +197,7 @@
     <ClInclude Include="海中鱼巣\领域\L1特征定义.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L1实例特征.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L1自我结构登记.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\特征比较.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L1实际存在.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\L1状态.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\L1动态.数据.h" />
   </ItemGroup>
   <Target Name="验证D455RealSense构建输入" BeforeTargets="PrepareForBuild"
           Condition="'$(EnableD455RealSense)'=='true' and '$(Platform)'=='x64'">
