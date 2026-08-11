@@ -416,6 +416,9 @@ public:
                     || 新值->second.属性类型节点 != *类型)
                     return 中性写入结果(请求, L1中性写入状态::入口拒绝,
                         状态_.事实代次, false, L1中性重试边界::修正请求后可重试);
+                if (!插入历史属性槽值候选索引(候选, 新值->second))
+                    return 中性写入结果(请求, L1中性写入状态::内部不一致,
+                        状态_.事实代次, false, L1中性重试边界::原幂等键读回收敛);
                 auto& 槽组 = 节点->second.当前属性;
                 auto 槽 = std::find_if(槽组.begin(), 槽组.end(), [&](const 属性槽& 值) {
                     return 值.属性类型节点 == *类型;
@@ -440,8 +443,7 @@ public:
             std::sort(映射.begin(), 映射.end(), [](const auto& 左, const auto& 右) {
                 return 左.first < 右.first;
             });
-            if (!中性候选读回完整(候选, *规范化, 映射, 新代次)
-                || !状态完整(候选))
+            if (!中性候选读回完整(候选, *规范化, 映射, 新代次))
                 return 中性写入结果(请求, L1中性写入状态::入口拒绝,
                     状态_.事实代次, false, L1中性重试边界::修正请求后可重试);
 
@@ -645,6 +647,84 @@ public:
         }
         return 结果;
     }
+
+    // 诊断责任：向上送出；一次共享许可内按全生命周期候选回读权威值事实。
+    L1中性历史属性值组读取结果 读取中性历史属性值组(
+        const L1中性历史属性值组读取请求& 请求) const {
+        const auto 失败 = [&](L1中性历史属性值组读取状态 状态,
+            std::uint64_t 读取代次 = 0) {
+            return L1中性历史属性值组读取结果{状态, L1中性CRUD合同版本,
+                请求.所属节点, 请求.历史截止事实代次, 读取代次, {}};
+        };
+        if (请求.合同版本 != L1中性CRUD合同版本 || !有效(请求.所属节点)
+            || 请求.历史截止事实代次 == 0)
+            return 失败(L1中性历史属性值组读取状态::入口拒绝);
+
+        std::shared_lock<std::shared_mutex> 锁(锁_);
+        if (状态_.隔离)
+            return 失败(L1中性历史属性值组读取状态::内部不一致);
+        if (状态_.事实代次 < 请求.历史截止事实代次)
+            return 失败(L1中性历史属性值组读取状态::事实代次漂移,
+                状态_.事实代次);
+
+        const auto 所属 = 状态_.历史属性槽值候选索引.find(请求.所属节点.值);
+        if (所属 == 状态_.历史属性槽值候选索引.end())
+            return 失败(L1中性历史属性值组读取状态::成功, 状态_.事实代次);
+        if (所属->second.empty())
+            return 失败(L1中性历史属性值组读取状态::内部不一致);
+
+        L1中性历史属性值组读取结果 结果{
+            L1中性历史属性值组读取状态::成功, L1中性CRUD合同版本,
+            请求.所属节点, 请求.历史截止事实代次, 状态_.事实代次, {}};
+        for (const auto& [类型编码, 编码组] : 所属->second) {
+            if (类型编码 == 0 || 编码组.empty())
+                return 失败(L1中性历史属性值组读取状态::内部不一致);
+            std::uint64_t 前一编码 = 0;
+            bool 已有有效值 = false;
+            for (const auto 编码 : 编码组) {
+                const auto 当前 = 状态_.当前值.find(编码);
+                const auto 历史 = 状态_.历史.find(编码);
+                const bool 当前命中 = 当前 != 状态_.当前值.end();
+                const bool 历史命中 = 历史 != 状态_.历史.end();
+                const auto* 历史值 = 历史命中
+                    ? std::get_if<值事实>(&历史->second.事实) : nullptr;
+                const 值事实* 事实 = 当前命中 ? &当前->second : 历史值;
+                if (编码 == 0 || 编码 <= 前一编码 || 当前命中 == 历史命中
+                    || !事实 || 事实->编码.值 != 编码
+                    || 事实->所属节点 != 请求.所属节点
+                    || 事实->属性类型节点.值 != 类型编码
+                    || !有效(事实->来源节点) || 事实->创建事实代次 == 0
+                    || 事实->创建事实代次 > 状态_.事实代次
+                    || (当前命中 && 事实->退出事实代次)
+                    || (历史命中 && (历史->second.查询编码.值 != 编码
+                        || 历史->second.当前有效 || !事实->退出事实代次
+                        || 事实->创建事实代次 > *事实->退出事实代次
+                        || *事实->退出事实代次 > 状态_.事实代次)))
+                    return 失败(L1中性历史属性值组读取状态::内部不一致);
+
+                if (事实->创建事实代次 <= 请求.历史截止事实代次
+                    && (!事实->退出事实代次
+                        || 请求.历史截止事实代次 < *事实->退出事实代次)) {
+                    if (已有有效值)
+                        return 失败(L1中性历史属性值组读取状态::内部不一致);
+                    const auto 材料 = 转换中性原始材料(事实->材料);
+                    if (!材料)
+                        return 失败(L1中性历史属性值组读取状态::内部不一致);
+                    结果.属性值组.push_back({事实->编码, 事实->所属节点,
+                        事实->属性类型节点, *材料, 事实->来源节点,
+                        事实->创建事实代次, 事实->退出事实代次});
+                    已有有效值 = true;
+                }
+                前一编码 = 编码;
+            }
+        }
+        std::sort(结果.属性值组.begin(), 结果.属性值组.end(),
+            [](const L1中性值事实& 左, const L1中性值事实& 右) noexcept {
+                return 左.属性类型节点 < 右.属性类型节点
+                    || (左.属性类型节点 == 右.属性类型节点 && 左.编码 < 右.编码);
+            });
+        return 结果;
+    }
     L1属性读取结果 读取当前属性(稳定编码 节点, 稳定编码 类型) const {
         if (!有效(节点) || !有效(类型)) return {};
         std::shared_lock<std::shared_mutex> 锁(锁_);
@@ -702,6 +782,9 @@ private:
         std::unordered_map<std::uint64_t,
             std::unordered_map<std::uint64_t, std::vector<std::uint64_t>>>
             历史目标关系候选索引;
+        std::unordered_map<std::uint64_t,
+            std::unordered_map<std::uint64_t, std::vector<std::uint64_t>>>
+            历史属性槽值候选索引;
         std::unordered_map<std::uint64_t, 值事实> 当前值;
         std::unordered_map<std::uint64_t, L1历史事实副本> 历史;
         std::unordered_set<std::uint64_t> 永久占用;
@@ -1077,6 +1160,18 @@ private:
         return true;
     }
 
+    // 诊断责任：向上送出；只登记已经由成功属性槽变更采用的值稳定编码。
+    static bool 插入历史属性槽值候选索引(状态& 值, const 值事实& 事实) {
+        if (!有效(事实.编码) || !有效(事实.所属节点)
+            || !有效(事实.属性类型节点) || 事实.创建事实代次 == 0) return false;
+        auto& 编码组 = 值.历史属性槽值候选索引[事实.所属节点.值]
+            [事实.属性类型节点.值];
+        const auto 位置 = std::lower_bound(编码组.begin(), 编码组.end(), 事实.编码.值);
+        if (位置 != 编码组.end() && *位置 == 事实.编码.值) return false;
+        编码组.insert(位置, 事实.编码.值);
+        return true;
+    }
+
     // 诊断责任：向上送出；分配异常由提交中性写集统一映射。
     static L1中性写入结果 中性写入结果(const L1中性写集请求& 请求,
         L1中性写入状态 状态值, std::uint64_t 代次, bool 已发布,
@@ -1176,6 +1271,17 @@ private:
             if constexpr (std::is_same_v<类型, L1中性独立材料引用>)
                 return 原始值材料{独立材料引用{值.编码}};
             else return 原始值材料{值};
+        }, 材料);
+    }
+
+    // 诊断责任：向上送出；只把权威内部材料复制为公开中性材料。
+    static std::optional<L1中性原始值材料> 转换中性原始材料(
+        const 原始值材料& 材料) {
+        return std::visit([](const auto& 值) -> std::optional<L1中性原始值材料> {
+            using 类型 = std::decay_t<decltype(值)>;
+            if constexpr (std::is_same_v<类型, 独立材料引用>)
+                return L1中性原始值材料{L1中性独立材料引用{值.编码}};
+            else return L1中性原始值材料{值};
         }, 材料);
     }
 
@@ -1415,6 +1521,12 @@ private:
         std::uint64_t 最大编码 = 0;
         for (const auto 编码 : 值.永久占用) 最大编码 = std::max(最大编码, 编码);
         if (值.下个编码 == 0 || 值.下个编码 <= 最大编码) return false;
+        struct 期望历史属性候选 final {
+            std::uint64_t 所属节点 = 0;
+            std::uint64_t 属性类型 = 0;
+            std::uint64_t 创建事实代次 = 0;
+        };
+        std::unordered_map<std::uint64_t, 期望历史属性候选> 期望属性候选;
         for (const auto& [键, 账] : 值.中性幂等账) {
             if (键 == 0 || 账.首次规范化写集.合同版本 != L1中性CRUD合同版本
                 || 账.首次规范化写集.幂等键.值 != 键
@@ -1448,6 +1560,96 @@ private:
                         return 事实.创建事实代次 == 账.首次发布事实代次;
                     }, it->second.事实);
                 if (!创建匹配) return false;
+            }
+            const auto 查映射 = [&](L1中性写集本地键 本地键)
+                -> std::optional<稳定编码> {
+                const auto 位置 = std::lower_bound(账.首次新编码映射.begin(),
+                    账.首次新编码映射.end(), 本地键,
+                    [](const auto& 项, L1中性写集本地键 键值) {
+                        return 项.first < 键值;
+                    });
+                return 位置 != 账.首次新编码映射.end() && 位置->first == 本地键
+                    ? std::optional<稳定编码>{位置->second} : std::nullopt;
+            };
+            const auto 解析 = [&](const L1中性事实引用& 引用)
+                -> std::optional<稳定编码> {
+                return std::visit([&](const auto& 项) -> std::optional<稳定编码> {
+                    using 类型 = std::decay_t<decltype(项)>;
+                    if constexpr (std::is_same_v<类型, 稳定编码>) return 项;
+                    else return 查映射(项);
+                }, 引用);
+            };
+            for (const auto& 槽变更 : 账.首次规范化写集.属性槽变更) {
+                const auto 所属 = 解析(槽变更.所属节点);
+                const auto 类型 = 解析(槽变更.属性类型节点);
+                const auto 值编码 = 查映射(槽变更.新当前值);
+                if (!所属 || !类型 || !值编码) return false;
+                const auto 当前 = 值.当前值.find(值编码->值);
+                const auto 历史 = 值.历史.find(值编码->值);
+                const bool 当前命中 = 当前 != 值.当前值.end();
+                const bool 历史命中 = 历史 != 值.历史.end();
+                const auto* 历史值 = 历史命中
+                    ? std::get_if<值事实>(&历史->second.事实) : nullptr;
+                const 值事实* 事实 = 当前命中 ? &当前->second : 历史值;
+                if (当前命中 == 历史命中 || !事实
+                    || 事实->编码 != *值编码 || 事实->所属节点 != *所属
+                    || 事实->属性类型节点 != *类型
+                    || 事实->创建事实代次 != 账.首次发布事实代次
+                    || (当前命中 && 事实->退出事实代次)
+                    || (历史命中 && (历史->second.查询编码 != *值编码
+                        || 历史->second.当前有效 || !事实->退出事实代次)))
+                    return false;
+                if (!期望属性候选.emplace(值编码->值,
+                        期望历史属性候选{所属->值, 类型->值,
+                            账.首次发布事实代次}).second)
+                    return false;
+            }
+        }
+        std::unordered_set<std::uint64_t> 已登记属性候选;
+        for (const auto& [所属编码, 类型组] : 值.历史属性槽值候选索引) {
+            if (所属编码 == 0 || 类型组.empty()) return false;
+            for (const auto& [类型编码, 编码组] : 类型组) {
+                if (类型编码 == 0 || 编码组.empty()) return false;
+                std::uint64_t 前一编码 = 0;
+                for (const auto 值编码 : 编码组) {
+                    const auto 当前 = 值.当前值.find(值编码);
+                    const auto 历史 = 值.历史.find(值编码);
+                    const bool 当前命中 = 当前 != 值.当前值.end();
+                    const bool 历史命中 = 历史 != 值.历史.end();
+                    const auto* 历史值 = 历史命中
+                        ? std::get_if<值事实>(&历史->second.事实) : nullptr;
+                    const 值事实* 事实 = 当前命中 ? &当前->second : 历史值;
+                    const auto 期望 = 期望属性候选.find(值编码);
+                    if (值编码 == 0 || 值编码 <= 前一编码
+                        || !已登记属性候选.insert(值编码).second
+                        || 当前命中 == 历史命中 || !事实
+                        || 事实->编码.值 != 值编码 || 事实->所属节点.值 != 所属编码
+                        || 事实->属性类型节点.值 != 类型编码
+                        || 事实->创建事实代次 == 0
+                        || 事实->创建事实代次 > 值.事实代次
+                        || (当前命中 && 事实->退出事实代次)
+                        || (历史命中 && (历史->second.查询编码.值 != 值编码
+                            || 历史->second.当前有效 || !事实->退出事实代次
+                            || 事实->创建事实代次 > *事实->退出事实代次
+                            || *事实->退出事实代次 > 值.事实代次))
+                        || 期望 == 期望属性候选.end()
+                        || 期望->second.所属节点 != 所属编码
+                        || 期望->second.属性类型 != 类型编码
+                        || 期望->second.创建事实代次 != 事实->创建事实代次)
+                        return false;
+                    前一编码 = 值编码;
+                }
+            }
+        }
+        if (已登记属性候选.size() != 期望属性候选.size()) return false;
+        for (const auto& [编码, 节点] : 值.当前节点) {
+            for (const auto& 槽 : 节点.当前属性) {
+                const auto 所属 = 值.历史属性槽值候选索引.find(编码);
+                if (所属 == 值.历史属性槽值候选索引.end()) return false;
+                const auto 类型 = 所属->second.find(槽.属性类型节点.值);
+                if (类型 == 所属->second.end()
+                    || !std::binary_search(类型->second.begin(), 类型->second.end(),
+                        槽.当前值.值)) return false;
             }
         }
         return true;
