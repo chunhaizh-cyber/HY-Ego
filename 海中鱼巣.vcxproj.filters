@@ -10,6 +10,9 @@
     <ClCompile Include="海中鱼巣\领域\服务.L2场景结构.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\服务.L2存在结构.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <Filter Include="源文件">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
@@ -34,6 +37,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\L2场景结构.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\L2存在结构.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClCompile Include="海中鱼巣\启动.程序入口.ixx">
