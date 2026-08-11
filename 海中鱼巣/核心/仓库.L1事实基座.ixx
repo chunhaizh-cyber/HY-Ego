@@ -233,6 +233,57 @@ public:
                 return 中性写入结果(请求, L1中性写入状态::事实代次漂移,
                     状态_.事实代次, false, L1中性重试边界::原请求可重试);
 
+            std::unordered_set<std::uint64_t> 退出集合;
+            退出集合.reserve(规范化->退出事实.size());
+            for (const auto 编码 : 规范化->退出事实) {
+                if (!状态_.当前节点.contains(编码.值)
+                    && !状态_.当前关系.contains(编码.值)
+                    && !状态_.当前值.contains(编码.值))
+                    return 中性写入结果(请求,
+                        状态_.历史.contains(编码.值)
+                            ? L1中性写入状态::已退出 : L1中性写入状态::未找到,
+                        状态_.事实代次, false, L1中性重试边界::修正请求后可重试);
+                if (!退出集合.insert(编码.值).second)
+                    return 中性写入结果(请求, L1中性写入状态::入口拒绝,
+                        状态_.事实代次, false, L1中性重试边界::修正请求后可重试);
+            }
+            const auto 稳定引用指向退出节点 = [&](const L1中性事实引用& 引用) noexcept {
+                const auto* 编码 = std::get_if<稳定编码>(&引用);
+                return 编码 && 退出集合.contains(编码->值);
+            };
+            for (const auto& 项 : 规范化->关系) {
+                if (稳定引用指向退出节点(项.源节点)
+                    || 稳定引用指向退出节点(项.目标节点)
+                    || 稳定引用指向退出节点(项.关系类型节点))
+                    return 中性写入结果(请求, L1中性写入状态::入口拒绝,
+                        状态_.事实代次, false, L1中性重试边界::修正请求后可重试);
+            }
+            for (const auto& 项 : 规范化->值) {
+                const auto* 材料引用 = std::get_if<L1中性独立材料引用>(&项.材料);
+                if (稳定引用指向退出节点(项.所属节点)
+                    || 稳定引用指向退出节点(项.属性类型节点)
+                    || 稳定引用指向退出节点(项.来源节点)
+                    || (材料引用 && 退出集合.contains(材料引用->编码.值)))
+                    return 中性写入结果(请求, L1中性写入状态::入口拒绝,
+                        状态_.事实代次, false, L1中性重试边界::修正请求后可重试);
+            }
+            for (const auto& 项 : 规范化->属性槽变更) {
+                if (稳定引用指向退出节点(项.所属节点)
+                    || 稳定引用指向退出节点(项.属性类型节点))
+                    return 中性写入结果(请求, L1中性写入状态::入口拒绝,
+                        状态_.事实代次, false, L1中性重试边界::修正请求后可重试);
+            }
+            for (const auto 编码 : 规范化->退出事实) {
+                if (!状态_.当前节点.contains(编码.值)) continue;
+                const auto 闭包 = 检查当前节点引用闭包(状态_, 编码, 退出集合);
+                if (闭包 == 当前节点引用闭包检查结果::引用冲突)
+                    return 中性写入结果(请求, L1中性写入状态::引用冲突,
+                        状态_.事实代次, false, L1中性重试边界::修正请求后可重试);
+                if (闭包 == 当前节点引用闭包检查结果::内部不一致)
+                    return 中性写入结果(请求, L1中性写入状态::内部不一致,
+                        状态_.事实代次, false, L1中性重试边界::原幂等键读回收敛);
+            }
+
             状态 候选 = 状态_;
             std::vector<std::pair<L1中性写集本地键, 稳定编码>> 映射;
             映射.reserve(规范化->节点.size() + 规范化->关系.size() + 规范化->值.size());
@@ -318,7 +369,8 @@ public:
                     || !插入当前源关系索引(候选, 事实)
                     || !插入当前目标关系索引(候选, 事实)
                     || !插入历史源关系候选索引(候选, 事实)
-                    || !插入历史目标关系候选索引(候选, 事实))
+                    || !插入历史目标关系候选索引(候选, 事实)
+                    || !插入当前节点引用索引(候选, 事实))
                     return 中性写入结果(请求, L1中性写入状态::内部不一致,
                         状态_.事实代次, false, L1中性重试边界::原幂等键读回收敛);
                 候选.永久占用.insert(编码.值);
@@ -352,8 +404,12 @@ public:
                             ? L1中性写入状态::已退出 : L1中性写入状态::未找到,
                         状态_.事实代次, false, L1中性重试边界::修正请求后可重试);
                 const auto 编码 = 映射[值偏移 + i].second;
-                候选.当前值.emplace(编码.值, 值事实{编码, *所属, *类型编码,
-                    *材料, *来源, 新代次, std::nullopt});
+                const 值事实 事实{编码, *所属, *类型编码,
+                    *材料, *来源, 新代次, std::nullopt};
+                if (!候选.当前值.emplace(编码.值, 事实).second
+                    || !插入当前节点引用索引(候选, 事实))
+                    return 中性写入结果(请求, L1中性写入状态::内部不一致,
+                        状态_.事实代次, false, L1中性重试边界::原幂等键读回收敛);
                 候选.永久占用.insert(编码.值);
             }
 
@@ -366,15 +422,18 @@ public:
                 if (auto it = 候选.当前关系.find(编码.值); it != 候选.当前关系.end()) {
                     const auto 当前事实 = it->second;
                     if (!删除当前源关系索引(候选, 当前事实)
-                        || !删除当前目标关系索引(候选, 当前事实)) return false;
+                        || !删除当前目标关系索引(候选, 当前事实)
+                        || !删除当前节点引用索引(候选, 当前事实)) return false;
                     auto 事实 = 当前事实; 事实.退出事实代次 = 新代次;
                     候选.历史[编码.值] = {编码, 事实, false};
                     候选.当前关系.erase(it); return true;
                 }
-                if (auto it = 候选.当前值.find(编码.值); it != 候选.当前值.end()) {
-                    auto 事实 = it->second; 事实.退出事实代次 = 新代次;
+                if (auto 当前值 = 候选.当前值.find(编码.值);
+                    当前值 != 候选.当前值.end()) {
+                    if (!删除当前节点引用索引(候选, 当前值->second)) return false;
+                    auto 事实 = 当前值->second; 事实.退出事实代次 = 新代次;
                     候选.历史[编码.值] = {编码, 事实, false};
-                    候选.当前值.erase(it);
+                    候选.当前值.erase(当前值);
                     for (auto& [_, 节点] : 候选.当前节点)
                         节点.当前属性.erase(std::remove_if(节点.当前属性.begin(),
                             节点.当前属性.end(), [&](const 属性槽& 槽) {
@@ -384,15 +443,6 @@ public:
                 }
                 return false;
             };
-            for (const auto 编码 : 规范化->退出事实) {
-                if (!状态_.当前节点.contains(编码.值)
-                    && !状态_.当前关系.contains(编码.值)
-                    && !状态_.当前值.contains(编码.值))
-                    return 中性写入结果(请求,
-                        状态_.历史.contains(编码.值)
-                            ? L1中性写入状态::已退出 : L1中性写入状态::未找到,
-                        状态_.事实代次, false, L1中性重试边界::修正请求后可重试);
-            }
             for (const auto 编码 : 规范化->退出事实)
                 if (!退出一个(编码))
                     return 中性写入结果(请求, L1中性写入状态::内部不一致,
@@ -427,6 +477,10 @@ public:
                     const auto 旧值编码 = 槽->当前值;
                     if (auto 旧值 = 候选.当前值.find(旧值编码.值);
                         旧值 != 候选.当前值.end()) {
+                        if (!删除当前节点引用索引(候选, 旧值->second))
+                            return 中性写入结果(请求,
+                                L1中性写入状态::内部不一致, 状态_.事实代次,
+                                false, L1中性重试边界::原幂等键读回收敛);
                         auto 历史值 = 旧值->second;
                         历史值.退出事实代次 = 新代次;
                         候选.历史[旧值编码.值] = {旧值编码, 历史值, false};
@@ -759,6 +813,12 @@ public:
         }
     }
 private:
+    enum class 当前节点引用闭包检查结果 : std::uint8_t {
+        已闭合 = 1,
+        引用冲突 = 2,
+        内部不一致 = 3
+    };
+
     struct 中性幂等记录 {
         L1中性写集请求 首次规范化写集;
         std::uint64_t 首次发布事实代次 = 0;
@@ -785,6 +845,8 @@ private:
         std::unordered_map<std::uint64_t,
             std::unordered_map<std::uint64_t, std::vector<std::uint64_t>>>
             历史属性槽值候选索引;
+        std::unordered_map<std::uint64_t, std::vector<std::uint64_t>>
+            当前节点引用索引;
         std::unordered_map<std::uint64_t, 值事实> 当前值;
         std::unordered_map<std::uint64_t, L1历史事实副本> 历史;
         std::unordered_set<std::uint64_t> 永久占用;
@@ -1126,6 +1188,139 @@ private:
         if (类型->second.empty()) 目标->second.erase(类型);
         if (目标->second.empty()) 值.当前目标关系索引.erase(目标);
         return true;
+    }
+
+    // 诊断责任：向上送出；只按关系的去重当前节点角色登记事实编码。
+    static bool 插入当前节点引用索引(状态& 值, const 关系事实& 事实) {
+        if (!有效(事实.编码) || !有效(事实.源节点)
+            || !有效(事实.目标节点) || !有效(事实.关系类型节点)
+            || 事实.退出事实代次) return false;
+        std::uint64_t 节点组[3]{
+            事实.源节点.值, 事实.目标节点.值, 事实.关系类型节点.值};
+        std::sort(节点组, 节点组 + 3);
+        std::size_t 数量 = 0;
+        for (const auto 编码 : 节点组)
+            if (数量 == 0 || 节点组[数量 - 1] != 编码) 节点组[数量++] = 编码;
+        for (std::size_t 索引 = 0; 索引 < 数量; ++索引) {
+            if (!值.当前节点.contains(节点组[索引])) return false;
+            auto& 编码组 = 值.当前节点引用索引[节点组[索引]];
+            const auto 位置 = std::lower_bound(编码组.begin(), 编码组.end(), 事实.编码.值);
+            if (位置 != 编码组.end() && *位置 == 事实.编码.值) return false;
+            编码组.insert(位置, 事实.编码.值);
+        }
+        return true;
+    }
+
+    // 诊断责任：向上送出；只按值的去重当前节点角色登记事实编码。
+    static bool 插入当前节点引用索引(状态& 值, const 值事实& 事实) {
+        if (!有效(事实.编码) || !有效(事实.所属节点)
+            || !有效(事实.属性类型节点) || !有效(事实.来源节点)
+            || 事实.退出事实代次) return false;
+        std::uint64_t 节点组[4]{
+            事实.所属节点.值, 事实.属性类型节点.值, 事实.来源节点.值, 0};
+        std::size_t 原数量 = 3;
+        if (const auto* 引用 = std::get_if<独立材料引用>(&事实.材料)) {
+            if (!有效(引用->编码)) return false;
+            节点组[原数量++] = 引用->编码.值;
+        }
+        std::sort(节点组, 节点组 + 原数量);
+        std::size_t 数量 = 0;
+        for (std::size_t 索引 = 0; 索引 < 原数量; ++索引)
+            if (数量 == 0 || 节点组[数量 - 1] != 节点组[索引])
+                节点组[数量++] = 节点组[索引];
+        for (std::size_t 索引 = 0; 索引 < 数量; ++索引) {
+            if (!值.当前节点.contains(节点组[索引])) return false;
+            auto& 编码组 = 值.当前节点引用索引[节点组[索引]];
+            const auto 位置 = std::lower_bound(编码组.begin(), 编码组.end(), 事实.编码.值);
+            if (位置 != 编码组.end() && *位置 == 事实.编码.值) return false;
+            编码组.insert(位置, 事实.编码.值);
+        }
+        return true;
+    }
+
+    // 诊断责任：无适用错误分支；只删除一个当前关系的全部去重节点引用。
+    static bool 删除当前节点引用索引(状态& 值, const 关系事实& 事实) noexcept {
+        std::uint64_t 节点组[3]{
+            事实.源节点.值, 事实.目标节点.值, 事实.关系类型节点.值};
+        std::sort(节点组, 节点组 + 3);
+        std::size_t 数量 = 0;
+        for (const auto 编码 : 节点组)
+            if (数量 == 0 || 节点组[数量 - 1] != 编码) 节点组[数量++] = 编码;
+        for (std::size_t 索引 = 0; 索引 < 数量; ++索引) {
+            const auto 节点 = 值.当前节点引用索引.find(节点组[索引]);
+            if (节点 == 值.当前节点引用索引.end()) return false;
+            const auto 位置 = std::lower_bound(
+                节点->second.begin(), 节点->second.end(), 事实.编码.值);
+            if (位置 == 节点->second.end() || *位置 != 事实.编码.值) return false;
+            节点->second.erase(位置);
+            if (节点->second.empty()) 值.当前节点引用索引.erase(节点);
+        }
+        return true;
+    }
+
+    // 诊断责任：无适用错误分支；只删除一个当前值的全部去重节点引用。
+    static bool 删除当前节点引用索引(状态& 值, const 值事实& 事实) noexcept {
+        std::uint64_t 节点组[4]{
+            事实.所属节点.值, 事实.属性类型节点.值, 事实.来源节点.值, 0};
+        std::size_t 原数量 = 3;
+        if (const auto* 引用 = std::get_if<独立材料引用>(&事实.材料))
+            节点组[原数量++] = 引用->编码.值;
+        std::sort(节点组, 节点组 + 原数量);
+        std::size_t 数量 = 0;
+        for (std::size_t 索引 = 0; 索引 < 原数量; ++索引)
+            if (数量 == 0 || 节点组[数量 - 1] != 节点组[索引])
+                节点组[数量++] = 节点组[索引];
+        for (std::size_t 索引 = 0; 索引 < 数量; ++索引) {
+            const auto 节点 = 值.当前节点引用索引.find(节点组[索引]);
+            if (节点 == 值.当前节点引用索引.end()) return false;
+            const auto 位置 = std::lower_bound(
+                节点->second.begin(), 节点->second.end(), 事实.编码.值);
+            if (位置 == 节点->second.end() || *位置 != 事实.编码.值) return false;
+            节点->second.erase(位置);
+            if (节点->second.empty()) 值.当前节点引用索引.erase(节点);
+        }
+        return true;
+    }
+
+    // 诊断责任：无适用错误分支；只按反向候选回读权威当前事实并作三值闭包裁决。
+    static 当前节点引用闭包检查结果 检查当前节点引用闭包(
+        const 状态& 值, 稳定编码 节点编码,
+        const std::unordered_set<std::uint64_t>& 退出集合) noexcept {
+        if (!有效(节点编码) || !值.当前节点.contains(节点编码.值))
+            return 当前节点引用闭包检查结果::内部不一致;
+        const auto 节点 = 值.当前节点引用索引.find(节点编码.值);
+        if (节点 == 值.当前节点引用索引.end())
+            return 当前节点引用闭包检查结果::已闭合;
+        if (节点->second.empty()) return 当前节点引用闭包检查结果::内部不一致;
+        std::uint64_t 前一编码 = 0;
+        for (const auto 事实编码 : 节点->second) {
+            const auto 关系 = 值.当前关系.find(事实编码);
+            const auto 当前值 = 值.当前值.find(事实编码);
+            const bool 关系命中 = 关系 != 值.当前关系.end();
+            const bool 值命中 = 当前值 != 值.当前值.end();
+            if (事实编码 == 0 || 事实编码 <= 前一编码 || 关系命中 == 值命中)
+                return 当前节点引用闭包检查结果::内部不一致;
+            bool 真实引用 = false;
+            if (关系命中) {
+                const auto& 事实 = 关系->second;
+                真实引用 = 事实.编码.值 == 事实编码 && !事实.退出事实代次
+                    && (事实.源节点 == 节点编码 || 事实.目标节点 == 节点编码
+                        || 事实.关系类型节点 == 节点编码);
+            } else {
+                const auto& 事实 = 当前值->second;
+                const auto* 材料引用 = std::get_if<独立材料引用>(&事实.材料);
+                真实引用 = 事实.编码.值 == 事实编码 && !事实.退出事实代次
+                    && (事实.所属节点 == 节点编码
+                        || 事实.属性类型节点 == 节点编码
+                        || 事实.来源节点 == 节点编码
+                        || (材料引用 && 材料引用->编码 == 节点编码));
+            }
+            if (!真实引用) return 当前节点引用闭包检查结果::内部不一致;
+            if (!退出集合.contains(事实编码))
+                return 当前节点引用闭包检查结果::引用冲突;
+            前一编码 = 事实编码;
+        }
+        return 当前节点引用闭包检查结果::已闭合;
     }
 
     // 诊断责任：向上送出；只从本状态权威当前关系纯派生非权威索引。
@@ -1481,6 +1676,70 @@ private:
             if (类型 == 值.当前节点.end() || 类型->second.种类 != 节点种类::属性类型
                 || !类型->second.属性类型表示 || !表示匹配(*类型->second.属性类型表示, 事实.材料)) return false;
             if (const auto* 引用 = std::get_if<独立材料引用>(&事实.材料); 引用 && !值.当前节点.contains(引用->编码.值)) return false;
+        }
+        for (const auto& [节点编码, 编码组] : 值.当前节点引用索引) {
+            if (节点编码 == 0 || !值.当前节点.contains(节点编码) || 编码组.empty())
+                return false;
+            std::uint64_t 前一编码 = 0;
+            for (const auto 事实编码 : 编码组) {
+                const auto 关系 = 值.当前关系.find(事实编码);
+                const auto 当前值 = 值.当前值.find(事实编码);
+                const bool 关系命中 = 关系 != 值.当前关系.end();
+                const bool 值命中 = 当前值 != 值.当前值.end();
+                if (事实编码 == 0 || 事实编码 <= 前一编码
+                    || 关系命中 == 值命中 || 值.历史.contains(事实编码)) return false;
+                bool 真实引用 = false;
+                if (关系命中) {
+                    const auto& 事实 = 关系->second;
+                    真实引用 = 事实.编码.值 == 事实编码 && !事实.退出事实代次
+                        && (事实.源节点.值 == 节点编码
+                            || 事实.目标节点.值 == 节点编码
+                            || 事实.关系类型节点.值 == 节点编码);
+                } else {
+                    const auto& 事实 = 当前值->second;
+                    const auto* 材料引用 = std::get_if<独立材料引用>(&事实.材料);
+                    真实引用 = 事实.编码.值 == 事实编码 && !事实.退出事实代次
+                        && (事实.所属节点.值 == 节点编码
+                            || 事实.属性类型节点.值 == 节点编码
+                            || 事实.来源节点.值 == 节点编码
+                            || (材料引用 && 材料引用->编码.值 == 节点编码));
+                }
+                if (!真实引用) return false;
+                前一编码 = 事实编码;
+            }
+        }
+        for (const auto& [关系编码, 事实] : 值.当前关系) {
+            std::uint64_t 节点组[3]{
+                事实.源节点.值, 事实.目标节点.值, 事实.关系类型节点.值};
+            std::sort(节点组, 节点组 + 3);
+            std::size_t 数量 = 0;
+            for (std::size_t 索引 = 0; 索引 < 3; ++索引)
+                if (数量 == 0 || 节点组[数量 - 1] != 节点组[索引])
+                    节点组[数量++] = 节点组[索引];
+            for (std::size_t 索引 = 0; 索引 < 数量; ++索引) {
+                const auto 节点 = 值.当前节点引用索引.find(节点组[索引]);
+                if (节点 == 值.当前节点引用索引.end()
+                    || !std::binary_search(节点->second.begin(), 节点->second.end(),
+                        关系编码)) return false;
+            }
+        }
+        for (const auto& [值编码, 事实] : 值.当前值) {
+            std::uint64_t 节点组[4]{
+                事实.所属节点.值, 事实.属性类型节点.值, 事实.来源节点.值, 0};
+            std::size_t 原数量 = 3;
+            if (const auto* 引用 = std::get_if<独立材料引用>(&事实.材料))
+                节点组[原数量++] = 引用->编码.值;
+            std::sort(节点组, 节点组 + 原数量);
+            std::size_t 数量 = 0;
+            for (std::size_t 索引 = 0; 索引 < 原数量; ++索引)
+                if (数量 == 0 || 节点组[数量 - 1] != 节点组[索引])
+                    节点组[数量++] = 节点组[索引];
+            for (std::size_t 索引 = 0; 索引 < 数量; ++索引) {
+                const auto 节点 = 值.当前节点引用索引.find(节点组[索引]);
+                if (节点 == 值.当前节点引用索引.end()
+                    || !std::binary_search(节点->second.begin(), 节点->second.end(),
+                        值编码)) return false;
+            }
         }
         for (const auto& [编码, 节点] : 值.当前节点) for (const auto& 槽 : 节点.当前属性) {
             const auto 类型 = 值.当前节点.find(槽.属性类型节点.值);
