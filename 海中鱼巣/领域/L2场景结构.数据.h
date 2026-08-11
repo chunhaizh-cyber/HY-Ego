@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <limits>
 #include <optional>
-#include <type_traits>
 #include <vector>
 #include "L2结构公共.数据.h"
 #endif
@@ -369,18 +368,10 @@ inline bool L2场景完整读取请求有效(
 // 诊断责任：无适用错误分支；纯值请求判断不读取事实。
 inline bool L2场景固定属性新增请求有效(
     const L2场景固定属性新增请求& 请求) noexcept {
-    const bool 材料有效 = std::visit([](const auto& 材料) noexcept {
-        using 材料类型 = std::decay_t<decltype(材料)>;
-        if constexpr (std::is_same_v<材料类型, std::int64_t>) return true;
-        else if constexpr (std::is_same_v<材料类型, L2独立材料引用>)
-            return 有效(材料.编码);
-        else return !材料.empty();
-    }, 请求.新属性.原始值材料);
     return L2结构请求头合同有效(请求.请求头)
         && 请求.请求头.期望事实代次 != 0
         && L2结构幂等身份有效(请求.幂等身份)
-        && 有效(请求.场景.值) && 有效(请求.新属性.属性类型身份)
-        && 有效(请求.新属性.来源稳定编码) && 材料有效;
+        && 有效(请求.场景.值) && L2属性提交项有效(请求.新属性);
 }
 
 // 诊断责任：无适用错误分支；纯值请求判断不读取事实。
@@ -451,24 +442,6 @@ inline bool L2场景成员关系事实截止投影完整(
         && 关系.生命周期.创建事实代次 <= 截止
         && (!关系.生命周期.退出事实代次
             || *关系.生命周期.退出事实代次 <= 截止);
-}
-
-// 诊断责任：无适用错误分支；只判断属性事实在具名截止的值式投影。
-inline bool L2属性事实截止投影完整(
-    const L2属性事实& 属性, std::uint64_t 截止) noexcept {
-    const bool 材料完整 = std::visit([](const auto& 材料) noexcept {
-        using 材料类型 = std::decay_t<decltype(材料)>;
-        if constexpr (std::is_same_v<材料类型, std::int64_t>) return true;
-        else if constexpr (std::is_same_v<材料类型, L2独立材料引用>)
-            return 有效(材料.编码);
-        else return !材料.empty();
-    }, 属性.类型化不可变材料);
-    return 截止 != 0 && 有效(属性.属性类型身份) && 有效(属性.值稳定编码)
-        && 有效(属性.来源稳定编码) && 材料完整
-        && 属性.创建事实代次 != 0 && 属性.创建事实代次 <= 截止
-        && (!属性.退出事实代次
-            || (*属性.退出事实代次 >= 属性.创建事实代次
-                && *属性.退出事实代次 <= 截止));
 }
 
 // 诊断责任：无适用错误分支；只判断最终场景完整值式投影及稳定顺序。

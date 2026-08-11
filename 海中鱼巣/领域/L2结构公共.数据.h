@@ -3,6 +3,7 @@
 #ifndef L2_STRUCTURE_COMMON_NO_INCLUDES
 #include <cstdint>
 #include <optional>
+#include <type_traits>
 #include <variant>
 #include <vector>
 #include "../核心/L1公共事实.数据.h"
@@ -115,6 +116,36 @@ inline bool L2结构请求头合同有效(const L2结构请求头& 请求头) no
 // 诊断责任：无适用错误分支；纯值幂等身份判断不读取事实。
 inline bool L2结构幂等身份有效(L2结构幂等身份 身份) noexcept {
     return 身份.值 != 0;
+}
+
+// 诊断责任：无适用错误分支；纯值属性提交项判断不读取事实。
+inline bool L2属性提交项有效(const L2属性提交项& 属性) noexcept {
+    const bool 材料有效 = std::visit([](const auto& 材料) noexcept {
+        using 材料类型 = std::decay_t<decltype(材料)>;
+        if constexpr (std::is_same_v<材料类型, std::int64_t>) return true;
+        else if constexpr (std::is_same_v<材料类型, L2独立材料引用>)
+            return 有效(材料.编码);
+        else return !材料.empty();
+    }, 属性.原始值材料);
+    return 有效(属性.属性类型身份) && 有效(属性.来源稳定编码) && 材料有效;
+}
+
+// 诊断责任：无适用错误分支；只判断属性事实在具名截止的值式投影。
+inline bool L2属性事实截止投影完整(
+    const L2属性事实& 属性, std::uint64_t 截止) noexcept {
+    const bool 材料完整 = std::visit([](const auto& 材料) noexcept {
+        using 材料类型 = std::decay_t<decltype(材料)>;
+        if constexpr (std::is_same_v<材料类型, std::int64_t>) return true;
+        else if constexpr (std::is_same_v<材料类型, L2独立材料引用>)
+            return 有效(材料.编码);
+        else return !材料.empty();
+    }, 属性.类型化不可变材料);
+    return 截止 != 0 && 有效(属性.属性类型身份) && 有效(属性.值稳定编码)
+        && 有效(属性.来源稳定编码) && 材料完整
+        && 属性.创建事实代次 != 0 && 属性.创建事实代次 <= 截止
+        && (!属性.退出事实代次
+            || (*属性.退出事实代次 >= 属性.创建事实代次
+                && *属性.退出事实代次 <= 截止));
 }
 
 // 诊断责任：无适用错误分支；纯值生命周期判断不读取事实。
