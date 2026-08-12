@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="海中鱼巣\领域\服务.L1自我结构登记.ixx">
@@ -17,6 +17,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\服务.L2状态结构.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\服务.L2动态结构.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
     <Filter Include="源文件">
@@ -52,6 +55,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\L2状态结构.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\L2动态结构.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClCompile Include="海中鱼巣\启动.程序入口.ixx">
