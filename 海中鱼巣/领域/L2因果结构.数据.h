@@ -189,6 +189,91 @@ struct L2当前因果组读取结果 final {
         const L2当前因果组读取结果&) = default;
 };
 
+enum class L2因果状态引用组角色 : std::uint8_t {
+    条件 = 1,
+    结果 = 2
+};
+
+struct L2因果状态引用组替换请求 final {
+    L2结构请求头 请求头;
+    L2结构幂等身份 幂等身份;
+    L2因果身份 因果;
+    L2因果状态引用组角色 角色 = L2因果状态引用组角色::条件;
+    std::vector<稳定编码> 旧关系闭包;
+    std::vector<L2有序身份引用> 新状态引用组;
+    friend bool operator==(const L2因果状态引用组替换请求&,
+        const L2因果状态引用组替换请求&) = default;
+};
+
+struct L2因果状态引用组替换结果 final {
+    L2结构结果头 结果头;
+    L2因果状态引用组角色 角色 = L2因果状态引用组角色::条件;
+    std::optional<L2因果事实> 当前因果;
+    std::optional<L2因果自有关系引用> 当前自有事实;
+    std::vector<稳定编码> 已退出关系;
+    bool 成功() const noexcept;
+    friend bool operator==(const L2因果状态引用组替换结果&,
+        const L2因果状态引用组替换结果&) = default;
+};
+
+struct L2因果动作引用替换请求 final {
+    L2结构请求头 请求头;
+    L2结构幂等身份 幂等身份;
+    L2因果身份 因果;
+    std::optional<稳定编码> 旧动作关系;
+    std::optional<稳定编码> 新动作;
+    friend bool operator==(const L2因果动作引用替换请求&,
+        const L2因果动作引用替换请求&) = default;
+};
+
+struct L2因果动作引用替换结果 final {
+    L2结构结果头 结果头;
+    std::optional<L2因果事实> 当前因果;
+    std::optional<L2因果自有关系引用> 当前自有事实;
+    std::optional<稳定编码> 已退出动作关系;
+    bool 成功() const noexcept;
+    friend bool operator==(const L2因果动作引用替换结果&,
+        const L2因果动作引用替换结果&) = default;
+};
+
+struct L2因果来源换代请求 final {
+    L2结构请求头 请求头;
+    L2结构幂等身份 幂等身份;
+    L2因果身份 因果;
+    稳定编码 旧来源值;
+    稳定编码 新来源;
+    friend bool operator==(const L2因果来源换代请求&,
+        const L2因果来源换代请求&) = default;
+};
+
+struct L2因果来源换代结果 final {
+    L2结构结果头 结果头;
+    std::optional<L2因果事实> 当前因果;
+    std::optional<L2因果自有关系引用> 当前自有事实;
+    std::optional<L2属性事实> 已退出来源值;
+    bool 成功() const noexcept;
+    friend bool operator==(const L2因果来源换代结果&,
+        const L2因果来源换代结果&) = default;
+};
+
+struct L2因果退出请求 final {
+    L2结构请求头 请求头;
+    L2结构幂等身份 幂等身份;
+    L2因果身份 因果;
+    std::vector<稳定编码> 自有事实闭包;
+    friend bool operator==(const L2因果退出请求&,
+        const L2因果退出请求&) = default;
+};
+
+struct L2因果退出结果 final {
+    L2结构结果头 结果头;
+    std::optional<L2因果事实> 已退出因果;
+    std::optional<L2因果自有关系引用> 已退出自有事实;
+    bool 成功() const noexcept;
+    friend bool operator==(const L2因果退出结果&,
+        const L2因果退出结果&) = default;
+};
+
 inline bool L2因果结构类型登记请求有效(
     const L2因果结构类型登记请求& 请求) noexcept {
     return L2结构请求头合同有效(请求.请求头)
@@ -286,6 +371,49 @@ inline bool L2按结果状态当前因果读取请求有效(
         && 请求.请求头.期望事实代次 != 0 && 有效(请求.结果状态.值);
 }
 
+inline bool L2因果共同写请求有效(const L2结构请求头& 请求头,
+    L2结构幂等身份 幂等身份, L2因果身份 因果) noexcept {
+    return L2结构请求头合同有效(请求头) && 请求头.期望事实代次 != 0
+        && L2结构幂等身份有效(幂等身份)
+        && 幂等身份.值 != 0x4C32'4944'5352'4306ULL
+        && 幂等身份.值 != 0x2200'0000'0000'0001ULL && 有效(因果.值);
+}
+
+inline bool L2严格升序稳定编码组有效(const std::vector<稳定编码>& 组) noexcept {
+    if (组.empty()) return false;
+    for (std::size_t 索引 = 0; 索引 < 组.size(); ++索引)
+        if (!有效(组[索引]) || (索引 && !(组[索引 - 1] < 组[索引]))) return false;
+    return true;
+}
+
+inline bool L2因果状态引用组替换请求有效(
+    const L2因果状态引用组替换请求& 请求) noexcept {
+    return L2因果共同写请求有效(请求.请求头, 请求.幂等身份, 请求.因果)
+        && (请求.角色 == L2因果状态引用组角色::条件
+            || 请求.角色 == L2因果状态引用组角色::结果)
+        && L2严格升序稳定编码组有效(请求.旧关系闭包)
+        && L2因果有序引用组有效(请求.新状态引用组);
+}
+
+inline bool L2因果动作引用替换请求有效(
+    const L2因果动作引用替换请求& 请求) noexcept {
+    return L2因果共同写请求有效(请求.请求头, 请求.幂等身份, 请求.因果)
+        && (!请求.旧动作关系 || 有效(*请求.旧动作关系))
+        && (!请求.新动作 || 有效(*请求.新动作));
+}
+
+inline bool L2因果来源换代请求有效(const L2因果来源换代请求& 请求) noexcept {
+    return L2因果共同写请求有效(请求.请求头, 请求.幂等身份, 请求.因果)
+        && 有效(请求.旧来源值) && 有效(请求.新来源);
+}
+
+inline bool L2因果退出请求有效(const L2因果退出请求& 请求) noexcept {
+    return L2因果共同写请求有效(请求.请求头, 请求.幂等身份, 请求.因果)
+        && L2严格升序稳定编码组有效(请求.自有事实闭包)
+        && !std::binary_search(请求.自有事实闭包.begin(),
+            请求.自有事实闭包.end(), 请求.因果.值);
+}
+
 inline bool L2因果结构类型登记结果::成功() const noexcept {
     return (状态 == L2因果结构类型登记状态::已提交
             || 状态 == L2因果结构类型登记状态::精确重复
@@ -338,6 +466,49 @@ inline bool L2当前因果组读取结果::成功() const noexcept {
             || (索引 && !(因果[索引 - 1].身份.值 < 因果[索引].身份.值))) return false;
     }
     return true;
+}
+
+inline bool L2因果状态引用组替换结果::成功() const noexcept {
+    return (角色 == L2因果状态引用组角色::条件
+            || 角色 == L2因果状态引用组角色::结果)
+        && (结果头.状态 == L2结构状态::已提交
+            || 结果头.状态 == L2结构状态::精确重复)
+        && 结果头.事实截止代次 != 0 && 结果头.变更事实代次
+        && *结果头.变更事实代次 == 结果头.事实截止代次
+        && 当前因果 && 当前自有事实 && !已退出关系.empty()
+        && L2因果事实完整(*当前因果, 结果头.事实截止代次)
+        && L2严格升序稳定编码组有效(已退出关系);
+}
+
+inline bool L2因果动作引用替换结果::成功() const noexcept {
+    return (结果头.状态 == L2结构状态::已提交
+            || 结果头.状态 == L2结构状态::精确重复)
+        && 结果头.事实截止代次 != 0 && 结果头.变更事实代次
+        && *结果头.变更事实代次 == 结果头.事实截止代次
+        && 当前因果 && 当前自有事实
+        && L2因果事实完整(*当前因果, 结果头.事实截止代次)
+        && (!已退出动作关系 || 有效(*已退出动作关系));
+}
+
+inline bool L2因果来源换代结果::成功() const noexcept {
+    return (结果头.状态 == L2结构状态::已提交
+            || 结果头.状态 == L2结构状态::精确重复)
+        && 结果头.事实截止代次 != 0 && 结果头.变更事实代次
+        && *结果头.变更事实代次 == 结果头.事实截止代次
+        && 当前因果 && 当前自有事实 && 已退出来源值
+        && L2因果事实完整(*当前因果, 结果头.事实截止代次)
+        && 有效(已退出来源值->值稳定编码)
+        && 已退出来源值->退出事实代次 == 结果头.事实截止代次;
+}
+
+inline bool L2因果退出结果::成功() const noexcept {
+    return (结果头.状态 == L2结构状态::已提交
+            || 结果头.状态 == L2结构状态::精确重复)
+        && 结果头.事实截止代次 != 0 && 结果头.变更事实代次
+        && *结果头.变更事实代次 == 结果头.事实截止代次
+        && 已退出因果 && 已退出自有事实
+        && L2因果事实完整(*已退出因果, 结果头.事实截止代次)
+        && 已退出因果->生命周期.退出事实代次 == 结果头.事实截止代次;
 }
 
 } // namespace 海中鱼巣
