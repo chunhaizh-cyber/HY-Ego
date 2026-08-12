@@ -10,6 +10,7 @@ import 海中鱼巣.领域.服务.L2存在结构;
 import 海中鱼巣.领域.服务.L2特征结构;
 import 海中鱼巣.领域.服务.L2状态结构;
 import 海中鱼巣.领域.服务.L2动态结构;
+import 海中鱼巣.领域.服务.L2因果结构;
 
 export namespace 海中鱼巣 {
 
@@ -61,15 +62,19 @@ public:
         return *动态服务_;
     }
 
+    L2因果结构服务& 取得L2因果结构服务() noexcept { return *因果服务_; }
+    const L2因果结构服务& 取得L2因果结构服务() const noexcept { return *因果服务_; }
+
 private:
     普通应用上下文(L1事实基座运行包&& 运行包,
         std::unique_ptr<L2存在结构服务>&& 存在服务,
         std::unique_ptr<L2特征结构服务>&& 特征服务,
         std::unique_ptr<L2状态结构服务>&& 状态服务,
-        std::unique_ptr<L2动态结构服务>&& 动态服务) noexcept
+        std::unique_ptr<L2动态结构服务>&& 动态服务,
+        std::unique_ptr<L2因果结构服务>&& 因果服务) noexcept
         : 运行包_(std::move(运行包)), 存在服务_(std::move(存在服务)),
           特征服务_(std::move(特征服务)), 状态服务_(std::move(状态服务)),
-          动态服务_(std::move(动态服务)) {}
+          动态服务_(std::move(动态服务)), 因果服务_(std::move(因果服务)) {}
 
     friend struct 普通应用装配结果;
     friend 普通应用装配结果 构造普通应用上下文(const 普通应用配置& 配置);
@@ -78,6 +83,7 @@ private:
     std::unique_ptr<L2特征结构服务> 特征服务_;
     std::unique_ptr<L2状态结构服务> 状态服务_;
     std::unique_ptr<L2动态结构服务> 动态服务_;
+    std::unique_ptr<L2因果结构服务> 因果服务_;
 };
 
 enum class 普通应用装配状态 : std::uint8_t {
@@ -97,7 +103,10 @@ enum class 普通应用装配状态 : std::uint8_t {
     状态服务构造失败 = 13,
     动态所有者范围建立失败 = 14,
     动态所有者交付形成失败 = 15,
-    动态服务构造失败 = 16
+    动态服务构造失败 = 16,
+    因果所有者范围建立失败 = 17,
+    因果所有者交付形成失败 = 18,
+    因果服务构造失败 = 19
 };
 
 struct 普通应用装配结果 {
@@ -203,10 +212,29 @@ struct 普通应用装配结果 {
         } catch (...) {
             return {普通应用装配状态::动态服务构造失败, nullptr};
         }
+        auto 因果原始交付 = 运行包.所有者范围签发器().建立所有者范围(
+            {L1所有者范围CRUD合同版本, 因果所有者建立身份,
+                L1所有者范围种类::独占结构范围});
+        if ((因果原始交付.建立结果.状态 != L1所有者范围管理状态::成功
+                && 因果原始交付.建立结果.状态 != L1所有者范围管理状态::精确重复)
+            || !因果原始交付.建立结果.所有者事实 || !因果原始交付.写入端口)
+            return {普通应用装配状态::因果所有者范围建立失败, nullptr};
+        auto 因果交付 = 尝试形成L2因果所有者交付(
+            运行包.读取服务(), std::move(因果原始交付));
+        if (!因果交付)
+            return {普通应用装配状态::因果所有者交付形成失败, nullptr};
+        std::unique_ptr<L2因果结构服务> 因果服务;
+        try {
+            因果服务 = std::make_unique<L2因果结构服务>(
+                运行包.读取服务(), *状态服务, std::move(*因果交付));
+        } catch (...) {
+            return {普通应用装配状态::因果服务构造失败, nullptr};
+        }
         return {普通应用装配状态::已装配,
             std::unique_ptr<普通应用上下文>(new 普通应用上下文(
                 std::move(运行包), std::move(存在服务),
-                std::move(特征服务), std::move(状态服务), std::move(动态服务)))};
+                std::move(特征服务), std::move(状态服务), std::move(动态服务),
+                std::move(因果服务)))};
     } catch (...) {
         return {普通应用装配状态::构造失败, nullptr};
     }

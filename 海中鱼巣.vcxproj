@@ -160,6 +160,7 @@
     <ClCompile Include="海中鱼巣\领域\服务.L2特征结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L2状态结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L2动态结构.ixx" />
+    <ClCompile Include="海中鱼巣\领域\服务.L2因果结构.ixx" />
     <ClCompile Include="海中鱼巣\核心\合同.L1公共事实.ixx" />
     <ClCompile Include="海中鱼巣\核心\合同.L1事实基座.ixx" />
     <ClCompile Include="海中鱼巣\核心\合同.L1所有者范围CRUD.ixx" />
@@ -200,6 +201,7 @@
     <ClInclude Include="海中鱼巣\领域\L2特征结构.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2状态结构.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2动态结构.数据.h" />
+    <ClInclude Include="海中鱼巣\领域\L2因果结构.数据.h" />
   </ItemGroup>
   <Target Name="验证D455RealSense构建输入" BeforeTargets="PrepareForBuild"
           Condition="'$(EnableD455RealSense)'=='true' and '$(Platform)'=='x64'">
