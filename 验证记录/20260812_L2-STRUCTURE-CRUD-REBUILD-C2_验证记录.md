@@ -71,3 +71,14 @@ v0.4 仍未覆盖因果真实性 / 必然性、主动 / 被动、动作成立 / 
 - 两配置各四个并发窗均 PASS；每窗允许状态 129、资源失败 0、非法状态 0，每配置四窗合计 516 / 0 / 0。
 - 根工程 `Debug|x64 Rebuild`：PASS；根工程 `Release|x64 Rebuild`：PASS；`python .\tools\check_specs.py --strict`：113 / 113 PASS；七路径 `git diff --check`：PASS，仅 LF / CRLF 转换提示。
 - 本节结果取代修复前的发布前复跑结论；`NOT_RUN` 和完成声明边界保持上一节口径，不因静态映射与构建通过而升级。
+
+## v0.4 第二次独立核验退回与异常边界重跑
+
+- 第二次独立核验对结果提交 `929c50ad7da9ed0f54c94e9d319325d5a3fd20a0` 判定 FAIL，具名 BLOCKER 为 `DRIFT-C2-POSTPUBLISH-EXCEPTION-LOSES-FIRST-CUTOFF`：四公开写入口的外层 catch 未区分写前异常与已确认发布后的异常，后者错误返回截止 0、变更空。
+- 生产静态门禁：四个 `已发布首次代次` 声明、四个成功边界后赋值、十二个 catch 统一调用 `形成发布后异常代次边界`；两条 `static_assert` 直接锁定空值与非空值的截止 / 变更形状。赋值只发生在 `写入成功边界完整` 返回真之后，不以“调用过提交”代替已发布证明。
+- C2 专项 `Debug|x64 Rebuild` 加运行：93 / 93 PASS、失败数 0；随机临时目录 `C:\Users\zhchh\AppData\Local\Temp\海中鱼巣_C2_91416da9076c4b4c8429029ee0aae79b`。
+- C2 专项 `Release|x64 Rebuild` 加运行，基值 105000、顺序 11 / 21 / 31 / 41：93 / 93 PASS、失败数 0；随机临时目录 `C:\Users\zhchh\AppData\Local\Temp\海中鱼巣_C2_3a35dffd178e416aa966a93906cc3b2e`。
+- 两配置各四个并发窗均 PASS；每窗允许状态 129、资源失败 0、非法状态 0，每配置四窗合计 516 / 0 / 0。
+- 根工程 `Debug|x64 Rebuild`：PASS；根工程 `Release|x64 Rebuild`：PASS。
+- `NOT_RUN`：C2 公开 ABI 没有合法异常 / 分配失败注入入口，故写前真实分配失败、发布后读回 / 互证 / 结果构造真实抛出 `bad_alloc`、`length_error` 或其它异常未端到端触发。本轮不为补证增加友元、故障入口、计数器或测试钩子；运行矩阵证明正常与并发路径未回归，异常代次边界只由生产静态闭包与编译期断言证明，不写成 C2 运行通过。
+- 既有 `NOT_RUN`、L1 七角色保守绑定和业务完成声明边界继续有效；本修复不证明因果真实性 / 必然性、A1、生产装配、真实消费者、恢复、跨进程或独立集成验收。
