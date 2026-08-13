@@ -2,7 +2,7 @@
 
 日期：2026-08-13
 
-追加修复基线：`4f7d0cce3706727f6674c730fc2cd6cafbe4f934`。该提交已在 `main` / `origin/main`，但交互侧独立核验未接受；本记录以下补充描述其后追加修复，不改写既有历史。
+结果链：首轮已发布但未接受的 `4f7d0cce3706727f6674c730fc2cd6cafbe4f934` -> 生产核验缺口修复 `54e730c4231d7a70bf68a80e9eac61b0370d8da2` -> 本次验证夹具补强提交。本文件不在提交正文中自指尚未形成的第三个哈希；第三个哈希及发布后 `HEAD` / `origin/main` 关系由 Git 和执行回执裁决。
 
 ## 1. 实际范围
 
@@ -25,6 +25,7 @@
 - 新增场景成功 / 精确重复不再只读回节点；同时正式历史读回同写族归属关系，核对 owner、源 / 目标 / 类型 / 角色和与节点同创建代次。
 - 父子 / 成员关系投影显式接收场景 owner 并核对关系写入 owner；属性投影显式接收场景来源 owner，不再把事实自身 owner 当作期望值形成恒真校验。
 - 临时专项按计划 16 类建立逐类运行、静态和 `NOT_RUN` 分账；运行覆盖四材料新增 / 换代、父子 / 成员完整 CRUD、十入口乘三保留键、wrong-family / 裸节点、当前历史来源、退出、七 owner 装配和两类并发。
+- 第二次独立核验不再把矩阵 12 记作静态覆盖：专项用另一合法独占 owner 同写其本 owner 源节点、关系类型和指向正式场景的跨 owner 当前关系；场景退出返回引用冲突，场景、族归属及外 owner 三项事实全部保持当前且不级联。检查完成后，同一外 owner 显式同写退出关系、源节点和关系类型，避免影响后续退出矩阵。
 
 ## 3. 固定身份与键域
 
@@ -45,10 +46,12 @@
 | --- | ---: | --- |
 | `MSBuild.exe .\海中鱼巣.vcxproj /m:1 /t:Rebuild /p:Configuration=Debug /p:Platform=x64 /verbosity:minimal` | 0 | 根工程 Debug PASS，生成 `x64/Debug/海中鱼巣.exe`。 |
 | `MSBuild.exe .\海中鱼巣.vcxproj /m:1 /t:Rebuild /p:Configuration=Release /p:Platform=x64 /verbosity:minimal` | 0 | 根工程 Release PASS，生成 `x64/Release/海中鱼巣.exe`。 |
-| `powershell -ExecutionPolicy Bypass -File .\验证工具\运行L2场景身份来源提供者迁移参数验证.ps1 -配置 Debug -起始幂等身份 91001` | 0 | 28 runtime PASS、8 STATIC_PASS、3 NOT_RUN、失败数 0。 |
-| `powershell -ExecutionPolicy Bypass -File .\验证工具\运行L2场景身份来源提供者迁移参数验证.ps1 -配置 Release -起始幂等身份 101001` | 0 | 28 runtime PASS、8 STATIC_PASS、3 NOT_RUN、失败数 0。 |
+| `powershell -ExecutionPolicy Bypass -File .\验证工具\运行L2场景身份来源提供者迁移参数验证.ps1 -配置 Debug -起始幂等身份 111001` | 0 | 31 runtime PASS、7 STATIC_PASS、2 NOT_RUN、失败数 0；矩阵 12 三项真实运行通过。 |
+| `powershell -ExecutionPolicy Bypass -File .\验证工具\运行L2场景身份来源提供者迁移参数验证.ps1 -配置 Release -起始幂等身份 121001` | 0 | 31 runtime PASS、7 STATIC_PASS、2 NOT_RUN、失败数 0；矩阵 12 三项真实运行通过。 |
 | `python .\tools\check_specs.py --strict` | 0 | 113 / 113 正式规范目录项通过。 |
 | 八路径 `git diff --check` | 0 | 无空白错误；只有 Git 换行转换预告。 |
 | 八路径严格 UTF-8 解码及专项 vcxproj XML 解析 | 0 | UTF-8 PASS、XML PASS。 |
 
 专项构建持续使用系统 `%TEMP%` 下 GUID 隔离的 `OutDir` / `IntDir`，每轮 finally 删除本轮目录。MSBuild 输出一条 `MSB8029` 临时目录增量构建警告；实际使用 `Rebuild` 且每轮目录独立，双配置构建和运行均以退出码 0 完成。
+
+第二次独立核验相对 `54e730c4` 的生产源码、根工程和 filters 均为零 diff，唯一可执行代码改动位于生产工程外专项 CPP；因此按风险不重复根工程 Rebuild，以此前生产修复后的 Debug / Release Rebuild PASS 为生产构建证据，并以本次专项 Debug / Release 全量 Rebuild + 运行、生产零 diff 和禁止范围扫描完成最小复验。

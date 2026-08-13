@@ -2,7 +2,7 @@
 
 日期：2026-08-13
 
-核验对象：在未被交互侧接受的已发布提交 `4f7d0cce3706727f6674c730fc2cd6cafbe4f934` 之上形成的追加修复工作区。本文不把该旧提交描述为已接受结果，也不预写尚未形成的追加提交哈希。
+核验结果链：首轮已发布但未接受的 `4f7d0cce3706727f6674c730fc2cd6cafbe4f934` -> 生产核验缺口修复 `54e730c4231d7a70bf68a80e9eac61b0370d8da2` -> 本次矩阵 12 运行夹具补强提交。本文件不在提交正文中自指尚未形成的第三个哈希；发布后真实哈希及 `HEAD == origin/main` 关系由 Git 和执行回执裁决。
 
 ## 1. 已执行验证
 
@@ -10,8 +10,8 @@
 | --- | --- | --- |
 | 根工程 Debug x64 Rebuild | PASS | 0 错误；一次清理阶段报告另一个进程占用 `vc145.idb/pdb` 的 2 条警告，生成和链接成功。 |
 | 根工程 Release x64 Rebuild | PASS | 0 错误，生成 `x64/Release/海中鱼巣.exe`。 |
-| S-ID 专项 Debug，起始幂等身份 91001 | PASS | 退出码 0；28 runtime PASS、8 STATIC_PASS、3 NOT_RUN、失败数 0。 |
-| S-ID 专项 Release，起始幂等身份 101001 | PASS | 退出码 0；28 runtime PASS、8 STATIC_PASS、3 NOT_RUN、失败数 0。 |
+| S-ID 专项 Debug，起始幂等身份 111001 | PASS | 退出码 0；31 runtime PASS、7 STATIC_PASS、2 NOT_RUN、失败数 0。 |
+| S-ID 专项 Release，起始幂等身份 121001 | PASS | 退出码 0；31 runtime PASS、7 STATIC_PASS、2 NOT_RUN、失败数 0。 |
 | `python .\tools\check_specs.py --strict` | PASS | 113 份正式规范目录项全部通过。 |
 | `git diff --check`（八条允许路径） | PASS | 无空白错误；Git 仅提示三条生产文件工作区换行转换预告。 |
 | 旧中性写入口扫描 | PASS | 场景生产文件中 `L1中性写集请求`、`提交中性写集` 零命中。 |
@@ -33,7 +33,7 @@
 | 9 | PASS | 成员新增 / 替换 / 退出、E-ID 前置、旧关系历史、反向非空和退出后合法空组运行通过；稳定排序为源码静态防御。 |
 | 10 | PASS + STATIC_PASS | 当前 / 历史完整场景运行包含来源、属性、父子、成员和 E-ID；源码确认历史函数前后代次探测且不以当前补历史。 |
 | 11 | PASS | 错归属闭包引用冲突零变化；成功退出读回节点、归属、子、成员、属性同代退出；当前已退出和历史来源生命周期互证。漏 / 多其它闭包项由公开闭包比较源码防御。 |
-| 12 | STATIC_PASS + NOT_RUN | L1 引用闭包分支静态存在；专项没有另一个合法外族 owner 消费者的写端口合同，未构造跨 owner 当前引用夹具。 |
+| 12 | PASS | 另一合法独占 owner 运行建立其本 owner 源节点、关系类型及指向正式场景的跨 owner 当前关系；退出场景返回引用冲突且事实代次不变，场景及族归属保持当前，外 owner 节点 / 类型 / 关系也保持当前。随后显式同写退出三项外 owner 夹具事实，场景再按原闭包成功退出，证明没有级联和后续污染。 |
 | 13 | PASS | 十个公开写入口乘三项保留登记身份共 30 次运行，全部入口拒绝、空载荷且事实代次不变；另覆盖 wrong-family、裸 L1 和未标记节点。 |
 | 14 | PASS | 七个 owner 建立键运行比较两两不同；普通应用构造成功，const / 非 const 场景 getter 同址；状态 20—22 及失败不发布半上下文由装配源码静态复核。 |
 | 15 | PASS | 同幂等双线程收敛为首次 + 精确重复同一场景；不同幂等双线程收敛为一成功 + 一事实代次漂移，有界 join 完成。 |
@@ -61,7 +61,6 @@
 - 独立集成验收：NOT_RUN。
 - 公开 API 无法构造的关系自身错误 owner 防御分支：NOT_RUN，仅作源码静态复核。
 - malformed 来源重复、错锚点 / 类型 / 角色、混代及内部节点损坏注入：NOT_RUN；没有私有仓、候选或事务权限。
-- 合法外族当前引用阻止场景退出：NOT_RUN；临时专项没有合法跨 owner 消费者写端口合同，未越权直达私有实现。
 
 ## 4. 精确命令与退出码
 
@@ -69,14 +68,16 @@
 | --- | ---: |
 | `MSBuild.exe .\海中鱼巣.vcxproj /m:1 /t:Rebuild /p:Configuration=Debug /p:Platform=x64 /verbosity:minimal` | 0 |
 | `MSBuild.exe .\海中鱼巣.vcxproj /m:1 /t:Rebuild /p:Configuration=Release /p:Platform=x64 /verbosity:minimal` | 0 |
-| `powershell -ExecutionPolicy Bypass -File .\验证工具\运行L2场景身份来源提供者迁移参数验证.ps1 -配置 Debug -起始幂等身份 91001` | 0 |
-| `powershell -ExecutionPolicy Bypass -File .\验证工具\运行L2场景身份来源提供者迁移参数验证.ps1 -配置 Release -起始幂等身份 101001` | 0 |
+| `powershell -ExecutionPolicy Bypass -File .\验证工具\运行L2场景身份来源提供者迁移参数验证.ps1 -配置 Debug -起始幂等身份 111001` | 0 |
+| `powershell -ExecutionPolicy Bypass -File .\验证工具\运行L2场景身份来源提供者迁移参数验证.ps1 -配置 Release -起始幂等身份 121001` | 0 |
 | `python .\tools\check_specs.py --strict` | 0；113 / 113 |
 | 八路径 `git diff --check` | 0 |
 | 八路径严格 UTF-8 解码、专项 XML 解析 | 0 |
 
 专项双配置均有一条 MSBuild `MSB8029` 警告，说明临时目录不适于增量生成；本专项每轮使用 GUID 隔离目录并执行 `Rebuild`，finally 删除本轮输出，实际构建和程序运行退出码均为 0。根工程双配置无错误。
 
+第二次独立核验相对 `54e730c4` 的生产源码、根工程与 filters 为零 diff，因此未机械重复根工程 Rebuild；表中根工程双配置 PASS 来自生产修复提交形成前的已执行构建。本次以专项 Debug / Release 全量 Rebuild + 运行、生产零 diff、禁止范围扫描、strict、UTF-8 和 XML 复验覆盖新增风险。
+
 ## 5. 声明边界
 
-这些结果只证明当前追加修复工作区中的 S-ID 场景 owner、身份来源、四属性类型、现有 CRUD 迁移和普通应用 provider 通过所列构建与生产外专项。尚未执行本追加修复的 `git diff --cached --check`、提交或推送；也不证明世界树根、A1 聚合、自我初始化、生产业务或独立集成验收完成。提交 / 推送后应在本节追加真实哈希和远端关系，不得以记录预言 Git 事实。
+这些结果只证明结果链上的 S-ID 场景 owner、身份来源、四属性类型、现有 CRUD 迁移和普通应用 provider 通过所列构建与生产外专项；不证明世界树根、A1 聚合、自我初始化、生产业务或独立集成验收完成。本次生产源码相对 `54e730c4` 零修改；三条临时专项文件在交互侧接受结果前保留，尚未执行计划约定的独立清理提交。流程图、路线输入和 `.codex-build/` 是异主 WIP，本次不暂存、不覆盖、不清理。
