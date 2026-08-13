@@ -27,7 +27,9 @@
 - R1 详细设计 v0.2 修订正文；
 - A1 现行零写透明聚合设计。
 
-当前已发布主线 `1143b621f7deaa55c47ef50a68a494491e97df35` 已包含 R1 结果 `64aad717` 及其退出 / 清理，也包含 A1 实现 `b6c0279f`、结果退出 `847aa2e7` 和临时验证清理 `e38ca0de`。正式索引随后错误激活旧 I1 v0.1 并保留阶段 15；执行任务已确认冻结旧 v0.1、index 空且没有 I1 代码 WIP。本 v0.2 必须先替换正式索引登记，才能重新判断执行状态。
+当前正式基线 `cc5b6069d16e3d72db7bfdaec9210d5f46bbebb0` 已包含 R1 结果 `64aad717` 及其退出 / 清理，也包含 A1 实现 `b6c0279f`、结果退出 `847aa2e7` 和临时验证清理 `e38ca0de`。该基线已把 I1 v0.2 降为 `待激活` 并登记具名退回 `DRIFT-I1-MSVC-IMPLEMENTATION-UNIT`。执行侧已在十路径内保留未提交 WIP；计划支撑不得修改、暂存、清理或接管这些代码现场。原冻结的同 named module 非分区 `.ixx` implementation unit 在 MSVC 14.51 / v145 下即使获得正确 `/reference`，仍因 `.ixx` 被加入 `/interface` 而报 C4844 / C2871；该物理合同已经失效，不能继续施工。
+
+计划支撑随后用独立、已清理的最小探针验证普通 `.cpp` implementation unit：主接口 `main.ixx` 提供 `probe.main`，`impl.cpp` 以 `module probe.main;` 定义精确 friend 并访问私有成员，消费者完成链接；Debug / Release fresh Rebuild 和两配置程序运行均退出 0。两配置 `impl.cpp.module.json` 均只有 `requires: probe.main`、没有 `provides`，最终 `impl.cpp` 编译命令均含 `/TP` 与正确 `/reference "probe.main=...main.ixx.ifc"`、不含 `/interface`。工程没有设置 `CompileAsCppModule`、`AdditionalModuleDependencies` 或手填 `/interface`。据此本次只把 I1 实现单元的物理合同改为普通 `.cpp`，不改变任何业务语义。
 
 本设计包同步修订了授权范围中的目标业务图，以现行 8120 顺序替换旧六步初始化。该修订与本计划一并验证、提交并发布后才闭合设计证据漂移；`BIZ-L2-001-01` 未获授权，仍保留总目标到装配边的具名映射缺口，不能宣称全链目标图已经闭合。
 
@@ -44,6 +46,7 @@
 7. 从正式最新 HEAD 记录目标 blob、工程计数、index 和 dirty 所有权；
 8. 本设计包内授权目标图的现行初始化顺序修订已经正式发布，同时保留 `BIZ-L2-001-01` 未授权映射缺口；
 9. 不要求 I2 已实现；旧 I2 v0.1 不得直接施工，必须等待 I1 提供者真实发布后重基线并发布替代计划，形成 `R1 -> A1 -> I1 提供者 -> I2 重基线与替代计划发布 -> 连续启动接线` 的单向施工 DAG。
+10. 重新读取本次修订发布后的计划 / 详细设计 blob，确认第 2 白名单路径是普通 `.cpp`，工程扫描结果对该文件只有 `requires 海中鱼巣.装配.普通应用` 且没有 `provides`，最终该文件编译命令含 `/TP` 与正确模块 `/reference`、不含 `/interface`；任一项不符都再次具名退回，不得恢复 `.ixx`、改分区或手填模块依赖。
 
 任一 ABI、字段、生命周期、请求代次来源、调用顺序或对象性质不匹配时，具名退回计划支撑；执行者不得加别名、兼容层、第二服务、复制 DTO 或临场改语义。
 
@@ -52,7 +55,7 @@
 只允许修改或新增十条路径：
 
 1. `海中鱼巣/业务/系统世界树根初始化.数据.h`
-2. `海中鱼巣/业务/初始化.系统世界树根.ixx`
+2. `海中鱼巣/业务/初始化.系统世界树根.cpp`
 3. `海中鱼巣/装配.普通应用.ixx`
 4. `海中鱼巣.vcxproj`
 5. `海中鱼巣.vcxproj.filters`
@@ -76,7 +79,7 @@
     const 系统世界树根初始化请求& 请求) noexcept;
 ```
 
-普通应用的全局模块片段只包含标准库头；完成 R1 / A1 import 后，在 module purview 以 `export { #include "业务/系统世界树根初始化.数据.h" }` 的等价多行形态附着并导出 DTO，再导出 I1 根函数声明并精确 friend。DTO 头不得自行包含标准库或 R1 数据头。新 `.ixx` 是 `海中鱼巣.装配.普通应用` 的 module implementation unit，定义同一函数；不建立或 import 独立 I1 模块。A1 成员之后追加 I1 发布锁、待收敛完整根请求和值式根读回；新增按值 const getter。不得改成 public setter、暴露锁 / optional 引用或另建第二状态对象。I1 通过最终 A1 getter 取得同一 R1，不使用普通应用直接 getter 绕过聚合。
+普通应用的全局模块片段只包含标准库头；完成 R1 / A1 import 后，在 module purview 以 `export { #include "业务/系统世界树根初始化.数据.h" }` 的等价多行形态附着并导出 DTO，再导出 I1 根函数声明并精确 friend。DTO 头不得自行包含标准库或 R1 数据头。新 `.cpp` 是普通 `ClCompile` 项，其中以 `module 海中鱼巣.装配.普通应用;` 形成同 named module 的非接口 implementation unit并定义同一函数；不建立或 import 独立 I1 模块。工程只启用 `ScanSourceForModuleDependencies=true`，由 MSBuild 根据扫描结果自动附加主接口 IFC 引用；不得设置 `CompileAsCppModule`、手填 `AdditionalModuleDependencies`、手填 `/interface`，不得改成 implementation partition，也不得让主接口反向 import。A1 成员之后追加 I1 发布锁、待收敛完整根请求和值式根读回；新增按值 const getter。不得改成 public setter、暴露锁 / optional 引用或另建第二状态对象。I1 通过最终 A1 getter 取得同一 R1，不使用普通应用直接 getter 绕过聚合。
 
 ### 5.2 首次、收敛和重复
 
@@ -97,7 +100,7 @@
 
 ### 5.4 工程与记录
 
-根工程 / filters 各登记一个新 `.ixx` 和一个新 `.h`。临时专项不进入生产工程或 solution，并输出到隔离临时目录。永久记录必须写实际命令、结果、提交边界和 `NOT_RUN`。
+根工程 / filters 各登记一个新普通 `.cpp` 和一个新 `.h`；相对激活基线，生产 `.ixx` 数量不增加，普通 `.cpp` 增加一项，头文件增加一项。`.cpp` 项只冻结 `ScanSourceForModuleDependencies=true`，不得带接口编译或手填模块依赖属性。临时专项不进入生产工程或 solution，并输出到隔离临时目录。永久记录必须写实际命令、扫描 JSON、目标 `.cpp` 的最终编译命令、结果、提交边界和 `NOT_RUN`。
 
 ## 6. 验证矩阵与成功条件
 
@@ -114,7 +117,7 @@
 9. 普通应用直接场景 getter、A1 getter 和 I1 实际对象同址，A1 零写；
 10. 扫描确认本叶没有修改启动或程序失败阶段；两种普通模式的阶段 14、成功调用 I2 与阶段 16—18 均为后继 `NOT_RUN`；
 11. 第二服务、L1 / raw、SQL、缓存、扫描和旧入口零命中；
-12. 工程唯一登记、严格 UTF-8 / XML 和 staged 白名单。
+12. 工程唯一登记、严格 UTF-8 / XML 和 staged 白名单；两配置扫描 JSON 对目标 `.cpp` 只有 `requires 海中鱼巣.装配.普通应用` 且没有 `provides`，最终编译命令含 `/TP` 和正确 `/reference`、不含 `/interface`。
 
 至少执行：
 
@@ -132,7 +135,7 @@ powershell -ExecutionPolicy Bypass -File .\验证工具\运行系统世界树根
 ## 7. 实施、发布与清理顺序
 
 1. 从激活 HEAD 完成 S0，机械绑定最终 R1 / A1 ABI；
-2. 新建 DTO 头和 I1 模块；
+2. 新建 DTO 头和 I1 普通 `.cpp` implementation unit；
 3. 扩展普通应用上下文过程槽和值式 getter；
 4. 登记工程 / filters；
 5. 新建临时专项并完成矩阵；

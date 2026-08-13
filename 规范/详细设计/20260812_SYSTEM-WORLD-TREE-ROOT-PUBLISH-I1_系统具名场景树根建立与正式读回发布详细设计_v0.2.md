@@ -39,7 +39,11 @@ BIZ-L0-001 运行海中鱼巣
 - `规范/详细设计/20260812_L2-WORLD-TREE-ROOT-REGISTRY-R1_世界树根标记与具名树归属详细设计_v0.1.md` 的 v0.2 修订正文；
 - A1 现行计划所冻结的零写透明六服务聚合合同。
 
-当前已发布主线 `1143b621f7deaa55c47ef50a68a494491e97df35` 已包含 R1 结果 `64aad7172e85836d523d302a05b89c04b08837d3` 及其退出 / 清理，也包含 A1 实现 `b6c0279f`、结果退出 `847aa2e7` 和临时验证清理 `e38ca0de`：R1 三项公开能力与 A1 聚合已经成为可绑定的正式 ABI。提交 `1143b621` 随后把旧 I1 v0.1 激活为 `可执行`，但该旧计划仍恢复阶段 15，与现行 8120 v0.6 及本 v0.2 provider-only 设计冲突；因此旧激活项不得施工，本 v0.2 在替换索引登记前仍保持待激活。其它工作区的未提交源码、验证资产、构建输出和消息均不能补足 I1。
+当前正式基线 `cc5b6069d16e3d72db7bfdaec9210d5f46bbebb0` 已包含 R1 结果 `64aad7172e85836d523d302a05b89c04b08837d3` 及其退出 / 清理，也包含 A1 实现 `b6c0279f`、结果退出 `847aa2e7` 和临时验证清理 `e38ca0de`：R1 三项公开能力与 A1 聚合已经成为可绑定的正式 ABI。该基线已把 I1 v0.2 降为 `待激活` 并登记具名退回 `DRIFT-I1-MSVC-IMPLEMENTATION-UNIT`。执行侧十路径内未提交 WIP 原地保留，计划支撑只修订本设计包，不接管代码现场。
+
+原设计冻结的同 named module 非分区 `.ixx` implementation unit 在 MSVC 14.51.36231 / v145 下即使扫描生成正确主接口 `/reference`，仍因 `.ixx` 的接口编译形态出现 C4844，随后在模块 purview 出现 C2871 级联错误；`CompileAsCpp`、`CompileAsCppModule`、扫描依赖和手填附加依赖均不能使该物理形态成立，implementation partition 探针也因 C7621 失败。因此 `.ixx` 和分区都不再是 I1 合法物理合同。
+
+计划支撑用独立且已清理的最小工程验证普通 `.cpp` implementation unit：`main.ixx` 提供 `probe.main`，`impl.cpp` 以 `module probe.main;` 定义精确 friend 函数并访问类私有成员，`entry.cpp` 消费公开接口。项目只启用 `ScanSourceForModuleDependencies=true`，未设置 `CompileAsCppModule`、`AdditionalModuleDependencies` 或手填 `/interface`；Debug / Release fresh Rebuild、链接与程序运行均退出 0。两配置 `impl.cpp.module.json` 都只有 `requires: probe.main`、无 `provides`，最终 `impl.cpp` 命令都有 `/TP` 与正确 `/reference "probe.main=...main.ixx.ifc"`、没有 `/interface`。该探针只裁决物理编译合同，未进入仓库正式代码，完成取证后已删除。
 
 本设计包已在同一切片内同步修订授权范围中的目标业务图，把旧六步初始化替换为现行 8120 的 `I1 -> I2 -> 真实自我 -> 概念维度根` 前置顺序。该修订只有与本设计一并验证、提交并发布后才闭合设计证据漂移；未获授权的 `BIZ-L2-001-01` 仍是总目标到装配边的映射缺口，不得据此宣称全链目标图已经闭合。
 
@@ -51,14 +55,16 @@ BIZ-L0-001 运行海中鱼巣
 
 ```text
 海中鱼巣/业务/系统世界树根初始化.数据.h
-海中鱼巣/业务/初始化.系统世界树根.ixx
+海中鱼巣/业务/初始化.系统世界树根.cpp
 ```
 
-新 `.ixx` 固定为 `海中鱼巣.装配.普通应用` 的 module implementation unit，不建立第二个模块身份：
+新 `.cpp` 固定为普通 `ClCompile` 项，并以 `海中鱼巣.装配.普通应用` 的同 named module implementation unit 形态编译，不建立第二个模块身份：
 
 ```cpp
 module 海中鱼巣.装配.普通应用;
 ```
+
+根工程与 filters 登记该普通 `.cpp`；工程只对它启用 `ScanSourceForModuleDependencies=true`，让 MSBuild 从扫描 JSON 自动得到对主接口 IFC 的引用。扫描合同必须是 `requires 海中鱼巣.装配.普通应用`、`provides` 空或不存在；最终 `.cpp` 编译命令必须含 `/TP` 与正确 `/reference`、不得含 `/interface`。不得设置 `CompileAsCppModule`、手填 `AdditionalModuleDependencies`、手填 `/interface`，不得改成 implementation partition，也不得让主接口反向 import。相对激活基线，生产 `.ixx` 数量不增加，普通 `.cpp` 增加一项，头文件增加一项。
 
 依赖方向只能是：
 
@@ -174,7 +180,7 @@ export {
 }
 ```
 
-I1 数据头只定义 DTO，不自行包含标准库或 R1 数据头，也不声明根函数；包含方必须先提供标准库与已 import 的 R1 类型。普通应用主接口随后在 `普通应用上下文` 定义之前前置声明该类并导出根函数声明；新 `.ixx` 是同一模块的 implementation unit，直接定义该已导出函数。不得建立独立 I1 模块或 import 普通应用模块，因此不存在全局模块 / named module 实体混用、跨模块 friend 或模块环。
+I1 数据头只定义 DTO，不自行包含标准库或 R1 数据头，也不声明根函数；包含方必须先提供标准库与已 import 的 R1 类型。普通应用主接口随后在 `普通应用上下文` 定义之前前置声明该类并导出根函数声明；新普通 `.cpp` 以 `module 海中鱼巣.装配.普通应用;` 进入同 named module，直接定义该已导出函数并取得精确 friend 权限。不得建立独立 I1 模块、import 普通应用模块或使用分区，因此不存在主接口反向依赖、跨模块 friend 或模块环。
 
 A1 成员之后追加：
 
@@ -237,6 +243,7 @@ I1 提供者的激活只依赖 R1、A1、最终 ABI、所有权与验证资源�
 6. 8120 v0.6、4230 v0.7 和 7130 v0.7 仍为现行规范；
 7. 目标文件、代码段、Git index、发布租约和构建 / 验证资源没有所有权冲突；
 8. 不要求 I2 已实现；I2 必须继续等待本叶真实结果，不得反向成为 I1 激活条件。
+9. 重新读取本次修订发布后的详细设计 / 计划 blob；第 2 白名单路径必须为普通 `.cpp`。两配置扫描 JSON 和最终编译命令必须逐项满足第 3 节合同；任一项不符都再次具名退回，不得恢复 `.ixx`、改用分区、独立模块或手填模块依赖。
 
 任一不匹配都保持 `待激活` 并退回计划支撑；未提交 WIP、计划文本、构建产物或消息不能解除门禁。
 
@@ -255,7 +262,7 @@ I1 提供者的激活只依赖 R1、A1、最终 ABI、所有权与验证资源�
 9. 值式隔离、异常前旧值守恒、并发同请求和异请求冲突；
 10. 扫描确认本叶不修改启动与程序失败阶段；正式启动、阶段 14、I1 成功调用 I2 和阶段 16—18 均记为后继 `NOT_RUN`；
 11. 第二服务、L1 / raw、扫描、SQL、缓存和旧入口零命中；
-12. Debug / Release 根工程与生产外专项、strict、UTF-8 / XML 和范围门禁。
+12. Debug / Release 根工程与生产外专项、strict、UTF-8 / XML 和范围门禁；两配置扫描 JSON 对目标 `.cpp` 只有 named module `requires` 且无 `provides`，其最终编译命令含 `/TP` 和正确 `/reference`、不含 `/interface`。
 
 真实分配失败、正式启动接线、阶段 14—18、恢复、跨进程、长时生产、I2、真实自我、概念维度根和独立集成验收未运行时必须记为 `NOT_RUN`。
 
@@ -269,5 +276,6 @@ I1 完成最多证明提供者可通过 A1 同实例 R1，以固定运行期选�
 
 | 日期 | 版本 | 修订内容 |
 | --- | --- | --- |
+| 2026-08-13 | v0.2 | 按具名退回 `DRIFT-I1-MSVC-IMPLEMENTATION-UNIT` 原位修订物理编译合同：以已通过 Debug / Release 重建、链接、运行和精确 friend 私有访问的最小探针为依据，把同 named module 非分区实现单元从 `.ixx` 改为普通 `.cpp`；冻结自动扫描、`requires` / `provides`、最终 `/TP` / `/reference` / 无 `/interface` 门禁，并明确禁止分区、独立模块和手填模块依赖。provider-only、阶段 15 永久退出、十路径上限和全部业务语义不变。 |
 | 2026-08-13 | v0.2 | 按 4230 v0.7、7130 v0.7、8120 v0.6 和 R1 v0.2 重基线；阶段 15 保持退出；收窄为 I1 提供者叶，I1 真实发布后须先重基线并发布 I2 替代计划，再由后继统一接入正式启动，形成 `R1 -> A1 -> I1 提供者 -> I2 重基线与替代计划发布 -> 连续启动接线` 单向施工 DAG；R1 已绑定正式 ABI，A1 精确 ABI 延后到真实结果机械复核，并增加总目标纵向追溯与目标图同步修订门禁。 |
 | 2026-08-12 | v0.1 | 初次冻结系统具名根建立、正式读回和上下文值式发布。 |
