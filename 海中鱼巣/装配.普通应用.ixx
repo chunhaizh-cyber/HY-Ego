@@ -12,6 +12,7 @@ import 海中鱼巣.领域.服务.L2状态结构;
 import 海中鱼巣.领域.服务.L2动态结构;
 import 海中鱼巣.领域.服务.L2因果结构;
 import 海中鱼巣.领域.服务.L2场景结构;
+import 海中鱼巣.领域.服务.L2结构聚合;
 
 export namespace 海中鱼巣 {
 
@@ -69,6 +70,9 @@ public:
     L2场景结构服务& 取得L2场景结构服务() noexcept { return *场景服务_; }
     const L2场景结构服务& 取得L2场景结构服务() const noexcept { return *场景服务_; }
 
+    L2结构聚合服务& 取得L2结构聚合服务() noexcept { return *聚合服务_; }
+    const L2结构聚合服务& 取得L2结构聚合服务() const noexcept { return *聚合服务_; }
+
 private:
     普通应用上下文(L1事实基座运行包&& 运行包,
         std::unique_ptr<L2存在结构服务>&& 存在服务,
@@ -76,11 +80,12 @@ private:
         std::unique_ptr<L2状态结构服务>&& 状态服务,
         std::unique_ptr<L2动态结构服务>&& 动态服务,
         std::unique_ptr<L2因果结构服务>&& 因果服务,
-        std::unique_ptr<L2场景结构服务>&& 场景服务) noexcept
+        std::unique_ptr<L2场景结构服务>&& 场景服务,
+        std::unique_ptr<L2结构聚合服务>&& 聚合服务) noexcept
         : 运行包_(std::move(运行包)), 存在服务_(std::move(存在服务)),
           特征服务_(std::move(特征服务)), 状态服务_(std::move(状态服务)),
           动态服务_(std::move(动态服务)), 因果服务_(std::move(因果服务)),
-          场景服务_(std::move(场景服务)) {}
+          场景服务_(std::move(场景服务)), 聚合服务_(std::move(聚合服务)) {}
 
     friend struct 普通应用装配结果;
     friend 普通应用装配结果 构造普通应用上下文(const 普通应用配置& 配置);
@@ -91,6 +96,7 @@ private:
     std::unique_ptr<L2动态结构服务> 动态服务_;
     std::unique_ptr<L2因果结构服务> 因果服务_;
     std::unique_ptr<L2场景结构服务> 场景服务_;
+    std::unique_ptr<L2结构聚合服务> 聚合服务_;
 };
 
 enum class 普通应用装配状态 : std::uint8_t {
@@ -116,7 +122,8 @@ enum class 普通应用装配状态 : std::uint8_t {
     因果服务构造失败 = 19,
     场景所有者范围建立失败 = 20,
     场景所有者交付形成失败 = 21,
-    场景服务构造失败 = 22
+    场景服务构造失败 = 22,
+    L2结构聚合服务构造失败 = 23
 };
 
 struct 普通应用装配结果 {
@@ -259,11 +266,19 @@ struct 普通应用装配结果 {
         } catch (...) {
             return {普通应用装配状态::场景服务构造失败, nullptr};
         }
+        std::unique_ptr<L2结构聚合服务> 聚合服务;
+        try {
+            聚合服务 = std::make_unique<L2结构聚合服务>(
+                *场景服务, *存在服务, *特征服务,
+                *状态服务, *动态服务, *因果服务);
+        } catch (...) {
+            return {普通应用装配状态::L2结构聚合服务构造失败, nullptr};
+        }
         return {普通应用装配状态::已装配,
             std::unique_ptr<普通应用上下文>(new 普通应用上下文(
                 std::move(运行包), std::move(存在服务),
                 std::move(特征服务), std::move(状态服务), std::move(动态服务),
-                std::move(因果服务), std::move(场景服务)))};
+                std::move(因果服务), std::move(场景服务), std::move(聚合服务)))};
     } catch (...) {
         return {普通应用装配状态::构造失败, nullptr};
     }
