@@ -203,6 +203,7 @@
     <ClInclude Include="海中鱼巣\领域\L2状态结构.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2动态结构.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2因果结构.数据.h" />
+    <ClInclude Include="海中鱼巣\业务\系统世界树根初始化.数据.h" />
   </ItemGroup>
   <Target Name="验证D455RealSense构建输入" BeforeTargets="PrepareForBuild"
           Condition="'$(EnableD455RealSense)'=='true' and '$(Platform)'=='x64'">
