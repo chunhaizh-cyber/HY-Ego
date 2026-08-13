@@ -39,11 +39,11 @@ BIZ-L0-001 运行海中鱼巣
 - `规范/详细设计/20260812_L2-WORLD-TREE-ROOT-REGISTRY-R1_世界树根标记与具名树归属详细设计_v0.1.md` 的 v0.2 修订正文；
 - A1 现行计划所冻结的零写透明六服务聚合合同。
 
-当前正式基线 `cc5b6069d16e3d72db7bfdaec9210d5f46bbebb0` 已包含 R1 结果 `64aad7172e85836d523d302a05b89c04b08837d3` 及其退出 / 清理，也包含 A1 实现 `b6c0279f`、结果退出 `847aa2e7` 和临时验证清理 `e38ca0de`：R1 三项公开能力与 A1 聚合已经成为可绑定的正式 ABI。该基线已把 I1 v0.2 降为 `待激活` 并登记具名退回 `DRIFT-I1-MSVC-IMPLEMENTATION-UNIT`。执行侧十路径内未提交 WIP 原地保留，计划支撑只修订本设计包，不接管代码现场。
+当前正式基线 `061f835bda11326846c28e0979994a6b0d598b13` 已包含 R1 结果 `64aad7172e85836d523d302a05b89c04b08837d3` 及其退出 / 清理，也包含 A1 实现 `b6c0279f`、结果退出 `847aa2e7` 和临时验证清理 `e38ca0de`：R1 三项公开能力与 A1 聚合已经成为可绑定的正式 ABI。该基线已把 I1 v0.2 再次降为 `待激活` 并登记具名退回 `DRIFT-I1-MSVC-CPP-ATTACHED-REAL-GRAPH`。执行侧未提交 WIP 原地保留，计划支撑只修订本设计包，不接管代码现场。
 
-原设计冻结的同 named module 非分区 `.ixx` implementation unit 在 MSVC 14.51.36231 / v145 下即使扫描生成正确主接口 `/reference`，仍因 `.ixx` 的接口编译形态出现 C4844，随后在模块 purview 出现 C2871 级联错误；`CompileAsCpp`、`CompileAsCppModule`、扫描依赖和手填附加依赖均不能使该物理形态成立，implementation partition 探针也因 C7621 失败。因此 `.ixx` 和分区都不再是 I1 合法物理合同。
+两种独立实现单元已经依次被真实工具链否决。非分区 `.ixx` implementation unit 即使获得正确 `/reference`，仍因接口编译形态报 C4844 / C2871；implementation partition 探针报 C7621。普通 `.cpp` implementation unit 的独立最小探针虽通过 Debug / Release 重建、链接、运行和精确 friend 私有访问，却没有覆盖普通应用主接口真实 IFC 依赖图。执行侧从正式 `a528214d` 重新 S0 后已机械满足 `.cpp` 的 `requires` 主模块且无 `provides`、`/TP`、正确 `/reference` 和无 `/interface`，真实 fresh Debug 三次仍在重新加载主接口完整依赖图时于 `stop_token(248,6)` 报 C1116，冲突实例来自导入 `海中鱼巣.核心.服务.L1事实基座` 后的 `std::_Stop_callback_base::_Do_attach<false>` 专用化。因此最小 `.cpp` 探针不能升级为生产可编译证明。
 
-计划支撑用独立且已清理的最小工程验证普通 `.cpp` implementation unit：`main.ixx` 提供 `probe.main`，`impl.cpp` 以 `module probe.main;` 定义精确 friend 函数并访问类私有成员，`entry.cpp` 消费公开接口。项目只启用 `ScanSourceForModuleDependencies=true`，未设置 `CompileAsCppModule`、`AdditionalModuleDependencies` 或手填 `/interface`；Debug / Release fresh Rebuild、链接与程序运行均退出 0。两配置 `impl.cpp.module.json` 都只有 `requires: probe.main`、无 `provides`，最终 `impl.cpp` 命令都有 `/TP` 与正确 `/reference "probe.main=...main.ixx.ifc"`、没有 `/interface`。该探针只裁决物理编译合同，未进入仓库正式代码，完成取证后已删除。
+最终剩余物理方案不再建立第二翻译单元：I1 导出声明、普通应用上下文、精确 friend 和完整函数定义全部同置于现有 `海中鱼巣/装配.普通应用.ixx` 的同一次模块接口编译中。隔离探针已验证同一接口单元内精确 friend 私有访问成立；该证据只裁决物理可表达性，真实完整依赖图仍须由执行侧 Debug / Release 根工程证明。公开 ABI、状态机、provider-only 和阶段边界均不变。
 
 本设计包已在同一切片内同步修订授权范围中的目标业务图，把旧六步初始化替换为现行 8120 的 `I1 -> I2 -> 真实自我 -> 概念维度根` 前置顺序。该修订只有与本设计一并验证、提交并发布后才闭合设计证据漂移；未获授权的 `BIZ-L2-001-01` 仍是总目标到装配边的映射缺口，不得据此宣称全链目标图已经闭合。
 
@@ -55,16 +55,16 @@ BIZ-L0-001 运行海中鱼巣
 
 ```text
 海中鱼巣/业务/系统世界树根初始化.数据.h
-海中鱼巣/业务/初始化.系统世界树根.cpp
+海中鱼巣/装配.普通应用.ixx
 ```
 
-新 `.cpp` 固定为普通 `ClCompile` 项，并以 `海中鱼巣.装配.普通应用` 的同 named module implementation unit 形态编译，不建立第二个模块身份：
+I1 完整定义固定同置于现有模块接口：
 
 ```cpp
-module 海中鱼巣.装配.普通应用;
+export module 海中鱼巣.装配.普通应用;
 ```
 
-根工程与 filters 登记该普通 `.cpp`；工程只对它启用 `ScanSourceForModuleDependencies=true`，让 MSBuild 从扫描 JSON 自动得到对主接口 IFC 的引用。扫描合同必须是 `requires 海中鱼巣.装配.普通应用`、`provides` 空或不存在；最终 `.cpp` 编译命令必须含 `/TP` 与正确 `/reference`、不得含 `/interface`。不得设置 `CompileAsCppModule`、手填 `AdditionalModuleDependencies`、手填 `/interface`，不得改成 implementation partition，也不得让主接口反向 import。相对激活基线，生产 `.ixx` 数量不增加，普通 `.cpp` 增加一项，头文件增加一项。
+导出声明继续位于 `普通应用上下文` 完整定义之前，精确 friend 继续位于该类私有区；完整函数定义固定放在该类完整定义之后的同一 module purview。不得建立独立 `.ixx` / `.cpp` implementation unit、implementation partition、独立 I1 模块或主接口反向 import，也不得设置 `CompileAsCppModule`、手填 `AdditionalModuleDependencies` 或 `/interface` 来恢复第二实现单元。根工程与 filters 只新增 DTO 头登记；执行 WIP 中尚未发布的独立 `.cpp` 登记必须删除。相对 A1 已发布基线，生产 `.ixx` 和普通 `.cpp` 数量均不增加，头文件增加一项。
 
 依赖方向只能是：
 
@@ -180,7 +180,7 @@ export {
 }
 ```
 
-I1 数据头只定义 DTO，不自行包含标准库或 R1 数据头，也不声明根函数；包含方必须先提供标准库与已 import 的 R1 类型。普通应用主接口随后在 `普通应用上下文` 定义之前前置声明该类并导出根函数声明；新普通 `.cpp` 以 `module 海中鱼巣.装配.普通应用;` 进入同 named module，直接定义该已导出函数并取得精确 friend 权限。不得建立独立 I1 模块、import 普通应用模块或使用分区，因此不存在主接口反向依赖、跨模块 friend 或模块环。
+I1 数据头只定义 DTO，不自行包含标准库或 R1 数据头，也不声明根函数；包含方必须先提供标准库与已 import 的 R1 类型。普通应用主接口随后在 `普通应用上下文` 定义之前前置声明该类并导出根函数声明，在该类完整定义之后直接给出完整函数定义。声明、上下文、精确 friend 和定义都属于同一个模块接口翻译单元；不得建立独立 I1 模块、第二实现单元、分区或主接口反向 import，因此不触发第二翻译单元对真实 IFC 图的重新加载。
 
 A1 成员之后追加：
 
@@ -243,13 +243,13 @@ I1 提供者的激活只依赖 R1、A1、最终 ABI、所有权与验证资源�
 6. 8120 v0.6、4230 v0.7 和 7130 v0.7 仍为现行规范；
 7. 目标文件、代码段、Git index、发布租约和构建 / 验证资源没有所有权冲突；
 8. 不要求 I2 已实现；I2 必须继续等待本叶真实结果，不得反向成为 I1 激活条件。
-9. 重新读取本次修订发布后的详细设计 / 计划 blob；第 2 白名单路径必须为普通 `.cpp`。两配置扫描 JSON 和最终编译命令必须逐项满足第 3 节合同；任一项不符都再次具名退回，不得恢复 `.ixx`、改用分区、独立模块或手填模块依赖。
+9. 重新读取本次修订发布后的详细设计 / 计划 blob；生产白名单中不得存在独立 I1 实现文件，根工程 / filters 不得登记该文件，完整定义必须唯一同置于现有普通应用模块接口。任一项不符都再次具名退回，不得恢复第二 `.ixx` / `.cpp` 实现单元、分区、独立模块或手填模块依赖。
 
 任一不匹配都保持 `待激活` 并退回计划支撑；未提交 WIP、计划文本、构建产物或消息不能解除门禁。
 
 ## 9. 实施文件与验证矩阵
 
-代码实施只允许 I1 计划列出的十条路径。专项至少覆盖：
+代码实施只允许 I1 计划列出的九条路径。专项至少覆盖：
 
 1. 非 I1 唯一固定身份、异选择写前拒绝，并证明固定身份与 R1 当前四个保留值不同；
 2. 首次登记读、根建立、登记再读、整树读取和发布顺序；
@@ -262,7 +262,7 @@ I1 提供者的激活只依赖 R1、A1、最终 ABI、所有权与验证资源�
 9. 值式隔离、异常前旧值守恒、并发同请求和异请求冲突；
 10. 扫描确认本叶不修改启动与程序失败阶段；正式启动、阶段 14、I1 成功调用 I2 和阶段 16—18 均记为后继 `NOT_RUN`；
 11. 第二服务、L1 / raw、扫描、SQL、缓存和旧入口零命中；
-12. Debug / Release 根工程与生产外专项、strict、UTF-8 / XML 和范围门禁；两配置扫描 JSON 对目标 `.cpp` 只有 named module `requires` 且无 `provides`，其最终编译命令含 `/TP` 和正确 `/reference`、不含 `/interface`。
+12. Debug / Release 根工程与生产外专项、strict、UTF-8 / XML 和范围门禁；DTO 头唯一登记，独立 I1 实现文件及其工程 / filters 登记零命中，现有普通应用主接口在完整真实依赖图下一次编译通过。
 
 真实分配失败、正式启动接线、阶段 14—18、恢复、跨进程、长时生产、I2、真实自我、概念维度根和独立集成验收未运行时必须记为 `NOT_RUN`。
 
@@ -276,6 +276,7 @@ I1 完成最多证明提供者可通过 A1 同实例 R1，以固定运行期选�
 
 | 日期 | 版本 | 修订内容 |
 | --- | --- | --- |
-| 2026-08-13 | v0.2 | 按具名退回 `DRIFT-I1-MSVC-IMPLEMENTATION-UNIT` 原位修订物理编译合同：以已通过 Debug / Release 重建、链接、运行和精确 friend 私有访问的最小探针为依据，把同 named module 非分区实现单元从 `.ixx` 改为普通 `.cpp`；冻结自动扫描、`requires` / `provides`、最终 `/TP` / `/reference` / 无 `/interface` 门禁，并明确禁止分区、独立模块和手填模块依赖。provider-only、阶段 15 永久退出、十路径上限和全部业务语义不变。 |
+| 2026-08-13 | v0.2 | 按第二次具名退回 `DRIFT-I1-MSVC-CPP-ATTACHED-REAL-GRAPH` 原位修订最终物理合同：真实 fresh Debug 三次证明普通 `.cpp` 即使扫描和命令形态正确，重新加载完整主接口 IFC 依赖图仍触发 `stop_token` C1116，故隔离最小探针不能升级为生产证明；删除独立实现文件及工程 / filters 登记合同，把完整定义同置于现有普通应用模块接口，白名单收缩为九条，生产 `.ixx` / `.cpp` 数量均不增加。公开 ABI、精确 friend、状态机、provider-only、阶段 15 永久退出、专项 / 记录和启动 `NOT_RUN` 不变。 |
+| 2026-08-13 | v0.2 | 历史裁决 `DRIFT-I1-MSVC-IMPLEMENTATION-UNIT` 曾把独立实现单元从 `.ixx` 改为普通 `.cpp`；该合同随后已被真实完整依赖图中的 `DRIFT-I1-MSVC-CPP-ATTACHED-REAL-GRAPH` 否决，只保留为漂移证据，不再构成施工路径、成功门禁或可编译证明。 |
 | 2026-08-13 | v0.2 | 按 4230 v0.7、7130 v0.7、8120 v0.6 和 R1 v0.2 重基线；阶段 15 保持退出；收窄为 I1 提供者叶，I1 真实发布后须先重基线并发布 I2 替代计划，再由后继统一接入正式启动，形成 `R1 -> A1 -> I1 提供者 -> I2 重基线与替代计划发布 -> 连续启动接线` 单向施工 DAG；R1 已绑定正式 ABI，A1 精确 ABI 延后到真实结果机械复核，并增加总目标纵向追溯与目标图同步修订门禁。 |
 | 2026-08-12 | v0.1 | 初次冻结系统具名根建立、正式读回和上下文值式发布。 |

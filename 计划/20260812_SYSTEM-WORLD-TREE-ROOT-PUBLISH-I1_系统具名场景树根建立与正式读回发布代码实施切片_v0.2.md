@@ -27,9 +27,9 @@
 - R1 详细设计 v0.2 修订正文；
 - A1 现行零写透明聚合设计。
 
-当前正式基线 `cc5b6069d16e3d72db7bfdaec9210d5f46bbebb0` 已包含 R1 结果 `64aad717` 及其退出 / 清理，也包含 A1 实现 `b6c0279f`、结果退出 `847aa2e7` 和临时验证清理 `e38ca0de`。该基线已把 I1 v0.2 降为 `待激活` 并登记具名退回 `DRIFT-I1-MSVC-IMPLEMENTATION-UNIT`。执行侧已在十路径内保留未提交 WIP；计划支撑不得修改、暂存、清理或接管这些代码现场。原冻结的同 named module 非分区 `.ixx` implementation unit 在 MSVC 14.51 / v145 下即使获得正确 `/reference`，仍因 `.ixx` 被加入 `/interface` 而报 C4844 / C2871；该物理合同已经失效，不能继续施工。
+当前正式基线 `061f835bda11326846c28e0979994a6b0d598b13` 已包含 R1 结果 `64aad717` 及其退出 / 清理，也包含 A1 实现 `b6c0279f`、结果退出 `847aa2e7` 和临时验证清理 `e38ca0de`。该基线已把 I1 v0.2 再次降为 `待激活` 并登记具名退回 `DRIFT-I1-MSVC-CPP-ATTACHED-REAL-GRAPH`。执行侧保留未提交 WIP；计划支撑不得修改、暂存、清理或接管这些代码现场。
 
-计划支撑随后用独立、已清理的最小探针验证普通 `.cpp` implementation unit：主接口 `main.ixx` 提供 `probe.main`，`impl.cpp` 以 `module probe.main;` 定义精确 friend 并访问私有成员，消费者完成链接；Debug / Release fresh Rebuild 和两配置程序运行均退出 0。两配置 `impl.cpp.module.json` 均只有 `requires: probe.main`、没有 `provides`，最终 `impl.cpp` 编译命令均含 `/TP` 与正确 `/reference "probe.main=...main.ixx.ifc"`、不含 `/interface`。工程没有设置 `CompileAsCppModule`、`AdditionalModuleDependencies` 或手填 `/interface`。据此本次只把 I1 实现单元的物理合同改为普通 `.cpp`，不改变任何业务语义。
+第一次退回已证明独立非分区 `.ixx` implementation unit 在 MSVC 14.51 / v145 下报 C4844 / C2871。随后独立最小探针虽证明普通 `.cpp` implementation unit 的扫描、精确 friend、链接和运行成立，但没有覆盖普通应用主接口的真实 IFC 依赖图。执行侧从 `a528214d` 重新 S0 并机械迁移后，普通 `.cpp` 已满足 `requires` 主模块且无 `provides`、`/TP`、正确 `/reference` 和无 `/interface`，真实 fresh Debug 三次仍在重新加载主接口依赖图时于 `stop_token(248,6)` 报 C1116。故独立 `.ixx` 与普通 `.cpp` 两种第二实现单元都已失效，不能继续作为生产物理合同。最终剩余方案是把 I1 完整函数定义与声明、上下文和精确 friend 同置于现有 `海中鱼巣/装配.普通应用.ixx`，不再建立第二实现单元；隔离探针已验证同一接口单元内精确 friend 私有访问成立，真实完整依赖图仍必须由执行侧双配置根工程验证。本次只修订物理位置，不改变任何业务语义。
 
 本设计包同步修订了授权范围中的目标业务图，以现行 8120 顺序替换旧六步初始化。该修订与本计划一并验证、提交并发布后才闭合设计证据漂移；`BIZ-L2-001-01` 未获授权，仍保留总目标到装配边的具名映射缺口，不能宣称全链目标图已经闭合。
 
@@ -46,24 +46,23 @@
 7. 从正式最新 HEAD 记录目标 blob、工程计数、index 和 dirty 所有权；
 8. 本设计包内授权目标图的现行初始化顺序修订已经正式发布，同时保留 `BIZ-L2-001-01` 未授权映射缺口；
 9. 不要求 I2 已实现；旧 I2 v0.1 不得直接施工，必须等待 I1 提供者真实发布后重基线并发布替代计划，形成 `R1 -> A1 -> I1 提供者 -> I2 重基线与替代计划发布 -> 连续启动接线` 的单向施工 DAG。
-10. 重新读取本次修订发布后的计划 / 详细设计 blob，确认第 2 白名单路径是普通 `.cpp`，工程扫描结果对该文件只有 `requires 海中鱼巣.装配.普通应用` 且没有 `provides`，最终该文件编译命令含 `/TP` 与正确模块 `/reference`、不含 `/interface`；任一项不符都再次具名退回，不得恢复 `.ixx`、改分区或手填模块依赖。
+10. 重新读取本次修订发布后的计划 / 详细设计 blob，确认生产白名单中不存在独立 I1 实现文件，根工程 / filters 中不存在其登记，I1 完整定义唯一同置于现有 `海中鱼巣/装配.普通应用.ixx`；任一项不符都再次具名退回，不得恢复第二 `.ixx` / `.cpp` 实现单元、改分区、建独立模块或手填模块依赖。
 
 任一 ABI、字段、生命周期、请求代次来源、调用顺序或对象性质不匹配时，具名退回计划支撑；执行者不得加别名、兼容层、第二服务、复制 DTO 或临场改语义。
 
 ## 4. 实施白名单与禁止项
 
-只允许修改或新增十条路径：
+只允许修改或新增九条路径：
 
 1. `海中鱼巣/业务/系统世界树根初始化.数据.h`
-2. `海中鱼巣/业务/初始化.系统世界树根.cpp`
-3. `海中鱼巣/装配.普通应用.ixx`
-4. `海中鱼巣.vcxproj`
-5. `海中鱼巣.vcxproj.filters`
-6. `验证工具/系统世界树根建立与正式读回发布参数验证.cpp`
-7. `验证工具/系统世界树根建立与正式读回发布参数验证.vcxproj`
-8. `验证工具/运行系统世界树根建立与正式读回发布参数验证.ps1`
-9. `施工记录/20260812_SYSTEM-WORLD-TREE-ROOT-PUBLISH-I1_施工记录.md`
-10. `验证记录/20260812_SYSTEM-WORLD-TREE-ROOT-PUBLISH-I1_验证记录.md`
+2. `海中鱼巣/装配.普通应用.ixx`
+3. `海中鱼巣.vcxproj`
+4. `海中鱼巣.vcxproj.filters`
+5. `验证工具/系统世界树根建立与正式读回发布参数验证.cpp`
+6. `验证工具/系统世界树根建立与正式读回发布参数验证.vcxproj`
+7. `验证工具/运行系统世界树根建立与正式读回发布参数验证.ps1`
+8. `施工记录/20260812_SYSTEM-WORLD-TREE-ROOT-PUBLISH-I1_施工记录.md`
+9. `验证记录/20260812_SYSTEM-WORLD-TREE-ROOT-PUBLISH-I1_验证记录.md`
 
 禁止修改 R1、A1、六服务、L1、7130、8120、I2、`启动.应用程序.ixx`、`程序运行结果.数据.h`、自我、需求、概念、线程、日志、SQL、恢复、solution、流程图、其它设计 / 计划或异主 WIP。禁止恢复阶段 15、旧世界登记、旧自我快照、第二场景服务、第七世界服务、raw 写端口、仓库访问、扫描、名称 / 第一棵 / 无父猜根或跨进程承诺。
 
@@ -79,7 +78,7 @@
     const 系统世界树根初始化请求& 请求) noexcept;
 ```
 
-普通应用的全局模块片段只包含标准库头；完成 R1 / A1 import 后，在 module purview 以 `export { #include "业务/系统世界树根初始化.数据.h" }` 的等价多行形态附着并导出 DTO，再导出 I1 根函数声明并精确 friend。DTO 头不得自行包含标准库或 R1 数据头。新 `.cpp` 是普通 `ClCompile` 项，其中以 `module 海中鱼巣.装配.普通应用;` 形成同 named module 的非接口 implementation unit并定义同一函数；不建立或 import 独立 I1 模块。工程只启用 `ScanSourceForModuleDependencies=true`，由 MSBuild 根据扫描结果自动附加主接口 IFC 引用；不得设置 `CompileAsCppModule`、手填 `AdditionalModuleDependencies`、手填 `/interface`，不得改成 implementation partition，也不得让主接口反向 import。A1 成员之后追加 I1 发布锁、待收敛完整根请求和值式根读回；新增按值 const getter。不得改成 public setter、暴露锁 / optional 引用或另建第二状态对象。I1 通过最终 A1 getter 取得同一 R1，不使用普通应用直接 getter 绕过聚合。
+普通应用的全局模块片段只包含标准库头；完成 R1 / A1 import 后，在 module purview 以 `export { #include "业务/系统世界树根初始化.数据.h" }` 的等价多行形态附着并导出 DTO，再在 `普通应用上下文` 定义前导出 I1 根函数声明并精确 friend。DTO 头不得自行包含标准库或 R1 数据头。I1 完整函数定义固定放在同一个 `海中鱼巣/装配.普通应用.ixx` 的 module purview 内、完整 `普通应用上下文` 定义之后；声明、上下文、精确 friend 和定义必须由同一个模块接口翻译单元一次编译，不建立第二 `.ixx` / `.cpp` implementation unit，不建立分区或独立 I1 模块，也不让主接口反向 import。A1 成员之后追加 I1 发布锁、待收敛完整根请求和值式根读回；新增按值 const getter。不得改成 public setter、暴露锁 / optional 引用或另建第二状态对象。I1 通过最终 A1 getter 取得同一 R1，不使用普通应用直接 getter 绕过聚合。
 
 ### 5.2 首次、收敛和重复
 
@@ -100,7 +99,7 @@
 
 ### 5.4 工程与记录
 
-根工程 / filters 各登记一个新普通 `.cpp` 和一个新 `.h`；相对激活基线，生产 `.ixx` 数量不增加，普通 `.cpp` 增加一项，头文件增加一项。`.cpp` 项只冻结 `ScanSourceForModuleDependencies=true`，不得带接口编译或手填模块依赖属性。临时专项不进入生产工程或 solution，并输出到隔离临时目录。永久记录必须写实际命令、扫描 JSON、目标 `.cpp` 的最终编译命令、结果、提交边界和 `NOT_RUN`。
+根工程 / filters 只新增登记一个 `.h`，不得登记独立 I1 `.ixx` 或 `.cpp`；执行 WIP 中已有的独立 `.cpp` 登记必须由原执行者机械删除。相对 A1 已发布基线，生产 `.ixx` 和普通 `.cpp` 数量均不增加，头文件增加一项。临时专项不进入生产工程或 solution，并输出到隔离临时目录。永久记录必须写实际命令、双配置结果、独立实现文件 / 工程登记零命中、提交边界和 `NOT_RUN`。
 
 ## 6. 验证矩阵与成功条件
 
@@ -117,12 +116,12 @@
 9. 普通应用直接场景 getter、A1 getter 和 I1 实际对象同址，A1 零写；
 10. 扫描确认本叶没有修改启动或程序失败阶段；两种普通模式的阶段 14、成功调用 I2 与阶段 16—18 均为后继 `NOT_RUN`；
 11. 第二服务、L1 / raw、SQL、缓存、扫描和旧入口零命中；
-12. 工程唯一登记、严格 UTF-8 / XML 和 staged 白名单；两配置扫描 JSON 对目标 `.cpp` 只有 `requires 海中鱼巣.装配.普通应用` 且没有 `provides`，最终编译命令含 `/TP` 和正确 `/reference`、不含 `/interface`。
+12. DTO 头工程唯一登记、独立 I1 实现文件及其工程 / filters 登记零命中、严格 UTF-8 / XML 和 staged 白名单；双配置根工程证明现有普通应用主接口在完整真实依赖图下一次编译通过。
 
 至少执行：
 
 ```powershell
-git diff --check -- <十条白名单路径>
+git diff --check -- <九条白名单路径>
 python .\tools\check_specs.py --strict
 msbuild .\海中鱼巣.sln /t:Rebuild /p:Configuration=Debug /p:Platform=x64
 msbuild .\海中鱼巣.sln /t:Rebuild /p:Configuration=Release /p:Platform=x64
@@ -135,13 +134,13 @@ powershell -ExecutionPolicy Bypass -File .\验证工具\运行系统世界树根
 ## 7. 实施、发布与清理顺序
 
 1. 从激活 HEAD 完成 S0，机械绑定最终 R1 / A1 ABI；
-2. 新建 DTO 头和 I1 普通 `.cpp` implementation unit；
+2. 新建 DTO 头，并在现有普通应用主接口中同置 I1 完整定义；
 3. 扩展普通应用上下文过程槽和值式 getter；
-4. 登记工程 / filters；
+4. 工程 / filters 只登记 DTO 头，并清除执行 WIP 中尚未发布的独立实现文件登记；
 5. 新建临时专项并完成矩阵；
 6. 写永久施工 / 验证记录，运行全部门禁；
-7. 只发布十条白名单路径；
-8. 结果接受、索引退出后，以独立提交只删除第 6—8 项临时文件并重验生产工程；
+7. 只发布九条白名单路径；
+8. 结果接受、索引退出后，以独立提交只删除第 5—7 项临时文件并重验生产工程；
 9. I1 结果接受并退出后，计划智能体从包含本叶真实结果的新 HEAD 重基线 I2，发布替代详细设计和计划；该替代计划再进入 S0，统一完成正式启动阶段 14 与 I2 成功边。
 
 ## 8. 完成声明边界
