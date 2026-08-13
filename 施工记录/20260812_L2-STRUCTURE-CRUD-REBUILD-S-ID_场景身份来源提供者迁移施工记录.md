@@ -2,6 +2,8 @@
 
 日期：2026-08-13
 
+追加修复基线：`4f7d0cce3706727f6674c730fc2cd6cafbe4f934`。该提交已在 `main` / `origin/main`，但交互侧独立核验未接受；本记录以下补充描述其后追加修复，不改写既有历史。
+
 ## 1. 实际范围
 
 本次只修改计划允许的三条生产路径，并建立三条生产外专项路径及本记录、配对验证记录。未修改 L1、公共 L2、存在 / 特征 / 状态 / 动态 / 因果生产代码、根工程、filters、规范、详细设计、计划、索引、流程图或路线输入。
@@ -15,6 +17,15 @@
 - 场景退出把节点、族归属、可选父关系、全部子关系 / 成员关系 / 当前属性值纳入一个退出写集；成功后历史读回节点与族归属同代退出，owner、族锚点和归属类型继续当前。
 - 普通应用在存在、特征、状态、动态、因果 provider 之后建立场景 owner 和唯一场景服务，追加状态 20—22，并提供 const / 非 const 同实例 getter。
 
+## 2.1 独立核验退回后的追加修复
+
+- 历史场景来源从单次前置代次检查改为前后代次探测；同时完整核对 owner 读取头、独占范围、锚点 / 归属类型节点编码、owner、普通节点形状、创建代次和覆盖生命周期。
+- 当前场景来源补齐 owner 读取头、独占范围、内部锚点 / 类型 owner、形状、创建代次及生命周期约束。
+- 十个公开写入口在任何登记读取或 L1 提交前统一拒绝来源、关系类型、属性类型三项保留登记幂等身份。
+- 新增场景成功 / 精确重复不再只读回节点；同时正式历史读回同写族归属关系，核对 owner、源 / 目标 / 类型 / 角色和与节点同创建代次。
+- 父子 / 成员关系投影显式接收场景 owner 并核对关系写入 owner；属性投影显式接收场景来源 owner，不再把事实自身 owner 当作期望值形成恒真校验。
+- 临时专项按计划 16 类建立逐类运行、静态和 `NOT_RUN` 分账；运行覆盖四材料新增 / 换代、父子 / 成员完整 CRUD、十入口乘三保留键、wrong-family / 裸节点、当前历史来源、退出、七 owner 装配和两类并发。
+
 ## 3. 固定身份与键域
 
 - 场景 owner 建立身份：`0x4C31'4F57'4E45'5237`。
@@ -27,3 +38,17 @@
 没有恢复旧世界登记、历史状态 / 动态登记或旧世界树门面；没有新增第二场景服务、场景仓、缓存、恢复入口、测试友元、生产日志判断或验证专用分支。专项验证源码只存在于 `验证工具`，未登记根工程。
 
 本记录不声明计划状态、提交、推送、独立集成验收或生产业务闭环；这些事实分别由计划索引、Git 和具名验收记录裁决。
+
+## 5. 实际验证命令与退出码
+
+| 命令 | 退出码 | 结果 |
+| --- | ---: | --- |
+| `MSBuild.exe .\海中鱼巣.vcxproj /m:1 /t:Rebuild /p:Configuration=Debug /p:Platform=x64 /verbosity:minimal` | 0 | 根工程 Debug PASS，生成 `x64/Debug/海中鱼巣.exe`。 |
+| `MSBuild.exe .\海中鱼巣.vcxproj /m:1 /t:Rebuild /p:Configuration=Release /p:Platform=x64 /verbosity:minimal` | 0 | 根工程 Release PASS，生成 `x64/Release/海中鱼巣.exe`。 |
+| `powershell -ExecutionPolicy Bypass -File .\验证工具\运行L2场景身份来源提供者迁移参数验证.ps1 -配置 Debug -起始幂等身份 91001` | 0 | 28 runtime PASS、8 STATIC_PASS、3 NOT_RUN、失败数 0。 |
+| `powershell -ExecutionPolicy Bypass -File .\验证工具\运行L2场景身份来源提供者迁移参数验证.ps1 -配置 Release -起始幂等身份 101001` | 0 | 28 runtime PASS、8 STATIC_PASS、3 NOT_RUN、失败数 0。 |
+| `python .\tools\check_specs.py --strict` | 0 | 113 / 113 正式规范目录项通过。 |
+| 八路径 `git diff --check` | 0 | 无空白错误；只有 Git 换行转换预告。 |
+| 八路径严格 UTF-8 解码及专项 vcxproj XML 解析 | 0 | UTF-8 PASS、XML PASS。 |
+
+专项构建持续使用系统 `%TEMP%` 下 GUID 隔离的 `OutDir` / `IntDir`，每轮 finally 删除本轮目录。MSBuild 输出一条 `MSB8029` 临时目录增量构建警告；实际使用 `Rebuild` 且每轮目录独立，双配置构建和运行均以退出码 0 完成。
