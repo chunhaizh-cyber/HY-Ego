@@ -141,6 +141,9 @@
     <ClCompile Include="海中鱼巣\线程\投影.线程生命周期.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\线程\候选.支持线程.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\线程\有界运行消息队列.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -165,6 +168,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\线程\线程生命周期.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\线程\支持线程候选.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\核心\句柄.h">

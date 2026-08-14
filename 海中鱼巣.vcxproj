@@ -185,6 +185,7 @@
     <ClCompile Include="海中鱼巣\线程\任务结果回执协议.ixx" />
     <ClCompile Include="海中鱼巣\线程\有界自我治理队列.ixx" />
     <ClCompile Include="海中鱼巣\线程\投影.线程生命周期.ixx" />
+    <ClCompile Include="海中鱼巣\线程\候选.支持线程.ixx" />
     <ClCompile Include="海中鱼巣\线程\有界运行消息队列.ixx" />
     <ClCompile Include="海中鱼巣\线程\运行宿主线程.ixx" />
     <ClCompile Include="海中鱼巣\线程\任务管理线程.ixx" />
@@ -211,6 +212,7 @@
     <ClInclude Include="海中鱼巣\领域\L2动态结构.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2因果结构.数据.h" />
     <ClInclude Include="海中鱼巣\线程\线程生命周期.数据.h" />
+    <ClInclude Include="海中鱼巣\线程\支持线程候选.数据.h" />
     <ClInclude Include="海中鱼巣\业务\系统世界树根初始化.数据.h" />
     <ClInclude Include="海中鱼巣\业务\初始化.系统世界树根.inl" />
     <ClInclude Include="海中鱼巣\业务\自我世界树根消费.数据.h" />
