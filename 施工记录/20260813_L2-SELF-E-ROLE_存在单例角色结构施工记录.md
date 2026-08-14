@@ -44,8 +44,8 @@ plan blob：`dbd1c09c2680c36eba8987765d40ea44dab05af9`
 - 根工程 Debug / Release x64 fresh `Rebuild`：均 PASS，分别生成 `x64/Debug/海中鱼巣.exe` 与 `x64/Release/海中鱼巣.exe`。
 - 独立专项 Debug / Release x64 `Rebuild` 并运行：均为 21 / 21 PASS、失败数 0。
 - `python .\tools\check_specs.py --strict`：113 / 113 PASS。
-- 五个当前目标文件严格 UTF-8、无 BOM / `U+FFFD`：5 / 5 PASS；根工程、filters、专项工程 XML：3 / 3 PASS。
-- 五路径 `git diff --check`、生产工程 / filters 零专项登记、两个生产文件验证专用痕迹扫描：PASS。
+- 七个计划白名单文件严格 UTF-8、无 BOM / `U+FFFD`：7 / 7 PASS；根工程、filters、专项工程 XML：3 / 3 PASS。
+- 七路径 `git diff --check`、生产工程 / filters 零专项登记、两个生产文件验证专用痕迹扫描：PASS。
 - 专项的 `MSB8029` 只提示系统临时目录不适于增量构建；每轮使用独立 GUID 目录并执行 `Rebuild`，实际编译、链接和运行退出码均为 0。
 
 ## 5. 完成边界

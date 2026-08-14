@@ -55,9 +55,9 @@ Debug 与 Release 均逐项得到相同结果：
 | 专项 Debug `Rebuild` + 运行 | PASS；21 / 21，失败 0 |
 | 专项 Release `Rebuild` + 运行 | PASS；21 / 21，失败 0 |
 | `python .\tools\check_specs.py --strict` | PASS；113 / 113 |
-| 五路径严格 UTF-8、无 BOM / `U+FFFD` | PASS；5 / 5 |
+| 七路径严格 UTF-8、无 BOM / `U+FFFD` | PASS；7 / 7 |
 | 根工程、filters、专项工程 XML | PASS；3 / 3 |
-| 五路径 `git diff --check` | PASS；只有 LF / CRLF 转换预告 |
+| 七路径 `git diff --check` | PASS；只有 LF / CRLF 转换预告 |
 | 生产工程 / filters 专项登记扫描 | PASS；零命中 |
 | 两个生产文件验证专用痕迹扫描 | PASS；测试角色、测试友元、故障注入、测试分支、计数器和 sleep 零命中 |
 
