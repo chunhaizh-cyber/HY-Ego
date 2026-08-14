@@ -28,6 +28,18 @@ import 海中鱼巣.核心.合同.L1所有者范围CRUD;
 export namespace 海中鱼巣 {
 
 class L1事实基座仓库 final {
+    struct 所有者范围一致投影内部请求 final {
+        std::uint64_t 期望事实代次 = 0;
+        const std::vector<L1结构所有者身份>& 所有者;
+        const std::vector<稳定编码>& 节点;
+        const std::vector<稳定编码>& 关系;
+        const std::vector<稳定编码>& 值;
+        const std::vector<L1所有者范围一致属性值选择项>& 属性值;
+        const std::vector<L1所有者范围一致源关系组选择项>& 源关系组;
+        const std::vector<L1所有者范围一致目标关系组选择项>& 目标关系组;
+        const std::vector<L1所有者范围一致关系类型闭包选择项>*
+            关系类型闭包 = nullptr;
+    };
 public:
     enum class 一致当前事实种类 : std::uint8_t {
         节点 = 1, 关系 = 2, 值 = 3
@@ -714,6 +726,7 @@ public:
                 if (!候选.当前关系.emplace(编码.值, 事实).second
                     || !插入当前源关系索引(候选, 事实)
                     || !插入当前目标关系索引(候选, 事实)
+                    || !插入当前关系类型索引(候选, 事实)
                     || !插入历史源关系候选索引(候选, 事实)
                     || !插入历史目标关系候选索引(候选, 事实)
                     || !插入当前节点引用索引(候选, 事实))
@@ -769,6 +782,7 @@ public:
                     const auto 当前事实 = it->second;
                     if (!删除当前源关系索引(候选, 当前事实)
                         || !删除当前目标关系索引(候选, 当前事实)
+                        || !删除当前关系类型索引(候选, 当前事实)
                         || !删除当前节点引用索引(候选, 当前事实)) return false;
                     auto 事实 = 当前事实; 事实.退出事实代次 = 新代次;
                     候选.历史[编码.值] = {编码, 事实, false};
@@ -1457,20 +1471,102 @@ public:
 
     L1所有者范围一致当前读取结果 尝试读取所有者范围一致当前投影(
         const L1所有者范围一致当前读取请求& 请求) const {
+        if (请求.合同版本 != L1所有者范围一致当前读取合同版本
+            || (请求.所有者.empty() && 请求.节点.empty()
+                && 请求.关系.empty() && 请求.值.empty()
+                && 请求.属性值.empty() && 请求.源关系组.empty()
+                && 请求.目标关系组.empty())) {
+            L1所有者范围一致当前读取结果 结果;
+            结果.期望事实代次 = 请求.期望事实代次;
+            return 结果;
+        }
+        auto 内部 = 尝试读取所有者范围一致投影内部({
+            请求.期望事实代次, 请求.所有者, 请求.节点, 请求.关系,
+            请求.值, 请求.属性值, 请求.源关系组, 请求.目标关系组,
+            nullptr});
+        L1所有者范围一致当前读取结果 结果;
+        结果.状态 = 内部.状态;
+        结果.期望事实代次 = 内部.期望事实代次;
+        结果.读取事实代次 = 内部.读取事实代次;
+        结果.所有者 = std::move(内部.所有者);
+        结果.节点 = std::move(内部.节点);
+        结果.关系 = std::move(内部.关系);
+        结果.值 = std::move(内部.值);
+        结果.属性值 = std::move(内部.属性值);
+        结果.源关系组 = std::move(内部.源关系组);
+        结果.目标关系组 = std::move(内部.目标关系组);
+        return 结果;
+    }
+
+    L1所有者范围一致关系类型闭包读取结果
+    尝试读取所有者范围一致关系类型闭包投影(
+        const L1所有者范围一致关系类型闭包读取请求& 请求) const {
+        const auto 失败 = [&](L1所有者范围一致当前读取状态 状态) {
+            L1所有者范围一致关系类型闭包读取结果 结果;
+            结果.状态 = 状态;
+            结果.期望事实代次 = 请求.期望事实代次;
+            return 结果;
+        };
+        if (请求.合同版本 != L1所有者范围一致关系类型闭包读取合同版本
+            || (请求.所有者.empty() && 请求.节点.empty()
+                && 请求.关系.empty() && 请求.值.empty()
+                && 请求.属性值.empty() && 请求.源关系组.empty()
+                && 请求.目标关系组.empty() && 请求.关系类型闭包.empty()))
+            return 失败(L1所有者范围一致当前读取状态::入口拒绝);
+        try {
+            if (!关系类型闭包选择有效(请求.关系类型闭包))
+                return 失败(L1所有者范围一致当前读取状态::入口拒绝);
+            return 尝试读取所有者范围一致投影内部({
+                请求.期望事实代次, 请求.所有者, 请求.节点, 请求.关系,
+                请求.值, 请求.属性值, 请求.源关系组, 请求.目标关系组,
+                &请求.关系类型闭包});
+        } catch (const std::bad_alloc&) {
+            return 失败(L1所有者范围一致当前读取状态::资源失败);
+        } catch (const std::length_error&) {
+            return 失败(L1所有者范围一致当前读取状态::资源失败);
+        } catch (...) {
+            return 失败(L1所有者范围一致当前读取状态::内部不一致);
+        }
+    }
+private:
+    static bool 稳定编码组严格升序(const std::vector<稳定编码>& 编码组) noexcept {
+        std::uint64_t 前一编码 = 0;
+        for (const auto 编码 : 编码组) {
+            if (!有效(编码) || 编码.值 <= 前一编码) return false;
+            前一编码 = 编码.值;
+        }
+        return true;
+    }
+
+    static bool 关系类型闭包选择有效(
+        const std::vector<L1所有者范围一致关系类型闭包选择项>& 选择组) {
+        std::unordered_set<std::uint64_t> 入口关系类型;
+        入口关系类型.reserve(选择组.size());
+        for (const auto& 选择 : 选择组) {
+            if (!有效(选择.入口关系类型节点)
+                || !入口关系类型.insert(选择.入口关系类型节点.值).second
+                || !稳定编码组严格升序(选择.源节点属性类型)
+                || !稳定编码组严格升序(选择.源节点源关系类型)
+                || !稳定编码组严格升序(选择.源节点目标关系类型)
+                || !稳定编码组严格升序(选择.目标节点属性类型)
+                || !稳定编码组严格升序(选择.目标节点源关系类型)
+                || !稳定编码组严格升序(选择.目标节点目标关系类型))
+                return false;
+        }
+        return true;
+    }
+
+    L1所有者范围一致关系类型闭包读取结果
+    尝试读取所有者范围一致投影内部(
+        const 所有者范围一致投影内部请求& 请求) const {
         const auto 失败 = [&](L1所有者范围一致当前读取状态 状态,
             std::uint64_t 代次 = 0) {
-            L1所有者范围一致当前读取结果 结果;
+            L1所有者范围一致关系类型闭包读取结果 结果;
             结果.状态 = 状态;
             结果.期望事实代次 = 请求.期望事实代次;
             结果.读取事实代次 = 代次;
             return 结果;
         };
-        if (请求.合同版本 != L1所有者范围一致当前读取合同版本
-            || (请求.所有者.empty() && 请求.节点.empty()
-                && 请求.关系.empty() && 请求.值.empty()
-                && 请求.属性值.empty() && 请求.源关系组.empty()
-                && 请求.目标关系组.empty()))
-            return 失败(L1所有者范围一致当前读取状态::入口拒绝);
         try {
             std::shared_lock<std::shared_mutex> 锁(锁_, std::try_to_lock);
             if (!锁.owns_lock())
@@ -1481,7 +1577,8 @@ public:
                 && 状态_.事实代次 != 请求.期望事实代次)
                 return 失败(L1所有者范围一致当前读取状态::事实代次漂移,
                     状态_.事实代次);
-            L1所有者范围一致当前读取结果 结果;
+
+            L1所有者范围一致关系类型闭包读取结果 结果;
             结果.状态 = L1所有者范围一致当前读取状态::成功;
             结果.期望事实代次 = 请求.期望事实代次;
             结果.读取事实代次 = 状态_.事实代次;
@@ -1492,6 +1589,9 @@ public:
             结果.属性值.reserve(请求.属性值.size());
             结果.源关系组.reserve(请求.源关系组.size());
             结果.目标关系组.reserve(请求.目标关系组.size());
+            if (请求.关系类型闭包)
+                结果.关系类型闭包.reserve(请求.关系类型闭包->size());
+
             std::unordered_set<std::uint64_t> 唯一;
             for (const auto 所有者 : 请求.所有者) {
                 if (!有效(所有者) || !唯一.insert(所有者.编码.值).second)
@@ -1506,6 +1606,7 @@ public:
                     项.状态 = L1所有者范围一致当前读取项目状态::已退出;
                 结果.所有者.push_back(std::move(项));
             }
+
             const auto 添加具名 = [&](稳定编码 编码,
                 一致当前事实种类 种类, auto& 输出) -> bool {
                 if (!有效(编码) || !唯一.insert(编码.值).second) return false;
@@ -1545,68 +1646,33 @@ public:
             for (const auto 编码 : 请求.值)
                 if (!添加具名(编码, 一致当前事实种类::值, 结果.值))
                     return 失败(L1所有者范围一致当前读取状态::入口拒绝);
+
             for (const auto& 选择 : 请求.属性值) {
-                L1所有者范围一致属性值读取结果项 项{选择.节点,
-                    选择.属性类型,
-                    L1所有者范围一致当前读取项目状态::未找到,
-                    std::nullopt};
-                const auto 节点项 = 读取一致具名当前事实(状态_, 选择.节点,
-                    一致当前事实种类::节点);
-                if (!节点项)
+                auto 项 = 读取所有者范围一致属性值(
+                    状态_, 选择.节点, 选择.属性类型);
+                if (!项)
                     return 失败(L1所有者范围一致当前读取状态::内部不一致);
-                if (节点项->状态 != L1中性一致当前读取项目状态::成功)
-                    项.状态 = static_cast<L1所有者范围一致当前读取项目状态>(
-                        static_cast<std::uint8_t>(节点项->状态));
-                else {
-                    const auto* 节点 = 节点项->事实
-                        ? std::get_if<节点事实>(&*节点项->事实) : nullptr;
-                    if (!节点)
-                        return 失败(L1所有者范围一致当前读取状态::内部不一致);
-                    const auto 槽 = std::lower_bound(节点->当前属性.begin(),
-                        节点->当前属性.end(), 选择.属性类型,
-                        [](const 属性槽& 左, 稳定编码 右) {
-                            return 左.属性类型节点 < 右;
-                        });
-                    if (槽 == 节点->当前属性.end()
-                        || 槽->属性类型节点 != 选择.属性类型)
-                        项.状态 =
-                            L1所有者范围一致当前读取项目状态::属性未设置;
-                    else {
-                        const auto 当前值 = 状态_.当前值.find(槽->当前值.值);
-                        if (当前值 == 状态_.当前值.end())
-                            return 失败(
-                                L1所有者范围一致当前读取状态::内部不一致);
-                        项.状态 = L1所有者范围一致当前读取项目状态::成功;
-                        项.投影 = L1所有者范围一致属性值投影{
-                            {槽->属性类型节点, 槽->当前值},
-                            转换所有者范围值(当前值->second)};
-                    }
-                }
-                结果.属性值.push_back(std::move(项));
+                结果.属性值.push_back(std::move(*项));
             }
             for (const auto& 选择 : 请求.源关系组) {
-                const auto 内部 = 读取一致源关系组(状态_,
-                    {选择.源节点, 选择.关系类型节点});
-                if (!内部)
+                auto 项 = 读取所有者范围一致源关系组(状态_, 选择);
+                if (!项)
                     return 失败(L1所有者范围一致当前读取状态::内部不一致);
-                L1所有者范围一致源关系组读取结果项 项{
-                    选择.源节点, 选择.关系类型节点, {}};
-                for (const auto& 成员 : 内部->成员)
-                    项.成员.push_back({转换所有者范围关系(成员.关系),
-                        转换所有者范围节点(成员.对端节点)});
-                结果.源关系组.push_back(std::move(项));
+                结果.源关系组.push_back(std::move(*项));
             }
             for (const auto& 选择 : 请求.目标关系组) {
-                const auto 内部 = 读取一致目标关系组(状态_,
-                    {选择.目标节点, 选择.关系类型节点});
-                if (!内部)
+                auto 项 = 读取所有者范围一致目标关系组(状态_, 选择);
+                if (!项)
                     return 失败(L1所有者范围一致当前读取状态::内部不一致);
-                L1所有者范围一致目标关系组读取结果项 项{
-                    选择.目标节点, 选择.关系类型节点, {}};
-                for (const auto& 成员 : 内部->成员)
-                    项.成员.push_back({转换所有者范围关系(成员.关系),
-                        转换所有者范围节点(成员.对端节点)});
-                结果.目标关系组.push_back(std::move(项));
+                结果.目标关系组.push_back(std::move(*项));
+            }
+            if (请求.关系类型闭包) {
+                for (const auto& 选择 : *请求.关系类型闭包) {
+                    auto 项 = 读取一致关系类型闭包(状态_, 选择);
+                    if (!项)
+                        return 失败(L1所有者范围一致当前读取状态::内部不一致);
+                    结果.关系类型闭包.push_back(std::move(*项));
+                }
             }
             return 结果;
         } catch (const std::bad_alloc&) {
@@ -1617,7 +1683,7 @@ public:
             return 失败(L1所有者范围一致当前读取状态::内部不一致);
         }
     }
-private:
+
     static L1所有者范围节点事实 转换所有者范围节点(const 节点事实& 事实) {
         L1所有者范围节点事实 结果;
         结果.编码 = 事实.编码;
@@ -1704,6 +1770,8 @@ private:
         std::unordered_map<std::uint64_t,
             std::unordered_map<std::uint64_t, std::vector<std::uint64_t>>>
             当前目标关系索引;
+        std::unordered_map<std::uint64_t, std::vector<std::uint64_t>>
+            当前关系类型索引;
         std::unordered_map<std::uint64_t,
             std::unordered_map<std::uint64_t, std::vector<std::uint64_t>>>
             历史源关系候选索引;
@@ -2013,6 +2081,216 @@ private:
         return 结果;
     }
 
+    static std::optional<L1所有者范围一致属性值读取结果项>
+    读取所有者范围一致属性值(const 状态& 值, 稳定编码 节点编码,
+        稳定编码 属性类型编码) {
+        L1所有者范围一致属性值读取结果项 结果{节点编码, 属性类型编码,
+            L1所有者范围一致当前读取项目状态::未找到, std::nullopt};
+        const auto 节点项 = 读取一致具名当前事实(
+            值, 节点编码, 一致当前事实种类::节点);
+        if (!节点项) return std::nullopt;
+        if (节点项->状态 != L1中性一致当前读取项目状态::成功) {
+            结果.状态 = static_cast<L1所有者范围一致当前读取项目状态>(
+                static_cast<std::uint8_t>(节点项->状态));
+            return 结果;
+        }
+        const auto* 节点 = 节点项->事实
+            ? std::get_if<节点事实>(&*节点项->事实) : nullptr;
+        if (!节点) return std::nullopt;
+        const auto 槽 = std::lower_bound(节点->当前属性.begin(),
+            节点->当前属性.end(), 属性类型编码,
+            [](const 属性槽& 左, 稳定编码 右) {
+                return 左.属性类型节点 < 右;
+            });
+        if (槽 == 节点->当前属性.end()
+            || 槽->属性类型节点 != 属性类型编码) {
+            结果.状态 = L1所有者范围一致当前读取项目状态::属性未设置;
+            return 结果;
+        }
+        const auto 当前值 = 值.当前值.find(槽->当前值.值);
+        if (当前值 == 值.当前值.end()
+            || !一致当前值局部完整(值, 当前值->first, 当前值->second)
+            || 当前值->second.所属节点 != 节点编码
+            || 当前值->second.属性类型节点 != 属性类型编码)
+            return std::nullopt;
+        结果.状态 = L1所有者范围一致当前读取项目状态::成功;
+        结果.投影 = L1所有者范围一致属性值投影{
+            {槽->属性类型节点, 槽->当前值},
+            转换所有者范围值(当前值->second)};
+        return 结果;
+    }
+
+    static std::optional<L1所有者范围一致源关系组读取结果项>
+    读取所有者范围一致源关系组(const 状态& 值,
+        const L1所有者范围一致源关系组选择项& 选择) {
+        const auto 内部 = 读取一致源关系组(值,
+            {选择.源节点, 选择.关系类型节点});
+        if (!内部) return std::nullopt;
+        L1所有者范围一致源关系组读取结果项 结果{
+            选择.源节点, 选择.关系类型节点, {}};
+        结果.成员.reserve(内部->成员.size());
+        for (const auto& 成员 : 内部->成员)
+            结果.成员.push_back({转换所有者范围关系(成员.关系),
+                转换所有者范围节点(成员.对端节点)});
+        return 结果;
+    }
+
+    static std::optional<L1所有者范围一致目标关系组读取结果项>
+    读取所有者范围一致目标关系组(const 状态& 值,
+        const L1所有者范围一致目标关系组选择项& 选择) {
+        const auto 内部 = 读取一致目标关系组(值,
+            {选择.目标节点, 选择.关系类型节点});
+        if (!内部) return std::nullopt;
+        L1所有者范围一致目标关系组读取结果项 结果{
+            选择.目标节点, 选择.关系类型节点, {}};
+        结果.成员.reserve(内部->成员.size());
+        for (const auto& 成员 : 内部->成员)
+            结果.成员.push_back({转换所有者范围关系(成员.关系),
+                转换所有者范围节点(成员.对端节点)});
+        return 结果;
+    }
+
+    static std::optional<L1所有者范围一致闭包端点关系组读取结果项>
+    读取一致闭包端点关系组(const 状态& 值, 稳定编码 端点节点,
+        稳定编码 关系类型节点, bool 源方向) {
+        L1所有者范围一致闭包端点关系组读取结果项 结果{
+            端点节点, 关系类型节点,
+            L1所有者范围一致当前读取项目状态::未找到,
+            std::nullopt, {}};
+        const auto 类型项 = 读取一致具名当前事实(
+            值, 关系类型节点, 一致当前事实种类::节点);
+        if (!类型项) return std::nullopt;
+        if (类型项->状态 != L1中性一致当前读取项目状态::成功) {
+            结果.状态 = static_cast<L1所有者范围一致当前读取项目状态>(
+                static_cast<std::uint8_t>(类型项->状态));
+            return 结果;
+        }
+        const auto* 类型事实 = 类型项->事实
+            ? std::get_if<节点事实>(&*类型项->事实) : nullptr;
+        if (!类型事实) return std::nullopt;
+        if (类型事实->种类 != 节点种类::普通) {
+            结果.状态 = L1所有者范围一致当前读取项目状态::种类不匹配;
+            return 结果;
+        }
+        结果.状态 = L1所有者范围一致当前读取项目状态::成功;
+        结果.关系类型事实 = 转换所有者范围节点(*类型事实);
+        if (源方向) {
+            const auto 内部 = 读取一致源关系组(
+                值, {端点节点, 关系类型节点});
+            if (!内部) return std::nullopt;
+            结果.成员.reserve(内部->成员.size());
+            for (const auto& 成员 : 内部->成员)
+                结果.成员.push_back({转换所有者范围关系(成员.关系),
+                    转换所有者范围节点(成员.对端节点)});
+        } else {
+            const auto 内部 = 读取一致目标关系组(
+                值, {端点节点, 关系类型节点});
+            if (!内部) return std::nullopt;
+            结果.成员.reserve(内部->成员.size());
+            for (const auto& 成员 : 内部->成员)
+                结果.成员.push_back({转换所有者范围关系(成员.关系),
+                    转换所有者范围节点(成员.对端节点)});
+        }
+        return 结果;
+    }
+
+    static std::optional<L1所有者范围一致关系类型闭包读取结果项>
+    读取一致关系类型闭包(const 状态& 值,
+        const L1所有者范围一致关系类型闭包选择项& 选择) {
+        L1所有者范围一致关系类型闭包读取结果项 结果{
+            选择.入口关系类型节点,
+            L1所有者范围一致当前读取项目状态::未找到,
+            std::nullopt, {}};
+        const auto 类型项 = 读取一致具名当前事实(
+            值, 选择.入口关系类型节点, 一致当前事实种类::节点);
+        if (!类型项) return std::nullopt;
+        if (类型项->状态 != L1中性一致当前读取项目状态::成功) {
+            结果.状态 = static_cast<L1所有者范围一致当前读取项目状态>(
+                static_cast<std::uint8_t>(类型项->状态));
+            return 结果;
+        }
+        const auto* 类型事实 = 类型项->事实
+            ? std::get_if<节点事实>(&*类型项->事实) : nullptr;
+        if (!类型事实) return std::nullopt;
+        if (类型事实->种类 != 节点种类::普通) {
+            结果.状态 = L1所有者范围一致当前读取项目状态::种类不匹配;
+            return 结果;
+        }
+        结果.状态 = L1所有者范围一致当前读取项目状态::成功;
+        结果.关系类型事实 = 转换所有者范围节点(*类型事实);
+
+        const auto 类型索引 = 值.当前关系类型索引.find(
+            选择.入口关系类型节点.值);
+        if (类型索引 == 值.当前关系类型索引.end()) return 结果;
+        if (类型索引->second.empty()) return std::nullopt;
+        结果.成员.reserve(类型索引->second.size());
+        std::uint64_t 前一关系编码 = 0;
+        for (const auto 关系编码 : 类型索引->second) {
+            const auto 关系 = 值.当前关系.find(关系编码);
+            if (关系编码 == 0 || 关系编码 <= 前一关系编码
+                || 关系 == 值.当前关系.end()
+                || !一致当前关系局部完整(值, 关系编码, 关系->second)
+                || 关系->second.关系类型节点 != 选择.入口关系类型节点)
+                return std::nullopt;
+            const auto 源节点 = 值.当前节点.find(关系->second.源节点.值);
+            const auto 目标节点 = 值.当前节点.find(关系->second.目标节点.值);
+            if (源节点 == 值.当前节点.end() || 目标节点 == 值.当前节点.end()
+                || !一致当前节点局部完整(值, 源节点->first, 源节点->second)
+                || !一致当前节点局部完整(值, 目标节点->first, 目标节点->second))
+                return std::nullopt;
+
+            L1所有者范围一致关系类型闭包成员 成员;
+            成员.关系 = 转换所有者范围关系(关系->second);
+            成员.源节点 = 转换所有者范围节点(源节点->second);
+            成员.目标节点 = 转换所有者范围节点(目标节点->second);
+            成员.源节点属性值.reserve(选择.源节点属性类型.size());
+            成员.源节点源关系组.reserve(选择.源节点源关系类型.size());
+            成员.源节点目标关系组.reserve(选择.源节点目标关系类型.size());
+            成员.目标节点属性值.reserve(选择.目标节点属性类型.size());
+            成员.目标节点源关系组.reserve(选择.目标节点源关系类型.size());
+            成员.目标节点目标关系组.reserve(选择.目标节点目标关系类型.size());
+            for (const auto 属性类型 : 选择.源节点属性类型) {
+                auto 项 = 读取所有者范围一致属性值(
+                    值, 关系->second.源节点, 属性类型);
+                if (!项) return std::nullopt;
+                成员.源节点属性值.push_back(std::move(*项));
+            }
+            for (const auto 关系类型 : 选择.源节点源关系类型) {
+                auto 项 = 读取一致闭包端点关系组(
+                    值, 关系->second.源节点, 关系类型, true);
+                if (!项) return std::nullopt;
+                成员.源节点源关系组.push_back(std::move(*项));
+            }
+            for (const auto 关系类型 : 选择.源节点目标关系类型) {
+                auto 项 = 读取一致闭包端点关系组(
+                    值, 关系->second.源节点, 关系类型, false);
+                if (!项) return std::nullopt;
+                成员.源节点目标关系组.push_back(std::move(*项));
+            }
+            for (const auto 属性类型 : 选择.目标节点属性类型) {
+                auto 项 = 读取所有者范围一致属性值(
+                    值, 关系->second.目标节点, 属性类型);
+                if (!项) return std::nullopt;
+                成员.目标节点属性值.push_back(std::move(*项));
+            }
+            for (const auto 关系类型 : 选择.目标节点源关系类型) {
+                auto 项 = 读取一致闭包端点关系组(
+                    值, 关系->second.目标节点, 关系类型, true);
+                if (!项) return std::nullopt;
+                成员.目标节点源关系组.push_back(std::move(*项));
+            }
+            for (const auto 关系类型 : 选择.目标节点目标关系类型) {
+                auto 项 = 读取一致闭包端点关系组(
+                    值, 关系->second.目标节点, 关系类型, false);
+                if (!项) return std::nullopt;
+                成员.目标节点目标关系组.push_back(std::move(*项));
+            }
+            结果.成员.push_back(std::move(成员));
+            前一关系编码 = 关系编码;
+        }
+        return 结果;
+    }
+
     // 诊断责任：向上送出；分配异常由调用方公开边界映射。
     static bool 插入当前源关系索引(状态& 值, const 关系事实& 事实) {
         if (!有效(事实.编码) || !有效(事实.源节点)
@@ -2068,6 +2346,39 @@ private:
         类型->second.erase(位置);
         if (类型->second.empty()) 目标->second.erase(类型);
         if (目标->second.empty()) 值.当前目标关系索引.erase(目标);
+        return true;
+    }
+
+    // 诊断责任：向上送出；分配异常由调用方公开边界映射。
+    static bool 插入当前关系类型索引(状态& 值, const 关系事实& 事实) {
+        if (!有效(事实.编码) || !有效(事实.关系类型节点)
+            || 事实.退出事实代次) return false;
+        auto& 编码组 = 值.当前关系类型索引[事实.关系类型节点.值];
+        const auto 位置 = std::lower_bound(
+            编码组.begin(), 编码组.end(), 事实.编码.值);
+        if (位置 != 编码组.end() && *位置 == 事实.编码.值) return false;
+        编码组.insert(位置, 事实.编码.值);
+        return true;
+    }
+
+    // 诊断责任：无适用错误分支；只删除候选状态中的一个派生索引编码。
+    static bool 删除当前关系类型索引(
+        状态& 值, const 关系事实& 事实) noexcept {
+        const auto 类型 = 值.当前关系类型索引.find(事实.关系类型节点.值);
+        if (类型 == 值.当前关系类型索引.end()) return false;
+        const auto 位置 = std::lower_bound(
+            类型->second.begin(), 类型->second.end(), 事实.编码.值);
+        if (位置 == 类型->second.end() || *位置 != 事实.编码.值) return false;
+        类型->second.erase(位置);
+        if (类型->second.empty()) 值.当前关系类型索引.erase(类型);
+        return true;
+    }
+
+    // 诊断责任：向上送出；只从本状态权威当前关系纯派生非权威索引。
+    static bool 派生当前关系类型索引(状态& 值) {
+        值.当前关系类型索引.clear();
+        for (const auto& [_, 事实] : 值.当前关系)
+            if (!插入当前关系类型索引(值, 事实)) return false;
         return true;
     }
 
@@ -2552,6 +2863,25 @@ private:
             }
         }
         if (已目标索引关系.size() != 值.当前关系.size()) return false;
+        std::unordered_set<std::uint64_t> 已类型索引关系;
+        for (const auto& [类型编码, 编码组] : 值.当前关系类型索引) {
+            const auto 类型节点 = 值.当前节点.find(类型编码);
+            if (类型编码 == 0 || 编码组.empty()
+                || 类型节点 == 值.当前节点.end()
+                || !一致当前节点基本完整(
+                    值, 类型节点->first, 类型节点->second)) return false;
+            std::uint64_t 前一编码 = 0;
+            for (const auto 关系编码 : 编码组) {
+                const auto 关系 = 值.当前关系.find(关系编码);
+                if (关系编码 == 0 || 关系编码 <= 前一编码
+                    || !已类型索引关系.insert(关系编码).second
+                    || 关系 == 值.当前关系.end()
+                    || 关系->second.关系类型节点.值 != 类型编码
+                    || 关系->second.退出事实代次) return false;
+                前一编码 = 关系编码;
+            }
+        }
+        if (已类型索引关系.size() != 值.当前关系.size()) return false;
         const auto 历史关系索引完整 = [&](const auto& 索引, bool 源端) {
             std::unordered_set<std::uint64_t> 已索引关系;
             for (const auto& [端点编码, 类型组] : 索引) {

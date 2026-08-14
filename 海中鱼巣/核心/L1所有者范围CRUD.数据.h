@@ -14,6 +14,7 @@ namespace 海中鱼巣 {
 
 inline constexpr std::uint32_t L1所有者范围CRUD合同版本 = 2;
 inline constexpr std::uint32_t L1所有者范围一致当前读取合同版本 = 2;
+inline constexpr std::uint32_t L1所有者范围一致关系类型闭包读取合同版本 = 1;
 
 struct L1结构所有者身份 final {
     稳定编码 编码;
@@ -510,6 +511,92 @@ struct L1所有者范围一致当前读取结果 final {
     std::vector<L1所有者范围一致目标关系组读取结果项> 目标关系组;
     friend bool operator==(const L1所有者范围一致当前读取结果&,
         const L1所有者范围一致当前读取结果&) = default;
+};
+
+struct L1所有者范围一致关系类型闭包选择项 final {
+    稳定编码 入口关系类型节点;
+    std::vector<稳定编码> 源节点属性类型;
+    std::vector<稳定编码> 源节点源关系类型;
+    std::vector<稳定编码> 源节点目标关系类型;
+    std::vector<稳定编码> 目标节点属性类型;
+    std::vector<稳定编码> 目标节点源关系类型;
+    std::vector<稳定编码> 目标节点目标关系类型;
+    friend bool operator==(const L1所有者范围一致关系类型闭包选择项&,
+        const L1所有者范围一致关系类型闭包选择项&) = default;
+};
+
+struct L1所有者范围一致闭包端点关系组读取结果项 final {
+    稳定编码 端点节点;
+    稳定编码 关系类型节点;
+    L1所有者范围一致当前读取项目状态 状态 =
+        L1所有者范围一致当前读取项目状态::未找到;
+    std::optional<L1所有者范围节点事实> 关系类型事实;
+    std::vector<L1所有者范围一致关系对端投影> 成员;
+    friend bool operator==(const L1所有者范围一致闭包端点关系组读取结果项&,
+        const L1所有者范围一致闭包端点关系组读取结果项&) = default;
+};
+
+struct L1所有者范围一致关系类型闭包成员 final {
+    L1所有者范围关系事实 关系;
+    L1所有者范围节点事实 源节点;
+    L1所有者范围节点事实 目标节点;
+    std::vector<L1所有者范围一致属性值读取结果项> 源节点属性值;
+    std::vector<L1所有者范围一致闭包端点关系组读取结果项>
+        源节点源关系组;
+    std::vector<L1所有者范围一致闭包端点关系组读取结果项>
+        源节点目标关系组;
+    std::vector<L1所有者范围一致属性值读取结果项> 目标节点属性值;
+    std::vector<L1所有者范围一致闭包端点关系组读取结果项>
+        目标节点源关系组;
+    std::vector<L1所有者范围一致闭包端点关系组读取结果项>
+        目标节点目标关系组;
+    friend bool operator==(const L1所有者范围一致关系类型闭包成员&,
+        const L1所有者范围一致关系类型闭包成员&) = default;
+};
+
+struct L1所有者范围一致关系类型闭包读取结果项 final {
+    稳定编码 入口关系类型节点;
+    L1所有者范围一致当前读取项目状态 状态 =
+        L1所有者范围一致当前读取项目状态::未找到;
+    std::optional<L1所有者范围节点事实> 关系类型事实;
+    std::vector<L1所有者范围一致关系类型闭包成员> 成员;
+    friend bool operator==(const L1所有者范围一致关系类型闭包读取结果项&,
+        const L1所有者范围一致关系类型闭包读取结果项&) = default;
+};
+
+struct L1所有者范围一致关系类型闭包读取请求 final {
+    std::uint32_t 合同版本 =
+        L1所有者范围一致关系类型闭包读取合同版本;
+    std::uint64_t 期望事实代次 = 0;
+    std::vector<L1结构所有者身份> 所有者;
+    std::vector<稳定编码> 节点;
+    std::vector<稳定编码> 关系;
+    std::vector<稳定编码> 值;
+    std::vector<L1所有者范围一致属性值选择项> 属性值;
+    std::vector<L1所有者范围一致源关系组选择项> 源关系组;
+    std::vector<L1所有者范围一致目标关系组选择项> 目标关系组;
+    std::vector<L1所有者范围一致关系类型闭包选择项> 关系类型闭包;
+    friend bool operator==(const L1所有者范围一致关系类型闭包读取请求&,
+        const L1所有者范围一致关系类型闭包读取请求&) = default;
+};
+
+struct L1所有者范围一致关系类型闭包读取结果 final {
+    L1所有者范围一致当前读取状态 状态 =
+        L1所有者范围一致当前读取状态::入口拒绝;
+    std::uint32_t 合同版本 =
+        L1所有者范围一致关系类型闭包读取合同版本;
+    std::uint64_t 期望事实代次 = 0;
+    std::uint64_t 读取事实代次 = 0;
+    std::vector<L1所有者范围一致所有者读取结果项> 所有者;
+    std::vector<L1所有者范围一致节点读取结果项> 节点;
+    std::vector<L1所有者范围一致关系读取结果项> 关系;
+    std::vector<L1所有者范围一致值读取结果项> 值;
+    std::vector<L1所有者范围一致属性值读取结果项> 属性值;
+    std::vector<L1所有者范围一致源关系组读取结果项> 源关系组;
+    std::vector<L1所有者范围一致目标关系组读取结果项> 目标关系组;
+    std::vector<L1所有者范围一致关系类型闭包读取结果项> 关系类型闭包;
+    friend bool operator==(const L1所有者范围一致关系类型闭包读取结果&,
+        const L1所有者范围一致关系类型闭包读取结果&) = default;
 };
 
 inline bool 有效(L1结构所有者身份 身份) noexcept { return 有效(身份.编码); }

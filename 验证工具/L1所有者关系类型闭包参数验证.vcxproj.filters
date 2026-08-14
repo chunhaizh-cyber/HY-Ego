@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="生产模块"><UniqueIdentifier>{6493263E-23C1-46A9-B9F9-F14A5745E5ED}</UniqueIdentifier></Filter>
+    <Filter Include="验证入口"><UniqueIdentifier>{AA9A034E-8978-49F1-AD47-9912D1C5C13B}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\海中鱼巣\核心\合同.L1公共事实.ixx"><Filter>生产模块</Filter></ClCompile>
+    <ClCompile Include="..\海中鱼巣\核心\合同.L1所有者范围CRUD.ixx"><Filter>生产模块</Filter></ClCompile>
+    <ClCompile Include="..\海中鱼巣\核心\合同.L1事实基座.ixx"><Filter>生产模块</Filter></ClCompile>
+    <ClCompile Include="..\海中鱼巣\核心\合同.L1中性CRUD.ixx"><Filter>生产模块</Filter></ClCompile>
+    <ClCompile Include="..\海中鱼巣\核心\仓库.L1事实基座.ixx"><Filter>生产模块</Filter></ClCompile>
+    <ClCompile Include="..\海中鱼巣\核心\服务.L1事实基座.ixx"><Filter>生产模块</Filter></ClCompile>
+    <ClCompile Include="L1所有者关系类型闭包参数验证.cpp"><Filter>验证入口</Filter></ClCompile>
+  </ItemGroup>
+</Project>
