@@ -15,6 +15,7 @@ namespace 海中鱼巣 {
 inline constexpr std::uint32_t L1所有者范围CRUD合同版本 = 2;
 inline constexpr std::uint32_t L1所有者范围一致当前读取合同版本 = 2;
 inline constexpr std::uint32_t L1所有者范围一致关系类型闭包读取合同版本 = 1;
+inline constexpr std::uint32_t L1所有者范围首次写入读取合同版本 = 1;
 
 struct L1结构所有者身份 final {
     稳定编码 编码;
@@ -255,6 +256,25 @@ enum class L1所有者范围读取状态 : std::uint8_t {
     成功 = 1, 入口拒绝 = 2, 许可拒绝 = 3, 未找到 = 4,
     已退出 = 5, 属性未设置 = 6, 事实代次漂移 = 7,
     资源失败 = 8, 内部不一致 = 9
+};
+
+struct L1所有者范围首次写入读取请求 final {
+    std::uint32_t 合同版本 = L1所有者范围首次写入读取合同版本;
+    L1所有者范围写入幂等身份 写入幂等身份;
+    friend bool operator==(const L1所有者范围首次写入读取请求&,
+        const L1所有者范围首次写入读取请求&) = default;
+};
+
+struct L1所有者范围首次写入读取结果 final {
+    L1所有者范围读取状态 状态 = L1所有者范围读取状态::入口拒绝;
+    std::uint32_t 合同版本 = L1所有者范围首次写入读取合同版本;
+    L1结构所有者身份 所有者;
+    L1所有者范围写入幂等身份 写入幂等身份;
+    std::uint64_t 读取事实代次 = 0;
+    std::optional<L1所有者范围写集请求> 首次规范化写集;
+    std::optional<L1所有者范围写入结果> 首次写入结果;
+    friend bool operator==(const L1所有者范围首次写入读取结果&,
+        const L1所有者范围首次写入读取结果&) = default;
 };
 
 struct L1所有者范围事实读取请求 final {
