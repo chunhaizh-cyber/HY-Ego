@@ -1,6 +1,7 @@
 #pragma once
 
 #ifndef L2_FEATURE_STRUCTURE_NO_INCLUDES
+#include <compare>
 #include <optional>
 #include <vector>
 #include "L2结构公共.数据.h"
@@ -194,26 +195,72 @@ struct L2特征定义属性类型登记结果 final {
         const L2特征定义属性类型登记结果&) = default;
 };
 
-struct L2特征定义事实 final {
+struct L2特征派生规则身份 final {
+    稳定编码 值;
+    friend bool operator==(const L2特征派生规则身份&,
+        const L2特征派生规则身份&) = default;
+    friend auto operator<=>(const L2特征派生规则身份&,
+        const L2特征派生规则身份&) = default;
+};
+
+struct L2特征派生规则提交项 final {
+    L2特征派生规则身份 规则身份;
+    std::uint32_t 规则版本 = 0;
+    friend bool operator==(const L2特征派生规则提交项&,
+        const L2特征派生规则提交项&) = default;
+};
+
+struct L2特征直接来源提交项 final {
+    std::uint32_t 顺序 = 0;
+    std::uint32_t 输入角色 = 0;
+    L2特征定义身份 来源特征定义;
+    friend bool operator==(const L2特征直接来源提交项&,
+        const L2特征直接来源提交项&) = default;
+};
+
+struct L2特征直接来源事实 final {
+    稳定编码 关系稳定编码;
+    std::uint32_t 顺序 = 0;
+    std::uint32_t 输入角色 = 0;
+    L2特征定义身份 来源特征定义;
+    L2生命周期 生命周期;
+    friend bool operator==(const L2特征直接来源事实&,
+        const L2特征直接来源事实&) = default;
+};
+
+struct L2特征派生规则事实 final {
+    L2属性事实 规则见证属性;
+    friend bool operator==(const L2特征派生规则事实&,
+        const L2特征派生规则事实&) = default;
+};
+
+struct L2统一特征定义事实 final {
     L2特征定义身份 身份;
+    L2属性事实 实际阶次属性;
+    std::vector<L2特征直接来源事实> 直接来源;
+    std::optional<L2特征派生规则事实> 派生规则;
     L2生命周期 生命周期;
     std::vector<L2属性事实> 固定属性;
-    friend bool operator==(const L2特征定义事实&,
-        const L2特征定义事实&) = default;
+    friend bool operator==(const L2统一特征定义事实&,
+        const L2统一特征定义事实&) = default;
 };
 
-struct L2特征定义新增请求 final {
+struct L2统一特征定义新增请求 final {
     L2结构请求头 请求头;
     L2结构幂等身份 幂等身份;
-    friend bool operator==(const L2特征定义新增请求&,
-        const L2特征定义新增请求&) = default;
+    std::uint32_t 实际阶次 = 1;
+    std::vector<L2特征直接来源提交项> 直接来源;
+    std::optional<L2特征派生规则提交项> 派生规则;
+    friend bool operator==(const L2统一特征定义新增请求&,
+        const L2统一特征定义新增请求&) = default;
 };
 
-struct L2特征定义写入结果 final {
+struct L2统一特征定义写入结果 final {
     L2结构结果头 结果头;
-    std::optional<L2特征定义事实> 特征定义;
-    friend bool operator==(const L2特征定义写入结果&,
-        const L2特征定义写入结果&) = default;
+    std::optional<L2统一特征定义事实> 特征定义;
+    bool 成功() const noexcept;
+    friend bool operator==(const L2统一特征定义写入结果&,
+        const L2统一特征定义写入结果&) = default;
 };
 
 struct L2特征定义固定属性新增请求 final {
@@ -263,40 +310,58 @@ struct L2特征定义身份来源读取结果 final {
         const L2特征定义身份来源读取结果&) = default;
 };
 
-struct L2特征定义退出请求 final {
+struct L2统一特征定义完整读取请求 final {
+    L2结构请求头 请求头;
+    L2读取类别 读取类别 = L2读取类别::当前;
+    L2特征定义身份 特征定义;
+    std::uint64_t 历史截止事实代次 = 0;
+    friend bool operator==(const L2统一特征定义完整读取请求&,
+        const L2统一特征定义完整读取请求&) = default;
+};
+
+struct L2统一特征定义完整读取结果 final {
+    L2结构结果头 结果头;
+    L2读取类别 读取类别 = L2读取类别::当前;
+    std::uint64_t 历史截止事实代次 = 0;
+    std::optional<L2统一特征定义事实> 特征定义;
+    bool 成功() const noexcept;
+    friend bool operator==(const L2统一特征定义完整读取结果&,
+        const L2统一特征定义完整读取结果&) = default;
+};
+
+struct L2当前统一特征定义组读取请求 final {
+    L2结构请求头 请求头;
+    friend bool operator==(const L2当前统一特征定义组读取请求&,
+        const L2当前统一特征定义组读取请求&) = default;
+};
+
+struct L2当前统一特征定义组读取结果 final {
+    L2结构结果头 结果头;
+    std::vector<L2统一特征定义事实> 特征定义组;
+    bool 成功() const noexcept;
+    friend bool operator==(const L2当前统一特征定义组读取结果&,
+        const L2当前统一特征定义组读取结果&) = default;
+};
+
+struct L2统一特征定义退出请求 final {
     L2结构请求头 请求头;
     L2结构幂等身份 幂等身份;
     L2特征定义身份 特征定义;
     稳定编码 族归属关系稳定编码;
+    稳定编码 实际阶次值稳定编码;
+    std::vector<稳定编码> 直接来源关系稳定编码;
+    std::optional<稳定编码> 派生规则见证值稳定编码;
     std::vector<稳定编码> 当前固定属性值;
-    friend bool operator==(const L2特征定义退出请求&,
-        const L2特征定义退出请求&) = default;
+    friend bool operator==(const L2统一特征定义退出请求&,
+        const L2统一特征定义退出请求&) = default;
 };
 
-struct L2特征定义退出结果 final {
+struct L2统一特征定义退出结果 final {
     L2结构结果头 结果头;
-    std::optional<L2特征定义事实> 已退出特征定义;
+    std::optional<L2统一特征定义事实> 已退出特征定义;
     bool 成功() const noexcept;
-    friend bool operator==(const L2特征定义退出结果&,
-        const L2特征定义退出结果&) = default;
-};
-
-struct L2特征定义完整读取请求 final {
-    L2结构请求头 请求头;
-    L2读取类别 读取类别 = L2读取类别::当前;
-    L2特征定义身份 特征定义;
-    std::uint64_t 历史截止事实代次 = 0;
-    friend bool operator==(const L2特征定义完整读取请求&,
-        const L2特征定义完整读取请求&) = default;
-};
-
-struct L2特征定义完整读取结果 final {
-    L2结构结果头 结果头;
-    L2读取类别 读取类别 = L2读取类别::当前;
-    std::uint64_t 历史截止事实代次 = 0;
-    std::optional<L2特征定义事实> 特征定义;
-    friend bool operator==(const L2特征定义完整读取结果&,
-        const L2特征定义完整读取结果&) = default;
+    friend bool operator==(const L2统一特征定义退出结果&,
+        const L2统一特征定义退出结果&) = default;
 };
 
 struct L2特征值事实 final {
@@ -665,11 +730,41 @@ inline bool L2特征实例F2事实完整(
     return L2特征实例事实完整(特征实例, 截止) && !特征实例.当前值;
 }
 
-// 诊断责任：无适用错误分支；纯值请求判断不读取事实。
-inline bool L2特征定义新增请求有效(
-    const L2特征定义新增请求& 请求) noexcept {
-    return L2结构请求头合同有效(请求.请求头)
-        && L2结构幂等身份有效(请求.幂等身份);
+// 诊断责任：无适用错误分支；派生规则只接受非零稳定身份与版本。
+inline bool L2特征派生规则提交项有效(
+    const L2特征派生规则提交项& 规则) noexcept {
+    return 有效(规则.规则身份.值) && 规则.规则版本 != 0;
+}
+
+// 诊断责任：无适用错误分支；来源顺序连续、角色非零且来源角色对唯一。
+inline bool L2特征直接来源提交项组有效(
+    const std::vector<L2特征直接来源提交项>& 来源组) noexcept {
+    for (std::size_t 索引 = 0; 索引 < 来源组.size(); ++索引) {
+        const auto& 来源 = 来源组[索引];
+        if (索引 >= static_cast<std::size_t>(0x7fff'ffffU)
+            || 来源.顺序 != 索引 + 1 || 来源.输入角色 == 0
+            || !有效(来源.来源特征定义.值)) return false;
+        for (std::size_t 前索引 = 0; 前索引 < 索引; ++前索引) {
+            const auto& 前项 = 来源组[前索引];
+            if (前项.来源特征定义 == 来源.来源特征定义
+                && 前项.输入角色 == 来源.输入角色) return false;
+        }
+    }
+    return true;
+}
+
+// 诊断责任：无适用错误分支；基础与派生请求形状互斥且创建守卫非零。
+inline bool L2统一特征定义新增请求有效(
+    const L2统一特征定义新增请求& 请求) noexcept {
+    if (!L2结构请求头合同有效(请求.请求头)
+        || 请求.请求头.期望事实代次 == 0
+        || !L2结构幂等身份有效(请求.幂等身份)
+        || 请求.实际阶次 == 0
+        || !L2特征直接来源提交项组有效(请求.直接来源)) return false;
+    if (请求.实际阶次 == 1)
+        return 请求.直接来源.empty() && !请求.派生规则;
+    return !请求.直接来源.empty() && 请求.派生规则
+        && L2特征派生规则提交项有效(*请求.派生规则);
 }
 
 // 诊断责任：无适用错误分支；纯值请求判断不读取事实。
@@ -689,26 +784,9 @@ inline bool L2特征定义固定属性换代请求有效(
             请求.特征定义, 请求.新属性});
 }
 
-// 诊断责任：无适用错误分支；显式属性闭包须严格升序且无重复。
-inline bool L2特征定义退出请求有效(
-    const L2特征定义退出请求& 请求) noexcept {
-    if (!L2结构请求头合同有效(请求.请求头)
-        || 请求.请求头.期望事实代次 == 0
-        || !L2结构幂等身份有效(请求.幂等身份)
-        || !有效(请求.特征定义.值)
-        || !有效(请求.族归属关系稳定编码)) return false;
-    for (std::size_t 索引 = 0; 索引 < 请求.当前固定属性值.size(); ++索引) {
-        if (!有效(请求.当前固定属性值[索引])
-            || (索引 != 0
-                && !(请求.当前固定属性值[索引 - 1] < 请求.当前固定属性值[索引])))
-            return false;
-    }
-    return true;
-}
-
-// 诊断责任：无适用错误分支；纯值完整读取请求判断不读取事实。
-inline bool L2特征定义完整读取请求有效(
-    const L2特征定义完整读取请求& 请求) noexcept {
+// 诊断责任：无适用错误分支；完整读取请求的类别与截止必须闭合。
+inline bool L2统一特征定义完整读取请求有效(
+    const L2统一特征定义完整读取请求& 请求) noexcept {
     if (!L2结构请求头合同有效(请求.请求头)
         || 请求.请求头.期望事实代次 == 0
         || !有效(请求.特征定义.值)) return false;
@@ -719,17 +797,106 @@ inline bool L2特征定义完整读取请求有效(
         && 请求.历史截止事实代次 <= 请求.请求头.期望事实代次;
 }
 
-// 诊断责任：无适用错误分支；只判断特征定义完整值式投影及稳定属性顺序。
-inline bool L2特征定义事实完整(
-    const L2特征定义事实& 特征定义, std::uint64_t 截止) noexcept {
+// 诊断责任：无适用错误分支；全组读取允许零守卫选择同许可最新快照。
+inline bool L2当前统一特征定义组读取请求有效(
+    const L2当前统一特征定义组读取请求& 请求) noexcept {
+    return L2结构请求头合同有效(请求.请求头);
+}
+
+// 诊断责任：无适用错误分支；显式自有闭包各组严格升序且互不复用。
+inline bool L2统一特征定义退出请求有效(
+    const L2统一特征定义退出请求& 请求) noexcept {
+    if (!L2结构请求头合同有效(请求.请求头)
+        || 请求.请求头.期望事实代次 == 0
+        || !L2结构幂等身份有效(请求.幂等身份)
+        || !有效(请求.特征定义.值)
+        || !有效(请求.族归属关系稳定编码)
+        || !有效(请求.实际阶次值稳定编码)
+        || 请求.族归属关系稳定编码 == 请求.实际阶次值稳定编码
+        || (请求.派生规则见证值稳定编码
+            && (!有效(*请求.派生规则见证值稳定编码)
+                || *请求.派生规则见证值稳定编码
+                    == 请求.族归属关系稳定编码
+                || *请求.派生规则见证值稳定编码
+                    == 请求.实际阶次值稳定编码))) return false;
+    const auto 组有效 = [&](const std::vector<稳定编码>& 编码组) noexcept {
+        for (std::size_t 索引 = 0; 索引 < 编码组.size(); ++索引)
+            if (!有效(编码组[索引])
+                || (索引 != 0 && !(编码组[索引 - 1] < 编码组[索引])))
+                return false;
+        return true;
+    };
+    if (!组有效(请求.直接来源关系稳定编码)
+        || !组有效(请求.当前固定属性值)) return false;
+    const auto 与固定项冲突 = [&](稳定编码 编码) noexcept {
+        return 编码 == 请求.族归属关系稳定编码
+            || 编码 == 请求.实际阶次值稳定编码
+            || (请求.派生规则见证值稳定编码
+                && 编码 == *请求.派生规则见证值稳定编码);
+    };
+    for (const auto 编码 : 请求.直接来源关系稳定编码) {
+        if (与固定项冲突(编码)) return false;
+        for (const auto 属性编码 : 请求.当前固定属性值)
+            if (编码 == 属性编码) return false;
+    }
+    for (const auto 编码 : 请求.当前固定属性值)
+        if (与固定项冲突(编码)) return false;
+    return true;
+}
+
+// 诊断责任：无适用错误分支；判断统一定义在具名截止的基础/派生互斥形状。
+inline bool L2统一特征定义事实完整(
+    const L2统一特征定义事实& 特征定义, std::uint64_t 截止) noexcept {
+    const auto* 阶次材料 = std::get_if<std::int64_t>(
+        &特征定义.实际阶次属性.类型化不可变材料);
     if (截止 == 0 || !有效(特征定义.身份.值)
         || !L2生命周期完整(特征定义.生命周期)
         || 特征定义.生命周期.创建事实代次 > 截止
         || (特征定义.生命周期.退出事实代次
-            && *特征定义.生命周期.退出事实代次 > 截止)) return false;
+            && *特征定义.生命周期.退出事实代次 > 截止)
+        || !L2属性事实截止投影完整(特征定义.实际阶次属性, 截止)
+        || 特征定义.实际阶次属性.来源稳定编码 != 特征定义.身份.值
+        || !阶次材料 || *阶次材料 <= 0
+        || static_cast<std::uint64_t>(*阶次材料) > 0xffff'ffffULL) return false;
+    const auto 阶次 = static_cast<std::uint32_t>(*阶次材料);
+    const auto 退出代次 = 特征定义.生命周期.退出事实代次;
+    const auto 与定义同代退出 = [&](const std::optional<std::uint64_t>& 项退出代次) noexcept {
+        return 退出代次 ? 项退出代次 == 退出代次 : !项退出代次;
+    };
+    if (!与定义同代退出(特征定义.实际阶次属性.退出事实代次)) return false;
+    for (std::size_t 索引 = 0; 索引 < 特征定义.直接来源.size(); ++索引) {
+        const auto& 来源 = 特征定义.直接来源[索引];
+        if (!有效(来源.关系稳定编码) || 来源.顺序 != 索引 + 1
+            || 来源.顺序 > 0x7fff'ffffU
+            || 来源.输入角色 == 0 || !有效(来源.来源特征定义.值)
+            || !L2生命周期完整(来源.生命周期)
+            || 来源.生命周期.创建事实代次 > 截止
+            || (来源.生命周期.退出事实代次
+                && *来源.生命周期.退出事实代次 > 截止)
+            || !与定义同代退出(来源.生命周期.退出事实代次)) return false;
+        for (std::size_t 前索引 = 0; 前索引 < 索引; ++前索引) {
+            const auto& 前项 = 特征定义.直接来源[前索引];
+            if (前项.来源特征定义 == 来源.来源特征定义
+                && 前项.输入角色 == 来源.输入角色) return false;
+        }
+    }
+    if (阶次 == 1) {
+        if (!特征定义.直接来源.empty() || 特征定义.派生规则) return false;
+    } else {
+        if (特征定义.直接来源.empty() || !特征定义.派生规则) return false;
+        const auto& 属性 = 特征定义.派生规则->规则见证属性;
+        const auto* 材料 = std::get_if<std::vector<std::uint64_t>>(
+            &属性.类型化不可变材料);
+        if (!L2属性事实截止投影完整(属性, 截止)
+            || 属性.来源稳定编码 != 特征定义.身份.值
+            || !与定义同代退出(属性.退出事实代次)
+            || !材料 || 材料->size() != 2 || (*材料)[0] == 0
+            || (*材料)[1] == 0 || (*材料)[1] > 0xffff'ffffULL) return false;
+    }
     for (std::size_t 索引 = 0; 索引 < 特征定义.固定属性.size(); ++索引) {
         const auto& 属性 = 特征定义.固定属性[索引];
-        if (!L2属性事实截止投影完整(属性, 截止) || 属性.退出事实代次)
+        if (!L2属性事实截止投影完整(属性, 截止)
+            || !与定义同代退出(属性.退出事实代次))
             return false;
         if (索引 != 0) {
             const auto& 前项 = 特征定义.固定属性[索引 - 1];
@@ -882,26 +1049,65 @@ inline bool L2特征定义固定属性写入结果::成功() const noexcept {
         && 已退出属性->值稳定编码 != 当前属性->值稳定编码;
 }
 
-// 诊断责任：无适用错误分支；只判断定义和全部属性在同一代次退出。
-inline bool L2特征定义退出结果::成功() const noexcept {
+// 诊断责任：无适用错误分支；统一定义写成功必须携带同代完整当前定义。
+inline bool L2统一特征定义写入结果::成功() const noexcept {
+    const bool 成功状态 = 结果头.状态 == L2结构状态::已提交
+        || 结果头.状态 == L2结构状态::精确重复;
+    if (!成功状态 || 结果头.事实截止代次 == 0 || !结果头.变更事实代次
+        || *结果头.变更事实代次 != 结果头.事实截止代次
+        || !特征定义 || 特征定义->生命周期.退出事实代次) return false;
+    return L2统一特征定义事实完整(
+        *特征定义, 结果头.事实截止代次);
+}
+
+// 诊断责任：无适用错误分支；按身份读取成功保持类别、截止和完整载荷一致。
+inline bool L2统一特征定义完整读取结果::成功() const noexcept {
+    if (结果头.状态 != L2结构状态::已读取
+        || 结果头.事实截止代次 == 0 || 结果头.变更事实代次
+        || !特征定义
+        || !L2统一特征定义事实完整(
+            *特征定义, 结果头.事实截止代次)) return false;
+    if (读取类别 == L2读取类别::当前)
+        return 历史截止事实代次 == 0
+            && !特征定义->生命周期.退出事实代次;
+    return 读取类别 == L2读取类别::历史
+        && 历史截止事实代次 == 结果头.事实截止代次;
+}
+
+// 诊断责任：无适用错误分支；全组读取成功允许空组并要求身份严格升序。
+inline bool L2当前统一特征定义组读取结果::成功() const noexcept {
+    if (结果头.状态 != L2结构状态::已读取
+        || 结果头.事实截止代次 == 0 || 结果头.变更事实代次) return false;
+    for (std::size_t 索引 = 0; 索引 < 特征定义组.size(); ++索引) {
+        if (!L2统一特征定义事实完整(
+                特征定义组[索引], 结果头.事实截止代次)
+            || 特征定义组[索引].生命周期.退出事实代次
+            || (索引 != 0 && !(特征定义组[索引 - 1].身份.值
+                < 特征定义组[索引].身份.值))) return false;
+    }
+    return true;
+}
+
+// 诊断责任：无适用错误分支；退出成功要求全部自有结构同代退出。
+inline bool L2统一特征定义退出结果::成功() const noexcept {
     const bool 成功状态 = 结果头.状态 == L2结构状态::已提交
         || 结果头.状态 == L2结构状态::精确重复;
     if (!成功状态 || 结果头.事实截止代次 == 0 || !结果头.变更事实代次
         || *结果头.变更事实代次 != 结果头.事实截止代次
         || !已退出特征定义
         || 已退出特征定义->生命周期.退出事实代次
+            != 结果头.事实截止代次
+        || !L2统一特征定义事实完整(
+            *已退出特征定义, 结果头.事实截止代次)
+        || 已退出特征定义->实际阶次属性.退出事实代次
             != 结果头.事实截止代次) return false;
-    for (std::size_t 索引 = 0;
-        索引 < 已退出特征定义->固定属性.size(); ++索引) {
-        const auto& 属性 = 已退出特征定义->固定属性[索引];
-        if (!L2属性事实截止投影完整(属性, 结果头.事实截止代次)
-            || 属性.退出事实代次 != 结果头.事实截止代次
-            || (索引 != 0
-                && !(已退出特征定义->固定属性[索引 - 1].属性类型身份
-                    < 属性.属性类型身份))) return false;
-    }
-    return 有效(已退出特征定义->身份.值)
-        && L2生命周期完整(已退出特征定义->生命周期);
+    for (const auto& 来源 : 已退出特征定义->直接来源)
+        if (来源.生命周期.退出事实代次 != 结果头.事实截止代次)
+            return false;
+    if (已退出特征定义->派生规则
+        && 已退出特征定义->派生规则->规则见证属性.退出事实代次
+            != 结果头.事实截止代次) return false;
+    return true;
 }
 
 } // namespace 海中鱼巣
