@@ -1,7 +1,7 @@
 # DATA-L2 全部当前场景树结构读取代码实施切片
 
 日期：2026-08-15
-版本：v0.1
+版本：v0.2
 计划身份：`DATA-L2-SCENE-TREE-CURRENT-GROUP-READ`
 
 ## 1. 目标
@@ -18,7 +18,7 @@
 - `规范/4190_子规范_语义分层世界结构与状态动态因果边界.md`；
 - `规范/4230_子规范_L2六类纯结构统一合同.md`；
 - `计划/数据服务最终需求清单.md` 的 `DATA-EXT-01`；
-- `规范/详细设计/20260815_DATA-L2-SCENE-TREE-CURRENT-GROUP-READ_全部当前场景树结构读取详细设计_v0.1.md`。
+- `规范/详细设计/20260815_DATA-L2-SCENE-TREE-CURRENT-GROUP-READ_全部当前场景树结构读取详细设计_v0.2.md`。
 
 ## 3. 允许与禁止范围
 
@@ -29,8 +29,8 @@
 
 允许新增：
 
-- `施工记录/20260815_DATA-L2-SCENE-TREE-CURRENT-GROUP-READ_全部当前场景树结构读取施工记录_v0.1.md`；
-- `验证记录/20260815_DATA-L2-SCENE-TREE-CURRENT-GROUP-READ_全部当前场景树结构读取施工检查记录_v0.1.md`；
+- `施工记录/20260815_DATA-L2-SCENE-TREE-CURRENT-GROUP-READ_全部当前场景树结构读取施工记录_v0.2.md`；
+- `验证记录/20260815_DATA-L2-SCENE-TREE-CURRENT-GROUP-READ_全部当前场景树结构读取施工检查记录_v0.2.md`；
 - 仓库外或生产工程外的临时检查驱动，结果发布前必须删除。
 
 禁止修改工程、filters、普通应用、聚合、L1、其它 L2 服务、正式规范、BIZ 和本计划/详细设计。禁止覆盖暂停 EVENT 与其它异主 WIP，禁止新增生产验证 seam、万能查询或第二场景写入口。
