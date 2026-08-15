@@ -15,6 +15,7 @@ namespace 海中鱼巣 {
 
 inline constexpr std::uint32_t L2普通概念结构合同版本 = 1;
 inline constexpr std::uint32_t L2概念直接上下位关系合同版本 = 1;
+inline constexpr std::uint32_t L2概念世界事实支持关系合同版本 = 1;
 
 enum class L2概念治理生命周期状态 : std::uint8_t {
     活跃 = 1,
@@ -69,6 +70,10 @@ using L2概念定义目标 = std::variant<L2概念身份, L2场景身份,
     L2概念特征值引用, L2状态身份, L2动态身份, L2因果身份,
     L2概念世界关系引用>;
 
+using L2世界事实引用 = std::variant<L2场景身份, L2存在身份,
+    L2特征定义身份, L2特征实例身份, L2概念特征值引用,
+    L2状态身份, L2动态身份, L2因果身份, L2概念世界关系引用>;
+
 struct L2概念签名值式项 final {
     std::uint64_t 角色 = 0;
     std::uint64_t 顺序 = 0;
@@ -119,6 +124,17 @@ struct L2概念定义关系事实 final {
     L2生命周期 生命周期;
     friend bool operator==(const L2概念定义关系事实&,
         const L2概念定义关系事实&) = default;
+};
+
+struct L2概念世界事实支持关系事实 final {
+    L2世界事实引用 世界事实;
+    L2概念身份 概念;
+    不可变材料身份 建立依据材料;
+    std::vector<不可变材料身份> 发布证据材料;
+    稳定编码 关系稳定编码;
+    L2生命周期 生命周期;
+    friend bool operator==(const L2概念世界事实支持关系事实&,
+        const L2概念世界事实支持关系事实&) = default;
 };
 
 struct L2概念直接上位事实 final {
@@ -280,6 +296,85 @@ struct L2概念直接上位组读取结果 final {
 
 using L2概念直接下位组读取结果 = L2概念直接上位组读取结果;
 
+struct L2概念世界事实支持新增请求 final {
+    L2结构请求头 请求头;
+    std::uint32_t 关系合同版本 = L2概念世界事实支持关系合同版本;
+    L2结构幂等身份 幂等身份;
+    L2世界事实引用 世界事实;
+    L2概念身份 概念;
+    不可变材料身份 建立依据材料;
+    std::vector<不可变材料身份> 发布证据材料;
+    friend bool operator==(const L2概念世界事实支持新增请求&,
+        const L2概念世界事实支持新增请求&) = default;
+};
+
+struct L2概念世界事实支持替换请求 final {
+    L2结构请求头 请求头;
+    std::uint32_t 关系合同版本 = L2概念世界事实支持关系合同版本;
+    L2结构幂等身份 幂等身份;
+    稳定编码 旧关系稳定编码;
+    L2世界事实引用 旧世界事实;
+    L2概念身份 概念;
+    L2世界事实引用 新世界事实;
+    不可变材料身份 新建立依据材料;
+    std::vector<不可变材料身份> 新发布证据材料;
+    friend bool operator==(const L2概念世界事实支持替换请求&,
+        const L2概念世界事实支持替换请求&) = default;
+};
+
+struct L2概念世界事实支持退出请求 final {
+    L2结构请求头 请求头;
+    std::uint32_t 关系合同版本 = L2概念世界事实支持关系合同版本;
+    L2结构幂等身份 幂等身份;
+    稳定编码 关系稳定编码;
+    L2世界事实引用 世界事实;
+    L2概念身份 概念;
+    friend bool operator==(const L2概念世界事实支持退出请求&,
+        const L2概念世界事实支持退出请求&) = default;
+};
+
+struct L2概念世界事实支持写入结果 final {
+    L2结构结果头 结果头;
+    std::optional<L2概念世界事实支持关系事实> 当前关系;
+    std::optional<L2概念世界事实支持关系事实> 已退出关系;
+    bool 成功() const noexcept;
+    friend bool operator==(const L2概念世界事实支持写入结果&,
+        const L2概念世界事实支持写入结果&) = default;
+};
+
+struct L2按概念世界事实支持组读取请求 final {
+    L2结构请求头 请求头;
+    std::uint32_t 关系合同版本 = L2概念世界事实支持关系合同版本;
+    L2读取类别 读取类别 = L2读取类别::当前;
+    L2概念身份 概念;
+    std::uint64_t 历史截止事实代次 = 0;
+    std::size_t 数量预算 = 0;
+    friend bool operator==(const L2按概念世界事实支持组读取请求&,
+        const L2按概念世界事实支持组读取请求&) = default;
+};
+
+struct L2按世界事实支持概念组读取请求 final {
+    L2结构请求头 请求头;
+    std::uint32_t 关系合同版本 = L2概念世界事实支持关系合同版本;
+    L2读取类别 读取类别 = L2读取类别::当前;
+    L2世界事实引用 世界事实;
+    std::uint64_t 历史截止事实代次 = 0;
+    std::size_t 扫描预算 = 0;
+    std::size_t 数量预算 = 0;
+    friend bool operator==(const L2按世界事实支持概念组读取请求&,
+        const L2按世界事实支持概念组读取请求&) = default;
+};
+
+struct L2概念世界事实支持组读取结果 final {
+    L2结构结果头 结果头;
+    L2读取类别 读取类别 = L2读取类别::当前;
+    std::uint64_t 历史截止事实代次 = 0;
+    std::vector<L2概念世界事实支持关系事实> 关系组;
+    bool 成功() const noexcept;
+    friend bool operator==(const L2概念世界事实支持组读取结果&,
+        const L2概念世界事实支持组读取结果&) = default;
+};
+
 // 诊断责任：无适用错误分支；只校验闭合关系类别、非零关系身份与强类型端点方向。
 inline bool L2概念世界关系引用有效(
     const L2概念世界关系引用& 引用) noexcept {
@@ -363,6 +458,217 @@ inline bool L2概念定义目标有效(const L2概念定义目标& 目标) noexc
         else
             return 有效(值.值);
     }, 目标);
+}
+
+// 诊断责任：无适用错误分支；世界事实闭集排除概念身份并复用既有强类型形状。
+inline bool L2世界事实引用有效(const L2世界事实引用& 引用) noexcept {
+    return std::visit([](const auto& 值) noexcept {
+        using 类型 = std::decay_t<decltype(值)>;
+        if constexpr (std::is_same_v<类型, L2概念世界关系引用>)
+            return L2概念世界关系引用有效(值);
+        else if constexpr (std::is_same_v<类型, L2概念特征值引用>)
+            return 有效(值.特征实例.值) && 有效(值.值稳定编码);
+        else
+            return 有效(值.值);
+    }, 引用);
+}
+
+namespace L2普通概念数据内部 {
+
+inline bool 发布证据材料组有效(
+    const std::vector<不可变材料身份>& 材料组) noexcept {
+    if (材料组.empty()) return false;
+    for (std::size_t 索引 = 0; 索引 < 材料组.size(); ++索引)
+        if (!有效(材料组[索引].值)
+            || (索引 != 0 && !(材料组[索引 - 1].值 < 材料组[索引].值)))
+            return false;
+    return true;
+}
+
+inline std::vector<std::uint64_t> 世界事实引用排序键(
+    const L2世界事实引用& 引用) {
+    return std::visit([](const auto& 值) -> std::vector<std::uint64_t> {
+        using 类型 = std::decay_t<decltype(值)>;
+        if constexpr (std::is_same_v<类型, L2场景身份>) return {1, 值.值.值};
+        else if constexpr (std::is_same_v<类型, L2存在身份>) return {2, 值.值.值};
+        else if constexpr (std::is_same_v<类型, L2特征定义身份>)
+            return {3, 值.值.值};
+        else if constexpr (std::is_same_v<类型, L2特征实例身份>)
+            return {4, 值.值.值};
+        else if constexpr (std::is_same_v<类型, L2概念特征值引用>)
+            return {5, 值.特征实例.值.值, 值.值稳定编码.值};
+        else if constexpr (std::is_same_v<类型, L2状态身份>) return {6, 值.值.值};
+        else if constexpr (std::is_same_v<类型, L2动态身份>) return {7, 值.值.值};
+        else if constexpr (std::is_same_v<类型, L2因果身份>) return {8, 值.值.值};
+        else {
+            const auto 端点键 = [](const L2概念世界关系端点& 端点) {
+                return std::visit([](const auto& 项) {
+                    using 端点类型 = std::decay_t<decltype(项)>;
+                    if constexpr (std::is_same_v<端点类型, L2场景身份>)
+                        return std::pair<std::uint64_t, std::uint64_t>{1, 项.值.值};
+                    else if constexpr (std::is_same_v<端点类型, L2存在身份>)
+                        return std::pair<std::uint64_t, std::uint64_t>{2, 项.值.值};
+                    else if constexpr (std::is_same_v<端点类型, L2特征定义身份>)
+                        return std::pair<std::uint64_t, std::uint64_t>{3, 项.值.值};
+                    else if constexpr (std::is_same_v<端点类型, L2特征实例身份>)
+                        return std::pair<std::uint64_t, std::uint64_t>{4, 项.值.值};
+                    else if constexpr (std::is_same_v<端点类型, L2状态身份>)
+                        return std::pair<std::uint64_t, std::uint64_t>{5, 项.值.值};
+                    else if constexpr (std::is_same_v<端点类型, L2动态身份>)
+                        return std::pair<std::uint64_t, std::uint64_t>{6, 项.值.值};
+                    else if constexpr (std::is_same_v<端点类型, L2因果身份>)
+                        return std::pair<std::uint64_t, std::uint64_t>{7, 项.值.值};
+                    else return std::pair<std::uint64_t, std::uint64_t>{8, 项.值.值};
+                }, 端点);
+            };
+            const auto 源 = 端点键(值.源);
+            const auto 目标 = 端点键(值.目标);
+            return {9, static_cast<std::uint64_t>(值.类别),
+                值.关系稳定编码.值, 源.first, 源.second,
+                目标.first, 目标.second};
+        }
+    }, 引用);
+}
+
+inline bool 读取类别字段有效(L2读取类别 类别,
+    std::uint64_t 历史截止, std::uint64_t 期望代次) noexcept {
+    if (类别 == L2读取类别::当前) return 历史截止 == 0;
+    return 类别 == L2读取类别::历史 && 历史截止 != 0
+        && 历史截止 <= 期望代次;
+}
+
+} // namespace L2普通概念数据内部
+
+// 诊断责任：无适用错误分支；只校验支持新增请求的值式形状。
+inline bool L2概念世界事实支持新增请求有效(
+    const L2概念世界事实支持新增请求& 请求) noexcept {
+    return L2结构请求头合同有效(请求.请求头)
+        && 请求.请求头.期望事实代次 != 0
+        && 请求.关系合同版本 == L2概念世界事实支持关系合同版本
+        && L2结构幂等身份有效(请求.幂等身份)
+        && L2世界事实引用有效(请求.世界事实)
+        && 有效(请求.概念.值) && 有效(请求.建立依据材料.值)
+        && L2普通概念数据内部::发布证据材料组有效(请求.发布证据材料);
+}
+
+// 诊断责任：无适用错误分支；只校验支持替换请求的值式形状。
+inline bool L2概念世界事实支持替换请求有效(
+    const L2概念世界事实支持替换请求& 请求) noexcept {
+    return L2结构请求头合同有效(请求.请求头)
+        && 请求.请求头.期望事实代次 != 0
+        && 请求.关系合同版本 == L2概念世界事实支持关系合同版本
+        && L2结构幂等身份有效(请求.幂等身份)
+        && 有效(请求.旧关系稳定编码)
+        && L2世界事实引用有效(请求.旧世界事实)
+        && L2世界事实引用有效(请求.新世界事实)
+        && 有效(请求.概念.值) && 有效(请求.新建立依据材料.值)
+        && L2普通概念数据内部::发布证据材料组有效(
+            请求.新发布证据材料);
+}
+
+// 诊断责任：无适用错误分支；只校验支持退出请求的值式形状。
+inline bool L2概念世界事实支持退出请求有效(
+    const L2概念世界事实支持退出请求& 请求) noexcept {
+    return L2结构请求头合同有效(请求.请求头)
+        && 请求.请求头.期望事实代次 != 0
+        && 请求.关系合同版本 == L2概念世界事实支持关系合同版本
+        && L2结构幂等身份有效(请求.幂等身份)
+        && 有效(请求.关系稳定编码)
+        && L2世界事实引用有效(请求.世界事实)
+        && 有效(请求.概念.值);
+}
+
+// 诊断责任：无适用错误分支；按概念组读的当前与历史字段互斥。
+inline bool L2按概念世界事实支持组读取请求有效(
+    const L2按概念世界事实支持组读取请求& 请求) noexcept {
+    return L2结构请求头合同有效(请求.请求头)
+        && 请求.请求头.期望事实代次 != 0
+        && 请求.关系合同版本 == L2概念世界事实支持关系合同版本
+        && 有效(请求.概念.值) && 请求.数量预算 != 0
+        && L2普通概念数据内部::读取类别字段有效(
+            请求.读取类别, 请求.历史截止事实代次,
+            请求.请求头.期望事实代次);
+}
+
+// 诊断责任：无适用错误分支；按世界事实组读还要求非零扫描预算。
+inline bool L2按世界事实支持概念组读取请求有效(
+    const L2按世界事实支持概念组读取请求& 请求) noexcept {
+    return L2结构请求头合同有效(请求.请求头)
+        && 请求.请求头.期望事实代次 != 0
+        && 请求.关系合同版本 == L2概念世界事实支持关系合同版本
+        && L2世界事实引用有效(请求.世界事实)
+        && 请求.扫描预算 != 0 && 请求.数量预算 != 0
+        && L2普通概念数据内部::读取类别字段有效(
+            请求.读取类别, 请求.历史截止事实代次,
+            请求.请求头.期望事实代次);
+}
+
+// 诊断责任：无适用错误分支；只校验支持事实的值式闭合与截止投影。
+inline bool L2概念世界事实支持关系事实截止投影完整(
+    const L2概念世界事实支持关系事实& 事实,
+    std::uint64_t 截止) noexcept {
+    return 截止 != 0 && L2世界事实引用有效(事实.世界事实)
+        && 有效(事实.概念.值) && 有效(事实.建立依据材料.值)
+        && L2普通概念数据内部::发布证据材料组有效(事实.发布证据材料)
+        && 有效(事实.关系稳定编码) && L2生命周期完整(事实.生命周期)
+        && 事实.生命周期.创建事实代次 <= 截止
+        && (!事实.生命周期.退出事实代次
+            || *事实.生命周期.退出事实代次 <= 截止);
+}
+
+// 诊断责任：无适用错误分支；只判断支持关系新增、替换或退出的首次结果形状。
+inline bool L2概念世界事实支持写入结果::成功() const noexcept {
+    const bool 成功状态 = 结果头.状态 == L2结构状态::已提交
+        || 结果头.状态 == L2结构状态::精确重复;
+    if (!成功状态 || 结果头.合同版本 != L2结构合同版本
+        || 结果头.事实截止代次 == 0 || !结果头.变更事实代次
+        || *结果头.变更事实代次 != 结果头.事实截止代次
+        || (!当前关系 && !已退出关系)) return false;
+    if (当前关系
+        && (!L2概念世界事实支持关系事实截止投影完整(
+                *当前关系, 结果头.事实截止代次)
+            || 当前关系->生命周期.退出事实代次)) return false;
+    if (已退出关系
+        && (!L2概念世界事实支持关系事实截止投影完整(
+                *已退出关系, 结果头.事实截止代次)
+            || 已退出关系->生命周期.退出事实代次
+                != 结果头.事实截止代次)) return false;
+    return !当前关系 || !已退出关系
+        || 当前关系->关系稳定编码 != 已退出关系->关系稳定编码;
+}
+
+// 诊断责任：无适用错误分支；只判断双向当前或历史支持关系组的完整已读取形状。
+inline bool L2概念世界事实支持组读取结果::成功() const noexcept {
+    if (结果头.状态 != L2结构状态::已读取
+        || 结果头.合同版本 != L2结构合同版本
+        || 结果头.事实截止代次 == 0 || 结果头.变更事实代次) return false;
+    if (读取类别 == L2读取类别::当前) {
+        if (历史截止事实代次 != 0) return false;
+    } else if (读取类别 == L2读取类别::历史) {
+        if (历史截止事实代次 == 0
+            || 结果头.事实截止代次 != 历史截止事实代次) return false;
+    } else {
+        return false;
+    }
+    for (std::size_t 索引 = 0; 索引 < 关系组.size(); ++索引) {
+        const auto& 关系 = 关系组[索引];
+        if (!L2概念世界事实支持关系事实截止投影完整(
+                关系, 结果头.事实截止代次)
+            || 关系.生命周期.退出事实代次) return false;
+        if (索引 == 0) continue;
+        const auto& 前项 = 关系组[索引 - 1];
+        const auto 前世界键 = L2普通概念数据内部::世界事实引用排序键(
+            前项.世界事实);
+        const auto 当前世界键 = L2普通概念数据内部::世界事实引用排序键(
+            关系.世界事实);
+        const bool 严格升序 = 前世界键 < 当前世界键
+            || (前世界键 == 当前世界键
+                && (前项.概念.值 < 关系.概念.值
+                    || (前项.概念 == 关系.概念
+                        && 前项.关系稳定编码 < 关系.关系稳定编码)));
+        if (!严格升序) return false;
+    }
+    return true;
 }
 
 // 诊断责任：无适用错误分支；只校验普通概念建立请求的值式合同、排序和闭合强类型引用。
