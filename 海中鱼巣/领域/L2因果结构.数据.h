@@ -181,6 +181,13 @@ struct L2按结果状态当前因果读取请求 final {
     friend bool operator==(const L2按结果状态当前因果读取请求&,
         const L2按结果状态当前因果读取请求&) = default;
 };
+struct L2按来源当前因果读取请求 final {
+    L2结构请求头 请求头;
+    稳定编码 来源稳定编码;
+    std::uint64_t 最大数量 = 0;
+    friend bool operator==(const L2按来源当前因果读取请求&,
+        const L2按来源当前因果读取请求&) = default;
+};
 struct L2当前因果组读取结果 final {
     L2结构结果头 结果头;
     std::vector<L2因果事实> 因果;
@@ -369,6 +376,14 @@ inline bool L2按结果状态当前因果读取请求有效(
     const L2按结果状态当前因果读取请求& 请求) noexcept {
     return L2结构请求头合同有效(请求.请求头)
         && 请求.请求头.期望事实代次 != 0 && 有效(请求.结果状态.值);
+}
+
+// 诊断责任：无适用错误分支；来源条件读取必须使用非零守卫与数量预算。
+inline bool L2按来源当前因果读取请求有效(
+    const L2按来源当前因果读取请求& 请求) noexcept {
+    return L2结构请求头合同有效(请求.请求头)
+        && 请求.请求头.期望事实代次 != 0
+        && 有效(请求.来源稳定编码) && 请求.最大数量 != 0;
 }
 
 inline bool L2因果共同写请求有效(const L2结构请求头& 请求头,
