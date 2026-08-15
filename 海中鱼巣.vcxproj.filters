@@ -28,6 +28,9 @@
     <ClCompile Include="海中鱼巣\领域\服务.L2因果结构.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\服务.L2概念结构.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\服务.L2结构聚合.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -73,6 +76,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\L2因果结构.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\L2概念结构.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\业务\系统世界树根初始化.数据.h">
