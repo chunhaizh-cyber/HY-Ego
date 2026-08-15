@@ -374,6 +374,21 @@ struct L2特征值事实 final {
         const L2特征值事实&) = default;
 };
 
+struct L2特征当前值读取请求 final {
+    L2结构请求头 请求头;
+    L2特征实例身份 特征实例;
+    friend bool operator==(const L2特征当前值读取请求&,
+        const L2特征当前值读取请求&) = default;
+};
+
+struct L2特征当前值读取结果 final {
+    L2结构结果头 结果头;
+    std::optional<L2特征值事实> 当前值;
+    bool 成功() const noexcept;
+    friend bool operator==(const L2特征当前值读取结果&,
+        const L2特征当前值读取结果&) = default;
+};
+
 struct L2特征当前值新增请求 final {
     L2结构请求头 请求头;
     L2结构幂等身份 幂等身份;
@@ -705,6 +720,14 @@ inline bool L2特征当前值材料有效(const L2原始值材料& 材料) noexc
             return 有效(值.编码);
         else return !值.empty();
     }, 材料);
+}
+
+// 诊断责任：无适用错误分支；当前值单读只接受非零事实代次守卫和具名实例。
+inline bool L2特征当前值读取请求有效(
+    const L2特征当前值读取请求& 请求) noexcept {
+    return L2结构请求头合同有效(请求.请求头)
+        && 请求.请求头.期望事实代次 != 0
+        && 有效(请求.特征实例.值);
 }
 
 // 诊断责任：无适用错误分支；纯值初始当前值请求判断不读取事实。
@@ -1089,6 +1112,16 @@ inline bool L2按存在当前特征读取结果::成功() const noexcept {
                 < 特征实例组[索引].身份.值))) return false;
     }
     return true;
+}
+
+// 诊断责任：无适用错误分支；当前值读取成功必须携带同截止未退出的完整值。
+inline bool L2特征当前值读取结果::成功() const noexcept {
+    return 结果头.状态 == L2结构状态::已读取
+        && 结果头.事实截止代次 != 0 && !结果头.变更事实代次
+        && 当前值
+        && L2特征值事实截止投影完整(
+            *当前值, 结果头.事实截止代次)
+        && !当前值->生命周期.退出事实代次;
 }
 
 // 诊断责任：无适用错误分支；值写结果必须保持首次新值与可选同代退出旧值。
