@@ -19,6 +19,8 @@ import 海中鱼巣.领域.服务.L2动态结构;
 import 海中鱼巣.领域.服务.L2因果结构;
 import 海中鱼巣.领域.服务.L2场景结构;
 import 海中鱼巣.领域.服务.L2结构聚合;
+import 海中鱼巣.领域.服务.L2概念结构;
+import 海中鱼巣.领域.服务.L2概念结构聚合;
 
 export {
 #include "业务/系统世界树根初始化.数据.h"
@@ -101,12 +103,23 @@ public:
     L2结构聚合服务& 取得L2结构聚合服务() noexcept { return *聚合服务_; }
     const L2结构聚合服务& 取得L2结构聚合服务() const noexcept { return *聚合服务_; }
 
+    // 诊断责任：无适用错误分支；返回上下文持有的唯一概念结构聚合同实例引用。
+    L2概念结构聚合服务& 取得L2概念结构聚合服务() noexcept {
+        return *概念聚合服务_;
+    }
+
+    // 诊断责任：无适用错误分支；返回上下文持有的唯一概念结构聚合同实例只读引用。
+    const L2概念结构聚合服务& 取得L2概念结构聚合服务() const noexcept {
+        return *概念聚合服务_;
+    }
+
     std::optional<系统世界树根读回> 读取系统世界树根读回() const {
         std::lock_guard<std::mutex> 锁(系统世界树根发布锁_);
         return 系统世界树根读回_;
     }
 
 private:
+    // 诊断责任：无适用错误分支；只移动已经完整装配的所有权并保持引用析构顺序。
     普通应用上下文(L1事实基座运行包&& 运行包,
         std::unique_ptr<L2存在结构服务>&& 存在服务,
         std::unique_ptr<L2特征结构服务>&& 特征服务,
@@ -114,11 +127,15 @@ private:
         std::unique_ptr<L2动态结构服务>&& 动态服务,
         std::unique_ptr<L2因果结构服务>&& 因果服务,
         std::unique_ptr<L2场景结构服务>&& 场景服务,
-        std::unique_ptr<L2结构聚合服务>&& 聚合服务) noexcept
+        std::unique_ptr<L2结构聚合服务>&& 聚合服务,
+        std::unique_ptr<L2概念结构服务>&& 概念服务,
+        std::unique_ptr<L2概念结构聚合服务>&& 概念聚合服务) noexcept
         : 运行包_(std::move(运行包)), 存在服务_(std::move(存在服务)),
           特征服务_(std::move(特征服务)), 状态服务_(std::move(状态服务)),
           动态服务_(std::move(动态服务)), 因果服务_(std::move(因果服务)),
-          场景服务_(std::move(场景服务)), 聚合服务_(std::move(聚合服务)) {}
+          场景服务_(std::move(场景服务)), 聚合服务_(std::move(聚合服务)),
+          概念服务_(std::move(概念服务)),
+          概念聚合服务_(std::move(概念聚合服务)) {}
 
     friend struct 普通应用装配结果;
     friend 普通应用装配结果 构造普通应用上下文(const 普通应用配置& 配置);
@@ -138,6 +155,8 @@ private:
     std::unique_ptr<L2因果结构服务> 因果服务_;
     std::unique_ptr<L2场景结构服务> 场景服务_;
     std::unique_ptr<L2结构聚合服务> 聚合服务_;
+    std::unique_ptr<L2概念结构服务> 概念服务_;
+    std::unique_ptr<L2概念结构聚合服务> 概念聚合服务_;
     mutable std::mutex 系统世界树根发布锁_;
     std::optional<L2场景树根建立请求> 待收敛系统世界树根请求_;
     std::optional<系统世界树根读回> 系统世界树根读回_;
@@ -169,7 +188,11 @@ enum class 普通应用装配状态 : std::uint8_t {
     场景所有者范围建立失败 = 20,
     场景所有者交付形成失败 = 21,
     场景服务构造失败 = 22,
-    L2结构聚合服务构造失败 = 23
+    L2结构聚合服务构造失败 = 23,
+    概念所有者范围建立失败 = 24,
+    概念所有者交付形成失败 = 25,
+    概念服务构造失败 = 26,
+    L2概念结构聚合服务构造失败 = 27
 };
 
 struct 普通应用装配结果 {
@@ -181,6 +204,7 @@ struct 普通应用装配结果 {
     }
 };
 
+// 诊断责任：向上送出；全部装配失败只映射结构化装配状态，不重复记录错误。
 普通应用装配结果 构造普通应用上下文(const 普通应用配置& 配置) {
     if (!配置.有效()) {
         return {};
@@ -320,11 +344,45 @@ struct 普通应用装配结果 {
         } catch (...) {
             return {普通应用装配状态::L2结构聚合服务构造失败, nullptr};
         }
+        std::optional<L1所有者范围交付> 概念原始交付;
+        try {
+            概念原始交付.emplace(
+                运行包.所有者范围签发器().建立所有者范围(
+                    {L1所有者范围CRUD合同版本, 概念所有者建立身份,
+                        L1所有者范围种类::独占结构范围}));
+        } catch (...) {
+            return {普通应用装配状态::概念所有者范围建立失败, nullptr};
+        }
+        if ((概念原始交付->建立结果.状态 != L1所有者范围管理状态::成功
+                && 概念原始交付->建立结果.状态
+                    != L1所有者范围管理状态::精确重复)
+            || !概念原始交付->建立结果.所有者事实
+            || !概念原始交付->写入端口)
+            return {普通应用装配状态::概念所有者范围建立失败, nullptr};
+        auto 概念所有者交付 = 尝试形成L2概念所有者交付(
+            运行包.读取服务(), std::move(*概念原始交付));
+        if (!概念所有者交付)
+            return {普通应用装配状态::概念所有者交付形成失败, nullptr};
+        std::unique_ptr<L2概念结构服务> 概念服务;
+        try {
+            概念服务 = std::make_unique<L2概念结构服务>(
+                运行包.读取服务(), std::move(*概念所有者交付));
+        } catch (...) {
+            return {普通应用装配状态::概念服务构造失败, nullptr};
+        }
+        std::unique_ptr<L2概念结构聚合服务> 概念聚合服务;
+        try {
+            概念聚合服务 =
+                std::make_unique<L2概念结构聚合服务>(*概念服务);
+        } catch (...) {
+            return {普通应用装配状态::L2概念结构聚合服务构造失败, nullptr};
+        }
         return {普通应用装配状态::已装配,
             std::unique_ptr<普通应用上下文>(new 普通应用上下文(
                 std::move(运行包), std::move(存在服务),
                 std::move(特征服务), std::move(状态服务), std::move(动态服务),
-                std::move(因果服务), std::move(场景服务), std::move(聚合服务)))};
+                std::move(因果服务), std::move(场景服务), std::move(聚合服务),
+                std::move(概念服务), std::move(概念聚合服务)))};
     } catch (...) {
         return {普通应用装配状态::构造失败, nullptr};
     }
