@@ -436,6 +436,20 @@ struct L2场景树读取结果 final {
         const L2场景树读取结果&) = default;
 };
 
+struct L2当前场景树组读取请求 final {
+    L2结构请求头 请求头;
+    friend bool operator==(const L2当前场景树组读取请求&,
+        const L2当前场景树组读取请求&) = default;
+};
+
+struct L2当前场景树组读取结果 final {
+    L2结构结果头 结果头;
+    std::vector<L2场景树事实> 场景树组;
+    bool 成功() const noexcept;
+    friend bool operator==(const L2当前场景树组读取结果&,
+        const L2当前场景树组读取结果&) = default;
+};
+
 inline bool L2场景树归属退出事实完整(
     const L2场景树归属事实&, std::uint64_t) noexcept;
 
@@ -1410,6 +1424,12 @@ inline bool L2场景树读取请求有效(const L2场景树读取请求& 请求)
         && 请求.历史截止事实代次 <= 请求.请求头.期望事实代次;
 }
 
+// 诊断责任：无适用错误分支；具名全部当前组入口允许零守卫选择最新快照。
+inline bool L2当前场景树组读取请求有效(
+    const L2当前场景树组读取请求& 请求) noexcept {
+    return L2结构请求头合同有效(请求.请求头);
+}
+
 // 诊断责任：无适用错误分支；创建成功载荷须与同代次根或非根结构一致。
 inline bool L2场景树节点写入结果::成功() const noexcept {
     const bool 成功状态 = 结果头.状态 == L2结构状态::已提交
@@ -1448,6 +1468,26 @@ inline bool L2场景树读取结果::成功() const noexcept {
             ? 历史截止事实代次 == 0
             : 读取类别 == L2读取类别::历史
                 && 历史截止事实代次 == 结果头.事实截止代次);
+}
+
+// 诊断责任：无适用错误分支；成功组必须严格排序、同截止且跨树无重复场景。
+inline bool L2当前场景树组读取结果::成功() const noexcept {
+    if (结果头.状态 != L2结构状态::已读取
+        || 结果头.事实截止代次 == 0 || 结果头.变更事实代次) return false;
+    for (std::size_t 树索引 = 0; 树索引 < 场景树组.size(); ++树索引) {
+        const auto& 树 = 场景树组[树索引];
+        if (树.事实截止代次 != 结果头.事实截止代次
+            || !L2场景树事实完整(树)
+            || (树索引 != 0
+                && !(场景树组[树索引 - 1].树.值 < 树.树.值))) return false;
+        for (const auto& 场景 : 树.场景组) {
+            for (std::size_t 前树索引 = 0; 前树索引 < 树索引; ++前树索引) {
+                for (const auto& 前树场景 : 场景树组[前树索引].场景组)
+                    if (前树场景.场景.身份 == 场景.场景.身份) return false;
+            }
+        }
+    }
+    return true;
 }
 
 } // namespace 海中鱼巣
