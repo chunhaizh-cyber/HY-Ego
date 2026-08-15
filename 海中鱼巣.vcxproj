@@ -217,6 +217,7 @@
     <ClInclude Include="海中鱼巣\领域\L2动态结构.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2因果结构.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2概念结构.数据.h" />
+    <ClInclude Include="海中鱼巣\领域\L2普通概念结构.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2方法结构.数据.h" />
     <ClInclude Include="海中鱼巣\线程\线程生命周期.数据.h" />
     <ClInclude Include="海中鱼巣\线程\支持线程候选.数据.h" />

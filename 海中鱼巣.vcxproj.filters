@@ -90,6 +90,9 @@
     <ClInclude Include="海中鱼巣\领域\L2概念结构.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\L2普通概念结构.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="海中鱼巣\领域\L2方法结构.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
