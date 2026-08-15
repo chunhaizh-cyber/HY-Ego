@@ -177,6 +177,14 @@ struct L2按特征实例当前状态读取请求 final {
         const L2按特征实例当前状态读取请求&) = default;
 };
 
+struct L2按来源当前状态读取请求 final {
+    L2结构请求头 请求头;
+    稳定编码 来源稳定编码;
+    std::uint64_t 最大数量 = 0;
+    friend bool operator==(const L2按来源当前状态读取请求&,
+        const L2按来源当前状态读取请求&) = default;
+};
+
 struct L2当前状态组读取结果 final {
     L2结构结果头 结果头;
     std::vector<L2状态事实> 状态;
@@ -475,6 +483,14 @@ inline bool L2按特征实例当前状态读取请求有效(
     const L2按特征实例当前状态读取请求& 请求) noexcept {
     return L2结构请求头合同有效(请求.请求头)
         && 请求.请求头.期望事实代次 != 0 && 有效(请求.特征实例.值);
+}
+
+// 诊断责任：无适用错误分支；来源条件读取必须使用非零守卫与数量预算。
+inline bool L2按来源当前状态读取请求有效(
+    const L2按来源当前状态读取请求& 请求) noexcept {
+    return L2结构请求头合同有效(请求.请求头)
+        && 请求.请求头.期望事实代次 != 0
+        && 有效(请求.来源稳定编码) && 请求.最大数量 != 0;
 }
 
 inline bool L2状态结构类型登记结果::成功() const noexcept {
