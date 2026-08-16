@@ -128,6 +128,7 @@ constexpr L2结构状态 映射历史失败(L1所有者范围读取状态 状态
 constexpr L2结构状态 映射事实代次探测失败(L1中性读取状态 状态) noexcept {
     switch (状态) {
     case L1中性读取状态::入口拒绝: return L2结构状态::入口拒绝;
+    case L1中性读取状态::许可拒绝: return L2结构状态::许可拒绝;
     case L1中性读取状态::资源失败: return L2结构状态::资源失败;
     case L1中性读取状态::成功: return L2结构状态::已读取;
     default: return L2结构状态::内部不一致;

@@ -193,6 +193,7 @@ std::optional<L2存在事实> 形成E1存在事实(
 L2结构状态 映射存在事实代次探测失败(L1中性读取状态 状态) noexcept {
     switch (状态) {
     case L1中性读取状态::入口拒绝: return L2结构状态::入口拒绝;
+    case L1中性读取状态::许可拒绝: return L2结构状态::许可拒绝;
     case L1中性读取状态::资源失败: return L2结构状态::资源失败;
     case L1中性读取状态::成功:
     case L1中性读取状态::未找到:
