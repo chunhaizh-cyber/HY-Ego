@@ -8,6 +8,7 @@
 namespace 海中鱼巣 {
 
 inline constexpr std::uint32_t L2普通方法结构合同版本 = 1;
+inline constexpr std::uint32_t L2普通方法规格引用合同版本 = 1;
 
 #define 定义L2普通方法节点身份(类型名) \
     struct 类型名 final { \
@@ -22,6 +23,26 @@ inline constexpr std::uint32_t L2普通方法结构合同版本 = 1;
 定义L2普通方法节点身份(L2方法动作入口身份);
 
 #undef 定义L2普通方法节点身份
+
+#define 定义L2普通方法规格引用身份(类型名) \
+    struct 类型名 final { \
+        稳定编码 值; \
+        explicit 类型名(稳定编码 编码 = {}) noexcept : 值(编码) {} \
+        friend bool operator==(const 类型名&, const 类型名&) = default; \
+    }
+
+定义L2普通方法规格引用身份(L2方法作用对象绑定身份);
+定义L2普通方法规格引用身份(L2方法参数规格身份);
+定义L2普通方法规格引用身份(L2方法禁止项规格身份);
+定义L2普通方法规格引用身份(L2方法适用范围身份);
+
+#undef 定义L2普通方法规格引用身份
+
+struct L2方法稳定动作键 final {
+    std::uint64_t 值 = 0;
+    friend bool operator==(const L2方法稳定动作键&,
+        const L2方法稳定动作键&) = default;
+};
 
 struct L2方法内容版本 final {
     std::uint64_t 值 = 0;
@@ -64,6 +85,33 @@ inline bool L2方法内容版本有效(L2方法内容版本 版本) noexcept {
 // 诊断责任：无适用错误分支；只判断独立方法规格版本非零。
 inline bool L2方法规格版本有效(L2方法规格版本 版本) noexcept {
     return 版本.值 != 0;
+}
+
+// 诊断责任：无适用错误分支；只判断作用对象绑定身份的非零稳定编码。
+inline bool L2方法作用对象绑定身份有效(
+    L2方法作用对象绑定身份 身份) noexcept {
+    return 有效(身份.值);
+}
+
+// 诊断责任：无适用错误分支；只判断参数规格身份的非零稳定编码。
+inline bool L2方法参数规格身份有效(L2方法参数规格身份 身份) noexcept {
+    return 有效(身份.值);
+}
+
+// 诊断责任：无适用错误分支；只判断禁止项规格身份的非零稳定编码。
+inline bool L2方法禁止项规格身份有效(
+    L2方法禁止项规格身份 身份) noexcept {
+    return 有效(身份.值);
+}
+
+// 诊断责任：无适用错误分支；只判断适用范围身份的非零稳定编码。
+inline bool L2方法适用范围身份有效(L2方法适用范围身份 身份) noexcept {
+    return 有效(身份.值);
+}
+
+// 诊断责任：无适用错误分支；只判断不透明稳定动作键非零。
+inline bool L2方法稳定动作键有效(L2方法稳定动作键 动作键) noexcept {
+    return 动作键.值 != 0;
 }
 
 } // namespace 海中鱼巣
