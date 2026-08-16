@@ -210,6 +210,7 @@
     <ClInclude Include="海中鱼巣\领域\L1自我结构登记.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2结构公共.数据.h" />
     <ClInclude Include="海中鱼巣\领域\不可变材料.数据.h" />
+    <ClInclude Include="海中鱼巣\领域\L2语言结构.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2场景结构.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2存在结构.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2特征结构.数据.h" />

@@ -69,6 +69,9 @@
     <ClInclude Include="海中鱼巣\领域\不可变材料.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\L2语言结构.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="海中鱼巣\领域\L2场景结构.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
