@@ -22,8 +22,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{9e26e203-9619-4d61-aa6c-5ed4d8694ecf}</ProjectGuid>
-    <RootNamespace>海中鱼巣</RootNamespace>
+    <ProjectGuid>{6B41BA23-8C4A-4E91-B2E6-0C8827515FD4}</ProjectGuid>
+    <RootNamespace>共享截止世界与自我快照消费参数验证</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -153,83 +153,83 @@
   </ItemDefinitionGroup>
 
   <ItemGroup>
-    <ClCompile Include="海中鱼巣\启动.程序入口.ixx" />
-    <ClCompile Include="海中鱼巣\装配.普通应用.ixx" />
-    <ClCompile Include="海中鱼巣\启动.程序运行宿主.ixx" />
-    <ClCompile Include="海中鱼巣\启动.应用程序.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.L1自我结构登记.ixx" />
-    <ClCompile Include="海中鱼巣\领域\合同.L2结构公共.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.不可变材料.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.L2场景结构.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.L2存在结构.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.L2特征结构.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.L2状态结构.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.L2动态结构.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.L2因果结构.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.L2概念结构.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.L2概念结构聚合.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.L2方法结构.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.L2语言结构.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.L2方法结构聚合.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.L2结构聚合.ixx" />
-    <ClCompile Include="海中鱼巣\领域\组合.运行期只读查询.ixx" />
-    <ClCompile Include="海中鱼巣\核心\合同.L1公共事实.ixx" />
-    <ClCompile Include="海中鱼巣\核心\合同.L1事实基座.ixx" />
-    <ClCompile Include="海中鱼巣\核心\合同.L1所有者范围CRUD.ixx" />
-    <ClCompile Include="海中鱼巣\核心\合同.L1中性CRUD.ixx" />
-    <ClCompile Include="海中鱼巣\核心\仓库.L1事实基座.ixx" />
-    <ClCompile Include="海中鱼巣\核心\服务.L1事实基座.ixx" />
-    <ClCompile Include="海中鱼巣\线程\运行消息协议.ixx" />
-    <ClCompile Include="海中鱼巣\适配\协议.D455采样材料.ixx" />
-    <ClCompile Include="海中鱼巣\适配\采集器.D455相机.ixx">
+    <ClCompile Include="..\海中鱼巣\启动.程序入口.ixx" />
+    <ClCompile Include="..\海中鱼巣\装配.普通应用.ixx" />
+    <ClCompile Include="..\海中鱼巣\启动.程序运行宿主.ixx" />
+    <ClCompile Include="..\海中鱼巣\启动.应用程序.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\服务.L1自我结构登记.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\合同.L2结构公共.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\服务.不可变材料.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\服务.L2场景结构.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\服务.L2存在结构.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\服务.L2特征结构.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\服务.L2状态结构.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\服务.L2动态结构.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\服务.L2因果结构.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\服务.L2概念结构.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\服务.L2概念结构聚合.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\服务.L2方法结构.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\服务.L2语言结构.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\服务.L2方法结构聚合.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\服务.L2结构聚合.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\组合.运行期只读查询.ixx" />
+    <ClCompile Include="..\海中鱼巣\核心\合同.L1公共事实.ixx" />
+    <ClCompile Include="..\海中鱼巣\核心\合同.L1事实基座.ixx" />
+    <ClCompile Include="..\海中鱼巣\核心\合同.L1所有者范围CRUD.ixx" />
+    <ClCompile Include="..\海中鱼巣\核心\合同.L1中性CRUD.ixx" />
+    <ClCompile Include="..\海中鱼巣\核心\仓库.L1事实基座.ixx" />
+    <ClCompile Include="..\海中鱼巣\核心\服务.L1事实基座.ixx" />
+    <ClCompile Include="..\海中鱼巣\线程\运行消息协议.ixx" />
+    <ClCompile Include="..\海中鱼巣\适配\协议.D455采样材料.ixx" />
+    <ClCompile Include="..\海中鱼巣\适配\采集器.D455相机.ixx">
       <ExcludedFromBuild Condition="'$(Platform)'!='x64' or '$(EnableD455RealSense)'!='true'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\线程\缓存.D455帧材料.ixx" />
-    <ClCompile Include="海中鱼巣\线程\上行桥.D455采样材料.ixx" />
-    <ClCompile Include="海中鱼巣\线程\自我治理消息协议.ixx" />
-    <ClCompile Include="海中鱼巣\线程\协议.任务执行请求.ixx" />
-    <ClCompile Include="海中鱼巣\线程\任务结果回执协议.ixx" />
-    <ClCompile Include="海中鱼巣\线程\有界自我治理队列.ixx" />
-    <ClCompile Include="海中鱼巣\线程\投影.线程生命周期.ixx" />
-    <ClCompile Include="海中鱼巣\线程\候选.支持线程.ixx" />
-    <ClCompile Include="海中鱼巣\线程\运行.事件日志线程.ixx" />
-    <ClCompile Include="海中鱼巣\线程\有界运行消息队列.ixx" />
-    <ClCompile Include="海中鱼巣\线程\运行宿主线程.ixx" />
-    <ClCompile Include="海中鱼巣\线程\任务管理线程.ixx" />
-    <ClCompile Include="海中鱼巣\线程\外设采样材料线程.ixx" />
-    <ClCompile Include="海中鱼巣\入口.cpp" />
+    <ClCompile Include="..\海中鱼巣\线程\缓存.D455帧材料.ixx" />
+    <ClCompile Include="..\海中鱼巣\线程\上行桥.D455采样材料.ixx" />
+    <ClCompile Include="..\海中鱼巣\线程\自我治理消息协议.ixx" />
+    <ClCompile Include="..\海中鱼巣\线程\协议.任务执行请求.ixx" />
+    <ClCompile Include="..\海中鱼巣\线程\任务结果回执协议.ixx" />
+    <ClCompile Include="..\海中鱼巣\线程\有界自我治理队列.ixx" />
+    <ClCompile Include="..\海中鱼巣\线程\投影.线程生命周期.ixx" />
+    <ClCompile Include="..\海中鱼巣\线程\候选.支持线程.ixx" />
+    <ClCompile Include="..\海中鱼巣\线程\运行.事件日志线程.ixx" />
+    <ClCompile Include="..\海中鱼巣\线程\有界运行消息队列.ixx" />
+    <ClCompile Include="..\海中鱼巣\线程\运行宿主线程.ixx" />
+    <ClCompile Include="..\海中鱼巣\线程\任务管理线程.ixx" />
+    <ClCompile Include="..\海中鱼巣\线程\外设采样材料线程.ixx" />
+    <ClCompile Include="共享截止世界与自我快照消费参数验证.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="海中鱼巣\启动选项.数据.h" />
-    <ClInclude Include="海中鱼巣\程序运行结果.数据.h" />
-    <ClInclude Include="海中鱼巣\核心\句柄.h" />
-    <ClInclude Include="海中鱼巣\核心\L1公共事实.数据.h" />
-    <ClInclude Include="海中鱼巣\核心\L1事实基座.数据.h" />
-    <ClInclude Include="海中鱼巣\核心\L1所有者范围CRUD.数据.h" />
-    <ClInclude Include="海中鱼巣\核心\L1中性CRUD.数据.h" />
-    <ClInclude Include="海中鱼巣\核心\日志系统.h" />
-    <ClInclude Include="海中鱼巣\核心\容错检查.h" />
-    <ClInclude Include="海中鱼巣\领域\L1自我结构登记.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\L2结构公共.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\不可变材料.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\L2语言结构.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\L2场景结构.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\L2存在结构.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\L2特征结构.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\L2状态结构.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\L2动态结构.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\L2因果结构.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\L2概念结构.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\L2普通概念结构.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\L2方法结构.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\L2普通方法结构.数据.h" />
-    <ClInclude Include="海中鱼巣\线程\线程生命周期.数据.h" />
-    <ClInclude Include="海中鱼巣\线程\支持线程候选.数据.h" />
-    <ClInclude Include="海中鱼巣\线程\事件日志线程.数据.h" />
-    <ClInclude Include="海中鱼巣\业务\系统世界树根初始化.数据.h" />
-    <ClInclude Include="海中鱼巣\业务\初始化.系统世界树根.inl" />
-    <ClInclude Include="海中鱼巣\业务\自我世界树根消费.数据.h" />
-    <ClInclude Include="海中鱼巣\业务\消费.自我世界树根.inl" />
+    <ClInclude Include="..\海中鱼巣\启动选项.数据.h" />
+    <ClInclude Include="..\海中鱼巣\程序运行结果.数据.h" />
+    <ClInclude Include="..\海中鱼巣\核心\句柄.h" />
+    <ClInclude Include="..\海中鱼巣\核心\L1公共事实.数据.h" />
+    <ClInclude Include="..\海中鱼巣\核心\L1事实基座.数据.h" />
+    <ClInclude Include="..\海中鱼巣\核心\L1所有者范围CRUD.数据.h" />
+    <ClInclude Include="..\海中鱼巣\核心\L1中性CRUD.数据.h" />
+    <ClInclude Include="..\海中鱼巣\核心\日志系统.h" />
+    <ClInclude Include="..\海中鱼巣\核心\容错检查.h" />
+    <ClInclude Include="..\海中鱼巣\领域\L1自我结构登记.数据.h" />
+    <ClInclude Include="..\海中鱼巣\领域\L2结构公共.数据.h" />
+    <ClInclude Include="..\海中鱼巣\领域\不可变材料.数据.h" />
+    <ClInclude Include="..\海中鱼巣\领域\L2语言结构.数据.h" />
+    <ClInclude Include="..\海中鱼巣\领域\L2场景结构.数据.h" />
+    <ClInclude Include="..\海中鱼巣\领域\L2存在结构.数据.h" />
+    <ClInclude Include="..\海中鱼巣\领域\L2特征结构.数据.h" />
+    <ClInclude Include="..\海中鱼巣\领域\L2状态结构.数据.h" />
+    <ClInclude Include="..\海中鱼巣\领域\L2动态结构.数据.h" />
+    <ClInclude Include="..\海中鱼巣\领域\L2因果结构.数据.h" />
+    <ClInclude Include="..\海中鱼巣\领域\L2概念结构.数据.h" />
+    <ClInclude Include="..\海中鱼巣\领域\L2普通概念结构.数据.h" />
+    <ClInclude Include="..\海中鱼巣\领域\L2方法结构.数据.h" />
+    <ClInclude Include="..\海中鱼巣\领域\L2普通方法结构.数据.h" />
+    <ClInclude Include="..\海中鱼巣\线程\线程生命周期.数据.h" />
+    <ClInclude Include="..\海中鱼巣\线程\支持线程候选.数据.h" />
+    <ClInclude Include="..\海中鱼巣\线程\事件日志线程.数据.h" />
+    <ClInclude Include="..\海中鱼巣\业务\系统世界树根初始化.数据.h" />
+    <ClInclude Include="..\海中鱼巣\业务\初始化.系统世界树根.inl" />
+    <ClInclude Include="..\海中鱼巣\业务\自我世界树根消费.数据.h" />
+    <ClInclude Include="..\海中鱼巣\业务\消费.自我世界树根.inl" />
   </ItemGroup>
   <Target Name="验证D455RealSense构建输入" BeforeTargets="PrepareForBuild"
           Condition="'$(EnableD455RealSense)'=='true' and '$(Platform)'=='x64'">
