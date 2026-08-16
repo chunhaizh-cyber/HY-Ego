@@ -13,7 +13,9 @@
 
 namespace 海中鱼巣 {
 
-inline constexpr std::uint32_t L2普通概念结构合同版本 = 1;
+inline constexpr std::uint32_t L2普通概念结构合同版本 = 2;
+inline constexpr std::uint32_t L2概念定义合同版本 = 1;
+inline constexpr std::uint32_t L2普通概念退出合同版本 = 1;
 inline constexpr std::uint32_t L2概念直接上下位关系合同版本 = 1;
 inline constexpr std::uint32_t L2概念世界事实支持关系合同版本 = 1;
 inline constexpr std::uint32_t L2概念治理生命周期合同版本 = 1;
@@ -91,6 +93,14 @@ struct L2概念定义引用项 final {
         const L2概念定义引用项&) = default;
 };
 
+struct L2概念定义角色合同 final {
+    std::uint64_t 角色 = 0;
+    std::size_t 最小数量 = 0;
+    std::size_t 最大数量 = 0;
+    friend bool operator==(const L2概念定义角色合同&,
+        const L2概念定义角色合同&) = default;
+};
+
 struct L2概念本体根归属事实 final {
     L2概念身份 本体根;
     L2概念身份 概念;
@@ -125,6 +135,18 @@ struct L2概念定义关系事实 final {
     L2生命周期 生命周期;
     friend bool operator==(const L2概念定义关系事实&,
         const L2概念定义关系事实&) = default;
+};
+
+struct L2概念定义角色合同事实 final {
+    L2概念身份 概念;
+    L2概念定义角色合同 合同;
+    稳定编码 成员关系稳定编码;
+    稳定编码 角色值稳定编码;
+    稳定编码 最小数量值稳定编码;
+    稳定编码 最大数量值稳定编码;
+    L2生命周期 生命周期;
+    friend bool operator==(const L2概念定义角色合同事实&,
+        const L2概念定义角色合同事实&) = default;
 };
 
 struct L2概念世界事实支持关系事实 final {
@@ -171,6 +193,7 @@ struct L2普通概念事实 final {
     L2概念本体根归属事实 本体根归属;
     L2概念签名规则事实 签名规则;
     std::vector<L2概念签名值式事实> 签名值式项;
+    std::vector<L2概念定义角色合同事实> 定义角色合同;
     std::vector<L2概念定义关系事实> 定义关系;
     std::vector<L2概念直接上位事实> 直接上位;
     std::vector<L2概念来源证据事实> 来源证据;
@@ -186,6 +209,7 @@ struct L2普通概念建立请求 final {
     L2概念身份 本体根;
     不可变材料身份 签名规则材料;
     std::vector<L2概念签名值式项> 签名值式项;
+    std::vector<L2概念定义角色合同> 定义角色合同;
     std::vector<L2概念定义引用项> 初始定义;
     std::vector<L2概念身份> 直接上位;
     std::vector<不可变材料身份> 来源证据材料;
@@ -219,6 +243,62 @@ struct L2普通概念读取结果 final {
     bool 成功() const noexcept;
     friend bool operator==(const L2普通概念读取结果&,
         const L2普通概念读取结果&) = default;
+};
+
+struct L2按概念定义组读取请求 final {
+    L2结构请求头 请求头;
+    std::uint32_t 定义合同版本 = L2概念定义合同版本;
+    L2读取类别 读取类别 = L2读取类别::当前;
+    L2概念身份 概念;
+    std::uint64_t 历史截止事实代次 = 0;
+    std::size_t 数量预算 = 0;
+    friend bool operator==(const L2按概念定义组读取请求&,
+        const L2按概念定义组读取请求&) = default;
+};
+
+struct L2按定义目标概念组读取请求 final {
+    L2结构请求头 请求头;
+    std::uint32_t 定义合同版本 = L2概念定义合同版本;
+    L2读取类别 读取类别 = L2读取类别::当前;
+    L2概念定义目标 目标;
+    std::uint64_t 历史截止事实代次 = 0;
+    std::size_t 扫描预算 = 0;
+    std::size_t 数量预算 = 0;
+    friend bool operator==(const L2按定义目标概念组读取请求&,
+        const L2按定义目标概念组读取请求&) = default;
+};
+
+struct L2概念定义组读取结果 final {
+    L2结构结果头 结果头;
+    L2读取类别 读取类别 = L2读取类别::当前;
+    std::uint64_t 历史截止事实代次 = 0;
+    std::vector<L2概念定义角色合同事实> 角色合同组;
+    std::vector<L2概念定义关系事实> 定义关系组;
+    bool 成功() const noexcept;
+    friend bool operator==(const L2概念定义组读取结果&,
+        const L2概念定义组读取结果&) = default;
+};
+
+struct L2普通概念退出请求 final {
+    L2结构请求头 请求头;
+    std::uint32_t 退出合同版本 = L2普通概念退出合同版本;
+    L2结构幂等身份 幂等身份;
+    L2概念身份 概念;
+    稳定编码 当前退役生命周期事实稳定编码;
+    std::size_t 图扫描预算 = 0;
+    std::size_t 关系数量预算 = 0;
+    friend bool operator==(const L2普通概念退出请求&,
+        const L2普通概念退出请求&) = default;
+};
+
+struct L2普通概念退出结果 final {
+    L2结构结果头 结果头;
+    std::optional<L2普通概念事实> 已退出概念;
+    std::vector<L2概念直接上位事实> 已退出直接关系;
+    std::vector<L2概念直接上位事实> 新增替代关系;
+    bool 成功() const noexcept;
+    friend bool operator==(const L2普通概念退出结果&,
+        const L2普通概念退出结果&) = default;
 };
 
 struct L2概念治理生命周期迁移请求 final {
@@ -809,6 +889,28 @@ inline bool L2概念世界事实支持组读取结果::成功() const noexcept {
     return true;
 }
 
+// 诊断责任：无适用错误分支；角色合同必须有限、非零且上下界有序。
+inline bool L2概念定义角色合同有效(
+    const L2概念定义角色合同& 合同) noexcept {
+    return 合同.角色 != 0 && 合同.最大数量 != 0
+        && 合同.最小数量 <= 合同.最大数量;
+}
+
+// 诊断责任：无适用错误分支；只判断角色合同事实在具名截止的完整投影。
+inline bool L2概念定义角色合同事实截止投影完整(
+    const L2概念定义角色合同事实& 事实, std::uint64_t 截止) noexcept {
+    return 截止 != 0 && 有效(事实.概念.值)
+        && L2概念定义角色合同有效(事实.合同)
+        && 有效(事实.成员关系稳定编码)
+        && 有效(事实.角色值稳定编码)
+        && 有效(事实.最小数量值稳定编码)
+        && 有效(事实.最大数量值稳定编码)
+        && L2生命周期完整(事实.生命周期)
+        && 事实.生命周期.创建事实代次 <= 截止
+        && (!事实.生命周期.退出事实代次
+            || *事实.生命周期.退出事实代次 <= 截止);
+}
+
 // 诊断责任：无适用错误分支；只校验普通概念建立请求的值式合同、排序和闭合强类型引用。
 inline bool L2普通概念建立请求有效(
     const L2普通概念建立请求& 请求) noexcept {
@@ -837,6 +939,13 @@ inline bool L2普通概念建立请求有效(
         if (索引 != 0 && !键小于(请求.签名值式项[索引 - 1].角色,
                 请求.签名值式项[索引 - 1].顺序, 项.角色, 项.顺序)) return false;
     }
+    for (std::size_t 索引 = 0; 索引 < 请求.定义角色合同.size(); ++索引) {
+        const auto& 合同 = 请求.定义角色合同[索引];
+        if (!L2概念定义角色合同有效(合同)
+            || (索引 != 0
+                && 请求.定义角色合同[索引 - 1].角色 >= 合同.角色))
+            return false;
+    }
     for (std::size_t 索引 = 0; 索引 < 请求.初始定义.size(); ++索引) {
         const auto& 项 = 请求.初始定义[索引];
         if (项.角色 == 0 || 项.顺序 == 0 || !L2概念定义目标有效(项.目标))
@@ -848,6 +957,22 @@ inline bool L2普通概念建立请求有效(
         for (const auto& 定义项 : 请求.初始定义)
             if (值式项.角色 == 定义项.角色 && 值式项.顺序 == 定义项.顺序)
                 return false;
+    for (const auto& 定义项 : 请求.初始定义) {
+        const L2概念定义角色合同* 合同 = nullptr;
+        for (const auto& 候选 : 请求.定义角色合同)
+            if (候选.角色 == 定义项.角色) 合同 = &候选;
+        if (!合同 || 定义项.顺序 > 合同->最大数量) return false;
+    }
+    for (const auto& 合同 : 请求.定义角色合同) {
+        std::size_t 数量 = 0;
+        std::uint64_t 期望顺序 = 1;
+        for (const auto& 定义项 : 请求.初始定义) {
+            if (定义项.角色 != 合同.角色) continue;
+            if (定义项.顺序 != 期望顺序++) return false;
+            ++数量;
+        }
+        if (数量 < 合同.最小数量 || 数量 > 合同.最大数量) return false;
+    }
     for (std::size_t 索引 = 0; 索引 < 请求.直接上位.size(); ++索引) {
         if (!有效(请求.直接上位[索引].值)
             || (索引 != 0
@@ -861,6 +986,43 @@ inline bool L2普通概念建立请求有效(
                     < 请求.来源证据材料[索引].值))) return false;
     }
     return true;
+}
+
+// 诊断责任：无适用错误分支；正向定义组读要求非零守卫、身份和数量预算。
+inline bool L2按概念定义组读取请求有效(
+    const L2按概念定义组读取请求& 请求) noexcept {
+    if (!L2结构请求头合同有效(请求.请求头)
+        || 请求.请求头.期望事实代次 == 0
+        || 请求.定义合同版本 != L2概念定义合同版本
+        || !有效(请求.概念.值) || 请求.数量预算 == 0) return false;
+    return L2普通概念数据内部::读取类别字段有效(
+        请求.读取类别, 请求.历史截止事实代次,
+        请求.请求头.期望事实代次);
+}
+
+// 诊断责任：无适用错误分支；反向定义组读还要求闭合目标和非零扫描预算。
+inline bool L2按定义目标概念组读取请求有效(
+    const L2按定义目标概念组读取请求& 请求) noexcept {
+    if (!L2结构请求头合同有效(请求.请求头)
+        || 请求.请求头.期望事实代次 == 0
+        || 请求.定义合同版本 != L2概念定义合同版本
+        || !L2概念定义目标有效(请求.目标)
+        || 请求.扫描预算 == 0 || 请求.数量预算 == 0) return false;
+    return L2普通概念数据内部::读取类别字段有效(
+        请求.读取类别, 请求.历史截止事实代次,
+        请求.请求头.期望事实代次);
+}
+
+// 诊断责任：无适用错误分支；退出请求要求精确退役见证和两个有界预算。
+inline bool L2普通概念退出请求有效(
+    const L2普通概念退出请求& 请求) noexcept {
+    return L2结构请求头合同有效(请求.请求头)
+        && 请求.请求头.期望事实代次 != 0
+        && 请求.退出合同版本 == L2普通概念退出合同版本
+        && L2结构幂等身份有效(请求.幂等身份)
+        && 有效(请求.概念.值)
+        && 有效(请求.当前退役生命周期事实稳定编码)
+        && 请求.图扫描预算 != 0 && 请求.关系数量预算 != 0;
 }
 
 // 诊断责任：无适用错误分支；当前与历史读取参数按类别互斥。
@@ -1000,6 +1162,15 @@ inline bool L2普通概念事实完整(
                 事实.签名值式项[索引 - 1].项.顺序,
                 项.项.角色, 项.项.顺序)) return false;
     }
+    for (std::size_t 索引 = 0; 索引 < 事实.定义角色合同.size(); ++索引) {
+        const auto& 合同 = 事实.定义角色合同[索引];
+        if (合同.概念 != 事实.概念
+            || !L2概念定义角色合同事实截止投影完整(合同, 截止)
+            || (索引 != 0
+                && 事实.定义角色合同[索引 - 1].合同.角色
+                    >= 合同.合同.角色))
+            return false;
+    }
     for (std::size_t 索引 = 0; 索引 < 事实.定义关系.size(); ++索引) {
         const auto& 项 = 事实.定义关系[索引];
         if (项.概念 != 事实.概念 || 项.项.角色 == 0 || 项.项.顺序 == 0
@@ -1014,6 +1185,23 @@ inline bool L2普通概念事实完整(
         for (const auto& 定义项 : 事实.定义关系)
             if (值式项.项.角色 == 定义项.项.角色
                 && 值式项.项.顺序 == 定义项.项.顺序) return false;
+    for (const auto& 定义项 : 事实.定义关系) {
+        const L2概念定义角色合同事实* 合同 = nullptr;
+        for (const auto& 候选 : 事实.定义角色合同)
+            if (候选.合同.角色 == 定义项.项.角色) 合同 = &候选;
+        if (!合同 || 定义项.项.顺序 > 合同->合同.最大数量) return false;
+    }
+    for (const auto& 合同 : 事实.定义角色合同) {
+        std::size_t 数量 = 0;
+        std::uint64_t 期望顺序 = 1;
+        for (const auto& 定义项 : 事实.定义关系) {
+            if (定义项.项.角色 != 合同.合同.角色) continue;
+            if (定义项.项.顺序 != 期望顺序++) return false;
+            ++数量;
+        }
+        if (数量 < 合同.合同.最小数量
+            || 数量 > 合同.合同.最大数量) return false;
+    }
     for (std::size_t 索引 = 0; 索引 < 事实.直接上位.size(); ++索引) {
         const auto& 上位 = 事实.直接上位[索引];
         if (!有效(上位.上位概念.值) || 上位.上位概念 == 事实.概念
@@ -1108,6 +1296,8 @@ inline bool L2普通概念写入结果::成功() const noexcept {
         || 概念->治理生命周期.生命周期.退出事实代次) return false;
     for (const auto& 项 : 概念->签名值式项)
         if (项.生命周期.退出事实代次) return false;
+    for (const auto& 项 : 概念->定义角色合同)
+        if (项.生命周期.退出事实代次) return false;
     for (const auto& 项 : 概念->定义关系)
         if (项.生命周期.退出事实代次) return false;
     for (const auto& 项 : 概念->直接上位)
@@ -1143,12 +1333,101 @@ inline bool L2普通概念读取结果::成功() const noexcept {
         || 概念->治理生命周期.生命周期.退出事实代次) return false;
     for (const auto& 项 : 概念->签名值式项)
         if (项.生命周期.退出事实代次) return false;
+    for (const auto& 项 : 概念->定义角色合同)
+        if (项.生命周期.退出事实代次) return false;
     for (const auto& 项 : 概念->定义关系)
         if (项.生命周期.退出事实代次) return false;
     for (const auto& 项 : 概念->直接上位)
         if (项.生命周期.退出事实代次) return false;
     for (const auto& 项 : 概念->来源证据)
         if (项.生命周期.退出事实代次) return false;
+    return true;
+}
+
+// 诊断责任：无适用错误分支；定义组读必须同截止、稳定排序且全量值式完整。
+inline bool L2概念定义组读取结果::成功() const noexcept {
+    if (结果头.状态 != L2结构状态::已读取
+        || 结果头.合同版本 != L2结构合同版本
+        || 结果头.事实截止代次 == 0 || 结果头.变更事实代次) return false;
+    if (读取类别 == L2读取类别::当前) {
+        if (历史截止事实代次 != 0) return false;
+    } else if (读取类别 == L2读取类别::历史) {
+        if (历史截止事实代次 == 0
+            || 结果头.事实截止代次 != 历史截止事实代次) return false;
+    } else return false;
+    const auto 生命周期适合类别 = [&](const L2生命周期& 生命周期) noexcept {
+        if (读取类别 == L2读取类别::当前)
+            return !生命周期.退出事实代次;
+        return !生命周期.退出事实代次
+            || *生命周期.退出事实代次 <= 结果头.事实截止代次;
+    };
+    for (std::size_t 索引 = 0; 索引 < 角色合同组.size(); ++索引) {
+        const auto& 当前 = 角色合同组[索引];
+        if (!L2概念定义角色合同事实截止投影完整(
+                当前, 结果头.事实截止代次)
+            || !生命周期适合类别(当前.生命周期)) return false;
+        if (索引 == 0) continue;
+        const auto& 前 = 角色合同组[索引 - 1];
+        if (!(前.概念.值 < 当前.概念.值
+                || (前.概念 == 当前.概念
+                    && 前.合同.角色 < 当前.合同.角色))) return false;
+    }
+    for (std::size_t 索引 = 0; 索引 < 定义关系组.size(); ++索引) {
+        const auto& 当前 = 定义关系组[索引];
+        if (!有效(当前.概念.值) || 当前.项.角色 == 0
+            || 当前.项.顺序 == 0 || !L2概念定义目标有效(当前.项.目标)
+            || !有效(当前.关系稳定编码)
+            || !L2生命周期完整(当前.生命周期)
+            || 当前.生命周期.创建事实代次 > 结果头.事实截止代次
+            || !生命周期适合类别(当前.生命周期)) return false;
+        if (索引 == 0) continue;
+        const auto& 前 = 定义关系组[索引 - 1];
+        if (!(前.概念.值 < 当前.概念.值
+                || (前.概念 == 当前.概念
+                    && (前.项.角色 < 当前.项.角色
+                        || (前.项.角色 == 当前.项.角色
+                            && (前.项.顺序 < 当前.项.顺序
+                                || (前.项.顺序 == 当前.项.顺序
+                                    && 前.关系稳定编码
+                                        < 当前.关系稳定编码))))))) return false;
+    }
+    return true;
+}
+
+// 诊断责任：无适用错误分支；退出成功必须同代关闭概念和旧边并值式返回替代边。
+inline bool L2普通概念退出结果::成功() const noexcept {
+    const bool 成功状态 = 结果头.状态 == L2结构状态::已提交
+        || 结果头.状态 == L2结构状态::精确重复;
+    if (!成功状态 || 结果头.合同版本 != L2结构合同版本
+        || 结果头.事实截止代次 == 0 || !结果头.变更事实代次
+        || *结果头.变更事实代次 != 结果头.事实截止代次
+        || !已退出概念
+        || !L2普通概念事实完整(*已退出概念, 结果头.事实截止代次))
+        return false;
+    const auto 截止 = 结果头.事实截止代次;
+    const auto 同截止退出 = [截止](const L2生命周期& 生命周期) noexcept {
+        return 生命周期.退出事实代次 == 截止;
+    };
+    if (!同截止退出(已退出概念->身份来源.节点生命周期)
+        || !同截止退出(已退出概念->身份来源.归属关系生命周期)
+        || !同截止退出(已退出概念->本体根归属.生命周期)
+        || !同截止退出(已退出概念->签名规则.生命周期)
+        || !同截止退出(已退出概念->治理生命周期.生命周期)) return false;
+    for (const auto& 项 : 已退出概念->签名值式项)
+        if (!同截止退出(项.生命周期)) return false;
+    for (const auto& 项 : 已退出概念->定义角色合同)
+        if (!同截止退出(项.生命周期)) return false;
+    for (const auto& 项 : 已退出概念->定义关系)
+        if (!同截止退出(项.生命周期)) return false;
+    for (const auto& 项 : 已退出概念->来源证据)
+        if (!同截止退出(项.生命周期)) return false;
+    for (const auto& 关系 : 已退出直接关系)
+        if (!L2概念直接上位事实截止投影完整(关系, 截止)
+            || 关系.生命周期.退出事实代次 != 截止) return false;
+    for (const auto& 关系 : 新增替代关系)
+        if (!L2概念直接上位事实截止投影完整(关系, 截止)
+            || 关系.生命周期.创建事实代次 != 截止
+            || 关系.生命周期.退出事实代次) return false;
     return true;
 }
 
