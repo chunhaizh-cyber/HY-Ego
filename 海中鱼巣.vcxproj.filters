@@ -37,6 +37,9 @@
     <ClCompile Include="海中鱼巣\领域\服务.L2方法结构.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\服务.L2语言结构.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\服务.L2方法结构聚合.ixx">
       <Filter>源文件</Filter>
     </ClCompile>

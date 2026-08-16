@@ -450,6 +450,10 @@ public:
     不可变材料登记读取结果 读取不可变材料登记(
         const 不可变材料登记读取请求& 请求) const;
 
+    // 诊断责任：无适用错误分支；只比较构造时借入的 L1 服务实例地址。
+    bool 使用同一L1事实基座实例(
+        const L1事实基座服务& 第一层服务) const noexcept;
+
 private:
     struct 实现;
     explicit 不可变材料服务(std::unique_ptr<实现> 实现值) noexcept;
@@ -1175,6 +1179,11 @@ bool 不可变材料服务构造结果::成功() const noexcept {
     : 实现_(std::move(实现值)) {}
 
 inline 不可变材料服务::~不可变材料服务() = default;
+
+bool 不可变材料服务::使用同一L1事实基座实例(
+    const L1事实基座服务& 第一层服务) const noexcept {
+    return 实现_ && &实现_->第一层读取服务 == &第一层服务;
+}
 
 // 诊断责任：本地记录；异常映射不改变已经发布的权威事实。
 不可变材料写入结果 不可变材料服务::写入不可变材料(
