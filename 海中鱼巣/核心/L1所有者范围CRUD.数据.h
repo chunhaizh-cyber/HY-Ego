@@ -17,6 +17,7 @@ inline constexpr std::uint32_t L1所有者范围一致当前读取合同版本 =
 inline constexpr std::uint32_t L1所有者范围一致关系类型闭包读取合同版本 = 1;
 inline constexpr std::uint32_t L1所有者范围首次写入读取合同版本 = 1;
 inline constexpr std::uint32_t L1所有者范围来源当前值组读取合同版本 = 1;
+inline constexpr std::uint32_t L1所有者范围属性类型当前值组读取合同版本 = 1;
 
 struct L1结构所有者身份 final {
     稳定编码 编码;
@@ -291,6 +292,42 @@ struct L1所有者范围来源当前值组读取结果 final {
     std::vector<L1所有者范围值事实> 当前值;
     friend bool operator==(const L1所有者范围来源当前值组读取结果&,
         const L1所有者范围来源当前值组读取结果&) = default;
+};
+
+enum class L1所有者范围属性类型当前值组读取状态 : std::uint8_t {
+    成功 = 1,
+    入口拒绝 = 2,
+    未找到 = 3,
+    已退出 = 4,
+    事实代次漂移 = 5,
+    数量预算不足 = 6,
+    资源失败 = 7,
+    内部不一致 = 8
+};
+
+struct L1所有者范围属性类型当前值组读取请求 final {
+    std::uint32_t 合同版本 = L1所有者范围属性类型当前值组读取合同版本;
+    L1结构所有者身份 所有者;
+    稳定编码 属性类型节点;
+    std::uint64_t 期望事实代次 = 0;
+    std::uint64_t 最大数量 = 0;
+    friend bool operator==(
+        const L1所有者范围属性类型当前值组读取请求&,
+        const L1所有者范围属性类型当前值组读取请求&) = default;
+};
+
+struct L1所有者范围属性类型当前值组读取结果 final {
+    L1所有者范围属性类型当前值组读取状态 状态 =
+        L1所有者范围属性类型当前值组读取状态::入口拒绝;
+    std::uint32_t 合同版本 = L1所有者范围属性类型当前值组读取合同版本;
+    L1结构所有者身份 所有者;
+    稳定编码 属性类型节点;
+    std::uint64_t 期望事实代次 = 0;
+    std::uint64_t 读取事实代次 = 0;
+    std::vector<L1所有者范围值事实> 当前值;
+    friend bool operator==(
+        const L1所有者范围属性类型当前值组读取结果&,
+        const L1所有者范围属性类型当前值组读取结果&) = default;
 };
 
 struct L1所有者范围首次写入读取请求 final {
