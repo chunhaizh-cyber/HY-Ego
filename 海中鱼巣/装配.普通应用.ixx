@@ -1,17 +1,31 @@
 module;
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#include <shlobj.h>
+
 #include <cstdint>
+#include <filesystem>
 #include <memory>
 #include <mutex>
+#include <new>
 #include <optional>
+#include <stdexcept>
+#include <system_error>
 #include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>
 
+#pragma comment(lib, "shell32.lib")
+
 export module 海中鱼巣.装配.普通应用;
 
 import 海中鱼巣.核心.服务.L1事实基座;
+import 海中鱼巣.领域.服务.不可变材料;
+import 海中鱼巣.领域.服务.L2语言结构;
 import 海中鱼巣.领域.服务.L2存在结构;
 import 海中鱼巣.领域.服务.L2特征结构;
 import 海中鱼巣.领域.服务.L2状态结构;
@@ -49,10 +63,71 @@ std::optional<自我世界树根消费材料>
 读取自我世界树根消费材料(const 普通应用上下文& 上下文);
 
 struct 普通应用配置 {
+    不可变材料存储配置 不可变材料存储;
+
     bool 有效() const noexcept {
+        const auto& 路径 = 不可变材料存储.受控根.绝对路径;
+        if (不可变材料存储.合同版本 != L2结构合同版本
+            || 路径.empty() || !路径.is_absolute()) return false;
+        for (const auto& 分量 : 路径)
+            if (分量 == L"." || 分量 == L"..") return false;
         return true;
     }
 };
+
+enum class 普通应用生产配置状态 : std::uint8_t {
+    已形成 = 1,
+    已知目录不可用 = 2,
+    目录建立失败 = 3,
+    配置无效 = 4,
+    资源失败 = 5,
+    内部不一致 = 6
+};
+
+struct 普通应用生产配置结果 final {
+    普通应用生产配置状态 状态 =
+        普通应用生产配置状态::内部不一致;
+    std::optional<普通应用配置> 配置;
+
+    bool 成功() const noexcept {
+        return 状态 == 普通应用生产配置状态::已形成
+            && 配置 && 配置->有效();
+    }
+};
+
+// 诊断责任：本地记录；只建立每用户安装实例的固定材料目录，不写领域事实。
+普通应用生产配置结果 形成普通应用生产配置() noexcept {
+    try {
+        PWSTR 已知目录缓冲 = nullptr;
+        const HRESULT 读取结果 = SHGetKnownFolderPath(
+            FOLDERID_LocalAppData, KF_FLAG_CREATE, nullptr, &已知目录缓冲);
+        std::unique_ptr<wchar_t, decltype(&CoTaskMemFree)> 已知目录(
+            已知目录缓冲, &CoTaskMemFree);
+        if (FAILED(读取结果) || !已知目录)
+            return {普通应用生产配置状态::已知目录不可用, std::nullopt};
+
+        auto 根 = (std::filesystem::path(已知目录.get()) / L"海中鱼巣"
+            / L"数据" / L"不可变材料").lexically_normal();
+        std::error_code 错误;
+        std::filesystem::create_directories(根, 错误);
+        if (错误)
+            return {普通应用生产配置状态::目录建立失败, std::nullopt};
+        错误.clear();
+        if (!std::filesystem::is_directory(根, 错误) || 错误)
+            return {普通应用生产配置状态::目录建立失败, std::nullopt};
+
+        普通应用配置 配置{{L2结构合同版本, {std::move(根)}}};
+        if (!配置.有效())
+            return {普通应用生产配置状态::配置无效, std::nullopt};
+        return {普通应用生产配置状态::已形成, std::move(配置)};
+    } catch (const std::bad_alloc&) {
+        return {普通应用生产配置状态::资源失败, std::nullopt};
+    } catch (const std::length_error&) {
+        return {普通应用生产配置状态::资源失败, std::nullopt};
+    } catch (...) {
+        return {普通应用生产配置状态::内部不一致, std::nullopt};
+    }
+}
 
 struct 普通应用装配结果;
 
@@ -63,6 +138,26 @@ public:
     普通应用上下文& operator=(const 普通应用上下文&) = delete;
     普通应用上下文(普通应用上下文&&) = delete;
     普通应用上下文& operator=(普通应用上下文&&) = delete;
+
+    // 诊断责任：无适用错误分支；返回上下文持有的唯一材料服务同实例引用。
+    不可变材料服务& 取得不可变材料服务() noexcept {
+        return *材料服务_;
+    }
+
+    // 诊断责任：无适用错误分支；返回上下文持有的唯一材料服务同实例只读引用。
+    const 不可变材料服务& 取得不可变材料服务() const noexcept {
+        return *材料服务_;
+    }
+
+    // 诊断责任：无适用错误分支；返回上下文持有的唯一语言结构服务同实例引用。
+    L2语言结构服务& 取得L2语言结构服务() noexcept {
+        return *语言服务_;
+    }
+
+    // 诊断责任：无适用错误分支；返回上下文持有的唯一语言结构服务同实例只读引用。
+    const L2语言结构服务& 取得L2语言结构服务() const noexcept {
+        return *语言服务_;
+    }
 
     L2存在结构服务& 取得L2存在结构服务() noexcept {
         return *存在服务_;
@@ -133,6 +228,8 @@ public:
 private:
     // 诊断责任：无适用错误分支；只移动已经完整装配的所有权并保持引用析构顺序。
     普通应用上下文(L1事实基座运行包&& 运行包,
+        std::unique_ptr<不可变材料服务>&& 材料服务,
+        std::unique_ptr<L2语言结构服务>&& 语言服务,
         std::unique_ptr<L2存在结构服务>&& 存在服务,
         std::unique_ptr<L2特征结构服务>&& 特征服务,
         std::unique_ptr<L2状态结构服务>&& 状态服务,
@@ -144,7 +241,8 @@ private:
         std::unique_ptr<L2概念结构聚合服务>&& 概念聚合服务,
         std::unique_ptr<L2方法结构服务>&& 方法服务,
         std::unique_ptr<L2方法结构聚合服务>&& 方法聚合服务) noexcept
-        : 运行包_(std::move(运行包)), 存在服务_(std::move(存在服务)),
+        : 运行包_(std::move(运行包)), 材料服务_(std::move(材料服务)),
+          语言服务_(std::move(语言服务)), 存在服务_(std::move(存在服务)),
           特征服务_(std::move(特征服务)), 状态服务_(std::move(状态服务)),
           动态服务_(std::move(动态服务)), 因果服务_(std::move(因果服务)),
           场景服务_(std::move(场景服务)), 聚合服务_(std::move(聚合服务)),
@@ -164,6 +262,8 @@ private:
     friend std::optional<自我世界树根消费材料>
     读取自我世界树根消费材料(const 普通应用上下文& 上下文);
     L1事实基座运行包 运行包_;
+    std::unique_ptr<不可变材料服务> 材料服务_;
+    std::unique_ptr<L2语言结构服务> 语言服务_;
     std::unique_ptr<L2存在结构服务> 存在服务_;
     std::unique_ptr<L2特征结构服务> 特征服务_;
     std::unique_ptr<L2状态结构服务> 状态服务_;
@@ -214,7 +314,14 @@ enum class 普通应用装配状态 : std::uint8_t {
     方法所有者范围建立失败 = 28,
     方法所有者交付形成失败 = 29,
     方法服务构造失败 = 30,
-    L2方法结构聚合服务构造失败 = 31
+    L2方法结构聚合服务构造失败 = 31,
+    不可变材料所有者范围建立失败 = 32,
+    不可变材料服务构造失败 = 33,
+    语言所有者范围建立失败 = 34,
+    语言所有者交付形成失败 = 35,
+    词条所有者范围建立失败 = 36,
+    词条所有者交付形成失败 = 37,
+    语言服务构造失败 = 38
 };
 
 struct 普通应用装配结果 {
@@ -233,6 +340,84 @@ struct 普通应用装配结果 {
     }
     try {
         auto 运行包 = 建立L1事实基座运行包();
+        std::optional<L1所有者范围交付> 材料原始交付;
+        try {
+            材料原始交付.emplace(
+                运行包.所有者范围签发器().建立所有者范围(
+                    {L1所有者范围CRUD合同版本,
+                        不可变材料所有者建立身份,
+                        L1所有者范围种类::独占结构范围}));
+        } catch (...) {
+            return {普通应用装配状态::不可变材料所有者范围建立失败,
+                nullptr};
+        }
+        if ((材料原始交付->建立结果.状态
+                    != L1所有者范围管理状态::成功
+                && 材料原始交付->建立结果.状态
+                    != L1所有者范围管理状态::精确重复)
+            || !材料原始交付->建立结果.所有者事实
+            || !材料原始交付->写入端口)
+            return {普通应用装配状态::不可变材料所有者范围建立失败,
+                nullptr};
+        不可变材料服务构造输入 材料输入;
+        材料输入.存储配置 = 配置.不可变材料存储;
+        材料输入.所有者交付 = std::move(*材料原始交付);
+        auto 材料构造 = 构造不可变材料服务(
+            运行包.读取服务(), std::move(材料输入));
+        if (!材料构造.成功())
+            return {普通应用装配状态::不可变材料服务构造失败, nullptr};
+        auto 材料服务 = std::move(材料构造.服务);
+
+        std::optional<L1所有者范围交付> 语言原始交付;
+        try {
+            语言原始交付.emplace(
+                运行包.所有者范围签发器().建立所有者范围(
+                    {L1所有者范围CRUD合同版本, 语言所有者建立身份,
+                        L1所有者范围种类::独占结构范围}));
+        } catch (...) {
+            return {普通应用装配状态::语言所有者范围建立失败, nullptr};
+        }
+        if ((语言原始交付->建立结果.状态
+                    != L1所有者范围管理状态::成功
+                && 语言原始交付->建立结果.状态
+                    != L1所有者范围管理状态::精确重复)
+            || !语言原始交付->建立结果.所有者事实
+            || !语言原始交付->写入端口)
+            return {普通应用装配状态::语言所有者范围建立失败, nullptr};
+        auto 语言所有者交付 = 尝试形成L2语言所有者交付(
+            运行包.读取服务(), std::move(*语言原始交付));
+        if (!语言所有者交付)
+            return {普通应用装配状态::语言所有者交付形成失败, nullptr};
+
+        std::optional<L1所有者范围交付> 词条原始交付;
+        try {
+            词条原始交付.emplace(
+                运行包.所有者范围签发器().建立所有者范围(
+                    {L1所有者范围CRUD合同版本, 词条所有者建立身份,
+                        L1所有者范围种类::独占结构范围}));
+        } catch (...) {
+            return {普通应用装配状态::词条所有者范围建立失败, nullptr};
+        }
+        if ((词条原始交付->建立结果.状态
+                    != L1所有者范围管理状态::成功
+                && 词条原始交付->建立结果.状态
+                    != L1所有者范围管理状态::精确重复)
+            || !词条原始交付->建立结果.所有者事实
+            || !词条原始交付->写入端口)
+            return {普通应用装配状态::词条所有者范围建立失败, nullptr};
+        auto 词条所有者交付 = 尝试形成L2词条所有者交付(
+            运行包.读取服务(), std::move(*词条原始交付));
+        if (!词条所有者交付)
+            return {普通应用装配状态::词条所有者交付形成失败, nullptr};
+        std::unique_ptr<L2语言结构服务> 语言服务;
+        try {
+            语言服务 = std::make_unique<L2语言结构服务>(
+                运行包.读取服务(), *材料服务,
+                std::move(*语言所有者交付), std::move(*词条所有者交付));
+        } catch (...) {
+            return {普通应用装配状态::语言服务构造失败, nullptr};
+        }
+
         auto 交付 = 运行包.所有者范围签发器().建立所有者范围(
             {L1所有者范围CRUD合同版本, 存在所有者建立身份,
                 L1所有者范围种类::独占结构范围});
@@ -388,7 +573,9 @@ struct 普通应用装配结果 {
         std::unique_ptr<L2概念结构服务> 概念服务;
         try {
             概念服务 = std::make_unique<L2概念结构服务>(
-                运行包.读取服务(), std::move(*概念所有者交付));
+                运行包.读取服务(), *材料服务, *场景服务, *存在服务,
+                *特征服务, *状态服务, *动态服务, *因果服务,
+                std::move(*概念所有者交付));
         } catch (...) {
             return {普通应用装配状态::概念服务构造失败, nullptr};
         }
@@ -435,7 +622,8 @@ struct 普通应用装配结果 {
         }
         return {普通应用装配状态::已装配,
             std::unique_ptr<普通应用上下文>(new 普通应用上下文(
-                std::move(运行包), std::move(存在服务),
+                std::move(运行包), std::move(材料服务),
+                std::move(语言服务), std::move(存在服务),
                 std::move(特征服务), std::move(状态服务), std::move(动态服务),
                 std::move(因果服务), std::move(场景服务), std::move(聚合服务),
                 std::move(概念服务), std::move(概念聚合服务),
