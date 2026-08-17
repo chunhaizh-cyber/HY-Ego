@@ -9,6 +9,8 @@ inline constexpr L2结构幂等身份 海中鱼巣现实世界树根建立幂等
 struct 系统世界树根初始化请求 final {
     std::uint32_t 合同版本 = 系统世界树根初始化合同版本;
     L2结构幂等身份 根建立幂等身份 = 海中鱼巣现实世界树根建立幂等身份;
+    friend bool operator==(const 系统世界树根初始化请求 &,
+                           const 系统世界树根初始化请求 &) = default;
 };
 
 enum class 系统世界树根初始化状态 : std::uint8_t {
