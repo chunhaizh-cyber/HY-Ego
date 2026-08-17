@@ -168,6 +168,7 @@
     <ClCompile Include="海中鱼巣\领域\服务.L2因果结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L2概念结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L2概念结构聚合.ixx" />
+    <ClCompile Include="海中鱼巣\领域\服务.L2概念名称结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L2方法结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L2语言结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L2方法结构聚合.ixx" />
@@ -197,6 +198,10 @@
     <ClCompile Include="海中鱼巣\线程\运行宿主线程.ixx" />
     <ClCompile Include="海中鱼巣\线程\任务管理线程.ixx" />
     <ClCompile Include="海中鱼巣\线程\外设采样材料线程.ixx" />
+    <ClCompile Include="海中鱼巣\业务\提供者.真实自我形成.ixx" />
+    <ClCompile Include="海中鱼巣\业务\提供者.四本体根生产初始化.ixx" />
+    <ClCompile Include="海中鱼巣\业务\提供者.方法登记根生产初始化.ixx" />
+    <ClCompile Include="海中鱼巣\线程\创建.自我线程.ixx" />
     <ClCompile Include="海中鱼巣\入口.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -221,6 +226,7 @@
     <ClInclude Include="海中鱼巣\领域\L2因果结构.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2概念结构.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2普通概念结构.数据.h" />
+    <ClInclude Include="海中鱼巣\领域\L2概念名称结构.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2方法结构.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2普通方法结构.数据.h" />
     <ClInclude Include="海中鱼巣\线程\线程生命周期.数据.h" />
@@ -230,6 +236,11 @@
     <ClInclude Include="海中鱼巣\业务\初始化.系统世界树根.inl" />
     <ClInclude Include="海中鱼巣\业务\自我世界树根消费.数据.h" />
     <ClInclude Include="海中鱼巣\业务\消费.自我世界树根.inl" />
+    <ClInclude Include="海中鱼巣\业务\真实自我形成.数据.h" />
+    <ClInclude Include="海中鱼巣\业务\四本体根生产初始化.数据.h" />
+    <ClInclude Include="海中鱼巣\业务\初始化.四本体根.inl" />
+    <ClInclude Include="海中鱼巣\业务\方法登记根生产初始化.数据.h" />
+    <ClInclude Include="海中鱼巣\线程\自我线程生产创建.数据.h" />
   </ItemGroup>
   <Target Name="验证D455RealSense构建输入" BeforeTargets="PrepareForBuild"
           Condition="'$(EnableD455RealSense)'=='true' and '$(Platform)'=='x64'">
