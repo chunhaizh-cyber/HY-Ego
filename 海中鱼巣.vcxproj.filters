@@ -201,6 +201,9 @@
     <ClCompile Include="海中鱼巣\入口.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\端到端测试.需求服务.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="海中鱼巣\启动选项.数据.h">
