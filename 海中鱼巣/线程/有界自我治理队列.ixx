@@ -19,7 +19,12 @@ import 海中鱼巣.线程.自我治理消息协议;
 
 export namespace 海中鱼巣 {
 
-using 自我治理任务句柄 = decltype(自我治理只读材料句柄组{}.目标任务);
+// 索引只保存任务稳定编码，不引入 legacy 节点句柄，也不把它发布为领域事实。
+struct 自我治理任务身份 final {
+    std::uint64_t 值 = 0;
+    friend bool operator==(const 自我治理任务身份&,
+        const 自我治理任务身份&) = default;
+};
 
 enum class 自我治理邮箱状态 : std::uint32_t {
     运行中 = 1,
@@ -210,22 +215,9 @@ public:
     }
 
 private:
-    struct 节点句柄哈希 {
-        std::size_t operator()(const 自我治理任务句柄& 句柄) const noexcept {
-            std::size_t 结果 = std::hash<std::uint64_t>{}(句柄.仓库编号);
-            结果 ^= std::hash<std::uint64_t>{}(句柄.节点编号)
-                + static_cast<std::size_t>(0x9e3779b9U) + (结果 << 6U) + (结果 >> 2U);
-            结果 ^= std::hash<std::uint32_t>{}(句柄.版本号)
-                + static_cast<std::size_t>(0x9e3779b9U) + (结果 << 6U) + (结果 >> 2U);
-            return 结果;
-        }
-    };
-
-    struct 节点句柄相等 {
-        bool operator()(const 自我治理任务句柄& 左, const 自我治理任务句柄& 右) const noexcept {
-            return 左.仓库编号 == 右.仓库编号
-                && 左.节点编号 == 右.节点编号
-                && 左.版本号 == 右.版本号;
+    struct 任务身份哈希 {
+        std::size_t operator()(const 自我治理任务身份& 身份) const noexcept {
+            return std::hash<std::uint64_t>{}(身份.值);
         }
     };
 
@@ -234,7 +226,7 @@ private:
     std::condition_variable 等待条件_;
     std::deque<自我治理消息> 待处理消息_;
     std::unordered_map<std::uint64_t, 自我治理消息> 已见幂等消息_;
-    std::unordered_map<自我治理任务句柄, std::uint64_t, 节点句柄哈希, 节点句柄相等> 同任务最新序号_;
+    std::unordered_map<自我治理任务身份, std::uint64_t, 任务身份哈希> 同任务最新序号_;
     std::uint64_t 已冻结批次数量_ = 0;
     自我治理邮箱状态 状态_ = 自我治理邮箱状态::运行中;
 
@@ -251,12 +243,13 @@ private:
         if (幂等位置 != 已见幂等消息_.end()) {
             上下文.同幂等键既有消息 = 幂等位置->second;
         }
-        if (消息.来源任务序号 != 0
-            && !自我治理句柄为空(消息.句柄组.目标任务)
-            && 自我治理可选句柄形状有效(消息.句柄组.目标任务)) {
-            const auto 顺序位置 = 同任务最新序号_.find(消息.句柄组.目标任务);
+        if (消息.来源任务序号 != 0) {
+            const auto 任务 = 取得自我治理消息任务(消息);
+            if (!任务 || !自我治理身份有效(*任务)) return 上下文;
+            const 自我治理任务身份 任务身份{任务->值.值};
+            const auto 顺序位置 = 同任务最新序号_.find(任务身份);
             if (顺序位置 != 同任务最新序号_.end()) {
-                上下文.同任务目标 = 消息.句柄组.目标任务;
+                上下文.同任务目标 = *任务;
                 上下文.同任务最新序号 = 顺序位置->second;
             }
         }
@@ -265,10 +258,11 @@ private:
 
     void 记录提交索引(const 自我治理消息& 消息) {
         已见幂等消息_.emplace(消息.幂等键, 消息);
-        if (消息.来源任务序号 != 0
-            && !自我治理句柄为空(消息.句柄组.目标任务)
-            && 自我治理可选句柄形状有效(消息.句柄组.目标任务)) {
-            auto& 最新序号 = 同任务最新序号_[消息.句柄组.目标任务];
+        if (消息.来源任务序号 != 0) {
+            const auto 任务 = 取得自我治理消息任务(消息);
+            if (!任务 || !自我治理身份有效(*任务)) return;
+            const 自我治理任务身份 任务身份{任务->值.值};
+            auto& 最新序号 = 同任务最新序号_[任务身份];
             if (消息.来源任务序号 > 最新序号) {
                 最新序号 = 消息.来源任务序号;
             }
