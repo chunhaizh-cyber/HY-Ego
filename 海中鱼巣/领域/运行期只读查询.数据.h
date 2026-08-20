@@ -117,7 +117,7 @@ struct 生存服务快照结果 final {
     }
 };
 
-// ===== BIZ-L3-002-02-03 需求活动与任务后继快照 =====
+// ===== BIZ-L3-002-02-03 需求结构与任务后继快照 =====
 enum class 需求任务快照状态 : std::uint8_t {
     已形成 = 1,
     请求拒绝 = 2,
@@ -132,41 +132,36 @@ struct 需求任务快照请求 final {
     std::uint32_t 合同版本 = 运行期只读查询合同版本;
     std::uint64_t 运行代次 = 0;
     std::uint64_t 事实范围版本 = 0;
-    std::uint32_t 需求范围版本 = 0;
     L2存在身份 唯一自我;
     std::uint64_t 共享事实截止G0 = 0;
-    std::uint64_t 任务树合同版本 = 0;
     std::uint64_t 最大根需求数 = 64;
-    std::uint64_t 最大活动路径深度 = 8;
+    std::uint64_t 最大需求节点数 = 256;
+    std::uint64_t 最大需求结构深度 = 16;
 };
 
-struct 需求活动路径项 final {
+struct 需求当前结构项 final {
     L2需求事实 需求;
-    std::optional<L2需求父子关系事实> 父关系;
-    std::optional<L2需求列表成员关系事实> 列表成员关系;
+    std::optional<L2需求父子关系事实> 当前父关系;
+    L2需求列表成员关系事实 当前列表成员关系;
     std::uint64_t 事实截止代次 = 0;
 };
 
-struct 根需求活动路径 final {
-    L2需求事实 根需求;
-    std::vector<需求活动路径项> 活动路径;
-};
-
-struct 活动需求任务树项 final {
-    L2需求身份 活动需求;
+struct 需求列表任务后继项 final {
+    L2需求列表项事实 列表项;
     std::optional<L2任务事实> 当前任务;
     std::uint64_t 事实截止代次 = 0;
 };
 
-struct 需求活动与任务后继快照 final {
-    std::vector<根需求活动路径> 根需求活动路径组;
-    std::vector<活动需求任务树项> 活动需求任务组;
+struct 需求结构与任务后继快照 final {
+    std::vector<L2需求事实> 根需求组;
+    std::vector<需求当前结构项> 当前需求结构组;
+    std::vector<需求列表任务后继项> 列表任务后继组;
     std::uint64_t 事实截止代次 = 0;
 };
 
 struct 需求任务快照结果 final {
     需求任务快照状态 状态 = 需求任务快照状态::材料缺失;
-    std::optional<需求活动与任务后继快照> 快照;
+    std::optional<需求结构与任务后继快照> 快照;
     bool 成功() const noexcept {
         return 状态 == 需求任务快照状态::已形成 && 快照.has_value();
     }
@@ -176,7 +171,7 @@ struct 需求任务快照结果 final {
 struct 自我治理一致事实快照 final {
     自我世界一致子快照 世界自我;
     生存服务共享截止快照 生存服务;
-    需求活动与任务后继快照 需求任务;
+    需求结构与任务后继快照 需求任务;
     std::uint64_t 事实截止代次 = 0;
 };
 

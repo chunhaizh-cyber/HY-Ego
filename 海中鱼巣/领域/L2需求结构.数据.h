@@ -451,6 +451,7 @@ struct L2按精确目标查询列表项结果 final {
 struct L2按所属存在读取当前根需求组请求 final {
     L2结构请求头 请求头;
     L2存在身份 所属存在;
+    std::uint64_t 数量预算 = 0;
     friend bool operator==(const L2按所属存在读取当前根需求组请求&,
         const L2按所属存在读取当前根需求组请求&) = default;
 };
@@ -458,7 +459,6 @@ struct L2按所属存在读取当前根需求组请求 final {
 struct L2按所属存在读取当前根需求组结果 final {
     L2结构结果头 结果头;
     std::vector<L2需求事实> 根需求组;
-    std::vector<L2需求父子关系事实> 根父子占位组;
     bool 成功() const noexcept;
     friend bool operator==(const L2按所属存在读取当前根需求组结果&,
         const L2按所属存在读取当前根需求组结果&) = default;
@@ -1079,7 +1079,8 @@ inline bool L2按所属存在读取当前根需求组请求有效(
     const L2按所属存在读取当前根需求组请求& 请求) noexcept {
     return L2结构请求头合同有效(请求.请求头)
         && 请求.请求头.期望事实代次 != 0
-        && 有效(请求.所属存在.值);
+        && 有效(请求.所属存在.值)
+        && 请求.数量预算 != 0;
 }
 
 inline bool L2按父需求读取当前直接子需求组请求有效(
