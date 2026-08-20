@@ -17,7 +17,7 @@
 - `启动.应用程序.ixx` 当前阶段 20 局部构造 self-thread，向其传入存在服务并立即开门；必须纳入迁移。
 - `创建.自我线程.ixx` 当前 import `装配.普通应用`，内部构造完整秒、事实版本和批次路由，并在线程入口调用 `冻结当前治理批次`；这些调用不能复制到本叶新接线。
 - `装配.普通应用.ixx` 当前已有结构服务装配，但不是完整运行上下文 owner。
-- `RUNTIME-MONOTONIC-TIME-EVIDENCE-PROVIDER v0.1` 当前为可执行；`RUNTIME-PROVIDER-ABI-CLOSURE v0.1`、`RUNTIME-GOVERNANCE-CURRENT-BATCH-ASSEMBLY v0.1` 及 SELF-THREAD 最终结果仍须正式结果/接受/释放后机械匹配。
+- 合并后的 `RUNTIME-PROVIDER-ABI-CLOSURE v0.2` 当前承接单调适配器、完整秒、事实截止及现有消费者的单一代码闭环；其结果与 `RUNTIME-GOVERNANCE-CURRENT-BATCH-ASSEMBLY v0.1`、SELF-THREAD 最终结果仍须正式发布、接受和释放后机械匹配。
 
 激活前必须从最新 `main==origin/main` 重做 S0，确认上述依赖的真实模块、DTO、状态、`noexcept`、工程登记和调用方 ABI 无漂移；任一改变所有权、身份来源、生命周期或关闭语义的漂移退回计划支撑。
 

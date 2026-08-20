@@ -26,7 +26,7 @@ I1/I2稳定DTO只有一个合同模块所有者
 
 ## 2. 最新事实与正式依据
 
-正式依据：0050、8100、8110、8120 v0.10，BIZ-L2-001-01 v0.2、BIZ-L3-001-01-01 v0.1、BIZ-L1-T02 v0.2，以及 `RUNTIME-PROVIDER-ABI-CLOSURE v0.1`、`RUNTIME-GOVERNANCE-CURRENT-BATCH-ASSEMBLY v0.1` 和 SELF-THREAD 正式结果。
+正式依据：0050、8100、8110、8120 v0.10，BIZ-L2-001-01 v0.2、BIZ-L3-001-01-01 v0.1、BIZ-L1-T02 v0.2，以及合并后的 `RUNTIME-PROVIDER-ABI-CLOSURE v0.2`、`RUNTIME-GOVERNANCE-CURRENT-BATCH-ASSEMBLY v0.1` 和 SELF-THREAD 正式结果。
 
 截至正式 HEAD `0316e35fbbab403151177b8e9bbf94ff06fc5611` 的代码事实：
 
@@ -133,7 +133,7 @@ L1/DATA-L2现有结构服务与结构聚合
 
 本计划必须等待并从最新 HEAD 机械复核：
 
-1. `RUNTIME-PROVIDER-ABI-CLOSURE v0.1`：提供最终完整秒/事实版本 ABI 与现有消费者闭包；
+1. `RUNTIME-PROVIDER-ABI-CLOSURE v0.2`：同一结果提供单调适配器、最终完整秒/事实版本 ABI 与现有消费者闭包；
 2. `RUNTIME-GOVERNANCE-CURRENT-BATCH-ASSEMBLY v0.1`：提供批次路由最终 DTO/状态/所有权；
 3. SELF-THREAD 正式设计/生产结果：提供创建、停门、失败回收、邮箱/路由和生命周期 ABI，并释放 `启动.应用程序.ixx`、`创建.自我线程.ixx`、普通应用及工程文件；
 4. 所有上游均接受、退出、临时专项清理并与本设计匹配，最新 `main==origin/main`、index 空、单一代码执行段和构建资源可用。
