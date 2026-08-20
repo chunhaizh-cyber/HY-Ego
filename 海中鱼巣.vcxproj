@@ -184,6 +184,7 @@
     <ClCompile Include="海中鱼巣\核心\服务.L1事实基座.ixx" />
     <ClCompile Include="海中鱼巣\线程\运行消息协议.ixx" />
     <ClCompile Include="海中鱼巣\适配\协议.D455采样材料.ixx" />
+    <ClCompile Include="海中鱼巣\适配\适配器.单调时钟.ixx" />
     <ClCompile Include="海中鱼巣\适配\采集器.D455相机.ixx">
       <ExcludedFromBuild Condition="'$(Platform)'!='x64' or '$(EnableD455RealSense)'!='true'">true</ExcludedFromBuild>
     </ClCompile>
@@ -255,7 +256,6 @@
     <ClInclude Include="海中鱼巣\领域\内部治理\任务筹办编排.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2治理函数骨架.数据.h" />
     <ClInclude Include="海中鱼巣\领域\运行期只读查询.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\运行期Provider.数据.h" />
   </ItemGroup>
   <Target Name="验证D455RealSense构建输入" BeforeTargets="PrepareForBuild"
           Condition="'$(EnableD455RealSense)'=='true' and '$(Platform)'=='x64'">

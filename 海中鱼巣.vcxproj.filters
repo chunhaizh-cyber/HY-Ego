@@ -156,6 +156,9 @@
     <ClCompile Include="海中鱼巣\适配\协议.D455采样材料.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\适配\适配器.单调时钟.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\适配\采集器.D455相机.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -264,9 +267,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\运行期只读查询.数据.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="海中鱼巣\领域\运行期Provider.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
