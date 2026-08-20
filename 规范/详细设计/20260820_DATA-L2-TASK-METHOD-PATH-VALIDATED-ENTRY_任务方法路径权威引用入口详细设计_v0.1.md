@@ -1,7 +1,9 @@
 # 任务方法路径权威引用入口详细设计
 
-日期：2026-08-20  
-身份：`DATA-L2-TASK-METHOD-PATH-VALIDATED-ENTRY`  
+日期：2026-08-20
+
+身份：`DATA-L2-TASK-METHOD-PATH-VALIDATED-ENTRY`
+
 版本：v0.1
 
 ## 1. 目标与边界

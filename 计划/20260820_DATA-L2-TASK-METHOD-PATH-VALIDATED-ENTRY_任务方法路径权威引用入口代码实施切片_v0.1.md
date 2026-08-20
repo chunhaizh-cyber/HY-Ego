@@ -1,7 +1,9 @@
 # 任务方法路径权威引用入口代码实施切片
 
-日期：2026-08-20  
-身份：`DATA-L2-TASK-METHOD-PATH-VALIDATED-ENTRY`  
+日期：2026-08-20
+
+身份：`DATA-L2-TASK-METHOD-PATH-VALIDATED-ENTRY`
+
 版本：v0.1
 
 ## 1. 目标与完成条件
