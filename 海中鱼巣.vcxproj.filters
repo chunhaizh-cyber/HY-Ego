@@ -204,6 +204,9 @@
     <ClCompile Include="海中鱼巣\端到端测试.需求服务.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\端到端测试.自我治理一致事实.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务筹办编排.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -258,6 +261,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\L2治理函数骨架.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\运行期只读查询.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\运行期Provider.数据.h">
