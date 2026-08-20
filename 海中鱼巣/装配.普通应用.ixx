@@ -40,6 +40,7 @@ import 海中鱼巣.领域.服务.L2概念结构聚合;
 import 海中鱼巣.领域.服务.L2概念名称结构;
 import 海中鱼巣.领域.服务.L2方法结构;
 import 海中鱼巣.领域.服务.L2方法结构聚合;
+import 海中鱼巣.领域.服务.L2任务方法路径结构;
 
 export {
 #include "业务/系统世界树根初始化.数据.h"
@@ -202,6 +203,11 @@ public:
         return *任务服务_;
     }
 
+    L2任务方法路径结构服务& 取得L2任务方法路径结构服务() noexcept;
+
+    const L2任务方法路径结构服务&
+    取得L2任务方法路径结构服务() const noexcept;
+
     L2动态结构服务& 取得L2动态结构服务() noexcept {
         return *动态服务_;
     }
@@ -272,7 +278,8 @@ private:
         std::unique_ptr<L2概念结构聚合服务>&& 概念聚合服务,
         std::unique_ptr<L2概念名称结构服务>&& 概念名称服务,
         std::unique_ptr<L2方法结构服务>&& 方法服务,
-        std::unique_ptr<L2方法结构聚合服务>&& 方法聚合服务) noexcept
+        std::unique_ptr<L2方法结构聚合服务>&& 方法聚合服务,
+        std::unique_ptr<L2任务方法路径结构服务>&& 任务方法路径服务) noexcept
         : 运行包_(std::move(运行包)), 材料服务_(std::move(材料服务)),
           语言服务_(std::move(语言服务)), 存在服务_(std::move(存在服务)),
           特征服务_(std::move(特征服务)), 状态服务_(std::move(状态服务)),
@@ -283,7 +290,8 @@ private:
           概念聚合服务_(std::move(概念聚合服务)),
           概念名称服务_(std::move(概念名称服务)),
           方法服务_(std::move(方法服务)),
-          方法聚合服务_(std::move(方法聚合服务)) {}
+          方法聚合服务_(std::move(方法聚合服务)),
+          任务方法路径服务_(std::move(任务方法路径服务)) {}
 
     friend struct 普通应用装配结果;
     friend 普通应用装配结果 构造普通应用上下文(const 普通应用配置& 配置);
@@ -312,12 +320,23 @@ private:
     std::unique_ptr<L2概念名称结构服务> 概念名称服务_;
     std::unique_ptr<L2方法结构服务> 方法服务_;
     std::unique_ptr<L2方法结构聚合服务> 方法聚合服务_;
+    std::unique_ptr<L2任务方法路径结构服务> 任务方法路径服务_;
     mutable std::mutex 系统世界树根发布锁_;
     std::optional<L2场景树根建立请求> 待收敛系统世界树根请求_;
     std::optional<系统世界树根读回> 系统世界树根读回_;
     mutable std::mutex 自我世界树根消费发布锁_;
     std::optional<自我世界树根消费材料> 自我世界树根消费材料_;
 };
+
+L2任务方法路径结构服务&
+普通应用上下文::取得L2任务方法路径结构服务() noexcept {
+    return *任务方法路径服务_;
+}
+
+const L2任务方法路径结构服务&
+普通应用上下文::取得L2任务方法路径结构服务() const noexcept {
+    return *任务方法路径服务_;
+}
 
 enum class 普通应用装配状态 : std::uint8_t {
     已装配 = 0,
@@ -367,7 +386,10 @@ enum class 普通应用装配状态 : std::uint8_t {
     需求服务构造失败 = 44,
     任务所有者范围建立失败 = 45,
     任务所有者交付形成失败 = 46,
-    任务服务构造失败 = 47
+    任务服务构造失败 = 47,
+    任务方法路径能力交付提取失败 = 48,
+    任务方法路径写入端口形成失败 = 49,
+    任务方法路径服务构造失败 = 50
 };
 
 struct 普通应用装配结果 {
@@ -567,6 +589,11 @@ struct 普通应用装配结果 {
             运行包.读取服务(), std::move(任务原始交付));
         if (!任务交付)
             return {普通应用装配状态::任务所有者交付形成失败, nullptr};
+        auto 任务方法路径能力交付 =
+            任务交付->提取任务方法路径写入能力交付();
+        if (!任务方法路径能力交付)
+            return {普通应用装配状态::任务方法路径能力交付提取失败,
+                nullptr};
         std::unique_ptr<L2任务结构服务> 任务服务;
         try {
             任务服务 = std::make_unique<L2任务结构服务>(
@@ -574,6 +601,11 @@ struct 普通应用装配结果 {
         } catch (...) {
             return {普通应用装配状态::任务服务构造失败, nullptr};
         }
+        auto 任务方法路径写入端口 = 尝试形成L2任务方法路径写入端口(
+            *任务服务, std::move(*任务方法路径能力交付));
+        if (!任务方法路径写入端口)
+            return {普通应用装配状态::任务方法路径写入端口形成失败,
+                nullptr};
         auto 动态原始交付 = 运行包.所有者范围签发器().建立所有者范围(
             {L1所有者范围CRUD合同版本, 动态所有者建立身份,
                 L1所有者范围种类::独占结构范围});
@@ -734,6 +766,14 @@ struct 普通应用装配结果 {
         } catch (...) {
             return {普通应用装配状态::L2方法结构聚合服务构造失败, nullptr};
         }
+        std::unique_ptr<L2任务方法路径结构服务> 任务方法路径服务;
+        try {
+            任务方法路径服务 =
+                std::make_unique<L2任务方法路径结构服务>(
+                    *方法服务, std::move(*任务方法路径写入端口));
+        } catch (...) {
+            return {普通应用装配状态::任务方法路径服务构造失败, nullptr};
+        }
         return {普通应用装配状态::已装配,
             std::unique_ptr<普通应用上下文>(new 普通应用上下文(
                 std::move(运行包), std::move(材料服务),
@@ -743,7 +783,8 @@ struct 普通应用装配结果 {
                 std::move(因果服务), std::move(场景服务), std::move(聚合服务),
                 std::move(概念服务), std::move(概念聚合服务),
                 std::move(概念名称服务),
-                std::move(方法服务), std::move(方法聚合服务)))};
+                std::move(方法服务), std::move(方法聚合服务),
+                std::move(任务方法路径服务)))};
     } catch (...) {
         return {普通应用装配状态::构造失败, nullptr};
     }
