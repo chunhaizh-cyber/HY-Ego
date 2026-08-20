@@ -17,9 +17,11 @@
 | 规范 strict | PASS | `python .\tools\check_specs.py --strict`：`116/116` |
 | diff 检查 | PASS | `git diff --check` 与 `git diff --cached --check` 退出 0 |
 
-## 发布前待执行
+## 发布
 
-- 获取唯一发布租约后，重新核对 HEAD/origin/index，精确暂存九个计划文件并提交、普通推送、远端读回。
+- 结果提交：`f42568422ebe3db08e7def132ca143a0846d9f5b`（`实现需求结构与任务后继快照`）。
+- 提交范围精确为七个计划白名单代码文件及本施工 / 验证记录共九个文件；未夹带无关未跟踪 WIP 或旧 `.codex-build/` 残留。
+- 已普通推送至 `origin/main`；发布后 `HEAD = origin/main = f42568422ebe3db08e7def132ca143a0846d9f5b`，ahead/behind 为 `0/0`，Git index clean。
 
 ## 未证明边界
 
