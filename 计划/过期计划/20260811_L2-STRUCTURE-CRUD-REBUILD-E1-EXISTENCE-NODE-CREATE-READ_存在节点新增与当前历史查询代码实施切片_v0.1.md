@@ -27,7 +27,7 @@
 
 - `规范/详细设计/20260810_L2-STRUCTURE-CRUD-REBUILD_旧链清理与六类结构CRUD分步重建详细设计_v0.1.md`
 - `流程图/20260810_L2-STRUCTURE-CRUD-REBUILD_旧链清理与六类结构CRUD分步路线图_v0.1.md`
-- `计划/20260811_L2-STRUCTURE-CRUD-REBUILD-S1-SCENE-NODE-CREATE-READ_场景节点新增与当前历史查询代码实施切片_v0.1.md`
+- `计划/过期计划/20260811_L2-STRUCTURE-CRUD-REBUILD-S1-SCENE-NODE-CREATE-READ_场景节点新增与当前历史查询代码实施切片_v0.1.md`
 
 ### 2.1 创建侧已验证事实
 

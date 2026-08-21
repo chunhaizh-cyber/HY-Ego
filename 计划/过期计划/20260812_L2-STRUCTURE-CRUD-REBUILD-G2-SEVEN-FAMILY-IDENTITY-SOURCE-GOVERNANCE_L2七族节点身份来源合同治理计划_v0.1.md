@@ -124,7 +124,7 @@ E-ID 复用当前存在 owner-scoped 服务，增加非自环来源登记、同�
 3. `规范/4230_子规范_L2六类纯结构统一合同.md`
 4. `规范/规范目录.md`
 5. `规范/详细设计/20260812_L2-STRUCTURE-CRUD-REBUILD-G2_七族节点身份来源与迁移顺序详细设计_v0.1.md`
-6. `计划/20260812_L2-STRUCTURE-CRUD-REBUILD-G2-SEVEN-FAMILY-IDENTITY-SOURCE-GOVERNANCE_L2七族节点身份来源合同治理计划_v0.1.md`
+6. `计划/过期计划/20260812_L2-STRUCTURE-CRUD-REBUILD-G2-SEVEN-FAMILY-IDENTITY-SOURCE-GOVERNANCE_L2七族节点身份来源合同治理计划_v0.1.md`
 
 索引登记时另行只修改 `计划/计划索引.md`。零写入 C++、工程、T1、DYN2、路线、流程图、验证记录、施工记录和 `.codex-build/`。
 

@@ -27,7 +27,7 @@
 
 - `规范/详细设计/20260810_L2-STRUCTURE-CRUD-REBUILD_旧链清理与六类结构CRUD分步重建详细设计_v0.1.md`
 - `流程图/20260810_L2-STRUCTURE-CRUD-REBUILD_旧链清理与六类结构CRUD分步路线图_v0.1.md`
-- `计划/20260811_L2-STRUCTURE-CRUD-REBUILD-D5-LEGACY-WORLD-SCENE-EXISTENCE-CLOSURE-REMOVAL_旧世界场景存在原子发布组合闭包删除代码实施切片_v0.1.md`
+- `计划/过期计划/20260811_L2-STRUCTURE-CRUD-REBUILD-D5-LEGACY-WORLD-SCENE-EXISTENCE-CLOSURE-REMOVAL_旧世界场景存在原子发布组合闭包删除代码实施切片_v0.1.md`
 
 创建侧正式事实基线为 `cd7060946c51ff182da69c6dff750a3467034d59`，该提交同时位于 `main` 与 `origin/main`：
 

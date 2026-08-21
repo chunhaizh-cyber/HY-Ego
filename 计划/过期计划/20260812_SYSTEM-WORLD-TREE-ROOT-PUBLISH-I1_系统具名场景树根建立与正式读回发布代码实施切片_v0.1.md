@@ -25,8 +25,8 @@
 - `规范/8120_子规范_程序入口启动模式与运行宿主边界_20260726.md` v0.4；
 - `规范/详细设计/20260812_L2-WORLD-TREE-ROOT-REGISTRY-R1_世界树根标记与具名树归属详细设计_v0.1.md`；
 - `规范/详细设计/20260812_SYSTEM-WORLD-TREE-ROOT-PUBLISH-I1_系统具名场景树根建立与正式读回发布详细设计_v0.1.md`；
-- `计划/20260812_L2-WORLD-TREE-ROOT-REGISTRY-R1_世界树根标记与具名树归属代码实施切片_v0.1.md`，当前 plan blob `6fa98479948ac43c3e9ef84d25d1779fbc43ceab`；
-- `计划/20260812_L2-STRUCTURE-CRUD-REBUILD-A1_六服务聚合与生产装配代码实施切片_v0.1.md`，当前 plan blob `ea1d2bf9a5c9546ff7aa60c71e25f76eaf67d276`。
+- `计划/已完成计划/20260812_L2-WORLD-TREE-ROOT-REGISTRY-R1_世界树根标记与具名树归属代码实施切片_v0.1.md`，当前 plan blob `6fa98479948ac43c3e9ef84d25d1779fbc43ceab`；
+- `计划/已完成计划/20260812_L2-STRUCTURE-CRUD-REBUILD-A1_六服务聚合与生产装配代码实施切片_v0.1.md`，当前 plan blob `ea1d2bf9a5c9546ff7aa60c71e25f76eaf67d276`。
 
 本计划初始设计基线为 `300ab310f1e468747a0e7a2fe74a73b0201fe68c`，发布前复核基线为 `71c985eb6b784078e461a91917dd3bfd2b523ea2`；后者只比前者增加 DYN2 v0.5 计划支撑 / 索引发布，不改变本叶所读 R1 / A1、普通应用、启动或程序运行结果 ABI。基线代码没有系统初始化或根消费者，R1 / A1 均未实现。本计划冻结待实现合同，不得用设计文本、未跟踪源码、构建产物或消息解除依赖。
 

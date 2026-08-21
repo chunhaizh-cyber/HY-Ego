@@ -25,7 +25,7 @@
 
 - `规范/详细设计/20260810_L2-STRUCTURE-CRUD-REBUILD_旧链清理与六类结构CRUD分步重建详细设计_v0.1.md`
 - `流程图/20260810_L2-STRUCTURE-CRUD-REBUILD_旧链清理与六类结构CRUD分步路线图_v0.1.md`
-- `计划/20260811_L2-STRUCTURE-CRUD-REBUILD-D2-LEGACY-CAUSAL-DYNAMIC-PATTERN-CLOSURE-REMOVAL_旧因果动态模式算法材料闭包删除代码实施切片_v0.1.md`
+- `计划/过期计划/20260811_L2-STRUCTURE-CRUD-REBUILD-D2-LEGACY-CAUSAL-DYNAMIC-PATTERN-CLOSURE-REMOVAL_旧因果动态模式算法材料闭包删除代码实施切片_v0.1.md`
 
 创建侧只读事实基线为 `fee54dca6ff8eeffcaa3a5dbda98a27f3dd32ba5`，该提交同时位于 `main` 与 `origin/main`：
 

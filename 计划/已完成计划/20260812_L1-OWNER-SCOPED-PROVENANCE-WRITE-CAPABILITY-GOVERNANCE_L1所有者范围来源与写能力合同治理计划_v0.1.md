@@ -481,7 +481,7 @@ provider 计划必须以当时真实模块 ABI、工程登记、调用点和构�
 
 本计划创建侧只拥有：
 
-- `计划/20260812_L1-OWNER-SCOPED-PROVENANCE-WRITE-CAPABILITY-GOVERNANCE_L1所有者范围来源与写能力合同治理计划_v0.1.md`
+- `计划/已完成计划/20260812_L1-OWNER-SCOPED-PROVENANCE-WRITE-CAPABILITY-GOVERNANCE_L1所有者范围来源与写能力合同治理计划_v0.1.md`
 
 计划发布后另行只修改 `计划/计划索引.md`，登记：
 

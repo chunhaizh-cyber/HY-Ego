@@ -38,5 +38,5 @@
 
 ## 依据与证据
 
-- `计划/20260814_CONCEPT-SPACE-STRUCTURE-CRUD-REBUILD-M1_不可变材料结构代码实施切片_v0.3.md:264-268`
+- `计划/已完成计划/20260814_CONCEPT-SPACE-STRUCTURE-CRUD-REBUILD-M1_不可变材料结构代码实施切片_v0.3.md:264-268`
 - `验证记录/20260814_CONCEPT-M1_不可变材料验证记录.md:30-32,40`

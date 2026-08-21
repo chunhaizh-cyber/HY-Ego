@@ -4,7 +4,7 @@
 
 计划：`L2-STRUCTURE-CRUD-REBUILD-F3 v0.1`
 
-计划文件：`计划/20260811_L2-STRUCTURE-CRUD-REBUILD-F3_特征当前值换代实例退出与历史值读取代码实施切片_v0.1.md`
+计划文件：`计划/已完成计划/20260811_L2-STRUCTURE-CRUD-REBUILD-F3_特征当前值换代实例退出与历史值读取代码实施切片_v0.1.md`
 
 计划 blob：`e939b7dbbb85ce5e5a692263aff76a49c19abd29`
 

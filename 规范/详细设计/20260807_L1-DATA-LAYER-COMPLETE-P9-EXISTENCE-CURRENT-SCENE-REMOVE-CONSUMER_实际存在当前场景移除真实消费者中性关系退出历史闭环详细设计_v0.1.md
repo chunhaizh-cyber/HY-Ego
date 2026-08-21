@@ -22,7 +22,7 @@
 
 - `规范/详细设计/20260807_L1-DATA-LAYER-COMPLETE-P5-EXISTENCE-CREATE-CONSUMER_初始场景实际存在创建真实消费者中性写读闭环详细设计_v0.1.md`
 - `规范/详细设计/20260807_L1-DATA-LAYER-COMPLETE-P7-EXISTENCE-I64-INSTANCE-FEATURE-CONSUMER_实际存在I64实例特征真实消费者中性关系写读闭环详细设计_v0.1.md`
-- `计划/20260807_L1-DATA-LAYER-COMPLETE-P8-EXISTENCE-I64-CURRENT-VALUE-UPDATE-CONSUMER_实际存在I64实例特征当前值修改真实消费者中性改退历史闭环代码实施切片_v0.1.md`
+- `计划/已完成计划/20260807_L1-DATA-LAYER-COMPLETE-P8-EXISTENCE-I64-CURRENT-VALUE-UPDATE-CONSUMER_实际存在I64实例特征当前值修改真实消费者中性改退历史闭环代码实施切片_v0.1.md`
 
 创建侧基线为 `main == origin/main == f7dd52fefc27f1f0f9a6a577df01940045caa978`，Git index 空。该基线包含 P8 代码候选，但 P8 独立消费者验收仍在进行，不能预称通过。P8 与本叶没有业务语义依赖；它只占用当前唯一活动代码段及构建、运行和验收资源，因此本叶登记为待激活。
 

@@ -44,8 +44,8 @@
 - `规范/详细设计/20260812_L2-STRUCTURE-CRUD-REBUILD-G2_七族节点身份来源与迁移顺序详细设计_v0.1.md`
 - `规范/详细设计/20260810_L2-STRUCTURE-CRUD-REBUILD_旧链清理与六类结构CRUD分步重建详细设计_v0.1.md`
 - `计划/20260811_L2-STRUCTURE-CRUD-REBUILD-T1_状态新增当前条件与历史查询代码实施切片_v0.1.md`
-- `计划/20260811_L2-STRUCTURE-CRUD-REBUILD-F2_通用特征实例新增查询与按存在当前枚举代码实施切片_v0.1.md`
-- `计划/20260811_L2-STRUCTURE-CRUD-REBUILD-F3_特征当前值换代实例退出与历史值读取代码实施切片_v0.1.md`
+- `计划/已完成计划/20260811_L2-STRUCTURE-CRUD-REBUILD-F2_通用特征实例新增查询与按存在当前枚举代码实施切片_v0.1.md`
+- `计划/已完成计划/20260811_L2-STRUCTURE-CRUD-REBUILD-F3_特征当前值换代实例退出与历史值读取代码实施切片_v0.1.md`
 
 ### 2.1 规范与事务裁决
 

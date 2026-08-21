@@ -4,7 +4,7 @@
 
 计划：`L2-STRUCTURE-CRUD-REBUILD-F2 v0.1`
 
-计划文件：`计划/20260811_L2-STRUCTURE-CRUD-REBUILD-F2_通用特征实例新增查询与按存在当前枚举代码实施切片_v0.1.md`
+计划文件：`计划/已完成计划/20260811_L2-STRUCTURE-CRUD-REBUILD-F2_通用特征实例新增查询与按存在当前枚举代码实施切片_v0.1.md`
 
 计划 blob：`a257819b249468fd85750353f7d673d9b760f937`
 

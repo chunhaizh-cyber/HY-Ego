@@ -5,7 +5,7 @@
 ## 基线与范围
 
 - 起点：`main`，`HEAD == origin/main == 34ac1ac588aa86237853204ce10b92f5398f2349`，ahead / behind 为 `0 / 0`，index 为空。
-- 计划：`计划/20260812_L2-STRUCTURE-CRUD-REBUILD-A1_六服务聚合与生产装配代码实施切片_v0.1.md`，plan blob `ea1d2bf9a5c9546ff7aa60c71e25f76eaf67d276`；索引状态为 `可执行`。
+- 计划：`计划/已完成计划/20260812_L2-STRUCTURE-CRUD-REBUILD-A1_六服务聚合与生产装配代码实施切片_v0.1.md`，plan blob `ea1d2bf9a5c9546ff7aa60c71e25f76eaf67d276`；索引状态为 `可执行`。
 - S0：六服务、普通应用 ABI、状态最大值 22、31 个生产 `.ixx` / 17 个头、四配置 `/utf-8` 均与激活登记匹配；九条允许路径无异主写入，构建与验证资源无冲突，无 DRIFT。
 - 异主 `流程图/**`、`计划/20260803_后续计划持续制定共识与路线输入.md` 与 `.codex-build/` WIP 原样保留，未写入、未暂存、未清理。
 

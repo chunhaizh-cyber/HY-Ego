@@ -4,7 +4,7 @@
 
 计划：`DATA-L2-FEATURE-CURRENT-VALUE-EXIT v0.1`
 
-计划文件：`计划/20260815_DATA-L2-FEATURE-CURRENT-VALUE-EXIT_特征实例当前值独立退出代码实施切片_v0.1.md`
+计划文件：`计划/已完成计划/20260815_DATA-L2-FEATURE-CURRENT-VALUE-EXIT_特征实例当前值独立退出代码实施切片_v0.1.md`
 
 计划 blob：`aa25274c1045a07530c294765e4ca2183cf0dd03`
 

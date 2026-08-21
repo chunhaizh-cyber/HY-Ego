@@ -19,7 +19,7 @@
 正式依据：0050、2100、4015 v0.5、4030 v1.3、4110 v0.7、ACCEPTANCE-01 v0.3，以及：
 
 - `规范/详细设计/20260807_L1-DATA-LAYER-COMPLETE-P7-EXISTENCE-I64-INSTANCE-FEATURE-CONSUMER_实际存在I64实例特征真实消费者中性关系写读闭环详细设计_v0.1.md`
-- `计划/20260807_L1-DATA-LAYER-COMPLETE-P7-EXISTENCE-I64-INSTANCE-FEATURE-CONSUMER_实际存在I64实例特征真实消费者中性关系写读闭环代码实施切片_v0.1.md`
+- `计划/过期计划/20260807_L1-DATA-LAYER-COMPLETE-P7-EXISTENCE-I64-INSTANCE-FEATURE-CONSUMER_实际存在I64实例特征真实消费者中性关系写读闭环代码实施切片_v0.1.md`
 
 4015 的上位物理裁决继续适用：当前值只由实例槽当前属性与不可变值事实承载；值事实自身携带来源。修改不恢复角色 3 当前值关系，不新建来源关系，也不原位改写旧值事实。旧值以退出事实代次进入历史，新值取得新的稳定编码。
 

@@ -25,7 +25,7 @@
 海中鱼巣.vcxproj
 海中鱼巣.vcxproj.filters
 规范/详细设计/20260815_THREAD-LIFECYCLE-PROJECTION-SERVICE_线程生命周期投影服务详细设计_v0.1.md
-计划/20260815_THREAD-LIFECYCLE-PROJECTION-SERVICE_线程生命周期投影服务代码实施切片_v0.1.md
+计划/过期计划/20260815_THREAD-LIFECYCLE-PROJECTION-SERVICE_线程生命周期投影服务代码实施切片_v0.1.md
 ```
 
 禁止修改计划索引、规范目录、DATA 规范/provider、SELF-THREAD 源码/设计/计划、CF 图谱、路线和其它所有者 WIP。SELF-THREAD 当前现场原地保留，不得纳入本提交。

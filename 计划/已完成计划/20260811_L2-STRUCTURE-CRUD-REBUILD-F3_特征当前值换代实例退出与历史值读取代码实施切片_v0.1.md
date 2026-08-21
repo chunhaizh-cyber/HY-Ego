@@ -37,9 +37,9 @@
 正式依据：0050、4015、4030、4040、4050、4190、4200、4230、ACCEPTANCE-01、CODE-FILE-01，以及：
 
 - `规范/详细设计/20260810_L2-STRUCTURE-CRUD-REBUILD_旧链清理与六类结构CRUD分步重建详细设计_v0.1.md`
-- `计划/20260811_L2-STRUCTURE-CRUD-REBUILD-F1_特征定义增查改退与历史读取代码实施切片_v0.1.md`
-- `计划/20260811_L2-STRUCTURE-CRUD-REBUILD-F2_通用特征实例新增查询与按存在当前枚举代码实施切片_v0.1.md`
-- `计划/20260811_L1-NEUTRAL-HISTORICAL-ATTRIBUTE-VALUE-GROUP-PROVIDER_中性历史属性值组提供者代码实施切片_v0.1.md`
+- `计划/已完成计划/20260811_L2-STRUCTURE-CRUD-REBUILD-F1_特征定义增查改退与历史读取代码实施切片_v0.1.md`
+- `计划/已完成计划/20260811_L2-STRUCTURE-CRUD-REBUILD-F2_通用特征实例新增查询与按存在当前枚举代码实施切片_v0.1.md`
+- `计划/过期计划/20260811_L1-NEUTRAL-HISTORICAL-ATTRIBUTE-VALUE-GROUP-PROVIDER_中性历史属性值组提供者代码实施切片_v0.1.md`
 
 ### 2.1 创建侧正式事实
 
