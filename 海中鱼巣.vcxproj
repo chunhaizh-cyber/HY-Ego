@@ -195,6 +195,7 @@
     <ClCompile Include="海中鱼巣\线程\协议.任务执行请求.ixx" />
     <ClCompile Include="海中鱼巣\线程\任务结果回执协议.ixx" />
     <ClCompile Include="海中鱼巣\线程\上行桥.任务实际结果.ixx" />
+    <ClCompile Include="海中鱼巣\线程\协议.任务重筹办意图.ixx" />
     <ClCompile Include="海中鱼巣\线程\有界自我治理队列.ixx" />
     <ClCompile Include="海中鱼巣\线程\投影.线程生命周期.ixx" />
     <ClCompile Include="海中鱼巣\线程\候选.支持线程.ixx" />
@@ -212,6 +213,7 @@
     <ClCompile Include="海中鱼巣\端到端测试.需求服务.ixx" />
     <ClCompile Include="海中鱼巣\端到端测试.自我治理一致事实.ixx" />
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务筹办编排.ixx" />
+    <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务目标未达成重筹办触发.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L2治理函数骨架.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.完整秒时钟.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.运行期事实版本.ixx" />
@@ -258,6 +260,7 @@
     <ClInclude Include="海中鱼巣\业务\方法登记根生产初始化.数据.h" />
     <ClInclude Include="海中鱼巣\线程\自我线程生产创建.数据.h" />
     <ClInclude Include="海中鱼巣\领域\内部治理\任务筹办编排.数据.h" />
+    <ClInclude Include="海中鱼巣\领域\内部治理\任务重筹办.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2治理函数骨架.数据.h" />
     <ClInclude Include="海中鱼巣\领域\运行期只读查询.数据.h" />
   </ItemGroup>

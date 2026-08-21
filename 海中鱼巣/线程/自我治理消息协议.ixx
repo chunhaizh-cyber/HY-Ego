@@ -2,6 +2,7 @@
 module;
 
 #include <cstdint>
+#include <limits>
 #include <optional>
 #include <variant>
 
@@ -20,7 +21,7 @@ import 海中鱼巣.领域.服务.不可变材料;
 
 export namespace 海中鱼巣 {
 
-inline constexpr std::uint32_t 自我治理协议版本 = 3;
+inline constexpr std::uint32_t 自我治理协议版本 = 4;
 
 enum class 自我治理消息类型 : std::uint32_t {
     未知 = 0,
@@ -165,7 +166,19 @@ enum class 自我治理拒绝原因 : std::uint32_t {
 
 struct 自我治理工作项身份 final { 稳定编码 值{}; friend bool operator==(const 自我治理工作项身份&, const 自我治理工作项身份&) = default; };
 struct 自我治理承接身份 final { 稳定编码 值{}; friend bool operator==(const 自我治理承接身份&, const 自我治理承接身份&) = default; };
-struct 任务结果复核载荷 final { L2任务身份 任务; L2状态身份 实际结果状态; L2动态身份 动态证据; L2方法身份 方法; L2方法动作入口身份 动作入口; L2场景身份 场景; L2存在身份 主体; friend bool operator==(const 任务结果复核载荷&, const 任务结果复核载荷&) = default; };
+struct 任务结果复核载荷 final {
+    L2任务身份 任务;
+    L2状态身份 实际结果状态;
+    L2动态身份 动态证据;
+    L2方法身份 方法;
+    L2方法动作入口身份 动作入口;
+    L2场景身份 场景;
+    L2存在身份 主体;
+    L2结构幂等身份 任务治理首态写入幂等身份;
+    L2结构幂等身份 任务重筹办迁移写入幂等身份;
+    friend bool operator==(const 任务结果复核载荷&,
+        const 任务结果复核载荷&) = default;
+};
 struct 派生需求载荷 final { L2存在身份 目标宿主; L2特征定义身份 特征定义; L2特征实例身份 特征实例; L2状态身份 当前状态; L2状态身份 目标状态; friend bool operator==(const 派生需求载荷&, const 派生需求载荷&) = default; };
 struct 观察材料准入载荷 final { L2存在身份 主体; L2场景身份 场景; 不可变材料身份 材料; std::optional<L2任务身份> 绑定任务; std::optional<自我治理工作项身份> 绑定工作项; std::optional<自我治理承接身份> 正式承接身份; friend bool operator==(const 观察材料准入载荷&, const 观察材料准入载荷&) = default; };
 struct 执行前许可预判载荷 final { L2任务身份 任务; L2方法身份 方法; L2方法动作入口身份 动作入口; friend bool operator==(const 执行前许可预判载荷&, const 执行前许可预判载荷&) = default; };
@@ -533,7 +546,11 @@ inline 自我治理拒绝原因 复核自我治理必填材料(const 自我治�
         if (!自我治理身份有效(载荷.任务) || !自我治理身份有效(载荷.实际结果状态)
             || !自我治理身份有效(载荷.动态证据) || !自我治理身份有效(载荷.方法)
             || !自我治理身份有效(载荷.动作入口) || !自我治理身份有效(载荷.场景)
-            || !自我治理身份有效(载荷.主体)) {
+            || !自我治理身份有效(载荷.主体)
+            || !L2结构幂等身份有效(载荷.任务治理首态写入幂等身份)
+            || !L2结构幂等身份有效(载荷.任务重筹办迁移写入幂等身份)
+            || 载荷.任务治理首态写入幂等身份 ==
+                载荷.任务重筹办迁移写入幂等身份) {
             return 自我治理拒绝原因::必填句柄缺失;
         }}
         if (消息.来源任务序号 == 0) {
@@ -632,7 +649,10 @@ inline 自我治理准入结果 复核自我治理消息(
     if (!自我治理服务角色有效(消息.目标服务)) {
         return 拒绝自我治理消息(自我治理拒绝原因::目标服务未知);
     }
-    if (消息.发生时间戳 == 0) {
+    if (消息.发生时间戳 == 0
+        || (消息.类型 == 自我治理消息类型::任务结果复核请求
+            && 消息.发生时间戳 > static_cast<std::uint64_t>(
+                (std::numeric_limits<std::int64_t>::max)()))) {
         return 拒绝自我治理消息(自我治理拒绝原因::发生时间戳无效);
     }
     if (!自我治理消息优先级有效(消息.优先级)) {

@@ -177,6 +177,9 @@
     <ClCompile Include="海中鱼巣\线程\任务结果回执协议.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\线程\协议.任务重筹办意图.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\线程\有界自我治理队列.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -220,6 +223,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务筹办编排.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务目标未达成重筹办触发.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\服务.L2治理函数骨架.ixx">
@@ -270,6 +276,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\内部治理\任务筹办编排.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\内部治理\任务重筹办.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\L2治理函数骨架.数据.h">
