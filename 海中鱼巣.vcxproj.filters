@@ -198,6 +198,15 @@
     <ClCompile Include="海中鱼巣\线程\任务管理线程.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\线程\上行桥.任务实际结果.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\线程\任务工作线程.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\线程\运行包.任务结果生产.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\线程\外设采样材料线程.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
