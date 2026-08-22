@@ -13,7 +13,7 @@
 
 namespace 海中鱼巣 {
 
-inline constexpr std::uint32_t L2普通方法结构合同版本 = 2;
+inline constexpr std::uint32_t L2普通方法结构合同版本 = 3;
 inline constexpr std::uint32_t L2普通方法规格引用合同版本 = 2;
 
 #define 定义L2普通方法节点身份(类型名) \
@@ -418,33 +418,20 @@ struct L2普通方法读取请求 final {
     L2方法身份 方法;
     std::uint64_t 历史截止事实代次 = 0;
 };
-struct L2方法用途粗召回键 final {
-    L2概念身份 目标对象类型;
-    L2特征定义身份 可改变特征类型;
-    L2方法变化方向 变化方向 = L2方法变化方向::无变化;
-    L2方法结果类型引用 结果类型 = L2目标状态合同身份{};
-    friend bool operator==(const L2方法用途粗召回键& 左,
-        const L2方法用途粗召回键& 右) noexcept {
-        return 左.目标对象类型 == 右.目标对象类型
-            && 左.可改变特征类型 == 右.可改变特征类型
-            && 左.变化方向 == 右.变化方向
-            && L2方法结果类型引用相同(左.结果类型, 右.结果类型);
-    }
-};
-struct L2方法用途粗召回请求 final {
+struct L2方法特征粗召回请求 final {
     L2结构请求头 请求头;
     std::uint32_t 普通方法合同版本 = L2普通方法结构合同版本;
     L2读取类别 读取类别 = L2读取类别::当前;
     std::uint64_t 历史截止事实代次 = 0;
-    L2方法用途粗召回键 用途;
+    L2特征定义身份 可改变特征类型;
     std::uint64_t 最大扫描用途事实数 = 0;
     std::uint64_t 最大粗召回方法数 = 0;
 };
-struct L2方法用途粗召回项 final {
+struct L2方法特征粗召回项 final {
     L2方法身份 方法;
     L2方法用途事实 用途;
-    friend bool operator==(const L2方法用途粗召回项&,
-        const L2方法用途粗召回项&) = default;
+    friend bool operator==(const L2方法特征粗召回项&,
+        const L2方法特征粗召回项&) = default;
 };
 struct L2方法静态能力投影读取请求 final {
     L2结构请求头 请求头;
@@ -477,10 +464,10 @@ struct L2普通方法读取结果 final {
     std::optional<L2普通方法事实> 方法;
     bool 成功() const noexcept;
 };
-struct L2方法用途粗召回结果 final {
+struct L2方法特征粗召回结果 final {
     L2结构结果头 结果头;
     std::uint64_t 实际扫描用途事实数 = 0;
-    std::vector<L2方法用途粗召回项> 粗召回;
+    std::vector<L2方法特征粗召回项> 粗召回;
     bool 成功() const noexcept;
 };
 struct L2方法静态能力投影读取结果 final {
@@ -688,12 +675,10 @@ inline bool L2普通方法读取请求有效(const L2普通方法读取请求& �
         && L2读取截止请求有效(请求.请求头, 请求.读取类别,
             请求.历史截止事实代次);
 }
-inline bool L2方法用途粗召回请求有效(const L2方法用途粗召回请求& 请求) noexcept {
+inline bool L2方法特征粗召回请求有效(
+    const L2方法特征粗召回请求& 请求) noexcept {
     return 请求.普通方法合同版本 == L2普通方法结构合同版本
-        && 有效(请求.用途.目标对象类型.值)
-        && 有效(请求.用途.可改变特征类型.值)
-        && L2方法变化方向有效(请求.用途.变化方向)
-        && L2方法结果类型引用有效(请求.用途.结果类型)
+        && 有效(请求.可改变特征类型.值)
         && 请求.最大扫描用途事实数 != 0 && 请求.最大粗召回方法数 != 0
         && L2读取截止请求有效(请求.请求头, 请求.读取类别,
             请求.历史截止事实代次);
@@ -981,7 +966,7 @@ inline bool L2普通方法读取结果::成功() const noexcept {
     return 结果头.状态 == L2结构状态::已读取 && !结果头.变更事实代次
         && 方法 && L2普通方法事实完整(*方法, 截止);
 }
-inline bool L2方法用途粗召回结果::成功() const noexcept {
+inline bool L2方法特征粗召回结果::成功() const noexcept {
     if (结果头.状态 != L2结构状态::已读取 || 结果头.事实截止代次 == 0
         || 结果头.变更事实代次) return false;
     for (std::size_t i = 0; i < 粗召回.size(); ++i) {
