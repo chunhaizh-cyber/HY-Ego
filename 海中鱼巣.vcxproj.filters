@@ -222,7 +222,7 @@
     <ClCompile Include="海中鱼巣\端到端测试.自我治理一致事实.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务筹办编排.ixx">
+    <ClCompile Include="海中鱼巣\领域\内部治理\服务.方法静态能力候选准入.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务目标未达成重筹办触发.ixx">
@@ -275,7 +275,7 @@
     <ClInclude Include="海中鱼巣\核心\容错检查.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="海中鱼巣\领域\内部治理\任务筹办编排.数据.h">
+    <ClInclude Include="海中鱼巣\领域\内部治理\方法静态能力准入.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\内部治理\任务重筹办.数据.h">
