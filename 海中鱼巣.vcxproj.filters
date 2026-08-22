@@ -52,6 +52,9 @@
     <ClCompile Include="海中鱼巣\领域\服务.L2任务子目标承接记录结构.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\服务.需求任务子目标承接.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\组合.运行期只读查询.ixx">
       <Filter>源文件</Filter>
     </ClCompile>

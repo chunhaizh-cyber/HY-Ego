@@ -173,6 +173,7 @@
     <ClCompile Include="海中鱼巣\领域\服务.L2需求结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L2任务结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L2任务子目标承接记录结构.ixx" />
+    <ClCompile Include="海中鱼巣\领域\服务.需求任务子目标承接.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L2任务方法路径结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L2语言结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L2方法结构聚合.ixx" />
