@@ -234,6 +234,9 @@
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务特征方法查找与条件提议.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务筹办当前就绪与执行冻结.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务目标未达成重筹办触发.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -291,6 +294,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\内部治理\任务特征方法查找与条件提议.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\内部治理\任务筹办当前就绪与执行冻结.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\内部治理\任务重筹办.数据.h">

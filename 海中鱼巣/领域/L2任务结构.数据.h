@@ -11,6 +11,8 @@
 #include <vector>
 #include "L2结构公共.数据.h"
 #include "L2需求结构.数据.h"
+#include "L2存在结构.数据.h"
+#include "L2普通方法结构.数据.h"
 #endif
 
 namespace 海中鱼巣 {
@@ -36,6 +38,8 @@ namespace 海中鱼巣 {
 定义L2任务强类型身份(L2任务初次筹办准备记录身份);
 定义L2任务强类型身份(L2任务筹办轮次权威记录身份);
 定义L2任务强类型身份(L2任务后继筹办准备记录身份);
+定义L2任务强类型身份(L2任务方法选择记录身份);
+定义L2任务强类型身份(L2任务执行绑定冻结材料身份);
 
 #undef 定义L2任务强类型身份
 
@@ -65,6 +69,12 @@ inline constexpr std::uint32_t L2任务结构类型登记规则版本 = 1;
 定义L2任务结构类型身份(L2实例方法任务引用关系类型身份);
 定义L2任务结构类型身份(L2实例方法路径引用关系类型身份);
 定义L2任务结构类型身份(L2实例方法当前关系类型身份);
+定义L2任务结构类型身份(L2任务当前正式选择关系类型身份);
+定义L2任务结构类型身份(L2选择记录方法引用关系类型身份);
+定义L2任务结构类型身份(L2选择记录路径引用关系类型身份);
+定义L2任务结构类型身份(L2选择记录来源需求关系类型身份);
+定义L2任务结构类型身份(L2选择记录稳定证据关系类型身份);
+定义L2任务结构类型身份(L2选择记录冻结材料关系类型身份);
 
 #undef 定义L2任务结构类型身份
 
@@ -92,6 +102,372 @@ inline bool L2任务身份来源事实完整(
         && 来源.任务节点生命周期.创建事实代次 != 0
         && 来源.族归属关系生命周期.创建事实代次 != 0;
 }
+
+// ===== 任务筹办正式选择与执行绑定冻结 =====
+
+inline constexpr std::uint32_t L2任务方法选择合同版本 = 1;
+
+enum class L2任务方法选择记录状态 : std::uint8_t {
+    已发布 = 1
+};
+
+struct L2任务重筹办意图幂等身份 final {
+    std::uint64_t 值 = 0;
+    friend bool operator==(const L2任务重筹办意图幂等身份&,
+        const L2任务重筹办意图幂等身份&) = default;
+};
+
+using L2任务筹办来源幂等身份 = std::variant<
+    L2任务初次筹办准备记录身份,
+    L2任务重筹办意图幂等身份>;
+
+using L2任务筹办归因证据引用 = std::variant<
+    L2任务初次筹办准备记录身份,
+    L2任务目标裁决证据身份>;
+
+struct L2任务方法选择记录事实 final {
+    std::uint32_t 合同版本 = L2任务方法选择合同版本;
+    std::uint32_t 记录格式版本 = 1;
+    std::uint64_t 记录版本 = 0;
+    L2任务方法选择记录状态 状态 = L2任务方法选择记录状态::已发布;
+    L2任务方法选择记录身份 身份;
+    L2任务筹办来源幂等身份 原筹办来源幂等身份;
+    std::uint64_t 筹办轮次 = 0;
+    std::uint32_t 选择规则版本 = 0;
+    std::uint32_t 召回规则版本 = 0;
+    L2方法内容版本 方法内容版本;
+    L2任务身份来源事实 任务身份来源;
+    L2方法生命周期事实 方法生命周期;
+    L2生命周期 生命周期;
+    friend bool operator==(const L2任务方法选择记录事实&,
+        const L2任务方法选择记录事实&) = default;
+};
+
+enum class L2任务选择稳定证据类别 : std::uint8_t {
+    初次筹办准备记录 = 1,
+    目标裁决证据 = 2,
+    任务治理状态 = 3
+};
+
+struct L2任务选择稳定证据引用 final {
+    L2任务选择稳定证据类别 类别 =
+        L2任务选择稳定证据类别::目标裁决证据;
+    稳定编码 身份;
+    friend bool operator==(const L2任务选择稳定证据引用&,
+        const L2任务选择稳定证据引用&) = default;
+};
+
+struct L2任务初次筹办规范化来源材料 final {
+    std::uint32_t 合同版本 = L2任务方法选择合同版本;
+    L2任务初次筹办准备记录身份 首次准备记录;
+    L2任务身份 任务;
+    L2需求身份 来源需求;
+    L2需求列表项身份 需求列表项;
+    std::uint64_t 首次目标比较共同事实截止G0 = 0;
+    std::uint64_t 任务建立事实代次G1 = 0;
+    std::uint64_t 筹办轮次 = 1;
+    std::uint64_t 运行代次 = 0;
+    friend bool operator==(const L2任务初次筹办规范化来源材料&,
+        const L2任务初次筹办规范化来源材料&) = default;
+};
+
+struct L2任务重筹办规范化来源材料 final {
+    std::uint32_t 合同版本 = L2任务方法选择合同版本;
+    L2任务重筹办意图幂等身份 原重筹办意图幂等身份;
+    L2任务身份 任务;
+    L2任务方法路径身份 旧路径;
+    L2实例方法身份 旧实例;
+    std::uint64_t 旧执行轮次 = 0;
+    L2任务实际结果身份 旧实际结果;
+    L2任务目标裁决证据身份 正式目标裁决证据;
+    L2任务治理状态身份 正式待重筹办状态;
+    std::uint64_t 原共同事实截止 = 0;
+    std::uint64_t 迁移后事实代次 = 0;
+    std::uint64_t 旧筹办轮次 = 0;
+    std::uint64_t 新筹办轮次 = 0;
+    std::uint64_t 运行代次 = 0;
+    friend bool operator==(const L2任务重筹办规范化来源材料&,
+        const L2任务重筹办规范化来源材料&) = default;
+};
+
+using L2任务筹办规范化来源材料 = std::variant<
+    L2任务初次筹办规范化来源材料,
+    L2任务重筹办规范化来源材料>;
+
+struct L2方法限制解释器身份 final {
+    稳定编码 值;
+    explicit L2方法限制解释器身份(稳定编码 编码 = {}) noexcept
+        : 值(编码) {}
+    friend bool operator==(const L2方法限制解释器身份&,
+        const L2方法限制解释器身份&) = default;
+};
+
+using L2任务限制当前事实证据引用 = std::variant<
+    L2状态事实,
+    L2存在场景成员引用事实,
+    L2特征值事实,
+    L2因果身份>;
+
+#define 定义L2任务冻结来源身份(类型名) \
+    struct 类型名 final { \
+        稳定编码 值; \
+        explicit 类型名(稳定编码 编码 = {}) noexcept : 值(编码) {} \
+        friend bool operator==(const 类型名&, const 类型名&) = default; \
+    }
+
+定义L2任务冻结来源身份(L2来源需求授权事实身份);
+定义L2任务冻结来源身份(L2安全图事实身份);
+定义L2任务冻结来源身份(L2安全阈值事实身份);
+定义L2任务冻结来源身份(L2权限规则事实身份);
+定义L2任务冻结来源身份(L2适用性分类规则事实身份);
+
+#undef 定义L2任务冻结来源身份
+
+using L2任务授权安全来源证据引用 = std::variant<
+    L2来源需求授权事实身份,
+    L2安全图事实身份,
+    L2安全阈值事实身份,
+    L2权限规则事实身份,
+    L2适用性分类规则事实身份>;
+
+inline bool L2任务冻结属性事实相同(
+    const L2属性事实& 左,
+    const L2属性事实& 右) noexcept {
+    return 左.属性类型身份 == 右.属性类型身份
+        && 左.值稳定编码 == 右.值稳定编码
+        && 左.类型化不可变材料 == 右.类型化不可变材料
+        && 左.来源稳定编码 == 右.来源稳定编码
+        && 左.创建事实代次 == 右.创建事实代次
+        && 左.退出事实代次 == 右.退出事实代次;
+}
+
+inline bool L2任务冻结状态事实相同(
+    const L2状态事实& 左,
+    const L2状态事实& 右) noexcept {
+    return 左.身份 == 右.身份
+        && 左.主体存在 == 右.主体存在
+        && 左.特征实例 == 右.特征实例
+        && L2任务冻结属性事实相同(左.精确值, 右.精确值)
+        && L2任务冻结属性事实相同(左.时间值, 右.时间值)
+        && 左.来源稳定编码 == 右.来源稳定编码
+        && 左.生命周期 == 右.生命周期;
+}
+
+inline bool L2任务冻结方法规格材料相同(
+    const L2方法规格材料& 左,
+    const L2方法规格材料& 右) noexcept {
+    return 左.角色 == 右.角色
+        && 左.顺序 == 右.顺序
+        && 左.值 == 右.值;
+}
+
+inline bool L2任务冻结方法输入规格事实相同(
+    const L2方法输入规格事实& 左,
+    const L2方法输入规格事实& 右) noexcept {
+    return 左.身份 == 右.身份
+        && 左.方法 == 右.方法
+        && 左.条件 == 右.条件
+        && 左.作用对象角色 == 右.作用对象角色
+        && 左.顺序 == 右.顺序
+        && L2任务冻结方法规格材料相同(左.规格, 右.规格)
+        && 左.来源稳定编码 == 右.来源稳定编码
+        && 左.内容版本 == 右.内容版本
+        && 左.生命周期 == 右.生命周期;
+}
+
+inline bool L2任务冻结方法限制条件事实相同(
+    const L2方法限制条件事实& 左,
+    const L2方法限制条件事实& 右) noexcept {
+    return 左.身份 == 右.身份
+        && 左.方法 == 右.方法
+        && 左.条件 == 右.条件
+        && 左.类别 == 右.类别
+        && 左.作用对象角色 == 右.作用对象角色
+        && 左.顺序 == 右.顺序
+        && L2任务冻结方法规格材料相同(左.规格, 右.规格)
+        && 左.来源稳定编码 == 右.来源稳定编码
+        && 左.内容版本 == 右.内容版本
+        && 左.生命周期 == 右.生命周期;
+}
+
+inline bool L2任务限制当前事实证据相同(
+    const L2任务限制当前事实证据引用& 左,
+    const L2任务限制当前事实证据引用& 右) noexcept {
+    if (左.index() != 右.index()) return false;
+    if (const auto* 左状态 = std::get_if<L2状态事实>(&左)) {
+        const auto* 右状态 = std::get_if<L2状态事实>(&右);
+        return 右状态 && L2任务冻结状态事实相同(*左状态, *右状态);
+    }
+    if (const auto* 左成员 = std::get_if<L2存在场景成员引用事实>(&左)) {
+        const auto* 右成员 = std::get_if<L2存在场景成员引用事实>(&右);
+        return 右成员 && *左成员 == *右成员;
+    }
+    if (const auto* 左特征 = std::get_if<L2特征值事实>(&左)) {
+        const auto* 右特征 = std::get_if<L2特征值事实>(&右);
+        return 右特征 && *左特征 == *右特征;
+    }
+    const auto* 左因果 = std::get_if<L2因果身份>(&左);
+    const auto* 右因果 = std::get_if<L2因果身份>(&右);
+    return 左因果 && 右因果 && *左因果 == *右因果;
+}
+
+struct L2任务条件当前就绪冻结证据 final {
+    L2方法条件事实 条件;
+    L2存在身份 绑定目标;
+    std::optional<L2场景身份> 场景;
+    std::optional<L2存在场景成员引用事实> 场景成员;
+    L2状态事实 当前状态;
+    L2特征比较具名关系 具名关系 =
+        L2特征比较具名关系::当前达到目标;
+    std::uint8_t 允许关系位 = 0;
+    friend bool operator==(const L2任务条件当前就绪冻结证据& 左,
+        const L2任务条件当前就绪冻结证据& 右) noexcept {
+        return 左.条件 == 右.条件
+            && 左.绑定目标 == 右.绑定目标
+            && 左.场景 == 右.场景
+            && 左.场景成员 == 右.场景成员
+            && L2任务冻结状态事实相同(左.当前状态, 右.当前状态)
+            && 左.具名关系 == 右.具名关系
+            && 左.允许关系位 == 右.允许关系位;
+    }
+};
+
+struct L2任务输入规格冻结项 final {
+    L2方法输入规格事实 输入规格;
+    L2存在身份 绑定目标;
+    friend bool operator==(const L2任务输入规格冻结项& 左,
+        const L2任务输入规格冻结项& 右) noexcept {
+        return L2任务冻结方法输入规格事实相同(左.输入规格, 右.输入规格)
+            && 左.绑定目标 == 右.绑定目标;
+    }
+};
+
+struct L2任务参数绑定冻结项 final {
+    L2方法输入规格身份 来源输入规格;
+    std::uint64_t 作用对象角色 = 0;
+    L2方法规格材料 参数规格;
+    L2存在身份 绑定目标;
+    friend bool operator==(const L2任务参数绑定冻结项& 左,
+        const L2任务参数绑定冻结项& 右) noexcept {
+        return 左.来源输入规格 == 右.来源输入规格
+            && 左.作用对象角色 == 右.作用对象角色
+            && L2任务冻结方法规格材料相同(左.参数规格, 右.参数规格)
+            && 左.绑定目标 == 右.绑定目标;
+    }
+};
+
+struct L2任务限制条件复判冻结证据 final {
+    L2方法限制条件事实 限制条件;
+    L2存在身份 绑定目标;
+    L2方法限制解释器身份 解释器;
+    std::uint32_t 解释规则版本 = 0;
+    L2任务限制当前事实证据引用 当前事实证据;
+    bool 已满足 = false;
+    friend bool operator==(const L2任务限制条件复判冻结证据& 左,
+        const L2任务限制条件复判冻结证据& 右) noexcept {
+        return L2任务冻结方法限制条件事实相同(左.限制条件, 右.限制条件)
+            && 左.绑定目标 == 右.绑定目标
+            && 左.解释器 == 右.解释器
+            && 左.解释规则版本 == 右.解释规则版本
+            && L2任务限制当前事实证据相同(左.当前事实证据, 右.当前事实证据)
+            && 左.已满足 == 右.已满足;
+    }
+};
+
+enum class L2任务授权安全复判结论 : std::uint8_t {
+    已授权 = 1,
+    权限为零 = 2,
+    不适用已证明 = 3,
+    材料缺失 = 4
+};
+
+inline bool L2任务授权安全来源证据相同(
+    const L2任务授权安全来源证据引用& 左,
+    const L2任务授权安全来源证据引用& 右) noexcept {
+    if (左.index() != 右.index()) return false;
+    if (const auto* 左身份 = std::get_if<L2来源需求授权事实身份>(&左)) {
+        const auto* 右身份 = std::get_if<L2来源需求授权事实身份>(&右);
+        return 右身份 && *左身份 == *右身份;
+    }
+    if (const auto* 左身份 = std::get_if<L2安全图事实身份>(&左)) {
+        const auto* 右身份 = std::get_if<L2安全图事实身份>(&右);
+        return 右身份 && *左身份 == *右身份;
+    }
+    if (const auto* 左身份 = std::get_if<L2安全阈值事实身份>(&左)) {
+        const auto* 右身份 = std::get_if<L2安全阈值事实身份>(&右);
+        return 右身份 && *左身份 == *右身份;
+    }
+    if (const auto* 左身份 = std::get_if<L2权限规则事实身份>(&左)) {
+        const auto* 右身份 = std::get_if<L2权限规则事实身份>(&右);
+        return 右身份 && *左身份 == *右身份;
+    }
+    const auto* 左身份 = std::get_if<L2适用性分类规则事实身份>(&左);
+    const auto* 右身份 = std::get_if<L2适用性分类规则事实身份>(&右);
+    return 左身份 && 右身份 && *左身份 == *右身份;
+}
+
+inline bool L2任务授权安全来源证据组相同(
+    const std::vector<L2任务授权安全来源证据引用>& 左,
+    const std::vector<L2任务授权安全来源证据引用>& 右) noexcept {
+    if (左.size() != 右.size()) return false;
+    for (std::size_t 索引 = 0; 索引 < 左.size(); ++索引) {
+        if (!L2任务授权安全来源证据相同(左[索引], 右[索引])) return false;
+    }
+    return true;
+}
+
+struct L2任务授权安全复判材料 final {
+    L2任务授权安全复判结论 结论 =
+        L2任务授权安全复判结论::材料缺失;
+    std::vector<L2需求身份> 来源需求组;
+    std::int64_t 最高权限 = 0;
+    std::uint64_t 授权版本 = 0;
+    std::uint64_t 安全图版本 = 0;
+    std::uint64_t 阈值版本 = 0;
+    std::uint32_t 权限规则版本 = 0;
+    std::uint32_t 适用性分类规则版本 = 0;
+    std::vector<L2任务授权安全来源证据引用> 强类型来源证据组;
+    friend bool operator==(const L2任务授权安全复判材料& 左,
+        const L2任务授权安全复判材料& 右) noexcept {
+        return 左.结论 == 右.结论
+            && 左.来源需求组 == 右.来源需求组
+            && 左.最高权限 == 右.最高权限
+            && 左.授权版本 == 右.授权版本
+            && 左.安全图版本 == 右.安全图版本
+            && 左.阈值版本 == 右.阈值版本
+            && 左.权限规则版本 == 右.权限规则版本
+            && 左.适用性分类规则版本 == 右.适用性分类规则版本
+            && L2任务授权安全来源证据组相同(
+                左.强类型来源证据组, 右.强类型来源证据组);
+    }
+};
+
+struct L2任务执行绑定冻结材料提交项 final {
+    L2任务身份 任务;
+    std::uint64_t 筹办轮次 = 0;
+    L2方法身份 方法;
+    L2方法内容版本 方法内容版本;
+    std::vector<L2任务条件当前就绪冻结证据> 条件证据组;
+    std::vector<L2任务输入规格冻结项> 输入冻结组;
+    std::vector<L2任务参数绑定冻结项> 参数冻结组;
+    std::vector<L2任务限制条件复判冻结证据> 限制证据组;
+    L2任务授权安全复判材料 授权安全材料;
+    L2方法动作入口事实 动作入口;
+    L2方法结果事实 主轴结果;
+    L2目标状态合同身份 验证合同;
+    L2任务筹办归因证据引用 归因证据;
+    std::uint64_t 失效事实截止 = 0;
+    friend bool operator==(const L2任务执行绑定冻结材料提交项&,
+        const L2任务执行绑定冻结材料提交项&) = default;
+};
+
+struct L2任务执行绑定冻结材料事实 final {
+    L2任务执行绑定冻结材料身份 身份;
+    L2任务执行绑定冻结材料提交项 材料;
+    L2生命周期 生命周期;
+    friend bool operator==(const L2任务执行绑定冻结材料事实&,
+        const L2任务执行绑定冻结材料事实&) = default;
+};
 
 // ===== L2任务事实 =====
 
@@ -151,6 +527,19 @@ struct L2任务方法路径事实 final {
     L2生命周期 生命周期;
     friend bool operator==(const L2任务方法路径事实&,
         const L2任务方法路径事实&) = default;
+};
+
+struct L2任务方法选择完整事实 final {
+    L2任务方法选择记录事实 记录;
+    L2任务身份 任务;
+    L2方法身份 方法;
+    L2任务方法路径事实 路径;
+    std::vector<L2需求身份> 来源需求组;
+    std::vector<L2任务选择稳定证据引用> 稳定证据组;
+    L2任务执行绑定冻结材料身份 冻结材料;
+    bool 当前 = false;
+    friend bool operator==(const L2任务方法选择完整事实&,
+        const L2任务方法选择完整事实&) = default;
 };
 
 // ===== L2实例方法事实 =====
@@ -1239,37 +1628,340 @@ inline bool L2任务方法路径退出请求有效(
         && 有效(请求.路径.值);
 }
 
-// ===== 发布当前选中路径 =====
+// ===== 发布并读取任务筹办正式选择 =====
 
-struct L2发布当前选中路径请求 final {
+struct L2发布任务筹办正式选择请求 final {
     L2结构请求头 请求头;
-    L2结构幂等身份 幂等身份;
-    L2任务身份 任务;
-    L2任务方法路径身份 新路径;
-    friend bool operator==(const L2发布当前选中路径请求&,
-        const L2发布当前选中路径请求&) = default;
+    L2任务筹办规范化来源材料 来源材料;
+    L2任务身份来源事实 任务身份来源;
+    L2方法生命周期事实 方法生命周期;
+    std::uint32_t 选择规则版本 = 0;
+    std::uint32_t 召回规则版本 = 0;
+    std::vector<L2需求身份> 来源需求组;
+    std::vector<L2任务选择稳定证据引用> 稳定证据组;
+    L2任务执行绑定冻结材料提交项 冻结材料;
+    friend bool operator==(const L2发布任务筹办正式选择请求&,
+        const L2发布任务筹办正式选择请求&) = default;
 };
 
-struct L2发布当前选中路径结果 final {
+struct L2发布任务筹办正式选择结果 final {
     L2结构结果头 结果头;
-    std::optional<L2任务方法路径身份> 旧当前选中路径;
-    std::optional<L2任务方法路径身份> 新当前选中路径;
+    std::optional<L2任务方法选择完整事实> 正式选择;
+    std::optional<L2任务执行绑定冻结材料事实> 冻结材料;
+    std::optional<L2实例方法事实> 实例方法;
+    std::optional<L2任务方法选择记录身份> 旧当前选择;
+    std::optional<L2任务方法路径身份> 旧当前路径;
+    std::optional<L2实例方法身份> 旧当前实例;
     bool 成功() const noexcept {
-        return 结果头.状态 == L2结构状态::已提交
-            && 结果头.变更事实代次 != 0
-            && 新当前选中路径;
+        return (结果头.状态 == L2结构状态::已提交
+                || 结果头.状态 == L2结构状态::精确重复)
+            && 结果头.事实截止代次 != 0
+            && 正式选择 && 冻结材料 && 实例方法;
     }
-    friend bool operator==(const L2发布当前选中路径结果&,
-        const L2发布当前选中路径结果&) = default;
+    friend bool operator==(const L2发布任务筹办正式选择结果&,
+        const L2发布任务筹办正式选择结果&) = default;
 };
 
-inline bool L2发布当前选中路径请求有效(
-    const L2发布当前选中路径请求& 请求) noexcept {
+struct L2任务方法选择读取请求 final {
+    L2结构请求头 请求头;
+    L2读取类别 读取类别 = L2读取类别::当前;
+    L2任务方法选择记录身份 选择记录;
+    std::uint64_t 历史截止事实代次 = 0;
+    friend bool operator==(const L2任务方法选择读取请求&,
+        const L2任务方法选择读取请求&) = default;
+};
+
+struct L2任务方法选择读取结果 final {
+    L2结构结果头 结果头;
+    L2读取类别 读取类别 = L2读取类别::当前;
+    std::uint64_t 历史截止事实代次 = 0;
+    std::optional<L2任务方法选择完整事实> 正式选择;
+    std::optional<L2任务执行绑定冻结材料事实> 冻结材料;
+    std::optional<L2实例方法事实> 实例方法;
+    bool 成功() const noexcept {
+        return 结果头.状态 == L2结构状态::已读取
+            && 结果头.事实截止代次 != 0
+            && 正式选择 && 冻结材料 && 实例方法;
+    }
+    friend bool operator==(const L2任务方法选择读取结果&,
+        const L2任务方法选择读取结果&) = default;
+};
+
+struct L2按任务读取当前方法选择请求 final {
+    L2结构请求头 请求头;
+    L2任务身份 任务;
+    friend bool operator==(const L2按任务读取当前方法选择请求&,
+        const L2按任务读取当前方法选择请求&) = default;
+};
+
+struct L2按任务读取当前方法选择结果 final {
+    L2结构结果头 结果头;
+    std::optional<L2任务方法选择完整事实> 正式选择;
+    std::optional<L2任务执行绑定冻结材料事实> 冻结材料;
+    std::optional<L2实例方法事实> 实例方法;
+    bool 成功() const noexcept {
+        return 结果头.状态 == L2结构状态::已读取
+            && 结果头.事实截止代次 != 0;
+    }
+    friend bool operator==(const L2按任务读取当前方法选择结果&,
+        const L2按任务读取当前方法选择结果&) = default;
+};
+
+struct L2按筹办来源幂等身份读取正式选择请求 final {
+    L2结构请求头 请求头;
+    L2任务筹办来源幂等身份 原筹办来源幂等身份;
+    std::optional<L2发布任务筹办正式选择请求> 原完整请求;
+    friend bool operator==(const L2按筹办来源幂等身份读取正式选择请求&,
+        const L2按筹办来源幂等身份读取正式选择请求&) = default;
+};
+
+struct L2按筹办来源幂等身份读取正式选择结果 final {
+    L2结构结果头 结果头;
+    std::optional<L2发布任务筹办正式选择请求> 首次完整请求;
+    std::optional<L2任务方法选择完整事实> 正式选择;
+    std::optional<L2任务执行绑定冻结材料事实> 冻结材料;
+    std::optional<L2实例方法事实> 实例方法;
+    bool 成功() const noexcept {
+        return 结果头.状态 == L2结构状态::已读取
+            && 结果头.事实截止代次 != 0
+            && 首次完整请求 && 正式选择 && 冻结材料 && 实例方法;
+    }
+    friend bool operator==(
+        const L2按筹办来源幂等身份读取正式选择结果&,
+        const L2按筹办来源幂等身份读取正式选择结果&) = default;
+};
+
+inline bool L2任务初次筹办规范化来源材料完整(
+    const L2任务初次筹办规范化来源材料& 材料) noexcept {
+    return 材料.合同版本 == L2任务方法选择合同版本
+        && 有效(材料.首次准备记录.值) && 有效(材料.任务.值)
+        && 有效(材料.来源需求.值) && 有效(材料.需求列表项.值)
+        && 材料.首次目标比较共同事实截止G0 != 0
+        && 材料.任务建立事实代次G1
+            > 材料.首次目标比较共同事实截止G0
+        && 材料.筹办轮次 == 1 && 材料.运行代次 != 0;
+}
+
+inline bool L2任务重筹办规范化来源材料完整(
+    const L2任务重筹办规范化来源材料& 材料) noexcept {
+    return 材料.合同版本 == L2任务方法选择合同版本
+        && 材料.原重筹办意图幂等身份.值 != 0 && 有效(材料.任务.值)
+        && 有效(材料.旧路径.值) && 有效(材料.旧实例.值)
+        && 材料.旧执行轮次 != 0 && 有效(材料.旧实际结果.值)
+        && 有效(材料.正式目标裁决证据.值)
+        && 有效(材料.正式待重筹办状态.值)
+        && 材料.原共同事实截止 != 0 && 材料.迁移后事实代次 != 0
+        && 材料.旧筹办轮次 != 0
+        && 材料.新筹办轮次 == 材料.旧筹办轮次 + 1
+        && 材料.运行代次 != 0;
+}
+
+inline bool L2任务筹办规范化来源材料完整(
+    const L2任务筹办规范化来源材料& 材料) noexcept {
+    if (材料.valueless_by_exception()) return false;
+    return std::visit([](const auto& 来源) noexcept {
+        using 来源类型 = std::decay_t<decltype(来源)>;
+        if constexpr (std::is_same_v<来源类型,
+                L2任务初次筹办规范化来源材料>)
+            return L2任务初次筹办规范化来源材料完整(来源);
+        else
+            return L2任务重筹办规范化来源材料完整(来源);
+    }, 材料);
+}
+
+inline L2任务筹办来源幂等身份 L2取得任务筹办来源幂等身份(
+    const L2任务筹办规范化来源材料& 材料) noexcept {
+    return std::visit([](const auto& 来源) -> L2任务筹办来源幂等身份 {
+        using 来源类型 = std::decay_t<decltype(来源)>;
+        if constexpr (std::is_same_v<来源类型,
+                L2任务初次筹办规范化来源材料>)
+            return 来源.首次准备记录;
+        else
+            return 来源.原重筹办意图幂等身份;
+    }, 材料);
+}
+
+inline L2任务身份 L2取得任务筹办任务(
+    const L2任务筹办规范化来源材料& 材料) noexcept {
+    return std::visit([](const auto& 来源) noexcept { return 来源.任务; }, 材料);
+}
+
+inline std::uint64_t L2取得任务筹办轮次(
+    const L2任务筹办规范化来源材料& 材料) noexcept {
+    return std::visit([](const auto& 来源) noexcept {
+        using 来源类型 = std::decay_t<decltype(来源)>;
+        if constexpr (std::is_same_v<来源类型,
+                L2任务初次筹办规范化来源材料>)
+            return 来源.筹办轮次;
+        else
+            return 来源.新筹办轮次;
+    }, 材料);
+}
+
+inline bool L2任务筹办来源幂等身份有效(
+    const L2任务筹办来源幂等身份& 身份) noexcept {
+    if (身份.valueless_by_exception()) return false;
+    return std::visit([](const auto& 值) noexcept {
+        using 身份类型 = std::decay_t<decltype(值)>;
+        if constexpr (std::is_same_v<身份类型,
+                L2任务初次筹办准备记录身份>)
+            return 有效(值.值);
+        else
+            return 值.值 != 0;
+    }, 身份);
+}
+
+inline bool L2任务筹办归因证据引用有效(
+    const L2任务筹办归因证据引用& 证据) noexcept {
+    return !证据.valueless_by_exception()
+        && std::visit([](const auto& 身份) noexcept {
+            return 有效(身份.值);
+        }, 证据);
+}
+
+inline bool L2任务选择稳定证据组完整(
+    const std::vector<L2任务选择稳定证据引用>& 组) noexcept {
+    if (组.empty()) return false;
+    for (std::size_t 索引 = 0; 索引 < 组.size(); ++索引) {
+        const auto& 项 = 组[索引];
+        if (!有效(项.身份)
+            || (项.类别 != L2任务选择稳定证据类别::初次筹办准备记录
+                && 项.类别 != L2任务选择稳定证据类别::目标裁决证据
+                && 项.类别 != L2任务选择稳定证据类别::任务治理状态))
+            return false;
+        if (索引 != 0) {
+            const auto& 前 = 组[索引 - 1];
+            if (static_cast<std::uint8_t>(前.类别)
+                    > static_cast<std::uint8_t>(项.类别)
+                || (前.类别 == 项.类别 && 前.身份.值 >= 项.身份.值))
+                return false;
+        }
+    }
+    return true;
+}
+
+inline bool L2任务来源需求组规范化(
+    const std::vector<L2需求身份>& 组) noexcept {
+    if (组.empty()) return false;
+    for (std::size_t 索引 = 0; 索引 < 组.size(); ++索引) {
+        if (!有效(组[索引].值)
+            || (索引 != 0 && 组[索引 - 1].值.值 >= 组[索引].值.值))
+            return false;
+    }
+    return true;
+}
+
+inline bool L2任务授权安全复判材料完整(
+    const L2任务授权安全复判材料& 材料) noexcept {
+    if (!L2任务来源需求组规范化(材料.来源需求组)) return false;
+    for (const auto& 证据 : 材料.强类型来源证据组) {
+        if (证据.valueless_by_exception()) return false;
+        const bool 有值 = std::visit([](const auto& 值) noexcept {
+            return 有效(值.值);
+        }, 证据);
+        if (!有值) return false;
+    }
+    if (材料.结论 == L2任务授权安全复判结论::已授权)
+        return 材料.最高权限 > 0 && 材料.授权版本 != 0
+            && 材料.安全图版本 != 0 && 材料.阈值版本 != 0
+            && 材料.权限规则版本 != 0
+            && !材料.强类型来源证据组.empty();
+    if (材料.结论 == L2任务授权安全复判结论::权限为零)
+        return 材料.最高权限 == 0 && 材料.授权版本 != 0
+            && 材料.权限规则版本 != 0;
+    if (材料.结论 == L2任务授权安全复判结论::不适用已证明) {
+        if (材料.适用性分类规则版本 == 0) return false;
+        return std::any_of(材料.强类型来源证据组.begin(),
+            材料.强类型来源证据组.end(), [](const auto& 证据) noexcept {
+                return std::holds_alternative<L2适用性分类规则事实身份>(证据);
+            });
+    }
+    return 材料.结论 == L2任务授权安全复判结论::材料缺失;
+}
+
+inline bool L2任务执行绑定冻结材料提交项完整(
+    const L2任务执行绑定冻结材料提交项& 材料) noexcept {
+    if (!有效(材料.任务.值) || 材料.筹办轮次 == 0
+        || !有效(材料.方法.值)
+        || !L2方法内容版本有效(材料.方法内容版本)
+        || !L2任务授权安全复判材料完整(材料.授权安全材料)
+        || !有效(材料.动作入口.身份.值)
+        || !有效(材料.主轴结果.身份.值)
+        || !有效(材料.验证合同.值)
+        || !L2任务筹办归因证据引用有效(材料.归因证据)
+        || 材料.失效事实截止 == 0) return false;
+    for (const auto& 项 : 材料.条件证据组)
+        if (!有效(项.条件.身份.值) || !有效(项.绑定目标.值)
+            || !有效(项.当前状态.身份.值)
+            || 项.允许关系位 == 0 || 项.允许关系位 > 7) return false;
+    for (const auto& 项 : 材料.输入冻结组)
+        if (!有效(项.输入规格.身份.值) || !有效(项.绑定目标.值)) return false;
+    for (const auto& 项 : 材料.参数冻结组)
+        if (!有效(项.来源输入规格.值) || 项.作用对象角色 == 0
+            || !L2方法规格材料有效(项.参数规格)
+            || !有效(项.绑定目标.值)) return false;
+    for (const auto& 项 : 材料.限制证据组)
+        if (!有效(项.限制条件.身份.值) || !有效(项.绑定目标.值)
+            || !有效(项.解释器.值) || 项.解释规则版本 == 0
+            || 项.当前事实证据.valueless_by_exception() || !项.已满足)
+            return false;
+    return true;
+}
+
+inline bool L2发布任务筹办正式选择请求有效(
+    const L2发布任务筹办正式选择请求& 请求) noexcept {
+    if (请求.来源材料.valueless_by_exception()) return false;
+    const auto 来源任务 = L2取得任务筹办任务(请求.来源材料);
+    const auto 来源轮次 = L2取得任务筹办轮次(请求.来源材料);
+    const auto 截止匹配 = std::visit([&](const auto& 来源) noexcept {
+        using 来源类型 = std::decay_t<decltype(来源)>;
+        if constexpr (std::is_same_v<来源类型,
+                L2任务初次筹办规范化来源材料>)
+            return 请求.请求头.期望事实代次 >= 来源.任务建立事实代次G1;
+        else
+            return 请求.请求头.期望事实代次 == 来源.迁移后事实代次;
+    }, 请求.来源材料);
+    return L2任务结构请求头合同有效(请求.请求头)
+        && 截止匹配
+        && L2任务筹办规范化来源材料完整(请求.来源材料)
+        && L2任务身份来源事实完整(请求.任务身份来源)
+        && 请求.选择规则版本 != 0 && 请求.召回规则版本 != 0
+        && 有效(请求.方法生命周期.方法.值)
+        && L2方法生命周期版本有效(请求.方法生命周期.生命周期版本)
+        && 请求.方法生命周期.生命周期.创建事实代次 != 0
+        && L2任务来源需求组规范化(请求.来源需求组)
+        && L2任务选择稳定证据组完整(请求.稳定证据组)
+        && L2任务执行绑定冻结材料提交项完整(请求.冻结材料)
+        && 请求.冻结材料.任务 == 来源任务
+        && 请求.冻结材料.筹办轮次 == 来源轮次
+        && 请求.冻结材料.方法 == 请求.方法生命周期.方法
+        && 请求.冻结材料.授权安全材料.来源需求组 == 请求.来源需求组;
+}
+
+inline bool L2任务方法选择读取请求有效(
+    const L2任务方法选择读取请求& 请求) noexcept {
+    return L2任务结构请求头合同有效(请求.请求头)
+        && 请求.请求头.期望事实代次 != 0 && 有效(请求.选择记录.值)
+        && L2任务读取类别有效(请求.读取类别,
+            请求.历史截止事实代次, 请求.请求头.期望事实代次);
+}
+
+inline bool L2按任务读取当前方法选择请求有效(
+    const L2按任务读取当前方法选择请求& 请求) noexcept {
+    return L2任务结构请求头合同有效(请求.请求头)
+        && 请求.请求头.期望事实代次 != 0 && 有效(请求.任务.值);
+}
+
+inline bool L2按筹办来源幂等身份读取正式选择请求有效(
+    const L2按筹办来源幂等身份读取正式选择请求& 请求) noexcept {
     return L2任务结构请求头合同有效(请求.请求头)
         && 请求.请求头.期望事实代次 != 0
-        && L2结构幂等身份有效(请求.幂等身份)
-        && 有效(请求.任务.值)
-        && 有效(请求.新路径.值);
+        && L2任务筹办来源幂等身份有效(请求.原筹办来源幂等身份)
+        && (!请求.原完整请求
+            || (L2发布任务筹办正式选择请求有效(*请求.原完整请求)
+                && L2取得任务筹办来源幂等身份(
+                    请求.原完整请求->来源材料)
+                    == 请求.原筹办来源幂等身份));
 }
 
 // ===== 读取当前选中路径 =====
