@@ -217,6 +217,7 @@
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务特征方法查找与条件提议.ixx" />
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务目标未达成重筹办触发.ixx" />
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.需求初次筹办准备.ixx" />
+    <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务子目标回流重判.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L2治理函数骨架.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.完整秒时钟.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.运行期事实版本.ixx" />
@@ -266,6 +267,7 @@
     <ClInclude Include="海中鱼巣\领域\内部治理\任务特征方法查找与条件提议.数据.h" />
     <ClInclude Include="海中鱼巣\领域\内部治理\任务重筹办.数据.h" />
     <ClInclude Include="海中鱼巣\领域\内部治理\任务初次筹办.数据.h" />
+    <ClInclude Include="海中鱼巣\领域\内部治理\任务子目标回流重判.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2治理函数骨架.数据.h" />
     <ClInclude Include="海中鱼巣\领域\运行期只读查询.数据.h" />
   </ItemGroup>
