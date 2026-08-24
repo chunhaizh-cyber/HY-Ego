@@ -34,7 +34,6 @@ import 海中鱼巣.领域.服务.L2任务结构;
 import 海中鱼巣.领域.服务.L2任务子目标承接记录结构;
 import 海中鱼巣.领域.服务.需求任务子目标承接;
 import 海中鱼巣.领域.服务.L2动态结构;
-import 海中鱼巣.领域.服务.L2通用虚拟存在结构;
 import 海中鱼巣.领域.服务.L2状态动态原子发布;
 import 海中鱼巣.领域.服务.L2因果结构;
 import 海中鱼巣.领域.服务.L2场景结构;
@@ -239,14 +238,6 @@ public:
         return *存在服务_;
     }
 
-    L2通用虚拟存在结构服务& 取得L2通用虚拟存在结构服务() noexcept {
-        return *通用存在服务_;
-    }
-
-    const L2通用虚拟存在结构服务& 取得L2通用虚拟存在结构服务() const noexcept {
-        return *通用存在服务_;
-    }
-
     L2特征结构服务& 取得L2特征结构服务() noexcept {
         return *特征服务_;
     }
@@ -378,7 +369,6 @@ private:
         std::unique_ptr<不可变材料服务>&& 材料服务,
         std::unique_ptr<L2语言结构服务>&& 语言服务,
         std::unique_ptr<L2存在结构服务>&& 存在服务,
-        std::unique_ptr<L2通用虚拟存在结构服务>&& 通用存在服务,
         std::unique_ptr<L2特征结构服务>&& 特征服务,
         std::unique_ptr<L2状态结构服务>&& 状态服务,
         std::unique_ptr<L2需求结构服务>&& 需求服务,
@@ -404,7 +394,6 @@ private:
         任务筹办授权安全材料来源* 授权安全材料来源) noexcept
         : 运行包_(std::move(运行包)), 材料服务_(std::move(材料服务)),
           语言服务_(std::move(语言服务)), 存在服务_(std::move(存在服务)),
-          通用存在服务_(std::move(通用存在服务)),
           特征服务_(std::move(特征服务)), 状态服务_(std::move(状态服务)),
           需求服务_(std::move(需求服务)), 任务服务_(std::move(任务服务)),
           任务子目标承接记录服务_(std::move(任务子目标承接记录服务)),
@@ -438,7 +427,6 @@ private:
     std::unique_ptr<不可变材料服务> 材料服务_;
     std::unique_ptr<L2语言结构服务> 语言服务_;
     std::unique_ptr<L2存在结构服务> 存在服务_;
-    std::unique_ptr<L2通用虚拟存在结构服务> 通用存在服务_;
     std::unique_ptr<L2特征结构服务> 特征服务_;
     std::unique_ptr<L2状态结构服务> 状态服务_;
     std::unique_ptr<L2需求结构服务> 需求服务_;
@@ -673,8 +661,6 @@ struct 普通应用装配结果 {
         } catch (...) {
             return {普通应用装配状态::存在服务构造失败, nullptr};
         }
-        auto 通用存在服务 =
-            std::make_unique<L2通用虚拟存在结构服务>();
         auto 定义原始交付 = 运行包.所有者范围签发器().建立所有者范围(
             {L1所有者范围CRUD合同版本, 特征定义所有者建立身份,
                 L1所有者范围种类::独占结构范围});
@@ -817,8 +803,8 @@ struct 普通应用装配结果 {
         try {
             状态动态原子发布服务 =
                 std::make_unique<L2状态动态原子发布服务>(
-                    运行包.读取服务(), *通用存在服务, *状态服务,
-                    *动态服务, std::move(*事务凭证));
+                    运行包.读取服务(), *状态服务, *动态服务,
+                    std::move(*事务凭证));
         } catch (...) {
             return {普通应用装配状态::动态服务构造失败, nullptr};
         }
@@ -1006,7 +992,6 @@ struct 普通应用装配结果 {
         auto 上下文 = std::unique_ptr<普通应用上下文>(new 普通应用上下文(
                 std::move(运行包), std::move(材料服务),
                 std::move(语言服务), std::move(存在服务),
-                std::move(通用存在服务),
                 std::move(特征服务), std::move(状态服务),
                 std::move(需求服务), std::move(任务服务),
                 std::move(任务子目标承接记录服务),
