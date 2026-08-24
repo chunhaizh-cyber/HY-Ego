@@ -27,7 +27,9 @@
 | 工作树差异 | `git diff --check` | PASS：无 whitespace 错误（仅 Git LF→CRLF 提示） |
 | Debug fresh Rebuild | VS 18 Professional / x64 Debug，独立 D:\TEMP 输出 | PASS：exit 0，生成 `D:\TEMP\ARCH-L2-GENERIC-VIRTUAL-EXISTENCE-AUTHORITY-CORRECTION\Debug\海中鱼巣.exe` |
 | Release fresh Rebuild | VS 18 Professional / x64 Release，独立 D:\TEMP 输出 | PASS：exit 0，生成 `D:\TEMP\ARCH-L2-GENERIC-VIRTUAL-EXISTENCE-AUTHORITY-CORRECTION\Release\海中鱼巣.exe` |
-| 发布前暂存差异 | `git diff --cached --check` 与精确八路径集合 | 待发布租约授予后回填 |
+| 代码发布前暂存差异 | `git diff --cached --check` 与精确八路径集合 | PASS：cached 精确 8 路径，`git diff --cached --check` 无错误；代码提交为 `5b10e1795b9c6dfd94bc9e2dd5aa13e28e7e09db` |
+| 代码提交/推送读回 | `git show`, `git fetch origin`, `git rev-parse`, `git rev-list --left-right --count` | PASS：代码提交唯一父 `cceb09006c48525e85a65ddacb11f99f6cc09419`；普通 push 成功；`main==origin/main==5b10e1795b9c6dfd94bc9e2dd5aa13e28e7e09db`，ahead/behind `0/0` |
+| 记录收口前 index | `git diff --cached --name-status` | PASS：index 为空；本轮仅暂存本验证记录与施工记录 |
 
 ## 函数级代码知识变更清单
 
@@ -35,4 +37,4 @@
 
 ## 完成声明
 
-静态、双配置构建已通过；精确暂存/提交/推送门禁待代码发布租约授予后执行。即使全部通过，也只证明冗余第二存在权威已移除、provider/装配依赖收敛和构建门禁闭合；不证明任何 G1 或业务消费者闭环。
+代码已发布，记录收口提交仅包含本施工记录与验证记录；`main==origin/main`、ahead/behind `0/0`、index 空。即使全部通过，也只证明冗余第二存在权威已移除、provider/装配依赖收敛和构建门禁闭合；不证明 G1、任务消费者、任务轮次或顶层闭环。

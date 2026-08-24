@@ -33,4 +33,17 @@
 
 ## 代码状态
 
-施工完成后等待验证、精确发布；提交哈希在发布前标记为待填。
+代码提交已正式发布：`5b10e1795b9c6dfd94bc9e2dd5aa13e28e7e09db`。
+
+代码提交的精确八路径集合为：
+
+1. `海中鱼巣.vcxproj`
+2. `海中鱼巣.vcxproj.filters`
+3. `海中鱼巣/领域/服务.L2状态动态原子发布.ixx`
+4. `海中鱼巣/装配.普通应用.ixx`
+5. `海中鱼巣/领域/L2通用虚拟存在结构.数据.h`（删除）
+6. `海中鱼巣/领域/服务.L2通用虚拟存在结构.ixx`（删除）
+7. `施工记录/20260824_ARCH-L2-GENERIC-VIRTUAL-EXISTENCE-AUTHORITY-CORRECTION_施工记录.md`
+8. `验证记录/20260824_ARCH-L2-GENERIC-VIRTUAL-EXISTENCE-AUTHORITY-CORRECTION_验证记录.md`
+
+代码提交唯一父为 `cceb09006c48525e85a65ddacb11f99f6cc09419`，已普通 push 并由远端读回；记录收口提交仅修改本记录与验证记录，和上述代码提交明确区分。
