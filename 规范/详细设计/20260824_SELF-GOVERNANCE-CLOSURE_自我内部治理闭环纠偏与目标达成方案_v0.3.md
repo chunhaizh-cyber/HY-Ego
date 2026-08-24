@@ -3,7 +3,8 @@
 版本：v0.3
 日期：2026-08-24
 状态：目标模式路线设计；不单独授予代码施工许可
-基线：`main@a1c76c515e558a0ae9c0a016847be755afd327c0`
+路线首次冻结基线：`main@a1c76c515e558a0ae9c0a016847be755afd327c0`
+当前执行检查点：`main@d638579596ef5b474e395b7e092d194db0c67ff2`
 
 ## 1. 顶层目标与完成声明
 
@@ -58,14 +59,27 @@
 
 ARCH-L4 任务对 ARCH-L2 存在的业务引用由任务 owner 保存；ARCH-L2 只认识正式 `L2存在身份`，不保存 `ARCHL4宿主引用`。
 
+### 2.4 2026-08-25 当前执行检查点
+
+本检查点只更新路线的实现事实，不改变第 1 节目标、正式机器语义或最终验收合同：
+
+1. `ARCH-L2-GENERIC-VIRTUAL-EXISTENCE-AUTHORITY-CORRECTION` 已发布代码结果：冗余 `L2通用虚拟存在结构服务` 私有存在权威及其装配依赖已经退出，状态动态组合只消费正式 `L2存在身份`。该结果不证明任务轮次或自我治理消费者已经接通。
+2. `ARCH-L1-OWNER-PORT-REISSUANCE` 已发布代码结果，提供同运行包 owner 无活动端口时的重签发边界；它不证明崩溃恢复、跨进程恢复或 L4 消费者闭环。
+3. `TASK-ROUND-INITIAL-STATE-ARCH-L2-MIGRATION v0.3` 的八个 L4 生产文件 WIP 已在执行 S0 后停驻。停驻原因不是任务业务语义变化，而是当时的中性 L2 provider 会退出旧状态事实，同时又保留动态到旧状态的引用，违反 L1 引用闭包。
+4. 直接前置已经收敛为 `ARCH-L1-L2-STATE-HISTORY-CURRENT-SELECTION-REFERENCE-CLOSURE`：状态事实永久保留，当前性由状态 owner 的当前选择关系表达；首态无动态，迁移只退出旧当前选择并形成新状态、新当前选择和动态。该前置当前仍在 v0.4 设计修订期，尚无可执行计划或生产能力结果。
+5. 因直接前置 ABI 尚未正式发布，`TASK-ROUND-INITIAL-STATE-ARCH-L2-MIGRATION v0.3` 继续保持`待激活`，不得原样恢复。前置发布并返还真实 ABI 后，必须从新 HEAD 重新 S0，以同一计划身份形成修订版本；不得把保留 WIP、历史专项二进制或旧验证结果当作可继续施工证据。
+
+因此当前最早代码缺口不是继续扩展任务业务阶段，而是先完成中性状态历史与当前选择闭包，再恢复任务轮次首叶。叶 2—6 仍只属于路线输入，不具备计划或施工身份。
+
 ## 3. 目标达成的有限队列路线
 
 完整路线保存在本方案中；`计划/计划索引.md` 同一依赖链只登记当前最早可执行叶和至多一个合同已冻结的直接后继。
 
 | 顺序 | 代码叶 | 唯一结果 | 激活条件 |
 | --- | --- | --- | --- |
-| 0 | `ARCH-L2-GENERIC-VIRTUAL-EXISTENCE-AUTHORITY-CORRECTION` | 删除冗余通用虚拟存在私有权威；状态动态 provider 只消费正式 `L2存在身份` | 当前立即可设计 / 施工 |
-| 1 | `TASK-ROUND-INITIAL-STATE-ARCH-L2-MIGRATION` | 任务轮次 R1、任务到正式存在引用、无动态首态、P1 与第一条真实动态、ARCH G1 矩阵 | 叶 0 发布后 |
+| 0 | `ARCH-L2-GENERIC-VIRTUAL-EXISTENCE-AUTHORITY-CORRECTION` | 删除冗余通用虚拟存在私有权威；状态动态 provider 只消费正式 `L2存在身份` | 已发布；不再是活动缺口 |
+| 0.5 | `ARCH-L1-L2-STATE-HISTORY-CURRENT-SELECTION-REFERENCE-CLOSURE` | 永久状态事实、状态 owner 当前选择、首态无动态、迁移双 owner 单 G1 与历史 / 当前独立读回 | v0.4 设计修订中；当前唯一直接前置 |
+| 1 | `TASK-ROUND-INITIAL-STATE-ARCH-L2-MIGRATION` | 任务轮次 R1、任务到正式存在引用、无动态首态、P1 与第一条真实动态、ARCH G1 矩阵 | 叶 0.5 生产发布并返还 ABI 后，以同身份修订版本重新 S0 |
 | 2 | `TASK-PLANNING-GOVERNANCE-STATE-MIGRATION` | 任务管理按通用状态调用筹办；移除 Stage C 旧授权安全前置；发布筹办到执行前状态 | 叶 1 生产验收后 |
 | 3 | `TASK-EXECUTION-GOVERNANCE-STATE-MIGRATION` | 冻结后调度 / 硬否决 / 适用时唯一授权；执行结果后进入结算 | 叶 2 发布后 |
 | 4 | `TASK-ROUND-SETTLEMENT-CLOSURE` | 结果关系裁决、争用分配、逐需求核算、轮次结算及收束状态 | 叶 3 发布后 |
