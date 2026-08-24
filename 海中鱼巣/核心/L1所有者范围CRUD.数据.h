@@ -213,6 +213,125 @@ struct L1所有者范围写入结果 final {
         const L1所有者范围写入结果&) = default;
 };
 
+// ARCH-L2 跨结构组合发布只使用中性参与者合同；普通 owner CRUD 不经过此合同。
+inline constexpr std::uint32_t L1跨所有者原子事务合同版本 = 1;
+
+enum class L1跨所有者原子事务参与者序号 : std::uint8_t {
+    状态 = 1,
+    动态 = 2
+};
+
+enum class L1跨所有者原子事务状态 : std::uint8_t {
+    已提交 = 1,
+    精确重复 = 2,
+    入口拒绝 = 3,
+    许可拒绝 = 4,
+    未找到 = 5,
+    已退出 = 6,
+    事实代次漂移 = 7,
+    幂等冲突 = 8,
+    引用冲突 = 9,
+    资源失败 = 10,
+    内部不一致 = 11
+};
+
+struct L1跨所有者原子事实引用 final {
+    L1跨所有者原子事务参与者序号 参与者 =
+        L1跨所有者原子事务参与者序号::状态;
+    L1所有者范围写集本地键 本地键;
+    friend bool operator==(const L1跨所有者原子事实引用&,
+        const L1跨所有者原子事实引用&) = default;
+};
+
+// 仅供跨 owner 原子参与者写集使用。普通 owner CRUD 永远只接受
+// L1所有者范围事实引用，不暴露跨参与者局部位置。
+using L1跨所有者原子事实引用值 = std::variant<
+    稳定编码,
+    L1所有者范围写集本地键,
+    L1跨所有者原子事实引用>;
+
+struct L1跨所有者原子节点新建项 final {
+    L1所有者范围写集本地键 本地键;
+    节点种类 种类 = 节点种类::普通;
+    std::optional<L1所有者范围值表示种类> 属性类型表示;
+    friend bool operator==(const L1跨所有者原子节点新建项&,
+        const L1跨所有者原子节点新建项&) = default;
+};
+
+struct L1跨所有者原子关系新建项 final {
+    L1所有者范围写集本地键 本地键;
+    L1跨所有者原子事实引用值 源节点;
+    L1跨所有者原子事实引用值 目标节点;
+    L1跨所有者原子事实引用值 关系类型节点;
+    std::int64_t 角色或顺序 = 0;
+    friend bool operator==(const L1跨所有者原子关系新建项&,
+        const L1跨所有者原子关系新建项&) = default;
+};
+
+struct L1跨所有者原子值新建项 final {
+    L1所有者范围写集本地键 本地键;
+    L1跨所有者原子事实引用值 所属节点;
+    L1跨所有者原子事实引用值 属性类型节点;
+    L1所有者范围原始值材料 材料;
+    L1跨所有者原子事实引用值 来源节点;
+    friend bool operator==(const L1跨所有者原子值新建项&,
+        const L1跨所有者原子值新建项&) = default;
+};
+
+struct L1跨所有者原子属性槽变更项 final {
+    L1跨所有者原子事实引用值 所属节点;
+    L1跨所有者原子事实引用值 属性类型节点;
+    L1所有者范围写集本地键 新当前值;
+    friend bool operator==(const L1跨所有者原子属性槽变更项&,
+        const L1跨所有者原子属性槽变更项&) = default;
+};
+
+struct L1跨所有者原子写集请求 final {
+    std::uint32_t 合同版本 = L1所有者范围CRUD合同版本;
+    std::uint64_t 期望事实代次 = 0;
+    L1所有者范围写入幂等身份 写入幂等身份;
+    std::vector<L1跨所有者原子节点新建项> 节点;
+    std::vector<L1跨所有者原子关系新建项> 关系;
+    std::vector<L1跨所有者原子值新建项> 值;
+    std::vector<L1跨所有者原子属性槽变更项> 属性槽变更;
+    std::vector<稳定编码> 退出事实;
+    friend bool operator==(const L1跨所有者原子写集请求&,
+        const L1跨所有者原子写集请求&) = default;
+};
+
+struct L1跨所有者原子参与者写集 final {
+    L1跨所有者原子事务参与者序号 参与者 =
+        L1跨所有者原子事务参与者序号::状态;
+    L1结构所有者身份 所有者;
+    L1跨所有者原子写集请求 写集;
+    friend bool operator==(const L1跨所有者原子参与者写集&,
+        const L1跨所有者原子参与者写集&) = default;
+};
+
+struct L1跨所有者原子事务请求 final {
+    std::uint32_t 合同版本 = L1跨所有者原子事务合同版本;
+    std::uint64_t 共同期望事实代次 = 0;
+    L1所有者范围写入幂等身份 组合写入幂等身份;
+    L1跨所有者原子参与者写集 状态写集;
+    L1跨所有者原子参与者写集 动态写集;
+    friend bool operator==(const L1跨所有者原子事务请求&,
+        const L1跨所有者原子事务请求&) = default;
+};
+
+struct L1跨所有者原子事务结果 final {
+    L1跨所有者原子事务状态 状态 =
+        L1跨所有者原子事务状态::入口拒绝;
+    std::uint32_t 合同版本 = L1跨所有者原子事务合同版本;
+    std::uint64_t 共同事实代次 = 0;
+    bool 是否形成内存权威发布 = false;
+    L1所有者范围重试边界 重试边界 =
+        L1所有者范围重试边界::修正请求后可重试;
+    std::vector<std::pair<L1所有者范围写集本地键, 稳定编码>> 状态编码映射;
+    std::vector<std::pair<L1所有者范围写集本地键, 稳定编码>> 动态编码映射;
+    friend bool operator==(const L1跨所有者原子事务结果&,
+        const L1跨所有者原子事务结果&) = default;
+};
+
 struct L1所有者范围节点事实 final {
     稳定编码 编码;
     节点种类 种类 = 节点种类::普通;

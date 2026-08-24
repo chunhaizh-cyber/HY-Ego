@@ -164,6 +164,8 @@
     <ClCompile Include="海中鱼巣\领域\服务.L2特征结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L2状态结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L2动态结构.ixx" />
+    <ClCompile Include="海中鱼巣\领域\服务.L2通用虚拟存在结构.ixx" />
+    <ClCompile Include="海中鱼巣\领域\服务.L2状态动态原子发布.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L2因果结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L2概念结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L2概念结构聚合.ixx" />
@@ -242,6 +244,8 @@
     <ClInclude Include="海中鱼巣\领域\L2特征结构.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2状态结构.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2动态结构.数据.h" />
+    <ClInclude Include="海中鱼巣\领域\L2通用虚拟存在结构.数据.h" />
+    <ClInclude Include="海中鱼巣\领域\L2状态动态原子发布.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2因果结构.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2概念结构.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2普通概念结构.数据.h" />

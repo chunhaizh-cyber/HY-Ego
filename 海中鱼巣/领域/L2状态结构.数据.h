@@ -9,6 +9,7 @@
 #include <vector>
 #include "L2结构公共.数据.h"
 #include "L2特征结构.数据.h"
+#include "../核心/L1所有者范围CRUD.数据.h"
 #endif
 
 namespace 海中鱼巣 {
@@ -405,6 +406,41 @@ struct L2状态自有关系退出投影 final {
     L2状态关系退出事实 特征实例关系;
     friend bool operator==(const L2状态自有关系退出投影&,
         const L2状态自有关系退出投影&) = default;
+};
+
+struct L2状态原子参与者请求 final {
+    std::uint32_t 合同版本 = L2结构合同版本;
+    std::uint64_t 共同期望事实代次 = 0;
+    L1所有者范围写入幂等身份 组合写入幂等身份;
+    L2存在身份 主体存在;
+    L2状态身份 旧当前状态;
+    L2特征实例身份 新状态特征实例;
+    L2原始值材料 新状态精确值材料;
+    L2原始值材料 新状态时间值材料;
+    稳定编码 来源方法稳定编码;
+    friend bool operator==(const L2状态原子参与者请求&,
+        const L2状态原子参与者请求&) = default;
+};
+
+struct L2状态原子参与者局部键 final {
+    L1所有者范围写集本地键 状态节点{0x02041001};
+    L1所有者范围写集本地键 族归属关系{0x02042003};
+    L1所有者范围写集本地键 主体关系{0x02041101};
+    L1所有者范围写集本地键 特征实例关系{0x02041102};
+    L1所有者范围写集本地键 精确值{0x02041201};
+    L1所有者范围写集本地键 时间值{0x02041202};
+    friend bool operator==(const L2状态原子参与者局部键&,
+        const L2状态原子参与者局部键&) = default;
+};
+
+struct L2状态原子参与者形成结果 final {
+    L2结构状态 状态 = L2结构状态::内部不一致;
+    std::uint64_t 共同期望事实代次 = 0;
+    std::optional<L1跨所有者原子参与者写集> 参与者;
+    L2状态原子参与者局部键 局部键;
+    std::optional<L2状态自有关系退出投影> 旧状态退出闭包;
+    friend bool operator==(const L2状态原子参与者形成结果&,
+        const L2状态原子参与者形成结果&) = default;
 };
 
 struct L2状态引用替换请求 final {

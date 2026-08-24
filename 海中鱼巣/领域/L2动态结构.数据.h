@@ -8,6 +8,8 @@
 #include <variant>
 #include <vector>
 #include "L2结构公共.数据.h"
+#include "L2状态结构.数据.h"
+#include "../核心/L1所有者范围CRUD.数据.h"
 #endif
 
 namespace 海中鱼巣 {
@@ -106,6 +108,43 @@ struct L2动态自有关系引用 final {
     稳定编码 后状态关系稳定编码;
     friend bool operator==(const L2动态自有关系引用&,
         const L2动态自有关系引用&) = default;
+};
+
+struct L2动态原子参与者请求 final {
+    std::uint32_t 合同版本 = L2结构合同版本;
+    std::uint64_t 共同期望事实代次 = 0;
+    L1所有者范围写入幂等身份 组合写入幂等身份;
+    L2存在身份 主体存在;
+    L2特征实例身份 变化特征实例;
+    L2状态身份 前状态;
+    L2状态身份 后状态;
+    L1跨所有者原子事实引用 后状态局部引用;
+    L2原始值材料 起始时间材料;
+    L2原始值材料 结束时间材料;
+    稳定编码 来源方法稳定编码;
+    friend bool operator==(const L2动态原子参与者请求&,
+        const L2动态原子参与者请求&) = default;
+};
+
+struct L2动态原子参与者局部键 final {
+    L1所有者范围写集本地键 动态节点{0x02051001};
+    L1所有者范围写集本地键 族归属关系{0x02052002};
+    L1所有者范围写集本地键 主体关系{0x02051101};
+    L1所有者范围写集本地键 前状态关系{0x02051102};
+    L1所有者范围写集本地键 后状态关系{0x02051103};
+    L1所有者范围写集本地键 起始值{0x02051201};
+    L1所有者范围写集本地键 结束值{0x02051202};
+    friend bool operator==(const L2动态原子参与者局部键&,
+        const L2动态原子参与者局部键&) = default;
+};
+
+struct L2动态原子参与者形成结果 final {
+    L2结构状态 状态 = L2结构状态::内部不一致;
+    std::uint64_t 共同期望事实代次 = 0;
+    std::optional<L1跨所有者原子参与者写集> 参与者;
+    L2动态原子参与者局部键 局部键;
+    friend bool operator==(const L2动态原子参与者形成结果&,
+        const L2动态原子参与者形成结果&) = default;
 };
 
 struct L2动态身份来源读取请求 final {
