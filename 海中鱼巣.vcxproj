@@ -157,7 +157,6 @@
     <ClCompile Include="海中鱼巣\装配.普通应用.ixx" />
     <ClCompile Include="海中鱼巣\启动.程序运行宿主.ixx" />
     <ClCompile Include="海中鱼巣\启动.应用程序.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.L1自我结构登记.ixx" />
     <ClCompile Include="海中鱼巣\领域\合同.L2结构公共.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.不可变材料.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L2场景结构.ixx" />
@@ -235,7 +234,6 @@
     <ClInclude Include="海中鱼巣\核心\L1中性CRUD.数据.h" />
     <ClInclude Include="海中鱼巣\核心\日志系统.h" />
     <ClInclude Include="海中鱼巣\核心\容错检查.h" />
-    <ClInclude Include="海中鱼巣\领域\L1自我结构登记.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2结构公共.数据.h" />
     <ClInclude Include="海中鱼巣\领域\不可变材料.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2语言结构.数据.h" />
