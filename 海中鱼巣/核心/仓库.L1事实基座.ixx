@@ -40,6 +40,14 @@ class L1事实基座仓库 final {
         const std::vector<L1所有者范围一致关系类型闭包选择项>*
             关系类型闭包 = nullptr;
     };
+    struct 物理清理幂等记录 final {
+        L1物理清理请求 首次规范请求;
+        L1物理清理状态 首次状态 = L1物理清理状态::内部错误;
+        std::uint64_t 首次物理清理事实代次 = 0;
+        std::vector<std::pair<L1物理清理事实身份, 稳定编码>>
+            首次稳定编码映射;
+        bool 已物理清理 = false;
+    };
 public:
     enum class 一致当前事实种类 : std::uint8_t {
         节点 = 1, 关系 = 2, 值 = 3
@@ -50,6 +58,8 @@ public:
         L1中性一致当前读取项目状态 状态 =
             L1中性一致当前读取项目状态::未找到;
         std::optional<L1事实副本> 事实;
+        std::optional<std::uint64_t> 物理清理事实代次;
+        std::optional<L1物理清理墓碑> 物理清理墓碑;
     };
 
     struct 一致属性值内部投影 final {
@@ -291,7 +301,7 @@ public:
         }
     }
 
-    // 诊断责任：向上送出；许可、资源与局部结构矛盾均由中性结构化状态携带。
+    // 诊断责任：向上送出；资源与局部结构矛盾均由中性结构化状态携带。
     一致当前读取内部结果 尝试读取一致当前内部投影(
         const L1中性一致当前读取请求& 请求) const {
         const auto 失败 = [](L1中性一致当前读取状态 状态,
@@ -307,7 +317,7 @@ public:
 
             std::shared_lock<std::shared_mutex> 锁(锁_, std::try_to_lock);
             if (!锁.owns_lock())
-                return 失败(L1中性一致当前读取状态::许可拒绝);
+                return 失败(L1中性一致当前读取状态::资源失败);
             if (状态_.隔离 || 状态_.事实代次 == 0)
                 return 失败(L1中性一致当前读取状态::内部不一致);
             if (状态_.事实代次 != 请求.期望事实代次)
@@ -404,8 +414,246 @@ public:
 
     // 诊断责任：向上送出；v1 保持原 DTO，仓库在首笔写时同代建立 legacy owner。
     L1中性写入结果 提交中性写集(const L1中性写集请求& 请求) {
-        bool 许可拒绝 = false;
-        return 提交中性写集实现(请求, std::nullopt, 许可拒绝);
+        return 提交中性写集实现(请求, std::nullopt);
+    }
+
+    L1中性写入首次结果读取结果 读取中性写入首次结果(
+        const L1中性写入首次结果读取请求& 请求) const noexcept {
+        std::uint64_t 读取代次 = 0;
+        const auto 失败 = [&](L1中性写入首次结果读取状态 状态) {
+            L1中性写入首次结果读取结果 结果;
+            结果.状态 = 状态;
+            结果.幂等键 = 请求.幂等键;
+            结果.读取事实代次 = 读取代次;
+            return 结果;
+        };
+        if (请求.合同版本 != L1中性写入首次结果读取合同版本
+            || !有效(请求.幂等键))
+            return 失败(L1中性写入首次结果读取状态::入口拒绝);
+        try {
+            std::shared_lock<std::shared_mutex> 锁(锁_, std::try_to_lock);
+            if (!锁.owns_lock())
+                return 失败(L1中性写入首次结果读取状态::资源失败);
+            读取代次 = 状态_.事实代次;
+            if (状态_.隔离 || !状态完整(状态_))
+                return 失败(L1中性写入首次结果读取状态::内部错误);
+            const auto 记录 = 状态_.中性幂等账.find(请求.幂等键.值);
+            if (记录 == 状态_.中性幂等账.end())
+                return 失败(L1中性写入首次结果读取状态::未找到);
+            const auto& 首次 = 记录->second;
+            if (首次.首次规范化写集.幂等键 != 请求.幂等键
+                || 首次.首次发布事实代次 == 0
+                || 首次.首次发布事实代次 > 读取代次
+                || 首次.首次结果.状态 != L1中性写入状态::成功
+                || 首次.首次结果.事实代次 != 首次.首次发布事实代次
+                || 首次.首次结果.新编码映射 != 首次.首次新编码映射)
+                return 失败(L1中性写入首次结果读取状态::内部错误);
+            L1中性写入首次结果读取结果 结果;
+            结果.状态 = L1中性写入首次结果读取状态::已读取;
+            结果.幂等键 = 请求.幂等键;
+            结果.读取事实代次 = 读取代次;
+            结果.首次规范请求等价材料 = 首次.首次规范化写集;
+            结果.首次状态 = 首次.首次结果.状态;
+            结果.首次事实代次 = 首次.首次发布事实代次;
+            结果.首次稳定编码映射 = 首次.首次新编码映射;
+            return 结果;
+        } catch (const std::bad_alloc&) {
+            return 失败(L1中性写入首次结果读取状态::资源失败);
+        } catch (const std::length_error&) {
+            return 失败(L1中性写入首次结果读取状态::资源失败);
+        } catch (...) {
+            return 失败(L1中性写入首次结果读取状态::内部错误);
+        }
+    }
+
+    L1物理清理结果 执行L1物理清理(
+        const L1物理清理请求& 请求) noexcept {
+        const auto 失败 = [&](L1物理清理状态 状态,
+            std::uint64_t 清理代次 = 0) {
+            L1物理清理结果 结果;
+            结果.状态 = 状态;
+            结果.幂等身份 = 请求.幂等身份;
+            结果.物理清理事实代次 = 清理代次;
+            return 结果;
+        };
+        if (!L1物理清理请求规范有序(请求))
+            return 失败(L1物理清理状态::入口拒绝);
+        try {
+            std::unique_lock<std::shared_mutex> 锁(锁_, std::try_to_lock);
+            if (!锁.owns_lock()) return 失败(L1物理清理状态::资源失败);
+            if (状态_.隔离 || !状态完整(状态_))
+                return 失败(L1物理清理状态::内部错误);
+            if (const auto 既有 = 状态_.物理清理幂等账.find(请求.幂等身份.值);
+                既有 != 状态_.物理清理幂等账.end()) {
+                if (既有->second.首次规范请求 != 请求)
+                    return 失败(L1物理清理状态::同键冲突);
+                if (既有->second.首次状态 != L1物理清理状态::已清理
+                    || !既有->second.已物理清理
+                    || 既有->second.首次物理清理事实代次 == 0
+                    || 既有->second.首次稳定编码映射.size()
+                        != 请求.待清理事实身份组.size())
+                    return 失败(L1物理清理状态::内部错误);
+                L1物理清理结果 结果;
+                结果.状态 = L1物理清理状态::精确重复;
+                结果.幂等身份 = 请求.幂等身份;
+                结果.物理清理事实代次 =
+                    既有->second.首次物理清理事实代次;
+                结果.稳定编码映射 = 既有->second.首次稳定编码映射;
+                结果.墓碑组.reserve(结果.稳定编码映射.size());
+                for (const auto& [身份, 编码] : 结果.稳定编码映射) {
+                    if (身份.编码 != 编码)
+                        return 失败(L1物理清理状态::内部错误);
+                    const auto 墓碑 = 状态_.物理清理墓碑.find(编码.值);
+                    if (墓碑 == 状态_.物理清理墓碑.end()
+                        || 墓碑->second.事实种类 != 身份.事实种类
+                        || 墓碑->second.物理清理事实代次
+                            != 结果.物理清理事实代次)
+                        return 失败(L1物理清理状态::内部错误);
+                    结果.墓碑组.push_back(墓碑->second);
+                }
+                return 结果;
+            }
+            if (状态_.事实代次 != 请求.期望事实代次)
+                return 失败(L1物理清理状态::事实代次漂移,
+                    状态_.事实代次);
+            if (状态_.事实代次 == std::numeric_limits<std::uint64_t>::max())
+                return 失败(L1物理清理状态::内部错误);
+
+            std::unordered_set<std::uint64_t> 清理编码;
+            清理编码.reserve(请求.待清理事实身份组.size());
+            std::vector<L1物理清理墓碑> 墓碑组;
+            std::vector<std::pair<L1物理清理事实身份, 稳定编码>> 映射;
+            墓碑组.reserve(请求.待清理事实身份组.size());
+            映射.reserve(请求.待清理事实身份组.size());
+            const auto 清理代次 = 状态_.事实代次 + 1;
+            for (const auto& 身份 : 请求.待清理事实身份组) {
+                if (!清理编码.insert(身份.编码.值).second)
+                    return 失败(L1物理清理状态::入口拒绝);
+                if (状态_.当前节点.contains(身份.编码.值)
+                    || 状态_.当前关系.contains(身份.编码.值)
+                    || 状态_.当前值.contains(身份.编码.值))
+                    return 失败(L1物理清理状态::尚未退出);
+                const auto 历史 = 状态_.历史.find(身份.编码.值);
+                if (历史 == 状态_.历史.end())
+                    return 失败(L1物理清理状态::未找到);
+                const auto 墓碑 = std::visit([&](const auto& 事实)
+                    -> std::optional<L1物理清理墓碑> {
+                    using T = std::decay_t<decltype(事实)>;
+                    constexpr auto 种类 = std::is_same_v<T, 节点事实>
+                        ? L1物理清理事实种类::节点
+                        : std::is_same_v<T, 关系事实>
+                            ? L1物理清理事实种类::关系
+                            : L1物理清理事实种类::值;
+                    if (身份.事实种类 != 种类 || 事实.编码 != 身份.编码
+                        || !事实.退出事实代次
+                        || 事实.创建事实代次 == 0
+                        || 事实.创建事实代次 > *事实.退出事实代次
+                        || *事实.退出事实代次 > 状态_.事实代次
+                        || !有效(事实.写入所有者)) return std::nullopt;
+                    return L1物理清理墓碑{事实.编码, 种类,
+                        事实.写入所有者.编码, 事实.创建事实代次,
+                        *事实.退出事实代次, 清理代次};
+                }, 历史->second.事实);
+                if (!墓碑) return 失败(L1物理清理状态::未找到);
+                墓碑组.push_back(*墓碑);
+                映射.push_back({身份, 身份.编码});
+            }
+
+            const auto 引用待清理 = [&](稳定编码 编码) noexcept {
+                return 清理编码.contains(编码.值);
+            };
+            const auto 事实引用待清理 = [&](const auto& 事实) noexcept {
+                using T = std::decay_t<decltype(事实)>;
+                if constexpr (std::is_same_v<T, 节点事实>) {
+                    for (const auto& 槽 : 事实.当前属性)
+                        if (引用待清理(槽.属性类型节点)
+                            || 引用待清理(槽.当前值)) return true;
+                    return false;
+                } else if constexpr (std::is_same_v<T, 关系事实>) {
+                    return 引用待清理(事实.源节点)
+                        || 引用待清理(事实.目标节点)
+                        || 引用待清理(事实.关系类型节点);
+                } else {
+                    if (引用待清理(事实.所属节点)
+                        || 引用待清理(事实.属性类型节点)
+                        || 引用待清理(事实.来源节点)) return true;
+                    const auto* 独立 = std::get_if<独立材料引用>(&事实.材料);
+                    return 独立 && 引用待清理(独立->编码);
+                }
+            };
+            for (const auto& [_, 事实] : 状态_.当前节点)
+                if (事实引用待清理(事实))
+                    return 失败(L1物理清理状态::引用冲突);
+            for (const auto& [_, 事实] : 状态_.当前关系)
+                if (事实引用待清理(事实))
+                    return 失败(L1物理清理状态::引用冲突);
+            for (const auto& [_, 事实] : 状态_.当前值)
+                if (事实引用待清理(事实))
+                    return 失败(L1物理清理状态::引用冲突);
+            for (const auto& [编码, 历史] : 状态_.历史)
+                if (!清理编码.contains(编码)
+                    && std::visit(事实引用待清理, 历史.事实))
+                    return 失败(L1物理清理状态::引用冲突);
+
+            状态 候选 = 状态_;
+            const auto 删除候选索引 = [](auto& 索引, std::uint64_t 第一,
+                std::uint64_t 第二, std::uint64_t 编码) noexcept {
+                const auto 一级 = 索引.find(第一);
+                if (一级 == 索引.end()) return;
+                const auto 二级 = 一级->second.find(第二);
+                if (二级 == 一级->second.end()) return;
+                const auto 位置 = std::lower_bound(
+                    二级->second.begin(), 二级->second.end(), 编码);
+                if (位置 != 二级->second.end() && *位置 == 编码)
+                    二级->second.erase(位置);
+                if (二级->second.empty()) 一级->second.erase(二级);
+                if (一级->second.empty()) 索引.erase(一级);
+            };
+            for (const auto& 身份 : 请求.待清理事实身份组) {
+                const auto 历史 = 候选.历史.find(身份.编码.值);
+                if (历史 == 候选.历史.end())
+                    return 失败(L1物理清理状态::内部错误);
+                std::visit([&](const auto& 事实) {
+                    using T = std::decay_t<decltype(事实)>;
+                    if constexpr (std::is_same_v<T, 关系事实>) {
+                        删除候选索引(候选.历史源关系候选索引,
+                            事实.源节点.值, 事实.关系类型节点.值, 事实.编码.值);
+                        删除候选索引(候选.历史目标关系候选索引,
+                            事实.目标节点.值, 事实.关系类型节点.值, 事实.编码.值);
+                    } else if constexpr (std::is_same_v<T, 值事实>) {
+                        删除候选索引(候选.历史属性槽值候选索引,
+                            事实.所属节点.值, 事实.属性类型节点.值, 事实.编码.值);
+                    }
+                }, 历史->second.事实);
+                候选.历史.erase(历史);
+            }
+            for (const auto& 墓碑 : 墓碑组)
+                if (!候选.物理清理墓碑.emplace(墓碑.编码.值, 墓碑).second)
+                    return 失败(L1物理清理状态::内部错误);
+            候选.事实代次 = 清理代次;
+            if (!候选.物理清理幂等账.emplace(请求.幂等身份.值,
+                    物理清理幂等记录{请求, L1物理清理状态::已清理,
+                        清理代次, 映射, true}).second)
+                return 失败(L1物理清理状态::内部错误);
+            if (!状态完整(候选))
+                return 失败(L1物理清理状态::内部错误);
+            std::swap(状态_, 候选);
+
+            L1物理清理结果 结果;
+            结果.状态 = L1物理清理状态::已清理;
+            结果.幂等身份 = 请求.幂等身份;
+            结果.物理清理事实代次 = 清理代次;
+            结果.是否形成内存权威发布 = true;
+            结果.稳定编码映射 = std::move(映射);
+            结果.墓碑组 = std::move(墓碑组);
+            return 结果;
+        } catch (const std::bad_alloc&) {
+            return 失败(L1物理清理状态::资源失败);
+        } catch (const std::length_error&) {
+            return 失败(L1物理清理状态::资源失败);
+        } catch (...) {
+            return 失败(L1物理清理状态::内部错误);
+        }
     }
 
     // 诊断责任：向上送出；owner 由实例绑定端口注入，请求不含可写 owner 字段。
@@ -466,13 +714,11 @@ public:
                     转换引用(项.来源节点)});
             中性.属性槽变更.reserve(请求.属性槽变更.size());
             for (const auto& 项 : 请求.属性槽变更)
-                中性.属性槽变更.push_back({转换引用(项.所属节点),
+            中性.属性槽变更.push_back({转换引用(项.所属节点),
                     转换引用(项.属性类型节点), {项.新当前值.值}});
             中性.退出事实 = 请求.退出事实;
-            bool 许可拒绝 = false;
-            const auto 内部 = 提交中性写集实现(中性, 所有者, 许可拒绝);
+            const auto 内部 = 提交中性写集实现(中性, 所有者);
             const auto 映射状态 = [&](L1中性写入状态 状态) {
-                if (许可拒绝) return L1所有者范围写入状态::许可拒绝;
                 switch (状态) {
                 case L1中性写入状态::成功: return L1所有者范围写入状态::成功;
                 case L1中性写入状态::精确重复:
@@ -803,8 +1049,7 @@ public:
 
     // 诊断责任：向上送出；v1/v2 共用同一候选和最后发布点。
     L1中性写入结果 提交中性写集实现(const L1中性写集请求& 请求,
-        std::optional<L1结构所有者身份> 指定所有者, bool& 许可拒绝) {
-        许可拒绝 = false;
+        std::optional<L1结构所有者身份> 指定所有者) {
         try {
             const auto 规范化 = 规范化中性写集(请求);
             if (!规范化 || 请求.合同版本 != L1中性CRUD合同版本
@@ -831,10 +1076,9 @@ public:
                     || 所有者->second.所有者 != *指定所有者
                     || 所有者->second.范围种类 != L1所有者范围种类::独占结构范围
                     || 所有者->second.退出事实代次) {
-                    许可拒绝 = true;
-                    return 中性写入结果(请求, L1中性写入状态::入口拒绝,
+                    return 中性写入结果(请求, L1中性写入状态::内部不一致,
                         状态_.事实代次, false,
-                        L1中性重试边界::修正请求后可重试);
+                        L1中性重试边界::原幂等键读回收敛);
                 }
                 写入所有者 = *指定所有者;
                 const auto 所有者账 = 状态_.所有者范围幂等账.find(
@@ -927,8 +1171,7 @@ public:
             for (const auto 编码 : 规范化->退出事实)
                 所有权不符 = 所有权不符 || !事实属于写者(编码);
             if (所有权不符) {
-                许可拒绝 = 指定所有者.has_value();
-                return 中性写入结果(请求, L1中性写入状态::入口拒绝,
+                return 中性写入结果(请求, L1中性写入状态::引用冲突,
                     状态_.事实代次, false,
                     L1中性重试边界::修正请求后可重试);
             }
@@ -1518,13 +1761,16 @@ public:
         if (auto it = 状态_.当前关系.find(编码.值); it != 状态_.当前关系.end()) return {L1读取状态::成功, L1历史事实副本{编码, it->second, true}};
         if (auto it = 状态_.当前值.find(编码.值); it != 状态_.当前值.end()) return {L1读取状态::成功, L1历史事实副本{编码, it->second, true}};
         if (auto it = 状态_.历史.find(编码.值); it != 状态_.历史.end()) return {L1读取状态::成功, it->second};
+        if (auto it = 状态_.物理清理墓碑.find(编码.值);
+            it != 状态_.物理清理墓碑.end())
+            return {L1读取状态::历史材料已清理, std::nullopt, it->second};
         return {L1读取状态::未找到, std::nullopt};
     }
-    // 诊断责任：向上送出；只复制同一共享许可内的权威事实代次。
+    // 诊断责任：向上送出；只复制同一共享锁内的权威事实代次。
     L1事实代次读取结果 尝试读取当前事实代次() const {
         try {
             std::shared_lock<std::shared_mutex> 锁(锁_, std::try_to_lock);
-            if (!锁.owns_lock()) return {L1读取状态::许可拒绝, 0};
+            if (!锁.owns_lock()) return {L1读取状态::资源失败, 0};
             if (状态_.隔离 || !状态完整(状态_))
                 return {L1读取状态::内部不一致, 0};
             if (状态_.事实代次 == 0) return {L1读取状态::未找到, 0};
@@ -1869,6 +2115,14 @@ public:
             else if (const auto 历史 = 状态_.历史.find(请求.编码.值);
                 历史 != 状态_.历史.end())
                 结果.事实 = 转换所有者范围事实(历史->second.事实);
+            else if (const auto 墓碑 = 状态_.物理清理墓碑.find(请求.编码.值);
+                墓碑 != 状态_.物理清理墓碑.end()) {
+                结果.状态 = L1所有者范围读取状态::历史材料已清理;
+                结果.物理清理事实代次 = 墓碑->second.物理清理事实代次;
+                结果.物理清理墓碑 =
+                    转换所有者范围物理清理墓碑(墓碑->second);
+                return 结果;
+            }
             else {
                 结果.状态 = L1所有者范围读取状态::未找到;
                 return 结果;
@@ -2170,7 +2424,7 @@ private:
         try {
             std::shared_lock<std::shared_mutex> 锁(锁_, std::try_to_lock);
             if (!锁.owns_lock())
-                return 失败(L1所有者范围一致当前读取状态::许可拒绝);
+                return 失败(L1所有者范围一致当前读取状态::资源失败);
             if (状态_.隔离 || !状态完整(状态_))
                 return 失败(L1所有者范围一致当前读取状态::内部不一致);
             if (请求.期望事实代次 != 0
@@ -2217,6 +2471,10 @@ private:
                 项.查询编码 = 编码;
                 项.状态 = static_cast<L1所有者范围一致当前读取项目状态>(
                     static_cast<std::uint8_t>(内部->状态));
+                项.物理清理事实代次 = 内部->物理清理事实代次;
+                if (内部->物理清理墓碑)
+                    项.物理清理墓碑 = 转换所有者范围物理清理墓碑(
+                        *内部->物理清理墓碑);
                 if (内部->事实) {
                     if constexpr (std::is_same_v<输出项,
                         L1所有者范围一致节点读取结果项>) {
@@ -2335,6 +2593,15 @@ private:
         }, 事实);
     }
 
+    static L1所有者范围物理清理墓碑 转换所有者范围物理清理墓碑(
+        const L1物理清理墓碑& 墓碑) noexcept {
+        return {墓碑.编码,
+            static_cast<L1所有者范围物理清理事实种类>(
+                static_cast<std::uint8_t>(墓碑.事实种类)),
+            墓碑.内部结构分区, 墓碑.创建事实代次, 墓碑.退出事实代次,
+            墓碑.物理清理事实代次};
+    }
+
     enum class 当前节点引用闭包检查结果 : std::uint8_t {
         已闭合 = 1,
         引用冲突 = 2,
@@ -2390,6 +2657,8 @@ private:
         std::unordered_map<std::uint64_t, 值事实> 当前值;
         std::unordered_map<std::uint64_t, L1历史事实副本> 历史;
         std::unordered_set<std::uint64_t> 永久占用;
+        std::unordered_map<std::uint64_t, L1物理清理墓碑> 物理清理墓碑;
+        std::unordered_map<std::uint64_t, 物理清理幂等记录> 物理清理幂等账;
         std::unordered_map<std::uint64_t, 中性幂等记录> 中性幂等账;
         std::unordered_map<std::uint64_t, 所有者建立幂等记录>
             所有者建立幂等账;
@@ -2777,6 +3046,22 @@ private:
                 结果.事实 = L1事实副本{it->second};
                 return 结果;
             }
+        }
+        if (const auto 墓碑 = 值.物理清理墓碑.find(编码.值);
+            墓碑 != 值.物理清理墓碑.end()) {
+            const auto 期望种类 = 种类 == 一致当前事实种类::节点
+                ? L1物理清理事实种类::节点
+                : 种类 == 一致当前事实种类::关系
+                    ? L1物理清理事实种类::关系
+                    : L1物理清理事实种类::值;
+            结果.状态 = 墓碑->second.事实种类 == 期望种类
+                ? L1中性一致当前读取项目状态::历史材料已清理
+                : L1中性一致当前读取项目状态::种类不匹配;
+            if (结果.状态 == L1中性一致当前读取项目状态::历史材料已清理)
+                结果.物理清理事实代次 = 墓碑->second.物理清理事实代次;
+            if (结果.状态 == L1中性一致当前读取项目状态::历史材料已清理)
+                结果.物理清理墓碑 = 墓碑->second;
+            return 结果;
         }
         const auto 状态 = 一致当前缺失状态(值, 编码, 种类);
         if (!状态) return std::nullopt;
@@ -3532,6 +3817,40 @@ private:
     static bool 状态完整(const 状态& 值) {
         std::unordered_set<std::uint64_t> 全部;
         auto 插入 = [&](std::uint64_t 编码) { return 编码 != 0 && 全部.insert(编码).second; };
+        for (const auto& [编码, 墓碑] : 值.物理清理墓碑) {
+            if (!插入(编码) || 墓碑.编码.值 != 编码
+                || !L1物理清理事实身份有效({墓碑.事实种类, 墓碑.编码})
+                || !有效(墓碑.内部结构分区)
+                || 墓碑.创建事实代次 == 0 || 墓碑.退出事实代次 == 0
+                || 墓碑.物理清理事实代次 == 0
+                || 墓碑.创建事实代次 > 墓碑.退出事实代次
+                || 墓碑.退出事实代次 >= 墓碑.物理清理事实代次
+                || 墓碑.物理清理事实代次 > 值.事实代次
+                || 值.当前节点.contains(编码) || 值.当前关系.contains(编码)
+                || 值.当前值.contains(编码) || 值.历史.contains(编码)
+                || !值.永久占用.contains(编码)) return false;
+        }
+        for (const auto& [键, 账] : 值.物理清理幂等账) {
+            if (键 == 0 || 账.首次规范请求.幂等身份.值 != 键
+                || !L1物理清理请求规范有序(账.首次规范请求)
+                || 账.首次状态 != L1物理清理状态::已清理
+                || 账.首次物理清理事实代次 == 0
+                || 账.首次物理清理事实代次 > 值.事实代次
+                || !账.已物理清理
+                || 账.首次稳定编码映射.size()
+                    != 账.首次规范请求.待清理事实身份组.size()) return false;
+            for (std::size_t 序号 = 0;
+                序号 < 账.首次稳定编码映射.size(); ++序号) {
+                const auto& 映射 = 账.首次稳定编码映射[序号];
+                if (映射.first != 账.首次规范请求.待清理事实身份组[序号]
+                    || 映射.first.编码 != 映射.second) return false;
+                const auto 墓碑 = 值.物理清理墓碑.find(映射.second.值);
+                if (墓碑 == 值.物理清理墓碑.end()
+                    || 墓碑->second.事实种类 != 映射.first.事实种类
+                    || 墓碑->second.物理清理事实代次
+                        != 账.首次物理清理事实代次) return false;
+            }
+        }
         for (const auto& [编码, 所有者] : 值.当前所有者) {
             if (!插入(编码) || 所有者.所有者.编码.值 != 编码
                 || 所有者.创建事实代次 == 0
@@ -3891,6 +4210,10 @@ private:
                     创建匹配 = std::visit([&](const auto& 事实) {
                         return 事实.创建事实代次 == 账.首次发布事实代次;
                     }, it->second.事实);
+                if (const auto it = 值.物理清理墓碑.find(编码.值);
+                    it != 值.物理清理墓碑.end())
+                    创建匹配 = it->second.创建事实代次
+                        == 账.首次发布事实代次;
                 if (!创建匹配) return false;
             }
             const auto 查映射 = [&](L1中性写集本地键 本地键)
@@ -3918,6 +4241,12 @@ private:
                 if (!所属 || !类型 || !值编码) return false;
                 const auto 当前 = 值.当前值.find(值编码->值);
                 const auto 历史 = 值.历史.find(值编码->值);
+                const auto 墓碑 = 值.物理清理墓碑.find(值编码->值);
+                if (当前 == 值.当前值.end() && 历史 == 值.历史.end()
+                    && 墓碑 != 值.物理清理墓碑.end()
+                    && 墓碑->second.事实种类 == L1物理清理事实种类::值
+                    && 墓碑->second.创建事实代次 == 账.首次发布事实代次)
+                    continue;
                 const bool 当前命中 = 当前 != 值.当前值.end();
                 const bool 历史命中 = 历史 != 值.历史.end();
                 const auto* 历史值 = 历史命中
@@ -3965,6 +4294,13 @@ private:
                     if (!所属 || !类型 || !值编码) return false;
                     const auto 当前 = 值.当前值.find(值编码->值);
                     const auto 历史 = 值.历史.find(值编码->值);
+                    const auto 墓碑 = 值.物理清理墓碑.find(值编码->值);
+                    if (当前 == 值.当前值.end() && 历史 == 值.历史.end()
+                        && 墓碑 != 值.物理清理墓碑.end()
+                        && 墓碑->second.事实种类 == L1物理清理事实种类::值
+                        && 墓碑->second.内部结构分区.值 == 所有者编码
+                        && 墓碑->second.创建事实代次 == 账.首次发布事实代次)
+                        continue;
                     const bool 当前命中 = 当前 != 值.当前值.end();
                     const bool 历史命中 = 历史 != 值.历史.end();
                     const auto* 历史值 = 历史命中
@@ -4115,6 +4451,11 @@ private:
                             return 事实.创建事实代次 == 账.首次发布事实代次
                                 && 事实.写入所有者.编码.值 == 所有者编码;
                         }, 历史->second.事实);
+                    if (const auto 墓碑 = 值.物理清理墓碑.find(编码.值);
+                        墓碑 != 值.物理清理墓碑.end())
+                        匹配 = 墓碑->second.创建事实代次
+                                == 账.首次发布事实代次
+                            && 墓碑->second.内部结构分区.值 == 所有者编码;
                     if (!匹配) return false;
                 }
             }
@@ -4127,6 +4468,10 @@ private:
         if (状态_.隔离) return {L1读取状态::内部不一致, 状态_.事实代次, std::nullopt};
         const auto it = 表.find(编码.值);
         if (it != 表.end()) return {L1读取状态::成功, 状态_.事实代次, L1事实副本{it->second}};
+        if (const auto 墓碑 = 状态_.物理清理墓碑.find(编码.值);
+            墓碑 != 状态_.物理清理墓碑.end())
+            return {L1读取状态::历史材料已清理, 状态_.事实代次,
+                std::nullopt, 墓碑->second};
         return {状态_.历史.contains(编码.值) ? L1读取状态::已退出 : L1读取状态::未找到, 0, std::nullopt};
     }
     template<class T>
@@ -4156,6 +4501,15 @@ private:
             } else 结果.状态 = 状态_.历史.contains(请求.编码.值)
                 ? L1所有者范围读取状态::已退出
                 : L1所有者范围读取状态::未找到;
+            if (结果.状态 == L1所有者范围读取状态::未找到) {
+                const auto 墓碑 = 状态_.物理清理墓碑.find(请求.编码.值);
+                if (墓碑 != 状态_.物理清理墓碑.end()) {
+                    结果.状态 = L1所有者范围读取状态::历史材料已清理;
+                    结果.物理清理事实代次 = 墓碑->second.物理清理事实代次;
+                    结果.物理清理墓碑 =
+                        转换所有者范围物理清理墓碑(墓碑->second);
+                }
+            }
             return 结果;
         } catch (const std::bad_alloc&) {
             结果.状态 = L1所有者范围读取状态::资源失败;

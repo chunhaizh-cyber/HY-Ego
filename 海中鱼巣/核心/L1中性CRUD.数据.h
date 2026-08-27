@@ -147,9 +147,64 @@ struct L1中性写入结果 final {
     friend bool operator==(const L1中性写入结果&, const L1中性写入结果&) = default;
 };
 
+inline constexpr std::uint32_t L1中性写入首次结果读取合同版本 = 1;
+
+struct L1中性写入首次结果读取请求 final {
+    std::uint32_t 合同版本 = L1中性写入首次结果读取合同版本;
+    L1中性写集幂等键 幂等键;
+    friend bool operator==(const L1中性写入首次结果读取请求&,
+        const L1中性写入首次结果读取请求&) = default;
+};
+
+enum class L1中性写入首次结果读取状态 : std::uint8_t {
+    已读取 = 1,
+    未找到 = 2,
+    入口拒绝 = 3,
+    资源失败 = 4,
+    内部错误 = 5
+};
+
+struct L1中性写入首次结果读取结果 final {
+    L1中性写入首次结果读取状态 状态 =
+        L1中性写入首次结果读取状态::入口拒绝;
+    std::uint32_t 合同版本 = L1中性写入首次结果读取合同版本;
+    L1中性写集幂等键 幂等键;
+    std::uint64_t 读取事实代次 = 0;
+    std::optional<L1中性写集请求> 首次规范请求等价材料;
+    std::optional<L1中性写入状态> 首次状态;
+    std::uint64_t 首次事实代次 = 0;
+    std::vector<std::pair<L1中性写集本地键, 稳定编码>> 首次稳定编码映射;
+    bool 成功() const noexcept {
+        return 状态 == L1中性写入首次结果读取状态::已读取
+            && 读取事实代次 != 0 && 首次事实代次 != 0
+            && 首次事实代次 <= 读取事实代次
+            && 首次规范请求等价材料
+            && 首次规范请求等价材料->幂等键 == 幂等键
+            && 首次状态 == L1中性写入状态::成功;
+    }
+    friend bool operator==(const L1中性写入首次结果读取结果&,
+        const L1中性写入首次结果读取结果&) = default;
+};
+
+enum class L1中性物理清理事实种类 : std::uint8_t {
+    节点 = 1, 关系 = 2, 值 = 3
+};
+
+struct L1中性物理清理墓碑 final {
+    稳定编码 编码;
+    L1中性物理清理事实种类 事实种类 = L1中性物理清理事实种类::节点;
+    稳定编码 内部结构分区;
+    std::uint64_t 创建事实代次 = 0;
+    std::uint64_t 退出事实代次 = 0;
+    std::uint64_t 物理清理事实代次 = 0;
+    friend bool operator==(const L1中性物理清理墓碑&,
+        const L1中性物理清理墓碑&) = default;
+};
+
 enum class L1中性读取状态 : std::uint8_t {
     成功 = 1, 入口拒绝 = 2, 未找到 = 3, 已退出 = 4,
-    属性未设置 = 5, 资源失败 = 6, 内部不一致 = 7, 许可拒绝 = 8
+    属性未设置 = 5, 资源失败 = 6, 内部不一致 = 7, 许可拒绝 = 8,
+    历史材料已清理 = 9
 };
 
 struct L1中性事实读取请求 final {
@@ -259,6 +314,8 @@ struct L1中性具名事实读取结果 final {
     稳定编码 查询编码;
     std::uint64_t 读取事实代次 = 0;
     std::optional<事实类型> 事实;
+    std::optional<std::uint64_t> 物理清理事实代次;
+    std::optional<L1中性物理清理墓碑> 物理清理墓碑;
     friend bool operator==(const L1中性具名事实读取结果&,
         const L1中性具名事实读取结果&) = default;
 };
@@ -305,6 +362,8 @@ struct L1中性历史读取结果 final {
     稳定编码 查询编码;
     std::uint64_t 读取事实代次 = 0;
     std::optional<L1中性事实副本> 事实;
+    std::optional<std::uint64_t> 物理清理事实代次;
+    std::optional<L1中性物理清理墓碑> 物理清理墓碑;
     friend bool operator==(const L1中性历史读取结果&, const L1中性历史读取结果&) = default;
 };
 
@@ -325,7 +384,7 @@ enum class L1中性一致当前读取状态 : std::uint8_t {
 
 enum class L1中性一致当前读取项目状态 : std::uint8_t {
     成功 = 1, 未找到 = 2, 已退出 = 3,
-    属性未设置 = 4, 种类不匹配 = 5
+    属性未设置 = 4, 种类不匹配 = 5, 历史材料已清理 = 6
 };
 
 struct L1中性一致属性值选择项 final {
@@ -368,6 +427,8 @@ struct L1中性一致具名事实读取结果项 final {
     L1中性一致当前读取项目状态 状态 =
         L1中性一致当前读取项目状态::未找到;
     std::optional<事实类型> 事实;
+    std::optional<std::uint64_t> 物理清理事实代次;
+    std::optional<L1中性物理清理墓碑> 物理清理墓碑;
     friend bool operator==(const L1中性一致具名事实读取结果项&,
         const L1中性一致具名事实读取结果项&) = default;
 };

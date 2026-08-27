@@ -15,6 +15,8 @@ inline constexpr std::uint32_t L2状态动态原子发布合同版本 = 1;
 inline constexpr std::uint32_t L2状态动态迁移专属合同版本_v2 = 2;
 inline constexpr std::uint64_t L2状态动态原子发布幂等域 = 0xA2C0'0201ULL;
 
+// 以下旧原子发布 DTO 仅作源兼容和历史诊断；生产入口不再新增事实。
+
 enum class L2状态动态原子发布状态 : std::uint8_t {
     已提交 = 1, 精确重复 = 2, 入口拒绝 = 3, 许可拒绝 = 4,
     未找到 = 5, 已退出 = 6, 事实代次漂移 = 7, 幂等冲突 = 8,

@@ -373,10 +373,26 @@ struct L1所有者范围值事实 final {
 using L1所有者范围事实副本 = std::variant<L1所有者范围节点事实,
     L1所有者范围关系事实, L1所有者范围值事实>;
 
+enum class L1所有者范围物理清理事实种类 : std::uint8_t {
+    节点 = 1, 关系 = 2, 值 = 3
+};
+
+struct L1所有者范围物理清理墓碑 final {
+    稳定编码 编码;
+    L1所有者范围物理清理事实种类 事实种类 =
+        L1所有者范围物理清理事实种类::节点;
+    稳定编码 内部结构分区;
+    std::uint64_t 创建事实代次 = 0;
+    std::uint64_t 退出事实代次 = 0;
+    std::uint64_t 物理清理事实代次 = 0;
+    friend bool operator==(const L1所有者范围物理清理墓碑&,
+        const L1所有者范围物理清理墓碑&) = default;
+};
+
 enum class L1所有者范围读取状态 : std::uint8_t {
     成功 = 1, 入口拒绝 = 2, 许可拒绝 = 3, 未找到 = 4,
     已退出 = 5, 属性未设置 = 6, 事实代次漂移 = 7,
-    资源失败 = 8, 内部不一致 = 9
+    资源失败 = 8, 内部不一致 = 9, 历史材料已清理 = 10
 };
 
 enum class L1所有者范围来源当前值组读取状态 : std::uint8_t {
@@ -481,6 +497,8 @@ struct L1所有者范围当前读取结果 final {
     稳定编码 查询编码;
     std::uint64_t 读取事实代次 = 0;
     std::optional<L1所有者范围事实副本> 事实;
+    std::optional<std::uint64_t> 物理清理事实代次;
+    std::optional<L1所有者范围物理清理墓碑> 物理清理墓碑;
     friend bool operator==(const L1所有者范围当前读取结果&,
         const L1所有者范围当前读取结果&) = default;
 };
@@ -491,6 +509,8 @@ struct L1所有者范围历史读取结果 final {
     稳定编码 查询编码;
     std::uint64_t 读取事实代次 = 0;
     std::optional<L1所有者范围事实副本> 事实;
+    std::optional<std::uint64_t> 物理清理事实代次;
+    std::optional<L1所有者范围物理清理墓碑> 物理清理墓碑;
     friend bool operator==(const L1所有者范围历史读取结果&,
         const L1所有者范围历史读取结果&) = default;
 };
@@ -624,7 +644,8 @@ enum class L1所有者范围一致当前读取状态 : std::uint8_t {
 };
 
 enum class L1所有者范围一致当前读取项目状态 : std::uint8_t {
-    成功 = 1, 未找到 = 2, 已退出 = 3, 属性未设置 = 4, 种类不匹配 = 5
+    成功 = 1, 未找到 = 2, 已退出 = 3, 属性未设置 = 4,
+    种类不匹配 = 5, 历史材料已清理 = 6
 };
 
 struct L1所有者范围一致当前读取请求 final {
@@ -647,6 +668,8 @@ struct L1所有者范围一致具名事实读取结果项 final {
     L1所有者范围一致当前读取项目状态 状态 =
         L1所有者范围一致当前读取项目状态::未找到;
     std::optional<事实类型> 事实;
+    std::optional<std::uint64_t> 物理清理事实代次;
+    std::optional<L1所有者范围物理清理墓碑> 物理清理墓碑;
     friend bool operator==(const L1所有者范围一致具名事实读取结果项&,
         const L1所有者范围一致具名事实读取结果项&) = default;
 };

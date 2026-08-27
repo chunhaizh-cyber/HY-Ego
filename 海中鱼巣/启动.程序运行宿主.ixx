@@ -25,6 +25,14 @@ enum class 停止信号安装状态 : std::uint8_t {
     SIGBREAK失败 = 3
 };
 
+enum class 程序周期维护状态 : std::uint8_t {
+    已完成 = 0,
+    稍后重试 = 1,
+    内部不一致 = 2
+};
+
+using 程序周期维护回调 = std::function<程序周期维护状态()>;
+
 struct 停止信号安装结果;
 void 接收程序停止信号(int);
 
@@ -128,8 +136,36 @@ export namespace 海中鱼巣 {
     }
 }
 
-程序运行结果 运行无窗口宿主(停止信号租约& 信号) {
+程序运行结果 运行无窗口宿主(停止信号租约& 信号,
+    程序周期维护回调 维护回调 = {}) {
+    const auto 执行一个维护周期 = [&]() noexcept {
+        try {
+            switch (维护回调()) {
+            case 程序周期维护状态::已完成:
+            case 程序周期维护状态::稍后重试:
+                return true;
+            case 程序周期维护状态::内部不一致:
+                return false;
+            }
+        } catch (...) {
+        }
+        return false;
+    };
+    if (维护回调 && !执行一个维护周期()) {
+        return {启动模式::无窗口常驻, 程序运行状态::内部不一致,
+            程序失败阶段::中性实例材料维护};
+    }
+    auto 下一次维护 = std::chrono::steady_clock::now()
+        + std::chrono::seconds(60);
     while (信号.停止请求 == 0) {
+        if (维护回调 && std::chrono::steady_clock::now() >= 下一次维护) {
+            if (!执行一个维护周期()) {
+                return {启动模式::无窗口常驻, 程序运行状态::内部不一致,
+                    程序失败阶段::中性实例材料维护};
+            }
+            下一次维护 = std::chrono::steady_clock::now()
+                + std::chrono::seconds(60);
+        }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     return {启动模式::无窗口常驻, 程序运行状态::已完成,

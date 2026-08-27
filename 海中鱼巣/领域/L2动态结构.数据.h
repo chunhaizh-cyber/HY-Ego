@@ -37,6 +37,233 @@ inline constexpr std::uint32_t L2动态结构类型登记规则版本 = 1;
 
 #undef 定义L2动态结构类型身份
 
+struct L2中性动态成员_v1 final {
+    std::uint32_t 顺序 = 0;
+    L2状态身份 状态{};
+    friend bool operator==(const L2中性动态成员_v1&,
+        const L2中性动态成员_v1&) = default;
+};
+
+struct L2中性动态事实_v1 final {
+    L2动态身份 身份{};
+    L2中性材料类别_v1 材料类别 = L2中性材料类别_v1::实例;
+    L2中性时间语义_v1 时间语义 = L2中性时间语义_v1::绝对UTC纳秒;
+    std::vector<L2中性动态成员_v1> 有序状态组{};
+    std::int64_t 首次形成UTC纳秒 = 0;
+    std::uint64_t 形成事实代次 = 0;
+    friend bool operator==(const L2中性动态事实_v1&,
+        const L2中性动态事实_v1&) = default;
+};
+
+struct L2中性动态新增请求_v1 final {
+    L2结构请求头 请求头{};
+    std::uint32_t 专属合同版本 = L2中性状态动态合同版本_v1;
+    L2结构幂等身份 幂等身份{};
+    L2中性材料类别_v1 材料类别 = L2中性材料类别_v1::实例;
+    std::vector<L2状态身份> 有序状态组{};
+    friend bool operator==(const L2中性动态新增请求_v1&,
+        const L2中性动态新增请求_v1&) = default;
+};
+
+struct L2中性动态读取请求_v1 final {
+    L2结构请求头 请求头{};
+    std::uint32_t 专属合同版本 = L2中性状态动态合同版本_v1;
+    L2读取类别 读取类别 = L2读取类别::当前;
+    L2动态身份 动态{};
+    std::uint64_t 历史截止事实代次 = 0;
+    friend bool operator==(const L2中性动态读取请求_v1&,
+        const L2中性动态读取请求_v1&) = default;
+};
+
+struct L2中性动态退出请求_v1 final {
+    L2结构请求头 请求头{};
+    std::uint32_t 专属合同版本 = L2中性状态动态合同版本_v1;
+    L2结构幂等身份 幂等身份{};
+    L2动态身份 动态{};
+    friend bool operator==(const L2中性动态退出请求_v1&,
+        const L2中性动态退出请求_v1&) = default;
+};
+
+struct L2中性动态写入结果_v1 final {
+    L2中性结构结果头_v1 结果头{};
+    std::optional<L2中性动态事实_v1> 动态{};
+    bool 成功() const noexcept;
+    friend bool operator==(const L2中性动态写入结果_v1&,
+        const L2中性动态写入结果_v1&) = default;
+};
+
+struct L2中性动态读取结果_v1 final {
+    L2中性结构结果头_v1 结果头{};
+    L2读取类别 读取类别 = L2读取类别::当前;
+    std::uint64_t 历史截止事实代次 = 0;
+    std::optional<L2中性动态事实_v1> 动态{};
+    std::vector<L2中性状态事实_v1> 有序状态组{};
+    std::optional<L2中性结构墓碑_v1> 墓碑{};
+    bool 成功() const noexcept;
+    friend bool operator==(const L2中性动态读取结果_v1&,
+        const L2中性动态读取结果_v1&) = default;
+};
+
+struct L2中性动态退出结果_v1 final {
+    L2中性结构结果头_v1 结果头{};
+    std::optional<L2中性动态事实_v1> 已退出动态{};
+    bool 成功() const noexcept;
+    friend bool operator==(const L2中性动态退出结果_v1&,
+        const L2中性动态退出结果_v1&) = default;
+};
+
+inline constexpr std::uint64_t L2中性实例材料周期维护幂等前缀_v1 =
+    0x4E43'0000'0000'0000ULL;
+inline constexpr std::uint64_t L2中性实例材料周期维护幂等前缀掩码_v1 =
+    0xFFFF'0000'0000'0000ULL;
+
+inline bool L2中性实例材料周期维护幂等身份_v1(
+    L2结构幂等身份 身份) noexcept {
+    return (身份.值 & L2中性实例材料周期维护幂等前缀掩码_v1)
+        == L2中性实例材料周期维护幂等前缀_v1;
+}
+
+enum class L2中性实例材料清理原因_v1 : std::uint8_t {
+    周期或总量 = 1,
+    抽象完成 = 2
+};
+
+struct L2中性实例材料清理请求_v1 final {
+    L2结构请求头 请求头{};
+    std::uint32_t 专属合同版本 = L2中性状态动态合同版本_v1;
+    L2结构幂等身份 幂等身份{};
+    L2中性实例材料清理原因_v1 原因 =
+        L2中性实例材料清理原因_v1::周期或总量;
+    std::optional<L2动态身份> 已抽象实例动态{};
+    std::optional<稳定编码> 抽象结果身份{};
+    std::optional<std::uint64_t> 抽象结果形成事实代次{};
+    friend bool operator==(const L2中性实例材料清理请求_v1&,
+        const L2中性实例材料清理请求_v1&) = default;
+};
+
+struct L2中性实例材料清理结果_v1 final {
+    L2中性结构结果头_v1 结果头{};
+    std::vector<L2中性结构墓碑_v1> 已清理动态{};
+    std::vector<L2中性结构墓碑_v1> 已清理状态{};
+    std::vector<L2中性状态引用身份_v1> 已退出当前选择{};
+    std::uint64_t 清理前实例动态数量 = 0;
+    std::uint64_t 清理后实例动态数量 = 0;
+    std::uint64_t 清理前实例状态数量 = 0;
+    std::uint64_t 清理后实例状态数量 = 0;
+    bool 成功() const noexcept;
+    friend bool operator==(const L2中性实例材料清理结果_v1&,
+        const L2中性实例材料清理结果_v1&) = default;
+};
+
+inline bool L2中性动态新增请求有效_v1(
+    const L2中性动态新增请求_v1& 请求) noexcept {
+    if (!L2结构请求头合同有效(请求.请求头)
+        || 请求.请求头.期望事实代次 == 0
+        || 请求.专属合同版本 != L2中性状态动态合同版本_v1
+        || !L2结构幂等身份有效(请求.幂等身份)
+        || (请求.材料类别 != L2中性材料类别_v1::实例
+            && 请求.材料类别 != L2中性材料类别_v1::抽象)
+        || 请求.有序状态组.size() < 2) return false;
+    for (std::size_t 左 = 0; 左 < 请求.有序状态组.size(); ++左) {
+        if (!有效(请求.有序状态组[左].值)) return false;
+        for (std::size_t 右 = 0; 右 < 左; ++右)
+            if (请求.有序状态组[左] == 请求.有序状态组[右]) return false;
+    }
+    return true;
+}
+
+inline bool L2中性动态读取请求有效_v1(
+    const L2中性动态读取请求_v1& 请求) noexcept {
+    const bool 截止有效 = 请求.读取类别 == L2读取类别::当前
+        ? 请求.历史截止事实代次 == 0
+        : 请求.读取类别 == L2读取类别::历史
+            && 请求.历史截止事实代次 != 0
+            && 请求.历史截止事实代次 <= 请求.请求头.期望事实代次;
+    return L2结构请求头合同有效(请求.请求头)
+        && 请求.请求头.期望事实代次 != 0
+        && 请求.专属合同版本 == L2中性状态动态合同版本_v1
+        && 有效(请求.动态.值) && 截止有效;
+}
+
+inline bool L2中性动态事实完整_v1(
+    const L2中性动态事实_v1& 动态) noexcept {
+    if (!有效(动态.身份.值) || 动态.首次形成UTC纳秒 <= 0
+        || 动态.形成事实代次 == 0 || 动态.有序状态组.size() < 2
+        || (动态.材料类别 == L2中性材料类别_v1::实例
+            ? 动态.时间语义 != L2中性时间语义_v1::绝对UTC纳秒
+            : 动态.材料类别 != L2中性材料类别_v1::抽象
+                || 动态.时间语义 != L2中性时间语义_v1::非负相对纳秒))
+        return false;
+    for (std::size_t i = 0; i < 动态.有序状态组.size(); ++i) {
+        if (动态.有序状态组[i].顺序 != i + 1
+            || !有效(动态.有序状态组[i].状态.值)) return false;
+        for (std::size_t j = 0; j < i; ++j)
+            if (动态.有序状态组[i].状态 == 动态.有序状态组[j].状态)
+                return false;
+    }
+    return true;
+}
+
+inline bool L2中性动态写入结果_v1::成功() const noexcept {
+    return (结果头.状态 == L2中性结构状态_v1::已提交
+            || 结果头.状态 == L2中性结构状态_v1::精确重复)
+        && 结果头.事实截止代次 != 0 && 结果头.变更事实代次
+        && *结果头.变更事实代次 <= 结果头.事实截止代次
+        && 动态 && L2中性动态事实完整_v1(*动态)
+        && 动态->形成事实代次 == *结果头.变更事实代次;
+}
+
+inline bool L2中性动态读取结果_v1::成功() const noexcept {
+    if (结果头.状态 != L2中性结构状态_v1::已读取
+        || 结果头.事实截止代次 == 0 || 结果头.变更事实代次
+        || !动态 || 墓碑 || !L2中性动态事实完整_v1(*动态)
+        || 有序状态组.size() != 动态->有序状态组.size()) return false;
+    for (std::size_t i = 0; i < 有序状态组.size(); ++i)
+        if (!L2中性状态事实完整_v1(有序状态组[i])
+            || 有序状态组[i].身份 != 动态->有序状态组[i].状态) return false;
+    return true;
+}
+
+inline bool L2中性动态退出结果_v1::成功() const noexcept {
+    return (结果头.状态 == L2中性结构状态_v1::已退出
+            || 结果头.状态 == L2中性结构状态_v1::精确重复)
+        && 结果头.事实截止代次 != 0 && 结果头.变更事实代次
+        && *结果头.变更事实代次 <= 结果头.事实截止代次
+        && 已退出动态 && L2中性动态事实完整_v1(*已退出动态);
+}
+
+inline bool L2中性实例材料清理请求有效_v1(
+    const L2中性实例材料清理请求_v1& 请求) noexcept {
+    if (!L2结构请求头合同有效(请求.请求头)
+        || 请求.请求头.期望事实代次 == 0
+        || 请求.专属合同版本 != L2中性状态动态合同版本_v1
+        || !L2结构幂等身份有效(请求.幂等身份)) return false;
+    if (请求.原因 == L2中性实例材料清理原因_v1::周期或总量)
+        return !请求.已抽象实例动态 && !请求.抽象结果身份
+            && !请求.抽象结果形成事实代次
+            && L2中性实例材料周期维护幂等身份_v1(请求.幂等身份);
+    return 请求.原因 == L2中性实例材料清理原因_v1::抽象完成
+        && !L2中性实例材料周期维护幂等身份_v1(请求.幂等身份)
+        && 请求.已抽象实例动态 && 有效(请求.已抽象实例动态->值)
+        && 请求.抽象结果身份 && 有效(*请求.抽象结果身份)
+        && 请求.抽象结果形成事实代次
+        && *请求.抽象结果形成事实代次 != 0;
+}
+
+inline bool L2中性实例材料清理结果_v1::成功() const noexcept {
+    const bool 无写 = 结果头.状态 == L2中性结构状态_v1::无须清理
+        && 结果头.事实截止代次 != 0 && !结果头.变更事实代次
+        && 已清理动态.empty() && 已清理状态.empty()
+        && 已退出当前选择.empty();
+    const bool 已写 = (结果头.状态 == L2中性结构状态_v1::已提交
+            || 结果头.状态 == L2中性结构状态_v1::精确重复)
+        && 结果头.事实截止代次 != 0 && 结果头.变更事实代次
+        && *结果头.变更事实代次 == 结果头.事实截止代次;
+    return (无写 || 已写)
+        && 清理后实例动态数量 <= 清理前实例动态数量
+        && 清理后实例状态数量 <= 清理前实例状态数量;
+}
+
 enum class L2动态结构类型登记状态 : std::uint8_t {
     已提交 = 1,
     精确重复 = 2,
