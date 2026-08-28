@@ -99,7 +99,7 @@ FRESH任务执行证据
 
 ```text
 海中鱼巣/端到端测试.本能根运行锚点.ixx
-海中鱼巣/端到端测试.ixx
+海中鱼巣/入口.cpp
 施工记录/20260828_INSTINCT-BOOTSTRAP-ROOT-ANCHOR_施工记录_v0.1.md
 验证记录/20260828_INSTINCT-BOOTSTRAP-ROOT-ANCHOR_验证记录_v0.1.md
 ```
@@ -154,7 +154,7 @@ FRESH任务执行证据
 ### 6.5 工程与测试
 
 1. 工程和 filters 登记业务文件及专项测试模块。
-2. 正式测试调度增加 `--test-本能根运行锚点`。
+2. 真实测试分派位于 `海中鱼巣/入口.cpp`；增加 `--test-本能根运行锚点 --data-root <绝对路径>`，只调用新专项模块，不改变普通启动解析和生产路由。
 3. 数据、IntDir、OutDir 全部使用仓库外隔离目录。
 4. 测试宏和故障注入不得进入普通生产构建。
 
@@ -240,7 +240,7 @@ $msbuild = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild 
     --data-root "$env:TEMP\INSTINCT-ROOT-ANCHOR\Release\data"
 ```
 
-若现行测试调度命名不同，S0 先读取真实入口并保持同一隔离和矩阵语义，不新增第二测试主程序。
+专项继续复用唯一 `海中鱼巣/入口.cpp`，不得新增第二测试主程序。缺失、相对或重复 `--data-root` 必须在进入专项前拒绝。
 
 ## 10. 完成门禁
 
