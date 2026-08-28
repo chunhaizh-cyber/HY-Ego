@@ -178,6 +178,36 @@ std::pair<L2结构状态, std::uint64_t> 读取当前事实代次(
     return {L2结构状态::内部不一致, 读取.事实代次};
 }
 
+// 诊断责任：向上送出；固定登记恢复只复用 L1 首次请求的原 G0。
+std::uint64_t 读取固定登记期望代次(const L1事实基座服务& 第一层服务,
+    L1所有者范围写端口& 写入端口,
+    L1所有者范围写入幂等身份 幂等身份) {
+    const auto 首次 = 写入端口.读取首次写入材料(
+        {L1所有者范围首次写入读取合同版本, 幂等身份});
+    if (首次.状态 == L1所有者范围读取状态::成功) {
+        if (首次.合同版本 != L1所有者范围首次写入读取合同版本
+            || 首次.所有者 != 写入端口.所有者身份()
+            || 首次.写入幂等身份 != 幂等身份
+            || !首次.首次规范化写集 || !首次.首次写入结果
+            || 首次.首次规范化写集->写入幂等身份 != 幂等身份
+            || 首次.首次规范化写集->期望事实代次 == 0
+            || 首次.首次写入结果->所有者 != 写入端口.所有者身份()
+            || 首次.首次写入结果->写入幂等身份 != 幂等身份
+            || 首次.首次写入结果->事实代次 == 0)
+            throw std::runtime_error(
+                "L2 concept name fixed registration first material invalid");
+        return 首次.首次规范化写集->期望事实代次;
+    }
+    if (首次.状态 != L1所有者范围读取状态::未找到)
+        throw std::runtime_error(
+            "L2 concept name fixed registration first read failed");
+    const auto [状态, 当前代次] = 读取当前事实代次(第一层服务);
+    if (状态 != L2结构状态::已读取 || 当前代次 == 0)
+        throw std::runtime_error(
+            "L2 concept name fixed registration generation failed");
+    return 当前代次;
+}
+
 // 诊断责任：向上送出；缺失、重复或零登记映射令服务构造失败。
 稳定编码 取得唯一映射(const L1所有者范围写入结果& 写入,
     std::uint32_t 本地键) {
@@ -231,13 +261,10 @@ L1所有者范围节点事实 读取名称登记节点(const L1事实基座服�
         || 所有者.所有者事实->退出事实代次)
         throw std::runtime_error("L2 concept name owner fact is invalid");
     定位.所有者事实 = *所有者.所有者事实;
-    const auto [状态, 当前代次] = 读取当前事实代次(第一层服务);
-    if (状态 != L2结构状态::已读取)
-        throw std::runtime_error(
-            "L2 concept name registration generation failed");
     L1所有者范围写集请求 写集;
     写集.合同版本 = L1所有者范围CRUD合同版本;
-    写集.期望事实代次 = 当前代次;
+    写集.期望事实代次 = 读取固定登记期望代次(
+        第一层服务, 写入端口, 概念名称结构登记幂等身份);
     写集.写入幂等身份 = 概念名称结构登记幂等身份;
     写集.节点 = {
         {{概念端点关系类型本地键值}, 节点种类::普通, std::nullopt},

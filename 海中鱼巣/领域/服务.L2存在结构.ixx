@@ -1650,12 +1650,41 @@ public:
               第一层读取服务, 存在所有者交付)),
           存在身份来源定位_(L2存在结构内部::初始化存在身份来源(
               第一层读取服务_, 第一层写入端口_)) {
-        const auto 代次 = 第一层读取服务_.读取中性当前事实代次(
-            {L1中性CRUD合同版本});
-        if (代次.状态 != L1中性读取状态::成功 || 代次.事实代次 == 0)
-            throw std::runtime_error("L2 existence singleton role registry generation unavailable");
+        const auto 形成固定写集 = [](std::uint64_t 期望事实代次) {
+            L1所有者范围写集请求 写集;
+            写集.合同版本 = L1所有者范围CRUD合同版本;
+            写集.期望事实代次 = 期望事实代次;
+            写集.写入幂等身份 = {L2存在单例角色登记固定幂等身份.值};
+            写集.节点 = {
+                {{L2存在结构内部::存在单例角色登记锚点本地键值},
+                    节点种类::普通, std::nullopt},
+                {{L2存在结构内部::存在单例角色关系类型本地键值},
+                    节点种类::普通, std::nullopt}};
+            return 写集;
+        };
+        const auto 首次 = 第一层写入端口_.读取首次写入材料({
+            L1所有者范围首次写入读取合同版本,
+            {L2存在单例角色登记固定幂等身份.值}});
+        std::uint64_t 期望事实代次 = 0;
+        if (首次.状态 == L1所有者范围读取状态::成功) {
+            if (!首次.首次规范化写集 || !首次.首次写入结果
+                || 首次.首次规范化写集->期望事实代次 == 0
+                || *首次.首次规范化写集
+                    != 形成固定写集(首次.首次规范化写集->期望事实代次))
+                throw std::runtime_error("L2 existence singleton first registry invalid");
+            期望事实代次 = 首次.首次规范化写集->期望事实代次;
+        } else if (首次.状态 == L1所有者范围读取状态::未找到) {
+            const auto 代次 = 第一层读取服务_.读取中性当前事实代次(
+                {L1中性CRUD合同版本});
+            if (代次.状态 != L1中性读取状态::成功 || 代次.事实代次 == 0)
+                throw std::runtime_error(
+                    "L2 existence singleton role registry generation unavailable");
+            期望事实代次 = 代次.事实代次;
+        } else {
+            throw std::runtime_error("L2 existence singleton first registry read failed");
+        }
         const auto 登记 = 建立存在单例角色结构登记({
-            {L2结构合同版本, 代次.事实代次},
+            {L2结构合同版本, 期望事实代次},
             L2存在单例角色登记规则版本,
             L2存在单例角色登记固定幂等身份});
         if (!登记.成功())

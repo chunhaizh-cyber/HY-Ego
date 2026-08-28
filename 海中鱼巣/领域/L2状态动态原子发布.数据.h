@@ -3,7 +3,9 @@
 #ifndef L2_STATE_DYNAMIC_ATOMIC_PUBLISH_NO_INCLUDES
 #include <cstdint>
 #include <optional>
+#include <vector>
 #include "L2结构公共.数据.h"
+#include "L2特征结构.数据.h"
 #include "L2状态结构.数据.h"
 #include "L2动态结构.数据.h"
 #include "../核心/L1所有者范围CRUD.数据.h"
@@ -14,6 +16,112 @@ namespace 海中鱼巣 {
 inline constexpr std::uint32_t L2状态动态原子发布合同版本 = 1;
 inline constexpr std::uint32_t L2状态动态迁移专属合同版本_v2 = 2;
 inline constexpr std::uint64_t L2状态动态原子发布幂等域 = 0xA2C0'0201ULL;
+inline constexpr std::uint32_t L2特征当前值变化记录合同版本_v1 = 1;
+inline constexpr 稳定编码 L2特征当前值记录状态角色_v1{
+    0x4E53'4355'5252'454EULL};
+
+enum class L2特征当前值变化记录状态_v1 : std::uint8_t {
+    已提交 = 1,
+    精确重复 = 2,
+    无变化 = 3,
+    入口拒绝 = 4,
+    当前性漂移 = 5,
+    幂等冲突 = 6,
+    材料不足 = 7,
+    引用冲突 = 8,
+    资源失败 = 9,
+    内部错误 = 10,
+    已可能发布 = 11
+};
+
+struct L2特征当前值变化记录请求_v1 final {
+    std::uint32_t 合同版本 = L2特征当前值变化记录合同版本_v1;
+    L2结构请求头 请求头{};
+    L2结构幂等身份 组合幂等身份{};
+    L2结构幂等身份 特征参与者幂等身份{};
+    L2结构幂等身份 状态参与者幂等身份{};
+    L2结构幂等身份 动态参与者幂等身份{};
+    L2特征实例身份 特征实例{};
+    L2特征值事实 预期旧当前值{稳定编码{},
+        L2特征实例身份{稳定编码{}},
+        L2原始值材料{std::int64_t{0}}, 稳定编码{}, L2生命周期{}};
+    L2原始值材料 新值材料{};
+    std::int64_t 变化UTC纳秒 = 0;
+    L2存在身份 主体存在{};
+    L2场景身份 共同场景{};
+    L2存在身份 来源存在{};
+    std::optional<L2方法身份> 来源方法{};
+    friend bool operator==(const L2特征当前值变化记录请求_v1&,
+        const L2特征当前值变化记录请求_v1&) = default;
+};
+
+struct L2特征当前值变化记录结果_v1 final {
+    std::uint32_t 合同版本 = L2特征当前值变化记录合同版本_v1;
+    L2特征当前值变化记录状态_v1 状态 =
+        L2特征当前值变化记录状态_v1::入口拒绝;
+    L2结构幂等身份 组合幂等身份{};
+    L2结构幂等身份 特征参与者幂等身份{};
+    L2结构幂等身份 状态参与者幂等身份{};
+    L2结构幂等身份 动态参与者幂等身份{};
+    std::optional<L2特征值事实> 当前值{};
+    std::optional<L2中性状态事实_v1> 前状态{};
+    std::optional<L2中性状态事实_v1> 后状态{};
+    std::optional<L2中性状态引用事实_v1> 当前选择{};
+    std::optional<L2中性状态引用事实_v1> 已退出旧选择{};
+    std::optional<L2中性动态事实_v1> 状态迁移动能{};
+    std::optional<L2中性动态事实_v1> 动作致变动态{};
+    std::vector<L2中性状态上下文事实_v1> 状态上下文组{};
+    std::vector<L2中性动态上下文事实_v1> 动态上下文组{};
+    bool legacy基线兼容 = false;
+    std::uint64_t 本次正式读回截止 = 0;
+    bool 成功() const noexcept;
+    friend bool operator==(const L2特征当前值变化记录结果_v1&,
+        const L2特征当前值变化记录结果_v1&) = default;
+};
+
+struct L2特征当前值变化记录读取请求_v1 final {
+    std::uint32_t 合同版本 = L2特征当前值变化记录合同版本_v1;
+    L2结构请求头 请求头{};
+    L2特征实例身份 特征实例{};
+    稳定编码 新当前值稳定编码{};
+    L2中性状态引用身份_v1 新当前选择{};
+    L2状态身份 前状态{};
+    L2状态身份 后状态{};
+    L2动态身份 状态迁移动能{};
+    std::optional<L2动态身份> 动作致变动态{};
+    std::uint64_t 首次事实代次 = 0;
+    friend bool operator==(const L2特征当前值变化记录读取请求_v1&,
+        const L2特征当前值变化记录读取请求_v1&) = default;
+};
+
+enum class L2特征当前值变化记录读取状态_v1 : std::uint8_t {
+    已读取 = 1,
+    入口拒绝 = 2,
+    当前性漂移 = 3,
+    材料不足 = 4,
+    引用冲突 = 5,
+    资源失败 = 6,
+    内部错误 = 7
+};
+
+struct L2特征当前值变化记录读取结果_v1 final {
+    std::uint32_t 合同版本 = L2特征当前值变化记录合同版本_v1;
+    L2特征当前值变化记录读取状态_v1 状态 =
+        L2特征当前值变化记录读取状态_v1::入口拒绝;
+    std::optional<L2特征值事实> 当前值{};
+    std::optional<L2中性状态事实_v1> 前状态{};
+    std::optional<L2中性状态事实_v1> 后状态{};
+    std::optional<L2中性状态引用事实_v1> 当前选择{};
+    std::optional<L2中性动态事实_v1> 状态迁移动能{};
+    std::optional<L2中性动态事实_v1> 动作致变动态{};
+    std::vector<L2中性状态上下文事实_v1> 状态上下文组{};
+    std::vector<L2中性动态上下文事实_v1> 动态上下文组{};
+    bool legacy基线兼容 = false;
+    std::uint64_t 本次正式读回截止 = 0;
+    bool 成功() const noexcept;
+    friend bool operator==(const L2特征当前值变化记录读取结果_v1&,
+        const L2特征当前值变化记录读取结果_v1&) = default;
+};
 
 // 以下旧原子发布 DTO 仅作源兼容和历史诊断；生产入口不再新增事实。
 

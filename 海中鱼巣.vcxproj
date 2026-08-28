@@ -216,6 +216,7 @@
     <ClCompile Include="海中鱼巣\端到端测试.需求服务.ixx" />
     <ClCompile Include="海中鱼巣\端到端测试.自我治理一致事实.ixx" />
     <ClCompile Include="海中鱼巣\端到端测试.L1事实基座持久恢复.ixx" />
+    <ClCompile Include="海中鱼巣\端到端测试.本能路线阶段二.ixx" />
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务特征方法查找与条件提议.ixx" />
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务筹办当前就绪与执行冻结.ixx" />
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务目标未达成重筹办触发.ixx" />

@@ -103,6 +103,34 @@ struct 场景树结构定位 final {
     std::uint64_t 建立事实代次 = 0;
 };
 
+// 诊断责任：向上送出；固定登记恢复只复用 L1 首次请求的原 G0。
+std::uint64_t 读取固定登记期望代次(const L1事实基座服务& L1,
+    L1所有者范围写端口& 端口,
+    L1所有者范围写入幂等身份 幂等身份) {
+    const auto 首次 = 端口.读取首次写入材料(
+        {L1所有者范围首次写入读取合同版本, 幂等身份});
+    if (首次.状态 == L1所有者范围读取状态::成功) {
+        if (首次.合同版本 != L1所有者范围首次写入读取合同版本
+            || 首次.所有者 != 端口.所有者身份()
+            || 首次.写入幂等身份 != 幂等身份
+            || !首次.首次规范化写集 || !首次.首次写入结果
+            || 首次.首次规范化写集->写入幂等身份 != 幂等身份
+            || 首次.首次规范化写集->期望事实代次 == 0
+            || 首次.首次写入结果->所有者 != 端口.所有者身份()
+            || 首次.首次写入结果->写入幂等身份 != 幂等身份
+            || 首次.首次写入结果->事实代次 == 0)
+            throw std::runtime_error(
+                "L2 scene fixed registration first material invalid");
+        return 首次.首次规范化写集->期望事实代次;
+    }
+    if (首次.状态 != L1所有者范围读取状态::未找到)
+        throw std::runtime_error("L2 scene fixed registration first read failed");
+    const auto 当前 = L1.读取中性当前事实代次({L1中性CRUD合同版本});
+    if (当前.状态 != L1中性读取状态::成功 || 当前.事实代次 == 0)
+        throw std::runtime_error("L2 scene fixed registration generation failed");
+    return 当前.事实代次;
+}
+
 // 诊断责任：向上送出；场景来源登记失败使服务构造失败，不发布半构造服务。
 场景身份来源定位 初始化场景身份来源(
     const L1事实基座服务& 第一层服务, L1所有者范围写端口& 写入端口) {
@@ -2743,36 +2771,36 @@ public:
           第一层写入端口_(验证并移动交付(第一层服务, 场景所有者交付)),
           场景身份来源定位_(L2场景结构内部::初始化场景身份来源(
               L1_, 第一层写入端口_)) {
-        const auto 代次1 = L1_.读取中性当前事实代次({L1中性CRUD合同版本});
-        if (代次1.状态 != L1中性读取状态::成功 || 代次1.事实代次 == 0)
-            throw std::runtime_error("L2 scene relation registry generation unavailable");
+        const auto 关系登记代次 = L2场景结构内部::读取固定登记期望代次(
+            L1_, 第一层写入端口_,
+            L2场景结构内部::场景关系类型登记幂等身份);
         const auto 关系 = 建立场景关系类型登记(
-            {{L2结构合同版本, 代次1.事实代次},
+            {{L2结构合同版本, 关系登记代次},
                 L2场景关系类型登记规则版本, {1}});
         if (!关系.成功())
             throw std::runtime_error("L2 scene relation registry initialization failed");
-        const auto 代次2 = L1_.读取中性当前事实代次({L1中性CRUD合同版本});
-        if (代次2.状态 != L1中性读取状态::成功 || 代次2.事实代次 == 0)
-            throw std::runtime_error("L2 scene attribute registry generation unavailable");
+        const auto 属性登记代次 = L2场景结构内部::读取固定登记期望代次(
+            L1_, 第一层写入端口_,
+            L2场景结构内部::场景属性类型登记幂等身份);
         const auto 属性 = 建立场景属性类型登记(
-            {{L2结构合同版本, 代次2.事实代次},
+            {{L2结构合同版本, 属性登记代次},
                 L2场景属性类型登记规则版本, {1}});
         if (!属性.成功())
             throw std::runtime_error("L2 scene attribute registry initialization failed");
-        const auto 代次3 = L1_.读取中性当前事实代次({L1中性CRUD合同版本});
-        if (代次3.状态 != L1中性读取状态::成功 || 代次3.事实代次 == 0)
-            throw std::runtime_error("L2 scene tree registry generation unavailable");
+        const auto 树登记代次 = L2场景结构内部::读取固定登记期望代次(
+            L1_, 第一层写入端口_,
+            {L2场景树结构登记固定幂等身份.值});
         const auto 树登记 = 建立场景树结构登记(
-            {{L2结构合同版本, 代次3.事实代次},
+            {{L2结构合同版本, 树登记代次},
                 L2场景树结构登记规则版本,
                 L2场景树结构登记固定幂等身份});
         if (!树登记.成功())
             throw std::runtime_error("L2 scene tree registry initialization failed");
-        const auto 代次4 = L1_.读取中性当前事实代次({L1中性CRUD合同版本});
-        if (代次4.状态 != L1中性读取状态::成功 || 代次4.事实代次 == 0)
-            throw std::runtime_error("L2 scene host registry generation unavailable");
+        const auto 宿主登记代次 = L2场景结构内部::读取固定登记期望代次(
+            L1_, 第一层写入端口_,
+            {L2场景宿主结构登记固定幂等身份.值});
         const auto 宿主登记 = 建立场景宿主结构登记(
-            {{L2结构合同版本, 代次4.事实代次},
+            {{L2结构合同版本, 宿主登记代次},
                 L2场景宿主结构登记规则版本,
                 L2场景宿主结构登记固定幂等身份});
         if (!宿主登记.成功())
@@ -2845,6 +2873,13 @@ public:
             宿主结构登记定位_ = *读回.登记;
             读回.结果头.状态 = 状态;
             读回.结果头.变更事实代次 = 写入.事实代次;
+            if (状态 == L2结构状态::精确重复
+                && 读回.结果头.事实截止代次 != 写入.事实代次) {
+                // 构造恢复已在 Gread 完成当前投影核对；登记提交结果继续保持
+                // 既有“变更代次即提交截止”的公开成功形状。
+                读回.结果头.事实截止代次 = 写入.事实代次;
+                读回.登记->事实截止代次 = 写入.事实代次;
+            }
             return 读回.成功() ? 读回
                 : L2场景结构内部::形成场景宿主登记失败(
                     L2结构状态::内部不一致, 写入.事实代次);
