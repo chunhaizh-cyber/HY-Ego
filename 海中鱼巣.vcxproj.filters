@@ -19,6 +19,9 @@
     <ClCompile Include="海中鱼巣\领域\服务.L2状态结构.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\业务\提供者.本能根运行初始化.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\服务.L2动态结构.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -133,6 +136,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\业务\消费.自我世界树根.inl">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\业务\本能根运行初始化.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClCompile Include="海中鱼巣\启动.程序入口.ixx">

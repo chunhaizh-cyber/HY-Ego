@@ -5,7 +5,7 @@
 // 本文件不定义 DATA 事实，也不把候选源码视为已编译。
 namespace 海中鱼巣 {
 
-inline constexpr std::uint32_t 自我线程生产创建合同版本 = 1;
+inline constexpr std::uint32_t 自我线程生产创建合同版本 = 2;
 
 struct 自我线程创建幂等身份 final {
   std::uint64_t 值 = 0;
@@ -22,6 +22,7 @@ struct 自我线程生产创建请求 final {
   线程逻辑身份 线程逻辑身份;
   std::uint64_t 运行代次 = 0;
   自我世界树根消费材料 根消费材料;
+  本能根运行锚点_v1 本能根锚点;
   std::uint64_t 治理邮箱容量 = 0;
   std::uint64_t 最大任务结果来源需求成员数 = 64;
   std::uint64_t 入口停门等待毫秒 = 0;
