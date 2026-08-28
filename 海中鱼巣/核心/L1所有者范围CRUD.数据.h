@@ -1,6 +1,7 @@
 #pragma once
 
 #ifndef L1_OWNER_SCOPED_CRUD_NO_INCLUDES
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <type_traits>
@@ -452,6 +453,58 @@ struct L1三分区原子事务结果_v2 final {
     std::vector<L1三分区原子参与者结果_v2> 参与者结果组;
     friend bool operator==(const L1三分区原子事务结果_v2&,
         const L1三分区原子事务结果_v2&) = default;
+};
+
+// 有限 2..255 个中性内部结构分区的一次原子发布合同。v3 只复用
+// v2 的业务中性写项布局；顶层请求、结果、幂等域和持久账保持隔离。
+inline constexpr std::uint32_t L1有限N分区原子事务合同版本_v3 = 3;
+inline constexpr std::size_t L1有限N分区原子事务最小参与者数_v3 = 2;
+inline constexpr std::size_t L1有限N分区原子事务最大参与者数_v3 = 255;
+
+using L1有限N分区原子参与者身份_v3 = L1三分区原子参与者身份_v2;
+using L1有限N分区原子事实引用_v3 = L1三分区原子事实引用_v2;
+using L1有限N分区原子事实引用值_v3 = L1三分区原子事实引用值_v2;
+using L1有限N分区原子节点新建项_v3 = L1三分区原子节点新建项_v2;
+using L1有限N分区原子关系新建项_v3 = L1三分区原子关系新建项_v2;
+using L1有限N分区原子值新建项_v3 = L1三分区原子值新建项_v2;
+using L1有限N分区原子属性槽变更项_v3 = L1三分区原子属性槽变更项_v2;
+using L1有限N分区原子写集请求_v3 = L1三分区原子写集请求_v2;
+using L1有限N分区原子参与者写集_v3 = L1三分区原子参与者写集_v2;
+using L1有限N分区原子参与者结果_v3 = L1三分区原子参与者结果_v2;
+
+struct L1有限N分区原子事务请求_v3 final {
+    std::uint32_t 合同版本 = L1有限N分区原子事务合同版本_v3;
+    std::uint64_t 共同期望事实代次 = 0;
+    L1所有者范围写入幂等身份 组合写入幂等身份;
+    std::vector<L1有限N分区原子参与者写集_v3> 参与者写集组;
+    friend bool operator==(const L1有限N分区原子事务请求_v3&,
+        const L1有限N分区原子事务请求_v3&) = default;
+};
+
+enum class L1有限N分区原子事务状态_v3 : std::uint8_t {
+    已提交 = 1,
+    精确重复 = 2,
+    入口拒绝 = 3,
+    事实代次漂移 = 4,
+    幂等冲突 = 5,
+    引用冲突 = 6,
+    资源失败 = 7,
+    内部不一致 = 8,
+    已可能发布 = 9
+};
+
+struct L1有限N分区原子事务结果_v3 final {
+    L1有限N分区原子事务状态_v3 状态 =
+        L1有限N分区原子事务状态_v3::入口拒绝;
+    std::uint32_t 合同版本 = L1有限N分区原子事务合同版本_v3;
+    L1所有者范围写入幂等身份 组合写入幂等身份;
+    std::uint64_t 共同事实代次 = 0;
+    bool 是否已确认形成内存权威发布 = false;
+    L1所有者范围重试边界 重试边界 =
+        L1所有者范围重试边界::修正请求后可重试;
+    std::vector<L1有限N分区原子参与者结果_v3> 参与者结果组;
+    friend bool operator==(const L1有限N分区原子事务结果_v3&,
+        const L1有限N分区原子事务结果_v3&) = default;
 };
 
 struct L1所有者范围节点事实 final {
