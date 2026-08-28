@@ -2,6 +2,8 @@ module;
 
 #include <cstdint>
 #include <algorithm>
+#include <array>
+#include <filesystem>
 #include <new>
 #include <memory>
 #include <mutex>
@@ -15,6 +17,10 @@ module;
 
 export module 海中鱼巣.核心.服务.L1事实基座;
 
+export {
+#include "L1事实基座持久恢复.数据.h"
+}
+
 export import 海中鱼巣.核心.合同.L1中性CRUD;
 export import 海中鱼巣.核心.合同.L1所有者范围CRUD;
 import 海中鱼巣.核心.合同.L1事实基座;
@@ -23,6 +29,51 @@ import 海中鱼巣.核心.仓库.L1事实基座;
 namespace {
 
 using namespace 海中鱼巣;
+
+L1事实基座持久恢复状态_v1 映射持久恢复状态(
+    L1事实基座核心持久恢复状态 状态) noexcept {
+    switch (状态) {
+    case L1事实基座核心持久恢复状态::已建立空仓:
+        return L1事实基座持久恢复状态_v1::已建立空仓;
+    case L1事实基座核心持久恢复状态::已恢复:
+        return L1事实基座持久恢复状态_v1::已恢复;
+    case L1事实基座核心持久恢复状态::入口拒绝:
+        return L1事实基座持久恢复状态_v1::入口拒绝;
+    case L1事实基座核心持久恢复状态::存储占用:
+        return L1事实基座持久恢复状态_v1::存储占用;
+    case L1事实基座核心持久恢复状态::材料不完整:
+        return L1事实基座持久恢复状态_v1::材料不完整;
+    case L1事实基座核心持久恢复状态::格式不支持:
+        return L1事实基座持久恢复状态_v1::格式不支持;
+    case L1事实基座核心持久恢复状态::摘要不一致:
+        return L1事实基座持久恢复状态_v1::摘要不一致;
+    case L1事实基座核心持久恢复状态::编码或所有者冲突:
+        return L1事实基座持久恢复状态_v1::编码或所有者冲突;
+    case L1事实基座核心持久恢复状态::事实代次漂移:
+        return L1事实基座持久恢复状态_v1::事实代次漂移;
+    case L1事实基座核心持久恢复状态::资源失败:
+        return L1事实基座持久恢复状态_v1::资源失败;
+    case L1事实基座核心持久恢复状态::持久证据未知:
+        return L1事实基座持久恢复状态_v1::持久证据未知;
+    case L1事实基座核心持久恢复状态::内部不一致:
+        return L1事实基座持久恢复状态_v1::内部不一致;
+    }
+    return L1事实基座持久恢复状态_v1::内部不一致;
+}
+
+L1事实基座持久恢复结果_v1 映射持久恢复结果(
+    const L1事实基座核心持久恢复结果& 核心结果) noexcept {
+    L1事实基座持久恢复结果_v1 结果;
+    结果.状态 = 映射持久恢复状态(核心结果.状态);
+    if (核心结果.恢复见证) {
+        结果.恢复见证 = L1事实基座持久恢复见证_v1{
+            核心结果.恢复见证->格式版本,
+            核心结果.恢复见证->快照序号,
+            核心结果.恢复见证->事实代次,
+            核心结果.恢复见证->载荷SHA256};
+    }
+    return 结果;
+}
 
 // 诊断责任：无适用错误分支；纯值状态映射。
 L1中性读取状态 映射中性读取状态(L1读取状态 状态) noexcept {
@@ -123,6 +174,7 @@ export namespace 海中鱼巣 {
 class L1所有者范围签发器;
 class L1所有者范围写端口;
 class L1事实基座运行包;
+struct L1事实基座持久运行包建立结果_v1;
 
 class L1事实基座服务 final {
 public:
@@ -873,6 +925,9 @@ private:
           签发器_(new L1所有者范围签发器(状态_)) {}
 
     friend L1事实基座运行包 建立L1事实基座运行包();
+    friend L1事实基座持久运行包建立结果_v1
+    建立L1事实基座持久运行包_v1(
+        const L1事实基座持久存储配置_v1&) noexcept;
     std::shared_ptr<L1事实基座实例状态> 状态_;
     std::unique_ptr<L1事实基座服务> 服务_;
     std::unique_ptr<L1所有者范围签发器> 签发器_;
@@ -880,6 +935,61 @@ private:
 
 L1事实基座运行包 建立L1事实基座运行包() {
     return L1事实基座运行包{std::make_shared<L1事实基座实例状态>()};
+}
+
+struct L1事实基座持久运行包建立结果_v1 final {
+    L1事实基座持久恢复结果_v1 恢复;
+    std::unique_ptr<L1事实基座运行包> 运行包;
+
+    bool 成功() const noexcept {
+        return 恢复.成功() && 运行包 != nullptr;
+    }
+};
+
+L1事实基座持久运行包建立结果_v1
+建立L1事实基座持久运行包_v1(
+    const L1事实基座持久存储配置_v1& 配置) noexcept {
+    L1事实基座持久运行包建立结果_v1 结果;
+    const auto& 根 = 配置.受控根;
+    if (配置.合同版本 != L1事实基座持久恢复合同版本_v1
+        || 根.empty() || !根.is_absolute()) {
+        结果.恢复.状态 = L1事实基座持久恢复状态_v1::入口拒绝;
+        return 结果;
+    }
+    for (const auto& 分量 : 根) {
+        if (分量 == L"." || 分量 == L"..") {
+            结果.恢复.状态 = L1事实基座持久恢复状态_v1::入口拒绝;
+            return 结果;
+        }
+    }
+
+    try {
+        auto 状态 = std::make_shared<L1事实基座实例状态>();
+        结果.恢复 = 映射持久恢复结果(状态->仓库.初始化持久恢复(根));
+        if (!结果.恢复.成功()) return 结果;
+        结果.运行包.reset(new L1事实基座运行包(std::move(状态)));
+        if (!结果.成功()) {
+            结果.运行包.reset();
+            结果.恢复 = {};
+            结果.恢复.状态 = L1事实基座持久恢复状态_v1::内部不一致;
+        }
+        return 结果;
+    } catch (const std::bad_alloc&) {
+        结果.运行包.reset();
+        结果.恢复 = {};
+        结果.恢复.状态 = L1事实基座持久恢复状态_v1::资源失败;
+        return 结果;
+    } catch (const std::length_error&) {
+        结果.运行包.reset();
+        结果.恢复 = {};
+        结果.恢复.状态 = L1事实基座持久恢复状态_v1::资源失败;
+        return 结果;
+    } catch (...) {
+        结果.运行包.reset();
+        结果.恢复 = {};
+        结果.恢复.状态 = L1事实基座持久恢复状态_v1::内部不一致;
+        return 结果;
+    }
 }
 
 } // namespace 海中鱼巣

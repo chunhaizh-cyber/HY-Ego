@@ -72,12 +72,35 @@ std::optional<自我世界树根消费材料>
 读取自我世界树根消费材料(const 普通应用上下文& 上下文);
 
 struct 普通应用配置 {
+    L1事实基座持久存储配置_v1 L1事实基座持久存储;
     不可变材料存储配置 不可变材料存储;
     任务筹办等待合同登记 等待合同登记;
     任务筹办授权安全材料来源* 授权安全材料来源 = nullptr;
 
     bool 有效() const noexcept {
+        const auto& L1路径 = L1事实基座持久存储.受控根;
         const auto& 路径 = 不可变材料存储.受控根.绝对路径;
+        const auto 路径有效 = [](const std::filesystem::path& 值) noexcept {
+            if (值.empty() || !值.is_absolute()) return false;
+            for (const auto& 分量 : 值)
+                if (分量 == L"." || 分量 == L"..") return false;
+            return true;
+        };
+        const auto 是路径前缀 = [](const std::filesystem::path& 前缀,
+            const std::filesystem::path& 完整) noexcept {
+            auto 前缀项 = 前缀.begin();
+            auto 完整项 = 完整.begin();
+            for (; 前缀项 != 前缀.end() && 完整项 != 完整.end();
+                ++前缀项, ++完整项) {
+                if (*前缀项 != *完整项) return false;
+            }
+            return 前缀项 == 前缀.end();
+        };
+        if (L1事实基座持久存储.合同版本
+                != L1事实基座持久恢复合同版本_v1
+            || !路径有效(L1路径) || !路径有效(路径)
+            || 是路径前缀(L1路径, 路径) || 是路径前缀(路径, L1路径))
+            return false;
         if (不可变材料存储.合同版本 != L2结构合同版本
             || 路径.empty() || !路径.is_absolute()) return false;
         for (const auto& 分量 : 路径)
@@ -175,9 +198,18 @@ struct 普通应用生产配置结果 final {
         if (FAILED(读取结果) || !已知目录)
             return {普通应用生产配置状态::已知目录不可用, std::nullopt};
 
-        auto 根 = (std::filesystem::path(已知目录.get()) / L"海中鱼巣"
-            / L"数据" / L"不可变材料").lexically_normal();
+        auto 数据根 = (std::filesystem::path(已知目录.get()) / L"海中鱼巣"
+            / L"数据").lexically_normal();
+        auto L1根 = (数据根 / L"L1事实基座").lexically_normal();
+        auto 根 = (数据根 / L"不可变材料").lexically_normal();
         std::error_code 错误;
+        std::filesystem::create_directories(L1根, 错误);
+        if (错误)
+            return {普通应用生产配置状态::目录建立失败, std::nullopt};
+        错误.clear();
+        if (!std::filesystem::is_directory(L1根, 错误) || 错误)
+            return {普通应用生产配置状态::目录建立失败, std::nullopt};
+        错误.clear();
         std::filesystem::create_directories(根, 错误);
         if (错误)
             return {普通应用生产配置状态::目录建立失败, std::nullopt};
@@ -186,6 +218,8 @@ struct 普通应用生产配置结果 final {
             return {普通应用生产配置状态::目录建立失败, std::nullopt};
 
         普通应用配置 配置;
+        配置.L1事实基座持久存储 = {
+            L1事实基座持久恢复合同版本_v1, std::move(L1根)};
         配置.不可变材料存储 = {L2结构合同版本, {std::move(根)}};
         配置.等待合同登记 = 形成普通应用任务筹办等待合同登记();
         if (!配置.有效())
@@ -542,7 +576,8 @@ enum class 普通应用装配状态 : std::uint8_t {
     任务子目标承接记录服务构造失败 = 54,
     需求任务子目标承接服务构造失败 = 55,
     任务筹办等待合同登记无效 = 56,
-    任务筹办当前就绪与执行冻结提供者构造失败 = 57
+    任务筹办当前就绪与执行冻结提供者构造失败 = 57,
+    L1事实基座持久恢复失败 = 87
 };
 
 struct 普通应用装配结果 {
@@ -557,14 +592,22 @@ struct 普通应用装配结果 {
 // 诊断责任：向上送出；全部装配失败只映射结构化装配状态，不重复记录错误。
 普通应用装配结果 构造普通应用上下文(const 普通应用配置& 配置) {
     const auto& 路径 = 配置.不可变材料存储.受控根.绝对路径;
-    if (配置.不可变材料存储.合同版本 != L2结构合同版本
+    if (配置.L1事实基座持久存储.合同版本
+            != L1事实基座持久恢复合同版本_v1
+        || 配置.L1事实基座持久存储.受控根.empty()
+        || !配置.L1事实基座持久存储.受控根.is_absolute()
+        || 配置.不可变材料存储.合同版本 != L2结构合同版本
         || 路径.empty() || !路径.is_absolute()) {
         return {};
     }
     if (!配置.有效())
         return {普通应用装配状态::任务筹办等待合同登记无效, nullptr};
     try {
-        auto 运行包 = 建立L1事实基座运行包();
+        auto 持久运行包建立 = 建立L1事实基座持久运行包_v1(
+            配置.L1事实基座持久存储);
+        if (!持久运行包建立.成功())
+            return {普通应用装配状态::L1事实基座持久恢复失败, nullptr};
+        auto 运行包 = std::move(*持久运行包建立.运行包);
         std::optional<L1所有者范围交付> 材料原始交付;
         try {
             材料原始交付.emplace(

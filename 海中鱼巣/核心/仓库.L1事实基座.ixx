@@ -1,15 +1,22 @@
 module;
 
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <bcrypt.h>
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <limits>
 #include <memory>
 #include <mutex>
 #include <new>
 #include <optional>
 #include <shared_mutex>
+#include <string>
 #include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
@@ -17,6 +24,8 @@ module;
 #include <variant>
 #include <vector>
 #include <type_traits>
+
+#pragma comment(lib, "bcrypt.lib")
 
 #define L1_FACT_BASE_NO_INCLUDES
 
@@ -27,7 +36,28 @@ import 海中鱼巣.核心.合同.L1所有者范围CRUD;
 
 export namespace 海中鱼巣 {
 
+enum class L1事实基座核心持久恢复状态 : std::uint8_t {
+    已建立空仓 = 1, 已恢复 = 2, 入口拒绝 = 3, 存储占用 = 4,
+    材料不完整 = 5, 格式不支持 = 6, 摘要不一致 = 7,
+    编码或所有者冲突 = 8, 事实代次漂移 = 9, 资源失败 = 10,
+    持久证据未知 = 11, 内部不一致 = 12
+};
+
+struct L1事实基座核心持久恢复见证 final {
+    std::uint32_t 格式版本 = 1;
+    std::uint64_t 快照序号 = 0;
+    std::uint64_t 事实代次 = 0;
+    std::array<std::uint8_t, 32> 载荷SHA256{};
+};
+
+struct L1事实基座核心持久恢复结果 final {
+    L1事实基座核心持久恢复状态 状态 =
+        L1事实基座核心持久恢复状态::内部不一致;
+    std::optional<L1事实基座核心持久恢复见证> 恢复见证;
+};
+
 class L1事实基座仓库 final {
+    struct 持久会话;
     struct 所有者范围一致投影内部请求 final {
         std::uint64_t 期望事实代次 = 0;
         const std::vector<L1结构所有者身份>& 所有者;
@@ -108,6 +138,11 @@ public:
     L1事实基座仓库(const L1事实基座仓库&) = delete;
     L1事实基座仓库& operator=(const L1事实基座仓库&) = delete;
 
+    L1事实基座核心持久恢复结果 初始化持久恢复(
+        const std::filesystem::path& 绝对受控根) noexcept {
+        return 初始化持久恢复实现(绝对受控根);
+    }
+
     L1所有者范围建立结果 建立所有者范围(
         const L1所有者范围建立请求& 请求) {
         const auto 失败 = [&](L1所有者范围管理状态 状态,
@@ -158,6 +193,11 @@ public:
             if (!状态完整(候选))
                 return 失败(L1所有者范围管理状态::内部不一致,
                     状态_.事实代次);
+            const auto 持久准备 = 准备持久发布(候选);
+            if (持久准备 != 持久准备状态::成功)
+                return 失败(持久准备 == 持久准备状态::资源失败
+                    ? L1所有者范围管理状态::资源失败
+                    : L1所有者范围管理状态::内部不一致, 状态_.事实代次);
             std::swap(状态_, 候选);
             const auto 读回 = 状态_.当前所有者.find(编码->值);
             if (读回 == 状态_.当前所有者.end() || 读回->second != 事实) {
@@ -290,6 +330,11 @@ public:
             if (!状态完整(候选))
                 return 失败(L1所有者范围管理状态::内部不一致,
                     状态_.事实代次);
+            const auto 持久准备 = 准备持久发布(候选);
+            if (持久准备 != 持久准备状态::成功)
+                return 失败(持久准备 == 持久准备状态::资源失败
+                    ? L1所有者范围管理状态::资源失败
+                    : L1所有者范围管理状态::内部不一致, 状态_.事实代次);
             std::swap(状态_, 候选);
             return {L1所有者范围管理状态::成功,
                 L1所有者范围CRUD合同版本, 请求.建立幂等身份,
@@ -637,6 +682,11 @@ public:
                 return 失败(L1物理清理状态::内部错误);
             if (!状态完整(候选))
                 return 失败(L1物理清理状态::内部错误);
+            const auto 持久准备 = 准备持久发布(候选);
+            if (持久准备 != 持久准备状态::成功)
+                return 失败(持久准备 == 持久准备状态::资源失败
+                    ? L1物理清理状态::资源失败
+                    : L1物理清理状态::内部错误);
             std::swap(状态_, 候选);
 
             L1物理清理结果 结果;
@@ -970,6 +1020,11 @@ public:
             候选仓库.状态_.跨所有者原子事务幂等账.emplace(
                 请求.组合写入幂等身份.值,
                 跨所有者原子事务幂等记录{请求, 结果});
+            const auto 持久准备 = 准备持久发布(候选仓库.状态_);
+            if (持久准备 != 持久准备状态::成功)
+                return 失败(持久准备 == 持久准备状态::资源失败
+                    ? L1跨所有者原子事务状态::资源失败
+                    : L1跨所有者原子事务状态::内部不一致);
             状态_ = std::move(候选仓库.状态_);
             return 结果;
         } catch (const std::bad_alloc&) {
@@ -1472,6 +1527,16 @@ public:
                 return 中性写入结果(请求, L1中性写入状态::内部不一致,
                     状态_.事实代次, false, L1中性重试边界::原幂等键读回收敛);
 
+            const auto 持久准备 = 准备持久发布(候选);
+            if (持久准备 != 持久准备状态::成功)
+                return 中性写入结果(请求,
+                    持久准备 == 持久准备状态::资源失败
+                        ? L1中性写入状态::资源失败
+                        : L1中性写入状态::内部不一致,
+                    状态_.事实代次, false,
+                    持久准备 == 持久准备状态::资源失败
+                        ? L1中性重试边界::原请求可重试
+                        : L1中性重试边界::原幂等键读回收敛);
             std::swap(状态_, 候选);
             if (!中性候选读回完整(
                     状态_, *规范化, 映射, 新代次, 写入所有者)) {
@@ -2670,6 +2735,474 @@ private:
         std::optional<L1结构所有者身份> 旧共享所有者定位;
         bool 隔离 = false;
     };
+
+    enum class 持久准备状态 : std::uint8_t {
+        成功 = 1, 资源失败 = 2, 内部不一致 = 3, 持久证据未知 = 4
+    };
+
+    struct 持久会话 final {
+        std::filesystem::path 根;
+        HANDLE 锁句柄 = INVALID_HANDLE_VALUE;
+        std::uint64_t 快照序号 = 0;
+        std::uint8_t 活动槽 = 0;
+        bool 已毒化 = false;
+        ~持久会话() {
+            if (锁句柄 != INVALID_HANDLE_VALUE) CloseHandle(锁句柄);
+        }
+    };
+
+    struct 规范编码器 final {
+        std::vector<std::uint8_t> 字节;
+        void U8(std::uint8_t 值) { 字节.push_back(值); }
+        void U32(std::uint32_t 值) {
+            for (unsigned i = 0; i != 4; ++i) U8(static_cast<std::uint8_t>(值 >> (i * 8)));
+        }
+        void U64(std::uint64_t 值) {
+            for (unsigned i = 0; i != 8; ++i) U8(static_cast<std::uint8_t>(值 >> (i * 8)));
+        }
+        void I64(std::int64_t 值) { U64(static_cast<std::uint64_t>(值)); }
+        void 布尔(bool 值) { U8(值 ? 1 : 0); }
+    };
+
+    struct 规范解码器 final {
+        const std::vector<std::uint8_t>& 字节;
+        std::size_t 位置 = 0;
+        bool U8(std::uint8_t& 值) {
+            if (位置 >= 字节.size()) return false;
+            值 = 字节[位置++]; return true;
+        }
+        bool U32(std::uint32_t& 值) {
+            值 = 0; std::uint8_t 一{};
+            for (unsigned i = 0; i != 4; ++i) { if (!U8(一)) return false; 值 |= std::uint32_t{一} << (i * 8); }
+            return true;
+        }
+        bool U64(std::uint64_t& 值) {
+            值 = 0; std::uint8_t 一{};
+            for (unsigned i = 0; i != 8; ++i) { if (!U8(一)) return false; 值 |= std::uint64_t{一} << (i * 8); }
+            return true;
+        }
+        bool I64(std::int64_t& 值) { std::uint64_t 原{}; if (!U64(原)) return false; 值 = static_cast<std::int64_t>(原); return true; }
+        bool 布尔(bool& 值) { std::uint8_t 原{}; if (!U8(原) || 原 > 1) return false; 值 = 原 != 0; return true; }
+        bool 完结() const noexcept { return 位置 == 字节.size(); }
+    };
+
+    template<class T, class 写函数>
+    static void 写组(规范编码器& 出, const std::vector<T>& 组, 写函数 写一) {
+        出.U64(static_cast<std::uint64_t>(组.size()));
+        for (const auto& 项 : 组) 写一(出, 项);
+    }
+    template<class T, class 读函数>
+    static bool 读组(规范解码器& 入, std::vector<T>& 组, 读函数 读一) {
+        std::uint64_t 数{};
+        if (!入.U64(数) || 数 > 入.字节.size() - 入.位置) return false;
+        组.clear(); 组.reserve(static_cast<std::size_t>(数));
+        for (std::uint64_t i = 0; i != 数; ++i) { T 项{}; if (!读一(入, 项)) return false; 组.push_back(std::move(项)); }
+        return true;
+    }
+    template<class T, class 写函数>
+    static void 写可选(规范编码器& 出, const std::optional<T>& 值, 写函数 写一) {
+        出.U8(值 ? 1 : 0); if (值) 写一(出, *值);
+    }
+    template<class T, class 读函数>
+    static bool 读可选(规范解码器& 入, std::optional<T>& 值, 读函数 读一) {
+        std::uint8_t 有{}; if (!入.U8(有) || 有 > 1) return false;
+        if (!有) { 值.reset(); return true; }
+        T 项{}; if (!读一(入, 项)) return false; 值 = std::move(项); return true;
+    }
+    template<class E>
+    static void 写枚举(规范编码器& 出, E 值) { 出.U8(static_cast<std::uint8_t>(值)); }
+    template<class E>
+    static bool 读枚举(规范解码器& 入, E& 值, std::uint8_t 最大) {
+        std::uint8_t 原{}; if (!入.U8(原) || 原 == 0 || 原 > 最大) return false;
+        值 = static_cast<E>(原); return true;
+    }
+
+    static void 写(规范编码器& 出, 稳定编码 值) { 出.U64(值.值); }
+    static bool 读(规范解码器& 入, 稳定编码& 值) { return 入.U64(值.值); }
+    static void 写(规范编码器& 出, L1结构所有者身份 值) { 写(出, 值.编码); }
+    static bool 读(规范解码器& 入, L1结构所有者身份& 值) { return 读(入, 值.编码); }
+    static void 写(规范编码器& 出, L1中性写集本地键 值) { 出.U32(值.值); }
+    static bool 读(规范解码器& 入, L1中性写集本地键& 值) { return 入.U32(值.值); }
+    static void 写(规范编码器& 出, L1所有者范围写集本地键 值) { 出.U32(值.值); }
+    static void 写(规范编码器& 出, L1中性写集幂等键 值) { 出.U64(值.值); }
+    static bool 读(规范解码器& 入, L1中性写集幂等键& 值) { return 入.U64(值.值); }
+    static void 写(规范编码器& 出, L1所有者范围建立幂等身份 值) { 出.U64(值.值); }
+    static bool 读(规范解码器& 入, L1所有者范围建立幂等身份& 值) { return 入.U64(值.值); }
+    static void 写(规范编码器& 出, L1所有者范围写入幂等身份 值) { 出.U64(值.值); }
+    static bool 读(规范解码器& 入, L1所有者范围写入幂等身份& 值) { return 入.U64(值.值); }
+
+    static void 写原始材料(规范编码器& 出, const 原始值材料& 值) {
+        if (const auto* 项 = std::get_if<std::int64_t>(&值)) { 出.U8(1); 出.I64(*项); }
+        else if (const auto* 项 = std::get_if<std::vector<std::int64_t>>(&值)) { 出.U8(2); 写组(出, *项, [](auto& e, auto v){ e.I64(v); }); }
+        else if (const auto* 项 = std::get_if<std::vector<std::uint64_t>>(&值)) { 出.U8(3); 写组(出, *项, [](auto& e, auto v){ e.U64(v); }); }
+        else { 出.U8(4); 写(出, std::get<独立材料引用>(值).编码); }
+    }
+    static bool 读原始材料(规范解码器& 入, 原始值材料& 值) {
+        std::uint8_t 标签{}; if (!入.U8(标签)) return false;
+        if (标签 == 1) { std::int64_t 项{}; if (!入.I64(项)) return false; 值 = 项; return true; }
+        if (标签 == 2) { std::vector<std::int64_t> 项; if (!读组(入, 项, [](auto& d, auto& v){ return d.I64(v); })) return false; 值 = std::move(项); return true; }
+        if (标签 == 3) { std::vector<std::uint64_t> 项; if (!读组(入, 项, [](auto& d, auto& v){ return d.U64(v); })) return false; 值 = std::move(项); return true; }
+        if (标签 == 4) { 独立材料引用 项; if (!读(入, 项.编码)) return false; 值 = 项; return true; }
+        return false;
+    }
+    static void 写中性材料(规范编码器& 出, const L1中性原始值材料& 值) {
+        if (const auto* 项 = std::get_if<std::int64_t>(&值)) { 出.U8(1); 出.I64(*项); }
+        else if (const auto* 项 = std::get_if<std::vector<std::int64_t>>(&值)) { 出.U8(2); 写组(出, *项, [](auto& e, auto v){ e.I64(v); }); }
+        else if (const auto* 项 = std::get_if<std::vector<std::uint64_t>>(&值)) { 出.U8(3); 写组(出, *项, [](auto& e, auto v){ e.U64(v); }); }
+        else { 出.U8(4); 写(出, std::get<L1中性独立材料引用>(值).编码); }
+    }
+    static bool 读中性材料(规范解码器& 入, L1中性原始值材料& 值) {
+        原始值材料 临时; if (!读原始材料(入, 临时)) return false;
+        值 = std::visit([](const auto& 项) -> L1中性原始值材料 {
+            using T = std::decay_t<decltype(项)>;
+            if constexpr (std::is_same_v<T, 独立材料引用>) return L1中性独立材料引用{项.编码};
+            else return 项;
+        }, 临时); return true;
+    }
+    static void 写所有者材料(规范编码器& 出, const L1所有者范围原始值材料& 值) {
+        if (const auto* 项 = std::get_if<std::int64_t>(&值)) { 出.U8(1); 出.I64(*项); }
+        else if (const auto* 项 = std::get_if<std::vector<std::int64_t>>(&值)) { 出.U8(2); 写组(出, *项, [](auto& e, auto v){ e.I64(v); }); }
+        else if (const auto* 项 = std::get_if<std::vector<std::uint64_t>>(&值)) { 出.U8(3); 写组(出, *项, [](auto& e, auto v){ e.U64(v); }); }
+        else { 出.U8(4); 写(出, std::get<L1所有者范围独立材料引用>(值).编码); }
+    }
+    static bool 读所有者材料(规范解码器& 入, L1所有者范围原始值材料& 值) {
+        原始值材料 临时; if (!读原始材料(入, 临时)) return false;
+        值 = std::visit([](const auto& 项) -> L1所有者范围原始值材料 {
+            using T = std::decay_t<decltype(项)>;
+            if constexpr (std::is_same_v<T, 独立材料引用>) return L1所有者范围独立材料引用{项.编码};
+            else return 项;
+        }, 临时); return true;
+    }
+
+    static void 写(规范编码器& 出, const 属性槽& 值) { 写(出, 值.属性类型节点); 写(出, 值.当前值); }
+    static bool 读(规范解码器& 入, 属性槽& 值) { return 读(入, 值.属性类型节点) && 读(入, 值.当前值); }
+    static void 写(规范编码器& 出, const 节点事实& 值) {
+        写(出, 值.编码); 写枚举(出, 值.种类);
+        写可选(出, 值.属性类型表示, [](auto& e, auto v){ 写枚举(e, v); });
+        出.U64(值.创建事实代次); 写可选(出, 值.退出事实代次, [](auto& e, auto v){ e.U64(v); });
+        写组(出, 值.当前属性, [](auto& e, const auto& v){ 写(e, v); }); 写(出, 值.写入所有者);
+    }
+    static bool 读(规范解码器& 入, 节点事实& 值) {
+        return 读(入, 值.编码) && 读枚举(入, 值.种类, 3)
+            && 读可选(入, 值.属性类型表示, [](auto& d, auto& v){ return 读枚举(d, v, 4); })
+            && 入.U64(值.创建事实代次)
+            && 读可选(入, 值.退出事实代次, [](auto& d, auto& v){ return d.U64(v); })
+            && 读组(入, 值.当前属性, [](auto& d, auto& v){ return 读(d, v); }) && 读(入, 值.写入所有者);
+    }
+    static void 写(规范编码器& 出, const 关系事实& 值) {
+        写(出, 值.编码); 写(出, 值.源节点); 写(出, 值.目标节点); 写(出, 值.关系类型节点);
+        出.I64(值.角色或顺序); 出.U64(值.创建事实代次);
+        写可选(出, 值.退出事实代次, [](auto& e, auto v){ e.U64(v); }); 写(出, 值.写入所有者);
+    }
+    static bool 读(规范解码器& 入, 关系事实& 值) {
+        return 读(入, 值.编码) && 读(入, 值.源节点) && 读(入, 值.目标节点)
+            && 读(入, 值.关系类型节点) && 入.I64(值.角色或顺序) && 入.U64(值.创建事实代次)
+            && 读可选(入, 值.退出事实代次, [](auto& d, auto& v){ return d.U64(v); }) && 读(入, 值.写入所有者);
+    }
+    static void 写(规范编码器& 出, const 值事实& 值) {
+        写(出, 值.编码); 写(出, 值.所属节点); 写(出, 值.属性类型节点); 写原始材料(出, 值.材料);
+        写(出, 值.来源节点); 出.U64(值.创建事实代次);
+        写可选(出, 值.退出事实代次, [](auto& e, auto v){ e.U64(v); }); 写(出, 值.写入所有者);
+    }
+    static bool 读(规范解码器& 入, 值事实& 值) {
+        return 读(入, 值.编码) && 读(入, 值.所属节点) && 读(入, 值.属性类型节点)
+            && 读原始材料(入, 值.材料) && 读(入, 值.来源节点) && 入.U64(值.创建事实代次)
+            && 读可选(入, 值.退出事实代次, [](auto& d, auto& v){ return d.U64(v); }) && 读(入, 值.写入所有者);
+    }
+    static void 写事实副本(规范编码器& 出, const L1事实副本& 值) {
+        if (const auto* 项 = std::get_if<节点事实>(&值)) { 出.U8(1); 写(出, *项); }
+        else if (const auto* 项 = std::get_if<关系事实>(&值)) { 出.U8(2); 写(出, *项); }
+        else { 出.U8(3); 写(出, std::get<值事实>(值)); }
+    }
+    static bool 读事实副本(规范解码器& 入, L1事实副本& 值) {
+        std::uint8_t 标签{}; if (!入.U8(标签)) return false;
+        if (标签 == 1) { 节点事实 项; if (!读(入, 项)) return false; 值 = std::move(项); return true; }
+        if (标签 == 2) { 关系事实 项; if (!读(入, 项)) return false; 值 = std::move(项); return true; }
+        if (标签 == 3) { 值事实 项; if (!读(入, 项)) return false; 值 = std::move(项); return true; }
+        return false;
+    }
+    static void 写(规范编码器& 出, const L1历史事实副本& 值) { 写(出, 值.查询编码); 写事实副本(出, 值.事实); 出.布尔(值.当前有效); }
+    static bool 读(规范解码器& 入, L1历史事实副本& 值) { return 读(入, 值.查询编码) && 读事实副本(入, 值.事实) && 入.布尔(值.当前有效); }
+    static void 写(规范编码器& 出, const L1结构所有者事实& 值) {
+        写(出, 值.所有者); 写枚举(出, 值.范围种类); 出.U64(值.创建事实代次);
+        写可选(出, 值.退出事实代次, [](auto& e, auto v){ e.U64(v); });
+    }
+    static bool 读(规范解码器& 入, L1结构所有者事实& 值) {
+        return 读(入, 值.所有者) && 读枚举(入, 值.范围种类, 2) && 入.U64(值.创建事实代次)
+            && 读可选(入, 值.退出事实代次, [](auto& d, auto& v){ return d.U64(v); });
+    }
+    static void 写(规范编码器& 出, const L1物理清理事实身份& 值) { 写枚举(出, 值.事实种类); 写(出, 值.编码); }
+    static bool 读(规范解码器& 入, L1物理清理事实身份& 值) { return 读枚举(入, 值.事实种类, 3) && 读(入, 值.编码); }
+    static void 写(规范编码器& 出, const L1物理清理墓碑& 值) {
+        写(出, 值.编码); 写枚举(出, 值.事实种类); 写(出, 值.内部结构分区);
+        出.U64(值.创建事实代次); 出.U64(值.退出事实代次); 出.U64(值.物理清理事实代次);
+    }
+    static bool 读(规范解码器& 入, L1物理清理墓碑& 值) {
+        return 读(入, 值.编码) && 读枚举(入, 值.事实种类, 3) && 读(入, 值.内部结构分区)
+            && 入.U64(值.创建事实代次) && 入.U64(值.退出事实代次) && 入.U64(值.物理清理事实代次);
+    }
+
+    static void 写中性引用(规范编码器& 出, const L1中性事实引用& 值) {
+        if (const auto* 项 = std::get_if<稳定编码>(&值)) { 出.U8(1); 写(出, *项); }
+        else { 出.U8(2); 写(出, std::get<L1中性写集本地键>(值)); }
+    }
+    static bool 读中性引用(规范解码器& 入, L1中性事实引用& 值) {
+        std::uint8_t 标签{}; if (!入.U8(标签)) return false;
+        if (标签 == 1) { 稳定编码 项; if (!读(入, 项)) return false; 值 = 项; return true; }
+        if (标签 == 2) { L1中性写集本地键 项; if (!读(入, 项)) return false; 值 = 项; return true; }
+        return false;
+    }
+    static void 写(规范编码器& 出, const L1中性写集请求& 值) {
+        出.U32(值.合同版本); 出.U64(值.期望事实代次); 写(出, 值.幂等键);
+        写组(出, 值.节点, [](auto& e, const auto& v){ 写(e, v.本地键); 写枚举(e, v.种类); 写可选(e, v.属性类型表示, [](auto& x, auto y){ 写枚举(x, y); }); });
+        写组(出, 值.关系, [](auto& e, const auto& v){ 写(e, v.本地键); 写中性引用(e, v.源节点); 写中性引用(e, v.目标节点); 写中性引用(e, v.关系类型节点); e.I64(v.角色或顺序); });
+        写组(出, 值.值, [](auto& e, const auto& v){ 写(e, v.本地键); 写中性引用(e, v.所属节点); 写中性引用(e, v.属性类型节点); 写中性材料(e, v.材料); 写中性引用(e, v.来源节点); });
+        写组(出, 值.属性槽变更, [](auto& e, const auto& v){ 写中性引用(e, v.所属节点); 写中性引用(e, v.属性类型节点); 写(e, v.新当前值); });
+        写组(出, 值.退出事实, [](auto& e, auto v){ 写(e, v); });
+    }
+    static bool 读(规范解码器& 入, L1中性写集请求& 值) {
+        return 入.U32(值.合同版本) && 入.U64(值.期望事实代次) && 读(入, 值.幂等键)
+            && 读组(入, 值.节点, [](auto& d, auto& v){ return 读(d, v.本地键) && 读枚举(d, v.种类, 3) && 读可选(d, v.属性类型表示, [](auto& x, auto& y){ return 读枚举(x, y, 4); }); })
+            && 读组(入, 值.关系, [](auto& d, auto& v){ return 读(d, v.本地键) && 读中性引用(d, v.源节点) && 读中性引用(d, v.目标节点) && 读中性引用(d, v.关系类型节点) && d.I64(v.角色或顺序); })
+            && 读组(入, 值.值, [](auto& d, auto& v){ return 读(d, v.本地键) && 读中性引用(d, v.所属节点) && 读中性引用(d, v.属性类型节点) && 读中性材料(d, v.材料) && 读中性引用(d, v.来源节点); })
+            && 读组(入, 值.属性槽变更, [](auto& d, auto& v){ return 读中性引用(d, v.所属节点) && 读中性引用(d, v.属性类型节点) && 读(d, v.新当前值); })
+            && 读组(入, 值.退出事实, [](auto& d, auto& v){ return 读(d, v); });
+    }
+    static void 写(规范编码器& 出, const L1中性写入结果& 值) {
+        写枚举(出, 值.状态); 出.U32(值.合同版本); 写(出, 值.幂等键); 出.U64(值.事实代次);
+        出.布尔(值.是否形成内存权威发布); 写枚举(出, 值.重试边界);
+        写组(出, 值.新编码映射, [](auto& e, const auto& v){ 写(e, v.first); 写(e, v.second); });
+    }
+    static bool 读(规范解码器& 入, L1中性写入结果& 值) {
+        return 读枚举(入, 值.状态, 10) && 入.U32(值.合同版本) && 读(入, 值.幂等键)
+            && 入.U64(值.事实代次) && 入.布尔(值.是否形成内存权威发布)
+            && 读枚举(入, 值.重试边界, 4)
+            && 读组(入, 值.新编码映射, [](auto& d, auto& v){ return 读(d, v.first) && 读(d, v.second); });
+    }
+
+    static void 写(规范编码器& 出, const L1所有者范围建立请求& 值) { 出.U32(值.合同版本); 写(出, 值.建立幂等身份); 写枚举(出, 值.范围种类); }
+    static bool 读(规范解码器& 入, L1所有者范围建立请求& 值) { return 入.U32(值.合同版本) && 读(入, 值.建立幂等身份) && 读枚举(入, 值.范围种类, 2); }
+    static void 写(规范编码器& 出, const L1所有者范围建立结果& 值) {
+        写枚举(出, 值.状态); 出.U32(值.合同版本); 写(出, 值.建立幂等身份);
+        写可选(出, 值.所有者事实, [](auto& e, const auto& v){ 写(e, v); });
+        出.U64(值.事实代次); 出.布尔(值.是否形成内存权威发布); 写枚举(出, 值.重试边界);
+    }
+    static bool 读(规范解码器& 入, L1所有者范围建立结果& 值) {
+        return 读枚举(入, 值.状态, 11) && 入.U32(值.合同版本) && 读(入, 值.建立幂等身份)
+            && 读可选(入, 值.所有者事实, [](auto& d, auto& v){ return 读(d, v); })
+            && 入.U64(值.事实代次) && 入.布尔(值.是否形成内存权威发布) && 读枚举(入, 值.重试边界, 4);
+    }
+
+    static void 写跨引用(规范编码器& 出, const L1跨所有者原子事实引用值& 值) {
+        if (const auto* 稳定项 = std::get_if<稳定编码>(&值)) {
+            出.U8(1); 写(出, *稳定项);
+        } else if (const auto* 本地项 =
+            std::get_if<L1所有者范围写集本地键>(&值)) {
+            出.U8(2); 出.U32(本地项->值);
+        } else {
+            出.U8(3);
+            const auto& 跨项 = std::get<L1跨所有者原子事实引用>(值);
+            写枚举(出, 跨项.参与者);
+            出.U32(跨项.本地键.值);
+        }
+    }
+    static bool 读跨引用(规范解码器& 入, L1跨所有者原子事实引用值& 值) {
+        std::uint8_t 标签{}; if (!入.U8(标签)) return false;
+        if (标签 == 1) { 稳定编码 项; if (!读(入, 项)) return false; 值 = 项; return true; }
+        if (标签 == 2) { L1所有者范围写集本地键 项; if (!入.U32(项.值)) return false; 值 = 项; return true; }
+        if (标签 == 3) { L1跨所有者原子事实引用 项; if (!读枚举(入, 项.参与者, 2) || !入.U32(项.本地键.值)) return false; 值 = 项; return true; }
+        return false;
+    }
+    static void 写(规范编码器& 出, const L1跨所有者原子写集请求& 值) {
+        const auto& [合同, 代次, 幂等, 节点, 关系, 值组, 槽, 退出] = 值;
+        出.U32(合同); 出.U64(代次); 写(出, 幂等);
+        写组(出, 节点, [](auto& e, const auto& v){ 写(e, v.本地键); 写枚举(e, v.种类); 写可选(e, v.属性类型表示, [](auto& x, auto y){ 写枚举(x, y); }); });
+        写组(出, 关系, [](auto& e, const auto& v){ 写(e, v.本地键); 写跨引用(e, v.源节点); 写跨引用(e, v.目标节点); 写跨引用(e, v.关系类型节点); e.I64(v.角色或顺序); });
+        写组(出, 值组, [](auto& e, const auto& v){ 写(e, v.本地键); 写跨引用(e, v.所属节点); 写跨引用(e, v.属性类型节点); 写所有者材料(e, v.材料); 写跨引用(e, v.来源节点); });
+        写组(出, 槽, [](auto& e, const auto& v){ 写跨引用(e, v.所属节点); 写跨引用(e, v.属性类型节点); 写(e, v.新当前值); });
+        写组(出, 退出, [](auto& e, auto v){ 写(e, v); });
+    }
+    static bool 读(规范解码器& 入, L1跨所有者原子写集请求& 值) {
+        std::uint32_t 合同{}; std::uint64_t 代次{}; L1所有者范围写入幂等身份 幂等;
+        std::vector<L1跨所有者原子节点新建项> 节点; std::vector<L1跨所有者原子关系新建项> 关系;
+        std::vector<L1跨所有者原子值新建项> 值组; std::vector<L1跨所有者原子属性槽变更项> 槽; std::vector<稳定编码> 退出;
+        if (!入.U32(合同) || !入.U64(代次) || !读(入, 幂等)
+            || !读组(入, 节点, [](auto& d, auto& v){ return d.U32(v.本地键.值) && 读枚举(d, v.种类, 3) && 读可选(d, v.属性类型表示, [](auto& x, auto& y){ return 读枚举(x, y, 4); }); })
+            || !读组(入, 关系, [](auto& d, auto& v){ return d.U32(v.本地键.值) && 读跨引用(d, v.源节点) && 读跨引用(d, v.目标节点) && 读跨引用(d, v.关系类型节点) && d.I64(v.角色或顺序); })
+            || !读组(入, 值组, [](auto& d, auto& v){ return d.U32(v.本地键.值) && 读跨引用(d, v.所属节点) && 读跨引用(d, v.属性类型节点) && 读所有者材料(d, v.材料) && 读跨引用(d, v.来源节点); })
+            || !读组(入, 槽, [](auto& d, auto& v){ return 读跨引用(d, v.所属节点) && 读跨引用(d, v.属性类型节点) && d.U32(v.新当前值.值); })
+            || !读组(入, 退出, [](auto& d, auto& v){ return 读(d, v); })) return false;
+        值 = {合同, 代次, 幂等, std::move(节点), std::move(关系), std::move(值组), std::move(槽), std::move(退出)}; return true;
+    }
+    static void 写(规范编码器& 出, const L1跨所有者原子参与者写集& 值) { 写枚举(出, 值.参与者); 写(出, 值.所有者); 写(出, 值.写集); }
+    static bool 读(规范解码器& 入, L1跨所有者原子参与者写集& 值) { return 读枚举(入, 值.参与者, 2) && 读(入, 值.所有者) && 读(入, 值.写集); }
+    static void 写(规范编码器& 出, const L1跨所有者原子事务请求& 值) {
+        出.U32(值.合同版本); 出.U64(值.共同期望事实代次); 写(出, 值.组合写入幂等身份); 写(出, 值.状态写集); 写(出, 值.动态写集);
+    }
+    static bool 读(规范解码器& 入, L1跨所有者原子事务请求& 值) {
+        return 入.U32(值.合同版本) && 入.U64(值.共同期望事实代次) && 读(入, 值.组合写入幂等身份) && 读(入, 值.状态写集) && 读(入, 值.动态写集);
+    }
+    static void 写(规范编码器& 出, const L1跨所有者原子事务结果& 值) {
+        写枚举(出, 值.状态); 出.U32(值.合同版本); 出.U64(值.共同事实代次); 出.布尔(值.是否形成内存权威发布); 写枚举(出, 值.重试边界);
+        写组(出, 值.状态编码映射, [](auto& e, const auto& v){ e.U32(v.first.值); 写(e, v.second); });
+        写组(出, 值.动态编码映射, [](auto& e, const auto& v){ e.U32(v.first.值); 写(e, v.second); });
+    }
+    static bool 读(规范解码器& 入, L1跨所有者原子事务结果& 值) {
+        return 读枚举(入, 值.状态, 11) && 入.U32(值.合同版本) && 入.U64(值.共同事实代次)
+            && 入.布尔(值.是否形成内存权威发布) && 读枚举(入, 值.重试边界, 4)
+            && 读组(入, 值.状态编码映射, [](auto& d, auto& v){ return d.U32(v.first.值) && 读(d, v.second); })
+            && 读组(入, 值.动态编码映射, [](auto& d, auto& v){ return d.U32(v.first.值) && 读(d, v.second); });
+    }
+
+    template<class T, class 写函数>
+    static void 写有序表(规范编码器& 出, const std::unordered_map<std::uint64_t, T>& 表, 写函数 写值) {
+        std::vector<std::uint64_t> 键; 键.reserve(表.size()); for (const auto& [k, _] : 表) 键.push_back(k);
+        std::sort(键.begin(), 键.end()); 出.U64(static_cast<std::uint64_t>(键.size()));
+        for (auto k : 键) { 出.U64(k); 写值(出, 表.at(k)); }
+    }
+    template<class T, class 读函数>
+    static bool 读有序表(规范解码器& 入, std::unordered_map<std::uint64_t, T>& 表, 读函数 读值) {
+        std::uint64_t 数{}; if (!入.U64(数) || 数 > 入.字节.size() - 入.位置) return false;
+        表.clear(); 表.reserve(static_cast<std::size_t>(数)); std::uint64_t 前{};
+        for (std::uint64_t i=0;i!=数;++i) { std::uint64_t k{}; T v{}; if (!入.U64(k) || (i && k<=前) || !读值(入,v) || !表.emplace(k,std::move(v)).second) return false; 前=k; }
+        return true;
+    }
+    static bool 是进程维护幂等键(std::uint64_t 键) noexcept { return (键 & 0xFFFF000000000000ULL) == 0x4E43000000000000ULL; }
+    static bool 是进程维护跨所有者原子事务(
+        std::uint64_t 账键,
+        const 跨所有者原子事务幂等记录& 账) noexcept {
+        const auto 参与者写入幂等身份 = [](const L1跨所有者原子写集请求& 写集) {
+            const auto& [合同版本, 期望事实代次, 写入幂等身份,
+                节点, 关系, 值, 属性槽变更, 退出事实] = 写集;
+            return 写入幂等身份.值;
+        };
+        return 是进程维护幂等键(账键)
+            || 是进程维护幂等键(账.请求.组合写入幂等身份.值)
+            || 是进程维护幂等键(
+                参与者写入幂等身份(账.请求.状态写集.写集))
+            || 是进程维护幂等键(
+                参与者写入幂等身份(账.请求.动态写集.写集));
+    }
+
+    static std::vector<std::uint8_t> 编码权威状态(const 状态& 值) {
+        规范编码器 出; 出.U64(0x3150414E534C3148ULL); 出.U32(1); 出.U64(值.事实代次); 出.U64(值.下个编码);
+        写有序表(出, 值.当前所有者, [](auto& e,const auto& v){写(e,v);}); 写有序表(出, 值.历史所有者, [](auto& e,const auto& v){写(e,v);});
+        写有序表(出, 值.当前节点, [](auto& e,const auto& v){写(e,v);}); 写有序表(出, 值.当前关系, [](auto& e,const auto& v){写(e,v);});
+        写有序表(出, 值.当前值, [](auto& e,const auto& v){写(e,v);}); 写有序表(出, 值.历史, [](auto& e,const auto& v){写(e,v);});
+        std::vector<std::uint64_t> 占用(值.永久占用.begin(), 值.永久占用.end()); std::sort(占用.begin(),占用.end());
+        写组(出, 占用, [](auto& e,auto v){e.U64(v);});
+        写有序表(出, 值.物理清理墓碑, [](auto& e,const auto& v){写(e,v);});
+        写有序表(出, 值.物理清理幂等账, [](auto& e,const auto& v){
+            e.U32(v.首次规范请求.合同版本); e.U64(v.首次规范请求.期望事实代次); e.U64(v.首次规范请求.幂等身份.值);
+            写组(e,v.首次规范请求.待清理事实身份组,[](auto& x,const auto& y){写(x,y);}); 写枚举(e,v.首次状态); e.U64(v.首次物理清理事实代次);
+            写组(e,v.首次稳定编码映射,[](auto& x,const auto& y){写(x,y.first);写(x,y.second);}); e.布尔(v.已物理清理);
+        });
+        std::vector<std::uint64_t> 中性键; for(const auto& [k,_]:值.中性幂等账) if(!是进程维护幂等键(k)) 中性键.push_back(k); std::sort(中性键.begin(),中性键.end());
+        出.U64(static_cast<std::uint64_t>(中性键.size())); for(auto k:中性键){出.U64(k);const auto& v=值.中性幂等账.at(k);写(出,v.首次规范化写集);出.U64(v.首次发布事实代次);写组(出,v.首次新编码映射,[](auto& e,const auto& x){写(e,x.first);写(e,x.second);});写(出,v.首次结果);}
+        写有序表(出, 值.所有者建立幂等账, [](auto& e,const auto& v){写(e,v.首次请求);写(e,v.首次结果);});
+        std::vector<std::uint64_t> owner; for(const auto& [k,_]:值.所有者范围幂等账) owner.push_back(k); std::sort(owner.begin(),owner.end()); 出.U64(owner.size());
+        for(auto ok:owner){出.U64(ok);const auto& inner=值.所有者范围幂等账.at(ok);std::vector<std::uint64_t> keys;for(const auto&[k,_]:inner)if(!是进程维护幂等键(k))keys.push_back(k);std::sort(keys.begin(),keys.end());出.U64(keys.size());for(auto k:keys){出.U64(k);const auto&v=inner.at(k);写(出,v.首次规范化写集);出.U64(v.首次发布事实代次);写组(出,v.首次新编码映射,[](auto&e,const auto&x){写(e,x.first);写(e,x.second);});写(出,v.首次结果);}}
+        std::vector<std::uint64_t> 跨所有者事务键;
+        for (const auto& [键, 账] : 值.跨所有者原子事务幂等账)
+            if (!是进程维护跨所有者原子事务(键, 账))
+                跨所有者事务键.push_back(键);
+        std::sort(跨所有者事务键.begin(), 跨所有者事务键.end());
+        出.U64(static_cast<std::uint64_t>(跨所有者事务键.size()));
+        for (const auto 键 : 跨所有者事务键) {
+            出.U64(键);
+            const auto& 账 = 值.跨所有者原子事务幂等账.at(键);
+            写(出, 账.请求);
+            写(出, 账.结果);
+        }
+        写可选(出, 值.旧共享所有者定位, [](auto& e,auto v){写(e,v);}); return std::move(出.字节);
+    }
+
+    static bool 解码权威状态(const std::vector<std::uint8_t>& 字节, 状态& 值) {
+        规范解码器 入{字节}; std::uint64_t magic{}; std::uint32_t 版本{};
+        if(!入.U64(magic)||magic!=0x3150414E534C3148ULL||!入.U32(版本)||版本!=1||!入.U64(值.事实代次)||!入.U64(值.下个编码))return false;
+        if(!读有序表(入,值.当前所有者,[](auto&d,auto&v){return 读(d,v);})||!读有序表(入,值.历史所有者,[](auto&d,auto&v){return 读(d,v);})
+            ||!读有序表(入,值.当前节点,[](auto&d,auto&v){return 读(d,v);})||!读有序表(入,值.当前关系,[](auto&d,auto&v){return 读(d,v);})
+            ||!读有序表(入,值.当前值,[](auto&d,auto&v){return 读(d,v);})||!读有序表(入,值.历史,[](auto&d,auto&v){return 读(d,v);}))return false;
+        std::vector<std::uint64_t> 占用;if(!读组(入,占用,[](auto&d,auto&v){return d.U64(v);}))return false;std::uint64_t 前{};for(auto k:占用){if(!k||k<=前||!值.永久占用.insert(k).second)return false;前=k;}
+        if(!读有序表(入,值.物理清理墓碑,[](auto&d,auto&v){return 读(d,v);}))return false;
+        if(!读有序表(入,值.物理清理幂等账,[](auto&d,auto&v){
+            if(!d.U32(v.首次规范请求.合同版本)||!d.U64(v.首次规范请求.期望事实代次)||!d.U64(v.首次规范请求.幂等身份.值)
+                ||!读组(d,v.首次规范请求.待清理事实身份组,[](auto&x,auto&y){return 读(x,y);})||!读枚举(d,v.首次状态,10)||!d.U64(v.首次物理清理事实代次)
+                ||!读组(d,v.首次稳定编码映射,[](auto&x,auto&y){return 读(x,y.first)&&读(x,y.second);})||!d.布尔(v.已物理清理))return false;return true;}))return false;
+        std::uint64_t 数{};if(!入.U64(数)||数>入.字节.size()-入.位置)return false;for(std::uint64_t i=0,prev=0;i!=数;++i){std::uint64_t k{};中性幂等记录 v;if(!入.U64(k)||(i&&k<=prev)||是进程维护幂等键(k)||!读(入,v.首次规范化写集)||!入.U64(v.首次发布事实代次)||!读组(入,v.首次新编码映射,[](auto&d,auto&x){return 读(d,x.first)&&读(d,x.second);})||!读(入,v.首次结果)||!值.中性幂等账.emplace(k,std::move(v)).second)return false;prev=k;}
+        if(!读有序表(入,值.所有者建立幂等账,[](auto&d,auto&v){return 读(d,v.首次请求)&&读(d,v.首次结果);}))return false;
+        if(!入.U64(数)||数>入.字节.size()-入.位置)return false;for(std::uint64_t i=0,prev=0;i!=数;++i){std::uint64_t ok{},inner{};if(!入.U64(ok)||(i&&ok<=prev)||!入.U64(inner)||inner>入.字节.size()-入.位置)return false;auto&表=值.所有者范围幂等账[ok];for(std::uint64_t j=0,p=0;j!=inner;++j){std::uint64_t k{};所有者范围幂等记录 v;if(!入.U64(k)||(j&&k<=p)||是进程维护幂等键(k)||!读(入,v.首次规范化写集)||!入.U64(v.首次发布事实代次)||!读组(入,v.首次新编码映射,[](auto&d,auto&x){return 读(d,x.first)&&读(d,x.second);})||!读(入,v.首次结果)||!表.emplace(k,std::move(v)).second)return false;p=k;}prev=ok;}
+        if (!入.U64(数) || 数 > 入.字节.size() - 入.位置) return false;
+        std::uint64_t 前一事务键 = 0;
+        for (std::uint64_t i = 0; i != 数; ++i) {
+            std::uint64_t 键{};
+            跨所有者原子事务幂等记录 账;
+            if (!入.U64(键) || (i != 0 && 键 <= 前一事务键)
+                || !读(入, 账.请求) || !读(入, 账.结果)
+                || 是进程维护跨所有者原子事务(键, 账)
+                || !值.跨所有者原子事务幂等账.emplace(
+                    键, std::move(账)).second)
+                return false;
+            前一事务键 = 键;
+        }
+        if (!读可选(入,值.旧共享所有者定位,
+                [](auto&d,auto&v){return 读(d,v);}) || !入.完结())
+            return false;
+        return 重建恢复索引(值);
+    }
+
+    static bool 重建恢复索引(状态& 值) {
+        值.当前源关系索引.clear(); 值.当前目标关系索引.clear(); 值.当前关系类型索引.clear();
+        值.历史源关系候选索引.clear(); 值.历史目标关系候选索引.clear(); 值.历史属性槽值候选索引.clear(); 值.当前节点引用索引.clear();
+        for(const auto&[_,r]:值.当前关系)if(!插入当前源关系索引(值,r)||!插入当前目标关系索引(值,r)||!插入当前关系类型索引(值,r)||!插入历史源关系候选索引(值,r)||!插入历史目标关系候选索引(值,r)||!插入当前节点引用索引(值,r))return false;
+        for(const auto&[_,v]:值.当前值)if(!插入历史属性槽值候选索引(值,v)||!插入当前节点引用索引(值,v))return false;
+        for(const auto&[_,h]:值.历史)if(!std::visit([&](const auto&f){using T=std::decay_t<decltype(f)>;if constexpr(std::is_same_v<T,关系事实>)return 插入历史源关系候选索引(值,f)&&插入历史目标关系候选索引(值,f);else if constexpr(std::is_same_v<T,值事实>)return 插入历史属性槽值候选索引(值,f);else return true;},h.事实))return false;
+        return true;
+    }
+
+    static bool SHA256(const std::vector<std::uint8_t>& 数据, std::array<std::uint8_t,32>& 摘要) noexcept {
+        BCRYPT_ALG_HANDLE 算法{}; BCRYPT_HASH_HANDLE 哈希{}; std::vector<std::uint8_t> 对象; DWORD 长度{},已取{}; bool 成功=false;
+        if (摘要.size() > (std::numeric_limits<ULONG>::max)()) return false;
+        const auto 摘要长度 = static_cast<ULONG>(摘要.size());
+        if(BCryptOpenAlgorithmProvider(&算法,BCRYPT_SHA256_ALGORITHM,nullptr,0)<0)return false;
+        if(BCryptGetProperty(算法,BCRYPT_OBJECT_LENGTH,reinterpret_cast<PUCHAR>(&长度),sizeof(长度),&已取,0)>=0){try{对象.resize(长度);}catch(...){BCryptCloseAlgorithmProvider(算法,0);return false;}
+            if(BCryptCreateHash(算法,&哈希,对象.data(),长度,nullptr,0,0)>=0){const auto* p=数据.data();std::size_t n=数据.size();NTSTATUS s=0;while(n&&s>=0){const auto 块=static_cast<ULONG>((std::min)(n,static_cast<std::size_t>((std::numeric_limits<ULONG>::max)())));s=BCryptHashData(哈希,const_cast<PUCHAR>(p),块,0);p+=块;n-=块;}成功=s>=0&&BCryptFinishHash(哈希,摘要.data(),摘要长度,0)>=0;}}
+        if(哈希)BCryptDestroyHash(哈希);BCryptCloseAlgorithmProvider(算法,0);return 成功;
+    }
+    static bool 读文件(const std::filesystem::path& 路径,std::vector<std::uint8_t>& 数据) noexcept {
+        HANDLE h=CreateFileW(路径.c_str(),GENERIC_READ,FILE_SHARE_READ,nullptr,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,nullptr);if(h==INVALID_HANDLE_VALUE)return false;LARGE_INTEGER s{};bool ok=GetFileSizeEx(h,&s)&&s.QuadPart>=0&&s.QuadPart<=static_cast<LONGLONG>(std::numeric_limits<std::uint32_t>::max());if(ok)try{数据.resize(static_cast<std::size_t>(s.QuadPart));}catch(...){ok=false;}DWORD got{};std::size_t off=0;while(ok&&off<数据.size()){DWORD want=static_cast<DWORD>((std::min)(数据.size()-off,static_cast<std::size_t>(1u<<30)));if(!ReadFile(h,数据.data()+off,want,&got,nullptr)||got!=want)ok=false;off+=got;}CloseHandle(h);return ok;
+    }
+    static bool 写文件并刷新(const std::filesystem::path& 路径,const std::vector<std::uint8_t>& 数据) noexcept {
+        HANDLE h=CreateFileW(路径.c_str(),GENERIC_WRITE,0,nullptr,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,nullptr);if(h==INVALID_HANDLE_VALUE)return false;bool ok=true;std::size_t off=0;while(ok&&off<数据.size()){DWORD done{},want=static_cast<DWORD>((std::min)(数据.size()-off,static_cast<std::size_t>(1u<<30)));if(!WriteFile(h,数据.data()+off,want,&done,nullptr)||done!=want)ok=false;off+=done;}if(ok)ok=FlushFileBuffers(h)!=0;CloseHandle(h);return ok;
+    }
+    static std::filesystem::path 槽路径(const 持久会话& 会话,std::uint8_t 槽){return 会话.根/(槽==1?L"snapshot-a.bin":L"snapshot-b.bin");}
+    static std::vector<std::uint8_t> 编码清单(std::uint64_t 序号,std::uint64_t 代次,std::uint8_t 槽,std::uint64_t 长度,const std::array<std::uint8_t,32>& 摘要){规范编码器 e;e.U64(0x31464E414D314C48ULL);e.U32(1);e.U64(序号);e.U64(代次);e.U8(槽);e.U64(长度);for(auto b:摘要)e.U8(b);return std::move(e.字节);}
+    static bool 解码清单(const std::vector<std::uint8_t>& 数据,std::uint64_t&序号,std::uint64_t&代次,std::uint8_t&槽,std::uint64_t&长度,std::array<std::uint8_t,32>&摘要){规范解码器 d{数据};std::uint64_t m{};std::uint32_t v{};if(!d.U64(m)||m!=0x31464E414D314C48ULL||!d.U32(v)||v!=1||!d.U64(序号)||序号==0||!d.U64(代次)||代次==0||!d.U8(槽)||(槽!=1&&槽!=2)||!d.U64(长度)||长度==0)return false;for(auto&b:摘要)if(!d.U8(b))return false;return d.完结();}
+
+    持久准备状态 准备持久发布(const 状态& 候选) noexcept {
+        if(!持久会话_)return 持久准备状态::成功;
+        if(持久会话_->已毒化){状态_.隔离=true;return 持久准备状态::持久证据未知;}
+        try{if(!状态完整(候选))return 持久准备状态::内部不一致;auto 载荷=编码权威状态(候选);std::array<std::uint8_t,32>摘要{};if(!SHA256(载荷,摘要))return 持久准备状态::资源失败;
+            const std::uint8_t 新槽=持久会话_->活动槽==1?2:1;const auto 槽临时=持久会话_->根/L"snapshot.tmp";if(!写文件并刷新(槽临时,载荷))return 持久准备状态::资源失败;
+            if(!MoveFileExW(槽临时.c_str(),槽路径(*持久会话_,新槽).c_str(),MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH)){持久会话_->已毒化=true;状态_.隔离=true;return 持久准备状态::持久证据未知;}
+            const auto 新序号=持久会话_->快照序号+1;if(!新序号){持久会话_->已毒化=true;return 持久准备状态::内部不一致;}auto 清单=编码清单(新序号,候选.事实代次,新槽,载荷.size(),摘要);const auto 清单临时=持久会话_->根/L"manifest.tmp";
+            if(!写文件并刷新(清单临时,清单))return 持久准备状态::资源失败;if(!MoveFileExW(清单临时.c_str(),(持久会话_->根/L"manifest.bin").c_str(),MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH)){持久会话_->已毒化=true;状态_.隔离=true;return 持久准备状态::持久证据未知;}
+            持久会话_->快照序号=新序号;持久会话_->活动槽=新槽;return 持久准备状态::成功;
+        }catch(const std::bad_alloc&){return 持久准备状态::资源失败;}catch(const std::filesystem::filesystem_error&){return 持久准备状态::资源失败;}catch(...){return 持久准备状态::内部不一致;}
+    }
+
+    L1事实基座核心持久恢复结果 初始化持久恢复实现(const std::filesystem::path& 根) noexcept {
+        const auto 失败=[](auto s){return L1事实基座核心持久恢复结果{s,std::nullopt};};
+        if(根.empty()||!根.is_absolute()||根!=根.lexically_normal())return 失败(L1事实基座核心持久恢复状态::入口拒绝);
+        try{std::unique_lock<std::shared_mutex> 锁(锁_);if(持久会话_||状态_.事实代次!=0||状态_.下个编码!=1||!状态_.当前所有者.empty()||!状态_.历史所有者.empty()||!状态_.当前节点.empty()||!状态_.当前关系.empty()||!状态_.当前值.empty()||!状态_.历史.empty())return 失败(L1事实基座核心持久恢复状态::内部不一致);
+            std::error_code ec;std::filesystem::create_directories(根,ec);if(ec)return 失败(L1事实基座核心持久恢复状态::资源失败);auto 会话=std::make_unique<持久会话>();会话->根=根;会话->锁句柄=CreateFileW((根/L"session.lock").c_str(),GENERIC_READ|GENERIC_WRITE,0,nullptr,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,nullptr);if(会话->锁句柄==INVALID_HANDLE_VALUE)return 失败(GetLastError()==ERROR_SHARING_VIOLATION?L1事实基座核心持久恢复状态::存储占用:L1事实基座核心持久恢复状态::资源失败);
+            const auto 清单路径=根/L"manifest.bin";const auto 槽A=根/L"snapshot-a.bin";const auto 槽B=根/L"snapshot-b.bin";const bool 有清单=std::filesystem::exists(清单路径,ec);if(ec)return 失败(L1事实基座核心持久恢复状态::资源失败);const bool 有A=std::filesystem::exists(槽A,ec);if(ec)return 失败(L1事实基座核心持久恢复状态::资源失败);const bool 有B=std::filesystem::exists(槽B,ec);if(ec)return 失败(L1事实基座核心持久恢复状态::资源失败);
+            if(!有清单){if(有A||有B)return 失败(L1事实基座核心持久恢复状态::材料不完整);持久会话_=std::move(会话);return 失败(L1事实基座核心持久恢复状态::已建立空仓);}
+            std::vector<std::uint8_t> 清单; if(!读文件(清单路径,清单))return 失败(L1事实基座核心持久恢复状态::资源失败);std::uint64_t 序号{},代次{},长度{};std::uint8_t 活动槽{};std::array<std::uint8_t,32>摘要{};if(!解码清单(清单,序号,代次,活动槽,长度,摘要))return 失败(L1事实基座核心持久恢复状态::格式不支持);
+            const auto 活动路径=活动槽==1?槽A:槽B;if(!std::filesystem::exists(活动路径,ec)||ec)return 失败(ec?L1事实基座核心持久恢复状态::资源失败:L1事实基座核心持久恢复状态::材料不完整);std::vector<std::uint8_t>载荷;if(!读文件(活动路径,载荷))return 失败(L1事实基座核心持久恢复状态::资源失败);if(载荷.size()!=长度)return 失败(L1事实基座核心持久恢复状态::摘要不一致);std::array<std::uint8_t,32>实际{};if(!SHA256(载荷,实际))return 失败(L1事实基座核心持久恢复状态::资源失败);if(实际!=摘要)return 失败(L1事实基座核心持久恢复状态::摘要不一致);
+            状态 候选;if(!解码权威状态(载荷,候选))return 失败(L1事实基座核心持久恢复状态::编码或所有者冲突);if(候选.事实代次!=代次)return 失败(L1事实基座核心持久恢复状态::事实代次漂移);if(!状态完整(候选))return 失败(L1事实基座核心持久恢复状态::内部不一致);会话->快照序号=序号;会话->活动槽=活动槽;std::swap(状态_,候选);持久会话_=std::move(会话);return {L1事实基座核心持久恢复状态::已恢复,L1事实基座核心持久恢复见证{1,序号,代次,摘要}};
+        }catch(const std::bad_alloc&){return 失败(L1事实基座核心持久恢复状态::资源失败);}catch(const std::filesystem::filesystem_error&){return 失败(L1事实基座核心持久恢复状态::资源失败);}catch(...){return 失败(L1事实基座核心持久恢复状态::内部不一致);}
+    }
 
     // 诊断责任：向上送出；分配异常由首次写入材料读取入口统一映射。
     static L1所有者范围事实引用 转换所有者范围写集引用(
@@ -4521,6 +5054,7 @@ private:
     }
     mutable std::shared_mutex 锁_;
     状态 状态_;
+    std::unique_ptr<持久会话> 持久会话_;
 };
 
 } // namespace 海中鱼巣
