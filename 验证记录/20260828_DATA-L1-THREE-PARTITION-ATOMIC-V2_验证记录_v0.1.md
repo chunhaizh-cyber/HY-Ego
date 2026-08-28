@@ -90,6 +90,26 @@ c8a65b4df099362c21992c14b528c9bbb4433921  仓库.L1事实基座.ixx
 
 本小节写入记录后只改变本验证记录 blob；最终提交前再次核对三个生产 blob 与上列复验对象完全相同。
 
+### 2.6 发布提交 v143 根工程复验
+
+发布 `ff2366d97b662cfc6c8cf16917c06d5da182bf4b` 后，从该提交树 `d73a3122094729cffb0d01d435c79ab8842d14c5` 新建隔离源码根：
+
+```text
+D:\TEMP\海中鱼巣\DATA-L1-THREE-PARTITION-ATOMIC-V2\20260828-published-v143
+```
+
+使用 VS 2022 Professional 的 MSBuild，并按计划显式覆盖正式工具集：
+
+```powershell
+MSBuild.exe .\海中鱼巣.vcxproj /m:1 /t:Rebuild `
+    /p:Configuration=Debug /p:Platform=x64 /p:PlatformToolset=v143
+
+MSBuild.exe .\海中鱼巣.vcxproj /m:1 /t:Rebuild `
+    /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143
+```
+
+结果：Debug、Release 均退出码 `0`，根工程完整编译并链接成功。由此补齐计划冻结的 v143 双配置根工程门禁。VS 2026 v145 在既有模块的 C1001 继续作为独立工具链未证明边界，不覆盖本节正式 v143 结果。
+
 ## 3. NOT_RUN
 
 - V11 旧内部格式 1 恢复：没有合法已发布内部格式 1 fixture，未伪造。
@@ -98,4 +118,4 @@ c8a65b4df099362c21992c14b528c9bbb4433921  仓库.L1事实基座.ixx
 
 ## 4. 结论
 
-三分区 L1 provider 的最终候选已通过两配置模块编译和 V01–V10 公开入口运行矩阵；旧 v1 回归与持久 round-trip 实际发生。全项目 Debug/Release 仍被起点 HEAD 的编译/链接问题阻断，不能声明根项目构建 PASS，也不能据此声明任何上层业务闭环完成。
+三分区 L1 provider 已通过 Debug/Release 模块编译、V01–V10 公开入口运行矩阵以及发布提交的 v143 根工程双配置 Rebuild；旧 v1 回归与持久 round-trip 实际发生。v145 C1001、V11 和故障注入边界保持分账，不能据此声明 DATA-L2 当前值变化入口或任何上层业务闭环完成。
