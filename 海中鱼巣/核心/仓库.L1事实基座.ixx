@@ -24,6 +24,7 @@ module;
 #include <variant>
 #include <vector>
 #include <type_traits>
+#include <tuple>
 
 #pragma comment(lib, "bcrypt.lib")
 
@@ -1031,6 +1032,379 @@ public:
             return 失败(L1跨所有者原子事务状态::资源失败, 状态_.事实代次);
         } catch (...) {
             return 失败(L1跨所有者原子事务状态::内部不一致, 状态_.事实代次);
+        }
+    }
+
+    L1三分区原子事务结果_v2 提交三分区原子事务_v2(
+        const L1三分区原子事务请求_v2& 请求) noexcept {
+        bool 已进入交换边界 = false;
+        std::uint64_t 候选共同代次 = 0;
+        const auto 失败 = [&](L1三分区原子事务状态_v2 失败状态,
+            std::uint64_t 代次 = 0,
+            L1所有者范围重试边界 重试边界 =
+                L1所有者范围重试边界::修正请求后可重试) {
+            return L1三分区原子事务结果_v2{失败状态,
+                L1三分区原子事务合同版本_v2, 请求.组合写入幂等身份,
+                代次, false, 重试边界, {}};
+        };
+        try {
+            if (请求.合同版本 != L1三分区原子事务合同版本_v2
+                || 请求.共同期望事实代次 == 0
+                || !有效(请求.组合写入幂等身份)
+                || 请求.参与者写集组.size() != 3)
+                return 失败(L1三分区原子事务状态_v2::入口拒绝);
+
+            auto 规范请求 = 请求;
+            const auto 引用排序键 = [](const L1三分区原子事实引用值_v2& 引用) {
+                std::array<std::uint64_t, 3> 键{};
+                if (const auto* 稳定项 = std::get_if<稳定编码>(&引用))
+                    键 = {1, 稳定项->值, 0};
+                else if (const auto* 本地项 =
+                    std::get_if<L1所有者范围写集本地键>(&引用))
+                    键 = {2, 本地项->值, 0};
+                else {
+                    const auto& 跨项 = std::get<L1三分区原子事实引用_v2>(引用);
+                    键 = {3, 跨项.参与者.值, 跨项.本地键.值};
+                }
+                return 键;
+            };
+            std::sort(规范请求.参与者写集组.begin(),
+                规范请求.参与者写集组.end(), [](const auto& 左, const auto& 右) {
+                    return 左.参与者.值 < 右.参与者.值;
+                });
+            for (auto& 参与者 : 规范请求.参与者写集组) {
+                const auto 按本地键 = [](const auto& 左, const auto& 右) {
+                    return 左.本地键.值 < 右.本地键.值;
+                };
+                std::sort(参与者.写集.节点.begin(), 参与者.写集.节点.end(), 按本地键);
+                std::sort(参与者.写集.关系.begin(), 参与者.写集.关系.end(), 按本地键);
+                std::sort(参与者.写集.值.begin(), 参与者.写集.值.end(), 按本地键);
+                std::sort(参与者.写集.退出事实.begin(),
+                    参与者.写集.退出事实.end());
+                std::sort(参与者.写集.属性槽变更.begin(),
+                    参与者.写集.属性槽变更.end(), [&](const auto& 左, const auto& 右) {
+                        const auto 左所属 = 引用排序键(左.所属节点);
+                        const auto 右所属 = 引用排序键(右.所属节点);
+                        if (左所属 != 右所属) return 左所属 < 右所属;
+                        const auto 左类型 = 引用排序键(左.属性类型节点);
+                        const auto 右类型 = 引用排序键(右.属性类型节点);
+                        if (左类型 != 右类型) return 左类型 < 右类型;
+                        return 左.新当前值.值 < 右.新当前值.值;
+                    });
+            }
+
+            std::array<std::unordered_set<std::uint32_t>, 3> 节点键组;
+            std::array<std::unordered_set<std::uint32_t>, 3> 值键组;
+            std::unordered_set<std::uint64_t> 所有者组;
+            std::unordered_set<std::uint64_t> 内部幂等组;
+            for (std::size_t 序号 = 0; 序号 != 3; ++序号) {
+                const auto& 参与者 = 规范请求.参与者写集组[序号];
+                const auto& 写集 = 参与者.写集;
+                if (参与者.参与者.值 != 序号 + 1
+                    || !有效(参与者.所有者)
+                    || !所有者组.insert(参与者.所有者.编码.值).second
+                    || 写集.合同版本 != L1所有者范围CRUD合同版本
+                    || 写集.期望事实代次 != 请求.共同期望事实代次
+                    || !有效(写集.写入幂等身份)
+                    || !内部幂等组.insert(写集.写入幂等身份.值).second
+                    || (写集.节点.empty() && 写集.关系.empty()
+                        && 写集.值.empty() && 写集.属性槽变更.empty()
+                        && 写集.退出事实.empty()))
+                    return 失败(L1三分区原子事务状态_v2::入口拒绝);
+
+                std::unordered_set<std::uint32_t> 全部本地键;
+                for (const auto& 项 : 写集.节点) {
+                    if (项.本地键.值 == 0
+                        || !全部本地键.insert(项.本地键.值).second
+                        || !节点键组[序号].insert(项.本地键.值).second)
+                        return 失败(L1三分区原子事务状态_v2::入口拒绝);
+                }
+                for (const auto& 项 : 写集.关系)
+                    if (项.本地键.值 == 0
+                        || !全部本地键.insert(项.本地键.值).second)
+                        return 失败(L1三分区原子事务状态_v2::入口拒绝);
+                for (const auto& 项 : 写集.值) {
+                    if (项.本地键.值 == 0
+                        || !全部本地键.insert(项.本地键.值).second
+                        || !值键组[序号].insert(项.本地键.值).second)
+                        return 失败(L1三分区原子事务状态_v2::入口拒绝);
+                }
+                for (std::size_t i = 0; i < 写集.退出事实.size(); ++i)
+                    if (!有效(写集.退出事实[i])
+                        || (i != 0 && 写集.退出事实[i - 1] == 写集.退出事实[i]))
+                        return 失败(L1三分区原子事务状态_v2::入口拒绝);
+                for (std::size_t i = 1; i < 写集.属性槽变更.size(); ++i) {
+                    const auto& 前 = 写集.属性槽变更[i - 1];
+                    const auto& 后 = 写集.属性槽变更[i];
+                    if (引用排序键(前.所属节点) == 引用排序键(后.所属节点)
+                        && 引用排序键(前.属性类型节点)
+                            == 引用排序键(后.属性类型节点))
+                        return 失败(L1三分区原子事务状态_v2::入口拒绝);
+                }
+            }
+
+            std::unique_lock<std::shared_mutex> 锁(锁_);
+            const auto 引用有效 = [&](const L1三分区原子事实引用值_v2& 引用,
+                std::size_t 当前序号) {
+                if (const auto* 稳定项 = std::get_if<稳定编码>(&引用))
+                    return 有效(*稳定项);
+                if (const auto* 本地项 =
+                    std::get_if<L1所有者范围写集本地键>(&引用))
+                    return 本地项->值 != 0
+                        && 节点键组[当前序号].contains(本地项->值);
+                const auto& 跨项 = std::get<L1三分区原子事实引用_v2>(引用);
+                return 跨项.参与者.值 >= 1
+                    && 跨项.参与者.值 <= 3
+                    && 跨项.参与者.值 < 当前序号 + 1
+                    && 跨项.本地键.值 != 0
+                    && 节点键组[跨项.参与者.值 - 1].contains(跨项.本地键.值);
+            };
+            for (std::size_t 序号 = 0; 序号 != 3; ++序号) {
+                const auto& 写集 = 规范请求.参与者写集组[序号].写集;
+                for (const auto& 项 : 写集.关系)
+                    if (!引用有效(项.源节点, 序号)
+                        || !引用有效(项.目标节点, 序号)
+                        || !引用有效(项.关系类型节点, 序号))
+                        return 失败(L1三分区原子事务状态_v2::引用冲突,
+                            状态_.事实代次);
+                for (const auto& 项 : 写集.值)
+                    if (!引用有效(项.所属节点, 序号)
+                        || !引用有效(项.属性类型节点, 序号)
+                        || !引用有效(项.来源节点, 序号))
+                        return 失败(L1三分区原子事务状态_v2::引用冲突,
+                            状态_.事实代次);
+                for (const auto& 项 : 写集.属性槽变更)
+                    if (!引用有效(项.所属节点, 序号)
+                        || !引用有效(项.属性类型节点, 序号)
+                        || !值键组[序号].contains(项.新当前值.值))
+                        return 失败(L1三分区原子事务状态_v2::引用冲突,
+                            状态_.事实代次);
+            }
+
+            if (状态_.隔离 || !状态完整(状态_))
+                return 失败(L1三分区原子事务状态_v2::内部不一致,
+                    状态_.事实代次, L1所有者范围重试边界::不适用);
+            if (const auto 既有 = 状态_.三分区原子事务幂等账_v2.find(
+                    请求.组合写入幂等身份.值);
+                既有 != 状态_.三分区原子事务幂等账_v2.end()) {
+                if (!(既有->second.请求 == 规范请求))
+                    return 失败(L1三分区原子事务状态_v2::幂等冲突,
+                        状态_.事实代次, L1所有者范围重试边界::不适用);
+                auto 结果 = 既有->second.结果;
+                结果.状态 = L1三分区原子事务状态_v2::精确重复;
+                结果.是否已确认形成内存权威发布 = false;
+                结果.重试边界 =
+                    L1所有者范围重试边界::原幂等身份读回收敛;
+                return 结果;
+            }
+            if (规范请求.共同期望事实代次 != 状态_.事实代次)
+                return 失败(L1三分区原子事务状态_v2::事实代次漂移,
+                    状态_.事实代次);
+
+            const auto 转换写集 = [&](const L1三分区原子写集请求_v2& 原,
+                const std::array<std::vector<std::pair<
+                    L1所有者范围写集本地键, 稳定编码>>, 3>& 映射组,
+                std::size_t 当前序号) -> std::optional<L1所有者范围写集请求> {
+                const auto 查映射 = [&](std::size_t 参与者序号,
+                    L1所有者范围写集本地键 本地键) -> std::optional<稳定编码> {
+                    const auto& 映射 = 映射组[参与者序号];
+                    const auto 位置 = std::lower_bound(映射.begin(), 映射.end(),
+                        本地键, [](const auto& 项, const auto 键值) {
+                            return 项.first < 键值;
+                        });
+                    return 位置 != 映射.end() && 位置->first == 本地键
+                        ? std::optional<稳定编码>{位置->second} : std::nullopt;
+                };
+                const auto 转换引用 = [&](const L1三分区原子事实引用值_v2& 引用)
+                    -> std::optional<L1所有者范围事实引用> {
+                    if (const auto* 稳定项 = std::get_if<稳定编码>(&引用))
+                        return *稳定项;
+                    if (const auto* 本地项 =
+                        std::get_if<L1所有者范围写集本地键>(&引用))
+                        return *本地项;
+                    const auto& 跨项 = std::get<L1三分区原子事实引用_v2>(引用);
+                    if (跨项.参与者.值 == 0
+                        || 跨项.参与者.值 > 当前序号)
+                        return std::nullopt;
+                    const auto 编码 = 查映射(跨项.参与者.值 - 1, 跨项.本地键);
+                    return 编码 ? std::optional<L1所有者范围事实引用>{*编码}
+                        : std::nullopt;
+                };
+                L1所有者范围写集请求 结果;
+                结果.合同版本 = 原.合同版本;
+                结果.期望事实代次 = 原.期望事实代次;
+                结果.写入幂等身份 = 原.写入幂等身份;
+                结果.退出事实 = 原.退出事实;
+                for (const auto& 项 : 原.节点)
+                    结果.节点.push_back({项.本地键, 项.种类, 项.属性类型表示});
+                for (const auto& 项 : 原.关系) {
+                    const auto 源 = 转换引用(项.源节点);
+                    const auto 目标 = 转换引用(项.目标节点);
+                    const auto 类型 = 转换引用(项.关系类型节点);
+                    if (!源 || !目标 || !类型) return std::nullopt;
+                    结果.关系.push_back({项.本地键, *源, *目标, *类型,
+                        项.角色或顺序});
+                }
+                for (const auto& 项 : 原.值) {
+                    const auto 所属 = 转换引用(项.所属节点);
+                    const auto 类型 = 转换引用(项.属性类型节点);
+                    const auto 来源 = 转换引用(项.来源节点);
+                    if (!所属 || !类型 || !来源) return std::nullopt;
+                    结果.值.push_back({项.本地键, *所属, *类型, 项.材料, *来源});
+                }
+                for (const auto& 项 : 原.属性槽变更) {
+                    const auto 所属 = 转换引用(项.所属节点);
+                    const auto 类型 = 转换引用(项.属性类型节点);
+                    if (!所属 || !类型) return std::nullopt;
+                    结果.属性槽变更.push_back({*所属, *类型, 项.新当前值});
+                }
+                return 结果;
+            };
+            const auto 映射写入失败 = [](L1所有者范围写入状态 写入状态) {
+                switch (写入状态) {
+                case L1所有者范围写入状态::入口拒绝:
+                    return L1三分区原子事务状态_v2::入口拒绝;
+                case L1所有者范围写入状态::事实代次漂移:
+                    return L1三分区原子事务状态_v2::事实代次漂移;
+                case L1所有者范围写入状态::精确重复:
+                case L1所有者范围写入状态::幂等冲突:
+                    return L1三分区原子事务状态_v2::幂等冲突;
+                case L1所有者范围写入状态::引用冲突:
+                    return L1三分区原子事务状态_v2::引用冲突;
+                case L1所有者范围写入状态::资源失败:
+                    return L1三分区原子事务状态_v2::资源失败;
+                default:
+                    return L1三分区原子事务状态_v2::内部不一致;
+                }
+            };
+            const auto 映射写入重试边界 = [](L1所有者范围写入状态 写入状态) {
+                switch (写入状态) {
+                case L1所有者范围写入状态::精确重复:
+                case L1所有者范围写入状态::幂等冲突:
+                case L1所有者范围写入状态::内部不一致:
+                    return L1所有者范围重试边界::不适用;
+                case L1所有者范围写入状态::资源失败:
+                    return L1所有者范围重试边界::原请求可重试;
+                default:
+                    return L1所有者范围重试边界::修正请求后可重试;
+                }
+            };
+
+            L1事实基座仓库 候选仓库;
+            候选仓库.状态_ = 状态_;
+            std::array<std::vector<std::pair<
+                L1所有者范围写集本地键, 稳定编码>>, 3> 映射组;
+            std::array<L1所有者范围写入结果, 3> 写入组;
+            for (std::size_t 序号 = 0; 序号 != 3; ++序号) {
+                auto 普通请求 = 转换写集(
+                    规范请求.参与者写集组[序号].写集, 映射组, 序号);
+                if (!普通请求)
+                    return 失败(L1三分区原子事务状态_v2::引用冲突,
+                        状态_.事实代次);
+                if (序号 != 0)
+                    普通请求->期望事实代次 = 写入组[序号 - 1].事实代次;
+                写入组[序号] = 候选仓库.提交所有者范围中性写集(
+                    规范请求.参与者写集组[序号].所有者, *普通请求);
+                if (写入组[序号].状态 != L1所有者范围写入状态::成功)
+                    return 失败(映射写入失败(写入组[序号].状态),
+                        状态_.事实代次,
+                        映射写入重试边界(写入组[序号].状态));
+                映射组[序号] = 写入组[序号].新编码映射;
+                if (写入组[序号].事实代次 == 0
+                    || (序号 == 0
+                        && 写入组[序号].事实代次
+                            != 规范请求.共同期望事实代次 + 1)
+                    || (序号 != 0
+                        && 写入组[序号].事实代次
+                            != 写入组[序号 - 1].事实代次 + 1))
+                    return 失败(L1三分区原子事务状态_v2::内部不一致,
+                        状态_.事实代次, L1所有者范围重试边界::不适用);
+            }
+
+            候选共同代次 = 写入组[0].事实代次;
+            const auto 第二临时代次 = 写入组[1].事实代次;
+            const auto 第三临时代次 = 写入组[2].事实代次;
+            const auto 调整代次 = [&](auto& 事实) {
+                if (事实.创建事实代次 == 第二临时代次
+                    || 事实.创建事实代次 == 第三临时代次)
+                    事实.创建事实代次 = 候选共同代次;
+                if (事实.退出事实代次
+                    && (*事实.退出事实代次 == 第二临时代次
+                        || *事实.退出事实代次 == 第三临时代次))
+                    *事实.退出事实代次 = 候选共同代次;
+            };
+            for (auto& [_, 事实] : 候选仓库.状态_.当前所有者) 调整代次(事实);
+            for (auto& [_, 事实] : 候选仓库.状态_.历史所有者) 调整代次(事实);
+            for (auto& [_, 事实] : 候选仓库.状态_.当前节点) 调整代次(事实);
+            for (auto& [_, 事实] : 候选仓库.状态_.当前关系) 调整代次(事实);
+            for (auto& [_, 事实] : 候选仓库.状态_.当前值) 调整代次(事实);
+            for (auto& [_, 副本] : 候选仓库.状态_.历史)
+                std::visit([&](auto& 事实) { 调整代次(事实); }, 副本.事实);
+
+            for (const auto& 参与者 : 规范请求.参与者写集组) {
+                const auto 账组 = 候选仓库.状态_.所有者范围幂等账.find(
+                    参与者.所有者.编码.值);
+                if (账组 == 候选仓库.状态_.所有者范围幂等账.end())
+                    return 失败(L1三分区原子事务状态_v2::内部不一致,
+                        状态_.事实代次, L1所有者范围重试边界::不适用);
+                const auto 记录 = 账组->second.find(参与者.写集.写入幂等身份.值);
+                if (记录 == 账组->second.end())
+                    return 失败(L1三分区原子事务状态_v2::内部不一致,
+                        状态_.事实代次, L1所有者范围重试边界::不适用);
+                记录->second.首次规范化写集.期望事实代次 =
+                    规范请求.共同期望事实代次;
+                记录->second.首次发布事实代次 = 候选共同代次;
+                记录->second.首次结果.事实代次 = 候选共同代次;
+            }
+            候选仓库.状态_.事实代次 = 候选共同代次;
+
+            L1三分区原子事务结果_v2 结果{
+                L1三分区原子事务状态_v2::已提交,
+                L1三分区原子事务合同版本_v2,
+                规范请求.组合写入幂等身份,
+                候选共同代次, true, L1所有者范围重试边界::不适用,
+                {
+                    {规范请求.参与者写集组[0].参与者,
+                        规范请求.参与者写集组[0].所有者, 映射组[0]},
+                    {规范请求.参与者写集组[1].参与者,
+                        规范请求.参与者写集组[1].所有者, 映射组[1]},
+                    {规范请求.参与者写集组[2].参与者,
+                        规范请求.参与者写集组[2].所有者, 映射组[2]}
+                }};
+            if (!候选仓库.状态_.三分区原子事务幂等账_v2.emplace(
+                    规范请求.组合写入幂等身份.值,
+                    三分区原子事务幂等记录_v2{规范请求, 结果}).second
+                || !状态完整(候选仓库.状态_))
+                return 失败(L1三分区原子事务状态_v2::内部不一致,
+                    状态_.事实代次, L1所有者范围重试边界::不适用);
+            const auto 持久准备 = 准备持久发布(候选仓库.状态_);
+            if (持久准备 != 持久准备状态::成功)
+                return 失败(持久准备 == 持久准备状态::资源失败
+                        ? L1三分区原子事务状态_v2::资源失败
+                        : L1三分区原子事务状态_v2::内部不一致,
+                    状态_.事实代次,
+                    持久准备 == 持久准备状态::资源失败
+                        ? L1所有者范围重试边界::原请求可重试
+                        : L1所有者范围重试边界::不适用);
+            已进入交换边界 = true;
+            状态_ = std::move(候选仓库.状态_);
+            return 结果;
+        } catch (const std::bad_alloc&) {
+            return 失败(已进入交换边界
+                    ? L1三分区原子事务状态_v2::已可能发布
+                    : L1三分区原子事务状态_v2::资源失败,
+                已进入交换边界 ? 候选共同代次 : 0,
+                已进入交换边界
+                    ? L1所有者范围重试边界::原幂等身份读回收敛
+                    : L1所有者范围重试边界::原请求可重试);
+        } catch (...) {
+            return 失败(已进入交换边界
+                    ? L1三分区原子事务状态_v2::已可能发布
+                    : L1三分区原子事务状态_v2::内部不一致,
+                已进入交换边界 ? 候选共同代次 : 0,
+                已进入交换边界
+                    ? L1所有者范围重试边界::原幂等身份读回收敛
+                    : L1所有者范围重试边界::不适用);
         }
     }
 
@@ -2693,6 +3067,10 @@ private:
         L1跨所有者原子事务请求 请求;
         L1跨所有者原子事务结果 结果;
     };
+    struct 三分区原子事务幂等记录_v2 {
+        L1三分区原子事务请求_v2 请求;
+        L1三分区原子事务结果_v2 结果;
+    };
     struct 状态 {
         std::uint64_t 事实代次 = 0;
         std::uint64_t 下个编码 = 1;
@@ -2732,6 +3110,8 @@ private:
             所有者范围幂等账;
         std::unordered_map<std::uint64_t, 跨所有者原子事务幂等记录>
             跨所有者原子事务幂等账;
+        std::unordered_map<std::uint64_t, 三分区原子事务幂等记录_v2>
+            三分区原子事务幂等账_v2;
         std::optional<L1结构所有者身份> 旧共享所有者定位;
         bool 隔离 = false;
     };
@@ -3054,6 +3434,144 @@ private:
             && 读组(入, 值.动态编码映射, [](auto& d, auto& v){ return d.U32(v.first.值) && 读(d, v.second); });
     }
 
+    static void 写三分区引用_v2(规范编码器& 出,
+        const L1三分区原子事实引用值_v2& 值) {
+        if (const auto* 稳定项 = std::get_if<稳定编码>(&值)) {
+            出.U8(1); 写(出, *稳定项);
+        } else if (const auto* 本地项 =
+            std::get_if<L1所有者范围写集本地键>(&值)) {
+            出.U8(2); 出.U32(本地项->值);
+        } else {
+            出.U8(3);
+            const auto& 跨项 = std::get<L1三分区原子事实引用_v2>(值);
+            出.U8(跨项.参与者.值); 出.U32(跨项.本地键.值);
+        }
+    }
+    static bool 读三分区引用_v2(规范解码器& 入,
+        L1三分区原子事实引用值_v2& 值) {
+        std::uint8_t 标签{};
+        if (!入.U8(标签)) return false;
+        if (标签 == 1) {
+            稳定编码 项; if (!读(入, 项)) return false; 值 = 项; return true;
+        }
+        if (标签 == 2) {
+            L1所有者范围写集本地键 项;
+            if (!入.U32(项.值)) return false; 值 = 项; return true;
+        }
+        if (标签 == 3) {
+            L1三分区原子事实引用_v2 项;
+            if (!入.U8(项.参与者.值) || 项.参与者.值 < 1
+                || 项.参与者.值 > 3 || !入.U32(项.本地键.值)) return false;
+            值 = 项; return true;
+        }
+        return false;
+    }
+    static void 写(规范编码器& 出, const L1三分区原子写集请求_v2& 值) {
+        出.U32(值.合同版本); 出.U64(值.期望事实代次);
+        写(出, 值.写入幂等身份);
+        写组(出, 值.节点, [](auto& e, const auto& v) {
+            e.U32(v.本地键.值); 写枚举(e, v.种类);
+            写可选(e, v.属性类型表示,
+                [](auto& x, auto y) { 写枚举(x, y); });
+        });
+        写组(出, 值.关系, [](auto& e, const auto& v) {
+            e.U32(v.本地键.值); 写三分区引用_v2(e, v.源节点);
+            写三分区引用_v2(e, v.目标节点);
+            写三分区引用_v2(e, v.关系类型节点); e.I64(v.角色或顺序);
+        });
+        写组(出, 值.值, [](auto& e, const auto& v) {
+            e.U32(v.本地键.值); 写三分区引用_v2(e, v.所属节点);
+            写三分区引用_v2(e, v.属性类型节点); 写所有者材料(e, v.材料);
+            写三分区引用_v2(e, v.来源节点);
+        });
+        写组(出, 值.属性槽变更, [](auto& e, const auto& v) {
+            写三分区引用_v2(e, v.所属节点);
+            写三分区引用_v2(e, v.属性类型节点); e.U32(v.新当前值.值);
+        });
+        写组(出, 值.退出事实, [](auto& e, auto v) { 写(e, v); });
+    }
+    static bool 读(规范解码器& 入, L1三分区原子写集请求_v2& 值) {
+        return 入.U32(值.合同版本) && 入.U64(值.期望事实代次)
+            && 读(入, 值.写入幂等身份)
+            && 读组(入, 值.节点, [](auto& d, auto& v) {
+                return d.U32(v.本地键.值) && 读枚举(d, v.种类, 3)
+                    && 读可选(d, v.属性类型表示,
+                        [](auto& x, auto& y) { return 读枚举(x, y, 4); });
+            })
+            && 读组(入, 值.关系, [](auto& d, auto& v) {
+                return d.U32(v.本地键.值)
+                    && 读三分区引用_v2(d, v.源节点)
+                    && 读三分区引用_v2(d, v.目标节点)
+                    && 读三分区引用_v2(d, v.关系类型节点)
+                    && d.I64(v.角色或顺序);
+            })
+            && 读组(入, 值.值, [](auto& d, auto& v) {
+                return d.U32(v.本地键.值)
+                    && 读三分区引用_v2(d, v.所属节点)
+                    && 读三分区引用_v2(d, v.属性类型节点)
+                    && 读所有者材料(d, v.材料)
+                    && 读三分区引用_v2(d, v.来源节点);
+            })
+            && 读组(入, 值.属性槽变更, [](auto& d, auto& v) {
+                return 读三分区引用_v2(d, v.所属节点)
+                    && 读三分区引用_v2(d, v.属性类型节点)
+                    && d.U32(v.新当前值.值);
+            })
+            && 读组(入, 值.退出事实,
+                [](auto& d, auto& v) { return 读(d, v); });
+    }
+    static void 写(规范编码器& 出,
+        const L1三分区原子参与者写集_v2& 值) {
+        出.U8(值.参与者.值); 写(出, 值.所有者); 写(出, 值.写集);
+    }
+    static bool 读(规范解码器& 入,
+        L1三分区原子参与者写集_v2& 值) {
+        return 入.U8(值.参与者.值) && 值.参与者.值 >= 1
+            && 值.参与者.值 <= 3 && 读(入, 值.所有者) && 读(入, 值.写集);
+    }
+    static void 写(规范编码器& 出, const L1三分区原子事务请求_v2& 值) {
+        出.U32(值.合同版本); 出.U64(值.共同期望事实代次);
+        写(出, 值.组合写入幂等身份);
+        写组(出, 值.参与者写集组,
+            [](auto& e, const auto& v) { 写(e, v); });
+    }
+    static bool 读(规范解码器& 入, L1三分区原子事务请求_v2& 值) {
+        return 入.U32(值.合同版本) && 入.U64(值.共同期望事实代次)
+            && 读(入, 值.组合写入幂等身份)
+            && 读组(入, 值.参与者写集组,
+                [](auto& d, auto& v) { return 读(d, v); });
+    }
+    static void 写(规范编码器& 出,
+        const L1三分区原子参与者结果_v2& 值) {
+        出.U8(值.参与者.值); 写(出, 值.所有者);
+        写组(出, 值.新编码映射, [](auto& e, const auto& v) {
+            e.U32(v.first.值); 写(e, v.second);
+        });
+    }
+    static bool 读(规范解码器& 入,
+        L1三分区原子参与者结果_v2& 值) {
+        return 入.U8(值.参与者.值) && 值.参与者.值 >= 1
+            && 值.参与者.值 <= 3 && 读(入, 值.所有者)
+            && 读组(入, 值.新编码映射, [](auto& d, auto& v) {
+                return d.U32(v.first.值) && 读(d, v.second);
+            });
+    }
+    static void 写(规范编码器& 出, const L1三分区原子事务结果_v2& 值) {
+        写枚举(出, 值.状态); 出.U32(值.合同版本);
+        写(出, 值.组合写入幂等身份); 出.U64(值.共同事实代次);
+        出.布尔(值.是否已确认形成内存权威发布); 写枚举(出, 值.重试边界);
+        写组(出, 值.参与者结果组,
+            [](auto& e, const auto& v) { 写(e, v); });
+    }
+    static bool 读(规范解码器& 入, L1三分区原子事务结果_v2& 值) {
+        return 读枚举(入, 值.状态, 9) && 入.U32(值.合同版本)
+            && 读(入, 值.组合写入幂等身份) && 入.U64(值.共同事实代次)
+            && 入.布尔(值.是否已确认形成内存权威发布)
+            && 读枚举(入, 值.重试边界, 4)
+            && 读组(入, 值.参与者结果组,
+                [](auto& d, auto& v) { return 读(d, v); });
+    }
+
     template<class T, class 写函数>
     static void 写有序表(规范编码器& 出, const std::unordered_map<std::uint64_t, T>& 表, 写函数 写值) {
         std::vector<std::uint64_t> 键; 键.reserve(表.size()); for (const auto& [k, _] : 表) 键.push_back(k);
@@ -3083,9 +3601,20 @@ private:
             || 是进程维护幂等键(
                 参与者写入幂等身份(账.请求.动态写集.写集));
     }
+    static bool 是进程维护三分区原子事务_v2(
+        std::uint64_t 账键,
+        const 三分区原子事务幂等记录_v2& 账) noexcept {
+        if (是进程维护幂等键(账键)
+            || 是进程维护幂等键(账.请求.组合写入幂等身份.值))
+            return true;
+        for (const auto& 参与者 : 账.请求.参与者写集组)
+            if (是进程维护幂等键(参与者.写集.写入幂等身份.值))
+                return true;
+        return false;
+    }
 
     static std::vector<std::uint8_t> 编码权威状态(const 状态& 值) {
-        规范编码器 出; 出.U64(0x3150414E534C3148ULL); 出.U32(1); 出.U64(值.事实代次); 出.U64(值.下个编码);
+        规范编码器 出; 出.U64(0x3150414E534C3148ULL); 出.U32(2); 出.U64(值.事实代次); 出.U64(值.下个编码);
         写有序表(出, 值.当前所有者, [](auto& e,const auto& v){写(e,v);}); 写有序表(出, 值.历史所有者, [](auto& e,const auto& v){写(e,v);});
         写有序表(出, 值.当前节点, [](auto& e,const auto& v){写(e,v);}); 写有序表(出, 值.当前关系, [](auto& e,const auto& v){写(e,v);});
         写有序表(出, 值.当前值, [](auto& e,const auto& v){写(e,v);}); 写有序表(出, 值.历史, [](auto& e,const auto& v){写(e,v);});
@@ -3114,12 +3643,24 @@ private:
             写(出, 账.请求);
             写(出, 账.结果);
         }
+        std::vector<std::uint64_t> 三分区事务键;
+        for (const auto& [键, 账] : 值.三分区原子事务幂等账_v2)
+            if (!是进程维护三分区原子事务_v2(键, 账))
+                三分区事务键.push_back(键);
+        std::sort(三分区事务键.begin(), 三分区事务键.end());
+        出.U64(static_cast<std::uint64_t>(三分区事务键.size()));
+        for (const auto 键 : 三分区事务键) {
+            出.U64(键);
+            const auto& 账 = 值.三分区原子事务幂等账_v2.at(键);
+            写(出, 账.请求); 写(出, 账.结果);
+        }
         写可选(出, 值.旧共享所有者定位, [](auto& e,auto v){写(e,v);}); return std::move(出.字节);
     }
 
     static bool 解码权威状态(const std::vector<std::uint8_t>& 字节, 状态& 值) {
         规范解码器 入{字节}; std::uint64_t magic{}; std::uint32_t 版本{};
-        if(!入.U64(magic)||magic!=0x3150414E534C3148ULL||!入.U32(版本)||版本!=1||!入.U64(值.事实代次)||!入.U64(值.下个编码))return false;
+        if(!入.U64(magic)||magic!=0x3150414E534C3148ULL||!入.U32(版本)
+            ||(版本!=1&&版本!=2)||!入.U64(值.事实代次)||!入.U64(值.下个编码))return false;
         if(!读有序表(入,值.当前所有者,[](auto&d,auto&v){return 读(d,v);})||!读有序表(入,值.历史所有者,[](auto&d,auto&v){return 读(d,v);})
             ||!读有序表(入,值.当前节点,[](auto&d,auto&v){return 读(d,v);})||!读有序表(入,值.当前关系,[](auto&d,auto&v){return 读(d,v);})
             ||!读有序表(入,值.当前值,[](auto&d,auto&v){return 读(d,v);})||!读有序表(入,值.历史,[](auto&d,auto&v){return 读(d,v);}))return false;
@@ -3144,6 +3685,21 @@ private:
                     键, std::move(账)).second)
                 return false;
             前一事务键 = 键;
+        }
+        if (版本 == 2) {
+            if (!入.U64(数) || 数 > 入.字节.size() - 入.位置) return false;
+            std::uint64_t 前一三分区键 = 0;
+            for (std::uint64_t i = 0; i != 数; ++i) {
+                std::uint64_t 键{};
+                三分区原子事务幂等记录_v2 账;
+                if (!入.U64(键) || (i != 0 && 键 <= 前一三分区键)
+                    || !读(入, 账.请求) || !读(入, 账.结果)
+                    || 是进程维护三分区原子事务_v2(键, 账)
+                    || !值.三分区原子事务幂等账_v2.emplace(
+                        键, std::move(账)).second)
+                    return false;
+                前一三分区键 = 键;
+            }
         }
         if (!读可选(入,值.旧共享所有者定位,
                 [](auto&d,auto&v){return 读(d,v);}) || !入.完结())
@@ -4991,6 +5547,259 @@ private:
                             && 墓碑->second.内部结构分区.值 == 所有者编码;
                     if (!匹配) return false;
                 }
+            }
+        }
+        const auto 三分区引用排序键 = [](const L1三分区原子事实引用值_v2& 引用) {
+            std::array<std::uint64_t, 3> 键{};
+            if (const auto* 稳定项 = std::get_if<稳定编码>(&引用))
+                键 = {1, 稳定项->值, 0};
+            else if (const auto* 本地项 =
+                std::get_if<L1所有者范围写集本地键>(&引用))
+                键 = {2, 本地项->值, 0};
+            else {
+                const auto& 跨项 = std::get<L1三分区原子事实引用_v2>(引用);
+                键 = {3, 跨项.参与者.值, 跨项.本地键.值};
+            }
+            return 键;
+        };
+        for (const auto& [键, 账] : 值.三分区原子事务幂等账_v2) {
+            const auto& 请求 = 账.请求;
+            const auto& 结果 = 账.结果;
+            if (键 == 0 || 请求.合同版本 != L1三分区原子事务合同版本_v2
+                || 请求.组合写入幂等身份.值 != 键
+                || 请求.共同期望事实代次 == 0
+                || 请求.参与者写集组.size() != 3
+                || 结果.状态 != L1三分区原子事务状态_v2::已提交
+                || 结果.合同版本 != L1三分区原子事务合同版本_v2
+                || 结果.组合写入幂等身份 != 请求.组合写入幂等身份
+                || 结果.共同事实代次 != 请求.共同期望事实代次 + 1
+                || 结果.共同事实代次 == 0 || 结果.共同事实代次 > 值.事实代次
+                || !结果.是否已确认形成内存权威发布
+                || 结果.重试边界 != L1所有者范围重试边界::不适用
+                || 结果.参与者结果组.size() != 3)
+                return false;
+            std::unordered_set<std::uint64_t> 所有者组;
+            std::unordered_set<std::uint64_t> 幂等组;
+            std::array<std::unordered_set<std::uint32_t>, 3> 节点键组;
+            std::array<std::unordered_set<std::uint32_t>, 3> 值键组;
+            for (std::size_t 序号 = 0; 序号 != 3; ++序号) {
+                const auto& 参与者 = 请求.参与者写集组[序号];
+                const auto& 参与者结果 = 结果.参与者结果组[序号];
+                const auto& 写集 = 参与者.写集;
+                if (参与者.参与者.值 != 序号 + 1
+                    || 参与者结果.参与者 != 参与者.参与者
+                    || 参与者结果.所有者 != 参与者.所有者
+                    || !有效(参与者.所有者)
+                    || !所有者组.insert(参与者.所有者.编码.值).second
+                    || 写集.合同版本 != L1所有者范围CRUD合同版本
+                    || 写集.期望事实代次 != 请求.共同期望事实代次
+                    || !有效(写集.写入幂等身份)
+                    || !幂等组.insert(写集.写入幂等身份.值).second
+                    || (写集.节点.empty() && 写集.关系.empty()
+                        && 写集.值.empty() && 写集.属性槽变更.empty()
+                        && 写集.退出事实.empty()))
+                    return false;
+                std::unordered_set<std::uint32_t> 全部本地键;
+                std::uint32_t 前一本地键 = 0;
+                for (const auto& 项 : 写集.节点) {
+                    if (项.本地键.值 == 0 || 项.本地键.值 <= 前一本地键
+                        || !全部本地键.insert(项.本地键.值).second
+                        || !节点键组[序号].insert(项.本地键.值).second)
+                        return false;
+                    前一本地键 = 项.本地键.值;
+                }
+                前一本地键 = 0;
+                for (const auto& 项 : 写集.关系) {
+                    if (项.本地键.值 == 0 || 项.本地键.值 <= 前一本地键
+                        || !全部本地键.insert(项.本地键.值).second) return false;
+                    前一本地键 = 项.本地键.值;
+                }
+                前一本地键 = 0;
+                for (const auto& 项 : 写集.值) {
+                    if (项.本地键.值 == 0 || 项.本地键.值 <= 前一本地键
+                        || !全部本地键.insert(项.本地键.值).second
+                        || !值键组[序号].insert(项.本地键.值).second) return false;
+                    前一本地键 = 项.本地键.值;
+                }
+                std::uint64_t 前一退出 = 0;
+                for (const auto 退出 : 写集.退出事实) {
+                    if (!有效(退出) || 退出.值 <= 前一退出) return false;
+                    前一退出 = 退出.值;
+                }
+                for (std::size_t i = 1; i < 写集.属性槽变更.size(); ++i) {
+                    const auto& 前 = 写集.属性槽变更[i - 1];
+                    const auto& 后 = 写集.属性槽变更[i];
+                    const auto 前所属 = 三分区引用排序键(前.所属节点);
+                    const auto 后所属 = 三分区引用排序键(后.所属节点);
+                    const auto 前类型 = 三分区引用排序键(前.属性类型节点);
+                    const auto 后类型 = 三分区引用排序键(后.属性类型节点);
+                    if ((前所属 == 后所属 && 前类型 == 后类型)
+                        || !(std::tuple{前所属, 前类型, 前.新当前值.值}
+                            < std::tuple{后所属, 后类型, 后.新当前值.值}))
+                        return false;
+                }
+                if (参与者结果.新编码映射.size()
+                    != 写集.节点.size() + 写集.关系.size() + 写集.值.size())
+                    return false;
+                const auto owner账组 = 值.所有者范围幂等账.find(
+                    参与者.所有者.编码.值);
+                if (owner账组 == 值.所有者范围幂等账.end()) return false;
+                const auto owner账 = owner账组->second.find(写集.写入幂等身份.值);
+                if (owner账 == owner账组->second.end()
+                    || owner账->second.首次发布事实代次 != 结果.共同事实代次
+                    || owner账->second.首次结果.事实代次 != 结果.共同事实代次
+                    || owner账->second.首次新编码映射.size()
+                        != 参与者结果.新编码映射.size())
+                    return false;
+                for (std::size_t i = 0;
+                    i < 参与者结果.新编码映射.size(); ++i)
+                    if (owner账->second.首次新编码映射[i].first.值
+                            != 参与者结果.新编码映射[i].first.值
+                        || owner账->second.首次新编码映射[i].second
+                            != 参与者结果.新编码映射[i].second)
+                        return false;
+                std::uint32_t 前一映射键 = 0;
+                for (const auto& [本地键, 编码] : 参与者结果.新编码映射) {
+                    if (本地键.值 == 0 || 本地键.值 <= 前一映射键
+                        || !全部本地键.contains(本地键.值) || !有效(编码))
+                        return false;
+                    前一映射键 = 本地键.值;
+                }
+            }
+            const auto 引用有效 = [&](const L1三分区原子事实引用值_v2& 引用,
+                std::size_t 当前序号) {
+                if (const auto* 稳定项 = std::get_if<稳定编码>(&引用))
+                    return 有效(*稳定项);
+                if (const auto* 本地项 =
+                    std::get_if<L1所有者范围写集本地键>(&引用))
+                    return 本地项->值 != 0
+                        && 节点键组[当前序号].contains(本地项->值);
+                const auto& 跨项 = std::get<L1三分区原子事实引用_v2>(引用);
+                return 跨项.参与者.值 >= 1
+                    && 跨项.参与者.值 < 当前序号 + 1
+                    && 节点键组[跨项.参与者.值 - 1].contains(跨项.本地键.值);
+            };
+            for (std::size_t 序号 = 0; 序号 != 3; ++序号) {
+                const auto& 写集 = 请求.参与者写集组[序号].写集;
+                for (const auto& 项 : 写集.关系)
+                    if (!引用有效(项.源节点, 序号)
+                        || !引用有效(项.目标节点, 序号)
+                        || !引用有效(项.关系类型节点, 序号)) return false;
+                for (const auto& 项 : 写集.值)
+                    if (!引用有效(项.所属节点, 序号)
+                        || !引用有效(项.属性类型节点, 序号)
+                        || !引用有效(项.来源节点, 序号)) return false;
+                for (const auto& 项 : 写集.属性槽变更)
+                    if (!引用有效(项.所属节点, 序号)
+                        || !引用有效(项.属性类型节点, 序号)
+                        || !值键组[序号].contains(项.新当前值.值)) return false;
+            }
+            const auto 转换首次账写集 = [&](const L1三分区原子写集请求_v2& 原,
+                std::size_t 当前序号) -> std::optional<L1中性写集请求> {
+                const auto 查映射 = [&](std::size_t 参与者序号,
+                    L1所有者范围写集本地键 本地键) -> std::optional<稳定编码> {
+                    const auto& 映射 = 结果.参与者结果组[参与者序号].新编码映射;
+                    const auto 位置 = std::lower_bound(映射.begin(), 映射.end(),
+                        本地键, [](const auto& 项, const auto 键值) {
+                            return 项.first < 键值;
+                        });
+                    return 位置 != 映射.end() && 位置->first == 本地键
+                        ? std::optional<稳定编码>{位置->second} : std::nullopt;
+                };
+                const auto 转换引用 = [&](const L1三分区原子事实引用值_v2& 引用)
+                    -> std::optional<L1中性事实引用> {
+                    if (const auto* 稳定项 = std::get_if<稳定编码>(&引用))
+                        return *稳定项;
+                    if (const auto* 本地项 =
+                        std::get_if<L1所有者范围写集本地键>(&引用))
+                        return L1中性写集本地键{本地项->值};
+                    const auto& 跨项 = std::get<L1三分区原子事实引用_v2>(引用);
+                    if (跨项.参与者.值 == 0
+                        || 跨项.参与者.值 > 当前序号)
+                        return std::nullopt;
+                    const auto 编码 = 查映射(
+                        跨项.参与者.值 - 1, 跨项.本地键);
+                    return 编码
+                        ? std::optional<L1中性事实引用>{*编码}
+                        : std::nullopt;
+                };
+                const auto 转换表示 = [](std::optional<L1所有者范围值表示种类> 表示)
+                    -> std::optional<L1中性值表示种类> {
+                    if (!表示) return std::nullopt;
+                    return static_cast<L1中性值表示种类>(
+                        static_cast<std::uint8_t>(*表示));
+                };
+                const auto 转换材料 = [](const L1所有者范围原始值材料& 材料)
+                    -> L1中性原始值材料 {
+                    return std::visit([](const auto& 值) -> L1中性原始值材料 {
+                        using 类型 = std::decay_t<decltype(值)>;
+                        if constexpr (std::is_same_v<类型,
+                            L1所有者范围独立材料引用>)
+                            return L1中性独立材料引用{值.编码};
+                        else return 值;
+                    }, 材料);
+                };
+                L1中性写集请求 预期;
+                预期.合同版本 = L1中性CRUD合同版本;
+                预期.期望事实代次 = 原.期望事实代次;
+                预期.幂等键 = {原.写入幂等身份.值};
+                预期.退出事实 = 原.退出事实;
+                for (const auto& 项 : 原.节点)
+                    预期.节点.push_back({{项.本地键.值}, 项.种类,
+                        转换表示(项.属性类型表示)});
+                for (const auto& 项 : 原.关系) {
+                    const auto 源 = 转换引用(项.源节点);
+                    const auto 目标 = 转换引用(项.目标节点);
+                    const auto 类型 = 转换引用(项.关系类型节点);
+                    if (!源 || !目标 || !类型) return std::nullopt;
+                    预期.关系.push_back({{项.本地键.值}, *源, *目标, *类型,
+                        项.角色或顺序});
+                }
+                for (const auto& 项 : 原.值) {
+                    const auto 所属 = 转换引用(项.所属节点);
+                    const auto 类型 = 转换引用(项.属性类型节点);
+                    const auto 来源 = 转换引用(项.来源节点);
+                    if (!所属 || !类型 || !来源) return std::nullopt;
+                    预期.值.push_back({{项.本地键.值}, *所属, *类型,
+                        转换材料(项.材料), *来源});
+                }
+                for (const auto& 项 : 原.属性槽变更) {
+                    const auto 所属 = 转换引用(项.所属节点);
+                    const auto 类型 = 转换引用(项.属性类型节点);
+                    if (!所属 || !类型) return std::nullopt;
+                    预期.属性槽变更.push_back(
+                        {*所属, *类型, {项.新当前值.值}});
+                }
+                const auto 引用排序键 = [](const L1中性事实引用& 引用) {
+                    if (const auto* 稳定项 = std::get_if<稳定编码>(&引用))
+                        return 稳定项->值;
+                    return (1ULL << 63)
+                        | std::get<L1中性写集本地键>(引用).值;
+                };
+                std::sort(预期.属性槽变更.begin(), 预期.属性槽变更.end(),
+                    [&](const auto& 左, const auto& 右) {
+                        const auto 左所属 = 引用排序键(左.所属节点);
+                        const auto 右所属 = 引用排序键(右.所属节点);
+                        if (左所属 != 右所属) return 左所属 < 右所属;
+                        const auto 左类型 = 引用排序键(左.属性类型节点);
+                        const auto 右类型 = 引用排序键(右.属性类型节点);
+                        if (左类型 != 右类型) return 左类型 < 右类型;
+                        return 左.新当前值 < 右.新当前值;
+                    });
+                return 预期;
+            };
+            for (std::size_t 序号 = 0; 序号 != 3; ++序号) {
+                const auto& 参与者 = 请求.参与者写集组[序号];
+                const auto 预期 = 转换首次账写集(参与者.写集, 序号);
+                const auto owner账组 = 值.所有者范围幂等账.find(
+                    参与者.所有者.编码.值);
+                if (!预期 || owner账组 == 值.所有者范围幂等账.end())
+                    return false;
+                const auto owner账 = owner账组->second.find(
+                    参与者.写集.写入幂等身份.值);
+                if (owner账 == owner账组->second.end()
+                    || !(owner账->second.首次规范化写集 == *预期))
+                    return false;
             }
         }
         return true;

@@ -332,6 +332,128 @@ struct L1跨所有者原子事务结果 final {
         const L1跨所有者原子事务结果&) = default;
 };
 
+// 恰好三个中性内部结构分区的一次原子发布合同。该 v2 合同与上方
+// 固定状态/动态双参与者 v1 物理隔离，不复义也不迁移旧请求。
+inline constexpr std::uint32_t L1三分区原子事务合同版本_v2 = 2;
+
+struct L1三分区原子参与者身份_v2 final {
+    std::uint8_t 值 = 0;
+    friend bool operator==(const L1三分区原子参与者身份_v2&,
+        const L1三分区原子参与者身份_v2&) = default;
+};
+
+struct L1三分区原子事实引用_v2 final {
+    L1三分区原子参与者身份_v2 参与者;
+    L1所有者范围写集本地键 本地键;
+    friend bool operator==(const L1三分区原子事实引用_v2&,
+        const L1三分区原子事实引用_v2&) = default;
+};
+
+using L1三分区原子事实引用值_v2 = std::variant<
+    稳定编码,
+    L1所有者范围写集本地键,
+    L1三分区原子事实引用_v2>;
+
+struct L1三分区原子节点新建项_v2 final {
+    L1所有者范围写集本地键 本地键;
+    节点种类 种类 = 节点种类::普通;
+    std::optional<L1所有者范围值表示种类> 属性类型表示;
+    friend bool operator==(const L1三分区原子节点新建项_v2&,
+        const L1三分区原子节点新建项_v2&) = default;
+};
+
+struct L1三分区原子关系新建项_v2 final {
+    L1所有者范围写集本地键 本地键;
+    L1三分区原子事实引用值_v2 源节点;
+    L1三分区原子事实引用值_v2 目标节点;
+    L1三分区原子事实引用值_v2 关系类型节点;
+    std::int64_t 角色或顺序 = 0;
+    friend bool operator==(const L1三分区原子关系新建项_v2&,
+        const L1三分区原子关系新建项_v2&) = default;
+};
+
+struct L1三分区原子值新建项_v2 final {
+    L1所有者范围写集本地键 本地键;
+    L1三分区原子事实引用值_v2 所属节点;
+    L1三分区原子事实引用值_v2 属性类型节点;
+    L1所有者范围原始值材料 材料;
+    L1三分区原子事实引用值_v2 来源节点;
+    friend bool operator==(const L1三分区原子值新建项_v2&,
+        const L1三分区原子值新建项_v2&) = default;
+};
+
+struct L1三分区原子属性槽变更项_v2 final {
+    L1三分区原子事实引用值_v2 所属节点;
+    L1三分区原子事实引用值_v2 属性类型节点;
+    L1所有者范围写集本地键 新当前值;
+    friend bool operator==(const L1三分区原子属性槽变更项_v2&,
+        const L1三分区原子属性槽变更项_v2&) = default;
+};
+
+struct L1三分区原子写集请求_v2 final {
+    std::uint32_t 合同版本 = L1所有者范围CRUD合同版本;
+    std::uint64_t 期望事实代次 = 0;
+    L1所有者范围写入幂等身份 写入幂等身份;
+    std::vector<L1三分区原子节点新建项_v2> 节点;
+    std::vector<L1三分区原子关系新建项_v2> 关系;
+    std::vector<L1三分区原子值新建项_v2> 值;
+    std::vector<L1三分区原子属性槽变更项_v2> 属性槽变更;
+    std::vector<稳定编码> 退出事实;
+    friend bool operator==(const L1三分区原子写集请求_v2&,
+        const L1三分区原子写集请求_v2&) = default;
+};
+
+struct L1三分区原子参与者写集_v2 final {
+    L1三分区原子参与者身份_v2 参与者;
+    L1结构所有者身份 所有者;
+    L1三分区原子写集请求_v2 写集;
+    friend bool operator==(const L1三分区原子参与者写集_v2&,
+        const L1三分区原子参与者写集_v2&) = default;
+};
+
+struct L1三分区原子事务请求_v2 final {
+    std::uint32_t 合同版本 = L1三分区原子事务合同版本_v2;
+    std::uint64_t 共同期望事实代次 = 0;
+    L1所有者范围写入幂等身份 组合写入幂等身份;
+    std::vector<L1三分区原子参与者写集_v2> 参与者写集组;
+    friend bool operator==(const L1三分区原子事务请求_v2&,
+        const L1三分区原子事务请求_v2&) = default;
+};
+
+enum class L1三分区原子事务状态_v2 : std::uint8_t {
+    已提交 = 1,
+    精确重复 = 2,
+    入口拒绝 = 3,
+    事实代次漂移 = 4,
+    幂等冲突 = 5,
+    引用冲突 = 6,
+    资源失败 = 7,
+    内部不一致 = 8,
+    已可能发布 = 9
+};
+
+struct L1三分区原子参与者结果_v2 final {
+    L1三分区原子参与者身份_v2 参与者;
+    L1结构所有者身份 所有者;
+    std::vector<std::pair<L1所有者范围写集本地键, 稳定编码>> 新编码映射;
+    friend bool operator==(const L1三分区原子参与者结果_v2&,
+        const L1三分区原子参与者结果_v2&) = default;
+};
+
+struct L1三分区原子事务结果_v2 final {
+    L1三分区原子事务状态_v2 状态 =
+        L1三分区原子事务状态_v2::入口拒绝;
+    std::uint32_t 合同版本 = L1三分区原子事务合同版本_v2;
+    L1所有者范围写入幂等身份 组合写入幂等身份;
+    std::uint64_t 共同事实代次 = 0;
+    bool 是否已确认形成内存权威发布 = false;
+    L1所有者范围重试边界 重试边界 =
+        L1所有者范围重试边界::修正请求后可重试;
+    std::vector<L1三分区原子参与者结果_v2> 参与者结果组;
+    friend bool operator==(const L1三分区原子事务结果_v2&,
+        const L1三分区原子事务结果_v2&) = default;
+};
+
 struct L1所有者范围节点事实 final {
     稳定编码 编码;
     节点种类 种类 = 节点种类::普通;
