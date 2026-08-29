@@ -5,9 +5,10 @@
 - 计划 blob：`8d92a30ccd5ebdb107bcbbf2671cafe1bd5e5a4b`
 - 起点：`6b55a9ef500c9b6b9159185d721412240cd2cff6`
 - 工程入口：`海中鱼巣.vcxproj`
-- 工具链：Visual Studio 18 Professional，MSVC `14.50.35717`（工程构建）；MSBuild `18`。
+- 工具链：Visual Studio 2022 Professional，MSBuild Current；正式根工程门禁使用本机已安装的 `v143 / MSVC 14.44.35207`。另以项目默认 `v145 / MSVC 14.50.35717` 做兼容边界诊断。
 - 专项与 ABI runner：`D:/TEMP/海中鱼巣/INSTINCT-STAGE3-SERVICE-CONTRACT-FACT-OWNER/runner-01`。
 - 干净索引候选：`D:/TEMP/海中鱼巣/INSTINCT-STAGE3-SERVICE-CONTRACT-FACT-OWNER/candidate-index-01`。
+- 当前 HEAD 精确提交树：`D:/TEMP/海中鱼巣/INSTINCT-STAGE3-SERVICE-CONTRACT-FACT-OWNER/candidate-head-v143-20260830-01/source`，对应 `35df49d0f8d7ec4e0c2efbb02ec76bbacaef040b`，归档 tar SHA-256 为 `88033FC82F2352F0403499D91DE9D0F8C9D9742DE4B69AB2698440BD036DB039`。
 
 ## 2. 门禁结果
 
@@ -19,8 +20,9 @@
 | live Debug，验证宏开 | PARTIAL | 本计划服务与专项编译通过；根构建被三个异主 SELF 测试缺失 `等待合同登记` 接口阻断 |
 | live Debug，验证宏关 | PARTIAL | 本计划生产模块与专项无宏形状编译通过；同一异主阻断 |
 | live Release，验证宏关 | PARTIAL | 本计划生产模块编译通过；同一异主阻断 |
-| 精确索引候选 Debug Rebuild | FAIL（基线链接） | 全部源码编译完成；最终链接为 26 个 L2 跨模块 LNK2001/LNK2019，非本计划符号 |
-| 精确索引候选 Release Rebuild | FAIL（基线链接） | 与 Debug 相同的 26 个跨模块未解析符号 |
+| 当前 HEAD 精确提交树 `v143` Debug Rebuild | PASS | 退出码 0；生成 `Debug/bin/海中鱼巣.exe` |
+| 当前 HEAD 精确提交树 `v143` Release Rebuild | PASS | 退出码 0；完成全程序生成，生成 `Release/bin/海中鱼巣.exe` |
+| 精确索引候选项目默认 `v145` Debug / Release Rebuild | COMPATIBILITY FAIL | 全部源码编译完成后出现 26 个 L2 跨模块 LNK2001/LNK2019；相同源码在阶段二与本轮 `v143` 双配置均可完整链接，故记录为 `v145` 模块工具链兼容边界，不归因为本计划代码缺口 |
 | Debug ABI consumer | PASS | 仓库外编译、链接、运行，退出码 0 |
 | Release `/GL + /LTCG` ABI consumer | PASS | 生成代码完成，运行退出码 0 |
 | Release fixture 符号扫描 | PASS | 生产 `服务.服务合同事实权威.ixx.obj` 中无三个 `ARCH_` fixture 符号 |
@@ -51,6 +53,10 @@
 - 没有新增公开生产合同写入入口。
 - 当前没有生产合同发布者；合法空集合只证明已发布结构 owner 下成员数为 0，不证明 SERVICE-C1 闭环完成。
 
-## 5. 未通过项与结论
+## 5. 结论与未证明边界
 
-根工程 Debug / Release Rebuild 的最终链接门禁未通过。当前证据足以证明本计划 leaf 的 ABI、完整集合、失败矩阵与持久恢复实现可用，但不足以满足计划第 6 节的完整根工程门禁。因此本验证结论为 `PARTIAL / SAFE WIP`，禁止升级为计划完成或上层业务完成。
+当前 HEAD 精确提交树已经以本机实际可用的 `v143` 完成 Debug / Release 根工程 Rebuild，结合 P00—P10、两类仓库外 ABI consumer、持久恢复、strict 与差异检查，本计划第 6 节门禁全部满足，验证结论升级为 `PASS`。
+
+项目默认 `v145 / MSVC 14.50` 的 26 个既有 L2 跨模块未解析符号仍是独立工具链兼容边界。它不降低本轮 `v143` 正式门禁，也不授权修改 L2 特征、状态、动态、需求、方法或概念源码；若以后要求把 `v145` 作为正式支持工具链，须单独形成兼容修复目标与验证矩阵。
+
+本结论只证明服务合同事实权威 leaf 达到其计划完成条件；仍不得声明 SERVICE-C1、服务结算、有效活动、服务值衰减、生存安全回归、阶段三整体或 `INSTINCT-ROUTE` 完成。

@@ -37,9 +37,10 @@
 
 没有退出既有生产函数。共享知识库未由本计划直接修改。
 
-## 4. 完成边界与当前阻断
+## 4. 完成边界与工具链边界
 
 - P00—P10、Debug ABI consumer、Release `/GL + /LTCG` ABI consumer、持久恢复、strict 和 diff-check 已取得独立证据，详见同名验证记录。
-- live 工作区根构建被异主 SELF 测试与普通应用 WIP 的既有接口不一致阻断。
-- 从精确索引导出的干净候选中，Debug / Release Rebuild 均完成全部编译，但最终链接被 HEAD 基线既有 26 个 L2 跨模块未解析符号阻断；符号来自状态、动态、需求、方法、概念和任务筹办等本计划禁止修改模块。
-- 因根工程 Rebuild 未通过，本计划当前只能形成安全 WIP 结果，不能标为完成、不能归档，也不能声明 SERVICE-C1、阶段三或 `INSTINCT-ROUTE` 完成。
+- live 工作区根构建仍会消费异主 SELF WIP，因此正式根工程证据取自 `HEAD@35df49d0f8d7ec4e0c2efbb02ec76bbacaef040b` 的精确归档提交树。
+- 该精确提交树已使用本机 `v143 / MSVC 14.44.35207` 完成 Debug / Release Rebuild，均退出码 0；根工程门禁已闭合。
+- 项目默认 `v145 / MSVC 14.50` 对相同源码产生 26 个既有 L2 跨模块链接错误。阶段二和本轮 `v143` 双配置证据排除了本计划 leaf 引入该错误，故只记录为独立工具链兼容边界，不扩大本计划白名单。
+- 本计划 leaf 可以归档；仍不能声明 SERVICE-C1、阶段三整体或 `INSTINCT-ROUTE` 完成。
