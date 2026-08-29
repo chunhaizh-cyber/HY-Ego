@@ -77,6 +77,14 @@ bool 事件空失败(const 服务到期事件完整集合读取结果_v1& 结果
         && 结果.本次正式读回截止 == 0;
 }
 
+bool 事件终态空失败(
+    const 服务到期事件合同终态完整集合读取结果_v1& 结果,
+    服务合同事实权威读取状态_v1 状态) {
+    return 结果.状态 == 状态 && !结果.成功()
+        && 结果.完整投影组.empty() && !结果.完整集合见证
+        && 结果.本次正式读回截止 == 0;
+}
+
 bool 进展空失败(const 服务进展完整集合读取结果_v1& 结果,
     服务合同事实权威读取状态_v1 状态) {
     return 结果.状态 == 状态 && !结果.成功()
@@ -315,6 +323,7 @@ int 运行服务合同事实权威端到端测试() noexcept {
             L2存在身份 自我{};
             服务合同完整集合读取结果_v1 合同期望;
             服务到期事件完整集合读取结果_v1 事件期望;
+            服务到期事件合同终态完整集合读取结果_v1 事件终态期望;
             服务进展完整集合读取结果_v1 进展期望;
             服务准备完整集合读取结果_v1 准备期望;
             {
@@ -326,7 +335,7 @@ int 运行服务合同事实权威端到端测试() noexcept {
                 const auto 自我结果 = 服务
                     ? 服务->ARCH_建立验证样本_v1(
                         0x5343'0000'0000'0070ULL, 2, 2, false, false, 2,
-                        false, 2)
+                        false, 2, false, false, false, true)
                     : std::optional<L2存在身份>{};
                 const auto G0 = 当前代次(运行包);
                 if (!服务 || !自我结果 || !G0)
@@ -336,11 +345,15 @@ int 运行服务合同事实权威端到端测试() noexcept {
                     合同请求(自我, *G0));
                 事件期望 = 服务->读取到期未满足事件完整集合_v1(
                     事件请求(自我, *G0));
+                事件终态期望 =
+                    服务->读取到期未满足事件合同终态完整集合_v1(
+                        事件请求(自我, *G0));
                 进展期望 = 服务->读取当前服务合同关联进展完整集合_v1(
                     进展请求(自我, *G0));
                 准备期望 = 服务->读取当前服务准备完整集合_v1(
                     准备请求(自我, *G0));
                 if (!合同期望.成功() || !事件期望.成功()
+                    || !事件终态期望.成功()
                     || !进展期望.成功() || !准备期望.成功())
                     return 失败("P10", "persistent first readback");
             }
@@ -356,13 +369,15 @@ int 运行服务合同事实权威端到端测试() noexcept {
                         合同请求(自我, *G0)) != 合同期望
                     || 服务->读取到期未满足事件完整集合_v1(
                         事件请求(自我, *G0)) != 事件期望
+                    || 服务->读取到期未满足事件合同终态完整集合_v1(
+                        事件请求(自我, *G0)) != 事件终态期望
                     || 服务->读取当前服务合同关联进展完整集合_v1(
                         进展请求(自我, *G0)) != 进展期望
                     || 服务->读取当前服务准备完整集合_v1(
                         准备请求(自我, *G0)) != 准备期望)
                     return 失败("P10", "recovery exact readback");
             }
-            通过("P10", "persistent recovery preserves all four complete collections");
+            通过("P10", "persistent recovery preserves all five complete collections");
         }
 
         {
@@ -653,6 +668,199 @@ int 运行服务合同事实权威端到端测试() noexcept {
                 return 失败("P24", "preparation resource failure");
             通过("P23", "preparation G0 drift fails with empty payload");
             通过("P24", "preparation resource failure has no stale payload");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务
+                ? 服务->ARCH_建立验证样本_v1(
+                    0x5343'0000'0000'0200ULL, 0, 0)
+                : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !自我 || !G0) return 失败("Q00", "empty terminal fixture");
+            auto 坏请求 = 事件请求(*自我, *G0);
+            坏请求.合同版本 = 0;
+            if (!事件终态空失败(
+                    服务->读取到期未满足事件合同终态完整集合_v1(坏请求),
+                    服务合同事实权威读取状态_v1::入口拒绝))
+                return 失败("Q00", "invalid terminal request");
+            const auto 空组 =
+                服务->读取到期未满足事件合同终态完整集合_v1(
+                    事件请求(*自我, *G0));
+            if (!空组.成功() || !空组.完整集合见证
+                || 空组.完整集合见证->声明成员数 != 0
+                || !空组.完整投影组.empty()
+                || 空组.本次正式读回截止 != *G0)
+                return 失败("Q00", "legal empty terminal witness");
+            通过("Q00", "invalid request is empty failure and zero members are proven");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务
+                ? 服务->ARCH_建立验证样本_v1(
+                    0x5343'0000'0000'0210ULL, 1, 1, false, false,
+                    0, false, 0, false, false, false, true)
+                : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !自我 || !G0) return 失败("Q01", "single terminal fixture");
+            const auto 单项 =
+                服务->读取到期未满足事件合同终态完整集合_v1(
+                    事件请求(*自我, *G0));
+            if (!单项.成功() || 单项.完整投影组.size() != 1
+                || 单项.完整投影组.front().原合同.时间纪元身份.值
+                    != 0xF3000001ULL
+                || 单项.完整投影组.front().当前终态.状态
+                    != 服务合同当前状态_v1::已到期)
+                return 失败("Q01", "single terminal projection");
+            通过("Q01", "one event retains the original contract epoch and expired state");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务
+                ? 服务->ARCH_建立验证样本_v1(
+                    0x5343'0000'0000'0220ULL, 3, 3, false, false,
+                    0, false, 0, false, false, false, true)
+                : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !自我 || !G0) return 失败("Q02", "N terminal fixture");
+            const auto N项 =
+                服务->读取到期未满足事件合同终态完整集合_v1(
+                    事件请求(*自我, *G0));
+            bool 纪元[3]{};
+            if (!N项.成功() || N项.完整投影组.size() != 3
+                || !N项.完整集合见证
+                || N项.完整集合见证->声明成员数 != 3)
+                return 失败("Q02", "N terminal complete readback");
+            for (const auto& 投影 : N项.完整投影组) {
+                const auto 值 = 投影.原合同.时间纪元身份.值;
+                if (值 < 0xF3000001ULL || 值 > 0xF3000003ULL)
+                    return 失败("Q02", "original epoch range");
+                纪元[值 - 0xF3000001ULL] = true;
+            }
+            for (const auto 已见 : 纪元)
+                if (!已见) return 失败("Q02", "all original epochs retained");
+            const auto 重放自我 = 服务->ARCH_建立验证样本_v1(
+                0x5343'0000'0000'0220ULL, 3, 3, false, false,
+                0, false, 0, false, false, false, true);
+            const auto G重放 = 当前代次(运行包);
+            if (!重放自我 || !G重放 || *G重放 != *G0
+                || 服务->读取到期未满足事件合同终态完整集合_v1(
+                    事件请求(*自我, *G重放)) != N项)
+                return 失败("Q02", "N terminal exact replay");
+            通过("Q02", "N projections are canonical, epoch-faithful and replay-stable");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务
+                ? 服务->ARCH_建立验证样本_v1(
+                    0x5343'0000'0000'0230ULL, 1, 1)
+                : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !自我 || !G0
+                || !事件终态空失败(
+                    服务->读取到期未满足事件合同终态完整集合_v1(
+                        事件请求(*自我, *G0)),
+                    服务合同事实权威读取状态_v1::引用冲突))
+                return 失败("Q03", "non-expired terminal accepted");
+            通过("Q03", "an event without an expired current state fails closed");
+        }
+
+        {
+            const auto 验证损坏 = [](std::uint64_t 幂等身份,
+                std::size_t 合同数, std::size_t 事件数,
+                bool 坏秒, bool 坏版本, bool 漏成员, bool 重成员,
+                bool 错合同, bool 漏状态, bool 重状态,
+                服务合同事实权威读取状态_v1 期望状态) {
+                auto 运行包 = 建立L1事实基座运行包();
+                auto 服务 = 建立服务(运行包);
+                const auto 自我 = 服务
+                    ? 服务->ARCH_建立验证样本_v1(
+                        幂等身份, 合同数, 事件数, false, false,
+                        0, false, 0, false, false, false, true,
+                        坏秒, 坏版本, 漏成员, 重成员, 错合同,
+                        漏状态, 重状态)
+                    : std::optional<L2存在身份>{};
+                const auto G0 = 当前代次(运行包);
+                return 服务 && 自我 && G0
+                    && 事件终态空失败(
+                        服务->读取到期未满足事件合同终态完整集合_v1(
+                            事件请求(*自我, *G0)), 期望状态);
+            };
+            if (!验证损坏(0x5343'0000'0000'0240ULL, 1, 1,
+                    true, false, false, false, false, false, false,
+                    服务合同事实权威读取状态_v1::引用冲突)
+                || !验证损坏(0x5343'0000'0000'0241ULL, 1, 1,
+                    false, true, false, false, false, false, false,
+                    服务合同事实权威读取状态_v1::引用冲突)
+                || !验证损坏(0x5343'0000'0000'0242ULL, 1, 1,
+                    false, false, true, false, false, false, false,
+                    服务合同事实权威读取状态_v1::集合不闭合)
+                || !验证损坏(0x5343'0000'0000'0243ULL, 1, 1,
+                    false, false, false, true, false, false, false,
+                    服务合同事实权威读取状态_v1::集合不闭合)
+                || !验证损坏(0x5343'0000'0000'0244ULL, 2, 1,
+                    false, false, false, false, true, false, false,
+                    服务合同事实权威读取状态_v1::引用冲突)
+                || !验证损坏(0x5343'0000'0000'0245ULL, 1, 1,
+                    false, false, false, false, false, true, false,
+                    服务合同事实权威读取状态_v1::集合不闭合)
+                || !验证损坏(0x5343'0000'0000'0246ULL, 1, 1,
+                    false, false, false, false, false, false, true,
+                    服务合同事实权威读取状态_v1::集合不闭合))
+                return 失败("Q04", "terminal closure corruption matrix");
+            通过("Q04", "seconds, version, member, contract and state corruption fail closed");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务
+                ? 服务->ARCH_建立验证样本_v1(
+                    0x5343'0000'0000'0250ULL, 1, 1, false, true,
+                    0, false, 0, false, false, false, true)
+                : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !自我 || !G0
+                || !事件终态空失败(
+                    服务->读取到期未满足事件合同终态完整集合_v1(
+                        事件请求(*自我, *G0)),
+                    服务合同事实权威读取状态_v1::引用冲突))
+                return 失败("Q05", "damaged original contract payload");
+            通过("Q05", "damaged original contract payload cannot become partial success");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务
+                ? 服务->ARCH_建立验证样本_v1(
+                    0x5343'0000'0000'0260ULL, 1, 1, false, false,
+                    0, false, 0, false, false, false, true)
+                : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !自我 || !G0) return 失败("Q06", "terminal drift fixture");
+            服务->ARCH_注入读中漂移一次();
+            if (!事件终态空失败(
+                    服务->读取到期未满足事件合同终态完整集合_v1(
+                        事件请求(*自我, *G0)),
+                    服务合同事实权威读取状态_v1::当前性漂移))
+                return 失败("Q06", "terminal read drift");
+            const auto G1 = 当前代次(运行包);
+            if (!G1) return 失败("Q06", "terminal resource G");
+            服务->ARCH_注入资源失败一次();
+            if (!事件终态空失败(
+                    服务->读取到期未满足事件合同终态完整集合_v1(
+                        事件请求(*自我, *G1)),
+                    服务合同事实权威读取状态_v1::资源失败))
+                return 失败("Q06", "terminal resource failure");
+            通过("Q06", "terminal drift and resource failure return no stale payload");
         }
         return 0;
     } catch (const std::exception& 异常) {
