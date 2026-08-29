@@ -99,6 +99,20 @@ bool 准备空失败(const 服务准备完整集合读取结果_v1& 结果,
         && 结果.本次正式读回截止 == 0;
 }
 
+bool 进展空失败_v2(const 服务进展完整集合读取结果_v2& 结果,
+    服务合同事实权威读取状态_v2 状态) {
+    return 结果.状态 == 状态 && !结果.成功()
+        && 结果.完整进展事实组.empty() && !结果.完整集合见证
+        && 结果.本次正式读回截止 == 0;
+}
+
+bool 准备空失败_v2(const 服务准备完整集合读取结果_v2& 结果,
+    服务合同事实权威读取状态_v2 状态) {
+    return 结果.状态 == 状态 && !结果.成功()
+        && 结果.完整准备事实组.empty() && !结果.完整集合见证
+        && 结果.本次正式读回截止 == 0;
+}
+
 服务合同完整集合读取请求_v1 合同请求(L2存在身份 自我, std::uint64_t G0) {
     return {服务合同事实权威合同版本_v1,
         {L2结构合同版本, G0}, 自我};
@@ -119,6 +133,18 @@ bool 准备空失败(const 服务准备完整集合读取结果_v1& 结果,
 服务准备完整集合读取请求_v1 准备请求(
     L2存在身份 自我, std::uint64_t G0) {
     return {服务准备事实扩展合同版本_v1,
+        {L2结构合同版本, G0}, 自我};
+}
+
+服务进展完整集合读取请求_v2 进展请求_v2(
+    L2存在身份 自我, std::uint64_t G0) {
+    return {服务进展事实扩展合同版本_v2,
+        {L2结构合同版本, G0}, 自我};
+}
+
+服务准备完整集合读取请求_v2 准备请求_v2(
+    L2存在身份 自我, std::uint64_t G0) {
+    return {服务准备事实扩展合同版本_v2,
         {L2结构合同版本, G0}, 自我};
 }
 
@@ -668,6 +694,154 @@ int 运行服务合同事实权威端到端测试() noexcept {
                 return 失败("P24", "preparation resource failure");
             通过("P23", "preparation G0 drift fails with empty payload");
             通过("P24", "preparation resource failure has no stale payload");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务 ? 服务->ARCH_建立v2验证样本(
+                0x5343'0000'0000'1000ULL, 0, 0) : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !自我 || !G0) return 失败("V00", "v2 empty fixture");
+            auto 坏 = 进展请求_v2(*自我, *G0); 坏.合同版本 = 1;
+            if (!进展空失败_v2(
+                    服务->读取当前服务合同关联进展完整集合_v2(坏),
+                    服务合同事实权威读取状态_v2::入口拒绝))
+                return 失败("V00", "v2 invalid request");
+            const auto p = 服务->读取当前服务合同关联进展完整集合_v2(
+                进展请求_v2(*自我, *G0));
+            const auto r = 服务->读取当前服务准备完整集合_v2(
+                准备请求_v2(*自我, *G0));
+            if (!p.成功() || !r.成功() || !p.完整集合见证 || !r.完整集合见证
+                || p.完整集合见证->声明成员数 != 0
+                || r.完整集合见证->声明成员数 != 0)
+                return 失败("V00", "v2 legal zero-member witnesses");
+            通过("V00", "v2 progress and preparation registrations prove legal empty sets");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务 ? 服务->ARCH_建立v2验证样本(
+                0x5343'0000'0000'1010ULL, 8, 9) : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !自我 || !G0) return 失败("V01", "v2 N fixture");
+            const auto p = 服务->读取当前服务合同关联进展完整集合_v2(
+                进展请求_v2(*自我, *G0));
+            const auto r = 服务->读取当前服务准备完整集合_v2(
+                准备请求_v2(*自我, *G0));
+            if (!p.成功() || !r.成功() || p.完整进展事实组.size() != 8
+                || r.完整准备事实组.size() != 9)
+                return 失败("V01", "v2 N complete readback");
+            for (const auto& f : p.完整进展事实组)
+                if (!服务活动任务执行绑定完整_v2(f.执行绑定))
+                    return 失败("V01", "v2 progress typed binding");
+            for (const auto& f : r.完整准备事实组)
+                if (!服务活动任务执行绑定完整_v2(f.执行绑定))
+                    return 失败("V01", "v2 preparation typed binding");
+            const auto 重放 = 服务->ARCH_建立v2验证样本(
+                0x5343'0000'0000'1010ULL, 8, 9);
+            const auto G重放 = 当前代次(运行包);
+            if (!重放 || !G重放 || *G重放 != *G0
+                || 服务->读取当前服务合同关联进展完整集合_v2(
+                    进展请求_v2(*自我, *G重放)) != p
+                || 服务->读取当前服务准备完整集合_v2(
+                    准备请求_v2(*自我, *G重放)) != r)
+                return 失败("V01", "v2 exact replay");
+            通过("V01", "v2 N members are canonical, typed and replay-stable");
+        }
+
+        {
+            const auto 验证损坏 = [](std::uint64_t id, bool 绑定, bool 关系,
+                bool 载荷, bool 准备) {
+                auto 运行包 = 建立L1事实基座运行包();
+                auto 服务 = 建立服务(运行包);
+                const auto 自我 = 服务 ? 服务->ARCH_建立v2验证样本(
+                    id, 准备 ? 0 : 1, 准备 ? 1 : 0, 绑定, 关系, 载荷)
+                    : std::optional<L2存在身份>{};
+                const auto G0 = 当前代次(运行包);
+                if (!服务 || !自我 || !G0) return false;
+                return 准备
+                    ? 准备空失败_v2(服务->读取当前服务准备完整集合_v2(
+                        准备请求_v2(*自我, *G0)),
+                        服务合同事实权威读取状态_v2::引用冲突)
+                    : 进展空失败_v2(
+                        服务->读取当前服务合同关联进展完整集合_v2(
+                            进展请求_v2(*自我, *G0)),
+                        服务合同事实权威读取状态_v2::引用冲突);
+            };
+            if (!验证损坏(0x5343'0000'0000'1020ULL, true, false, false, false)
+                || !验证损坏(0x5343'0000'0000'1021ULL, false, true, false, false)
+                || !验证损坏(0x5343'0000'0000'1022ULL, false, false, true, false)
+                || !验证损坏(0x5343'0000'0000'1023ULL, true, false, false, true)
+                || !验证损坏(0x5343'0000'0000'1024ULL, false, true, false, true)
+                || !验证损坏(0x5343'0000'0000'1025ULL, false, false, true, true))
+                return 失败("V02", "v2 corruption matrix");
+            通过("V02", "invalid bindings, payloads and relation endpoints fail closed");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务 ? 服务->ARCH_建立v2验证样本(
+                0x5343'0000'0000'1026ULL, 1, 0,
+                false, false, false, true) : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !自我 || !G0
+                || !进展空失败_v2(
+                    服务->读取当前服务合同关联进展完整集合_v2(
+                        进展请求_v2(*自我, *G0)),
+                    服务合同事实权威读取状态_v2::集合不闭合))
+                return 失败("V02A", "v2 duplicate member closure");
+            通过("V02A", "duplicate v2 members fail as an unclosed collection");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务 ? 服务->ARCH_建立v2验证样本(
+                0x5343'0000'0000'1027ULL, 0, 0) : std::optional<L2存在身份>{};
+            if (!服务 || !自我 || !服务->ARCH_损坏v2结构登记(false))
+                return 失败("V02B", "v2 registration corruption fixture");
+            const auto G0 = 当前代次(运行包);
+            if (!G0 || !进展空失败_v2(
+                    服务->读取当前服务合同关联进展完整集合_v2(
+                        进展请求_v2(*自我, *G0)),
+                    服务合同事实权威读取状态_v2::结构未登记))
+                return 失败("V02B", "v2 registration version mismatch");
+            通过("V02B", "v2 registration version mismatch fails closed");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务 ? 服务->ARCH_建立验证样本_v1(
+                0x5343'0000'0000'1030ULL, 1, 0, false, false,
+                1, false, 1) : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !自我 || !G0) return 失败("V03", "v1 isolation fixture");
+            const auto p = 服务->读取当前服务合同关联进展完整集合_v2(
+                进展请求_v2(*自我, *G0));
+            const auto r = 服务->读取当前服务准备完整集合_v2(
+                准备请求_v2(*自我, *G0));
+            if (!p.成功() || !r.成功() || !p.完整进展事实组.empty()
+                || !r.完整准备事实组.empty())
+                return 失败("V03", "v1 leaked into v2");
+            服务->ARCH_注入读中漂移一次();
+            if (!进展空失败_v2(
+                    服务->读取当前服务合同关联进展完整集合_v2(
+                        进展请求_v2(*自我, *G0)),
+                    服务合同事实权威读取状态_v2::当前性漂移))
+                return 失败("V04", "v2 drift");
+            const auto G1 = 当前代次(运行包);
+            if (!G1) return 失败("V04", "v2 resource cutoff");
+            服务->ARCH_注入资源失败一次();
+            if (!准备空失败_v2(服务->读取当前服务准备完整集合_v2(
+                    准备请求_v2(*自我, *G1)),
+                    服务合同事实权威读取状态_v2::资源失败))
+                return 失败("V04", "v2 resource failure");
+            通过("V03", "v1 facts do not project or fall back into v2");
+            通过("V04", "v2 drift and resource failures expose no stale payload");
         }
 
         {
