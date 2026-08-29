@@ -3,11 +3,11 @@
 ## 1. 身份与边界
 
 - 计划：`INSTINCT-STAGE3-SERVICE-PROGRESS-FACT-COLLECTION`
-- 计划文件：`计划/20260830_INSTINCT-STAGE3-SERVICE-PROGRESS-FACT-COLLECTION_服务合同关联进展事实完整集合代码实施计划_v0.1.md`
+- 计划文件：`计划/已完成计划/20260830_INSTINCT-STAGE3-SERVICE-PROGRESS-FACT-COLLECTION_服务合同关联进展事实完整集合代码实施计划_v0.1.md`
 - 计划 blob：`dcff19c020c9b614babbcf2161bead663f26e97e`
 - 执行起点：`main@80c508f82a7c210bc29aa70a1ec66663166c2587`
 - 直接前置结果：`35df49d0f8d7ec4e0c2efbb02ec76bbacaef040b`
-- 结果提交：待本切片精确提交形成；由计划收口提交补录。
+- 结果提交：`3a49b40c207c8282c9f4b6499d2324449bd763d4`。
 
 本记录只陈述本计划三个代码文件内已发生的施工事实。没有修改 L1、L2 需求 / 任务 / 方法 / 特征 / 状态 / 动态、普通应用、工程、线程、运行期只读查询或 SELF-GOVERNANCE WIP。用户确认的安全根当前版本 L/H 保持不变，本计划没有修改阈值规范或代码。
 

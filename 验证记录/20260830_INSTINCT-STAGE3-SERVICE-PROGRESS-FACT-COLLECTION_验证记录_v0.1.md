@@ -8,7 +8,7 @@
 - 工具链：Visual Studio 2022 Professional，MSVC 14.44.35207，`PlatformToolset=v143`，x64。
 - 隔离候选：`D:/TEMP/海中鱼巣/INSTINCT-STAGE3-SERVICE-PROGRESS-FACT-COLLECTION/wip-v143-20260830-01/source`。
 - 专项 / ABI runner：同一隔离根下 `runner/`。
-- 结果提交：待本切片精确提交形成；由计划收口提交补录。
+- 结果提交：`3a49b40c207c8282c9f4b6499d2324449bd763d4`。
 
 ## 2. 构建与外部 consumer
 
