@@ -14,6 +14,7 @@ module;
 #include <string>
 #include <system_error>
 #include <utility>
+#include <variant>
 
 export module 海中鱼巣.端到端测试.服务合同事实权威;
 
@@ -83,6 +84,13 @@ bool 进展空失败(const 服务进展完整集合读取结果_v1& 结果,
         && 结果.本次正式读回截止 == 0;
 }
 
+bool 准备空失败(const 服务准备完整集合读取结果_v1& 结果,
+    服务合同事实权威读取状态_v1 状态) {
+    return 结果.状态 == 状态 && !结果.成功()
+        && 结果.完整准备事实组.empty() && !结果.完整集合见证
+        && 结果.本次正式读回截止 == 0;
+}
+
 服务合同完整集合读取请求_v1 合同请求(L2存在身份 自我, std::uint64_t G0) {
     return {服务合同事实权威合同版本_v1,
         {L2结构合同版本, G0}, 自我};
@@ -97,6 +105,12 @@ bool 进展空失败(const 服务进展完整集合读取结果_v1& 结果,
 服务进展完整集合读取请求_v1 进展请求(
     L2存在身份 自我, std::uint64_t G0) {
     return {服务进展事实扩展合同版本_v1,
+        {L2结构合同版本, G0}, 自我};
+}
+
+服务准备完整集合读取请求_v1 准备请求(
+    L2存在身份 自我, std::uint64_t G0) {
+    return {服务准备事实扩展合同版本_v1,
         {L2结构合同版本, G0}, 自我};
 }
 
@@ -302,6 +316,7 @@ int 运行服务合同事实权威端到端测试() noexcept {
             服务合同完整集合读取结果_v1 合同期望;
             服务到期事件完整集合读取结果_v1 事件期望;
             服务进展完整集合读取结果_v1 进展期望;
+            服务准备完整集合读取结果_v1 准备期望;
             {
                 auto 建立 = 建立L1事实基座持久运行包_v1(配置);
                 if (!建立.成功() || !建立.运行包)
@@ -310,7 +325,8 @@ int 运行服务合同事实权威端到端测试() noexcept {
                 auto 服务 = 建立服务(运行包);
                 const auto 自我结果 = 服务
                     ? 服务->ARCH_建立验证样本_v1(
-                        0x5343'0000'0000'0070ULL, 2, 2, false, false, 2)
+                        0x5343'0000'0000'0070ULL, 2, 2, false, false, 2,
+                        false, 2)
                     : std::optional<L2存在身份>{};
                 const auto G0 = 当前代次(运行包);
                 if (!服务 || !自我结果 || !G0)
@@ -322,7 +338,10 @@ int 运行服务合同事实权威端到端测试() noexcept {
                     事件请求(自我, *G0));
                 进展期望 = 服务->读取当前服务合同关联进展完整集合_v1(
                     进展请求(自我, *G0));
-                if (!合同期望.成功() || !事件期望.成功() || !进展期望.成功())
+                准备期望 = 服务->读取当前服务准备完整集合_v1(
+                    准备请求(自我, *G0));
+                if (!合同期望.成功() || !事件期望.成功()
+                    || !进展期望.成功() || !准备期望.成功())
                     return 失败("P10", "persistent first readback");
             }
             {
@@ -338,10 +357,12 @@ int 运行服务合同事实权威端到端测试() noexcept {
                     || 服务->读取到期未满足事件完整集合_v1(
                         事件请求(自我, *G0)) != 事件期望
                     || 服务->读取当前服务合同关联进展完整集合_v1(
-                        进展请求(自我, *G0)) != 进展期望)
+                        进展请求(自我, *G0)) != 进展期望
+                    || 服务->读取当前服务准备完整集合_v1(
+                        准备请求(自我, *G0)) != 准备期望)
                     return 失败("P10", "recovery exact readback");
             }
-            通过("P10", "persistent recovery preserves all three complete collections");
+            通过("P10", "persistent recovery preserves all four complete collections");
         }
 
         {
@@ -460,6 +481,178 @@ int 运行服务合同事实权威端到端测试() noexcept {
                 return 失败("P16", "progress resource failure");
             通过("P15", "progress G0 drift fails with empty payload");
             通过("P16", "progress resource failure has no stale payload");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务
+                ? 服务->ARCH_建立验证样本_v1(
+                    0x5343'0000'0000'00C0ULL, 0, 0)
+                : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !自我 || !G0) return 失败("P17", "empty preparation fixture");
+            auto 坏请求 = 准备请求(*自我, *G0);
+            坏请求.合同版本 = 0;
+            if (!准备空失败(服务->读取当前服务准备完整集合_v1(坏请求),
+                    服务合同事实权威读取状态_v1::入口拒绝))
+                return 失败("P17", "invalid preparation request");
+            const auto 空组 = 服务->读取当前服务准备完整集合_v1(
+                准备请求(*自我, *G0));
+            if (!空组.成功() || !空组.完整集合见证
+                || 空组.完整集合见证->声明成员数 != 0
+                || 空组.本次正式读回截止 != *G0)
+                return 失败("P17", "legal empty preparation witness");
+            通过("P17", "zero preparations are proven by the three registrations");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务
+                ? 服务->ARCH_建立验证样本_v1(
+                    0x5343'0000'0000'00D0ULL, 0, 0, false, false,
+                    0, false, 1)
+                : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !自我 || !G0) return 失败("P18", "single preparation fixture");
+            const auto 单项 = 服务->读取当前服务准备完整集合_v1(
+                准备请求(*自我, *G0));
+            if (!单项.成功() || 单项.完整准备事实组.size() != 1
+                || !std::holds_alternative<L2需求身份>(
+                    单项.完整准备事实组.front().来源)
+                || !单项.完整准备事实组.front().T到D关系稳定编码)
+                return 失败("P18", "single demand preparation readback");
+            通过("P18", "one demand preparation retains its T-to-D binding");
+        }
+
+        服务准备完整集合读取结果_v1 N准备期望;
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务
+                ? 服务->ARCH_建立验证样本_v1(
+                    0x5343'0000'0000'00E0ULL, 0, 0, false, false,
+                    0, false, 9)
+                : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !自我 || !G0) return 失败("P19", "N preparation fixture");
+            N准备期望 = 服务->读取当前服务准备完整集合_v1(
+                准备请求(*自我, *G0));
+            if (!N准备期望.成功() || N准备期望.完整准备事实组.size() != 9)
+                return 失败("P19", "N preparation complete readback");
+            bool 状态组[9]{};
+            bool 已见需求来源 = false;
+            bool 已见能力缺口来源 = false;
+            for (const auto& 准备 : N准备期望.完整准备事实组) {
+                const auto 状态 = static_cast<std::uint8_t>(准备.运行状态);
+                if (状态 < 1 || 状态 > 9) return 失败("P19", "preparation state range");
+                状态组[状态 - 1] = true;
+                if (std::holds_alternative<L2需求身份>(准备.来源)) {
+                    已见需求来源 = true;
+                    if (!准备.T到D关系稳定编码)
+                        return 失败("P19", "demand source without T-to-D");
+                } else {
+                    已见能力缺口来源 = true;
+                    if (准备.T到D关系稳定编码)
+                        return 失败("P19", "gap source forged T-to-D");
+                }
+                const bool 已完成 = 准备.运行状态
+                    == 服务准备运行状态_v1::已完整完成;
+                if (准备.准备结果.has_value() != 已完成
+                    || 准备.完成验证.has_value() != 已完成)
+                    return 失败("P19", "completion evidence shape");
+            }
+            for (const auto 已见 : 状态组)
+                if (!已见) return 失败("P19", "all preparation states retained");
+            if (!已见需求来源 || !已见能力缺口来源)
+                return 失败("P19", "both preparation source variants retained");
+            const auto 重复自我 = 服务->ARCH_建立验证样本_v1(
+                0x5343'0000'0000'00E0ULL, 0, 0, false, false,
+                0, false, 9);
+            const auto G重复 = 当前代次(运行包);
+            if (!重复自我 || !G重复 || *重复自我 != *自我 || *G重复 != *G0
+                || 服务->读取当前服务准备完整集合_v1(
+                    准备请求(*自我, *G重复)) != N准备期望)
+                return 失败("P19", "preparation exact duplicate");
+            通过("P19", "nine states and both source variants are complete and replay-stable");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务
+                ? 服务->ARCH_建立验证样本_v1(
+                    0x5343'0000'0000'00F0ULL, 0, 0, false, false,
+                    0, false, 1, true)
+                : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !自我 || !G0
+                || !准备空失败(服务->读取当前服务准备完整集合_v1(
+                    准备请求(*自我, *G0)),
+                    服务合同事实权威读取状态_v1::引用冲突))
+                return 失败("P20", "damaged preparation payload");
+            通过("P20", "damaged preparation payload fails closed");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务
+                ? 服务->ARCH_建立验证样本_v1(
+                    0x5343'0000'0000'0100ULL, 0, 0, false, false,
+                    0, false, 1, false, true)
+                : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !自我 || !G0
+                || !准备空失败(服务->读取当前服务准备完整集合_v1(
+                    准备请求(*自我, *G0)),
+                    服务合同事实权威读取状态_v1::引用冲突))
+                return 失败("P21", "invalid preparation source shape");
+            通过("P21", "invalid demand source shape fails closed");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务
+                ? 服务->ARCH_建立验证样本_v1(
+                    0x5343'0000'0000'0110ULL, 0, 0, false, false,
+                    0, false, 1, false, false, true)
+                : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !自我 || !G0
+                || !准备空失败(服务->读取当前服务准备完整集合_v1(
+                    准备请求(*自我, *G0)),
+                    服务合同事实权威读取状态_v1::引用冲突))
+                return 失败("P22", "invalid preparation relation");
+            通过("P22", "source relation mismatch fails closed");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务
+                ? 服务->ARCH_建立验证样本_v1(
+                    0x5343'0000'0000'0120ULL, 0, 0, false, false,
+                    0, false, 1)
+                : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !自我 || !G0) return 失败("P23", "preparation drift fixture");
+            服务->ARCH_注入读中漂移一次();
+            if (!准备空失败(服务->读取当前服务准备完整集合_v1(
+                    准备请求(*自我, *G0)),
+                    服务合同事实权威读取状态_v1::当前性漂移))
+                return 失败("P23", "preparation read drift");
+            const auto G1 = 当前代次(运行包);
+            if (!G1) return 失败("P24", "preparation resource G");
+            服务->ARCH_注入资源失败一次();
+            if (!准备空失败(服务->读取当前服务准备完整集合_v1(
+                    准备请求(*自我, *G1)),
+                    服务合同事实权威读取状态_v1::资源失败))
+                return 失败("P24", "preparation resource failure");
+            通过("P23", "preparation G0 drift fails with empty payload");
+            通过("P24", "preparation resource failure has no stale payload");
         }
         return 0;
     } catch (const std::exception& 异常) {
