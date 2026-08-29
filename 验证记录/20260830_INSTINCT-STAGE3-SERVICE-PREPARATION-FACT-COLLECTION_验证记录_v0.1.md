@@ -7,7 +7,7 @@
 - 工程入口：`海中鱼巣.vcxproj`
 - 工具链：Visual Studio Community 安装根 `18`，`PlatformToolset=v143`，x64。
 - 隔离候选：`D:/TEMP/海中鱼巣/INSTINCT-STAGE3-SERVICE-PREPARATION-FACT-COLLECTION/6b16cb9ec8874da5aadb1e127f2a1895/source`。
-- 结果提交：待本切片精确提交形成；由计划收口提交补录。
+- 结果提交：`0c170f397dd41da00f43ff9b73e3a641bd9cd5b0`。
 
 ## 2. 构建、consumer 与恢复
 
@@ -47,7 +47,7 @@
 | L/H 改动扫描 | PASS | 本计划差异没有当前 L/H 定义或数值改动；`INT64_MAX` 仅用于持久时间字段解码上界 |
 | `git diff --check` | PASS | 三代码文件无 whitespace error；仅换行转换提示 |
 | `check_specs.py --strict` | PASS | 116 份正式规范目录项全部通过 |
-| 精确 staged `git diff --cached --check` | 待提交门禁 | 精确暂存五个计划白名单文件后执行 |
+| 精确 staged `git diff --cached --check` | PASS | index 恰含三个代码文件与两份专属记录，无 whitespace error |
 
 ## 5. 结论与未证明边界
 

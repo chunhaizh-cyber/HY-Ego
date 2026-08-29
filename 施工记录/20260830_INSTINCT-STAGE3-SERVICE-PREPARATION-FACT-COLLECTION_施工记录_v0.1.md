@@ -3,11 +3,11 @@
 ## 1. 身份与边界
 
 - 计划：`INSTINCT-STAGE3-SERVICE-PREPARATION-FACT-COLLECTION v0.1`
-- 计划文件：`计划/20260830_INSTINCT-STAGE3-SERVICE-PREPARATION-FACT-COLLECTION_服务准备当前事实完整集合代码实施计划_v0.1.md`
+- 计划文件：`计划/已完成计划/20260830_INSTINCT-STAGE3-SERVICE-PREPARATION-FACT-COLLECTION_服务准备当前事实完整集合代码实施计划_v0.1.md`
 - 计划 blob：`377e6ab08a259af992731945558b8d32abe758ac`
 - 执行起点：`main@01deea80fc22642650dbbcf3b5a9bc9092733e8b`
 - 直接前置结果：`3a49b40c207c8282c9f4b6499d2324449bd763d4`
-- 结果提交：待本切片精确提交形成；由计划收口提交补录。
+- 结果提交：`0c170f397dd41da00f43ff9b73e3a641bd9cd5b0`。
 
 本记录只陈述计划白名单内三个代码文件的实际施工。未修改 L1、普通应用、工程、线程、任务 / 方法 / 安全 owner、正式规范、详细设计、流程图、计划 / 索引或异主 SELF-GOVERNANCE WIP。当前定义版本的值域 `0..I64_MAX`、`L=2,767,011,611,056,432,742`、`H=7,378,697,629,483,820,645` 保持不变；本切片没有修改任何阈值定义。
 
