@@ -8,7 +8,7 @@
 
 施工起点：`e292e4d9a9d99ae2a995fac76592ca135ef98d76`
 
-结果提交：待填
+结果提交：`2fdcc4bf598922d273108bd455ef59a26d7c63b1`
 
 ## 1. 验证环境
 
@@ -76,7 +76,7 @@ Debug 与 Release 均编译仓库外专项 main、链接隔离对象并实际运
 - Debug / Release ABI consumer 从精确 index tree 的 IFC / OBJ 重新编译、链接并运行：PASS，均 exit 0；Release 使用 `/LTCG`。
 - `python .\tools\check_specs.py --strict`：PASS，116 / 116。
 - `git diff --check`、`git diff --cached --check` 和最终 staged 范围审计：提交前执行。
-- 提交和普通推送：待执行。
+- 提交和普通推送：PASS，结果提交 `2fdcc4bf598922d273108bd455ef59a26d7c63b1` 已进入 `origin/main`。
 
 提交树首次专项运行曾在普通应用装配处失败。根因不是生产 provider，而是测试 fixture 未显式填充现行正式 `任务筹办等待合同登记`，此前工作树中的异主配置简化掩盖了该问题。fixture 已在测试白名单内修正；修正后的普通 / 验证宏两配置根工程、专项和 ABI consumer 均重新通过。
 
