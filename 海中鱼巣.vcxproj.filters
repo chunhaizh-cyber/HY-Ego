@@ -22,6 +22,9 @@
     <ClCompile Include="海中鱼巣\业务\提供者.本能根运行初始化.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\业务\提供者.安全根生产定义初始化.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\服务.L2动态结构.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -141,6 +144,9 @@
     <ClInclude Include="海中鱼巣\业务\本能根运行初始化.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\业务\安全根生产定义初始化.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClCompile Include="海中鱼巣\启动.程序入口.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -256,6 +262,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\端到端测试.安全根定义与当前值.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\端到端测试.安全根生产定义初始化.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务特征方法查找与条件提议.ixx">
