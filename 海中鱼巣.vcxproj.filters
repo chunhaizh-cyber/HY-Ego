@@ -255,6 +255,9 @@
     <ClCompile Include="海中鱼巣\端到端测试.本能UTC时间证据.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\端到端测试.安全根定义与当前值.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务特征方法查找与条件提议.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -277,6 +280,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\服务.本能被动维护游标.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\服务.安全根定义与当前值.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\组合.运行期事实版本.ixx">
@@ -345,6 +351,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\本能被动维护游标.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\安全根定义与当前值.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
