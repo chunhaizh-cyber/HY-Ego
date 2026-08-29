@@ -76,6 +76,13 @@ bool 事件空失败(const 服务到期事件完整集合读取结果_v1& 结果
         && 结果.本次正式读回截止 == 0;
 }
 
+bool 进展空失败(const 服务进展完整集合读取结果_v1& 结果,
+    服务合同事实权威读取状态_v1 状态) {
+    return 结果.状态 == 状态 && !结果.成功()
+        && 结果.完整进展事实组.empty() && !结果.完整集合见证
+        && 结果.本次正式读回截止 == 0;
+}
+
 服务合同完整集合读取请求_v1 合同请求(L2存在身份 自我, std::uint64_t G0) {
     return {服务合同事实权威合同版本_v1,
         {L2结构合同版本, G0}, 自我};
@@ -84,6 +91,12 @@ bool 事件空失败(const 服务到期事件完整集合读取结果_v1& 结果
 服务到期事件完整集合读取请求_v1 事件请求(
     L2存在身份 自我, std::uint64_t G0) {
     return {服务合同事实权威合同版本_v1,
+        {L2结构合同版本, G0}, 自我};
+}
+
+服务进展完整集合读取请求_v1 进展请求(
+    L2存在身份 自我, std::uint64_t G0) {
+    return {服务进展事实扩展合同版本_v1,
         {L2结构合同版本, G0}, 自我};
 }
 
@@ -288,6 +301,7 @@ int 运行服务合同事实权威端到端测试() noexcept {
             L2存在身份 自我{};
             服务合同完整集合读取结果_v1 合同期望;
             服务到期事件完整集合读取结果_v1 事件期望;
+            服务进展完整集合读取结果_v1 进展期望;
             {
                 auto 建立 = 建立L1事实基座持久运行包_v1(配置);
                 if (!建立.成功() || !建立.运行包)
@@ -296,7 +310,7 @@ int 运行服务合同事实权威端到端测试() noexcept {
                 auto 服务 = 建立服务(运行包);
                 const auto 自我结果 = 服务
                     ? 服务->ARCH_建立验证样本_v1(
-                        0x5343'0000'0000'0070ULL, 2, 2)
+                        0x5343'0000'0000'0070ULL, 2, 2, false, false, 2)
                     : std::optional<L2存在身份>{};
                 const auto G0 = 当前代次(运行包);
                 if (!服务 || !自我结果 || !G0)
@@ -306,7 +320,9 @@ int 运行服务合同事实权威端到端测试() noexcept {
                     合同请求(自我, *G0));
                 事件期望 = 服务->读取到期未满足事件完整集合_v1(
                     事件请求(自我, *G0));
-                if (!合同期望.成功() || !事件期望.成功())
+                进展期望 = 服务->读取当前服务合同关联进展完整集合_v1(
+                    进展请求(自我, *G0));
+                if (!合同期望.成功() || !事件期望.成功() || !进展期望.成功())
                     return 失败("P10", "persistent first readback");
             }
             {
@@ -320,10 +336,130 @@ int 运行服务合同事实权威端到端测试() noexcept {
                     || 服务->读取当前有效未满足服务合同完整集合_v1(
                         合同请求(自我, *G0)) != 合同期望
                     || 服务->读取到期未满足事件完整集合_v1(
-                        事件请求(自我, *G0)) != 事件期望)
+                        事件请求(自我, *G0)) != 事件期望
+                    || 服务->读取当前服务合同关联进展完整集合_v1(
+                        进展请求(自我, *G0)) != 进展期望)
                     return 失败("P10", "recovery exact readback");
             }
-            通过("P10", "persistent recovery preserves both complete collections");
+            通过("P10", "persistent recovery preserves all three complete collections");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务
+                ? 服务->ARCH_建立验证样本_v1(
+                    0x5343'0000'0000'0080ULL, 0, 0)
+                : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !自我 || !G0) return 失败("P11", "empty progress fixture");
+            auto 坏请求 = 进展请求(*自我, *G0);
+            坏请求.合同版本 = 0;
+            if (!进展空失败(服务->读取当前服务合同关联进展完整集合_v1(坏请求),
+                    服务合同事实权威读取状态_v1::入口拒绝))
+                return 失败("P11", "invalid progress request");
+            const auto 空组 = 服务->读取当前服务合同关联进展完整集合_v1(
+                进展请求(*自我, *G0));
+            if (!空组.成功() || !空组.完整集合见证
+                || 空组.完整集合见证->声明成员数 != 0
+                || 空组.本次正式读回截止 != *G0)
+                return 失败("P11", "legal empty progress witness");
+            auto 单项运行包 = 建立L1事实基座运行包();
+            auto 单项服务 = 建立服务(单项运行包);
+            const auto 单项自我 = 单项服务
+                ? 单项服务->ARCH_建立验证样本_v1(
+                    0x5343'0000'0000'0081ULL, 1, 0, false, false, 1)
+                : std::optional<L2存在身份>{};
+            const auto 单项G0 = 当前代次(单项运行包);
+            if (!单项服务 || !单项自我 || !单项G0)
+                return 失败("P11", "single progress fixture");
+            const auto 单项组 = 单项服务->读取当前服务合同关联进展完整集合_v1(
+                进展请求(*单项自我, *单项G0));
+            if (!单项组.成功() || 单项组.完整进展事实组.size() != 1
+                || !单项组.完整集合见证
+                || 单项组.完整集合见证->声明成员数 != 1)
+                return 失败("P11", "single progress readback");
+            通过("P11", "zero and one progress sets have complete witnesses");
+        }
+
+        服务进展完整集合读取结果_v1 N进展期望;
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务
+                ? 服务->ARCH_建立验证样本_v1(
+                    0x5343'0000'0000'0090ULL, 8, 0, false, false, 8)
+                : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !自我 || !G0) return 失败("P12", "N progress fixture");
+            N进展期望 = 服务->读取当前服务合同关联进展完整集合_v1(
+                进展请求(*自我, *G0));
+            if (!N进展期望.成功() || N进展期望.完整进展事实组.size() != 8)
+                return 失败("P12", "N progress complete readback");
+            bool 状态组[8]{};
+            for (std::size_t i = 0; i < N进展期望.完整进展事实组.size(); ++i) {
+                const auto& 进展 = N进展期望.完整进展事实组[i];
+                const auto 状态 = static_cast<std::uint8_t>(进展.运行状态);
+                if (状态 < 1 || 状态 > 8) return 失败("P12", "progress state range");
+                状态组[状态 - 1] = true;
+                const bool 应有状态 = i % 3 != 1;
+                const bool 应有动态 = i % 3 != 0;
+                if (进展.进展状态.has_value() != 应有状态
+                    || 进展.进展动态.has_value() != 应有动态)
+                    return 失败("P12", "state and dynamic optional shapes");
+            }
+            for (const auto 已见 : 状态组)
+                if (!已见) return 失败("P12", "all progress states retained");
+            const auto 重复自我 = 服务->ARCH_建立验证样本_v1(
+                0x5343'0000'0000'0090ULL, 8, 0, false, false, 8);
+            const auto G重复 = 当前代次(运行包);
+            if (!重复自我 || !G重复 || *重复自我 != *自我 || *G重复 != *G0
+                || 服务->读取当前服务合同关联进展完整集合_v1(
+                    进展请求(*自我, *G重复)) != N进展期望)
+                return 失败("P13", "progress exact duplicate");
+            通过("P12", "all eight current run states remain in the complete set");
+            通过("P13", "progress fixture exact duplicate has zero second effect");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务
+                ? 服务->ARCH_建立验证样本_v1(
+                    0x5343'0000'0000'00A0ULL, 1, 0, false, false, 1, true)
+                : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !自我 || !G0) return 失败("P14", "damaged progress fixture");
+            if (!进展空失败(服务->读取当前服务合同关联进展完整集合_v1(
+                    进展请求(*自我, *G0)),
+                    服务合同事实权威读取状态_v1::引用冲突))
+                return 失败("P14", "damaged progress payload fail closed");
+            通过("P14", "damaged progress cannot become partial success");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto 自我 = 服务
+                ? 服务->ARCH_建立验证样本_v1(
+                    0x5343'0000'0000'00B0ULL, 1, 0, false, false, 1)
+                : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !自我 || !G0) return 失败("P15", "progress drift fixture");
+            服务->ARCH_注入读中漂移一次();
+            if (!进展空失败(服务->读取当前服务合同关联进展完整集合_v1(
+                    进展请求(*自我, *G0)),
+                    服务合同事实权威读取状态_v1::当前性漂移))
+                return 失败("P15", "progress read drift");
+            const auto G1 = 当前代次(运行包);
+            if (!G1) return 失败("P16", "progress resource G");
+            服务->ARCH_注入资源失败一次();
+            if (!进展空失败(服务->读取当前服务合同关联进展完整集合_v1(
+                    进展请求(*自我, *G1)),
+                    服务合同事实权威读取状态_v1::资源失败))
+                return 失败("P16", "progress resource failure");
+            通过("P15", "progress G0 drift fails with empty payload");
+            通过("P16", "progress resource failure has no stale payload");
         }
         return 0;
     } catch (const std::exception& 异常) {
