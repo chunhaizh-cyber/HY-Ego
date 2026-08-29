@@ -1,4 +1,4 @@
-# INSTINCT-STAGE3-SINGLE-SECOND-DEMAND-TIME-ADJUDICATION 读取当前维护秒服务需求时间裁决函数流程图 v0.1
+# INSTINCT-STAGE3-SINGLE-SECOND-DEMAND-TIME-ADJUDICATION 读取当前维护秒服务需求时间裁决函数流程图 v0.2
 
 ```mermaid
 flowchart TD
@@ -14,7 +14,7 @@ flowchart TD
     I --> J{"完整集合成功？"}
     J -- "否" --> H
     J -- "是" --> K["第二次读取基础快照"]
-    K --> L{"与第一次逐字段相同？"}
+    K --> L{"稳定权威字段与第一次相同，且仍在同一完整秒边界？\n瞬时经过纳秒不比较"}
     L -- "否" --> M["当前性漂移；空载荷、截止 0"]
     L -- "是" --> N["验证当前纪元、当前秒、规则版本及唯一合同/需求"]
     N --> O{"时间或引用闭合？"}
