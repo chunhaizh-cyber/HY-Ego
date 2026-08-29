@@ -188,6 +188,7 @@
     <ClCompile Include="海中鱼巣\线程\运行消息协议.ixx" />
     <ClCompile Include="海中鱼巣\适配\协议.D455采样材料.ixx" />
     <ClCompile Include="海中鱼巣\适配\适配器.单调时钟.ixx" />
+    <ClCompile Include="海中鱼巣\适配\适配器.UTC时钟.ixx" />
     <ClCompile Include="海中鱼巣\适配\采集器.D455相机.ixx">
       <ExcludedFromBuild Condition="'$(Platform)'!='x64' or '$(EnableD455RealSense)'!='true'">true</ExcludedFromBuild>
     </ClCompile>
@@ -219,6 +220,7 @@
     <ClCompile Include="海中鱼巣\端到端测试.本能路线阶段二.ixx" />
     <ClCompile Include="海中鱼巣\端到端测试.DATA-L1有限N分区原子事务.ixx" />
     <ClCompile Include="海中鱼巣\端到端测试.本能被动维护游标.ixx" />
+    <ClCompile Include="海中鱼巣\端到端测试.本能UTC时间证据.ixx" />
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务特征方法查找与条件提议.ixx" />
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务筹办当前就绪与执行冻结.ixx" />
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务目标未达成重筹办触发.ixx" />

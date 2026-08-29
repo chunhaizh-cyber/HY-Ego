@@ -18,6 +18,7 @@ import 海中鱼巣.业务.提供者.四本体根生产初始化;
 import 海中鱼巣.业务.提供者.方法登记根生产初始化;
 import 海中鱼巣.业务.提供者.本能根运行初始化;
 import 海中鱼巣.适配.适配器.单调时钟;
+import 海中鱼巣.适配.适配器.UTC时钟;
 import 海中鱼巣.领域.服务.完整秒时钟;
 import 海中鱼巣.领域.服务.本能被动维护游标;
 import 海中鱼巣.线程.创建.自我线程;
@@ -153,13 +154,15 @@ std::optional<L2结构幂等身份> 分配中性实例材料维护幂等身份()
             程序失败阶段::方法登记根生产初始化};
     }
     // 阶段 21：在自我线程创建前建立或恢复双根，并按同一截止读回值式锚点。
-    const auto 本次启动UTC计数 =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(
-            std::chrono::system_clock::now().time_since_epoch()).count();
-    if (本次启动UTC计数 <= 0 || !自我形成.已形成自我) {
+    UTC时钟适配器 UTC时钟;
+    const auto 本次启动UTC = UTC时钟.读取当前UTC时间证据_v1({});
+    if (!本次启动UTC.成功() || !本次启动UTC.证据
+        || !自我形成.已形成自我) {
         return {模式, 程序运行状态::初始化失败,
             程序失败阶段::本能根运行初始化};
     }
+    const auto 本次启动UTC计数 = static_cast<std::uint64_t>(
+        本次启动UTC.证据->UTC纳秒);
     本能根运行初始化提供者 本能根者(
         装配.上下文->取得L2存在结构服务(),
         装配.上下文->取得L2特征结构服务(),
