@@ -16,6 +16,7 @@ module;
 #include <system_error>
 #include <thread>
 #include <utility>
+#include <variant>
 
 export module 海中鱼巣.端到端测试.本能被动维护基础快照;
 
@@ -27,6 +28,7 @@ import 海中鱼巣.业务.提供者.本能根运行初始化;
 import 海中鱼巣.适配.适配器.单调时钟;
 import 海中鱼巣.领域.服务.完整秒时钟;
 import 海中鱼巣.领域.服务.服务合同事实权威;
+import 海中鱼巣.领域.服务.L2状态动态原子发布;
 import 海中鱼巣.领域.组合.本能被动维护基础快照;
 import 海中鱼巣.领域.算法.本能单完整秒被动维护;
 
@@ -62,6 +64,8 @@ void 通过(const char* 编号, const char* 说明) {
 
 struct 会话_v1 final {
     std::unique_ptr<普通应用上下文> 上下文;
+    L2场景身份 根场景{};
+    L2存在身份 自我{};
     本能根运行锚点_v1 本能根;
 };
 
@@ -100,7 +104,8 @@ std::optional<会话_v1> 建立会话(
         本能根运行初始化合同版本_v1,
         自我.已形成自我->自我存在.身份, 根启动身份});
     if (!本能根.成功() || !本能根.锚点) return std::nullopt;
-    return 会话_v1{std::move(上下文), *本能根.锚点};
+    return 会话_v1{std::move(上下文), 根.根场景,
+        自我.已形成自我->自我存在.身份, *本能根.锚点};
 }
 
 std::optional<std::uint64_t> 当前代次(const 会话_v1& 会话) {
@@ -153,6 +158,85 @@ bool 裁决空失败(const 本能单完整秒服务需求时间裁决读取结�
     本能单完整秒服务需求时间裁决读取状态_v1 状态) {
     return 结果.状态 == 状态 && !结果.成功() && !结果.可维护()
         && !结果.快照 && 结果.本次正式读回截止 == 0;
+}
+
+bool 发布主动安全来源规则(会话_v1& 会话, std::uint64_t 幂等) {
+    const auto G0 = 当前代次(会话);
+    if (!G0) return false;
+    const auto 结果 = 会话.上下文->取得安全根定义与当前值服务()
+        .发布主动安全结算来源规则_v1({安全根定义合同版本_v1,
+            {L2结构合同版本, *G0}, L2结构幂等身份{幂等}, 会话.本能根,
+            1, {}, 稳定编码{0x4153'5749'4E44'4F57ULL}});
+    return 结果.成功() && 结果.规则 && 结果.规则->规则版本 == 1
+        && 结果.规则->完整来源方法组.empty();
+}
+
+bool 登记永久变化账(会话_v1& 会话) {
+    const auto G0 = 当前代次(会话);
+    if (!G0) return false;
+    return 会话.上下文->取得L2状态动态原子发布服务()
+        .确保特征当前值变化永久账登记_v2({
+            L2特征当前值变化永久账合同版本_v2,
+            {L2结构合同版本, *G0}}).成功();
+}
+
+std::optional<L2特征值事实> 读取安全根当前值(const 会话_v1& 会话) {
+    const auto G0 = 当前代次(会话);
+    if (!G0) return std::nullopt;
+    const auto 结果 = 会话.上下文->取得L2特征结构服务().读取特征当前值(
+        {{L2结构合同版本, *G0}, 会话.本能根.安全根特征实例});
+    return 结果.成功() && 结果.结果头.事实截止代次 == *G0 && 结果.当前值
+        ? 结果.当前值 : std::nullopt;
+}
+
+bool 发布安全根变化(会话_v1& 会话, std::int64_t UTC纳秒,
+    std::uint64_t 身份基数) {
+    const auto G0 = 当前代次(会话);
+    const auto 旧值 = 读取安全根当前值(会话);
+    if (!G0 || !旧值) return false;
+    const auto* 数值 = std::get_if<std::int64_t>(&旧值->类型化不可变材料);
+    if (!数值 || *数值 <= 0) return false;
+    L2特征当前值变化记录请求_v2 请求;
+    请求.请求头 = {L2结构合同版本, *G0};
+    请求.组合幂等身份 = {身份基数};
+    请求.特征参与者幂等身份 = {身份基数 + 1};
+    请求.状态参与者幂等身份 = {身份基数 + 2};
+    请求.动态参与者幂等身份 = {身份基数 + 3};
+    请求.特征实例 = 会话.本能根.安全根特征实例;
+    请求.预期旧当前值 = *旧值;
+    请求.新值材料 = L2原始值材料{*数值 - 1};
+    请求.变化UTC纳秒 = UTC纳秒;
+    请求.主体存在 = 会话.自我;
+    请求.共同场景 = 会话.根场景;
+    请求.来源存在 = 会话.自我;
+    return 会话.上下文->取得L2状态动态原子发布服务()
+        .发布特征当前值变化与中性记录_v2(请求).成功();
+}
+
+本能主动安全UTC窗口裁决读取请求_v1 形成主动安全窗口请求(
+    const 会话_v1& 会话, std::uint64_t 运行代次, std::uint64_t G0,
+    std::uint64_t 数量预算 = 8) {
+    return {本能主动安全UTC窗口裁决合同版本_v1,
+        形成请求(会话, 运行代次, G0), 1, 1'000, 数量预算};
+}
+
+bool 主动安全空失败(const 本能主动安全UTC窗口裁决读取结果_v1& 结果,
+    本能主动安全UTC窗口裁决读取状态_v1 状态) {
+    return 结果.状态 == 状态 && !结果.成功() && !结果.快照
+        && 结果.本次正式读回截止 == 0;
+}
+
+本能主动安全UTC窗口裁决读取结果_v1 读取稳定主动安全裁决(
+    const 本能主动安全UTC窗口裁决组合器& 组合器,
+    const 本能主动安全UTC窗口裁决读取请求_v1& 请求) {
+    本能主动安全UTC窗口裁决读取结果_v1 结果;
+    for (int i = 0; i < 4; ++i) {
+        结果 = 组合器.读取UTC窗口主动安全变化裁决_v1(请求);
+        if (结果.状态 != 本能主动安全UTC窗口裁决读取状态_v1::当前性漂移)
+            break;
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+    return 结果;
 }
 
 本能单完整秒服务需求时间裁决读取结果_v1 读取稳定裁决(
@@ -369,6 +453,110 @@ int 运行本能被动维护基础快照端到端测试() noexcept {
             || 算法结果.载荷->安全根定义版本 != 2)
             return 失败("P08", "consumer projection into rule kernel");
         通过("P08", "consumer projects A/V/L/H/version without constants");
+
+        本能主动安全UTC窗口裁决组合器 主动安全组合器(
+            组合器, 会话->上下文->取得安全根定义与当前值服务(),
+            会话->上下文->取得L2状态动态原子发布服务());
+        const auto GA0 = 当前代次(*会话);
+        if (!GA0) return 失败("A00", "read active-safety initial G");
+        auto 主动坏请求 = 形成主动安全窗口请求(*会话, 运行代次, *GA0);
+        主动坏请求.合同版本 = 0;
+        if (!主动安全空失败(
+                主动安全组合器.读取UTC窗口主动安全变化裁决_v1(主动坏请求),
+                本能主动安全UTC窗口裁决读取状态_v1::入口拒绝))
+            return 失败("A00", "invalid active-safety request");
+        auto 反向窗口 = 形成主动安全窗口请求(*会话, 运行代次, *GA0);
+        反向窗口.排除结束UTC纳秒 = 反向窗口.包含起始UTC纳秒;
+        if (!主动安全空失败(
+                主动安全组合器.读取UTC窗口主动安全变化裁决_v1(反向窗口),
+                本能主动安全UTC窗口裁决读取状态_v1::入口拒绝))
+            return 失败("A00", "invalid UTC half-open window");
+        通过("A00", "invalid contract and UTC window fail closed");
+
+        const auto 未发布规则 = 读取稳定主动安全裁决(
+            主动安全组合器,
+            形成主动安全窗口请求(*会话, 运行代次, *GA0));
+        if (!主动安全空失败(未发布规则,
+                本能主动安全UTC窗口裁决读取状态_v1::规则未发布))
+            return 失败("A01", "source rule must be published");
+        if (!发布主动安全来源规则(
+                *会话, 0x4153'5749'0000'0001ULL))
+            return 失败("A01", "publish source rule v1 empty set");
+        const auto GA1 = 当前代次(*会话);
+        if (!GA1) return 失败("A01", "read post-rule G");
+        const auto 未登记账 = 读取稳定主动安全裁决(
+            主动安全组合器,
+            形成主动安全窗口请求(*会话, 运行代次, *GA1));
+        if (!主动安全空失败(未登记账,
+                本能主动安全UTC窗口裁决读取状态_v1::账未登记))
+            return 失败("A01", "ledger registration must be explicit");
+        通过("A01", "unpublished rule and unregistered ledger remain distinct");
+
+        if (!登记永久变化账(*会话))
+            return 失败("A02", "register permanent change ledger");
+        const auto GA2 = 当前代次(*会话);
+        if (!GA2) return 失败("A02", "read registered-ledger G");
+        const auto 合法空 = 读取稳定主动安全裁决(
+            主动安全组合器,
+            形成主动安全窗口请求(*会话, 运行代次, *GA2));
+        if (!合法空.成功() || !合法空.快照
+            || 合法空.快照->裁决 != 本能主动安全UTC窗口裁决_v1::未改变A
+            || !合法空.快照->永久变化账完整组.完整变化组.empty()
+            || !合法空.快照->永久变化账完整组.完整集合见证
+            || 合法空.快照->永久变化账完整组.完整集合见证->声明成员数 != 0)
+            return 失败("A02", "rule-v1 and legal empty ledger result");
+        const auto 旧G结果 = 主动安全组合器.读取UTC窗口主动安全变化裁决_v1(
+            形成主动安全窗口请求(*会话, 运行代次, *GA1));
+        if (!主动安全空失败(旧G结果,
+                本能主动安全UTC窗口裁决读取状态_v1::当前性漂移))
+            return 失败("A02", "old G must not reuse legal-empty result");
+        通过("A02", "registered complete empty ledger proves unchanged A");
+
+        if (!发布安全根变化(*会话, 100,
+                0x4153'5749'1000'0000ULL)
+            || !发布安全根变化(*会话, 200,
+                0x4153'5749'2000'0000ULL))
+            return 失败("A03", "publish two permanent safety changes");
+        const auto GA3 = 当前代次(*会话);
+        if (!GA3) return 失败("A03", "read post-change G");
+        const auto 预算不足 = 读取稳定主动安全裁决(
+            主动安全组合器,
+            形成主动安全窗口请求(*会话, 运行代次, *GA3, 1));
+        if (!主动安全空失败(预算不足,
+                本能主动安全UTC窗口裁决读取状态_v1::数量预算不足))
+            return 失败("A03", "ledger count budget mapping");
+        const auto 未裁定来源 = 读取稳定主动安全裁决(
+            主动安全组合器,
+            形成主动安全窗口请求(*会话, 运行代次, *GA3, 2));
+        if (!主动安全空失败(未裁定来源,
+                本能主动安全UTC窗口裁决读取状态_v1::来源未裁定))
+            return 失败("A03", "non-empty ledger must fail closed");
+        通过("A03", "budget failure and non-empty unknown source remain structured");
+
+        using 主动状态 = 本能主动安全UTC窗口裁决读取状态_v1;
+        if (本能主动安全UTC窗口裁决内部::映射规则状态(
+                主动安全结算来源规则读取状态_v1::当前性漂移)
+                != 主动状态::当前性漂移
+            || 本能主动安全UTC窗口裁决内部::映射规则状态(
+                主动安全结算来源规则读取状态_v1::引用冲突)
+                != 主动状态::引用冲突
+            || 本能主动安全UTC窗口裁决内部::映射规则状态(
+                主动安全结算来源规则读取状态_v1::资源失败)
+                != 主动状态::资源失败
+            || 本能主动安全UTC窗口裁决内部::映射永久账状态(
+                L2特征当前值变化组读取状态_v2::集合不闭合)
+                != 主动状态::集合不闭合
+            || 本能主动安全UTC窗口裁决内部::映射永久账状态(
+                L2特征当前值变化组读取状态_v2::引用冲突)
+                != 主动状态::引用冲突
+            || 本能主动安全UTC窗口裁决内部::映射永久账状态(
+                L2特征当前值变化组读取状态_v2::资源失败)
+                != 主动状态::资源失败
+            || 本能主动安全UTC窗口裁决内部::映射永久账状态(
+                L2特征当前值变化组读取状态_v2::内部错误)
+                != 主动状态::内部错误)
+            return 失败("A04", "lower provider status mapping");
+        通过("A04", "lower drift, closure, reference, resource and internal states map exactly");
 
         单调时钟适配器 裁决时间适配器({运行代次, 纪元});
         完整秒时钟服务 裁决时钟(裁决时间适配器,
