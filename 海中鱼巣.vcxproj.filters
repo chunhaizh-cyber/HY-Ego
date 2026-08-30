@@ -267,6 +267,9 @@
     <ClCompile Include="海中鱼巣\端到端测试.安全根生产定义初始化.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\端到端测试.任务现实执行硬否决规则宇宙.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\端到端测试.本能单完整秒被动维护.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -292,6 +295,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\服务.L2治理函数骨架.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\安全治理\服务.L2任务现实执行硬否决规则结构.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\安全治理\服务.任务现实执行硬否决.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\服务.完整秒时钟.ixx">
@@ -372,6 +381,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\L2治理函数骨架.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\安全治理\L2任务现实执行硬否决规则结构.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\安全治理\任务现实执行硬否决.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\运行期只读查询.数据.h">

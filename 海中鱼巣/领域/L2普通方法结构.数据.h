@@ -273,6 +273,15 @@ struct L2方法动作入口事实 final {
     friend bool operator==(const L2方法动作入口事实&,
         const L2方法动作入口事实&) = default;
 };
+
+// 方法动作在任务执行冻结中的强类型作用范围。完整 v2 动作入口服务由
+// 后继方法治理切片实现；本枚举先作为跨 owner 冻结材料的稳定 ABI。
+enum class L2方法动作作用范围 : std::uint8_t {
+    内部治理 = 1,
+    纯现实观察 = 2,
+    现实改变 = 3
+};
+
 struct L2方法生命周期事实 final {
     L2方法身份 方法;
     L2方法生命周期版本 生命周期版本;

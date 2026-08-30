@@ -224,6 +224,7 @@
     <ClCompile Include="海中鱼巣\端到端测试.本能UTC时间证据.ixx" />
     <ClCompile Include="海中鱼巣\端到端测试.安全根定义与当前值.ixx" />
     <ClCompile Include="海中鱼巣\端到端测试.安全根生产定义初始化.ixx" />
+    <ClCompile Include="海中鱼巣\端到端测试.任务现实执行硬否决规则宇宙.ixx" />
     <ClCompile Include="海中鱼巣\端到端测试.本能单完整秒被动维护.ixx" />
     <ClCompile Include="海中鱼巣\端到端测试.本能被动维护基础快照.ixx" />
     <ClCompile Include="海中鱼巣\端到端测试.服务合同事实权威.ixx">
@@ -235,6 +236,8 @@
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.需求初次筹办准备.ixx" />
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务子目标回流重判.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.L2治理函数骨架.ixx" />
+    <ClCompile Include="海中鱼巣\领域\安全治理\服务.L2任务现实执行硬否决规则结构.ixx" />
+    <ClCompile Include="海中鱼巣\领域\安全治理\服务.任务现实执行硬否决.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.完整秒时钟.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.本能被动维护游标.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.安全根定义与当前值.ixx" />
@@ -296,6 +299,8 @@
     <ClInclude Include="海中鱼巣\领域\内部治理\任务初次筹办.数据.h" />
     <ClInclude Include="海中鱼巣\领域\内部治理\任务子目标回流重判.数据.h" />
     <ClInclude Include="海中鱼巣\领域\L2治理函数骨架.数据.h" />
+    <ClInclude Include="海中鱼巣\领域\安全治理\L2任务现实执行硬否决规则结构.数据.h" />
+    <ClInclude Include="海中鱼巣\领域\安全治理\任务现实执行硬否决.数据.h" />
     <ClInclude Include="海中鱼巣\领域\运行期只读查询.数据.h" />
     <ClInclude Include="海中鱼巣\领域\本能被动维护游标.数据.h" />
     <ClInclude Include="海中鱼巣\领域\安全根定义与当前值.数据.h" />
