@@ -134,6 +134,15 @@ bool 准备发布空失败_v2(const 服务准备事实发布结果_v2& 结果,
                      : 结果.首次提交事实代次 == 0);
 }
 
+bool 历史范围空失败(const 服务维护历史事实范围读取结果_v1& 结果,
+    服务维护历史事实范围读取状态_v1 状态) {
+    return 结果.状态 == 状态 && !结果.成功()
+        && 结果.合同变化组.empty() && 结果.合同状态变化组.empty()
+        && 结果.到期事件变化组.empty() && 结果.服务进展变化组.empty()
+        && 结果.服务准备变化组.empty() && !结果.完整集合见证
+        && 结果.本次正式读回截止 == 0;
+}
+
 服务合同完整集合读取请求_v1 合同请求(L2存在身份 自我, std::uint64_t G0) {
     return {服务合同事实权威合同版本_v1,
         {L2结构合同版本, G0}, 自我};
@@ -167,6 +176,13 @@ bool 准备发布空失败_v2(const 服务准备事实发布结果_v2& 结果,
     L2存在身份 自我, std::uint64_t G0) {
     return {服务准备事实扩展合同版本_v2,
         {L2结构合同版本, G0}, 自我};
+}
+
+服务维护历史事实范围读取请求_v1 历史范围请求(
+    L2存在身份 自我, std::uint64_t 起点, std::uint64_t G0,
+    std::uint64_t 预算 = 1024) {
+    return {服务维护历史事实账合同版本_v1,
+        {L2结构合同版本, G0}, 自我, 起点, 预算};
 }
 
 struct 外部端点交付 final {
@@ -246,8 +262,8 @@ struct 发布测试上下文 final {
 std::optional<发布测试上下文> 建立发布测试上下文(
     L1事实基座运行包& 运行包, 服务合同事实权威服务& 服务,
     std::uint64_t 身份基数) {
-    const auto 自我 = 服务.ARCH_建立验证样本_v1(
-        身份基数 + 1, 1, 0);
+    const auto 自我 = 服务.ARCH_建立历史到期事件样本_v1(
+        身份基数 + 1, false);
     auto 外部端点 = 建立外部端点(
         运行包, 身份基数 + 2, 身份基数 + 3);
     const auto G0 = 当前代次(运行包);
@@ -1029,6 +1045,244 @@ int 运行服务合同事实权威端到端测试() noexcept {
         {
             auto 运行包 = 建立L1事实基座运行包();
             auto 服务 = 建立服务(运行包);
+            const auto Greg = 当前代次(运行包);
+            const auto 自我 = 服务 && Greg
+                ? 服务->ARCH_建立历史到期事件样本_v1(
+                    0x5348'0000'0000'0001ULL, false)
+                : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !Greg || *Greg <= 1 || !自我 || !G0)
+                return 失败("H00", "history contract fixture");
+            const auto 完整 = 服务->按事实代次范围读取服务维护历史事实完整组_v1(
+                历史范围请求(*自我, *Greg, *G0));
+            if (!完整.成功() || 完整.合同变化组.size() != 1
+                || 完整.合同状态变化组.size() != 1
+                || !完整.到期事件变化组.empty()
+                || !完整.服务进展变化组.empty()
+                || !完整.服务准备变化组.empty()
+                || !完整.完整集合见证
+                || 完整.完整集合见证->声明成员数 != 2
+                || 完整.完整集合见证->历史账登记事实代次 != *Greg)
+                return 失败("H00", "contract, state and expiry history range");
+            if (!历史范围空失败(
+                    服务->按事实代次范围读取服务维护历史事实完整组_v1(
+                        历史范围请求(*自我, *Greg - 1, *G0)),
+                    服务维护历史事实范围读取状态_v1::覆盖边界不可用))
+                return 失败("H00", "history coverage boundary");
+            if (!历史范围空失败(
+                    服务->按事实代次范围读取服务维护历史事实完整组_v1(
+                        历史范围请求(*自我, *Greg, *G0, 1)),
+                    服务维护历史事实范围读取状态_v1::数量预算不足))
+                return 失败("H00", "history count budget");
+            const auto 空组 = 服务->按事实代次范围读取服务维护历史事实完整组_v1(
+                历史范围请求(*自我, *G0, *G0));
+            if (!空组.成功() || !空组.完整集合见证
+                || 空组.完整集合见证->声明成员数 != 0)
+                return 失败("H00", "legal empty history range");
+            通过("H00", "registration boundary, contract/state range, budget and empty witness");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto Greg = 当前代次(运行包);
+            const auto 自我 = 服务 && Greg
+                ? 服务->ARCH_建立历史到期事件样本_v1(
+                    0x5348'0100'0000'0001ULL)
+                : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !Greg || !自我 || !G0 || *G0 <= *Greg)
+                return 失败("H01", "expiry history fixture");
+            const auto 完整 = 服务->按事实代次范围读取服务维护历史事实完整组_v1(
+                历史范围请求(*自我, *Greg, *G0));
+            if (!完整.成功() || !完整.完整集合见证
+                || 完整.合同变化组.size() != 1
+                || 完整.合同状态变化组.size() != 2
+                || 完整.到期事件变化组.size() != 1
+                || !完整.服务进展变化组.empty()
+                || !完整.服务准备变化组.empty()
+                || 完整.完整集合见证->声明成员数 != 4)
+                return 失败("H01", "five-root expiry history shape");
+            const auto& 合同 = 完整.合同变化组.front();
+            const auto& 初态 = 完整.合同状态变化组.front();
+            const auto& 终态 = 完整.合同状态变化组.back();
+            const auto& 事件 = 完整.到期事件变化组.front();
+            if (!合同.退出当前事实代次
+                || 初态.退出当前事实代次 != 合同.退出当前事实代次
+                || 终态.退出当前事实代次
+                || 事件.退出当前事实代次
+                || 初态.事实.状态 != 服务合同当前状态_v1::有效未满足
+                || 终态.事实.状态 != 服务合同当前状态_v1::已到期
+                || 事件.事实.合同 != 合同.事实.身份
+                || 事件.事实.合同终态版本 != 终态.事实.状态版本
+                || *合同.退出当前事实代次 != 终态.事实.形成事实代次
+                || 完整.完整集合见证->规范成员身份组.size() != 4)
+                return 失败("H01", "expiry current-exit boundary and references");
+            通过("H01", "contract, two states and expiry event form permanent history");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto Greg = 当前代次(运行包);
+            auto 上下文 = 服务 && Greg ? 建立发布测试上下文(
+                运行包, *服务, 0x5348'0200'0000'0000ULL)
+                : std::optional<发布测试上下文>{};
+            bool 发布完整 = 服务 && 上下文;
+            for (std::uint64_t i = 1; 发布完整 && i <= 3; ++i) {
+                const auto G = 当前代次(运行包);
+                if (!G || !服务->发布服务进展事实_v2(形成进展发布请求(
+                        *上下文, *G, 0x5348'0201'0000'0000ULL + i, i)).成功())
+                    发布完整 = false;
+            }
+            for (std::uint64_t i = 1; 发布完整 && i <= 2; ++i) {
+                const auto G = 当前代次(运行包);
+                if (!G || !服务->发布服务准备事实_v2(形成准备发布请求(
+                        *上下文, *G, 0x5348'0202'0000'0000ULL + i, i)).成功())
+                    发布完整 = false;
+            }
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !Greg || !上下文 || !发布完整 || !G0)
+                return 失败("H02", "five-category N fixture");
+            const auto 完整 = 服务->按事实代次范围读取服务维护历史事实完整组_v1(
+                历史范围请求(上下文->自我, *Greg, *G0, 7));
+            if (!完整.成功() || !完整.完整集合见证
+                || 完整.合同变化组.size() != 1
+                || 完整.合同状态变化组.size() != 1
+                || !完整.到期事件变化组.empty()
+                || 完整.服务进展变化组.size() != 3
+                || 完整.服务准备变化组.size() != 2
+                || 完整.完整集合见证->声明成员数 != 7
+                || 完整.完整集合见证->规范成员身份组.size() != 7)
+                return 失败("H02", "five-category N range and exact budget");
+            if (!历史范围空失败(
+                    服务->按事实代次范围读取服务维护历史事实完整组_v1(
+                        历史范围请求(上下文->自我, *Greg, *G0, 6)),
+                    服务维护历史事实范围读取状态_v1::数量预算不足))
+                return 失败("H02", "exact total budget minus one");
+            const auto 左开空组 = 服务->按事实代次范围读取服务维护历史事实完整组_v1(
+                历史范围请求(上下文->自我, *G0, *G0));
+            if (!左开空组.成功() || !左开空组.完整集合见证
+                || 左开空组.完整集合见证->声明成员数 != 0)
+                return 失败("H02", "left-open right-closed boundary");
+            通过("H02", "five categories, N members, exact budget and open-left boundary");
+        }
+
+        {
+            const auto 验证坏载荷 = [&](std::uint64_t 幂等身份,
+                std::uint8_t 类别) {
+                auto 运行包 = 建立L1事实基座运行包();
+                auto 服务 = 建立服务(运行包);
+                const auto Greg = 当前代次(运行包);
+                const auto 自我 = 服务 && Greg
+                    ? 服务->ARCH_建立历史到期事件样本_v1(
+                        幂等身份, 类别 == 3, 类别)
+                    : std::optional<L2存在身份>{};
+                const auto G0 = 当前代次(运行包);
+                if (!服务 || !Greg || !自我 || !G0) return false;
+                return 历史范围空失败(
+                    服务->按事实代次范围读取服务维护历史事实完整组_v1(
+                        历史范围请求(*自我, *Greg, *G0)),
+                    服务维护历史事实范围读取状态_v1::引用冲突);
+            };
+            if (!验证坏载荷(0x5348'0300'0000'0001ULL, 1)
+                || !验证坏载荷(0x5348'0300'0000'0002ULL, 2)
+                || !验证坏载荷(0x5348'0300'0000'0003ULL, 3))
+                return 失败("H03", "damaged contract/state/expiry payload");
+            通过("H03", "damaged payload in three owner fact categories fails the whole history read");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto Greg = 当前代次(运行包);
+            const auto 自我 = 服务 && Greg
+                ? 服务->ARCH_建立验证样本_v1(
+                    0x5348'0400'0000'0001ULL, 1, 1)
+                : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !Greg || !自我 || !G0)
+                return 失败("H04", "failure injection fixture");
+            服务->ARCH_注入读中漂移一次();
+            if (!历史范围空失败(
+                    服务->按事实代次范围读取服务维护历史事实完整组_v1(
+                        历史范围请求(*自我, *Greg, *G0)),
+                    服务维护历史事实范围读取状态_v1::当前性漂移))
+                return 失败("H04", "history read drift");
+            const auto G1 = 当前代次(运行包);
+            if (!G1) return 失败("H04", "resource failure G");
+            服务->ARCH_注入资源失败一次();
+            if (!历史范围空失败(
+                    服务->按事实代次范围读取服务维护历史事实完整组_v1(
+                        历史范围请求(*自我, *Greg, *G1)),
+                    服务维护历史事实范围读取状态_v1::资源失败))
+                return 失败("H04", "history resource failure");
+            通过("H04", "drift and resource failure return exact empty results");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto Greg = 当前代次(运行包);
+            auto 上下文 = 服务 && Greg ? 建立发布测试上下文(
+                运行包, *服务, 0x5348'0500'0000'0000ULL)
+                : std::optional<发布测试上下文>{};
+            const auto G0 = 当前代次(运行包);
+            const auto 发布 = 服务 && 上下文 && G0
+                ? 服务->发布服务进展事实_v2(形成进展发布请求(
+                    *上下文, *G0, 0x5348'0501'0000'0001ULL, 1))
+                : 服务进展事实发布结果_v2{};
+            if (!服务 || !Greg || !上下文 || !发布.成功() || !发布.事实)
+                return 失败("H05", "missing history member fixture");
+            if (!服务->ARCH_退出历史成员关系_v1(
+                    服务维护历史事实类别_v1::服务进展,
+                    发布.事实->身份.值, 发布.事实->形成事实代次))
+                return 失败("H05", "exit permanent history member");
+            const auto G1 = 当前代次(运行包);
+            if (!G1 || !历史范围空失败(
+                    服务->按事实代次范围读取服务维护历史事实完整组_v1(
+                        历史范围请求(上下文->自我, *Greg, *G1)),
+                    服务维护历史事实范围读取状态_v1::集合不闭合))
+                return 失败("H05", "current progress missing from permanent history");
+            通过("H05", "a current post-registration fact cannot disappear from history");
+        }
+
+        {
+            const auto 验证坏成员 = [&](std::uint64_t 基数, bool 重复) {
+                auto 运行包 = 建立L1事实基座运行包();
+                auto 服务 = 建立服务(运行包);
+                const auto Greg = 当前代次(运行包);
+                auto 上下文 = 服务 && Greg ? 建立发布测试上下文(
+                    运行包, *服务, 基数)
+                    : std::optional<发布测试上下文>{};
+                const auto G0 = 当前代次(运行包);
+                const auto 发布 = 服务 && 上下文 && G0
+                    ? 服务->发布服务进展事实_v2(形成进展发布请求(
+                        *上下文, *G0, 基数 + 0x100, 1))
+                    : 服务进展事实发布结果_v2{};
+                if (!服务 || !Greg || !上下文 || !发布.成功() || !发布.事实)
+                    return false;
+                const bool 已损坏 = 重复
+                    ? 服务->ARCH_追加重复进展历史成员关系_v1(
+                        发布.事实->身份.值)
+                    : 服务->ARCH_追加无载荷进展历史成员_v1();
+                const auto G1 = 当前代次(运行包);
+                if (!已损坏 || !G1) return false;
+                return 历史范围空失败(
+                    服务->按事实代次范围读取服务维护历史事实完整组_v1(
+                        历史范围请求(上下文->自我, *Greg, *G1)),
+                    重复 ? 服务维护历史事实范围读取状态_v1::集合不闭合
+                         : 服务维护历史事实范围读取状态_v1::引用冲突);
+            };
+            if (!验证坏成员(0x5348'0600'0000'0000ULL, true)
+                || !验证坏成员(0x5348'0601'0000'0000ULL, false))
+                return 失败("H06", "duplicate or unreferenced history member");
+            通过("H06", "duplicate and payload-less members fail the whole history read");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
             auto 上下文 = 服务 ? 建立发布测试上下文(
                 运行包, *服务, 0x5350'0000'0000'1000ULL)
                 : std::optional<发布测试上下文>{};
@@ -1072,9 +1326,18 @@ int 运行服务合同事实权威端到端测试() noexcept {
                 || 首次重放.事实->身份 != 首次.事实->身份
                 || 首次重放.首次提交事实代次 != 首次.首次提交事实代次
                 || 首次重放.事实->生命周期.退出事实代次
-                    != std::optional<std::uint64_t>{更新.首次提交事实代次}
                 || !外部端点仍当前(运行包, 上下文->外部端点))
                 return 失败("W00", "progress historical replay after replacement");
+            const auto 历史组 = 服务->按事实代次范围读取服务维护历史事实完整组_v1(
+                历史范围请求(上下文->自我, *G0, *G2));
+            if (!历史组.成功() || 历史组.服务进展变化组.size() != 2
+                || !历史组.合同变化组.empty()
+                || 历史组.服务进展变化组.front().事实.身份 != 首次.事实->身份
+                || 历史组.服务进展变化组.front().退出当前事实代次
+                    != std::optional<std::uint64_t>{更新.首次提交事实代次}
+                || 历史组.服务进展变化组.back().事实.身份 != 更新.事实->身份
+                || 历史组.服务进展变化组.back().退出当前事实代次)
+                return 失败("W00", "progress permanent history ledger");
 
             auto 异义 = 首次请求;
             异义.材料.运行代次 = 99;
@@ -1125,8 +1388,7 @@ int 运行服务合同事实权威端到端测试() noexcept {
                 || 首次重放.状态 != 服务活动事实发布状态_v2::精确重复
                 || !首次重放.事实
                 || 首次重放.事实->身份 != 首次.事实->身份
-                || 首次重放.事实->生命周期.退出事实代次
-                    != std::optional<std::uint64_t>{完成.首次提交事实代次})
+                || 首次重放.事实->生命周期.退出事实代次)
                 return 失败("W01", "preparation historical replay");
 
             const auto 能力缺口请求 = 形成准备发布请求(*上下文, *G2,
@@ -1144,6 +1406,13 @@ int 运行服务合同事实权威端到端测试() noexcept {
             if (!当前组.成功() || 当前组.完整准备事实组.size() != 2
                 || !外部端点仍当前(运行包, 上下文->外部端点))
                 return 失败("W01", "preparation current closure");
+            const auto 历史组 = 服务->按事实代次范围读取服务维护历史事实完整组_v1(
+                历史范围请求(上下文->自我, *G0, *G3));
+            if (!历史组.成功() || 历史组.服务准备变化组.size() != 3
+                || 历史组.服务准备变化组.front().事实.身份 != 首次.事实->身份
+                || 历史组.服务准备变化组.front().退出当前事实代次
+                    != std::optional<std::uint64_t>{完成.首次提交事实代次})
+                return 失败("W01", "preparation permanent history ledger");
             通过("W01", "demand and gap preparations publish with exact source shapes");
         }
 
@@ -1344,19 +1613,25 @@ int 运行服务合同事实权威端到端测试() noexcept {
             发布服务准备事实请求_v2 准备请求{};
             服务进展事实发布结果_v2 进展期望{};
             服务准备事实发布结果_v2 准备期望{};
+            服务维护历史事实范围读取结果_v1 历史期望{};
+            服务维护历史事实范围读取结果_v1 到期历史期望{};
             L2存在身份 自我{};
+            L2存在身份 到期自我{};
+            std::uint64_t 历史起点 = 0;
             {
                 auto 建立 = 建立L1事实基座持久运行包_v1(配置);
                 if (!建立.成功() || !建立.运行包)
                     return 失败("W05", "first persistent publisher package");
                 auto 运行包 = std::move(*建立.运行包);
                 auto 服务 = 建立服务(运行包);
+                const auto Greg = 当前代次(运行包);
                 auto 上下文 = 服务 ? 建立发布测试上下文(
                     运行包, *服务, 0x5350'0000'0000'6000ULL)
                     : std::optional<发布测试上下文>{};
                 const auto G0 = 当前代次(运行包);
-                if (!服务 || !上下文 || !G0)
+                if (!服务 || !Greg || !上下文 || !G0)
                     return 失败("W05", "persistent publisher fixture");
+                历史起点 = *Greg;
                 自我 = 上下文->自我;
                 进展请求 = 形成进展发布请求(*上下文, *G0,
                     0x5350'6000'0000'0001ULL, 1);
@@ -1369,6 +1644,30 @@ int 运行服务合同事实权威端到端测试() noexcept {
                 准备期望 = 服务->发布服务准备事实_v2(准备请求);
                 if (!准备期望.成功())
                     return 失败("W05", "persistent preparation publish");
+                const auto 到期自我结果 = 服务->ARCH_建立历史到期事件样本_v1(
+                    0x5350'6000'0000'1000ULL);
+                if (!到期自我结果)
+                    return 失败("W05", "persistent expiry history fixture");
+                到期自我 = *到期自我结果;
+                const auto G2 = 当前代次(运行包);
+                历史期望 = G2
+                    ? 服务->按事实代次范围读取服务维护历史事实完整组_v1(
+                        历史范围请求(自我, 历史起点, *G2))
+                    : 服务维护历史事实范围读取结果_v1{};
+                到期历史期望 = G2
+                    ? 服务->按事实代次范围读取服务维护历史事实完整组_v1(
+                        历史范围请求(到期自我, 历史起点, *G2))
+                    : 服务维护历史事实范围读取结果_v1{};
+                if (!历史期望.成功()
+                    || 历史期望.合同变化组.size() != 1
+                    || 历史期望.合同状态变化组.size() != 1
+                    || 历史期望.服务进展变化组.size() != 1
+                    || 历史期望.服务准备变化组.size() != 1
+                    || !到期历史期望.成功()
+                    || 到期历史期望.合同变化组.size() != 1
+                    || 到期历史期望.合同状态变化组.size() != 2
+                    || 到期历史期望.到期事件变化组.size() != 1)
+                    return 失败("W05", "persistent history range before recovery");
             }
             {
                 auto 恢复 = 建立L1事实基座持久运行包_v1(配置);
@@ -1389,6 +1688,14 @@ int 运行服务合同事实权威端到端测试() noexcept {
                     ? 服务->读取当前服务准备完整集合_v2(
                         准备请求_v2(自我, *G1))
                     : 服务准备完整集合读取结果_v2{};
+                const auto 历史重放 = G1
+                    ? 服务->按事实代次范围读取服务维护历史事实完整组_v1(
+                        历史范围请求(自我, 历史起点, *G1))
+                    : 服务维护历史事实范围读取结果_v1{};
+                const auto 到期历史重放 = G1
+                    ? 服务->按事实代次范围读取服务维护历史事实完整组_v1(
+                        历史范围请求(到期自我, 历史起点, *G1))
+                    : 服务维护历史事实范围读取结果_v1{};
                 if (!G1 || *G1 != *G0 || !进展重放.成功()
                     || !准备重放.成功()
                     || 进展重放.状态
@@ -1400,6 +1707,8 @@ int 运行服务合同事实权威端到端测试() noexcept {
                     || 准备重放.首次提交事实代次
                         != 准备期望.首次提交事实代次
                     || !当前进展.成功() || !当前准备.成功()
+                    || 历史重放 != 历史期望
+                    || 到期历史重放 != 到期历史期望
                     || 当前进展.完整进展事实组.size() != 1
                     || 当前准备.完整准备事实组.size() != 1)
                     return 失败("W05", "persistent exact replay and current readback");
