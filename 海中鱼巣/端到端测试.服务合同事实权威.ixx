@@ -143,6 +143,13 @@ bool 历史范围空失败(const 服务维护历史事实范围读取结果_v1& 
         && 结果.本次正式读回截止 == 0;
 }
 
+bool 历史覆盖起点空失败(
+    const 服务维护历史覆盖起点读取结果_v1& 结果,
+    服务维护历史覆盖起点读取状态_v1 状态) {
+    return 结果.状态 == 状态 && !结果.成功() && !结果.快照
+        && 结果.本次正式读回截止 == 0;
+}
+
 服务合同完整集合读取请求_v1 合同请求(L2存在身份 自我, std::uint64_t G0) {
     return {服务合同事实权威合同版本_v1,
         {L2结构合同版本, G0}, 自我};
@@ -1040,6 +1047,62 @@ int 运行服务合同事实权威端到端测试() noexcept {
                 return 失败("V04", "v2 resource failure");
             通过("V03", "v1 facts do not project or fall back into v2");
             通过("V04", "v2 drift and resource failures expose no stale payload");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            const auto Greg = 当前代次(运行包);
+            const auto 自我 = 服务 && Greg
+                ? 服务->ARCH_建立验证样本_v1(
+                    0x5348'0000'0000'00F0ULL, 1, 1)
+                : std::optional<L2存在身份>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !Greg || *Greg <= 1 || !自我 || !G0)
+                return 失败("H-1", "history coverage-point fixture");
+            const auto 成功 = 服务->读取服务维护历史事实账覆盖起点_v1({
+                服务维护历史覆盖起点合同版本_v1,
+                {L2结构合同版本, *G0}, *自我});
+            if (!成功.成功() || !成功.快照
+                || 成功.快照->结构登记版本
+                    != 服务维护历史事实账结构登记版本_v1
+                || 成功.快照->历史账登记事实代次 != *Greg
+                || 成功.快照->自我 != *自我 || 成功.快照->G0 != *G0
+                || 成功.本次正式读回截止 != *G0)
+                return 失败("H-1", "history coverage-point readback");
+            if (!历史覆盖起点空失败(
+                    服务->读取服务维护历史事实账覆盖起点_v1({
+                        0, {L2结构合同版本, *G0}, *自我}),
+                    服务维护历史覆盖起点读取状态_v1::入口拒绝)
+                || !历史覆盖起点空失败(
+                    服务->读取服务维护历史事实账覆盖起点_v1({
+                        服务维护历史覆盖起点合同版本_v1,
+                        {L2结构合同版本, *G0},
+                        L2存在身份{稳定编码{0}}}),
+                    服务维护历史覆盖起点读取状态_v1::入口拒绝)
+                || !历史覆盖起点空失败(
+                    服务->读取服务维护历史事实账覆盖起点_v1({
+                        服务维护历史覆盖起点合同版本_v1,
+                        {L2结构合同版本, *Greg - 1}, *自我}),
+                    服务维护历史覆盖起点读取状态_v1::当前性漂移))
+                return 失败("H-1", "coverage-point entry and old-G matrix");
+            服务->ARCH_注入读中漂移一次();
+            if (!历史覆盖起点空失败(
+                    服务->读取服务维护历史事实账覆盖起点_v1({
+                        服务维护历史覆盖起点合同版本_v1,
+                        {L2结构合同版本, *G0}, *自我}),
+                    服务维护历史覆盖起点读取状态_v1::当前性漂移))
+                return 失败("H-1", "coverage-point read drift");
+            const auto G1 = 当前代次(运行包);
+            if (!G1) return 失败("H-1", "coverage-point resource G");
+            服务->ARCH_注入资源失败一次();
+            if (!历史覆盖起点空失败(
+                    服务->读取服务维护历史事实账覆盖起点_v1({
+                        服务维护历史覆盖起点合同版本_v1,
+                        {L2结构合同版本, *G1}, *自我}),
+                    服务维护历史覆盖起点读取状态_v1::资源失败))
+                return 失败("H-1", "coverage-point resource failure");
+            通过("H-1", "history owner exposes a guarded registration cutoff");
         }
 
         {

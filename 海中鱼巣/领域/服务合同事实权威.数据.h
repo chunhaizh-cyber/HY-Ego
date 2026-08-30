@@ -27,6 +27,7 @@ inline constexpr std::uint32_t 服务准备事实结构登记版本_v2 = 2;
 inline constexpr std::uint32_t 服务活动事实发布合同版本_v2 = 2;
 inline constexpr std::uint32_t 服务维护历史事实账合同版本_v1 = 1;
 inline constexpr std::uint32_t 服务维护历史事实账结构登记版本_v1 = 1;
+inline constexpr std::uint32_t 服务维护历史覆盖起点合同版本_v1 = 1;
 inline constexpr L1所有者范围建立幂等身份
     服务合同事实权威所有者建立身份_v1{0x494E'5354'5343'4F57ULL};
 
@@ -727,6 +728,54 @@ struct 服务维护历史事实范围读取结果_v1 final {
     bool 成功() const noexcept;
     friend bool operator==(const 服务维护历史事实范围读取结果_v1&,
         const 服务维护历史事实范围读取结果_v1&) = default;
+};
+
+struct 服务维护历史覆盖起点读取请求_v1 final {
+    std::uint32_t 合同版本 = 服务维护历史覆盖起点合同版本_v1;
+    L2结构请求头 请求头{};
+    L2存在身份 自我{};
+    friend bool operator==(const 服务维护历史覆盖起点读取请求_v1&,
+        const 服务维护历史覆盖起点读取请求_v1&) = default;
+};
+
+struct 服务维护历史覆盖起点快照_v1 final {
+    std::uint32_t 结构登记版本 = 0;
+    std::uint64_t 历史账登记事实代次 = 0;
+    L2存在身份 自我{};
+    std::uint64_t G0 = 0;
+    friend bool operator==(const 服务维护历史覆盖起点快照_v1&,
+        const 服务维护历史覆盖起点快照_v1&) = default;
+};
+
+enum class 服务维护历史覆盖起点读取状态_v1 : std::uint8_t {
+    已读取 = 1,
+    入口拒绝 = 2,
+    当前性漂移 = 3,
+    历史账未登记 = 4,
+    引用冲突 = 5,
+    资源失败 = 6,
+    内部错误 = 7
+};
+
+struct 服务维护历史覆盖起点读取结果_v1 final {
+    std::uint32_t 合同版本 = 服务维护历史覆盖起点合同版本_v1;
+    服务维护历史覆盖起点读取状态_v1 状态 =
+        服务维护历史覆盖起点读取状态_v1::入口拒绝;
+    std::optional<服务维护历史覆盖起点快照_v1> 快照{};
+    std::uint64_t 本次正式读回截止 = 0;
+    bool 成功() const noexcept {
+        return 合同版本 == 服务维护历史覆盖起点合同版本_v1
+            && 状态 == 服务维护历史覆盖起点读取状态_v1::已读取
+            && 快照
+            && 快照->结构登记版本 == 服务维护历史事实账结构登记版本_v1
+            && 快照->历史账登记事实代次 != 0
+            && 快照->历史账登记事实代次 <= 快照->G0
+            && 有效(快照->自我.值)
+            && 快照->G0 == 本次正式读回截止
+            && 本次正式读回截止 != 0;
+    }
+    friend bool operator==(const 服务维护历史覆盖起点读取结果_v1&,
+        const 服务维护历史覆盖起点读取结果_v1&) = default;
 };
 
 inline bool 服务合同当前状态有效_v1(服务合同当前状态_v1 状态) noexcept {
