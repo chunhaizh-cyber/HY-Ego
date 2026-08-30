@@ -1,4 +1,4 @@
-# INSTINCT-STAGE3-PASSIVE-MAINTENANCE-BATCH-KERNEL 多完整秒被动维护批量内核代码实施计划 v0.1
+# INSTINCT-STAGE3-PASSIVE-MAINTENANCE-BATCH-KERNEL 多完整秒被动维护批量内核代码实施计划 v0.2
 
 日期：2026-08-31
 
@@ -6,7 +6,7 @@
 
 计划身份：`INSTINCT-STAGE3-PASSIVE-MAINTENANCE-BATCH-KERNEL`
 
-版本：`v0.1`
+版本：`v0.2`
 
 目标：在现有本能单完整秒被动维护纯算法 owner 内增加多完整秒批量候选入口，使无外部 A/V 调整的最大被动区间在规范有限事实段覆盖下与逐秒调用现有单秒内核等价，且执行复杂度不依赖完整秒总数。合同预支 / 余款、准备补回等有限外部变化由后继 composer 在区间之间先形成候选，不属于本函数。
 
@@ -28,7 +28,7 @@
 ## 2. 正式依据和当前基线
 
 - `规范/6170_子规范_服务值时间维护生存安全回归与任务门控.md`：完整秒参考顺序、批量等价、地板和、分段、服务比例与安全回归；
-- `规范/详细设计/20260831_INSTINCT-STAGE3-PASSIVE-MAINTENANCE-BATCH-KERNEL_多完整秒被动维护批量内核详细设计_v0.1.md`：本计划唯一实现合同；
+- `规范/详细设计/20260831_INSTINCT-STAGE3-PASSIVE-MAINTENANCE-BATCH-KERNEL_多完整秒被动维护批量内核详细设计_v0.2.md`：本计划唯一实现合同；
 - `海中鱼巣/领域/本能单完整秒被动维护.数据.h` 与 `算法.本能单完整秒被动维护.ixx`：现有单秒参考入口；
 - 代码基线：计划创建时 `main@2cf7ce902f81938db624ee6f4903c1fb648afd0a`；
 - 当前 `计划/计划索引.md` 执行队列为空。
@@ -46,8 +46,8 @@
 新增专属记录：
 
 ```text
-施工记录/20260831_INSTINCT-STAGE3-PASSIVE-MAINTENANCE-BATCH-KERNEL_施工记录_v0.1.md
-验证记录/20260831_INSTINCT-STAGE3-PASSIVE-MAINTENANCE-BATCH-KERNEL_验证记录_v0.1.md
+施工记录/20260831_INSTINCT-STAGE3-PASSIVE-MAINTENANCE-BATCH-KERNEL_施工记录_v0.2.md
+验证记录/20260831_INSTINCT-STAGE3-PASSIVE-MAINTENANCE-BATCH-KERNEL_验证记录_v0.2.md
 ```
 
 禁止修改：
@@ -83,7 +83,7 @@
 
 ## 5. 实施步骤
 
-1. 增加 DTO、固定算法边界、完整性函数、状态和成功谓词；所有非成功结果载荷为空。
+1. 增加 DTO、固定算法边界、完整性函数、状态和成功谓词；所有非成功结果载荷为空。`事实分段键`固定为模块内非零 `std::uint64_t` 不透明关联键，不 import DATA、不取得持久身份语义。
 2. 实现事实段规范化验证：完整覆盖、无重叠 / 空洞、形状、分段键唯一、相邻可合并拒绝；合同 v1 只接受主动安全规则版本 1 的无主动变化形状。
 3. 实现服务累计衰减：无需求饱和减法、最长未满足地板和、30 天门禁、活动 1 保护；只用检查整数、饱和值和固定次数二分 / 欧几里得算法。
 4. 实现服务比例边界跳跃，最多跨 99 个比例区间；禁止按完整秒数量循环。
