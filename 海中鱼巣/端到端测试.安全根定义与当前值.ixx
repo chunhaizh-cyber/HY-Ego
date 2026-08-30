@@ -13,6 +13,7 @@ module;
 #include <string>
 #include <system_error>
 #include <utility>
+#include <vector>
 
 export module 海中鱼巣.端到端测试.安全根定义与当前值;
 
@@ -130,6 +131,28 @@ std::optional<发布安全根定义请求_v1> 形成发布请求(
             {L2结构合同版本, *G}, 会话.本能根});
 }
 
+std::optional<发布主动安全结算来源规则请求_v1> 形成来源规则发布请求(
+    const 会话_v1& 会话, std::uint64_t 幂等,
+    std::uint32_t 版本 = 1,
+    std::vector<L2方法身份> 方法组 = {}) {
+    const auto G = 当前代次(会话);
+    if (!G) return std::nullopt;
+    return 发布主动安全结算来源规则请求_v1{
+        安全根定义合同版本_v1, {L2结构合同版本, *G},
+        L2结构幂等身份{幂等}, 会话.本能根, 版本,
+        std::move(方法组), 稳定编码{0x5341'4645'5343'5201ULL}};
+}
+
+主动安全结算来源规则读取结果_v1 读取来源规则(
+    const 会话_v1& 会话) {
+    const auto G = 当前代次(会话);
+    if (!G) return {};
+    return 会话.上下文->取得安全根定义与当前值服务()
+        .读取当前主动安全结算来源规则_v1({
+            安全根定义合同版本_v1, {L2结构合同版本, *G},
+            会话.本能根});
+}
+
 std::optional<L2特征值事实> 读取安全根当前值(const 会话_v1& 会话) {
     const auto G = 当前代次(会话);
     if (!G) return std::nullopt;
@@ -238,7 +261,13 @@ int 运行安全根定义与当前值端到端测试() noexcept {
             || 未发布.成功() || 未发布.定义
             || 未发布.本次正式读回截止 != 0)
             return 失败("S00", "must not auto publish defaults");
-        通过("S00", "ordinary assembly leaves definition unpublished");
+        const auto 来源规则未发布 = 读取来源规则(*会话);
+        if (来源规则未发布.状态
+                != 主动安全结算来源规则读取状态_v1::未发布
+            || 来源规则未发布.成功() || 来源规则未发布.规则
+            || 来源规则未发布.本次正式读回截止 != 0)
+            return 失败("S00", "unpublished source rule is not an empty set");
+        通过("S00", "ordinary assembly leaves definition and source rule unpublished");
 
         auto 首版跳版请求 = 形成发布请求(*会话,
             0x5341'4645'0000'00F4ULL, 2);
@@ -417,6 +446,129 @@ int 运行安全根定义与当前值端到端测试() noexcept {
         std::cout << "[INSTINCT-SAFETY-DEFINITION][S10] NOT_RUN: "
                      "validation macro disabled\n";
 #endif
+
+        const std::vector<L2方法身份> 规范方法组{
+            L2方法身份{稳定编码{1}}, L2方法身份{稳定编码{2}}};
+        const std::vector<L2方法身份> 乱序方法组{
+            L2方法身份{稳定编码{2}}, L2方法身份{稳定编码{1}}};
+        const std::vector<L2方法身份> 重复方法组{
+            L2方法身份{稳定编码{1}}, L2方法身份{稳定编码{1}}};
+        const std::vector<L2方法身份> 零身份方法组{
+            L2方法身份{稳定编码{}}};
+        if (!主动安全结算来源方法组规范_v1({})
+            || !主动安全结算来源方法组规范_v1(规范方法组)
+            || 主动安全结算来源方法组规范_v1(乱序方法组)
+            || 主动安全结算来源方法组规范_v1(重复方法组)
+            || 主动安全结算来源方法组规范_v1(零身份方法组))
+            return 失败("S17", "canonical source-method group predicate");
+
+        auto 非一版来源请求 = 形成来源规则发布请求(*会话,
+            0x5341'4645'5343'52F1ULL, 2);
+        auto 非空来源请求 = 形成来源规则发布请求(*会话,
+            0x5341'4645'5343'52F2ULL, 1,
+            {L2方法身份{稳定编码{1}}});
+        auto 坏身份来源请求 = 形成来源规则发布请求(*会话,
+            0x5341'4645'5343'52F3ULL);
+        if (!非一版来源请求 || !非空来源请求 || !坏身份来源请求)
+            return 失败("S17", "make invalid source-rule requests");
+        坏身份来源请求->幂等身份 = {};
+        const auto 非一版来源 = 服务.发布主动安全结算来源规则_v1(
+            *非一版来源请求);
+        const auto 非空来源 = 服务.发布主动安全结算来源规则_v1(
+            *非空来源请求);
+        const auto 坏身份来源 = 服务.发布主动安全结算来源规则_v1(
+            *坏身份来源请求);
+        const auto 空失败形状 = [](const auto& 结果) {
+            return !结果.成功() && !结果.规则
+                && 结果.首次提交事实代次 == 0
+                && 结果.本次正式读回截止 == 0;
+        };
+        if (非一版来源.状态
+                != 主动安全结算来源规则发布状态_v1::入口拒绝
+            || 非空来源.状态
+                != 主动安全结算来源规则发布状态_v1::入口拒绝
+            || 坏身份来源.状态
+                != 主动安全结算来源规则发布状态_v1::入口拒绝
+            || !空失败形状(非一版来源) || !空失败形状(非空来源)
+            || !空失败形状(坏身份来源))
+            return 失败("S17", "v1 admits only an explicit empty version 1");
+        通过("S17", "source rule rejects non-v1, non-empty and bad identities");
+
+        auto 首次来源规则请求 = 形成来源规则发布请求(*会话,
+            0x5341'4645'5343'5201ULL);
+        if (!首次来源规则请求)
+            return 失败("S18", "make first source-rule request");
+        主动安全结算来源规则发布结果_v1 首次来源规则;
+#if defined(ARCH_INSTINCT_SAFETY_DEFINITION_VALIDATION)
+        服务.ARCH_注入来源规则发布提交后首次读回失败一次();
+        const auto 来源规则已可能 = 服务.发布主动安全结算来源规则_v1(
+            *首次来源规则请求);
+        if (来源规则已可能.状态
+                != 主动安全结算来源规则发布状态_v1::已可能发布
+            || 来源规则已可能.成功() || 来源规则已可能.规则
+            || 来源规则已可能.首次提交事实代次 == 0
+            || 来源规则已可能.本次正式读回截止 != 0)
+            return 失败("S18", "source-rule post-commit failure shape");
+        首次来源规则 = 服务.发布主动安全结算来源规则_v1(
+            *首次来源规则请求);
+        if (首次来源规则.首次提交事实代次
+            != 来源规则已可能.首次提交事实代次)
+            return 失败("S18", "source-rule replay keeps first G1");
+#else
+        首次来源规则 = 服务.发布主动安全结算来源规则_v1(
+            *首次来源规则请求);
+#endif
+        const auto 来源规则读回 = 读取来源规则(*会话);
+        if (!首次来源规则.成功() || !首次来源规则.规则
+            || !来源规则读回.成功() || !来源规则读回.规则
+            || 来源规则读回.规则 != 首次来源规则.规则
+            || !来源规则读回.规则->完整来源方法组.empty())
+            return 失败("S18", "publish and read explicit empty source rule");
+        通过("S18", "unpublished and legal empty source sets remain distinct");
+
+        const auto 幂等矩阵前G = 当前代次(*会话);
+        const auto 同键重复 = 服务.发布主动安全结算来源规则_v1(
+            *首次来源规则请求);
+        auto 同义异键请求 = 形成来源规则发布请求(*会话,
+            0x5341'4645'5343'5202ULL);
+        if (!同义异键请求)
+            return 失败("S19", "make same-meaning different-key request");
+        const auto 同义异键 = 服务.发布主动安全结算来源规则_v1(
+            *同义异键请求);
+        auto 来源规则同键异义请求 = *首次来源规则请求;
+        来源规则同键异义请求.来源稳定编码 =
+            稳定编码{0x5341'4645'5343'52EEULL};
+        const auto 来源规则同键异义 = 服务.发布主动安全结算来源规则_v1(
+            来源规则同键异义请求);
+        const auto 幂等矩阵后G = 当前代次(*会话);
+        if (!幂等矩阵前G || !幂等矩阵后G
+            || *幂等矩阵前G != *幂等矩阵后G
+            || !同键重复.成功()
+            || 同键重复.状态
+                != 主动安全结算来源规则发布状态_v1::精确重复
+            || 同键重复.首次提交事实代次
+                != 首次来源规则.首次提交事实代次
+            || !同义异键.成功()
+            || 同义异键.状态
+                != 主动安全结算来源规则发布状态_v1::精确重复
+            || 同义异键.规则 != 首次来源规则.规则
+            || 来源规则同键异义.状态
+                != 主动安全结算来源规则发布状态_v1::幂等冲突
+            || !空失败形状(来源规则同键异义))
+            return 失败("S19", "source-rule idempotency matrix");
+
+        const auto 来源规则漂移G = 当前代次(*会话);
+        if (!来源规则漂移G)
+            return 失败("S19", "read source-rule drift G0");
+        const auto 来源规则漂移 = 服务.读取当前主动安全结算来源规则_v1({
+            安全根定义合同版本_v1,
+            {L2结构合同版本, *来源规则漂移G + 1}, 会话->本能根});
+        if (来源规则漂移.状态
+                != 主动安全结算来源规则读取状态_v1::当前性漂移
+            || 来源规则漂移.成功() || 来源规则漂移.规则
+            || 来源规则漂移.本次正式读回截止 != 0)
+            return 失败("S19", "source-rule pre-read drift shape");
+        通过("S19", "source-rule replay, conflict and drift fail closed");
 
         auto& 原子服务 = 会话->上下文->取得L2状态动态原子发布服务();
         const auto 未登记G = 当前代次(*会话);
@@ -660,10 +812,13 @@ int 运行安全根定义与当前值端到端测试() noexcept {
             std::move(恢复上下文), *恢复本能根.锚点, 恢复场景,
             恢复四本体根};
         const auto 恢复定义 = 读取定义(恢复会话);
+        const auto 恢复来源规则 = 读取来源规则(恢复会话);
         const auto 恢复G = 当前代次(恢复会话);
         if (!恢复定义.成功() || !恢复定义.定义
-            || 恢复定义.定义->定义版本 != 期望恢复版本 || !恢复G)
-            return 失败("S11", "read current definition after reassembly");
+            || 恢复定义.定义->定义版本 != 期望恢复版本
+            || !恢复来源规则.成功() || !恢复来源规则.规则
+            || 恢复来源规则.规则 != 首次来源规则.规则 || !恢复G)
+            return 失败("S11", "read current definition and source rule after reassembly");
         const auto 恢复快照 = 恢复会话.上下文
             ->取得安全根定义与当前值服务().读取安全根定义与当前值_v1({
                 安全根定义合同版本_v1, {L2结构合同版本, *恢复G},
@@ -692,7 +847,7 @@ int 运行安全根定义与当前值端到端测试() noexcept {
                 恢复会话.本能根.安全根特征实例, 100, 301, 3});
         if (!恢复变化组.成功() || 恢复变化组.完整变化组 != 变化组.完整变化组)
             return 失败("S11", "recover permanent ledger facts");
-        通过("S11", "definition, registration and permanent ledger recover");
+        通过("S11", "definition, source rule, registration and ledger recover");
         return 0;
     } catch (...) {
         return 失败("EX", "unhandled exception");
