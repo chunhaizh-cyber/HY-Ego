@@ -5,6 +5,8 @@ module;
 #endif
 #include <windows.h>
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
 #include <exception>
 #include <filesystem>
@@ -15,6 +17,7 @@ module;
 #include <system_error>
 #include <utility>
 #include <variant>
+#include <vector>
 
 export module 海中鱼巣.端到端测试.服务合同事实权威;
 
@@ -113,6 +116,24 @@ bool 准备空失败_v2(const 服务准备完整集合读取结果_v2& 结果,
         && 结果.本次正式读回截止 == 0;
 }
 
+bool 进展发布空失败_v2(const 服务进展事实发布结果_v2& 结果,
+    服务活动事实发布状态_v2 状态) {
+    const bool 允许见证 = 状态 == 服务活动事实发布状态_v2::已可能发布;
+    return 结果.状态 == 状态 && !结果.成功() && !结果.事实
+        && 结果.本次正式读回截止 == 0
+        && (允许见证 ? 结果.首次提交事实代次 != 0
+                     : 结果.首次提交事实代次 == 0);
+}
+
+bool 准备发布空失败_v2(const 服务准备事实发布结果_v2& 结果,
+    服务活动事实发布状态_v2 状态) {
+    const bool 允许见证 = 状态 == 服务活动事实发布状态_v2::已可能发布;
+    return 结果.状态 == 状态 && !结果.成功() && !结果.事实
+        && 结果.本次正式读回截止 == 0
+        && (允许见证 ? 结果.首次提交事实代次 != 0
+                     : 结果.首次提交事实代次 == 0);
+}
+
 服务合同完整集合读取请求_v1 合同请求(L2存在身份 自我, std::uint64_t G0) {
     return {服务合同事实权威合同版本_v1,
         {L2结构合同版本, G0}, 自我};
@@ -146,6 +167,167 @@ bool 准备空失败_v2(const 服务准备完整集合读取结果_v2& 结果,
     L2存在身份 自我, std::uint64_t G0) {
     return {服务准备事实扩展合同版本_v2,
         {L2结构合同版本, G0}, 自我};
+}
+
+struct 外部端点交付 final {
+    L1所有者范围写端口 端口;
+    std::array<稳定编码, 11> 节点{};
+
+    外部端点交付(L1所有者范围写端口&& 写端口,
+        std::array<稳定编码, 11> 节点组) noexcept
+        : 端口(std::move(写端口)), 节点(std::move(节点组)) {}
+    外部端点交付(const 外部端点交付&) = delete;
+    外部端点交付& operator=(const 外部端点交付&) = delete;
+    外部端点交付(外部端点交付&&) noexcept = default;
+    外部端点交付& operator=(外部端点交付&&) noexcept = default;
+};
+
+std::optional<外部端点交付> 建立外部端点(
+    L1事实基座运行包& 运行包, std::uint64_t 建立身份,
+    std::uint64_t 写入身份) {
+    auto 交付 = 运行包.所有者范围签发器().建立所有者范围(
+        {L1所有者范围CRUD合同版本, {建立身份},
+            L1所有者范围种类::独占结构范围});
+    if ((交付.建立结果.状态 != L1所有者范围管理状态::成功
+            && 交付.建立结果.状态 != L1所有者范围管理状态::精确重复)
+        || !交付.写入端口)
+        return std::nullopt;
+    const auto G0 = 当前代次(运行包);
+    if (!G0) return std::nullopt;
+    L1所有者范围写集请求 写集;
+    写集.期望事实代次 = *G0;
+    写集.写入幂等身份 = {写入身份};
+    for (std::uint32_t i = 1; i <= 11; ++i)
+        写集.节点.push_back({{i}, 节点种类::普通, std::nullopt});
+    const auto 写入 = 交付.写入端口->提交所有者范围中性写集(写集);
+    if (写入.状态 != L1所有者范围写入状态::成功
+        || 写入.事实代次 == 0 || 写入.新编码映射.size() != 11)
+        return std::nullopt;
+    std::array<稳定编码, 11> 节点{};
+    for (std::uint32_t i = 1; i <= 11; ++i) {
+        const auto it = std::find_if(写入.新编码映射.begin(),
+            写入.新编码映射.end(), [i](const auto& 项) {
+                return 项.first == L1所有者范围写集本地键{i};
+            });
+        if (it == 写入.新编码映射.end()) return std::nullopt;
+        节点[i - 1] = it->second;
+    }
+    return 外部端点交付{std::move(*交付.写入端口), std::move(节点)};
+}
+
+bool 外部端点仍当前(
+    const L1事实基座运行包& 运行包, const 外部端点交付& 端点) {
+    for (const auto 身份 : 端点.节点) {
+        const auto 读 = 运行包.读取服务().读取所有者范围当前节点(
+            {L1所有者范围CRUD合同版本, 身份});
+        if (读.状态 != L1所有者范围读取状态::成功 || !读.事实)
+            return false;
+    }
+    return true;
+}
+
+struct 发布测试上下文 final {
+    L2存在身份 自我{};
+    服务合同身份_v1 服务合同{};
+    L2需求身份 需求{};
+    外部端点交付 外部端点;
+
+    发布测试上下文(L2存在身份 self, 服务合同身份_v1 contract,
+        L2需求身份 demand, 外部端点交付&& endpoints) noexcept
+        : 自我(self), 服务合同(contract), 需求(demand),
+          外部端点(std::move(endpoints)) {}
+    发布测试上下文(const 发布测试上下文&) = delete;
+    发布测试上下文& operator=(const 发布测试上下文&) = delete;
+    发布测试上下文(发布测试上下文&&) noexcept = default;
+    发布测试上下文& operator=(发布测试上下文&&) noexcept = default;
+};
+
+#if defined(ARCH_INSTINCT_SERVICE_CONTRACT_FACT_AUTHORITY_VALIDATION)
+std::optional<发布测试上下文> 建立发布测试上下文(
+    L1事实基座运行包& 运行包, 服务合同事实权威服务& 服务,
+    std::uint64_t 身份基数) {
+    const auto 自我 = 服务.ARCH_建立验证样本_v1(
+        身份基数 + 1, 1, 0);
+    auto 外部端点 = 建立外部端点(
+        运行包, 身份基数 + 2, 身份基数 + 3);
+    const auto G0 = 当前代次(运行包);
+    if (!自我 || !外部端点 || !G0) return std::nullopt;
+    const auto 合同组 = 服务.读取当前有效未满足服务合同完整集合_v1(
+        合同请求(*自我, *G0));
+    if (!合同组.成功() || 合同组.完整合同事实组.size() != 1)
+        return std::nullopt;
+    const auto& 合同 = 合同组.完整合同事实组.front();
+    return 发布测试上下文{
+        *自我, 合同.身份, 合同.需求, std::move(*外部端点)};
+}
+#endif
+
+发布服务进展事实请求_v2 形成进展发布请求(
+    const 发布测试上下文& c, std::uint64_t G0,
+    std::uint64_t 幂等身份, std::uint64_t 流序号,
+    服务进展运行状态_v1 状态 = 服务进展运行状态_v1::进行中,
+    bool 携带状态 = true, bool 携带动态 = true) {
+    发布服务进展事实请求_v2 r;
+    r.请求头 = {L2结构合同版本, G0};
+    r.幂等身份 = {幂等身份};
+    auto& m = r.材料;
+    m.自我 = c.自我; m.服务合同 = c.服务合同; m.需求 = c.需求;
+    m.任务 = L2任务身份{c.外部端点.节点[0]};
+    m.方法 = L2方法身份{c.外部端点.节点[1]};
+    m.T到D关系稳定编码 = {0x5055'4200'0000'0000ULL + 流序号};
+    m.执行绑定 = {L2任务方法选择记录身份{c.外部端点.节点[2]},
+        L2任务执行绑定冻结材料身份{c.外部端点.节点[3]},
+        L2实例方法身份{c.外部端点.节点[4]}, 1, 1};
+    if (携带状态) m.进展状态 = L2状态身份{c.外部端点.节点[5]};
+    if (携带动态) m.进展动态 = L2动态身份{c.外部端点.节点[6]};
+    m.运行状态 = 状态; m.运行代次 = 流序号;
+    m.计量窗口开始完整秒边界 = 10;
+    m.进展发生完整秒边界 = 11;
+    m.计量窗口结束完整秒边界 = 12;
+    m.方法内容版本 = 1; m.方法规格版本 = 1;
+    m.方法生命周期版本 = 1; m.进展规则版本 = 1;
+    return r;
+}
+
+发布服务准备事实请求_v2 形成准备发布请求(
+    const 发布测试上下文& c, std::uint64_t G0,
+    std::uint64_t 幂等身份, std::uint64_t 流序号,
+    服务准备运行状态_v1 状态 = 服务准备运行状态_v1::进行中,
+    bool 需求来源 = true, bool 携带状态 = true, bool 携带动态 = true) {
+    发布服务准备事实请求_v2 r;
+    r.请求头 = {L2结构合同版本, G0};
+    r.幂等身份 = {幂等身份};
+    auto& m = r.材料;
+    m.自我 = c.自我;
+    m.来源 = 需求来源
+        ? 服务准备来源身份_v1{c.需求}
+        : 服务准备来源身份_v1{
+            服务能力缺口身份_v1{c.外部端点.节点[9]}};
+    m.准备目标 = {{0x5052'4500'0000'0000ULL + 流序号}};
+    m.适用服务范围 = {0x5052'5300'0000'0000ULL + 流序号};
+    m.有效开始完整秒边界 = 10;
+    m.有效结束完整秒边界 = 30;
+    m.任务 = L2任务身份{c.外部端点.节点[0]};
+    m.方法 = L2方法身份{c.外部端点.节点[1]};
+    if (需求来源)
+        m.T到D关系稳定编码 = 稳定编码{
+            0x5052'5400'0000'0000ULL + 流序号};
+    m.执行绑定 = {L2任务方法选择记录身份{c.外部端点.节点[2]},
+        L2任务执行绑定冻结材料身份{c.外部端点.节点[3]},
+        L2实例方法身份{c.外部端点.节点[4]}, 1, 1};
+    if (携带状态) m.进展状态 = L2状态身份{c.外部端点.节点[5]};
+    if (携带动态) m.进展动态 = L2动态身份{c.外部端点.节点[6]};
+    if (状态 == 服务准备运行状态_v1::已完整完成) {
+        m.准备结果 = 服务准备结果身份_v1{c.外部端点.节点[7]};
+        m.完成验证 = 服务准备验证事实身份_v1{c.外部端点.节点[8]};
+    }
+    m.运行状态 = 状态; m.运行代次 = 流序号;
+    m.计量窗口开始完整秒边界 = 10;
+    m.进展发生完整秒边界 = 11;
+    m.计量窗口结束完整秒边界 = 12;
+    m.方法内容版本 = 1; m.方法规格版本 = 1;
+    m.方法生命周期版本 = 1; m.准备规则版本 = 1;
+    return r;
 }
 
 struct 隔离根清理 final {
@@ -842,6 +1024,387 @@ int 运行服务合同事实权威端到端测试() noexcept {
                 return 失败("V04", "v2 resource failure");
             通过("V03", "v1 facts do not project or fall back into v2");
             通过("V04", "v2 drift and resource failures expose no stale payload");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            auto 上下文 = 服务 ? 建立发布测试上下文(
+                运行包, *服务, 0x5350'0000'0000'1000ULL)
+                : std::optional<发布测试上下文>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !上下文 || !G0)
+                return 失败("W00", "progress publisher fixture");
+            const auto 首次请求 = 形成进展发布请求(*上下文, *G0,
+                0x5350'1000'0000'0001ULL, 1,
+                服务进展运行状态_v1::进行中, true, false);
+            const auto 首次 = 服务->发布服务进展事实_v2(首次请求);
+            const auto G1 = 当前代次(运行包);
+            if (!首次.成功()
+                || 首次.状态 != 服务活动事实发布状态_v2::已发布
+                || !首次.事实 || !G1 || *G1 != 首次.首次提交事实代次
+                || 首次.事实->进展状态 == std::nullopt
+                || 首次.事实->进展动态 != std::nullopt)
+                return 失败("W00", "progress first publish and readback");
+
+            auto 更新请求 = 形成进展发布请求(*上下文, *G1,
+                0x5350'1000'0000'0002ULL, 1,
+                服务进展运行状态_v1::等待条件, false, true);
+            更新请求.预期当前事实 = 首次.事实->身份;
+            更新请求.材料.运行代次 = 2;
+            const auto 更新 = 服务->发布服务进展事实_v2(更新请求);
+            const auto G2 = 当前代次(运行包);
+            if (!更新.成功()
+                || 更新.状态 != 服务活动事实发布状态_v2::已发布
+                || !更新.事实 || !G2 || *G2 != 更新.首次提交事实代次
+                || 更新.事实->身份 == 首次.事实->身份)
+                return 失败("W00", "progress atomic successor");
+            const auto 当前组 = 服务->读取当前服务合同关联进展完整集合_v2(
+                进展请求_v2(上下文->自我, *G2));
+            if (!当前组.成功() || 当前组.完整进展事实组.size() != 1
+                || 当前组.完整进展事实组.front().身份 != 更新.事实->身份)
+                return 失败("W00", "progress unique current successor");
+
+            const auto 首次重放 = 服务->发布服务进展事实_v2(首次请求);
+            if (!首次重放.成功()
+                || 首次重放.状态 != 服务活动事实发布状态_v2::精确重复
+                || !首次重放.事实
+                || 首次重放.事实->身份 != 首次.事实->身份
+                || 首次重放.首次提交事实代次 != 首次.首次提交事实代次
+                || 首次重放.事实->生命周期.退出事实代次
+                    != std::optional<std::uint64_t>{更新.首次提交事实代次}
+                || !外部端点仍当前(运行包, 上下文->外部端点))
+                return 失败("W00", "progress historical replay after replacement");
+
+            auto 异义 = 首次请求;
+            异义.材料.运行代次 = 99;
+            if (!进展发布空失败_v2(服务->发布服务进展事实_v2(异义),
+                    服务活动事实发布状态_v2::幂等冲突))
+                return 失败("W00", "progress same-key conflict");
+            auto 跨入口 = 形成准备发布请求(*上下文, *G2,
+                首次请求.幂等身份.值, 1);
+            if (!准备发布空失败_v2(服务->发布服务准备事实_v2(跨入口),
+                    服务活动事实发布状态_v2::幂等冲突))
+                return 失败("W00", "cross-entry idempotency conflict");
+            通过("W00", "progress publish, replace and historical replay preserve external endpoints");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            auto 上下文 = 服务 ? 建立发布测试上下文(
+                运行包, *服务, 0x5350'0000'0000'2000ULL)
+                : std::optional<发布测试上下文>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !上下文 || !G0)
+                return 失败("W01", "preparation publisher fixture");
+            const auto 首次请求 = 形成准备发布请求(*上下文, *G0,
+                0x5350'2000'0000'0001ULL, 1,
+                服务准备运行状态_v1::进行中, true, true, false);
+            const auto 首次 = 服务->发布服务准备事实_v2(首次请求);
+            const auto G1 = 当前代次(运行包);
+            if (!首次.成功()
+                || 首次.状态 != 服务活动事实发布状态_v2::已发布
+                || !首次.事实 || !G1 || *G1 != 首次.首次提交事实代次
+                || !std::holds_alternative<L2需求身份>(首次.事实->来源)
+                || !首次.事实->T到D关系稳定编码)
+                return 失败("W01", "demand preparation first publish");
+
+            auto 完成请求 = 形成准备发布请求(*上下文, *G1,
+                0x5350'2000'0000'0002ULL, 1,
+                服务准备运行状态_v1::已完整完成, true, true, true);
+            完成请求.预期当前事实 = 首次.事实->身份;
+            完成请求.材料.运行代次 = 2;
+            const auto 完成 = 服务->发布服务准备事实_v2(完成请求);
+            const auto G2 = 当前代次(运行包);
+            if (!完成.成功() || !完成.事实 || !G2
+                || !完成.事实->准备结果 || !完成.事实->完成验证)
+                return 失败("W01", "preparation completed successor");
+            const auto 首次重放 = 服务->发布服务准备事实_v2(首次请求);
+            if (!首次重放.成功()
+                || 首次重放.状态 != 服务活动事实发布状态_v2::精确重复
+                || !首次重放.事实
+                || 首次重放.事实->身份 != 首次.事实->身份
+                || 首次重放.事实->生命周期.退出事实代次
+                    != std::optional<std::uint64_t>{完成.首次提交事实代次})
+                return 失败("W01", "preparation historical replay");
+
+            const auto 能力缺口请求 = 形成准备发布请求(*上下文, *G2,
+                0x5350'2000'0000'0003ULL, 2,
+                服务准备运行状态_v1::等待条件, false, false, false);
+            const auto 能力缺口 = 服务->发布服务准备事实_v2(能力缺口请求);
+            const auto G3 = 当前代次(运行包);
+            if (!能力缺口.成功() || !能力缺口.事实 || !G3
+                || !std::holds_alternative<服务能力缺口身份_v1>(
+                    能力缺口.事实->来源)
+                || 能力缺口.事实->T到D关系稳定编码)
+                return 失败("W01", "gap preparation source shape");
+            const auto 当前组 = 服务->读取当前服务准备完整集合_v2(
+                准备请求_v2(上下文->自我, *G3));
+            if (!当前组.成功() || 当前组.完整准备事实组.size() != 2
+                || !外部端点仍当前(运行包, 上下文->外部端点))
+                return 失败("W01", "preparation current closure");
+            通过("W01", "demand and gap preparations publish with exact source shapes");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            auto 上下文 = 服务 ? 建立发布测试上下文(
+                运行包, *服务, 0x5350'0000'0000'3000ULL)
+                : std::optional<发布测试上下文>{};
+            if (!服务 || !上下文) return 失败("W02", "state matrix fixture");
+            for (std::uint64_t i = 1; i <= 8; ++i) {
+                const auto G = 当前代次(运行包);
+                if (!G) return 失败("W02", "progress state G0");
+                const auto r = 服务->发布服务进展事实_v2(
+                    形成进展发布请求(*上下文, *G,
+                        0x5350'3000'0000'0000ULL + i, 100 + i,
+                        static_cast<服务进展运行状态_v1>(i),
+                        i % 3 != 1, i % 3 != 0));
+                if (!r.成功()) return 失败("W02", "progress state publish");
+            }
+            bool 进展状态[8]{};
+            const auto Gp = 当前代次(运行包);
+            const auto p = Gp ? 服务->读取当前服务合同关联进展完整集合_v2(
+                进展请求_v2(上下文->自我, *Gp))
+                : 服务进展完整集合读取结果_v2{};
+            if (!p.成功() || p.完整进展事实组.size() != 8)
+                return 失败("W02", "progress state matrix readback");
+            for (const auto& f : p.完整进展事实组) {
+                const auto s = static_cast<std::uint8_t>(f.运行状态);
+                if (s < 1 || s > 8) return 失败("W02", "progress state range");
+                进展状态[s - 1] = true;
+            }
+            for (const bool 已见 : 进展状态)
+                if (!已见) return 失败("W02", "all progress states");
+
+            for (std::uint64_t i = 1; i <= 9; ++i) {
+                const auto G = 当前代次(运行包);
+                if (!G) return 失败("W02", "preparation state G0");
+                const auto r = 服务->发布服务准备事实_v2(
+                    形成准备发布请求(*上下文, *G,
+                        0x5350'3100'0000'0000ULL + i, 100 + i,
+                        static_cast<服务准备运行状态_v1>(i), i % 2 != 0,
+                        i % 3 != 1, i % 3 != 0));
+                if (!r.成功()) return 失败("W02", "preparation state publish");
+            }
+            bool 准备状态[9]{};
+            const auto Gr = 当前代次(运行包);
+            const auto r = Gr ? 服务->读取当前服务准备完整集合_v2(
+                准备请求_v2(上下文->自我, *Gr))
+                : 服务准备完整集合读取结果_v2{};
+            if (!r.成功() || r.完整准备事实组.size() != 9)
+                return 失败("W02", "preparation state matrix readback");
+            for (const auto& f : r.完整准备事实组) {
+                const auto s = static_cast<std::uint8_t>(f.运行状态);
+                if (s < 1 || s > 9) return 失败("W02", "preparation state range");
+                准备状态[s - 1] = true;
+            }
+            for (const bool 已见 : 准备状态)
+                if (!已见) return 失败("W02", "all preparation states");
+            通过("W02", "all progress and preparation states publish with optional evidence shapes");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            auto 上下文 = 服务 ? 建立发布测试上下文(
+                运行包, *服务, 0x5350'0000'0000'4000ULL)
+                : std::optional<发布测试上下文>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !上下文 || !G0)
+                return 失败("W03", "publisher failure fixture");
+            auto 首进展请求 = 形成进展发布请求(*上下文, *G0,
+                0x5350'4000'0000'0001ULL, 1);
+            const auto 首进展 = 服务->发布服务进展事实_v2(首进展请求);
+            const auto G1 = 当前代次(运行包);
+            if (!首进展.成功() || !首进展.事实 || !G1)
+                return 失败("W03", "failure fixture progress current");
+            auto 首准备请求 = 形成准备发布请求(*上下文, *G1,
+                0x5350'4000'0000'0002ULL, 1);
+            const auto 首准备 = 服务->发布服务准备事实_v2(首准备请求);
+            const auto G2 = 当前代次(运行包);
+            if (!首准备.成功() || !首准备.事实 || !G2)
+                return 失败("W03", "failure fixture preparation current");
+
+            auto 坏材料 = 形成进展发布请求(*上下文, *G2,
+                0x5350'4000'0000'0010ULL, 2);
+            坏材料.材料.运行代次 = 0;
+            if (!进展发布空失败_v2(服务->发布服务进展事实_v2(坏材料),
+                    服务活动事实发布状态_v2::入口拒绝))
+                return 失败("W03", "bad progress material");
+            auto 漏预期 = 形成进展发布请求(*上下文, *G2,
+                0x5350'4000'0000'0011ULL, 1);
+            if (!进展发布空失败_v2(服务->发布服务进展事实_v2(漏预期),
+                    服务活动事实发布状态_v2::当前事实冲突))
+                return 失败("W03", "missing expected current progress");
+            auto 错预期 = 漏预期;
+            错预期.幂等身份 = {0x5350'4000'0000'0012ULL};
+            错预期.预期当前事实 = 服务进展事实身份_v2{
+                上下文->外部端点.节点[10]};
+            if (!进展发布空失败_v2(服务->发布服务进展事实_v2(错预期),
+                    服务活动事实发布状态_v2::当前事实冲突))
+                return 失败("W03", "wrong expected current progress");
+
+            auto 错需求 = 形成进展发布请求(*上下文, *G2,
+                0x5350'4000'0000'0013ULL, 3);
+            错需求.材料.需求 = L2需求身份{上下文->外部端点.节点[10]};
+            if (!进展发布空失败_v2(服务->发布服务进展事实_v2(错需求),
+                    服务活动事实发布状态_v2::引用冲突))
+                return 失败("W03", "contract self-demand mismatch");
+            auto 坏引用 = 形成准备发布请求(*上下文, *G2,
+                0x5350'4000'0000'0014ULL, 3);
+            坏引用.材料.任务 = L2任务身份{{0xFFFF'FFFF'FFFF'FFF0ULL}};
+            if (!准备发布空失败_v2(服务->发布服务准备事实_v2(坏引用),
+                    服务活动事实发布状态_v2::引用冲突))
+                return 失败("W03", "missing external endpoint");
+
+            auto 推进 = 形成进展发布请求(*上下文, *G2,
+                0x5350'4000'0000'0015ULL, 4);
+            if (!服务->发布服务进展事实_v2(推进).成功())
+                return 失败("W03", "advance generation");
+            auto 旧G = 形成进展发布请求(*上下文, *G2,
+                0x5350'4000'0000'0016ULL, 5);
+            if (!进展发布空失败_v2(服务->发布服务进展事实_v2(旧G),
+                    服务活动事实发布状态_v2::当前性漂移))
+                return 失败("W03", "stale G0");
+            const auto G3 = 当前代次(运行包);
+            if (!G3) return 失败("W03", "resource G0");
+            服务->ARCH_注入资源失败一次();
+            auto 资源 = 形成进展发布请求(*上下文, *G3,
+                0x5350'4000'0000'0017ULL, 6);
+            if (!进展发布空失败_v2(服务->发布服务进展事实_v2(资源),
+                    服务活动事实发布状态_v2::资源失败))
+                return 失败("W03", "progress resource failure");
+            const auto G4 = 当前代次(运行包);
+            if (!G4) return 失败("W03", "preparation resource G0");
+            服务->ARCH_注入资源失败一次();
+            auto 准备资源 = 形成准备发布请求(*上下文, *G4,
+                0x5350'4000'0000'0018ULL, 4);
+            if (!准备发布空失败_v2(服务->发布服务准备事实_v2(准备资源),
+                    服务活动事实发布状态_v2::资源失败))
+                return 失败("W03", "preparation resource failure");
+            通过("W03", "invalid, conflicting, stale and resource paths remain zero-payload");
+        }
+
+        {
+            auto 运行包 = 建立L1事实基座运行包();
+            auto 服务 = 建立服务(运行包);
+            auto 上下文 = 服务 ? 建立发布测试上下文(
+                运行包, *服务, 0x5350'0000'0000'5000ULL)
+                : std::optional<发布测试上下文>{};
+            const auto G0 = 当前代次(运行包);
+            if (!服务 || !上下文 || !G0)
+                return 失败("W04", "post-commit failure fixture");
+            auto 进展请求 = 形成进展发布请求(*上下文, *G0,
+                0x5350'5000'0000'0001ULL, 1);
+            服务->ARCH_注入发布后读回失败一次();
+            const auto 进展可能 = 服务->发布服务进展事实_v2(进展请求);
+            if (!进展发布空失败_v2(进展可能,
+                    服务活动事实发布状态_v2::已可能发布))
+                return 失败("W04", "progress possible publish witness");
+            const auto 进展重试 = 服务->发布服务进展事实_v2(进展请求);
+            if (!进展重试.成功()
+                || 进展重试.状态 != 服务活动事实发布状态_v2::精确重复
+                || 进展重试.首次提交事实代次
+                    != 进展可能.首次提交事实代次)
+                return 失败("W04", "progress retry convergence");
+
+            const auto G1 = 当前代次(运行包);
+            if (!G1) return 失败("W04", "preparation post-commit G0");
+            auto 准备请求 = 形成准备发布请求(*上下文, *G1,
+                0x5350'5000'0000'0002ULL, 1);
+            服务->ARCH_注入发布后读回失败一次();
+            const auto 准备可能 = 服务->发布服务准备事实_v2(准备请求);
+            if (!准备发布空失败_v2(准备可能,
+                    服务活动事实发布状态_v2::已可能发布))
+                return 失败("W04", "preparation possible publish witness");
+            const auto 准备重试 = 服务->发布服务准备事实_v2(准备请求);
+            if (!准备重试.成功()
+                || 准备重试.状态 != 服务活动事实发布状态_v2::精确重复
+                || 准备重试.首次提交事实代次
+                    != 准备可能.首次提交事实代次)
+                return 失败("W04", "preparation retry convergence");
+            通过("W04", "post-commit readback failure converges by original idempotent request");
+        }
+
+        {
+            const auto 根 = std::filesystem::path{L"D:\\TEMP"} / L"海中鱼巣"
+                / L"INSTINCT-STAGE3-SERVICE-ACTIVITY-V2-PUBLISHER"
+                / (std::to_wstring(GetCurrentProcessId()) + L"-"
+                    + std::to_wstring(GetTickCount64()));
+            隔离根清理 清理{根};
+            std::error_code 错误;
+            std::filesystem::create_directories(根, 错误);
+            if (错误) return 失败("W05", "create persistent publisher root");
+            const L1事实基座持久存储配置_v1 配置{
+                L1事实基座持久恢复合同版本_v1, 根};
+            发布服务进展事实请求_v2 进展请求{};
+            发布服务准备事实请求_v2 准备请求{};
+            服务进展事实发布结果_v2 进展期望{};
+            服务准备事实发布结果_v2 准备期望{};
+            L2存在身份 自我{};
+            {
+                auto 建立 = 建立L1事实基座持久运行包_v1(配置);
+                if (!建立.成功() || !建立.运行包)
+                    return 失败("W05", "first persistent publisher package");
+                auto 运行包 = std::move(*建立.运行包);
+                auto 服务 = 建立服务(运行包);
+                auto 上下文 = 服务 ? 建立发布测试上下文(
+                    运行包, *服务, 0x5350'0000'0000'6000ULL)
+                    : std::optional<发布测试上下文>{};
+                const auto G0 = 当前代次(运行包);
+                if (!服务 || !上下文 || !G0)
+                    return 失败("W05", "persistent publisher fixture");
+                自我 = 上下文->自我;
+                进展请求 = 形成进展发布请求(*上下文, *G0,
+                    0x5350'6000'0000'0001ULL, 1);
+                进展期望 = 服务->发布服务进展事实_v2(进展请求);
+                const auto G1 = 当前代次(运行包);
+                if (!进展期望.成功() || !G1)
+                    return 失败("W05", "persistent progress publish");
+                准备请求 = 形成准备发布请求(*上下文, *G1,
+                    0x5350'6000'0000'0002ULL, 1);
+                准备期望 = 服务->发布服务准备事实_v2(准备请求);
+                if (!准备期望.成功())
+                    return 失败("W05", "persistent preparation publish");
+            }
+            {
+                auto 恢复 = 建立L1事实基座持久运行包_v1(配置);
+                if (!恢复.成功() || !恢复.运行包)
+                    return 失败("W05", "recover persistent publisher package");
+                auto 运行包 = std::move(*恢复.运行包);
+                auto 服务 = 建立服务(运行包);
+                const auto G0 = 当前代次(运行包);
+                if (!服务 || !G0) return 失败("W05", "recovered publisher G0");
+                const auto 进展重放 = 服务->发布服务进展事实_v2(进展请求);
+                const auto 准备重放 = 服务->发布服务准备事实_v2(准备请求);
+                const auto G1 = 当前代次(运行包);
+                const auto 当前进展 = G1
+                    ? 服务->读取当前服务合同关联进展完整集合_v2(
+                        进展请求_v2(自我, *G1))
+                    : 服务进展完整集合读取结果_v2{};
+                const auto 当前准备 = G1
+                    ? 服务->读取当前服务准备完整集合_v2(
+                        准备请求_v2(自我, *G1))
+                    : 服务准备完整集合读取结果_v2{};
+                if (!G1 || *G1 != *G0 || !进展重放.成功()
+                    || !准备重放.成功()
+                    || 进展重放.状态
+                        != 服务活动事实发布状态_v2::精确重复
+                    || 准备重放.状态
+                        != 服务活动事实发布状态_v2::精确重复
+                    || 进展重放.首次提交事实代次
+                        != 进展期望.首次提交事实代次
+                    || 准备重放.首次提交事实代次
+                        != 准备期望.首次提交事实代次
+                    || !当前进展.成功() || !当前准备.成功()
+                    || 当前进展.完整进展事实组.size() != 1
+                    || 当前准备.完整准备事实组.size() != 1)
+                    return 失败("W05", "persistent exact replay and current readback");
+            }
+            通过("W05", "both publishers replay exactly after persistent recovery");
         }
 
         {
