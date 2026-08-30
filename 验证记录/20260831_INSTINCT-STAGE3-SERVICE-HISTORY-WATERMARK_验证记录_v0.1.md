@@ -4,7 +4,7 @@
 
 计划：`INSTINCT-STAGE3-SERVICE-HISTORY-WATERMARK v0.1`
 
-验证基线：工作区起点 `ced9acef11f26fe8f25a836d579a74a59b77d2c6` 加本计划九文件候选；发布提交待填。
+验证基线：工作区起点 `ced9acef11f26fe8f25a836d579a74a59b77d2c6` 加本计划九文件候选；结果提交 `49b7ca2abca7c379adf4c6b0224f33495c3eb809`。
 
 隔离根：
 

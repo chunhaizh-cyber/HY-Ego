@@ -6,7 +6,7 @@
 
 起点：`main == origin/main == ced9acef11f26fe8f25a836d579a74a59b77d2c6`，index 空。
 
-结果提交：待发布。
+结果提交：`49b7ca2abca7c379adf4c6b0224f33495c3eb809`。
 
 ## 1. S0 与范围
 
