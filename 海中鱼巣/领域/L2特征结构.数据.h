@@ -406,6 +406,33 @@ struct L2特征值事实 final {
         const L2特征值事实&) = default;
 };
 
+inline constexpr std::uint32_t L2特征当前值变化永久账合同版本_v2 = 2;
+inline constexpr std::uint64_t L2特征当前值变化账登记写入身份值_v2 =
+    0x4E53'4356'4C45'4432ULL;
+
+struct L2特征当前值变化账身份_v2 final {
+    稳定编码 值{};
+    friend bool operator==(const L2特征当前值变化账身份_v2&,
+        const L2特征当前值变化账身份_v2&) = default;
+};
+
+struct L2特征当前值变化账事实_v2 final {
+    L2特征当前值变化账身份_v2 身份{};
+    L2特征实例身份 特征实例{};
+    稳定编码 旧当前值稳定编码{};
+    稳定编码 新当前值稳定编码{};
+    std::int64_t 变化UTC纳秒 = 0;
+    L2存在身份 来源存在{};
+    std::optional<L2方法身份> 来源方法{};
+    L2结构幂等身份 组合幂等身份{};
+    L2结构幂等身份 特征参与者幂等身份{};
+    L2结构幂等身份 状态参与者幂等身份{};
+    L2结构幂等身份 动态参与者幂等身份{};
+    std::uint64_t 形成事实代次 = 0;
+    friend bool operator==(const L2特征当前值变化账事实_v2&,
+        const L2特征当前值变化账事实_v2&) = default;
+};
+
 struct L2特征当前值读取请求 final {
     L2结构请求头 请求头;
     L2特征实例身份 特征实例;

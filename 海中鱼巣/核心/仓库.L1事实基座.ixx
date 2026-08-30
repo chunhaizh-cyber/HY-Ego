@@ -4446,6 +4446,25 @@ private:
             if (!本地键.contains(本地.值) || !有效(编码)
                 || (索引 != 0 && !(记录.首次新编码映射[索引 - 1].first < 本地)))
                 return false;
+            const auto 期望种类 = [&]() -> std::optional<L1物理清理事实种类> {
+                const auto 本地相同 = [&](const auto& 项) {
+                    return 项.本地键 == 本地;
+                };
+                if (std::find_if(记录.首次规范化写集.节点.begin(),
+                        记录.首次规范化写集.节点.end(), 本地相同)
+                    != 记录.首次规范化写集.节点.end())
+                    return L1物理清理事实种类::节点;
+                if (std::find_if(记录.首次规范化写集.关系.begin(),
+                        记录.首次规范化写集.关系.end(), 本地相同)
+                    != 记录.首次规范化写集.关系.end())
+                    return L1物理清理事实种类::关系;
+                if (std::find_if(记录.首次规范化写集.值.begin(),
+                        记录.首次规范化写集.值.end(), 本地相同)
+                    != 记录.首次规范化写集.值.end())
+                    return L1物理清理事实种类::值;
+                return std::nullopt;
+            }();
+            if (!期望种类) return false;
             std::size_t 命中数 = 0;
             const auto 匹配 = [&](const auto& 事实) {
                 return 事实.编码 == 编码 && 事实.写入所有者 == 所有者
@@ -4453,22 +4472,47 @@ private:
             };
             if (const auto 当前 = 值.当前节点.find(编码.值);
                 当前 != 值.当前节点.end()) {
-                if (!匹配(当前->second)) return false;
+                if (*期望种类 != L1物理清理事实种类::节点
+                    || !匹配(当前->second)) return false;
                 ++命中数;
             }
             if (const auto 当前 = 值.当前关系.find(编码.值);
                 当前 != 值.当前关系.end()) {
-                if (!匹配(当前->second)) return false;
+                if (*期望种类 != L1物理清理事实种类::关系
+                    || !匹配(当前->second)) return false;
                 ++命中数;
             }
             if (const auto 当前 = 值.当前值.find(编码.值);
                 当前 != 值.当前值.end()) {
-                if (!匹配(当前->second)) return false;
+                if (*期望种类 != L1物理清理事实种类::值
+                    || !匹配(当前->second)) return false;
                 ++命中数;
             }
             if (const auto 历史 = 值.历史.find(编码.值);
                 历史 != 值.历史.end()) {
-                if (!std::visit(匹配, 历史->second.事实)) return false;
+                const auto 历史匹配 = std::visit([&](const auto& 事实) {
+                    using 事实类型 = std::decay_t<decltype(事实)>;
+                    constexpr auto 种类 = [] {
+                        if constexpr (std::is_same_v<事实类型, 节点事实>)
+                            return L1物理清理事实种类::节点;
+                        else if constexpr (std::is_same_v<事实类型, 关系事实>)
+                            return L1物理清理事实种类::关系;
+                        else
+                            return L1物理清理事实种类::值;
+                    }();
+                    return *期望种类 == 种类 && 匹配(事实);
+                }, 历史->second.事实);
+                if (!历史匹配) return false;
+                ++命中数;
+            }
+            if (const auto 墓碑 = 值.物理清理墓碑.find(编码.值);
+                墓碑 != 值.物理清理墓碑.end()) {
+                if (墓碑->second.编码 != 编码
+                    || 墓碑->second.事实种类 != *期望种类
+                    || 墓碑->second.内部结构分区 != 所有者.编码
+                    || 墓碑->second.创建事实代次 != 记录.首次发布事实代次
+                    || 墓碑->second.物理清理事实代次 > 值.事实代次)
+                    return false;
                 ++命中数;
             }
             if (命中数 != 1) return false;

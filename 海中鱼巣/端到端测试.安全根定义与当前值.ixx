@@ -22,6 +22,8 @@ import 海中鱼巣.业务.提供者.四本体根生产初始化;
 import 海中鱼巣.业务.提供者.方法登记根生产初始化;
 import 海中鱼巣.业务.提供者.本能根运行初始化;
 import 海中鱼巣.领域.服务.安全根定义与当前值;
+import 海中鱼巣.领域.服务.L2状态动态原子发布;
+import 海中鱼巣.领域.服务.L2方法结构;
 
 export namespace 海中鱼巣 {
 int 运行安全根定义与当前值端到端测试() noexcept;
@@ -53,6 +55,8 @@ void 通过(const char* 编号, const char* 说明) {
 struct 会话_v1 final {
     std::unique_ptr<普通应用上下文> 上下文;
     本能根运行锚点_v1 本能根;
+    L2场景身份 共同场景;
+    四本体根发布材料 四本体根;
 };
 
 std::optional<会话_v1> 建立会话(
@@ -85,7 +89,8 @@ std::optional<会话_v1> 建立会话(
     四本体根生产初始化提供者 四本体根者(
         上下文->取得L2概念结构聚合服务());
     const auto 四本体根 = 四本体根者.初始化(四本体根生产初始化请求{});
-    if (!四本体根.成功()) return 失败("initialize ontology roots");
+    if (!四本体根.成功() || !四本体根.已发布材料)
+        return 失败("initialize ontology roots");
     方法登记根生产初始化提供者 方法根者(
         上下文->取得L2方法结构聚合服务());
     const auto 方法根 = 方法根者.初始化(方法登记根生产初始化请求{});
@@ -98,7 +103,8 @@ std::optional<会话_v1> 建立会话(
         自我.已形成自我->自我存在.身份, 根启动身份});
     if (!本能根.成功() || !本能根.锚点)
         return 失败("initialize instinct root anchor");
-    return 会话_v1{std::move(上下文), *本能根.锚点};
+    return 会话_v1{std::move(上下文), *本能根.锚点, 根.根场景,
+        *四本体根.已发布材料};
 }
 
 std::optional<std::uint64_t> 当前代次(const 会话_v1& 会话) {
@@ -122,6 +128,82 @@ std::optional<发布安全根定义请求_v1> 形成发布请求(
     return 会话.上下文->取得安全根定义与当前值服务()
         .读取当前安全根定义_v1({安全根定义合同版本_v1,
             {L2结构合同版本, *G}, 会话.本能根});
+}
+
+std::optional<L2特征值事实> 读取安全根当前值(const 会话_v1& 会话) {
+    const auto G = 当前代次(会话);
+    if (!G) return std::nullopt;
+    const auto 读取 = 会话.上下文->取得L2特征结构服务().读取特征当前值({
+        {L2结构合同版本, *G}, 会话.本能根.安全根特征实例});
+    if (!读取.成功() || !读取.当前值
+        || 读取.结果头.事实截止代次 != *G)
+        return std::nullopt;
+    return *读取.当前值;
+}
+
+L2特征当前值变化记录请求_v2 形成变化请求_v2(
+    const 会话_v1& 会话, const L2特征值事实& 旧值,
+    std::int64_t 新值, std::uint64_t 身份基数,
+    std::uint64_t G0, std::int64_t UTC纳秒,
+    std::optional<L2方法身份> 来源方法 = std::nullopt) {
+    L2特征当前值变化记录请求_v2 请求;
+    请求.请求头 = {L2结构合同版本, G0};
+    请求.组合幂等身份 = {身份基数};
+    请求.特征参与者幂等身份 = {身份基数 + 1};
+    请求.状态参与者幂等身份 = {身份基数 + 2};
+    请求.动态参与者幂等身份 = {身份基数 + 3};
+    请求.特征实例 = 会话.本能根.安全根特征实例;
+    请求.预期旧当前值 = 旧值;
+    请求.新值材料 = L2原始值材料{新值};
+    请求.变化UTC纳秒 = UTC纳秒;
+    请求.主体存在 = 会话.本能根.唯一自我;
+    请求.共同场景 = 会话.共同场景;
+    请求.来源存在 = 会话.本能根.唯一自我;
+    请求.来源方法 = 来源方法;
+    return 请求;
+}
+
+std::optional<L2方法身份> 建立变化来源方法(会话_v1& 会话) {
+    const auto G0 = 当前代次(会话);
+    if (!G0) return std::nullopt;
+    L2普通方法新增请求 请求;
+    请求.请求头 = {L2结构合同版本, *G0};
+    请求.幂等身份 = {0x4C45'4447'4D45'5401ULL};
+    请求.方法.内容版本 = L2方法内容版本{1};
+    请求.方法.规格版本 = L2方法规格版本{1};
+    请求.方法.生命周期版本 = L2方法生命周期版本{1};
+    请求.方法.生命周期发生时间 = 1;
+    请求.方法.生命周期来源稳定编码 = 会话.本能根.唯一自我.值;
+    const auto 类型 = 会话.四本体根.存在根.根概念;
+    const auto 特征 = 会话.本能根.安全根特征定义;
+    const auto 合同 = 会话.本能根.安全根目标合同;
+    请求.方法.用途 = {{1, 1, 类型, 特征, L2方法变化方向::负方向,
+        L2方法结果类型引用{合同}, 特征.值}};
+    请求.方法.条件 = {{1, 1, 类型, 会话.共同场景, 特征, 合同,
+        特征.值}};
+    请求.方法.结果 = {{1, 1, 类型, 特征, L2方法变化方向::负方向,
+        L2方法结果类型引用{合同}, 特征.值}};
+    请求.方法.条件结果关系 = {{1, 1, 1, 特征.值}};
+    请求.方法.输入规格 = {
+        {1, std::nullopt, 2, 1, {2, 1, std::int64_t{2}}, 特征.值}};
+    请求.方法.限制条件 = {
+        {1, std::nullopt, L2方法限制条件类别::禁止项,
+            3, 1, {3, 1, std::int64_t{3}}, 特征.值},
+        {2, std::nullopt, L2方法限制条件类别::适用范围,
+            4, 1, {4, 1, std::int64_t{4}}, 特征.值}};
+    请求.方法.动作入口 = {
+        会话.共同场景, 会话.共同场景, L2方法稳定动作键{1}, 特征.值};
+    auto& 方法服务 = 会话.上下文->取得L2方法结构聚合服务()
+        .取得L2方法结构服务();
+    const auto 写入 = 方法服务.新增普通方法(请求);
+    if (!写入.成功() || !写入.方法) return std::nullopt;
+    const auto Gread = 当前代次(会话);
+    if (!Gread) return std::nullopt;
+    const auto 读回 = 方法服务.读取普通方法({
+        {L2结构合同版本, *Gread}, L2普通方法结构合同版本,
+        L2读取类别::当前, 写入.方法->方法, 0});
+    return 读回.成功() && 读回.方法
+        ? std::optional<L2方法身份>{写入.方法->方法} : std::nullopt;
 }
 
 } // namespace 海中鱼巣::安全根定义测试内部
@@ -336,7 +418,227 @@ int 运行安全根定义与当前值端到端测试() noexcept {
                      "validation macro disabled\n";
 #endif
 
+        auto& 原子服务 = 会话->上下文->取得L2状态动态原子发布服务();
+        const auto 未登记G = 当前代次(*会话);
+        if (!未登记G) return 失败("S12", "read pre-registration G0");
+        const auto 未登记组 = 原子服务.按特征实例与UTC范围读取完整变化组_v2({
+            L2特征当前值变化永久账合同版本_v2,
+            {L2结构合同版本, *未登记G}, 会话->本能根.安全根特征实例,
+            1, 1000, 8});
+        if (未登记组.状态 != L2特征当前值变化组读取状态_v2::账未登记
+            || 未登记组.成功() || !未登记组.完整变化组.empty()
+            || 未登记组.完整集合见证 || 未登记组.本次正式读回截止 != 0)
+            return 失败("S12", "pre-registration must not return legal empty set");
+
+        const auto 登记G0 = 当前代次(*会话);
+        if (!登记G0) return 失败("S12", "read ledger registration G0");
+#if defined(ARCH_L1_L2_STATE_SELECTION_VALIDATION)
+        原子服务.ARCH_注入变化账登记提交后首次读回失败一次();
+        const auto 已可能登记 = 原子服务.确保特征当前值变化永久账登记_v2({
+            L2特征当前值变化永久账合同版本_v2,
+            {L2结构合同版本, *登记G0}});
+        if (已可能登记.状态
+                != L2特征当前值变化账登记状态_v2::已可能登记
+            || 已可能登记.成功() || 已可能登记.账锚点
+            || 已可能登记.首次登记事实代次 == 0
+            || 已可能登记.本次正式读回截止 != 0)
+            return 失败("S12", "post-commit registration readback failure");
+        const auto 登记收束G = 当前代次(*会话);
+        if (!登记收束G) return 失败("S12", "read registration replay G0");
+        const auto 登记 = 原子服务.确保特征当前值变化永久账登记_v2({
+            L2特征当前值变化永久账合同版本_v2,
+            {L2结构合同版本, *登记收束G}});
+        if (登记.首次登记事实代次 != 已可能登记.首次登记事实代次)
+            return 失败("S12", "registration replay must keep first G1");
+#else
+        const auto 登记 = 原子服务.确保特征当前值变化永久账登记_v2({
+            L2特征当前值变化永久账合同版本_v2,
+            {L2结构合同版本, *登记G0}});
+#endif
+        const auto 登记重放G = 当前代次(*会话);
+        if (!登记.成功() || !登记.账锚点 || !登记重放G)
+            return 失败("S12", "register permanent current-value ledger");
+        const auto 登记重放 = 原子服务.确保特征当前值变化永久账登记_v2({
+            L2特征当前值变化永久账合同版本_v2,
+            {L2结构合同版本, *登记重放G}});
+        if (!登记重放.成功()
+            || 登记重放.状态
+                != L2特征当前值变化账登记状态_v2::精确重复
+            || 登记重放.账锚点 != 登记.账锚点
+            || 登记重放.首次登记事实代次 != 登记.首次登记事实代次)
+            return 失败("S12", "exact ledger registration replay");
+        通过("S12", "registration boundary, replay and unknown-readback convergence");
+
+        const auto 空组G = 当前代次(*会话);
+        if (!空组G) return 失败("S13", "read empty-ledger G0");
+        const auto 空组 = 原子服务.按特征实例与UTC范围读取完整变化组_v2({
+            L2特征当前值变化永久账合同版本_v2,
+            {L2结构合同版本, *空组G}, 会话->本能根.安全根特征实例,
+            1, 1000, 8});
+        if (!空组.成功() || !空组.完整变化组.empty()
+            || !空组.完整集合见证
+            || 空组.完整集合见证->声明成员数 != 0
+            || 空组.完整集合见证->账登记事实代次
+                != 登记.首次登记事实代次)
+            return 失败("S13", "registered legal empty range");
+        通过("S13", "registered ledger proves a legal empty range");
+
+        const auto 变化前值 = 读取安全根当前值(*会话);
+        const auto 变化G0 = 当前代次(*会话);
+        if (!变化G0 || !变化前值)
+            return 失败("S14", "prepare v2 current-value change");
+        const auto 变化请求 = 形成变化请求_v2(*会话, *变化前值,
+            本能根初始值_v1 - 1, 0x4C45'4447'4552'0100ULL,
+            *变化G0, 100);
+        const auto 变化 = 原子服务.发布特征当前值变化与中性记录_v2(变化请求);
+        const auto 重放变化 = 原子服务.发布特征当前值变化与中性记录_v2(变化请求);
+        if (!变化.成功() || !变化.变化账事实
+            || 变化.变化账事实->形成事实代次 != 变化.本次正式读回截止
+            || !重放变化.成功()
+            || 重放变化.状态 != L2特征当前值变化记录状态_v2::精确重复
+            || 重放变化.变化账事实 != 变化.变化账事实)
+            return 失败("S14", "v2 change and exact replay");
+        通过("S14", "v2 change publishes one same-G permanent ledger fact");
+
+        const auto 无变化前值 = 读取安全根当前值(*会话);
+        const auto 无变化G = 当前代次(*会话);
+        if (!无变化前值 || !无变化G)
+            return 失败("S14A", "prepare no-change request");
+        const auto 无变化请求 = 形成变化请求_v2(*会话, *无变化前值,
+            本能根初始值_v1 - 1, 0x4C45'4447'4552'0200ULL,
+            *无变化G, 150);
+        const auto 无变化 = 原子服务.发布特征当前值变化与中性记录_v2(
+            无变化请求);
+        const auto 无变化后G = 当前代次(*会话);
+        if (!无变化.成功()
+            || 无变化.状态 != L2特征当前值变化记录状态_v2::无变化
+            || 无变化.变化账事实 || !无变化后G || *无变化后G != *无变化G)
+            return 失败("S14A", "no-change must not publish a ledger fact");
+
+        const auto 来源方法 = 建立变化来源方法(*会话);
+        const auto 第二变化前值 = 读取安全根当前值(*会话);
+        const auto 第二变化G = 当前代次(*会话);
+        if (!来源方法 || !第二变化前值 || !第二变化G)
+            return 失败("S14A", "prepare second change");
+        const auto 第二请求 = 形成变化请求_v2(*会话, *第二变化前值,
+            本能根初始值_v1 - 2, 0x4C45'4447'4552'0300ULL,
+            *第二变化G, 200, *来源方法);
+        const auto 第二变化 = 原子服务.发布特征当前值变化与中性记录_v2(
+            第二请求);
+        if (!第二变化.成功() || !第二变化.变化账事实
+            || 第二变化.变化账事实->来源方法
+                != 来源方法
+            || !第二变化.动作致变动态)
+            return 失败("S14A", "second change with typed method source");
+
+        const auto 延后重放 = 原子服务.发布特征当前值变化与中性记录_v2(
+            变化请求);
+        if (!延后重放.成功()
+            || 延后重放.状态 != L2特征当前值变化记录状态_v2::精确重复
+            || 延后重放.变化账事实 != 变化.变化账事实)
+            return 失败("S14A", "historical exact replay after later facts");
+        auto 同键异义请求 = 第二请求;
+        同键异义请求.新值材料 = L2原始值材料{本能根初始值_v1 - 20};
+        const auto 同键异义 = 原子服务.发布特征当前值变化与中性记录_v2(
+            同键异义请求);
+        if (同键异义.状态 != L2特征当前值变化记录状态_v2::幂等冲突
+            || 同键异义.成功() || 同键异义.变化账事实)
+            return 失败("S14A", "same combination key with different meaning");
+
+        const auto 第三变化前值 = 读取安全根当前值(*会话);
+        const auto 第三变化G = 当前代次(*会话);
+        if (!第三变化前值 || !第三变化G)
+            return 失败("S14A", "prepare third change");
+        const auto 第三请求 = 形成变化请求_v2(*会话, *第三变化前值,
+            本能根初始值_v1 - 3, 0x4C45'4447'4552'0400ULL,
+            *第三变化G, 300);
+#if defined(ARCH_L1_L2_STATE_SELECTION_VALIDATION)
+        原子服务.ARCH_注入迁移提交后首次读回失败一次();
+        const auto 已可能变化 = 原子服务.发布特征当前值变化与中性记录_v2(
+            第三请求);
+        if (已可能变化.状态
+                != L2特征当前值变化记录状态_v2::已可能发布
+            || 已可能变化.成功() || 已可能变化.变化账事实
+            || 已可能变化.本次正式读回截止 == 0)
+            return 失败("S14A", "post-commit v2 readback failure shape");
+#endif
+        const auto 第三变化 = 原子服务.发布特征当前值变化与中性记录_v2(
+            第三请求);
+        if (!第三变化.成功() || !第三变化.变化账事实
+#if defined(ARCH_L1_L2_STATE_SELECTION_VALIDATION)
+            || 第三变化.状态 != L2特征当前值变化记录状态_v2::精确重复
+            || 第三变化.本次正式读回截止
+                != 已可能变化.本次正式读回截止
+#endif
+            )
+            return 失败("S14A", "third change and unknown publish convergence");
+        通过("S14A", "no-change, continuous changes, source binding and replay");
+
+        const auto 变化组G = 当前代次(*会话);
+        if (!变化组G) return 失败("S15", "read changed-ledger G0");
+        const auto 变化组 = 原子服务.按特征实例与UTC范围读取完整变化组_v2({
+            L2特征当前值变化永久账合同版本_v2,
+            {L2结构合同版本, *变化组G}, 会话->本能根.安全根特征实例,
+            100, 301, 3});
+        const auto 边界空组 = 原子服务.按特征实例与UTC范围读取完整变化组_v2({
+            L2特征当前值变化永久账合同版本_v2,
+            {L2结构合同版本, *变化组G}, 会话->本能根.安全根特征实例,
+            301, 302, 1});
+        const auto 预算不足 = 原子服务.按特征实例与UTC范围读取完整变化组_v2({
+            L2特征当前值变化永久账合同版本_v2,
+            {L2结构合同版本, *变化组G}, 会话->本能根.安全根特征实例,
+            100, 301, 2});
+        if (!变化组.成功() || 变化组.完整变化组.size() != 3
+            || 变化组.完整变化组[0] != *变化.变化账事实
+            || 变化组.完整变化组[1] != *第二变化.变化账事实
+            || 变化组.完整变化组[2] != *第三变化.变化账事实
+            || !边界空组.成功() || !边界空组.完整变化组.empty())
+            return 失败("S15", "half-open complete range readback");
+        if (预算不足.状态
+                != L2特征当前值变化组读取状态_v2::数量预算不足
+            || 预算不足.成功() || !预算不足.完整变化组.empty()
+            || 预算不足.完整集合见证 || 预算不足.本次正式读回截止 != 0)
+            return 失败("S15", "member budget must fail with empty payload");
+        通过("S15", "half-open 0/N sorting, boundaries and budget are closed");
+
+        const auto 清理G = 当前代次(*会话);
+        if (!清理G) return 失败("S16", "read cleanup G0");
+        std::vector<L2动态身份> 待清理动态{
+            变化.状态迁移动能->身份,
+            第二变化.状态迁移动能->身份,
+            第二变化.动作致变动态->身份,
+            第三变化.状态迁移动能->身份};
+        for (const auto 动态 : 待清理动态) {
+            const auto 读取 = 会话->上下文->取得L2动态结构服务()
+                .读取中性动态_v1({{L2结构合同版本, *清理G},
+                    L2中性状态动态合同版本_v1, L2读取类别::当前,
+                    动态, 0});
+            if (!读取.成功() || !读取.动态
+                || 读取.结果头.事实截止代次 != *清理G)
+                return 失败("S16", "read current dynamic before cleanup");
+        }
+        L2中性实例材料清理请求_v1 清理请求;
+        清理请求.请求头 = {L2结构合同版本, *清理G};
+        清理请求.幂等身份 = {0x4E43'4C45'4447'0001ULL};
+        const auto 清理结果 = 会话->上下文->取得L2动态结构服务()
+            .执行中性实例材料清理_v1(清理请求);
+        if (!清理结果.成功() || 清理结果.已清理动态.empty())
+            return 失败("S16", "clean expired state and dynamic materials");
+        const auto 清理后G = 当前代次(*会话);
+        if (!清理后G) return 失败("S16", "read post-cleanup G0");
+        const auto 清理后变化组 =
+            原子服务.按特征实例与UTC范围读取完整变化组_v2({
+                L2特征当前值变化永久账合同版本_v2,
+                {L2结构合同版本, *清理后G},
+                会话->本能根.安全根特征实例, 100, 301, 3});
+        if (!清理后变化组.成功()
+            || 清理后变化组.完整变化组 != 变化组.完整变化组)
+            return 失败("S16", "permanent ledger after state/dynamic cleanup");
+        通过("S16", "state/dynamic cleanup leaves permanent ledger readable");
+
         const auto 恢复锚点 = 会话->本能根;
+        const auto 恢复场景 = 会话->共同场景;
+        const auto 恢复四本体根 = 会话->四本体根;
         会话.reset();
         auto 恢复装配 = 构造普通应用上下文(配置);
         if (!恢复装配.成功() || !恢复装配.上下文)
@@ -354,7 +656,9 @@ int 运行安全根定义与当前值端到端测试() noexcept {
         if (!恢复本能根.成功() || !恢复本能根.锚点
             || 恢复本能根.状态 != 本能根运行初始化状态_v1::已恢复)
             return 失败("S11", "recover persistent instinct root anchor");
-        会话_v1 恢复会话{std::move(恢复上下文), *恢复本能根.锚点};
+        会话_v1 恢复会话{
+            std::move(恢复上下文), *恢复本能根.锚点, 恢复场景,
+            恢复四本体根};
         const auto 恢复定义 = 读取定义(恢复会话);
         const auto 恢复G = 当前代次(恢复会话);
         if (!恢复定义.成功() || !恢复定义.定义
@@ -367,7 +671,28 @@ int 运行安全根定义与当前值端到端测试() noexcept {
         if (!恢复快照.成功() || !恢复快照.快照
             || 恢复快照.快照->定义.定义版本 != 期望恢复版本)
             return 失败("S11", "read same-G snapshot after reassembly");
-        通过("S11", "owner and current definition recover across reassembly");
+        auto& 恢复原子服务 =
+            恢复会话.上下文->取得L2状态动态原子发布服务();
+        const auto 恢复登记 =
+            恢复原子服务.确保特征当前值变化永久账登记_v2({
+                L2特征当前值变化永久账合同版本_v2,
+                {L2结构合同版本, *恢复G}});
+        const auto 恢复账G = 当前代次(恢复会话);
+        if (!恢复登记.成功()
+            || 恢复登记.状态
+                != L2特征当前值变化账登记状态_v2::精确重复
+            || 恢复登记.账锚点 != 登记.账锚点
+            || 恢复登记.首次登记事实代次 != 登记.首次登记事实代次
+            || !恢复账G)
+            return 失败("S11", "recover permanent ledger registration");
+        const auto 恢复变化组 =
+            恢复原子服务.按特征实例与UTC范围读取完整变化组_v2({
+                L2特征当前值变化永久账合同版本_v2,
+                {L2结构合同版本, *恢复账G},
+                恢复会话.本能根.安全根特征实例, 100, 301, 3});
+        if (!恢复变化组.成功() || 恢复变化组.完整变化组 != 变化组.完整变化组)
+            return 失败("S11", "recover permanent ledger facts");
+        通过("S11", "definition, registration and permanent ledger recover");
         return 0;
     } catch (...) {
         return 失败("EX", "unhandled exception");
