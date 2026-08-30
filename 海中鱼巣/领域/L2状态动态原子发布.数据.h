@@ -254,6 +254,55 @@ struct L2特征当前值变化组读取结果_v2 final {
         const L2特征当前值变化组读取结果_v2&) = default;
 };
 
+struct L2特征当前值变化事实代次组读取请求_v2 final {
+    std::uint32_t 合同版本 = L2特征当前值变化永久账合同版本_v2;
+    L2结构请求头 请求头{};
+    L2特征实例身份 特征实例{};
+    std::uint64_t 排除起始事实代次 = 0;
+    std::uint64_t 数量预算 = 0;
+    friend bool operator==(const L2特征当前值变化事实代次组读取请求_v2&,
+        const L2特征当前值变化事实代次组读取请求_v2&) = default;
+};
+
+struct L2特征当前值变化事实代次完整集合见证_v2 final {
+    std::uint64_t 账登记事实代次 = 0;
+    L2特征实例身份 特征实例{};
+    std::uint64_t 排除起始事实代次 = 0;
+    std::uint64_t 包含结束事实代次 = 0;
+    std::uint64_t 声明成员数 = 0;
+    std::vector<L2特征当前值变化账身份_v2> 规范成员身份组{};
+    std::uint64_t G0 = 0;
+    friend bool operator==(
+        const L2特征当前值变化事实代次完整集合见证_v2&,
+        const L2特征当前值变化事实代次完整集合见证_v2&) = default;
+};
+
+enum class L2特征当前值变化事实代次组读取状态_v2 : std::uint8_t {
+    已读取 = 1,
+    账未登记 = 2,
+    入口拒绝 = 3,
+    当前性漂移 = 4,
+    覆盖边界不可用 = 5,
+    数量预算不足 = 6,
+    集合不闭合 = 7,
+    引用冲突 = 8,
+    资源失败 = 9,
+    内部错误 = 10
+};
+
+struct L2特征当前值变化事实代次组读取结果_v2 final {
+    std::uint32_t 合同版本 = L2特征当前值变化永久账合同版本_v2;
+    L2特征当前值变化事实代次组读取状态_v2 状态 =
+        L2特征当前值变化事实代次组读取状态_v2::入口拒绝;
+    std::vector<L2特征当前值变化账事实_v2> 完整变化组{};
+    std::optional<L2特征当前值变化事实代次完整集合见证_v2>
+        完整集合见证{};
+    std::uint64_t 本次正式读回截止 = 0;
+    bool 成功() const noexcept;
+    friend bool operator==(const L2特征当前值变化事实代次组读取结果_v2&,
+        const L2特征当前值变化事实代次组读取结果_v2&) = default;
+};
+
 // 以下旧原子发布 DTO 仅作源兼容和历史诊断；生产入口不再新增事实。
 
 enum class L2状态动态原子发布状态 : std::uint8_t {

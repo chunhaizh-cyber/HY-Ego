@@ -239,6 +239,35 @@ bool 主动安全空失败(const 本能主动安全UTC窗口裁决读取结果_v
     return 结果;
 }
 
+本能主动安全事实代次覆盖裁决读取请求_v1 形成主动安全事实代次请求(
+    const 会话_v1& 会话, std::uint64_t 运行代次, std::uint64_t G0,
+    std::uint64_t 排除起点, std::uint64_t 数量预算 = 8) {
+    return {本能主动安全事实代次覆盖裁决合同版本_v1,
+        形成请求(会话, 运行代次, G0), 排除起点, 数量预算};
+}
+
+bool 事实代次主动安全空失败(
+    const 本能主动安全事实代次覆盖裁决读取结果_v1& 结果,
+    本能主动安全事实代次覆盖裁决读取状态_v1 状态) {
+    return 结果.状态 == 状态 && !结果.成功() && !结果.快照
+        && 结果.本次正式读回截止 == 0;
+}
+
+本能主动安全事实代次覆盖裁决读取结果_v1
+读取稳定事实代次主动安全裁决(
+    const 本能主动安全事实代次覆盖裁决组合器& 组合器,
+    const 本能主动安全事实代次覆盖裁决读取请求_v1& 请求) {
+    本能主动安全事实代次覆盖裁决读取结果_v1 结果;
+    for (int i = 0; i < 4; ++i) {
+        结果 = 组合器.读取事实代次覆盖主动安全变化裁决_v1(请求);
+        if (结果.状态
+            != 本能主动安全事实代次覆盖裁决读取状态_v1::当前性漂移)
+            break;
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+    return 结果;
+}
+
 本能单完整秒服务需求时间裁决读取结果_v1 读取稳定裁决(
     const 本能单完整秒服务需求时间裁决组合器& 组合器,
     const 本能单完整秒服务需求时间裁决读取请求_v1& 请求) {
@@ -557,6 +586,53 @@ int 运行本能被动维护基础快照端到端测试() noexcept {
                 != 主动状态::内部错误)
             return 失败("A04", "lower provider status mapping");
         通过("A04", "lower drift, closure, reference, resource and internal states map exactly");
+
+        本能主动安全事实代次覆盖裁决组合器 事实代次组合器(
+            组合器, 会话->上下文->取得安全根定义与当前值服务(),
+            会话->上下文->取得L2状态动态原子发布服务());
+        auto 事实代次坏请求 = 形成主动安全事实代次请求(
+            *会话, 运行代次, *GA3, *GA3);
+        事实代次坏请求.合同版本 = 0;
+        if (!事实代次主动安全空失败(
+                事实代次组合器.读取事实代次覆盖主动安全变化裁决_v1(
+                    事实代次坏请求),
+                本能主动安全事实代次覆盖裁决读取状态_v1::入口拒绝))
+            return 失败("A05", "invalid fact-generation coverage request");
+        const auto 当前空覆盖 = 读取稳定事实代次主动安全裁决(
+            事实代次组合器,
+            形成主动安全事实代次请求(
+                *会话, 运行代次, *GA3, *GA3));
+        if (!当前空覆盖.成功() || !当前空覆盖.快照
+            || 当前空覆盖.快照->裁决
+                != 本能主动安全事实代次覆盖裁决_v1::无尚未消费变化
+            || 当前空覆盖.快照->排除已消费变化事实代次 != *GA3
+            || 当前空覆盖.快照->包含结束变化事实代次 != *GA3
+            || !当前空覆盖.快照->永久变化账完整组.完整变化组.empty())
+            return 失败("A05", "same-G complete empty fact-generation coverage");
+        通过("A05", "same-G complete empty coverage proves no unconsumed change");
+
+        const auto 覆盖边界不可用 = 读取稳定事实代次主动安全裁决(
+            事实代次组合器,
+            形成主动安全事实代次请求(
+                *会话, 运行代次, *GA3, *GA1));
+        if (!事实代次主动安全空失败(覆盖边界不可用,
+                本能主动安全事实代次覆盖裁决读取状态_v1::覆盖边界不可用))
+            return 失败("A06", "pre-registration start must fail closed");
+        const auto 事实代次预算不足 = 读取稳定事实代次主动安全裁决(
+            事实代次组合器,
+            形成主动安全事实代次请求(
+                *会话, 运行代次, *GA3, *GA2, 1));
+        if (!事实代次主动安全空失败(事实代次预算不足,
+                本能主动安全事实代次覆盖裁决读取状态_v1::数量预算不足))
+            return 失败("A06", "fact-generation member budget mapping");
+        const auto 事实代次来源未裁定 = 读取稳定事实代次主动安全裁决(
+            事实代次组合器,
+            形成主动安全事实代次请求(
+                *会话, 运行代次, *GA3, *GA2, 2));
+        if (!事实代次主动安全空失败(事实代次来源未裁定,
+                本能主动安全事实代次覆盖裁决读取状态_v1::来源未裁定))
+            return 失败("A06", "non-empty fact-generation coverage must fail closed");
+        通过("A06", "coverage boundary, budget and non-empty source remain structured");
 
         单调时钟适配器 裁决时间适配器({运行代次, 纪元});
         完整秒时钟服务 裁决时钟(裁决时间适配器,
