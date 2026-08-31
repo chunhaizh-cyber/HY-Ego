@@ -32,7 +32,6 @@ export namespace 海中鱼巣 {
 
 inline constexpr L1所有者范围建立幂等身份 动态所有者建立身份{
     0x4C31'4F57'4E45'5235ULL};
-class L2状态动态原子发布服务;
 
 class L2动态所有者交付 final {
 public:
@@ -1222,6 +1221,22 @@ public:
     // 仅供 ARCH-L2 组合 provider 绑定非拥有参与者引用。
     L1所有者范围写端口& 取得组合发布写入端口() noexcept {
         return 第一层写入端口_;
+    }
+
+    const L1所有者范围写端口& 取得组合发布写入端口() const noexcept {
+        return 第一层写入端口_;
+    }
+
+    struct 当前值记录动态参与者结果_v1 final {
+        L2结构状态 状态 = L2结构状态::内部不一致;
+        std::optional<L1三分区原子参与者写集_v2> 参与者{};
+        L1所有者范围写集本地键 状态迁移动能本地键{};
+        std::optional<L1所有者范围写集本地键> 动作致变动态本地键{};
+    };
+
+    bool 组合发布当前值动态材料就绪_v1() const noexcept {
+        return 结构类型登记定位_.has_value()
+            && 有效(动态上下文关系类型定位_.关系类型);
     }
 
     L2动态结构类型登记结果 建立动态结构类型登记(
@@ -2438,7 +2453,6 @@ public:
     }
 
 private:
-    friend class L2状态动态原子发布服务;
     enum class 动态端点角色 : std::uint8_t { 主体, 前状态, 后状态 };
 
     L2当前动态组读取结果 收敛并发条件读取(
@@ -3189,13 +3203,6 @@ public:
     }
 
 private:
-    struct 当前值记录动态参与者结果_v1 final {
-        L2结构状态 状态 = L2结构状态::内部不一致;
-        std::optional<L1三分区原子参与者写集_v2> 参与者{};
-        L1所有者范围写集本地键 状态迁移动能本地键{};
-        std::optional<L1所有者范围写集本地键> 动作致变动态本地键{};
-    };
-
     class 中性动态提供者 final {
     public:
         中性动态提供者(const L1事实基座服务& L1,
@@ -4395,6 +4402,29 @@ private:
         mutable std::mutex 清理锁_;
         std::vector<清理进度项> 清理进度_{};
     };
+
+public:
+    当前值记录动态参与者结果_v1 形成组合发布当前值记录动态参与者_v1(
+        const L2结构请求头& 请求头, L2结构幂等身份 幂等身份,
+        L2存在身份 主体存在, L2场景身份 共同场景,
+        L2特征实例身份 特征实例, L2存在身份 来源存在,
+        const std::optional<L2方法身份>& 来源方法,
+        const L1三分区原子事实引用值_v2& 前状态,
+        const L1三分区原子事实引用值_v2& 后状态,
+        std::int64_t 变化UTC纳秒) const noexcept {
+        if (!组合发布当前值动态材料就绪_v1()) {
+            当前值记录动态参与者结果_v1 失败;
+            失败.状态 = L2结构状态::未找到;
+            return 失败;
+        }
+        return 中性动态提供者_.形成当前值记录动态参与者_v1(
+            请求头, 幂等身份, 主体存在, 共同场景, 特征实例, 来源存在,
+            来源方法, 前状态, 后状态,
+            动态上下文关系类型定位_.关系类型, 变化UTC纳秒,
+            第一层写入端口_.所有者身份());
+    }
+
+private:
 
     const L1事实基座服务& L1_;
     const L2存在结构服务& 存在服务_;

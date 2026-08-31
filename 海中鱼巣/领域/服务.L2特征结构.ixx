@@ -33,8 +33,6 @@ inline constexpr L1所有者范围建立幂等身份 特征实例所有者建立
     0x4C31'4F57'4E45'5233ULL};
 
 class L2特征结构服务;
-class L2状态结构服务;
-class L2状态动态原子发布服务;
 
 class L2特征定义所有者交付 final {
 public:
@@ -5511,9 +5509,7 @@ public:
         }
     }
 
-private:
-    friend class L2状态结构服务;
-    friend class L2状态动态原子发布服务;
+public:
 
     struct 当前值变化三分区参与者结果_v1 final {
         L2结构状态 状态 = L2结构状态::内部不一致;
@@ -6121,6 +6117,7 @@ private:
             && 结果.动态编码映射.front().second == 期望值编码;
     }
 
+private:
     static L1所有者范围写端口&& 验证并移动定义交付(
         const L1事实基座服务& 第一层服务,
         L2特征定义所有者交付& 交付) {
