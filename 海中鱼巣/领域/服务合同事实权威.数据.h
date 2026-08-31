@@ -28,6 +28,7 @@ inline constexpr std::uint32_t 服务活动事实发布合同版本_v2 = 2;
 inline constexpr std::uint32_t 服务维护历史事实账合同版本_v1 = 1;
 inline constexpr std::uint32_t 服务维护历史事实账结构登记版本_v1 = 1;
 inline constexpr std::uint32_t 服务维护历史覆盖起点合同版本_v1 = 1;
+inline constexpr std::uint32_t 服务维护历史边界合同版本_v2 = 2;
 inline constexpr L1所有者范围建立幂等身份
     服务合同事实权威所有者建立身份_v1{0x494E'5354'5343'4F57ULL};
 
@@ -730,6 +731,72 @@ struct 服务维护历史事实范围读取结果_v1 final {
         const 服务维护历史事实范围读取结果_v1&) = default;
 };
 
+struct 服务维护历史边界读取请求_v2 final {
+    std::uint32_t 合同版本 = 服务维护历史边界合同版本_v2;
+    L2结构请求头 请求头{};
+    L2存在身份 自我{};
+    std::uint64_t 左边界事实代次 = 0;
+    std::uint64_t 左边界数量预算 = 0;
+    std::uint64_t 变化数量预算 = 0;
+    friend bool operator==(const 服务维护历史边界读取请求_v2&,
+        const 服务维护历史边界读取请求_v2&) = default;
+};
+
+struct 服务维护历史左边界合同投影_v1 final {
+    服务合同历史投影_v1 合同{};
+    服务合同状态历史投影_v1 当前状态{};
+    friend bool operator==(const 服务维护历史左边界合同投影_v1&,
+        const 服务维护历史左边界合同投影_v1&) = default;
+};
+
+struct 服务维护历史边界完整范围快照_v2 final {
+    std::uint64_t v2覆盖登记事实代次 = 0;
+    L2存在身份 自我{};
+    std::uint64_t 左边界事实代次 = 0;
+    std::uint64_t 包含结束事实代次 = 0;
+    std::uint64_t 声明左边界成员数 = 0;
+    std::uint64_t 声明变化成员数 = 0;
+    std::vector<服务维护历史成员身份_v1> 规范左边界成员身份组;
+    std::vector<服务维护历史成员身份_v1> 规范变化成员身份组;
+    std::vector<服务维护历史左边界合同投影_v1> 左边界合同组;
+    std::vector<服务进展历史投影_v1> 左边界进展组;
+    std::vector<服务准备历史投影_v1> 左边界准备组;
+    std::vector<服务合同历史投影_v1> 合同变化组;
+    std::vector<服务合同状态历史投影_v1> 合同状态变化组;
+    std::vector<服务到期事件历史投影_v1> 到期事件变化组;
+    std::vector<服务进展历史投影_v1> 服务进展变化组;
+    std::vector<服务准备历史投影_v1> 服务准备变化组;
+    friend bool operator==(const 服务维护历史边界完整范围快照_v2&,
+        const 服务维护历史边界完整范围快照_v2&) = default;
+};
+
+enum class 服务维护历史边界读取状态_v2 : std::uint8_t {
+    已读取 = 1,
+    入口拒绝 = 2,
+    当前性漂移 = 3,
+    v2历史账未登记 = 4,
+    覆盖边界不可用 = 5,
+    左边界不可恢复 = 6,
+    左边界预算不足 = 7,
+    变化预算不足 = 8,
+    集合不闭合 = 9,
+    引用冲突 = 10,
+    版本漂移 = 11,
+    资源失败 = 12,
+    内部错误 = 13
+};
+
+struct 服务维护历史边界读取结果_v2 final {
+    std::uint32_t 合同版本 = 服务维护历史边界合同版本_v2;
+    服务维护历史边界读取状态_v2 状态 =
+        服务维护历史边界读取状态_v2::入口拒绝;
+    std::optional<服务维护历史边界完整范围快照_v2> 快照{};
+    std::uint64_t 本次正式读回截止 = 0;
+    bool 成功() const noexcept;
+    friend bool operator==(const 服务维护历史边界读取结果_v2&,
+        const 服务维护历史边界读取结果_v2&) = default;
+};
+
 struct 服务维护历史覆盖起点读取请求_v1 final {
     std::uint32_t 合同版本 = 服务维护历史覆盖起点合同版本_v1;
     L2结构请求头 请求头{};
@@ -1272,6 +1339,227 @@ inline bool 服务维护历史事实范围读取结果_v1::成功() const noexce
     };
     for (const auto& x : 完整集合见证->规范成员身份组)
         if (!命中(x)) return false;
+    return true;
+}
+
+inline bool 服务维护历史边界成员身份组完整_v2(
+    const std::vector<服务维护历史成员身份_v1>& 组,
+    std::uint64_t Gstart, std::uint64_t G0, bool 左边界) noexcept {
+    for (std::size_t i = 0; i < 组.size(); ++i) {
+        const auto& x = 组[i];
+        if (!服务维护历史事实类别有效_v1(x.类别)
+            || !有效(x.事实身份) || x.事实版本 == 0
+            || x.形成事实代次 == 0 || x.形成事实代次 > G0
+            || (左边界 ? x.形成事实代次 > Gstart
+                       : x.形成事实代次 <= Gstart)
+            || (i != 0 && !服务维护历史成员身份小于_v1(组[i - 1], x)))
+            return false;
+    }
+    return true;
+}
+
+inline bool 服务维护历史左边界退出完整_v2(
+    std::uint64_t 形成事实代次,
+    const std::optional<std::uint64_t>& 退出当前事实代次,
+    std::uint64_t Gstart, std::uint64_t G0) noexcept {
+    return 形成事实代次 != 0 && 形成事实代次 <= Gstart
+        && (!退出当前事实代次
+            || (*退出当前事实代次 > Gstart
+                && *退出当前事实代次 <= G0));
+}
+
+template<class 投影类型, class 身份函数, class 版本函数, class 完整函数>
+inline bool 服务维护历史左边界投影组完整_v2(
+    const std::vector<投影类型>& 组, const L2存在身份& 自我,
+    std::uint64_t Gstart, std::uint64_t G0, 身份函数 取身份,
+    版本函数 取版本, 完整函数 完整) noexcept {
+    for (std::size_t i = 0; i < 组.size(); ++i) {
+        const auto& p = 组[i];
+        const auto G1 = p.事实.形成事实代次;
+        if (!完整(p.事实, G1) || p.事实.自我 != 自我
+            || !服务维护历史左边界退出完整_v2(
+                G1, p.退出当前事实代次, Gstart, G0))
+            return false;
+        if (i == 0) continue;
+        const auto& q = 组[i - 1];
+        if (q.事实.形成事实代次 > G1
+            || (q.事实.形成事实代次 == G1
+                && (取身份(q.事实).值 > 取身份(p.事实).值
+                    || (取身份(q.事实).值 == 取身份(p.事实).值
+                        && 取版本(q.事实) >= 取版本(p.事实)))))
+            return false;
+    }
+    return true;
+}
+
+inline bool 服务维护历史边界读取结果_v2::成功() const noexcept {
+    if (合同版本 != 服务维护历史边界合同版本_v2
+        || 状态 != 服务维护历史边界读取状态_v2::已读取
+        || !快照 || 本次正式读回截止 == 0)
+        return false;
+    const auto& s = *快照;
+    const auto Gseed = s.v2覆盖登记事实代次;
+    const auto Gstart = s.左边界事实代次;
+    const auto G0 = s.包含结束事实代次;
+    if (Gseed == 0 || !有效(s.自我.值) || Gseed > Gstart
+        || Gstart > G0 || G0 != 本次正式读回截止
+        || s.声明左边界成员数 != s.规范左边界成员身份组.size()
+        || s.声明变化成员数 != s.规范变化成员身份组.size()
+        || !服务维护历史边界成员身份组完整_v2(
+            s.规范左边界成员身份组, Gstart, G0, true)
+        || !服务维护历史边界成员身份组完整_v2(
+            s.规范变化成员身份组, Gstart, G0, false))
+        return false;
+    for (const auto& a : s.规范左边界成员身份组)
+        for (const auto& b : s.规范变化成员身份组)
+            if (a == b) return false;
+
+    for (std::size_t i = 0; i < s.左边界合同组.size(); ++i) {
+        const auto& p = s.左边界合同组[i];
+        const auto& c = p.合同.事实;
+        const auto& q = p.当前状态.事实;
+        if (!服务合同事实完整_v1(c, c.形成事实代次)
+            || !服务合同状态事实完整_v1(q, q.形成事实代次)
+            || c.自我 != s.自我 || q.合同 != c.身份
+            || q.状态 != 服务合同当前状态_v1::有效未满足
+            || q.已消费有效秒 > c.冻结有效总秒
+            || !服务维护历史左边界退出完整_v2(c.形成事实代次,
+                p.合同.退出当前事实代次, Gstart, G0)
+            || !服务维护历史左边界退出完整_v2(q.形成事实代次,
+                p.当前状态.退出当前事实代次, Gstart, G0))
+            return false;
+        if (i != 0) {
+            const auto& z = s.左边界合同组[i - 1].合同.事实;
+            if (z.形成事实代次 > c.形成事实代次
+                || (z.形成事实代次 == c.形成事实代次
+                    && (z.身份.值.值 > c.身份.值.值
+                        || (z.身份 == c.身份 && z.合同代次 >= c.合同代次))))
+                return false;
+        }
+    }
+    if (!服务维护历史左边界投影组完整_v2(s.左边界进展组,
+            s.自我, Gstart, G0,
+            [](const 服务合同关联进展事实_v2& f) { return f.身份.值; },
+            [](const 服务合同关联进展事实_v2& f) { return f.形成事实代次; },
+            服务合同关联进展事实完整_v2)
+        || !服务维护历史左边界投影组完整_v2(s.左边界准备组,
+            s.自我, Gstart, G0,
+            [](const 服务准备当前事实_v2& f) { return f.身份.值; },
+            [](const 服务准备当前事实_v2& f) { return f.形成事实代次; },
+            服务准备当前事实完整_v2)
+        || !服务维护历史投影组完整_v1(s.合同变化组, Gstart, G0,
+            [](const 服务合同事实_v1& f) { return f.身份.值; },
+            [](const 服务合同事实_v1& f) { return f.合同代次; },
+            服务合同事实完整_v1)
+        || !服务维护历史投影组完整_v1(s.合同状态变化组, Gstart, G0,
+            [](const 服务合同状态事实_v1& f) { return f.合同.值; },
+            [](const 服务合同状态事实_v1& f) { return f.状态版本; },
+            服务合同状态事实完整_v1)
+        || !服务维护历史投影组完整_v1(s.到期事件变化组, Gstart, G0,
+            [](const 服务到期未满足事件事实_v1& f) { return f.身份.值; },
+            [](const 服务到期未满足事件事实_v1& f) { return f.合同终态版本; },
+            服务到期未满足事件事实完整_v1)
+        || !服务维护历史投影组完整_v1(s.服务进展变化组, Gstart, G0,
+            [](const 服务合同关联进展事实_v2& f) { return f.身份.值; },
+            [](const 服务合同关联进展事实_v2& f) { return f.形成事实代次; },
+            服务合同关联进展事实完整_v2)
+        || !服务维护历史投影组完整_v1(s.服务准备变化组, Gstart, G0,
+            [](const 服务准备当前事实_v2& f) { return f.身份.值; },
+            [](const 服务准备当前事实_v2& f) { return f.形成事实代次; },
+            服务准备当前事实完整_v2))
+        return false;
+
+    for (const auto& p : s.合同变化组)
+        if (p.事实.自我 != s.自我) return false;
+    for (const auto& p : s.服务进展变化组)
+        if (p.事实.自我 != s.自我) return false;
+    for (const auto& p : s.服务准备变化组)
+        if (p.事实.自我 != s.自我) return false;
+
+    const auto 合同归属唯一闭合 = [&](服务合同身份_v1 合同) noexcept {
+        std::size_t 命中数 = 0;
+        bool 自我一致 = false;
+        for (const auto& p : s.左边界合同组) {
+            if (p.合同.事实.身份 != 合同) continue;
+            ++命中数;
+            自我一致 = p.合同.事实.自我 == s.自我;
+        }
+        for (const auto& p : s.合同变化组) {
+            if (p.事实.身份 != 合同) continue;
+            ++命中数;
+            自我一致 = p.事实.自我 == s.自我;
+        }
+        return 命中数 == 1 && 自我一致;
+    };
+    for (const auto& p : s.合同状态变化组)
+        if (!合同归属唯一闭合(p.事实.合同)) return false;
+    for (const auto& p : s.到期事件变化组)
+        if (!合同归属唯一闭合(p.事实.合同)) return false;
+
+    const auto 左边界载荷数 = s.左边界合同组.size() * 2
+        + s.左边界进展组.size() + s.左边界准备组.size();
+    const auto 变化载荷数 = s.合同变化组.size() + s.合同状态变化组.size()
+        + s.到期事件变化组.size() + s.服务进展变化组.size()
+        + s.服务准备变化组.size();
+    if (左边界载荷数 != s.声明左边界成员数
+        || 变化载荷数 != s.声明变化成员数)
+        return false;
+
+    const auto 左边界命中 = [&](const 服务维护历史成员身份_v1& x) noexcept {
+        std::size_t n = 0;
+        for (const auto& p : s.左边界合同组) {
+            const auto& c = p.合同.事实;
+            const auto& q = p.当前状态.事实;
+            n += x == 服务维护历史成员身份_v1{
+                服务维护历史事实类别_v1::服务合同,
+                c.身份.值, c.合同代次, c.形成事实代次};
+            n += x == 服务维护历史成员身份_v1{
+                服务维护历史事实类别_v1::合同状态,
+                q.合同.值, q.状态版本, q.形成事实代次};
+        }
+        for (const auto& p : s.左边界进展组)
+            n += x == 服务维护历史成员身份_v1{
+                服务维护历史事实类别_v1::服务进展,
+                p.事实.身份.值, p.事实.形成事实代次,
+                p.事实.形成事实代次};
+        for (const auto& p : s.左边界准备组)
+            n += x == 服务维护历史成员身份_v1{
+                服务维护历史事实类别_v1::服务准备,
+                p.事实.身份.值, p.事实.形成事实代次,
+                p.事实.形成事实代次};
+        return n == 1;
+    };
+    const auto 变化命中 = [&](const 服务维护历史成员身份_v1& x) noexcept {
+        std::size_t n = 0;
+        for (const auto& p : s.合同变化组)
+            n += x == 服务维护历史成员身份_v1{
+                服务维护历史事实类别_v1::服务合同,
+                p.事实.身份.值, p.事实.合同代次, p.事实.形成事实代次};
+        for (const auto& p : s.合同状态变化组)
+            n += x == 服务维护历史成员身份_v1{
+                服务维护历史事实类别_v1::合同状态,
+                p.事实.合同.值, p.事实.状态版本, p.事实.形成事实代次};
+        for (const auto& p : s.到期事件变化组)
+            n += x == 服务维护历史成员身份_v1{
+                服务维护历史事实类别_v1::到期未满足事件,
+                p.事实.身份.值, p.事实.合同终态版本,
+                p.事实.形成事实代次};
+        for (const auto& p : s.服务进展变化组)
+            n += x == 服务维护历史成员身份_v1{
+                服务维护历史事实类别_v1::服务进展,
+                p.事实.身份.值, p.事实.形成事实代次,
+                p.事实.形成事实代次};
+        for (const auto& p : s.服务准备变化组)
+            n += x == 服务维护历史成员身份_v1{
+                服务维护历史事实类别_v1::服务准备,
+                p.事实.身份.值, p.事实.形成事实代次,
+                p.事实.形成事实代次};
+        return n == 1;
+    };
+    for (const auto& x : s.规范左边界成员身份组)
+        if (!左边界命中(x)) return false;
+    for (const auto& x : s.规范变化成员身份组)
+        if (!变化命中(x)) return false;
     return true;
 }
 

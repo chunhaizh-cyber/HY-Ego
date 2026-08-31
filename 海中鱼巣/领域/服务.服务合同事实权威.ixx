@@ -1,6 +1,7 @@
 module;
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <map>
@@ -8,6 +9,7 @@ module;
 #include <new>
 #include <optional>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -78,6 +80,9 @@ inline constexpr L1所有者范围写入幂等身份 准备v2登记幂等身份{
     0x494E'5354'5050'5632ULL};
 inline constexpr L1所有者范围写入幂等身份 历史账登记幂等身份{
     0x494E'5354'5348'5631ULL};
+inline constexpr L1所有者范围写入幂等身份 历史覆盖登记幂等身份_v2{
+    0x494E'5354'5348'5632ULL};
+inline constexpr std::uint32_t 服务维护历史覆盖结构登记版本_v2 = 2;
 
 inline constexpr std::uint32_t 登记锚点键 = 0x0307'3001U;
 inline constexpr std::uint32_t 当前合同索引根键 = 0x0307'3002U;
@@ -172,6 +177,20 @@ inline constexpr std::uint32_t 进展v2历史成员关系键 = 0x0307'3059U;
 inline constexpr std::uint32_t 准备v2历史索引根键 = 0x0307'305AU;
 inline constexpr std::uint32_t 准备v2历史成员关系键 = 0x0307'305BU;
 inline constexpr std::uint32_t 历史账登记版本值本地键 = 0xF000'3051U;
+inline constexpr std::uint32_t 历史覆盖登记锚点键_v2 = 0x0307'3060U;
+inline constexpr std::uint32_t 历史覆盖登记版本载荷键_v2 = 0x0307'3061U;
+inline constexpr std::uint32_t 合同历史索引根键_v2 = 0x0307'3062U;
+inline constexpr std::uint32_t 合同历史成员关系键_v2 = 0x0307'3063U;
+inline constexpr std::uint32_t 合同状态历史索引根键_v2 = 0x0307'3064U;
+inline constexpr std::uint32_t 合同状态历史成员关系键_v2 = 0x0307'3065U;
+inline constexpr std::uint32_t 到期事件历史索引根键_v2 = 0x0307'3066U;
+inline constexpr std::uint32_t 到期事件历史成员关系键_v2 = 0x0307'3067U;
+inline constexpr std::uint32_t 进展历史索引根键_v2 = 0x0307'3068U;
+inline constexpr std::uint32_t 进展历史成员关系键_v2 = 0x0307'3069U;
+inline constexpr std::uint32_t 准备历史索引根键_v2 = 0x0307'306AU;
+inline constexpr std::uint32_t 准备历史成员关系键_v2 = 0x0307'306BU;
+inline constexpr std::uint32_t 历史覆盖登记版本值本地键_v2 = 0xF000'3061U;
+inline constexpr std::uint32_t 历史覆盖种子关系本地键起点_v2 = 0xE100'0000U;
 
 struct 结构登记定位 final {
     稳定编码 登记锚点{};
@@ -283,6 +302,50 @@ struct 服务维护历史账登记定位_v1 final {
             准备v2历史成员关系};
     }
 };
+
+struct 服务维护历史覆盖登记定位_v2 final {
+    稳定编码 登记锚点{}, 登记版本载荷{};
+    稳定编码 合同历史索引根{}, 合同历史成员关系{};
+    稳定编码 合同状态历史索引根{}, 合同状态历史成员关系{};
+    稳定编码 到期事件历史索引根{}, 到期事件历史成员关系{};
+    稳定编码 进展历史索引根{}, 进展历史成员关系{};
+    稳定编码 准备历史索引根{}, 准备历史成员关系{};
+    std::uint64_t 登记事实代次 = 0;
+    std::vector<稳定编码> 全部节点() const {
+        return {登记锚点, 登记版本载荷, 合同历史索引根,
+            合同历史成员关系, 合同状态历史索引根,
+            合同状态历史成员关系, 到期事件历史索引根,
+            到期事件历史成员关系, 进展历史索引根,
+            进展历史成员关系, 准备历史索引根,
+            准备历史成员关系};
+    }
+};
+
+struct 服务维护历史覆盖成员_v2 final {
+    服务维护历史事实类别_v1 类别 =
+        服务维护历史事实类别_v1::服务合同;
+    稳定编码 目标事实节点{};
+    稳定编码 事实身份{};
+    std::uint64_t 事实版本 = 0;
+    std::uint64_t 形成事实代次 = 0;
+    friend bool operator==(const 服务维护历史覆盖成员_v2&,
+        const 服务维护历史覆盖成员_v2&) = default;
+};
+
+inline bool 历史覆盖成员小于_v2(
+    const 服务维护历史覆盖成员_v2& a,
+    const 服务维护历史覆盖成员_v2& b) noexcept {
+    if (a.类别 != b.类别)
+        return static_cast<std::uint8_t>(a.类别)
+            < static_cast<std::uint8_t>(b.类别);
+    if (a.事实身份.值 != b.事实身份.值)
+        return a.事实身份.值 < b.事实身份.值;
+    if (a.事实版本 != b.事实版本)
+        return a.事实版本 < b.事实版本;
+    if (a.形成事实代次 != b.形成事实代次)
+        return a.形成事实代次 < b.形成事实代次;
+    return a.目标事实节点.值 < b.目标事实节点.值;
+}
 
 inline L1所有者范围写集本地键 键(std::uint32_t 值) noexcept { return {值}; }
 
@@ -1250,6 +1313,7 @@ inline L1所有者范围写集请求 形成进展发布写集(
     const 发布服务进展事实请求_v2& 请求,
     const 进展结构登记定位_v2& d,
     const 服务维护历史账登记定位_v1& h,
+    const 服务维护历史覆盖登记定位_v2& h2,
     std::vector<稳定编码> 退出) {
     L1所有者范围写集请求 w;
     w.期望事实代次 = 请求.请求头.期望事实代次;
@@ -1265,6 +1329,13 @@ inline L1所有者范围写集请求 形成进展发布写集(
         d.当前成员关系);
     添加发布关系(w, k, h.进展v2历史索引根,
         键(发布事实节点本地键), h.进展v2历史成员关系);
+    if (h2.登记事实代次 != 0)
+        添加发布关系(w, k, h2.进展历史索引根,
+            键(发布事实节点本地键), h2.进展历史成员关系);
+#if !defined(ARCH_INSTINCT_SERVICE_CONTRACT_FACT_AUTHORITY_VALIDATION)
+    else
+        throw std::runtime_error("service history v2 progress ledger unavailable");
+#endif
     添加发布关系(w, k, 键(发布事实节点本地键), f.服务合同.值, d.服务合同关系);
     添加发布关系(w, k, 键(发布事实节点本地键), f.自我.值, d.自我关系);
     添加发布关系(w, k, 键(发布事实节点本地键), f.需求.值, d.需求关系);
@@ -1288,6 +1359,7 @@ inline L1所有者范围写集请求 形成准备发布写集(
     const 发布服务准备事实请求_v2& 请求,
     const 准备结构登记定位_v2& d,
     const 服务维护历史账登记定位_v1& h,
+    const 服务维护历史覆盖登记定位_v2& h2,
     std::vector<稳定编码> 退出) {
     L1所有者范围写集请求 w;
     w.期望事实代次 = 请求.请求头.期望事实代次;
@@ -1303,6 +1375,13 @@ inline L1所有者范围写集请求 形成准备发布写集(
         d.当前成员关系);
     添加发布关系(w, k, h.准备v2历史索引根,
         键(发布事实节点本地键), h.准备v2历史成员关系);
+    if (h2.登记事实代次 != 0)
+        添加发布关系(w, k, h2.准备历史索引根,
+            键(发布事实节点本地键), h2.准备历史成员关系);
+#if !defined(ARCH_INSTINCT_SERVICE_CONTRACT_FACT_AUTHORITY_VALIDATION)
+    else
+        throw std::runtime_error("service history v2 preparation ledger unavailable");
+#endif
     const auto 来源 = std::holds_alternative<L2需求身份>(f.来源)
         ? std::get<L2需求身份>(f.来源).值
         : std::get<服务能力缺口身份_v1>(f.来源).值;
@@ -1374,6 +1453,813 @@ inline std::optional<稳定编码> 唯一关系目标(
         || !活动于(成员.关系, 截止) || !活动于(成员.对端节点, 截止))
         return std::nullopt;
     return 成员.对端节点.编码;
+}
+
+inline bool 可选关系目标闭合_v2(
+    const std::vector<L1所有者范围一致闭包端点关系组读取结果项>& 组,
+    稳定编码 关系类型, 稳定编码 源节点,
+    const std::optional<稳定编码>& 期望, std::uint64_t 截止) noexcept {
+    const auto* 命中 = 查找关系组(组, 关系类型);
+    if (!命中 || 命中->状态 != L1所有者范围一致当前读取项目状态::成功
+        || !命中->关系类型事实)
+        return false;
+    if (!期望) return 命中->成员.empty();
+    if (命中->成员.size() != 1) return false;
+    const auto& 成员 = 命中->成员.front();
+    return 成员.关系.源节点 == 源节点
+        && 成员.关系.关系类型节点 == 关系类型
+        && 成员.关系.目标节点 == 成员.对端节点.编码
+        && 成员.对端节点.编码 == *期望
+        && 活动于(成员.关系, 截止) && 活动于(成员.对端节点, 截止);
+}
+
+inline bool 服务进展当前闭包引用完整_v2(
+    const L1所有者范围一致关系类型闭包成员& 成员,
+    const 服务合同关联进展事实_v2& 事实,
+    const 进展结构登记定位_v2& d, std::uint64_t G0) noexcept {
+    const auto 状态 = 事实.进展状态
+        ? std::optional<稳定编码>{事实.进展状态->值} : std::nullopt;
+    const auto 动态 = 事实.进展动态
+        ? std::optional<稳定编码>{事实.进展动态->值} : std::nullopt;
+    const auto& 组 = 成员.目标节点源关系组;
+    const auto 源 = 成员.目标节点.编码;
+    return 唯一关系目标(组, d.服务合同关系, 源, G0)
+            == std::optional<稳定编码>{事实.服务合同.值}
+        && 唯一关系目标(组, d.自我关系, 源, G0)
+            == std::optional<稳定编码>{事实.自我.值}
+        && 唯一关系目标(组, d.需求关系, 源, G0)
+            == std::optional<稳定编码>{事实.需求.值}
+        && 唯一关系目标(组, d.任务关系, 源, G0)
+            == std::optional<稳定编码>{事实.任务.值}
+        && 唯一关系目标(组, d.方法关系, 源, G0)
+            == std::optional<稳定编码>{事实.方法.值}
+        && 唯一关系目标(组, d.正式选择关系, 源, G0)
+            == std::optional<稳定编码>{事实.执行绑定.正式选择.值}
+        && 唯一关系目标(组, d.冻结材料关系, 源, G0)
+            == std::optional<稳定编码>{事实.执行绑定.执行冻结材料.值}
+        && 唯一关系目标(组, d.实例方法关系, 源, G0)
+            == std::optional<稳定编码>{事实.执行绑定.实例方法.值}
+        && 可选关系目标闭合_v2(组, d.状态引用关系, 源, 状态, G0)
+        && 可选关系目标闭合_v2(组, d.动态引用关系, 源, 动态, G0);
+}
+
+inline bool 服务准备当前闭包引用完整_v2(
+    const L1所有者范围一致关系类型闭包成员& 成员,
+    const 服务准备当前事实_v2& 事实,
+    const 准备结构登记定位_v2& d, std::uint64_t G0) noexcept {
+    const auto 来源 = std::holds_alternative<L2需求身份>(事实.来源)
+        ? std::get<L2需求身份>(事实.来源).值
+        : std::get<服务能力缺口身份_v1>(事实.来源).值;
+    const auto 状态 = 事实.进展状态
+        ? std::optional<稳定编码>{事实.进展状态->值} : std::nullopt;
+    const auto 动态 = 事实.进展动态
+        ? std::optional<稳定编码>{事实.进展动态->值} : std::nullopt;
+    const auto 结果 = 事实.准备结果
+        ? std::optional<稳定编码>{事实.准备结果->值} : std::nullopt;
+    const auto 验证 = 事实.完成验证
+        ? std::optional<稳定编码>{事实.完成验证->值} : std::nullopt;
+    const auto& 组 = 成员.目标节点源关系组;
+    const auto 源 = 成员.目标节点.编码;
+    return 唯一关系目标(组, d.来源关系, 源, G0)
+            == std::optional<稳定编码>{来源}
+        && 唯一关系目标(组, d.自我关系, 源, G0)
+            == std::optional<稳定编码>{事实.自我.值}
+        && 唯一关系目标(组, d.任务关系, 源, G0)
+            == std::optional<稳定编码>{事实.任务.值}
+        && 唯一关系目标(组, d.方法关系, 源, G0)
+            == std::optional<稳定编码>{事实.方法.值}
+        && 唯一关系目标(组, d.正式选择关系, 源, G0)
+            == std::optional<稳定编码>{事实.执行绑定.正式选择.值}
+        && 唯一关系目标(组, d.冻结材料关系, 源, G0)
+            == std::optional<稳定编码>{事实.执行绑定.执行冻结材料.值}
+        && 唯一关系目标(组, d.实例方法关系, 源, G0)
+            == std::optional<稳定编码>{事实.执行绑定.实例方法.值}
+        && 可选关系目标闭合_v2(组, d.状态引用关系, 源, 状态, G0)
+        && 可选关系目标闭合_v2(组, d.动态引用关系, 源, 动态, G0)
+        && 可选关系目标闭合_v2(组, d.结果引用关系, 源, 结果, G0)
+        && 可选关系目标闭合_v2(组, d.验证引用关系, 源, 验证, G0);
+}
+
+inline const L1所有者范围一致关系类型闭包读取结果项* 查找闭包投影(
+    const L1所有者范围一致关系类型闭包读取结果& 读取,
+    稳定编码 关系类型) noexcept {
+    const L1所有者范围一致关系类型闭包读取结果项* 结果 = nullptr;
+    for (const auto& 项 : 读取.关系类型闭包) {
+        if (项.入口关系类型节点 != 关系类型) continue;
+        if (结果 || 项.状态 != L1所有者范围一致当前读取项目状态::成功
+            || !项.关系类型事实)
+            return nullptr;
+        结果 = &项;
+    }
+    return 结果;
+}
+
+template<class 登记类型>
+inline bool 登记投影完整_v2(
+    const L1所有者范围一致关系类型闭包读取结果& 读,
+    L1结构所有者身份 所有者, const 登记类型& d,
+    std::uint32_t 版本, std::uint64_t G0) noexcept {
+    const auto 节点组 = d.全部节点();
+    if (读.合同版本 != L1所有者范围一致关系类型闭包读取合同版本
+        || 读.读取事实代次 != G0 || 读.所有者.size() != 1)
+        return false;
+    const auto& o = 读.所有者.front();
+    if (o.查询所有者 != 所有者
+        || o.状态 != L1所有者范围一致当前读取项目状态::成功
+        || !o.所有者事实 || o.所有者事实->退出事实代次)
+        return false;
+    std::size_t 命中节点数 = 0;
+    for (const auto& n : 读.节点) {
+        if (std::find(节点组.begin(), 节点组.end(), n.查询编码)
+                == 节点组.end())
+            continue;
+        if (n.状态 != L1所有者范围一致当前读取项目状态::成功
+            || !n.事实 || n.事实->写入所有者 != 所有者
+            || !活动于(*n.事实, G0))
+            return false;
+        ++命中节点数;
+    }
+    if (命中节点数 != 节点组.size()) return false;
+    const auto* p = 查找属性投影(读.属性值, d.登记锚点, d.登记版本载荷);
+    const auto* v = p ? U64载荷(p->当前值事实) : nullptr;
+    return p && p->当前值事实.写入所有者 == 所有者
+        && 活动于(p->当前值事实, G0) && v
+        && *v == std::vector<std::uint64_t>{版本};
+}
+
+inline L1所有者范围一致关系类型闭包读取请求
+形成历史覆盖种子读取请求_v2(std::uint64_t G0,
+    L1结构所有者身份 所有者, const 结构登记定位& 基础,
+    const 进展结构登记定位_v2& 进展,
+    const 准备结构登记定位_v2& 准备) {
+    L1所有者范围一致关系类型闭包读取请求 r;
+    r.期望事实代次 = G0;
+    r.所有者 = {所有者};
+    const auto 加节点 = [&](const auto& d) {
+        const auto n = d.全部节点();
+        r.节点.insert(r.节点.end(), n.begin(), n.end());
+        r.属性值.push_back({d.登记锚点, d.登记版本载荷});
+    };
+    加节点(基础);
+    加节点(进展);
+    加节点(准备);
+    L1所有者范围一致关系类型闭包选择项 合同;
+    合同.入口关系类型节点 = 基础.当前合同成员关系;
+    合同.目标节点属性类型 = {基础.合同载荷};
+    合同.目标节点源关系类型 = {基础.合同自我关系,
+        基础.合同提出者关系, 基础.合同需求关系,
+        基础.合同目标宿主关系, 基础.合同目标特征关系,
+        基础.合同目标状态合同关系};
+    L1所有者范围一致关系类型闭包选择项 状态;
+    状态.入口关系类型节点 = 基础.合同当前状态关系;
+    状态.源节点属性类型 = {基础.合同载荷};
+    状态.目标节点属性类型 = {基础.合同状态载荷};
+    L1所有者范围一致关系类型闭包选择项 进展项;
+    进展项.入口关系类型节点 = 进展.当前成员关系;
+    进展项.目标节点属性类型 = {进展.载荷};
+    进展项.目标节点源关系类型 = {进展.服务合同关系,
+        进展.自我关系, 进展.需求关系, 进展.任务关系,
+        进展.方法关系, 进展.正式选择关系, 进展.冻结材料关系,
+        进展.实例方法关系, 进展.状态引用关系, 进展.动态引用关系};
+    L1所有者范围一致关系类型闭包选择项 准备项;
+    准备项.入口关系类型节点 = 准备.当前成员关系;
+    准备项.目标节点属性类型 = {准备.载荷};
+    准备项.目标节点源关系类型 = {准备.来源关系,
+        准备.自我关系, 准备.任务关系, 准备.方法关系,
+        准备.正式选择关系, 准备.冻结材料关系,
+        准备.实例方法关系, 准备.状态引用关系, 准备.动态引用关系,
+        准备.结果引用关系, 准备.验证引用关系};
+    r.关系类型闭包 = {std::move(合同), std::move(状态),
+        std::move(进展项), std::move(准备项)};
+    return r;
+}
+
+inline std::optional<std::vector<服务维护历史覆盖成员_v2>>
+读取当前历史覆盖种子_v2(const L1事实基座服务& L1,
+    L1结构所有者身份 所有者, const 结构登记定位& 基础,
+    const 进展结构登记定位_v2& 进展,
+    const 准备结构登记定位_v2& 准备, std::uint64_t G0) {
+    const auto 读 = L1.尝试读取所有者范围一致关系类型闭包投影(
+        形成历史覆盖种子读取请求_v2(G0, 所有者, 基础, 进展, 准备));
+    if (!登记投影完整_v2(读, 所有者, 基础,
+            服务合同事实权威结构登记版本_v1, G0)
+        || !登记投影完整_v2(读, 所有者, 进展,
+            服务进展事实结构登记版本_v2, G0)
+        || !登记投影完整_v2(读, 所有者, 准备,
+            服务准备事实结构登记版本_v2, G0)
+        || 读.关系类型闭包.size() != 4)
+        return std::nullopt;
+    const auto* 合同组 = 查找闭包投影(读, 基础.当前合同成员关系);
+    const auto* 状态组 = 查找闭包投影(读, 基础.合同当前状态关系);
+    const auto* 进展组 = 查找闭包投影(读, 进展.当前成员关系);
+    const auto* 准备组 = 查找闭包投影(读, 准备.当前成员关系);
+    if (!合同组 || !状态组 || !进展组 || !准备组) return std::nullopt;
+
+    std::map<std::uint64_t, std::pair<服务合同状态事实_v1, 稳定编码>> 状态表;
+    for (const auto& m : 状态组->成员) {
+        if (m.关系.写入所有者 != 所有者
+            || m.关系.源节点 != m.源节点.编码
+            || m.关系.目标节点 != m.目标节点.编码
+            || m.关系.关系类型节点 != 基础.合同当前状态关系
+            || m.关系.角色或顺序 != 1 || !活动于(m.关系, G0)
+            || m.目标节点.写入所有者 != 所有者
+            || !活动于(m.目标节点, G0))
+            return std::nullopt;
+        const auto* p = 查找属性投影(
+            m.目标节点属性值, m.目标节点.编码, 基础.合同状态载荷);
+        服务合同状态事实_v1 f;
+        if (!p || !解码状态(p->当前值事实, {m.源节点.编码}, f)
+            || f.形成事实代次 != m.目标节点.创建事实代次
+            || !状态表.emplace(m.源节点.编码.值,
+                std::pair{f, m.目标节点.编码}).second)
+            return std::nullopt;
+    }
+
+    std::vector<服务维护历史覆盖成员_v2> 种子;
+    for (const auto& m : 合同组->成员) {
+        if (m.关系.写入所有者 != 所有者
+            || m.关系.源节点 != 基础.当前合同索引根
+            || m.关系.目标节点 != m.目标节点.编码
+            || m.关系.关系类型节点 != 基础.当前合同成员关系
+            || m.关系.角色或顺序 != 1 || !活动于(m.关系, G0)
+            || m.目标节点.写入所有者 != 所有者
+            || !活动于(m.目标节点, G0))
+            return std::nullopt;
+        const auto* p = 查找属性投影(
+            m.目标节点属性值, m.目标节点.编码, 基础.合同载荷);
+        服务合同事实_v1 f;
+        if (!p || !解码合同(p->当前值事实, m.目标节点.编码, f)
+            || f.形成事实代次 != m.目标节点.创建事实代次)
+            return std::nullopt;
+        const auto u = [&](稳定编码 t) {
+            return 唯一关系目标(m.目标节点源关系组, t,
+                m.目标节点.编码, G0);
+        };
+        if (u(基础.合同自我关系) != std::optional<稳定编码>{f.自我.值}
+            || u(基础.合同提出者关系) != std::optional<稳定编码>{f.提出者.值}
+            || u(基础.合同需求关系) != std::optional<稳定编码>{f.需求.值}
+            || u(基础.合同目标宿主关系) != std::optional<稳定编码>{f.目标宿主.值}
+            || u(基础.合同目标特征关系) != std::optional<稳定编码>{f.目标特征.值}
+            || u(基础.合同目标状态合同关系)
+                != std::optional<稳定编码>{f.目标状态合同.值})
+            return std::nullopt;
+        const auto s = 状态表.find(f.身份.值.值);
+        if (s == 状态表.end()
+            || s->second.first.状态 != 服务合同当前状态_v1::有效未满足
+            || s->second.first.已消费有效秒 > f.冻结有效总秒)
+            return std::nullopt;
+        种子.push_back({服务维护历史事实类别_v1::服务合同,
+            m.目标节点.编码, f.身份.值, f.合同代次, f.形成事实代次});
+        种子.push_back({服务维护历史事实类别_v1::合同状态,
+            s->second.second, f.身份.值, s->second.first.状态版本,
+            s->second.first.形成事实代次});
+        状态表.erase(s);
+    }
+    if (!状态表.empty()) return std::nullopt;
+
+    for (const auto& m : 进展组->成员) {
+        const auto* p = 查找属性投影(
+            m.目标节点属性值, m.目标节点.编码, 进展.载荷);
+        服务合同关联进展事实_v2 f;
+        if (m.关系.写入所有者 != 所有者
+            || m.关系.源节点 != 进展.当前索引根
+            || m.关系.目标节点 != m.目标节点.编码
+            || m.关系.关系类型节点 != 进展.当前成员关系
+            || m.关系.角色或顺序 != 1 || !活动于(m.关系, G0)
+            || m.目标节点.写入所有者 != 所有者
+            || !活动于(m.目标节点, G0)
+            || !p || !解码进展_v2(p->当前值事实, m.目标节点.编码, f)
+            || f.形成事实代次 != m.目标节点.创建事实代次
+            || !服务进展当前闭包引用完整_v2(m, f, 进展, G0))
+            return std::nullopt;
+        种子.push_back({服务维护历史事实类别_v1::服务进展,
+            m.目标节点.编码, f.身份.值, f.形成事实代次,
+            f.形成事实代次});
+    }
+    for (const auto& m : 准备组->成员) {
+        const auto* p = 查找属性投影(
+            m.目标节点属性值, m.目标节点.编码, 准备.载荷);
+        服务准备当前事实_v2 f;
+        if (m.关系.写入所有者 != 所有者
+            || m.关系.源节点 != 准备.当前索引根
+            || m.关系.目标节点 != m.目标节点.编码
+            || m.关系.关系类型节点 != 准备.当前成员关系
+            || m.关系.角色或顺序 != 1 || !活动于(m.关系, G0)
+            || m.目标节点.写入所有者 != 所有者
+            || !活动于(m.目标节点, G0)
+            || !p || !解码准备_v2(p->当前值事实, m.目标节点.编码, f)
+            || f.形成事实代次 != m.目标节点.创建事实代次
+            || !服务准备当前闭包引用完整_v2(m, f, 准备, G0))
+            return std::nullopt;
+        种子.push_back({服务维护历史事实类别_v1::服务准备,
+            m.目标节点.编码, f.身份.值, f.形成事实代次,
+            f.形成事实代次});
+    }
+    std::sort(种子.begin(), 种子.end(), 历史覆盖成员小于_v2);
+    if (std::adjacent_find(种子.begin(), 种子.end()) != 种子.end())
+        return std::nullopt;
+    return 种子;
+}
+
+inline bool 同一服务进展活动流事实_v2(
+    const 服务合同关联进展事实_v2& a,
+    const 服务合同关联进展事实_v2& b) noexcept {
+    return a.自我 == b.自我 && a.服务合同 == b.服务合同
+        && a.需求 == b.需求 && a.任务 == b.任务 && a.方法 == b.方法
+        && a.T到D关系稳定编码 == b.T到D关系稳定编码
+        && a.执行绑定 == b.执行绑定;
+}
+
+inline bool 同一服务准备活动流事实_v2(
+    const 服务准备当前事实_v2& a,
+    const 服务准备当前事实_v2& b) noexcept {
+    return a.自我 == b.自我 && a.来源 == b.来源
+        && a.准备目标 == b.准备目标
+        && a.适用服务范围 == b.适用服务范围
+        && a.任务 == b.任务 && a.方法 == b.方法
+        && a.T到D关系稳定编码 == b.T到D关系稳定编码
+        && a.执行绑定 == b.执行绑定;
+}
+
+template<class 投影类型, class 同流函数>
+inline bool 历史当前版本链按流闭合_v2(
+    const std::vector<投影类型>& 组, 同流函数 同流) noexcept {
+    for (const auto& 当前 : 组) {
+        std::size_t 同代同流数 = 0;
+        std::size_t 前驱数 = 0;
+        std::size_t 后继数 = 0;
+        bool 有更早同流 = false;
+        for (const auto& 候选 : 组) {
+            if (!同流(当前.事实, 候选.事实)) continue;
+            同代同流数 += 候选.事实.形成事实代次
+                == 当前.事实.形成事实代次;
+            有更早同流 = 有更早同流
+                || 候选.事实.形成事实代次 < 当前.事实.形成事实代次;
+            前驱数 += 候选.退出当前事实代次
+                && *候选.退出当前事实代次 == 当前.事实.形成事实代次;
+            后继数 += 当前.退出当前事实代次
+                && 候选.事实.形成事实代次 == *当前.退出当前事实代次;
+        }
+        if (同代同流数 != 1
+            || 前驱数 != (有更早同流 ? 1U : 0U)
+            || 后继数 != (当前.退出当前事实代次 ? 1U : 0U))
+            return false;
+    }
+    return true;
+}
+
+inline L1所有者范围写集请求 形成历史覆盖登记写集_v2(
+    std::uint64_t G0, const std::vector<服务维护历史覆盖成员_v2>& 种子) {
+    L1所有者范围写集请求 w;
+    w.期望事实代次 = G0;
+    w.写入幂等身份 = 历史覆盖登记幂等身份_v2;
+    for (std::uint32_t k = 历史覆盖登记锚点键_v2;
+        k <= 准备历史成员关系键_v2; ++k) {
+        w.节点.push_back({键(k),
+            k == 历史覆盖登记版本载荷键_v2 ? 节点种类::属性类型
+                                               : 节点种类::普通,
+            k == 历史覆盖登记版本载荷键_v2
+                ? std::optional<L1所有者范围值表示种类>{
+                    L1所有者范围值表示种类::U64组}
+                : std::nullopt});
+    }
+    w.值.push_back({键(历史覆盖登记版本值本地键_v2),
+        键(历史覆盖登记锚点键_v2), 键(历史覆盖登记版本载荷键_v2),
+        std::vector<std::uint64_t>{服务维护历史覆盖结构登记版本_v2},
+        键(历史覆盖登记锚点键_v2)});
+    w.属性槽变更.push_back({键(历史覆盖登记锚点键_v2),
+        键(历史覆盖登记版本载荷键_v2),
+        键(历史覆盖登记版本值本地键_v2)});
+    std::uint32_t rk = 历史覆盖种子关系本地键起点_v2;
+    for (const auto& m : 种子) {
+        std::uint32_t 根 = 0, 类型 = 0;
+        switch (m.类别) {
+        case 服务维护历史事实类别_v1::服务合同:
+            根 = 合同历史索引根键_v2; 类型 = 合同历史成员关系键_v2; break;
+        case 服务维护历史事实类别_v1::合同状态:
+            根 = 合同状态历史索引根键_v2;
+            类型 = 合同状态历史成员关系键_v2; break;
+        case 服务维护历史事实类别_v1::服务进展:
+            根 = 进展历史索引根键_v2; 类型 = 进展历史成员关系键_v2; break;
+        case 服务维护历史事实类别_v1::服务准备:
+            根 = 准备历史索引根键_v2; 类型 = 准备历史成员关系键_v2; break;
+        default:
+            throw std::runtime_error("invalid service history v2 seed category");
+        }
+        w.关系.push_back({键(rk++), 键(根), m.目标事实节点, 键(类型), 1});
+    }
+    return w;
+}
+
+inline 服务维护历史覆盖登记定位_v2 从映射形成历史覆盖定位_v2(
+    const std::vector<std::pair<L1所有者范围写集本地键, 稳定编码>>& m,
+    std::uint64_t Gseed) {
+    const auto 取 = [&](std::uint32_t k) {
+        const auto v = 查找映射(m, k);
+        if (!v) throw std::runtime_error("service history v2 mapping missing");
+        return *v;
+    };
+    return {取(历史覆盖登记锚点键_v2),
+        取(历史覆盖登记版本载荷键_v2), 取(合同历史索引根键_v2),
+        取(合同历史成员关系键_v2), 取(合同状态历史索引根键_v2),
+        取(合同状态历史成员关系键_v2), 取(到期事件历史索引根键_v2),
+        取(到期事件历史成员关系键_v2), 取(进展历史索引根键_v2),
+        取(进展历史成员关系键_v2), 取(准备历史索引根键_v2),
+        取(准备历史成员关系键_v2), Gseed};
+}
+
+inline bool 验证历史覆盖登记当前投影_v2(
+    const L1事实基座服务& L1, L1结构所有者身份 所有者,
+    const 服务维护历史覆盖登记定位_v2& d, std::uint64_t G0) {
+    L1所有者范围一致当前读取请求 r;
+    r.期望事实代次 = G0; r.所有者 = {所有者}; r.节点 = d.全部节点();
+    r.属性值 = {{d.登记锚点, d.登记版本载荷}};
+    const auto 读 = L1.尝试读取所有者范围一致当前投影(r);
+    if (读.状态 != L1所有者范围一致当前读取状态::成功
+        || 读.读取事实代次 != G0 || 读.所有者.size() != 1
+        || 读.节点.size() != d.全部节点().size()) return false;
+    for (const auto& n : 读.节点)
+        if (n.状态 != L1所有者范围一致当前读取项目状态::成功
+            || !n.事实 || n.事实->写入所有者 != 所有者
+            || !活动于(*n.事实, G0)) return false;
+    const auto* p = 查找属性投影(读.属性值, d.登记锚点, d.登记版本载荷);
+    const auto* v = p ? U64载荷(p->当前值事实) : nullptr;
+    return v && *v == std::vector<std::uint64_t>{
+        服务维护历史覆盖结构登记版本_v2};
+}
+
+template<class 事实类型, class 解码函数>
+inline std::optional<事实类型> 读取历史覆盖目标载荷_v2(
+    const L1事实基座服务& L1, L1结构所有者身份 所有者,
+    稳定编码 目标, 稳定编码 载荷类型, std::uint64_t Gread,
+    解码函数 解码) {
+    const auto n = L1.读取所有者范围历史事实(
+        {L1所有者范围CRUD合同版本, 目标});
+    if (n.状态 != L1所有者范围读取状态::成功
+        || n.读取事实代次 != Gread || !n.事实
+        || !std::holds_alternative<L1所有者范围节点事实>(*n.事实))
+        return std::nullopt;
+    const auto& 节点 = std::get<L1所有者范围节点事实>(*n.事实);
+    if (节点.编码 != 目标 || 节点.写入所有者 != 所有者
+        || 节点.创建事实代次 == 0 || 节点.退出事实代次)
+        return std::nullopt;
+    const auto values = L1.读取所有者范围历史属性值组(
+        {L1所有者范围CRUD合同版本, 目标, 节点.创建事实代次});
+    if (values.状态 != L1所有者范围读取状态::成功
+        || values.读取事实代次 != Gread) return std::nullopt;
+    const L1所有者范围值事实* value = nullptr;
+    for (const auto& v : values.属性值组) {
+        if (v.属性类型节点 != 载荷类型
+            || v.创建事实代次 > 节点.创建事实代次
+            || (v.退出事实代次 && *v.退出事实代次 <= 节点.创建事实代次))
+            continue;
+        if (value) return std::nullopt;
+        value = &v;
+    }
+    事实类型 f;
+    if (!value || !解码(*value, 目标, f)
+        || f.形成事实代次 != 节点.创建事实代次)
+        return std::nullopt;
+    return f;
+}
+
+inline std::optional<L1所有者范围关系事实> 读取种子当前关系_v2(
+    const L1事实基座服务& L1, L1结构所有者身份 所有者,
+    稳定编码 目标, 稳定编码 类型, std::uint64_t Gseed前,
+    std::uint64_t Gread) {
+    const auto r = L1.读取所有者范围历史关系组({
+        L1所有者范围CRUD合同版本, L1所有者范围关系端点方向::目标,
+        目标, 类型, Gseed前});
+    if (r.状态 != L1所有者范围读取状态::成功
+        || r.读取事实代次 != Gread || r.关系组.size() != 1)
+        return std::nullopt;
+    const auto& x = r.关系组.front();
+    if (x.目标节点 != 目标 || x.关系类型节点 != 类型
+        || x.写入所有者 != 所有者 || x.角色或顺序 != 1
+        || !活动于(x, Gseed前)) return std::nullopt;
+    return x;
+}
+
+inline std::optional<服务维护历史覆盖成员_v2>
+从首次种子目标重建覆盖成员_v2(const L1事实基座服务& L1,
+    L1结构所有者身份 所有者, 服务维护历史事实类别_v1 类别,
+    稳定编码 目标, const 结构登记定位& 基础,
+    const 进展结构登记定位_v2& 进展,
+    const 准备结构登记定位_v2& 准备,
+    std::uint64_t Gseed前, std::uint64_t Gread) {
+    switch (类别) {
+    case 服务维护历史事实类别_v1::服务合同: {
+        const auto f = 读取历史覆盖目标载荷_v2<服务合同事实_v1>(
+            L1, 所有者, 目标, 基础.合同载荷, Gread, 解码合同);
+        const auto 当前 = 读取种子当前关系_v2(
+            L1, 所有者, 目标, 基础.当前合同成员关系, Gseed前, Gread);
+        if (!f || !当前 || 当前->源节点 != 基础.当前合同索引根)
+            return std::nullopt;
+        return 服务维护历史覆盖成员_v2{类别, 目标, f->身份.值,
+            f->合同代次, f->形成事实代次};
+    }
+    case 服务维护历史事实类别_v1::合同状态: {
+        const auto 当前 = 读取种子当前关系_v2(
+            L1, 所有者, 目标, 基础.合同当前状态关系, Gseed前, Gread);
+        if (!当前) return std::nullopt;
+        const auto f = 读取历史覆盖目标载荷_v2<服务合同状态事实_v1>(
+            L1, 所有者, 目标, 基础.合同状态载荷, Gread,
+            [&](const auto& v, 稳定编码, auto& out) {
+                return 解码状态(v, {当前->源节点}, out);
+            });
+        if (!f) return std::nullopt;
+        return 服务维护历史覆盖成员_v2{类别, 目标, f->合同.值,
+            f->状态版本, f->形成事实代次};
+    }
+    case 服务维护历史事实类别_v1::服务进展: {
+        const auto f = 读取历史覆盖目标载荷_v2<服务合同关联进展事实_v2>(
+            L1, 所有者, 目标, 进展.载荷, Gread, 解码进展_v2);
+        const auto 当前 = 读取种子当前关系_v2(
+            L1, 所有者, 目标, 进展.当前成员关系, Gseed前, Gread);
+        if (!f || !当前 || 当前->源节点 != 进展.当前索引根)
+            return std::nullopt;
+        return 服务维护历史覆盖成员_v2{类别, 目标, f->身份.值,
+            f->形成事实代次, f->形成事实代次};
+    }
+    case 服务维护历史事实类别_v1::服务准备: {
+        const auto f = 读取历史覆盖目标载荷_v2<服务准备当前事实_v2>(
+            L1, 所有者, 目标, 准备.载荷, Gread, 解码准备_v2);
+        const auto 当前 = 读取种子当前关系_v2(
+            L1, 所有者, 目标, 准备.当前成员关系, Gseed前, Gread);
+        if (!f || !当前 || 当前->源节点 != 准备.当前索引根)
+            return std::nullopt;
+        return 服务维护历史覆盖成员_v2{类别, 目标, f->身份.值,
+            f->形成事实代次, f->形成事实代次};
+    }
+    default:
+        return std::nullopt;
+    }
+}
+
+inline std::optional<std::vector<服务维护历史覆盖成员_v2>>
+从首次写集重建覆盖种子_v2(const L1事实基座服务& L1,
+    L1结构所有者身份 所有者, const L1所有者范围写集请求& w,
+    const 结构登记定位& 基础, const 进展结构登记定位_v2& 进展,
+    const 准备结构登记定位_v2& 准备, std::uint64_t Gseed,
+    std::uint64_t Gread) {
+    if (Gseed == 0 || w.期望事实代次 == 0
+        || Gseed != w.期望事实代次 + 1
+        || w.写入幂等身份 != 历史覆盖登记幂等身份_v2)
+        return std::nullopt;
+    std::vector<服务维护历史覆盖成员_v2> 结果;
+    std::uint32_t 预期关系键 = 历史覆盖种子关系本地键起点_v2;
+    for (const auto& r : w.关系) {
+        const auto* 源 = std::get_if<L1所有者范围写集本地键>(&r.源节点);
+        const auto* 目标 = std::get_if<稳定编码>(&r.目标节点);
+        const auto* 类型 = std::get_if<L1所有者范围写集本地键>(&r.关系类型节点);
+        if (!源 || !目标 || !类型 || r.本地键.值 != 预期关系键++
+            || r.角色或顺序 != 1) return std::nullopt;
+        服务维护历史事实类别_v1 类别;
+        if (源->值 == 合同历史索引根键_v2
+            && 类型->值 == 合同历史成员关系键_v2)
+            类别 = 服务维护历史事实类别_v1::服务合同;
+        else if (源->值 == 合同状态历史索引根键_v2
+            && 类型->值 == 合同状态历史成员关系键_v2)
+            类别 = 服务维护历史事实类别_v1::合同状态;
+        else if (源->值 == 进展历史索引根键_v2
+            && 类型->值 == 进展历史成员关系键_v2)
+            类别 = 服务维护历史事实类别_v1::服务进展;
+        else if (源->值 == 准备历史索引根键_v2
+            && 类型->值 == 准备历史成员关系键_v2)
+            类别 = 服务维护历史事实类别_v1::服务准备;
+        else return std::nullopt;
+        const auto m = 从首次种子目标重建覆盖成员_v2(
+            L1, 所有者, 类别, *目标, 基础, 进展, 准备,
+            w.期望事实代次, Gread);
+        if (!m) return std::nullopt;
+        结果.push_back(*m);
+    }
+    if (!std::is_sorted(结果.begin(), 结果.end(), 历史覆盖成员小于_v2)
+        || std::adjacent_find(结果.begin(), 结果.end()) != 结果.end()
+        || w != 形成历史覆盖登记写集_v2(w.期望事实代次, 结果))
+        return std::nullopt;
+    return 结果;
+}
+
+inline L1所有者范围一致关系类型闭包读取请求
+形成历史覆盖恢复验证读取请求_v2(std::uint64_t Gread,
+    L1结构所有者身份 所有者,
+    const 服务维护历史覆盖登记定位_v2& d,
+    const 结构登记定位& 基础, const 进展结构登记定位_v2& 进展,
+    const 准备结构登记定位_v2& 准备) {
+    L1所有者范围一致关系类型闭包读取请求 r;
+    r.期望事实代次 = Gread;
+    r.所有者 = {所有者};
+    r.节点 = d.全部节点();
+    r.属性值 = {{d.登记锚点, d.登记版本载荷}};
+    const auto 加 = [&](稳定编码 入口, 稳定编码 载荷) {
+        L1所有者范围一致关系类型闭包选择项 x;
+        x.入口关系类型节点 = 入口;
+        x.目标节点属性类型 = {载荷};
+        r.关系类型闭包.push_back(std::move(x));
+    };
+    加(d.合同历史成员关系, 基础.合同载荷);
+    加(d.合同状态历史成员关系, 基础.合同状态载荷);
+    加(d.到期事件历史成员关系, 基础.到期事件载荷);
+    加(d.进展历史成员关系, 进展.载荷);
+    加(d.准备历史成员关系, 准备.载荷);
+    return r;
+}
+
+inline std::optional<服务维护历史覆盖成员_v2>
+解码历史覆盖闭包成员_v2(const L1事实基座服务& L1,
+    L1结构所有者身份 所有者, 服务维护历史事实类别_v1 类别,
+    const L1所有者范围一致关系类型闭包成员& m,
+    稳定编码 根, 稳定编码 类型, const 结构登记定位& 基础,
+    const 进展结构登记定位_v2& 进展,
+    const 准备结构登记定位_v2& 准备,
+    std::uint64_t Gseed, std::uint64_t Gread) {
+    const auto G1 = m.目标节点.创建事实代次;
+    const auto 预期关系代次 = G1 < Gseed ? Gseed : G1;
+    if (G1 == 0 || G1 == Gseed
+        || m.关系.源节点 != 根
+        || m.关系.目标节点 != m.目标节点.编码
+        || m.关系.关系类型节点 != 类型 || m.关系.角色或顺序 != 1
+        || m.关系.写入所有者 != 所有者
+        || m.目标节点.写入所有者 != 所有者
+        || m.关系.创建事实代次 != 预期关系代次
+        || m.关系.退出事实代次 || m.目标节点.退出事实代次
+        || !活动于(m.关系, Gread) || !活动于(m.目标节点, Gread))
+        return std::nullopt;
+    switch (类别) {
+    case 服务维护历史事实类别_v1::服务合同: {
+        const auto* p = 查找属性投影(
+            m.目标节点属性值, m.目标节点.编码, 基础.合同载荷);
+        服务合同事实_v1 f;
+        if (!p || !解码合同(p->当前值事实, m.目标节点.编码, f)
+            || f.形成事实代次 != G1) return std::nullopt;
+        return 服务维护历史覆盖成员_v2{
+            类别, m.目标节点.编码, f.身份.值, f.合同代次, G1};
+    }
+    case 服务维护历史事实类别_v1::合同状态: {
+        const auto 边界 = G1 < Gseed ? Gseed - 1 : G1;
+        const auto 当前 = 读取种子当前关系_v2(
+            L1, 所有者, m.目标节点.编码, 基础.合同当前状态关系,
+            边界, Gread);
+        const auto* p = 查找属性投影(
+            m.目标节点属性值, m.目标节点.编码, 基础.合同状态载荷);
+        服务合同状态事实_v1 f;
+        if (!当前 || !p || !解码状态(
+                p->当前值事实, {当前->源节点}, f)
+            || f.形成事实代次 != G1) return std::nullopt;
+        return 服务维护历史覆盖成员_v2{
+            类别, m.目标节点.编码, f.合同.值, f.状态版本, G1};
+    }
+    case 服务维护历史事实类别_v1::到期未满足事件: {
+        const auto* p = 查找属性投影(
+            m.目标节点属性值, m.目标节点.编码, 基础.到期事件载荷);
+        服务到期未满足事件事实_v1 f;
+        if (!p || !解码事件(p->当前值事实, m.目标节点.编码, f)
+            || f.形成事实代次 != G1) return std::nullopt;
+        return 服务维护历史覆盖成员_v2{类别, m.目标节点.编码,
+            f.身份.值, f.合同终态版本, G1};
+    }
+    case 服务维护历史事实类别_v1::服务进展: {
+        const auto* p = 查找属性投影(
+            m.目标节点属性值, m.目标节点.编码, 进展.载荷);
+        服务合同关联进展事实_v2 f;
+        if (!p || !解码进展_v2(p->当前值事实, m.目标节点.编码, f)
+            || f.形成事实代次 != G1) return std::nullopt;
+        return 服务维护历史覆盖成员_v2{
+            类别, m.目标节点.编码, f.身份.值, G1, G1};
+    }
+    case 服务维护历史事实类别_v1::服务准备: {
+        const auto* p = 查找属性投影(
+            m.目标节点属性值, m.目标节点.编码, 准备.载荷);
+        服务准备当前事实_v2 f;
+        if (!p || !解码准备_v2(p->当前值事实, m.目标节点.编码, f)
+            || f.形成事实代次 != G1) return std::nullopt;
+        return 服务维护历史覆盖成员_v2{
+            类别, m.目标节点.编码, f.身份.值, G1, G1};
+    }
+    default:
+        return std::nullopt;
+    }
+}
+
+inline bool 验证历史覆盖永久成员全集_v2(const L1事实基座服务& L1,
+    L1结构所有者身份 所有者,
+    const 服务维护历史覆盖登记定位_v2& d,
+    const 结构登记定位& 基础, const 进展结构登记定位_v2& 进展,
+    const 准备结构登记定位_v2& 准备,
+    const std::vector<服务维护历史覆盖成员_v2>& 首次种子,
+    std::uint64_t Gread) {
+    const auto 读 = L1.尝试读取所有者范围一致关系类型闭包投影(
+        形成历史覆盖恢复验证读取请求_v2(
+            Gread, 所有者, d, 基础, 进展, 准备));
+    if (!登记投影完整_v2(读, 所有者, d,
+            服务维护历史覆盖结构登记版本_v2, Gread)
+        || 读.关系类型闭包.size() != 5)
+        return false;
+    struct 闭包规格 final {
+        服务维护历史事实类别_v1 类别;
+        稳定编码 根;
+        稳定编码 类型;
+    };
+    const std::array<闭包规格, 5> 规格{{
+        {服务维护历史事实类别_v1::服务合同,
+            d.合同历史索引根, d.合同历史成员关系},
+        {服务维护历史事实类别_v1::合同状态,
+            d.合同状态历史索引根, d.合同状态历史成员关系},
+        {服务维护历史事实类别_v1::到期未满足事件,
+            d.到期事件历史索引根, d.到期事件历史成员关系},
+        {服务维护历史事实类别_v1::服务进展,
+            d.进展历史索引根, d.进展历史成员关系},
+        {服务维护历史事实类别_v1::服务准备,
+            d.准备历史索引根, d.准备历史成员关系}}};
+    std::vector<服务维护历史覆盖成员_v2> 全部;
+    std::vector<服务维护历史覆盖成员_v2> Gseed子集;
+    for (const auto& s : 规格) {
+        const auto* 闭包 = 查找闭包投影(读, s.类型);
+        if (!闭包) return false;
+        for (const auto& m : 闭包->成员) {
+            const auto x = 解码历史覆盖闭包成员_v2(
+                L1, 所有者, s.类别, m, s.根, s.类型,
+                基础, 进展, 准备, d.登记事实代次, Gread);
+            if (!x) return false;
+            全部.push_back(*x);
+            if (x->形成事实代次 < d.登记事实代次)
+                Gseed子集.push_back(*x);
+        }
+    }
+    std::sort(全部.begin(), 全部.end(), 历史覆盖成员小于_v2);
+    std::sort(Gseed子集.begin(), Gseed子集.end(), 历史覆盖成员小于_v2);
+    return std::adjacent_find(全部.begin(), 全部.end()) == 全部.end()
+        && Gseed子集 == 首次种子;
+}
+
+inline 服务维护历史覆盖登记定位_v2 初始化历史覆盖结构登记_v2(
+    const L1事实基座服务& L1, L1所有者范围写端口& 端口,
+    const 结构登记定位& 基础, const 进展结构登记定位_v2& 进展,
+    const 准备结构登记定位_v2& 准备) {
+    auto 首次 = 端口.读取首次写入材料(
+        {L1所有者范围首次写入读取合同版本, 历史覆盖登记幂等身份_v2});
+    L1所有者范围写集请求 w;
+    if (首次.状态 == L1所有者范围读取状态::成功
+        && 首次.首次规范化写集 && 首次.首次写入结果) {
+        w = *首次.首次规范化写集;
+    } else if (首次.状态 == L1所有者范围读取状态::未找到) {
+        const auto 当前 = L1.读取中性当前事实代次({L1中性CRUD合同版本});
+        if (当前.状态 != L1中性读取状态::成功 || 当前.事实代次 == 0)
+            throw std::runtime_error("service history v2 cutoff unavailable");
+        const auto 种子 = 读取当前历史覆盖种子_v2(
+            L1, 端口.所有者身份(), 基础, 进展, 准备, 当前.事实代次);
+        if (!种子) throw std::runtime_error("service history v2 seed unavailable");
+        w = 形成历史覆盖登记写集_v2(当前.事实代次, *种子);
+    } else {
+        throw std::runtime_error("service history v2 first write unavailable");
+    }
+    const auto 写 = 端口.提交所有者范围中性写集(w);
+    if ((写.状态 != L1所有者范围写入状态::成功
+            && 写.状态 != L1所有者范围写入状态::精确重复)
+        || 写.事实代次 == 0)
+        throw std::runtime_error("service history v2 registration failed");
+    首次 = 端口.读取首次写入材料(
+        {L1所有者范围首次写入读取合同版本, 历史覆盖登记幂等身份_v2});
+    if (首次.状态 != L1所有者范围读取状态::成功
+        || !首次.首次规范化写集 || !首次.首次写入结果
+        || 首次.首次写入结果->事实代次 != 写.事实代次
+        || 首次.首次规范化写集->写入幂等身份
+            != 历史覆盖登记幂等身份_v2
+        || 首次.首次规范化写集->期望事实代次 == 0)
+        throw std::runtime_error("service history v2 first write drift");
+    const auto d = 从映射形成历史覆盖定位_v2(
+        首次.首次写入结果->新编码映射, 首次.首次写入结果->事实代次);
+    const auto 当前 = L1.读取中性当前事实代次({L1中性CRUD合同版本});
+    const auto 重建种子 = 当前.状态 == L1中性读取状态::成功
+        ? 从首次写集重建覆盖种子_v2(L1, 端口.所有者身份(),
+            *首次.首次规范化写集, 基础, 进展, 准备,
+            首次.首次写入结果->事实代次, 当前.事实代次)
+        : std::nullopt;
+    if (当前.状态 != L1中性读取状态::成功 || !重建种子
+        || !验证历史覆盖登记当前投影_v2(
+            L1, 端口.所有者身份(), d, 当前.事实代次)
+        || !验证历史覆盖永久成员全集_v2(L1, 端口.所有者身份(),
+            d, 基础, 进展, 准备, *重建种子, 当前.事实代次))
+        throw std::runtime_error("service history v2 registration readback failed");
+    return d;
+}
+
+#if defined(ARCH_INSTINCT_SERVICE_CONTRACT_FACT_AUTHORITY_VALIDATION)
+inline bool ARCH_延迟下一实例历史覆盖登记_v2 = false;
+#endif
+
+inline 服务维护历史覆盖登记定位_v2 构造期初始化历史覆盖结构登记_v2(
+    const L1事实基座服务& L1, L1所有者范围写端口& 端口,
+    const 结构登记定位& 基础, const 进展结构登记定位_v2& 进展,
+    const 准备结构登记定位_v2& 准备) {
+#if defined(ARCH_INSTINCT_SERVICE_CONTRACT_FACT_AUTHORITY_VALIDATION)
+    if (ARCH_延迟下一实例历史覆盖登记_v2) {
+        ARCH_延迟下一实例历史覆盖登记_v2 = false;
+        return {};
+    }
+#endif
+    return 初始化历史覆盖结构登记_v2(L1, 端口, 基础, 进展, 准备);
 }
 
 inline 服务合同事实权威读取状态_v1 映射读取状态(
@@ -1455,6 +2341,12 @@ public:
     服务合同事实权威服务(const 服务合同事实权威服务&) = delete;
     服务合同事实权威服务& operator=(const 服务合同事实权威服务&) = delete;
 
+#if defined(ARCH_INSTINCT_SERVICE_CONTRACT_FACT_AUTHORITY_VALIDATION)
+    static void ARCH_延迟下一实例v2历史覆盖登记() noexcept {
+        服务合同事实权威内部::ARCH_延迟下一实例历史覆盖登记_v2 = true;
+    }
+#endif
+
     服务合同事实权威服务(const L1事实基座服务& 第一层服务,
         服务合同事实权威所有者交付_v1&& 交付)
         : L1_(第一层服务), 写入端口_(验证并移动交付(第一层服务, 交付)),
@@ -1468,7 +2360,10 @@ public:
           准备登记_v2_(服务合同事实权威内部::初始化准备v2结构登记(
               L1_, 写入端口_)),
           历史账登记_(服务合同事实权威内部::初始化历史账结构登记(
-              L1_, 写入端口_)) {}
+              L1_, 写入端口_)),
+          历史覆盖登记_v2_(
+              服务合同事实权威内部::构造期初始化历史覆盖结构登记_v2(
+                  L1_, 写入端口_, 登记_, 进展登记_v2_, 准备登记_v2_)) {}
 
     服务合同完整集合读取结果_v1
     读取当前有效未满足服务合同完整集合_v1(
@@ -1537,9 +2432,10 @@ public:
                 服务合同事实_v1 合同;
                 if (!投影 || !服务合同事实权威内部::解码合同(
                         投影->当前值事实, 成员.目标节点.编码, 合同)
-                    || 合同.自我 != 请求.自我
                     || !合同引用闭合(成员, 合同, G0))
                     return 失败(服务合同事实权威读取状态_v1::引用冲突);
+                if (合同.自我 != 请求.自我)
+                    continue;
                 const auto 状态 = 状态表.find(合同.身份.值.值);
                 if (状态 == 状态表.end()
                     || 状态->second.状态 != 服务合同当前状态_v1::有效未满足
@@ -2018,6 +2914,12 @@ public:
                         历史账登记_.进展v2历史索引根,
                         历史账登记_.进展v2历史成员关系, G1, *Gread))
                     return 失败(服务活动事实发布状态_v2::幂等冲突);
+                if (历史覆盖登记_v2_.登记事实代次 != 0
+                    && !v2精确重复历史形状同义_已锁定(*身份, G1,
+                        进展登记_v2_.当前索引根, 进展登记_v2_.当前成员关系,
+                        历史覆盖登记_v2_.进展历史索引根,
+                        历史覆盖登记_v2_.进展历史成员关系, *Gread))
+                    return 失败(服务活动事实发布状态_v2::幂等冲突);
                 auto f = 读取进展首次历史闭包_已锁定(*身份, G1, *Gread);
                 if (!f || !读后守卫(*Gread))
                     return 失败(服务活动事实发布状态_v2::内部错误);
@@ -2075,6 +2977,8 @@ public:
                     旧->身份.值, 旧->形成事实代次, 进展登记_v2_,
                     历史账登记_.进展v2历史索引根,
                     历史账登记_.进展v2历史成员关系,
+                    历史覆盖登记_v2_.进展历史索引根,
+                    历史覆盖登记_v2_.进展历史成员关系,
                     请求.请求头.期望事实代次,
                     形成进展读取请求_v2(请求.请求头.期望事实代次));
                 if (!x) return 失败(服务活动事实发布状态_v2::集合不闭合);
@@ -2082,7 +2986,8 @@ public:
             }
             const auto 写 = 写入端口_.提交所有者范围中性写集(
                 形成进展发布写集(
-                    请求, 进展登记_v2_, 历史账登记_, std::move(退出)));
+                    请求, 进展登记_v2_, 历史账登记_, 历史覆盖登记_v2_,
+                    std::move(退出)));
             if (写.状态 != L1所有者范围写入状态::成功
                 && 写.状态 != L1所有者范围写入状态::精确重复)
                 return 失败(映射写入到发布状态(写.状态));
@@ -2175,8 +3080,7 @@ private:
                     成员.目标节点属性值, 成员.目标节点.编码, 进展登记_v2_.载荷);
                 服务合同关联进展事实_v2 f;
                 if (!p || !服务合同事实权威内部::解码进展_v2(
-                        p->当前值事实, 成员.目标节点.编码, f)
-                    || f.自我 != 请求.自我)
+                        p->当前值事实, 成员.目标节点.编码, f))
                     return 失败(服务合同事实权威读取状态_v2::引用冲突);
                 const auto u = [&](稳定编码 t) { return
                     服务合同事实权威内部::唯一关系目标(
@@ -2206,6 +3110,8 @@ private:
                         f.进展动态 ? std::optional<稳定编码>{f.进展动态->值}
                                     : std::nullopt, G0))
                     return 失败(服务合同事实权威读取状态_v2::引用冲突);
+                if (f.自我 != 请求.自我)
+                    continue;
                 结果.完整进展事实组.push_back(std::move(f));
             }
             std::sort(结果.完整进展事实组.begin(), 结果.完整进展事实组.end(),
@@ -2265,6 +3171,12 @@ public:
                         历史账登记_.准备v2历史索引根,
                         历史账登记_.准备v2历史成员关系, G1, *Gread))
                     return 失败(服务活动事实发布状态_v2::幂等冲突);
+                if (历史覆盖登记_v2_.登记事实代次 != 0
+                    && !v2精确重复历史形状同义_已锁定(*身份, G1,
+                        准备登记_v2_.当前索引根, 准备登记_v2_.当前成员关系,
+                        历史覆盖登记_v2_.准备历史索引根,
+                        历史覆盖登记_v2_.准备历史成员关系, *Gread))
+                    return 失败(服务活动事实发布状态_v2::幂等冲突);
                 auto f = 读取准备首次历史闭包_已锁定(*身份, G1, *Gread);
                 if (!f || !读后守卫(*Gread))
                     return 失败(服务活动事实发布状态_v2::内部错误);
@@ -2301,6 +3213,8 @@ public:
                     旧->身份.值, 旧->形成事实代次, 准备登记_v2_,
                     历史账登记_.准备v2历史索引根,
                     历史账登记_.准备v2历史成员关系,
+                    历史覆盖登记_v2_.准备历史索引根,
+                    历史覆盖登记_v2_.准备历史成员关系,
                     请求.请求头.期望事实代次,
                     形成准备读取请求_v2(请求.请求头.期望事实代次));
                 if (!x) return 失败(服务活动事实发布状态_v2::集合不闭合);
@@ -2308,7 +3222,8 @@ public:
             }
             const auto 写 = 写入端口_.提交所有者范围中性写集(
                 形成准备发布写集(
-                    请求, 准备登记_v2_, 历史账登记_, std::move(退出)));
+                    请求, 准备登记_v2_, 历史账登记_, 历史覆盖登记_v2_,
+                    std::move(退出)));
             if (写.状态 != L1所有者范围写入状态::成功
                 && 写.状态 != L1所有者范围写入状态::精确重复)
                 return 失败(映射写入到发布状态(写.状态));
@@ -2697,6 +3612,449 @@ public:
         }
     }
 
+    服务维护历史边界读取结果_v2
+    按事实代次边界读取服务维护历史完整快照_v2(
+        const 服务维护历史边界读取请求_v2& 请求) const noexcept {
+        using 状态 = 服务维护历史边界读取状态_v2;
+        using namespace 服务合同事实权威内部;
+        const auto 失败 = [](状态 s) {
+            服务维护历史边界读取结果_v2 r;
+            r.状态 = s;
+            return r;
+        };
+        try {
+            const auto G0 = 请求.请求头.期望事实代次;
+            if (请求.合同版本 != 服务维护历史边界合同版本_v2
+                || 请求.请求头.合同版本 != L2结构合同版本
+                || G0 == 0 || !有效(请求.自我.值)
+                || 请求.左边界事实代次 == 0
+                || 请求.左边界事实代次 > G0
+                || 请求.左边界数量预算 == 0 || 请求.变化数量预算 == 0)
+                return 失败(状态::入口拒绝);
+
+            std::unique_lock<std::mutex> 锁(互斥体_);
+            const auto Gseed = 历史覆盖登记_v2_.登记事实代次;
+            if (Gseed == 0) return 失败(状态::v2历史账未登记);
+            if (请求.左边界事实代次 < Gseed)
+                return 失败(状态::覆盖边界不可用);
+            if (!读前守卫(G0)) return 失败(状态::当前性漂移);
+
+            锁.unlock();
+            const auto 当前合同 = 读取当前有效未满足服务合同完整集合_v1({
+                服务合同事实权威合同版本_v1, 请求.请求头, 请求.自我});
+            const auto 当前进展 = 读取当前服务合同关联进展完整集合_v2({
+                服务进展事实扩展合同版本_v2, 请求.请求头, 请求.自我});
+            const auto 当前准备 = 读取当前服务准备完整集合_v2({
+                服务准备事实扩展合同版本_v2, 请求.请求头, 请求.自我});
+            const auto 兼容变化 = 按事实代次范围读取服务维护历史事实完整组_v1({
+                服务维护历史事实账合同版本_v1, 请求.请求头, 请求.自我,
+                请求.左边界事实代次, 请求.变化数量预算});
+            锁.lock();
+            if (!读前守卫(G0)) return 失败(状态::当前性漂移);
+
+            const auto 映射当前读取失败 = [&](auto s) noexcept {
+                if (s == 服务合同事实权威读取状态_v1::当前性漂移)
+                    return 状态::当前性漂移;
+                if (s == 服务合同事实权威读取状态_v1::资源失败)
+                    return 状态::资源失败;
+                if (s == 服务合同事实权威读取状态_v1::结构未登记)
+                    return 状态::版本漂移;
+                if (s == 服务合同事实权威读取状态_v1::引用冲突)
+                    return 状态::引用冲突;
+                if (s == 服务合同事实权威读取状态_v1::集合不闭合)
+                    return 状态::集合不闭合;
+                return 状态::内部错误;
+            };
+            if (!当前合同.成功()) return 失败(映射当前读取失败(当前合同.状态));
+            if (!当前进展.成功()) return 失败(映射当前读取失败(当前进展.状态));
+            if (!当前准备.成功()) return 失败(映射当前读取失败(当前准备.状态));
+            if (!兼容变化.成功()) {
+                switch (兼容变化.状态) {
+                case 服务维护历史事实范围读取状态_v1::当前性漂移:
+                    return 失败(状态::当前性漂移);
+                case 服务维护历史事实范围读取状态_v1::数量预算不足:
+                    return 失败(状态::变化预算不足);
+                case 服务维护历史事实范围读取状态_v1::资源失败:
+                    return 失败(状态::资源失败);
+                case 服务维护历史事实范围读取状态_v1::引用冲突:
+                    return 失败(状态::引用冲突);
+                case 服务维护历史事实范围读取状态_v1::覆盖边界不可用:
+                case 服务维护历史事实范围读取状态_v1::历史账未登记:
+                    return 失败(状态::版本漂移);
+                case 服务维护历史事实范围读取状态_v1::集合不闭合:
+                    return 失败(状态::集合不闭合);
+                default:
+                    return 失败(状态::内部错误);
+                }
+            }
+
+            const auto 读 = L1_.尝试读取所有者范围一致关系类型闭包投影(
+                形成历史覆盖账读取请求_v2(G0));
+            if (读.状态 != L1所有者范围一致当前读取状态::成功) {
+                if (读.状态 == L1所有者范围一致当前读取状态::事实代次漂移)
+                    return 失败(状态::当前性漂移);
+                if (读.状态 == L1所有者范围一致当前读取状态::资源失败)
+                    return 失败(状态::资源失败);
+                return 失败(状态::内部错误);
+            }
+            if (读.读取事实代次 != G0) return 失败(状态::当前性漂移);
+            if (!验证v2共同登记(读, 历史覆盖登记_v2_,
+                    服务维护历史覆盖结构登记版本_v2, G0))
+                return 失败(状态::v2历史账未登记);
+            if (读.关系类型闭包.size() != 5)
+                return 失败(状态::集合不闭合);
+            const auto* 合同闭包 = 查找闭包(
+                读, 历史覆盖登记_v2_.合同历史成员关系);
+            const auto* 状态闭包 = 查找闭包(
+                读, 历史覆盖登记_v2_.合同状态历史成员关系);
+            const auto* 事件闭包 = 查找闭包(
+                读, 历史覆盖登记_v2_.到期事件历史成员关系);
+            const auto* 进展闭包 = 查找闭包(
+                读, 历史覆盖登记_v2_.进展历史成员关系);
+            const auto* 准备闭包 = 查找闭包(
+                读, 历史覆盖登记_v2_.准备历史成员关系);
+            if (!合同闭包 || !状态闭包 || !事件闭包 || !进展闭包 || !准备闭包)
+                return 失败(状态::集合不闭合);
+
+            const auto 成员基础完整 = [&](const auto& m, 稳定编码 根,
+                稳定编码 类型) noexcept {
+                const auto 预期关系代次 = m.目标节点.创建事实代次 < Gseed
+                    ? Gseed : m.目标节点.创建事实代次;
+                return m.关系.源节点 == 根
+                    && m.关系.目标节点 == m.目标节点.编码
+                    && m.关系.关系类型节点 == 类型
+                    && m.关系.角色或顺序 == 1
+                    && m.关系.写入所有者 == 写入端口_.所有者身份()
+                    && m.目标节点.写入所有者 == 写入端口_.所有者身份()
+                    && m.目标节点.创建事实代次 != Gseed
+                    && m.关系.创建事实代次 == 预期关系代次
+                    && !m.关系.退出事实代次 && !m.目标节点.退出事实代次
+                    && 活动于(m.关系, G0) && 活动于(m.目标节点, G0);
+            };
+
+            std::vector<服务合同历史投影_v1> 全合同;
+            std::vector<服务合同状态历史投影_v1> 全状态;
+            std::vector<服务到期事件历史投影_v1> 全事件;
+            std::vector<服务进展历史投影_v1> 全进展;
+            std::vector<服务准备历史投影_v1> 全准备;
+            std::vector<服务合同状态历史投影_v1> 全局状态链;
+            std::vector<服务进展历史投影_v1> 全局进展链;
+            std::vector<服务准备历史投影_v1> 全局准备链;
+            std::map<std::uint64_t, L2存在身份> 合同自我;
+
+            for (const auto& m : 合同闭包->成员) {
+                if (!成员基础完整(m, 历史覆盖登记_v2_.合同历史索引根,
+                        历史覆盖登记_v2_.合同历史成员关系))
+                    return 失败(状态::集合不闭合);
+                const auto* p = 查找属性投影(
+                    m.目标节点属性值, m.目标节点.编码, 登记_.合同载荷);
+                服务合同事实_v1 f;
+                if (!p || !解码合同(p->当前值事实, m.目标节点.编码, f)
+                    || f.形成事实代次 != m.目标节点.创建事实代次
+                    || !合同历史引用闭合_已锁定(f, G0))
+                    return 失败(状态::引用冲突);
+                const auto 当前 = 历史成员关系_已锁定(f.身份.值,
+                    登记_.当前合同索引根, 登记_.当前合同成员关系,
+                    f.形成事实代次, G0);
+                if (!当前 || (当前->退出事实代次
+                        && (*当前->退出事实代次 <= f.形成事实代次
+                            || *当前->退出事实代次 > G0)))
+                    return 失败(状态::集合不闭合);
+                const auto [it, inserted] = 合同自我.emplace(f.身份.值.值, f.自我);
+                if (!inserted && it->second != f.自我)
+                    return 失败(状态::引用冲突);
+                if (f.自我 == 请求.自我)
+                    全合同.push_back({f, 当前->退出事实代次});
+            }
+            for (const auto& m : 状态闭包->成员) {
+                if (!成员基础完整(m, 历史覆盖登记_v2_.合同状态历史索引根,
+                        历史覆盖登记_v2_.合同状态历史成员关系))
+                    return 失败(状态::集合不闭合);
+                const auto G1 = m.目标节点.创建事实代次;
+                const auto 当前 = 读取状态当前关系_已锁定(
+                    m.目标节点.编码, G1, G0);
+                const auto* p = 查找属性投影(
+                    m.目标节点属性值, m.目标节点.编码, 登记_.合同状态载荷);
+                服务合同状态事实_v1 f;
+                if (!当前 || !p || !解码状态(p->当前值事实,
+                        {当前->源节点}, f)
+                    || f.形成事实代次 != G1)
+                    return 失败(状态::引用冲突);
+                if (当前->退出事实代次
+                    && (*当前->退出事实代次 <= G1 || *当前->退出事实代次 > G0))
+                    return 失败(状态::集合不闭合);
+                const auto self = 合同自我.find(f.合同.值.值);
+                if (self == 合同自我.end()) return 失败(状态::引用冲突);
+                全局状态链.push_back({f, 当前->退出事实代次});
+                if (self->second == 请求.自我)
+                    全状态.push_back({f, 当前->退出事实代次});
+            }
+            for (const auto& m : 事件闭包->成员) {
+                if (!成员基础完整(m, 历史覆盖登记_v2_.到期事件历史索引根,
+                        历史覆盖登记_v2_.到期事件历史成员关系))
+                    return 失败(状态::集合不闭合);
+                const auto* p = 查找属性投影(m.目标节点属性值,
+                    m.目标节点.编码, 登记_.到期事件载荷);
+                服务到期未满足事件事实_v1 f;
+                if (!p || !解码事件(p->当前值事实, m.目标节点.编码, f)
+                    || f.形成事实代次 != m.目标节点.创建事实代次
+                    || !到期事件历史引用闭合_已锁定(f, G0))
+                    return 失败(状态::引用冲突);
+                const auto self = 合同自我.find(f.合同.值.值);
+                if (self == 合同自我.end()) return 失败(状态::引用冲突);
+                if (self->second == 请求.自我) 全事件.push_back({f, std::nullopt});
+            }
+            for (const auto& m : 进展闭包->成员) {
+                if (!成员基础完整(m, 历史覆盖登记_v2_.进展历史索引根,
+                        历史覆盖登记_v2_.进展历史成员关系))
+                    return 失败(状态::集合不闭合);
+                const auto G1 = m.目标节点.创建事实代次;
+                const auto f = 读取进展首次历史闭包_已锁定(
+                    m.目标节点.编码, G1, G0);
+                const auto 当前 = 历史成员关系_已锁定(m.目标节点.编码,
+                    进展登记_v2_.当前索引根, 进展登记_v2_.当前成员关系,
+                    G1, G0);
+                if (!f || !当前 || (当前->退出事实代次
+                        && (*当前->退出事实代次 <= G1 || *当前->退出事实代次 > G0)))
+                    return 失败(状态::引用冲突);
+                全局进展链.push_back({*f, 当前->退出事实代次});
+                if (f->自我 == 请求.自我)
+                    全进展.push_back({*f, 当前->退出事实代次});
+            }
+            for (const auto& m : 准备闭包->成员) {
+                if (!成员基础完整(m, 历史覆盖登记_v2_.准备历史索引根,
+                        历史覆盖登记_v2_.准备历史成员关系))
+                    return 失败(状态::集合不闭合);
+                const auto G1 = m.目标节点.创建事实代次;
+                const auto f = 读取准备首次历史闭包_已锁定(
+                    m.目标节点.编码, G1, G0);
+                const auto 当前 = 历史成员关系_已锁定(m.目标节点.编码,
+                    准备登记_v2_.当前索引根, 准备登记_v2_.当前成员关系,
+                    G1, G0);
+                if (!f || !当前 || (当前->退出事实代次
+                        && (*当前->退出事实代次 <= G1 || *当前->退出事实代次 > G0)))
+                    return 失败(状态::引用冲突);
+                全局准备链.push_back({*f, 当前->退出事实代次});
+                if (f->自我 == 请求.自我)
+                    全准备.push_back({*f, 当前->退出事实代次});
+            }
+
+            const auto 排序 = [](auto& 组, auto 身份, auto 版本) {
+                std::sort(组.begin(), 组.end(), [&](const auto& a, const auto& b) {
+                    if (a.事实.形成事实代次 != b.事实.形成事实代次)
+                        return a.事实.形成事实代次 < b.事实.形成事实代次;
+                    if (身份(a.事实).值 != 身份(b.事实).值)
+                        return 身份(a.事实).值 < 身份(b.事实).值;
+                    return 版本(a.事实) < 版本(b.事实);
+                });
+            };
+            排序(全合同, [](const auto& f) { return f.身份.值; },
+                [](const auto& f) { return f.合同代次; });
+            排序(全状态, [](const auto& f) { return f.合同.值; },
+                [](const auto& f) { return f.状态版本; });
+            排序(全事件, [](const auto& f) { return f.身份.值; },
+                [](const auto& f) { return f.合同终态版本; });
+            排序(全进展, [](const auto& f) { return f.身份.值; },
+                [](const auto& f) { return f.形成事实代次; });
+            排序(全准备, [](const auto& f) { return f.身份.值; },
+                [](const auto& f) { return f.形成事实代次; });
+
+            if (!历史当前版本链按流闭合_v2(全局状态链,
+                    [](const auto& a, const auto& b) {
+                        return a.合同 == b.合同;
+                    })
+                || !历史当前版本链按流闭合_v2(
+                    全局进展链, 同一服务进展活动流事实_v2)
+                || !历史当前版本链按流闭合_v2(
+                    全局准备链, 同一服务准备活动流事实_v2))
+                return 失败(状态::左边界不可恢复);
+
+            服务维护历史边界读取结果_v2 结果;
+            结果.状态 = 状态::已读取;
+            服务维护历史边界完整范围快照_v2 s;
+            s.v2覆盖登记事实代次 = Gseed;
+            s.自我 = 请求.自我;
+            s.左边界事实代次 = 请求.左边界事实代次;
+            s.包含结束事实代次 = G0;
+
+            std::map<std::uint64_t, 服务合同历史投影_v1> 左合同;
+            std::map<std::uint64_t, 服务合同状态历史投影_v1> 左状态;
+            const auto 在左边界当前 = [&](const auto& p) noexcept {
+                return p.事实.形成事实代次 <= 请求.左边界事实代次
+                    && (!p.退出当前事实代次
+                        || *p.退出当前事实代次 > 请求.左边界事实代次);
+            };
+            for (const auto& p : 全合同) {
+                if (在左边界当前(p)) {
+                    if (!左合同.emplace(p.事实.身份.值.值, p).second)
+                        return 失败(状态::左边界不可恢复);
+                } else if (p.事实.形成事实代次 > 请求.左边界事实代次) {
+                    s.合同变化组.push_back(p);
+                }
+            }
+            for (const auto& p : 全状态) {
+                if (在左边界当前(p)) {
+                    if (左合同.contains(p.事实.合同.值.值)
+                        && !左状态.emplace(p.事实.合同.值.值, p).second)
+                        return 失败(状态::左边界不可恢复);
+                } else if (p.事实.形成事实代次 > 请求.左边界事实代次) {
+                    s.合同状态变化组.push_back(p);
+                }
+            }
+            if (左合同.size() != 左状态.size())
+                return 失败(状态::左边界不可恢复);
+            for (const auto& [id, c] : 左合同) {
+                const auto q = 左状态.find(id);
+                if (q == 左状态.end()) return 失败(状态::左边界不可恢复);
+                if (q->second.事实.状态 != 服务合同当前状态_v1::有效未满足
+                    || q->second.事实.已消费有效秒 > c.事实.冻结有效总秒)
+                    return 失败(状态::集合不闭合);
+                s.左边界合同组.push_back({c, q->second});
+            }
+            std::sort(s.左边界合同组.begin(), s.左边界合同组.end(),
+                [](const auto& a, const auto& b) {
+                    const auto& x = a.合同.事实;
+                    const auto& y = b.合同.事实;
+                    if (x.形成事实代次 != y.形成事实代次)
+                        return x.形成事实代次 < y.形成事实代次;
+                    if (x.身份.值.值 != y.身份.值.值)
+                        return x.身份.值.值 < y.身份.值.值;
+                    return x.合同代次 < y.合同代次;
+                });
+            for (const auto& p : 全事件)
+                if (p.事实.形成事实代次 > 请求.左边界事实代次)
+                    s.到期事件变化组.push_back(p);
+            for (const auto& p : 全进展) {
+                if (在左边界当前(p)) s.左边界进展组.push_back(p);
+                else if (p.事实.形成事实代次 > 请求.左边界事实代次)
+                    s.服务进展变化组.push_back(p);
+            }
+            for (const auto& p : 全准备) {
+                if (在左边界当前(p)) s.左边界准备组.push_back(p);
+                else if (p.事实.形成事实代次 > 请求.左边界事实代次)
+                    s.服务准备变化组.push_back(p);
+            }
+
+            if (s.合同变化组 != 兼容变化.合同变化组
+                || s.合同状态变化组 != 兼容变化.合同状态变化组
+                || s.到期事件变化组 != 兼容变化.到期事件变化组
+                || s.服务进展变化组 != 兼容变化.服务进展变化组
+                || s.服务准备变化组 != 兼容变化.服务准备变化组)
+                return 失败(状态::集合不闭合);
+
+            const auto 取当前 = [](const auto& 全组) {
+                using 事实类型 = std::decay_t<decltype(全组.front().事实)>;
+                std::vector<事实类型> r;
+                for (const auto& p : 全组)
+                    if (!p.退出当前事实代次) r.push_back(p.事实);
+                return r;
+            };
+            auto G0合同 = 取当前(全合同);
+            std::map<std::uint64_t, bool> G0合同身份;
+            for (const auto& f : G0合同) G0合同身份.emplace(f.身份.值.值, true);
+            std::vector<服务合同状态事实_v1> G0状态;
+            for (const auto& p : 全状态)
+                if (!p.退出当前事实代次
+                    && G0合同身份.contains(p.事实.合同.值.值))
+                    G0状态.push_back(p.事实);
+            auto G0进展 = 取当前(全进展);
+            auto G0准备 = 取当前(全准备);
+            const auto 按编码排序 = [](auto& 组, auto 身份) {
+                std::sort(组.begin(), 组.end(), [&](const auto& a, const auto& b) {
+                    return 身份(a).值 < 身份(b).值;
+                });
+            };
+            按编码排序(G0合同, [](const auto& f) { return f.身份.值; });
+            按编码排序(G0状态, [](const auto& f) { return f.合同.值; });
+            按编码排序(G0进展, [](const auto& f) { return f.身份.值; });
+            按编码排序(G0准备, [](const auto& f) { return f.身份.值; });
+            auto 权威合同 = 当前合同.完整合同事实组;
+            auto 权威状态 = 当前合同.当前状态事实组;
+            auto 权威进展 = 当前进展.完整进展事实组;
+            auto 权威准备 = 当前准备.完整准备事实组;
+#if defined(ARCH_INSTINCT_SERVICE_CONTRACT_FACT_AUTHORITY_VALIDATION)
+            if (ARCH_G0终态错配一次_) {
+                ARCH_G0终态错配一次_ = false;
+                权威合同.push_back({});
+            }
+#endif
+            按编码排序(权威合同, [](const auto& f) { return f.身份.值; });
+            按编码排序(权威状态, [](const auto& f) { return f.合同.值; });
+            按编码排序(权威进展, [](const auto& f) { return f.身份.值; });
+            按编码排序(权威准备, [](const auto& f) { return f.身份.值; });
+            if (G0合同 != 权威合同 || G0状态 != 权威状态
+                || G0进展 != 权威进展 || G0准备 != 权威准备)
+                return 失败(状态::集合不闭合);
+
+            const auto 加成员 = [](auto& 组, 服务维护历史事实类别_v1 类别,
+                const auto& 投影组, auto 身份, auto 版本) {
+                for (const auto& p : 投影组)
+                    组.push_back({类别, 身份(p.事实), 版本(p.事实),
+                        p.事实.形成事实代次});
+            };
+            for (const auto& p : s.左边界合同组) {
+                const auto& c = p.合同.事实;
+                const auto& q = p.当前状态.事实;
+                s.规范左边界成员身份组.push_back({
+                    服务维护历史事实类别_v1::服务合同, c.身份.值,
+                    c.合同代次, c.形成事实代次});
+                s.规范左边界成员身份组.push_back({
+                    服务维护历史事实类别_v1::合同状态, q.合同.值,
+                    q.状态版本, q.形成事实代次});
+            }
+            加成员(s.规范左边界成员身份组,
+                服务维护历史事实类别_v1::服务进展, s.左边界进展组,
+                [](const auto& f) { return f.身份.值; },
+                [](const auto& f) { return f.形成事实代次; });
+            加成员(s.规范左边界成员身份组,
+                服务维护历史事实类别_v1::服务准备, s.左边界准备组,
+                [](const auto& f) { return f.身份.值; },
+                [](const auto& f) { return f.形成事实代次; });
+            加成员(s.规范变化成员身份组,
+                服务维护历史事实类别_v1::服务合同, s.合同变化组,
+                [](const auto& f) { return f.身份.值; },
+                [](const auto& f) { return f.合同代次; });
+            加成员(s.规范变化成员身份组,
+                服务维护历史事实类别_v1::合同状态, s.合同状态变化组,
+                [](const auto& f) { return f.合同.值; },
+                [](const auto& f) { return f.状态版本; });
+            加成员(s.规范变化成员身份组,
+                服务维护历史事实类别_v1::到期未满足事件,
+                s.到期事件变化组,
+                [](const auto& f) { return f.身份.值; },
+                [](const auto& f) { return f.合同终态版本; });
+            加成员(s.规范变化成员身份组,
+                服务维护历史事实类别_v1::服务进展, s.服务进展变化组,
+                [](const auto& f) { return f.身份.值; },
+                [](const auto& f) { return f.形成事实代次; });
+            加成员(s.规范变化成员身份组,
+                服务维护历史事实类别_v1::服务准备, s.服务准备变化组,
+                [](const auto& f) { return f.身份.值; },
+                [](const auto& f) { return f.形成事实代次; });
+            std::sort(s.规范左边界成员身份组.begin(),
+                s.规范左边界成员身份组.end(), 服务维护历史成员身份小于_v1);
+            std::sort(s.规范变化成员身份组.begin(),
+                s.规范变化成员身份组.end(), 服务维护历史成员身份小于_v1);
+            s.声明左边界成员数 = s.规范左边界成员身份组.size();
+            s.声明变化成员数 = s.规范变化成员身份组.size();
+            if (s.声明左边界成员数 > 请求.左边界数量预算)
+                return 失败(状态::左边界预算不足);
+            if (s.声明变化成员数 > 请求.变化数量预算)
+                return 失败(状态::变化预算不足);
+            结果.快照 = std::move(s);
+            结果.本次正式读回截止 = G0;
+            if (!读后守卫(G0)) return 失败(状态::当前性漂移);
+            if (!结果.成功()) return 失败(状态::集合不闭合);
+            return 结果;
+        } catch (const std::bad_alloc&) {
+            return 失败(状态::资源失败);
+        } catch (const std::length_error&) {
+            return 失败(状态::资源失败);
+        } catch (...) {
+            return 失败(状态::内部错误);
+        }
+    }
+
 private:
     服务准备完整集合读取结果_v2 读取当前服务准备完整集合_v2_已锁定(
         const 服务准备完整集合读取请求_v2& 请求) const noexcept {
@@ -2738,8 +4096,7 @@ private:
                     成员.目标节点属性值, 成员.目标节点.编码, 准备登记_v2_.载荷);
                 服务准备当前事实_v2 f;
                 if (!p || !服务合同事实权威内部::解码准备_v2(
-                        p->当前值事实, 成员.目标节点.编码, f)
-                    || f.自我 != 请求.自我)
+                        p->当前值事实, 成员.目标节点.编码, f))
                     return 失败(服务合同事实权威读取状态_v2::引用冲突);
                 const auto u = [&](稳定编码 t) { return
                     服务合同事实权威内部::唯一关系目标(
@@ -2774,6 +4131,8 @@ private:
                         f.完成验证 ? std::optional<稳定编码>{f.完成验证->值}
                                    : std::nullopt, G0))
                     return 失败(服务合同事实权威读取状态_v2::引用冲突);
+                if (f.自我 != 请求.自我)
+                    continue;
                 结果.完整准备事实组.push_back(std::move(f));
             }
             std::sort(结果.完整准备事实组.begin(), 结果.完整准备事实组.end(),
@@ -2794,6 +4153,22 @@ private:
 
 public:
 #if defined(ARCH_INSTINCT_SERVICE_CONTRACT_FACT_AUTHORITY_VALIDATION)
+    std::optional<std::uint64_t> ARCH_完成延迟v2历史覆盖登记() noexcept {
+        std::lock_guard<std::mutex> 锁(互斥体_);
+        try {
+            if (历史覆盖登记_v2_.登记事实代次 != 0)
+                return 历史覆盖登记_v2_.登记事实代次;
+            历史覆盖登记_v2_ =
+                服务合同事实权威内部::初始化历史覆盖结构登记_v2(
+                    L1_, 写入端口_, 登记_, 进展登记_v2_, 准备登记_v2_);
+            return 历史覆盖登记_v2_.登记事实代次 != 0
+                ? std::optional<std::uint64_t>{历史覆盖登记_v2_.登记事实代次}
+                : std::nullopt;
+        } catch (...) {
+            return std::nullopt;
+        }
+    }
+
     std::optional<L2存在身份> ARCH_建立历史到期事件样本_v1(
         std::uint64_t 幂等身份, bool 形成到期 = true,
         std::uint8_t 损坏载荷类别 = 0) noexcept {
@@ -2873,6 +4248,9 @@ public:
                 登记_.当前合同成员关系);
             合同关系(107, 历史账登记_.合同历史索引根, 键(10),
                 历史账登记_.合同历史成员关系);
+            if (历史覆盖登记_v2_.登记事实代次 != 0)
+                合同关系(108, 历史覆盖登记_v2_.合同历史索引根, 键(10),
+                    历史覆盖登记_v2_.合同历史成员关系);
             const auto 合同写结果 = 写入端口_.提交所有者范围中性写集(合同写);
             if (合同写结果.状态 != L1所有者范围写入状态::成功
                 || 合同写结果.事实代次 == 0)
@@ -2901,6 +4279,10 @@ public:
                 登记_.合同当前状态关系, 1});
             初态写.关系.push_back({键(101), 历史账登记_.合同状态历史索引根,
                 键(10), 历史账登记_.合同状态历史成员关系, 1});
+            if (历史覆盖登记_v2_.登记事实代次 != 0)
+                初态写.关系.push_back({键(102),
+                    历史覆盖登记_v2_.合同状态历史索引根, 键(10),
+                    历史覆盖登记_v2_.合同状态历史成员关系, 1});
             const auto 初态写结果 = 写入端口_.提交所有者范围中性写集(初态写);
             if (初态写结果.状态 != L1所有者范围写入状态::成功
                 || 初态写结果.事实代次 == 0)
@@ -2950,11 +4332,17 @@ public:
             r2(*合同节点, 键(10), 登记_.合同当前状态关系);
             r2(历史账登记_.合同状态历史索引根, 键(10),
                 历史账登记_.合同状态历史成员关系);
+            if (历史覆盖登记_v2_.登记事实代次 != 0)
+                r2(历史覆盖登记_v2_.合同状态历史索引根, 键(10),
+                    历史覆盖登记_v2_.合同状态历史成员关系);
             r2(登记_.到期事件索引根, 键(11), 登记_.到期事件成员关系);
             r2(键(11), *合同节点, 登记_.到期事件合同关系);
             r2(键(11), *未满足事实, 登记_.到期事件未满足事实关系);
             r2(历史账登记_.到期事件历史索引根, 键(11),
                 历史账登记_.到期事件历史成员关系);
+            if (历史覆盖登记_v2_.登记事实代次 != 0)
+                r2(历史覆盖登记_v2_.到期事件历史索引根, 键(11),
+                    历史覆盖登记_v2_.到期事件历史成员关系);
             终态写.退出事实 = {*旧合同当前, *旧状态当前};
             const auto 第二写 = 写入端口_.提交所有者范围中性写集(终态写);
             if (第二写.状态 != L1所有者范围写入状态::成功
@@ -3227,6 +4615,119 @@ public:
         } catch (...) { return false; }
     }
 
+    bool ARCH_损坏当前v2事实引用关系(bool 准备, 稳定编码 事实,
+        std::uint8_t 模式, 稳定编码 替代目标 = {}) noexcept {
+        using namespace 服务合同事实权威内部;
+        std::lock_guard<std::mutex> 锁(互斥体_);
+        try {
+            if (!有效(事实) || 模式 == 0 || 模式 > 3
+                || ((模式 == 1 || 模式 == 3) && !有效(替代目标)))
+                return false;
+            const auto 当前 = L1_.读取中性当前事实代次({L1中性CRUD合同版本});
+            if (当前.状态 != L1中性读取状态::成功 || 当前.事实代次 == 0)
+                return false;
+            const auto 所有者 = 写入端口_.所有者身份();
+            const auto 当前闭包读取 = L1_.尝试读取所有者范围一致关系类型闭包投影(
+                准备 ? 形成准备读取请求_v2(当前.事实代次)
+                     : 形成进展读取请求_v2(当前.事实代次));
+            const auto 当前索引根 = 准备
+                ? 准备登记_v2_.当前索引根 : 进展登记_v2_.当前索引根;
+            const auto 当前成员关系 = 准备
+                ? 准备登记_v2_.当前成员关系 : 进展登记_v2_.当前成员关系;
+            const auto 载荷类型 = 准备
+                ? 准备登记_v2_.载荷 : 进展登记_v2_.载荷;
+            if (当前闭包读取.状态 != L1所有者范围一致当前读取状态::成功
+                || 当前闭包读取.读取事实代次 != 当前.事实代次
+                || 当前闭包读取.关系类型闭包.size() != 1)
+                return false;
+            if (准备) {
+                if (!验证v2共同登记(当前闭包读取, 准备登记_v2_,
+                        服务准备事实结构登记版本_v2, 当前.事实代次))
+                    return false;
+            } else if (!验证v2共同登记(当前闭包读取, 进展登记_v2_,
+                    服务进展事实结构登记版本_v2, 当前.事实代次)) {
+                return false;
+            }
+            const auto* 当前闭包 = 查找闭包(
+                当前闭包读取, 当前成员关系);
+            if (!当前闭包) return false;
+            const L1所有者范围一致关系类型闭包成员* 当前成员 = nullptr;
+            for (const auto& 成员 : 当前闭包->成员) {
+                if (成员.目标节点.编码 != 事实) continue;
+                if (当前成员) return false;
+                当前成员 = &成员;
+            }
+            if (!当前成员
+                || 当前成员->关系.写入所有者 != 所有者
+                || 当前成员->关系.源节点 != 当前索引根
+                || 当前成员->关系.目标节点 != 事实
+                || 当前成员->关系.关系类型节点 != 当前成员关系
+                || 当前成员->关系.角色或顺序 != 1
+                || !活动于(当前成员->关系, 当前.事实代次)
+                || 当前成员->目标节点.写入所有者 != 所有者
+                || !活动于(当前成员->目标节点, 当前.事实代次))
+                return false;
+            const auto* 载荷投影 = 查找属性投影(
+                当前成员->目标节点属性值, 事实, 载荷类型);
+            if (!载荷投影) return false;
+            if (准备) {
+                服务准备当前事实_v2 载荷;
+                if (!解码准备_v2(载荷投影->当前值事实, 事实, 载荷)
+                    || 载荷.形成事实代次 != 当前成员->目标节点.创建事实代次
+                    || !服务准备当前闭包引用完整_v2(
+                        *当前成员, 载荷, 准备登记_v2_, 当前.事实代次))
+                    return false;
+            } else {
+                服务合同关联进展事实_v2 载荷;
+                if (!解码进展_v2(载荷投影->当前值事实, 事实, 载荷)
+                    || 载荷.形成事实代次 != 当前成员->目标节点.创建事实代次
+                    || !服务进展当前闭包引用完整_v2(
+                        *当前成员, 载荷, 进展登记_v2_, 当前.事实代次))
+                    return false;
+            }
+            const auto 类型 = 准备
+                ? 模式 == 1 ? 准备登记_v2_.正式选择关系
+                    : 模式 == 2 ? 准备登记_v2_.状态引用关系
+                                : 准备登记_v2_.动态引用关系
+                : 模式 == 1 ? 进展登记_v2_.正式选择关系
+                    : 模式 == 2 ? 进展登记_v2_.状态引用关系
+                                : 进展登记_v2_.动态引用关系;
+            const auto 关系组 = L1_.读取所有者范围历史关系组({
+                L1所有者范围CRUD合同版本,
+                L1所有者范围关系端点方向::源,
+                事实, 类型, 当前.事实代次});
+            if (关系组.状态 != L1所有者范围读取状态::成功
+                || 关系组.读取事实代次 != 当前.事实代次)
+                return false;
+            for (const auto& 关系 : 关系组.关系组)
+                if (关系.写入所有者 != 写入端口_.所有者身份()
+                    || 关系.源节点 != 事实 || 关系.关系类型节点 != 类型
+                    || !活动于(关系, 当前.事实代次))
+                    return false;
+            if (模式 == 3) {
+                if (!关系组.关系组.empty()) return false;
+            } else {
+                if (关系组.关系组.size() != 1) return false;
+                if (模式 == 1
+                    && 关系组.关系组.front().目标节点 == 替代目标)
+                    return false;
+            }
+            L1所有者范围写集请求 写集;
+            写集.期望事实代次 = 当前.事实代次;
+            写集.写入幂等身份 = {
+                0x5348'5632'5246'0000ULL + ARCH_v2事实引用损坏序号_++};
+            if (模式 != 3)
+                写集.退出事实 = {关系组.关系组.front().编码};
+            if (模式 != 2)
+                写集.关系.push_back({键(1), 事实, 替代目标, 类型, 1});
+            const auto 写 = 写入端口_.提交所有者范围中性写集(写集);
+            return 写.状态 == L1所有者范围写入状态::成功
+                && 写.事实代次 != 0;
+        } catch (...) {
+            return false;
+        }
+    }
+
     void ARCH_注入读中漂移一次() noexcept {
         std::lock_guard<std::mutex> 锁(互斥体_);
         ARCH_读中漂移一次_ = true;
@@ -3242,33 +4743,77 @@ public:
         ARCH_发布后读回失败一次_ = true;
     }
 
+    void ARCH_注入G0终态错配一次() noexcept {
+        std::lock_guard<std::mutex> 锁(互斥体_);
+        ARCH_G0终态错配一次_ = true;
+    }
+
+    static bool ARCH_验证历史后继按业务流分组_v2() noexcept {
+        using namespace 服务合同事实权威内部;
+        服务进展历史投影_v1 a0, a1, b0, b1;
+        a0.事实.自我 = a1.事实.自我 = b0.事实.自我 = b1.事实.自我
+            = L2存在身份{稳定编码{1}};
+        a0.事实.服务合同 = a1.事实.服务合同 = b0.事实.服务合同
+            = b1.事实.服务合同 = 服务合同身份_v1{稳定编码{2}};
+        a0.事实.需求 = a1.事实.需求 = b0.事实.需求 = b1.事实.需求
+            = L2需求身份{稳定编码{3}};
+        a0.事实.任务 = a1.事实.任务 = L2任务身份{稳定编码{4}};
+        b0.事实.任务 = b1.事实.任务 = L2任务身份{稳定编码{5}};
+        a0.事实.方法 = a1.事实.方法 = b0.事实.方法 = b1.事实.方法
+            = L2方法身份{稳定编码{6}};
+        a0.事实.T到D关系稳定编码 = a1.事实.T到D关系稳定编码
+            = 稳定编码{7};
+        b0.事实.T到D关系稳定编码 = b1.事实.T到D关系稳定编码
+            = 稳定编码{8};
+        a0.事实.形成事实代次 = 1;
+        b0.事实.形成事实代次 = 2;
+        a1.事实.形成事实代次 = b1.事实.形成事实代次 = 3;
+        a0.退出当前事实代次 = b0.退出当前事实代次 = 3;
+        const std::vector<服务进展历史投影_v1> 完整{a0, b0, a1, b1};
+        const std::vector<服务进展历史投影_v1> 缺少A后继{a0, b0, b1};
+        return 历史当前版本链按流闭合_v2(
+                完整, 同一服务进展活动流事实_v2)
+            && !历史当前版本链按流闭合_v2(
+                缺少A后继, 同一服务进展活动流事实_v2);
+    }
+
     bool ARCH_退出历史成员关系_v1(
         服务维护历史事实类别_v1 类别, 稳定编码 事实,
-        std::uint64_t 形成事实代次) noexcept {
+        std::uint64_t 形成事实代次, bool v2覆盖根 = false) noexcept {
         using namespace 服务合同事实权威内部;
         std::lock_guard<std::mutex> 锁(互斥体_);
         try {
             稳定编码 根{}, 类型{};
             switch (类别) {
             case 服务维护历史事实类别_v1::服务合同:
-                根 = 历史账登记_.合同历史索引根;
-                类型 = 历史账登记_.合同历史成员关系;
+                根 = v2覆盖根 ? 历史覆盖登记_v2_.合同历史索引根
+                              : 历史账登记_.合同历史索引根;
+                类型 = v2覆盖根 ? 历史覆盖登记_v2_.合同历史成员关系
+                                 : 历史账登记_.合同历史成员关系;
                 break;
             case 服务维护历史事实类别_v1::合同状态:
-                根 = 历史账登记_.合同状态历史索引根;
-                类型 = 历史账登记_.合同状态历史成员关系;
+                根 = v2覆盖根 ? 历史覆盖登记_v2_.合同状态历史索引根
+                              : 历史账登记_.合同状态历史索引根;
+                类型 = v2覆盖根 ? 历史覆盖登记_v2_.合同状态历史成员关系
+                                 : 历史账登记_.合同状态历史成员关系;
                 break;
             case 服务维护历史事实类别_v1::到期未满足事件:
-                根 = 历史账登记_.到期事件历史索引根;
-                类型 = 历史账登记_.到期事件历史成员关系;
+                根 = v2覆盖根 ? 历史覆盖登记_v2_.到期事件历史索引根
+                              : 历史账登记_.到期事件历史索引根;
+                类型 = v2覆盖根 ? 历史覆盖登记_v2_.到期事件历史成员关系
+                                 : 历史账登记_.到期事件历史成员关系;
                 break;
             case 服务维护历史事实类别_v1::服务进展:
-                根 = 历史账登记_.进展v2历史索引根;
-                类型 = 历史账登记_.进展v2历史成员关系;
+                根 = v2覆盖根 ? 历史覆盖登记_v2_.进展历史索引根
+                              : 历史账登记_.进展v2历史索引根;
+                类型 = v2覆盖根 ? 历史覆盖登记_v2_.进展历史成员关系
+                                 : 历史账登记_.进展v2历史成员关系;
                 break;
             case 服务维护历史事实类别_v1::服务准备:
-                根 = 历史账登记_.准备v2历史索引根;
-                类型 = 历史账登记_.准备v2历史成员关系;
+                根 = v2覆盖根 ? 历史覆盖登记_v2_.准备历史索引根
+                              : 历史账登记_.准备v2历史索引根;
+                类型 = v2覆盖根 ? 历史覆盖登记_v2_.准备历史成员关系
+                                 : 历史账登记_.准备v2历史成员关系;
                 break;
             default:
                 return false;
@@ -3277,8 +4822,11 @@ public:
             if (!G0 || !有效(事实) || 形成事实代次 == 0
                 || 形成事实代次 > *G0)
                 return false;
-            const auto 关系 = 历史成员关系_已锁定(
-                事实, 根, 类型, 形成事实代次, *G0);
+            const auto 关系 = v2覆盖根
+                ? v2永久历史成员关系_已锁定(
+                    事实, 形成事实代次, 根, 类型, *G0)
+                : 历史成员关系_已锁定(
+                    事实, 根, 类型, 形成事实代次, *G0);
             if (!关系 || 关系->退出事实代次) return false;
             L1所有者范围写集请求 写集;
             写集.期望事实代次 = *G0;
@@ -3544,6 +5092,65 @@ private:
         return x;
     }
 
+    std::optional<L1所有者范围关系事实> v2永久历史成员关系_已锁定(
+        稳定编码 事实, std::uint64_t 事实形成代次, 稳定编码 索引根,
+        稳定编码 类型, std::uint64_t Gread) const {
+        if (历史覆盖登记_v2_.登记事实代次 == 0
+            || 事实形成代次 == 历史覆盖登记_v2_.登记事实代次)
+            return std::nullopt;
+        const auto r = L1_.读取所有者范围历史关系组({
+            L1所有者范围CRUD合同版本, L1所有者范围关系端点方向::目标,
+            事实, 类型, Gread});
+        if (r.状态 != L1所有者范围读取状态::成功
+            || r.读取事实代次 != Gread || r.关系组.size() != 1)
+            return std::nullopt;
+        const auto& x = r.关系组.front();
+        const auto 预期形成 = 事实形成代次 < 历史覆盖登记_v2_.登记事实代次
+            ? 历史覆盖登记_v2_.登记事实代次 : 事实形成代次;
+        if (x.源节点 != 索引根 || x.目标节点 != 事实
+            || x.关系类型节点 != 类型 || x.角色或顺序 != 1
+            || x.写入所有者 != 写入端口_.所有者身份()
+            || x.创建事实代次 != 预期形成 || x.退出事实代次)
+            return std::nullopt;
+        return x;
+    }
+
+    bool v2精确重复历史形状同义_已锁定(
+        稳定编码 事实, std::uint64_t 事实形成代次,
+        稳定编码 当前索引根, 稳定编码 当前类型,
+        稳定编码 历史索引根, 稳定编码 历史类型,
+        std::uint64_t Gread) const {
+        if (历史覆盖登记_v2_.登记事实代次 == 0
+            || 事实形成代次 == 历史覆盖登记_v2_.登记事实代次)
+            return false;
+        if (事实形成代次 > 历史覆盖登记_v2_.登记事实代次)
+            return v2永久历史成员关系_已锁定(
+                事实, 事实形成代次, 历史索引根, 历史类型, Gread).has_value();
+        const auto Gseed前 = 历史覆盖登记_v2_.登记事实代次 - 1;
+        const auto 当前 = L1_.读取所有者范围历史关系组({
+            L1所有者范围CRUD合同版本, L1所有者范围关系端点方向::目标,
+            事实, 当前类型, Gseed前});
+        if (当前.状态 != L1所有者范围读取状态::成功
+            || 当前.读取事实代次 != Gread || 当前.关系组.size() > 1)
+            return false;
+        const auto 历史 = L1_.读取所有者范围历史关系组({
+            L1所有者范围CRUD合同版本, L1所有者范围关系端点方向::目标,
+            事实, 历史类型, Gread});
+        if (历史.状态 != L1所有者范围读取状态::成功
+            || 历史.读取事实代次 != Gread || 历史.关系组.size() > 1)
+            return false;
+        if (当前.关系组.empty()) return 历史.关系组.empty();
+        const auto& c = 当前.关系组.front();
+        if (c.源节点 != 当前索引根 || c.目标节点 != 事实
+            || c.关系类型节点 != 当前类型 || c.角色或顺序 != 1
+            || c.写入所有者 != 写入端口_.所有者身份()
+            || c.创建事实代次 != 事实形成代次 || !服务合同事实权威内部::活动于(c, Gseed前))
+            return false;
+        const auto h = v2永久历史成员关系_已锁定(
+            事实, 事实形成代次, 历史索引根, 历史类型, Gread);
+        return h.has_value();
+    }
+
     template<class 事实身份类型, class 登记类型>
     bool 首次发布历史形状同义_已锁定(
         const L1所有者范围首次写入读取结果& 首次,
@@ -3580,21 +5187,42 @@ private:
     std::optional<std::vector<稳定编码>> 形成版本化退出组_已锁定(
         稳定编码 旧事实身份, std::uint64_t 旧事实形成代次,
         const 登记类型& d, 稳定编码 历史索引根,
-        稳定编码 历史成员关系, std::uint64_t G0,
+        稳定编码 历史成员关系, 稳定编码 v2历史索引根,
+        稳定编码 v2历史成员关系, std::uint64_t G0,
         L1所有者范围一致关系类型闭包读取请求 兼容读取请求) const {
+        (void)兼容读取请求;
+#if defined(ARCH_INSTINCT_SERVICE_CONTRACT_FACT_AUTHORITY_VALIDATION)
+        if (历史覆盖登记_v2_.登记事实代次 == 0) {
+            if (旧事实形成代次 == 历史账登记_.登记事实代次)
+                return std::nullopt;
+            if (旧事实形成代次 < 历史账登记_.登记事实代次)
+                return 收集退出闭包_已锁定(
+                    G0, 旧事实身份, d, std::move(兼容读取请求));
+            const auto 当前 = 历史成员关系_已锁定(
+                旧事实身份, d.当前索引根, d.当前成员关系,
+                旧事实形成代次, G0);
+            const auto 历史 = 历史成员关系_已锁定(
+                旧事实身份, 历史索引根, 历史成员关系,
+                旧事实形成代次, G0);
+            if (!当前 || !历史 || 当前->退出事实代次 || 历史->退出事实代次)
+                return std::nullopt;
+            return std::vector<稳定编码>{当前->编码};
+        }
+#endif
         if (旧事实形成代次 == 历史账登记_.登记事实代次)
             return std::nullopt;
-        if (旧事实形成代次 < 历史账登记_.登记事实代次)
-            return 收集退出闭包_已锁定(
-                G0, 旧事实身份, d, std::move(兼容读取请求));
         const auto 当前 = 历史成员关系_已锁定(
             旧事实身份, d.当前索引根, d.当前成员关系,
             旧事实形成代次, G0);
-        const auto 历史 = 历史成员关系_已锁定(
-            旧事实身份, 历史索引根, 历史成员关系,
-            旧事实形成代次, G0);
-        if (!当前 || !历史 || 历史->退出事实代次
-            || 当前->退出事实代次)
+        const auto v2历史 = v2永久历史成员关系_已锁定(
+            旧事实身份, 旧事实形成代次,
+            v2历史索引根, v2历史成员关系, G0);
+        const auto v1历史 = 旧事实形成代次 < 历史账登记_.登记事实代次
+            ? std::optional<L1所有者范围关系事实>{}
+            : 历史成员关系_已锁定(旧事实身份, 历史索引根,
+                历史成员关系, 旧事实形成代次, G0);
+        if (!当前 || 当前->退出事实代次 || !v2历史
+            || (旧事实形成代次 > 历史账登记_.登记事实代次 && !v1历史))
             return std::nullopt;
         return std::vector<稳定编码>{当前->编码};
     }
@@ -3929,6 +5557,28 @@ private:
         加(历史账登记_.准备v2历史成员关系, 准备登记_v2_.载荷);
         加(进展登记_v2_.当前成员关系, 进展登记_v2_.载荷);
         加(准备登记_v2_.当前成员关系, 准备登记_v2_.载荷);
+        return r;
+    }
+
+    L1所有者范围一致关系类型闭包读取请求
+    形成历史覆盖账读取请求_v2(std::uint64_t G0) const {
+        L1所有者范围一致关系类型闭包读取请求 r;
+        r.期望事实代次 = G0;
+        r.所有者 = {写入端口_.所有者身份()};
+        r.节点 = 历史覆盖登记_v2_.全部节点();
+        r.属性值 = {{历史覆盖登记_v2_.登记锚点,
+            历史覆盖登记_v2_.登记版本载荷}};
+        const auto 加 = [&](稳定编码 入口, 稳定编码 载荷) {
+            L1所有者范围一致关系类型闭包选择项 x;
+            x.入口关系类型节点 = 入口;
+            x.目标节点属性类型 = {载荷};
+            r.关系类型闭包.push_back(std::move(x));
+        };
+        加(历史覆盖登记_v2_.合同历史成员关系, 登记_.合同载荷);
+        加(历史覆盖登记_v2_.合同状态历史成员关系, 登记_.合同状态载荷);
+        加(历史覆盖登记_v2_.到期事件历史成员关系, 登记_.到期事件载荷);
+        加(历史覆盖登记_v2_.进展历史成员关系, 进展登记_v2_.载荷);
+        加(历史覆盖登记_v2_.准备历史成员关系, 准备登记_v2_.载荷);
         return r;
     }
 
@@ -4618,6 +6268,7 @@ private:
     服务合同事实权威内部::进展结构登记定位_v2 进展登记_v2_;
     服务合同事实权威内部::准备结构登记定位_v2 准备登记_v2_;
     服务合同事实权威内部::服务维护历史账登记定位_v1 历史账登记_;
+    服务合同事实权威内部::服务维护历史覆盖登记定位_v2 历史覆盖登记_v2_;
     mutable std::mutex 互斥体_;
 #if defined(ARCH_INSTINCT_SERVICE_CONTRACT_FACT_AUTHORITY_VALIDATION)
     struct ARCH_v2验证样本记录 final {
@@ -4663,10 +6314,12 @@ private:
     std::map<std::uint64_t, ARCH_v2验证样本记录> ARCH_v2验证样本记录_;
     mutable bool ARCH_读中漂移一次_ = false;
     mutable bool ARCH_资源失败一次_ = false;
+    mutable bool ARCH_G0终态错配一次_ = false;
     bool ARCH_发布后读回失败一次_ = false;
     mutable std::uint64_t ARCH_漂移序号_ = 1;
     std::uint64_t ARCH_v2损坏序号_ = 1;
     std::uint64_t ARCH_历史损坏序号_ = 1;
+    std::uint64_t ARCH_v2事实引用损坏序号_ = 1;
 #endif
 };
 

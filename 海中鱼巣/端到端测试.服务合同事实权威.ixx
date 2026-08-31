@@ -150,6 +150,13 @@ bool 历史覆盖起点空失败(
         && 结果.本次正式读回截止 == 0;
 }
 
+bool 历史边界空失败_v2(
+    const 服务维护历史边界读取结果_v2& 结果,
+    服务维护历史边界读取状态_v2 状态) {
+    return 结果.状态 == 状态 && !结果.成功() && !结果.快照
+        && 结果.本次正式读回截止 == 0;
+}
+
 服务合同完整集合读取请求_v1 合同请求(L2存在身份 自我, std::uint64_t G0) {
     return {服务合同事实权威合同版本_v1,
         {L2结构合同版本, G0}, 自我};
@@ -190,6 +197,15 @@ bool 历史覆盖起点空失败(
     std::uint64_t 预算 = 1024) {
     return {服务维护历史事实账合同版本_v1,
         {L2结构合同版本, G0}, 自我, 起点, 预算};
+}
+
+服务维护历史边界读取请求_v2 历史边界请求_v2(
+    L2存在身份 自我, std::uint64_t Gstart, std::uint64_t G0,
+    std::uint64_t 左边界预算 = 1024,
+    std::uint64_t 变化预算 = 1024) {
+    return {服务维护历史边界合同版本_v2,
+        {L2结构合同版本, G0}, 自我, Gstart,
+        左边界预算, 变化预算};
 }
 
 struct 外部端点交付 final {
@@ -360,6 +376,717 @@ struct 隔离根清理 final {
         std::filesystem::remove_all(根, 错误);
     }
 };
+
+#if defined(ARCH_INSTINCT_SERVICE_CONTRACT_FACT_AUTHORITY_VALIDATION)
+int 验证历史边界v2_B00() {
+    auto 运行包 = 建立L1事实基座运行包();
+    auto 服务 = 建立服务(运行包);
+    const auto Gseed = 当前代次(运行包);
+    const auto 自我 = 服务 && Gseed
+        ? 服务->ARCH_建立v2验证样本(
+            0x5342'0000'0000'0001ULL, 0, 0)
+        : std::optional<L2存在身份>{};
+    const auto G0 = 当前代次(运行包);
+    if (!服务 || !Gseed || !自我 || !G0 || *G0 < *Gseed)
+        return 失败("B00", "empty v2 boundary fixture");
+    const auto 从种子 = 服务->按事实代次边界读取服务维护历史完整快照_v2(
+        历史边界请求_v2(*自我, *Gseed, *G0));
+    if (!从种子.成功() || !从种子.快照
+        || 从种子.快照->v2覆盖登记事实代次 != *Gseed
+        || 从种子.快照->自我 != *自我
+        || 从种子.快照->左边界事实代次 != *Gseed
+        || 从种子.快照->包含结束事实代次 != *G0
+        || 从种子.快照->声明左边界成员数 != 0
+        || 从种子.快照->声明变化成员数 != 0
+        || !从种子.快照->规范左边界成员身份组.empty()
+        || !从种子.快照->规范变化成员身份组.empty()
+        || !从种子.快照->左边界合同组.empty()
+        || !从种子.快照->左边界进展组.empty()
+        || !从种子.快照->左边界准备组.empty()
+        || !从种子.快照->合同变化组.empty()
+        || !从种子.快照->合同状态变化组.empty()
+        || !从种子.快照->到期事件变化组.empty()
+        || !从种子.快照->服务进展变化组.empty()
+        || !从种子.快照->服务准备变化组.empty()
+        || 从种子.本次正式读回截止 != *G0)
+        return 失败("B00", "empty seed and complete zero-member witness");
+    const auto 同点 = 服务->按事实代次边界读取服务维护历史完整快照_v2(
+        历史边界请求_v2(*自我, *G0, *G0));
+    if (!同点.成功() || !同点.快照
+        || 同点.快照->左边界事实代次 != *G0
+        || 同点.快照->包含结束事实代次 != *G0
+        || 同点.快照->声明左边界成员数 != 0
+        || 同点.快照->声明变化成员数 != 0)
+        return 失败("B00", "Gstart equals G0 legal empty boundary");
+    通过("B00", "empty seed and Gseed/Gstart/G0 boundaries are complete");
+    return 0;
+}
+
+bool 历史边界B01头完整(
+    const 服务维护历史边界完整范围快照_v2& s,
+    std::uint64_t Gseed, std::uint64_t Gstart, std::uint64_t G0) {
+    return s.v2覆盖登记事实代次 == Gseed
+        && s.左边界事实代次 == Gstart && s.包含结束事实代次 == G0
+        && s.声明左边界成员数 == 4 && s.声明变化成员数 == 2;
+}
+
+bool 历史边界B01左边界形状完整(
+    const 服务维护历史边界完整范围快照_v2& s) {
+    return s.左边界合同组.size() == 1
+        && s.左边界进展组.size() == 1
+        && s.左边界准备组.size() == 1;
+}
+
+bool 历史边界B01变化形状完整(
+    const 服务维护历史边界完整范围快照_v2& s) {
+    return s.合同变化组.empty() && s.合同状态变化组.empty()
+        && s.到期事件变化组.empty() && s.服务进展变化组.size() == 1
+        && s.服务准备变化组.size() == 1;
+}
+
+bool 历史边界B01执行绑定相同(
+    const 服务活动任务执行绑定_v2& a,
+    const 服务活动任务执行绑定_v2& b) {
+    return a.正式选择 == b.正式选择
+        && a.执行冻结材料 == b.执行冻结材料
+        && a.实例方法 == b.实例方法
+        && a.筹办轮次 == b.筹办轮次 && a.执行轮次 == b.执行轮次;
+}
+
+bool 历史边界B01进展身份绑定相同(
+    const 服务合同关联进展事实_v2& a,
+    const 服务合同关联进展事实_v2& b) {
+    if (a.身份 != b.身份 || a.自我 != b.自我 || a.服务合同 != b.服务合同)
+        return false;
+    if (a.需求 != b.需求 || a.任务 != b.任务 || a.方法 != b.方法)
+        return false;
+    return a.T到D关系稳定编码 == b.T到D关系稳定编码
+        && 历史边界B01执行绑定相同(a.执行绑定, b.执行绑定);
+}
+
+bool 历史边界B01进展运行证据相同(
+    const 服务合同关联进展事实_v2& a,
+    const 服务合同关联进展事实_v2& b) {
+    if (a.进展状态 != b.进展状态 || a.进展动态 != b.进展动态
+        || a.运行状态 != b.运行状态 || a.运行代次 != b.运行代次)
+        return false;
+    if (a.进展发生完整秒边界 != b.进展发生完整秒边界
+        || a.计量窗口开始完整秒边界 != b.计量窗口开始完整秒边界
+        || a.计量窗口结束完整秒边界 != b.计量窗口结束完整秒边界)
+        return false;
+    if (a.方法内容版本 != b.方法内容版本
+        || a.方法规格版本 != b.方法规格版本
+        || a.方法生命周期版本 != b.方法生命周期版本
+        || a.进展规则版本 != b.进展规则版本)
+        return false;
+    return a.形成事实代次 == b.形成事实代次
+        && a.生命周期.创建事实代次 == b.生命周期.创建事实代次
+        && a.生命周期.退出事实代次 == b.生命周期.退出事实代次;
+}
+
+bool 历史边界B01准备来源相同(
+    const 服务准备来源身份_v1& a, const 服务准备来源身份_v1& b) {
+    if (a.index() != b.index()) return false;
+    if (std::holds_alternative<L2需求身份>(a))
+        return std::get<L2需求身份>(a) == std::get<L2需求身份>(b);
+    return std::get<服务能力缺口身份_v1>(a)
+        == std::get<服务能力缺口身份_v1>(b);
+}
+
+bool 历史边界B01准备身份绑定相同(
+    const 服务准备当前事实_v2& a, const 服务准备当前事实_v2& b) {
+    if (a.身份 != b.身份 || a.自我 != b.自我
+        || !历史边界B01准备来源相同(a.来源, b.来源))
+        return false;
+    if (a.准备目标 != b.准备目标 || a.适用服务范围 != b.适用服务范围
+        || a.有效开始完整秒边界 != b.有效开始完整秒边界
+        || a.有效结束完整秒边界 != b.有效结束完整秒边界)
+        return false;
+    if (a.任务 != b.任务 || a.方法 != b.方法
+        || a.T到D关系稳定编码 != b.T到D关系稳定编码)
+        return false;
+    return 历史边界B01执行绑定相同(a.执行绑定, b.执行绑定);
+}
+
+bool 历史边界B01准备运行证据相同(
+    const 服务准备当前事实_v2& a, const 服务准备当前事实_v2& b) {
+    if (a.进展状态 != b.进展状态 || a.进展动态 != b.进展动态
+        || a.准备结果 != b.准备结果 || a.完成验证 != b.完成验证)
+        return false;
+    if (a.运行状态 != b.运行状态 || a.运行代次 != b.运行代次
+        || a.进展发生完整秒边界 != b.进展发生完整秒边界
+        || a.计量窗口开始完整秒边界 != b.计量窗口开始完整秒边界
+        || a.计量窗口结束完整秒边界 != b.计量窗口结束完整秒边界)
+        return false;
+    if (a.方法内容版本 != b.方法内容版本
+        || a.方法规格版本 != b.方法规格版本
+        || a.方法生命周期版本 != b.方法生命周期版本
+        || a.准备规则版本 != b.准备规则版本)
+        return false;
+    return a.形成事实代次 == b.形成事实代次
+        && a.生命周期.创建事实代次 == b.生命周期.创建事实代次
+        && a.生命周期.退出事实代次 == b.生命周期.退出事实代次;
+}
+
+bool 历史边界B01进展后继证据完整(
+    const 服务维护历史边界完整范围快照_v2& s,
+    const 服务合同关联进展事实_v2& 首进展,
+    const 服务合同关联进展事实_v2& 次进展) {
+    const auto& 左进展 = s.左边界进展组.front();
+    return 历史边界B01进展身份绑定相同(左进展.事实, 首进展)
+        && 历史边界B01进展运行证据相同(左进展.事实, 首进展)
+        && 左进展.退出当前事实代次 == 次进展.形成事实代次
+        && 历史边界B01进展身份绑定相同(
+            s.服务进展变化组.front().事实, 次进展)
+        && 历史边界B01进展运行证据相同(
+            s.服务进展变化组.front().事实, 次进展);
+}
+
+bool 历史边界B01准备后继证据完整(
+    const 服务维护历史边界完整范围快照_v2& s,
+    const 服务准备当前事实_v2& 首准备,
+    const 服务准备当前事实_v2& 次准备) {
+    const auto& 左准备 = s.左边界准备组.front();
+    return 历史边界B01准备身份绑定相同(左准备.事实, 首准备)
+        && 历史边界B01准备运行证据相同(左准备.事实, 首准备)
+        && 左准备.退出当前事实代次 == 次准备.形成事实代次
+        && 历史边界B01准备身份绑定相同(
+            s.服务准备变化组.front().事实, 次准备)
+        && 历史边界B01准备运行证据相同(
+            s.服务准备变化组.front().事实, 次准备);
+}
+
+bool 历史边界B01预算完整(服务合同事实权威服务& 服务,
+    L2存在身份 自我, std::uint64_t Gstart, std::uint64_t G0) {
+    return 历史边界空失败_v2(
+            服务.按事实代次边界读取服务维护历史完整快照_v2(
+                历史边界请求_v2(自我, Gstart, G0, 3, 2)),
+            服务维护历史边界读取状态_v2::左边界预算不足)
+        && 历史边界空失败_v2(
+            服务.按事实代次边界读取服务维护历史完整快照_v2(
+                历史边界请求_v2(自我, Gstart, G0, 4, 1)),
+            服务维护历史边界读取状态_v2::变化预算不足);
+}
+
+bool 历史边界B01_v1回归完整(服务合同事实权威服务& 服务,
+    L2存在身份 自我, std::uint64_t Gstart, std::uint64_t G0) {
+    const auto r = 服务.按事实代次范围读取服务维护历史事实完整组_v1(
+        历史范围请求(自我, Gstart, G0, 2));
+    return r.成功() && r.完整集合见证 && r.合同变化组.empty()
+        && r.合同状态变化组.empty() && r.到期事件变化组.empty()
+        && r.服务进展变化组.size() == 1 && r.服务准备变化组.size() == 1;
+}
+
+int 验证历史边界v2_B01() {
+    服务合同事实权威服务::ARCH_延迟下一实例v2历史覆盖登记();
+    auto 运行包 = 建立L1事实基座运行包();
+    auto 服务 = 建立服务(运行包);
+    auto 上下文 = 服务 ? 建立发布测试上下文(
+        运行包, *服务, 0x5342'0100'0000'0000ULL)
+        : std::optional<发布测试上下文>{};
+    const auto G准备 = 当前代次(运行包);
+    const auto 首进展 = 服务 && 上下文 && G准备
+        ? 服务->发布服务进展事实_v2(形成进展发布请求(
+            *上下文, *G准备, 0x5342'0101'0000'0001ULL, 1))
+        : 服务进展事实发布结果_v2{};
+    const auto G进展 = 当前代次(运行包);
+    const auto 首准备 = 服务 && 上下文 && G进展
+        ? 服务->发布服务准备事实_v2(形成准备发布请求(
+            *上下文, *G进展, 0x5342'0102'0000'0001ULL, 1))
+        : 服务准备事实发布结果_v2{};
+    const auto Glegacy = 当前代次(运行包);
+    const auto Gseed = 服务 && 首进展.成功() && 首准备.成功()
+        ? 服务->ARCH_完成延迟v2历史覆盖登记()
+        : std::optional<std::uint64_t>{};
+    const auto Gstart = 当前代次(运行包);
+    if (!服务 || !上下文 || !首进展.成功() || !首进展.事实
+        || !首准备.成功() || !首准备.事实 || !Glegacy
+        || !Gseed || !Gstart || *Gseed <= *Glegacy || *Gstart != *Gseed)
+        return 失败("B01", "left-boundary incumbent fixture");
+
+    auto 次进展请求 = 形成进展发布请求(*上下文, *Gstart,
+        0x5342'0101'0000'0002ULL, 1,
+        服务进展运行状态_v1::等待条件, false, true);
+    次进展请求.预期当前事实 = 首进展.事实->身份;
+    次进展请求.材料.运行代次 = 2;
+    const auto 次进展 = 服务->发布服务进展事实_v2(次进展请求);
+    const auto G进展2 = 当前代次(运行包);
+    auto 次准备请求 = G进展2
+        ? 形成准备发布请求(*上下文, *G进展2,
+            0x5342'0102'0000'0002ULL, 1,
+            服务准备运行状态_v1::等待条件, true, false, true)
+        : 发布服务准备事实请求_v2{};
+    次准备请求.预期当前事实 = 首准备.事实->身份;
+    次准备请求.材料.运行代次 = 2;
+    const auto 次准备 = G进展2
+        ? 服务->发布服务准备事实_v2(次准备请求)
+        : 服务准备事实发布结果_v2{};
+    const auto G0 = 当前代次(运行包);
+    if (!次进展.成功() || !次进展.事实
+        || !次准备.成功() || !次准备.事实 || !G0)
+        return 失败("B01", "incumbent successor publication");
+
+    const auto 完整 = 服务->按事实代次边界读取服务维护历史完整快照_v2(
+        历史边界请求_v2(上下文->自我, *Gstart, *G0, 4, 2));
+    if (!完整.成功() || !完整.快照
+        || !历史边界B01头完整(*完整.快照, *Gseed, *Gstart, *G0)
+        || !历史边界B01左边界形状完整(*完整.快照)
+        || !历史边界B01变化形状完整(*完整.快照)
+        || !历史边界B01进展后继证据完整(
+            *完整.快照, *首进展.事实, *次进展.事实)
+        || !历史边界B01准备后继证据完整(
+            *完整.快照, *首准备.事实, *次准备.事实))
+        return 失败("B01", "left boundary and two successors");
+    if (!历史边界B01预算完整(*服务, 上下文->自我, *Gstart, *G0))
+        return 失败("B01", "independent left and change budgets");
+    if (!历史边界B01_v1回归完整(*服务, 上下文->自我, *Gstart, *G0))
+        return 失败("B01", "v1 history range regression");
+    通过("B01", "incumbent exits, successors, budgets and v1 range remain closed");
+    return 0;
+}
+
+int 验证历史边界v2_B02() {
+    auto 运行包 = 建立L1事实基座运行包();
+    auto 服务 = 建立服务(运行包);
+    const auto Gseed = 当前代次(运行包);
+    const auto 自我 = 服务 && Gseed
+        ? 服务->ARCH_建立v2验证样本(
+            0x5342'0200'0000'0001ULL, 0, 0)
+        : std::optional<L2存在身份>{};
+    const auto G0 = 当前代次(运行包);
+    if (!服务 || !Gseed || *Gseed <= 1 || !自我 || !G0
+        || *G0 <= *Gseed)
+        return 失败("B02", "boundary failure fixture");
+    auto 坏版本 = 历史边界请求_v2(*自我, *Gseed, *G0);
+    坏版本.合同版本 = 0;
+    if (!历史边界空失败_v2(
+            服务->按事实代次边界读取服务维护历史完整快照_v2(坏版本),
+            服务维护历史边界读取状态_v2::入口拒绝)
+        || !历史边界空失败_v2(
+            服务->按事实代次边界读取服务维护历史完整快照_v2(
+                历史边界请求_v2(*自我, *G0 + 1, *G0)),
+            服务维护历史边界读取状态_v2::入口拒绝)
+        || !历史边界空失败_v2(
+            服务->按事实代次边界读取服务维护历史完整快照_v2(
+                历史边界请求_v2(*自我, *Gseed, *G0, 0, 1)),
+            服务维护历史边界读取状态_v2::入口拒绝)
+        || !历史边界空失败_v2(
+            服务->按事实代次边界读取服务维护历史完整快照_v2(
+                历史边界请求_v2(*自我, *Gseed, *G0, 1, 0)),
+            服务维护历史边界读取状态_v2::入口拒绝))
+        return 失败("B02", "entry rejection matrix");
+    if (!历史边界空失败_v2(
+            服务->按事实代次边界读取服务维护历史完整快照_v2(
+                历史边界请求_v2(*自我, *Gseed - 1, *G0)),
+            服务维护历史边界读取状态_v2::覆盖边界不可用))
+        return 失败("B02", "Gstart before Gseed");
+    if (!历史边界空失败_v2(
+            服务->按事实代次边界读取服务维护历史完整快照_v2(
+                历史边界请求_v2(*自我, *Gseed, *G0 - 1)),
+            服务维护历史边界读取状态_v2::当前性漂移))
+        return 失败("B02", "read-before current generation drift");
+    服务->ARCH_注入读中漂移一次();
+    if (!历史边界空失败_v2(
+            服务->按事实代次边界读取服务维护历史完整快照_v2(
+                历史边界请求_v2(*自我, *Gseed, *G0)),
+            服务维护历史边界读取状态_v2::当前性漂移))
+        return 失败("B02", "read-middle generation drift");
+    const auto G1 = 当前代次(运行包);
+    if (!G1) return 失败("B02", "resource failure generation");
+    服务->ARCH_注入资源失败一次();
+    if (!历史边界空失败_v2(
+            服务->按事实代次边界读取服务维护历史完整快照_v2(
+                历史边界请求_v2(*自我, *Gseed, *G1)),
+            服务维护历史边界读取状态_v2::资源失败))
+        return 失败("B02", "resource failure empty result");
+    通过("B02", "boundary, drift, resource and all empty failures are exact");
+    return 0;
+}
+
+bool 历史边界B03种子头完整(
+    const 服务维护历史边界完整范围快照_v2& s,
+    std::uint64_t Gseed) {
+    return s.v2覆盖登记事实代次 == Gseed
+        && s.声明左边界成员数 == 4 && s.声明变化成员数 == 0;
+}
+
+bool 历史边界B03种子形状完整(
+    const 服务维护历史边界完整范围快照_v2& s) {
+    if (s.左边界合同组.size() != 1 || s.左边界进展组.size() != 1
+        || s.左边界准备组.size() != 1 || !s.规范变化成员身份组.empty())
+        return false;
+    return s.合同变化组.empty() && s.合同状态变化组.empty()
+        && s.到期事件变化组.empty() && s.服务进展变化组.empty()
+        && s.服务准备变化组.empty();
+}
+
+bool 历史边界B03种子首事实完整(
+    const 服务维护历史边界完整范围快照_v2& s,
+    const 服务合同关联进展事实_v2& 首进展,
+    const 服务准备当前事实_v2& 首准备) {
+    const auto& 进展 = s.左边界进展组.front().事实;
+    const auto& 准备 = s.左边界准备组.front().事实;
+    return 历史边界B01进展身份绑定相同(进展, 首进展)
+        && 历史边界B01进展运行证据相同(进展, 首进展)
+        && 历史边界B01准备身份绑定相同(准备, 首准备)
+        && 历史边界B01准备运行证据相同(准备, 首准备);
+}
+
+int 验证历史边界v2_B03() {
+    服务合同事实权威服务::ARCH_延迟下一实例v2历史覆盖登记();
+    auto 运行包 = 建立L1事实基座运行包();
+    auto 服务 = 建立服务(运行包);
+    auto 上下文 = 服务 ? 建立发布测试上下文(
+        运行包, *服务, 0x5342'0300'0000'0000ULL)
+        : std::optional<发布测试上下文>{};
+    const auto G准备 = 当前代次(运行包);
+    const auto 首进展 = 服务 && 上下文 && G准备
+        ? 服务->发布服务进展事实_v2(形成进展发布请求(
+            *上下文, *G准备, 0x5342'0301'0000'0001ULL, 1))
+        : 服务进展事实发布结果_v2{};
+    const auto G进展 = 当前代次(运行包);
+    const auto 首准备 = 服务 && 上下文 && G进展
+        ? 服务->发布服务准备事实_v2(形成准备发布请求(
+            *上下文, *G进展, 0x5342'0302'0000'0001ULL, 1))
+        : 服务准备事实发布结果_v2{};
+    const auto Glegacy = 当前代次(运行包);
+    const auto Gseed = 服务 && 上下文 && 首进展.成功() && 首准备.成功()
+        ? 服务->ARCH_完成延迟v2历史覆盖登记()
+        : std::optional<std::uint64_t>{};
+    const auto G0 = 当前代次(运行包);
+    if (!服务 || !上下文 || !首进展.事实 || !首准备.事实
+        || !Glegacy || !Gseed || !G0
+        || *Gseed <= *Glegacy || *G0 != *Gseed)
+        return 失败("B03", "production registration seed fixture");
+    const auto 种子 = 服务->按事实代次边界读取服务维护历史完整快照_v2(
+        历史边界请求_v2(上下文->自我, *Gseed, *G0, 4, 1));
+    if (!种子.成功() || !种子.快照
+        || !历史边界B03种子头完整(*种子.快照, *Gseed)
+        || !历史边界B03种子形状完整(*种子.快照)
+        || !历史边界B03种子首事实完整(
+            *种子.快照, *首进展.事实, *首准备.事实))
+        return 失败("B03", "legacy incumbents frozen by production seed path");
+    通过("B03", "delayed upgrade uses the production registration path once");
+    return 0;
+}
+
+std::optional<服务维护历史边界读取结果_v2>
+形成历史边界B04左边界快照() {
+    服务合同事实权威服务::ARCH_延迟下一实例v2历史覆盖登记();
+    auto 运行包 = 建立L1事实基座运行包();
+    auto 服务 = 建立服务(运行包);
+    auto 上下文 = 服务 ? 建立发布测试上下文(
+        运行包, *服务, 0x5342'0400'0000'0000ULL)
+        : std::optional<发布测试上下文>{};
+    const auto G准备 = 当前代次(运行包);
+    const auto 进展 = 服务 && 上下文 && G准备
+        ? 服务->发布服务进展事实_v2(形成进展发布请求(
+            *上下文, *G准备, 0x5342'0401'0000'0001ULL, 1))
+        : 服务进展事实发布结果_v2{};
+    const auto G进展 = 当前代次(运行包);
+    const auto 准备 = 服务 && 上下文 && G进展
+        ? 服务->发布服务准备事实_v2(形成准备发布请求(
+            *上下文, *G进展, 0x5342'0402'0000'0001ULL, 1))
+        : 服务准备事实发布结果_v2{};
+    const auto Gseed = 服务 && 进展.成功() && 准备.成功()
+        ? 服务->ARCH_完成延迟v2历史覆盖登记()
+        : std::optional<std::uint64_t>{};
+    const auto G0 = 当前代次(运行包);
+    if (!服务 || !上下文 || !进展.成功() || !准备.成功()
+        || !Gseed || !G0 || *Gseed != *G0)
+        return std::nullopt;
+    auto 结果 = 服务->按事实代次边界读取服务维护历史完整快照_v2(
+        历史边界请求_v2(上下文->自我, *Gseed, *G0, 4, 1));
+    if (!结果.成功() || !结果.快照
+        || 结果.快照->左边界合同组.size() != 1
+        || 结果.快照->左边界进展组.size() != 1
+        || 结果.快照->左边界准备组.size() != 1)
+        return std::nullopt;
+    return 结果;
+}
+
+bool 历史边界B04左状态负例完整(
+    const 服务维护历史边界读取结果_v2& 正常) {
+    auto 终态 = 正常;
+    终态.快照->左边界合同组.front().当前状态.事实.状态 =
+        服务合同当前状态_v1::已完整完成;
+    auto 超额 = 正常;
+    auto& 超额合同 = 超额.快照->左边界合同组.front();
+    超额合同.当前状态.事实.已消费有效秒 =
+        超额合同.合同.事实.冻结有效总秒 + 1;
+    return !终态.成功() && !超额.成功();
+}
+
+bool 历史边界B04自我负例完整(
+    const 服务维护历史边界读取结果_v2& 正常) {
+    const L2存在身份 异主{稳定编码{0x5342'04FF'FFFF'FFFFULL}};
+    auto 合同异主 = 正常;
+    合同异主.快照->左边界合同组.front().合同.事实.自我 = 异主;
+    auto 进展异主 = 正常;
+    进展异主.快照->左边界进展组.front().事实.自我 = 异主;
+    auto 准备异主 = 正常;
+    准备异主.快照->左边界准备组.front().事实.自我 = 异主;
+    return !合同异主.成功() && !进展异主.成功() && !准备异主.成功();
+}
+
+int 验证历史边界v2_B04() {
+    const auto 正常 = 形成历史边界B04左边界快照();
+    if (!正常 || !正常->成功())
+        return 失败("B04", "successful left-boundary predicate fixture");
+    if (!历史边界B04左状态负例完整(*正常))
+        return 失败("B04", "terminal or over-consumed left state");
+    if (!历史边界B04自我负例完整(*正常))
+        return 失败("B04", "foreign contract, progress or preparation self");
+    通过("B04", "copied snapshot rejects terminal, over-consumed and foreign-self payloads");
+    return 0;
+}
+
+std::optional<服务维护历史边界读取结果_v2>
+形成历史边界B05变化快照() {
+    auto 运行包 = 建立L1事实基座运行包();
+    auto 服务 = 建立服务(运行包);
+    const auto Gseed = 当前代次(运行包);
+    const auto 自我 = 服务 && Gseed
+        ? 服务->ARCH_建立历史到期事件样本_v1(
+            0x5342'0500'0000'0001ULL)
+        : std::optional<L2存在身份>{};
+    const auto G0 = 当前代次(运行包);
+    if (!服务 || !Gseed || !自我 || !G0 || *G0 <= *Gseed)
+        return std::nullopt;
+    auto 结果 = 服务->按事实代次边界读取服务维护历史完整快照_v2(
+        历史边界请求_v2(*自我, *Gseed, *G0, 1, 4));
+    if (!结果.成功() || !结果.快照
+        || 结果.快照->合同变化组.size() != 1
+        || 结果.快照->合同状态变化组.size() != 2
+        || 结果.快照->到期事件变化组.size() != 1)
+        return std::nullopt;
+    return 结果;
+}
+
+int 验证历史边界v2_B05() {
+    const auto 正常 = 形成历史边界B05变化快照();
+    if (!正常 || !正常->成功())
+        return 失败("B05", "successful state and expiry change fixture");
+    auto 未知状态合同 = *正常;
+    未知状态合同.快照->合同状态变化组.front().事实.合同 =
+        服务合同身份_v1{稳定编码{0x5342'05FE'0000'0001ULL}};
+    auto 异主事件合同 = *正常;
+    异主事件合同.快照->到期事件变化组.front().事实.合同 =
+        服务合同身份_v1{稳定编码{0x5342'05FF'0000'0001ULL}};
+    if (未知状态合同.成功() || 异主事件合同.成功())
+        return 失败("B05", "unknown or foreign contract reference");
+    通过("B05", "copied snapshot rejects unclosed state and expiry contract references");
+    return 0;
+}
+
+bool 历史边界B06归属完整(
+    const 服务维护历史边界读取结果_v2& 结果,
+    L2存在身份 自我) {
+    if (!结果.成功() || !结果.快照
+        || 结果.快照->自我 != 自我
+        || 结果.快照->声明左边界成员数 != 0
+        || 结果.快照->声明变化成员数 != 4
+        || 结果.快照->合同变化组.size() != 1
+        || 结果.快照->合同状态变化组.size() != 1
+        || 结果.快照->服务进展变化组.size() != 1
+        || 结果.快照->服务准备变化组.size() != 1)
+        return false;
+    const auto 合同 = 结果.快照->合同变化组.front().事实.身份;
+    return 结果.快照->合同变化组.front().事实.自我 == 自我
+        && 结果.快照->合同状态变化组.front().事实.合同 == 合同
+        && 结果.快照->服务进展变化组.front().事实.自我 == 自我
+        && 结果.快照->服务准备变化组.front().事实.自我 == 自我;
+}
+
+int 验证历史边界v2_B06() {
+    auto 运行包 = 建立L1事实基座运行包();
+    auto 服务 = 建立服务(运行包);
+    const auto Gseed = 当前代次(运行包);
+    auto 甲 = 服务 ? 建立发布测试上下文(
+        运行包, *服务, 0x5342'0600'0000'0000ULL)
+        : std::optional<发布测试上下文>{};
+    auto 乙 = 服务 ? 建立发布测试上下文(
+        运行包, *服务, 0x5342'1600'0000'0000ULL)
+        : std::optional<发布测试上下文>{};
+    const auto 发布进展 = [&](发布测试上下文& c, std::uint64_t 键值) {
+        const auto G = 当前代次(运行包);
+        return G && 服务 && 服务->发布服务进展事实_v2(
+            形成进展发布请求(c, *G, 键值, 1)).成功();
+    };
+    const auto 发布准备 = [&](发布测试上下文& c, std::uint64_t 键值) {
+        const auto G = 当前代次(运行包);
+        return G && 服务 && 服务->发布服务准备事实_v2(
+            形成准备发布请求(c, *G, 键值, 1)).成功();
+    };
+    const bool 交错发布 = 甲 && 乙
+        && 发布进展(*甲, 0x5342'0601'0000'0001ULL)
+        && 发布进展(*乙, 0x5342'1611'0000'0001ULL)
+        && 发布准备(*甲, 0x5342'0602'0000'0001ULL)
+        && 发布准备(*乙, 0x5342'1612'0000'0001ULL);
+    const auto G0 = 当前代次(运行包);
+    if (!服务 || !Gseed || !甲 || !乙 || !交错发布 || !G0)
+        return 失败("B06", "two-self interleaved fixture");
+    const auto 甲结果 = 服务->按事实代次边界读取服务维护历史完整快照_v2(
+        历史边界请求_v2(甲->自我, *Gseed, *G0, 1, 4));
+    const auto 乙结果 = 服务->按事实代次边界读取服务维护历史完整快照_v2(
+        历史边界请求_v2(乙->自我, *Gseed, *G0, 1, 4));
+    if (!历史边界B06归属完整(甲结果, 甲->自我)
+        || !历史边界B06归属完整(乙结果, 乙->自我))
+        return 失败("B06", "per-self history isolation");
+    if (!历史边界空失败_v2(
+            服务->按事实代次边界读取服务维护历史完整快照_v2(
+                历史边界请求_v2(甲->自我, *Gseed, *G0, 1, 3)),
+            服务维护历史边界读取状态_v2::变化预算不足)
+        || !历史边界空失败_v2(
+            服务->按事实代次边界读取服务维护历史完整快照_v2(
+                历史边界请求_v2(乙->自我, *Gseed, *G0, 1, 3)),
+            服务维护历史边界读取状态_v2::变化预算不足))
+        return 失败("B06", "budget counts only requested self");
+    通过("B06", "interleaved facts remain self-isolated and budgets count only that self");
+    return 0;
+}
+
+int 验证历史边界v2_B07() {
+    auto 运行包 = 建立L1事实基座运行包();
+    auto 服务 = 建立服务(运行包);
+    const auto Gseed = 当前代次(运行包);
+    const auto 自我 = 服务 && Gseed
+        ? 服务->ARCH_建立v2验证样本(
+            0x5342'0700'0000'0001ULL, 0, 0)
+        : std::optional<L2存在身份>{};
+    const auto G0 = 当前代次(运行包);
+    if (!服务 || !Gseed || !自我 || !G0)
+        return 失败("B07", "G0 terminal mismatch fixture");
+    const auto 请求 = 历史边界请求_v2(*自我, *Gseed, *G0);
+    if (!服务->按事实代次边界读取服务维护历史完整快照_v2(请求).成功())
+        return 失败("B07", "legal boundary before terminal mismatch");
+    服务->ARCH_注入G0终态错配一次();
+    if (!历史边界空失败_v2(
+            服务->按事实代次边界读取服务维护历史完整快照_v2(请求),
+            服务维护历史边界读取状态_v2::集合不闭合))
+        return 失败("B07", "G0 terminal mismatch must be empty failure");
+    通过("B07", "provider rejects a replay terminal that differs from G0 current roots");
+    return 0;
+}
+
+int 验证历史边界v2_B08() {
+    if (!服务合同事实权威服务::ARCH_验证历史后继按业务流分组_v2())
+        return 失败("B08", "successor closure must be grouped by business flow");
+    通过("B08", "same-generation successors of different flows remain legal and a missing same-flow successor fails");
+    return 0;
+}
+
+int 验证历史边界v2_B09() {
+    服务合同事实权威服务::ARCH_延迟下一实例v2历史覆盖登记();
+    auto 运行包 = 建立L1事实基座运行包();
+    auto 服务 = 建立服务(运行包);
+    auto 上下文 = 服务 ? 建立发布测试上下文(
+        运行包, *服务, 0x5342'0900'0000'0000ULL)
+        : std::optional<发布测试上下文>{};
+    const auto G发布 = 当前代次(运行包);
+    const auto 进展 = 服务 && 上下文 && G发布
+        ? 服务->发布服务进展事实_v2(形成进展发布请求(
+            *上下文, *G发布, 0x5342'0901'0000'0001ULL, 1))
+        : 服务进展事实发布结果_v2{};
+    const auto Gseed = 服务 && 进展.成功()
+        ? 服务->ARCH_完成延迟v2历史覆盖登记()
+        : std::optional<std::uint64_t>{};
+    if (!服务 || !上下文 || !进展.成功() || !进展.事实 || !Gseed)
+        return 失败("B09", "seed progress registration fixture");
+    if (!服务->ARCH_退出历史成员关系_v1(
+            服务维护历史事实类别_v1::服务进展,
+            进展.事实->身份.值, 进展.事实->形成事实代次, true))
+        return 失败("B09", "exit v2 permanent seed progress relation");
+    服务.reset();
+    bool 重建已拒绝 = false;
+    try {
+        auto 重建 = 建立服务(运行包);
+        重建已拒绝 = !重建;
+    } catch (...) {
+        重建已拒绝 = true;
+    }
+    if (!重建已拒绝)
+        return 失败("B09", "service reconstruction accepted a missing seed relation");
+    通过("B09", "service reconstruction rejects a missing v2 permanent seed relation");
+    return 0;
+}
+
+bool 历史边界B10正式坏种子登记拒绝(
+    std::uint64_t 身份基数, bool 准备, std::uint8_t 模式) {
+    服务合同事实权威服务::ARCH_延迟下一实例v2历史覆盖登记();
+    auto 运行包 = 建立L1事实基座运行包();
+    auto 服务 = 建立服务(运行包);
+    auto 上下文 = 服务 ? 建立发布测试上下文(运行包, *服务, 身份基数)
+        : std::optional<发布测试上下文>{};
+    const auto G0 = 当前代次(运行包);
+    if (!服务 || !上下文 || !G0) return false;
+    std::optional<稳定编码> 事实;
+    if (准备) {
+        const auto 发布 = 服务->发布服务准备事实_v2(形成准备发布请求(
+            *上下文, *G0, 身份基数 + 0x100, 1,
+            服务准备运行状态_v1::进行中, true, true, 模式 != 3));
+        if (发布.成功() && 发布.事实) 事实 = 发布.事实->身份.值;
+    } else {
+        const auto 发布 = 服务->发布服务进展事实_v2(形成进展发布请求(
+            *上下文, *G0, 身份基数 + 0x100, 1,
+            服务进展运行状态_v1::进行中, true, 模式 != 3));
+        if (发布.成功() && 发布.事实) 事实 = 发布.事实->身份.值;
+    }
+    if (!事实) return false;
+    const auto 替代目标 = 模式 == 1 ? 上下文->外部端点.节点[1]
+        : 模式 == 3 ? 上下文->外部端点.节点[6] : 稳定编码{};
+    if (!服务->ARCH_损坏当前v2事实引用关系(
+            准备, *事实, 模式, 替代目标))
+        return false;
+    return !服务->ARCH_完成延迟v2历史覆盖登记();
+}
+
+bool 历史边界B10正式正常种子登记成功() {
+    服务合同事实权威服务::ARCH_延迟下一实例v2历史覆盖登记();
+    auto 运行包 = 建立L1事实基座运行包();
+    auto 服务 = 建立服务(运行包);
+    auto 上下文 = 服务 ? 建立发布测试上下文(
+        运行包, *服务, 0x5342'10F0'0000'0000ULL)
+        : std::optional<发布测试上下文>{};
+    const auto G进展 = 当前代次(运行包);
+    const auto 进展 = 服务 && 上下文 && G进展
+        ? 服务->发布服务进展事实_v2(形成进展发布请求(
+            *上下文, *G进展, 0x5342'10F1'0000'0001ULL, 1))
+        : 服务进展事实发布结果_v2{};
+    const auto G准备 = 当前代次(运行包);
+    const auto 准备 = 服务 && 上下文 && G准备
+        ? 服务->发布服务准备事实_v2(形成准备发布请求(
+            *上下文, *G准备, 0x5342'10F2'0000'0001ULL, 1))
+        : 服务准备事实发布结果_v2{};
+    return 服务 && 上下文 && 进展.成功() && 准备.成功()
+        && 服务->ARCH_完成延迟v2历史覆盖登记().has_value();
+}
+
+int 验证历史边界v2_B10() {
+    if (!历史边界B10正式坏种子登记拒绝(
+            0x5342'1000'0000'0000ULL, false, 1))
+        return 失败("B10", "progress required selection relation wrong target");
+    if (!历史边界B10正式坏种子登记拒绝(
+            0x5342'1010'0000'0000ULL, false, 2))
+        return 失败("B10", "progress optional state relation missing");
+    if (!历史边界B10正式坏种子登记拒绝(
+            0x5342'1020'0000'0000ULL, false, 3))
+        return 失败("B10", "progress empty optional dynamic has relation");
+    if (!历史边界B10正式坏种子登记拒绝(
+            0x5342'1030'0000'0000ULL, true, 1))
+        return 失败("B10", "preparation required selection relation wrong target");
+    if (!历史边界B10正式坏种子登记拒绝(
+            0x5342'1040'0000'0000ULL, true, 2))
+        return 失败("B10", "preparation optional state relation missing");
+    if (!历史边界B10正式坏种子登记拒绝(
+            0x5342'1050'0000'0000ULL, true, 3))
+        return 失败("B10", "preparation empty optional dynamic has relation");
+    if (!历史边界B10正式正常种子登记成功())
+        return 失败("B10", "normal progress and preparation seed control");
+    通过("B10", "seed registration validates required and optional progress/preparation references");
+    return 0;
+}
+#endif
 
 } // namespace 海中鱼巣::服务合同事实权威测试内部
 
@@ -1066,7 +1793,8 @@ int 运行服务合同事实权威端到端测试() noexcept {
             if (!成功.成功() || !成功.快照
                 || 成功.快照->结构登记版本
                     != 服务维护历史事实账结构登记版本_v1
-                || 成功.快照->历史账登记事实代次 != *Greg
+                || 成功.快照->历史账登记事实代次 == 0
+                || 成功.快照->历史账登记事实代次 > *Greg
                 || 成功.快照->自我 != *自我 || 成功.快照->G0 != *G0
                 || 成功.本次正式读回截止 != *G0)
                 return 失败("H-1", "history coverage-point readback");
@@ -1125,11 +1853,13 @@ int 运行服务合同事实权威端到端测试() noexcept {
                 || !完整.服务准备变化组.empty()
                 || !完整.完整集合见证
                 || 完整.完整集合见证->声明成员数 != 2
-                || 完整.完整集合见证->历史账登记事实代次 != *Greg)
+                || 完整.完整集合见证->历史账登记事实代次 <= 1
+                || 完整.完整集合见证->历史账登记事实代次 > *Greg)
                 return 失败("H00", "contract, state and expiry history range");
             if (!历史范围空失败(
                     服务->按事实代次范围读取服务维护历史事实完整组_v1(
-                        历史范围请求(*自我, *Greg - 1, *G0)),
+                        历史范围请求(*自我,
+                            完整.完整集合见证->历史账登记事实代次 - 1, *G0)),
                     服务维护历史事实范围读取状态_v1::覆盖边界不可用))
                 return 失败("H00", "history coverage boundary");
             if (!历史范围空失败(
@@ -1342,6 +2072,18 @@ int 运行服务合同事实权威端到端测试() noexcept {
                 return 失败("H06", "duplicate or unreferenced history member");
             通过("H06", "duplicate and payload-less members fail the whole history read");
         }
+
+        if (const auto r = 验证历史边界v2_B00(); r != 0) return r;
+        if (const auto r = 验证历史边界v2_B01(); r != 0) return r;
+        if (const auto r = 验证历史边界v2_B02(); r != 0) return r;
+        if (const auto r = 验证历史边界v2_B03(); r != 0) return r;
+        if (const auto r = 验证历史边界v2_B04(); r != 0) return r;
+        if (const auto r = 验证历史边界v2_B05(); r != 0) return r;
+        if (const auto r = 验证历史边界v2_B06(); r != 0) return r;
+        if (const auto r = 验证历史边界v2_B07(); r != 0) return r;
+        if (const auto r = 验证历史边界v2_B08(); r != 0) return r;
+        if (const auto r = 验证历史边界v2_B09(); r != 0) return r;
+        if (const auto r = 验证历史边界v2_B10(); r != 0) return r;
 
         {
             auto 运行包 = 建立L1事实基座运行包();
@@ -1678,9 +2420,13 @@ int 运行服务合同事实权威端到端测试() noexcept {
             服务准备事实发布结果_v2 准备期望{};
             服务维护历史事实范围读取结果_v1 历史期望{};
             服务维护历史事实范围读取结果_v1 到期历史期望{};
+            服务维护历史边界读取结果_v2 边界期望{};
             L2存在身份 自我{};
             L2存在身份 到期自我{};
             std::uint64_t 历史起点 = 0;
+            std::uint64_t 边界Gseed = 0;
+            std::uint64_t 边界Gstart = 0;
+            std::uint64_t 边界G0 = 0;
             {
                 auto 建立 = 建立L1事实基座持久运行包_v1(配置);
                 if (!建立.成功() || !建立.运行包)
@@ -1721,6 +2467,18 @@ int 运行服务合同事实权威端到端测试() noexcept {
                     ? 服务->按事实代次范围读取服务维护历史事实完整组_v1(
                         历史范围请求(到期自我, 历史起点, *G2))
                     : 服务维护历史事实范围读取结果_v1{};
+                const auto 边界定位 = G2
+                    ? 服务->按事实代次边界读取服务维护历史完整快照_v2(
+                        历史边界请求_v2(自我, *G2, *G2, 1024, 1024))
+                    : 服务维护历史边界读取结果_v2{};
+                if (!边界定位.成功() || !边界定位.快照)
+                    return 失败("W05", "persistent boundary seed lookup");
+                边界Gseed = 边界定位.快照->v2覆盖登记事实代次;
+                边界Gstart = 边界Gseed;
+                边界G0 = *G2;
+                边界期望 = 服务->按事实代次边界读取服务维护历史完整快照_v2(
+                    历史边界请求_v2(
+                        自我, 边界Gstart, 边界G0, 1024, 1024));
                 if (!历史期望.成功()
                     || 历史期望.合同变化组.size() != 1
                     || 历史期望.合同状态变化组.size() != 1
@@ -1729,7 +2487,13 @@ int 运行服务合同事实权威端到端测试() noexcept {
                     || !到期历史期望.成功()
                     || 到期历史期望.合同变化组.size() != 1
                     || 到期历史期望.合同状态变化组.size() != 2
-                    || 到期历史期望.到期事件变化组.size() != 1)
+                    || 到期历史期望.到期事件变化组.size() != 1
+                    || !边界期望.成功() || !边界期望.快照
+                    || 边界期望.快照->v2覆盖登记事实代次 != 边界Gseed
+                    || 边界期望.快照->自我 != 自我
+                    || 边界期望.快照->左边界事实代次 != 边界Gstart
+                    || 边界期望.快照->包含结束事实代次 != 边界G0
+                    || 边界期望.本次正式读回截止 != 边界G0)
                     return 失败("W05", "persistent history range before recovery");
             }
             {
@@ -1759,6 +2523,11 @@ int 运行服务合同事实权威端到端测试() noexcept {
                     ? 服务->按事实代次范围读取服务维护历史事实完整组_v1(
                         历史范围请求(到期自我, 历史起点, *G1))
                     : 服务维护历史事实范围读取结果_v1{};
+                const auto 边界重放 = G1 && *G1 == 边界G0
+                    ? 服务->按事实代次边界读取服务维护历史完整快照_v2(
+                        历史边界请求_v2(
+                            自我, 边界Gstart, 边界G0, 1024, 1024))
+                    : 服务维护历史边界读取结果_v2{};
                 if (!G1 || *G1 != *G0 || !进展重放.成功()
                     || !准备重放.成功()
                     || 进展重放.状态
@@ -1772,11 +2541,16 @@ int 运行服务合同事实权威端到端测试() noexcept {
                     || !当前进展.成功() || !当前准备.成功()
                     || 历史重放 != 历史期望
                     || 到期历史重放 != 到期历史期望
+                    || !边界重放.成功() || !边界重放.快照
+                    || 边界重放.快照->v2覆盖登记事实代次 != 边界Gseed
+                    || 边界重放.快照->左边界事实代次 != 边界Gstart
+                    || 边界重放.快照->包含结束事实代次 != 边界G0
+                    || 边界重放 != 边界期望
                     || 当前进展.完整进展事实组.size() != 1
                     || 当前准备.完整准备事实组.size() != 1)
                     return 失败("W05", "persistent exact replay and current readback");
             }
-            通过("W05", "both publishers replay exactly after persistent recovery");
+            通过("W05", "publishers and history boundary replay exactly after persistent recovery");
         }
 
         {
