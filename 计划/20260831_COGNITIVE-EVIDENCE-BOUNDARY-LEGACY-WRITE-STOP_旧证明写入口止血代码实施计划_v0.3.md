@@ -89,4 +89,3 @@ Release x64 候选树构建
 ## 7. 完成声明
 
 完成后只声明两个 legacy 入口停止无账首次 proof 生产；已有账精确重放代码保留。HEAD 中旧调用会 fail-closed，旧调用移除、v2 正式选择、current provider、执行后结算和 current-value 比较均为后继，不属于本计划。
-
