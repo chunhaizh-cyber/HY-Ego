@@ -235,13 +235,21 @@ std::optional<显式激活或恢复本能被动维护纪元请求_v1> 形成激�
         L1事实基座持久恢复合同版本_v1, 根 / L"l1"};
     配置.不可变材料存储 = {
         L2结构合同版本, {根 / L"material"}};
+    配置.等待合同登记 = 形成普通应用任务筹办等待合同登记();
     return 配置;
 }
 
 int 运行Gseed显式激活专项(const std::filesystem::path& 总根) {
     constexpr std::uint64_t 根身份 = 0x4753'4545'4400'0001ULL;
     constexpr std::uint64_t 键 = 0x4753'4545'4401'0001ULL;
-    const auto 配置 = 形成隔离配置(总根 / L"gseed-v4");
+    const auto 专项根 = 总根 / L"gseed-v4";
+    std::error_code 错误;
+    std::filesystem::create_directories(专项根 / L"l1", 错误);
+    if (错误) return 失败("G01", "建立 v4 L1 隔离根");
+    错误.clear();
+    std::filesystem::create_directories(专项根 / L"material", 错误);
+    if (错误) return 失败("G01", "建立 v4 材料隔离根");
+    const auto 配置 = 形成隔离配置(专项根);
     auto 会话 = 建立或恢复会话(配置, 根身份);
     if (!会话) return 失败("G01", "建立 v4 会话");
     const auto 未建立 = 读取当前_v4(*会话);
@@ -325,7 +333,14 @@ int 运行Gseed显式激活专项(const std::filesystem::path& 总根) {
     通过("G04", "维护纪元、Gseed、零成功序号与形成代次持久恢复");
 
     const auto 验证旧格式 = [&](const wchar_t* 子目录, int 版本) -> bool {
-        auto 旧会话 = 建立或恢复会话(形成隔离配置(总根 / 子目录),
+        const auto 旧根 = 总根 / 子目录;
+        std::error_code 旧根错误;
+        std::filesystem::create_directories(旧根 / L"l1", 旧根错误);
+        if (旧根错误) return false;
+        旧根错误.clear();
+        std::filesystem::create_directories(旧根 / L"material", 旧根错误);
+        if (旧根错误) return false;
+        auto 旧会话 = 建立或恢复会话(形成隔离配置(旧根),
             根身份 + static_cast<std::uint64_t>(版本));
         if (!旧会话) return false;
         auto& 旧服务 = 旧会话->上下文->取得本能被动维护游标服务();
