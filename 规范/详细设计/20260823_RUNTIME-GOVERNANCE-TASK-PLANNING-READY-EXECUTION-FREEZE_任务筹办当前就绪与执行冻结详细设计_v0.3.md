@@ -4,7 +4,7 @@
 
 身份：`RUNTIME-GOVERNANCE-TASK-PLANNING-READY-EXECUTION-FREEZE`
 
-状态：现行详细设计；解释 3200、4010、4260 v0.4、5210、5230 v1.0、5250 v0.7、5300 v0.7、5310、6140、6150；不单独建立机器事实
+状态：部分历史形成材料；目标裁决证据 / 稳定证明节点生产语义已由 `20260831_COGNITIVE-EVIDENCE-BOUNDARY_认知证据与工程正确性分界详细设计_v0.2.md` 覆盖。其余选择与冻结语义在后继版本化消费者设计完成前不得单独施工。
 
 前版：`规范/详细设计/20260823_RUNTIME-GOVERNANCE-TASK-PLANNING-READY-EXECUTION-FREEZE_任务筹办当前就绪与执行冻结详细设计_v0.2.md`
 
