@@ -1,0 +1,67 @@
+01-extra-operation: exit=1; expected_nonzero=True
+  DATA-L1 冻结面检查未通过：2 个错误
+  [ERROR] 冻结文件规范化长度变化: 海中鱼巣/核心/服务.L1事实基座.ixx
+  [ERROR] 冻结文件 SHA-256 变化: 海中鱼巣/核心/服务.L1事实基座.ixx
+02-missing-operation: exit=1; expected_nonzero=True
+  DATA-L1 冻结面检查未通过：2 个错误
+  [ERROR] 冻结文件规范化长度变化: 海中鱼巣/核心/服务.L1事实基座.ixx
+  [ERROR] 冻结文件 SHA-256 变化: 海中鱼巣/核心/服务.L1事实基座.ixx
+03-same-name-overload: exit=1; expected_nonzero=True
+  DATA-L1 冻结面检查未通过：2 个错误
+  [ERROR] 冻结文件规范化长度变化: 海中鱼巣/核心/服务.L1事实基座.ixx
+  [ERROR] 冻结文件 SHA-256 变化: 海中鱼巣/核心/服务.L1事实基座.ixx
+04-signature-noexcept: exit=1; expected_nonzero=True
+  DATA-L1 冻结面检查未通过：2 个错误
+  [ERROR] 冻结文件规范化长度变化: 海中鱼巣/核心/服务.L1事实基座.ixx
+  [ERROR] 冻结文件 SHA-256 变化: 海中鱼巣/核心/服务.L1事实基座.ixx
+05-dto-field: exit=1; expected_nonzero=True
+  DATA-L1 冻结面检查未通过：2 个错误
+  [ERROR] 冻结文件规范化长度变化: 海中鱼巣/核心/L1中性CRUD.数据.h
+  [ERROR] 冻结文件 SHA-256 变化: 海中鱼巣/核心/L1中性CRUD.数据.h
+06-enum-reorder: exit=1; expected_nonzero=True
+  DATA-L1 冻结面检查未通过：3 个错误
+  [ERROR] 冻结文件 SHA-256 变化: 海中鱼巣/核心/L1所有者范围CRUD.数据.h
+  [ERROR] legacy 例外缺失、移动、重复或变种: ('海中鱼巣/核心/L1所有者范围CRUD.数据.h', 'L1跨所有者原子事务参与者序号', '状态', 'enum_item')
+  [ERROR] legacy 例外缺失、移动、重复或变种: ('海中鱼巣/核心/L1所有者范围CRUD.数据.h', 'L1跨所有者原子事务参与者序号', '动态', 'enum_item')
+07-contract-version: exit=1; expected_nonzero=True
+  DATA-L1 冻结面检查未通过：1 个错误
+  [ERROR] 冻结文件 SHA-256 变化: 海中鱼巣/核心/L1中性CRUD.数据.h
+08-reexport-callable: exit=1; expected_nonzero=True
+  DATA-L1 冻结面检查未通过：2 个错误
+  [ERROR] 冻结文件规范化长度变化: 海中鱼巣/核心/L1公共事实.数据.h
+  [ERROR] 冻结文件 SHA-256 变化: 海中鱼巣/核心/L1公共事实.数据.h
+09-domain-token: exit=1; expected_nonzero=True
+  DATA-L1 冻结面检查未通过：3 个错误
+  [ERROR] 冻结文件规范化长度变化: 海中鱼巣/核心/L1公共事实.数据.h
+  [ERROR] 冻结文件 SHA-256 变化: 海中鱼巣/核心/L1公共事实.数据.h
+  [ERROR] 出现未限定领域标识符: {('海中鱼巣/核心/L1公共事实.数据.h', 'L1场景索引'): 1}
+10-duplicate-legacy: exit=1; expected_nonzero=True
+  DATA-L1 冻结面检查未通过：3 个错误
+  [ERROR] 冻结文件规范化长度变化: 海中鱼巣/核心/L1所有者范围CRUD.数据.h
+  [ERROR] 冻结文件 SHA-256 变化: 海中鱼巣/核心/L1所有者范围CRUD.数据.h
+  [ERROR] legacy 例外缺失、移动、重复或变种: ('海中鱼巣/核心/L1所有者范围CRUD.数据.h', 'L1跨所有者原子事务参与者序号', '状态', 'enum_item')
+11-surface-status: exit=1; expected_nonzero=True
+  DATA-L1 冻结面检查未通过：1 个错误
+  [ERROR] surface_contract_status 必须为 FROZEN
+12-premature-frozen: exit=1; expected_nonzero=True
+  DATA-L1 冻结面检查未通过：6 个错误
+  [ERROR] FROZEN 必须登记 40 位 accepted_commit
+  [ERROR] 4080 当前状态块的整体状态与冻结清单不一致
+  [ERROR] 规范目录 4080 当前行与冻结清单状态不一致
+  [ERROR] DATA-L1 当前完整性段落未明确升级为 FROZEN
+  [ERROR] DATA-L1 当前完整性段落缺少 accepted_commit
+  [ERROR] DATA-L1 当前完整性段落缺少 acceptance_record
+13-entry-test-backflow: exit=1; expected_nonzero=True
+  DATA-L1 冻结面检查未通过：2 个错误
+  [ERROR] 生产入口不得 import 端到端测试模块
+  [ERROR] 生产入口不得保留 --test-* 字符串开关
+14a-project-test-backflow: exit=1; expected_nonzero=True
+  DATA-L1 冻结面检查未通过：1 个错误
+  [ERROR] 生产工程不得登记端到端测试 ClCompile 项: 1
+14b-filters-test-backflow: exit=1; expected_nonzero=True
+  DATA-L1 冻结面检查未通过：1 个错误
+  [ERROR] 生产工程筛选器不得登记端到端测试 ClCompile 项: 1
+baseline-after-variants: exit=0; expected_zero=True
+  DATA-L1 冻结面检查通过：43 项操作、5 个冻结文件与生产边界一致
+ALL_15_STANDARD_NEGATIVE_EXPECTATIONS=True
+BASELINE_RESTORED=True

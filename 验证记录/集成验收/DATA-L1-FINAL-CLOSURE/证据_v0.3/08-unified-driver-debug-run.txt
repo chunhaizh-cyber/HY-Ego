@@ -1,0 +1,11 @@
+[L1持久恢复测试] 三类事实、当前/历史/墓碑、组/一致投影、幂等与 fail-closed 通过
+[DATA-L1-N-ATOMIC][V01] PASS：2/3/4/8/255 参与者共同 G1 与逐 owner 正式读回
+[DATA-L1-N-ATOMIC][V02] PASS：精确重复与同键异义分账
+[DATA-L1-N-ATOMIC][V03] PASS：非法 N、身份、owner、幂等和端口矩阵写前拒绝
+[DATA-L1-N-ATOMIC][V04] PASS：G0、键、前向、自跨、缺失引用与属性槽边界零写
+[DATA-L1-N-ATOMIC][V05] PASS：第1/中间/末参与者失败后可用原键修正提交
+[DATA-L1-N-ATOMIC][V06] PASS：既有 v1/v2 原子事务入口保持成功
+[DATA-L1-N-ATOMIC][V07] PASS：格式3持久恢复后 v3 幂等账收敛
+[DATA-L1-N-ATOMIC][V08] PASS：格式1/2真实固定样本恢复、旧账重放与后继v3收敛
+[DATA-L1-N-ATOMIC] 可运行矩阵全部通过
+exit=0

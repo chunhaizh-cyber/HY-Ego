@@ -1,0 +1,86 @@
+candidate_A=112e238589509b1baa923c2f324915ed1401e676
+record_R=4dea5b8d52616f9aff455ab4aec6493a23f25971
+governance_G=762ecebcb90b2f7df248987177ee174d189ac253
+chain=candidate_A <= recorded_remote(candidate_A) <= origin/main(governance_G)
+P01: exit=0; expected=True
+  DATA-L1 冻结面检查通过：43 项操作、5 个冻结文件与生产边界一致
+N01: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：1 个错误
+  [ERROR] PENDING_ACCEPTANCE 不得登记 accepted_commit/acceptance_record
+N02: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：3 个错误
+  [ERROR] accepted_commit 与 acceptance_record 的候选提交不一致
+  [ERROR] acceptance_record 验收标识不属于精确 DATA-L1 候选
+  [ERROR] DATA-L1 当前完整性段落缺少 accepted_commit
+N03: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：2 个错误
+  [ERROR] FROZEN 只能绑定结论为服务验收通过的记录
+  [ERROR] acceptance_record 工作树字节与已提交 blob 不一致
+N04: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：2 个错误
+  [ERROR] acceptance_record 验收标识不属于精确 DATA-L1 候选
+  [ERROR] acceptance_record 工作树字节与已提交 blob 不一致
+N05: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：2 个错误
+  [ERROR] acceptance_record 服务切片名称不匹配
+  [ERROR] acceptance_record 工作树字节与已提交 blob 不一致
+N06: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：2 个错误
+  [ERROR] acceptance_record 上级目标不匹配
+  [ERROR] acceptance_record 工作树字节与已提交 blob 不一致
+N07: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：2 个错误
+  [ERROR] acceptance_record 基线仓库必须精确为 .
+  [ERROR] acceptance_record 工作树字节与已提交 blob 不一致
+N08: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：2 个错误
+  [ERROR] acceptance_record 远端分支必须精确为 origin/main
+  [ERROR] acceptance_record 工作树字节与已提交 blob 不一致
+N09: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：4 个错误
+  [ERROR] acceptance_record 尚未进入 HEAD
+  [ERROR] acceptance_record 尚未进入 origin/main
+  [ERROR] acceptance_record 在 HEAD 与 origin/main 的 blob 不一致
+  [ERROR] acceptance_record 工作树字节与已提交 blob 不一致
+N10: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：1 个错误
+  [ERROR] acceptance_record 工作树字节与已提交 blob 不一致
+N11: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：1 个错误
+  [ERROR] acceptance_record 在 HEAD 与 origin/main 的 blob 不一致
+N12: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：1 个错误
+  [ERROR] acceptance_record 必须是 JSON 清单
+N13: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：1 个错误
+  [ERROR] acceptance_record 不得是绝对路径或包含路径穿越
+N14: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：1 个错误
+  [ERROR] acceptance_record 不得是绝对路径或包含路径穿越
+N15: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：1 个错误
+  [ERROR] acceptance_record 必须位于 DATA-L1-FINAL-CLOSURE 集成验收目录
+N16: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：1 个错误
+  [ERROR] acceptance_record 无法解析为 JSON: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)
+N17: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：1 个错误
+  [ERROR] 4080 当前状态块的整体状态与冻结清单不一致
+N18: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：1 个错误
+  [ERROR] 4080 当前状态块的整体状态与冻结清单不一致
+N19: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：1 个错误
+  [ERROR] 规范目录 4080 当前行与冻结清单状态不一致
+N20: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：1 个错误
+  [ERROR] 规范目录 4080 当前行与冻结清单状态不一致
+N21: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：1 个错误
+  [ERROR] DATA-L1 当前完整性段落缺少 accepted_commit
+N22: exit=1; expected=True
+  DATA-L1 冻结面检查未通过：1 个错误
+  [ERROR] DATA-L1 当前完整性段落缺少 acceptance_record
+P02: exit=0; expected=True
+  DATA-L1 冻结面检查通过：43 项操作、5 个冻结文件与生产边界一致
+ALL_24_FROZEN_BINDING_EXPECTATIONS=True
