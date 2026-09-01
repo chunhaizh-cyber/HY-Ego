@@ -220,16 +220,10 @@
     <ClCompile Include="海中鱼巣\端到端测试.L1事实基座持久恢复.ixx" />
     <ClCompile Include="海中鱼巣\端到端测试.本能路线阶段二.ixx" />
     <ClCompile Include="海中鱼巣\端到端测试.DATA-L1有限N分区原子事务.ixx" />
-    <ClCompile Include="海中鱼巣\端到端测试.本能被动维护游标.ixx" />
     <ClCompile Include="海中鱼巣\端到端测试.本能UTC时间证据.ixx" />
     <ClCompile Include="海中鱼巣\端到端测试.安全根定义与当前值.ixx" />
     <ClCompile Include="海中鱼巣\端到端测试.安全根生产定义初始化.ixx" />
     <ClCompile Include="海中鱼巣\端到端测试.任务现实执行硬否决规则宇宙.ixx" />
-    <ClCompile Include="海中鱼巣\端到端测试.本能单完整秒被动维护.ixx" />
-    <ClCompile Include="海中鱼巣\端到端测试.本能被动维护基础快照.ixx" />
-    <ClCompile Include="海中鱼巣\端到端测试.服务合同事实权威.ixx">
-      <PreprocessorDefinitions Condition="'$(ServiceContractFactAuthorityValidation)'=='true'">ARCH_INSTINCT_SERVICE_CONTRACT_FACT_AUTHORITY_VALIDATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务特征方法查找与条件提议.ixx" />
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务筹办当前就绪与执行冻结.ixx" />
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务目标未达成重筹办触发.ixx" />
@@ -239,13 +233,7 @@
     <ClCompile Include="海中鱼巣\领域\安全治理\服务.L2任务现实执行硬否决规则结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\安全治理\服务.任务现实执行硬否决.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.完整秒时钟.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.本能被动维护游标.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.安全根定义与当前值.ixx" />
-    <ClCompile Include="海中鱼巣\领域\服务.服务合同事实权威.ixx">
-      <PreprocessorDefinitions Condition="'$(ServiceContractFactAuthorityValidation)'=='true'">ARCH_INSTINCT_SERVICE_CONTRACT_FACT_AUTHORITY_VALIDATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\算法.本能单完整秒被动维护.ixx" />
-    <ClCompile Include="海中鱼巣\领域\组合.本能被动维护基础快照.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.运行期事实版本.ixx" />
     <ClCompile Include="海中鱼巣\线程\路由.自我治理批次.ixx" />
     <ClCompile Include="海中鱼巣\入口.cpp" />
@@ -302,11 +290,7 @@
     <ClInclude Include="海中鱼巣\领域\安全治理\L2任务现实执行硬否决规则结构.数据.h" />
     <ClInclude Include="海中鱼巣\领域\安全治理\任务现实执行硬否决.数据.h" />
     <ClInclude Include="海中鱼巣\领域\运行期只读查询.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\本能被动维护游标.数据.h" />
     <ClInclude Include="海中鱼巣\领域\安全根定义与当前值.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\服务合同事实权威.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\本能单完整秒被动维护.数据.h" />
-    <ClInclude Include="海中鱼巣\领域\本能被动维护基础快照.数据.h" />
   </ItemGroup>
   <Target Name="验证D455RealSense构建输入" BeforeTargets="PrepareForBuild"
           Condition="'$(EnableD455RealSense)'=='true' and '$(Platform)'=='x64'">
