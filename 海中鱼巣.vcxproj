@@ -196,6 +196,7 @@
     <ClCompile Include="海中鱼巣\线程\上行桥.D455采样材料.ixx" />
     <ClCompile Include="海中鱼巣\线程\自我治理消息协议.ixx" />
     <ClCompile Include="海中鱼巣\线程\协议.任务执行请求.ixx" />
+    <ClCompile Include="海中鱼巣\线程\协议.任务筹办工作与结果.ixx" />
     <ClCompile Include="海中鱼巣\线程\任务结果回执协议.ixx" />
     <ClCompile Include="海中鱼巣\线程\上行桥.任务实际结果.ixx" />
     <ClCompile Include="海中鱼巣\线程\协议.任务重筹办意图.ixx" />

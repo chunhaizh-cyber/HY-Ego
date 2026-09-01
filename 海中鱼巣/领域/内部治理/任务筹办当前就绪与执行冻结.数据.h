@@ -3,9 +3,11 @@
 #ifndef 任务筹办当前就绪与执行冻结数据_NO_INCLUDES
 #include <cstdint>
 #include <optional>
+#include <variant>
 #include <vector>
 
 #include "../L2任务结构.数据.h"
+#include "../L2任务子目标承接记录.数据.h"
 #include "任务重筹办.数据.h"
 #include "任务特征方法查找与条件提议.数据.h"
 #endif
@@ -97,16 +99,11 @@ struct 任务筹办当前就绪结果 final {
 };
 
 enum class 任务筹办收束类别 : std::uint8_t {
-    执行冻结候选 = 1,
-    合法等待 = 2,
-    子目标承接 = 3,
-    学习需求承接 = 4,
-    方法补齐承接 = 5,
-    当前性漂移 = 6,
-    引用冲突 = 7,
-    数量预算不足 = 8,
-    资源失败 = 9,
-    内部错误 = 10
+    可执行冻结 = 1,
+    子目标承接 = 2,
+    合法等待 = 3,
+    目标已完成 = 4,
+    结构化非成功 = 5
 };
 
 #define 定义任务筹办等待身份(类型名) \
@@ -148,42 +145,6 @@ struct 任务筹办等待合同 final {
         const 任务筹办等待合同&) = default;
 };
 
-struct 任务学习需求承接草案 final {
-    L2任务身份 来源任务;
-    std::uint64_t 筹办轮次 = 0;
-    任务筹办目标三元组 目标;
-    L2状态事实 当前状态;
-    L2方法变化方向 所需方向 = L2方法变化方向::无变化;
-    std::vector<L2方法特征粗召回项> 完整空召回;
-    std::vector<稳定编码> 学习门禁证据组;
-    任务筹办合法生产者身份 合法学习需求生产者;
-    friend bool operator==(const 任务学习需求承接草案&,
-        const 任务学习需求承接草案&) = default;
-};
-
-struct 任务方法补齐承接草案 final {
-    L2任务身份 来源任务;
-    std::uint64_t 筹办轮次 = 0;
-    L2方法身份 方法;
-    L2方法内容版本 内容版本;
-    L2方法规格版本 规格版本;
-    std::vector<L2方法结构缺口> 结构缺口组;
-    std::vector<任务未绑定输入限制证据> 未绑定材料组;
-    任务筹办合法生产者身份 合法补齐处理方;
-    friend bool operator==(const 任务方法补齐承接草案&,
-        const 任务方法补齐承接草案&) = default;
-};
-
-struct 任务筹办非成功承接材料 final {
-    任务筹办收束类别 类别 = 任务筹办收束类别::内部错误;
-    std::optional<任务筹办等待合同> 等待合同;
-    std::vector<任务缺失条件草案> 子目标草案组;
-    std::optional<任务学习需求承接草案> 学习需求草案;
-    std::optional<任务方法补齐承接草案> 方法补齐草案;
-    friend bool operator==(const 任务筹办非成功承接材料&,
-        const 任务筹办非成功承接材料&) = default;
-};
-
 struct 任务筹办推进请求 final {
     std::uint32_t 合同版本 = 任务筹办当前就绪合同版本;
     L2结构请求头 请求头;
@@ -201,24 +162,116 @@ struct 任务筹办推进请求 final {
         const 任务筹办推进请求&) = default;
 };
 
-struct 任务执行冻结形成材料 final {
-    下一筹办工作包 来源工作包;
-    L2任务方法选择完整事实 正式选择;
-    L2任务执行绑定冻结材料事实 冻结材料;
-    L2实例方法事实 实例方法;
-    std::uint64_t 形成事实截止 = 0;
-    friend bool operator==(const 任务执行冻结形成材料&,
-        const 任务执行冻结形成材料&) = default;
+struct 任务筹办可执行冻结定位 final {
+    L2任务方法选择记录身份 正式选择;
+    L2任务方法路径身份 路径;
+    L2任务执行绑定冻结材料身份 冻结材料;
+    L2实例方法身份 实例方法;
+    friend bool operator==(const 任务筹办可执行冻结定位&,
+        const 任务筹办可执行冻结定位&) = default;
 };
 
+struct 任务筹办子目标承接定位 final {
+    std::vector<L2任务子目标承接记录身份> 记录身份组;
+    friend bool operator==(const 任务筹办子目标承接定位&,
+        const 任务筹办子目标承接定位&) = default;
+};
+
+struct 任务筹办合法等待定位 final {
+    任务筹办等待合同 等待合同;
+    friend bool operator==(const 任务筹办合法等待定位&,
+        const 任务筹办合法等待定位&) = default;
+};
+
+struct 任务筹办目标已完成定位 final {
+    L2任务目标裁决证据身份 目标裁决证据;
+    friend bool operator==(const 任务筹办目标已完成定位&,
+        const 任务筹办目标已完成定位&) = default;
+};
+
+enum class 任务筹办非成功类别 : std::uint8_t {
+    当前性漂移 = 1,
+    引用冲突 = 2,
+    数量预算不足 = 3,
+    入口拒绝 = 4,
+    资源失败 = 5,
+    内部错误 = 6,
+    待实现能力 = 7
+};
+
+struct 任务筹办结构化非成功材料 final {
+    任务筹办非成功类别 类别 = 任务筹办非成功类别::内部错误;
+    std::uint64_t 失败事实截止 = 0;
+    friend bool operator==(const 任务筹办结构化非成功材料&,
+        const 任务筹办结构化非成功材料&) = default;
+};
+
+using 任务筹办结果载荷 = std::variant<
+    任务筹办可执行冻结定位,
+    任务筹办子目标承接定位,
+    任务筹办合法等待定位,
+    任务筹办目标已完成定位,
+    任务筹办结构化非成功材料>;
+
 struct 任务筹办推进结果 final {
-    任务筹办收束类别 类别 = 任务筹办收束类别::内部错误;
-    std::optional<任务执行冻结形成材料> 执行冻结材料;
-    std::optional<任务筹办非成功承接材料> 非成功承接;
+    任务筹办收束类别 类别 = 任务筹办收束类别::结构化非成功;
+    任务筹办结果载荷 载荷 = 任务筹办结构化非成功材料{};
     std::uint64_t 最终事实截止 = 0;
-    bool 成功() const noexcept {
-        return 类别 == 任务筹办收束类别::执行冻结候选
-            && 执行冻结材料 && !非成功承接 && 最终事实截止 != 0;
+    bool 完整() const noexcept {
+        if (载荷.valueless_by_exception() || 最终事实截止 == 0) return false;
+        switch (类别) {
+        case 任务筹办收束类别::可执行冻结: {
+            if (!std::holds_alternative<任务筹办可执行冻结定位>(载荷))
+                return false;
+            const auto& 定位 = std::get<任务筹办可执行冻结定位>(载荷);
+            return 有效(定位.正式选择.值) && 有效(定位.路径.值)
+                && 有效(定位.冻结材料.值) && 有效(定位.实例方法.值);
+        }
+        case 任务筹办收束类别::子目标承接: {
+            if (!std::holds_alternative<任务筹办子目标承接定位>(载荷))
+                return false;
+            const auto& 定位 = std::get<任务筹办子目标承接定位>(载荷);
+            if (定位.记录身份组.empty()) return false;
+            for (std::size_t 索引 = 0; 索引 < 定位.记录身份组.size(); ++索引) {
+                if (!有效(定位.记录身份组[索引].值)) return false;
+                for (std::size_t 前 = 0; 前 < 索引; ++前)
+                    if (定位.记录身份组[前] == 定位.记录身份组[索引])
+                        return false;
+            }
+            return true;
+        }
+        case 任务筹办收束类别::合法等待: {
+            if (!std::holds_alternative<任务筹办合法等待定位>(载荷))
+                return false;
+            const auto& 合同 =
+                std::get<任务筹办合法等待定位>(载荷).等待合同;
+            return 有效(合同.等待对象.值) && 有效(合同.合法生产者.值)
+                && 有效(合同.重新触发条件.值)
+                && 下一筹办工作包完整(合同.原工作包);
+        }
+        case 任务筹办收束类别::目标已完成:
+            return std::holds_alternative<任务筹办目标已完成定位>(载荷)
+                && 有效(std::get<任务筹办目标已完成定位>(载荷)
+                    .目标裁决证据.值);
+        case 任务筹办收束类别::结构化非成功: {
+            if (!std::holds_alternative<任务筹办结构化非成功材料>(载荷))
+                return false;
+            const auto& 非成功 =
+                std::get<任务筹办结构化非成功材料>(载荷);
+            switch (非成功.类别) {
+            case 任务筹办非成功类别::当前性漂移:
+            case 任务筹办非成功类别::引用冲突:
+            case 任务筹办非成功类别::数量预算不足:
+            case 任务筹办非成功类别::入口拒绝:
+            case 任务筹办非成功类别::资源失败:
+            case 任务筹办非成功类别::内部错误:
+            case 任务筹办非成功类别::待实现能力:
+                return 非成功.失败事实截止 == 最终事实截止;
+            }
+            return false;
+        }
+        }
+        return false;
     }
     friend bool operator==(const 任务筹办推进结果&,
         const 任务筹办推进结果&) = default;

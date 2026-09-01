@@ -198,6 +198,9 @@
     <ClCompile Include="海中鱼巣\线程\协议.任务执行请求.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\线程\协议.任务筹办工作与结果.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\线程\任务结果回执协议.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
