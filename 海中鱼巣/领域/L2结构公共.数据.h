@@ -221,8 +221,9 @@ inline constexpr bool L2节点族属于当前DATA_L2(L2节点族 节点族) noex
     return false;
 }
 
-// 诊断责任：无适用错误分支；纯值判断现有 ARCH-L4 兼容节点族。
-inline constexpr bool L2节点族属于ARCH_L4兼容(L2节点族 节点族) noexcept {
+// 诊断责任：无适用错误分支；纯值判断现有 ARCH-L4 兼容记录面节点族。
+inline constexpr bool L2节点族属于ARCH_L4兼容记录面(
+    L2节点族 节点族) noexcept {
     switch (节点族) {
     case L2节点族::方法:
     case L2节点族::需求:
@@ -244,6 +245,11 @@ inline constexpr bool L2节点族属于ARCH_L4兼容(L2节点族 节点族) noex
     return false;
 }
 
+// 诊断责任：无适用错误分支；旧源码 ABI 兼容别名，不扩张 DATA-L2。
+inline constexpr bool L2节点族属于ARCH_L4兼容(L2节点族 节点族) noexcept {
+    return L2节点族属于ARCH_L4兼容记录面(节点族);
+}
+
 static_assert(static_cast<std::uint8_t>(L2节点族::概念) == 10);
 static_assert(static_cast<std::uint8_t>(L2节点族::方法) == 11);
 static_assert(static_cast<std::uint8_t>(L2节点族::需求) == 12);
@@ -263,6 +269,20 @@ static_assert(L2节点族属于当前DATA_L2(L2节点族::不可变材料));
 static_assert(!L2节点族属于当前DATA_L2(L2节点族::方法));
 static_assert(!L2节点族属于当前DATA_L2(L2节点族::需求));
 static_assert(!L2节点族属于当前DATA_L2(L2节点族::任务));
+static_assert(L2节点族属于ARCH_L4兼容记录面(L2节点族::方法));
+static_assert(L2节点族属于ARCH_L4兼容记录面(L2节点族::需求));
+static_assert(L2节点族属于ARCH_L4兼容记录面(L2节点族::任务));
+static_assert(!L2节点族属于ARCH_L4兼容记录面(L2节点族::场景));
+static_assert(!L2节点族属于ARCH_L4兼容记录面(L2节点族::存在));
+static_assert(!L2节点族属于ARCH_L4兼容记录面(L2节点族::特征定义));
+static_assert(!L2节点族属于ARCH_L4兼容记录面(L2节点族::特征实例));
+static_assert(!L2节点族属于ARCH_L4兼容记录面(L2节点族::状态));
+static_assert(!L2节点族属于ARCH_L4兼容记录面(L2节点族::动态));
+static_assert(!L2节点族属于ARCH_L4兼容记录面(L2节点族::因果));
+static_assert(!L2节点族属于ARCH_L4兼容记录面(L2节点族::语言));
+static_assert(!L2节点族属于ARCH_L4兼容记录面(L2节点族::词条));
+static_assert(!L2节点族属于ARCH_L4兼容记录面(L2节点族::概念));
+static_assert(!L2节点族属于ARCH_L4兼容记录面(L2节点族::不可变材料));
 static_assert(L2节点族属于ARCH_L4兼容(L2节点族::方法));
 static_assert(L2节点族属于ARCH_L4兼容(L2节点族::需求));
 static_assert(L2节点族属于ARCH_L4兼容(L2节点族::任务));
@@ -278,15 +298,55 @@ static_assert(!L2节点族属于ARCH_L4兼容(L2节点族::词条));
 static_assert(!L2节点族属于ARCH_L4兼容(L2节点族::概念));
 static_assert(!L2节点族属于ARCH_L4兼容(L2节点族::不可变材料));
 static_assert(!L2节点族属于当前DATA_L2(static_cast<L2节点族>(0)));
+static_assert(!L2节点族属于ARCH_L4兼容记录面(static_cast<L2节点族>(0)));
 static_assert(!L2节点族属于ARCH_L4兼容(static_cast<L2节点族>(0)));
 static_assert(!L2节点族属于当前DATA_L2(static_cast<L2节点族>(255)));
+static_assert(!L2节点族属于ARCH_L4兼容记录面(static_cast<L2节点族>(255)));
 static_assert(!L2节点族属于ARCH_L4兼容(static_cast<L2节点族>(255)));
+static_assert(L2节点族属于ARCH_L4兼容(L2节点族::方法)
+    == L2节点族属于ARCH_L4兼容记录面(L2节点族::方法));
+static_assert(L2节点族属于ARCH_L4兼容(L2节点族::需求)
+    == L2节点族属于ARCH_L4兼容记录面(L2节点族::需求));
+static_assert(L2节点族属于ARCH_L4兼容(L2节点族::任务)
+    == L2节点族属于ARCH_L4兼容记录面(L2节点族::任务));
+static_assert(L2节点族属于ARCH_L4兼容(L2节点族::场景)
+    == L2节点族属于ARCH_L4兼容记录面(L2节点族::场景));
+static_assert(L2节点族属于ARCH_L4兼容(L2节点族::存在)
+    == L2节点族属于ARCH_L4兼容记录面(L2节点族::存在));
+static_assert(L2节点族属于ARCH_L4兼容(L2节点族::特征定义)
+    == L2节点族属于ARCH_L4兼容记录面(L2节点族::特征定义));
+static_assert(L2节点族属于ARCH_L4兼容(L2节点族::特征实例)
+    == L2节点族属于ARCH_L4兼容记录面(L2节点族::特征实例));
+static_assert(L2节点族属于ARCH_L4兼容(L2节点族::状态)
+    == L2节点族属于ARCH_L4兼容记录面(L2节点族::状态));
+static_assert(L2节点族属于ARCH_L4兼容(L2节点族::动态)
+    == L2节点族属于ARCH_L4兼容记录面(L2节点族::动态));
+static_assert(L2节点族属于ARCH_L4兼容(L2节点族::因果)
+    == L2节点族属于ARCH_L4兼容记录面(L2节点族::因果));
+static_assert(L2节点族属于ARCH_L4兼容(L2节点族::语言)
+    == L2节点族属于ARCH_L4兼容记录面(L2节点族::语言));
+static_assert(L2节点族属于ARCH_L4兼容(L2节点族::词条)
+    == L2节点族属于ARCH_L4兼容记录面(L2节点族::词条));
+static_assert(L2节点族属于ARCH_L4兼容(L2节点族::概念)
+    == L2节点族属于ARCH_L4兼容记录面(L2节点族::概念));
+static_assert(L2节点族属于ARCH_L4兼容(L2节点族::不可变材料)
+    == L2节点族属于ARCH_L4兼容记录面(L2节点族::不可变材料));
+static_assert(L2节点族属于ARCH_L4兼容(static_cast<L2节点族>(0))
+    == L2节点族属于ARCH_L4兼容记录面(static_cast<L2节点族>(0)));
+static_assert(L2节点族属于ARCH_L4兼容(static_cast<L2节点族>(255))
+    == L2节点族属于ARCH_L4兼容记录面(static_cast<L2节点族>(255)));
+static_assert(!(L2节点族属于当前DATA_L2(L2节点族::方法)
+    && L2节点族属于ARCH_L4兼容记录面(L2节点族::方法)));
+static_assert(!(L2节点族属于当前DATA_L2(L2节点族::需求)
+    && L2节点族属于ARCH_L4兼容记录面(L2节点族::需求)));
+static_assert(!(L2节点族属于当前DATA_L2(L2节点族::任务)
+    && L2节点族属于ARCH_L4兼容记录面(L2节点族::任务)));
 
 // 诊断责任：无适用错误分支；只判断共同身份来源事实的纯值完整性。
 inline bool L2节点族身份来源事实完整(
     const L2节点族身份来源事实& 来源, std::uint64_t 截止) noexcept {
     const bool 节点族有效 = L2节点族属于当前DATA_L2(来源.节点族)
-        || L2节点族属于ARCH_L4兼容(来源.节点族);
+        || L2节点族属于ARCH_L4兼容记录面(来源.节点族);
     const auto 生命周期适用 = [截止](const L2生命周期& 生命周期) noexcept {
         return L2生命周期完整(生命周期)
             && 生命周期.创建事实代次 <= 截止
