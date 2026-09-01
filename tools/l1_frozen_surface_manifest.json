@@ -2,9 +2,9 @@
   "schema_version": 1,
   "specification": "4080-v1.0",
   "surface_contract_status": "FROZEN",
-  "data_l1_status": "PENDING_ACCEPTANCE",
-  "accepted_commit": null,
-  "acceptance_record": null,
+  "data_l1_status": "FROZEN",
+  "accepted_commit": "f8805cb3d0142aaaacce87b6351b4b7cac1c22c1",
+  "acceptance_record": "验证记录/集成验收/DATA-L1-FINAL-CLOSURE/manifest_v0.3.json",
   "source_module": "海中鱼巣/核心/服务.L1事实基座.ixx",
   "public_operations": {
     "L1事实基座服务": [
