@@ -66,6 +66,9 @@ from pathlib import Path
     "public_operations", "frozen_source_files", "legacy_domain_exceptions",
     "technical_token_exceptions", "forbidden_domain_tokens",
 }
+验收服务名称 = "DATA-L1 通用操作冻结面、三类事实持久恢复与旧格式兼容收口"
+验收上级目标 = "冻结 L1 通用操作全集并使后续存在、场景、特征、需求、任务和方法应用只能组合 L1 能力"
+验收目录段 = ("验证记录", "集成验收", "DATA-L1-FINAL-CLOSURE")
 
 
 def 读取文本(路径: Path) -> str:
@@ -152,6 +155,18 @@ def 读取清单(错误: list[str]) -> dict:
     return 清单
 
 
+def 运行_git(*参数: str) -> tuple[int, str]:
+    结果 = subprocess.run(
+        ["git", "-C", str(根目录), *参数],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    return 结果.returncode, (结果.stdout or 结果.stderr).strip()
+
+
 def 检查状态(清单: dict, 错误: list[str]) -> None:
     状态 = 清单.get("data_l1_status")
     提交 = 清单.get("accepted_commit")
@@ -166,13 +181,80 @@ def 检查状态(清单: dict, 错误: list[str]) -> None:
     if not isinstance(提交, str) or not re.fullmatch(r"[0-9a-f]{40}", 提交):
         错误.append("FROZEN 必须登记 40 位 accepted_commit")
         return
-    if not isinstance(记录, str) or not (根目录 / 记录).is_file():
+    if not isinstance(记录, str) or not 记录.strip():
+        错误.append("FROZEN 必须登记仓库内 acceptance_record")
+        return
+    记录相对路径 = Path(记录)
+    if 记录相对路径.is_absolute() or ".." in 记录相对路径.parts:
+        错误.append("acceptance_record 不得是绝对路径或包含路径穿越")
+        return
+    try:
+        记录路径 = (根目录 / 记录相对路径).resolve()
+        规范相对路径 = 记录路径.relative_to(根目录.resolve())
+    except (OSError, ValueError):
+        错误.append("acceptance_record 解析结果位于仓库外")
+        return
+    if 规范相对路径.parts[:3] != 验收目录段:
+        错误.append("acceptance_record 必须位于 DATA-L1-FINAL-CLOSURE 集成验收目录")
+        return
+    if 记录路径.suffix != ".json":
+        错误.append("acceptance_record 必须是 JSON 清单")
+        return
+    if not 记录路径.is_file():
         错误.append("FROZEN 必须登记存在的 acceptance_record")
         return
-    命令 = [sys.executable, str(根目录 / "tools" / "check_integration_acceptance.py"),
-          "--manifest", str(根目录 / 记录), "--verify-git", "--strict"]
-    if subprocess.run(命令, cwd=根目录, capture_output=True).returncode != 0:
-        错误.append("FROZEN 的独立集成验收记录/commit 未通过检查")
+    try:
+        验收清单 = json.loads(读取文本(记录路径))
+    except (OSError, UnicodeError, json.JSONDecodeError) as 异常:
+        错误.append(f"acceptance_record 无法解析为 JSON: {异常}")
+        return
+    if not isinstance(验收清单, dict):
+        错误.append("acceptance_record 根必须是 JSON 对象")
+        return
+    基线 = 验收清单.get("基线") if isinstance(验收清单.get("基线"), dict) else {}
+    服务 = 验收清单.get("服务切片") if isinstance(验收清单.get("服务切片"), dict) else {}
+    结论 = 验收清单.get("结论") if isinstance(验收清单.get("结论"), dict) else {}
+    if 基线.get("候选提交") != 提交:
+        错误.append("accepted_commit 与 acceptance_record 的候选提交不一致")
+    if 验收清单.get("验收标识") != f"DATA-L1-FINAL-CLOSURE@{提交}":
+        错误.append("acceptance_record 验收标识不属于精确 DATA-L1 候选")
+    if 服务.get("名称") != 验收服务名称:
+        错误.append("acceptance_record 服务切片名称不匹配")
+    if 服务.get("上级目标") != 验收上级目标:
+        错误.append("acceptance_record 上级目标不匹配")
+    if 基线.get("仓库") != ".":
+        错误.append("acceptance_record 基线仓库必须精确为 .")
+    if 基线.get("远端分支") != "origin/main":
+        错误.append("acceptance_record 远端分支必须精确为 origin/main")
+    if 结论.get("类型") != "服务验收通过":
+        错误.append("FROZEN 只能绑定结论为服务验收通过的记录")
+
+    记录git路径 = 规范相对路径.as_posix()
+    退出码, HEAD记录blob = 运行_git("rev-parse", f"HEAD:{记录git路径}")
+    if 退出码 != 0:
+        错误.append("acceptance_record 尚未进入 HEAD")
+    退出码, 远端记录blob = 运行_git("rev-parse", f"origin/main:{记录git路径}")
+    if 退出码 != 0:
+        错误.append("acceptance_record 尚未进入 origin/main")
+    退出码, 工作树记录blob = 运行_git(
+        "hash-object", f"--path={记录git路径}", "--", str(记录路径)
+    )
+    if 退出码 != 0:
+        错误.append("acceptance_record 工作树 Git blob 无法计算")
+    if HEAD记录blob and 远端记录blob and HEAD记录blob != 远端记录blob:
+        错误.append("acceptance_record 在 HEAD 与 origin/main 的 blob 不一致")
+    if HEAD记录blob and 工作树记录blob and HEAD记录blob != 工作树记录blob:
+        错误.append("acceptance_record 工作树字节与已提交 blob 不一致")
+
+    if not 错误:
+        命令 = [sys.executable, str(根目录 / "tools" / "check_integration_acceptance.py"),
+              "--manifest", str(记录路径), "--verify-git", "--strict"]
+        结果 = subprocess.run(命令, cwd=根目录, capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", check=False)
+        if 结果.returncode != 0:
+            摘要 = (结果.stdout or 结果.stderr).strip().splitlines()
+            后缀 = f": {摘要[-1]}" if 摘要 else ""
+            错误.append(f"FROZEN 的独立集成验收记录/commit 未通过检查{后缀}")
 
 
 def 检查操作与指纹(清单: dict, 错误: list[str]) -> None:
@@ -287,17 +369,70 @@ def 检查领域例外(清单: dict, 错误: list[str]) -> None:
 def 检查规范与生产边界(清单: dict, 错误: list[str]) -> None:
     规范4080 = 读取文本(根目录 / "规范" / "4080_子规范_DATA-L1通用操作全集与冻结门禁.md")
     目录 = 读取文本(根目录 / "规范" / "规范目录.md")
-    if "DATA-L1 通用操作全集 / 目标公开合同状态 = FROZEN" not in 规范4080:
-        错误.append("4080 未冻结通用操作/目标公开合同")
-    预期整体 = f"DATA-L1 整体能力状态 = {清单.get('data_l1_status')}"
-    if 预期整体 not in 规范4080:
-        错误.append("4080 整体状态与冻结清单不一致")
+    状态 = 清单.get("data_l1_status")
+    节匹配 = re.search(
+        r"(?ms)^## 1\. 定位与冻结状态\s*$\n(?P<正文>.*?)(?=^##\s)",
+        规范4080,
+    )
+    if not 节匹配:
+        错误.append("4080 缺少唯一第 1 节当前冻结状态")
+    else:
+        节正文 = 节匹配.group("正文")
+        状态块组 = [
+            块 for 块 in re.findall(r"(?ms)^```text\s*$\n(.*?)^```\s*$", 节正文)
+            if "DATA-L1 通用操作全集 / 目标公开合同状态" in 块
+            or "DATA-L1 整体能力状态" in 块
+        ]
+        if len(状态块组) != 1:
+            错误.append("4080 第 1 节必须恰有一个当前状态代码块")
+        else:
+            状态块 = 状态块组[0]
+            合同行 = "DATA-L1 通用操作全集 / 目标公开合同状态 = FROZEN"
+            整体行 = f"DATA-L1 整体能力状态 = {状态}"
+            if len(re.findall(rf"(?m)^{re.escape(合同行)}\s*$", 状态块)) != 1:
+                错误.append("4080 当前状态块未唯一冻结通用操作/目标公开合同")
+            if len(re.findall(rf"(?m)^{re.escape(整体行)}\s*$", 状态块)) != 1:
+                错误.append("4080 当前状态块的整体状态与冻结清单不一致")
+
+    目录4080行 = re.findall(r"(?m)^\|\s*4080\s*\|[^\r\n]*$", 目录)
+    if len(目录4080行) != 1:
+        错误.append("规范目录必须恰有一个 4080 当前表格行")
+    else:
+        预期摘要 = f"目标合同 FROZEN，整体 {状态}"
+        相反状态 = "FROZEN" if 状态 == "PENDING_ACCEPTANCE" else "PENDING_ACCEPTANCE"
+        if 预期摘要 not in 目录4080行[0] or f"整体 {相反状态}" in 目录4080行[0]:
+            错误.append("规范目录 4080 当前行与冻结清单状态不一致")
+
+    完整性段落组: list[str] = []
+    for 段落 in re.split(r"\n\s*\n", 目录):
+        首行 = 段落.strip().splitlines()[0] if 段落.strip() else ""
+        首行 = re.sub(r"^>\s*", "", 首行)
+        if 首行.startswith("20260901 DATA-L1 最终收口"):
+            完整性段落组.append(段落)
+    if len(完整性段落组) != 1:
+        错误.append("规范目录必须恰有一个 DATA-L1 最终收口当前完整性段落")
+    else:
+        完整性段落 = 完整性段落组[0]
+        if 状态 == "PENDING_ACCEPTANCE":
+            if "保持 `PENDING_ACCEPTANCE`" not in 完整性段落:
+                错误.append("DATA-L1 当前完整性段落未明确保持 PENDING_ACCEPTANCE")
+        elif 状态 == "FROZEN":
+            已冻结 = re.search(
+                r"整体(?:(?!。).){0,300}(?:已|升级)(?:(?!。).){0,300}`FROZEN`",
+                完整性段落,
+                flags=re.DOTALL,
+            )
+            if not 已冻结 or "PENDING_ACCEPTANCE" in 完整性段落:
+                错误.append("DATA-L1 当前完整性段落未明确升级为 FROZEN")
+            if str(清单.get("accepted_commit")) not in 完整性段落:
+                错误.append("DATA-L1 当前完整性段落缺少 accepted_commit")
+            if str(清单.get("acceptance_record")) not in 完整性段落:
+                错误.append("DATA-L1 当前完整性段落缺少 acceptance_record")
     for 片段 in (
         "4015_子规范_L1简化事实基座.md",
         "4070_子规范_权威结构快照恢复候选与运行期原子发布.md",
         "4080_子规范_DATA-L1通用操作全集与冻结门禁.md",
         "有限 N 分区原子事务 v3",
-        "目标合同 FROZEN，整体 PENDING_ACCEPTANCE",
     ):
         if 片段 not in 目录:
             错误.append(f"规范目录缺少冻结摘要: {片段}")

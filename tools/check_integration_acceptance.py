@@ -7,8 +7,10 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 import subprocess
 import sys
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -357,21 +359,32 @@ def 验证_git(清单: dict[str, Any]) -> list[检查项]:
     if not 仓库.is_dir():
         return [检查项("基线.仓库", f"仓库目录不存在: {仓库}")]
     退出码, _ = 运行_git(仓库, "cat-file", "-e", f"{候选}^{{commit}}")
-    if 退出码 != 0:
+    候选存在 = 退出码 == 0
+    if not 候选存在:
         加错误(错误, "基线.候选提交", "本地 Git 中不存在该提交")
-    退出码, _ = 运行_git(仓库, "merge-base", "--is-ancestor", 候选, 远端分支)
-    if 退出码 != 0:
-        加错误(错误, "基线.远端分支", "远端分支不包含候选提交")
-    退出码, 实际远端 = 运行_git(仓库, "rev-parse", 远端分支)
-    if 退出码 != 0:
+    退出码, _ = 运行_git(仓库, "cat-file", "-e", f"{记录远端}^{{commit}}")
+    记录远端存在 = 退出码 == 0
+    if not 记录远端存在:
+        加错误(错误, "基线.远端提交", "本地 Git 中不存在该提交")
+    退出码, 当前远端 = 运行_git(仓库, "rev-parse", f"{远端分支}^{{commit}}")
+    远端分支存在 = 退出码 == 0
+    if not 远端分支存在:
         加错误(错误, "基线.远端分支", "本地 Git 中不存在记录的远端分支")
-    elif 实际远端.lower() != 记录远端.lower():
-        加错误(错误, "基线.远端提交", f"与当前远端跟踪引用不一致，实际 {实际远端}")
+    if 候选存在 and 记录远端存在:
+        退出码, _ = 运行_git(仓库, "merge-base", "--is-ancestor", 候选, 记录远端)
+        if 退出码 != 0:
+            加错误(错误, "基线.远端提交", "记录远端提交不包含候选提交")
+    if 记录远端存在 and 远端分支存在:
+        退出码, _ = 运行_git(仓库, "merge-base", "--is-ancestor", 记录远端, 当前远端)
+        if 退出码 != 0:
+            加错误(错误, "基线.远端分支", "当前远端分支不包含记录远端提交")
     for 序号, 项 in enumerate(取列表(基线, "输入文件")):
         if not isinstance(项, dict):
             continue
         路径 = str(项.get("路径", ""))
         预期 = str(项.get("blob", ""))
+        if not 候选存在:
+            continue
         退出码, 实际 = 运行_git(仓库, "rev-parse", f"{候选}:{路径}")
         if 退出码 != 0:
             加错误(错误, f"基线.输入文件[{序号}]", "候选提交中不存在该路径")
@@ -492,7 +505,97 @@ def 自检() -> int:
         print("自检失败：入口巡检结论未阻止零入口覆盖")
         return 1
 
-    print("集成验收清单检查器自检: 通过")
+    临时根 = Path("D:/TEMP/海中鱼巣/DATA-L1-FINAL-CLOSURE") / f"integration-self-test-{uuid.uuid4().hex}"
+    try:
+        临时根.mkdir(parents=True)
+
+        def 必须_git(*参数: str) -> str:
+            退出码, 输出 = 运行_git(临时根, *参数)
+            if 退出码 != 0:
+                raise RuntimeError(f"git {' '.join(参数)}: {输出}")
+            return 输出
+
+        必须_git("init", "-q")
+        必须_git("config", "user.name", "DATA-L1 checker")
+        必须_git("config", "user.email", "data-l1-checker@example.invalid")
+        (临时根 / "input.txt").write_text("candidate\n", encoding="utf-8")
+        必须_git("add", "--", "input.txt")
+        必须_git("commit", "-q", "-m", "candidate A")
+        候选甲 = 必须_git("rev-parse", "HEAD")
+        输入blob = 必须_git("rev-parse", f"{候选甲}:input.txt")
+        (临时根 / "record-anchor.txt").write_text("recorded remote\n", encoding="utf-8")
+        必须_git("add", "--", "record-anchor.txt")
+        必须_git("commit", "-q", "-m", "recorded remote R")
+        记录远端甲 = 必须_git("rev-parse", "HEAD")
+        候选树 = 必须_git("rev-parse", f"{候选甲}^{{tree}}")
+        非祖先提交 = 必须_git("commit-tree", 候选树, "-m", "unrelated B")
+        (临时根 / "governance.txt").write_text("later governance\n", encoding="utf-8")
+        必须_git("add", "--", "governance.txt")
+        必须_git("commit", "-q", "-m", "later governance G")
+        后继治理 = 必须_git("rev-parse", "HEAD")
+
+        Git清单 = json.loads(json.dumps(有效, ensure_ascii=False))
+        Git清单["基线"].update({
+            "仓库": str(临时根),
+            "候选提交": 候选甲,
+            "远端分支": "origin/main",
+            "远端提交": 记录远端甲,
+            "输入文件": [{"路径": "input.txt", "blob": 输入blob}],
+        })
+
+        def 预期_git(名称: str, 清单: dict[str, Any], 错误路径: str | None) -> bool:
+            实际错误 = 验证_git(清单)
+            if 错误路径 is None and 实际错误:
+                print(f"自检失败：{名称} 被拒绝: {实际错误}")
+                return False
+            if 错误路径 is not None and not any(项.路径 == 错误路径 for 项 in 实际错误):
+                print(f"自检失败：{名称} 未命中 {错误路径}: {实际错误}")
+                return False
+            return True
+
+        必须_git("update-ref", "refs/remotes/origin/main", 记录远端甲)
+        if not 预期_git("A <= R <= origin/main", Git清单, None):
+            return 1
+        必须_git("update-ref", "refs/remotes/origin/main", 后继治理)
+        if not 预期_git("远端从 R 推进到 G", Git清单, None):
+            return 1
+
+        变体 = json.loads(json.dumps(Git清单, ensure_ascii=False))
+        变体["基线"]["候选提交"] = "f" * 40
+        if not 预期_git("候选不存在", 变体, "基线.候选提交"):
+            return 1
+        变体 = json.loads(json.dumps(Git清单, ensure_ascii=False))
+        变体["基线"]["远端提交"] = "e" * 40
+        if not 预期_git("记录远端不存在", 变体, "基线.远端提交"):
+            return 1
+        变体 = json.loads(json.dumps(Git清单, ensure_ascii=False))
+        变体["基线"]["远端分支"] = "origin/missing"
+        if not 预期_git("远端分支不存在", 变体, "基线.远端分支"):
+            return 1
+        必须_git("update-ref", "refs/remotes/origin/main", 非祖先提交)
+        变体 = json.loads(json.dumps(Git清单, ensure_ascii=False))
+        变体["基线"]["远端提交"] = 非祖先提交
+        if not 预期_git("候选不在记录远端历史", 变体, "基线.远端提交"):
+            return 1
+        变体 = json.loads(json.dumps(Git清单, ensure_ascii=False))
+        if not 预期_git("记录远端不在当前远端历史", 变体, "基线.远端分支"):
+            return 1
+        必须_git("update-ref", "refs/remotes/origin/main", 后继治理)
+        变体 = json.loads(json.dumps(Git清单, ensure_ascii=False))
+        变体["基线"]["输入文件"][0]["路径"] = "missing.txt"
+        if not 预期_git("输入路径不存在", 变体, "基线.输入文件[0]"):
+            return 1
+        变体 = json.loads(json.dumps(Git清单, ensure_ascii=False))
+        变体["基线"]["输入文件"][0]["blob"] = "d" * 40
+        if not 预期_git("输入 blob 不同", 变体, "基线.输入文件[0].blob"):
+            return 1
+    except (OSError, RuntimeError) as 异常:
+        print(f"自检失败：Git 耐久性矩阵无法执行: {异常}")
+        return 1
+    finally:
+        shutil.rmtree(临时根, ignore_errors=True)
+
+    print("集成验收清单检查器自检: 通过（含 9 项 Git 耐久性正负例）")
     return 0
 
 
