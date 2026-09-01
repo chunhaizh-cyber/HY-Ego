@@ -215,15 +215,6 @@
     <ClCompile Include="海中鱼巣\业务\提供者.安全根生产定义初始化.ixx" />
     <ClCompile Include="海中鱼巣\线程\创建.自我线程.ixx" />
     <ClCompile Include="海中鱼巣\线程\运行包.任务结果生产.ixx" />
-    <ClCompile Include="海中鱼巣\端到端测试.需求服务.ixx" />
-    <ClCompile Include="海中鱼巣\端到端测试.自我治理一致事实.ixx" />
-    <ClCompile Include="海中鱼巣\端到端测试.L1事实基座持久恢复.ixx" />
-    <ClCompile Include="海中鱼巣\端到端测试.本能路线阶段二.ixx" />
-    <ClCompile Include="海中鱼巣\端到端测试.DATA-L1有限N分区原子事务.ixx" />
-    <ClCompile Include="海中鱼巣\端到端测试.本能UTC时间证据.ixx" />
-    <ClCompile Include="海中鱼巣\端到端测试.安全根定义与当前值.ixx" />
-    <ClCompile Include="海中鱼巣\端到端测试.安全根生产定义初始化.ixx" />
-    <ClCompile Include="海中鱼巣\端到端测试.任务现实执行硬否决规则宇宙.ixx" />
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务特征方法查找与条件提议.ixx" />
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务筹办当前就绪与执行冻结.ixx" />
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务目标未达成重筹办触发.ixx" />

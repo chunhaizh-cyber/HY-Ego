@@ -17,6 +17,9 @@ from pathlib import Path
 根目录 = Path(__file__).resolve().parents[1]
 清单路径 = 根目录 / "tools" / "l1_frozen_surface_manifest.json"
 服务路径 = 根目录 / "海中鱼巣" / "核心" / "服务.L1事实基座.ixx"
+生产入口路径 = 根目录 / "海中鱼巣" / "入口.cpp"
+生产工程路径 = 根目录 / "海中鱼巣.vcxproj"
+生产工程筛选器路径 = 根目录 / "海中鱼巣.vcxproj.filters"
 冻结路径 = (
     "海中鱼巣/核心/服务.L1事实基座.ixx",
     "海中鱼巣/核心/L1公共事实.数据.h",
@@ -76,6 +79,60 @@ def 规范字节(路径: Path) -> bytes:
 def 去注释与字符串(文本: str) -> str:
     return re.sub(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"', " ", 文本,
                   flags=re.DOTALL)
+
+
+def 去注释保留字符串(文本: str) -> str:
+    """删除 C++ 注释但保留字符串/字符字面量，供生产入口开关检查。"""
+    结果: list[str] = []
+    位置 = 0
+    状态 = "代码"
+    while 位置 < len(文本):
+        当前 = 文本[位置]
+        后继 = 文本[位置 + 1] if 位置 + 1 < len(文本) else ""
+        if 状态 == "代码":
+            if 当前 == "/" and 后继 == "/":
+                结果.extend((" ", " "))
+                位置 += 2
+                状态 = "行注释"
+                continue
+            if 当前 == "/" and 后继 == "*":
+                结果.extend((" ", " "))
+                位置 += 2
+                状态 = "块注释"
+                continue
+            结果.append(当前)
+            if 当前 == '"':
+                状态 = "字符串"
+            elif 当前 == "'":
+                状态 = "字符"
+            位置 += 1
+            continue
+        if 状态 == "行注释":
+            if 当前 == "\n":
+                结果.append("\n")
+                状态 = "代码"
+            else:
+                结果.append(" ")
+            位置 += 1
+            continue
+        if 状态 == "块注释":
+            if 当前 == "*" and 后继 == "/":
+                结果.extend((" ", " "))
+                位置 += 2
+                状态 = "代码"
+            else:
+                结果.append("\n" if 当前 == "\n" else " ")
+                位置 += 1
+            continue
+        结果.append(当前)
+        if 当前 == "\\" and 后继:
+            结果.append(后继)
+            位置 += 2
+            continue
+        if (状态 == "字符串" and 当前 == '"') or (状态 == "字符" and 当前 == "'"):
+            状态 = "代码"
+        位置 += 1
+    return "".join(结果)
 
 
 def 读取清单(错误: list[str]) -> dict:
@@ -275,8 +332,43 @@ def 检查规范与生产边界(清单: dict, 错误: list[str]) -> None:
         错误.append(f"许可拒绝出现位置/次数变化: {实际许可}")
 
 
+def 检查生产目标测试隔离(错误: list[str]) -> None:
+    文本组: dict[str, str] = {}
+    for 名称, 路径 in (
+        ("生产入口", 生产入口路径),
+        ("生产工程", 生产工程路径),
+        ("生产工程筛选器", 生产工程筛选器路径),
+    ):
+        try:
+            文本组[名称] = 读取文本(路径)
+        except (OSError, UnicodeError) as 异常:
+            错误.append(f"{名称}无法读取: {异常}")
+
+    入口 = 文本组.get("生产入口")
+    if 入口 is not None:
+        有效入口 = 去注释保留字符串(入口)
+        if re.search(r"\bimport\s+海中鱼巣\.端到端测试\.[^;\s]+\s*;", 有效入口):
+            错误.append("生产入口不得 import 端到端测试模块")
+        if re.search(r'"(?:\\.|[^"\\])*--test-[^"\\]*"', 有效入口):
+            错误.append("生产入口不得保留 --test-* 字符串开关")
+
+    工程项模式 = re.compile(
+        r'<ClCompile\b[^>]*\bInclude\s*=\s*["\'][^"\']*端到端测试\.[^"\']*["\'][^>]*>',
+        flags=re.IGNORECASE,
+    )
+    for 名称 in ("生产工程", "生产工程筛选器"):
+        文本 = 文本组.get(名称)
+        if 文本 is None:
+            continue
+        有效工程 = re.sub(r"<!--.*?-->", " ", 文本, flags=re.DOTALL)
+        命中 = 工程项模式.findall(有效工程)
+        if 命中:
+            错误.append(f"{名称}不得登记端到端测试 ClCompile 项: {len(命中)}")
+
+
 def 检查冻结面() -> list[str]:
     错误: list[str] = []
+    检查生产目标测试隔离(错误)
     清单 = 读取清单(错误)
     if not 清单:
         return 错误

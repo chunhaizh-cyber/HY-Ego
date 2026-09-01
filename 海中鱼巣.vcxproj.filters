@@ -240,33 +240,6 @@
     <ClCompile Include="海中鱼巣\入口.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\端到端测试.需求服务.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\端到端测试.自我治理一致事实.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\端到端测试.L1事实基座持久恢复.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\端到端测试.本能路线阶段二.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\端到端测试.DATA-L1有限N分区原子事务.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\端到端测试.本能UTC时间证据.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\端到端测试.安全根定义与当前值.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\端到端测试.安全根生产定义初始化.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\端到端测试.任务现实执行硬否决规则宇宙.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务特征方法查找与条件提议.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
