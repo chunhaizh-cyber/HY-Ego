@@ -3499,6 +3499,12 @@ private:
         成功 = 1, 资源失败 = 2, 内部不一致 = 3, 持久证据未知 = 4
     };
 
+    enum class 权威载荷解码状态 : std::uint8_t {
+        成功 = 1,
+        格式不支持 = 2,
+        材料非法 = 3
+    };
+
     struct 持久会话 final {
         std::filesystem::path 根;
         HANDLE 锁句柄 = INVALID_HANDLE_VALUE;
@@ -4204,23 +4210,27 @@ private:
         写可选(出, 值.旧共享所有者定位, [](auto& e,auto v){写(e,v);}); return std::move(出.字节);
     }
 
-    static bool 解码权威状态(const std::vector<std::uint8_t>& 字节, 状态& 值) {
+    static 权威载荷解码状态 解码权威状态(
+        const std::vector<std::uint8_t>& 字节, 状态& 值) {
         规范解码器 入{字节}; std::uint64_t magic{}; std::uint32_t 版本{};
-        if(!入.U64(magic)||magic!=0x3150414E534C3148ULL||!入.U32(版本)
-            ||(版本!=1&&版本!=2&&版本!=3)||!入.U64(值.事实代次)||!入.U64(值.下个编码))return false;
+        if (!入.U64(magic) || magic != 0x3150414E534C3148ULL
+            || !入.U32(版本) || (版本 != 1 && 版本 != 2 && 版本 != 3))
+            return 权威载荷解码状态::格式不支持;
+        if (!入.U64(值.事实代次) || !入.U64(值.下个编码))
+            return 权威载荷解码状态::材料非法;
         if(!读有序表(入,值.当前所有者,[](auto&d,auto&v){return 读(d,v);})||!读有序表(入,值.历史所有者,[](auto&d,auto&v){return 读(d,v);})
             ||!读有序表(入,值.当前节点,[](auto&d,auto&v){return 读(d,v);})||!读有序表(入,值.当前关系,[](auto&d,auto&v){return 读(d,v);})
-            ||!读有序表(入,值.当前值,[](auto&d,auto&v){return 读(d,v);})||!读有序表(入,值.历史,[](auto&d,auto&v){return 读(d,v);}))return false;
-        std::vector<std::uint64_t> 占用;if(!读组(入,占用,[](auto&d,auto&v){return d.U64(v);}))return false;std::uint64_t 前{};for(auto k:占用){if(!k||k<=前||!值.永久占用.insert(k).second)return false;前=k;}
-        if(!读有序表(入,值.物理清理墓碑,[](auto&d,auto&v){return 读(d,v);}))return false;
+            ||!读有序表(入,值.当前值,[](auto&d,auto&v){return 读(d,v);})||!读有序表(入,值.历史,[](auto&d,auto&v){return 读(d,v);}))return 权威载荷解码状态::材料非法;
+        std::vector<std::uint64_t> 占用;if(!读组(入,占用,[](auto&d,auto&v){return d.U64(v);}))return 权威载荷解码状态::材料非法;std::uint64_t 前{};for(auto k:占用){if(!k||k<=前||!值.永久占用.insert(k).second)return 权威载荷解码状态::材料非法;前=k;}
+        if(!读有序表(入,值.物理清理墓碑,[](auto&d,auto&v){return 读(d,v);}))return 权威载荷解码状态::材料非法;
         if(!读有序表(入,值.物理清理幂等账,[](auto&d,auto&v){
             if(!d.U32(v.首次规范请求.合同版本)||!d.U64(v.首次规范请求.期望事实代次)||!d.U64(v.首次规范请求.幂等身份.值)
                 ||!读组(d,v.首次规范请求.待清理事实身份组,[](auto&x,auto&y){return 读(x,y);})||!读枚举(d,v.首次状态,10)||!d.U64(v.首次物理清理事实代次)
-                ||!读组(d,v.首次稳定编码映射,[](auto&x,auto&y){return 读(x,y.first)&&读(x,y.second);})||!d.布尔(v.已物理清理))return false;return true;}))return false;
-        std::uint64_t 数{};if(!入.U64(数)||数>入.字节.size()-入.位置)return false;for(std::uint64_t i=0,prev=0;i!=数;++i){std::uint64_t k{};中性幂等记录 v;if(!入.U64(k)||(i&&k<=prev)||是进程维护幂等键(k)||!读(入,v.首次规范化写集)||!入.U64(v.首次发布事实代次)||!读组(入,v.首次新编码映射,[](auto&d,auto&x){return 读(d,x.first)&&读(d,x.second);})||!读(入,v.首次结果)||!值.中性幂等账.emplace(k,std::move(v)).second)return false;prev=k;}
-        if(!读有序表(入,值.所有者建立幂等账,[](auto&d,auto&v){return 读(d,v.首次请求)&&读(d,v.首次结果);}))return false;
-        if(!入.U64(数)||数>入.字节.size()-入.位置)return false;for(std::uint64_t i=0,prev=0;i!=数;++i){std::uint64_t ok{},inner{};if(!入.U64(ok)||(i&&ok<=prev)||!入.U64(inner)||inner>入.字节.size()-入.位置)return false;auto&表=值.所有者范围幂等账[ok];for(std::uint64_t j=0,p=0;j!=inner;++j){std::uint64_t k{};所有者范围幂等记录 v;if(!入.U64(k)||(j&&k<=p)||是进程维护幂等键(k)||!读(入,v.首次规范化写集)||!入.U64(v.首次发布事实代次)||!读组(入,v.首次新编码映射,[](auto&d,auto&x){return 读(d,x.first)&&读(d,x.second);})||!读(入,v.首次结果)||!表.emplace(k,std::move(v)).second)return false;p=k;}prev=ok;}
-        if (!入.U64(数) || 数 > 入.字节.size() - 入.位置) return false;
+                ||!读组(d,v.首次稳定编码映射,[](auto&x,auto&y){return 读(x,y.first)&&读(x,y.second);})||!d.布尔(v.已物理清理))return false;return true;}))return 权威载荷解码状态::材料非法;
+        std::uint64_t 数{};if(!入.U64(数)||数>入.字节.size()-入.位置)return 权威载荷解码状态::材料非法;for(std::uint64_t i=0,prev=0;i!=数;++i){std::uint64_t k{};中性幂等记录 v;if(!入.U64(k)||(i&&k<=prev)||是进程维护幂等键(k)||!读(入,v.首次规范化写集)||!入.U64(v.首次发布事实代次)||!读组(入,v.首次新编码映射,[](auto&d,auto&x){return 读(d,x.first)&&读(d,x.second);})||!读(入,v.首次结果)||!值.中性幂等账.emplace(k,std::move(v)).second)return 权威载荷解码状态::材料非法;prev=k;}
+        if(!读有序表(入,值.所有者建立幂等账,[](auto&d,auto&v){return 读(d,v.首次请求)&&读(d,v.首次结果);}))return 权威载荷解码状态::材料非法;
+        if(!入.U64(数)||数>入.字节.size()-入.位置)return 权威载荷解码状态::材料非法;for(std::uint64_t i=0,prev=0;i!=数;++i){std::uint64_t ok{},inner{};if(!入.U64(ok)||(i&&ok<=prev)||!入.U64(inner)||inner>入.字节.size()-入.位置)return 权威载荷解码状态::材料非法;auto&表=值.所有者范围幂等账[ok];for(std::uint64_t j=0,p=0;j!=inner;++j){std::uint64_t k{};所有者范围幂等记录 v;if(!入.U64(k)||(j&&k<=p)||是进程维护幂等键(k)||!读(入,v.首次规范化写集)||!入.U64(v.首次发布事实代次)||!读组(入,v.首次新编码映射,[](auto&d,auto&x){return 读(d,x.first)&&读(d,x.second);})||!读(入,v.首次结果)||!表.emplace(k,std::move(v)).second)return 权威载荷解码状态::材料非法;p=k;}prev=ok;}
+        if (!入.U64(数) || 数 > 入.字节.size() - 入.位置) return 权威载荷解码状态::材料非法;
         std::uint64_t 前一事务键 = 0;
         for (std::uint64_t i = 0; i != 数; ++i) {
             std::uint64_t 键{};
@@ -4230,11 +4240,11 @@ private:
                 || 是进程维护跨所有者原子事务(键, 账)
                 || !值.跨所有者原子事务幂等账.emplace(
                     键, std::move(账)).second)
-                return false;
+                return 权威载荷解码状态::材料非法;
             前一事务键 = 键;
         }
         if (版本 >= 2) {
-            if (!入.U64(数) || 数 > 入.字节.size() - 入.位置) return false;
+            if (!入.U64(数) || 数 > 入.字节.size() - 入.位置) return 权威载荷解码状态::材料非法;
             std::uint64_t 前一三分区键 = 0;
             for (std::uint64_t i = 0; i != 数; ++i) {
                 std::uint64_t 键{};
@@ -4244,12 +4254,12 @@ private:
                     || 是进程维护三分区原子事务_v2(键, 账)
                     || !值.三分区原子事务幂等账_v2.emplace(
                         键, std::move(账)).second)
-                    return false;
+                    return 权威载荷解码状态::材料非法;
                 前一三分区键 = 键;
             }
         }
         if (版本 == 3) {
-            if (!入.U64(数) || 数 > 入.字节.size() - 入.位置) return false;
+            if (!入.U64(数) || 数 > 入.字节.size() - 入.位置) return 权威载荷解码状态::材料非法;
             std::uint64_t 前一有限N分区键 = 0;
             for (std::uint64_t i = 0; i != 数; ++i) {
                 std::uint64_t 键{};
@@ -4260,14 +4270,16 @@ private:
                     || 是进程维护有限N分区原子事务_v3(键, 账)
                     || !值.有限N分区原子事务幂等账_v3.emplace(
                         键, std::move(账)).second)
-                    return false;
+                    return 权威载荷解码状态::材料非法;
                 前一有限N分区键 = 键;
             }
         }
         if (!读可选(入,值.旧共享所有者定位,
                 [](auto&d,auto&v){return 读(d,v);}) || !入.完结())
-            return false;
-        return 重建恢复索引(值);
+            return 权威载荷解码状态::材料非法;
+        return 重建恢复索引(值)
+            ? 权威载荷解码状态::成功
+            : 权威载荷解码状态::材料非法;
     }
 
     static bool 重建恢复索引(状态& 值) {
@@ -4319,7 +4331,7 @@ private:
             if(!有清单){if(有A||有B)return 失败(L1事实基座核心持久恢复状态::材料不完整);持久会话_=std::move(会话);return 失败(L1事实基座核心持久恢复状态::已建立空仓);}
             std::vector<std::uint8_t> 清单; if(!读文件(清单路径,清单))return 失败(L1事实基座核心持久恢复状态::资源失败);std::uint64_t 序号{},代次{},长度{};std::uint8_t 活动槽{};std::array<std::uint8_t,32>摘要{};if(!解码清单(清单,序号,代次,活动槽,长度,摘要))return 失败(L1事实基座核心持久恢复状态::格式不支持);
             const auto 活动路径=活动槽==1?槽A:槽B;if(!std::filesystem::exists(活动路径,ec)||ec)return 失败(ec?L1事实基座核心持久恢复状态::资源失败:L1事实基座核心持久恢复状态::材料不完整);std::vector<std::uint8_t>载荷;if(!读文件(活动路径,载荷))return 失败(L1事实基座核心持久恢复状态::资源失败);if(载荷.size()!=长度)return 失败(L1事实基座核心持久恢复状态::摘要不一致);std::array<std::uint8_t,32>实际{};if(!SHA256(载荷,实际))return 失败(L1事实基座核心持久恢复状态::资源失败);if(实际!=摘要)return 失败(L1事实基座核心持久恢复状态::摘要不一致);
-            状态 候选;if(!解码权威状态(载荷,候选))return 失败(L1事实基座核心持久恢复状态::编码或所有者冲突);if(候选.事实代次!=代次)return 失败(L1事实基座核心持久恢复状态::事实代次漂移);if(!状态完整(候选))return 失败(L1事实基座核心持久恢复状态::内部不一致);会话->快照序号=序号;会话->活动槽=活动槽;std::swap(状态_,候选);持久会话_=std::move(会话);return {L1事实基座核心持久恢复状态::已恢复,L1事实基座核心持久恢复见证{1,序号,代次,摘要}};
+            状态 候选;const auto 解码状态=解码权威状态(载荷,候选);if(解码状态==权威载荷解码状态::格式不支持)return 失败(L1事实基座核心持久恢复状态::格式不支持);if(解码状态!=权威载荷解码状态::成功)return 失败(L1事实基座核心持久恢复状态::编码或所有者冲突);if(候选.事实代次!=代次)return 失败(L1事实基座核心持久恢复状态::事实代次漂移);if(!状态完整(候选))return 失败(L1事实基座核心持久恢复状态::内部不一致);会话->快照序号=序号;会话->活动槽=活动槽;std::swap(状态_,候选);持久会话_=std::move(会话);return {L1事实基座核心持久恢复状态::已恢复,L1事实基座核心持久恢复见证{1,序号,代次,摘要}};
         }catch(const std::bad_alloc&){return 失败(L1事实基座核心持久恢复状态::资源失败);}catch(const std::filesystem::filesystem_error&){return 失败(L1事实基座核心持久恢复状态::资源失败);}catch(...){return 失败(L1事实基座核心持久恢复状态::内部不一致);}
     }
 

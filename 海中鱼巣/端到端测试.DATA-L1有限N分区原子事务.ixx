@@ -5,10 +5,13 @@ module;
 #define NOMINMAX
 #endif
 #include <windows.h>
+#include <bcrypt.h>
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -17,6 +20,8 @@ module;
 #include <utility>
 #include <variant>
 #include <vector>
+
+#pragma comment(lib, "bcrypt.lib")
 
 export module 海中鱼巣.端到端测试.DATA_L1有限N分区原子事务;
 
@@ -151,6 +156,209 @@ bool 正式读回全部节点(const L1事实基座运行包& 运行包,
         if (!节点 || 节点->写入所有者 != 参与者.所有者
             || 节点->创建事实代次 != 写入.共同事实代次)
             return false;
+    }
+    return true;
+}
+
+std::optional<std::array<std::uint8_t, 32>> SHA256文件(
+    const std::filesystem::path& 路径) {
+    BCRYPT_ALG_HANDLE 算法 = nullptr;
+    BCRYPT_HASH_HANDLE 哈希 = nullptr;
+    std::vector<std::uint8_t> 对象;
+    std::array<std::uint8_t, 32> 摘要{};
+    const auto 收尾 = [&]() noexcept {
+        if (哈希) BCryptDestroyHash(哈希);
+        if (算法) BCryptCloseAlgorithmProvider(算法, 0);
+    };
+    DWORD 对象长度 = 0, 摘要长度 = 0, 返回长度 = 0;
+    if (BCryptOpenAlgorithmProvider(&算法, BCRYPT_SHA256_ALGORITHM,
+            nullptr, 0) < 0
+        || BCryptGetProperty(算法, BCRYPT_OBJECT_LENGTH,
+            reinterpret_cast<PUCHAR>(&对象长度), sizeof(对象长度),
+            &返回长度, 0) < 0
+        || BCryptGetProperty(算法, BCRYPT_HASH_LENGTH,
+            reinterpret_cast<PUCHAR>(&摘要长度), sizeof(摘要长度),
+            &返回长度, 0) < 0 || 摘要长度 != 摘要.size()) {
+        收尾(); return std::nullopt;
+    }
+    对象.resize(对象长度);
+    if (BCryptCreateHash(算法, &哈希, 对象.data(), 对象长度,
+            nullptr, 0, 0) < 0) {
+        收尾(); return std::nullopt;
+    }
+    std::ifstream 输入(路径, std::ios::binary);
+    std::array<char, 8192> 缓冲{};
+    while (输入) {
+        输入.read(缓冲.data(), 缓冲.size());
+        const auto 数量 = 输入.gcount();
+        if (数量 > 0 && BCryptHashData(哈希,
+                reinterpret_cast<PUCHAR>(缓冲.data()),
+                static_cast<ULONG>(数量), 0) < 0) {
+            收尾(); return std::nullopt;
+        }
+    }
+    if (!输入.eof() || BCryptFinishHash(哈希, 摘要.data(),
+            static_cast<ULONG>(摘要.size()), 0) < 0) {
+        收尾(); return std::nullopt;
+    }
+    收尾();
+    return 摘要;
+}
+
+std::string 十六进制(const std::array<std::uint8_t, 32>& 摘要) {
+    static constexpr char 数字[] = "0123456789abcdef";
+    std::string 结果;
+    结果.reserve(64);
+    for (const auto 字节 : 摘要) {
+        结果.push_back(数字[字节 >> 4]);
+        结果.push_back(数字[字节 & 0x0f]);
+    }
+    return 结果;
+}
+
+bool 验证fixture来源(const std::filesystem::path& 源,
+    const char* 提交) {
+    std::ifstream 输入(源 / L"provenance.json", std::ios::binary);
+    const std::string 来源文本((std::istreambuf_iterator<char>(输入)), {});
+    if (来源文本.empty() || 来源文本.find(提交) == std::string::npos)
+        return false;
+    for (const auto* 文件 : {L"manifest.bin", L"snapshot-a.bin", L"snapshot-b.bin"}) {
+        const auto 摘要 = SHA256文件(源 / 文件);
+        if (!摘要 || 来源文本.find(十六进制(*摘要))
+                == std::string::npos)
+            return false;
+    }
+    return true;
+}
+
+bool 验证旧格式三类事实(const L1事实基座运行包& 运行包) {
+    const auto& 读 = 运行包.读取服务();
+    for (const std::uint64_t 编码 : {2, 3, 4, 5}) {
+        const auto 结果 = 读.读取所有者范围当前节点(
+            {L1所有者范围CRUD合同版本, {{编码}}});
+        if (结果.状态 != L1所有者范围读取状态::成功 || !结果.事实)
+            return false;
+    }
+    const auto 关系 = 读.读取所有者范围当前关系(
+        {L1所有者范围CRUD合同版本, {{8}}});
+    const auto 值 = 读.读取所有者范围当前值(
+        {L1所有者范围CRUD合同版本, {{9}}});
+    const auto 历史关系 = 读.读取所有者范围历史事实(
+        {L1所有者范围CRUD合同版本, {{6}}});
+    const auto 历史值 = 读.读取所有者范围历史事实(
+        {L1所有者范围CRUD合同版本, {{7}}});
+    const auto 节点 = 读.读取所有者范围当前节点(
+        {L1所有者范围CRUD合同版本, {{2}}});
+    const auto* A = 节点.事实
+        ? std::get_if<L1所有者范围节点事实>(&*节点.事实) : nullptr;
+    return 关系.状态 == L1所有者范围读取状态::成功 && 关系.事实
+        && 值.状态 == L1所有者范围读取状态::成功 && 值.事实
+        && 历史关系.状态 == L1所有者范围读取状态::成功 && 历史关系.事实
+        && 历史值.状态 == L1所有者范围读取状态::成功 && 历史值.事实
+        && A && A->当前属性.size() == 1
+        && A->当前属性[0].属性类型节点 == 稳定编码{5}
+        && A->当前属性[0].当前值 == 稳定编码{9};
+}
+
+bool 验证旧格式并继续v3(std::uint32_t 格式,
+    const std::filesystem::path& 本轮根, std::uint64_t 身份域) {
+    const auto 源 = std::filesystem::path{__FILE__}.parent_path()
+        / L"测试材料" / L"DATA-L1-FINAL-CLOSURE"
+        / (格式 == 1 ? L"载荷格式1" : L"载荷格式2");
+    const char* 提交 = 格式 == 1
+        ? "db65bc99c48310935509e3fdf05b22e71ae9b6b1"
+        : "ff2366d97b662cfc6c8cf16917c06d5da182bf4b";
+    if (!验证fixture来源(源, 提交)) {
+        std::cout << "[V08-debug] provenance/hash fail format=" << 格式 << " source=" << 源 << "\n";
+        return false;
+    }
+    const auto 根 = 本轮根 / (格式 == 1 ? L"format1" : L"format2");
+    std::filesystem::create_directories(根.parent_path());
+    std::filesystem::copy(源, 根, std::filesystem::copy_options::recursive);
+    const L1事实基座持久存储配置_v1 配置{
+        L1事实基座持久恢复合同版本_v1, 根};
+    std::vector<L1结构所有者身份> v3所有者;
+    std::vector<L1所有者范围建立幂等身份> v3建立;
+    L1有限N分区原子事务请求_v3 v3请求;
+    std::uint64_t v3G1 = 0;
+    {
+        auto 恢复 = 建立L1事实基座持久运行包_v1(配置);
+        if (!恢复.成功() || !恢复.运行包
+            || 恢复.恢复.状态 != L1事实基座持久恢复状态_v1::已恢复
+            || !验证旧格式三类事实(*恢复.运行包)) {
+            std::cout << "[V08-debug] recovery/readback fail format=" << 格式
+                << " status=" << static_cast<int>(恢复.恢复.状态) << "\n";
+            return false;
+        }
+        auto 旧主端口 = 恢复.运行包->所有者范围签发器().重新签发所有者范围写端口(
+            {L1所有者范围CRUD合同版本, {{1}},
+                {0x4c31'4649'5831'0001ULL}});
+        if (旧主端口.重入结果.状态 != L1所有者范围管理状态::成功
+            || !旧主端口.写入端口) {
+            std::cout << "[V08-debug] owner reissue fail format=" << 格式 << "\n"; return false;
+        }
+        const auto 首次 = 旧主端口.写入端口->读取首次写入材料(
+            {L1所有者范围首次写入读取合同版本,
+                {0x4c31'4649'5831'0101ULL}});
+        if (首次.状态 != L1所有者范围读取状态::成功
+            || !首次.首次规范化写集
+            || 旧主端口.写入端口->提交所有者范围中性写集(
+                *首次.首次规范化写集).状态
+                != L1所有者范围写入状态::精确重复) {
+            std::cout << "[V08-debug] initial replay fail format=" << 格式 << "\n"; return false;
+        }
+        if (格式 == 2) {
+            auto 端口2 = 恢复.运行包->所有者范围签发器().重新签发所有者范围写端口(
+                {L1所有者范围CRUD合同版本, {{10}}, {0x4c31'4649'5832'0002ULL}});
+            auto 端口3 = 恢复.运行包->所有者范围签发器().重新签发所有者范围写端口(
+                {L1所有者范围CRUD合同版本, {{11}}, {0x4c31'4649'5832'0003ULL}});
+            if (!端口2.写入端口 || !端口3.写入端口) return false;
+            L1三分区原子事务请求_v2 请求;
+            请求.共同期望事实代次 = 5;
+            请求.组合写入幂等身份 = {0x4c31'4649'5832'0201ULL};
+            const L1结构所有者身份 所有者组[3]{{{1}}, {{10}}, {{11}}};
+            for (std::uint8_t i = 1; i <= 3; ++i) {
+                L1三分区原子参与者写集_v2 参与;
+                参与.参与者 = {i}; 参与.所有者 = 所有者组[i - 1];
+                参与.写集.期望事实代次 = 5;
+                参与.写集.写入幂等身份 = {0x4c31'4649'5832'1000ULL + i};
+                参与.写集.节点 = {{{1}, 节点种类::普通, std::nullopt}};
+                请求.参与者写集组.push_back(std::move(参与));
+            }
+            const auto 重放 = 旧主端口.写入端口->提交三分区原子事务_v2(
+                请求, *端口2.写入端口, *端口3.写入端口);
+            if (重放.状态 != L1三分区原子事务状态_v2::精确重复
+                || 重放.共同事实代次 != 6) return false;
+        }
+        auto v3参与者 = 建立参与者(*恢复.运行包, 4, 身份域);
+        const auto G0 = 当前代次(*恢复.运行包);
+        if (!v3参与者 || !G0) {
+            std::cout << "[V08-debug] v3 participants fail format=" << 格式 << "\n"; return false;
+        }
+        v3所有者 = v3参与者->所有者组;
+        v3建立 = v3参与者->建立身份组;
+        v3请求 = 形成节点请求(*v3参与者, *G0,
+            身份域 + 0x10000, 身份域 + 0x20000);
+        const auto 其余 = 形成其余端口(v3参与者->端口组);
+        const auto 首次v3 = v3参与者->端口组.front().提交有限N分区原子事务_v3(v3请求, 其余);
+        if (首次v3.状态 != L1有限N分区原子事务状态_v3::已提交
+            || !正式读回全部节点(*恢复.运行包, 首次v3)) {
+            std::cout << "[V08-debug] first v3 fail format=" << 格式
+                << " status=" << static_cast<int>(首次v3.状态) << "\n"; return false;
+        }
+        v3G1 = 首次v3.共同事实代次;
+    }
+    {
+        auto 再启动 = 建立L1事实基座持久运行包_v1(配置);
+        if (!再启动.成功() || !再启动.运行包) {
+            std::cout << "[V08-debug] post-v3 restart fail format=" << 格式 << "\n"; return false;
+        }
+        auto 端口 = 重新签发参与者(*再启动.运行包, v3所有者, v3建立);
+        if (!端口) return false;
+        const auto 其余 = 形成其余端口(*端口);
+        const auto 重放 = 端口->front().提交有限N分区原子事务_v3(v3请求, 其余);
+        if (重放.状态 != L1有限N分区原子事务状态_v3::精确重复
+            || 重放.共同事实代次 != v3G1) return false;
     }
     return true;
 }
@@ -516,8 +724,14 @@ int 运行DATA_L1有限N分区原子事务端到端测试() noexcept {
                 return 失败("V07", "格式3恢复后精确重放");
         }
         通过("V07", "格式3持久恢复后 v3 幂等账收敛");
-        std::cout << "[DATA-L1-N-ATOMIC][V08] NOT_RUN：缺少独立合法格式1/2固定样本；"
-                     "当前解码兼容分支已编译，未以伪造样本升级为运行证据\n";
+        const auto 旧格式根 = 隔离根 / L"legacy-fixtures";
+        if (!验证旧格式并继续v3(1, 旧格式根,
+                身份域 + 0x40000000))
+            return 失败("V08", "格式1恢复、旧账重放、首次v3与重启v3重放");
+        if (!验证旧格式并继续v3(2, 旧格式根,
+                身份域 + 0x50000000))
+            return 失败("V08", "格式2恢复、v2旧账重放、首次v3与重启v3重放");
+        通过("V08", "格式1/2真实固定样本恢复、旧账重放与后继v3收敛");
         std::cout << "[DATA-L1-N-ATOMIC] 可运行矩阵全部通过\n";
         return 0;
     } catch (const std::exception& 异常) {

@@ -10,6 +10,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from check_l1_frozen_surface import 检查冻结面
+
 
 @dataclass(frozen=True)
 class 检查项:
@@ -508,6 +510,10 @@ def 主函数() -> int:
     结果.extend(检查目录文件(项目))
     结果.extend(检查规范关系图(项目))
     结果.extend(检查退出文件())
+    结果.extend(
+        检查项("ERROR", "tools/l1_frozen_surface_manifest.json", 说明)
+        for 说明 in 检查冻结面()
+    )
     打印结果(结果, sum(项.编号 != "000" for 项 in 项目))
 
     if 参数.strict and any(项.等级 == "ERROR" for 项 in 结果):

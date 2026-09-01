@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "payload_format": 1,
+  "source_commit": "db65bc99c48310935509e3fdf05b22e71ae9b6b1",
+  "generator_sha256": "be2c99945da20e7c999bd7f04f47ada2a0fb9720708dc898ebdf2f11fa8bb99d",
+  "generation_command": "MSBuild.exe .\\海中鱼巣.vcxproj /m:1 /t:Rebuild /p:Configuration=Debug /p:Platform=x64 /p:PlatformToolset=v143; format1-build\\bin\\海中鱼巣.exe",
+  "manifest": {
+    "sequence": 3,
+    "fact_generation": 3,
+    "active_slot": "a",
+    "active_payload_length": 1430,
+    "active_payload_sha256": "eca97e5aa51146590097ed5c1d2ef397d839e1482b1cd8fd2b421b0f17f5330a"
+  },
+  "files": {
+    "manifest.bin": "4a63b5fa36cb1ffce7734d55435af26f09631b6eb3ee1ffcd12dc46985a6ff63",
+    "snapshot-a.bin": "eca97e5aa51146590097ed5c1d2ef397d839e1482b1cd8fd2b421b0f17f5330a",
+    "snapshot-b.bin": "3ef046fe80a59182cae7c506be8e3d4a8cb9b8a9043f03a4a99cf8e25a4791ea"
+  },
+  "owner": 1,
+  "owner_establishment_idempotency": "0x4c31464958310001",
+  "write_idempotency": {
+    "initial": "0x4c31464958310101",
+    "replacement": "0x4c31464958310102"
+  },
+  "stable_codes": {
+    "node_a": 2,
+    "node_b": 3,
+    "relation_type_node": 4,
+    "property_type_node": 5,
+    "historical_relation_r1": 6,
+    "historical_value_v1": 7,
+    "current_relation_r2": 8,
+    "current_value_v2": 9
+  },
+  "expected_readback": {
+    "current_nodes": [2, 3, 4, 5],
+    "current_relations": [8],
+    "current_values": [9],
+    "historical_relations": [6],
+    "historical_values": [7],
+    "attribute_slot": {"node": 2, "property_type": 5, "current_value": 9},
+    "initial_write_replay": "exact_duplicate"
+  },
+  "historical_tree_public_readback": "PASS"
+}

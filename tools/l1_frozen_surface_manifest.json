@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "specification": "4080-v1.0",
+  "surface_contract_status": "FROZEN",
+  "data_l1_status": "PENDING_ACCEPTANCE",
+  "accepted_commit": null,
+  "acceptance_record": null,
+  "source_module": "海中鱼巣/核心/服务.L1事实基座.ixx",
+  "public_operations": {
+    "L1事实基座服务": [
+      "尝试读取中性一致当前投影",
+      "提交中性写集",
+      "读取中性写入首次结果",
+      "执行L1物理清理",
+      "读取中性当前节点",
+      "读取中性当前关系",
+      "读取中性当前源关系组",
+      "读取中性当前目标关系组",
+      "读取中性历史关系组",
+      "读取中性历史属性值组",
+      "读取中性当前值",
+      "读取中性当前属性",
+      "读取中性历史事实",
+      "读取中性当前事实代次",
+      "读取所有者范围当前节点",
+      "读取所有者范围当前关系",
+      "读取所有者范围当前值",
+      "按来源读取所有者范围全部当前值",
+      "按属性类型读取所有者范围全部当前值",
+      "读取所有者范围当前源关系组",
+      "读取所有者范围当前目标关系组",
+      "读取所有者范围历史关系组",
+      "读取所有者范围历史属性值组",
+      "读取所有者范围历史事实",
+      "尝试读取所有者范围一致当前投影",
+      "尝试读取所有者范围一致关系类型闭包投影",
+      "读取当前结构所有者",
+      "读取历史结构所有者"
+    ],
+    "L1所有者范围写端口": [
+      "所有者身份",
+      "有效",
+      "绑定于",
+      "提交所有者范围中性写集",
+      "提交跨所有者原子事务",
+      "提交三分区原子事务_v2",
+      "提交有限N分区原子事务_v3",
+      "读取首次写入材料"
+    ],
+    "L1所有者范围签发器": [
+      "建立所有者范围",
+      "重新签发所有者范围写端口",
+      "退出所有者范围"
+    ],
+    "L1事实基座运行包": [
+      "读取服务",
+      "所有者范围签发器"
+    ],
+    "free_functions": [
+      "建立L1事实基座运行包",
+      "建立L1事实基座持久运行包_v1"
+    ]
+  },
+  "frozen_source_files": [
+    {
+      "path": "海中鱼巣/核心/服务.L1事实基座.ixx",
+      "normalized_size": 55025,
+      "sha256": "a172cf0b404262dc562f3b0823e5d83d70ae7c28d2ee2f4564e333c32a3075ad"
+    },
+    {
+      "path": "海中鱼巣/核心/L1公共事实.数据.h",
+      "normalized_size": 536,
+      "sha256": "88c3831ca518d451b56c08e1fa7eb9f422c58f1d0efedb6c3c8e1aecf7a936de"
+    },
+    {
+      "path": "海中鱼巣/核心/L1中性CRUD.数据.h",
+      "normalized_size": 20891,
+      "sha256": "f6ebc66170656e73f4f1eb266ab50b975173af4ac00609374c786523d7c231b8"
+    },
+    {
+      "path": "海中鱼巣/核心/L1所有者范围CRUD.数据.h",
+      "normalized_size": 46746,
+      "sha256": "510195d8d34192461a5f6d602d49df01925c08396034487d7e235e9ac0b9eaa9"
+    },
+    {
+      "path": "海中鱼巣/核心/L1事实基座持久恢复.数据.h",
+      "normalized_size": 2238,
+      "sha256": "5cdde1a654b42aff8a7c6ddfdf3f94eeb74c158fc2866fca6a30d9dff1f4aea6"
+    }
+  ],
+  "legacy_domain_exceptions": [
+    {
+      "path": "海中鱼巣/核心/L1所有者范围CRUD.数据.h",
+      "owner": "L1跨所有者原子事务参与者序号",
+      "member": "状态",
+      "kind": "enum_item",
+      "count": 1
+    },
+    {
+      "path": "海中鱼巣/核心/L1所有者范围CRUD.数据.h",
+      "owner": "L1跨所有者原子事务参与者序号",
+      "member": "动态",
+      "kind": "enum_item",
+      "count": 1
+    },
+    {
+      "path": "海中鱼巣/核心/L1所有者范围CRUD.数据.h",
+      "owner": "L1跨所有者原子事务请求",
+      "member": "状态写集",
+      "kind": "field",
+      "count": 1
+    },
+    {
+      "path": "海中鱼巣/核心/L1所有者范围CRUD.数据.h",
+      "owner": "L1跨所有者原子事务请求",
+      "member": "动态写集",
+      "kind": "field",
+      "count": 1
+    },
+    {
+      "path": "海中鱼巣/核心/L1所有者范围CRUD.数据.h",
+      "owner": "L1跨所有者原子事务结果",
+      "member": "状态编码映射",
+      "kind": "field",
+      "count": 1
+    },
+    {
+      "path": "海中鱼巣/核心/L1所有者范围CRUD.数据.h",
+      "owner": "L1跨所有者原子事务结果",
+      "member": "动态编码映射",
+      "kind": "field",
+      "count": 1
+    },
+    {
+      "path": "海中鱼巣/核心/服务.L1事实基座.ixx",
+      "owner": "L1所有者范围写端口",
+      "member": "提交跨所有者原子事务",
+      "kind": "method",
+      "count": 1
+    },
+    {
+      "path": "海中鱼巣/核心/服务.L1事实基座.ixx",
+      "owner": "L1所有者范围写端口::提交跨所有者原子事务",
+      "member": "状态写集",
+      "kind": "field_access",
+      "count": 1
+    },
+    {
+      "path": "海中鱼巣/核心/服务.L1事实基座.ixx",
+      "owner": "L1所有者范围写端口::提交跨所有者原子事务",
+      "member": "动态写集",
+      "kind": "field_access",
+      "count": 1
+    }
+  ],
+  "technical_token_exceptions": [
+    {
+      "path": "海中鱼巣/核心/服务.L1事实基座.ixx",
+      "identifier": "L1事实基座服务",
+      "count": 12
+    },
+    {
+      "path": "海中鱼巣/核心/服务.L1事实基座.ixx",
+      "identifier": "读取服务",
+      "count": 2
+    },
+    {
+      "path": "海中鱼巣/核心/服务.L1事实基座.ixx",
+      "identifier": "服务",
+      "count": 3
+    },
+    {
+      "path": "海中鱼巣/核心/服务.L1事实基座.ixx",
+      "identifier": "服务_",
+      "count": 4
+    }
+  ],
+  "forbidden_domain_tokens": [
+    "存在",
+    "场景",
+    "特征",
+    "动态",
+    "因果",
+    "需求",
+    "任务",
+    "方法",
+    "动作",
+    "安全",
+    "服务"
+  ]
+}
