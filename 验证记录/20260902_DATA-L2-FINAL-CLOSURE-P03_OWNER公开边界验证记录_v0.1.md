@@ -6,7 +6,7 @@
 
 候选基线：`58e1718cac00f57fc9ea70ae07c5e86b3f5ea35f + P03 精确覆盖`
 
-当前结论：`PASS / staged 源码树已严格检查和双配置重建，待精确发布复核`
+当前结论：`PASS / staged 源码树已严格检查和双配置重建；结果提交 51ee8cf2e7db864c3c3c234e1d0ce47bb9cebcfb 待普通推送`
 
 ## 1. 验证范围
 
@@ -26,9 +26,9 @@
 
 已验证 staged 源码树（写入本记录发布状态前）：
 
-`D:\TEMP\海中鱼巣\DATA-L2-FINAL-CLOSURE-P03-OWNER-PUBLIC-BOUNDARY\staged-c14c9bf00e5e1833`
+`D:\TEMP\海中鱼巣\DATA-L2-FINAL-CLOSURE-P03-OWNER-PUBLIC-BOUNDARY\staged-cfb7f452f368b441`
 
-该树不是 Git worktree。为使严格检查读取施工起点的真实 HEAD / `origin/main` 证据，同时检查 staged 内容，在该树根执行：
+该树不是 Git worktree，且其 28 个 P03 文件已逐文件哈希确认与结果提交一致。为使严格检查读取施工起点的真实 HEAD / `origin/main` 证据，同时检查 staged 内容，在该树根执行：
 
 ```powershell
 $env:GIT_DIR = 'D:\海中鱼巣\.git'
