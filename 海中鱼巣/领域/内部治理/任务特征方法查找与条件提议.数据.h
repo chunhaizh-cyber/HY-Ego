@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <optional>
 #include <vector>
-#include "任务重筹办.数据.h"
+#include "../L2任务结构.数据.h"
 #include "../L2普通方法结构.数据.h"
 #include "../L2特征结构.数据.h"
 #endif
@@ -125,7 +125,10 @@ struct 任务缺失条件草案 final {
 struct 任务特征方法查找请求 final {
     std::uint32_t 合同版本 = 任务特征方法查找合同版本;
     L2结构请求头 请求头;
-    下一筹办工作包 工作包;
+    L2任务身份 任务;
+    L2任务轮次身份 任务轮次;
+    L2任务筹办轮次权威记录身份 筹办轮次;
+    std::uint64_t 筹办轮次序号 = 0;
     std::uint64_t 最大扫描用途事实数 = 0;
     std::uint64_t 最大粗召回方法数 = 0;
     std::uint64_t 最大概念支持扫描事实数 = 0;
@@ -140,7 +143,10 @@ struct 任务特征方法查找结果 final {
     任务特征方法查找状态 状态 = 任务特征方法查找状态::入口拒绝;
     std::optional<任务特征方法查找结论> 结论;
     std::uint64_t 共同事实截止 = 0;
-    std::optional<下一筹办工作包> 已互证工作包;
+    L2任务身份 任务;
+    L2任务轮次身份 任务轮次;
+    L2任务筹办轮次权威记录身份 筹办轮次;
+    std::uint64_t 筹办轮次序号 = 0;
     std::optional<任务筹办目标三元组> 任务目标;
     std::optional<L2状态事实> 当前实际状态;
     std::optional<L2特征比较具名关系> 目标比较具名关系;
@@ -159,6 +165,11 @@ struct 任务特征方法查找结果 final {
     std::vector<任务未绑定输入限制证据> 未绑定输入限制;
     std::vector<任务缺失条件草案> 缺失条件草案;
     bool 成功() const noexcept;
+    friend bool operator==(const 任务特征方法查找结果&,
+        const 任务特征方法查找结果&) noexcept;
 };
+
+bool operator==(const 任务特征方法查找结果&,
+    const 任务特征方法查找结果&) noexcept;
 
 } // namespace 海中鱼巣

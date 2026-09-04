@@ -79,6 +79,36 @@
     <Filter Include="核心">
       <UniqueIdentifier>{E6F6E9BB-7BB6-4DD0-A99C-4F2BA9C1B7EE}</UniqueIdentifier>
     </Filter>
+    <ClCompile Include="海中鱼巣\领域\服务.L2需求结构.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\服务.L2任务结构.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\服务.L2任务方法路径结构.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\合同.L1公共事实.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\核心\合同.L1事实基座.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\业务\提供者.真实自我形成.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\业务\合同.自我世界树根消费.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\业务\提供者.四本体根生产初始化.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\业务\提供者.方法登记根生产初始化.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\线程\创建.自我线程.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="海中鱼巣\领域\L2结构公共.数据.h">
@@ -153,9 +183,6 @@
     <ClCompile Include="海中鱼巣\启动.应用程序.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\装配.普通应用.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="海中鱼巣\启动.程序运行宿主.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -198,13 +225,22 @@
     <ClCompile Include="海中鱼巣\线程\协议.任务执行请求.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\线程\协议.任务筹办工作与结果.ixx">
+    <ClCompile Include="海中鱼巣\线程\协议.任务动作完成消息.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\线程\服务.任务动作完成消息.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\组合.任务动作权威结果读回.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\线程\服务.任务动作结果收束.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\线程\任务结果回执协议.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\线程\协议.任务重筹办意图.ixx">
+    <ClCompile Include="海中鱼巣\线程\协议.自我任务后继决议.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\线程\有界自我治理队列.ixx">
@@ -243,28 +279,64 @@
     <ClCompile Include="海中鱼巣\入口.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\合同.任务结果消费共同.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\合同.任务结果消费身份.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\服务.L2自我治理结构.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\服务.L2任务结果消费结构.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\服务.L2需求结算结构.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务特征方法查找与条件提议.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务筹办当前就绪与执行冻结.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务目标未达成重筹办触发.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\内部治理\服务.需求初次筹办准备.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务子目标回流重判.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\服务.L2治理函数骨架.ixx">
+    <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务阶段结构消费端口.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务主阶段治理.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务执行派发门控.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\内部治理\服务.实例方法执行.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务结果消费分配与轮次结算.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\自我治理\服务.自我现实执行授权.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\自我治理\服务.自我结果争用成员优先级.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\自我治理\服务.自我任务后继决议.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\安全治理\服务.L2任务现实执行硬否决规则结构.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\安全治理\服务.任务现实执行硬否决.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\内部治理\服务.任务执行最终当前性复核.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\服务.L2治理函数骨架.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\服务.完整秒时钟.ixx">
@@ -279,6 +351,30 @@
     <ClCompile Include="海中鱼巣\线程\路由.自我治理批次.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClInclude Include="海中鱼巣\核心\L1公共事实.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\L2需求结构.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\L2任务结构.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\业务\真实自我形成.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\业务\四本体根生产初始化.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\业务\初始化.四本体根.inl">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\业务\方法登记根生产初始化.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\线程\自我线程生产创建.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="海中鱼巣\启动选项.数据.h">
@@ -323,22 +419,49 @@
     <ClInclude Include="海中鱼巣\领域\内部治理\任务筹办当前就绪与执行冻结.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="海中鱼巣\领域\内部治理\任务重筹办.数据.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="海中鱼巣\领域\内部治理\任务初次筹办.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\内部治理\任务子目标回流重判.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="海中鱼巣\领域\L2治理函数骨架.数据.h">
+    <ClInclude Include="海中鱼巣\领域\L2自我治理结构.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\L2任务结果消费结构.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\L2需求结算结构.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\内部治理\任务阶段治理.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\内部治理\任务执行派发门控.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\内部治理\实例方法执行.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\内部治理\任务结果消费分配与轮次结算.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\自我治理\自我现实执行授权.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\自我治理\自我结果争用成员优先级.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\自我治理\自我任务后继决议.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\安全治理\L2任务现实执行硬否决规则结构.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\安全治理\任务现实执行硬否决.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\L2治理函数骨架.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\运行期只读查询.数据.h">

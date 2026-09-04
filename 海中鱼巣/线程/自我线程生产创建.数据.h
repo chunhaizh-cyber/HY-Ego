@@ -5,7 +5,99 @@
 // 本文件不定义 DATA 事实，也不把候选源码视为已编译。
 namespace 海中鱼巣 {
 
-inline constexpr std::uint32_t 自我线程生产创建合同版本 = 2;
+inline constexpr std::uint32_t 自我线程生产创建合同版本 = 3;
+
+inline constexpr std::uint32_t 自我线程治理端口合同版本 = 1;
+
+enum class 自我线程外部调用状态 : std::uint8_t {
+  已形成 = 1,
+  精确重复 = 2,
+  合法等待 = 3,
+  当前性漂移 = 4,
+  引用冲突 = 5,
+  不可比较 = 6,
+  资源失败 = 7,
+  入口拒绝 = 8,
+  内部错误 = 9
+};
+
+struct 自我线程治理端口请求 final {
+  std::uint32_t 合同版本 = 自我线程治理端口合同版本;
+  std::uint64_t 运行代次 = 0;
+  std::uint64_t 治理批次 = 0;
+  std::uint64_t 治理消息编号 = 0;
+  std::uint64_t 消息幂等键 = 0;
+  std::uint64_t 共同事实截止G0 = 0;
+  L2存在身份 唯一自我;
+  L2特征定义身份 安全根特征定义;
+  L2特征定义身份 服务根特征定义;
+  std::optional<L2需求身份> 具体需求;
+  std::optional<L2任务子目标承接记录身份> 子目标承接记录;
+  std::optional<自我治理消息> 来源消息;
+};
+
+struct 自我线程治理端口结果 final {
+  自我线程外部调用状态 状态 = 自我线程外部调用状态::入口拒绝;
+  std::uint64_t 本次正式读回截止 = 0;
+  std::optional<L2需求身份> 具体需求;
+  std::optional<L2任务子目标承接记录身份> 子目标承接记录;
+
+  bool 成功() const noexcept {
+    return (状态 == 自我线程外部调用状态::已形成 ||
+            状态 == 自我线程外部调用状态::精确重复) &&
+           本次正式读回截止 != 0;
+  }
+};
+
+class 自我线程需求治理端口 {
+public:
+  virtual ~自我线程需求治理端口() = default;
+  virtual 自我线程治理端口结果 读取需求治理当前快照(
+      const 自我线程治理端口请求 &) noexcept = 0;
+  virtual 自我线程治理端口结果 确认后继目标(
+      const 自我线程治理端口请求 &) noexcept = 0;
+  virtual 自我线程治理端口结果 发布或复用已承接需求(
+      const 自我线程治理端口请求 &) noexcept = 0;
+};
+
+class 自我线程任务管理提交端口 {
+public:
+  virtual ~自我线程任务管理提交端口() = default;
+  virtual 自我线程治理端口结果 提交已确认子目标承接记录意图(
+      const 自我线程治理端口请求 &) noexcept = 0;
+  virtual 自我线程治理端口结果 提交任务承接意图(
+      const 自我线程治理端口请求 &) noexcept = 0;
+  virtual 自我线程治理端口结果 提交自我任务后继决议(
+      const 自我线程治理端口请求 &) noexcept = 0;
+};
+
+class 自我线程安全治理端口 {
+public:
+  virtual ~自我线程安全治理端口() = default;
+  virtual 自我线程治理端口结果 读取安全治理当前快照(
+      const 自我线程治理端口请求 &) noexcept = 0;
+  virtual 自我线程治理端口结果 请求执行安全治理(
+      const 自我线程治理端口请求 &) noexcept = 0;
+  virtual 自我线程治理端口结果 请求现实执行授权(
+      const 自我线程治理端口请求 &) noexcept = 0;
+};
+
+enum class 自我线程治理端口绑定状态 : std::uint8_t {
+  已绑定 = 1,
+  精确重复 = 2,
+  请求无效 = 3,
+  选择冲突 = 4,
+  已停止 = 5
+};
+
+struct 自我线程治理端口绑定结果 final {
+  自我线程治理端口绑定状态 状态 =
+      自我线程治理端口绑定状态::请求无效;
+  bool 成功() const noexcept {
+    return 状态 == 自我线程治理端口绑定状态::已绑定 ||
+           状态 == 自我线程治理端口绑定状态::精确重复;
+  }
+};
 
 struct 自我线程创建幂等身份 final {
   std::uint64_t 值 = 0;
@@ -88,7 +180,6 @@ enum class 自我治理循环退出结果 : std::uint8_t {
   领域治理终止 = 4,
   下行提交终止 = 5,
   内部不一致 = 6,
-  任务结果后继已形成 = 7,
   任务目标裁决已形成 = 8
 };
 
@@ -103,9 +194,7 @@ enum class 任务结果治理处理槽状态 : std::uint8_t {
   内部终止 = 8,
   目标待裁决 = 9,
   不可比较终止 = 10,
-  目标裁决已形成 = 11,
-  重筹办意图待提交 = 12,
-  重筹办意图已提交 = 13
+  目标裁决已形成 = 11
 };
 
 struct 任务结果治理后继输入 final {
@@ -117,7 +206,6 @@ struct 任务结果治理后继输入 final {
   std::uint64_t 执行轮次 = 0;
   L2任务实际结果身份 任务实际结果;
   L2结构幂等身份 任务治理首态写入幂等身份;
-  L2结构幂等身份 任务重筹办迁移写入幂等身份;
   std::uint64_t 共享事实截止G0 = 0;
   治理输入事实复核状态 复核状态 = 治理输入事实复核状态::入口拒绝;
   friend bool operator==(const 任务结果治理后继输入&,
@@ -136,8 +224,6 @@ struct 任务结果治理处理槽快照 final {
   治理输入事实复核状态 复核状态 = 治理输入事实复核状态::入口拒绝;
   std::optional<任务结果治理后继输入> 后继输入;
   std::optional<任务目标达成裁决快照> 目标裁决;
-  std::optional<任务重筹办意图> 重筹办意图;
-  std::optional<任务重筹办意图提交结果> 重筹办提交结果;
   friend bool operator==(const 任务结果治理处理槽快照&,
                          const 任务结果治理处理槽快照&) = default;
 };

@@ -19,6 +19,7 @@ module;
 export module 海中鱼巣.领域.服务.L2需求结构;
 
 export import 海中鱼巣.领域.合同.L2结构公共;
+export import 海中鱼巣.领域.合同.任务结果消费身份;
 import 海中鱼巣.核心.服务.L1事实基座;
 import 海中鱼巣.领域.服务.L2存在结构;
 import 海中鱼巣.领域.服务.L2特征结构;

@@ -197,6 +197,42 @@ struct 任务实际结果独立读回结果 final {
     }
 };
 
+inline constexpr std::uint32_t 任务实际结果独立读回合同版本_v2 = 2;
+
+struct 任务实际结果独立读回请求_v2 final {
+    std::uint32_t 合同版本 = 任务实际结果独立读回合同版本_v2;
+    任务实际结果独立读回请求 基础请求;
+    friend bool operator==(const 任务实际结果独立读回请求_v2&,
+        const 任务实际结果独立读回请求_v2&) = default;
+};
+
+struct 任务实际结果独立读回快照_v2 final {
+    L2任务实际结果事实 结果;
+    L2实例方法事实 实例方法;
+    L2任务方法路径事实_v2 选中路径;
+    L2任务事实 任务;
+    L2状态事实 状态;
+    L2动态事实 动态;
+    L2场景事实 场景;
+    L2存在事实 主体;
+    L2需求列表项事实 需求列表项;
+    std::vector<L2需求列表成员关系事实> 来源成员关系组;
+    std::vector<L2需求事实> 来源需求组;
+    std::uint64_t 事实截止代次 = 0;
+    friend bool operator==(const 任务实际结果独立读回快照_v2&,
+        const 任务实际结果独立读回快照_v2&) = default;
+};
+
+struct 任务实际结果独立读回结果_v2 final {
+    任务实际结果独立读回状态 状态 = 任务实际结果独立读回状态::尚未形成;
+    std::optional<任务实际结果独立读回快照_v2> 快照;
+    bool 成功() const noexcept {
+        return 状态 == 任务实际结果独立读回状态::已形成 && 快照.has_value();
+    }
+    friend bool operator==(const 任务实际结果独立读回结果_v2&,
+        const 任务实际结果独立读回结果_v2&) = default;
+};
+
 // ===== 任务实际结果后继的任务目标达成裁决 =====
 struct 任务目标达成裁决请求 final {
     std::uint32_t 合同版本 = 运行期只读查询合同版本;
@@ -220,12 +256,6 @@ enum class 任务目标达成裁决状态 : std::uint8_t {
     内部错误 = 9
 };
 
-enum class 任务生命周期后继准备 : std::uint8_t {
-    无 = 0,
-    待验证后完成 = 1,
-    目标未达成待重筹办 = 2
-};
-
 struct 任务目标达成裁决快照 final {
     std::uint64_t 治理输入幂等键 = 0;
     L2任务身份 任务;
@@ -246,7 +276,6 @@ struct 任务目标达成裁决快照 final {
     L2特征比较具名关系 具名关系 =
         L2特征比较具名关系::当前达到目标;
     std::uint8_t 允许关系位 = 0;
-    任务生命周期后继准备 生命周期准备 = 任务生命周期后继准备::无;
     std::uint64_t 事实截止代次 = 0;
     friend bool operator==(const 任务目标达成裁决快照&,
         const 任务目标达成裁决快照&) = default;

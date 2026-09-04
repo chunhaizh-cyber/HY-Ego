@@ -168,6 +168,8 @@ struct 自我治理工作项身份 final { 稳定编码 值{}; friend bool opera
 struct 自我治理承接身份 final { 稳定编码 值{}; friend bool operator==(const 自我治理承接身份&, const 自我治理承接身份&) = default; };
 struct 任务结果复核载荷 final {
     L2任务身份 任务;
+    L2任务轮次身份 任务轮次;
+    L2任务轮次结算身份 轮次结算;
     L2状态身份 实际结果状态;
     L2动态身份 动态证据;
     L2方法身份 方法;
@@ -175,7 +177,6 @@ struct 任务结果复核载荷 final {
     L2场景身份 场景;
     L2存在身份 主体;
     L2结构幂等身份 任务治理首态写入幂等身份;
-    L2结构幂等身份 任务重筹办迁移写入幂等身份;
     friend bool operator==(const 任务结果复核载荷&,
         const 任务结果复核载荷&) = default;
 };
@@ -183,8 +184,39 @@ struct 派生需求载荷 final { L2存在身份 目标宿主; L2特征定义身
 struct 观察材料准入载荷 final { L2存在身份 主体; L2场景身份 场景; 不可变材料身份 材料; std::optional<L2任务身份> 绑定任务; std::optional<自我治理工作项身份> 绑定工作项; std::optional<自我治理承接身份> 正式承接身份; friend bool operator==(const 观察材料准入载荷&, const 观察材料准入载荷&) = default; };
 struct 执行前许可预判载荷 final { L2任务身份 任务; L2方法身份 方法; L2方法动作入口身份 动作入口; friend bool operator==(const 执行前许可预判载荷&, const 执行前许可预判载荷&) = default; };
 struct 自检缺口载荷 final { L2存在身份 主体; L2场景身份 场景; 不可变材料身份 材料; friend bool operator==(const 自检缺口载荷&, const 自检缺口载荷&) = default; };
-struct 缓存刷新载荷 final { std::variant<L2需求身份,L2任务身份,不可变材料身份> 目标; friend bool operator==(const 缓存刷新载荷&, const 缓存刷新载荷&) = default; };
-struct 事件日志载荷 final { std::variant<L2需求身份,L2任务身份,L2动态身份,不可变材料身份> 目标; friend bool operator==(const 事件日志载荷&, const 事件日志载荷&) = default; };
+struct 缓存刷新载荷 final {
+    std::variant<L2需求身份,L2任务身份,不可变材料身份> 目标;
+    friend bool operator==(const 缓存刷新载荷& 左,
+        const 缓存刷新载荷& 右) noexcept {
+        if (左.目标.valueless_by_exception() || 右.目标.valueless_by_exception()) {
+            return 左.目标.valueless_by_exception() && 右.目标.valueless_by_exception();
+        }
+        if (左.目标.index() != 右.目标.index()) return false;
+        switch (左.目标.index()) {
+        case 0: return std::get<0>(左.目标).值.值 == std::get<0>(右.目标).值.值;
+        case 1: return std::get<1>(左.目标).值.值 == std::get<1>(右.目标).值.值;
+        case 2: return std::get<2>(左.目标).值.值 == std::get<2>(右.目标).值.值;
+        default: return false;
+        }
+    }
+};
+struct 事件日志载荷 final {
+    std::variant<L2需求身份,L2任务身份,L2动态身份,不可变材料身份> 目标;
+    friend bool operator==(const 事件日志载荷& 左,
+        const 事件日志载荷& 右) noexcept {
+        if (左.目标.valueless_by_exception() || 右.目标.valueless_by_exception()) {
+            return 左.目标.valueless_by_exception() && 右.目标.valueless_by_exception();
+        }
+        if (左.目标.index() != 右.目标.index()) return false;
+        switch (左.目标.index()) {
+        case 0: return std::get<0>(左.目标).值.值 == std::get<0>(右.目标).值.值;
+        case 1: return std::get<1>(左.目标).值.值 == std::get<1>(右.目标).值.值;
+        case 2: return std::get<2>(左.目标).值.值 == std::get<2>(右.目标).值.值;
+        case 3: return std::get<3>(左.目标).值.值 == std::get<3>(右.目标).值.值;
+        default: return false;
+        }
+    }
+};
 struct 停止载荷 final { friend bool operator==(const 停止载荷&, const 停止载荷&) = default; };
 struct 概念待命名载荷 final { L2概念身份 概念; friend bool operator==(const 概念待命名载荷&, const 概念待命名载荷&) = default; };
 using 自我治理消息载荷 = std::variant<任务结果复核载荷,派生需求载荷,观察材料准入载荷,执行前许可预判载荷,自检缺口载荷,缓存刷新载荷,事件日志载荷,停止载荷,概念待命名载荷>;
@@ -543,14 +575,14 @@ inline 自我治理拒绝原因 复核自我治理必填材料(const 自我治�
     switch (消息.类型) {
     case 自我治理消息类型::任务结果复核请求:
         { const auto& 载荷 = std::get<任务结果复核载荷>(消息.载荷);
-        if (!自我治理身份有效(载荷.任务) || !自我治理身份有效(载荷.实际结果状态)
+        if (!自我治理身份有效(载荷.任务)
+            || !自我治理身份有效(载荷.任务轮次)
+            || !自我治理身份有效(载荷.轮次结算)
+            || !自我治理身份有效(载荷.实际结果状态)
             || !自我治理身份有效(载荷.动态证据) || !自我治理身份有效(载荷.方法)
             || !自我治理身份有效(载荷.动作入口) || !自我治理身份有效(载荷.场景)
             || !自我治理身份有效(载荷.主体)
-            || !L2结构幂等身份有效(载荷.任务治理首态写入幂等身份)
-            || !L2结构幂等身份有效(载荷.任务重筹办迁移写入幂等身份)
-            || 载荷.任务治理首态写入幂等身份 ==
-                载荷.任务重筹办迁移写入幂等身份) {
+            || !L2结构幂等身份有效(载荷.任务治理首态写入幂等身份)) {
             return 自我治理拒绝原因::必填句柄缺失;
         }}
         if (消息.来源任务序号 == 0) {
