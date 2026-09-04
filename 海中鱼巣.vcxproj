@@ -236,6 +236,12 @@
     <ClCompile Include="海中鱼巣\领域\服务.完整秒时钟.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.安全根定义与当前值.ixx" />
     <ClCompile Include="海中鱼巣\领域\组合.运行期事实版本.ixx" />
+    <ClCompile Include="海中鱼巣\领域\数据服务.特征值类.ixx" />
+    <ClCompile Include="海中鱼巣\领域\数据服务.特征类.ixx" />
+    <ClCompile Include="海中鱼巣\领域\数据服务.状态类.ixx" />
+    <ClCompile Include="海中鱼巣\领域\数据服务.动态类.ixx" />
+    <ClCompile Include="海中鱼巣\领域\数据服务.存在类.ixx" />
+    <ClCompile Include="海中鱼巣\领域\数据服务.场景类.ixx" />
     <ClCompile Include="海中鱼巣\线程\路由.自我治理批次.ixx" />
     <ClCompile Include="海中鱼巣\入口.cpp" />
   </ItemGroup>
