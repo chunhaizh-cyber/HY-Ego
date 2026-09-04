@@ -242,6 +242,7 @@
     <ClCompile Include="海中鱼巣\领域\数据服务.动态类.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据服务.存在类.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据服务.场景类.ixx" />
+    <ClCompile Include="海中鱼巣\领域\数据服务.因果类.ixx" />
     <ClCompile Include="海中鱼巣\线程\路由.自我治理批次.ixx" />
     <ClCompile Include="海中鱼巣\入口.cpp" />
   </ItemGroup>
