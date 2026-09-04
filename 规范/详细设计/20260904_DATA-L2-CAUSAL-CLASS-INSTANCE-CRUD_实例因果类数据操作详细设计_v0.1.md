@@ -1,8 +1,11 @@
 # 实例因果类数据操作详细设计
 
-身份：`DATA-L2-CAUSAL-CLASS-INSTANCE-CRUD`  
-版本：v0.1  
-日期：2026-09-04  
+身份：`DATA-L2-CAUSAL-CLASS-INSTANCE-CRUD`
+
+版本：v0.1
+
+日期：2026-09-04
+
 代码基线：`aaa6d40df3b02357ac172c39f8dd79fd21e54b04`
 
 ## 1. 目标、依据与完成边界

@@ -1,9 +1,13 @@
 # 实例因果类数据操作代码实施计划
 
-身份：`DATA-L2-CAUSAL-CLASS-INSTANCE-CRUD`  
-版本：v0.1  
-设计：[实例因果类数据操作详细设计 v0.1](../规范/详细设计/20260904_DATA-L2-CAUSAL-CLASS-INSTANCE-CRUD_实例因果类数据操作详细设计_v0.1.md)  
-状态：待激活  
+身份：`DATA-L2-CAUSAL-CLASS-INSTANCE-CRUD`
+
+版本：v0.1
+
+设计：[实例因果类数据操作详细设计 v0.1](../规范/详细设计/20260904_DATA-L2-CAUSAL-CLASS-INSTANCE-CRUD_实例因果类数据操作详细设计_v0.1.md)
+
+状态：待激活
+
 代码起点：`aaa6d40df3b02357ac172c39f8dd79fd21e54b04`
 
 ## 1. 目标、依赖与完成条件
@@ -82,4 +86,3 @@ python .\tools\check_specs.py --strict
 报告必须说明激活后起点、实际变更、专项与两配置编译、静态 / 规范检查、提交 / 推送、剩余 dirty、
 未验证边界和知识变更清单。发布只证明候选代码进入 Git，不证明生产装配、迁移、业务正确或独立
 服务验收。
-
