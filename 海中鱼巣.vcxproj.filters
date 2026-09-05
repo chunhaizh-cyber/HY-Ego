@@ -375,6 +375,9 @@
     <ClCompile Include="海中鱼巣\领域\数据服务.存在类.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\数据服务.概念树类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\数据服务.场景类.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
