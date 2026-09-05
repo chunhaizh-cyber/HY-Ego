@@ -357,6 +357,9 @@
     <ClCompile Include="海中鱼巣\领域\数据服务.二次特征类.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\数据服务.需求类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\数据服务.状态类.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
