@@ -149,8 +149,238 @@ struct 特征值获取结果 final {
     }
 };
 
+enum class 特征引用读取状态 : std::uint8_t {
+    已读取 = 1,
+    入口拒绝 = 2,
+    未找到 = 3,
+    目标已退出 = 4,
+    事实代次漂移 = 5,
+    引用冲突 = 6,
+    历史材料不可用 = 7,
+    资源失败 = 8,
+    内部不一致 = 9,
+    数量预算不足 = 10
+};
+
+// 只映射历史读取状态，不把已清理材料解释成未找到。
+inline 特征引用读取状态 特征引用历史状态(L1所有者范围读取状态 s) noexcept {
+    switch (s) {
+    case L1所有者范围读取状态::成功:
+        return 特征引用读取状态::已读取;
+    case L1所有者范围读取状态::未找到:
+        return 特征引用读取状态::未找到;
+    case L1所有者范围读取状态::已退出:
+        return 特征引用读取状态::目标已退出;
+    case L1所有者范围读取状态::历史材料已清理:
+        return 特征引用读取状态::历史材料不可用;
+    case L1所有者范围读取状态::事实代次漂移:
+        return 特征引用读取状态::事实代次漂移;
+    case L1所有者范围读取状态::资源失败:
+        return 特征引用读取状态::资源失败;
+    default:
+        return 特征引用读取状态::内部不一致;
+    }
+}
+
+struct 特征值按结点历史读取请求 final {
+    std::uint32_t 合同版本 = 1;
+    std::uint64_t Gread = 0;
+    std::uint64_t H = 0;
+    稳定编码 结点{};
+    std::uint64_t 最大属性值数 = 0;
+};
+struct 特征值历史读取请求 final {
+    std::uint32_t 合同版本 = 1;
+    std::uint64_t Gread = 0;
+    std::uint64_t H = 0;
+    稳定编码 结点{}, 值事实{};
+    friend bool operator==(const 特征值历史读取请求&, const 特征值历史读取请求&) = default;
+};
+struct 特征值历史读取结果 final {
+    特征引用读取状态 状态 = 特征引用读取状态::入口拒绝;
+    std::uint32_t 合同版本 = 1;
+    std::uint64_t Gread = 0;
+    std::uint64_t H = 0;
+    std::optional<特征值类材料结点> 材料;
+    bool 成功() const noexcept {
+        return 状态 == 特征引用读取状态::已读取 && 合同版本 == 1 && Gread >= H && H != 0 && 材料
+               && 有效(材料->结点) && 有效(材料->值事实) && 有效(材料->属性类型) && 有效(材料->来源结点)
+               && 材料->创建事实代次 && 材料->创建事实代次 <= H && !材料->退出事实代次
+               && 特征值类数据内部::材料有效(材料->特征值);
+    }
+};
+
 class 特征值类数据服务 final {
 public:
+    bool 绑定于(const L1事实基座服务& s) const noexcept {
+        return &s == &第一层服务_;
+    }
+    // 按明确 H 投影具名历史值；不依赖当前槽，也不改变原始重放路径。
+    特征值历史读取结果 按结点读取不可变材料历史事实(const 特征值按结点历史读取请求& r) const {
+        using S = 特征引用读取状态;
+        特征值历史读取结果 out;
+        out.Gread = r.Gread;
+        out.H = r.H;
+        const auto fail = [&](S status) {
+            out.状态 = status;
+            return out;
+        };
+        if (r.合同版本 != 1 || !有效(r.结点) || !r.H || r.H > r.Gread || !r.最大属性值数)
+            return out;
+        try {
+            const auto first = 第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
+            if (first.状态 != L1中性读取状态::成功)
+                return fail(first.状态 == L1中性读取状态::资源失败 ? S::资源失败 : S::内部不一致);
+            if (first.事实代次 != r.Gread)
+                return fail(S::事实代次漂移);
+            const auto nr = 第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, r.结点});
+            if (nr.状态 != L1所有者范围读取状态::成功)
+                return fail(特征引用历史状态(nr.状态));
+            if (nr.读取事实代次 != r.Gread)
+                return fail(S::事实代次漂移);
+            const auto* n = nr.事实 ? std::get_if<L1所有者范围节点事实>(&*nr.事实) : nullptr;
+            if (nr.合同版本 != L1所有者范围CRUD合同版本 || nr.查询编码 != r.结点)
+                return fail(S::内部不一致);
+            if (!n || n->编码 != r.结点 || n->写入所有者 != 所有者_ || n->种类 != 节点种类::普通
+                || n->属性类型表示)
+                return fail(S::引用冲突);
+            if (!n->创建事实代次)
+                return fail(S::内部不一致);
+            if (n->创建事实代次 > r.H)
+                return fail(S::未找到);
+            if (n->退出事实代次 && *n->退出事实代次 <= r.H)
+                return fail(S::目标已退出);
+            const auto rows = 第一层服务_.读取所有者范围历史属性值组({L1所有者范围CRUD合同版本, r.结点, r.H});
+            if (rows.状态 != L1所有者范围读取状态::成功)
+                return fail(特征引用历史状态(rows.状态));
+            if (rows.读取事实代次 != r.Gread)
+                return fail(S::事实代次漂移);
+            if (rows.合同版本 != L1所有者范围CRUD合同版本 || rows.所属节点 != r.结点
+                || rows.历史截止事实代次 != r.H)
+                return fail(S::内部不一致);
+            if (rows.属性值组.size() > r.最大属性值数)
+                return fail(S::数量预算不足);
+            if (rows.属性值组.empty())
+                return fail(S::历史材料不可用);
+            if (rows.属性值组.size() != 1)
+                return fail(S::内部不一致);
+            const auto& value = rows.属性值组.front();
+            if (!有效(value.编码) || value.写入所有者 != 所有者_ || value.所属节点 != r.结点
+                || !有效(value.来源节点) || !有效(value.属性类型节点))
+                return fail(S::引用冲突);
+            if (!value.创建事实代次 || value.创建事实代次 > r.H
+                || (value.退出事实代次 && *value.退出事实代次 <= r.H) || value.创建事实代次 != n->创建事实代次
+                || value.退出事实代次 != n->退出事实代次)
+                return fail(S::内部不一致);
+            auto result = 读取不可变材料历史事实({1, r.Gread, r.H, r.结点, value.编码});
+            if (!result.成功())
+                return fail(result.状态);
+            if (result.Gread != r.Gread || result.H != r.H || result.材料->结点 != r.结点
+                || result.材料->值事实 != value.编码)
+                return fail(S::内部不一致);
+            const auto last = 第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
+            if (last.状态 != L1中性读取状态::成功)
+                return fail(last.状态 == L1中性读取状态::资源失败 ? S::资源失败 : S::内部不一致);
+            if (last.事实代次 != r.Gread)
+                return fail(S::事实代次漂移);
+            return result;
+        } catch (const std::bad_alloc&) {
+            return fail(S::资源失败);
+        } catch (...) {
+            return fail(S::内部不一致);
+        }
+    }
+
+    特征值历史读取结果 读取不可变材料历史事实(const 特征值历史读取请求& r) const {
+
+        using S = 特征引用读取状态;
+        特征值历史读取结果 out;
+        out.Gread = r.Gread;
+        out.H = r.H;
+        auto fail = [&](S s) {
+            out.状态 = s;
+            return out;
+        };
+        if (r.合同版本 != 1 || !r.H || r.H > r.Gread || !有效(r.结点) || !有效(r.值事实))
+            return out;
+        try {
+            auto first = 第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
+            if (first.状态 != L1中性读取状态::成功)
+                return fail(first.状态 == L1中性读取状态::资源失败 ? S::资源失败 : S::内部不一致);
+            if (first.事实代次 != r.Gread)
+                return fail(S::事实代次漂移);
+            auto nr = 第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, r.结点});
+            auto vr = 第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, r.值事实});
+            if (nr.状态 != L1所有者范围读取状态::成功)
+                return fail(特征引用历史状态(nr.状态));
+            if (vr.状态 != L1所有者范围读取状态::成功)
+                return fail(特征引用历史状态(vr.状态));
+            if (nr.读取事实代次 != r.Gread || vr.读取事实代次 != r.Gread)
+                return fail(S::事实代次漂移);
+            auto n = nr.事实 ? std::get_if<L1所有者范围节点事实>(&*nr.事实) : nullptr;
+            auto v = vr.事实 ? std::get_if<L1所有者范围值事实>(&*vr.事实) : nullptr;
+            if (nr.合同版本 != L1所有者范围CRUD合同版本 || vr.合同版本 != L1所有者范围CRUD合同版本
+                || nr.查询编码 != r.结点 || vr.查询编码 != r.值事实 || !n || !v || n->编码 != r.结点
+                || v->编码 != r.值事实 || n->写入所有者 != 所有者_ || v->写入所有者 != 所有者_
+                || n->种类 != 节点种类::普通 || n->属性类型表示 || v->所属节点 != n->编码
+                || n->创建事实代次 != v->创建事实代次 || n->退出事实代次 != v->退出事实代次)
+                return fail(S::引用冲突);
+            if (!n->创建事实代次 || !v->创建事实代次 || n->创建事实代次 > r.H || v->创建事实代次 > r.H)
+                return fail(S::未找到);
+            if ((n->退出事实代次 && *n->退出事实代次 <= r.H) || (v->退出事实代次 && *v->退出事实代次 <= r.H))
+                return fail(S::目标已退出);
+            if (!有效(v->来源节点) || !特征值类数据内部::材料有效(v->材料))
+                return fail(S::引用冲突);
+            auto tr = 第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, v->属性类型节点});
+            if (tr.状态 != L1所有者范围读取状态::成功)
+                return fail(特征引用历史状态(tr.状态));
+            if (tr.读取事实代次 != r.Gread)
+                return fail(S::事实代次漂移);
+            auto t = tr.事实 ? std::get_if<L1所有者范围节点事实>(&*tr.事实) : nullptr;
+            auto representation = std::visit(
+                [](const auto& x) {
+                    using T = std::decay_t<decltype(x)>;
+                    if constexpr (std::is_same_v<T, std::int64_t>)
+                        return L1所有者范围值表示种类::I64;
+                    else if constexpr (std::is_same_v<T, std::vector<std::int64_t>>)
+                        return L1所有者范围值表示种类::I64组;
+                    else if constexpr (std::is_same_v<T, std::vector<std::uint64_t>>)
+                        return L1所有者范围值表示种类::U64组;
+                    else
+                        return L1所有者范围值表示种类::独立材料引用;
+                },
+                v->材料);
+            if (tr.合同版本 != L1所有者范围CRUD合同版本 || tr.查询编码 != v->属性类型节点 || !t
+                || t->编码 != v->属性类型节点 || !t->创建事实代次 || t->写入所有者 != 所有者_
+                || t->种类 != 节点种类::属性类型 || !t->属性类型表示 || *t->属性类型表示 != representation
+                || t->创建事实代次 > r.H || (t->退出事实代次 && *t->退出事实代次 <= r.H))
+                return fail(S::引用冲突);
+            const auto sr = 第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, v->来源节点});
+            if (sr.状态 != L1所有者范围读取状态::成功)
+                return fail(特征引用历史状态(sr.状态));
+            if (sr.读取事实代次 != r.Gread)
+                return fail(S::事实代次漂移);
+            const auto* source = sr.事实 ? std::get_if<L1所有者范围节点事实>(&*sr.事实) : nullptr;
+            if (sr.合同版本 != L1所有者范围CRUD合同版本 || sr.查询编码 != v->来源节点 || !source
+                || source->编码 != v->来源节点 || !source->创建事实代次 || source->创建事实代次 > r.H
+                || (source->退出事实代次 && *source->退出事实代次 <= r.H))
+                return fail(S::引用冲突);
+            auto last = 第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
+            if (last.状态 != L1中性读取状态::成功)
+                return fail(last.状态 == L1中性读取状态::资源失败 ? S::资源失败 : S::内部不一致);
+            if (last.事实代次 != r.Gread)
+                return fail(S::事实代次漂移);
+            out.状态 = S::已读取;
+            out.材料 = 特征值类材料结点{n->编码,     v->编码,         v->属性类型节点, v->材料,
+                                        v->来源节点, n->创建事实代次, std::nullopt};
+            return out;
+        } catch (const std::bad_alloc&) {
+            return fail(S::资源失败);
+        } catch (...) {
+            return fail(S::内部不一致);
+        }
+    }
+
     特征值类数据服务() = delete;
     特征值类数据服务(const 特征值类数据服务&) = delete;
     特征值类数据服务& operator=(const 特征值类数据服务&) = delete;

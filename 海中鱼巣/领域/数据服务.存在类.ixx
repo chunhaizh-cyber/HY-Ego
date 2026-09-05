@@ -476,8 +476,214 @@ struct 任务方法实例参数规格组结果 final {
     }
 };
 
+struct 存在历史读取请求 final {
+    std::uint32_t 合同版本 = 1;
+    std::uint64_t Gread = 0;
+    std::uint64_t H = 0;
+    稳定编码 宿主{};
+    std::uint64_t 关系预算 = 0;
+};
+struct 存在历史读取结果 final {
+    特征引用读取状态 状态 = 特征引用读取状态::入口拒绝;
+    std::uint32_t 合同版本 = 1;
+    std::uint64_t Gread = 0;
+    std::uint64_t H = 0;
+    std::optional<存在类结点> 存在;
+    bool 成功() const noexcept {
+        return 状态 == 特征引用读取状态::已读取 && 合同版本 == 1 && H && Gread >= H && 存在
+               && 有效(存在->结点) && !存在->退出事实代次;
+    }
+};
+struct 存在特征成员历史请求 final {
+    std::uint32_t 合同版本 = 1;
+    std::uint64_t Gread = 0;
+    std::uint64_t H = 0;
+    稳定编码 宿主{}, 成员关系{}, 特征实例{};
+};
+struct 存在特征成员历史结果 final {
+    特征引用读取状态 状态 = 特征引用读取状态::入口拒绝;
+    std::uint32_t 合同版本 = 1;
+    std::uint64_t Gread = 0;
+    std::uint64_t H = 0;
+    稳定编码 宿主{};
+    std::optional<存在类成员引用> 成员;
+    bool 成功() const noexcept {
+        return 状态 == 特征引用读取状态::已读取 && 合同版本 == 1 && H && Gread >= H && 有效(宿主) && 成员
+               && 有效(成员->成员关系) && 有效(成员->目标结点);
+    }
+};
+
 class 存在类数据服务 final {
 public:
+    bool 绑定于(const L1事实基座服务& s) const noexcept {
+        return &s == &第一层服务_;
+    }
+    存在历史读取结果 读取存在历史事实(const 存在历史读取请求& r) const {
+        using S = 特征引用读取状态;
+        存在历史读取结果 o;
+        o.Gread = r.Gread;
+        o.H = r.H;
+        if (r.合同版本 != 1 || !r.H || r.H > r.Gread || !有效(r.宿主) || !r.关系预算)
+            return o;
+        try {
+            auto first = 第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
+            if (first.状态 != L1中性读取状态::成功) {
+                o.状态 = first.状态 == L1中性读取状态::资源失败 ? S::资源失败 : S::内部不一致;
+                return o;
+            }
+            if (first.事实代次 != r.Gread) {
+                o.状态 = S::事实代次漂移;
+                return o;
+            }
+            auto nr = 第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, r.宿主});
+            if (nr.状态 != L1所有者范围读取状态::成功) {
+                o.状态 = 特征引用历史状态(nr.状态);
+                return o;
+            }
+            if (nr.读取事实代次 != r.Gread) {
+                o.状态 = S::事实代次漂移;
+                return o;
+            }
+            auto n = nr.事实 ? std::get_if<L1所有者范围节点事实>(&*nr.事实) : nullptr;
+            if (nr.合同版本 != L1所有者范围CRUD合同版本 || nr.查询编码 != r.宿主 || !n || n->编码 != r.宿主
+                || n->写入所有者 != 所有者_ || n->种类 != 节点种类::普通 || n->属性类型表示) {
+                o.状态 = S::引用冲突;
+                return o;
+            }
+            if (!n->创建事实代次 || n->创建事实代次 > r.H) {
+                o.状态 = S::未找到;
+                return o;
+            }
+            if (n->退出事实代次 && *n->退出事实代次 <= r.H) {
+                o.状态 = S::目标已退出;
+                return o;
+            }
+            存在类结点 snapshot;
+            snapshot.结点 = r.宿主;
+            snapshot.创建事实代次 = n->创建事实代次;
+            if (!n->当前属性.empty()) {
+                o.状态 = S::引用冲突;
+                return o;
+            }
+            const std::vector<std::pair<存在类成员种类, 稳定编码>> kinds{
+                {存在类成员种类::子存在, 子存在关系类型_},
+                {存在类成员种类::特征, 特征关系类型_},
+                {存在类成员种类::状态, 状态关系类型_},
+                {存在类成员种类::动态, 动态关系类型_}};
+            std::uint64_t count = 0;
+            for (const auto& [kind, type] : kinds) {
+                auto rr = 第一层服务_.读取所有者范围历史关系组(
+                    {L1所有者范围CRUD合同版本, L1所有者范围关系端点方向::源, r.宿主, type, r.H});
+                if (rr.状态 != L1所有者范围读取状态::成功) {
+                    o.状态 = 特征引用历史状态(rr.状态);
+                    return o;
+                }
+                if (rr.读取事实代次 != r.Gread) {
+                    o.状态 = S::事实代次漂移;
+                    return o;
+                }
+                if (rr.合同版本 != L1所有者范围CRUD合同版本 || rr.方向 != L1所有者范围关系端点方向::源
+                    || rr.端点节点 != r.宿主 || rr.关系类型节点 != type || rr.历史截止事实代次 != r.H
+                    || !规范化关系组(rr.关系组, r.宿主, type, r.H, std::nullopt)) {
+                    o.状态 = S::内部不一致;
+                    return o;
+                }
+                if (rr.关系组.size() > r.关系预算 - count) {
+                    o.状态 = S::数量预算不足;
+                    return o;
+                }
+                count += rr.关系组.size();
+                auto& members = 选择成员组(snapshot, kind);
+                for (const auto& edge : rr.关系组) {
+                    if (!edge.创建事实代次) {
+                        o.状态 = S::内部不一致;
+                        return o;
+                    }
+                    members.push_back({edge.编码, edge.目标节点});
+                }
+            }
+            auto last = 第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
+            if (last.状态 != L1中性读取状态::成功) {
+                o.状态 = last.状态 == L1中性读取状态::资源失败 ? S::资源失败 : S::内部不一致;
+                return o;
+            }
+            if (last.事实代次 != r.Gread) {
+                o.状态 = S::事实代次漂移;
+                return o;
+            }
+            o.状态 = S::已读取;
+            o.存在 = std::move(snapshot);
+            return o;
+        } catch (const std::bad_alloc&) {
+            o.状态 = S::资源失败;
+            return o;
+        } catch (...) {
+            o.状态 = S::内部不一致;
+            return o;
+        }
+    }
+    存在特征成员历史结果 读取特征成员历史事实(const 存在特征成员历史请求& r) const {
+        using S = 特征引用读取状态;
+        存在特征成员历史结果 o;
+        o.Gread = r.Gread;
+        o.H = r.H;
+        o.宿主 = r.宿主;
+        if (r.合同版本 != 1 || !r.H || r.H > r.Gread || !有效(r.宿主) || !有效(r.成员关系) || !有效(r.特征实例))
+            return o;
+        try {
+            auto nr = 第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, r.宿主});
+            auto rr = 第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, r.成员关系});
+            if (nr.状态 != L1所有者范围读取状态::成功) {
+                o.状态 = 特征引用历史状态(nr.状态);
+                return o;
+            }
+            if (rr.状态 != L1所有者范围读取状态::成功) {
+                o.状态 = 特征引用历史状态(rr.状态);
+                return o;
+            }
+            if (nr.读取事实代次 != r.Gread || rr.读取事实代次 != r.Gread) {
+                o.状态 = S::事实代次漂移;
+                return o;
+            }
+            auto n = nr.事实 ? std::get_if<L1所有者范围节点事实>(&*nr.事实) : nullptr;
+            auto e = rr.事实 ? std::get_if<L1所有者范围关系事实>(&*rr.事实) : nullptr;
+            if (nr.合同版本 != L1所有者范围CRUD合同版本 || rr.合同版本 != L1所有者范围CRUD合同版本
+                || nr.查询编码 != r.宿主 || rr.查询编码 != r.成员关系 || !n || !e || n->编码 != r.宿主
+                || n->写入所有者 != 所有者_ || n->种类 != 节点种类::普通 || n->属性类型表示
+                || e->编码 != r.成员关系 || e->写入所有者 != 所有者_ || e->源节点 != r.宿主
+                || e->目标节点 != r.特征实例 || e->关系类型节点 != 特征关系类型_ || e->角色或顺序 != 1) {
+                o.状态 = S::引用冲突;
+                return o;
+            }
+            if (!n->创建事实代次 || !e->创建事实代次 || n->创建事实代次 > r.H || e->创建事实代次 > r.H) {
+                o.状态 = S::未找到;
+                return o;
+            }
+            if ((n->退出事实代次 && *n->退出事实代次 <= r.H) || (e->退出事实代次 && *e->退出事实代次 <= r.H)) {
+                o.状态 = S::目标已退出;
+                return o;
+            }
+            auto last = 第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
+            if (last.状态 != L1中性读取状态::成功) {
+                o.状态 = last.状态 == L1中性读取状态::资源失败 ? S::资源失败 : S::内部不一致;
+                return o;
+            }
+            if (last.事实代次 != r.Gread) {
+                o.状态 = S::事实代次漂移;
+                return o;
+            }
+            o.状态 = S::已读取;
+            o.成员 = 存在类成员引用{e->编码, e->目标节点};
+            return o;
+        } catch (const std::bad_alloc&) {
+            o.状态 = S::资源失败;
+            return o;
+        } catch (...) {
+            o.状态 = S::内部不一致;
+            return o;
+        }
+    }
+
     存在类数据服务() = delete;
     存在类数据服务(const 存在类数据服务&) = delete;
     存在类数据服务& operator=(const 存在类数据服务&) = delete;

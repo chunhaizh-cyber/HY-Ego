@@ -26,6 +26,7 @@ import 海中鱼巣.领域.服务.L2特征结构;
 import 海中鱼巣.领域.服务.L2状态结构;
 import 海中鱼巣.领域.服务.L2动态结构;
 import 海中鱼巣.领域.服务.L2因果结构;
+import 海中鱼巣.领域.数据服务.存在类;
 
 export {
 #include "L2概念结构.数据.h"
@@ -164,6 +165,7 @@ struct 普通概念结构定位 final {
     稳定编码 定义最小数量属性类型;
     稳定编码 定义最大数量属性类型;
     std::uint64_t 建立事实代次 = 0;
+    稳定编码 特征程度属性类型{};
 };
 
 struct 概念世界事实支持结构定位 final {
@@ -874,6 +876,14 @@ std::vector<std::uint64_t> 编码概念定义目标(const L2概念定义目标& 
         else if constexpr (std::is_same_v<类型, L2状态身份>) return {7, 值.值.值};
         else if constexpr (std::is_same_v<类型, L2动态身份>) return {8, 值.值.值};
         else if constexpr (std::is_same_v<类型, L2因果身份>) return {9, 值.值.值};
+        else if constexpr (std::is_same_v<类型, L2新存在引用>)
+            return {11, 值.值.值};
+        else if constexpr (std::is_same_v<类型, L2新特征类型引用>)
+            return {12, 值.值.值};
+        else if constexpr (std::is_same_v<类型, L2新特征实例引用>)
+            return {13, 值.值.值};
+        else if constexpr (std::is_same_v<类型, L2新特征值引用>)
+            return {14, 值.实例.值.值, 值.值事实.值};
         else {
             const auto 端点 = [](const L2概念世界关系端点& 端)
                 -> std::pair<std::uint64_t, std::uint64_t> {
@@ -927,6 +937,16 @@ std::optional<L2概念定义目标> 解码概念定义目标(
         if (编码[0] == 8) return L2动态身份{稳定(编码[1])};
         return L2因果身份{稳定(编码[1])};
     }
+    if (编码.size() == 2 && 编码[1] != 0) {
+        if (编码[0] == 11)
+            return L2新存在引用{稳定(编码[1])};
+        if (编码[0] == 12)
+            return L2新特征类型引用{稳定(编码[1])};
+        if (编码[0] == 13)
+            return L2新特征实例引用{稳定(编码[1])};
+    }
+    if (编码[0] == 14 && 编码.size() == 3 && 编码[1] && 编码[2])
+        return L2新特征值引用{{稳定(编码[1])}, 稳定(编码[2])};
     if (编码[0] != 10 || 编码.size() != 7 || 编码[1] < 1 || 编码[1] > 13
         || 编码[2] == 0 || 编码[3] < 1 || 编码[3] > 8 || 编码[4] == 0
         || 编码[5] < 1 || 编码[5] > 8 || 编码[6] == 0) return std::nullopt;
@@ -1017,6 +1037,13 @@ std::optional<稳定编码> 读取普通概念节点映射(
         普通概念签名规则关系本地键值,
         普通概念首次请求见证值本地键值,
         普通概念治理生命周期值本地键值};
+    if (!请求.签名值式项.empty() && 请求.签名值式项.front().角色 == 0x4643'0001ULL) {
+        for (auto key : {0x02FC'1001U, 0x02FC'1002U, 0x02FC'1003U, 0x02FC'1004U, 0x02FC'100AU})
+            期望键.push_back(key);
+        for (const auto& item : 请求.签名值式项)
+            if (item.顺序 == 2)
+                期望键.push_back(0x02FC'1005U);
+    }
     const auto 追加分区 = [&](std::uint32_t 分区, std::size_t 数量) {
         for (std::size_t 索引 = 0; 索引 < 数量; ++索引)
             期望键.push_back(分区 + static_cast<std::uint32_t>(索引));
@@ -1414,10 +1441,9 @@ bool 历史关系组头完整(const L1所有者范围历史关系组读取结果
             属性组.读取事实代次};
     if (属性组.读取事实代次 != 调用代次)
         return {L2结构状态::事实代次漂移, 属性组.读取事实代次};
-    if (属性组.合同版本 != L1所有者范围CRUD合同版本
-        || 属性组.所属节点 != 请求.概念.值
+    if (属性组.合同版本 != L1所有者范围CRUD合同版本 || 属性组.所属节点 != 请求.概念.值
         || 属性组.历史截止事实代次 != 结构截止
-        || 属性组.属性值组.size() != 2)
+        || (属性组.属性值组.size() != 2 && 属性组.属性值组.size() != 3))
         return {L2结构状态::内部不一致, 投影截止};
     const L1所有者范围值事实* 见证值 = nullptr;
     const L1所有者范围值事实* 生命周期值 = nullptr;
@@ -1425,7 +1451,8 @@ bool 历史关系组头完整(const L1所有者范围历史关系组读取结果
         if (值.属性类型节点 == 普通定位.首次见证属性类型) 见证值 = &值;
         else if (值.属性类型节点 == 普通定位.治理生命周期属性类型)
             生命周期值 = &值;
-        else return {L2结构状态::内部不一致, 投影截止};
+        else if (!有效(普通定位.特征程度属性类型) || 值.属性类型节点 != 普通定位.特征程度属性类型)
+            return {L2结构状态::内部不一致, 投影截止};
     }
     const auto* 见证 = 见证值
         ? std::get_if<std::vector<std::uint64_t>>(&见证值->材料) : nullptr;
@@ -1821,11 +1848,9 @@ L2概念治理生命周期写入结果 重建概念治理生命周期首次结�
     }
     const auto* 新状态 = std::get_if<std::int64_t>(&新值.值->材料);
     const auto* 旧状态 = std::get_if<std::int64_t>(&旧值.值->材料);
-    if (!新状态 || !旧状态
-        || *新状态 != static_cast<std::int64_t>(请求.目标状态)
-        || *旧状态 != static_cast<std::int64_t>(请求.当前状态)
-        || 新值.值->创建事实代次 != 截止 || 新值.值->退出事实代次
-        || 旧值.值->创建事实代次 >= 截止
+    if (!新状态 || !旧状态 || *新状态 != static_cast<std::int64_t>(请求.目标状态)
+        || *旧状态 != static_cast<std::int64_t>(请求.当前状态) || 新值.值->创建事实代次 != 截止
+        || (新值.值->退出事实代次 && *新值.值->退出事实代次 <= 截止) || 旧值.值->创建事实代次 >= 截止
         || 旧值.值->退出事实代次 != 截止)
         return 形成概念生命周期写入失败(
             L2结构状态::内部不一致, 截止);
@@ -1864,7 +1889,7 @@ struct 普通概念公开依赖 final {
     const L2因果结构服务* 因果 = nullptr;
 
     bool 完整() const noexcept {
-        return 材料 && 场景 && 存在 && 特征 && 状态 && 动态 && 因果;
+        return 材料 != nullptr;
     }
 };
 
@@ -2043,235 +2068,22 @@ L2结构状态 校验普通概念公开引用(
             && 关系.前状态关系稳定编码 != 关系.后状态关系稳定编码;
     };
     for (const auto& 项 : 事实.定义关系) {
-        状态 = std::visit([&](const auto& 目标) -> L2结构状态 {
-            using 类型 = std::decay_t<decltype(目标)>;
-            if constexpr (!std::is_same_v<类型, L2概念身份>)
-                return 校验世界事实(L2世界事实引用{目标},
-                    请求.读取类别, 历史截止,
-                    请求.请求头.期望事实代次);
-            if constexpr (std::is_same_v<类型, L2概念身份>) {
-                if (是根(目标)) return L2结构状态::已读取;
-                const auto 读取 = 重建普通概念自有事实(第一层服务,
-                    来源定位, 本体定位, 普通定位,
-                    {请求.请求头, L2普通概念结构合同版本,
-                        请求.读取类别, 目标, 历史截止});
-                return 读取.状态;
-            } else if constexpr (std::is_same_v<类型, L2场景身份>) {
-                const auto 读取 = 读场景(目标);
-                return 完整读取形状结论(读取,
-                    读取.场景 && 读取.场景->身份 == 目标
-                        && L2场景事实完整(*读取.场景, 投影截止)
-                        && 生命周期投影完整(读取.场景->生命周期));
-            } else if constexpr (std::is_same_v<类型, L2存在身份>) {
-                const auto 读取 = 读存在(目标);
-                return 完整读取形状结论(读取,
-                    读取.存在 && 读取.存在->身份 == 目标
-                        && L2存在事实完整(*读取.存在, 投影截止)
-                        && 生命周期投影完整(读取.存在->生命周期));
-            } else if constexpr (std::is_same_v<类型, L2特征定义身份>) {
-                const auto 读取 = 读特征定义(目标);
-                return 完整读取形状结论(读取,
-                    读取.特征定义 && 读取.特征定义->身份 == 目标
-                        && L2统一特征定义事实完整(
-                            *读取.特征定义, 投影截止)
-                        && 生命周期投影完整(读取.特征定义->生命周期));
-            } else if constexpr (std::is_same_v<类型, L2特征实例身份>) {
-                const auto 读取 = 读特征实例(目标);
-                return 完整读取形状结论(读取,
-                    读取.特征实例 && 读取.特征实例->身份 == 目标
-                        && 读取.自有关系
-                        && L2特征实例事实完整(
-                            *读取.特征实例, 投影截止)
-                        && 生命周期投影完整(读取.特征实例->生命周期));
-            } else if constexpr (std::is_same_v<类型, L2概念特征值引用>) {
-                const auto 实例 = 读特征实例(目标.特征实例);
-                const auto 实例结论 = 完整读取形状结论(实例,
-                    实例.特征实例 && 实例.特征实例->身份 == 目标.特征实例);
-                if (实例结论 != L2结构状态::已读取) return 实例结论;
-                if (请求.读取类别 == L2读取类别::当前) {
-                    const auto 值 = 依赖.特征->读取特征当前值(
-                        {请求.请求头, 目标.特征实例});
-                    return 读取头形状结论(值.结果头, 值.成功() && 值.当前值
-                        && 值.当前值->特征实例 == 目标.特征实例
-                        && 值.当前值->值稳定编码 == 目标.值稳定编码);
+        状态 = std::visit(
+            [&](const auto& 目标) -> L2结构状态 {
+                using 类型 = std::decay_t<decltype(目标)>;
+                if constexpr (!std::is_same_v<类型, L2概念身份>)
+                    return 校验世界事实(L2世界事实引用{目标}, 请求.读取类别, 历史截止,
+                                        请求.请求头.期望事实代次);
+                else {
+                    if (是根(目标))
+                        return L2结构状态::已读取;
+                    return 重建普通概念自有事实(
+                               第一层服务, 来源定位, 本体定位, 普通定位,
+                               {请求.请求头, L2普通概念结构合同版本, 请求.读取类别, 目标, 历史截止})
+                        .状态;
                 }
-                const auto 值 = 依赖.特征->读取特征历史值(
-                    {请求.请求头, 目标.特征实例, 目标.值稳定编码});
-                if (值.结果头.状态 != L2结构状态::已读取)
-                    return 值.结果头.状态;
-                return 值.结果头.合同版本 == L2结构合同版本
-                    && 值.结果头.事实截止代次 == 请求.请求头.期望事实代次
-                    && !值.结果头.变更事实代次 && 值.特征值
-                    && 值.特征值->特征实例 == 目标.特征实例
-                    && 值.特征值->值稳定编码 == 目标.值稳定编码
-                    && 有效(值.特征值->来源稳定编码)
-                    && L2特征当前值材料有效(值.特征值->类型化不可变材料)
-                    && L2特征值事实截止投影完整(
-                        *值.特征值, 投影截止)
-                    ? L2结构状态::已读取 : L2结构状态::内部不一致;
-            } else if constexpr (std::is_same_v<类型, L2状态身份>) {
-                const auto 读取 = 读状态(目标);
-                return 完整读取形状结论(读取,
-                    读取.状态 && 读取.状态->身份 == 目标
-                        && 读取.自有关系
-                        && 状态公开形状完整(*读取.状态, *读取.自有关系));
-            } else if constexpr (std::is_same_v<类型, L2动态身份>) {
-                const auto 读取 = 读动态(目标);
-                return 完整读取形状结论(读取,
-                    读取.动态 && 读取.动态->身份 == 目标
-                        && 读取.自有关系
-                        && 动态公开形状完整(*读取.动态, *读取.自有关系));
-            } else if constexpr (std::is_same_v<类型, L2因果身份>) {
-                const auto 读取 = 读因果(目标);
-                return 完整读取形状结论(读取,
-                    读取.因果 && 读取.因果->身份 == 目标
-                        && 读取.自有事实
-                        && L2因果事实完整(*读取.因果, 投影截止)
-                        && 生命周期投影完整(读取.因果->生命周期));
-            } else {
-                const auto& 引用 = 目标;
-                switch (引用.类别) {
-                case L2概念世界关系类别::场景父子: {
-                    const auto 源 = std::get<L2场景身份>(引用.源);
-                    const auto 目标场景 = std::get<L2场景身份>(引用.目标);
-                    const auto 读取 = 读场景(源);
-                    const auto 结论 = 完整读取形状结论(读取,
-                        读取.场景 && 读取.场景->身份 == 源
-                            && L2场景事实完整(*读取.场景, 投影截止)
-                            && 生命周期投影完整(读取.场景->生命周期));
-                    if (结论 != L2结构状态::已读取) return 结论;
-                    const bool 命中 = std::any_of(读取.场景->直接子场景.begin(),
-                        读取.场景->直接子场景.end(), [&](const auto& 关系) {
-                            return 关系.关系稳定编码 == 引用.关系稳定编码
-                                && 关系.父场景 == 源 && 关系.子场景 == 目标场景; });
-                    return 命中 ? L2结构状态::已读取 : L2结构状态::引用冲突;
-                }
-                case L2概念世界关系类别::场景成员: {
-                    const auto 源 = std::get<L2场景身份>(引用.源);
-                    const auto 目标存在 = std::get<L2存在身份>(引用.目标);
-                    const auto 读取 = 读场景(源);
-                    const auto 结论 = 完整读取形状结论(读取,
-                        读取.场景 && 读取.场景->身份 == 源
-                            && L2场景事实完整(*读取.场景, 投影截止)
-                            && 生命周期投影完整(读取.场景->生命周期));
-                    if (结论 != L2结构状态::已读取) return 结论;
-                    const bool 命中 = std::any_of(读取.场景->直接成员.begin(),
-                        读取.场景->直接成员.end(), [&](const auto& 关系) {
-                            return 关系.关系稳定编码 == 引用.关系稳定编码
-                                && 关系.场景 == 源 && 关系.存在 == 目标存在; });
-                    return 命中 ? L2结构状态::已读取 : L2结构状态::引用冲突;
-                }
-                case L2概念世界关系类别::场景宿主存在: {
-                    const auto 源 = std::get<L2场景身份>(引用.源);
-                    const auto 目标存在 = std::get<L2存在身份>(引用.目标);
-                    const auto 读取 = 读场景(源);
-                    const auto 结论 = 完整读取形状结论(读取,
-                        读取.场景 && 读取.场景->身份 == 源
-                            && L2场景事实完整(*读取.场景, 投影截止)
-                            && 生命周期投影完整(读取.场景->生命周期));
-                    if (结论 != L2结构状态::已读取) return 结论;
-                    return 读取.场景->当前宿主关系
-                        && 读取.场景->当前宿主关系->关系稳定编码
-                            == 引用.关系稳定编码
-                        && 读取.场景->当前宿主关系->场景 == 源
-                        && 读取.场景->当前宿主关系->宿主存在 == 目标存在
-                        ? L2结构状态::已读取 : L2结构状态::引用冲突;
-                }
-                case L2概念世界关系类别::特征宿主:
-                case L2概念世界关系类别::特征定义: {
-                    const auto 源 = std::get<L2特征实例身份>(引用.源);
-                    const auto 读取 = 读特征实例(源);
-                    const auto 结论 = 完整读取形状结论(读取,
-                        读取.特征实例 && 读取.特征实例->身份 == 源
-                            && 读取.自有关系
-                            && L2特征实例事实完整(
-                                *读取.特征实例, 投影截止)
-                            && 生命周期投影完整(读取.特征实例->生命周期));
-                    if (结论 != L2结构状态::已读取) return 结论;
-                    const bool 宿主 = 引用.类别 == L2概念世界关系类别::特征宿主;
-                    const bool 端点 = 宿主
-                        ? 读取.特征实例->宿主存在 == std::get<L2存在身份>(引用.目标)
-                        : 读取.特征实例->特征定义 == std::get<L2特征定义身份>(引用.目标);
-                    const auto 编码 = 宿主 ? 读取.自有关系->宿主关系稳定编码
-                        : 读取.自有关系->定义关系稳定编码;
-                    return 端点 && 编码 == 引用.关系稳定编码
-                        ? L2结构状态::已读取 : L2结构状态::引用冲突;
-                }
-                case L2概念世界关系类别::状态主体:
-                case L2概念世界关系类别::状态特征实例: {
-                    const auto 源 = std::get<L2状态身份>(引用.源);
-                    const auto 读取 = 读状态(源);
-                    const auto 结论 = 完整读取形状结论(读取,
-                        读取.状态 && 读取.状态->身份 == 源
-                            && 读取.自有关系
-                            && 状态公开形状完整(*读取.状态, *读取.自有关系));
-                    if (结论 != L2结构状态::已读取) return 结论;
-                    const bool 主体 = 引用.类别 == L2概念世界关系类别::状态主体;
-                    const bool 端点 = 主体
-                        ? 读取.状态->主体存在 == std::get<L2存在身份>(引用.目标)
-                        : 读取.状态->特征实例 == std::get<L2特征实例身份>(引用.目标);
-                    const auto 编码 = 主体 ? 读取.自有关系->主体关系稳定编码
-                        : 读取.自有关系->特征实例关系稳定编码;
-                    return 端点 && 编码 == 引用.关系稳定编码
-                        ? L2结构状态::已读取 : L2结构状态::引用冲突;
-                }
-                case L2概念世界关系类别::动态主体:
-                case L2概念世界关系类别::动态前状态:
-                case L2概念世界关系类别::动态后状态: {
-                    const auto 源 = std::get<L2动态身份>(引用.源);
-                    const auto 读取 = 读动态(源);
-                    const auto 结论 = 完整读取形状结论(读取,
-                        读取.动态 && 读取.动态->身份 == 源
-                            && 读取.自有关系
-                            && 动态公开形状完整(*读取.动态, *读取.自有关系));
-                    if (结论 != L2结构状态::已读取) return 结论;
-                    bool 端点 = false; 稳定编码 编码;
-                    if (引用.类别 == L2概念世界关系类别::动态主体) {
-                        端点 = 读取.动态->主体存在 == std::get<L2存在身份>(引用.目标);
-                        编码 = 读取.自有关系->主体关系稳定编码;
-                    } else if (引用.类别 == L2概念世界关系类别::动态前状态) {
-                        端点 = 读取.动态->前状态 == std::get<L2状态身份>(引用.目标);
-                        编码 = 读取.自有关系->前状态关系稳定编码;
-                    } else {
-                        端点 = 读取.动态->后状态 == std::get<L2状态身份>(引用.目标);
-                        编码 = 读取.自有关系->后状态关系稳定编码;
-                    }
-                    return 端点 && 编码 == 引用.关系稳定编码
-                        ? L2结构状态::已读取 : L2结构状态::引用冲突;
-                }
-                default: {
-                    const auto 源 = std::get<L2因果身份>(引用.源);
-                    const auto 读取 = 读因果(源);
-                    const auto 结论 = 完整读取形状结论(读取,
-                        读取.因果 && 读取.因果->身份 == 源
-                            && 读取.自有事实
-                            && L2因果事实完整(*读取.因果, 投影截止)
-                            && 生命周期投影完整(读取.因果->生命周期));
-                    if (结论 != L2结构状态::已读取) return 结论;
-                    if (引用.类别 == L2概念世界关系类别::因果动作引用) {
-                        const auto 目标动作 = std::get<L2概念动作引用>(引用.目标);
-                        return 读取.因果->动作 && 读取.自有事实->动作关系稳定编码
-                            && *读取.因果->动作 == 目标动作.值
-                            && *读取.自有事实->动作关系稳定编码
-                                == 引用.关系稳定编码
-                            ? L2结构状态::已读取 : L2结构状态::引用冲突;
-                    }
-                    const auto 目标状态 = std::get<L2状态身份>(引用.目标);
-                    const bool 条件 = 引用.类别
-                        == L2概念世界关系类别::因果条件状态;
-                    const auto& 端点组 = 条件 ? 读取.因果->条件状态
-                        : 读取.因果->结果状态;
-                    const auto& 编码组 = 条件 ? 读取.自有事实->条件关系稳定编码
-                        : 读取.自有事实->结果关系稳定编码;
-                    for (std::size_t i = 0; i < 端点组.size() && i < 编码组.size(); ++i)
-                        if (端点组[i].目标 == 目标状态.值
-                            && 编码组[i] == 引用.关系稳定编码)
-                            return L2结构状态::已读取;
-                    return L2结构状态::引用冲突;
-                }
-                }
-            }
-        }, 项.项.目标);
+            },
+            项.项.目标);
         if (状态 != L2结构状态::已读取) return 状态;
     }
     return L2结构状态::已读取;
@@ -3652,6 +3464,1380 @@ public:
     L2概念结构服务(L2概念结构服务&&) = delete;
     L2概念结构服务& operator=(L2概念结构服务&&) = delete;
 
+    // 唯一概念 owner 内配置；不同库或不同实例拒绝。
+    L2特征概念状态 配置特征概念依赖(const 不可变材料服务& material, const 特征类数据服务& feature,
+                                    const 存在类数据服务& existence, const 特征值类数据服务& value) {
+        using S = L2特征概念状态;
+        if (!material.使用同一L1事实基座实例(第一层服务_) || !feature.绑定于(第一层服务_)
+            || !existence.绑定于(第一层服务_) || !value.绑定于(第一层服务_))
+            return S::引用冲突;
+        try {
+            std::lock_guard<std::mutex> lock(概念写入锁_);
+            if (特征概念已配置_)
+                return 特征概念依赖匹配(feature, existence, value) && 普通概念依赖_.材料 == &material
+                           ? S::精确重复
+                           : S::引用冲突;
+            if (普通概念依赖_.材料 && 普通概念依赖_.材料 != &material)
+                return S::引用冲突;
+            using namespace L2概念结构内部;
+            L1所有者范围写集请求 w;
+            w.写入幂等身份 = {0x4C32'4643'5247'0001ULL};
+            w.期望事实代次 = 读取固定登记期望代次(第一层服务_, 第一层写入端口_, w.写入幂等身份);
+            for (std::uint32_t i = 0; i < 16; ++i) {
+                std::optional<L1所有者范围值表示种类> repr;
+                if (i == 0)
+                    repr = L1所有者范围值表示种类::I64;
+                if (i == 1)
+                    repr = L1所有者范围值表示种类::U64组;
+                if (i == 12)
+                    repr = L1所有者范围值表示种类::I64组;
+                w.节点.push_back({{0x02FC'0000U + i}, repr ? 节点种类::属性类型 : 节点种类::普通, repr});
+            }
+            const auto result = 第一层写入端口_.提交所有者范围中性写集(w);
+            if (!登记写入结果完整(result, 第一层写入端口_.所有者身份(), w.写入幂等身份, 16))
+                return S::已可能发布;
+            std::vector<稳定编码> types;
+            for (std::uint32_t i = 0; i < 16; ++i)
+                types.push_back(取得唯一登记编码(result, 0x02FC'0000U + i));
+            if (!支持结构定位_)
+                支持结构定位_ = 初始化概念世界事实支持结构(第一层服务_, 第一层写入端口_, 身份来源定位_,
+                                                           本体结构定位_, 普通结构定位_);
+            特征概念类型_ = std::move(types);
+            普通结构定位_.特征程度属性类型 = 特征概念类型_[0];
+            普通概念依赖_.材料 = &material;
+            新特征服务_ = &feature;
+            新存在服务_ = &existence;
+            新值服务_ = &value;
+            特征概念已配置_ = true;
+            return S::已创建;
+        } catch (...) {
+            return S::已可能发布;
+        }
+    }
+
+    bool 特征概念依赖匹配(const 特征类数据服务& f, const 存在类数据服务& e,
+                          const 特征值类数据服务& v) const noexcept {
+        return 特征概念已配置_ && 新特征服务_ == &f && 新存在服务_ == &e && 新值服务_ == &v;
+    }
+
+  private:
+    using FC状态 = L2特征概念状态;
+    struct FC失败 {
+        FC状态 状态;
+        bool 明确零发布 = false;
+    };
+    const 特征类数据服务* 新特征服务_ = nullptr;
+    const 存在类数据服务* 新存在服务_ = nullptr;
+    const 特征值类数据服务* 新值服务_ = nullptr;
+    bool 特征概念已配置_ = false;
+    std::vector<稳定编码> 特征概念类型_;
+
+    static FC状态 FC映射(L2结构状态 s) noexcept {
+        switch (s) {
+        case L2结构状态::已读取:
+            return FC状态::已读取;
+        case L2结构状态::已提交:
+            return FC状态::已创建;
+        case L2结构状态::精确重复:
+            return FC状态::精确重复;
+        case L2结构状态::入口拒绝:
+            return FC状态::入口拒绝;
+        case L2结构状态::未找到:
+            return FC状态::未找到;
+        case L2结构状态::已退出:
+            return FC状态::目标已退出;
+        case L2结构状态::未实现:
+            return FC状态::结构未配置;
+        case L2结构状态::事实代次漂移:
+            return FC状态::事实代次漂移;
+        case L2结构状态::幂等冲突:
+            return FC状态::幂等冲突;
+        case L2结构状态::引用冲突:
+            return FC状态::引用冲突;
+        case L2结构状态::数量预算不足:
+            return FC状态::数量预算不足;
+        case L2结构状态::资源失败:
+            return FC状态::资源失败;
+        default:
+            return FC状态::内部不一致;
+        }
+    }
+    static FC状态 FC映射(特征引用读取状态 s) noexcept {
+        switch (s) {
+        case 特征引用读取状态::已读取:
+            return FC状态::已读取;
+        case 特征引用读取状态::入口拒绝:
+            return FC状态::入口拒绝;
+        case 特征引用读取状态::未找到:
+            return FC状态::未找到;
+        case 特征引用读取状态::目标已退出:
+            return FC状态::目标已退出;
+        case 特征引用读取状态::事实代次漂移:
+            return FC状态::事实代次漂移;
+        case 特征引用读取状态::引用冲突:
+            return FC状态::引用冲突;
+        case 特征引用读取状态::历史材料不可用:
+            return FC状态::历史材料不可用;
+        case 特征引用读取状态::资源失败:
+            return FC状态::资源失败;
+        case 特征引用读取状态::数量预算不足:
+            return FC状态::数量预算不足;
+        default:
+            return FC状态::内部不一致;
+        }
+    }
+    static L2结构状态 FC旧状态(FC状态 s) noexcept {
+        switch (s) {
+        case FC状态::已读取:
+            return L2结构状态::已读取;
+        case FC状态::未找到:
+            return L2结构状态::未找到;
+        case FC状态::目标已退出:
+            return L2结构状态::已退出;
+        case FC状态::结构未配置:
+            return L2结构状态::未实现;
+        case FC状态::事实代次漂移:
+            return L2结构状态::事实代次漂移;
+        case FC状态::资源失败:
+            return L2结构状态::资源失败;
+        case FC状态::历史材料不可用:
+            return L2结构状态::内部不一致;
+        case FC状态::引用冲突:
+            return L2结构状态::引用冲突;
+        default:
+            return L2结构状态::内部不一致;
+        }
+    }
+    std::uint64_t FC当前代次() const {
+        const auto r = 第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
+        if (r.状态 != L1中性读取状态::成功)
+            throw FC失败{r.状态 == L1中性读取状态::资源失败 ? FC状态::资源失败 : FC状态::内部不一致};
+        return r.事实代次;
+    }
+    void FC守卫(std::uint64_t g, std::uint64_t h) const {
+        if (!特征概念已配置_)
+            throw FC失败{FC状态::结构未配置};
+        if (!g || !h || h > g)
+            throw FC失败{FC状态::入口拒绝};
+        if (FC当前代次() != g)
+            throw FC失败{FC状态::事实代次漂移};
+    }
+    void FC材料(不可变材料身份 id, std::uint64_t g, std::uint64_t h) const {
+        if (!普通概念依赖_.材料)
+            throw FC失败{FC状态::结构未配置};
+        const auto r = 普通概念依赖_.材料->读取不可变材料({{1, g}, L2读取类别::历史, id, h});
+        if (r.结果头.状态 != L2结构状态::已读取)
+            throw FC失败{FC映射(r.结果头.状态)};
+        if (r.结果头.合同版本 != L2结构合同版本 || r.结果头.变更事实代次 || r.读取类别 != L2读取类别::历史
+            || r.历史截止事实代次 != h || r.结果头.事实截止代次 != h || !r.材料 || r.材料->身份 != id
+            || !有效(r.材料->格式身份.值) || !有效(r.材料->来源节点) || !r.材料->字节长度
+            || !L2生命周期完整(r.材料->生命周期) || r.材料->生命周期.创建事实代次 > h
+            || r.材料->生命周期.退出事实代次 || !r.材料->物理定位
+            || r.材料->物理定位->摘要对象绝对路径.empty())
+            throw FC失败{FC状态::内部不一致};
+    }
+    template <class T>
+    T FC事实(稳定编码 id, std::uint64_t g, std::uint64_t h, bool requireActive = true) const {
+        const auto r = 第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, id});
+        if (r.状态 != L1所有者范围读取状态::成功)
+            throw FC失败{FC映射(特征引用历史状态(r.状态))};
+        if (r.读取事实代次 != g)
+            throw FC失败{FC状态::事实代次漂移};
+        const auto* p = r.事实 ? std::get_if<T>(&*r.事实) : nullptr;
+        if (r.合同版本 != L1所有者范围CRUD合同版本 || r.查询编码 != id || !p || p->编码 != id
+            || p->写入所有者 != 第一层写入端口_.所有者身份())
+            throw FC失败{FC状态::引用冲突};
+        if (!p->创建事实代次 || p->创建事实代次 > h)
+            throw FC失败{FC状态::未找到};
+        if (requireActive && p->退出事实代次 && *p->退出事实代次 <= h)
+            throw FC失败{FC状态::目标已退出};
+        auto value = *p;
+        if (value.退出事实代次 && *value.退出事实代次 > h)
+            value.退出事实代次.reset();
+        return value;
+    }
+    std::vector<L1所有者范围关系事实>
+    FC关系(稳定编码 node, unsigned type, std::uint64_t g, std::uint64_t h,
+           L1所有者范围关系端点方向 dir = L1所有者范围关系端点方向::源) const {
+        const auto r = 第一层服务_.读取所有者范围历史关系组(
+            {L1所有者范围CRUD合同版本, dir, node, 特征概念类型_.at(type), h});
+        if (r.状态 != L1所有者范围读取状态::成功)
+            throw FC失败{FC映射(特征引用历史状态(r.状态))};
+        if (r.读取事实代次 != g)
+            throw FC失败{FC状态::事实代次漂移};
+        if (r.合同版本 != L1所有者范围CRUD合同版本 || r.端点节点 != node || r.方向 != dir
+            || r.关系类型节点 != 特征概念类型_[type] || r.历史截止事实代次 != h)
+            throw FC失败{FC状态::内部不一致};
+        auto rows = r.关系组;
+        for (auto& x : rows) {
+            if (!有效(x.编码) || !有效(x.源节点) || !有效(x.目标节点)
+                || (dir == L1所有者范围关系端点方向::源 ? x.源节点 : x.目标节点) != node
+                || x.写入所有者 != 第一层写入端口_.所有者身份() || x.关系类型节点 != 特征概念类型_[type]
+                || !x.创建事实代次 || x.创建事实代次 > h || (x.退出事实代次 && *x.退出事实代次 <= h))
+                throw FC失败{FC状态::内部不一致};
+            x.退出事实代次.reset();
+        }
+        std::sort(rows.begin(), rows.end(), [](const auto& a, const auto& b) { return a.编码 < b.编码; });
+        return rows;
+    }
+    L1所有者范围值事实 FC属性(稳定编码 node, unsigned type, std::uint64_t g, std::uint64_t h) const {
+        const auto r = 第一层服务_.读取所有者范围历史属性值组({L1所有者范围CRUD合同版本, node, h});
+        if (r.状态 != L1所有者范围读取状态::成功)
+            throw FC失败{FC映射(特征引用历史状态(r.状态))};
+        if (r.读取事实代次 != g)
+            throw FC失败{FC状态::事实代次漂移};
+        if (r.合同版本 != L1所有者范围CRUD合同版本 || r.所属节点 != node || r.历史截止事实代次 != h)
+            throw FC失败{FC状态::内部不一致};
+        std::optional<L1所有者范围值事实> found;
+        for (const auto& x : r.属性值组) {
+            if (x.属性类型节点 != 特征概念类型_.at(type))
+                continue;
+            if (found)
+                throw FC失败{FC状态::内部不一致};
+            found = FC事实<L1所有者范围值事实>(x.编码, g, h);
+            if (found->所属节点 != node)
+                throw FC失败{FC状态::内部不一致};
+        }
+        if (!found)
+            throw FC失败{FC状态::未找到};
+        return *found;
+    }
+    稳定编码 FC单引用(稳定编码 node, std::int64_t role, std::uint64_t g, std::uint64_t h) const {
+        std::optional<稳定编码> id;
+        for (const auto& e : FC关系(node, 5, g, h)) {
+            if (e.角色或顺序 != role)
+                continue;
+            if (id)
+                throw FC失败{FC状态::内部不一致};
+            id = e.目标节点;
+        }
+        if (!id)
+            throw FC失败{FC状态::内部不一致};
+        return *id;
+    }
+    static L1所有者范围写集本地键 FCK(std::uint32_t n) {
+        return {0x02FC'1000U + n};
+    }
+    void FC写关系(L1所有者范围写集请求& w, unsigned key, L1所有者范围事实引用 from, L1所有者范围事实引用 to,
+                  unsigned type, std::int64_t role) const {
+        w.关系.push_back({FCK(key), from, to, 特征概念类型_.at(type), role});
+    }
+    void FC写属性(L1所有者范围写集请求& w, unsigned key, L1所有者范围事实引用 node, unsigned type,
+                  L1所有者范围原始值材料 material, L1所有者范围事实引用 source) const {
+        w.值.push_back({FCK(key), node, 特征概念类型_.at(type), std::move(material), source});
+        w.属性槽变更.push_back({node, 特征概念类型_[type], FCK(key)});
+    }
+    static void FC规范写集(L1所有者范围写集请求& w) {
+        auto sort = [](auto& xs) {
+            std::sort(xs.begin(), xs.end(), [](const auto& a, const auto& b) { return a.本地键 < b.本地键; });
+        };
+        sort(w.节点);
+        sort(w.关系);
+        sort(w.值);
+        std::sort(w.属性槽变更.begin(), w.属性槽变更.end(), [](const auto& a, const auto& b) {
+            if (a.所属节点 != b.所属节点)
+                return a.所属节点 < b.所属节点;
+            if (a.属性类型节点 != b.属性类型节点)
+                return a.属性类型节点 < b.属性类型节点;
+            return a.新当前值 < b.新当前值;
+        });
+        std::sort(w.退出事实.begin(), w.退出事实.end());
+    }
+    std::optional<L1所有者范围写入结果> FC重放(const L1所有者范围写集请求& w) const {
+        const auto r = 第一层写入端口_.读取首次写入材料({1, w.写入幂等身份});
+        if (r.合同版本 != 1 || r.所有者 != 第一层写入端口_.所有者身份() || r.写入幂等身份 != w.写入幂等身份)
+            throw FC失败{FC状态::内部不一致};
+        if (r.状态 == L1所有者范围读取状态::未找到) {
+            if (r.首次规范化写集 || r.首次写入结果)
+                throw FC失败{FC状态::内部不一致};
+            return std::nullopt;
+        }
+        if (r.状态 != L1所有者范围读取状态::成功)
+            throw FC失败{FC映射(特征引用历史状态(r.状态))};
+        if (!r.首次规范化写集 || !r.首次写入结果)
+            throw FC失败{FC状态::已可能发布};
+        if (*r.首次规范化写集 != w)
+            throw FC失败{FC状态::幂等冲突};
+        const auto& first = *r.首次写入结果;
+        if (first.合同版本 != L1所有者范围CRUD合同版本 || first.状态 != L1所有者范围写入状态::成功
+            || first.所有者 != r.所有者 || first.写入幂等身份 != w.写入幂等身份 || !first.事实代次
+            || first.事实代次 > r.读取事实代次 || !first.是否形成内存权威发布
+            || first.重试边界 != L1所有者范围重试边界::不适用)
+            throw FC失败{FC状态::已可能发布};
+        std::vector<L1所有者范围写集本地键> keys;
+        for (const auto& x : w.节点)
+            keys.push_back(x.本地键);
+        for (const auto& x : w.关系)
+            keys.push_back(x.本地键);
+        for (const auto& x : w.值)
+            keys.push_back(x.本地键);
+        std::sort(keys.begin(), keys.end());
+        if (first.新编码映射.size() != keys.size())
+            throw FC失败{FC状态::已可能发布};
+        for (std::size_t i = 0; i < keys.size(); ++i) {
+            if (first.新编码映射[i].first != keys[i] || !有效(first.新编码映射[i].second))
+                throw FC失败{FC状态::已可能发布};
+            for (std::size_t j = 0; j < i; ++j)
+                if (first.新编码映射[j].second == first.新编码映射[i].second)
+                    throw FC失败{FC状态::已可能发布};
+        }
+        return *r.首次写入结果;
+    }
+    L1所有者范围写入结果 FC提交(const L1所有者范围写集请求& w) {
+        const auto r = 第一层写入端口_.提交所有者范围中性写集(w);
+        if (r.合同版本 != L1所有者范围CRUD合同版本 || r.所有者 != 第一层写入端口_.所有者身份()
+            || r.写入幂等身份 != w.写入幂等身份)
+            throw FC失败{FC状态::已可能发布};
+        if (r.状态 == L1所有者范围写入状态::成功 && r.是否形成内存权威发布)
+            return r;
+        if (r.状态 == L1所有者范围写入状态::精确重复) {
+            auto first = FC重放(w);
+            if (first)
+                return *first;
+        }
+        if (r.是否形成内存权威发布 || r.状态 == L1所有者范围写入状态::资源失败
+            || r.状态 == L1所有者范围写入状态::内部不一致)
+            throw FC失败{FC状态::已可能发布};
+        throw FC失败{FC映射(L2概念结构内部::映射写入状态(r.状态)), true};
+    }
+    L2结构状态 校验新特征概念引用(const L2世界事实引用& ref, std::uint64_t g, std::uint64_t h) const {
+        if (!特征概念已配置_)
+            return L2结构状态::未实现;
+        try {
+            return std::visit(
+                [&](const auto& v) -> L2结构状态 {
+                    using T = std::decay_t<decltype(v)>;
+                    if constexpr (std::is_same_v<T, L2新存在引用>) {
+                        const auto r = 新存在服务_->读取存在历史事实(
+                            {1, g, h, v.值, (std::numeric_limits<std::uint64_t>::max)()});
+                        return r.成功() ? L2结构状态::已读取 : FC旧状态(FC映射(r.状态));
+                    } else if constexpr (std::is_same_v<T, L2新特征类型引用>) {
+                        const auto r = 新特征服务_->读取特征类型历史事实({1, g, h, v.值});
+                        return r.成功() ? L2结构状态::已读取 : FC旧状态(FC映射(r.状态));
+                    } else if constexpr (std::is_same_v<T, L2新特征值引用>) {
+                        const auto r = 新特征服务_->读取特征历史事实({1, g, h, v.实例.值, v.值事实});
+                        return r.成功() ? L2结构状态::已读取 : FC旧状态(FC映射(r.状态));
+                    } else if constexpr (std::is_same_v<T, L2新特征实例引用>) {
+                        const auto r = 新特征服务_->按实例读取特征历史事实({1, g, h, v.值, 1});
+                        return r.成功() ? L2结构状态::已读取 : FC旧状态(FC映射(r.状态));
+                    } else
+                        return L2结构状态::引用冲突;
+                },
+                ref);
+        } catch (...) {
+            return L2结构状态::内部不一致;
+        }
+    }
+
+  public:
+  private:
+    static constexpr std::uint64_t FC签名角色 = 0x4643'0001ULL;
+    // 同一私有构造用于首次创建与退出时的原写集自证。独立规则记录不随概念退出。
+    std::vector<L1所有者范围写集本地键> FC追加首次特征内容(
+        L1所有者范围写集请求& 写集, const L2普通概念建立请求& 请求) const {
+        using namespace L2概念结构内部;
+        FC写属性(写集, 10, L1所有者范围写集本地键{普通概念节点本地键值}, 0, std::int64_t{0},
+                 L1所有者范围写集本地键{普通概念节点本地键值});
+        const auto* signature = std::get_if<std::vector<std::uint64_t>>(&请求.签名值式项.front().值);
+        if (!signature || signature->size() != 3)
+            throw FC失败{FC状态::入口拒绝};
+        std::vector<std::int64_t> partitions;
+        for (const auto& item : 请求.签名值式项)
+            if (item.顺序 == 2) {
+                const auto* values = std::get_if<std::vector<std::int64_t>>(&item.值);
+                if (!values || values->size() % 2)
+                    throw FC失败{FC状态::入口拒绝};
+                partitions = *values;
+            }
+        FC新记录(写集, 11, {5, 1, (*signature)[1], partitions.size() / 2});
+        FC写关系(写集, 4, FCK(1), 请求.签名规则材料.值, 5, 6);
+        if (!partitions.empty())
+            FC写属性(写集, 5, FCK(1), 12, partitions, FCK(1));
+        FC规范写集(写集);
+        std::vector<L1所有者范围写集本地键> 独立规则键{FCK(1), FCK(2), FCK(3), FCK(4)};
+        if (!partitions.empty())
+            独立规则键.push_back(FCK(5));
+        return 独立规则键;
+    }
+    L2普通概念建立请求 FC普通请求(const L2特征概念建立请求& r) const {
+        L2普通概念建立请求 q;
+        q.请求头 = r.请求头;
+        q.幂等身份 = r.幂等身份;
+        q.本体根 = r.本体根;
+        q.签名规则材料 = r.规则.规则材料;
+        q.签名值式项.push_back(
+            {FC签名角色, 1,
+             std::vector<std::uint64_t>{1, r.规则.规则版本, static_cast<std::uint64_t>(r.值域.类别)}});
+        std::vector<std::int64_t> partitions;
+        for (auto x : r.规则.分区) {
+            partitions.push_back(x.下界);
+            partitions.push_back(x.上界);
+        }
+        if (!partitions.empty())
+            q.签名值式项.push_back({FC签名角色, 2, std::move(partitions)});
+        if (r.值域.区间)
+            q.签名值式项.push_back(
+                {FC签名角色, 3, std::vector<std::int64_t>{r.值域.区间->下界, r.值域.区间->上界}});
+        else
+            std::visit([&](const auto& x) { q.签名值式项.push_back({FC签名角色, 3, x}); }, *r.值域.精确值);
+        q.定义角色合同 = {{FC签名角色 + 1, 1, 1}, {FC签名角色 + 2, 1, 1}};
+        q.初始定义 = {{FC签名角色 + 1, 1, r.宿主}, {FC签名角色 + 2, 1, r.特征类型}};
+        q.直接上位 = r.直接上位组;
+        q.来源证据材料 = r.来源材料组;
+        return q;
+    }
+    L2特征概念事实 FC解读定义(const L2普通概念事实& f) const {
+        if (f.签名值式项.empty() || f.签名值式项.front().项.角色 != FC签名角色)
+            throw FC失败{FC状态::未找到};
+        L2特征概念事实 out;
+        out.普通概念 = f;
+        out.规则.规则材料 = f.签名规则.规则材料;
+        out.规则.规则身份 = out.规则.规则材料.值;
+        const auto* meta = std::get_if<std::vector<std::uint64_t>>(&f.签名值式项.front().项.值);
+        if (!meta || meta->size() != 3 || (*meta)[0] != 1 || (*meta)[1] == 0
+            || ((*meta)[2] != 1 && (*meta)[2] != 2))
+            throw FC失败{FC状态::内部不一致};
+        out.规则.规则版本 = (*meta)[1];
+        out.值域.类别 = static_cast<特征概念值域类别>((*meta)[2]);
+        for (std::size_t i = 1; i < f.签名值式项.size(); ++i) {
+            const auto& x = f.签名值式项[i].项;
+            if (x.角色 != FC签名角色)
+                throw FC失败{FC状态::内部不一致};
+            if (x.顺序 == 2) {
+                auto values = std::get_if<std::vector<std::int64_t>>(&x.值);
+                if (!values || values->size() % 2)
+                    throw FC失败{FC状态::内部不一致};
+                for (std::size_t j = 0; j < values->size(); j += 2)
+                    out.规则.分区.push_back({(*values)[j], (*values)[j + 1]});
+            } else if (x.顺序 == 3 && !out.值域.精确值 && !out.值域.区间) {
+                if (out.值域.类别 == 特征概念值域类别::I64闭区间) {
+                    auto values = std::get_if<std::vector<std::int64_t>>(&x.值);
+                    if (!values || values->size() != 2)
+                        throw FC失败{FC状态::内部不一致};
+                    out.值域.区间 = 特征概念I64区间{(*values)[0], (*values)[1]};
+                } else {
+                    std::visit(
+                        [&](const auto& v) {
+                            if constexpr (std::is_same_v<std::decay_t<decltype(v)>, L2独立材料引用>)
+                                throw FC失败{FC状态::内部不一致};
+                            else
+                                out.值域.精确值 = 特征概念材料{v};
+                        },
+                        x.值);
+                }
+            } else
+                throw FC失败{FC状态::内部不一致};
+        }
+        if (f.定义关系.size() != 2)
+            throw FC失败{FC状态::内部不一致};
+        const auto* host = std::get_if<L2新存在引用>(&f.定义关系[0].项.目标);
+        const auto* type = std::get_if<L2新特征类型引用>(&f.定义关系[1].项.目标);
+        if (!host || !type || f.定义关系[0].项.角色 != FC签名角色 + 1
+            || f.定义关系[1].项.角色 != FC签名角色 + 2)
+            throw FC失败{FC状态::内部不一致};
+        out.宿主 = *host;
+        out.特征类型 = *type;
+        if (!特征概念形成规则有效(out.规则) || !特征概念值域有效(out.值域))
+            throw FC失败{FC状态::内部不一致};
+        return out;
+    }
+    template <class R, class F> R FC读取封装(std::uint64_t g, F&& f) const {
+        try {
+            return f();
+        } catch (const FC失败& e) {
+            R r;
+            r.状态 = e.状态;
+            r.事实截止 = g;
+            return r;
+        } catch (const std::bad_alloc&) {
+            R r;
+            r.状态 = FC状态::资源失败;
+            r.事实截止 = g;
+            return r;
+        } catch (...) {
+            R r;
+            r.状态 = FC状态::内部不一致;
+            r.事实截止 = g;
+            return r;
+        }
+    }
+    template <class R, class F> R FC写入封装(std::uint64_t g, F&& f) {
+        try {
+            return f();
+        } catch (const FC失败& e) {
+            R r;
+            r.状态 = e.状态 == FC状态::资源失败 || e.状态 == FC状态::内部不一致 ? FC状态::已可能发布 : e.状态;
+            r.事实截止 = g;
+            return r;
+        } catch (...) {
+            R r;
+            r.状态 = FC状态::已可能发布;
+            r.事实截止 = g;
+            return r;
+        }
+    }
+
+  public:
+    L2特征概念结果 建立特征概念(const L2特征概念建立请求& r) {
+        FC发布跟踪 track;
+        try {
+            if (r.合同版本 != 1 || !特征概念形成规则有效(r.规则) || !特征概念值域有效(r.值域)
+                || r.直接上位组.empty() || !FC写头有效(r.请求头, r.幂等身份))
+                throw FC失败{FC状态::入口拒绝};
+            if (!特征概念已配置_)
+                throw FC失败{FC状态::结构未配置};
+            auto q = FC普通请求(r);
+            auto result = 建立普通概念核心(q, true, &track);
+            if (!result.成功() || !result.概念)
+                throw FC失败{FC映射(result.结果头.状态)};
+            track.已知截止 = result.结果头.事实截止代次;
+            auto out =
+                读取特征概念({1, {1, FC当前代次()}, result.概念->概念, L2读取类别::历史, *track.已知截止});
+            if (!out.成功())
+                throw FC失败{out.状态};
+            out.状态 = result.结果头.状态 == L2结构状态::精确重复 ? FC状态::精确重复 : FC状态::已创建;
+            out.发布截止 = track.已知截止;
+            return out;
+        } catch (const FC失败& e) {
+            L2特征概念结果 out;
+            out.状态 =
+                track.已尝试 || track.已知截止 || e.状态 == FC状态::资源失败 || e.状态 == FC状态::内部不一致
+                    ? FC状态::已可能发布
+                    : e.状态;
+            out.事实截止 = r.请求头.期望事实代次;
+            out.发布截止 = track.已知截止;
+            return out;
+        } catch (...) {
+            L2特征概念结果 out;
+            out.状态 = FC状态::已可能发布;
+            out.事实截止 = r.请求头.期望事实代次;
+            out.发布截止 = track.已知截止;
+            return out;
+        }
+    }
+
+    L2特征概念结果 读取特征概念(const L2特征概念读取请求& r) const {
+        const auto g = r.请求头.期望事实代次;
+        return FC读取封装<L2特征概念结果>(g, [&] {
+            if (r.合同版本 != 1 || r.请求头.合同版本 != 1 || (r.读取类别 == L2读取类别::当前 && r.历史截止)
+                || (r.读取类别 != L2读取类别::当前 && r.读取类别 != L2读取类别::历史))
+                throw FC失败{FC状态::入口拒绝};
+            auto h = r.读取类别 == L2读取类别::历史 ? r.历史截止 : g;
+            FC守卫(g, h);
+            auto f = 读取普通概念({{1, g}, L2普通概念结构合同版本, r.读取类别, r.概念, r.历史截止});
+            if (!f.成功() || !f.概念)
+                throw FC失败{FC映射(f.结果头.状态)};
+            auto out = FC解读定义(*f.概念);
+            const auto degree = FC属性(r.概念.值, 0, g, h);
+            auto d = std::get_if<std::int64_t>(&degree.材料);
+            if (!d || (*d != 0 && *d != 1))
+                throw FC失败{FC状态::内部不一致};
+            out.程度值事实 = degree.编码;
+            out.已成熟 = *d == 1;
+            if (out.已成熟)
+                FC读取成熟证据(out, degree.来源节点, g, h);
+            FC守卫(g, h);
+            L2特征概念结果 result;
+            result.状态 = FC状态::已读取;
+            result.事实截止 = h;
+            result.概念 = std::move(out);
+            if (!result.成功())
+                throw FC失败{FC状态::内部不一致};
+            return result;
+        });
+    }
+
+    L2特征概念组结果 按宿主和类型读取特征概念(const L2特征概念组请求& r) const {
+        const auto g = r.请求头.期望事实代次;
+        return FC读取封装<L2特征概念组结果>(g, [&] {
+            if (r.合同版本 != 1 || r.请求头.合同版本 != 1 || !有效(r.宿主.值) || !有效(r.特征类型.值)
+                || !r.最大候选数 || !有效(r.规则身份) || !r.规则版本)
+                throw FC失败{FC状态::入口拒绝};
+            FC守卫(g, g);
+            FC材料(不可变材料身份{r.规则身份}, g, g);
+            const auto host = 新存在服务_->读取存在历史事实(
+                {1, g, g, r.宿主.值, (std::numeric_limits<std::uint64_t>::max)()});
+            if (!host.成功())
+                throw FC失败{FC映射(host.状态)};
+            const auto type = 新特征服务_->确认特征类型({1, g, r.特征类型.值});
+            if (!type.成功())
+                throw FC失败{FC映射(type.状态)};
+            auto ids = L2概念结构内部::读取全部当前普通概念身份(第一层服务_, 身份来源定位_, 普通结构定位_, g);
+            if (ids.状态 != L2结构状态::已读取)
+                throw FC失败{FC映射(ids.状态)};
+            L2特征概念组结果 out;
+            out.宿主 = r.宿主;
+            out.特征类型 = r.特征类型;
+            out.规则身份 = r.规则身份;
+            out.规则版本 = r.规则版本;
+            for (const auto id : ids.身份) {
+                // Full ordinary read preserves refusal for unconfigured legacy references.
+                auto f = 读取普通概念({{1, g}, L2普通概念结构合同版本, L2读取类别::当前, id, 0});
+                if (!f.成功() || !f.概念)
+                    throw FC失败{FC映射(f.结果头.状态)};
+                if (f.概念->签名值式项.empty() || f.概念->签名值式项.front().项.角色 != FC签名角色)
+                    continue;
+                auto d = FC解读定义(*f.概念);
+                if (d.宿主 != r.宿主 || d.特征类型 != r.特征类型 || d.规则.规则身份 != r.规则身份
+                    || d.规则.规则版本 != r.规则版本)
+                    continue;
+                auto value = 读取特征概念({1, {1, g}, id});
+                if (!value.成功())
+                    throw FC失败{value.状态};
+                if (out.概念组.size() == r.最大候选数)
+                    throw FC失败{FC状态::数量预算不足};
+                out.概念组.push_back(*value.概念);
+            }
+            FC守卫(g, g);
+            out.状态 = FC状态::已读取;
+            out.事实截止 = g;
+            return out;
+        });
+    }
+    L2特征概念范围结果 按宿主和类型读取全部特征概念(const L2特征概念范围请求& r) const {
+        const auto g = r.请求头.期望事实代次;
+        return FC读取封装<L2特征概念范围结果>(g, [&] {
+            if (r.合同版本 != 1 || r.请求头.合同版本 != 1 || !有效(r.宿主.值) || !有效(r.特征类型.值)
+                || !r.最大概念数 || !特征概念形成规则有效(r.本次形成规则))
+                throw FC失败{FC状态::入口拒绝};
+            FC守卫(g, g);
+            FC材料(r.本次形成规则.规则材料, g, g);
+            FC核验形成规则历史(r.本次形成规则, g);
+            const auto host = 新存在服务_->读取存在历史事实(
+                {1, g, g, r.宿主.值, (std::numeric_limits<std::uint64_t>::max)()});
+            if (!host.成功())
+                throw FC失败{FC映射(host.状态)};
+            const auto type = 新特征服务_->确认特征类型({1, g, r.特征类型.值});
+            if (!type.成功())
+                throw FC失败{FC映射(type.状态)};
+            auto ids = L2概念结构内部::读取全部当前普通概念身份(第一层服务_, 身份来源定位_, 普通结构定位_, g);
+            if (ids.状态 != L2结构状态::已读取)
+                throw FC失败{FC映射(ids.状态)};
+            L2特征概念范围结果 out;
+            out.宿主 = r.宿主;
+            out.特征类型 = r.特征类型;
+            out.已验证规则 = r.本次形成规则;
+            for (const auto id : ids.身份) {
+                // Full ordinary read preserves refusal for unconfigured legacy references.
+                auto f = 读取普通概念({{1, g}, L2普通概念结构合同版本, L2读取类别::当前, id, 0});
+                if (!f.成功() || !f.概念)
+                    throw FC失败{FC映射(f.结果头.状态)};
+                if (f.概念->签名值式项.empty() || f.概念->签名值式项.front().项.角色 != FC签名角色)
+                    continue;
+                auto d = FC解读定义(*f.概念);
+                if (d.宿主 != r.宿主 || d.特征类型 != r.特征类型)
+                    continue;
+                auto value = 读取特征概念({1, {1, g}, id});
+                if (!value.成功())
+                    throw FC失败{value.状态};
+                if (out.概念组.size() == r.最大概念数)
+                    throw FC失败{FC状态::数量预算不足};
+                out.概念组.push_back(*value.概念);
+            }
+            FC守卫(g, g);
+            out.状态 = FC状态::已读取;
+            out.事实截止 = g;
+            return out;
+        });
+    }
+
+  private:
+    void FC核验形成规则历史(const 特征概念形成规则& requested, std::uint64_t g) const {
+        for (const auto& edge : FC关系(特征概念类型_[11], 8, g, g)) {
+            const auto created = edge.创建事实代次;
+            const auto metadata = FC元数据(edge.目标节点, 5, 4, g, created);
+            特征概念形成规则 rule;
+            rule.规则材料 = {FC单引用(edge.目标节点, 6, g, created)};
+            rule.规则身份 = rule.规则材料.值;
+            rule.规则版本 = metadata[2];
+            if (metadata[3]) {
+                const auto property = FC属性(edge.目标节点, 12, g, created);
+                const auto* values = std::get_if<std::vector<std::int64_t>>(&property.材料);
+                if (!values || values->size() % 2 || values->size() / 2 != metadata[3]
+                    || property.来源节点 != edge.目标节点 || property.创建事实代次 != created)
+                    throw FC失败{FC状态::内部不一致};
+                for (std::size_t i = 0; i < values->size(); i += 2)
+                    rule.分区.push_back({(*values)[i], (*values)[i + 1]});
+            }
+            if (!特征概念形成规则有效(rule))
+                throw FC失败{FC状态::内部不一致};
+            FC材料(rule.规则材料, g, created);
+            if (rule.规则材料 == requested.规则材料 && rule.规则版本 == requested.规则版本
+                && rule != requested)
+                throw FC失败{FC状态::幂等冲突};
+        }
+    }
+    struct FC发布跟踪 {
+        bool 已尝试 = false;
+        std::optional<std::uint64_t> 已知截止;
+    };
+    static bool FC写头有效(const L2结构请求头& head, L2结构幂等身份 key) {
+        return head.合同版本 == L2结构合同版本 && head.期望事实代次 && key.值 != 0
+               && !L2概念结构内部::是概念保留登记幂等身份(key) && key.值 != 0x4C32'4643'5247'0001ULL;
+    }
+    L1所有者范围写集请求 FC新写集(const L2结构请求头& head, L2结构幂等身份 key) const {
+        if (!FC写头有效(head, key))
+            throw FC失败{FC状态::入口拒绝};
+        L1所有者范围写集请求 w;
+        w.期望事实代次 = head.期望事实代次;
+        w.写入幂等身份 = L2概念结构内部::映射概念幂等身份(key);
+        return w;
+    }
+    void FC新记录(L1所有者范围写集请求& w, unsigned anchor, std::vector<std::uint64_t> metadata) const {
+        w.节点.push_back({FCK(1), 节点种类::普通, std::nullopt});
+        FC写关系(w, 2, 特征概念类型_.at(anchor), FCK(1), 8, 1);
+        FC写属性(w, 3, FCK(1), 1, std::move(metadata), FCK(1));
+    }
+    static 稳定编码 FC映射编码(const L1所有者范围写入结果& result, unsigned key) {
+        std::optional<稳定编码> found;
+        for (const auto& [k, id] : result.新编码映射) {
+            if (k != FCK(key))
+                continue;
+            if (found || !有效(id))
+                throw FC失败{FC状态::内部不一致};
+            found = id;
+        }
+        if (!found)
+            throw FC失败{FC状态::内部不一致};
+        return *found;
+    }
+    std::vector<std::uint64_t> FC元数据(稳定编码 record, unsigned kind, std::size_t size, std::uint64_t g,
+                                        std::uint64_t h) const {
+        const auto n = FC事实<L1所有者范围节点事实>(record, g, h);
+        if (n.种类 != 节点种类::普通 || n.属性类型表示)
+            throw FC失败{FC状态::内部不一致};
+        const unsigned anchor = kind == 1 ? 3 : kind == 2 ? 4 : kind == 3 ? 6 : kind == 4 ? 9 : 11;
+        const auto memberships = FC关系(record, 8, g, n.创建事实代次, L1所有者范围关系端点方向::目标);
+        if (memberships.size() != 1 || memberships.front().源节点 != 特征概念类型_[anchor]
+            || memberships.front().角色或顺序 != 1 || memberships.front().创建事实代次 != n.创建事实代次)
+            throw FC失败{FC状态::内部不一致};
+        const auto v = FC属性(record, 1, g, h);
+        const auto* values = std::get_if<std::vector<std::uint64_t>>(&v.材料);
+        if (!values || values->size() != size || (*values)[0] != kind || (*values)[1] != 1
+            || v.来源节点 != record || v.创建事实代次 != n.创建事实代次)
+            throw FC失败{FC状态::内部不一致};
+        return *values;
+    }
+    void FC成员(稳定编码 host, 稳定编码 instance, 稳定编码 type, 稳定编码 member, std::uint64_t g,
+                std::uint64_t h) const {
+        const auto f = 新特征服务_->按实例读取特征历史事实({1, g, h, instance, 1});
+        if (!f.成功())
+            throw FC失败{FC映射(f.状态)};
+        if (f.特征->特征类型 != type)
+            throw FC失败{FC状态::引用冲突};
+        const auto m = 新存在服务_->读取特征成员历史事实({1, g, h, host, member, instance});
+        if (!m.成功())
+            throw FC失败{FC映射(m.状态)};
+    }
+    L2特征概念事实 FC概念(L2概念身份 id, std::uint64_t g, std::uint64_t h) const {
+        auto result = 读取特征概念({1, {1, g}, id, L2读取类别::历史, h});
+        if (!result.成功())
+            throw FC失败{result.状态};
+        return *result.概念;
+    }
+    template <class R, class Check, class Read> R FC事务(L1所有者范围写集请求 w, Check&& check, Read&& read) {
+        FC发布跟踪 track;
+        try {
+            std::lock_guard<std::mutex> lock(概念写入锁_);
+            if (!特征概念已配置_)
+                throw FC失败{FC状态::结构未配置};
+            FC规范写集(w);
+            if (auto first = FC重放(w)) {
+                track.已知截止 = first->事实代次;
+                auto result = read(*first, true);
+                if (!result.成功())
+                    throw FC失败{FC状态::内部不一致};
+                return result;
+            }
+            FC守卫(w.期望事实代次, w.期望事实代次);
+            if (auto result = check()) {
+                FC守卫(w.期望事实代次, w.期望事实代次);
+                if (!result->成功())
+                    throw FC失败{FC状态::内部不一致};
+                return *result;
+            }
+            track.已尝试 = true;
+            const auto first = FC提交(w);
+            track.已知截止 = first.事实代次;
+            auto result = read(first, false);
+            if (!result.成功())
+                throw FC失败{FC状态::内部不一致};
+            return result;
+        } catch (const FC失败& e) {
+            R result;
+            result.状态 =
+                e.明确零发布 || e.状态 == FC状态::幂等冲突 ? e.状态
+                : track.已尝试 || track.已知截止 || e.状态 == FC状态::资源失败 || e.状态 == FC状态::内部不一致
+                    ? FC状态::已可能发布
+                    : e.状态;
+            result.事实截止 = w.期望事实代次;
+            result.发布截止 = track.已知截止;
+            return result;
+        } catch (...) {
+            R result;
+            result.状态 = FC状态::已可能发布;
+            result.事实截止 = w.期望事实代次;
+            result.发布截止 = track.已知截止;
+            return result;
+        }
+    }
+    L2特征名称字段事实 FC名称(稳定编码 edgeId, std::uint64_t g, std::uint64_t h, bool exited = false) const {
+        const auto edge = FC事实<L1所有者范围关系事实>(edgeId, g, h, !exited);
+        if (edge.关系类型节点 != 特征概念类型_[2] || edge.角色或顺序 != 1
+            || (exited && edge.退出事实代次 != h))
+            throw FC失败{FC状态::引用冲突};
+        const auto created = edge.创建事实代次;
+        std::optional<稳定编码> record;
+        for (const auto& member : FC关系(特征概念类型_[3], 8, g, created)) {
+            if (member.创建事实代次 != created)
+                continue;
+            if (record)
+                throw FC失败{FC状态::内部不一致};
+            record = member.目标节点;
+        }
+        if (!record)
+            throw FC失败{FC状态::历史材料不可用};
+        const auto metadata = FC元数据(*record, 1, 4, g, created);
+        L2特征名称字段事实 out;
+        out.关系身份 = edgeId;
+        out.实例 = {edge.源节点};
+        out.概念 = L2概念身份{edge.目标节点};
+        out.宿主 = {FC单引用(*record, 1, g, created)};
+        out.特征类型 = {FC单引用(*record, 2, g, created)};
+        if (FC单引用(*record, 3, g, created) != out.概念.值)
+            throw FC失败{FC状态::内部不一致};
+        out.Gbind = metadata[2];
+        out.宿主成员关系 = {metadata[3]};
+        out.创建代次 = created;
+        out.退出代次 = edge.退出事实代次;
+        if (!特征概念载荷完整(out) || out.Gbind >= created)
+            throw FC失败{FC状态::内部不一致};
+        FC成员(out.宿主.值, out.实例.值, out.特征类型.值, out.宿主成员关系, g, out.Gbind);
+        const auto definition = FC定义(out.概念, g, created);
+        if (definition.宿主 != out.宿主 || definition.特征类型 != out.特征类型)
+            throw FC失败{FC状态::引用冲突};
+        return out;
+    }
+    std::optional<L2特征名称字段事实> FC当前名称(L2新特征实例引用 instance, std::uint64_t g,
+                                                 std::uint64_t h) const {
+        const auto edges = FC关系(instance.值, 2, g, h);
+        if (edges.size() > 1)
+            throw FC失败{FC状态::内部不一致};
+        if (edges.empty())
+            return std::nullopt;
+        return FC名称(edges.front().编码, g, h);
+    }
+    template <class Q> L2特征名称字段结果 FC绑定(const Q& r, std::optional<稳定编码> old) {
+        return FC写入封装<L2特征名称字段结果>(r.请求头.期望事实代次, [&] {
+            if (r.合同版本 != 1 || !有效(r.实例.值) || !有效(r.宿主.值) || !有效(r.特征类型.值)
+                || !有效(r.概念.值) || !r.Gbind || r.Gbind > r.请求头.期望事实代次 || !有效(r.宿主成员关系)
+                || (old && !有效(*old)))
+                throw FC失败{FC状态::入口拒绝};
+            auto w = FC新写集(r.请求头, r.幂等身份);
+            FC新记录(w, 3, {1, 1, r.Gbind, r.宿主成员关系.值});
+            FC写关系(w, 4, r.实例.值, r.概念.值, 2, 1);
+            FC写关系(w, 5, FCK(1), r.宿主.值, 5, 1);
+            FC写关系(w, 6, FCK(1), r.特征类型.值, 5, 2);
+            FC写关系(w, 7, FCK(1), r.概念.值, 5, 3);
+            if (old)
+                w.退出事实.push_back(*old);
+            return FC事务<L2特征名称字段结果>(
+                std::move(w),
+                [&]() -> std::optional<L2特征名称字段结果> {
+                    const auto g = r.请求头.期望事实代次;
+                    FC成员(r.宿主.值, r.实例.值, r.特征类型.值, r.宿主成员关系, g, r.Gbind);
+                    FC成员(r.宿主.值, r.实例.值, r.特征类型.值, r.宿主成员关系, g, g);
+                    auto definition = FC概念(r.概念, g, g);
+                    if (definition.宿主 != r.宿主 || definition.特征类型 != r.特征类型)
+                        throw FC失败{FC状态::引用冲突};
+                    auto current = FC当前名称(r.实例, g, g);
+                    if (old) {
+                        if (!current || current->关系身份 != *old)
+                            throw FC失败{FC状态::引用冲突};
+                    } else if (current) {
+                        if (current->概念 != r.概念 || current->宿主 != r.宿主
+                            || current->特征类型 != r.特征类型)
+                            throw FC失败{FC状态::引用冲突};
+                        L2特征名称字段结果 result;
+                        result.状态 = FC状态::精确重复;
+                        result.事实截止 = g;
+                        result.名称字段 = current;
+                        return result;
+                    }
+                    return std::nullopt;
+                },
+                [&](const auto& first, bool replay) {
+                    auto fact = FC名称(FC映射编码(first, 4), FC当前代次(), first.事实代次);
+                    L2特征名称字段结果 result;
+                    result.状态 = replay ? FC状态::精确重复 : FC状态::已绑定;
+                    result.事实截止 = first.事实代次;
+                    result.发布截止 = first.事实代次;
+                    result.名称字段 = std::move(fact);
+                    return result;
+                });
+        });
+    }
+
+  public:
+    L2特征名称字段结果 绑定特征名称字段节点(const L2特征名称字段绑定请求& r) {
+        return FC绑定(r, std::nullopt);
+    }
+    L2特征名称字段结果 替换特征名称字段节点(const L2特征名称字段替换请求& r) {
+        return FC绑定(r, r.原关系稳定编码);
+    }
+    L2特征名称字段结果 读取特征名称字段节点(const L2特征名称字段读取请求& r) const {
+        const auto g = r.请求头.期望事实代次;
+        return FC读取封装<L2特征名称字段结果>(g, [&] {
+            if (r.合同版本 != 1 || r.请求头.合同版本 != 1 || !有效(r.实例.值)
+                || (r.读取类别 != L2读取类别::当前 && r.读取类别 != L2读取类别::历史)
+                || (r.读取类别 == L2读取类别::当前 && r.历史截止))
+                throw FC失败{FC状态::入口拒绝};
+            const auto h = r.读取类别 == L2读取类别::历史 ? r.历史截止 : g;
+            FC守卫(g, h);
+            auto fact = FC当前名称(r.实例, g, h);
+            if (!fact)
+                throw FC失败{FC状态::未找到};
+            FC守卫(g, h);
+            L2特征名称字段结果 result;
+            result.状态 = FC状态::已读取;
+            result.事实截止 = h;
+            result.名称字段 = std::move(fact);
+            return result;
+        });
+    }
+    L2特征名称字段结果 退出特征名称字段节点(const L2特征名称字段退出请求& r) {
+        return FC写入封装<L2特征名称字段结果>(r.请求头.期望事实代次, [&] {
+            if (r.合同版本 != 1 || !有效(r.实例.值) || !有效(r.原关系稳定编码))
+                throw FC失败{FC状态::入口拒绝};
+            auto w = FC新写集(r.请求头, r.幂等身份);
+            w.退出事实.push_back(r.原关系稳定编码);
+            return FC事务<L2特征名称字段结果>(
+                std::move(w),
+                [&]() -> std::optional<L2特征名称字段结果> {
+                    const auto current = FC当前名称(r.实例, r.请求头.期望事实代次, r.请求头.期望事实代次);
+                    if (!current || current->关系身份 != r.原关系稳定编码)
+                        throw FC失败{FC状态::引用冲突};
+                    return std::nullopt;
+                },
+                [&](const auto& first, bool replay) {
+                    const auto fact = FC名称(r.原关系稳定编码, FC当前代次(), first.事实代次, true);
+                    if (fact.实例 != r.实例)
+                        throw FC失败{FC状态::幂等冲突};
+                    L2特征名称字段结果 result;
+                    // Relationship-exit success remains distinct from a rejected exited target.
+                    result.状态 = FC状态::已退出;
+                    result.事实截止 = first.事实代次;
+                    result.发布截止 = first.事实代次;
+                    result.名称字段 = fact;
+                    return result;
+                });
+        });
+    }
+
+  public:
+  private:
+    L2特征概念事实 FC定义(L2概念身份 id, std::uint64_t g, std::uint64_t h) const {
+        auto result = 读取普通概念({{1, g}, L2普通概念结构合同版本, L2读取类别::历史, id, h});
+        if (!result.成功() || !result.概念)
+            throw FC失败{FC映射(result.结果头.状态)};
+        return FC解读定义(*result.概念);
+    }
+    特征概念材料 FC原值(const 特征类结点& instance, std::uint64_t g, std::uint64_t h) const {
+        return std::visit(
+            [&](const auto& value) -> 特征概念材料 {
+                using T = std::decay_t<decltype(value)>;
+                if constexpr (std::is_same_v<T, 特征直接值>) {
+                    return std::visit([](const auto& v) -> 特征概念材料 { return v; }, value);
+                } else {
+                    const auto result = 新值服务_->按结点读取不可变材料历史事实({1, g, h, value.结点, 1});
+                    if (!result.成功())
+                        throw FC失败{FC映射(result.状态)};
+                    return std::visit(
+                        [&](const auto& v) -> 特征概念材料 {
+                            using V = std::decay_t<decltype(v)>;
+                            if constexpr (std::is_same_v<V, L1所有者范围独立材料引用>) {
+                                FC材料(不可变材料身份{v.编码}, g, h);
+                                throw FC失败{FC状态::规则不支持};
+                            } else
+                                return v;
+                        },
+                        result.材料->特征值);
+                }
+            },
+            instance.特征值);
+    }
+    static bool FC观测排序(const L2特征观测事实& a, const L2特征观测事实& b) {
+        if (a.观测时间.纳秒 != b.观测时间.纳秒)
+            return a.观测时间.纳秒 < b.观测时间.纳秒;
+        return a.观测稳定编码 < b.观测稳定编码;
+    }
+    static bool FC观测内容相同(const L2特征观测事实& a, const L2特征观测登记请求& b) {
+        return a.观测稳定编码 == b.观测稳定编码 && a.宿主 == b.宿主 && a.特征类型 == b.特征类型
+               && a.精确值 == b.精确值 && a.概念 == b.概念 && a.观测时间 == b.观测时间
+               && a.来源材料 == b.来源材料 && a.Gobs == b.Gobs && a.宿主成员关系 == b.宿主成员关系;
+    }
+    L2特征观测事实 FC观测(稳定编码 record, std::uint64_t g, std::uint64_t h) const {
+        const auto node = FC事实<L1所有者范围节点事实>(record, g, h);
+        const auto created = node.创建事实代次;
+        const auto values = FC元数据(record, 2, 7, g, created);
+        if (values[3] > static_cast<std::uint64_t>((std::numeric_limits<std::int64_t>::max)()))
+            throw FC失败{FC状态::内部不一致};
+        L2特征观测事实 out;
+        out.记录节点 = record;
+        out.观测稳定编码 = {values[2]};
+        out.观测时间 = {L2中性时间语义_v1::绝对UTC纳秒, static_cast<std::int64_t>(values[3])};
+        out.Gobs = values[4];
+        out.精确值 = {{FC单引用(record, 4, g, created)}, {values[5]}};
+        out.宿主成员关系 = {values[6]};
+        out.宿主 = {FC单引用(record, 1, g, created)};
+        out.特征类型 = {FC单引用(record, 2, g, created)};
+        out.概念 = L2概念身份{FC单引用(record, 3, g, created)};
+        out.来源材料 = {FC单引用(record, 5, g, created)};
+        out.创建代次 = created;
+        if (!特征概念载荷完整(out) || out.Gobs >= created)
+            throw FC失败{FC状态::内部不一致};
+        const auto feature =
+            新特征服务_->读取特征历史事实({1, g, out.Gobs, out.精确值.实例.值, out.精确值.值事实});
+        if (!feature.成功())
+            throw FC失败{FC映射(feature.状态)};
+        FC成员(out.宿主.值, out.精确值.实例.值, out.特征类型.值, out.宿主成员关系, g, out.Gobs);
+        FC材料(out.来源材料, g, out.Gobs);
+        const auto definition = FC定义(out.概念, g, created);
+        if (definition.宿主 != out.宿主 || definition.特征类型 != out.特征类型)
+            throw FC失败{FC状态::引用冲突};
+        // Resolve the complete material through its owner at the observed world cutoff.
+        static_cast<void>(FC原值(*feature.特征, g, out.Gobs));
+        return out;
+    }
+    std::vector<L2特征观测事实> FC全部观测(std::uint64_t g, std::uint64_t h) const {
+        std::vector<L2特征观测事实> result;
+        for (const auto& member : FC关系(特征概念类型_[4], 8, g, h)) {
+            if (member.角色或顺序 != 1)
+                throw FC失败{FC状态::内部不一致};
+            auto observation = FC观测(member.目标节点, g, h);
+            if (observation.创建代次 != member.创建事实代次)
+                throw FC失败{FC状态::内部不一致};
+            for (const auto& previous : result)
+                if (previous.记录节点 == observation.记录节点
+                    || previous.观测稳定编码 == observation.观测稳定编码
+                    || (previous.来源材料 == observation.来源材料
+                        && previous.观测时间 == observation.观测时间))
+                    throw FC失败{FC状态::内部不一致};
+            result.push_back(std::move(observation));
+        }
+        std::sort(result.begin(), result.end(), FC观测排序);
+        return result;
+    }
+    void FC读取成熟证据(L2特征概念事实& out, 稳定编码 record, std::uint64_t g, std::uint64_t h) const {
+        const auto node = FC事实<L1所有者范围节点事实>(record, g, h);
+        const auto created = node.创建事实代次;
+        const auto metadata = FC元数据(record, 3, 7, g, created);
+        if (metadata[4] > static_cast<std::uint64_t>((std::numeric_limits<std::int64_t>::max)())
+            || metadata[5] > static_cast<std::uint64_t>((std::numeric_limits<std::int64_t>::max)()))
+            throw FC失败{FC状态::内部不一致};
+        特征概念成熟规则 rule;
+        rule.规则材料 = {FC单引用(record, 6, g, created)};
+        rule.规则身份 = rule.规则材料.值;
+        rule.规则版本 = metadata[2];
+        rule.最少独立观测数 = metadata[3];
+        rule.最短观察跨度 = {L2中性时间语义_v1::非负相对纳秒, static_cast<std::int64_t>(metadata[4])};
+        rule.最小观测间隔 = {L2中性时间语义_v1::非负相对纳秒, static_cast<std::int64_t>(metadata[5])};
+        if (!特征概念成熟规则有效(rule) || FC单引用(record, 3, g, created) != out.普通概念.概念.值
+            || !metadata[6] || metadata[6] >= created)
+            throw FC失败{FC状态::内部不一致};
+        FC材料(rule.规则材料, g, created);
+        auto edges = FC关系(record, 7, g, created);
+        std::sort(edges.begin(), edges.end(),
+                  [](const auto& a, const auto& b) { return a.角色或顺序 < b.角色或顺序; });
+        std::optional<L2特征观测事实> previous;
+        for (std::size_t i = 0; i < edges.size(); ++i) {
+            if (edges[i].角色或顺序 != static_cast<std::int64_t>(i + 1))
+                throw FC失败{FC状态::内部不一致};
+            const auto obs = FC观测(edges[i].目标节点, g, metadata[6]);
+            if (obs.概念 != out.普通概念.概念 || obs.宿主 != out.宿主 || obs.特征类型 != out.特征类型
+                || (previous && !FC观测排序(*previous, obs)))
+                throw FC失败{FC状态::内部不一致};
+            out.成熟证据身份组.push_back(obs.记录节点);
+            previous = obs;
+        }
+        out.成熟规则 = rule;
+        out.评估截止 = metadata[6];
+        if (out.成熟证据身份组.empty())
+            throw FC失败{FC状态::内部不一致};
+    }
+
+  public:
+    L2特征观测组结果 读取特征概念观测(const L2特征观测组请求& r) const {
+        const auto g = r.请求头.期望事实代次;
+        return FC读取封装<L2特征观测组结果>(g, [&] {
+            if (r.合同版本 != 1 || r.请求头.合同版本 != 1 || !有效(r.概念.值) || !r.最大观测数
+                || (r.读取类别 != L2读取类别::当前 && r.读取类别 != L2读取类别::历史)
+                || (r.读取类别 == L2读取类别::当前 && r.历史截止))
+                throw FC失败{FC状态::入口拒绝};
+            const auto h = r.读取类别 == L2读取类别::历史 ? r.历史截止 : g;
+            FC守卫(g, h);
+            static_cast<void>(FC定义(r.概念, g, h));
+            L2特征观测组结果 out;
+            out.概念 = r.概念;
+            for (auto& obs : FC全部观测(g, h)) {
+                if (obs.概念 != r.概念)
+                    continue;
+                if (out.观测组.size() == r.最大观测数)
+                    throw FC失败{FC状态::数量预算不足};
+                out.观测组.push_back(std::move(obs));
+            }
+            FC守卫(g, h);
+            out.状态 = FC状态::已读取;
+            out.事实截止 = h;
+            return out;
+        });
+    }
+    L2特征观测结果 登记特征概念观测(const L2特征观测登记请求& r) {
+        return FC写入封装<L2特征观测结果>(r.请求头.期望事实代次, [&] {
+            if (r.合同版本 != 1 || !有效(r.观测稳定编码) || !有效(r.宿主.值) || !有效(r.特征类型.值)
+                || !有效(r.精确值.实例.值) || !有效(r.精确值.值事实) || !有效(r.概念.值)
+                || !有效(r.来源材料.值) || !r.Gobs || r.Gobs > r.请求头.期望事实代次 || !有效(r.宿主成员关系)
+                || r.观测时间.语义 != L2中性时间语义_v1::绝对UTC纳秒 || r.观测时间.纳秒 < 0)
+                throw FC失败{FC状态::入口拒绝};
+            auto w = FC新写集(r.请求头, r.幂等身份);
+            FC新记录(w, 4,
+                     {2, 1, r.观测稳定编码.值, static_cast<std::uint64_t>(r.观测时间.纳秒), r.Gobs,
+                      r.精确值.值事实.值, r.宿主成员关系.值});
+            FC写关系(w, 4, FCK(1), r.宿主.值, 5, 1);
+            FC写关系(w, 5, FCK(1), r.特征类型.值, 5, 2);
+            FC写关系(w, 6, FCK(1), r.概念.值, 5, 3);
+            FC写关系(w, 7, FCK(1), r.精确值.实例.值, 5, 4);
+            FC写关系(w, 8, FCK(1), r.来源材料.值, 5, 5);
+            return FC事务<L2特征观测结果>(
+                std::move(w),
+                [&]() -> std::optional<L2特征观测结果> {
+                    const auto g = r.请求头.期望事实代次;
+                    for (const auto& obs : FC全部观测(g, g)) {
+                        if (obs.观测稳定编码 == r.观测稳定编码) {
+                            if (!FC观测内容相同(obs, r))
+                                throw FC失败{FC状态::幂等冲突};
+                            L2特征观测结果 out;
+                            out.状态 = FC状态::精确重复;
+                            out.事实截止 = g;
+                            out.观测 = obs;
+                            return out;
+                        }
+                        if (obs.来源材料 == r.来源材料 && obs.观测时间 == r.观测时间)
+                            throw FC失败{FC状态::引用冲突};
+                    }
+                    const auto feature =
+                        新特征服务_->读取特征历史事实({1, g, r.Gobs, r.精确值.实例.值, r.精确值.值事实});
+                    if (!feature.成功())
+                        throw FC失败{FC映射(feature.状态)};
+                    FC成员(r.宿主.值, r.精确值.实例.值, r.特征类型.值, r.宿主成员关系, g, r.Gobs);
+                    const auto current = 新特征服务_->按实例读取特征历史事实({1, g, g, r.精确值.实例.值, 1});
+                    if (!current.成功())
+                        throw FC失败{FC映射(current.状态)};
+                    const auto name = FC当前名称(r.精确值.实例, g, g);
+                    const auto definition = FC定义(r.概念, g, g);
+                    if (!name || name->概念 != r.概念 || name->宿主 != r.宿主 || name->特征类型 != r.特征类型
+                        || definition.宿主 != r.宿主 || definition.特征类型 != r.特征类型
+                        || definition.普通概念.治理生命周期.状态 != L2概念治理生命周期状态::活跃)
+                        throw FC失败{FC状态::引用冲突};
+                    FC材料(r.来源材料, g, r.Gobs);
+                    static_cast<void>(FC原值(*feature.特征, g, r.Gobs));
+                    return std::nullopt;
+                },
+                [&](const auto& first, bool replay) {
+                    auto fact = FC观测(FC映射编码(first, 1), FC当前代次(), first.事实代次);
+                    L2特征观测结果 out;
+                    out.状态 = replay ? FC状态::精确重复 : FC状态::已记录;
+                    out.事实截止 = first.事实代次;
+                    out.发布截止 = first.事实代次;
+                    out.观测 = std::move(fact);
+                    return out;
+                });
+        });
+    }
+    L2特征概念结果 发布特征概念成熟(const L2特征概念成熟请求& r) {
+        return FC写入封装<L2特征概念结果>(r.请求头.期望事实代次, [&] {
+            if (r.合同版本 != 1 || !有效(r.概念.值) || !有效(r.原程度值事实) || !特征概念成熟规则有效(r.规则)
+                || !r.观测证据截止 || r.观测证据截止 > r.请求头.期望事实代次 || r.观测记录身份组.empty())
+                throw FC失败{FC状态::入口拒绝};
+            if (r.观测记录身份组.size() > 0xFFFF'0000ULL)
+                throw FC失败{FC状态::数量预算不足};
+            for (std::size_t i = 0; i < r.观测记录身份组.size(); ++i) {
+                if (!有效(r.观测记录身份组[i]))
+                    throw FC失败{FC状态::入口拒绝};
+                for (std::size_t j = 0; j < i; ++j)
+                    if (r.观测记录身份组[j] == r.观测记录身份组[i])
+                        throw FC失败{FC状态::入口拒绝};
+            }
+            auto w = FC新写集(r.请求头, r.幂等身份);
+            FC新记录(w, 6,
+                     {3, 1, r.规则.规则版本, r.规则.最少独立观测数,
+                      static_cast<std::uint64_t>(r.规则.最短观察跨度.纳秒),
+                      static_cast<std::uint64_t>(r.规则.最小观测间隔.纳秒), r.观测证据截止});
+            FC写关系(w, 4, FCK(1), r.概念.值, 5, 3);
+            FC写关系(w, 5, FCK(1), r.规则.规则材料.值, 5, 6);
+            FC写属性(w, 6, r.概念.值, 0, std::int64_t{1}, FCK(1));
+            w.退出事实.push_back(r.原程度值事实);
+            for (std::size_t i = 0; i < r.观测记录身份组.size(); ++i)
+                FC写关系(w, 100 + static_cast<unsigned>(i), FCK(1), r.观测记录身份组[i], 7,
+                         static_cast<std::int64_t>(i + 1));
+            return FC事务<L2特征概念结果>(
+                std::move(w),
+                [&]() -> std::optional<L2特征概念结果> {
+                    const auto g = r.请求头.期望事实代次;
+                    const auto definition = FC概念(r.概念, g, g);
+                    if (definition.程度值事实 != r.原程度值事实)
+                        throw FC失败{FC状态::引用冲突};
+                    FC材料(r.规则.规则材料, g, g);
+                    // Maturity records remain append-only after degree replacement.
+                    for (const auto& item : FC关系(特征概念类型_[6], 8, g, g)) {
+                        const auto target = L2概念身份{FC单引用(item.目标节点, 3, g, item.创建事实代次)};
+                        auto historical = FC定义(target, g, item.创建事实代次);
+                        FC读取成熟证据(historical, item.目标节点, g, g);
+                        const auto& rule = *historical.成熟规则;
+                        if (rule.规则材料 == r.规则.规则材料 && rule.规则版本 == r.规则.规则版本
+                            && rule != r.规则)
+                            throw FC失败{FC状态::幂等冲突};
+                    }
+                    std::optional<L2特征观测事实> previous;
+                    for (const auto record : r.观测记录身份组) {
+                        auto obs = FC观测(record, g, r.观测证据截止);
+                        if (obs.概念 != r.概念 || obs.宿主 != definition.宿主
+                            || obs.特征类型 != definition.特征类型
+                            || (previous && !FC观测排序(*previous, obs)))
+                            throw FC失败{FC状态::引用冲突};
+                        previous = std::move(obs);
+                    }
+                    return std::nullopt;
+                },
+                [&](const auto& first, bool replay) {
+                    auto out = 读取特征概念({1, {1, FC当前代次()}, r.概念, L2读取类别::历史, first.事实代次});
+                    if (!out.成功() || !out.概念->已成熟 || out.概念->成熟规则 != r.规则
+                        || out.概念->成熟证据身份组 != r.观测记录身份组)
+                        throw FC失败{FC状态::内部不一致};
+                    out.状态 = replay ? FC状态::精确重复 : FC状态::已成熟;
+                    out.发布截止 = first.事实代次;
+                    return out;
+                });
+        });
+    }
+
+  private:
+    L2特征实例当前引用清单 FC引用清单(L2新特征实例引用 instance, std::uint64_t witness, std::uint64_t budget,
+                                      std::uint64_t g, std::uint64_t h) const {
+        if (!有效(instance.值) || !witness || witness > h || !budget)
+            throw FC失败{FC状态::入口拒绝};
+        const auto f = 新特征服务_->按实例读取特征历史事实({1, g, witness, instance.值, 1});
+        if (!f.成功())
+            throw FC失败{FC映射(f.状态)};
+        L2特征实例当前引用清单 out;
+        out.实例 = instance;
+        out.实例见证截止 = witness;
+        const auto names = FC关系(instance.值, 2, g, h);
+        if (names.size() > 1)
+            throw FC失败{FC状态::内部不一致};
+        if (!names.empty()) {
+            static_cast<void>(FC名称(names.front().编码, g, h));
+            out.名称关系 = names.front().编码;
+        }
+        const auto refs = FC关系(instance.值, 5, g, h, L1所有者范围关系端点方向::目标);
+        if (refs.size() > budget - (out.名称关系 ? 1 : 0))
+            throw FC失败{FC状态::数量预算不足};
+        for (const auto& ref : refs) {
+            if (ref.角色或顺序 != 4)
+                throw FC失败{FC状态::内部不一致};
+            auto obs = FC观测(ref.源节点, g, h);
+            if (obs.精确值.实例 != instance || obs.创建代次 != ref.创建事实代次)
+                throw FC失败{FC状态::内部不一致};
+            out.观测实例关系.push_back({ref.源节点, ref.编码});
+        }
+        if (!特征实例引用清单完整(out, h))
+            throw FC失败{FC状态::内部不一致};
+        return out;
+    }
+
+  public:
+    L2特征实例引用清单结果 读取特征实例当前引用清单(const L2特征实例引用清单请求& r) const {
+        const auto g = r.请求头.期望事实代次;
+        return FC读取封装<L2特征实例引用清单结果>(g, [&] {
+            if (r.合同版本 != 1 || r.请求头.合同版本 != 1)
+                throw FC失败{FC状态::入口拒绝};
+            FC守卫(g, g);
+            auto list = FC引用清单(r.实例, r.实例见证截止, r.最大引用数, g, g);
+            FC守卫(g, g);
+            L2特征实例引用清单结果 out;
+            out.状态 = FC状态::已读取;
+            out.事实截止 = g;
+            out.清单 = std::move(list);
+            return out;
+        });
+    }
+    L2特征实例引用释放结果 释放特征实例当前引用(const L2特征实例引用释放请求& r) {
+        return FC写入封装<L2特征实例引用释放结果>(r.请求头.期望事实代次, [&] {
+            if (r.合同版本 != 1 || !r.最大引用数 || !特征实例引用清单完整(r.期望清单, r.请求头.期望事实代次))
+                throw FC失败{FC状态::入口拒绝};
+            auto w = FC新写集(r.请求头, r.幂等身份);
+            FC新记录(w, 9, {4, 1, r.期望清单.实例见证截止, r.最大引用数});
+            if (r.期望清单.名称关系)
+                w.退出事实.push_back(*r.期望清单.名称关系);
+            for (const auto& item : r.期望清单.观测实例关系)
+                w.退出事实.push_back(item.实例关系);
+            return FC事务<L2特征实例引用释放结果>(
+                std::move(w),
+                [&]() -> std::optional<L2特征实例引用释放结果> {
+                    const auto g = r.请求头.期望事实代次;
+                    const auto actual =
+                        FC引用清单(r.期望清单.实例, r.期望清单.实例见证截止, r.最大引用数, g, g);
+                    if (actual != r.期望清单)
+                        throw FC失败{FC状态::引用冲突};
+                    if (!actual.名称关系 && actual.观测实例关系.empty()) {
+                        L2特征实例引用释放结果 out;
+                        out.状态 = FC状态::无须释放;
+                        out.事实截止 = g;
+                        out.释放前清单 = actual;
+                        return out;
+                    }
+                    return std::nullopt;
+                },
+                [&](const auto& first, bool replay) {
+                    const auto g = FC当前代次();
+                    const auto h = first.事实代次;
+                    if (h <= 1)
+                        throw FC失败{FC状态::内部不一致};
+                    const auto metadata = FC元数据(FC映射编码(first, 1), 4, 4, g, h);
+                    if (metadata[2] != r.期望清单.实例见证截止 || metadata[3] != r.最大引用数)
+                        throw FC失败{FC状态::幂等冲突};
+                    const auto before = FC引用清单(r.期望清单.实例, metadata[2], metadata[3], g, h - 1);
+                    if (before != r.期望清单)
+                        throw FC失败{FC状态::幂等冲突};
+                    L2特征实例引用释放结果 out;
+                    out.释放前清单 = before;
+                    if (before.名称关系)
+                        out.已退出关系.push_back(*before.名称关系);
+                    for (const auto& item : before.观测实例关系) {
+                        out.已退出关系.push_back(item.实例关系);
+                        out.保留观测记录.push_back(item.观测记录);
+                        static_cast<void>(FC观测(item.观测记录, g, h));
+                    }
+                    std::sort(out.已退出关系.begin(), out.已退出关系.end());
+                    std::sort(out.保留观测记录.begin(), out.保留观测记录.end());
+                    for (const auto id : out.已退出关系) {
+                        const auto e = FC事实<L1所有者范围关系事实>(id, g, h, false);
+                        if (e.退出事实代次 != h)
+                            throw FC失败{FC状态::内部不一致};
+                    }
+                    const auto after = FC引用清单(before.实例, before.实例见证截止, r.最大引用数, g, h);
+                    if (after.名称关系 || !after.观测实例关系.empty())
+                        throw FC失败{FC状态::内部不一致};
+                    FC守卫(g, h);
+                    out.状态 = replay ? FC状态::精确重复 : FC状态::已释放;
+                    out.事实截止 = h;
+                    out.发布截止 = h;
+                    return out;
+                });
+        });
+    }
+
+  public:
     // 诊断责任：向上送出；全部失败只经结构化结果返回，发布未知保留原请求重放。
     L2概念本体根写入结果 建立概念本体根(
         const L2概念本体根建立请求& 请求) {
@@ -4532,9 +5718,16 @@ public:
                         ? L2结构状态::内部不一致 : 自有重建.状态,
                     自有重建.截止);
             }
-            const auto 首次建立写集 = 形成普通概念写集(
+            auto 首次建立写集 = 形成普通概念写集(
                 *自有重建.首次请求, 身份来源定位_,
                 本体结构定位_, 普通结构定位_);
+            std::vector<L1所有者范围写集本地键> 保留独立规则键;
+            if (!自有重建.首次请求->签名值式项.empty()
+                && 自有重建.首次请求->签名值式项.front().角色 == FC签名角色) {
+                const auto 定义 = FC解读定义(*自有重建.事实);
+                FC核验形成规则历史(定义.规则, 请求.请求头.期望事实代次);
+                保留独立规则键 = FC追加首次特征内容(首次建立写集, *自有重建.首次请求);
+            }
             const auto 首次建立材料 = 第一层写入端口_.读取首次写入材料({
                 L1所有者范围首次写入读取合同版本,
                 首次建立写集.写入幂等身份});
@@ -4564,6 +5757,9 @@ public:
                 首次建立材料.首次写入结果->新编码映射.size());
             for (const auto& [键, 编码] :
                     首次建立材料.首次写入结果->新编码映射) {
+                if (std::find(保留独立规则键.begin(), 保留独立规则键.end(), 键)
+                    != 保留独立规则键.end())
+                    continue;
                 const bool 是节点 = std::any_of(首次建立写集.节点.begin(),
                     首次建立写集.节点.end(), [&](const auto& 项) {
                         return 项.本地键 == 键;
@@ -4873,8 +6069,13 @@ public:
     }
 
     // 诊断责任：向上送出；唯一性预读、owner 原子提交和首次历史读回共用同一写锁。
-    L2普通概念写入结果 建立普通概念(
-        const L2普通概念建立请求& 请求) {
+    L2普通概念写入结果 建立普通概念(const L2普通概念建立请求& 请求) {
+        return 建立普通概念核心(请求, false);
+    }
+
+  private:
+    L2普通概念写入结果 建立普通概念核心(const L2普通概念建立请求& 请求, bool 初始特征概念,
+                                        FC发布跟踪* 跟踪 = nullptr) {
         using namespace L2概念结构内部;
         if (!L2普通概念建立请求有效(请求)
             || 是概念保留登记幂等身份(请求.幂等身份))
@@ -4883,10 +6084,13 @@ public:
             return 形成普通概念写入失败(L2结构状态::未实现);
         if (!普通概念写集数量可表示(请求))
             return 形成普通概念写入失败(L2结构状态::数量预算不足);
+        if (!初始特征概念 && !请求.签名值式项.empty() && 请求.签名值式项.front().角色 == FC签名角色)
+            return 形成普通概念写入失败(L2结构状态::入口拒绝);
         try {
             std::lock_guard<std::mutex> 锁(概念写入锁_);
-            const auto 写集 = 形成普通概念写集(请求, 身份来源定位_,
-                本体结构定位_, 普通结构定位_);
+            auto 写集 = 形成普通概念写集(请求, 身份来源定位_, 本体结构定位_, 普通结构定位_);
+            if (初始特征概念)
+                static_cast<void>(FC追加首次特征内容(写集, 请求));
             const auto 既有幂等 = 第一层写入端口_.读取首次写入材料(
                 {L1所有者范围首次写入读取合同版本, 写集.写入幂等身份});
             const bool 幂等头完整 = 既有幂等.合同版本
@@ -4905,6 +6109,11 @@ public:
                     return 形成普通概念写入失败(
                         L2结构状态::幂等冲突, 既有幂等.读取事实代次);
                 const auto& 首次结果 = *既有幂等.首次写入结果;
+                if (跟踪) {
+                    跟踪->已尝试 = true;
+                    if (首次结果.是否形成内存权威发布 && 首次结果.事实代次)
+                        跟踪->已知截止 = 首次结果.事实代次;
+                }
                 const bool 首次形状完整 = 首次结果.状态
                         == L1所有者范围写入状态::成功
                     && 首次结果.合同版本 == L1所有者范围CRUD合同版本
@@ -4973,6 +6182,42 @@ public:
                 return 形成普通概念写入失败(引用状态,
                     请求.请求头.期望事实代次);
 
+            if (初始特征概念) {
+                const auto definition = FC解读定义(候选);
+                FC核验形成规则历史(definition.规则, 请求.请求头.期望事实代次);
+                const auto roots = 读取全部当前概念本体根({请求.请求头});
+                if (!roots.成功())
+                    return 形成普通概念写入失败(roots.结果头.状态);
+                bool featureRoot = false;
+                for (const auto& root : roots.本体根)
+                    if (root.根概念 == 请求.本体根 && root.根角色.角色 == L2概念本体根角色::特征)
+                        featureRoot = true;
+                if (!featureRoot
+                    || std::find(请求.直接上位.begin(), 请求.直接上位.end(), 请求.本体根)
+                           == 请求.直接上位.end())
+                    return 形成普通概念写入失败(L2结构状态::引用冲突);
+                const auto type =
+                    新特征服务_->确认特征类型({1, 请求.请求头.期望事实代次, definition.特征类型.值});
+                if (!type.成功())
+                    return 形成普通概念写入失败(FC旧状态(FC映射(type.状态)));
+                const auto expected =
+                    definition.值域.区间
+                        ? L1所有者范围值表示种类::I64
+                        : std::visit(
+                              [](const auto& x) {
+                                  using T = std::decay_t<decltype(x)>;
+                                  if constexpr (std::is_same_v<T, std::int64_t>)
+                                      return L1所有者范围值表示种类::I64;
+                                  else if constexpr (std::is_same_v<T, std::vector<std::int64_t>>)
+                                      return L1所有者范围值表示种类::I64组;
+                                  else
+                                      return L1所有者范围值表示种类::U64组;
+                              },
+                              *definition.值域.精确值);
+                if (*type.表示 != expected && *type.表示 != L1所有者范围值表示种类::独立材料引用)
+                    return 形成普通概念写入失败(L2结构状态::引用冲突);
+            }
+
             const auto 身份组 = 读取全部当前普通概念身份(第一层服务_,
                 身份来源定位_, 普通结构定位_, 请求.请求头.期望事实代次);
             if (身份组.状态 != L2结构状态::已读取)
@@ -5005,12 +6250,25 @@ public:
                 if (现有引用状态 != L2结构状态::已读取)
                     return 形成普通概念写入失败(
                         现有引用状态, 请求.请求头.期望事实代次);
+                if (初始特征概念 && !现有.事实->签名值式项.empty()
+                    && 现有.事实->签名值式项.front().项.角色 == FC签名角色
+                    && 现有.事实->签名规则.规则材料 == 请求.签名规则材料) {
+                    const auto oldDefinition = FC解读定义(*现有.事实);
+                    const auto newDefinition = FC解读定义(候选);
+                    if (oldDefinition.规则.规则版本 == newDefinition.规则.规则版本
+                        && oldDefinition.规则 != newDefinition.规则)
+                        return 形成普通概念写入失败(L2结构状态::幂等冲突);
+                }
                 if (普通概念签名相同(*现有.首次请求, 请求))
                     return 形成普通概念写入失败(L2结构状态::引用冲突,
                         请求.请求头.期望事实代次);
             }
 
+            if (跟踪)
+                跟踪->已尝试 = true;
             const auto 写入 = 第一层写入端口_.提交所有者范围中性写集(写集);
+            if (跟踪 && 写入.是否形成内存权威发布 && 写入.事实代次)
+                跟踪->已知截止 = 写入.事实代次;
             if (写入.合同版本 != L1所有者范围CRUD合同版本
                 || 写入.所有者 != 第一层写入端口_.所有者身份()
                 || 写入.写入幂等身份 != 写集.写入幂等身份)
@@ -5022,6 +6280,9 @@ public:
                 if (!写入.新编码映射.empty() || 写入.是否形成内存权威发布)
                     return 形成普通概念写入失败(
                         L2结构状态::内部不一致, 写入.事实代次);
+                if (跟踪 && 写入.状态 != L1所有者范围写入状态::资源失败
+                    && 写入.状态 != L1所有者范围写入状态::内部不一致)
+                    跟踪->已尝试 = false;
                 return 形成普通概念写入失败(写入状态, 写入.事实代次);
             }
             const bool 提交首次完整 = 写入.状态 == L1所有者范围写入状态::成功
@@ -5085,6 +6346,10 @@ public:
             return 结果.成功() ? 结果
                 : 形成普通概念写入失败(
                     L2结构状态::内部不一致, 首次结果.事实代次);
+        } catch (const FC失败&) {
+            if (初始特征概念)
+                throw;
+            return 形成普通概念写入失败(L2结构状态::内部不一致);
         } catch (const std::bad_alloc&) {
             return 形成普通概念写入失败(L2结构状态::资源失败);
         } catch (const std::length_error&) {
@@ -5300,7 +6565,14 @@ private:
         };
         return std::visit([&](const auto& 值) -> L2结构状态 {
             using 类型 = std::decay_t<decltype(值)>;
-            if constexpr (std::is_same_v<类型, L2场景身份>) {
+            if constexpr (std::is_same_v<类型, L2新存在引用> || std::is_same_v<类型, L2新特征类型引用>
+                          || std::is_same_v<类型, L2新特征实例引用> || std::is_same_v<类型, L2新特征值引用>) {
+                return 校验新特征概念引用(L2世界事实引用{值}, 期望代次, 投影截止);
+            } else if constexpr (std::is_same_v<类型, L2场景身份>) {
+                if (!普通概念依赖_.场景)
+                    return L2结构状态::未实现;
+                if (!普通概念依赖_.场景)
+                    return L2结构状态::未实现;
                 const auto 读取 = 普通概念依赖_.场景->读取完整场景(
                     {头, 类别, 值, 读截止});
                 if (!完整读取成功(读取)) return 结果状态(读取.结果头);
@@ -5309,6 +6581,8 @@ private:
                     && 生命周期投影完整(读取.场景->生命周期)
                     ? L2结构状态::已读取 : L2结构状态::内部不一致;
             } else if constexpr (std::is_same_v<类型, L2存在身份>) {
+                if (!普通概念依赖_.存在)
+                    return L2结构状态::未实现;
                 const auto 读取 = 普通概念依赖_.存在->读取完整存在(
                     {头, 类别, 值, 读截止});
                 if (!完整读取成功(读取)) return 结果状态(读取.结果头);
@@ -5317,6 +6591,8 @@ private:
                     && 生命周期投影完整(读取.存在->生命周期)
                     ? L2结构状态::已读取 : L2结构状态::内部不一致;
             } else if constexpr (std::is_same_v<类型, L2特征定义身份>) {
+                if (!普通概念依赖_.特征)
+                    return L2结构状态::未实现;
                 const auto 读取 = 普通概念依赖_.特征->读取完整统一特征定义(
                     {头, 类别, 值, 读截止});
                 if (!完整读取成功(读取)) return 结果状态(读取.结果头);
@@ -5325,6 +6601,8 @@ private:
                     && 生命周期投影完整(读取.特征定义->生命周期)
                     ? L2结构状态::已读取 : L2结构状态::内部不一致;
             } else if constexpr (std::is_same_v<类型, L2特征实例身份>) {
+                if (!普通概念依赖_.特征)
+                    return L2结构状态::未实现;
                 const auto 读取 = 普通概念依赖_.特征->读取完整特征实例(
                     {头, 类别, 值, 读截止});
                 if (!完整读取成功(读取)) return 结果状态(读取.结果头);
@@ -5334,6 +6612,8 @@ private:
                     && 生命周期投影完整(读取.特征实例->生命周期)
                     ? L2结构状态::已读取 : L2结构状态::内部不一致;
             } else if constexpr (std::is_same_v<类型, L2概念特征值引用>) {
+                if (!普通概念依赖_.特征)
+                    return L2结构状态::未实现;
                 const auto 实例 = 普通概念依赖_.特征->读取完整特征实例(
                     {头, 类别, 值.特征实例, 读截止});
                 if (!完整读取成功(实例) || !实例.特征实例
@@ -5343,6 +6623,8 @@ private:
                     || !生命周期投影完整(实例.特征实例->生命周期))
                     return 结果状态(实例.结果头);
                 if (类别 == L2读取类别::当前) {
+                    if (!普通概念依赖_.特征)
+                        return L2结构状态::未实现;
                     const auto 读取 = 普通概念依赖_.特征->读取特征当前值(
                         {头, 值.特征实例});
                     if (!读取.成功()) return 结果状态(读取.结果头);
@@ -5351,6 +6633,8 @@ private:
                         && 读取.当前值->值稳定编码 == 值.值稳定编码
                         ? L2结构状态::已读取 : L2结构状态::引用冲突;
                 }
+                if (!普通概念依赖_.特征)
+                    return L2结构状态::未实现;
                 const auto 读取 = 普通概念依赖_.特征->读取特征历史值(
                     {头, 值.特征实例, 值.值稳定编码});
                 if (读取.结果头.状态 != L2结构状态::已读取)
@@ -5365,6 +6649,8 @@ private:
                     && L2特征值事实截止投影完整(*读取.特征值, 投影截止)
                     ? L2结构状态::已读取 : L2结构状态::内部不一致;
             } else if constexpr (std::is_same_v<类型, L2状态身份>) {
+                if (!普通概念依赖_.状态)
+                    return L2结构状态::未实现;
                 const auto 读取 = 普通概念依赖_.状态->读取完整状态(
                     {头, 类别, 值, 读截止});
                 if (!完整读取成功(读取)) return 结果状态(读取.结果头);
@@ -5373,6 +6659,8 @@ private:
                     && 状态公开形状完整(*读取.状态, *读取.自有关系)
                     ? L2结构状态::已读取 : L2结构状态::内部不一致;
             } else if constexpr (std::is_same_v<类型, L2动态身份>) {
+                if (!普通概念依赖_.动态)
+                    return L2结构状态::未实现;
                 const auto 读取 = 普通概念依赖_.动态->读取完整动态(
                     {头, 类别, 值, 读截止});
                 if (!完整读取成功(读取)) return 结果状态(读取.结果头);
@@ -5381,6 +6669,8 @@ private:
                     && 动态公开形状完整(*读取.动态, *读取.自有关系)
                     ? L2结构状态::已读取 : L2结构状态::内部不一致;
             } else if constexpr (std::is_same_v<类型, L2因果身份>) {
+                if (!普通概念依赖_.因果)
+                    return L2结构状态::未实现;
                 const auto 读取 = 普通概念依赖_.因果->读取完整因果(
                     {头, 类别, 值, 读截止});
                 if (!完整读取成功(读取)) return 结果状态(读取.结果头);
@@ -5396,6 +6686,8 @@ private:
                 case L2概念世界关系类别::场景成员:
                 case L2概念世界关系类别::场景宿主存在: {
                     const auto 源 = std::get<L2场景身份>(关系.源);
+                    if (!普通概念依赖_.场景)
+                        return L2结构状态::未实现;
                     const auto 读取 = 普通概念依赖_.场景->读取完整场景(
                         {头, 类别, 源, 读截止});
                     if (!完整读取成功(读取) || !读取.场景
@@ -5429,6 +6721,8 @@ private:
                 case L2概念世界关系类别::特征宿主:
                 case L2概念世界关系类别::特征定义: {
                     const auto 源 = std::get<L2特征实例身份>(关系.源);
+                    if (!普通概念依赖_.特征)
+                        return L2结构状态::未实现;
                     const auto 读取 = 普通概念依赖_.特征->读取完整特征实例(
                         {头, 类别, 源, 读截止});
                     if (!完整读取成功(读取) || !读取.特征实例
@@ -5448,6 +6742,8 @@ private:
                 case L2概念世界关系类别::状态主体:
                 case L2概念世界关系类别::状态特征实例: {
                     const auto 源 = std::get<L2状态身份>(关系.源);
+                    if (!普通概念依赖_.状态)
+                        return L2结构状态::未实现;
                     const auto 读取 = 普通概念依赖_.状态->读取完整状态(
                         {头, 类别, 源, 读截止});
                     if (!完整读取成功(读取) || !读取.状态
@@ -5467,6 +6763,8 @@ private:
                 case L2概念世界关系类别::动态前状态:
                 case L2概念世界关系类别::动态后状态: {
                     const auto 源 = std::get<L2动态身份>(关系.源);
+                    if (!普通概念依赖_.动态)
+                        return L2结构状态::未实现;
                     const auto 读取 = 普通概念依赖_.动态->读取完整动态(
                         {头, 类别, 源, 读截止});
                     if (!完整读取成功(读取) || !读取.动态
@@ -5489,6 +6787,8 @@ private:
                 }
                 default: {
                     const auto 源 = std::get<L2因果身份>(关系.源);
+                    if (!普通概念依赖_.因果)
+                        return L2结构状态::未实现;
                     const auto 读取 = 普通概念依赖_.因果->读取完整因果(
                         {头, 类别, 源, 读截止});
                     if (!完整读取成功(读取) || !读取.因果

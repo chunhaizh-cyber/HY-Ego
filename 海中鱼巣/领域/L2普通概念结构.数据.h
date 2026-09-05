@@ -9,6 +9,7 @@
 #include <vector>
 #include "L2结构公共.数据.h"
 #include "不可变材料.数据.h"
+#include "L2状态结构.数据.h"
 #endif
 
 namespace 海中鱼巣 {
@@ -68,14 +69,31 @@ struct L2概念世界关系引用 final {
         const L2概念世界关系引用&) = default;
 };
 
-using L2概念定义目标 = std::variant<L2概念身份, L2场景身份,
-    L2存在身份, L2特征定义身份, L2特征实例身份,
-    L2概念特征值引用, L2状态身份, L2动态身份, L2因果身份,
-    L2概念世界关系引用>;
+struct L2新存在引用 final {
+    稳定编码 值{};
+    friend bool operator==(const L2新存在引用&, const L2新存在引用&) = default;
+};
+struct L2新特征类型引用 final {
+    稳定编码 值{};
+    friend bool operator==(const L2新特征类型引用&, const L2新特征类型引用&) = default;
+};
+struct L2新特征实例引用 final {
+    稳定编码 值{};
+    friend bool operator==(const L2新特征实例引用&, const L2新特征实例引用&) = default;
+};
+struct L2新特征值引用 final {
+    L2新特征实例引用 实例;
+    稳定编码 值事实{};
+    friend bool operator==(const L2新特征值引用&, const L2新特征值引用&) = default;
+};
 
-using L2世界事实引用 = std::variant<L2场景身份, L2存在身份,
-    L2特征定义身份, L2特征实例身份, L2概念特征值引用,
-    L2状态身份, L2动态身份, L2因果身份, L2概念世界关系引用>;
+using L2概念定义目标 = std::variant<L2概念身份, L2场景身份, L2存在身份, L2特征定义身份, L2特征实例身份,
+                                    L2概念特征值引用, L2状态身份, L2动态身份, L2因果身份, L2概念世界关系引用,
+                                    L2新存在引用, L2新特征类型引用, L2新特征实例引用, L2新特征值引用>;
+
+using L2世界事实引用 = std::variant<L2场景身份, L2存在身份, L2特征定义身份, L2特征实例身份, L2概念特征值引用,
+                                    L2状态身份, L2动态身份, L2因果身份, L2概念世界关系引用, L2新存在引用,
+                                    L2新特征类型引用, L2新特征实例引用, L2新特征值引用>;
 
 struct L2概念签名值式项 final {
     std::uint64_t 角色 = 0;
@@ -577,6 +595,8 @@ inline bool L2概念定义目标有效(const L2概念定义目标& 目标) noexc
             return L2概念世界关系引用有效(值);
         else if constexpr (std::is_same_v<类型, L2概念特征值引用>)
             return 有效(值.特征实例.值) && 有效(值.值稳定编码);
+        else if constexpr (std::is_same_v<类型, L2新特征值引用>)
+            return 有效(值.实例.值) && 有效(值.值事实);
         else
             return 有效(值.值);
     }, 目标);
@@ -590,6 +610,8 @@ inline bool L2世界事实引用有效(const L2世界事实引用& 引用) noexc
             return L2概念世界关系引用有效(值);
         else if constexpr (std::is_same_v<类型, L2概念特征值引用>)
             return 有效(值.特征实例.值) && 有效(值.值稳定编码);
+        else if constexpr (std::is_same_v<类型, L2新特征值引用>)
+            return 有效(值.实例.值) && 有效(值.值事实);
         else
             return 有效(值.值);
     }, 引用);
@@ -622,6 +644,14 @@ inline std::vector<std::uint64_t> 世界事实引用排序键(
         else if constexpr (std::is_same_v<类型, L2状态身份>) return {6, 值.值.值};
         else if constexpr (std::is_same_v<类型, L2动态身份>) return {7, 值.值.值};
         else if constexpr (std::is_same_v<类型, L2因果身份>) return {8, 值.值.值};
+        else if constexpr (std::is_same_v<类型, L2新存在引用>)
+            return {10, 值.值.值};
+        else if constexpr (std::is_same_v<类型, L2新特征类型引用>)
+            return {11, 值.值.值};
+        else if constexpr (std::is_same_v<类型, L2新特征实例引用>)
+            return {12, 值.值.值};
+        else if constexpr (std::is_same_v<类型, L2新特征值引用>)
+            return {13, 值.实例.值.值, 值.值事实.值};
         else {
             const auto 端点键 = [](const L2概念世界关系端点& 端点) {
                 return std::visit([](const auto& 项) {
@@ -1429,4 +1459,493 @@ inline bool L2普通概念退出结果::成功() const noexcept {
     return true;
 }
 
+} // namespace 海中鱼巣
+
+namespace 海中鱼巣 {
+
+// FEATURE-CONCEPT-APPLICATION：具名特征概念结构合同；业务算法由应用执行。
+inline constexpr std::uint32_t L2特征概念合同版本 = 1;
+enum class L2特征概念状态 : std::uint8_t {
+    已创建 = 1,
+    精确重复 = 2,
+    已读取 = 3,
+    已绑定 = 4,
+    已记录 = 5,
+    已成熟 = 6,
+    已迁移 = 7,
+    入口拒绝 = 8,
+    未找到 = 9,
+    目标已退出 = 10,
+    结构未配置 = 11,
+    事实代次漂移 = 12,
+    幂等冲突 = 13,
+    引用冲突 = 14,
+    匹配歧义 = 15,
+    证据不足 = 16,
+    数量预算不足 = 17,
+    资源失败 = 18,
+    内部不一致 = 19,
+    已可能发布 = 20,
+    规则不支持 = 21,
+    历史材料不可用 = 22,
+    已退出 = 23,
+    材料不足 = 24,
+    无须释放 = 25,
+    已释放 = 26
+};
+using 特征概念材料 = std::variant<std::int64_t, std::vector<std::int64_t>, std::vector<std::uint64_t>>;
+struct 特征概念I64区间 final {
+    std::int64_t 下界 = 0;
+    std::int64_t 上界 = 0;
+    friend bool operator==(const 特征概念I64区间&, const 特征概念I64区间&) = default;
+};
+enum class 特征概念值域类别 : std::uint8_t { 精确值 = 1, I64闭区间 = 2 };
+struct 特征概念值域 final {
+    特征概念值域类别 类别 = 特征概念值域类别::精确值;
+    std::optional<特征概念材料> 精确值;
+    std::optional<特征概念I64区间> 区间;
+    friend bool operator==(const 特征概念值域&, const 特征概念值域&) = default;
+};
+struct 特征概念形成规则 final {
+    稳定编码 规则身份{};
+    std::uint64_t 规则版本 = 0;
+    不可变材料身份 规则材料;
+    std::vector<特征概念I64区间> 分区;
+    friend bool operator==(const 特征概念形成规则&, const 特征概念形成规则&) = default;
+};
+struct 特征概念成熟规则 final {
+    稳定编码 规则身份{};
+    std::uint64_t 规则版本 = 0;
+    不可变材料身份 规则材料;
+    std::uint64_t 最少独立观测数 = 0;
+    L2中性时间_v1 最短观察跨度{}, 最小观测间隔{};
+    friend bool operator==(const 特征概念成熟规则&, const 特征概念成熟规则&) = default;
+};
+inline bool 特征概念值域有效(const 特征概念值域& d) noexcept {
+    if (d.类别 == 特征概念值域类别::I64闭区间)
+        return !d.精确值 && d.区间 && d.区间->下界 < d.区间->上界;
+    if (d.类别 != 特征概念值域类别::精确值 || !d.精确值 || d.区间)
+        return false;
+    return std::visit(
+        [](const auto& v) {
+            if constexpr (std::is_same_v<std::decay_t<decltype(v)>, std::int64_t>)
+                return true;
+            else
+                return !v.empty();
+        },
+        *d.精确值);
+}
+inline bool 特征概念形成规则有效(const 特征概念形成规则& r) noexcept {
+    if (!有效(r.规则身份) || !r.规则版本 || !有效(r.规则材料.值) || r.规则身份 != r.规则材料.值)
+        return false;
+    for (std::size_t i = 0; i < r.分区.size(); ++i) {
+        auto v = r.分区[i];
+        if (v.下界 > v.上界)
+            return false;
+        if (i
+            && (r.分区[i - 1].下界 > v.下界
+                || (r.分区[i - 1].下界 == v.下界 && r.分区[i - 1].上界 >= v.上界)))
+            return false;
+    }
+    return true;
+}
+inline bool 特征概念成熟规则有效(const 特征概念成熟规则& r) noexcept {
+    return 有效(r.规则身份) && r.规则版本 && 有效(r.规则材料.值) && r.规则身份 == r.规则材料.值
+           && r.最少独立观测数 >= 2 && r.最短观察跨度.语义 == L2中性时间语义_v1::非负相对纳秒
+           && r.最短观察跨度.纳秒 > 0 && r.最小观测间隔.语义 == L2中性时间语义_v1::非负相对纳秒
+           && r.最小观测间隔.纳秒 > 0;
+}
+struct L2特征概念建立请求 final {
+    std::uint32_t 合同版本 = L2特征概念合同版本;
+    L2结构请求头 请求头;
+    L2结构幂等身份 幂等身份;
+    L2概念身份 本体根;
+    L2新存在引用 宿主;
+    L2新特征类型引用 特征类型;
+    特征概念形成规则 规则;
+    特征概念值域 值域;
+    std::vector<不可变材料身份> 来源材料组;
+    std::vector<L2概念身份> 直接上位组;
+    friend bool operator==(const L2特征概念建立请求&, const L2特征概念建立请求&) = default;
+};
+struct L2特征概念读取请求 final {
+    std::uint32_t 合同版本 = L2特征概念合同版本;
+    L2结构请求头 请求头;
+    L2概念身份 概念;
+    L2读取类别 读取类别 = L2读取类别::当前;
+    std::uint64_t 历史截止 = 0;
+    friend bool operator==(const L2特征概念读取请求&, const L2特征概念读取请求&) = default;
+};
+struct L2特征概念组请求 final {
+    std::uint32_t 合同版本 = L2特征概念合同版本;
+    L2结构请求头 请求头;
+    L2新存在引用 宿主;
+    L2新特征类型引用 特征类型;
+    稳定编码 规则身份{};
+    std::uint64_t 规则版本 = 0;
+    std::uint64_t 最大候选数 = 0;
+    friend bool operator==(const L2特征概念组请求&, const L2特征概念组请求&) = default;
+};
+struct L2特征名称字段绑定请求 final {
+    std::uint32_t 合同版本 = L2特征概念合同版本;
+    L2结构请求头 请求头;
+    L2结构幂等身份 幂等身份;
+    L2新特征实例引用 实例;
+    L2新存在引用 宿主;
+    L2新特征类型引用 特征类型;
+    L2概念身份 概念;
+    std::uint64_t Gbind = 0;
+    稳定编码 宿主成员关系{};
+
+    friend bool operator==(const L2特征名称字段绑定请求&, const L2特征名称字段绑定请求&) = default;
+};
+struct L2特征名称字段替换请求 final {
+    std::uint32_t 合同版本 = L2特征概念合同版本;
+    L2结构请求头 请求头;
+    L2结构幂等身份 幂等身份;
+    L2新特征实例引用 实例;
+    L2新存在引用 宿主;
+    L2新特征类型引用 特征类型;
+    L2概念身份 概念;
+    std::uint64_t Gbind = 0;
+    稳定编码 宿主成员关系{};
+    稳定编码 原关系稳定编码{};
+    friend bool operator==(const L2特征名称字段替换请求&, const L2特征名称字段替换请求&) = default;
+};
+struct L2特征名称字段读取请求 final {
+    std::uint32_t 合同版本 = L2特征概念合同版本;
+    L2结构请求头 请求头;
+    L2新特征实例引用 实例;
+    L2读取类别 读取类别 = L2读取类别::当前;
+    std::uint64_t 历史截止 = 0;
+    friend bool operator==(const L2特征名称字段读取请求&, const L2特征名称字段读取请求&) = default;
+};
+struct L2特征名称字段退出请求 final {
+    std::uint32_t 合同版本 = L2特征概念合同版本;
+    L2结构请求头 请求头;
+    L2结构幂等身份 幂等身份;
+    L2新特征实例引用 实例;
+    稳定编码 原关系稳定编码{};
+    friend bool operator==(const L2特征名称字段退出请求&, const L2特征名称字段退出请求&) = default;
+};
+struct L2特征观测登记请求 final {
+    std::uint32_t 合同版本 = L2特征概念合同版本;
+    L2结构请求头 请求头;
+    L2结构幂等身份 幂等身份;
+    稳定编码 观测稳定编码{};
+    L2新存在引用 宿主;
+    L2新特征类型引用 特征类型;
+    L2新特征值引用 精确值;
+    L2概念身份 概念;
+    L2中性时间_v1 观测时间{};
+    不可变材料身份 来源材料;
+    std::uint64_t Gobs = 0;
+    稳定编码 宿主成员关系{};
+
+    friend bool operator==(const L2特征观测登记请求&, const L2特征观测登记请求&) = default;
+};
+struct L2特征观测组请求 final {
+    std::uint32_t 合同版本 = L2特征概念合同版本;
+    L2结构请求头 请求头;
+    L2概念身份 概念;
+    L2读取类别 读取类别 = L2读取类别::当前;
+    std::uint64_t 历史截止 = 0;
+    std::uint64_t 最大观测数 = 0;
+    friend bool operator==(const L2特征观测组请求&, const L2特征观测组请求&) = default;
+};
+struct L2特征概念成熟请求 final {
+    std::uint32_t 合同版本 = L2特征概念合同版本;
+    L2结构请求头 请求头;
+    L2结构幂等身份 幂等身份;
+    L2概念身份 概念;
+    稳定编码 原程度值事实{};
+    特征概念成熟规则 规则;
+    std::uint64_t 观测证据截止 = 0;
+    std::vector<稳定编码> 观测记录身份组;
+    friend bool operator==(const L2特征概念成熟请求&, const L2特征概念成熟请求&) = default;
+};
+struct L2特征概念事实 final {
+    L2普通概念事实 普通概念;
+    L2新存在引用 宿主;
+    L2新特征类型引用 特征类型;
+    特征概念形成规则 规则;
+    特征概念值域 值域;
+    bool 已成熟 = false;
+    稳定编码 程度值事实{};
+    std::optional<特征概念成熟规则> 成熟规则;
+    std::vector<稳定编码> 成熟证据身份组;
+    std::uint64_t 评估截止 = 0;
+    friend bool operator==(const L2特征概念事实&, const L2特征概念事实&) = default;
+};
+struct L2特征名称字段事实 final {
+    稳定编码 关系身份{};
+    L2新特征实例引用 实例;
+    L2新存在引用 宿主;
+    L2新特征类型引用 特征类型;
+    L2概念身份 概念;
+    std::uint64_t Gbind = 0;
+    稳定编码 宿主成员关系{};
+    std::uint64_t 创建代次 = 0;
+    std::optional<std::uint64_t> 退出代次;
+    friend bool operator==(const L2特征名称字段事实&, const L2特征名称字段事实&) = default;
+};
+struct L2特征观测事实 final {
+    稳定编码 记录节点{};
+    稳定编码 观测稳定编码{};
+    L2新存在引用 宿主;
+    L2新特征类型引用 特征类型;
+    L2新特征值引用 精确值;
+    L2概念身份 概念;
+    L2中性时间_v1 观测时间{};
+    不可变材料身份 来源材料;
+    std::uint64_t Gobs = 0;
+    稳定编码 宿主成员关系{};
+    std::uint64_t 创建代次 = 0;
+    friend bool operator==(const L2特征观测事实&, const L2特征观测事实&) = default;
+};
+
+inline bool 特征概念载荷完整(const L2特征概念事实& f) noexcept {
+    for (std::size_t i = 0; i < f.成熟证据身份组.size(); ++i) {
+        if (!有效(f.成熟证据身份组[i]))
+            return false;
+        for (std::size_t j = 0; j < i; ++j)
+            if (f.成熟证据身份组[j] == f.成熟证据身份组[i])
+                return false;
+    }
+    return 有效(f.普通概念.概念.值) && 有效(f.宿主.值) && 有效(f.特征类型.值) && 特征概念形成规则有效(f.规则)
+           && 特征概念值域有效(f.值域) && 有效(f.程度值事实)
+           && (f.已成熟 ? (f.成熟规则 && 特征概念成熟规则有效(*f.成熟规则) && !f.成熟证据身份组.empty()
+                           && f.评估截止)
+                        : (!f.成熟规则 && f.成熟证据身份组.empty() && !f.评估截止));
+}
+inline bool 特征概念载荷完整(const L2特征名称字段事实& f) noexcept {
+    return 有效(f.关系身份) && 有效(f.实例.值) && 有效(f.宿主.值) && 有效(f.特征类型.值) && 有效(f.概念.值)
+           && f.Gbind && 有效(f.宿主成员关系) && f.创建代次 && f.Gbind < f.创建代次
+           && (!f.退出代次 || *f.退出代次 > f.创建代次);
+}
+inline bool 特征概念载荷完整(const L2特征观测事实& f) noexcept {
+    return 有效(f.记录节点) && 有效(f.观测稳定编码) && 有效(f.宿主.值) && 有效(f.特征类型.值)
+           && 有效(f.精确值.实例.值) && 有效(f.精确值.值事实) && 有效(f.概念.值)
+           && f.观测时间.语义 == L2中性时间语义_v1::绝对UTC纳秒 && f.观测时间.纳秒 >= 0 && 有效(f.来源材料.值)
+           && f.Gobs && 有效(f.宿主成员关系) && f.创建代次 > f.Gobs;
+}
+struct L2特征概念结果 final {
+    L2特征概念状态 状态 = L2特征概念状态::入口拒绝;
+    std::uint32_t 合同版本 = 1;
+    std::uint64_t 事实截止 = 0;
+    std::optional<std::uint64_t> 发布截止;
+    std::optional<L2特征概念事实> 概念;
+    bool 成功() const noexcept {
+        return (状态 == L2特征概念状态::已创建 || 状态 == L2特征概念状态::精确重复
+                || 状态 == L2特征概念状态::已读取 || 状态 == L2特征概念状态::已成熟)
+               && 合同版本 == 1 && 事实截止 && 概念 && 特征概念载荷完整(*概念)
+               && L2普通概念事实完整(概念->普通概念, 事实截止)
+               && (!概念->已成熟 || 概念->评估截止 <= 事实截止);
+    }
+};
+struct L2特征名称字段结果 final {
+    L2特征概念状态 状态 = L2特征概念状态::入口拒绝;
+    std::uint32_t 合同版本 = 1;
+    std::uint64_t 事实截止 = 0;
+    std::optional<std::uint64_t> 发布截止;
+    std::optional<L2特征名称字段事实> 名称字段;
+    bool 成功() const noexcept {
+        return (状态 == L2特征概念状态::已绑定 || 状态 == L2特征概念状态::精确重复
+                || 状态 == L2特征概念状态::已读取 || 状态 == L2特征概念状态::已退出)
+               && 合同版本 == 1 && 事实截止 && 名称字段 && 特征概念载荷完整(*名称字段)
+               && 名称字段->创建代次 <= 事实截止
+               && (状态 == L2特征概念状态::已退出 ? 名称字段->退出代次 == 事实截止 : !名称字段->退出代次);
+    }
+};
+struct L2特征观测结果 final {
+    L2特征概念状态 状态 = L2特征概念状态::入口拒绝;
+    std::uint32_t 合同版本 = 1;
+    std::uint64_t 事实截止 = 0;
+    std::optional<std::uint64_t> 发布截止;
+    std::optional<L2特征观测事实> 观测;
+    bool 成功() const noexcept {
+        return (状态 == L2特征概念状态::已记录 || 状态 == L2特征概念状态::精确重复
+                || 状态 == L2特征概念状态::已读取)
+               && 合同版本 == 1 && 事实截止 && 观测 && 特征概念载荷完整(*观测) && 观测->创建代次 <= 事实截止;
+    }
+};
+struct L2特征概念组结果 final {
+    L2特征概念状态 状态 = L2特征概念状态::入口拒绝;
+    std::uint32_t 合同版本 = 1;
+    std::uint64_t 事实截止 = 0;
+    L2新存在引用 宿主;
+    L2新特征类型引用 特征类型;
+    稳定编码 规则身份{};
+    std::uint64_t 规则版本 = 0;
+    std::vector<L2特征概念事实> 概念组;
+    bool 成功() const noexcept {
+        if (状态 != L2特征概念状态::已读取 || 合同版本 != 1 || !事实截止)
+            return false;
+        if (!有效(宿主.值) || !有效(特征类型.值) || !有效(规则身份) || !规则版本)
+            return false;
+        稳定编码 previous{};
+        for (const auto& x : 概念组) {
+            if (!特征概念载荷完整(x) || !L2普通概念事实完整(x.普通概念, 事实截止) || x.宿主 != 宿主
+                || x.特征类型 != 特征类型 || x.规则.规则身份 != 规则身份 || x.规则.规则版本 != 规则版本
+                || (有效(previous) && !(previous < x.普通概念.概念.值)))
+                return false;
+            previous = x.普通概念.概念.值;
+        }
+        return true;
+    }
+};
+struct L2特征观测组结果 final {
+    L2特征概念状态 状态 = L2特征概念状态::入口拒绝;
+    std::uint32_t 合同版本 = 1;
+    std::uint64_t 事实截止 = 0;
+    L2概念身份 概念;
+    std::vector<L2特征观测事实> 观测组;
+    bool 成功() const noexcept {
+        if (状态 != L2特征概念状态::已读取 || 合同版本 != 1 || !事实截止)
+            return false;
+        if (!有效(概念.值))
+            return false;
+        for (std::size_t i = 0; i < 观测组.size(); ++i) {
+            const auto& x = 观测组[i];
+            if (!特征概念载荷完整(x) || x.概念 != 概念 || x.创建代次 > 事实截止)
+                return false;
+            for (std::size_t j = 0; j < i; ++j)
+                if (观测组[j].记录节点 == x.记录节点 || 观测组[j].观测稳定编码 == x.观测稳定编码)
+                    return false;
+            if (i
+                && (观测组[i - 1].观测时间.纳秒 > x.观测时间.纳秒
+                    || (观测组[i - 1].观测时间 == x.观测时间
+                        && !(观测组[i - 1].观测稳定编码 < x.观测稳定编码))))
+                return false;
+        }
+        return true;
+    }
+};
+
+} // namespace 海中鱼巣
+
+namespace 海中鱼巣 {
+struct L2特征观测实例引用项 final {
+    稳定编码 观测记录{};
+    稳定编码 实例关系{};
+    friend bool operator==(const L2特征观测实例引用项&, const L2特征观测实例引用项&) = default;
+};
+struct L2特征实例当前引用清单 final {
+    L2新特征实例引用 实例;
+    std::uint64_t 实例见证截止 = 0;
+    std::optional<稳定编码> 名称关系;
+    std::vector<L2特征观测实例引用项> 观测实例关系;
+    friend bool operator==(const L2特征实例当前引用清单&, const L2特征实例当前引用清单&) = default;
+};
+inline bool 特征实例引用清单完整(const L2特征实例当前引用清单& x, std::uint64_t g) noexcept {
+    if (!有效(x.实例.值) || !x.实例见证截止 || x.实例见证截止 > g || (x.名称关系 && !有效(*x.名称关系)))
+        return false;
+    for (std::size_t i = 0; i < x.观测实例关系.size(); ++i) {
+        const auto& item = x.观测实例关系[i];
+        if (!有效(item.观测记录) || !有效(item.实例关系) || (x.名称关系 && *x.名称关系 == item.实例关系)
+            || (i && !(x.观测实例关系[i - 1].实例关系 < item.实例关系)))
+            return false;
+        for (std::size_t j = 0; j < i; ++j)
+            if (x.观测实例关系[j].观测记录 == item.观测记录)
+                return false;
+    }
+    return true;
+}
+struct L2特征实例引用清单请求 final {
+    L2结构请求头 请求头;
+    std::uint32_t 合同版本 = 1;
+    L2新特征实例引用 实例;
+    std::uint64_t 实例见证截止 = 0;
+    std::uint64_t 最大引用数 = 0;
+};
+struct L2特征实例引用清单结果 final {
+    L2特征概念状态 状态 = L2特征概念状态::入口拒绝;
+    std::uint32_t 合同版本 = 1;
+    std::uint64_t 事实截止 = 0;
+    std::optional<L2特征实例当前引用清单> 清单;
+    bool 成功() const noexcept {
+        return 状态 == L2特征概念状态::已读取 && 合同版本 == 1 && 事实截止 && 清单
+               && 特征实例引用清单完整(*清单, 事实截止);
+    }
+};
+struct L2特征实例引用释放请求 final {
+    L2结构请求头 请求头;
+    std::uint32_t 合同版本 = 1;
+    L2结构幂等身份 幂等身份;
+    L2特征实例当前引用清单 期望清单;
+    std::uint64_t 最大引用数 = 0;
+    friend bool operator==(const L2特征实例引用释放请求&, const L2特征实例引用释放请求&) = default;
+};
+struct L2特征实例引用释放结果 final {
+    L2特征概念状态 状态 = L2特征概念状态::入口拒绝;
+    std::uint32_t 合同版本 = 1;
+    std::uint64_t 事实截止 = 0;
+    std::optional<std::uint64_t> 发布截止;
+    std::optional<L2特征实例当前引用清单> 释放前清单;
+    std::vector<稳定编码> 已退出关系;
+    std::vector<稳定编码> 保留观测记录;
+    bool 成功() const noexcept {
+        if (合同版本 != 1 || !事实截止 || !释放前清单 || !特征实例引用清单完整(*释放前清单, 事实截止))
+            return false;
+        const auto& x = *释放前清单;
+        const auto count = x.观测实例关系.size() + (x.名称关系 ? 1 : 0);
+        if (状态 == L2特征概念状态::无须释放)
+            return !count && 已退出关系.empty() && 保留观测记录.empty() && !发布截止;
+        if ((状态 != L2特征概念状态::已释放 && 状态 != L2特征概念状态::精确重复) || 发布截止 != 事实截止
+            || !count || 已退出关系.size() != count || 保留观测记录.size() != x.观测实例关系.size())
+            return false;
+        for (std::size_t i = 0; i < 已退出关系.size(); ++i) {
+            if (!有效(已退出关系[i]) || (i && !(已退出关系[i - 1] < 已退出关系[i])))
+                return false;
+            bool found = x.名称关系 && *x.名称关系 == 已退出关系[i];
+            for (const auto& item : x.观测实例关系)
+                found |= item.实例关系 == 已退出关系[i];
+            if (!found)
+                return false;
+        }
+        for (std::size_t i = 0; i < 保留观测记录.size(); ++i) {
+            if (!有效(保留观测记录[i]) || (i && !(保留观测记录[i - 1] < 保留观测记录[i])))
+                return false;
+            bool found = false;
+            for (const auto& item : x.观测实例关系)
+                found |= item.观测记录 == 保留观测记录[i];
+            if (!found)
+                return false;
+        }
+        return true;
+    }
+};
+} // namespace 海中鱼巣
+
+namespace 海中鱼巣 {
+struct L2特征概念范围请求 final {
+    std::uint32_t 合同版本 = 1;
+    L2结构请求头 请求头;
+    L2新存在引用 宿主;
+    L2新特征类型引用 特征类型;
+    特征概念形成规则 本次形成规则;
+    std::uint64_t 最大概念数 = 0;
+};
+struct L2特征概念范围结果 final {
+    L2特征概念状态 状态 = L2特征概念状态::入口拒绝;
+    std::uint32_t 合同版本 = 1;
+    std::uint64_t 事实截止 = 0;
+    L2新存在引用 宿主;
+    L2新特征类型引用 特征类型;
+    std::optional<特征概念形成规则> 已验证规则;
+    std::vector<L2特征概念事实> 概念组;
+    bool 成功() const noexcept {
+        if (状态 != L2特征概念状态::已读取 || 合同版本 != 1 || !事实截止 || !有效(宿主.值)
+            || !有效(特征类型.值) || !已验证规则 || !特征概念形成规则有效(*已验证规则))
+            return false;
+        for (std::size_t i = 0; i < 概念组.size(); ++i) {
+            const auto& x = 概念组[i];
+            if (!特征概念载荷完整(x) || !L2普通概念事实完整(x.普通概念, 事实截止)
+                || (x.已成熟 && x.评估截止 > 事实截止) || x.宿主 != 宿主 || x.特征类型 != 特征类型
+                || (i && !(概念组[i - 1].普通概念.概念.值 < x.普通概念.概念.值)))
+                return false;
+        }
+        return true;
+    }
+};
 } // namespace 海中鱼巣
