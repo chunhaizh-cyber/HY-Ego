@@ -203,8 +203,149 @@ struct 状态类组查询结果 final {
     }
 };
 
+
+enum class 状态类历史缺失位置 : std::uint8_t { 本体 = 1, 快照依赖 = 2 };
+struct 状态类历史读取请求 final {
+    std::uint32_t 合同版本 = 1;
+    std::uint64_t Gread = 0, H = 0;
+    稳定编码 状态结点{};
+    std::uint64_t 最大特征数 = 0;
+};
+struct 状态类历史读取结果 final {
+    状态类数据状态 状态 = 状态类数据状态::入口拒绝;
+    std::uint32_t 合同版本 = 1;
+    std::uint64_t Gread = 0, H = 0;
+    std::optional<状态类结点> 状态结点;
+    std::optional<状态类历史缺失位置> 缺失位置;
+    bool 成功() const noexcept {
+        if (状态 != 状态类数据状态::已读取 || 合同版本 != 1 || !H || Gread < H
+            || !状态结点 || 缺失位置) return false;
+        const auto& n = *状态结点;
+        if (!有效(n.结点) || !有效(n.时间值事实) || !有效(n.快照值事实)
+            || n.时间 <= 0 || !n.创建事实代次 || n.创建事实代次 > H
+            || (n.退出事实代次 && *n.退出事实代次 <= H) || n.特征值快照组.empty()) return false;
+        稳定编码 previous{};
+        for (const auto& f : n.特征值快照组) {
+            if (!有效(f.结点) || (有效(previous) && previous.值 >= f.结点.值)
+                || !有效(f.值事实) || !有效(f.特征类型) || !f.创建事实代次
+                || f.创建事实代次 > n.创建事实代次
+                || (f.退出事实代次 && *f.退出事实代次 <= n.创建事实代次)
+                || f.特征值.valueless_by_exception()) return false;
+            previous = f.结点;
+        }
+        return true;
+    }
+};
+
 class 状态类数据服务 final {
 public:
+
+    bool 绑定于(const L1事实基座服务& s) const noexcept { return &s == &第一层服务_; }
+
+    状态类历史读取结果 读取状态历史事实(const 状态类历史读取请求& r) const {
+        using S = 状态类数据状态;
+        状态类历史读取结果 out;
+        out.Gread = r.Gread;
+        out.H = r.H;
+        auto missing = 状态类历史缺失位置::本体;
+        if (r.合同版本 != 1 || !r.Gread || !r.H || r.H > r.Gread
+            || !有效(r.状态结点) || !r.最大特征数) return out;
+        try {
+            auto guard = [&] {
+                const auto q = 第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
+                if (q.状态 != L1中性读取状态::成功)
+                    throw q.状态 == L1中性读取状态::资源失败 ? S::资源失败 : S::内部不一致;
+                if (q.合同版本 != L1中性CRUD合同版本 || !q.事实代次) throw S::内部不一致;
+                if (q.事实代次 != r.Gread) throw S::事实代次漂移;
+            };
+            guard();
+            auto raw = [&](稳定编码 id) {
+                auto q = 第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, id});
+                if (q.状态 != L1所有者范围读取状态::成功) throw 映射读取状态(q.状态);
+                if (q.读取事实代次 != r.Gread) throw S::事实代次漂移;
+                if (q.合同版本 != L1所有者范围CRUD合同版本 || q.查询编码 != id || !q.事实)
+                    throw S::内部不一致;
+                return *q.事实;
+            };
+            const auto nf = raw(r.状态结点);
+            const auto* n = std::get_if<L1所有者范围节点事实>(&nf);
+            if (!n || n->编码 != r.状态结点 || n->写入所有者 != 所有者_
+                || n->种类 != 节点种类::普通 || n->属性类型表示) throw S::引用冲突;
+            if (!n->创建事实代次) throw S::内部不一致;
+            if (n->创建事实代次 > r.H) throw S::未找到;
+            if (n->退出事实代次 && *n->退出事实代次 <= r.H) throw S::目标已退出;
+            const auto vals = 第一层服务_.读取所有者范围历史属性值组({L1所有者范围CRUD合同版本, r.状态结点, r.H});
+            if (vals.状态 != L1所有者范围读取状态::成功) throw 映射读取状态(vals.状态);
+            if (vals.读取事实代次 != r.Gread) throw S::事实代次漂移;
+            if (vals.合同版本 != L1所有者范围CRUD合同版本 || vals.所属节点 != r.状态结点
+                || vals.历史截止事实代次 != r.H || vals.属性值组.size() != 2) throw S::内部不一致;
+            const L1所有者范围值事实 *time = nullptr, *snapshot = nullptr;
+            for (const auto& v : vals.属性值组) {
+                if (!有效(v.编码) || !历史值在截止有效(v, *n, v.属性类型节点, v.编码, r.H, n->退出事实代次)
+                    || v.退出事实代次 != n->退出事实代次) throw S::内部不一致;
+                if (v.属性类型节点 == 时间属性类型_ && !time) time = &v;
+                else if (v.属性类型节点 == 快照属性类型_ && !snapshot) snapshot = &v;
+                else throw S::内部不一致;
+            }
+            auto type = [&](稳定编码 id, L1所有者范围值表示种类 rep) {
+                const auto tf = raw(id);
+                const auto* t = std::get_if<L1所有者范围节点事实>(&tf);
+                if (!t || t->编码 != id || t->写入所有者 != 所有者_
+                    || t->种类 != 节点种类::属性类型 || t->属性类型表示 != rep
+                    || !t->创建事实代次 || t->创建事实代次 > n->创建事实代次
+                    || (t->退出事实代次 && *t->退出事实代次 <= r.H)) throw S::内部不一致;
+            };
+            type(时间属性类型_, L1所有者范围值表示种类::I64);
+            type(快照属性类型_, L1所有者范围值表示种类::U64组);
+            const auto* t = time ? std::get_if<std::int64_t>(&time->材料) : nullptr;
+            const auto* codes = snapshot ? std::get_if<std::vector<std::uint64_t>>(&snapshot->材料) : nullptr;
+            if (!t || *t <= 0 || !codes || !状态类数据内部::快照编码有效(*codes)) throw S::内部不一致;
+            if (codes->size() / 2 > r.最大特征数) throw S::数量预算不足;
+            状态类结点 result{r.状态结点, time->编码, snapshot->编码, *t, {}, n->创建事实代次, n->退出事实代次};
+            missing = 状态类历史缺失位置::快照依赖;
+            for (std::size_t i = 0; i < codes->size(); i += 2) {
+                const 稳定编码 id{(*codes)[i]}, value{(*codes)[i + 1]};
+                auto f = 特征服务_.读取特征历史事实({1, r.Gread, n->创建事实代次, id, value});
+                if (f.状态 != 特征引用读取状态::已读取) {
+                    switch (f.状态) {
+                    case 特征引用读取状态::历史材料不可用: throw S::历史材料已清理;
+                    case 特征引用读取状态::资源失败: throw S::资源失败;
+                    case 特征引用读取状态::事实代次漂移: throw S::事实代次漂移;
+                    case 特征引用读取状态::数量预算不足: throw S::数量预算不足;
+                    case 特征引用读取状态::未找到: throw S::特征未找到;
+                    case 特征引用读取状态::目标已退出: throw S::特征已退出;
+                    case 特征引用读取状态::引用冲突: throw S::引用冲突;
+                    default: throw S::内部不一致;
+                    }
+                }
+                if (!f.成功() || f.Gread != r.Gread || f.H != n->创建事实代次
+                    || f.特征->结点 != id || f.特征->值事实 != value) throw S::内部不一致;
+                result.特征值快照组.push_back(std::move(*f.特征));
+            }
+            guard();
+            out.状态 = S::已读取;
+            out.状态结点 = std::move(result);
+            if (!out.成功()) throw S::内部不一致;
+            return out;
+        } catch (S s) { out.状态 = s; }
+        catch (const std::bad_alloc&) { out.状态 = S::资源失败; }
+        catch (const std::length_error&) { out.状态 = S::资源失败; }
+        catch (...) { out.状态 = S::内部不一致; }
+        // 失败也必须确认其诊断属于本次冻结 G，尤其不能把并发清理标成同 G 的确定失证。
+        try {
+            const auto q = 第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
+            if (q.状态 != L1中性读取状态::成功)
+                out.状态 = q.状态 == L1中性读取状态::资源失败 ? S::资源失败 : S::内部不一致;
+            else if (q.合同版本 != L1中性CRUD合同版本 || !q.事实代次) out.状态 = S::内部不一致;
+            else if (q.事实代次 != r.Gread) out.状态 = S::事实代次漂移;
+        } catch (const std::bad_alloc&) { out.状态 = S::资源失败; }
+        catch (const std::length_error&) { out.状态 = S::资源失败; }
+        catch (...) { out.状态 = S::内部不一致; }
+        out.状态结点.reset();
+        if (out.状态 == S::历史材料已清理) out.缺失位置 = missing;
+        return out;
+    }
+
     状态类数据服务() = delete;
     状态类数据服务(const 状态类数据服务&) = delete;
     状态类数据服务& operator=(const 状态类数据服务&) = delete;
@@ -223,7 +364,8 @@ public:
           所有者_(写入端口_.所有者身份()),
           时间属性类型_(时间属性类型),
           快照属性类型_(快照属性类型) {
-        if (!写入端口_.有效() || !写入端口_.绑定于(第一层服务_)
+        if (!特征服务_.绑定于(第一层服务_)
+            || !写入端口_.有效() || !写入端口_.绑定于(第一层服务_)
             || !有效(所有者_) || !有效(时间属性类型_)
             || !有效(快照属性类型_)
             || 时间属性类型_ == 快照属性类型_)

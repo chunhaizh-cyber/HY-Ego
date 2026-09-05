@@ -17,6 +17,7 @@ module;
 export module 海中鱼巣.领域.数据服务.概念树类;
 
 export import 海中鱼巣.领域.数据服务.存在类;
+export import 海中鱼巣.领域.数据服务.场景类;
 
 export namespace 海中鱼巣 {
 
@@ -55,8 +56,23 @@ struct 概念树特征引用 final {
     }
     friend bool operator==(const 概念树特征引用 &, const 概念树特征引用 &) = default;
 };
-using 概念树世界引用 = std::variant<概念树存在引用, 概念树特征引用>;
-using 概念树形成世界引用 = std::variant<概念树存在引用, 概念树特征引用, 概念树特征类型引用>;
+struct 概念树场景引用 final {
+    稳定编码 值{};
+    概念树场景引用() = default;
+    explicit 概念树场景引用(稳定编码 id) : 值(id) {
+    }
+    friend bool operator==(const 概念树场景引用 &, const 概念树场景引用 &) = default;
+};
+struct 概念树动态引用 final {
+    稳定编码 值{};
+    概念树动态引用() = default;
+    explicit 概念树动态引用(稳定编码 id) : 值(id) {
+    }
+    friend bool operator==(const 概念树动态引用 &, const 概念树动态引用 &) = default;
+};
+using 概念树世界引用 = std::variant<概念树存在引用, 概念树特征引用, 概念树动态引用>;
+using 概念树形成世界引用 =
+    std::variant<概念树存在引用, 概念树特征引用, 概念树特征类型引用, 概念树场景引用, 概念树动态引用>;
 using 概念树精确值 = std::variant<std::int64_t, std::vector<std::int64_t>, std::vector<std::uint64_t>>;
 struct 概念树I64区间 final {
     std::int64_t 下界 = 0;
@@ -74,7 +90,20 @@ struct 概念树存在定义 final {
     std::vector<概念树概念身份> 特征模板组;
     friend bool operator==(const 概念树存在定义 &, const 概念树存在定义 &) = default;
 };
-using 概念树定义 = std::variant<概念树特征定义, 概念树存在定义>;
+
+struct 概念树动态时间槽 final {
+    std::int64_t 相对纳秒 = 0;
+    std::vector<概念树概念身份> 模板组;
+    friend bool operator==(const 概念树动态时间槽 &, const 概念树动态时间槽 &) = default;
+};
+struct 概念树动态定义 final {
+    概念树场景引用 场景;
+    概念树存在引用 主体;
+    std::vector<概念树动态时间槽> 时间槽组;
+    friend bool operator==(const 概念树动态定义 &, const 概念树动态定义 &) = default;
+};
+using 概念树定义 = std::variant<概念树特征定义, 概念树存在定义, 概念树动态定义>;
+
 struct 概念树来源项 final {
     概念树世界引用 世界事实;
     std::uint64_t 证据截止 = 0;
@@ -99,6 +128,8 @@ struct 概念树预算 final {
     std::uint64_t 最大支持数 = 0;
     std::uint64_t 最大世界成员数 = 0;
     std::uint64_t 最大特征属性数 = 0;
+    std::uint64_t 最大动态槽数 = 0;
+    std::uint64_t 最大动态模板数 = 0;
     friend bool operator==(const 概念树预算 &, const 概念树预算 &) = default;
 };
 enum class 概念树根角色 : std::uint8_t {
@@ -194,6 +225,27 @@ struct 概念树结构交付 final {
     概念树结构类型 类型;
     friend bool operator==(const 概念树结构交付 &, const 概念树结构交付 &) = default;
 };
+
+struct 概念树动态结构类型 final {
+    稳定编码 定义场景{}, 定义主体{}, 时间槽{}, 槽模板{}, 相对时间{}, 来源动态{}, 支持动态{}, 来源下位概念{};
+    friend bool operator==(const 概念树动态结构类型 &, const 概念树动态结构类型 &) = default;
+};
+struct 概念树动态扩展交付 final {
+    稳定编码 锚点{};
+    概念树规则身份 签名规则;
+    概念树动态结构类型 类型;
+    friend bool operator==(const 概念树动态扩展交付 &, const 概念树动态扩展交付 &) = default;
+};
+enum class 概念树动态证据状态 : std::uint8_t {
+    已核验 = 1,
+    历史已清理 = 2,
+    未展开 = 3
+};
+struct 概念树动态依据项 final {
+    std::variant<概念树动态引用, 概念树概念身份> 目标;
+    std::uint64_t H = 0;
+    friend bool operator==(const 概念树动态依据项 &, const 概念树动态依据项 &) = default;
+};
 struct 概念树生命周期 final {
     std::uint64_t 创建事实代次 = 0;
     std::optional<std::uint64_t> 退出事实代次;
@@ -216,6 +268,14 @@ struct 概念树来源事实 final {
     bool 当前世界引用已释放 = false;
     friend bool operator==(const 概念树来源事实 &, const 概念树来源事实 &) = default;
 };
+
+struct 概念树动态依据事实 final {
+    稳定编码 记录{}, 成员关系{}, 引用关系{}, 截止值事实{};
+    概念树动态依据项 依据;
+    概念树生命周期 生命周期;
+    bool 当前引用已释放 = false;
+    friend bool operator==(const 概念树动态依据事实 &, const 概念树动态依据事实 &) = default;
+};
 struct 概念树概念事实 final {
     概念树概念身份 概念;
     概念树根角色 根角色 = 概念树根角色::存在;
@@ -229,6 +289,7 @@ struct 概念树概念事实 final {
     概念树生命周期 生命周期;
     std::vector<概念树来源事实> 来源组;
     std::vector<概念树直接上位事实> 直接上位组;
+    std::vector<概念树动态依据事实> 动态依据组;
     friend bool operator==(const 概念树概念事实 &, const 概念树概念事实 &) = default;
 };
 struct 概念树支持事实 final {
@@ -241,6 +302,7 @@ struct 概念树支持事实 final {
     概念树世界引用 世界引用;
     std::uint64_t 证据H = 0;
     概念树生命周期 记录生命周期;
+    std::optional<概念树动态证据状态> 动态证据;
     friend bool operator==(const 概念树支持事实 &, const 概念树支持事实 &) = default;
 };
 struct 概念树形成引用事实 final {
@@ -344,9 +406,82 @@ struct 概念树形成引用释放请求 final {
     概念树预算 预算;
     friend bool operator==(const 概念树形成引用释放请求 &, const 概念树形成引用释放请求 &) = default;
 };
-using 概念树业务写请求 =
-    std::variant<概念树概念建立请求, 概念树上位操作请求, 概念树支持建立请求, 概念树支持退出请求,
-                 概念树生命周期迁移请求, 概念树概念退出请求, 概念树形成引用释放请求>;
+
+struct 概念树动态建立请求 final {
+    概念树写入头 头;
+    概念树动态定义 定义;
+    std::vector<概念树概念身份> 直接上位;
+    std::vector<概念树动态依据项> 依据;
+    概念树预算 预算;
+    friend bool operator==(const 概念树动态建立请求 &, const 概念树动态建立请求 &) = default;
+};
+struct 概念树动态依据释放请求 final {
+    概念树写入头 头;
+    概念树概念身份 所属概念;
+    std::vector<概念树动态依据事实> 预期当前依据;
+    概念树预算 预算;
+    friend bool operator==(const 概念树动态依据释放请求 &, const 概念树动态依据释放请求 &) = default;
+};
+struct 概念树动态依据审计请求 final {
+    概念树读取头 头;
+    概念树概念身份 概念;
+    概念树预算 预算;
+};
+struct 概念树动态依据审计项 final {
+    概念树动态依据事实 依据;
+    概念树动态证据状态 证据状态 = 概念树动态证据状态::未展开;
+};
+struct 概念树动态依据审计结果 final {
+    std::uint32_t 合同版本 = 1;
+    概念树数据状态 状态 = 概念树数据状态::入口拒绝;
+    std::uint64_t Gread = 0, H = 0;
+    std::vector<概念树动态依据审计项> 依据组;
+    bool 成功() const noexcept;
+};
+struct 概念树动态支持核验请求 final {
+    概念树读取头 读取头;
+    稳定编码 支持记录{};
+    概念树预算 预算;
+};
+struct 概念树动态支持核验结果 final {
+    std::uint32_t 合同版本 = 1;
+    概念树数据状态 状态 = 概念树数据状态::入口拒绝;
+    std::uint64_t Gread = 0, H = 0;
+    std::optional<概念树支持事实> 支持;
+    bool 成功() const noexcept;
+};
+struct 概念树截止结果 final {
+    std::uint32_t 合同版本 = 1;
+    概念树数据状态 状态 = 概念树数据状态::入口拒绝;
+    std::uint64_t Gread = 0;
+    bool 成功() const noexcept {
+        return 合同版本 == 1 && 状态 == 概念树数据状态::已读取 && Gread;
+    }
+};
+struct 概念树动态模板读取请求 final {
+    概念树读取头 头;
+    概念树概念身份 模板;
+    概念树预算 预算;
+};
+struct 概念树动态模板事实 final {
+    概念树概念身份 模板, 本体根;
+    概念树规则身份 规则;
+    稳定编码 定义记录{}, 生命周期值事实{};
+    概念树特征定义 定义;
+    概念树生命周期 生命周期;
+    概念树生命周期状态 治理状态 = 概念树生命周期状态::活跃;
+    friend bool operator==(const 概念树动态模板事实 &, const 概念树动态模板事实 &) = default;
+};
+struct 概念树动态模板读取结果 final {
+    std::uint32_t 合同版本 = 1;
+    概念树数据状态 状态 = 概念树数据状态::入口拒绝;
+    std::uint64_t Gread = 0, H = 0;
+    std::optional<概念树动态模板事实> 模板;
+    bool 成功() const noexcept;
+};
+using 概念树业务写请求 = std::variant<概念树概念建立请求, 概念树上位操作请求, 概念树支持建立请求,
+                                      概念树支持退出请求, 概念树生命周期迁移请求, 概念树概念退出请求,
+                                      概念树形成引用释放请求, 概念树动态建立请求, 概念树动态依据释放请求>;
 
 struct 概念树读取结果 final {
     std::uint32_t 合同版本 = 1;
@@ -432,10 +567,34 @@ class 概念树类数据服务 final {
     friend struct 概念树支持组结果;
     friend struct 概念树形成引用组结果;
     friend struct 概念树写入结果;
+    friend struct 概念树动态模板读取结果;
+    friend struct 概念树动态支持核验结果;
+    friend struct 概念树动态依据审计结果;
 
   public:
     概念树类数据服务(const L1事实基座服务 &, const 特征类数据服务 &, const 存在类数据服务 &,
                      const 特征值类数据服务 &, L1所有者范围写端口 &&, const 概念树结构交付 &);
+
+    概念树类数据服务(const L1事实基座服务 &, const 特征类数据服务 &, const 存在类数据服务 &,
+                     const 特征值类数据服务 &, L1所有者范围写端口 &&, const 概念树结构交付 &,
+                     const 场景类数据服务 &, const 动态类数据服务 &, const 概念树动态扩展交付 &);
+    bool 使用动态世界服务(const 场景类数据服务 &s, const 存在类数据服务 &e,
+                          const 动态类数据服务 &d) const noexcept {
+        return dynamic_ && scenes_ == &s && dynamics_ == &d && &existences_ == &e;
+    }
+    概念树概念身份 动态根引用() const noexcept {
+        return layout_.根组.动态根;
+    }
+    概念树截止结果 读取当前事实代次() const;
+    概念树写入结果 创建动态概念(const 概念树动态建立请求 &r) {
+        return 执行写入(r);
+    }
+    概念树写入结果 释放动态形成依据(const 概念树动态依据释放请求 &r) {
+        return 执行写入(r);
+    }
+    概念树动态依据审计结果 读取动态形成依据(const 概念树动态依据审计请求 &) const;
+    概念树动态支持核验结果 核验动态支持依据(const 概念树动态支持核验请求 &) const;
+    概念树动态模板读取结果 读取动态特征模板(const 概念树动态模板读取请求 &) const;
     概念树类数据服务() = delete;
     概念树类数据服务(const 概念树类数据服务 &) = delete;
     概念树类数据服务 &operator=(const 概念树类数据服务 &) = delete;
@@ -476,6 +635,32 @@ class 概念树类数据服务 final {
     const 特征值类数据服务 &values_;
     L1所有者范围写端口 port_;
     概念树结构交付 layout_;
+
+    const 场景类数据服务 *scenes_ = nullptr;
+    const 动态类数据服务 *dynamics_ = nullptr;
+    std::optional<概念树动态扩展交付> dynamic_;
+    void 校验动态扩展(std::uint64_t) const;
+    void 验证动态定义(const 概念树动态定义 &, std::uint64_t, std::uint64_t, const 概念树预算 &) const;
+    struct 动态历史用量 {
+        std::uint64_t 状态数 = 0, 变化数 = 0, 快照数 = 0;
+        std::set<std::pair<std::uint64_t, std::uint64_t>> 已核验;
+    };
+    void 验证动态依据(const 概念树动态依据项 &, std::uint64_t, const 概念树预算 &,
+                      动态历史用量 * = nullptr) const;
+    概念树动态证据状态 审计动态(概念树动态引用, std::uint64_t, std::uint64_t, const 概念树预算 &,
+                                bool 当前保护 = false, 动态历史用量 * = nullptr) const;
+    概念树动态模板事实 动态模板(概念树概念身份, std::uint64_t, std::uint64_t, const 概念树预算 &) const;
+    static bool 动态定义完整(const 概念树动态定义 &) noexcept;
+    static bool 动态依据完整(const 概念树动态依据事实 &, std::uint64_t, bool = false) noexcept;
+    稳定编码 支持关系类型(const 概念树世界引用 &) const;
+    static S 映射(动态类数据状态);
+    static S 映射(场景类数据状态);
+    template <class T> static const 概念树写入头 &请求写头(const T &r) {
+        if constexpr (std::is_same_v<T, 概念树动态建立请求> || std::is_same_v<T, 概念树动态依据释放请求>)
+            return r.头;
+        else
+            return r.写入头;
+    }
     mutable std::mutex mutex_;
 
     void 校验布局(std::uint64_t Gread) const;
@@ -497,7 +682,8 @@ class 概念树类数据服务 final {
     std::array<稳定编码, 28> 类型组() const;
     std::array<概念树概念身份, 4> 根组() const;
     概念树概念身份 根(概念树根角色) const;
-    概念展开 展开概念(概念树概念身份, std::uint64_t g, std::uint64_t h, const 概念树预算 &) const;
+    概念展开 展开概念(概念树概念身份, std::uint64_t g, std::uint64_t h, const 概念树预算 &,
+                      bool 窄模板 = false) const;
     概念树图结果 图(概念树根角色, bool 支持, std::uint64_t g, std::uint64_t h, const 概念树预算 &) const;
     概念树支持事实 支持记录(稳定编码, std::uint64_t g, std::uint64_t h, const 概念树预算 &) const;
     std::vector<概念树支持事实> 支持组(std::optional<概念树概念身份>, std::optional<概念树世界引用>,
@@ -832,6 +1018,241 @@ void 概念树类数据服务::校验布局(std::uint64_t g) const {
     守卫代次(g);
 }
 
+概念树类数据服务::概念树类数据服务(const L1事实基座服务 &l1, const 特征类数据服务 &f, const 存在类数据服务 &e,
+                                   const 特征值类数据服务 &v, L1所有者范围写端口 &&port,
+                                   const 概念树结构交付 &base, const 场景类数据服务 &scene,
+                                   const 动态类数据服务 &dynamics, const 概念树动态扩展交付 &extension)
+    : 概念树类数据服务(l1, f, e, v, std::move(port), base) {
+    if (!scene.绑定于(l1) || !dynamics.绑定于(l1))
+        throw std::invalid_argument("dynamic world L1 mismatch");
+    scenes_ = &scene;
+    dynamics_ = &dynamics;
+    dynamic_ = extension;
+    try {
+        校验动态扩展(当前代次());
+    } catch (const 失败 &x) {
+        if (x.状态 == S::资源失败)
+            throw std::bad_alloc{};
+        throw std::invalid_argument("dynamic concept extension is invalid");
+    }
+}
+void 概念树类数据服务::校验动态扩展(std::uint64_t g) const {
+    if (!dynamic_ || !scenes_ || !dynamics_)
+        throw 失败{S::入口拒绝};
+    const auto &x = *dynamic_;
+    const auto &t = x.类型;
+    const std::array<稳定编码, 8> ids{t.定义场景, t.定义主体, t.时间槽,   t.槽模板,
+                                      t.相对时间, t.来源动态, t.支持动态, t.来源下位概念};
+    std::set<std::uint64_t> used{layout_.格式锚点.值, layout_.签名规则.值.值};
+    for (auto id : 类型组())
+        used.insert(id.值);
+    for (auto id : 根组())
+        used.insert(id.值.值);
+    auto unique = [&](稳定编码 id) {
+        if (!有效(id) || !used.insert(id.值).second)
+            throw 失败{S::引用冲突};
+    };
+    unique(x.锚点);
+    unique(x.签名规则.值);
+    for (std::size_t i = 0; i < ids.size(); ++i) {
+        unique(ids[i]);
+        const auto n = 节点(ids[i], g, g);
+        if (n.种类 != (i == 4 ? 节点种类::属性类型 : 节点种类::普通) ||
+            n.属性类型表示 != (i == 4 ? std::optional{L1所有者范围值表示种类::I64} : std::nullopt) ||
+            !属性(ids[i], g, g).empty())
+            throw 失败{S::引用冲突};
+    }
+    for (auto id : {x.锚点, x.签名规则.值}) {
+        const auto n = 节点(id, g, g);
+        if (n.种类 != 节点种类::普通 || n.属性类型表示)
+            throw 失败{S::引用冲突};
+    }
+    const auto a = 属性(x.锚点, g, g), rv = 属性(x.签名规则.值, g, g);
+    if (a.size() != 1 || rv.size() != 2 ||
+        std::get<std::int64_t>(唯一属性(a, layout_.类型.格式版本).材料) != 1 ||
+        std::get<std::int64_t>(唯一属性(rv, layout_.类型.格式版本).材料) != 1 ||
+        std::get<std::int64_t>(唯一属性(rv, layout_.类型.规则版本).材料) != 1 ||
+        唯一关系(x.锚点, layout_.类型.规则归属, g, g).目标节点 != x.签名规则.值)
+        throw 失败{S::引用冲突};
+    const auto regs = 关系(x.锚点, layout_.类型.类型登记, false, g, g, 8);
+    if (regs.size() != 8)
+        throw 失败{S::引用冲突};
+    for (std::size_t i = 0; i < 8; ++i)
+        if (regs[i].角色或顺序 != i + 1 || regs[i].目标节点 != ids[i])
+            throw 失败{S::引用冲突};
+    守卫代次(g);
+}
+概念树截止结果 概念树类数据服务::读取当前事实代次() const {
+    try {
+        return {1, S::已读取, 当前代次()};
+    } catch (const 失败 &x) {
+        return {1, x.状态, 0};
+    } catch (const std::bad_alloc &) {
+        return {1, S::资源失败, 0};
+    } catch (const std::length_error &) {
+        return {1, S::资源失败, 0};
+    } catch (...) {
+        return {1, S::内部不一致, 0};
+    }
+}
+概念树数据状态 概念树类数据服务::映射(动态类数据状态 s) {
+    switch (s) {
+    case 动态类数据状态::未找到:
+        return S::未找到;
+    case 动态类数据状态::目标已退出:
+        return S::目标已退出;
+    case 动态类数据状态::入口拒绝:
+        return S::入口拒绝;
+    case 动态类数据状态::事实代次漂移:
+        return S::事实代次漂移;
+    case 动态类数据状态::数量预算不足:
+        return S::数量预算不足;
+    case 动态类数据状态::资源失败:
+        return S::资源失败;
+    case 动态类数据状态::历史材料已清理:
+        return S::历史材料不可用;
+    case 动态类数据状态::引用冲突:
+        return S::引用冲突;
+    default:
+        return S::内部不一致;
+    }
+}
+概念树数据状态 概念树类数据服务::映射(场景类数据状态 s) {
+    switch (s) {
+    case 场景类数据状态::未找到:
+        return S::未找到;
+    case 场景类数据状态::目标已退出:
+        return S::目标已退出;
+    case 场景类数据状态::入口拒绝:
+        return S::入口拒绝;
+    case 场景类数据状态::事实代次漂移:
+        return S::事实代次漂移;
+    case 场景类数据状态::数量预算不足:
+        return S::数量预算不足;
+    case 场景类数据状态::资源失败:
+        return S::资源失败;
+    case 场景类数据状态::历史材料已清理:
+        return S::历史材料不可用;
+    case 场景类数据状态::引用冲突:
+        return S::引用冲突;
+    default:
+        return S::内部不一致;
+    }
+}
+bool 概念树类数据服务::动态定义完整(const 概念树动态定义 &d) noexcept {
+    if (!有效(d.场景.值) || !有效(d.主体.值) || d.时间槽组.size() < 2 || d.时间槽组.front().相对纳秒 != 0)
+        return false;
+    for (std::size_t i = 0; i < d.时间槽组.size(); ++i) {
+        const auto &q = d.时间槽组[i];
+        if (q.相对纳秒 < 0 || q.模板组.empty() || (i && d.时间槽组[i - 1].相对纳秒 > q.相对纳秒))
+            return false;
+        for (std::size_t j = 0; j < q.模板组.size(); ++j)
+            if (!有效(q.模板组[j].值) || (j && !身份小于(q.模板组[j - 1], q.模板组[j])))
+                return false;
+    }
+    return true;
+}
+bool 概念树类数据服务::动态依据完整(const 概念树动态依据事实 &f, std::uint64_t h, bool exited) noexcept {
+    return !f.依据.目标.valueless_by_exception() && 有效(f.记录) && 有效(f.成员关系) && 有效(f.引用关系) &&
+           有效(f.截止值事实) && 有效(世界编码(f.依据.目标)) && f.依据.H &&
+           f.依据.H < f.生命周期.创建事实代次 && 生命完整(f.生命周期, h, exited);
+}
+稳定编码 概念树类数据服务::支持关系类型(const 概念树世界引用 &w) const {
+    if (w.valueless_by_exception())
+        throw 失败{S::入口拒绝};
+    if (w.index() == 0)
+        return layout_.类型.支持存在;
+    if (w.index() == 1)
+        return layout_.类型.支持特征;
+    if (!dynamic_)
+        throw 失败{S::入口拒绝};
+    return dynamic_->类型.支持动态;
+}
+概念树动态模板事实 概念树类数据服务::动态模板(概念树概念身份 id, std::uint64_t g, std::uint64_t h,
+                                              const 概念树预算 &b) const {
+    if (!dynamic_)
+        throw 失败{S::入口拒绝};
+    auto f = 展开概念(id, g, h, b, true).事实;
+    if (f.是本体根 || f.根角色 != 概念树根角色::特征 || !f.定义 ||
+        !std::holds_alternative<概念树特征定义>(*f.定义))
+        throw 失败{S::引用冲突};
+    return {f.概念,     f.本体根,  f.规则, f.定义记录, f.生命周期值事实, std::get<概念树特征定义>(*f.定义),
+            f.生命周期, f.治理状态};
+}
+概念树动态模板读取结果 概念树类数据服务::读取动态特征模板(const 概念树动态模板读取请求 &r) const {
+    return 读取封装<概念树动态模板读取结果>(r.头, r.预算, [&](auto g, auto h) {
+        概念树动态模板读取结果 out;
+        out.模板 = 动态模板(r.模板, g, h, r.预算);
+        return out;
+    });
+}
+void 概念树类数据服务::验证动态定义(const 概念树动态定义 &d, std::uint64_t g, std::uint64_t h,
+                                    const 概念树预算 &b) const {
+    if (!dynamic_ || !动态定义完整(d) || !b.最大动态槽数 || !b.最大动态模板数)
+        throw 失败{S::入口拒绝};
+    检查数量(d.时间槽组.size(), b.最大动态槽数);
+    验证世界(d.场景, g, h, b);
+    验证世界(d.主体, g, h, b);
+    std::uint64_t count = 0;
+    for (const auto &q : d.时间槽组) {
+        if (q.模板组.size() > b.最大动态模板数 - count)
+            throw 失败{S::数量预算不足};
+        count += q.模板组.size();
+        for (auto id : q.模板组) {
+            const auto f = 动态模板(id, g, h, b);
+            if (f.定义.形成宿主 != d.主体)
+                throw 失败{S::引用冲突};
+        }
+    }
+}
+void 概念树类数据服务::验证动态依据(const 概念树动态依据项 &a, std::uint64_t g, const 概念树预算 &b,
+                                    动态历史用量 *used) const {
+    if (a.目标.valueless_by_exception() || !a.H || a.H > g)
+        throw 失败{S::入口拒绝};
+    if (const auto *d = std::get_if<概念树动态引用>(&a.目标)) {
+        if (审计动态(*d, g, a.H, b, false, used) != 概念树动态证据状态::已核验)
+            throw 失败{S::历史材料不可用};
+    } else {
+        const auto id = std::get<概念树概念身份>(a.目标);
+        const auto f = 读取概念内部(id, g, a.H, b);
+        if (f.是本体根 || f.根角色 != 概念树根角色::动态 || f.生命周期.创建事实代次 > a.H)
+            throw 失败{S::引用冲突};
+    }
+}
+概念树动态证据状态 概念树类数据服务::审计动态(概念树动态引用 d, std::uint64_t g, std::uint64_t h,
+                                              const 概念树预算 &b, bool current, 动态历史用量 *used) const {
+    if (!dynamic_)
+        throw 失败{S::入口拒绝};
+    if (used && used->已核验.contains({d.值.值, h}))
+        return 概念树动态证据状态::已核验;
+    const auto states = b.最大世界成员数 - (used ? used->状态数 : 0);
+    const auto changes = b.最大世界成员数 - (used ? used->变化数 : 0);
+    const auto snapshots = b.最大特征属性数 - (used ? used->快照数 : 0);
+    if (!states || !changes || !snapshots)
+        throw 失败{S::数量预算不足};
+    auto r = dynamics_->读取动态历史事实({1, g, h, d.值, states, changes, snapshots});
+    if (r.状态 == 动态类数据状态::历史材料已清理) {
+        if (r.合同版本 != 1 || r.Gread != g || r.H != h || !r.缺失位置)
+            throw 失败{S::内部不一致};
+        if (current && *r.缺失位置 != 动态类历史缺失位置::状态快照依赖)
+            throw 失败{S::内部不一致};
+        守卫代次(g);
+        return 概念树动态证据状态::历史已清理;
+    }
+    if (!r.成功())
+        throw 失败{映射(r.状态)};
+    if (r.Gread != g || r.H != h || r.动态结点->结点 != d.值)
+        throw 失败{S::内部不一致};
+    if (used) {
+        used->状态数 += r.状态组.size();
+        used->变化数 += r.变化特征组.size();
+        for (const auto &q : r.状态组)
+            used->快照数 += q.特征值快照组.size();
+        used->已核验.emplace(d.值.值, h);
+    }
+    return 概念树动态证据状态::已核验;
+}
+
 概念树定义 概念树类数据服务::规范化定义(const 概念树定义 &input) const {
     auto out = input;
     std::visit(
@@ -854,13 +1275,20 @@ void 概念树类数据服务::校验布局(std::uint64_t g) const {
                                     throw 失败{S::入口拒绝};
                         },
                         *exact);
-            } else {
+            } else if constexpr (std::is_same_v<T, 概念树存在定义>) {
                 if (d.特征模板组.empty())
                     throw 失败{S::入口拒绝};
                 std::sort(d.特征模板组.begin(), d.特征模板组.end(), 身份小于);
                 for (std::size_t i = 0; i < d.特征模板组.size(); ++i)
                     if (!有效(d.特征模板组[i].值) || (i && d.特征模板组[i] == d.特征模板组[i - 1]))
                         throw 失败{S::入口拒绝};
+            } else {
+                if (!dynamic_)
+                    throw 失败{S::入口拒绝};
+                for (auto &q : d.时间槽组)
+                    std::sort(q.模板组.begin(), q.模板组.end(), 身份小于);
+                if (!动态定义完整(d))
+                    throw 失败{S::入口拒绝};
             }
         },
         out);
@@ -885,12 +1313,23 @@ void 概念树类数据服务::验证世界(const 概念树形成世界引用 &w
                     throw 失败{映射(r.状态)};
                 if (r.Gread != g || r.H != h || r.特征->结点 != x.值)
                     throw 失败{S::内部不一致};
-            } else {
+            } else if constexpr (std::is_same_v<T, 概念树特征类型引用>) {
                 const auto r = features_.读取特征类型历史事实({1, g, h, x.值});
                 if (!r.成功())
                     throw 失败{映射(r.状态)};
                 if (r.Gread != g || r.H != h || r.特征类型 != x.值)
                     throw 失败{S::内部不一致};
+            } else if constexpr (std::is_same_v<T, 概念树场景引用>) {
+                if (!dynamic_)
+                    throw 失败{S::入口拒绝};
+                const auto r = scenes_->读取场景历史事实({1, g, h, x.值, b.最大世界成员数});
+                if (!r.成功())
+                    throw 失败{映射(r.状态)};
+                if (r.Gread != g || r.H != h || r.场景结点->结点 != x.值)
+                    throw 失败{S::内部不一致};
+            } else {
+                if (审计动态(x, g, h, b) != 概念树动态证据状态::已核验)
+                    throw 失败{S::历史材料不可用};
             }
         },
         w);
@@ -914,7 +1353,7 @@ void 概念树类数据服务::验证特征定义(const 概念树特征定义 &d
 
 // 当前结构与不可变记录的形成关系分别按结构 H 与记录创建 H 投影。
 概念树类数据服务::概念展开 概念树类数据服务::展开概念(概念树概念身份 id, std::uint64_t g, std::uint64_t h,
-                                                      const 概念树预算 &b) const {
+                                                      const 概念树预算 &b, bool narrow) const {
     概念展开 out;
     auto &f = out.事实;
     const auto n = 节点(id.值, g, h);
@@ -944,9 +1383,14 @@ void 概念树类数据服务::验证特征定义(const 概念树特征定义 &d
     const auto &lifeValue = 唯一属性(a, t.生命周期);
     const auto kind = std::get<std::int64_t>(kindValue.材料);
     const auto state = std::get<std::int64_t>(lifeValue.材料);
-    if ((kind != 1 && kind != 2) || state < 1 || state > 3 || kindValue.创建事实代次 != n.创建事实代次)
+    if ((kind != 1 && kind != 2 && kind != 3) || state < 1 || state > 3 ||
+        kindValue.创建事实代次 != n.创建事实代次)
         throw 失败{S::内部不一致};
-    f.根角色 = kind == 1 ? 概念树根角色::特征 : 概念树根角色::存在;
+    if ((kind == 3 && !dynamic_) || (narrow && kind != 1))
+        throw 失败{S::入口拒绝};
+    if (kind == 3)
+        f.规则 = dynamic_->签名规则;
+    f.根角色 = kind == 1 ? 概念树根角色::特征 : kind == 2 ? 概念树根角色::存在 : 概念树根角色::动态;
     f.本体根 = 根(f.根角色);
     f.治理状态 = static_cast<概念树生命周期状态>(state);
     f.生命周期值事实 = lifeValue.编码;
@@ -955,7 +1399,7 @@ void 概念树类数据服务::验证特征定义(const 概念树特征定义 &d
     const auto rootEdge = 唯一关系(id.值, t.概念根归属, g, h);
     const auto ruleEdge = 唯一关系(id.值, t.概念规则, g, h);
     const auto definitionEdge = 唯一关系(id.值, t.定义成员, g, h);
-    if (rootEdge.目标节点 != f.本体根.值 || ruleEdge.目标节点 != layout_.签名规则.值)
+    if (rootEdge.目标节点 != f.本体根.值 || ruleEdge.目标节点 != f.规则.值)
         throw 失败{S::引用冲突};
     for (const auto &e : {rootEdge, ruleEdge, definitionEdge}) {
         if (e.创建事实代次 != n.创建事实代次)
@@ -1010,9 +1454,23 @@ void 概念树类数据服务::验证特征定义(const 概念树特征定义 &d
             throw 失败{S::内部不一致};
         if (规范化定义(d) != 概念树定义{d})
             throw 失败{S::内部不一致};
-        验证特征定义(d, g, n.创建事实代次, b);
+
+        if (!narrow)
+            验证特征定义(d, g, n.创建事实代次, b);
+        else {
+            const auto ft = features_.读取特征类型历史事实({1, g, n.创建事实代次, d.特征类型.值});
+            if (!ft.成功())
+                throw 失败{映射(ft.状态)};
+            using R = L1所有者范围值表示种类;
+            const auto *exact = std::get_if<概念树精确值>(&d.值域);
+            const auto rep = exact && exact->index() == 1   ? R::I64组
+                             : exact && exact->index() == 2 ? R::U64组
+                                                            : R::I64;
+            if (ft.Gread != g || ft.H != n.创建事实代次 || ft.特征类型 != d.特征类型.值 || ft.表示 != rep)
+                throw 失败{S::内部不一致};
+        }
         f.定义 = d;
-    } else {
+    } else if (kind == 2) {
         if (!definitionValues.empty() ||
             !关系(record.编码, t.定义宿主, false, g, n.创建事实代次, 1).empty() ||
             !关系(record.编码, t.定义特征类型, false, g, n.创建事实代次, 1).empty())
@@ -1040,14 +1498,75 @@ void 概念树类数据服务::验证特征定义(const 概念树特征定义 &d
         if (规范化定义(d) != 概念树定义{d})
             throw 失败{S::内部不一致};
         f.定义 = d;
+    } else {
+        if (!b.最大动态槽数 || !b.最大动态模板数)
+            throw 失败{S::入口拒绝};
+        const auto &dt = dynamic_->类型;
+        if (!definitionValues.empty() ||
+            !关系(record.编码, t.定义宿主, false, g, n.创建事实代次, 1).empty() ||
+            !关系(record.编码, t.定义特征类型, false, g, n.创建事实代次, 1).empty() ||
+            !关系(record.编码, t.定义模板, false, g, h, b.最大关系数).empty())
+            throw 失败{S::内部不一致};
+        const auto se = formedEdge(record.编码, dt.定义场景, n.创建事实代次);
+        const auto ee = formedEdge(record.编码, dt.定义主体, n.创建事实代次);
+        概念树动态定义 d{概念树场景引用{se.目标节点}, 概念树存在引用{ee.目标节点}, {}};
+        if (有效于(se, h))
+            验证世界(d.场景, g, n.创建事实代次, b);
+        if (有效于(ee, h))
+            验证世界(d.主体, g, n.创建事实代次, b);
+        const auto slots = 关系(record.编码, dt.时间槽, false, g, h, b.最大动态槽数);
+        if (slots != 关系(record.编码, dt.时间槽, false, g, n.创建事实代次, b.最大动态槽数))
+            throw 失败{S::内部不一致};
+        std::uint64_t count = 0;
+        std::set<std::uint64_t> slotIds;
+        for (const auto &slot : slots) {
+            if (slot.角色或顺序 != d.时间槽组.size() + 1 || slot.创建事实代次 != n.创建事实代次 ||
+                !slotIds.insert(slot.目标节点.值).second)
+                throw 失败{S::内部不一致};
+            const auto sn = 节点(slot.目标节点, g, h);
+            const auto sv = 属性(sn.编码, g, h);
+            if (sn.种类 != 节点种类::普通 || sn.属性类型表示 || sn.创建事实代次 != n.创建事实代次 ||
+                sv.size() != 1)
+                throw 失败{S::内部不一致};
+            const auto &tv = 唯一属性(sv, dt.相对时间);
+            if (tv.创建事实代次 != n.创建事实代次)
+                throw 失败{S::内部不一致};
+            概念树动态时间槽 q{std::get<std::int64_t>(tv.材料), {}};
+            if (count == b.最大动态模板数)
+                throw 失败{S::数量预算不足};
+            const auto templates = 关系(sn.编码, dt.槽模板, false, g, h, b.最大动态模板数 - count);
+            if (templates != 关系(sn.编码, dt.槽模板, false, g, n.创建事实代次, b.最大动态模板数 - count))
+                throw 失败{S::内部不一致};
+            if (templates.size() > b.最大动态模板数 - count)
+                throw 失败{S::数量预算不足};
+            count += templates.size();
+            for (const auto &e : templates) {
+                if (e.角色或顺序 != q.模板组.size() + 1 || e.创建事实代次 != n.创建事实代次)
+                    throw 失败{S::内部不一致};
+                const auto ft = 动态模板(概念树概念身份{e.目标节点}, g, h, b);
+                if (ft.定义.形成宿主 != d.主体)
+                    throw 失败{S::引用冲突};
+                q.模板组.push_back(ft.模板);
+                out.当前自有事实.push_back(e.编码);
+            }
+            d.时间槽组.push_back(std::move(q));
+            for (auto code : {slot.编码, sn.编码, tv.编码})
+                out.当前自有事实.push_back(code);
+        }
+        if (!动态定义完整(d))
+            throw 失败{S::内部不一致};
+        f.定义 = std::move(d);
     }
+    if (narrow)
+        return out;
     const auto sources = 关系(id.值, t.来源成员, false, g, h, b.最大来源数);
     if (sources != 关系(id.值, t.来源成员, false, g, n.创建事实代次, b.最大来源数))
         throw 失败{S::内部不一致};
     if (sources.empty())
         throw 失败{S::内部不一致};
     for (const auto &member : sources) {
-        if (member.角色或顺序 != f.来源组.size() + 1 || member.创建事实代次 != n.创建事实代次)
+        if (member.角色或顺序 != f.来源组.size() + f.动态依据组.size() + 1 ||
+            member.创建事实代次 != n.创建事实代次)
             throw 失败{S::内部不一致};
         const auto sourceNode = 节点(member.目标节点, g, h);
         if (sourceNode.创建事实代次 != n.创建事实代次 || sourceNode.种类 != 节点种类::普通 ||
@@ -1061,6 +1580,30 @@ void 概念树类数据服务::验证特征定义(const 概念树特征定义 &d
         if (times.size() != 1 || !times[0] || times[0] >= n.创建事实代次 ||
             time.创建事实代次 != n.创建事实代次)
             throw 失败{S::内部不一致};
+        if (kind == 3) {
+            const auto &dt = dynamic_->类型;
+            const auto ds = 关系(sourceNode.编码, dt.来源动态, false, g, n.创建事实代次, 1);
+            const auto cs = 关系(sourceNode.编码, dt.来源下位概念, false, g, n.创建事实代次, 1);
+            if (ds.size() + cs.size() != 1 ||
+                !关系(sourceNode.编码, t.来源存在, false, g, n.创建事实代次, 1).empty() ||
+                !关系(sourceNode.编码, t.来源特征, false, g, n.创建事实代次, 1).empty())
+                throw 失败{S::内部不一致};
+            const auto e =
+                formedEdge(sourceNode.编码, ds.empty() ? dt.来源下位概念 : dt.来源动态, n.创建事实代次);
+            概念树动态依据项 item;
+            if (ds.empty())
+                item.目标 = 概念树概念身份{e.目标节点};
+            else
+                item.目标 = 概念树动态引用{e.目标节点};
+            item.H = times[0];
+            if (!有效(e.目标节点) || e.目标节点 == id.值)
+                throw 失败{S::内部不一致};
+            f.动态依据组.push_back({sourceNode.编码, member.编码, e.编码, time.编码, item,
+                                    投影生命(sourceNode, h), !有效于(e, h)});
+            for (auto code : {sourceNode.编码, member.编码, time.编码})
+                out.当前自有事实.push_back(code);
+            continue;
+        }
         const auto oldExists = 关系(sourceNode.编码, t.来源存在, false, g, n.创建事实代次, 1);
         const auto oldFeatures = 关系(sourceNode.编码, t.来源特征, false, g, n.创建事实代次, 1);
         if (oldExists.size() + oldFeatures.size() != 1)
@@ -1116,9 +1659,12 @@ void 概念树类数据服务::验证特征定义(const 概念树特征定义 &d
     const auto c = 唯一关系(id, t.支持概念, g, h);
     const auto exists = 关系(id, t.支持存在, false, g, h, 1);
     const auto features = 关系(id, t.支持特征, false, g, h, 1);
-    if (exists.size() + features.size() != 1)
+    const auto dynamics = dynamic_ ? 关系(id, dynamic_->类型.支持动态, false, g, h, 1) : std::vector<E>{};
+    if (exists.size() + features.size() + dynamics.size() != 1)
         throw 失败{S::内部不一致};
-    const auto &e = exists.empty() ? features.front() : exists.front();
+    const auto &e = !exists.empty()     ? exists.front()
+                    : !features.empty() ? features.front()
+                                        : dynamics.front();
     const auto values = 属性(id, g, h);
     if (values.size() != 1)
         throw 失败{S::内部不一致};
@@ -1140,7 +1686,11 @@ void 概念树类数据服务::验证特征定义(const 概念树特征定义 &d
                      times[0],
                      投影生命(n, h)};
     (void)读取概念内部(s.目标概念, g, h, b);
-    验证世界(扩展世界(s.世界引用), g, s.证据H, b);
+    if (!dynamics.empty()) {
+        s.世界引用 = 概念树动态引用{e.目标节点};
+        s.动态证据 = 概念树动态证据状态::未展开;
+    } else
+        验证世界(扩展世界(s.世界引用), g, s.证据H, b);
     return s;
 }
 std::vector<概念树支持事实> 概念树类数据服务::支持组(std::optional<概念树概念身份> conceptId,
@@ -1148,15 +1698,16 @@ std::vector<概念树支持事实> 概念树类数据服务::支持组(std::opti
                                                      std::uint64_t h, const 概念树预算 &b) const {
     if (conceptId)
         (void)读取概念内部(*conceptId, g, h, b);
-    if (world)
+    if (world && world->index() != 2)
         验证世界(扩展世界(*world), g, h, b);
+    if (world && world->index() == 2 && (!dynamic_ || !有效(世界编码(*world))))
+        throw 失败{S::入口拒绝};
     const auto &t = layout_.类型;
     std::vector<E> members;
     if (conceptId)
         members = 关系(conceptId->值, t.支持概念, true, g, h, b.最大支持数);
     else if (world)
-        members =
-            关系(世界编码(*world), world->index() == 0 ? t.支持存在 : t.支持特征, true, g, h, b.最大支持数);
+        members = 关系(世界编码(*world), 支持关系类型(*world), true, g, h, b.最大支持数);
     else
         members = 关系(layout_.格式锚点, t.支持归属, false, g, h, b.最大支持数);
     std::vector<概念树支持事实> out;
@@ -1222,16 +1773,38 @@ bool 概念树类数据服务::校验图闭包(const 概念树图结果 &graph) 
     const auto members = 关系(out.根身份.值, layout_.类型.概念根归属, true, g, h, b.最大概念数);
     检查数量(members.size() + 1, b.最大概念数);
     std::set<std::uint64_t> edges;
-    std::uint64_t sources = 0;
+    std::uint64_t sources = 0, slots = 0, templates = 0;
     for (const auto &member : members) {
         if (member.角色或顺序 != 1)
             throw 失败{S::内部不一致};
-        auto f = 读取概念内部(概念树概念身份{member.源节点}, g, h, b);
+        auto remaining = b;
+        if (role == 概念树根角色::动态) {
+            if (slots >= b.最大动态槽数 || templates >= b.最大动态模板数)
+                throw 失败{S::数量预算不足};
+            remaining.最大动态槽数 -= slots;
+            remaining.最大动态模板数 -= templates;
+        }
+        if (sources >= b.最大来源数)
+            throw 失败{S::数量预算不足};
+        remaining.最大来源数 -= sources;
+        auto f = 读取概念内部(概念树概念身份{member.源节点}, g, h, remaining);
         if (f.本体根 != out.根身份 || f.是本体根)
             throw 失败{S::内部不一致};
-        if (f.来源组.size() > b.最大来源数 - sources)
+        const auto sourceCount = f.来源组.size() + f.动态依据组.size();
+        if (sourceCount > b.最大来源数 - sources)
             throw 失败{S::数量预算不足};
-        sources += f.来源组.size();
+        sources += sourceCount;
+        if (f.定义 && std::holds_alternative<概念树动态定义>(*f.定义)) {
+            const auto &d = std::get<概念树动态定义>(*f.定义);
+            if (d.时间槽组.size() > b.最大动态槽数 - slots)
+                throw 失败{S::数量预算不足};
+            slots += d.时间槽组.size();
+            for (const auto &q : d.时间槽组) {
+                if (q.模板组.size() > b.最大动态模板数 - templates)
+                    throw 失败{S::数量预算不足};
+                templates += q.模板组.size();
+            }
+        }
         for (const auto &e : f.直接上位组) {
             if (!edges.insert(e.关系.值).second)
                 throw 失败{S::内部不一致};
@@ -1283,20 +1856,31 @@ std::vector<概念树形成引用事实> 概念树类数据服务::形成引用�
         throw 失败{S::入口拒绝};
     std::vector<概念树形成引用事实> out;
     const auto &t = layout_.类型;
-    const std::array<稳定编码, 4> types{t.定义宿主, t.定义特征类型, t.来源存在, t.来源特征};
+    std::vector<稳定编码> types{t.定义宿主, t.定义特征类型, t.来源存在, t.来源特征};
+    if (dynamic_) {
+        types.push_back(dynamic_->类型.定义场景);
+        types.push_back(dynamic_->类型.定义主体);
+        types.push_back(dynamic_->类型.来源动态);
+    }
+    if (world.index() >= 3 && !dynamic_)
+        throw 失败{S::入口拒绝};
     for (std::size_t i = 0; i < types.size(); ++i) {
-        if ((i == 0 || i == 2) ? world.index() != 0 : i == 1 ? world.index() != 2 : world.index() != 1)
+        const std::array<std::size_t, 7> indices{0, 2, 0, 1, 3, 0, 4};
+        if (world.index() != indices[i])
             continue;
         for (const auto &edge : 关系(世界编码(world), types[i], true, g, h, b.最大关系数)) {
             if (edge.角色或顺序 != 1)
                 throw 失败{S::内部不一致};
-            auto parent = 关系(edge.源节点, i < 2 ? t.定义成员 : t.来源成员, true, g, h, b.最大关系数);
+            auto parent = 关系(edge.源节点, (i < 2 || i == 4 || i == 5) ? t.定义成员 : t.来源成员, true, g, h,
+                               b.最大关系数);
             if (parent.size() != 1)
                 throw 失败{S::内部不一致};
             auto f = 展开概念(概念树概念身份{parent[0].源节点}, g, h, b);
             if (std::find(f.当前自有事实.begin(), f.当前自有事实.end(), edge.编码) == f.当前自有事实.end())
                 throw 失败{S::内部不一致};
             if (i < 2 && (!f.事实.定义 || !std::holds_alternative<概念树特征定义>(*f.事实.定义)))
+                throw 失败{S::内部不一致};
+            if (i >= 4 && (!f.事实.定义 || !std::holds_alternative<概念树动态定义>(*f.事实.定义)))
                 throw 失败{S::内部不一致};
             out.push_back({edge.编码, edge.源节点, f.事实.概念, world, 投影生命(edge, h)});
             检查数量(out.size(), b.最大关系数);
@@ -1315,7 +1899,10 @@ std::vector<概念树形成引用事实> 概念树类数据服务::形成引用�
 概念树概念组结果 概念树类数据服务::查找完整定义(const 概念树定义查找请求 &r) const {
     return 读取封装<概念树概念组结果>(r.读取头, r.预算, [&](auto g, auto h) {
         const auto d = 规范化定义(r.定义);
-        auto graph = 图(d.index() == 0 ? 概念树根角色::特征 : 概念树根角色::存在, false, g, h, r.预算);
+        auto graph = 图(d.index() == 0   ? 概念树根角色::特征
+                        : d.index() == 1 ? 概念树根角色::存在
+                                         : 概念树根角色::动态,
+                        false, g, h, r.预算);
         概念树概念组结果 out;
         for (auto &f : graph.概念组)
             if (f.定义 && *f.定义 == d)
@@ -1366,9 +1953,11 @@ bool 概念树类数据服务::概念完整(const 概念树概念事实 &f, std:
         return false;
     if (f.是本体根)
         return f.概念 == f.本体根 && !f.定义 && !有效(f.定义记录) && !有效(f.生命周期值事实) &&
-               f.来源组.empty() && f.直接上位组.empty() && f.治理状态 == 概念树生命周期状态::活跃 &&
-               !f.生命周期.退出事实代次;
-    if (f.概念 == f.本体根 || !f.定义 || !有效(f.定义记录) || !有效(f.生命周期值事实) || f.来源组.empty() ||
+               f.来源组.empty() && f.动态依据组.empty() && f.直接上位组.empty() &&
+               f.治理状态 == 概念树生命周期状态::活跃 && !f.生命周期.退出事实代次;
+    if (f.概念 == f.本体根 || !f.定义 || !有效(f.定义记录) || !有效(f.生命周期值事实) ||
+        (f.定义->index() == 2 ? (!f.来源组.empty() || f.动态依据组.empty())
+                              : (f.来源组.empty() || !f.动态依据组.empty())) ||
         f.直接上位组.empty())
         return false;
     if (const auto *d = std::get_if<概念树特征定义>(&*f.定义)) {
@@ -1390,12 +1979,21 @@ bool 概念树类数据服务::概念完整(const 概念树概念事实 &f, std:
                        },
                        std::get<概念树精确值>(d->值域)))
             return false;
-    } else {
+    } else if (std::holds_alternative<概念树存在定义>(*f.定义)) {
         const auto &ids = std::get<概念树存在定义>(*f.定义).特征模板组;
         if (f.根角色 != 概念树根角色::存在 || ids.empty())
             return false;
         for (std::size_t i = 0; i < ids.size(); ++i)
             if (!有效(ids[i].值) || (i && !身份小于(ids[i - 1], ids[i])))
+                return false;
+    } else if (f.根角色 != 概念树根角色::动态 || !动态定义完整(std::get<概念树动态定义>(*f.定义)))
+        return false;
+    for (std::size_t i = 0; i < f.动态依据组.size(); ++i) {
+        const auto &a = f.动态依据组[i];
+        if (!动态依据完整(a, h, exited) || a.生命周期.创建事实代次 != f.生命周期.创建事实代次)
+            return false;
+        for (std::size_t j = 0; j < i; ++j)
+            if (a.记录 == f.动态依据组[j].记录 || a.依据 == f.动态依据组[j].依据)
                 return false;
     }
     for (std::size_t i = 0; i < f.来源组.size(); ++i) {
@@ -1423,7 +2021,10 @@ bool 概念树类数据服务::概念完整(const 概念树概念事实 &f, std:
 bool 概念树类数据服务::支持完整(const 概念树支持事实 &f, std::uint64_t h, bool exited) noexcept {
     return !f.世界引用.valueless_by_exception() && 有效(f.记录) && 有效(f.归属关系) && 有效(f.概念关系) &&
            有效(f.世界关系) && 有效(f.截止值事实) && 有效(f.目标概念.值) && 有效(世界编码(f.世界引用)) &&
-           f.证据H && f.证据H < f.记录生命周期.创建事实代次 && 生命完整(f.记录生命周期, h, exited);
+           f.证据H && f.证据H < f.记录生命周期.创建事实代次 && 生命完整(f.记录生命周期, h, exited) &&
+           (f.世界引用.index() == 2 ? (f.动态证据 && static_cast<unsigned>(*f.动态证据) >= 1 &&
+                                       static_cast<unsigned>(*f.动态证据) <= 3)
+                                    : !f.动态证据);
 }
 bool 概念树读取结果::成功() const noexcept {
     return 合同版本 == 1 && 状态 == 概念树数据状态::已读取 && Gread >= H && 概念 &&
@@ -1512,10 +2113,15 @@ bool 概念树图结果::成功() const noexcept {
     std::visit(
         [&](auto &r) {
             using T = std::decay_t<decltype(r)>;
-            if (r.写入头.合同版本 != 1 || !r.写入头.期望事实代次 || !r.写入头.幂等身份)
+            if (请求写头(r).合同版本 != 1 || !请求写头(r).期望事实代次 || !请求写头(r).幂等身份)
                 throw 失败{S::入口拒绝};
             预算有效(r.预算);
             if constexpr (std::is_same_v<T, 概念树概念建立请求>) {
+                if (r.定义.index() > 1)
+                    throw 失败{S::入口拒绝};
+                for (const auto &a : r.来源)
+                    if (a.世界事实.index() > 1)
+                        throw 失败{S::入口拒绝};
                 r.定义 = 规范化定义(r.定义);
                 if (r.直接上位.empty() || r.来源.empty())
                     throw 失败{S::入口拒绝};
@@ -1542,7 +2148,7 @@ bool 概念树图结果::成功() const noexcept {
                 });
                 for (std::size_t i = 0; i < r.来源.size(); ++i)
                     if (!有效(世界编码(r.来源[i].世界事实)) || !r.来源[i].证据截止 ||
-                        r.来源[i].证据截止 > r.写入头.期望事实代次 || (i && r.来源[i] == r.来源[i - 1]))
+                        r.来源[i].证据截止 > 请求写头(r).期望事实代次 || (i && r.来源[i] == r.来源[i - 1]))
                         throw 失败{S::入口拒绝};
             } else if constexpr (std::is_same_v<T, 概念树上位操作请求>) {
                 if (!有效(r.下位.值))
@@ -1562,11 +2168,13 @@ bool 概念树图结果::成功() const noexcept {
                     throw 失败{S::入口拒绝};
             } else if constexpr (std::is_same_v<T, 概念树支持建立请求>) {
                 if (!有效(r.目标概念.值) || !有效(世界编码(r.世界引用)) || !r.证据H ||
-                    r.证据H > r.写入头.期望事实代次)
+                    r.证据H > 请求写头(r).期望事实代次)
                     throw 失败{S::入口拒绝};
             } else if constexpr (std::is_same_v<T, 概念树支持退出请求>) {
-                if (!支持完整(r.预期支持, r.写入头.期望事实代次))
+                if (!支持完整(r.预期支持, 请求写头(r).期望事实代次))
                     throw 失败{S::入口拒绝};
+                if (r.预期支持.世界引用.index() == 2)
+                    r.预期支持.动态证据 = 概念树动态证据状态::未展开;
             } else if constexpr (std::is_same_v<T, 概念树生命周期迁移请求>) {
                 if (!有效(r.概念.值) || !有效(r.当前生命周期值编码) ||
                     static_cast<unsigned>(r.预期状态) < 1 || static_cast<unsigned>(r.预期状态) > 3 ||
@@ -1575,7 +2183,7 @@ bool 概念树图结果::成功() const noexcept {
             } else if constexpr (std::is_same_v<T, 概念树概念退出请求>) {
                 if (!有效(r.概念.值) || !有效(r.当前退役生命周期值编码))
                     throw 失败{S::入口拒绝};
-            } else {
+            } else if constexpr (std::is_same_v<T, 概念树形成引用释放请求>) {
                 if (!有效(世界编码(r.世界引用)))
                     throw 失败{S::入口拒绝};
                 检查数量(r.预期当前引用.size(), r.预算.最大关系数);
@@ -1583,8 +2191,65 @@ bool 概念树图结果::成功() const noexcept {
                     const auto &f = r.预期当前引用[i];
                     if (f.世界引用.valueless_by_exception() || !有效(f.关系) || !有效(f.记录) ||
                         !有效(f.所属概念.值) || f.世界引用 != r.世界引用 ||
-                        !生命完整(f.关系生命周期, r.写入头.期望事实代次) ||
+                        !生命完整(f.关系生命周期, 请求写头(r).期望事实代次) ||
                         (i && !编码小于(r.预期当前引用[i - 1].关系, f.关系)))
+                        throw 失败{S::入口拒绝};
+                }
+            } else if constexpr (std::is_same_v<T, 概念树动态建立请求>) {
+                if (!dynamic_ || !r.预算.最大动态槽数 || !r.预算.最大动态模板数)
+                    throw 失败{S::入口拒绝};
+                r.定义 = std::get<概念树动态定义>(规范化定义(r.定义));
+                if (r.直接上位.empty() || r.依据.empty())
+                    throw 失败{S::入口拒绝};
+                检查数量(r.定义.时间槽组.size(), r.预算.最大动态槽数);
+                检查数量(r.依据.size(), r.预算.最大来源数);
+                检查数量(r.直接上位.size(), r.预算.最大关系数);
+                std::uint64_t nodes = 2, edges = 5, values = 2, templates = 0;
+                auto count = [](std::uint64_t &n, std::size_t add) {
+                    if (add > 0xFFFF - n)
+                        throw 失败{S::数量预算不足};
+                    n += add;
+                };
+                count(nodes, r.定义.时间槽组.size());
+                count(nodes, r.依据.size());
+                count(edges, r.直接上位.size());
+                count(edges, r.定义.时间槽组.size());
+                count(edges, r.依据.size());
+                count(edges, r.依据.size());
+                count(values, r.定义.时间槽组.size());
+                count(values, r.依据.size());
+                for (const auto &q : r.定义.时间槽组) {
+                    count(edges, q.模板组.size());
+                    if (q.模板组.size() > r.预算.最大动态模板数 - templates)
+                        throw 失败{S::数量预算不足};
+                    templates += q.模板组.size();
+                }
+                检查数量(edges, r.预算.最大关系数);
+                std::sort(r.直接上位.begin(), r.直接上位.end(), 身份小于);
+                for (std::size_t i = 0; i < r.直接上位.size(); ++i)
+                    if (!有效(r.直接上位[i].值) || (i && r.直接上位[i] == r.直接上位[i - 1]))
+                        throw 失败{S::入口拒绝};
+                for (const auto &a : r.依据)
+                    if (a.目标.valueless_by_exception() || !有效(世界编码(a.目标)) || !a.H ||
+                        a.H > r.头.期望事实代次)
+                        throw 失败{S::入口拒绝};
+                std::sort(r.依据.begin(), r.依据.end(), [](const auto &a, const auto &b) {
+                    if (a.目标.index() != b.目标.index())
+                        return a.目标.index() < b.目标.index();
+                    if (世界编码(a.目标) != 世界编码(b.目标))
+                        return 编码小于(世界编码(a.目标), 世界编码(b.目标));
+                    return a.H < b.H;
+                });
+                if (std::adjacent_find(r.依据.begin(), r.依据.end()) != r.依据.end())
+                    throw 失败{S::入口拒绝};
+            } else {
+                if (!dynamic_ || !有效(r.所属概念.值))
+                    throw 失败{S::入口拒绝};
+                检查数量(r.预期当前依据.size(), r.预算.最大来源数);
+                for (std::size_t i = 0; i < r.预期当前依据.size(); ++i) {
+                    const auto &a = r.预期当前依据[i];
+                    if (!动态依据完整(a, r.头.期望事实代次) || a.当前引用已释放 ||
+                        (i && !编码小于(r.预期当前依据[i - 1].引用关系, a.引用关系)))
                         throw 失败{S::入口拒绝};
                 }
             }
@@ -1631,8 +2296,8 @@ L1所有者范围写集请求 概念树类数据服务::形成写集(const 概�
     std::visit(
         [&](const auto &r) {
             using T = std::decay_t<decltype(r)>;
-            out.期望事实代次 = r.写入头.期望事实代次;
-            out.写入幂等身份 = {r.写入头.幂等身份};
+            out.期望事实代次 = 请求写头(r).期望事实代次;
+            out.写入幂等身份 = {请求写头(r).幂等身份};
             const auto &b = r.预算;
             if constexpr (std::is_same_v<T, 概念树概念建立请求>) {
                 const auto role = r.定义.index() == 0 ? 概念树根角色::特征 : 概念树根角色::存在;
@@ -1753,7 +2418,7 @@ L1所有者范围写集请求 概念树类数据服务::形成写集(const 概�
                 const auto n = newNode();
                 newEdge(Ref{layout_.格式锚点}, n, t.支持归属);
                 newEdge(n, Ref{r.目标概念.值}, t.支持概念);
-                newEdge(n, Ref{世界编码(r.世界引用)}, r.世界引用.index() == 0 ? t.支持存在 : t.支持特征);
+                newEdge(n, Ref{世界编码(r.世界引用)}, 支持关系类型(r.世界引用));
                 newValue(n, t.证据截止, std::vector<std::uint64_t>{r.证据H});
             } else if constexpr (std::is_same_v<T, 概念树支持退出请求>) {
                 const auto s = 支持记录(r.预期支持.记录, g, h, b);
@@ -1785,6 +2450,10 @@ L1所有者范围写集请求 概念树类数据服务::形成写集(const 概�
                 if (!支持组(r.概念, std::nullopt, g, h, b).empty() ||
                     !关系(r.概念.值, t.定义模板, true, g, h, b.最大关系数).empty())
                     throw 失败{S::引用冲突};
+                if (dynamic_ &&
+                    (!关系(r.概念.值, dynamic_->类型.槽模板, true, g, h, b.最大关系数).empty() ||
+                     !关系(r.概念.值, dynamic_->类型.来源下位概念, true, g, h, b.最大关系数).empty()))
+                    throw 失败{S::引用冲突};
                 auto graph = 图(f.根角色, false, g, h, b);
                 std::vector<概念树概念身份> parents, children;
                 out.退出事实 = expanded.当前自有事实;
@@ -1815,12 +2484,101 @@ L1所有者范围写集请求 概念树类数据服务::形成写集(const 概�
                 if (!校验图闭包(graph))
                     throw 失败{S::内部不一致};
                 检查数量(graph.直接边组.size(), b.最大关系数);
-            } else {
+            } else if constexpr (std::is_same_v<T, 概念树形成引用释放请求>) {
                 const auto actual = 形成引用组(r.世界引用, g, h, b);
                 if (actual != r.预期当前引用)
                     throw 失败{S::引用冲突};
                 for (const auto &f : actual)
                     out.退出事实.push_back(f.关系);
+            } else if constexpr (std::is_same_v<T, 概念树动态建立请求>) {
+                const auto graph = 图(概念树根角色::动态, false, g, h, b);
+                for (const auto &f : graph.概念组)
+                    if (f.定义 && *f.定义 == 概念树定义{r.定义})
+                        return;
+                检查数量(graph.概念组.size() + 1, b.最大概念数);
+                if (r.直接上位.size() > b.最大关系数 - graph.直接边组.size())
+                    throw 失败{S::数量预算不足};
+                std::uint64_t sources = 0, slots = 0, templates = 0;
+                for (const auto &f : graph.概念组) {
+                    if (f.动态依据组.size() > b.最大来源数 - sources)
+                        throw 失败{S::数量预算不足};
+                    sources += f.动态依据组.size();
+                    if (f.定义)
+                        for (const auto &q : std::get<概念树动态定义>(*f.定义).时间槽组) {
+                            if (slots == b.最大动态槽数 || q.模板组.size() > b.最大动态模板数 - templates)
+                                throw 失败{S::数量预算不足};
+                            ++slots;
+                            templates += q.模板组.size();
+                        }
+                }
+                if (r.依据.size() > b.最大来源数 - sources || r.定义.时间槽组.size() > b.最大动态槽数 - slots)
+                    throw 失败{S::数量预算不足};
+                for (const auto &q : r.定义.时间槽组) {
+                    if (q.模板组.size() > b.最大动态模板数 - templates)
+                        throw 失败{S::数量预算不足};
+                    templates += q.模板组.size();
+                }
+                for (auto id : r.直接上位)
+                    if (读取概念内部(id, g, h, b).本体根 != layout_.根组.动态根)
+                        throw 失败{S::引用冲突};
+                验证动态定义(r.定义, g, h, b);
+                动态历史用量 sourceUsage;
+                for (const auto &a : r.依据) {
+                    验证动态依据(a, g, b, &sourceUsage);
+                    if (const auto *d = std::get_if<概念树动态引用>(&a.目标)) {
+                        if (审计动态(*d, g, h, b, false, &sourceUsage) != 概念树动态证据状态::已核验)
+                            throw 失败{S::历史材料不可用};
+                    } else {
+                        const auto f = 读取概念内部(std::get<概念树概念身份>(a.目标), g, h, b);
+                        if (f.是本体根 || f.根角色 != 概念树根角色::动态)
+                            throw 失败{S::引用冲突};
+                    }
+                }
+                const auto &dt = dynamic_->类型;
+                const auto cn = newNode(), dn = newNode();
+                std::vector<Ref> qs, as;
+                for (const auto &q : r.定义.时间槽组)
+                    qs.push_back(newNode());
+                for (const auto &a : r.依据)
+                    as.push_back(newNode());
+                newEdge(cn, Ref{layout_.根组.动态根.值}, t.概念根归属);
+                newEdge(cn, Ref{dynamic_->签名规则.值}, t.概念规则);
+                newEdge(cn, dn, t.定义成员);
+                for (auto id : r.直接上位)
+                    newEdge(Ref{id.值}, cn, t.直接上位);
+                newEdge(dn, Ref{r.定义.场景.值}, dt.定义场景);
+                newEdge(dn, Ref{r.定义.主体.值}, dt.定义主体);
+                for (std::size_t i = 0; i < qs.size(); ++i) {
+                    newEdge(dn, qs[i], dt.时间槽, static_cast<std::int64_t>(i + 1));
+                    const auto &ids = r.定义.时间槽组[i].模板组;
+                    for (std::size_t j = 0; j < ids.size(); ++j)
+                        newEdge(qs[i], Ref{ids[j].值}, dt.槽模板, static_cast<std::int64_t>(j + 1));
+                }
+                for (std::size_t i = 0; i < as.size(); ++i) {
+                    newEdge(cn, as[i], t.来源成员, static_cast<std::int64_t>(i + 1));
+                    newEdge(as[i], Ref{世界编码(r.依据[i].目标)},
+                            r.依据[i].目标.index() == 0 ? dt.来源动态 : dt.来源下位概念);
+                }
+                newValue(cn, t.概念种类, std::int64_t{3});
+                newValue(cn, t.生命周期, std::int64_t{1});
+                for (std::size_t i = 0; i < qs.size(); ++i)
+                    newValue(qs[i], dt.相对时间, r.定义.时间槽组[i].相对纳秒);
+                for (std::size_t i = 0; i < as.size(); ++i)
+                    newValue(as[i], t.证据截止, std::vector<std::uint64_t>{r.依据[i].H});
+            } else {
+                const auto f = 读取概念内部(r.所属概念, g, h, b);
+                if (f.是本体根 || f.根角色 != 概念树根角色::动态)
+                    throw 失败{S::引用冲突};
+                std::vector<概念树动态依据事实> actual;
+                for (const auto &a : f.动态依据组)
+                    if (!a.当前引用已释放)
+                        actual.push_back(a);
+                std::sort(actual.begin(), actual.end(),
+                          [](const auto &a, const auto &z) { return 编码小于(a.引用关系, z.引用关系); });
+                if (actual != r.预期当前依据)
+                    throw 失败{S::引用冲突};
+                for (const auto &a : actual)
+                    out.退出事实.push_back(a.引用关系);
             }
             检查数量(out.关系.size(), b.最大关系数);
             std::sort(out.退出事实.begin(), out.退出事实.end(), 编码小于);
@@ -1913,7 +2671,7 @@ L1所有者范围写集请求 概念树类数据服务::形成写集(const 概�
     std::visit(
         [&](const auto &r) {
             using T = std::decay_t<decltype(r)>;
-            if constexpr (std::is_same_v<T, 概念树概念建立请求>) {
+            if constexpr (std::is_same_v<T, 概念树概念建立请求> || std::is_same_v<T, 概念树动态建立请求>) {
                 out.状态 = S::已创建;
                 out.概念 = 读取概念内部(概念树概念身份{mapped(Key{1})}, g, h, r.预算);
                 if (out.概念->定义 != std::optional<概念树定义>{r.定义})
@@ -1935,7 +2693,7 @@ L1所有者范围写集请求 概念树类数据服务::形成写集(const 概�
                     throw 失败{S::内部不一致};
             } else if constexpr (std::is_same_v<T, 概念树支持退出请求>) {
                 out.状态 = S::已退出支持;
-                out.支持 = 支持记录(r.预期支持.记录, g, r.写入头.期望事实代次, r.预算);
+                out.支持 = 支持记录(r.预期支持.记录, g, 请求写头(r).期望事实代次, r.预算);
                 out.支持->记录生命周期.退出事实代次 = h;
                 const auto a = 支持组(r.预期支持.目标概念, std::nullopt, g, h, r.预算);
                 const auto b = 支持组(std::nullopt, r.预期支持.世界引用, g, h, r.预算);
@@ -1950,20 +2708,28 @@ L1所有者范围写集请求 概念树类数据服务::形成写集(const 概�
                     throw 失败{S::内部不一致};
             } else if constexpr (std::is_same_v<T, 概念树概念退出请求>) {
                 out.状态 = S::已退出概念;
-                out.概念 = 读取概念内部(r.概念, g, r.写入头.期望事实代次, r.预算);
+                out.概念 = 读取概念内部(r.概念, g, 请求写头(r).期望事实代次, r.预算);
                 out.概念->生命周期.退出事实代次 = h;
                 for (auto &source : out.概念->来源组)
                     source.记录生命周期.退出事实代次 = h;
+                for (auto &source : out.概念->动态依据组)
+                    source.生命周期.退出事实代次 = h;
                 for (auto &edge : out.概念->直接上位组)
                     edge.生命周期.退出事实代次 = h;
                 (void)图(out.概念->根角色, false, g, h, r.预算);
-            } else {
+            } else if constexpr (std::is_same_v<T, 概念树形成引用释放请求>) {
                 out.状态 = S::已释放引用;
                 const auto remaining = 形成引用组(r.世界引用, g, h, r.预算);
                 if (!remaining.empty())
                     throw 失败{S::内部不一致};
                 for (const auto &f : r.预期当前引用)
                     (void)读取概念内部(f.所属概念, g, h, r.预算);
+            } else {
+                out.状态 = S::已释放引用;
+                const auto f = 读取概念内部(r.所属概念, g, h, r.预算);
+                for (const auto &a : f.动态依据组)
+                    if (!a.当前引用已释放)
+                        throw 失败{S::内部不一致};
             }
         },
         request);
@@ -1979,7 +2745,7 @@ L1所有者范围写集请求 概念树类数据服务::形成写集(const 概�
         out.原请求 = input;
         const auto request = 规范写请求(input);
         out.原请求 = request;
-        const auto header = std::visit([](const auto &r) { return r.写入头; }, request);
+        const auto header = std::visit([](const auto &r) { return 请求写头(r); }, request);
         std::scoped_lock lock(mutex_);
         keyUnknown = true;
         const auto first = port_.读取首次写入材料({L1所有者范围首次写入读取合同版本, {header.幂等身份}});
@@ -2046,6 +2812,11 @@ L1所有者范围写集请求 概念树类数据服务::形成写集(const 概�
                                               false, g, g, r.预算);
                         for (const auto &f : graph.概念组)
                             if (f.定义 && *f.定义 == r.定义)
+                                out.概念 = f;
+                    } else if constexpr (std::is_same_v<T, 概念树动态建立请求>) {
+                        const auto graph = 图(概念树根角色::动态, false, g, g, r.预算);
+                        for (const auto &f : graph.概念组)
+                            if (f.定义 && *f.定义 == 概念树定义{r.定义})
                                 out.概念 = f;
                     } else if constexpr (std::is_same_v<T, 概念树支持建立请求>) {
                         for (const auto &f : 支持组(r.目标概念, std::nullopt, g, g, r.预算))
@@ -2122,8 +2893,10 @@ bool 概念树写入结果::成功() const noexcept {
     return std::visit(
         [&](const auto &r) {
             using T = std::decay_t<decltype(r)>;
-            if (r.写入头.合同版本 != 1 || !r.写入头.幂等身份 || !r.写入头.期望事实代次 ||
-                (noChange ? r.写入头.期望事实代次 != h : r.写入头.期望事实代次 >= h))
+            if (概念树类数据服务::请求写头(r).合同版本 != 1 || !概念树类数据服务::请求写头(r).幂等身份 ||
+                !概念树类数据服务::请求写头(r).期望事实代次 ||
+                (noChange ? 概念树类数据服务::请求写头(r).期望事实代次 != h
+                          : 概念树类数据服务::请求写头(r).期望事实代次 >= h))
                 return false;
             const bool replay = 状态 == S::精确重复;
             if constexpr (std::is_same_v<T, 概念树概念建立请求>) {
@@ -2157,7 +2930,7 @@ bool 概念树写入结果::成功() const noexcept {
                        概念->概念 == r.概念 && 概念->治理状态 == 概念树生命周期状态::退役 &&
                        概念->生命周期.退出事实代次 == 发布截止 &&
                        std::find(已退出事实.begin(), 已退出事实.end(), r.概念.值) != 已退出事实.end();
-            } else {
+            } else if constexpr (std::is_same_v<T, 概念树形成引用释放请求>) {
                 if (!(noChange || replay || 状态 == S::已释放引用) || 概念 || 支持 || !关系组.empty() ||
                     已退出事实.size() != r.预期当前引用.size())
                     return false;
@@ -2165,9 +2938,115 @@ bool 概念树写入结果::成功() const noexcept {
                     if (已退出事实[i] != r.预期当前引用[i].关系)
                         return false;
                 return noChange ? r.预期当前引用.empty() : !r.预期当前引用.empty();
+            } else if constexpr (std::is_same_v<T, 概念树动态建立请求>) {
+                return (noChange || replay || 状态 == S::已创建) && 概念 && !支持 && 概念->定义 &&
+                       std::holds_alternative<概念树动态定义>(*概念->定义) &&
+                       std::get<概念树动态定义>(*概念->定义) == r.定义 && !概念->生命周期.退出事实代次 &&
+                       已退出事实.empty() && (noChange || 概念->生命周期.创建事实代次 == h);
+            } else {
+                if (!(noChange || replay || 状态 == S::已释放引用) || 概念 || 支持 || !关系组.empty() ||
+                    已退出事实.size() != r.预期当前依据.size())
+                    return false;
+                for (std::size_t i = 0; i < 已退出事实.size(); ++i)
+                    if (已退出事实[i] != r.预期当前依据[i].引用关系)
+                        return false;
+                return noChange ? r.预期当前依据.empty() : !r.预期当前依据.empty();
             }
         },
         *原请求);
+}
+
+bool 概念树动态模板读取结果::成功() const noexcept {
+    using C = 概念树类数据服务;
+    if (合同版本 != 1 || 状态 != 概念树数据状态::已读取 || !H || Gread < H || !模板)
+        return false;
+    const auto &f = *模板;
+    if (!有效(f.模板.值) || !有效(f.本体根.值) || f.模板 == f.本体根 || !有效(f.规则.值) ||
+        !有效(f.定义记录) || !有效(f.生命周期值事实) || !C::生命完整(f.生命周期, H) ||
+        static_cast<unsigned>(f.治理状态) < 1 || static_cast<unsigned>(f.治理状态) > 3 ||
+        !有效(f.定义.形成宿主.值) || !有效(f.定义.特征类型.值) || f.定义.值域.valueless_by_exception())
+        return false;
+    if (const auto *i = std::get_if<概念树I64区间>(&f.定义.值域))
+        return i->下界 < i->上界;
+    const auto &exact = std::get<概念树精确值>(f.定义.值域);
+    if (exact.valueless_by_exception())
+        return false;
+    return std::visit(
+        [](const auto &v) {
+            if constexpr (std::is_same_v<std::decay_t<decltype(v)>, std::int64_t>)
+                return true;
+            else
+                return !v.empty();
+        },
+        exact);
+}
+bool 概念树动态支持核验结果::成功() const noexcept {
+    return 合同版本 == 1 && 状态 == 概念树数据状态::已读取 && H && Gread >= H && 支持 &&
+           概念树类数据服务::支持完整(*支持, H) && 支持->世界引用.index() == 2 &&
+           (支持->动态证据 == 概念树动态证据状态::已核验 || 支持->动态证据 == 概念树动态证据状态::历史已清理);
+}
+bool 概念树动态依据审计结果::成功() const noexcept {
+    if (合同版本 != 1 || 状态 != 概念树数据状态::已读取 || !H || Gread < H || 依据组.empty())
+        return false;
+    for (std::size_t i = 0; i < 依据组.size(); ++i) {
+        const auto &a = 依据组[i];
+        if (!概念树类数据服务::动态依据完整(a.依据, H) ||
+            (a.证据状态 != 概念树动态证据状态::已核验 && a.证据状态 != 概念树动态证据状态::历史已清理))
+            return false;
+        for (std::size_t j = 0; j < i; ++j)
+            if (a.依据.记录 == 依据组[j].依据.记录 || a.依据.依据 == 依据组[j].依据.依据)
+                return false;
+    }
+    return true;
+}
+概念树动态支持核验结果 概念树类数据服务::核验动态支持依据(const 概念树动态支持核验请求 &r) const {
+    return 读取封装<概念树动态支持核验结果>(r.读取头, r.预算, [&](auto g, auto h) {
+        if (!dynamic_)
+            throw 失败{S::入口拒绝};
+        auto s = 支持记录(r.支持记录, g, h, r.预算);
+        if (s.世界引用.index() != 2)
+            throw 失败{S::引用冲突};
+        const auto raw = 原始事实(s.世界关系, g);
+        const auto *edge = std::get_if<E>(&raw);
+        if (!edge)
+            throw 失败{S::内部不一致};
+        s.动态证据 = 审计动态(std::get<概念树动态引用>(s.世界引用), g, s.证据H, r.预算, !edge->退出事实代次);
+        概念树动态支持核验结果 out;
+        out.支持 = std::move(s);
+        return out;
+    });
+}
+概念树动态依据审计结果 概念树类数据服务::读取动态形成依据(const 概念树动态依据审计请求 &r) const {
+    return 读取封装<概念树动态依据审计结果>(r.头, r.预算, [&](auto g, auto h) {
+        if (!dynamic_)
+            throw 失败{S::入口拒绝};
+        const auto f = 读取概念内部(r.概念, g, h, r.预算);
+        if (f.是本体根 || f.根角色 != 概念树根角色::动态)
+            throw 失败{S::引用冲突};
+        概念树动态依据审计结果 out;
+        动态历史用量 sourceUsage;
+        for (const auto &a : f.动态依据组) {
+            auto state = 概念树动态证据状态::已核验;
+            if (const auto *d = std::get_if<概念树动态引用>(&a.依据.目标)) {
+                const auto raw = 原始事实(a.引用关系, g);
+                const auto *edge = std::get_if<E>(&raw);
+                if (!edge)
+                    throw 失败{S::内部不一致};
+                state = 审计动态(*d, g, a.依据.H, r.预算, !edge->退出事实代次, &sourceUsage);
+            } else {
+                try {
+                    验证动态依据(a.依据, g, r.预算);
+                } catch (const 失败 &e) {
+                    if (e.状态 != S::历史材料不可用)
+                        throw;
+                    守卫代次(g);
+                    state = 概念树动态证据状态::历史已清理;
+                }
+            }
+            out.依据组.push_back({a, state});
+        }
+        return out;
+    });
 }
 
 } // namespace 海中鱼巣

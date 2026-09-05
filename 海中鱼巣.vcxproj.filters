@@ -387,6 +387,9 @@
     <ClCompile Include="海中鱼巣\业务\应用服务.世界树类.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\业务\应用服务.动态概念树类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\业务\应用服务.特征概念类.ixx">
       <Filter>源文件</Filter>
     </ClCompile>

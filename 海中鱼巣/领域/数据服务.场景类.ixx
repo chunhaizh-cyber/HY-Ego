@@ -451,8 +451,147 @@ struct 场景类宿主存在结果 final {
     }
 };
 
+
+struct 场景类历史读取请求 final {
+    std::uint32_t 合同版本 = 1;
+    std::uint64_t Gread = 0, H = 0;
+    稳定编码 场景结点{};
+    std::uint64_t 最大关系数 = 0;
+};
+struct 场景类历史读取结果 final {
+    场景类数据状态 状态 = 场景类数据状态::入口拒绝;
+    std::uint32_t 合同版本 = 1;
+    std::uint64_t Gread = 0, H = 0;
+    std::optional<场景类结点> 场景结点;
+    bool 成功() const noexcept {
+        if (状态 != 场景类数据状态::已读取 || 合同版本 != 1 || !H || Gread < H || !场景结点) return false;
+        const auto& n = *场景结点;
+        if (!有效(n.结点) || !n.创建事实代次 || n.创建事实代次 > H
+            || (n.退出事实代次 && *n.退出事实代次 <= H)) return false;
+        if (n.父场景 && (!有效(n.父场景->成员关系) || !有效(n.父场景->目标结点)
+            || n.父场景->目标结点 == n.结点)) return false;
+        for (const auto* group : {&n.子场景组, &n.存在组, &n.状态组, &n.动态组}) {
+            稳定编码 previous{};
+            for (const auto& rel : *group) {
+                if (!有效(rel.成员关系) || !有效(rel.目标结点)
+                    || (有效(previous) && previous.值 >= rel.目标结点.值)) return false;
+                previous = rel.目标结点;
+            }
+        }
+        return true;
+    }
+};
+
 class 场景类数据服务 final {
 public:
+
+    bool 绑定于(const L1事实基座服务& s) const noexcept { return &s == &第一层服务_; }
+
+    场景类历史读取结果 读取场景历史事实(const 场景类历史读取请求& r) const {
+        using S = 场景类数据状态;
+        场景类历史读取结果 out;
+        out.Gread = r.Gread;
+        out.H = r.H;
+        if (r.合同版本 != 1 || !r.Gread || !r.H || r.H > r.Gread
+            || !有效(r.场景结点) || !r.最大关系数) return out;
+        try {
+            auto guard = [&] {
+                auto q = 第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
+                if (q.状态 != L1中性读取状态::成功)
+                    throw q.状态 == L1中性读取状态::资源失败 ? S::资源失败 : S::内部不一致;
+                if (q.合同版本 != L1中性CRUD合同版本 || !q.事实代次) throw S::内部不一致;
+                if (q.事实代次 != r.Gread) throw S::事实代次漂移;
+            };
+            guard();
+            auto raw = [&](稳定编码 id) {
+                auto q = 第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, id});
+                if (q.状态 != L1所有者范围读取状态::成功) throw 映射读取状态(q.状态);
+                if (q.读取事实代次 != r.Gread) throw S::事实代次漂移;
+                if (q.合同版本 != L1所有者范围CRUD合同版本 || q.查询编码 != id || !q.事实) throw S::内部不一致;
+                return *q.事实;
+            };
+            const auto nf = raw(r.场景结点);
+            const auto* n = std::get_if<L1所有者范围节点事实>(&nf);
+            if (!n || n->编码 != r.场景结点 || n->写入所有者 != 所有者_
+                || n->种类 != 节点种类::普通 || n->属性类型表示) throw S::引用冲突;
+            if (!n->创建事实代次 || !n->当前属性.empty()) throw S::内部不一致;
+            if (n->创建事实代次 > r.H) throw S::未找到;
+            if (n->退出事实代次 && *n->退出事实代次 <= r.H) throw S::目标已退出;
+            场景类结点 result;
+            result.结点 = r.场景结点;
+            result.创建事实代次 = n->创建事实代次;
+            result.退出事实代次 = n->退出事实代次;
+            std::uint64_t remaining = r.最大关系数;
+            auto group = [&](稳定编码 type, L1所有者范围关系端点方向 direction, bool ownEndpoint) {
+                const auto tf = raw(type);
+                const auto* t = std::get_if<L1所有者范围节点事实>(&tf);
+                if (!t || t->编码 != type || t->写入所有者 != 所有者_
+                    || t->种类 != 节点种类::普通 || t->属性类型表示 || !t->创建事实代次
+                    || t->创建事实代次 > r.H || (t->退出事实代次 && *t->退出事实代次 <= r.H))
+                    throw S::内部不一致;
+                auto q = 第一层服务_.读取所有者范围历史关系组({L1所有者范围CRUD合同版本,
+                    direction, r.场景结点, type, r.H});
+                if (q.状态 != L1所有者范围读取状态::成功) throw 映射读取状态(q.状态);
+                if (q.读取事实代次 != r.Gread) throw S::事实代次漂移;
+                if (q.合同版本 != L1所有者范围CRUD合同版本 || q.方向 != direction
+                    || q.端点节点 != r.场景结点 || q.关系类型节点 != type || q.历史截止事实代次 != r.H)
+                    throw S::内部不一致;
+                if (q.关系组.size() > remaining) throw S::数量预算不足;
+                remaining -= q.关系组.size();
+                std::vector<场景类成员引用> result;
+                for (const auto& rel : q.关系组) {
+                    const bool source = direction == L1所有者范围关系端点方向::源;
+                    const auto target = source ? rel.目标节点 : rel.源节点;
+                    if (!有效(rel.编码) || !有效(target) || target == r.场景结点
+                        || (source ? rel.源节点 : rel.目标节点) != r.场景结点
+                        || rel.关系类型节点 != type || rel.写入所有者 != 所有者_ || rel.角色或顺序 != 1
+                        || !rel.创建事实代次 || rel.创建事实代次 < n->创建事实代次
+                        || rel.创建事实代次 > r.H || (rel.退出事实代次 && *rel.退出事实代次 <= r.H))
+                        throw S::内部不一致;
+                    // 只核验关系端点的事实形状；具体世界载荷由所属公开服务读取。
+                    const auto ef = raw(target);
+                    const auto* e = std::get_if<L1所有者范围节点事实>(&ef);
+                    if (!e || e->编码 != target || e->种类 != 节点种类::普通 || e->属性类型表示
+                        || !e->创建事实代次 || e->创建事实代次 > r.H
+                        || (e->退出事实代次 && *e->退出事实代次 <= r.H)
+                        || (ownEndpoint && e->写入所有者 != 所有者_)) throw S::内部不一致;
+                    result.push_back({rel.编码, target});
+                }
+                std::sort(result.begin(), result.end(), [](const auto& a, const auto& b) { return a.目标结点 < b.目标结点; });
+                for (std::size_t i = 1; i < result.size(); ++i)
+                    if (result[i - 1].目标结点 == result[i].目标结点) throw S::内部不一致;
+                return result;
+            };
+            result.子场景组 = group(子场景关系类型_, L1所有者范围关系端点方向::源, true);
+            result.存在组 = group(存在关系类型_, L1所有者范围关系端点方向::源, false);
+            result.状态组 = group(状态关系类型_, L1所有者范围关系端点方向::源, false);
+            result.动态组 = group(动态关系类型_, L1所有者范围关系端点方向::源, false);
+            auto parents = group(子场景关系类型_, L1所有者范围关系端点方向::目标, true);
+            if (parents.size() > 1) throw S::内部不一致;
+            if (!parents.empty()) result.父场景 = parents.front();
+            guard();
+            out.状态 = S::已读取;
+            out.场景结点 = std::move(result);
+            if (!out.成功()) throw S::内部不一致;
+            return out;
+        } catch (S s) { out.状态 = s; }
+        catch (const std::bad_alloc&) { out.状态 = S::资源失败; }
+        catch (const std::length_error&) { out.状态 = S::资源失败; }
+        catch (...) { out.状态 = S::内部不一致; }
+        // 失败也必须确认其诊断属于本次冻结 G，尤其不能把并发清理标成同 G 的确定失证。
+        try {
+            const auto q = 第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
+            if (q.状态 != L1中性读取状态::成功)
+                out.状态 = q.状态 == L1中性读取状态::资源失败 ? S::资源失败 : S::内部不一致;
+            else if (q.合同版本 != L1中性CRUD合同版本 || !q.事实代次) out.状态 = S::内部不一致;
+            else if (q.事实代次 != r.Gread) out.状态 = S::事实代次漂移;
+        } catch (const std::bad_alloc&) { out.状态 = S::资源失败; }
+        catch (const std::length_error&) { out.状态 = S::资源失败; }
+        catch (...) { out.状态 = S::内部不一致; }
+        out.场景结点.reset();
+        return out;
+    }
+
     场景类数据服务() = delete;
     场景类数据服务(const 场景类数据服务&) = delete;
     场景类数据服务& operator=(const 场景类数据服务&) = delete;
@@ -460,9 +599,6 @@ public:
     场景类数据服务& operator=(场景类数据服务&&) = delete;
 
     // 五类关系类型由同一场景 owner 预先建立；服务引用由装配层注入。
-    // 待外部支撑：存在、状态、动态服务分别公开
-    // bool 绑定于(const L1事实基座服务&) const noexcept；支撑实现后，
-    // 本构造器必须同时拒绝任何不绑定于第一层服务_的依赖服务。
     场景类数据服务(const L1事实基座服务& 第一层服务,
         const 存在类数据服务& 存在服务,
         const 状态类数据服务& 状态服务,
@@ -482,7 +618,9 @@ public:
           状态关系类型_(状态关系类型),
           动态关系类型_(动态关系类型),
           宿主存在关系类型_(宿主存在关系类型) {
-        if (!写入端口_.有效() || !写入端口_.绑定于(第一层服务_)
+        if (!存在服务_.绑定于(第一层服务_) || !状态服务_.绑定于(第一层服务_)
+            || !动态服务_.绑定于(第一层服务_)
+            || !写入端口_.有效() || !写入端口_.绑定于(第一层服务_)
             || !有效(所有者_) || !关系类型组有效())
             throw std::invalid_argument("invalid scene data configuration");
         const auto 所有者读取 = 第一层服务_.读取当前结构所有者(
