@@ -10,7 +10,7 @@
 
 起点 HEAD：`488652215e6ca54b962301b04185b0f2c7d1ae60`
 
-详细设计：[现实世界存在创建接纳详细设计](../规范/详细设计/20260905_ARCH-L3-WORLD-TREE-EXISTENCE-CREATE-AND-ADMIT_现实世界存在创建接纳详细设计_v0.1.md)
+详细设计：[现实世界存在创建接纳详细设计](../../规范/详细设计/20260905_ARCH-L3-WORLD-TREE-EXISTENCE-CREATE-AND-ADMIT_现实世界存在创建接纳详细设计_v0.1.md)
 
 ## 1. 代码结果和允许文件
 
