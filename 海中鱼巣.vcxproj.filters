@@ -381,6 +381,9 @@
     <ClCompile Include="海中鱼巣\领域\数据服务.因果类.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\业务\应用服务.世界树类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\线程\路由.自我治理批次.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
