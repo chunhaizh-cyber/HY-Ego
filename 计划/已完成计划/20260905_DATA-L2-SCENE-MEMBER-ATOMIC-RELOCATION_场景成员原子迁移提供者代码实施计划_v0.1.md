@@ -4,9 +4,9 @@
 
 版本：v0.1
 
-设计：[场景成员原子迁移提供者详细设计 v0.1](../规范/详细设计/20260905_DATA-L2-SCENE-MEMBER-ATOMIC-RELOCATION_场景成员原子迁移提供者详细设计_v0.1.md)
+设计：[场景成员原子迁移提供者详细设计 v0.1](../../规范/详细设计/20260905_DATA-L2-SCENE-MEMBER-ATOMIC-RELOCATION_场景成员原子迁移提供者详细设计_v0.1.md)
 
-状态：可执行
+状态：已退出 / 已归档；代码结果提交 `859f0b05bdfd1645dea4a4b4fa98abd1723fad3c`
 
 代码起点：`8ce3298dedf4f7911b4023d8b8abf164facb240a`
 
