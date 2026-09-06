@@ -1,60 +1,41 @@
 module;
 
 #include <cstdint>
-#include <exception>
 #include <new>
 #include <optional>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 export module 海中鱼巣.领域.数据服务.二次特征类;
-
 export import 海中鱼巣.领域.数据服务.存在类;
 
 export namespace 海中鱼巣 {
 
-struct 二次特征节点生成请求 final {
-    特征类派生定义新增请求 定义请求;
-    friend bool operator==(const 二次特征节点生成请求&,
-        const 二次特征节点生成请求&) = default;
+struct 二次标量特征生成请求 final {
+    特征类标量派生建立请求 定义请求;
 };
-
-struct 二次特征计算请求 final {
-    特征类比较请求 比较请求;
-    friend bool operator==(const 二次特征计算请求&,
-        const 二次特征计算请求&) = default;
+struct 二次标量特征计算请求 final {
+    特征类标量比较请求 比较请求;
 };
-
-struct 二次特征概念材料 final {
-    特征类定义身份 特征身份;
-    std::uint32_t 实际阶次 = 0;
-    std::vector<特征类派生来源事实> 直接来源;
-    特征类派生规则 派生规则;
-    特征类比较注册身份 比较注册;
-    std::uint32_t 算法版本 = 0;
-    std::optional<稳定编码> 宿主存在;
-    std::uint64_t 事实截止代次 = 0;
-    friend bool operator==(const 二次特征概念材料&,
-        const 二次特征概念材料&) = default;
-};
-
-struct 二次特征概念材料结果 final {
-    特征类派生数据状态 状态 = 特征类派生数据状态::入口拒绝;
-    std::uint64_t 事实代次 = 0;
-    std::optional<二次特征概念材料> 材料;
+struct 二次标量特征概念材料结果 final {
+    std::uint32_t 版本 = 标量派生合同版本;
+    特征类标量状态 状态 = 特征类标量状态::入口拒绝;
+    std::uint64_t Gread = 0, H = 0;
+    std::optional<特征类标量派生事实> 定义事实;
+    std::vector<特征类标量叶回执> 基础叶组;
+    std::vector<稳定编码> 左叶组, 右叶组;
     bool 成功() const noexcept {
-        return 状态 == 特征类派生数据状态::已读取
-            && 事实代次 != 0 && 材料 && 材料->实际阶次 > 1
-            && 材料->直接来源.size() == 2
-            && 有效(材料->特征身份.值) && 有效(材料->派生规则.规则身份)
-            && 材料->派生规则.规则版本 != 0
-            && 有效(材料->比较注册.值) && 材料->算法版本 != 0
-            && 材料->事实截止代次 == 事实代次;
+        return 版本 == 2 && 状态 == 特征类标量状态::已读取 && H && Gread >= H
+            && 定义事实 && 定义事实->完整(H)
+            && !基础叶组.empty() && !左叶组.empty() && !右叶组.empty();
     }
 };
 
 class 二次特征类数据服务 final {
+    using S = 特征类标量状态;
+    using P = 特征类标量发布确定性;
 public:
     二次特征类数据服务() = delete;
     二次特征类数据服务(const 二次特征类数据服务&) = delete;
@@ -62,185 +43,121 @@ public:
     二次特征类数据服务(二次特征类数据服务&&) = delete;
     二次特征类数据服务& operator=(二次特征类数据服务&&) = delete;
 
-    二次特征类数据服务(const L1事实基座服务& 第一层服务,
-        特征类数据服务& 特征服务,
-        const 存在类数据服务& 存在服务)
-        : 第一层服务_(第一层服务), 特征服务_(特征服务),
-          存在服务_(存在服务) {}
+    二次特征类数据服务(const L1事实基座服务& l1, 特征类数据服务& feature,
+        const 存在类数据服务& existence)
+        : 第一层服务_(l1), 特征服务_(feature), 存在服务_(existence) {
+        if (!feature.绑定于(l1) || !existence.绑定于(l1))
+            throw std::invalid_argument("scalar providers must share L1");
+    }
 
-    特征类派生定义结果 生成二次特征节点(
-        const 二次特征节点生成请求& 请求) {
-        const auto G0 = 读取当前代次();
-        if (!G0 || *G0 != 请求.定义请求.期望事实代次)
-            return 派生失败(特征类派生数据状态::事实代次漂移,
-                G0.value_or(0));
-        try {
-            if (请求.定义请求.宿主存在) {
-                const auto 宿主 = 存在服务_.查询存在({存在类数据合同版本,
-                    *G0, *请求.定义请求.宿主存在});
-                if (!(宿主.状态 == 存在类数据状态::已读取
-                        && 宿主.成功() && 宿主.事实代次 == *G0
-                        && 宿主.存在结点
-                        && 宿主.存在结点->结点 == *请求.定义请求.宿主存在))
-                    return 派生失败(映射宿主状态(宿主.状态),
-                        宿主.事实代次);
-            }
-            auto 结果 = 特征服务_.新增派生特征定义(请求.定义请求);
-            if (结果.成功() && (!结果.定义 || 结果.定义->实际阶次 <= 1))
-                return 派生失败(特征类派生数据状态::内部不一致,
-                    结果.事实代次);
-            const auto 读后 = 读取当前代次();
-            const auto 期望末代次 = 结果.成功() || 结果.状态
-                    == 特征类派生数据状态::已可能发布
-                ? 结果.事实代次 : *G0;
-            if (!读后 || *读后 != 期望末代次)
-                return 派生失败(特征类派生数据状态::事实代次漂移,
-                    读后.value_or(0));
-            return 结果;
-        } catch (const std::bad_alloc&) {
-            return 派生失败(特征类派生数据状态::资源失败);
-        } catch (const std::length_error&) {
-            return 派生失败(特征类派生数据状态::资源失败);
-        } catch (...) {
-            return 派生失败(特征类派生数据状态::内部不一致);
+    特征类标量派生写结果 生成二次特征节点(const 二次标量特征生成请求& r) {
+        return 包装写(r.定义请求);
+    }
+    特征类标量派生写结果 退出二次特征节点(const 特征类标量派生退出请求& r) {
+        return 包装写(r);
+    }
+    特征类标量派生读取结果 查询二次特征节点(const 特征类标量派生读取请求& r) const {
+        auto out = 特征服务_.读取标量派生定义(r);
+        if (!out.成功()) return out;
+        S 代次失败 = S::内部不一致;
+        const auto g = 当前G(代次失败);
+        if (!g || *g != r.Gread || out.Gread != r.Gread || out.H != r.H
+            || out.定义事实->定义身份 != r.定义身份) {
+            特征类标量派生读取结果 fail;
+            fail.状态 = !g ? 代次失败 : *g != r.Gread ? S::事实代次漂移 : S::内部不一致;
+            fail.Gread = g.value_or(0); fail.H = r.H; return fail;
         }
+        return out;
     }
-
-    特征类派生定义结果 查询二次特征节点(
-        const 特征类派生定义查询请求& 请求) const {
-        const auto G0 = 读取当前代次();
-        if (!G0 || *G0 != 请求.期望事实代次)
-            return 派生失败(特征类派生数据状态::事实代次漂移,
-                G0.value_or(0));
-        auto 结果 = 特征服务_.查询派生特征定义(请求);
-        if (结果.成功() && (!结果.定义 || 结果.定义->实际阶次 <= 1))
-            return 派生失败(特征类派生数据状态::内部不一致,
-                结果.事实代次);
-        const auto 读后 = 读取当前代次();
-        if (!读后 || *读后 != *G0)
-            return 派生失败(特征类派生数据状态::事实代次漂移,
-                读后.value_or(0));
-        return 结果;
-    }
-
-    特征类派生定义结果 退出二次特征节点(
-        const 特征类派生定义退出请求& 请求) {
-        const auto G0 = 读取当前代次();
-        if (!G0 || *G0 != 请求.期望事实代次)
-            return 派生失败(特征类派生数据状态::事实代次漂移,
-                G0.value_or(0));
-        auto 结果 = 特征服务_.退出派生特征定义(请求);
-        if (结果.成功() && (!结果.定义 || 结果.定义->实际阶次 <= 1))
-            return 派生失败(特征类派生数据状态::内部不一致,
-                结果.事实代次);
-        const auto 读后 = 读取当前代次();
-        const auto 期望末代次 = 结果.成功() || 结果.状态
-                == 特征类派生数据状态::已可能发布
-            ? 结果.事实代次 : *G0;
-        if (!读后 || *读后 != 期望末代次)
-            return 派生失败(特征类派生数据状态::事实代次漂移,
-                读后.value_or(0));
-        return 结果;
-    }
-
-    特征类比较结果 计算二次特征(const 二次特征计算请求& 请求) const {
-        const auto G0 = 读取当前代次();
-        if (!G0 || *G0 != 请求.比较请求.期望事实代次)
-            return 比较漂移失败(请求.比较请求.请求身份, G0.value_or(0));
-        auto 结果 = 特征服务_.比较派生特征(请求.比较请求);
-        const auto 读后 = 读取当前代次();
-        if (!读后 || *读后 != *G0)
-            return 比较漂移失败(请求.比较请求.请求身份,
-                读后.value_or(0));
-        return 结果;
-    }
-
-    二次特征概念材料结果 读取二次特征概念材料(
-        const 特征类派生定义查询请求& 请求) const {
-        const auto G0 = 读取当前代次();
-        if (!G0 || *G0 != 请求.期望事实代次)
-            return 概念失败(特征类派生数据状态::事实代次漂移,
-                G0.value_or(0));
-        try {
-            const auto 读取 = 特征服务_.查询派生特征定义(请求);
-            if (!读取.成功() || !读取.定义)
-                return 概念失败(读取.状态, 读取.事实代次);
-            const auto& 定义 = *读取.定义;
-            if (定义.实际阶次 <= 1)
-                return 概念失败(特征类派生数据状态::内部不一致,
-                    读取.事实代次);
-            二次特征概念材料 材料{定义.身份, 定义.实际阶次,
-                定义.直接来源, 定义.派生规则, 定义.比较注册.身份,
-                定义.比较注册.合同.算法版本, 定义.宿主存在, *G0};
-            const auto 读后 = 读取当前代次();
-            if (!读后 || *读后 != *G0)
-                return 概念失败(特征类派生数据状态::事实代次漂移,
-                    读后.value_or(0));
-            二次特征概念材料结果 结果{
-                特征类派生数据状态::已读取, *G0, std::move(材料)};
-            return 结果.成功() ? 结果
-                : 概念失败(特征类派生数据状态::内部不一致, *G0);
-        } catch (const std::bad_alloc&) {
-            return 概念失败(特征类派生数据状态::资源失败);
-        } catch (const std::length_error&) {
-            return 概念失败(特征类派生数据状态::资源失败);
-        } catch (...) {
-            return 概念失败(特征类派生数据状态::内部不一致);
+    特征类标量比较结果 计算二次特征(const 二次标量特征计算请求& r) const {
+        auto out = 特征服务_.比较派生特征(r.比较请求);
+        if (!out.成功()) return out;
+        const auto& q = r.比较请求;
+        S 代次失败 = S::内部不一致;
+        const auto g = 当前G(代次失败);
+        if (!g || *g != q.G || out.G != q.G || out.请求身份 != q.请求身份
+            || out.根定义 != q.根定义 || out.实际结果位 != q.要求结果位) {
+            特征类标量比较结果 fail;
+            fail.状态 = !g ? 代次失败 : *g != q.G ? S::事实代次漂移 : S::内部不一致;
+            fail.拒绝原因 = fail.状态; fail.G = g.value_or(0); fail.请求身份 = q.请求身份; return fail;
         }
+        return out;
     }
-
+    二次标量特征概念材料结果 读取二次特征概念材料(const 特征类标量派生读取请求& r) const {
+        auto read = 查询二次特征节点(r);
+        二次标量特征概念材料结果 out;
+        out.状态 = read.状态; out.Gread = read.Gread; out.H = read.H;
+        if (read.成功()) {
+            out.定义事实 = std::move(read.定义事实);
+            out.基础叶组 = std::move(read.基础叶组);
+            out.左叶组 = std::move(read.左叶组);
+            out.右叶组 = std::move(read.右叶组);
+        }
+        return out;
+    }
 private:
-    std::optional<std::uint64_t> 读取当前代次() const noexcept {
-        const auto 读取 = 第一层服务_.读取中性当前事实代次(
-            {L1中性CRUD合同版本});
-        if (读取.状态 != L1中性读取状态::成功
-            || 读取.合同版本 != L1中性CRUD合同版本
-            || 读取.事实代次 == 0)
-            return std::nullopt;
-        return 读取.事实代次;
+    std::optional<std::uint64_t> 当前G(S& error) const noexcept {
+        try {
+            const auto r = 第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
+            if (r.状态 == L1中性读取状态::成功 && r.合同版本 == L1中性CRUD合同版本 && r.事实代次)
+                return r.事实代次;
+            error = r.状态 == L1中性读取状态::资源失败 ? S::资源失败 : S::内部不一致;
+        } catch (const std::bad_alloc&) { error = S::资源失败; }
+        catch (const std::length_error&) { error = S::资源失败; }
+        catch (...) { error = S::内部不一致; }
+        return std::nullopt;
     }
-
-    static 特征类派生定义结果 派生失败(
-        特征类派生数据状态 状态, std::uint64_t 事实代次 = 0) noexcept {
-        return {状态, 特征类派生数据合同版本, 事实代次, std::nullopt};
-    }
-
-    static 二次特征概念材料结果 概念失败(
-        特征类派生数据状态 状态, std::uint64_t 事实代次 = 0) noexcept {
-        return {状态, 事实代次, std::nullopt};
-    }
-
-    static 特征类比较结果 比较漂移失败(
-        std::uint64_t 请求身份, std::uint64_t 事实代次) noexcept {
-        特征类比较结果 结果;
-        结果.请求身份 = 请求身份;
-        结果.状态 = 特征类比较状态::入口拒绝;
-        结果.拒绝原因 = 特征类比较拒绝原因::输入版本失效;
-        结果.事实代次 = 事实代次;
-        return 结果;
-    }
-
-    static 特征类派生数据状态 映射宿主状态(
-        存在类数据状态 状态) noexcept {
-        switch (状态) {
-        case 存在类数据状态::未找到:
-            return 特征类派生数据状态::宿主未找到;
-        case 存在类数据状态::目标已退出:
-            return 特征类派生数据状态::宿主已退出;
-        case 存在类数据状态::事实代次漂移:
-            return 特征类派生数据状态::事实代次漂移;
-        case 存在类数据状态::入口拒绝:
-            return 特征类派生数据状态::入口拒绝;
-        case 存在类数据状态::资源失败:
-            return 特征类派生数据状态::资源失败;
-        default:
-            return 特征类派生数据状态::宿主读取失败;
+    static S 宿主状态(存在类数据状态 s) noexcept {
+        switch (s) {
+        case 存在类数据状态::未找到: return S::未找到;
+        case 存在类数据状态::目标已退出: return S::已退出;
+        case 存在类数据状态::事实代次漂移: return S::事实代次漂移;
+        case 存在类数据状态::资源失败: return S::资源失败;
+        case 存在类数据状态::数量预算不足: return S::预算不足;
+        case 存在类数据状态::入口拒绝: return S::入口拒绝;
+        default: return S::内部不一致;
         }
     }
-
+    template<class R> 特征类标量派生写结果 包装写(const R& r) {
+        特征类标量派生写结果 out;
+        bool dispatched = false;
+        auto fail = [&](S s) {
+            out.定义事实.reset();
+            if (dispatched || out.首次发布H || out.发布确定性 == P::可能已发布
+                || out.发布确定性 == P::确认已发布) {
+                out.状态 = S::已可能发布; out.发布确定性 = P::可能已发布;
+            } else out.状态 = s;
+            return std::move(out);
+        };
+        try {
+            S 代次失败 = S::内部不一致;
+            const auto g = 当前G(代次失败);
+            if (!g) return fail(代次失败);
+            out.Gread = *g;
+            if constexpr (std::is_same_v<R, 特征类标量派生建立请求>) {
+                // 原 G 已过去时只让 owner 做原键裁决，不用今天 E 的活动性阻断历史恢复。
+                if (*g == r.G && r.宿主E) {
+                    const auto e = 存在服务_.查询存在({存在类数据合同版本, r.G, *r.宿主E});
+                    if (!e.成功() || e.状态 != 存在类数据状态::已读取)
+                        return fail(宿主状态(e.状态));
+                    if (e.事实代次 != r.G || !e.存在结点 || e.存在结点->结点 != *r.宿主E)
+                        return fail(S::内部不一致);
+                }
+            }
+            dispatched = true;
+            if constexpr (std::is_same_v<R, 特征类标量派生建立请求>) out = 特征服务_.建立标量派生定义(r);
+            else out = 特征服务_.退出标量派生定义(r);
+            // 返回失败也保留 owner 已知的首次 H 和正式 L1 回执。
+            if (!out.成功()) return out;
+            const auto tail = 当前G(代次失败);
+            if (!tail || *tail != out.Gread) return fail(!tail ? 代次失败 : S::事实代次漂移);
+            return out;
+        } catch (const std::bad_alloc&) { return fail(S::资源失败); }
+        catch (const std::length_error&) { return fail(S::资源失败); }
+        catch (...) { return fail(S::内部不一致); }
+    }
     const L1事实基座服务& 第一层服务_;
     特征类数据服务& 特征服务_;
     const 存在类数据服务& 存在服务_;
 };
-
 } // namespace 海中鱼巣

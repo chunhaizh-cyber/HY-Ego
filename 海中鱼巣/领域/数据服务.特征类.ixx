@@ -4,6 +4,10 @@ module;
 #include <cstdint>
 #include <exception>
 #include <limits>
+#include <array>
+#include <map>
+#include <set>
+#include <numeric>
 #include <new>
 #include <optional>
 #include <stdexcept>
@@ -125,6 +129,7 @@ struct 特征类派生结构类型 final {
     稳定编码 比较注册归属关系类型{};
     稳定编码 比较注册U64属性类型{};
     稳定编码 比较注册I64属性类型{};
+    稳定编码 输出类型关系类型{};
     friend bool operator==(const 特征类派生结构类型&,
         const 特征类派生结构类型&) = default;
 };
@@ -259,114 +264,293 @@ struct 特征类派生定义结果 final {
     }
 };
 
-struct 特征类比较输入 final {
-    稳定编码 事实身份{};
-    std::int64_t 值 = 0;
-    稳定编码 来源稳定编码{};
-    std::uint64_t 输入版本 = 0;
-    std::uint64_t 创建事实代次 = 0;
-    std::optional<std::uint64_t> 退出事实代次;
-    稳定编码 单位{};
-    稳定编码 维度{};
-    稳定编码 分量角色{};
-    特征类比较角色 角色 = 特征类比较角色::当前事实;
-    friend bool operator==(const 特征类比较输入&,
-        const 特征类比较输入&) = default;
-};
 
-struct 特征类比较请求 final {
-    std::uint32_t 合同版本 = 特征类派生数据合同版本;
-    std::uint64_t 期望事实代次 = 0;
-    std::uint64_t 请求身份 = 0;
-    特征类定义身份 特征定义;
+inline constexpr std::uint32_t 标量派生合同版本 = 2;
+enum class 特征类标量结果角色 : std::uint8_t { 排序 = 1, 关系 = 2, 差异 = 3 };
+enum class 特征类标量量纲 : std::uint8_t { 无量纲 = 1, 有量纲 = 2 };
+enum class 特征类标量舍入 : std::uint8_t { 不转换 = 1 };
+enum class 特征类标量溢出 : std::uint8_t { 拒绝 = 1 };
+enum class 特征类标量方向 : std::uint8_t { 左对右 = 1, 左到右 = 2, 右减左 = 3 };
+enum class 特征类标量状态 : std::uint8_t {
+    已读取 = 1, 已比较, 入口拒绝, 未找到, 已退出, 格式不支持, 算法不支持,
+    类型不匹配, 来源不匹配, 单位量化不匹配, 结果范围不满足, 运算溢出,
+    预算不足, 历史材料不可用, 事实代次漂移, 资源失败, 内部不一致,
+    已创建, 精确重复, 幂等冲突, 引用冲突, 已可能发布
+};
+enum class 特征类标量发布确定性 : std::uint8_t {
+    未派发 = 1, 确认未发布, 确认已发布, 可能已发布
+};
+struct 特征类标量量化合同 final {
+    稳定编码 单位{}, 维度{}, 分量角色{};
+    std::uint64_t 缩放分子 = 1, 缩放分母 = 1;
+    std::int64_t 下界 = 0, 上界 = 0;
+    特征类标量量纲 量纲类别 = 特征类标量量纲::无量纲;
+    特征类标量舍入 舍入 = 特征类标量舍入::不转换;
+    特征类标量溢出 溢出 = 特征类标量溢出::拒绝;
+    bool 完整() const noexcept {
+        return 有效(单位) && 有效(维度) && 有效(分量角色) && 缩放分子 && 缩放分母
+            && std::gcd(缩放分子, 缩放分母) == 1 && 下界 <= 上界
+            && (量纲类别 == 特征类标量量纲::无量纲 || 量纲类别 == 特征类标量量纲::有量纲)
+            && 舍入 == 特征类标量舍入::不转换 && 溢出 == 特征类标量溢出::拒绝;
+    }
+    friend bool operator==(const 特征类标量量化合同&, const 特征类标量量化合同&) = default;
+};
+struct 特征类标量输出提交项 final {
+    特征类标量结果角色 角色 = 特征类标量结果角色::排序;
+    特征类标量量化合同 量化;
+    friend bool operator==(const 特征类标量输出提交项&, const 特征类标量输出提交项&) = default;
+};
+struct 特征类标量输出事实 final {
+    特征类标量输出提交项 声明;
+    稳定编码 特征类型{}, 归属关系{}, 格式标记值事实{};
+    friend bool operator==(const 特征类标量输出事实&, const 特征类标量输出事实&) = default;
+};
+struct 特征类标量派生来源提交项 final {
+    std::uint32_t 顺序 = 0, 输入角色 = 0;
+    特征类定义身份 来源;
+    std::uint8_t 上游输出角色 = 0;
+    friend bool operator==(const 特征类标量派生来源提交项&, const 特征类标量派生来源提交项&) = default;
+};
+struct 特征类标量派生来源事实 final {
+    特征类标量派生来源提交项 内容;
+    稳定编码 关系{};
+    friend bool operator==(const 特征类标量派生来源事实&, const 特征类标量派生来源事实&) = default;
+};
+struct 特征类标量比较注册合同 final {
+    特征类比较用途 用途 = 特征类比较用途::目标判断;
+    std::uint32_t 算法版本 = 1;
+    特征类比较角色 左角色 = 特征类比较角色::当前事实;
+    特征类比较角色 右角色 = 特征类比较角色::目标状态;
+    std::uint8_t 允许结果位 = 0;
+    std::uint32_t 误差合同版本 = 0;
+    std::optional<std::int64_t> 误差预算, 相等容差;
+    特征类标量量化合同 输入量化;
+    std::vector<特征类标量输出提交项> 输出组;
+    friend bool operator==(const 特征类标量比较注册合同&, const 特征类标量比较注册合同&) = default;
+};
+struct 特征类派生读取预算 final {
+    std::uint64_t 最大定义数 = 0, 最大关系数 = 0, 最大叶数 = 0, 最大属性值数 = 0, 最大深度 = 0;
+    bool 有效() const noexcept {
+        return 最大定义数 && 最大关系数 && 最大叶数 && 最大属性值数 && 最大深度;
+    }
+    friend bool operator==(const 特征类派生读取预算&, const 特征类派生读取预算&) = default;
+};
+inline constexpr 特征类派生读取预算 标量业务准入预算{1024, 8192, 2048, 16384, 64};
+struct 特征类标量派生建立请求 final {
+    std::uint32_t 版本 = 标量派生合同版本;
+    std::uint64_t G = 0;
+    L1所有者范围写入幂等身份 幂等身份;
+    std::vector<特征类标量派生来源提交项> 来源组;
+    特征类派生规则 派生规则;
+    std::optional<稳定编码> 宿主E;
+    特征类标量比较注册合同 标量注册;
+    特征类派生读取预算 预算;
+    friend bool operator==(const 特征类标量派生建立请求&, const 特征类标量派生建立请求&) = default;
+};
+struct 特征类标量派生读取请求 final {
+    std::uint32_t 版本 = 标量派生合同版本;
+    std::uint64_t Gread = 0, H = 0;
+    特征类定义身份 定义身份;
+    特征类派生读取预算 预算;
+};
+struct 特征类标量派生退出请求 final {
+    std::uint32_t 版本 = 标量派生合同版本;
+    std::uint64_t G = 0;
+    L1所有者范围写入幂等身份 幂等身份;
+    特征类定义身份 定义身份;
+    特征类派生读取预算 预算;
+};
+struct 特征类标量比较请求 final {
+    std::uint32_t 版本 = 标量派生合同版本;
+    std::uint64_t G = 0, 请求身份 = 0;
+    特征类定义身份 根定义;
     特征类比较用途 用途 = 特征类比较用途::目标判断;
     std::optional<std::uint32_t> 预期算法版本;
-    特征类比较输入 左;
-    特征类比较输入 右;
     std::uint8_t 要求结果位 = 0;
-    friend bool operator==(const 特征类比较请求&,
-        const 特征类比较请求&) = default;
+    特征类派生读取预算 预算;
 };
-
-struct 特征类I64差异材料 final {
-    std::int64_t 值 = 0;
-    稳定编码 单位{};
-    稳定编码 维度{};
-    稳定编码 分量角色{};
-    特征类比较方向 方向 = 特征类比较方向::右减左;
-    std::uint32_t 算法版本 = 0;
-    friend bool operator==(const 特征类I64差异材料&,
-        const 特征类I64差异材料&) = default;
-};
-
-struct 特征类比较结果 final {
-    std::uint64_t 请求身份 = 0;
-    特征类比较状态 状态 = 特征类比较状态::入口拒绝;
-    特征类比较拒绝原因 拒绝原因 = 特征类比较拒绝原因::无;
-    std::uint64_t 事实代次 = 0;
+struct 特征类标量派生事实 final {
+    特征类定义身份 定义身份;
+    std::uint32_t 真实阶次 = 0;
+    std::vector<特征类标量派生来源事实> 来源组;
+    特征类派生规则 派生规则;
+    std::optional<稳定编码> 宿主E, 宿主关系;
     特征类比较注册身份 注册身份;
-    std::uint32_t 算法版本 = 0;
-    std::uint8_t 实际结果位 = 0;
-    std::optional<std::int8_t> 排序三态;
-    std::optional<特征类比较具名关系> 具名关系;
-    std::optional<特征类I64差异材料> 差异材料;
-    std::optional<std::int64_t> 误差预算;
-    std::optional<std::int64_t> 相等容差;
-    std::uint32_t 误差合同版本 = 0;
-    稳定编码 单位{};
-    稳定编码 维度{};
-    稳定编码 分量角色{};
-    特征类比较角色 实际左角色 = 特征类比较角色::当前事实;
-    特征类比较角色 实际右角色 = 特征类比较角色::目标状态;
-    稳定编码 左事实身份{};
-    稳定编码 左来源稳定编码{};
-    std::uint64_t 左输入版本 = 0;
-    std::uint64_t 左创建事实代次 = 0;
-    稳定编码 右事实身份{};
-    稳定编码 右来源稳定编码{};
-    std::uint64_t 右输入版本 = 0;
-    std::uint64_t 右创建事实代次 = 0;
-    bool 成功() const noexcept {
-        const bool 角色闭合 =
-            (实际左角色 == 特征类比较角色::当前事实
-                && 实际右角色 == 特征类比较角色::目标状态)
-            || (实际左角色 == 特征类比较角色::前状态
-                && 实际右角色 == 特征类比较角色::后当前事实);
-        if (状态 != 特征类比较状态::已比较
-            || 拒绝原因 != 特征类比较拒绝原因::无
-            || 请求身份 == 0 || 事实代次 == 0 || !有效(注册身份.值)
-            || 算法版本 == 0 || 实际结果位 == 0 || 实际结果位 > 7
-            || 排序三态.has_value() != ((实际结果位 & 1U) != 0)
-            || 具名关系.has_value() != ((实际结果位 & 2U) != 0)
-            || 差异材料.has_value() != ((实际结果位 & 4U) != 0)
-            || 误差合同版本 == 0 || !有效(单位) || !有效(维度)
-            || !有效(分量角色) || !有效(左事实身份)
-            || !有效(左来源稳定编码) || 左输入版本 == 0
-            || 左创建事实代次 == 0 || !有效(右事实身份)
-            || !有效(右来源稳定编码) || 右输入版本 == 0
-            || 右创建事实代次 == 0 || 左创建事实代次 > 左输入版本
-            || 右创建事实代次 > 右输入版本 || !角色闭合
-            || (误差预算 && *误差预算 < 0)
-            || (相等容差 && *相等容差 < 0)
-            || (排序三态 && (*排序三态 < -1 || *排序三态 > 1)))
-            return false;
-        if (具名关系) {
-            const auto 数值 = static_cast<std::uint8_t>(*具名关系);
-            if (数值 < 1 || 数值 > 6) return false;
-            const bool 目标关系 = 数值 <= 3;
-            if (目标关系 != (实际左角色 == 特征类比较角色::当前事实))
-                return false;
+    稳定编码 注册归属{}, 阶次值{}, 规则值{}, 注册U64值{}, 注册I64值{};
+    特征类标量比较注册合同 注册;
+    std::vector<特征类标量输出事实> 输出组;
+    std::uint64_t 创建G = 0;
+    std::optional<std::uint64_t> 退出G;
+    bool 完整(std::uint64_t h) const noexcept {
+        if (!有效(定义身份.值) || 真实阶次 <= 1 || !创建G || 创建G > h
+            || (退出G && (*退出G <= 创建G || *退出G <= h)) || 来源组.size() != 2
+            || !有效(派生规则.规则身份) || 派生规则.规则版本 != 1 || !有效(注册身份.值)
+            || !有效(注册归属) || !有效(阶次值) || !有效(规则值) || !有效(注册U64值) || !有效(注册I64值)
+            || 宿主E.has_value() != 宿主关系.has_value() || (宿主E && (!有效(*宿主E) || !有效(*宿主关系)))
+            || 注册.算法版本 != 1 || !注册.误差合同版本 || !注册.输入量化.完整()
+            || (注册.误差预算 && *注册.误差预算 < 0) || (注册.相等容差 && *注册.相等容差 < 0)
+            || 输出组.empty() || 输出组.size() > 3 || 输出组.size() != 注册.输出组.size()) return false;
+        const auto left = static_cast<unsigned>(注册.左角色), right = static_cast<unsigned>(注册.右角色);
+        if (注册.用途 == 特征类比较用途::目标判断 ? left != 1 || right != 2
+            : 注册.用途 != 特征类比较用途::状态迁移 || left != 3 || right != 4) return false;
+        for (unsigned i = 0; i < 2; ++i) {
+            const auto& x = 来源组[i];
+            if (!有效(x.关系) || !有效(x.内容.来源.值) || x.内容.顺序 != i + 1
+                || x.内容.输入角色 != (i ? right : left) || x.内容.上游输出角色 > 3) return false;
         }
-        return !差异材料 || (差异材料->单位 == 单位
-            && 差异材料->维度 == 维度
-            && 差异材料->分量角色 == 分量角色
-            && 差异材料->方向 == 特征类比较方向::右减左
-            && 差异材料->算法版本 == 算法版本);
+        if (来源组[0].内容.来源 == 来源组[1].内容.来源 || 来源组[0].关系 == 来源组[1].关系) return false;
+        unsigned mask = 0, previous = 0;
+        for (std::size_t i = 0; i < 输出组.size(); ++i) {
+            const auto& x = 输出组[i]; const auto role = static_cast<unsigned>(x.声明.角色);
+            if (role < 1 || role > 3 || role <= previous || !x.声明.量化.完整()
+                || x.声明 != 注册.输出组[i] || !有效(x.特征类型) || !有效(x.归属关系) || !有效(x.格式标记值事实)) return false;
+            for (std::size_t j = 0; j < i; ++j)
+                if (x.特征类型 == 输出组[j].特征类型 || x.归属关系 == 输出组[j].归属关系
+                    || x.格式标记值事实 == 输出组[j].格式标记值事实) return false;
+            mask |= 1U << (role - 1); previous = role;
+        }
+        return mask == 注册.允许结果位;
+    }
+    friend bool operator==(const 特征类标量派生事实&, const 特征类标量派生事实&) = default;
+};
+struct 特征类标量叶回执 final {
+    稳定编码 F{}, FT{}, 值事实{};
+    std::int64_t 值 = 0;
+    std::uint64_t G = 0, 创建G = 0;
+    std::optional<std::uint64_t> 退出G;
+    friend bool operator==(const 特征类标量叶回执&, const 特征类标量叶回执&) = default;
+};
+struct 特征类标量基础输入回执 final {
+    特征类标量叶回执 叶;
+    特征类比较角色 角色 = 特征类比较角色::当前事实;
+};
+struct 特征类标量上游输入回执 final {
+    特征类定义身份 定义;
+    稳定编码 输出FT{};
+    特征类标量结果角色 输出角色 = 特征类标量结果角色::排序;
+    std::int64_t 值 = 0;
+    std::uint32_t 实际阶次 = 0;
+    特征类比较角色 角色 = 特征类比较角色::当前事实;
+};
+using 特征类标量输入回执 = std::variant<特征类标量基础输入回执, 特征类标量上游输入回执>;
+struct 特征类标量结果项 final {
+    稳定编码 输出FT{};
+    特征类标量结果角色 角色 = 特征类标量结果角色::排序;
+    std::int64_t 值 = 0;
+    特征类标量量化合同 量化;
+    特征类标量方向 方向 = 特征类标量方向::左对右;
+};
+struct 特征类标量派生读取结果 final {
+    std::uint32_t 版本 = 标量派生合同版本;
+    特征类标量状态 状态 = 特征类标量状态::入口拒绝;
+    std::uint64_t Gread = 0, H = 0;
+    std::optional<特征类标量派生事实> 定义事实;
+    std::vector<特征类标量叶回执> 基础叶组;
+    std::vector<稳定编码> 左叶组, 右叶组;
+    bool 成功() const noexcept {
+        if (版本 != 2 || 状态 != 特征类标量状态::已读取 || !H || Gread < H
+            || !定义事实 || !定义事实->完整(H) || 基础叶组.empty() || 左叶组.empty() || 右叶组.empty()) return false;
+        稳定编码 previous{};
+        for (const auto& x : 基础叶组) {
+            if (!有效(x.F) || !有效(x.FT) || !有效(x.值事实) || x.G != H || !x.创建G || x.创建G > H
+                || (x.退出G && *x.退出G <= H) || (有效(previous) && !(previous < x.F))) return false;
+            if (std::find(左叶组.begin(), 左叶组.end(), x.F) == 左叶组.end()
+                && std::find(右叶组.begin(), 右叶组.end(), x.F) == 右叶组.end()) return false;
+            previous = x.F;
+        }
+        for (const auto* group : {&左叶组, &右叶组}) {
+            稳定编码 prior{};
+            for (auto id : *group) {
+                if (!有效(id) || (有效(prior) && !(prior < id))
+                    || std::none_of(基础叶组.begin(), 基础叶组.end(), [&](const auto& x) { return x.F == id; })) return false;
+                prior = id;
+            }
+        }
+        return true;
+    }
+};
+struct 特征类标量派生写结果 final {
+    std::uint32_t 版本 = 标量派生合同版本;
+    特征类标量状态 状态 = 特征类标量状态::入口拒绝;
+    std::uint64_t Gread = 0;
+    std::optional<std::uint64_t> 首次发布H;
+    特征类标量发布确定性 发布确定性 = 特征类标量发布确定性::未派发;
+    std::optional<特征类标量派生事实> 定义事实;
+    std::optional<L1所有者范围写入结果> 正式回执;
+    bool 成功() const noexcept {
+        return 版本 == 2 && (状态 == 特征类标量状态::已创建 || 状态 == 特征类标量状态::已退出
+                || 状态 == 特征类标量状态::精确重复)
+            && 首次发布H && *首次发布H && Gread >= *首次发布H && 定义事实
+            && 定义事实->完整(定义事实->创建G)
+            && (*首次发布H == 定义事实->创建G || 定义事实->退出G == 首次发布H)
+            && (状态 != 特征类标量状态::已创建 || *首次发布H == 定义事实->创建G)
+            && (状态 != 特征类标量状态::已退出 || 定义事实->退出G == 首次发布H)
+            && 发布确定性 == 特征类标量发布确定性::确认已发布 && 正式回执
+            && 正式回执->合同版本 == L1所有者范围CRUD合同版本 && 正式回执->事实代次 == *首次发布H
+            && (正式回执->状态 == L1所有者范围写入状态::成功 || 正式回执->状态 == L1所有者范围写入状态::精确重复);
+    }
+};
+struct 特征类标量比较结果 final {
+    std::uint32_t 版本 = 标量派生合同版本;
+    特征类标量状态 状态 = 特征类标量状态::入口拒绝;
+    特征类标量状态 拒绝原因 = 特征类标量状态::入口拒绝;
+    std::uint64_t G = 0, 请求身份 = 0;
+    特征类定义身份 根定义;
+    特征类比较注册身份 注册身份;
+    std::uint32_t 算法版本 = 0, 真实阶次 = 0;
+    std::uint8_t 实际结果位 = 0;
+    特征类标量量化合同 输入量化;
+    std::uint32_t 误差合同版本 = 0;
+    std::optional<std::int64_t> 误差预算, 相等容差;
+    std::optional<std::array<特征类标量输入回执, 2>> 直接输入回执;
+    std::vector<特征类标量叶回执> 基础叶回执组;
+    std::vector<特征类标量结果项> 结果组;
+    bool 成功() const noexcept {
+        if (版本 != 2 || 状态 != 特征类标量状态::已比较 || 拒绝原因 != 状态 || !G || !请求身份
+            || !有效(根定义.值) || !有效(注册身份.值) || 算法版本 != 1 || 真实阶次 <= 1
+            || 实际结果位 == 0 || 实际结果位 > 7 || 基础叶回执组.empty() || !直接输入回执
+            || !输入量化.完整() || !误差合同版本 || (误差预算 && *误差预算 < 0) || (相等容差 && *相等容差 < 0)) return false;
+        稳定编码 previousLeaf{};
+        for (const auto& leaf : 基础叶回执组) {
+            if (!有效(leaf.F) || !有效(leaf.FT) || !有效(leaf.值事实) || leaf.G != G
+                || !leaf.创建G || leaf.创建G > G || (leaf.退出G && *leaf.退出G <= G)
+                || (有效(previousLeaf) && !(previousLeaf < leaf.F))) return false;
+            previousLeaf = leaf.F;
+        }
+        for (unsigned i = 0; i < 2; ++i) {
+            const auto& input = (*直接输入回执)[i];
+            if (input.valueless_by_exception()) return false;
+            const bool valid = std::visit([&](const auto& x) noexcept {
+                using T = std::decay_t<decltype(x)>;
+                const auto role = static_cast<unsigned>(x.角色);
+                if (i == 0 ? (role != 1 && role != 3) : (role != 2 && role != 4)) return false;
+                if constexpr (std::is_same_v<T, 特征类标量基础输入回执>) {
+                    const auto it = std::find(基础叶回执组.begin(), 基础叶回执组.end(), x.叶);
+                    return it != 基础叶回执组.end();
+                } else {
+                    const auto selected = static_cast<unsigned>(x.输出角色);
+                    return 有效(x.定义.值) && 有效(x.输出FT) && x.实际阶次 > 1 && x.实际阶次 < 真实阶次
+                        && selected >= 1 && selected <= 3;
+                }
+            }, input);
+            if (!valid) return false;
+        }
+        const auto leftRole = std::visit([](const auto& x) { return static_cast<unsigned>(x.角色); }, (*直接输入回执)[0]);
+        const auto rightRole = std::visit([](const auto& x) { return static_cast<unsigned>(x.角色); }, (*直接输入回执)[1]);
+        if (rightRole != leftRole + 1) return false;
+        unsigned bits = 0, last = 0;
+        for (const auto& x : 结果组) {
+            const auto role = static_cast<unsigned>(x.角色);
+            if (role < 1 || role > 3 || role <= last || !有效(x.输出FT) || !x.量化.完整()
+                || x.值 < x.量化.下界 || x.值 > x.量化.上界
+                || static_cast<unsigned>(x.方向) != role) return false;
+            bits |= 1U << (role - 1); last = role;
+        }
+        return bits == 实际结果位;
     }
 };
 
-using 特征直接值 = std::variant<std::int64_t,
-    std::vector<std::int64_t>, std::vector<std::uint64_t>>;
+using 特征直接值 = std::variant<std::int64_t, std::vector<std::int64_t>, std::vector<std::uint64_t>>;
 
 struct 特征值结点引用 final {
     稳定编码 结点{};
@@ -392,7 +576,8 @@ enum class 特征类数据状态 : std::uint8_t {
     引用冲突 = 13,
     数量预算不足 = 14,
     资源失败 = 15,
-    内部不一致 = 16
+    内部不一致 = 16,
+    已可能发布 = 17
 };
 
 struct 特征类结点 final {
@@ -914,6 +1099,10 @@ public:
             || !类型结点有效(派生结构类型_.比较注册I64属性类型,
                 节点种类::属性类型, L1所有者范围值表示种类::I64组))
             throw std::invalid_argument("invalid derived feature type shape");
+        if (有效(派生结构类型_.输出类型关系类型)
+            && (std::find(类型组.begin(), 类型组.end(), 派生结构类型_.输出类型关系类型) != 类型组.end()
+                || !类型结点有效(派生结构类型_.输出类型关系类型, 节点种类::普通, std::nullopt)))
+            throw std::invalid_argument("invalid scalar output relation type");
     }
 
     特征类数据服务(const L1事实基座服务& 第一层服务,
@@ -930,11 +1119,12 @@ public:
     // 诊断责任：向上送出；一份 L1 写集创建独立特征结点及其类型值槽。
     特征类结点结果 新增特征(const 特征类新增请求& 请求) {
         if (!新增请求有效(请求)) return 失败(特征类数据状态::入口拒绝);
+        static_assert(std::is_nothrow_move_constructible_v<特征类结点结果>);
         try {
-            if (const auto 重放 = 尝试重放新特征(请求.期望事实代次,
+            if (auto 重放 = 尝试重放新特征(请求.期望事实代次,
                     请求.幂等身份, 请求.特征类型, 请求.特征值,
                     std::nullopt, 特征类数据状态::已创建))
-                return *重放;
+                return std::move(*重放);
             if (const auto 类型状态 = 验证特征类型(
                     请求.特征类型, 请求.特征值, 请求.期望事实代次))
                 return 失败(*类型状态, 请求.期望事实代次);
@@ -955,11 +1145,12 @@ public:
     // 诊断责任：向上送出；修改生成新结点并在同一写集退出旧结点和值。
     特征类结点结果 修改特征(const 特征类修改请求& 请求) {
         if (!修改请求有效(请求)) return 失败(特征类数据状态::入口拒绝);
+        static_assert(std::is_nothrow_move_constructible_v<特征类结点结果>);
         try {
-            if (const auto 重放 = 尝试重放新特征(请求.期望事实代次,
+            if (auto 重放 = 尝试重放新特征(请求.期望事实代次,
                     请求.幂等身份, 请求.新特征类型, 请求.新特征值,
                     请求.原特征结点, 特征类数据状态::已换代))
-                return *重放;
+                return std::move(*重放);
             const auto 原特征 = 读取当前特征(
                 请求.原特征结点, 请求.期望事实代次);
             if (!原特征.成功()) return 原特征;
@@ -1107,43 +1298,7 @@ public:
             return 派生失败(特征类派生数据状态::入口拒绝);
         try {
             if (const auto 重放 = 尝试重放派生新增(请求)) return *重放;
-            std::vector<稳定编码> 路径;
-            const auto 左 = 读取统一定义(
-                请求.直接来源[0].来源特征定义, 请求.期望事实代次, 路径);
-            if (!左.成功)
-                return 派生失败(映射来源状态(左.状态), 左.事实代次);
-            路径.clear();
-            const auto 右 = 读取统一定义(
-                请求.直接来源[1].来源特征定义, 请求.期望事实代次, 路径);
-            if (!右.成功)
-                return 派生失败(映射来源状态(右.状态), 右.事实代次);
-            const auto 最大阶次 = std::max(左.实际阶次, 右.实际阶次);
-            if (最大阶次 == std::numeric_limits<std::uint32_t>::max())
-                return 派生失败(特征类派生数据状态::不支持,
-                    请求.期望事实代次);
-            if (请求.宿主存在) {
-                const auto 宿主 = 第一层服务_.读取所有者范围当前节点(
-                    {L1所有者范围CRUD合同版本, *请求.宿主存在});
-                if (宿主.读取事实代次 != 请求.期望事实代次)
-                    return 派生失败(特征类派生数据状态::事实代次漂移,
-                        宿主.读取事实代次);
-                const auto* 宿主事实 = 宿主.事实
-                    ? std::get_if<L1所有者范围节点事实>(&*宿主.事实) : nullptr;
-                if (宿主.状态 == L1所有者范围读取状态::未找到)
-                    return 派生失败(特征类派生数据状态::宿主未找到,
-                        宿主.读取事实代次);
-                if (宿主.状态 == L1所有者范围读取状态::已退出)
-                    return 派生失败(特征类派生数据状态::宿主已退出,
-                        宿主.读取事实代次);
-                if (宿主.状态 != L1所有者范围读取状态::成功
-                    || !宿主事实 || 宿主事实->编码 != *请求.宿主存在
-                    || 宿主事实->种类 != 节点种类::普通
-                    || 宿主事实->属性类型表示 || 宿主事实->退出事实代次)
-                    return 派生失败(特征类派生数据状态::宿主读取失败,
-                        宿主.读取事实代次);
-            }
-            return 提交派生新增(形成派生新增写集(
-                请求, 最大阶次 + 1), 请求, 特征类派生数据状态::已创建);
+            return 派生失败(特征类派生数据状态::不支持, 请求.期望事实代次);
         } catch (const std::bad_alloc&) {
             return 派生失败(特征类派生数据状态::资源失败);
         } catch (const std::length_error&) {
@@ -1221,124 +1376,6 @@ public:
         }
     }
 
-    特征类比较结果 比较派生特征(const 特征类比较请求& 请求) const {
-        if (!比较请求有效(请求))
-            return 比较失败(请求.请求身份, 特征类比较状态::入口拒绝,
-                请求.合同版本 != 特征类派生数据合同版本
-                    ? 特征类比较拒绝原因::请求合同版本不匹配
-                    : 特征类比较拒绝原因::请求身份或特征定义不完整);
-        try {
-            const auto 读取 = 查询派生特征定义({特征类派生数据合同版本,
-                请求.期望事实代次, 请求.特征定义});
-            if (!读取.成功()) {
-                if (读取.状态 == 特征类派生数据状态::未找到
-                    || 读取.状态 == 特征类派生数据状态::目标已退出)
-                    return 比较失败(请求.请求身份, 特征类比较状态::未注册,
-                        特征类比较拒绝原因::未注册, 读取.事实代次);
-                if (读取.状态 == 特征类派生数据状态::资源失败)
-                    return 比较失败(请求.请求身份, 特征类比较状态::资源失败,
-                        特征类比较拒绝原因::无, 读取.事实代次);
-                return 比较失败(请求.请求身份, 特征类比较状态::内部不一致,
-                    特征类比较拒绝原因::注册失效, 读取.事实代次);
-            }
-            const auto& 定义 = *读取.定义;
-            const auto& 注册 = 定义.比较注册;
-            if (请求.预期算法版本
-                && *请求.预期算法版本 != 注册.合同.算法版本)
-                return 比较失败(请求.请求身份, 特征类比较状态::版本漂移,
-                    特征类比较拒绝原因::算法版本不匹配, 读取.事实代次);
-            if (请求.用途 != 注册.合同.用途)
-                return 比较失败(请求.请求身份, 特征类比较状态::入口拒绝,
-                    特征类比较拒绝原因::左右角色不合法, 读取.事实代次);
-            if (请求.要求结果位 == 0 || 请求.要求结果位 > 7
-                || (请求.要求结果位 & ~注册.合同.允许结果位) != 0)
-                return 比较失败(请求.请求身份, 特征类比较状态::入口拒绝,
-                    特征类比较拒绝原因::要求结果组合不支持, 读取.事实代次);
-            if (请求.左.角色 != 注册.合同.左角色
-                || 请求.右.角色 != 注册.合同.右角色)
-                return 比较失败(请求.请求身份, 特征类比较状态::入口拒绝,
-                    特征类比较拒绝原因::左右角色不合法, 读取.事实代次);
-            if (请求.左.单位 != 注册.合同.单位
-                || 请求.右.单位 != 注册.合同.单位)
-                return 比较失败(请求.请求身份, 特征类比较状态::入口拒绝,
-                    特征类比较拒绝原因::单位不匹配, 读取.事实代次);
-            if (请求.左.维度 != 注册.合同.维度
-                || 请求.右.维度 != 注册.合同.维度)
-                return 比较失败(请求.请求身份, 特征类比较状态::入口拒绝,
-                    特征类比较拒绝原因::维度不匹配, 读取.事实代次);
-            if (请求.左.分量角色 != 注册.合同.分量角色
-                || 请求.右.分量角色 != 注册.合同.分量角色)
-                return 比较失败(请求.请求身份, 特征类比较状态::入口拒绝,
-                    特征类比较拒绝原因::原始类型不匹配, 读取.事实代次);
-            if (请求.左.来源稳定编码
-                    != 定义.直接来源[0].来源特征定义.值
-                || 请求.右.来源稳定编码
-                    != 定义.直接来源[1].来源特征定义.值)
-                return 比较失败(请求.请求身份, 特征类比较状态::入口拒绝,
-                    特征类比较拒绝原因::请求身份或特征定义不完整,
-                    读取.事实代次);
-            if (!比较输入当前(请求.左, 请求.期望事实代次)
-                || !比较输入当前(请求.右, 请求.期望事实代次))
-                return 比较失败(请求.请求身份, 特征类比较状态::入口拒绝,
-                    特征类比较拒绝原因::输入版本失效, 读取.事实代次);
-            if (!验证比较输入事实(请求.左, 请求.期望事实代次)
-                || !验证比较输入事实(请求.右, 请求.期望事实代次))
-                return 比较失败(请求.请求身份, 特征类比较状态::入口拒绝,
-                    特征类比较拒绝原因::输入版本失效, 读取.事实代次);
-            if (定义.派生规则.规则版本 != 注册.合同.算法版本)
-                return 比较失败(请求.请求身份, 特征类比较状态::内部不一致,
-                    特征类比较拒绝原因::注册失效, 读取.事实代次);
-
-            特征类比较结果 结果;
-            结果.请求身份 = 请求.请求身份;
-            结果.状态 = 特征类比较状态::已比较;
-            结果.事实代次 = 读取.事实代次;
-            结果.注册身份 = 注册.身份;
-            结果.算法版本 = 注册.合同.算法版本;
-            结果.实际结果位 = 请求.要求结果位;
-            const std::int8_t 排序 = 请求.左.值 < 请求.右.值 ? -1
-                : 请求.左.值 > 请求.右.值 ? 1 : 0;
-            if ((请求.要求结果位 & 1U) != 0) 结果.排序三态 = 排序;
-            const auto 差异幅度 = I64差异幅度(请求.左.值, 请求.右.值);
-            const bool 容差相等 = 注册.合同.相等容差
-                && 差异幅度 <= static_cast<std::uint64_t>(*注册.合同.相等容差);
-            if ((请求.要求结果位 & 2U) != 0) {
-                if (请求.用途 == 特征类比较用途::目标判断)
-                    结果.具名关系 = 容差相等 || 排序 == 0
-                        ? 特征类比较具名关系::当前达到目标
-                        : 排序 < 0 ? 特征类比较具名关系::当前低于目标
-                                   : 特征类比较具名关系::当前高于目标;
-                else
-                    结果.具名关系 = 容差相等 || 排序 == 0
-                        ? 特征类比较具名关系::状态迁移等价
-                        : 排序 < 0 ? 特征类比较具名关系::状态迁移增加
-                                   : 特征类比较具名关系::状态迁移减少;
-            }
-            if ((请求.要求结果位 & 4U) != 0) {
-                if (!I64差异可表示(请求.左.值, 请求.右.值))
-                    return 比较失败(请求.请求身份, 特征类比较状态::入口拒绝,
-                        特征类比较拒绝原因::差异不可表示, 读取.事实代次);
-                结果.差异材料 = 特征类I64差异材料{
-                    请求.右.值 - 请求.左.值, 注册.合同.单位,
-                    注册.合同.维度, 注册.合同.分量角色,
-                    特征类比较方向::右减左, 注册.合同.算法版本};
-            }
-            填充比较回显(结果, 请求, 注册.合同);
-            return 结果.成功() ? 结果
-                : 比较失败(请求.请求身份, 特征类比较状态::内部不一致,
-                    特征类比较拒绝原因::注册失效, 读取.事实代次);
-        } catch (const std::bad_alloc&) {
-            return 比较失败(请求.请求身份, 特征类比较状态::资源失败,
-                特征类比较拒绝原因::无);
-        } catch (const std::length_error&) {
-            return 比较失败(请求.请求身份, 特征类比较状态::资源失败,
-                特征类比较拒绝原因::无);
-        } catch (...) {
-            return 比较失败(请求.请求身份, 特征类比较状态::内部不一致,
-                特征类比较拒绝原因::注册失效);
-        }
-    }
-
     特征类事实集合结果 新增特征事实集合(const 特征类事实集合新增请求& 请求) noexcept {
         if (!事实集合结构类型_) return 集合失败(特征类事实集合状态::结构未配置);
         if (!集合新增请求有效(请求)) return 集合失败(特征类事实集合状态::入口拒绝);
@@ -1407,6 +1444,660 @@ public:
         catch (const std::bad_alloc&) { return 集合组失败(特征类事实集合状态::资源失败); }
         catch (const std::length_error&) { return 集合组失败(特征类事实集合状态::资源失败); }
         catch (...) { return 集合组失败(特征类事实集合状态::内部不一致); }
+    }
+
+
+private:
+    using SS = 特征类标量状态;
+    using SP = 特征类标量发布确定性;
+    using SN = L1所有者范围节点事实;
+    using SV = L1所有者范围值事实;
+    using SE = L1所有者范围关系事实;
+    using SK = L1所有者范围写集本地键;
+    static constexpr std::int64_t 标量格式标记 = 0x5343414C41520002LL;
+    struct 标量失败 { SS 状态; };
+    struct 标量读取上下文 {
+        std::uint64_t G = 0, H = 0;
+        特征类派生读取预算 预算;
+        std::set<稳定编码> 定义计数, 关系计数, 叶计数, 值计数;
+        std::map<稳定编码, 特征类标量派生事实> 定义;
+        std::map<稳定编码, 特征类标量叶回执> 叶;
+        std::map<稳定编码, std::set<稳定编码>> 闭包;
+        std::map<稳定编码, std::uint64_t> 高度;
+        std::vector<稳定编码> 后序;
+    };
+    static void 标量要求(bool ok, SS e = SS::内部不一致) {
+        if (!ok) throw 标量失败{e};
+    }
+    static SS 标量映射(L1所有者范围读取状态 s) noexcept {
+        switch (s) {
+        case L1所有者范围读取状态::成功: return SS::已读取;
+        case L1所有者范围读取状态::未找到: return SS::未找到;
+        case L1所有者范围读取状态::已退出: return SS::已退出;
+        case L1所有者范围读取状态::历史材料已清理: return SS::历史材料不可用;
+        case L1所有者范围读取状态::事实代次漂移: return SS::事实代次漂移;
+        case L1所有者范围读取状态::资源失败: return SS::资源失败;
+        case L1所有者范围读取状态::入口拒绝: return SS::入口拒绝;
+        default: return SS::内部不一致;
+        }
+    }
+    std::uint64_t 标量当前G() const {
+        const auto r = 第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
+        标量要求(r.状态 == L1中性读取状态::成功,
+            r.状态 == L1中性读取状态::资源失败 ? SS::资源失败 : SS::内部不一致);
+        标量要求(r.合同版本 == L1中性CRUD合同版本 && r.事实代次);
+        return r.事实代次;
+    }
+    void 标量守卫(std::uint64_t g) const { 标量要求(标量当前G() == g, SS::事实代次漂移); }
+    template<class T> static bool 标量活动(const T& f, std::uint64_t h) noexcept {
+        return f.创建事实代次 && f.创建事实代次 <= h
+            && (!f.退出事实代次 || *f.退出事实代次 > h);
+    }
+    static void 标量计数(std::set<稳定编码>& ids, 稳定编码 id, std::uint64_t limit) {
+        if (ids.contains(id)) return;
+        标量要求(ids.size() < limit, SS::预算不足);
+        ids.insert(id);
+    }
+    SN 标量节点(稳定编码 id, 标量读取上下文& c, bool own = true) const {
+        const auto r = 第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, id});
+        if (r.状态 != L1所有者范围读取状态::成功) {
+            标量守卫(c.G);
+            throw 标量失败{标量映射(r.状态)};
+        }
+        标量要求(r.读取事实代次 == c.G, SS::事实代次漂移);
+        const auto* n = r.事实 ? std::get_if<SN>(&*r.事实) : nullptr;
+        标量要求(r.合同版本 == L1所有者范围CRUD合同版本 && r.查询编码 == id
+            && n && n->编码 == id && (!own || n->写入所有者 == 所有者_));
+        标量要求(标量活动(*n, c.H), n->退出事实代次 && *n->退出事实代次 <= c.H ? SS::已退出 : SS::未找到);
+        return *n;
+    }
+    SV 标量属性(const SN& n, 稳定编码 type, 标量读取上下文& c) const {
+        const L1所有者范围属性槽* slot = nullptr;
+        for (const auto& x : n.当前属性) if (x.属性类型节点 == type) {
+            标量要求(!slot); slot = &x;
+        }
+        标量要求(slot != nullptr);
+        标量计数(c.值计数, slot->当前值, c.预算.最大属性值数);
+        const auto r = 第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, slot->当前值});
+        if (r.状态 != L1所有者范围读取状态::成功) {
+            标量守卫(c.G); throw 标量失败{标量映射(r.状态)};
+        }
+        标量要求(r.读取事实代次 == c.G, SS::事实代次漂移);
+        const auto* v = r.事实 ? std::get_if<SV>(&*r.事实) : nullptr;
+        标量要求(r.合同版本 == L1所有者范围CRUD合同版本 && r.查询编码 == slot->当前值
+            && v && v->编码 == slot->当前值 && v->所属节点 == n.编码 && v->来源节点 == n.编码
+            && v->属性类型节点 == type && v->写入所有者 == 所有者_ && 标量活动(*v, c.H)
+            && v->创建事实代次 == n.创建事实代次 && v->退出事实代次 == n.退出事实代次);
+        return *v;
+    }
+    std::vector<SE> 标量关系(稳定编码 id, 稳定编码 type, bool incoming, 标量读取上下文& c) const {
+        const auto direction = incoming ? L1所有者范围关系端点方向::目标 : L1所有者范围关系端点方向::源;
+        const auto r = 第一层服务_.读取所有者范围历史关系组({L1所有者范围CRUD合同版本, direction, id, type, c.H});
+        if (r.状态 != L1所有者范围读取状态::成功) {
+            标量守卫(c.G); throw 标量失败{标量映射(r.状态)};
+        }
+        标量要求(r.读取事实代次 == c.G, SS::事实代次漂移);
+        标量要求(r.合同版本 == L1所有者范围CRUD合同版本 && r.方向 == direction
+            && r.端点节点 == id && r.关系类型节点 == type && r.历史截止事实代次 == c.H);
+        std::uint64_t extra = 0;
+        for (const auto& e : r.关系组) if (!c.关系计数.contains(e.编码)) ++extra;
+        标量要求(extra <= c.预算.最大关系数 - c.关系计数.size(), SS::预算不足);
+        std::set<稳定编码> unique;
+        auto out = r.关系组;
+        for (const auto& e : out) {
+            标量要求(有效(e.编码) && e.写入所有者 == 所有者_ && e.关系类型节点 == type
+                && (incoming ? e.目标节点 : e.源节点) == id && 标量活动(e, c.H)
+                && unique.insert(e.编码).second);
+            c.关系计数.insert(e.编码);
+        }
+        std::sort(out.begin(), out.end(), [](const auto& a, const auto& b) { return a.角色或顺序 < b.角色或顺序; });
+        return out;
+    }
+    static bool 标量量化有效(const 特征类标量量化合同& q) noexcept {
+        return q.完整();
+    }
+    static bool 标量同量纲(const 特征类标量量化合同& a, const 特征类标量量化合同& b) noexcept {
+        return a.单位 == b.单位 && a.维度 == b.维度 && a.分量角色 == b.分量角色
+            && a.缩放分子 == b.缩放分子 && a.缩放分母 == b.缩放分母 && a.量纲类别 == b.量纲类别
+            && a.舍入 == b.舍入 && a.溢出 == b.溢出;
+    }
+    static bool 标量注册有效(const 特征类标量比较注册合同& x) noexcept {
+        const bool roles = x.用途 == 特征类比较用途::目标判断
+            ? x.左角色 == 特征类比较角色::当前事实 && x.右角色 == 特征类比较角色::目标状态
+            : x.用途 == 特征类比较用途::状态迁移
+                && x.左角色 == 特征类比较角色::前状态 && x.右角色 == 特征类比较角色::后当前事实;
+        if (!roles || x.算法版本 != 1 || !x.误差合同版本 || !标量量化有效(x.输入量化)
+            || (x.误差预算 && *x.误差预算 < 0) || (x.相等容差 && *x.相等容差 < 0)
+            || x.输出组.empty() || x.输出组.size() > 3) return false;
+        unsigned mask = 0, previous = 0;
+        for (const auto& o : x.输出组) {
+            const auto role = static_cast<unsigned>(o.角色);
+            if (role < 1 || role > 3 || role <= previous || !标量量化有效(o.量化)) return false;
+            if (role == 3) {
+                if (!标量同量纲(o.量化, x.输入量化)) return false;
+            } else {
+                if (o.量化.量纲类别 != 特征类标量量纲::无量纲 || o.量化.缩放分子 != 1 || o.量化.缩放分母 != 1) return false;
+                const auto lo = role == 1 ? -1 : x.用途 == 特征类比较用途::目标判断 ? 1 : 4;
+                const auto hi = role == 1 ? 1 : x.用途 == 特征类比较用途::目标判断 ? 3 : 6;
+                if (o.量化.下界 != lo || o.量化.上界 != hi) return false;
+            }
+            mask |= 1U << (role - 1); previous = role;
+        }
+        return mask == x.允许结果位;
+    }
+    static void 标量建立形状(const 特征类标量派生建立请求& r) {
+        标量要求(r.版本 == 2 && r.G && 有效(r.幂等身份) && r.预算.有效()
+            && 有效(r.派生规则.规则身份) && r.派生规则.规则版本 == 1
+            && (!r.宿主E || 有效(*r.宿主E)) && 标量注册有效(r.标量注册), SS::入口拒绝);
+        标量要求(r.来源组.size() == 2 && r.来源组[0].来源 != r.来源组[1].来源, SS::来源不匹配);
+        for (unsigned i = 0; i < 2; ++i) {
+            const auto& x = r.来源组[i];
+            标量要求(x.顺序 == i + 1 && 有效(x.来源.值) && x.上游输出角色 <= 3
+                && x.输入角色 == static_cast<unsigned>(i ? r.标量注册.右角色 : r.标量注册.左角色), SS::来源不匹配);
+        }
+    }
+    static std::pair<std::vector<std::uint64_t>, std::vector<std::int64_t>> 标量编码(
+        const 特征类标量派生建立请求& r) {
+        const auto& x = r.标量注册; const auto& q = x.输入量化;
+        std::vector<std::uint64_t> u{2, static_cast<std::uint64_t>(x.用途), 2, x.算法版本, 1,
+            static_cast<std::uint64_t>(x.左角色), static_cast<std::uint64_t>(x.右角色), 1,
+            q.单位.值, q.维度.值, q.分量角色.值, x.允许结果位, 1, 1, x.误差合同版本,
+            r.派生规则.规则身份.值, r.来源组[0].上游输出角色, r.来源组[1].上游输出角色,
+            q.缩放分子, q.缩放分母, 1, 1, x.输出组.size(), static_cast<std::uint64_t>(q.量纲类别)};
+        std::vector<std::int64_t> v{x.误差预算 ? 1 : 0, x.误差预算.value_or(0),
+            x.相等容差 ? 1 : 0, x.相等容差.value_or(0), q.下界, q.上界};
+        for (const auto& o : x.输出组) {
+            const auto& z = o.量化;
+            u.insert(u.end(), {static_cast<std::uint64_t>(o.角色), z.单位.值, z.维度.值,
+                z.分量角色.值, z.缩放分子, z.缩放分母, static_cast<std::uint64_t>(z.量纲类别), 1, 1});
+            v.insert(v.end(), {z.下界, z.上界});
+        }
+        return {std::move(u), std::move(v)};
+    }
+    static void 标量解码(const std::vector<std::uint64_t>& u, const std::vector<std::int64_t>& v,
+        特征类标量派生事实& d) {
+        标量要求(!u.empty());
+        标量要求(u[0] == 2, SS::格式不支持);
+        标量要求(u.size() >= 24 && v.size() >= 6 && u[22] >= 1 && u[22] <= 3
+            && u.size() == 24 + 9 * u[22] && v.size() == 6 + 2 * u[22]);
+        标量要求(u[1] >= 1 && u[1] <= 2 && u[2] == 2 && u[4] == 1 && u[7] == 1
+            && u[12] == 1 && u[13] == 1 && u[5] >= 1 && u[5] <= 4 && u[6] >= 1 && u[6] <= 4
+            && u[11] >= 1 && u[11] <= 7 && u[14] && u[14] <= UINT32_MAX
+            && u[15] == d.派生规则.规则身份.值 && u[16] <= 3 && u[17] <= 3
+            && u[20] == 1 && u[21] == 1 && u[23] >= 1 && u[23] <= 2);
+        标量要求(u[3] == 1 && d.派生规则.规则版本 == 1, SS::算法不支持);
+        标量要求((v[0] == 0 || v[0] == 1) && (v[2] == 0 || v[2] == 1)
+            && (v[0] ? v[1] >= 0 : v[1] == 0) && (v[2] ? v[3] >= 0 : v[3] == 0));
+        auto& x = d.注册;
+        x.用途 = static_cast<特征类比较用途>(u[1]); x.算法版本 = 1;
+        x.左角色 = static_cast<特征类比较角色>(u[5]); x.右角色 = static_cast<特征类比较角色>(u[6]);
+        x.允许结果位 = static_cast<std::uint8_t>(u[11]); x.误差合同版本 = static_cast<std::uint32_t>(u[14]);
+        if (v[0]) x.误差预算 = v[1]; if (v[2]) x.相等容差 = v[3];
+        x.输入量化 = {{u[8]}, {u[9]}, {u[10]}, u[18], u[19], v[4], v[5], static_cast<特征类标量量纲>(u[23])};
+        d.来源组[0].内容.上游输出角色 = static_cast<std::uint8_t>(u[16]);
+        d.来源组[1].内容.上游输出角色 = static_cast<std::uint8_t>(u[17]);
+        for (std::size_t j = 0; j < u[22]; ++j) {
+            const auto k = 24 + 9 * j;
+            标量要求(u[k] >= 1 && u[k] <= 3 && u[k + 6] >= 1 && u[k + 6] <= 2 && u[k + 7] == 1 && u[k + 8] == 1);
+            x.输出组.push_back({static_cast<特征类标量结果角色>(u[k]),
+                {{u[k + 1]}, {u[k + 2]}, {u[k + 3]}, u[k + 4], u[k + 5],
+                    v[6 + 2 * j], v[7 + 2 * j], static_cast<特征类标量量纲>(u[k + 6])}});
+        }
+        标量要求(标量注册有效(x));
+    }
+    特征类标量派生事实 标量自有定义(稳定编码 id, 标量读取上下文& c) const {
+        标量要求(有效(派生结构类型_.输出类型关系类型), SS::格式不支持);
+        标量计数(c.定义计数, id, c.预算.最大定义数);
+        const auto n = 标量节点(id, c);
+        标量要求(n.种类 == 节点种类::普通 && !n.属性类型表示 && n.当前属性.size() == 2, SS::类型不匹配);
+        const auto order = 标量属性(n, 派生结构类型_.实际阶次属性类型, c);
+        const auto rule = 标量属性(n, 派生结构类型_.派生规则属性类型, c);
+        const auto* level = std::get_if<std::int64_t>(&order.材料);
+        const auto* rules = std::get_if<std::vector<std::uint64_t>>(&rule.材料);
+        标量要求(level && *level > 1 && static_cast<std::uint64_t>(*level) <= UINT32_MAX
+            && rules && rules->size() == 2 && (*rules)[0] && (*rules)[1] && (*rules)[1] <= UINT32_MAX);
+        特征类标量派生事实 d;
+        d.定义身份 = {id}; d.真实阶次 = static_cast<std::uint32_t>(*level);
+        d.阶次值 = order.编码; d.规则值 = rule.编码;
+        d.派生规则 = {{(*rules)[0]}, static_cast<std::uint32_t>((*rules)[1])};
+        d.创建G = n.创建事实代次; d.退出G = n.退出事实代次;
+        const auto sources = 标量关系(id, 派生结构类型_.直接来源关系类型, false, c);
+        const auto host = 标量关系(id, 派生结构类型_.宿主关系类型, false, c);
+        const auto reg = 标量关系(id, 派生结构类型_.比较注册归属关系类型, false, c);
+        标量要求(sources.size() == 2 && host.size() <= 1 && reg.size() == 1);
+        auto sameLife = [&](const SE& e) { 标量要求(e.创建事实代次 == n.创建事实代次 && e.退出事实代次 == n.退出事实代次); };
+        for (unsigned i = 0; i < 2; ++i) {
+            const auto& e = sources[i]; sameLife(e);
+            const auto bits = static_cast<std::uint64_t>(e.角色或顺序);
+            标量要求(bits >> 32U == i + 1 && static_cast<std::uint32_t>(bits) != 0);
+            d.来源组.push_back({{i + 1, static_cast<std::uint32_t>(bits), {e.目标节点}, 0}, e.编码});
+        }
+        标量要求(d.来源组[0].内容.来源 != d.来源组[1].内容.来源);
+        if (!host.empty()) {
+            sameLife(host[0]); 标量要求(host[0].角色或顺序 == 1);
+            const auto hn = 标量节点(host[0].目标节点, c, false);
+            标量要求(hn.种类 == 节点种类::普通 && !hn.属性类型表示, SS::来源不匹配);
+            d.宿主E = hn.编码; d.宿主关系 = host[0].编码;
+        }
+        sameLife(reg[0]); 标量要求(reg[0].角色或顺序 == 1);
+        const auto rn = 标量节点(reg[0].目标节点, c);
+        标量要求(rn.种类 == 节点种类::普通 && !rn.属性类型表示 && rn.当前属性.size() == 2
+            && rn.创建事实代次 == n.创建事实代次 && rn.退出事实代次 == n.退出事实代次);
+        const auto uv = 标量属性(rn, 派生结构类型_.比较注册U64属性类型, c);
+        const auto iv = 标量属性(rn, 派生结构类型_.比较注册I64属性类型, c);
+        const auto* u = std::get_if<std::vector<std::uint64_t>>(&uv.材料);
+        const auto* v = std::get_if<std::vector<std::int64_t>>(&iv.材料);
+        标量要求(u && v); 标量解码(*u, *v, d);
+        d.注册身份 = {rn.编码}; d.注册归属 = reg[0].编码; d.注册U64值 = uv.编码; d.注册I64值 = iv.编码;
+        const auto outputs = 标量关系(id, 派生结构类型_.输出类型关系类型, false, c);
+        标量要求(outputs.size() == d.注册.输出组.size());
+        for (std::size_t i = 0; i < outputs.size(); ++i) {
+            const auto& e = outputs[i]; sameLife(e);
+            标量要求(e.角色或顺序 == static_cast<std::int64_t>(d.注册.输出组[i].角色));
+            const auto ft = 标量节点(e.目标节点, c);
+            标量要求(ft.种类 == 节点种类::属性类型 && ft.属性类型表示 == L1所有者范围值表示种类::I64
+                && ft.当前属性.size() == 1 && ft.创建事实代次 == n.创建事实代次 && ft.退出事实代次 == n.退出事实代次);
+            const auto marker = 标量属性(ft, ft.编码, c);
+            const auto* value = std::get_if<std::int64_t>(&marker.材料);
+            标量要求(value && *value == 标量格式标记);
+            const auto reverse = 标量关系(ft.编码, 派生结构类型_.输出类型关系类型, true, c);
+            标量要求(reverse.size() == 1 && reverse[0] == e);
+            d.输出组.push_back({d.注册.输出组[i], ft.编码, e.编码, marker.编码});
+        }
+        for (unsigned i = 0; i < 2; ++i)
+            标量要求(d.来源组[i].内容.输入角色 == static_cast<unsigned>(i ? d.注册.右角色 : d.注册.左角色));
+        return d;
+    }
+    特征类标量叶回执 标量读叶(稳定编码 id, 标量读取上下文& c) const {
+        标量计数(c.叶计数, id, c.预算.最大叶数);
+        const auto n = 标量节点(id, c);
+        标量要求(n.种类 == 节点种类::普通 && !n.属性类型表示 && n.当前属性.size() == 1, SS::类型不匹配);
+        const auto ft = 标量节点(n.当前属性[0].属性类型节点, c);
+        标量要求(ft.种类 == 节点种类::属性类型 && ft.属性类型表示 == L1所有者范围值表示种类::I64
+            && std::none_of(ft.当前属性.begin(), ft.当前属性.end(), [&](const auto& x) { return x.属性类型节点 == ft.编码; }), SS::类型不匹配);
+        const auto v = 标量属性(n, ft.编码, c);
+        const auto* value = std::get_if<std::int64_t>(&v.材料);
+        标量要求(value != nullptr, SS::类型不匹配);
+        const auto exact = 读取特征历史事实({1, c.G, c.H, id, v.编码});
+        if (!exact.成功()) {
+            标量守卫(c.G);
+            switch (exact.状态) {
+            case 特征引用读取状态::资源失败: throw 标量失败{SS::资源失败};
+            case 特征引用读取状态::事实代次漂移: throw 标量失败{SS::事实代次漂移};
+            case 特征引用读取状态::历史材料不可用: throw 标量失败{SS::历史材料不可用};
+            default: throw 标量失败{SS::来源不匹配};
+            }
+        }
+        标量要求(exact.Gread == c.G && exact.H == c.H && exact.特征
+            && exact.特征->结点 == id && exact.特征->值事实 == v.编码 && exact.特征->特征类型 == ft.编码);
+        // 普通 F 不可借只有形状相似的派生结构进入叶路径。
+        for (auto type : {派生结构类型_.直接来源关系类型, 派生结构类型_.宿主关系类型,
+                派生结构类型_.比较注册归属关系类型, 派生结构类型_.输出类型关系类型})
+            if (有效(type)) 标量要求(标量关系(id, type, false, c).empty(), SS::类型不匹配);
+        return {id, ft.编码, v.编码, *value, c.H, n.创建事实代次, n.退出事实代次};
+    }
+    const 特征类标量输出事实& 标量输出(const 特征类标量派生事实& d, unsigned role) const {
+        const auto it = std::find_if(d.输出组.begin(), d.输出组.end(), [&](const auto& x) { return static_cast<unsigned>(x.声明.角色) == role; });
+        标量要求(it != d.输出组.end(), SS::来源不匹配); return *it;
+    }
+    void 标量展开(稳定编码 root, bool derived, 标量读取上下文& c) const {
+        struct Frame { 稳定编码 id; bool derived; bool finish; std::uint64_t depth; };
+        std::vector<Frame> stack{{root, derived, false, 1}};
+        std::set<稳定编码> gray;
+        while (!stack.empty()) {
+            const auto f = stack.back(); stack.pop_back();
+            标量要求(f.depth <= c.预算.最大深度, SS::预算不足);
+            if (f.finish) {
+                const auto& d = c.定义.at(f.id);
+                std::uint32_t maxOrder = 0; std::uint64_t height = 0;
+                std::set<稳定编码> leaves;
+                for (const auto& source : d.来源组) {
+                    const auto& x = source.内容;
+                    if (x.上游输出角色) {
+                        const auto& child = c.定义.at(x.来源.值);
+                        const auto& output = 标量输出(child, x.上游输出角色);
+                        标量要求(标量同量纲(output.声明.量化, d.注册.输入量化), SS::单位量化不匹配);
+                        maxOrder = std::max(maxOrder, child.真实阶次);
+                    } else { 标量要求(c.叶.contains(x.来源.值), SS::来源不匹配); maxOrder = std::max(maxOrder, 1U); }
+                    const auto& set = c.闭包.at(x.来源.值); leaves.insert(set.begin(), set.end());
+                    height = std::max(height, c.高度.at(x.来源.值));
+                }
+                标量要求(maxOrder != UINT32_MAX && d.真实阶次 == maxOrder + 1);
+                标量要求(height < c.预算.最大深度, SS::预算不足);
+                c.高度[f.id] = height + 1; c.闭包[f.id] = std::move(leaves);
+                c.后序.push_back(f.id); gray.erase(f.id); continue;
+            }
+            标量要求(!gray.contains(f.id));
+            if (c.闭包.contains(f.id)) {
+                标量要求(f.derived == c.定义.contains(f.id), SS::来源不匹配);
+                标量要求(c.高度.at(f.id) <= c.预算.最大深度 - f.depth + 1, SS::预算不足); continue;
+            }
+            if (!f.derived) {
+                c.叶.emplace(f.id, 标量读叶(f.id, c)); c.闭包[f.id] = {f.id}; c.高度[f.id] = 1; continue;
+            }
+            auto d = 标量自有定义(f.id, c);
+            gray.insert(f.id); stack.push_back({f.id, true, true, f.depth});
+            for (auto it = d.来源组.rbegin(); it != d.来源组.rend(); ++it)
+                stack.push_back({it->内容.来源.值, it->内容.上游输出角色 != 0, false, f.depth + 1});
+            c.定义.emplace(f.id, std::move(d));
+        }
+    }
+    特征类标量派生读取结果 标量读取结果(稳定编码 id, 标量读取上下文& c) const {
+        特征类标量派生读取结果 out;
+        out.状态 = SS::已读取; out.Gread = c.G; out.H = c.H; out.定义事实 = c.定义.at(id);
+        for (const auto& leaf : c.闭包.at(id)) out.基础叶组.push_back(c.叶.at(leaf));
+        const auto& d = *out.定义事实;
+        const auto& left = c.闭包.at(d.来源组[0].内容.来源.值);
+        const auto& right = c.闭包.at(d.来源组[1].内容.来源.值);
+        out.左叶组.assign(left.begin(), left.end()); out.右叶组.assign(right.begin(), right.end());
+        return out;
+    }
+public:
+    特征类标量派生读取结果 读取标量派生定义(const 特征类标量派生读取请求& r) const {
+        特征类标量派生读取结果 out;
+        auto fail = [&](SS e) { 特征类标量派生读取结果 f; f.状态 = e; f.Gread = out.Gread; f.H = r.H; return f; };
+        try {
+            标量要求(r.版本 == 2 && r.H && r.Gread >= r.H && 有效(r.定义身份.值) && r.预算.有效(), SS::入口拒绝);
+            标量守卫(r.Gread); out.Gread = r.Gread;
+            标量读取上下文 c{r.Gread, r.H, r.预算};
+            标量展开(r.定义身份.值, true, c);
+            out = 标量读取结果(r.定义身份.值, c); 标量守卫(r.Gread);
+            标量要求(out.成功()); return out;
+        } catch (const 标量失败& e) { return fail(e.状态); }
+        catch (const std::bad_alloc&) { return fail(SS::资源失败); }
+        catch (const std::length_error&) { return fail(SS::资源失败); }
+        catch (...) { return fail(SS::内部不一致); }
+    }
+
+
+private:
+    static void 标量排序写集(L1所有者范围写集请求& w) {
+        auto local = [](const auto& a, const auto& b) { return a.本地键 < b.本地键; };
+        std::sort(w.节点.begin(), w.节点.end(), local);
+        std::sort(w.关系.begin(), w.关系.end(), local);
+        std::sort(w.值.begin(), w.值.end(), local);
+        auto less = [](const L1所有者范围事实引用& a, const L1所有者范围事实引用& b) {
+            if (a.index() != b.index()) return a.index() < b.index();
+            auto key = [](const auto& x) { return static_cast<std::uint64_t>(x.值); };
+            return std::visit(key, a) < std::visit(key, b);
+        };
+        std::sort(w.属性槽变更.begin(), w.属性槽变更.end(), [&](const auto& a, const auto& b) {
+            return a.所属节点 != b.所属节点 ? less(a.所属节点, b.所属节点) : less(a.属性类型节点, b.属性类型节点);
+        });
+        std::sort(w.退出事实.begin(), w.退出事实.end());
+        标量要求(std::adjacent_find(w.退出事实.begin(), w.退出事实.end()) == w.退出事实.end());
+    }
+    L1所有者范围写集请求 标量建立写集(const 特征类标量派生建立请求& r, std::uint32_t level) const {
+        特征类派生定义新增请求 base;
+        base.期望事实代次 = r.G; base.幂等身份 = r.幂等身份; base.派生规则 = r.派生规则; base.宿主存在 = r.宿主E;
+        for (const auto& x : r.来源组) base.直接来源.push_back({x.顺序, x.输入角色, x.来源});
+        auto w = 形成派生新增写集(base, level);
+        const auto [u, v] = 标量编码(r);
+        for (auto& value : w.值) {
+            if (value.本地键 == SK{0x30003}) value.材料 = u;
+            if (value.本地键 == SK{0x30004}) value.材料 = v;
+        }
+        for (const auto& x : r.标量注册.输出组) {
+            const auto role = static_cast<std::uint32_t>(x.角色);
+            const SK ft{0x40000U + role}, edge{0x41000U + role}, marker{0x42000U + role};
+            w.节点.push_back({ft, 节点种类::属性类型, L1所有者范围值表示种类::I64});
+            w.关系.push_back({edge, SK{1}, ft, 派生结构类型_.输出类型关系类型, static_cast<std::int64_t>(role)});
+            w.值.push_back({marker, ft, ft, 标量格式标记, ft});
+            w.属性槽变更.push_back({ft, ft, marker});
+        }
+        标量排序写集(w); return w;
+    }
+    L1所有者范围写集请求 标量退出写集(const 特征类标量派生退出请求& r,
+        const 特征类标量派生事实& d) const {
+        L1所有者范围写集请求 w;
+        w.合同版本 = L1所有者范围CRUD合同版本; w.期望事实代次 = r.G; w.写入幂等身份 = r.幂等身份;
+        w.退出事实 = {d.定义身份.值, d.注册身份.值, d.阶次值, d.规则值,
+            d.注册U64值, d.注册I64值, d.注册归属};
+        for (const auto& x : d.来源组) w.退出事实.push_back(x.关系);
+        if (d.宿主关系) w.退出事实.push_back(*d.宿主关系);
+        // L1 退出节点时保存完整历史属性；不能再向退出节点提交槽变更。
+        for (const auto& x : d.输出组) {
+            w.退出事实.insert(w.退出事实.end(), {x.特征类型, x.归属关系, x.格式标记值事实});
+        }
+        标量排序写集(w); return w;
+    }
+    std::uint32_t 标量准入来源(const 特征类标量派生建立请求& r, 标量读取上下文& c) const {
+        std::uint32_t maximum = 0; std::uint64_t height = 0;
+        for (const auto& x : r.来源组) {
+            标量展开(x.来源.值, x.上游输出角色 != 0, c);
+            if (x.上游输出角色) {
+                const auto& d = c.定义.at(x.来源.值);
+                const auto& o = 标量输出(d, x.上游输出角色);
+                标量要求(标量同量纲(o.声明.量化, r.标量注册.输入量化), SS::单位量化不匹配);
+                const auto computed = 标量复算(x.来源.值, 1U << (x.上游输出角色 - 1), c);
+                const auto value = computed.值.at(x.来源.值).at(x.上游输出角色).值;
+                标量要求(value >= r.标量注册.输入量化.下界 && value <= r.标量注册.输入量化.上界, SS::结果范围不满足);
+                maximum = std::max(maximum, d.真实阶次);
+            } else {
+                const auto value = c.叶.at(x.来源.值).值;
+                标量要求(value >= r.标量注册.输入量化.下界 && value <= r.标量注册.输入量化.上界, SS::结果范围不满足);
+                maximum = std::max(maximum, 1U);
+            }
+            height = std::max(height, c.高度.at(x.来源.值));
+        }
+        标量要求(maximum != UINT32_MAX, SS::运算溢出);
+        标量要求(height < r.预算.最大深度, SS::预算不足);
+        const auto n = r.标量注册.输出组.size();
+        标量要求(c.定义计数.size() < r.预算.最大定义数
+            && 4 + n <= r.预算.最大属性值数 - c.值计数.size()
+            && 3 + (r.宿主E ? 1U : 0U) + n <= r.预算.最大关系数 - c.关系计数.size(), SS::预算不足);
+        if (r.宿主E) {
+            const auto e = 标量节点(*r.宿主E, c, false);
+            标量要求(e.种类 == 节点种类::普通 && !e.属性类型表示, SS::来源不匹配);
+        }
+        return maximum + 1;
+    }
+    void 标量映射互证(const L1所有者范围写入结果& receipt, const 特征类标量派生事实& d) const {
+        auto id = [&](std::uint32_t k) {
+            const auto x = 特征类数据内部::查找唯一编码(receipt, SK{k});
+            标量要求(x.has_value()); return *x;
+        };
+        标量要求(receipt.新编码映射.size() == 9 + (d.宿主E ? 1U : 0U) + 3 * d.输出组.size()
+            && id(1) == d.定义身份.值 && id(2) == d.阶次值 && id(3) == d.规则值
+            && id(0x10001) == d.来源组[0].关系 && id(0x10002) == d.来源组[1].关系
+            && id(0x30001) == d.注册身份.值 && id(0x30002) == d.注册归属
+            && id(0x30003) == d.注册U64值 && id(0x30004) == d.注册I64值);
+        if (d.宿主关系) 标量要求(id(0x20001) == *d.宿主关系);
+        for (const auto& x : d.输出组) {
+            const auto r = static_cast<std::uint32_t>(x.声明.角色);
+            标量要求(id(0x40000 + r) == x.特征类型 && id(0x41000 + r) == x.归属关系
+                && id(0x42000 + r) == x.格式标记值事实);
+        }
+    }
+    template<class R> 特征类标量派生写结果 标量执行写(const R& r) {
+        constexpr bool create = std::is_same_v<R, 特征类标量派生建立请求>;
+        特征类标量派生写结果 out;
+        bool keyUnknown = false, dispatched = false, prior = false;
+        auto fail = [&](SS e) {
+            out.定义事实.reset();
+            if (dispatched || prior || keyUnknown) {
+                out.发布确定性 = SP::可能已发布;
+                out.状态 = e == SS::幂等冲突 ? e : SS::已可能发布;
+            } else { out.状态 = e; }
+            return std::move(out);
+        };
+        try {
+            if constexpr (create) 标量建立形状(r);
+            else 标量要求(r.版本 == 2 && r.G && 有效(r.幂等身份) && 有效(r.定义身份.值) && r.预算.有效(), SS::入口拒绝);
+            标量要求(有效(派生结构类型_.输出类型关系类型), SS::格式不支持);
+            out.Gread = 标量当前G(); keyUnknown = true;
+            const auto first = 写入端口_.读取首次写入材料({L1所有者范围首次写入读取合同版本, r.幂等身份});
+            L1所有者范围写集请求 w;
+            稳定编码 target{};
+            std::uint64_t readH = r.G;
+            if (first.状态 == L1所有者范围读取状态::成功) {
+                标量要求(first.合同版本 == L1所有者范围首次写入读取合同版本
+                    && first.所有者 == 所有者_ && first.写入幂等身份 == r.幂等身份
+                    && first.首次规范化写集 && first.首次写入结果);
+                const auto& saved = *first.首次写入结果;
+                if (saved.事实代次 && saved.事实代次 <= out.Gread) out.首次发布H = saved.事实代次;
+                out.正式回执 = saved; prior = true; keyUnknown = false;
+                标量要求(saved.状态 == L1所有者范围写入状态::成功 && 写入结果头完整(saved, r.幂等身份)
+                    && out.首次发布H && first.读取事实代次 == out.Gread);
+                标量守卫(out.Gread);
+                标量要求(first.首次规范化写集->期望事实代次 == r.G, SS::幂等冲突);
+                标量读取上下文 c{out.Gread, create ? *out.首次发布H : r.G, r.预算};
+                if constexpr (create) {
+                    const auto id = 特征类数据内部::查找唯一编码(saved, SK{1});
+                    标量要求(id.has_value()); target = *id;
+                    标量展开(target, true, c);
+                    w = 标量建立写集(r, c.定义.at(target).真实阶次);
+                    标量映射互证(saved, c.定义.at(target));
+                } else {
+                    target = r.定义身份.值; 标量展开(target, true, c);
+                    w = 标量退出写集(r, c.定义.at(target));
+                    标量要求(saved.新编码映射.empty());
+                }
+                标量要求(w == *first.首次规范化写集, SS::幂等冲突);
+            } else if (first.状态 == L1所有者范围读取状态::未找到) {
+                标量要求(first.合同版本 == L1所有者范围首次写入读取合同版本
+                    && first.所有者 == 所有者_ && first.写入幂等身份 == r.幂等身份);
+                keyUnknown = false; out.发布确定性 = SP::确认未发布;
+                标量守卫(r.G); out.Gread = r.G;
+                标量读取上下文 c{r.G, r.G, r.预算};
+                if constexpr (create) w = 标量建立写集(r, 标量准入来源(r, c));
+                else {
+                    target = r.定义身份.值; 标量展开(target, true, c);
+                    const auto& d = c.定义.at(target);
+                    // 下游定义与输出类型上的真实外部引用仍由 L1 原子闭包守卫最终裁决。
+                    标量要求(标量关系(target, 派生结构类型_.直接来源关系类型, true, c).empty(), SS::引用冲突);
+                    w = 标量退出写集(r, d);
+                }
+                标量守卫(r.G);
+            } else { throw 标量失败{标量映射(first.状态)}; }
+            dispatched = true;
+            auto receipt = 写入端口_.提交所有者范围中性写集(w);
+            out.正式回执 = std::move(receipt);
+            const auto& committed = *out.正式回执;
+            const bool ok = committed.状态 == L1所有者范围写入状态::成功 || committed.状态 == L1所有者范围写入状态::精确重复;
+            if (!ok) {
+                if (!prior && (committed.状态 == L1所有者范围写入状态::事实代次漂移
+                        || committed.状态 == L1所有者范围写入状态::引用冲突
+                        || committed.状态 == L1所有者范围写入状态::入口拒绝)) {
+                    dispatched = false; out.发布确定性 = SP::确认未发布;
+                    return fail(committed.状态 == L1所有者范围写入状态::事实代次漂移 ? SS::事实代次漂移
+                        : committed.状态 == L1所有者范围写入状态::引用冲突 ? SS::引用冲突 : SS::入口拒绝);
+                }
+                return fail(committed.状态 == L1所有者范围写入状态::幂等冲突 ? SS::幂等冲突 : SS::已可能发布);
+            }
+            if (committed.事实代次) out.首次发布H = committed.事实代次;
+            标量要求(写入结果头完整(committed, r.幂等身份) && out.首次发布H);
+            out.Gread = 标量当前G();
+            标量要求(out.Gread >= *out.首次发布H);
+            if constexpr (create) {
+                const auto id = 特征类数据内部::查找唯一编码(committed, SK{1});
+                标量要求(id.has_value()); target = *id; readH = *out.首次发布H;
+            }
+            标量读取上下文 c{out.Gread, readH, r.预算};
+            标量展开(target, true, c);
+            auto d = c.定义.at(target);
+            if constexpr (create) {
+                标量映射互证(committed, d);
+                标量要求(标量建立写集(r, d.真实阶次) == w);
+            } else {
+                标量要求(committed.新编码映射.empty() && d.退出G == out.首次发布H && 标量退出写集(r, d) == w);
+            }
+            标量守卫(out.Gread);
+            out.定义事实 = std::move(d); out.发布确定性 = SP::确认已发布;
+            out.状态 = committed.状态 == L1所有者范围写入状态::精确重复 ? SS::精确重复 : create ? SS::已创建 : SS::已退出;
+            标量要求(out.成功()); return out;
+        } catch (const 标量失败& e) { return fail(e.状态); }
+        catch (const std::bad_alloc&) { return fail(SS::资源失败); }
+        catch (const std::length_error&) { return fail(SS::资源失败); }
+        catch (...) { return fail(SS::内部不一致); }
+    }
+    struct 标量计算缓存 {
+        std::map<稳定编码, std::map<unsigned, 特征类标量结果项>> 值;
+        std::map<稳定编码, std::array<特征类标量输入回执, 2>> 输入;
+    };
+    标量计算缓存 标量复算(稳定编码 root, unsigned requested, 标量读取上下文& c) const {
+        std::map<稳定编码, unsigned> needed;
+        needed[root] = requested;
+        for (auto it = c.后序.rbegin(); it != c.后序.rend(); ++it) {
+            const auto& d = c.定义.at(*it);
+            for (const auto& x : d.来源组)
+                if (x.内容.上游输出角色) needed[x.内容.来源.值] |= 1U << (x.内容.上游输出角色 - 1);
+        }
+        标量计算缓存 cache;
+        for (auto id : c.后序) {
+            const auto& d = c.定义.at(id); const auto& r = d.注册;
+            标量要求((needed[id] & ~r.允许结果位) == 0, SS::来源不匹配);
+            std::array<std::int64_t, 2> values{};
+            std::array<特征类标量输入回执, 2> inputs;
+            for (unsigned i = 0; i < 2; ++i) {
+                const auto& x = d.来源组[i].内容;
+                const auto role = i ? r.右角色 : r.左角色;
+                if (!x.上游输出角色) {
+                    const auto& leaf = c.叶.at(x.来源.值); values[i] = leaf.值;
+                    inputs[i] = 特征类标量基础输入回执{leaf, role};
+                } else {
+                    const auto& value = cache.值.at(x.来源.值).at(x.上游输出角色);
+                    标量要求(标量同量纲(value.量化, r.输入量化), SS::单位量化不匹配);
+                    values[i] = value.值;
+                    inputs[i] = 特征类标量上游输入回执{x.来源, value.输出FT, value.角色,
+                        value.值, c.定义.at(x.来源.值).真实阶次, role};
+                }
+                标量要求(values[i] >= r.输入量化.下界 && values[i] <= r.输入量化.上界, SS::结果范围不满足);
+            }
+            const std::int64_t order = values[0] < values[1] ? -1 : values[0] > values[1] ? 1 : 0;
+            const bool equivalent = order == 0 || (r.相等容差
+                && I64差异幅度(values[0], values[1]) <= static_cast<std::uint64_t>(*r.相等容差));
+            for (const auto& o : d.输出组) {
+                const auto role = static_cast<unsigned>(o.声明.角色);
+                if (!(needed[id] & (1U << (role - 1)))) continue;
+                std::int64_t value = 0;
+                if (role == 1) value = order;
+                else if (role == 2) value = r.用途 == 特征类比较用途::目标判断
+                    ? (equivalent ? 2 : order < 0 ? 1 : 3) : (equivalent ? 5 : order < 0 ? 4 : 6);
+                else {
+                    标量要求(I64差异可表示(values[0], values[1]), SS::运算溢出);
+                    value = values[1] - values[0];
+                }
+                标量要求(value >= o.声明.量化.下界 && value <= o.声明.量化.上界, SS::结果范围不满足);
+                cache.值[id].emplace(role, 特征类标量结果项{o.特征类型, o.声明.角色, value,
+                    o.声明.量化, static_cast<特征类标量方向>(role)});
+            }
+            cache.输入.emplace(id, std::move(inputs));
+        }
+        return cache;
+    }
+public:
+    特征类标量派生写结果 建立标量派生定义(const 特征类标量派生建立请求& r) { return 标量执行写(r); }
+    特征类标量派生写结果 退出标量派生定义(const 特征类标量派生退出请求& r) { return 标量执行写(r); }
+    特征类标量比较结果 比较派生特征(const 特征类标量比较请求& r) const {
+        特征类标量比较结果 out;
+        auto fail = [&](SS e) {
+            特征类标量比较结果 f; f.状态 = e; f.拒绝原因 = e; f.请求身份 = r.请求身份; f.G = out.G;
+            return f;
+        };
+        try {
+            标量要求(r.版本 == 2 && r.G && r.请求身份 && 有效(r.根定义.值) && r.预算.有效()
+                && r.要求结果位 >= 1 && r.要求结果位 <= 7, SS::入口拒绝);
+            标量守卫(r.G); out.G = r.G;
+            标量读取上下文 c{r.G, r.G, r.预算}; 标量展开(r.根定义.值, true, c);
+            const auto& d = c.定义.at(r.根定义.值);
+            标量要求(r.用途 == d.注册.用途, SS::来源不匹配);
+            标量要求(!r.预期算法版本 || *r.预期算法版本 == d.注册.算法版本, SS::算法不支持);
+            标量要求((r.要求结果位 & ~d.注册.允许结果位) == 0, SS::入口拒绝);
+            const auto cache = 标量复算(r.根定义.值, r.要求结果位, c);
+            out.状态 = SS::已比较; out.拒绝原因 = SS::已比较; out.请求身份 = r.请求身份;
+            out.根定义 = r.根定义; out.注册身份 = d.注册身份; out.算法版本 = d.注册.算法版本;
+            out.真实阶次 = d.真实阶次; out.实际结果位 = r.要求结果位;
+            out.输入量化 = d.注册.输入量化; out.误差合同版本 = d.注册.误差合同版本;
+            out.误差预算 = d.注册.误差预算; out.相等容差 = d.注册.相等容差;
+            out.直接输入回执 = cache.输入.at(r.根定义.值);
+            for (const auto& id : c.闭包.at(r.根定义.值)) out.基础叶回执组.push_back(c.叶.at(id));
+            for (const auto& [_, value] : cache.值.at(r.根定义.值)) out.结果组.push_back(value);
+            标量守卫(r.G); 标量要求(out.成功()); return out;
+        } catch (const 标量失败& e) { return fail(e.状态); }
+        catch (const std::bad_alloc&) { return fail(SS::资源失败); }
+        catch (const std::length_error&) { return fail(SS::资源失败); }
+        catch (...) { return fail(SS::内部不一致); }
     }
 
 private:
@@ -2212,47 +2903,6 @@ private:
             && (!合同.相等容差 || *合同.相等容差 >= 0);
     }
 
-    static bool 比较输入当前(const 特征类比较输入& 输入,
-        std::uint64_t 截止) noexcept {
-        return 有效(输入.事实身份) && 有效(输入.来源稳定编码)
-            && 输入.输入版本 != 0 && 输入.输入版本 <= 截止
-            && 输入.创建事实代次 != 0
-            && 输入.创建事实代次 <= 输入.输入版本
-            && (!输入.退出事实代次 || *输入.退出事实代次 > 截止)
-            && 有效(输入.单位) && 有效(输入.维度)
-            && 有效(输入.分量角色);
-    }
-
-    bool 验证比较输入事实(const 特征类比较输入& 输入,
-        std::uint64_t 截止) const {
-        const auto 读取 = 第一层服务_.读取所有者范围历史事实(
-            {L1所有者范围CRUD合同版本, 输入.事实身份});
-        const auto* 事实 = 读取.事实
-            ? std::get_if<L1所有者范围值事实>(&*读取.事实) : nullptr;
-        const auto* 值 = 事实
-            ? std::get_if<std::int64_t>(&事实->材料) : nullptr;
-        return 读取.状态 == L1所有者范围读取状态::成功
-            && 读取.合同版本 == L1所有者范围CRUD合同版本
-            && 读取.查询编码 == 输入.事实身份
-            && 读取.读取事实代次 == 截止 && !读取.物理清理事实代次
-            && !读取.物理清理墓碑 && 事实 && 值 && *值 == 输入.值
-            && 事实->编码 == 输入.事实身份
-            && 事实->创建事实代次 == 输入.创建事实代次
-            && 事实->创建事实代次 <= 输入.输入版本
-            && (!事实->退出事实代次 || *事实->退出事实代次 > 截止);
-    }
-
-    static bool 比较请求有效(const 特征类比较请求& 请求) noexcept {
-        return 请求.合同版本 == 特征类派生数据合同版本
-            && 请求.期望事实代次 != 0 && 请求.请求身份 != 0
-            && 有效(请求.特征定义.值)
-            && (请求.用途 == 特征类比较用途::目标判断
-                || 请求.用途 == 特征类比较用途::状态迁移)
-            && 请求.要求结果位 >= 1 && 请求.要求结果位 <= 7
-            && 比较输入当前(请求.左, 请求.期望事实代次)
-            && 比较输入当前(请求.右, 请求.期望事实代次);
-    }
-
     static std::uint64_t I64差异幅度(
         std::int64_t 左, std::int64_t 右) noexcept {
         if (左 == 右) return 0;
@@ -2272,38 +2922,6 @@ private:
         if (左 < 0 && 右 > std::numeric_limits<std::int64_t>::max() + 左)
             return false;
         return true;
-    }
-
-    static 特征类比较结果 比较失败(std::uint64_t 请求身份,
-        特征类比较状态 状态, 特征类比较拒绝原因 原因,
-        std::uint64_t 事实代次 = 0) noexcept {
-        特征类比较结果 结果;
-        结果.请求身份 = 请求身份;
-        结果.状态 = 状态;
-        结果.拒绝原因 = 原因;
-        结果.事实代次 = 事实代次;
-        return 结果;
-    }
-
-    static void 填充比较回显(特征类比较结果& 结果,
-        const 特征类比较请求& 请求,
-        const 特征类I64比较注册合同& 合同) noexcept {
-        结果.误差预算 = 合同.误差预算;
-        结果.相等容差 = 合同.相等容差;
-        结果.误差合同版本 = 合同.误差合同版本;
-        结果.单位 = 合同.单位;
-        结果.维度 = 合同.维度;
-        结果.分量角色 = 合同.分量角色;
-        结果.实际左角色 = 请求.左.角色;
-        结果.实际右角色 = 请求.右.角色;
-        结果.左事实身份 = 请求.左.事实身份;
-        结果.左来源稳定编码 = 请求.左.来源稳定编码;
-        结果.左输入版本 = 请求.左.输入版本;
-        结果.左创建事实代次 = 请求.左.创建事实代次;
-        结果.右事实身份 = 请求.右.事实身份;
-        结果.右来源稳定编码 = 请求.右.来源稳定编码;
-        结果.右输入版本 = 请求.右.输入版本;
-        结果.右创建事实代次 = 请求.右.创建事实代次;
     }
 
     static 特征类派生定义结果 派生失败(
@@ -3255,6 +3873,9 @@ private:
             || 类型事实.创建事实代次 > 读取.读取事实代次
             || 类型事实.退出事实代次)
             return 特征类数据状态::入口拒绝;
+        if (std::any_of(类型事实.当前属性.begin(), 类型事实.当前属性.end(),
+                [特征类型](const auto& 槽) { return 槽.属性类型节点 == 特征类型; }))
+            return 特征类数据状态::入口拒绝;
         return std::nullopt;
     }
 
@@ -3519,72 +4140,71 @@ private:
         const auto 状态 = 映射写入状态(写入.状态, 成功状态);
         if (状态 != 成功状态 && 状态 != 特征类数据状态::精确重复)
             return 失败(状态, 写入.事实代次);
-        if (!写入结果头完整(写入, 幂等身份)
-            || 写入.新编码映射.size() != 2)
-            return 失败(特征类数据状态::内部不一致, 写入.事实代次);
-        const auto 结点 = 特征类数据内部::查找唯一编码(
-            写入, 特征类数据内部::特征结点本地键);
-        const auto 值 = 特征类数据内部::查找唯一编码(
-            写入, 特征类数据内部::特征值本地键);
-        if (!结点 || !值)
-            return 失败(特征类数据状态::内部不一致, 写入.事实代次);
-        auto 读回 = 读取历史新特征(*结点, *值, 写入.事实代次);
-        if (!读回.成功()) return 读回;
-        if (被换代特征结点) {
-            const auto 退出读回 = 读取历史已退出特征(
-                *被换代特征结点, 写入.事实代次);
-            if (!退出读回.成功()) return 退出读回;
+
+        // 从此处起原键已经发布；任何读回失败都不能再证明原键未绑定。
+        const auto 未收敛 = [&] {
+            return 失败(特征类数据状态::已可能发布, 写入.事实代次);
+        };
+        try {
+            if (!写入结果头完整(写入, 幂等身份) || 写入.新编码映射.size() != 2)
+                return 未收敛();
+            const auto 结点 = 特征类数据内部::查找唯一编码(
+                写入, 特征类数据内部::特征结点本地键);
+            const auto 值 = 特征类数据内部::查找唯一编码(
+                写入, 特征类数据内部::特征值本地键);
+            if (!结点 || !值)
+                return 未收敛();
+            const auto 当前 = 第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
+            if (当前.状态 != L1中性读取状态::成功
+                || 当前.合同版本 != L1中性CRUD合同版本 || 当前.事实代次 < 写入.事实代次)
+                return 未收敛();
+            auto 读回 = 读取历史新特征(*结点, *值, 写入.事实代次, 当前.事实代次);
+            if (!读回.成功())
+                return 未收敛();
+            if (被换代特征结点) {
+                const auto 退出读回 = 读取历史已退出特征(
+                    *被换代特征结点, 写入.事实代次, 当前.事实代次);
+                if (!退出读回.成功())
+                    return 未收敛();
+            }
+            const auto 末读 = 第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
+            if (末读.状态 != L1中性读取状态::成功
+                || 末读.合同版本 != L1中性CRUD合同版本 || 末读.事实代次 != 当前.事实代次)
+                return 未收敛();
+            读回.状态 = 状态;
+            读回.被换代特征结点 = 被换代特征结点;
+            return 读回;
+        } catch (...) {
+            return 未收敛();
         }
-        读回.状态 = 状态;
-        读回.被换代特征结点 = 被换代特征结点;
-        return 读回;
     }
 
     特征类结点结果 读取历史新特征(稳定编码 结点,
-        稳定编码 值, std::uint64_t 创建事实代次) const {
-        const auto 结点读取 = 第一层服务_.读取所有者范围历史事实(
-            {L1所有者范围CRUD合同版本, 结点});
-        const auto 值读取 = 第一层服务_.读取所有者范围历史事实(
-            {L1所有者范围CRUD合同版本, 值});
-        if (结点读取.状态 != L1所有者范围读取状态::成功)
-            return 失败(映射读取状态(结点读取.状态),
-                结点读取.读取事实代次);
-        if (值读取.状态 != L1所有者范围读取状态::成功)
-            return 失败(映射读取状态(值读取.状态),
-                值读取.读取事实代次);
-        const auto* 结点事实 = 结点读取.事实
-            ? std::get_if<L1所有者范围节点事实>(&*结点读取.事实) : nullptr;
-        const auto* 值事实 = 值读取.事实
-            ? std::get_if<L1所有者范围值事实>(&*值读取.事实) : nullptr;
-        if (!结点事实 || !值事实 || 结点事实->编码 != 结点
-            || 值事实->编码 != 值 || 结点事实->写入所有者 != 所有者_
-            || 值事实->写入所有者 != 所有者_
-            || 结点事实->创建事实代次 != 创建事实代次
-            || 值事实->创建事实代次 != 创建事实代次
-            || 结点事实->退出事实代次 || 值事实->退出事实代次
-            || 结点事实->种类 != 节点种类::普通
-            || 结点事实->属性类型表示
-            || 结点事实->当前属性.size() != 1
-            || 结点事实->当前属性.front().属性类型节点
-                != 值事实->属性类型节点
-            || 结点事实->当前属性.front().当前值 != 值事实->编码
-            || 值事实->所属节点 != 结点 || 值事实->来源节点 != 结点
-            || !特征类数据内部::L1材料形状有效(值事实->材料))
+        稳定编码 值, std::uint64_t 创建事实代次, std::uint64_t 读取事实代次) const {
+        const auto 当前 = 第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
+        if (当前.状态 != L1中性读取状态::成功
+            || 当前.合同版本 != L1中性CRUD合同版本
+            || !创建事实代次 || 当前.事实代次 < 创建事实代次
+            || 当前.事实代次 != 读取事实代次)
             return 失败(特征类数据状态::内部不一致, 创建事实代次);
-        特征类结点 特征{结点事实->编码, 值事实->编码,
-            值事实->属性类型节点, 转换为特征类值(值事实->材料),
-            创建事实代次, std::nullopt};
+        // 身份来自首次映射，H 来自首次发布；不读取已经换代的当前槽。
+        auto 历史 = 读取特征历史事实({1, 当前.事实代次, 创建事实代次, 结点, 值});
+        if (!历史.成功() || 历史.Gread != 当前.事实代次 || 历史.H != 创建事实代次
+            || 历史.特征->结点 != 结点 || 历史.特征->值事实 != 值
+            || 历史.特征->创建事实代次 != 创建事实代次)
+            return 失败(特征类数据状态::内部不一致, 创建事实代次);
         return {特征类数据状态::已读取, 特征类数据合同版本,
-            创建事实代次, std::move(特征), std::nullopt};
+            创建事实代次, std::move(历史.特征), std::nullopt};
     }
 
     特征类结点结果 读取历史已退出特征(稳定编码 结点,
-        std::uint64_t 退出事实代次) const {
+        std::uint64_t 退出事实代次, std::uint64_t 读取事实代次 = 0) const {
         const auto 结点读取 = 第一层服务_.读取所有者范围历史事实(
             {L1所有者范围CRUD合同版本, 结点});
         const auto* 结点事实 = 结点读取.事实
             ? std::get_if<L1所有者范围节点事实>(&*结点读取.事实) : nullptr;
         if (结点读取.状态 != L1所有者范围读取状态::成功
+            || (读取事实代次 && 结点读取.读取事实代次 != 读取事实代次)
             || 结点读取.合同版本 != L1所有者范围CRUD合同版本
             || 结点读取.查询编码 != 结点 || 结点读取.物理清理事实代次
             || 结点读取.物理清理墓碑 || !结点事实
@@ -3608,6 +4228,7 @@ private:
         const auto* 值事实 = 值读取.事实
             ? std::get_if<L1所有者范围值事实>(&*值读取.事实) : nullptr;
         if (值读取.状态 != L1所有者范围读取状态::成功
+            || (读取事实代次 && 值读取.读取事实代次 != 读取事实代次)
             || 值读取.合同版本 != L1所有者范围CRUD合同版本
             || 值读取.查询编码 != 属性槽.当前值
             || 值读取.物理清理事实代次 || 值读取.物理清理墓碑
