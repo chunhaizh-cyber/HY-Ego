@@ -990,6 +990,65 @@ struct 特征长期比较请求 final {
     特征观察见证 左, 右;
     特征长期预算 预算;
 };
+struct 特征原子实际值见证 final {
+    稳定编码 F{}, 值事实{}, FT{};
+    std::uint64_t H = 0;
+    friend bool operator==(const 特征原子实际值见证&, const 特征原子实际值见证&) = default;
+};
+struct 特征原子差异标量 final {
+    稳定编码 输出FT{};
+    特征类型域身份 类型域身份;
+    稳定编码 单位{};
+    std::int64_t 缩放 = 1;
+    std::uint32_t 真实阶次 = 2;
+    特征类型化原子域 左域输入;
+    特征原子实际值见证 右实际;
+    std::int64_t 值 = 0;
+    friend bool operator==(const 特征原子差异标量&, const 特征原子差异标量&) = default;
+};
+struct 特征完整域标记 final {
+    friend bool operator==(const 特征完整域标记&, const 特征完整域标记&) = default;
+};
+using 特征判定域选择 = std::variant<特征完整域标记, 特征类型化原子域>;
+struct 特征原子域判定请求 final {
+    std::uint32_t 版本 = 1;
+    特征长期读头 读头;
+    特征类型域身份 类型域;
+    特征判定域选择 域选择;
+    特征原子实际值见证 实际;
+    特征长期预算 预算;
+};
+struct 特征长期只读用量 final {
+    std::uint64_t 记录数 = 0, 关系数 = 0, 属性数 = 0, 样本数 = 0;
+    std::uint64_t 像素数 = 0, 点对数 = 0, 历史数 = 0;
+    friend bool operator==(const 特征长期只读用量&, const 特征长期只读用量&) = default;
+};
+struct 特征原子域判定事实 final {
+    特征长期只读用量 用量;
+    特征类型域事实 类型域事实;
+    特征判定域选择 规范域;
+    特征类结点 实际F;
+    std::optional<特征值类材料结点> 引用材料;
+    特征原子实际值见证 实际;
+    bool 适用 = false;
+    std::optional<特征原子差异标量> 差异;
+};
+struct 特征拟建值预检请求 final {
+    std::uint32_t 版本 = 1;
+    特征长期读头 读头;
+    特征类型域身份 类型域;
+    稳定编码 FT{};
+    特征类值 原始值;
+    特征长期预算 预算;
+};
+struct 特征拟建值预检事实 final {
+    特征长期只读用量 用量;
+    稳定编码 FT{};
+    特征类型域事实 类型域事实;
+    特征类值 原始值;
+    std::variant<std::int64_t, 特征二值图> 已解析值;
+    std::optional<特征值类材料结点> 引用材料;
+};
 struct 特征校正内容 final {
     特征类型域身份 类型域;
     std::uint64_t 参数版本 = 0;
@@ -1376,6 +1435,82 @@ public:
             return 长期差异事实(type, r.左, r.右, 长期差异(type.内容, a, b, c));
         });
     }
+    特征长期读取结果<特征原子域判定事实> 判定特征原子域(const 特征原子域判定请求& r) const {
+        return 长期读包装<特征原子域判定事实>(r.读头, r.预算, [&](长期上下文& c) {
+            长期要求(r.版本 == 1 && r.实际.H == c.H, LS::入口拒绝);
+            auto type = 长期读类型(r.类型域.值, c);
+            长期要求(!r.域选择.valueless_by_exception(), LS::入口拒绝);
+            特征原子域判定事实 out;
+            out.规范域 = r.域选择;
+            out.实际 = r.实际;
+            if (std::holds_alternative<特征完整域标记>(r.域选择)) {
+                auto actual = 长期读原子实际(type, r.实际, c);
+                out.实际F = std::move(actual.F);
+                out.引用材料 = std::move(actual.材料);
+                out.适用 = true;
+                out.类型域事实 = std::move(type);
+                return out;
+            }
+            const auto& atom = std::get<特征类型化原子域>(r.域选择);
+            长期要求(atom.类型 == type.内容 && !atom.域.valueless_by_exception(), LS::入口拒绝);
+            if (type.内容.算法 == 特征长期算法::I64幅度) {
+                const auto* interval = std::get_if<特征I64闭区间>(&atom.域);
+                const auto full = std::get<特征I64闭区间>(type.内容.完整域);
+                长期要求(interval && interval->下界 <= interval->上界
+                    && interval->下界 >= full.下界 && interval->上界 <= full.上界, LS::入口拒绝);
+                auto actual = 长期读原子实际(type, r.实际, c);
+                const auto value = std::get<std::int64_t>(actual.值);
+                out.适用 = value >= interval->下界 && value <= interval->上界;
+                out.实际F = std::move(actual.F);
+                out.引用材料 = std::move(actual.材料);
+            } else {
+                const auto* radius = std::get_if<特征二值半径域>(&atom.域);
+                长期要求(radius && radius->半径 >= 0
+                    && radius->代表.格式 == std::get<特征二值图格式>(type.内容.完整域), LS::入口拒绝);
+                auto representative = 长期解析二值(长期图载荷(radius->代表), c);
+                auto actual = 长期读原子实际(type, r.实际, c);
+                const auto difference = 长期差异(type.内容, representative, actual.值, c);
+                out.适用 = difference <= radius->半径;
+                out.差异 = 特征原子差异标量{type.输出FT, type.身份, type.内容.单位,
+                    type.内容.缩放, 2, atom, r.实际, difference};
+                out.实际F = std::move(actual.F);
+                out.引用材料 = std::move(actual.材料);
+            }
+            out.类型域事实 = std::move(type);
+            return out;
+        });
+    }
+
+    特征长期读取结果<特征拟建值预检事实> 预检长期特征拟建值(const 特征拟建值预检请求& r) const {
+        return 长期读包装<特征拟建值预检事实>(r.读头, r.预算, [&](长期上下文& c) {
+            长期要求(r.版本 == 1 && 有效(r.FT) && !r.原始值.valueless_by_exception(), LS::入口拒绝);
+            if (const auto* direct = std::get_if<特征直接值>(&r.原始值))
+                长期要求(!direct->valueless_by_exception(), LS::入口拒绝);
+            长期要求(特征值形状有效(r.原始值), LS::入口拒绝);
+            auto type = 长期读类型(r.类型域.值, c);
+            长期要求(type.内容.FT == r.FT, LS::引用冲突);
+            长期扣量(c, c.历史数, 2, c.限额.最大历史事实数);
+            if (const auto status = 验证特征类型(r.FT, r.原始值, c.G)) {
+                长期守卫(c.G);
+                throw 长期失败{长期普通状态(*status)};
+            }
+            if (std::holds_alternative<特征值结点引用>(r.原始值)) {
+                长期扣量(c, c.历史数, 4, c.限额.最大历史事实数);
+                长期扣量(c, c.属性数, 1, c.限额.最大属性数);
+                if (const auto status = 验证特征值结点引用(r.原始值, c.G)) {
+                    长期守卫(c.G);
+                    throw 长期失败{长期普通状态(*status)};
+                }
+            }
+            特征拟建值预检事实 out;
+            out.FT = r.FT;
+            out.原始值 = r.原始值;
+            out.已解析值 = 长期解析实际材料(type, 转换为L1材料(r.原始值), c.H, c, out.引用材料);
+            out.类型域事实 = std::move(type);
+            return out;
+        });
+    }
+
     特征长期写入结果<特征类型域事实> 登记特征类型域(const 特征类型域登记请求& r) {
         return 长期执行<特征类型域事实>(r, [&](auto& c) {
             长期要求(长期类型有效(r.内容), LS::入口拒绝);
@@ -1403,7 +1538,7 @@ public:
     特征长期写入结果<特征校正事实> 建立特征校正(const 特征校正建立请求& r) {
         return 长期执行<特征校正事实>(r, [&](auto& c) {
             const auto input = 长期规范校正(r.内容);
-            长期扣量(c.样本数, input.样本.size(), c.限额.最大样本数);
+            长期扣量(c, c.样本数, input.样本.size(), c.限额.最大样本数);
             const auto type = 长期读类型(input.类型域.值, c);
             (void)长期节点(input.外设来源, c, false);
             const auto computed = 长期计算校正(input, type, c);
@@ -1998,9 +2133,11 @@ private:
         std::uint64_t 记录数 = 0, 关系数 = 0, 属性数 = 0, 样本数 = 0;
         std::uint64_t 像素数 = 0, 点对数 = 0, 历史数 = 0;
         std::map<std::pair<稳定编码, std::uint64_t>, 长期记录> 已读记录;
+        bool 允许零量 = false;
+        bool 精确跨入口计数 = false;
     };
-    static void 长期扣量(std::uint64_t& used, std::uint64_t amount, std::uint64_t limit) {
-        长期要求(limit && used <= limit && amount <= limit - used, LS::预算不足);
+    static void 长期扣量(const 长期上下文& c, std::uint64_t& used, std::uint64_t amount, std::uint64_t limit) {
+        长期要求((limit || c.允许零量) && used <= limit && amount <= limit - used, LS::预算不足);
         used += amount;
     }
     static bool 长期格式有效(const 特征二值图格式& f) noexcept {
@@ -2026,7 +2163,7 @@ private:
         out.格式 = {u[1], u[2], 稳定编码{u[3]}, u[4], u[5], u[6], 长期I64位模式(u[7]), 长期I64位模式(u[8])};
         长期要求(长期格式有效(out.格式), LS::类型不支持);
         长期要求(u[1] <= UINT64_MAX / u[2] && u[1] * u[2] == u.size() - 9, LS::类型不支持);
-        长期扣量(c.像素数, u.size() - 9, c.限额.最大像素数);
+        长期扣量(c, c.像素数, u.size() - 9, c.限额.最大像素数);
         bool foreground = false;
         for (std::size_t i = 9; i < u.size(); ++i) {
             长期要求(u[i] <= 1, LS::类型不支持);
@@ -2097,7 +2234,7 @@ private:
         return f.创建事实代次 && f.创建事实代次 <= h && (!f.退出事实代次 || *f.退出事实代次 > h);
     }
     LN 长期节点(稳定编码 id, 长期上下文& c, bool own = true, bool active = true) const {
-        长期扣量(c.历史数, 1, c.限额.最大历史事实数);
+        长期扣量(c, c.历史数, 1, c.限额.最大历史事实数);
         auto r = 第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, id});
         if (r.状态 != L1所有者范围读取状态::成功) {
             长期守卫(c.G);
@@ -2117,8 +2254,8 @@ private:
         }
         长期要求(r.读取事实代次 == c.G, LS::事实代次漂移);
         长期要求(r.合同版本 == L1所有者范围CRUD合同版本 && r.所属节点 == n.编码 && r.历史截止事实代次 == c.H);
-        长期扣量(c.属性数, r.属性值组.size(), c.限额.最大属性数);
-        长期扣量(c.历史数, r.属性值组.size(), c.限额.最大历史事实数);
+        长期扣量(c, c.属性数, r.属性值组.size(), c.限额.最大属性数);
+        长期扣量(c, c.历史数, r.属性值组.size(), c.限额.最大历史事实数);
         for (const auto& v : r.属性值组)
             长期要求(有效(v.编码) && v.所属节点 == n.编码 && v.写入所有者 == 所有者_
                 && v.来源节点 == n.编码 && 长期活动(v, c.H)
@@ -2138,8 +2275,8 @@ private:
         长期要求(r.读取事实代次 == c.G, LS::事实代次漂移);
         长期要求(r.合同版本 == L1所有者范围CRUD合同版本 && r.方向 == direction
             && r.端点节点 == id && r.关系类型节点 == 长期交付_->类型[role - 1] && r.历史截止事实代次 == h);
-        长期扣量(c.关系数, r.关系组.size(), c.限额.最大关系数);
-        长期扣量(c.历史数, r.关系组.size(), c.限额.最大历史事实数);
+        长期扣量(c, c.关系数, r.关系组.size(), c.限额.最大关系数);
+        长期扣量(c, c.历史数, r.关系组.size(), c.限额.最大历史事实数);
         for (const auto& e : r.关系组)
             长期要求(有效(e.编码) && e.写入所有者 == 所有者_ && e.关系类型节点 == 长期交付_->类型[role - 1]
                 && (incoming ? e.目标节点 : e.源节点) == id && 长期活动(e, h));
@@ -2177,7 +2314,7 @@ private:
     长期记录 长期读记录(稳定编码 id, 长期上下文& c) const {
         const auto cached = c.已读记录.find({id, c.H});
         if (cached != c.已读记录.end()) return cached->second;
-        长期扣量(c.记录数, 1, c.限额.最大记录数);
+        长期扣量(c, c.记录数, 1, c.限额.最大记录数);
         长期记录 r;
         r.节点 = 长期节点(id, c);
         长期要求(r.节点.种类 == 节点种类::普通 && !r.节点.属性类型表示 && !r.节点.退出事实代次);
@@ -2340,7 +2477,7 @@ private:
             for (const auto& p : first) {
                 std::optional<长期宽整数> nearest;
                 for (const auto& q : second) {
-                    长期扣量(c.点对数, 1, c.限额.最大边界点对数);
+                    长期扣量(c, c.点对数, 1, c.限额.最大边界点对数);
                     const auto dx = p.first > q.first ? p.first - q.first : q.first - p.first;
                     const auto dy = p.second > q.second ? p.second - q.second : q.second - p.second;
                     const auto d2 = 长期加(长期乘(长期宽整数{dx}, 长期宽整数{dx}), 长期乘(长期宽整数{dy}, 长期宽整数{dy}));
@@ -2401,34 +2538,37 @@ private:
         c.H = originalH;
         return out;
     }
-    长期实际值 长期实际(const 特征类型域事实& type, const 特征观察见证& w, 长期上下文& c) const {
-        长期要求(长期见证有效(w) && w.H <= c.H && w.FT == type.内容.FT, LS::引用冲突);
-        长期扣量(c.样本数, 1, c.限额.最大样本数);
-        长期扣量(c.历史数, 3, c.限额.最大历史事实数);
-        长期要求(c.属性数 < c.限额.最大属性数, LS::预算不足);
-        auto whole = 按实例读取特征历史事实({1, c.G, w.H, w.F, c.限额.最大属性数 - c.属性数});
-        if (!whole.成功()) { 长期守卫(c.G); throw 长期失败{长期映射(whole.状态)}; }
-        长期扣量(c.属性数, 1, c.限额.最大属性数);
-        长期扣量(c.历史数, 3, c.限额.最大历史事实数);
-        长期要求(whole.Gread == c.G && whole.H == w.H && whole.特征 && whole.特征->结点 == w.F
-            && whole.特征->特征类型 == w.FT && whole.特征->值事实 == w.值事实, LS::引用冲突);
-        auto f = 读取特征历史事实({1, c.G, w.H, w.F, w.值事实});
-        if (!f.成功()) { 长期守卫(c.G); throw 长期失败{长期映射(f.状态)}; }
-        长期要求(f.Gread == c.G && f.H == w.H && f.特征 && f.特征->特征类型 == w.FT);
-        // 派生输出FT不能借普通历史形状伪装为第一阶来源。
-        auto oldH = c.H; c.H = w.H;
-        const auto ft = 长期节点(w.FT, c);
-        长期要求(std::none_of(ft.当前属性.begin(), ft.当前属性.end(), [&](const auto& x) { return x.属性类型节点 == ft.编码; }), LS::类型不支持);
-        c.H = oldH;
-        L1所有者范围原始值材料 raw = 转换为L1材料(f.特征->特征值);
+    static LS 长期普通状态(特征类数据状态 status) noexcept {
+        switch (status) {
+        case 特征类数据状态::事实代次漂移: return LS::事实代次漂移;
+        case 特征类数据状态::资源失败: return LS::资源失败;
+        case 特征类数据状态::内部不一致: return LS::内部不一致;
+        case 特征类数据状态::特征类型未找到:
+        case 特征类数据状态::未找到: return LS::未找到;
+        case 特征类数据状态::特征类型已退出:
+        case 特征类数据状态::目标已退出:
+        case 特征类数据状态::引用冲突: return LS::引用冲突;
+        default: return LS::入口拒绝;
+        }
+    }
+    struct 长期原子实际材料 {
+        特征类结点 F;
+        std::optional<特征值类材料结点> 材料;
+        长期实际值 值;
+    };
+    长期实际值 长期解析实际材料(const 特征类型域事实& type,
+        L1所有者范围原始值材料 raw, std::uint64_t h, 长期上下文& c,
+        std::optional<特征值类材料结点>& savedMaterial) const {
         if (const auto* ref = std::get_if<L1所有者范围独立材料引用>(&raw)) {
-            长期扣量(c.历史数, 4, c.限额.最大历史事实数);
+            // 按结点入口读取节点/唯一值，再由精确入口读取节点、值、FT及来源，共六次历史访问。
+            长期扣量(c, c.历史数, c.精确跨入口计数 ? 6 : 4, c.限额.最大历史事实数);
             长期要求(c.属性数 < c.限额.最大属性数, LS::预算不足);
-            auto material = 特征值服务_.按结点读取不可变材料历史事实({1, c.G, w.H, ref->编码, c.限额.最大属性数 - c.属性数});
+            auto material = 特征值服务_.按结点读取不可变材料历史事实({1, c.G, h, ref->编码, c.限额.最大属性数 - c.属性数});
             if (!material.成功()) { 长期守卫(c.G); throw 长期失败{长期映射(material.状态)}; }
-            长期要求(material.Gread == c.G && material.H == w.H && material.材料 && material.材料->结点 == ref->编码);
-            长期扣量(c.属性数, 1, c.限额.最大属性数);
-            raw = material.材料->特征值;
+            长期要求(material.Gread == c.G && material.H == h && material.材料 && material.材料->结点 == ref->编码);
+            长期扣量(c, c.属性数, 1, c.限额.最大属性数);
+            savedMaterial = std::move(material.材料);
+            raw = savedMaterial->特征值;
         }
         if (type.内容.算法 == 特征长期算法::I64幅度) {
             const auto* v = std::get_if<std::int64_t>(&raw);
@@ -2443,6 +2583,37 @@ private:
         长期要求(image.格式 == std::get<特征二值图格式>(type.内容.完整域), LS::类型不支持);
         return image;
     }
+    长期原子实际材料 长期读原子实际(const 特征类型域事实& type,
+        const 特征原子实际值见证& w, 长期上下文& c) const {
+        长期要求(w.H && w.H <= c.H && 有效(w.F) && 有效(w.值事实)
+            && w.FT == type.内容.FT, LS::引用冲突);
+        // whole 入口的节点/唯一值两次访问，加其内部 exact 的 F/值/FT 三次访问。
+        长期扣量(c, c.历史数, c.精确跨入口计数 ? 5 : 3, c.限额.最大历史事实数);
+        长期要求(c.属性数 < c.限额.最大属性数, LS::预算不足);
+        auto whole = 按实例读取特征历史事实({1, c.G, w.H, w.F, c.限额.最大属性数 - c.属性数});
+        if (!whole.成功()) { 长期守卫(c.G); throw 长期失败{长期映射(whole.状态)}; }
+        长期扣量(c, c.属性数, 1, c.限额.最大属性数);
+        长期扣量(c, c.历史数, 3, c.限额.最大历史事实数);
+        长期要求(whole.Gread == c.G && whole.H == w.H && whole.特征 && whole.特征->结点 == w.F
+            && whole.特征->特征类型 == w.FT && whole.特征->值事实 == w.值事实, LS::引用冲突);
+        auto f = 读取特征历史事实({1, c.G, w.H, w.F, w.值事实});
+        if (!f.成功()) { 长期守卫(c.G); throw 长期失败{长期映射(f.状态)}; }
+        长期要求(f.Gread == c.G && f.H == w.H && f.特征 && f.特征->特征类型 == w.FT);
+        // 派生输出FT不能借普通历史形状伪装为第一阶来源。
+        auto oldH = c.H; c.H = w.H;
+        const auto ft = 长期节点(w.FT, c);
+        长期要求(std::none_of(ft.当前属性.begin(), ft.当前属性.end(), [&](const auto& x) { return x.属性类型节点 == ft.编码; }), LS::类型不支持);
+        c.H = oldH;
+        长期原子实际材料 out;
+        out.F = std::move(*f.特征);
+        out.值 = 长期解析实际材料(type, 转换为L1材料(out.F.特征值), w.H, c, out.材料);
+        return out;
+    }
+    长期实际值 长期实际(const 特征类型域事实& type, const 特征观察见证& w, 长期上下文& c) const {
+        长期要求(长期见证有效(w) && w.H <= c.H && w.FT == type.内容.FT, LS::引用冲突);
+        长期扣量(c, c.样本数, 1, c.限额.最大样本数);
+        return 长期读原子实际(type, {w.F, w.值事实, w.FT, w.H}, c).值;
+    }
     static 特征差异标量 长期差异事实(const 特征类型域事实& t,
         std::variant<特征观察见证, 特征区间身份> left, const 特征观察见证& right, std::int64_t value) {
         return {t.输出FT, t.身份, 2, t.内容.单位, t.内容.缩放, std::move(left), right, value};
@@ -2453,8 +2624,15 @@ private:
         out.Gread = h.Gread; out.H = h.H ? h.H : h.Gread;
         try {
             auto c = 长期开始(h, budget);
+            constexpr bool 新只读 = std::is_same_v<T, 特征原子域判定事实> || std::is_same_v<T, 特征拟建值预检事实>;
+            if constexpr (新只读) {
+                c.允许零量 = true;
+                c.精确跨入口计数 = true;
+            }
             auto data = action(c);
             长期守卫(c.G);
+            if constexpr (新只读)
+                data.用量 = {c.记录数, c.关系数, c.属性数, c.样本数, c.像素数, c.点对数, c.历史数};
             out.数据 = std::move(data); out.状态 = LS::已读取;
         } catch (const 长期失败& e) { out.状态 = e.状态; }
         catch (const std::bad_alloc&) { out.状态 = LS::资源失败; }
@@ -2545,7 +2723,7 @@ private:
             长期要求(actual.种类 == n.种类 && actual.属性类型表示 == n.属性类型表示 && actual.创建事实代次 == saved.事实代次);
         }
         auto read = [&](稳定编码 id) {
-            长期扣量(c.历史数, 1, c.限额.最大历史事实数);
+            长期扣量(c, c.历史数, 1, c.限额.最大历史事实数);
             auto raw = 第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, id});
             if (raw.状态 != L1所有者范围读取状态::成功) { 长期守卫(c.G); throw 长期失败{长期映射(raw.状态)}; }
             长期要求(raw.读取事实代次 == c.G, LS::事实代次漂移);
@@ -2636,9 +2814,9 @@ private:
                 return out;
             }
             w = std::move(plan.写集);
-            长期扣量(c.记录数, w.节点.size(), c.限额.最大记录数);
-            长期扣量(c.关系数, w.关系.size(), c.限额.最大关系数);
-            长期扣量(c.属性数, w.值.size(), c.限额.最大属性数);
+            长期扣量(c, c.记录数, w.节点.size(), c.限额.最大记录数);
+            长期扣量(c, c.关系数, w.关系.size(), c.限额.最大关系数);
+            长期扣量(c, c.属性数, w.值.size(), c.限额.最大属性数);
             dispatched = true;
             const auto saved = 写入端口_.提交所有者范围中性写集(w);
             if (saved.状态 != L1所有者范围写入状态::成功 && saved.状态 != L1所有者范围写入状态::精确重复) {
@@ -2725,7 +2903,7 @@ private:
         const auto h = c.H; c.H = out.创建G;
         (void)长期节点(out.内容.外设来源, c, false); c.H = h;
         长期要求(r.边[9].size() >= 2);
-        长期扣量(c.样本数, r.边[9].size(), c.限额.最大样本数);
+        长期扣量(c, c.样本数, r.边[9].size(), c.限额.最大样本数);
         for (const auto& edge : r.边[9]) {
             auto sample = 长期读记录(edge.目标节点, c);
             长期角色(sample, {16});
