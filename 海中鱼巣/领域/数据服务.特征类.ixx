@@ -5,6 +5,7 @@ module;
 #include <exception>
 #include <limits>
 #include <array>
+#include <bit>
 #include <map>
 #include <set>
 #include <numeric>
@@ -844,6 +845,303 @@ struct 特征历史读取结果 final {
     }
 };
 
+// 长期特征的类型域和观测事实，独立于既有标量派生格式。
+#define HYC_LONG_ID(Name) \
+struct Name final { \
+    稳定编码 值{}; \
+    Name() = default; \
+    explicit Name(稳定编码 x) : 值(x) {} \
+    friend bool operator==(const Name&, const Name&) = default; \
+};
+HYC_LONG_ID(特征类型域身份)
+HYC_LONG_ID(特征校正身份)
+HYC_LONG_ID(特征跟踪身份)
+HYC_LONG_ID(特征区间身份)
+HYC_LONG_ID(特征长期观测身份)
+HYC_LONG_ID(特征长期类型引用)
+HYC_LONG_ID(特征存在上下文引用)
+#undef HYC_LONG_ID
+
+struct 特征I64闭区间 final {
+    std::int64_t 下界 = 0, 上界 = 0;
+    friend bool operator==(const 特征I64闭区间&, const 特征I64闭区间&) = default;
+};
+struct 特征二值图格式 final {
+    std::uint64_t 宽 = 0, 高 = 0;
+    稳定编码 坐标系{};
+    std::uint64_t 轴约定 = 1, 分辨率分子 = 1, 分辨率分母 = 1;
+    std::int64_t 原点X = 0, 原点Y = 0;
+    friend bool operator==(const 特征二值图格式&, const 特征二值图格式&) = default;
+};
+struct 特征二值图 final {
+    特征二值图格式 格式;
+    std::vector<std::uint64_t> 像素;
+    friend bool operator==(const 特征二值图&, const 特征二值图&) = default;
+};
+struct 特征二值半径域 final {
+    特征二值图 代表;
+    std::int64_t 半径 = 0;
+    friend bool operator==(const 特征二值半径域&, const 特征二值半径域&) = default;
+};
+enum class 特征长期算法 : std::uint8_t { I64幅度 = 1, 二值边界平均 = 2 };
+struct 特征类型域内容 final {
+    std::uint32_t 版本 = 1;
+    稳定编码 FT{};
+    特征长期算法 算法 = 特征长期算法::I64幅度;
+    稳定编码 单位{}, 坐标系{};
+    std::int64_t 缩放 = 1;
+    std::variant<特征I64闭区间, 特征二值图格式> 完整域;
+    friend bool operator==(const 特征类型域内容&, const 特征类型域内容&) = default;
+};
+struct 特征类型化原子域 final {
+    特征类型域内容 类型;
+    std::variant<特征I64闭区间, 特征二值半径域> 域;
+    friend bool operator==(const 特征类型化原子域&, const 特征类型化原子域&) = default;
+};
+struct 特征长期结构交付 final {
+    稳定编码 格式锚点{};
+    std::uint32_t 格式 = 1;
+    std::array<稳定编码, 18> 类型{};
+    friend bool operator==(const 特征长期结构交付&, const 特征长期结构交付&) = default;
+};
+struct 特征长期读头 final {
+    std::uint32_t 版本 = 1;
+    std::uint64_t Gread = 0, H = 0;
+    friend bool operator==(const 特征长期读头&, const 特征长期读头&) = default;
+};
+struct 特征长期写头 final {
+    std::uint32_t 版本 = 1;
+    std::uint64_t 期望G = 0;
+    L1所有者范围写入幂等身份 幂等键{};
+    friend bool operator==(const 特征长期写头&, const 特征长期写头&) = default;
+};
+struct 特征长期预算 final {
+    std::uint64_t 最大记录数 = 0, 最大关系数 = 0, 最大属性数 = 0, 最大样本数 = 0;
+    std::uint64_t 最大像素数 = 0, 最大边界点对数 = 0, 最大历史事实数 = 0;
+    friend bool operator==(const 特征长期预算&, const 特征长期预算&) = default;
+};
+struct 特征观察见证 final {
+    std::uint64_t 观察标识 = 0;
+    std::int64_t 时间纳秒 = 0;
+    std::uint64_t H = 0;
+    稳定编码 存在上下文{}, F{}, FT{}, 值事实{}, 成员关系{};
+    friend bool operator==(const 特征观察见证&, const 特征观察见证&) = default;
+};
+struct 特征长期来源事实 final {
+    稳定编码 记录身份{}, 关系{}, F{};
+    std::uint64_t 创建G = 0;
+    std::optional<std::uint64_t> 退出G;
+    friend bool operator==(const 特征长期来源事实&, const 特征长期来源事实&) = default;
+};
+struct 特征长期自有事实 final {
+    std::vector<L1所有者范围节点事实> 节点;
+    std::vector<L1所有者范围关系事实> 关系;
+    std::vector<L1所有者范围值事实> 值;
+    friend bool operator==(const 特征长期自有事实&, const 特征长期自有事实&) = default;
+};
+struct 特征类型域事实 final {
+    特征类型域身份 身份;
+    特征类型域内容 内容;
+    稳定编码 输出FT{};
+    std::uint64_t 创建G = 0;
+    特征长期自有事实 自有事实;
+    friend bool operator==(const 特征类型域事实&, const 特征类型域事实&) = default;
+};
+struct 特征差异标量 final {
+    稳定编码 输出FT{};
+    特征类型域身份 类型域身份;
+    std::uint32_t 真实阶次 = 2;
+    稳定编码 单位{};
+    std::int64_t 缩放 = 1;
+    std::variant<特征观察见证, 特征区间身份> 左来源;
+    特征观察见证 右观察见证;
+    std::int64_t 值 = 0;
+    friend bool operator==(const 特征差异标量&, const 特征差异标量&) = default;
+};
+enum class 特征长期状态 : std::uint8_t {
+    已读取 = 1, 已发布, 精确重复, 无须变更, 未启用, 入口拒绝, 未找到,
+    类型不支持, 预算不足, 历史材料不可用, 事实代次漂移, 幂等冲突,
+    引用冲突, 资源失败, 内部不一致, 可能已发布, 差异不可表示 = 17
+};
+enum class 特征长期发布确定性 : std::uint8_t { 未派发, 已确认未发布, 已确认发布, 未知 };
+template<class T> struct 特征长期读取结果 final {
+    std::uint32_t 版本 = 1;
+    特征长期状态 状态 = 特征长期状态::入口拒绝;
+    std::uint64_t Gread = 0, H = 0;
+    std::optional<T> 数据;
+    bool 成功() const noexcept {
+        return 版本 == 1 && 状态 == 特征长期状态::已读取 && Gread && H && H <= Gread && 数据.has_value();
+    }
+};
+struct 特征类型域登记请求 final {
+    特征长期写头 写头;
+    特征类型域内容 内容;
+    特征长期预算 预算;
+    friend bool operator==(const 特征类型域登记请求&, const 特征类型域登记请求&) = default;
+};
+struct 特征类型域读取请求 final {
+    特征长期读头 读头;
+    std::variant<特征类型域身份, 特征长期类型引用> 选择;
+    特征长期预算 预算;
+};
+struct 特征长期比较请求 final {
+    特征长期读头 读头;
+    特征类型域身份 类型域;
+    特征观察见证 左, 右;
+    特征长期预算 预算;
+};
+struct 特征校正内容 final {
+    特征类型域身份 类型域;
+    std::uint64_t 参数版本 = 0;
+    稳定编码 外设来源{};
+    std::int64_t 裕量 = 0;
+    std::vector<特征观察见证> 样本;
+    bool 静止声明 = false;
+    friend bool operator==(const 特征校正内容&, const 特征校正内容&) = default;
+};
+enum class 特征长期证据状态 : std::uint8_t { 未展开 = 1, 已核验 = 2 };
+struct 特征校正事实 final {
+    特征校正身份 身份;
+    特征校正内容 内容;
+    std::int64_t 阈值 = 0;
+    std::optional<std::vector<特征差异标量>> 样本对比较;
+    特征长期证据状态 证据状态 = 特征长期证据状态::未展开;
+    std::uint64_t 创建G = 0;
+    特征长期自有事实 自有事实;
+    std::vector<特征长期来源事实> 来源组;
+    friend bool operator==(const 特征校正事实&, const 特征校正事实&) = default;
+};
+struct 特征跟踪内容 final {
+    特征存在上下文引用 存在上下文;
+    特征类型域身份 类型域;
+    特征校正身份 校正;
+    friend bool operator==(const 特征跟踪内容&, const 特征跟踪内容&) = default;
+};
+struct 特征跟踪事实 final {
+    特征跟踪身份 身份;
+    特征跟踪内容 内容;
+    std::uint64_t 创建G = 0;
+    特征长期自有事实 自有事实;
+    friend bool operator==(const 特征跟踪事实&, const 特征跟踪事实&) = default;
+};
+struct 特征区间事实 final {
+    特征区间身份 身份;
+    特征跟踪身份 跟踪;
+    特征观察见证 首观察;
+    std::variant<std::int64_t, 特征二值图> 固定代表;
+    std::int64_t 半径 = 0;
+    特征类型化原子域 原子域;
+    std::uint64_t 创建G = 0;
+    特征长期自有事实 自有事实;
+    std::vector<特征长期来源事实> 来源组;
+    friend bool operator==(const 特征区间事实&, const 特征区间事实&) = default;
+};
+struct 特征区间命中 final {
+    特征区间身份 区间;
+    特征差异标量 差异;
+    friend bool operator==(const 特征区间命中&, const 特征区间命中&) = default;
+};
+struct 特征长期观测事实 final {
+    特征长期观测身份 身份;
+    特征观察见证 见证;
+    特征跟踪身份 跟踪;
+    std::vector<特征区间命中> 全部命中;
+    std::optional<特征区间身份> 本次新建;
+    std::optional<std::int64_t> 实际I64值;
+    std::uint64_t 创建G = 0;
+    特征长期证据状态 证据状态 = 特征长期证据状态::未展开;
+    特征长期自有事实 自有事实;
+    std::vector<特征长期来源事实> 来源组;
+    friend bool operator==(const 特征长期观测事实&, const 特征长期观测事实&) = default;
+};
+struct 特征完整跟踪投影 final {
+    特征跟踪事实 跟踪事实;
+    特征类型域事实 类型域事实;
+    特征校正事实 校正事实;
+    std::vector<特征区间事实> 区间组;
+    std::vector<特征长期观测事实> 观察组;
+    std::uint64_t 观察总数 = 0;
+    std::vector<std::pair<特征区间身份, std::uint64_t>> 各区间命中数;
+    std::int64_t 首时间 = 0, 末时间 = 0;
+    std::optional<特征I64闭区间> 实际范围;
+};
+struct 特征校正建立请求 final {
+    特征长期写头 写头;
+    特征校正内容 内容;
+    特征长期预算 预算;
+    friend bool operator==(const 特征校正建立请求&, const 特征校正建立请求&) = default;
+};
+struct 特征校正读取请求 final {
+    特征长期读头 读头;
+    特征校正身份 校正;
+    bool 核验原始样本 = false;
+    特征长期预算 预算;
+};
+struct 特征跟踪建立请求 final {
+    特征长期写头 写头;
+    特征跟踪内容 内容;
+    特征长期预算 预算;
+    friend bool operator==(const 特征跟踪建立请求&, const 特征跟踪建立请求&) = default;
+};
+struct 特征跟踪范围 final {
+    特征存在上下文引用 E;
+    特征长期类型引用 FT;
+    friend bool operator==(const 特征跟踪范围&, const 特征跟踪范围&) = default;
+};
+struct 特征跟踪读取请求 final {
+    特征长期读头 读头;
+    std::variant<特征跟踪身份, 特征跟踪范围> 选择;
+    特征长期预算 预算;
+};
+struct 特征长期观察积累请求 final {
+    特征长期写头 写头;
+    特征跟踪身份 跟踪;
+    特征观察见证 观察;
+    特征长期预算 预算;
+    friend bool operator==(const 特征长期观察积累请求&, const 特征长期观察积累请求&) = default;
+};
+struct 特征长期区间匹配请求 final {
+    特征长期读头 读头;
+    特征跟踪身份 跟踪;
+    特征观察见证 观察;
+    特征长期预算 预算;
+};
+struct 特征长期区间读取请求 final {
+    特征长期读头 读头;
+    特征跟踪身份 跟踪;
+    特征长期预算 预算;
+};
+struct 特征长期观察读取请求 final {
+    特征长期读头 读头;
+    特征跟踪身份 跟踪;
+    bool 核验原始证据 = false;
+    特征长期预算 预算;
+};
+struct 特征长期来源释放请求 final {
+    特征长期写头 写头;
+    std::vector<特征长期来源事实> 预期组;
+    特征长期预算 预算;
+    friend bool operator==(const 特征长期来源释放请求&, const 特征长期来源释放请求&) = default;
+};
+using 特征长期原请求 = std::variant<特征类型域登记请求, 特征校正建立请求, 特征跟踪建立请求,
+    特征长期观察积累请求, 特征长期来源释放请求>;
+template<class T> struct 特征长期写入结果 final {
+    std::uint32_t 版本 = 1;
+    特征长期状态 状态 = 特征长期状态::入口拒绝;
+    std::uint64_t Gread = 0, H = 0;
+    std::optional<T> 数据;
+    std::optional<特征长期原请求> 原请求;
+    std::optional<std::uint64_t> 首次H;
+    特征长期发布确定性 发布确定性 = 特征长期发布确定性::未派发;
+    bool 成功() const noexcept {
+        if (版本 != 1 || !Gread || !H || H > Gread || !数据 || !原请求 || 原请求->valueless_by_exception()) return false;
+        if (状态 == 特征长期状态::无须变更)
+            return !首次H && 发布确定性 == 特征长期发布确定性::已确认未发布;
+        return (状态 == 特征长期状态::已发布 || 状态 == 特征长期状态::精确重复)
+            && 首次H && *首次H && *首次H <= Gread && H == *首次H
+            && 发布确定性 == 特征长期发布确定性::已确认发布;
+    }
+};
 class 特征类数据服务 final {
 public:
     bool 绑定于(const L1事实基座服务& s) const noexcept {
@@ -1041,6 +1339,236 @@ public:
         }
     }
 
+    特征类数据服务(const L1事实基座服务& l1, const 特征值类数据服务& values,
+        L1所有者范围写端口&& port, 特征类派生结构类型 derived, 特征长期结构交付 layout)
+        : 特征类数据服务(l1, values, std::move(port), derived) {
+        if (!values.绑定于(l1)) throw std::invalid_argument("long term feature value provider mismatch");
+        长期校验交付(layout);
+    }
+    特征类数据服务(const L1事实基座服务& l1, const 特征值类数据服务& values,
+        L1所有者范围写端口&& port, 特征类派生结构类型 derived,
+        特征类事实集合结构类型 collections, 特征长期结构交付 layout)
+        : 特征类数据服务(l1, values, std::move(port), derived, collections) {
+        if (!values.绑定于(l1)) throw std::invalid_argument("long term feature value provider mismatch");
+        长期校验交付(layout);
+    }
+    特征长期读取结果<特征类型域事实> 读取特征类型域(const 特征类型域读取请求& r) const {
+        return 长期读包装<特征类型域事实>(r.读头, r.预算, [&](auto& c) {
+            长期要求(!r.选择.valueless_by_exception(), LS::入口拒绝);
+            if (const auto* id = std::get_if<特征类型域身份>(&r.选择)) {
+                长期要求(有效(id->值), LS::入口拒绝); return 长期读类型(id->值, c);
+            }
+            const auto ft = std::get<特征长期类型引用>(r.选择).值;
+            长期要求(有效(ft), LS::入口拒绝);
+            std::optional<特征类型域事实> found;
+            for (const auto& record : 长期目录(c)) if (record.种类 == 1) {
+                auto type = 长期读类型(record.节点.编码, c);
+                if (type.内容.FT == ft) { 长期要求(!found); found = std::move(type); }
+            }
+            长期要求(found.has_value(), LS::未找到); return std::move(*found);
+        });
+    }
+    特征长期读取结果<特征差异标量> 比较长期特征(const 特征长期比较请求& r) const {
+        return 长期读包装<特征差异标量>(r.读头, r.预算, [&](auto& c) {
+            长期要求(有效(r.类型域.值), LS::入口拒绝);
+            const auto type = 长期读类型(r.类型域.值, c);
+            const auto a = 长期实际(type, r.左, c), b = 长期实际(type, r.右, c);
+            return 长期差异事实(type, r.左, r.右, 长期差异(type.内容, a, b, c));
+        });
+    }
+    特征长期写入结果<特征类型域事实> 登记特征类型域(const 特征类型域登记请求& r) {
+        return 长期执行<特征类型域事实>(r, [&](auto& c) {
+            长期要求(长期类型有效(r.内容), LS::入口拒绝);
+            const auto ft = 长期节点(r.内容.FT, c);
+            长期要求(ft.种类 == 节点种类::属性类型 && ft.属性类型表示, LS::类型不支持);
+            const auto rep = *ft.属性类型表示;
+            长期要求(rep == L1所有者范围值表示种类::独立材料引用
+                || (r.内容.算法 == 特征长期算法::I64幅度 ? rep == L1所有者范围值表示种类::I64 : rep == L1所有者范围值表示种类::U64组), LS::类型不支持);
+            (void)长期节点(r.内容.单位, c, false);
+            if (有效(r.内容.坐标系)) (void)长期节点(r.内容.坐标系, c, false);
+            for (const auto& record : 长期目录(c)) if (record.种类 == 1) {
+                auto old = 长期读类型(record.节点.编码, c);
+                if (old.内容.FT == r.内容.FT) {
+                    长期要求(old.内容 == r.内容, LS::幂等冲突);
+                    return 长期准备<特征类型域事实>{{}, std::move(old)};
+                }
+            }
+            return 长期准备<特征类型域事实>{长期类型写集(r), {}};
+        }, [&](auto& c, const auto& saved) {
+            auto result = 长期读类型(长期映射键(saved, SK{1}), c);
+            长期要求(result.内容 == r.内容, LS::幂等冲突);
+            return std::pair{长期类型写集(r), std::move(result)};
+        });
+    }
+    特征长期写入结果<特征校正事实> 建立特征校正(const 特征校正建立请求& r) {
+        return 长期执行<特征校正事实>(r, [&](auto& c) {
+            const auto input = 长期规范校正(r.内容);
+            长期扣量(c.样本数, input.样本.size(), c.限额.最大样本数);
+            const auto type = 长期读类型(input.类型域.值, c);
+            (void)长期节点(input.外设来源, c, false);
+            const auto computed = 长期计算校正(input, type, c);
+            std::vector<std::uint64_t> states;
+            for (const auto& sample : input.样本) states.push_back(长期源状态(sample, c));
+            return 长期准备<特征校正事实>{长期校正写集(r, input, computed.first, states), {}};
+        }, [&](auto& c, const auto& saved) {
+            auto out = 长期读校正(长期映射键(saved, SK{1}), false, c);
+            const auto input = 长期规范校正(r.内容);
+            长期要求(out.内容 == input, LS::幂等冲突);
+            std::vector<std::uint64_t> states;
+            for (std::size_t i = 0; i < input.样本.size(); ++i)
+                states.push_back(长期读记录(长期映射键(saved, SK{static_cast<std::uint32_t>(i + 2)}), c).U.back());
+            return std::pair{长期校正写集(r, input, out.阈值, states), std::move(out)};
+        });
+    }
+    特征长期读取结果<特征校正事实> 读取特征校正(const 特征校正读取请求& r) const {
+        return 长期读包装<特征校正事实>(r.读头, r.预算, [&](auto& c) {
+            长期要求(有效(r.校正.值), LS::入口拒绝);
+            return 长期读校正(r.校正.值, r.核验原始样本, c);
+        });
+    }
+    特征长期写入结果<特征跟踪事实> 建立特征跟踪(const 特征跟踪建立请求& r) {
+        return 长期执行<特征跟踪事实>(r, [&](auto& c) {
+            长期要求(有效(r.内容.存在上下文.值) && 有效(r.内容.类型域.值) && 有效(r.内容.校正.值), LS::入口拒绝);
+            const auto type = 长期读类型(r.内容.类型域.值, c);
+            const auto correction = 长期读校正(r.内容.校正.值, false, c);
+            长期要求(correction.内容.类型域 == type.身份, LS::引用冲突);
+            for (const auto& item : 长期目录(c)) if (item.种类 == 4) {
+                auto old = 长期读跟踪(item.节点.编码, c);
+                if (old.内容 == r.内容) return 长期准备<特征跟踪事实>{{}, std::move(old)};
+            }
+            return 长期准备<特征跟踪事实>{长期跟踪写集(r), {}};
+        }, [&](auto& c, const auto& saved) {
+            auto out = 长期读跟踪(长期映射键(saved, SK{1}), c);
+            长期要求(out.内容 == r.内容, LS::幂等冲突);
+            return std::pair{长期跟踪写集(r), std::move(out)};
+        });
+    }
+    特征长期读取结果<std::vector<特征完整跟踪投影>> 读取特征跟踪(const 特征跟踪读取请求& r) const {
+        return 长期读包装<std::vector<特征完整跟踪投影>>(r.读头, r.预算, [&](auto& c) {
+            长期要求(!r.选择.valueless_by_exception(), LS::入口拒绝);
+            std::vector<特征完整跟踪投影> out;
+            if (const auto* id = std::get_if<特征跟踪身份>(&r.选择)) {
+                长期要求(有效(id->值), LS::入口拒绝);
+                out.push_back(长期投影(id->值, false, c));
+            } else {
+                const auto& range = std::get<特征跟踪范围>(r.选择);
+                长期要求(有效(range.E.值) && 有效(range.FT.值), LS::入口拒绝);
+                for (const auto& record : 长期目录(c)) if (record.种类 == 4) {
+                    const auto track = 长期读跟踪(record.节点.编码, c);
+                    const auto type = 长期读类型(track.内容.类型域.值, c);
+                    if (track.内容.存在上下文 == range.E && type.内容.FT == range.FT.值)
+                        out.push_back(长期投影(track.身份.值, false, c));
+                }
+            }
+            std::sort(out.begin(), out.end(), [](const auto& a, const auto& b) {
+                return std::pair{a.跟踪事实.创建G, a.跟踪事实.身份.值} < std::pair{b.跟踪事实.创建G, b.跟踪事实.身份.值};
+            });
+            return out;
+        });
+    }
+    特征长期写入结果<特征长期观测事实> 积累特征观察(const 特征长期观察积累请求& r) {
+        return 长期执行<特征长期观测事实>(r, [&](auto& c) {
+            长期要求(有效(r.跟踪.值) && 长期见证有效(r.观察), LS::入口拒绝);
+            auto projection = 长期投影(r.跟踪.值, false, c);
+            长期要求(r.观察.存在上下文 == projection.跟踪事实.内容.存在上下文.值
+                && r.观察.FT == projection.类型域事实.内容.FT, LS::引用冲突);
+            if (auto shared = 长期跨跟踪重复(r, projection.跟踪事实, c))
+                return 长期准备<特征长期观测事实>{{}, std::move(shared)};
+            for (auto& old : projection.观察组) {
+                if (old.见证.观察标识 == r.观察.观察标识) {
+                    长期要求(old.见证 == r.观察, LS::幂等冲突);
+                    return 长期准备<特征长期观测事实>{{}, std::move(old)};
+                }
+                if (长期同次样本(old.见证, r.观察)) {
+                    auto witness = r.观察; witness.观察标识 = old.见证.观察标识;
+                    长期要求(witness == old.见证, LS::幂等冲突);
+                    return 长期准备<特征长期观测事实>{{}, std::move(old)};
+                }
+            }
+            const auto value = 长期实际(projection.类型域事实, r.观察, c);
+            const auto matches = 长期匹配(projection.区间组, projection.类型域事实, r.观察, value, c);
+            std::optional<特征区间事实> created;
+            if (matches.empty()) {
+                created.emplace(); created->固定代表 = value; created->半径 = projection.校正事实.阈值;
+            }
+            std::optional<std::int64_t> scalar;
+            if (const auto* n = std::get_if<std::int64_t>(&value)) scalar = *n;
+            return 长期准备<特征长期观测事实>{长期观察写集(r, created, matches, scalar, 长期源状态(r.观察, c)), {}};
+        }, [&](auto& c, const auto& saved) {
+            长期要求(有效(r.跟踪.值), LS::幂等冲突);
+            auto projection = 长期投影(r.跟踪.值, false, c);
+            std::optional<特征长期观测事实> out;
+            for (auto& item : projection.观察组) if (item.创建G == saved.事实代次 && item.见证 == r.观察) {
+                长期要求(!out); out = std::move(item);
+            }
+            长期要求(out.has_value(), LS::幂等冲突);
+            const auto raw = 长期读记录(out->身份.值, c);
+            std::optional<特征区间事实> created;
+            if (out->本次新建) for (const auto& interval : projection.区间组)
+                if (interval.身份 == *out->本次新建) created = interval;
+            长期要求(bool(created) == bool(out->本次新建));
+            return std::pair{长期观察写集(r, created, out->全部命中, out->实际I64值, raw.U.back()), std::move(*out)};
+        });
+    }
+    特征长期读取结果<std::vector<特征区间命中>> 匹配长期区间(const 特征长期区间匹配请求& r) const {
+        return 长期读包装<std::vector<特征区间命中>>(r.读头, r.预算, [&](auto& c) {
+            长期要求(有效(r.跟踪.值), LS::入口拒绝);
+            const auto p = 长期投影(r.跟踪.值, false, c);
+            长期要求(r.观察.存在上下文 == p.跟踪事实.内容.存在上下文.值, LS::引用冲突);
+            const auto value = 长期实际(p.类型域事实, r.观察, c);
+            return 长期匹配(p.区间组, p.类型域事实, r.观察, value, c);
+        });
+    }
+    特征长期读取结果<std::vector<特征区间事实>> 读取长期区间(const 特征长期区间读取请求& r) const {
+        return 长期读包装<std::vector<特征区间事实>>(r.读头, r.预算, [&](auto& c) {
+            长期要求(有效(r.跟踪.值), LS::入口拒绝);
+            return 长期投影(r.跟踪.值, false, c).区间组;
+        });
+    }
+    特征长期读取结果<std::vector<特征长期观测事实>> 读取长期观察(const 特征长期观察读取请求& r) const {
+        return 长期读包装<std::vector<特征长期观测事实>>(r.读头, r.预算, [&](auto& c) {
+            长期要求(有效(r.跟踪.值), LS::入口拒绝);
+            return 长期投影(r.跟踪.值, r.核验原始证据, c).观察组;
+        });
+    }
+    特征长期写入结果<std::vector<特征长期来源事实>> 释放长期来源引用(const 特征长期来源释放请求& r) {
+        auto reconstruct = [&](auto& c, bool replay) {
+            std::vector<特征长期来源事实> actual;
+            std::set<稳定编码> seen;
+            for (const auto& expected : r.预期组) {
+                长期要求(有效(expected.记录身份) && 有效(expected.关系) && 有效(expected.F)
+                    && expected.创建G && expected.创建G <= r.写头.期望G && !expected.退出G
+                    && seen.insert(expected.关系).second, LS::入口拒绝);
+                const auto record = 长期读记录(expected.记录身份, c);
+                长期要求(record.种类 == 3 || record.种类 == 5 || record.种类 == 6, LS::引用冲突);
+                const auto w = 长期解析见证(record.U, record.I[0]);
+                const auto source = 长期来源(record, w);
+                长期要求(source.size() == 1, LS::引用冲突);
+                auto before = source[0];
+                if (before.退出G && *before.退出G > r.写头.期望G) before.退出G.reset();
+                长期要求(before == expected, replay ? LS::幂等冲突 : LS::引用冲突);
+                if (replay) 长期要求(source[0].退出G == c.H);
+                else 长期要求(!source[0].退出G || *source[0].退出G > c.H, LS::引用冲突);
+                actual.push_back(source[0]);
+            }
+            std::sort(actual.begin(), actual.end(), [](const auto& a, const auto& b) { return a.关系 < b.关系; });
+            return actual;
+        };
+        auto write = [&](const auto& sources) {
+            L1所有者范围写集请求 w;
+            w.合同版本 = L1所有者范围CRUD合同版本; w.期望事实代次 = r.写头.期望G; w.写入幂等身份 = r.写头.幂等键;
+            for (const auto& e : sources) w.退出事实.push_back(e.关系);
+            return w;
+        };
+        return 长期执行<std::vector<特征长期来源事实>>(r, [&](auto& c) {
+            auto sources = reconstruct(c, false);
+            if (sources.empty()) return 长期准备<std::vector<特征长期来源事实>>{{}, std::move(sources)};
+            return 长期准备<std::vector<特征长期来源事实>>{write(sources), {}};
+        }, [&](auto& c, const auto& saved) {
+            auto sources = reconstruct(c, true);
+            return std::pair{write(sources), std::move(sources)};
+        });
+    }
     特征类数据服务() = delete;
     特征类数据服务(const 特征类数据服务&) = delete;
     特征类数据服务& operator=(const 特征类数据服务&) = delete;
@@ -1448,6 +1976,996 @@ public:
 
 
 private:
+    using LS = 特征长期状态;
+    struct 长期失败 { LS 状态; };
+    static void 长期要求(bool ok, LS s = LS::内部不一致) {
+        if (!ok) throw 长期失败{s};
+    }
+    using LN = L1所有者范围节点事实;
+    using LV = L1所有者范围值事实;
+    using LE = L1所有者范围关系事实;
+    struct 长期记录 {
+        LN 节点;
+        std::int64_t 种类 = 0;
+        std::vector<std::uint64_t> U;
+        std::vector<std::int64_t> I;
+        std::array<std::vector<LE>, 18> 边;
+        特征长期自有事实 事实;
+    };
+    struct 长期上下文 {
+        std::uint64_t G = 0, H = 0;
+        特征长期预算 限额;
+        std::uint64_t 记录数 = 0, 关系数 = 0, 属性数 = 0, 样本数 = 0;
+        std::uint64_t 像素数 = 0, 点对数 = 0, 历史数 = 0;
+        std::map<std::pair<稳定编码, std::uint64_t>, 长期记录> 已读记录;
+    };
+    static void 长期扣量(std::uint64_t& used, std::uint64_t amount, std::uint64_t limit) {
+        长期要求(limit && used <= limit && amount <= limit - used, LS::预算不足);
+        used += amount;
+    }
+    static bool 长期格式有效(const 特征二值图格式& f) noexcept {
+        return f.宽 && f.高 && 有效(f.坐标系) && f.轴约定 == 1 && f.分辨率分子 && f.分辨率分母
+            && std::gcd(f.分辨率分子, f.分辨率分母) == 1;
+    }
+    static bool 长期类型有效(const 特征类型域内容& t) noexcept {
+        if (t.版本 != 1 || !有效(t.FT) || !有效(t.单位) || t.缩放 <= 0 || t.完整域.valueless_by_exception()) return false;
+        if (t.算法 == 特征长期算法::I64幅度) {
+            const auto* d = std::get_if<特征I64闭区间>(&t.完整域);
+            return d && d->下界 <= d->上界 && t.缩放 == 1 && !有效(t.坐标系);
+        }
+        if (t.算法 != 特征长期算法::二值边界平均) return false;
+        const auto* d = std::get_if<特征二值图格式>(&t.完整域);
+        return d && 长期格式有效(*d) && d->坐标系 == t.坐标系;
+    }
+    static std::int64_t 长期I64位模式(std::uint64_t x) noexcept {
+        return std::bit_cast<std::int64_t>(x);
+    }
+    static 特征二值图 长期解析二值(const std::vector<std::uint64_t>& u, 长期上下文& c) {
+        长期要求(u.size() >= 10 && u[0] == 0x42494E4152590001ULL, LS::类型不支持);
+        特征二值图 out;
+        out.格式 = {u[1], u[2], 稳定编码{u[3]}, u[4], u[5], u[6], 长期I64位模式(u[7]), 长期I64位模式(u[8])};
+        长期要求(长期格式有效(out.格式), LS::类型不支持);
+        长期要求(u[1] <= UINT64_MAX / u[2] && u[1] * u[2] == u.size() - 9, LS::类型不支持);
+        长期扣量(c.像素数, u.size() - 9, c.限额.最大像素数);
+        bool foreground = false;
+        for (std::size_t i = 9; i < u.size(); ++i) {
+            长期要求(u[i] <= 1, LS::类型不支持);
+            foreground |= u[i] == 1;
+        }
+        长期要求(foreground, LS::类型不支持);
+        out.像素.assign(u.begin() + 9, u.end());
+        return out;
+    }
+    static std::vector<std::uint64_t> 长期图载荷(const 特征二值图& x) {
+        const auto& f = x.格式;
+        std::vector<std::uint64_t> out{0x42494E4152590001ULL, f.宽, f.高, f.坐标系.值, f.轴约定,
+            f.分辨率分子, f.分辨率分母, std::bit_cast<std::uint64_t>(f.原点X), std::bit_cast<std::uint64_t>(f.原点Y)};
+        out.insert(out.end(), x.像素.begin(), x.像素.end());
+        return out;
+    }
+    static bool 长期见证有效(const 特征观察见证& w) noexcept {
+        return w.观察标识 && w.时间纳秒 > 0 && w.H && 有效(w.存在上下文) && 有效(w.F)
+            && 有效(w.FT) && 有效(w.值事实) && 有效(w.成员关系);
+    }
+    static bool 长期同次样本(const 特征观察见证& a, const 特征观察见证& b) noexcept {
+        return a.存在上下文 == b.存在上下文 && a.FT == b.FT && a.F == b.F && a.值事实 == b.值事实
+            && a.H == b.H && a.时间纳秒 == b.时间纳秒;
+    }
+    static std::vector<std::uint64_t> 长期见证U64(const 特征观察见证& w) {
+        return {w.观察标识, w.H, w.存在上下文.值, w.F.值, w.FT.值, w.值事实.值, w.成员关系.值};
+    }
+    static 特征观察见证 长期解析见证(const std::vector<std::uint64_t>& u, std::int64_t time) {
+        长期要求(u.size() >= 7);
+        特征观察见证 w{u[0], time, u[1], 稳定编码{u[2]}, 稳定编码{u[3]}, 稳定编码{u[4]}, 稳定编码{u[5]}, 稳定编码{u[6]}};
+        长期要求(长期见证有效(w));
+        return w;
+    }
+    std::uint64_t 长期当前() const {
+        const auto r = 第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
+        长期要求(r.状态 == L1中性读取状态::成功,
+            r.状态 == L1中性读取状态::资源失败 ? LS::资源失败 : LS::内部不一致);
+        长期要求(r.合同版本 == L1中性CRUD合同版本 && r.事实代次);
+        return r.事实代次;
+    }
+    void 长期守卫(std::uint64_t g) const { 长期要求(长期当前() == g, LS::事实代次漂移); }
+    static LS 长期映射(L1所有者范围读取状态 s) noexcept {
+        switch (s) {
+        case L1所有者范围读取状态::未找到: return LS::未找到;
+        case L1所有者范围读取状态::历史材料已清理: return LS::历史材料不可用;
+        case L1所有者范围读取状态::资源失败: return LS::资源失败;
+        default: return LS::内部不一致;
+        }
+    }
+    static LS 长期映射(特征引用读取状态 s) noexcept {
+        switch (s) {
+        case 特征引用读取状态::数量预算不足: return LS::预算不足;
+        case 特征引用读取状态::资源失败: return LS::资源失败;
+        case 特征引用读取状态::事实代次漂移: return LS::事实代次漂移;
+        case 特征引用读取状态::历史材料不可用: return LS::历史材料不可用;
+        case 特征引用读取状态::未找到: return LS::未找到;
+        case 特征引用读取状态::内部不一致: return LS::内部不一致;
+        default: return LS::引用冲突;
+        }
+    }
+    长期上下文 长期开始(const 特征长期读头& h, const 特征长期预算& b) const {
+        长期要求(长期交付_.has_value(), LS::未启用);
+        长期要求(h.版本 == 1 && h.Gread && h.H <= h.Gread, LS::入口拒绝);
+        长期守卫(h.Gread);
+        return {h.Gread, h.H ? h.H : h.Gread, b};
+    }
+    template<class T> static bool 长期活动(const T& f, std::uint64_t h) noexcept {
+        return f.创建事实代次 && f.创建事实代次 <= h && (!f.退出事实代次 || *f.退出事实代次 > h);
+    }
+    LN 长期节点(稳定编码 id, 长期上下文& c, bool own = true, bool active = true) const {
+        长期扣量(c.历史数, 1, c.限额.最大历史事实数);
+        auto r = 第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, id});
+        if (r.状态 != L1所有者范围读取状态::成功) {
+            长期守卫(c.G);
+            throw 长期失败{长期映射(r.状态)};
+        }
+        长期要求(r.读取事实代次 == c.G, LS::事实代次漂移);
+        const auto* n = r.事实 ? std::get_if<LN>(&*r.事实) : nullptr;
+        长期要求(r.合同版本 == L1所有者范围CRUD合同版本 && r.查询编码 == id && n && n->编码 == id
+            && n->创建事实代次 && (!own || n->写入所有者 == 所有者_));
+        长期要求(n->创建事实代次 <= c.H && (!active || 长期活动(*n, c.H)), LS::未找到);
+        return *n;
+    }
+    std::vector<LV> 长期属性(const LN& n, 长期上下文& c) const {
+        auto r = 第一层服务_.读取所有者范围历史属性值组({L1所有者范围CRUD合同版本, n.编码, c.H});
+        if (r.状态 != L1所有者范围读取状态::成功) {
+            长期守卫(c.G); throw 长期失败{长期映射(r.状态)};
+        }
+        长期要求(r.读取事实代次 == c.G, LS::事实代次漂移);
+        长期要求(r.合同版本 == L1所有者范围CRUD合同版本 && r.所属节点 == n.编码 && r.历史截止事实代次 == c.H);
+        长期扣量(c.属性数, r.属性值组.size(), c.限额.最大属性数);
+        长期扣量(c.历史数, r.属性值组.size(), c.限额.最大历史事实数);
+        for (const auto& v : r.属性值组)
+            长期要求(有效(v.编码) && v.所属节点 == n.编码 && v.写入所有者 == 所有者_
+                && v.来源节点 == n.编码 && 长期活动(v, c.H)
+                && v.创建事实代次 == n.创建事实代次 && v.退出事实代次 == n.退出事实代次);
+        return r.属性值组;
+    }
+    std::vector<LE> 长期关系(稳定编码 id, unsigned role, bool incoming, 长期上下文& c,
+        std::optional<std::uint64_t> at = {}) const {
+        长期要求(role >= 1 && role <= 18);
+        const auto h = at.value_or(c.H);
+        const auto direction = incoming ? L1所有者范围关系端点方向::目标 : L1所有者范围关系端点方向::源;
+        auto r = 第一层服务_.读取所有者范围历史关系组(
+            {L1所有者范围CRUD合同版本, direction, id, 长期交付_->类型[role - 1], h});
+        if (r.状态 != L1所有者范围读取状态::成功) {
+            长期守卫(c.G); throw 长期失败{长期映射(r.状态)};
+        }
+        长期要求(r.读取事实代次 == c.G, LS::事实代次漂移);
+        长期要求(r.合同版本 == L1所有者范围CRUD合同版本 && r.方向 == direction
+            && r.端点节点 == id && r.关系类型节点 == 长期交付_->类型[role - 1] && r.历史截止事实代次 == h);
+        长期扣量(c.关系数, r.关系组.size(), c.限额.最大关系数);
+        长期扣量(c.历史数, r.关系组.size(), c.限额.最大历史事实数);
+        for (const auto& e : r.关系组)
+            长期要求(有效(e.编码) && e.写入所有者 == 所有者_ && e.关系类型节点 == 长期交付_->类型[role - 1]
+                && (incoming ? e.目标节点 : e.源节点) == id && 长期活动(e, h));
+        std::sort(r.关系组.begin(), r.关系组.end(), [](const auto& a, const auto& b) {
+            return std::pair{a.角色或顺序, a.编码} < std::pair{b.角色或顺序, b.编码};
+        });
+        return r.关系组;
+    }
+    void 长期校验交付(const 特征长期结构交付& d) {
+        长期要求(d.格式 == 1 && 有效(d.格式锚点), LS::入口拒绝);
+        长期交付_ = d;
+        特征长期预算 b;
+        b.最大记录数 = b.最大关系数 = b.最大属性数 = b.最大历史事实数 = 1000;
+        auto c = 长期开始({1, 长期当前(), 0}, b);
+        const auto a = 长期节点(d.格式锚点, c);
+        长期要求(a.种类 == 节点种类::普通 && !a.属性类型表示);
+        std::set<稳定编码> ids;
+        for (unsigned i = 0; i < 18; ++i) {
+            长期要求(有效(d.类型[i]) && d.类型[i] != d.格式锚点 && ids.insert(d.类型[i]).second);
+            const auto n = 长期节点(d.类型[i], c);
+            const auto rep = i == 1 || i == 2 ? std::optional{L1所有者范围值表示种类::I64}
+                : i == 3 ? std::optional{L1所有者范围值表示种类::U64组}
+                : i == 4 ? std::optional{L1所有者范围值表示种类::I64组} : std::nullopt;
+            长期要求(n.种类 == (rep ? 节点种类::属性类型 : 节点种类::普通) && n.属性类型表示 == rep);
+        }
+        const auto values = 长期属性(a, c);
+        长期要求(values.size() == 1 && values[0].属性类型节点 == d.类型[2]
+            && std::get_if<std::int64_t>(&values[0].材料) && std::get<std::int64_t>(values[0].材料) == 1);
+        const auto edges = 长期关系(a.编码, 18, false, c);
+        长期要求(edges.size() == 18);
+        for (unsigned i = 0; i < 18; ++i)
+            长期要求(edges[i].角色或顺序 == i + 1 && edges[i].目标节点 == d.类型[i] && !edges[i].退出事实代次);
+        长期守卫(c.G);
+    }
+    长期记录 长期读记录(稳定编码 id, 长期上下文& c) const {
+        const auto cached = c.已读记录.find({id, c.H});
+        if (cached != c.已读记录.end()) return cached->second;
+        长期扣量(c.记录数, 1, c.限额.最大记录数);
+        长期记录 r;
+        r.节点 = 长期节点(id, c);
+        长期要求(r.节点.种类 == 节点种类::普通 && !r.节点.属性类型表示 && !r.节点.退出事实代次);
+        r.事实.节点.push_back(r.节点);
+        r.事实.值 = 长期属性(r.节点, c);
+        长期要求(r.事实.值.size() == 4);
+        auto value = [&](unsigned role) -> const L1所有者范围原始值材料& {
+            const LV* found = nullptr;
+            for (const auto& v : r.事实.值) if (v.属性类型节点 == 长期交付_->类型[role - 1]) {
+                长期要求(!found); found = &v;
+            }
+            长期要求(found != nullptr); return found->材料;
+        };
+        const auto* kind = std::get_if<std::int64_t>(&value(2));
+        const auto* ver = std::get_if<std::int64_t>(&value(3));
+        const auto* u = std::get_if<std::vector<std::uint64_t>>(&value(4));
+        const auto* i = std::get_if<std::vector<std::int64_t>>(&value(5));
+        长期要求(kind && *kind >= 1 && *kind <= 6 && ver && *ver == 1 && u && !u->empty() && i && !i->empty());
+        r.种类 = *kind; r.U = *u; r.I = *i;
+        r.边[0] = 长期关系(id, 1, true, c);
+        长期要求(r.边[0].size() == 1 && r.边[0][0].源节点 == 长期交付_->格式锚点
+            && r.边[0][0].角色或顺序 == 1 && r.边[0][0].创建事实代次 == r.节点.创建事实代次
+            && !r.边[0][0].退出事实代次);
+        r.事实.关系 = r.边[0];
+        for (unsigned role = 6; role <= 17; ++role) {
+            r.边[role - 1] = 长期关系(id, role, false, c, role == 16 ? std::optional{r.节点.创建事实代次} : std::nullopt);
+            std::int64_t order = 0;
+            for (const auto& e : r.边[role - 1]) {
+                长期要求(e.创建事实代次 == r.节点.创建事实代次 && (role == 16 || !e.退出事实代次)
+                    && e.角色或顺序 == ++order);
+                r.事实.关系.push_back(e);
+            }
+        }
+        c.已读记录.emplace(std::pair{id, c.H}, r);
+        return r;
+    }
+    static 稳定编码 长期单边(const 长期记录& r, unsigned role) {
+        长期要求(r.边[role - 1].size() == 1);
+        return r.边[role - 1][0].目标节点;
+    }
+    static void 长期角色(const 长期记录& r, std::initializer_list<unsigned> allowed) {
+        for (unsigned role = 6; role <= 17; ++role)
+            if (std::find(allowed.begin(), allowed.end(), role) == allowed.end())
+                长期要求(r.边[role - 1].empty());
+    }
+    std::vector<长期记录> 长期目录(长期上下文& c) const {
+        const auto edges = 长期关系(长期交付_->格式锚点, 1, false, c);
+        std::vector<长期记录> out;
+        std::set<稳定编码> ids;
+        for (const auto& e : edges) {
+            长期要求(e.角色或顺序 == 1 && !e.退出事实代次 && ids.insert(e.目标节点).second);
+            auto r = 长期读记录(e.目标节点, c);
+            长期要求(r.边[0][0] == e);
+            out.push_back(std::move(r));
+        }
+        return out;
+    }
+    // 有界128位整数；每个中间量均精确，超过本实现宽度显式拒绝。
+    struct 长期宽整数 {
+        std::array<std::uint32_t, 4> w{};
+        长期宽整数() = default;
+        explicit 长期宽整数(std::uint64_t x) : w{static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(x >> 32), 0, 0} {}
+        friend bool operator==(const 长期宽整数&, const 长期宽整数&) = default;
+        bool operator<(const 长期宽整数& b) const noexcept {
+            for (int i = 3; i >= 0; --i) if (w[i] != b.w[i]) return w[i] < b.w[i];
+            return false;
+        }
+        bool bit(unsigned i) const noexcept { return (w[i / 32] >> (i % 32)) & 1U; }
+        void set(unsigned i) noexcept { w[i / 32] |= 1U << (i % 32); }
+        bool shift() noexcept {
+            bool carry = w[3] >> 31;
+            for (int i = 3; i >= 0; --i) w[i] = (w[i] << 1) | (i ? w[i - 1] >> 31 : 0);
+            return carry;
+        }
+        void subtract(const 长期宽整数& b) noexcept {
+            std::uint64_t borrow = 0;
+            for (unsigned i = 0; i < 4; ++i) {
+                const auto rhs = static_cast<std::uint64_t>(b.w[i]) + borrow;
+                const auto lhs = static_cast<std::uint64_t>(w[i]);
+                w[i] = static_cast<std::uint32_t>(lhs - rhs);
+                borrow = lhs < rhs;
+            }
+        }
+        std::uint64_t u64() const {
+            长期要求(!w[2] && !w[3], LS::差异不可表示);
+            return w[0] | (static_cast<std::uint64_t>(w[1]) << 32);
+        }
+    };
+    static 长期宽整数 长期加(长期宽整数 a, const 长期宽整数& b) {
+        std::uint64_t carry = 0;
+        for (unsigned i = 0; i < 4; ++i) {
+            const auto x = static_cast<std::uint64_t>(a.w[i]) + b.w[i] + carry;
+            a.w[i] = static_cast<std::uint32_t>(x); carry = x >> 32;
+        }
+        长期要求(!carry, LS::差异不可表示); return a;
+    }
+    static 长期宽整数 长期乘(const 长期宽整数& a, const 长期宽整数& b) {
+        std::array<std::uint32_t, 8> v{};
+        for (unsigned i = 0; i < 4; ++i) {
+            std::uint64_t carry = 0;
+            for (unsigned j = 0; j < 4; ++j) {
+                const auto x = static_cast<std::uint64_t>(a.w[i]) * b.w[j] + v[i + j] + carry;
+                v[i + j] = static_cast<std::uint32_t>(x); carry = x >> 32;
+            }
+            v[i + 4] = static_cast<std::uint32_t>(carry);
+        }
+        长期要求(!v[4] && !v[5] && !v[6] && !v[7], LS::差异不可表示);
+        长期宽整数 out; std::copy_n(v.begin(), 4, out.w.begin()); return out;
+    }
+    static 长期宽整数 长期除(const 长期宽整数& a, const 长期宽整数& b) {
+        长期要求(b != 长期宽整数{});
+        长期宽整数 q, rem;
+        for (int i = 127; i >= 0; --i) {
+            const bool carry = rem.shift();
+            if (a.bit(static_cast<unsigned>(i))) rem.w[0] |= 1;
+            if (carry || !(rem < b)) { rem.subtract(b); q.set(static_cast<unsigned>(i)); }
+        }
+        return q;
+    }
+    static std::uint64_t 长期开方(const 长期宽整数& n) {
+        std::uint64_t lo = 0, hi = UINT64_MAX;
+        while (lo != hi) {
+            const auto mid = lo + (hi - lo) / 2 + (hi - lo) % 2;
+            const auto square = 长期乘(长期宽整数{mid}, 长期宽整数{mid});
+            if (n < square) hi = mid - 1; else lo = mid;
+        }
+        return lo;
+    }
+    using 长期实际值 = std::variant<std::int64_t, 特征二值图>;
+    static std::int64_t 长期差异(const 特征类型域内容& t, const 长期实际值& a,
+        const 长期实际值& b, 长期上下文& c) {
+        长期要求(a.index() == b.index());
+        if (const auto* x = std::get_if<std::int64_t>(&a)) {
+            const auto y = std::get<std::int64_t>(b);
+            const auto distance = *x >= y ? static_cast<std::uint64_t>(*x) - static_cast<std::uint64_t>(y)
+                : static_cast<std::uint64_t>(y) - static_cast<std::uint64_t>(*x);
+            长期要求(distance <= INT64_MAX, LS::差异不可表示);
+            return static_cast<std::int64_t>(distance);
+        }
+        const auto& x = std::get<特征二值图>(a);
+        const auto& y = std::get<特征二值图>(b);
+        长期要求(x.格式 == y.格式 && x.格式 == std::get<特征二值图格式>(t.完整域), LS::类型不支持);
+        if (x == y) return 0;
+        using Point = std::pair<std::uint64_t, std::uint64_t>;
+        auto boundary = [](const 特征二值图& image) {
+            std::vector<Point> out;
+            const auto w = image.格式.宽, h = image.格式.高;
+            for (std::uint64_t i = 0; i < image.像素.size(); ++i) if (image.像素[i]) {
+                const auto px = i % w, py = i / w;
+                if (!px || px + 1 == w || !py || py + 1 == h || !image.像素[i - 1]
+                    || !image.像素[i + 1] || !image.像素[i - w] || !image.像素[i + w]) out.emplace_back(px, py);
+            }
+            return out;
+        };
+        const auto A = boundary(x), B = boundary(y);
+        长期要求(!A.empty() && !B.empty());
+        const auto scale2 = 长期乘(长期宽整数{static_cast<std::uint64_t>(t.缩放)}, 长期宽整数{static_cast<std::uint64_t>(t.缩放)});
+        auto directed = [&](const auto& first, const auto& second) {
+            长期宽整数 sum;
+            for (const auto& p : first) {
+                std::optional<长期宽整数> nearest;
+                for (const auto& q : second) {
+                    长期扣量(c.点对数, 1, c.限额.最大边界点对数);
+                    const auto dx = p.first > q.first ? p.first - q.first : q.first - p.first;
+                    const auto dy = p.second > q.second ? p.second - q.second : q.second - p.second;
+                    const auto d2 = 长期加(长期乘(长期宽整数{dx}, 长期宽整数{dx}), 长期乘(长期宽整数{dy}, 长期宽整数{dy}));
+                    if (!nearest || d2 < *nearest) nearest = d2;
+                }
+                sum = 长期加(sum, 长期宽整数{长期开方(长期乘(*nearest, scale2))});
+            }
+            return sum;
+        };
+        const auto sa = directed(A, B), sb = directed(B, A);
+        const auto numerator = 长期加(长期乘(sa, 长期宽整数{B.size()}), 长期乘(sb, 长期宽整数{A.size()}));
+        const auto denominator = 长期乘(长期宽整数{2}, 长期乘(长期宽整数{A.size()}, 长期宽整数{B.size()}));
+        const auto result = 长期除(numerator, denominator).u64();
+        长期要求(result <= INT64_MAX, LS::差异不可表示);
+        return static_cast<std::int64_t>(result);
+    }
+    特征类型域事实 长期读类型(稳定编码 id, 长期上下文& c) const {
+        auto r = 长期读记录(id, c);
+        长期要求(r.种类 == 1 && r.U.size() == 6 && r.I.size() == 5);
+        长期角色(r, {6, 7, 8, 17});
+        特征类型域事实 out;
+        out.身份 = 特征类型域身份{id}; out.创建G = r.节点.创建事实代次;
+        auto& t = out.内容;
+        t.FT = 长期单边(r, 6); t.单位 = 长期单边(r, 8); t.缩放 = r.I[0];
+        长期要求(r.U[0] == 1 || r.U[0] == 2);
+        t.算法 = static_cast<特征长期算法>(r.U[0]);
+        if (r.U[0] == 1) {
+            长期要求(std::all_of(r.U.begin() + 1, r.U.end(), [](auto x) { return x == 0; })
+                && !r.I[3] && !r.I[4] && r.边[6].empty());
+            t.完整域 = 特征I64闭区间{r.I[1], r.I[2]};
+        } else {
+            t.坐标系 = 长期单边(r, 7);
+            长期要求(!r.I[1] && !r.I[2]);
+            t.完整域 = 特征二值图格式{r.U[1], r.U[2], t.坐标系, r.U[3], r.U[4], r.U[5], r.I[3], r.I[4]};
+        }
+        长期要求(长期类型有效(t));
+        const auto originalH = c.H;
+        c.H = out.创建G;
+        const auto ft = 长期节点(t.FT, c);
+        长期要求(ft.种类 == 节点种类::属性类型 && ft.属性类型表示);
+        const auto rep = *ft.属性类型表示;
+        长期要求(rep == L1所有者范围值表示种类::独立材料引用
+            || (t.算法 == 特征长期算法::I64幅度 ? rep == L1所有者范围值表示种类::I64 : rep == L1所有者范围值表示种类::U64组));
+        (void)长期节点(t.单位, c, false);
+        if (有效(t.坐标系)) (void)长期节点(t.坐标系, c, false);
+        out.输出FT = 长期单边(r, 17);
+        const auto output = 长期节点(out.输出FT, c);
+        长期要求(output.种类 == 节点种类::属性类型 && output.属性类型表示 == L1所有者范围值表示种类::I64
+            && output.创建事实代次 == out.创建G && !output.退出事实代次);
+        const auto values = 长期属性(output, c);
+        长期要求(values.size() == 1 && values[0].属性类型节点 == output.编码
+            && std::get_if<std::int64_t>(&values[0].材料)
+            && std::get<std::int64_t>(values[0].材料) == 0x4C54444946460001LL);
+        const auto reverse = 长期关系(output.编码, 17, true, c);
+        长期要求(reverse.size() == 1 && reverse[0] == r.边[16][0]);
+        r.事实.节点.push_back(output); r.事实.值.push_back(values[0]);
+        out.自有事实 = std::move(r.事实);
+        c.H = originalH;
+        return out;
+    }
+    长期实际值 长期实际(const 特征类型域事实& type, const 特征观察见证& w, 长期上下文& c) const {
+        长期要求(长期见证有效(w) && w.H <= c.H && w.FT == type.内容.FT, LS::引用冲突);
+        长期扣量(c.样本数, 1, c.限额.最大样本数);
+        长期扣量(c.历史数, 3, c.限额.最大历史事实数);
+        长期要求(c.属性数 < c.限额.最大属性数, LS::预算不足);
+        auto whole = 按实例读取特征历史事实({1, c.G, w.H, w.F, c.限额.最大属性数 - c.属性数});
+        if (!whole.成功()) { 长期守卫(c.G); throw 长期失败{长期映射(whole.状态)}; }
+        长期扣量(c.属性数, 1, c.限额.最大属性数);
+        长期扣量(c.历史数, 3, c.限额.最大历史事实数);
+        长期要求(whole.Gread == c.G && whole.H == w.H && whole.特征 && whole.特征->结点 == w.F
+            && whole.特征->特征类型 == w.FT && whole.特征->值事实 == w.值事实, LS::引用冲突);
+        auto f = 读取特征历史事实({1, c.G, w.H, w.F, w.值事实});
+        if (!f.成功()) { 长期守卫(c.G); throw 长期失败{长期映射(f.状态)}; }
+        长期要求(f.Gread == c.G && f.H == w.H && f.特征 && f.特征->特征类型 == w.FT);
+        // 派生输出FT不能借普通历史形状伪装为第一阶来源。
+        auto oldH = c.H; c.H = w.H;
+        const auto ft = 长期节点(w.FT, c);
+        长期要求(std::none_of(ft.当前属性.begin(), ft.当前属性.end(), [&](const auto& x) { return x.属性类型节点 == ft.编码; }), LS::类型不支持);
+        c.H = oldH;
+        L1所有者范围原始值材料 raw = 转换为L1材料(f.特征->特征值);
+        if (const auto* ref = std::get_if<L1所有者范围独立材料引用>(&raw)) {
+            长期扣量(c.历史数, 4, c.限额.最大历史事实数);
+            长期要求(c.属性数 < c.限额.最大属性数, LS::预算不足);
+            auto material = 特征值服务_.按结点读取不可变材料历史事实({1, c.G, w.H, ref->编码, c.限额.最大属性数 - c.属性数});
+            if (!material.成功()) { 长期守卫(c.G); throw 长期失败{长期映射(material.状态)}; }
+            长期要求(material.Gread == c.G && material.H == w.H && material.材料 && material.材料->结点 == ref->编码);
+            长期扣量(c.属性数, 1, c.限额.最大属性数);
+            raw = material.材料->特征值;
+        }
+        if (type.内容.算法 == 特征长期算法::I64幅度) {
+            const auto* v = std::get_if<std::int64_t>(&raw);
+            长期要求(v != nullptr, LS::类型不支持);
+            const auto domain = std::get<特征I64闭区间>(type.内容.完整域);
+            长期要求(*v >= domain.下界 && *v <= domain.上界, LS::类型不支持);
+            return *v;
+        }
+        const auto* v = std::get_if<std::vector<std::uint64_t>>(&raw);
+        长期要求(v != nullptr, LS::类型不支持);
+        auto image = 长期解析二值(*v, c);
+        长期要求(image.格式 == std::get<特征二值图格式>(type.内容.完整域), LS::类型不支持);
+        return image;
+    }
+    static 特征差异标量 长期差异事实(const 特征类型域事实& t,
+        std::variant<特征观察见证, 特征区间身份> left, const 特征观察见证& right, std::int64_t value) {
+        return {t.输出FT, t.身份, 2, t.内容.单位, t.内容.缩放, std::move(left), right, value};
+    }
+    template<class T, class F> 特征长期读取结果<T> 长期读包装(
+        const 特征长期读头& h, const 特征长期预算& budget, F&& action) const {
+        特征长期读取结果<T> out;
+        out.Gread = h.Gread; out.H = h.H ? h.H : h.Gread;
+        try {
+            auto c = 长期开始(h, budget);
+            auto data = action(c);
+            长期守卫(c.G);
+            out.数据 = std::move(data); out.状态 = LS::已读取;
+        } catch (const 长期失败& e) { out.状态 = e.状态; }
+        catch (const std::bad_alloc&) { out.状态 = LS::资源失败; }
+        catch (const std::length_error&) { out.状态 = LS::资源失败; }
+        catch (...) { out.状态 = LS::内部不一致; }
+        if (out.状态 != LS::已读取) out.数据.reset();
+        return out;
+    }
+    struct 长期草稿 {
+        std::int64_t 种类 = 0;
+        std::vector<std::uint64_t> U;
+        std::vector<std::int64_t> I;
+        struct Edge {
+            unsigned 角色 = 0;
+            L1所有者范围事实引用 目标;
+            std::int64_t 顺序 = 1;
+        };
+        std::vector<Edge> 边;
+    };
+    L1所有者范围写集请求 长期写集(const 特征长期写头& h, const std::vector<长期草稿>& records,
+        bool output = false) const {
+        L1所有者范围写集请求 w;
+        w.合同版本 = L1所有者范围CRUD合同版本; w.期望事实代次 = h.期望G; w.写入幂等身份 = h.幂等键;
+        长期要求(!records.empty() && records.size() + output <= 0xFFFF, LS::预算不足);
+        std::uint32_t edgeKey = 0x10000, valueKey = 0x20000;
+        for (std::size_t i = 0; i < records.size(); ++i) {
+            const SK key{static_cast<std::uint32_t>(i + 1)};
+            const auto& r = records[i];
+            长期要求(r.种类 >= 1 && r.种类 <= 6 && !r.U.empty() && !r.I.empty());
+            w.节点.push_back({key, 节点种类::普通, std::nullopt});
+            w.关系.push_back({SK{edgeKey++}, 长期交付_->格式锚点, key, 长期交付_->类型[0], 1});
+            auto edges = r.边;
+            std::sort(edges.begin(), edges.end(), [](const auto& a, const auto& b) {
+                return std::pair{a.角色, a.顺序} < std::pair{b.角色, b.顺序};
+            });
+            for (const auto& e : edges) {
+                长期要求(e.角色 >= 6 && e.角色 <= 17 && edgeKey < 0x1FFFF, LS::预算不足);
+                w.关系.push_back({SK{edgeKey++}, key, e.目标, 长期交付_->类型[e.角色 - 1], e.顺序});
+            }
+            std::array<L1所有者范围原始值材料, 4> payload{r.种类, std::int64_t{1}, r.U, r.I};
+            for (unsigned j = 0; j < 4; ++j) {
+                长期要求(valueKey < 0x2FFFF, LS::预算不足);
+                const SK vk{valueKey++};
+                w.值.push_back({vk, key, 长期交付_->类型[j + 1], std::move(payload[j]), key});
+                w.属性槽变更.push_back({key, 长期交付_->类型[j + 1], vk});
+            }
+        }
+        if (output) {
+            const SK key{static_cast<std::uint32_t>(records.size() + 1)}, vk{valueKey++};
+            w.节点.push_back({key, 节点种类::属性类型, L1所有者范围值表示种类::I64});
+            w.值.push_back({vk, key, key, std::int64_t{0x4C54444946460001LL}, key});
+            w.属性槽变更.push_back({key, key, vk});
+        }
+        标量排序写集(w);
+        return w;
+    }
+    L1所有者范围写集请求 长期类型写集(const 特征类型域登记请求& r) const {
+        长期草稿 d;
+        d.种类 = 1;
+        d.U = {static_cast<std::uint64_t>(r.内容.算法), 0, 0, 0, 0, 0};
+        d.I = {r.内容.缩放, 0, 0, 0, 0};
+        d.边 = {{6, r.内容.FT}, {8, r.内容.单位}, {17, SK{2}}};
+        if (const auto* interval = std::get_if<特征I64闭区间>(&r.内容.完整域)) {
+            d.I[1] = interval->下界; d.I[2] = interval->上界;
+        } else {
+            const auto& f = std::get<特征二值图格式>(r.内容.完整域);
+            d.U = {2, f.宽, f.高, f.轴约定, f.分辨率分子, f.分辨率分母};
+            d.I[3] = f.原点X; d.I[4] = f.原点Y;
+            d.边.push_back({7, r.内容.坐标系});
+        }
+        return 长期写集(r.写头, {d}, true);
+    }
+    static 稳定编码 长期映射键(const L1所有者范围写入结果& saved, L1所有者范围写集本地键 key) {
+        const auto id = 特征类数据内部::查找唯一编码(saved, key);
+        长期要求(id.has_value()); return *id;
+    }
+    static 稳定编码 长期引用解码(const L1所有者范围写入结果& saved, const L1所有者范围事实引用& ref) {
+        if (const auto* id = std::get_if<稳定编码>(&ref)) return *id;
+        return 长期映射键(saved, std::get<SK>(ref));
+    }
+    void 长期核验写后(const L1所有者范围写入结果& saved, const L1所有者范围写集请求& w, 长期上下文& c) const {
+        长期要求(写入结果头完整(saved, w.写入幂等身份) && saved.新编码映射.size() == w.节点.size() + w.关系.size() + w.值.size());
+        auto resolve = [&](const auto& ref) { return 长期引用解码(saved, ref); };
+        std::set<稳定编码> ids;
+        for (const auto& [key, id] : saved.新编码映射) 长期要求(有效(id) && ids.insert(id).second);
+        for (const auto& n : w.节点) {
+            const auto actual = 长期节点(长期映射键(saved, n.本地键), c);
+            长期要求(actual.种类 == n.种类 && actual.属性类型表示 == n.属性类型表示 && actual.创建事实代次 == saved.事实代次);
+        }
+        auto read = [&](稳定编码 id) {
+            长期扣量(c.历史数, 1, c.限额.最大历史事实数);
+            auto raw = 第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, id});
+            if (raw.状态 != L1所有者范围读取状态::成功) { 长期守卫(c.G); throw 长期失败{长期映射(raw.状态)}; }
+            长期要求(raw.读取事实代次 == c.G, LS::事实代次漂移);
+            长期要求(raw.合同版本 == L1所有者范围CRUD合同版本 && raw.查询编码 == id && raw.事实);
+            return *raw.事实;
+        };
+        for (const auto& e : w.关系) {
+            const auto raw = read(长期映射键(saved, e.本地键));
+            const auto* x = std::get_if<LE>(&raw);
+            长期要求(x && x->写入所有者 == 所有者_ && x->源节点 == resolve(e.源节点) && x->目标节点 == resolve(e.目标节点)
+                && x->关系类型节点 == resolve(e.关系类型节点) && x->角色或顺序 == e.角色或顺序
+                && x->创建事实代次 == saved.事实代次 && 长期活动(*x, saved.事实代次));
+        }
+        for (const auto& v : w.值) {
+            const auto raw = read(长期映射键(saved, v.本地键));
+            const auto* x = std::get_if<LV>(&raw);
+            长期要求(x && x->写入所有者 == 所有者_ && x->所属节点 == resolve(v.所属节点)
+                && x->属性类型节点 == resolve(v.属性类型节点) && x->来源节点 == resolve(v.来源节点)
+                && x->材料 == v.材料 && x->创建事实代次 == saved.事实代次 && 长期活动(*x, saved.事实代次));
+        }
+        for (const auto& slot : w.属性槽变更) {
+            const auto n = 长期节点(resolve(slot.所属节点), c);
+            const auto found = std::find_if(n.当前属性.begin(), n.当前属性.end(), [&](const auto& x) {
+                return x.属性类型节点 == resolve(slot.属性类型节点);
+            });
+            长期要求(found != n.当前属性.end() && found->当前值 == 长期映射键(saved, slot.新当前值));
+        }
+        for (const auto id : w.退出事实) {
+            const auto raw = read(id); const auto* e = std::get_if<LE>(&raw);
+            长期要求(e && e->写入所有者 == 所有者_ && e->退出事实代次 == saved.事实代次);
+        }
+    }
+    template<class T> struct 长期准备 {
+        L1所有者范围写集请求 写集;
+        std::optional<T> 复用;
+    };
+    template<class T, class R, class Prepare, class Recover>
+    特征长期写入结果<T> 长期执行(const R& r, Prepare&& prepare, Recover&& recover) {
+        特征长期写入结果<T> out;
+        bool uncertain = false, dispatched = false, prior = false;
+        auto fail = [&](LS s) {
+            out.数据.reset();
+            if (uncertain || dispatched || prior) {
+                out.发布确定性 = 特征长期发布确定性::未知;
+                out.状态 = s == LS::幂等冲突 ? s : LS::可能已发布;
+            } else out.状态 = s;
+            return std::move(out);
+        };
+        try {
+            out.原请求 = 特征长期原请求{r};
+            长期要求(长期交付_.has_value(), LS::未启用);
+            长期要求(r.写头.版本 == 1 && r.写头.期望G && 有效(r.写头.幂等键)
+                && (r.写头.幂等键.值 >> 48) != 0x4E43, LS::入口拒绝);
+            if constexpr (std::is_same_v<R, 特征校正建立请求>) 长期要求(r.内容.静止声明, LS::入口拒绝);
+            out.Gread = 长期当前(); uncertain = true;
+            auto first = 写入端口_.读取首次写入材料({L1所有者范围首次写入读取合同版本, r.写头.幂等键});
+            长期要求(first.合同版本 == L1所有者范围首次写入读取合同版本 && first.所有者 == 所有者_
+                && first.写入幂等身份 == r.写头.幂等键);
+            L1所有者范围写集请求 w;
+            if (first.状态 == L1所有者范围读取状态::成功) {
+                长期要求(first.首次写入结果 && first.首次规范化写集);
+                const auto& saved = *first.首次写入结果;
+                if (saved.事实代次 && saved.事实代次 <= out.Gread) out.首次H = saved.事实代次;
+                prior = true; uncertain = false;
+                长期要求(first.读取事实代次 == out.Gread, LS::事实代次漂移);
+                长期要求(out.首次H && saved.状态 == L1所有者范围写入状态::成功 && 写入结果头完整(saved, r.写头.幂等键));
+                长期守卫(out.Gread);
+                长期要求(first.首次规范化写集->期望事实代次 == r.写头.期望G, LS::幂等冲突);
+                长期上下文 c{out.Gread, *out.首次H, r.预算};
+                auto recovered = recover(c, saved);
+                长期要求(recovered.first == *first.首次规范化写集, LS::幂等冲突);
+                长期核验写后(saved, recovered.first, c);
+                长期守卫(c.G);
+                out.数据 = std::move(recovered.second);
+                out.H = *out.首次H; out.状态 = LS::精确重复;
+                out.发布确定性 = 特征长期发布确定性::已确认发布;
+                return out;
+            }
+            if (first.状态 != L1所有者范围读取状态::未找到) throw 长期失败{长期映射(first.状态)};
+            长期要求(first.读取事实代次 == out.Gread, LS::事实代次漂移);
+            uncertain = false; out.发布确定性 = 特征长期发布确定性::已确认未发布;
+            长期守卫(r.写头.期望G); out.Gread = r.写头.期望G;
+            长期上下文 c{out.Gread, out.Gread, r.预算};
+            auto plan = prepare(c);
+            长期守卫(c.G);
+            if (plan.复用) {
+                out.数据 = std::move(plan.复用); out.H = c.H; out.状态 = LS::无须变更;
+                return out;
+            }
+            w = std::move(plan.写集);
+            长期扣量(c.记录数, w.节点.size(), c.限额.最大记录数);
+            长期扣量(c.关系数, w.关系.size(), c.限额.最大关系数);
+            长期扣量(c.属性数, w.值.size(), c.限额.最大属性数);
+            dispatched = true;
+            const auto saved = 写入端口_.提交所有者范围中性写集(w);
+            if (saved.状态 != L1所有者范围写入状态::成功 && saved.状态 != L1所有者范围写入状态::精确重复) {
+                if (saved.状态 == L1所有者范围写入状态::事实代次漂移 || saved.状态 == L1所有者范围写入状态::引用冲突
+                    || saved.状态 == L1所有者范围写入状态::入口拒绝) {
+                    dispatched = false;
+                    return fail(saved.状态 == L1所有者范围写入状态::事实代次漂移 ? LS::事实代次漂移
+                        : saved.状态 == L1所有者范围写入状态::引用冲突 ? LS::引用冲突 : LS::入口拒绝);
+                }
+                return fail(saved.状态 == L1所有者范围写入状态::幂等冲突 ? LS::幂等冲突 : LS::可能已发布);
+            }
+            if (saved.事实代次) out.首次H = saved.事实代次;
+            长期要求(out.首次H && 写入结果头完整(saved, r.写头.幂等键));
+            out.Gread = 长期当前();
+            长期上下文 after{out.Gread, *out.首次H, r.预算};
+            auto result = recover(after, saved);
+            长期要求(result.first == w);
+            长期核验写后(saved, w, after);
+            长期守卫(after.G);
+            out.数据 = std::move(result.second); out.H = *out.首次H;
+            out.状态 = saved.状态 == L1所有者范围写入状态::精确重复 ? LS::精确重复 : LS::已发布;
+            out.发布确定性 = 特征长期发布确定性::已确认发布;
+            return out;
+        } catch (const 长期失败& e) { return fail(e.状态); }
+        catch (const std::bad_alloc&) { return fail(LS::资源失败); }
+        catch (const std::length_error&) { return fail(LS::资源失败); }
+        catch (...) { return fail(LS::内部不一致); }
+    }
+    static void 长期合并(特征长期自有事实& a, const 特征长期自有事实& b) {
+        a.节点.insert(a.节点.end(), b.节点.begin(), b.节点.end());
+        a.关系.insert(a.关系.end(), b.关系.begin(), b.关系.end());
+        a.值.insert(a.值.end(), b.值.begin(), b.值.end());
+    }
+    static std::vector<特征长期来源事实> 长期来源(const 长期记录& r, const 特征观察见证& w) {
+        长期要求(r.U.back() == 1 || r.U.back() == 2);
+        const auto& edges = r.边[15];
+        if (r.U.back() == 2) { 长期要求(edges.empty()); return {}; }
+        长期要求(edges.size() == 1 && edges[0].目标节点 == w.F);
+        const auto& e = edges[0];
+        return {{r.节点.编码, e.编码, e.目标节点, e.创建事实代次, e.退出事实代次}};
+    }
+    std::uint64_t 长期源状态(const 特征观察见证& w, 长期上下文& c) const {
+        const auto h = c.H; c.H = c.G;
+        const auto n = 长期节点(w.F, c, true, false);
+        c.H = h;
+        return n.退出事实代次 && *n.退出事实代次 <= c.G ? 2 : 1;
+    }
+    static 特征校正内容 长期规范校正(特征校正内容 input) {
+        长期要求(input.静止声明 && 有效(input.类型域.值) && input.参数版本 && 有效(input.外设来源)
+            && input.裕量 >= 0 && input.样本.size() >= 2, LS::入口拒绝);
+        std::sort(input.样本.begin(), input.样本.end(), [](const auto& a, const auto& b) { return a.观察标识 < b.观察标识; });
+        for (std::size_t i = 0; i < input.样本.size(); ++i) {
+            const auto& a = input.样本[i];
+            长期要求(长期见证有效(a) && a.存在上下文 == input.样本[0].存在上下文 && a.FT == input.样本[0].FT, LS::入口拒绝);
+            if (i) 长期要求(a.观察标识 != input.样本[i - 1].观察标识, LS::入口拒绝);
+            for (std::size_t j = 0; j < i; ++j) 长期要求(!长期同次样本(a, input.样本[j]), LS::引用冲突);
+        }
+        return input;
+    }
+    std::pair<std::int64_t, std::vector<特征差异标量>> 长期计算校正(
+        const 特征校正内容& input, const 特征类型域事实& type, 长期上下文& c) const {
+        std::vector<长期实际值> values;
+        for (const auto& w : input.样本) values.push_back(长期实际(type, w, c));
+        std::int64_t maximum = 0;
+        std::vector<特征差异标量> comparisons;
+        for (std::size_t i = 0; i < values.size(); ++i) for (std::size_t j = i + 1; j < values.size(); ++j) {
+            const auto d = 长期差异(type.内容, values[i], values[j], c);
+            maximum = std::max(maximum, d);
+            comparisons.push_back(长期差异事实(type, input.样本[i], input.样本[j], d));
+        }
+        长期要求(input.裕量 <= INT64_MAX - maximum, LS::差异不可表示);
+        return {maximum + input.裕量, std::move(comparisons)};
+    }
+    特征校正事实 长期读校正(稳定编码 id, bool audit, 长期上下文& c) const {
+        auto r = 长期读记录(id, c);
+        长期要求(r.种类 == 2 && r.U.size() == 1 && r.I.size() == 3 && r.I[0] >= 0 && r.I[1] >= r.I[0] && r.I[2] == 1);
+        长期角色(r, {8, 9, 10});
+        特征校正事实 out;
+        out.身份 = 特征校正身份{id}; out.创建G = r.节点.创建事实代次;
+        out.内容.类型域 = 特征类型域身份{长期单边(r, 9)};
+        out.内容.外设来源 = 长期单边(r, 8); out.内容.参数版本 = r.U[0];
+        out.内容.裕量 = r.I[0]; out.阈值 = r.I[1]; out.内容.静止声明 = true;
+        const auto type = 长期读类型(out.内容.类型域.值, c);
+        const auto h = c.H; c.H = out.创建G;
+        (void)长期节点(out.内容.外设来源, c, false); c.H = h;
+        长期要求(r.边[9].size() >= 2);
+        长期扣量(c.样本数, r.边[9].size(), c.限额.最大样本数);
+        for (const auto& edge : r.边[9]) {
+            auto sample = 长期读记录(edge.目标节点, c);
+            长期角色(sample, {16});
+            长期要求(sample.种类 == 3 && sample.U.size() == 8 && sample.I.size() == 1
+                && sample.节点.创建事实代次 == out.创建G);
+            const auto parent = 长期关系(sample.节点.编码, 10, true, c);
+            长期要求(parent.size() == 1 && parent[0] == edge);
+            auto w = 长期解析见证(sample.U, sample.I[0]);
+            长期要求(w.H < out.创建G && w.FT == type.内容.FT);
+            auto sources = 长期来源(sample, w);
+            out.来源组.insert(out.来源组.end(), sources.begin(), sources.end());
+            out.内容.样本.push_back(w);
+            长期合并(r.事实, sample.事实);
+        }
+        长期要求(长期规范校正(out.内容) == out.内容);
+        out.自有事实 = std::move(r.事实);
+        if (audit) {
+            auto calculated = 长期计算校正(out.内容, type, c);
+            长期要求(calculated.first == out.阈值);
+            out.样本对比较 = std::move(calculated.second);
+            out.证据状态 = 特征长期证据状态::已核验;
+        }
+        return out;
+    }
+    特征跟踪事实 长期读跟踪(稳定编码 id, 长期上下文& c) const {
+        auto r = 长期读记录(id, c);
+        长期要求(r.种类 == 4 && r.U.size() == 1 && r.U[0] && r.I == std::vector<std::int64_t>{0});
+        长期角色(r, {11, 12});
+        特征跟踪事实 out;
+        out.身份 = 特征跟踪身份{id}; out.创建G = r.节点.创建事实代次;
+        out.内容 = {特征存在上下文引用{稳定编码{r.U[0]}}, 特征类型域身份{长期单边(r, 11)}, 特征校正身份{长期单边(r, 12)}};
+        const auto type = 长期读类型(out.内容.类型域.值, c);
+        const auto correction = 长期读校正(out.内容.校正.值, false, c);
+        长期要求(correction.内容.类型域 == type.身份 && correction.创建G < out.创建G && type.创建G < out.创建G);
+        out.自有事实 = std::move(r.事实); return out;
+    }
+    static 特征类型化原子域 长期原子域(const 特征类型域内容& t, const 长期实际值& value, std::int64_t radius) {
+        长期要求(radius >= 0);
+        特征类型化原子域 out; out.类型 = t;
+        if (const auto* v = std::get_if<std::int64_t>(&value)) {
+            const auto domain = std::get<特征I64闭区间>(t.完整域);
+            const auto low = *v < INT64_MIN + radius ? INT64_MIN : *v - radius;
+            const auto high = *v > INT64_MAX - radius ? INT64_MAX : *v + radius;
+            out.域 = 特征I64闭区间{std::max(domain.下界, low), std::min(domain.上界, high)};
+        } else out.域 = 特征二值半径域{std::get<特征二值图>(value), radius};
+        return out;
+    }
+    特征区间事实 长期读区间(稳定编码 id, const 特征跟踪事实& track, const 特征类型域事实& type,
+        const 特征校正事实& correction, 长期上下文& c) const {
+        auto r = 长期读记录(id, c);
+        长期要求(r.种类 == 5 && r.U.size() >= 10 && r.I.size() == 3 && r.U[8] == r.U.size() - 10);
+        长期角色(r, {13, 16});
+        长期要求(长期单边(r, 13) == track.身份.值 && track.创建G < r.节点.创建事实代次);
+        特征区间事实 out;
+        out.身份 = 特征区间身份{id}; out.跟踪 = track.身份; out.创建G = r.节点.创建事实代次;
+        out.首观察 = 长期解析见证(r.U, r.I[0]); out.半径 = r.I[1];
+        长期要求(out.首观察.H < out.创建G && out.首观察.存在上下文 == track.内容.存在上下文.值
+            && out.首观察.FT == type.内容.FT && out.半径 == correction.阈值);
+        if (type.内容.算法 == 特征长期算法::I64幅度) {
+            长期要求(r.U[7] == 1 && !r.U[8]); out.固定代表 = r.I[2];
+            const auto domain = std::get<特征I64闭区间>(type.内容.完整域);
+            长期要求(r.I[2] >= domain.下界 && r.I[2] <= domain.上界);
+        } else {
+            长期要求(r.U[7] == 2 && r.I[2] == 0);
+            std::vector<std::uint64_t> payload(r.U.begin() + 9, r.U.end() - 1);
+            auto image = 长期解析二值(payload, c);
+            长期要求(image.格式 == std::get<特征二值图格式>(type.内容.完整域));
+            out.固定代表 = std::move(image);
+        }
+        out.原子域 = 长期原子域(type.内容, out.固定代表, out.半径);
+        out.来源组 = 长期来源(r, out.首观察); out.自有事实 = std::move(r.事实);
+        return out;
+    }
+    std::vector<特征区间事实> 长期区间组(const 特征跟踪事实& track, const 特征类型域事实& type,
+        const 特征校正事实& correction, 长期上下文& c) const {
+        std::vector<特征区间事实> out;
+        for (const auto& edge : 长期关系(track.身份.值, 13, true, c)) {
+            const auto record = 长期读记录(edge.源节点, c);
+            长期要求(record.种类 == 5 && record.边[12].size() == 1 && record.边[12][0] == edge);
+            out.push_back(长期读区间(edge.源节点, track, type, correction, c));
+        }
+        std::sort(out.begin(), out.end(), [](const auto& a, const auto& b) { return std::pair{a.创建G, a.身份.值} < std::pair{b.创建G, b.身份.值}; });
+        return out;
+    }
+    std::vector<特征区间命中> 长期匹配(const std::vector<特征区间事实>& intervals, const 特征类型域事实& type,
+        const 特征观察见证& observation, const 长期实际值& value, 长期上下文& c) const {
+        std::vector<特征区间命中> out;
+        for (const auto& x : intervals) {
+            const auto d = 长期差异(type.内容, x.固定代表, value, c);
+            if (d <= x.半径) out.push_back({x.身份, 长期差异事实(type, x.身份, observation, d)});
+        }
+        return out;
+    }
+    特征长期观测事实 长期读观察(稳定编码 id, const 特征跟踪事实& track, const 特征类型域事实& type,
+        const std::vector<特征区间事实>& intervals, bool audit, 长期上下文& c) const {
+        auto r = 长期读记录(id, c);
+        长期要求(r.种类 == 6 && r.U.size() == 9 && r.U[7] <= 1 && r.I.size() >= 4
+            && r.I[1] > 0 && static_cast<std::uint64_t>(r.I[1]) == r.I.size() - 3);
+        长期角色(r, {14, 15, 16});
+        长期要求(长期单边(r, 14) == track.身份.值 && r.边[14].size() == r.I.size() - 3);
+        特征长期观测事实 out;
+        out.身份 = 特征长期观测身份{id}; out.跟踪 = track.身份; out.创建G = r.节点.创建事实代次;
+        out.见证 = 长期解析见证(r.U, r.I[0]);
+        长期要求(out.见证.H < out.创建G && out.见证.FT == type.内容.FT && out.见证.存在上下文 == track.内容.存在上下文.值);
+        if (type.内容.算法 == 特征长期算法::I64幅度) {
+            out.实际I64值 = r.I[2];
+            const auto domain = std::get<特征I64闭区间>(type.内容.完整域);
+            长期要求(r.I[2] >= domain.下界 && r.I[2] <= domain.上界);
+        } else 长期要求(r.I[2] == 0);
+        std::optional<std::pair<std::uint64_t, 稳定编码>> previous;
+        for (std::size_t i = 0; i < r.边[14].size(); ++i) {
+            const auto id = r.边[14][i].目标节点;
+            const auto it = std::find_if(intervals.begin(), intervals.end(), [&](const auto& x) { return x.身份.值 == id; });
+            长期要求(it != intervals.end() && r.I[i + 3] >= 0 && r.I[i + 3] <= it->半径 && it->创建G <= out.创建G);
+            const auto order = std::pair{it->创建G, id};
+            长期要求(!previous || *previous < order); previous = order;
+            out.全部命中.push_back({it->身份, 长期差异事实(type, it->身份, out.见证, r.I[i + 3])});
+            if (r.U[7]) {
+                长期要求(r.边[14].size() == 1 && it->创建G == out.创建G && it->首观察 == out.见证 && r.I[i + 3] == 0);
+                out.本次新建 = it->身份;
+            }
+        }
+        out.来源组 = 长期来源(r, out.见证); out.自有事实 = std::move(r.事实);
+        if (audit) {
+            const auto value = 长期实际(type, out.见证, c);
+            if (out.实际I64值) 长期要求(std::get<std::int64_t>(value) == *out.实际I64值);
+            std::vector<特征区间事实> originalIntervals;
+            for (const auto& interval : intervals) if (interval.创建G <= out.创建G)
+                originalIntervals.push_back(interval);
+            const auto complete = 长期匹配(originalIntervals, type, out.见证, value, c);
+            长期要求(complete == out.全部命中);
+            out.证据状态 = 特征长期证据状态::已核验;
+        }
+        return out;
+    }
+    特征完整跟踪投影 长期投影(稳定编码 id, bool audit, 长期上下文& c) const {
+        特征完整跟踪投影 out;
+        out.跟踪事实 = 长期读跟踪(id, c);
+        out.类型域事实 = 长期读类型(out.跟踪事实.内容.类型域.值, c);
+        out.校正事实 = 长期读校正(out.跟踪事实.内容.校正.值, false, c);
+        out.区间组 = 长期区间组(out.跟踪事实, out.类型域事实, out.校正事实, c);
+        for (const auto& x : out.区间组) out.各区间命中数.emplace_back(x.身份, 0);
+        for (const auto& edge : 长期关系(id, 14, true, c)) {
+            const auto r = 长期读记录(edge.源节点, c);
+            长期要求(r.种类 == 6 && r.边[13].size() == 1 && r.边[13][0] == edge);
+            auto observation = 长期读观察(r.节点.编码, out.跟踪事实, out.类型域事实, out.区间组, audit, c);
+            for (const auto& old : out.观察组)
+                长期要求(old.见证.观察标识 != observation.见证.观察标识 && !长期同次样本(old.见证, observation.见证));
+            const auto time = observation.见证.时间纳秒;
+            out.首时间 = out.首时间 ? std::min(out.首时间, time) : time;
+            out.末时间 = std::max(out.末时间, time);
+            if (observation.实际I64值) {
+                if (!out.实际范围) out.实际范围 = 特征I64闭区间{*observation.实际I64值, *observation.实际I64值};
+                else { out.实际范围->下界 = std::min(out.实际范围->下界, *observation.实际I64值); out.实际范围->上界 = std::max(out.实际范围->上界, *observation.实际I64值); }
+            }
+            for (const auto& match : observation.全部命中)
+                for (auto& counter : out.各区间命中数) if (counter.first == match.区间) ++counter.second;
+            out.观察组.push_back(std::move(observation));
+        }
+        std::sort(out.观察组.begin(), out.观察组.end(), [](const auto& a, const auto& b) { return std::pair{a.创建G, a.身份.值} < std::pair{b.创建G, b.身份.值}; });
+        out.观察总数 = out.观察组.size();
+        return out;
+    }
+    L1所有者范围写集请求 长期校正写集(const 特征校正建立请求& r,
+        const 特征校正内容& input, std::int64_t threshold, const std::vector<std::uint64_t>& states) const {
+        长期要求(states.size() == input.样本.size());
+        长期草稿 correction{2, {input.参数版本}, {input.裕量, threshold, 1},
+            {{8, input.外设来源}, {9, input.类型域.值}}};
+        std::vector<长期草稿> records;
+        records.push_back(std::move(correction));
+        for (std::size_t i = 0; i < input.样本.size(); ++i) {
+            const auto& w = input.样本[i];
+            records[0].边.push_back({10, SK{static_cast<std::uint32_t>(i + 2)}, static_cast<std::int64_t>(i + 1)});
+            auto u = 长期见证U64(w); u.push_back(states[i]);
+            长期草稿 sample{3, std::move(u), {w.时间纳秒}, {}};
+            if (states[i] == 1) sample.边.push_back({16, w.F});
+            else 长期要求(states[i] == 2);
+            records.push_back(std::move(sample));
+        }
+        return 长期写集(r.写头, records);
+    }
+    L1所有者范围写集请求 长期跟踪写集(const 特征跟踪建立请求& r) const {
+        return 长期写集(r.写头, {{4, {r.内容.存在上下文.值.值}, {0},
+            {{11, r.内容.类型域.值}, {12, r.内容.校正.值}}}});
+    }
+    L1所有者范围写集请求 长期观察写集(const 特征长期观察积累请求& r,
+        const std::optional<特征区间事实>& created, const std::vector<特征区间命中>& matches,
+        std::optional<std::int64_t> scalar, std::uint64_t state) const {
+        std::vector<长期草稿> records;
+        if (created) {
+            auto u = 长期见证U64(r.观察);
+            std::vector<std::uint64_t> image;
+            std::int64_t value = 0;
+            if (const auto* n = std::get_if<std::int64_t>(&created->固定代表)) { u.push_back(1); value = *n; }
+            else { u.push_back(2); image = 长期图载荷(std::get<特征二值图>(created->固定代表)); }
+            u.push_back(image.size()); u.insert(u.end(), image.begin(), image.end()); u.push_back(state);
+            records.push_back({5, std::move(u), {r.观察.时间纳秒, created->半径, value}, {{13, r.跟踪.值}}});
+            if (state == 1) records.back().边.push_back({16, r.观察.F});
+        }
+        auto u = 长期见证U64(r.观察); u.push_back(created ? 1 : 0); u.push_back(state);
+        长期草稿 observation{6, std::move(u), {r.观察.时间纳秒,
+            static_cast<std::int64_t>(created ? 1 : matches.size()), scalar.value_or(0)}, {{14, r.跟踪.值}}};
+        if (created) { observation.边.push_back({15, SK{1}, 1}); observation.I.push_back(0); }
+        else for (std::size_t i = 0; i < matches.size(); ++i) {
+            observation.边.push_back({15, matches[i].区间.值, static_cast<std::int64_t>(i + 1)});
+            observation.I.push_back(matches[i].差异.值);
+        }
+        if (state == 1) observation.边.push_back({16, r.观察.F});
+        else 长期要求(state == 2);
+        records.push_back(std::move(observation));
+        return 长期写集(r.写头, records);
+    }
+    std::optional<特征长期观测事实> 长期跨跟踪重复(const 特征长期观察积累请求& r,
+        const 特征跟踪事实& current, 长期上下文& c) const {
+        // 类型域按 FT 唯一；反向原生关系完整枚举各校正跟踪，不扫描其它类型记录。
+        for (const auto& trackEdge : 长期关系(current.内容.类型域.值, 11, true, c)) {
+            const auto ownerTrack = trackEdge.源节点;
+            const auto rawTrack = 长期读记录(ownerTrack, c);
+            长期要求(rawTrack.种类 == 4 && rawTrack.边[10].size() == 1 && rawTrack.边[10][0] == trackEdge);
+            const auto track = 长期读跟踪(ownerTrack, c);
+            if (ownerTrack == r.跟踪.值 || track.内容.存在上下文 != current.内容.存在上下文) continue;
+            for (const auto& observationEdge : 长期关系(ownerTrack, 14, true, c)) {
+                const auto record = 长期读记录(observationEdge.源节点, c);
+                长期要求(record.种类 == 6 && record.边[13].size() == 1 && record.边[13][0] == observationEdge
+                    && record.U.size() == 9 && record.I.size() >= 4);
+                const auto witness = 长期解析见证(record.U, record.I[0]);
+                if (!长期同次样本(witness, r.观察)) continue;
+                const auto other = 长期投影(ownerTrack, false, c);
+                const auto found = std::find_if(other.观察组.begin(), other.观察组.end(),
+                    [&](const auto& x) { return x.身份.值 == record.节点.编码; });
+                长期要求(found != other.观察组.end());
+                长期要求(other.跟踪事实.内容 == current.内容, LS::幂等冲突);
+                auto normalized = r.观察; normalized.观察标识 = witness.观察标识;
+                长期要求(normalized == witness, LS::幂等冲突);
+                return *found;
+            }
+        }
+        return std::nullopt;
+    }
+    std::optional<特征长期结构交付> 长期交付_;
     using SS = 特征类标量状态;
     using SP = 特征类标量发布确定性;
     using SN = L1所有者范围节点事实;
