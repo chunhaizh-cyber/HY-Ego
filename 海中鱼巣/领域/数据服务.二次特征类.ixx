@@ -113,7 +113,6 @@ private:
         case 存在类数据状态::目标已退出: return S::已退出;
         case 存在类数据状态::事实代次漂移: return S::事实代次漂移;
         case 存在类数据状态::资源失败: return S::资源失败;
-        case 存在类数据状态::数量预算不足: return S::预算不足;
         case 存在类数据状态::入口拒绝: return S::入口拒绝;
         default: return S::内部不一致;
         }
