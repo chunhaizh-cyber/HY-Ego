@@ -1,4 +1,4 @@
 interface:
   display_name: "海中鱼巣讨论"
-  short_description: "Read-only review of Sea Nest goals and design ideas"
-  default_prompt: "Use $hai-zhong-yu-chao-discuss to challenge a Sea Nest goal or design idea and return evidence-labeled decision input without editing files."
+  short_description: "只读澄清概念、探索可行性、比较方案并审查提议，给出有依据和成立条件的判断"
+  default_prompt: "使用 $hai-zhong-yu-chao-discuss 讨论当前问题，按目标核对关键前提、证据与必要取舍，给出判断、成立条件及待核事项，保持只读。"
