@@ -394,8 +394,14 @@ void 场景成员概念应用服务::完成投影(场景成员概念结果_v2& o
         }
         // 恢复读原 H 的成员事实，但读取封套使用当前 G，不伪造原 G 仍是当前。
         (void)读取成员(r,g,r.H);out.继续=m;
-        const auto* preserved=m.阶段==P::特征应用 ? nullptr : &m;
-        if(!消费特征结果(out,r,features_.收敛类型观察(r.观察),preserved))return out;
+        if(m.阶段==P::特征应用){
+            if(!消费特征结果(out,r,features_.收敛类型观察(r.观察)))return out;
+        }else if(m.阶段==P::存在采用){
+            if(!消费特征结果(out,r,features_.读取已发布类型观察(r.观察,g),&m))return out;
+        }else{
+            // 最终读回也只核验已发布观察，不重新进入命中、名称等写入流程。
+            if(!消费特征结果(out,r,features_.读取已发布类型观察(r.观察,g),&m))return out;
+        }
         const auto& f=*out.特征概念.已确认F;
         if(m.阶段==P::存在采用){
             const auto& q=*m.采用原请求;

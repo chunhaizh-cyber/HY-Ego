@@ -231,3 +231,117 @@ rg -n '数据服务\.(特征类|状态类|动态类|存在类|需求类|任务�
 `git diff --check -- <上表16项精确路径>` exit 0；`git diff --cached --check` exit 0，index 空。全仓 `git diff --check` 仅报异主 `AGENTS.md:12` 既有尾空格，未修改该文件；本计划 v0.2 明确允许单列此基线问题。`python .\tools\check_specs.py --strict` exit 0、101 份目录项通过。
 
 未运行程序、测试、数据库、故障注入、恢复或集成验收。本证据只证明当前切片静态迁移与编译/链接闭合，不证明生产装配、跨进程 F pending、历史数据迁移或业务闭环。源码与两份记录仍未提交；未取得 Git 发布租约前不 stage/commit/push，未释放登记、未清理旧隔离日志和异主 WIP。
+
+## 8. 2026-09-08 场景只读续行中间候选
+
+第 7 节代码及记录后来已由 `ea2c3f950d8e349d1738d73dc1a63eed491e6603` 提交推送；上节末的未发布描述是当时状态。退出复核发现后两阶段误入 Fapp 写流程，随后按原 v0.5 计划恢复场景单源码及两记录切片。本轮仍有准确值互证 ABI 缺口，不能宣称修复完成。
+
+### 8.1 精确输入及命令
+
+新根 `D:/TEMP/海中鱼巣/FEATURE-CONCEPT-MODEL-CUTOVER/compile-20260908-03/` 创建前确认不存在。执行：
+
+```powershell
+$featureCompileRoot = 'D:/TEMP/海中鱼巣/FEATURE-CONCEPT-MODEL-CUTOVER/compile-20260908-03'
+git archive --format=zip "--output=$featureCompileRoot/HEAD.zip" ea2c3f950d8e349d1738d73dc1a63eed491e6603
+Expand-Archive -LiteralPath "$featureCompileRoot/HEAD.zip" -DestinationPath "$featureCompileRoot/source"
+Copy-Item -LiteralPath 'D:/海中鱼巣/海中鱼巣/业务/应用服务.场景成员概念类.ixx' -Destination "$featureCompileRoot/source/海中鱼巣/业务/应用服务.场景成员概念类.ixx"
+& 'C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/amd64/MSBuild.exe' "$featureCompileRoot/source/海中鱼巣.vcxproj" /t:Rebuild /p:Configuration=Debug /p:Platform=x64 /m:1 /nologo /v:minimal "/p:OutDir=$featureCompileRoot/out/Debug/" "/p:IntDir=$featureCompileRoot/obj/Debug/" /fl "/flp:logfile=$featureCompileRoot/logs/Debug-first.log;encoding=UTF-8;verbosity=normal"
+& 'C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/amd64/MSBuild.exe' "$featureCompileRoot/source/海中鱼巣.vcxproj" /t:Rebuild /p:Configuration=Release /p:Platform=x64 /m:1 /nologo /v:minimal "/p:OutDir=$featureCompileRoot/out/Release/" "/p:IntDir=$featureCompileRoot/obj/Release/" /fl "/flp:logfile=$featureCompileRoot/logs/Release-first.log;encoding=UTF-8;verbosity=normal"
+```
+
+场景文件 source 与工作区 SHA256 均为 `563F94D89ABA6524F9E21DEEB49B880D4F91E2563A3EB396FAB71F6AD9B448B4`；规范化 Git blob 为 `270af2a258261f3e6a7ead5f05c149d4df38b9f3`，正式基底旧 blob `4acb35d55edfb3b3c6d0b1ba5bad5148e1d07512`。第 7.4 节 16 个输入分别以 `git hash-object --path=<相对路径> -- <source文件>` 对比 `git rev-parse ea2c3f95:<相对路径>`，恰只有场景这一项不同；其余 15 项等于正式基底，没有复制其它 WIP，也未删改工程输入。
+
+### 8.2 结果与边界
+
+| 日志 | exit | 警告/错误 | 用时 |
+| --- | --- | --- | --- |
+| logs/Debug-first.log | 0 | 0/0 | 32.81 秒 |
+| logs/Release-first.log | 0 | 0/0 | 27.50 秒 |
+
+两配置之间源码未改，同一个 source 候选完整编译链接，14 个计划源码实际编译。单场景 `git diff --check` exit 0；`python .\tools\check_specs.py --strict` exit 0、101 项通过。`rg -n '收敛特征概念写入|概念原请求' <场景文件>` 无命中、exit 1。当前阶段分支静态核对说明后两阶段没有 Fapp 写调用，但不能以这个零命中替代原准确值互证。
+
+独立复核发现只读分支无法经既有公开 ABI 对原请求准确值进行解引用等值校验；具体原因与回传见施工记录 §8.6。当前保留安全 WIP，等待正式 v0.6 设计/计划；这两次通过仅为中间编译证据，后续改代码必须重新取得最终同字节双配置。未执行二进制、测试、数据库、恢复、故障注入或集成验收；未提交本段 WIP、不申请发布租约，保留占用和隔离日志。
+
+## 9. 2026-09-08 v0.6 最终只读核验候选
+
+### 9.1 冻结输入与构建
+
+正式基底 `789a1859646f0e769d883ea8f11b3df5df48c94a`；v0.6 plan blob `060e01341288c033734d0c43c68b01ce8224aa88`、design blob `fa5dd374a3de7ddf8b1110aff25feb2054c7a38e`，索引可执行。新根 `D:/TEMP/海中鱼巣/FEATURE-CONCEPT-MODEL-CUTOVER/compile-20260908-04/` 创建前确认不存在，只从正式提交导出并覆盖两份获准源码：
+
+```powershell
+$featureCompileRoot = 'D:/TEMP/海中鱼巣/FEATURE-CONCEPT-MODEL-CUTOVER/compile-20260908-04'
+git archive --format=zip "--output=$featureCompileRoot/HEAD.zip" 789a1859646f0e769d883ea8f11b3df5df48c94a
+Expand-Archive -LiteralPath "$featureCompileRoot/HEAD.zip" -DestinationPath "$featureCompileRoot/source"
+$featurePatchFiles = @('海中鱼巣/业务/应用服务.特征概念类.ixx','海中鱼巣/业务/应用服务.场景成员概念类.ixx')
+foreach ($featureFile in $featurePatchFiles) { Copy-Item -LiteralPath "D:/海中鱼巣/$featureFile" -Destination "$featureCompileRoot/source/$featureFile" }
+& 'C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/amd64/MSBuild.exe' "$featureCompileRoot/source/海中鱼巣.vcxproj" /t:Rebuild /p:Configuration=Debug /p:Platform=x64 /m:1 /nologo /v:minimal "/p:OutDir=$featureCompileRoot/out/Debug/" "/p:IntDir=$featureCompileRoot/obj/Debug/" /fl "/flp:logfile=$featureCompileRoot/logs/Debug-second.log;encoding=UTF-8;verbosity=normal"
+& 'C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/amd64/MSBuild.exe' "$featureCompileRoot/source/海中鱼巣.vcxproj" /t:Rebuild /p:Configuration=Release /p:Platform=x64 /m:1 /nologo /v:minimal "/p:OutDir=$featureCompileRoot/out/Release/" "/p:IntDir=$featureCompileRoot/obj/Release/" /fl "/flp:logfile=$featureCompileRoot/logs/Release-final.log;encoding=UTF-8;verbosity=normal"
+```
+
+首次 Debug 使用相同命令但日志为 `Debug-first.log`，新函数定义带 `inline`。该轮 MSVC 在场景模块 432 行导入 IFC 时触发 C1001（`symbols.c:5692`）；仅删除新函数定义的 `inline` 并精确重拷 Fapp 后重做 Debug，公开签名、可见性和语义未改。没有降低编译选项、跳过消费者或修改工程。
+
+| 日志（本根 logs） | exit | 警告/错误 | 用时 | 结论 |
+| --- | --- | --- | --- | --- |
+| Debug-first.log | 1 | 0/1 | 29.16 秒 | 内联模块函数导入时的编译器内部错误，保留失败日志。 |
+| Debug-second.log | 0 | 0/0 | 29.88 秒 | 最终普通模块函数定义；14 个计划源码实际编译并链接。 |
+| Release-final.log | 0 | 0/0 | 27.43 秒 | 同一最终 source 字节，完整编译链接。 |
+
+最终两源码 source 与工作区逐项 SHA256 和 Git blob 相等：
+
+| 源码 | SHA256 | Git blob |
+| --- | --- | --- |
+| 海中鱼巣/业务/应用服务.特征概念类.ixx | `1A31C6FF89E7117E2787B8BE3BD6F7F0C08E0F3671E6678565DC2C98070ED3FC` | `5f6b390c100adf5cc12fc6a0804fa9caa81672b5` |
+| 海中鱼巣/业务/应用服务.场景成员概念类.ixx | `0304DB65031D90B34928B03040C4F75DC07020BDEBD272D528765CA2C640514A` | `bff29970c61a0d769c491eeaea43450760df7e6c` |
+
+第 7.4 节全部 16 输入按 §8.1 的 blob 比对方法复核，基底改为 `789a1859`：恰仅上表两项不同，其余 14 项均等于正式 HEAD；两源码没有在 Debug-second 与 Release-final 之间修改。项目 source 不含异主 WIP。
+
+### 9.2 静态命令与结果
+
+旧符号四组使用 §7.3 原完整模式，在同一 14 路径白名单重跑，均无输出、exit 1。曾尝试自动提取模式时嵌套 PowerShell `-match` 覆盖 `$Matches`，所得 null 模式结果已弃用；修正为先保存捕获字符串并断言 14 文件/4 模式，再逐条扫描，才计入上述结论。
+
+新入口体扫描只取该函数定义，不把同模块正常写函数混入只读核验范围：
+
+```powershell
+$featureText = Get-Content -LiteralPath '海中鱼巣/业务/应用服务.特征概念类.ixx' -Encoding UTF8 -Raw
+$featureStart = $featureText.IndexOf('特征概念处理结果 特征概念应用服务::读取已发布类型观察(')
+$featureStop = $featureText.IndexOf('inline 概念树应用读取结果<std::vector<特征概念事实>>', $featureStart)
+$featureReadBody = $featureText.Substring($featureStart,$featureStop-$featureStart)
+$featureReadBody | rg -n 'pending_input_|pending_|pending_feature_|confirmed_|写头|写\(|推进\(|消费待确认写入|处理类型观察|收敛类型观察|待原请求确认'
+$featureReadBody | rg -n '查询准确特征|读取类型观察|读取特征当前名称|读取应用特征模板|判定应用特征模板|守卫\(g\)'
+rg -n '处理类型观察|收敛类型观察|读取已发布类型观察' '海中鱼巣/业务/应用服务.场景成员概念类.ixx'
+rg -n '概念原请求|收敛特征概念写入|特征类数据服务|读取类型观察|读取应用特征模板' '海中鱼巣/业务/应用服务.场景成员概念类.ixx'
+rg -n '共享特征应用预算|共享场景限制|共享特征业务状态|共享特征阶段状态|特征类结点|特征引用读取状态|查询特征\(' 海中鱼巣 -g '*.ixx' -g '*.cpp' -g '*.h'
+rg -n 'struct 存在概念应用预算|struct 存在概念场景限制|enum class 存在概念业务状态|enum class 存在概念阶段状态' 海中鱼巣 -g '*.ixx'
+rg -n '不支持=15|旧格式不支持=16|规则缺失=17|类型不相容=18|前次写入待收敛=19|case D::(不支持|旧格式不支持|规则缺失|类型不相容|前次写入待收敛)' '海中鱼巣/业务/应用服务.动态概念树类.ixx'
+```
+
+依次结果：禁止读写成员零命中/1；五项只读调用与前后守卫命中/0；场景首次/特征续行各一处，E/最终只读各一处/0；场景非法依赖/本地替代恢复零命中/1；旧 ABI 零命中/1；EC 四个定义各只在 EC 模块一处/0；DC 15..19 和五个显式 case 命中/0。排除范围与 §7.3 相同：旧文档、根目录异主副本不作生产扫描；合法 L1 G/H、原 v1 审计与普通业务槽不退役。
+
+静态分支核对：准确查询解析外部材料完整 I64，持久观察固定 F 后只计该身份的恰一次命中，不使用输入 raw variant 相等；名称缺失保留 O/F，生命周期/FT/名称端点/完整判定回执和域适用逐项复核；失败没有待确认原请求，不伪造写完成。这里是源码证据，未构造运行测试输入。
+
+### 9.3 文本与完成边界
+
+两源码 `git diff --check` exit 0；严格规范检查 exit 0、101 项通过。两份记录追加后仍须随精确四文件进行发布前检查。未运行程序、数据库、测试、恢复、故障注入或集成验收；本段只证明静态实现与同候选两配置编译链接。未取得新的发布租约，不暂存或提交；4 项登记与日志保留，异主 WIP 未改。
+
+## 10. v0.6 全返回路径守卫后的最终候选
+
+§9 候选随后被独立审计指出异常捕获后的返回缺少 G 守卫，不能作为最终合同完成依据。新只读入口现已将错误映射提为局部 lambda，在唯一返回之前对全部非零 G 统一守卫；尾守卫失败清空局部结果并保留真实原因，零 G 保持入口拒绝。独立复核 PASS，不涉及运行验证。
+
+新隔离根 `D:/TEMP/海中鱼巣/FEATURE-CONCEPT-MODEL-CUTOVER/compile-20260908-05/` 创建前确认不存在。仍使用 §9.1 同一个精确 `789a1859646f0e769d883ea8f11b3df5df48c94a` archive，加 Fapp/场景两个精确覆盖文件；最终命令为：
+
+```powershell
+$featureCompileRoot = 'D:/TEMP/海中鱼巣/FEATURE-CONCEPT-MODEL-CUTOVER/compile-20260908-05'
+& 'C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/amd64/MSBuild.exe' "$featureCompileRoot/source/海中鱼巣.vcxproj" /t:Rebuild /p:Configuration=Debug /p:Platform=x64 /m:1 /nologo /v:minimal "/p:OutDir=$featureCompileRoot/out/Debug/" "/p:IntDir=$featureCompileRoot/obj/Debug/" /fl "/flp:logfile=$featureCompileRoot/logs/Debug-final.log;encoding=UTF-8;verbosity=normal"
+& 'C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/amd64/MSBuild.exe' "$featureCompileRoot/source/海中鱼巣.vcxproj" /t:Rebuild /p:Configuration=Release /p:Platform=x64 /m:1 /nologo /v:minimal "/p:OutDir=$featureCompileRoot/out/Release/" "/p:IntDir=$featureCompileRoot/obj/Release/" /fl "/flp:logfile=$featureCompileRoot/logs/Release-final.log;encoding=UTF-8;verbosity=normal"
+```
+
+| 日志（本根 logs） | exit | 警告/错误 | 用时 |
+| --- | --- | --- | --- |
+| Debug-final.log | 0 | 0/0 | 30.97 秒 |
+| Release-final.log | 0 | 0/0 | 26.76 秒 |
+
+两配置同一 source 字节、14 个计划源码实际编译并链接。Fapp 最终 blob `f95bebf99c3334828d43f5621462c9c5db7bc372`，SHA256 `7BB1C795C50C7D537FFD0E2E819AA2B31DADA711CC986CF9DB975C1FD836CBEA`；场景 blob `bff29970c61a0d769c491eeaea43450760df7e6c`、SHA256 `0304DB65031D90B34928B03040C4F75DC07020BDEBD272D528765CA2C640514A`。两源码工作区/source 字节与 blob 逐项一致；16 输入与精确正式基底相比只有上述两项变化，其余 14 项保持正式 blob。
+
+重跑 §9.2 函数体禁止引用扫描和 §7.3 原四组旧符号/14 路径扫描，均无命中、exit 1；函数体额外执行 `rg -n 'if\(g\)try|out=特征概念处理结果|return out|守卫\(g\)|记录失败'`，exit 0，确认异常处理之后的唯一返回前守卫及四种尾失败清空分支。没有待确认载荷、pending 或写入口引用。两源码 diff check exit 0，严格规范检查 exit 0、101 项通过。
+
+本轮未执行程序、测试、数据库、恢复、故障注入或集成验收。记录保留之前失败与中间结果；最终字节只采用本节证据，不复用旧候选。代码和记录尚待唯一 Git 发布租约、四文件精确暂存及发布前复核；四项登记保留，异主 WIP 未动。

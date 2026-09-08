@@ -362,9 +362,99 @@ public:
     bool 使用概念服务(const 概念树类数据服务& c) const noexcept{return &concepts_==&c;}
     特征概念处理结果 处理类型观察(const 特征概念观察请求& r){return 推进(r,false);}
     特征概念处理结果 收敛类型观察(const 特征概念观察请求& r){return 推进(r,true);}
+    特征概念处理结果 读取已发布类型观察(const 特征概念观察请求&,std::uint64_t Gread) const;
     概念树应用读取结果<std::vector<特征概念事实>> 查找适用特征概念(const 特征概念应用读取请求& r) const;
     概念树应用读取结果<特征命名视图> 读取命名特征(const 特征概念应用读取请求& r) const;
 };
+特征概念处理结果 特征概念应用服务::读取已发布类型观察(
+    const 特征概念观察请求& r,std::uint64_t g) const {
+    特征概念处理结果 out;
+    const auto 记录失败=[&](const std::variant<特征数据错误,D>& reason){
+        out.原因=reason;
+        switch(数据错误映射(reason)){
+        case D::规则缺失:out.状态=B::规则缺失;break;
+        case D::未找到:case D::目标已退出:case D::历史材料不可用:out.状态=B::材料缺失;break;
+        case D::旧格式不支持:out.状态=B::旧格式不支持;break;
+        case D::数量预算不足:out.状态=B::预算不足;break;
+        case D::资源失败:out.状态=B::资源失败;break;
+        case D::内部不一致:case D::差异不可表示:out.状态=B::内部不一致;break;
+        default:out.状态=B::入口拒绝;break;
+        }
+    };
+    try {
+        const auto& b=r.预算;const auto& base=b.基础;
+        if(!g||!有效(r.观察.类型)||!有效(r.观察.来源)||!r.观察.序号
+            ||!浅层结构有效(r.准确值)||(r.指定F&&!有效(*r.指定F))||!r.最大保留观察数
+            ||!base.最大概念数||!base.最大关系数||!base.最大来源数||!base.最大支持数
+            ||!base.最大世界成员数||!base.最大特征属性数||!base.最大动态槽数||!base.最大动态模板数
+            ||!b.最大观察数||!b.最大区间数||!b.最大命中数||!b.最大名称数||!b.最大首次材料项数)
+            throw 失败{D::入口拒绝};
+        守卫(g);
+        // 查询负责解引用内容等值；外部材料身份与 F 自有值身份无需相同。
+        const auto exact=特征结果(features_.查询准确特征(r.观察.类型,r.准确值));
+        const auto observed=概念结果(concepts_.读取类型观察({{1,g,g},r.观察,b}),g,g);
+        if(observed.empty())throw 失败{D::未找到};
+        if(observed.size()!=1)throw 失败{D::内部不一致};
+        const auto& o=observed.front();const auto f=o.输入.F;
+        if(!有效(o.记录)||!有效(f)||!o.证据H||o.证据H>g)throw 失败{D::内部不一致};
+        if(o.输入.键!=r.观察||o.输入.时间!=r.时间||(r.指定F&&*r.指定F!=f))
+            throw 失败{特征数据错误::幂等冲突};
+        const 特征信息* matched=nullptr;
+        for(const auto& candidate:exact)if(candidate.身份==f){
+            if(matched)throw 失败{D::内部不一致};matched=&candidate;
+        }
+        if(!matched)throw 失败{特征数据错误::幂等冲突};
+        if(!浅层结构有效(*matched)||matched->类型!=r.观察.类型)throw 失败{D::内部不一致};
+        out.准确匹配={f};out.观察=o;
+        const auto name=概念结果(concepts_.读取特征当前名称({2,{1,g,g},f,base}),g,g);
+        if(!name){
+            守卫(g);out.状态=B::准确F已成立名称未完成;
+        }else{
+            const auto active=[&](const 概念树生命周期& life){
+                return life.创建事实代次&&life.创建事实代次<=g
+                    &&(!life.退出事实代次||*life.退出事实代次>g);
+            };
+            if(name->F!=f||!有效(name->C.值)||!有效(name->关系)||!active(name->生命周期))
+                throw 失败{D::引用冲突};
+            const 概念树共享预算 budget{base,b,b.最大区间数,base.最大来源数,b.最大名称数,b.最大首次材料项数};
+            const auto definition=概念结果(concepts_.读取应用特征模板({2,{1,g,g},name->C,budget}),g,g);
+            const auto* c=std::get_if<特征概念事实>(&definition);
+            if(!c||c->身份!=name->C||!有效(c->定义记录)||!有效(c->类型关系))throw 失败{D::内部不一致};
+            if(c->定义.类型!=r.观察.类型)throw 失败{D::类型不相容};
+            if(!active(c->生命周期)||c->治理状态==概念树生命周期状态::退役)throw 失败{D::引用冲突};
+            if(c->定义.域.区间.empty())throw 失败{D::规则缺失};
+            const auto matchedDomain=概念结果(concepts_.判定应用特征模板({2,{1,g,g},c->身份,{1,g,g,f},budget}),g,g);
+            const auto* checkedC=std::get_if<特征概念事实>(&matchedDomain.模板);
+            const auto& check=matchedDomain.判定;const auto& actual=check.实际;
+            if(!checkedC||*checkedC!=*c||check.Gread!=g||check.模板H!=g||check.实际H!=g
+                ||actual.Gread!=g||actual.H!=g||actual.信息!=*matched||!有效(actual.类型关系)
+                ||!actual.准确值事实||!有效(*actual.准确值事实)||!actual.创建G||actual.创建G>g
+                ||(actual.退出G&&*actual.退出G<=g)||check.域!=c->定义.域
+                ||matchedDomain.适用!=check.命中)throw 失败{D::内部不一致};
+            if(const auto* scalar=std::get_if<std::int64_t>(&actual.信息.准确值)){
+                const auto* full=std::get_if<std::int64_t>(&actual.完整值);
+                if(!full||*full!=*scalar)throw 失败{D::内部不一致};
+            }else{
+                const auto* full=std::get_if<特征值信息>(&actual.完整值);
+                if(!full||full->值身份!=std::get<特征值身份>(actual.信息.准确值)
+                    ||full->值身份.编码!=*actual.准确值事实||!std::holds_alternative<std::int64_t>(full->值内容))
+                    throw 失败{D::内部不一致};
+            }
+            if(!matchedDomain.适用)throw 失败{D::引用冲突};
+            守卫(g);out.概念=*c;out.名称=*name;out.状态=B::完成;
+        }
+    }catch(const 失败& e){记录失败(e.原因);}
+    catch(const std::bad_alloc&){记录失败(D::资源失败);}
+    catch(const std::length_error&){记录失败(D::资源失败);}
+    catch(...){记录失败(D::内部不一致);}
+    // 成功与失败统一在出口守卫；零 G 是非法输入，不尝试用当前代次替代它。
+    if(g)try{守卫(g);}
+    catch(const 失败& e){out=特征概念处理结果{};记录失败(e.原因);}
+    catch(const std::bad_alloc&){out=特征概念处理结果{};记录失败(D::资源失败);}
+    catch(const std::length_error&){out=特征概念处理结果{};记录失败(D::资源失败);}
+    catch(...){out=特征概念处理结果{};记录失败(D::内部不一致);}
+    return out;
+}
 inline 概念树应用读取结果<std::vector<特征概念事实>> 特征概念应用服务::查找适用特征概念(
     const 特征概念应用读取请求& r) const {
     概念树应用读取结果<std::vector<特征概念事实>> out;out.Gread=r.特征.Gread;out.H=r.特征.H;
