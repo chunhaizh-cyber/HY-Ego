@@ -14,9 +14,27 @@
 #include <variant>
 #include <vector>
 export module 海中鱼巣.业务.应用服务.存在概念树类;
-export import 海中鱼巣.业务.应用服务.特征概念类;
+export import 海中鱼巣.领域.数据服务.概念树类;
 
 export namespace 海中鱼巣 {
+struct 存在概念应用预算 final {
+    概念树共享预算 数据;
+    std::uint64_t 最大派发步骤=0;
+    std::uint64_t 最大保留尝试=0;
+    std::uint64_t 最大遍历节点=0;
+    friend bool operator==(const 存在概念应用预算&,const 存在概念应用预算&)=default;
+};
+struct 存在概念场景限制 final {
+    概念树场景引用 S{};
+    概念树存在引用 E{};
+    std::uint64_t 原场景H=0;
+    friend bool operator==(const 存在概念场景限制&,const 存在概念场景限制&)=default;
+};
+enum class 存在概念业务状态 : std::uint8_t {
+    完成=1,待继续,被后继覆盖,需显式治理,不支持,入口拒绝,数量预算不足,历史材料不可用,资源失败,内部不一致
+};
+enum class 存在概念阶段状态 : std::uint8_t {未派发=1,部分确认,先前阶段待核验,全部确认};
+
 struct 存在概念特征见证 final {
     概念树概念身份 模板;
     概念树特征引用 实例;
@@ -30,8 +48,8 @@ struct 存在概念形成请求 final {
     std::vector<存在概念特征见证>见证;
     std::optional<概念树概念身份>显式目标;
     std::uint64_t 概念key=0,支持key=0;
-    共享特征应用预算 预算;
-    std::optional<共享场景限制>场景限制;
+    存在概念应用预算 预算;
+    std::optional<存在概念场景限制>场景限制;
     friend bool operator==(const 存在概念形成请求&,const 存在概念形成请求&)=default;
 };
 struct 存在概念上位请求 final {
@@ -40,7 +58,7 @@ struct 存在概念上位请求 final {
     概念树概念身份 下位;
     std::vector<概念树概念身份>保留模板;
     std::uint64_t 概念key=0,接边key=0;
-    共享特征应用预算 预算;
+    存在概念应用预算 预算;
     friend bool operator==(const 存在概念上位请求&,const 存在概念上位请求&)=default;
 };
 enum class 存在概念步骤阶段 :std::uint8_t {概念=1,支持,接边};
@@ -63,14 +81,14 @@ struct 存在概念继续材料 final {
 struct 存在概念继续请求 final {
     存在概念继续材料 材料;
     std::uint64_t Gread=0;
-    共享特征应用预算 本次读取预算;
+    存在概念应用预算 本次读取预算;
 };
 using 存在概念确认事实=std::variant<概念树应用定义事实,概念树支持事实,概念树直接上位事实>;
 struct 存在概念操作结果 final {
     std::uint32_t 版本=1;
-    共享特征业务状态 业务状态=共享特征业务状态::入口拒绝;
+    存在概念业务状态 业务状态=存在概念业务状态::入口拒绝;
     std::uint64_t Gread=0,H=0;
-    共享特征阶段状态 阶段=共享特征阶段状态::未派发;
+    存在概念阶段状态 阶段=存在概念阶段状态::未派发;
     bool 可能已发布=false;
     std::vector<存在概念确认事实>已确认;
     std::optional<存在概念继续材料>继续;
@@ -117,8 +135,8 @@ class 存在概念树应用服务 final {
     std::optional<概念树存在定义>上位见证(const 存在概念上位请求&,std::uint64_t,const 概念树共享预算&)const;
     概念树应用定义事实 定义(概念树概念身份,std::uint64_t,std::uint64_t,const 概念树共享预算&)const;
     std::optional<概念树应用定义事实>查找(const std::optional<概念树存在定义>&,std::uint64_t,std::uint64_t,const 概念树共享预算&)const;
-    void 核验材料(const 存在概念继续材料&,std::uint64_t,const 共享特征应用预算&)const;
-    存在概念操作结果 推进(存在概念继续材料,std::uint64_t,const 共享特征应用预算&,const 场景类数据服务*);
+    void 核验材料(const 存在概念继续材料&,std::uint64_t,const 存在概念应用预算&)const;
+    存在概念操作结果 推进(存在概念继续材料,std::uint64_t,const 存在概念应用预算&,const 场景类数据服务*);
 public:
     static std::optional<概念树概念身份>读取存在概念根节点(){std::lock_guard lock(根节点互斥_);if(!根绑定实例数_)return std::nullopt;return 存在概念根节点;}
     ~存在概念树应用服务()noexcept{释放全局根();}
@@ -133,8 +151,8 @@ public:
     存在概念操作结果 形成或复用存在概念(const 存在概念形成请求&);
     存在概念操作结果 形成上位存在概念(const 存在概念上位请求&);
     存在概念操作结果 继续存在概念操作(const 存在概念继续请求&);
-    存在概念操作结果 形成或复用存在概念(const 存在概念形成请求&,const 共享场景限制&,const 场景类数据服务&);
-    存在概念操作结果 继续存在概念操作(const 存在概念继续请求&,const 共享场景限制&,const 场景类数据服务&);
+    存在概念操作结果 形成或复用存在概念(const 存在概念形成请求&,const 存在概念场景限制&,const 场景类数据服务&);
+    存在概念操作结果 继续存在概念操作(const 存在概念继续请求&,const 存在概念场景限制&,const 场景类数据服务&);
     概念树应用读取结果<概念树应用图事实>读取存在概念树(const 概念树应用图读取请求&)const;
     概念树应用写入结果 退出存在支持(const 概念树应用写请求&);
     概念树存在写入结果_v2 迁移存在概念(const 概念树存在治理请求_v2&);
@@ -143,13 +161,13 @@ public:
 };
 } // namespace 海中鱼巣
 namespace 海中鱼巣::共享存在应用内部 {
-using D=概念树数据状态;using B=共享特征业务状态;
+using D=概念树数据状态;using B=存在概念业务状态;
 struct 失败 final {D 数据;B 业务;};
 inline B 映射(D s)noexcept{
     switch(s){
     case D::事实代次漂移:return B::待继续;
-    case D::数量预算不足:return B::预算不足;
-    case D::历史材料不可用:return B::历史不可用;
+    case D::数量预算不足:return B::数量预算不足;
+    case D::历史材料不可用:return B::历史材料不可用;
     case D::资源失败:return B::资源失败;
     case D::不支持:return B::不支持;
     case D::未找到:case D::目标已退出:return B::被后继覆盖;
@@ -162,46 +180,62 @@ inline B 映射(D s)noexcept{
 inline std::uint64_t 当前(const 概念树类数据服务&c){auto g=c.读取当前事实代次();if(!g.成功())拒绝(g.状态);return g.Gread;}
 inline void 守卫(const 概念树类数据服务&c,std::uint64_t g){if(!g||当前(c)!=g)拒绝(D::事实代次漂移);}
 inline bool 合法键(std::uint64_t k)noexcept{return k&&(k&0xFFFF000000000000ULL)!=0x4E43000000000000ULL;}
-inline bool 限制相等(const 共享场景限制&a,const 共享场景限制&b)noexcept{return a.S==b.S&&a.E==b.E&&a.原场景H==b.原场景H;}
-inline 概念树概念身份 身份(const 概念树应用定义事实&v){return std::visit([](const auto&f){return f.概念;},v);}
+inline bool 限制相等(const 存在概念场景限制&a,const 存在概念场景限制&b)noexcept{return a.S==b.S&&a.E==b.E&&a.原场景H==b.原场景H;}
+inline 概念树概念身份 身份(const 概念树应用定义事实&v){return std::visit([](const auto&f){if constexpr(std::is_same_v<std::decay_t<decltype(f)>,特征概念事实>)return f.身份;else return f.概念;},v);}
 inline 概念树生命周期状态 治理(const 概念树应用定义事实&v){return std::visit([](const auto&f){return f.治理状态;},v);}
-inline const std::vector<概念树直接上位事实>&父组(const 概念树应用定义事实&v){return std::visit([](const auto&f)->const std::vector<概念树直接上位事实>&{return f.直接上位组;},v);}
+inline const std::vector<概念树直接上位事实>&父组(const 概念树应用定义事实&v){return std::visit([](const auto&f)->const std::vector<概念树直接上位事实>&{if constexpr(std::is_same_v<std::decay_t<decltype(f)>,特征概念事实>)return f.直接上位;else return f.直接上位组;},v);}
 inline 存在类结点 存在(const 存在类数据服务&e,概念树存在引用 id,std::uint64_t g,std::uint64_t h,const 概念树共享预算&b){
     auto r=e.读取存在历史事实({1,g,h,id.值,b.基础.最大世界成员数});
     if(!r.成功()){
         switch(r.状态){
-        case 特征引用读取状态::未找到:拒绝(D::未找到);
-        case 特征引用读取状态::目标已退出:拒绝(D::目标已退出);
-        case 特征引用读取状态::历史材料不可用:拒绝(D::历史材料不可用);
-        case 特征引用读取状态::事实代次漂移:拒绝(D::事实代次漂移);
-        case 特征引用读取状态::数量预算不足:拒绝(D::数量预算不足);
-        case 特征引用读取状态::资源失败:拒绝(D::资源失败);
-        case 特征引用读取状态::入口拒绝:拒绝();
+        case 存在历史读取状态::未找到:拒绝(D::未找到);
+        case 存在历史读取状态::目标已退出:拒绝(D::目标已退出);
+        case 存在历史读取状态::历史材料不可用:拒绝(D::历史材料不可用);
+        case 存在历史读取状态::事实代次漂移:拒绝(D::事实代次漂移);
+        case 存在历史读取状态::数量预算不足:拒绝(D::数量预算不足);
+        case 存在历史读取状态::资源失败:拒绝(D::资源失败);
+        case 存在历史读取状态::入口拒绝:拒绝();
         default:拒绝(D::内部不一致);
         }
     }
     if(r.Gread!=g||r.H!=h||r.存在->结点!=id.值)拒绝(D::内部不一致);return std::move(*r.存在);
 }
-inline 特征类结点 特征(const 特征类数据服务&f,概念树特征引用 id,std::uint64_t g,std::uint64_t h,const 概念树共享预算&b){
-    auto r=f.按实例读取特征历史事实({1,g,h,id.值,b.基础.最大特征属性数});
-    if(!r.成功()){
-        switch(r.状态){
-        case 特征引用读取状态::未找到:拒绝(D::未找到);
-        case 特征引用读取状态::目标已退出:拒绝(D::目标已退出);
-        case 特征引用读取状态::历史材料不可用:拒绝(D::历史材料不可用);
-        case 特征引用读取状态::事实代次漂移:拒绝(D::事实代次漂移);
-        case 特征引用读取状态::数量预算不足:拒绝(D::数量预算不足);
-        case 特征引用读取状态::资源失败:拒绝(D::资源失败);
-        case 特征引用读取状态::入口拒绝:拒绝();
+inline 准确特征读取事实 特征(const 特征类数据服务& f,概念树特征引用 id,
+    std::uint64_t g,std::uint64_t h,const 概念树共享预算&) {
+    auto r=f.读取准确特征事实({1,g,h,{id.值}});
+    if(const auto* e=std::get_if<特征数据错误>(&r)) {
+        switch(*e) {
+        case 特征数据错误::未找到:拒绝(D::未找到);
+        case 特征数据错误::已退出:拒绝(D::目标已退出);
+        case 特征数据错误::历史材料不可用:拒绝(D::历史材料不可用);
+        case 特征数据错误::并发变化:拒绝(D::事实代次漂移);
+        case 特征数据错误::数量预算不足:拒绝(D::数量预算不足);
+        case 特征数据错误::资源失败:拒绝(D::资源失败);
+        case 特征数据错误::入口拒绝:拒绝();
+        case 特征数据错误::旧格式不支持:拒绝(D::旧格式不支持);
+        case 特征数据错误::类型不相容:case 特征数据错误::引用冲突:拒绝(D::引用冲突);
         default:拒绝(D::内部不一致);
         }
     }
-    if(r.Gread!=g||r.H!=h||r.特征->结点!=id.值)拒绝(D::内部不一致);return std::move(*r.特征);
+    auto value=std::get<准确特征读取事实>(std::move(r));
+    if(value.Gread!=g||value.H!=h||value.信息.身份.编码!=id.值)拒绝(D::内部不一致);return value;
 }
-inline void 消费(特征长期预算&b,const 特征长期只读用量&u){
-    auto take=[](auto&limit,auto cost){if(cost>limit)拒绝(D::数量预算不足);limit-=cost;};
-    take(b.最大记录数,u.记录数);take(b.最大关系数,u.关系数);take(b.最大属性数,u.属性数);take(b.最大样本数,u.样本数);
-    take(b.最大像素数,u.像素数);take(b.最大边界点对数,u.点对数);take(b.最大历史事实数,u.历史数);
+inline bool 可派发(const 概念树共享预算& b) noexcept {
+    const auto base=[](const 概念树预算& a){return a.最大概念数&&a.最大关系数&&a.最大来源数
+        &&a.最大支持数&&a.最大世界成员数&&a.最大特征属性数&&a.最大动态槽数&&a.最大动态模板数;};
+    const auto& f=b.特征;
+    return base(b.基础)&&base(f.基础)&&f.最大观察数
+        &&f.最大区间数&&f.最大命中数&&f.最大名称数&&f.最大首次材料项数
+        &&b.最大用途数&&b.最大名称数&&b.最大首次材料项数;
+}
+inline void 消费(概念树共享预算& b,const 概念树应用读取用量& u) {
+    auto take=[](auto& limit,auto cost){if(cost>limit)拒绝(D::数量预算不足);limit-=cost;};
+    take(b.基础.最大概念数,u.概念数);take(b.基础.最大关系数,u.关系数);take(b.基础.最大来源数,u.来源数);
+    take(b.基础.最大支持数,u.支持数);take(b.基础.最大世界成员数,u.世界成员数);take(b.基础.最大特征属性数,u.特征属性数);
+    take(b.基础.最大动态槽数,u.动态槽数);take(b.基础.最大动态模板数,u.动态模板数);
+    take(b.特征.最大观察数,u.观察数);take(b.特征.最大区间数,u.区间数);take(b.特征.最大命中数,u.命中数);
+    take(b.特征.最大名称数,u.名称数);take(b.特征.最大首次材料项数,u.首次材料项数);take(b.最大用途数,u.用途数);
+    b.特征.基础=b.基础;
 }
 inline 概念树写入头 头(const 存在概念步骤请求&q){return std::visit([](const auto&r)->概念树写入头{
     if constexpr(requires{r.写入头;})return r.写入头;else return std::visit([](const auto&w){if constexpr(requires{w.写入头;})return w.写入头;else return w.头;},r.操作);
@@ -209,7 +243,7 @@ inline 概念树写入头 头(const 存在概念步骤请求&q){return std::visi
 inline 存在概念步骤请求 调整预算(存在概念步骤请求 q,const 概念树共享预算&b){std::visit([&](auto&r){r.预算=b;if constexpr(requires{r.操作;})std::visit([&](auto&w){w.预算=b.基础;},r.操作);},q);return q;}
 inline bool 等义(const 存在概念步骤请求&a,const 存在概念步骤请求&b){return 调整预算(a,{})==调整预算(b,{});}
 inline void 改G(存在概念步骤请求&q,std::uint64_t g){std::visit([&](auto&r){if constexpr(requires{r.写入头;})r.写入头.期望事实代次=g;else std::visit([&](auto&w){if constexpr(requires{w.写入头;})w.写入头.期望事实代次=g;else w.头.期望事实代次=g;},r.操作);},q);}
-inline void 场景检查(const 概念树类数据服务&c,const 存在类数据服务&e,const 场景类数据服务*s,const std::optional<共享场景限制>&limit,概念树存在引用 E,std::uint64_t g,const 概念树共享预算&b){
+inline void 场景检查(const 概念树类数据服务&c,const 存在类数据服务&e,const 场景类数据服务*s,const std::optional<存在概念场景限制>&limit,概念树存在引用 E,std::uint64_t g,const 概念树共享预算&b){
     if(!limit)return;
     if(!s||limit->E!=E||!有效(limit->S.值)||!limit->原场景H||limit->原场景H>g||!c.使用同一场景基座(*s)||!s->使用存在服务(e))拒绝();
     for(auto h:{limit->原场景H,g}){
@@ -235,7 +269,7 @@ namespace 海中鱼巣 {
     :concepts_(c),features_(f),existences_(e),root_(c.存在根引用()){
     using namespace 共享存在应用内部;
     if(!有效(root_.值)||!c.共享应用已启用()||!c.使用特征存在服务(f,e))throw std::invalid_argument("shared existence binding");
-    const auto g=当前(c);概念树预算 b;b.最大概念数=b.最大关系数=b.最大来源数=b.最大支持数=b.最大世界成员数=b.最大特征属性数=1;
+    const auto g=当前(c);概念树预算 b;b.最大概念数=b.最大关系数=b.最大来源数=b.最大支持数=b.最大世界成员数=b.最大特征属性数=b.最大动态槽数=b.最大动态模板数=1;
     auto root=c.读取概念({{1,g,g},root_,b});
     if(!root.成功()||root.Gread!=g||root.H!=g||!root.概念||!root.概念->是本体根||root.概念->概念!=root_||root.概念->本体根!=root_||
         root.概念->根角色!=概念树根角色::存在||root.概念->定义||有效(root.概念->定义记录)||!root.概念->直接上位组.empty()||root.概念->治理状态!=概念树生命周期状态::活跃)
@@ -244,7 +278,7 @@ namespace 海中鱼巣 {
 }
 概念树应用定义事实 存在概念树应用服务::定义(概念树概念身份 id,std::uint64_t g,std::uint64_t h,const 概念树共享预算&b)const{
     using namespace 共享存在应用内部;
-    auto r=concepts_.读取应用概念定义({1,{1,g,h},id,b});if(!r.成功())拒绝(r.状态);
+    auto r=concepts_.读取应用概念定义({2,{1,g,h},id,b});if(!r.成功())拒绝(r.状态);
     if(r.Gread!=g||r.H!=h||身份(*r.数据)!=id)拒绝(D::内部不一致);
     if(const auto*root=std::get_if<概念树概念事实>(&*r.数据)){
         if(id!=root_||!root->是本体根||root->本体根!=root_||root->根角色!=概念树根角色::存在)拒绝(D::引用冲突);
@@ -254,7 +288,7 @@ namespace 海中鱼巣 {
 std::optional<概念树应用定义事实>存在概念树应用服务::查找(const std::optional<概念树存在定义>&definition,std::uint64_t g,std::uint64_t h,const 概念树共享预算&b)const{
     using namespace 共享存在应用内部;
     if(!definition)return 定义(root_,g,h,b);
-    auto graph=concepts_.读取应用概念图({1,{{1,g,h},概念树根角色::存在,false,b.基础},b});if(!graph.成功())拒绝(graph.状态);
+    auto graph=concepts_.读取应用概念图({2,{{1,g,h},概念树根角色::存在,false,b.基础},b});if(!graph.成功())拒绝(graph.状态);
     if(graph.Gread!=g||graph.H!=h||graph.数据->根身份!=root_)拒绝(D::内部不一致);
     std::optional<概念树应用定义事实>found;
     for(const auto&node:graph.数据->节点组){const auto*ec=std::get_if<概念树应用存在事实>(&node);if(ec&&ec->定义==*definition){if(found)拒绝(D::内部不一致);found=node;}}
@@ -263,16 +297,21 @@ std::optional<概念树应用定义事实>存在概念树应用服务::查找(co
 概念树存在定义 存在概念树应用服务::形成见证(const 存在概念形成请求&r,std::uint64_t g,const 概念树共享预算&b)const{
     using namespace 共享存在应用内部;
     if(r.版本!=1||!r.H||r.H>g||!有效(r.E.值)||r.见证.empty()||!合法键(r.概念key)||!合法键(r.支持key)||r.概念key==r.支持key)拒绝();
+    if(!可派发(b))拒绝();
     if(r.见证.size()>b.基础.最大关系数)拒绝(D::数量预算不足);
     const auto e=存在(existences_,r.E,g,r.H,b);概念树存在定义 out;std::set<std::uint64_t>ids;auto remaining=b;
     for(const auto&w:r.见证){
         if(!有效(w.模板.值)||!有效(w.实例.值)||!有效(w.值事实)||!有效(w.成员关系)||!ids.insert(w.模板.值.值).second)拒绝();
-        if(std::count_if(e.特征组.begin(),e.特征组.end(),[&](const auto&m){return m.目标结点==w.实例.值&&m.成员关系==w.成员关系;})!=1)拒绝(D::引用冲突);
-        auto f=特征(features_,w.实例,g,r.H,b);if(f.值事实!=w.值事实)拒绝(D::引用冲突);
-        auto match=concepts_.判定应用特征模板({1,{1,g,r.H},w.模板,{w.实例.值,w.值事实,f.特征类型,r.H},remaining});if(!match.成功())拒绝(match.状态);
-        if(match.Gread!=g||match.H!=r.H)拒绝(D::内部不一致);消费(remaining.特征,match.数据->特征用量);
+        if(std::count_if(e.当前采用组.begin(),e.当前采用组.end(),[&](const auto&m){return m.F.编码==w.实例.值&&m.关系==w.成员关系&&m.E==r.E.值;})!=1)拒绝(D::引用冲突);
+        auto f=特征(features_,w.实例,g,r.H,b);if(f.准确值事实!=w.值事实)拒绝(D::引用冲突);
+        if(!可派发(remaining))拒绝(D::数量预算不足);
+        auto match=concepts_.判定应用特征模板({2,{1,g,r.H},w.模板,{1,g,r.H,{w.实例.值}},remaining});if(!match.成功())拒绝(match.状态);
+        if(match.Gread!=g||match.H!=r.H)拒绝(D::内部不一致);消费(remaining,match.数据->用量);
         if(std::holds_alternative<概念树动态模板事实>(match.数据->模板))拒绝(D::不支持);
-        if(std::get<概念树共享定义事实>(match.数据->模板).治理状态==概念树生命周期状态::退役)业务拒绝(B::需显式治理);
+        const auto& c=std::get<特征概念事实>(match.数据->模板);const auto& p=match.数据->判定;
+        if(c.身份!=w.模板||c.定义.类型!=f.信息.类型||p.Gread!=g||p.模板H!=r.H||p.实际H!=r.H
+            ||p.实际!=f||p.域!=c.定义.域||p.命中!=match.数据->适用)拒绝(D::内部不一致);
+        if(c.治理状态==概念树生命周期状态::退役)业务拒绝(B::需显式治理);
         if(!match.数据->适用)拒绝(D::引用冲突);out.特征模板组.push_back(w.模板);
     }
     std::sort(out.特征模板组.begin(),out.特征模板组.end(),[](auto a,auto b){return a.值.值<b.值.值;});守卫(concepts_,g);return out;
@@ -290,7 +329,7 @@ std::optional<概念树存在定义>存在概念树应用服务::上位见证(co
 }
 } // namespace 海中鱼巣
 namespace 海中鱼巣 {
-void 存在概念树应用服务::核验材料(const 存在概念继续材料&m,std::uint64_t g,const 共享特征应用预算&b)const{
+void 存在概念树应用服务::核验材料(const 存在概念继续材料&m,std::uint64_t g,const 存在概念应用预算&b)const{
     using namespace 共享存在应用内部;
     if(m.版本!=1||m.原业务.valueless_by_exception()||!m.初始G||m.初始G>g)拒绝();
     const auto*form=std::get_if<存在概念形成请求>(&m.原业务);const auto*upper=std::get_if<存在概念上位请求>(&m.原业务);
@@ -325,12 +364,12 @@ void 存在概念树应用服务::核验材料(const 存在概念继续材料&m,
         if(std::none_of(m.步骤.begin(),m.步骤.end(),[&](const auto&n){if(n.阶段!=s.阶段||头(n.原请求).期望事实代次<=oldG)return false;auto q=n.原请求;改G(q,oldG);return 等义(q,s.原请求);}))拒绝(D::引用冲突);
     }
 }
-存在概念操作结果 存在概念树应用服务::推进(存在概念继续材料 material,std::uint64_t expectedG,const 共享特征应用预算&budget,const 场景类数据服务*scene){
+存在概念操作结果 存在概念树应用服务::推进(存在概念继续材料 material,std::uint64_t expectedG,const 存在概念应用预算&budget,const 场景类数据服务*scene){
     using namespace 共享存在应用内部;
     存在概念操作结果 out;out.继续=std::move(material);auto&m=*out.继续;
     out.Gread=expectedG;
     bool unknown=!m.步骤.empty();std::set<unsigned>verified;
-    auto confirmed=[&](存在概念确认事实 fact){out.已确认.push_back(std::move(fact));out.阶段=共享特征阶段状态::部分确认;};
+    auto confirmed=[&](存在概念确认事实 fact){out.已确认.push_back(std::move(fact));out.阶段=存在概念阶段状态::部分确认;};
     try{
         out.H=std::visit([](const auto&r){return r.H;},m.原业务);
         auto g=当前(concepts_);out.Gread=g;if(g!=expectedG)拒绝(D::事实代次漂移);
@@ -420,7 +459,7 @@ void 存在概念树应用服务::核验材料(const 存在概念继续材料&m,
             auto live=*upper;live.H=g;if(上位见证(live,g,budget.数据)!=m.冻结定义)业务拒绝(B::被后继覆盖);
             auto lower=定义(upper->下位,g,g,budget.数据);const auto&parents=父组(lower);
             if(std::none_of(parents.begin(),parents.end(),[&](const auto&e){return e.上位==*target;}))step(存在概念步骤阶段::接边,[&](auto pg)->存在概念步骤请求{return edgeRequest(pg);});
-            auto graph=concepts_.读取应用概念图({1,{{1,g,g},概念树根角色::存在,false,budget.数据.基础},budget.数据});if(!graph.成功())拒绝(graph.状态);
+            auto graph=concepts_.读取应用概念图({2,{{1,g,g},概念树根角色::存在,false,budget.数据.基础},budget.数据});if(!graph.成功())拒绝(graph.状态);
             if(graph.Gread!=g||graph.H!=g)拒绝(D::内部不一致);
             auto edge=std::find_if(graph.数据->直接边组.begin(),graph.数据->直接边组.end(),[&](const auto&e){return e.下位==upper->下位&&e.上位==*target;});if(edge==graph.数据->直接边组.end())业务拒绝(B::被后继覆盖);
             for(const auto&s:m.步骤)if(s.阶段==存在概念步骤阶段::接边){const auto&q=std::get<概念树上位操作请求>(std::get<概念树存在治理请求_v2>(s.原请求).操作);const auto&r=std::get<概念树存在写入结果_v2>(*s.回执提示);
@@ -429,19 +468,30 @@ void 存在概念树应用服务::核验材料(const 存在概念继续材料&m,
             lower=定义(upper->下位,g,g,budget.数据);current=定义(*target,g,g,budget.数据);
             if(治理(lower)==概念树生命周期状态::退役||治理(current)==概念树生命周期状态::退役)业务拒绝(B::被后继覆盖);confirmed(lower);confirmed(current);confirmed(*edge);
         }
-        守卫(concepts_,g);out.Gread=g;out.业务状态=B::完成;out.阶段=共享特征阶段状态::全部确认;out.可能已发布=false;return out;
+        守卫(concepts_,g);out.Gread=g;out.业务状态=B::完成;out.阶段=存在概念阶段状态::全部确认;out.可能已发布=false;return out;
     }catch(const 失败&e){out.业务状态=e.业务;}
     catch(const std::bad_alloc&){out.业务状态=B::资源失败;}catch(const std::length_error&){out.业务状态=B::资源失败;}catch(...){out.业务状态=B::内部不一致;}
     out.可能已发布=unknown||verified.size()!=m.步骤.size();
-    if(out.可能已发布)out.阶段=共享特征阶段状态::先前阶段待核验;
-    else out.阶段=out.已确认.empty() ? 共享特征阶段状态::未派发 : 共享特征阶段状态::部分确认;
+    if(out.可能已发布)out.阶段=存在概念阶段状态::先前阶段待核验;
+    else out.阶段=out.已确认.empty() ? 存在概念阶段状态::未派发 : 存在概念阶段状态::部分确认;
     return out;
 }
 } // namespace 海中鱼巣
 namespace 海中鱼巣 {
 bool 存在概念操作结果::成功()const noexcept{
-    if(版本!=1||业务状态!=共享特征业务状态::完成||阶段!=共享特征阶段状态::全部确认||可能已发布||!Gread||!H||H>Gread||!继续||继续->版本!=1||已确认.empty())return false;
-    for(const auto&v:已确认){if(v.valueless_by_exception())return false;if(const auto*c=std::get_if<概念树应用定义事实>(&v)){if(c->valueless_by_exception()||!std::visit([](const auto&f){return 有效(f.概念.值)&&有效(f.本体根.值)&&f.治理状态!=概念树生命周期状态::退役;},*c))return false;}}
+    if(版本!=1||业务状态!=存在概念业务状态::完成||阶段!=存在概念阶段状态::全部确认||可能已发布||!Gread||!H||H>Gread||!继续||继续->版本!=1||已确认.empty())return false;
+    for(const auto&v:已确认) {
+        if(v.valueless_by_exception())return false;
+        if(const auto*c=std::get_if<概念树应用定义事实>(&v)) {
+            if(c->valueless_by_exception()||!std::visit([](const auto&f) {
+                const auto id=[&] {
+                    if constexpr(std::is_same_v<std::decay_t<decltype(f)>,特征概念事实>)return f.身份;
+                    else return f.概念;
+                }();
+                return 有效(id.值)&&有效(f.本体根.值)&&f.治理状态!=概念树生命周期状态::退役;
+            },*c))return false;
+        }
+    }
     return true;
 }
 存在概念操作结果 存在概念树应用服务::形成或复用存在概念(const 存在概念形成请求&r){
@@ -449,7 +499,7 @@ bool 存在概念操作结果::成功()const noexcept{
     try{存在概念继续材料 m;m.原业务=r;m.初始G=r.Gread;out.继续=m;if(r.场景限制)拒绝();守卫(concepts_,r.Gread);m.冻结定义=形成见证(r,r.Gread,r.预算.数据);return 推进(std::move(m),r.Gread,r.预算,nullptr);}
     catch(const 失败&e){out.业务状态=e.业务;}catch(const std::bad_alloc&){out.业务状态=B::资源失败;}catch(const std::length_error&){out.业务状态=B::资源失败;}catch(...){out.业务状态=B::内部不一致;}return out;
 }
-存在概念操作结果 存在概念树应用服务::形成或复用存在概念(const 存在概念形成请求&r,const 共享场景限制&limit,const 场景类数据服务&scene){
+存在概念操作结果 存在概念树应用服务::形成或复用存在概念(const 存在概念形成请求&r,const 存在概念场景限制&limit,const 场景类数据服务&scene){
     using namespace 共享存在应用内部;存在概念操作结果 out;out.Gread=r.Gread;out.H=r.H;
     try{auto request=r;if(request.场景限制&&!限制相等(*request.场景限制,limit))拒绝();request.场景限制=limit;
         存在概念继续材料 m;m.原业务=request;m.初始G=r.Gread;out.继续=m;守卫(concepts_,r.Gread);场景检查(concepts_,existences_,&scene,limit,r.E,r.Gread,r.预算.数据);m.冻结定义=形成见证(request,r.Gread,r.预算.数据);return 推进(std::move(m),r.Gread,r.预算,&scene);}
@@ -461,14 +511,14 @@ bool 存在概念操作结果::成功()const noexcept{
     catch(const 失败&e){out.业务状态=e.业务;}catch(const std::bad_alloc&){out.业务状态=B::资源失败;}catch(const std::length_error&){out.业务状态=B::资源失败;}catch(...){out.业务状态=B::内部不一致;}return out;
 }
 存在概念操作结果 存在概念树应用服务::继续存在概念操作(const 存在概念继续请求&r){
-    存在概念操作结果 out;out.Gread=r.Gread;out.可能已发布=!r.材料.步骤.empty();if(out.可能已发布)out.阶段=共享特征阶段状态::先前阶段待核验;
+    存在概念操作结果 out;out.Gread=r.Gread;out.可能已发布=!r.材料.步骤.empty();if(out.可能已发布)out.阶段=存在概念阶段状态::先前阶段待核验;
     try{out.继续=r.材料;out.H=std::visit([](const auto&q){return q.H;},r.材料.原业务);return 推进(std::move(*out.继续),r.Gread,r.本次读取预算,nullptr);}
-    catch(const std::bad_alloc&){out.业务状态=共享特征业务状态::资源失败;}catch(const std::length_error&){out.业务状态=共享特征业务状态::资源失败;}catch(...){out.业务状态=共享特征业务状态::内部不一致;}return out;
+    catch(const std::bad_alloc&){out.业务状态=存在概念业务状态::资源失败;}catch(const std::length_error&){out.业务状态=存在概念业务状态::资源失败;}catch(...){out.业务状态=存在概念业务状态::内部不一致;}return out;
 }
-存在概念操作结果 存在概念树应用服务::继续存在概念操作(const 存在概念继续请求&r,const 共享场景限制&limit,const 场景类数据服务&scene){
-    存在概念操作结果 out;out.Gread=r.Gread;out.可能已发布=!r.材料.步骤.empty();if(out.可能已发布)out.阶段=共享特征阶段状态::先前阶段待核验;
+存在概念操作结果 存在概念树应用服务::继续存在概念操作(const 存在概念继续请求&r,const 存在概念场景限制&limit,const 场景类数据服务&scene){
+    存在概念操作结果 out;out.Gread=r.Gread;out.可能已发布=!r.材料.步骤.empty();if(out.可能已发布)out.阶段=存在概念阶段状态::先前阶段待核验;
     try{out.继续=r.材料;out.H=std::visit([](const auto&q){return q.H;},r.材料.原业务);const auto*form=std::get_if<存在概念形成请求>(&r.材料.原业务);if(!form||!form->场景限制||!共享存在应用内部::限制相等(*form->场景限制,limit))return out;return 推进(std::move(*out.继续),r.Gread,r.本次读取预算,&scene);}
-    catch(const std::bad_alloc&){out.业务状态=共享特征业务状态::资源失败;}catch(const std::length_error&){out.业务状态=共享特征业务状态::资源失败;}catch(...){out.业务状态=共享特征业务状态::内部不一致;}return out;
+    catch(const std::bad_alloc&){out.业务状态=存在概念业务状态::资源失败;}catch(const std::length_error&){out.业务状态=存在概念业务状态::资源失败;}catch(...){out.业务状态=存在概念业务状态::内部不一致;}return out;
 }
 概念树应用读取结果<概念树应用图事实> 存在概念树应用服务::读取存在概念树(const 概念树应用图读取请求&r)const{
     if(r.图请求.根角色!=概念树根角色::存在)return {};return concepts_.读取应用概念图(r);

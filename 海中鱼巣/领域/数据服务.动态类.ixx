@@ -192,7 +192,7 @@ struct 动态类历史读取结果 final {
     std::uint64_t Gread = 0, H = 0;
     std::optional<动态类结点> 动态结点;
     std::vector<状态类结点> 状态组;
-    std::vector<特征类结点> 变化特征组;
+    std::vector<准确特征读取事实> 变化特征组;
     std::optional<动态类历史缺失位置> 缺失位置;
     bool 成功() const noexcept {
         if (合同版本 != 1 || 状态 != 动态类数据状态::已读取 || !H || Gread < H
@@ -213,21 +213,23 @@ struct 动态类历史读取结果 final {
                 || (i && 状态组[i - 1].时间 > q.时间)) return false;
             for (std::size_t j = 0; j < i; ++j) if (状态组[j].结点 == q.结点) return false;
             for (const auto& f : q.特征值快照组)
-                if (!有效(f.结点) || !有效(f.值事实) || !有效(f.特征类型)
-                    || !f.创建事实代次 || f.创建事实代次 > q.创建事实代次
-                    || (f.退出事实代次 && *f.退出事实代次 <= q.创建事实代次)
-                    || f.特征值.valueless_by_exception()) return false;
+                if (!有效(f.信息.身份.编码) || (!f.准确值事实 || !有效(*f.准确值事实)) || !有效(f.信息.类型)
+                    || !f.创建G || f.创建G > q.创建事实代次
+                    || (f.退出G && *f.退出G <= q.创建事实代次)
+                    || f.Gread != Gread || f.H != q.创建事实代次
+                    || !有效(f.类型关系) || f.完整值.valueless_by_exception()) return false;
         }
         if (n.发生时间 != 状态组.back().时间) return false;
         for (std::size_t i = 0; i < 变化特征组.size(); ++i) {
             const auto& f = 变化特征组[i];
             const auto& rel = n.变化特征组[i];
-            if (!有效(f.结点) || rel.特征结点 != f.结点 || !有效(rel.成员关系)
-                || rel.顺序 != i + 1 || !有效(f.值事实) || !有效(f.特征类型)
-                || !f.创建事实代次 || f.创建事实代次 > H
-                || (f.退出事实代次 && *f.退出事实代次 <= H)
-                || f.特征值.valueless_by_exception()) return false;
-            for (std::size_t j = 0; j < i; ++j) if (变化特征组[j].结点 == f.结点) return false;
+            if (!有效(f.信息.身份.编码) || rel.特征结点 != f.信息.身份.编码 || !有效(rel.成员关系)
+                || rel.顺序 != i + 1 || (!f.准确值事实 || !有效(*f.准确值事实)) || !有效(f.信息.类型)
+                || !f.创建G || f.创建G > H
+                || (f.退出G && *f.退出G <= H)
+                || f.Gread != Gread || f.H != H
+                || !有效(f.类型关系) || f.完整值.valueless_by_exception()) return false;
+            for (std::size_t j = 0; j < i; ++j) if (变化特征组[j].信息.身份.编码 == f.信息.身份.编码) return false;
         }
         return true;
     }
@@ -336,22 +338,13 @@ public:
             if (out.状态组.back().时间 != *time) throw S::内部不一致;
             missing = 动态类历史缺失位置::变化特征依赖;
             for (const auto& rel : fs) {
-                auto f = 特征服务_.按实例读取特征历史事实({1, r.Gread, r.H, rel.目标节点, 1});
-                if (f.状态 != 特征引用读取状态::已读取) {
-                    switch (f.状态) {
-                    case 特征引用读取状态::历史材料不可用: throw S::历史材料已清理;
-                    case 特征引用读取状态::资源失败: throw S::资源失败;
-                    case 特征引用读取状态::事实代次漂移: throw S::事实代次漂移;
-                    case 特征引用读取状态::数量预算不足: throw S::内部不一致;
-                    case 特征引用读取状态::未找到: throw S::特征未找到;
-                    case 特征引用读取状态::目标已退出: throw S::特征已退出;
-                    default: throw S::内部不一致;
-                    }
-                }
-                if (!f.成功() || f.Gread != r.Gread || f.H != r.H || f.特征->结点 != rel.目标节点)
+                auto read = 特征服务_.读取准确特征事实({1, r.Gread, r.H, {rel.目标节点}});
+                if (const auto* e = std::get_if<特征数据错误>(&read)) throw 映射特征状态(*e);
+                auto f = std::get<准确特征读取事实>(std::move(read));
+                if (f.Gread != r.Gread || f.H != r.H || f.信息.身份.编码 != rel.目标节点)
                     throw S::内部不一致;
                 result.变化特征组.push_back({static_cast<std::uint32_t>(rel.角色或顺序), rel.编码, rel.目标节点});
-                out.变化特征组.push_back(std::move(*f.特征));
+                out.变化特征组.push_back(std::move(f));
             }
             guard();
             out.动态结点 = std::move(result);
@@ -551,7 +544,7 @@ private:
         bool 成功 = false;
         动态类数据状态 状态 = 动态类数据状态::特征读取失败;
         std::uint64_t 事实代次 = 0;
-        std::vector<特征类结点> 值;
+        std::vector<准确特征读取事实> 值;
     };
 
     bool 类型结点有效(稳定编码 编码, 节点种类 种类,
@@ -645,15 +638,17 @@ private:
         特征组读取结果 结果;
         结果.事实代次 = 期望事实代次;
         for (const auto 编码 : 编码组) {
-            const auto 读取 = 特征服务_.查询特征(
-                {特征类数据合同版本, 期望事实代次, 编码});
-            if (!读取.成功() || 读取.状态 != 特征类数据状态::已读取
-                || 读取.事实代次 != 期望事实代次 || !读取.特征) {
-                结果.状态 = 映射特征状态(读取.状态);
-                结果.事实代次 = 读取.事实代次;
+            auto 读取 = 特征服务_.读取准确特征事实({1, 期望事实代次, 期望事实代次, {编码}});
+            if (const auto* e = std::get_if<特征数据错误>(&读取)) {
+                结果.状态 = 映射特征状态(*e);
                 return 结果;
             }
-            结果.值.push_back(*读取.特征);
+            auto f = std::get<准确特征读取事实>(std::move(读取));
+            if (f.Gread != 期望事实代次 || f.H != 期望事实代次 || f.信息.身份.编码 != 编码) {
+                结果.状态 = 动态类数据状态::内部不一致;
+                return 结果;
+            }
+            结果.值.push_back(std::move(f));
         }
         结果.成功 = true;
         结果.状态 = 动态类数据状态::已读取;
@@ -1142,22 +1137,16 @@ private:
         }
     }
 
-    static 动态类数据状态 映射特征状态(特征类数据状态 状态) noexcept {
+    static 动态类数据状态 映射特征状态(特征数据错误 状态) noexcept {
         switch (状态) {
-        case 特征类数据状态::未找到:
-        case 特征类数据状态::特征类型未找到:
-            return 动态类数据状态::特征未找到;
-        case 特征类数据状态::目标已退出:
-        case 特征类数据状态::特征类型已退出:
-            return 动态类数据状态::特征已退出;
-        case 特征类数据状态::事实代次漂移:
-            return 动态类数据状态::事实代次漂移;
-        case 特征类数据状态::入口拒绝:
-            return 动态类数据状态::入口拒绝;
-        case 特征类数据状态::资源失败:
-            return 动态类数据状态::资源失败;
-        default:
-            return 动态类数据状态::特征读取失败;
+        case 特征数据错误::未找到: return 动态类数据状态::特征未找到;
+        case 特征数据错误::已退出: return 动态类数据状态::特征已退出;
+        case 特征数据错误::历史材料不可用: return 动态类数据状态::历史材料已清理;
+        case 特征数据错误::并发变化: return 动态类数据状态::事实代次漂移;
+        case 特征数据错误::入口拒绝: return 动态类数据状态::入口拒绝;
+        case 特征数据错误::资源失败: return 动态类数据状态::资源失败;
+        case 特征数据错误::数量预算不足: return 动态类数据状态::数量预算不足;
+        default: return 动态类数据状态::特征读取失败;
         }
     }
 

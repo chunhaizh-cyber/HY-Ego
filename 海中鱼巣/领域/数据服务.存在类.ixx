@@ -5,6 +5,10 @@ module;
 #include <cstdint>
 #include <exception>
 #include <limits>
+#include <map>
+#include <mutex>
+#include <set>
+#include <type_traits>
 #include <new>
 #include <optional>
 #include <stdexcept>
@@ -80,9 +84,47 @@ enum class 存在类数据状态 : std::uint8_t {
     历史材料已清理 = 21,
     资源失败 = 22,
     内部不一致 = 23,
-    已可能发布 = 24
+    已可能发布 = 24,
+    已建立当前采用 = 25, 已替换当前采用 = 26, 已解除当前采用 = 27,
+    格式不支持 = 28, 数量预算不足 = 29
 };
 
+enum class 存在历史读取状态 : std::uint8_t {
+    已读取=1,入口拒绝=2,未找到=3,目标已退出=4,事实代次漂移=5,引用冲突=6,
+    历史材料不可用=7,资源失败=8,内部不一致=9,数量预算不足=10
+};
+struct 存在当前采用结构交付 final { 稳定编码 当前采用关系类型; };
+struct 存在当前采用事实 final {
+    稳定编码 关系,E;特征类型身份 FT;特征信息身份 F;
+    friend bool operator==(const 存在当前采用事实&,const 存在当前采用事实&)=default;
+};
+struct 存在当前采用读取请求 final {
+    std::uint32_t 版本=1;std::uint64_t Gread=0,H=0;稳定编码 E;特征类型身份 FT;std::uint64_t 关系预算=0;
+};
+struct 存在当前采用建立 final { 特征信息身份 F;friend bool operator==(const 存在当前采用建立&,const 存在当前采用建立&)=default; };
+struct 存在当前采用替换 final {
+    存在当前采用事实 预期;特征信息身份 新F;
+    friend bool operator==(const 存在当前采用替换&,const 存在当前采用替换&)=default;
+};
+struct 存在当前采用解除 final {
+    存在当前采用事实 预期;friend bool operator==(const 存在当前采用解除&,const 存在当前采用解除&)=default;
+};
+struct 存在关联已知并采用 final {
+    特征信息身份 F;std::optional<存在当前采用事实> 预期;
+    friend bool operator==(const 存在关联已知并采用&,const 存在关联已知并采用&)=default;
+};
+using 存在当前采用操作=std::variant<存在当前采用建立,存在当前采用替换,存在当前采用解除,存在关联已知并采用>;
+struct 存在当前采用写请求 final {
+    std::uint32_t 版本=1;std::uint64_t G=0;L1所有者范围写入幂等身份 幂等身份;
+    稳定编码 E;特征类型身份 FT;存在当前采用操作 操作;std::uint64_t 关系预算=0;
+    friend bool operator==(const 存在当前采用写请求&,const 存在当前采用写请求&)=default;
+};
+struct 存在当前采用结果 final {
+    std::uint32_t 版本=1;存在类数据状态 状态=存在类数据状态::入口拒绝;std::uint64_t Gread=0,H=0;
+    std::optional<std::uint64_t> 首次H;std::optional<存在当前采用事实> 采用;
+    std::optional<存在当前采用写请求> 原请求;
+    bool 成功() const noexcept;
+};
 struct 存在类成员引用 final {
     稳定编码 成员关系{};
     稳定编码 目标结点{};
@@ -100,6 +142,7 @@ struct 存在类结点 final {
     std::uint64_t 创建事实代次 = 0;
     std::optional<std::uint64_t> 退出事实代次;
     friend bool operator==(const 存在类结点&, const 存在类结点&) = default;
+    std::vector<存在当前采用事实> 当前采用组;
 };
 
 struct 存在类新增请求 final {
@@ -484,13 +527,13 @@ struct 存在历史读取请求 final {
     std::uint64_t 关系预算 = 0;
 };
 struct 存在历史读取结果 final {
-    特征引用读取状态 状态 = 特征引用读取状态::入口拒绝;
+    存在历史读取状态 状态 = 存在历史读取状态::入口拒绝;
     std::uint32_t 合同版本 = 1;
     std::uint64_t Gread = 0;
     std::uint64_t H = 0;
     std::optional<存在类结点> 存在;
     bool 成功() const noexcept {
-        return 状态 == 特征引用读取状态::已读取 && 合同版本 == 1 && H && Gread >= H && 存在
+        return 状态 == 存在历史读取状态::已读取 && 合同版本 == 1 && H && Gread >= H && 存在
                && 有效(存在->结点) && !存在->退出事实代次;
     }
 };
@@ -501,14 +544,14 @@ struct 存在特征成员历史请求 final {
     稳定编码 宿主{}, 成员关系{}, 特征实例{};
 };
 struct 存在特征成员历史结果 final {
-    特征引用读取状态 状态 = 特征引用读取状态::入口拒绝;
+    存在历史读取状态 状态 = 存在历史读取状态::入口拒绝;
     std::uint32_t 合同版本 = 1;
     std::uint64_t Gread = 0;
     std::uint64_t H = 0;
     稳定编码 宿主{};
     std::optional<存在类成员引用> 成员;
     bool 成功() const noexcept {
-        return 状态 == 特征引用读取状态::已读取 && 合同版本 == 1 && H && Gread >= H && 有效(宿主) && 成员
+        return 状态 == 存在历史读取状态::已读取 && 合同版本 == 1 && H && Gread >= H && 有效(宿主) && 成员
                && 有效(成员->成员关系) && 有效(成员->目标结点);
     }
 };
@@ -519,7 +562,7 @@ public:
         return &s == &第一层服务_;
     }
     存在历史读取结果 读取存在历史事实(const 存在历史读取请求& r) const {
-        using S = 特征引用读取状态;
+        using S = 存在历史读取状态;
         存在历史读取结果 o;
         o.Gread = r.Gread;
         o.H = r.H;
@@ -537,7 +580,7 @@ public:
             }
             auto nr = 第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, r.宿主});
             if (nr.状态 != L1所有者范围读取状态::成功) {
-                o.状态 = 特征引用历史状态(nr.状态);
+                o.状态 = 存在历史状态(nr.状态);
                 return o;
             }
             if (nr.读取事实代次 != r.Gread) {
@@ -575,7 +618,7 @@ public:
                 auto rr = 第一层服务_.读取所有者范围历史关系组(
                     {L1所有者范围CRUD合同版本, L1所有者范围关系端点方向::源, r.宿主, type, r.H});
                 if (rr.状态 != L1所有者范围读取状态::成功) {
-                    o.状态 = 特征引用历史状态(rr.状态);
+                    o.状态 = 存在历史状态(rr.状态);
                     return o;
                 }
                 if (rr.读取事实代次 != r.Gread) {
@@ -611,6 +654,24 @@ public:
                 o.状态 = S::事实代次漂移;
                 return o;
             }
+            if(有效(当前采用关系类型_)) {
+                try {
+                    snapshot.当前采用组=读取采用组(r.宿主,r.Gread,r.H,r.关系预算).采用;
+                    if(snapshot.当前采用组.size()>r.关系预算-count){o.状态=S::数量预算不足;return o;}
+                } catch(const 采用失败& e) {
+                    switch(e.状态) {
+                    case 采用S::数量预算不足:o.状态=S::数量预算不足;break;
+                    case 采用S::资源失败:o.状态=S::资源失败;break;
+                    case 采用S::事实代次漂移:o.状态=S::事实代次漂移;break;
+                    case 采用S::历史材料已清理:o.状态=S::历史材料不可用;break;
+                    case 采用S::未找到:o.状态=S::未找到;break;
+                    case 采用S::目标已退出:o.状态=S::目标已退出;break;
+                    case 采用S::引用冲突:o.状态=S::引用冲突;break;
+                    default:o.状态=S::内部不一致;break;
+                    }
+                    return o;
+                }
+            }
             o.状态 = S::已读取;
             o.存在 = std::move(snapshot);
             return o;
@@ -623,7 +684,7 @@ public:
         }
     }
     存在特征成员历史结果 读取特征成员历史事实(const 存在特征成员历史请求& r) const {
-        using S = 特征引用读取状态;
+        using S = 存在历史读取状态;
         存在特征成员历史结果 o;
         o.Gread = r.Gread;
         o.H = r.H;
@@ -634,11 +695,11 @@ public:
             auto nr = 第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, r.宿主});
             auto rr = 第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, r.成员关系});
             if (nr.状态 != L1所有者范围读取状态::成功) {
-                o.状态 = 特征引用历史状态(nr.状态);
+                o.状态 = 存在历史状态(nr.状态);
                 return o;
             }
             if (rr.状态 != L1所有者范围读取状态::成功) {
-                o.状态 = 特征引用历史状态(rr.状态);
+                o.状态 = 存在历史状态(rr.状态);
                 return o;
             }
             if (nr.读取事实代次 != r.Gread || rr.读取事实代次 != r.Gread) {
@@ -728,6 +789,20 @@ public:
             throw std::invalid_argument("invalid existence relation types");
     }
 
+    存在类数据服务(const L1事实基座服务& l1,const 特征类数据服务& f,
+        const 状态类数据服务& s,const 动态类数据服务& d,L1所有者范围写端口&& port,
+        稳定编码 child,稳定编码 known,稳定编码 state,稳定编码 dynamic,
+        const 存在当前采用结构交付& layout)
+        :存在类数据服务(l1,f,s,d,std::move(port),child,known,state,dynamic) {
+        if(!有效(layout.当前采用关系类型)||layout.当前采用关系类型==child
+            ||layout.当前采用关系类型==known||layout.当前采用关系类型==state
+            ||layout.当前采用关系类型==dynamic||!关系类型有效(layout.当前采用关系类型))
+            throw std::invalid_argument("invalid adoption relation type");
+        当前采用关系类型_=layout.当前采用关系类型;
+    }
+    存在当前采用结果 读取当前采用(const 存在当前采用读取请求&) const;
+    存在当前采用结果 变更当前采用(const 存在当前采用写请求&);
+    存在当前采用结果 收敛当前采用(const 存在当前采用写请求& r){return 变更当前采用(r);}
     任务虚拟存在写集规格结果 形成任务虚拟存在写集规格(
         const 任务虚拟存在写集规格请求& 请求) const {
         if (请求.合同版本 != 任务虚拟存在专用合同版本
@@ -1203,6 +1278,7 @@ public:
     存在类结点结果 新增存在(const 存在类新增请求& 请求) {
         if (!新增请求有效(请求)) return 失败(存在类数据状态::入口拒绝);
         try {
+            std::scoped_lock lock(写入锁_);
             if (const auto 重放 = 尝试重放新增存在(请求)) return *重放;
             L1所有者范围写集请求 写集;
             写集.合同版本 = L1所有者范围CRUD合同版本;
@@ -1239,6 +1315,7 @@ public:
         if (!成员新增请求有效(请求))
             return 失败(存在类数据状态::入口拒绝);
         try {
+            std::scoped_lock lock(写入锁_);
             if (const auto 重放 = 尝试重放新增成员(请求)) return *重放;
             const auto 本体 = 读取当前存在本体(
                 请求.存在结点, 请求.期望事实代次);
@@ -1274,6 +1351,7 @@ public:
         if (!成员删除请求有效(请求))
             return 失败(存在类数据状态::入口拒绝);
         try {
+            std::scoped_lock lock(写入锁_);
             if (const auto 重放 = 尝试重放删除成员(请求)) return *重放;
             const auto 本体 = 读取当前存在本体(
                 请求.存在结点, 请求.期望事实代次);
@@ -1295,6 +1373,14 @@ public:
             写集.期望事实代次 = 请求.期望事实代次;
             写集.写入幂等身份 = 请求.幂等身份;
             写集.退出事实 = {it->编码};
+            if(请求.成员种类==存在类成员种类::特征&&有效(当前采用关系类型_)) {
+                try {
+                    const auto used=读取采用组(请求.存在结点,请求.期望事实代次,请求.期望事实代次,
+                        std::numeric_limits<std::uint64_t>::max());
+                    if(std::any_of(used.采用.begin(),used.采用.end(),[&](const auto& a){return a.F.编码==请求.目标结点;}))
+                        return 失败(存在类数据状态::引用冲突,请求.期望事实代次);
+                }catch(const 采用失败& e){return 失败(e.状态,请求.期望事实代次);}
+            }
             return 提交成员变更(写集, 请求.幂等身份,
                 存在类数据状态::已移除成员,
                 请求.存在结点, 请求.成员种类, 请求.目标结点, false);
@@ -1310,6 +1396,7 @@ public:
     存在类结点结果 删除存在(const 存在类删除请求& 请求) {
         if (!删除请求有效(请求)) return 失败(存在类数据状态::入口拒绝);
         try {
+            std::scoped_lock lock(写入锁_);
             if (const auto 重放 = 尝试重放删除存在(请求)) return *重放;
             const auto 当前 = 读取当前存在(
                 请求.存在结点, 请求.期望事实代次, false);
@@ -1471,22 +1558,21 @@ private:
 
     任务方法实例参数规格专用状态 验证参数类型节点(
         稳定编码 ft, std::uint64_t G0) const {
-        const auto q = 第一层服务_.读取所有者范围当前节点(
-            {L1所有者范围CRUD合同版本, ft});
-        if (q.读取事实代次 != G0)
-            return 任务方法实例参数规格专用状态::事实代次漂移;
-        if (q.状态 == L1所有者范围读取状态::未找到)
-            return 任务方法实例参数规格专用状态::参数特征类型未找到;
-        if (q.状态 == L1所有者范围读取状态::已退出)
-            return 任务方法实例参数规格专用状态::参数特征类型已退出;
-        if (q.状态 == L1所有者范围读取状态::资源失败)
-            return 任务方法实例参数规格专用状态::资源失败;
-        const auto* n = q.事实 ? std::get_if<L1所有者范围节点事实>(&*q.事实) : nullptr;
-        if (q.状态 != L1所有者范围读取状态::成功 || !n || n->编码 != ft)
-            return 任务方法实例参数规格专用状态::内部不一致;
-        if (n->种类 != 节点种类::属性类型 || !n->属性类型表示)
-            return 任务方法实例参数规格专用状态::参数特征类型不是属性类型;
-        if (n->创建事实代次 == 0 || n->创建事实代次 > G0 || n->退出事实代次)
+        // FT由特征定义服务解释；普通类型结点不能再按L1属性类型验形。
+        const auto q = 特征服务_.读取I64类型完整域({1,G0,G0,{ft}});
+        if(const auto* error=std::get_if<特征数据错误>(&q)) {
+            switch(*error) {
+            case 特征数据错误::并发变化:return 任务方法实例参数规格专用状态::事实代次漂移;
+            case 特征数据错误::未找到:return 任务方法实例参数规格专用状态::参数特征类型未找到;
+            case 特征数据错误::已退出:return 任务方法实例参数规格专用状态::参数特征类型已退出;
+            case 特征数据错误::资源失败:return 任务方法实例参数规格专用状态::资源失败;
+            case 特征数据错误::入口拒绝:case 特征数据错误::类型不相容:
+                return 任务方法实例参数规格专用状态::参数特征类型不是属性类型;
+            default:return 任务方法实例参数规格专用状态::内部不一致;
+            }
+        }
+        const auto& fact=std::get<特征截止事实<特征规范I64域>>(q);
+        if(fact.Gread!=G0||fact.H!=G0||fact.数据.区间.empty())
             return 任务方法实例参数规格专用状态::内部不一致;
         return 任务方法实例参数规格专用状态::已读取;
     }
@@ -2295,13 +2381,12 @@ private:
             return 存在类数据状态::子存在读取失败;
         }
         case 存在类成员种类::特征: {
-            const auto 读取 = 特征服务_.查询特征(
-                {特征类数据合同版本, 期望事实代次, 目标});
-            if (读取.成功() && 读取.状态 == 特征类数据状态::已读取
-                && 读取.事实代次 == 期望事实代次
-                && 读取.特征 && 读取.特征->结点 == 目标)
-                return std::nullopt;
-            return 映射特征状态(读取.状态);
+            const auto read=特征服务_.读取准确特征事实({1,期望事实代次,期望事实代次,{目标}});
+            if(const auto* error=std::get_if<特征数据错误>(&read))return 映射特征状态(*error);
+            const auto& f=std::get<准确特征读取事实>(read);
+            if(f.Gread!=期望事实代次||f.H!=期望事实代次||f.信息.身份.编码!=目标)
+                return 存在类数据状态::内部不一致;
+            return std::nullopt;
         }
         case 存在类成员种类::状态: {
             const auto 读取 = 状态服务_.查询状态(
@@ -2399,6 +2484,11 @@ private:
                 目标组.push_back({关系.编码, 关系.目标节点});
             }
         }
+        if(有效(当前采用关系类型_)) {
+            try{本体.存在结点->当前采用组=读取采用组(存在结点,期望事实代次,期望事实代次,
+                std::numeric_limits<std::uint64_t>::max()).采用;}
+            catch(const 采用失败& e){return 失败(e.状态,期望事实代次);}
+        }
         return 本体;
     }
 
@@ -2428,6 +2518,7 @@ private:
         加入(当前.特征组);
         加入(当前.状态组);
         加入(当前.动态组);
+        for(const auto& a:当前.当前采用组)写集.退出事实.push_back(a.关系);
         return 写集;
     }
 
@@ -2720,6 +2811,11 @@ private:
             for (const auto& 关系 : 关系组)
                 成员组.push_back({关系.编码, 关系.目标节点});
         }
+        if(有效(当前采用关系类型_)) {
+            try{结果.当前采用组=读取采用组(存在结点,节点读取.读取事实代次,历史截止事实代次,
+                std::numeric_limits<std::uint64_t>::max()).采用;}
+            catch(const 采用失败& e){return 失败(e.状态,结果事实代次);}
+        }
         return {返回状态, 存在类数据合同版本,
             结果事实代次, std::move(结果)};
     }
@@ -2886,17 +2982,20 @@ private:
         return {状态, 存在类数据合同版本, 事实代次, std::nullopt};
     }
 
-    static 存在类数据状态 映射特征状态(
-        特征类数据状态 状态) noexcept {
-        switch (状态) {
-        case 特征类数据状态::事实代次漂移:
-            return 存在类数据状态::事实代次漂移;
-        case 特征类数据状态::入口拒绝:
-            return 存在类数据状态::入口拒绝;
-        case 特征类数据状态::资源失败:
-            return 存在类数据状态::资源失败;
-        default:
-            return 存在类数据状态::特征读取失败;
+    static 存在类数据状态 映射特征状态(特征数据错误 s) noexcept {
+        using S=存在类数据状态;
+        switch(s) {
+        case 特征数据错误::未找到:return S::未找到;
+        case 特征数据错误::已退出:return S::目标已退出;
+        case 特征数据错误::并发变化:return S::事实代次漂移;
+        case 特征数据错误::入口拒绝:return S::入口拒绝;
+        case 特征数据错误::资源失败:return S::资源失败;
+        case 特征数据错误::历史材料不可用:return S::历史材料已清理;
+        case 特征数据错误::类型不相容:case 特征数据错误::引用冲突:return S::引用冲突;
+        case 特征数据错误::旧格式不支持:return S::格式不支持;
+        case 特征数据错误::数量预算不足:return S::数量预算不足;
+        case 特征数据错误::内部不一致:return S::内部不一致;
+        default:return S::特征读取失败;
         }
     }
 
@@ -2979,6 +3078,147 @@ private:
         }
     }
 
+    static 存在历史读取状态 存在历史状态(L1所有者范围读取状态 s) noexcept {
+        using S=存在历史读取状态;
+        switch(s) {
+        case L1所有者范围读取状态::成功:return S::已读取;
+        case L1所有者范围读取状态::未找到:return S::未找到;
+        case L1所有者范围读取状态::已退出:return S::目标已退出;
+        case L1所有者范围读取状态::历史材料已清理:return S::历史材料不可用;
+        case L1所有者范围读取状态::事实代次漂移:return S::事实代次漂移;
+        case L1所有者范围读取状态::资源失败:return S::资源失败;
+        default:return S::内部不一致;
+        }
+    }
+    using 采用S=存在类数据状态;
+    struct 采用失败 {采用S 状态;};
+    struct 采用事实集 {
+        std::vector<L1所有者范围关系事实> 已知;
+        std::vector<存在当前采用事实> 采用;
+    };
+    struct 采用准备 {L1所有者范围写集请求 写集;std::optional<存在当前采用事实> 当前;};
+    static void 采用要求(bool yes,采用S s=采用S::内部不一致){if(!yes)throw 采用失败{s};}
+    std::uint64_t 采用当前G() const {
+        const auto r=第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
+        采用要求(r.状态==L1中性读取状态::成功,
+            r.状态==L1中性读取状态::资源失败 ? 采用S::资源失败 : 采用S::内部不一致);
+        采用要求(r.合同版本==L1中性CRUD合同版本&&r.事实代次);return r.事实代次;
+    }
+    void 采用守卫(std::uint64_t g) const {采用要求(采用当前G()==g,采用S::事实代次漂移);}
+    准确特征读取事实 采用读F(特征信息身份 id,std::uint64_t g,std::uint64_t h) const {
+        auto result=特征服务_.读取准确特征事实({1,g,h,id});
+        if(const auto* e=std::get_if<特征数据错误>(&result))throw 采用失败{映射特征状态(*e)};
+        auto f=std::get<准确特征读取事实>(std::move(result));
+        采用要求(f.Gread==g&&f.H==h&&f.信息.身份==id&&有效(f.类型关系));return f;
+    }
+    采用事实集 读取采用组(稳定编码 e,std::uint64_t g,std::uint64_t h,std::uint64_t budget) const {
+        采用要求(有效(当前采用关系类型_),采用S::格式不支持);
+        采用要求(有效(e)&&g&&h&&h<=g&&budget,采用S::入口拒绝);
+        采用守卫(g);
+        const auto nr=第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本,e});
+        采用要求(nr.状态==L1所有者范围读取状态::成功,映射读取状态(nr.状态));
+        采用要求(nr.读取事实代次==g,采用S::事实代次漂移);
+        const auto* n=nr.事实 ? std::get_if<L1所有者范围节点事实>(&*nr.事实) : nullptr;
+        采用要求(nr.合同版本==L1所有者范围CRUD合同版本&&nr.查询编码==e&&n&&n->编码==e
+            &&n->写入所有者==所有者_&&n->种类==节点种类::普通&&!n->属性类型表示,采用S::引用冲突);
+        采用要求(n->创建事实代次&&n->创建事实代次<=h,采用S::未找到);
+        采用要求(!n->退出事实代次||*n->退出事实代次>h,采用S::目标已退出);
+        auto rows=[&](稳定编码 type) {
+            const auto r=第一层服务_.读取所有者范围历史关系组(
+                {L1所有者范围CRUD合同版本,L1所有者范围关系端点方向::源,e,type,h});
+            采用要求(r.状态==L1所有者范围读取状态::成功,映射读取状态(r.状态));
+            采用要求(r.读取事实代次==g,采用S::事实代次漂移);
+            采用要求(r.合同版本==L1所有者范围CRUD合同版本&&r.端点节点==e&&r.关系类型节点==type
+                &&r.方向==L1所有者范围关系端点方向::源&&r.历史截止事实代次==h);
+            采用要求(r.关系组.size()<=budget,采用S::数量预算不足);
+            auto out=r.关系组;
+            采用要求(规范化关系组(out,e,type,h,std::nullopt));
+            return out;
+        };
+        采用事实集 out;out.已知=rows(特征关系类型_);const auto selected=rows(当前采用关系类型_);
+        采用要求(selected.size()<=budget-out.已知.size(),采用S::数量预算不足);
+        std::map<std::uint64_t,特征类型身份> known;
+        for(const auto& edge:out.已知) {
+            auto f=采用读F({edge.目标节点},g,h);
+            采用要求(known.emplace(edge.目标节点.值,f.信息.类型).second);
+        }
+        std::set<std::uint64_t> types;
+        for(const auto& edge:selected) {
+            auto f=采用读F({edge.目标节点},g,h);
+            const auto it=known.find(edge.目标节点.值);
+            采用要求(it!=known.end()&&it->second==f.信息.类型,采用S::引用冲突);
+            采用要求(types.insert(f.信息.类型.编码.值).second);
+            out.采用.push_back({edge.编码,e,f.信息.类型,f.信息.身份});
+        }
+        采用守卫(g);return out;
+    }
+    采用准备 准备采用(const 存在当前采用写请求& r,std::uint64_t g) const {
+        采用要求(r.版本==1&&r.G&&有效(r.幂等身份)&&有效(r.E)&&有效(r.FT)&&r.关系预算
+            &&!r.操作.valueless_by_exception(),采用S::入口拒绝);
+        auto all=读取采用组(r.E,g,r.G,r.关系预算);采用准备 out;
+        auto& ws=out.写集;ws.合同版本=L1所有者范围CRUD合同版本;ws.期望事实代次=r.G;ws.写入幂等身份=r.幂等身份;
+        for(const auto& a:all.采用)if(a.FT==r.FT){采用要求(!out.当前);out.当前=a;}
+        std::optional<特征信息身份> next;std::optional<存在当前采用事实> expected;bool combine=false;
+        std::visit([&](const auto& op) {
+            using T=std::decay_t<decltype(op)>;
+            if constexpr(std::is_same_v<T,存在当前采用建立>)next=op.F;
+            else if constexpr(std::is_same_v<T,存在当前采用替换>){expected=op.预期;next=op.新F;}
+            else if constexpr(std::is_same_v<T,存在当前采用解除>)expected=op.预期;
+            else {combine=true;next=op.F;expected=op.预期;}
+        },r.操作);
+        if(expected) {
+            采用要求(有效(expected->关系)&&expected->E==r.E&&expected->FT==r.FT&&有效(expected->F),采用S::入口拒绝);
+            const auto old=采用读F(expected->F,g,r.G);
+            采用要求(old.信息.类型==r.FT&&out.当前==expected,采用S::引用冲突);
+        } else if(out.当前)采用要求(next&&out.当前->F==*next,采用S::引用冲突);
+        if(next) {
+            const auto f=采用读F(*next,g,r.G);
+            采用要求(f.信息.类型==r.FT,采用S::引用冲突);
+            const bool known=std::any_of(all.已知.begin(),all.已知.end(),[&](const auto& e){return e.目标节点==next->编码;});
+            if(!known) {
+                采用要求(combine,采用S::引用冲突);
+                ws.关系.push_back({{1},r.E,next->编码,特征关系类型_,1});
+            }
+            if(!out.当前||out.当前->F!=*next)
+                ws.关系.push_back({{2},r.E,next->编码,当前采用关系类型_,1});
+        }
+        if(out.当前&&(!next||out.当前->F!=*next))ws.退出事实.push_back(out.当前->关系);
+        // 派发前保证写后完整已知/采用组仍在同一读取预算内，避免明知读回必超限还发布。
+        const auto retained=all.已知.size()+all.采用.size()-ws.退出事实.size();
+        采用要求(retained<=r.关系预算&&ws.关系.size()<=r.关系预算-retained,采用S::数量预算不足);
+        return out;
+    }
+    void 采用互证(const L1所有者范围写集请求& ws,const L1所有者范围写入结果& saved,std::uint64_t g) const {
+        采用要求(saved.合同版本==L1所有者范围CRUD合同版本&&saved.所有者==所有者_
+            &&saved.写入幂等身份==ws.写入幂等身份&&saved.事实代次>ws.期望事实代次&&saved.事实代次<=g
+            &&(saved.状态==L1所有者范围写入状态::成功||saved.状态==L1所有者范围写入状态::精确重复)
+            &&(saved.状态!=L1所有者范围写入状态::成功||saved.是否形成内存权威发布)
+            &&saved.新编码映射.size()==ws.关系.size());
+        std::set<std::uint64_t> ids;
+        for(const auto& wanted:ws.关系) {
+            const auto id=存在类数据内部::查找唯一编码(saved,wanted.本地键);采用要求(id&&ids.insert(id->值).second);
+            const auto r=第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本,*id});
+            采用要求(r.状态==L1所有者范围读取状态::成功,映射读取状态(r.状态));
+            采用要求(r.读取事实代次==g,采用S::事实代次漂移);
+            const auto* e=r.事实 ? std::get_if<L1所有者范围关系事实>(&*r.事实) : nullptr;
+            采用要求(r.合同版本==L1所有者范围CRUD合同版本&&r.查询编码==*id
+                &&e&&e->编码==*id&&e->写入所有者==所有者_&&e->创建事实代次==saved.事实代次
+                &&(!e->退出事实代次||*e->退出事实代次>saved.事实代次)
+                &&e->源节点==std::get<稳定编码>(wanted.源节点)&&e->目标节点==std::get<稳定编码>(wanted.目标节点)
+                &&e->关系类型节点==std::get<稳定编码>(wanted.关系类型节点)&&e->角色或顺序==wanted.角色或顺序);
+        }
+        for(auto id:ws.退出事实) {
+            const auto r=第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本,id});
+            采用要求(r.状态==L1所有者范围读取状态::成功,映射读取状态(r.状态));
+            采用要求(r.读取事实代次==g,采用S::事实代次漂移);
+            const auto* e=r.事实 ? std::get_if<L1所有者范围关系事实>(&*r.事实) : nullptr;
+            采用要求(r.合同版本==L1所有者范围CRUD合同版本&&r.查询编码==id
+                &&e&&e->编码==id&&e->写入所有者==所有者_&&e->退出事实代次==saved.事实代次);
+        }
+    }
+    稳定编码 当前采用关系类型_;
+    mutable std::mutex 写入锁_;
+    std::optional<存在当前采用写请求> 采用待确认_;
     const L1事实基座服务& 第一层服务_;
     const 特征类数据服务& 特征服务_;
     const 状态类数据服务& 状态服务_;
@@ -2991,4 +3231,122 @@ private:
     稳定编码 动态关系类型_{};
 };
 
+inline 存在当前采用结果 存在类数据服务::读取当前采用(const 存在当前采用读取请求& r) const {
+    存在当前采用结果 out;out.Gread=r.Gread;out.H=r.H;
+    try {
+        采用要求(r.版本==1&&有效(r.FT),采用S::入口拒绝);
+        const auto all=读取采用组(r.E,r.Gread,r.H,r.关系预算);
+        for(const auto& a:all.采用)if(a.FT==r.FT)out.采用=a;
+        out.状态=采用S::已读取;
+        采用要求(out.成功());return out;
+    }catch(const 采用失败& e){out.状态=e.状态;}
+    catch(const std::bad_alloc&){out.状态=采用S::资源失败;}
+    catch(const std::length_error&){out.状态=采用S::资源失败;}
+    catch(...){out.状态=采用S::内部不一致;}
+    out.采用.reset();return out;
+}
+inline 存在当前采用结果 存在类数据服务::变更当前采用(const 存在当前采用写请求& r) {
+    存在当前采用结果 out;bool uncertain=false,dispatched=false,zero=false;
+    std::unique_lock<std::mutex> lock(写入锁_);
+    try {
+        out.原请求=r;
+        采用要求(r.版本==1&&r.G&&有效(r.幂等身份)&&有效(r.E)&&有效(r.FT)&&r.关系预算
+            &&!r.操作.valueless_by_exception(),采用S::入口拒绝);
+        采用要求(!采用待确认_||*采用待确认_==r,采用S::已可能发布);
+        uncertain=true;
+        const auto first=写入端口_.读取首次写入材料({L1所有者范围首次写入读取合同版本,r.幂等身份});
+        采用要求(first.合同版本==L1所有者范围首次写入读取合同版本&&first.所有者==所有者_
+            &&first.写入幂等身份==r.幂等身份&&first.读取事实代次);
+        out.Gread=first.读取事实代次;采用守卫(out.Gread);
+        采用要求(first.状态==L1所有者范围读取状态::成功||first.状态==L1所有者范围读取状态::未找到,
+            映射读取状态(first.状态));
+        L1所有者范围写入结果 saved;L1所有者范围写集请求 ws;
+        const bool replay=first.状态==L1所有者范围读取状态::成功;
+        if(replay) {
+            采用要求(first.首次规范化写集&&first.首次写入结果);
+            if(first.首次写入结果->事实代次&&first.首次写入结果->事实代次<=out.Gread)
+                out.首次H=first.首次写入结果->事实代次;
+            if(first.首次规范化写集->期望事实代次!=r.G){uncertain=false;throw 采用失败{采用S::幂等冲突};}
+            ws=准备采用(r,out.Gread).写集;
+            if(ws!=*first.首次规范化写集){uncertain=false;throw 采用失败{采用S::幂等冲突};}
+            saved=*first.首次写入结果;
+        } else {
+            采用要求(!first.首次规范化写集&&!first.首次写入结果);uncertain=false;
+            if(out.Gread!=r.G){采用待确认_.reset();throw 采用失败{采用S::事实代次漂移};}
+            auto prepared=准备采用(r,out.Gread);ws=std::move(prepared.写集);
+            if(ws.关系.empty()&&ws.退出事实.empty()) {
+                out.状态=采用S::精确重复;out.H=r.G;out.采用=std::move(prepared.当前);
+                采用守卫(out.Gread);采用要求(out.成功());采用待确认_.reset();return out;
+            }
+            采用待确认_=r;采用守卫(out.Gread);dispatched=true;
+            saved=写入端口_.提交所有者范围中性写集(ws);
+            const bool header=saved.合同版本==L1所有者范围CRUD合同版本&&saved.所有者==所有者_&&saved.写入幂等身份==r.幂等身份;
+            if(header&&!saved.是否形成内存权威发布&&saved.新编码映射.empty()
+                &&saved.状态!=L1所有者范围写入状态::成功&&saved.状态!=L1所有者范围写入状态::精确重复
+                &&saved.重试边界!=L1所有者范围重试边界::原幂等身份读回收敛) {
+                zero=true;采用待确认_.reset();throw 采用失败{映射写入状态(saved.状态,采用S::内部不一致)};
+            }
+            采用要求(header);
+            if(saved.事实代次>r.G&&(saved.是否形成内存权威发布||saved.状态==L1所有者范围写入状态::精确重复))
+                out.首次H=saved.事实代次;
+            out.Gread=采用当前G();
+        }
+        采用互证(ws,saved,out.Gread);out.H=saved.事实代次;out.首次H=saved.事实代次;
+        const auto all=读取采用组(r.E,out.Gread,out.H,r.关系预算);
+        for(const auto& a:all.采用)if(a.FT==r.FT)out.采用=a;
+        out.状态=std::visit([](const auto& op) {
+            using T=std::decay_t<decltype(op)>;
+            if constexpr(std::is_same_v<T,存在当前采用解除>)return 采用S::已解除当前采用;
+            else if constexpr(std::is_same_v<T,存在当前采用替换>)return 采用S::已替换当前采用;
+            else if constexpr(std::is_same_v<T,存在关联已知并采用>)return op.预期 ? 采用S::已替换当前采用 : 采用S::已建立当前采用;
+            else return 采用S::已建立当前采用;
+        },r.操作);
+        if(replay||saved.状态==L1所有者范围写入状态::精确重复)out.状态=采用S::精确重复;
+        采用守卫(out.Gread);采用要求(out.成功());采用待确认_.reset();return out;
+    }catch(const 采用失败& e){out.状态=e.状态;}
+    catch(const std::bad_alloc&){out.状态=采用S::资源失败;}
+    catch(const std::length_error&){out.状态=采用S::资源失败;}
+    catch(...){out.状态=采用S::内部不一致;}
+    out.采用.reset();
+    if((uncertain||dispatched)&&!zero) {
+        out.状态=采用S::已可能发布;
+        if(!采用待确认_)try{采用待确认_=r;}catch(...){}
+    } else if(采用待确认_&&*采用待确认_==r)采用待确认_.reset();
+    return out;
+}
+inline bool 存在当前采用结果::成功() const noexcept {
+    using S=存在类数据状态;
+    if(版本!=1||!H||H>Gread)return false;
+    if(采用&&(!有效(采用->关系)||!有效(采用->E)||!有效(采用->FT)||!有效(采用->F)))return false;
+    if(状态==S::已读取)return !首次H&&!原请求;
+    if(!原请求||原请求->版本!=1||!原请求->G||原请求->G>Gread||!有效(原请求->幂等身份)
+        ||!有效(原请求->E)||!有效(原请求->FT)||!原请求->关系预算||原请求->操作.valueless_by_exception())return false;
+    if(状态==S::精确重复){if(首次H&&(*首次H!=H||!*首次H))return false;}
+    else if(!首次H||!*首次H||*首次H!=H)return false;
+    if(首次H ? *首次H<=原请求->G : 状态!=S::精确重复||H!=原请求->G)return false;
+    if(采用&&(采用->E!=原请求->E||采用->FT!=原请求->FT))return false;
+    return std::visit([&](const auto& op) noexcept {
+        using T=std::decay_t<decltype(op)>;
+        auto expectedValid=[&](const 存在当前采用事实& old) {
+            return 有效(old.关系)&&old.E==原请求->E&&old.FT==原请求->FT&&有效(old.F);
+        };
+        if constexpr(std::is_same_v<T,存在当前采用替换>||std::is_same_v<T,存在当前采用解除>) {
+            if(!expectedValid(op.预期))return false;
+        } else if constexpr(std::is_same_v<T,存在关联已知并采用>) {
+            if(op.预期&&!expectedValid(*op.预期))return false;
+        }
+        if constexpr(std::is_same_v<T,存在当前采用解除>)
+            return(状态==S::精确重复||状态==S::已解除当前采用)&&!采用&&首次H.has_value();
+        else {
+            const auto expected=[&]{
+                if constexpr(std::is_same_v<T,存在当前采用替换>)return op.新F;else return op.F;
+            }();
+            if(!采用||采用->F!=expected)return false;
+            if constexpr(std::is_same_v<T,存在当前采用替换>)return 状态==S::精确重复||状态==S::已替换当前采用;
+            else if constexpr(std::is_same_v<T,存在关联已知并采用>)
+                return 状态==S::精确重复||状态==(op.预期 ? S::已替换当前采用 : S::已建立当前采用);
+            else return 状态==S::精确重复||状态==S::已建立当前采用;
+        }
+    },原请求->操作);
+}
 } // namespace 海中鱼巣
