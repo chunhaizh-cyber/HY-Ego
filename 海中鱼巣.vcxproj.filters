@@ -126,6 +126,9 @@
     <ClCompile Include="海中鱼巣\领域\合同.场景状态使用绑定.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\合同.动态结构.ixx">
+      <Filter>领域\合同</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\数据服务.动态类.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
