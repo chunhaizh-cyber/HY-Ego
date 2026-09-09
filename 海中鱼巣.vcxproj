@@ -186,6 +186,7 @@
     <ClCompile Include="海中鱼巣\领域\合同.场景状态使用绑定.ixx" />
     <ClCompile Include="海中鱼巣\领域\合同.动态结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据服务.动态类.ixx" />
+    <ClCompile Include="海中鱼巣\领域\合同.因果结构.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据服务.存在类.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据服务.概念树类.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据服务.场景类.ixx" />
