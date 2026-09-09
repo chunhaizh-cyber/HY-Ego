@@ -77,6 +77,35 @@ struct 准确特征读取事实 final {
     std::optional<std::uint64_t> 退出G;
     friend bool operator==(const 准确特征读取事实&, const 准确特征读取事实&) = default;
 };
+struct 特征类型准确值核验请求 final {
+    std::uint32_t 合同版本 = 1;
+    std::uint64_t Gread = 0, H = 0;
+    特征类型身份 正式特征类型;
+    特征准确值 准确值;
+};
+struct 特征类型准确值核验事实 final {
+    std::uint64_t Gread = 0, H = 0;
+    特征类型身份 正式特征类型;
+    特征准确值 准确值;
+};
+enum class 特征类型准确值核验状态 : std::uint8_t {
+    已核验 = 1, 入口拒绝 = 2,
+    正式特征类型未找到 = 3, 正式特征类型已退出 = 4,
+    准确值未找到 = 5, 准确值已退出 = 6, 准确值不相容 = 7,
+    历史材料不可用 = 8, 事实代次漂移 = 9,
+    资源失败 = 10, 内部不一致 = 11
+};
+struct 特征类型准确值核验结果 final {
+    std::uint32_t 合同版本 = 1;
+    特征类型准确值核验状态 状态 = 特征类型准确值核验状态::入口拒绝;
+    std::optional<特征类型准确值核验事实> 事实;
+    bool 成功() const noexcept {
+        return 合同版本 == 1 && 状态 == 特征类型准确值核验状态::已核验
+            && 事实 && 事实->Gread != 0 && 事实->H != 0
+            && 事实->H <= 事实->Gread && 有效(事实->正式特征类型)
+            && 浅层结构有效(事实->准确值);
+    }
+};
 struct I64特征域形成参数 final {
     std::int64_t 允许误差{};
     稳定编码 参数来源;
@@ -808,6 +837,8 @@ public:
     R<特征准确值> 读取准确特征值(特征信息身份) const;
     有界准确特征读取结果 读取有界准确特征事实(const 有界准确特征读取请求&) const noexcept;
     R<准确特征读取事实> 读取准确特征事实(const 准确特征读取请求&) const;
+    特征类型准确值核验结果 核验正式特征类型准确值(
+        const 特征类型准确值核验请求&) const;
     R<特征截止事实<先天I64特征类型信息>> 读取先天I64特征类型事实(const 特征类型截止请求&) const;
     R<特征截止事实<特征规范I64域>> 读取I64类型完整域(const 特征类型截止请求&) const;
     R<特征域形成事实> 形成I64特征域(const 准确特征读取请求&) const;
@@ -2261,6 +2292,63 @@ inline 特征数据结果<准确特征读取事实> 特征类数据服务::读�
         截止有效(r.合同版本, r.Gread, r.H); 守卫(r.Gread);
         auto out = 读准确(r.身份, r.Gread, r.H); 守卫(r.Gread); return out;
     });
+}
+inline 特征类型准确值核验结果
+特征类数据服务::核验正式特征类型准确值(
+    const 特征类型准确值核验请求& r) const {
+    using V = 特征类型准确值核验状态;
+    特征类型准确值核验结果 out;
+    const auto fail = [&](V state) { out.状态 = state; out.事实.reset(); };
+    const auto common = [](S state) noexcept {
+        switch (state) {
+        case S::入口拒绝: return V::入口拒绝;
+        case S::历史材料不可用: return V::历史材料不可用;
+        case S::并发变化: return V::事实代次漂移;
+        case S::资源失败: return V::资源失败;
+        default: return V::内部不一致;
+        }
+    };
+    try {
+        std::lock_guard<std::mutex> lock(mutex_);
+        截止有效(r.合同版本, r.Gread, r.H);
+        要求(有效(r.正式特征类型) && 浅层结构有效(r.准确值), S::入口拒绝);
+        守卫(r.Gread);
+        先天I64特征类型信息 type;
+        try { type = 读类型(r.正式特征类型, r.Gread, r.H); }
+        catch (S state) {
+            if (state == S::未找到) fail(V::正式特征类型未找到);
+            else if (state == S::已退出) fail(V::正式特征类型已退出);
+            else if (state == S::入口拒绝) fail(V::内部不一致);
+            else fail(common(state));
+            return out;
+        }
+        std::int64_t value = 0;
+        try { value = 解析输入(r.准确值, r.Gread, r.H); }
+        catch (S state) {
+            if (state == S::未找到) fail(V::准确值未找到);
+            else if (state == S::已退出) fail(V::准确值已退出);
+            else if (state == S::类型不相容 || state == S::能力未提供)
+                fail(V::准确值不相容);
+            else if (state == S::入口拒绝) fail(V::内部不一致);
+            else fail(common(state));
+            return out;
+        }
+        if (!包含(规范域({type.规格.允许集合}), 特征规范I64域{{{value, value}}})) {
+            fail(V::准确值不相容); return out;
+        }
+        守卫(r.Gread);
+        out.状态 = V::已核验;
+        out.事实 = 特征类型准确值核验事实{
+            r.Gread, r.H, r.正式特征类型, r.准确值};
+        if (!out.成功() || out.事实->Gread != r.Gread || out.事实->H != r.H
+            || out.事实->正式特征类型 != r.正式特征类型
+            || out.事实->准确值 != r.准确值)
+            fail(V::内部不一致);
+    } catch (S state) { fail(common(state)); }
+    catch (const std::bad_alloc&) { fail(V::资源失败); }
+    catch (const std::length_error&) { fail(V::资源失败); }
+    catch (...) { fail(V::内部不一致); }
+    return out;
 }
 inline 特征数据结果<特征信息> 特征类数据服务::读取准确特征(特征信息身份 id) const {
     return 保护<特征信息>([&] { const auto g = 当前G(); auto out = 读准确(id, g, g).信息; 守卫(g); return out; });
