@@ -43,7 +43,6 @@ struct 任务目标方向结果 final {
     }
 };
 class 任务目标方向应用服务 final {
-    const L1事实基座服务& l1_;
     const 任务类数据服务& task_;
     const 需求类数据服务& demand_;
     const 需求目标方向应用服务& direction_;
@@ -61,25 +60,24 @@ class 任务目标方向应用服务 final {
         }
     }
     void 守卫(std::uint64_t g) const {
-        const auto read=l1_.读取中性当前事实代次({L1中性CRUD合同版本});
-        要求(read.状态==L1中性读取状态::成功,read.状态==L1中性读取状态::资源失败 ? S::资源失败:S::内部不一致);
-        要求(read.合同版本==L1中性CRUD合同版本&&read.事实代次);
-        要求(read.事实代次==g,S::事实代次漂移);
+        const auto read=task_.核验当前事实代次(g);
+        if(read.状态==任务类数据状态::入口拒绝)throw 失败{S::入口拒绝};
+        if(read.状态==任务类数据状态::事实代次漂移)throw 失败{S::事实代次漂移};
+        if(read.状态==任务类数据状态::资源失败)throw 失败{S::资源失败};
+        要求(read.成功(),S::内部不一致);
     }
 public:
-    任务目标方向应用服务(const L1事实基座服务& l1,const 任务类数据服务& task,
+    任务目标方向应用服务(const 任务类数据服务& task,
         const 需求类数据服务& demand,const 需求目标方向应用服务& direction)
-        :l1_(l1),task_(task),demand_(demand),direction_(direction){
-        if(!绑定于(l1))throw std::invalid_argument("任务方向数据绑定");
+        :task_(task),demand_(demand),direction_(direction){
+        if(!task_.与需求服务同底座(demand_)||!direction_.与需求服务同底座(demand_))
+            throw std::invalid_argument("任务方向数据绑定");
     }
     任务目标方向应用服务()=delete;
     任务目标方向应用服务(const 任务目标方向应用服务&)=delete;
     任务目标方向应用服务& operator=(const 任务目标方向应用服务&)=delete;
     任务目标方向应用服务(任务目标方向应用服务&&)=delete;
     任务目标方向应用服务& operator=(任务目标方向应用服务&&)=delete;
-    bool 绑定于(const L1事实基座服务& l1) const noexcept {
-        return &l1==&l1_&&task_.绑定于(l1)&&demand_.绑定于(l1)&&direction_.绑定于(l1);
-    }
     // 任务层只核验来源并委托需求方向，不写任务、不复制比较核心。
     任务目标方向结果 读取并计算(const 任务目标方向请求& r) const noexcept {
         任务目标方向结果 out;out.原请求=r;out.G=r.G;out.任务=r.任务;

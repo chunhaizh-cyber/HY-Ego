@@ -67,6 +67,19 @@ enum class 任务类数据状态 : std::uint8_t {
     目标方向来源不匹配=55, 目标方向计算失败=56, 目标方向历史材料不可用=57
 };
 
+inline constexpr std::uint32_t 任务当前事实代次核验合同版本 = 1;
+struct 任务当前事实代次核验结果 final {
+    任务类数据状态 状态 = 任务类数据状态::入口拒绝;
+    std::uint32_t 合同版本 = 任务当前事实代次核验合同版本;
+    std::uint64_t 期望事实代次 = 0;
+    std::uint64_t 实际事实代次 = 0;
+    bool 成功() const noexcept {
+        return 合同版本 == 任务当前事实代次核验合同版本
+            && 状态 == 任务类数据状态::已读取 && 期望事实代次 != 0
+            && 实际事实代次 == 期望事实代次;
+    }
+};
+
 struct 任务类结构类型 final {
     稳定编码 所属存在关系类型{};
     稳定编码 来源需求关系类型{};
@@ -376,6 +389,28 @@ struct 任务类可执行参数组结果 final {
 class 任务类数据服务 final {
 public:
     bool 绑定于(const L1事实基座服务& l1) const noexcept { return &l1==&第一层服务_; }
+    bool 与需求服务同底座(const 需求类数据服务& other) const noexcept {
+        try { return 绑定于(第一层服务_) && other.绑定于(第一层服务_); }
+        catch (...) { return false; }
+    }
+    任务当前事实代次核验结果 核验当前事实代次(std::uint64_t expected) const noexcept {
+        任务当前事实代次核验结果 out;
+        out.期望事实代次 = expected;
+        if (!expected) return out;
+        try {
+            const auto read = 第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
+            out.实际事实代次 = read.事实代次;
+            if (read.状态 == L1中性读取状态::资源失败) out.状态 = 任务类数据状态::资源失败;
+            else if (read.状态 != L1中性读取状态::成功
+                || read.合同版本 != L1中性CRUD合同版本 || !read.事实代次)
+                out.状态 = 任务类数据状态::内部不一致;
+            else out.状态 = read.事实代次 == expected
+                ? 任务类数据状态::已读取 : 任务类数据状态::事实代次漂移;
+        } catch (const std::bad_alloc&) { out.状态 = 任务类数据状态::资源失败; }
+        catch (const std::length_error&) { out.状态 = 任务类数据状态::资源失败; }
+        catch (...) { out.状态 = 任务类数据状态::内部不一致; }
+        return out;
+    }
     任务类数据服务() = delete;
     任务类数据服务(const 任务类数据服务&) = delete;
     任务类数据服务& operator=(const 任务类数据服务&) = delete;
@@ -406,6 +441,8 @@ public:
         auto 类型组 = 任务类型组;
         类型组.insert(类型组.end(), 方法类型组.begin(), 方法类型组.end());
         if (!写入端口_.有效() || !写入端口_.绑定于(第一层服务_)
+            || !需求服务_.绑定于(第一层服务_) || !存在服务_.绑定于(第一层服务_)
+            || !方法服务_.绑定于(第一层服务_) || !特征服务_.绑定于(第一层服务_)
             || !有效(所有者_) || std::any_of(类型组.begin(), 类型组.end(),
                 [](稳定编码 值) noexcept { return !有效(值); }))
             throw std::invalid_argument("invalid task data configuration");

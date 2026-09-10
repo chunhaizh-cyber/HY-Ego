@@ -67,16 +67,21 @@ bool 需求目标方向结果::成功() const noexcept {
     auto reaches=[&](auto&& self,const 二次计算来源& source,特征信息身份 id,std::size_t depth)->bool {
         if(depth>计算->计算项组.size())return false;
         if(const auto* leaf=std::get_if<二次准确F来源>(&source))return leaf->F==id;
-        const auto key=二次计算内部::输出键(source);
-        for(const auto& node:计算->计算项组)if(二次计算内部::键(node.节点)==key)
-            return self(self,node.输入[0].来源,id,depth+1)||self(self,node.输入[1].来源,id,depth+1);
-        return false;
+        if(source.valueless_by_exception())return false;
+        std::optional<二次计算节点身份> identity;
+        if(const auto* saved=std::get_if<二次已保存定义输出来源>(&source))
+            identity=二次已保存定义节点身份{saved->定义};
+        else if(const auto* local=std::get_if<二次本次输出来源>(&source))
+            identity=二次本次节点身份{local->局部编号};
+        if(!identity)return false;
+        const 二次计算项回执* found=nullptr;
+        for(const auto& node:计算->计算项组)if(node.节点==*identity){if(found)return false;found=&node;}
+        return found&&(self(self,found->输入[0].来源,id,depth+1)||self(self,found->输入[1].来源,id,depth+1));
     };
     return reaches(reaches,direction->输入[0].来源,当前F,0)&&reaches(reaches,direction->输入[1].来源,目标F,0);
 }
 
 class 需求目标方向应用服务 final {
-    const L1事实基座服务& l1_;
     const 需求类数据服务& demand_;
     const 存在类数据服务& existence_;
     const 特征类数据服务& feature_;
@@ -130,24 +135,27 @@ class 需求目标方向应用服务 final {
         }
     }
     void 守卫(std::uint64_t g) const {
-        const auto read=l1_.读取中性当前事实代次({L1中性CRUD合同版本});
-        要求(read.状态==L1中性读取状态::成功,read.状态==L1中性读取状态::资源失败 ? S::资源失败:S::内部不一致);
-        要求(read.合同版本==L1中性CRUD合同版本&&read.事实代次);
-        要求(read.事实代次==g,S::事实代次漂移);
+        const auto read=demand_.核验当前事实代次(g);
+        if(read.状态==需求类数据状态::入口拒绝)throw 失败{S::入口拒绝};
+        if(read.状态==需求类数据状态::事实代次漂移)throw 失败{S::事实代次漂移};
+        if(read.状态==需求类数据状态::资源失败)throw 失败{S::资源失败};
+        要求(read.成功(),S::内部不一致);
     }
 public:
-    需求目标方向应用服务(const L1事实基座服务& l1,const 需求类数据服务& demand,const 存在类数据服务& existence,
+    需求目标方向应用服务(const 需求类数据服务& demand,const 存在类数据服务& existence,
         const 特征类数据服务& feature,const 二次特征计算应用服务& calculation)
-        :l1_(l1),demand_(demand),existence_(existence),feature_(feature),calculation_(calculation) {
-        if(!绑定于(l1))throw std::invalid_argument("需求方向数据绑定");
+        :demand_(demand),existence_(existence),feature_(feature),calculation_(calculation) {
+        if(!demand_.与存在服务同底座(existence_)||!demand_.与特征服务同底座(feature_)
+            ||!calculation_.与特征服务同底座(feature_))throw std::invalid_argument("需求方向数据绑定");
     }
     需求目标方向应用服务()=delete;
     需求目标方向应用服务(const 需求目标方向应用服务&)=delete;
     需求目标方向应用服务& operator=(const 需求目标方向应用服务&)=delete;
     需求目标方向应用服务(需求目标方向应用服务&&)=delete;
     需求目标方向应用服务& operator=(需求目标方向应用服务&&)=delete;
-    bool 绑定于(const L1事实基座服务& l1) const noexcept {
-        return &l1==&l1_&&demand_.绑定于(l1)&&existence_.绑定于(l1)&&feature_.绑定于(l1)&&calculation_.绑定于(l1);
+    bool 与需求服务同底座(const 需求类数据服务& demand) const noexcept {
+        try { return demand_.与需求服务同底座(demand); }
+        catch (...) { return false; }
     }
     // 结构读取与当前采用核验只产生本次方向依据；诊断向上送出，不写需求。
     需求目标方向结果 读取并计算(const 需求目标方向请求& r) const noexcept {

@@ -767,6 +767,7 @@ public:
           特征关系类型_(特征关系类型),
           当前采用关系类型_(当前采用结构.当前采用关系类型) {
         if (!写入端口_.有效() || !写入端口_.绑定于(第一层服务_)
+            || !特征服务_.绑定于(第一层服务_)
             || !有效(所有者_) || !关系类型组有效())
             throw std::invalid_argument("invalid existence data configuration");
         const auto 所有者读取 = 第一层服务_.读取当前结构所有者(

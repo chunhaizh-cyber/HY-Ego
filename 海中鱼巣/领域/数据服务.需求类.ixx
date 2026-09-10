@@ -57,6 +57,19 @@ enum class 需求类数据状态 : std::uint8_t {
     方向来源不匹配=31, 方向比较失败=32, 方向历史材料不可用=33
 };
 
+inline constexpr std::uint32_t 需求当前事实代次核验合同版本 = 1;
+struct 需求当前事实代次核验结果 final {
+    需求类数据状态 状态 = 需求类数据状态::入口拒绝;
+    std::uint32_t 合同版本 = 需求当前事实代次核验合同版本;
+    std::uint64_t 期望事实代次 = 0;
+    std::uint64_t 实际事实代次 = 0;
+    bool 成功() const noexcept {
+        return 合同版本 == 需求当前事实代次核验合同版本
+            && 状态 == 需求类数据状态::已读取 && 期望事实代次 != 0
+            && 实际事实代次 == 期望事实代次;
+    }
+};
+
 struct 需求类结构类型 final {
     稳定编码 所属存在关系类型{};
     稳定编码 目标宿主关系类型{};
@@ -151,6 +164,36 @@ struct 需求类记录结果 final {
 class 需求类数据服务 final {
 public:
     bool 绑定于(const L1事实基座服务& l1) const noexcept { return &l1==&第一层服务_; }
+    bool 与需求服务同底座(const 需求类数据服务& other) const noexcept {
+        try { return 绑定于(第一层服务_) && other.绑定于(第一层服务_); }
+        catch (...) { return false; }
+    }
+    bool 与存在服务同底座(const 存在类数据服务& other) const noexcept {
+        try { return 绑定于(第一层服务_) && other.绑定于(第一层服务_); }
+        catch (...) { return false; }
+    }
+    bool 与特征服务同底座(const 特征类数据服务& other) const noexcept {
+        try { return 绑定于(第一层服务_) && other.绑定于(第一层服务_); }
+        catch (...) { return false; }
+    }
+    需求当前事实代次核验结果 核验当前事实代次(std::uint64_t expected) const noexcept {
+        需求当前事实代次核验结果 out;
+        out.期望事实代次 = expected;
+        if (!expected) return out;
+        try {
+            const auto read = 第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
+            out.实际事实代次 = read.事实代次;
+            if (read.状态 == L1中性读取状态::资源失败) out.状态 = 需求类数据状态::资源失败;
+            else if (read.状态 != L1中性读取状态::成功
+                || read.合同版本 != L1中性CRUD合同版本 || !read.事实代次)
+                out.状态 = 需求类数据状态::内部不一致;
+            else out.状态 = read.事实代次 == expected
+                ? 需求类数据状态::已读取 : 需求类数据状态::事实代次漂移;
+        } catch (const std::bad_alloc&) { out.状态 = 需求类数据状态::资源失败; }
+        catch (const std::length_error&) { out.状态 = 需求类数据状态::资源失败; }
+        catch (...) { out.状态 = 需求类数据状态::内部不一致; }
+        return out;
+    }
     需求类数据服务() = delete;
     需求类数据服务(const 需求类数据服务&) = delete;
     需求类数据服务& operator=(const 需求类数据服务&) = delete;

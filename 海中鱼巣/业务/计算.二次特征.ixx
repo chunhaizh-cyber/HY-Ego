@@ -278,18 +278,17 @@ bool 二次准确计算结果::成功() const noexcept {
 
 // 每次调用只持有局部图与局部读取缓存；无写端口、owner 或跨请求缓存。
 class 二次特征计算应用服务 final {
-    const L1事实基座服务& l1_;
     const 特征类数据服务& feature_;
     const 有序I64特征比较提供者& provider_;
     using S=二次计算状态;
     struct 失败 {S 状态;};
     static void 要求(bool condition,S state=S::内部不一致){if(!condition)throw 失败{state};}
     void 守卫(std::uint64_t g) const {
-        const auto r=l1_.读取中性当前事实代次({L1中性CRUD合同版本});
-        要求(r.状态==L1中性读取状态::成功,
-            r.状态==L1中性读取状态::资源失败 ? S::资源失败:S::内部不一致);
-        要求(r.合同版本==L1中性CRUD合同版本&&r.事实代次,S::内部不一致);
-        要求(r.事实代次==g,S::事实代次漂移);
+        const auto r=feature_.核验当前事实代次(g);
+        if(r.状态==特征类标量状态::入口拒绝)throw 失败{S::入口拒绝};
+        if(r.状态==特征类标量状态::事实代次漂移)throw 失败{S::事实代次漂移};
+        if(r.状态==特征类标量状态::资源失败)throw 失败{S::资源失败};
+        要求(r.成功(),S::内部不一致);
     }
     static S 映射(特征类标量状态 s) noexcept {
         switch(s) {
@@ -305,16 +304,17 @@ class 二次特征计算应用服务 final {
         }
     }
 public:
-    二次特征计算应用服务(const L1事实基座服务& l1,const 特征类数据服务& feature,const 有序I64特征比较提供者& provider)
-        :l1_(l1),feature_(feature),provider_(provider) {
-        if(!feature_.绑定于(l1_))throw std::invalid_argument("二次计算数据绑定");
-    }
+    二次特征计算应用服务(const 特征类数据服务& feature,const 有序I64特征比较提供者& provider)
+        :feature_(feature),provider_(provider) {}
     二次特征计算应用服务()=delete;
     二次特征计算应用服务(const 二次特征计算应用服务&)=delete;
     二次特征计算应用服务& operator=(const 二次特征计算应用服务&)=delete;
     二次特征计算应用服务(二次特征计算应用服务&&)=delete;
     二次特征计算应用服务& operator=(二次特征计算应用服务&&)=delete;
-    bool 绑定于(const L1事实基座服务& l1) const noexcept{return &l1==&l1_&&feature_.绑定于(l1);}
+    bool 与特征服务同底座(const 特征类数据服务& feature) const noexcept {
+        try { return feature_.与特征服务同底座(feature); }
+        catch (...) { return false; }
+    }
     二次准确计算结果 计算(const 二次计算请求& r) const noexcept {
         using namespace 二次计算内部;
         二次准确计算结果 out;out.版本=1;out.G=r.G;out.H=r.H;out.请求身份=r.请求身份;out.上下文=r.上下文;
