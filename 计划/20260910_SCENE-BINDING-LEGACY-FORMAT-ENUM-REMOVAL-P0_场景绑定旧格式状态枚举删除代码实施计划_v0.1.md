@@ -50,7 +50,7 @@
 3. 扫描删除闭包并执行显式数值、底层类型、DTO/接口/谓词形状探针。
 4. 从真实 import 递归形成外置验证工程，使用当前可定位的 MSBuild、v145、C++20、UTF-8 和 `bcrypt.lib`；在 `D:/TEMP/海中鱼巣/SCENE-BINDING-LEGACY-FORMAT-ENUM-REMOVAL-P0/<run-id>` 使用独占 IntDir/OutDir，Debug/Release x64 `/t:Rebuild /m:1 /v:minimal`，链接并运行 ABI/数值探针。
 5. 核对生产 diff 严格只有一个枚举成员删除，工程零差异；运行 diff/strict 检查并分账范围外既有失败。
-6. 写施工/验证记录，精确暂存三份允许交付文件，执行 cached diff/check，申请唯一Git发布租约后提交并普通推送。
+6. 写施工/验证记录，申请并取得唯一Git发布租约；确认 index 可用后只暂存三份允许交付文件，执行 cached diff/check，提交并普通推送。
 7. 回读远端提交、目标 blob、index和剩余dirty；释放WIP登记并通知交互智能体。
 
 ## 6. 验证要求
