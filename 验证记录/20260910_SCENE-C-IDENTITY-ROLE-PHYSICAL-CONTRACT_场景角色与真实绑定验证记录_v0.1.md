@@ -2,9 +2,9 @@
 
 日期：2026-09-11
 
-计划：`SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT` v0.8
+计划：`SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT` v0.9，plan blob `65b63dd3097f271908a325f33d13a9499c91c01a`，详细设计v0.8 blob `51861772ec4f78c3831b5e3429bbe06ebc82cefd`
 
-输入HEAD：`6d5e35055ef11164a1df9757becb3cd5ab78ff32`
+生产验证输入HEAD：`6d5e35055ef11164a1df9757becb3cd5ab78ff32`；v0.9重新S0及L1提供者专项HEAD：`6b5b3c5a6c6a14618cc95bfd080b40462bb381ce`
 
 验证根：`D:\TEMP\海中鱼巣\SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT\run-20260911-v2`
 
@@ -25,7 +25,7 @@
 
 ## 2. 构建与运行结果
 
-实际八条构建命令完整列于§5.2。
+场景生产切片实际八条构建命令及v0.9新增L1提供者专项两条构建命令完整列于§5.2。
 
 | 项目/运行 | Debug x64 | Release x64 | 结论 |
 | --- | --- | --- | --- |
@@ -33,6 +33,7 @@
 | `probe/scene_probe.vcxproj` | Rebuild exit 0；Run exit 0；`SCENE_PROBE_OK` | 同左 | C/B/S组织、读取、退出和幂等公开路径通过 |
 | `probe/dynamic_split_probe.vcxproj` | Rebuild exit 0；Run exit 0；`P01_RESTORE_AND_DYNAMIC_PROBE_OK` | 同左 | 真实原子/组合D、两层组织和同进程持久恢复通过 |
 | `probe-cstage/cstage_probe.vcxproj` | Rebuild exit 0；Run exit 0；498 PASS/0 FAIL | 同左 | 合法失败面、映射、零写和结构破坏矩阵通过 |
+| `provider-current/l1_provider_current_probe.vcxproj` | Rebuild exit 0；Run exit 0；20 PASS/0 FAIL；`L1_PROVIDER_CURRENT_OK` | 同左 | 当前L1公开接口首次发布、同键同义、同键异义、冲突后公开事实与首次材料保持、原请求再次精确重复、新键旧G0零写且不占用首次材料通过 |
 
 动态探针在独立持久根分别执行。它实际证明：原子D组织成功；来源B.C属于E1的真实组合D可以直接组织到E2的动态根；两层路径可读；B仍受D引用保护；服务销毁后由公开L1持久恢复入口重建并读回C、B、动态路径及原C/B幂等键。该跨场景成功只证明4204 v1.1的场景服务不解释D来源，不证明E2是D的实际发生场景。
 
@@ -49,11 +50,13 @@ C阶段探针SHA256为`EBE08D8C9BBC9E0502F2262AAB2F2B3FB5DF28C108A64E72CDFF77264
 
 ### B阶段
 
-`RUN_PASS`：C01、B01、O01-S、O02、R01、I01、X01、P01。真实E/S/D/L1均来自正式生产服务；原子D和组合D均经真实当前读取进入场景纯结构组织。C/B历史、路径、退出、引用保护、同键重放和同进程持久恢复均实际命中。
+`SCENE_RUN_PASS`：C01、B01、O01-S、O02、R01、I01、X01、P01。真实E/S/D/L1均来自正式生产服务；原子D和组合D均经真实当前读取进入场景纯结构组织。C/B历史、路径、退出、引用保护、同键重放和同进程持久恢复均实际命中。
 
 ### C阶段
 
-`RUN_PASS`：C02、B02、O01-F、F01、G01-R；Debug/Release均498 PASS/0 FAIL。可由公开provider替身表达的E/D失败状态、公开合法L1形成的代次漂移、预算、引用、幂等、恢复及结构损坏路径均实际运行并检查零写。
+`SCENE_RUN_PASS`：C02、B02、O01-F、F01、G01-R；Debug/Release均498 PASS/0 FAIL。场景入口实际覆盖旧G0守卫、同服务同G0竞争只一次发布、首次材料同键异义、零写和结构化出口；其中`cstage_probe.cpp:296`以原键异义取得场景`幂等冲突`并由`no_write`核对零写，`:344`覆盖旧G0漂移与零写，`:349-356`覆盖同服务同G0并发只有一个`已组织`、另一个`事实代次漂移`。这些场景结果不声称精确归因到L1内部某一次返回。
+
+`L1_PROVIDER_RUN_PASS`：v0.9当前L1公开接口专项在Debug/Release均20 PASS/0 FAIL，真实命中一次成功发布、同键同义`精确重复`、同键异义`幂等冲突`、新键旧G0`事实代次漂移`。冲突后逐项核对事实代次不变、公开历史事实读回不变、首次材料仍等于原规范化写集与首次成功结果，并确认原请求再次提交仍为精确重复且零写；漂移后核对事实代次不变、失败映射为空且该新键没有首次材料。L1六个生产编译单元与重新S0的HEAD clean blob逐项相等；专项未调用仓库私有入口、未增加生产注入缝。
 
 `UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M`：需要非法未知枚举注入、具体L1/写端口私有状态篡改或测试后门才能形成的来源状态。对应证据为A阶段生产switch机械穷尽及C阶段真实公开可达状态清单；未修改L1或增加注入缝。
 
@@ -114,20 +117,24 @@ Release输入为`persist-run-20260911-v16`、SHA256
 | `D:/TEMP/海中鱼巣/SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT/run-20260911-v2/probe/dynamic_main.cpp`（Debug/v15） | `9CC1D03EB1D94D3B29B7233F3C0E3B11C3405AFD5C229CEF99D02E79AADECACF` |
 | `D:/TEMP/海中鱼巣/SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT/run-20260911-v2/probe/dynamic_main.cpp`（Release/v16） | `1A7FF61B0F01D4E2440C9549CBC287F0E6CD73ED7F9E583B207FD8B90BDA4805` |
 | `D:/TEMP/海中鱼巣/SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT/run-20260911-v2/probe-cstage/cstage_probe.cpp` | `EBE08D8C9BBC9E0502F2262AAB2F2B3FB5DF28C108A64E72CDFF7726480009E8` |
+| `D:/TEMP/海中鱼巣/SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT/run-20260911-v2/provider-current/l1_provider_current_probe.cpp` | `D84D498AA051374F9C7B2348592F2FE799EE2DD73F9F1C61114EA73BEF544B2C` |
 | `D:/TEMP/海中鱼巣/SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT/run-20260911-v2/compile-check/scene_compile.vcxproj` | `8BAEFCF7851B75E354B32BAD21066845CFA950E724AA55777B855D2DA73A3B8A` |
 | `D:/TEMP/海中鱼巣/SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT/run-20260911-v2/probe/scene_probe.vcxproj` | `7281A7DB5CE51592832AF014551CA91A3D3FC0D82C79F5BC6D452856B7326508` |
 | `D:/TEMP/海中鱼巣/SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT/run-20260911-v2/probe/dynamic_split_probe.vcxproj` | `6971EC2B9534C8BAAEEAE7BC2F969B03D0228EEFCB126A621106CB36444DB459` |
 | `D:/TEMP/海中鱼巣/SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT/run-20260911-v2/probe-cstage/cstage_probe.vcxproj` | `36C74D164025FFF276D1502DB665854401FB274615C4218EBC5AE8C7D57773AE` |
+| `D:/TEMP/海中鱼巣/SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT/run-20260911-v2/provider-current/l1_provider_current_probe.vcxproj` | `E963F263F3873CEFFF3AB2403A95AF495EC6DFDCEBE3F2CC07C3A644BC69DCA0` |
 
 工程依赖是上述共同生产闭包；`compile-check`不编译动态类，`scene_probe`和`cstage_probe`增加动态类，
 `dynamic_split_probe`再增加`dynamic_setup.cpp`、`dynamic_run.cpp`、`dynamic_scene_call.cpp`和`dynamic_main.cpp`。
-四份vcxproj均直接列出其完整ClCompile清单，没有从根工程删项或以替身成功替代E/S/D生产成功链。
+四份场景vcxproj均直接列出其完整ClCompile清单，没有从根工程删项或以替身成功替代E/S/D生产成功链。第五份L1提供者专项vcxproj只编译六个当前L1生产模块及专项驱动；六个生产输入经clean-filter blob逐项核对均与v0.9重新S0 HEAD相等。
 
 ### 5.2 实际构建命令、产物与运行输出
 
 MSBuild绝对路径与版本：
 `C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/MSBuild.exe`，`18.5.4.18101`。
-实际执行的八条命令如下：
+v0.9新增L1提供者专项使用：
+`C:/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/MSBuild.exe`，`.NET Framework MSBuild 18.8.2+ce25c0108`。
+完成证据采用的十条最终构建命令如下：
 
 ```powershell
 & 'C:\Program Files\Microsoft Visual Studio\18\Professional\MSBuild\Current\Bin\MSBuild.exe' 'D:\TEMP\海中鱼巣\SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT\run-20260911-v2\compile-check\scene_compile.vcxproj' /t:Rebuild /p:Configuration=Debug /p:Platform=x64 /m /nologo /v:minimal
@@ -138,9 +145,11 @@ MSBuild绝对路径与版本：
 & 'C:\Program Files\Microsoft Visual Studio\18\Professional\MSBuild\Current\Bin\MSBuild.exe' 'D:\TEMP\海中鱼巣\SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT\run-20260911-v2\probe\dynamic_split_probe.vcxproj' /t:Rebuild /p:Configuration=Release /p:Platform=x64 /m /nologo /v:minimal
 & 'C:\Program Files\Microsoft Visual Studio\18\Professional\MSBuild\Current\Bin\MSBuild.exe' 'D:\TEMP\海中鱼巣\SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT\run-20260911-v2\probe-cstage\cstage_probe.vcxproj' /t:Rebuild /p:Configuration=Debug /p:Platform=x64 /m /nologo /v:minimal
 & 'C:\Program Files\Microsoft Visual Studio\18\Professional\MSBuild\Current\Bin\MSBuild.exe' 'D:\TEMP\海中鱼巣\SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT\run-20260911-v2\probe-cstage\cstage_probe.vcxproj' /t:Rebuild /p:Configuration=Release /p:Platform=x64 /m /nologo /v:minimal
+& 'C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe' 'D:\TEMP\海中鱼巣\SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT\run-20260911-v2\provider-current\l1_provider_current_probe.vcxproj' /t:Rebuild /p:Configuration=Debug /p:Platform=x64 /m:1
+& 'C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe' 'D:\TEMP\海中鱼巣\SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT\run-20260911-v2\provider-current\l1_provider_current_probe.vcxproj' /t:Rebuild /p:Configuration=Release /p:Platform=x64 /m:1
 ```
 
-八次Rebuild均返回0，MSBuild末行分别指向下表EXE。每个IntDir中的IFC/OBJ数量、场景模块产物、探针OBJ和EXE均在复跑后实际枚举：
+十次最终Rebuild均返回0，MSBuild末行分别指向下表EXE。每个IntDir中的IFC/OBJ数量、目标模块产物、探针OBJ和EXE均在复跑后实际枚举：
 
 | 工程/配置 | IFC/OBJ | 关键IFC、OBJ目录 | EXE及SHA256 | 构建/运行与输出 |
 | --- | --- | --- | --- | --- |
@@ -152,6 +161,10 @@ MSBuild绝对路径与版本：
 | dynamic/Release | 17/21 | `D:/TEMP/海中鱼巣/SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT/run-20260911-v2/probe/obj-dynamic-split/Release/数据服务.场景类.ixx.ifc`、同目录`数据服务.场景类.ixx.obj`、`dynamic_main.obj` | `D:/TEMP/海中鱼巣/SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT/run-20260911-v2/probe/bin-dynamic-split/Release/dynamic_split_probe.exe`；`CF16721AB4FA2323C9D09797D0A5B7B64A03D0833298A2459F2619235C714ADA` | build 0；run 0；92 PASS/0 FAIL；`P01_RESTORE_AND_DYNAMIC_PROBE_OK`；持久根v16 |
 | cstage/Debug | 17/18 | `D:/TEMP/海中鱼巣/SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT/run-20260911-v2/probe-cstage/obj-cstage/Debug/数据服务.场景类.ixx.ifc`、同目录`数据服务.场景类.ixx.obj`、`cstage_probe.obj` | `D:/TEMP/海中鱼巣/SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT/run-20260911-v2/probe-cstage/bin-cstage/Debug/cstage_probe.exe`；`DB825D546D6F8BA378D860038A5044953CE7D91AE796779A1757AFED2CC36520` | build 0；run 0；498 PASS/0 FAIL；`CSTAGE_PROBE_OK` |
 | cstage/Release | 17/18 | `D:/TEMP/海中鱼巣/SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT/run-20260911-v2/probe-cstage/obj-cstage/Release/数据服务.场景类.ixx.ifc`、同目录`数据服务.场景类.ixx.obj`、`cstage_probe.obj` | `D:/TEMP/海中鱼巣/SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT/run-20260911-v2/probe-cstage/bin-cstage/Release/cstage_probe.exe`；`0CC2BEBB702B4BD99BC28EA2ACDA834FB33B44E0145D6EF82A72CA7B0F6785D4` | build 0；run 0；498 PASS/0 FAIL；`CSTAGE_PROBE_OK` |
+| provider/Debug | 6/7 | `D:/TEMP/海中鱼巣/SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT/run-20260911-v2/provider-current/obj/Debug/服务.L1事实基座.ixx.ifc`、同目录`服务.L1事实基座.ixx.obj`、`l1_provider_current_probe.obj` | `D:/TEMP/海中鱼巣/SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT/run-20260911-v2/provider-current/bin/Debug/l1_provider_current_probe.exe`；`0117D6DAFE3E9042716B596F35C3F58E830AC122886975969257290E5E8B4166` | build 0；run 0；20 PASS/0 FAIL；`L1_PROVIDER_CURRENT_OK` |
+| provider/Release | 6/7 | `D:/TEMP/海中鱼巣/SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT/run-20260911-v2/provider-current/obj/Release/服务.L1事实基座.ixx.ifc`、同目录`服务.L1事实基座.ixx.obj`、`l1_provider_current_probe.obj` | `D:/TEMP/海中鱼巣/SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT/run-20260911-v2/provider-current/bin/Release/l1_provider_current_probe.exe`；`4F9D73943265C3512A083FB98D95B3225053860B84AA1080F55E3A73B2140D33` | build 0；run 0；20 PASS/0 FAIL；`L1_PROVIDER_CURRENT_OK` |
+
+L1专项驱动首轮Debug/Release均因直接比较不具备整体`operator==`的编码映射vector而编译失败；改为逐项比较后第二轮又因驱动字段名误写为`属性值表示`而编译失败。两项都只在仓库外专项源码，未触碰生产。更正为现行`属性类型表示`后，重新执行上表Debug/Release完整Rebuild和运行均通过；失败构建未作为完成证据。
 
 动态探针首次直接复用已存在的v12持久根时，Debug和Release均真实返回1，
 输出止于`FAIL comparison-binding-create`及`dynamic probe aborted: probe failure`；该次失败证明固定旧根不能作为重复首轮输入，
@@ -176,15 +189,15 @@ E映射位置为`:148`与调用点`:403`、`:568`：
 
 | E来源状态 | 场景/B目标 | 运行分账 |
 | --- | --- | --- |
-| 已读取 | `成功(G0)`且载荷一致则继续；成功载荷矛盾则内部不一致 | RUN_PASS：真实E链`scene_probe.cpp:180`；矛盾载荷`cstage_probe.cpp:423-424` |
-| 入口拒绝 | 入口拒绝 | RUN_PASS：`cstage_probe.cpp:412-422` |
-| 未找到 | 未找到/存在未找到 | RUN_PASS：同上 |
-| 目标已退出 | 目标已退出/存在已退出 | RUN_PASS：同上 |
-| 事实代次漂移 | 事实代次漂移 | RUN_PASS：同上 |
-| 历史材料已清理 | 历史材料已清理 | RUN_PASS：同上 |
-| 资源失败 | 资源失败 | RUN_PASS：同上 |
-| 内部不一致 | 内部不一致（default） | RUN_PASS：同上 |
-| 未实现 | 内部不一致（default） | RUN_PASS：同上 |
+| 已读取 | `成功(G0)`且载荷一致则继续；成功载荷矛盾则内部不一致 | SCENE_RUN_PASS + G01-M：真实E链`scene_probe.cpp:180`；矛盾载荷`cstage_probe.cpp:423-424` |
+| 入口拒绝 | 入口拒绝 | SCENE_RUN_PASS + G01-M：`cstage_probe.cpp:412-422` |
+| 未找到 | 未找到/存在未找到 | SCENE_RUN_PASS + G01-M：同上 |
+| 目标已退出 | 目标已退出/存在已退出 | SCENE_RUN_PASS + G01-M：同上 |
+| 事实代次漂移 | 事实代次漂移 | SCENE_RUN_PASS + G01-M：同上 |
+| 历史材料已清理 | 历史材料已清理 | SCENE_RUN_PASS + G01-M：同上 |
+| 资源失败 | 资源失败 | SCENE_RUN_PASS + G01-M：同上 |
+| 内部不一致 | 内部不一致（default） | SCENE_RUN_PASS + G01-M：同上 |
+| 未实现 | 内部不一致（default） | SCENE_RUN_PASS + G01-M：同上 |
 
 S映射位置为`:146`（组织）和`:605`（B）：
 
@@ -192,12 +205,12 @@ S映射位置为`:146`（组织）和`:605`（B）：
 | --- | --- | --- |
 | 已创建 | 内部不一致（读取入口不会合法返回写结果） | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M `:146/:605` |
 | 精确重复 | 内部不一致 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M `:146/:605` |
-| 已读取 | 状态结果头和内容与请求一致则继续；成功但内容缺失或身份/截止代次矛盾则内部不一致 | RUN_PASS：真实S，`scene_probe.cpp:191-203`；生产核验`:361,462,519` |
+| 已读取 | 状态结果头和内容与请求一致则继续；成功但内容缺失或身份/截止代次矛盾则内部不一致 | SCENE_RUN_PASS + G01-M：真实S，`scene_probe.cpp:191-203`；生产核验`:361,462,519` |
 | 已退出 | 内部不一致（写结果，不等于目标已退出） | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M `:146/:605` |
 | 已清理 | 内部不一致（写结果） | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M `:146/:605` |
 | 入口拒绝 | 入口拒绝 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M：场景固定合法读取请求 |
-| 未找到 | 未找到/状态未找到 | RUN_PASS：`cstage_probe.cpp:342` |
-| 目标已退出 | 目标已退出/状态已退出 | RUN_PASS：`cstage_probe.cpp:343` |
+| 未找到 | 未找到/状态未找到 | SCENE_RUN_PASS + G01-M：`cstage_probe.cpp:342` |
+| 目标已退出 | 目标已退出/状态已退出 | SCENE_RUN_PASS + G01-M：`cstage_probe.cpp:343` |
 | 正式特征类型未找到 | 引用冲突 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M `:146/:605` |
 | 正式特征类型已退出 | 引用冲突 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M `:146/:605` |
 | 准确值不相容 | 入口拒绝 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M `:146/:605` |
@@ -215,50 +228,50 @@ D映射位置为`:147`，调用点`:375`；除`已读取`使用真实动态外�
 
 | D来源状态 | 场景目标 | 运行分账 |
 | --- | --- | --- |
-| 已创建 | 内部不一致 | RUN_PASS |
-| 精确重复 | 内部不一致 | RUN_PASS |
-| 已读取 | 当前动态结果与请求一致则继续；成功载荷矛盾则内部不一致 | RUN_PASS：真实D为`cstage_probe.cpp:331-336`及动态探针；矛盾载荷`cstage_probe.cpp:458-459` |
-| 已退出 | 内部不一致 | RUN_PASS |
-| 已清理 | 内部不一致 | RUN_PASS |
-| 入口拒绝 | 入口拒绝 | RUN_PASS |
-| 未找到 | 未找到 | RUN_PASS |
-| 目标已退出 | 目标已退出 | RUN_PASS |
-| 来源未找到 | 引用冲突 | RUN_PASS |
-| 来源已退出 | 引用冲突 | RUN_PASS |
-| 历史材料已清理 | 历史材料已清理 | RUN_PASS |
-| 绑定不完整 | 内部不一致 | RUN_PASS |
-| 主体不一致 | 内部不一致 | RUN_PASS |
-| 正式特征类型不一致 | 内部不一致 | RUN_PASS |
-| 时间不递增 | 内部不一致 | RUN_PASS |
-| 无变化 | 内部不一致 | RUN_PASS |
-| 比较依据不支持 | 内部不一致 | RUN_PASS |
-| 组成发生期依据不足 | 内部不一致 | RUN_PASS |
-| 重复成员 | 内部不一致 | RUN_PASS |
-| 来源成环 | 内部不一致 | RUN_PASS |
-| 数量预算不足 | 数量预算不足 | RUN_PASS |
-| 事实代次漂移 | 事实代次漂移 | RUN_PASS |
-| 幂等冲突 | 内部不一致 | RUN_PASS |
-| 引用冲突 | 引用冲突 | RUN_PASS |
-| 旧格式不支持 | 内部不一致 | RUN_PASS |
-| 依赖未实现 | 内部不一致 | RUN_PASS |
-| 资源失败 | 资源失败 | RUN_PASS |
-| 内部不一致 | 内部不一致（default） | RUN_PASS |
-| 已可能发布 | 内部不一致（default） | RUN_PASS |
+| 已创建 | 内部不一致 | SCENE_RUN_PASS + G01-M |
+| 精确重复 | 内部不一致 | SCENE_RUN_PASS + G01-M |
+| 已读取 | 当前动态结果与请求一致则继续；成功载荷矛盾则内部不一致 | SCENE_RUN_PASS + G01-M：真实D为`cstage_probe.cpp:331-336`及动态探针；矛盾载荷`cstage_probe.cpp:458-459` |
+| 已退出 | 内部不一致 | SCENE_RUN_PASS + G01-M |
+| 已清理 | 内部不一致 | SCENE_RUN_PASS + G01-M |
+| 入口拒绝 | 入口拒绝 | SCENE_RUN_PASS + G01-M |
+| 未找到 | 未找到 | SCENE_RUN_PASS + G01-M |
+| 目标已退出 | 目标已退出 | SCENE_RUN_PASS + G01-M |
+| 来源未找到 | 引用冲突 | SCENE_RUN_PASS + G01-M |
+| 来源已退出 | 引用冲突 | SCENE_RUN_PASS + G01-M |
+| 历史材料已清理 | 历史材料已清理 | SCENE_RUN_PASS + G01-M |
+| 绑定不完整 | 内部不一致 | SCENE_RUN_PASS + G01-M |
+| 主体不一致 | 内部不一致 | SCENE_RUN_PASS + G01-M |
+| 正式特征类型不一致 | 内部不一致 | SCENE_RUN_PASS + G01-M |
+| 时间不递增 | 内部不一致 | SCENE_RUN_PASS + G01-M |
+| 无变化 | 内部不一致 | SCENE_RUN_PASS + G01-M |
+| 比较依据不支持 | 内部不一致 | SCENE_RUN_PASS + G01-M |
+| 组成发生期依据不足 | 内部不一致 | SCENE_RUN_PASS + G01-M |
+| 重复成员 | 内部不一致 | SCENE_RUN_PASS + G01-M |
+| 来源成环 | 内部不一致 | SCENE_RUN_PASS + G01-M |
+| 数量预算不足 | 数量预算不足 | SCENE_RUN_PASS + G01-M |
+| 事实代次漂移 | 事实代次漂移 | SCENE_RUN_PASS + G01-M |
+| 幂等冲突 | 内部不一致 | SCENE_RUN_PASS + G01-M |
+| 引用冲突 | 引用冲突 | SCENE_RUN_PASS + G01-M |
+| 旧格式不支持 | 内部不一致 | SCENE_RUN_PASS + G01-M |
+| 依赖未实现 | 内部不一致 | SCENE_RUN_PASS + G01-M |
+| 资源失败 | 资源失败 | SCENE_RUN_PASS + G01-M |
+| 内部不一致 | 内部不一致（default） | SCENE_RUN_PASS + G01-M |
+| 已可能发布 | 内部不一致（default） | SCENE_RUN_PASS + G01-M |
 
 L1写映射位置为`:150-176`；失败头/载荷先决为`:202-218`。`是否形成内存权威发布=true`
 且状态不是成功时优先收口为已可能发布；正常失败头不完整则内部不一致：
 
 | L1写来源状态 | 场景/B目标 | 运行分账 |
 | --- | --- | --- |
-| 成功 | 写入头、编码映射、发布后读回和结束守卫完整时给出调用点成功态；提交已开始后任一头/映射/读回/结束守卫矛盾均收口为已可能发布 | RUN_PASS：全部真实首发路径；G01-M：生产`:61-78,326-328,347-349,396-411,438-440,455-498` |
-| 精确重复 | 原幂等身份、首次写集/首次结果、编码映射、发布后读回和结束守卫一致时为精确重复；已有原结果或提交已开始后任一互证失败均收口为已可能发布 | RUN_PASS：`scene_probe.cpp:183,204`及恢复原键；G01-M：生产`:52-78`及各写后收敛位置 |
+| 成功 | 写入头、编码映射、发布后读回和结束守卫完整时给出调用点成功态；提交已开始后任一头/映射/读回/结束守卫矛盾均收口为已可能发布 | SCENE_RUN_PASS + L1_PROVIDER_RUN_PASS + G01-M：全部真实首发路径及L1专项`first-publish-structured`；生产`:61-78,326-328,347-349,396-411,438-440,455-498` |
+| 精确重复 | 原幂等身份、首次写集/首次结果、编码映射、发布后读回和结束守卫一致时为精确重复；已有原结果或提交已开始后任一互证失败均收口为已可能发布 | SCENE_RUN_PASS + L1_PROVIDER_RUN_PASS + G01-M：场景`scene_probe.cpp:183,204`及恢复原键；L1专项`same-key-same-meaning-replay`；生产`:52-78`及各写后收敛位置 |
 | 入口拒绝 | 内部不一致；已发布标志存在则已可能发布 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M：合法场景写集在提交前已完成形状核验 |
 | 许可拒绝 | 内部不一致；已发布标志存在则已可能发布 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M：已持有场景owner唯一端口 |
 | 未找到 | 内部不一致；已发布标志存在则已可能发布 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M：引用端点均在提交前真实读回 |
 | 已退出 | 内部不一致；已发布标志存在则已可能发布 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M：退出端点均在提交前真实读回 |
-| 事实代次漂移 | 失败头完整时事实代次漂移；若错误声称已发布则已可能发布；失败头矛盾则内部不一致 | 未运行覆盖（计划证据缺口）：合法并发可在L1提交窗口形成；本轮O01-F只观察场景最终漂移，不能证明来源为L1写返回。G01-M仅证明生产`:151-158,202-218`映射存在 |
-| 幂等冲突 | 失败头完整时幂等冲突；若错误声称已发布则已可能发布；失败头矛盾则内部不一致 | 未运行覆盖（计划证据缺口）：合法同键异义竞态可在L1提交形成；本轮未制造该提交瞬时竞争。G01-M仅证明生产`:151-158,202-218`映射存在 |
-| 引用冲突 | 引用冲突 | RUN_PASS：B/D保护及有组织内容的C退出保护 |
+| 事实代次漂移 | 失败头完整时事实代次漂移；若错误声称已发布则已可能发布；失败头矛盾则内部不一致 | `SCENE_RUN_PASS + G01-M`：场景旧G0、同G0竞争、零写和结构化出口见§3及`cstage_probe.cpp:344,349-356`；不精确归因L1内部返回。`L1_PROVIDER_RUN_PASS + G01-M`：当前L1专项`stale-generation-guard-drift`/`drift-zero-write`；生产映射`:151-158,202-218` |
+| 幂等冲突 | 失败头完整时幂等冲突；若错误声称已发布则已可能发布；失败头矛盾则内部不一致 | `SCENE_RUN_PASS + G01-M`：场景首次材料同键异义、零写、结构化出口见`cstage_probe.cpp:296`。`L1_PROVIDER_RUN_PASS + G01-M`：当前L1专项`same-key-different-meaning-conflict`/`conflict-zero-write`/`original-key-material-retained`；生产映射`:151-158,202-218` |
+| 引用冲突 | 引用冲突 | SCENE_RUN_PASS + G01-M：B/D保护及有组织内容的C退出保护 |
 | 资源失败 | 资源失败 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M：无生产故障注入入口 |
 | 内部不一致 | 内部不一致 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M：无L1私有状态篡改/测试后门 |
 
@@ -267,24 +280,24 @@ L1读取并非集中switch，而是按用途在`:50-78`、`:182-192`、`:322-332
 
 | L1读取来源 | 逐项映射 | 运行分账 |
 | --- | --- | --- |
-| `L1所有者范围读取状态::成功` | 校验合同、owner、编码、G/H、载荷后继续 | RUN_PASS：当前/历史/首次材料/恢复 |
+| `L1所有者范围读取状态::成功` | 校验合同、owner、编码、G/H、载荷后继续 | SCENE_RUN_PASS + L1_PROVIDER_RUN_PASS + G01-M：当前/历史/首次材料/恢复及L1专项原键保留 |
 | `::入口拒绝` | 内部不一致 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M：固定合法版本和编码形状 |
 | `::许可拒绝` | 内部不一致 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M：owner内读取接口 |
-| `::未找到` | 首次材料分流为新写；节点/关系为未找到 | RUN_PASS：首发与缺失对象 |
+| `::未找到` | 首次材料分流为新写；节点/关系为未找到 | SCENE_RUN_PASS + G01-M：首发与缺失对象 |
 | `::已退出` | 内部不一致；生命周期由成功载荷的退出代次表达 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M |
 | `::属性未设置` | 内部不一致 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M：这里不调用属性读取 |
 | `::事实代次漂移` | 载荷G不等请求G时映射事实代次漂移；直接枚举值否则内部不一致 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M：公开旧G0由一致当前读取先收口，未把它误记为该枚举实际返回 |
 | `::资源失败` | 资源失败 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M：无生产故障注入入口 |
 | `::内部不一致` | 内部不一致 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M |
 | `::历史材料已清理` | 历史节点/关系映射历史材料已清理；首次原键读取不接受该状态 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M：本计划不做物理清理 |
-| `L1中性读取状态::成功` | 当前代次继续 | RUN_PASS：每项探针的`L1-current-generation` |
+| `L1中性读取状态::成功` | 当前代次继续 | SCENE_RUN_PASS + L1_PROVIDER_RUN_PASS + G01-M：每项探针的当前代次读取 |
 | `::资源失败` | 资源失败 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M：无故障注入 |
 | `::入口拒绝/未找到/已退出/属性未设置/内部不一致/许可拒绝/历史材料已清理` | 内部不一致 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M：固定合法的当前代次读取不产生这些状态 |
-| `L1所有者范围一致当前读取状态::成功` | 校验唯一owner项目后继续 | RUN_PASS：正常读回与路径读取 |
-| `::事实代次漂移` | 事实代次漂移 | RUN_PASS：旧G0调用 |
+| `L1所有者范围一致当前读取状态::成功` | 校验唯一owner项目后继续 | SCENE_RUN_PASS + G01-M：正常读回与路径读取 |
+| `::事实代次漂移` | 事实代次漂移 | SCENE_RUN_PASS + G01-M：旧G0调用 |
 | `::资源失败` | 资源失败 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M：无故障注入 |
 | `::入口拒绝/许可拒绝/内部不一致` | 内部不一致 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M |
-| `L1所有者范围一致当前读取项目状态::成功` | 校验owner事实后继续 | RUN_PASS |
+| `L1所有者范围一致当前读取项目状态::成功` | 校验owner事实后继续 | SCENE_RUN_PASS + G01-M |
 | `::未找到/已退出/属性未设置/种类不匹配/历史材料已清理` | 内部不一致 | UNREACHABLE_BY_PUBLIC_CONTRACT + G01-M：场景只选择自身owner且不选择属性项目 |
 
 所有上述枚举之外的非法底层数值统一由各映射末端`default -> 内部不一致`或
@@ -295,28 +308,27 @@ L1读取并非集中switch，而是按用途在`:50-78`、`:182-192`、`:322-332
 
 | 组 | 分账 | 实际源码证据位置 |
 | --- | --- | --- |
-| C01 | RUN_PASS | `probe/scene_probe.cpp:180,186-187` |
-| B01 | RUN_PASS | `probe/scene_probe.cpp:191-198` |
-| O01-S | RUN_PASS | `probe/scene_probe.cpp:203-208` |
-| O02 | RUN_PASS | `probe/dynamic_scene_call.cpp:14,17`；真实原子/组合D |
-| R01 | RUN_PASS | `probe/scene_probe.cpp:187,198-199,208`及恢复冷索引 |
-| I01 | RUN_PASS | `probe/scene_probe.cpp:183,204`、`probe/dynamic_setup.cpp:113-114` |
-| X01 | RUN_PASS | `probe/scene_probe.cpp:214-216` |
-| P01 | RUN_PASS | `probe/dynamic_setup.cpp:113-114`、`probe/dynamic_main.cpp:7` |
-| C02 | RUN_PASS | `probe-cstage/cstage_probe.cpp:285-296` |
-| B02 | RUN_PASS | `probe-cstage/cstage_probe.cpp:303-337` |
-| O01-F | RUN_PASS | `probe-cstage/cstage_probe.cpp:347-388` |
-| F01 | RUN_PASS | `probe-cstage/cstage_probe.cpp:390-424,458-464` |
-| G01-R | RUN_PASS | `probe-cstage/cstage_probe.cpp:285-296,335-344,412-468` |
-| G01-M | PASS（静态枚举与条件分流） | 本记录§5.3；枚举定义、生产映射、载荷/发布阶段分流和default位置均绑定§5.1精确输入hash；不替代两项合法并发运行缺口 |
+| C01 | SCENE_RUN_PASS | `probe/scene_probe.cpp:180,186-187` |
+| B01 | SCENE_RUN_PASS | `probe/scene_probe.cpp:191-198` |
+| O01-S | SCENE_RUN_PASS | `probe/scene_probe.cpp:203-208` |
+| O02 | SCENE_RUN_PASS | `probe/dynamic_scene_call.cpp:14,17`；真实原子/组合D |
+| R01 | SCENE_RUN_PASS | `probe/scene_probe.cpp:187,198-199,208`及恢复冷索引 |
+| I01 | SCENE_RUN_PASS + L1_PROVIDER_RUN_PASS | 场景`probe/scene_probe.cpp:183,204`、`probe/dynamic_setup.cpp:113-114`；L1专项同键同义/异义及首次材料原键保留 |
+| X01 | SCENE_RUN_PASS | `probe/scene_probe.cpp:214-216` |
+| P01 | SCENE_RUN_PASS | `probe/dynamic_setup.cpp:113-114`、`probe/dynamic_main.cpp:7` |
+| C02 | SCENE_RUN_PASS | `probe-cstage/cstage_probe.cpp:285-296` |
+| B02 | SCENE_RUN_PASS | `probe-cstage/cstage_probe.cpp:303-337` |
+| O01-F | SCENE_RUN_PASS | `probe-cstage/cstage_probe.cpp:347-388` |
+| F01 | SCENE_RUN_PASS | `probe-cstage/cstage_probe.cpp:390-424,458-464` |
+| G01-R | SCENE_RUN_PASS + L1_PROVIDER_RUN_PASS | 场景`probe-cstage/cstage_probe.cpp:285-296,335-356,412-468`；L1专项全部20项 |
+| G01-M | PASS（静态枚举与条件分流） | 本记录§5.3；枚举定义、生产映射、载荷/发布阶段分流和default位置均绑定§5.1精确输入hash；与场景入口及L1提供者运行证据分账 |
 
-本轮没有把`UNREACHABLE_BY_PUBLIC_CONTRACT`写成运行通过，也没有用占位模板代替来源状态分账。
-L1写入的`事实代次漂移`与`幂等冲突`是合法并发可达状态，但本轮未在L1提交窗口精确注入，已明确记为计划证据缺口。
+本轮没有把`UNREACHABLE_BY_PUBLIC_CONTRACT`写成运行通过，也没有用占位模板代替来源状态分账。场景入口不承担精确归因L1内部返回；L1写入`事实代次漂移`与`幂等冲突`的权威生成由当前L1公开接口专项实际命中，并与场景入口证据及G01-M机械映射共同闭合。
 唯一实际`RUN_FAIL`是复用旧持久根v12的动态探针前置条件失败，已在§5.2保留；使用事前不存在的v15/v16后相同生产链均RUN_PASS。
 
 ## 6. 结论与未证明范围
 
-本轮已通过目标模块Debug/Release构建、真实成功链、公开失败面、结构破坏、退出/重放和同进程L1持久恢复；G01-M静态枚举与条件分流也已闭合。由于L1写入`事实代次漂移`与`幂等冲突`虽可由合法并发形成、但本轮未精确运行命中，计划v0.8要求的G01-R仍有两项运行证据缺口，因此本记录不宣布A/B/C全部通过或计划完成。strict另有具名范围外阻断，不改变已经取得的目标模块和公开探针结果。
+本轮已通过目标模块Debug/Release构建、真实成功链、公开失败面、结构破坏、退出/重放和同进程L1持久恢复；G01-M静态枚举与条件分流、场景入口责任运行和当前L1提供者专项证据均已闭合。按计划v0.9的新责任分账，A/B/C全部验证通过；strict另有具名范围外阻断，不改变已经取得的目标模块和公开探针结果。
 
 已经证明的范围限于：C角色、四根、C/E/S绑定、S/D组织路径、退出/重放/同进程L1持久恢复、4204 v1.1动态当前读取边界，以及本记录逐项列出的运行分支和G01-M静态分支。
 
