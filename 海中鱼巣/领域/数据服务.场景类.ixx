@@ -28,16 +28,23 @@ public : 场景类数据服务()=delete;
 
     场景类数据服务(const L1事实基座服务& l1,L1所有者范围写端口&& port,
         const 场景角色结构交付& layout,const 存在结构身份只读提供者& existence,
-        const 状态类数据服务& state) : l1_(l1),port_(std::move(port)),owner_(port_.所有者身份()),
-        layout_(layout),existence_(existence),state_(state){
+        const 状态类数据服务& state,const 场景特征组织扩展结构交付& featureLayout)
+        : l1_(l1),port_(std::move(port)),owner_(port_.所有者身份()),layout_(layout),
+          featureLayout_(featureLayout),existence_(existence),state_(state){
         if(!布局形状有效(layout_)||!有效(owner_)||!port_.有效()||!port_.绑定于(l1_)
-            ||!existence_.绑定于(l1_)||!state_.绑定于(l1_)||!登记材料匹配())
+            ||!有效(featureLayout_.特征组织关系类型)
+            ||!existence_.绑定于(l1_)||!state_.绑定于(l1_)
+            ||!登记材料匹配()||!扩展登记材料匹配())
             throw std::invalid_argument("场景结构交付无效");
     }
 
     bool 绑定于(const L1事实基座服务& x) const noexcept override {
         return &l1_==&x&&port_.绑定于(x)&&existence_.绑定于(x)&&state_.绑定于(x);
     }
+
+    static 场景特征组织扩展登记结果 登记特征组织扩展(
+        const L1事实基座服务& l1,L1所有者范围写端口& port,
+        const 场景特征组织扩展登记请求& r);
 
     static 场景结构登记结果 登记结构类型(const L1事实基座服务& l1,L1所有者范围写端口& port,const 场景结构登记请求& r){
         场景结构登记结果 out;
@@ -97,6 +104,8 @@ public : 场景类数据服务()=delete;
     场景组织写结果_v2 组织动态实例(const 场景动态组织请求&,const 动态结构只读提供者&);
     场景组织历史结果 读取实例组织历史(const 场景组织历史请求&)const;
     场景动态组织历史结果 读取动态场景组织历史(const 场景动态组织历史请求&)const override;
+    场景特征组织写结果_v1 组织特征实例(const 场景特征组织请求&);
+    场景特征组织历史结果 读取特征组织历史(const 场景特征组织历史请求&)const;
 
 private : struct 关系读取 { 场景角色数据状态 状态=场景角色数据状态::内部不一致; std::uint64_t Gread=0; std::vector<L1所有者范围关系事实> 关系; bool 成功()const noexcept{return 状态==场景角色数据状态::已读取;} };
     struct 代次读取 { 场景角色数据状态 状态=场景角色数据状态::内部不一致; std::uint64_t Gread=0; bool 成功()const noexcept{return 状态==场景角色数据状态::已读取;} };
@@ -104,6 +113,7 @@ private : struct 关系读取 { 场景角色数据状态 状态=场景角色数�
     struct 关系事实读取 { 场景角色数据状态 状态=场景角色数据状态::内部不一致; std::uint64_t Gread=0; std::optional<L1所有者范围关系事实> 事实; bool 成功()const noexcept{return 状态==场景角色数据状态::已读取&&事实.has_value();} };
     static bool 布局形状有效(const 场景角色结构交付&)noexcept;
     bool 登记材料匹配()const;
+    bool 扩展登记材料匹配()const;
     关系读取 查询关系(std::uint64_t,std::uint64_t,L1所有者范围关系端点方向,稳定编码,稳定编码)const;
     节点读取 读节点(稳定编码,std::uint64_t)const;
     关系事实读取 读关系(稳定编码,std::uint64_t)const;
@@ -111,6 +121,13 @@ private : struct 关系读取 { 场景角色数据状态 状态=场景角色数�
     状态使用绑定读取结果 读B(std::uint64_t,std::uint64_t,状态使用绑定身份)const;
     状态使用绑定组查询结果 查B组(std::uint32_t,std::uint64_t,稳定编码,std::int64_t,std::uint64_t)const;
     场景组织历史结果 读路径(std::uint64_t,std::uint64_t,场景根角色,稳定编码,std::uint64_t)const;
+    场景特征组织历史结果 读特征路径(std::uint64_t,std::uint64_t,特征信息身份,std::uint64_t)const;
+    场景角色数据状态 核验当前已知准确特征(const 场景特征组织请求&,std::uint64_t&)const;
+    场景角色数据状态 核验特征组织父(const 场景特征组织请求&,稳定编码,std::uint64_t&)const;
+    场景角色数据状态 核验特征未组织(const 场景特征组织请求&,std::uint64_t&)const;
+    场景角色数据状态 核验特征组织前置(const 场景特征组织请求&,std::uint64_t&)const;
+    场景特征组织写结果_v1 读回特征组织(const 场景特征组织请求&,
+        场景角色数据状态,const L1所有者范围写入结果&)const;
     场景组织写结果_v2 组织(std::uint32_t,std::uint64_t,L1所有者范围写入幂等身份,稳定编码,稳定编码,稳定编码,std::uint64_t,场景根角色);
     static 场景节点见证 转节点(const L1所有者范围节点事实&n){return {n.编码,{n.创建事实代次,n.退出事实代次}};}
     static 场景组织边见证 转边(const L1所有者范围关系事实&e){return {e.编码,e.源节点,e.目标节点,e.关系类型节点,static_cast<std::uint64_t>(e.角色或顺序),{e.创建事实代次,e.退出事实代次}};}
@@ -119,6 +136,7 @@ private : struct 关系读取 { 场景角色数据状态 状态=场景角色数�
     static 状态使用绑定数据状态 状态到B(状态类数据状态)noexcept;
     static 场景角色数据状态 状态到场景(状态类数据状态)noexcept;
     static 场景角色数据状态 动态到场景(动态数据状态)noexcept;
+    static 场景角色数据状态 存在特征到场景(存在已知准确特征只读状态)noexcept;
     static 场景角色数据状态 存在到场景(存在结构身份只读状态)noexcept;
     static 场景角色数据状态 映射场景写入状态(const L1所有者范围写入结果&,场景角色数据状态,L1结构所有者身份,const L1所有者范围写集请求&)noexcept;
     static 状态使用绑定数据状态 映射绑定写入状态(const L1所有者范围写入结果&,状态使用绑定数据状态,L1结构所有者身份,const L1所有者范围写集请求&)noexcept;
@@ -134,14 +152,318 @@ private : struct 关系读取 { 场景角色数据状态 状态=场景角色数�
     L1所有者范围写集请求 形成启用写集(const 场景角色启用请求&)const;
     L1所有者范围写集请求 形成绑定写集(const 状态使用绑定创建请求&)const;
     L1所有者范围写集请求 形成组织写集(std::uint64_t,L1所有者范围写入幂等身份,稳定编码,稳定编码,场景根角色)const;
+    L1所有者范围写集请求 形成特征组织写集(std::uint64_t,L1所有者范围写入幂等身份,稳定编码,特征信息身份)const;
+    static bool 普通幂等身份有效(L1所有者范围写入幂等身份)noexcept;
 
     const L1事实基座服务& l1_;L1所有者范围写端口 port_;L1结构所有者身份 owner_;
-    场景角色结构交付 layout_;const 存在结构身份只读提供者& existence_;const 状态类数据服务& state_;mutable std::mutex write_;
+    场景角色结构交付 layout_;场景特征组织扩展结构交付 featureLayout_;
+    const 存在结构身份只读提供者& existence_;const 状态类数据服务& state_;
+    mutable std::mutex write_;
 };
 
-} // namespace 海中鱼巣
+场景特征组织扩展登记结果 场景类数据服务::登记特征组织扩展(
+    const L1事实基座服务& l1,L1所有者范围写端口& port,
+    const 场景特征组织扩展登记请求&r){
+    场景特征组织扩展登记结果 out;
+    if(r.版本!=1||!r.G0||r.G0==UINT64_MAX||!port.绑定于(l1))return out;
+    bool commitStarted=false;std::uint64_t published=0;
+    const auto key=场景特征组织扩展登记固定幂等身份;
+    try{
+        L1所有者范围写集请求 ws{L1所有者范围CRUD合同版本,r.G0,key};
+        ws.节点={{{1},节点种类::普通,std::nullopt}};
+        auto first=port.读取首次写入材料({L1所有者范围首次写入读取合同版本,key});
+        if(first.合同版本!=L1所有者范围首次写入读取合同版本
+            ||first.所有者!=port.所有者身份()||first.写入幂等身份!=key){
+            out.状态=场景角色数据状态::内部不一致;out.Gread=first.读取事实代次;return out;
+        }
+        const bool replay=first.状态==L1所有者范围读取状态::成功;
+        if(replay){
+            if(!first.首次规范化写集||!写集相同(*first.首次规范化写集,ws)
+                ||!first.首次写入结果||first.首次写入结果->状态!=L1所有者范围写入状态::成功
+                ||first.首次写入结果->合同版本!=L1所有者范围CRUD合同版本
+                ||first.首次写入结果->所有者!=port.所有者身份()
+                ||first.首次写入结果->写入幂等身份!=key
+                ||first.首次写入结果->事实代次!=r.G0+1
+                ||!first.首次写入结果->是否形成内存权威发布
+                ||first.首次写入结果->重试边界!=L1所有者范围重试边界::不适用
+                ||!写入映射完整(*first.首次写入结果,ws)){
+                out.状态=first.首次规范化写集&&!写集相同(*first.首次规范化写集,ws)
+                    ? 场景角色数据状态::幂等冲突: 场景角色数据状态::内部不一致;
+                out.Gread=first.读取事实代次;return out;
+            }
+        }else if(first.状态!=L1所有者范围读取状态::未找到){
+            out.状态=first.状态==L1所有者范围读取状态::资源失败
+                ? 场景角色数据状态::资源失败: 场景角色数据状态::内部不一致;
+            out.Gread=first.读取事实代次;return out;
+        }else if(first.读取事实代次!=r.G0||first.首次规范化写集||first.首次写入结果){
+            out.状态=first.读取事实代次!=r.G0 ? 场景角色数据状态::事实代次漂移
+                : 场景角色数据状态::内部不一致;out.Gread=first.读取事实代次;return out;
+        }
+        commitStarted=true;const auto saved=port.提交所有者范围中性写集(ws);published=saved.事实代次;
+        if(saved.状态!=L1所有者范围写入状态::成功
+            &&saved.状态!=L1所有者范围写入状态::精确重复){
+            out.状态=映射场景写入状态(saved,场景角色数据状态::已登记,port.所有者身份(),ws);
+            out.Gread=saved.事实代次;out.首次发布代次=out.状态==场景角色数据状态::已可能发布 ? saved.事实代次 : 0;return out;
+        }
+        if(saved.合同版本!=L1所有者范围CRUD合同版本||saved.所有者!=port.所有者身份()
+            ||saved.写入幂等身份!=key||saved.事实代次!=r.G0+1||!写入映射完整(saved,ws)){
+            out.状态=场景角色数据状态::已可能发布;out.Gread=saved.事实代次;
+            out.首次发布代次=saved.事实代次;return out;
+        }
+        if(saved.状态==L1所有者范围写入状态::精确重复){
+            const auto won=port.读取首次写入材料({L1所有者范围首次写入读取合同版本,key});
+            if(won.状态!=L1所有者范围读取状态::成功||!won.首次规范化写集
+                ||!写集相同(*won.首次规范化写集,ws)||!won.首次写入结果
+                ||won.首次写入结果->状态!=L1所有者范围写入状态::成功
+                ||won.首次写入结果->新编码映射!=saved.新编码映射){
+                out.状态=场景角色数据状态::已可能发布;out.Gread=won.读取事实代次;
+                out.首次发布代次=saved.事实代次;return out;
+            }
+        }
+        const auto id=映射编码(saved,{1});
+        if(!id){out.状态=场景角色数据状态::已可能发布;out.首次发布代次=saved.事实代次;return out;}
+        const auto guard=l1.读取中性当前事实代次({L1中性CRUD合同版本});
+        out.Gread=guard.事实代次;out.首次发布代次=saved.事实代次;
+        if(guard.状态!=L1中性读取状态::成功||guard.合同版本!=L1中性CRUD合同版本
+            ||guard.事实代次<saved.事实代次){out.状态=场景角色数据状态::已可能发布;return out;}
+        const auto node=l1.读取所有者范围历史事实({L1所有者范围CRUD合同版本,*id});
+        const auto*n=node.事实 ? std::get_if<L1所有者范围节点事实>(&*node.事实) : nullptr;
+        if(node.状态!=L1所有者范围读取状态::成功||node.合同版本!=L1所有者范围CRUD合同版本
+            ||node.读取事实代次!=out.Gread||node.查询编码!=*id||!n
+            ||n->写入所有者!=port.所有者身份()||n->种类!=节点种类::普通
+            ||n->属性类型表示||!n->当前属性.empty()||n->创建事实代次!=saved.事实代次||n->退出事实代次){
+            out.状态=场景角色数据状态::已可能发布;return out;
+        }
+        const auto last=l1.读取中性当前事实代次({L1中性CRUD合同版本});
+        if(last.状态!=L1中性读取状态::成功||last.合同版本!=L1中性CRUD合同版本
+            ||last.事实代次!=out.Gread){out.状态=场景角色数据状态::已可能发布;out.Gread=last.事实代次;return out;}
+        out.交付=场景特征组织扩展结构交付{*id};
+        out.状态=saved.状态==L1所有者范围写入状态::成功
+            ? 场景角色数据状态::已登记: 场景角色数据状态::精确重复;
+        return out;
+    }catch(const std::bad_alloc&){out.状态=commitStarted ? 场景角色数据状态::已可能发布 : 场景角色数据状态::资源失败;out.首次发布代次=commitStarted ? published : 0;return out;}
+    catch(...){out.状态=commitStarted ? 场景角色数据状态::已可能发布 : 场景角色数据状态::内部不一致;out.首次发布代次=commitStarted ? published : 0;return out;}
+}
 
+场景特征组织写结果_v1 场景类数据服务::组织特征实例(const 场景特征组织请求&r){
+    if(r.版本!=1||!r.G0||r.G0==UINT64_MAX||!普通幂等身份有效(r.幂等身份)
+        ||!有效(r.场景)||!有效(r.组织父)||!有效(r.特征)||r.场景==r.组织父
+        ||r.场景==r.特征.编码||r.组织父==r.特征.编码
+        ||!r.最大路径长度||r.最大路径长度>4096)return{};
+    bool commitStarted=false;std::uint64_t published=0,confirmed=0;
+    try{
+        const auto expected=形成特征组织写集(r.G0,r.幂等身份,r.组织父,r.特征);
+        const auto first=port_.读取首次写入材料({L1所有者范围首次写入读取合同版本,r.幂等身份});
+        if(first.合同版本!=L1所有者范围首次写入读取合同版本||first.所有者!=owner_
+            ||first.写入幂等身份!=r.幂等身份)
+            return {1,场景角色数据状态::内部不一致,first.读取事实代次,0,std::nullopt};
+        L1所有者范围写入结果 saved;
+        场景角色数据状态 status=场景角色数据状态::内部不一致;
+        if(first.状态==L1所有者范围读取状态::成功){
+            if(!first.首次规范化写集||!写集相同(*first.首次规范化写集,expected))
+                return {1,场景角色数据状态::幂等冲突,first.读取事实代次,0,std::nullopt};
+            if(!first.首次写入结果||first.首次写入结果->状态!=L1所有者范围写入状态::成功
+                ||!写入映射完整(*first.首次写入结果,expected))
+                return {1,场景角色数据状态::内部不一致,first.读取事实代次,0,std::nullopt};
+            commitStarted=true;saved=串行提交(*first.首次规范化写集);published=saved.事实代次;
+            if(saved.状态!=L1所有者范围写入状态::精确重复||!写入头完整(saved,r.幂等身份,r.G0)
+                ||!写入映射完整(saved,expected)||saved.新编码映射!=first.首次写入结果->新编码映射)
+                return {1,场景角色数据状态::已可能发布,saved.事实代次,saved.事实代次,std::nullopt};
+            status=场景角色数据状态::精确重复;
+        }else{
+            if(first.状态!=L1所有者范围读取状态::未找到)
+                return {1,first.状态==L1所有者范围读取状态::资源失败 ? 场景角色数据状态::资源失败 : 场景角色数据状态::内部不一致,first.读取事实代次,0,std::nullopt};
+            if(first.读取事实代次!=r.G0)return {1,场景角色数据状态::事实代次漂移,first.读取事实代次,0,std::nullopt};
+            if(first.首次规范化写集||first.首次写入结果)return {1,场景角色数据状态::内部不一致,first.读取事实代次,0,std::nullopt};
+            std::uint64_t preflightGread=0;
+            const auto preflight=核验特征组织前置(r,preflightGread);
+            if(preflight!=场景角色数据状态::已读取)
+                return {1,preflight,preflightGread,0,std::nullopt};
+            commitStarted=true;saved=串行提交(expected);published=saved.事实代次;
+            status=映射场景写入状态(saved,场景角色数据状态::已组织,owner_,expected);
+            if(status==场景角色数据状态::精确重复&&!竞争精确重复材料完整(saved,expected))
+                return {1,场景角色数据状态::已可能发布,saved.事实代次,saved.事实代次,std::nullopt};
+            if(status!=场景角色数据状态::已组织&&status!=场景角色数据状态::精确重复)
+                return {1,status,saved.事实代次,status==场景角色数据状态::已可能发布 ? saved.事实代次 : 0,std::nullopt};
+            if(!写入头完整(saved,r.幂等身份,r.G0)||!写入映射完整(saved,expected))
+                return {1,saved.是否形成内存权威发布||saved.状态==L1所有者范围写入状态::精确重复 ? 场景角色数据状态::已可能发布 : 场景角色数据状态::内部不一致,saved.事实代次,saved.事实代次,std::nullopt};
+        }
+        auto result=读回特征组织(r,status,saved);confirmed=result.Gread;return result;
+    }catch(const std::bad_alloc&){return {1,commitStarted ? 场景角色数据状态::已可能发布 : 场景角色数据状态::资源失败,confirmed ? confirmed : published,commitStarted ? published : 0,std::nullopt};}
+    catch(...){return {1,commitStarted ? 场景角色数据状态::已可能发布 : 场景角色数据状态::内部不一致,confirmed ? confirmed : published,commitStarted ? published : 0,std::nullopt};}
+}
+
+场景特征组织历史结果 场景类数据服务::读取特征组织历史(const 场景特征组织历史请求&r)const{
+    if(r.版本!=1||!r.Gread||!r.H||r.H>r.Gread||!有效(r.特征)
+        ||!r.最大路径长度||r.最大路径长度>4096)return{};
+    std::uint64_t confirmed=0;
+    try{auto first=核验代次(r.Gread);if(!first.成功())return {1,first.状态,first.Gread,r.H,std::nullopt};
+        confirmed=first.Gread;auto result=读特征路径(r.Gread,r.H,r.特征,r.最大路径长度);
+        auto last=核验代次(r.Gread);if(!last.成功())return {1,last.状态,last.Gread,r.H,std::nullopt};return result;
+    }catch(const std::bad_alloc&){return {1,场景角色数据状态::资源失败,confirmed,r.H,std::nullopt};}
+    catch(...){return {1,场景角色数据状态::内部不一致,confirmed,r.H,std::nullopt};}
+}
+
+bool 场景类数据服务::扩展登记材料匹配()const{
+    const auto key=场景特征组织扩展登记固定幂等身份;
+    const auto f=port_.读取首次写入材料({L1所有者范围首次写入读取合同版本,key});
+    if(f.状态!=L1所有者范围读取状态::成功||f.合同版本!=L1所有者范围首次写入读取合同版本
+        ||f.所有者!=owner_||f.写入幂等身份!=key||!f.首次规范化写集||!f.首次写入结果)return false;
+    const auto&ws=*f.首次规范化写集;
+    if(ws.合同版本!=L1所有者范围CRUD合同版本||ws.写入幂等身份!=key||!ws.期望事实代次
+        ||ws.期望事实代次==UINT64_MAX||ws.节点.size()!=1||!ws.关系.empty()||!ws.值.empty()
+        ||!ws.属性槽变更.empty()||!ws.退出事实.empty())return false;
+    const auto&n=ws.节点.front();if(n.本地键.值!=1||n.种类!=节点种类::普通||n.属性类型表示)return false;
+    const auto&first=*f.首次写入结果;
+    if(first.状态!=L1所有者范围写入状态::成功||first.合同版本!=L1所有者范围CRUD合同版本
+        ||first.所有者!=owner_||first.写入幂等身份!=key||first.事实代次!=ws.期望事实代次+1
+        ||!first.是否形成内存权威发布||first.重试边界!=L1所有者范围重试边界::不适用
+        ||first.新编码映射.size()!=1)return false;
+    const auto id=映射编码(first,{1});if(!id||*id!=featureLayout_.特征组织关系类型)return false;
+    const auto guard=读取当前代次();if(!guard.成功()||guard.Gread<first.事实代次)return false;
+    const auto node=读节点(*id,guard.Gread);
+    return node.成功()&&node.事实->写入所有者==owner_&&node.事实->种类==节点种类::普通
+        &&!node.事实->属性类型表示&&node.事实->当前属性.empty()
+        &&node.事实->创建事实代次==first.事实代次&&!node.事实->退出事实代次;
+}
+
+场景特征组织历史结果 场景类数据服务::读特征路径(std::uint64_t g,std::uint64_t h,特征信息身份 feature,std::uint64_t budget)const{
+    场景特征组织事实 fact;fact.Gread=g;fact.H=h;fact.角色=场景根角色::特征;fact.实例=feature.编码;
+    std::vector<L1所有者范围关系事实> reverse;std::unordered_set<std::uint64_t> visited;
+    auto child=feature.编码;
+    for(std::uint64_t depth=0;;++depth){
+        if(!visited.insert(child.值).second)return {1,场景角色数据状态::内部不一致,g,h,std::nullopt};
+        auto roots=查询关系(g,h,L1所有者范围关系端点方向::目标,child,layout_.根绑定关系类型);
+        if(!roots.成功())return {1,roots.状态,roots.Gread,h,std::nullopt};
+        if(roots.关系.size()>4096)return {1,场景角色数据状态::数量预算不足,g,h,std::nullopt};
+        if(!roots.关系.empty()){
+            if(roots.关系.size()!=1||roots.关系.front().写入所有者!=owner_
+                ||roots.关系.front().目标节点!=child||roots.关系.front().关系类型节点!=layout_.根绑定关系类型
+                ||roots.关系.front().角色或顺序!=static_cast<std::int64_t>(场景根角色::特征))
+                return {1,场景角色数据状态::内部不一致,g,h,std::nullopt};
+            if(reverse.empty())return {1,场景角色数据状态::实例未组织,g,h,std::nullopt};
+            const auto c=roots.关系.front().源节点;auto scene=读角色(g,h,c);
+            if(!scene.成功({2,g,h,c}))return {1,scene.状态,scene.Gread,h,std::nullopt};
+            if(scene.角色->四根[0].根.编码!=child)return {1,场景角色数据状态::内部不一致,g,h,std::nullopt};
+            fact.场景角色=*scene.角色;fact.根=child;break;
+        }
+        if(depth>=budget)return {1,场景角色数据状态::数量预算不足,g,h,std::nullopt};
+        auto incoming=查询关系(g,h,L1所有者范围关系端点方向::目标,child,featureLayout_.特征组织关系类型);
+        if(!incoming.成功())return {1,incoming.状态,incoming.Gread,h,std::nullopt};
+        if(incoming.关系.size()>4096)return {1,场景角色数据状态::数量预算不足,g,h,std::nullopt};
+        if(incoming.关系.empty())return {1,reverse.empty() ? 场景角色数据状态::实例未组织 : 场景角色数据状态::内部不一致,g,h,std::nullopt};
+        if(incoming.关系.size()!=1)return {1,场景角色数据状态::内部不一致,g,h,std::nullopt};
+        const auto&e=incoming.关系.front();
+        if(e.写入所有者!=owner_||e.关系类型节点!=featureLayout_.特征组织关系类型
+            ||e.角色或顺序!=1||e.目标节点!=child||e.创建事实代次>h
+            ||(e.退出事实代次&&*e.退出事实代次<=h))
+            return {1,场景角色数据状态::内部不一致,g,h,std::nullopt};
+        reverse.push_back(e);child=e.源节点;
+    }
+    std::reverse(reverse.begin(),reverse.end());
+    auto rootNode=读节点(fact.根,g);
+    if(!rootNode.成功())return {1,rootNode.状态==场景角色数据状态::未找到 ? 场景角色数据状态::内部不一致 : rootNode.状态,rootNode.Gread,h,std::nullopt};
+    if(rootNode.事实->写入所有者!=owner_||rootNode.事实->种类!=节点种类::普通
+        ||rootNode.事实->属性类型表示||!rootNode.事实->当前属性.empty()
+        ||rootNode.事实->创建事实代次>h||(rootNode.事实->退出事实代次&&*rootNode.事实->退出事实代次<=h))
+        return {1,场景角色数据状态::内部不一致,g,h,std::nullopt};
+    fact.路径节点.push_back(转节点(*rootNode.事实));
+    for(const auto&e:reverse){
+        fact.路径边.push_back(转边(e));
+        const 存在已知准确特征历史请求 request{1,g,h,
+            fact.场景角色.场景,e.目标节点};
+        auto f=existence_.读取已知准确特征历史(request);
+        if(!f.历史成功(request))return {1,存在特征到场景(f.状态),f.Gread,h,std::nullopt};
+        fact.路径节点.push_back({e.目标节点,
+            {f.见证->特征创建事实代次,f.见证->特征退出事实代次}});
+    }
+    场景特征组织历史结果 result{1,场景角色数据状态::已读取,g,h,std::move(fact)};
+    return result.成功({1,g,h,feature,budget}) ? std::move(result)
+        : 场景特征组织历史结果{1,场景角色数据状态::内部不一致,g,h,std::nullopt};
+}
+
+场景角色数据状态 场景类数据服务::核验当前已知准确特征(
+    const 场景特征组织请求&r,std::uint64_t& gread)const{
+    const 存在已知准确特征当前请求 request{1,r.G0,r.场景,r.特征.编码};
+    auto known=existence_.确认当前已知准确特征(request);gread=known.Gread;
+    return known.当前成功(request) ? 场景角色数据状态::已读取
+        : 存在特征到场景(known.状态);
+}
+
+场景角色数据状态 场景类数据服务::核验特征组织父(
+    const 场景特征组织请求&r,稳定编码 root,std::uint64_t& gread)const{
+    if(r.组织父!=root){
+        auto parentPath=读特征路径(r.G0,r.G0,{r.组织父},r.最大路径长度);gread=parentPath.Gread;
+        const 场景特征组织历史请求 parentPathRequest{1,r.G0,r.G0,{r.组织父},r.最大路径长度};
+        if(!parentPath.成功(parentPathRequest))return parentPath.状态;
+        if(parentPath.组织->场景角色.场景!=r.场景)return 场景角色数据状态::引用冲突;
+        if(parentPath.组织->路径边.size()>=r.最大路径长度)return 场景角色数据状态::数量预算不足;
+    }
+    return 场景角色数据状态::已读取;
+}
+
+场景角色数据状态 场景类数据服务::核验特征未组织(
+    const 场景特征组织请求&r,std::uint64_t& gread)const{
+    auto incoming=查询关系(r.G0,r.G0,L1所有者范围关系端点方向::目标,
+        r.特征.编码,featureLayout_.特征组织关系类型);gread=incoming.Gread;
+    if(!incoming.成功())return incoming.状态;
+    if(incoming.关系.size()>4096)return 场景角色数据状态::数量预算不足;
+    if(!incoming.关系.empty())return 场景角色数据状态::实例已组织;
+    auto outgoing=查询关系(r.G0,r.G0,L1所有者范围关系端点方向::源,
+        r.特征.编码,featureLayout_.特征组织关系类型);gread=outgoing.Gread;
+    if(!outgoing.成功())return outgoing.状态;
+    if(outgoing.关系.size()>4096)return 场景角色数据状态::数量预算不足;
+    if(!outgoing.关系.empty())return 场景角色数据状态::引用冲突;
+    return 场景角色数据状态::已读取;
+}
+
+场景角色数据状态 场景类数据服务::核验特征组织前置(
+    const 场景特征组织请求&r,std::uint64_t& gread)const{
+    auto scene=读角色(r.G0,r.G0,r.场景);gread=scene.Gread;
+    if(!scene.成功({2,r.G0,r.G0,r.场景}))return scene.状态;
+    auto status=核验当前已知准确特征(r,gread);if(status!=场景角色数据状态::已读取)return status;
+    status=核验特征组织父(r,scene.角色->四根[0].根.编码,gread);
+    if(status!=场景角色数据状态::已读取)return status;
+    return 核验特征未组织(r,gread);
+}
+
+场景特征组织写结果_v1 场景类数据服务::读回特征组织(
+    const 场景特征组织请求&r,场景角色数据状态 status,
+    const L1所有者范围写入结果& saved)const{
+    const auto guard=读取当前代次();
+    if(!guard.成功())return {1,场景角色数据状态::已可能发布,guard.Gread,saved.事实代次,std::nullopt};
+    const 存在已知准确特征历史请求 knownRequest{1,guard.Gread,
+        saved.事实代次,r.场景,r.特征.编码};
+    auto known=existence_.读取已知准确特征历史(knownRequest);
+    if(!known.历史成功(knownRequest))
+        return {1,场景角色数据状态::已可能发布,known.Gread,saved.事实代次,std::nullopt};
+    auto path=读特征路径(guard.Gread,saved.事实代次,r.特征,r.最大路径长度);
+    const 场景特征组织历史请求 pathRequest{1,guard.Gread,saved.事实代次,r.特征,r.最大路径长度};
+    if(!path.成功(pathRequest)||path.组织->场景角色.场景!=r.场景
+        ||path.组织->路径边.back().源!=r.组织父)
+        return {1,场景角色数据状态::已可能发布,path.Gread,saved.事实代次,std::nullopt};
+    const auto finalGuard=核验代次(guard.Gread);
+    if(!finalGuard.成功())return {1,场景角色数据状态::已可能发布,finalGuard.Gread,saved.事实代次,std::nullopt};
+    场景实例组织回执_v2 receipt{guard.Gread,saved.事实代次,r.场景,
+        path.组织->根,r.特征.编码,场景根角色::特征,path.组织->路径边.back()};
+    return {1,status,guard.Gread,saved.事实代次,std::move(receipt)};
+}
+
+场景角色数据状态 场景类数据服务::存在特征到场景(存在已知准确特征只读状态 s)noexcept{switch(s){case 存在已知准确特征只读状态::未找到:return 场景角色数据状态::未找到;case 存在已知准确特征只读状态::目标已退出:return 场景角色数据状态::目标已退出;case 存在已知准确特征只读状态::事实代次漂移:return 场景角色数据状态::事实代次漂移;case 存在已知准确特征只读状态::数量预算不足:return 场景角色数据状态::数量预算不足;case 存在已知准确特征只读状态::历史材料已清理:return 场景角色数据状态::历史材料已清理;case 存在已知准确特征只读状态::资源失败:return 场景角色数据状态::资源失败;case 存在已知准确特征只读状态::入口拒绝:return 场景角色数据状态::入口拒绝;default:return 场景角色数据状态::内部不一致;}}
+
+L1所有者范围写集请求 场景类数据服务::形成特征组织写集(std::uint64_t g,L1所有者范围写入幂等身份 key,稳定编码 parent,特征信息身份 feature)const{
+    L1所有者范围写集请求 ws{L1所有者范围CRUD合同版本,g,key};
+    ws.关系={{{1},parent,feature.编码,featureLayout_.特征组织关系类型,1}};return ws;
+}
+
+bool 场景类数据服务::普通幂等身份有效(L1所有者范围写入幂等身份 key)noexcept{
+    return key.值>1&&key!=场景特征组织扩展登记固定幂等身份;
+}
+
+} // namespace 海中鱼巣
 namespace 海中鱼巣 {
+
+
 
 inline 场景角色数据状态 场景类数据服务::状态到场景(状态类数据状态 s)noexcept{switch(s){case 状态类数据状态::未找到 : return 场景角色数据状态::未找到;case 状态类数据状态::目标已退出 : return 场景角色数据状态::目标已退出;case 状态类数据状态::正式特征类型未找到 : case 状态类数据状态::正式特征类型已退出 : return 场景角色数据状态::引用冲突;case 状态类数据状态::事实代次漂移 : return 场景角色数据状态::事实代次漂移;case 状态类数据状态::数量预算不足 : return 场景角色数据状态::数量预算不足;case 状态类数据状态::历史材料已清理 : return 场景角色数据状态::历史材料已清理;case 状态类数据状态::资源失败 : return 场景角色数据状态::资源失败;case 状态类数据状态::入口拒绝 : case 状态类数据状态::准确值不相容 : case 状态类数据状态::旧格式不支持 : return 场景角色数据状态::入口拒绝;case 状态类数据状态::引用冲突 : default : return 场景角色数据状态::内部不一致;}}
 inline 场景角色数据状态 场景类数据服务::动态到场景(动态数据状态 s)noexcept{switch(s){case 动态数据状态::未找到 : return 场景角色数据状态::未找到;case 动态数据状态::目标已退出 : return 场景角色数据状态::目标已退出;case 动态数据状态::来源未找到 : case 动态数据状态::来源已退出 : case 动态数据状态::引用冲突 : return 场景角色数据状态::引用冲突;case 动态数据状态::数量预算不足 : return 场景角色数据状态::数量预算不足;case 动态数据状态::事实代次漂移 : return 场景角色数据状态::事实代次漂移;case 动态数据状态::历史材料已清理 : return 场景角色数据状态::历史材料已清理;case 动态数据状态::资源失败 : return 场景角色数据状态::资源失败;case 动态数据状态::入口拒绝 : return 场景角色数据状态::入口拒绝;default : return 场景角色数据状态::内部不一致;}}
@@ -313,8 +635,17 @@ inline 场景组织历史结果 场景类数据服务::读路径(std::uint64_t g
 inline 场景组织历史结果 场景类数据服务::读取实例组织历史(const 场景组织历史请求&r)const{if(r.版本!=2||!r.Gread||!r.H||r.H>r.Gread||!有效(r.实例)||!r.最大路径长度||r.最大路径长度>4096||(r.角色!=场景根角色::状态&&r.角色!=场景根角色::动态))return{};std::uint64_t confirmed=0;try{auto first=核验代次(r.Gread);if(!first.成功())return {2,first.状态,first.Gread,r.H,std::nullopt};confirmed=first.Gread;auto result=读路径(r.Gread,r.H,r.角色,r.实例,r.最大路径长度);auto last=核验代次(r.Gread);if(!last.成功())return {2,last.状态,last.Gread,r.H,std::nullopt};return result;}catch(const std::bad_alloc&){return {2,场景角色数据状态::资源失败,confirmed,r.H,std::nullopt};}catch(...){return {2,场景角色数据状态::内部不一致,confirmed,r.H,std::nullopt};}}
 inline 场景动态组织历史结果 场景类数据服务::读取动态场景组织历史(const 场景动态组织历史请求&r)const{auto x=读取实例组织历史({r.版本,r.Gread,r.H,场景根角色::动态,r.动态.编码,r.最大路径长度});return {x.版本,x.状态,x.Gread,x.H,std::move(x.组织)};}
 
+
+
+
+
+
+
+
+
+
 inline 场景组织写结果_v2 场景类数据服务::组织(std::uint32_t v,std::uint64_t g,L1所有者范围写入幂等身份 key,稳定编码 c,稳定编码 parent,稳定编码 instance,std::uint64_t budget,场景根角色 role){
-    if(v!=2||!g||g==UINT64_MAX||key.值<=1||!有效(c)||!有效(parent)||!有效(instance)||!budget||budget>4096||parent==instance||(role!=场景根角色::状态&&role!=场景根角色::动态))return{};
+    if(v!=2||!g||g==UINT64_MAX||!普通幂等身份有效(key)||!有效(c)||!有效(parent)||!有效(instance)||!budget||budget>4096||parent==instance||(role!=场景根角色::状态&&role!=场景根角色::动态))return{};
     bool commitStarted=false;std::uint64_t published=0,confirmed=0;try{
     const auto expected=形成组织写集(g,key,parent,instance,role);
     const auto first=port_.读取首次写入材料({L1所有者范围首次写入读取合同版本,key});
@@ -352,7 +683,7 @@ inline 场景组织写结果_v2 场景类数据服务::组织(std::uint32_t v,st
     }catch(const std::bad_alloc&){return {2,commitStarted ? 场景角色数据状态::已可能发布 : 场景角色数据状态::资源失败,confirmed ? confirmed : published,commitStarted ? published : 0,std::nullopt};}catch(...){return {2,commitStarted ? 场景角色数据状态::已可能发布 : 场景角色数据状态::内部不一致,confirmed ? confirmed : published,commitStarted ? published : 0,std::nullopt};}
 }
 inline 场景组织写结果_v2 场景类数据服务::组织状态实例(const 场景状态组织请求&r){
-    if(r.版本!=2||!r.G0||r.G0==UINT64_MAX||r.幂等身份.值<=1||!有效(r.场景)||!有效(r.组织父)||!有效(r.状态)||!r.最大路径长度||r.最大路径长度>4096)return{};
+    if(r.版本!=2||!r.G0||r.G0==UINT64_MAX||!普通幂等身份有效(r.幂等身份)||!有效(r.场景)||!有效(r.组织父)||!有效(r.状态)||!r.最大路径长度||r.最大路径长度>4096)return{};
     try{
     const auto first=port_.读取首次写入材料({L1所有者范围首次写入读取合同版本,r.幂等身份});
     if(first.状态==L1所有者范围读取状态::成功)return 组织(r.版本,r.G0,r.幂等身份,r.场景,r.组织父,r.状态.编码,r.最大路径长度,场景根角色::状态);
@@ -364,7 +695,7 @@ inline 场景组织写结果_v2 场景类数据服务::组织状态实例(const 
     }catch(const std::bad_alloc&){return {2,场景角色数据状态::资源失败};}catch(...){return {2,场景角色数据状态::内部不一致};}
 }
 场景组织写结果_v2 场景类数据服务::组织动态实例(const 场景动态组织请求&r,const 动态结构只读提供者& d){
-    if(r.版本!=2||!r.G0||r.G0==UINT64_MAX||r.幂等身份.值<=1||!有效(r.场景)||!有效(r.组织父)||!有效(r.动态)||!r.最大路径长度||r.最大路径长度>4096)return{};
+    if(r.版本!=2||!r.G0||r.G0==UINT64_MAX||!普通幂等身份有效(r.幂等身份)||!有效(r.场景)||!有效(r.组织父)||!有效(r.动态)||!r.最大路径长度||r.最大路径长度>4096)return{};
     if(!d.绑定于(l1_))return {2,场景角色数据状态::内部不一致};
     try{
     const auto first=port_.读取首次写入材料({L1所有者范围首次写入读取合同版本,r.幂等身份});
@@ -379,11 +710,10 @@ inline 场景组织写结果_v2 场景类数据服务::组织状态实例(const 
 }
 
 } // namespace 海中鱼巣
-
 namespace 海中鱼巣 {
 
 inline 场景角色写结果 场景类数据服务::启用场景角色(const 场景角色启用请求&r){
-    if(r.版本!=2||!r.G0||r.G0==UINT64_MAX||r.幂等身份.值<=1||!有效(r.对象存在))return{};bool commitStarted=false;std::uint64_t published=0,confirmed=0;
+    if(r.版本!=2||!r.G0||r.G0==UINT64_MAX||!普通幂等身份有效(r.幂等身份)||!有效(r.对象存在))return{};bool commitStarted=false;std::uint64_t published=0,confirmed=0;
     try{
         const auto expected=形成启用写集(r);
         const auto first=port_.读取首次写入材料({L1所有者范围首次写入读取合同版本,r.幂等身份});
@@ -413,7 +743,7 @@ inline 场景角色写结果 场景类数据服务::启用场景角色(const 场
     }catch(const std::bad_alloc&){return {2,commitStarted ? 场景角色数据状态::已可能发布 : 场景角色数据状态::资源失败,confirmed ? confirmed : published,commitStarted ? published : 0,std::nullopt};}catch(...){return {2,commitStarted ? 场景角色数据状态::已可能发布 : 场景角色数据状态::内部不一致,confirmed ? confirmed : published,commitStarted ? published : 0,std::nullopt};}}
 
 inline 场景角色写结果 场景类数据服务::退出场景角色(const 场景角色退出请求&r){
-    if(r.版本!=2||!r.G0||r.G0==UINT64_MAX||r.幂等身份.值<=1||!有效(r.场景))return{};bool commitStarted=false;std::uint64_t published=0,confirmed=0;
+    if(r.版本!=2||!r.G0||r.G0==UINT64_MAX||!普通幂等身份有效(r.幂等身份)||!有效(r.场景))return{};bool commitStarted=false;std::uint64_t published=0,confirmed=0;
     try{
         const auto first=port_.读取首次写入材料({L1所有者范围首次写入读取合同版本,r.幂等身份});
         if(first.合同版本!=L1所有者范围首次写入读取合同版本||first.所有者!=owner_||first.写入幂等身份!=r.幂等身份)return {2,场景角色数据状态::内部不一致,first.读取事实代次,0,std::nullopt};
@@ -429,7 +759,11 @@ inline 场景角色写结果 场景类数据服务::退出场景角色(const 场
         }
         if(first.状态!=L1所有者范围读取状态::未找到)return {2,first.状态==L1所有者范围读取状态::资源失败 ? 场景角色数据状态::资源失败 : 场景角色数据状态::内部不一致,first.读取事实代次,0,std::nullopt};
         if(first.读取事实代次!=r.G0)return {2,场景角色数据状态::事实代次漂移,first.读取事实代次,0,std::nullopt};if(first.首次规范化写集||first.首次写入结果)return {2,场景角色数据状态::内部不一致,first.读取事实代次,0,std::nullopt};
-        auto old=读角色(r.G0,r.G0,r.场景);if(!old.成功({2,r.G0,r.G0,r.场景}))return {2,old.状态,old.Gread,0,std::nullopt};auto bs=查B组(1,r.G0,r.场景,1,65536);if(!bs.成功()){const auto s=bs.结果头.状态==状态使用绑定数据状态::事实代次漂移 ? 场景角色数据状态::事实代次漂移 : bs.结果头.状态==状态使用绑定数据状态::数量预算不足 ? 场景角色数据状态::数量预算不足 : bs.结果头.状态==状态使用绑定数据状态::历史材料已清理 ? 场景角色数据状态::历史材料已清理 : bs.结果头.状态==状态使用绑定数据状态::资源失败 ? 场景角色数据状态::资源失败 : 场景角色数据状态::内部不一致;return {2,s,bs.结果头.事实截止代次,0,std::nullopt};}if(!bs.绑定组.empty())return {2,场景角色数据状态::引用冲突,r.G0,0,std::nullopt};for(std::size_t i=1;i<=2;++i){auto type=i==1 ? layout_.状态组织关系类型 : layout_.动态组织关系类型;auto q=查询关系(r.G0,r.G0,L1所有者范围关系端点方向::源,old.角色->四根[i].根.编码,type);if(!q.成功()||!q.关系.empty())return {2,q.成功() ? 场景角色数据状态::引用冲突 : q.状态,q.Gread,0,std::nullopt};}
+        auto old=读角色(r.G0,r.G0,r.场景);if(!old.成功({2,r.G0,r.G0,r.场景}))return {2,old.状态,old.Gread,0,std::nullopt};auto bs=查B组(1,r.G0,r.场景,1,65536);if(!bs.成功()){const auto s=bs.结果头.状态==状态使用绑定数据状态::事实代次漂移 ? 场景角色数据状态::事实代次漂移 : bs.结果头.状态==状态使用绑定数据状态::数量预算不足 ? 场景角色数据状态::数量预算不足 : bs.结果头.状态==状态使用绑定数据状态::历史材料已清理 ? 场景角色数据状态::历史材料已清理 : bs.结果头.状态==状态使用绑定数据状态::资源失败 ? 场景角色数据状态::资源失败 : 场景角色数据状态::内部不一致;return {2,s,bs.结果头.事实截止代次,0,std::nullopt};}if(!bs.绑定组.empty())return {2,场景角色数据状态::引用冲突,r.G0,0,std::nullopt};
+        auto featureEdges=查询关系(r.G0,r.G0,L1所有者范围关系端点方向::源,
+            old.角色->四根[0].根.编码,featureLayout_.特征组织关系类型);
+        if(!featureEdges.成功()||!featureEdges.关系.empty())return {2,featureEdges.成功() ? 场景角色数据状态::引用冲突 : featureEdges.状态,featureEdges.Gread,0,std::nullopt};
+        for(std::size_t i=1;i<=2;++i){auto type=i==1 ? layout_.状态组织关系类型 : layout_.动态组织关系类型;auto q=查询关系(r.G0,r.G0,L1所有者范围关系端点方向::源,old.角色->四根[i].根.编码,type);if(!q.成功()||!q.关系.empty())return {2,q.成功() ? 场景角色数据状态::引用冲突 : q.状态,q.Gread,0,std::nullopt};}
         L1所有者范围写集请求 ws{L1所有者范围CRUD合同版本,r.G0,r.幂等身份};for(const auto&x : old.角色->四根){ws.退出事实.push_back(x.根.编码);ws.退出事实.push_back(x.绑定.编码);}std::sort(ws.退出事实.begin(),ws.退出事实.end());
         commitStarted=true;auto saved=串行提交(ws);published=saved.事实代次;auto status=映射场景写入状态(saved,场景角色数据状态::已退出,owner_,ws);
         if(status==场景角色数据状态::精确重复&&!竞争精确重复材料完整(saved,ws))return {2,场景角色数据状态::已可能发布,saved.事实代次,saved.事实代次,std::nullopt};
@@ -442,7 +776,7 @@ inline 场景角色写结果 场景类数据服务::退出场景角色(const 场
     }catch(const std::bad_alloc&){return {2,commitStarted ? 场景角色数据状态::已可能发布 : 场景角色数据状态::资源失败,confirmed ? confirmed : published,commitStarted ? published : 0,std::nullopt};}catch(...){return {2,commitStarted ? 场景角色数据状态::已可能发布 : 场景角色数据状态::内部不一致,confirmed ? confirmed : published,commitStarted ? published : 0,std::nullopt};}}
 
 inline 状态使用绑定创建结果 场景类数据服务::创建状态使用绑定(const 状态使用绑定创建请求&r){
-    if(r.合同版本!=1||!r.G0||r.G0==UINT64_MAX||r.幂等身份.值<=1||!有效(r.发生场景)||!有效(r.被描述存在)||!有效(r.状态))return{};bool commitStarted=false;std::uint64_t published=0,confirmed=0;
+    if(r.合同版本!=1||!r.G0||r.G0==UINT64_MAX||!普通幂等身份有效(r.幂等身份)||!有效(r.发生场景)||!有效(r.被描述存在)||!有效(r.状态))return{};bool commitStarted=false;std::uint64_t published=0,confirmed=0;
     try{
         const auto expected=形成绑定写集(r);
         const auto first=port_.读取首次写入材料({L1所有者范围首次写入读取合同版本,r.幂等身份});
@@ -472,7 +806,7 @@ inline 状态使用绑定创建结果 场景类数据服务::创建状态使用�
     }catch(const std::bad_alloc&){return {{commitStarted ? 状态使用绑定数据状态::已可能发布 : 状态使用绑定数据状态::资源失败,1,confirmed ? confirmed : published,commitStarted ? std::optional<std::uint64_t>{published} : std::nullopt},std::nullopt};}catch(...){return {{commitStarted ? 状态使用绑定数据状态::已可能发布 : 状态使用绑定数据状态::内部不一致,1,confirmed ? confirmed : published,commitStarted ? std::optional<std::uint64_t>{published} : std::nullopt},std::nullopt};}}
 
 inline 状态使用绑定退出结果 场景类数据服务::退出状态使用绑定(const 状态使用绑定退出请求&r){
-    if(r.合同版本!=1||!r.G0||r.G0==UINT64_MAX||r.幂等身份.值<=1||!有效(r.身份))return{};bool commitStarted=false;std::uint64_t published=0,confirmed=0;try{
+    if(r.合同版本!=1||!r.G0||r.G0==UINT64_MAX||!普通幂等身份有效(r.幂等身份)||!有效(r.身份))return{};bool commitStarted=false;std::uint64_t published=0,confirmed=0;try{
     const auto first=port_.读取首次写入材料({L1所有者范围首次写入读取合同版本,r.幂等身份});
     if(first.合同版本!=L1所有者范围首次写入读取合同版本||first.所有者!=owner_||first.写入幂等身份!=r.幂等身份)return {{状态使用绑定数据状态::内部不一致,1,first.读取事实代次,std::nullopt},std::nullopt};
     if(first.状态==L1所有者范围读取状态::成功){
@@ -501,7 +835,6 @@ inline 状态使用绑定退出结果 场景类数据服务::退出状态使用�
 }
 
 } // namespace 海中鱼巣
-
 namespace 海中鱼巣 {
 
 inline 状态使用绑定读取结果 场景类数据服务::读B(std::uint64_t g,std::uint64_t h,状态使用绑定身份 bid)const{
@@ -529,7 +862,6 @@ inline 状态使用绑定组查询结果 场景类数据服务::按被描述存�
 inline 状态使用绑定组查询结果 场景类数据服务::按状态查询当前状态使用绑定组(const 状态使用绑定按状态查询请求&r)const{return 查B组(r.合同版本,r.G0,r.状态.编码,3,r.最大候选数量);}
 
 } // namespace 海中鱼巣
-
 namespace 海中鱼巣 {
 
 inline bool 场景类数据服务::布局形状有效(const 场景角色结构交付&v)noexcept{
@@ -549,6 +881,7 @@ inline bool 场景类数据服务::登记材料匹配()const{
     for(const auto id:ids){const auto n=读节点(id,guard.Gread);if(!n.成功()||n.事实->写入所有者!=owner_||n.事实->种类!=节点种类::普通||n.事实->属性类型表示||!n.事实->当前属性.empty()||n.事实->创建事实代次!=first.事实代次||n.事实->退出事实代次)return false;}
     return true;
 }
+
 
 inline 场景类数据服务::关系读取 场景类数据服务::查询关系(std::uint64_t g,std::uint64_t h,L1所有者范围关系端点方向 d,稳定编码 endpoint,稳定编码 type)const{
     const auto q=l1_.读取所有者范围历史关系组({L1所有者范围CRUD合同版本,d,endpoint,type,h});

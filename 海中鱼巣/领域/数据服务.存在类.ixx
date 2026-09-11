@@ -560,6 +560,12 @@ public:
         return &s == &第一层服务_;
     }
     存在历史读取结果 读取存在历史事实(const 存在历史读取请求& r) const {
+        return 读取存在历史事实核心(r, true);
+    }
+
+private:
+    存在历史读取结果 读取存在历史事实核心(
+        const 存在历史读取请求& r, bool 包含当前采用) const {
         using S = 存在历史读取状态;
         存在历史读取结果 o;
         o.Gread = r.Gread;
@@ -581,6 +587,7 @@ public:
             }
             if (first.事实代次 != r.Gread) {
                 o.状态 = S::事实代次漂移;
+                o.Gread = first.事实代次;
                 return o;
             }
             auto nr = 第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, r.宿主});
@@ -590,6 +597,7 @@ public:
             }
             if (nr.读取事实代次 != r.Gread) {
                 o.状态 = S::事实代次漂移;
+                o.Gread = nr.读取事实代次;
                 return o;
             }
             auto n = nr.事实 ? std::get_if<L1所有者范围节点事实>(&*nr.事实) : nullptr;
@@ -626,6 +634,7 @@ public:
                 }
                 if (rr.读取事实代次 != r.Gread) {
                     o.状态 = S::事实代次漂移;
+                    o.Gread = rr.读取事实代次;
                     return o;
                 }
                 if (rr.合同版本 != L1所有者范围CRUD合同版本 || rr.方向 != L1所有者范围关系端点方向::源
@@ -655,9 +664,10 @@ public:
             }
             if (last.事实代次 != r.Gread) {
                 o.状态 = S::事实代次漂移;
+                o.Gread = last.事实代次;
                 return o;
             }
-            if(有效(当前采用关系类型_)) {
+            if(包含当前采用 && 有效(当前采用关系类型_)) {
                 try {
                     snapshot.当前采用组=读取采用组(r.宿主,r.Gread,r.H,r.关系预算).采用;
                     if(snapshot.当前采用组.size()>r.关系预算-count){o.状态=S::数量预算不足;return o;}
@@ -686,6 +696,7 @@ public:
             return o;
         }
     }
+public:
     存在特征成员历史结果 读取特征成员历史事实(const 存在特征成员历史请求& r) const {
         using S = 存在历史读取状态;
         存在特征成员历史结果 o;
@@ -870,6 +881,8 @@ public:
         }
     }
 
+public:
+
     存在身份来源历史见证读取结果 读取存在身份来源历史见证(
         std::uint64_t Gread, std::uint64_t H,
         稳定编码 身份) const override {
@@ -938,6 +951,135 @@ public:
         } catch (...) {
             return 历史身份失败(存在结构身份只读状态::内部不一致,
                 读取守卫已成立 ? Gread : 0, 读取守卫已成立 ? H : 0);
+        }
+    }
+
+    存在已知准确特征读取结果 确认当前已知准确特征(
+        const 存在已知准确特征当前请求& r) const override {
+        const 存在已知准确特征历史请求 history{
+            r.版本, r.G0, r.G0, r.存在, r.特征};
+        auto out = 读取已知准确特征历史(history);
+        return out;
+    }
+
+    存在已知准确特征读取结果 读取已知准确特征历史(
+        const 存在已知准确特征历史请求& r) const override {
+        using S = 存在已知准确特征只读状态;
+        auto fail = [&](S state, std::uint64_t g = 0,
+                        std::uint64_t h = 0) {
+            return 存在已知准确特征读取结果{state,
+                存在已知准确特征只读合同版本, g, h,
+                r.存在, r.特征, std::nullopt};
+        };
+        if (r.版本 != 存在已知准确特征只读合同版本
+            || r.Gread == 0 || r.H == 0 || r.H > r.Gread
+            || !有效(r.存在) || !有效(r.特征) || r.存在 == r.特征)
+            return fail(S::入口拒绝);
+        bool guardEstablished = false;
+        try {
+            const auto identity = 读取存在身份来源历史见证(
+                r.Gread, r.H, r.存在);
+            auto mapIdentity = [](存在结构身份只读状态 state) noexcept {
+                switch (state) {
+                case 存在结构身份只读状态::入口拒绝: return S::入口拒绝;
+                case 存在结构身份只读状态::未找到: return S::未找到;
+                case 存在结构身份只读状态::目标已退出: return S::目标已退出;
+                case 存在结构身份只读状态::事实代次漂移: return S::事实代次漂移;
+                case 存在结构身份只读状态::历史材料已清理: return S::历史材料已清理;
+                case 存在结构身份只读状态::资源失败: return S::资源失败;
+                default: return S::内部不一致;
+                }
+            };
+            if (!identity.成功(r.Gread, r.H, r.存在))
+                return fail(mapIdentity(identity.状态), identity.Gread, r.H);
+            guardEstablished = true;
+
+            const auto existence = 读取存在历史事实核心(
+                {1, r.Gread, r.H, r.存在, 4096}, false);
+            auto mapExistence = [](存在历史读取状态 state) noexcept {
+                switch (state) {
+                case 存在历史读取状态::入口拒绝: return S::入口拒绝;
+                case 存在历史读取状态::未找到: return S::未找到;
+                case 存在历史读取状态::目标已退出: return S::目标已退出;
+                case 存在历史读取状态::事实代次漂移: return S::事实代次漂移;
+                case 存在历史读取状态::历史材料不可用: return S::历史材料已清理;
+                case 存在历史读取状态::资源失败: return S::资源失败;
+                case 存在历史读取状态::数量预算不足: return S::数量预算不足;
+                default: return S::内部不一致;
+                }
+            };
+            if (!existence.成功() || existence.Gread != r.Gread
+                || existence.H != r.H || !existence.存在
+                || existence.存在->结点 != r.存在)
+                return fail(existence.状态 == 存在历史读取状态::已读取
+                        ? S::内部不一致 : mapExistence(existence.状态),
+                    existence.Gread, r.H);
+
+            const 存在类成员引用* known = nullptr;
+            for (const auto& member : existence.存在->特征组) {
+                if (member.目标结点 != r.特征) continue;
+                if (known) return fail(S::内部不一致, r.Gread, r.H);
+                known = &member;
+            }
+            if (!known) return fail(S::未找到, r.Gread, r.H);
+            if (!有效(known->成员关系) || !有效(known->目标结点))
+                return fail(S::内部不一致, r.Gread, r.H);
+
+            const 有界准确特征读取请求 featureRequest{
+                有界准确特征读取合同版本, r.Gread, r.H,
+                特征信息身份{r.特征}, {4096, 4096, 4096, 65536}};
+            const auto feature = 特征服务_.读取有界准确特征事实(featureRequest);
+            auto mapFeature = [](特征类标量状态 state) noexcept {
+                switch (state) {
+                case 特征类标量状态::入口拒绝: return S::入口拒绝;
+                case 特征类标量状态::未找到: return S::未找到;
+                case 特征类标量状态::已退出: return S::目标已退出;
+                case 特征类标量状态::事实代次漂移: return S::事实代次漂移;
+                case 特征类标量状态::历史材料不可用: return S::历史材料已清理;
+                case 特征类标量状态::预算不足: return S::数量预算不足;
+                case 特征类标量状态::资源失败: return S::资源失败;
+                default: return S::内部不一致;
+                }
+            };
+            if (!feature.成功() || !feature.事实
+                || feature.原请求.版本 != featureRequest.版本
+                || feature.原请求.Gread != r.Gread || feature.原请求.H != r.H
+                || feature.原请求.身份.编码 != r.特征
+                || feature.事实->Gread != r.Gread || feature.事实->H != r.H
+                || feature.事实->信息.身份.编码 != r.特征)
+            {
+                auto observed = r.Gread;
+                if (feature.状态 == 特征类标量状态::事实代次漂移) {
+                    const auto current = 读取当前事实代次();
+                    observed = current.first == 存在结构身份只读状态::已读取
+                        ? current.second : 0;
+                }
+                return fail(feature.状态 == 特征类标量状态::已读取
+                        ? S::内部不一致 : mapFeature(feature.状态),
+                    observed, r.H);
+            }
+
+            const auto last = 读取当前事实代次();
+            if (last.first != 存在结构身份只读状态::已读取)
+                return fail(mapIdentity(last.first), last.second, r.H);
+            if (last.second != r.Gread)
+                return fail(S::事实代次漂移, last.second, r.H);
+
+            存在已知准确特征读取结果 out{S::已读取,
+                存在已知准确特征只读合同版本, r.Gread, r.H,
+                r.存在, r.特征,
+                存在已知准确特征见证{known->成员关系, r.特征,
+                    feature.事实->创建G, feature.事实->退出G}};
+            return out.历史成功(r) ? out : fail(S::内部不一致, r.Gread, r.H);
+        } catch (const std::bad_alloc&) {
+            return fail(S::资源失败, guardEstablished ? r.Gread : 0,
+                r.H);
+        } catch (const std::length_error&) {
+            return fail(S::资源失败, guardEstablished ? r.Gread : 0,
+                r.H);
+        } catch (...) {
+            return fail(S::内部不一致, guardEstablished ? r.Gread : 0,
+                r.H);
         }
     }
     存在当前采用结果 读取当前采用(const 存在当前采用读取请求&) const;
