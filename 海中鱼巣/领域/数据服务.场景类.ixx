@@ -272,7 +272,8 @@ public:
 
   场景当前身份结果 确认当前场景角色(const 场景当前身份请求 &r) const override;
   场景角色历史结果 读取场景角色历史(const 场景历史身份请求 &r) const override;
-  场景角色写结果 启用场景角色(const 场景角色启用请求 &r);
+  场景树角色写结果 启用场景角色(const 场景角色启用请求 &r,
+                                  const 直接归属联合只读提供者 &);
   场景角色写结果 退出场景角色(const 场景角色退出请求 &r);
 
   状态使用绑定创建结果 创建状态使用绑定(const 状态使用绑定创建请求 &r);
@@ -310,8 +311,6 @@ public:
   场景树角色写结果 启用并建立场景树根(const 场景树根启用请求 &,
                                       const 直接归属联合只读提供者 &);
   场景树角色写结果 启用并接纳直接子场景(const 场景直接子场景启用请求 &,
-                                        const 直接归属联合只读提供者 &);
-  场景树角色写结果 启用并纳入既有归属树(const 场景既有归属角色启用请求 &,
                                         const 直接归属联合只读提供者 &);
   场景直接包含单项结果 新增直接存在成员(const 场景直接包含写请求 &,
                                         const 直接归属联合只读提供者 &);
@@ -437,7 +436,9 @@ private:
   static std::optional<稳定编码> 映射编码(const L1所有者范围写入结果 &,
                                           L1所有者范围写集本地键);
   L1所有者范围写入结果 串行提交(const L1所有者范围写集请求 &);
-  L1所有者范围写集请求 形成启用写集(const 场景角色启用请求 &) const;
+  L1所有者范围写集请求 形成启用写集(std::uint64_t,
+                                        L1所有者范围写入幂等身份,
+                                        稳定编码) const;
   L1所有者范围写集请求 形成绑定写集(const 状态使用绑定创建请求 &) const;
   L1所有者范围写集请求 形成组织写集(std::uint64_t, L1所有者范围写入幂等身份,
                                     稳定编码, 稳定编码, 场景根角色) const;
@@ -1689,18 +1690,18 @@ inline L1所有者范围写入结果
   return port_.提交所有者范围中性写集(ws);
 }
 
-inline L1所有者范围写集请求
-场景类数据服务::形成启用写集(const 场景角色启用请求 &r) const {
-  L1所有者范围写集请求 ws{L1所有者范围CRUD合同版本, r.G0, r.幂等身份};
+inline L1所有者范围写集请求 场景类数据服务::形成启用写集(
+    std::uint64_t g, L1所有者范围写入幂等身份 key, 稳定编码 object) const {
+  L1所有者范围写集请求 ws{L1所有者范围CRUD合同版本, g, key};
   ws.关系.push_back({{1},
-                     r.对象存在,
+                     object,
                      layout_.绑定结构.场景族锚点,
                      layout_.绑定结构.场景族归属关系类型,
                      1});
   for (std::uint32_t i = 0; i < 4; ++i) {
     ws.节点.push_back({{i + 2}, 节点种类::普通, std::nullopt});
     ws.关系.push_back({{i + 6},
-                       r.对象存在,
+                       object,
                        L1所有者范围写集本地键{i + 2},
                        layout_.根绑定关系类型,
                        static_cast<std::int64_t>(i + 1)});
@@ -2160,142 +2161,21 @@ inline 场景组织写结果_v2
 } // namespace 海中鱼巣
 namespace 海中鱼巣 {
 
-inline 场景角色写结果 场景类数据服务::启用场景角色(const 场景角色启用请求 &r) {
-  if (r.版本 != 2 || !r.G0 || r.G0 == UINT64_MAX ||
-      !普通幂等身份有效(r.幂等身份) || !有效(r.对象存在))
+inline 场景树角色写结果 场景类数据服务::启用场景角色(
+    const 场景角色启用请求 &r, const 直接归属联合只读提供者 &joint) {
+  if (r.版本 != 3 || !有效(r.父场景))
     return {};
-  bool commitStarted = false;
-  std::uint64_t published = 0, confirmed = 0;
-  try {
-    const auto expected = 形成启用写集(r);
-    const auto first =
-        port_.读取首次写入材料({L1所有者范围首次写入读取合同版本, r.幂等身份});
-    if (first.合同版本 != L1所有者范围首次写入读取合同版本 ||
-        first.所有者 != owner_ || first.写入幂等身份 != r.幂等身份)
-      return {2, 场景角色数据状态::内部不一致, first.读取事实代次, 0,
-              std::nullopt};
-    if (first.状态 == L1所有者范围读取状态::成功) {
-      if (!first.首次规范化写集 || !写集相同(*first.首次规范化写集, expected))
-        return {2, 场景角色数据状态::幂等冲突, first.读取事实代次, 0,
-                std::nullopt};
-      if (!first.首次写入结果 ||
-          first.首次写入结果->状态 != L1所有者范围写入状态::成功 ||
-          !写入头完整(*first.首次写入结果, r.幂等身份, r.G0) ||
-          !写入映射完整(*first.首次写入结果, expected))
-        return {2, 场景角色数据状态::内部不一致, first.读取事实代次, 0,
-                std::nullopt};
-      commitStarted = true;
-      const auto saved = 串行提交(*first.首次规范化写集);
-      published = saved.事实代次;
-      if (saved.状态 != L1所有者范围写入状态::精确重复) {
-        auto status =
-            映射场景写入状态(saved, 场景角色数据状态::已启用, owner_, expected);
-        if (status == 场景角色数据状态::已启用)
-          status = saved.是否形成内存权威发布 ? 场景角色数据状态::已可能发布
-                                              : 场景角色数据状态::内部不一致;
-        return {2, status, saved.事实代次,
-                status == 场景角色数据状态::已可能发布 ? saved.事实代次 : 0,
-                std::nullopt};
-      }
-      if (!写入头完整(saved, r.幂等身份, r.G0) ||
-          !写入映射完整(saved, expected) ||
-          saved.新编码映射 != first.首次写入结果->新编码映射)
-        return {2, 场景角色数据状态::已可能发布, saved.事实代次, saved.事实代次,
-                std::nullopt};
-      const auto guard = 读取当前代次();
-      if (!guard.成功())
-        return {2, 场景角色数据状态::已可能发布, guard.Gread, saved.事实代次,
-                std::nullopt};
-      confirmed = guard.Gread;
-      auto fact = 读角色(guard.Gread, saved.事实代次, r.对象存在);
-      if (!fact.成功({2, guard.Gread, saved.事实代次, r.对象存在}))
-        return {2, 场景角色数据状态::已可能发布, fact.Gread, saved.事实代次,
-                std::nullopt};
-      const auto finalGuard = 核验代次(guard.Gread);
-      if (!finalGuard.成功())
-        return {2, 场景角色数据状态::已可能发布, finalGuard.Gread,
-                saved.事实代次, std::nullopt};
-      return {2, 场景角色数据状态::精确重复, guard.Gread, saved.事实代次,
-              std::move(fact.角色)};
-    }
-    if (first.状态 != L1所有者范围读取状态::未找到)
-      return {2,
-              first.状态 == L1所有者范围读取状态::资源失败
-                  ? 场景角色数据状态::资源失败
-                  : 场景角色数据状态::内部不一致,
-              first.读取事实代次, 0, std::nullopt};
-    if (first.读取事实代次 != r.G0)
-      return {2, 场景角色数据状态::事实代次漂移, first.读取事实代次, 0,
-              std::nullopt};
-    if (first.首次规范化写集 || first.首次写入结果)
-      return {2, 场景角色数据状态::内部不一致, first.读取事实代次, 0,
-              std::nullopt};
-    auto e = existence_.确认当前存在结构身份(r.G0, r.对象存在);
-    if (!e.成功(r.G0))
-      return {2, 存在到场景(e.状态), e.Gread, 0, std::nullopt};
-    auto old = 读角色(r.G0, r.G0, r.对象存在);
-    if (old.状态 == 场景角色数据状态::已读取)
-      return {2, 场景角色数据状态::场景角色已存在, r.G0, 0, std::nullopt};
-    if (old.状态 != 场景角色数据状态::场景角色未启用)
-      return {2, old.状态, old.Gread, 0, std::nullopt};
-    commitStarted = true;
-    auto saved = 串行提交(expected);
-    published = saved.事实代次;
-    auto status =
-        映射场景写入状态(saved, 场景角色数据状态::已启用, owner_, expected);
-    if (status == 场景角色数据状态::精确重复 &&
-        !竞争精确重复材料完整(saved, expected))
-      return {2, 场景角色数据状态::已可能发布, saved.事实代次, saved.事实代次,
-              std::nullopt};
-    if (status != 场景角色数据状态::已启用 &&
-        status != 场景角色数据状态::精确重复)
-      return {2, status, saved.事实代次,
-              status == 场景角色数据状态::已可能发布 ? saved.事实代次 : 0,
-              std::nullopt};
-    if (!写入头完整(saved, r.幂等身份, r.G0) || !写入映射完整(saved, expected))
-      return {2,
-              saved.是否形成内存权威发布 ||
-                      saved.状态 == L1所有者范围写入状态::精确重复
-                  ? 场景角色数据状态::已可能发布
-                  : 场景角色数据状态::内部不一致,
-              saved.事实代次,
-              saved.是否形成内存权威发布 ||
-                      saved.状态 == L1所有者范围写入状态::精确重复
-                  ? saved.事实代次
-                  : 0,
-              std::nullopt};
-    const auto guard = 读取当前代次();
-    if (!guard.成功())
-      return {2, 场景角色数据状态::已可能发布, guard.Gread, saved.事实代次,
-              std::nullopt};
-    confirmed = guard.Gread;
-    auto fact = 读角色(guard.Gread, saved.事实代次, r.对象存在);
-    if (!fact.成功({2, guard.Gread, saved.事实代次, r.对象存在}))
-      return {2, 场景角色数据状态::已可能发布, fact.Gread, saved.事实代次,
-              std::nullopt};
-    const auto finalGuard = 核验代次(guard.Gread);
-    if (!finalGuard.成功())
-      return {2, 场景角色数据状态::已可能发布, finalGuard.Gread, saved.事实代次,
-              std::nullopt};
-    return {2, status, guard.Gread, saved.事实代次, std::move(fact.角色)};
-  } catch (const std::bad_alloc &) {
-    return {2,
-            commitStarted ? 场景角色数据状态::已可能发布
-                          : 场景角色数据状态::资源失败,
-            confirmed ? confirmed : published, commitStarted ? published : 0,
-            std::nullopt};
-  } catch (...) {
-    return {2,
-            commitStarted ? 场景角色数据状态::已可能发布
-                          : 场景角色数据状态::内部不一致,
-            confirmed ? confirmed : published, commitStarted ? published : 0,
-            std::nullopt};
-  }
+  return 启用并接纳直接子场景(
+      {1, r.G0, r.幂等身份, r.对象存在, r.父场景, r.最大关系数量,
+       r.最大祖先数量},
+      joint);
 }
 
+
 inline 场景角色写结果 场景类数据服务::退出场景角色(const 场景角色退出请求 &r) {
-  if (r.版本 != 2 || !r.G0 || r.G0 == UINT64_MAX ||
-      !普通幂等身份有效(r.幂等身份) || !有效(r.场景))
+  if (r.版本 != 3 || !r.G0 || r.G0 == UINT64_MAX ||
+      !普通幂等身份有效(r.幂等身份) || !有效(r.场景) ||
+      !有效(r.父场景) || r.场景 == r.父场景)
     return {};
   bool commitStarted = false;
   std::uint64_t published = 0, confirmed = 0;
@@ -2313,11 +2193,10 @@ inline 场景角色写结果 场景类数据服务::退出场景角色(const 场
       const auto &ws = *first.首次规范化写集;
       if (ws.期望事实代次 != r.G0 || ws.写入幂等身份 != r.幂等身份 ||
           !ws.节点.empty() || !ws.关系.empty() || !ws.值.empty() ||
-          !ws.属性槽变更.empty() || ws.退出事实.size() != 8 ||
+          !ws.属性槽变更.empty() || ws.退出事实.size() != 10 ||
           !std::is_sorted(ws.退出事实.begin(), ws.退出事实.end()) ||
           first.首次写入结果->状态 != L1所有者范围写入状态::成功 ||
-          !写入头完整(*first.首次写入结果, r.幂等身份, r.G0) ||
-          !写入映射完整(*first.首次写入结果, ws))
+          !写入头完整(*first.首次写入结果, r.幂等身份, r.G0))
         return {2, 场景角色数据状态::幂等冲突, first.读取事实代次, 0,
                 std::nullopt};
       commitStarted = true;
@@ -2351,6 +2230,31 @@ inline 场景角色写结果 场景类数据服务::退出场景角色(const 场
         actual.push_back(x.根.编码);
         actual.push_back(x.绑定.编码);
       }
+      std::size_t parentCount = 0, proofCount = 0;
+      for (const auto id : ws.退出事实) {
+        if (std::find(actual.begin(), actual.end(), id) != actual.end())
+          continue;
+        const auto edge = 读关系(id, guard.Gread);
+        if (!edge.成功())
+          return {2, 场景角色数据状态::幂等冲突, guard.Gread, 0, std::nullopt};
+        if (edge.事实->源节点 == edge.事实->目标节点)
+          return {2, 场景角色数据状态::幂等冲突, guard.Gread, 0, std::nullopt};
+        if (edge.事实->创建事实代次 > saved.事实代次 - 1 ||
+            edge.事实->退出事实代次 != saved.事实代次)
+          return {2, 场景角色数据状态::幂等冲突, guard.Gread, 0, std::nullopt};
+        if (edge.事实->关系类型节点 == includeLayout_.直接子场景关系类型 &&
+            edge.事实->源节点 == r.父场景 && edge.事实->目标节点 == r.场景 &&
+            edge.事实->角色或顺序 == 1)
+          ++parentCount;
+        else if (edge.事实->关系类型节点 == includeLayout_.树归属关系类型 &&
+                 edge.事实->源节点 == r.场景 && edge.事实->角色或顺序 == 1)
+          ++proofCount;
+        else
+          return {2, 场景角色数据状态::幂等冲突, guard.Gread, 0, std::nullopt};
+        actual.push_back(id);
+      }
+      if (parentCount != 1 || proofCount != 1)
+        return {2, 场景角色数据状态::幂等冲突, guard.Gread, 0, std::nullopt};
       std::sort(actual.begin(), actual.end());
       if (actual != ws.退出事实)
         return {2, 场景角色数据状态::已可能发布, guard.Gread, saved.事实代次,
@@ -2377,9 +2281,34 @@ inline 场景角色写结果 场景类数据服务::退出场景角色(const 场
     auto old = 读角色(r.G0, r.G0, r.场景);
     if (!old.成功({2, r.G0, r.G0, r.场景}))
       return {2, old.状态, old.Gread, 0, std::nullopt};
+    const 场景直接包含反向读取请求 parentRequest{1, r.G0, r.场景, 4096};
+    const auto parents = 读取当前场景包含父组(parentRequest);
+    if (!parents.父组读取成功(parentRequest)) {
+      const auto state =
+          parents.结果头.状态 == 场景直接包含状态::事实代次漂移
+              ? 场景角色数据状态::事实代次漂移
+          : parents.结果头.状态 == 场景直接包含状态::数量预算不足
+              ? 场景角色数据状态::数量预算不足
+          : parents.结果头.状态 == 场景直接包含状态::资源失败
+              ? 场景角色数据状态::资源失败
+              : 场景角色数据状态::内部不一致;
+      return {2, state, parents.结果头.Gread, 0, std::nullopt};
+    }
+    const auto parentIt = std::find_if(
+        parents.包含组.begin(), parents.包含组.end(), [&](const auto &x) {
+          return x.种类 == 场景直接包含种类::子场景 &&
+                 x.父场景 == r.父场景 && x.成员 == r.场景;
+        });
+    if (parentIt == parents.包含组.end() || parents.包含组.size() != 1)
+      return {2, 场景角色数据状态::引用冲突, r.G0, 0, std::nullopt};
+    const auto position = 读取当前场景角色位置({1, r.G0, r.场景});
+    if (!position.成功({1, r.G0, r.场景}) || !position.角色 ||
+        position.角色->位置 == 直接归属场景位置::场景树根 ||
+        !position.角色->树证明关系)
+      return {2, 场景角色数据状态::引用冲突, r.G0, 0, std::nullopt};
     const 稳定编码 roleDependencies[]{
-        includeLayout_.根标记关系类型, includeLayout_.树归属关系类型,
-        includeLayout_.直接存在成员关系类型, includeLayout_.直接子场景关系类型};
+        includeLayout_.根标记关系类型, includeLayout_.直接存在成员关系类型,
+        includeLayout_.直接子场景关系类型};
     for (const auto type : roleDependencies) {
       auto q = 查询关系(r.G0, r.G0, L1所有者范围关系端点方向::源, r.场景, type);
       if (!q.成功())
@@ -2423,6 +2352,8 @@ inline 场景角色写结果 场景类数据服务::退出场景角色(const 场
       ws.退出事实.push_back(x.根.编码);
       ws.退出事实.push_back(x.绑定.编码);
     }
+    ws.退出事实.push_back(parentIt->关系.编码);
+    ws.退出事实.push_back(*position.角色->树证明关系);
     std::sort(ws.退出事实.begin(), ws.退出事实.end());
     commitStarted = true;
     auto saved = 串行提交(ws);
@@ -4365,7 +4296,7 @@ inline std::optional<场景树角色写结果> 场景类数据服务::尝试重�
     return out;
   }
   const auto recordedRoot = rootMarker ? object : *recordedProofTarget;
-  auto expected = 形成启用写集({2, g, key, object});
+  auto expected = 形成启用写集(g, key, object);
   expected.关系.push_back({{10}, object,
                            rootMarker ? includeLayout_.树登记锚点 : recordedRoot,
                            rootMarker ? includeLayout_.根标记关系类型
@@ -4637,7 +4568,7 @@ inline 场景树角色写结果 场景类数据服务::启用树角色核心(
                                  : 场景直接包含状态::内部不一致;
       return out;
     }
-    auto ws = 形成启用写集({2, g, key, object});
+    auto ws = 形成启用写集(g, key, object);
     ws.关系.push_back({{10},
                        object,
                        rootMarker ? includeLayout_.树登记锚点 : *treeRoot,
@@ -4792,61 +4723,6 @@ inline 场景树角色写结果
                          r.最大关系数量, r.最大祖先数量, joint);
 }
 
-inline 场景树角色写结果
-场景类数据服务::启用并纳入既有归属树(const 场景既有归属角色启用请求 &r,
-                                      const 直接归属联合只读提供者 &joint) {
-  if (r.版本 != 1 || r.最大关系数量 < 1 || r.最大关系数量 > 4096 ||
-      r.最大祖先数量 < 1 || r.最大祖先数量 > 4096 || !joint.绑定于(l1_))
-    return {};
-  if (auto replay = 尝试重放树角色(
-          r.G0, r.幂等身份, r.对象存在, std::nullopt, r.请求直接父, false,
-          r.最大关系数量, r.最大祖先数量, joint))
-    return *replay;
-  const 直接归属联合父读取请求 pr{1, r.G0, r.对象存在, r.最大关系数量};
-  const auto direct = joint.读取当前联合父(pr);
-  if (!direct.父读取成功(pr) || !direct.父 || direct.父->父 != r.请求直接父)
-    return {};
-  std::unordered_set<std::uint64_t> seen;
-  std::unordered_set<std::uint64_t> relations;
-  relations.insert(direct.父->关系.值);
-  auto budgetFailure = [&]() {
-    场景树角色写结果 out;
-    out.结果头 = {场景直接包含状态::数量预算不足, 1, r.G0, r.G0,
-                  std::nullopt};
-    return out;
-  };
-  if (relations.size() > r.最大关系数量)
-    return budgetFailure();
-  稳定编码 cursor = r.请求直接父;
-  for (std::uint64_t i = 0; i < r.最大祖先数量; ++i) {
-    if (!seen.insert(cursor.值).second)
-      return {};
-    const auto role = joint.读取当前场景角色位置({1, r.G0, cursor});
-    if (!role.成功({1, r.G0, cursor}))
-      return {};
-    if (role.角色) {
-      if (!role.角色->树根)
-        return {};
-      if (!role.角色->树证明关系 ||
-          !relations.insert(role.角色->树证明关系->值).second)
-        return {};
-      if (relations.size() > r.最大关系数量)
-        return budgetFailure();
-      return 启用树角色核心(r.G0, r.幂等身份, r.对象存在, std::nullopt, cursor,
-                             direct.父, role.角色->树根, false,
-                             r.最大关系数量, r.最大祖先数量, joint);
-    }
-    const auto up = joint.读取当前联合父({1, r.G0, cursor, r.最大关系数量});
-    if (!up.父读取成功({1, r.G0, cursor, r.最大关系数量}) || !up.父)
-      return {};
-    if (!relations.insert(up.父->关系.值).second)
-      return {};
-    if (relations.size() > r.最大关系数量)
-      return budgetFailure();
-    cursor = up.父->父;
-  }
-  return budgetFailure();
-}
 
 inline 场景直接包含单项结果
 场景类数据服务::读取直接包含历史(const 场景直接包含历史读取请求 &r) const {

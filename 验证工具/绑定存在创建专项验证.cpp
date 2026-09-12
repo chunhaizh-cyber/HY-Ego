@@ -325,6 +325,39 @@ int main(int argc, char **argv) {
     auto comp = create(compQ, "single-owner-composition");
     auto deepQ = request(K::场景成员, child.事实->新存在);
     auto deep = create(deepQ, "child-scene-member");
+    auto exitChildQ = request(K::直接子场景, C);
+    auto exitChild = create(exitChildQ, "parent-bound-child-for-exit");
+    const auto beforeBadExit = 当前代次(l1);
+    场景角色退出请求 zeroParentExit{
+        3, beforeBadExit, {7991}, exitChild.事实->新存在, {}};
+    auto zeroParentRejected = scene.退出场景角色(zeroParentExit);
+    要求(zeroParentRejected.状态 == 场景角色数据状态::入口拒绝 &&
+             当前代次(l1) == beforeBadExit,
+         "scene-exit-requires-parent");
+    场景角色退出请求 exitScene{
+        3, 当前代次(l1), {7992}, exitChild.事实->新存在, C};
+    auto sceneExited = scene.退出场景角色(exitScene);
+    if (!sceneExited.退出成功(exitScene))
+      std::cerr << "scene-exit-status=" << int(sceneExited.状态)
+                << " G=" << sceneExited.Gread
+                << " H=" << sceneExited.首次发布代次 << "\n";
+    要求(sceneExited.退出成功(exitScene), "scene-parent-and-role-atomic-exit");
+    const auto afterSceneExit = 当前代次(l1);
+    auto sceneExitReplay = scene.退出场景角色(exitScene);
+    if (!sceneExitReplay.退出成功(exitScene))
+      std::cerr << "scene-exit-replay-status=" << int(sceneExitReplay.状态)
+                << " G=" << sceneExitReplay.Gread
+                << " H=" << sceneExitReplay.首次发布代次 << "\n";
+    要求(sceneExitReplay.退出成功(exitScene) &&
+             sceneExitReplay.状态 == 场景角色数据状态::精确重复 &&
+             当前代次(l1) == afterSceneExit,
+         "scene-parent-exit-exact-replay");
+    auto wrongExit = exitScene;
+    wrongExit.父场景 = child.事实->新存在;
+    auto wrongExitResult = scene.退出场景角色(wrongExit);
+    要求(wrongExitResult.状态 == 场景角色数据状态::幂等冲突 &&
+             当前代次(l1) == afterSceneExit,
+         "scene-exit-same-key-different-parent");
     for (const auto *a : {&member, &child, &comp, &deep}) {
       const auto g = 当前代次(l1);
       直接归属联合父读取请求 q{1, g, a->事实->新存在, 100};
