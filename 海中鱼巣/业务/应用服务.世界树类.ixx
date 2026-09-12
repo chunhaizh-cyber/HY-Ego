@@ -9,6 +9,7 @@ module;
 export module 海中鱼巣.业务.应用服务.世界树类;
 export import 海中鱼巣.领域.数据服务.存在类;
 export import 海中鱼巣.领域.数据服务.场景类;
+export import 海中鱼巣.领域.数据服务.绑定存在;
 export namespace 海中鱼巣 {
 inline constexpr std::uint32_t 世界树应用合同版本 = 2;
 enum class 世界树操作阶段 : std::uint8_t {
@@ -74,37 +75,25 @@ struct 世界树成员移动请求 final {
   friend bool operator==(const 世界树成员移动请求 &,
                          const 世界树成员移动请求 &) = default;
 };
+struct 世界树绑定创建预算 final {
+  std::uint64_t 最大场景数量 = 0, 最大关系数量 = 0, 最大祖先数量 = 0;
+  friend bool operator==(const 世界树绑定创建预算 &, const 世界树绑定创建预算 &) = default;
+};
 struct 世界树场景创建请求 final {
-  std::uint32_t 版本 = 2;
-  std::uint64_t 观察G0 = 0, 存在创建期望G0 = 0;
-  L1所有者范围写入幂等身份 存在幂等身份{}, 场景幂等身份{};
+  std::uint32_t 版本 = 3;
+  std::uint64_t G0 = 0;
+  L1所有者范围写入幂等身份 组合幂等身份{}, 存在幂等身份{}, 场景幂等身份{};
   稳定编码 父场景{};
-  std::optional<场景直接子场景启用请求> 已固定第二阶段请求;
-  世界树读取预算 预算;
-  friend bool operator==(const 世界树场景创建请求 &a,
-                         const 世界树场景创建请求 &b) noexcept {
-    return a.版本 == b.版本 && a.观察G0 == b.观察G0 &&
-           a.存在创建期望G0 == b.存在创建期望G0 &&
-           a.存在幂等身份 == b.存在幂等身份 && a.场景幂等身份 == b.场景幂等身份 &&
-           a.父场景 == b.父场景 && a.已固定第二阶段请求 == b.已固定第二阶段请求 &&
-           a.预算 == b.预算;
-  }
+  世界树绑定创建预算 预算{};
+  friend bool operator==(const 世界树场景创建请求 &, const 世界树场景创建请求 &) = default;
 };
 struct 世界树存在创建请求 final {
-  std::uint32_t 版本 = 2;
-  std::uint64_t 观察G0 = 0, 存在创建期望G0 = 0;
-  L1所有者范围写入幂等身份 存在幂等身份{}, 接纳幂等身份{};
+  std::uint32_t 版本 = 3;
+  std::uint64_t G0 = 0;
+  L1所有者范围写入幂等身份 组合幂等身份{}, 存在幂等身份{}, 场景幂等身份{};
   稳定编码 目标场景{};
-  std::optional<场景直接包含写请求> 已固定第二阶段请求;
-  世界树读取预算 预算;
-  friend bool operator==(const 世界树存在创建请求 &a,
-                         const 世界树存在创建请求 &b) noexcept {
-    return a.版本 == b.版本 && a.观察G0 == b.观察G0 &&
-           a.存在创建期望G0 == b.存在创建期望G0 &&
-           a.存在幂等身份 == b.存在幂等身份 && a.接纳幂等身份 == b.接纳幂等身份 &&
-           a.目标场景 == b.目标场景 && a.已固定第二阶段请求 == b.已固定第二阶段请求 &&
-           a.预算 == b.预算;
-  }
+  世界树绑定创建预算 预算{};
+  friend bool operator==(const 世界树存在创建请求 &, const 世界树存在创建请求 &) = default;
 };
 struct 世界树结果头 final {
   std::uint32_t 版本 = 2;
@@ -114,6 +103,7 @@ struct 世界树结果头 final {
   std::optional<std::uint64_t> 首次发布H;
   std::optional<存在类数据状态> 存在原因;
   std::optional<场景直接包含状态> 场景原因;
+  std::optional<绑定存在创建状态> 绑定原因;
 };
 struct 世界树存在位置 final {
   稳定编码 存在{}, 所在场景{};
@@ -127,20 +117,12 @@ struct 世界树移动进度 final {
   场景直接包含迁移请求 已交换请求;
   std::optional<std::uint64_t> 首次发布H;
 };
-struct 世界树场景创建进度 final {
-  稳定编码 E{};
-  std::uint64_t 存在首次发布H = 0;
-  std::optional<场景直接子场景启用请求> 第二阶段请求;
-};
+
 struct 世界树场景创建投影 final {
   稳定编码 E{}, 父场景{};
   场景树节点当前事实 场景;
 };
-struct 世界树存在创建进度 final {
-  稳定编码 E{};
-  std::uint64_t 存在首次发布H = 0;
-  std::optional<场景直接包含写请求> 第二阶段请求;
-};
+
 struct 世界树存在创建投影 final {
   稳定编码 存在{};
   世界树存在位置 位置;
@@ -192,34 +174,96 @@ struct 世界树移动结果 final {
 };
 struct 世界树场景创建结果 final {
   世界树结果头 结果头;
-  std::optional<世界树场景创建请求> 原请求, 续跑请求;
-  std::optional<世界树场景创建进度> 进度;
+  std::optional<世界树场景创建请求> 原请求;
   std::optional<世界树场景创建投影> 投影;
   bool 成功(const 世界树场景创建请求 &r) const noexcept {
-    return r.版本 == 2 && 结果头.版本 == 2 &&
-           (结果头.状态 == 世界树操作状态::已创建场景并纳入 ||
-            结果头.状态 == 世界树操作状态::精确重复) &&
-           结果头.阶段 == 世界树操作阶段::现实树最终确认 && 结果头.Gread &&
-           结果头.首次发布H && *结果头.首次发布H <= 结果头.Gread && 原请求 &&
-           *原请求 == r && 投影 && 投影->父场景 == r.父场景 &&
-           投影->E == 投影->场景.场景角色.场景 &&
-           !续跑请求 && !进度 && !结果头.存在原因 && !结果头.场景原因;
+    if (!(r.版本 == 3 && 结果头.版本 == 3 &&
+          (结果头.状态 == 世界树操作状态::已创建场景并纳入 ||
+           结果头.状态 == 世界树操作状态::精确重复) &&
+          结果头.阶段 == 世界树操作阶段::现实树最终确认 && 结果头.Gread &&
+          结果头.首次发布H && r.G0 < *结果头.首次发布H &&
+          *结果头.首次发布H <= 结果头.Gread && 原请求 && *原请求 == r && 投影 &&
+          投影->父场景 == r.父场景 && 投影->E == 投影->场景.场景角色.场景 &&
+          !结果头.存在原因 && !结果头.场景原因 &&
+          (结果头.绑定原因 == 绑定存在创建状态::已创建 ||
+           结果头.绑定原因 == 绑定存在创建状态::精确重复)))
+      return false;
+    const auto g = 结果头.Gread, h = *结果头.首次发布H;
+    const auto &n = 投影->场景;
+    const auto &role = n.场景角色;
+    const auto current = [&](const 场景事实生命周期 &life) {
+      return life.创建事实代次 && life.创建事实代次 <= g && !life.退出事实代次;
+    };
+    if (!有效(r.父场景) || !有效(投影->E) || 投影->E == r.父场景 ||
+        role.Gread != g || role.H != g ||
+        !存在身份来源历史见证完整(role.对象存在来源, g, 投影->E) ||
+        role.对象存在来源.节点生命周期.创建事实代次 != h ||
+        !有效(role.场景族锚点.编码) || !有效(role.场景族归属类型.编码) ||
+        !有效(role.根绑定类型.编码) || !current(role.场景族锚点.生命周期) ||
+        !current(role.场景族归属类型.生命周期) ||
+        !current(role.根绑定类型.生命周期) || !有效(role.场景角色登记边.编码) ||
+        role.场景角色登记边.源 != 投影->E ||
+        role.场景角色登记边.目标 != role.场景族锚点.编码 ||
+        role.场景角色登记边.关系类型 != role.场景族归属类型.编码 ||
+        role.场景角色登记边.角色或顺序 != 1 ||
+        role.场景角色登记边.生命周期.创建事实代次 != h ||
+        !current(role.场景角色登记边.生命周期))
+      return false;
+    for (std::size_t i = 0; i < 4; ++i) {
+      const auto &root = role.四根[i];
+      if (root.角色 != static_cast<场景根角色>(i + 1) || !有效(root.根.编码) ||
+          !有效(root.绑定.编码) || root.绑定.源 != 投影->E ||
+          root.绑定.目标 != root.根.编码 ||
+          root.绑定.关系类型 != role.根绑定类型.编码 ||
+          root.绑定.角色或顺序 != i + 1 || root.根.生命周期.创建事实代次 != h ||
+          root.绑定.生命周期.创建事实代次 != h || !current(root.根.生命周期) ||
+          !current(root.绑定.生命周期))
+        return false;
+      for (std::size_t j = 0; j < i; ++j)
+        if (root.根.编码 == role.四根[j].根.编码 ||
+            root.绑定.编码 == role.四根[j].绑定.编码)
+          return false;
+    }
+    return n.树证明.Gread == g && n.树证明.H == g &&
+           n.树证明.种类 == 场景树证明种类::树归属 &&
+           n.树证明.场景 == 投影->E && 有效(n.树证明.树根) &&
+           n.树证明.树根 != 投影->E && 有效(n.树证明.关系) &&
+           n.树证明.关系 == n.树证明.见证.编码 && n.树证明.见证.源 == 投影->E &&
+           n.树证明.见证.目标 == n.树证明.树根 &&
+           有效(n.树证明.见证.关系类型) && n.树证明.见证.角色或顺序 == 1 &&
+           n.树证明.见证.生命周期.创建事实代次 == h &&
+           current(n.树证明.见证.生命周期) && n.直接父 &&
+           n.直接父->Gread == g && n.直接父->H == g &&
+           n.直接父->父 == r.父场景 && n.直接父->成员 == 投影->E &&
+           n.直接父->来源 == 直接归属来源::直接子场景 && 有效(n.直接父->关系) &&
+           n.直接父->创建事实代次 == h && !n.直接父->退出事实代次 &&
+           n.从上游场景到本场景路径.size() == 1 &&
+           n.从上游场景到本场景路径.front().关系 == n.直接父->关系;
   }
 };
 struct 世界树存在创建结果 final {
   世界树结果头 结果头;
-  std::optional<世界树存在创建请求> 原请求, 续跑请求;
-  std::optional<世界树存在创建进度> 进度;
+  std::optional<世界树存在创建请求> 原请求;
   std::optional<世界树存在创建投影> 投影;
   bool 成功(const 世界树存在创建请求 &r) const noexcept {
-    return r.版本 == 2 && 结果头.版本 == 2 &&
+    return r.版本 == 3 && 结果头.版本 == 3 &&
            (结果头.状态 == 世界树操作状态::已创建存在并纳入 ||
             结果头.状态 == 世界树操作状态::精确重复) &&
            结果头.阶段 == 世界树操作阶段::现实树最终确认 && 结果头.Gread &&
-           结果头.首次发布H && *结果头.首次发布H <= 结果头.Gread && 原请求 &&
-           *原请求 == r && 投影 && 投影->存在 == 投影->位置.存在 &&
+           结果头.首次发布H && r.G0 < *结果头.首次发布H &&
+           *结果头.首次发布H <= 结果头.Gread && 原请求 && *原请求 == r &&
+           投影 && 投影->存在 == 投影->位置.存在 && 有效(r.目标场景) &&
+           有效(投影->存在) && 投影->存在 != r.目标场景 &&
            投影->位置.所在场景 == r.目标场景 &&
-           !续跑请求 && !进度 && !结果头.存在原因 && !结果头.场景原因;
+           场景直接包含事实完整(投影->位置.成员关系, 结果头.Gread) &&
+           投影->位置.成员关系.种类 == 场景直接包含种类::存在成员 &&
+           投影->位置.成员关系.父场景 == r.目标场景 &&
+           投影->位置.成员关系.成员 == 投影->存在 &&
+           投影->位置.成员关系.关系.生命周期.创建事实代次 ==
+               *结果头.首次发布H &&
+           !结果头.存在原因 && !结果头.场景原因 &&
+           (结果头.绑定原因 == 绑定存在创建状态::已创建 ||
+            结果头.绑定原因 == 绑定存在创建状态::精确重复);
   }
 };
 
@@ -231,7 +275,7 @@ public:
   世界树应用服务(世界树应用服务 &&) = delete;
   世界树应用服务 &operator=(世界树应用服务 &&) = delete;
   世界树应用服务(场景类数据服务 &s, 存在类数据服务 &e, 稳定编码 root)
-      : scene_(s), existence_(e), root_(root), joint_(e, s) {
+      : scene_(s), existence_(e), root_(root), joint_(e, s), binding_(e, s) {
     if (!有效(root_) || !scene_.使用存在提供者(e))
       throw std::invalid_argument("invalid world root");
   }
@@ -321,13 +365,7 @@ private:
     return v == 2 && g && b.最大场景数量 >= 1 && b.最大场景数量 <= 4096 &&
            b.最大关系数量 >= 1 && b.最大关系数量 <= 4096;
   }
-  static bool 有效创建(std::uint32_t v, std::uint64_t observe,
-                       std::uint64_t create, L1所有者范围写入幂等身份 a,
-                       L1所有者范围写入幂等身份 b, 稳定编码 target,
-                       世界树读取预算 budget) noexcept {
-    return 有效读取(v, observe, budget) && create && create != UINT64_MAX &&
-           a.值 > 1 && b.值 > 1 && a != b && 有效(target);
-  }
+
   static bool 树含场景(const 场景树当前事实 &t, 稳定编码 c) noexcept {
     return std::any_of(t.场景组.begin(), t.场景组.end(),
                        [&](const auto &x) { return x.场景角色.场景 == c; });
@@ -371,29 +409,7 @@ private:
       return 世界树操作状态::内部不一致;
     }
   }
-  static 世界树操作状态 映射存在(存在类数据状态 s) noexcept {
-    switch (s) {
-    case 存在类数据状态::事实代次漂移:
-      return 世界树操作状态::事实代次漂移;
-    case 存在类数据状态::幂等冲突:
-      return 世界树操作状态::幂等冲突;
-    case 存在类数据状态::数量预算不足:
-      return 世界树操作状态::数量预算不足;
-    case 存在类数据状态::历史材料已清理:
-      return 世界树操作状态::历史材料已清理;
-    case 存在类数据状态::资源失败:
-      return 世界树操作状态::资源失败;
-    case 存在类数据状态::已可能发布:
-      return 世界树操作状态::结果未知;
-    case 存在类数据状态::引用冲突:
-      return 世界树操作状态::引用冲突;
-    case 存在类数据状态::未找到:
-    case 存在类数据状态::目标已退出:
-      return 世界树操作状态::存在不在现实树;
-    default:
-      return 世界树操作状态::内部不一致;
-    }
-  }
+
   世界树移动结果 移动(const 世界树成员移动请求 &r, bool sceneMove) noexcept {
     世界树移动结果 o{
         {2, 世界树操作状态::入口拒绝, 世界树操作阶段::现实树预读, r.G0}, r};
@@ -496,239 +512,149 @@ private:
     }
     return o;
   }
+  static 世界树操作状态 映射绑定状态(绑定存在创建状态 x, bool scene) noexcept {
+    using S = 绑定存在创建状态;
+    using W = 世界树操作状态;
+    switch (x) {
+    case S::已创建:
+      return scene ? W::已创建场景并纳入 : W::已创建存在并纳入;
+    case S::精确重复:
+      return W::精确重复;
+    case S::绑定不在现实树:
+      return W::场景不在现实树;
+    case S::包含冲突:
+      return W::成员多重位置;
+    case S::成环:
+      return W::形成场景环;
+    case S::事实代次漂移:
+      return W::事实代次漂移;
+    case S::幂等冲突:
+      return W::幂等冲突;
+    case S::数量预算不足:
+      return W::数量预算不足;
+    case S::历史材料已清理:
+      return W::历史材料已清理;
+    case S::资源失败:
+      return W::资源失败;
+    case S::内部不一致:
+      return W::内部不一致;
+    case S::已可能发布:
+      return W::已发布待复核;
+    case S::既有操作已被后继事实覆盖:
+      return W::既有操作已被后继事实覆盖;
+    default:
+      return W::入口拒绝;
+    }
+  }
+  template <class R>
+  绑定存在创建请求 绑定请求(const R &r, 稳定编码 parent,
+                            存在初始绑定种类 kind) const {
+    return {r.版本 == 3 ? 1u : 0u,
+            r.G0,
+            {kind, parent},
+            root_,
+            存在场景绑定创建键{r.组合幂等身份, r.存在幂等身份, r.场景幂等身份},
+            {r.预算.最大关系数量, r.预算.最大场景数量, r.预算.最大祖先数量}};
+  }
   世界树场景创建结果 创建场景(const 世界树场景创建请求 &r) noexcept {
-    世界树场景创建结果 o{
-        {2, 世界树操作状态::入口拒绝, 世界树操作阶段::现实树预读, r.观察G0}, r};
-    if (!有效创建(r.版本, r.观察G0, r.存在创建期望G0, r.存在幂等身份,
-                  r.场景幂等身份, r.父场景, r.预算))
-      return o;
-    if (r.已固定第二阶段请求) {
-      const auto &fixed = *r.已固定第二阶段请求;
-      if (fixed.版本 != 1 || !fixed.G0 || fixed.幂等身份 != r.场景幂等身份 ||
-          fixed.父场景 != r.父场景 || !有效(fixed.对象存在) ||
-          fixed.最大关系数量 != r.预算.最大关系数量 ||
-          fixed.最大祖先数量 != r.预算.最大场景数量)
-        return o;
-    }
+    世界树场景创建结果 o{};
+    o.结果头.版本 = 3;
     try {
-      auto tree = 验证现实世界根({2, r.观察G0, r.预算});
-      const bool treeRead = tree.成功({2, r.观察G0, r.预算});
-      if (!treeRead && tree.结果头.状态 != 世界树操作状态::事实代次漂移) {
-        o.结果头 = tree.结果头;
-        return o;
-      }
-      if (treeRead && !树含场景(*tree.树, r.父场景)) {
-        o.结果头 = tree.结果头;
-        o.结果头.状态 = 世界树操作状态::场景不在现实树;
-        return o;
-      }
+      o.原请求 = r;
+      const auto q = 绑定请求(r, r.父场景, 存在初始绑定种类::直接子场景);
+      const auto a = binding_.创建绑定存在(q);
+      o.结果头.状态 = 映射绑定状态(a.状态, true);
+      o.结果头.绑定原因 = a.状态;
+      o.结果头.Gread = a.Gread;
+      o.结果头.首次发布H = a.首次发布H;
       o.结果头.阶段 = 世界树操作阶段::存在创建;
-      auto made = existence_.新增存在(
-          {存在类数据合同版本, r.存在创建期望G0, r.存在幂等身份});
-      if (!made.成功() || !made.存在结点) {
-        o.结果头.状态 = 映射存在(made.状态);
-        o.结果头.Gread = made.事实代次;
-        o.结果头.存在原因 = made.状态;
-        if (made.状态 == 存在类数据状态::已可能发布) {
-          o.结果头.阶段 = 世界树操作阶段::存在创建;
-          o.原请求 = r;
-        }
+      if (!a.成功(q))
         return o;
-      }
-      auto E = made.存在结点->结点;
-      const 场景直接子场景启用请求 derived{
-          1,        made.事实代次,       r.场景幂等身份,     E,
-          r.父场景, r.预算.最大关系数量, r.预算.最大场景数量};
-      if (r.已固定第二阶段请求 && r.已固定第二阶段请求->对象存在 != E) {
-        o.结果头.状态 = 世界树操作状态::部分已发布;
-        o.结果头.Gread = made.事实代次;
-        o.进度 = 世界树场景创建进度{E, made.存在结点->创建事实代次, derived};
-        return o;
-      }
-      const auto second = r.已固定第二阶段请求.value_or(derived);
-      o.进度 = 世界树场景创建进度{E, made.存在结点->创建事实代次, second};
-      o.结果头.阶段 = 世界树操作阶段::场景包含发布;
-      auto accepted = scene_.启用并接纳直接子场景(second, joint_);
-      o.结果头.Gread = accepted.结果头.Gread;
-      if (!accepted.子场景纳入成功(second)) {
-        o.结果头.场景原因 = accepted.结果头.状态;
-        o.结果头.状态 = accepted.结果头.状态 == 场景直接包含状态::已可能发布
-                            ? 世界树操作状态::结果未知
-                            : 世界树操作状态::部分已发布;
-        if (accepted.结果头.状态 == 场景直接包含状态::事实代次漂移) {
-          const auto fresh = 验证现实世界根({2, accepted.结果头.Gread, r.预算});
-          if (fresh.成功({2, accepted.结果头.Gread, r.预算}) &&
-              树含场景(*fresh.树, r.父场景)) {
-            auto retrySecond = second;
-            retrySecond.G0 = accepted.结果头.Gread;
-            auto retry = r;
-            retry.观察G0 = accepted.结果头.Gread;
-            retry.已固定第二阶段请求 = retrySecond;
-            o.续跑请求 = std::move(retry);
-          }
-        } else if (accepted.结果头.状态 == 场景直接包含状态::已可能发布) {
-          o.结果头.首次发布H = accepted.结果头.首次发布H;
-        }
-        return o;
-      }
-      const 场景树当前读取请求 finalRequest{1, accepted.结果头.Gread, root_,
-                                            r.预算.最大场景数量,
-                                            r.预算.最大关系数量};
-      const auto finalTree = scene_.读取当前场景树(finalRequest, joint_);
-      if (!finalTree.成功(finalRequest)) {
+      o.结果头.阶段 = 世界树操作阶段::现实树最终确认;
+      const 世界树根验证请求 read{
+          2, a.Gread, {r.预算.最大场景数量, r.预算.最大关系数量}};
+      const auto tree = 验证现实世界根(read);
+      if (!tree.成功(read)) {
         o.结果头.状态 = 世界树操作状态::已发布待复核;
-        o.结果头.阶段 = 世界树操作阶段::现实树最终确认;
-        o.结果头.首次发布H = accepted.结果头.首次发布H;
         return o;
       }
-      const auto matches = std::count_if(
-          finalTree.树->场景组.begin(), finalTree.树->场景组.end(),
-          [&](const auto &x) {
-            return x.场景角色.场景 == E && x.直接父 && x.直接父->父 == r.父场景;
+      const auto it = std::find_if(
+          tree.树->场景组.begin(), tree.树->场景组.end(), [&](const auto &n) {
+            return n.场景角色.场景 == a.事实->新存在 && n.直接父 &&
+                   n.直接父->父 == r.父场景;
           });
-      const auto sceneIt = std::find_if(finalTree.树->场景组.begin(),
-                                        finalTree.树->场景组.end(),
-                                        [&](const auto &x) {
-                                          return x.场景角色.场景 == E;
-                                        });
-      if (matches != 1 || sceneIt == finalTree.树->场景组.end()) {
-        const bool successorObserved =
-            sceneIt != finalTree.树->场景组.end() && sceneIt->直接父 &&
-            sceneIt->直接父->父 != r.父场景;
-        o.结果头.状态 = accepted.结果头.状态 == 场景直接包含状态::精确重复 &&
-                                successorObserved
-                            ? 世界树操作状态::既有操作已被后继事实覆盖
-                            : 世界树操作状态::已发布待复核;
-        o.结果头.阶段 = 世界树操作阶段::现实树最终确认;
-        o.结果头.首次发布H = accepted.结果头.首次发布H;
+      if (it == tree.树->场景组.end()) {
+        o.结果头.状态 = 世界树操作状态::已发布待复核;
         return o;
       }
-      o.结果头 = {2,
-                  accepted.结果头.状态 == 场景直接包含状态::精确重复
-                      ? 世界树操作状态::精确重复
-                      : 世界树操作状态::已创建场景并纳入,
-                  世界树操作阶段::现实树最终确认, accepted.结果头.Gread,
-                  accepted.结果头.首次发布H};
-      o.投影 = 世界树场景创建投影{E, r.父场景, *sceneIt};
-      o.进度.reset();
+      o.投影 = 世界树场景创建投影{a.事实->新存在, r.父场景, *it};
+      return o;
     } catch (const std::bad_alloc &) {
-      o.结果头.状态 = 世界树操作状态::资源失败;
+      o.投影.reset();
+      o.结果头.状态 = o.结果头.首次发布H ? 世界树操作状态::已发布待复核
+                                         : 世界树操作状态::资源失败;
+      return o;
     } catch (const std::length_error &) {
-      o.结果头.状态 = 世界树操作状态::资源失败;
+      o.投影.reset();
+      o.结果头.状态 = o.结果头.首次发布H ? 世界树操作状态::已发布待复核
+                                         : 世界树操作状态::资源失败;
+      return o;
     } catch (...) {
-      o.结果头.状态 = 世界树操作状态::内部不一致;
+      o.投影.reset();
+      o.结果头.状态 = o.结果头.首次发布H ? 世界树操作状态::已发布待复核
+                                         : 世界树操作状态::内部不一致;
+      return o;
     }
-    return o;
   }
   世界树存在创建结果 创建存在(const 世界树存在创建请求 &r) noexcept {
-    世界树存在创建结果 o{
-        {2, 世界树操作状态::入口拒绝, 世界树操作阶段::现实树预读, r.观察G0}, r};
-    if (!有效创建(r.版本, r.观察G0, r.存在创建期望G0, r.存在幂等身份,
-                  r.接纳幂等身份, r.目标场景, r.预算))
-      return o;
-    if (r.已固定第二阶段请求) {
-      const auto &fixed = *r.已固定第二阶段请求;
-      if (fixed.版本 != 1 || !fixed.G0 || fixed.幂等身份 != r.接纳幂等身份 ||
-          fixed.父场景 != r.目标场景 || !有效(fixed.成员) ||
-          fixed.最大关系数量 != r.预算.最大关系数量 ||
-          fixed.最大场景数量 != r.预算.最大场景数量)
-        return o;
-    }
+    世界树存在创建结果 o{};
+    o.结果头.版本 = 3;
     try {
-      auto tree = 验证现实世界根({2, r.观察G0, r.预算});
-      const bool treeRead = tree.成功({2, r.观察G0, r.预算});
-      if (!treeRead && tree.结果头.状态 != 世界树操作状态::事实代次漂移) {
-        o.结果头 = tree.结果头;
-        return o;
-      }
-      if (treeRead && !树含场景(*tree.树, r.目标场景)) {
-        o.结果头 = tree.结果头;
-        o.结果头.状态 = 世界树操作状态::场景不在现实树;
-        return o;
-      }
+      o.原请求 = r;
+      const auto q = 绑定请求(r, r.目标场景, 存在初始绑定种类::场景成员);
+      const auto a = binding_.创建绑定存在(q);
+      o.结果头.状态 = 映射绑定状态(a.状态, false);
+      o.结果头.绑定原因 = a.状态;
+      o.结果头.Gread = a.Gread;
+      o.结果头.首次发布H = a.首次发布H;
       o.结果头.阶段 = 世界树操作阶段::存在创建;
-      auto made = existence_.新增存在(
-          {存在类数据合同版本, r.存在创建期望G0, r.存在幂等身份});
-      if (!made.成功() || !made.存在结点) {
-        o.结果头.状态 = 映射存在(made.状态);
-        o.结果头.Gread = made.事实代次;
-        o.结果头.存在原因 = made.状态;
-        if (made.状态 == 存在类数据状态::已可能发布) {
-          o.结果头.阶段 = 世界树操作阶段::存在创建;
-          o.原请求 = r;
-        }
+      if (!a.成功(q))
+        return o;
+      o.结果头.阶段 = 世界树操作阶段::现实树最终确认;
+      const 世界树存在位置读取请求 read{
+          2,
+          a.Gread,
+          a.事实->新存在,
+          {r.预算.最大场景数量, r.预算.最大关系数量}};
+      const auto pos = 读取现实世界存在位置(read);
+      if (!pos.成功(read) || pos.位置->所在场景 != r.目标场景) {
+        o.结果头.状态 = 世界树操作状态::已发布待复核;
         return o;
       }
-      auto E = made.存在结点->结点;
-      const 场景直接包含写请求 derived{
-          1, made.事实代次,       r.接纳幂等身份,     r.目标场景,
-          E, r.预算.最大关系数量, r.预算.最大场景数量};
-      if (r.已固定第二阶段请求 && r.已固定第二阶段请求->成员 != E) {
-        o.结果头.状态 = 世界树操作状态::部分已发布;
-        o.结果头.Gread = made.事实代次;
-        o.进度 = 世界树存在创建进度{E, made.存在结点->创建事实代次, derived};
-        return o;
-      }
-      const auto second = r.已固定第二阶段请求.value_or(derived);
-      o.进度 = 世界树存在创建进度{E, made.存在结点->创建事实代次, second};
-      o.结果头.阶段 = 世界树操作阶段::场景包含发布;
-      auto accepted = scene_.新增直接存在成员(second, joint_);
-      o.结果头.Gread = accepted.结果头.Gread;
-      if (!accepted.成功()) {
-        o.结果头.场景原因 = accepted.结果头.状态;
-        o.结果头.状态 = accepted.结果头.状态 == 场景直接包含状态::已可能发布
-                            ? 世界树操作状态::结果未知
-                            : 世界树操作状态::部分已发布;
-        if (accepted.结果头.状态 == 场景直接包含状态::事实代次漂移) {
-          const auto fresh = 验证现实世界根({2, accepted.结果头.Gread, r.预算});
-          if (fresh.成功({2, accepted.结果头.Gread, r.预算}) &&
-              树含场景(*fresh.树, r.目标场景)) {
-            auto retrySecond = second;
-            retrySecond.G0 = accepted.结果头.Gread;
-            auto retry = r;
-            retry.观察G0 = accepted.结果头.Gread;
-            retry.已固定第二阶段请求 = retrySecond;
-            o.续跑请求 = std::move(retry);
-          }
-        } else if (accepted.结果头.状态 == 场景直接包含状态::已可能发布) {
-          o.结果头.首次发布H = accepted.结果头.首次发布H;
-        }
-        return o;
-      }
-      const auto finalPosition = 读取现实世界存在位置(
-          {2, accepted.结果头.Gread, E, r.预算});
-      if (!finalPosition.成功({2, accepted.结果头.Gread, E, r.预算}) ||
-          finalPosition.位置->所在场景 != r.目标场景) {
-        o.结果头.状态 = accepted.结果头.状态 == 场景直接包含状态::精确重复 &&
-                                finalPosition.成功(
-                                    {2, accepted.结果头.Gread, E, r.预算})
-                            ? 世界树操作状态::既有操作已被后继事实覆盖
-                            : 世界树操作状态::已发布待复核;
-        o.结果头.阶段 = 世界树操作阶段::现实树最终确认;
-        o.结果头.首次发布H = accepted.结果头.首次发布H;
-        return o;
-      }
-      o.结果头 = {2,
-                  accepted.结果头.状态 == 场景直接包含状态::精确重复
-                      ? 世界树操作状态::精确重复
-                      : 世界树操作状态::已创建存在并纳入,
-                  世界树操作阶段::现实树最终确认, accepted.结果头.Gread,
-                  accepted.结果头.首次发布H};
-      o.投影 = 世界树存在创建投影{E, *finalPosition.位置};
-      o.进度.reset();
+      o.投影 = 世界树存在创建投影{a.事实->新存在, *pos.位置};
+      return o;
     } catch (const std::bad_alloc &) {
-      o.结果头.状态 = 世界树操作状态::资源失败;
+      o.投影.reset();
+      o.结果头.状态 = o.结果头.首次发布H ? 世界树操作状态::已发布待复核
+                                         : 世界树操作状态::资源失败;
+      return o;
     } catch (const std::length_error &) {
-      o.结果头.状态 = 世界树操作状态::资源失败;
+      o.投影.reset();
+      o.结果头.状态 = o.结果头.首次发布H ? 世界树操作状态::已发布待复核
+                                         : 世界树操作状态::资源失败;
+      return o;
     } catch (...) {
-      o.结果头.状态 = 世界树操作状态::内部不一致;
+      o.投影.reset();
+      o.结果头.状态 = o.结果头.首次发布H ? 世界树操作状态::已发布待复核
+                                         : 世界树操作状态::内部不一致;
+      return o;
     }
-    return o;
   }
   场景类数据服务 &scene_;
   存在类数据服务 &existence_;
   稳定编码 root_;
   直接归属联合只读组合器 joint_;
+  绑定存在数据服务 binding_;
 };
 static_assert(世界树应用合同版本 == 2);
 } // namespace 海中鱼巣

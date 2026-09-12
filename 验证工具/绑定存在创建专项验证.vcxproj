@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+﻿<?xml version='1.0' encoding='utf-8'?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64"><Configuration>Debug</Configuration><Platform>x64</Platform></ProjectConfiguration>
@@ -7,8 +7,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{54CF3281-7ADC-4191-A2EA-289E124B3C99}</ProjectGuid>
-    <RootNamespace>定位特征创建专项验证</RootNamespace>
+    <ProjectGuid>{915E49F1-E4D2-452A-8A76-2EA95A6B327C}</ProjectGuid>
+    <RootNamespace>绑定存在创建专项验证</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -35,6 +35,6 @@
     <ClCompile><WarningLevel>Level3</WarningLevel><FunctionLevelLinking>true</FunctionLevelLinking><IntrinsicFunctions>true</IntrinsicFunctions><SDLCheck>true</SDLCheck><PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions><ConformanceMode>true</ConformanceMode><LanguageStandard>stdcpp20</LanguageStandard><AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions></ClCompile>
     <Link><SubSystem>Console</SubSystem><GenerateDebugInformation>true</GenerateDebugInformation></Link>
   </ItemDefinitionGroup>
-  <ItemGroup><ClCompile Include="..\海中鱼巣\核心\合同.L1公共事实.ixx" /><ClCompile Include="..\海中鱼巣\核心\合同.L1中性CRUD.ixx" /><ClCompile Include="..\海中鱼巣\核心\合同.L1所有者范围CRUD.ixx" /><ClCompile Include="..\海中鱼巣\核心\合同.L1事实基座.ixx" /><ClCompile Include="..\海中鱼巣\核心\仓库.L1事实基座.ixx" /><ClCompile Include="..\海中鱼巣\核心\服务.L1事实基座.ixx" /><ClCompile Include="..\海中鱼巣\领域\合同.存在结构身份只读.ixx" /><ClCompile Include="..\海中鱼巣\领域\数据服务.特征值类.ixx" /><ClCompile Include="..\海中鱼巣\领域\数据服务.定位特征.ixx" /><ClCompile Include="..\海中鱼巣\领域\数据服务.特征类.ixx" /><ClCompile Include="..\海中鱼巣\领域\数据服务.状态类.ixx" /><ClCompile Include="..\海中鱼巣\领域\合同.场景状态使用绑定.ixx" /><ClCompile Include="..\海中鱼巣\领域\算法.有序I64特征比较.ixx" /><ClCompile Include="..\海中鱼巣\领域\合同.动态结构.ixx" /><ClCompile Include="..\海中鱼巣\领域\合同.场景角色组织.ixx" /><ClCompile Include="..\海中鱼巣\领域\数据服务.场景类.ixx" /><ClCompile Include="..\海中鱼巣\领域\数据服务.绑定存在.ixx" /><ClCompile Include="..\海中鱼巣\领域\数据服务.存在类.ixx" /><ClCompile Include="..\海中鱼巣\领域\数据服务.概念树类.ixx" /><ClCompile Include="..\海中鱼巣\业务\应用服务.特征概念类.ixx" /><ClCompile Include="..\海中鱼巣\业务\应用服务.存在概念树类.ixx" /><ClCompile Include="..\海中鱼巣\业务\应用服务.场景成员概念类.ixx" /><ClCompile Include="定位特征创建专项验证.cpp" /></ItemGroup><Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ItemGroup><ClCompile Include="..\海中鱼巣\核心\合同.L1公共事实.ixx" /><ClCompile Include="..\海中鱼巣\核心\合同.L1中性CRUD.ixx" /><ClCompile Include="..\海中鱼巣\核心\合同.L1所有者范围CRUD.ixx" /><ClCompile Include="..\海中鱼巣\核心\合同.L1事实基座.ixx" /><ClCompile Include="..\海中鱼巣\核心\仓库.L1事实基座.ixx" /><ClCompile Include="..\海中鱼巣\核心\服务.L1事实基座.ixx" /><ClCompile Include="..\海中鱼巣\领域\合同.存在结构身份只读.ixx" /><ClCompile Include="..\海中鱼巣\领域\数据服务.特征值类.ixx" /><ClCompile Include="..\海中鱼巣\领域\数据服务.定位特征.ixx" /><ClCompile Include="..\海中鱼巣\领域\数据服务.特征类.ixx" /><ClCompile Include="..\海中鱼巣\领域\数据服务.状态类.ixx" /><ClCompile Include="..\海中鱼巣\领域\合同.场景状态使用绑定.ixx" /><ClCompile Include="..\海中鱼巣\领域\算法.有序I64特征比较.ixx" /><ClCompile Include="..\海中鱼巣\领域\合同.动态结构.ixx" /><ClCompile Include="..\海中鱼巣\领域\合同.场景角色组织.ixx" /><ClCompile Include="..\海中鱼巣\领域\数据服务.场景类.ixx" /><ClCompile Include="..\海中鱼巣\领域\数据服务.存在类.ixx" /><ClCompile Include="..\海中鱼巣\领域\数据服务.概念树类.ixx" /><ClCompile Include="..\海中鱼巣\业务\应用服务.特征概念类.ixx" /><ClCompile Include="..\海中鱼巣\业务\应用服务.存在概念树类.ixx" /><ClCompile Include="..\海中鱼巣\业务\应用服务.场景成员概念类.ixx" /><ClCompile Include="..\海中鱼巣\领域\数据服务.绑定存在.ixx" /><ClCompile Include="..\海中鱼巣\业务\应用服务.世界树类.ixx" /><ClCompile Include="绑定存在创建专项验证.cpp" /></ItemGroup><Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
 </Project>

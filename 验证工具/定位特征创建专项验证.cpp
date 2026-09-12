@@ -10,6 +10,7 @@
 import 海中鱼巣.领域.数据服务.存在类;
 import 海中鱼巣.领域.数据服务.场景类;
 import 海中鱼巣.领域.数据服务.定位特征;
+import 海中鱼巣.领域.数据服务.绑定存在;
 import 海中鱼巣.业务.应用服务.场景成员概念类;
 namespace {
 using namespace 海中鱼巣;
@@ -40,8 +41,14 @@ for(std::int64_t value:{60,60,70}){L1所有者范围写集请求 fw{L1所有者�
 }
 特征值类数据服务 values(l1);特征类数据服务 features(l1,std::move(*fdef.写入端口),std::move(*finfo.写入端口),values,fmeta[0]);
 auto eo=建立所有者(issuer,103);auto em=建立元节点(*eo.写入端口,l1,2001,{{节点种类::普通,std::nullopt},{节点种类::普通,std::nullopt},{节点种类::普通,std::nullopt}});
+// 固定现实根夹具：owner 端口交付前登记现有存在族布局与根身份。
+auto family = 建立元节点(*eo.写入端口,l1,0x455849535446414DULL,{{节点种类::普通,std::nullopt},{节点种类::普通,std::nullopt}});
+L1所有者范围写集请求 rootSeed{L1所有者范围CRUD合同版本,当前代次(l1),{2101}};
+rootSeed.节点={{{1},节点种类::普通,std::nullopt}};
+rootSeed.关系={{{2},L1所有者范围写集本地键{1},family[0],family[1],1}};
+auto rootSaved=eo.写入端口->提交所有者范围中性写集(rootSeed);要求(rootSaved.状态==L1所有者范围写入状态::成功,"fixed-root-seed");
+稳定编码 C{};for(auto [key,id]:rootSaved.新编码映射)if(key.值==1)C=id;
 存在类数据服务 existence(l1,features,std::move(*eo.写入端口),em[0],em[1],{em[2]});
-auto created=existence.新增存在({存在类数据合同版本,当前代次(l1),{2101}});要求(created.成功()&&created.存在结点,"real-C-create");auto C=created.存在结点->结点;
 auto so=建立所有者(issuer,104),sto=建立所有者(issuer,105);
 auto sm=建立元节点(*sto.写入端口,l1,3001,{{节点种类::普通,std::nullopt},{节点种类::普通,std::nullopt},{节点种类::普通,std::nullopt},{节点种类::属性类型,L1所有者范围值表示种类::I64},{节点种类::属性类型,L1所有者范围值表示种类::U64组},{节点种类::属性类型,L1所有者范围值表示种类::I64},{节点种类::属性类型,L1所有者范围值表示种类::I64},{节点种类::属性类型,L1所有者范围值表示种类::I64}});
 状态类数据服务 state(l1,features,std::move(*sto.写入端口),{sm[0],sm[1],sm[2],sm[3],sm[4],sm[5],sm[6],sm[7]});
@@ -49,7 +56,10 @@ auto sm=建立元节点(*sto.写入端口,l1,3001,{{节点种类::普通,std::nu
 场景特征组织扩展登记请求 er{1,当前代次(l1)};auto ext=场景类数据服务::登记特征组织扩展(l1,*so.写入端口,er);要求(ext.成功(er),"scene-feature-layout");
 场景直接包含扩展登记请求 ir{1,当前代次(l1)};auto inc=场景类数据服务::登记直接包含扩展(l1,*so.写入端口,ir);要求(inc.成功(ir),"scene-containment-layout");
 场景类数据服务 scene(l1,std::move(*so.写入端口),*base.交付,existence,state,*ext.交付,*inc.交付);
-场景角色启用请求 enable{2,当前代次(l1),{4001},C};auto enabled=scene.启用场景角色(enable);要求(enabled.启用成功(enable),"real-C-scene-role");
+直接归属联合只读组合器 joint(existence,scene);
+场景树根启用请求 rootRequest{1,当前代次(l1),{12004},C,100,100};auto rootCreated=scene.启用并建立场景树根(rootRequest,joint);
+要求(rootCreated.建根成功(rootRequest),"scene-app-real-root");
+
 
 const auto coldG=当前代次(l1);bool coldRejected=false;
 try{定位特征数据服务 cold(features,existence,scene);}catch(const std::invalid_argument&){coldRejected=true;}
@@ -59,10 +69,10 @@ const auto halfG=当前代次(l1);bool halfRejected=false;
 try{定位特征数据服务 half(features,existence,scene);}catch(const std::invalid_argument&){halfRejected=true;}
 要求(halfRejected&&当前代次(l1)==halfG,"definition-only-constructor-refused");
 要求(std::holds_alternative<std::monostate>(features.初始化准确特征结构()),"feature-information-init");auto ftResult=features.创建先天I64特征类型({fmeta[0],fmeta[1],1,1,{{0,100}},std::nullopt});auto*ft=std::get_if<特征类型身份>(&ftResult);要求(ft&&有效(*ft),"feature-type-create");
-const auto g=当前代次(l1);auto view=scene.读取场景角色历史({2,g,g,C});要求(view.成功({2,g,g,C})&&view.角色->四根[0].根.编码==enabled.角色->四根[0].根.编码,"explicit-feature-root");
+const auto g=当前代次(l1);auto view=scene.读取场景角色历史({2,g,g,C});要求(view.成功({2,g,g,C})&&view.角色->四根[0].根.编码==rootCreated.场景角色->四根[0].根.编码,"explicit-feature-root");
 要求(当前代次(l1)==g,"fixture-read-zero-write");
 定位特征数据服务 located(features,existence,scene);要求(当前代次(l1)==g,"combined-constructor-zero-write");
-定位特征创建请求 request{1,g,{C,enabled.角色->四根[0].根.编码},ft->编码,std::int64_t{10},std::nullopt,{5001},{5002},{5003},{5004},{100,16}};
+定位特征创建请求 request{1,g,{C,rootCreated.场景角色->四根[0].根.编码},ft->编码,std::int64_t{10},std::nullopt,{5001},{5002},{5003},{5004},{100,16}};
 auto made=located.创建或复用(request);std::cout<<"CREATE_STATE "<<static_cast<int>(made.状态)<<" G="<<made.Gread<<"\n";
 要求(made.成功()&&made.状态==定位特征状态::已创建&&made.首次发布H==g+1,"atomic-feature-create");
 要求(当前代次(l1)==g+1,"three-owners-one-generation");
@@ -89,7 +99,7 @@ auto historical=missingRead;historical.H=*childMade.首次发布H;const auto old
 auto legacyRequest=reuse;legacyRequest.G0=当前代次(l1);legacyRequest.正式特征类型=legacyFT;legacyRequest.准确值=std::int64_t{70};legacyRequest.组合键={9001};legacyRequest.内容键={9002};legacyRequest.已知键={9003};legacyRequest.组织键={9004};
 reject(legacyRequest,定位特征状态::存量未定位,"legacy-unlocated-not-new-F");
 auto addLegacy=existence.新增成员关系({存在类数据合同版本,当前代次(l1),{9101},C,存在类成员种类::特征,legacyF[0]});要求(addLegacy.成功(),"legacy-known-add");
-场景特征组织请求 organize{1,当前代次(l1),{9102},C,enabled.角色->四根[0].根.编码,{legacyF[0]},16};auto organized=scene.组织特征实例(organize);要求(organized.成功(organize),"legacy-explicit-root-migration");
+场景特征组织请求 organize{1,当前代次(l1),{9102},C,rootCreated.场景角色->四根[0].根.编码,{legacyF[0]},16};auto organized=scene.组织特征实例(organize);要求(organized.成功(organize),"legacy-explicit-root-migration");
 legacyRequest.G0=当前代次(l1);legacyRequest.准确值=std::int64_t{60};auto multi=located.创建或复用(legacyRequest);
 要求(multi.状态==定位特征状态::需选择F&&multi.候选F==std::vector<稳定编码>{legacyF[0],legacyF[1]}&&!multi.事实,"all-exact-candidates-not-location-filtered");
 legacyRequest.指定F=legacyF[0];auto selected=located.创建或复用(legacyRequest);要求(selected.成功()&&selected.状态==定位特征状态::已复用&&selected.事实->出生H==legacyBirth[0],"explicit-selected-legacy-reuse-old-birth");
@@ -146,27 +156,28 @@ auto appFTResult=features.创建先天I64特征类型({fmeta[0],fmeta[1],1,1,{{0
 auto* appFT=std::get_if<特征类型身份>(&appFTResult);要求(appFT&&有效(*appFT),"app-FT-with-domain-rule");
 特征概念预算 cb{{10000,10000,10000,10000,10000,10000,10000,10000},10000,10000,10000,10000,10000};
 特征概念观察请求 aq{{*appFT,fmeta[0],1},std::int64_t{45},1,std::nullopt,100,cb,
- {1,当前代次(l1),{C,enabled.角色->四根[0].根.编码},appFT->编码,std::int64_t{45},std::nullopt,{11001},{11002},{11003},{11004},{100,16}}};
+ {1,当前代次(l1),{C,rootCreated.场景角色->四根[0].根.编码},appFT->编码,std::int64_t{45},std::nullopt,{11001},{11002},{11003},{11004},{100,16}}};
 // 显式R从真实直接包含结果取得，不从S/E编码反推。
-直接归属联合只读组合器 joint(existence,scene);
-auto newS=existence.新增存在({存在类数据合同版本,当前代次(l1),{12001}});
-auto newE=existence.新增存在({存在类数据合同版本,当前代次(l1),{12002}});
-auto otherE=existence.新增存在({存在类数据合同版本,当前代次(l1),{12003}});
-要求(newS.成功()&&newE.成功()&&otherE.成功(),"scene-app-real-S-and-members");
-const auto sceneS=newS.存在结点->结点,sceneE=newE.存在结点->结点;
-场景树根启用请求 rootRequest{1,当前代次(l1),{12004},sceneS,100,100};auto rootCreated=scene.启用并建立场景树根(rootRequest,joint);
-要求(rootCreated.建根成功(rootRequest),"scene-app-real-root");
-场景直接包含写请求 memberRequest{1,当前代次(l1),{12005},sceneS,sceneE,100,100};auto memberCreated=scene.新增直接存在成员(memberRequest,joint);
-要求(memberCreated.成功()&&memberCreated.包含,"scene-app-explicit-R-created");const auto R=memberCreated.包含->关系.编码;
+绑定存在数据服务 bound(existence,scene);
+auto createBound=[&](稳定编码 parent,存在初始绑定种类 kind,std::uint64_t key) {
+  绑定存在创建请求 q{1,当前代次(l1),{kind,parent},C,存在场景绑定创建键{{key+100},{key},{key+200}},{100,100,100}};
+  auto r=bound.创建绑定存在(q);要求(r.成功(q),"scene-app-bound-create");return r;
+};
+auto newS=createBound(C,存在初始绑定种类::直接子场景,12001);
+auto newE=createBound(newS.事实->新存在,存在初始绑定种类::场景成员,12002);
+auto otherE=createBound(newS.事实->新存在,存在初始绑定种类::场景成员,12003);
+const auto sceneS=newS.事实->新存在,sceneE=newE.事实->新存在,R=newE.事实->绑定关系;
+const auto sceneG=当前代次(l1);const auto sceneRole=scene.读取场景角色历史({2,sceneG,sceneG,sceneS});
+要求(sceneRole.成功({2,sceneG,sceneG,sceneS}),"scene-app-child-role");
 场景成员概念请求_v2 sr;sr.S=概念树场景引用{sceneS};sr.E=概念树存在引用{sceneE};sr.Gread=sr.H=当前代次(l1);sr.场景关系预算=1;sr.场景成员关系=R;
 sr.观察=aq;sr.观察.观察.序号=3;sr.观察.准确值=std::int64_t{55};sr.观察.时间=3;
-sr.观察.定位={1,sr.Gread,{sceneS,rootCreated.场景角色->四根[0].根.编码},appFT->编码,std::int64_t{55},std::nullopt,{12101},{12102},{12103},{12104},{100,16}};
+sr.观察.定位={1,sr.Gread,{sceneS,sceneRole.角色->四根[0].根.编码},appFT->编码,std::int64_t{55},std::nullopt,{12101},{12102},{12103},{12104},{100,16}};
 sr.采用=存在当前采用意图_v2{2,{12105},std::nullopt,100};
 特征概念应用服务 scFC(features,concepts,located);存在概念树应用服务 ecApp(concepts,features,existence);场景成员概念应用服务 scApp(concepts,scene,existence,scFC,ecApp);
 auto sceneReject=[&](场景成员概念请求_v2 q,场景成员概念状态_v2 expected,const char* label){const auto before=当前代次(l1);auto failed=scApp.处理场景成员概念(q);
  要求(failed.状态==expected&&!failed.最终投影&&!failed.特征概念.处理.定位结果&&当前代次(l1)==before,label);};
 auto sq=sr;sq.场景成员关系={};sceneReject(sq,场景成员概念状态_v2::入口拒绝,"scene-missing-R-before-location");
-sq=sr;sq.E=概念树存在引用{otherE.存在结点->结点};sceneReject(sq,场景成员概念状态_v2::引用冲突,"scene-valid-R-wrong-E");
+sq=sr;sq.E=概念树存在引用{otherE.事实->新存在};sceneReject(sq,场景成员概念状态_v2::引用冲突,"scene-valid-R-wrong-E");
 sq=sr;sq.场景成员关系=made.事实->组织关系;sceneReject(sq,场景成员概念状态_v2::内部不一致,"scene-organization-edge-is-not-R");
 sq=sr;sq.H=sr.Gread+1;sceneReject(sq,场景成员概念状态_v2::入口拒绝,"scene-future-H");
 sq=sr;sq.场景关系预算=0;sceneReject(sq,场景成员概念状态_v2::入口拒绝,"scene-zero-relation-budget");
@@ -229,7 +240,7 @@ aq.定位.G0=当前代次(l1);
    &&os.关系组.front().目标节点==hit.观察记录&&cs.关系组.front().目标节点==hit.C.值
    &&os.关系组.front().创建事实代次==hitH&&cs.关系组.front().创建事实代次==hitH,"hit-native-two-references-same-H");
  }
- auto unrelated=existence.新增存在({存在类数据合同版本,当前代次(l1),{12500}});要求(unrelated.成功(),"advance-unrelated-G-after-hit");
+ auto unrelated=createBound(C,存在初始绑定种类::场景成员,12500);要求(unrelated.事实.has_value(),"advance-unrelated-G-after-hit");
  const auto replayG=当前代次(l1);auto hitReplay=concepts.收敛特征概念写入(hitRequest);
  要求(hitReplay.成功()&&hitReplay.状态==概念树数据状态::精确重复&&hitReplay.首次H==hitH&&hitReplay.命中组.size()==2&&当前代次(l1)==replayG,"hit-original-request-after-future-G");
  for(const auto& old:hitWrite.命中组){std::size_t count=0;for(const auto& now:hitReplay.命中组)if(now.记录==old.记录&&now.观察记录==old.观察记录&&now.C==old.C)++count;要求(count==1,"hit-replay-complete-original-identities");}

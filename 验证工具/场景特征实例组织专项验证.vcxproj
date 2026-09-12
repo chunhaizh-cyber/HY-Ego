@@ -48,15 +48,21 @@
     <ClCompile Include="..\海中鱼巣\核心\仓库.L1事实基座.ixx" />
     <ClCompile Include="..\海中鱼巣\核心\服务.L1事实基座.ixx" />
     <ClCompile Include="..\海中鱼巣\领域\数据服务.特征值类.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\数据服务.定位特征.ixx" />
     <ClCompile Include="..\海中鱼巣\领域\数据服务.特征类.ixx" />
     <ClCompile Include="..\海中鱼巣\领域\算法.有序I64特征比较.ixx" />
     <ClCompile Include="..\海中鱼巣\领域\合同.存在结构身份只读.ixx" />
-    <ClCompile Include="..\海中鱼巣\领域\合同.场景状态使用绑定.ixx" Condition="'$(ProbeMode)'=='SceneOrganization'" />
-    <ClCompile Include="..\海中鱼巣\领域\合同.动态结构.ixx" Condition="'$(ProbeMode)'=='SceneOrganization'" />
-    <ClCompile Include="..\海中鱼巣\领域\合同.场景角色组织.ixx" Condition="'$(ProbeMode)'=='SceneOrganization'" />
-    <ClCompile Include="..\海中鱼巣\领域\数据服务.存在类.ixx" Condition="'$(ProbeMode)'=='ExistenceProvider'" />
-    <ClCompile Include="..\海中鱼巣\领域\数据服务.状态类.ixx" Condition="'$(ProbeMode)'=='SceneOrganization'" />
-    <ClCompile Include="..\海中鱼巣\领域\数据服务.场景类.ixx" Condition="'$(ProbeMode)'=='SceneOrganization'" />
+    <ClCompile Include="..\海中鱼巣\领域\合同.场景状态使用绑定.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\合同.动态结构.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\合同.场景角色组织.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\数据服务.绑定存在.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\数据服务.存在类.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\数据服务.状态类.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\数据服务.场景类.ixx" />
+    <ClCompile Include="..\海中鱼巣\领域\数据服务.概念树类.ixx" />
+    <ClCompile Include="..\海中鱼巣\业务\应用服务.特征概念类.ixx" />
+    <ClCompile Include="..\海中鱼巣\业务\应用服务.存在概念树类.ixx" />
+    <ClCompile Include="..\海中鱼巣\业务\应用服务.场景成员概念类.ixx" />
     <ClCompile Include="场景特征实例组织专项验证.cpp" />
   </ItemGroup>
   <PropertyGroup Condition="'$(ProbeMode)'=='ExistenceProvider'">

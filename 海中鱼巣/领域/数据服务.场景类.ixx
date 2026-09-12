@@ -14,6 +14,7 @@ module;
 #include <vector>
 
 export module 海中鱼巣.领域.数据服务.场景类;
+import 海中鱼巣.领域.数据服务.绑定存在;
 export import 海中鱼巣.领域.合同.场景角色组织;
 import 海中鱼巣.领域.数据服务.定位特征;
 
@@ -21,7 +22,7 @@ export namespace 海中鱼巣 {
 
 class 场景类数据服务 final : public 状态使用绑定只读提供者,
                              public 场景动态组织只读提供者,
-                             public 场景直接包含只读提供者, public 定位特征组织参与者 {
+                             public 场景直接包含只读提供者, public 定位特征组织参与者, public 绑定存在场景参与者 {
 public:
   场景类数据服务() = delete;
   场景类数据服务(const 场景类数据服务 &) = delete;
@@ -474,12 +475,310 @@ private:
                                         const 直接归属联合只读提供者 &,
                                         场景直接包含种类);
 
+  using 绑定S = 绑定存在创建状态;
+  const L1事实基座服务 &绑定存在底座() const noexcept override { return l1_; }
+  const L1所有者范围写端口 &绑定存在端口() const noexcept override {
+    return port_;
+  }
+  bool 绑定存在结构已就绪() const noexcept override {
+    return 场景结构登记已就绪();
+  }
+  bool 绑定存在幂等键可用(L1所有者范围写入幂等身份 k) const noexcept override {
+    return k.值 && k.值 != 1 && k != 场景特征组织扩展登记固定幂等身份 &&
+           k != 场景直接包含扩展登记固定幂等身份 && (k.值 >> 48) != 0x4E43;
+  }
+  const 场景直接包含只读提供者 &绑定存在场景提供者() const noexcept override {
+    return *this;
+  }
+  static 绑定S 绑定映射(直接归属联合只读状态 s) noexcept {
+    using X = 直接归属联合只读状态;
+    switch (s) {
+    case X::成员未找到:
+      return 绑定S::绑定未找到;
+    case X::成员已退出:
+      return 绑定S::绑定已退出;
+    case X::事实代次漂移:
+      return 绑定S::事实代次漂移;
+    case X::入口拒绝:
+      return 绑定S::绑定类型不符;
+    case X::数量预算不足:
+      return 绑定S::数量预算不足;
+    case X::历史材料已清理:
+      return 绑定S::历史材料已清理;
+    case X::资源失败:
+      return 绑定S::资源失败;
+    default:
+      return 绑定S::内部不一致;
+    }
+  }
+  static 绑定S 绑定映射(场景直接包含状态 state) noexcept {
+    using X = 场景直接包含状态;
+    switch (state) {
+    case X::场景未找到:
+    case X::成员未找到:
+      return 绑定S::绑定未找到;
+    case X::场景已退出:
+    case X::成员已退出:
+      return 绑定S::绑定已退出;
+    case X::入口拒绝:
+    case X::引用冲突:
+      return 绑定S::绑定类型不符;
+    case X::成员已归属:
+    case X::成员多重归属:
+      return 绑定S::包含冲突;
+    case X::形成场景环:
+      return 绑定S::成环;
+    case X::事实代次漂移:
+      return 绑定S::事实代次漂移;
+    case X::数量预算不足:
+      return 绑定S::数量预算不足;
+    case X::历史材料已清理:
+      return 绑定S::历史材料已清理;
+    case X::资源失败:
+      return 绑定S::资源失败;
+    default:
+      return 绑定S::内部不一致;
+    }
+  }
+  static 绑定S 绑定映射(场景角色数据状态 state) noexcept {
+    using X = 场景角色数据状态;
+    switch (state) {
+    case X::未找到:
+      return 绑定S::绑定未找到;
+    case X::目标已退出:
+      return 绑定S::绑定已退出;
+    case X::入口拒绝:
+    case X::场景角色未启用:
+    case X::引用冲突:
+      return 绑定S::绑定类型不符;
+    case X::事实代次漂移:
+      return 绑定S::事实代次漂移;
+    case X::数量预算不足:
+      return 绑定S::数量预算不足;
+    case X::历史材料已清理:
+      return 绑定S::历史材料已清理;
+    case X::资源失败:
+      return 绑定S::资源失败;
+    default:
+      return 绑定S::内部不一致;
+    }
+  }
+  template <class T, class F>
+  绑定存在参与者结果<T> 绑定保护(std::uint64_t g, std::uint64_t h,
+                                 F &&fn) const {
+    绑定存在参与者结果<T> out;
+    out.Gread = g;
+    out.H = h;
+    try {
+      auto before = 读取当前代次();
+      if (!before.成功())
+        throw 绑定映射(before.状态);
+      if (before.Gread != g)
+        throw 绑定S::事实代次漂移;
+      out.数据 = fn();
+      const auto after = 读取当前代次();
+      if (!after.成功())
+        throw 绑定映射(after.状态);
+      if (after.Gread != g)
+        throw 绑定S::事实代次漂移;
+      out.状态 = 绑定S::精确重复;
+    } catch (绑定S e) {
+      out.状态 = e;
+      out.数据.reset();
+    } catch (const std::bad_alloc &) {
+      out.状态 = 绑定S::资源失败;
+      out.数据.reset();
+    } catch (const std::length_error &) {
+      out.状态 = 绑定S::资源失败;
+      out.数据.reset();
+    } catch (...) {
+      out.状态 = 绑定S::内部不一致;
+      out.数据.reset();
+    }
+    return out;
+  }
+  绑定存在参与者结果<L1所有者范围首次写入读取结果>
+  读取场景绑定首次材料(L1所有者范围写入幂等身份 k) const override {
+    auto f = port_.读取首次写入材料({L1所有者范围首次写入读取合同版本, k});
+    return {绑定S::精确重复, f.读取事实代次, f.读取事实代次, f};
+  }
+  绑定存在参与者结果<绑定现实树见证>
+  核验绑定现实树(std::uint64_t g, const 存在初始绑定 &b, 稳定编码 root,
+                 const 绑定存在创建预算 &budget,
+                 const 直接归属联合只读提供者 &joint) const override {
+    return 绑定保护<绑定现实树见证>(g, g, [&] {
+      if (!joint.绑定于(l1_))
+        throw 绑定S::入口拒绝;
+      auto rp = joint.读取当前场景角色位置({1, g, root});
+      if (!rp.成功({1, g, root}))
+        throw 绑定映射(rp.状态);
+      if (!rp.角色 || rp.角色->位置 != 直接归属场景位置::场景树根 ||
+          rp.角色->树根 != root)
+        throw 绑定S::绑定不在现实树;
+      auto bp = joint.读取当前场景角色位置({1, g, b.绑定节点});
+      if (!bp.成功({1, g, b.绑定节点}))
+        throw 绑定映射(bp.状态);
+      if (b.种类 != 存在初始绑定种类::父存在组成 &&
+          (!bp.角色 || bp.角色->位置 == 直接归属场景位置::未纳入场景树))
+        throw 绑定S::绑定类型不符;
+      绑定现实树见证 out{g, b.绑定节点, root, *rp.角色, {}};
+      std::unordered_set<std::uint64_t> seen;
+      auto cursor = b.绑定节点;
+      std::uint64_t scenes = 0;
+      for (;;) {
+        if (!seen.insert(cursor.值).second)
+          throw 绑定S::成环;
+        auto role = joint.读取当前场景角色位置({1, g, cursor});
+        if (!role.成功({1, g, cursor}))
+          throw 绑定映射(role.状态);
+        if (role.角色) {
+          if (++scenes > budget.最大场景数量)
+            throw 绑定S::数量预算不足;
+          if (role.角色->树根 != root)
+            throw 绑定S::绑定不在现实树;
+        }
+        auto parent = joint.读取当前联合父({1, g, cursor, budget.最大关系数量});
+        if (!parent.父读取成功({1, g, cursor, budget.最大关系数量}))
+          throw 绑定映射(parent.状态);
+        if (cursor == root) {
+          if (parent.父)
+            throw 绑定S::包含冲突;
+          break;
+        }
+        if (!parent.父)
+          throw 绑定S::绑定不在现实树;
+        if (out.上行路径.size() >= budget.最大祖先数量 ||
+            out.上行路径.size() >= budget.最大关系数量)
+          throw 绑定S::数量预算不足;
+        out.上行路径.push_back(*parent.父);
+        cursor = parent.父->父;
+      }
+      return out;
+    });
+  }
+  绑定存在参与者结果<L1有限N分区原子参与者写集_v3>
+  准备场景绑定片段(const 绑定存在创建请求 &r, std::uint64_t g) const override {
+    return 绑定保护<L1有限N分区原子参与者写集_v3>(g, r.G0, [&] {
+      auto parent = 读角色(g, r.G0, r.绑定.绑定节点);
+      if (!parent.成功({2, g, r.G0, r.绑定.绑定节点}))
+        throw 绑定映射(parent.状态);
+      auto key = std::get<存在场景绑定创建键>(r.幂等键).场景幂等身份;
+      L1有限N分区原子参与者写集_v3 p{
+          {2}, owner_, {L1所有者范围CRUD合同版本, r.G0, key}};
+      const L1有限N分区原子事实引用_v3 newborn{{1}, {1}};
+      if (r.绑定.种类 == 存在初始绑定种类::场景成员) {
+        p.写集.关系.push_back({{1},
+                               r.绑定.绑定节点,
+                               newborn,
+                               includeLayout_.直接存在成员关系类型,
+                               1});
+        return p;
+      }
+      if (r.绑定.种类 != 存在初始绑定种类::直接子场景)
+        throw 绑定S::入口拒绝;
+      for (std::uint32_t i = 1; i <= 4; ++i)
+        p.写集.节点.push_back({{i}, 节点种类::普通, std::nullopt});
+      p.写集.关系.push_back({{5},
+                             newborn,
+                             layout_.绑定结构.场景族锚点,
+                             layout_.绑定结构.场景族归属关系类型,
+                             1});
+      for (std::uint32_t i = 1; i <= 4; ++i)
+        p.写集.关系.push_back({{i + 5},
+                               newborn,
+                               L1所有者范围写集本地键{i},
+                               layout_.根绑定关系类型,
+                               static_cast<std::int64_t>(i)});
+      auto markers = 查询关系(g, r.G0, L1所有者范围关系端点方向::源,
+                              r.绑定.绑定节点, includeLayout_.根标记关系类型);
+      auto membership =
+          查询关系(g, r.G0, L1所有者范围关系端点方向::源, r.绑定.绑定节点,
+                   includeLayout_.树归属关系类型);
+      if (!markers.成功())
+        throw 绑定映射(markers.状态);
+      if (!membership.成功())
+        throw 绑定映射(membership.状态);
+      if (markers.关系.size() + membership.关系.size() != 1)
+        throw 绑定S::内部不一致;
+      const auto actualRoot = markers.关系.empty()
+                                  ? membership.关系.front().目标节点
+                                  : r.绑定.绑定节点;
+      if (actualRoot != r.期望现实树根)
+        throw 绑定S::绑定不在现实树;
+      p.写集.关系.push_back(
+          {{10}, newborn, actualRoot, includeLayout_.树归属关系类型, 1});
+      p.写集.关系.push_back({{11},
+                             r.绑定.绑定节点,
+                             newborn,
+                             includeLayout_.直接子场景关系类型,
+                             1});
+      return p;
+    });
+  }
+  绑定存在参与者结果<场景绑定出生见证>
+  读取场景绑定出生(std::uint64_t g, std::uint64_t h, 稳定编码 e,
+                   const 存在初始绑定 &b) const override {
+    return 绑定保护<场景绑定出生见证>(g, h, [&] {
+      auto type = b.种类 == 存在初始绑定种类::场景成员
+                      ? includeLayout_.直接存在成员关系类型
+                      : includeLayout_.直接子场景关系类型;
+      auto edges = 查询关系(g, h, L1所有者范围关系端点方向::目标, e, type);
+      if (!edges.成功())
+        throw 绑定映射(edges.状态);
+      if (edges.关系.empty())
+        throw 绑定S::绑定未找到;
+      if (edges.关系.size() != 1)
+        throw 绑定S::内部不一致;
+      const auto &x = edges.关系.front();
+      if (x.源节点 != b.绑定节点 || x.目标节点 != e || x.角色或顺序 != 1)
+        throw 绑定S::内部不一致;
+      auto bound = 读取直接包含历史({1, g, h, x.编码});
+      if (!bound.成功())
+        throw 绑定映射(bound.结果头.状态);
+      if (!bound.包含)
+        throw 绑定S::内部不一致;
+      场景绑定出生见证 out{g, h, b.种类, b.绑定节点, e, *bound.包含, {}};
+      if (b.种类 == 存在初始绑定种类::直接子场景) {
+        auto role = 读角色(g, h, e);
+        if (!role.成功({2, g, h, e}))
+          throw 绑定映射(role.状态);
+        auto proof = 查询关系(g, h, L1所有者范围关系端点方向::源, e,
+                              includeLayout_.树归属关系类型);
+        if (!proof.成功())
+          throw 绑定映射(proof.状态);
+        if (proof.关系.size() != 1)
+          throw 绑定S::内部不一致;
+        const auto &edge = proof.关系.front();
+        场景树节点当前事实 node;
+        node.场景角色 = *role.角色;
+        node.树证明 = {g,
+                       h,
+                       场景树证明种类::树归属,
+                       edge.编码,
+                       e,
+                       edge.目标节点,
+                       {edge.编码,
+                        e,
+                        edge.目标节点,
+                        edge.关系类型节点,
+                        1,
+                        {edge.创建事实代次, {}}}};
+        node.直接父 =
+            直接归属联合事实{g,        h, 直接归属来源::直接子场景, x.编码,
+                             x.源节点, e, x.创建事实代次,           {}};
+        node.从上游场景到本场景路径.push_back(*node.直接父);
+        out.子场景结构 = std::move(node);
+      }
+      return out;
+    });
+  }
   const L1事实基座服务& 定位底座() const noexcept override { return l1_; }
   L1所有者范围写端口& 定位端口() noexcept override { return port_; }
   bool 定位幂等键可用(L1所有者范围写入幂等身份 key) const noexcept override {
     return key.值&&key.值!=1&&key!=场景特征组织扩展登记固定幂等身份&&key!=场景直接包含扩展登记固定幂等身份&&(key.值>>48)!=0x4E43;
   }
-  bool 定位结构已就绪() const noexcept override {
+  bool 定位结构已就绪() const noexcept override { return 场景结构登记已就绪(); }
+  bool 场景结构登记已就绪() const noexcept {
     try {
       std::lock_guard<std::mutex> lock(write_);
       const auto g=l1_.读取中性当前事实代次({L1中性CRUD合同版本});

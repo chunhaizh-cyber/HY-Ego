@@ -1,5 +1,10 @@
 module;
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include "../核心/容错检查.h"
+
 #include <algorithm>
 #include <array>
 #include <bit>
@@ -897,7 +902,21 @@ class 概念树类数据服务 final {
     概念树支持组结果 按世界读取支持(const 概念树按世界支持读取请求 &) const;
     概念树形成引用组结果 读取形成来源当前引用(const 概念树形成引用读取请求 &) const;
     概念树写入结果 创建概念(const 概念树概念建立请求 &r) {
-        return 执行写入(r);
+        const bool existence = std::holds_alternative<概念树存在定义>(r.定义);
+        if (existence && r.直接上位.empty()) {
+            try {
+                追根因检查(false, L"普通存在概念创建前必须明确直接上位绑定节点");
+            } catch (...) {}
+        }
+        auto result = 执行写入(r);
+        if (existence && !r.直接上位.empty() && !result.成功()) {
+            try {
+                追根因检查(false, L"普通存在概念创建失败：必须先明确合法直接上位绑定节点；请核对结构化结果原因");
+            } catch (...) {
+                // 诊断失败不得改写已经确定的机器结果。
+            }
+        }
+        return result;
     }
     概念树写入结果 操作直接上位(const 概念树上位操作请求 &r) {
         return 执行写入(r);
@@ -5107,7 +5126,22 @@ bool 概念树存在写入结果_v2::成功() const noexcept {
         }
     }, *原请求);
 }
-概念树存在写入结果_v2 概念树类数据服务::创建存在概念(const 概念树存在建立请求_v2 &r) { return 存在执行(r); }
+概念树存在写入结果_v2 概念树类数据服务::创建存在概念(const 概念树存在建立请求_v2 &r) {
+    if (r.直接上位.empty()) {
+        try {
+            追根因检查(false, L"普通存在概念创建前必须明确直接上位绑定节点");
+        } catch (...) {}
+    }
+    auto result = 存在执行(r);
+    if (!r.直接上位.empty() && !result.成功()) {
+        try {
+            追根因检查(false, L"普通存在概念创建失败：必须先明确合法直接上位绑定节点；请核对结构化结果原因");
+        } catch (...) {
+            // 诊断失败不得改写已经确定的机器结果。
+        }
+    }
+    return result;
+}
 概念树存在写入结果_v2 概念树类数据服务::释放存在抽象依据(const 概念树存在依据释放请求_v2 &r) { return 存在执行(r); }
 概念树存在写入结果_v2 概念树类数据服务::治理存在概念(const 概念树存在治理请求_v2 &r) { return 存在执行(r); }
 概念树应用写入结果 概念树类数据服务::执行应用概念写入(const 概念树应用写请求 &input) {

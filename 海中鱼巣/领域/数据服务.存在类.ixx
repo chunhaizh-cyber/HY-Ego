@@ -18,6 +18,7 @@ module;
 #include <vector>
 
 export module 海中鱼巣.领域.数据服务.存在类;
+import 海中鱼巣.领域.数据服务.绑定存在;
 
 export import 海中鱼巣.领域.数据服务.特征类;
 export import 海中鱼巣.领域.合同.存在结构身份只读;
@@ -184,13 +185,7 @@ struct 存在类结点 final {
   std::vector<存在当前采用事实> 当前采用组;
 };
 
-struct 存在类新增请求 final {
-  std::uint32_t 合同版本 = 存在类数据合同版本;
-  std::uint64_t 期望事实代次 = 0;
-  L1所有者范围写入幂等身份 幂等身份{};
-  friend bool operator==(const 存在类新增请求 &,
-                         const 存在类新增请求 &) = default;
-};
+
 
 struct 存在类查询请求 final {
   std::uint32_t 合同版本 = 存在类数据合同版本;
@@ -638,7 +633,7 @@ struct 存在特征成员历史结果 final {
 };
 
 class 存在类数据服务 final : public 存在结构身份只读提供者,
-                             public 存在组成结构只读提供者, public 定位特征已知参与者 {
+                             public 存在组成结构只读提供者, public 定位特征已知参与者, public 绑定存在内容参与者 {
 public:
   bool 绑定于(const L1事实基座服务 &s) const noexcept override {
     return &s == &第一层服务_;
@@ -1823,31 +1818,7 @@ public:
     }
   }
 
-  存在类结点结果 新增存在(const 存在类新增请求 &请求) {
-    if (!新增请求有效(请求))
-      return 失败(存在类数据状态::入口拒绝);
-    try {
-      std::scoped_lock lock(写入锁_);
-      if (const auto 重放 = 尝试重放新增存在(请求))
-        return *重放;
-      L1所有者范围写集请求 写集;
-      写集.合同版本 = L1所有者范围CRUD合同版本;
-      写集.期望事实代次 = 请求.期望事实代次;
-      写集.写入幂等身份 = 请求.幂等身份;
-      写集.节点 = {
-          {存在类数据内部::存在结点本地键, 节点种类::普通, std::nullopt}};
-      写集.关系 = {{存在类数据内部::存在族归属关系本地键,
-                    存在类数据内部::存在结点本地键, 存在族锚点_,
-                    存在族归属关系类型_, 1}};
-      return 提交新增存在(写集, 请求.幂等身份, 存在类数据状态::已创建);
-    } catch (const std::bad_alloc &) {
-      return 失败(存在类数据状态::资源失败);
-    } catch (const std::length_error &) {
-      return 失败(存在类数据状态::资源失败);
-    } catch (...) {
-      return 失败(存在类数据状态::内部不一致);
-    }
-  }
+
 
   存在类结点结果 查询存在(const 存在类查询请求 &请求) const {
     if (!查询请求有效(请求))
@@ -3385,10 +3356,7 @@ private:
     return 种类 == 存在类成员种类::子存在 || 种类 == 存在类成员种类::特征;
   }
 
-  static bool 新增请求有效(const 存在类新增请求 &请求) noexcept {
-    return 请求.合同版本 == 存在类数据合同版本 && 请求.期望事实代次 != 0 &&
-           有效(请求.幂等身份);
-  }
+
 
   static bool 查询请求有效(const 存在类查询请求 &请求) noexcept {
     return 请求.合同版本 == 存在类数据合同版本 && 请求.期望事实代次 != 0 &&
@@ -3588,48 +3556,7 @@ private:
     return 写集;
   }
 
-  存在类结点结果 提交新增存在(const L1所有者范围写集请求 &写集,
-                              L1所有者范围写入幂等身份 幂等身份,
-                              存在类数据状态 成功状态) {
-    const auto 写入 = 写入端口_.提交所有者范围中性写集(写集);
-    const auto 状态 = 映射写入状态(写入.状态, 成功状态);
-    if (状态 != 成功状态 && 状态 != 存在类数据状态::精确重复)
-      return 失败(状态, 写入.事实代次);
-    try {
-      if (!写入结果头完整(写入, 幂等身份))
-        return 失败(存在类数据状态::内部不一致, 写入.事实代次);
-      if (写入.新编码映射.size() != 2)
-        return 失败(存在类数据状态::已可能发布, 写入.事实代次);
-      const auto 结点 =
-          存在类数据内部::查找唯一编码(写入, 存在类数据内部::存在结点本地键);
-      const auto 族关系 = 存在类数据内部::查找唯一编码(
-          写入, 存在类数据内部::存在族归属关系本地键);
-      if (!结点 || !族关系)
-        return 失败(存在类数据状态::已可能发布, 写入.事实代次);
-      std::uint64_t 读取守卫事实代次 = 写入.事实代次;
-      if (状态 == 存在类数据状态::精确重复) {
-        const auto 当前 = 读取当前事实代次();
-        if (当前.first != 存在结构身份只读状态::已读取)
-          return 失败(存在类数据状态::已可能发布, 写入.事实代次);
-        读取守卫事实代次 = 当前.second;
-      }
-      auto 读回 = 状态 == 存在类数据状态::精确重复
-                      ? 读取历史存在快照(*结点, 写入.事实代次, 写入.事实代次,
-                                         存在类数据状态::精确重复, std::nullopt,
-                                         读取守卫事实代次)
-                      : 读取当前存在(*结点, 写入.事实代次, true);
-      if (!读回.成功() || !读回.存在结点 || 读回.存在结点->结点 != *结点)
-        return 失败(存在类数据状态::已可能发布, 写入.事实代次);
-      读回.状态 = 状态;
-      return 读回;
-    } catch (const std::bad_alloc &) {
-      return 失败(存在类数据状态::已可能发布, 写入.事实代次);
-    } catch (const std::length_error &) {
-      return 失败(存在类数据状态::已可能发布, 写入.事实代次);
-    } catch (...) {
-      return 失败(存在类数据状态::内部不一致, 写入.事实代次);
-    }
-  }
+
 
   存在类结点结果 提交成员变更(const L1所有者范围写集请求 &写集,
                               L1所有者范围写入幂等身份 幂等身份,
@@ -3680,27 +3607,7 @@ private:
     }
   }
 
-  std::optional<存在类结点结果> 尝试重放新增存在(const 存在类新增请求 &请求) {
-    const auto 首次 = 读取首次写入(请求.幂等身份);
-    if (!首次)
-      return std::nullopt;
-    if (首次->状态 != L1所有者范围读取状态::成功 || !首次->首次规范化写集 ||
-        !首次->首次写入结果)
-      return 失败(映射读取状态(首次->状态), 首次->读取事实代次);
-    L1所有者范围写集请求 期望;
-    期望.合同版本 = L1所有者范围CRUD合同版本;
-    期望.期望事实代次 = 请求.期望事实代次;
-    期望.写入幂等身份 = 请求.幂等身份;
-    期望.节点 = {
-        {存在类数据内部::存在结点本地键, 节点种类::普通, std::nullopt}};
-    期望.关系 = {{存在类数据内部::存在族归属关系本地键,
-                  存在类数据内部::存在结点本地键, 存在族锚点_,
-                  存在族归属关系类型_, 1}};
-    if (*首次->首次规范化写集 != 期望 ||
-        首次->首次写入结果->状态 != L1所有者范围写入状态::成功)
-      return 失败(存在类数据状态::幂等冲突, 首次->首次写入结果->事实代次);
-    return 提交新增存在(期望, 请求.幂等身份, 存在类数据状态::精确重复);
-  }
+
 
   std::optional<存在类结点结果>
   尝试重放新增成员(const 存在类成员新增请求 &请求) {
@@ -4308,12 +4215,149 @@ private:
                e->退出事实代次 == saved.事实代次);
     }
   }
+  using 绑定S = 绑定存在创建状态;
+  const L1事实基座服务 &绑定存在底座() const noexcept override {
+    return 第一层服务_;
+  }
+  L1所有者范围写端口 &绑定存在端口() noexcept override { return 写入端口_; }
+  bool 绑定存在结构已就绪() const noexcept override {
+    return 存在结构登记已就绪();
+  }
+  bool 绑定存在幂等键可用(L1所有者范围写入幂等身份 k) const noexcept override {
+    return k.值 && k.值 != 1 && k != 存在族来源初始化幂等身份 &&
+           (k.值 >> 48) != 0x4E43;
+  }
+  const 存在组成结构只读提供者 &绑定存在组成提供者() const noexcept override {
+    return *this;
+  }
+  static 绑定S 绑定映射(存在结构身份只读状态 s) noexcept {
+    using X = 存在结构身份只读状态;
+    switch (s) {
+    case X::入口拒绝:
+      return 绑定S::绑定类型不符;
+    case X::未找到:
+      return 绑定S::绑定未找到;
+    case X::目标已退出:
+      return 绑定S::绑定已退出;
+    case X::事实代次漂移:
+      return 绑定S::事实代次漂移;
+    case X::历史材料已清理:
+      return 绑定S::历史材料已清理;
+    case X::资源失败:
+      return 绑定S::资源失败;
+    case X::数量预算不足:
+      return 绑定S::数量预算不足;
+    default:
+      return 绑定S::内部不一致;
+    }
+  }
+  template <class T, class F>
+  绑定存在参与者结果<T> 绑定保护(std::uint64_t g, std::uint64_t h,
+                                 F &&fn) const {
+    绑定存在参与者结果<T> out;
+    out.Gread = g;
+    out.H = h;
+    try {
+      auto before = 读取当前事实代次();
+      if (before.first != 存在结构身份只读状态::已读取)
+        throw 绑定映射(before.first);
+      if (before.second != g)
+        throw 绑定S::事实代次漂移;
+      out.数据 = fn();
+      auto after = 读取当前事实代次();
+      if (after.first != 存在结构身份只读状态::已读取)
+        throw 绑定映射(after.first);
+      if (after.second != g)
+        throw 绑定S::事实代次漂移;
+      out.状态 = 绑定S::精确重复;
+    } catch (绑定S e) {
+      out.状态 = e;
+      out.数据.reset();
+    } catch (const std::bad_alloc &) {
+      out.状态 = 绑定S::资源失败;
+      out.数据.reset();
+    } catch (const std::length_error &) {
+      out.状态 = 绑定S::资源失败;
+      out.数据.reset();
+    } catch (...) {
+      out.状态 = 绑定S::内部不一致;
+      out.数据.reset();
+    }
+    return out;
+  }
+  绑定存在参与者结果<L1所有者范围首次写入读取结果>
+  读取存在出生首次材料(L1所有者范围写入幂等身份 k) const override {
+    const auto f =
+        写入端口_.读取首次写入材料({L1所有者范围首次写入读取合同版本, k});
+    return {绑定S::精确重复, f.读取事实代次, f.读取事实代次, f};
+  }
+  绑定存在参与者结果<L1有限N分区原子参与者写集_v3>
+  准备存在出生片段(const 绑定存在创建请求 &r, std::uint64_t g) const override {
+    return 绑定保护<L1有限N分区原子参与者写集_v3>(g, r.G0, [&] {
+      const bool single = r.绑定.种类 == 存在初始绑定种类::父存在组成;
+      const auto key =
+          single ? std::get<存在组成绑定创建键>(r.幂等键).幂等身份
+                 : std::get<存在场景绑定创建键>(r.幂等键).存在幂等身份;
+      L1有限N分区原子参与者写集_v3 p{
+          {1}, 所有者_, {L1所有者范围CRUD合同版本, r.G0, key}};
+      p.写集.节点.push_back({{1}, 节点种类::普通, std::nullopt});
+      p.写集.关系.push_back({{2},
+                             L1所有者范围写集本地键{1},
+                             存在族锚点_,
+                             存在族归属关系类型_,
+                             1});
+      if (single) {
+        auto parent = 读取存在身份来源历史见证(g, r.G0, r.绑定.绑定节点);
+        if (!parent.成功(g, r.G0, r.绑定.绑定节点))
+          throw 绑定映射(parent.状态);
+        p.写集.关系.push_back({{3},
+                               r.绑定.绑定节点,
+                               L1所有者范围写集本地键{1},
+                               子存在关系类型_,
+                               1});
+      }
+      return p;
+    });
+  }
+  绑定存在参与者结果<存在绑定出生见证>
+  读取存在绑定出生(std::uint64_t g, std::uint64_t h, 稳定编码 e,
+                   const 存在初始绑定 &b) const override {
+    return 绑定保护<存在绑定出生见证>(g, h, [&] {
+      auto id = 读取存在身份来源历史见证(g, h, e);
+      if (!id.成功(g, h, e))
+        throw 绑定映射(id.状态);
+      存在绑定出生见证 out{g, h, e, *id.见证, {}};
+      if (b.种类 == 存在初始绑定种类::父存在组成) {
+        auto q = 第一层服务_.读取所有者范围历史关系组(
+            {L1所有者范围CRUD合同版本, L1所有者范围关系端点方向::目标, e,
+             子存在关系类型_, h});
+        if (q.读取事实代次 != g)
+          throw 绑定S::事实代次漂移;
+        if (q.状态 != L1所有者范围读取状态::成功)
+          throw 绑定S::内部不一致;
+        for (const auto &x : q.关系组) {
+          if (!x.创建事实代次 || x.创建事实代次 > h ||
+              (x.退出事实代次 && *x.退出事实代次 <= h))
+            continue;
+          if (out.组成绑定关系 || x.源节点 != b.绑定节点 || x.目标节点 != e ||
+              x.写入所有者 != 所有者_ || x.角色或顺序 != 1)
+            throw 绑定S::内部不一致;
+          out.组成绑定关系 =
+              存在组成关系事实{g, h, x.编码, x.源节点, e, x.创建事实代次, {}};
+        }
+        if (!out.组成绑定关系)
+          throw 绑定S::绑定未找到;
+      }
+      return out;
+    });
+  }
   const L1事实基座服务& 定位底座() const noexcept override { return 第一层服务_; }
   L1所有者范围写端口& 定位端口() noexcept override { return 写入端口_; }
   bool 定位幂等键可用(L1所有者范围写入幂等身份 key) const noexcept override {
     return key.值&&key.值!=1&&key!=存在族来源初始化幂等身份&&(key.值>>48)!=0x4E43;
   }
-  bool 定位结构已就绪() const noexcept override {
+  bool 定位结构已就绪() const noexcept override { return 存在结构登记已就绪(); }
+  bool 存在结构登记已就绪() const noexcept {
     try {
       std::lock_guard<std::mutex> lock(写入锁_);
       if(!写入端口_.有效()||!写入端口_.绑定于(第一层服务_)||!特征服务_.绑定于(第一层服务_))return false;
