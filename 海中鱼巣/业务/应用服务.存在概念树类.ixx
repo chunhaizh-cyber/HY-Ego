@@ -307,7 +307,6 @@ std::optional<概念树应用定义事实>存在概念树应用服务::查找(co
         if(!可派发(remaining))拒绝(D::数量预算不足);
         auto match=concepts_.判定应用特征模板({2,{1,g,r.H},w.模板,{1,g,r.H,{w.实例.值}},remaining});if(!match.成功())拒绝(match.状态);
         if(match.Gread!=g||match.H!=r.H)拒绝(D::内部不一致);消费(remaining,match.数据->用量);
-        if(std::holds_alternative<概念树动态模板事实>(match.数据->模板))拒绝(D::不支持);
         const auto& c=std::get<特征概念事实>(match.数据->模板);const auto& p=match.数据->判定;
         if(c.身份!=w.模板||c.定义.类型!=f.信息.类型||p.Gread!=g||p.模板H!=r.H||p.实际H!=r.H
             ||p.实际!=f||p.域!=c.定义.域||p.命中!=match.数据->适用)拒绝(D::内部不一致);
