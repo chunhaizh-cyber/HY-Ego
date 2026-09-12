@@ -1,0 +1,271 @@
+module;
+
+#include <cstdint>
+#include <memory>
+#include <mutex>
+#include <new>
+#include <optional>
+#include <stdexcept>
+#include <utility>
+#include <variant>
+#include <vector>
+
+module 海中鱼巣.装配.普通应用;
+
+import 海中鱼巣.领域.数据服务.世界树根;
+import 海中鱼巣.业务.应用服务.世界树类;
+
+namespace 海中鱼巣 {
+namespace 普通应用装配内部 {
+
+using 元节点规格 =
+    std::pair<节点种类, std::optional<L1所有者范围值表示种类>>;
+
+std::uint64_t 当前代次(const L1事实基座服务 &l1) {
+  const auto result =
+      l1.读取中性当前事实代次({L1中性CRUD合同版本});
+  if (result.状态 != L1中性读取状态::成功 || !result.事实代次)
+    throw 普通应用装配状态::内部不一致;
+  return result.事实代次;
+}
+
+L1所有者范围交付 建立所有者(L1所有者范围签发器 &issuer,
+                              std::uint64_t key) {
+  auto result = issuer.建立所有者范围(
+      {L1所有者范围CRUD合同版本, {key},
+       L1所有者范围种类::独占结构范围});
+  if (result.建立结果.状态 != L1所有者范围管理状态::成功 ||
+      !result.写入端口 || !result.写入端口->有效())
+    throw 普通应用装配状态::所有者建立失败;
+  return result;
+}
+
+std::vector<稳定编码>
+建立并读回元节点(L1所有者范围写端口 &port,
+                  const L1事实基座服务 &l1, std::uint64_t key,
+                  const std::vector<元节点规格> &specs) {
+  if (specs.empty())
+    throw 普通应用装配状态::元结构建立失败;
+  L1所有者范围写集请求 request{
+      L1所有者范围CRUD合同版本, 当前代次(l1), {key}};
+  request.节点.reserve(specs.size());
+  for (std::uint32_t i = 0; i < specs.size(); ++i)
+    request.节点.push_back(
+        {{static_cast<std::uint64_t>(i) + 1}, specs[i].first,
+         specs[i].second});
+
+  const auto saved = port.提交所有者范围中性写集(request);
+  if (saved.状态 != L1所有者范围写入状态::成功 ||
+      saved.所有者 != port.所有者身份() ||
+      saved.写入幂等身份 != request.写入幂等身份 ||
+      saved.新编码映射.size() != specs.size() || !saved.事实代次)
+    throw 普通应用装配状态::元结构建立失败;
+
+  const auto first = port.读取首次写入材料(
+      {L1所有者范围首次写入读取合同版本, request.写入幂等身份});
+  if (first.状态 != L1所有者范围读取状态::成功 ||
+      first.所有者 != port.所有者身份() ||
+      first.写入幂等身份 != request.写入幂等身份 ||
+      first.读取事实代次 != saved.事实代次 ||
+      !first.首次规范化写集 || !first.首次写入结果 ||
+      *first.首次规范化写集 != request ||
+      first.首次写入结果->状态 != L1所有者范围写入状态::成功 ||
+      first.首次写入结果->事实代次 != saved.事实代次 ||
+      first.首次写入结果->新编码映射 != saved.新编码映射)
+    throw 普通应用装配状态::元结构建立失败;
+
+  std::vector<稳定编码> ids(specs.size());
+  for (const auto &[local, id] : saved.新编码映射) {
+    if (!local.值 || local.值 > ids.size() || !有效(id) ||
+        有效(ids[local.值 - 1]))
+      throw 普通应用装配状态::元结构建立失败;
+    ids[local.值 - 1] = id;
+  }
+  for (std::size_t i = 0; i < ids.size(); ++i) {
+    const auto read = l1.读取所有者范围当前节点(
+        {L1所有者范围CRUD合同版本, ids[i]});
+    const auto *node = read.事实
+                           ? std::get_if<L1所有者范围节点事实>(&*read.事实)
+                           : nullptr;
+    if (read.状态 != L1所有者范围读取状态::成功 ||
+        read.读取事实代次 != saved.事实代次 || !node ||
+        node->编码 != ids[i] || node->种类 != specs[i].first ||
+        node->属性类型表示 != specs[i].second ||
+        node->写入所有者 != port.所有者身份() ||
+        node->创建事实代次 != saved.事实代次 || node->退出事实代次)
+      throw 普通应用装配状态::元结构建立失败;
+  }
+  return ids;
+}
+
+struct 普通应用上下文 final {
+  std::unique_ptr<L1事实基座运行包> 运行包;
+  L1所有者范围交付 特征定义所有者;
+  L1所有者范围交付 特征信息所有者;
+  L1所有者范围交付 存在所有者;
+  L1所有者范围交付 场景所有者;
+  L1所有者范围交付 状态所有者;
+  std::unique_ptr<特征值类数据服务> 特征值;
+  std::unique_ptr<特征类数据服务> 特征;
+  std::unique_ptr<存在类数据服务> 存在;
+  std::unique_ptr<状态类数据服务> 状态;
+  std::unique_ptr<场景类数据服务> 场景;
+  std::unique_ptr<世界树根数据服务> 根服务;
+  std::unique_ptr<世界树应用服务> 世界树;
+};
+
+std::mutex 上下文锁;
+std::unique_ptr<普通应用上下文> 上下文;
+
+std::unique_ptr<普通应用上下文> 建立上下文() {
+  auto result = std::make_unique<普通应用上下文>();
+  result->运行包 =
+      std::make_unique<L1事实基座运行包>(建立L1事实基座运行包());
+  auto &l1 = result->运行包->读取服务();
+  auto &issuer = result->运行包->所有者范围签发器();
+
+  result->特征定义所有者 = 建立所有者(issuer, 0x1001);
+  result->特征信息所有者 = 建立所有者(issuer, 0x1002);
+  result->存在所有者 = 建立所有者(issuer, 0x1003);
+  result->场景所有者 = 建立所有者(issuer, 0x1004);
+  result->状态所有者 = 建立所有者(issuer, 0x1005);
+
+  const auto producers = 建立并读回元节点(
+      *result->特征定义所有者.写入端口, l1, 0x1101,
+      {{节点种类::普通, std::nullopt},
+       {节点种类::普通, std::nullopt}});
+
+  std::vector<元节点规格> definition(
+      16, {节点种类::普通, std::nullopt});
+  for (auto i : {2, 9, 13})
+    definition[i] =
+        {节点种类::属性类型, L1所有者范围值表示种类::U64组};
+  for (auto i : {3, 8})
+    definition[i] =
+        {节点种类::属性类型, L1所有者范围值表示种类::I64};
+  definition[14] =
+      {节点种类::属性类型, L1所有者范围值表示种类::I64组};
+  (void)建立并读回元节点(*result->特征定义所有者.写入端口, l1, 1,
+                           definition);
+
+  (void)建立并读回元节点(
+      *result->特征信息所有者.写入端口, l1, 1,
+      {{节点种类::普通, std::nullopt},
+       {节点种类::普通, std::nullopt},
+       {节点种类::属性类型, L1所有者范围值表示种类::I64},
+       {节点种类::属性类型, L1所有者范围值表示种类::I64},
+       {节点种类::普通, std::nullopt}});
+
+  const auto existenceLayout = 建立并读回元节点(
+      *result->存在所有者.写入端口, l1, 0x1201,
+      {{节点种类::普通, std::nullopt},
+       {节点种类::普通, std::nullopt},
+       {节点种类::普通, std::nullopt}});
+  (void)建立并读回元节点(
+      *result->存在所有者.写入端口, l1, 0x455849535446414DULL,
+      {{节点种类::普通, std::nullopt},
+       {节点种类::普通, std::nullopt}});
+
+  const auto stateLayout = 建立并读回元节点(
+      *result->状态所有者.写入端口, l1, 0x1301,
+      {{节点种类::普通, std::nullopt},
+       {节点种类::普通, std::nullopt},
+       {节点种类::普通, std::nullopt},
+       {节点种类::属性类型, L1所有者范围值表示种类::I64},
+       {节点种类::属性类型, L1所有者范围值表示种类::U64组},
+       {节点种类::属性类型, L1所有者范围值表示种类::I64},
+       {节点种类::属性类型, L1所有者范围值表示种类::I64},
+       {节点种类::属性类型, L1所有者范围值表示种类::I64}});
+
+  result->特征值 = std::make_unique<特征值类数据服务>(l1);
+  result->特征 = std::make_unique<特征类数据服务>(
+      l1, std::move(*result->特征定义所有者.写入端口),
+      std::move(*result->特征信息所有者.写入端口), *result->特征值,
+      producers.front());
+  result->存在 = std::make_unique<存在类数据服务>(
+      l1, *result->特征, std::move(*result->存在所有者.写入端口),
+      existenceLayout[0], existenceLayout[1],
+      存在当前采用结构交付{existenceLayout[2]});
+  result->状态 = std::make_unique<状态类数据服务>(
+      l1, *result->特征, std::move(*result->状态所有者.写入端口),
+      状态类结构交付{stateLayout[0], stateLayout[1], stateLayout[2],
+                     stateLayout[3], stateLayout[4], stateLayout[5],
+                     stateLayout[6], stateLayout[7]});
+
+  场景结构登记请求 baseRequest{2, 当前代次(l1), {1}};
+  auto base = 场景类数据服务::登记结构类型(
+      l1, *result->场景所有者.写入端口, baseRequest);
+  场景特征组织扩展登记请求 featureRequest{1, 当前代次(l1)};
+  auto feature = 场景类数据服务::登记特征组织扩展(
+      l1, *result->场景所有者.写入端口, featureRequest);
+  场景直接包含扩展登记请求 includeRequest{1, 当前代次(l1)};
+  auto include = 场景类数据服务::登记直接包含扩展(
+      l1, *result->场景所有者.写入端口, includeRequest);
+  if (!base.成功(baseRequest) || !base.交付 ||
+      !feature.成功(featureRequest) || !feature.交付 ||
+      !include.成功(includeRequest) || !include.交付)
+    throw 普通应用装配状态::元结构建立失败;
+
+  result->场景 = std::make_unique<场景类数据服务>(
+      l1, std::move(*result->场景所有者.写入端口), *base.交付,
+      *result->存在, *result->状态, *feature.交付, *include.交付);
+  result->根服务 =
+      std::make_unique<世界树根数据服务>(*result->存在, *result->场景);
+  return result;
+}
+
+} // namespace 普通应用装配内部
+
+普通应用装配结果 构造普通应用上下文() noexcept {
+  using namespace 普通应用装配内部;
+  std::lock_guard lock(上下文锁);
+  普通应用装配结果 out;
+  try {
+    if (上下文) {
+      const auto root = 读取世界树根节点();
+      if (!root.成功()) {
+        out.状态 = 普通应用装配状态::内部不一致;
+        return out;
+      }
+      out.状态 = 普通应用装配状态::已装配;
+      out.根事实代次 = root.投影->最近验证G;
+      return out;
+    }
+
+    auto candidate = 建立上下文();
+    auto &l1 = candidate->运行包->读取服务();
+    const 世界树根初始化请求 rootRequest{
+        世界树根合同版本, 当前代次(l1), {0x2001}, {0x2002}, {0x2003},
+        256, 64};
+    const auto initialized = candidate->根服务->初始化世界树根(rootRequest);
+    if (!initialized.成功(rootRequest)) {
+      out.状态 = 普通应用装配状态::世界树根失败;
+      return out;
+    }
+
+    const 世界树根验证请求 verifyRequest{
+        2, initialized.Gread, {64, 256}};
+    auto world = 建立世界树应用服务(*candidate->场景, *candidate->存在,
+                                      verifyRequest);
+    if (!world.成功() ||
+        !world.服务->验证现实世界根(verifyRequest).成功(verifyRequest)) {
+      out.状态 = 普通应用装配状态::世界树应用失败;
+      return out;
+    }
+    candidate->世界树 = std::move(world.服务);
+    out.状态 = 普通应用装配状态::已装配;
+    out.根事实代次 = initialized.Gread;
+    上下文 = std::move(candidate);
+  } catch (普通应用装配状态 status) {
+    out.状态 = status;
+  } catch (const std::bad_alloc &) {
+    out.状态 = 普通应用装配状态::资源失败;
+  } catch (const std::length_error &) {
+    out.状态 = 普通应用装配状态::资源失败;
+  } catch (...) {
+    out.状态 = 普通应用装配状态::内部不一致;
+  }
+  return out;
+}
+
+} // namespace 海中鱼巣

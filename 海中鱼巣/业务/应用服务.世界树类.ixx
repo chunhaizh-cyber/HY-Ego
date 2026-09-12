@@ -1,17 +1,21 @@
 module;
 #include <algorithm>
 #include <cstdint>
+#include <memory>
+#include <mutex>
 #include <new>
 #include <optional>
 #include <stdexcept>
 #include <utility>
 #include <variant>
+#include <unordered_set>
 export module 海中鱼巣.业务.应用服务.世界树类;
 export import 海中鱼巣.领域.数据服务.存在类;
 export import 海中鱼巣.领域.数据服务.场景类;
 export import 海中鱼巣.领域.数据服务.绑定存在;
+export import 海中鱼巣.领域.数据服务.世界树根;
 export namespace 海中鱼巣 {
-inline constexpr std::uint32_t 世界树应用合同版本 = 2;
+inline constexpr std::uint32_t 世界树应用合同版本 = 3;
 enum class 世界树操作阶段 : std::uint8_t {
   无 = 0,
   现实树预读 = 1,
@@ -127,6 +131,53 @@ struct 世界树存在创建投影 final {
   稳定编码 存在{};
   世界树存在位置 位置;
 };
+
+enum class 世界树节点视角 : std::uint8_t { 世界根场景 = 1, 场景 = 2, 存在 = 3 };
+struct 世界树层级位置读取请求 final {
+  std::uint32_t 版本 = 世界树应用合同版本;
+  std::uint64_t G0 = 0;
+  稳定编码 节点{};
+  世界树节点视角 预期视角 = 世界树节点视角::存在;
+  世界树读取预算 预算{};
+};
+struct 世界树层级位置 final {
+  稳定编码 节点{}, 世界根{};
+  世界树节点视角 视角 = 世界树节点视角::存在;
+  std::optional<直接归属联合事实> 直接结构父;
+  std::optional<场景父语境投影事实> 父场景语境;
+  std::vector<直接归属联合事实> 上行路径;
+};
+struct 世界树层级位置结果 final {
+  世界树结果头 结果头;
+  std::optional<世界树层级位置> 位置;
+  bool 成功(const 世界树层级位置读取请求 &r) const noexcept {
+    return r.版本 == 世界树应用合同版本 &&
+           结果头.版本 == 世界树应用合同版本 &&
+           结果头.状态 == 世界树操作状态::已读取存在位置 &&
+           结果头.Gread == r.G0 && 位置 && 位置->节点 == r.节点 &&
+           位置->视角 == r.预期视角 && 有效(位置->世界根);
+  }
+};
+struct 世界树全局根投影 final {
+  稳定编码 根{};
+  std::uint64_t 首次H = 0, 最近验证G = 0;
+};
+enum class 世界树全局根读取状态 : std::uint8_t { 已读取 = 1, 未绑定 = 2 };
+struct 世界树全局根读取结果 final {
+  世界树全局根读取状态 状态 = 世界树全局根读取状态::未绑定;
+  std::optional<世界树全局根投影> 投影;
+  bool 成功() const noexcept {
+    return 状态 == 世界树全局根读取状态::已读取 && 投影 &&
+           有效(投影->根) && 投影->首次H &&
+           投影->首次H <= 投影->最近验证G;
+  }
+};
+class 世界树应用服务;
+struct 世界树应用服务建立结果;
+世界树全局根读取结果 读取世界树根节点() noexcept;
+世界树应用服务建立结果
+建立世界树应用服务(场景类数据服务 &, 存在类数据服务 &,
+                     const 世界树根验证请求 &) noexcept;
 struct 世界树根验证结果 final {
   世界树结果头 结果头;
   std::optional<场景树当前事实> 树;
@@ -274,18 +325,115 @@ public:
   世界树应用服务 &operator=(const 世界树应用服务 &) = delete;
   世界树应用服务(世界树应用服务 &&) = delete;
   世界树应用服务 &operator=(世界树应用服务 &&) = delete;
-  世界树应用服务(场景类数据服务 &s, 存在类数据服务 &e, 稳定编码 root)
-      : scene_(s), existence_(e), root_(root), joint_(e, s), binding_(e, s) {
-    if (!有效(root_) || !scene_.使用存在提供者(e))
-      throw std::invalid_argument("invalid world root");
+
+  世界树层级位置结果
+  读取世界树层级位置(const 世界树层级位置读取请求 &r) const noexcept {
+    世界树层级位置结果 out{
+        {世界树应用合同版本, 世界树操作状态::入口拒绝,
+         世界树操作阶段::现实树预读, r.G0},
+        {}};
+    if (r.版本 != 世界树应用合同版本 || !r.G0 || !有效(r.节点) ||
+        r.预算.最大场景数量 < 1 || r.预算.最大场景数量 > 4096 ||
+        r.预算.最大关系数量 < 1 || r.预算.最大关系数量 > 4096)
+      return out;
+    try {
+      const auto global = 读取世界树根节点();
+      if (!global.成功()) {
+        out.结果头.状态 = 世界树操作状态::内部不一致;
+        return out;
+      }
+      世界树层级位置 position{r.节点, global.投影->根, r.预期视角};
+      if (r.节点 == global.投影->根) {
+        if (r.预期视角 != 世界树节点视角::世界根场景) {
+          out.结果头.状态 = 世界树操作状态::场景不在现实树;
+          return out;
+        }
+        const auto role = scene_.读取当前场景角色位置({1, r.G0, r.节点});
+        const 直接归属联合父读取请求 pq{1, r.G0, r.节点,
+                                            r.预算.最大关系数量};
+        const auto parent = joint_.读取当前联合父(pq);
+        if (!role.成功({1, r.G0, r.节点}) || !role.角色 ||
+            role.角色->位置 != 直接归属场景位置::场景树根 ||
+            !parent.父读取成功(pq) || parent.父) {
+          out.结果头.状态 = 世界树操作状态::内部不一致;
+          return out;
+        }
+        out.结果头.状态 = 世界树操作状态::已读取存在位置;
+        out.位置 = std::move(position);
+        return out;
+      }
+      std::unordered_set<std::uint64_t> seen;
+      auto cursor = r.节点;
+      while (cursor != global.投影->根) {
+        if (!seen.insert(cursor.值).second) {
+          out.结果头.状态 = 世界树操作状态::形成场景环;
+          return out;
+        }
+        if (position.上行路径.size() >= r.预算.最大关系数量) {
+          out.结果头.状态 = 世界树操作状态::数量预算不足;
+          return out;
+        }
+        const 直接归属联合父读取请求 pq{
+            1, r.G0, cursor, r.预算.最大关系数量};
+        const auto parent = joint_.读取当前联合父(pq);
+        if (!parent.父读取成功(pq)) {
+          out.结果头.状态 =
+              parent.状态 == 直接归属联合只读状态::数量预算不足
+                  ? 世界树操作状态::数量预算不足
+                  : 世界树操作状态::内部不一致;
+          return out;
+        }
+        if (!parent.父) {
+          out.结果头.状态 =
+              r.预期视角 == 世界树节点视角::存在
+                  ? 世界树操作状态::存在不在现实树
+                  : 世界树操作状态::场景不在现实树;
+          return out;
+        }
+        if (!position.直接结构父)
+          position.直接结构父 = parent.父;
+        position.上行路径.push_back(*parent.父);
+        cursor = parent.父->父;
+      }
+      if (r.预期视角 == 世界树节点视角::场景) {
+        const auto role = scene_.读取当前场景角色位置({1, r.G0, r.节点});
+        if (!role.成功({1, r.G0, r.节点}) || !role.角色 ||
+            role.角色->位置 == 直接归属场景位置::场景树根) {
+          out.结果头.状态 = 世界树操作状态::场景不在现实树;
+          return out;
+        }
+        const 场景父语境读取请求 contextRequest{
+            1, r.G0, r.节点, r.预算.最大关系数量};
+        const auto context = scene_.读取当前父场景语境(contextRequest);
+        if (!context.成功(contextRequest) || !context.投影 ||
+            context.投影->结构父.关系 != position.直接结构父->关系 ||
+            context.投影->结构父.父 != position.直接结构父->父 ||
+            context.投影->结构父.成员 != position.直接结构父->成员 ||
+            context.投影->结构父.来源 != position.直接结构父->来源) {
+          out.结果头.状态 = 世界树操作状态::内部不一致;
+          return out;
+        }
+        position.父场景语境 = context.投影;
+      }
+      out.结果头.状态 = 世界树操作状态::已读取存在位置;
+      out.位置 = std::move(position);
+    } catch (const std::bad_alloc &) {
+      out.结果头.状态 = 世界树操作状态::资源失败;
+    } catch (const std::length_error &) {
+      out.结果头.状态 = 世界树操作状态::资源失败;
+    } catch (...) {
+      out.结果头.状态 = 世界树操作状态::内部不一致;
+    }
+    return out;
   }
+
   世界树根验证结果 验证现实世界根(const 世界树根验证请求 &r) const noexcept {
     世界树根验证结果 o{
         {2, 世界树操作状态::入口拒绝, 世界树操作阶段::现实树预读, r.G0}, {}};
     if (!有效读取(r.版本, r.G0, r.预算))
       return o;
     try {
-      const 场景树当前读取请求 q{1, r.G0, root_, r.预算.最大场景数量,
+      const 场景树当前读取请求 q{1, r.G0, 读取根(), r.预算.最大场景数量,
                                  r.预算.最大关系数量};
       auto t = scene_.读取当前场景树(q, joint_);
       if (!t.成功(q)) {
@@ -294,7 +442,7 @@ public:
         o.结果头.场景原因 = t.结果头.状态;
         return o;
       }
-      const 直接归属联合父读取请求 p{1, r.G0, root_, r.预算.最大关系数量};
+      const 直接归属联合父读取请求 p{1, r.G0, 读取根(), r.预算.最大关系数量};
       auto parent = joint_.读取当前联合父(p);
       if (!parent.父读取成功(p) || parent.父) {
         o.结果头.状态 = 世界树操作状态::内部不一致;
@@ -360,6 +508,19 @@ public:
   }
 
 private:
+  struct 已验证世界根令牌 final {};
+  世界树应用服务(场景类数据服务 &s, 存在类数据服务 &e, 已验证世界根令牌)
+      : scene_(s), existence_(e), joint_(e, s), binding_(e, s) {
+    if (!scene_.使用存在提供者(e) || !读取世界树根节点().成功())
+      throw std::invalid_argument("invalid world root");
+  }
+  friend 世界树应用服务建立结果
+  建立世界树应用服务(场景类数据服务 &, 存在类数据服务 &,
+                       const 世界树根验证请求 &) noexcept;
+  static 稳定编码 读取根() noexcept {
+    const auto r = 读取世界树根节点();
+    return r.成功() ? r.投影->根 : 稳定编码{};
+  }
   static bool 有效读取(std::uint32_t v, std::uint64_t g,
                        世界树读取预算 b) noexcept {
     return v == 2 && g && b.最大场景数量 >= 1 && b.最大场景数量 <= 4096 &&
@@ -420,7 +581,7 @@ private:
       o.结果头.状态 = 世界树操作状态::目标位置相同;
       return o;
     }
-    if (sceneMove && r.成员 == root_) {
+    if (sceneMove && r.成员 == 读取根()) {
       o.结果头.状态 = 世界树操作状态::现实根不可移动;
       return o;
     }
@@ -459,7 +620,7 @@ private:
       bool readable = false;
       bool successorObserved = false;
       if (sceneMove) {
-        const 场景树当前读取请求 read{1, moved.结果头.Gread, root_,
+        const 场景树当前读取请求 read{1, moved.结果头.Gread, 读取根(),
                                       r.预算.最大场景数量, r.预算.最大关系数量};
         const auto treeAfter = scene_.读取当前场景树(read, joint_);
         if (treeAfter.成功(read)) {
@@ -552,7 +713,7 @@ private:
     return {r.版本 == 3 ? 1u : 0u,
             r.G0,
             {kind, parent},
-            root_,
+            读取根(),
             存在场景绑定创建键{r.组合幂等身份, r.存在幂等身份, r.场景幂等身份},
             {r.预算.最大关系数量, r.预算.最大场景数量, r.预算.最大祖先数量}};
   }
@@ -652,9 +813,111 @@ private:
   }
   场景类数据服务 &scene_;
   存在类数据服务 &existence_;
-  稳定编码 root_;
   直接归属联合只读组合器 joint_;
   绑定存在数据服务 binding_;
 };
-static_assert(世界树应用合同版本 == 2);
+
+namespace 世界树应用内部 {
+struct 全局根绑定 final {
+  const L1事实基座服务 *底座 = nullptr;
+  世界树全局根投影 投影;
+};
+inline std::mutex 根锁;
+inline std::optional<全局根绑定> 根;
+}
+
+inline 世界树全局根读取结果 读取世界树根节点() noexcept {
+  try {
+    std::lock_guard lock(世界树应用内部::根锁);
+    if (!世界树应用内部::根)
+      return {};
+    return {世界树全局根读取状态::已读取, 世界树应用内部::根->投影};
+  } catch (...) {
+    return {};
+  }
+}
+
+struct 世界树应用服务建立结果 final {
+  世界树操作状态 状态 = 世界树操作状态::入口拒绝;
+  std::uint64_t Gread = 0;
+  std::optional<世界树全局根投影> 投影;
+  std::unique_ptr<世界树应用服务> 服务;
+  bool 成功() const noexcept {
+    return 状态 == 世界树操作状态::已验证现实根 && 投影 && 服务 &&
+           有效(投影->根) && 投影->首次H &&
+           投影->首次H <= 投影->最近验证G && Gread == 投影->最近验证G;
+  }
+};
+
+inline 世界树应用服务建立结果
+建立世界树应用服务(场景类数据服务 &scene, 存在类数据服务 &existence,
+                     const 世界树根验证请求 &r) noexcept {
+  世界树应用服务建立结果 out;
+  out.Gread = r.G0;
+  if (r.版本 != 2 || !r.G0 || r.预算.最大场景数量 < 1 ||
+      r.预算.最大关系数量 < 1 || !scene.使用存在提供者(existence))
+    return out;
+  try {
+    const auto roots = scene.读取当前世界树根组(
+        {世界树根合同版本, r.G0, r.预算.最大关系数量});
+    if (!roots.成功({世界树根合同版本, r.G0, r.预算.最大关系数量}) ||
+        roots.根组.size() != 1) {
+      out.状态 = roots.根组.size() > 1 ? 世界树操作状态::内部不一致
+                                      : 世界树操作状态::场景不在现实树;
+      return out;
+    }
+    const auto root = roots.根组.front();
+    直接归属联合只读组合器 joint(existence, scene);
+    const 场景树当前读取请求 treeRequest{
+        1, r.G0, root, r.预算.最大场景数量, r.预算.最大关系数量};
+    const auto tree = scene.读取当前场景树(treeRequest, joint);
+    const 直接归属联合父读取请求 parentRequest{
+        1, r.G0, root, r.预算.最大关系数量};
+    const auto parent = joint.读取当前联合父(parentRequest);
+    if (!tree.成功(treeRequest) || !tree.树 || tree.树->场景组.empty() ||
+        !parent.父读取成功(parentRequest) || parent.父) {
+      out.状态 = 世界树操作状态::内部不一致;
+      return out;
+    }
+    const auto rootPosition = std::find_if(
+        tree.树->场景组.begin(), tree.树->场景组.end(),
+        [&](const auto &x) { return x.场景角色.场景 == root; });
+    if (rootPosition == tree.树->场景组.end()) {
+      out.状态 = 世界树操作状态::内部不一致;
+      return out;
+    }
+    const auto &rootNode = *rootPosition;
+    const auto firstH = rootNode.场景角色.对象存在来源.节点生命周期.创建事实代次;
+    世界树全局根投影 projection{root, firstH, r.G0};
+    {
+      std::lock_guard lock(世界树应用内部::根锁);
+      auto &global = 世界树应用内部::根;
+      if (global &&
+          (global->底座 != &existence.世界树根底座() ||
+           global->投影.根 != root || global->投影.首次H != firstH)) {
+        out.状态 = 世界树操作状态::内部不一致;
+        return out;
+      }
+      if (!global)
+        global = 世界树应用内部::全局根绑定{
+            &existence.世界树根底座(), projection};
+      else
+        global->投影.最近验证G = r.G0;
+      projection = global->投影;
+    }
+    out.服务.reset(new 世界树应用服务(
+        scene, existence, 世界树应用服务::已验证世界根令牌{}));
+    out.投影 = projection;
+    out.状态 = 世界树操作状态::已验证现实根;
+  } catch (const std::bad_alloc &) {
+    out.状态 = 世界树操作状态::资源失败;
+  } catch (const std::length_error &) {
+    out.状态 = 世界树操作状态::资源失败;
+  } catch (...) {
+    out.状态 = 世界树操作状态::内部不一致;
+  }
+  return out;
+}
+
+static_assert(世界树应用合同版本 == 3);
 } // namespace 海中鱼巣

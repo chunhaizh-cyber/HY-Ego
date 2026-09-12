@@ -39,6 +39,7 @@ enum class 场景角色数据状态 : std::uint8_t {
   幂等冲突 = 16,
   数量预算不足 = 17,
   历史材料已清理 = 18,
+  旧版本迁移拒绝 = 19,
   资源失败 = 20,
   内部不一致 = 21,
   已可能发布 = 22
@@ -69,6 +70,25 @@ struct 场景角色历史事实 final {
   场景节点见证 场景族锚点, 场景族归属类型, 根绑定类型;
   场景组织边见证 场景角色登记边;
   std::array<场景根事实, 4> 四根;
+};
+struct 场景父语境投影事实 final {
+  std::uint64_t Gread = 0, H = 0;
+  稳定编码 场景{}, 父场景语境{};
+  直接归属联合事实 结构父;
+  场景组织边见证 投影边;
+};
+struct 场景父语境读取请求 final {
+  std::uint32_t 版本 = 1;
+  std::uint64_t G0 = 0;
+  稳定编码 场景{};
+  std::uint64_t 最大关系数量 = 0;
+};
+struct 场景父语境读取结果 final {
+  std::uint32_t 版本 = 1;
+  场景角色数据状态 状态 = 场景角色数据状态::入口拒绝;
+  std::uint64_t Gread = 0;
+  std::optional<场景父语境投影事实> 投影;
+  bool 成功(const 场景父语境读取请求 &) const noexcept;
 };
 
 struct 场景当前身份请求 final {
@@ -137,13 +157,16 @@ public:
   virtual bool 绑定于(const L1事实基座服务 &) const noexcept = 0;
   virtual 场景当前身份结果 确认当前场景角色(const 场景当前身份请求 &) const = 0;
   virtual 场景角色历史结果 读取场景角色历史(const 场景历史身份请求 &) const = 0;
+  virtual 场景父语境读取结果
+  读取当前父场景语境(const 场景父语境读取请求 &) const = 0;
   virtual 场景动态组织历史结果
   读取动态场景组织历史(const 场景动态组织历史请求 &) const = 0;
 };
 
 struct 场景角色结构交付 final {
   状态使用绑定结构交付 绑定结构;
-  稳定编码 根绑定关系类型, 状态组织关系类型, 动态组织关系类型;
+  稳定编码 根绑定关系类型, 状态组织关系类型, 动态组织关系类型,
+      父场景语境关系类型;
 };
 struct 场景结构登记请求 final {
   std::uint32_t 版本 = 2;
@@ -158,23 +181,27 @@ struct 场景结构登记结果 final {
   bool 成功(const 场景结构登记请求 &) const noexcept;
 };
 struct 场景角色启用请求 final {
-  std::uint32_t 版本 = 3;
+  std::uint32_t 版本 = 4;
   std::uint64_t G0 = 0;
   L1所有者范围写入幂等身份 幂等身份;
-  稳定编码 对象存在, 父场景;
+  稳定编码 对象存在, 父场景语境, 预期结构父关系;
   std::uint64_t 最大关系数量 = 0, 最大祖先数量 = 0;
 };
 struct 场景角色退出请求 final {
-  std::uint32_t 版本 = 3;
+  std::uint32_t 版本 = 4;
   std::uint64_t G0 = 0;
   L1所有者范围写入幂等身份 幂等身份;
-  稳定编码 场景, 父场景;
+  稳定编码 场景, 父场景语境, 预期结构父关系;
+  std::uint64_t 最大关系数量 = 0;
 };
 struct 场景角色写结果 final {
   std::uint32_t 版本 = 2;
   场景角色数据状态 状态 = 场景角色数据状态::入口拒绝;
   std::uint64_t Gread = 0, 首次发布代次 = 0;
   std::optional<场景角色历史事实> 角色;
+  std::optional<直接归属联合事实> 结构父;
+  std::optional<场景父语境投影事实> 父语境投影;
+  bool 启用成功(const 场景角色启用请求 &) const noexcept;
   bool 退出成功(const 场景角色退出请求 &) const noexcept;
 };
 struct 场景状态组织请求 final {
@@ -400,6 +427,7 @@ struct 场景直接包含单项结果 final {
 struct 场景直接包含迁移结果 final {
   场景直接包含结果头 结果头;
   std::optional<场景直接包含事实> 已退出原包含, 已建立新包含;
+  std::optional<场景父语境投影事实> 已退出原父语境, 已建立新父语境;
   bool 成功(const 场景直接包含迁移请求 &) const noexcept;
 };
 struct 场景树角色写结果 final {
@@ -409,6 +437,7 @@ struct 场景树角色写结果 final {
   std::optional<稳定编码> 最近上游场景;
   std::optional<直接归属联合事实> 既有直接父;
   std::optional<场景直接包含事实> 新直接包含;
+  std::optional<场景父语境投影事实> 父语境投影;
   bool 建根成功(const 场景树根启用请求 &) const noexcept;
   bool 子场景纳入成功(const 场景直接子场景启用请求 &) const noexcept;
 };
@@ -424,6 +453,7 @@ struct 场景树节点当前事实 final {
   std::optional<直接归属联合事实> 直接父;
   std::vector<场景直接包含事实> 直接存在成员组, 直接子场景组;
   std::vector<直接归属联合事实> 从上游场景到本场景路径;
+  std::optional<场景父语境投影事实> 父语境投影;
 };
 struct 场景树当前读取请求 final {
   std::uint32_t 版本 = 1;
@@ -651,8 +681,9 @@ inline bool 场景结构登记结果::成功(const 场景结构登记请求 &r) 
                        交付->绑定结构.状态使用绑定成员关系类型,
                        交付->根绑定关系类型,
                        交付->状态组织关系类型,
-                       交付->动态组织关系类型};
-  for (std::size_t i = 0; i < 6; ++i) {
+                       交付->动态组织关系类型,
+                       交付->父场景语境关系类型};
+  for (std::size_t i = 0; i < 7; ++i) {
     if (!有效(ids[i]))
       return false;
     for (std::size_t j = 0; j < i; ++j)
@@ -661,14 +692,58 @@ inline bool 场景结构登记结果::成功(const 场景结构登记请求 &r) 
   }
   return true;
 }
+inline bool 场景角色写结果::启用成功(const 场景角色启用请求 &r) const noexcept {
+  return r.版本 == 4 && r.G0 && r.G0 != UINT64_MAX && r.幂等身份.值 > 1 &&
+         有效(r.对象存在) && 有效(r.父场景语境) &&
+         有效(r.预期结构父关系) && r.最大关系数量 >= 1 &&
+         r.最大关系数量 <= 4096 && r.最大祖先数量 >= 1 &&
+         r.最大祖先数量 <= 4096 && 版本 == 2 &&
+         (状态 == 场景角色数据状态::已启用 ||
+          状态 == 场景角色数据状态::精确重复) &&
+         首次发布代次 == r.G0 + 1 && Gread >= 首次发布代次 && 角色 &&
+         角色->Gread == Gread && 角色->H == Gread &&
+         角色->场景 == r.对象存在 && 结构父 &&
+         结构父->Gread == Gread && 结构父->H == Gread &&
+         结构父->成员 == r.对象存在 && 结构父->父 == r.父场景语境 &&
+         结构父->关系 == r.预期结构父关系 && 父语境投影 &&
+         父语境投影->Gread == Gread && 父语境投影->H == Gread &&
+         父语境投影->场景 == r.对象存在 &&
+         父语境投影->父场景语境 == r.父场景语境 &&
+         父语境投影->结构父.关系 == r.预期结构父关系 &&
+         !父语境投影->投影边.生命周期.退出事实代次;
+}
 inline bool 场景角色写结果::退出成功(const 场景角色退出请求 &r) const noexcept {
-  return r.版本 == 3 && r.G0 && r.G0 != UINT64_MAX && r.幂等身份.值 > 1 &&
-         有效(r.场景) && 有效(r.父场景) && 版本 == 2 &&
+  return r.版本 == 4 && r.G0 && r.G0 != UINT64_MAX && r.幂等身份.值 > 1 &&
+         有效(r.场景) && 有效(r.父场景语境) &&
+         有效(r.预期结构父关系) && r.最大关系数量 >= 1 &&
+         r.最大关系数量 <= 4096 && 版本 == 2 &&
          (状态 == 场景角色数据状态::已退出 ||
           状态 == 场景角色数据状态::精确重复) &&
          首次发布代次 == r.G0 + 1 && Gread >= 首次发布代次 && 角色 &&
          角色->Gread == Gread && 角色->H == 首次发布代次 - 1 &&
-         角色->场景 == r.场景;
+         角色->场景 == r.场景 && 结构父 &&
+         结构父->Gread == Gread && 结构父->H == 首次发布代次 - 1 &&
+         结构父->成员 == r.场景 && 结构父->父 == r.父场景语境 &&
+         结构父->关系 == r.预期结构父关系 && 父语境投影 &&
+         父语境投影->场景 == r.场景 &&
+         父语境投影->父场景语境 == r.父场景语境 &&
+         父语境投影->结构父.关系 == r.预期结构父关系 &&
+         父语境投影->投影边.生命周期.退出事实代次 == 首次发布代次;
+}
+inline bool
+场景父语境读取结果::成功(const 场景父语境读取请求 &r) const noexcept {
+  return r.版本 == 1 && r.G0 && 有效(r.场景) &&
+         r.最大关系数量 >= 1 && r.最大关系数量 <= 4096 && 版本 == 1 &&
+         状态 == 场景角色数据状态::已读取 && Gread == r.G0 && 投影 &&
+         投影->Gread == Gread && 投影->H == Gread &&
+         投影->场景 == r.场景 && 有效(投影->父场景语境) &&
+         投影->结构父.Gread == Gread && 投影->结构父.H == Gread &&
+         投影->结构父.成员 == r.场景 &&
+         投影->结构父.父 == 投影->父场景语境 &&
+         投影->投影边.源 == r.场景 &&
+         投影->投影边.目标 == 投影->父场景语境 &&
+         投影->投影边.角色或顺序 == 1 &&
+         !投影->投影边.生命周期.退出事实代次;
 }
 inline bool
 场景组织写结果_v2::状态组织成功(const 场景状态组织请求 &r) const noexcept {
@@ -802,7 +877,7 @@ inline bool
     return false;
   const auto &old = *已退出原包含;
   const auto &fresh = *已建立新包含;
-  return old.Gread == 结果头.Gread && fresh.Gread == 结果头.Gread &&
+  const bool base = old.Gread == 结果头.Gread && fresh.Gread == 结果头.Gread &&
          old.H == 结果头.H && fresh.H == 结果头.H && old.种类 == fresh.种类 &&
          (old.种类 == 场景直接包含种类::存在成员 ||
           old.种类 == 场景直接包含种类::子场景) &&
@@ -820,6 +895,24 @@ inline bool
          fresh.关系.生命周期.创建事实代次 == 结果头.H &&
          (!fresh.关系.生命周期.退出事实代次 ||
           *fresh.关系.生命周期.退出事实代次 > 结果头.H);
+  if (!base)
+    return false;
+  if (old.种类 == 场景直接包含种类::存在成员)
+    return !已退出原父语境 && !已建立新父语境;
+  if (!已退出原父语境 || !已建立新父语境)
+    return false;
+  const auto &oldContext = *已退出原父语境;
+  const auto &newContext = *已建立新父语境;
+  return oldContext.Gread == 结果头.Gread && newContext.Gread == 结果头.Gread &&
+         oldContext.H == 结果头.H && newContext.H == 结果头.H &&
+         oldContext.场景 == r.成员 && newContext.场景 == r.成员 &&
+         oldContext.父场景语境 == r.原父场景 &&
+         newContext.父场景语境 == r.目标父场景 &&
+         oldContext.结构父.关系 == old.关系.编码 &&
+         newContext.结构父.关系 == fresh.关系.编码 &&
+         oldContext.投影边.生命周期.退出事实代次 == 结果头.H &&
+         newContext.投影边.生命周期.创建事实代次 == 结果头.H &&
+         !newContext.投影边.生命周期.退出事实代次;
 }
 inline bool 场景树写头与角色完整(const 场景直接包含结果头 &h,
                                   const 场景角色历史事实 &role,
@@ -915,8 +1008,8 @@ inline bool
          场景树写头与角色完整(结果头, *场景角色, *树证明, r.G0,
                                   r.对象存在) &&
          树证明->种类 == 场景树证明种类::根标记 &&
-         树证明->树根 == r.对象存在 && !最近上游场景 && !既有直接父 &&
-         !新直接包含;
+          树证明->树根 == r.对象存在 && !最近上游场景 && !既有直接父 &&
+          !新直接包含 && !父语境投影;
 }
 inline bool 场景树角色写结果::子场景纳入成功(
     const 场景直接子场景启用请求 &r) const noexcept {
@@ -927,7 +1020,7 @@ inline bool 场景树角色写结果::子场景纳入成功(
          (结果头.状态 == 场景直接包含状态::已启用并纳入场景树 ||
           结果头.状态 == 场景直接包含状态::精确重复) &&
          场景角色 && 树证明 && 最近上游场景 && *最近上游场景 == r.父场景 &&
-         既有直接父 && 新直接包含 &&
+          既有直接父 && 新直接包含 && 父语境投影 &&
          场景树写头与角色完整(结果头, *场景角色, *树证明, r.G0,
                                   r.对象存在) &&
          树证明->种类 == 场景树证明种类::树归属 &&
@@ -936,7 +1029,10 @@ inline bool 场景树角色写结果::子场景纳入成功(
          既有直接父->来源 == 直接归属来源::直接子场景 &&
          新子场景载荷完整(*新直接包含, 结果头.Gread, 结果头.H,
                             r.父场景, r.对象存在) &&
-         既有直接父->关系 == 新直接包含->关系.编码;
+          既有直接父->关系 == 新直接包含->关系.编码 &&
+          父语境投影->场景 == r.对象存在 &&
+          父语境投影->父场景语境 == r.父场景 &&
+          父语境投影->结构父.关系 == 既有直接父->关系;
 }
 inline bool 场景树当前结果::成功(const 场景树当前读取请求 &r) const noexcept {
   if (r.版本 != 1 || !r.G0 || !有效(r.根场景) || r.最大场景数量 < 1 ||
@@ -967,12 +1063,19 @@ inline bool 场景树当前结果::成功(const 场景树当前读取请求 &r) 
     if (scene == r.根场景) {
       ++rootCount;
       if (node.树证明.种类 != 场景树证明种类::根标记 || node.直接父 ||
+          node.父语境投影 ||
           !node.从上游场景到本场景路径.empty())
         return false;
     } else if (node.树证明.种类 != 场景树证明种类::树归属 ||
-               !node.直接父 || node.从上游场景到本场景路径.empty()) {
+               !node.直接父 || !node.父语境投影 ||
+               node.父语境投影->场景 != scene ||
+               node.父语境投影->结构父.关系 != node.直接父->关系 ||
+               node.从上游场景到本场景路径.empty()) {
       return false;
     }
+    if (node.父语境投影 &&
+        !relationIds.insert(node.父语境投影->投影边.编码.值).second)
+      return false;
     auto validGroup = [&](const std::vector<场景直接包含事实> &group,
                            场景直接包含种类 kind) noexcept {
       for (std::size_t j = 0; j < group.size(); ++j) {

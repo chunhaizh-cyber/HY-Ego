@@ -17,12 +17,14 @@ export module 海中鱼巣.领域.数据服务.场景类;
 import 海中鱼巣.领域.数据服务.绑定存在;
 export import 海中鱼巣.领域.合同.场景角色组织;
 import 海中鱼巣.领域.数据服务.定位特征;
+import 海中鱼巣.领域.合同.世界树根;
 
 export namespace 海中鱼巣 {
 
 class 场景类数据服务 final : public 状态使用绑定只读提供者,
                              public 场景动态组织只读提供者,
-                             public 场景直接包含只读提供者, public 定位特征组织参与者, public 绑定存在场景参与者 {
+                             public 场景直接包含只读提供者, public 定位特征组织参与者,
+                             public 绑定存在场景参与者, public 世界树根场景参与者 {
 public:
   场景类数据服务() = delete;
   场景类数据服务(const 场景类数据服务 &) = delete;
@@ -38,7 +40,9 @@ public:
                  const 场景直接包含扩展结构交付 &includeLayout)
       : l1_(l1), port_(std::move(port)), owner_(port_.所有者身份()),
         layout_(layout), featureLayout_(featureLayout),
-        includeLayout_(includeLayout), existence_(existence), state_(state) {
+        includeLayout_(includeLayout), existence_(existence),
+        existenceStructure_(dynamic_cast<const 存在组成结构只读提供者 &>(existence)),
+        state_(state) {
     if (!布局形状有效(layout_) || !有效(owner_) || !port_.有效() ||
         !port_.绑定于(l1_) || !有效(featureLayout_.特征组织关系类型) ||
         !包含布局形状有效(includeLayout_, layout_, featureLayout_) ||
@@ -49,7 +53,86 @@ public:
 
   bool 绑定于(const L1事实基座服务 &x) const noexcept override {
     return &l1_ == &x && port_.绑定于(x) && existence_.绑定于(x) &&
-           state_.绑定于(x);
+           existenceStructure_.绑定于(x) && state_.绑定于(x);
+  }
+
+  const L1事实基座服务 &世界树根底座() const noexcept override { return l1_; }
+  L1结构所有者身份 世界树根所有者() const noexcept override {
+    return port_.所有者身份();
+  }
+  bool 世界树根幂等键可用(L1所有者范围写入幂等身份 k) const noexcept override {
+    return k.值 && k.值 != 1 &&
+           k != 场景特征组织扩展登记固定幂等身份 &&
+           k != 场景直接包含扩展登记固定幂等身份 &&
+           (k.值 >> 48) != 0x4E43;
+  }
+  bool 世界树根结构已就绪() const noexcept override { return 场景结构登记已就绪(); }
+  世界树根场景片段
+  准备世界树根场景片段(const 世界树根初始化请求 &r) const override {
+    世界树根场景片段 out;
+    out.写集 = {{2}, owner_, {L1所有者范围CRUD合同版本, r.G0, r.场景幂等身份}};
+    const L1有限N分区原子事实引用_v3 root{{1}, {1}};
+    for (std::uint32_t i = 1; i <= 4; ++i)
+      out.写集.写集.节点.push_back({{i}, 节点种类::普通, std::nullopt});
+    out.写集.写集.关系.push_back({{5}, root, layout_.绑定结构.场景族锚点,
+                                  layout_.绑定结构.场景族归属关系类型, 1});
+    for (std::uint32_t i = 1; i <= 4; ++i)
+      out.写集.写集.关系.push_back({{i + 5}, root,
+                                    L1所有者范围写集本地键{i},
+                                    layout_.根绑定关系类型,
+                                    static_cast<std::int64_t>(i)});
+    out.写集.写集.关系.push_back({{10}, root, includeLayout_.树登记锚点,
+                                  includeLayout_.根标记关系类型, 1});
+    return out;
+  }
+  L1所有者范围首次写入读取结果 读取世界树根场景首次材料(
+      L1所有者范围写入幂等身份 k) const override {
+    return port_.读取首次写入材料({L1所有者范围首次写入读取合同版本, k});
+  }
+  世界树根组读取结果
+  读取当前世界树根组(const 世界树根组读取请求 &r) const override {
+    世界树根组读取结果 out{世界树根状态::入口拒绝, r.G0, {}};
+    if (r.版本 != 世界树根合同版本 || !r.G0 || !r.最大关系数量 ||
+        r.最大关系数量 > 4096)
+      return out;
+    try {
+      auto q = 查询关系(r.G0, r.G0, L1所有者范围关系端点方向::目标,
+                        includeLayout_.树登记锚点,
+                        includeLayout_.根标记关系类型);
+      if (!q.成功()) {
+        out.Gread = q.Gread;
+        switch (q.状态) {
+        case 场景角色数据状态::事实代次漂移: out.状态 = 世界树根状态::事实代次漂移; break;
+        case 场景角色数据状态::历史材料已清理: out.状态 = 世界树根状态::历史材料已清理; break;
+        case 场景角色数据状态::资源失败: out.状态 = 世界树根状态::资源失败; break;
+        default: out.状态 = 世界树根状态::内部不一致; break;
+        }
+        return out;
+      }
+      if (q.关系.size() > r.最大关系数量) {
+        out.状态 = 世界树根状态::数量预算不足;
+        return out;
+      }
+      for (const auto &e : q.关系) {
+        if (!有效(e.源节点) || e.目标节点 != includeLayout_.树登记锚点 ||
+            e.关系类型节点 != includeLayout_.根标记关系类型 ||
+            e.角色或顺序 != 1 || e.写入所有者 != owner_ ||
+            !e.创建事实代次 || e.退出事实代次) {
+          out.状态 = 世界树根状态::内部不一致;
+          out.根组.clear();
+          return out;
+        }
+        out.根组.push_back(e.源节点);
+      }
+      std::sort(out.根组.begin(), out.根组.end(),
+                [](auto a, auto b) { return a.值 < b.值; });
+      out.状态 = 世界树根状态::精确重复;
+    } catch (const std::bad_alloc &) {
+      out.状态 = 世界树根状态::资源失败;
+    } catch (...) {
+      out.状态 = 世界树根状态::内部不一致;
+    }
+    return out;
   }
 
   static 场景特征组织扩展登记结果
@@ -70,7 +153,7 @@ public:
     std::uint64_t published = 0, knownFirst = 0;
     try {
       L1所有者范围写集请求 ws{L1所有者范围CRUD合同版本, r.G0, r.幂等身份};
-      for (std::uint32_t i = 1; i <= 6; ++i)
+      for (std::uint32_t i = 1; i <= 7; ++i)
         ws.节点.push_back({{i}, 节点种类::普通, std::nullopt});
       const auto first =
           port.读取首次写入材料({L1所有者范围首次写入读取合同版本, r.幂等身份});
@@ -83,6 +166,16 @@ public:
         return out;
       }
       if (first.状态 == L1所有者范围读取状态::成功) {
+        if (first.首次规范化写集 &&
+            first.首次规范化写集->节点.size() == 6 &&
+            first.首次规范化写集->关系.empty() &&
+            first.首次规范化写集->值.empty() &&
+            first.首次规范化写集->属性槽变更.empty() &&
+            first.首次规范化写集->退出事实.empty()) {
+          out.状态 = 场景角色数据状态::旧版本迁移拒绝;
+          out.Gread = first.读取事实代次;
+          return out;
+        }
         if (!first.首次规范化写集 || !写集相同(*first.首次规范化写集, ws)) {
           out.状态 = 场景角色数据状态::幂等冲突;
           out.Gread = first.读取事实代次;
@@ -199,13 +292,13 @@ public:
         out.首次发布代次 = priorOrPublished ? knownFirst : 0;
         return out;
       }
-      std::array<稳定编码, 6> ids{};
-      if (saved.新编码映射.size() != 6) {
+      std::array<稳定编码, 7> ids{};
+      if (saved.新编码映射.size() != 7) {
         out.状态 = 场景角色数据状态::已可能发布;
         return out;
       }
       for (const auto &m : saved.新编码映射) {
-        if (m.first.值 < 1 || m.first.值 > 6 || 有效(ids[m.first.值 - 1])) {
+        if (m.first.值 < 1 || m.first.值 > 7 || 有效(ids[m.first.值 - 1])) {
           out.状态 = 场景角色数据状态::已可能发布;
           return out;
         }
@@ -216,7 +309,8 @@ public:
         return out;
       }
       out.交付 =
-          场景角色结构交付{{ids[0], ids[1], ids[2]}, ids[3], ids[4], ids[5]};
+          场景角色结构交付{{ids[0], ids[1], ids[2]}, ids[3], ids[4], ids[5],
+                           ids[6]};
       out.首次发布代次 = saved.事实代次;
       const auto guard = l1.读取中性当前事实代次({L1中性CRUD合同版本});
       if (guard.状态 != L1中性读取状态::成功 ||
@@ -270,11 +364,14 @@ public:
     }
   }
 
+
   场景当前身份结果 确认当前场景角色(const 场景当前身份请求 &r) const override;
   场景角色历史结果 读取场景角色历史(const 场景历史身份请求 &r) const override;
-  场景树角色写结果 启用场景角色(const 场景角色启用请求 &r,
-                                  const 直接归属联合只读提供者 &);
+  场景角色写结果 启用场景角色(const 场景角色启用请求 &r,
+                              const 直接归属联合只读提供者 &);
   场景角色写结果 退出场景角色(const 场景角色退出请求 &r);
+  场景父语境读取结果
+  读取当前父场景语境(const 场景父语境读取请求 &r) const override;
 
   状态使用绑定创建结果 创建状态使用绑定(const 状态使用绑定创建请求 &r);
   状态使用绑定读取结果
@@ -337,6 +434,8 @@ public:
                                 const 直接归属联合只读提供者 &) const;
 
 private:
+  friend class 世界树根数据服务;
+  L1所有者范围写端口 &世界树根协调端口() noexcept { return port_; }
   struct 关系读取 {
     场景角色数据状态 状态 = 场景角色数据状态::内部不一致;
     std::uint64_t Gread = 0;
@@ -713,6 +812,8 @@ private:
                              newborn,
                              includeLayout_.直接子场景关系类型,
                              1});
+      p.写集.关系.push_back({{12}, newborn, r.绑定.绑定节点,
+                             layout_.父场景语境关系类型, 1});
       return p;
     });
   }
@@ -768,6 +869,12 @@ private:
             直接归属联合事实{g,        h, 直接归属来源::直接子场景, x.编码,
                              x.源节点, e, x.创建事实代次,           {}};
         node.从上游场景到本场景路径.push_back(*node.直接父);
+        const 场景父语境读取请求 contextRequest{1, g, e, 4096};
+        const auto context = 读取当前父场景语境(contextRequest);
+        if (!context.成功(contextRequest) || !context.投影 ||
+            context.投影->结构父.关系 != node.直接父->关系)
+          throw 绑定S::内部不一致;
+        node.父语境投影 = context.投影;
         out.子场景结构 = std::move(node);
       }
       return out;
@@ -856,6 +963,7 @@ private:
   场景特征组织扩展结构交付 featureLayout_;
   场景直接包含扩展结构交付 includeLayout_;
   const 存在结构身份只读提供者 &existence_;
+  const 存在组成结构只读提供者 &existenceStructure_;
   const 状态类数据服务 &state_;
   mutable std::mutex write_;
 };
@@ -1383,7 +1491,9 @@ L1所有者范围写集请求
 }
 
 bool 场景类数据服务::普通幂等身份有效(L1所有者范围写入幂等身份 key) noexcept {
-  return key.值 > 1 && key != 场景特征组织扩展登记固定幂等身份;
+  return key.值 > 1 && key != 场景特征组织扩展登记固定幂等身份 &&
+         key != 场景直接包含扩展登记固定幂等身份 &&
+         (key.值 >> 48) != 0x4E43;
 }
 
 } // namespace 海中鱼巣
@@ -2161,21 +2271,99 @@ inline 场景组织写结果_v2
 } // namespace 海中鱼巣
 namespace 海中鱼巣 {
 
-inline 场景树角色写结果 场景类数据服务::启用场景角色(
+inline 场景角色写结果 场景类数据服务::启用场景角色(
     const 场景角色启用请求 &r, const 直接归属联合只读提供者 &joint) {
-  if (r.版本 != 3 || !有效(r.父场景))
+  if (r.版本 == 3)
+    return {2, 场景角色数据状态::旧版本迁移拒绝, r.G0};
+  if (r.版本 != 4 || !r.G0 || r.G0 == UINT64_MAX ||
+      !普通幂等身份有效(r.幂等身份) || !有效(r.对象存在) ||
+      !有效(r.父场景语境) || !有效(r.预期结构父关系) ||
+      r.对象存在 == r.父场景语境 || !r.最大关系数量 ||
+      r.最大关系数量 > 4096 || !r.最大祖先数量 ||
+      r.最大祖先数量 > 4096 || !joint.绑定于(l1_))
     return {};
-  return 启用并接纳直接子场景(
-      {1, r.G0, r.幂等身份, r.对象存在, r.父场景, r.最大关系数量,
-       r.最大祖先数量},
-      joint);
+  const auto first =
+      port_.读取首次写入材料({L1所有者范围首次写入读取合同版本, r.幂等身份});
+  if (first.状态 == L1所有者范围读取状态::成功 &&
+      first.首次规范化写集 && first.首次规范化写集->节点.size() == 4 &&
+      first.首次规范化写集->关系.size() == 10 &&
+      first.首次规范化写集->值.empty() &&
+      first.首次规范化写集->属性槽变更.empty() &&
+      first.首次规范化写集->退出事实.empty())
+    return {2, 场景角色数据状态::旧版本迁移拒绝,
+            first.读取事实代次};
+  const 直接归属联合父读取请求 parentRequest{
+      1, r.G0, r.对象存在, r.最大关系数量};
+  const auto parent = joint.读取当前联合父(parentRequest);
+  if (!parent.父读取成功(parentRequest) || !parent.父 ||
+      parent.父->关系 != r.预期结构父关系 ||
+      parent.父->父 != r.父场景语境 || parent.父->成员 != r.对象存在)
+    return {};
+  const 直接归属场景角色读取请求 upstreamRequest{1, r.G0, r.父场景语境};
+  const auto upstream = joint.读取当前场景角色位置(upstreamRequest);
+  if (!upstream.成功(upstreamRequest) || !upstream.角色 ||
+      !upstream.角色->树根)
+    return {};
+  const auto tree = 启用树角色核心(
+      r.G0, r.幂等身份, r.对象存在, std::nullopt, r.父场景语境,
+      parent.父, upstream.角色->树根, false, r.最大关系数量,
+      r.最大祖先数量, joint);
+  const auto map = [](场景直接包含状态 status) noexcept {
+    switch (status) {
+    case 场景直接包含状态::已启用并纳入场景树:
+      return 场景角色数据状态::已启用;
+    case 场景直接包含状态::精确重复:
+      return 场景角色数据状态::精确重复;
+    case 场景直接包含状态::入口拒绝:
+      return 场景角色数据状态::入口拒绝;
+    case 场景直接包含状态::场景未找到:
+    case 场景直接包含状态::成员未找到:
+      return 场景角色数据状态::未找到;
+    case 场景直接包含状态::场景已退出:
+    case 场景直接包含状态::成员已退出:
+      return 场景角色数据状态::目标已退出;
+    case 场景直接包含状态::成员已归属:
+      return 场景角色数据状态::场景角色已存在;
+    case 场景直接包含状态::引用冲突:
+      return 场景角色数据状态::引用冲突;
+    case 场景直接包含状态::事实代次漂移:
+      return 场景角色数据状态::事实代次漂移;
+    case 场景直接包含状态::幂等冲突:
+      return 场景角色数据状态::幂等冲突;
+    case 场景直接包含状态::数量预算不足:
+      return 场景角色数据状态::数量预算不足;
+    case 场景直接包含状态::历史材料已清理:
+      return 场景角色数据状态::历史材料已清理;
+    case 场景直接包含状态::资源失败:
+      return 场景角色数据状态::资源失败;
+    case 场景直接包含状态::已可能发布:
+      return 场景角色数据状态::已可能发布;
+    default:
+      return 场景角色数据状态::内部不一致;
+    }
+  };
+  场景角色写结果 out{2, map(tree.结果头.状态), tree.结果头.Gread,
+                        tree.结果头.首次发布H.value_or(0), tree.场景角色,
+                        tree.既有直接父, tree.父语境投影};
+  if ((out.状态 == 场景角色数据状态::已启用 ||
+       out.状态 == 场景角色数据状态::精确重复) && !out.启用成功(r)) {
+    out.状态 = 场景角色数据状态::已可能发布;
+    out.角色.reset();
+    out.结构父.reset();
+    out.父语境投影.reset();
+  }
+  return out;
 }
 
 
 inline 场景角色写结果 场景类数据服务::退出场景角色(const 场景角色退出请求 &r) {
-  if (r.版本 != 3 || !r.G0 || r.G0 == UINT64_MAX ||
+  if (r.版本 == 3)
+    return {2, 场景角色数据状态::旧版本迁移拒绝, r.G0};
+  if (r.版本 != 4 || !r.G0 || r.G0 == UINT64_MAX ||
       !普通幂等身份有效(r.幂等身份) || !有效(r.场景) ||
-      !有效(r.父场景) || r.场景 == r.父场景)
+      !有效(r.父场景语境) || !有效(r.预期结构父关系) ||
+      r.场景 == r.父场景语境 || !r.最大关系数量 ||
+      r.最大关系数量 > 4096)
     return {};
   bool commitStarted = false;
   std::uint64_t published = 0, confirmed = 0;
@@ -2191,6 +2379,16 @@ inline 场景角色写结果 场景类数据服务::退出场景角色(const 场
         return {2, 场景角色数据状态::内部不一致, first.读取事实代次, 0,
                 std::nullopt};
       const auto &ws = *first.首次规范化写集;
+      for (const auto id : ws.退出事实) {
+        const auto legacy = 读关系(id, first.读取事实代次);
+        if (legacy.成功() &&
+            legacy.事实->关系类型节点 ==
+                includeLayout_.直接子场景关系类型 &&
+            legacy.事实->目标节点 == r.场景) {
+          return {2, 场景角色数据状态::旧版本迁移拒绝,
+                  first.读取事实代次, 0, std::nullopt, std::nullopt};
+        }
+      }
       if (ws.期望事实代次 != r.G0 || ws.写入幂等身份 != r.幂等身份 ||
           !ws.节点.empty() || !ws.关系.empty() || !ws.值.empty() ||
           !ws.属性槽变更.empty() || ws.退出事实.size() != 10 ||
@@ -2230,7 +2428,8 @@ inline 场景角色写结果 场景类数据服务::退出场景角色(const 场
         actual.push_back(x.根.编码);
         actual.push_back(x.绑定.编码);
       }
-      std::size_t parentCount = 0, proofCount = 0;
+      std::size_t contextCount = 0, proofCount = 0;
+      std::optional<场景组织边见证> historicalContext;
       for (const auto id : ws.退出事实) {
         if (std::find(actual.begin(), actual.end(), id) != actual.end())
           continue;
@@ -2242,10 +2441,14 @@ inline 场景角色写结果 场景类数据服务::退出场景角色(const 场
         if (edge.事实->创建事实代次 > saved.事实代次 - 1 ||
             edge.事实->退出事实代次 != saved.事实代次)
           return {2, 场景角色数据状态::幂等冲突, guard.Gread, 0, std::nullopt};
-        if (edge.事实->关系类型节点 == includeLayout_.直接子场景关系类型 &&
-            edge.事实->源节点 == r.父场景 && edge.事实->目标节点 == r.场景 &&
+        if (edge.事实->关系类型节点 == layout_.父场景语境关系类型 &&
+            edge.事实->源节点 == r.场景 &&
+            edge.事实->目标节点 == r.父场景语境 &&
             edge.事实->角色或顺序 == 1)
-          ++parentCount;
+        {
+          ++contextCount;
+          historicalContext = 转边(*edge.事实);
+        }
         else if (edge.事实->关系类型节点 == includeLayout_.树归属关系类型 &&
                  edge.事实->源节点 == r.场景 && edge.事实->角色或顺序 == 1)
           ++proofCount;
@@ -2253,7 +2456,7 @@ inline 场景角色写结果 场景类数据服务::退出场景角色(const 场
           return {2, 场景角色数据状态::幂等冲突, guard.Gread, 0, std::nullopt};
         actual.push_back(id);
       }
-      if (parentCount != 1 || proofCount != 1)
+      if (contextCount != 1 || proofCount != 1)
         return {2, 场景角色数据状态::幂等冲突, guard.Gread, 0, std::nullopt};
       std::sort(actual.begin(), actual.end());
       if (actual != ws.退出事实)
@@ -2263,8 +2466,21 @@ inline 场景角色写结果 场景类数据服务::退出场景角色(const 场
       if (!finalGuard.成功())
         return {2, 场景角色数据状态::已可能发布, finalGuard.Gread,
                 saved.事实代次, std::nullopt};
-      return {2, 场景角色数据状态::精确重复, guard.Gread, saved.事实代次,
-              std::move(old.角色)};
+      直接归属联合只读组合器 joint(existenceStructure_, *this);
+      const 直接归属联合父读取请求 parentRequest{
+          1, guard.Gread, r.场景, r.最大关系数量};
+      const auto parent = joint.读取当前联合父(parentRequest);
+      if (!parent.父读取成功(parentRequest) || !parent.父 ||
+          parent.父->关系 != r.预期结构父关系 ||
+          parent.父->父 != r.父场景语境 || !historicalContext)
+        return {2, 场景角色数据状态::幂等冲突, guard.Gread, 0,
+                std::nullopt, std::nullopt};
+      return {2, 场景角色数据状态::精确重复, guard.Gread,
+              saved.事实代次, std::move(old.角色),
+              *parent.父,
+              场景父语境投影事实{guard.Gread, saved.事实代次 - 1,
+                                      r.场景, r.父场景语境, *parent.父,
+                                      *historicalContext}};
     }
     if (first.状态 != L1所有者范围读取状态::未找到)
       return {2,
@@ -2281,25 +2497,20 @@ inline 场景角色写结果 场景类数据服务::退出场景角色(const 场
     auto old = 读角色(r.G0, r.G0, r.场景);
     if (!old.成功({2, r.G0, r.G0, r.场景}))
       return {2, old.状态, old.Gread, 0, std::nullopt};
-    const 场景直接包含反向读取请求 parentRequest{1, r.G0, r.场景, 4096};
-    const auto parents = 读取当前场景包含父组(parentRequest);
-    if (!parents.父组读取成功(parentRequest)) {
-      const auto state =
-          parents.结果头.状态 == 场景直接包含状态::事实代次漂移
-              ? 场景角色数据状态::事实代次漂移
-          : parents.结果头.状态 == 场景直接包含状态::数量预算不足
-              ? 场景角色数据状态::数量预算不足
-          : parents.结果头.状态 == 场景直接包含状态::资源失败
-              ? 场景角色数据状态::资源失败
-              : 场景角色数据状态::内部不一致;
-      return {2, state, parents.结果头.Gread, 0, std::nullopt};
-    }
-    const auto parentIt = std::find_if(
-        parents.包含组.begin(), parents.包含组.end(), [&](const auto &x) {
-          return x.种类 == 场景直接包含种类::子场景 &&
-                 x.父场景 == r.父场景 && x.成员 == r.场景;
-        });
-    if (parentIt == parents.包含组.end() || parents.包含组.size() != 1)
+    直接归属联合只读组合器 joint(existenceStructure_, *this);
+    const 直接归属联合父读取请求 parentRequest{
+        1, r.G0, r.场景, r.最大关系数量};
+    const auto parent = joint.读取当前联合父(parentRequest);
+    if (!parent.父读取成功(parentRequest) || !parent.父 ||
+        parent.父->关系 != r.预期结构父关系 ||
+        parent.父->父 != r.父场景语境 || parent.父->成员 != r.场景)
+      return {2, 场景角色数据状态::引用冲突, r.G0, 0, std::nullopt};
+    const 场景父语境读取请求 contextRequest{
+        1, r.G0, r.场景, r.最大关系数量};
+    const auto context = 读取当前父场景语境(contextRequest);
+    if (!context.成功(contextRequest) || !context.投影 ||
+        context.投影->结构父.关系 != r.预期结构父关系 ||
+        context.投影->父场景语境 != r.父场景语境)
       return {2, 场景角色数据状态::引用冲突, r.G0, 0, std::nullopt};
     const auto position = 读取当前场景角色位置({1, r.G0, r.场景});
     if (!position.成功({1, r.G0, r.场景}) || !position.角色 ||
@@ -2352,7 +2563,7 @@ inline 场景角色写结果 场景类数据服务::退出场景角色(const 场
       ws.退出事实.push_back(x.根.编码);
       ws.退出事实.push_back(x.绑定.编码);
     }
-    ws.退出事实.push_back(parentIt->关系.编码);
+    ws.退出事实.push_back(context.投影->投影边.编码);
     ws.退出事实.push_back(*position.角色->树证明关系);
     std::sort(ws.退出事实.begin(), ws.退出事实.end());
     commitStarted = true;
@@ -2393,7 +2604,20 @@ inline 场景角色写结果 场景类数据服务::退出场景角色(const 场
     if (!finalGuard.成功())
       return {2, 场景角色数据状态::已可能发布, finalGuard.Gread, saved.事实代次,
               std::nullopt};
-    return {2, status, guard.Gread, saved.事实代次, std::move(read.角色)};
+    const auto historicalContext =
+        读关系(context.投影->投影边.编码, guard.Gread);
+    if (!historicalContext.成功() ||
+        historicalContext.事实->退出事实代次 != saved.事实代次)
+      return {2, 场景角色数据状态::已可能发布, guard.Gread,
+              saved.事实代次, std::nullopt, std::nullopt};
+    auto historicalParent = *parent.父;
+    historicalParent.Gread = guard.Gread;
+    historicalParent.H = saved.事实代次 - 1;
+    return {2, status, guard.Gread, saved.事实代次, std::move(read.角色),
+            historicalParent,
+            场景父语境投影事实{
+                guard.Gread, saved.事实代次 - 1, r.场景, r.父场景语境,
+                historicalParent, 转边(*historicalContext.事实)}};
   } catch (const std::bad_alloc &) {
     return {2,
             commitStarted ? 场景角色数据状态::已可能发布
@@ -3024,8 +3248,9 @@ inline bool 场景类数据服务::布局形状有效(const 场景角色结构�
                        v.绑定结构.状态使用绑定成员关系类型,
                        v.根绑定关系类型,
                        v.状态组织关系类型,
-                       v.动态组织关系类型};
-  for (std::size_t i = 0; i < 6; ++i) {
+                       v.动态组织关系类型,
+                       v.父场景语境关系类型};
+  for (std::size_t i = 0; i < 7; ++i) {
     if (!有效(ids[i]))
       return false;
     for (std::size_t j = 0; j < i; ++j)
@@ -3052,7 +3277,8 @@ inline bool 场景类数据服务::包含布局形状有效(
                             base.绑定结构.状态使用绑定成员关系类型,
                             base.根绑定关系类型,
                             base.状态组织关系类型,
-                            base.动态组织关系类型,
+                             base.动态组织关系类型,
+                             base.父场景语境关系类型,
                             feature.特征组织关系类型};
   for (const auto id : ids)
     for (const auto old : occupied)
@@ -3094,12 +3320,12 @@ inline bool 场景类数据服务::登记材料匹配() const {
   const auto &ws = *f.首次规范化写集;
   if (ws.合同版本 != L1所有者范围CRUD合同版本 || ws.写入幂等身份.值 != 1 ||
       !ws.期望事实代次 || ws.期望事实代次 == UINT64_MAX ||
-      ws.节点.size() != 6 || !ws.关系.empty() || !ws.值.empty() ||
+       ws.节点.size() != 7 || !ws.关系.empty() || !ws.值.empty() ||
       !ws.属性槽变更.empty() || !ws.退出事实.empty())
     return false;
-  std::array<bool, 6> keys{};
+  std::array<bool, 7> keys{};
   for (const auto &n : ws.节点) {
-    if (n.本地键.值 < 1 || n.本地键.值 > 6 || keys[n.本地键.值 - 1] ||
+    if (n.本地键.值 < 1 || n.本地键.值 > 7 || keys[n.本地键.值 - 1] ||
         n.种类 != 节点种类::普通 || n.属性类型表示)
       return false;
     keys[n.本地键.值 - 1] = true;
@@ -3110,20 +3336,21 @@ inline bool 场景类数据服务::登记材料匹配() const {
       first.写入幂等身份.值 != 1 || first.事实代次 != ws.期望事实代次 + 1 ||
       !first.是否形成内存权威发布 ||
       first.重试边界 != L1所有者范围重试边界::不适用 ||
-      first.新编码映射.size() != 6)
+       first.新编码映射.size() != 7)
     return false;
-  std::array<稳定编码, 6> ids{};
+  std::array<稳定编码, 7> ids{};
   for (const auto &m : first.新编码映射) {
-    if (m.first.值 < 1 || m.first.值 > 6 || 有效(ids[m.first.值 - 1]) ||
+    if (m.first.值 < 1 || m.first.值 > 7 || 有效(ids[m.first.值 - 1]) ||
         !有效(m.second))
       return false;
     ids[m.first.值 - 1] = m.second;
   }
   if (ids !=
-      std::array<稳定编码, 6>{
+      std::array<稳定编码, 7>{
           layout_.绑定结构.场景族锚点, layout_.绑定结构.场景族归属关系类型,
           layout_.绑定结构.状态使用绑定成员关系类型, layout_.根绑定关系类型,
-          layout_.状态组织关系类型, layout_.动态组织关系类型})
+          layout_.状态组织关系类型, layout_.动态组织关系类型,
+          layout_.父场景语境关系类型})
     return false;
   const auto guard = 读取当前代次();
   if (!guard.成功() || guard.Gread < first.事实代次)
@@ -3374,6 +3601,67 @@ inline 场景角色历史结果
   } catch (...) {
     return {2, 场景角色数据状态::内部不一致, confirmed, r.H, std::nullopt};
   }
+}
+
+inline 场景父语境读取结果
+场景类数据服务::读取当前父场景语境(const 场景父语境读取请求 &r) const {
+  场景父语境读取结果 out{1, 场景角色数据状态::入口拒绝, r.G0, {}};
+  if (r.版本 != 1 || !r.G0 || !有效(r.场景) ||
+      r.最大关系数量 < 1 || r.最大关系数量 > 4096)
+    return out;
+  try {
+    const auto edges = 查询关系(r.G0, r.G0,
+                                  L1所有者范围关系端点方向::源, r.场景,
+                                  layout_.父场景语境关系类型);
+    out.Gread = edges.Gread;
+    if (!edges.成功()) {
+      out.状态 = edges.状态;
+      return out;
+    }
+    if (edges.关系.size() > r.最大关系数量) {
+      out.状态 = 场景角色数据状态::数量预算不足;
+      return out;
+    }
+    if (edges.关系.empty()) {
+      out.状态 = 场景角色数据状态::未找到;
+      return out;
+    }
+    if (edges.关系.size() != 1) {
+      out.状态 = 场景角色数据状态::内部不一致;
+      return out;
+    }
+    const auto &edge = edges.关系.front();
+    if (edge.源节点 != r.场景 || !有效(edge.目标节点) ||
+        edge.关系类型节点 != layout_.父场景语境关系类型 ||
+        edge.角色或顺序 != 1 || edge.写入所有者 != owner_ ||
+        edge.退出事实代次) {
+      out.状态 = 场景角色数据状态::内部不一致;
+      return out;
+    }
+    直接归属联合只读组合器 joint(existenceStructure_, *this);
+    const 直接归属联合父读取请求 parentRequest{
+        1, r.G0, r.场景, r.最大关系数量};
+    const auto parent = joint.读取当前联合父(parentRequest);
+    if (!parent.父读取成功(parentRequest) || !parent.父 ||
+        parent.父->成员 != r.场景 || parent.父->父 != edge.目标节点) {
+      out.状态 = 场景角色数据状态::内部不一致;
+      return out;
+    }
+    out.投影 = 场景父语境投影事实{r.G0, r.G0, r.场景,
+                                         edge.目标节点, *parent.父, 转边(edge)};
+    out.状态 = 场景角色数据状态::已读取;
+    if (!out.成功(r)) {
+      out.投影.reset();
+      out.状态 = 场景角色数据状态::内部不一致;
+    }
+  } catch (const std::bad_alloc &) {
+    out.状态 = 场景角色数据状态::资源失败;
+  } catch (const std::length_error &) {
+    out.状态 = 场景角色数据状态::资源失败;
+  } catch (...) {
+    out.状态 = 场景角色数据状态::内部不一致;
+  }
+  return out;
 }
 
 inline 场景直接包含状态 包含读取状态(场景角色数据状态 s) noexcept {
@@ -4064,16 +4352,31 @@ inline 场景直接包含迁移结果
         return out;
       }
       const auto &ws = *first.首次规范化写集;
+      const bool sceneKind = kind == 场景直接包含种类::子场景;
       const bool shape =
           ws.合同版本 == L1所有者范围CRUD合同版本 &&
           ws.期望事实代次 == r.G0 && ws.写入幂等身份 == r.幂等身份 &&
           ws.节点.empty() && ws.值.empty() && ws.属性槽变更.empty() &&
-          ws.关系.size() == 1 && ws.退出事实.size() == 1 &&
+          ws.关系.size() == (sceneKind ? 2 : 1) &&
+          ws.退出事实.size() == (sceneKind ? 2 : 1) &&
+          std::is_sorted(ws.退出事实.begin(), ws.退出事实.end()) &&
           ws.关系.front() == L1所有者范围关系新建项{
-                                     {1}, r.目标父场景, r.成员, type, 1};
+                                     {1}, r.目标父场景, r.成员, type, 1} &&
+          (!sceneKind ||
+           ws.关系[1] == L1所有者范围关系新建项{
+                                  {2}, r.成员, r.目标父场景,
+                                  layout_.父场景语境关系类型, 1});
       const auto newId = 映射编码(*first.首次写入结果, {1});
-      const auto oldEdge = shape ? 读关系(ws.退出事实.front(), first.读取事实代次)
-                                 : 关系事实读取{};
+      std::optional<关系事实读取> oldEdge, oldContextEdge;
+      if (shape)
+        for (const auto id : ws.退出事实) {
+          auto edge = 读关系(id, first.读取事实代次);
+          if (edge.成功() && edge.事实->关系类型节点 == type)
+            oldEdge = std::move(edge);
+          else if (edge.成功() &&
+                   edge.事实->关系类型节点 == layout_.父场景语境关系类型)
+            oldContextEdge = std::move(edge);
+        }
       const auto newEdge = newId ? 读关系(*newId, first.读取事实代次)
                                  : 关系事实读取{};
       if (!shape) {
@@ -4084,17 +4387,18 @@ inline 场景直接包含迁移结果
         out.结果头.状态 = 场景直接包含状态::内部不一致;
         return out;
       }
-      if (!oldEdge.成功() || !newEdge.成功()) {
-        const auto failure = !oldEdge.成功() ? oldEdge.状态 : newEdge.状态;
+      if (!oldEdge || !oldEdge->成功() || !newEdge.成功() ||
+          (sceneKind && (!oldContextEdge || !oldContextEdge->成功()))) {
+        const auto failure = oldEdge ? oldEdge->状态 : 场景角色数据状态::内部不一致;
         out.结果头.状态 = 包含读取状态(failure);
         out.结果头.Gread = first.读取事实代次;
         out.结果头.H = first.首次写入结果->事实代次;
         return out;
       }
       if (
-          oldEdge.事实->源节点 != r.原父场景 ||
-          oldEdge.事实->目标节点 != r.成员 || oldEdge.事实->关系类型节点 != type ||
-          oldEdge.事实->退出事实代次 != first.首次写入结果->事实代次 ||
+          oldEdge->事实->源节点 != r.原父场景 ||
+          oldEdge->事实->目标节点 != r.成员 || oldEdge->事实->关系类型节点 != type ||
+          oldEdge->事实->退出事实代次 != first.首次写入结果->事实代次 ||
           newEdge.事实->源节点 != r.目标父场景 ||
           newEdge.事实->目标节点 != r.成员 || newEdge.事实->关系类型节点 != type) {
         out.结果头.状态 = 场景直接包含状态::内部不一致;
@@ -4102,7 +4406,7 @@ inline 场景直接包含迁移结果
         out.结果头.H = first.首次写入结果->事实代次;
         return out;
       }
-      auto oldWitness = 转边(*oldEdge.事实);
+      auto oldWitness = 转边(*oldEdge->事实);
       auto newWitness = 转边(*newEdge.事实);
       if (newWitness.生命周期.退出事实代次 &&
           *newWitness.生命周期.退出事实代次 > first.首次写入结果->事实代次)
@@ -4118,6 +4422,43 @@ inline 场景直接包含迁移结果
       out.已建立新包含 = 场景直接包含事实{
           first.读取事实代次, first.首次写入结果->事实代次, kind,
           r.目标父场景, r.成员, newWitness};
+      if (sceneKind) {
+        const auto newContextId = 映射编码(*first.首次写入结果, {2});
+        const auto newContextEdge =
+            newContextId ? 读关系(*newContextId, first.读取事实代次)
+                         : 关系事实读取{};
+        if (!newContextId || !newContextEdge.成功() ||
+            oldContextEdge->事实->源节点 != r.成员 ||
+            oldContextEdge->事实->目标节点 != r.原父场景 ||
+            oldContextEdge->事实->退出事实代次 !=
+                first.首次写入结果->事实代次 ||
+            newContextEdge.事实->源节点 != r.成员 ||
+            newContextEdge.事实->目标节点 != r.目标父场景 ||
+            newContextEdge.事实->关系类型节点 !=
+                layout_.父场景语境关系类型 ||
+            newContextEdge.事实->角色或顺序 != 1) {
+          out.已退出原包含.reset();
+          out.已建立新包含.reset();
+          out.结果头.状态 = 场景直接包含状态::已可能发布;
+          return out;
+        }
+        直接归属联合事实 oldParent{
+            first.读取事实代次, first.首次写入结果->事实代次,
+            直接归属来源::直接子场景, oldEdge->事实->编码,
+            r.原父场景, r.成员, oldEdge->事实->创建事实代次,
+            oldEdge->事实->退出事实代次};
+        直接归属联合事实 newParent{
+            first.读取事实代次, first.首次写入结果->事实代次,
+            直接归属来源::直接子场景, newEdge.事实->编码,
+            r.目标父场景, r.成员, newEdge.事实->创建事实代次,
+            newEdge.事实->退出事实代次};
+        out.已退出原父语境 = 场景父语境投影事实{
+            first.读取事实代次, first.首次写入结果->事实代次, r.成员,
+            r.原父场景, oldParent, 转边(*oldContextEdge->事实)};
+        out.已建立新父语境 = 场景父语境投影事实{
+            first.读取事实代次, first.首次写入结果->事实代次, r.成员,
+            r.目标父场景, newParent, 转边(*newContextEdge.事实)};
+      }
       return out;
     }
     if (first.状态 != L1所有者范围读取状态::未找到 ||
@@ -4165,9 +4506,30 @@ inline 场景直接包含迁移结果
       out.结果头.状态 = closure;
       return out;
     }
+    std::optional<场景父语境投影事实> oldContext;
+    if (kind == 场景直接包含种类::子场景) {
+      const 场景父语境读取请求 contextRequest{
+          1, r.G0, r.成员, r.最大关系数量};
+      const auto context = 读取当前父场景语境(contextRequest);
+      if (!context.成功(contextRequest) || !context.投影 ||
+          context.投影->父场景语境 != r.原父场景 ||
+          context.投影->结构父.关系 != parent.父->关系) {
+        out.结果头.状态 = context.状态 == 场景角色数据状态::数量预算不足
+                                  ? 场景直接包含状态::数量预算不足
+                                  : 场景直接包含状态::引用冲突;
+        return out;
+      }
+      oldContext = context.投影;
+    }
     L1所有者范围写集请求 ws{L1所有者范围CRUD合同版本, r.G0, r.幂等身份};
     ws.关系 = {{{1}, r.目标父场景, r.成员, type, 1}};
     ws.退出事实 = {parent.父->关系};
+    if (oldContext) {
+      ws.关系.push_back({{2}, r.成员, r.目标父场景,
+                         layout_.父场景语境关系类型, 1});
+      ws.退出事实.push_back(oldContext->投影边.编码);
+      std::sort(ws.退出事实.begin(), ws.退出事实.end());
+    }
     started = true;
     const auto saved = 串行提交(ws);
     out.结果头.Gread = saved.事实代次;
@@ -4206,6 +4568,52 @@ inline 场景直接包含迁移结果
     out.已建立新包含 =
         场景直接包含事实{saved.事实代次, saved.事实代次, kind,
                          r.目标父场景,   r.成员,         转边(*ne.事实)};
+    if (kind == 场景直接包含种类::子场景) {
+      const auto newContextId = 映射编码(saved, {2});
+      const auto oldContextEdge =
+          oldContext ? 读关系(oldContext->投影边.编码, saved.事实代次)
+                     : 关系事实读取{};
+      const auto newContextEdge =
+          newContextId ? 读关系(*newContextId, saved.事实代次)
+                       : 关系事实读取{};
+      const 直接归属联合父读取请求 currentParentRequest{
+          1, saved.事实代次, r.成员, r.最大关系数量};
+      const auto currentParent = joint.读取当前联合父(currentParentRequest);
+      const 场景父语境读取请求 currentContextRequest{
+          1, saved.事实代次, r.成员, r.最大关系数量};
+      const auto currentContext = 读取当前父场景语境(currentContextRequest);
+      const 场景树当前读取请求 treeRequest{
+          1, saved.事实代次, *oldRole.角色->树根, r.最大场景数量,
+          r.最大关系数量};
+      const auto tree = 读取当前场景树(treeRequest, joint);
+      if (!newContextId || !oldContextEdge.成功() || !newContextEdge.成功() ||
+          oldContextEdge.事实->退出事实代次 != saved.事实代次 ||
+          newContextEdge.事实->源节点 != r.成员 ||
+          newContextEdge.事实->目标节点 != r.目标父场景 ||
+          newContextEdge.事实->关系类型节点 != layout_.父场景语境关系类型 ||
+          newContextEdge.事实->角色或顺序 != 1 ||
+          !currentParent.父读取成功(currentParentRequest) ||
+          !currentParent.父 || currentParent.父->关系 != *newid ||
+          !currentContext.成功(currentContextRequest) || !currentContext.投影 ||
+          currentContext.投影->投影边.编码 != *newContextId ||
+          currentContext.投影->结构父.关系 != *newid ||
+          !tree.成功(treeRequest)) {
+        out.已退出原包含.reset();
+        out.已建立新包含.reset();
+        out.结果头.状态 = 场景直接包含状态::已可能发布;
+        return out;
+      }
+      auto historicalParent = oldContext->结构父;
+      historicalParent.Gread = saved.事实代次;
+      historicalParent.H = saved.事实代次;
+      auto oldProjection = *oldContext;
+      oldProjection.Gread = saved.事实代次;
+      oldProjection.H = saved.事实代次;
+      oldProjection.结构父 = historicalParent;
+      oldProjection.投影边 = 转边(*oldContextEdge.事实);
+      out.已退出原父语境 = std::move(oldProjection);
+      out.已建立新父语境 = currentContext.投影;
+    }
     out.结果头.状态 = saved.状态 == L1所有者范围写入状态::成功
                           ? 场景直接包含状态::已迁移
                           : 场景直接包含状态::精确重复;
@@ -4305,6 +4713,12 @@ inline std::optional<场景树角色写结果> 场景类数据服务::尝试重�
   if (parentScene)
     expected.关系.push_back(
         {{11}, *parentScene, object, includeLayout_.直接子场景关系类型, 1});
+  if (parentScene)
+    expected.关系.push_back(
+        {{12}, object, *parentScene, layout_.父场景语境关系类型, 1});
+  else if (requestedExistingParent)
+    expected.关系.push_back({{11}, object, *requestedExistingParent,
+                             layout_.父场景语境关系类型, 1});
   if (!写集相同(firstSet, expected)) {
     out.结果头.状态 = 场景直接包含状态::幂等冲突;
     return out;
@@ -4524,6 +4938,20 @@ inline std::optional<场景树角色写结果> 场景类数据服务::尝试重�
       cursor = up.父->父;
     }
   }
+  if (!rootMarker) {
+    const 场景父语境读取请求 contextRequest{
+        1, guard.Gread, object, relationBudget};
+    auto context = 读取当前父场景语境(contextRequest);
+    if (!context.成功(contextRequest) || !context.投影 ||
+        !out.既有直接父 ||
+        context.投影->结构父.关系 != out.既有直接父->关系) {
+      out.结果头.状态 = 场景直接包含状态::已可能发布;
+      return out;
+    }
+    context.投影->H = H;
+    context.投影->结构父.H = H;
+    out.父语境投影 = std::move(context.投影);
+  }
   out.结果头.H = H;
   out.结果头.首次发布H = H;
   out.结果头.状态 = 场景直接包含状态::精确重复;
@@ -4578,6 +5006,12 @@ inline 场景树角色写结果 场景类数据服务::启用树角色核心(
     if (parentScene)
       ws.关系.push_back(
           {{11}, *parentScene, object, includeLayout_.直接子场景关系类型, 1});
+    if (parentScene)
+      ws.关系.push_back(
+          {{12}, object, *parentScene, layout_.父场景语境关系类型, 1});
+    else if (existingParent)
+      ws.关系.push_back({{11}, object, existingParent->父,
+                         layout_.父场景语境关系类型, 1});
     started = true;
     const auto saved = 串行提交(ws);
     out.结果头.Gread = saved.事实代次;
@@ -4665,7 +5099,19 @@ inline 场景树角色写结果 场景类数据服务::启用树角色核心(
                            *parentScene,
                            object,
                            out.新直接包含->关系.生命周期.创建事实代次,
-                           out.新直接包含->关系.生命周期.退出事实代次};
+                            out.新直接包含->关系.生命周期.退出事实代次};
+    }
+    if (!rootMarker) {
+      const 场景父语境读取请求 contextRequest{
+          1, saved.事实代次, object, relationBudget};
+      const auto context = 读取当前父场景语境(contextRequest);
+      if (!context.成功(contextRequest) || !context.投影 ||
+          !out.既有直接父 ||
+          context.投影->结构父.关系 != out.既有直接父->关系) {
+        out.结果头.状态 = 场景直接包含状态::已可能发布;
+        return out;
+      }
+      out.父语境投影 = context.投影;
     }
     if (saved.状态 == L1所有者范围写入状态::精确重复)
       out.结果头.状态 = 场景直接包含状态::精确重复;
@@ -4858,6 +5304,22 @@ inline 场景树当前结果
                        转边(*proof.事实)};
         node.直接父 = item.parent;
         node.从上游场景到本场景路径 = item.path;
+        if (item.parent) {
+          const 场景父语境读取请求 contextRequest{
+              1, r.G0, item.E, r.最大关系数量};
+          const auto context = 读取当前父场景语境(contextRequest);
+          if (!context.成功(contextRequest) || !context.投影 ||
+              context.投影->结构父.关系 != item.parent->关系) {
+            out.结果头.状态 = 场景直接包含状态::内部不一致;
+            return out;
+          }
+          node.父语境投影 = context.投影;
+          relationSeen.insert(context.投影->投影边.编码.值);
+          if (relationSeen.size() > r.最大关系数量) {
+            out.结果头.状态 = 场景直接包含状态::数量预算不足;
+            return out;
+          }
+        }
         const 场景直接包含组读取请求 gr{1, r.G0, item.E, r.最大关系数量};
         const auto direct = 读取当前场景包含子组(gr);
         if (!direct.子组读取成功(gr)) {

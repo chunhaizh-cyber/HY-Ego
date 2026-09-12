@@ -22,6 +22,7 @@ import 海中鱼巣.领域.数据服务.绑定存在;
 
 export import 海中鱼巣.领域.数据服务.特征类;
 export import 海中鱼巣.领域.合同.存在结构身份只读;
+import 海中鱼巣.领域.合同.世界树根;
 
 namespace 海中鱼巣::存在类数据内部 {
 
@@ -633,10 +634,44 @@ struct 存在特征成员历史结果 final {
 };
 
 class 存在类数据服务 final : public 存在结构身份只读提供者,
-                             public 存在组成结构只读提供者, public 定位特征已知参与者, public 绑定存在内容参与者 {
+                             public 存在组成结构只读提供者, public 定位特征已知参与者,
+                             public 绑定存在内容参与者, public 世界树根存在参与者 {
 public:
   bool 绑定于(const L1事实基座服务 &s) const noexcept override {
     return &s == &第一层服务_;
+  }
+  const L1事实基座服务 &世界树根底座() const noexcept override {
+    return 第一层服务_;
+  }
+  L1结构所有者身份 世界树根所有者() const noexcept override {
+    return 写入端口_.所有者身份();
+  }
+  bool 世界树根幂等键可用(L1所有者范围写入幂等身份 k) const noexcept override {
+    return k.值 && k.值 != 1 && k != 存在族来源初始化幂等身份 &&
+           (k.值 >> 48) != 0x4E43;
+  }
+  bool 世界树根结构已就绪() const noexcept override { return 存在结构登记已就绪(); }
+  世界树根存在片段
+  准备世界树根存在片段(const 世界树根初始化请求 &r) const override {
+    世界树根存在片段 out;
+    out.写集 = {{1}, 所有者_, {L1所有者范围CRUD合同版本, r.G0, r.存在幂等身份}};
+    out.写集.写集.节点.push_back({{1}, 节点种类::普通, std::nullopt});
+    out.写集.写集.关系.push_back({{2}, L1所有者范围写集本地键{1},
+                                  存在族锚点_, 存在族归属关系类型_, 1});
+    return out;
+  }
+  L1所有者范围首次写入读取结果 读取世界树根存在首次材料(
+      L1所有者范围写入幂等身份 k) const override {
+    return 写入端口_.读取首次写入材料(
+        {L1所有者范围首次写入读取合同版本, k});
+  }
+  std::optional<世界树根存在来源>
+  读取世界树根存在来源(std::uint64_t g, std::uint64_t h,
+                         稳定编码 e) const override {
+    const auto r = 读取存在身份来源历史见证(g, h, e);
+    if (!r.成功(g, h, e) || !r.见证)
+      return std::nullopt;
+    return 世界树根存在来源{g, h, e, *r.见证};
   }
   存在组成读取结果 读取当前组成父(const 存在组成父读取请求 &r) const override {
     存在组成读取结果 o;
@@ -767,6 +802,8 @@ public:
   }
 
 private:
+  friend class 世界树根数据服务;
+  L1所有者范围写端口 &世界树根协调端口() noexcept { return 写入端口_; }
   存在历史读取结果 读取存在历史事实核心(const 存在历史读取请求 &r,
                                         bool 包含当前采用) const {
     using S = 存在历史读取状态;

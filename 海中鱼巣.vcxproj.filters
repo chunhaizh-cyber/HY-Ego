@@ -27,6 +27,12 @@
     <ClCompile Include="海中鱼巣\启动.程序入口.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\装配.普通应用.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\装配.普通应用.cppcpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\启动.应用程序.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -135,6 +141,9 @@
     <ClCompile Include="海中鱼巣\领域\合同.动态结构.ixx">
       <Filter>领域\合同</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\合同.世界树根.ixx">
+      <Filter>领域\合同</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\合同.场景角色组织.ixx">
       <Filter>领域\合同</Filter>
     </ClCompile>
@@ -148,6 +157,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\数据服务.概念树类.ixx">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\数据服务.世界树根.ixx">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\数据服务.场景类.ixx">
