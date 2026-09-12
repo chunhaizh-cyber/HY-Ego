@@ -1,4 +1,4 @@
-﻿module;
+module;
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -28,6 +28,7 @@ struct 存在概念场景限制 final {
     概念树场景引用 S{};
     概念树存在引用 E{};
     std::uint64_t 原场景H=0;
+    稳定编码 成员关系{};
     friend bool operator==(const 存在概念场景限制&,const 存在概念场景限制&)=default;
 };
 enum class 存在概念业务状态 : std::uint8_t {
@@ -180,7 +181,7 @@ inline B 映射(D s)noexcept{
 inline std::uint64_t 当前(const 概念树类数据服务&c){auto g=c.读取当前事实代次();if(!g.成功())拒绝(g.状态);return g.Gread;}
 inline void 守卫(const 概念树类数据服务&c,std::uint64_t g){if(!g||当前(c)!=g)拒绝(D::事实代次漂移);}
 inline bool 合法键(std::uint64_t k)noexcept{return k&&(k&0xFFFF000000000000ULL)!=0x4E43000000000000ULL;}
-inline bool 限制相等(const 存在概念场景限制&a,const 存在概念场景限制&b)noexcept{return a.S==b.S&&a.E==b.E&&a.原场景H==b.原场景H;}
+inline bool 限制相等(const 存在概念场景限制&a,const 存在概念场景限制&b)noexcept{return a.S==b.S&&a.E==b.E&&a.原场景H==b.原场景H&&a.成员关系==b.成员关系;}
 inline 概念树概念身份 身份(const 概念树应用定义事实&v){return std::visit([](const auto&f){if constexpr(std::is_same_v<std::decay_t<decltype(f)>,特征概念事实>)return f.身份;else return f.概念;},v);}
 inline 概念树生命周期状态 治理(const 概念树应用定义事实&v){return std::visit([](const auto&f){return f.治理状态;},v);}
 inline const std::vector<概念树直接上位事实>&父组(const 概念树应用定义事实&v){return std::visit([](const auto&f)->const std::vector<概念树直接上位事实>&{if constexpr(std::is_same_v<std::decay_t<decltype(f)>,特征概念事实>)return f.直接上位;else return f.直接上位组;},v);}
@@ -243,25 +244,56 @@ inline 概念树写入头 头(const 存在概念步骤请求&q){return std::visi
 inline 存在概念步骤请求 调整预算(存在概念步骤请求 q,const 概念树共享预算&b){std::visit([&](auto&r){r.预算=b;if constexpr(requires{r.操作;})std::visit([&](auto&w){w.预算=b.基础;},r.操作);},q);return q;}
 inline bool 等义(const 存在概念步骤请求&a,const 存在概念步骤请求&b){return 调整预算(a,{})==调整预算(b,{});}
 inline void 改G(存在概念步骤请求&q,std::uint64_t g){std::visit([&](auto&r){if constexpr(requires{r.写入头;})r.写入头.期望事实代次=g;else std::visit([&](auto&w){if constexpr(requires{w.写入头;})w.写入头.期望事实代次=g;else w.头.期望事实代次=g;},r.操作);},q);}
-inline void 场景检查(const 概念树类数据服务&c,const 存在类数据服务&e,const 场景类数据服务*s,const std::optional<存在概念场景限制>&limit,概念树存在引用 E,std::uint64_t g,const 概念树共享预算&b){
+inline void 场景检查(const 概念树类数据服务& c,const 存在类数据服务& e,const 场景类数据服务* s,
+    const std::optional<存在概念场景限制>& limit,概念树存在引用 E,std::uint64_t g,const 概念树共享预算& b){
     if(!limit)return;
-    if(!s||limit->E!=E||!有效(limit->S.值)||!limit->原场景H||limit->原场景H>g||!c.使用同一场景基座(*s)||!s->使用存在服务(e))拒绝();
-    for(auto h:{limit->原场景H,g}){
-        auto r=s->读取场景历史事实({1,g,h,limit->S.值,b.基础.最大世界成员数});
-        if(!r.成功()){
-            switch(r.状态){
-            case 场景类数据状态::未找到:case 场景类数据状态::目标已退出:业务拒绝(B::被后继覆盖);
-            case 场景类数据状态::历史材料已清理:拒绝(D::历史材料不可用);
-            case 场景类数据状态::事实代次漂移:拒绝(D::事实代次漂移);
-            case 场景类数据状态::数量预算不足:拒绝(D::数量预算不足);
-            case 场景类数据状态::资源失败:拒绝(D::资源失败);
-            case 场景类数据状态::入口拒绝:拒绝();
-            default:拒绝(D::内部不一致);
-            }
+    if(!s||limit->E!=E||!有效(E.值)||!有效(limit->S.值)||!有效(limit->成员关系)
+        ||!limit->原场景H||limit->原场景H>g||!b.基础.最大世界成员数
+        ||!c.使用同一场景基座(*s)||!s->使用存在提供者(e))拒绝();
+    const auto check=[&](std::uint64_t h){
+        const 场景历史身份请求 rq{2,g,h,limit->S.值};auto role=s->读取场景角色历史(rq);
+        if(role.状态!=场景角色数据状态::已读取)switch(role.状态){
+        case 场景角色数据状态::入口拒绝:拒绝();
+        case 场景角色数据状态::未找到:case 场景角色数据状态::目标已退出:case 场景角色数据状态::场景角色未启用:业务拒绝(B::被后继覆盖);
+        case 场景角色数据状态::引用冲突:拒绝(D::引用冲突);
+        case 场景角色数据状态::事实代次漂移:拒绝(D::事实代次漂移);
+        case 场景角色数据状态::历史材料已清理:拒绝(D::历史材料不可用);
+        case 场景角色数据状态::数量预算不足:拒绝(D::数量预算不足);
+        case 场景角色数据状态::资源失败:拒绝(D::资源失败);
+        default:拒绝(D::内部不一致);
         }
-        if(r.Gread!=g||r.H!=h)拒绝(D::内部不一致);
-        if(std::count_if(r.场景结点->存在组.begin(),r.场景结点->存在组.end(),[&](const auto&m){return m.目标结点==E.值;})!=1)业务拒绝(B::被后继覆盖);
-    }
+        if(!role.成功(rq))拒绝(D::内部不一致);
+        const auto identity=e.读取存在身份来源历史见证(g,h,E.值);
+        if(identity.状态!=存在结构身份只读状态::已读取)switch(identity.状态){
+        case 存在结构身份只读状态::入口拒绝:拒绝();
+        case 存在结构身份只读状态::未找到:case 存在结构身份只读状态::目标已退出:业务拒绝(B::被后继覆盖);
+        case 存在结构身份只读状态::事实代次漂移:拒绝(D::事实代次漂移);
+        case 存在结构身份只读状态::历史材料已清理:拒绝(D::历史材料不可用);
+        case 存在结构身份只读状态::数量预算不足:拒绝(D::数量预算不足);
+        case 存在结构身份只读状态::资源失败:拒绝(D::资源失败);
+        default:拒绝(D::内部不一致);
+        }
+        if(!identity.成功(g,h,E.值))拒绝(D::内部不一致);
+        const auto r=s->读取直接存在成员历史({1,g,h,limit->成员关系});const auto& head=r.结果头;
+        if(head.状态!=场景直接包含状态::已读取)switch(head.状态){
+        case 场景直接包含状态::入口拒绝:拒绝();
+        case 场景直接包含状态::场景未找到:case 场景直接包含状态::场景已退出:case 场景直接包含状态::成员未找到:
+        case 场景直接包含状态::成员已退出:case 场景直接包含状态::成员未归属:业务拒绝(B::被后继覆盖);
+        case 场景直接包含状态::引用冲突:case 场景直接包含状态::原父不匹配:case 场景直接包含状态::成员多重归属:拒绝(D::引用冲突);
+        case 场景直接包含状态::事实代次漂移:拒绝(D::事实代次漂移);
+        case 场景直接包含状态::历史材料已清理:拒绝(D::历史材料不可用);
+        case 场景直接包含状态::数量预算不足:拒绝(D::数量预算不足);
+        case 场景直接包含状态::资源失败:拒绝(D::资源失败);
+        default:拒绝(D::内部不一致);
+        }
+        if(head.版本!=1||head.Gread!=g||head.H!=h||head.首次发布H||!r.成功())拒绝(D::内部不一致);
+        const auto& m=*r.包含;const auto& edge=m.关系;
+        if(m.Gread!=g||m.H!=h||m.种类!=场景直接包含种类::存在成员||!有效(edge.关系类型)
+            ||edge.角色或顺序!=1||!edge.生命周期.创建事实代次||edge.生命周期.创建事实代次>h||edge.生命周期.退出事实代次)拒绝(D::内部不一致);
+        if(m.父场景!=limit->S.值||m.成员!=E.值||edge.编码!=limit->成员关系||edge.源!=limit->S.值||edge.目标!=E.值)拒绝(D::引用冲突);
+        守卫(c,g);
+    };
+    check(limit->原场景H);if(limit->原场景H!=g)check(g);
 }
 } // namespace 海中鱼巣::共享存在应用内部
 namespace 海中鱼巣 {

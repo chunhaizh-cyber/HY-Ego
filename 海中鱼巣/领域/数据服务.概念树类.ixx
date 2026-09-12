@@ -3265,10 +3265,14 @@ void 概念树类数据服务::核验外部节点(稳定编码 id,std::uint64_t 
         if(es.size()!=1 || es.front().角色或顺序!=1) throw 失败{S::内部不一致};
         pair(es.front()); return es.front();
     };
-    const auto own=one(x[0]), ft=one(x[1]), f=one(x[2]), source=one(x[3]);
+    const auto own=共享关系(id,x[0],true,c.H,c);
+    if(own.size()!=1||own.front().源节点!=feature_layout_->锚点||own.front().目标节点!=id
+        ||own.front().关系类型节点!=x[0]||own.front().角色或顺序!=1)throw 失败{S::内部不一致};
+    pair(own.front());
+    const auto ft=one(x[1]), f=one(x[2]), source=one(x[3]);
     const auto* time=std::get_if<std::int64_t>(&唯一属性(av,x[5]).材料);
     const auto seq=u64(x[4]), h=u64(x[6]);
-    if (own.目标节点!=feature_layout_->锚点 || !time || h>=n.创建事实代次) throw 失败{S::内部不一致};
+    if (!time || h>=n.创建事实代次) throw 失败{S::内部不一致};
     const auto exact=特征结果(features_.读取准确特征事实({1,c.G,h,{f.目标节点}}));
     if(exact.Gread!=c.G || exact.H!=h || exact.信息.类型.编码!=ft.目标节点) throw 失败{S::引用冲突};
     核验外部节点(source.目标节点,c.G,h);
@@ -3674,15 +3678,20 @@ std::vector<特征名称事实> 概念树类数据服务::共享名称组(共享
 std::vector<特征概念命中事实> 概念树类数据服务::命中组(共享读取上下文& c) const {
     if(!feature_layout_)throw 失败{S::不支持};
     const auto& x=feature_layout_->类型;
-    const auto own=共享关系(feature_layout_->锚点,x[12],true,c.H,c);
+    const auto own=共享关系(feature_layout_->锚点,x[12],false,c.H,c);
     std::vector<特征概念命中事实> out;std::set<std::pair<std::uint64_t,std::uint64_t>> pairs;
     for(const auto& member:own) {
-        if(member.角色或顺序!=1)throw 失败{S::内部不一致};
-        const auto n=节点(member.源节点,c.G,c.H);
-        if(n.种类!=节点种类::普通||n.属性类型表示||!属性(n.编码,c.G,c.H).empty())throw 失败{S::内部不一致};
+        if(!有效(member.编码)||member.源节点!=feature_layout_->锚点
+            ||member.关系类型节点!=x[12]||member.角色或顺序!=1||!有效(member.目标节点))throw 失败{S::内部不一致};
+        const auto n=节点(member.目标节点,c.G,c.H);
+        if(n.编码!=member.目标节点||n.种类!=节点种类::普通||n.属性类型表示
+            ||!属性(n.编码,c.G,c.H).empty())throw 失败{S::内部不一致};
         专项计数(c.命中计数,n.编码,c.H,c.预算.特征.最大命中数);
         const auto os=共享关系(n.编码,x[13],false,c.H,c),cs=共享关系(n.编码,x[14],false,c.H,c);
         if(os.size()!=1||cs.size()!=1||os.front().角色或顺序!=1||cs.front().角色或顺序!=1
+            ||os.front().源节点!=n.编码||cs.front().源节点!=n.编码
+            ||os.front().关系类型节点!=x[13]||cs.front().关系类型节点!=x[14]
+            ||!有效(os.front().目标节点)||!有效(cs.front().目标节点)
             ||!pairs.insert({os.front().目标节点.值,cs.front().目标节点.值}).second)throw 失败{S::内部不一致};
         for(const auto& e:{member,os.front(),cs.front()})
             if(e.创建事实代次!=n.创建事实代次||e.退出事实代次!=n.退出事实代次)throw 失败{S::内部不一致};

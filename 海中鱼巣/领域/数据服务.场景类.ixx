@@ -15,12 +15,13 @@ module;
 
 export module 海中鱼巣.领域.数据服务.场景类;
 export import 海中鱼巣.领域.合同.场景角色组织;
+import 海中鱼巣.领域.数据服务.定位特征;
 
 export namespace 海中鱼巣 {
 
 class 场景类数据服务 final : public 状态使用绑定只读提供者,
                              public 场景动态组织只读提供者,
-                             public 场景直接包含只读提供者 {
+                             public 场景直接包含只读提供者, public 定位特征组织参与者 {
 public:
   场景类数据服务() = delete;
   场景类数据服务(const 场景类数据服务 &) = delete;
@@ -382,7 +383,7 @@ private:
   场景组织历史结果 读路径(std::uint64_t, std::uint64_t, 场景根角色, 稳定编码,
                           std::uint64_t) const;
   场景特征组织历史结果 读特征路径(std::uint64_t, std::uint64_t, 特征信息身份,
-                                  std::uint64_t) const;
+                                  std::uint64_t,bool* =nullptr) const;
   场景角色数据状态 核验当前已知准确特征(const 场景特征组织请求 &,
                                         std::uint64_t &) const;
   场景角色数据状态 核验特征组织父(const 场景特征组织请求 &, 稳定编码,
@@ -473,6 +474,81 @@ private:
                                         const 直接归属联合只读提供者 &,
                                         场景直接包含种类);
 
+  const L1事实基座服务& 定位底座() const noexcept override { return l1_; }
+  L1所有者范围写端口& 定位端口() noexcept override { return port_; }
+  bool 定位幂等键可用(L1所有者范围写入幂等身份 key) const noexcept override {
+    return key.值&&key.值!=1&&key!=场景特征组织扩展登记固定幂等身份&&key!=场景直接包含扩展登记固定幂等身份&&(key.值>>48)!=0x4E43;
+  }
+  bool 定位结构已就绪() const noexcept override {
+    try {
+      std::lock_guard<std::mutex> lock(write_);
+      const auto g=l1_.读取中性当前事实代次({L1中性CRUD合同版本});
+      if(g.状态!=L1中性读取状态::成功||!g.事实代次||!绑定于(l1_)||!port_.有效()
+          ||!布局形状有效(layout_)||!包含布局形状有效(includeLayout_,layout_,featureLayout_)
+          ||!登记材料匹配()||!扩展登记材料匹配()||!包含扩展登记材料匹配())return false;
+      const auto tail=l1_.读取中性当前事实代次({L1中性CRUD合同版本});
+      return tail.状态==L1中性读取状态::成功&&tail.事实代次==g.事实代次;
+    }catch(...){return false;}
+  }
+  static 定位特征状态 定位映射(场景角色数据状态 s) noexcept {
+    using P=定位特征状态;using X=场景角色数据状态;
+    switch(s){case X::入口拒绝 : return P::入口拒绝;case X::未找到 : return P::未找到;
+    case X::目标已退出 : return P::目标已退出;case X::事实代次漂移 : return P::事实代次漂移;
+    case X::数量预算不足 : return P::预算不足;case X::历史材料已清理 : return P::历史材料不可用;
+    case X::资源失败 : return P::资源失败;case X::实例未组织 : return P::存量未定位;
+    default : return P::内部不一致;}
+  }
+  template<class T,class F> 定位参与者结果<T> 定位保护(std::uint64_t g,std::uint64_t h,F&& fn) const {
+    定位参与者结果<T> out;out.Gread=g;out.H=h;
+    const auto guard=[&]{auto x=l1_.读取中性当前事实代次({L1中性CRUD合同版本});
+      if(x.状态!=L1中性读取状态::成功)throw x.状态==L1中性读取状态::资源失败 ? 定位特征状态::资源失败 : 定位特征状态::内部不一致;
+      if(x.事实代次!=g)throw 定位特征状态::事实代次漂移;};
+    try {if(!g||!h||h>g)throw 定位特征状态::入口拒绝;guard();out.数据=fn();guard();out.状态=定位特征状态::已读取;}
+    catch(定位特征状态 e){out.状态=e;out.数据.reset();}
+    catch(const std::bad_alloc&){out.状态=定位特征状态::资源失败;out.数据.reset();}
+    catch(const std::length_error&){out.状态=定位特征状态::资源失败;out.数据.reset();}
+    catch(...){out.状态=定位特征状态::内部不一致;out.数据.reset();}return out;
+  }
+  static 定位关系见证 定位边(const 场景组织边见证& e) {
+    return {e.编码,e.源,e.目标,e.关系类型,static_cast<std::int64_t>(e.角色或顺序),e.生命周期.创建事实代次,e.生命周期.退出事实代次};
+  }
+  定位参与者结果<定位父路径见证> 核验定位父(std::uint64_t g,std::uint64_t h,稳定编码 c,稳定编码 p,std::uint64_t budget) const override {
+    return 定位保护<定位父路径见证>(g,h,[&]{
+      if(!有效(c)||!有效(p)||c==p||!budget||budget>4096)throw 定位特征状态::入口拒绝;
+      auto role=读角色(g,h,c);if(!role.成功({2,g,h,c}))throw 定位映射(role.状态);
+      const auto root=role.角色->四根[0].根.编码;
+      定位父路径见证 out{c,root,p,{},{}};
+      if(p==root){out.路径节点.push_back(root);return out;}
+      bool missingKnown=false;auto path=读特征路径(g,h,{p},budget,&missingKnown);if(missingKnown)throw 定位特征状态::位置冲突;
+      if(!path.成功({1,g,h,{p},budget}))throw 定位映射(path.状态);
+      if(path.组织->场景角色.场景!=c||path.组织->根!=root)throw 定位特征状态::位置冲突;
+      for(const auto& n : path.组织->路径节点)out.路径节点.push_back(n.编码);
+      for(const auto& e : path.组织->路径边)out.路径关系.push_back(定位边(e));
+      return out;
+    });
+  }
+  定位参与者结果<定位路径见证> 读取定位路径(std::uint64_t g,std::uint64_t h,稳定编码 f,std::uint64_t budget) const override {
+    return 定位保护<定位路径见证>(g,h,[&]{
+      if(!有效(f)||!budget||budget>4096)throw 定位特征状态::入口拒绝;
+      bool missingKnown=false;auto path=读特征路径(g,h,{f},budget,&missingKnown);if(missingKnown)throw 定位特征状态::位置冲突;
+      if(!path.成功({1,g,h,{f},budget}))throw 定位映射(path.状态);
+      if(path.组织->路径边.empty())throw 定位特征状态::内部不一致;
+      定位路径见证 out{path.组织->场景角色.场景,path.组织->根,path.组织->路径边.back().源,f,{},{}};
+      for(const auto& n : path.组织->路径节点)out.路径节点.push_back(n.编码);
+      for(const auto& e : path.组织->路径边)out.路径关系.push_back(定位边(e));return out;
+    });
+  }
+  定位参与者结果<L1三分区原子参与者写集_v2> 准备定位组织(const 定位特征创建请求& r,std::uint64_t g) const override {
+    return 定位保护<L1三分区原子参与者写集_v2>(g,r.G0,[&]{
+      for(auto key : {r.组合键,r.内容键,r.已知键,r.组织键})if(!定位幂等键可用(key))throw 定位特征状态::入口拒绝;
+      auto p=核验定位父(g,r.G0,r.位置.场景,r.位置.组织父,r.预算.最大路径长度);
+      if(p.状态!=定位特征状态::已读取||!p.数据)throw p.状态;
+      if(p.数据->路径关系.size()>=r.预算.最大路径长度)throw 定位特征状态::预算不足;
+      L1三分区原子参与者写集_v2 out;out.参与者={3};out.所有者=owner_;
+      out.写集.期望事实代次=r.G0;out.写集.写入幂等身份=r.组织键;
+      out.写集.关系.push_back({L1所有者范围写集本地键{1},r.位置.组织父,L1三分区原子事实引用_v2{{1},{1}},featureLayout_.特征组织关系类型,1});return out;
+    });
+  }
   const L1事实基座服务 &l1_;
   L1所有者范围写端口 port_;
   L1结构所有者身份 owner_;
@@ -780,7 +856,8 @@ bool 场景类数据服务::扩展登记材料匹配() const {
 场景特征组织历史结果 场景类数据服务::读特征路径(std::uint64_t g,
                                                 std::uint64_t h,
                                                 特征信息身份 feature,
-                                                std::uint64_t budget) const {
+                                                std::uint64_t budget,bool* missingKnown) const {
+  if(missingKnown)*missingKnown=false;
   场景特征组织事实 fact;
   fact.Gread = g;
   fact.H = h;
@@ -860,8 +937,10 @@ bool 场景类数据服务::扩展登记材料匹配() const {
     const 存在已知准确特征历史请求 request{1, g, h, fact.场景角色.场景,
                                            e.目标节点};
     auto f = existence_.读取已知准确特征历史(request);
-    if (!f.历史成功(request))
+    if (!f.历史成功(request)) {
+      if(missingKnown&&f.状态==存在已知准确特征只读状态::未找到)*missingKnown=true;
       return {1, 存在特征到场景(f.状态), f.Gread, h, std::nullopt};
+    }
     fact.路径节点.push_back(
         {e.目标节点, {f.见证->特征创建事实代次, f.见证->特征退出事实代次}});
   }

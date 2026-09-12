@@ -19,6 +19,7 @@ module;
 
 export module 海中鱼巣.领域.数据服务.特征类;
 export import 海中鱼巣.领域.数据服务.特征值类;
+import 海中鱼巣.领域.数据服务.定位特征;
 export namespace 海中鱼巣 {
 struct 特征信息身份 final {
     稳定编码 编码{};
@@ -770,7 +771,7 @@ struct 特征类标量派生写结果 final {
     }
 };
 // 定义和准确内容使用两个既有技术分区；本类不保存名称、观察或当前采用。
-class 特征类数据服务 final {
+class 特征类数据服务 final : public 定位特征内容参与者 {
     template<class T> using R = 特征数据结果<T>;
     using S = 特征数据错误;
     using N = L1所有者范围节点事实;
@@ -863,7 +864,6 @@ public:
     R<std::monostate> 收敛待确认写入();
     R<特征类型身份> 创建先天I64特征类型(const 先天I64特征类型规格&);
     R<先天I64特征类型信息> 读取先天I64特征类型(特征类型身份) const;
-    R<特征信息身份> 创建准确特征(特征类型身份, const 特征准确值&);
     R<特征信息> 读取准确特征(特征信息身份) const;
     R<std::vector<特征信息>> 查询准确特征(特征类型身份, const 特征准确值&) const;
     R<std::monostate> 删除准确特征(特征信息身份);
@@ -1802,6 +1802,80 @@ public:
     特征类标量派生写结果 退出标量派生定义(const 特征类标量派生退出请求& r) { return 标量执行写(r); }
 
 private:
+    const L1事实基座服务& 定位底座() const noexcept override { return l1_; }
+    L1所有者范围写端口& 定位端口() noexcept override { return information_; }
+    bool 定位结构已就绪() const noexcept override {
+        try {std::lock_guard<std::mutex> lock(mutex_);const auto g=当前G();
+            if(!definition_ready_||!information_ready_||!绑定于(l1_))return false;
+            结构就绪(分区::定义,g,g);结构就绪(分区::信息,g,g);守卫(g);return true;
+        }catch(...){return false;}
+    }
+    bool 定位幂等键可用(L1所有者范围写入幂等身份 key) const noexcept override {
+        return key.值&&key.值!=1&&key!=I64比较绑定结构扩展初始化幂等身份&&(key.值>>48)!=0x4E43;
+    }
+    static 定位特征状态 定位映射(S state) noexcept {
+        using P=定位特征状态;
+        switch(state) {
+        case S::未找到:return P::未找到;
+        case S::已退出:return P::目标已退出;
+        case S::入口拒绝:case S::类型不相容:case S::引用冲突:return P::入口拒绝;
+        case S::能力未提供:case S::旧格式不支持:return P::表示不支持;
+        case S::并发变化:return P::事实代次漂移;
+        case S::历史材料不可用:return P::历史材料不可用;
+        case S::数量预算不足:return P::预算不足;
+        case S::资源失败:return P::资源失败;
+        case S::幂等冲突:return P::幂等冲突;
+        default:return P::内部不一致;
+        }
+    }
+    template<class T,class F> 定位参与者结果<T> 定位读取保护(std::uint64_t g,std::uint64_t h,F&& action) const {
+        定位参与者结果<T> out; out.Gread=g;out.H=h;
+        try { std::lock_guard<std::mutex> lock(mutex_);截止有效(1,g,h);守卫(g);
+            out.数据=action();守卫(g);out.状态=定位特征状态::已读取;
+        } catch(S e){out.状态=定位映射(e);out.数据.reset();}
+        catch(const std::bad_alloc&){out.状态=定位特征状态::资源失败;out.数据.reset();}
+        catch(const std::length_error&){out.状态=定位特征状态::资源失败;out.数据.reset();}
+        catch(...){out.状态=定位特征状态::内部不一致;out.数据.reset();}
+        return out;
+    }
+    定位参与者结果<L1三分区原子参与者写集_v2> 准备定位内容(const 定位特征创建请求& r,std::uint64_t g) const override {
+        return 定位读取保护<L1三分区原子参与者写集_v2>(g,r.G0,[&] {
+            for(auto key:{r.组合键,r.内容键,r.已知键,r.组织键})
+                要求(定位幂等键可用(key),S::入口拒绝);
+            结构就绪(分区::信息,g,r.G0);
+            const auto ft=读类型({r.正式特征类型},g,r.G0);
+            const auto value=解析输入(r.准确值,g,r.G0);
+            要求(包含(规范域({ft.规格.允许集合}),特征规范I64域{{{value,value}}}),S::类型不相容);
+            L1三分区原子参与者写集_v2 out;out.参与者={1};out.所有者=information_.所有者身份();
+            auto& w=out.写集;w.期望事实代次=r.G0;w.写入幂等身份=r.内容键;
+            const Key f{1}; const auto attr=f_[std::holds_alternative<std::int64_t>(r.准确值)?准确内联属性:准确引用属性];
+            w.节点.push_back({f,节点种类::普通,{}});
+            w.关系.push_back({Key{2},f,f_[信息锚点],f_[信息归属],1});
+            w.关系.push_back({Key{3},f,r.正式特征类型,f_[准确类型关系],1});
+            (void)节点(producer_,g,r.G0);
+            w.值.push_back({Key{4},f,attr,value,producer_});
+            w.属性槽变更.push_back({f,attr,Key{4}});
+            return out;
+        });
+    }
+    定位参与者结果<定位内容见证> 读取定位内容(std::uint64_t g,std::uint64_t h,稳定编码 id) const override {
+        return 定位读取保护<定位内容见证>(g,h,[&] {
+            auto f=读准确({id},g,h);return 定位内容见证{id,f.信息.类型.编码,完整整数(f),f.创建G,f.退出G};
+        });
+    }
+    定位参与者结果<std::vector<稳定编码>> 查询定位准确候选(std::uint64_t g,std::uint64_t h,稳定编码 type,
+        const std::variant<std::int64_t,特征值身份>& input,std::uint64_t maximum) const override {
+        return 定位读取保护<std::vector<稳定编码>>(g,h,[&] {
+            要求(maximum!=0,S::入口拒绝);结构就绪(分区::信息,g,h);
+            (void)读类型({type},g,h);const auto value=解析输入(input,g,h);
+            const auto edges=关系(type,f_[准确类型关系],true,g,h,分区::信息);
+            要求(edges.size()<=maximum,S::数量预算不足);
+            std::vector<稳定编码> out;
+            for(const auto& e:edges){要求(e.角色或顺序==1);auto f=读准确({e.源节点},g,h);
+                if(完整整数(f)==value)out.push_back(e.源节点);}
+            std::sort(out.begin(),out.end());要求(std::adjacent_find(out.begin(),out.end())==out.end());return out;
+        });
+    }
     const L1事实基座服务& l1_;
     L1所有者范围写端口 definitions_, information_;
     const 特征值类数据服务& values_;
@@ -2289,18 +2363,6 @@ inline 特征数据结果<特征类型身份> 特征类数据服务::创建先�
             (void)加值(ws, rule, d_[规则误差属性], spec.域形成->允许误差);
         }
         const auto result = 提交(分区::定义, std::move(ws)); return 特征类型身份{映射编码(result, ft)};
-    });
-}
-inline 特征数据结果<特征信息身份> 特征类数据服务::创建准确特征(特征类型身份 type, const 特征准确值& input) {
-    return 保护<特征信息身份>([&] {
-        const auto g = 当前G(); 结构就绪(分区::信息, g, g);
-        const auto ft = 读类型(type, g, g); const auto value = 解析输入(input, g, g);
-        要求(包含(规范域({ft.规格.允许集合}), 特征规范I64域{{{value, value}}}), S::类型不相容);
-        (void)节点(producer_, g, g); auto ws = 新写集(分区::信息, g); const auto f = 加节点(ws);
-        (void)加关系(ws, f, f_[信息锚点], f_[信息归属]); (void)加关系(ws, f, type.编码, f_[准确类型关系]);
-        // 引用输入复制完整 I64 为 F 自有不可变值；外部值身份不进入整数载荷。
-        (void)加值(ws, f, f_[std::holds_alternative<std::int64_t>(input) ? 准确内联属性 : 准确引用属性], value);
-        const auto result = 提交(分区::信息, std::move(ws)); return 特征信息身份{映射编码(result, f)};
     });
 }
 

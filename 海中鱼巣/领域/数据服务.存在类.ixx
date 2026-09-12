@@ -55,6 +55,8 @@ std::optional<稳定编码> 查找唯一编码(const L1所有者范围写入结�
 
 } // namespace 海中鱼巣::存在类数据内部
 
+import 海中鱼巣.领域.数据服务.定位特征;
+
 export namespace 海中鱼巣 {
 
 inline constexpr std::uint32_t 存在类数据合同版本 = 1;
@@ -636,7 +638,7 @@ struct 存在特征成员历史结果 final {
 };
 
 class 存在类数据服务 final : public 存在结构身份只读提供者,
-                             public 存在组成结构只读提供者 {
+                             public 存在组成结构只读提供者, public 定位特征已知参与者 {
 public:
   bool 绑定于(const L1事实基座服务 &s) const noexcept override {
     return &s == &第一层服务_;
@@ -4305,6 +4307,140 @@ private:
                e && e->编码 == id && e->写入所有者 == 所有者_ &&
                e->退出事实代次 == saved.事实代次);
     }
+  }
+  const L1事实基座服务& 定位底座() const noexcept override { return 第一层服务_; }
+  L1所有者范围写端口& 定位端口() noexcept override { return 写入端口_; }
+  bool 定位幂等键可用(L1所有者范围写入幂等身份 key) const noexcept override {
+    return key.值&&key.值!=1&&key!=存在族来源初始化幂等身份&&(key.值>>48)!=0x4E43;
+  }
+  bool 定位结构已就绪() const noexcept override {
+    try {
+      std::lock_guard<std::mutex> lock(写入锁_);
+      if(!写入端口_.有效()||!写入端口_.绑定于(第一层服务_)||!特征服务_.绑定于(第一层服务_))return false;
+      const auto 首次=写入端口_.读取首次写入材料({L1所有者范围首次写入读取合同版本,存在族来源初始化幂等身份});
+
+    if (首次.状态 != L1所有者范围读取状态::成功 ||
+        首次.合同版本 != L1所有者范围首次写入读取合同版本 ||
+        首次.所有者 != 所有者_ ||
+        首次.写入幂等身份 != 存在族来源初始化幂等身份 || !首次.首次规范化写集 ||
+        !首次.首次写入结果)
+      throw std::logic_error("invalid existence family first write");
+    const auto 期望 = 形成存在族初始化写集(首次.首次规范化写集->期望事实代次);
+    if (*首次.首次规范化写集 != 期望)
+      throw std::logic_error("conflicting existence family layout");
+    const auto &写入 = *首次.首次写入结果;
+    if (写入.状态 != L1所有者范围写入状态::成功 ||
+        写入.合同版本 != L1所有者范围CRUD合同版本 || 写入.所有者 != 所有者_ ||
+        写入.写入幂等身份 != 存在族来源初始化幂等身份 ||
+        !写入.是否形成内存权威发布 || 写入.事实代次 == 0 ||
+        写入.事实代次 != 期望.期望事实代次 + 1 || 写入.新编码映射.size() != 2)
+      throw std::logic_error("invalid existence family publication");
+    const auto 锚点 =
+        存在类数据内部::查找唯一编码(写入, 存在类数据内部::存在族锚点本地键);
+    const auto 类型 = 存在类数据内部::查找唯一编码(
+        写入, 存在类数据内部::存在族归属类型本地键);
+    if (!锚点 || !类型 || *锚点 == *类型)
+      throw std::logic_error("invalid existence family mapping");
+
+    L1所有者范围一致当前读取请求 请求;
+    请求.合同版本 = L1所有者范围一致当前读取合同版本;
+    请求.期望事实代次 = 首次.读取事实代次;
+    请求.所有者 = {所有者_};
+    请求.节点 = {*锚点, *类型};
+    const auto 投影 = 第一层服务_.尝试读取所有者范围一致当前投影(请求);
+    if (投影.状态 == L1所有者范围一致当前读取状态::资源失败)
+      throw std::runtime_error("existence family projection unavailable");
+    if (投影.状态 != L1所有者范围一致当前读取状态::成功 ||
+        投影.合同版本 != L1所有者范围一致当前读取合同版本 ||
+        投影.期望事实代次 != 首次.读取事实代次 ||
+        投影.读取事实代次 != 首次.读取事实代次 || 投影.所有者.size() != 1 ||
+        投影.节点.size() != 2 || !投影.关系.empty() || !投影.值.empty() ||
+        !投影.属性值.empty() || !投影.源关系组.empty() ||
+        !投影.目标关系组.empty())
+      throw std::logic_error("invalid existence family projection");
+    const auto &owner = 投影.所有者.front();
+    if (owner.查询所有者 != 所有者_ ||
+        owner.状态 != L1所有者范围一致当前读取项目状态::成功 ||
+        !owner.所有者事实 || owner.所有者事实->所有者 != 所有者_ ||
+        owner.所有者事实->范围种类 != L1所有者范围种类::独占结构范围 ||
+        owner.所有者事实->创建事实代次 == 0 ||
+        owner.所有者事实->创建事实代次 > 首次.读取事实代次 ||
+        owner.所有者事实->退出事实代次)
+      throw std::logic_error("invalid existence family owner projection");
+    const auto *锚点项 = 查找一致节点(投影, *锚点);
+    const auto *类型项 = 查找一致节点(投影, *类型);
+    const auto *锚点事实 = 锚点项 ? 当前节点事实(*锚点项) : nullptr;
+    const auto *类型事实 = 类型项 ? 当前节点事实(*类型项) : nullptr;
+    if (!锚点事实 || !类型事实 || !普通空节点当前有效(*锚点事实, *锚点) ||
+        !普通空节点当前有效(*类型事实, *类型))
+      throw std::logic_error("invalid existence family metadata");
+    if(存在族锚点_!=*锚点||存在族归属关系类型_!=*类型)return false;
+    if(!关系类型组有效()||!关系类型有效(子存在关系类型_)||!关系类型有效(特征关系类型_)||!关系类型有效(当前采用关系类型_))return false;
+    const auto tail=读取当前事实代次();
+    return tail.first==存在结构身份只读状态::已读取&&tail.second==首次.读取事实代次;
+
+    }catch(...){return false;}
+  }
+
+  static 定位特征状态 定位映射(存在已知准确特征只读状态 state) noexcept {
+    using P=定位特征状态; using X=存在已知准确特征只读状态;
+    switch(state){
+    case X::入口拒绝 : return P::入口拒绝;case X::未找到 : return P::未找到;
+    case X::目标已退出 : return P::目标已退出;case X::事实代次漂移 : return P::事实代次漂移;
+    case X::历史材料已清理 : return P::历史材料不可用;case X::数量预算不足 : return P::预算不足;
+    case X::资源失败 : return P::资源失败;default : return P::内部不一致;}
+  }
+  template<class T,class F> 定位参与者结果<T> 定位保护(std::uint64_t g,std::uint64_t h,F&& fn) const {
+    定位参与者结果<T> out;out.Gread=g;out.H=h;
+    try {
+      if(!g||!h||h>g)throw 定位特征状态::入口拒绝;
+      auto current=读取当前事实代次();
+      if(current.first!=存在结构身份只读状态::已读取)throw current.first==存在结构身份只读状态::资源失败 ? 定位特征状态::资源失败 : 定位特征状态::内部不一致;
+      if(current.second!=g)throw 定位特征状态::事实代次漂移;
+      out.数据=fn();current=读取当前事实代次();
+      if(current.first!=存在结构身份只读状态::已读取)throw current.first==存在结构身份只读状态::资源失败 ? 定位特征状态::资源失败 : 定位特征状态::内部不一致;
+      if(current.second!=g)throw 定位特征状态::事实代次漂移;
+      out.状态=定位特征状态::已读取;
+    }catch(定位特征状态 e){out.状态=e;out.数据.reset();}
+    catch(const std::bad_alloc&){out.状态=定位特征状态::资源失败;out.数据.reset();}
+    catch(const std::length_error&){out.状态=定位特征状态::资源失败;out.数据.reset();}
+    catch(...){out.状态=定位特征状态::内部不一致;out.数据.reset();}
+    return out;
+  }
+  定位参与者结果<定位关系见证> 读取定位已知(std::uint64_t g,std::uint64_t h,稳定编码 c,稳定编码 f) const override {
+    return 定位保护<定位关系见证>(g,h,[&]{
+      const 存在已知准确特征历史请求 request{1,g,h,c,f};
+      auto known=读取已知准确特征历史(request);
+      if(!known.历史成功(request))throw 定位映射(known.状态);
+      auto raw=第一层服务_.读取所有者范围历史事实({L1所有者范围CRUD合同版本,known.见证->已知关系});
+      if(raw.状态!=L1所有者范围读取状态::成功||!raw.事实||raw.读取事实代次!=g)
+        throw raw.状态==L1所有者范围读取状态::资源失败 ? 定位特征状态::资源失败 : raw.读取事实代次!=g ? 定位特征状态::事实代次漂移 : 定位特征状态::内部不一致;
+      const auto* e=std::get_if<L1所有者范围关系事实>(&*raw.事实);
+      if(!e||e->写入所有者!=所有者_||e->编码!=known.见证->已知关系||e->源节点!=c||e->目标节点!=f||e->关系类型节点!=特征关系类型_||e->角色或顺序!=1||e->创建事实代次>h||(e->退出事实代次&&*e->退出事实代次<=h))throw 定位特征状态::内部不一致;
+      return 定位关系见证{e->编码,c,f,e->关系类型节点,1,e->创建事实代次,e->退出事实代次};
+    });
+  }
+  定位参与者结果<定位场景已知见证> 核验定位场景与父已知(std::uint64_t g,std::uint64_t h,稳定编码 c,std::optional<稳定编码> parent,const 定位特征预算& b) const override {
+    return 定位保护<定位场景已知见证>(g,h,[&]{
+      if(!有效(c)||!b.最大候选数||!b.最大路径长度||b.最大路径长度>4096)throw 定位特征状态::入口拒绝;
+      const auto identity=读取存在身份来源历史见证(g,h,c);
+      if(!identity.成功(g,h,c)){
+        using X=存在结构身份只读状态;
+        switch(identity.状态){case X::未找到 : throw 定位特征状态::未找到;case X::目标已退出 : throw 定位特征状态::目标已退出;case X::事实代次漂移 : throw 定位特征状态::事实代次漂移;case X::历史材料已清理 : throw 定位特征状态::历史材料不可用;case X::资源失败 : throw 定位特征状态::资源失败;default : throw 定位特征状态::内部不一致;}
+      }
+      定位场景已知见证 out{c,parent,{}};
+      if(parent){auto x=读取定位已知(g,h,c,*parent);if(x.状态!=定位特征状态::已读取||!x.数据)throw x.状态;out.父已知关系=std::move(x.数据);}
+      return out;
+    });
+  }
+  定位参与者结果<L1三分区原子参与者写集_v2> 准备定位已知(const 定位特征创建请求& r,std::uint64_t g) const override {
+    return 定位保护<L1三分区原子参与者写集_v2>(g,r.G0,[&]{
+      for(auto key : {r.组合键,r.内容键,r.已知键,r.组织键})if(!定位幂等键可用(key))throw 定位特征状态::入口拒绝;
+      auto c=核验定位场景与父已知(g,r.G0,r.位置.场景,{},r.预算);if(c.状态!=定位特征状态::已读取||!c.数据)throw c.状态;
+      L1三分区原子参与者写集_v2 out;out.参与者={2};out.所有者=所有者_;
+      out.写集.期望事实代次=r.G0;out.写集.写入幂等身份=r.已知键;
+      out.写集.关系.push_back({L1所有者范围写集本地键{1},r.位置.场景,L1三分区原子事实引用_v2{{1},{1}},特征关系类型_,1});return out;
+    });
   }
   稳定编码 当前采用关系类型_;
   mutable std::mutex 写入锁_;

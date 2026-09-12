@@ -174,6 +174,7 @@
     <ClCompile Include="海中鱼巣\领域\服务.完整秒时钟.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据服务.特征值类.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据服务.特征类.ixx" />
+    <ClCompile Include="海中鱼巣\领域\数据服务.定位特征.ixx" />
     <ClCompile Include="海中鱼巣\领域\算法.有序I64特征比较.ixx" />
     <ClCompile Include="海中鱼巣\业务\计算.二次特征.ixx" />
     <ClCompile Include="海中鱼巣\业务\应用服务.需求目标方向.ixx" />
