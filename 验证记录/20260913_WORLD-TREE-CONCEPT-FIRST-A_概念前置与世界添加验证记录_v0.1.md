@@ -59,3 +59,23 @@ L1 owner 默认比较改为等价底层稳定编码比较后，世界根和概�
 - 真实磁盘硬件故障、进程崩溃/断电中断、资源耗尽、长时和压力测试：`NOT_RUN`。
 - 旧域的物理迁移/删除、完整世界树后续治理线程运行：不在 A 计划范围。
 - 本记录是未提交工作区的代码验证记录，不是正式集成验收；Git 提交和推送由交互根串行完成。
+
+## 6. 登记原 G0 分类修复验证
+
+本段是候选 `f5dda0a5ec920e8ebe72f441c813bf8151b2f946` 之后的有界修复证据，不改写第 2—3 节的首轮 A 验证历史。修复验证根为 `D:/TEMP/海中鱼巣/WORLD-TREE-CONCEPT-FIRST-A/01a06f6b-a-fix-g0-c18`，68 项持久输入在构建前与当前生产源码逐文件核对一致。
+
+| 项目 | 结果 | 证据与边界 |
+| --- | --- | --- |
+| 旧候选同键异 G0 复现 | EXPECTED_FAIL | `logs/build-before-debug.log` 构建 exit 0；`logs/run-before-debug.log` 为 34/35，唯一失败是 `layout-same-key-different-G0-idempotency-conflict`。独立验收已记录实际状态 22、预期 16，且 G 和首次账零变化。 |
+| 修复后纯概念完整组 Debug | PASS | `logs/build-fixed-debug.log`、`logs/run-fixed-debug.log`：构建 exit 0，原 35 组与新增登记断言合并运行 35/35。 |
+| 修复后纯概念完整组 Release | PASS | `logs/build-fixed-release.log`、`logs/run-fixed-release.log`：构建 exit 0，原 35 组与新增登记断言合并运行 35/35。 |
+| 同键原 G0、只改预算 | PASS | 补充断言把登记预算加倍，读回仍为精确重复、交付身份一致、G 零增加。预算不作为首次身份材料。 |
+| 异登记键占用域 | PASS | 补充断言使用新登记键进入已有纯概念域，准确返回 `旧格式不支持(22)`，无首次 H、无交付、G 零增加。 |
+| 持久 concept-only 前缀 Debug/Release | PASS | `h-old-v1/prefix-runs/{Debug,Release}/result.json`；每配置执行创建前缀、继续形成、再次独立恢复，身份与持久快照检查通过。 |
+| 真实 v1 固定键拒绝 Debug/Release | PASS | 同一结果文件；每配置先生成真实旧 v1 概念布局，再通过普通持久装配恢复，准确得到 `concept_reason=22`，拒绝前后 manifest 与全部文件逐字节不变。 |
+| 主工程 Debug Rebuild | PASS | `logs/main-debug-rebuild.log`：exit 0，0 警告、0 错误；`OutDir/IntDir/TEMP/TMP` 均在本切片独占根。 |
+| 主工程 Release Rebuild | PASS | `logs/main-release-rebuild.log`：exit 0，0 警告、0 错误；`OutDir/IntDir/TEMP/TMP` 均在本切片独占根。 |
+
+首次复制 H07 驱动后，驱动第 110 行仍绑定旧 H 专属根 `D:/TEMP/海中鱼巣/WORLD-TREE-CONCEPT-FIRST-A/01a06f6b-persistent-self-h-b627`；本次实际参数位于 `.../01a06f6b-a-fix-g0-c18/h-old-v1/prefix-data/Debug/concept-only`，因此第 112 行 `explicit-exclusive-root` 在打印 PID、创建快照或调用持久包之前拒绝，exit 99。该次失败留在 `h-old-v1/prefix-runs/Debug-first/seed-concept-only.json` 与 `h-old-v1/run-debug.log`，没有访问或写入旧 H 根，也没有创建本次数据文件。随后只把 TEMP 驱动的允许根改为本切片独占根；Debug 重跑和 Release 首跑均使用新根，实际命令为 `persistent-self-world.exe <本切片绝对数据根> <mode>`。
+
+本修复未改 L1，未重复运行与该分支无关的 L1 322 项矩阵。纯概念补测沿用原完整 35 组驱动，在布局登记组内增加同键异 G0、同键预算变化和异键旧域三条断言；并发 50 轮和五个私有端口矩阵沿用首轮已冻结证据，没有在本修复重复执行。真实磁盘故障、进程崩溃/断电、介质故障、资源耗尽、长时与压力测试仍为 `NOT_RUN`。
