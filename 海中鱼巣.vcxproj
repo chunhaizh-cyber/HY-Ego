@@ -174,7 +174,10 @@
     <ClCompile Include="海中鱼巣\线程\运行宿主线程.ixx" />
     <ClCompile Include="海中鱼巣\线程\外设采样材料线程.ixx" />
     <ClCompile Include="海中鱼巣\领域\服务.完整秒时钟.ixx" />
+    <ClCompile Include="海中鱼巣\领域\合同.结构操作公共.ixx" />
+    <ClCompile Include="海中鱼巣\领域\数据服务.不可变材料.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据服务.特征值类.ixx" />
+    <ClCompile Include="海中鱼巣\领域\合同.特征解释.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据服务.特征类.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据服务.定位特征.ixx" />
     <ClCompile Include="海中鱼巣\领域\数据服务.绑定存在.ixx" />
