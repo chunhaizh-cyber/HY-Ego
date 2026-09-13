@@ -399,6 +399,14 @@ public:
     return &provider == &existence_;
   }
 
+  已发布概念绑定创建结果 添加场景节点(
+      const 已发布概念绑定创建请求 &r, 绑定存在数据服务 &binding,
+      已发布概念引用参与者 &concepts) noexcept {
+    if(r.绑定.种类!=存在初始绑定种类::直接子场景||
+       !binding.使用场景提供者(*this)) return {};
+    return binding.创建绑定存在并引用概念(r,concepts);
+  }
+
   场景直接包含组结果
   读取当前场景包含父组(const 场景直接包含反向读取请求 &) const override;
   场景直接包含组结果
@@ -434,7 +442,7 @@ public:
                                 const 直接归属联合只读提供者 &) const;
 
 private:
-  friend class 世界树根数据服务;
+  friend class ::海中鱼巣::世界树根数据服务;
   L1所有者范围写端口 &世界树根协调端口() noexcept { return port_; }
   struct 关系读取 {
     场景角色数据状态 状态 = 场景角色数据状态::内部不一致;
@@ -869,12 +877,17 @@ private:
             直接归属联合事实{g,        h, 直接归属来源::直接子场景, x.编码,
                              x.源节点, e, x.创建事实代次,           {}};
         node.从上游场景到本场景路径.push_back(*node.直接父);
-        const 场景父语境读取请求 contextRequest{1, g, e, 4096};
-        const auto context = 读取当前父场景语境(contextRequest);
-        if (!context.成功(contextRequest) || !context.投影 ||
-            context.投影->结构父.关系 != node.直接父->关系)
+        const auto contextEdges=查询关系(g,h,L1所有者范围关系端点方向::源,e,
+                                           layout_.父场景语境关系类型);
+        if(!contextEdges.成功()||contextEdges.关系.size()!=1)
           throw 绑定S::内部不一致;
-        node.父语境投影 = context.投影;
+        const auto &contextEdge=contextEdges.关系.front();
+        if(contextEdge.源节点!=e||contextEdge.目标节点!=b.绑定节点||
+           contextEdge.关系类型节点!=layout_.父场景语境关系类型||
+           contextEdge.角色或顺序!=1)
+          throw 绑定S::内部不一致;
+        node.父语境投影=场景父语境投影事实{
+            g,h,e,b.绑定节点,*node.直接父,转边(contextEdge)};
         out.子场景结构 = std::move(node);
       }
       return out;

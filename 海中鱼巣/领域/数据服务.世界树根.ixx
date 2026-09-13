@@ -17,6 +17,7 @@ export import 海中鱼巣.领域.数据服务.场景类;
 
 export namespace 海中鱼巣 {
 
+extern "C++" {
 class 世界树根数据服务 final {
 public:
   世界树根数据服务() = delete;
@@ -173,9 +174,16 @@ public:
       const 场景树当前读取请求 treeRequest{
           1, *current, root, r.最大场景数量, r.最大关系数量};
       const auto tree = scene_.读取当前场景树(treeRequest, joint_);
-      if (!tree.成功(treeRequest) || !tree.树 || tree.树->场景组.size() != 1 ||
-          tree.树->场景组.front().场景角色.场景 != root) {
+      if (!tree.成功(treeRequest) || !tree.树) {
         out.状态 = 世界树根状态::已可能发布;
+        return out;
+      }
+      const auto rootCount=std::count_if(tree.树->场景组.begin(),tree.树->场景组.end(),
+          [&](const auto&node){return node.场景角色.场景==root;});
+      const auto rootPosition=std::find_if(tree.树->场景组.begin(),tree.树->场景组.end(),
+          [&](const auto&node){return node.场景角色.场景==root;});
+      if(rootCount!=1||rootPosition==tree.树->场景组.end()) {
+        out.状态=世界树根状态::已可能发布;
         return out;
       }
       const 直接归属联合父读取请求 parentRequest{
@@ -186,7 +194,7 @@ public:
         return out;
       }
       out.事实 = 世界树根事实{
-          root, *out.首次发布H, *current, tree.树->场景组.front()};
+          root, *out.首次发布H, *current, *rootPosition};
       out.状态 = saved.状态 == LS::精确重复 ? 世界树根状态::精确重复
                                             : 世界树根状态::已建立;
       if (!out.成功(r)) {
@@ -316,5 +324,6 @@ private:
   场景类数据服务 &scene_;
   直接归属联合只读组合器 joint_;
 };
+}
 
 } // namespace 海中鱼巣

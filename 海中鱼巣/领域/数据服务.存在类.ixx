@@ -802,7 +802,7 @@ public:
   }
 
 private:
-  friend class 世界树根数据服务;
+  friend class ::海中鱼巣::世界树根数据服务;
   L1所有者范围写端口 &世界树根协调端口() noexcept { return 写入端口_; }
   存在历史读取结果 读取存在历史事实核心(const 存在历史读取请求 &r,
                                         bool 包含当前采用) const {
@@ -1072,6 +1072,41 @@ public:
         存在族归属关系类型_ == 特征关系类型_ ||
         存在族归属关系类型_ == 当前采用关系类型_)
       throw std::invalid_argument("invalid existence family metadata");
+  }
+
+  static 存在单例角色结构登记结果 登记单例角色结构(
+      const L1事实基座服务 &, L1所有者范围写端口 &,
+      const 存在单例角色结构登记请求 &) noexcept;
+
+  存在类数据服务(const L1事实基座服务 &l1, const 特征类数据服务 &features,
+                 L1所有者范围写端口 &&port, 稳定编码 childType,
+                 稳定编码 featureType, const 存在当前采用结构交付 &current,
+                 const 存在单例角色结构交付 &role)
+      : 存在类数据服务(l1, features, std::move(port), childType, featureType, current) {
+    if(role.版本!=1||!有效(role.角色登记类型)||!有效(role.角色目标类型)||
+       !有效(role.项目角色.值)||role.角色登记类型==role.角色目标类型||
+       role.角色登记类型==role.项目角色.值||role.角色目标类型==role.项目角色.值)
+      throw std::invalid_argument("invalid singleton role layout");
+    角色结构_=role;
+    const auto currentCut=读取当前事实代次();
+    try {
+      if(currentCut.first!=存在结构身份只读状态::已读取||!currentCut.second)
+        throw 存在单例角色状态::内部不一致;
+      核验单例角色结构首次材料(currentCut.second);
+    } catch(...) {
+      角色结构_.reset();
+      throw std::invalid_argument("invalid singleton role registration");
+    }
+  }
+
+  存在单例角色读取结果 读取单例角色(
+      const 存在单例角色读取请求 &) const noexcept;
+  已发布概念绑定创建结果 添加存在节点(
+      const 已发布概念绑定创建请求 &r, 绑定存在数据服务 &binding,
+      已发布概念引用参与者 &concepts) noexcept {
+    if(r.绑定.种类==存在初始绑定种类::直接子场景||
+       !binding.使用存在提供者(*this)) return {};
+    return binding.创建绑定存在并引用概念(r,concepts);
   }
 
   存在当前身份确认结果 确认当前存在结构身份(std::uint64_t G0,
@@ -4329,7 +4364,8 @@ private:
     return {绑定S::精确重复, f.读取事实代次, f.读取事实代次, f};
   }
   绑定存在参与者结果<L1有限N分区原子参与者写集_v3>
-  准备存在出生片段(const 绑定存在创建请求 &r, std::uint64_t g) const override {
+  准备存在出生片段(const 绑定存在创建请求 &r, std::uint64_t g,
+                   const std::optional<存在单例角色身份> &role) const override {
     return 绑定保护<L1有限N分区原子参与者写集_v3>(g, r.G0, [&] {
       const bool single = r.绑定.种类 == 存在初始绑定种类::父存在组成;
       const auto key =
@@ -4353,8 +4389,26 @@ private:
                                子存在关系类型_,
                                1});
       }
+      if(role) {
+        if(!角色结构_||*role!=角色结构_->项目角色)
+          throw 绑定S::内部不一致;
+        const 存在单例角色读取请求 q{1,g,r.G0,*role,r.预算.最大关系数量};
+        const auto existing=读取单例角色(q);
+        if(!existing.确认未绑定(q)) {
+          if(existing.状态==存在单例角色状态::角色冲突)
+            throw 绑定S::包含冲突;
+          throw 绑定S::内部不一致;
+        }
+        p.写集.关系.push_back({{static_cast<std::uint64_t>(single?4U:3U)},角色结构_->项目角色.值,
+                               L1所有者范围写集本地键{1},
+                               角色结构_->角色目标类型,1});
+      }
       return p;
     });
+  }
+  存在单例角色读取结果 读取绑定单例角色(
+      const 存在单例角色读取请求 &r) const noexcept override {
+    return 读取单例角色(r);
   }
   绑定存在参与者结果<存在绑定出生见证>
   读取存在绑定出生(std::uint64_t g, std::uint64_t h, 稳定编码 e,
@@ -4524,6 +4578,74 @@ private:
     });
   }
   稳定编码 当前采用关系类型_;
+  void 核验单例角色结构首次材料(std::uint64_t g) const {
+    if(!角色结构_||!g)throw 存在单例角色状态::入口拒绝;
+    const auto first=写入端口_.读取首次写入材料(
+        {L1所有者范围首次写入读取合同版本,
+         L1所有者范围写入幂等身份{0x1202U}});
+    if(first.读取事实代次!=g)throw 存在单例角色状态::事实代次漂移;
+    if(first.状态!=L1所有者范围读取状态::成功) {
+      if(first.状态==L1所有者范围读取状态::资源失败)
+        throw 存在单例角色状态::资源失败;
+      if(first.状态==L1所有者范围读取状态::历史材料已清理)
+        throw 存在单例角色状态::历史材料不可用;
+      if(first.状态==L1所有者范围读取状态::事实代次漂移)
+        throw 存在单例角色状态::事实代次漂移;
+      if(first.状态==L1所有者范围读取状态::未找到)
+        throw 存在单例角色状态::未找到;
+      throw 存在单例角色状态::内部不一致;
+    }
+    if(first.合同版本!=L1所有者范围首次写入读取合同版本||
+       first.所有者!=所有者_||
+       first.写入幂等身份!=L1所有者范围写入幂等身份{0x1202U}||
+       !first.首次规范化写集||!first.首次写入结果)
+      throw 存在单例角色状态::内部不一致;
+    const auto &saved=*first.首次写入结果;
+    const auto &ws=*first.首次规范化写集;
+    if(saved.合同版本!=L1所有者范围CRUD合同版本||
+       saved.状态!=L1所有者范围写入状态::成功||
+       !saved.是否形成内存权威发布||saved.所有者!=所有者_||
+       saved.写入幂等身份!=L1所有者范围写入幂等身份{0x1202U}||
+       !ws.期望事实代次||saved.事实代次!=ws.期望事实代次+1||
+       ws.合同版本!=L1所有者范围CRUD合同版本||
+       ws.写入幂等身份!=L1所有者范围写入幂等身份{0x1202U})
+      throw 存在单例角色状态::内部不一致;
+    L1所有者范围写集请求 expected{
+        L1所有者范围CRUD合同版本,ws.期望事实代次,
+        L1所有者范围写入幂等身份{0x1202U}};
+    expected.节点={{L1所有者范围写集本地键{1},节点种类::普通,std::nullopt},
+                   {L1所有者范围写集本地键{2},节点种类::普通,std::nullopt},
+                   {L1所有者范围写集本地键{3},节点种类::普通,std::nullopt}};
+    expected.关系.push_back({L1所有者范围写集本地键{4},存在族锚点_,
+        L1所有者范围事实引用{L1所有者范围写集本地键{3}},
+        L1所有者范围事实引用{L1所有者范围写集本地键{1}},1});
+    if(ws!=expected||saved.新编码映射.size()!=4)
+      throw 存在单例角色状态::内部不一致;
+    std::array<std::optional<稳定编码>,4> mapped{};
+    for(const auto &[key,id]:saved.新编码映射) {
+      if(!key.值||key.值>mapped.size()||mapped[key.值-1]||!有效(id))
+        throw 存在单例角色状态::内部不一致;
+      mapped[key.值-1]=id;
+    }
+    if(!mapped[0]||!mapped[1]||!mapped[2]||!mapped[3]||
+       *mapped[0]!=角色结构_->角色登记类型||
+       *mapped[1]!=角色结构_->角色目标类型||
+       *mapped[2]!=角色结构_->项目角色.值)
+      throw 存在单例角色状态::内部不一致;
+    const auto relation=第一层服务_.读取所有者范围历史事实(
+        {L1所有者范围CRUD合同版本,*mapped[3]});
+    const L1所有者范围关系事实 *edge=nullptr;
+    if(relation.事实)
+      edge=std::get_if<L1所有者范围关系事实>(&*relation.事实);
+    if(relation.读取事实代次!=g)throw 存在单例角色状态::事实代次漂移;
+    if(relation.状态!=L1所有者范围读取状态::成功||!edge||
+       edge->写入所有者!=所有者_||edge->源节点!=存在族锚点_||
+       edge->目标节点!=角色结构_->项目角色.值||
+       edge->关系类型节点!=角色结构_->角色登记类型||edge->角色或顺序!=1||
+       edge->创建事实代次!=saved.事实代次||
+       (edge->退出事实代次&&*edge->退出事实代次<=g))
+      throw 存在单例角色状态::内部不一致;
+  }
   mutable std::mutex 写入锁_;
   std::optional<存在当前采用写请求> 采用待确认_;
   const L1事实基座服务 &第一层服务_;
@@ -4534,7 +4656,179 @@ private:
   稳定编码 特征关系类型_{};
   稳定编码 存在族锚点_{};
   稳定编码 存在族归属关系类型_{};
+  std::optional<存在单例角色结构交付> 角色结构_;
 };
+
+inline 存在单例角色结构登记结果 存在类数据服务::登记单例角色结构(
+    const L1事实基座服务 &l1,L1所有者范围写端口 &port,
+    const 存在单例角色结构登记请求 &r) noexcept {
+  存在单例角色结构登记结果 out;out.Gread=r.G0;
+  bool entered=false;
+  try {
+    if(r.版本!=1||!r.G0||r.G0==UINT64_MAX||r.幂等身份.值!=0x1202U||
+       !port.有效()||!port.绑定于(l1)) return out;
+    const auto owner=port.所有者身份();
+    const auto family=port.读取首次写入材料(
+        {L1所有者范围首次写入读取合同版本,存在族来源初始化幂等身份});
+    if(family.状态!=L1所有者范围读取状态::成功||!family.首次规范化写集||
+       !family.首次写入结果||family.所有者!=owner||
+       family.首次规范化写集->写入幂等身份!=存在族来源初始化幂等身份)
+      throw 存在单例角色状态::内部不一致;
+    const auto anchor=存在类数据内部::查找唯一编码(
+        *family.首次写入结果,存在类数据内部::存在族锚点本地键);
+    if(!anchor)throw 存在单例角色状态::内部不一致;
+    L1所有者范围写集请求 ws{L1所有者范围CRUD合同版本,r.G0,r.幂等身份};
+    ws.节点={{L1所有者范围写集本地键{1},节点种类::普通,std::nullopt},
+             {L1所有者范围写集本地键{2},节点种类::普通,std::nullopt},
+             {L1所有者范围写集本地键{3},节点种类::普通,std::nullopt}};
+    ws.关系.push_back({L1所有者范围写集本地键{4},*anchor,L1所有者范围事实引用{L1所有者范围写集本地键{3}},L1所有者范围事实引用{L1所有者范围写集本地键{1}},1});
+    const auto first=port.读取首次写入材料(
+        {L1所有者范围首次写入读取合同版本,r.幂等身份});
+    bool replay=false;
+    if(first.合同版本!=L1所有者范围首次写入读取合同版本||
+       first.所有者!=owner||first.写入幂等身份!=r.幂等身份)
+      throw 存在单例角色状态::内部不一致;
+    if(first.状态==L1所有者范围读取状态::成功) {
+      replay=true;
+      if(!first.首次规范化写集||*first.首次规范化写集!=ws||
+         !first.首次写入结果||first.首次写入结果->状态!=L1所有者范围写入状态::成功||
+         !first.首次写入结果->是否形成内存权威发布)
+        throw 存在单例角色状态::幂等冲突;
+    } else if(first.状态==L1所有者范围读取状态::未找到) {
+      if(first.读取事实代次!=r.G0)
+        throw 存在单例角色状态::事实代次漂移;
+      if(first.首次规范化写集||first.首次写入结果)
+        throw 存在单例角色状态::内部不一致;
+    } else {
+      if(first.状态==L1所有者范围读取状态::资源失败)
+        throw 存在单例角色状态::资源失败;
+      throw 存在单例角色状态::内部不一致;
+    }
+    entered=true;
+    const auto saved=port.提交所有者范围中性写集(ws);
+    out.Gread=saved.事实代次;
+    const auto expected=replay ? L1所有者范围写入状态::精确重复
+                               : L1所有者范围写入状态::成功;
+    if(saved.状态!=expected||saved.事实代次!=r.G0+1||saved.新编码映射.size()!=4) {
+      if(saved.状态==L1所有者范围写入状态::事实代次漂移)
+        throw 存在单例角色状态::事实代次漂移;
+      if(saved.状态==L1所有者范围写入状态::幂等冲突)
+        throw 存在单例角色状态::幂等冲突;
+      throw 存在单例角色状态::已可能发布;
+    }
+    const auto one=[&](std::uint64_t key){
+      std::optional<稳定编码> found;
+      for(const auto &[k,id]:saved.新编码映射)if(k.值==key){if(found)throw 存在单例角色状态::内部不一致;found=id;}
+      if(!found||!有效(*found))throw 存在单例角色状态::内部不一致;
+      return *found;
+    };
+    const auto reg=one(1),target=one(2),role=one(3),edge=one(4);
+    if(reg==target||reg==role||target==role)throw 存在单例角色状态::内部不一致;
+    for(const auto id:{reg,target,role}) {
+      const auto raw=l1.读取所有者范围历史事实({L1所有者范围CRUD合同版本,id});
+      const auto *node=raw.事实 ? std::get_if<L1所有者范围节点事实>(&*raw.事实) : nullptr;
+      if(raw.状态!=L1所有者范围读取状态::成功||raw.读取事实代次<saved.事实代次||
+         !node||node->写入所有者!=owner||node->创建事实代次!=saved.事实代次||
+         node->退出事实代次||node->种类!=节点种类::普通||node->属性类型表示)
+        throw 存在单例角色状态::内部不一致;
+      out.Gread=raw.读取事实代次;
+    }
+    const auto er=l1.读取所有者范围历史事实({L1所有者范围CRUD合同版本,edge});
+    const auto *ef=er.事实 ? std::get_if<L1所有者范围关系事实>(&*er.事实) : nullptr;
+    if(er.状态!=L1所有者范围读取状态::成功||!ef||ef->写入所有者!=owner||
+       ef->源节点!=*anchor||ef->目标节点!=role||ef->关系类型节点!=reg||
+       ef->角色或顺序!=1||ef->创建事实代次!=saved.事实代次||ef->退出事实代次)
+      throw 存在单例角色状态::内部不一致;
+    out.Gread=er.读取事实代次;out.首次H=saved.事实代次;
+    out.交付=存在单例角色结构交付{1,reg,target,{role}};
+    out.状态=replay?存在单例角色状态::精确重复:存在单例角色状态::已登记;
+  } catch(存在单例角色状态 s) {
+    out.状态=s;
+    if(entered&&s!=存在单例角色状态::事实代次漂移&&s!=存在单例角色状态::幂等冲突)
+      out.状态=存在单例角色状态::已可能发布;
+    if(out.状态!=存在单例角色状态::精确重复&&out.状态!=存在单例角色状态::已登记)
+      out.交付.reset();
+  } catch(const std::bad_alloc&) {out.状态=entered?存在单例角色状态::已可能发布:存在单例角色状态::资源失败;out.交付.reset();}
+    catch(...) {out.状态=entered?存在单例角色状态::已可能发布:存在单例角色状态::内部不一致;out.交付.reset();}
+  return out;
+}
+
+存在单例角色读取结果 存在类数据服务::读取单例角色(
+    const 存在单例角色读取请求 &r) const noexcept {
+  存在单例角色读取结果 out;out.Gread=r.Gread;out.H=r.H;
+  try {
+    if(!角色结构_||r.版本!=1||!r.Gread||!r.H||r.H>r.Gread||
+       r.角色!=角色结构_->项目角色||!r.最大关系数)
+      throw 存在单例角色状态::入口拒绝;
+    核验单例角色结构首次材料(r.Gread);
+    const auto registration=第一层服务_.读取所有者范围历史关系组(
+        {L1所有者范围CRUD合同版本,L1所有者范围关系端点方向::目标,
+         r.角色.值,角色结构_->角色登记类型,r.H});
+    if(registration.读取事实代次!=r.Gread)throw 存在单例角色状态::事实代次漂移;
+    if(registration.状态!=L1所有者范围读取状态::成功) {
+      if(registration.状态==L1所有者范围读取状态::资源失败)
+        throw 存在单例角色状态::资源失败;
+      if(registration.状态==L1所有者范围读取状态::历史材料已清理)
+        throw 存在单例角色状态::历史材料不可用;
+      if(registration.状态==L1所有者范围读取状态::事实代次漂移)
+        throw 存在单例角色状态::事实代次漂移;
+      if(registration.状态==L1所有者范围读取状态::未找到)
+        throw 存在单例角色状态::未找到;
+      throw 存在单例角色状态::内部不一致;
+    }
+    if(registration.关系组.empty())throw 存在单例角色状态::未找到;
+    if(registration.关系组.size()!=1)throw 存在单例角色状态::内部不一致;
+    const auto &reg=registration.关系组.front();
+    if(reg.写入所有者!=所有者_||reg.源节点!=存在族锚点_||reg.目标节点!=r.角色.值||
+       reg.关系类型节点!=角色结构_->角色登记类型||reg.角色或顺序!=1||
+       !reg.创建事实代次||reg.创建事实代次>r.H||
+       (reg.退出事实代次&&*reg.退出事实代次<=r.H))
+      throw 存在单例角色状态::内部不一致;
+    const auto targets=第一层服务_.读取所有者范围历史关系组(
+        {L1所有者范围CRUD合同版本,L1所有者范围关系端点方向::源,
+         r.角色.值,角色结构_->角色目标类型,r.H});
+    if(targets.读取事实代次!=r.Gread)throw 存在单例角色状态::事实代次漂移;
+    if(targets.状态!=L1所有者范围读取状态::成功) {
+      if(targets.状态==L1所有者范围读取状态::资源失败)
+        throw 存在单例角色状态::资源失败;
+      throw 存在单例角色状态::内部不一致;
+    }
+    std::vector<L1所有者范围关系事实> active;
+    for(const auto &x:targets.关系组)if(x.创建事实代次&&x.创建事实代次<=r.H&&
+        (!x.退出事实代次||r.H<*x.退出事实代次))active.push_back(x);
+    if(active.size()>r.最大关系数)throw 存在单例角色状态::数量预算不足;
+    if(active.empty()){out.状态=存在单例角色状态::未绑定;return out;}
+    if(active.size()!=1)throw 存在单例角色状态::角色冲突;
+    const auto &target=active.front();
+    if(target.写入所有者!=所有者_||target.源节点!=r.角色.值||
+       target.关系类型节点!=角色结构_->角色目标类型||target.角色或顺序!=1)
+      throw 存在单例角色状态::内部不一致;
+    const auto identity=读取存在身份来源历史见证(r.Gread,r.H,target.目标节点);
+    if(!identity.成功(r.Gread,r.H,target.目标节点)||!identity.见证) {
+      if(identity.状态==存在结构身份只读状态::目标已退出)
+        throw 存在单例角色状态::目标已退出;
+      if(identity.状态==存在结构身份只读状态::事实代次漂移)
+        throw 存在单例角色状态::事实代次漂移;
+      if(identity.状态==存在结构身份只读状态::数量预算不足)
+        throw 存在单例角色状态::数量预算不足;
+      if(identity.状态==存在结构身份只读状态::历史材料已清理)
+        throw 存在单例角色状态::历史材料不可用;
+      if(identity.状态==存在结构身份只读状态::资源失败)
+        throw 存在单例角色状态::资源失败;
+      throw 存在单例角色状态::内部不一致;
+    }
+    out.事实=存在单例角色事实{r.角色,reg.编码,target.编码,target.目标节点,
+        {reg.创建事实代次,reg.退出事实代次},{target.创建事实代次,target.退出事实代次},
+        *identity.见证};
+    out.状态=存在单例角色状态::已读取;
+    const auto tail=读取当前事实代次();
+    if(tail.first!=存在结构身份只读状态::已读取||tail.second!=r.Gread)
+      throw 存在单例角色状态::事实代次漂移;
+  } catch(存在单例角色状态 s){out.状态=s;out.事实.reset();}
+    catch(const std::bad_alloc&){out.状态=存在单例角色状态::资源失败;out.事实.reset();}
+    catch(...){out.状态=存在单例角色状态::内部不一致;out.事实.reset();}
+  return out;
+}
 
 inline 存在当前采用结果
 存在类数据服务::读取当前采用(const 存在当前采用读取请求 &r) const {

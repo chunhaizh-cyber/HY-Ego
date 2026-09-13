@@ -10,6 +10,10 @@ export import 海中鱼巣.领域.合同.场景角色组织;
 
 export namespace 海中鱼巣 {
 
+extern "C++" {
+class 世界树根数据服务;
+}
+
 inline constexpr std::uint32_t 世界树根合同版本 = 1;
 
 enum class 世界树根状态 : std::uint8_t {

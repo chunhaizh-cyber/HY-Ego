@@ -40,6 +40,36 @@ struct L1结构所有者事实 final {
         const L1结构所有者事实&) = default;
 };
 
+inline constexpr std::uint32_t L1所有者范围空域读取合同版本 = 1;
+
+enum class L1所有者范围空域读取状态 : std::uint8_t {
+    成功 = 1, 入口拒绝 = 2, 未找到 = 3, 已退出 = 4,
+    事实代次漂移 = 5, 数量预算不足 = 6, 资源失败 = 7,
+    内部不一致 = 8, 范围不支持 = 9
+};
+
+struct L1所有者范围空域读取请求 final {
+    std::uint32_t 合同版本 = L1所有者范围空域读取合同版本;
+    L1结构所有者身份 所有者{};
+    std::uint64_t 期望事实代次 = 0;
+    std::uint64_t 最大核验事实数 = 0;
+    friend bool operator==(const L1所有者范围空域读取请求&,
+        const L1所有者范围空域读取请求&) = default;
+};
+
+struct L1所有者范围空域读取结果 final {
+    L1所有者范围空域读取状态 状态 = L1所有者范围空域读取状态::入口拒绝;
+    std::uint32_t 合同版本 = L1所有者范围空域读取合同版本;
+    L1结构所有者身份 所有者{};
+    std::uint64_t 期望事实代次 = 0;
+    std::uint64_t 读取事实代次 = 0;
+    std::optional<bool> 空域{};
+    bool 成功(const L1所有者范围空域读取请求&) const noexcept;
+    bool 确认空域(const L1所有者范围空域读取请求&) const noexcept;
+    friend bool operator==(const L1所有者范围空域读取结果&,
+        const L1所有者范围空域读取结果&) = default;
+};
+
 struct L1所有者范围建立幂等身份 final {
     std::uint64_t 值 = 0;
     friend bool operator==(const L1所有者范围建立幂等身份&,
@@ -545,6 +575,38 @@ struct L1所有者范围值事实 final {
         const L1所有者范围值事实&) = default;
 };
 
+inline constexpr std::uint32_t L1节点当前引用读取合同版本 = 1;
+
+enum class L1节点当前引用读取状态 : std::uint8_t {
+    成功 = 1, 入口拒绝 = 2, 未找到 = 3, 已退出 = 4,
+    事实代次漂移 = 5, 数量预算不足 = 6,
+    资源失败 = 7, 内部不一致 = 8
+};
+
+using L1节点当前引用事实 = std::variant<
+    L1所有者范围关系事实, L1所有者范围值事实>;
+
+struct L1节点当前引用读取请求 final {
+    std::uint32_t 合同版本 = L1节点当前引用读取合同版本;
+    稳定编码 节点{};
+    std::uint64_t 期望事实代次 = 0;
+    std::uint64_t 最大数量 = 0;
+    friend bool operator==(const L1节点当前引用读取请求&,
+        const L1节点当前引用读取请求&) = default;
+};
+
+struct L1节点当前引用读取结果 final {
+    L1节点当前引用读取状态 状态 = L1节点当前引用读取状态::入口拒绝;
+    std::uint32_t 合同版本 = L1节点当前引用读取合同版本;
+    稳定编码 节点{};
+    std::uint64_t 期望事实代次 = 0;
+    std::uint64_t 读取事实代次 = 0;
+    std::vector<L1节点当前引用事实> 引用{};
+    bool 成功(const L1节点当前引用读取请求&) const noexcept;
+    friend bool operator==(const L1节点当前引用读取结果&,
+        const L1节点当前引用读取结果&) = default;
+};
+
 using L1所有者范围事实副本 = std::variant<L1所有者范围节点事实,
     L1所有者范围关系事实, L1所有者范围值事实>;
 
@@ -1022,6 +1084,59 @@ inline bool L1所有者范围原始材料完整(
             return 有效(值.编码);
         else return !值.empty();
     }, 材料);
+}
+
+inline bool L1所有者范围空域读取结果::成功(
+    const L1所有者范围空域读取请求& 请求) const noexcept {
+    return 请求.合同版本 == L1所有者范围空域读取合同版本
+        && 有效(请求.所有者) && 请求.期望事实代次 != 0
+        && 请求.最大核验事实数 != 0
+        && 状态 == L1所有者范围空域读取状态::成功
+        && 合同版本 == 请求.合同版本 && 所有者.编码.值 == 请求.所有者.编码.值
+        && 期望事实代次 == 请求.期望事实代次
+        && 读取事实代次 == 请求.期望事实代次 && 空域.has_value();
+}
+
+inline bool L1所有者范围空域读取结果::确认空域(
+    const L1所有者范围空域读取请求& 请求) const noexcept {
+    return 成功(请求) && *空域;
+}
+
+inline bool L1节点当前引用读取结果::成功(
+    const L1节点当前引用读取请求& 请求) const noexcept {
+    if (请求.合同版本 != L1节点当前引用读取合同版本
+        || !有效(请求.节点) || 请求.期望事实代次 == 0 || 请求.最大数量 == 0
+        || 状态 != L1节点当前引用读取状态::成功
+        || 合同版本 != 请求.合同版本 || 节点 != 请求.节点
+        || 期望事实代次 != 请求.期望事实代次
+        || 读取事实代次 != 请求.期望事实代次 || 引用.size() > 请求.最大数量)
+        return false;
+    std::uint64_t 前一编码 = 0;
+    for (const auto& 项 : 引用) {
+        const auto 头完整 = [&](const auto& 事实) noexcept {
+            return 事实.编码.值 > 前一编码 && 有效(事实.写入所有者)
+                && 事实.创建事实代次 != 0 && 事实.创建事实代次 <= 读取事实代次
+                && !事实.退出事实代次;
+        };
+        if (const auto* 关系 = std::get_if<L1所有者范围关系事实>(&项)) {
+            if (!头完整(*关系) || !有效(关系->源节点) || !有效(关系->目标节点)
+                || !有效(关系->关系类型节点)
+                || (关系->源节点 != 节点 && 关系->目标节点 != 节点
+                    && 关系->关系类型节点 != 节点)) return false;
+            前一编码 = 关系->编码.值;
+        } else if (const auto* 值 = std::get_if<L1所有者范围值事实>(&项)) {
+            const auto* 材料引用 =
+                std::get_if<L1所有者范围独立材料引用>(&值->材料);
+            if (!头完整(*值) || !有效(值->所属节点) || !有效(值->属性类型节点)
+                || !有效(值->来源节点) || 值->材料.valueless_by_exception()
+                || !L1所有者范围原始材料完整(值->材料)
+                || (值->所属节点 != 节点 && 值->属性类型节点 != 节点
+                    && 值->来源节点 != 节点
+                    && (!材料引用 || 材料引用->编码 != 节点))) return false;
+            前一编码 = 值->编码.值;
+        } else return false;
+    }
+    return true;
 }
 
 } // namespace 海中鱼巣
