@@ -146,7 +146,7 @@ def 读取清单(错误: list[str]) -> dict:
         return {}
     if set(清单) != 允许顶层键:
         错误.append("冻结清单顶层字段集合不等于 schema 1")
-    if 清单.get("schema_version") != 1 or 清单.get("specification") != "4080-v1.0":
+    if 清单.get("schema_version") != 1 or 清单.get("specification") != "4080-v1.1":
         错误.append("冻结清单 schema/specification 不匹配")
     if 清单.get("surface_contract_status") != "FROZEN":
         错误.append("surface_contract_status 必须为 FROZEN")
@@ -270,7 +270,7 @@ def 检查操作与指纹(清单: dict, 错误: list[str]) -> None:
         if len(值) != len(set(值)):
             错误.append(f"公开操作组 {组} 含重复名称")
         if tuple(值) != 预期操作[组]:
-            错误.append(f"公开操作组 {组} 与 4080 v1.0 不相等")
+            错误.append(f"公开操作组 {组} 与 4080 v1.1 施工前实现快照不相等")
     if sum(len(操作.get(组, [])) for 组 in 操作组) != 43:
         错误.append("公开操作总数不是 43")
     服务 = 读取文本(服务路径) if 服务路径.is_file() else ""
