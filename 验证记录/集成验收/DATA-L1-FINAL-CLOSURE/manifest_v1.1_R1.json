@@ -1,0 +1,469 @@
+{
+  "schema_version": 1,
+  "验收标识": "DATA-L1-FINAL-CLOSURE@8ed1c1335f5cfba714602f12aca1e3c7fdcd87a6",
+  "基线": {
+    "仓库": ".",
+    "候选提交": "8ed1c1335f5cfba714602f12aca1e3c7fdcd87a6",
+    "远端分支": "origin/main",
+    "远端提交": "8ed1c1335f5cfba714602f12aca1e3c7fdcd87a6",
+    "已推送": true,
+    "使用未提交内容": false,
+    "输入文件": [
+      {
+        "路径": ".codex/rules/单工作区串行执行与发布规则.md",
+        "blob": "62d2d66a1c421c1e21ef500acc48d05a775b35f1"
+      },
+      {
+        "路径": ".codex/skills/hai-zhong-yu-chao-integration-acceptance/SKILL.md",
+        "blob": "58e604a0582d175dca3a925a4424533ec5f09fbd"
+      },
+      {
+        "路径": "规范/4015_子规范_L1简化事实基座.md",
+        "blob": "e528fc39802a827601a99164eda73c77d3aef506"
+      },
+      {
+        "路径": "规范/4070_子规范_权威结构快照恢复候选与运行期原子发布.md",
+        "blob": "bf447fab89e282067be38388a806e050bb4d1935"
+      },
+      {
+        "路径": "规范/4080_子规范_DATA-L1通用操作全集与冻结门禁.md",
+        "blob": "e324c22346e472186b319e15ef77a35a1cd6b070"
+      },
+      {
+        "路径": "规范/4240_子规范_语言词条与概念空间纯结构统一合同.md",
+        "blob": "25f08e59139885a1818d019c7c19b3b23af434b9"
+      },
+      {
+        "路径": "规范/详细设计/20260913_WORLD-TREE-CONCEPT-FIRST-A_概念前置与世界添加详细设计_v0.1.md",
+        "blob": "b7f2f41236d105456ae142458bfffa4ad0abd215"
+      },
+      {
+        "路径": "规范/运行期服务导向代码验收与全函数入口巡检规范.md",
+        "blob": "d0fde7948a94b4ee7abcfd766ccdd44fd48075d1"
+      },
+      {
+        "路径": "海中鱼巣.vcxproj",
+        "blob": "b7461133b5bb94255a7a4f66020d3145f5635b8b"
+      },
+      {
+        "路径": "海中鱼巣.vcxproj.filters",
+        "blob": "0a55c46027a2ed71960459c664756965e74f807b"
+      },
+      {
+        "路径": "海中鱼巣/测试材料/DATA-L1-FINAL-CLOSURE/载荷格式1/manifest.bin",
+        "blob": "8dc2f739f54e9ecf9f17f9da67e8b83102957ad5"
+      },
+      {
+        "路径": "海中鱼巣/测试材料/DATA-L1-FINAL-CLOSURE/载荷格式1/provenance.json",
+        "blob": "8f8251c99b5b5d973084c2df18168c13bac57d21"
+      },
+      {
+        "路径": "海中鱼巣/测试材料/DATA-L1-FINAL-CLOSURE/载荷格式1/snapshot-a.bin",
+        "blob": "ea5453d5a06f7cb21a42cd31c00e0a094302b3cd"
+      },
+      {
+        "路径": "海中鱼巣/测试材料/DATA-L1-FINAL-CLOSURE/载荷格式1/snapshot-b.bin",
+        "blob": "a0c8da949beb12906aedc1b7982d0db253d436c3"
+      },
+      {
+        "路径": "海中鱼巣/测试材料/DATA-L1-FINAL-CLOSURE/载荷格式2/manifest.bin",
+        "blob": "a39067bebc7d0443736f41804f4a88edaadcf766"
+      },
+      {
+        "路径": "海中鱼巣/测试材料/DATA-L1-FINAL-CLOSURE/载荷格式2/provenance.json",
+        "blob": "1c2f15d9ab30e1df2b4f66be43a218cfd5f285c0"
+      },
+      {
+        "路径": "海中鱼巣/测试材料/DATA-L1-FINAL-CLOSURE/载荷格式2/snapshot-a.bin",
+        "blob": "8e3838adc8af7179e0a0229295066e28dcd5b7f9"
+      },
+      {
+        "路径": "海中鱼巣/测试材料/DATA-L1-FINAL-CLOSURE/载荷格式2/snapshot-b.bin",
+        "blob": "c1458b387e083cc362f0ef072ecc128a6df8ec1a"
+      },
+      {
+        "路径": "海中鱼巣/核心/仓库.L1事实基座.ixx",
+        "blob": "7ef7c106a4eb0b2f0b9c64be4eb5ca20dfbc0926"
+      },
+      {
+        "路径": "海中鱼巣/核心/服务.L1事实基座.ixx",
+        "blob": "83eb88219e1e97de949ad343237e316717d1a08c"
+      },
+      {
+        "路径": "海中鱼巣/核心/合同.L1公共事实.ixx",
+        "blob": "d898ff4c2272ad89ac57ebb27cdf08c2bf2eff89"
+      },
+      {
+        "路径": "海中鱼巣/核心/合同.L1事实基座.ixx",
+        "blob": "1aec03e6aba2613abccef3b292e0a790bcd38a1e"
+      },
+      {
+        "路径": "海中鱼巣/核心/合同.L1所有者范围CRUD.ixx",
+        "blob": "831248a6a23d73978abcd824789660f2b9b9f79b"
+      },
+      {
+        "路径": "海中鱼巣/核心/合同.L1中性CRUD.ixx",
+        "blob": "f9ab4cf5758478be12c54e7b43205cc89aa17126"
+      },
+      {
+        "路径": "海中鱼巣/核心/L1公共事实.数据.h",
+        "blob": "d8e128e1ebf6a1d46c38051427b7e912a676cef2"
+      },
+      {
+        "路径": "海中鱼巣/核心/L1事实基座.数据.h",
+        "blob": "2c8a5d6fbcb34d20b909de0d8e83c0dc3e004c36"
+      },
+      {
+        "路径": "海中鱼巣/核心/L1事实基座持久恢复.数据.h",
+        "blob": "5b9f04311a7f49368ffc8259a8b43b8e5f03a5a8"
+      },
+      {
+        "路径": "海中鱼巣/核心/L1所有者范围CRUD.数据.h",
+        "blob": "063232b70136e1b63fbbd86f4701cb1314d8c864"
+      },
+      {
+        "路径": "海中鱼巣/核心/L1中性CRUD.数据.h",
+        "blob": "000355ef64dd40e86fa204758699fbeb45c95062"
+      },
+      {
+        "路径": "海中鱼巣/领域/合同.世界树根.ixx",
+        "blob": "b721808e8b8783acac6dbc0f7d4dc43c64d46fe4"
+      },
+      {
+        "路径": "海中鱼巣/领域/合同.相关概念添加参与.ixx",
+        "blob": "4331392bdefe32514c52292339833a026aef7b4d"
+      },
+      {
+        "路径": "海中鱼巣/领域/数据服务.绑定存在.ixx",
+        "blob": "e5058ae8e6bc965e339c933878a29d865d9bcc1e"
+      },
+      {
+        "路径": "海中鱼巣/领域/数据服务.场景类.ixx",
+        "blob": "b9e708dd516c256368998d96506a00d96ec74ec8"
+      },
+      {
+        "路径": "海中鱼巣/领域/数据服务.存在类.ixx",
+        "blob": "e1184e53ed875e2faa108f58220d93cf1e20ff1e"
+      },
+      {
+        "路径": "海中鱼巣/领域/数据服务.概念树类.ixx",
+        "blob": "9b9abdfaee514f78d1d0c58fcb360674bfa8a503"
+      },
+      {
+        "路径": "海中鱼巣/领域/数据服务.世界树根.ixx",
+        "blob": "693b0ae3681719d69043b62af46c511560500824"
+      },
+      {
+        "路径": "海中鱼巣/启动.应用程序.ixx",
+        "blob": "3da2b531c4c455c383ee7a4ffe37cfda207bf3e1"
+      },
+      {
+        "路径": "海中鱼巣/业务/应用服务.世界树类.ixx",
+        "blob": "dd70e23d2d9191cd96b176418709f937740838b1"
+      },
+      {
+        "路径": "海中鱼巣/业务/应用服务.自我形成.cppcpp",
+        "blob": "fc324edb0c046b75fa0d90d70c1343169e86fd48"
+      },
+      {
+        "路径": "海中鱼巣/业务/应用服务.自我形成.ixx",
+        "blob": "4e6e9dc6aeff234d3a42d8e6f11dc7533514fb48"
+      },
+      {
+        "路径": "海中鱼巣/装配.普通应用.cppcpp",
+        "blob": "8b7f4e0e116c0c7406579ebbb700b96bf9f0d26d"
+      },
+      {
+        "路径": "海中鱼巣/装配.普通应用.ixx",
+        "blob": "7b2bc51f9ffa97f88d548eee7ccb65336d834373"
+      },
+      {
+        "路径": "计划/20260913_WORLD-TREE-CONCEPT-FIRST-A_概念前置与世界添加代码实施计划_v0.1.md",
+        "blob": "2161774da6c891e16ac518a3ab7b79f8bcb94848"
+      },
+      {
+        "路径": "计划/计划索引.md",
+        "blob": "2a2e787de103fbbf221897e6fe4fdf88826f1678"
+      },
+      {
+        "路径": "施工记录/20260913_WORLD-TREE-CONCEPT-FIRST-A_概念前置与世界添加施工记录_v0.1.md",
+        "blob": "bc4f8c35f6cbab1b02bd247521bd502f88517325"
+      },
+      {
+        "路径": "验证记录/20260913_WORLD-TREE-CONCEPT-FIRST-A_概念前置与世界添加验证记录_v0.1.md",
+        "blob": "3296919cdd65a4eb8f5a4970342296400c838837"
+      },
+      {
+        "路径": "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A/concept-evidence.json",
+        "blob": "854ed84e73936ae65b96aaa72ba85db756866e24"
+      },
+      {
+        "路径": "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A/concept-review.md",
+        "blob": "5ee8df31c3222ba66c54aac43ed5e38c3c31a4ad"
+      },
+      {
+        "路径": "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A/l1-evidence.json",
+        "blob": "c116505de0b25db879c8b4f9fda935c9e330b6c4"
+      },
+      {
+        "路径": "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A/l1-review.md",
+        "blob": "ea1d6b60e24625c6613d92c8c04d160d49f0490b"
+      },
+      {
+        "路径": "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A/manifest.json",
+        "blob": "8bd32c5e3739b67993845077f8dabf02e8239351"
+      },
+      {
+        "路径": "AGENTS.md",
+        "blob": "ca8097b4e9e8e8c707fc4e8e3f88abb692544b9f"
+      },
+      {
+        "路径": "tools/check_integration_acceptance.py",
+        "blob": "82177ccf568ccee97341868c494cfa608ae12cf9"
+      },
+      {
+        "路径": "tools/check_l1_frozen_surface.py",
+        "blob": "714ba4b1f489ae1db9e74be60964f7cac8f3abee"
+      },
+      {
+        "路径": "tools/check_specs.py",
+        "blob": "97cf6a647aba54e41fe3ec0c13b490ef50a8e677"
+      },
+      {
+        "路径": "tools/l1_frozen_surface_manifest.json",
+        "blob": "ae65c6660ae81c6dd7700c5ed5dee5f2bba30cc8"
+      }
+    ]
+  },
+  "服务切片": {
+    "名称": "DATA-L1 通用操作冻结面、三类事实持久恢复与旧格式兼容收口",
+    "上级目标": "冻结 L1 通用操作全集并使后续存在、场景、特征、需求、任务和方法应用只能组合 L1 能力",
+    "合法消费者": [
+      "概念树类数据服务；独立生产外驱动通过其公开服务消费L1空域及当前引用读取",
+      "L1统一公开黑盒驱动；不注入生产测试入口"
+    ],
+    "正式入口": [
+      "L1事实基座服务::读取所有者范围空域",
+      "L1事实基座服务::读取节点全部当前引用",
+      "概念树类数据服务::登记纯概念结构_v2",
+      "概念树类数据服务::创建或复用纯概念、读取纯概念、精确查询纯概念、迁移纯概念生命周期、退出无引用叶概念"
+    ],
+    "输入前提": [
+      "精确已发布Git快照、唯一owner端口、完整请求、当前G及显式预算",
+      "各复核与主工程使用各自登记TEMP根；不运行用户默认数据根",
+      "存储格式1/2样本来自候选Git及原始来源证明；不由当前编码器重造",
+      "R1仅概念登记函数改变；L1的11源、8固定样本及5冻结输入逐Git blob相同，18项既有主要证据SHA未变。原统一L1驱动不重复运行，明确承接同一未变实现的独立结果。"
+    ],
+    "结构化结果": {
+      "成功": "两读取交付同G完整空域证明或去重引用集合；概念交付合法C/D、定义、生命周期、首次H和发布状态。",
+      "非成功": "读取拒绝清空不完整载荷；合法v2同键原G0异义精确返回幂等冲突16，异键占用域和真实v1固定键精确返回旧格式不支持22。",
+      "禁止假成功": "不以日志或编译替代结果；不把8项L1前置拒绝计入20项真实概念保护；不以零写入抵消错误状态分类。"
+    },
+    "写入权威事实": true,
+    "权威终态": {
+      "事实来源": "L1公开owner当前、历史、墓碑、首次规范化写集/首次结果及持久恢复读回；两新增读取本身零写入。",
+      "预期终态": "成功事实完整一致；重放保留原身份/H；拒绝无新事实。原G0异义补测必须精确返回16。",
+      "独立读回": "R1独立概念审阅者从新Git候选重新运行原35及3补测，检查原账/当前G/公开当前历史事实；L1九组矩阵及322断言沿用独立f5结果，所有L1输入及18项主要证据在R1重新核等价，未声称重新运行L1。",
+      "不适用原因": ""
+    },
+    "安全继续条件": [
+      "保留f5失败候选及其6份原记录；R1只收口原G0分类修复和4080 v1.1指定范围。",
+      "本独立记录提交、普通推送并通过现有冻结检查器精确绑定后，另作4080/冻结清单/目录状态治理。",
+      "只允许继续既定世界树后继目标，不扩大L1公开面、持久格式或未验证可靠性声明。"
+    ]
+  },
+  "环境": {
+    "运行配置": "Windows x64；VS18 Professional，MSBuild v145/MSVC14.50.35717；Debug/Release完整Rebuild；生产工程原优化不变。",
+    "外部资源": [
+      "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/01a06f6b-integration-793c",
+      "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/01a06f6b-concept-recheck-c220",
+      "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A/01a06f6b-l1-review-a913（只读引用原独立结果）"
+    ],
+    "专用命名域": "INT-DATA-L1-TWO-READ-CONSUMER-A-R1/01a06f6b；新Git归档SHA256 39D3D8DF2DE37B9A1DC3E94BF66AEAB99C40B5D143D26E6D4C4D2BA10AAB583D",
+    "就绪": true,
+    "阻断原因": ""
+  },
+  "函数巡检": {
+    "范围": "45项DATA-L1公开操作；原独立统一驱动已逐项核调用点，R1核全部L1输入等价后承接，不声称重跑45项或全项目函数覆盖。",
+    "清单来源": "候选 tools/l1_frozen_surface_manifest.json；独立L1证据45项覆盖表",
+    "目标函数数": 45,
+    "排除函数数": 0,
+    "编译通过数": 45,
+    "入口巡检通过数": 45,
+    "逻辑异常数": 0,
+    "证据": [
+      "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A/l1-evidence.json",
+      "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A/l1-review.md",
+      "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/01a06f6b-integration-793c/l1-equivalence.json",
+      "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/01a06f6b-integration-793c/static-result.json"
+    ],
+    "未覆盖函数": []
+  },
+  "场景": [
+    {
+      "标识": "S01",
+      "类型": "成功",
+      "必需": true,
+      "状态": "PASS",
+      "证据": [
+        "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A/l1-evidence.json",
+        "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/concept-evidence.json",
+        "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/01a06f6b-integration-793c/l1-equivalence.json"
+      ],
+      "结构化结果": "L1未变实现的两配置322新增断言和原九组独立PASS经输入/主要证据核对承接；新候选概念每配置原35及补3均build0/run0。",
+      "终态观察": "空域/七引用结果、概念定义与当前/历史权威事实互证。",
+      "不适用原因": "",
+      "未运行原因": ""
+    },
+    {
+      "标识": "S02",
+      "类型": "精确重复",
+      "必需": true,
+      "状态": "PASS",
+      "证据": [
+        "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A/l1-evidence.json",
+        "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/concept-evidence.json",
+        "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/01a06f6b-integration-793c/l1-equivalence.json"
+      ],
+      "结构化结果": "新候选原登记/创建/生命周期/退出重放通过；预算8192原键重放状态3、H16、G17且完整原账不变；L1精确重复沿用未变实现的独立结果。",
+      "终态观察": "原身份和首次H不变，精确重复不增加G。",
+      "不适用原因": "",
+      "未运行原因": ""
+    },
+    {
+      "标识": "S03",
+      "类型": "合法拒绝",
+      "必需": true,
+      "状态": "PASS",
+      "证据": [
+        "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/concept-evidence.json",
+        "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/concept-review.md"
+      ],
+      "结构化结果": "新候选两配置：合法v2原键0x7142、G0 15→16实返16；异键占用域22且无新账；真实v1 34节点33边7值、固定键0x1401实返22。",
+      "终态观察": "G0冲突前后G17，无交付/H且完整原账相等；预算恢复保留H16；真实v1原G0=1/H2、G2不变、原账不变。原35含20项真实引用保护及8项L1前置拒绝，分账保留。",
+      "不适用原因": "",
+      "未运行原因": ""
+    },
+    {
+      "标识": "S04",
+      "类型": "外部失败",
+      "必需": true,
+      "状态": "PASS",
+      "证据": [
+        "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A/l1-evidence.json",
+        "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/01a06f6b-integration-793c/l1-equivalence.json"
+      ],
+      "结构化结果": "已执行存储占用、未知格式、缺损、坏活动槽等精确拒绝；不覆盖资源耗尽或概念19/21注入。",
+      "终态观察": "真实第二进程占用及损坏材料不交付运行包，不回退完整非活动槽。",
+      "不适用原因": "",
+      "未运行原因": ""
+    },
+    {
+      "标识": "S05",
+      "类型": "并发",
+      "必需": true,
+      "状态": "PASS",
+      "证据": [
+        "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A/l1-evidence.json",
+        "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/concept-evidence.json",
+        "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/01a06f6b-integration-793c/l1-equivalence.json"
+      ],
+      "结构化结果": "新候选原35中真实双线程竞争通过；旧L1同G竞争及旧概念25+25轮按未变输入/并发路径的既有证据承接，R1不声称重跑50轮。",
+      "终态观察": "恰一发布、无重复定义或孤立事实，失败原G不增加；跨实例概念竞争未运行。",
+      "不适用原因": "",
+      "未运行原因": ""
+    },
+    {
+      "标识": "S06",
+      "类型": "崩溃恢复",
+      "必需": false,
+      "状态": "NOT_RUN",
+      "证据": [],
+      "结构化结果": "未执行真实kill、进程崩溃、断电或介质故障。",
+      "终态观察": "受控销毁后重新打开列S07，不充当崩溃恢复证据。",
+      "不适用原因": "",
+      "未运行原因": "本切片未安排真实崩溃/断电/介质故障注入；受控恢复不等于此类故障试验。"
+    },
+    {
+      "标识": "S07",
+      "类型": "正式读回",
+      "必需": true,
+      "状态": "PASS",
+      "证据": [
+        "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A/l1-evidence.json",
+        "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/concept-evidence.json",
+        "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/01a06f6b-integration-793c/l1-equivalence.json"
+      ],
+      "结构化结果": "新候选概念公开当前/历史/墓碑/原账互证；L1受控新运行包、固定格式1/2恢复矩阵经输入和主要证据等价核对承接。",
+      "终态观察": "两读口零写入；补测原账完整相等；概念销毁owner端口后重新签发读回仅为同运行包恢复。",
+      "不适用原因": "",
+      "未运行原因": ""
+    },
+    {
+      "标识": "S08",
+      "类型": "正式构建",
+      "必需": true,
+      "状态": "PASS",
+      "证据": [
+        "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/01a06f6b-integration-793c/main-build-results.json",
+        "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/01a06f6b-integration-793c/production-isolation.json",
+        "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A/l1-evidence.json",
+        "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/concept-evidence.json"
+      ],
+      "结构化结果": "新精确候选主工程Debug/Release完整Rebuild均exit0；独立概念21模块原35和3补测双配置均实际编译链接。原L1独立目标构建证据按相同输入承接。",
+      "终态观察": "57个正式编译单元，项目及直接导入没有测试项；未执行普通应用。",
+      "不适用原因": "",
+      "未运行原因": ""
+    }
+  ],
+  "边界检查": {
+    "正式接线": {
+      "状态": "PASS",
+      "证据": [
+        "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/concept-review.md",
+        "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/concept-evidence.json",
+        "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A/l1-evidence.json",
+        "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/01a06f6b-integration-793c/l1-equivalence.json"
+      ],
+      "不适用原因": "",
+      "未运行原因": ""
+    },
+    "自检隔离": {
+      "状态": "PASS",
+      "证据": [
+        "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/01a06f6b-integration-793c/production-isolation.json",
+        "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A/l1-evidence.json",
+        "验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/concept-evidence.json"
+      ],
+      "不适用原因": "",
+      "未运行原因": ""
+    },
+    "正式构建隔离": {
+      "状态": "PASS",
+      "证据": [
+        "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/01a06f6b-integration-793c/main-build-results.json",
+        "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A-R1/01a06f6b-integration-793c/production-isolation.json"
+      ],
+      "不适用原因": "",
+      "未运行原因": ""
+    }
+  },
+  "结论": {
+    "类型": "服务验收通过",
+    "允许声明": [
+      "DATA-L1 v1.1目标45项及具名概念消费者在本记录明确范围内服务验收通过；原G0分类失败在新候选修复并独立复验。",
+      "L1同一未变实现的完整独立矩阵经11源/8样本/5冻结项和18项主要证据等价核对承接；R1重新执行概念原35+3和主工程双构建。",
+      "记录提交推送后可按既有门禁进行另一次具名FROZEN状态治理；本记录本身不修改冻结清单。"
+    ],
+    "禁止声明": [
+      "不得把本次输入等价核对说成重新运行L1统一驱动或概念50轮/私口矩阵。",
+      "不得改写原f5失败及INCIDENT-001事实；不得声称旧概念验证目录所有指纹未变。",
+      "不得声明世界树B—E、普通自我治理或未运行故障场景完成。"
+    ],
+    "未覆盖范围": [
+      "真实kill/崩溃、断电、介质故障、资源耗尽、长时可靠性",
+      "概念跨实例竞争及资源19/可能发布21注入；新候选概念50轮和私口矩阵NOT_RERUN",
+      "任意未登记旧布局、私有索引破坏、完整世界树CRUD和普通自我线程运行"
+    ]
+  }
+}
