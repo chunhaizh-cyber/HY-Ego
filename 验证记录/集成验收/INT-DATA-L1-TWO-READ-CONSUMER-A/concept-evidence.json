@@ -1,0 +1,1448 @@
+{
+  "schemaVersion": 1,
+  "acceptanceId": "INT-DATA-L1-TWO-READ-CONSUMER-A",
+  "subtask": "concept-consumer",
+  "reviewer": "/root/l1_read_execute",
+  "candidateCommit": "f5dda0a5ec920e8ebe72f441c813bf8151b2f946",
+  "status": "FAIL",
+  "scope": "4080 v1.1 named exception: two-read pure concept consumer only; no L1 self-certification or FROZEN promotion",
+  "resourceRoot": "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A/01a06f6b-concept-review-b407",
+  "reviewPath": "D:/海中鱼巢/验证记录/集成验收/INT-DATA-L1-TWO-READ-CONSUMER-A/concept-review.md",
+  "reviewSHA256": "ED8A876EBD7702A29F173C047A1624A00FBDEB66F2EAEEE1DF7A3C3C89A7026E",
+  "artifacts": [
+    {
+      "path": "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A/01a06f6b-concept-review-b407/result.json",
+      "sha256": "B868BB12238CF9D31A923B95616BE8B0C917B3C25D8F014DC2EF58CAE9E56488"
+    },
+    {
+      "path": "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A/01a06f6b-concept-review-b407/input-manifest.json",
+      "sha256": "8DE1C936F1B55406E391A772141B2A4FF06ACB555E46C51CB2B473BD03E72DB4"
+    },
+    {
+      "path": "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A/01a06f6b-concept-review-b407/artifact-index.json",
+      "sha256": "06B3E8FC6BA452729681A77985B0008A919A6CD856A232F70F5BC37CD0C75F31"
+    },
+    {
+      "path": "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A/01a06f6b-concept-review-b407/incident-001/incident.json",
+      "sha256": "62D385D245C6B33D118E95B2D5536B237573791EE7F6EFC793595F8DA5351FB9"
+    },
+    {
+      "path": "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A/01a06f6b-concept-review-b407/driver.cpp",
+      "sha256": "55A4BD237FD63433629B052376110C8055A5F519F4B9580DF2D5C726F343265A"
+    },
+    {
+      "path": "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A/01a06f6b-concept-review-b407/supplement.cpp",
+      "sha256": "A2E577A4C0AD8C66BC045C173B342775FA3F3A914AC2E0C787370FBA6530AB6B"
+    },
+    {
+      "path": "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A/01a06f6b-concept-review-b407/path-preflight-final.json",
+      "sha256": "28860510E922EE7679EA91C9697F9799EC7E8DF9FD0F42BC2B8C06BBE8E6DEF3"
+    }
+  ],
+  "inputManifest": {
+    "candidateCommit": "f5dda0a5ec920e8ebe72f441c813bf8151b2f946",
+    "remoteMain": "f5dda0a5ec920e8ebe72f441c813bf8151b2f946\trefs/heads/main",
+    "archiveSha256": "10EE165AA533B8C459A65459CE57DE18B793852213A8D6C523669DAC99F4B9AF",
+    "sourceInputs": [
+      {
+        "path": "海中鱼巣/启动选项.数据.h",
+        "blob": "13cb66c1e617748c7df64d8e0862115051f96883",
+        "sha256": "86566BE0A09E4142FF9BA3F834B7C3B382B532BDC036B11E700D380162C03C22",
+        "normalizedSha256": "86566BE0A09E4142FF9BA3F834B7C3B382B532BDC036B11E700D380162C03C22"
+      },
+      {
+        "path": "海中鱼巣/核心/L1中性CRUD.数据.h",
+        "blob": "000355ef64dd40e86fa204758699fbeb45c95062",
+        "sha256": "F6EBC66170656E73F4F1EB266AB50B975173AF4AC00609374C786523D7C231B8",
+        "normalizedSha256": "F6EBC66170656E73F4F1EB266AB50B975173AF4AC00609374C786523D7C231B8"
+      },
+      {
+        "path": "海中鱼巣/核心/L1事实基座.数据.h",
+        "blob": "2c8a5d6fbcb34d20b909de0d8e83c0dc3e004c36",
+        "sha256": "9A700AED169E165699FC7F06664178D0734858375E9E12C8F10F70A0B4ADA709",
+        "normalizedSha256": "9A700AED169E165699FC7F06664178D0734858375E9E12C8F10F70A0B4ADA709"
+      },
+      {
+        "path": "海中鱼巣/核心/L1事实基座持久恢复.数据.h",
+        "blob": "5b9f04311a7f49368ffc8259a8b43b8e5f03a5a8",
+        "sha256": "5CDDE1A654B42AFF8A7C6DDFDF3F94EEB74C158FC2866FCA6A30D9DFF1F4AEA6",
+        "normalizedSha256": "5CDDE1A654B42AFF8A7C6DDFDF3F94EEB74C158FC2866FCA6A30D9DFF1F4AEA6"
+      },
+      {
+        "path": "海中鱼巣/核心/L1公共事实.数据.h",
+        "blob": "d8e128e1ebf6a1d46c38051427b7e912a676cef2",
+        "sha256": "88C3831CA518D451B56C08E1FA7EB9F422C58F1D0EFEDB6C3C8E1AECF7A936DE",
+        "normalizedSha256": "88C3831CA518D451B56C08E1FA7EB9F422C58F1D0EFEDB6C3C8E1AECF7A936DE"
+      },
+      {
+        "path": "海中鱼巣/核心/L1所有者范围CRUD.数据.h",
+        "blob": "063232b70136e1b63fbbd86f4701cb1314d8c864",
+        "sha256": "3A9419D258351468E53BF5E540372ABF04EC13A8CA09488E3F880E78ACE6ADB8",
+        "normalizedSha256": "3A9419D258351468E53BF5E540372ABF04EC13A8CA09488E3F880E78ACE6ADB8"
+      },
+      {
+        "path": "海中鱼巣/核心/仓库.L1事实基座.ixx",
+        "blob": "7ef7c106a4eb0b2f0b9c64be4eb5ca20dfbc0926",
+        "sha256": "E9F671E5158B0E0A3CC686C30080BF7A0615CCFA5A162B04FBEE4FBDF5111885",
+        "normalizedSha256": "E9F671E5158B0E0A3CC686C30080BF7A0615CCFA5A162B04FBEE4FBDF5111885"
+      },
+      {
+        "path": "海中鱼巣/核心/合同.L1中性CRUD.ixx",
+        "blob": "f9ab4cf5758478be12c54e7b43205cc89aa17126",
+        "sha256": "30125F34E7DCA0FD55428D50B953334527ABE2FBA27DDC3CBF33C5F520AA5372",
+        "normalizedSha256": "30125F34E7DCA0FD55428D50B953334527ABE2FBA27DDC3CBF33C5F520AA5372"
+      },
+      {
+        "path": "海中鱼巣/核心/合同.L1事实基座.ixx",
+        "blob": "1aec03e6aba2613abccef3b292e0a790bcd38a1e",
+        "sha256": "209BA8FB3F272FC5C7E2E031550A44A79E6E5DBF858F661FCE0F7AA1B469400C",
+        "normalizedSha256": "209BA8FB3F272FC5C7E2E031550A44A79E6E5DBF858F661FCE0F7AA1B469400C"
+      },
+      {
+        "path": "海中鱼巣/核心/合同.L1公共事实.ixx",
+        "blob": "d898ff4c2272ad89ac57ebb27cdf08c2bf2eff89",
+        "sha256": "4C6913FCFA0EC5B78EAF920B26B48F3E4E2BCD67E5CA1A73904D292CA44C970E",
+        "normalizedSha256": "4C6913FCFA0EC5B78EAF920B26B48F3E4E2BCD67E5CA1A73904D292CA44C970E"
+      },
+      {
+        "path": "海中鱼巣/核心/合同.L1所有者范围CRUD.ixx",
+        "blob": "831248a6a23d73978abcd824789660f2b9b9f79b",
+        "sha256": "9A5F13D93213FDEE03E0986A705F6C86C816AFD8824E95C27EDD5BCC35C579C3",
+        "normalizedSha256": "9A5F13D93213FDEE03E0986A705F6C86C816AFD8824E95C27EDD5BCC35C579C3"
+      },
+      {
+        "path": "海中鱼巣/核心/容错检查.h",
+        "blob": "fe17868d6ec44fffb2d0b199388d9f40aca30613",
+        "sha256": "05E660E2F810EF6B9A24F48AED15AB3E2D0E2E36CC51E52B2750E34E5AD15BE5",
+        "normalizedSha256": "05E660E2F810EF6B9A24F48AED15AB3E2D0E2E36CC51E52B2750E34E5AD15BE5"
+      },
+      {
+        "path": "海中鱼巣/核心/日志系统.h",
+        "blob": "703d68d7a056f38a70efdabf9099ea5f5e4b2f6a",
+        "sha256": "F1883BE16F7D9C8D524728FCDCC92008B1AE35B46BD97AA37576A8B991B37DB0",
+        "normalizedSha256": "F1883BE16F7D9C8D524728FCDCC92008B1AE35B46BD97AA37576A8B991B37DB0"
+      },
+      {
+        "path": "海中鱼巣/核心/服务.L1事实基座.ixx",
+        "blob": "83eb88219e1e97de949ad343237e316717d1a08c",
+        "sha256": "34B80B6FB3A991A076F4C92E74517553A00E35A7E16662214D1B2724192804CC",
+        "normalizedSha256": "34B80B6FB3A991A076F4C92E74517553A00E35A7E16662214D1B2724192804CC"
+      },
+      {
+        "path": "海中鱼巣/程序运行结果.数据.h",
+        "blob": "9b53f72d11328b1c2998b424439f6c03304011e1",
+        "sha256": "6B9ADF088FE43A982B7331A552B23203E7A77B85B2E1F46D38981AEC92470582",
+        "normalizedSha256": "6B9ADF088FE43A982B7331A552B23203E7A77B85B2E1F46D38981AEC92470582"
+      },
+      {
+        "path": "海中鱼巣/线程/事件日志线程.数据.h",
+        "blob": "561621ef06d7ff399872f58a6ab1fae1e1790caf",
+        "sha256": "9C2C2B93678B4B2D34686D57243406E20C76CA43E2B2ADA3A5321D135CBF5BC1",
+        "normalizedSha256": "9C2C2B93678B4B2D34686D57243406E20C76CA43E2B2ADA3A5321D135CBF5BC1"
+      },
+      {
+        "path": "海中鱼巣/线程/支持线程候选.数据.h",
+        "blob": "e01456813c90379991180fcfd2c417f9d43c8410",
+        "sha256": "B62E8DECF0672494824003F225408EEBB4E08F743FCC32CB04409ED0EF2FB36B",
+        "normalizedSha256": "B62E8DECF0672494824003F225408EEBB4E08F743FCC32CB04409ED0EF2FB36B"
+      },
+      {
+        "path": "海中鱼巣/线程/线程生命周期.数据.h",
+        "blob": "71bd60686dafe9bd58aa2f7aab93e13c6ceffbfc",
+        "sha256": "3E3F4376EF0979ACF22821A56843792ACC7DEFBBA468C2E2324BA30380CB81DB",
+        "normalizedSha256": "3E3F4376EF0979ACF22821A56843792ACC7DEFBBA468C2E2324BA30380CB81DB"
+      },
+      {
+        "path": "海中鱼巣/领域/合同.世界树根.ixx",
+        "blob": "b721808e8b8783acac6dbc0f7d4dc43c64d46fe4",
+        "sha256": "40B21EC157BE7CB74B1589F63FAEDAC683D97AA6259936FB6DA8090CF84BBAB0",
+        "normalizedSha256": "40B21EC157BE7CB74B1589F63FAEDAC683D97AA6259936FB6DA8090CF84BBAB0"
+      },
+      {
+        "path": "海中鱼巣/领域/合同.动态结构.ixx",
+        "blob": "03edf8eb1b646da53ddd4ac45ecc3b54279250bb",
+        "sha256": "A75C389CE3FEB0C66D16A6F61885CFC5181F530C717B965878C0B96B8DC8ED3E",
+        "normalizedSha256": "A75C389CE3FEB0C66D16A6F61885CFC5181F530C717B965878C0B96B8DC8ED3E"
+      },
+      {
+        "path": "海中鱼巣/领域/合同.场景状态使用绑定.ixx",
+        "blob": "1b777530a7456af4a0d50b8f22a7b0f2659e2d8f",
+        "sha256": "6E20377ACE094DB95BA1BCDCD6631ABC2C36665274AEB15F5684C169A3B163B0",
+        "normalizedSha256": "6E20377ACE094DB95BA1BCDCD6631ABC2C36665274AEB15F5684C169A3B163B0"
+      },
+      {
+        "path": "海中鱼巣/领域/合同.场景角色组织.ixx",
+        "blob": "52ea2aa94c7e4ddc85fc61f22b301cfeb93abc77",
+        "sha256": "86BADB5AA45CA3458D4874AA6ACBA8EBFA64609AA2A7C733CA6325A002B2CDF2",
+        "normalizedSha256": "86BADB5AA45CA3458D4874AA6ACBA8EBFA64609AA2A7C733CA6325A002B2CDF2"
+      },
+      {
+        "path": "海中鱼巣/领域/合同.存在结构身份只读.ixx",
+        "blob": "04cd51c2e6d9bdf70be77987b771ee12a6194619",
+        "sha256": "B1323B8D280CC8493B264E2A6507C657D42DDBAA11B7705787A53D85F3267E69",
+        "normalizedSha256": "B1323B8D280CC8493B264E2A6507C657D42DDBAA11B7705787A53D85F3267E69"
+      },
+      {
+        "path": "海中鱼巣/领域/合同.相关概念添加参与.ixx",
+        "blob": "4331392bdefe32514c52292339833a026aef7b4d",
+        "sha256": "337B1E963AA7AE3FCF488D0C07DB3693E9FDD294B09CE305789AC5AC2E44EA96",
+        "normalizedSha256": "337B1E963AA7AE3FCF488D0C07DB3693E9FDD294B09CE305789AC5AC2E44EA96"
+      },
+      {
+        "path": "海中鱼巣/领域/数据服务.场景类.ixx",
+        "blob": "b9e708dd516c256368998d96506a00d96ec74ec8",
+        "sha256": "0E192A74B58BE315311BA1648EC825087AA213485B80EB20D5190E4A61E5C516",
+        "normalizedSha256": "0E192A74B58BE315311BA1648EC825087AA213485B80EB20D5190E4A61E5C516"
+      },
+      {
+        "path": "海中鱼巣/领域/数据服务.存在类.ixx",
+        "blob": "e1184e53ed875e2faa108f58220d93cf1e20ff1e",
+        "sha256": "D417A5D550666CFE1FAA77FBC7381999A9509D800E904B7CA908EBE61523AF95",
+        "normalizedSha256": "D417A5D550666CFE1FAA77FBC7381999A9509D800E904B7CA908EBE61523AF95"
+      },
+      {
+        "path": "海中鱼巣/领域/数据服务.定位特征.ixx",
+        "blob": "a6292e8bf0da334698fddb32cbe078f054934b0b",
+        "sha256": "44613E7CA9D4D2E67959E34A234470C15E8C2CAFFF7235C25BBD76BC0508C2ED",
+        "normalizedSha256": "44613E7CA9D4D2E67959E34A234470C15E8C2CAFFF7235C25BBD76BC0508C2ED"
+      },
+      {
+        "path": "海中鱼巣/领域/数据服务.概念树类.ixx",
+        "blob": "b6170b9d5780a1e61f6b52e66719822890e49ce9",
+        "sha256": "54988DEB62DCCE09B91F069E1346A1667F39B56D43160A7C431E6CDF34F53DEF",
+        "normalizedSha256": "54988DEB62DCCE09B91F069E1346A1667F39B56D43160A7C431E6CDF34F53DEF"
+      },
+      {
+        "path": "海中鱼巣/领域/数据服务.特征值类.ixx",
+        "blob": "4d761c2661544c11c4412bb023714f92669c441a",
+        "sha256": "C2A287C3534F62CAED991E00E08C522F39B4E5AC0CDCD23F3B3B84A408BEB00B",
+        "normalizedSha256": "C2A287C3534F62CAED991E00E08C522F39B4E5AC0CDCD23F3B3B84A408BEB00B"
+      },
+      {
+        "path": "海中鱼巣/领域/数据服务.特征类.ixx",
+        "blob": "f590ff67b1a14fcb2c22db9f99f6a79ba97fdf1b",
+        "sha256": "56D9ACBA77C3B6D35935D057870F40A72F6ABB2F7DF639D0E0443AFF186015E2",
+        "normalizedSha256": "56D9ACBA77C3B6D35935D057870F40A72F6ABB2F7DF639D0E0443AFF186015E2"
+      },
+      {
+        "path": "海中鱼巣/领域/数据服务.状态类.ixx",
+        "blob": "5184756dd20a47e1c9d815bd2855f5418a109731",
+        "sha256": "7877BC9938EB10A63D98ADF233159DC8A90F6FB8709AC2857EDE7963DDF757CA",
+        "normalizedSha256": "7877BC9938EB10A63D98ADF233159DC8A90F6FB8709AC2857EDE7963DDF757CA"
+      },
+      {
+        "path": "海中鱼巣/领域/数据服务.绑定存在.ixx",
+        "blob": "e5058ae8e6bc965e339c933878a29d865d9bcc1e",
+        "sha256": "12F0628E4CB9A0A8F1079323639F1AC00C68461E227A49E9B1A079702CB302B0",
+        "normalizedSha256": "12F0628E4CB9A0A8F1079323639F1AC00C68461E227A49E9B1A079702CB302B0"
+      },
+      {
+        "path": "海中鱼巣/领域/算法.有序I64特征比较.ixx",
+        "blob": "9cb2d1aaf26fc7c46462ff097ba1a9705c6e4e7f",
+        "sha256": "ACEBB285B5AB4F26ECD99E578436E4D4DEE6EB56BEAAF8B21EEE5AE31E83A9E4",
+        "normalizedSha256": "ACEBB285B5AB4F26ECD99E578436E4D4DEE6EB56BEAAF8B21EEE5AE31E83A9E4"
+      },
+      {
+        "path": "规范/4015_子规范_L1简化事实基座.md",
+        "blob": "e528fc39802a827601a99164eda73c77d3aef506",
+        "sha256": "ED50FF22C19F9B81EE8B1C2D4E75DCB4D879664139CA8AC6D7405D4282681AD2",
+        "normalizedSha256": "ED50FF22C19F9B81EE8B1C2D4E75DCB4D879664139CA8AC6D7405D4282681AD2"
+      },
+      {
+        "path": "规范/4080_子规范_DATA-L1通用操作全集与冻结门禁.md",
+        "blob": "e324c22346e472186b319e15ef77a35a1cd6b070",
+        "sha256": "FE32D7BF6399FE96832125C2620B5FF1F23DCF14D360A06D611059DB41DD553D",
+        "normalizedSha256": "FE32D7BF6399FE96832125C2620B5FF1F23DCF14D360A06D611059DB41DD553D"
+      },
+      {
+        "path": "规范/详细设计/20260913_WORLD-TREE-CONCEPT-FIRST-A_概念前置与世界添加详细设计_v0.1.md",
+        "blob": "b7f2f41236d105456ae142458bfffa4ad0abd215",
+        "sha256": "EE95C926039240431591C8764D745014E891D09B97D08A510D5578D38A4C6D0A",
+        "normalizedSha256": "EE95C926039240431591C8764D745014E891D09B97D08A510D5578D38A4C6D0A"
+      },
+      {
+        "path": "规范/运行期服务导向代码验收与全函数入口巡检规范.md",
+        "blob": "d0fde7948a94b4ee7abcfd766ccdd44fd48075d1",
+        "sha256": "265716F2FB3171794B1F34AECC4A7F5DA433BF20AABF302AC04CFB978A18CF89",
+        "normalizedSha256": "265716F2FB3171794B1F34AECC4A7F5DA433BF20AABF302AC04CFB978A18CF89"
+      },
+      {
+        "path": "计划/20260913_WORLD-TREE-CONCEPT-FIRST-A_概念前置与世界添加代码实施计划_v0.1.md",
+        "blob": "2161774da6c891e16ac518a3ab7b79f8bcb94848",
+        "sha256": "6C665807B6F70B174A8439C6A0FA491F220F23CB95BAA9BBAD3E3C8DC6FCE4C0",
+        "normalizedSha256": "6C665807B6F70B174A8439C6A0FA491F220F23CB95BAA9BBAD3E3C8DC6FCE4C0"
+      }
+    ],
+    "archiveNormalization": [],
+    "reusedOriginals": [
+      {
+        "source": "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\driver-build10.cpp",
+        "sha256": "55A4BD237FD63433629B052376110C8055A5F519F4B9580DF2D5C726F343265A"
+      },
+      {
+        "source": "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\regression-10.vcxproj",
+        "sha256": "0286A51303981E5893F0208BAE054DDF417A92F2C56A557BB4E7708607DE0CA2"
+      },
+      {
+        "source": "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\run-regression.ps1",
+        "sha256": "65690444062740246AD99B17B4B36640E538D98FF6E1347C86FC0CB0A16D843F"
+      },
+      {
+        "source": "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\run-negative-1450-debug-10.py",
+        "sha256": "1B9A794AA25A6A0913D98FA292E925FE29A5FEF5AE0740A27C3B5285FB411435"
+      },
+      {
+        "source": "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\run-negative-1450-release-10.py",
+        "sha256": "A6CB7DA0CF21FD29C323961FD4DD62289C89F7E09CAF4F5138B4F0E0044AC63F"
+      },
+      {
+        "source": "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\oracle-correction-09-10.md",
+        "sha256": "016FB845D1DBC11CD8C56E7E41BD8689945BA2091BBA89DA60CF7B608F563699"
+      },
+      {
+        "source": "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\negative-1450-debug-10\\bind.cpp",
+        "sha256": "DCA048365A4BF86D1C4AE94F67AAC8ABB2D7D245AB0E8B85CE78145A56680B54"
+      },
+      {
+        "source": "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\negative-1450-debug-10\\cases.json",
+        "sha256": "5E323A396270B71BE2B8F6E41573702DC4DF44523C4E5E5EDD93EA4C9B1CC004"
+      },
+      {
+        "source": "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\negative-1450-debug-10\\first.cpp",
+        "sha256": "77EE5029AC36E30210AC15F718F123C1EE7882C59ADB8614796E60C9FA5CEFDE"
+      },
+      {
+        "source": "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\negative-1450-debug-10\\port.cpp",
+        "sha256": "35552781D405DF14F3D5297937A3B31D882663F058BE15F9CBDED0630E87A114"
+      },
+      {
+        "source": "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\negative-1450-debug-10\\prepare.cpp",
+        "sha256": "267BB9AE852E2B5327451DFE0B9AD26DD676F282B41A55C11EC159B75423EC2B"
+      },
+      {
+        "source": "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\negative-1450-debug-10\\public-control.cpp",
+        "sha256": "5D137C8E7BD215FEA8C58A04AECBD57F2DDC24DDFE0690117B9D613926C56D8D"
+      },
+      {
+        "source": "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\negative-1450-debug-10\\usage.cpp",
+        "sha256": "C0C2E8B9636E59CFB0396B5FD99AB0D0262BF32E09247C451FF5778171B89149"
+      },
+      {
+        "source": "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\negative-1450-release-10\\bind.cpp",
+        "sha256": "DCA048365A4BF86D1C4AE94F67AAC8ABB2D7D245AB0E8B85CE78145A56680B54"
+      },
+      {
+        "source": "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\negative-1450-release-10\\cases.json",
+        "sha256": "5E323A396270B71BE2B8F6E41573702DC4DF44523C4E5E5EDD93EA4C9B1CC004"
+      },
+      {
+        "source": "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\negative-1450-release-10\\first.cpp",
+        "sha256": "77EE5029AC36E30210AC15F718F123C1EE7882C59ADB8614796E60C9FA5CEFDE"
+      },
+      {
+        "source": "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\negative-1450-release-10\\port.cpp",
+        "sha256": "35552781D405DF14F3D5297937A3B31D882663F058BE15F9CBDED0630E87A114"
+      },
+      {
+        "source": "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\negative-1450-release-10\\prepare.cpp",
+        "sha256": "267BB9AE852E2B5327451DFE0B9AD26DD676F282B41A55C11EC159B75423EC2B"
+      },
+      {
+        "source": "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\negative-1450-release-10\\public-control.cpp",
+        "sha256": "5D137C8E7BD215FEA8C58A04AECBD57F2DDC24DDFE0690117B9D613926C56D8D"
+      },
+      {
+        "source": "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\negative-1450-release-10\\usage.cpp",
+        "sha256": "C0C2E8B9636E59CFB0396B5FD99AB0D0262BF32E09247C451FF5778171B89149"
+      }
+    ],
+    "mechanicalChanges": [
+      "project source prefix inputs-10/ -> candidate/",
+      "run-script exclusive task root",
+      "negative script exclusive root and candidate source path; no production source changes"
+    ],
+    "driverSha256": "55A4BD237FD63433629B052376110C8055A5F519F4B9580DF2D5C726F343265A"
+  },
+  "results": {
+    "candidateCommit": "f5dda0a5ec920e8ebe72f441c813bf8151b2f946",
+    "scope": "Only pure-concept consumer of two L1 reads",
+    "status": "INTEGRATION-ACCEPTANCE-FAIL",
+    "configurationResults": {
+      "Debug": {
+        "originalMatrixPass": 35,
+        "conceptConsumptionPass": 27,
+        "L1PreconditionRejections": 8,
+        "extraConcurrencyPass": 25,
+        "negativePrivatePass": 5,
+        "supplementFail": 1
+      },
+      "Release": {
+        "originalMatrixPass": 35,
+        "conceptConsumptionPass": 27,
+        "L1PreconditionRejections": 8,
+        "extraConcurrencyPass": 25,
+        "negativePrivatePass": 5,
+        "supplementFail": 1
+      }
+    },
+    "observedConcurrencyStatuses": {
+      "Debug": [
+        2,
+        15
+      ],
+      "Release": [
+        2,
+        15
+      ]
+    },
+    "resource19AndPossible21Injected": false,
+    "cases": [
+      {
+        "configuration": "Debug",
+        "case": "layout-15-13-recovery",
+        "result": "PASS",
+        "ledger": "concept-consumer"
+      },
+      {
+        "configuration": "Debug",
+        "case": "creation-query-normalization-replay",
+        "result": "PASS",
+        "ledger": "concept-consumer"
+      },
+      {
+        "configuration": "Debug",
+        "case": "lifecycle-exit-history-predicates",
+        "result": "PASS",
+        "ledger": "concept-consumer"
+      },
+      {
+        "configuration": "Debug",
+        "case": "concurrent-G0-guard",
+        "result": "PASS",
+        "ledger": "concept-consumer"
+      },
+      {
+        "configuration": "Debug",
+        "case": "query-and-result-predicates",
+        "result": "PASS",
+        "ledger": "concept-consumer"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-C-position-0-same-owner-0",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-C-position-0-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-C-position-1-same-owner-0",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-C-position-1-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-C-position-2-same-owner-0",
+        "result": "PASS",
+        "ledger": "L1-rejected-before-concept-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-C-position-2-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-C-position-3-same-owner-0",
+        "result": "PASS",
+        "ledger": "L1-rejected-before-concept-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-C-position-3-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-C-position-4-same-owner-0",
+        "result": "PASS",
+        "ledger": "L1-rejected-before-concept-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-C-position-4-same-owner-1",
+        "result": "PASS",
+        "ledger": "L1-rejected-before-concept-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-C-position-5-same-owner-0",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-C-position-5-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-C-position-6-same-owner-0",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-C-position-6-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-D-position-0-same-owner-0",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-D-position-0-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-D-position-1-same-owner-0",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-D-position-1-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-D-position-2-same-owner-0",
+        "result": "PASS",
+        "ledger": "L1-rejected-before-concept-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-D-position-2-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-D-position-3-same-owner-0",
+        "result": "PASS",
+        "ledger": "L1-rejected-before-concept-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-D-position-3-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-D-position-4-same-owner-0",
+        "result": "PASS",
+        "ledger": "L1-rejected-before-concept-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-D-position-4-same-owner-1",
+        "result": "PASS",
+        "ledger": "L1-rejected-before-concept-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-D-position-5-same-owner-0",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-D-position-5-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-D-position-6-same-owner-0",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "protection-D-position-6-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Debug",
+        "case": "template-child-world-use",
+        "result": "PASS",
+        "ledger": "concept-consumer"
+      },
+      {
+        "configuration": "Debug",
+        "case": "family-member-birth",
+        "result": "PASS",
+        "ledger": "concept-consumer"
+      },
+      {
+        "configuration": "Release",
+        "case": "layout-15-13-recovery",
+        "result": "PASS",
+        "ledger": "concept-consumer"
+      },
+      {
+        "configuration": "Release",
+        "case": "creation-query-normalization-replay",
+        "result": "PASS",
+        "ledger": "concept-consumer"
+      },
+      {
+        "configuration": "Release",
+        "case": "lifecycle-exit-history-predicates",
+        "result": "PASS",
+        "ledger": "concept-consumer"
+      },
+      {
+        "configuration": "Release",
+        "case": "concurrent-G0-guard",
+        "result": "PASS",
+        "ledger": "concept-consumer"
+      },
+      {
+        "configuration": "Release",
+        "case": "query-and-result-predicates",
+        "result": "PASS",
+        "ledger": "concept-consumer"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-C-position-0-same-owner-0",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-C-position-0-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-C-position-1-same-owner-0",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-C-position-1-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-C-position-2-same-owner-0",
+        "result": "PASS",
+        "ledger": "L1-rejected-before-concept-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-C-position-2-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-C-position-3-same-owner-0",
+        "result": "PASS",
+        "ledger": "L1-rejected-before-concept-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-C-position-3-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-C-position-4-same-owner-0",
+        "result": "PASS",
+        "ledger": "L1-rejected-before-concept-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-C-position-4-same-owner-1",
+        "result": "PASS",
+        "ledger": "L1-rejected-before-concept-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-C-position-5-same-owner-0",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-C-position-5-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-C-position-6-same-owner-0",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-C-position-6-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-D-position-0-same-owner-0",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-D-position-0-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-D-position-1-same-owner-0",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-D-position-1-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-D-position-2-same-owner-0",
+        "result": "PASS",
+        "ledger": "L1-rejected-before-concept-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-D-position-2-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-D-position-3-same-owner-0",
+        "result": "PASS",
+        "ledger": "L1-rejected-before-concept-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-D-position-3-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-D-position-4-same-owner-0",
+        "result": "PASS",
+        "ledger": "L1-rejected-before-concept-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-D-position-4-same-owner-1",
+        "result": "PASS",
+        "ledger": "L1-rejected-before-concept-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-D-position-5-same-owner-0",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-D-position-5-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-D-position-6-same-owner-0",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "protection-D-position-6-same-owner-1",
+        "result": "PASS",
+        "ledger": "concept-reference-protection"
+      },
+      {
+        "configuration": "Release",
+        "case": "template-child-world-use",
+        "result": "PASS",
+        "ledger": "concept-consumer"
+      },
+      {
+        "configuration": "Release",
+        "case": "family-member-birth",
+        "result": "PASS",
+        "ledger": "concept-consumer"
+      }
+    ],
+    "commands": [
+      {
+        "configuration": "Debug",
+        "round": "10",
+        "started": "2026-09-13T19:28:53.3656548+08:00",
+        "ended": "2026-09-13T19:30:43.9244282+08:00",
+        "msbuild": "C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/MSBuild.exe",
+        "arguments": [
+          "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-concept-review-b407\\regression-10.vcxproj",
+          "/m:1",
+          "/p:Configuration=Debug",
+          "/p:Platform=x64",
+          "/v:minimal",
+          "/nologo"
+        ],
+        "workingDirectory": "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A/01a06f6b-concept-review-b407",
+        "temp": "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-concept-review-b407\\compiler-temp-10-Debug",
+        "buildExit": 0,
+        "runExit": 0,
+        "buildLog": "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-concept-review-b407\\build-debug-10.log",
+        "runLog": "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-concept-review-b407\\run-debug-10.log",
+        "driverSha": "55A4BD237FD63433629B052376110C8055A5F519F4B9580DF2D5C726F343265A",
+        "actualProbeSource": "driver.cpp",
+        "actualProbeSourceSHA256": "55A4BD237FD63433629B052376110C8055A5F519F4B9580DF2D5C726F343265A"
+      },
+      {
+        "configuration": "Debug",
+        "round": "supplement",
+        "started": "2026-09-13T19:34:15.8929203+08:00",
+        "ended": "2026-09-13T19:35:33.8973905+08:00",
+        "msbuild": "C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/MSBuild.exe",
+        "arguments": [
+          "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-concept-review-b407\\supplement.vcxproj",
+          "/m:1",
+          "/p:Configuration=Debug",
+          "/p:Platform=x64",
+          "/v:minimal",
+          "/nologo"
+        ],
+        "workingDirectory": "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A/01a06f6b-concept-review-b407",
+        "temp": "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-concept-review-b407\\compiler-temp-supplement-Debug",
+        "buildExit": 0,
+        "runExit": 1,
+        "buildLog": "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-concept-review-b407\\build-debug-supplement.log",
+        "runLog": "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-concept-review-b407\\run-debug-supplement.log",
+        "driverSha": "55A4BD237FD63433629B052376110C8055A5F519F4B9580DF2D5C726F343265A",
+        "actualProbeSource": "supplement.cpp",
+        "actualProbeSourceSHA256": "A2E577A4C0AD8C66BC045C173B342775FA3F3A914AC2E0C787370FBA6530AB6B"
+      },
+      {
+        "configuration": "Debug",
+        "kind": "private-negative-compile",
+        "resultFile": "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-concept-review-b407\\negative-1450-debug-10\\results.json",
+        "publicControlExit": 0,
+        "privateExits": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "privateErrors": [
+          [
+            "C2248"
+          ],
+          [
+            "C2248"
+          ],
+          [
+            "C2248"
+          ],
+          [
+            "C2248"
+          ],
+          [
+            "C2248"
+          ]
+        ]
+      },
+      {
+        "configuration": "Release",
+        "round": "10",
+        "started": "2026-09-13T19:28:53.3804306+08:00",
+        "ended": "2026-09-13T19:30:30.8423371+08:00",
+        "msbuild": "C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/MSBuild.exe",
+        "arguments": [
+          "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-concept-review-b407\\regression-10.vcxproj",
+          "/m:1",
+          "/p:Configuration=Release",
+          "/p:Platform=x64",
+          "/v:minimal",
+          "/nologo"
+        ],
+        "workingDirectory": "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A/01a06f6b-concept-review-b407",
+        "temp": "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-concept-review-b407\\compiler-temp-10-Release",
+        "buildExit": 0,
+        "runExit": 0,
+        "buildLog": "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-concept-review-b407\\build-release-10.log",
+        "runLog": "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-concept-review-b407\\run-release-10.log",
+        "driverSha": "55A4BD237FD63433629B052376110C8055A5F519F4B9580DF2D5C726F343265A",
+        "actualProbeSource": "driver.cpp",
+        "actualProbeSourceSHA256": "55A4BD237FD63433629B052376110C8055A5F519F4B9580DF2D5C726F343265A"
+      },
+      {
+        "configuration": "Release",
+        "round": "supplement",
+        "started": "2026-09-13T19:34:16.0817656+08:00",
+        "ended": "2026-09-13T19:35:51.7574863+08:00",
+        "msbuild": "C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/MSBuild.exe",
+        "arguments": [
+          "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-concept-review-b407\\supplement.vcxproj",
+          "/m:1",
+          "/p:Configuration=Release",
+          "/p:Platform=x64",
+          "/v:minimal",
+          "/nologo"
+        ],
+        "workingDirectory": "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A/01a06f6b-concept-review-b407",
+        "temp": "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-concept-review-b407\\compiler-temp-supplement-Release",
+        "buildExit": 0,
+        "runExit": 1,
+        "buildLog": "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-concept-review-b407\\build-release-supplement.log",
+        "runLog": "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-concept-review-b407\\run-release-supplement.log",
+        "driverSha": "55A4BD237FD63433629B052376110C8055A5F519F4B9580DF2D5C726F343265A",
+        "actualProbeSource": "supplement.cpp",
+        "actualProbeSourceSHA256": "A2E577A4C0AD8C66BC045C173B342775FA3F3A914AC2E0C787370FBA6530AB6B"
+      },
+      {
+        "configuration": "Release",
+        "kind": "private-negative-compile",
+        "resultFile": "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-concept-review-b407\\negative-1450-release-10\\results.json",
+        "publicControlExit": 0,
+        "privateExits": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "privateErrors": [
+          [
+            "C2248"
+          ],
+          [
+            "C2248"
+          ],
+          [
+            "C2248"
+          ],
+          [
+            "C2248"
+          ],
+          [
+            "C2248"
+          ]
+        ]
+      }
+    ],
+    "concurrencyCommands": [
+      {
+        "configuration": "Debug",
+        "command": [
+          "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-concept-review-b407\\output-10\\Debug\\pure-concept-regression.exe",
+          "concurrency"
+        ],
+        "pid": 9340,
+        "startedUTC": "2026-09-13T19:33:14.20117+08:00",
+        "endedUTC": "2026-09-13T19:33:34.809989+08:00",
+        "exit": 0,
+        "log": "run-debug-10-concurrency25.log",
+        "exeSHA256": "A49BEE1BE00095D306B620EDF6F1E640C250CE009EF78086C2C1B49221631CD6"
+      },
+      {
+        "configuration": "Release",
+        "command": [
+          "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-concept-review-b407\\output-10\\Release\\pure-concept-regression.exe",
+          "concurrency"
+        ],
+        "pid": 25892,
+        "startedUTC": "2026-09-13T19:33:34.823952+08:00",
+        "endedUTC": "2026-09-13T19:33:35.461646+08:00",
+        "exit": 0,
+        "log": "run-release-10-concurrency25.log",
+        "exeSHA256": "F599732AAD28AA748F7E22BAF9DE895A2D119BA0C9A51C89B61BCE6CF669008D"
+      }
+    ],
+    "failure": {
+      "id": "CONCEPT-REGISTRATION-G0-01",
+      "publicEntry": "概念树类数据服务::登记纯概念结构_v2",
+      "contractVersion": 2,
+      "sameKey": {
+        "hex": "0x7142",
+        "decimal": 28994
+      },
+      "originalG0": 15,
+      "originalPublishedH": 16,
+      "changedG0": 16,
+      "beforeAndAfterCurrentG": 17,
+      "expectedStatus": {
+        "name": "幂等冲突",
+        "value": 16
+      },
+      "actualStatus": {
+        "name": "旧格式不支持",
+        "value": 22
+      },
+      "actualPublication": 0,
+      "returnedDelivery": false,
+      "returnedFirstH": null,
+      "onlyMutation": "++changed.G0 after copy from original request",
+      "legalV2Proof": "Fixture requires public original registration successful, retains exact layout and constructs real concept service; with_port destroys service before reacquiring sole owner port",
+      "ledgerUnchangedProof": "supplement.cpp compares both optional full first normalized write set and first write result before/after; assertion passed before exact status assertion failed",
+      "sourceLocation": "海中鱼巣/领域/数据服务.概念树类.ixx:6253-6256",
+      "designLocation": "规范/详细设计/20260913_WORLD-TREE-CONCEPT-FIRST-A_概念前置与世界添加详细设计_v0.1.md:895,952",
+      "oldFormatConstraint": "An actual old v1/related layout at same fixed key must remain old-format refusal22; do not blanket replace22 with16."
+    },
+    "incident": "incident-001/incident.json",
+    "notRun": [
+      "Resource exhaustion / explicit status19 injection",
+      "Explicit post-publication unknown status21 injection",
+      "Real kill / crash / power loss / media failure",
+      "Long-duration reliability / stress beyond 25+25 same-instance race trials",
+      "Cross-instance concept writer competition",
+      "This subtask did not repeat H07, world A4, main build or pure concept cross-process persisted-store recovery; those are separately owned or outside this subset."
+    ]
+  },
+  "eightScenarios": [
+    {
+      "name": "成功",
+      "status": "PASS",
+      "proof": "legal v2 empty-domain registration / concept create-query / complete authoritative state"
+    },
+    {
+      "name": "精确重复",
+      "status": "PASS_WITH_SEPARATE_CONFLICT_FAIL",
+      "proof": "original layout / create / lifecycle / exit keys and original first H / complete ledger"
+    },
+    {
+      "name": "合法拒绝",
+      "status": "FAIL",
+      "proof": "20 actual concept guards and 8 L1 prior refusals separated; changed original G0 returns22 instead of16"
+    },
+    {
+      "name": "外部失败",
+      "status": "NOT_RUN",
+      "proof": "19/21 / resource exhaustion not injected; persistent faults owned by separate L1 subtask"
+    },
+    {
+      "name": "并发",
+      "status": "PASS_BOUNDED",
+      "proof": "25 Debug +25 Release same-instance two-thread rounds; only statuses2/15 observed"
+    },
+    {
+      "name": "崩溃恢复",
+      "status": "NOT_RUN",
+      "proof": "no real kill / powerloss / media fault or disk recovery in this subtask"
+    },
+    {
+      "name": "正式读回",
+      "status": "PASS_BOUNDED",
+      "proof": "public current / history / tombstone / complete original ledger, owner destroyed then reissued; no private probe"
+    },
+    {
+      "name": "正式构建",
+      "status": "PASS_CONSUMER_ONLY",
+      "proof": "21 module independent Debug/Release compile/link; root owns production main build"
+    }
+  ],
+  "incident": {
+    "id": "INCIDENT-001",
+    "cause": "Python Path on Windows converted old path to backslashes; literal source script used forward slashes. replace did not match; inadequate assert checked wrong spelling.",
+    "commands": [
+      {
+        "configuration": "debug",
+        "submittedCommand": "& 'D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A/01a06f6b-concept-review-b407/run-regression.ps1' -Configuration Debug -Round 10",
+        "actualMSBuildCommand": [
+          "C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/MSBuild.exe",
+          "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\regression-10.vcxproj",
+          "/m:1",
+          "/p:Configuration=Debug",
+          "/p:Platform=x64",
+          "/v:minimal",
+          "/nologo"
+        ],
+        "actualExecutable": "D:/TEMP/海中鱼巣/WORLD-TREE-CONCEPT-FIRST-A/01a06f6b-pure-concept-regression-4c591208/output-10/Debug/pure-concept-regression.exe",
+        "started": "2026-09-13T19:27:12.7804267+08:00",
+        "ended": "2026-09-13T19:27:51.6220148+08:00",
+        "buildExit": 0,
+        "runExit": 0,
+        "toolSessionId": 78226,
+        "osPID": null,
+        "osPIDStatus": "NOT_CAPTURED: original helper did not record child PID; unified exec completion proves exit, no PID guessed"
+      },
+      {
+        "configuration": "release",
+        "submittedCommand": "& 'D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A/01a06f6b-concept-review-b407/run-regression.ps1' -Configuration Release -Round 10",
+        "actualMSBuildCommand": [
+          "C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/MSBuild.exe",
+          "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-pure-concept-regression-4c591208\\regression-10.vcxproj",
+          "/m:1",
+          "/p:Configuration=Release",
+          "/p:Platform=x64",
+          "/v:minimal",
+          "/nologo"
+        ],
+        "actualExecutable": "D:/TEMP/海中鱼巣/WORLD-TREE-CONCEPT-FIRST-A/01a06f6b-pure-concept-regression-4c591208/output-10/Release/pure-concept-regression.exe",
+        "started": "2026-09-13T19:27:24.6437996+08:00",
+        "ended": "2026-09-13T19:27:30.7283891+08:00",
+        "buildExit": 0,
+        "runExit": 0,
+        "toolSessionId": null,
+        "osPID": null,
+        "osPIDStatus": "NOT_CAPTURED: original helper did not record child PID; unified exec completion proves exit, no PID guessed"
+      }
+    ],
+    "oldManifestSHA256": "D1EDFB5D36FC0BACD831607CD3EF88E8EB5E0E715908B048332D6F2107BAE7EA",
+    "counts": {
+      "MATCH": 1426,
+      "CHANGED": 6,
+      "MISSING": 0
+    },
+    "changedArtifacts": [
+      {
+        "path": "build-debug-10.log",
+        "category": "log_or_report",
+        "originalSHA256": "29EFCC348B51DC3E2E38E054FD42B4D765B58DE2C7F32F35AC45F856255C168F",
+        "currentSHA256": "94A5C5D93430FDBD807AC659712AEBE4A6E3F32D696E4F0C111724EF5A7A7E3B",
+        "state": "CHANGED"
+      },
+      {
+        "path": "build-release-10.log",
+        "category": "log_or_report",
+        "originalSHA256": "2F99A20A87D49BCF66F8276BF6BCDF990C6681683BCB2AF7418C7E539569D97A",
+        "currentSHA256": "300245F5740F8CC8121ADA55B5BD553C1D31C420B1E925DB15C8CCB97C72A28C",
+        "state": "CHANGED"
+      },
+      {
+        "path": "execution-debug-10.json",
+        "category": "log_or_report",
+        "originalSHA256": "D4BC87ECFC14D1158962C4FA343F7FFB0BD031E8BEFACFD3CD563D0CD4F559BC",
+        "currentSHA256": "60F29B6288EB07988EE006ABC8DDF2B8C4DA06214B4D9DDD0357B2CF1A0EAEC8",
+        "state": "CHANGED"
+      },
+      {
+        "path": "execution-release-10.json",
+        "category": "log_or_report",
+        "originalSHA256": "F57B997D5FFCE9E5F89F55831D69B1F9377C0372715083DC11259C4D6D1639E7",
+        "currentSHA256": "C5FB05D2E3B28FA8F53DA70BABAD0FABC33F07234EB7EEFA23C7E53679252478",
+        "state": "CHANGED"
+      },
+      {
+        "path": "output-10/Debug/pure-concept-regression.exe",
+        "category": "binary",
+        "originalSHA256": "673B5C8A65D9EA9F33E62E87EC8033BF584F48B31CB5E513C205B4938230D7A9",
+        "currentSHA256": "97133E520755854B648DC85D14F91C5C2F4C212B3C58C89D40AF5F42952B57EA",
+        "state": "CHANGED"
+      },
+      {
+        "path": "output-10/Release/pure-concept-regression.exe",
+        "category": "binary",
+        "originalSHA256": "60BE94541BC74668CFD1EB77942383B04358C2F077835C4BD0D6874B611B1A18",
+        "currentSHA256": "DC5304EA47AD3F2F0EF048A0C66C586B340C2783D1ED9CA23B71E7DAA3070837",
+        "state": "CHANGED"
+      }
+    ],
+    "untrackedBuildArtifactsModifiedInWindow": [
+      {
+        "path": "output-10/Debug/pure-concept-regression.pdb",
+        "category": "binary",
+        "currentSHA256": "EB0940EBC1265181E7D9D0234D162AD5132D3EE921AE0E1E0AEBCA6A34DE488A",
+        "mtimeUTC": "2026-09-13T19:27:15.686693+08:00",
+        "size": 111568896,
+        "claim": "UNTRACKED_CHANGED_IN_INCIDENT_WINDOW; no original hash available, cannot prove newly created"
+      },
+      {
+        "path": "output-10/Release/pure-concept-regression.ilk",
+        "category": "log_or_report",
+        "currentSHA256": "4F81F35842DFCC6DEE0A6FF1287703E7547F9D2177635157EF2AD58010680B84",
+        "mtimeUTC": "2026-09-13T19:27:28.219925+08:00",
+        "size": 8718632,
+        "claim": "UNTRACKED_CHANGED_IN_INCIDENT_WINDOW; no original hash available, cannot prove newly created"
+      },
+      {
+        "path": "output-10/Release/pure-concept-regression.pdb",
+        "category": "binary",
+        "currentSHA256": "461FD2FDC5036BFCC9D21ED08AB05A2757EBFA41DECFBCBE46AAFA6ADC5886B1",
+        "mtimeUTC": "2026-09-13T19:27:27.961181+08:00",
+        "size": 53606400,
+        "claim": "UNTRACKED_CHANGED_IN_INCIDENT_WINDOW; no original hash available, cannot prove newly created"
+      },
+      {
+        "path": "obj-10/Debug/pure-concept-regression.exe.recipe",
+        "category": "obj_build_temp",
+        "currentSHA256": "2F5C1CC366EFA91AD2D34A8BE030491F8CDB72AE32DDCCC53141B1A6DB19B943",
+        "mtimeUTC": "2026-09-13T19:27:17.075682+08:00",
+        "size": 376,
+        "claim": "UNTRACKED_CHANGED_IN_INCIDENT_WINDOW; no original hash available, cannot prove newly created"
+      },
+      {
+        "path": "obj-10/Debug/pure-concept-regression.ilk",
+        "category": "obj_build_temp",
+        "currentSHA256": "6EF6A78C78E1C9B7C64337AEA6B56A8382BCE634DDE4367CEFFAFE56FF4B4B35",
+        "mtimeUTC": "2026-09-13T19:27:15.97334+08:00",
+        "size": 45026338,
+        "claim": "UNTRACKED_CHANGED_IN_INCIDENT_WINDOW; no original hash available, cannot prove newly created"
+      },
+      {
+        "path": "obj-10/Release/pure-concept-regression.exe.recipe",
+        "category": "obj_build_temp",
+        "currentSHA256": "9591E8D196C07A7B0D133A9EAD90997C23B8676CE64C6814B36B5E321834D16B",
+        "mtimeUTC": "2026-09-13T19:27:29.64003+08:00",
+        "size": 378,
+        "claim": "UNTRACKED_CHANGED_IN_INCIDENT_WINDOW; no original hash available, cannot prove newly created"
+      },
+      {
+        "path": "obj-10/Release/regression-10.tlog/link.command.1.tlog",
+        "category": "obj_build_temp",
+        "currentSHA256": "2187C7BB48E16CD753D7234D5A8B2429144411E698550D5C5B22CBDDA5942D1B",
+        "mtimeUTC": "2026-09-13T19:27:28.271725+08:00",
+        "size": 11996,
+        "claim": "UNTRACKED_CHANGED_IN_INCIDENT_WINDOW; no original hash available, cannot prove newly created"
+      },
+      {
+        "path": "obj-10/Release/regression-10.tlog/link.read.1.tlog",
+        "category": "obj_build_temp",
+        "currentSHA256": "08B130A5822B12FF1F6DC42406DB0E69C25A43D4511FCFC10A9DB75DB400CB25",
+        "mtimeUTC": "2026-09-13T19:27:28.269655+08:00",
+        "size": 44592,
+        "claim": "UNTRACKED_CHANGED_IN_INCIDENT_WINDOW; no original hash available, cannot prove newly created"
+      },
+      {
+        "path": "obj-10/Release/regression-10.tlog/link.secondary.1.tlog",
+        "category": "obj_build_temp",
+        "currentSHA256": "0C73FE0ECC5F80547DCE4DAB3C7CC8461420435C1EADAFF3C30A0AB7F214F70D",
+        "mtimeUTC": "2026-09-13T19:27:28.255333+08:00",
+        "size": 3152,
+        "claim": "UNTRACKED_CHANGED_IN_INCIDENT_WINDOW; no original hash available, cannot prove newly created"
+      },
+      {
+        "path": "obj-10/Release/regression-10.tlog/link.write.1.tlog",
+        "category": "obj_build_temp",
+        "currentSHA256": "777EAC384FA0E1F249577484E5D8315EF9951FFCE4787293CF34D97CDF361110",
+        "mtimeUTC": "2026-09-13T19:27:28.257844+08:00",
+        "size": 5584,
+        "claim": "UNTRACKED_CHANGED_IN_INCIDENT_WINDOW; no original hash available, cannot prove newly created"
+      },
+      {
+        "path": "obj-10/Release/regression-10.tlog/regression-10.lastbuildstate",
+        "category": "obj_build_temp",
+        "currentSHA256": "0072EF7390F693FEADD2A153C5CA5841C87C3664B60E93EA7AB39BAFFBB77540",
+        "mtimeUTC": "2026-09-13T19:27:29.686797+08:00",
+        "size": 286,
+        "claim": "UNTRACKED_CHANGED_IN_INCIDENT_WINDOW; no original hash available, cannot prove newly created"
+      },
+      {
+        "path": "obj-10/Debug/regression-10.tlog/link.command.1.tlog",
+        "category": "obj_build_temp",
+        "currentSHA256": "D2CDBFE82C6F4AC50ECA49BA8B43B7AE864F2410716FD4F9A5A96DA62C48ADD0",
+        "mtimeUTC": "2026-09-13T19:27:16.026757+08:00",
+        "size": 12130,
+        "claim": "UNTRACKED_CHANGED_IN_INCIDENT_WINDOW; no original hash available, cannot prove newly created"
+      },
+      {
+        "path": "obj-10/Debug/regression-10.tlog/link.read.1.tlog",
+        "category": "obj_build_temp",
+        "currentSHA256": "DBF1039CA77A5F1D06EB6136DC91240C491D18F3FD8B5F33EF50CD5210EABB0E",
+        "mtimeUTC": "2026-09-13T19:27:16.025556+08:00",
+        "size": 48012,
+        "claim": "UNTRACKED_CHANGED_IN_INCIDENT_WINDOW; no original hash available, cannot prove newly created"
+      },
+      {
+        "path": "obj-10/Debug/regression-10.tlog/link.secondary.1.tlog",
+        "category": "obj_build_temp",
+        "currentSHA256": "DFFEE45D107F75D4E25795DE83C8375E247DE2DDBE145E1EF9774D9C32021EF6",
+        "mtimeUTC": "2026-09-13T19:27:16.012233+08:00",
+        "size": 3103,
+        "claim": "UNTRACKED_CHANGED_IN_INCIDENT_WINDOW; no original hash available, cannot prove newly created"
+      },
+      {
+        "path": "obj-10/Debug/regression-10.tlog/link.write.1.tlog",
+        "category": "obj_build_temp",
+        "currentSHA256": "A0037971391D1DB6B721E14A02475C060D12A0A53DA8ED04A72E7B678C8A0C95",
+        "mtimeUTC": "2026-09-13T19:27:16.015288+08:00",
+        "size": 5488,
+        "claim": "UNTRACKED_CHANGED_IN_INCIDENT_WINDOW; no original hash available, cannot prove newly created"
+      },
+      {
+        "path": "obj-10/Debug/regression-10.tlog/regression-10.lastbuildstate",
+        "category": "obj_build_temp",
+        "currentSHA256": "C4BB62BDC31ADBEAD58AD483331CCFE27FEE91633D4FB101BE07BF2BDA4EC369",
+        "mtimeUTC": "2026-09-13T19:27:17.139347+08:00",
+        "size": 284,
+        "claim": "UNTRACKED_CHANGED_IN_INCIDENT_WINDOW; no original hash available, cannot prove newly created"
+      }
+    ],
+    "productionCandidateCheck": [
+      {
+        "path": "海中鱼巣/领域/合同.相关概念添加参与.ixx",
+        "workspaceRawSHA256": "337B1E963AA7AE3FCF488D0C07DB3693E9FDD294B09CE305789AC5AC2E44EA96",
+        "candidateRawSHA256": "337B1E963AA7AE3FCF488D0C07DB3693E9FDD294B09CE305789AC5AC2E44EA96",
+        "normalizedMatch": true
+      },
+      {
+        "path": "海中鱼巣/领域/数据服务.概念树类.ixx",
+        "workspaceRawSHA256": "54988DEB62DCCE09B91F069E1346A1667F39B56D43160A7C431E6CDF34F53DEF",
+        "candidateRawSHA256": "54988DEB62DCCE09B91F069E1346A1667F39B56D43160A7C431E6CDF34F53DEF",
+        "normalizedMatch": true
+      },
+      {
+        "path": "海中鱼巣/领域/数据服务.绑定存在.ixx",
+        "workspaceRawSHA256": "12F0628E4CB9A0A8F1079323639F1AC00C68461E227A49E9B1A079702CB302B0",
+        "candidateRawSHA256": "12F0628E4CB9A0A8F1079323639F1AC00C68461E227A49E9B1A079702CB302B0",
+        "normalizedMatch": true
+      },
+      {
+        "path": "海中鱼巣/领域/数据服务.存在类.ixx",
+        "workspaceRawSHA256": "D417A5D550666CFE1FAA77FBC7381999A9509D800E904B7CA908EBE61523AF95",
+        "candidateRawSHA256": "D417A5D550666CFE1FAA77FBC7381999A9509D800E904B7CA908EBE61523AF95",
+        "normalizedMatch": true
+      },
+      {
+        "path": "海中鱼巣/领域/数据服务.场景类.ixx",
+        "workspaceRawSHA256": "0E192A74B58BE315311BA1648EC825087AA213485B80EB20D5190E4A61E5C516",
+        "candidateRawSHA256": "0E192A74B58BE315311BA1648EC825087AA213485B80EB20D5190E4A61E5C516",
+        "normalizedMatch": true
+      },
+      {
+        "path": "海中鱼巣/业务/应用服务.世界树类.ixx",
+        "workspaceRawSHA256": "1E0CA6035849CB87F5563C1C429D34FEF53F7751C700D1A8295A2C7B881B4FAE",
+        "candidateRawSHA256": "580FFEEE72B40A33860D50FA8CA4DD5E26E9422685D29939C7D549F87E4193FE",
+        "normalizedMatch": true
+      },
+      {
+        "path": "海中鱼巣/业务/应用服务.自我形成.ixx",
+        "workspaceRawSHA256": "798CB43190C90418FF3F96BFDC2E5D3B4A0576706187431ACE9E9CB985B4765C",
+        "candidateRawSHA256": "798CB43190C90418FF3F96BFDC2E5D3B4A0576706187431ACE9E9CB985B4765C",
+        "normalizedMatch": true
+      },
+      {
+        "path": "海中鱼巣/装配.普通应用.ixx",
+        "workspaceRawSHA256": "B4694CB7CA94A12835BC5DB18B48E50A157B8C3FB5D90F8C41F7F2A8E74FB615",
+        "candidateRawSHA256": "B2B6C4139A0F75CC5DF5811B30F13C762DF3F3F08A31F3F7B35179CEBFD55171",
+        "normalizedMatch": true
+      },
+      {
+        "path": "海中鱼巣/装配.普通应用.cppcpp",
+        "workspaceRawSHA256": "F0539152F548E3B73B2397FFD9051EB025E26E88EA1BE55F8F9F4B103C0272D4",
+        "candidateRawSHA256": "0ABA8E61007912978C988915E5C56C4177BB909143FDBAEFCA9B3BF0D2A4C176",
+        "normalizedMatch": true
+      },
+      {
+        "path": "海中鱼巣/启动.应用程序.ixx",
+        "workspaceRawSHA256": "ADC13AE06828B5D28B3A0A6E60459AEF194E678691FD2084525484984BB18D0C",
+        "candidateRawSHA256": "A2D99EAE8AC92BFC7B14244E90B8F442EEA0EA7D60F398D0E283F3FAB87A0623",
+        "normalizedMatch": true
+      },
+      {
+        "path": "海中鱼巣.vcxproj",
+        "workspaceRawSHA256": "B14913FDA4B5119C46E8FCAF10BD17A9DD73A723E92575EEEABE102EC0F00C65",
+        "candidateRawSHA256": "9B4B1A250468CDA3DB03F6E041B358AF1E5DD3B3C445937A7E958BA34A3CC1BC",
+        "normalizedMatch": true
+      },
+      {
+        "path": "海中鱼巣.vcxproj.filters",
+        "workspaceRawSHA256": "F1DE67EC5CBF99D5676107D012F51D1706D0EB5D4363117124C342BC1633D3E6",
+        "candidateRawSHA256": "7646B70600137C5749FB80EF9871F98C5430B3A5FF5F67C06C3299B6D4989C86",
+        "normalizedMatch": true
+      },
+      {
+        "path": "海中鱼巣/核心/L1所有者范围CRUD.数据.h",
+        "workspaceRawSHA256": "65B43194B12CEB4BF53E5B50DE8D368C1749B6ED4E07CD51AC341870D054D22D",
+        "candidateRawSHA256": "3A9419D258351468E53BF5E540372ABF04EC13A8CA09488E3F880E78ACE6ADB8",
+        "normalizedMatch": true
+      },
+      {
+        "path": "海中鱼巣/核心/服务.L1事实基座.ixx",
+        "workspaceRawSHA256": "8EC0DAEC4E0D0DBA21BA200FA0B16ACB246AC1A0E1BD96A31227B518013E7B90",
+        "candidateRawSHA256": "34B80B6FB3A991A076F4C92E74517553A00E35A7E16662214D1B2724192804CC",
+        "normalizedMatch": true
+      },
+      {
+        "path": "海中鱼巣/核心/仓库.L1事实基座.ixx",
+        "workspaceRawSHA256": "9584FEDB7085C97B3568877891B8743F355C17418EE201EF818C3192DD005CE5",
+        "candidateRawSHA256": "E9F671E5158B0E0A3CC686C30080BF7A0615CCFA5A162B04FBEE4FBDF5111885",
+        "normalizedMatch": true
+      },
+      {
+        "path": "海中鱼巣/业务/应用服务.自我形成.cppcpp",
+        "workspaceRawSHA256": "7BE09100A0A5FACC1C55B25C06F12DE61B0FD81269D9031FD7768E8C5E9FC0B2",
+        "candidateRawSHA256": "741D6B5C94E3F687289A552BE47C1C59BC3A91FA86F362CFA265F531AF38A376",
+        "normalizedMatch": true
+      },
+      {
+        "path": "海中鱼巣/领域/数据服务.世界树根.ixx",
+        "workspaceRawSHA256": "6793F54AF76E00BF76AF8ADD16104EDD83B3C1D7859D3A739CB5A9A3BB8D341B",
+        "candidateRawSHA256": "9F8DCA2B1E51207E63D2C8226B7590C81C16416197ADCE2B1474E73F264F8795",
+        "normalizedMatch": true
+      },
+      {
+        "path": "海中鱼巣/领域/合同.世界树根.ixx",
+        "workspaceRawSHA256": "40B21EC157BE7CB74B1589F63FAEDAC683D97AA6259936FB6DA8090CF84BBAB0",
+        "candidateRawSHA256": "40B21EC157BE7CB74B1589F63FAEDAC683D97AA6259936FB6DA8090CF84BBAB0",
+        "normalizedMatch": true
+      },
+      {
+        "path": "tools/l1_frozen_surface_manifest.json",
+        "workspaceRawSHA256": "43A8408BF030C2CB225705582B245EDD2630BCC7C18910A90FB38FDD3A4E7313",
+        "candidateRawSHA256": "43A8408BF030C2CB225705582B245EDD2630BCC7C18910A90FB38FDD3A4E7313",
+        "normalizedMatch": true
+      },
+      {
+        "path": "tools/check_l1_frozen_surface.py",
+        "workspaceRawSHA256": "5487E215AFFFD4E208636BA879A5486175E663AA6D8BC3724B805B7A5ECACA63",
+        "candidateRawSHA256": "C7D4A6A611C7EF869AC7CC3C4413F194480511FFE715EBB60373A2360844E867",
+        "normalizedMatch": true
+      }
+    ],
+    "priorEvidenceEffect": "Original A PASS remains historical; changed artifacts no longer match original frozen manifest. Incident runs are excluded from independent acceptance.",
+    "oldResourceWritesSinceDetection": false,
+    "oldResourceRestoreAttempted": false,
+    "pidLimitation": "No original OS child PID captured; both unified exec calls returned completion exit 0; no broad termination or kill used.",
+    "fullAuditPath": "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A/01a06f6b-concept-review-b407/incident-001/incident.json"
+  },
+  "productionWritesByReviewer": false,
+  "gitWritesByReviewer": false,
+  "overallFrozenClaim": false,
+  "newTestsPaused": true
+}

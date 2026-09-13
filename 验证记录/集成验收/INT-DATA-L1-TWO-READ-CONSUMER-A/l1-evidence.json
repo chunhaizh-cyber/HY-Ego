@@ -1,0 +1,581 @@
+{
+  "schema_version": 1,
+  "acceptance_id": "INT-DATA-L1-TWO-READ-CONSUMER-A",
+  "reviewer": "/root/world_tree_execute",
+  "review_independence": "Reviewer did not author the L1 implementation under review.",
+  "observed_at": "2026-09-13T19:34:27.481968+08:00",
+  "candidate": {
+    "commit": "f5dda0a5ec920e8ebe72f441c813bf8151b2f946",
+    "tree": "6e55b4059ee56c93c8ffe64f16f9ecb5f304d5ca",
+    "origin_main_equal": true,
+    "snapshot_method": "git archive exact commit"
+  },
+  "scope": {
+    "included": [
+      "original 43 frozen DATA-L1 operations",
+      "读取所有者范围空域",
+      "读取节点全部当前引用",
+      "45-operation frozen surface",
+      "4015 section 9.5",
+      "4080 nine groups"
+    ],
+    "excluded": [
+      "concept consumer acceptance",
+      "world/self acceptance",
+      "whole-project build and production-isolation integration"
+    ]
+  },
+  "conclusion": "L1_SUBREVIEW_PASS",
+  "overall_4080_status": "PENDING_ACCEPTANCE",
+  "inputs": {
+    "candidate_sources": [
+      {
+        "repo_path": "海中鱼巣/核心/合同.L1公共事实.ixx",
+        "git_blob": "d898ff4c2272ad89ac57ebb27cdf08c2bf2eff89",
+        "sha256": "59eedd7061420a3a8ecf2744d8c8f2951b71b1da36108fba087e801384fc88bc",
+        "bytes": 140
+      },
+      {
+        "repo_path": "海中鱼巣/核心/合同.L1所有者范围CRUD.ixx",
+        "git_blob": "831248a6a23d73978abcd824789660f2b9b9f79b",
+        "sha256": "c743f9acf6a65e2f6abb3a2a47befe96b950e9c2fbe8dc272c949e2b049044a4",
+        "bytes": 362
+      },
+      {
+        "repo_path": "海中鱼巣/核心/合同.L1中性CRUD.ixx",
+        "git_blob": "f9ab4cf5758478be12c54e7b43205cc89aa17126",
+        "sha256": "bdf45adf835442cdd1a1cb0b56e100ebd431a9b0f8a4be60e82649be52237b84",
+        "bytes": 375
+      },
+      {
+        "repo_path": "海中鱼巣/核心/合同.L1事实基座.ixx",
+        "git_blob": "1aec03e6aba2613abccef3b292e0a790bcd38a1e",
+        "sha256": "e30bbb5d938f21ccc8c3975367ac0e3758e12de9d63fd7698ac27aa1eb8c4371",
+        "bytes": 459
+      },
+      {
+        "repo_path": "海中鱼巣/核心/仓库.L1事实基座.ixx",
+        "git_blob": "7ef7c106a4eb0b2f0b9c64be4eb5ca20dfbc0926",
+        "sha256": "1f20750e4b4ee0176f5dc1bc9fdf7868e998cb7a8eb3b5ef4cb99aa974ed5b59",
+        "bytes": 442547
+      },
+      {
+        "repo_path": "海中鱼巣/核心/服务.L1事实基座.ixx",
+        "git_blob": "83eb88219e1e97de949ad343237e316717d1a08c",
+        "sha256": "8ec0daec4e0d0dba21ba200fa0b16acb246ac1a0e1bd96a31227b518013e7b90",
+        "bytes": 57792
+      },
+      {
+        "repo_path": "海中鱼巣/核心/L1公共事实.数据.h",
+        "git_blob": "d8e128e1ebf6a1d46c38051427b7e912a676cef2",
+        "sha256": "493531c9ae313b23b73d28f04f27f9885f3e7fff647bd8c4a8c76a11a0c2b018",
+        "bytes": 555
+      },
+      {
+        "repo_path": "海中鱼巣/核心/L1所有者范围CRUD.数据.h",
+        "git_blob": "063232b70136e1b63fbbd86f4701cb1314d8c864",
+        "sha256": "7be6b4c26669b7c79aa1f9a2b3e2ca8b4477c8becaa603a9ef527a139a129c2a",
+        "bytes": 53668
+      },
+      {
+        "repo_path": "海中鱼巣/核心/L1中性CRUD.数据.h",
+        "git_blob": "000355ef64dd40e86fa204758699fbeb45c95062",
+        "sha256": "bf394dc1bff90cfd7eb23de9ffd00810359b88dd9e69f1031267bee1f9a3092e",
+        "bytes": 21405
+      },
+      {
+        "repo_path": "海中鱼巣/核心/L1事实基座.数据.h",
+        "git_blob": "2c8a5d6fbcb34d20b909de0d8e83c0dc3e004c36",
+        "sha256": "161bd43341d3c320902e361fd76918ff7e24a030d02b253bbdc608d5886fa4fd",
+        "bytes": 8564
+      },
+      {
+        "repo_path": "海中鱼巣/核心/L1事实基座持久恢复.数据.h",
+        "git_blob": "5b9f04311a7f49368ffc8259a8b43b8e5f03a5a8",
+        "sha256": "1573de06243c7fe63de885302688e3754b90a72c06fdc0f2dc8f3418eae0b478",
+        "bytes": 2295
+      }
+    ],
+    "historical_drivers": [
+      {
+        "repo_path": "海中鱼巣/端到端测试.L1事实基座持久恢复.ixx",
+        "source_commit": "f8805cb3d0142aaaacce87b6351b4b7cac1c22c1",
+        "git_blob": "3e936dad8c444a40fe0e7d3304f898c4e4fbae87",
+        "original_sha256": "967934188552150c512c296be4dac563992a7dcf691a2ce5a19bd06cc30d9456",
+        "executed_sha256": "aea4a102a2ead6775d84c527a607832a652c9ad290d3478ebf80082425fbee18",
+        "mechanical_diff": "historical-recovery-root.diff"
+      },
+      {
+        "repo_path": "海中鱼巣/端到端测试.DATA-L1有限N分区原子事务.ixx",
+        "source_commit": "f8805cb3d0142aaaacce87b6351b4b7cac1c22c1",
+        "git_blob": "9cdd6ffec7d3e5e8b6c596ee35d6590efb2143bb",
+        "original_sha256": "355ef8d1993f3697f6fb9a8f36dd0c67a8a97ac45dfaec743018372ca1e13528",
+        "executed_sha256": "41cb107278c2b6d8b0bb7476e9034923d679ba584d7768aa881070301ce803e3",
+        "mechanical_diff": "historical-v3-root.diff"
+      }
+    ],
+    "drivers": [
+      {
+        "path": "src/regression.cpp",
+        "prior_sha256": "ebc32134dd7f5b1854ca0c1826e947b0918ab8b683c9245b34ce557a1e369478",
+        "executed_sha256": "ebc32134dd7f5b1854ca0c1826e947b0918ab8b683c9245b34ce557a1e369478",
+        "change": "byte-identical"
+      },
+      {
+        "path": "src/new_reads.cpp",
+        "prior_sha256": "f9ed0318004e1cef37bed8d2b53334c411b19f0e2b6d662b2c68c9a237246c25",
+        "executed_sha256": "11a049e46301a3e8d71c4e243ea30f39da57a62cac4c7bc6321e4f7171c6b8e5",
+        "change": "exclusive runtime root only",
+        "mechanical_diff": "new-reads-root.diff"
+      },
+      {
+        "path": "l1_regression.vcxproj",
+        "prior_sha256": "46135a7dc93b90b28654fd8604b7e088481d8cb38f21b906b4d7c4c8a2b5888c",
+        "executed_sha256": "46135a7dc93b90b28654fd8604b7e088481d8cb38f21b906b4d7c4c8a2b5888c",
+        "change": "byte-identical"
+      },
+      {
+        "path": "operation-coverage.json",
+        "prior_sha256": "9a1f8ca707b95cbf81c84e52fa8fa247eb0fe82f0c1cf6710c03a1d12be537a5",
+        "executed_sha256": "9a1f8ca707b95cbf81c84e52fa8fa247eb0fe82f0c1cf6710c03a1d12be537a5",
+        "change": "byte-identical; independently reviewed against driver call sites"
+      }
+    ],
+    "fixed_fixtures": [
+      {
+        "repo_path": "海中鱼巣/测试材料/DATA-L1-FINAL-CLOSURE/载荷格式1/manifest.bin",
+        "git_blob": "8dc2f739f54e9ecf9f17f9da67e8b83102957ad5",
+        "sha256": "4a63b5fa36cb1ffce7734d55435af26f09631b6eb3ee1ffcd12dc46985a6ff63",
+        "bytes": 69
+      },
+      {
+        "repo_path": "海中鱼巣/测试材料/DATA-L1-FINAL-CLOSURE/载荷格式1/provenance.json",
+        "git_blob": "8f8251c99b5b5d973084c2df18168c13bac57d21",
+        "sha256": "cd4029a85e29440744158f13d986a9938162f369c141323754db119fe6049d8e",
+        "bytes": 1700
+      },
+      {
+        "repo_path": "海中鱼巣/测试材料/DATA-L1-FINAL-CLOSURE/载荷格式1/snapshot-a.bin",
+        "git_blob": "ea5453d5a06f7cb21a42cd31c00e0a094302b3cd",
+        "sha256": "eca97e5aa51146590097ed5c1d2ef397d839e1482b1cd8fd2b421b0f17f5330a",
+        "bytes": 1430
+      },
+      {
+        "repo_path": "海中鱼巣/测试材料/DATA-L1-FINAL-CLOSURE/载荷格式1/snapshot-b.bin",
+        "git_blob": "a0c8da949beb12906aedc1b7982d0db253d436c3",
+        "sha256": "3ef046fe80a59182cae7c506be8e3d4a8cb9b8a9043f03a4a99cf8e25a4791ea",
+        "bytes": 967
+      },
+      {
+        "repo_path": "海中鱼巣/测试材料/DATA-L1-FINAL-CLOSURE/载荷格式2/manifest.bin",
+        "git_blob": "a39067bebc7d0443736f41804f4a88edaadcf766",
+        "sha256": "406866618be48117deceffc26fb0dea2cb6f545ff1d607996600310252fa60c6",
+        "bytes": 69
+      },
+      {
+        "repo_path": "海中鱼巣/测试材料/DATA-L1-FINAL-CLOSURE/载荷格式2/provenance.json",
+        "git_blob": "1c2f15d9ab30e1df2b4f66be43a218cfd5f285c0",
+        "sha256": "530f48b7502c15400ca49adce13a8c3050809a180c6575f8f23f460b8debfe0a",
+        "bytes": 1927
+      },
+      {
+        "repo_path": "海中鱼巣/测试材料/DATA-L1-FINAL-CLOSURE/载荷格式2/snapshot-a.bin",
+        "git_blob": "8e3838adc8af7179e0a0229295066e28dcd5b7f9",
+        "sha256": "89675ef4807a62f898193b569c683b0065061de050d9168e9cdee3cc56c878e3",
+        "bytes": 1632
+      },
+      {
+        "repo_path": "海中鱼巣/测试材料/DATA-L1-FINAL-CLOSURE/载荷格式2/snapshot-b.bin",
+        "git_blob": "c1458b387e083cc362f0ef072ecc128a6df8ec1a",
+        "sha256": "cc3a4a3f99eb4865cb573aff461188aef4c6fa2fb7c19c27e3dec3a35661cfb6",
+        "bytes": 2631
+      }
+    ],
+    "integrity": {
+      "candidate_archive_sha256": "dbcc87b138a3f6b017b18b1f9cec30546edca2c9bec5d42cdcb73670030daaa9",
+      "historical_archive_sha256": "ae1ce4e9e5047f2e180d1c9356a2391716b95c09024bf64cc759159ec045f24d",
+      "candidate_source_matches": 11,
+      "candidate_source_total": 11,
+      "fixed_fixture_matches": 8,
+      "fixed_fixture_total": 8,
+      "operation_callsite_matches": 45,
+      "operation_callsite_total": 45
+    },
+    "frozen_inputs": [
+      {
+        "repo_path": "海中鱼巣/核心/仓库.L1事实基座.ixx",
+        "git_blob": "7ef7c106a4eb0b2f0b9c64be4eb5ca20dfbc0926",
+        "sha256": "1f20750e4b4ee0176f5dc1bc9fdf7868e998cb7a8eb3b5ef4cb99aa974ed5b59"
+      },
+      {
+        "repo_path": "海中鱼巣/核心/服务.L1事实基座.ixx",
+        "git_blob": "83eb88219e1e97de949ad343237e316717d1a08c",
+        "sha256": "8ec0daec4e0d0dba21ba200fa0b16acb246ac1a0e1bd96a31227b518013e7b90"
+      },
+      {
+        "repo_path": "海中鱼巣/核心/L1所有者范围CRUD.数据.h",
+        "git_blob": "063232b70136e1b63fbbd86f4701cb1314d8c864",
+        "sha256": "7be6b4c26669b7c79aa1f9a2b3e2ca8b4477c8becaa603a9ef527a139a129c2a"
+      },
+      {
+        "repo_path": "tools/l1_frozen_surface_manifest.json",
+        "git_blob": "ae65c6660ae81c6dd7700c5ed5dee5f2bba30cc8",
+        "sha256": "43a8408bf030c2cb225705582b245edd2630bcc7c18910a90fb38fdd3a4e7313"
+      },
+      {
+        "repo_path": "tools/check_l1_frozen_surface.py",
+        "git_blob": "714ba4b1f489ae1db9e74be60964f7cac8f3abee",
+        "sha256": "c7d4a6a611c7ef869ac7cc3c4413f194480511ffe715ebb60373a2360844e867"
+      }
+    ]
+  },
+  "commands": {
+    "build_debug": "\"C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/MSBuild.exe\" l1_regression.vcxproj /t:Rebuild /m:1 /p:Configuration=Debug /p:Platform=x64 /v:minimal",
+    "run_debug": "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-l1-review-a913\\bin\\Debug\\l1_regression.exe",
+    "build_release": "\"C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/MSBuild.exe\" l1_regression.vcxproj /t:Rebuild /m:1 /p:Configuration=Release /p:Platform=x64 /v:minimal",
+    "run_release": "D:\\TEMP\\海中鱼巣\\INT-DATA-L1-TWO-READ-CONSUMER-A\\01a06f6b-l1-review-a913\\bin\\Release\\l1_regression.exe",
+    "frozen_strict": "py -3.14 -B tools/check_l1_frozen_surface.py --strict (cwd=candidate-repo)",
+    "specs_strict": "py -3.14 -B tools/check_specs.py --strict (cwd=candidate-repo)"
+  },
+  "results": {
+    "debug": {
+      "build_exit": 0,
+      "warnings": 0,
+      "errors": 0,
+      "run_exit": 0,
+      "assertions": 322,
+      "legacy_recovery": 0,
+      "legacy_atomic": 0,
+      "new_reads": 0
+    },
+    "release": {
+      "build_exit": 0,
+      "warnings": 0,
+      "errors": 0,
+      "run_exit": 0,
+      "assertions": 322,
+      "legacy_recovery": 0,
+      "legacy_atomic": 0,
+      "new_reads": 0
+    },
+    "frozen_surface": {
+      "exit": 0,
+      "operation_count": 45,
+      "frozen_file_count": 5
+    },
+    "specs_strict": {
+      "exit": 0,
+      "entry_count": 124
+    }
+  },
+  "new_read_coverage_4015_9_5": [
+    "unused owner remains empty after unrelated write at fresh G",
+    "different-key live facts and owner idempotency ledger make scope nonempty",
+    "history-only and tombstone-only owners remain nonempty across controlled recovery",
+    "legacy shared owner returns scope unsupported",
+    "entry, stale-G and budget failures clear optional/vector payload and preserve G",
+    "seven reference positions, self-reference dedup, cross-owner and unknown relation type",
+    "zero-reference set, exited node, tombstoned node and non-node identity",
+    "real two-thread stale empty proof and simultaneous same-G writes",
+    "controlled persistent restart rebuilds authoritative reverse index"
+  ],
+  "matrix_4080": [
+    {
+      "group": 1,
+      "status": "PASS",
+      "evidence": [
+        "legacy recovery",
+        "R02"
+      ],
+      "claim": "node/relation/value create, read, replace, exit, history and tombstone"
+    },
+    {
+      "group": 2,
+      "status": "PASS",
+      "evidence": [
+        "legacy recovery",
+        "V02-V05",
+        "R01",
+        "C01"
+      ],
+      "claim": "slot, closure, generations, exact duplicate/conflict, zero-change failure, concurrency"
+    },
+    {
+      "group": 3,
+      "status": "PASS",
+      "evidence": [
+        "O01",
+        "L01",
+        "legacy recovery"
+      ],
+      "claim": "owner lifecycle and owner-scoped exact/group/consistent reads"
+    },
+    {
+      "group": 4,
+      "status": "PASS",
+      "evidence": [
+        "V01",
+        "V06"
+      ],
+      "claim": "v1/v2/v3 and N=2/3/4/8/255 compatibility"
+    },
+    {
+      "group": 5,
+      "status": "PASS",
+      "evidence": [
+        "legacy recovery",
+        "V07",
+        "P02"
+      ],
+      "claim": "format3 authority, histories, ledgers and reverse-index recovery"
+    },
+    {
+      "group": 6,
+      "status": "PASS",
+      "evidence": [
+        "V08",
+        "candidate fixed fixtures and provenance"
+      ],
+      "claim": "real fixed format1/2 samples recover, replay and continue v3"
+    },
+    {
+      "group": 7,
+      "status": "PASS",
+      "evidence": [
+        "legacy recovery",
+        "P03"
+      ],
+      "claim": "unknown versions and known corruption fail closed"
+    },
+    {
+      "group": 8,
+      "status": "PASS",
+      "evidence": [
+        "legacy recovery",
+        "P01",
+        "P03"
+      ],
+      "claim": "manifest/slot/length/hash/tag, real second-process occupancy and inactive-slot non-fallback"
+    },
+    {
+      "group": 9,
+      "status": "PASS_IN_L1_SUBREVIEW",
+      "evidence": [
+        "45 frozen strict",
+        "124 specs strict",
+        "Debug/Release rebuild and same driver"
+      ],
+      "boundary": "whole-project build and production self-test isolation are integrated by root"
+    }
+  ],
+  "acceptance_scenarios": [
+    {
+      "scenario": "成功",
+      "status": "PASS",
+      "evidence": [
+        "E01",
+        "R01",
+        "V01",
+        "V07",
+        "V08"
+      ]
+    },
+    {
+      "scenario": "精确重复",
+      "status": "PASS",
+      "evidence": [
+        "V02",
+        "V06",
+        "V07",
+        "V08",
+        "owner reissue"
+      ]
+    },
+    {
+      "scenario": "合法拒绝",
+      "status": "PASS",
+      "evidence": [
+        "E01",
+        "R01",
+        "E02",
+        "V03-V05"
+      ],
+      "zero_change_checked": true
+    },
+    {
+      "scenario": "外部失败",
+      "status": "PASS_FOR_EXECUTED_STORAGE_FAILURES",
+      "evidence": [
+        "P01",
+        "P03",
+        "legacy corruption matrix"
+      ],
+      "boundary": "resource exhaustion not run"
+    },
+    {
+      "scenario": "并发",
+      "status": "PASS",
+      "evidence": [
+        "C01"
+      ],
+      "claim": "real threads, stale proof rejected, same-G exactly one publication"
+    },
+    {
+      "scenario": "崩溃恢复",
+      "status": "NOT_RUN",
+      "evidence": [
+        "P02 controlled destruction/reopen only"
+      ],
+      "reason": "kill, power and media faults outside authorized matrix"
+    },
+    {
+      "scenario": "正式读回",
+      "status": "PASS",
+      "evidence": [
+        "legacy recovery",
+        "L01",
+        "P02",
+        "V08"
+      ]
+    },
+    {
+      "scenario": "正式构建",
+      "status": "PASS_FOR_ISOLATED_L1_TARGET",
+      "evidence": [
+        "Debug/Release Rebuild 0 warnings 0 errors"
+      ],
+      "boundary": "root owns whole-project build and production isolation"
+    }
+  ],
+  "diagnostic_responsibility": [
+    {
+      "function": "L1事实基座服务::读取所有者范围空域(const L1所有者范围空域读取请求&) const noexcept",
+      "service_lines": "633-635,1106-1114",
+      "repository_lines": "2611-2744",
+      "responsibility": "向上送出; structured status; no local log"
+    },
+    {
+      "function": "L1事实基座服务::读取节点全部当前引用(const L1节点当前引用读取请求&) const noexcept",
+      "service_lines": "637-639,1116-1123",
+      "repository_lines": "2748 onward",
+      "responsibility": "向上送出; structured status; no local log"
+    }
+  ],
+  "not_run": [
+    "real process kill or crash injection",
+    "power loss",
+    "physical media faults",
+    "actual resource exhaustion",
+    "long-duration reliability or performance stress",
+    "private state/index mutation",
+    "arbitrary unregistered legacy layouts",
+    "concept consumer acceptance (separate reviewer)",
+    "world/self acceptance",
+    "whole-project build (root integration evidence)"
+  ],
+  "artifacts": [
+    {
+      "path": "logs/build-debug.log",
+      "sha256": "cc047e29d024f5a53a6662663a518365d2bda479b7012fd41725ec4174223b4e",
+      "bytes": 32120
+    },
+    {
+      "path": "logs/build-debug.exit",
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "bytes": 3
+    },
+    {
+      "path": "logs/run-debug.log",
+      "sha256": "3ff25bd1e05e61943572e0bffef2d4aacca5ee921a1f63731a597fb90c654581",
+      "bytes": 2502
+    },
+    {
+      "path": "logs/run-debug.exit",
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "bytes": 3
+    },
+    {
+      "path": "logs/build-release-final.log",
+      "sha256": "49955f158e18e404b08912d0d6d4167d606aa9a650568e06c54eec02d88bbc71",
+      "bytes": 31527
+    },
+    {
+      "path": "logs/build-release-final.exit",
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "bytes": 3
+    },
+    {
+      "path": "logs/run-release.log",
+      "sha256": "0dfab718d4fa8b72b2705badc038d0af0cb26ab5d0b96159230d08832fa676e0",
+      "bytes": 2502
+    },
+    {
+      "path": "logs/run-release.exit",
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "bytes": 3
+    },
+    {
+      "path": "logs/l1-frozen-strict.log",
+      "sha256": "09d46e3ded27c667c99f19cb1e91e063d7311d4c86b925f38a64961074ef137a",
+      "bytes": 87
+    },
+    {
+      "path": "logs/l1-frozen-strict.exit",
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "bytes": 3
+    },
+    {
+      "path": "logs/specs-strict.log",
+      "sha256": "95be1bf4c35ff7ef3dc14ae4e96ce224dc4fe83cd4a008e8a8488ee7507fff55",
+      "bytes": 77
+    },
+    {
+      "path": "logs/specs-strict.exit",
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "bytes": 3
+    },
+    {
+      "path": "bin/Debug/l1_regression.exe",
+      "sha256": "93df3961770101646d55c2cb23a69f9d52b0222de9acf44b9e4c9e9dfd4b778c",
+      "bytes": 5322240
+    },
+    {
+      "path": "bin/Release/l1_regression.exe",
+      "sha256": "ad5a018e121771e86ddc8b8a29a3f7443f200d6314d27a1fa483c363eed65195",
+      "bytes": 1601536
+    },
+    {
+      "path": "operation-coverage.json",
+      "sha256": "9a1f8ca707b95cbf81c84e52fa8fa247eb0fe82f0c1cf6710c03a1d12be537a5",
+      "bytes": 27501
+    },
+    {
+      "path": "historical-recovery-root.diff",
+      "sha256": "aa5dec5443bba6aae8cd0831e0745625eed1e90671fdfa6211a2f818ea941798",
+      "bytes": 1989
+    },
+    {
+      "path": "historical-v3-root.diff",
+      "sha256": "8d2a52e0b154374aeec59136344414f36c29acd729db561afa381c2e7b09ae9c",
+      "bytes": 2043
+    },
+    {
+      "path": "new-reads-root.diff",
+      "sha256": "dd6d78bd105d40fcd4f71571efae16791750944c070cb25341619fd5b737b051",
+      "bytes": 1562
+    }
+  ],
+  "prior_evidence_reference": {
+    "path": "D:\\TEMP\\海中鱼巣\\WORLD-TREE-CONCEPT-FIRST-A\\01a06f6b-l1-regression-9fb37420\\revision-owner-value-01",
+    "result_sha256": "46fc7cc4991285b2af159b32420df7624fdafa2e55e2d6bb2b7175762913827e",
+    "artifact_manifest_sha256": "06172ce2f014692de91a70f30e4d52acce5ade33abb261703bc2e756c21fec7f",
+    "use": "driver provenance only; all current builds and runs were produced independently in this review root"
+  },
+  "temp_evidence": {
+    "root": "D:/TEMP/海中鱼巣/INT-DATA-L1-TWO-READ-CONSUMER-A/01a06f6b-l1-review-a913",
+    "bundle_sha256": "7f876e77848cf99eb40014d923fc72cb1acc3f100062f6d3403e82bda92d7220",
+    "artifact_index": "artifact-index.json",
+    "artifact_index_sha256": "91b0288b3ac7bbfc9197031552c4e332d78972ad816f3c043edef97ae22bf146",
+    "artifact_count": 8691
+  }
+}
