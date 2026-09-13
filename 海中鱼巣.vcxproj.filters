@@ -144,6 +144,9 @@
     <ClCompile Include="海中鱼巣\领域\合同.世界树根.ixx">
       <Filter>领域\合同</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\合同.相关概念添加参与.ixx">
+      <Filter>领域\合同</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\合同.场景角色组织.ixx">
       <Filter>领域\合同</Filter>
     </ClCompile>

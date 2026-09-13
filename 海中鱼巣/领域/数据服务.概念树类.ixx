@@ -23,18 +23,12 @@ module;
 
 export module 海中鱼巣.领域.数据服务.概念树类;
 
+export import 海中鱼巣.领域.合同.相关概念添加参与;
 export import 海中鱼巣.领域.数据服务.存在类;
 export import 海中鱼巣.领域.数据服务.场景类;
 
 export namespace 海中鱼巣 {
 
-struct 概念树概念身份 final {
-    稳定编码 值{};
-    概念树概念身份() = default;
-    explicit 概念树概念身份(稳定编码 编码) : 值(编码) {
-    }
-    friend bool operator==(const 概念树概念身份 &, const 概念树概念身份 &) = default;
-};
 struct 概念树规则身份 final {
     稳定编码 值{};
     概念树规则身份() = default;
@@ -42,62 +36,8 @@ struct 概念树规则身份 final {
     }
     friend bool operator==(const 概念树规则身份 &, const 概念树规则身份 &) = default;
 };
-struct 概念树存在引用 final {
-    稳定编码 值{};
-    概念树存在引用() = default;
-    explicit 概念树存在引用(稳定编码 编码) : 值(编码) {
-    }
-    friend bool operator==(const 概念树存在引用 &, const 概念树存在引用 &) = default;
-};
-struct 概念树特征类型引用 final {
-    稳定编码 值{};
-    概念树特征类型引用() = default;
-    explicit 概念树特征类型引用(稳定编码 编码) : 值(编码) {
-    }
-    friend bool operator==(const 概念树特征类型引用 &, const 概念树特征类型引用 &) = default;
-};
-struct 概念树特征引用 final {
-    稳定编码 值{};
-    概念树特征引用() = default;
-    explicit 概念树特征引用(稳定编码 编码) : 值(编码) {
-    }
-    friend bool operator==(const 概念树特征引用 &, const 概念树特征引用 &) = default;
-};
-struct 概念树场景引用 final {
-    稳定编码 值{};
-    概念树场景引用() = default;
-    explicit 概念树场景引用(稳定编码 id) : 值(id) {
-    }
-    friend bool operator==(const 概念树场景引用 &, const 概念树场景引用 &) = default;
-};
-using 概念树世界引用 = std::variant<概念树存在引用, 概念树特征引用>;
-using 概念树形成世界引用 =
-    std::variant<概念树存在引用, 概念树特征引用, 概念树特征类型引用, 概念树场景引用>;
-using 概念树精确值 = std::variant<std::int64_t, std::vector<std::int64_t>, std::vector<std::uint64_t>>;
-struct 概念树I64区间 final {
-    std::int64_t 下界 = 0;
-    std::int64_t 上界 = 0;
-    friend bool operator==(const 概念树I64区间 &, const 概念树I64区间 &) = default;
-};
-using 概念树特征值域 = std::variant<概念树精确值, 概念树I64区间>;
-struct 概念树特征定义 final {
-    概念树存在引用 形成宿主;
-    概念树特征类型引用 特征类型;
-    概念树特征值域 值域;
-    friend bool operator==(const 概念树特征定义 &, const 概念树特征定义 &) = default;
-};
-struct 概念树存在定义 final {
-    std::vector<概念树概念身份> 特征模板组;
-    friend bool operator==(const 概念树存在定义 &, const 概念树存在定义 &) = default;
-};
 
-using 概念树定义 = std::variant<概念树特征定义, 概念树存在定义>;
 
-struct 概念树来源项 final {
-    概念树世界引用 世界事实;
-    std::uint64_t 证据截止 = 0;
-    friend bool operator==(const 概念树来源项 &, const 概念树来源项 &) = default;
-};
 struct 概念树读取头 final {
     std::uint32_t 合同版本 = 1;
     std::uint64_t Gread = 0;
@@ -109,17 +49,6 @@ struct 概念树写入头 final {
     std::uint64_t 期望事实代次 = 0;
     std::uint64_t 幂等身份 = 0;
     friend bool operator==(const 概念树写入头 &, const 概念树写入头 &) = default;
-};
-struct 概念树预算 final {
-    std::uint64_t 最大概念数 = 0;
-    std::uint64_t 最大关系数 = 0;
-    std::uint64_t 最大来源数 = 0;
-    std::uint64_t 最大支持数 = 0;
-    std::uint64_t 最大世界成员数 = 0;
-    std::uint64_t 最大特征属性数 = 0;
-    std::uint64_t 最大动态槽数 = 0;
-    std::uint64_t 最大动态模板数 = 0;
-    friend bool operator==(const 概念树预算 &, const 概念树预算 &) = default;
 };
 enum class 概念树根角色 : std::uint8_t {
     存在 = 1,
@@ -219,18 +148,6 @@ struct 概念树结构交付 final {
     friend bool operator==(const 概念树结构交付 &, const 概念树结构交付 &) = default;
 };
 
-struct 概念树生命周期 final {
-    std::uint64_t 创建事实代次 = 0;
-    std::optional<std::uint64_t> 退出事实代次;
-    friend bool operator==(const 概念树生命周期 &, const 概念树生命周期 &) = default;
-};
-struct 概念树直接上位事实 final {
-    稳定编码 关系{};
-    概念树概念身份 上位;
-    概念树概念身份 下位;
-    概念树生命周期 生命周期;
-    friend bool operator==(const 概念树直接上位事实 &, const 概念树直接上位事实 &) = default;
-};
 struct 概念树来源事实 final {
     稳定编码 记录{};
     稳定编码 成员关系{};
@@ -268,14 +185,6 @@ struct 概念树支持事实 final {
     std::uint64_t 证据H = 0;
     概念树生命周期 记录生命周期;
     friend bool operator==(const 概念树支持事实 &, const 概念树支持事实 &) = default;
-};
-struct 概念树形成引用事实 final {
-    稳定编码 关系{};
-    稳定编码 记录{};
-    概念树概念身份 所属概念;
-    概念树形成世界引用 世界引用;
-    概念树生命周期 关系生命周期;
-    friend bool operator==(const 概念树形成引用事实 &, const 概念树形成引用事实 &) = default;
 };
 
 struct 概念树概念建立请求 final {
@@ -812,7 +721,7 @@ struct 概念树共享写入结果 final {
     bool 成功() const noexcept;
 };
 
-class 概念树类数据服务 final {
+class 概念树类数据服务 final : public 相关概念添加参与者 {
     using S = 概念树数据状态;
     using P = 概念树发布状态;
     using N = L1所有者范围节点事实;
@@ -822,6 +731,9 @@ class 概念树类数据服务 final {
     using Key = L1所有者范围写集本地键;
     struct 失败 {
         S 状态;
+    };
+    struct 相关失败 {
+        相关概念参与状态 状态;
     };
     struct 概念展开 {
         概念树概念事实 事实;
@@ -840,6 +752,24 @@ class 概念树类数据服务 final {
     概念树类数据服务(const L1事实基座服务 &, const 特征类数据服务 &, const 存在类数据服务 &,
                      const 特征值类数据服务 &, L1所有者范围写端口 &&, const 概念树结构交付 &,
                      const 概念树共享结构交付 &);
+    bool 绑定于(const L1事实基座服务 &x) const noexcept override { return &l1_ == &x; }
+    相关概念参与片段 准备相关概念片段(const 相关概念参与请求 &,
+                                         std::uint64_t Gread,
+                                         L1有限N分区原子参与者身份_v3) const noexcept override;
+    相关概念组合提交结果 提交相关概念组合事务(
+        const 相关概念组合提交请求 &,
+        std::span<L1所有者范围写端口 *const>) noexcept override;
+    相关概念参与读回 读取相关概念结果(const 相关概念参与请求 &,
+                                         std::uint64_t Gread,
+                                         std::uint64_t H) const noexcept override;
+    概念树类数据服务(const L1事实基座服务 &, const 特征类数据服务 &,
+                     const 存在类数据服务 &, const 特征值类数据服务 &,
+                     const 场景类数据服务 &, L1所有者范围写端口 &&,
+                     const 相关概念结构交付 &);
+    概念树类数据服务(const L1事实基座服务 &, const 特征类数据服务 &,
+                     const 存在类数据服务 &, const 特征值类数据服务 &,
+                     const 场景类数据服务 &, L1所有者范围写端口 &&,
+                     const 概念树结构交付 &, const 相关概念结构交付 &);
     bool 使用特征存在服务(const 特征类数据服务 &f, const 存在类数据服务 &e) const noexcept {
         return &features_ == &f && &existences_ == &e;
     }
@@ -851,8 +781,8 @@ class 概念树类数据服务 final {
         const 特征值类数据服务&, L1所有者范围写端口&&, const 概念树结构交付&,
         const 特征概念结构交付&, const 概念树存在扩展交付&);
     bool 使用同一场景基座(const 场景类数据服务 &s) const noexcept { return s.绑定于(l1_); }
-    概念树概念身份 特征根引用() const noexcept { return layout_.根组.特征根; }
-    概念树概念身份 存在根引用() const noexcept { return layout_.根组.存在根; }
+    概念树概念身份 特征根引用() const noexcept { return layout_ ? layout_->根组.特征根 : 概念树概念身份{}; }
+    概念树概念身份 存在根引用() const noexcept { return layout_ ? layout_->根组.存在根 : 概念树概念身份{}; }
     概念树应用读取结果<概念树应用定义事实> 读取应用概念定义(const 概念树应用定义读取请求 &) const;
     概念树应用读取结果<概念树应用图事实> 读取应用概念图(const 概念树应用图读取请求 &) const;
     概念树应用读取结果<概念树应用模板事实> 读取应用特征模板(const 概念树应用模板读取请求 &) const;
@@ -885,7 +815,7 @@ class 概念树类数据服务 final {
 
 
     概念树概念身份 动态根引用() const noexcept {
-        return layout_.根组.动态根;
+        return layout_ ? layout_->根组.动态根 : 概念树概念身份{};
     }
     概念树截止结果 读取当前事实代次() const;
 
@@ -943,7 +873,34 @@ class 概念树类数据服务 final {
     const 存在类数据服务 &existences_;
     const 特征值类数据服务 &values_;
     L1所有者范围写端口 port_;
-    概念树结构交付 layout_;
+    std::optional<概念树结构交付> layout_;
+    const 场景类数据服务 *scenes_ = nullptr;
+    std::optional<相关概念结构交付> related_layout_;
+    const 概念树结构交付 &旧布局() const {
+        if (!layout_) throw 失败{S::旧格式不支持};
+        return *layout_;
+    }
+    void 校验相关概念布局(std::uint64_t) const;
+    struct 相关概念展开 final {
+        概念树概念身份 概念;
+        相关概念类别 类别 = 相关概念类别::存在;
+        概念树定义 定义;
+        std::vector<概念树直接上位事实> 直接上位;
+        std::vector<概念树形成引用事实> 挂接;
+        概念树生命周期 生命周期;
+    };
+    相关概念展开 展开相关概念(概念树概念身份, std::uint64_t,
+                                  std::uint64_t, const 相关概念读取预算 &) const;
+    相关概念完整事实 读取相关概念内部(const 相关概念参与请求 &,
+                                      概念树概念身份, std::uint64_t,
+                                      std::uint64_t) const;
+    相关概念参与状态 映射相关状态(S) const noexcept;
+    void 验证相关世界(const 相关概念世界挂靠 &, std::uint64_t,
+                      const 相关概念读取预算 &) const;
+    L1有限N分区原子参与者写集_v3 形成相关概念写集(
+        const 相关概念参与请求 &, std::uint64_t,
+        L1有限N分区原子参与者身份_v3,
+        const std::optional<相关概念完整事实> &) const;
 
     std::optional<概念树共享结构交付> shared_;
     void 校验共享扩展(std::uint64_t) const;
@@ -1381,14 +1338,14 @@ const 概念树类数据服务::V &概念树类数据服务::唯一属性(const 
     return *found;
 }
 std::array<稳定编码, 28> 概念树类数据服务::类型组() const {
-    const auto &t = layout_.类型;
+    const auto &t = 旧布局().类型;
     return {t.根成员,   t.规则归属,     t.概念根归属, t.概念规则,  t.定义成员, t.来源成员, t.直接上位,
             t.定义宿主, t.定义特征类型, t.定义模板,   t.来源存在,  t.来源特征, t.支持归属, t.支持概念,
             t.支持存在, t.支持特征,     t.格式版本,   t.规则版本,  t.根角色,   t.概念种类, t.生命周期,
             t.证据截止, t.精确I64,      t.精确I64组,  t.精确U64组, t.区间下界, t.区间上界, t.类型登记};
 }
 std::array<概念树概念身份, 4> 概念树类数据服务::根组() const {
-    const auto &r = layout_.根组;
+    const auto &r = 旧布局().根组;
     return {r.存在根, r.特征根, r.动态根, r.因果链根};
 }
 概念树概念身份 概念树类数据服务::根(概念树根角色 role) const {
@@ -1431,8 +1388,8 @@ void 概念树类数据服务::校验布局(std::uint64_t g) const {
         if (!有效(id) || !ids.insert(id.值).second)
             throw 失败{S::引用冲突};
     };
-    unique(layout_.格式锚点);
-    unique(layout_.签名规则.值);
+    unique(旧布局().格式锚点);
+    unique(旧布局().签名规则.值);
     for (const auto r : roots)
         unique(r.值);
     for (std::size_t i = 0; i < types.size(); ++i) {
@@ -1451,16 +1408,16 @@ void 概念树类数据服务::校验布局(std::uint64_t g) const {
         if (n.种类 != 节点种类::普通 || n.属性类型表示)
             throw 失败{S::引用冲突};
     };
-    plain(layout_.格式锚点);
-    plain(layout_.签名规则.值);
-    const auto &t = layout_.类型;
-    const auto registrations = 关系(layout_.格式锚点, t.类型登记, false, g, g, 28);
+    plain(旧布局().格式锚点);
+    plain(旧布局().签名规则.值);
+    const auto &t = 旧布局().类型;
+    const auto registrations = 关系(旧布局().格式锚点, t.类型登记, false, g, g, 28);
     if (registrations.size() != 28)
         throw 失败{S::引用冲突};
     for (std::size_t i = 0; i < 28; ++i)
         if (registrations[i].目标节点 != types[i] || registrations[i].角色或顺序 != i + 1)
             throw 失败{S::引用冲突};
-    const auto rootEdges = 关系(layout_.格式锚点, t.根成员, false, g, g, 4);
+    const auto rootEdges = 关系(旧布局().格式锚点, t.根成员, false, g, g, 4);
     if (rootEdges.size() != 4)
         throw 失败{S::引用冲突};
     for (std::size_t i = 0; i < 4; ++i) {
@@ -1470,10 +1427,10 @@ void 概念树类数据服务::校验布局(std::uint64_t g) const {
             std::get<std::int64_t>(唯一属性(a, t.根角色).材料) != i + 1)
             throw 失败{S::引用冲突};
     }
-    if (唯一关系(layout_.格式锚点, t.规则归属, g, g).目标节点 != layout_.签名规则.值)
+    if (唯一关系(旧布局().格式锚点, t.规则归属, g, g).目标节点 != 旧布局().签名规则.值)
         throw 失败{S::引用冲突};
-    const auto anchorValues = 属性(layout_.格式锚点, g, g);
-    const auto ruleValues = 属性(layout_.签名规则.值, g, g);
+    const auto anchorValues = 属性(旧布局().格式锚点, g, g);
+    const auto ruleValues = 属性(旧布局().签名规则.值, g, g);
     if (anchorValues.size() != 1 || ruleValues.size() != 2 ||
         std::get<std::int64_t>(唯一属性(anchorValues, t.格式版本).材料) != 1 ||
         std::get<std::int64_t>(唯一属性(ruleValues, t.格式版本).材料) != 1 ||
@@ -1499,7 +1456,7 @@ void 概念树类数据服务::校验布局(std::uint64_t g) const {
 稳定编码 概念树类数据服务::支持关系类型(const 概念树世界引用 &w) const {
     if (w.valueless_by_exception())
         throw 失败{S::入口拒绝};
-    return std::holds_alternative<概念树存在引用>(w) ? layout_.类型.支持存在 : layout_.类型.支持特征;
+    return std::holds_alternative<概念树存在引用>(w) ? 旧布局().类型.支持存在 : 旧布局().类型.支持特征;
 }
 
 概念树定义 概念树类数据服务::规范化定义(const 概念树定义 &input) const {
@@ -1599,10 +1556,10 @@ void 概念树类数据服务::验证特征定义(const 概念树特征定义 &d
         throw 失败{S::引用冲突};
     f.概念 = id;
     f.生命周期 = 投影生命(n, h);
-    f.规则 = layout_.签名规则;
+    f.规则 = 旧布局().签名规则;
     const auto roots = 根组();
     const auto rootIt = std::find(roots.begin(), roots.end(), id);
-    const auto &t = layout_.类型;
+    const auto &t = 旧布局().类型;
     if (rootIt != roots.end()) {
         const auto role = static_cast<概念树根角色>(rootIt - roots.begin() + 1);
         const auto a = 属性(id.值, g, h);
@@ -1825,9 +1782,9 @@ void 概念树类数据服务::验证特征定义(const 概念树特征定义 &d
     const auto n = 节点(id, g, h);
     if (n.种类 != 节点种类::普通 || n.属性类型表示)
         throw 失败{S::引用冲突};
-    const auto &t = layout_.类型;
+    const auto &t = 旧布局().类型;
     const auto anchor = rel(id, t.支持归属, true, g, h, 1);
-    if (anchor.size() != 1 || anchor.front().源节点 != layout_.格式锚点 || anchor.front().角色或顺序 != 1)
+    if (anchor.size() != 1 || anchor.front().源节点 != 旧布局().格式锚点 || anchor.front().角色或顺序 != 1)
         throw 失败{S::内部不一致};
     const auto c = one(id, t.支持概念, g, h);
     const auto exists = rel(id, t.支持存在, false, g, h, 1);
@@ -1875,14 +1832,14 @@ std::vector<概念树支持事实> 概念树类数据服务::支持组(std::opti
     }
     if (world)
         验证世界(扩展世界(*world), g, h, b);
-    const auto &t = layout_.类型;
+    const auto &t = 旧布局().类型;
     std::vector<E> members;
     if (conceptId)
         members = rel(conceptId->值, t.支持概念, true, g, h, b.最大支持数);
     else if (world)
         members = rel(世界编码(*world), 支持关系类型(*world), true, g, h, b.最大支持数);
     else
-        members = rel(layout_.格式锚点, t.支持归属, false, g, h, b.最大支持数);
+        members = rel(旧布局().格式锚点, t.支持归属, false, g, h, b.最大支持数);
     std::vector<概念树支持事实> out;
     std::set<std::pair<std::uint64_t, std::uint64_t>> endpoints;
     for (const auto &member : members) {
@@ -1973,7 +1930,7 @@ bool 概念树类数据服务::校验图闭包(const 概念树图结果 &graph) 
     out.H = h;
     out.根身份 = 根(role);
     out.概念组.push_back(读取概念内部(out.根身份, g, h, b, shared));
-    const auto members = rel(out.根身份.值, layout_.类型.概念根归属, true, g, h, b.最大概念数);
+    const auto members = rel(out.根身份.值, 旧布局().类型.概念根归属, true, g, h, b.最大概念数);
     检查数量(members.size() + 1, b.最大概念数);
     std::set<std::uint64_t> edges;
     std::uint64_t sources = 0;
@@ -2004,7 +1961,7 @@ bool 概念树类数据服务::校验图闭包(const 概念树图结果 &graph) 
     // 出边反查包含未知下位的坏边，不能仅扫描已知下位而漏掉孤立结构。
     std::set<std::uint64_t> outgoing;
     for (const auto &f : out.概念组)
-        for (const auto &e : rel(f.概念.值, layout_.类型.直接上位, false, g, h, b.最大关系数))
+        for (const auto &e : rel(f.概念.值, 旧布局().类型.直接上位, false, g, h, b.最大关系数))
             if (e.角色或顺序 != 1 || !outgoing.insert(e.编码.值).second)
                 throw 失败{S::内部不一致};
     if (outgoing != edges || !校验图闭包(out))
@@ -2053,7 +2010,7 @@ std::vector<概念树形成引用事实> 概念树类数据服务::形成引用�
         throw 失败{S::不支持};
     }
     std::vector<概念树形成引用事实> out;
-    const auto &t = layout_.类型;
+    const auto &t = 旧布局().类型;
     std::vector<稳定编码> types{t.定义宿主, t.定义特征类型, t.来源存在, t.来源特征};
 
     for (std::size_t i = 0; i < types.size(); ++i) {
@@ -2413,7 +2370,7 @@ L1所有者范围写集请求 概念树类数据服务::形成写集(const 概�
         检查数量(edges.size(), limit); return edges;
     };
     L1所有者范围写集请求 out;
-    const auto &t = layout_.类型;
+    const auto &t = 旧布局().类型;
     std::uint32_t nk = 1, rk = 0x10000, vk = 0x20000;
     auto newNode = [&]() -> Ref {
         if (nk > 0xFFFF)
@@ -2496,7 +2453,7 @@ L1所有者范围写集请求 概念树类数据服务::形成写集(const 概�
                 for (std::size_t i = 0; i < r.来源.size(); ++i)
                     sourceNodes.push_back(newNode());
                 newEdge(cn, Ref{根(role).值}, t.概念根归属);
-                newEdge(cn, Ref{layout_.签名规则.值}, t.概念规则);
+                newEdge(cn, Ref{旧布局().签名规则.值}, t.概念规则);
                 newEdge(cn, dn, t.定义成员);
                 for (auto parent : r.直接上位)
                     newEdge(Ref{parent.值}, cn, t.直接上位);
@@ -2569,7 +2526,7 @@ L1所有者范围写集请求 概念树类数据服务::形成写集(const 概�
                 验证世界(扩展世界(r.世界引用), g, r.证据H, b);
                 验证世界(扩展世界(r.世界引用), g, h, b);
                 const auto n = newNode();
-                newEdge(Ref{layout_.格式锚点}, n, t.支持归属);
+                newEdge(Ref{旧布局().格式锚点}, n, t.支持归属);
                 newEdge(n, Ref{r.目标概念.值}, t.支持概念);
                 newEdge(n, Ref{世界编码(r.世界引用)}, 支持关系类型(r.世界引用));
                 newValue(n, t.证据截止, std::vector<std::uint64_t>{r.证据H});
@@ -2723,7 +2680,7 @@ L1所有者范围写集请求 概念树类数据服务::形成写集(const 概�
     out.原请求 = request;
     out.已退出事实 = ws.退出事实;
     for (const auto &edge : ws.关系)
-        if (edge.关系类型节点 == Ref{layout_.类型.直接上位})
+        if (edge.关系类型节点 == Ref{旧布局().类型.直接上位})
             out.关系组.push_back({mapped(edge.本地键),
                                   概念树概念身份{mapped(edge.源节点)},
                                   概念树概念身份{mapped(edge.目标节点)},
@@ -3022,8 +2979,8 @@ void 概念树类数据服务::校验共享扩展(std::uint64_t g) const {
         if (!有效(id) || !used.insert(id.值).second)
             throw 失败{S::引用冲突};
     };
-    unique(layout_.格式锚点);
-    unique(layout_.签名规则.值);
+    unique(旧布局().格式锚点);
+    unique(旧布局().签名规则.值);
     for (auto id : 根组()) unique(id.值);
     for (auto id : 类型组()) unique(id);
 
@@ -3033,7 +2990,7 @@ void 概念树类数据服务::校验共享扩展(std::uint64_t g) const {
     if (anchor.种类 != 节点种类::普通 || anchor.属性类型表示)
         throw 失败{S::引用冲突};
     const auto av = 属性(x.锚点, g, g);
-    if (av.size() != 1 || std::get<std::int64_t>(唯一属性(av, layout_.类型.格式版本).材料) != 2)
+    if (av.size() != 1 || std::get<std::int64_t>(唯一属性(av, 旧布局().类型.格式版本).材料) != 2)
         throw 失败{S::引用冲突};
     using R = L1所有者范围值表示种类;
     for (std::size_t i = 0; i < x.类型.size(); ++i) {
@@ -3050,7 +3007,7 @@ void 概念树类数据服务::校验共享扩展(std::uint64_t g) const {
             n.属性类型表示 != rep || !属性(x.类型[i], g, g).empty())
             throw 失败{S::引用冲突};
     }
-    const auto registrations = 关系(x.锚点, layout_.类型.类型登记, false, g, g, 21);
+    const auto registrations = 关系(x.锚点, 旧布局().类型.类型登记, false, g, g, 21);
     if (registrations.size() != 21)
         throw 失败{S::引用冲突};
     for (std::size_t i = 0; i < registrations.size(); ++i)
@@ -3068,13 +3025,13 @@ void 概念树类数据服务::校验共享扩展(std::uint64_t g) const {
         if(!n||!n->创建事实代次||n->创建事实代次>c.H)throw 失败{S::未找到};
         if(n->种类!=节点种类::普通||n->属性类型表示)throw 失败{S::引用冲突};
         const auto effective=n->退出事实代次&&*n->退出事实代次<=c.H?*n->退出事实代次-1:c.H;
-        const auto& t=layout_.类型;const auto& x=shared_->类型;
+        const auto& t=旧布局().类型;const auto& x=shared_->类型;
         const auto attrs=属性(n->编码,c.G,effective);
         const auto* kind=std::get_if<std::int64_t>(&唯一属性(attrs,t.概念种类).材料);
         const auto* state=std::get_if<std::int64_t>(&唯一属性(attrs,t.生命周期).材料);
         if(attrs.size()!=2||!kind||*kind!=4||!state||*state<1||*state>3)throw 失败{S::旧格式不支持};
         旧特征概念审计事实 out;
-        out.C=r.概念;out.本体根=layout_.根组.特征根;out.规则=layout_.签名规则;
+        out.C=r.概念;out.本体根=旧布局().根组.特征根;out.规则=旧布局().签名规则;
         out.格式=2;out.生命周期=投影生命(*n,c.H);out.治理状态=static_cast<概念树生命周期状态>(*state);
         std::set<std::uint64_t> relations,values,nodes;
         auto addRelation=[&](const E& e) {
@@ -3155,7 +3112,7 @@ void 概念树类数据服务::校验存在扩展(std::uint64_t g) const {
     const auto id=existence_layout_->抽象依据目标关系类型;
     if(!有效(id))throw 失败{S::入口拒绝};
     const auto distinct=[&](稳定编码 other){if(id==other)throw 失败{S::引用冲突};};
-    distinct(layout_.格式锚点);distinct(layout_.签名规则.值);
+    distinct(旧布局().格式锚点);distinct(旧布局().签名规则.值);
     for(auto root:根组())distinct(root.值);
     for(auto type:类型组())distinct(type);
     distinct(feature_layout_->锚点);
@@ -3169,11 +3126,11 @@ void 概念树类数据服务::校验特征扩展(std::uint64_t g) const {
     if(!feature_layout_||feature_layout_->格式!=1)throw 失败{S::入口拒绝};
     const auto& x=*feature_layout_;std::set<std::uint64_t> ids;
     auto unique=[&](稳定编码 id){if(!有效(id)||!ids.insert(id.值).second)throw 失败{S::引用冲突};};
-    unique(layout_.格式锚点);unique(layout_.签名规则.值);
+    unique(旧布局().格式锚点);unique(旧布局().签名规则.值);
     for(auto root:根组())unique(root.值);for(auto t:类型组())unique(t);
 
     unique(x.锚点);const auto anchor=节点(x.锚点,g,g);const auto av=属性(x.锚点,g,g);
-    const auto* format=std::get_if<std::int64_t>(&唯一属性(av,layout_.类型.格式版本).材料);
+    const auto* format=std::get_if<std::int64_t>(&唯一属性(av,旧布局().类型.格式版本).材料);
     if(anchor.种类!=节点种类::普通||anchor.属性类型表示||av.size()!=1||!format||*format!=1)throw 失败{S::引用冲突};
     using R=L1所有者范围值表示种类;
     for(std::size_t i=0;i<x.类型.size();++i) {
@@ -3186,7 +3143,7 @@ void 概念树类数据服务::校验特征扩展(std::uint64_t g) const {
         if(n.种类!=(rep?节点种类::属性类型:节点种类::普通)||n.属性类型表示!=rep
             ||!属性(n.编码,g,g).empty())throw 失败{S::引用冲突};
     }
-    const auto es=关系(x.锚点,layout_.类型.类型登记,false,g,g,24);
+    const auto es=关系(x.锚点,旧布局().类型.类型登记,false,g,g,24);
     if(es.size()!=24)throw 失败{S::引用冲突};
     for(std::size_t i=0;i<es.size();++i)
         if(es[i].目标节点!=x.类型[i]||es[i].角色或顺序!=i+1)throw 失败{S::引用冲突};
@@ -3318,7 +3275,7 @@ std::vector<类型观察事实> 概念树类数据服务::观察组(特征类型
     struct Pop { decltype(c.定义路径)& set; decltype(path) key; ~Pop(){set.erase(key);} } pop{c.定义路径,path};
     专项计数(c.概念计数,id.值,c.H,c.预算.基础.最大概念数);
     c.用量.概念数=c.概念计数.size();
-    const auto& t=layout_.类型; const auto& x=feature_layout_->类型;
+    const auto& t=旧布局().类型; const auto& x=feature_layout_->类型;
     const auto n=节点(id.值,c.G,c.H);
     if(n.种类!=节点种类::普通 || n.属性类型表示) throw 失败{S::引用冲突};
     const auto av=属性(id.值,c.G,c.H);
@@ -3335,7 +3292,7 @@ std::vector<类型观察事实> 概念树类数据服务::观察组(特征类型
         return es.front();
     };
     共享展开 out; auto& f=out.事实;
-    f.身份=id; f.本体根=layout_.根组.特征根; f.规则=layout_.签名规则;
+    f.身份=id; f.本体根=旧布局().根组.特征根; f.规则=旧布局().签名规则;
     f.生命周期=投影生命(n,c.H); f.生命周期值事实=lv.编码;
     f.治理状态=static_cast<概念树生命周期状态>(*state);
     out.自有事实={id.值,唯一属性(av,t.概念种类).编码,lv.编码};
@@ -3438,7 +3395,7 @@ std::vector<类型观察事实> 概念树类数据服务::观察组(特征类型
     const auto roots = 根组();
     if (std::find(roots.begin(), roots.end(), id) == roots.end()) {
         const auto av = 属性(id.值, c.G, c.H);
-        const auto kind = std::get<std::int64_t>(唯一属性(av, layout_.类型.概念种类).材料);
+        const auto kind = std::get<std::int64_t>(唯一属性(av, 旧布局().类型.概念种类).材料);
         if (kind == 4)
             return 展开共享定义(id, c).事实;
         if (kind == 2)
@@ -3460,7 +3417,7 @@ std::vector<类型观察事实> 概念树类数据服务::观察组(特征类型
     概念树应用图事实 out;
     out.根身份 = 根(role);
     out.节点组.push_back(应用定义(out.根身份, c));
-    const auto members = 共享关系(out.根身份.值, layout_.类型.概念根归属, true, c.H, c);
+    const auto members = 共享关系(out.根身份.值, 旧布局().类型.概念根归属, true, c.H, c);
     检查数量(members.size() + 1, c.预算.基础.最大概念数);
     for (const auto &e : members) {
         if (e.角色或顺序 != 1) throw 失败{S::内部不一致};
@@ -3494,7 +3451,7 @@ std::vector<类型观察事实> 概念树类数据服务::观察组(特征类型
     }
     // 从完整根归属范围反查出边，不能只沿可达边遍历而遗漏坏边或孤儿。
     for (const auto &[id, degree] : degrees) {
-        for (const auto &e : 共享关系(稳定编码{id}, layout_.类型.直接上位, false, c.H, c))
+        for (const auto &e : 共享关系(稳定编码{id}, 旧布局().类型.直接上位, false, c.H, c))
             if (!edgeIds.contains(e.编码.值) || !degrees.contains(e.目标节点.值) || e.角色或顺序 != 1)
                 throw 失败{S::内部不一致};
         if ((id == out.根身份.值.值 && degree) || (id != out.根身份.值.值 && !degree))
@@ -3739,7 +3696,7 @@ void 概念树类数据服务::准备父组(
             throw 失败{S::入口拒绝};
         for(auto parent:ids) {
             if(!有效(parent.值)||parent==f.身份)throw 失败{S::形成环};
-            if(parent==layout_.根组.特征根) {
+            if(parent==旧布局().根组.特征根) {
                 if(f.身份!=f.类型根||addition)throw 失败{S::引用冲突};
             } else {
                 auto p=展开共享定义(parent,c).事实;
@@ -3749,13 +3706,13 @@ void 概念树类数据服务::准备父组(
         }
         if(addition) {
             if(addition->second==f.定义||!共享包含(addition->second,f.定义,c))throw 失败{S::引用冲突};
-            b.关系(addition->first,Ref{f.身份.值},layout_.类型.直接上位);
+            b.关系(addition->first,Ref{f.身份.值},旧布局().类型.直接上位);
         }
         for(const auto& e:actual)
             if(std::find(ids.begin(),ids.end(),e.上位)==ids.end())b.写集.退出事实.push_back(e.关系);
         for(auto parent:ids)
             if(std::none_of(actual.begin(),actual.end(),[&](const auto& e){return e.上位==parent;}))
-                b.关系(Ref{parent.值},Ref{f.身份.值},layout_.类型.直接上位);
+                b.关系(Ref{parent.值},Ref{f.身份.值},旧布局().类型.直接上位);
     }
     // 每条新父边严格包含子域；严格包含的传递性同时排除跨组环。
     检查数量(b.写集.关系.size(),c.预算.基础.最大关系数);
@@ -3765,7 +3722,7 @@ void 概念树类数据服务::准备父组(
     if(!feature_layout_||request.valueless_by_exception())throw 失败{S::不支持};
     特征准备结果 out;auto& b=out.构造;auto& reuse=out.复用;
     reuse.原请求=request;reuse.Gread=c.G;reuse.状态=S::无须变更;
-    const auto& x=feature_layout_->类型;const auto& t=layout_.类型;
+    const auto& x=feature_layout_->类型;const auto& t=旧布局().类型;
     auto uniqueIds=[&](auto ids) {
         检查数量(ids.size(),c.预算.基础.最大概念数);
         std::sort(ids.begin(),ids.end(),身份小于);
@@ -3810,9 +3767,9 @@ void 概念树类数据服务::准备父组(
             const auto full=特征结果(features_.读取I64类型完整域({1,c.G,c.H,d.类型})).数据;
             const bool typeRoot=full==d.域;
             if(typeRoot) {
-                if(parents.size()!=1||parents.front()!=layout_.根组.特征根)throw 失败{S::引用冲突};
+                if(parents.size()!=1||parents.front()!=旧布局().根组.特征根)throw 失败{S::引用冲突};
             } else for(auto id:parents) {
-                if(id==layout_.根组.特征根)throw 失败{S::引用冲突};
+                if(id==旧布局().根组.特征根)throw 失败{S::引用冲突};
                 auto p=展开共享定义(id,c).事实;
                 if(p.治理状态==概念树生命周期状态::退役||p.定义==d||!共享包含(p.定义,d,c))
                     throw 失败{S::引用冲突};
@@ -3844,8 +3801,8 @@ void 概念树类数据服务::准备父组(
             const auto node=b.节点(),def=b.节点();
             b.值(Ref{node},t.概念种类,std::int64_t{4});
             b.值(Ref{node},t.生命周期,static_cast<std::int64_t>(概念树生命周期状态::活跃));
-            b.关系(Ref{node},Ref{layout_.根组.特征根.值},t.概念根归属);
-            b.关系(Ref{node},Ref{layout_.签名规则.值},t.概念规则);
+            b.关系(Ref{node},Ref{旧布局().根组.特征根.值},t.概念根归属);
+            b.关系(Ref{node},Ref{旧布局().签名规则.值},t.概念规则);
             b.关系(Ref{node},Ref{def},t.定义成员);
             b.关系(Ref{def},Ref{d.类型.编码},x[7]);
             for(std::size_t i=0;i<d.域.区间.size();++i) {
@@ -4466,7 +4423,7 @@ std::map<std::uint32_t, 稳定编码> 概念树类数据服务::共享核验首�
 概念树类数据服务::共享准备结果 概念树类数据服务::准备共享治理(
     const 概念树共享写请求& request,共享读取上下文& c) const {
     共享准备结果 out;auto& b=out.构造;
-    const auto& x=feature_layout_->类型;const auto& t=layout_.类型;
+    const auto& x=feature_layout_->类型;const auto& t=旧布局().类型;
     if(const auto* r=std::get_if<概念树共享释放请求>(&request)) {
         for(const auto& expected:r->完整预期) {
             const auto raw=原始事实(expected.关系,c.G);const auto* e=std::get_if<E>(&raw);
@@ -4651,10 +4608,10 @@ void 概念树类数据服务::共享名称交叉核验(稳定编码 id,bool inc
 概念树类数据服务::存在展开_v2 概念树类数据服务::展开存在定义_v2(
     概念树概念身份 id, 共享读取上下文 &c) const {
     if(!existence_layout_)throw 失败{S::不支持};
-    const auto &t = layout_.类型;
+    const auto &t = 旧布局().类型;
     const auto n = 节点(id.值, c.G, c.H);
     const auto born = n.创建事实代次;
-    if (n.种类 != 节点种类::普通 || n.属性类型表示 || id == layout_.根组.存在根)
+    if (n.种类 != 节点种类::普通 || n.属性类型表示 || id == 旧布局().根组.存在根)
         throw 失败{S::引用冲突};
     const auto av = 属性(id.值, c.G, c.H);
     if (av.size() != 2) throw 失败{S::内部不一致};
@@ -4664,7 +4621,7 @@ void 概念树类数据服务::共享名称交叉核验(稳定编码 id,bool inc
         throw 失败{S::引用冲突};
     存在展开_v2 out;
     auto &f = out.事实;
-    f.概念 = id; f.本体根 = layout_.根组.存在根; f.规则 = layout_.签名规则;
+    f.概念 = id; f.本体根 = 旧布局().根组.存在根; f.规则 = 旧布局().签名规则;
     f.生命周期 = 投影生命(n,c.H); f.生命周期值事实 = state.编码;
     f.治理状态 = static_cast<概念树生命周期状态>(life);
     out.自有事实 = {id.值, kind.编码, state.编码};
@@ -4812,7 +4769,7 @@ void 概念树类数据服务::共享名称交叉核验(稳定编码 id,bool inc
     const 概念树存在写请求_v2 &request, 共享读取上下文 &c) const {
     存在准备结果_v2 out;
     auto &builder = out.构造;
-    const auto &t = layout_.类型;
+    const auto &t = 旧布局().类型;
     const auto head = 存在请求头(request);
     builder.写集.期望事实代次 = head.期望事实代次; builder.写集.写入幂等身份 = {head.幂等身份};
     const auto reachable = [](const auto &edges, 概念树概念身份 from, 概念树概念身份 to) {
@@ -4825,8 +4782,8 @@ void 概念树类数据服务::共享名称交叉核验(稳定编码 id,bool inc
     };
     auto parent = [&](概念树概念身份 id) {
         const auto fact = 应用定义(id, c);
-        if (std::visit([&](const auto &v) { return v.本体根 != layout_.根组.存在根; }, fact)) throw 失败{S::引用冲突};
-        if (id != layout_.根组.存在根 && !std::holds_alternative<概念树应用存在事实>(fact)) throw 失败{S::引用冲突};
+        if (std::visit([&](const auto &v) { return v.本体根 != 旧布局().根组.存在根; }, fact)) throw 失败{S::引用冲突};
+        if (id != 旧布局().根组.存在根 && !std::holds_alternative<概念树应用存在事实>(fact)) throw 失败{S::引用冲突};
     };
     std::visit([&](const auto &r) {
         using T = std::decay_t<decltype(r)>;
@@ -4859,8 +4816,8 @@ void 概念树类数据服务::共享名称交叉核验(稳定编码 id,bool inc
             if (sources >= c.预算.基础.最大来源数 ||
                 r.直接上位.size() > c.预算.基础.最大关系数 - graph.直接边组.size()) throw 失败{S::数量预算不足};
             const auto cn = builder.节点(), dn = builder.节点(), sn = builder.节点();
-            builder.关系(Ref{cn}, Ref{layout_.根组.存在根.值}, t.概念根归属);
-            builder.关系(Ref{cn}, Ref{layout_.签名规则.值}, t.概念规则);
+            builder.关系(Ref{cn}, Ref{旧布局().根组.存在根.值}, t.概念根归属);
+            builder.关系(Ref{cn}, Ref{旧布局().签名规则.值}, t.概念规则);
             builder.关系(Ref{cn}, Ref{dn}, t.定义成员);
             for (auto id : r.直接上位) builder.关系(Ref{id.值}, Ref{cn}, t.直接上位);
             std::int64_t order = 0;
@@ -4886,7 +4843,7 @@ void 概念树类数据服务::共享名称交叉核验(稳定编码 id,bool inc
         } else std::visit([&](const auto &op) {
             using O = std::decay_t<decltype(op)>;
             const auto id = [&] { if constexpr (std::is_same_v<O, 概念树上位操作请求>) return op.下位; else return op.概念; }();
-            if (id == layout_.根组.存在根) throw 失败{S::根不可退出};
+            if (id == 旧布局().根组.存在根) throw 失败{S::根不可退出};
             const auto expanded = 展开存在定义_v2(id, c); const auto &fact = expanded.事实;
             if constexpr (std::is_same_v<O, 概念树生命周期迁移请求>) {
                 if (fact.生命周期值事实 != op.当前生命周期值编码 || fact.治理状态 != op.预期状态) throw 失败{S::引用冲突};
@@ -5202,10 +5159,10 @@ bool 概念树存在写入结果_v2::成功() const noexcept {
                               std::is_same_v<T, 概念树概念退出请求>) {
                     const auto id = [&] { if constexpr (std::is_same_v<T, 概念树上位操作请求>) return r.下位; else return r.概念; }();
                     const auto raw = 节点(id.值, c.G, c.H);
-                    if (id == layout_.根组.特征根 || id == layout_.根组.动态根 || id == layout_.根组.存在根 || id == layout_.根组.因果链根)
+                    if (id == 旧布局().根组.特征根 || id == 旧布局().根组.动态根 || id == 旧布局().根组.存在根 || id == 旧布局().根组.因果链根)
                         throw 失败{S::根不可退出};
                     const auto av = 属性(id.值, c.G, c.H);
-                    const auto kind = std::get<std::int64_t>(唯一属性(av, layout_.类型.概念种类).材料);
+                    const auto kind = std::get<std::int64_t>(唯一属性(av, 旧布局().类型.概念种类).材料);
                     if (kind == 4) {
                         if (!feature_layout_) throw 失败{S::不支持};
                         const auto f = 展开共享定义(id, c).事实;
@@ -5268,8 +5225,8 @@ bool 概念树存在写入结果_v2::成功() const noexcept {
                     }
                     if (kind == 3) throw 失败{S::旧格式不支持};
                     if (kind != 1) throw 失败{S::不支持};
-                    const auto root = 唯一关系(id.值, layout_.类型.概念根归属, c.G, c.H);
-                    if (root.目标节点 != layout_.根组.特征根.值) throw 失败{S::引用冲突};
+                    const auto root = 唯一关系(id.值, 旧布局().类型.概念根归属, c.G, c.H);
+                    if (root.目标节点 != 旧布局().根组.特征根.值) throw 失败{S::引用冲突};
                 }
             }, request.操作);
             if (featureGovernance) {
@@ -5566,4 +5523,660 @@ bool 概念树类数据服务::应用事实完整(const 概念树应用定义事
     },node);
 }
 
+概念树类数据服务::概念树类数据服务(
+    const L1事实基座服务 &l1, const 特征类数据服务 &features,
+    const 存在类数据服务 &existences, const 特征值类数据服务 &values,
+    const 场景类数据服务 &scenes, L1所有者范围写端口 &&port,
+    const 相关概念结构交付 &layout)
+    : l1_(l1), features_(features), existences_(existences), values_(values),
+      port_(std::move(port)), scenes_(&scenes), related_layout_(layout) {
+    if (!port_.有效() || !port_.绑定于(l1_) || !features_.绑定于(l1_) ||
+        !existences_.绑定于(l1_) || !values_.绑定于(l1_) || !scenes.绑定于(l1_))
+        throw std::invalid_argument("related concept provider binding mismatch");
+    try { 校验相关概念布局(当前代次()); }
+    catch (const 失败 &e) {
+        if (e.状态 == S::资源失败) throw std::bad_alloc{};
+        throw std::invalid_argument("related concept structure delivery is invalid");
+    }
+}
+
+概念树类数据服务::概念树类数据服务(
+    const L1事实基座服务 &l1, const 特征类数据服务 &features,
+    const 存在类数据服务 &existences, const 特征值类数据服务 &values,
+    const 场景类数据服务 &scenes, L1所有者范围写端口 &&port,
+    const 概念树结构交付 &oldLayout, const 相关概念结构交付 &layout)
+    : 概念树类数据服务(l1, features, existences, values, std::move(port), oldLayout) {
+    if (!scenes.绑定于(l1_)) throw std::invalid_argument("related concept scene binding mismatch");
+    scenes_ = &scenes;
+    related_layout_ = layout;
+    try { 校验相关概念布局(当前代次()); }
+    catch (const 失败 &e) {
+        if (e.状态 == S::资源失败) throw std::bad_alloc{};
+        throw std::invalid_argument("related concept structure delivery is invalid");
+    }
+}
+
+void 概念树类数据服务::校验相关概念布局(std::uint64_t g) const {
+    if (!related_layout_ || related_layout_->版本 != 1 || related_layout_->格式 != 1)
+        throw 失败{S::旧格式不支持};
+    const auto owner = l1_.读取当前结构所有者(
+        {L1所有者范围CRUD合同版本, port_.所有者身份()});
+    if (owner.状态 != L1所有者范围读取状态::成功) throw 失败{映射(owner.状态)};
+    if (owner.读取事实代次 != g) throw 失败{S::事实代次漂移};
+    if (!owner.所有者事实 || owner.所有者事实->所有者 != port_.所有者身份() ||
+        owner.所有者事实->退出事实代次 ||
+        owner.所有者事实->范围种类 != L1所有者范围种类::独占结构范围)
+        throw 失败{S::引用冲突};
+    const auto &x = *related_layout_; const auto &t = x.类型;
+    const std::array<稳定编码, 21> types{
+        t.类型登记,t.概念族成员,t.概念类别,t.定义成员,t.定义种类,t.定义宿主,
+        t.定义特征类型,t.定义模板,t.精确I64,t.精确I64组,t.精确U64组,
+        t.区间下界,t.区间上界,t.直接上位,t.形成成员,t.形成存在,t.形成特征,
+        t.形成特征类型,t.形成场景,t.证据截止,t.生命周期};
+    std::set<std::uint64_t> ids;
+    auto unique=[&](稳定编码 id){if(!有效(id)||!ids.insert(id.值).second)throw 失败{S::引用冲突};};
+    unique(x.格式锚点); unique(x.概念族锚点); for(auto id:types)unique(id);
+    for(auto id:{x.格式锚点,x.概念族锚点}){
+        const auto n=节点(id,g,g);
+        if(n.种类!=节点种类::普通||n.属性类型表示||!属性(id,g,g).empty())throw 失败{S::引用冲突};
+    }
+    using R=L1所有者范围值表示种类;
+    for(std::size_t i=0;i<types.size();++i){
+        std::optional<R> rep;
+        switch(i+1){case 3:case 5:case 9:case 12:case 13:case 21:rep=R::I64;break;
+        case 10:rep=R::I64组;break;case 11:case 20:rep=R::U64组;break;default:break;}
+        const auto n=节点(types[i],g,g);
+        if(n.种类!=(rep?节点种类::属性类型:节点种类::普通)||n.属性类型表示!=rep||!属性(types[i],g,g).empty())
+            throw 失败{S::引用冲突};
+    }
+    const auto registrations=关系(x.格式锚点,t.类型登记,false,g,g,21);
+    if(registrations.size()!=21)throw 失败{S::引用冲突};
+    for(std::size_t i=0;i<21;++i)
+        if(registrations[i].源节点!=x.格式锚点||registrations[i].目标节点!=types[i]||
+           registrations[i].角色或顺序!=static_cast<std::int64_t>(i+1))throw 失败{S::引用冲突};
+}
+
+相关概念参与状态 概念树类数据服务::映射相关状态(S s) const noexcept {
+    using R=相关概念参与状态;
+    switch(s){
+    case S::精确重复:return R::精确重复;case S::已读取:return R::已读取;
+    case S::入口拒绝:return R::入口拒绝;case S::未找到:return R::概念未找到;
+    case S::目标已退出:return R::概念已退出;case S::形成环:return R::上位成环;
+    case S::事实代次漂移:return R::事实代次漂移;case S::幂等冲突:return R::幂等冲突;
+    case S::数量预算不足:return R::数量预算不足;case S::历史材料不可用:return R::历史材料不可用;
+    case S::资源失败:return R::资源失败;case S::已可能发布:return R::已可能发布;
+    case S::旧格式不支持:return R::旧格式不支持;case S::引用冲突:return R::挂靠无效;
+    case S::内部不一致:return R::内部不一致;
+    case S::已创建:case S::已添加支持:case S::已退出支持:case S::已添加上位:
+    case S::已替换上位:case S::已退出上位:case S::已迁移生命周期:case S::已退出概念:
+    case S::已释放引用:case S::无须变更:case S::根不可退出:case S::已创建共享定义:
+    case S::已绑定共享名称:case S::已退出共享名称:case S::已记录共享用途:case S::不支持:
+    case S::差异不可表示:case S::已登记类型观察:case S::已登记特征概念命中:
+    case S::已变更特征概念组织:case S::规则缺失:case S::类型不相容:case S::前次写入待收敛:
+        return R::内部不一致;
+    }
+    return R::内部不一致;
+}
+
+void 概念树类数据服务::验证相关世界(const 相关概念世界挂靠 &binding,std::uint64_t g,
+                                         const 相关概念读取预算 &budget) const {
+    if(binding.世界事实.valueless_by_exception()||!binding.证据截止||binding.证据截止>g||
+       !有效(世界编码(binding.世界事实)))throw 相关失败{相关概念参与状态::挂靠无效};
+    try{
+        if(const auto *scene=std::get_if<概念树场景引用>(&binding.世界事实)){
+            if(!scenes_)throw 相关失败{相关概念参与状态::旧格式不支持};
+            const 场景历史身份请求 request{2,g,binding.证据截止,scene->值};
+            const auto result=scenes_->读取场景角色历史(request);
+            if(!result.成功(request)){
+                if(result.状态==场景角色数据状态::资源失败)throw 相关失败{相关概念参与状态::资源失败};
+                if(result.状态==场景角色数据状态::历史材料已清理)throw 相关失败{相关概念参与状态::历史材料不可用};
+                if(result.状态==场景角色数据状态::事实代次漂移)throw 相关失败{相关概念参与状态::事实代次漂移};
+                throw 相关失败{相关概念参与状态::挂靠无效};
+            }
+            return;
+        }
+        验证世界(binding.世界事实,g,binding.证据截止,budget);
+    }catch(const 相关失败&){throw;}catch(const 失败 &e){
+        const auto mapped=映射相关状态(e.状态);
+        if(mapped==相关概念参与状态::概念未找到||mapped==相关概念参与状态::概念已退出||
+           mapped==相关概念参与状态::入口拒绝)throw 相关失败{相关概念参与状态::挂靠无效};
+        throw 相关失败{mapped};
+    }
+}
+
+概念树类数据服务::相关概念展开 概念树类数据服务::展开相关概念(
+    概念树概念身份 id, std::uint64_t g, std::uint64_t h,
+    const 相关概念读取预算 &budget) const {
+    if (!related_layout_) throw 相关失败{相关概念参与状态::旧格式不支持};
+    if (!有效(id.值) || !h || h > g) throw 相关失败{相关概念参与状态::入口拒绝};
+    try {
+        const auto &t = related_layout_->类型;
+        相关概念展开 out;
+        out.概念 = id;
+        const auto conceptNodeFact = 节点(id.值, g, h);
+        if (conceptNodeFact.种类 != 节点种类::普通 || conceptNodeFact.属性类型表示)
+            throw 相关失败{相关概念参与状态::签名冲突};
+        out.生命周期 = 投影生命(conceptNodeFact, h);
+
+        const auto members = 关系(id.值, t.概念族成员, true, g, h, 1);
+        if (members.size() != 1 || members.front().源节点 != related_layout_->概念族锚点 ||
+            members.front().角色或顺序 != 1)
+            throw 相关失败{相关概念参与状态::签名冲突};
+        const auto conceptValues = 属性(id.值, g, h);
+        if (conceptValues.size() != 2) throw 相关失败{相关概念参与状态::签名冲突};
+        const auto category = std::get<std::int64_t>(唯一属性(conceptValues, t.概念类别).材料);
+        const auto lifecycle = std::get<std::int64_t>(唯一属性(conceptValues, t.生命周期).材料);
+        if ((category != 1 && category != 2) || lifecycle != 1)
+            throw 相关失败{相关概念参与状态::签名冲突};
+        out.类别 = static_cast<相关概念类别>(category);
+
+        const auto definitionMembers = 关系(id.值, t.定义成员, false, g, h, 1);
+        if (definitionMembers.size() != 1 || definitionMembers.front().角色或顺序 != 1)
+            throw 相关失败{相关概念参与状态::签名冲突};
+        const auto definitionNode = 节点(definitionMembers.front().目标节点, g, h);
+        if (definitionNode.种类 != 节点种类::普通 || definitionNode.属性类型表示 ||
+            definitionNode.创建事实代次 != conceptNodeFact.创建事实代次)
+            throw 相关失败{相关概念参与状态::签名冲突};
+        const auto definitionValues = 属性(definitionNode.编码, g, h);
+        const auto kind = std::get<std::int64_t>(唯一属性(definitionValues, t.定义种类).材料);
+        if (kind != category) throw 相关失败{相关概念参与状态::类别冲突};
+        if (kind == 1) {
+            概念树存在定义 definition;
+            const auto templates = 关系(definitionNode.编码, t.定义模板, false, g, h,
+                                         budget.最大关系数);
+            if (definitionValues.size() != 1 || templates.empty())
+                throw 相关失败{相关概念参与状态::签名冲突};
+            for (std::size_t i = 0; i < templates.size(); ++i) {
+                if (templates[i].角色或顺序 != static_cast<std::int64_t>(i + 1))
+                    throw 相关失败{相关概念参与状态::签名冲突};
+                definition.特征模板组.emplace_back(templates[i].目标节点);
+            }
+            out.定义 = 规范化定义(definition);
+        } else {
+            概念树特征定义 definition;
+            const auto hosts = 关系(definitionNode.编码, t.定义宿主, false, g, h, 1);
+            const auto types = 关系(definitionNode.编码, t.定义特征类型, false, g, h, 1);
+            if (hosts.size() != 1 || types.size() != 1 || hosts.front().角色或顺序 != 1 ||
+                types.front().角色或顺序 != 1)
+                throw 相关失败{相关概念参与状态::签名冲突};
+            definition.形成宿主 = 概念树存在引用{hosts.front().目标节点};
+            definition.特征类型 = 概念树特征类型引用{types.front().目标节点};
+            if (definitionValues.size() == 2) {
+                const auto &value = definitionValues[0].属性类型节点 == t.定义种类
+                    ? definitionValues[1] : definitionValues[0];
+                if (value.属性类型节点 == t.精确I64)
+                    definition.值域 = 概念树精确值{std::get<std::int64_t>(value.材料)};
+                else if (value.属性类型节点 == t.精确I64组)
+                    definition.值域 = 概念树精确值{std::get<std::vector<std::int64_t>>(value.材料)};
+                else if (value.属性类型节点 == t.精确U64组)
+                    definition.值域 = 概念树精确值{std::get<std::vector<std::uint64_t>>(value.材料)};
+                else throw 相关失败{相关概念参与状态::签名冲突};
+            } else if (definitionValues.size() == 3) {
+                definition.值域 = 概念树I64区间{
+                    std::get<std::int64_t>(唯一属性(definitionValues, t.区间下界).材料),
+                    std::get<std::int64_t>(唯一属性(definitionValues, t.区间上界).材料)};
+            } else throw 相关失败{相关概念参与状态::签名冲突};
+            out.定义 = 规范化定义(definition);
+        }
+
+        std::set<std::uint64_t> parentIds;
+        for (const auto &edge : 关系(id.值, t.直接上位, true, g, h, budget.最大关系数)) {
+            if (edge.角色或顺序 != 1 || edge.源节点 == id.值 ||
+                !parentIds.insert(edge.源节点.值).second)
+                throw 相关失败{相关概念参与状态::上位成环};
+            const auto parentValues = 属性(edge.源节点, g, h);
+            const auto parentCategory = std::get<std::int64_t>(
+                唯一属性(parentValues, t.概念类别).材料);
+            if (parentCategory != category) throw 相关失败{相关概念参与状态::类别冲突};
+            out.直接上位.push_back({edge.编码, 概念树概念身份{edge.源节点}, id,
+                                    投影生命(edge, h)});
+        }
+        std::sort(out.直接上位.begin(), out.直接上位.end(), [](const auto &a, const auto &b) {
+            return a.上位.值.值 < b.上位.值.值;
+        });
+
+        for (const auto &member : 关系(id.值, t.形成成员, false, g, h, budget.最大来源数)) {
+            if (member.角色或顺序 != 1) throw 相关失败{相关概念参与状态::内部不一致};
+            const auto record = 节点(member.目标节点, g, h);
+            const auto recordValues = 属性(record.编码, g, h);
+            if (record.种类 != 节点种类::普通 || record.属性类型表示 || recordValues.size() != 1)
+                throw 相关失败{相关概念参与状态::内部不一致};
+            const auto &evidence = 唯一属性(recordValues, t.证据截止);
+            const auto &cutoffs = std::get<std::vector<std::uint64_t>>(evidence.材料);
+            if (cutoffs.size() != 1 || !cutoffs.front() || cutoffs.front() > record.创建事实代次)
+                throw 相关失败{相关概念参与状态::内部不一致};
+            std::optional<E> endpoint;
+            std::size_t branch = 0;
+            for (const auto type : {t.形成存在, t.形成特征, t.形成特征类型, t.形成场景}) {
+                const auto found = 关系(record.编码, type, false, g, h, 1);
+                if (!found.empty()) { endpoint = found.front(); ++branch; }
+            }
+            if (branch != 1 || !endpoint || endpoint->角色或顺序 != 1)
+                throw 相关失败{相关概念参与状态::内部不一致};
+            概念树形成世界引用 world;
+            if (endpoint->关系类型节点 == t.形成存在) world = 概念树存在引用{endpoint->目标节点};
+            else if (endpoint->关系类型节点 == t.形成特征) world = 概念树特征引用{endpoint->目标节点};
+            else if (endpoint->关系类型节点 == t.形成特征类型) world = 概念树特征类型引用{endpoint->目标节点};
+            else world = 概念树场景引用{endpoint->目标节点};
+            out.挂接.push_back({endpoint->编码, record.编码, id, world, 投影生命(*endpoint, h)});
+        }
+        return out;
+    } catch (const 相关失败 &) { throw; }
+      catch (const 失败 &e) { throw 相关失败{映射相关状态(e.状态)}; }
+}
+
+相关概念完整事实 概念树类数据服务::读取相关概念内部(
+    const 相关概念参与请求 &request, 概念树概念身份 id,
+    std::uint64_t g, std::uint64_t h) const {
+    const auto expanded = 展开相关概念(id, g, h, request.预算);
+    const auto expectedCategory = std::visit([](const auto &v) { return v.类别; }, request.方案);
+    const auto expectedDefinition = 规范化定义(std::visit([](const auto &v) -> 概念树定义 {
+        using T = std::decay_t<decltype(v)>;
+        if constexpr (std::is_same_v<T, 相关概念精确复用方案>) return v.预期定义;
+        else return v.定义;
+    }, request.方案));
+    if (expanded.类别 != expectedCategory) throw 相关失败{相关概念参与状态::类别冲突};
+    if (expanded.定义 != expectedDefinition) throw 相关失败{相关概念参与状态::签名冲突};
+    const auto target = 世界编码(request.挂靠.世界事实);
+    const 概念树形成引用事实 *attachment = nullptr;
+    for (const auto &value : expanded.挂接) {
+        if (value.世界引用.index() == request.挂靠.世界事实.index() &&
+            世界编码(value.世界引用) == target) {
+            if (attachment) throw 相关失败{相关概念参与状态::内部不一致};
+            attachment = &value;
+        }
+    }
+    if (!attachment) throw 相关失败{相关概念参与状态::概念未找到};
+    return {expanded.概念, expanded.类别, expanded.定义, expanded.直接上位,
+            *attachment, expanded.生命周期};
+}
+
+L1有限N分区原子参与者写集_v3 概念树类数据服务::形成相关概念写集(
+    const 相关概念参与请求 &request, std::uint64_t g,
+    L1有限N分区原子参与者身份_v3 participant,
+    const std::optional<相关概念完整事实> &existing) const {
+    if (!related_layout_) throw 相关失败{相关概念参与状态::旧格式不支持};
+    L1有限N分区原子参与者写集_v3 out;
+    out.参与者 = participant;
+    out.所有者 = port_.所有者身份();
+    out.写集.合同版本 = L1所有者范围CRUD合同版本;
+    out.写集.期望事实代次 = g;
+    out.写集.写入幂等身份 = request.幂等身份;
+    std::uint32_t nodeKey = 0, edgeKey = 0xFFFF, valueKey = 0x1FFFF;
+    const auto newNode = [&]() {
+        Key key{++nodeKey};
+        out.写集.节点.push_back({key, 节点种类::普通, std::nullopt});
+        return key;
+    };
+    const auto newEdge = [&](L1有限N分区原子事实引用值_v3 source,
+                             L1有限N分区原子事实引用值_v3 target,
+                             稳定编码 type, std::int64_t order = 1) {
+        Key key{++edgeKey};
+        out.写集.关系.push_back({key, std::move(source), std::move(target), type, order});
+        return key;
+    };
+    const auto newValue = [&](L1有限N分区原子事实引用值_v3 node,
+                              稳定编码 type, L1所有者范围原始值材料 material) {
+        Key key{++valueKey};
+        out.写集.值.push_back({key, node, type, std::move(material), node});
+        out.写集.属性槽变更.push_back({node, type, key});
+        return key;
+    };
+    const auto &t = related_layout_->类型;
+    L1有限N分区原子事实引用值_v3 conceptRef;
+    if (existing) conceptRef = existing->概念.值;
+    else {
+        const auto conceptNode = newNode();
+        const auto definitionNode = newNode();
+        conceptRef = conceptNode;
+        const auto category = std::visit([](const auto &v) { return v.类别; }, request.方案);
+        const auto definition = std::visit([](const auto &v) -> 概念树定义 {
+            using T = std::decay_t<decltype(v)>;
+            if constexpr (std::is_same_v<T, 相关概念精确复用方案>) return v.预期定义;
+            else return v.定义;
+        }, request.方案);
+        newEdge(related_layout_->概念族锚点, conceptNode, t.概念族成员);
+        newValue(conceptNode, t.概念类别, static_cast<std::int64_t>(category));
+        newValue(conceptNode, t.生命周期, std::int64_t{1});
+        newEdge(conceptNode, definitionNode, t.定义成员);
+        newValue(definitionNode, t.定义种类, static_cast<std::int64_t>(category));
+        if (const auto *feature = std::get_if<概念树特征定义>(&definition)) {
+            newEdge(definitionNode, feature->形成宿主.值, t.定义宿主);
+            newEdge(definitionNode, feature->特征类型.值, t.定义特征类型);
+            if (const auto *exact = std::get_if<概念树精确值>(&feature->值域)) {
+                const auto type = exact->index() == 0 ? t.精确I64
+                    : exact->index() == 1 ? t.精确I64组 : t.精确U64组;
+                std::visit([&](const auto &value) { newValue(definitionNode, type, value); }, *exact);
+            } else {
+                const auto range = std::get<概念树I64区间>(feature->值域);
+                newValue(definitionNode, t.区间下界, range.下界);
+                newValue(definitionNode, t.区间上界, range.上界);
+            }
+        } else {
+            const auto &definitionValue = std::get<概念树存在定义>(definition);
+            for (std::size_t i = 0; i < definitionValue.特征模板组.size(); ++i)
+                newEdge(definitionNode, definitionValue.特征模板组[i].值, t.定义模板,
+                        static_cast<std::int64_t>(i + 1));
+        }
+        if (const auto *create = std::get_if<相关概念创建方案>(&request.方案))
+            for (const auto parent : create->直接上位)
+                newEdge(parent.值, conceptNode, t.直接上位);
+    }
+    const auto formationNode = newNode();
+    newEdge(conceptRef, formationNode, t.形成成员);
+    const auto endpointType = std::visit([&](const auto &world) {
+        using T = std::decay_t<decltype(world)>;
+        if constexpr (std::is_same_v<T, 概念树存在引用>) return t.形成存在;
+        else if constexpr (std::is_same_v<T, 概念树特征引用>) return t.形成特征;
+        else if constexpr (std::is_same_v<T, 概念树特征类型引用>) return t.形成特征类型;
+        else return t.形成场景;
+    }, request.挂靠.世界事实);
+    newEdge(formationNode, 世界编码(request.挂靠.世界事实), endpointType);
+    newValue(formationNode, t.证据截止,
+             std::vector<std::uint64_t>{request.挂靠.证据截止});
+    if (out.写集.关系.size() > request.预算.最大关系数 ||
+        out.写集.值.size() > request.预算.最大特征属性数)
+        throw 相关失败{相关概念参与状态::数量预算不足};
+    return out;
+}
+
+相关概念参与片段 概念树类数据服务::准备相关概念片段(
+    const 相关概念参与请求 &request, std::uint64_t g,
+    L1有限N分区原子参与者身份_v3 participant) const noexcept {
+    相关概念参与片段 out;
+    out.Gread = g;
+    try {
+        if (!related_layout_) throw 相关失败{相关概念参与状态::旧格式不支持};
+        if (request.版本 != 1 || !g || request.G0 != g || !有效(request.幂等身份) ||
+            participant.值 < 2 ||
+            request.方案.valueless_by_exception() || request.挂靠.世界事实.valueless_by_exception())
+            throw 相关失败{相关概念参与状态::入口拒绝};
+        try { 预算有效(request.预算); }
+        catch (const 失败 &e) { throw 相关失败{映射相关状态(e.状态)}; }
+        守卫代次(g);
+        校验相关概念布局(g);
+        验证相关世界(request.挂靠, g, request.预算);
+        auto currentBinding = request.挂靠; currentBinding.证据截止 = g;
+        验证相关世界(currentBinding, g, request.预算);
+        const auto category = std::visit([](const auto &v) { return v.类别; }, request.方案);
+        auto definition = 规范化定义(std::visit([](const auto &v) -> 概念树定义 {
+            using T = std::decay_t<decltype(v)>;
+            if constexpr (std::is_same_v<T, 相关概念精确复用方案>) return v.预期定义;
+            else return v.定义;
+        }, request.方案));
+        if ((category != 相关概念类别::存在 && category != 相关概念类别::特征) ||
+            (category == 相关概念类别::存在) != std::holds_alternative<概念树存在定义>(definition))
+            throw 相关失败{相关概念参与状态::类别冲突};
+        if (const auto *feature = std::get_if<概念树特征定义>(&definition)) {
+            验证相关世界({feature->形成宿主, g}, g, request.预算);
+            验证相关世界({feature->特征类型, g}, g, request.预算);
+        } else {
+            for (const auto templateId : std::get<概念树存在定义>(definition).特征模板组) {
+                const auto feature = 展开相关概念(templateId, g, g, request.预算);
+                if (feature.类别 != 相关概念类别::特征)
+                    throw 相关失败{相关概念参与状态::类别冲突};
+            }
+        }
+
+        std::optional<相关概念完整事实> existing;
+        if (const auto *reuse = std::get_if<相关概念精确复用方案>(&request.方案)) {
+            const auto found = 展开相关概念(reuse->概念, g, g, request.预算);
+            if (found.类别 != category) throw 相关失败{相关概念参与状态::类别冲突};
+            if (found.定义 != definition) throw 相关失败{相关概念参与状态::签名冲突};
+            existing = {found.概念, found.类别, found.定义, found.直接上位,
+                        {}, found.生命周期};
+        } else {
+            const auto family = 关系(related_layout_->概念族锚点,
+                                     related_layout_->类型.概念族成员, false,
+                                     g, g, request.预算.最大概念数);
+            for (const auto &member : family) {
+                const auto found = 展开相关概念(概念树概念身份{member.目标节点}, g, g, request.预算);
+                if (found.定义 == definition) {
+                    if (existing) throw 相关失败{相关概念参与状态::内部不一致};
+                    if (found.类别 != category) throw 相关失败{相关概念参与状态::类别冲突};
+                    existing = {found.概念, found.类别, found.定义, found.直接上位,
+                                {}, found.生命周期};
+                }
+            }
+        }
+
+        if (const auto *create = std::get_if<相关概念创建方案>(&request.方案)) {
+            auto parents = create->直接上位;
+            std::sort(parents.begin(), parents.end(), 身份小于);
+            if (std::adjacent_find(parents.begin(), parents.end()) != parents.end())
+                throw 相关失败{相关概念参与状态::上位成环};
+            for (const auto parent : parents) {
+                const auto value = 展开相关概念(parent, g, g, request.预算);
+                if (value.类别 != category) throw 相关失败{相关概念参与状态::类别冲突};
+                if (existing && parent == existing->概念)
+                    throw 相关失败{相关概念参与状态::上位成环};
+            }
+            if (existing) {
+                std::vector<概念树概念身份> actual;
+                for (const auto &edge : existing->直接上位) actual.push_back(edge.上位);
+                std::sort(actual.begin(), actual.end(), 身份小于);
+                if (actual != parents) throw 相关失败{相关概念参与状态::签名冲突};
+            }
+        }
+
+        if (existing) {
+            const auto expanded = 展开相关概念(existing->概念, g, g, request.预算);
+            const auto target = 世界编码(request.挂靠.世界事实);
+            for (const auto &attachment : expanded.挂接) {
+                if (attachment.世界引用.index() != request.挂靠.世界事实.index() ||
+                    世界编码(attachment.世界引用) != target) continue;
+                const auto values = 属性(attachment.记录, g, g);
+                const auto &cutoff = std::get<std::vector<std::uint64_t>>(
+                    唯一属性(values, related_layout_->类型.证据截止).材料);
+                if (cutoff.size() != 1 || cutoff.front() != request.挂靠.证据截止)
+                    throw 相关失败{相关概念参与状态::挂靠无效};
+                out.状态 = 相关概念参与状态::精确重复;
+                守卫代次(g);
+                return out;
+            }
+        }
+        out.写集 = 形成相关概念写集(request, g, participant, existing);
+        if (!out.写集 || out.写集->写集.节点.empty())
+            throw 相关失败{相关概念参与状态::内部不一致};
+        out.状态 = 相关概念参与状态::已准备;
+        守卫代次(g);
+        return out;
+    } catch (const 相关失败 &e) { out.状态 = e.状态; }
+      catch (const 失败 &e) { out.状态 = 映射相关状态(e.状态); }
+      catch (const std::bad_alloc &) { out.状态 = 相关概念参与状态::资源失败; }
+      catch (const std::length_error &) { out.状态 = 相关概念参与状态::资源失败; }
+      catch (...) { out.状态 = 相关概念参与状态::内部不一致; }
+    out.写集.reset();
+    return out;
+}
+
+相关概念组合提交结果 概念树类数据服务::提交相关概念组合事务(
+    const 相关概念组合提交请求 &request,
+    std::span<L1所有者范围写端口 *const> externalPorts) noexcept {
+    相关概念组合提交结果 out;
+    out.Gread = request.Gread;
+    out.事务结果.组合写入幂等身份 = request.组合幂等身份;
+    try {
+        std::scoped_lock lock(mutex_);
+        const auto count = request.前序参与者写集组.size();
+        if (request.版本 != 1 || !request.Gread || !有效(request.组合幂等身份) ||
+            count < 1 || count > 254 || externalPorts.size() != count ||
+            request.概念请求.G0 != request.Gread || !有效(request.概念请求.幂等身份))
+            throw 相关失败{相关概念参与状态::入口拒绝};
+        std::set<std::uint64_t> owners;
+        std::set<std::uint64_t> keys;
+        keys.insert(request.组合幂等身份.值);
+        for (std::size_t i = 0; i < count; ++i) {
+            const auto &part = request.前序参与者写集组[i];
+            auto *port = externalPorts[i];
+            if (part.参与者.值 != i + 1 || !有效(part.所有者) ||
+                part.写集.合同版本 != L1所有者范围CRUD合同版本 ||
+                part.写集.期望事实代次 != request.Gread ||
+                !有效(part.写集.写入幂等身份) || !port || !port->有效() ||
+                !port->绑定于(l1_) || port->所有者身份() != part.所有者 ||
+                !owners.insert(part.所有者.编码.值).second ||
+                !keys.insert(part.写集.写入幂等身份.值).second)
+                throw 相关失败{相关概念参与状态::入口拒绝};
+        }
+        if (!owners.insert(port_.所有者身份().编码.值).second ||
+            !keys.insert(request.概念请求.幂等身份.值).second)
+            throw 相关失败{相关概念参与状态::入口拒绝};
+
+        const L1有限N分区原子参与者身份_v3 conceptParticipant{
+            static_cast<std::uint8_t>(count + 1)};
+        L1有限N分区原子参与者写集_v3 conceptPart;
+        const auto first = port_.读取首次写入材料(
+            {L1所有者范围首次写入读取合同版本, request.概念请求.幂等身份});
+        if (first.状态 == L1所有者范围读取状态::未找到) {
+            const auto prepared = 准备相关概念片段(
+                request.概念请求, request.Gread, conceptParticipant);
+            out.概念状态 = prepared.状态;
+            if (prepared.状态 != 相关概念参与状态::已准备 || !prepared.写集)
+                return out;
+            conceptPart = *prepared.写集;
+            if (conceptPart.参与者 != conceptParticipant ||
+                conceptPart.所有者 != port_.所有者身份() ||
+                conceptPart.写集.期望事实代次 != request.Gread ||
+                conceptPart.写集.写入幂等身份 != request.概念请求.幂等身份)
+                throw 相关失败{相关概念参与状态::内部不一致};
+        } else if (first.状态 == L1所有者范围读取状态::成功) {
+            if (first.合同版本 != L1所有者范围首次写入读取合同版本 ||
+                first.所有者 != port_.所有者身份() ||
+                first.写入幂等身份 != request.概念请求.幂等身份 ||
+                !first.首次规范化写集 || !first.首次写入结果 ||
+                first.首次写入结果->所有者 != port_.所有者身份() ||
+                first.首次写入结果->写入幂等身份 != request.概念请求.幂等身份 ||
+                !first.首次写入结果->事实代次)
+                throw 相关失败{相关概念参与状态::内部不一致};
+            const auto semantic = 读取相关概念结果(
+                request.概念请求, first.读取事实代次,
+                first.首次写入结果->事实代次);
+            if (semantic.状态 != 相关概念参与状态::已读取 || !semantic.概念)
+                throw 相关失败{相关概念参与状态::内部不一致};
+            conceptPart.参与者 = conceptParticipant;
+            conceptPart.所有者 = port_.所有者身份();
+            const auto &source = *first.首次规范化写集;
+            conceptPart.写集.合同版本 = source.合同版本;
+            conceptPart.写集.期望事实代次 = source.期望事实代次;
+            conceptPart.写集.写入幂等身份 = source.写入幂等身份;
+            for (const auto &node : source.节点)
+                conceptPart.写集.节点.push_back(
+                    {node.本地键, node.种类, node.属性类型表示});
+            conceptPart.写集.退出事实 = source.退出事实;
+            const auto convertRef = [](const L1所有者范围事实引用 &ref)
+                -> L1有限N分区原子事实引用值_v3 {
+                return std::visit([](const auto &value) -> L1有限N分区原子事实引用值_v3 {
+                    return value;
+                }, ref);
+            };
+            for (const auto &edge : source.关系)
+                conceptPart.写集.关系.push_back({edge.本地键, convertRef(edge.源节点),
+                    convertRef(edge.目标节点), convertRef(edge.关系类型节点), edge.角色或顺序});
+            for (const auto &value : source.值)
+                conceptPart.写集.值.push_back({value.本地键, convertRef(value.所属节点),
+                    convertRef(value.属性类型节点), value.材料, convertRef(value.来源节点)});
+            for (const auto &slot : source.属性槽变更)
+                conceptPart.写集.属性槽变更.push_back({convertRef(slot.所属节点),
+                    convertRef(slot.属性类型节点), slot.新当前值});
+            const auto restoreRef = [](const L1有限N分区原子事实引用值_v3 &ref)
+                -> std::optional<L1所有者范围事实引用> {
+                if (const auto *stable = std::get_if<稳定编码>(&ref)) return *stable;
+                if (const auto *local = std::get_if<Key>(&ref)) return *local;
+                return std::nullopt;
+            };
+            L1所有者范围写集请求 restored;
+            restored.合同版本 = conceptPart.写集.合同版本;
+            restored.期望事实代次 = conceptPart.写集.期望事实代次;
+            restored.写入幂等身份 = conceptPart.写集.写入幂等身份;
+            for (const auto &node : conceptPart.写集.节点)
+                restored.节点.push_back(
+                    {node.本地键, node.种类, node.属性类型表示});
+            restored.退出事实 = conceptPart.写集.退出事实;
+            for (const auto &edge : conceptPart.写集.关系) {
+                const auto a = restoreRef(edge.源节点), b = restoreRef(edge.目标节点),
+                           c = restoreRef(edge.关系类型节点);
+                if (!a || !b || !c) throw 相关失败{相关概念参与状态::内部不一致};
+                restored.关系.push_back({edge.本地键, *a, *b, *c, edge.角色或顺序});
+            }
+            for (const auto &value : conceptPart.写集.值) {
+                const auto a = restoreRef(value.所属节点), b = restoreRef(value.属性类型节点),
+                           c = restoreRef(value.来源节点);
+                if (!a || !b || !c) throw 相关失败{相关概念参与状态::内部不一致};
+                restored.值.push_back({value.本地键, *a, *b, value.材料, *c});
+            }
+            for (const auto &slot : conceptPart.写集.属性槽变更) {
+                const auto a = restoreRef(slot.所属节点), b = restoreRef(slot.属性类型节点);
+                if (!a || !b) throw 相关失败{相关概念参与状态::内部不一致};
+                restored.属性槽变更.push_back({*a, *b, slot.新当前值});
+            }
+            if (restored != source) throw 相关失败{相关概念参与状态::内部不一致};
+            out.概念状态 = 相关概念参与状态::已准备;
+        } else {
+            throw 相关失败{映射相关状态(映射(first.状态))};
+        }
+
+        L1有限N分区原子事务请求_v3 transaction;
+        transaction.共同期望事实代次 = request.Gread;
+        transaction.组合写入幂等身份 = request.组合幂等身份;
+        transaction.参与者写集组 = request.前序参与者写集组;
+        transaction.参与者写集组.push_back(std::move(conceptPart));
+        std::vector<const L1所有者范围写端口 *> remaining;
+        for (std::size_t i = 1; i < externalPorts.size(); ++i) remaining.push_back(externalPorts[i]);
+        remaining.push_back(&port_);
+        out.已进入L1 = true;
+        out.事务结果 = externalPorts.front()->提交有限N分区原子事务_v3(transaction, remaining);
+        if (out.事务结果.状态 == L1有限N分区原子事务状态_v3::精确重复)
+            out.概念状态 = 相关概念参与状态::精确重复;
+        return out;
+    } catch (const 相关失败 &e) { out.概念状态 = e.状态; }
+      catch (const 失败 &e) { out.概念状态 = 映射相关状态(e.状态); }
+      catch (const std::bad_alloc &) { out.概念状态 = 相关概念参与状态::资源失败; }
+      catch (const std::length_error &) { out.概念状态 = 相关概念参与状态::资源失败; }
+      catch (...) { out.概念状态 = 相关概念参与状态::内部不一致; }
+    out.已进入L1 = false;
+    return out;
+}
+
+相关概念参与读回 概念树类数据服务::读取相关概念结果(
+    const 相关概念参与请求 &request, std::uint64_t g, std::uint64_t h) const noexcept {
+    相关概念参与读回 out;
+    out.Gread = g;
+    try {
+        if (!related_layout_) throw 相关失败{相关概念参与状态::旧格式不支持};
+        if (request.版本 != 1 || !g || !h || h > g || request.G0 > g ||
+            !有效(request.幂等身份) || request.方案.valueless_by_exception())
+            throw 相关失败{相关概念参与状态::入口拒绝};
+        try { 预算有效(request.预算); }
+        catch (const 失败 &e) { throw 相关失败{映射相关状态(e.状态)}; }
+        守卫代次(g);
+        概念树概念身份 id;
+        if (const auto *reuse = std::get_if<相关概念精确复用方案>(&request.方案)) id = reuse->概念;
+        else {
+            const auto expected = 规范化定义(std::get<相关概念创建方案>(request.方案).定义);
+            const auto family = 关系(related_layout_->概念族锚点,
+                                     related_layout_->类型.概念族成员, false,
+                                     g, h, request.预算.最大概念数);
+            for (const auto &member : family) {
+                const auto found = 展开相关概念(概念树概念身份{member.目标节点}, g, h, request.预算);
+                if (found.定义 == expected) {
+                    if (有效(id.值)) throw 相关失败{相关概念参与状态::内部不一致};
+                    id = found.概念;
+                }
+            }
+            if (!有效(id.值)) throw 相关失败{相关概念参与状态::概念未找到};
+        }
+        out.概念 = 读取相关概念内部(request, id, g, h);
+        out.H = h;
+        out.状态 = 相关概念参与状态::已读取;
+        守卫代次(g);
+        return out;
+    } catch (const 相关失败 &e) { out.状态 = e.状态; }
+      catch (const 失败 &e) { out.状态 = 映射相关状态(e.状态); }
+      catch (const std::bad_alloc &) { out.状态 = 相关概念参与状态::资源失败; }
+      catch (const std::length_error &) { out.状态 = 相关概念参与状态::资源失败; }
+      catch (...) { out.状态 = 相关概念参与状态::内部不一致; }
+    out.H = 0;
+    out.概念.reset();
+    return out;
+}
 } // namespace 海中鱼巣
