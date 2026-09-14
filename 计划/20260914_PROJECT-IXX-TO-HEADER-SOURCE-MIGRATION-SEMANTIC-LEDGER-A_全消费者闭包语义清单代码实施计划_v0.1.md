@@ -3,7 +3,7 @@
 计划身份：`PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-SEMANTIC-LEDGER-A`
 
 日期：2026-09-14
-版本：v0.3
+版本：v0.4
 状态：可执行（只生成迁移施工前的可审查证据；不改生产源码或工程）
 
 ## 1. 目标、范围与完成条件
@@ -43,15 +43,65 @@
 
 每个输入清单行必须含相对路径、Git blob、SHA-256、文件类型和发现命令。扫描结果扩大范围时扩大清单；不得因目录、大小或是否“低依赖”缩小。
 
-### 3.2 MSVC 实际依赖闭包
+### 3.2 专属仓内产物与附件路径
 
-在 `D:/TEMP/海中鱼巣/PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-SEMANTIC-LEDGER-A/<UTC轮次>/` 建立当前 HEAD 的只读输入副本和独立 Debug/Release x64 输出。使用实际工程相同的 MSVC 工具集和配置；每次运行固定记录 `cl`/MSBuild 路径与版本、命令、配置、输入 hash、退出码和输出 hash。
+本叶唯一允许写入的仓内路径在 S0 前固定为以下集合。历史 v0.2 失败记录只读保留；本轮不得覆盖它们：
 
-只有某翻译单元在隔离构建成功时，才收录其编译器产生的 `/scanDependencies` 与 `/sourceDependencies` JSON。每份 JSON 保留原始文件、hash、对应翻译单元、配置及成功退出码；后处理只能汇总 JSON 中的文件/模块依赖，不能推导函数调用。
+```text
+施工记录/20260914_PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-SEMANTIC-LEDGER-A_施工记录_v0.4.md
+验证记录/20260914_PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-SEMANTIC-LEDGER-A_验证记录_v0.4.md
+施工记录/附件/20260914_PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-SEMANTIC-LEDGER-A/v0.4/输入闭包.json
+施工记录/附件/20260914_PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-SEMANTIC-LEDGER-A/v0.4/工程求值/Debug-x64.ClCompile.json
+施工记录/附件/20260914_PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-SEMANTIC-LEDGER-A/v0.4/工程求值/Release-x64.ClCompile.json
+施工记录/附件/20260914_PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-SEMANTIC-LEDGER-A/v0.4/Debug-x64/依赖索引.json
+施工记录/附件/20260914_PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-SEMANTIC-LEDGER-A/v0.4/Release-x64/依赖索引.json
+施工记录/附件/20260914_PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-SEMANTIC-LEDGER-A/v0.4/源码候选实体清单.json
+施工记录/附件/20260914_PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-SEMANTIC-LEDGER-A/v0.4/人工物理落点复核.json
+施工记录/附件/20260914_PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-SEMANTIC-LEDGER-A/v0.4/执行元数据.json
+施工记录/附件/20260914_PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-SEMANTIC-LEDGER-A/v0.4/失败分账.json
+```
 
-失败的构建必须保留首个真实诊断、命令和退出码，并标记“无成功依赖闭包”；不得用旧 JSON、词法 import 图或人工猜测补齐。Debug 与 Release 输出分账，不能由一边成功替代另一边。
+原始依赖 JSON 不得省略或改名：每个配置的 `依赖索引.json` 必须逐条引用同一附件根下的 `Debug-x64/scanDependencies/<tu_sha256>.json`、`Debug-x64/sourceDependencies/<tu_sha256>.json`、`Release-x64/scanDependencies/<tu_sha256>.json`、`Release-x64/sourceDependencies/<tu_sha256>.json`。`<tu_sha256>` 是 UTF-8、LF、仓库相对 `/` 路径的 SHA-256 小写十六进制；每个索引条目再记录原 JSON SHA-256、相对路径、TU、实际 `cl` 退出码。任何丢失、重复键、索引外 JSON 或 JSON 解析失败都是本叶失败，不能改以汇总表代替原始 JSON。
 
-### 3.3 源码候选实体清单
+### 3.3 MSVC 工程入口、隔离与实际依赖闭包
+
+唯一工程入口为当前 HEAD 的 `海中鱼巣.vcxproj`；不构建五个验证工程。本叶只扫描主工程的 `Debug|x64` 与 `Release|x64`，固定 `EnableD455RealSense=false`。工具入口必须由以下命令取得并记录其标准输出、退出码和 SHA-256：
+
+```powershell
+$vswhere = 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe'
+$vs = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
+$msbuild = Join-Path $vs 'MSBuild\Current\Bin\MSBuild.exe'
+$vsdevcmd = Join-Path $vs 'Common7\Tools\VsDevCmd.bat'
+cmd /c "call `"$vsdevcmd`" -arch=x64 -host_arch=x64 >nul && `"$msbuild`" -version"
+```
+
+`$vswhere`、`$msbuild`、`$vsdevcmd` 任一不存在、返回多于一个安装根、或 `MSBuild -version` 失败即安全失败；不得退回 PATH 中其它 `MSBuild.exe`。输入副本只能从 S0 所在 HEAD 用 `git archive --format=tar <HEAD> | tar -xf - -C <轮次>/source` 建立。实际构建只允许在 `D:/TEMP/海中鱼巣/PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-SEMANTIC-LEDGER-A/<UTC轮次>/source/` 中运行；对象、二进制和 JSON 分别固定落入该轮次的 `obj/Debug-x64`、`obj/Release-x64`、`bin/Debug-x64`、`bin/Release-x64`，不得读写仓库构建目录。
+
+每配置先在输入副本运行以下求值命令，完整 stdout 原样写入 §3.2 对应 `工程求值/*.ClCompile.json`：
+
+```powershell
+& $msbuild .\海中鱼巣.vcxproj -getItem:ClCompile -property:Configuration=Debug -property:Platform=x64 -property:EnableD455RealSense=false -nologo
+& $msbuild .\海中鱼巣.vcxproj -getItem:ClCompile -property:Configuration=Release -property:Platform=x64 -property:EnableD455RealSense=false -nologo
+```
+
+要求范围是每个求值结果中 `ExcludedFromBuild != true` 的全部 `ClCompile.Identity`，按 `/` 规范化并按序去重。当前已冻结集合为两配置均相同的 **59** 个 TU：主工程 **56** 个未排除的 `.ixx`、`海中鱼巣/装配.普通应用.cppcpp`、`海中鱼巣/业务/应用服务.自我形成.cppcpp` 与 `海中鱼巣/入口.cpp`；`海中鱼巣/适配/采集器.D455相机.ixx` 因固定关闭 D455 而唯一 `ExcludedFromBuild=true`。两个配置的求值集合、数量或该 D455 排除事实与此合同不符时，停止并在失败分账中写实际集合差异；不得自行缩小、扩大或改用一边集合。
+
+每配置只在预先创建的 `<轮次>/obj/<配置>/scanDependencies` 与 `<轮次>/obj/<配置>/sourceDependencies` 下构建。唯一构建命令形态如下；`<tu_sha256>` 通过项目项元数据 `%(ClCompile.Identity)` 的规范化路径计算，执行前先生成且记录 `TU -> sha256 -> 两个输出路径` 映射。若 MSBuild 项元数据不能产生该唯一映射，停止，不得使用 `%(Filename)` 或共享输出名。
+
+```powershell
+& $msbuild .\海中鱼巣.vcxproj -t:Rebuild -m:1 -nologo `
+  -property:Configuration=<Debug|Release> -property:Platform=x64 -property:EnableD455RealSense=false `
+  -property:BaseIntermediateOutputPath=<轮次>\obj\<配置>\ `
+  -property:IntDir=<轮次>\obj\<配置>\ `
+  -property:OutDir=<轮次>\bin\<配置>\ `
+  -property:AdditionalOptions="/scanDependencies <轮次>\\obj\\<配置>\\scanDependencies\\<tu_sha256>.json /sourceDependencies <轮次>\\obj\\<配置>\\sourceDependencies\\<tu_sha256>.json %(AdditionalOptions)"
+```
+
+上式的逐 TU `AdditionalOptions` 必须通过输入副本外、但同一轮次内的临时 MSBuild `.targets` 注入：该 targets 仅以 `BeforeTargets=ClCompile` 逐 `ClCompile` 项计算 `<tu_sha256>` 并追加两开关，不修改输入副本工程或仓库工程；其完整 XML、hash 和注入命令写入 `执行元数据.json`。若该注入不能保证每个实际 `cl` 命令恰有一对唯一绝对 JSON 输出，停止并记录首个命令，不能尝试全局同名 `/scanDependencies` 或 `/sourceDependencies`。
+
+只有构建返回 0、要求范围 59/59 均具有可解析的两类 JSON、且 JSON 的 source/TU 字段与映射相符时，该配置可标“成功依赖闭包”。任何失败只保留命令、首个真实诊断、退出码、已产生 JSON 与缺失 TU；不得用旧 JSON、词法 import 图或人工猜测补齐。Debug 与 Release 独立分账，任一失败即本叶“证据不完整”。
+
+### 3.4 源码候选实体清单
 
 对当前 HEAD 的每个模块、`.cppcpp` 和已有 `.cpp` 实现单元生成可人工审查的候选条目。候选可由受控源码提取产生，但提取器只定位文本，不能裁决 C++ 语义或调用关系。每条最少具有：
 
@@ -66,7 +116,7 @@
 
 提取器无法可靠划分的宏、条件编译、模板或中文标识符条目必须标 `unknown` 并保留原行区间，等待人工复核；不得丢弃、假定 inline 或假定私有。
 
-### 3.4 人工物理落点复核
+### 3.5 人工物理落点复核
 
 每个候选实体由人工复核后追加以下字段：`reviewer`、`review_time`、`classification`、`reason`、`target_header`、`target_source`、`source_anchor`。
 
