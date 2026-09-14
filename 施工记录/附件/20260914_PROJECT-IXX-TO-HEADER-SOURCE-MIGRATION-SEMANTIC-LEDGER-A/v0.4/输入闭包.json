@@ -1,0 +1,24 @@
+{
+  "schema": "PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-SEMANTIC-LEDGER-A-input-closure-v0.4",
+  "head": "ff0a535ba9e8c8a7d81c0194beedc6f2f177d80c",
+  "generatedAt": "2026-09-14T06:20:45.8249991Z",
+  "configurations": [
+    {
+      "name": "Debug|x64",
+      "total": 60,
+      "active": 59,
+      "excluded": [
+        "海中鱼巣\\适配\\采集器.D455相机.ixx"
+      ]
+    },
+    {
+      "name": "Release|x64",
+      "total": 60,
+      "active": 59,
+      "excluded": [
+        "海中鱼巣\\适配\\采集器.D455相机.ixx"
+      ]
+    }
+  ],
+  "sourceScope": "MSVC -getItem:ClCompile actual project evaluation only; not a dependency or call graph."
+}
