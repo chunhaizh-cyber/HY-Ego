@@ -3,9 +3,10 @@
 计划身份：`PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-SEMANTIC-LEDGER-A`
 
 日期：2026-09-14
-版本：v0.1
+版本：v0.2
 状态：可执行（只生成迁移施工前的语义清单；不改生产源码）
-起点：正式 `main` / `origin/main` 提交 `89697ac7220d17068f70da63cfb4a945824335f1`
+分析源码基线：`89697ac7220d17068f70da63cfb4a945824335f1`
+计划发布基线：本计划 v0.2 的 `计划/计划索引.md` 行所登记的精确 plan blob，且执行 S0 时该 blob 必须存在于当前正式 `main == origin/main` 的同一路径；不把分析源码基线冒充为计划发布 HEAD。
 
 ## 1. 目标、完成条件与边界
 
@@ -13,7 +14,7 @@
 
 完成条件是发布一份可复现的、基于 C++ 语义解析的迁移清单，供下一份实际迁移计划冻结逐实体施工合同。清单必须覆盖本节的 57 个模块、两个 `.cppcpp` 实现单元、所有活动消费者和六个工程；对每一可迁移实体列出完整签名、原始源锚点、声明/定义的 `.h/.cpp` 落点、直接调用方或“无静态直接调用方”的证据，以及唯一实体/ODR 理由。输出经复核后，计划智能体才可建立实际的全量 `.h/.cpp` 迁移计划。
 
-本叶不证明 `.h/.cpp` 已存在、工程能编译、程序行为等价、验证程序通过或任何业务能力闭合。
+本叶不证明 `.h/.cpp` 已存在、工程能编译、程序行为等价、验证程序通过或任何业务能力闭合。分析输出必须同时标明 `analysis_source_commit=89697ac7...`、`plan_release_head` 和本计划 blob；它只能说明该源码快照，不能被描述为计划发布 HEAD 的源码分析结果。
 
 允许写入仅为本计划的施工记录、验证记录及其受控清单；禁止修改：
 
@@ -22,15 +23,25 @@
 - 正式规范、共享知识索引、其它计划和异主 WIP；
 - 三个交接中的删除 WIP：`验证工具/L1中性当前引用闭包保护参数验证.cpp`、`验证工具/L1历史关系组参数验证.cpp`、`验证工具/L1历史属性值组参数验证.cpp`。
 
-后三个文件只允许从 `HEAD` Git 对象读取其内容和 blob；不得在本叶恢复、覆盖、删除或暂存。用户已经授权其后续交接，含义是它们必须进入**下一份实际迁移计划**的 `.cpp` 消费者集合，而不是授权本叶修改它们。
+后三个文件只允许从分析源码基线 Git 对象读取其内容和 blob；不得在本叶恢复、覆盖、删除或暂存。用户已经授权其后续交接，含义是它们必须进入**下一份实际迁移计划**的 `.cpp` 消费者集合，而不是授权本叶修改它们。
 
 ## 2. 正式依据与已核对事实
 
 - `CODE-FILE-01` v4.0 §2、§3.2、§3.4、§4.2、§4.3：最终形态是唯一同基本名 `.h/.cpp`；非 inline 定义不得留在头中；不得保留 `.ixx`、`.cppcpp`、`module`、`export`、`import` 或桥接形态；必须逐函数确定实体所有者和物理位置。
 - `计划/计划索引.md`：`WORLD-TREE-STRUCTURE-B` 因旧模块施工形态暂停，旧 CORE-COMPONENT 因 `FUNCTION-PHYSICAL-LOCATION-DRIFT` 和 `CONSUMER-CLOSURE-DRIFT` 暂停。
-- 在本起点 `git ls-files '*.ixx'` 为 **57**；全部是具名 C++20 模块。现存 `.cppcpp` 为 **2**：`海中鱼巣/装配.普通应用.cppcpp`、`海中鱼巣/业务/应用服务.自我形成.cppcpp`。
+- 在**分析源码基线** `89697ac7`，`git ls-files '*.ixx'` 为 **57**；全部是具名 C++20 模块。现存 `.cppcpp` 为 **2**：`海中鱼巣/装配.普通应用.cppcpp`、`海中鱼巣/业务/应用服务.自我形成.cppcpp`。
 - 已核对组件内无循环的 104 条 import 只是模块可达关系，不能推出函数调用关系。全根 `海中鱼巣/**` 与 `验证工具/**` 的活动源码必须以本计划第 4 节算法重新扫描，不能沿用旧计划数字作为结果。
 - 本机已实测 `LLVM clang++ 22.1.8` 在 `VsDevCmd.bat -arch=x64 -host_arch=x64` 环境可直接对现有 `.ixx` 执行 `-x c++ -std=c++20 -fsyntax-only -Xclang -ast-dump=json`；无 import 的 `合同.L1公共事实.ixx` 和其 BMI 均成功。故采用“原模块 + clang BMI + JSON AST”，不采用把源码伪改为头文件的文本投影。
+
+### 2.1 两个基线的可比性
+
+`89697ac7` 是唯一的**分析输入**，本计划 v0.2 所在的当前正式 HEAD 是唯一的**计划发布容器**；两者职责不同。执行 S0 必须以 Git 对象执行：
+
+```powershell
+git diff --quiet 89697ac7220d17068f70da63cfb4a945824335f1..HEAD -- 海中鱼巣 海中鱼巣.vcxproj 海中鱼巣.vcxproj.filters 验证工具
+```
+
+只有退出码为 `0`，才证明计划发布后到当前执行 HEAD 没有改变本叶的源码、工程或验证消费者输入；这时使用 `89697ac7` 生成的清单可被标记为“与当前计划发布源码闭包可比”。退出码为 `1` 时，清单仍只可作为旧基线诊断材料，本叶停止且不得发布成可供实际迁移消费的冻结输入；应以当前正式 HEAD 重新建立语义清单计划。任何工作区 dirty 都不参与该判断。
 
 ## 3. 固定输入闭包
 
@@ -75,7 +86,7 @@
 
 `D:/TEMP/海中鱼巣/PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-SEMANTIC-LEDGER-A/<UTC轮次>/`
 
-输入只能由 `git show 89697ac7:<相对路径>` 或等价 Git 对象导出取得；禁止从 dirty 工作区复制。开始时记录 `clang++ --version`、`VsDevCmd.bat` 绝对路径、MSVC 工具集版本、Windows 架构、所有输入 blob、命令行、退出码和 SHA-256。不得修改工作区源码以帮助解析。
+输入只能由 `git show 89697ac7220d17068f70da63cfb4a945824335f1:<相对路径>` 或等价 Git 对象导出取得；禁止从 dirty 工作区复制。开始时记录 `analysis_source_commit`、当前 `plan_release_head`、本计划 blob、`clang++ --version`、`VsDevCmd.bat` 绝对路径、MSVC 工具集版本、Windows 架构、所有输入 blob、命令行、退出码和 SHA-256。不得修改工作区源码、工程或验证源码以帮助解析。
 
 使用固定编译前置环境：
 
@@ -83,14 +94,14 @@
 cmd /c 'call "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\Tools\VsDevCmd.bat" -arch=x64 -host_arch=x64 >nul && set'
 ```
 
-从该环境取得系统 include；项目 include、预处理宏和语言开关从七份工程 XML 的 Debug/Release x64 实际条件合并读取。若项目条件给出相互冲突的解析开关，清单记录冲突并停止，不得任选一种。
+从该环境取得系统 include；项目 include、预处理宏和语言开关从分析源码基线中导出的七份工程 XML 的 Debug/Release x64 实际条件合并读取。若项目条件给出相互冲突的解析开关，清单记录冲突并停止，不得任选一种。
 
 ### 4.2 BMI 与 AST 步骤
 
 1. 用 §3.1 的模块声明和 import 建立有向图；import 指向 provider。拓扑排序以 provider 在前。发现环、未知 provider或重复模块名即失败。
 2. 依拓扑顺序，对每一个 Git 导出的原 `.ixx` 运行 `clang++ -std=c++20 -fms-extensions --precompile -x c++-module`；它的每个已解析 provider 必须以 `-fmodule-file=<模块名>=<对应pcm>` 显式传入。每项的 `.pcm`、stderr 和 hash 留在隔离目录。
 3. 对每个模块再次运行 `clang++ -std=c++20 -fms-extensions -fsyntax-only -x c++ -Xclang -ast-dump=json`，带同一组 `-fmodule-file`。为避免系统头淹没输出，可附加 `-Xclang -ast-dump-filter=海中鱼巣`，但只要过滤导致本源文件任一声明/定义缺失，就改用未过滤输出后再提取；不得因输出过大跳过模块。
-4. 对 `入口.cpp`、两个 `.cppcpp`、所有扫描命中验证 `.cpp` 同样生成 AST；对三个删除 WIP 的输入必须先 `git show HEAD:<路径>` 到隔离目录，禁止访问工作区路径。
+4. 对 `入口.cpp`、两个 `.cppcpp`、所有扫描命中验证 `.cpp` 同样生成 AST；对三个删除 WIP 的输入必须先 `git show 89697ac7220d17068f70da63cfb4a945824335f1:<路径>` 到隔离目录，禁止访问工作区路径。
 5. AST 后处理只接受 `kind`、限定名、类型、模板实参、`mangledName`（有）、source range、`isThisDeclarationADefinition`、inline/模板/可见性信息和调用表达式中的已解析引用。后处理脚本、版本、输入 hash 和输出 hash 均进入记录；词法扫描仅可作 AST 覆盖率交叉检查，不能决定实体身份、重载归属或调用关系。
 
 ### 4.3 逐实体迁移清单的强制字段
@@ -119,15 +130,16 @@ cmd /c 'call "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\Tool
 - 每个 public/import 可达实体保留公开声明；每个语义调用方/间接调用标识均可回读；
 - 模块、消费者、工程三份闭包清单与 Git blob 逐项一致；
 - `rg` 的词法候选定义只是较低保障的覆盖计数，不得比 AST 定义数更多而无逐行解释；
-- 三个交接验证源均显示为 `HEAD` 读取、`.cpp` consumer、未写入工作区。
+- 三个交接验证源均显示为 `89697ac7` 读取、`.cpp` consumer、未写入工作区。
+- 每份清单与记录均同时含 `analysis_source_commit`、`plan_release_head`、`plan_blob` 和第 2.1 节可比性命令的退出码；`analysis_source_commit` 不得省略或以 `HEAD` 代称。
 
 任一 module BMI 失败、AST 不能唯一标识实体、调用引用不能解析、布局须改变、未知消费者/工程项出现、或 WIP 与计划写入范围冲突时：停止在隔离目录，写失败记录与最小复现命令；不得改源码、工程、WIP、规范或当前暂停计划。
 
 ## 5. 实施与发布
 
-1. 执行者先完成 S0：确认 `main == origin/main == 89697ac7`，index 空、正式输入 blob、外部占用和三项 handoff WIP 状态；任何源码/工程基线变化使本计划退出并由计划智能体重建。
+1. 执行者先完成 S0：确认当前为 `main`、`HEAD == origin/main`、Git index 空，且 `HEAD:<本计划路径>` 与索引行登记的 v0.2 plan blob 相同；再确认 `89697ac7` 对象可读、三个 handoff WIP 仍不在本叶写入范围，并运行第 2.1 节的可比性命令。S0 不要求 `HEAD == 89697ac7`；后者只冻结分析输入。可比性失败、计划 blob 不一致、分析输入对象不可读或任何源码/工程/验证消费者输入相对 `89697ac7` 发生 Git 变化时，停止本叶并由计划智能体以新的正式 HEAD 重建语义清单计划。
 2. 建立第 4 节隔离目录并生成三份闭包清单、BMI、AST 和实体清单；此时不建立源码备份，因为未修改源码。
-3. 将可审计的 `模块清单.json`、`消费者闭包.json`、`工程闭包.json`、`语义实体迁移清单.json` 作为本计划施工记录附件提交，外部大体积 AST/BMI 只以 hash、命令、路径和保留期限记载；不得把数百 MB AST 无审查地纳入仓库。
+3. 将可审计的 `模块清单.json`、`消费者闭包.json`、`工程闭包.json`、`语义实体迁移清单.json` 作为本计划施工记录附件提交；每项都写入第 4.4 节的双基线元数据。外部大体积 AST/BMI 只以 hash、命令、路径和保留期限记载；不得把数百 MB AST 无审查地纳入仓库。
 4. 复核后由计划智能体建立下一份实际迁移计划。它必须把三份清单作为不可变输入，冻结所有 57 个 `.ixx` 的 `.h/.cpp` 映射、两个 `.cppcpp` 的承接、所有消费者和全部工程项。该后继才可以取得代码文件所有权、做 Git 白名单备份，并按用户确定的“顶层到低层编辑、全闭合后一次编译”的顺序施工。
 
 本计划施工记录固定为 `施工记录/20260914_PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-SEMANTIC-LEDGER-A_施工记录_v0.1.md`，验证记录固定为 `验证记录/20260914_PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-SEMANTIC-LEDGER-A_验证记录_v0.1.md`。
@@ -136,4 +148,6 @@ cmd /c 'call "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\Tool
 
 ## 6. 完成声明边界
 
-本叶完成仅证明：基于 `89697ac7` 的全消费者闭包已被语义分析并冻结为下一计划可消费的逐实体清单，三个删除 WIP 已按用户授权被纳入未来 `.cpp` 消费者范围但未被触碰。它不证明实际模块迁移、编译、链接、运行、恢复、业务语义或全项目无模块格式。
+本叶完成仅证明：基于 `89697ac7` 的全消费者闭包已被语义分析；只有第 2.1 节可比性为通过时，结果才可冻结为下一计划可消费的逐实体清单。三个删除 WIP 已按用户授权被纳入未来 `.cpp` 消费者范围但未被触碰。它不证明实际模块迁移、编译、链接、运行、恢复、业务语义或全项目无模块格式。
+
+下一份实际迁移计划必须重新 S0：其自身 `main == origin/main` 与登记 plan blob 一致，并逐一比对该计划源码 / 工程 / 验证消费者 Git 路径相对于本清单 `analysis_source_commit` 的差异。无差异时可引用本清单；任一差异存在时，必须先以该实际计划的正式源码基线重新生成并发布语义清单，禁止把本计划旧清单直接用于 `.h/.cpp` 施工。
