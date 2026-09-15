@@ -1,6 +1,7 @@
 #pragma once
 
 #include "业务/应用服务.自我形成.h"
+#include "业务/应用服务.方法登记根生产初始化.h"
 
 #include <cstdint>
 #include <filesystem>
@@ -47,5 +48,6 @@ struct 普通应用装配结果 final {
 普通应用装配结果 构造普通应用上下文() noexcept;
 真实自我形成结果 初始化普通应用自我() noexcept;
 真实自我形成结果 读取普通应用自我() noexcept;
+方法登记根生产初始化结果 初始化普通应用方法登记根() noexcept;
 
 } // namespace 海中鱼巣

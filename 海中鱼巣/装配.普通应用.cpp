@@ -187,6 +187,7 @@ struct 普通应用上下文 final {
   L1所有者范围交付 场景所有者;
   L1所有者范围交付 状态所有者;
   L1所有者范围交付 概念所有者;
+  L1所有者范围交付 方法登记根初始化结构所有者;
   std::unique_ptr<特征值类数据服务> 特征值;
   std::unique_ptr<特征类数据服务> 特征;
   std::unique_ptr<存在类数据服务> 存在;
@@ -196,6 +197,8 @@ struct 普通应用上下文 final {
   std::unique_ptr<世界树根数据服务> 根服务;
   std::unique_ptr<世界树应用服务> 世界树;
   std::unique_ptr<真实自我形成服务> 自我;
+  std::unique_ptr<L2方法结构聚合服务> 方法结构聚合;
+  std::unique_ptr<方法登记根生产初始化提供者> 方法登记根初始化;
   存在单例角色结构交付 角色结构;
   std::optional<std::uint64_t> 根原G0;
 };
@@ -347,6 +350,12 @@ std::unique_ptr<普通应用上下文> 建立上下文(
       std::move(*result->概念所有者.写入端口),*conceptRegistration.交付);
   result->根服务 =
       std::make_unique<世界树根数据服务>(*result->存在, *result->场景);
+  result->方法登记根初始化结构所有者 = 建立所有者(
+      issuer, l1, 方法登记根初始化所有者建立键);
+  result->方法结构聚合 = std::make_unique<L2方法结构聚合服务>(l1,
+      std::move(*result->方法登记根初始化结构所有者.写入端口));
+  result->方法登记根初始化 = std::make_unique<方法登记根生产初始化提供者>(
+      *result->方法结构聚合);
   return result;
 }
 
@@ -543,6 +552,30 @@ namespace 普通应用装配内部 {
   if(!root.成功(rootBudget)){out.状态=真实自我形成状态::读取未完成;return out;}
   return 上下文->自我->读取当前自我({1,root.结果头.Gread,root.树->根场景,
       上下文->角色结构.项目角色,{256,64,64},{256,256,256,64,64,64}});
+}
+
+方法登记根生产初始化结果 初始化普通应用方法登记根() noexcept {
+  using namespace 普通应用装配内部;
+  std::lock_guard lock(上下文锁);
+  方法登记根生产初始化结果 out;
+  if (!上下文 || !上下文->世界树 || !上下文->自我 ||
+      !上下文->方法登记根初始化) return out;
+  try {
+    const 世界树读取预算 rootBudget{64,256};
+    const auto root = 上下文->世界树->读取当前现实世界根(rootBudget);
+    if (!root.成功(rootBudget)) return out;
+    const 真实自我读取请求 selfRequest{1, root.结果头.Gread,
+        root.树->根场景, 上下文->角色结构.项目角色, {256,64,64},
+        {256,256,256,64,64,64}};
+    const auto self = 上下文->自我->读取当前自我(selfRequest);
+    if (!self.成功(selfRequest)) return out;
+    return 上下文->方法登记根初始化->初始化({1});
+  } catch (const std::bad_alloc &) {
+    out.状态 = 方法登记根生产初始化状态::资源失败;
+  } catch (...) {
+    out.状态 = 方法登记根生产初始化状态::内部不一致;
+  }
+  return out;
 }
 
 } // namespace 海中鱼巣

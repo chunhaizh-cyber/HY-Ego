@@ -169,6 +169,8 @@
     <ClInclude Include="海中鱼巣\业务\应用服务.需求目标方向.h" />
     <ClInclude Include="海中鱼巣\业务\应用服务.任务目标方向.h" />
     <ClInclude Include="海中鱼巣\领域\数据服务.方法类.h" />
+    <ClInclude Include="海中鱼巣\领域\数据服务.方法登记根.h" />
+    <ClCompile Include="海中鱼巣\领域\数据服务.方法登记根.cpp" />
     <ClInclude Include="海中鱼巣\领域\数据服务.需求类.h" />
     <ClInclude Include="海中鱼巣\领域\数据服务.任务类.h" />
     <ClInclude Include="海中鱼巣\领域\数据服务.状态类.h" />
@@ -186,6 +188,8 @@
     <ClInclude Include="海中鱼巣\业务\应用服务.世界树类.h" />
     <ClInclude Include="海中鱼巣\业务\应用服务.自我形成.h" />
     <ClCompile Include="海中鱼巣\业务\应用服务.自我形成.cpp" />
+    <ClInclude Include="海中鱼巣\业务\应用服务.方法登记根生产初始化.h" />
+    <ClCompile Include="海中鱼巣\业务\应用服务.方法登记根生产初始化.cpp" />
     <ClInclude Include="海中鱼巣\业务\应用服务.特征概念类.h" />
     <ClCompile Include="海中鱼巣\业务\应用服务.特征概念类.cpp" />
     <ClInclude Include="海中鱼巣\业务\应用服务.存在概念树类.h" />
