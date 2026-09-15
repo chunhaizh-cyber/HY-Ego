@@ -305,10 +305,17 @@ std::unique_ptr<普通应用上下文> 建立上下文(
       l1,*result->存在所有者.写入端口,roleRequest);
   if(!role.成功(roleRequest)||!role.交付)throw 角色结构异常{role.状态};
   result->角色结构=*role.交付;
+  const auto instanceFeatureG0=定位首次(*result->存在所有者.写入端口,l1,0x4946525354525543ULL).G0;
+  const 实例特征结构登记请求 instanceFeatureRequest{
+      1,instanceFeatureG0,{0x4946525354525543ULL}};
+  const auto instanceFeature=存在类数据服务::登记实例特征结构(
+      l1,*result->存在所有者.写入端口,instanceFeatureRequest);
+  if(!instanceFeature.成功(instanceFeatureRequest)||!instanceFeature.交付)
+    throw 普通应用装配状态::元结构建立失败;
   result->存在 = std::make_unique<存在类数据服务>(
       l1, *result->特征, std::move(*result->存在所有者.写入端口),
       existenceLayout[0], existenceLayout[1],
-      存在当前采用结构交付{existenceLayout[2]},result->角色结构);
+      存在当前采用结构交付{existenceLayout[2]},*instanceFeature.交付,result->角色结构);
   result->状态 = std::make_unique<状态类数据服务>(
       l1, *result->特征, std::move(*result->状态所有者.写入端口),
       状态类结构交付{stateLayout[0], stateLayout[1], stateLayout[2],

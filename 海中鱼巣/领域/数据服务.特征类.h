@@ -149,6 +149,34 @@ template<class T> struct 特征截止事实 final { std::uint64_t Gread = 0, H =
 inline constexpr std::uint32_t 标量派生合同版本 = 2;
 enum class 特征类比较用途 : std::uint8_t { 目标判断 = 1, 状态迁移 = 2 };
 enum class 特征类比较角色 : std::uint8_t { 当前事实 = 1, 目标状态 = 2, 前状态 = 3, 后当前事实 = 4 };
+// 4115：R 归组只声明“是否存在可用的正式比较方案”。本类不把 I64 域、相邻或重叠算法转作 R。
+enum class 特征R归组用途 : std::uint8_t { R归组 = 1 };
+enum class 特征R归组状态 : std::uint8_t {
+    归入当前R = 1, 形成新R = 2, 比较未启用 = 3,
+    入口拒绝 = 4, 特征未找到 = 5, 特征已退出 = 6,
+    类型不匹配 = 7, 数量预算不足 = 8, 事实代次漂移 = 9,
+    资源失败 = 10, 内部不一致 = 11
+};
+struct 特征R归组比较请求 final {
+    std::uint32_t 版本 = 1;
+    std::uint64_t Gread = 0, H = 0;
+    特征类型身份 FT;
+    特征R归组用途 用途 = 特征R归组用途::R归组;
+    特征信息身份 当前采用基准F, 候选F;
+    std::uint64_t 读取预算 = 0;
+    friend bool operator==(const 特征R归组比较请求&, const 特征R归组比较请求&) = default;
+};
+struct 特征R归组比较结果 final {
+    std::uint32_t 版本 = 1;
+    特征R归组状态 状态 = 特征R归组状态::入口拒绝;
+    std::uint64_t Gread = 0, H = 0;
+    std::optional<准确特征读取事实> 当前采用基准;
+    std::optional<准确特征读取事实> 候选;
+    bool 成功(const 特征R归组比较请求& r) const noexcept {
+        return 版本 == 1 && r.版本 == 1 && Gread == r.Gread && H == r.H && H && H <= Gread
+            && 状态 == 特征R归组状态::比较未启用 && 当前采用基准 && 候选;
+    }
+};
 struct 特征类定义身份 final {
     稳定编码 结点{};
     friend bool operator==(const 特征类定义身份&, const 特征类定义身份&) = default;
@@ -871,6 +899,7 @@ public:
     R<特征准确值> 读取准确特征值(特征信息身份) const;
     有界准确特征读取结果 读取有界准确特征事实(const 有界准确特征读取请求&) const noexcept;
     R<准确特征读取事实> 读取准确特征事实(const 准确特征读取请求&) const;
+    特征R归组比较结果 比较FT的R归组(const 特征R归组比较请求&) const noexcept;
     特征类型准确值核验结果 核验正式特征类型准确值(
         const 特征类型准确值核验请求&) const;
     R<特征截止事实<先天I64特征类型信息>> 读取先天I64特征类型事实(const 特征类型截止请求&) const;

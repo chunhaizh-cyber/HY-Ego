@@ -167,6 +167,46 @@ struct 存在当前采用结果 final {
   std::optional<存在当前采用写请求> 原请求;
   bool 成功() const noexcept;
 };
+
+// 4115：这些身份只表达存在 owner 的结构节点；它们不改变准确 F 或当前采用。
+struct 实例特征容器身份 final {
+  稳定编码 编码{};
+  friend bool operator==(const 实例特征容器身份 &, const 实例特征容器身份 &) = default;
+};
+struct 实例特征R集合身份 final {
+  稳定编码 编码{};
+  friend bool operator==(const 实例特征R集合身份 &, const 实例特征R集合身份 &) = default;
+};
+struct 实例特征R集合版本 final {
+  稳定编码 编码{};
+  friend bool operator==(const 实例特征R集合版本 &, const 实例特征R集合版本 &) = default;
+};
+struct 实例特征结构交付 final {
+  std::uint32_t 版本 = 1;
+  稳定编码 E到IF{}, IF到F{}, IF到R集合{}, R集合到版本{}, 版本到R项{}, R项到F{};
+  friend bool operator==(const 实例特征结构交付 &, const 实例特征结构交付 &) = default;
+};
+enum class 实例特征结构状态 : std::uint8_t {
+  已登记 = 1, 精确重复 = 2, 入口拒绝 = 3, 事实代次漂移 = 4,
+  幂等冲突 = 5, 结构冲突 = 6, 已可能发布 = 7, 资源失败 = 8, 内部不一致 = 9
+};
+struct 实例特征结构登记请求 final {
+  std::uint32_t 版本 = 1;
+  std::uint64_t G0 = 0;
+  L1所有者范围写入幂等身份 幂等身份{};
+  friend bool operator==(const 实例特征结构登记请求 &, const 实例特征结构登记请求 &) = default;
+};
+struct 实例特征结构登记结果 final {
+  实例特征结构状态 状态 = 实例特征结构状态::入口拒绝;
+  std::uint32_t 版本 = 1;
+  std::uint64_t Gread = 0;
+  std::optional<std::uint64_t> 首次H;
+  std::optional<实例特征结构交付> 交付;
+  bool 成功(const 实例特征结构登记请求 &r) const noexcept {
+    return r.版本 == 1 && r.G0 && 版本 == 1 && Gread >= r.G0 && 交付 &&
+      (状态 == 实例特征结构状态::已登记 || 状态 == 实例特征结构状态::精确重复);
+  }
+};
 struct 存在类成员引用 final {
   稳定编码 成员关系{};
   稳定编码 目标结点{};
@@ -1045,11 +1085,12 @@ public:
   存在类数据服务(const L1事实基座服务 &第一层服务,
                  const 特征类数据服务 &特征服务, L1所有者范围写端口 &&写入端口,
                  稳定编码 子存在关系类型, 稳定编码 特征关系类型,
-                 const 存在当前采用结构交付 &当前采用结构)
+                 const 存在当前采用结构交付 &当前采用结构,
+                 const 实例特征结构交付 &实例特征结构)
       : 第一层服务_(第一层服务), 特征服务_(特征服务),
         写入端口_(std::move(写入端口)), 所有者_(写入端口_.所有者身份()),
         子存在关系类型_(子存在关系类型), 特征关系类型_(特征关系类型),
-        当前采用关系类型_(当前采用结构.当前采用关系类型) {
+        当前采用关系类型_(当前采用结构.当前采用关系类型), 实例特征结构_(实例特征结构) {
     if (!写入端口_.有效() || !写入端口_.绑定于(第一层服务_) ||
         !特征服务_.绑定于(第一层服务_) || !有效(所有者_) || !关系类型组有效())
       throw std::invalid_argument("invalid existence data configuration");
@@ -1064,6 +1105,8 @@ public:
     if (!关系类型有效(子存在关系类型_) || !关系类型有效(特征关系类型_) ||
         !关系类型有效(当前采用关系类型_))
       throw std::invalid_argument("invalid existence relation types");
+    if (!实例特征结构有效())
+      throw std::invalid_argument("invalid instance feature layout");
     初始化存在族来源();
     if (存在族锚点_ == 子存在关系类型_ || 存在族锚点_ == 特征关系类型_ ||
         存在族锚点_ == 当前采用关系类型_ ||
@@ -1076,12 +1119,16 @@ public:
   static 存在单例角色结构登记结果 登记单例角色结构(
       const L1事实基座服务 &, L1所有者范围写端口 &,
       const 存在单例角色结构登记请求 &) noexcept;
+  static 实例特征结构登记结果 登记实例特征结构(
+      const L1事实基座服务 &, L1所有者范围写端口 &,
+      const 实例特征结构登记请求 &) noexcept;
 
   存在类数据服务(const L1事实基座服务 &l1, const 特征类数据服务 &features,
                  L1所有者范围写端口 &&port, 稳定编码 childType,
-                 稳定编码 featureType, const 存在当前采用结构交付 &current,
-                 const 存在单例角色结构交付 &role)
-      : 存在类数据服务(l1, features, std::move(port), childType, featureType, current) {
+                  稳定编码 featureType, const 存在当前采用结构交付 &current,
+                  const 实例特征结构交付 &instanceFeature,
+                  const 存在单例角色结构交付 &role)
+      : 存在类数据服务(l1, features, std::move(port), childType, featureType, current, instanceFeature) {
     if(role.版本!=1||!有效(role.角色登记类型)||!有效(role.角色目标类型)||
        !有效(role.项目角色.值)||role.角色登记类型==role.角色目标类型||
        role.角色登记类型==role.项目角色.值||role.角色目标类型==role.项目角色.值)
@@ -3410,6 +3457,26 @@ private:
     return true;
   }
 
+  bool 实例特征结构有效() const {
+    if (实例特征结构_.版本 != 1)
+      return false;
+    const std::array<稳定编码, 6> types{
+        实例特征结构_.E到IF, 实例特征结构_.IF到F,
+        实例特征结构_.IF到R集合, 实例特征结构_.R集合到版本,
+        实例特征结构_.版本到R项, 实例特征结构_.R项到F};
+    for (std::size_t i = 0; i < types.size(); ++i) {
+      if (!关系类型有效(types[i]))
+        return false;
+      for (std::size_t j = 0; j < i; ++j)
+        if (types[i] == types[j])
+          return false;
+      if (types[i] == 子存在关系类型_ || types[i] == 特征关系类型_ ||
+          types[i] == 当前采用关系类型_)
+        return false;
+    }
+    return true;
+  }
+
   bool 关系类型有效(稳定编码 编码) const {
     const auto 读取 =
         第一层服务_.读取所有者范围当前节点({L1所有者范围CRUD合同版本, 编码});
@@ -4653,10 +4720,75 @@ private:
   L1结构所有者身份 所有者_{};
   稳定编码 子存在关系类型_{};
   稳定编码 特征关系类型_{};
+  实例特征结构交付 实例特征结构_{};
   稳定编码 存在族锚点_{};
   稳定编码 存在族归属关系类型_{};
   std::optional<存在单例角色结构交付> 角色结构_;
 };
+
+inline 实例特征结构登记结果 存在类数据服务::登记实例特征结构(
+    const L1事实基座服务 &l1, L1所有者范围写端口 &port,
+    const 实例特征结构登记请求 &r) noexcept {
+  constexpr std::uint64_t key = 0x4946525354525543ULL;
+  实例特征结构登记结果 out; out.Gread = r.G0;
+  bool dispatched = false;
+  try {
+    if (r.版本 != 1 || !r.G0 || r.G0 == UINT64_MAX || r.幂等身份.值 != key ||
+        !port.有效() || !port.绑定于(l1)) return out;
+    const auto owner = port.所有者身份();
+    L1所有者范围写集请求 ws{L1所有者范围CRUD合同版本, r.G0, r.幂等身份};
+    for (std::uint64_t i = 1; i <= 6; ++i)
+      ws.节点.emplace_back(L1所有者范围节点新建项{
+          L1所有者范围写集本地键{static_cast<std::uint32_t>(i)}, 节点种类::普通, std::nullopt});
+    const auto first = port.读取首次写入材料(
+        {L1所有者范围首次写入读取合同版本, r.幂等身份});
+    if (first.合同版本 != L1所有者范围首次写入读取合同版本 ||
+        first.所有者 != owner || first.写入幂等身份 != r.幂等身份)
+      throw 实例特征结构状态::内部不一致;
+    const bool replay = first.状态 == L1所有者范围读取状态::成功;
+    if (replay) {
+      if (!first.首次规范化写集 || *first.首次规范化写集 != ws || !first.首次写入结果)
+        throw 实例特征结构状态::幂等冲突;
+    } else if (first.状态 == L1所有者范围读取状态::未找到) {
+      if (first.读取事实代次 != r.G0 || first.首次规范化写集 || first.首次写入结果)
+        throw 实例特征结构状态::事实代次漂移;
+    } else throw first.状态 == L1所有者范围读取状态::资源失败 ?
+        实例特征结构状态::资源失败 : 实例特征结构状态::内部不一致;
+    dispatched = true;
+    const auto saved = port.提交所有者范围中性写集(ws);
+    out.Gread = saved.事实代次;
+    if (saved.状态 != (replay ? L1所有者范围写入状态::精确重复 : L1所有者范围写入状态::成功) ||
+        saved.新编码映射.size() != 6) {
+      if (saved.状态 == L1所有者范围写入状态::事实代次漂移) throw 实例特征结构状态::事实代次漂移;
+      if (saved.状态 == L1所有者范围写入状态::幂等冲突) throw 实例特征结构状态::幂等冲突;
+      throw 实例特征结构状态::已可能发布;
+    }
+    std::array<稳定编码,6> ids{};
+    for (const auto &[local,id] : saved.新编码映射) {
+      if (!local.值 || local.值 > ids.size() || !有效(id) || 有效(ids[local.值-1]))
+        throw 实例特征结构状态::内部不一致;
+      ids[local.值-1] = id;
+    }
+    for (const auto id : ids) {
+      const auto raw = l1.读取所有者范围历史事实({L1所有者范围CRUD合同版本,id});
+      const auto *node = raw.事实 ? std::get_if<L1所有者范围节点事实>(&*raw.事实) : nullptr;
+      if (raw.状态 != L1所有者范围读取状态::成功 || raw.读取事实代次 != saved.事实代次 ||
+          !node || node->写入所有者 != owner || node->编码 != id ||
+          node->种类 != 节点种类::普通 || node->属性类型表示 ||
+          node->创建事实代次 != saved.事实代次 || node->退出事实代次)
+        throw 实例特征结构状态::内部不一致;
+    }
+    out.首次H = saved.事实代次;
+    out.交付 = {1,ids[0],ids[1],ids[2],ids[3],ids[4],ids[5]};
+    out.状态 = replay ? 实例特征结构状态::精确重复 : 实例特征结构状态::已登记;
+  } catch (实例特征结构状态 s) {
+    out.状态 = dispatched && s != 实例特征结构状态::事实代次漂移 && s != 实例特征结构状态::幂等冲突 ?
+        实例特征结构状态::已可能发布 : s;
+    if (out.状态 != 实例特征结构状态::已登记 && out.状态 != 实例特征结构状态::精确重复) out.交付.reset();
+  } catch (const std::bad_alloc &) { out.状态 = dispatched ? 实例特征结构状态::已可能发布 : 实例特征结构状态::资源失败; out.交付.reset(); }
+    catch (...) { out.状态 = dispatched ? 实例特征结构状态::已可能发布 : 实例特征结构状态::内部不一致; out.交付.reset(); }
+  return out;
+}
 
 inline 存在单例角色结构登记结果 存在类数据服务::登记单例角色结构(
     const L1事实基座服务 &l1,L1所有者范围写端口 &port,

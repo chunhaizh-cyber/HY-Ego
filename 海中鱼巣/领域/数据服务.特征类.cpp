@@ -1187,4 +1187,59 @@ bool 特征类标量派生批量读取结果::成功() const noexcept {
     catch(...){return fail(SS::内部不一致);}
 }
 
+特征R归组比较结果 特征类数据服务::比较FT的R归组(
+    const 特征R归组比较请求& r) const noexcept {
+    using RS = 特征R归组状态;
+    特征R归组比较结果 out;
+    out.Gread = r.Gread;
+    out.H = r.H;
+    auto map = [](S s) noexcept {
+        switch (s) {
+        case S::未找到: return RS::特征未找到;
+        case S::已退出: return RS::特征已退出;
+        case S::类型不相容: return RS::类型不匹配;
+        case S::数量预算不足: return RS::数量预算不足;
+        case S::并发变化: return RS::事实代次漂移;
+        case S::资源失败: return RS::资源失败;
+        default: return RS::内部不一致;
+        }
+    };
+    try {
+        if (r.版本 != 1 || r.Gread == 0 || r.H == 0 || r.H > r.Gread ||
+            r.用途 != 特征R归组用途::R归组 || !有效(r.FT) ||
+            !有效(r.当前采用基准F) || !有效(r.候选F) || r.读取预算 < 2) {
+            out.状态 = RS::入口拒绝;
+            return out;
+        }
+        std::lock_guard<std::mutex> lock(mutex_);
+        截止有效(1, r.Gread, r.H);
+        守卫(r.Gread);
+        const auto baseline = 读准确(r.当前采用基准F, r.Gread, r.H);
+        const auto candidate = 读准确(r.候选F, r.Gread, r.H);
+        if (baseline.信息.类型 != r.FT || candidate.信息.类型 != r.FT) {
+            out.状态 = RS::类型不匹配;
+            return out;
+        }
+        // 4115: 没有已发布的非 I64 R 归组提供者。本入口仅完成同截止材料核验，
+        // 绝不借用I64域、相邻或重叠逻辑来产生归组结论。
+        out.当前采用基准 = baseline;
+        out.候选 = candidate;
+        守卫(r.Gread);
+        out.状态 = RS::比较未启用;
+    } catch (S s) {
+        out.状态 = map(s);
+        out.当前采用基准.reset();
+        out.候选.reset();
+    } catch (const std::bad_alloc&) {
+        out.状态 = RS::资源失败;
+        out.当前采用基准.reset();
+        out.候选.reset();
+    } catch (...) {
+        out.状态 = RS::内部不一致;
+        out.当前采用基准.reset();
+        out.候选.reset();
+    }
+    return out;
+}
+
 } // namespace 海中鱼巣
