@@ -7,12 +7,13 @@
 #include <variant>
 #include <vector>
 
-import 海中鱼巣.领域.数据服务.存在类;
-import 海中鱼巣.领域.数据服务.场景类;
-import 海中鱼巣.领域.数据服务.定位特征;
-import 海中鱼巣.领域.数据服务.绑定存在;
-import 海中鱼巣.业务.应用服务.世界树类;
-import 海中鱼巣.领域.数据服务.概念树类;
+#include "../海中鱼巣/领域/数据服务.存在类.h"
+#include "../海中鱼巣/领域/数据服务.定位特征.h"
+#include "../海中鱼巣/领域/数据服务.绑定存在.h"
+#include "../海中鱼巣/业务/应用服务.世界树类.h"
+
+#include "../海中鱼巣/领域/数据服务.场景类.h"
+#include "../海中鱼巣/领域/数据服务.概念树类.h"
 namespace {
 using namespace 海中鱼巣;
 int 通过数 = 0;

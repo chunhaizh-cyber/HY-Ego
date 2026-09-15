@@ -1,0 +1,108 @@
+#include "启动.程序运行宿主.h"
+
+#include <chrono>
+#include <thread>
+#include <utility>
+
+namespace 海中鱼巣 {
+
+停止信号租约* 停止信号租约::当前停止信号租约 = nullptr;
+
+停止信号租约::~停止信号租约() {
+    if (安装函数) {
+#ifdef _WIN32
+        if (SIGBREAK已安装) {
+            (void)安装函数(SIGBREAK, SIGBREAK原处理);
+        }
+#endif
+        if (SIGTERM已安装) {
+            (void)安装函数(SIGTERM, SIGTERM原处理);
+        }
+        if (SIGINT已安装) {
+            (void)安装函数(SIGINT, SIGINT原处理);
+        }
+    }
+    if (当前停止信号租约 == this) {
+        当前停止信号租约 = nullptr;
+    }
+}
+
+bool 停止信号安装结果::成功() const noexcept {
+    return 状态 == 停止信号安装状态::已安装 && 租约 != nullptr;
+}
+
+void 接收程序停止信号(int) {
+    if (停止信号租约::当前停止信号租约 != nullptr) {
+        停止信号租约::当前停止信号租约->停止请求 = 1;
+    }
+}
+
+停止信号安装结果 安装程序停止信号(
+    程序信号安装函数 安装函数) noexcept {
+    if (!安装函数 || 停止信号租约::当前停止信号租约 != nullptr) {
+        return {};
+    }
+    try {
+        auto 租约 = std::make_unique<停止信号租约>();
+        租约->安装函数 = std::move(安装函数);
+        租约->SIGINT原处理 = 租约->安装函数(SIGINT, 接收程序停止信号);
+        if (租约->SIGINT原处理 == SIG_ERR) {
+            return {停止信号安装状态::SIGINT失败, nullptr};
+        }
+        租约->SIGINT已安装 = true;
+        租约->SIGTERM原处理 = 租约->安装函数(SIGTERM, 接收程序停止信号);
+        if (租约->SIGTERM原处理 == SIG_ERR) {
+            return {停止信号安装状态::SIGTERM失败, nullptr};
+        }
+        租约->SIGTERM已安装 = true;
+#ifdef _WIN32
+        租约->SIGBREAK原处理 = 租约->安装函数(SIGBREAK, 接收程序停止信号);
+        if (租约->SIGBREAK原处理 == SIG_ERR) {
+            return {停止信号安装状态::SIGBREAK失败, nullptr};
+        }
+        租约->SIGBREAK已安装 = true;
+#endif
+        停止信号租约::当前停止信号租约 = 租约.get();
+        return {停止信号安装状态::已安装, std::move(租约)};
+    } catch (...) {
+        return {};
+    }
+}
+
+程序运行结果 运行无窗口宿主(停止信号租约& 信号,
+    程序周期维护回调 维护回调) {
+    const auto 执行一个维护周期 = [&]() noexcept {
+        try {
+            switch (维护回调()) {
+            case 程序周期维护状态::已完成:
+            case 程序周期维护状态::稍后重试:
+                return true;
+            case 程序周期维护状态::内部不一致:
+                return false;
+            }
+        } catch (...) {
+        }
+        return false;
+    };
+    if (维护回调 && !执行一个维护周期()) {
+        return {启动模式::无窗口常驻, 程序运行状态::内部不一致,
+            程序失败阶段::中性实例材料维护};
+    }
+    auto 下一次维护 = std::chrono::steady_clock::now()
+        + std::chrono::seconds(60);
+    while (信号.停止请求 == 0) {
+        if (维护回调 && std::chrono::steady_clock::now() >= 下一次维护) {
+            if (!执行一个维护周期()) {
+                return {启动模式::无窗口常驻, 程序运行状态::内部不一致,
+                    程序失败阶段::中性实例材料维护};
+            }
+            下一次维护 = std::chrono::steady_clock::now()
+                + std::chrono::seconds(60);
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    return {启动模式::无窗口常驻, 程序运行状态::已完成,
+        程序失败阶段::无};
+}
+
+} // namespace 海中鱼巣

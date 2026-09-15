@@ -16,186 +16,156 @@
     <Filter Include="核心">
       <UniqueIdentifier>{E6F6E9BB-7BB6-4DD0-A99C-4F2BA9C1B7EE}</UniqueIdentifier>
     </Filter>
-    <ClCompile Include="海中鱼巣\核心\合同.L1公共事实.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\合同.L1事实基座.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="海中鱼巣\启动.程序入口.ixx">
+    <ClCompile Include="海中鱼巣\启动.程序入口.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\装配.普通应用.ixx">
+    <ClInclude Include="海中鱼巣\装配.普通应用.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\装配.普通应用.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\装配.普通应用.cppcpp">
+    <ClInclude Include="海中鱼巣\启动.应用程序.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\启动.应用程序.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\启动.应用程序.ixx">
+    <ClCompile Include="海中鱼巣\启动.程序运行宿主.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\启动.程序运行宿主.ixx">
+    <ClInclude Include="海中鱼巣\启动.程序运行宿主.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\适配\适配器.单调时钟.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\仓库.L1事实基座.ixx">
+    <ClCompile Include="海中鱼巣\适配\适配器.UTC时钟.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\服务.L1事实基座.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\合同.L1中性CRUD.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\核心\合同.L1所有者范围CRUD.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\线程\运行消息协议.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\适配\协议.D455采样材料.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\适配\适配器.单调时钟.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\适配\适配器.UTC时钟.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\适配\采集器.D455相机.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\线程\缓存.D455帧材料.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\线程\上行桥.D455采样材料.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\线程\投影.线程生命周期.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\线程\候选.支持线程.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\线程\运行.事件日志线程.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\线程\有界运行消息队列.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\线程\运行宿主线程.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\线程\外设采样材料线程.ixx">
+    <ClCompile Include="海中鱼巣\适配\采集器.D455相机.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\入口.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\服务.完整秒时钟.ixx">
+    <ClCompile Include="海中鱼巣\领域\数据服务.不可变材料.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\合同.结构操作公共.ixx">
+    <ClInclude Include="海中鱼巣\领域\合同.特征解释.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\领域\数据服务.特征类.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\数据服务.不可变材料.ixx">
+    <ClInclude Include="海中鱼巣\领域\数据服务.定位特征.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\数据服务.绑定存在.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\业务\计算.二次特征.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\计算.二次特征.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\数据服务.特征值类.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\合同.特征解释.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\数据服务.特征类.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\数据服务.定位特征.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\数据服务.绑定存在.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\算法.有序I64特征比较.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\业务\计算.二次特征.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\业务\应用服务.需求目标方向.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\业务\应用服务.任务目标方向.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\数据服务.方法类.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\数据服务.需求类.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\数据服务.任务类.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\数据服务.状态类.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\合同.存在结构身份只读.ixx">
+    <ClInclude Include="海中鱼巣\业务\应用服务.需求目标方向.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\业务\应用服务.任务目标方向.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\数据服务.方法类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\数据服务.需求类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\数据服务.任务类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\数据服务.状态类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\合同.存在结构身份只读.h">
+      <Filter>领域\合同</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\合同.场景状态使用绑定.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\合同.动态结构.h">
+      <Filter>领域\合同</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\合同.场景角色组织.h">
+      <Filter>领域\合同</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\合同.世界树根.h">
+      <Filter>领域\合同</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\合同.相关概念添加参与.h">
+      <Filter>领域\合同</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\领域\合同.场景角色组织.cpp">
       <Filter>领域\合同</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\合同.场景状态使用绑定.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\合同.动态结构.ixx">
+    <ClInclude Include="海中鱼巣\领域\数据服务.动态类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\合同.因果结构.h">
       <Filter>领域\合同</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\合同.世界树根.ixx">
-      <Filter>领域\合同</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\合同.相关概念添加参与.ixx">
-      <Filter>领域\合同</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\合同.场景角色组织.ixx">
-      <Filter>领域\合同</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\数据服务.动态类.ixx">
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\数据服务.存在类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\数据服务.概念树类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\领域\数据服务.概念树类.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\合同.因果结构.ixx">
-      <Filter>领域\合同</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\数据服务.存在类.ixx">
+    <ClInclude Include="海中鱼巣\领域\数据服务.世界树根.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\数据服务.场景类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\领域\数据服务.场景类.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\数据服务.概念树类.ixx">
+    <ClInclude Include="海中鱼巣\领域\数据服务.因果类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\领域\数据服务.因果类.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\数据服务.世界树根.ixx">
+    <ClInclude Include="海中鱼巣\业务\应用服务.世界树类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\业务\应用服务.自我形成.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\应用服务.自我形成.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\数据服务.场景类.ixx">
+    <ClInclude Include="海中鱼巣\业务\应用服务.特征概念类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\应用服务.特征概念类.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\领域\数据服务.因果类.ixx">
+    <ClInclude Include="海中鱼巣\业务\应用服务.存在概念树类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\应用服务.存在概念树类.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="海中鱼巣\业务\应用服务.世界树类.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\业务\应用服务.自我形成.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\业务\应用服务.自我形成.cppcpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\业务\应用服务.特征概念类.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\业务\应用服务.存在概念树类.ixx">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="海中鱼巣\业务\应用服务.场景成员概念类.ixx">
+    <ClInclude Include="海中鱼巣\业务\应用服务.场景成员概念类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\应用服务.场景成员概念类.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClInclude Include="海中鱼巣\核心\L1公共事实.数据.h">
@@ -204,6 +174,60 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="海中鱼巣\启动选项.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\适配\协议.D455采样材料.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\适配\协议.D455采样材料.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\适配\采集器.D455相机.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\线程\投影.线程生命周期.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\线程\运行消息协议.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\线程\有界运行消息队列.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\线程\运行宿主线程.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\线程\外设采样材料线程.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\服务.完整秒时钟.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\启动.程序入口.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\线程\缓存.D455帧材料.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\线程\上行桥.D455采样材料.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\线程\候选.支持线程.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\线程\候选.支持线程.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\线程\运行.事件日志线程.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\线程\运行.事件日志线程.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\适配\适配器.单调时钟.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\适配\适配器.UTC时钟.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\程序运行结果.数据.h">
@@ -219,6 +243,27 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\核心\L1事实基座.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\核心\仓库.L1事实基座.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\核心\服务.L1事实基座.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\合同.结构操作公共.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\数据服务.不可变材料.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\数据服务.特征值类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\数据服务.特征类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\算法.有序I64特征比较.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\核心\L1事实基座持久恢复.数据.h">
