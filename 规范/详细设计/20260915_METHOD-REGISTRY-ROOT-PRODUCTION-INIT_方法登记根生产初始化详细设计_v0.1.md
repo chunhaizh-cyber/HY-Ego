@@ -1,7 +1,7 @@
 # 方法登记根生产初始化详细设计
 
 身份：`METHOD-REGISTRY-ROOT-PRODUCTION-INIT`
-版本：v0.1
+版本：v0.2
 状态：已发布的施工设计；不修改正式逻辑规范。
 
 ## 1. 目标与依据
@@ -108,8 +108,8 @@ provider 非拥有地持有 `L2方法结构聚合服务&`，执行“零代次�
 海中鱼巣/装配.普通应用.h
 海中鱼巣/装配.普通应用.cpp
 海中鱼巣/启动.应用程序.cpp
-海中鱼巣/海中鱼巣.vcxproj
-海中鱼巣/海中鱼巣.vcxproj.filters
+海中鱼巣.vcxproj
+海中鱼巣.vcxproj.filters
 施工记录/20260915_METHOD-REGISTRY-ROOT-PRODUCTION-INIT_施工记录_v0.1.md
 验证记录/20260915_METHOD-REGISTRY-ROOT-PRODUCTION-INIT_验证记录_v0.1.md
 ```
