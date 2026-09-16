@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <bit>
 #include <array>
 #include <limits>
 #include <set>
@@ -161,8 +162,21 @@ struct 纯合取存在概念定义 final {
   std::vector<概念树概念身份> 特征模板组;
   friend bool operator==(const 纯合取存在概念定义&, const 纯合取存在概念定义&) = default;
 };
+enum class 存在概念完整性声明 : std::uint8_t { 未声明=0, 本次定义范围已知事实完整=1 };
+struct 完整存在概念自身特征约束 final { 概念树概念身份 特征概念{};
+  friend bool operator==(const 完整存在概念自身特征约束&,const 完整存在概念自身特征约束&)=default; };
+struct 完整存在概念组成约束 final { 概念树概念身份 子存在概念{}; 稳定编码 组成角色{};
+  friend bool operator==(const 完整存在概念组成约束&,const 完整存在概念组成约束&)=default; };
+struct 完整存在概念关系参与角色约束 final { std::uint64_t 顺序=0; 概念树概念身份 概念约束{};
+  friend bool operator==(const 完整存在概念关系参与角色约束&,const 完整存在概念关系参与角色约束&)=default; };
+struct 完整存在概念关系约束 final { 稳定编码 关系类型{}; std::vector<完整存在概念关系参与角色约束> 有序参与角色;
+  friend bool operator==(const 完整存在概念关系约束&,const 完整存在概念关系约束&)=default; };
+struct 完整存在概念定义 final { 存在概念完整性声明 完整性=存在概念完整性声明::未声明;
+  std::vector<完整存在概念自身特征约束> 自身特征; std::vector<完整存在概念组成约束> 组成;
+  std::vector<完整存在概念关系约束> 关系;
+  friend bool operator==(const 完整存在概念定义&,const 完整存在概念定义&)=default; };
 using 纯概念定义 = std::variant<纯I64特征概念定义,
-                                纯合取存在概念定义, 通用存在概念定义>;
+                                纯合取存在概念定义, 通用存在概念定义, 完整存在概念定义>;
 enum class 概念初始组织指定 : std::uint8_t { 未指定 = 0, 显式顶层 = 1, 具名上位 = 2 };
 struct 纯概念读取请求 final {
   std::uint32_t 版本 = 2;
@@ -246,6 +260,113 @@ struct 纯概念结构登记结果_v2 final {
   std::optional<纯概念结构登记请求_v2> 原请求;
   std::optional<纯概念结构交付_v2> 交付;
   bool 成功(const 纯概念结构登记请求_v2&) const noexcept;
+};
+
+// 完整存在概念的公开 ABI 与纯概念 DTO 分离；物理上仍复用同一概念 owner。
+enum class 完整存在概念状态 : std::uint8_t {
+  入口拒绝=1, 未找到=2, 已规范化=3, 已读取=4, 已创建=5, 精确重复=6,
+  目标已退出=7, 概念已退役=8, 定义不相容=9, 类别冲突=10,
+  事实代次漂移=11, 幂等冲突=12, 数量预算不足=13, 历史材料不可用=14,
+  资源失败=15, 内部不一致=16, 已可能发布=17, 旧格式不支持=18
+};
+enum class 完整存在概念发布状态 : std::uint8_t {
+  未进入=0, 确认未发布=1, 确认发布=2, 可能发布=3
+};
+struct 完整存在概念规范化请求 final {
+  std::uint32_t 版本=1; std::uint64_t Gread=0,H=0;
+  完整存在概念定义 定义; 概念树预算 预算;
+};
+struct 完整存在概念组成项事实 final {
+  稳定编码 节点{}; 概念树生命周期 节点生命周期;
+  纯概念定义关系事实 子概念关系;
+  稳定编码 组成角色值事实{}; 概念树生命周期 组成角色值生命周期;
+  稳定编码 组成角色{};
+  friend bool operator==(const 完整存在概念组成项事实&,const 完整存在概念组成项事实&)=default;
+};
+struct 完整存在概念关系项事实 final {
+  稳定编码 节点{}; 概念树生命周期 节点生命周期;
+  稳定编码 关系类型值事实{}; 概念树生命周期 关系类型值生命周期;
+  稳定编码 关系类型{};
+  std::vector<纯概念定义关系事实> 参与角色关系组;
+  friend bool operator==(const 完整存在概念关系项事实&,const 完整存在概念关系项事实&)=default;
+};
+struct 完整存在概念事实 final {
+  概念树概念身份 概念; 相关概念类别 类别=相关概念类别::存在;
+  稳定编码 定义记录{}; 概念树生命周期 定义记录生命周期;
+  概念树生命周期状态 治理状态{};
+  稳定编码 生命周期值事实{}; 概念树生命周期 生命周期值生命周期;
+  概念树生命周期 生命周期; 完整存在概念定义 定义;
+  std::vector<纯概念定义关系事实> 自身特征关系组;
+  std::vector<完整存在概念组成项事实> 组成项组;
+  std::vector<完整存在概念关系项事实> 关系项组;
+  friend bool operator==(const 完整存在概念事实&,const 完整存在概念事实&)=default;
+};
+struct 完整存在概念规范化结果 final {
+  std::uint32_t 版本=1; 完整存在概念状态 状态=完整存在概念状态::入口拒绝;
+  std::uint64_t Gread=0,H=0; std::optional<完整存在概念定义> 定义;
+  bool 成功(const 完整存在概念规范化请求&) const noexcept;
+};
+struct 完整存在概念查询请求 final {
+  std::uint32_t 版本=1; std::uint64_t Gread=0,H=0;
+  完整存在概念定义 定义; 概念树预算 预算;
+};
+struct 完整存在概念查询结果 final {
+  std::uint32_t 版本=1; 完整存在概念状态 状态=完整存在概念状态::入口拒绝;
+  std::uint64_t Gread=0,H=0; std::optional<完整存在概念事实> 事实;
+  bool 成功(const 完整存在概念查询请求&) const noexcept;
+  bool 确认未找到(const 完整存在概念查询请求&) const noexcept;
+};
+struct 完整存在概念创建请求 final {
+  std::uint32_t 版本=1; std::uint64_t G0=0;
+  L1所有者范围写入幂等身份 幂等身份; 完整存在概念定义 定义;
+  概念树预算 预算;
+};
+struct 完整存在概念写入结果 final {
+  std::uint32_t 版本=1; 完整存在概念状态 状态=完整存在概念状态::入口拒绝;
+  完整存在概念发布状态 发布=完整存在概念发布状态::未进入;
+  std::uint64_t Gread=0,H=0; std::optional<std::uint64_t> 首次发布H;
+  std::optional<完整存在概念创建请求> 原请求;
+  std::optional<完整存在概念事实> 事实;
+  bool 成功(const 完整存在概念创建请求&) const noexcept;
+};
+struct 完整存在概念读取请求 final {
+  std::uint32_t 版本=1; std::uint64_t Gread=0,H=0;
+  概念树概念身份 概念; 概念树预算 预算;
+};
+struct 完整存在概念读取结果 final {
+  std::uint32_t 版本=1; 完整存在概念状态 状态=完整存在概念状态::入口拒绝;
+  std::uint64_t Gread=0,H=0; std::optional<完整存在概念事实> 事实;
+  bool 成功(const 完整存在概念读取请求&) const noexcept;
+};
+struct 完整存在概念结构类型_v1 final {
+  稳定编码 完整定义成员{},完整定义自身特征{},完整定义组成项{},完整定义组成子概念{};
+  稳定编码 完整定义关系项{},完整定义关系参与角色{},组成角色属性{},关系类型属性{};
+  friend bool operator==(const 完整存在概念结构类型_v1&,const 完整存在概念结构类型_v1&)=default;
+};
+struct 完整存在概念结构交付_v1 final {
+  std::uint32_t 版本=1; 稳定编码 格式锚点{}; 完整存在概念结构类型_v1 类型;
+  friend bool operator==(const 完整存在概念结构交付_v1&,const 完整存在概念结构交付_v1&)=default;
+};
+struct 完整存在概念结构登记请求_v1 final {
+  std::uint32_t 版本=1; std::uint64_t G0=0;
+  L1所有者范围写入幂等身份 幂等身份; 纯概念结构交付_v2 纯概念结构;
+  std::uint64_t 最大首次材料项数=0;
+  friend bool operator==(const 完整存在概念结构登记请求_v1&,const 完整存在概念结构登记请求_v1&)=default;
+};
+struct 完整存在概念结构首次材料_v1 final {
+  std::array<L1所有者范围节点事实,9> 节点;
+  std::array<L1所有者范围关系事实,8> 类型登记关系;
+  L1所有者范围值事实 格式值;
+  friend bool operator==(const 完整存在概念结构首次材料_v1&,const 完整存在概念结构首次材料_v1&)=default;
+};
+struct 完整存在概念结构登记结果_v1 final {
+  std::uint32_t 版本=1; 纯概念状态 状态=纯概念状态::入口拒绝;
+  纯概念发布状态 发布=纯概念发布状态::未进入; std::uint64_t Gread=0;
+  std::optional<std::uint64_t> 首次发布H;
+  std::optional<完整存在概念结构登记请求_v1> 原请求;
+  std::optional<完整存在概念结构交付_v1> 交付;
+  std::optional<完整存在概念结构首次材料_v1> 首次材料;
+  bool 成功(const 完整存在概念结构登记请求_v1&) const noexcept;
 };
 struct 纯概念读取结果 final {
   std::uint32_t 版本=2; 纯概念状态 状态=纯概念状态::入口拒绝;
@@ -496,6 +617,8 @@ inline bool 定义匹配(const 纯概念定义&actual,const 纯概念定义&requ
                 [](auto a,auto b){return a.值.值<b.值.值;});
             ec->特征模板组.erase(std::unique(ec->特征模板组.begin(),ec->特征模板组.end()),
                                   ec->特征模板组.end());
+        } else if(const auto*complete=std::get_if<完整存在概念定义>(&expected)) {
+            if(complete->完整性!=存在概念完整性声明::本次定义范围已知事实完整)return false;
         } else {
             const auto&universal=std::get<通用存在概念定义>(expected);
             if(universal.规则版本!=1||universal.规则!=通用存在定义规则::不预设特征)return false;
@@ -549,6 +672,9 @@ inline bool 事实完整(const 纯概念事实&f,std::uint64_t h) noexcept {
                 if(e.种类!=纯概念定义关系种类::定义模板||e.顺序!=i+1||
                    e.源!=f.定义记录||e.目标!=ec->特征模板组[i].值)return false;
             }
+        } else if(const auto*complete=std::get_if<完整存在概念定义>(&f.定义)) {
+            if(complete->完整性!=存在概念完整性声明::本次定义范围已知事实完整||
+               f.定义关系组.size()!=1)return false;
         } else {
             const auto&universal=std::get<通用存在概念定义>(f.定义);
             if(universal.规则版本!=1||universal.规则!=通用存在定义规则::不预设特征||
@@ -594,6 +720,48 @@ inline bool I64特征概念组织读取结果::成功(const I64特征概念组�
         previous=f.概念.值.值;
     }
     return true;
+}
+inline bool 完整存在概念结构登记结果_v1::成功(
+    const 完整存在概念结构登记请求_v1&r) const noexcept {
+    if(版本!=1||r.版本!=1||(状态!=纯概念状态::已创建&&状态!=纯概念状态::精确重复)||
+       发布!=纯概念发布状态::确认发布||!Gread||!首次发布H||*首次发布H!=r.G0+1||
+       *首次发布H>Gread||!原请求||!交付||!首次材料||交付->版本!=1||
+       *原请求!=r)return false;
+    const auto&t=交付->类型;
+    const std::array<稳定编码,9> ids{交付->格式锚点,t.完整定义成员,t.完整定义自身特征,
+      t.完整定义组成项,t.完整定义组成子概念,t.完整定义关系项,t.完整定义关系参与角色,
+      t.组成角色属性,t.关系类型属性};
+    std::set<std::uint64_t> seen;
+    for(const auto id:ids)if(!有效(id)||!seen.insert(id.值).second)return false;
+    return true;
+}
+inline bool 完整存在概念规范化结果::成功(const 完整存在概念规范化请求&r) const noexcept {
+    return 版本==1&&r.版本==1&&r.Gread&&r.H&&r.H<=r.Gread&&
+        状态==完整存在概念状态::已规范化&&Gread==r.Gread&&H==r.H&&定义.has_value();
+}
+inline bool 完整存在概念读取结果::成功(const 完整存在概念读取请求&r) const noexcept {
+    return 版本==1&&r.版本==1&&r.Gread&&r.H&&r.H<=r.Gread&&有效(r.概念.值)&&
+        状态==完整存在概念状态::已读取&&Gread==r.Gread&&H==r.H&&事实&&事实->概念==r.概念;
+}
+inline bool 完整存在概念查询结果::成功(const 完整存在概念查询请求&r) const noexcept {
+    return 版本==1&&r.版本==1&&r.Gread&&r.H&&r.H<=r.Gread&&
+        状态==完整存在概念状态::已读取&&Gread==r.Gread&&H==r.H&&事实&&事实->定义==r.定义;
+}
+inline bool 完整存在概念查询结果::确认未找到(const 完整存在概念查询请求&r) const noexcept {
+    return 版本==1&&r.版本==1&&r.Gread&&r.H&&r.H<=r.Gread&&
+        r.预算.最大概念数&&r.预算.最大关系数&&r.预算.最大特征属性数&&
+        状态==完整存在概念状态::未找到&&Gread==r.Gread&&H==r.H&&!事实;
+}
+inline bool 完整存在概念写入结果::成功(const 完整存在概念创建请求&r) const noexcept {
+    const bool created=状态==完整存在概念状态::已创建&&发布==完整存在概念发布状态::确认发布&&
+      首次发布H&&*首次发布H==r.G0+1&&H==*首次发布H;
+    const bool replay=状态==完整存在概念状态::精确重复&&
+      ((发布==完整存在概念发布状态::确认未发布&&!首次发布H&&H==Gread)||
+       (发布==完整存在概念发布状态::确认发布&&首次发布H&&H==*首次发布H&&*首次发布H<=Gread));
+    return 版本==1&&r.版本==1&&r.G0&&有效(r.幂等身份)&&Gread&&H&&H<=Gread&&
+      (created||replay)&&原请求&&原请求->版本==r.版本&&原请求->G0==r.G0&&
+      原请求->幂等身份==r.幂等身份&&原请求->定义==r.定义&&原请求->预算==r.预算&&
+      事实&&事实->定义==r.定义;
 }
 inline bool 纯概念查询结果::成功(const 纯概念查询请求&r) const noexcept {
     return 版本==2&&r.版本==2&&r.Gread&&r.H&&r.H<=r.Gread&&
@@ -646,6 +814,8 @@ inline bool 纯概念写入结果::成功(const 纯概念创建请求&r) const n
                 [](auto a,auto b){return a.值.值<b.值.值;});
             ec->特征模板组.erase(std::unique(ec->特征模板组.begin(),ec->特征模板组.end()),
                                   ec->特征模板组.end());
+        } else if(const auto*complete=std::get_if<完整存在概念定义>(&expected)) {
+            if(complete->完整性!=存在概念完整性声明::本次定义范围已知事实完整)return false;
         } else {
             const auto &universal=std::get<通用存在概念定义>(expected);
             if(universal.规则版本!=1||universal.规则!=通用存在定义规则::不预设特征)return false;

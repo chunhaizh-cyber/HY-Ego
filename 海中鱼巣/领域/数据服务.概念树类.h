@@ -786,11 +786,15 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
     static 特征概念出生使用结构登记结果 登记特征概念出生使用结构(
         const L1事实基座服务 &, L1所有者范围写端口 &,
         const 特征概念出生使用结构登记请求 &) noexcept;
+    static 完整存在概念结构登记结果_v1 登记完整存在概念结构_v1(
+        const L1事实基座服务 &, L1所有者范围写端口 &,
+        const 完整存在概念结构登记请求_v1 &) noexcept;
     概念树类数据服务(const L1事实基座服务 &, const 特征类数据服务 &,
                      const 存在类数据服务 &, const 特征值类数据服务 &,
                      const 场景类数据服务 &, L1所有者范围写端口 &&,
                      const 纯概念结构交付_v2 &,
-                     const 特征概念出生使用结构交付 &);
+                     const 特征概念出生使用结构交付 &,
+                     const 完整存在概念结构交付_v1 &);
     概念树类数据服务(const L1事实基座服务 &, const 特征类数据服务 &, const 存在类数据服务 &,
                      const 特征值类数据服务 &, L1所有者范围写端口 &&, const 概念树结构交付 &,
                      const 概念树共享结构交付 &);
@@ -860,6 +864,14 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
         return layout_ ? layout_->根组.动态根 : 概念树概念身份{};
     }
     概念树截止结果 读取当前事实代次() const;
+    完整存在概念规范化结果 规范化完整存在概念定义(
+        const 完整存在概念规范化请求&) const noexcept;
+    完整存在概念查询结果 精确查询完整存在概念(
+        const 完整存在概念查询请求&) const noexcept;
+    完整存在概念写入结果 创建或复用完整存在概念(
+        const 完整存在概念创建请求&) noexcept;
+    完整存在概念读取结果 读取完整存在概念(
+        const 完整存在概念读取请求&) const noexcept;
     纯概念查询结果 精确查询纯概念(const 纯概念查询请求&) const noexcept;
     I64特征概念组织读取结果 读取当前I64特征概念(
         const I64特征概念组织读取请求&) const noexcept;
@@ -942,6 +954,7 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
     std::optional<相关概念结构交付> related_layout_;
     std::optional<纯概念结构交付_v2> pure_layout_;
     std::optional<特征概念出生使用结构交付> feature_birth_layout_;
+    std::optional<完整存在概念结构交付_v1> complete_definition_layout_;
     纯概念定义 规范化纯概念定义(const 纯概念定义&, std::uint64_t,
                               std::uint64_t, const 概念树预算&) const;
     纯概念事实 读取纯概念内部(概念树概念身份, std::uint64_t,
@@ -950,6 +963,10 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
                                const 概念树预算&) const;
     L1所有者范围写集请求 形成纯概念写集(
         const 纯概念创建请求&, const 纯概念定义&) const;
+    完整存在概念定义 规范化完整定义内部(const 完整存在概念定义&,
+        std::uint64_t, std::uint64_t, const 概念树预算&) const;
+    完整存在概念事实 读取完整定义内部(概念树概念身份,
+        std::uint64_t, std::uint64_t, const 概念树预算&) const;
     L1所有者范围写端口& 借用存在概念引用写端口() noexcept override {
         return port_;
     }

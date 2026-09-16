@@ -357,6 +357,13 @@ std::unique_ptr<普通应用上下文> 建立上下文(
       l1,*result->概念所有者.写入端口,conceptRequest);
   if(!conceptRegistration.成功(conceptRequest)||!conceptRegistration.交付)
     throw 概念结构异常{conceptRegistration.状态};
+  const 完整存在概念结构登记请求_v1 completeDefinitionRequest{
+      1, 定位首次(*result->概念所有者.写入端口,l1,0x1403).G0, {0x1403},
+      *conceptRegistration.交付, 18};
+  const auto completeDefinitionRegistration=概念树类数据服务::登记完整存在概念结构_v1(
+      l1,*result->概念所有者.写入端口,completeDefinitionRequest);
+  if(!completeDefinitionRegistration.成功(completeDefinitionRequest)||!completeDefinitionRegistration.交付)
+    throw 概念结构异常{completeDefinitionRegistration.状态};
   const 特征概念出生使用结构登记请求 featureBirthRequest{
       1, 定位首次(*result->概念所有者.写入端口,l1,0x1402).G0, {0x1402},
       *conceptRegistration.交付, 4};
@@ -367,7 +374,7 @@ std::unique_ptr<普通应用上下文> 建立上下文(
   result->概念=std::make_unique<概念树类数据服务>(
       l1,*result->特征,*result->存在,*result->特征值,*result->场景,
       std::move(*result->概念所有者.写入端口),*conceptRegistration.交付,
-      *featureBirthRegistration.交付);
+      *featureBirthRegistration.交付,*completeDefinitionRegistration.交付);
   result->原子I64特征出生=std::make_unique<原子I64特征出生数据服务>(
       *result->特征,*result->存在,*result->场景,*result->概念);
   result->特征概念=std::make_unique<特征概念应用服务>(
