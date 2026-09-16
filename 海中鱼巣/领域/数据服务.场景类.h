@@ -23,7 +23,7 @@ namespace 海中鱼巣 {
 
 class 场景类数据服务 final : public 状态使用绑定只读提供者,
                              public 场景动态组织只读提供者,
-                             public 场景直接包含只读提供者, public 定位特征组织参与者,
+                             public 场景直接包含只读提供者, public 原子I64特征组织参与者,
                              public 绑定存在场景参与者, public 世界树根场景参与者 {
 public:
   场景类数据服务() = delete;
@@ -893,12 +893,6 @@ private:
       return out;
     });
   }
-  const L1事实基座服务& 定位底座() const noexcept override { return l1_; }
-  L1所有者范围写端口& 定位端口() noexcept override { return port_; }
-  bool 定位幂等键可用(L1所有者范围写入幂等身份 key) const noexcept override {
-    return key.值&&key.值!=1&&key!=场景特征组织扩展登记固定幂等身份&&key!=场景直接包含扩展登记固定幂等身份&&(key.值>>48)!=0x4E43;
-  }
-  bool 定位结构已就绪() const noexcept override { return 场景结构登记已就绪(); }
   bool 场景结构登记已就绪() const noexcept {
     try {
       std::lock_guard<std::mutex> lock(write_);
@@ -910,64 +904,72 @@ private:
       return tail.状态==L1中性读取状态::成功&&tail.事实代次==g.事实代次;
     }catch(...){return false;}
   }
-  static 定位特征状态 定位映射(场景角色数据状态 s) noexcept {
-    using P=定位特征状态;using X=场景角色数据状态;
-    switch(s){case X::入口拒绝 : return P::入口拒绝;case X::未找到 : return P::未找到;
-    case X::目标已退出 : return P::目标已退出;case X::事实代次漂移 : return P::事实代次漂移;
-    case X::数量预算不足 : return P::预算不足;case X::历史材料已清理 : return P::历史材料不可用;
-    case X::资源失败 : return P::资源失败;case X::实例未组织 : return P::存量未定位;
-    default : return P::内部不一致;}
-  }
-  template<class T,class F> 定位参与者结果<T> 定位保护(std::uint64_t g,std::uint64_t h,F&& fn) const {
-    定位参与者结果<T> out;out.Gread=g;out.H=h;
-    const auto guard=[&]{auto x=l1_.读取中性当前事实代次({L1中性CRUD合同版本});
-      if(x.状态!=L1中性读取状态::成功)throw x.状态==L1中性读取状态::资源失败 ? 定位特征状态::资源失败 : 定位特征状态::内部不一致;
-      if(x.事实代次!=g)throw 定位特征状态::事实代次漂移;};
-    try {if(!g||!h||h>g)throw 定位特征状态::入口拒绝;guard();out.数据=fn();guard();out.状态=定位特征状态::已读取;}
-    catch(定位特征状态 e){out.状态=e;out.数据.reset();}
-    catch(const std::bad_alloc&){out.状态=定位特征状态::资源失败;out.数据.reset();}
-    catch(const std::length_error&){out.状态=定位特征状态::资源失败;out.数据.reset();}
-    catch(...){out.状态=定位特征状态::内部不一致;out.数据.reset();}return out;
-  }
-  static 定位关系见证 定位边(const 场景组织边见证& e) {
-    return {e.编码,e.源,e.目标,e.关系类型,static_cast<std::int64_t>(e.角色或顺序),e.生命周期.创建事实代次,e.生命周期.退出事实代次};
-  }
-  定位参与者结果<定位父路径见证> 核验定位父(std::uint64_t g,std::uint64_t h,稳定编码 c,稳定编码 p,std::uint64_t budget) const override {
-    return 定位保护<定位父路径见证>(g,h,[&]{
-      if(!有效(c)||!有效(p)||c==p||!budget||budget>4096)throw 定位特征状态::入口拒绝;
-      auto role=读角色(g,h,c);if(!role.成功({2,g,h,c}))throw 定位映射(role.状态);
+  const L1事实基座服务& 原子I64底座() const noexcept override { return l1_; }
+  L1所有者范围写端口& 原子I64端口() noexcept override { return port_; }
+  bool 原子I64结构已就绪() const noexcept override { return 场景结构登记已就绪(); }
+  原子I64特征参与结果<L1有限N分区原子参与者写集_v3>
+  准备原子I64出生片段(const 原子I64特征出生请求& r,std::uint64_t g) const override {
+    原子I64特征参与结果<L1有限N分区原子参与者写集_v3> out;
+    out.Gread=g;out.H=r.G0;
+    try {
+      if(!r.G0||g!=r.G0||!有效(r.位置.场景)||!有效(r.位置.组织父)||
+         !r.组织读取预算.最大路径长度||r.组织读取预算.最大路径长度>4096||!r.键.组织.值)
+        throw 原子I64特征出生状态::入口拒绝;
+      const auto map=[](场景角色数据状态 s) {
+        using X=场景角色数据状态; using B=原子I64特征出生状态;
+        switch(s) {case X::入口拒绝:return B::入口拒绝;case X::未找到:return B::未找到;
+          case X::目标已退出:return B::目标已退出;case X::事实代次漂移:return B::事实代次漂移;
+          case X::数量预算不足:return B::预算不足;case X::历史材料已清理:return B::历史材料不可用;
+          case X::资源失败:return B::资源失败;case X::实例未组织:return B::位置冲突;
+          default:return B::内部不一致;}
+      };
+      const auto role=读角色(g,r.G0,r.位置.场景);
+      if(!role.成功({2,g,r.G0,r.位置.场景}))throw map(role.状态);
       const auto root=role.角色->四根[0].根.编码;
-      定位父路径见证 out{c,root,p,{},{}};
-      if(p==root){out.路径节点.push_back(root);return out;}
-      bool missingKnown=false;auto path=读特征路径(g,h,{p},budget,&missingKnown);if(missingKnown)throw 定位特征状态::位置冲突;
-      if(!path.成功({1,g,h,{p},budget}))throw 定位映射(path.状态);
-      if(path.组织->场景角色.场景!=c||path.组织->根!=root)throw 定位特征状态::位置冲突;
-      for(const auto& n : path.组织->路径节点)out.路径节点.push_back(n.编码);
-      for(const auto& e : path.组织->路径边)out.路径关系.push_back(定位边(e));
-      return out;
-    });
+      std::size_t pathLength=0;
+      if(r.位置.组织父!=root) {
+        bool missingKnown=false;
+        const auto path=读特征路径(g,r.G0,{r.位置.组织父},r.组织读取预算.最大路径长度,&missingKnown);
+        if(missingKnown)throw 原子I64特征出生状态::位置冲突;
+        if(!path.成功({1,g,r.G0,{r.位置.组织父},r.组织读取预算.最大路径长度}))throw map(path.状态);
+        if(path.组织->场景角色.场景!=r.位置.场景||path.组织->根!=root)throw 原子I64特征出生状态::位置冲突;
+        pathLength=path.组织->路径边.size();
+      }
+      if(pathLength>=r.组织读取预算.最大路径长度)throw 原子I64特征出生状态::预算不足;
+      L1有限N分区原子参与者写集_v3 part;
+      part.参与者={3};part.所有者=owner_;
+      part.写集={L1所有者范围CRUD合同版本,r.G0,r.键.组织};
+      part.写集.关系.push_back({{1},r.位置.组织父,
+          L1三分区原子事实引用_v2{{1},{1}},featureLayout_.特征组织关系类型,1});
+      out.数据=std::move(part);out.状态=原子I64特征出生状态::已创建;
+    } catch(原子I64特征出生状态 s) { out.状态=s;out.数据.reset(); }
+      catch(const std::bad_alloc&) { out.状态=原子I64特征出生状态::资源失败;out.数据.reset(); }
+      catch(const std::length_error&) { out.状态=原子I64特征出生状态::资源失败;out.数据.reset(); }
+      catch(...) { out.状态=原子I64特征出生状态::内部不一致;out.数据.reset(); }
+    return out;
   }
-  定位参与者结果<定位路径见证> 读取定位路径(std::uint64_t g,std::uint64_t h,稳定编码 f,std::uint64_t budget) const override {
-    return 定位保护<定位路径见证>(g,h,[&]{
-      if(!有效(f)||!budget||budget>4096)throw 定位特征状态::入口拒绝;
-      bool missingKnown=false;auto path=读特征路径(g,h,{f},budget,&missingKnown);if(missingKnown)throw 定位特征状态::位置冲突;
-      if(!path.成功({1,g,h,{f},budget}))throw 定位映射(path.状态);
-      if(path.组织->路径边.empty())throw 定位特征状态::内部不一致;
-      定位路径见证 out{path.组织->场景角色.场景,path.组织->根,path.组织->路径边.back().源,f,{},{}};
-      for(const auto& n : path.组织->路径节点)out.路径节点.push_back(n.编码);
-      for(const auto& e : path.组织->路径边)out.路径关系.push_back(定位边(e));return out;
-    });
-  }
-  定位参与者结果<L1三分区原子参与者写集_v2> 准备定位组织(const 定位特征创建请求& r,std::uint64_t g) const override {
-    return 定位保护<L1三分区原子参与者写集_v2>(g,r.G0,[&]{
-      for(auto key : {r.组合键,r.内容键,r.已知键,r.组织键})if(!定位幂等键可用(key))throw 定位特征状态::入口拒绝;
-      auto p=核验定位父(g,r.G0,r.位置.场景,r.位置.组织父,r.预算.最大路径长度);
-      if(p.状态!=定位特征状态::已读取||!p.数据)throw p.状态;
-      if(p.数据->路径关系.size()>=r.预算.最大路径长度)throw 定位特征状态::预算不足;
-      L1三分区原子参与者写集_v2 out;out.参与者={3};out.所有者=owner_;
-      out.写集.期望事实代次=r.G0;out.写集.写入幂等身份=r.组织键;
-      out.写集.关系.push_back({L1所有者范围写集本地键{1},r.位置.组织父,L1三分区原子事实引用_v2{{1},{1}},featureLayout_.特征组织关系类型,1});return out;
-    });
+  原子I64特征窄读取结果<原子I64特征组织事实> 读取原子I64组织(const 原子I64特征组织读取请求& r) const override {
+    原子I64特征窄读取结果<原子I64特征组织事实> out;out.Gread=r.Gread;out.H=r.H;
+    auto map=[](L1所有者范围读取状态 s) {using X=原子I64特征窄读取状态;switch(s) {
+      case L1所有者范围读取状态::未找到:return X::未找到;case L1所有者范围读取状态::已退出:return X::目标已退出;
+      case L1所有者范围读取状态::事实代次漂移:return X::事实代次漂移;case L1所有者范围读取状态::历史材料已清理:return X::历史材料不可用;
+      case L1所有者范围读取状态::资源失败:return X::资源失败;default:return X::内部不一致;}};
+    try {if(r.版本!=1||!r.Gread||!r.H||r.H>r.Gread||!有效(r.C)||!有效(r.P)||!有效(r.F)||!r.预算.最大路径长度)return out;
+      const auto guard=[&]{const auto x=l1_.读取中性当前事实代次({L1中性CRUD合同版本});if(x.状态!=L1中性读取状态::成功||x.事实代次!=r.Gread)throw 原子I64特征窄读取状态::事实代次漂移;};guard();
+      std::vector<原子I64特征场景路径边事实> reverse;std::unordered_set<std::uint64_t> seen;auto child=r.F;
+      for(std::uint64_t depth=0;;++depth){if(!seen.insert(child.值).second)throw 原子I64特征窄读取状态::内部不一致;
+        const auto roots=l1_.读取所有者范围历史关系组({L1所有者范围CRUD合同版本,L1所有者范围关系端点方向::目标,child,layout_.根绑定关系类型,r.H});
+        if(roots.读取事实代次!=r.Gread)throw 原子I64特征窄读取状态::事实代次漂移;
+        if(roots.状态!=L1所有者范围读取状态::成功)throw map(roots.状态);
+        if(!roots.关系组.empty()){if(roots.关系组.size()!=1)throw 原子I64特征窄读取状态::内部不一致;const auto& e=roots.关系组.front();if(e.写入所有者!=owner_||e.源节点!=r.C||e.目标节点!=child||e.角色或顺序!=static_cast<std::int64_t>(场景根角色::特征)||e.创建事实代次>r.H||e.退出事实代次)throw 原子I64特征窄读取状态::位置冲突;break;}
+        if(depth>=r.预算.最大路径长度)throw 原子I64特征窄读取状态::预算不足;const auto rows=l1_.读取所有者范围历史关系组({L1所有者范围CRUD合同版本,L1所有者范围关系端点方向::目标,child,featureLayout_.特征组织关系类型,r.H});
+        if(rows.读取事实代次!=r.Gread)throw 原子I64特征窄读取状态::事实代次漂移;
+        if(rows.状态!=L1所有者范围读取状态::成功)throw map(rows.状态);
+        if(rows.关系组.size()!=1)throw 原子I64特征窄读取状态::位置冲突;const auto& e=rows.关系组.front();if(e.写入所有者!=owner_||e.目标节点!=child||e.关系类型节点!=featureLayout_.特征组织关系类型||e.角色或顺序!=1||e.创建事实代次>r.H||e.退出事实代次)throw 原子I64特征窄读取状态::内部不一致;reverse.push_back({e.编码,e.源节点,e.目标节点,e.关系类型节点,e.角色或顺序,e.创建事实代次});child=e.源节点;
+      }
+      std::reverse(reverse.begin(),reverse.end());if(reverse.empty()||reverse.back().源!=r.P||reverse.back().目标!=r.F)throw 原子I64特征窄读取状态::位置冲突;guard();
+      const auto& last=reverse.back();out.事实=原子I64特征组织事实{r.C,r.P,r.F,last.关系,last.关系类型,std::move(reverse),last.创建H};out.状态=原子I64特征窄读取状态::已读取;
+    }catch(原子I64特征窄读取状态 s){out.状态=s;out.事实.reset();}catch(...){out.状态=原子I64特征窄读取状态::内部不一致;out.事实.reset();}return out;
   }
   const L1事实基座服务 &l1_;
   L1所有者范围写端口 port_;

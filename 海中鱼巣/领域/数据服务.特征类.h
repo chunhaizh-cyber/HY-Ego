@@ -19,7 +19,6 @@
 
 
 #include "数据服务.特征值类.h"
-#include "数据服务.定位特征.h"
 namespace 海中鱼巣 {
 struct 特征信息身份 final {
     稳定编码 编码{};
@@ -36,6 +35,11 @@ struct 特征比较规则身份 final {
 inline bool 有效(特征信息身份 v) noexcept { return 有效(v.编码); }
 inline bool 有效(特征类型身份 v) noexcept { return 有效(v.编码); }
 inline bool 有效(特征比较规则身份 v) noexcept { return 有效(v.编码); }
+} // namespace 海中鱼巣
+
+#include "数据服务.定位特征.h"
+
+namespace 海中鱼巣 {
 struct 特征I64闭区间 final {
     std::int64_t 下界{}, 上界{};
     friend bool operator==(const 特征I64闭区间&, const 特征I64闭区间&) = default;
@@ -799,7 +803,7 @@ struct 特征类标量派生写结果 final {
     }
 };
 // 定义和准确内容使用两个既有技术分区；本类不保存名称、观察或当前采用。
-class 特征类数据服务 final : public 定位特征内容参与者 {
+class 特征类数据服务 final : public 原子I64特征内容参与者 {
     template<class T> using R = 特征数据结果<T>;
     using S = 特征数据错误;
     using N = L1所有者范围节点事实;
@@ -1831,79 +1835,107 @@ public:
     特征类标量派生写结果 退出标量派生定义(const 特征类标量派生退出请求& r) { return 标量执行写(r); }
 
 private:
-    const L1事实基座服务& 定位底座() const noexcept override { return l1_; }
-    L1所有者范围写端口& 定位端口() noexcept override { return information_; }
-    bool 定位结构已就绪() const noexcept override {
-        try {std::lock_guard<std::mutex> lock(mutex_);const auto g=当前G();
-            if(!definition_ready_||!information_ready_||!绑定于(l1_))return false;
-            结构就绪(分区::定义,g,g);结构就绪(分区::信息,g,g);守卫(g);return true;
-        }catch(...){return false;}
-    }
-    bool 定位幂等键可用(L1所有者范围写入幂等身份 key) const noexcept override {
-        return key.值&&key.值!=1&&key!=I64比较绑定结构扩展初始化幂等身份&&(key.值>>48)!=0x4E43;
-    }
-    static 定位特征状态 定位映射(S state) noexcept {
-        using P=定位特征状态;
-        switch(state) {
-        case S::未找到:return P::未找到;
-        case S::已退出:return P::目标已退出;
-        case S::入口拒绝:case S::类型不相容:case S::引用冲突:return P::入口拒绝;
-        case S::能力未提供:case S::旧格式不支持:return P::表示不支持;
-        case S::并发变化:return P::事实代次漂移;
-        case S::历史材料不可用:return P::历史材料不可用;
-        case S::数量预算不足:return P::预算不足;
-        case S::资源失败:return P::资源失败;
-        case S::幂等冲突:return P::幂等冲突;
-        default:return P::内部不一致;
-        }
-    }
-    template<class T,class F> 定位参与者结果<T> 定位读取保护(std::uint64_t g,std::uint64_t h,F&& action) const {
-        定位参与者结果<T> out; out.Gread=g;out.H=h;
-        try { std::lock_guard<std::mutex> lock(mutex_);截止有效(1,g,h);守卫(g);
-            out.数据=action();守卫(g);out.状态=定位特征状态::已读取;
-        } catch(S e){out.状态=定位映射(e);out.数据.reset();}
-        catch(const std::bad_alloc&){out.状态=定位特征状态::资源失败;out.数据.reset();}
-        catch(const std::length_error&){out.状态=定位特征状态::资源失败;out.数据.reset();}
-        catch(...){out.状态=定位特征状态::内部不一致;out.数据.reset();}
+    const L1事实基座服务& 原子I64底座() const noexcept override { return l1_; }
+    L1所有者范围写端口& 原子I64端口() noexcept override { return information_; }
+    bool 原子I64结构已就绪() const noexcept override { return information_ready_; }
+    原子I64特征候选查询结果 查询原子I64内容候选(
+        const 原子I64特征候选查询请求& r) const override {
+        原子I64特征候选查询结果 out;out.Gread=r.Gread;out.原请求=r;
+        auto map=[](L1所有者范围读取状态 s) {
+            using Q=原子I64特征候选查询状态;
+            switch(s) {case L1所有者范围读取状态::已退出:return Q::目标已退出;
+                case L1所有者范围读取状态::事实代次漂移:return Q::事实代次漂移;
+                case L1所有者范围读取状态::历史材料已清理:return Q::历史材料不可用;
+                case L1所有者范围读取状态::资源失败:return Q::资源失败;default:return Q::内部不一致;}
+        };
+        try {
+            if(r.版本!=1||!r.Gread||!有效(r.正式特征类型)||!r.候选读取预算.最大候选数)
+                return out;
+            std::lock_guard<std::mutex> lock(mutex_);
+            if(!information_ready_||!有效(f_[准确类型关系])||!有效(f_[准确内联属性]))return out;
+            const auto guard=[&] {
+                const auto x=l1_.读取中性当前事实代次({L1中性CRUD合同版本});
+                if(x.状态!=L1中性读取状态::成功||x.事实代次!=r.Gread)
+                    throw 原子I64特征候选查询状态::事实代次漂移;
+            };
+            guard();
+            const auto rows=l1_.读取所有者范围历史关系组({L1所有者范围CRUD合同版本,
+                L1所有者范围关系端点方向::目标,r.正式特征类型,f_[准确类型关系],r.Gread});
+            if(rows.读取事实代次!=r.Gread)throw 原子I64特征候选查询状态::事实代次漂移;
+            if(rows.状态!=L1所有者范围读取状态::成功)throw map(rows.状态);
+            if(rows.关系组.size()>r.候选读取预算.最大候选数)
+                throw 原子I64特征候选查询状态::预算不足;
+            for(const auto& edge:rows.关系组) {
+                if(edge.写入所有者!=information_.所有者身份()||edge.目标节点!=r.正式特征类型||
+                   edge.关系类型节点!=f_[准确类型关系]||edge.角色或顺序!=1||
+                   edge.创建事实代次>r.Gread||edge.退出事实代次)
+                    throw 原子I64特征候选查询状态::内部不一致;
+                if(std::find_if(out.候选.begin(),out.候选.end(),[&](const auto& x){return x.F==edge.源节点;})!=out.候选.end())
+                    throw 原子I64特征候选查询状态::内部不一致;
+                const auto node=l1_.读取所有者范围历史事实({L1所有者范围CRUD合同版本,edge.源节点});
+                const auto values=l1_.读取所有者范围历史属性值组({L1所有者范围CRUD合同版本,edge.源节点,r.Gread});
+                if(node.读取事实代次!=r.Gread||values.读取事实代次!=r.Gread)
+                    throw 原子I64特征候选查询状态::事实代次漂移;
+                if(node.状态!=L1所有者范围读取状态::成功)throw map(node.状态);
+                if(values.状态!=L1所有者范围读取状态::成功)throw map(values.状态);
+                const auto* n = node.事实 ? std::get_if<L1所有者范围节点事实>(&*node.事实) : nullptr;
+                if(!n||n->写入所有者!=information_.所有者身份()||n->创建事实代次>r.Gread||
+                   (n->退出事实代次&&*n->退出事实代次<=r.Gread)||values.属性值组.size()!=1)
+                    throw 原子I64特征候选查询状态::内部不一致;
+                const auto& value=values.属性值组.front();
+                if(value.写入所有者!=information_.所有者身份()||value.所属节点!=edge.源节点||
+                   value.属性类型节点!=f_[准确内联属性]||value.创建事实代次!=n->创建事实代次||
+                   value.退出事实代次||!std::holds_alternative<std::int64_t>(value.材料))
+                    throw 原子I64特征候选查询状态::内部不一致;
+                if(std::get<std::int64_t>(value.材料)!=r.准确I64)continue;
+                out.候选.push_back({edge.源节点,n->创建事实代次});
+            }
+            guard();out.状态=原子I64特征候选查询状态::已读取;
+        } catch(原子I64特征候选查询状态 s) {out.状态=s;out.候选.clear();}
+          catch(const std::bad_alloc&) {out.状态=原子I64特征候选查询状态::资源失败;out.候选.clear();}
+          catch(...) {out.状态=原子I64特征候选查询状态::内部不一致;out.候选.clear();}
         return out;
     }
-    定位参与者结果<L1三分区原子参与者写集_v2> 准备定位内容(const 定位特征创建请求& r,std::uint64_t g) const override {
-        return 定位读取保护<L1三分区原子参与者写集_v2>(g,r.G0,[&] {
-            for(auto key:{r.组合键,r.内容键,r.已知键,r.组织键})
-                要求(定位幂等键可用(key),S::入口拒绝);
-            结构就绪(分区::信息,g,r.G0);
-            const auto ft=读类型({r.正式特征类型},g,r.G0);
-            const auto value=解析输入(r.准确值,g,r.G0);
-            要求(包含(规范域({ft.规格.允许集合}),特征规范I64域{{{value,value}}}),S::类型不相容);
-            L1三分区原子参与者写集_v2 out;out.参与者={1};out.所有者=information_.所有者身份();
-            auto& w=out.写集;w.期望事实代次=r.G0;w.写入幂等身份=r.内容键;
-            const Key f{1}; const auto attr=f_[std::holds_alternative<std::int64_t>(r.准确值)?准确内联属性:准确引用属性];
-            w.节点.push_back({f,节点种类::普通,{}});
-            w.关系.push_back({Key{2},f,f_[信息锚点],f_[信息归属],1});
-            w.关系.push_back({Key{3},f,r.正式特征类型,f_[准确类型关系],1});
-            (void)节点(producer_,g,r.G0);
-            w.值.push_back({Key{4},f,attr,value,producer_});
-            w.属性槽变更.push_back({f,attr,Key{4}});
-            return out;
-        });
+    原子I64特征参与结果<L1有限N分区原子参与者写集_v3>
+    准备原子I64出生片段(const 原子I64特征出生请求& r,std::uint64_t g) const override {
+        原子I64特征参与结果<L1有限N分区原子参与者写集_v3> out;out.Gread=g;out.H=r.G0;
+        try { std::lock_guard<std::mutex> lock(mutex_);截止有效(1,g,r.G0);守卫(g);
+            结构就绪(分区::信息,g,r.G0);const auto ft=读类型({r.正式特征类型},g,r.G0);
+            要求(包含(规范域({ft.规格.允许集合}),特征规范I64域{{{r.准确I64,r.准确I64}}}),S::类型不相容);
+            L1有限N分区原子参与者写集_v3 p; p.参与者={1};p.所有者=information_.所有者身份();auto&w=p.写集;
+            w={L1所有者范围CRUD合同版本,r.G0,r.键.内容};const Key f{1};w.节点.push_back({f,节点种类::普通,{}});
+            w.关系.push_back({Key{2},f,f_[信息锚点],f_[信息归属],1});w.关系.push_back({Key{3},f,r.正式特征类型,f_[准确类型关系],1});
+            w.值.push_back({Key{4},f,f_[准确内联属性],r.准确I64,producer_});w.属性槽变更.push_back({f,f_[准确内联属性],Key{4}});
+            out.数据=std::move(p);out.状态=原子I64特征出生状态::已创建;
+        } catch(const std::bad_alloc&){out.状态=原子I64特征出生状态::资源失败;}catch(...){out.状态=原子I64特征出生状态::内部不一致;}
+        return out;
     }
-    定位参与者结果<定位内容见证> 读取定位内容(std::uint64_t g,std::uint64_t h,稳定编码 id) const override {
-        return 定位读取保护<定位内容见证>(g,h,[&] {
-            auto f=读准确({id},g,h);return 定位内容见证{id,f.信息.类型.编码,完整整数(f),f.创建G,f.退出G};
-        });
-    }
-    定位参与者结果<std::vector<稳定编码>> 查询定位准确候选(std::uint64_t g,std::uint64_t h,稳定编码 type,
-        const std::variant<std::int64_t,特征值身份>& input,std::uint64_t maximum) const override {
-        return 定位读取保护<std::vector<稳定编码>>(g,h,[&] {
-            要求(maximum!=0,S::入口拒绝);结构就绪(分区::信息,g,h);
-            (void)读类型({type},g,h);const auto value=解析输入(input,g,h);
-            const auto edges=关系(type,f_[准确类型关系],true,g,h,分区::信息);
-            要求(edges.size()<=maximum,S::数量预算不足);
-            std::vector<稳定编码> out;
-            for(const auto& e:edges){要求(e.角色或顺序==1);auto f=读准确({e.源节点},g,h);
-                if(完整整数(f)==value)out.push_back(e.源节点);}
-            std::sort(out.begin(),out.end());要求(std::adjacent_find(out.begin(),out.end())==out.end());return out;
-        });
+    原子I64特征窄读取结果<原子I64特征内容事实> 读取原子I64内容(const 原子I64特征内容读取请求& r) const override {
+        原子I64特征窄读取结果<原子I64特征内容事实> out;out.Gread=r.Gread;out.H=r.H;
+        auto map=[](L1所有者范围读取状态 s) {
+            using X=原子I64特征窄读取状态;
+            switch(s) {case L1所有者范围读取状态::未找到:return X::未找到;
+                case L1所有者范围读取状态::已退出:return X::目标已退出;
+                case L1所有者范围读取状态::事实代次漂移:return X::事实代次漂移;
+                case L1所有者范围读取状态::历史材料已清理:return X::历史材料不可用;
+                case L1所有者范围读取状态::资源失败:return X::资源失败;default:return X::内部不一致;}
+        };
+        try { if(r.版本!=1||!r.Gread||!r.H||r.H>r.Gread||!有效(r.F))return out;
+            const auto guard=[&]{const auto x=l1_.读取中性当前事实代次({L1中性CRUD合同版本});if(x.状态!=L1中性读取状态::成功||x.事实代次!=r.Gread)throw 原子I64特征窄读取状态::事实代次漂移;};guard();
+            const auto node=l1_.读取所有者范围历史事实({L1所有者范围CRUD合同版本,r.F});
+            const auto edges=l1_.读取所有者范围历史关系组({L1所有者范围CRUD合同版本,L1所有者范围关系端点方向::源,r.F,f_[准确类型关系],r.H});
+            const auto values=l1_.读取所有者范围历史属性值组({L1所有者范围CRUD合同版本,r.F,r.H});
+            if(node.读取事实代次!=r.Gread||edges.读取事实代次!=r.Gread||values.读取事实代次!=r.Gread)throw 原子I64特征窄读取状态::事实代次漂移;
+            if(node.状态!=L1所有者范围读取状态::成功)throw map(node.状态);
+            if(edges.状态!=L1所有者范围读取状态::成功)throw map(edges.状态);
+            if(values.状态!=L1所有者范围读取状态::成功)throw map(values.状态);
+            const auto* n = node.事实 ? std::get_if<L1所有者范围节点事实>(&*node.事实) : nullptr;
+            if(!n||n->写入所有者!=information_.所有者身份()||n->创建事实代次>r.H||
+               (n->退出事实代次&&*n->退出事实代次<=r.H))throw 原子I64特征窄读取状态::目标已退出;
+            if(edges.关系组.size()!=1||values.属性值组.size()!=1)throw 原子I64特征窄读取状态::内部不一致;
+            const auto& e=edges.关系组.front();const auto& v=values.属性值组.front();if(e.写入所有者!=information_.所有者身份()||e.角色或顺序!=1||e.创建事实代次!=n->创建事实代次||e.退出事实代次||v.写入所有者!=information_.所有者身份()||v.属性类型节点!=f_[准确内联属性]||v.创建事实代次!=n->创建事实代次||v.退出事实代次||!std::holds_alternative<std::int64_t>(v.材料))throw 原子I64特征窄读取状态::内部不一致;
+            guard();out.事实=原子I64特征内容事实{r.F,e.目标节点,e.编码,v.编码,std::get<std::int64_t>(v.材料),n->创建事实代次};out.状态=原子I64特征窄读取状态::已读取;
+        }catch(原子I64特征窄读取状态 s){out.状态=s;out.事实.reset();}catch(...){out.状态=原子I64特征窄读取状态::内部不一致;out.事实.reset();}return out;
     }
     const L1事实基座服务& l1_;
     L1所有者范围写端口 definitions_, information_;

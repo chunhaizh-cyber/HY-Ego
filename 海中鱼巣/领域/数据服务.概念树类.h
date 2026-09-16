@@ -419,6 +419,36 @@ struct 特征概念结构交付 final {
     稳定编码 锚点; std::uint32_t 格式 = 1; std::array<稳定编码, 24> 类型{};
     friend bool operator==(const 特征概念结构交付&, const 特征概念结构交付&) = default;
 };
+struct 特征概念出生使用结构交付 final {
+    稳定编码 锚点{};
+    std::uint32_t 格式=1;
+    稳定编码 F到FCv出生使用关系类型{};
+    friend bool operator==(const 特征概念出生使用结构交付&,const 特征概念出生使用结构交付&)=default;
+};
+struct 特征概念出生使用结构登记请求 final {
+    std::uint32_t 版本=1; std::uint64_t G0=0;
+    L1所有者范围写入幂等身份 幂等键{};
+    纯概念结构交付_v2 纯概念结构{}; std::uint64_t 最大首次材料项数=0;
+    friend bool operator==(const 特征概念出生使用结构登记请求&,const 特征概念出生使用结构登记请求&)=default;
+};
+struct 特征概念出生使用结构首次材料读回 final {
+    L1所有者范围节点事实 锚点;
+    L1所有者范围节点事实 F到FCv出生使用关系类型;
+    L1所有者范围关系事实 类型登记关系;
+    L1所有者范围值事实 格式值;
+    friend bool operator==(const 特征概念出生使用结构首次材料读回&,const 特征概念出生使用结构首次材料读回&)=default;
+};
+struct 特征概念出生使用结构登记结果 final {
+    std::uint32_t 版本=1;
+    纯概念状态 状态=纯概念状态::入口拒绝;
+    纯概念发布状态 发布=纯概念发布状态::未进入;
+    std::uint64_t Gread=0;
+    std::optional<std::uint64_t> 首次发布H;
+    std::optional<特征概念出生使用结构登记请求> 原请求;
+    std::optional<特征概念出生使用结构交付> 交付;
+    std::optional<特征概念出生使用结构首次材料读回> 首次材料;
+    bool 成功(const 特征概念出生使用结构登记请求&) const noexcept;
+};
 struct 概念树共享预算 final {
     概念树预算 基础; 特征概念预算 特征;
     std::uint64_t 最大原子数 = 0, 最大用途数 = 0, 最大名称数 = 0, 最大首次材料项数 = 0;
@@ -718,7 +748,8 @@ struct 概念树共享写入结果 final {
 };
 
 class 概念树类数据服务 final : public 相关概念添加参与者,
-                              public 已发布概念引用参与者 {
+                              public 已发布概念引用参与者,
+                              public 原子I64特征概念参与者 {
     using S = 概念树数据状态;
     using P = 概念树发布状态;
     using N = L1所有者范围节点事实;
@@ -752,10 +783,14 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
     static 纯概念结构登记结果_v2 登记纯概念结构_v2(
         const L1事实基座服务 &, L1所有者范围写端口 &,
         const 纯概念结构登记请求_v2 &) noexcept;
+    static 特征概念出生使用结构登记结果 登记特征概念出生使用结构(
+        const L1事实基座服务 &, L1所有者范围写端口 &,
+        const 特征概念出生使用结构登记请求 &) noexcept;
     概念树类数据服务(const L1事实基座服务 &, const 特征类数据服务 &,
                      const 存在类数据服务 &, const 特征值类数据服务 &,
                      const 场景类数据服务 &, L1所有者范围写端口 &&,
-                     const 纯概念结构交付_v2 &);
+                     const 纯概念结构交付_v2 &,
+                     const 特征概念出生使用结构交付 &);
     概念树类数据服务(const L1事实基座服务 &, const 特征类数据服务 &, const 存在类数据服务 &,
                      const 特征值类数据服务 &, L1所有者范围写端口 &&, const 概念树结构交付 &,
                      const 概念树共享结构交付 &);
@@ -826,6 +861,8 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
     }
     概念树截止结果 读取当前事实代次() const;
     纯概念查询结果 精确查询纯概念(const 纯概念查询请求&) const noexcept;
+    I64特征概念组织读取结果 读取当前I64特征概念(
+        const I64特征概念组织读取请求&) const noexcept;
     纯概念写入结果 创建或复用纯概念(const 纯概念创建请求&) noexcept;
     纯概念创建恢复结果 读取纯概念创建首次结果(
         const 纯概念创建恢复请求&) const noexcept;
@@ -835,6 +872,16 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
     纯概念退出结果 退出无引用叶概念(const 纯概念退出请求&) noexcept;
     存在概念使用读取结果 读取存在概念使用(
         const 存在概念使用读取请求&) const noexcept override;
+    const L1事实基座服务& 原子I64底座() const noexcept override;
+    L1所有者范围写端口& 原子I64端口() noexcept override;
+    bool 原子I64结构已就绪() const noexcept override;
+    原子I64特征参与结果<L1有限N分区原子参与者写集_v3>
+    准备原子I64出生片段(const 原子I64特征出生请求&,std::uint64_t) const override;
+    原子I64特征出生使用读取结果 读取原子I64出生使用(
+        const 原子I64特征出生使用读取请求&) const override;
+    原子I64特征参与结果<L1有限N分区原子参与者写集_v3>
+    准备原子I64出生使用退出片段(
+        const 原子I64特征出生使用退出片段请求&,std::uint64_t) const override;
 
 
     概念树类数据服务() = delete;
@@ -894,6 +941,7 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
     const 场景类数据服务 *scenes_ = nullptr;
     std::optional<相关概念结构交付> related_layout_;
     std::optional<纯概念结构交付_v2> pure_layout_;
+    std::optional<特征概念出生使用结构交付> feature_birth_layout_;
     纯概念定义 规范化纯概念定义(const 纯概念定义&, std::uint64_t,
                               std::uint64_t, const 概念树预算&) const;
     纯概念事实 读取纯概念内部(概念树概念身份, std::uint64_t,

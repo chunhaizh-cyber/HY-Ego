@@ -2,6 +2,8 @@
 
 #include "业务/应用服务.世界树类.h"
 #include "业务/应用服务.自我形成.h"
+#include "业务/应用服务.特征概念类.h"
+#include "业务/应用服务.场景成员概念类.h"
 
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -194,6 +196,9 @@ struct 普通应用上下文 final {
   std::unique_ptr<状态类数据服务> 状态;
   std::unique_ptr<场景类数据服务> 场景;
   std::unique_ptr<概念树类数据服务> 概念;
+  std::unique_ptr<原子I64特征出生数据服务> 原子I64特征出生;
+  std::unique_ptr<特征概念应用服务> 特征概念;
+  std::unique_ptr<场景成员概念应用服务> 场景成员概念;
   std::unique_ptr<世界树根数据服务> 根服务;
   std::unique_ptr<世界树应用服务> 世界树;
   std::unique_ptr<真实自我形成服务> 自我;
@@ -352,9 +357,23 @@ std::unique_ptr<普通应用上下文> 建立上下文(
       l1,*result->概念所有者.写入端口,conceptRequest);
   if(!conceptRegistration.成功(conceptRequest)||!conceptRegistration.交付)
     throw 概念结构异常{conceptRegistration.状态};
+  const 特征概念出生使用结构登记请求 featureBirthRequest{
+      1, 定位首次(*result->概念所有者.写入端口,l1,0x1402).G0, {0x1402},
+      *conceptRegistration.交付, 4};
+  const auto featureBirthRegistration=概念树类数据服务::登记特征概念出生使用结构(
+      l1,*result->概念所有者.写入端口,featureBirthRequest);
+  if(!featureBirthRegistration.成功(featureBirthRequest)||!featureBirthRegistration.交付)
+    throw 概念结构异常{featureBirthRegistration.状态};
   result->概念=std::make_unique<概念树类数据服务>(
       l1,*result->特征,*result->存在,*result->特征值,*result->场景,
-      std::move(*result->概念所有者.写入端口),*conceptRegistration.交付);
+      std::move(*result->概念所有者.写入端口),*conceptRegistration.交付,
+      *featureBirthRegistration.交付);
+  result->原子I64特征出生=std::make_unique<原子I64特征出生数据服务>(
+      *result->特征,*result->存在,*result->场景,*result->概念);
+  result->特征概念=std::make_unique<特征概念应用服务>(
+      *result->特征,*result->概念,*result->原子I64特征出生);
+  result->场景成员概念=std::make_unique<场景成员概念应用服务>(
+      *result->特征概念);
   result->根服务 =
       std::make_unique<世界树根数据服务>(*result->存在, *result->场景);
   result->方法登记根初始化结构所有者 = 建立所有者(

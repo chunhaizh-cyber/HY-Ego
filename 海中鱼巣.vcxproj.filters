@@ -150,6 +150,18 @@
     <ClInclude Include="海中鱼巣\业务\应用服务.世界树类.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\业务\应用服务.特征概念类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\应用服务.特征概念类.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\应用服务.场景成员概念类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\应用服务.场景成员概念类.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClInclude Include="海中鱼巣\业务\应用服务.自我形成.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -162,22 +174,10 @@
     <ClCompile Include="海中鱼巣\业务\应用服务.方法登记根生产初始化.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClInclude Include="海中鱼巣\业务\应用服务.特征概念类.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClCompile Include="海中鱼巣\业务\应用服务.特征概念类.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClInclude Include="海中鱼巣\业务\应用服务.存在概念树类.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClCompile Include="海中鱼巣\业务\应用服务.存在概念树类.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClInclude Include="海中鱼巣\业务\应用服务.场景成员概念类.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClCompile Include="海中鱼巣\业务\应用服务.场景成员概念类.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClInclude Include="海中鱼巣\核心\L1公共事实.数据.h">

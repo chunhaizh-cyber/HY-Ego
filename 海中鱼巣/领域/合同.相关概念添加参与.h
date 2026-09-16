@@ -213,6 +213,19 @@ struct 纯概念事实 final {
   稳定编码 生命周期值事实{}; 概念树生命周期 生命周期值生命周期;
   概念树生命周期 生命周期;
 };
+struct I64特征概念组织读取请求 final {
+  std::uint32_t 版本 = 2;
+  std::uint64_t Gread = 0, H = 0;
+  特征类型身份 FT;
+  概念树预算 预算;
+};
+struct I64特征概念组织读取结果 final {
+  std::uint32_t 版本 = 2;
+  纯概念状态 状态 = 纯概念状态::入口拒绝;
+  std::uint64_t Gread = 0, H = 0;
+  std::vector<纯概念事实> 概念组;
+  bool 成功(const I64特征概念组织读取请求 &) const noexcept;
+};
 struct 纯概念结构类型_v2 final {
   稳定编码 类型登记{},概念族成员{},格式版本{},概念类别{},定义成员{},定义种类{};
   稳定编码 定义特征类型{},定义模板{},I64域{},通用规则{},直接上位{},生命周期{},存在概念使用{};
@@ -569,6 +582,18 @@ inline bool 纯概念读取结果::成功(const 纯概念读取请求&r) const n
     return 版本==2&&r.版本==2&&r.Gread&&r.H&&r.H<=r.Gread&&有效(r.概念.值)&&
         状态==纯概念状态::已读取&&Gread==r.Gread&&H==r.H&&事实&&
         事实->概念==r.概念&&纯概念结果内部::事实完整(*事实,H);
+}
+inline bool I64特征概念组织读取结果::成功(const I64特征概念组织读取请求&r) const noexcept {
+    if(版本!=2||r.版本!=2||!r.Gread||!r.H||r.H>r.Gread||!有效(r.FT.编码)||
+       状态!=纯概念状态::已读取||Gread!=r.Gread||H!=r.H)return false;
+    std::uint64_t previous=0;
+    for(const auto& f:概念组) {
+        const auto* d=std::get_if<纯I64特征概念定义>(&f.定义);
+        if(!纯概念结果内部::事实完整(f,H)||f.类别!=相关概念类别::特征||!d||
+           d->特征类型!=概念树特征类型引用{r.FT.编码}||!f.概念.值.值||f.概念.值.值<=previous)return false;
+        previous=f.概念.值.值;
+    }
+    return true;
 }
 inline bool 纯概念查询结果::成功(const 纯概念查询请求&r) const noexcept {
     return 版本==2&&r.版本==2&&r.Gread&&r.H&&r.H<=r.Gread&&

@@ -186,16 +186,16 @@
     <ClInclude Include="海中鱼巣\领域\数据服务.因果类.h" />
     <ClCompile Include="海中鱼巣\领域\数据服务.因果类.cpp" />
     <ClInclude Include="海中鱼巣\业务\应用服务.世界树类.h" />
+    <ClInclude Include="海中鱼巣\业务\应用服务.特征概念类.h" />
+    <ClCompile Include="海中鱼巣\业务\应用服务.特征概念类.cpp" />
+    <ClInclude Include="海中鱼巣\业务\应用服务.场景成员概念类.h" />
+    <ClCompile Include="海中鱼巣\业务\应用服务.场景成员概念类.cpp" />
     <ClInclude Include="海中鱼巣\业务\应用服务.自我形成.h" />
     <ClCompile Include="海中鱼巣\业务\应用服务.自我形成.cpp" />
     <ClInclude Include="海中鱼巣\业务\应用服务.方法登记根生产初始化.h" />
     <ClCompile Include="海中鱼巣\业务\应用服务.方法登记根生产初始化.cpp" />
-    <ClInclude Include="海中鱼巣\业务\应用服务.特征概念类.h" />
-    <ClCompile Include="海中鱼巣\业务\应用服务.特征概念类.cpp" />
     <ClInclude Include="海中鱼巣\业务\应用服务.存在概念树类.h" />
     <ClCompile Include="海中鱼巣\业务\应用服务.存在概念树类.cpp" />
-    <ClInclude Include="海中鱼巣\业务\应用服务.场景成员概念类.h" />
-    <ClCompile Include="海中鱼巣\业务\应用服务.场景成员概念类.cpp" />
     <ClCompile Include="海中鱼巣\入口.cpp" />
   </ItemGroup>
   <ItemGroup>
