@@ -5,7 +5,7 @@
   "data_l1_status": "FROZEN",
   "accepted_commit": "8ed1c1335f5cfba714602f12aca1e3c7fdcd87a6",
   "acceptance_record": "验证记录/集成验收/DATA-L1-FINAL-CLOSURE/manifest_v1.1_R1.json",
-  "source_module": "海中鱼巣/核心/服务.L1事实基座.ixx",
+  "source_module": "海中鱼巣/核心/服务.L1事实基座.h",
   "public_operations": {
     "L1事实基座服务": [
       "尝试读取中性一致当前投影",
@@ -65,9 +65,9 @@
   },
   "frozen_source_files": [
     {
-      "path": "海中鱼巣/核心/服务.L1事实基座.ixx",
-      "normalized_size": 56666,
-      "sha256": "34b80b6fb3a991a076f4c92e74517553a00e35a7e16662214d1b2724192804cc"
+      "path": "海中鱼巣/核心/服务.L1事实基座.h",
+      "normalized_size": 56548,
+      "sha256": "38a2ff2a65921cec41f909cc4c88823d57634c9dd4c8ea53d22592f663c62f3e"
     },
     {
       "path": "海中鱼巣/核心/L1公共事实.数据.h",
@@ -134,21 +134,21 @@
       "count": 1
     },
     {
-      "path": "海中鱼巣/核心/服务.L1事实基座.ixx",
+      "path": "海中鱼巣/核心/服务.L1事实基座.h",
       "owner": "L1所有者范围写端口",
       "member": "提交跨所有者原子事务",
       "kind": "method",
       "count": 1
     },
     {
-      "path": "海中鱼巣/核心/服务.L1事实基座.ixx",
+      "path": "海中鱼巣/核心/服务.L1事实基座.h",
       "owner": "L1所有者范围写端口::提交跨所有者原子事务",
       "member": "状态写集",
       "kind": "field_access",
       "count": 1
     },
     {
-      "path": "海中鱼巣/核心/服务.L1事实基座.ixx",
+      "path": "海中鱼巣/核心/服务.L1事实基座.h",
       "owner": "L1所有者范围写端口::提交跨所有者原子事务",
       "member": "动态写集",
       "kind": "field_access",
@@ -157,22 +157,22 @@
   ],
   "technical_token_exceptions": [
     {
-      "path": "海中鱼巣/核心/服务.L1事实基座.ixx",
+      "path": "海中鱼巣/核心/服务.L1事实基座.h",
       "identifier": "L1事实基座服务",
       "count": 14
     },
     {
-      "path": "海中鱼巣/核心/服务.L1事实基座.ixx",
+      "path": "海中鱼巣/核心/服务.L1事实基座.h",
       "identifier": "读取服务",
       "count": 2
     },
     {
-      "path": "海中鱼巣/核心/服务.L1事实基座.ixx",
+      "path": "海中鱼巣/核心/服务.L1事实基座.h",
       "identifier": "服务",
-      "count": 3
+      "count": 2
     },
     {
-      "path": "海中鱼巣/核心/服务.L1事实基座.ixx",
+      "path": "海中鱼巣/核心/服务.L1事实基座.h",
       "identifier": "服务_",
       "count": 4
     }

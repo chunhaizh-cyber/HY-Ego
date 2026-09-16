@@ -16,12 +16,12 @@ from pathlib import Path
 
 根目录 = Path(__file__).resolve().parents[1]
 清单路径 = 根目录 / "tools" / "l1_frozen_surface_manifest.json"
-服务路径 = 根目录 / "海中鱼巣" / "核心" / "服务.L1事实基座.ixx"
+服务路径 = 根目录 / "海中鱼巣" / "核心" / "服务.L1事实基座.h"
 生产入口路径 = 根目录 / "海中鱼巣" / "入口.cpp"
 生产工程路径 = 根目录 / "海中鱼巣.vcxproj"
 生产工程筛选器路径 = 根目录 / "海中鱼巣.vcxproj.filters"
 冻结路径 = (
-    "海中鱼巣/核心/服务.L1事实基座.ixx",
+    "海中鱼巣/核心/服务.L1事实基座.h",
     "海中鱼巣/核心/L1公共事实.数据.h",
     "海中鱼巣/核心/L1中性CRUD.数据.h",
     "海中鱼巣/核心/L1所有者范围CRUD.数据.h",
@@ -437,21 +437,21 @@ def 检查规范与生产边界(清单: dict, 错误: list[str]) -> None:
         if 片段 not in 目录:
             错误.append(f"规范目录缺少冻结摘要: {片段}")
 
-    import模式 = re.compile(r"\bimport\s+海中鱼巣\.核心\.仓库\.L1事实基座\s*;")
+    仓库包含模式 = re.compile(r'#\s*include\s*"仓库\.L1事实基座\.h"')
     命中: list[str] = []
     for 路径 in (根目录 / "海中鱼巣").rglob("*"):
         if 路径.suffix.lower() not in {".ixx", ".cpp", ".h"} or not 路径.is_file():
             continue
         try:
-            if import模式.search(读取文本(路径)):
+            if 仓库包含模式.search(读取文本(路径)):
                 命中.append(路径.relative_to(根目录).as_posix())
         except UnicodeError:
             continue
     if 命中 != [冻结路径[0]]:
-        错误.append(f"仓库模块直接 import 不是唯一服务入口: {命中}")
+        错误.append(f"仓库头文件直接 include 不是唯一服务入口: {命中}")
 
     允许许可 = {
-        "海中鱼巣/核心/服务.L1事实基座.ixx": 2,
+        "海中鱼巣/核心/服务.L1事实基座.h": 2,
         "海中鱼巣/核心/L1事实基座.数据.h": 1,
         "海中鱼巣/核心/L1所有者范围CRUD.数据.h": 5,
         "海中鱼巣/核心/L1中性CRUD.数据.h": 2,
