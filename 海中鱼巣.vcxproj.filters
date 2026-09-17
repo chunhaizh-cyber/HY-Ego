@@ -275,6 +275,12 @@
     <ClInclude Include="海中鱼巣\领域\数据服务.特征类.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\数据服务.特征值域比较类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\领域\数据服务.特征值域比较类.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClInclude Include="海中鱼巣\领域\算法.有序I64特征比较.h">
       <Filter>头文件</Filter>
     </ClInclude>

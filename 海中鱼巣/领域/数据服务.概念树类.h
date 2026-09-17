@@ -747,6 +747,34 @@ struct 概念树共享写入结果 final {
     bool 成功() const noexcept;
 };
 
+// 4180 §5.2：仅供已知 FC 的窄读；不枚举概念树，也不承担值域比较。
+enum class 特征概念值域基础读取状态_v1 : std::uint8_t {
+    已读取 = 1, 未找到, 目标已退出, 类别冲突, 规则缺失, 未实现,
+    事实代次漂移, 数量预算不足, 历史材料不可用, 资源失败,
+    内部不一致, 入口拒绝
+};
+struct 特征概念值域基础读取请求_v1 final {
+    std::uint32_t 版本 = 1;
+    std::uint64_t Gread = 0, H = 0;
+    概念树概念身份 FC;
+    概念树预算 预算;
+};
+struct 特征概念值域基础事实_v1 final {
+    概念树概念身份 FC;
+    特征类型身份 FT;
+    特征值表示类型 表示 = 特征值表示类型::I64;
+    std::optional<特征规范I64域> I64域;
+    概念树生命周期 生命周期;
+    std::uint64_t Gread = 0, H = 0;
+};
+struct 特征概念值域基础读取结果_v1 final {
+    std::uint32_t 版本 = 1;
+    特征概念值域基础读取状态_v1 状态 = 特征概念值域基础读取状态_v1::入口拒绝;
+    std::uint64_t Gread = 0, H = 0;
+    std::optional<特征概念值域基础事实_v1> 事实;
+    bool 成功(const 特征概念值域基础读取请求_v1&) const noexcept;
+};
+
 class 概念树类数据服务 final : public 相关概念添加参与者,
                               public 已发布概念引用参与者,
                               public 原子I64特征概念参与者 {
@@ -875,6 +903,8 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
     纯概念查询结果 精确查询纯概念(const 纯概念查询请求&) const noexcept;
     I64特征概念组织读取结果 读取当前I64特征概念(
         const I64特征概念组织读取请求&) const noexcept;
+    特征概念值域基础读取结果_v1 读取特征概念值域基础(
+        const 特征概念值域基础读取请求_v1&) const noexcept;
     纯概念写入结果 创建或复用纯概念(const 纯概念创建请求&) noexcept;
     纯概念创建恢复结果 读取纯概念创建首次结果(
         const 纯概念创建恢复请求&) const noexcept;

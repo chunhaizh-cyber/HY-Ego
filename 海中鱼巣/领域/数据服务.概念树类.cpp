@@ -5922,6 +5922,87 @@ bool 特征概念出生使用结构登记结果::成功(
     return out;
 }
 
+bool 特征概念值域基础读取结果_v1::成功(
+    const 特征概念值域基础读取请求_v1& r) const noexcept {
+    return 版本 == 1 && r.版本 == 1 && 状态 == 特征概念值域基础读取状态_v1::已读取
+        && Gread == r.Gread && H == r.H && H != 0 && H <= Gread && 事实
+        && 事实->Gread == r.Gread && 事实->H == r.H && 事实->FC == r.FC
+        && 有效(事实->FC.值) && 有效(事实->FT) && 事实->表示 == 特征值表示类型::I64
+        && 事实->I64域.has_value() && !事实->I64域->区间.empty();
+}
+
+特征概念值域基础读取结果_v1 概念树类数据服务::读取特征概念值域基础(
+    const 特征概念值域基础读取请求_v1& r) const noexcept {
+    特征概念值域基础读取结果_v1 out; out.Gread = r.Gread;
+    try {
+        if (r.版本 != 1 || !r.Gread || !r.H || r.H > r.Gread || !有效(r.FC.值)
+            || !r.预算.最大概念数 || !r.预算.最大关系数 || !r.预算.最大特征属性数) {
+            out.状态 = 特征概念值域基础读取状态_v1::入口拒绝;
+            return out;
+        }
+        const auto read = 读取纯概念({2, r.Gread, r.H, r.FC, r.预算});
+        if (!read.成功({2, r.Gread, r.H, r.FC, r.预算}) || !read.事实) {
+            switch (read.状态) {
+            case 纯概念状态::未找到: out.状态 = 特征概念值域基础读取状态_v1::未找到; break;
+            case 纯概念状态::目标已退出: case 纯概念状态::概念已退役:
+                out.状态 = 特征概念值域基础读取状态_v1::目标已退出; break;
+            case 纯概念状态::事实代次漂移: out.状态 = 特征概念值域基础读取状态_v1::事实代次漂移; break;
+            case 纯概念状态::数量预算不足: out.状态 = 特征概念值域基础读取状态_v1::数量预算不足; break;
+            case 纯概念状态::历史材料不可用: out.状态 = 特征概念值域基础读取状态_v1::历史材料不可用; break;
+            case 纯概念状态::资源失败: out.状态 = 特征概念值域基础读取状态_v1::资源失败; break;
+            case 纯概念状态::入口拒绝: out.状态 = 特征概念值域基础读取状态_v1::入口拒绝; break;
+            default: out.状态 = 特征概念值域基础读取状态_v1::内部不一致; break;
+            }
+            return out;
+        }
+        const auto& fact = *read.事实;
+        if (fact.类别 != 相关概念类别::特征) {
+            out.状态 = 特征概念值域基础读取状态_v1::类别冲突;
+            return out;
+        }
+        if (fact.治理状态 == 概念树生命周期状态::退役) {
+            out.状态 = 特征概念值域基础读取状态_v1::目标已退出;
+            return out;
+        }
+        const auto* definition = std::get_if<纯I64特征概念定义>(&fact.定义);
+        // 待实现：非 I64 特征概念的格式、规则和完整域适配器尚未交付。
+        if (!definition) {
+            out.状态 = 特征概念值域基础读取状态_v1::未实现;
+            return out;
+        }
+        特征规范I64域 raw;
+        raw.区间.reserve(definition->规范域.size());
+        for (const auto& interval : definition->规范域)
+            raw.区间.push_back({interval.下界, interval.上界});
+        const auto normalized = features_.规范化I64特征域(
+            {{1, r.Gread, r.H, 特征类型身份{definition->特征类型.值}}, std::move(raw)});
+        if (const auto* value = std::get_if<特征截止事实<特征规范I64域>>(&normalized)) {
+            if (value->Gread != r.Gread || value->H != r.H) {
+                out.状态 = 特征概念值域基础读取状态_v1::事实代次漂移;
+                return out;
+            }
+            out.H = r.H;
+            out.事实 = 特征概念值域基础事实_v1{r.FC, 特征类型身份{definition->特征类型.值},
+                特征值表示类型::I64, value->数据, fact.生命周期, r.Gread, r.H};
+            out.状态 = 特征概念值域基础读取状态_v1::已读取;
+            return out;
+        }
+        const auto error = std::get<特征数据错误>(normalized);
+        out.状态 = error == 特征数据错误::规则缺失 ? 特征概念值域基础读取状态_v1::规则缺失 :
+            error == 特征数据错误::事实代次漂移 ? 特征概念值域基础读取状态_v1::事实代次漂移 :
+            error == 特征数据错误::数量预算不足 ? 特征概念值域基础读取状态_v1::数量预算不足 :
+            error == 特征数据错误::历史材料不可用 ? 特征概念值域基础读取状态_v1::历史材料不可用 :
+            error == 特征数据错误::资源失败 ? 特征概念值域基础读取状态_v1::资源失败 :
+            error == 特征数据错误::未找到 ? 特征概念值域基础读取状态_v1::未找到 :
+            error == 特征数据错误::已退出 ? 特征概念值域基础读取状态_v1::目标已退出 :
+            特征概念值域基础读取状态_v1::内部不一致;
+    } catch (const std::bad_alloc&) { out.状态 = 特征概念值域基础读取状态_v1::资源失败; }
+      catch (const std::length_error&) { out.状态 = 特征概念值域基础读取状态_v1::资源失败; }
+      catch (...) { out.状态 = 特征概念值域基础读取状态_v1::内部不一致; }
+    out.H = 0; out.事实.reset();
+    return out;
+}
+
 纯概念查询结果 概念树类数据服务::精确查询纯概念(
     const 纯概念查询请求 &r) const noexcept {
     纯概念查询结果 out; out.Gread=r.Gread;
