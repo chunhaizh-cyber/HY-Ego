@@ -262,6 +262,144 @@ struct 纯概念结构登记结果_v2 final {
   bool 成功(const 纯概念结构登记请求_v2&) const noexcept;
 };
 
+// 存在概念不再借用纯概念的定义 variant。它只保存调用方已经裁决的两组引用。
+struct 存在概念特征值域项_v3 final {
+  特征类型身份 FT{};
+  概念树概念身份 FC{};
+  friend bool operator==(const 存在概念特征值域项_v3&,
+                         const 存在概念特征值域项_v3&) = default;
+};
+struct 存在概念两组定义_v3 final {
+  bool 自身特征组已完整声明 = false;
+  std::vector<存在概念特征值域项_v3> 自身特征值域组;
+  bool 子存在概念组已完整声明 = false;
+  std::vector<概念树概念身份> 已知子存在概念组;
+  friend bool operator==(const 存在概念两组定义_v3&,
+                         const 存在概念两组定义_v3&) = default;
+};
+struct 存在概念两组预算_v3 final {
+  概念树预算 基础;
+  std::uint64_t 最大自身特征项 = 0;
+  std::uint64_t 最大子概念项 = 0;
+  std::uint64_t 最大候选数 = 0;
+  std::uint64_t 最大定义成员数 = 0;
+  std::uint64_t 最大首次材料项数 = 0;
+  friend bool operator==(const 存在概念两组预算_v3&,
+                         const 存在概念两组预算_v3&) = default;
+};
+enum class 存在概念两组状态_v3 : std::uint8_t {
+  入口拒绝=1, 已规范化, 已枚举, 已读取, 未找到, 已创建, 精确重复,
+  目标已退出, 概念已退役, 类别冲突, 定义不相容, 规则缺失,
+  事实代次漂移, 幂等冲突, 数量预算不足, 历史材料不可用, 资源失败,
+  内部不一致, 已可能发布, 旧格式不支持
+};
+struct 存在概念两组结构类型_v1 final {
+  稳定编码 两组定义成员{}, 自身特征值域项{}, 自身项特征类型{},
+           自身项值域概念{}, 已知子存在概念{};
+  friend bool operator==(const 存在概念两组结构类型_v1&,
+                         const 存在概念两组结构类型_v1&) = default;
+};
+struct 存在概念两组结构交付_v1 final {
+  std::uint32_t 版本 = 1;
+  稳定编码 格式锚点{};
+  存在概念两组结构类型_v1 类型;
+  friend bool operator==(const 存在概念两组结构交付_v1&,
+                         const 存在概念两组结构交付_v1&) = default;
+};
+struct 存在概念两组结构登记请求_v1 final {
+  std::uint32_t 版本 = 1;
+  std::uint64_t G0 = 0;
+  L1所有者范围写入幂等身份 幂等身份;
+  纯概念结构交付_v2 纯概念结构;
+  std::uint64_t 最大首次材料项数 = 0;
+  friend bool operator==(const 存在概念两组结构登记请求_v1&,
+                         const 存在概念两组结构登记请求_v1&) = default;
+};
+struct 存在概念两组结构首次材料_v1 final {
+  std::array<L1所有者范围节点事实, 6> 节点;
+  std::array<L1所有者范围关系事实, 5> 类型登记关系;
+  L1所有者范围值事实 格式值;
+  friend bool operator==(const 存在概念两组结构首次材料_v1&,
+                         const 存在概念两组结构首次材料_v1&) = default;
+};
+struct 存在概念两组结构登记结果_v1 final {
+  std::uint32_t 版本 = 1;
+  存在概念两组状态_v3 状态 = 存在概念两组状态_v3::入口拒绝;
+  纯概念发布状态 发布 = 纯概念发布状态::未进入;
+  std::uint64_t Gread = 0;
+  std::optional<std::uint64_t> 首次发布H;
+  std::optional<存在概念两组结构登记请求_v1> 原请求;
+  std::optional<存在概念两组结构交付_v1> 交付;
+  std::optional<存在概念两组结构首次材料_v1> 首次材料;
+  bool 成功(const 存在概念两组结构登记请求_v1&) const noexcept;
+};
+struct 存在概念两组事实_v3 final {
+  概念树概念身份 概念;
+  稳定编码 定义记录{};
+  概念树生命周期 定义记录生命周期;
+  概念树生命周期 状态生命周期;
+  概念树生命周期 概念生命周期;
+  概念树生命周期状态 治理状态{};
+  存在概念两组定义_v3 定义;
+  std::vector<纯概念定义关系事实> 自身特征项关系组;
+  std::vector<纯概念定义关系事实> 子概念关系组;
+  std::vector<概念树直接上位事实> 直接上位;
+  friend bool operator==(const 存在概念两组事实_v3&,
+                         const 存在概念两组事实_v3&) = default;
+};
+struct 存在概念两组规范化请求_v1 final {
+  std::uint32_t 版本 = 1; std::uint64_t Gread = 0, H = 0;
+  存在概念两组定义_v3 定义; 存在概念两组预算_v3 预算;
+};
+struct 存在概念两组枚举请求_v1 final {
+  std::uint32_t 版本 = 1; std::uint64_t Gread = 0, H = 0;
+  存在概念两组预算_v3 预算;
+};
+struct 存在概念两组读取请求_v1 final {
+  std::uint32_t 版本 = 1; std::uint64_t Gread = 0, H = 0;
+  概念树概念身份 EC; 存在概念两组预算_v3 预算;
+};
+struct 存在概念两组查询请求_v1 final {
+  std::uint32_t 版本 = 1; std::uint64_t Gread = 0, H = 0;
+  存在概念两组定义_v3 定义; 存在概念两组预算_v3 预算;
+};
+struct 存在概念两组创建请求_v1 final {
+  std::uint32_t 版本 = 1; std::uint64_t G0 = 0;
+  L1所有者范围写入幂等身份 幂等身份;
+  存在概念两组定义_v3 定义;
+  std::vector<概念树概念身份> 直接上位;
+  存在概念两组预算_v3 预算;
+};
+struct 存在概念两组规范化结果_v1 final {
+  std::uint32_t 版本 = 1; 存在概念两组状态_v3 状态 = 存在概念两组状态_v3::入口拒绝;
+  std::uint64_t Gread = 0, H = 0; std::optional<存在概念两组定义_v3> 定义;
+  bool 成功(const 存在概念两组规范化请求_v1&) const noexcept;
+};
+struct 存在概念两组枚举结果_v1 final {
+  std::uint32_t 版本 = 1; 存在概念两组状态_v3 状态 = 存在概念两组状态_v3::入口拒绝;
+  std::uint64_t Gread = 0, H = 0; std::vector<存在概念两组事实_v3> 候选;
+  bool 成功(const 存在概念两组枚举请求_v1&) const noexcept;
+};
+struct 存在概念两组读取结果_v1 final {
+  std::uint32_t 版本 = 1; 存在概念两组状态_v3 状态 = 存在概念两组状态_v3::入口拒绝;
+  std::uint64_t Gread = 0, H = 0; std::optional<存在概念两组事实_v3> 事实;
+  bool 成功(const 存在概念两组读取请求_v1&) const noexcept;
+};
+struct 存在概念两组查询结果_v1 final {
+  std::uint32_t 版本 = 1; 存在概念两组状态_v3 状态 = 存在概念两组状态_v3::入口拒绝;
+  std::uint64_t Gread = 0, H = 0; std::optional<存在概念两组事实_v3> 事实;
+  bool 成功(const 存在概念两组查询请求_v1&) const noexcept;
+  bool 确认未找到(const 存在概念两组查询请求_v1&) const noexcept;
+};
+struct 存在概念两组写入结果_v1 final {
+  std::uint32_t 版本 = 1; 存在概念两组状态_v3 状态 = 存在概念两组状态_v3::入口拒绝;
+  纯概念发布状态 发布 = 纯概念发布状态::未进入;
+  std::uint64_t Gread = 0, H = 0; std::optional<std::uint64_t> 首次发布H;
+  std::optional<存在概念两组创建请求_v1> 原请求;
+  std::optional<存在概念两组事实_v3> 事实;
+  bool 成功(const 存在概念两组创建请求_v1&) const noexcept;
+};
+
 // 完整存在概念的公开 ABI 与纯概念 DTO 分离；物理上仍复用同一概念 owner。
 enum class 完整存在概念状态 : std::uint8_t {
   入口拒绝=1, 未找到=2, 已规范化=3, 已读取=4, 已创建=5, 精确重复=6,
@@ -943,5 +1081,60 @@ inline bool 纯概念退出结果::成功(const 纯概念退出请求&r) const n
 inline bool 存在概念使用读取结果::成功(const 存在概念使用读取请求&r) const noexcept {
     return 版本==2&&r.版本==2&&状态==纯概念状态::已读取&&Gread==r.Gread&&H==r.H&&
         使用&&概念&&使用->E==r.E.值&&使用->EC==概念->概念;
+}
+inline bool 存在概念两组结构登记结果_v1::成功(
+    const 存在概念两组结构登记请求_v1& r) const noexcept {
+    if (版本 != 1 || r.版本 != 1 ||
+        (状态 != 存在概念两组状态_v3::已创建 && 状态 != 存在概念两组状态_v3::精确重复) ||
+        发布 != 纯概念发布状态::确认发布 || !Gread || !首次发布H ||
+        *首次发布H != r.G0 + 1 || *首次发布H > Gread || !原请求 ||
+        !交付 || !首次材料 || *原请求 != r) return false;
+    const auto& t = 交付->类型;
+    const std::array<稳定编码, 6> ids{交付->格式锚点, t.两组定义成员,
+        t.自身特征值域项, t.自身项特征类型, t.自身项值域概念, t.已知子存在概念};
+    std::set<std::uint64_t> seen;
+    return std::all_of(ids.begin(), ids.end(), [&](auto id) {
+        return 有效(id) && seen.insert(id.值).second;
+    });
+}
+inline bool 存在概念两组规范化结果_v1::成功(
+    const 存在概念两组规范化请求_v1& r) const noexcept {
+    return 版本 == 1 && r.版本 == 1 && r.Gread && r.H && r.H <= r.Gread &&
+        状态 == 存在概念两组状态_v3::已规范化 && Gread == r.Gread && H == r.H && 定义;
+}
+inline bool 存在概念两组枚举结果_v1::成功(
+    const 存在概念两组枚举请求_v1& r) const noexcept {
+    return 版本 == 1 && r.版本 == 1 && r.Gread && r.H && r.H <= r.Gread &&
+        状态 == 存在概念两组状态_v3::已枚举 && Gread == r.Gread && H == r.H;
+}
+inline bool 存在概念两组读取结果_v1::成功(
+    const 存在概念两组读取请求_v1& r) const noexcept {
+    return 版本 == 1 && r.版本 == 1 && r.Gread && r.H && r.H <= r.Gread &&
+        有效(r.EC.值) && 状态 == 存在概念两组状态_v3::已读取 &&
+        Gread == r.Gread && H == r.H && 事实 && 事实->概念 == r.EC;
+}
+inline bool 存在概念两组查询结果_v1::成功(
+    const 存在概念两组查询请求_v1& r) const noexcept {
+    return 版本 == 1 && r.版本 == 1 && r.Gread && r.H && r.H <= r.Gread &&
+        状态 == 存在概念两组状态_v3::已读取 && Gread == r.Gread && H == r.H &&
+        事实 && 事实->定义 == r.定义;
+}
+inline bool 存在概念两组查询结果_v1::确认未找到(
+    const 存在概念两组查询请求_v1& r) const noexcept {
+    return 版本 == 1 && r.版本 == 1 && r.Gread && r.H && r.H <= r.Gread &&
+        状态 == 存在概念两组状态_v3::未找到 && Gread == r.Gread && H == r.H && !事实;
+}
+inline bool 存在概念两组写入结果_v1::成功(
+    const 存在概念两组创建请求_v1& r) const noexcept {
+    const bool created = 状态 == 存在概念两组状态_v3::已创建 &&
+        发布 == 纯概念发布状态::确认发布 && 首次发布H && *首次发布H == r.G0 + 1 && H == *首次发布H;
+    const bool replay = 状态 == 存在概念两组状态_v3::精确重复 &&
+        ((发布 == 纯概念发布状态::确认未发布 && !首次发布H && H == Gread) ||
+         (发布 == 纯概念发布状态::确认发布 && 首次发布H && H == *首次发布H && *首次发布H <= Gread));
+    return 版本 == 1 && r.版本 == 1 && r.G0 && 有效(r.幂等身份) && Gread && H && H <= Gread &&
+        (created || replay) && 原请求 && 原请求->版本 == r.版本 && 原请求->G0 == r.G0 &&
+        原请求->幂等身份 == r.幂等身份 && 原请求->定义 == r.定义 &&
+        原请求->直接上位 == r.直接上位 && 原请求->预算 == r.预算 &&
+        事实 && 事实->定义 == r.定义;
 }
 } // namespace 海中鱼巣
