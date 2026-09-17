@@ -4395,14 +4395,415 @@ bool 概念树类数据服务::应用事实完整(const 概念树应用定义事
         throw std::invalid_argument("concept two-group services");
 }
 
-// 待实现：两组定义 6 节点/5 类型关系/格式值的同 owner 首次材料登记。
-// 在完整 L1 写集实现落入前禁止返回成功或交付，避免把旧 D/O/R 格式伪装为两组布局。
+namespace {
+存在概念两组状态_v3 映射两组状态(纯概念状态 state) noexcept {
+    switch (state) {
+    case 纯概念状态::入口拒绝: return 存在概念两组状态_v3::入口拒绝;
+    case 纯概念状态::未找到: return 存在概念两组状态_v3::未找到;
+    case 纯概念状态::目标已退出: return 存在概念两组状态_v3::目标已退出;
+    case 纯概念状态::概念已退役: return 存在概念两组状态_v3::概念已退役;
+    case 纯概念状态::类别冲突: return 存在概念两组状态_v3::类别冲突;
+    case 纯概念状态::定义不相容: return 存在概念两组状态_v3::定义不相容;
+    case 纯概念状态::定义不支持: return 存在概念两组状态_v3::规则缺失;
+    case 纯概念状态::事实代次漂移: return 存在概念两组状态_v3::事实代次漂移;
+    case 纯概念状态::幂等冲突: return 存在概念两组状态_v3::幂等冲突;
+    case 纯概念状态::数量预算不足: return 存在概念两组状态_v3::数量预算不足;
+    case 纯概念状态::历史材料不可用: return 存在概念两组状态_v3::历史材料不可用;
+    case 纯概念状态::资源失败: return 存在概念两组状态_v3::资源失败;
+    case 纯概念状态::已可能发布: return 存在概念两组状态_v3::已可能发布;
+    case 纯概念状态::旧格式不支持: return 存在概念两组状态_v3::旧格式不支持;
+    default: return 存在概念两组状态_v3::内部不一致;
+    }
+}
+}
+
+存在概念两组定义_v3 概念树类数据服务::规范化两组定义内部(
+    const 存在概念两组定义_v3& input, std::uint64_t g, std::uint64_t h,
+    const 存在概念两组预算_v3& budget) const {
+    if (!two_group_definition_layout_ || !pure_layout_ || !g || !h || h > g ||
+        !input.自身特征组已完整声明 || !input.子存在概念组已完整声明 ||
+        !budget.最大自身特征项 || !budget.最大子概念项 || !budget.最大定义成员数 ||
+        !budget.基础.最大概念数 || !budget.基础.最大关系数 || !budget.基础.最大特征属性数)
+        throw 纯失败{纯概念状态::入口拒绝};
+    if (input.自身特征值域组.size() > budget.最大自身特征项 ||
+        input.已知子存在概念组.size() > budget.最大子概念项 ||
+        input.自身特征值域组.size() + input.已知子存在概念组.size() > budget.最大定义成员数)
+        throw 纯失败{纯概念状态::数量预算不足};
+    auto out=input;
+    std::sort(out.自身特征值域组.begin(),out.自身特征值域组.end(),[](const auto&a,const auto&b) {
+        return std::tie(a.FT.编码.值,a.FC.值.值) < std::tie(b.FT.编码.值,b.FC.值.值);
+    });
+    for (std::size_t i=0;i<out.自身特征值域组.size();++i) {
+        const auto& item=out.自身特征值域组[i];
+        if (!有效(item.FT) || !有效(item.FC.值) ||
+            (i && out.自身特征值域组[i-1].FT == item.FT))
+            throw 纯失败{纯概念状态::定义不相容};
+        const auto value=读取特征概念值域基础({1,g,h,item.FC,budget.基础});
+        if (!value.成功({1,g,h,item.FC,budget.基础}) || !value.事实 || value.事实->FT != item.FT)
+            throw 纯失败{value.状态 == 特征概念值域基础读取状态_v1::未找到 ? 纯概念状态::定义不相容 :
+                         (value.状态 == 特征概念值域基础读取状态_v1::目标已退出 ? 纯概念状态::目标已退出 :
+                          (value.状态 == 特征概念值域基础读取状态_v1::事实代次漂移 ? 纯概念状态::事实代次漂移 :
+                           (value.状态 == 特征概念值域基础读取状态_v1::数量预算不足 ? 纯概念状态::数量预算不足 :
+                            (value.状态 == 特征概念值域基础读取状态_v1::历史材料不可用 ? 纯概念状态::历史材料不可用 :
+                             (value.状态 == 特征概念值域基础读取状态_v1::资源失败 ? 纯概念状态::资源失败 :
+                              (value.状态 == 特征概念值域基础读取状态_v1::规则缺失 || value.状态 == 特征概念值域基础读取状态_v1::未实现 ?
+                               纯概念状态::定义不支持 : 纯概念状态::内部不一致))))))};
+    }
+    std::sort(out.已知子存在概念组.begin(),out.已知子存在概念组.end(),[](auto a,auto b){return a.值.值<b.值.值;});
+    if (std::adjacent_find(out.已知子存在概念组.begin(),out.已知子存在概念组.end()) != out.已知子存在概念组.end())
+        throw 纯失败{纯概念状态::定义不相容};
+    for (const auto child:out.已知子存在概念组) {
+        if (!有效(child.值)) throw 纯失败{纯概念状态::定义不相容};
+        const auto fact=读取纯概念内部(child,g,h,budget.基础);
+        if (fact.类别 != 相关概念类别::存在) throw 纯失败{纯概念状态::类别冲突};
+        if (fact.治理状态 == 概念树生命周期状态::退役) throw 纯失败{纯概念状态::概念已退役};
+    }
+    return out;
+}
+
+存在概念两组规范化结果_v1 概念树类数据服务::规范化存在概念两组定义(
+    const 存在概念两组规范化请求_v1& r) const noexcept {
+    存在概念两组规范化结果_v1 out; out.Gread=r.Gread;
+    try {
+        if(r.版本!=1 || !r.Gread || !r.H || r.H>r.Gread) throw 纯失败{纯概念状态::入口拒绝};
+        守卫代次(r.Gread); out.定义=规范化两组定义内部(r.定义,r.Gread,r.H,r.预算);
+        out.H=r.H; out.状态=存在概念两组状态_v3::已规范化; 守卫代次(r.Gread);
+    } catch(const 纯失败& e) { out.状态=映射两组状态(e.状态); out.H=0; out.定义.reset(); }
+      catch(const std::bad_alloc&) { out.状态=存在概念两组状态_v3::资源失败; out.H=0; }
+      catch(...) { out.状态=存在概念两组状态_v3::内部不一致; out.H=0; }
+    return out;
+}
+
+存在概念两组事实_v3 概念树类数据服务::读取两组定义内部(
+    概念树概念身份 id, std::uint64_t g, std::uint64_t h,
+    const 存在概念两组预算_v3& budget) const {
+    if (!two_group_definition_layout_ || !有效(id.值)) throw 纯失败{纯概念状态::旧格式不支持};
+    const auto base=读取纯概念内部(id,g,h,budget.基础);
+    if(base.类别 != 相关概念类别::存在) throw 纯失败{纯概念状态::类别冲突};
+    if(base.治理状态 == 概念树生命周期状态::退役) throw 纯失败{纯概念状态::概念已退役};
+    const auto& t=two_group_definition_layout_->类型;
+    const auto definitions=关系(id.值,t.两组定义成员,false,g,h,2);
+    if(definitions.size()!=1 || definitions.front().角色或顺序!=1) throw 纯失败{纯概念状态::内部不一致};
+    const auto d=definitions.front().目标节点;
+    const auto dNode=节点(d,g,h);
+    if(dNode.写入所有者!=port_.所有者身份() || dNode.种类!=节点种类::普通 || dNode.属性类型表示 || dNode.退出事实代次)
+        throw 纯失败{纯概念状态::内部不一致};
+    存在概念两组事实_v3 out;
+    out.概念=id; out.定义记录=d; out.定义记录生命周期=投影纯生命(dNode,g);
+    out.状态生命周期=base.生命周期值生命周期; out.概念生命周期=base.生命周期;
+    out.治理状态=base.治理状态; out.直接上位=base.直接上位;
+    out.定义.自身特征组已完整声明=true; out.定义.子存在概念组已完整声明=true;
+    const auto own=关系(d,t.自身特征值域项,false,g,h,budget.最大自身特征项+1);
+    if(own.size()>budget.最大自身特征项) throw 纯失败{纯概念状态::数量预算不足};
+    for(std::size_t i=0;i<own.size();++i) {
+        const auto& edge=own[i];
+        if(edge.角色或顺序!=static_cast<std::int64_t>(i+1)) throw 纯失败{纯概念状态::内部不一致};
+        const auto itemNode=节点(edge.目标节点,g,h);
+        if(itemNode.写入所有者!=port_.所有者身份() || itemNode.种类!=节点种类::普通 || itemNode.属性类型表示 || itemNode.退出事实代次 || !属性(edge.目标节点,g,h).empty())
+            throw 纯失败{纯概念状态::内部不一致};
+        const auto ft=关系(edge.目标节点,t.自身项特征类型,false,g,h,2);
+        const auto fc=关系(edge.目标节点,t.自身项值域概念,false,g,h,2);
+        if(ft.size()!=1 || fc.size()!=1 || ft.front().角色或顺序!=1 || fc.front().角色或顺序!=1)
+            throw 纯失败{纯概念状态::内部不一致};
+        存在概念特征值域项_v3 item{特征类型身份{ft.front().目标节点},概念树概念身份{fc.front().目标节点}};
+        out.定义.自身特征值域组.push_back(item);
+        out.自身特征项关系组.push_back({edge.编码,edge.源节点,edge.目标节点,edge.关系类型节点,
+            纯概念定义关系种类::定义成员,static_cast<std::uint64_t>(edge.角色或顺序),投影纯生命(edge,g)});
+    }
+    const auto children=关系(d,t.已知子存在概念,false,g,h,budget.最大子概念项+1);
+    if(children.size()>budget.最大子概念项) throw 纯失败{纯概念状态::数量预算不足};
+    for(std::size_t i=0;i<children.size();++i) {
+        const auto& edge=children[i];
+        if(edge.角色或顺序!=static_cast<std::int64_t>(i+1)) throw 纯失败{纯概念状态::内部不一致};
+        out.定义.已知子存在概念组.push_back(概念树概念身份{edge.目标节点});
+        out.子概念关系组.push_back({edge.编码,edge.源节点,edge.目标节点,edge.关系类型节点,
+            纯概念定义关系种类::定义成员,static_cast<std::uint64_t>(edge.角色或顺序),投影纯生命(edge,g)});
+    }
+    const auto normalized=规范化两组定义内部(out.定义,g,h,budget);
+    if(normalized != out.定义) throw 纯失败{纯概念状态::内部不一致};
+    return out;
+}
+
+存在概念两组读取结果_v1 概念树类数据服务::读取存在概念两组定义(
+    const 存在概念两组读取请求_v1& r) const noexcept {
+    存在概念两组读取结果_v1 out; out.Gread=r.Gread;
+    try {
+        if(r.版本!=1 || !r.Gread || !r.H || r.H>r.Gread || !有效(r.EC.值)) throw 纯失败{纯概念状态::入口拒绝};
+        守卫代次(r.Gread); out.事实=读取两组定义内部(r.EC,r.Gread,r.H,r.预算);
+        out.H=r.H; out.状态=存在概念两组状态_v3::已读取; 守卫代次(r.Gread);
+    } catch(const 纯失败& e) { out.状态=映射两组状态(e.状态); out.H=0; out.事实.reset(); }
+      catch(const std::bad_alloc&) { out.状态=存在概念两组状态_v3::资源失败; out.H=0; }
+      catch(...) { out.状态=存在概念两组状态_v3::内部不一致; out.H=0; }
+    return out;
+}
+
+存在概念两组枚举结果_v1 概念树类数据服务::枚举存在概念候选(
+    const 存在概念两组枚举请求_v1& r) const noexcept {
+    存在概念两组枚举结果_v1 out; out.Gread=r.Gread;
+    try {
+        if(r.版本!=1 || !r.Gread || !r.H || r.H>r.Gread || !r.预算.最大候选数 || !pure_layout_)
+            throw 纯失败{纯概念状态::入口拒绝};
+        守卫代次(r.Gread);
+        const auto members=关系(pure_layout_->概念族锚点,pure_layout_->类型.概念族成员,false,r.Gread,r.H,r.预算.最大候选数+1);
+        if(members.size()>r.预算.最大候选数) throw 纯失败{纯概念状态::数量预算不足};
+        for(const auto& member:members) {
+            if(member.角色或顺序!=1) throw 纯失败{纯概念状态::内部不一致};
+            const auto definition=关系(member.目标节点,two_group_definition_layout_->类型.两组定义成员,
+                                      false,r.Gread,r.H,2);
+            if(definition.empty()) continue;
+            if(definition.size()!=1 || definition.front().角色或顺序!=1)
+                throw 纯失败{纯概念状态::内部不一致};
+            const auto base=读取纯概念内部(概念树概念身份{member.目标节点},r.Gread,r.H,r.预算.基础);
+            if(base.类别 != 相关概念类别::存在) continue;
+            const auto fact=读取两组定义内部(概念树概念身份{member.目标节点},r.Gread,r.H,r.预算);
+            out.候选.push_back(fact);
+        }
+        out.H=r.H; out.状态=存在概念两组状态_v3::已枚举; 守卫代次(r.Gread);
+    } catch(const 纯失败& e) { out.状态=映射两组状态(e.状态); out.H=0; out.候选.clear(); }
+      catch(const std::bad_alloc&) { out.状态=存在概念两组状态_v3::资源失败; out.H=0; out.候选.clear(); }
+      catch(...) { out.状态=存在概念两组状态_v3::内部不一致; out.H=0; out.候选.clear(); }
+    return out;
+}
+
+存在概念两组查询结果_v1 概念树类数据服务::精确查询存在概念(
+    const 存在概念两组查询请求_v1& r) const noexcept {
+    存在概念两组查询结果_v1 out; out.Gread=r.Gread;
+    try {
+        if(r.版本!=1 || !r.Gread || !r.H || r.H>r.Gread) throw 纯失败{纯概念状态::入口拒绝};
+        const auto normalized=规范化两组定义内部(r.定义,r.Gread,r.H,r.预算);
+        const auto candidates=枚举存在概念候选({1,r.Gread,r.H,r.预算});
+        if(!candidates.成功({1,r.Gread,r.H,r.预算}))
+            throw 纯失败{candidates.状态 == 存在概念两组状态_v3::数量预算不足 ? 纯概念状态::数量预算不足 :
+                         (candidates.状态 == 存在概念两组状态_v3::事实代次漂移 ? 纯概念状态::事实代次漂移 :
+                          (candidates.状态 == 存在概念两组状态_v3::资源失败 ? 纯概念状态::资源失败 : 纯概念状态::内部不一致))};
+        for(const auto& fact:candidates.候选) if(fact.定义==normalized) {
+            if(out.事实) throw 纯失败{纯概念状态::内部不一致};
+            out.事实=fact;
+        }
+        out.H=r.H; out.状态=out.事实 ? 存在概念两组状态_v3::已读取 : 存在概念两组状态_v3::未找到;
+    } catch(const 纯失败& e) { out.状态=映射两组状态(e.状态); out.H=0; out.事实.reset(); }
+      catch(const std::bad_alloc&) { out.状态=存在概念两组状态_v3::资源失败; out.H=0; }
+      catch(...) { out.状态=存在概念两组状态_v3::内部不一致; out.H=0; }
+    return out;
+}
+
+存在概念两组写入结果_v1 概念树类数据服务::创建或复用存在概念(
+    const 存在概念两组创建请求_v1& r) noexcept {
+    存在概念两组写入结果_v1 out; out.原请求=r;
+    bool entered=false;
+    try {
+        std::scoped_lock lock(mutex_);
+        if(r.版本!=1 || !r.G0 || r.G0==UINT64_MAX || !有效(r.幂等身份) || !pure_layout_ || !two_group_definition_layout_)
+            throw 纯失败{纯概念状态::入口拒绝};
+        const auto current=读取当前事实代次();
+        if(!current.成功()) throw 纯失败{纯概念状态::资源失败};
+        out.Gread=current.Gread;
+        const auto definition=规范化两组定义内部(r.定义,current.Gread,r.G0,r.预算);
+        auto parents=r.直接上位;
+        std::sort(parents.begin(),parents.end(),[](auto a,auto b){return a.值.值<b.值.值;});
+        if(std::adjacent_find(parents.begin(),parents.end())!=parents.end()) throw 纯失败{纯概念状态::定义不相容};
+        for(const auto parent:parents) {
+            const auto parentFact=读取两组定义内部(parent,r.G0,r.G0,r.预算);
+            if(parentFact.治理状态==概念树生命周期状态::退役)
+                throw 纯失败{纯概念状态::概念已退役};
+        }
+        const auto first=port_.读取首次写入材料({L1所有者范围首次写入读取合同版本,r.幂等身份});
+        if(first.合同版本!=L1所有者范围首次写入读取合同版本 || first.所有者!=port_.所有者身份() || first.写入幂等身份!=r.幂等身份)
+            throw 纯失败{纯概念状态::内部不一致};
+        if(first.状态==L1所有者范围读取状态::成功) {
+            if(!first.首次写入结果 || !first.首次规范化写集 || first.首次写入结果->状态!=L1所有者范围写入状态::成功 ||
+               !first.首次写入结果->是否形成内存权威发布) throw 纯失败{纯概念状态::已可能发布};
+            稳定编码 id{}; for(const auto& [key,value]:first.首次写入结果->新编码映射) if(key.值==1) id=value;
+            if(!有效(id)) throw 纯失败{纯概念状态::内部不一致};
+            const auto fact=读取两组定义内部(概念树概念身份{id},current.Gread,first.首次写入结果->事实代次,r.预算);
+            if(fact.定义!=definition) throw 纯失败{纯概念状态::幂等冲突};
+            out.H=first.首次写入结果->事实代次; out.首次发布H=out.H; out.事实=fact;
+            out.状态=存在概念两组状态_v3::精确重复; out.发布=纯概念发布状态::确认发布; return out;
+        }
+        if(first.状态!=L1所有者范围读取状态::未找到 || first.读取事实代次!=r.G0 || current.Gread!=r.G0)
+            throw 纯失败{first.状态==L1所有者范围读取状态::资源失败 ? 纯概念状态::资源失败 : 纯概念状态::事实代次漂移};
+        const auto found=精确查询存在概念({1,r.G0,r.G0,definition,r.预算});
+        if(found.成功({1,r.G0,r.G0,definition,r.预算})) {
+            out.H=r.G0; out.事实=found.事实; out.状态=存在概念两组状态_v3::精确重复; out.发布=纯概念发布状态::确认未发布; return out;
+        }
+        if(!found.确认未找到({1,r.G0,r.G0,definition,r.预算})) throw 纯失败{纯概念状态::内部不一致};
+        const auto& pure=pure_layout_->类型; const auto& two=two_group_definition_layout_->类型;
+        L1所有者范围写集请求 write{L1所有者范围CRUD合同版本,r.G0,r.幂等身份};
+        write.节点.push_back({{1},节点种类::普通,std::nullopt});
+        write.节点.push_back({{2},节点种类::普通,std::nullopt});
+        write.节点.push_back({{3},节点种类::普通,std::nullopt});
+        std::uint32_t nodeKey=4,edgeKey=0x41001,valueKey=0x42001;
+        auto edge=[&](Ref source,Ref target,稳定编码 type,std::int64_t role=1){write.关系.push_back({{edgeKey++},source,target,Ref{type},role});};
+        auto value=[&](Ref node,稳定编码 type,L1所有者范围原始值材料 material){const Key key{valueKey++};write.值.push_back({key,node,Ref{type},std::move(material),node});write.属性槽变更.push_back({node,Ref{type},key});};
+        edge(Ref{pure_layout_->概念族锚点},Ref{Key{1}},pure.概念族成员);
+        edge(Ref{Key{1}},Ref{Key{2}},pure.定义成员);
+        edge(Ref{Key{1}},Ref{Key{3}},two.两组定义成员);
+        value(Ref{Key{1}},pure.概念类别,std::int64_t{1});
+        value(Ref{Key{1}},pure.生命周期,std::int64_t{static_cast<std::uint8_t>(概念树生命周期状态::活跃)});
+        value(Ref{Key{2}},pure.定义种类,std::int64_t{3});
+        value(Ref{Key{2}},pure.通用规则,std::int64_t{1});
+        for(std::size_t i=0;i<definition.自身特征值域组.size();++i) {
+            const Key item{nodeKey++}; write.节点.push_back({item,节点种类::普通,std::nullopt});
+            edge(Ref{Key{3}},Ref{item},two.自身特征值域项,static_cast<std::int64_t>(i+1));
+            edge(Ref{item},Ref{definition.自身特征值域组[i].FT.编码},two.自身项特征类型);
+            edge(Ref{item},Ref{definition.自身特征值域组[i].FC.值},two.自身项值域概念);
+        }
+        for(std::size_t i=0;i<definition.已知子存在概念组.size();++i)
+            edge(Ref{Key{3}},Ref{definition.已知子存在概念组[i].值},two.已知子存在概念,static_cast<std::int64_t>(i+1));
+        for(const auto parent:parents) edge(Ref{parent.值},Ref{Key{1}},pure.直接上位);
+        entered=true;
+        const auto saved=port_.提交所有者范围中性写集(write); out.Gread=saved.事实代次;
+        if(saved.状态!=L1所有者范围写入状态::成功 || saved.事实代次!=r.G0+1) {
+            out.状态=saved.状态==L1所有者范围写入状态::事实代次漂移 ? 存在概念两组状态_v3::事实代次漂移 :
+                (saved.状态==L1所有者范围写入状态::幂等冲突 ? 存在概念两组状态_v3::幂等冲突 : 存在概念两组状态_v3::已可能发布);
+            out.发布=saved.是否形成内存权威发布 ? 纯概念发布状态::可能发布 : 纯概念发布状态::确认未发布; return out;
+        }
+        稳定编码 id{}; for(const auto& [key,candidate]:saved.新编码映射) if(key.值==1) id=candidate;
+        if(!有效(id)) throw 纯失败{纯概念状态::已可能发布};
+        const auto tail=读取当前事实代次(); if(!tail.成功() || tail.Gread<saved.事实代次) throw 纯失败{纯概念状态::已可能发布};
+        out.Gread=tail.Gread; out.H=saved.事实代次; out.首次发布H=out.H;
+        out.事实=读取两组定义内部(概念树概念身份{id},out.Gread,out.H,r.预算);
+        if(out.事实->定义!=definition) throw 纯失败{纯概念状态::内部不一致};
+        out.状态=存在概念两组状态_v3::已创建; out.发布=纯概念发布状态::确认发布;
+    } catch(const 纯失败& e) {
+        out.状态=entered ? 存在概念两组状态_v3::已可能发布 : 映射两组状态(e.状态);
+        out.发布=entered ? 纯概念发布状态::可能发布 : 纯概念发布状态::确认未发布;
+        if(out.状态!=存在概念两组状态_v3::已可能发布) {out.H=0;out.首次发布H.reset();out.事实.reset();}
+    } catch(const std::bad_alloc&) {out.状态=entered?存在概念两组状态_v3::已可能发布:存在概念两组状态_v3::资源失败;out.发布=entered?纯概念发布状态::可能发布:纯概念发布状态::确认未发布;}
+      catch(...) {out.状态=entered?存在概念两组状态_v3::已可能发布:存在概念两组状态_v3::内部不一致;out.发布=entered?纯概念发布状态::可能发布:纯概念发布状态::确认未发布;}
+    return out;
+}
+
 存在概念两组结构登记结果_v1 概念树类数据服务::登记存在概念两组结构_v1(
-    const L1事实基座服务&, L1所有者范围写端口&,
+    const L1事实基座服务& l1, L1所有者范围写端口& port,
     const 存在概念两组结构登记请求_v1& r) noexcept {
     存在概念两组结构登记结果_v1 out;
     out.原请求 = r;
-    out.状态 = 存在概念两组状态_v3::规则缺失;
+    bool entered = false;
+    const auto fail = [&](存在概念两组状态_v3 state) {
+        out.状态 = state;
+        out.发布 = entered ? 纯概念发布状态::可能发布 : 纯概念发布状态::确认未发布;
+        if (state != 存在概念两组状态_v3::已可能发布) out.首次发布H.reset();
+        out.交付.reset(); out.首次材料.reset();
+    };
+    try {
+        if (r.版本 != 1 || !r.G0 || r.G0 == UINT64_MAX || !有效(r.幂等身份) ||
+            !port.有效() || !port.绑定于(l1) || r.纯概念结构.版本 != 2 ||
+            !有效(r.纯概念结构.格式锚点) || !有效(r.纯概念结构.类型.类型登记) ||
+            !有效(r.纯概念结构.类型.格式版本) || r.最大首次材料项数 < 12) {
+            fail(存在概念两组状态_v3::入口拒绝); return out;
+        }
+        const auto& pure = r.纯概念结构;
+        const auto& type = pure.类型;
+        L1所有者范围写集请求 write{L1所有者范围CRUD合同版本,r.G0,r.幂等身份};
+        for (std::uint32_t key=1; key<=6; ++key)
+            write.节点.push_back({{key},节点种类::普通,std::nullopt});
+        for (std::uint32_t i=0; i<5; ++i)
+            write.关系.push_back({{0x31001U+i},Key{1},Key{2U+i},type.类型登记,
+                                  static_cast<std::int64_t>(i+1)});
+        write.值.push_back({{0x32001},Key{1},type.格式版本,std::int64_t{1},Key{1}});
+        write.属性槽变更.push_back({Key{1},type.格式版本,Key{0x32001}});
+
+        const auto first=port.读取首次写入材料(
+            {L1所有者范围首次写入读取合同版本,r.幂等身份});
+        out.Gread=first.读取事实代次;
+        if (first.合同版本 != L1所有者范围首次写入读取合同版本 ||
+            first.所有者 != port.所有者身份() || first.写入幂等身份 != r.幂等身份) {
+            fail(存在概念两组状态_v3::内部不一致); return out;
+        }
+        bool replay=false;
+        if (first.状态 == L1所有者范围读取状态::成功) {
+            replay=true;
+            if (!first.首次规范化写集 || *first.首次规范化写集 != write) {
+                fail(存在概念两组状态_v3::幂等冲突); return out;
+            }
+            if (!first.首次写入结果 || first.首次写入结果->状态 != L1所有者范围写入状态::成功 ||
+                first.首次写入结果->事实代次 != r.G0+1 || !first.首次写入结果->是否形成内存权威发布) {
+                entered=true; fail(存在概念两组状态_v3::已可能发布); return out;
+            }
+        } else if (first.状态 == L1所有者范围读取状态::未找到) {
+            if (first.读取事实代次 != r.G0 || first.首次规范化写集 || first.首次写入结果) {
+                fail(first.读取事实代次 != r.G0 ? 存在概念两组状态_v3::事实代次漂移 :
+                     存在概念两组状态_v3::内部不一致); return out;
+            }
+            const L1所有者范围空域读取请求 emptyRequest{
+                L1所有者范围空域读取合同版本,port.所有者身份(),r.G0,r.最大首次材料项数};
+            const auto empty=l1.读取所有者范围空域(emptyRequest);
+            out.Gread=empty.读取事实代次;
+            if (!empty.成功(emptyRequest) || !empty.确认空域(emptyRequest)) {
+                fail(empty.状态 == L1所有者范围空域读取状态::事实代次漂移 ?
+                     存在概念两组状态_v3::事实代次漂移 :
+                     (empty.状态 == L1所有者范围空域读取状态::数量预算不足 ?
+                      存在概念两组状态_v3::数量预算不足 :
+                      (empty.状态 == L1所有者范围空域读取状态::资源失败 ?
+                       存在概念两组状态_v3::资源失败 : 存在概念两组状态_v3::旧格式不支持)));
+                return out;
+            }
+        } else {
+            fail(first.状态 == L1所有者范围读取状态::资源失败 ?
+                 存在概念两组状态_v3::资源失败 : 存在概念两组状态_v3::内部不一致); return out;
+        }
+        entered=true;
+        const auto saved=port.提交所有者范围中性写集(write);
+        out.Gread=saved.事实代次;
+        if (saved.状态 != (replay ? L1所有者范围写入状态::精确重复 : L1所有者范围写入状态::成功) ||
+            saved.合同版本 != L1所有者范围CRUD合同版本 || saved.所有者 != port.所有者身份() ||
+            saved.写入幂等身份 != r.幂等身份 || saved.事实代次 != r.G0+1 || saved.新编码映射.size()!=12) {
+            fail(saved.状态 == L1所有者范围写入状态::事实代次漂移 ? 存在概念两组状态_v3::事实代次漂移 :
+                 (saved.状态 == L1所有者范围写入状态::幂等冲突 ? 存在概念两组状态_v3::幂等冲突 :
+                  存在概念两组状态_v3::已可能发布)); return out;
+        }
+        const auto mapped=[&](std::uint64_t key) {
+            std::optional<稳定编码> id;
+            for(const auto& [k,v]:saved.新编码映射) if(k.值==key) { if(id||!有效(v)) throw 纯失败{纯概念状态::内部不一致}; id=v; }
+            if(!id) throw 纯失败{纯概念状态::内部不一致}; return *id;
+        };
+        std::array<稳定编码,6> nodes{};
+        for(std::uint64_t i=0;i<nodes.size();++i) nodes[i]=mapped(i+1);
+        存在概念两组结构交付_v1 delivery{1,nodes[0],{nodes[1],nodes[2],nodes[3],nodes[4],nodes[5]}};
+        const auto tail=l1.读取中性当前事实代次({L1中性CRUD合同版本});
+        if(tail.状态!=L1中性读取状态::成功 || !tail.事实代次 || tail.事实代次<saved.事实代次) {
+            fail(存在概念两组状态_v3::已可能发布); return out;
+        }
+        out.Gread=tail.事实代次; out.首次发布H=saved.事实代次;
+        const auto raw=[&](稳定编码 id) {
+            const auto read=l1.读取所有者范围历史事实({L1所有者范围CRUD合同版本,id});
+            if(read.状态!=L1所有者范围读取状态::成功 || read.读取事实代次!=out.Gread || !read.事实 ||
+               read.物理清理墓碑 || read.物理清理事实代次) throw 纯失败{纯概念状态::已可能发布};
+            return *read.事实;
+        };
+        存在概念两组结构首次材料_v1 material;
+        for(std::size_t i=0;i<nodes.size();++i) {
+            const auto rawFact=raw(nodes[i]);
+            const auto* fact=std::get_if<L1所有者范围节点事实>(&rawFact);
+            if(!fact || fact->写入所有者!=port.所有者身份() || fact->种类!=节点种类::普通 ||
+               fact->属性类型表示 || fact->创建事实代次!=saved.事实代次 || fact->退出事实代次)
+                throw 纯失败{纯概念状态::内部不一致};
+            material.节点[i]=*fact;
+        }
+        for(std::uint64_t i=0;i<5;++i) {
+            const auto rawFact=raw(mapped(0x31001U+i));
+            const auto* fact=std::get_if<L1所有者范围关系事实>(&rawFact);
+            if(!fact || fact->写入所有者!=port.所有者身份() || fact->源节点!=nodes[0] ||
+               fact->目标节点!=nodes[i+1] || fact->关系类型节点!=type.类型登记 ||
+               fact->角色或顺序!=static_cast<std::int64_t>(i+1) || fact->创建事实代次!=saved.事实代次 || fact->退出事实代次)
+                throw 纯失败{纯概念状态::内部不一致};
+            material.类型登记关系[i]=*fact;
+        }
+        const auto rawValue=raw(mapped(0x32001));
+        const auto* value=std::get_if<L1所有者范围值事实>(&rawValue);
+        if(!value || value->写入所有者!=port.所有者身份() || value->所属节点!=nodes[0] ||
+           value->来源节点!=nodes[0] || value->属性类型节点!=type.格式版本 ||
+           !std::holds_alternative<std::int64_t>(value->材料) || std::get<std::int64_t>(value->材料)!=1 ||
+           value->创建事实代次!=saved.事实代次 || value->退出事实代次)
+            throw 纯失败{纯概念状态::内部不一致};
+        material.格式值=*value; out.交付=delivery; out.首次材料=material;
+        out.状态=replay ? 存在概念两组状态_v3::精确重复 : 存在概念两组状态_v3::已创建;
+        out.发布=纯概念发布状态::确认发布;
+        if(!out.成功(r)) throw 纯失败{纯概念状态::内部不一致};
+    } catch(const 纯失败&) { fail(entered ? 存在概念两组状态_v3::已可能发布 : 存在概念两组状态_v3::内部不一致); }
+      catch(const std::bad_alloc&) { fail(entered ? 存在概念两组状态_v3::已可能发布 : 存在概念两组状态_v3::资源失败); }
+      catch(...) { fail(entered ? 存在概念两组状态_v3::已可能发布 : 存在概念两组状态_v3::内部不一致); }
     return out;
 }
 
