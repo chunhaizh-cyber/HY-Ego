@@ -141,6 +141,12 @@
     <ClCompile Include="海中鱼巣\领域\数据服务.场景类.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClInclude Include="海中鱼巣\领域\数据服务.局部二值格解析类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\领域\数据服务.局部二值格解析类.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClInclude Include="海中鱼巣\领域\数据服务.因果类.h">
       <Filter>头文件</Filter>
     </ClInclude>

@@ -160,6 +160,8 @@
       <ExcludedFromBuild Condition="'$(Platform)'!='x64' or '$(EnableD455RealSense)'!='true'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="海中鱼巣\领域\数据服务.不可变材料.cpp" />
+    <ClInclude Include="海中鱼巣\领域\数据服务.局部二值格解析类.h" />
+    <ClCompile Include="海中鱼巣\领域\数据服务.局部二值格解析类.cpp" />
     <ClInclude Include="海中鱼巣\领域\合同.特征解释.h" />
     <ClCompile Include="海中鱼巣\领域\数据服务.特征类.cpp" />
     <ClInclude Include="海中鱼巣\领域\数据服务.定位特征.h" />
