@@ -34,6 +34,8 @@
 
 共享知识索引与用途卡未在本切片修改；发布后由知识库维护者按已发布源码建立上述四项用途卡。
 
+结果代码提交：`fc918c00 feat: add local binary grid parser`。
+
 ## 验证与边界
 
 专项驱动位于仓外 `D:\TEMP\海中鱼巣\LOCAL-BINARY-GRID-U64-PARSER\20260917-root-u64grid\`，Debug / Release 均以新头源直接编译、运行成功。矩阵和命令见同名验证记录。

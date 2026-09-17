@@ -49,4 +49,6 @@ MSBuild.exe .\海中鱼巣.vcxproj /t:Build /p:Configuration=Release /p:Platform
 
 本验证只证明纯 U64 组格式解析和主工程编译，不证明按 N 的全零体素持久化唯一性、非 I64 特征接线、比较、概念或运行期业务行为。
 
+验证对应结果代码提交：`fc918c00 feat: add local binary grid parser`。
+
 临时验证目录 `D:\TEMP\海中鱼巣\LOCAL-BINARY-GRID-U64-PARSER\20260917-root-u64grid\` 的递归清理被当前执行环境策略拒绝；目录不在仓库、不含生产或提交文件，本切片保留该残留路径以便后续环境允许时清理。
