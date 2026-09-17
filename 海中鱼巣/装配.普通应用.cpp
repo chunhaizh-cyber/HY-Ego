@@ -32,6 +32,27 @@ struct 概念结构异常 final { 纯概念状态 原因; };
 struct 角色结构异常 final { 存在单例角色状态 原因; };
 struct 持久恢复异常 final { L1事实基座持久恢复结果_v1 结果; };
 
+// 装配结果仍以既有纯概念状态承载失败原因；两组定义状态只在此失败边界做归类。
+// 成功状态不会进入此函数。
+纯概念状态 映射两组定义失败(存在概念两组状态_v3 state) noexcept {
+  switch (state) {
+  case 存在概念两组状态_v3::入口拒绝: return 纯概念状态::入口拒绝;
+  case 存在概念两组状态_v3::目标已退出: return 纯概念状态::目标已退出;
+  case 存在概念两组状态_v3::概念已退役: return 纯概念状态::概念已退役;
+  case 存在概念两组状态_v3::类别冲突: return 纯概念状态::类别冲突;
+  case 存在概念两组状态_v3::定义不相容: return 纯概念状态::定义不相容;
+  case 存在概念两组状态_v3::规则缺失: return 纯概念状态::定义不支持;
+  case 存在概念两组状态_v3::事实代次漂移: return 纯概念状态::事实代次漂移;
+  case 存在概念两组状态_v3::幂等冲突: return 纯概念状态::幂等冲突;
+  case 存在概念两组状态_v3::数量预算不足: return 纯概念状态::数量预算不足;
+  case 存在概念两组状态_v3::历史材料不可用: return 纯概念状态::历史材料不可用;
+  case 存在概念两组状态_v3::资源失败: return 纯概念状态::资源失败;
+  case 存在概念两组状态_v3::已可能发布: return 纯概念状态::已可能发布;
+  case 存在概念两组状态_v3::旧格式不支持: return 纯概念状态::旧格式不支持;
+  default: return 纯概念状态::内部不一致;
+  }
+}
+
 using 元节点规格 =
     std::pair<节点种类, std::optional<L1所有者范围值表示种类>>;
 
@@ -357,13 +378,13 @@ std::unique_ptr<普通应用上下文> 建立上下文(
       l1,*result->概念所有者.写入端口,conceptRequest);
   if(!conceptRegistration.成功(conceptRequest)||!conceptRegistration.交付)
     throw 概念结构异常{conceptRegistration.状态};
-  const 完整存在概念结构登记请求_v1 completeDefinitionRequest{
+  const 存在概念两组结构登记请求_v1 completeDefinitionRequest{
       1, 定位首次(*result->概念所有者.写入端口,l1,0x1403).G0, {0x1403},
       *conceptRegistration.交付, 18};
-  const auto completeDefinitionRegistration=概念树类数据服务::登记完整存在概念结构_v1(
+  const auto completeDefinitionRegistration=概念树类数据服务::登记存在概念两组结构_v1(
       l1,*result->概念所有者.写入端口,completeDefinitionRequest);
   if(!completeDefinitionRegistration.成功(completeDefinitionRequest)||!completeDefinitionRegistration.交付)
-    throw 概念结构异常{completeDefinitionRegistration.状态};
+    throw 概念结构异常{映射两组定义失败(completeDefinitionRegistration.状态)};
   const 特征概念出生使用结构登记请求 featureBirthRequest{
       1, 定位首次(*result->概念所有者.写入端口,l1,0x1402).G0, {0x1402},
       *conceptRegistration.交付, 4};
