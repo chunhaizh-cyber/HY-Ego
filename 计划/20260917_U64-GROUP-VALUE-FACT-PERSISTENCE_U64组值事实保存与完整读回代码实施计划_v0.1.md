@@ -1,9 +1,9 @@
 # U64组值事实保存与完整读回代码实施计划
 
 身份：`U64-GROUP-VALUE-FACT-PERSISTENCE`
-版本：v0.2
+版本：v0.3
 状态：可执行
-基线：`8fa0d2c5537112ecdc6d1f1946b15354869a6dc7`
+基线：`19998557df45d28db2bade7a67b11d9e07555a6d`
 
 ## 1. 目标、范围和完成条件
 
@@ -15,8 +15,8 @@
 海中鱼巣/领域/数据服务.特征值类.h
 海中鱼巣/领域/数据服务.特征值类.cpp
 海中鱼巣/装配.普通应用.cpp
-海中鱼巣/海中鱼巣.vcxproj
-海中鱼巣/海中鱼巣.vcxproj.filters
+海中鱼巣.vcxproj
+海中鱼巣.vcxproj.filters
 施工记录/20260917_U64-GROUP-VALUE-FACT-PERSISTENCE_施工记录_v0.1.md
 验证记录/20260917_U64-GROUP-VALUE-FACT-PERSISTENCE_验证记录_v0.1.md
 ```
