@@ -16,7 +16,6 @@ from pathlib import Path
 计划索引 = 根目录 / "计划" / "计划索引.md"
 
 必需代理规则 = (
-    ".codex/rules/设计执行双窗口交互规则.md",
     ".codex/rules/单工作区串行执行与发布规则.md",
     ".codex/rules/多工作树并发与集成规则.md",
 )
