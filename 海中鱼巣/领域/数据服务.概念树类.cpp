@@ -4726,19 +4726,6 @@ namespace {
                 fail(first.读取事实代次 != r.G0 ? 存在概念两组状态_v3::事实代次漂移 :
                      存在概念两组状态_v3::内部不一致); return out;
             }
-            const L1所有者范围空域读取请求 emptyRequest{
-                L1所有者范围空域读取合同版本,port.所有者身份(),r.G0,r.最大首次材料项数};
-            const auto empty=l1.读取所有者范围空域(emptyRequest);
-            out.Gread=empty.读取事实代次;
-            if (!empty.成功(emptyRequest) || !empty.确认空域(emptyRequest)) {
-                fail(empty.状态 == L1所有者范围空域读取状态::事实代次漂移 ?
-                     存在概念两组状态_v3::事实代次漂移 :
-                     (empty.状态 == L1所有者范围空域读取状态::数量预算不足 ?
-                      存在概念两组状态_v3::数量预算不足 :
-                      (empty.状态 == L1所有者范围空域读取状态::资源失败 ?
-                       存在概念两组状态_v3::资源失败 : 存在概念两组状态_v3::旧格式不支持)));
-                return out;
-            }
         } else {
             fail(first.状态 == L1所有者范围读取状态::资源失败 ?
                  存在概念两组状态_v3::资源失败 : 存在概念两组状态_v3::内部不一致); return out;
