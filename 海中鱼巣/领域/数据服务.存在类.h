@@ -182,8 +182,8 @@ struct 实例特征R集合版本 final {
   friend bool operator==(const 实例特征R集合版本 &, const 实例特征R集合版本 &) = default;
 };
 struct 实例特征结构交付 final {
-  std::uint32_t 版本 = 1;
-  稳定编码 E到IF{}, IF到F{}, IF到R集合{}, R集合到版本{}, 版本到R项{}, R项到F{};
+  std::uint32_t 版本 = 2;
+  稳定编码 E到IF{}, IF到F{}, IF到R集合{}, R集合到版本{}, 版本到R项{}, R项到F{}, R项材料属性类型{};
   friend bool operator==(const 实例特征结构交付 &, const 实例特征结构交付 &) = default;
 };
 enum class 实例特征结构状态 : std::uint8_t {
@@ -191,7 +191,7 @@ enum class 实例特征结构状态 : std::uint8_t {
   幂等冲突 = 5, 结构冲突 = 6, 已可能发布 = 7, 资源失败 = 8, 内部不一致 = 9
 };
 struct 实例特征结构登记请求 final {
-  std::uint32_t 版本 = 1;
+  std::uint32_t 版本 = 2;
   std::uint64_t G0 = 0;
   L1所有者范围写入幂等身份 幂等身份{};
   friend bool operator==(const 实例特征结构登记请求 &, const 实例特征结构登记请求 &) = default;
@@ -203,7 +203,7 @@ struct 实例特征结构登记结果 final {
   std::optional<std::uint64_t> 首次H;
   std::optional<实例特征结构交付> 交付;
   bool 成功(const 实例特征结构登记请求 &r) const noexcept {
-    return r.版本 == 1 && r.G0 && 版本 == 1 && Gread >= r.G0 && 交付 &&
+    return r.版本 == 2 && r.G0 && 版本 == 2 && Gread >= r.G0 && 交付 &&
       (状态 == 实例特征结构状态::已登记 || 状态 == 实例特征结构状态::精确重复);
   }
 };
@@ -3458,7 +3458,7 @@ private:
   }
 
   bool 实例特征结构有效() const {
-    if (实例特征结构_.版本 != 1)
+    if (实例特征结构_.版本 != 2)
       return false;
     const std::array<稳定编码, 6> types{
         实例特征结构_.E到IF, 实例特征结构_.IF到F,
@@ -3471,10 +3471,24 @@ private:
         if (types[i] == types[j])
           return false;
       if (types[i] == 子存在关系类型_ || types[i] == 特征关系类型_ ||
-          types[i] == 当前采用关系类型_)
+          types[i] == 当前采用关系类型_ || types[i] == 实例特征结构_.R项材料属性类型)
         return false;
     }
-    return true;
+    return 属性类型有效(实例特征结构_.R项材料属性类型);
+  }
+
+  bool 属性类型有效(稳定编码 编码) const {
+    const auto 读取 = 第一层服务_.读取所有者范围当前节点(
+        {L1所有者范围CRUD合同版本, 编码});
+    const auto *事实 =
+        读取.事实 ? std::get_if<L1所有者范围节点事实>(&*读取.事实) : nullptr;
+    return 读取.状态 == L1所有者范围读取状态::成功 &&
+           读取.合同版本 == L1所有者范围CRUD合同版本 && 读取.查询编码 == 编码 &&
+           !读取.物理清理事实代次 && !读取.物理清理墓碑 && 事实 &&
+           事实->编码 == 编码 && 事实->写入所有者 == 所有者_ &&
+           事实->种类 == 节点种类::属性类型 &&
+           事实->属性类型表示 == L1所有者范围值表示种类::U64组 &&
+           事实->创建事实代次 != 0 && !事实->退出事实代次;
   }
 
   bool 关系类型有效(稳定编码 编码) const {
@@ -4706,17 +4720,20 @@ private:
 inline 实例特征结构登记结果 存在类数据服务::登记实例特征结构(
     const L1事实基座服务 &l1, L1所有者范围写端口 &port,
     const 实例特征结构登记请求 &r) noexcept {
-  constexpr std::uint64_t key = 0x4946525354525543ULL;
+  constexpr std::uint64_t key = 0x4946525354525632ULL;
   实例特征结构登记结果 out; out.Gread = r.G0;
   bool dispatched = false;
   try {
-    if (r.版本 != 1 || !r.G0 || r.G0 == UINT64_MAX || r.幂等身份.值 != key ||
+    if (r.版本 != 2 || !r.G0 || r.G0 == UINT64_MAX || r.幂等身份.值 != key ||
         !port.有效() || !port.绑定于(l1)) return out;
     const auto owner = port.所有者身份();
     L1所有者范围写集请求 ws{L1所有者范围CRUD合同版本, r.G0, r.幂等身份};
     for (std::uint64_t i = 1; i <= 6; ++i)
       ws.节点.emplace_back(L1所有者范围节点新建项{
           L1所有者范围写集本地键{static_cast<std::uint32_t>(i)}, 节点种类::普通, std::nullopt});
+    ws.节点.emplace_back(L1所有者范围节点新建项{
+        L1所有者范围写集本地键{7}, 节点种类::属性类型,
+        L1所有者范围值表示种类::U64组});
     const auto first = port.读取首次写入材料(
         {L1所有者范围首次写入读取合同版本, r.幂等身份});
     if (first.合同版本 != L1所有者范围首次写入读取合同版本 ||
@@ -4735,28 +4752,31 @@ inline 实例特征结构登记结果 存在类数据服务::登记实例特征�
     const auto saved = port.提交所有者范围中性写集(ws);
     out.Gread = saved.事实代次;
     if (saved.状态 != (replay ? L1所有者范围写入状态::精确重复 : L1所有者范围写入状态::成功) ||
-        saved.新编码映射.size() != 6) {
+        saved.新编码映射.size() != 7) {
       if (saved.状态 == L1所有者范围写入状态::事实代次漂移) throw 实例特征结构状态::事实代次漂移;
       if (saved.状态 == L1所有者范围写入状态::幂等冲突) throw 实例特征结构状态::幂等冲突;
       throw 实例特征结构状态::已可能发布;
     }
-    std::array<稳定编码,6> ids{};
+    std::array<稳定编码,7> ids{};
     for (const auto &[local,id] : saved.新编码映射) {
       if (!local.值 || local.值 > ids.size() || !有效(id) || 有效(ids[local.值-1]))
         throw 实例特征结构状态::内部不一致;
       ids[local.值-1] = id;
     }
-    for (const auto id : ids) {
+    for (std::size_t i = 0; i < ids.size(); ++i) {
+      const auto id = ids[i];
       const auto raw = l1.读取所有者范围历史事实({L1所有者范围CRUD合同版本,id});
       const auto *node = raw.事实 ? std::get_if<L1所有者范围节点事实>(&*raw.事实) : nullptr;
+      const bool isAttribute = i == 6;
       if (raw.状态 != L1所有者范围读取状态::成功 || raw.读取事实代次 != saved.事实代次 ||
           !node || node->写入所有者 != owner || node->编码 != id ||
-          node->种类 != 节点种类::普通 || node->属性类型表示 ||
+          node->种类 != (isAttribute ? 节点种类::属性类型 : 节点种类::普通) ||
+          node->属性类型表示 != (isAttribute ? std::optional<L1所有者范围值表示种类>{L1所有者范围值表示种类::U64组} : std::nullopt) ||
           node->创建事实代次 != saved.事实代次 || node->退出事实代次)
         throw 实例特征结构状态::内部不一致;
     }
     out.首次H = saved.事实代次;
-    out.交付 = {1,ids[0],ids[1],ids[2],ids[3],ids[4],ids[5]};
+    out.交付 = {2,ids[0],ids[1],ids[2],ids[3],ids[4],ids[5],ids[6]};
     out.状态 = replay ? 实例特征结构状态::精确重复 : 实例特征结构状态::已登记;
   } catch (实例特征结构状态 s) {
     out.状态 = dispatched && s != 实例特征结构状态::事实代次漂移 && s != 实例特征结构状态::幂等冲突 ?

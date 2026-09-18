@@ -342,9 +342,9 @@ std::unique_ptr<普通应用上下文> 建立上下文(
       l1,*result->存在所有者.写入端口,roleRequest);
   if(!role.成功(roleRequest)||!role.交付)throw 角色结构异常{role.状态};
   result->角色结构=*role.交付;
-  const auto instanceFeatureG0=定位首次(*result->存在所有者.写入端口,l1,0x4946525354525543ULL).G0;
+  const auto instanceFeatureG0=定位首次(*result->存在所有者.写入端口,l1,0x4946525354525632ULL).G0;
   const 实例特征结构登记请求 instanceFeatureRequest{
-      1,instanceFeatureG0,{0x4946525354525543ULL}};
+      2,instanceFeatureG0,{0x4946525354525632ULL}};
   const auto instanceFeature=存在类数据服务::登记实例特征结构(
       l1,*result->存在所有者.写入端口,instanceFeatureRequest);
   if(!instanceFeature.成功(instanceFeatureRequest)||!instanceFeature.交付)
