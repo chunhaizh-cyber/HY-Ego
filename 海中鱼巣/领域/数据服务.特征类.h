@@ -1070,7 +1070,7 @@ private:
     void R规则就绪() const {
         for (const auto id : r_) 要求(有效(id), S::未设置);
     }
-    void 添加I64默认R规则(WS&, Ref FT, bool 有域形成) const;
+    void 添加I64默认R规则(WS&, Ref FT) const;
     std::optional<稳定编码> 读取R规则(特征类型身份, std::int64_t 用途,
         std::uint64_t Gread, std::uint64_t H, const 特征R规则读取预算&) const;
     using SS = 特征类标量状态;
