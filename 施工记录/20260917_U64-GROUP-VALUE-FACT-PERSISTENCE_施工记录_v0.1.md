@@ -1,6 +1,6 @@
 # U64组值事实保存与完整读回施工记录
 
-计划：`U64-GROUP-VALUE-FACT-PERSISTENCE` v0.4  
+计划：`U64-GROUP-VALUE-FACT-PERSISTENCE` v0.4
 施工基线：`c8fe099a`
 
 ## 实际变更
