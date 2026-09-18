@@ -1,6 +1,6 @@
-# INSTANCE-FEATURE-IF-R-CONCEPT-FOUNDATION 代码实施计划 v0.9
+# INSTANCE-FEATURE-IF-R-CONCEPT-FOUNDATION 代码实施计划 v1.0
 
-状态：待激活。v0.9 记录用户已裁决 I64 单点 R 零 FCr 输出；须等待 FEATURE-TYPE-R-I64-NO-FCR-RULE-CORRECTION 发布后重新 S0。
+状态：可执行。重新 S0 基线：b3fef3ef；I64 R规则已发布为成功零 FCr 输出。
 
 ## 目标、已保留现场与唯一门禁
 

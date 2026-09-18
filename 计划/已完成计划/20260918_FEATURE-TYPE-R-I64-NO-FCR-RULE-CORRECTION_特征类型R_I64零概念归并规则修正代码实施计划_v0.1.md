@@ -1,6 +1,6 @@
 # FEATURE-TYPE-R-I64-NO-FCR-RULE-CORRECTION 代码实施计划 v0.1
 
-状态：可执行。开工基线：计划登记提交的 main HEAD。
+状态：已完成；代码结果 b3fef3ef 已发布。
 
 ## 目标与完成条件
 
