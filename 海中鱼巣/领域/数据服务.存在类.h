@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cstdint>
 #include <exception>
 #include <limits>
@@ -207,6 +208,73 @@ struct 实例特征结构登记结果 final {
       (状态 == 实例特征结构状态::已登记 || 状态 == 实例特征结构状态::精确重复);
   }
 };
+enum class 实例特征IFR读取状态 : std::uint8_t {
+  已读取 = 1, 入口拒绝 = 2, 未找到 = 3, 已退出 = 4,
+  数量预算不足 = 5, 事实代次漂移 = 6, 引用冲突 = 7,
+  资源失败 = 8, 内部不一致 = 9
+};
+struct 实例特征IFR节点时态 final {
+  稳定编码 节点{};
+  std::uint64_t 创建H = 0;
+  std::optional<std::uint64_t> 退出H;
+  friend bool operator==(const 实例特征IFR节点时态 &,
+                         const 实例特征IFR节点时态 &) = default;
+};
+struct 实例特征IFR关系时态 final {
+  稳定编码 关系{}, 源节点{}, 目标节点{}, 关系类型{};
+  std::int64_t 角色或顺序 = 0;
+  std::uint64_t 创建H = 0;
+  std::optional<std::uint64_t> 退出H;
+  friend bool operator==(const 实例特征IFR关系时态 &,
+                         const 实例特征IFR关系时态 &) = default;
+};
+struct 实例特征R项身份 final {
+  稳定编码 R项{}, 材料属性类型{}, 材料值{};
+  friend bool operator==(const 实例特征R项身份 &,
+                         const 实例特征R项身份 &) = default;
+};
+struct 实例特征R项投影 final {
+  实例特征R项身份 身份;
+  实例特征IFR节点时态 R项节点;
+  实例特征IFR关系时态 来自版本关系;
+  特征R区间材料 材料;
+  std::vector<实例特征IFR关系时态> 形成关系;
+  std::vector<特征信息身份> 形成成员;
+  friend bool operator==(const 实例特征R项投影 &,
+                         const 实例特征R项投影 &) = default;
+};
+struct 实例特征IFR完整投影 final {
+  稳定编码 E{};
+  特征类型身份 FT;
+  实例特征IFR节点时态 E节点, IF节点, R集合节点, R集合版本节点;
+  实例特征IFR关系时态 E到IF关系, IF到R集合关系, R集合到版本关系;
+  std::vector<实例特征IFR关系时态> IF成员关系;
+  std::vector<特征信息身份> IF成员;
+  std::vector<实例特征R项投影> R项;
+  friend bool operator==(const 实例特征IFR完整投影 &,
+                         const 实例特征IFR完整投影 &) = default;
+};
+struct 实例特征IFR读取请求 final {
+  std::uint32_t 版本 = 1;
+  std::uint64_t Gread = 0;
+  稳定编码 E{};
+  特征类型身份 FT;
+  std::uint64_t F成员上限 = 0, R项上限 = 0, 关系上限 = 0;
+  friend bool operator==(const 实例特征IFR读取请求 &,
+                         const 实例特征IFR读取请求 &) = default;
+};
+struct 实例特征IFR读取结果 final {
+  std::uint32_t 版本 = 1;
+  实例特征IFR读取状态 状态 = 实例特征IFR读取状态::入口拒绝;
+  std::uint64_t Gread = 0, H = 0;
+  std::optional<实例特征IFR完整投影> 投影;
+  bool 成功(const 实例特征IFR读取请求 &r) const noexcept {
+    return r.版本 == 1 && r.Gread != 0 && 版本 == 1 &&
+           状态 == 实例特征IFR读取状态::已读取 && Gread == r.Gread &&
+           H == r.Gread && 投影 && 投影->E == r.E && 投影->FT == r.FT;
+  }
+};
+
 struct 存在类成员引用 final {
   稳定编码 成员关系{};
   稳定编码 目标结点{};
@@ -1122,6 +1190,242 @@ public:
   static 实例特征结构登记结果 登记实例特征结构(
       const L1事实基座服务 &, L1所有者范围写端口 &,
       const 实例特征结构登记请求 &) noexcept;
+
+  实例特征IFR读取结果
+  读取IFR结构(const 实例特征IFR读取请求 &r) const noexcept {
+    using S = 实例特征IFR读取状态;
+    实例特征IFR读取结果 out;
+    out.Gread = r.Gread;
+    out.H = r.Gread;
+    struct 读取失败 final { S 状态; };
+    if (r.版本 != 1 || !r.Gread || !有效(r.E) || !有效(r.FT.编码))
+      return out;
+    try {
+      const auto 守卫 = [&] {
+        const auto current = 读取当前事实代次();
+        if (current.first == 存在结构身份只读状态::资源失败)
+          throw 读取失败{S::资源失败};
+        if (current.first != 存在结构身份只读状态::已读取)
+          throw 读取失败{S::内部不一致};
+        if (current.second != r.Gread)
+          throw 读取失败{S::事实代次漂移};
+      };
+      const auto 映射 = [](L1所有者范围读取状态 state) noexcept {
+        switch (state) {
+        case L1所有者范围读取状态::未找到: return S::未找到;
+        case L1所有者范围读取状态::已退出: return S::已退出;
+        case L1所有者范围读取状态::事实代次漂移: return S::事实代次漂移;
+        case L1所有者范围读取状态::资源失败: return S::资源失败;
+        default: return S::内部不一致;
+        }
+      };
+      const auto 活动节点 = [&](稳定编码 id, bool 必须无属性) {
+        const auto raw = 第一层服务_.读取所有者范围历史事实(
+            {L1所有者范围CRUD合同版本, id});
+        守卫();
+        if (raw.读取事实代次 != r.Gread ||
+            raw.合同版本 != L1所有者范围CRUD合同版本 || raw.查询编码 != id)
+          throw 读取失败{S::事实代次漂移};
+        if (raw.状态 != L1所有者范围读取状态::成功)
+          throw 读取失败{映射(raw.状态)};
+        const auto *node = raw.事实
+                               ? std::get_if<L1所有者范围节点事实>(&*raw.事实)
+                               : nullptr;
+        if (!node || node->编码 != id || node->写入所有者 != 所有者_ ||
+            node->种类 != 节点种类::普通 || node->属性类型表示 ||
+            !node->创建事实代次 || node->创建事实代次 > r.Gread ||
+            (node->退出事实代次 && *node->退出事实代次 <= r.Gread) ||
+            (必须无属性 && !node->当前属性.empty()))
+          throw 读取失败{S::引用冲突};
+        return *node;
+      };
+      std::uint64_t 已读关系数 = 0;
+      const auto 活动关系组 = [&](稳定编码 source, 稳定编码 type) {
+        const auto raw = 第一层服务_.读取所有者范围历史关系组(
+            {L1所有者范围CRUD合同版本, L1所有者范围关系端点方向::源,
+             source, type, r.Gread});
+        守卫();
+        if (raw.读取事实代次 != r.Gread ||
+            raw.合同版本 != L1所有者范围CRUD合同版本 ||
+            raw.方向 != L1所有者范围关系端点方向::源 ||
+            raw.端点节点 != source || raw.关系类型节点 != type)
+          throw 读取失败{S::事实代次漂移};
+        if (raw.状态 != L1所有者范围读取状态::成功)
+          throw 读取失败{映射(raw.状态)};
+        if (raw.关系组.size() > r.关系上限 -
+                                  std::min(r.关系上限, 已读关系数))
+          throw 读取失败{S::数量预算不足};
+        已读关系数 += static_cast<std::uint64_t>(raw.关系组.size());
+        for (const auto &edge : raw.关系组)
+          if (!有效(edge.编码) || edge.写入所有者 != 所有者_ ||
+              edge.源节点 != source || edge.关系类型节点 != type ||
+              !有效(edge.目标节点) || !edge.创建事实代次 ||
+              edge.创建事实代次 > r.Gread ||
+              (edge.退出事实代次 && *edge.退出事实代次 <= r.Gread))
+            throw 读取失败{S::引用冲突};
+        return raw.关系组;
+      };
+      const auto 时态节点 = [](const L1所有者范围节点事实 &node) {
+        return 实例特征IFR节点时态{node.编码, node.创建事实代次,
+                                  node.退出事实代次};
+      };
+      const auto 时态关系 = [](const L1所有者范围关系事实 &edge) {
+        return 实例特征IFR关系时态{edge.编码, edge.源节点, edge.目标节点,
+                                  edge.关系类型节点, edge.角色或顺序,
+                                  edge.创建事实代次, edge.退出事实代次};
+      };
+      const auto 唯一关系 = [&](std::vector<L1所有者范围关系事实> group,
+                                稳定编码 source, 稳定编码 type) {
+        if (group.size() != 1 || group.front().源节点 != source ||
+            group.front().关系类型节点 != type || group.front().角色或顺序 != 1)
+          throw 读取失败{S::引用冲突};
+        return group.front();
+      };
+      const auto 成员关系 = [&](std::vector<L1所有者范围关系事实> group,
+                                std::uint64_t max, 稳定编码 source,
+                                稳定编码 type) {
+        if (group.size() > max)
+          throw 读取失败{S::数量预算不足};
+        std::sort(group.begin(), group.end(), [](const auto &a, const auto &b) {
+          return a.目标节点 < b.目标节点;
+        });
+        for (std::size_t i = 0; i < group.size(); ++i) {
+          const auto expected = static_cast<std::int64_t>(i + 1);
+          if (group[i].源节点 != source || group[i].关系类型节点 != type ||
+              group[i].角色或顺序 != expected ||
+              (i && group[i - 1].目标节点 == group[i].目标节点))
+            throw 读取失败{S::引用冲突};
+        }
+        return group;
+      };
+
+      守卫();
+      const auto e = 活动节点(r.E, false);
+      const auto eToIf组 = 活动关系组(r.E, 实例特征结构_.E到IF);
+      if (eToIf组.empty()) {
+        out.状态 = S::未找到;
+        return out;
+      }
+      const auto eToIf = 唯一关系(std::move(eToIf组), r.E,
+                                   实例特征结构_.E到IF);
+      const auto ifNode = 活动节点(eToIf.目标节点, true);
+      const auto ifToF = 成员关系(
+          活动关系组(ifNode.编码, 实例特征结构_.IF到F), r.F成员上限,
+          ifNode.编码, 实例特征结构_.IF到F);
+      const auto ifToSet = 唯一关系(
+          活动关系组(ifNode.编码, 实例特征结构_.IF到R集合), ifNode.编码,
+          实例特征结构_.IF到R集合);
+      const auto setNode = 活动节点(ifToSet.目标节点, true);
+      const auto setToVersion = 唯一关系(
+          活动关系组(setNode.编码, 实例特征结构_.R集合到版本), setNode.编码,
+          实例特征结构_.R集合到版本);
+      const auto versionNode = 活动节点(setToVersion.目标节点, true);
+      const auto versionToR = 成员关系(
+          活动关系组(versionNode.编码, 实例特征结构_.版本到R项), r.R项上限,
+          versionNode.编码, 实例特征结构_.版本到R项);
+
+      实例特征IFR完整投影 projection;
+      projection.E = r.E;
+      projection.FT = r.FT;
+      projection.E节点 = 时态节点(e);
+      projection.IF节点 = 时态节点(ifNode);
+      projection.R集合节点 = 时态节点(setNode);
+      projection.R集合版本节点 = 时态节点(versionNode);
+      projection.E到IF关系 = 时态关系(eToIf);
+      projection.IF到R集合关系 = 时态关系(ifToSet);
+      projection.R集合到版本关系 = 时态关系(setToVersion);
+      projection.IF成员关系.reserve(ifToF.size());
+      projection.IF成员.reserve(ifToF.size());
+      for (const auto &edge : ifToF) {
+        projection.IF成员关系.push_back(时态关系(edge));
+        projection.IF成员.push_back({edge.目标节点});
+      }
+
+      std::set<std::uint64_t> formed;
+      projection.R项.reserve(versionToR.size());
+      for (const auto &versionEdge : versionToR) {
+        const auto itemNode = 活动节点(versionEdge.目标节点, false);
+        if (itemNode.当前属性.size() != 1 ||
+            itemNode.当前属性.front().属性类型节点 !=
+                实例特征结构_.R项材料属性类型 ||
+            !有效(itemNode.当前属性.front().当前值))
+          throw 读取失败{S::引用冲突};
+        const auto values = 第一层服务_.读取所有者范围历史属性值组(
+            {L1所有者范围CRUD合同版本, itemNode.编码, r.Gread});
+        守卫();
+        if (values.读取事实代次 != r.Gread ||
+            values.合同版本 != L1所有者范围CRUD合同版本 ||
+            values.所属节点 != itemNode.编码)
+          throw 读取失败{S::事实代次漂移};
+        if (values.状态 != L1所有者范围读取状态::成功)
+          throw 读取失败{映射(values.状态)};
+        if (values.属性值组.size() != 1)
+          throw 读取失败{S::引用冲突};
+        const auto &value = values.属性值组.front();
+        const auto *u64 = std::get_if<std::vector<std::uint64_t>>(&value.材料);
+        if (!有效(value.编码) || value.写入所有者 != 所有者_ ||
+            value.所属节点 != itemNode.编码 ||
+            value.属性类型节点 != 实例特征结构_.R项材料属性类型 ||
+            value.来源节点 != itemNode.编码 ||
+            value.编码 != itemNode.当前属性.front().当前值 || !u64 ||
+            !value.创建事实代次 || value.创建事实代次 > r.Gread ||
+            (value.退出事实代次 && *value.退出事实代次 <= r.Gread))
+          throw 读取失败{S::引用冲突};
+        if (u64->size() < 3 || (*u64)[0] != 1 ||
+            ((*u64)[1] != static_cast<std::uint64_t>(特征R材料类别::I64闭区间) &&
+             (*u64)[1] != static_cast<std::uint64_t>(特征R材料类别::类型规则U64组)))
+          throw 读取失败{S::内部不一致};
+        if ((*u64)[1] == static_cast<std::uint64_t>(特征R材料类别::I64闭区间) &&
+            (u64->size() != 4 ||
+             std::bit_cast<std::int64_t>((*u64)[2]) >
+                 std::bit_cast<std::int64_t>((*u64)[3])))
+          throw 读取失败{S::内部不一致};
+        特征R区间材料 material;
+        material.格式版本 = static_cast<std::uint32_t>((*u64)[0]);
+        material.类别 = static_cast<特征R材料类别>((*u64)[1]);
+        material.规范化U64组.assign(u64->begin() + 2, u64->end());
+
+        const auto itemToF = 成员关系(
+            活动关系组(itemNode.编码, 实例特征结构_.R项到F), r.F成员上限,
+            itemNode.编码, 实例特征结构_.R项到F);
+        实例特征R项投影 item;
+        item.身份 = {itemNode.编码, 实例特征结构_.R项材料属性类型, value.编码};
+        item.R项节点 = 时态节点(itemNode);
+        item.来自版本关系 = 时态关系(versionEdge);
+        item.材料 = std::move(material);
+        item.形成关系.reserve(itemToF.size());
+        item.形成成员.reserve(itemToF.size());
+        for (const auto &edge : itemToF) {
+          if (!formed.insert(edge.目标节点.值).second)
+            throw 读取失败{S::引用冲突};
+          item.形成关系.push_back(时态关系(edge));
+          item.形成成员.push_back({edge.目标节点});
+        }
+        projection.R项.push_back(std::move(item));
+      }
+      if (formed.size() != projection.IF成员.size())
+        throw 读取失败{S::引用冲突};
+      for (const auto &member : projection.IF成员)
+        if (!formed.contains(member.编码.值))
+          throw 读取失败{S::引用冲突};
+      守卫();
+      out.状态 = S::已读取;
+      out.投影 = std::move(projection);
+    } catch (const 读取失败 &failure) {
+      out.状态 = failure.状态;
+      out.投影.reset();
+    } catch (const std::bad_alloc &) {
+      out.状态 = S::资源失败;
+      out.投影.reset();
+    } catch (const std::length_error &) {
+      out.状态 = S::资源失败;
+      out.投影.reset();
+    } catch (...) {
+      out.状态 = S::内部不一致;
+      out.投影.reset();
+    }
+    return out;
+  }
 
   存在类数据服务(const L1事实基座服务 &l1, const 特征类数据服务 &features,
                  L1所有者范围写端口 &&port, 稳定编码 childType,
