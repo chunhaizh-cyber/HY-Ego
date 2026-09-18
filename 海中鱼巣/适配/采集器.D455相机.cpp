@@ -1,6 +1,8 @@
 // 文件规则：D455 相机采集器是唯一 RealSense SDK 边界；导出接口不得暴露 SDK 类型或指向 SDK 缓冲区的视图。
 #include "采集器.D455相机.h"
 
+#if defined(HY_EGO_ENABLE_D455_REALSENSE)
+
 // rs2.hpp 在 MSVC 模块中会因 rs2_option_value 的类内 pack 切换触发 C3614；
 // 本模块使用同版本 SDK 的窄 C API 头，保持相同设备、profile、帧和标定语义。
 #include <librealsense2/h/rs_context.h>
@@ -31,6 +33,7 @@ std::unique_ptr<D455帧来源> 创建并打开D455相机采集器(
     D455操作结果& 打开结果);
 
 }
+
 namespace 海中鱼巣 {
 namespace {
 
@@ -752,3 +755,22 @@ std::unique_ptr<D455帧来源> 创建并打开D455相机采集器(
 }
 
 }
+
+#else
+
+namespace 海中鱼巣 {
+
+std::unique_ptr<D455帧来源> 创建并打开D455相机采集器(
+    D455采集配置 配置,
+    D455操作结果& 打开结果) {
+    if (!D455采集配置有效(配置)) {
+        打开结果 = {false, false, D455采集拒绝原因::配置无效};
+        return {};
+    }
+    打开结果 = {false, false, D455采集拒绝原因::无设备};
+    return {};
+}
+
+}
+
+#endif
