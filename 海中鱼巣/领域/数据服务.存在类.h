@@ -5025,7 +5025,7 @@ inline 实例特征结构登记结果 存在类数据服务::登记实例特征�
     const L1事实基座服务 &l1, L1所有者范围写端口 &port,
     const 实例特征结构登记请求 &r) noexcept {
   constexpr std::uint64_t key = 0x4946525354525632ULL;
-  实例特征结构登记结果 out; out.Gread = r.G0;
+  实例特征结构登记结果 out; out.版本 = 2; out.Gread = r.G0;
   bool dispatched = false;
   try {
     if (r.版本 != 2 || !r.G0 || r.G0 == UINT64_MAX || r.幂等身份.值 != key ||
