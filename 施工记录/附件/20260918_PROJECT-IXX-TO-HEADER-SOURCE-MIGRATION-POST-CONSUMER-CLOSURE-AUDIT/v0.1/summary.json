@@ -1,0 +1,51 @@
+{
+  "plan": "PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-POST-CONSUMER-CLOSURE-AUDIT",
+  "audit_input": {
+    "repository": "D:\\海中鱼巣",
+    "head": "f28ac086ecf3db403945945e92ac05d606a1161a",
+    "tree": "ef0e7310d24baba5bc2ac249efb79acb6411ccb6",
+    "archive_command": "git archive --format=tar f28ac086ecf3db403945945e92ac05d606a1161a | tar -xf - -C 'D:\\TEMP\\海中鱼巣\\PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-POST-CONSUMER-CLOSURE-AUDIT\\20260918-r1\\source'",
+    "source_file_count": 8581,
+    "source_root_sha256": "2443a8a595535b07298b0f6c6a305df9107e53efa2faeac7c317818ae650d2a1",
+    "msbuild": "C:\\Program Files\\Microsoft Visual Studio\\18\\Professional\\MSBuild\\Current\\Bin\\MSBuild.exe"
+  },
+  "inputs": {
+    "total": 2501,
+    "by_category": [
+      {
+        "category": "H",
+        "count": 2376
+      },
+      {
+        "category": "P",
+        "count": 108
+      },
+      {
+        "category": "V",
+        "count": 17
+      }
+    ]
+  },
+  "hits": {
+    "P": 0,
+    "V": 22,
+    "H": 11896,
+    "V_active_consumer": 22,
+    "V_inactive_text": 0,
+    "V_uncertain": 0
+  },
+  "result": {
+    "P": "PASS",
+    "V": "FAIL",
+    "total": "FAIL"
+  },
+  "successor_input": [
+    "Create one code plan for the three L1 validation projects and their imported validation source files; choose migration or retirement per consumer only after the validation contract/replacement is fixed.",
+    "Create one code plan for 验证工具/运行世界树根启动专项验证.ps1; migrate its old-format path probes to the current header/source layout or formally retire/replace the script after proving its validation role."
+  ],
+  "boundaries": [
+    "No production source, project, verification consumer, rule, plan, or specification was modified.",
+    "P PASS is format/consumer evidence only and does not prove compile/link/run, behavior equivalence, recovery, data compatibility, or business closure.",
+    "V FAIL does not authorize deletion of any active verification consumer."
+  ]
+}

@@ -1,0 +1,72 @@
+[
+  {
+    "category": "H",
+    "extension": ".cpp",
+    "count": 15
+  },
+  {
+    "category": "H",
+    "extension": ".json",
+    "count": 47
+  },
+  {
+    "category": "H",
+    "extension": ".log",
+    "count": 4
+  },
+  {
+    "category": "H",
+    "extension": ".md",
+    "count": 2299
+  },
+  {
+    "category": "H",
+    "extension": ".txt",
+    "count": 11
+  },
+  {
+    "category": "P",
+    "extension": ".bin",
+    "count": 6
+  },
+  {
+    "category": "P",
+    "extension": ".cpp",
+    "count": 28
+  },
+  {
+    "category": "P",
+    "extension": ".filters",
+    "count": 1
+  },
+  {
+    "category": "P",
+    "extension": ".h",
+    "count": 70
+  },
+  {
+    "category": "P",
+    "extension": ".json",
+    "count": 2
+  },
+  {
+    "category": "P",
+    "extension": ".vcxproj",
+    "count": 1
+  },
+  {
+    "category": "V",
+    "extension": ".cpp",
+    "count": 6
+  },
+  {
+    "category": "V",
+    "extension": ".ps1",
+    "count": 5
+  },
+  {
+    "category": "V",
+    "extension": ".vcxproj",
+    "count": 6
+  }
+]
