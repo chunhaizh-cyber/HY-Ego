@@ -4,16 +4,16 @@
 
 日期：2026-09-18
 版本：v0.1
-状态：待激活
+状态：可执行
 
 ## 1. 目标与前置
 
 把 `世界树根启动专项验证.cpp` 从已退出的 v3 世界树创建 DTO/结果投影迁移到当前 v4 概念先行创建 ABI，并让专项工程能够编译其 453942 字节的 `数据服务.概念树类.cpp`。恢复脚本定义的 Debug/Release 隔离 Rebuild、core、`--ordinary` 与 JSON 成功合同。
 
-本计划只能在以下两项均已发布并重新 S0 后激活：
+以下两项上游均已发布；执行前仍须以本计划修订后的工程源清单和当前 v4 ABI 重新 S0：
 
-1. `PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-WORLD-TREE-ROOT-SCRIPT` v0.2 的路径迁移已发布；
-2. `D455-CONDITIONAL-COMPILE-PROVIDER` 已发布，默认关闭 SDK 时专项可编译 D455 翻译单元。
+1. `PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-WORLD-TREE-ROOT-SCRIPT` v0.2 已由 `d206ae9fc9da2ad21c517519acb80e9660d75d75` 发布；
+2. `D455-CONDITIONAL-COMPILE-PROVIDER` 已由 `b2c3b9034921c57f4020641f9f4c36f374b199fe` 发布，默认关闭 SDK 时专项可编译 D455 翻译单元。
 
 ## 2. 当前事实与范围
 
@@ -36,13 +36,13 @@
 2. 建厂调用固定为 `建立世界树应用服务(*scene,*existence,*concepts,verify)`；保留根独立读回断言。
 3. 子场景与存在创建改用 `_v4` 请求：版本 4、当前 `G0`、`通用存在概念定义{1,不预设特征}`、`显式顶层`、空直接上位、独立概念定义键和世界键、足够的世界/概念预算；场景请求设置当前根为父，存在请求使用合法 `存在初始绑定`。不得复用旧三键请求或读取旧结果头。
 4. 成功必须经 `世界树概念创建结果_v4::成功(原_v4请求)`，并只读取 v4 `投影->E`、`投影->位置` 和 `投影->内容`；断言请求回显类别、概念类别为存在、同次世界读回和结构位置完整。保留原场景层级、成员、启退、预算、移动及精确重放覆盖；适配 v4 无对应旧字段时，删除旧字段断言而用 v4 成功谓词已覆盖的等价断言，不放宽业务结果。
-5. 专项 `.vcxproj` 的四个配置 `ClCompile/AdditionalOptions` 统一追加 `/bigobj`，保留 `/utf-8`、现有 D455 开关、输出隔离、toolset 和项目源清单。不得改变宏默认值、链接库、SDK 路径或源文件选择。
+5. 专项 `.vcxproj` 的四个配置 `ClCompile/AdditionalOptions` 统一追加 `/bigobj`，保留 `/utf-8`、现有 D455 开关、输出隔离和 toolset。项目源清单只允许新增唯一的 `..\\海中鱼巣\\适配\\协议.D455采样材料.cpp` 编译项：它为已包含的同名公开头提供 `D455采集配置有效` 等既有协议函数定义，填补关闭分支的链接提供者。不得改变宏默认值、链接库、SDK 路径、任何其它源文件选择或 D455 协议。
 
 ## 4. 实施、失败收口与验证
 
 先在正式上游提交重新 S0，核对请求字段、普通装配的概念初始化顺序、专项 C++/工程无异主 WIP、脚本和临时输出根资源。若 v4 已不再是现行 ABI、概念注册 API 变化或 D455 上游未提供关闭编译能力，停止并退回计划支撑。
 
-执行 Debug、Release 脚本。每配置要求 `result.json` 的 `RebuildExit=0`、`CoreExit=0`、`OrdinaryExit=0`、`InterfaceSplit=PASS`、`PublicRootPublisher=ABSENT`，且 core 日志保留原专项 PASS 总数。另检查旧请求/结果符号零残留、四配置均有 `/bigobj`、目标 diff 与 strict 通过。任何构建、运行、JSON 或断言失败均具名失败；不得改生产 ABI、脚本成功字段或用桩代替概念树。
+执行 Debug、Release 脚本。每配置要求 `result.json` 的 `RebuildExit=0`、`CoreExit=0`、`OrdinaryExit=0`、`InterfaceSplit=PASS`、`PublicRootPublisher=ABSENT`；core 最后成功行固定为 `PASS-TOTAL 174`，ordinary 最后成功行固定为 `PASS ordinary-entry-stops-at-stage-17`。`--ordinary` 的初始化失败/真实自我形成是该专项预期的非成功断言，不得误判为脚本失败。另检查旧请求/结果符号零残留、四配置各恰含一次 `/bigobj` 且保留 `/utf-8`、项目 `ClCompile` 中 `协议.D455采样材料.cpp` 恰一项、目标 diff 与 strict 通过。任一静态清单、构建、链接、core、ordinary 或 JSON 字段失败均在该步骤具名失败、记录第一个决定性错误且不得生成成功 `result.json`；不得改生产 ABI、D455 协议、脚本成功字段或用桩代替概念树。
 
 ## 5. 完成边界
 

@@ -4,7 +4,7 @@
 
 日期：2026-09-18
 版本：v0.2
-状态：施工设计
+状态：已发布
 
 ## 1. 目标与当前事实
 
@@ -50,4 +50,4 @@
 
 静态迁移验证必须通过 PowerShell AST、四个旧路径和旧 module 断言零残留、目标路径 `git diff --check` 与严格规范检查。Debug/Release 的 `result.json`（`RebuildExit=0`、`CoreExit=0`、`OrdinaryExit=0`、`InterfaceSplit=PASS`、`PublicRootPublisher=ABSENT`）是 `WORLD-TREE-ROOT-V4-CONSUMER-MIGRATION` 的验证合同；它不能作为本迁移计划是否完成的门槛。
 
-本迁移只证明专项脚本已消费当前头源物理形态；不证明专项仍可构建或运行、世界树根业务语义、恢复、其它验证消费者或全项目闭环。
+本设计已由 `d206ae9fc9da2ad21c517519acb80e9660d75d75` 实现并发布。本迁移只证明专项脚本已消费当前头源物理形态；不证明专项仍可构建或运行、世界树根业务语义、恢复、其它验证消费者或全项目闭环。
