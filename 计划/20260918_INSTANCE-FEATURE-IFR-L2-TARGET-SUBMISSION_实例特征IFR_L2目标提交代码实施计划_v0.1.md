@@ -25,7 +25,8 @@ struct 实例特征IFR提交请求 final {
   std::optional<实例特征IFR完整投影> 预期完整投影;
   std::vector<实例特征IFR目标R项> 规范化目标R项组;
   L1所有者范围写入幂等身份 幂等身份;
-  std::uint64_t F成员上限=0, R项上限=0, 关系上限=0;`r`n  有界准确特征读取预算 新增F特征读取预算;
+  std::uint64_t F成员上限=0, R项上限=0, 关系上限=0;
+    有界准确特征读取预算 新增F特征读取预算;
 };
 struct 实例特征IFR提交结果 final {
   std::uint32_t 版本=1;
