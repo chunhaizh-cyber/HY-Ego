@@ -3,7 +3,7 @@
 计划身份：`WORLD-TREE-ROOT-V4-CONSUMER-MIGRATION`
 
 日期：2026-09-18
-版本：v0.3
+版本：v0.4
 状态：可执行
 
 ## 1. 目标与前置
@@ -13,6 +13,8 @@
 v0.2 计划支撑裁决：专项工程同时编译 `启动.应用程序.cpp` 与 `装配.普通应用.cpp`，所以只加入 D455 协议实现会留下普通应用所需的既有提供者未链接。现行专项 Debug 链接日志已逐项归并为 18 个 `LNK2019`，其唯一来源是本计划第 3 节列明的六个现有 `.cpp`；这是工程源清单内在矛盾，不是生产合同、世界树语义或 D455 语义漂移。v0.2 仅把这些既有提供者加入专项工程，不修改其内容、公开 ABI 或主工程登记。
 
 v0.3 计划支撑裁决：加入上述六项后，专项 Debug Rebuild 的同一链接步骤只剩 `数据服务.特征值类.obj` 对 `材料读取结果_B1::成功` 与 `不可变材料数据服务::读取材料` 的两个 `LNK2019`。两者在 `海中鱼巣/领域/数据服务.不可变材料.cpp` 分别有唯一、非 inline 定义，且该文件已在 `海中鱼巣.vcxproj` 登记一次；它是已合法加入的特征值提供者的传递链接依赖。故 v0.2 的“七项且无额外新增编译项”不闭包，v0.3 只追加该第八项，不改变生产源、ABI 或机器语义。具名审计见 `计划支撑记录/WORLD-TREE-ROOT-V4-CONSUMER-MIGRATION_计划支撑记录_v0.3.md`。
+
+v0.4 计划支撑裁决：v0.3 专项 Debug core 已完整成功，`core-run.log` 为 205 条 `PASS`、零 `FAIL`、零本轮诊断输出，末行是 `PASS-TOTAL 205`。当前 `passed` 仅由 `require()` 的成功路径递增；v4 Fixture 所需的概念 owner、存在结构登记及三项概念结构真实读回均会经过该路径。本轮 `child`、预算和场景移动诊断只在失败分支输出，未影响计数。原 `174` 未在当前专项代码或脚本出现，只是 v0.1 的过期硬编码期望；改为 `205` 仅校正专项验证合同，不改变机器语义。
 
 以下两项上游均已发布；执行前仍须以本计划修订后的工程源清单和当前 v4 ABI 重新 S0：
 
@@ -72,7 +74,7 @@ v0.3 计划支撑裁决：加入上述六项后，专项 Debug Rebuild 的同一
 
 先在正式上游提交重新 S0，核对请求字段、普通装配的概念初始化顺序、专项 C++/工程无异主 WIP、脚本和临时输出根资源。若 v4 已不再是现行 ABI、概念注册 API 变化或 D455 上游未提供关闭编译能力，停止并退回计划支撑。
 
-执行 Debug、Release 脚本。每配置要求 `result.json` 的 `RebuildExit=0`、`CoreExit=0`、`OrdinaryExit=0`、`InterfaceSplit=PASS`、`PublicRootPublisher=ABSENT`；core 最后成功行固定为 `PASS-TOTAL 174`，ordinary 最后成功行固定为 `PASS ordinary-entry-stops-at-stage-17`。`--ordinary` 的初始化失败/真实自我形成是该专项预期的非成功断言，不得误判为脚本失败。另检查旧请求/结果符号零残留、四配置各恰含一次 `/bigobj` 且保留 `/utf-8`、项目 `ClCompile` 中第 3 节八项路径各恰一次且无额外新增编译项、目标 diff 与 strict 通过。任一静态清单、构建、链接、core、ordinary 或 JSON 字段失败均在该步骤具名失败、记录第一个决定性错误且不得生成成功 `result.json`；不得改生产 ABI、D455 协议、脚本成功字段或用桩代替概念树。
+执行 Debug、Release 脚本。每配置要求 `result.json` 的 `RebuildExit=0`、`CoreExit=0`、`OrdinaryExit=0`、`InterfaceSplit=PASS`、`PublicRootPublisher=ABSENT`；core 最后成功行固定为 `PASS-TOTAL 205`，ordinary 最后成功行固定为 `PASS ordinary-entry-stops-at-stage-17`。`--ordinary` 的初始化失败/真实自我形成是该专项预期的非成功断言，不得误判为脚本失败。另检查旧请求/结果符号零残留、四配置各恰含一次 `/bigobj` 且保留 `/utf-8`、项目 `ClCompile` 中第 3 节八项路径各恰一次且无额外新增编译项、目标 diff 与 strict 通过。任一静态清单、构建、链接、core、ordinary 或 JSON 字段失败均在该步骤具名失败、记录第一个决定性错误且不得生成成功 `result.json`；不得改生产 ABI、D455 协议、脚本成功字段或用桩代替概念树。
 
 ## 5. 完成边界
 
