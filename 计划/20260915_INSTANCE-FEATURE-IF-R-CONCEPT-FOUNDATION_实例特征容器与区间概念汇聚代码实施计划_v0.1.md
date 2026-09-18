@@ -1,6 +1,6 @@
-# INSTANCE-FEATURE-IF-R-CONCEPT-FOUNDATION 代码实施计划 v0.8
+# INSTANCE-FEATURE-IF-R-CONCEPT-FOUNDATION 代码实施计划 v0.9
 
-状态：待激活。重新 S0 基线：`991c5b614980e1f80903eea572f481bb51b75ccc`；v0.8 已冻结 L2 IF/R 读写合同与 L3 入口形状，但 I64 R→FCr 输出与 7160 同义身份发生上游漂移，未裁决前不得实施。
+状态：待激活。v0.9 记录用户已裁决 I64 单点 R 零 FCr 输出；须等待 FEATURE-TYPE-R-I64-NO-FCR-RULE-CORRECTION 发布后重新 S0。
 
 ## 目标、已保留现场与唯一门禁
 
@@ -48,3 +48,8 @@ R项材料固定用结构登记扩展的 `实例特征结构交付_v2.R项材料
 ## 实施验证
 
 重新 S0 后运行 `git diff --check`、`python .\tools\check_specs.py --strict`、隔离 Debug/Release x64 Rebuild及专属驱动。验证至少覆盖：既有完整 F+FCv 同次读回；首次、后续、每类结构异常及读取非成功的零写分账；L2快照守卫；诊断单链一次、锁释放后调用及日志/弹窗失败结果不变；IF/R六关系登记、I64/非I64分组、R未变零触发、R变化后单次汇聚、汇聚失败不回滚及普通应用装配禁止项。构建不证明无窗口诊断可见、跨进程恢复、非I64比较、生产观察或本能根阶段21。
+
+
+## v0.9 I64 归并裁决
+
+用户已明确裁决：I64 单点 R 不应产生严格包含其 FCv 的独立上位概念。因而 I64 R 归并的目标是成功零输出；FCv 保持原有事实，既不创建 FCr，也不建立 FCr→FCv 关系。已登记的 FEATURE-TYPE-R-I64-NO-FCR-RULE-CORRECTION 负责把该语义落实到特征类 R 规则提供者，并保留 DTO 外壳和旧用途3历史关系的只读边界。它发布后，本计划的 L3 汇聚只把已归并零输出映射为汇聚完成零写；其余 L2/L3 合同不变。
