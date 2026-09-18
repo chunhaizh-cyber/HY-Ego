@@ -11,23 +11,27 @@ $allowedRoot = [IO.Path]::GetFullPath('D:/TEMP/海中鱼巣/WORLD-TREE-ROOT-BOOT
 if (-not $resolvedOutput.Equals($allowedRoot,[StringComparison]::OrdinalIgnoreCase)) {
     throw 'Unexpected output root'
 }
-$interface = Join-Path $repoRoot '海中鱼巣/装配.普通应用.ixx'
-$implementation = Join-Path $repoRoot '海中鱼巣/装配.普通应用.cppcpp'
-$rootContract = Join-Path $repoRoot '海中鱼巣/领域/合同.世界树根.ixx'
-$rootService = Join-Path $repoRoot '海中鱼巣/领域/数据服务.世界树根.ixx'
+$interface = Join-Path $repoRoot '海中鱼巣/装配.普通应用.h'
+$implementation = Join-Path $repoRoot '海中鱼巣/装配.普通应用.cpp'
+$rootContract = Join-Path $repoRoot '海中鱼巣/领域/合同.世界树根.h'
+$rootService = Join-Path $repoRoot '海中鱼巣/领域/数据服务.世界树根.h'
 $interfaceText = [IO.File]::ReadAllText($interface)
 $implementationText = [IO.File]::ReadAllText($implementation)
-if ($interfaceText -match '(?m)^\s*(export\s+)?import\s+海中鱼巣\.(领域|业务)\.' -or
+if ($interfaceText -match '(?m)^\s*(export\s+)?module\b' -or
+    $interfaceText -match '(?m)^\s*(export\s+)?import\b' -or
     $interfaceText -match '普通应用装配结果\s+构造普通应用上下文\s*\([^;]*\)\s*\{') {
-    throw 'ordinary assembly interface contains forbidden imports or implementation'
+    throw 'ordinary assembly header contains forbidden module syntax or implementation'
 }
-if ($implementationText -notmatch '(?m)^module 海中鱼巣\.装配\.普通应用;' -or
-    $implementationText -notmatch '普通应用装配结果\s+构造普通应用上下文\s*\(') {
-    throw 'ordinary assembly implementation unit is incomplete'
+if ($implementationText -notmatch '(?m)^\s*#include\s+"装配\.普通应用\.h"' -or
+    $implementationText -notmatch '普通应用装配结果\s+构造普通应用上下文\s*\(' -or
+    $implementationText -match '(?m)^\s*module\s+海中鱼巣\.装配\.普通应用\s*;') {
+    throw 'ordinary assembly source is incomplete or contains retired module declaration'
 }
 $publicText = [IO.File]::ReadAllText($rootContract) + [IO.File]::ReadAllText($rootService)
-if ($publicText -match '发布世界树根节点') {
-    throw 'public root publication symbol exists'
+if ($publicText -match '发布世界树根节点' -or
+    $publicText -match '(?m)^\s*(export\s+)?module\b' -or
+    $publicText -match '(?m)^\s*(export\s+)?import\b') {
+    throw 'public root headers contain retired publication symbol or module syntax'
 }
 [void](New-Item -ItemType Directory -Path $resolvedOutput -Force)
 $configRoot = Join-Path $resolvedOutput $Configuration
