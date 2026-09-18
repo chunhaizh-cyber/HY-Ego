@@ -1,6 +1,6 @@
 # INSTANCE-FEATURE-IFR-L2-PROJECTION-READ 代码实施计划 v0.2
 
-状态：可执行。基线：`def54a06`；直接依赖 `8d79cf4f` 的 v2 IF/R 布局。
+状态：已完成。代码与验证记录：`12e678f7`、`664e1fe7`、`0c326f0a`；直接依赖 `8d79cf4f` 的 v2 IF/R 布局。
 
 ## 目标
 
