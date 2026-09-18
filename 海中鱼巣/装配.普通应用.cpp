@@ -205,6 +205,7 @@ struct 普通应用上下文 final {
   std::unique_ptr<L1事实基座运行包> 运行包;
   L1事实基座持久恢复结果_v1 持久恢复;
   L1所有者范围交付 特征定义所有者;
+  L1所有者范围交付 特征值所有者;
   L1所有者范围交付 特征信息所有者;
   L1所有者范围交付 存在所有者;
   L1所有者范围交付 场景所有者;
@@ -246,6 +247,7 @@ std::unique_ptr<普通应用上下文> 建立上下文(
   auto &l1 = result->运行包->读取服务();
   auto &issuer = result->运行包->所有者范围签发器();
 
+  result->特征值所有者 = 建立所有者(issuer,l1,0x1000);
   result->特征定义所有者 = 建立所有者(issuer,l1,0x1001);
   result->特征信息所有者 = 建立所有者(issuer,l1,0x1002);
   result->存在所有者 = 建立所有者(issuer,l1,0x1003);
@@ -320,7 +322,14 @@ std::unique_ptr<普通应用上下文> 建立上下文(
     result->根原G0=existenceRoot.G0;
   }
 
-  result->特征值 = std::make_unique<特征值类数据服务>(l1);
+  const 特征值U64组结构登记请求_B2 valueLayoutRequest{
+      1, 当前代次(l1), {0x1010}};
+  const auto valueLayout = 特征值类数据服务::登记U64组结构_B2(
+      l1, *result->特征值所有者.写入端口, valueLayoutRequest);
+  if (!valueLayout.成功(valueLayoutRequest) || !valueLayout.交付)
+    throw 普通应用装配状态::元结构建立失败;
+  result->特征值 = std::make_unique<特征值类数据服务>(
+      l1, std::move(*result->特征值所有者.写入端口), *valueLayout.交付);
   result->特征 = std::make_unique<特征类数据服务>(
       l1, std::move(*result->特征定义所有者.写入端口),
       std::move(*result->特征信息所有者.写入端口), *result->特征值,

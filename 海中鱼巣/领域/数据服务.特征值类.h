@@ -79,6 +79,43 @@ struct 特征值完整读取结果_B1 final {
     bool 成功(const 特征值完整读取请求_B1&) const noexcept;
 };
 
+// B2 只保存 L1 已定义的精确 U64 序列；不得在此解释轮廓、体素或其它业务格式。
+struct 特征值U64组保存请求_B2 final {
+    std::uint32_t 版本{1}; std::uint64_t G0{};
+    L1所有者范围写入幂等身份 幂等{};
+    std::vector<std::uint64_t> 内容; 世界结构预算_B1 预算{};
+};
+enum class 特征值U64组保存状态_B2 : std::uint8_t {
+    已复用=1, 已保存=2, 入口拒绝=8, 结构未就绪=9, 许可拒绝=10,
+    未找到=11, 已退出=12, 事实代次漂移=13, 数量预算不足=14,
+    幂等冲突=15, 引用冲突=16, 资源失败=17, 内部不一致=18,
+    已可能发布=19
+};
+struct 特征值U64组保存结果_B2 final {
+    std::uint32_t 版本{1}; 特征值U64组保存状态_B2 状态{特征值U64组保存状态_B2::入口拒绝};
+    std::uint64_t Gread{}; std::optional<特征值身份> 值;
+    世界结构用量_B1 用量{};
+    bool 成功(const 特征值U64组保存请求_B2&) const noexcept;
+};
+struct 特征值U64组结构登记请求_B2 final {
+    std::uint32_t 版本{1}; std::uint64_t G0{};
+    L1所有者范围写入幂等身份 幂等{};
+};
+struct 特征值U64组结构交付_B2 final {
+    L1结构所有者身份 所有者{};
+    稳定编码 承载节点{}; 稳定编码 U64组属性类型节点{}; 稳定编码 来源节点{};
+};
+enum class 特征值U64组结构登记状态_B2 : std::uint8_t {
+    已登记=1, 入口拒绝=8, 许可拒绝=9, 未找到=10, 已退出=11,
+    事实代次漂移=12, 幂等冲突=13, 引用冲突=14, 资源失败=15,
+    内部不一致=16, 已可能发布=17
+};
+struct 特征值U64组结构登记结果_B2 final {
+    std::uint32_t 版本{1}; 特征值U64组结构登记状态_B2 状态{特征值U64组结构登记状态_B2::入口拒绝};
+    std::uint64_t Gread{}; std::optional<特征值U64组结构交付_B2> 交付;
+    bool 成功(const 特征值U64组结构登记请求_B2&) const noexcept;
+};
+
 class 特征值类数据服务 final {
 public:
     explicit 特征值类数据服务(const L1事实基座服务& 第一层服务) noexcept
@@ -87,6 +124,9 @@ public:
                      const 不可变材料数据服务& 材料服务) noexcept
         : 第一层服务_(第一层服务),
           材料服务_(材料服务.绑定于(第一层服务) ? &材料服务 : nullptr) {}
+    特征值类数据服务(const L1事实基座服务& 第一层服务,
+                     L1所有者范围写端口&& 写端口,
+                     const 特征值U64组结构交付_B2& 结构) noexcept;
 
     特征值类数据服务() = delete;
     特征值类数据服务(const 特征值类数据服务&) = delete;
@@ -159,6 +199,13 @@ public:
 
     特征值完整读取结果_B1 获取完整值(
         const 特征值完整读取请求_B1& 请求) const noexcept;
+    特征值完整读取结果_B1 读取完整U64组_B2(
+        const 特征值完整读取请求_B1& 请求) const noexcept;
+    特征值U64组保存结果_B2 保存U64组(
+        const 特征值U64组保存请求_B2& 请求) noexcept;
+    static 特征值U64组结构登记结果_B2 登记U64组结构_B2(
+        const L1事实基座服务&, L1所有者范围写端口&,
+        const 特征值U64组结构登记请求_B2&) noexcept;
 
 private:
     static 特征值读取错误 映射读取错误(L1所有者范围读取状态 状态) noexcept {
@@ -207,6 +254,8 @@ private:
 
     const L1事实基座服务& 第一层服务_;
     const 不可变材料数据服务* 材料服务_;
+    std::optional<L1所有者范围写端口> 写端口_;
+    std::optional<特征值U64组结构交付_B2> U64组结构_;
 };
 
 } // namespace 海中鱼巣

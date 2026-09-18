@@ -228,6 +228,7 @@
     <ClInclude Include="海中鱼巣\领域\合同.结构操作公共.h" />
     <ClInclude Include="海中鱼巣\领域\数据服务.不可变材料.h" />
     <ClInclude Include="海中鱼巣\领域\数据服务.特征值类.h" />
+    <ClCompile Include="海中鱼巣\领域\数据服务.特征值类.cpp" />
     <ClInclude Include="海中鱼巣\领域\数据服务.特征类.h" />
     <ClInclude Include="海中鱼巣\领域\数据服务.特征值域比较类.h" />
     <ClCompile Include="海中鱼巣\领域\数据服务.特征值域比较类.cpp" />
