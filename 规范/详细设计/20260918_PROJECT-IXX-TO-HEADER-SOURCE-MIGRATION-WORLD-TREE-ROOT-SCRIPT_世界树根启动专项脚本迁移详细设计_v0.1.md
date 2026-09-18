@@ -3,7 +3,7 @@
 设计身份：`PROJECT-IXX-TO-HEADER-SOURCE-MIGRATION-WORLD-TREE-ROOT-SCRIPT`
 
 日期：2026-09-18
-版本：v0.1
+版本：v0.2
 状态：施工设计
 
 ## 1. 目标与当前事实
@@ -19,7 +19,7 @@
 | `海中鱼巣/领域/合同.世界树根.ixx` | `海中鱼巣/领域/合同.世界树根.h` |
 | `海中鱼巣/领域/数据服务.世界树根.ixx` | `海中鱼巣/领域/数据服务.世界树根.h` |
 
-完成条件是脚本改对现行 `.h/.cpp` 结构做等价的物理边界检查，并保留原有隔离构建、两种运行与 JSON 结果合同。
+完成条件是脚本改对现行 `.h/.cpp` 结构做等价的物理边界检查。原有隔离构建、两种运行与 JSON 结果合同保留在脚本中，但迁出本设计的完成证明：`D455-CONDITIONAL-COMPILE-PROVIDER` 先使默认关闭 SDK 的专项翻译单元可编译，`WORLD-TREE-ROOT-V4-CONSUMER-MIGRATION` 再升级专项消费者并补齐其 `/bigobj` 工程输入。
 
 ## 2. 唯一允许范围与冻结检查
 
@@ -44,10 +44,10 @@
 1. S0 从正式 HEAD 重读脚本和四个替代文件，确认当前 `.h/.cpp` 路径、函数名称和专项工程保持可读；若迁移事实已漂移，停止并退回计划支撑，不修改生产文件以迎合脚本。
 2. 仅替换四个路径变量及其文本读取目标。
 3. 用 §2 的 header/source 断言替代旧 module 断言；断言必须在 `New-Item`、MSBuild 和执行 EXE 之前失败，避免错误输入触发构建。
-4. 保留并运行原有 Debug/Release 构建、core/ordinary 执行与 JSON 输出。路径不存在、文本结构不符或非零退出都抛出具名失败，不得转换为 PASS。
+4. 保留原有 Debug/Release 构建、core/ordinary 执行与 JSON 输出，不改写其输出根、命令或字段。路径不存在或文本结构不符必须在构建前具名失败；构建/运行非零退出由后继计划记录为其输入失败，不得转换为本迁移的 PASS 或要求本迁移修改专项 C++、工程或生产代码。
 
 ## 4. 验证与声明边界
 
-脚本自身须在 Debug 与 Release 都从任务专属 `D:\TEMP\海中鱼巣\WORLD-TREE-ROOT-BOOTSTRAP\<轮次>\special` 运行成功，两个配置的 `result.json` 都记录 `RebuildExit=0`、`CoreExit=0`、`OrdinaryExit=0`、`InterfaceSplit=PASS`、`PublicRootPublisher=ABSENT`。另检查脚本不再含四个旧路径、`.ixx`、`.cppcpp` 或 module-specific 断言。
+静态迁移验证必须通过 PowerShell AST、四个旧路径和旧 module 断言零残留、目标路径 `git diff --check` 与严格规范检查。Debug/Release 的 `result.json`（`RebuildExit=0`、`CoreExit=0`、`OrdinaryExit=0`、`InterfaceSplit=PASS`、`PublicRootPublisher=ABSENT`）是 `WORLD-TREE-ROOT-V4-CONSUMER-MIGRATION` 的验证合同；它不能作为本迁移计划是否完成的门槛。
 
-本迁移只证明专项脚本已消费当前头源物理形态且原专项仍可运行；不证明世界树根业务语义、恢复、其它验证消费者或全项目闭环。
+本迁移只证明专项脚本已消费当前头源物理形态；不证明专项仍可构建或运行、世界树根业务语义、恢复、其它验证消费者或全项目闭环。
