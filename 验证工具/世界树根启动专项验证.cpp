@@ -14,6 +14,7 @@
 #include "../海中鱼巣/业务/应用服务.世界树类.h"
 
 #include "../海中鱼巣/启动.应用程序.h"
+#include "../海中鱼巣/装配.普通应用.h"
 #include "../海中鱼巣/领域/数据服务.世界树根.h"
 
 namespace {
@@ -89,12 +90,13 @@ std::vector<稳定编码> metadata(L1所有者范围写端口 &port,
 struct Fixture {
   std::unique_ptr<L1事实基座运行包> runtime;
   L1所有者范围交付 fdefOwner, finfoOwner, existenceOwner, sceneOwner,
-      stateOwner;
+      stateOwner, conceptOwner;
   std::unique_ptr<特征值类数据服务> values;
   std::unique_ptr<特征类数据服务> features;
   std::unique_ptr<存在类数据服务> existence;
   std::unique_ptr<状态类数据服务> state;
   std::unique_ptr<场景类数据服务> scene;
+  std::unique_ptr<概念树类数据服务> concepts;
   std::unique_ptr<世界树根数据服务> roots;
 
   Fixture() {
@@ -106,6 +108,7 @@ struct Fixture {
     existenceOwner = owner(issuer, 0x7103);
     sceneOwner = owner(issuer, 0x7104);
     stateOwner = owner(issuer, 0x7105);
+    conceptOwner = owner(issuer, 0x7106);
     const auto producers = metadata(
         *fdefOwner.写入端口, l1, 0x7111,
         {{节点种类::普通, std::nullopt}, {节点种类::普通, std::nullopt}});
@@ -148,10 +151,22 @@ struct Fixture {
     features = std::make_unique<特征类数据服务>(
         l1, std::move(*fdefOwner.写入端口), std::move(*finfoOwner.写入端口),
         *values, producers.front());
+    const 存在单例角色结构登记请求 roleRequest{
+        1, generation(l1), {0x1202}};
+    const auto role = 存在类数据服务::登记单例角色结构(
+        l1, *existenceOwner.写入端口, roleRequest);
+    require(role.成功(roleRequest) && role.交付, "existence-role-layout");
+    const 实例特征结构登记请求 instanceFeatureRequest{
+        1, generation(l1), {0x4946525354525543ULL}};
+    const auto instanceFeature = 存在类数据服务::登记实例特征结构(
+        l1, *existenceOwner.写入端口, instanceFeatureRequest);
+    require(instanceFeature.成功(instanceFeatureRequest) && instanceFeature.交付,
+            "existence-instance-feature-layout");
     existence = std::make_unique<存在类数据服务>(
         l1, *features, std::move(*existenceOwner.写入端口),
         existenceLayout[0], existenceLayout[1],
-        存在当前采用结构交付{existenceLayout[2]});
+        存在当前采用结构交付{existenceLayout[2]}, *instanceFeature.交付,
+        *role.交付);
     state = std::make_unique<状态类数据服务>(
         l1, *features, std::move(*stateOwner.写入端口),
         状态类结构交付{stateLayout[0], stateLayout[1], stateLayout[2],
@@ -173,6 +188,24 @@ struct Fixture {
     scene = std::make_unique<场景类数据服务>(
         l1, std::move(*sceneOwner.写入端口), *base.交付, *existence, *state,
         *feature.交付, *include.交付);
+    const 纯概念结构登记请求_v2 pureRequest{2, generation(l1), {0x7141}, 1048576};
+    const auto pure = 概念树类数据服务::登记纯概念结构_v2(
+        l1, *conceptOwner.写入端口, pureRequest);
+    require(pure.成功(pureRequest) && pure.交付, "concept-pure-layout");
+    const 特征概念出生使用结构登记请求 birthRequest{
+        1, generation(l1), {0x7142}, *pure.交付, 4};
+    const auto birth = 概念树类数据服务::登记特征概念出生使用结构(
+        l1, *conceptOwner.写入端口, birthRequest);
+    require(birth.成功(birthRequest) && birth.交付, "concept-birth-layout");
+    const 存在概念两组结构登记请求_v1 twoGroupRequest{
+        1, generation(l1), {0x7143}, *pure.交付, 18};
+    const auto twoGroup = 概念树类数据服务::登记存在概念两组结构_v1(
+        l1, *conceptOwner.写入端口, twoGroupRequest);
+    require(twoGroup.成功(twoGroupRequest) && twoGroup.交付, "concept-two-group-layout");
+    concepts = std::make_unique<概念树类数据服务>(
+        l1, *features, *existence, *values, *scene,
+        std::move(*conceptOwner.写入端口), *pure.交付, *birth.交付,
+        *twoGroup.交付);
     roots = std::make_unique<世界树根数据服务>(*existence, *scene);
   }
 
@@ -243,7 +276,8 @@ void core_probe() {
               generation(fixture.l1()) == afterRoot,
           "different-second-root-zero-write");
   世界树根验证请求 verify{2, afterRoot, {128, 256}};
-  auto built = 建立世界树应用服务(*fixture.scene, *fixture.existence, verify);
+  auto built = 建立世界树应用服务(*fixture.scene, *fixture.existence,
+                                    *fixture.concepts, verify);
   require(built.成功() && built.投影->根 == root &&
               built.服务->验证现实世界根(verify).成功(verify),
           "factory-independent-root-readback");
@@ -257,25 +291,33 @@ void core_probe() {
               !rootPosition.位置->父场景语境,
           "unified-root-location");
 
-  世界树场景创建请求 childRequest{
-      3, generation(fixture.l1()), {0x7401}, {0x7402}, {0x7403}, root,
-      {128, 256, 128}};
+  const 概念树预算 conceptBudget{256, 256, 256, 256, 256, 256, 256, 256};
+  世界树场景创建请求_v4 childRequest{
+      4,
+      generation(fixture.l1()),
+      root,
+      通用存在概念定义{1, 通用存在定义规则::不预设特征},
+      概念初始组织指定::显式顶层,
+      {},
+      {0x7401},
+      存在场景概念创建键_v2{{0x7402}, {0x7403}, {0x7404}, {0x7405}},
+      std::nullopt,
+      {128, 256, 128},
+      conceptBudget};
   auto child = world.创建场景并纳入现实世界(childRequest);
   if (!child.成功(childRequest))
-    std::cerr << "child status=" << static_cast<int>(child.结果头.状态)
-              << " stage=" << static_cast<int>(child.结果头.阶段)
-              << " G=" << child.结果头.Gread
-              << " H=" << child.结果头.首次发布H.value_or(0)
-              << " binding="
-              << (child.结果头.绑定原因
-                      ? static_cast<int>(*child.结果头.绑定原因)
-                      : -1)
+    std::cerr << "child status=" << static_cast<int>(child.状态)
+              << " stage=" << static_cast<int>(child.阶段)
+              << " G=" << child.Gread
+              << " H=" << child.世界首次H.value_or(0)
+              << " location="
+              << (child.位置原因 ? static_cast<int>(*child.位置原因) : -1)
               << " projection=" << static_cast<bool>(child.投影) << '\n';
   require(child.成功(childRequest) && child.投影 &&
-              child.投影->场景.直接父 &&
-              child.投影->场景.父语境投影 &&
-              child.投影->场景.直接父->关系 ==
-                  child.投影->场景.父语境投影->结构父.关系,
+              child.投影->位置.直接结构父 && child.投影->内容.场景 &&
+              child.投影->内容.场景->直接父 &&
+              child.投影->位置.直接结构父->关系 ==
+                  child.投影->内容.场景->直接父->关系,
           "direct-child-structure-and-context");
   const auto childId = child.投影->E;
   世界树层级位置读取请求 childLocation{
@@ -288,21 +330,39 @@ void core_probe() {
               childPosition.位置->父场景语境,
           "unified-child-scene-location");
 
-  世界树场景创建请求 grandchildRequest{
-      3, generation(fixture.l1()), {0x7404}, {0x7405}, {0x7406}, childId,
-      {128, 256, 128}};
+  世界树场景创建请求_v4 grandchildRequest{
+      4,
+      generation(fixture.l1()),
+      childId,
+      通用存在概念定义{1, 通用存在定义规则::不预设特征},
+      概念初始组织指定::显式顶层,
+      {},
+      {0x7411},
+      存在场景概念创建键_v2{{0x7412}, {0x7413}, {0x7414}, {0x7415}},
+      std::nullopt,
+      {128, 256, 128},
+      conceptBudget};
   auto grandchild = world.创建场景并纳入现实世界(grandchildRequest);
   require(grandchild.成功(grandchildRequest) && grandchild.投影,
           "deep-child-create-regression");
   const auto grandchildId = grandchild.投影->E;
 
-  世界树存在创建请求 memberRequest{
-      3, generation(fixture.l1()), {0x7411}, {0x7412}, {0x7413}, root,
-      {128, 256, 128}};
+  世界树存在创建请求_v4 memberRequest{
+      4,
+      generation(fixture.l1()),
+      {存在初始绑定种类::场景成员, root},
+      通用存在概念定义{1, 通用存在定义规则::不预设特征},
+      概念初始组织指定::显式顶层,
+      {},
+      {0x7421},
+      存在场景概念创建键_v2{{0x7422}, {0x7423}, {0x7424}, {0x7425}},
+      std::nullopt,
+      {128, 256, 128},
+      conceptBudget};
   auto member = world.创建存在并纳入现实世界(memberRequest);
   require(member.成功(memberRequest) && member.投影,
           "existing-binding-create-regression");
-  const auto memberId = member.投影->存在;
+  const auto memberId = member.投影->E;
   世界树层级位置读取请求 memberLocation{
       世界树应用合同版本, generation(fixture.l1()), memberId,
       世界树节点视角::存在, {128, 256}};
@@ -412,8 +472,24 @@ int main(int argc, char **argv) {
   try {
     std::cout << std::unitbuf;
     if (argc == 2 && std::string_view(argv[1]) == "--ordinary") {
+      const auto assembly = 构造普通应用上下文();
+      if (!assembly.成功())
+        std::cerr << "ordinary assembly=" << static_cast<int>(assembly.状态)
+                  << " concept="
+                  << (assembly.概念原因
+                          ? static_cast<int>(*assembly.概念原因)
+                          : -1)
+                  << " role="
+                  << (assembly.角色原因
+                          ? static_cast<int>(*assembly.角色原因)
+                          : -1)
+                  << '\n';
       const auto result = 运行海中鱼巣(
           {启动模式::普通控制面板});
+      if (result.状态 != 程序运行状态::初始化失败 ||
+          result.失败阶段 != 程序失败阶段::真实自我形成)
+        std::cerr << "ordinary status=" << static_cast<int>(result.状态)
+                  << " stage=" << static_cast<int>(result.失败阶段) << '\n';
       require(result.状态 == 程序运行状态::初始化失败 &&
                   result.失败阶段 == 程序失败阶段::真实自我形成,
               "ordinary-entry-stops-at-stage-17");

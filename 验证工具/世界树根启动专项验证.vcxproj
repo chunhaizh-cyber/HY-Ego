@@ -81,7 +81,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -98,7 +98,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -114,7 +114,7 @@
       <AdditionalIncludeDirectories Condition="'$(EnableD455RealSense)'=='true'">$(D455VcpkgRoot)\installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -134,7 +134,7 @@
       <AdditionalIncludeDirectories Condition="'$(EnableD455RealSense)'=='true'">$(D455VcpkgRoot)\installed\x64-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -161,6 +161,14 @@
     <ClInclude Include="..\海中鱼巣\核心\服务.L1事实基座.h" />
     <ClInclude Include="..\海中鱼巣\线程\运行消息协议.h" />
     <ClInclude Include="..\海中鱼巣\适配\协议.D455采样材料.h" />
+    <ClCompile Include="..\海中鱼巣\适配\协议.D455采样材料.cpp" />
+    <ClCompile Include="..\海中鱼巣\业务\应用服务.自我形成.cpp" />
+    <ClCompile Include="..\海中鱼巣\业务\应用服务.方法登记根生产初始化.cpp" />
+    <ClCompile Include="..\海中鱼巣\领域\数据服务.方法登记根.cpp" />
+    <ClCompile Include="..\海中鱼巣\领域\数据服务.特征值类.cpp" />
+    <ClCompile Include="..\海中鱼巣\业务\应用服务.特征概念类.cpp" />
+    <ClCompile Include="..\海中鱼巣\领域\数据服务.特征值域比较类.cpp" />
+    <ClCompile Include="..\海中鱼巣\领域\数据服务.不可变材料.cpp" />
     <ClInclude Include="..\海中鱼巣\适配\适配器.单调时钟.h" />
     <ClCompile Include="..\海中鱼巣\适配\适配器.单调时钟.cpp" />
     <ClInclude Include="..\海中鱼巣\适配\适配器.UTC时钟.h" />
