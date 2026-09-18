@@ -45,6 +45,10 @@ bool 读取请求有效(const 特征值域读取请求_v1& r) noexcept {
     const 特征值类数据服务& values) noexcept
     : concepts_(concepts), features_(features), values_(values) {}
 
+bool 特征值域比较数据服务::绑定于(const L1事实基座服务& l1) const noexcept {
+    return concepts_.绑定于(l1) && features_.绑定于(l1) && values_.绑定于(l1);
+}
+
 bool 特征值域读取结果_v1::成功(const 特征值域读取请求_v1& r) const noexcept {
     return 版本 == 1 && 读取请求有效(r) && 状态 == 特征值域比较状态_v1::已读取
         && Gread == r.Gread && H == r.H && 域 && 域->FC == r.FC && 有效(域->FT)

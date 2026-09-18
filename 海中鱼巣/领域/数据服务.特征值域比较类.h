@@ -57,6 +57,7 @@ public:
     特征值域比较数据服务() = delete;
     特征值域比较数据服务(const 特征值域比较数据服务&) = delete;
     特征值域比较数据服务& operator=(const 特征值域比较数据服务&) = delete;
+    bool 绑定于(const L1事实基座服务&) const noexcept;
     特征值域读取结果_v1 读取特征值域(const 特征值域读取请求_v1&) const;
     特征值域关系结果_v1 核验特征值域关系(const 特征值域关系核验请求_v1&) const;
     实例值域命中结果_v1 核验实例值域命中(const 实例值域命中核验请求_v1&) const;
