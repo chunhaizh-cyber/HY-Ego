@@ -153,33 +153,74 @@ template<class T> struct 特征截止事实 final { std::uint64_t Gread = 0, H =
 inline constexpr std::uint32_t 标量派生合同版本 = 2;
 enum class 特征类比较用途 : std::uint8_t { 目标判断 = 1, 状态迁移 = 2 };
 enum class 特征类比较角色 : std::uint8_t { 当前事实 = 1, 目标状态 = 2, 前状态 = 3, 后当前事实 = 4 };
-// 4115：R 归组只声明“是否存在可用的正式比较方案”。本类不把 I64 域、相邻或重叠算法转作 R。
-enum class 特征R归组用途 : std::uint8_t { R归组 = 1 };
-enum class 特征R归组状态 : std::uint8_t {
-    归入当前R = 1, 形成新R = 2, 比较未启用 = 3,
-    入口拒绝 = 4, 特征未找到 = 5, 特征已退出 = 6,
-    类型不匹配 = 7, 数量预算不足 = 8, 事实代次漂移 = 9,
-    资源失败 = 10, 内部不一致 = 11
+enum class 特征R材料类别 : std::uint8_t { I64闭区间 = 1, 类型规则U64组 = 2 };
+struct 特征R区间材料 final {
+    std::uint32_t 格式版本 = 1;
+    特征R材料类别 类别 = 特征R材料类别::I64闭区间;
+    std::vector<std::uint64_t> 规范化U64组;
+    friend bool operator==(const 特征R区间材料&, const 特征R区间材料&) = default;
 };
-struct 特征R归组比较请求 final {
-    std::uint32_t 版本 = 1;
-    std::uint64_t Gread = 0, H = 0;
-    特征类型身份 FT;
-    特征R归组用途 用途 = 特征R归组用途::R归组;
-    特征信息身份 当前采用基准F, 候选F;
-    std::uint64_t 读取预算 = 0;
-    friend bool operator==(const 特征R归组比较请求&, const 特征R归组比较请求&) = default;
+// FCv 是概念 owner 已同截止核验后的投影；特征类不读取 F→FCv 关系。
+struct 特征R成员规则投影 final {
+    特征信息身份 F;
+    稳定编码 FCv;
+    friend bool operator==(const 特征R成员规则投影&, const 特征R成员规则投影&) = default;
 };
-struct 特征R归组比较结果 final {
-    std::uint32_t 版本 = 1;
-    特征R归组状态 状态 = 特征R归组状态::入口拒绝;
+struct 特征R规则项投影 final {
+    稳定编码 R;
+    特征R区间材料 材料;
+    std::vector<特征R成员规则投影> 形成成员;
+    friend bool operator==(const 特征R规则项投影&, const 特征R规则项投影&) = default;
+};
+struct 特征R规则读取预算 final {
+    std::uint64_t 最大规则节点数 = 0, 最大规则关系数 = 0, 最大规则值数 = 0;
+    std::uint64_t 最大R项数 = 0, 最大R成员数 = 0, 最大材料U64项数 = 0;
+    std::uint64_t 最大候选值元素数 = 0;
+    friend bool operator==(const 特征R规则读取预算&, const 特征R规则读取预算&) = default;
+};
+enum class 特征R规则状态 : std::uint8_t {
+    唯一命中 = 1, 形成新R = 2, 已取得代表值 = 3, 已归并零输出 = 4, 已归并输出 = 5,
+    规则未启用 = 6, 入口拒绝 = 7, 特征类型未找到 = 8, 特征类型已退出 = 9,
+    候选值不可读 = 10, 材料格式不支持 = 11, 数量预算不足 = 12,
+    事实代次漂移 = 13, 资源失败 = 14, 内部不一致 = 15
+};
+struct 特征R归组规则请求 final {
+    std::uint32_t 合同版本 = 1; std::uint64_t Gread = 0, H = 0;
+    特征类型身份 FT; 特征准确值 候选值;
+    std::vector<特征R规则项投影> 当前R项; 特征R规则读取预算 预算;
+};
+struct 特征R归组规则结果 final {
+    std::uint32_t 合同版本 = 1; 特征R规则状态 状态 = 特征R规则状态::入口拒绝;
     std::uint64_t Gread = 0, H = 0;
-    std::optional<准确特征读取事实> 当前采用基准;
-    std::optional<准确特征读取事实> 候选;
-    bool 成功(const 特征R归组比较请求& r) const noexcept {
-        return 版本 == 1 && r.版本 == 1 && Gread == r.Gread && H == r.H && H && H <= Gread
-            && 状态 == 特征R归组状态::比较未启用 && 当前采用基准 && 候选;
-    }
+    std::optional<稳定编码> 命中R; std::optional<特征R区间材料> 规范化材料;
+};
+struct 特征R代表值请求 final {
+    std::uint32_t 合同版本 = 1; std::uint64_t Gread = 0, H = 0;
+    特征类型身份 FT; 特征R区间材料 材料; 特征R规则读取预算 预算;
+};
+struct 特征R代表值结果 final {
+    std::uint32_t 合同版本 = 1; 特征R规则状态 状态 = 特征R规则状态::入口拒绝;
+    std::uint64_t Gread = 0, H = 0; std::optional<特征准确值> 代表值;
+};
+struct 特征R概念归并请求 final {
+    std::uint32_t 合同版本 = 1; std::uint64_t Gread = 0, H = 0;
+    特征类型身份 FT; 特征R规则项投影 R项; 特征R规则读取预算 预算;
+};
+struct 特征RI64概念归并项 final {
+    特征规范I64域 域; std::vector<稳定编码> FCv下位;
+    friend bool operator==(const 特征RI64概念归并项&, const 特征RI64概念归并项&) = default;
+};
+struct 特征R概念归并结果 final {
+    std::uint32_t 合同版本 = 1; 特征R规则状态 状态 = 特征R规则状态::入口拒绝;
+    std::uint64_t Gread = 0, H = 0; std::vector<特征RI64概念归并项> 项;
+};
+struct 补齐I64默认R规则请求 final {
+    std::uint32_t 合同版本 = 1; std::uint64_t G = 0;
+    特征类型身份 FT; L1所有者范围写入幂等身份 幂等身份;
+};
+struct 补齐I64默认R规则结果 final {
+    特征R规则状态 状态 = 特征R规则状态::入口拒绝;
+    std::uint64_t Gread = 0; bool 规则已补齐 = false;
 };
 struct 特征类定义身份 final {
     稳定编码 结点{};
@@ -840,6 +881,7 @@ class 特征类数据服务 final : public 原子I64特征内容参与者 {
         分区 区; WS 请求; bool 初始化 = false;
         std::optional<特征类标量派生退出请求> 旧治理;
         bool I64扩展初始化=false;
+        bool R规则扩展初始化=false;
     };
     struct 待确认标量业务 final {
         bool 旧治理=false;
@@ -903,7 +945,10 @@ public:
     R<特征准确值> 读取准确特征值(特征信息身份) const;
     有界准确特征读取结果 读取有界准确特征事实(const 有界准确特征读取请求&) const noexcept;
     R<准确特征读取事实> 读取准确特征事实(const 准确特征读取请求&) const;
-    特征R归组比较结果 比较FT的R归组(const 特征R归组比较请求&) const noexcept;
+    特征R归组规则结果 归组特征R(const 特征R归组规则请求&) const noexcept;
+    特征R代表值结果 读取特征R代表值(const 特征R代表值请求&) const noexcept;
+    特征R概念归并结果 归并特征R概念(const 特征R概念归并请求&) const noexcept;
+    R<补齐I64默认R规则结果> 补齐I64默认R规则(const 补齐I64默认R规则请求&);
     特征类型准确值核验结果 核验正式特征类型准确值(
         const 特征类型准确值核验请求&) const;
     R<特征截止事实<先天I64特征类型信息>> 读取先天I64特征类型事实(const 特征类型截止请求&) const;
@@ -958,6 +1003,7 @@ private:
     先天I64特征类型信息 读类型(特征类型身份, std::uint64_t, std::uint64_t, 标量读取上下文* = nullptr, 读取计量* = nullptr) const;
     特征规范I64域 读完整域(特征类型身份, std::uint64_t, std::uint64_t) const;
     准确特征读取事实 读准确(特征信息身份, std::uint64_t, std::uint64_t, 标量读取上下文* = nullptr, 读取计量* = nullptr) const;
+    特征域形成事实 形成I64特征域已持锁(const 准确特征读取请求&) const;
     std::int64_t 解析输入(const 特征准确值&, std::uint64_t, std::uint64_t,读取计量* = nullptr) const;
     static std::int64_t 完整整数(const 准确特征读取事实&);
     static Key 新键(const WS&);
@@ -1006,6 +1052,27 @@ private:
             (void)收敛原请求();
         } else throw 映射(first.状态);
     }
+    static constexpr L1所有者范围写入幂等身份 R规则结构扩展初始化幂等身份{0x4654'554C'4553'0001ULL};
+    enum R规则结构角色 : std::size_t { R规则归属关系, R规则版本属性, R规则参数属性, R规则结构角色数 };
+    static WS R规则扩展写集(std::uint64_t g) {
+        WS ws; ws.期望事实代次 = g; ws.写入幂等身份 = R规则结构扩展初始化幂等身份;
+        ws.节点 = {{Key{1}, 节点种类::普通, {}},
+                   {Key{2}, 节点种类::属性类型, L1所有者范围值表示种类::I64},
+                   {Key{3}, 节点种类::属性类型, L1所有者范围值表示种类::U64组}};
+        return ws;
+    }
+    void 接受R规则扩展(const L1所有者范围写入结果& receipt) {
+        要求(receipt.新编码映射.size() == r_.size(), S::旧格式不支持);
+        for (std::size_t i = 0; i < r_.size(); ++i)
+            r_[i] = 映射编码(receipt, Key{static_cast<std::uint32_t>(i + 1)});
+    }
+    void 初始化R规则扩展();
+    void R规则就绪() const {
+        for (const auto id : r_) 要求(有效(id), S::未设置);
+    }
+    void 添加I64默认R规则(WS&, Ref FT, bool 有域形成) const;
+    std::optional<稳定编码> 读取R规则(特征类型身份, std::int64_t 用途,
+        std::uint64_t Gread, std::uint64_t H, const 特征R规则读取预算&) const;
     using SS = 特征类标量状态;
     static SS 标量映射(S s) noexcept {
         switch (s) {
@@ -1944,6 +2011,7 @@ private:
     std::array<稳定编码, 定义角色数> d_{};
     std::array<稳定编码, 信息角色数> f_{};
     std::array<稳定编码,I64比较绑定结构角色数> k_{};
+    std::array<稳定编码, R规则结构角色数> r_{};
     bool definition_ready_ = false, information_ready_ = false;
     std::optional<旧v1派生治理结构交付> legacy_;
     std::optional<待确认写入> pending_;

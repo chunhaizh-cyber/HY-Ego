@@ -420,6 +420,7 @@ L1所有者范围写入结果 特征类数据服务::收敛原请求() {
         确认发布(p, ws, *first.首次写入结果);
         if (pending_->初始化) 接受初始化(p, *first.首次写入结果);
         if (pending_->I64扩展初始化) 接受I64扩展(*first.首次写入结果);
+        if (pending_->R规则扩展初始化) 接受R规则扩展(*first.首次写入结果);
         auto result = std::move(*first.首次写入结果); pending_.reset(); return result;
     } catch (...) { if (pending_) throw S::发布结果未确认; throw; }
 }
@@ -443,8 +444,77 @@ void 特征类数据服务::初始化(分区 p) {
     } else if (first.状态 == L1所有者范围读取状态::未找到) (void)提交(p, 初始化写集(p, g), true);
     else throw 映射(first.状态);
 }
+void 特征类数据服务::初始化R规则扩展() {
+    要求(!pending_ && !scalar_pending_ && !binding_pending_, S::前次写入待收敛);
+    const auto g = 当前G();
+    const auto first = definitions_.读取首次写入材料(
+        {L1所有者范围首次写入读取合同版本, R规则结构扩展初始化幂等身份});
+    要求(first.读取事实代次 == g, S::并发变化);
+    if (first.状态 == L1所有者范围读取状态::成功) {
+        要求(first.首次规范化写集 && first.首次写入结果, S::旧格式不支持);
+        const auto ws = R规则扩展写集(first.首次规范化写集->期望事实代次);
+        要求(*first.首次规范化写集 == ws, S::旧格式不支持);
+        要求(first.所有者 == definitions_.所有者身份()
+            && first.写入幂等身份 == ws.写入幂等身份, S::幂等冲突);
+        确认发布(分区::定义, ws, *first.首次写入结果);
+        接受R规则扩展(*first.首次写入结果);
+    } else if (first.状态 == L1所有者范围读取状态::未找到) {
+        auto ws = R规则扩展写集(g);
+        pending_.emplace(待确认写入{分区::定义, std::move(ws), false, {}, false, true});
+        (void)收敛原请求();
+    } else throw 映射(first.状态);
+}
+void 特征类数据服务::添加I64默认R规则(WS& ws, Ref ft, bool hasDomainFormation) const {
+    R规则就绪();
+    const auto append = [&](std::int64_t usage) {
+        const auto rule = 加节点(ws);
+        (void)加关系(ws, rule, d_[定义锚点], d_[定义归属]);
+        (void)加关系(ws, ft, rule, r_[R规则归属关系], usage);
+        (void)加值(ws, rule, r_[R规则版本属性], std::int64_t{1});
+        (void)加值(ws, rule, r_[R规则参数属性], std::vector<std::uint64_t>{1});
+    };
+    append(1); append(2); if (hasDomainFormation) append(3);
+}
+std::optional<稳定编码> 特征类数据服务::读取R规则(
+    特征类型身份 ft, std::int64_t usage, std::uint64_t g, std::uint64_t h,
+    const 特征R规则读取预算& budget) const {
+    R规则就绪();
+    要求(usage >= 1 && usage <= 3, S::入口拒绝);
+    const auto all = 关系(ft.编码, r_[R规则归属关系], false, g, h, 分区::定义);
+    // 本次规则读取会读取全部 FT→规则关系、一个规则锚点、其定义归属关系及两个属性值。
+    // 先按实际返回组守卫，不能把预算仅当作非零标记。
+    要求(all.size() + 1 <= budget.最大规则关系数 && budget.最大规则节点数 >= 1
+        && budget.最大规则值数 >= 2, S::数量预算不足);
+    std::vector<E> matches;
+    for (const auto& edge : all) {
+        要求(edge.源节点 == ft.编码 && edge.关系类型节点 == r_[R规则归属关系], S::旧格式不支持);
+        if (edge.角色或顺序 == usage) matches.push_back(edge);
+        else 要求(edge.角色或顺序 >= 1 && edge.角色或顺序 <= 3, S::旧格式不支持);
+    }
+    if (matches.empty()) return std::nullopt;
+    要求(matches.size() == 1, S::内部不一致);
+    const auto anchor = 节点(matches.front().目标节点, g, h, 分区::定义);
+    要求(anchor.种类 == 节点种类::普通 && !anchor.属性类型表示, S::旧格式不支持);
+    要求(matches.front().创建事实代次 == anchor.创建事实代次
+        && matches.front().退出事实代次 == anchor.退出事实代次, S::旧格式不支持);
+    const auto owner = 唯一关系(anchor.编码, d_[定义归属], g, h, 分区::定义);
+    要求(owner.目标节点 == d_[定义锚点] && owner.源节点 == anchor.编码
+        && owner.创建事实代次 == anchor.创建事实代次
+        && owner.退出事实代次 == anchor.退出事实代次, S::旧格式不支持);
+    const auto values = 属性(anchor.编码, g, h, 分区::定义);
+    要求(values.size() == 2, S::旧格式不支持);
+    const auto& version = 唯一属性(values, r_[R规则版本属性]);
+    const auto& parameter = 唯一属性(values, r_[R规则参数属性]);
+    const auto* v = std::get_if<std::int64_t>(&version.材料);
+    const auto* p = std::get_if<std::vector<std::uint64_t>>(&parameter.材料);
+    要求(v && *v == 1 && p && *p == std::vector<std::uint64_t>{1}, S::内部不一致);
+    for (const auto* x : {&version, &parameter})
+        要求(x->所属节点 == anchor.编码 && x->创建事实代次 == anchor.创建事实代次
+            && x->退出事实代次 == anchor.退出事实代次, S::旧格式不支持);
+    return anchor.编码;
+}
 特征数据结果<std::monostate> 特征类数据服务::初始化特征定义结构() {
-    return 保护<std::monostate>([&] { 初始化(分区::定义); 初始化I64扩展(); return std::monostate{}; });
+    return 保护<std::monostate>([&] { 初始化(分区::定义); 初始化I64扩展(); 初始化R规则扩展(); return std::monostate{}; });
 }
 特征数据结果<std::monostate> 特征类数据服务::初始化准确特征结构() {
     return 保护<std::monostate>([&] { 初始化(分区::信息); return std::monostate{}; });
@@ -457,7 +527,7 @@ void 特征类数据服务::初始化(分区 p) {
 }
 特征数据结果<特征类型身份> 特征类数据服务::创建先天I64特征类型(const 先天I64特征类型规格& spec) {
     return 保护<特征类型身份>([&] {
-        检查规格(spec); const auto g = 当前G(); 结构就绪(分区::定义, g, g);
+        检查规格(spec); const auto g = 当前G(); 结构就绪(分区::定义, g, g); R规则就绪();
         (void)节点(spec.外设提供者, g, g); (void)节点(spec.单位, g, g); (void)节点(producer_, g, g);
         if (spec.域形成) (void)节点(spec.域形成->参数来源, g, g);
         auto ws = 新写集(分区::定义, g); const auto ft = 加节点(ws, L1所有者范围值表示种类::I64);
@@ -471,6 +541,7 @@ void 特征类数据服务::初始化(分区 p) {
             (void)加关系(ws, rule, spec.域形成->参数来源, d_[参数来源关系]);
             (void)加值(ws, rule, d_[规则误差属性], spec.域形成->允许误差);
         }
+        添加I64默认R规则(ws, ft, spec.域形成.has_value());
         const auto result = 提交(分区::定义, std::move(ws)); return 特征类型身份{映射编码(result, ft)};
     });
 }
@@ -603,17 +674,18 @@ inline 特征类型准确值核验结果
     });
 }
 特征数据结果<特征域形成事实> 特征类数据服务::形成I64特征域(const 准确特征读取请求& r) const {
-    return 保护<特征域形成事实>([&] {
-        截止有效(r.合同版本, r.Gread, r.H); 守卫(r.Gread);
-        const auto f = 读准确(r.身份, r.Gread, r.H); const auto ft = 读类型(f.信息.类型, r.Gread, r.H);
-        要求(ft.规格.域形成 && ft.规则, S::规则缺失);
-        const auto v = 完整整数(f), error = ft.规格.域形成->允许误差;
-        要求(v >= std::numeric_limits<std::int64_t>::min() + error
-            && v <= std::numeric_limits<std::int64_t>::max() - error, S::算术不可表示);
-        特征规范I64域 domain{{{v - error, v + error}}};
-        要求(包含(规范域({ft.规格.允许集合}), domain), S::类型不相容); 守卫(r.Gread);
-        return 特征域形成事实{ft.身份, std::move(domain), r.身份, *ft.规则, r.Gread, r.H};
-    });
+    return 保护<特征域形成事实>([&] { return 形成I64特征域已持锁(r); });
+}
+特征域形成事实 特征类数据服务::形成I64特征域已持锁(const 准确特征读取请求& r) const {
+    截止有效(r.合同版本, r.Gread, r.H); 守卫(r.Gread);
+    const auto f = 读准确(r.身份, r.Gread, r.H); const auto ft = 读类型(f.信息.类型, r.Gread, r.H);
+    要求(ft.规格.域形成 && ft.规则, S::规则缺失);
+    const auto v = 完整整数(f), error = ft.规格.域形成->允许误差;
+    要求(v >= std::numeric_limits<std::int64_t>::min() + error
+        && v <= std::numeric_limits<std::int64_t>::max() - error, S::算术不可表示);
+    特征规范I64域 domain{{{v - error, v + error}}};
+    要求(包含(规范域({ft.规格.允许集合}), domain), S::类型不相容); 守卫(r.Gread);
+    return {ft.身份, std::move(domain), r.身份, *ft.规则, r.Gread, r.H};
 }
 特征数据结果<特征截止事实<特征规范I64域>> 特征类数据服务::规范化I64特征域(const 特征I64域判定请求& r) const {
     return 保护<特征截止事实<特征规范I64域>>([&] {
@@ -1187,59 +1259,178 @@ bool 特征类标量派生批量读取结果::成功() const noexcept {
     catch(...){return fail(SS::内部不一致);}
 }
 
-特征R归组比较结果 特征类数据服务::比较FT的R归组(
-    const 特征R归组比较请求& r) const noexcept {
-    using RS = 特征R归组状态;
-    特征R归组比较结果 out;
-    out.Gread = r.Gread;
-    out.H = r.H;
-    auto map = [](S s) noexcept {
-        switch (s) {
-        case S::未找到: return RS::特征未找到;
-        case S::已退出: return RS::特征已退出;
-        case S::类型不相容: return RS::类型不匹配;
-        case S::数量预算不足: return RS::数量预算不足;
-        case S::并发变化: return RS::事实代次漂移;
-        case S::资源失败: return RS::资源失败;
-        default: return RS::内部不一致;
-        }
-    };
-    try {
-        if (r.版本 != 1 || r.Gread == 0 || r.H == 0 || r.H > r.Gread ||
-            r.用途 != 特征R归组用途::R归组 || !有效(r.FT) ||
-            !有效(r.当前采用基准F) || !有效(r.候选F) || r.读取预算 < 2) {
-            out.状态 = RS::入口拒绝;
-            return out;
-        }
-        std::lock_guard<std::mutex> lock(mutex_);
-        截止有效(1, r.Gread, r.H);
-        守卫(r.Gread);
-        const auto baseline = 读准确(r.当前采用基准F, r.Gread, r.H);
-        const auto candidate = 读准确(r.候选F, r.Gread, r.H);
-        if (baseline.信息.类型 != r.FT || candidate.信息.类型 != r.FT) {
-            out.状态 = RS::类型不匹配;
-            return out;
-        }
-        // 4115: 没有已发布的非 I64 R 归组提供者。本入口仅完成同截止材料核验，
-        // 绝不借用I64域、相邻或重叠逻辑来产生归组结论。
-        out.当前采用基准 = baseline;
-        out.候选 = candidate;
-        守卫(r.Gread);
-        out.状态 = RS::比较未启用;
-    } catch (S s) {
-        out.状态 = map(s);
-        out.当前采用基准.reset();
-        out.候选.reset();
-    } catch (const std::bad_alloc&) {
-        out.状态 = RS::资源失败;
-        out.当前采用基准.reset();
-        out.候选.reset();
-    } catch (...) {
-        out.状态 = RS::内部不一致;
-        out.当前采用基准.reset();
-        out.候选.reset();
+namespace {
+特征R规则状态 映射R错误(特征数据错误 e) noexcept {
+    using S = 特征数据错误;
+    using R = 特征R规则状态;
+    switch (e) {
+    case S::未找到: return R::特征类型未找到;
+    case S::已退出: return R::特征类型已退出;
+    case S::数量预算不足: return R::数量预算不足;
+    case S::并发变化: return R::事实代次漂移;
+    case S::资源失败: return R::资源失败;
+    default: return R::内部不一致;
     }
+}
+bool R材料I64单点(const 特征R区间材料& material, std::int64_t& value) noexcept {
+    if (material.格式版本 != 1 || material.类别 != 特征R材料类别::I64闭区间
+        || material.规范化U64组.size() != 2 || material.规范化U64组[0] != material.规范化U64组[1]) return false;
+    value = std::bit_cast<std::int64_t>(material.规范化U64组[0]);
+    return true;
+}
+特征R区间材料 I64单点R材料(std::int64_t value) {
+    return {1, 特征R材料类别::I64闭区间,
+        {std::bit_cast<std::uint64_t>(value), std::bit_cast<std::uint64_t>(value)}};
+}
+}
+
+特征R归组规则结果 特征类数据服务::归组特征R(const 特征R归组规则请求& request) const noexcept {
+    特征R归组规则结果 out; out.Gread = request.Gread; out.H = request.H;
+    try {
+        const auto& b = request.预算;
+        if (request.合同版本 != 1 || !request.Gread || !request.H || request.H > request.Gread
+            || !有效(request.FT) || !浅层结构有效(request.候选值)
+            || !b.最大规则节点数 || !b.最大规则关系数 || !b.最大规则值数
+            || !b.最大候选值元素数) return out;
+        const bool hasItems = !request.当前R项.empty();
+        bool hasMembers = false, hasMaterialElements = false;
+        for (const auto& item : request.当前R项) {
+            hasMembers = hasMembers || !item.形成成员.empty();
+            hasMaterialElements = hasMaterialElements || !item.材料.规范化U64组.empty();
+        }
+        if ((hasItems != (b.最大R项数 != 0))
+            || (hasMembers != (b.最大R成员数 != 0))
+            || (hasMaterialElements != (b.最大材料U64项数 != 0))) return out;
+        std::lock_guard<std::mutex> lock(mutex_);
+        截止有效(1, request.Gread, request.H); 守卫(request.Gread);
+        try { (void)读类型(request.FT, request.Gread, request.H); }
+        catch (S e) { out.状态 = e == S::能力未提供 ? 特征R规则状态::规则未启用 : 映射R错误(e); return out; }
+        if (!读取R规则(request.FT, 1, request.Gread, request.H, b)) { out.状态 = 特征R规则状态::规则未启用; return out; }
+        const auto* candidate = std::get_if<std::int64_t>(&request.候选值);
+        if (!candidate) { out.状态 = 特征R规则状态::候选值不可读; return out; }
+        if (request.当前R项.size() > b.最大R项数) { out.状态 = 特征R规则状态::数量预算不足; return out; }
+        const auto material = I64单点R材料(*candidate);
+        std::optional<稳定编码> matched; 稳定编码 previousR{}; std::uint64_t members = 0;
+        for (const auto& item : request.当前R项) {
+            if (!有效(item.R) || (有效(previousR) && !(previousR < item.R))
+                || item.材料.规范化U64组.size() > b.最大材料U64项数 || item.形成成员.empty()) {
+                out.状态 = 特征R规则状态::内部不一致; return out;
+            }
+            previousR = item.R; std::int64_t point{};
+            if (!R材料I64单点(item.材料, point)) { out.状态 = 特征R规则状态::材料格式不支持; return out; }
+            稳定编码 previousF{};
+            for (const auto& member : item.形成成员) {
+                if (!有效(member.F) || !有效(member.FCv) || (有效(previousF) && !(previousF < member.F.编码))
+                    || ++members > b.最大R成员数) { out.状态 = members > b.最大R成员数 ? 特征R规则状态::数量预算不足 : 特征R规则状态::内部不一致; return out; }
+                previousF = member.F.编码;
+                const auto f = 读准确(member.F, request.Gread, request.H);
+                if (f.信息.类型 != request.FT || 完整整数(f) != point) { out.状态 = 特征R规则状态::内部不一致; return out; }
+            }
+            if (item.材料 == material) {
+                if (matched) { out.状态 = 特征R规则状态::内部不一致; return out; }
+                matched = item.R;
+            }
+        }
+        守卫(request.Gread); out.规范化材料 = material;
+        if (matched) { out.状态 = 特征R规则状态::唯一命中; out.命中R = matched; }
+        else out.状态 = 特征R规则状态::形成新R;
+    } catch (S e) { out.状态 = 映射R错误(e); out.命中R.reset(); out.规范化材料.reset(); }
+    catch (const std::bad_alloc&) { out.状态 = 特征R规则状态::资源失败; out.命中R.reset(); out.规范化材料.reset(); }
+    catch (...) { out.状态 = 特征R规则状态::内部不一致; out.命中R.reset(); out.规范化材料.reset(); }
     return out;
+}
+
+特征R代表值结果 特征类数据服务::读取特征R代表值(const 特征R代表值请求& request) const noexcept {
+    特征R代表值结果 out; out.Gread = request.Gread; out.H = request.H;
+    try {
+        const auto& b = request.预算;
+        if (request.合同版本 != 1 || !request.Gread || !request.H || request.H > request.Gread || !有效(request.FT)
+            || !b.最大规则节点数 || !b.最大规则关系数 || !b.最大规则值数 || !b.最大材料U64项数
+            || b.最大R项数 || b.最大R成员数 || b.最大候选值元素数) return out;
+        std::lock_guard<std::mutex> lock(mutex_); 截止有效(1, request.Gread, request.H); 守卫(request.Gread);
+        try { (void)读类型(request.FT, request.Gread, request.H); }
+        catch (S e) { out.状态 = e == S::能力未提供 ? 特征R规则状态::规则未启用 : 映射R错误(e); return out; }
+        if (!读取R规则(request.FT, 2, request.Gread, request.H, b)) { out.状态 = 特征R规则状态::规则未启用; return out; }
+        if (request.材料.规范化U64组.size() > b.最大材料U64项数) { out.状态 = 特征R规则状态::数量预算不足; return out; }
+        std::int64_t value{}; if (!R材料I64单点(request.材料, value)) { out.状态 = 特征R规则状态::材料格式不支持; return out; }
+        守卫(request.Gread); out.状态 = 特征R规则状态::已取得代表值; out.代表值 = 特征准确值{value};
+    } catch (S e) { out.状态 = 映射R错误(e); out.代表值.reset(); }
+    catch (const std::bad_alloc&) { out.状态 = 特征R规则状态::资源失败; out.代表值.reset(); }
+    catch (...) { out.状态 = 特征R规则状态::内部不一致; out.代表值.reset(); }
+    return out;
+}
+
+特征R概念归并结果 特征类数据服务::归并特征R概念(const 特征R概念归并请求& request) const noexcept {
+    特征R概念归并结果 out; out.Gread = request.Gread; out.H = request.H;
+    try {
+        const auto& b = request.预算;
+        if (request.合同版本 != 1 || !request.Gread || !request.H || request.H > request.Gread || !有效(request.FT)
+            || b.最大候选值元素数) return out;
+        std::lock_guard<std::mutex> lock(mutex_); 截止有效(1, request.Gread, request.H); 守卫(request.Gread);
+        先天I64特征类型信息 type;
+        try { type = 读类型(request.FT, request.Gread, request.H); }
+        catch (S e) {
+            if (e != S::能力未提供) throw;
+            if (b.最大规则节点数 || b.最大规则关系数 || b.最大规则值数 || b.最大R项数
+                || b.最大R成员数 || b.最大材料U64项数) return out;
+            out.状态 = 特征R规则状态::已归并零输出; return out;
+        }
+        if (!type.规格.域形成) {
+            if (b.最大规则节点数 || b.最大规则关系数 || b.最大规则值数 || b.最大R项数
+                || b.最大R成员数 || b.最大材料U64项数) return out;
+            out.状态 = 特征R规则状态::已归并零输出; return out;
+        }
+        if (!b.最大规则节点数 || !b.最大规则关系数 || !b.最大规则值数) return out;
+        if (!读取R规则(request.FT, 3, request.Gread, request.H, b)) {
+            if (b.最大R项数 || b.最大R成员数 || b.最大材料U64项数) return out;
+            out.状态 = 特征R规则状态::已归并零输出; return out;
+        }
+        const bool hasMaterialElements = !request.R项.材料.规范化U64组.empty();
+        const bool hasMembers = !request.R项.形成成员.empty();
+        if (!b.最大R项数 || (hasMembers != (b.最大R成员数 != 0))
+            || (hasMaterialElements != (b.最大材料U64项数 != 0))) return out;
+        if (!有效(request.R项.R) || request.R项.形成成员.empty() || request.R项.材料.规范化U64组.size() > b.最大材料U64项数
+            || request.R项.形成成员.size() > b.最大R成员数) { out.状态 = 特征R规则状态::入口拒绝; return out; }
+        std::int64_t value{}; if (!R材料I64单点(request.R项.材料, value)) { out.状态 = 特征R规则状态::材料格式不支持; return out; }
+        std::vector<稳定编码> concepts; 稳定编码 previous{}; 特征信息身份 first{};
+        for (const auto& member : request.R项.形成成员) {
+            if (!有效(member.F) || !有效(member.FCv) || (有效(previous) && !(previous < member.F.编码))) { out.状态 = 特征R规则状态::内部不一致; return out; }
+            previous = member.F.编码; if (!有效(first)) first = member.F;
+            const auto f = 读准确(member.F, request.Gread, request.H);
+            if (f.信息.类型 != request.FT || 完整整数(f) != value) { out.状态 = 特征R规则状态::内部不一致; return out; }
+            concepts.push_back(member.FCv);
+        }
+        std::sort(concepts.begin(), concepts.end()); concepts.erase(std::unique(concepts.begin(), concepts.end()), concepts.end());
+        const auto domain = 形成I64特征域已持锁({1, request.Gread, request.H, first});
+        守卫(request.Gread); out.状态 = 特征R规则状态::已归并输出;
+        out.项.push_back({domain.域, std::move(concepts)});
+    } catch (S e) { out.状态 = e == S::能力未提供 ? 特征R规则状态::规则未启用 : 映射R错误(e); out.项.clear(); }
+    catch (const std::bad_alloc&) { out.状态 = 特征R规则状态::资源失败; out.项.clear(); }
+    catch (...) { out.状态 = 特征R规则状态::内部不一致; out.项.clear(); }
+    return out;
+}
+
+特征数据结果<补齐I64默认R规则结果> 特征类数据服务::补齐I64默认R规则(const 补齐I64默认R规则请求& request) {
+    return 保护<补齐I64默认R规则结果>([&] {
+        补齐I64默认R规则结果 out;
+        要求(request.合同版本 == 1 && request.G && 有效(request.FT) && 有效(request.幂等身份), S::入口拒绝);
+        const auto g = 当前G(); out.Gread = g; 要求(g == request.G, S::并发变化);
+        结构就绪(分区::定义, g, g); R规则就绪();
+        const auto type = 读类型(request.FT, g, g);
+        std::array<bool, 3> present{}; const auto required = type.规格.域形成 ? 3U : 2U;
+        const 特征R规则读取预算 unbounded{
+            std::numeric_limits<std::uint64_t>::max(), std::numeric_limits<std::uint64_t>::max(),
+            std::numeric_limits<std::uint64_t>::max(), 0, 0, 0, 0};
+        for (unsigned i = 0; i < required; ++i)
+            present[i] = 读取R规则(request.FT, static_cast<std::int64_t>(i + 1), g, g, unbounded).has_value();
+        const auto count = static_cast<unsigned>(present[0]) + static_cast<unsigned>(present[1]) + static_cast<unsigned>(present[2]);
+        if (count == required) { out.状态 = 特征R规则状态::已归并零输出; out.规则已补齐 = true; return out; }
+        要求(count == 0, S::内部不一致);
+        auto ws = 新写集(分区::定义, g); ws.写入幂等身份 = request.幂等身份;
+        添加I64默认R规则(ws, request.FT.编码, type.规格.域形成.has_value());
+        (void)提交(分区::定义, std::move(ws));
+        out.Gread = 当前G(); out.状态 = 特征R规则状态::已归并零输出; out.规则已补齐 = true; return out;
+    });
 }
 
 } // namespace 海中鱼巣
