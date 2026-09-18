@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "领域/数据服务.世界树根.h"
+#include "领域/数据服务.特征值域比较类.h"
 
 namespace 海中鱼巣 {
 namespace 普通应用装配内部 {
@@ -218,6 +219,7 @@ struct 普通应用上下文 final {
   std::unique_ptr<状态类数据服务> 状态;
   std::unique_ptr<场景类数据服务> 场景;
   std::unique_ptr<概念树类数据服务> 概念;
+  std::unique_ptr<特征值域比较数据服务> 特征值域比较;
   std::unique_ptr<原子I64特征出生数据服务> 原子I64特征出生;
   std::unique_ptr<特征概念应用服务> 特征概念;
   std::unique_ptr<场景成员概念应用服务> 场景成员概念;
@@ -387,13 +389,6 @@ std::unique_ptr<普通应用上下文> 建立上下文(
       l1,*result->概念所有者.写入端口,conceptRequest);
   if(!conceptRegistration.成功(conceptRequest)||!conceptRegistration.交付)
     throw 概念结构异常{conceptRegistration.状态};
-  const 存在概念两组结构登记请求_v1 completeDefinitionRequest{
-      1, 定位首次(*result->概念所有者.写入端口,l1,0x1403).G0, {0x1403},
-      *conceptRegistration.交付, 18};
-  const auto completeDefinitionRegistration=概念树类数据服务::登记存在概念两组结构_v1(
-      l1,*result->概念所有者.写入端口,completeDefinitionRequest);
-  if(!completeDefinitionRegistration.成功(completeDefinitionRequest)||!completeDefinitionRegistration.交付)
-    throw 概念结构异常{映射两组定义失败(completeDefinitionRegistration.状态)};
   const 特征概念出生使用结构登记请求 featureBirthRequest{
       1, 定位首次(*result->概念所有者.写入端口,l1,0x1402).G0, {0x1402},
       *conceptRegistration.交付, 4};
@@ -401,10 +396,19 @@ std::unique_ptr<普通应用上下文> 建立上下文(
       l1,*result->概念所有者.写入端口,featureBirthRequest);
   if(!featureBirthRegistration.成功(featureBirthRequest)||!featureBirthRegistration.交付)
     throw 概念结构异常{featureBirthRegistration.状态};
+  const 存在概念两组结构登记请求_v1 completeDefinitionRequest{
+      1, 定位首次(*result->概念所有者.写入端口,l1,0x1403).G0, {0x1403},
+      *conceptRegistration.交付, 18};
+  const auto completeDefinitionRegistration=概念树类数据服务::登记存在概念两组结构_v1(
+      l1,*result->概念所有者.写入端口,completeDefinitionRequest);
+  if(!completeDefinitionRegistration.成功(completeDefinitionRequest)||!completeDefinitionRegistration.交付)
+    throw 概念结构异常{映射两组定义失败(completeDefinitionRegistration.状态)};
   result->概念=std::make_unique<概念树类数据服务>(
       l1,*result->特征,*result->存在,*result->特征值,*result->场景,
       std::move(*result->概念所有者.写入端口),*conceptRegistration.交付,
       *featureBirthRegistration.交付,*completeDefinitionRegistration.交付);
+  result->特征值域比较=std::make_unique<特征值域比较数据服务>(
+      *result->概念,*result->特征,*result->特征值);
   result->原子I64特征出生=std::make_unique<原子I64特征出生数据服务>(
       *result->特征,*result->存在,*result->场景,*result->概念);
   result->特征概念=std::make_unique<特征概念应用服务>(

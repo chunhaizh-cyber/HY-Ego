@@ -320,6 +320,13 @@ struct 存在概念两组结构登记结果_v1 final {
   std::optional<存在概念两组结构首次材料_v1> 首次材料;
   bool 成功(const 存在概念两组结构登记请求_v1&) const noexcept;
 };
+struct 存在概念两组定义关系事实_v1 final {
+  稳定编码 关系{},源{},目标{},关系类型{};
+  std::uint64_t 顺序=0;
+  概念树生命周期 生命周期;
+  friend bool operator==(const 存在概念两组定义关系事实_v1&,
+                         const 存在概念两组定义关系事实_v1&) = default;
+};
 struct 存在概念两组事实_v3 final {
   概念树概念身份 概念;
   稳定编码 定义记录{};
@@ -328,8 +335,8 @@ struct 存在概念两组事实_v3 final {
   概念树生命周期 概念生命周期;
   概念树生命周期状态 治理状态{};
   存在概念两组定义_v3 定义;
-  std::vector<纯概念定义关系事实> 自身特征项关系组;
-  std::vector<纯概念定义关系事实> 子概念关系组;
+  std::vector<存在概念两组定义关系事实_v1> 自身特征项关系组;
+  std::vector<存在概念两组定义关系事实_v1> 子概念关系组;
   std::vector<概念树直接上位事实> 直接上位;
   friend bool operator==(const 存在概念两组事实_v3&,
                          const 存在概念两组事实_v3&) = default;
