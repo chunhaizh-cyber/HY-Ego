@@ -36,7 +36,7 @@
 
 ## 续行 v0.5：v0.7 退出与闭包矩阵
 
-- 当前生产头与`数据服务.特征类.cpp`在仓外唯一目录`D:\TEMP\海中鱼巣\ARCH-L4-INSTINCT-ROOT-DEMAND-PROVIDER\20260920-v07-root-exit-closure\`编译`root_provider_probe.cpp`，退出0。每个模式均新建运行包：`exit`（完整安全根`T/D/L/DF/DT/LD/V`公共退出后返回`根材料已退出`）、`duplicate`（额外`L->D`返回`根材料未闭合`）、`pollution`（普通关系污染返回`根材料未闭合`）和`stale`（写前旧`G`返回`事实代次漂移`）均退出0、零材料失败；夹具先销毁需求服务、同 owner 重取端口、回放结构登记，再以公共写集写入退出或污染并重建服务。
+- 当前生产头与`数据服务.特征类.cpp`在仓外唯一目录`D:\TEMP\海中鱼巣\ARCH-L4-INSTINCT-ROOT-DEMAND-PROVIDER\20260920-v07-root-exit-closure\`编译`root_provider_probe.cpp`，退出0。每个模式均新建运行包：`exit`（完整安全根`T/D/L/DF/DT/LD/V`公共退出后返回`根材料已退出`）、`duplicate`（额外`L->D`返回`根材料未闭合`）、`pollution`（普通关系污染返回`根材料未闭合`）、`cross`（根间`D->T`交叉返回`根材料未闭合`）、`value`（额外非`I64_MAX`目标值返回`根材料未闭合`）、`slot`（属性槽改指新值会按L1原子生命周期退出旧根`V`，因此优先返回`根材料已退出`）和`stale`（写前旧`G`返回`事实代次漂移`）均退出0、零材料失败；夹具先销毁需求服务、同 owner 重取端口、回放结构登记，再以公共写集写入退出或污染并重建服务。
 - 同目录以新持久仓编译并运行`root_provider_persistence_probe.cpp`：`seed`输出`G=10 T=27 D=28 L=29 serviceT=34`，第二进程`recover`输出`G=11 T=27 D=28 L=29 serviceT=34`，`recover-instance`输出`G=11 version=2 firstH=7`；三项退出0。该结果证明本次引用闭包检查未破坏双根原身份跨进程读回与实例恢复，不证明阶段21或启动。
 - `missing`直接运行未登记为PASS：完整退出后调用既有公共`执行L1物理清理`会使底层读取返回`历史材料已清理`，按现行L1合同属于独立技术非成功，根入口正确返回`内部不一致(15)`，不是计划中“未找到”。生产与公共L1均未提供可在不伪造状态、不修改快照或不改L1合同的前提下制造根自有`未找到`的入口；该精确运行分支为`NOT_RUN（合法注入缺口）`。源码逐行复核仍确认直接`未找到`映射为`根材料未闭合`。
 - 根工程以 MSBuild 18.8、`/t:Rebuild /m:1`在该目录的`Debug-x64`和`Release-x64`隔离`OutDir/IntDir`完成；两个配置均生成`bin\海中鱼巣.exe`且最终没有`obj\海中鱼巣.tlog\unsuccessfulbuild`标记。构建不等于运行、恢复或集成验收。
