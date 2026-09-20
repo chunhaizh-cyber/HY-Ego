@@ -62,6 +62,12 @@ namespace 海中鱼巣 {
 
 inline constexpr std::uint32_t 存在类数据合同版本 = 1;
 
+struct 存在信息身份 final {
+  稳定编码 编码{};
+  friend bool operator==(const 存在信息身份 &, const 存在信息身份 &) = default;
+};
+inline bool 有效(存在信息身份 v) noexcept { return 有效(v.编码); }
+
 enum class 存在类成员种类 : std::uint8_t { 子存在 = 1, 特征 = 2 };
 
 enum class 存在类数据状态 : std::uint8_t {
