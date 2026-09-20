@@ -5,11 +5,11 @@
 - 目标编号：`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`
 - 名称：本能根独立需求物理合同代码实施
 - 类型：代码实施目标
-- 记录版本：v0.15
+- 记录版本：v0.17
 - 创建与更新时间：2026-09-20
-- 当前状态：阻断
+- 当前状态：当前
 - 直接上位目标：`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`
-- 直接下位目标：`GOAL-IFR-INSTANCE-STRUCTURE-RESULT-VERSION-REPAIR`（完成）、`GOAL-IFR-INSTANCE-STRUCTURE-PERSISTENT-REPLAY-REPAIR`（完成）、`GOAL-IFR-INSTANCE-STRUCTURE-REPLAY-FIRST-WRITE-REPAIR`（当前）；阶段21后继必须等待本目标与特征组合 provider 都已发布后重新形成
+- 直接下位目标：`GOAL-IFR-INSTANCE-STRUCTURE-RESULT-VERSION-REPAIR`（完成）、`GOAL-IFR-INSTANCE-STRUCTURE-PERSISTENT-REPLAY-REPAIR`（完成）、`GOAL-IFR-INSTANCE-STRUCTURE-REPLAY-FIRST-WRITE-REPAIR`（完成）；阶段21后继必须等待本目标与特征组合 provider 都已发布后重新形成
 - 目标账所有者：交互智能体；代码切片所有者在S0通过后取得
 
 ## 2. 目标结果与完成条件
@@ -23,14 +23,14 @@
 - 设计承载：`计划/20260920_ARCH-L4-INSTINCT-ROOT-DEMAND-PROVIDER_本能根独立需求物理合同代码实施计划_v0.1.md`，v0.6 / blob `0c856f92b70e5537c69226ebbbb971b9b9f53f3a`，计划索引登记为`可执行`。
 - 依赖：8121、5170、6120、6130及本计划；`EXISTENCE-IDENTITY-CONTRACT-REPAIR`已由`81aa94e3a`满足，不依赖特征组合 provider 的代码结果即可实施根材料 provider，但阶段21依赖两者。
 - 明确排除：阶段21、特征当前采用写入、首值/状态/动态、线程、普通需求和任务合同迁移。
-- 当前阻断：未发布的实例特征结构持久重放修复在新持久仓首次路径把写前G误作写后读回截止；该函数不属于本计划白名单。
-- 下一动作：推进`GOAL-IFR-INSTANCE-STRUCTURE-REPLAY-FIRST-WRITE-REPAIR`，其发布后从新HEAD重新S0。
+- 当前阻断：无；实例特征结构首次/持久重放截止已由`37c3d7ae7`发布机械解除。
+- 下一动作：从`37c3d7ae7`重新S0；保留的`需求类`WIP和根 provider 恢复状态`事实代次漂移`均在计划范围内，先分别收敛首次H与当前G读回边界，再复跑双根持久恢复。
 
 ## 4. 状态证据上下文
 
-- 状态事实截止：`9f7a791542c7beb784775ffca01400de0aca54ac`
+- 状态事实截止：`37c3d7ae7f3203c5c4d2abfbe43e783f0e677071`
 - 关联计划身份：`ARCH-L4-INSTINCT-ROOT-DEMAND-PROVIDER`
 - 关联计划观察版本 / blob：v0.6 / `0c856f92b70e5537c69226ebbbb971b9b9f53f3a`
-- 最后实质进展：`f9febe7d7`发布登记/根材料重放收敛修复并以仓外真实L1驱动验证安全、服务双根与具名失败分支；Debug/Release根工程重建通过。
-- 阻断解除证据：`GOAL-IFR-INSTANCE-STRUCTURE-PERSISTENT-REPLAY-REPAIR`在`14953b8703a953eb6c13a087eb0cd64e188b515f`发布；同一两进程持久L1探针已证明实例结构重放成功，根工程Debug/Release隔离重建通过。该证据只解除计划外依赖阻断；需求结构登记的后续持久重放缺口仍须在本计划允许范围内处理。
+- 最后实质进展：`37c3d7ae7f3203c5c4d2abfbe43e783f0e677071`发布实例结构首次/重放读回截止分流修复；仓外新持久仓双根seed和第二进程实例恢复均通过，根材料目标的计划外阻断解除。
+- 阻断解除证据：`GOAL-IFR-INSTANCE-STRUCTURE-REPLAY-FIRST-WRITE-REPAIR`在`37c3d7ae7f3203c5c4d2abfbe43e783f0e677071`发布；该证据只解除实例文件的计划外阻断。需求结构登记的后续持久重放缺口仍须在本计划允许范围内处理。
 - 自动复核触发：相关依赖提交、计划/规范/接口/所有权变更、构建或验收回传，以及用户“同步”“继续”或“检查进展”。
