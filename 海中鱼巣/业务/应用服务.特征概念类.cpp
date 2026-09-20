@@ -53,6 +53,24 @@ bool 单点属于完整域(const 特征规范I64域& domain,std::int64_t value) 
     });
 }
 
+bool IFR预算有效(const 实例特征IFR读取预算& b) noexcept {
+    return b.最大F成员数 && b.最大R项数 && b.最大关系数 &&
+        b.最大材料值数 && b.最大单材料U64元素数;
+}
+
+bool R规则预算有效(const 特征R规则读取预算& b) noexcept {
+    return b.最大规则节点数 && b.最大规则关系数 && b.最大规则值数 &&
+        b.最大R项数 && b.最大R成员数 && b.最大材料U64项数 &&
+        b.最大候选值元素数;
+}
+
+void 发出结构诊断(实例特征结构诊断 callback, 存在信息身份 e,
+    特征类型身份 ft, 实例特征结构异常 issue, std::uint64_t g,
+    std::uint64_t h) noexcept {
+    if (!callback) return;
+    try { callback(e, ft, issue, g, h); } catch (...) {}
+}
+
 } // namespace
 
 bool I64单值出生概念确保结果::成功() const noexcept {
@@ -112,6 +130,17 @@ bool 特征概念应用服务::请求有效(const I64原子准确特征出生应
         r.出生概念读取预算.最大关系数&&r.出生概念读取预算.最大特征属性数&&
         r.FCv概念预算.最大概念数&&r.FCv概念预算.最大关系数&&
         r.FCv概念预算.最大特征属性数;
+}
+
+bool 特征概念应用服务::请求有效(const 实例特征R观察请求& r) noexcept {
+    if (r.版本 != 1 || !有效(r.E.编码) || !有效(r.FT) || !有效(r.IFR键) ||
+        !IFR预算有效(r.IFR预算) || !R规则预算有效(r.R规则预算)) return false;
+    const auto* value = std::get_if<std::int64_t>(&r.候选值);
+    if (!value) return true;
+    const I64原子准确特征出生应用请求 birth{
+        1, r.G0, r.位置, r.FT, *value, r.FCv概念键,
+        r.F出生键, r.候选预算, r.组织预算, r.概念读取预算, r.概念预算};
+    return 请求有效(birth);
 }
 
 I64单值出生概念确保状态 特征概念应用服务::映射概念状态(纯概念状态 s) noexcept {
@@ -238,8 +267,10 @@ I64单值出生概念确保结果 特征概念应用服务::确保FCv(
 }
 
 特征概念应用服务::特征概念应用服务(特征类数据服务& features,
-    概念树类数据服务& concepts,原子I64特征出生数据服务& atoms)
-    : 特征服务_(features),概念服务_(concepts),原子服务_(atoms) {}
+    概念树类数据服务& concepts, 原子I64特征出生数据服务& atoms,
+    存在类数据服务& existences, 实例特征结构诊断 diagnosis) noexcept
+    : 特征服务_(features),概念服务_(concepts),原子服务_(atoms),
+      存在服务_(existences),结构诊断_(diagnosis) {}
 
 I64原子准确特征出生应用结果 特征概念应用服务::处理I64原子准确特征出生(
     const I64原子准确特征出生应用请求& r) {
@@ -308,6 +339,272 @@ I64原子准确特征出生应用结果 特征概念应用服务::处理I64原�
             I64原子准确特征出生应用状态::出生失败 : I64原子准确特征出生应用状态::FCv确保失败;
     }
     return out;
+}
+
+实例特征R观察结果 特征概念应用服务::处理实例特征R观察(
+    const 实例特征R观察请求& r) noexcept {
+    using IFR状态 = 实例特征IFR状态;
+    using 观察状态 = 实例特征R观察状态;
+
+    实例特征R观察结果 out;
+    out.Gread = r.G0;
+    std::optional<实例特征结构异常> diagnostic;
+    auto finish = [&]() noexcept -> 实例特征R观察结果 {
+        if (diagnostic)
+            发出结构诊断(结构诊断_, r.E, r.FT, *diagnostic, out.Gread, r.G0);
+        return out;
+    };
+    if (!请求有效(r)) return finish();
+
+    const auto* candidate = std::get_if<std::int64_t>(&r.候选值);
+    if (!candidate) {
+        out.状态 = 观察状态::比较未启用;
+        return finish();
+    }
+
+    auto readIFR = [&](std::uint64_t g) {
+        return 存在服务_.读取实例特征IFR({1, r.E, r.FT, g, r.IFR预算});
+    };
+
+    auto 归组输入 = [&](const 实例特征IFR完整投影& projection,
+                       std::uint64_t g, std::uint64_t h,
+                       std::vector<特征R规则项投影>& items) noexcept -> bool {
+        try {
+            if (projection.E != r.E || projection.FT != r.FT || projection.R项.empty()) {
+                diagnostic = projection.R项.empty() ? 实例特征结构异常::空R项 :
+                    实例特征结构异常::半结构;
+                return false;
+            }
+            std::vector<稳定编码> allMembers;
+            std::vector<稳定编码> expectedMembers;
+            expectedMembers.reserve(projection.F成员.size());
+            for (const auto& member : projection.F成员) {
+                if (!有效(member)) {
+                    diagnostic = 实例特征结构异常::半结构;
+                    return false;
+                }
+                expectedMembers.push_back(member.编码);
+            }
+            std::sort(expectedMembers.begin(), expectedMembers.end());
+            if (std::adjacent_find(expectedMembers.begin(), expectedMembers.end()) != expectedMembers.end()) {
+                diagnostic = 实例特征结构异常::半结构;
+                return false;
+            }
+
+            items.clear();
+            items.reserve(projection.R项.size());
+            稳定编码 previousR{};
+            for (const auto& source : projection.R项) {
+                if (!有效(source.R项.编码) || (有效(previousR) && !(previousR < source.R项.编码)) ||
+                    source.形成成员.empty()) {
+                    diagnostic = !有效(source.R项.编码) || source.形成成员.empty() ?
+                        实例特征结构异常::半结构 : 实例特征结构异常::重复R项;
+                    return false;
+                }
+                if (source.材料.规范化U64组.empty()) {
+                    diagnostic = 实例特征结构异常::缺材料;
+                    return false;
+                }
+                previousR = source.R项.编码;
+                特征R规则项投影 item;
+                item.R = source.R项.编码;
+                item.材料 = source.材料;
+                item.形成成员.reserve(source.形成成员.size());
+                稳定编码 previousF{};
+                for (const auto& member : source.形成成员) {
+                    if (!有效(member) || (有效(previousF) && !(previousF < member.编码))) {
+                        diagnostic = 实例特征结构异常::半结构;
+                        return false;
+                    }
+                    previousF = member.编码;
+                    allMembers.push_back(member.编码);
+                    const 原子I64特征出生使用读取请求 useRequest{
+                        1, g, h, member.编码, r.概念读取预算};
+                    const auto use = 概念服务_.读取原子I64出生使用(useRequest);
+                    if (!use.成功(useRequest) || !use.事实 || use.事实->F != member ||
+                        !有效(use.事实->FCv.值)) {
+                        switch (use.状态) {
+                        case 原子I64特征出生使用读取状态::未找到:
+                        case 原子I64特征出生使用读取状态::目标已退出:
+                        case 原子I64特征出生使用读取状态::概念不适配:
+                        case 原子I64特征出生使用读取状态::内部不一致:
+                            diagnostic = 实例特征结构异常::半结构;
+                            break;
+                        default:
+                            break;
+                        }
+                        return false;
+                    }
+                    item.形成成员.push_back({member, use.事实->FCv.值});
+                }
+                items.push_back(std::move(item));
+            }
+            std::sort(allMembers.begin(), allMembers.end());
+            if (std::adjacent_find(allMembers.begin(), allMembers.end()) != allMembers.end() ||
+                allMembers != expectedMembers) {
+                diagnostic = 实例特征结构异常::半结构;
+                return false;
+            }
+            return true;
+        } catch (...) {
+            diagnostic = 实例特征结构异常::半结构;
+            return false;
+        }
+    };
+
+    auto 归组 = [&](std::uint64_t g, std::uint64_t h,
+                    std::vector<特征R规则项投影> current,
+                    bool first) noexcept {
+        auto budget = r.R规则预算;
+        if (first) {
+            budget.最大R项数 = 0;
+            budget.最大R成员数 = 0;
+            budget.最大材料U64项数 = 0;
+        }
+        return 特征服务_.归组特征R({1, g, h, r.FT, r.候选值,
+                                       std::move(current), std::move(budget)});
+    };
+
+    auto 构造目标 = [&](const std::optional<实例特征IFR完整投影>& current,
+                       std::optional<稳定编码> updatedR,
+                       const 特征R区间材料& updatedMaterial,
+                       std::optional<特征信息身份> additionalF) {
+        std::vector<实例特征IFR目标项> target;
+        if (current) {
+            target.reserve(current->R项.size() + (additionalF ? 1U : 0U));
+            for (const auto& source : current->R项) {
+                实例特征IFR目标项 item{source.材料, source.形成成员};
+                if (updatedR && source.R项.编码 == *updatedR) item.材料 = updatedMaterial;
+                target.push_back(std::move(item));
+            }
+        }
+        if (additionalF) target.push_back({updatedMaterial, {*additionalF}});
+        std::sort(target.begin(), target.end(), [](const auto& left, const auto& right) {
+            return left.形成成员.front().编码 < right.形成成员.front().编码;
+        });
+        return target;
+    };
+
+    auto 提交 = [&](std::uint64_t g, std::optional<实例特征IFR完整投影> expected,
+                    std::vector<实例特征IFR目标项> target) {
+        out.IFR = 存在服务_.提交实例特征IFR目标结构(
+            {1, r.E, r.FT, g, std::move(expected), std::move(target), r.IFR键, r.IFR预算});
+        out.Gread = out.IFR->Gread;
+        switch (out.IFR->状态) {
+        case IFR状态::已发布:
+        case IFR状态::精确重复:
+            out.状态 = 观察状态::已发布IFR;
+            break;
+        case IFR状态::无须变更:
+            out.状态 = 观察状态::IFR未变更;
+            break;
+        default:
+            out.状态 = 观察状态::IFR写入失败;
+            break;
+        }
+    };
+
+    try {
+        out.IFR = readIFR(r.G0);
+        out.Gread = out.IFR->Gread;
+        const bool first = out.IFR->状态 == IFR状态::未找到;
+        if (!first && (out.IFR->状态 != IFR状态::已读取 || !out.IFR->投影)) {
+            if (out.IFR->状态 == IFR状态::内部不一致) {
+                diagnostic = 实例特征结构异常::半结构;
+                out.状态 = 观察状态::结构异常;
+            } else {
+                out.状态 = 观察状态::读取失败;
+            }
+            return finish();
+        }
+
+        std::vector<特征R规则项投影> currentItems;
+        if (!first && !归组输入(*out.IFR->投影, out.IFR->Gread, out.IFR->H, currentItems)) {
+            out.状态 = diagnostic ? 观察状态::结构异常 : 观察状态::归组失败;
+            return finish();
+        }
+        auto grouped = 归组(out.IFR->Gread, out.IFR->H, std::move(currentItems), first);
+        out.Gread = grouped.Gread;
+        if (grouped.状态 == 特征R规则状态::规则未启用) {
+            out.状态 = 观察状态::比较未启用;
+            return finish();
+        }
+        if (!grouped.规范化材料 ||
+            (grouped.状态 != 特征R规则状态::唯一命中 &&
+             grouped.状态 != 特征R规则状态::形成新R)) {
+            out.状态 = 观察状态::归组失败;
+            return finish();
+        }
+
+        if (grouped.状态 == 特征R规则状态::唯一命中) {
+            if (first || !grouped.命中R) {
+                diagnostic = 实例特征结构异常::多重命中;
+                out.状态 = 观察状态::结构异常;
+                return finish();
+            }
+            提交(out.IFR->Gread, out.IFR->投影,
+                构造目标(out.IFR->投影, grouped.命中R, *grouped.规范化材料, std::nullopt));
+            return finish();
+        }
+
+        const I64原子准确特征出生应用请求 birthRequest{
+            1, out.IFR->Gread, r.位置, r.FT, *candidate, r.FCv概念键,
+            r.F出生键, r.候选预算, r.组织预算, r.概念读取预算, r.概念预算};
+        out.F出生 = 处理I64原子准确特征出生(birthRequest);
+        out.Gread = out.F出生->Gread;
+        if (!out.F出生->成功() || !out.F出生->事实) {
+            out.状态 = 观察状态::F出生失败;
+            return finish();
+        }
+
+        out.IFR = readIFR(out.F出生->Gread);
+        out.Gread = out.IFR->Gread;
+        const bool afterBirthFirst = out.IFR->状态 == IFR状态::未找到;
+        if (!afterBirthFirst && (out.IFR->状态 != IFR状态::已读取 || !out.IFR->投影)) {
+            if (out.IFR->状态 == IFR状态::内部不一致) {
+                diagnostic = 实例特征结构异常::半结构;
+                out.状态 = 观察状态::结构异常;
+            } else {
+                out.状态 = 观察状态::读取失败;
+            }
+            return finish();
+        }
+
+        currentItems.clear();
+        if (!afterBirthFirst && !归组输入(*out.IFR->投影, out.IFR->Gread,
+                                               out.IFR->H, currentItems)) {
+            out.状态 = diagnostic ? 观察状态::结构异常 : 观察状态::归组失败;
+            return finish();
+        }
+        grouped = 归组(out.IFR->Gread, out.IFR->H, std::move(currentItems), afterBirthFirst);
+        out.Gread = grouped.Gread;
+        if (grouped.状态 == 特征R规则状态::规则未启用) {
+            out.状态 = 观察状态::比较未启用;
+            return finish();
+        }
+        if (!grouped.规范化材料 ||
+            (grouped.状态 != 特征R规则状态::唯一命中 &&
+             grouped.状态 != 特征R规则状态::形成新R)) {
+            out.状态 = 观察状态::归组失败;
+            return finish();
+        }
+        if (grouped.状态 == 特征R规则状态::唯一命中) {
+            if (afterBirthFirst || !grouped.命中R) {
+                diagnostic = 实例特征结构异常::多重命中;
+                out.状态 = 观察状态::结构异常;
+                return finish();
+            }
+            提交(out.IFR->Gread, out.IFR->投影,
+                构造目标(out.IFR->投影, grouped.命中R, *grouped.规范化材料, std::nullopt));
+        } else {
+            提交(out.IFR->Gread, afterBirthFirst ? std::nullopt : out.IFR->投影,
+                构造目标(afterBirthFirst ? std::optional<实例特征IFR完整投影>{} : out.IFR->投影,
+                           std::nullopt, *grouped.规范化材料, out.F出生->事实->F));
+        }
+    } catch (...) {
+        out.状态 = 观察状态::归组失败;
+    }
+    return finish();
 }
 
 } // namespace 海中鱼巣
