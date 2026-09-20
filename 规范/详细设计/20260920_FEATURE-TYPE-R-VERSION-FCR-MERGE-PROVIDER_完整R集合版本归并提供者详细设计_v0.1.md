@@ -1,6 +1,6 @@
 # 特征类型完整 R 集合版本到 FCr 归并提供者详细设计 v0.1
 
-基线：`6c05c0c40694aaeb61971a4a16110478cbc9efe5`。状态：可执行。本设计是 `INSTANCE-FEATURE-IF-R-CONCEPT-FOUNDATION` 的唯一直接上游；只修正特征类型定义 owner 的 R→FCr 只读 ABI 与 I64 规则，不实现 IF/R、概念写入或普通应用装配。
+基线：`6c05c0c40694aaeb61971a4a16110478cbc9efe5`。状态：已退出；代码结果：`78fcfeebe`。本设计是 `INSTANCE-FEATURE-IF-R-CONCEPT-FOUNDATION` 的唯一直接上游；只修正特征类型定义 owner 的 R→FCr 只读 ABI 与 I64 规则，不实现 IF/R、概念写入或普通应用装配。
 
 ## 裁决与所有权
 

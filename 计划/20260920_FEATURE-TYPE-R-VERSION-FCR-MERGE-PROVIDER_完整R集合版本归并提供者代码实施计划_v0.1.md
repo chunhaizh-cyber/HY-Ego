@@ -1,6 +1,6 @@
 # FEATURE-TYPE-R-VERSION-FCR-MERGE-PROVIDER 代码实施计划 v0.1
 
-状态：可执行。基线：`6c05c0c40694aaeb61971a4a16110478cbc9efe5`。
+状态：已退出。基线：`6c05c0c40694aaeb61971a4a16110478cbc9efe5`。代码结果：`78fcfeebe`。
 
 ## 目标与完成条件
 

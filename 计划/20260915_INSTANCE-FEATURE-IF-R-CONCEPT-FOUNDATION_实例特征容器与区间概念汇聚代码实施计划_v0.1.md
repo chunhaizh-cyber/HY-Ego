@@ -1,6 +1,6 @@
 # INSTANCE-FEATURE-IF-R-CONCEPT-FOUNDATION 代码实施计划 v0.5
 
-状态：待激活。基线：`bdb66d35f04cf60c8065fbe021bbc4a4ac10e653`。
+状态：可执行。基线：`bdb66d35f04cf60c8065fbe021bbc4a4ac10e653`。直接上游结果：`78fcfeebe`；执行前仍须重新 S0。
 
 ## 目标、已保留现场与唯一门禁
 
