@@ -6,6 +6,7 @@
 #include <array>
 #include <cstdint>
 #include <exception>
+#include <initializer_list>
 #include <iterator>
 #include <limits>
 #include <new>
@@ -847,12 +848,29 @@ private:
         const auto* dtr = dt.事实 ? std::get_if<L1所有者范围关系事实>(&*dt.事实) : nullptr;
         const auto* ldr = ld.事实 ? std::get_if<L1所有者范围关系事实>(&*ld.事实) : nullptr;
         const auto* vv = v.事实 ? std::get_if<L1所有者范围值事实>(&*v.事实) : nullptr;
+        const auto 根读取失败状态 = [G](const auto& 读取)
+            -> std::optional<本能根材料状态> {
+            if (读取.合同版本 != L1所有者范围CRUD合同版本 || 读取.读取事实代次 != G)
+                return 本能根材料状态::事实代次漂移;
+            switch (读取.状态) {
+            case L1所有者范围读取状态::成功: return std::nullopt;
+            case L1所有者范围读取状态::已退出: return 本能根材料状态::根材料已退出;
+            case L1所有者范围读取状态::未找到: return 本能根材料状态::根材料未闭合;
+            case L1所有者范围读取状态::资源失败: return 本能根材料状态::资源失败;
+            case L1所有者范围读取状态::事实代次漂移:
+                return 本能根材料状态::事实代次漂移;
+            default: return 本能根材料状态::内部不一致;
+            }
+        };
+        for (const auto* 根读取 : {&t, &d, &l, &df, &dt, &ld, &v}) {
+            if (const auto 状态 = 根读取失败状态(*根读取))
+                return 根失败(*状态, G);
+        }
         const auto 同截止 = [G](const auto& x) noexcept {
             return x.状态 == L1所有者范围读取状态::成功
                 && x.合同版本 == L1所有者范围CRUD合同版本 && x.读取事实代次 == G;
         };
-        if (!同截止(t) || !同截止(d) || !同截止(l) || !同截止(f)
-            || !同截止(df) || !同截止(dt) || !同截止(ld) || !同截止(v))
+        if (!同截止(f))
             return 根失败(本能根材料状态::事实代次漂移, G);
         if (!tn || !dn || !ln || !fn || !dfr || !dtr || !ldr || !vv
             || !根节点有效(*tn, *T, H, true) || !根节点有效(*dn, *D, H, false)
@@ -874,6 +892,49 @@ private:
         if (!I64 || *I64 != std::numeric_limits<std::int64_t>::max()
             || tn->当前属性.size() != 1 || tn->当前属性.front().属性类型节点 != 根结构类型_.根目标值属性类型
             || tn->当前属性.front().当前值 != *V)
+            return 根失败(本能根材料状态::根材料未闭合, G);
+        constexpr std::uint64_t 最大根引用数量 = 8;
+        const L1节点当前引用读取请求 T引用请求{
+            L1节点当前引用读取合同版本, *T, G, 最大根引用数量};
+        const L1节点当前引用读取请求 D引用请求{
+            L1节点当前引用读取合同版本, *D, G, 最大根引用数量};
+        const L1节点当前引用读取请求 L引用请求{
+            L1节点当前引用读取合同版本, *L, G, 最大根引用数量};
+        const auto T引用 = 第一层服务_.读取节点全部当前引用(T引用请求);
+        const auto D引用 = 第一层服务_.读取节点全部当前引用(D引用请求);
+        const auto L引用 = 第一层服务_.读取节点全部当前引用(L引用请求);
+        const auto 引用读取失败状态 = [](const auto& 读取, const auto& 请求)
+            -> std::optional<本能根材料状态> {
+            if (读取.成功(请求)) return std::nullopt;
+            switch (读取.状态) {
+            case L1节点当前引用读取状态::资源失败: return 本能根材料状态::资源失败;
+            case L1节点当前引用读取状态::事实代次漂移:
+                return 本能根材料状态::事实代次漂移;
+            default: return 本能根材料状态::内部不一致;
+            }
+        };
+        for (const auto* 引用读取 : {&T引用, &D引用, &L引用}) {
+            const auto& 请求 = 引用读取 == &T引用 ? T引用请求
+                : 引用读取 == &D引用 ? D引用请求 : L引用请求;
+            if (const auto 状态 = 引用读取失败状态(*引用读取, 请求))
+                return 根失败(*状态, G);
+        }
+        const auto 引用编码 = [](const L1节点当前引用事实& 引用) noexcept {
+            return std::visit([](const auto& 事实) noexcept { return 事实.编码; }, 引用);
+        };
+        const auto 引用恰为 = [&引用编码](const L1节点当前引用读取结果& 读取,
+            std::initializer_list<稳定编码> 期望) {
+            if (读取.引用.size() != 期望.size()) return false;
+            for (const auto 编码 : 期望) {
+                if (std::count_if(读取.引用.begin(), 读取.引用.end(),
+                    [&引用编码, 编码](const auto& 引用) {
+                        return 引用编码(引用) == 编码;
+                    }) != 1) return false;
+            }
+            return true;
+        };
+        if (!引用恰为(T引用, {*DT, *V}) || !引用恰为(D引用, {*DF, *DT, *LD})
+            || !引用恰为(L引用, {*LD}))
             return 根失败(本能根材料状态::根材料未闭合, G);
         const auto 后 = 读取当前代次();
         if (!后 || *后 != G) return 根失败(本能根材料状态::事实代次漂移, 后.value_or(0));
