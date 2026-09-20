@@ -1,6 +1,6 @@
 # 实例特征容器与区间概念汇聚详细设计 v0.5
 
-基线：`bdb66d35f04cf60c8065fbe021bbc4a4ac10e653`。状态：可执行；直接上游结果：`78fcfeebe`，执行前仍须重新 S0。为 `INSTANCE-FEATURE-IF-R-CONCEPT-FOUNDATION` 保留已裁决的后继施工合同。I64 四 owner 特征出生提供者已发布；本详细设计不构成 `R→FCr` 归并规则物理提供者的设计或实现许可。
+基线：`bdb66d35f04cf60c8065fbe021bbc4a4ac10e653`。状态：待激活；直接上游结果：`78fcfeebe`。它已满足上游门禁，但存在类 IF/R 读取/目标写入 ABI、L3 入口/诊断注入及概念 owner 的 FCr 消费接口尚未冻结，必须由计划支撑修订后重新 S0。为 `INSTANCE-FEATURE-IF-R-CONCEPT-FOUNDATION` 保留已裁决的后继施工合同。I64 四 owner 特征出生提供者已发布；本详细设计不构成 `R→FCr` 归并规则物理提供者的设计或实现许可。
 
 ## 已确定闭环与上游停点
 
