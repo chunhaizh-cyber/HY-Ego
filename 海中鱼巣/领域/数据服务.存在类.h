@@ -4892,8 +4892,16 @@ inline 实例特征结构登记结果 存在类数据服务::登记实例特征�
         first.所有者 != owner || first.写入幂等身份 != r.幂等身份)
       throw 实例特征结构状态::内部不一致;
     const bool replay = first.状态 == L1所有者范围读取状态::成功;
+    const auto 写集语义相同 = [](const L1所有者范围写集请求 &首次,
+                                  const L1所有者范围写集请求 &本次) {
+      return 首次.合同版本 == 本次.合同版本 &&
+             首次.写入幂等身份 == 本次.写入幂等身份 &&
+             首次.节点 == 本次.节点 && 首次.关系 == 本次.关系 &&
+             首次.值 == 本次.值 && 首次.属性槽变更 == 本次.属性槽变更 &&
+             首次.退出事实 == 本次.退出事实;
+    };
     if (replay) {
-      if (!first.首次规范化写集 || *first.首次规范化写集 != ws || !first.首次写入结果)
+      if (!first.首次规范化写集 || !写集语义相同(*first.首次规范化写集, ws) || !first.首次写入结果)
         throw 实例特征结构状态::幂等冲突;
     } else if (first.状态 == L1所有者范围读取状态::未找到) {
       if (first.读取事实代次 != r.G0 || first.首次规范化写集 || first.首次写入结果)
@@ -4901,7 +4909,8 @@ inline 实例特征结构登记结果 存在类数据服务::登记实例特征�
     } else throw first.状态 == L1所有者范围读取状态::资源失败 ?
         实例特征结构状态::资源失败 : 实例特征结构状态::内部不一致;
     dispatched = true;
-    const auto saved = port.提交所有者范围中性写集(ws);
+    const auto &提交写集 = replay ? *first.首次规范化写集 : ws;
+    const auto saved = port.提交所有者范围中性写集(提交写集);
     out.Gread = saved.事实代次;
     if (saved.状态 != (replay ? L1所有者范围写入状态::精确重复 : L1所有者范围写入状态::成功) ||
         saved.新编码映射.size() != (hasV1 ? 1U : 7U)) {
@@ -4935,6 +4944,7 @@ inline 实例特征结构登记结果 存在类数据服务::登记实例特征�
     }
     out.首次H = saved.事实代次;
     out.交付 = {2,ids[0],ids[1],ids[2],ids[3],ids[4],ids[5],ids[6]};
+    out.版本 = 2;
     out.状态 = replay ? 实例特征结构状态::精确重复 : 实例特征结构状态::已登记;
   } catch (实例特征结构状态 s) {
     out.状态 = dispatched && s != 实例特征结构状态::事实代次漂移 && s != 实例特征结构状态::幂等冲突 ?
