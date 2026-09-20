@@ -4917,7 +4917,7 @@ inline 实例特征结构登记结果 存在类数据服务::登记实例特征�
         实例特征结构状态::资源失败 : 实例特征结构状态::内部不一致;
     if (!replay) dispatched = true;
     const auto &saved = replay ? *first.首次写入结果 : port.提交所有者范围中性写集(ws);
-    out.Gread = current.事实代次;
+    out.Gread = replay ? current.事实代次 : saved.事实代次;
     if (saved.状态 != L1所有者范围写入状态::成功 ||
         saved.新编码映射.size() != (hasV1 ? 1U : 7U)) {
       if (saved.状态 == L1所有者范围写入状态::事实代次漂移) throw 实例特征结构状态::事实代次漂移;
