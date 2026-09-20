@@ -4,6 +4,7 @@
 #include "业务/应用服务.自我形成.h"
 #include "业务/应用服务.特征概念类.h"
 #include "业务/应用服务.场景成员概念类.h"
+#include "核心/日志系统.h"
 
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -32,6 +33,41 @@ namespace 普通应用装配内部 {
 struct 概念结构异常 final { 纯概念状态 原因; };
 struct 角色结构异常 final { 存在单例角色状态 原因; };
 struct 持久恢复异常 final { L1事实基座持久恢复结果_v1 结果; };
+
+const wchar_t* 实例特征结构异常文本(实例特征结构异常 reason) noexcept {
+  switch (reason) {
+  case 实例特征结构异常::半结构: return L"半结构";
+  case 实例特征结构异常::空R项: return L"空R项";
+  case 实例特征结构异常::缺材料: return L"缺材料";
+  case 实例特征结构异常::重复R项: return L"重复R项";
+  case 实例特征结构异常::多重命中: return L"多重命中";
+  }
+  return L"未知结构异常";
+}
+
+void 报告实例特征结构异常(存在信息身份 e, 特征类型身份 ft,
+                        实例特征结构异常 reason, std::uint64_t gread,
+                        std::uint64_t g0) noexcept {
+  constexpr auto module = L"普通应用装配";
+  constexpr auto entry = L"实例特征结构诊断";
+  constexpr auto title = L"海中鱼巣实例特征结构异常";
+  constexpr auto fallback = L"实例特征结构诊断未能构造完整内容。";
+  try {
+    const std::wstring content =
+        std::wstring{L"实例特征结构异常："} + 实例特征结构异常文本(reason) +
+        L"\nE=" + std::to_wstring(e.编码.值) +
+        L"\nFT=" + std::to_wstring(ft.编码.值) +
+        L"\nGread=" + std::to_wstring(gread) +
+        L"\nG0=" + std::to_wstring(g0);
+    try { (void)记录逻辑错误日志(module, entry, content); } catch (...) {}
+    try { (void)MessageBoxW(nullptr, content.c_str(), title, MB_OK | MB_ICONERROR); }
+    catch (...) {}
+  } catch (...) {
+    try { (void)记录逻辑错误日志(module, entry, fallback); } catch (...) {}
+    try { (void)MessageBoxW(nullptr, fallback, title, MB_OK | MB_ICONERROR); }
+    catch (...) {}
+  }
+}
 
 // 装配结果仍以既有纯概念状态承载失败原因；两组定义状态只在此失败边界做归类。
 // 成功状态不会进入此函数。
@@ -342,9 +378,9 @@ std::unique_ptr<普通应用上下文> 建立上下文(
       l1,*result->存在所有者.写入端口,roleRequest);
   if(!role.成功(roleRequest)||!role.交付)throw 角色结构异常{role.状态};
   result->角色结构=*role.交付;
-  const auto instanceFeatureG0=定位首次(*result->存在所有者.写入端口,l1,0x4946525354525543ULL).G0;
+  const auto instanceFeatureG0=定位首次(*result->存在所有者.写入端口,l1,0x4946525354525632ULL).G0;
   const 实例特征结构登记请求 instanceFeatureRequest{
-      1,instanceFeatureG0,{0x4946525354525543ULL}};
+      2,instanceFeatureG0,{0x4946525354525632ULL}};
   const auto instanceFeature=存在类数据服务::登记实例特征结构(
       l1,*result->存在所有者.写入端口,instanceFeatureRequest);
   if(!instanceFeature.成功(instanceFeatureRequest)||!instanceFeature.交付)
@@ -412,7 +448,8 @@ std::unique_ptr<普通应用上下文> 建立上下文(
   result->原子I64特征出生=std::make_unique<原子I64特征出生数据服务>(
       *result->特征,*result->存在,*result->场景,*result->概念);
   result->特征概念=std::make_unique<特征概念应用服务>(
-      *result->特征,*result->概念,*result->原子I64特征出生);
+      *result->特征,*result->概念,*result->原子I64特征出生,*result->存在,
+      报告实例特征结构异常);
   result->场景成员概念=std::make_unique<场景成员概念应用服务>(
       *result->特征概念);
   result->根服务 =
