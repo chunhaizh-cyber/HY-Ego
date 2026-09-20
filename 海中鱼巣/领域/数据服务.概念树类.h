@@ -30,6 +30,9 @@
 
 namespace 海中鱼巣 {
 
+class 特征值域比较数据服务;
+struct 特征值域比较预算_v1;
+
 struct 概念树规则身份 final {
     稳定编码 值{};
     概念树规则身份() = default;
@@ -893,15 +896,20 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
     }
     概念树截止结果 读取当前事实代次() const;
     存在概念两组规范化结果_v1 规范化存在概念两组定义(
-        const 存在概念两组规范化请求_v1&) const noexcept;
+        const 存在概念两组规范化请求_v1&, const 特征值域比较数据服务&,
+        const 特征值域比较预算_v1&) const noexcept;
     存在概念两组枚举结果_v1 枚举存在概念候选(
-        const 存在概念两组枚举请求_v1&) const noexcept;
+        const 存在概念两组枚举请求_v1&, const 特征值域比较数据服务&,
+        const 特征值域比较预算_v1&) const noexcept;
     存在概念两组查询结果_v1 精确查询存在概念(
-        const 存在概念两组查询请求_v1&) const noexcept;
+        const 存在概念两组查询请求_v1&, const 特征值域比较数据服务&,
+        const 特征值域比较预算_v1&) const noexcept;
     存在概念两组写入结果_v1 创建或复用存在概念(
-        const 存在概念两组创建请求_v1&) noexcept;
+        const 存在概念两组创建请求_v1&, const 特征值域比较数据服务&,
+        const 特征值域比较预算_v1&) noexcept;
     存在概念两组读取结果_v1 读取存在概念两组定义(
-        const 存在概念两组读取请求_v1&) const noexcept;
+        const 存在概念两组读取请求_v1&, const 特征值域比较数据服务&,
+        const 特征值域比较预算_v1&) const noexcept;
     纯概念查询结果 精确查询纯概念(const 纯概念查询请求&) const noexcept;
     I64特征概念组织读取结果 读取当前I64特征概念(
         const I64特征概念组织读取请求&) const noexcept;
@@ -997,10 +1005,12 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
         const 纯概念创建请求&, const 纯概念定义&) const;
     存在概念两组定义_v3 规范化两组定义内部(
         const 存在概念两组定义_v3&, std::uint64_t, std::uint64_t,
-        const 存在概念两组预算_v3&) const;
+        const 存在概念两组预算_v3&, const 特征值域比较数据服务&,
+        const 特征值域比较预算_v1&) const;
     存在概念两组事实_v3 读取两组定义内部(
         概念树概念身份, std::uint64_t, std::uint64_t,
-        const 存在概念两组预算_v3&) const;
+        const 存在概念两组预算_v3&, const 特征值域比较数据服务&,
+        const 特征值域比较预算_v1&) const;
     L1所有者范围写端口& 借用存在概念引用写端口() noexcept override {
         return port_;
     }
