@@ -4875,6 +4875,13 @@ inline 实例特征结构登记结果 存在类数据服务::登记实例特征�
       throw v1.状态 == L1所有者范围读取状态::资源失败
           ? 实例特征结构状态::资源失败 : 实例特征结构状态::内部不一致;
     }
+    const auto current = l1.读取中性当前事实代次({L1中性CRUD合同版本});
+    if (current.状态 == L1中性读取状态::资源失败)
+      throw 实例特征结构状态::资源失败;
+    if (current.状态 != L1中性读取状态::成功 || !current.事实代次)
+      throw 实例特征结构状态::内部不一致;
+    if (current.事实代次 != r.G0)
+      throw 实例特征结构状态::事实代次漂移;
     L1所有者范围写集请求 ws{L1所有者范围CRUD合同版本, r.G0, r.幂等身份};
     if (hasV1) {
       ws.节点.emplace_back(L1所有者范围节点新建项{{1}, 节点种类::属性类型,
@@ -4908,11 +4915,10 @@ inline 实例特征结构登记结果 存在类数据服务::登记实例特征�
         throw 实例特征结构状态::事实代次漂移;
     } else throw first.状态 == L1所有者范围读取状态::资源失败 ?
         实例特征结构状态::资源失败 : 实例特征结构状态::内部不一致;
-    dispatched = true;
-    const auto &提交写集 = replay ? *first.首次规范化写集 : ws;
-    const auto saved = port.提交所有者范围中性写集(提交写集);
-    out.Gread = saved.事实代次;
-    if (saved.状态 != (replay ? L1所有者范围写入状态::精确重复 : L1所有者范围写入状态::成功) ||
+    if (!replay) dispatched = true;
+    const auto &saved = replay ? *first.首次写入结果 : port.提交所有者范围中性写集(ws);
+    out.Gread = current.事实代次;
+    if (saved.状态 != L1所有者范围写入状态::成功 ||
         saved.新编码映射.size() != (hasV1 ? 1U : 7U)) {
       if (saved.状态 == L1所有者范围写入状态::事实代次漂移) throw 实例特征结构状态::事实代次漂移;
       if (saved.状态 == L1所有者范围写入状态::幂等冲突) throw 实例特征结构状态::幂等冲突;
@@ -4932,7 +4938,7 @@ inline 实例特征结构登记结果 存在类数据服务::登记实例特征�
       const auto id = ids[i];
       const auto raw = l1.读取所有者范围历史事实({L1所有者范围CRUD合同版本,id});
       const auto *node = raw.事实 ? std::get_if<L1所有者范围节点事实>(&*raw.事实) : nullptr;
-      if (raw.状态 != L1所有者范围读取状态::成功 || raw.读取事实代次 != saved.事实代次 ||
+      if (raw.状态 != L1所有者范围读取状态::成功 || raw.读取事实代次 != out.Gread ||
           !node || node->写入所有者 != owner || node->编码 != id ||
           node->种类 != (i == 6 ? 节点种类::属性类型 : 节点种类::普通) ||
           node->属性类型表示 != (i == 6
