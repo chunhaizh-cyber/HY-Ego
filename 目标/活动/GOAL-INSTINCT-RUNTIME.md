@@ -5,11 +5,11 @@
 - 目标编号：`GOAL-INSTINCT-RUNTIME`
 - 名称：构建本能系统基于世界事实、实例特征和现实锚点持续运行的基础架构
 - 类型：集成能力目标
-- 记录版本：v0.2
+- 记录版本：v0.3
 - 创建与更新时间：2026-09-20
-- 当前状态：候选；已确认的上位目标，当前直接执行位置由下位目标承担
+- 当前状态：当前；根材料 provider 实施目标已完成，等待形成下一合法下位目标
 - 直接上位目标：无
-- 直接下位目标：`GOAL-IF-R-FOUNDATION`（已完成）、`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`（已完成）、`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`（当前）
+- 直接下位目标：`GOAL-IF-R-FOUNDATION`（已完成）、`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`（已完成）、`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`（完成）
 - 目标账所有者：交互智能体
 
 ## 1.1 目标问题与优先级
@@ -36,16 +36,16 @@
 
 - 已完成前置：`GOAL-IF-R-FOUNDATION` 已以代码实施目标完成，详见`目标/已完成/GOAL-IF-R-FOUNDATION.md`；其不证明构建、运行、恢复或本目标能力。
 - 已完成设计：`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`已冻结根目标合同、独立根 D、根列表 L 与成员关系的 ARCH-L4 物理合同，并登记`ARCH-L4-INSTINCT-ROOT-DEMAND-PROVIDER`为可执行计划。
-- 当前下位目标：`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`，先实施根材料 provider；阶段21仍须同时等待该 provider 与特征组合 provider 的已发布结果。
-- 后续方向：在上述两个 provider发布后，重新形成阶段21本能根运行锚点计划；再按8120、8100、8200和8300形成线程、运行门、循环及验收闭环。
+- 已完成下位目标：`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`已发布根材料 provider；阶段21仍须同时等待该 provider 与特征组合 provider 的已发布结果。
+- 后续方向：先依据4115当前事实形成特征组合 provider 的下位目标与设计承载，再在两个 provider发布后重新形成阶段21本能根运行锚点计划；其后才按8120、8100、8200和8300形成线程、运行门、循环及验收闭环。
 - 设计承载方式：机器语义、DTO、所有权、事务、恢复和验收边界由现行规范、具名详细设计和后续计划组合承载；本目标记录不替代这些材料。
 
 ## 5. 依赖、风险与下一动作
 
 - 依赖：4115 IF/R、8120 启动顺序、8121 阶段21物理合同、8100 / 8200 运行边界、8300 验收，以及待形成的 ARCH-L4 根材料合同。
-- 当前阻断：无直接阻断；当前代码实施下位目标尚未完成，故本上位目标尚未取得阶段21直接实施位置。
+- 当前阻断：无直接阻断；阶段21仍缺特征组合 provider 的已发布结果，当前直接动作是形成该依赖的下位目标与设计承载。
 - 当前风险：`规范/详细设计/20260915_INSTINCT-ROOT-RUNTIME-ANCHOR_本能根运行锚点详细设计_v0.1.md`已具名 DRIFT，不能作为施工依据；阶段21不得模拟或替代上游特征与 ARCH-L4 合同。
-- 下一动作：推进当前根材料 provider 代码实施目标；在其完成前不重建或实施阶段21。
+- 下一动作：从4115、现有特征组合 provider 代码与目标路线重新S0，形成特征组合 provider 的下位目标；在其完成前不重建或实施阶段21。
 
 ## 6. 状态证据上下文
 
