@@ -21,7 +21,7 @@
 场景最早实施包：
 
 - [详细设计](../../规范/详细设计/20260910_SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT_场景角色与真实绑定详细设计_v0.1.md)。
-- [实施计划](../20260910_SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT_场景角色与真实绑定实施计划_v0.1.md)。
+- [实施计划](../已完成计划/20260910_SCENE-C-IDENTITY-ROLE-PHYSICAL-CONTRACT_场景角色与真实绑定实施计划_v0.1.md)。
 
 本文件保留基线、代码映射、复用裁决和发布验证等过程信息；正式规范只保存稳定机器合同。规范目录是规范现行性的权威，本文件不能替代它。
 
