@@ -14,3 +14,14 @@
 - `git diff --check`通过；静态检索仍确认普通应用未调用`建立或读取本能根材料`。
 
 仍未覆盖：原身份可能发布/重启读回、写后漂移、资源失败、根不完整/污染/重复成员的故障注入，以及普通应用真实装配、阶段21、启动和集成验收。计划外实例特征结果版本缺陷未修复前，本计划不得标记完成。
+
+## 续行 v0.3：新持久仓双根恢复
+
+- 专项源和全部输出位于`D:\TEMP\海中鱼巣\ARCH-L4-INSTINCT-ROOT-DEMAND-PROVIDER\20260920-s0\root-provider-persistence-probe\`，以MSVC 19.51编译`root_provider_persistence_probe.cpp`及既有`数据服务.特征类.cpp`；该专项未进入Git或工程文件。
+- 新`data-v4`持久仓的首次进程`seed`退出0，输出`seed pass G=10 T=27 D=28 L=29 serviceT=34`；证明首次结构登记和安全、服务双根形成后，根材料读回截止为新写入H。
+- 同一`data-v4`第二进程`recover`退出0，输出`recover pass G=11 T=27 D=28 L=29 serviceT=34`；安全、服务均为`已恢复`，安全根与服务根的`T/D/L`未交叉，且结果与材料读回截止为当前G。`recover-instance`退出0，输出`recover-instance pass G=11 version=2 firstH=7`。
+- 已有`data-v3`第二进程`recover`亦退出0，输出同为`recover pass G=11 T=27 D=28 L=29 serviceT=34`。
+- 根工程在独占目录`D:\TEMP\海中鱼巣\ARCH-L4-INSTINCT-ROOT-DEMAND-PROVIDER\20260920-s0\{Debug-x64,Release-x64}\`以MSBuild 18.5 `/t:Rebuild /m:1`完成；两个配置均清除`unsuccessfulbuild`标记并生成`bin\海中鱼巣.exe`。
+- `git diff --check`通过；本次没有暂存其它所有者的`Debug/`、`.obj`、PDB或其它遗留输出。
+
+本轮证明冻结范围内的首次/持久恢复读回边界和根工程可构建；仍未覆盖计划第7节的原身份可能发布、写后漂移、资源失败、根不完整/污染/重复成员故障注入，以及普通应用启动、阶段21、线程、连续运行和正式集成验收，不能将本计划或上位集成目标标记完成。
