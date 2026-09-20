@@ -26,6 +26,7 @@
 
 #include "领域/数据服务.世界树根.h"
 #include "领域/数据服务.特征值域比较类.h"
+#include "领域/数据服务.需求类.h"
 
 namespace 海中鱼巣 {
 namespace 普通应用装配内部 {
@@ -248,10 +249,12 @@ struct 普通应用上下文 final {
   L1所有者范围交付 场景所有者;
   L1所有者范围交付 状态所有者;
   L1所有者范围交付 概念所有者;
+  L1所有者范围交付 需求所有者;
   L1所有者范围交付 方法登记根初始化结构所有者;
   std::unique_ptr<特征值类数据服务> 特征值;
   std::unique_ptr<特征类数据服务> 特征;
   std::unique_ptr<存在类数据服务> 存在;
+  std::unique_ptr<需求类数据服务> 需求;
   std::unique_ptr<状态类数据服务> 状态;
   std::unique_ptr<场景类数据服务> 场景;
   std::unique_ptr<概念树类数据服务> 概念;
@@ -292,6 +295,7 @@ std::unique_ptr<普通应用上下文> 建立上下文(
   result->场景所有者 = 建立所有者(issuer,l1,0x1004);
   result->状态所有者 = 建立所有者(issuer,l1,0x1005);
   result->概念所有者 = 建立所有者(issuer,l1,0x1006);
+  result->需求所有者 = 建立所有者(issuer,l1,0x1007);
 
   const auto producers = 建立并读回元节点(
       *result->特征定义所有者.写入端口, l1, 0x1101,
@@ -389,6 +393,16 @@ std::unique_ptr<普通应用上下文> 建立上下文(
       l1, *result->特征, std::move(*result->存在所有者.写入端口),
       existenceLayout[0], existenceLayout[1],
       存在当前采用结构交付{existenceLayout[2]},*instanceFeature.交付,result->角色结构);
+  const 需求结构登记请求 demandRequest{需求结构登记合同版本,
+      定位首次(*result->需求所有者.写入端口, l1,
+          需求结构登记固定幂等身份.值).G0};
+  const auto demandRegistration = 需求类数据服务::登记需求结构(
+      l1, *result->需求所有者.写入端口, demandRequest);
+  if (!demandRegistration.成功(demandRequest) || !demandRegistration.交付)
+    throw 普通应用装配状态::服务建立失败;
+  result->需求 = std::make_unique<需求类数据服务>(l1, *result->特征,
+      *result->存在, std::move(*result->需求所有者.写入端口),
+      *demandRegistration.交付);
   result->状态 = std::make_unique<状态类数据服务>(
       l1, *result->特征, std::move(*result->状态所有者.写入端口),
       状态类结构交付{stateLayout[0], stateLayout[1], stateLayout[2],
@@ -680,6 +694,12 @@ namespace 普通应用装配内部 {
     out.状态 = 方法登记根生产初始化状态::内部不一致;
   }
   return out;
+}
+
+需求类数据服务* 读取普通应用需求服务() noexcept {
+  using namespace 普通应用装配内部;
+  std::lock_guard lock(上下文锁);
+  return 上下文 && 上下文->需求 ? 上下文->需求.get() : nullptr;
 }
 
 } // namespace 海中鱼巣

@@ -10,6 +10,8 @@
 
 namespace 海中鱼巣 {
 
+class 需求类数据服务;
+
 enum class 普通应用装配状态 : std::uint8_t {
   已装配 = 1,
   入口拒绝 = 2,
@@ -49,5 +51,6 @@ struct 普通应用装配结果 final {
 真实自我形成结果 初始化普通应用自我() noexcept;
 真实自我形成结果 读取普通应用自我() noexcept;
 方法登记根生产初始化结果 初始化普通应用方法登记根() noexcept;
+需求类数据服务* 读取普通应用需求服务() noexcept;
 
 } // namespace 海中鱼巣
