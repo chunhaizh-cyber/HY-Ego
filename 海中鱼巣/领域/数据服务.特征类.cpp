@@ -1364,46 +1364,79 @@ bool R材料I64单点(const 特征R区间材料& material, std::int64_t& value) 
     特征R概念归并结果 out; out.Gread = request.Gread; out.H = request.H;
     try {
         const auto& b = request.预算;
-        if (request.合同版本 != 1 || !request.Gread || !request.H || request.H > request.Gread || !有效(request.FT)
-            || b.最大候选值元素数) return out;
+        const auto& version = request.R集合版本;
+        if (request.合同版本 != 2 || !request.Gread || !request.H || request.H > request.Gread || !有效(request.FT)
+            || !有效(version.R集合) || !有效(version.版本) || version.R项.empty() || b.最大候选值元素数) return out;
         std::lock_guard<std::mutex> lock(mutex_); 截止有效(1, request.Gread, request.H); 守卫(request.Gread);
+        if (version.R项.size() > b.最大R项数) { out.状态 = 特征R规则状态::数量预算不足; return out; }
+        std::uint64_t memberCount = 0, materialCount = 0;
+        std::set<稳定编码> seenFeatures;
+        稳定编码 previousR{};
+        struct 归并候选 final { const 特征R规则项投影* R项; 特征信息身份 首个成员; std::vector<稳定编码> FCv下位; };
+        std::vector<归并候选> candidates;
+        candidates.reserve(version.R项.size());
+        for (const auto& item : version.R项) {
+            if (!有效(item.R) || (有效(previousR) && !(previousR < item.R)) || item.形成成员.empty()) {
+                out.状态 = 特征R规则状态::内部不一致; return out;
+            }
+            previousR = item.R;
+            materialCount += item.材料.规范化U64组.size();
+            if (materialCount > b.最大材料U64项数) { out.状态 = 特征R规则状态::数量预算不足; return out; }
+            std::vector<稳定编码> concepts;
+            稳定编码 previousF{};
+            特征信息身份 first{};
+            for (const auto& member : item.形成成员) {
+                if (!有效(member.F) || !有效(member.FCv) || (有效(previousF) && !(previousF < member.F.编码))
+                    || !seenFeatures.insert(member.F.编码).second) { out.状态 = 特征R规则状态::内部不一致; return out; }
+                previousF = member.F.编码;
+                if (++memberCount > b.最大R成员数) { out.状态 = 特征R规则状态::数量预算不足; return out; }
+                const auto f = 读准确(member.F, request.Gread, request.H);
+                if (f.信息.类型 != request.FT) { out.状态 = 特征R规则状态::内部不一致; return out; }
+                if (!有效(first)) first = member.F;
+                concepts.push_back(member.FCv);
+            }
+            std::sort(concepts.begin(), concepts.end());
+            concepts.erase(std::unique(concepts.begin(), concepts.end()), concepts.end());
+            candidates.push_back({&item, first, std::move(concepts)});
+        }
         先天I64特征类型信息 type;
         try { type = 读类型(request.FT, request.Gread, request.H); }
         catch (S e) {
             if (e != S::能力未提供) throw;
-            if (b.最大规则节点数 || b.最大规则关系数 || b.最大规则值数 || b.最大R项数
-                || b.最大R成员数 || b.最大材料U64项数) return out;
-            out.状态 = 特征R规则状态::已归并零输出; return out;
+            守卫(request.Gread); out.状态 = 特征R规则状态::已归并零输出;
+            out.R集合 = version.R集合; out.版本 = version.版本; return out;
         }
-        if (!type.规格.域形成) {
-            if (b.最大规则节点数 || b.最大规则关系数 || b.最大规则值数 || b.最大R项数
-                || b.最大R成员数 || b.最大材料U64项数) return out;
-            out.状态 = 特征R规则状态::已归并零输出; return out;
+        if (!type.规格.域形成 || !读取R规则(request.FT, 3, request.Gread, request.H, b)) {
+            守卫(request.Gread); out.状态 = 特征R规则状态::已归并零输出;
+            out.R集合 = version.R集合; out.版本 = version.版本; return out;
         }
-        if (!b.最大规则节点数 || !b.最大规则关系数 || !b.最大规则值数) return out;
-        if (!读取R规则(request.FT, 3, request.Gread, request.H, b)) {
-            if (b.最大R项数 || b.最大R成员数 || b.最大材料U64项数) return out;
-            out.状态 = 特征R规则状态::已归并零输出; return out;
+        std::vector<特征RI64概念归并项> normalized;
+        normalized.reserve(candidates.size());
+        for (const auto& candidate : candidates) {
+            std::int64_t point{};
+            if (!R材料I64单点(candidate.R项->材料, point)) { out.状态 = 特征R规则状态::材料格式不支持; return out; }
+            for (const auto& member : candidate.R项->形成成员) {
+                const auto f = 读准确(member.F, request.Gread, request.H);
+                if (完整整数(f) != point) { out.状态 = 特征R规则状态::内部不一致; return out; }
+            }
+            normalized.push_back({形成I64特征域已持锁({1, request.Gread, request.H, candidate.首个成员}).域, candidate.FCv下位});
         }
-        const bool hasMaterialElements = !request.R项.材料.规范化U64组.empty();
-        const bool hasMembers = !request.R项.形成成员.empty();
-        if (!b.最大R项数 || (hasMembers != (b.最大R成员数 != 0))
-            || (hasMaterialElements != (b.最大材料U64项数 != 0))) return out;
-        if (!有效(request.R项.R) || request.R项.形成成员.empty() || request.R项.材料.规范化U64组.size() > b.最大材料U64项数
-            || request.R项.形成成员.size() > b.最大R成员数) { out.状态 = 特征R规则状态::入口拒绝; return out; }
-        std::int64_t value{}; if (!R材料I64单点(request.R项.材料, value)) { out.状态 = 特征R规则状态::材料格式不支持; return out; }
-        std::vector<稳定编码> concepts; 稳定编码 previous{}; 特征信息身份 first{};
-        for (const auto& member : request.R项.形成成员) {
-            if (!有效(member.F) || !有效(member.FCv) || (有效(previous) && !(previous < member.F.编码))) { out.状态 = 特征R规则状态::内部不一致; return out; }
-            previous = member.F.编码; if (!有效(first)) first = member.F;
-            const auto f = 读准确(member.F, request.Gread, request.H);
-            if (f.信息.类型 != request.FT || 完整整数(f) != value) { out.状态 = 特征R规则状态::内部不一致; return out; }
-            concepts.push_back(member.FCv);
-        }
-        std::sort(concepts.begin(), concepts.end()); concepts.erase(std::unique(concepts.begin(), concepts.end()), concepts.end());
-        const auto domain = 形成I64特征域已持锁({1, request.Gread, request.H, first});
-        守卫(request.Gread); out.状态 = 特征R规则状态::已归并输出;
-        out.项.push_back({domain.域, std::move(concepts)});
+        auto lessDomain = [](const 特征规范I64域& left, const 特征规范I64域& right) {
+            const auto count = std::min(left.区间.size(), right.区间.size());
+            for (std::size_t index = 0; index < count; ++index) {
+                if (left.区间[index].下界 != right.区间[index].下界) return left.区间[index].下界 < right.区间[index].下界;
+                if (left.区间[index].上界 != right.区间[index].上界) return left.区间[index].上界 < right.区间[index].上界;
+            }
+            return left.区间.size() < right.区间.size();
+        };
+        std::sort(normalized.begin(), normalized.end(), [&](const auto& left, const auto& right) {
+            if (lessDomain(left.域, right.域)) return true;
+            if (lessDomain(right.域, left.域)) return false;
+            return left.FCv下位 < right.FCv下位;
+        });
+        normalized.erase(std::unique(normalized.begin(), normalized.end()), normalized.end());
+        守卫(request.Gread); out.状态 = normalized.empty() ? 特征R规则状态::已归并零输出 : 特征R规则状态::已归并输出;
+        out.R集合 = version.R集合; out.版本 = version.版本; out.项 = std::move(normalized);
     } catch (S e) { out.状态 = e == S::能力未提供 ? 特征R规则状态::规则未启用 : 映射R错误(e); out.项.clear(); }
     catch (const std::bad_alloc&) { out.状态 = 特征R规则状态::资源失败; out.项.clear(); }
     catch (...) { out.状态 = 特征R规则状态::内部不一致; out.项.clear(); }

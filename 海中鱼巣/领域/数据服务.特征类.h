@@ -172,6 +172,12 @@ struct 特征R规则项投影 final {
     std::vector<特征R成员规则投影> 形成成员;
     friend bool operator==(const 特征R规则项投影&, const 特征R规则项投影&) = default;
 };
+struct 特征R集合版本规则投影 final {
+    稳定编码 R集合;
+    稳定编码 版本;
+    std::vector<特征R规则项投影> R项;
+    friend bool operator==(const 特征R集合版本规则投影&, const 特征R集合版本规则投影&) = default;
+};
 struct 特征R规则读取预算 final {
     std::uint64_t 最大规则节点数 = 0, 最大规则关系数 = 0, 最大规则值数 = 0;
     std::uint64_t 最大R项数 = 0, 最大R成员数 = 0, 最大材料U64项数 = 0;
@@ -203,16 +209,17 @@ struct 特征R代表值结果 final {
     std::uint64_t Gread = 0, H = 0; std::optional<特征准确值> 代表值;
 };
 struct 特征R概念归并请求 final {
-    std::uint32_t 合同版本 = 1; std::uint64_t Gread = 0, H = 0;
-    特征类型身份 FT; 特征R规则项投影 R项; 特征R规则读取预算 预算;
+    std::uint32_t 合同版本 = 2; std::uint64_t Gread = 0, H = 0;
+    特征类型身份 FT; 特征R集合版本规则投影 R集合版本; 特征R规则读取预算 预算;
 };
 struct 特征RI64概念归并项 final {
     特征规范I64域 域; std::vector<稳定编码> FCv下位;
     friend bool operator==(const 特征RI64概念归并项&, const 特征RI64概念归并项&) = default;
 };
 struct 特征R概念归并结果 final {
-    std::uint32_t 合同版本 = 1; 特征R规则状态 状态 = 特征R规则状态::入口拒绝;
-    std::uint64_t Gread = 0, H = 0; std::vector<特征RI64概念归并项> 项;
+    std::uint32_t 合同版本 = 2; 特征R规则状态 状态 = 特征R规则状态::入口拒绝;
+    std::uint64_t Gread = 0, H = 0; 稳定编码 R集合, 版本;
+    std::vector<特征RI64概念归并项> 项;
 };
 struct 补齐I64默认R规则请求 final {
     std::uint32_t 合同版本 = 1; std::uint64_t G = 0;
