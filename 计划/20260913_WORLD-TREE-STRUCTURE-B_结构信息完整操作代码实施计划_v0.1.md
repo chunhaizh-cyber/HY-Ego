@@ -81,8 +81,10 @@ $BMSBuild = 'C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Cu
 & "$BRoot/build/test-release/世界树结构B专项验证.exe" --all --data-root "$BRoot/data/release" --evidence-root "$BRoot/evidence/release"
 & "$BRoot/snapshot/验证工具/世界树结构B权限验证.ps1" -SnapshotRoot "$BRoot/snapshot" -EvidenceRoot "$BRoot/evidence/access" -VCToolsVersion '14.50.35717'
 git diff --check
-python .\tools\check_specs.py --strict
+git diff --cached --check
 ```
+
+涉及正式计划材料时，另逐项读回目录登记、路径与内部链接；`tools/check_specs.py` 已退役，不构成该计划的执行或发布门禁。
 
 驱动冻结支持`--all`与`--case B01`..`B20`、`--data-root`、`--evidence-root`四类参数，缺显式独占目录入口拒绝。主程序输出exe不运行到用户默认根。每个命令保存独立原日志及exitcode，任何命令失败立即分账，不能靠后一条成功覆盖。完整矩阵和成功标准唯一来源是详细设计§14；测试assert从公开真实读取及原G/首次账验证，不打印固定PASS。方法/线程/E总体闭环及尚未实际命中的故障窗口标NOT_RUN，不与本批已执行通过合并。
 

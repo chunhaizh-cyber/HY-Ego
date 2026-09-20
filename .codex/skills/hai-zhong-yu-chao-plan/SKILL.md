@@ -112,7 +112,9 @@ description: Create, validate and register a new 海中鱼巣 design-ready plan,
 
 ```powershell
 git diff --check
-python .\tools\check_specs.py --strict
+git diff --cached --check
 ```
+
+涉及正式规范、目录或计划索引时，逐项读回本次改动涉及的目录登记、路径与内部链接。`tools/check_specs.py` 已退役，不得恢复、调用或以虚构等价检查替代。
 
 只暂存当前角色拥有的文件，取得发布租约后精确提交并普通推送。计划智能体报告设计包身份、索引登记、当前代码基线、关键裁决、验证、提交、剩余风险和完成边界；计划支撑报告来源执行问题、裁决、修订版本和重新 S0 门禁。计划可执行不等于代码已实现。

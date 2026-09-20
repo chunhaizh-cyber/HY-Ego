@@ -109,7 +109,7 @@
 1. 项目使用唯一主工作区和 `main`，不新建 Git / Codex worktree 或任务分支。详细规则读取单工作区发布规则。
    旧 worktree 材料的兼容边界只读 `.codex/rules/多工作树并发与集成规则.md`。
 2. 禁止未经用户明确授权的 force、reset、clean、stash、merge、rebase、cherry-pick，以及覆盖、删除或带入其他所有者的 WIP。
-3. 文档或规则治理至少运行 `git diff --check`；涉及正式规范或目录时再运行 `python .\tools\check_specs.py --strict`。代码验证按目标计划和风险执行；具名集成验收还须以 `tools/check_integration_acceptance.py` 检查验收清单与结论升级门禁。
+3. 文档或规则治理至少运行 `git diff --check`；涉及正式规范或目录时，还须逐项读回本次改动涉及的目录登记、路径与内部链接。`tools/check_specs.py` 已退役，不构成创建、执行、验收或发布门禁，也不得以不存在的等价脚本替代。代码验证按目标计划和风险执行；具名集成验收还须以其现行验收清单检查验收结论升级门禁。
 4. 任务完成且用户未禁止发布时，只提交本轮切片并普通推送；提交和推送只证明产物进入 Git，不证明能力完成。
 5. 完成报告必须说明实际变更、实际验证、未验证范围、提交 / 推送事实和剩余风险，禁止夸大。
 
