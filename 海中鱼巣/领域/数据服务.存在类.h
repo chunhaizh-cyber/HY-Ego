@@ -181,9 +181,14 @@ struct 实例特征R集合版本 final {
   稳定编码 编码{};
   friend bool operator==(const 实例特征R集合版本 &, const 实例特征R集合版本 &) = default;
 };
+struct 实例特征R项身份 final {
+  稳定编码 编码{};
+  friend bool operator==(const 实例特征R项身份 &, const 实例特征R项身份 &) = default;
+};
 struct 实例特征结构交付 final {
-  std::uint32_t 版本 = 1;
+  std::uint32_t 版本 = 2;
   稳定编码 E到IF{}, IF到F{}, IF到R集合{}, R集合到版本{}, 版本到R项{}, R项到F{};
+  稳定编码 R项材料属性类型{};
   friend bool operator==(const 实例特征结构交付 &, const 实例特征结构交付 &) = default;
 };
 enum class 实例特征结构状态 : std::uint8_t {
@@ -191,7 +196,7 @@ enum class 实例特征结构状态 : std::uint8_t {
   幂等冲突 = 5, 结构冲突 = 6, 已可能发布 = 7, 资源失败 = 8, 内部不一致 = 9
 };
 struct 实例特征结构登记请求 final {
-  std::uint32_t 版本 = 1;
+  std::uint32_t 版本 = 2;
   std::uint64_t G0 = 0;
   L1所有者范围写入幂等身份 幂等身份{};
   friend bool operator==(const 实例特征结构登记请求 &, const 实例特征结构登记请求 &) = default;
@@ -203,9 +208,85 @@ struct 实例特征结构登记结果 final {
   std::optional<std::uint64_t> 首次H;
   std::optional<实例特征结构交付> 交付;
   bool 成功(const 实例特征结构登记请求 &r) const noexcept {
-    return r.版本 == 1 && r.G0 && 版本 == 1 && Gread >= r.G0 && 交付 &&
+    return r.版本 == 2 && r.G0 && 版本 == 2 && Gread >= r.G0 && 交付 &&
       (状态 == 实例特征结构状态::已登记 || 状态 == 实例特征结构状态::精确重复);
   }
+};
+struct 实例特征IFR读取预算 final {
+  std::uint64_t 最大F成员数 = 0;
+  std::uint64_t 最大R项数 = 0;
+  std::uint64_t 最大关系数 = 0;
+  std::uint64_t 最大材料值数 = 0;
+  std::uint64_t 最大单材料U64元素数 = 0;
+  friend bool operator==(const 实例特征IFR读取预算 &,
+                         const 实例特征IFR读取预算 &) = default;
+};
+struct 实例特征R项投影 final {
+  实例特征R项身份 R项;
+  特征R区间材料 材料;
+  std::vector<特征信息身份> 形成成员;
+  L1所有者范围节点事实 节点事实;
+  std::vector<L1所有者范围关系事实> 成员关系;
+  L1所有者范围值事实 材料值事实;
+  friend bool operator==(const 实例特征R项投影 &,
+                         const 实例特征R项投影 &) = default;
+};
+struct 实例特征IFR完整投影 final {
+  存在信息身份 E;
+  特征类型身份 FT;
+  实例特征容器身份 IF;
+  实例特征R集合身份 R集合;
+  实例特征R集合版本 版本;
+  std::vector<特征信息身份> F成员;
+  std::vector<实例特征R项投影> R项;
+  实例特征结构交付 结构;
+  std::vector<L1所有者范围节点事实> 节点事实;
+  std::vector<L1所有者范围关系事实> 六关系事实;
+  friend bool operator==(const 实例特征IFR完整投影 &,
+                         const 实例特征IFR完整投影 &) = default;
+};
+struct 读取实例特征IFR请求 final {
+  std::uint32_t 版本 = 1;
+  存在信息身份 E;
+  特征类型身份 FT;
+  std::uint64_t Gread = 0;
+  实例特征IFR读取预算 预算;
+  friend bool operator==(const 读取实例特征IFR请求 &,
+                         const 读取实例特征IFR请求 &) = default;
+};
+struct 实例特征IFR目标项 final {
+  特征R区间材料 材料;
+  std::vector<特征信息身份> 形成成员;
+  friend bool operator==(const 实例特征IFR目标项 &,
+                         const 实例特征IFR目标项 &) = default;
+};
+struct 提交实例特征IFR目标请求 final {
+  std::uint32_t 版本 = 1;
+  存在信息身份 E;
+  特征类型身份 FT;
+  std::uint64_t G0 = 0;
+  std::optional<实例特征IFR完整投影> 预期快照;
+  std::vector<实例特征IFR目标项> 目标R项;
+  L1所有者范围写入幂等身份 幂等身份;
+  实例特征IFR读取预算 读回预算;
+  friend bool operator==(const 提交实例特征IFR目标请求 &,
+                         const 提交实例特征IFR目标请求 &) = default;
+};
+enum class 实例特征IFR状态 : std::uint8_t {
+  已读取 = 1, 已发布 = 2, 无须变更 = 3, 精确重复 = 4, 入口拒绝 = 5,
+  未找到 = 6, 已退出 = 7, 数量预算不足 = 8, 事实代次漂移 = 9,
+  引用冲突 = 10, 幂等冲突 = 11, 资源失败 = 12, 已可能发布 = 13,
+  内部不一致 = 14
+};
+struct 实例特征IFR结果 final {
+  std::uint32_t 版本 = 1;
+  实例特征IFR状态 状态 = 实例特征IFR状态::入口拒绝;
+  std::uint64_t Gread = 0, H = 0;
+  std::optional<std::uint64_t> 首次H;
+  std::optional<实例特征IFR完整投影> 投影;
+  std::optional<提交实例特征IFR目标请求> 原请求;
+  friend bool operator==(const 实例特征IFR结果 &,
+                         const 实例特征IFR结果 &) = default;
 };
 struct 存在类成员引用 final {
   稳定编码 成员关系{};
@@ -1122,6 +1203,10 @@ public:
   static 实例特征结构登记结果 登记实例特征结构(
       const L1事实基座服务 &, L1所有者范围写端口 &,
       const 实例特征结构登记请求 &) noexcept;
+  实例特征IFR结果 读取实例特征IFR(
+      const 读取实例特征IFR请求 &) const noexcept;
+  实例特征IFR结果 提交实例特征IFR目标结构(
+      const 提交实例特征IFR目标请求 &) noexcept;
 
   存在类数据服务(const L1事实基座服务 &l1, const 特征类数据服务 &features,
                  L1所有者范围写端口 &&port, 稳定编码 childType,
@@ -3458,7 +3543,7 @@ private:
   }
 
   bool 实例特征结构有效() const {
-    if (实例特征结构_.版本 != 1)
+    if (实例特征结构_.版本 != 2)
       return false;
     const std::array<稳定编码, 6> types{
         实例特征结构_.E到IF, 实例特征结构_.IF到F,
@@ -3474,7 +3559,23 @@ private:
           types[i] == 当前采用关系类型_)
         return false;
     }
-    return true;
+    const auto material = 第一层服务_.读取所有者范围当前节点(
+        {L1所有者范围CRUD合同版本, 实例特征结构_.R项材料属性类型});
+    const auto *node = material.事实
+        ? std::get_if<L1所有者范围节点事实>(&*material.事实) : nullptr;
+    return 有效(实例特征结构_.R项材料属性类型) &&
+           std::find(types.begin(), types.end(), 实例特征结构_.R项材料属性类型) == types.end() &&
+           实例特征结构_.R项材料属性类型 != 子存在关系类型_ &&
+           实例特征结构_.R项材料属性类型 != 特征关系类型_ &&
+           实例特征结构_.R项材料属性类型 != 当前采用关系类型_ &&
+           material.状态 == L1所有者范围读取状态::成功 &&
+           material.合同版本 == L1所有者范围CRUD合同版本 &&
+           material.查询编码 == 实例特征结构_.R项材料属性类型 &&
+           !material.物理清理事实代次 && !material.物理清理墓碑 && node &&
+           node->编码 == 实例特征结构_.R项材料属性类型 &&
+           node->写入所有者 == 所有者_ && node->种类 == 节点种类::属性类型 &&
+           node->属性类型表示 == L1所有者范围值表示种类::U64组 &&
+           node->创建事实代次 != 0 && !node->退出事实代次;
   }
 
   bool 关系类型有效(稳定编码 编码) const {
@@ -4604,6 +4705,14 @@ private:
       catch(const std::bad_alloc&){out.状态=原子I64特征出生状态::资源失败;out.数据.reset();}
       catch(...){out.状态=原子I64特征出生状态::内部不一致;out.数据.reset();} return out;
   }
+
+  static bool IFR持久请求相同(const 提交实例特征IFR目标请求 &left,
+                             const 提交实例特征IFR目标请求 &right) noexcept {
+    // 4115 v0.9：读回预算不进入首次持久写集，不能参与同键重放判定。
+    return left.版本 == right.版本 && left.E == right.E && left.FT == right.FT &&
+           left.G0 == right.G0 && left.预期快照 == right.预期快照 &&
+           left.目标R项 == right.目标R项 && left.幂等身份 == right.幂等身份;
+  }
   原子I64特征窄读取结果<原子I64特征holder事实> 读取原子I64holder(const 原子I64特征holder读取请求& r) const override {
     原子I64特征窄读取结果<原子I64特征holder事实> out;out.Gread=r.Gread;out.H=r.H;
     auto map=[](L1所有者范围读取状态 s) {using X=原子I64特征窄读取状态;switch(s) {
@@ -4691,6 +4800,7 @@ private:
   }
   mutable std::mutex 写入锁_;
   std::optional<存在当前采用写请求> 采用待确认_;
+  std::optional<提交实例特征IFR目标请求> IFR待确认_;
   const L1事实基座服务 &第一层服务_;
   const 特征类数据服务 &特征服务_;
   L1所有者范围写端口 写入端口_;
@@ -4706,17 +4816,70 @@ private:
 inline 实例特征结构登记结果 存在类数据服务::登记实例特征结构(
     const L1事实基座服务 &l1, L1所有者范围写端口 &port,
     const 实例特征结构登记请求 &r) noexcept {
-  constexpr std::uint64_t key = 0x4946525354525543ULL;
+  constexpr std::uint64_t v1key = 0x4946525354525543ULL;
+  constexpr std::uint64_t v2key = 0x4946525354525632ULL;
   实例特征结构登记结果 out; out.Gread = r.G0;
   bool dispatched = false;
   try {
-    if (r.版本 != 1 || !r.G0 || r.G0 == UINT64_MAX || r.幂等身份.值 != key ||
+    if (r.版本 != 2 || !r.G0 || r.G0 == UINT64_MAX || r.幂等身份.值 != v2key ||
         !port.有效() || !port.绑定于(l1)) return out;
     const auto owner = port.所有者身份();
+    const auto v1 = port.读取首次写入材料(
+        {L1所有者范围首次写入读取合同版本, {v1key}});
+    if (v1.合同版本 != L1所有者范围首次写入读取合同版本 ||
+        v1.所有者 != owner || v1.写入幂等身份.值 != v1key)
+      throw 实例特征结构状态::内部不一致;
+    std::array<稳定编码, 6> v1ids{};
+    const bool hasV1 = v1.状态 == L1所有者范围读取状态::成功;
+    if (hasV1) {
+      if (!v1.首次规范化写集 || !v1.首次写入结果 ||
+          v1.首次写入结果->状态 != L1所有者范围写入状态::成功 ||
+          v1.首次写入结果->所有者 != owner ||
+          v1.首次写入结果->写入幂等身份.值 != v1key ||
+          v1.首次规范化写集->合同版本 != L1所有者范围CRUD合同版本 ||
+          v1.首次规范化写集->写入幂等身份.值 != v1key ||
+          v1.首次规范化写集->节点.size() != 6 ||
+          !v1.首次规范化写集->关系.empty() || !v1.首次规范化写集->值.empty() ||
+          !v1.首次规范化写集->属性槽变更.empty() || !v1.首次规范化写集->退出事实.empty() ||
+          v1.首次写入结果->新编码映射.size() != 6)
+        throw 实例特征结构状态::内部不一致;
+      for (std::size_t i = 0; i < 6; ++i) {
+        const auto &n = v1.首次规范化写集->节点[i];
+        if (n.本地键.值 != i + 1 || n.种类 != 节点种类::普通 || n.属性类型表示)
+          throw 实例特征结构状态::内部不一致;
+      }
+      for (const auto &[local, id] : v1.首次写入结果->新编码映射) {
+        if (!local.值 || local.值 > v1ids.size() || !有效(id) ||
+            有效(v1ids[local.值 - 1]))
+          throw 实例特征结构状态::内部不一致;
+        v1ids[local.值 - 1] = id;
+      }
+      for (const auto id : v1ids) {
+        const auto raw = l1.读取所有者范围当前节点(
+            {L1所有者范围CRUD合同版本, id});
+        const auto *node = raw.事实 ? std::get_if<L1所有者范围节点事实>(&*raw.事实) : nullptr;
+        if (raw.状态 != L1所有者范围读取状态::成功 ||
+            raw.合同版本 != L1所有者范围CRUD合同版本 || raw.查询编码 != id ||
+            !node || node->编码 != id || node->写入所有者 != owner ||
+            node->种类 != 节点种类::普通 || node->属性类型表示 ||
+            !node->创建事实代次 || node->退出事实代次)
+          throw 实例特征结构状态::内部不一致;
+      }
+    } else if (v1.状态 != L1所有者范围读取状态::未找到) {
+      throw v1.状态 == L1所有者范围读取状态::资源失败
+          ? 实例特征结构状态::资源失败 : 实例特征结构状态::内部不一致;
+    }
     L1所有者范围写集请求 ws{L1所有者范围CRUD合同版本, r.G0, r.幂等身份};
-    for (std::uint64_t i = 1; i <= 6; ++i)
-      ws.节点.emplace_back(L1所有者范围节点新建项{
-          L1所有者范围写集本地键{static_cast<std::uint32_t>(i)}, 节点种类::普通, std::nullopt});
+    if (hasV1) {
+      ws.节点.emplace_back(L1所有者范围节点新建项{{1}, 节点种类::属性类型,
+          L1所有者范围值表示种类::U64组});
+    } else {
+      for (std::uint64_t i = 1; i <= 6; ++i)
+        ws.节点.emplace_back(L1所有者范围节点新建项{
+            L1所有者范围写集本地键{static_cast<std::uint32_t>(i)}, 节点种类::普通, std::nullopt});
+      ws.节点.emplace_back(L1所有者范围节点新建项{{7}, 节点种类::属性类型,
+          L1所有者范围值表示种类::U64组});
+    }
     const auto first = port.读取首次写入材料(
         {L1所有者范围首次写入读取合同版本, r.幂等身份});
     if (first.合同版本 != L1所有者范围首次写入读取合同版本 ||
@@ -4735,28 +4898,37 @@ inline 实例特征结构登记结果 存在类数据服务::登记实例特征�
     const auto saved = port.提交所有者范围中性写集(ws);
     out.Gread = saved.事实代次;
     if (saved.状态 != (replay ? L1所有者范围写入状态::精确重复 : L1所有者范围写入状态::成功) ||
-        saved.新编码映射.size() != 6) {
+        saved.新编码映射.size() != (hasV1 ? 1U : 7U)) {
       if (saved.状态 == L1所有者范围写入状态::事实代次漂移) throw 实例特征结构状态::事实代次漂移;
       if (saved.状态 == L1所有者范围写入状态::幂等冲突) throw 实例特征结构状态::幂等冲突;
       throw 实例特征结构状态::已可能发布;
     }
-    std::array<稳定编码,6> ids{};
+    std::array<稳定编码,7> ids{};
     for (const auto &[local,id] : saved.新编码映射) {
       if (!local.值 || local.值 > ids.size() || !有效(id) || 有效(ids[local.值-1]))
         throw 实例特征结构状态::内部不一致;
       ids[local.值-1] = id;
     }
-    for (const auto id : ids) {
+    if (hasV1) {
+      for (std::size_t i = 0; i < 6; ++i) ids[i] = v1ids[i];
+      ids[6] = saved.新编码映射.front().second;
+    }
+    for (std::size_t i = 0; i < ids.size(); ++i) {
+      const auto id = ids[i];
       const auto raw = l1.读取所有者范围历史事实({L1所有者范围CRUD合同版本,id});
       const auto *node = raw.事实 ? std::get_if<L1所有者范围节点事实>(&*raw.事实) : nullptr;
       if (raw.状态 != L1所有者范围读取状态::成功 || raw.读取事实代次 != saved.事实代次 ||
           !node || node->写入所有者 != owner || node->编码 != id ||
-          node->种类 != 节点种类::普通 || node->属性类型表示 ||
-          node->创建事实代次 != saved.事实代次 || node->退出事实代次)
+          node->种类 != (i == 6 ? 节点种类::属性类型 : 节点种类::普通) ||
+          node->属性类型表示 != (i == 6
+              ? std::optional<L1所有者范围值表示种类>{L1所有者范围值表示种类::U64组}
+              : std::nullopt) || node->退出事实代次 ||
+          ((replay || (hasV1 && i < 6)) ? node->创建事实代次 == 0
+                                         : node->创建事实代次 != saved.事实代次))
         throw 实例特征结构状态::内部不一致;
     }
     out.首次H = saved.事实代次;
-    out.交付 = {1,ids[0],ids[1],ids[2],ids[3],ids[4],ids[5]};
+    out.交付 = {2,ids[0],ids[1],ids[2],ids[3],ids[4],ids[5],ids[6]};
     out.状态 = replay ? 实例特征结构状态::精确重复 : 实例特征结构状态::已登记;
   } catch (实例特征结构状态 s) {
     out.状态 = dispatched && s != 实例特征结构状态::事实代次漂移 && s != 实例特征结构状态::幂等冲突 ?
@@ -5150,5 +5322,422 @@ inline bool 存在当前采用结果::成功() const noexcept {
         }
       },
       原请求->操作);
+}
+
+inline 实例特征IFR结果 存在类数据服务::读取实例特征IFR(
+    const 读取实例特征IFR请求 &r) const noexcept {
+  using S = 实例特征IFR状态;
+  实例特征IFR结果 out;
+  out.Gread = r.Gread;
+  out.H = r.Gread;
+  try {
+    const auto budgetValid = [](const 实例特征IFR读取预算 &b) noexcept {
+      return b.最大F成员数 && b.最大R项数 && b.最大关系数 &&
+             b.最大材料值数 && b.最大单材料U64元素数;
+    };
+    if (r.版本 != 1 || !有效(r.E) || !有效(r.FT) || !r.Gread ||
+        !budgetValid(r.预算))
+      return out;
+    const auto fail = [&](S s, std::uint64_t g = 0) {
+      out.状态 = s;
+      out.Gread = g ? g : r.Gread;
+      out.H = 0;
+      out.投影.reset();
+      return out;
+    };
+    const auto mapRead = [](存在类数据状态 s) noexcept {
+      switch (s) {
+      case 存在类数据状态::未找到: return S::未找到;
+      case 存在类数据状态::目标已退出: return S::已退出;
+      case 存在类数据状态::事实代次漂移: return S::事实代次漂移;
+      case 存在类数据状态::数量预算不足: return S::数量预算不足;
+      case 存在类数据状态::资源失败: return S::资源失败;
+      default: return S::内部不一致;
+      }
+    };
+    const auto ordinary = [&](稳定编码 id) -> std::optional<L1所有者范围节点事实> {
+      const auto q = 第一层服务_.读取所有者范围当前节点(
+          {L1所有者范围CRUD合同版本, id});
+      const auto *n = q.事实 ? std::get_if<L1所有者范围节点事实>(&*q.事实) : nullptr;
+      if (q.读取事实代次 != r.Gread)
+        throw S::事实代次漂移;
+      if (q.状态 == L1所有者范围读取状态::资源失败)
+        throw S::资源失败;
+      if (q.状态 == L1所有者范围读取状态::未找到)
+        throw S::未找到;
+      if (q.状态 == L1所有者范围读取状态::已退出)
+        throw S::已退出;
+      if (q.状态 != L1所有者范围读取状态::成功 ||
+          q.合同版本 != L1所有者范围CRUD合同版本 || q.查询编码 != id ||
+          q.物理清理事实代次 || q.物理清理墓碑 || !n || n->编码 != id ||
+          n->写入所有者 != 所有者_ || n->种类 != 节点种类::普通 ||
+          n->属性类型表示 || !n->创建事实代次 || n->退出事实代次)
+        throw S::内部不一致;
+      return *n;
+    };
+    const auto relation = [&](稳定编码 source, 稳定编码 type) {
+      auto q = 读取当前源关系组(source, type, r.Gread);
+      if (!q.成功)
+        throw mapRead(q.状态);
+      for (const auto &e : q.关系组)
+        if (e.写入所有者 != 所有者_ || e.源节点 != source ||
+            e.关系类型节点 != type || !有效(e.目标节点) ||
+            !e.创建事实代次 || e.退出事实代次)
+          throw S::内部不一致;
+      return q.关系组;
+    };
+    const auto self = 读取当前存在本体(r.E.编码, r.Gread);
+    if (!self.成功())
+      return fail(mapRead(self.状态), self.事实代次);
+    const auto knownEdges = relation(r.E.编码, 特征关系类型_);
+    std::set<稳定编码> known;
+    for (const auto &e : knownEdges) known.insert(e.目标节点);
+    auto eif = relation(r.E.编码, 实例特征结构_.E到IF);
+    if (eif.empty()) return fail(S::未找到);
+    if (eif.size() != 1) return fail(S::内部不一致);
+    auto ifNode = ordinary(eif.front().目标节点);
+    auto ifF = relation(ifNode->编码, 实例特征结构_.IF到F);
+    if (ifF.empty()) return fail(S::内部不一致);
+    if (ifF.size() > r.预算.最大F成员数) return fail(S::数量预算不足);
+    std::vector<特征信息身份> fMembers;
+    fMembers.reserve(ifF.size());
+    for (const auto &e : ifF) {
+      if (!known.contains(e.目标节点)) return fail(S::引用冲突);
+      const auto f = 特征服务_.读取准确特征事实({1, r.Gread, r.Gread, {e.目标节点}});
+      if (const auto *err = std::get_if<特征数据错误>(&f)) {
+        if (*err == 特征数据错误::资源失败) return fail(S::资源失败);
+        return fail(S::引用冲突);
+      }
+      const auto &fact = std::get<准确特征读取事实>(f);
+      if (fact.Gread != r.Gread || fact.H != r.Gread ||
+          fact.信息.身份.编码 != e.目标节点 || fact.信息.类型 != r.FT)
+        return fail(S::引用冲突);
+      fMembers.push_back({e.目标节点});
+    }
+    std::sort(fMembers.begin(), fMembers.end(), [](auto a, auto b) { return a.编码 < b.编码; });
+    if (std::adjacent_find(fMembers.begin(), fMembers.end(),
+        [](auto a, auto b) { return a.编码 == b.编码; }) != fMembers.end()) return fail(S::内部不一致);
+    auto ifR = relation(ifNode->编码, 实例特征结构_.IF到R集合);
+    if (ifR.size() != 1) return fail(ifR.empty() ? S::内部不一致 : S::引用冲突);
+    auto setNode = ordinary(ifR.front().目标节点);
+    auto setV = relation(setNode->编码, 实例特征结构_.R集合到版本);
+    if (setV.size() != 1) return fail(setV.empty() ? S::内部不一致 : S::引用冲突);
+    auto versionNode = ordinary(setV.front().目标节点);
+    auto versionR = relation(versionNode->编码, 实例特征结构_.版本到R项);
+    if (versionR.empty()) return fail(S::内部不一致);
+    if (versionR.size() > r.预算.最大R项数) return fail(S::数量预算不足);
+    std::uint64_t relationCount = eif.size() + ifF.size() + ifR.size() + setV.size() + versionR.size();
+    std::vector<实例特征R项投影> items;
+    items.reserve(versionR.size());
+    std::set<稳定编码> allMember;
+    for (const auto &rEdge : versionR) {
+      auto rNode = ordinary(rEdge.目标节点);
+      auto members = relation(rNode->编码, 实例特征结构_.R项到F);
+      if (members.empty()) return fail(S::内部不一致);
+      relationCount += members.size();
+      if (relationCount > r.预算.最大关系数) return fail(S::数量预算不足);
+      std::vector<特征信息身份> memberIds;
+      memberIds.reserve(members.size());
+      for (const auto &e : members) {
+        if (!std::binary_search(fMembers.begin(), fMembers.end(), 特征信息身份{e.目标节点},
+            [](auto a, auto b) { return a.编码 < b.编码; }) || !allMember.insert(e.目标节点).second)
+          return fail(S::引用冲突);
+        memberIds.push_back({e.目标节点});
+      }
+      std::sort(memberIds.begin(), memberIds.end(), [](auto a, auto b) { return a.编码 < b.编码; });
+      if (std::adjacent_find(memberIds.begin(), memberIds.end(),
+          [](auto a, auto b) { return a.编码 == b.编码; }) != memberIds.end()) return fail(S::内部不一致);
+      const auto values = 第一层服务_.按来源读取所有者范围全部当前值(
+          {L1所有者范围来源当前值组读取合同版本, 所有者_, rNode->编码,
+           r.Gread, r.预算.最大材料值数});
+      if (values.读取事实代次 != r.Gread) return fail(S::事实代次漂移, values.读取事实代次);
+      if (values.状态 == L1所有者范围来源当前值组读取状态::数量预算不足)
+        return fail(S::数量预算不足);
+      if (values.状态 == L1所有者范围来源当前值组读取状态::资源失败)
+        return fail(S::资源失败);
+      if (values.状态 != L1所有者范围来源当前值组读取状态::成功 ||
+          values.合同版本 != L1所有者范围来源当前值组读取合同版本 ||
+          values.所有者 != 所有者_ || values.来源节点 != rNode->编码 ||
+          values.期望事实代次 != r.Gread || values.当前值.size() != 1)
+        return fail(S::内部不一致);
+      const auto &value = values.当前值.front();
+      const auto *raw = std::get_if<std::vector<std::uint64_t>>(&value.材料);
+      if (value.写入所有者 != 所有者_ || value.所属节点 != rNode->编码 ||
+          value.来源节点 != rNode->编码 || value.属性类型节点 != 实例特征结构_.R项材料属性类型 ||
+          !value.创建事实代次 || value.退出事实代次 || !raw || raw->size() < 4 ||
+          raw->size() > r.预算.最大单材料U64元素数 || (*raw)[0] != 1 ||
+          ((*raw)[1] != static_cast<std::uint64_t>(特征R材料类别::I64闭区间) &&
+           (*raw)[1] != static_cast<std::uint64_t>(特征R材料类别::类型规则U64组)) ||
+          (*raw)[2] == 0 || (*raw)[2] != raw->size() - 3)
+        return fail(S::内部不一致);
+      特征R区间材料 material{static_cast<std::uint32_t>((*raw)[0]),
+          static_cast<特征R材料类别>((*raw)[1]),
+          std::vector<std::uint64_t>(raw->begin() + 3, raw->end())};
+      items.push_back({{rNode->编码}, std::move(material), std::move(memberIds),
+                       *rNode, std::move(members), value});
+    }
+    if (relationCount > r.预算.最大关系数 || allMember.size() != fMembers.size())
+      return fail(relationCount > r.预算.最大关系数 ? S::数量预算不足 : S::引用冲突);
+    std::sort(items.begin(), items.end(), [](const auto &a, const auto &b) {
+      return a.R项.编码 < b.R项.编码;
+    });
+    实例特征IFR完整投影 p;
+    p.E = r.E; p.FT = r.FT; p.IF = {{ifNode->编码}}; p.R集合 = {{setNode->编码}};
+    p.版本 = {{versionNode->编码}}; p.F成员 = std::move(fMembers); p.R项 = std::move(items);
+    p.结构 = 实例特征结构_;
+    p.节点事实 = {*ifNode, *setNode, *versionNode};
+    for (const auto &i : p.R项) p.节点事实.push_back(i.节点事实);
+    p.六关系事实.insert(p.六关系事实.end(), eif.begin(), eif.end());
+    p.六关系事实.insert(p.六关系事实.end(), ifF.begin(), ifF.end());
+    p.六关系事实.insert(p.六关系事实.end(), ifR.begin(), ifR.end());
+    p.六关系事实.insert(p.六关系事实.end(), setV.begin(), setV.end());
+    p.六关系事实.insert(p.六关系事实.end(), versionR.begin(), versionR.end());
+    for (const auto &i : p.R项)
+      p.六关系事实.insert(p.六关系事实.end(), i.成员关系.begin(), i.成员关系.end());
+    std::sort(p.节点事实.begin(), p.节点事实.end(), [](const auto &a, const auto &b) { return a.编码 < b.编码; });
+    std::sort(p.六关系事实.begin(), p.六关系事实.end(), [](const auto &a, const auto &b) { return a.编码 < b.编码; });
+    out.状态 = S::已读取;
+    out.投影 = std::move(p);
+    return out;
+  } catch (S s) {
+    out.状态 = s; out.H = 0; out.投影.reset(); return out;
+  } catch (const std::bad_alloc &) {
+    out.状态 = S::资源失败; out.H = 0; out.投影.reset(); return out;
+  } catch (...) {
+    out.状态 = S::内部不一致; out.H = 0; out.投影.reset(); return out;
+  }
+}
+
+inline 实例特征IFR结果 存在类数据服务::提交实例特征IFR目标结构(
+    const 提交实例特征IFR目标请求 &r) noexcept {
+  using S = 实例特征IFR状态;
+  实例特征IFR结果 out;
+  out.Gread = r.G0;
+  bool dispatched = false;
+  bool zeroWrite = false;
+  std::unique_lock<std::mutex> lock(写入锁_);
+  try {
+    const auto budgetValid = [](const 实例特征IFR读取预算 &b) noexcept {
+      return b.最大F成员数 && b.最大R项数 && b.最大关系数 &&
+             b.最大材料值数 && b.最大单材料U64元素数;
+    };
+    const auto materialValid = [](const 特征R区间材料 &m) noexcept {
+      return m.格式版本 == 1 &&
+             (m.类别 == 特征R材料类别::I64闭区间 ||
+              m.类别 == 特征R材料类别::类型规则U64组) &&
+             !m.规范化U64组.empty();
+    };
+    if (r.版本 != 1 || !有效(r.E) || !有效(r.FT) || !r.G0 ||
+        !有效(r.幂等身份) || !budgetValid(r.读回预算) || r.目标R项.empty())
+      return out;
+    out.原请求 = r;
+    if (IFR待确认_ && !IFR持久请求相同(*IFR待确认_, r)) {
+      out.状态 = S::已可能发布;
+      return out;
+    }
+    std::set<稳定编码> all;
+    稳定编码 previousMinimum{};
+    for (const auto &item : r.目标R项) {
+      if (!materialValid(item.材料) || item.形成成员.empty()) {
+        out.状态 = S::入口拒绝;
+        return out;
+      }
+      稳定编码 prior{};
+      for (const auto &f : item.形成成员) {
+        if (!有效(f) || (有效(prior) && !(prior < f.编码)) || !all.insert(f.编码).second) {
+          out.状态 = S::入口拒绝;
+          return out;
+        }
+        prior = f.编码;
+      }
+      if (有效(previousMinimum) && !(previousMinimum < item.形成成员.front().编码)) {
+        out.状态 = S::入口拒绝;
+        return out;
+      }
+      previousMinimum = item.形成成员.front().编码;
+    }
+    const auto current = 读取实例特征IFR({1, r.E, r.FT, r.G0, r.读回预算});
+    if (current.状态 != S::已读取 && current.状态 != S::未找到) {
+      out.状态 = current.状态;
+      out.Gread = current.Gread;
+      out.H = current.H;
+      return out;
+    }
+    if ((current.状态 == S::已读取) != r.预期快照.has_value()) {
+      out.状态 = S::引用冲突;
+      return out;
+    }
+    if (r.预期快照 && (!current.投影 || *r.预期快照 != *current.投影)) {
+      out.状态 = S::引用冲突;
+      return out;
+    }
+    const auto known = 读取当前源关系组(r.E.编码, 特征关系类型_, r.G0);
+    if (!known.成功) {
+      out.状态 = known.状态 == 存在类数据状态::事实代次漂移 ? S::事实代次漂移 :
+                   known.状态 == 存在类数据状态::资源失败 ? S::资源失败 : S::内部不一致;
+      out.Gread = known.事实代次;
+      return out;
+    }
+    std::set<稳定编码> knownIds;
+    for (const auto &e : known.关系组) knownIds.insert(e.目标节点);
+    for (const auto f : all) {
+      if (!knownIds.contains(f)) { out.状态 = S::引用冲突; return out; }
+      const auto fact = 特征服务_.读取准确特征事实({1, r.G0, r.G0, {{f}}});
+      if (const auto *error = std::get_if<特征数据错误>(&fact)) {
+        out.状态 = *error == 特征数据错误::资源失败 ? S::资源失败 : S::引用冲突;
+        return out;
+      }
+      const auto &factual = std::get<准确特征读取事实>(fact);
+      if (factual.Gread != r.G0 || factual.H != r.G0 ||
+          factual.信息.身份.编码 != f || factual.信息.类型 != r.FT) {
+        out.状态 = S::引用冲突;
+        return out;
+      }
+    }
+    const auto same = [&] {
+      if (!current.投影 || current.投影->R项.size() != r.目标R项.size()) return false;
+      for (std::size_t i = 0; i < r.目标R项.size(); ++i) {
+        if (current.投影->R项[i].材料 != r.目标R项[i].材料 ||
+            current.投影->R项[i].形成成员 != r.目标R项[i].形成成员) return false;
+      }
+      return true;
+    }();
+    if (same) {
+      const L1所有者范围写集请求 zero{
+          L1所有者范围CRUD合同版本, r.G0, r.幂等身份};
+      const auto first = 写入端口_.读取首次写入材料(
+          {L1所有者范围首次写入读取合同版本, r.幂等身份});
+      if (first.合同版本 != L1所有者范围首次写入读取合同版本 ||
+          first.所有者 != 所有者_ || first.写入幂等身份 != r.幂等身份) {
+        out.状态 = S::内部不一致;
+        return out;
+      }
+      if (first.状态 == L1所有者范围读取状态::成功) {
+        if (!first.首次规范化写集 || *first.首次规范化写集 != zero) {
+          out.状态 = S::幂等冲突;
+          return out;
+        }
+      } else if (first.状态 != L1所有者范围读取状态::未找到) {
+        out.状态 = first.状态 == L1所有者范围读取状态::资源失败
+            ? S::资源失败 : S::内部不一致;
+        return out;
+      }
+      out.状态 = S::无须变更;
+      out.Gread = current.Gread;
+      out.H = current.H;
+      out.投影 = current.投影;
+      return out;
+    }
+    std::set<稳定编码> oldMembers;
+    if (current.投影)
+      for (const auto &f : current.投影->F成员) oldMembers.insert(f.编码);
+    if (current.投影)
+      for (const auto &f : current.投影->F成员)
+        if (!all.contains(f.编码)) { out.状态 = S::引用冲突; return out; }
+    L1所有者范围写集请求 ws{L1所有者范围CRUD合同版本, r.G0, r.幂等身份};
+    std::uint32_t next = 1;
+    const auto local = [&]() { return L1所有者范围写集本地键{next++}; };
+    L1所有者范围事实引用 IF;
+    L1所有者范围事实引用 collection;
+    if (!current.投影) {
+      const auto ifKey = local();
+      const auto collectionKey = local();
+      ws.节点.push_back({ifKey, 节点种类::普通, std::nullopt});
+      ws.节点.push_back({collectionKey, 节点种类::普通, std::nullopt});
+      IF = ifKey; collection = collectionKey;
+      ws.关系.push_back({local(), r.E.编码, IF, 实例特征结构_.E到IF, 1});
+      for (const auto f : all)
+        ws.关系.push_back({local(), IF, f, 实例特征结构_.IF到F, 1});
+      ws.关系.push_back({local(), IF, collection, 实例特征结构_.IF到R集合, 1});
+    } else {
+      IF = current.投影->IF.编码;
+      collection = current.投影->R集合.编码;
+      for (const auto f : all)
+        if (!oldMembers.contains(f))
+          ws.关系.push_back({local(), IF, f, 实例特征结构_.IF到F, 1});
+      std::optional<稳定编码> oldVersionRelation;
+      for (const auto &edge : current.投影->六关系事实)
+        if (edge.源节点 == current.投影->R集合.编码 &&
+            edge.目标节点 == current.投影->版本.编码 &&
+            edge.关系类型节点 == 实例特征结构_.R集合到版本)
+          oldVersionRelation = edge.编码;
+      if (!oldVersionRelation) { out.状态 = S::内部不一致; return out; }
+      ws.退出事实.push_back(*oldVersionRelation);
+    }
+    const auto versionKey = local();
+    ws.节点.push_back({versionKey, 节点种类::普通, std::nullopt});
+    ws.关系.push_back({local(), collection, versionKey, 实例特征结构_.R集合到版本, 1});
+    for (const auto &item : r.目标R项) {
+      const auto itemKey = local();
+      ws.节点.push_back({itemKey, 节点种类::普通, std::nullopt});
+      ws.关系.push_back({local(), versionKey, itemKey, 实例特征结构_.版本到R项, 1});
+      for (const auto f : item.形成成员)
+        ws.关系.push_back({local(), itemKey, f.编码, 实例特征结构_.R项到F, 1});
+      std::vector<std::uint64_t> encoded;
+      encoded.reserve(item.材料.规范化U64组.size() + 3);
+      encoded.push_back(item.材料.格式版本);
+      encoded.push_back(static_cast<std::uint64_t>(item.材料.类别));
+      encoded.push_back(item.材料.规范化U64组.size());
+      encoded.insert(encoded.end(), item.材料.规范化U64组.begin(), item.材料.规范化U64组.end());
+      ws.值.push_back({local(), itemKey, 实例特征结构_.R项材料属性类型,
+                       std::move(encoded), itemKey});
+    }
+    const auto first = 写入端口_.读取首次写入材料(
+        {L1所有者范围首次写入读取合同版本, r.幂等身份});
+    if (first.合同版本 != L1所有者范围首次写入读取合同版本 ||
+        first.所有者 != 所有者_ || first.写入幂等身份 != r.幂等身份) {
+      out.状态 = S::内部不一致;
+      return out;
+    }
+    const bool replay = first.状态 == L1所有者范围读取状态::成功;
+    if (replay) {
+      if (!first.首次规范化写集 || *first.首次规范化写集 != ws || !first.首次写入结果) {
+        out.状态 = S::幂等冲突;
+        return out;
+      }
+    } else if (first.状态 == L1所有者范围读取状态::未找到) {
+      if (first.读取事实代次 != r.G0) { out.状态 = S::事实代次漂移; out.Gread = first.读取事实代次; return out; }
+    } else {
+      out.状态 = first.状态 == L1所有者范围读取状态::资源失败 ? S::资源失败 : S::内部不一致;
+      return out;
+    }
+    dispatched = true;
+    IFR待确认_ = r;
+    const auto saved = 写入端口_.提交所有者范围中性写集(ws);
+    out.Gread = saved.事实代次;
+    const auto expected = replay ? L1所有者范围写入状态::精确重复 : L1所有者范围写入状态::成功;
+    if (saved.合同版本 != L1所有者范围CRUD合同版本 || saved.所有者 != 所有者_ ||
+        saved.写入幂等身份 != r.幂等身份 || saved.状态 != expected ||
+        saved.新编码映射.size() != ws.节点.size() + ws.关系.size() + ws.值.size()) {
+      if (saved.状态 == L1所有者范围写入状态::事实代次漂移) { zeroWrite = true; IFR待确认_.reset(); out.状态 = S::事实代次漂移; return out; }
+      if (saved.状态 == L1所有者范围写入状态::幂等冲突) { zeroWrite = true; IFR待确认_.reset(); out.状态 = S::幂等冲突; return out; }
+      out.状态 = S::已可能发布;
+      return out;
+    }
+    const auto read = 读取实例特征IFR({1, r.E, r.FT, saved.事实代次, r.读回预算});
+    if (read.状态 != S::已读取 || !read.投影) {
+      out.状态 = S::已可能发布;
+      return out;
+    }
+    out.状态 = replay ? S::精确重复 : S::已发布;
+    out.Gread = read.Gread;
+    out.H = read.H;
+    out.首次H = saved.事实代次;
+    out.投影 = read.投影;
+    IFR待确认_.reset();
+    return out;
+  } catch (const std::bad_alloc &) {
+    out.状态 = dispatched && !zeroWrite ? S::已可能发布 : S::资源失败;
+  } catch (...) {
+    out.状态 = dispatched && !zeroWrite ? S::已可能发布 : S::内部不一致;
+  }
+  if (out.状态 == S::已可能发布) {
+    if (!IFR待确认_) try { IFR待确认_ = r; } catch (...) {}
+  } else if (IFR待确认_ && IFR持久请求相同(*IFR待确认_, r)) {
+    IFR待确认_.reset();
+  }
+  out.H = 0;
+  out.投影.reset();
+  return out;
 }
 } // namespace 海中鱼巣
