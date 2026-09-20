@@ -7,9 +7,9 @@
 - 类型：集成能力目标
 - 记录版本：v0.3
 - 创建与更新时间：2026-09-20
-- 当前状态：当前；根材料 provider 实施目标已完成，等待形成下一合法下位目标
+- 当前状态：候选；当前直接执行位置由特征实际F provider 设计下位目标承担
 - 直接上位目标：无
-- 直接下位目标：`GOAL-IF-R-FOUNDATION`（已完成）、`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`（已完成）、`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`（完成）
+- 直接下位目标：`GOAL-IF-R-FOUNDATION`（已完成）、`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`（已完成）、`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-IFR-ACTUAL-F-PROVIDER-DESIGN`（当前）
 - 目标账所有者：交互智能体
 
 ## 1.1 目标问题与优先级
