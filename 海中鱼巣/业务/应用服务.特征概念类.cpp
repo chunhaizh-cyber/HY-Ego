@@ -599,7 +599,7 @@ I64原子准确特征出生应用结果 特征概念应用服务::处理I64原�
         } else {
             提交(out.IFR->Gread, afterBirthFirst ? std::nullopt : out.IFR->投影,
                 构造目标(afterBirthFirst ? std::optional<实例特征IFR完整投影>{} : out.IFR->投影,
-                           std::nullopt, *grouped.规范化材料, out.F出生->事实->F));
+                           std::nullopt, *grouped.规范化材料, 特征信息身份{out.F出生->事实->F}));
         }
     } catch (...) {
         out.状态 = 观察状态::归组失败;
