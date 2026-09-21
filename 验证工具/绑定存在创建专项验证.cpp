@@ -628,18 +628,16 @@ int main(int argc, char **argv) {
     概念树共享预算 cb{fb.基础, fb, 10000, 10000, 10000, 10000};
     std::vector<概念树概念身份> templates;
     for (std::uint32_t i = 0; i < 3; ++i) {
-      auto ftResult =
-          features.创建先天I64特征类型({fmeta[0],
-                                        fmeta[1],
-                                        i + 1,
-                                        1,
-                                        {{0, 100}},
-                                        I64特征域形成参数{2, fmeta[0]}});
-      auto *ft = std::get_if<特征类型身份>(&ftResult);
-      要求(ft, "concept-feature-type");
+      auto ftResult = features.形成或读取I64基础特征类型(
+          {1,当前代次(l1),{0x4654424153450000ULL+i},
+           {特征类型来源::外设能够获取,fmeta[0],
+            I64基础特征单位绑定::既有稳定单位,fmeta[1],i+1,1,
+            {{0,100}},I64特征域形成参数{2,fmeta[0]}}});
+      要求(ftResult.成功()&&ftResult.事实,"concept-feature-type");
+      const auto ft=ftResult.事实->数据.身份;
       特征概念建立请求 fq{{1, 当前代次(l1), 15000 + i},
-                          {*ft, {{{0, 100}}}},
-                          *ft,
+                          {ft, {{{0, 100}}}},
+                          ft,
                           {cl.根组.特征根},
                           {},
                           fb};

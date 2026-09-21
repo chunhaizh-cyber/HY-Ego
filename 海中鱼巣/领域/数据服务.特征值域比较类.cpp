@@ -90,8 +90,8 @@ bool 实例值域命中结果_v1::成功(const 实例值域命中核验请求_v1
             || fact.I64域->区间.size() > r.预算.最大域项数) {
             out.状态 = 特征值域比较状态_v1::内部不一致; return out;
         }
-        const auto type = features_.读取先天I64特征类型事实({1, r.Gread, r.H, fact.FT});
-        const auto* typeFact = std::get_if<特征截止事实<先天I64特征类型信息>>(&type);
+        const auto type = features_.读取I64基础特征类型事实({1, r.Gread, r.H, fact.FT});
+        const auto* typeFact = std::get_if<特征截止事实<I64基础特征类型信息>>(&type);
         if (!typeFact) { out.状态 = 映射特征错误(std::get<特征数据错误>(type)); return out; }
         if (typeFact->Gread != r.Gread || typeFact->H != r.H) {
             out.状态 = 特征值域比较状态_v1::事实代次漂移; return out;

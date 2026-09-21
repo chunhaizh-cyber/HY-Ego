@@ -116,18 +116,36 @@ struct I64特征域形成参数 final {
     稳定编码 参数来源;
     friend bool operator==(const I64特征域形成参数&, const I64特征域形成参数&) = default;
 };
-struct 先天I64特征类型规格 final {
-    稳定编码 外设提供者, 单位;
+enum class 特征类型来源 : std::uint8_t {
+    外设能够获取 = 1, 先天定义 = 2, 后天派生 = 3
+};
+enum class I64基础特征单位绑定 : std::uint8_t {
+    既有稳定单位 = 1, 新FT自身 = 2
+};
+struct I64基础特征类型形成规格 final {
+    特征类型来源 来源 = 特征类型来源::外设能够获取;
+    std::optional<稳定编码> 外设提供者;
+    I64基础特征单位绑定 单位绑定 = I64基础特征单位绑定::既有稳定单位;
+    std::optional<稳定编码> 既有单位;
     std::uint64_t 缩放分子{}, 缩放分母{};
     std::vector<特征I64闭区间> 允许集合;
     std::optional<I64特征域形成参数> 域形成;
-    friend bool operator==(const 先天I64特征类型规格&, const 先天I64特征类型规格&) = default;
+    friend bool operator==(const I64基础特征类型形成规格&, const I64基础特征类型形成规格&) = default;
 };
-struct 先天I64特征类型信息 final {
+struct I64基础特征类型规格 final {
+    特征类型来源 来源 = 特征类型来源::外设能够获取;
+    std::optional<稳定编码> 外设提供者;
+    稳定编码 单位;
+    std::uint64_t 缩放分子{}, 缩放分母{};
+    std::vector<特征I64闭区间> 允许集合;
+    std::optional<I64特征域形成参数> 域形成;
+    friend bool operator==(const I64基础特征类型规格&, const I64基础特征类型规格&) = default;
+};
+struct I64基础特征类型信息 final {
     特征类型身份 身份;
-    先天I64特征类型规格 规格;
+    I64基础特征类型规格 规格;
     std::optional<特征比较规则身份> 规则;
-    friend bool operator==(const 先天I64特征类型信息&, const 先天I64特征类型信息&) = default;
+    friend bool operator==(const I64基础特征类型信息&, const I64基础特征类型信息&) = default;
 };
 struct 特征规范I64域 final {
     std::vector<特征I64闭区间> 区间;
@@ -159,6 +177,31 @@ struct 特征R区间材料 final {
     特征R材料类别 类别 = 特征R材料类别::I64闭区间;
     std::vector<std::uint64_t> 规范化U64组;
     friend bool operator==(const 特征R区间材料&, const 特征R区间材料&) = default;
+};
+struct I64基础特征类型定义请求 final {
+    std::uint32_t 版本 = 1;
+    std::uint64_t G0 = 0;
+    L1所有者范围写入幂等身份 幂等身份;
+    I64基础特征类型形成规格 规格;
+    friend bool operator==(const I64基础特征类型定义请求&, const I64基础特征类型定义请求&) = default;
+};
+enum class I64基础特征类型定义状态 : std::uint8_t {
+    已形成 = 1, 已恢复 = 2, 入口拒绝 = 3, 当前性漂移 = 4,
+    幂等冲突 = 5, 首次材料不一致 = 6, 类型已退出 = 7,
+    引用冲突 = 8, 已可能发布 = 9, 资源失败 = 10, 内部不一致 = 11
+};
+struct I64基础特征类型定义结果 final {
+    std::uint32_t 版本 = 1;
+    I64基础特征类型定义状态 状态 = I64基础特征类型定义状态::入口拒绝;
+    I64基础特征类型定义请求 原请求;
+    std::optional<L1所有者范围写入结果> 首次写入回执;
+    std::optional<特征截止事实<I64基础特征类型信息>> 事实;
+    bool 成功() const noexcept {
+        return 版本 == 1 && (状态 == I64基础特征类型定义状态::已形成
+            || 状态 == I64基础特征类型定义状态::已恢复)
+            && 事实 && 事实->Gread && 事实->H && 事实->H <= 事实->Gread
+            && 有效(事实->数据.身份) && 事实->数据.规格.来源 == 原请求.规格.来源;
+    }
 };
 // FCv 是概念 owner 已同截止核验后的投影；特征类不读取 F→FCv 关系。
 struct 特征R成员规则投影 final {
@@ -943,8 +986,9 @@ public:
     R<std::monostate> 初始化特征定义结构();
     R<std::monostate> 初始化准确特征结构();
     R<std::monostate> 收敛待确认写入();
-    R<特征类型身份> 创建先天I64特征类型(const 先天I64特征类型规格&);
-    R<先天I64特征类型信息> 读取先天I64特征类型(特征类型身份) const;
+    I64基础特征类型定义结果 形成或读取I64基础特征类型(
+        const I64基础特征类型定义请求&) noexcept;
+    R<I64基础特征类型信息> 读取I64基础特征类型(特征类型身份) const;
     R<特征信息> 读取准确特征(特征信息身份) const;
     R<std::vector<特征信息>> 查询准确特征(特征类型身份, const 特征准确值&) const;
     R<std::monostate> 删除准确特征(特征信息身份);
@@ -958,7 +1002,8 @@ public:
     R<补齐I64默认R规则结果> 补齐I64默认R规则(const 补齐I64默认R规则请求&);
     特征类型准确值核验结果 核验正式特征类型准确值(
         const 特征类型准确值核验请求&) const;
-    R<特征截止事实<先天I64特征类型信息>> 读取先天I64特征类型事实(const 特征类型截止请求&) const;
+    R<特征截止事实<I64基础特征类型信息>> 读取I64基础特征类型事实(
+        const 特征类型截止请求&) const;
     R<特征截止事实<特征规范I64域>> 读取I64类型完整域(const 特征类型截止请求&) const;
     R<特征域形成事实> 形成I64特征域(const 准确特征读取请求&) const;
     R<特征截止事实<特征规范I64域>> 规范化I64特征域(const 特征I64域判定请求&) const;
@@ -1005,9 +1050,11 @@ private:
     E 核对归属(稳定编码, std::uint64_t, std::uint64_t, 分区, 读取计量* = nullptr) const;
     static 特征规范I64域 规范域(特征规范I64域);
     static bool 包含(const 特征规范I64域&, const 特征规范I64域&);
-    static void 检查规格(const 先天I64特征类型规格&);
+    static void 检查形成规格(const I64基础特征类型形成规格&);
+    static void 检查规格(const I64基础特征类型规格&);
     struct 标量读取上下文;
-    先天I64特征类型信息 读类型(特征类型身份, std::uint64_t, std::uint64_t, 标量读取上下文* = nullptr, 读取计量* = nullptr) const;
+    I64基础特征类型信息 读类型(特征类型身份, std::uint64_t, std::uint64_t,
+        标量读取上下文* = nullptr, 读取计量* = nullptr) const;
     特征规范I64域 读完整域(特征类型身份, std::uint64_t, std::uint64_t) const;
     准确特征读取事实 读准确(特征信息身份, std::uint64_t, std::uint64_t, 标量读取上下文* = nullptr, 读取计量* = nullptr) const;
     特征域形成事实 形成I64特征域已持锁(const 准确特征读取请求&) const;
@@ -1077,6 +1124,24 @@ private:
     void R规则就绪() const {
         for (const auto id : r_) 要求(有效(id), S::未设置);
     }
+    static constexpr L1所有者范围写入幂等身份 类型来源结构扩展初始化幂等身份{
+        0x4654'534F'5552'4345ULL};
+    enum 类型来源结构角色 : std::size_t { 类型来源属性, 类型来源结构角色数 };
+    static WS 类型来源扩展写集(std::uint64_t g) {
+        WS ws; ws.期望事实代次 = g; ws.写入幂等身份 = 类型来源结构扩展初始化幂等身份;
+        ws.节点 = {{Key{1}, 节点种类::属性类型, L1所有者范围值表示种类::I64}};
+        return ws;
+    }
+    void 接受类型来源扩展(const L1所有者范围写入结果& receipt) {
+        要求(receipt.新编码映射.size() == source_.size(), S::旧格式不支持);
+        for (std::size_t i = 0; i < source_.size(); ++i)
+            source_[i] = 映射编码(receipt, Key{static_cast<std::uint32_t>(i + 1)});
+    }
+    void 初始化类型来源扩展();
+    void 类型来源就绪() const { for (const auto id : source_) 要求(有效(id), S::未设置); }
+    WS I64基础类型写集(std::uint64_t, const I64基础特征类型定义请求&) const;
+    特征截止事实<I64基础特征类型信息> 读取I64基础类型定义事实(
+        const L1所有者范围写入结果&, std::uint64_t) const;
     void 添加I64默认R规则(WS&, Ref FT, bool 有域形成) const;
     std::optional<稳定编码> 读取R规则(特征类型身份, std::int64_t 用途,
         std::uint64_t Gread, std::uint64_t H, const 特征R规则读取预算&) const;
@@ -2019,6 +2084,7 @@ private:
     std::array<稳定编码, 信息角色数> f_{};
     std::array<稳定编码,I64比较绑定结构角色数> k_{};
     std::array<稳定编码, R规则结构角色数> r_{};
+    std::array<稳定编码, 类型来源结构角色数> source_{};
     bool definition_ready_ = false, information_ready_ = false;
     std::optional<旧v1派生治理结构交付> legacy_;
     std::optional<待确认写入> pending_;

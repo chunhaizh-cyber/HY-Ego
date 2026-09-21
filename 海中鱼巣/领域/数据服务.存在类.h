@@ -4730,9 +4730,18 @@ private:
       const auto rows=第一层服务_.读取所有者范围历史关系组({L1所有者范围CRUD合同版本,L1所有者范围关系端点方向::源,r.holder,特征关系类型_,r.H});
       if(rows.读取事实代次!=r.Gread)throw 原子I64特征窄读取状态::事实代次漂移;
       if(rows.状态!=L1所有者范围读取状态::成功)throw map(rows.状态);
-      if(rows.关系组.empty()) {out.状态=原子I64特征窄读取状态::未找到;return out;}if(rows.关系组.size()!=1)throw 原子I64特征窄读取状态::内部不一致;
-      const auto& e=rows.关系组.front();if(e.写入所有者!=所有者_||e.源节点!=r.holder||e.目标节点!=r.F||e.关系类型节点!=特征关系类型_||e.角色或顺序!=1||e.创建事实代次>r.H||e.退出事实代次)throw 原子I64特征窄读取状态::内部不一致;
-      guard();out.事实=原子I64特征holder事实{r.holder,r.F,e.编码,e.关系类型节点,e.创建事实代次};out.状态=原子I64特征窄读取状态::已读取;
+      const L1所有者范围关系事实* selected=nullptr;
+      for(const auto& e:rows.关系组) {
+        if(e.目标节点!=r.F)continue;
+        if(selected||e.写入所有者!=所有者_||e.源节点!=r.holder||
+           e.关系类型节点!=特征关系类型_||e.角色或顺序!=1||
+           !e.创建事实代次||e.创建事实代次>r.H||e.退出事实代次)
+          throw 原子I64特征窄读取状态::内部不一致;
+        selected=&e;
+      }
+      if(!selected) {out.状态=原子I64特征窄读取状态::未找到;return out;}
+      guard();out.事实=原子I64特征holder事实{r.holder,r.F,selected->编码,
+          selected->关系类型节点,selected->创建事实代次};out.状态=原子I64特征窄读取状态::已读取;
     }catch(原子I64特征窄读取状态 s){out.状态=s;out.事实.reset();}catch(...){out.状态=原子I64特征窄读取状态::内部不一致;out.事实.reset();}return out;
   }
   稳定编码 当前采用关系类型_;
@@ -5416,26 +5425,59 @@ inline 实例特征IFR结果 存在类数据服务::读取实例特征IFR(
     for (const auto &e : knownEdges) known.insert(e.目标节点);
     auto eif = relation(r.E.编码, 实例特征结构_.E到IF);
     if (eif.empty()) return fail(S::未找到);
-    if (eif.size() != 1) return fail(S::内部不一致);
-    auto ifNode = ordinary(eif.front().目标节点);
-    auto ifF = relation(ifNode->编码, 实例特征结构_.IF到F);
-    if (ifF.empty()) return fail(S::内部不一致);
-    if (ifF.size() > r.预算.最大F成员数) return fail(S::数量预算不足);
+    std::uint64_t relationCount = 0;
+    const auto consumeRelations = [&](std::size_t count) noexcept {
+      if (count > r.预算.最大关系数 - relationCount) return false;
+      relationCount += static_cast<std::uint64_t>(count);
+      return true;
+    };
+    if (!consumeRelations(eif.size())) return fail(S::数量预算不足);
+    std::optional<L1所有者范围关系事实> selectedEif;
+    std::optional<L1所有者范围节点事实> ifNode;
+    std::vector<L1所有者范围关系事实> ifF;
     std::vector<特征信息身份> fMembers;
-    fMembers.reserve(ifF.size());
-    for (const auto &e : ifF) {
-      if (!known.contains(e.目标节点)) return fail(S::引用冲突);
-      const auto f = 特征服务_.读取准确特征事实({1, r.Gread, r.Gread, {e.目标节点}});
-      if (const auto *err = std::get_if<特征数据错误>(&f)) {
-        if (*err == 特征数据错误::资源失败) return fail(S::资源失败);
-        return fail(S::引用冲突);
+    for (const auto &candidateEif : eif) {
+      auto candidateIf = ordinary(candidateEif.目标节点);
+      auto candidateF = relation(candidateIf->编码, 实例特征结构_.IF到F);
+      if (candidateF.empty()) return fail(S::内部不一致);
+      if (!consumeRelations(candidateF.size())) return fail(S::数量预算不足);
+      std::optional<特征类型身份> candidateFt;
+      std::vector<特征信息身份> candidateMembers;
+      candidateMembers.reserve(candidateF.size());
+      for (const auto &edge : candidateF) {
+        if (!known.contains(edge.目标节点)) return fail(S::引用冲突);
+        const auto f = 特征服务_.读取准确特征事实(
+            {1, r.Gread, r.Gread, {edge.目标节点}});
+        if (const auto *err = std::get_if<特征数据错误>(&f)) {
+          if (*err == 特征数据错误::资源失败) return fail(S::资源失败);
+          return fail(S::引用冲突);
+        }
+        const auto &fact = std::get<准确特征读取事实>(f);
+        if (fact.Gread != r.Gread || fact.H != r.Gread ||
+            fact.信息.身份.编码 != edge.目标节点 || !有效(fact.信息.类型))
+          return fail(S::引用冲突);
+        if (candidateFt && *candidateFt != fact.信息.类型)
+          return fail(S::内部不一致);
+        candidateFt = fact.信息.类型;
+        candidateMembers.push_back({edge.目标节点});
       }
-      const auto &fact = std::get<准确特征读取事实>(f);
-      if (fact.Gread != r.Gread || fact.H != r.Gread ||
-          fact.信息.身份.编码 != e.目标节点 || fact.信息.类型 != r.FT)
-        return fail(S::引用冲突);
-      fMembers.push_back({e.目标节点});
+      if (!candidateFt) return fail(S::内部不一致);
+      std::sort(candidateMembers.begin(), candidateMembers.end(),
+                [](auto a, auto b) { return a.编码 < b.编码; });
+      if (std::adjacent_find(candidateMembers.begin(), candidateMembers.end(),
+                             [](auto a, auto b) { return a.编码 == b.编码; }) !=
+          candidateMembers.end())
+        return fail(S::内部不一致);
+      if (*candidateFt != r.FT) continue;
+      if (selectedEif) return fail(S::内部不一致);
+      if (candidateF.size() > r.预算.最大F成员数)
+        return fail(S::数量预算不足);
+      selectedEif = candidateEif;
+      ifNode = std::move(candidateIf);
+      ifF = std::move(candidateF);
+      fMembers = std::move(candidateMembers);
     }
+    if (!selectedEif) return fail(S::未找到);
     std::sort(fMembers.begin(), fMembers.end(), [](auto a, auto b) { return a.编码 < b.编码; });
     if (std::adjacent_find(fMembers.begin(), fMembers.end(),
         [](auto a, auto b) { return a.编码 == b.编码; }) != fMembers.end()) return fail(S::内部不一致);
@@ -5448,7 +5490,9 @@ inline 实例特征IFR结果 存在类数据服务::读取实例特征IFR(
     auto versionR = relation(versionNode->编码, 实例特征结构_.版本到R项);
     if (versionR.empty()) return fail(S::内部不一致);
     if (versionR.size() > r.预算.最大R项数) return fail(S::数量预算不足);
-    std::uint64_t relationCount = eif.size() + ifF.size() + ifR.size() + setV.size() + versionR.size();
+    if (!consumeRelations(ifR.size()) || !consumeRelations(setV.size()) ||
+        !consumeRelations(versionR.size()))
+      return fail(S::数量预算不足);
     std::vector<实例特征R项投影> items;
     items.reserve(versionR.size());
     std::set<稳定编码> allMember;
@@ -5456,8 +5500,7 @@ inline 实例特征IFR结果 存在类数据服务::读取实例特征IFR(
       auto rNode = ordinary(rEdge.目标节点);
       auto members = relation(rNode->编码, 实例特征结构_.R项到F);
       if (members.empty()) return fail(S::内部不一致);
-      relationCount += members.size();
-      if (relationCount > r.预算.最大关系数) return fail(S::数量预算不足);
+      if (!consumeRelations(members.size())) return fail(S::数量预算不足);
       std::vector<特征信息身份> memberIds;
       memberIds.reserve(members.size());
       for (const auto &e : members) {
@@ -5509,7 +5552,7 @@ inline 实例特征IFR结果 存在类数据服务::读取实例特征IFR(
     p.结构 = 实例特征结构_;
     p.节点事实 = {*ifNode, *setNode, *versionNode};
     for (const auto &i : p.R项) p.节点事实.push_back(i.节点事实);
-    p.六关系事实.insert(p.六关系事实.end(), eif.begin(), eif.end());
+    p.六关系事实.push_back(*selectedEif);
     p.六关系事实.insert(p.六关系事实.end(), ifF.begin(), ifF.end());
     p.六关系事实.insert(p.六关系事实.end(), ifR.begin(), ifR.end());
     p.六关系事实.insert(p.六关系事实.end(), setV.begin(), setV.end());

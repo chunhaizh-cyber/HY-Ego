@@ -420,7 +420,7 @@ void 概念树类数据服务::验证世界(const 概念树形成世界引用 &w
                 if (r.Gread != g || r.H != h || r.信息.身份.编码 != x.值)
                     throw 失败{S::内部不一致};
             } else if constexpr (std::is_same_v<T, 概念树特征类型引用>) {
-                const auto r = 特征结果(features_.读取先天I64特征类型事实({1,g,h,{x.值}}));
+                const auto r = 特征结果(features_.读取I64基础特征类型事实({1,g,h,{x.值}}));
                 if (r.Gread != g || r.H != h || r.数据.身份.编码 != x.值)
                     throw 失败{S::内部不一致};
             } else if constexpr (std::is_same_v<T, 概念树场景引用>) {
@@ -433,7 +433,7 @@ void 概念树类数据服务::验证世界(const 概念树形成世界引用 &w
 void 概念树类数据服务::验证特征定义(const 概念树特征定义 &d, std::uint64_t g, std::uint64_t h,
                                     const 概念树预算 &b) const {
     验证世界(d.形成宿主, g, h, b);
-    const auto r = 特征结果(features_.读取先天I64特征类型事实({1,g,h,{d.特征类型.值}}));
+    const auto r = 特征结果(features_.读取I64基础特征类型事实({1,g,h,{d.特征类型.值}}));
     if (r.Gread != g || r.H != h || r.数据.身份.编码 != d.特征类型.值)
         throw 失败{S::内部不一致};
     using R = L1所有者范围值表示种类;
@@ -561,7 +561,7 @@ void 概念树类数据服务::验证特征定义(const 概念树特征定义 &d
         if (!narrow && !structure)
             验证特征定义(d, g, n.创建事实代次, b);
         else {
-            const auto ft = 特征结果(features_.读取先天I64特征类型事实({1,g,n.创建事实代次,{d.特征类型.值}}));
+            const auto ft = 特征结果(features_.读取I64基础特征类型事实({1,g,n.创建事实代次,{d.特征类型.值}}));
             using R = L1所有者范围值表示种类;
             const auto *exact = std::get_if<概念树精确值>(&d.值域);
             const auto rep = exact && exact->index() == 1   ? R::I64组
@@ -4766,9 +4766,6 @@ namespace {
             !有效(r.纯概念结构.类型.格式版本) || r.最大首次材料项数 < 12) {
             fail(存在概念两组状态_v3::入口拒绝); return out;
         }
-        if (!已发布纯概念结构_v2(l1,port,r.纯概念结构,r.G0)) {
-            fail(存在概念两组状态_v3::旧格式不支持); return out;
-        }
         const auto& pure = r.纯概念结构;
         const auto& type = pure.类型;
         L1所有者范围写集请求 write{L1所有者范围CRUD合同版本,r.G0,r.幂等身份};
@@ -4805,6 +4802,10 @@ namespace {
         } else {
             fail(first.状态 == L1所有者范围读取状态::资源失败 ?
                  存在概念两组状态_v3::资源失败 : 存在概念两组状态_v3::内部不一致); return out;
+        }
+        const auto pureReadGeneration=replay ? first.读取事实代次 : r.G0;
+        if (!已发布纯概念结构_v2(l1,port,r.纯概念结构,pureReadGeneration)) {
+            fail(存在概念两组状态_v3::旧格式不支持); return out;
         }
         entered=true;
         const auto saved=port.提交所有者范围中性写集(write);
@@ -5770,9 +5771,6 @@ bool 特征概念出生使用结构登记结果::成功(
             t.定义特征类型,t.定义模板,t.I64域,t.通用规则,t.直接上位,t.生命周期,t.存在概念使用};
         std::set<std::uint64_t> distinct;
         for (const auto id : pure) if (!有效(id) || !distinct.insert(id.值).second) return out;
-        if (!已发布纯概念结构_v2(l1,port,r.纯概念结构,r.G0)) {
-            out.状态=纯概念状态::旧格式不支持; return out;
-        }
         const auto existing=port.读取首次写入材料({L1所有者范围首次写入读取合同版本,r.幂等键});
         out.Gread=existing.读取事实代次;
         if (existing.合同版本 != L1所有者范围首次写入读取合同版本 ||
@@ -5784,6 +5782,16 @@ bool 特征概念出生使用结构登记结果::成功(
             out.状态=existing.状态 == L1所有者范围读取状态::资源失败 ?
                 纯概念状态::资源失败 : 纯概念状态::内部不一致;
             return out;
+        }
+        if (!hasExisting && (existing.读取事实代次 != r.G0 ||
+            existing.首次规范化写集 || existing.首次写入结果)) {
+            out.状态=existing.读取事实代次 != r.G0 ?
+                纯概念状态::事实代次漂移 : 纯概念状态::内部不一致;
+            return out;
+        }
+        const auto pureReadGeneration=hasExisting ? existing.读取事实代次 : r.G0;
+        if (!已发布纯概念结构_v2(l1,port,r.纯概念结构,pureReadGeneration)) {
+            out.状态=纯概念状态::旧格式不支持; return out;
         }
         if (!hasExisting) {
         // The pure delivery is the only structure input.  Its fifteen named facts are

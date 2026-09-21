@@ -107,11 +107,95 @@ struct 实例特征R观察结果 final {
                          const 实例特征R观察结果&) = default;
 };
 
+enum class 本能值角色 : std::uint8_t { 安全值 = 1, 服务值 = 2 };
+struct 本能先天特征概念初始化请求 final {
+  std::uint32_t 版本 = 1;
+  std::uint64_t G0 = 0;
+  概念树预算 概念预算;
+  friend bool operator==(const 本能先天特征概念初始化请求&,
+                         const 本能先天特征概念初始化请求&) = default;
+};
+struct 先天I64特征概念交付 final {
+  本能值角色 角色 = 本能值角色::安全值;
+  I64基础特征类型信息 类型;
+  纯概念事实 完整域概念;
+  std::uint64_t FT首次H = 0, 概念首次H = 0, Gread = 0;
+  friend bool operator==(const 先天I64特征概念交付&,
+                         const 先天I64特征概念交付&) = default;
+};
+enum class 本能先天特征概念初始化状态 : std::uint8_t {
+  已形成 = 1, 已恢复 = 2, 入口拒绝 = 3, FT失败 = 4, 概念失败 = 5,
+  当前性漂移 = 6, 幂等冲突 = 7, 首次材料不一致 = 8,
+  类型或概念已退出 = 9, 引用冲突 = 10, 已可能发布 = 11,
+  资源失败 = 12, 内部不一致 = 13
+};
+struct 本能先天特征概念初始化结果 final {
+  std::uint32_t 版本 = 1;
+  本能先天特征概念初始化状态 状态 = 本能先天特征概念初始化状态::入口拒绝;
+  本能先天特征概念初始化请求 原请求;
+  std::optional<先天I64特征概念交付> 安全值交付, 服务值交付;
+  std::uint64_t Gread = 0;
+  bool 成功() const noexcept;
+};
+
+class 本能先天特征概念初始化提供者 final {
+  特征类数据服务& 特征服务_;
+  概念树类数据服务& 概念服务_;
+public:
+  本能先天特征概念初始化提供者(特征类数据服务& features,
+      概念树类数据服务& concepts) noexcept : 特征服务_(features), 概念服务_(concepts) {}
+  本能先天特征概念初始化结果 初始化(
+      const 本能先天特征概念初始化请求&) noexcept;
+};
+
+struct 本能根I64实际F请求 final {
+  std::uint32_t 版本 = 1;
+  std::uint64_t G0 = 0;
+  本能值角色 角色 = 本能值角色::安全值;
+  存在信息身份 E;
+  定位特征位置 位置;
+  L1所有者范围写入幂等身份 IFR键, FCv概念键, 当前采用键;
+  原子I64特征出生键 F出生键;
+  实例特征IFR读取预算 IFR预算;
+  特征R规则读取预算 R规则预算;
+  原子I64特征候选读取预算 候选预算;
+  原子I64特征组织读取预算 组织预算;
+  原子I64特征概念读取预算 概念读取预算;
+  概念树预算 概念预算;
+  std::uint64_t 当前采用关系预算 = 0;
+  friend bool operator==(const 本能根I64实际F请求&, const 本能根I64实际F请求&) = default;
+};
+enum class 本能根I64实际F状态 : std::uint8_t {
+  已形成 = 1, 已读取 = 2, 入口拒绝 = 3, 初始化交付不完整 = 4,
+  当前采用读取失败 = 5, IFR失败 = 6, F出生失败 = 7, 当前采用写入失败 = 8,
+  引用冲突 = 9, 事实代次漂移 = 10, 资源失败 = 11, 内部不一致 = 12
+};
+struct 本能根I64实际F结果 final {
+  std::uint32_t 版本 = 1;
+  本能根I64实际F状态 状态 = 本能根I64实际F状态::入口拒绝;
+  本能根I64实际F请求 原请求;
+  std::optional<先天I64特征概念交付> 初始化交付;
+  std::optional<实例特征R观察结果> IFR;
+  std::optional<实例特征IFR结果> IFR读回;
+  std::optional<存在当前采用结果> 当前采用;
+  std::optional<准确特征读取事实> 准确F;
+  std::optional<原子I64特征出生读取结果> 原子读回;
+  std::optional<纯概念读取结果> 单值概念读回;
+  std::optional<特征信息身份> 实际F;
+  bool 成功() const noexcept { return (状态 == 本能根I64实际F状态::已形成 || 状态 == 本能根I64实际F状态::已读取)
+    && 初始化交付 && 当前采用 && 当前采用->成功() && IFR读回
+    && IFR读回->状态 == 实例特征IFR状态::已读取 && IFR读回->投影
+    && 准确F && 原子读回 && 单值概念读回 && 实际F
+    && 原子读回->事实 && 单值概念读回->事实
+    && *实际F == 当前采用->采用->F; }
+};
+
 class 特征概念应用服务 final {
   特征类数据服务& 特征服务_;
   概念树类数据服务& 概念服务_;
   原子I64特征出生数据服务& 原子服务_;
   存在类数据服务& 存在服务_;
+  本能先天特征概念初始化结果 初始化交付_;
   实例特征结构诊断 结构诊断_ = nullptr;
 
   static bool 请求有效(const I64原子准确特征出生应用请求&) noexcept;
@@ -126,11 +210,12 @@ class 特征概念应用服务 final {
 public:
   特征概念应用服务(特征类数据服务&, 概念树类数据服务&,
       原子I64特征出生数据服务&, 存在类数据服务&,
-      实例特征结构诊断) noexcept;
+      const 本能先天特征概念初始化结果&, 实例特征结构诊断) noexcept;
   I64原子准确特征出生应用结果 处理I64原子准确特征出生(
       const I64原子准确特征出生应用请求&);
   实例特征R观察结果 处理实例特征R观察(
       const 实例特征R观察请求&) noexcept;
+  本能根I64实际F结果 形成或读取本能根I64实际F(const 本能根I64实际F请求&) noexcept;
   bool 使用概念服务(const 概念树类数据服务& x) const noexcept { return &概念服务_==&x; }
   bool 使用原子出生服务(const 原子I64特征出生数据服务& x) const noexcept { return &原子服务_==&x; }
   bool 使用存在服务(const 存在类数据服务& x) const noexcept { return &存在服务_==&x; }

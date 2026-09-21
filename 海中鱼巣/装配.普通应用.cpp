@@ -33,6 +33,7 @@ namespace 普通应用装配内部 {
 
 struct 概念结构异常 final { 纯概念状态 原因; };
 struct 角色结构异常 final { 存在单例角色状态 原因; };
+struct 本能先天特征概念异常 final { 本能先天特征概念初始化状态 原因; };
 struct 持久恢复异常 final { L1事实基座持久恢复结果_v1 结果; };
 
 const wchar_t* 实例特征结构异常文本(实例特征结构异常 reason) noexcept {
@@ -258,6 +259,7 @@ struct 普通应用上下文 final {
   std::unique_ptr<状态类数据服务> 状态;
   std::unique_ptr<场景类数据服务> 场景;
   std::unique_ptr<概念树类数据服务> 概念;
+  本能先天特征概念初始化结果 本能先天特征概念初始化;
   std::unique_ptr<特征值域比较数据服务> 特征值域比较;
   std::unique_ptr<原子I64特征出生数据服务> 原子I64特征出生;
   std::unique_ptr<特征概念应用服务> 特征概念;
@@ -365,7 +367,8 @@ std::unique_ptr<普通应用上下文> 建立上下文(
   }
 
   const 特征值U64组结构登记请求_B2 valueLayoutRequest{
-      1, 当前代次(l1), {0x1010}};
+      1, 定位首次(*result->特征值所有者.写入端口,l1,0x1010).G0,
+      {0x1010}};
   const auto valueLayout = 特征值类数据服务::登记U64组结构_B2(
       l1, *result->特征值所有者.写入端口, valueLayoutRequest);
   if (!valueLayout.成功(valueLayoutRequest) || !valueLayout.交付)
@@ -376,13 +379,18 @@ std::unique_ptr<普通应用上下文> 建立上下文(
       l1, std::move(*result->特征定义所有者.写入端口),
       std::move(*result->特征信息所有者.写入端口), *result->特征值,
       producers.front());
+  if (!std::holds_alternative<std::monostate>(
+          result->特征->初始化特征定义结构()) ||
+      !std::holds_alternative<std::monostate>(
+          result->特征->初始化准确特征结构()))
+    throw 普通应用装配状态::元结构建立失败;
   const auto roleG0=定位首次(*result->存在所有者.写入端口,l1,0x1202).G0;
   const 存在单例角色结构登记请求 roleRequest{1,roleG0,{0x1202}};
   const auto role=存在类数据服务::登记单例角色结构(
       l1,*result->存在所有者.写入端口,roleRequest);
   if(!role.成功(roleRequest)||!role.交付)throw 角色结构异常{role.状态};
   result->角色结构=*role.交付;
-  const auto instanceFeatureG0=定位首次(*result->存在所有者.写入端口,l1,0x4946525354525632ULL).G0;
+  const auto instanceFeatureG0=当前代次(l1);
   const 实例特征结构登记请求 instanceFeatureRequest{
       2,instanceFeatureG0,{0x4946525354525632ULL}};
   const auto instanceFeature=存在类数据服务::登记实例特征结构(
@@ -394,8 +402,7 @@ std::unique_ptr<普通应用上下文> 建立上下文(
       existenceLayout[0], existenceLayout[1],
       存在当前采用结构交付{existenceLayout[2]},*instanceFeature.交付,result->角色结构);
   const 需求结构登记请求 demandRequest{需求结构登记合同版本,
-      定位首次(*result->需求所有者.写入端口, l1,
-          需求结构登记固定幂等身份.值).G0};
+      当前代次(l1)};
   const auto demandRegistration = 需求类数据服务::登记需求结构(
       l1, *result->需求所有者.写入端口, demandRequest);
   if (!demandRegistration.成功(demandRequest) || !demandRegistration.交付)
@@ -457,13 +464,18 @@ std::unique_ptr<普通应用上下文> 建立上下文(
       l1,*result->特征,*result->存在,*result->特征值,*result->场景,
       std::move(*result->概念所有者.写入端口),*conceptRegistration.交付,
       *featureBirthRegistration.交付,*completeDefinitionRegistration.交付);
+  本能先天特征概念初始化提供者 instinctInitialization(*result->特征,*result->概念);
+  result->本能先天特征概念初始化=instinctInitialization.初始化(
+      {1,当前代次(l1),{64,256,0,0,0,64,0,0}});
+  if(!result->本能先天特征概念初始化.成功())
+    throw 本能先天特征概念异常{result->本能先天特征概念初始化.状态};
   result->特征值域比较=std::make_unique<特征值域比较数据服务>(
       *result->概念,*result->特征,*result->特征值);
   result->原子I64特征出生=std::make_unique<原子I64特征出生数据服务>(
       *result->特征,*result->存在,*result->场景,*result->概念);
   result->特征概念=std::make_unique<特征概念应用服务>(
       *result->特征,*result->概念,*result->原子I64特征出生,*result->存在,
-      报告实例特征结构异常);
+      result->本能先天特征概念初始化,报告实例特征结构异常);
   result->场景成员概念=std::make_unique<场景成员概念应用服务>(
       *result->特征概念);
   result->根服务 =
@@ -550,6 +562,11 @@ namespace 普通应用装配内部 {
 
     if(上下文) {
       out.持久恢复=上下文->持久恢复;
+      if(!上下文->本能先天特征概念初始化.成功()) {
+        out.状态=普通应用装配状态::本能先天特征概念初始化失败;
+        out.本能先天特征概念原因=上下文->本能先天特征概念初始化.状态;
+        return out;
+      }
       if(!上下文->自我) {
         try {上下文->自我=std::make_unique<真实自我形成服务>(
             *上下文->世界树,*上下文->存在,上下文->角色结构.项目角色);}
@@ -616,6 +633,9 @@ namespace 普通应用装配内部 {
     out.状态=普通应用装配状态::概念结构失败;out.概念原因=e.原因;
   } catch(const 角色结构异常&e) {
     out.状态=普通应用装配状态::单例角色结构失败;out.角色原因=e.原因;
+  } catch(const 本能先天特征概念异常&e) {
+    out.状态=普通应用装配状态::本能先天特征概念初始化失败;
+    out.本能先天特征概念原因=e.原因;
   } catch(const std::bad_alloc&) {
     out.状态=普通应用装配状态::资源失败;
   } catch(const std::length_error&) {
@@ -694,6 +714,14 @@ namespace 普通应用装配内部 {
     out.状态 = 方法登记根生产初始化状态::内部不一致;
   }
   return out;
+}
+
+std::optional<本能先天特征概念初始化结果>
+读取普通应用本能先天特征概念初始化() noexcept {
+  using namespace 普通应用装配内部;
+  std::lock_guard lock(上下文锁);
+  if(!上下文||!上下文->本能先天特征概念初始化.成功())return std::nullopt;
+  return 上下文->本能先天特征概念初始化;
 }
 
 需求类数据服务* 读取普通应用需求服务() noexcept {

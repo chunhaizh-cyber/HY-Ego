@@ -115,8 +115,9 @@ bool 特征值U64组结构登记结果_B2::成功(const 特征值U64组结构登
         }
         const auto tail = l1.读取中性当前事实代次({L1中性CRUD合同版本});
         if (tail.状态 != L1中性读取状态::成功 || !tail.事实代次
-            || (saved.状态 == L1所有者范围写入状态::成功 && tail.事实代次 != r.G0 + 1)
-            || (saved.状态 == L1所有者范围写入状态::精确重复 && tail.事实代次 != r.G0)) {
+            || saved.事实代次 != r.G0 + 1 || tail.事实代次 < saved.事实代次
+            || (saved.状态 == L1所有者范围写入状态::成功
+                && tail.事实代次 != saved.事实代次)) {
             out.状态 = 特征值U64组结构登记状态_B2::已可能发布; return out;
         }
         const auto g = tail.事实代次;

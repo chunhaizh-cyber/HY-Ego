@@ -295,11 +295,13 @@ void probe() {
   const auto featureInit = fixture.features->初始化准确特征结构();
   require(std::holds_alternative<std::monostate>(featureInit),
           "feature-structure-init");
-  const auto ftResult = fixture.features->创建先天I64特征类型(
-      {fixture.producers[0], fixture.producers[1], 1, 1,
-       {{0,100}}, std::nullopt});
-  const auto *ft = std::get_if<特征类型身份>(&ftResult);
-  require(ft && 有效(*ft), "feature-type");
+  const auto ftResult = fixture.features->形成或读取I64基础特征类型(
+      {1,generation(fixture.l1()),{0x8251},
+       {特征类型来源::外设能够获取,fixture.producers[0],
+        I64基础特征单位绑定::既有稳定单位,fixture.producers[1],1,1,
+        {{0,100}},std::nullopt}});
+  require(ftResult.成功() && ftResult.事实, "feature-type");
+  const auto ft = ftResult.事实->数据.身份;
 
   auto conceptOwner = owner(fixture.runtime->所有者范围签发器(), 0x8301);
   const auto layout = related_layout(*conceptOwner.写入端口, fixture.l1());
@@ -311,7 +313,7 @@ void probe() {
   const auto g1 = generation(fixture.l1());
   相关概念参与请求 featureRequest{1,g1,{0x8401},
       相关概念创建方案{相关概念类别::特征,
-          概念树特征定义{概念树存在引用{root}, 概念树特征类型引用{ft->编码},
+          概念树特征定义{概念树存在引用{root}, 概念树特征类型引用{ft.编码},
               概念树精确值{std::int64_t{12}}}, {}},
       {概念树存在引用{root}, g1}, budget()};
   const auto prepared = concepts.准备相关概念片段(featureRequest, g1, {2});
@@ -344,7 +346,7 @@ void probe() {
   相关概念参与请求 attachRequest{1, attachG, {0x8451},
       相关概念精确复用方案{featureRead.概念->概念,
           相关概念类别::特征, featureRead.概念->定义},
-      {概念树特征类型引用{ft->编码}, attachG}, budget()};
+      {概念树特征类型引用{ft.编码}, attachG}, budget()};
   const auto attachPrepared = concepts.准备相关概念片段(
       attachRequest, attachG, {2});
   require(attachPrepared.状态 == 相关概念参与状态::已准备 &&
@@ -409,7 +411,7 @@ void probe() {
   signatureConflict.方案 = 相关概念精确复用方案{
       featureRead.概念->概念, 相关概念类别::特征,
       概念树特征定义{概念树存在引用{root},
-          概念树特征类型引用{ft->编码},
+          概念树特征类型引用{ft.编码},
           概念树精确值{std::int64_t{13}}}};
   rejected(signatureConflict, 相关概念参与状态::签名冲突,
            "reuse-signature-conflict-zero-write");
@@ -462,7 +464,7 @@ void probe() {
   相关概念参与请求 competitionRequest{1, competitionG, {0x8801},
       相关概念创建方案{相关概念类别::特征,
           概念树特征定义{概念树存在引用{root},
-              概念树特征类型引用{ft->编码},
+              概念树特征类型引用{ft.编码},
               概念树精确值{std::int64_t{14}}}, {}},
       {概念树存在引用{root}, competitionG}, budget()};
   auto competitionPart1 = fake_part(*external1.写入端口, 1,
