@@ -150,10 +150,24 @@ struct Fixture {
     features = std::make_unique<特征类数据服务>(
         l1, std::move(*fdefOwner.写入端口), std::move(*finfoOwner.写入端口),
         *values, producers.front());
+    const 存在单例角色结构登记请求 roleRequest{
+        1, generation(l1), {0x1202}};
+    const auto role = 存在类数据服务::登记单例角色结构(
+        l1, *existenceOwner.写入端口, roleRequest);
+    require(role.成功(roleRequest) && role.交付,
+            "existence-role-layout");
+    const 实例特征结构登记请求 instanceFeatureRequest{
+        2, generation(l1), {0x4946525354525632ULL}};
+    const auto instanceFeature = 存在类数据服务::登记实例特征结构(
+        l1, *existenceOwner.写入端口, instanceFeatureRequest);
+    require(instanceFeature.成功(instanceFeatureRequest) &&
+                instanceFeature.交付,
+            "existence-instance-feature-layout");
     existence = std::make_unique<存在类数据服务>(
         l1, *features, std::move(*existenceOwner.写入端口),
         existenceLayout[0], existenceLayout[1],
-        存在当前采用结构交付{existenceLayout[2]});
+        存在当前采用结构交付{existenceLayout[2]},
+        *instanceFeature.交付, *role.交付);
     state = std::make_unique<状态类数据服务>(
         l1, *features, std::move(*stateOwner.写入端口),
         状态类结构交付{stateLayout[0], stateLayout[1], stateLayout[2],
@@ -213,54 +227,6 @@ struct Fixture {
       ids[15], ids[16], ids[17], ids[18], ids[19], ids[20], ids[21], ids[22]}};
 }
 
-概念树结构交付 old_layout(L1所有者范围写端口 &port,
-                            const L1事实基座服务 &l1,
-                            std::uint64_t keyBase) {
-  using R = L1所有者范围值表示种类;
-  std::vector<Spec> typeSpecs(28, {节点种类::普通, std::nullopt});
-  for (std::size_t i = 16; i < 27; ++i)
-    typeSpecs[i] = {节点种类::属性类型,
-                    i == 21 || i == 24 ? R::U64组
-                    : i == 23 ? R::I64组 : R::I64};
-  const auto types = metadata(port, l1, keyBase + 1, typeSpecs);
-  const auto nodes = metadata(
-      port, l1, keyBase + 2,
-      std::vector<Spec>(6, {节点种类::普通, std::nullopt}));
-  L1所有者范围写集请求 request{
-      L1所有者范围CRUD合同版本, generation(l1), {keyBase + 3}};
-  std::uint32_t key = 1;
-  auto edge = [&](稳定编码 source, 稳定编码 target, 稳定编码 type,
-                  std::int64_t role) {
-    request.关系.push_back({{key++}, source, target, type, role});
-  };
-  auto attr = [&](稳定编码 node, 稳定编码 type, std::int64_t value) {
-    const L1所有者范围写集本地键 local{key++};
-    request.值.push_back({local, node, type, value, node});
-    request.属性槽变更.push_back({node, type, local});
-  };
-  for (std::size_t i = 0; i < types.size(); ++i)
-    edge(nodes[0], types[i], types[27], static_cast<std::int64_t>(i + 1));
-  edge(nodes[0], nodes[1], types[1], 1);
-  attr(nodes[0], types[16], 1);
-  attr(nodes[1], types[16], 1);
-  attr(nodes[1], types[17], 1);
-  for (std::size_t i = 0; i < 4; ++i) {
-    edge(nodes[0], nodes[i + 2], types[0], static_cast<std::int64_t>(i + 1));
-    attr(nodes[i + 2], types[18], static_cast<std::int64_t>(i + 1));
-  }
-  const auto saved = port.提交所有者范围中性写集(request);
-  require(saved.状态 == L1所有者范围写入状态::成功,
-          "old-layout-publish");
-  return {nodes[0],
-          {概念树概念身份{nodes[2]}, 概念树概念身份{nodes[3]},
-           概念树概念身份{nodes[4]}, 概念树概念身份{nodes[5]}},
-          概念树规则身份{nodes[1]},
-          {types[0], types[1], types[2], types[3], types[4], types[5],
-           types[6], types[7], types[8], types[9], types[10], types[11],
-           types[12], types[13], types[14], types[15], types[16], types[17],
-           types[18], types[19], types[20], types[21], types[22], types[23],
-           types[24], types[25], types[26], types[27]}};
-}
 
 L1有限N分区原子参与者写集_v3 fake_part(
     L1所有者范围写端口 &port, std::uint8_t participant,
@@ -277,7 +243,6 @@ L1有限N分区原子参与者写集_v3 fake_part(
 
 void probe() {
   static_assert(static_cast<unsigned>(相关概念参与状态::旧格式不支持) == 18);
-  static_assert(static_cast<unsigned>(概念树数据状态::旧格式不支持) == 35);
   using Prepare = 相关概念参与片段 (相关概念添加参与者::*)(
       const 相关概念参与请求&, std::uint64_t,
       L1有限N分区原子参与者身份_v3) const noexcept;
@@ -498,52 +463,6 @@ void probe() {
               generation(fixture.l1()) == competitionG + 1,
           "same-G-competition-single-commit");
 
-  const 概念树预算 oldBudget{64,128,64,64,64,64,64,64};
-  const auto pureNewG = generation(fixture.l1());
-  const auto pureNewOldRead = concepts.读取概念图(
-      {{1, pureNewG, pureNewG}, 概念树根角色::存在, false, oldBudget});
-  require(pureNewOldRead.状态 == 概念树数据状态::旧格式不支持,
-          "pure-new-old-entry-unsupported-35");
-
-  auto oldOwner = owner(fixture.runtime->所有者范围签发器(), 0x8601);
-  const auto oldLayout = old_layout(*oldOwner.写入端口, fixture.l1(), 0x8610);
-  概念树类数据服务 oldOnly(fixture.l1(), *fixture.features,
-      *fixture.existence, *fixture.values, std::move(*oldOwner.写入端口),
-      oldLayout);
-  const auto oldG = generation(fixture.l1());
-  auto oldRequest = featureRequest;
-  oldRequest.G0 = oldG;
-  oldRequest.挂靠.证据截止 = oldG;
-  const auto oldPrepare = oldOnly.准备相关概念片段(oldRequest, oldG, {2});
-  const auto oldRelatedRead = oldOnly.读取相关概念结果(
-      oldRequest, oldG, oldG);
-  require(oldPrepare.状态 == 相关概念参与状态::旧格式不支持 &&
-      !oldPrepare.写集 && oldPrepare.Gread == oldG &&
-      oldRelatedRead.状态 == 相关概念参与状态::旧格式不支持 &&
-      oldRelatedRead.Gread == oldG && oldRelatedRead.H == 0 &&
-      !oldRelatedRead.概念,
-      "old-only-new-entries-unsupported-18");
-
-  auto migrationOwner = owner(fixture.runtime->所有者范围签发器(), 0x8701);
-  const auto migrationOld = old_layout(
-      *migrationOwner.写入端口, fixture.l1(), 0x8710);
-  const auto migrationNew = related_layout(
-      *migrationOwner.写入端口, fixture.l1());
-  概念树类数据服务 migration(fixture.l1(), *fixture.features,
-      *fixture.existence, *fixture.values, *fixture.scene,
-      std::move(*migrationOwner.写入端口), migrationOld, migrationNew);
-  const auto migrationG = generation(fixture.l1());
-  auto migrationRequest = featureRequest;
-  migrationRequest.G0 = migrationG;
-  migrationRequest.挂靠.证据截止 = migrationG;
-  const auto migrationPrepare = migration.准备相关概念片段(
-      migrationRequest, migrationG, {2});
-  const auto migrationOldRead = migration.读取概念(
-      {{1, migrationG, migrationG}, migrationOld.根组.特征根, oldBudget});
-  require(migrationPrepare.状态 == 相关概念参与状态::已准备 &&
-      migrationPrepare.写集 &&
-      migrationOldRead.状态 == 概念树数据状态::已读取,
-      "migration-old-new-entries-independent");
   std::cout << "PASS-TOTAL " << passed << '\n';
 }
 } // namespace

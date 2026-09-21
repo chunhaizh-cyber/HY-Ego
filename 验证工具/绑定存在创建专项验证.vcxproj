@@ -94,9 +94,10 @@
     <ClInclude Include="..\海中鱼巣\领域\数据服务.存在类.h" />
     <ClInclude Include="..\海中鱼巣\领域\数据服务.概念树类.h" />
     <ClCompile Include="..\海中鱼巣\领域\数据服务.概念树类.cpp" />
+    <ClInclude Include="..\海中鱼巣\领域\数据服务.特征值域比较类.h" />
+    <ClCompile Include="..\海中鱼巣\领域\数据服务.特征值域比较类.cpp" />
     <ClInclude Include="..\海中鱼巣\业务\应用服务.特征概念类.h" />
-    <ClInclude Include="..\海中鱼巣\业务\应用服务.存在概念树类.h" />
-    <ClCompile Include="..\海中鱼巣\业务\应用服务.存在概念树类.cpp" />
+    <ClCompile Include="..\海中鱼巣\业务\应用服务.特征概念类.cpp" />
     <ClInclude Include="..\海中鱼巣\业务\应用服务.场景成员概念类.h" />
     <ClCompile Include="..\海中鱼巣\业务\应用服务.场景成员概念类.cpp" />
     <ClInclude Include="..\海中鱼巣\领域\数据服务.绑定存在.h" />
