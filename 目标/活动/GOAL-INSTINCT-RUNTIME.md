@@ -49,10 +49,10 @@
 
 ## 6. 状态证据上下文
 
-- 状态事实截止：`803380dd611caf3600d666ddaa0834b7d01c5748`
+- 状态事实截止：`94f04882983651d0ad19af9392e0014e9f44f127`
 - 关联计划身份：`SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER`；`ARCH-L4-INSTINCT-ROOT-DEMAND-PROVIDER`已完成并退出执行候选；`INSTINCT-ROOT-RUNTIME-ANCHOR`仅为待重建设计输入
 - 关联计划观察版本 / blob：v0.2 / `26e722bb69d2db18953d0618fb6951a64ec64fa9`；原锚点详细设计 v0.1 已标记 DRIFT
-- 最后实质进展：`a8159e1ecabec8c1bd7a150b9110f7e62081c23d`发布v0.1计划；执行S0已将跨owner连续截止补订为v0.2
+- 最后实质进展：`94f04882983651d0ad19af9392e0014e9f44f127`已发布v0.2计划；根FT/实际F代码尚未施工
 - 阻断证据来源：阶段21仍缺系统根FT/特征组合 provider的已发布代码结果
 - 阻断解除条件：该provider与根材料 provider均以各自完成条件发布且新S0确认后，重新形成阶段21计划
 - 自动复核触发：关联规范 / 设计 / 计划索引变更、相关代码或验收发布、所有权释放、用户同步或继续
