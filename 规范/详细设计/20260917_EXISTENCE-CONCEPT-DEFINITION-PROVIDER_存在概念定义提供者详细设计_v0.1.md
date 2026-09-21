@@ -6,7 +6,7 @@
 
 日期：2026-09-18
 
-状态：施工设计；直接上游 `FEATURE-DOMAIN-COMPARISON-BINDING-ABI` 已由 `0e8e2db9` 发布比较服务同 L1 绑定核验，非 I64 的真实成功比较仍由具名待实现适配器后续提供
+状态：已退出；2026-09-21由`LEGACY-CONCEPT-INTERFACE-REMOVAL`替代其剩余旧接口删除职责，本文仅作中间实现历史
 
 ## 1. 目标、范围与完成条件
 

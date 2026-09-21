@@ -4,7 +4,7 @@
 
 版本：v0.1
 
-状态：待登记
+状态：可执行
 
 设计基线：`20260921_LEGACY-CONCEPT-INTERFACE-REMOVAL_旧概念接口物理删除详细设计_v0.1.md` v0.1
 

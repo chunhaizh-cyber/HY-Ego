@@ -4,7 +4,7 @@
 
 版本：v0.7
 
-状态：暂停；直接上游 `FEATURE-DOMAIN-COMPARISON-BINDING-ABI` 已由 `0e8e2db9` 发布
+状态：已退出；2026-09-21由`LEGACY-CONCEPT-INTERFACE-REMOVAL`替代剩余旧接口删除职责，不再作为执行候选
 
 原开工基线：`8a7ba623`；v0.7 执行 S0 必须以含直接上游发布提交 `0e8e2db9` 的当前正式 HEAD 为基线（`c433ebc9` 已发布 v0.3 两组提供者，`23db3c5d` 保存专项验证发现的本计划内结构登记漂移）
 
