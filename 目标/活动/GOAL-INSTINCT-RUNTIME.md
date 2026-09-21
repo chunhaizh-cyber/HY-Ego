@@ -5,11 +5,11 @@
 - 目标编号：`GOAL-INSTINCT-RUNTIME`
 - 名称：构建本能系统基于世界事实、实例特征和现实锚点持续运行的基础架构
 - 类型：集成能力目标
-- 记录版本：v0.3
+- 记录版本：v0.4
 - 创建与更新时间：2026-09-20
 - 当前状态：候选；当前直接执行位置由特征实际F provider 设计下位目标承担
 - 直接上位目标：无
-- 直接下位目标：`GOAL-IF-R-FOUNDATION`（已完成）、`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`（已完成）、`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-IFR-ACTUAL-F-PROVIDER-DESIGN`（当前）
+- 直接下位目标：`GOAL-IF-R-FOUNDATION`（已完成）、`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`（已完成）、`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-IFR-ACTUAL-F-PROVIDER-DESIGN`（完成）、`GOAL-SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER-IMPLEMENTATION`（当前）
 - 目标账所有者：交互智能体
 
 ## 1.1 目标问题与优先级
@@ -37,22 +37,22 @@
 - 已完成前置：`GOAL-IF-R-FOUNDATION` 已以代码实施目标完成，详见`目标/已完成/GOAL-IF-R-FOUNDATION.md`；其不证明构建、运行、恢复或本目标能力。
 - 已完成设计：`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`已冻结根目标合同、独立根 D、根列表 L 与成员关系的 ARCH-L4 物理合同，并登记`ARCH-L4-INSTINCT-ROOT-DEMAND-PROVIDER`为可执行计划。
 - 已完成下位目标：`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`已发布根材料 provider；阶段21仍须同时等待该 provider 与特征组合 provider 的已发布结果。
-- 后续方向：先依据4115当前事实形成特征组合 provider 的下位目标与设计承载，再在两个 provider发布后重新形成阶段21本能根运行锚点计划；其后才按8120、8100、8200和8300形成线程、运行门、循环及验收闭环。
+- 后续方向：先实施已闭合的系统根FT/实际F组合 provider；在它与已发布根材料 provider均满足目标完成条件后，重新形成阶段21本能根运行锚点计划；其后才按8120、8100、8200和8300形成线程、运行门、循环及验收闭环。
 - 设计承载方式：机器语义、DTO、所有权、事务、恢复和验收边界由现行规范、具名详细设计和后续计划组合承载；本目标记录不替代这些材料。
 
 ## 5. 依赖、风险与下一动作
 
 - 依赖：4115 IF/R、8120 启动顺序、8121 阶段21物理合同、8100 / 8200 运行边界、8300 验收，以及待形成的 ARCH-L4 根材料合同。
-- 当前阻断：无直接阻断；阶段21仍缺特征组合 provider 的已发布结果，当前直接动作是形成该依赖的下位目标与设计承载。
+- 当前阻断：无直接阻断；阶段21仍缺特征组合 provider 的已发布结果，当前直接动作是实施其已登记的可执行计划。
 - 当前风险：`规范/详细设计/20260915_INSTINCT-ROOT-RUNTIME-ANCHOR_本能根运行锚点详细设计_v0.1.md`已具名 DRIFT，不能作为施工依据；阶段21不得模拟或替代上游特征与 ARCH-L4 合同。
-- 下一动作：从4115、现有特征组合 provider 代码与目标路线重新S0，形成特征组合 provider 的下位目标；在其完成前不重建或实施阶段21。
+- 下一动作：由`GOAL-SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER-IMPLEMENTATION`以计划发布基线重新S0并实施；在其完成前不重建或实施阶段21。
 
 ## 6. 状态证据上下文
 
-- 状态事实截止：`2fad1901b10db2396c8dc5b9f1b38475635f4627`
-- 关联计划身份：`ARCH-L4-INSTINCT-ROOT-DEMAND-PROVIDER`；`INSTINCT-ROOT-RUNTIME-ANCHOR`仅为待重建设计输入
-- 关联计划观察版本 / blob：v0.1 / `aa70a4e456d742121554bfc26f8b1b92cc34a61a`；原锚点详细设计 v0.1 已标记 DRIFT
-- 最后实质进展：`2fad1901b10db2396c8dc5b9f1b38475635f4627`，根材料 provider计划已发布并可执行
-- 阻断证据来源：阶段21仍缺根材料 provider与特征组合 provider的已发布代码结果
-- 阻断解除条件：两个 provider发布且新S0确认后，重新形成阶段21计划
+- 状态事实截止：`803380dd611caf3600d666ddaa0834b7d01c5748`
+- 关联计划身份：`SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER`；`ARCH-L4-INSTINCT-ROOT-DEMAND-PROVIDER`已完成并退出执行候选；`INSTINCT-ROOT-RUNTIME-ANCHOR`仅为待重建设计输入
+- 关联计划观察版本 / blob：v0.1 / `518934bf5e4a7e87fbd2a7b1eb994838e9b78752`；原锚点详细设计 v0.1 已标记 DRIFT
+- 最后实质进展：`803380dd611caf3600d666ddaa0834b7d01c5748`发布系统根初始化来源语义；本次已闭合其唯一代码计划
+- 阻断证据来源：阶段21仍缺系统根FT/特征组合 provider的已发布代码结果
+- 阻断解除条件：该provider与根材料 provider均以各自完成条件发布且新S0确认后，重新形成阶段21计划
 - 自动复核触发：关联规范 / 设计 / 计划索引变更、相关代码或验收发布、所有权释放、用户同步或继续
