@@ -5,11 +5,12 @@
 - 目标编号：`GOAL-INSTINCT-RUNTIME`
 - 名称：构建本能系统基于世界事实、实例特征和现实锚点持续运行的基础架构
 - 类型：集成能力目标
-- 记录版本：v0.7
-- 创建与更新时间：2026-09-21
-- 当前状态：候选；当前直接执行位置由阶段21本能根运行锚点重新设计目标承担
+- 记录版本：v0.8
+- 创建时间：2026-09-21
+- 更新时间：2026-09-22
+- 当前状态：候选；当前直接推进位置由`GOAL-SELF-GOVERNANCE-CLOSURE`下的M1-A自顶向下设计目标承担
 - 直接上位目标：无
-- 直接下位目标：`GOAL-IF-R-FOUNDATION`（已完成）、`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`（已完成）、`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-IFR-ACTUAL-F-PROVIDER-DESIGN`（完成）、`GOAL-SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`（当前）
+- 直接下位目标：`GOAL-IF-R-FOUNDATION`（已完成）、`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`（已完成）、`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-IFR-ACTUAL-F-PROVIDER-DESIGN`（完成）、`GOAL-SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`（暂停）、`GOAL-SELF-GOVERNANCE-CLOSURE`（候选，当前路线）
 - 目标账所有者：交互智能体
 
 ## 1.1 目标问题与优先级
@@ -37,22 +38,22 @@
 - 已完成前置：`GOAL-IF-R-FOUNDATION` 已以代码实施目标完成，详见`目标/已完成/GOAL-IF-R-FOUNDATION.md`；其不证明构建、运行、恢复或本目标能力。
 - 已完成设计：`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`已冻结根目标合同、独立根 D、根列表 L 与成员关系的 ARCH-L4 物理合同，并登记`ARCH-L4-INSTINCT-ROOT-DEMAND-PROVIDER`为可执行计划。
 - 已完成下位目标：根材料 provider 与安全值/服务值先天FT、完整域概念和实际F组合provider均已按各自完成条件发布。
-- 后续方向：当前先由`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`按当前代码与规范替代旧DRIFT设计并形成阶段21可执行计划；其后才进入阶段21代码、线程、运行门、循环及验收闭环。
+- 后续方向：用户已确认以完整自我线程治理闭环反推数据服务需求，并采用先写上层、在真实调用点补最小下层能力的策略；当前由`GOAL-SELF-GOVERNANCE-CLOSURE`统一承接线程、运行门、阶段21锚点、需求/任务治理和验收路线。
 - 设计承载方式：机器语义、DTO、所有权、事务、恢复和验收边界由现行规范、具名详细设计和后续计划组合承载；本目标记录不替代这些材料。
 
 ## 5. 依赖、风险与下一动作
 
 - 依赖：4115 IF/R、8120 启动顺序、8121 阶段21物理合同、8100 / 8200 运行边界、8300 验收，以及已发布的 ARCH-L4 根材料与特征组合provider。
-- 当前阻断：无直接阻断；阶段21两个直接上游已发布，但旧锚点详细设计和计划仍为DRIFT，必须先重新设计。
+- 当前阻断：无直接阻断；旧锚点详细设计和计划仍为DRIFT，其替代设计纳入自我治理G0统一核对。
 - 当前风险：`规范/详细设计/20260915_INSTINCT-ROOT-RUNTIME-ANCHOR_本能根运行锚点详细设计_v0.1.md`已具名 DRIFT，不能作为施工依据；阶段21不得模拟或替代上游特征与 ARCH-L4 合同。
-- 下一动作：由`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`执行设计S0并形成新的阶段21可执行计划；旧计划不得直接恢复。
+- 下一动作：由`GOAL-SELF-THREAD-M1A-TOP-DOWN-DESIGN`先冻结上层线程首包；实际调用遇到锚点缺口后再恢复其设计目标，旧锚点计划不得直接恢复。
 
 ## 6. 状态证据上下文
 
-- 状态事实截止：`576189d3c42e179852871e093865358b0f939d9a`
+- 状态事实截止：`a8aaf58d413e8d5b3da97f8df3078291d8cb9584`
 - 关联计划身份：`ARCH-L4-INSTINCT-ROOT-DEMAND-PROVIDER`和`SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER`均已完成；`INSTINCT-ROOT-RUNTIME-ANCHOR`旧v0.1仅为待重建设计输入
 - 关联计划观察版本 / blob：已完成特征组合计划v1.0 / `c967a515b70a0302ce1380677a8c7cde32b4b8fd`；旧锚点计划v0.1 / `02d9c64185d45abebc42a50a49775db277071c37`不可执行
 - 最后实质进展：`576189d3c`发布双FT、双完整域概念、双实际F和普通应用初始化，并以Debug/Release及两进程恢复证据解除阶段21最后一个已知直接上游缺口
 - 阻断证据来源：无；当前是设计闭合动作，不是等待外部依赖
 - 阻断解除条件：不适用
-- 自动复核触发：关联规范 / 设计 / 计划索引变更、相关代码或验收发布、所有权释放、用户同步或继续
+- 自动复核触发：自我治理G0设计/计划发布；关联规范 / 设计 / 计划索引变更、相关代码或验收发布、所有权释放、用户同步或继续
