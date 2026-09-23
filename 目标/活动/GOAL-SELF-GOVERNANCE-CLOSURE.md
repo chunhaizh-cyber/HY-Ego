@@ -5,12 +5,12 @@
 - 目标编号：`GOAL-SELF-GOVERNANCE-CLOSURE`
 - 名称：自我线程内部治理闭环实现
 - 类型：集成能力目标
-- 记录版本：v0.3
+- 记录版本：v0.4
 - 创建时间：2026-09-22
 - 更新时间：2026-09-23
-- 当前状态：候选；当前直接推进位置由`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`承担
+- 当前状态：候选；当前直接推进位置由`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER-IMPLEMENTATION`承担
 - 直接上位目标：`GOAL-INSTINCT-RUNTIME`
-- 直接下位目标：`GOAL-SELF-THREAD-M1A-TOP-DOWN-DESIGN`（已完成）；`GOAL-SELF-THREAD-G1-ISOLATED-SHELL-IMPLEMENTATION`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`（当前）；其余G1—G8达到转入条件时再建立稳定目标身份
+- 直接下位目标：`GOAL-SELF-THREAD-M1A-TOP-DOWN-DESIGN`（已完成）；`GOAL-SELF-THREAD-G1-ISOLATED-SHELL-IMPLEMENTATION`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER-IMPLEMENTATION`（当前）；其余G1—G8达到转入条件时再建立稳定目标身份
 - 目标账所有者：交互智能体
 
 ## 1.1 目标问题与优先级
@@ -66,16 +66,16 @@ G1—G8现在只表示目标路线，不是已冻结合同、活动目标或可�
 - 当前直接依赖：8000、8100、8200、8120/8121、需求/任务/安全相关正式规范；现行`线程_自我.h/.cpp`、普通应用启动/装配、自我形成、消息和宿主线程代码；本能根运行锚点现行提供者状态。
 - 当前阻断：无目标含义阻断；具体接口和提供者是否完备由G0确认，缺失不得由自我线程越层补齐。
 - 主要风险：把目标逻辑操作误当现有C++ API；把self编排权扩大为领域事实写权；为了线程接线恢复旧计划或旧消息实现；一次登记多层远期计划；与当前未提交普通应用/工程WIP产生真实文件或语义冲突。
-- 下一动作：以已发布G1 self消费合同为上层真实调用点，完成`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`，形成阶段21无DRIFT详细设计与单一可执行代码计划。
+- 下一动作：执行已登记的`INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER` v0.1，先发布与RC-P1隔离的阶段21组合provider和专项证据；代码结果发布后再形成普通应用、启动阶段21和self停门消费后继。
 - 转入条件：所有下位能力和最终具名集成验收满足本节完成条件后移入`目标/已完成/`；任何局部结果只推进相应下位目标，不提前完成本目标。
 
 ## 6. 状态证据上下文
 
-- 状态事实截止：`1445f4250324b3dad4b0524c9be9850c10630267`
-- 关联计划身份：G1计划已完成归档；阶段21新计划待设计形成
-- 关联计划观察版本 / blob：已完成G1 v0.1 / `13d8dca640645c67ad8a26c0228dd0506ebd3638`；阶段21旧v0.1不可执行
-- 最后实质进展：`1445f4250`发布G1隔离上层骨架，双配置专项均`30 PASS / 0 FAIL`；self真实锚点消费合同已形成，治理门仍关闭
-- 已验证证据：单对象线程生命周期、关闭门、有界邮箱、停止唤醒和`join`专项通过；静态越层检查零命中
+- 状态事实截止：`d3b1b17e1978f1f35b8203fe7998cffc7850d9e4`
+- 关联计划身份：`INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER`
+- 关联计划观察版本 / blob：v0.1 / `d2f2ba1c3d6a53c0a7d9e095ad9a462fa06b9b22`
+- 最后实质进展：`1445f4250`发布G1隔离上层骨架；`505b2a0ba`发布阶段21组合provider详细设计与计划，`d3b1b17e1`登记为`可执行`；self真实锚点消费合同已形成，治理门仍关闭
+- 已验证证据：G1单对象线程生命周期、关闭门、有界邮箱、停止唤醒和`join`专项通过；阶段21设计包独立复核、精确blob和索引登记通过；静态越层检查零命中
 - 未验证范围：阶段21真实锚点、治理门开放、进程级唯一self、生产接线、需求/任务/方法/安全治理、跨进程恢复、连续治理和集成能力
 - 阻断证据来源：无；G0中发现的接口、所有权或WIP冲突按事实具名处理
 - 阻断解除条件：不适用
