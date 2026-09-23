@@ -5,10 +5,10 @@
 - 目标编号：`GOAL-INSTINCT-RUNTIME`
 - 名称：构建本能系统基于世界事实、实例特征和现实锚点持续运行的基础架构
 - 类型：集成能力目标
-- 记录版本：v0.14
+- 记录版本：v0.15
 - 创建时间：2026-09-21
 - 更新时间：2026-09-23
-- 当前状态：候选；当前直接推进位置由`GOAL-SELF-GOVERNANCE-CLOSURE`下的`GOAL-INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER-DESIGN`承担
+- 当前状态：候选；当前直接推进位置由`GOAL-SELF-GOVERNANCE-CLOSURE`下处于设计阻断的`GOAL-INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER-DESIGN`承担
 - 直接上位目标：无
 - 直接下位目标：`GOAL-IF-R-FOUNDATION`（已完成）、`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`（已完成）、`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-IFR-ACTUAL-F-PROVIDER-DESIGN`（完成）、`GOAL-SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-SELF-GOVERNANCE-CLOSURE`（候选，当前路线）
 - 目标账所有者：交互智能体
@@ -44,16 +44,16 @@
 ## 5. 依赖、风险与下一动作
 
 - 依赖：4115 IF/R、8120 启动顺序、8121 阶段21物理合同、8100 / 8200 运行边界、8300 验收，以及已发布的 ARCH-L4 根材料与特征组合provider。
-- 当前阻断：无。阶段21组合provider已发布；RC-P1对普通应用和根工程的所有权只阻断后继代码实施，不阻断当前设计闭合。
+- 当前阻断：阶段21组合provider已发布，但生产消费设计缺少self运行身份、容量/预算/时限正式来源及普通控制面板宿主生命周期合同；RC-P1对普通应用和根工程的所有权另行阻断后继代码实施。
 - 当前风险：`规范/详细设计/20260915_INSTINCT-ROOT-RUNTIME-ANCHOR_本能根运行锚点详细设计_v0.1.md`已具名 DRIFT，不能作为施工依据；阶段21不得模拟或替代上游特征与 ARCH-L4 合同。
-- 下一动作：完成普通应用、启动阶段21和self停门消费的精确设计与计划；在RC-P1所有权释放和计划变为可执行前不得修改接线代码。
+- 下一动作：先裁决并正式发布运行身份、容量/预算/时限来源与普通控制面板宿主生命周期边界；再按新HEAD完成生产消费设计与计划。在RC-P1所有权释放和计划变为可执行前不得修改接线代码。
 
 ## 6. 状态证据上下文
 
-- 状态事实截止：`4c6cd9277fc0e428dcccb1e41fe1e66d4da797da`
+- 状态事实截止：`27934691c7743fe195f1335ac99b9914cf603c36`
 - 关联计划身份：阶段21provider计划已完成退出；生产消费设计目标尚未建立代码计划
 - 关联计划观察版本 / blob：不适用；已完成阶段21v0.2历史blob为`c9cdcd70d8a98a38c8eb6601b6cccc2c8e594e93`
 - 最后实质进展：`4c6cd9277`发布阶段21组合provider、专属专项及施工/验证记录；生产治理门和生产接线仍未实现
-- 阻断证据来源：RC-P1异主WIP只阻断后继代码实施；当前设计目标无阻断
-- 阻断解除条件：不适用
+- 阻断证据来源：生产消费只读S0与现行self/启动/宿主合同；RC-P1异主WIP另行阻断后继代码实施
+- 阻断解除条件：运行身份、容量/预算/时限来源和普通控制面板宿主生命周期合同正式发布；RC-P1所有权释放后重新S0
 - 自动复核触发：生产消费设计/计划发布；RC-P1发布/交接；关联规范、计划索引、后继生产接线或验收发布、用户同步或继续
