@@ -295,6 +295,7 @@ void 验证当前概念(夹具 &fixture, const 概念树预算 &conceptBudget) {
   const 特征值域比较预算_v1 comparisonBudget{
       {10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000},
       conceptBudget,
+      {10000, 10000, 10000, 30000},
       10000};
   特征值域比较数据服务 comparison(
       *fixture.concepts, *fixture.features, *fixture.values);

@@ -182,6 +182,10 @@
     <ClInclude Include="海中鱼巣\领域\数据服务.存在类.h" />
     <ClInclude Include="海中鱼巣\领域\数据服务.概念树类.h" />
     <ClCompile Include="海中鱼巣\领域\数据服务.概念树类.cpp" />
+    <ClInclude Include="海中鱼巣\领域\合同.二次关系概念.h" />
+    <ClCompile Include="海中鱼巣\领域\合同.二次关系概念.cpp" />
+    <ClInclude Include="海中鱼巣\业务\初始化.二次关系概念结构.h" />
+    <ClCompile Include="海中鱼巣\业务\初始化.二次关系概念结构.cpp" />
     <ClInclude Include="海中鱼巣\领域\数据服务.场景类.h" />
     <ClCompile Include="海中鱼巣\领域\数据服务.场景类.cpp" />
     <ClInclude Include="海中鱼巣\领域\数据服务.世界树根.h" />

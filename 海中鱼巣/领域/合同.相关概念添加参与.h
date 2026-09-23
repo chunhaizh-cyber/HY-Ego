@@ -162,6 +162,31 @@ struct 纯合取存在概念定义 final {
   std::vector<概念树概念身份> 特征模板组;
   friend bool operator==(const 纯合取存在概念定义&, const 纯合取存在概念定义&) = default;
 };
+
+// 公共概念结构的规则身份。该纯值只承载稳定编码；构造和比较均不访问仓库，
+// 也不证明对应规则已经发布、归属正确或仍处于合法生命周期。
+struct 概念树规则身份 final {
+  稳定编码 值{};
+  概念树规则身份() = default;
+  explicit 概念树规则身份(稳定编码 编码) : 值(编码) {}
+  friend bool operator==(const 概念树规则身份 &,
+                         const 概念树规则身份 &) = default;
+};
+
+struct 概念树读取头 final {
+  std::uint32_t 合同版本 = 1;
+  std::uint64_t Gread = 0, H = 0;
+  friend bool operator==(const 概念树读取头 &,
+                         const 概念树读取头 &) = default;
+};
+
+struct 概念树写入头 final {
+  std::uint32_t 合同版本 = 1;
+  std::uint64_t 期望事实代次 = 0;
+  L1所有者范围写入幂等身份 幂等身份{};
+  friend bool operator==(const 概念树写入头 &,
+                         const 概念树写入头 &) = default;
+};
 using 纯概念定义 = std::variant<纯I64特征概念定义,
                                 纯合取存在概念定义, 通用存在概念定义>;
 enum class 概念初始组织指定 : std::uint8_t { 未指定 = 0, 显式顶层 = 1, 具名上位 = 2 };

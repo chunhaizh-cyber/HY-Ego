@@ -4,6 +4,7 @@
 #include "业务/应用服务.自我形成.h"
 #include "业务/应用服务.特征概念类.h"
 #include "业务/应用服务.场景成员概念类.h"
+#include "业务/初始化.二次关系概念结构.h"
 #include "核心/日志系统.h"
 
 #ifndef NOMINMAX
@@ -88,6 +89,23 @@ void 报告实例特征结构异常(存在信息身份 e, 特征类型身份 ft,
   case 存在概念两组状态_v3::资源失败: return 纯概念状态::资源失败;
   case 存在概念两组状态_v3::已可能发布: return 纯概念状态::已可能发布;
   case 存在概念两组状态_v3::旧格式不支持: return 纯概念状态::旧格式不支持;
+  default: return 纯概念状态::内部不一致;
+  }
+}
+
+纯概念状态 映射二次关系结构失败(二次关系数据状态 state) noexcept {
+  switch (state) {
+  case 二次关系数据状态::入口拒绝: return 纯概念状态::入口拒绝;
+  case 二次关系数据状态::目标已退出: return 纯概念状态::目标已退出;
+  case 二次关系数据状态::引用冲突: return 纯概念状态::引用冲突;
+  case 二次关系数据状态::事实代次漂移: return 纯概念状态::事实代次漂移;
+  case 二次关系数据状态::幂等冲突: return 纯概念状态::幂等冲突;
+  case 二次关系数据状态::预算不足: return 纯概念状态::数量预算不足;
+  case 二次关系数据状态::历史材料不可用: return 纯概念状态::历史材料不可用;
+  case 二次关系数据状态::资源失败: return 纯概念状态::资源失败;
+  case 二次关系数据状态::发布未知: return 纯概念状态::已可能发布;
+  case 二次关系数据状态::格式不支持: return 纯概念状态::旧格式不支持;
+  case 二次关系数据状态::规则不支持: return 纯概念状态::定义不支持;
   default: return 纯概念状态::内部不一致;
   }
 }
@@ -460,10 +478,18 @@ std::unique_ptr<普通应用上下文> 建立上下文(
       l1,*result->概念所有者.写入端口,completeDefinitionRequest);
   if(!completeDefinitionRegistration.成功(completeDefinitionRequest)||!completeDefinitionRegistration.交付)
     throw 概念结构异常{映射两组定义失败(completeDefinitionRegistration.状态)};
+  const 二次关系初始化请求 secondaryRelationRequest{
+      1, 定位首次(*result->概念所有者.写入端口,l1,0x1404).G0,
+      {0x1404}, *conceptRegistration.交付, 53};
+  const auto secondaryRelationRegistration=初始化二次关系结构(
+      l1,*result->概念所有者.写入端口,secondaryRelationRequest);
+  if(!secondaryRelationRegistration.成功()||!secondaryRelationRegistration.交付)
+    throw 概念结构异常{映射二次关系结构失败(secondaryRelationRegistration.状态)};
   result->概念=std::make_unique<概念树类数据服务>(
       l1,*result->特征,*result->存在,*result->特征值,*result->场景,
       std::move(*result->概念所有者.写入端口),*conceptRegistration.交付,
-      *featureBirthRegistration.交付,*completeDefinitionRegistration.交付);
+      *featureBirthRegistration.交付,*completeDefinitionRegistration.交付,
+      *secondaryRelationRegistration.交付,*result->场景);
   本能先天特征概念初始化提供者 instinctInitialization(*result->特征,*result->概念);
   result->本能先天特征概念初始化=instinctInitialization.初始化(
       {1,当前代次(l1),{64,256,0,0,0,64,0,0}});

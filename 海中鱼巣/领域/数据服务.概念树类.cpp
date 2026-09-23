@@ -1,6 +1,10 @@
 #include "数据服务.概念树类.h"
 #include "数据服务.特征值域比较类.h"
 
+#include <functional>
+#include <map>
+#include <tuple>
+
 namespace {
 bool 纯概念结构相同(const 海中鱼巣::纯概念结构交付_v2& a,
                  const 海中鱼巣::纯概念结构交付_v2& b) noexcept {
@@ -52,16 +56,19 @@ bool 已发布纯概念结构_v2(const 海中鱼巣::L1事实基座服务& l1,
         const auto edges=l1.读取所有者范围历史关系组(
             {L1所有者范围CRUD合同版本,L1所有者范围关系端点方向::源,ids[0],ids[2],g});
         if (edges.状态!=L1所有者范围读取状态::成功 || edges.读取事实代次!=g ||
-            edges.历史截止事实代次!=g || edges.关系组.size()!=13) return false;
+            edges.历史截止事实代次!=g || edges.关系组.size()<13) return false;
         std::array<bool,13> seen{};
         for (const auto& edge : edges.关系组) {
-            if (edge.角色或顺序 < 1 || edge.角色或顺序 > 13) return false;
+            // pure v2 的类型登记关系允许后继扩展使用其它具名角色；
+            // 基础交付只核验并唯一覆盖角色 1..13。
+            if (edge.角色或顺序 < 1 || edge.角色或顺序 > 13) continue;
             const auto slot=static_cast<std::size_t>(edge.角色或顺序-1);
             if (edge.写入所有者!=port.所有者身份() || edge.源节点!=ids[0] ||
                 edge.目标节点!=ids[slot+2] || edge.关系类型节点!=ids[2] ||
                 seen[slot] || edge.退出事实代次) return false;
             seen[slot]=true;
         }
+        if (std::ranges::any_of(seen,[](bool value){return !value;})) return false;
         const auto values=l1.读取所有者范围历史属性值组(
             {L1所有者范围CRUD合同版本,ids[0],g});
         if (values.状态!=L1所有者范围读取状态::成功 || values.读取事实代次!=g ||
@@ -73,6 +80,203 @@ bool 已发布纯概念结构_v2(const 海中鱼巣::L1事实基座服务& l1,
             std::get<std::int64_t>(value.材料)!=2 || value.退出事实代次) return false;
         return true;
     } catch (...) { return false; }
+}
+
+bool 已发布出生使用结构(const 海中鱼巣::L1事实基座服务& l1,
+                        const 海中鱼巣::L1所有者范围写端口& port,
+                        const 海中鱼巣::纯概念结构交付_v2& pure,
+                        const 海中鱼巣::特征概念出生使用结构交付& delivery,
+                        std::uint64_t g) noexcept {
+    using namespace 海中鱼巣;
+    try {
+        if (delivery.格式!=1 || !出生结构身份独立(delivery,pure)) return false;
+        const std::array<稳定编码,2> nodes{delivery.锚点,delivery.F到FCv出生使用关系类型};
+        for (const auto id:nodes) {
+            const auto read=l1.读取所有者范围历史事实({L1所有者范围CRUD合同版本,id});
+            const auto* node=read.事实 ? std::get_if<L1所有者范围节点事实>(&*read.事实) : nullptr;
+            if(read.状态!=L1所有者范围读取状态::成功||read.读取事实代次!=g||
+               read.物理清理墓碑||read.物理清理事实代次||!node||
+               node->写入所有者!=port.所有者身份()||node->种类!=节点种类::普通||
+               node->属性类型表示||node->退出事实代次) return false;
+        }
+        const auto edges=l1.读取所有者范围历史关系组(
+            {L1所有者范围CRUD合同版本,L1所有者范围关系端点方向::源,
+             delivery.锚点,pure.类型.类型登记,g});
+        if(edges.状态!=L1所有者范围读取状态::成功||edges.读取事实代次!=g||
+           edges.历史截止事实代次!=g||edges.关系组.size()!=1) return false;
+        const auto& edge=edges.关系组.front();
+        if(edge.写入所有者!=port.所有者身份()||edge.源节点!=delivery.锚点||
+           edge.目标节点!=delivery.F到FCv出生使用关系类型||
+           edge.关系类型节点!=pure.类型.类型登记||edge.角色或顺序!=1||
+           edge.退出事实代次) return false;
+        const auto values=l1.读取所有者范围历史属性值组(
+            {L1所有者范围CRUD合同版本,delivery.锚点,g});
+        if(values.状态!=L1所有者范围读取状态::成功||values.读取事实代次!=g||
+           values.历史截止事实代次!=g) return false;
+        std::size_t count=0;
+        for(const auto& value:values.属性值组) if(value.属性类型节点==pure.类型.格式版本) {
+            ++count;
+            if(value.写入所有者!=port.所有者身份()||value.所属节点!=delivery.锚点||
+               value.来源节点!=delivery.锚点||value.退出事实代次||
+               !std::holds_alternative<std::int64_t>(value.材料)||
+               std::get<std::int64_t>(value.材料)!=1) return false;
+        }
+        return count==1;
+    } catch(...) { return false; }
+}
+
+bool 已发布存在两组结构(const 海中鱼巣::L1事实基座服务& l1,
+                        const 海中鱼巣::L1所有者范围写端口& port,
+                        const 海中鱼巣::纯概念结构交付_v2& pure,
+                        const 海中鱼巣::存在概念两组结构交付_v1& delivery,
+                        std::uint64_t g) noexcept {
+    using namespace 海中鱼巣;
+    try {
+        const auto& t=delivery.类型;
+        const std::array<稳定编码,6> ids{delivery.格式锚点,t.两组定义成员,
+            t.自身特征值域项,t.自身项特征类型,t.自身项值域概念,t.已知子存在概念};
+        if(delivery.版本!=1) return false;
+        std::set<std::uint64_t> unique;
+        for(const auto id:ids) {
+            if(!有效(id)||!unique.insert(id.值).second) return false;
+            const auto read=l1.读取所有者范围历史事实({L1所有者范围CRUD合同版本,id});
+            const auto* node=read.事实 ? std::get_if<L1所有者范围节点事实>(&*read.事实) : nullptr;
+            if(read.状态!=L1所有者范围读取状态::成功||read.读取事实代次!=g||
+               read.物理清理墓碑||read.物理清理事实代次||!node||
+               node->写入所有者!=port.所有者身份()||node->种类!=节点种类::普通||
+               node->属性类型表示||node->退出事实代次) return false;
+        }
+        const auto edges=l1.读取所有者范围历史关系组(
+            {L1所有者范围CRUD合同版本,L1所有者范围关系端点方向::源,
+             delivery.格式锚点,pure.类型.类型登记,g});
+        if(edges.状态!=L1所有者范围读取状态::成功||edges.读取事实代次!=g||
+           edges.历史截止事实代次!=g||edges.关系组.size()!=5) return false;
+        std::array<bool,5> seen{};
+        for(const auto& edge:edges.关系组) {
+            if(edge.角色或顺序<1||edge.角色或顺序>5) return false;
+            const auto slot=static_cast<std::size_t>(edge.角色或顺序-1);
+            if(seen[slot]||edge.写入所有者!=port.所有者身份()||
+               edge.源节点!=delivery.格式锚点||edge.目标节点!=ids[slot+1]||
+               edge.关系类型节点!=pure.类型.类型登记||edge.退出事实代次) return false;
+            seen[slot]=true;
+        }
+        const auto values=l1.读取所有者范围历史属性值组(
+            {L1所有者范围CRUD合同版本,delivery.格式锚点,g});
+        if(values.状态!=L1所有者范围读取状态::成功||values.读取事实代次!=g||
+           values.历史截止事实代次!=g) return false;
+        std::size_t count=0;
+        for(const auto& value:values.属性值组) if(value.属性类型节点==pure.类型.格式版本) {
+            ++count;
+            if(value.写入所有者!=port.所有者身份()||value.所属节点!=delivery.格式锚点||
+               value.来源节点!=delivery.格式锚点||value.退出事实代次||
+               !std::holds_alternative<std::int64_t>(value.材料)||
+               std::get<std::int64_t>(value.材料)!=1) return false;
+        }
+        return count==1;
+    } catch(...) { return false; }
+}
+
+bool 已发布二次关系结构(const 海中鱼巣::L1事实基座服务& l1,
+                        const 海中鱼巣::L1所有者范围写端口& port,
+                        const 海中鱼巣::纯概念结构交付_v2& pure,
+                        const 海中鱼巣::二次关系结构交付& delivery,
+                        std::uint64_t g) noexcept {
+    using namespace 海中鱼巣;
+    try {
+        const auto& t=delivery.类型;
+        const std::array<稳定编码,23> types{
+            t.规范化规则归属,t.规则版本,t.定义种类,t.定义格式,t.域掩码,
+            t.输出角色,t.固定K,t.约束成员,t.约束FC,t.约束EC,t.合取成员,
+            t.子RC,t.来源成员,t.来源F,t.来源B,t.来源概念,t.来源截止,
+            t.用途成员,t.用途目标,t.用途业务依据,t.用途业务标识,t.用途角色,
+            t.用途时间};
+        if(delivery.版本!=1||!有效(delivery.锚点)||
+           !有效(delivery.规范化规则.值)) return false;
+        std::set<std::uint64_t> unique{delivery.锚点.值};
+        if(!unique.insert(delivery.规范化规则.值.值).second) return false;
+        for(std::size_t i=0;i<types.size();++i) {
+            const auto id=types[i];
+            if(!有效(id)||!unique.insert(id.值).second) return false;
+            const auto read=l1.读取所有者范围历史事实({L1所有者范围CRUD合同版本,id});
+            const auto* node=read.事实 ? std::get_if<L1所有者范围节点事实>(&*read.事实) : nullptr;
+            std::optional<L1所有者范围值表示种类> representation;
+            const auto position=i+1;
+            if(position==2||position==3||position==4||position==5||position==6||
+               position==22||position==23)
+                representation=L1所有者范围值表示种类::I64;
+            else if(position==17||position==21)
+                representation=L1所有者范围值表示种类::U64组;
+            if(read.状态!=L1所有者范围读取状态::成功||read.读取事实代次!=g||
+               read.物理清理墓碑||read.物理清理事实代次||!node||
+               node->写入所有者!=port.所有者身份()||
+               node->种类!=(representation ? 节点种类::属性类型 : 节点种类::普通)||
+               node->属性类型表示!=representation||node->退出事实代次) return false;
+        }
+        for(const auto id:{delivery.锚点,delivery.规范化规则.值}) {
+            const auto read=l1.读取所有者范围历史事实({L1所有者范围CRUD合同版本,id});
+            const auto* node=read.事实 ? std::get_if<L1所有者范围节点事实>(&*read.事实) : nullptr;
+            if(read.状态!=L1所有者范围读取状态::成功||read.读取事实代次!=g||
+               read.物理清理墓碑||read.物理清理事实代次||!node||
+               node->写入所有者!=port.所有者身份()||node->种类!=节点种类::普通||
+               node->属性类型表示||node->退出事实代次) return false;
+        }
+        const auto locating=l1.读取所有者范围历史关系组(
+            {L1所有者范围CRUD合同版本,L1所有者范围关系端点方向::源,
+             pure.格式锚点,pure.类型.类型登记,g});
+        if(locating.状态!=L1所有者范围读取状态::成功||locating.读取事实代次!=g||
+           locating.历史截止事实代次!=g) return false;
+        std::size_t locatingCount=0;
+        for(const auto& edge:locating.关系组) if(edge.角色或顺序==4242) {
+            ++locatingCount;
+            if(edge.写入所有者!=port.所有者身份()||edge.源节点!=pure.格式锚点||
+               edge.目标节点!=delivery.锚点||
+               edge.关系类型节点!=pure.类型.类型登记||edge.退出事实代次) return false;
+        }
+        if(locatingCount!=1) return false;
+        const auto registrations=l1.读取所有者范围历史关系组(
+            {L1所有者范围CRUD合同版本,L1所有者范围关系端点方向::源,
+             delivery.锚点,pure.类型.类型登记,g});
+        if(registrations.状态!=L1所有者范围读取状态::成功||
+           registrations.读取事实代次!=g||registrations.历史截止事实代次!=g||
+           registrations.关系组.size()!=23) return false;
+        std::array<bool,23> seen{};
+        for(const auto& edge:registrations.关系组) {
+            if(edge.角色或顺序<1||edge.角色或顺序>23) return false;
+            const auto slot=static_cast<std::size_t>(edge.角色或顺序-1);
+            if(seen[slot]||edge.写入所有者!=port.所有者身份()||
+               edge.源节点!=delivery.锚点||edge.目标节点!=types[slot]||
+               edge.关系类型节点!=pure.类型.类型登记||edge.退出事实代次) return false;
+            seen[slot]=true;
+        }
+        const auto rules=l1.读取所有者范围历史关系组(
+            {L1所有者范围CRUD合同版本,L1所有者范围关系端点方向::源,
+             delivery.锚点,t.规范化规则归属,g});
+        if(rules.状态!=L1所有者范围读取状态::成功||rules.读取事实代次!=g||
+           rules.历史截止事实代次!=g||rules.关系组.size()!=1) return false;
+        const auto& rule=rules.关系组.front();
+        if(rule.写入所有者!=port.所有者身份()||rule.源节点!=delivery.锚点||
+           rule.目标节点!=delivery.规范化规则.值||
+           rule.关系类型节点!=t.规范化规则归属||rule.角色或顺序!=1||
+           rule.退出事实代次) return false;
+        const auto hasI64=[&](稳定编码 node,稳定编码 type) {
+            const auto values=l1.读取所有者范围历史属性值组(
+                {L1所有者范围CRUD合同版本,node,g});
+            if(values.状态!=L1所有者范围读取状态::成功||values.读取事实代次!=g||
+               values.历史截止事实代次!=g) return false;
+            std::size_t count=0;
+            for(const auto& value:values.属性值组) if(value.属性类型节点==type) {
+                ++count;
+                if(value.写入所有者!=port.所有者身份()||value.所属节点!=node||
+                   value.来源节点!=node||value.退出事实代次||
+                   !std::holds_alternative<std::int64_t>(value.材料)||
+                   std::get<std::int64_t>(value.材料)!=1) return false;
+            }
+            return count==1;
+        };
+        return hasI64(delivery.锚点,pure.类型.格式版本)&&
+               hasI64(delivery.规范化规则.值,pure.类型.格式版本)&&
+               hasI64(delivery.规范化规则.值,t.规则版本);
+    } catch(...) { return false; }
 }
 // 出生使用扩展必须由纯概念交付定位其登记类型；不得扫描其它扩展。
 bool 可登记出生使用(const 海中鱼巣::特征概念出生使用结构登记请求& r) noexcept {
@@ -172,7 +376,29 @@ L1所有者范围事实副本 概念树类数据服务::原始事实(稳定编�
         *r.事实);
     return *r.事实;
 }
-概念树类数据服务::N 概念树类数据服务::节点(稳定编码 id, std::uint64_t g, std::uint64_t h) const {
+概念树类数据服务::N 概念树类数据服务::节点(
+    稳定编码 id, std::uint64_t g, std::uint64_t h,
+    概念事实读取会话_v1* session) const {
+    if (session) {
+        if (session->所有者_ != port_.所有者身份() || session->Gread_ != g || session->H_ != h ||
+            !session->预算_.最大节点数 || !session->预算_.最大关系数 ||
+            !session->预算_.最大值数 || !session->预算_.最大材料总数)
+            throw 失败{S::入口拒绝};
+        if (const auto it=session->节点缓存_.find(id.值); it!=session->节点缓存_.end())
+            return it->second;
+        if (session->用量_.节点数 >= session->预算_.最大节点数 ||
+            session->用量_.材料总数 >= session->预算_.最大材料总数)
+            throw 失败{S::数量预算不足};
+        auto f=原始事实(id,g);
+        auto* n=std::get_if<N>(&f);
+        if(!n) throw 失败{S::引用冲突};
+        if(n->创建事实代次>h) throw 失败{S::未找到};
+        if(!有效于(*n,h)) throw 失败{S::目标已退出};
+        ++session->用量_.节点数;
+        ++session->用量_.材料总数;
+        session->节点缓存_.emplace(id.值,*n);
+        return *n;
+    }
     auto f = 原始事实(id, g);
     auto *n = std::get_if<N>(&f);
     if (!n)
@@ -185,8 +411,41 @@ L1所有者范围事实副本 概念树类数据服务::原始事实(稳定编�
 }
 std::vector<概念树类数据服务::E> 概念树类数据服务::关系(稳定编码 id, 稳定编码 type, bool incoming,
                                                         std::uint64_t g, std::uint64_t h,
-                                                        std::uint64_t budget) const {
+                                                        std::uint64_t budget,
+                                                        概念事实读取会话_v1* session) const {
     const auto direction = incoming ? L1所有者范围关系端点方向::目标 : L1所有者范围关系端点方向::源;
+    std::vector<E> loaded;
+    if(session) {
+        if(session->所有者_!=port_.所有者身份()||session->Gread_!=g||session->H_!=h||
+           !session->预算_.最大节点数||!session->预算_.最大关系数||
+           !session->预算_.最大值数||!session->预算_.最大材料总数||!budget)
+            throw 失败{S::入口拒绝};
+        const 概念事实读取会话_v1::关系键 key{id.值,type.值,incoming};
+        if(const auto it=session->关系组缓存_.find(key);it!=session->关系组缓存_.end()) {
+            loaded=it->second;
+        } else {
+            const auto remainingRelations=session->预算_.最大关系数-session->用量_.关系数;
+            const auto remainingTotal=session->预算_.最大材料总数-session->用量_.材料总数;
+            const auto maximum=std::min({budget,remainingRelations,remainingTotal});
+            if(!maximum) throw 失败{S::数量预算不足};
+            const L1所有者范围有界历史关系组读取请求 request{
+                L1所有者范围有界历史组读取合同版本,direction,id,type,g,h,maximum};
+            const auto r=l1_.读取所有者范围有界历史关系组(request);
+            if(r.状态!=L1所有者范围读取状态::成功) throw 失败{映射(r.状态)};
+            if(!r.成功(request)) throw 失败{S::内部不一致};
+            for(const auto& e:r.关系组)
+                if(e.写入所有者!=port_.所有者身份()) throw 失败{S::引用冲突};
+            session->用量_.关系数+=static_cast<std::uint64_t>(r.关系组.size());
+            session->用量_.材料总数+=static_cast<std::uint64_t>(r.关系组.size());
+            loaded=r.关系组;
+            session->关系组缓存_.emplace(key,loaded);
+        }
+        检查数量(loaded.size(),budget);
+        std::sort(loaded.begin(),loaded.end(),[](const auto&a,const auto&b){
+            return a.角色或顺序!=b.角色或顺序 ? a.角色或顺序<b.角色或顺序 : a.编码.值<b.编码.值;
+        });
+        return loaded;
+    }
     const auto r = l1_.读取所有者范围历史关系组({L1所有者范围CRUD合同版本, direction, id, type, h});
     if (r.状态 != L1所有者范围读取状态::成功)
         throw 失败{映射(r.状态)};
@@ -209,7 +468,35 @@ std::vector<概念树类数据服务::E> 概念树类数据服务::关系(稳定
     });
     return out;
 }
-std::vector<概念树类数据服务::V> 概念树类数据服务::属性(稳定编码 id, std::uint64_t g, std::uint64_t h) const {
+std::vector<概念树类数据服务::V> 概念树类数据服务::属性(
+    稳定编码 id, std::uint64_t g, std::uint64_t h,
+    概念事实读取会话_v1* session) const {
+    if(session) {
+        if(session->所有者_!=port_.所有者身份()||session->Gread_!=g||session->H_!=h||
+           !session->预算_.最大节点数||!session->预算_.最大关系数||
+           !session->预算_.最大值数||!session->预算_.最大材料总数)
+            throw 失败{S::入口拒绝};
+        if(const auto it=session->属性值组缓存_.find(id.值);it!=session->属性值组缓存_.end())
+            return it->second;
+        const auto remainingValues=session->预算_.最大值数-session->用量_.值数;
+        const auto remainingTotal=session->预算_.最大材料总数-session->用量_.材料总数;
+        const auto maximum=std::min(remainingValues,remainingTotal);
+        if(!maximum) throw 失败{S::数量预算不足};
+        const L1所有者范围有界历史属性值组读取请求 request{
+            L1所有者范围有界历史组读取合同版本,id,g,h,maximum};
+        const auto r=l1_.读取所有者范围有界历史属性值组(request);
+        if(r.状态!=L1所有者范围读取状态::成功) throw 失败{映射(r.状态)};
+        if(!r.成功(request)) throw 失败{S::内部不一致};
+        std::set<std::uint64_t> slots;
+        for(const auto& v:r.属性值组)
+            if(!有效(v.属性类型节点)||v.来源节点!=id||v.写入所有者!=port_.所有者身份()||
+               !slots.insert(v.属性类型节点.值).second)
+                throw 失败{S::内部不一致};
+        session->用量_.值数+=static_cast<std::uint64_t>(r.属性值组.size());
+        session->用量_.材料总数+=static_cast<std::uint64_t>(r.属性值组.size());
+        session->属性值组缓存_.emplace(id.值,r.属性值组);
+        return r.属性值组;
+    }
     const auto r = l1_.读取所有者范围历史属性值组({L1所有者范围CRUD合同版本, id, h});
     if (r.状态 != L1所有者范围读取状态::成功)
         throw 失败{映射(r.状态)};
@@ -361,6 +648,70 @@ void 概念树类数据服务::核验外部节点(稳定编码 id,std::uint64_t 
         throw std::invalid_argument("concept two-group services");
 }
 
+概念树类数据服务::概念树类数据服务(
+    const L1事实基座服务& l1, const 特征类数据服务& features,
+    const 存在类数据服务& existences, const 特征值类数据服务& values,
+    const 场景类数据服务& scenes, L1所有者范围写端口&& port,
+    const 纯概念结构交付_v2& layout,
+    const 特征概念出生使用结构交付& birthLayout,
+    const 存在概念两组结构交付_v1& twoGroupLayout,
+    const 二次关系结构交付& secondaryRelationLayout,
+    const 状态使用绑定只读提供者& stateUseBindings)
+    : l1_(l1), features_(features), existences_(existences), values_(values),
+      port_(std::move(port)), scenes_(&scenes), pure_layout_(layout),
+      feature_birth_layout_(birthLayout), two_group_definition_layout_(twoGroupLayout),
+      secondary_relation_layout_(secondaryRelationLayout),
+      state_use_bindings_(&stateUseBindings) {
+    const auto types = std::array<稳定编码, 23>{
+        secondaryRelationLayout.类型.规范化规则归属,
+        secondaryRelationLayout.类型.规则版本,
+        secondaryRelationLayout.类型.定义种类,
+        secondaryRelationLayout.类型.定义格式,
+        secondaryRelationLayout.类型.域掩码,
+        secondaryRelationLayout.类型.输出角色,
+        secondaryRelationLayout.类型.固定K,
+        secondaryRelationLayout.类型.约束成员,
+        secondaryRelationLayout.类型.约束FC,
+        secondaryRelationLayout.类型.约束EC,
+        secondaryRelationLayout.类型.合取成员,
+        secondaryRelationLayout.类型.子RC,
+        secondaryRelationLayout.类型.来源成员,
+        secondaryRelationLayout.类型.来源F,
+        secondaryRelationLayout.类型.来源B,
+        secondaryRelationLayout.类型.来源概念,
+        secondaryRelationLayout.类型.来源截止,
+        secondaryRelationLayout.类型.用途成员,
+        secondaryRelationLayout.类型.用途目标,
+        secondaryRelationLayout.类型.用途业务依据,
+        secondaryRelationLayout.类型.用途业务标识,
+        secondaryRelationLayout.类型.用途角色,
+        secondaryRelationLayout.类型.用途时间};
+    std::set<std::uint64_t> unique;
+    unique.insert(secondaryRelationLayout.锚点.值);
+    unique.insert(secondaryRelationLayout.规范化规则.值.值);
+    for (const auto id : types)
+        if (!有效(id) || !unique.insert(id.值).second)
+            throw std::invalid_argument("secondary relation layout");
+    if (!port_.有效() || !port_.绑定于(l1_) || !features_.绑定于(l1_) ||
+        !existences_.绑定于(l1_) || !values_.绑定于(l1_) ||
+        !scenes.绑定于(l1_) || !stateUseBindings.绑定于(l1_) ||
+        &stateUseBindings !=
+            static_cast<const 状态使用绑定只读提供者 *>(&scenes) ||
+        layout.版本 != 2 || twoGroupLayout.版本 != 1 ||
+        secondaryRelationLayout.版本 != 1 ||
+        !有效(secondaryRelationLayout.锚点) ||
+        !有效(secondaryRelationLayout.规范化规则.值))
+        throw std::invalid_argument("secondary relation services");
+    const auto current=l1_.读取中性当前事实代次({L1中性CRUD合同版本});
+    if(current.状态!=L1中性读取状态::成功||!current.事实代次||
+       !已发布纯概念结构_v2(l1_,port_,layout,current.事实代次)||
+       !已发布出生使用结构(l1_,port_,layout,birthLayout,current.事实代次)||
+       !已发布存在两组结构(l1_,port_,layout,twoGroupLayout,current.事实代次)||
+       !已发布二次关系结构(l1_,port_,layout,secondaryRelationLayout,
+                              current.事实代次))
+        throw std::invalid_argument("secondary relation published layouts");
+}
+
 namespace {
 存在概念两组状态_v3 映射两组状态(纯概念状态 state) noexcept {
     switch (state) {
@@ -402,7 +753,9 @@ namespace {
 存在概念两组定义_v3 概念树类数据服务::规范化两组定义内部(
     const 存在概念两组定义_v3& input, std::uint64_t g, std::uint64_t h,
     const 存在概念两组预算_v3& budget, const 特征值域比较数据服务& comparison,
-    const 特征值域比较预算_v1& comparisonBudget) const {
+    const 特征值域比较预算_v1& comparisonBudget,
+    概念事实读取会话_v1* session,
+    特征值域事实读取会话_v1* featureSession) const {
     if (!two_group_definition_layout_ || !pure_layout_ || !comparison.绑定于(l1_) || !g || !h || h > g ||
         !input.自身特征组已完整声明 || !input.子存在概念组已完整声明 ||
         !budget.最大自身特征项 || !budget.最大子概念项 || !budget.最大定义成员数 ||
@@ -424,7 +777,26 @@ namespace {
             !seenFeatureConcepts.insert(item.FC.值.值).second)
             throw 纯失败{纯概念状态::定义不相容};
         const 特征值域读取请求_v1 request{1,g,h,item.FC,comparisonBudget};
-        const auto value=comparison.读取特征值域(request);
+        if(session&&featureSession) {
+            if(session->用量_.节点数>session->预算_.最大节点数||
+               session->用量_.关系数>session->预算_.最大关系数||
+               session->用量_.值数>session->预算_.最大值数||
+               session->用量_.材料总数>session->预算_.最大材料总数)
+                throw 纯失败{纯概念状态::数量预算不足};
+            featureSession->计量_.上限={
+                featureSession->计量_.用量.节点数+
+                    (session->预算_.最大节点数-session->用量_.节点数),
+                featureSession->计量_.用量.关系数+
+                    (session->预算_.最大关系数-session->用量_.关系数),
+                featureSession->计量_.用量.属性值数+
+                    (session->预算_.最大值数-session->用量_.值数),
+                featureSession->计量_.用量.材料总数+
+                    (session->预算_.最大材料总数-session->用量_.材料总数)};
+        }
+        const auto value=session&&featureSession ?
+            comparison.读取特征值域共享(request,*session,*featureSession) :
+            session ? comparison.读取特征值域共享(request,*session) :
+                      comparison.读取特征值域(request);
         if (!value.成功(request) || !value.域 || value.域->FT != item.FT)
             throw 纯失败{value.成功(request) ? 纯概念状态::定义不相容 : 映射特征值域比较状态(value.状态)};
     }
@@ -433,7 +805,22 @@ namespace {
         throw 纯失败{纯概念状态::定义不相容};
     for (const auto child:out.已知子存在概念组) {
         if (!有效(child.值)) throw 纯失败{纯概念状态::定义不相容};
-        const auto fact=读取纯概念内部(child,g,h,budget.基础);
+        if(session&&featureSession) {
+            if(featureSession->计量_.用量.节点数>featureSession->计量_.上限.最大节点数||
+               featureSession->计量_.用量.关系数>featureSession->计量_.上限.最大关系数||
+               featureSession->计量_.用量.属性值数>featureSession->计量_.上限.最大属性值数||
+               featureSession->计量_.用量.材料总数>featureSession->计量_.上限.最大材料总数)
+                throw 纯失败{纯概念状态::数量预算不足};
+            session->预算_={session->用量_.节点数+
+                    (featureSession->计量_.上限.最大节点数-featureSession->计量_.用量.节点数),
+                session->用量_.关系数+
+                    (featureSession->计量_.上限.最大关系数-featureSession->计量_.用量.关系数),
+                session->用量_.值数+
+                    (featureSession->计量_.上限.最大属性值数-featureSession->计量_.用量.属性值数),
+                session->用量_.材料总数+
+                    (featureSession->计量_.上限.最大材料总数-featureSession->计量_.用量.材料总数)};
+        }
+        const auto fact=读取纯概念内部(child,g,h,budget.基础,session,featureSession);
         if (fact.类别 != 相关概念类别::存在) throw 纯失败{纯概念状态::类别冲突};
         if (fact.治理状态 == 概念树生命周期状态::退役) throw 纯失败{纯概念状态::概念已退役};
     }
@@ -457,17 +844,19 @@ namespace {
 存在概念两组事实_v3 概念树类数据服务::读取两组定义内部(
     概念树概念身份 id, std::uint64_t g, std::uint64_t h,
     const 存在概念两组预算_v3& budget, const 特征值域比较数据服务& comparison,
-    const 特征值域比较预算_v1& comparisonBudget) const {
+    const 特征值域比较预算_v1& comparisonBudget,
+    概念事实读取会话_v1* session,
+    特征值域事实读取会话_v1* featureSession) const {
     if (!two_group_definition_layout_ || !pure_layout_ || !有效(id.值)) throw 纯失败{纯概念状态::旧格式不支持};
     if (!comparison.绑定于(l1_)) throw 纯失败{纯概念状态::入口拒绝};
-    const auto base=读取纯概念内部(id,g,h,budget.基础);
+    const auto base=读取纯概念内部(id,g,h,budget.基础,session,featureSession);
     if(base.类别 != 相关概念类别::存在) throw 纯失败{纯概念状态::类别冲突};
     if(base.治理状态 == 概念树生命周期状态::退役) throw 纯失败{纯概念状态::概念已退役};
     const auto& t=two_group_definition_layout_->类型;
-    const auto definitions=关系(id.值,t.两组定义成员,false,g,h,2);
+    const auto definitions=关系(id.值,t.两组定义成员,false,g,h,2,session);
     if(definitions.size()!=1 || definitions.front().角色或顺序!=1) throw 纯失败{纯概念状态::内部不一致};
     const auto d=definitions.front().目标节点;
-    const auto dNode=节点(d,g,h);
+    const auto dNode=节点(d,g,h,session);
     if(dNode.写入所有者!=port_.所有者身份() || dNode.种类!=节点种类::普通 || dNode.属性类型表示 || dNode.退出事实代次)
         throw 纯失败{纯概念状态::内部不一致};
     存在概念两组事实_v3 out;
@@ -475,16 +864,16 @@ namespace {
     out.状态生命周期=base.生命周期值生命周期; out.概念生命周期=base.生命周期;
     out.治理状态=base.治理状态; out.直接上位=base.直接上位;
     out.定义.自身特征组已完整声明=true; out.定义.子存在概念组已完整声明=true;
-    const auto own=关系(d,t.自身特征值域项,false,g,h,budget.最大自身特征项+1);
+    const auto own=关系(d,t.自身特征值域项,false,g,h,budget.最大自身特征项+1,session);
     if(own.size()>budget.最大自身特征项) throw 纯失败{纯概念状态::数量预算不足};
     for(std::size_t i=0;i<own.size();++i) {
         const auto& edge=own[i];
         if(edge.角色或顺序!=static_cast<std::int64_t>(i+1)) throw 纯失败{纯概念状态::内部不一致};
-        const auto itemNode=节点(edge.目标节点,g,h);
-        if(itemNode.写入所有者!=port_.所有者身份() || itemNode.种类!=节点种类::普通 || itemNode.属性类型表示 || itemNode.退出事实代次 || !属性(edge.目标节点,g,h).empty())
+        const auto itemNode=节点(edge.目标节点,g,h,session);
+        if(itemNode.写入所有者!=port_.所有者身份() || itemNode.种类!=节点种类::普通 || itemNode.属性类型表示 || itemNode.退出事实代次 || !属性(edge.目标节点,g,h,session).empty())
             throw 纯失败{纯概念状态::内部不一致};
-        const auto ft=关系(edge.目标节点,t.自身项特征类型,false,g,h,2);
-        const auto fc=关系(edge.目标节点,t.自身项值域概念,false,g,h,2);
+        const auto ft=关系(edge.目标节点,t.自身项特征类型,false,g,h,2,session);
+        const auto fc=关系(edge.目标节点,t.自身项值域概念,false,g,h,2,session);
         if(ft.size()!=1 || fc.size()!=1 || ft.front().角色或顺序!=1 || fc.front().角色或顺序!=1)
             throw 纯失败{纯概念状态::内部不一致};
         存在概念特征值域项_v3 item{特征类型身份{ft.front().目标节点},概念树概念身份{fc.front().目标节点}};
@@ -492,7 +881,7 @@ namespace {
         out.自身特征项关系组.push_back({edge.编码,edge.源节点,edge.目标节点,edge.关系类型节点,
             static_cast<std::uint64_t>(edge.角色或顺序),投影纯生命(edge,g)});
     }
-    const auto children=关系(d,t.已知子存在概念,false,g,h,budget.最大子概念项+1);
+    const auto children=关系(d,t.已知子存在概念,false,g,h,budget.最大子概念项+1,session);
     if(children.size()>budget.最大子概念项) throw 纯失败{纯概念状态::数量预算不足};
     for(std::size_t i=0;i<children.size();++i) {
         const auto& edge=children[i];
@@ -501,7 +890,8 @@ namespace {
         out.子概念关系组.push_back({edge.编码,edge.源节点,edge.目标节点,edge.关系类型节点,
             static_cast<std::uint64_t>(edge.角色或顺序),投影纯生命(edge,g)});
     }
-    const auto normalized=规范化两组定义内部(out.定义,g,h,budget,comparison,comparisonBudget);
+    const auto normalized=规范化两组定义内部(out.定义,g,h,budget,comparison,
+        comparisonBudget,session,featureSession);
     if(normalized != out.定义) throw 纯失败{纯概念状态::内部不一致};
     return out;
 }
@@ -1830,7 +2220,8 @@ bool 特征概念出生使用结构登记结果::成功(
 
 纯概念定义 概念树类数据服务::规范化纯概念定义(
     const 纯概念定义 &input, std::uint64_t g, std::uint64_t h,
-    const 概念树预算 &budget) const {
+    const 概念树预算 &budget, 概念事实读取会话_v1* session,
+    特征值域事实读取会话_v1* featureSession) const {
     if (!pure_layout_ || !g || !h || h > g || !budget.最大概念数 ||
         !budget.最大关系数 || !budget.最大特征属性数) {
         if(!pure_layout_) throw 纯失败{纯概念状态::旧格式不支持};
@@ -1842,8 +2233,31 @@ bool 特征概念出生使用结构登记结果::成功(
             throw 纯失败{纯概念状态::定义不相容};
         特征规范I64域 raw;
         for (const auto &x : fc->规范域) raw.区间.push_back({x.下界,x.上界});
-        const auto normalized = 特征结果(features_.规范化I64特征域(
-            {{1,g,h,{fc->特征类型.值}},raw}));
+        if(session&&featureSession) {
+            if(session->用量_.节点数>session->预算_.最大节点数||
+               session->用量_.关系数>session->预算_.最大关系数||
+               session->用量_.值数>session->预算_.最大值数||
+               session->用量_.材料总数>session->预算_.最大材料总数)
+                throw 纯失败{纯概念状态::数量预算不足};
+            featureSession->计量_.上限={featureSession->计量_.用量.节点数+
+                    (session->预算_.最大节点数-session->用量_.节点数),
+                featureSession->计量_.用量.关系数+
+                    (session->预算_.最大关系数-session->用量_.关系数),
+                featureSession->计量_.用量.属性值数+
+                    (session->预算_.最大值数-session->用量_.值数),
+                featureSession->计量_.用量.材料总数+
+                    (session->预算_.最大材料总数-session->用量_.材料总数)};
+        }
+        const auto normalized = 特征结果(featureSession ?
+            features_.保护<特征截止事实<特征规范I64域>>([&] {
+                features_.守卫(g);
+                auto full=features_.读完整域({fc->特征类型.值},g,h,
+                    &featureSession->计量_);
+                auto domain=features_.规范域(raw);
+                features_.要求(features_.包含(full,domain),特征数据错误::类型不相容);
+                features_.守卫(g);
+                return 特征截止事实<特征规范I64域>{g,h,std::move(domain)};
+            }) : features_.规范化I64特征域({{1,g,h,{fc->特征类型.值}},raw}));
         if (normalized.Gread != g || normalized.H != h || normalized.数据.区间.empty())
             throw 纯失败{纯概念状态::定义不相容};
         纯I64特征概念定义 out; out.特征类型 = fc->特征类型;
@@ -1859,7 +2273,17 @@ bool 特征概念出生使用结构登记结果::成功(
         if (out.特征模板组.empty() || out.特征模板组.size() > budget.最大概念数)
             throw 纯失败{纯概念状态::定义不相容};
         for (const auto id : out.特征模板组) {
-            const auto fact = 读取纯概念内部(id,g,h,budget);
+            if(session&&featureSession) {
+                session->预算_={session->用量_.节点数+
+                        (featureSession->计量_.上限.最大节点数-featureSession->计量_.用量.节点数),
+                    session->用量_.关系数+
+                        (featureSession->计量_.上限.最大关系数-featureSession->计量_.用量.关系数),
+                    session->用量_.值数+
+                        (featureSession->计量_.上限.最大属性值数-featureSession->计量_.用量.属性值数),
+                    session->用量_.材料总数+
+                        (featureSession->计量_.上限.最大材料总数-featureSession->计量_.用量.材料总数)};
+            }
+            const auto fact = 读取纯概念内部(id,g,h,budget,session,featureSession);
             if (fact.类别 != 相关概念类别::特征 ||
                 (fact.治理状态 != 概念树生命周期状态::活跃 &&
                  fact.治理状态 != 概念树生命周期状态::冷却))
@@ -1875,21 +2299,25 @@ bool 特征概念出生使用结构登记结果::成功(
 
 纯概念事实 概念树类数据服务::读取纯概念内部(
     概念树概念身份 id, std::uint64_t g, std::uint64_t h,
-    const 概念树预算 &budget) const {
+    const 概念树预算 &budget, 概念事实读取会话_v1* session,
+    特征值域事实读取会话_v1* featureSession) const {
     if (!pure_layout_) throw 纯失败{纯概念状态::旧格式不支持};
     if (!有效(id.值) || !g || !h || h > g || !budget.最大关系数 ||
         !budget.最大概念数 || !budget.最大特征属性数)
         throw 纯失败{纯概念状态::入口拒绝};
+    if(session && !session->已完整概念_.contains(id.值.值) &&
+       session->已完整概念_.size()>=session->最大概念数_)
+        throw 纯失败{纯概念状态::数量预算不足};
     const auto &t = pure_layout_->类型;
     纯概念事实 out; out.概念=id;
-    const auto conceptNode=节点(id.值,g,h);
+    const auto conceptNode=节点(id.值,g,h,session);
     out.生命周期=投影纯生命(conceptNode,g);
-    const auto members=关系(id.值,t.概念族成员,true,g,h,1);
+    const auto members=关系(id.值,t.概念族成员,true,g,h,1,session);
     if(members.size()!=1||members.front().源节点!=pure_layout_->概念族锚点||
        members.front().目标节点!=id.值||members.front().角色或顺序!=1||
        members.front().创建事实代次!=out.生命周期.创建事实代次)
         throw 纯失败{纯概念状态::内部不一致};
-    const auto cv=属性(id.值,g,h);
+    const auto cv=属性(id.值,g,h,session);
     if(cv.size()!=2) throw 纯失败{纯概念状态::内部不一致};
     const auto category=std::get<std::int64_t>(唯一属性(cv,t.概念类别).材料);
     const auto lifecycle=std::get<std::int64_t>(唯一属性(cv,t.生命周期).材料);
@@ -1900,20 +2328,20 @@ bool 特征概念出生使用结构登记结果::成功(
     const auto &lifeValue=唯一属性(cv,t.生命周期);
     out.生命周期值事实=lifeValue.编码;
     out.生命周期值生命周期=投影纯生命(lifeValue,g);
-    const auto defs=关系(id.值,t.定义成员,false,g,h,1);
+    const auto defs=关系(id.值,t.定义成员,false,g,h,1,session);
     if(defs.size()!=1||defs.front().角色或顺序!=1)
         throw 纯失败{纯概念状态::内部不一致};
     out.定义记录=defs.front().目标节点;
-    out.定义记录生命周期=投影纯生命(节点(out.定义记录,g,h),g);
+    out.定义记录生命周期=投影纯生命(节点(out.定义记录,g,h,session),g);
     out.定义关系组.push_back({defs.front().编码,defs.front().源节点,
         defs.front().目标节点,defs.front().关系类型节点,
         纯概念定义关系种类::定义成员,1,投影纯生命(defs.front(),g)});
-    const auto dv=属性(out.定义记录,g,h);
+    const auto dv=属性(out.定义记录,g,h,session);
     const auto kind=std::get<std::int64_t>(唯一属性(dv,t.定义种类).材料);
     if(kind==1) {
         if(out.类别!=相关概念类别::特征||dv.size()!=2)
             throw 纯失败{纯概念状态::类别冲突};
-        const auto ft=关系(out.定义记录,t.定义特征类型,false,g,h,1);
+        const auto ft=关系(out.定义记录,t.定义特征类型,false,g,h,1,session);
         if(ft.size()!=1||ft.front().角色或顺序!=1)
             throw 纯失败{纯概念状态::内部不一致};
         const auto &domain=唯一属性(dv,t.I64域);
@@ -1924,7 +2352,7 @@ bool 特征概念出生使用结构登记结果::成功(
         for(std::size_t i=0;i<raw.size();i+=2)
             def.规范域.push_back({std::bit_cast<std::int64_t>(raw[i]),
                                   std::bit_cast<std::int64_t>(raw[i+1])});
-        const auto normalized=规范化纯概念定义(def,g,h,budget);
+        const auto normalized=规范化纯概念定义(def,g,h,budget,session,featureSession);
         if(normalized!=纯概念定义{def})
             throw 纯失败{纯概念状态::内部不一致};
         out.定义=std::move(def);
@@ -1934,7 +2362,7 @@ bool 特征概念出生使用结构登记结果::成功(
     } else if(kind==2) {
         if(out.类别!=相关概念类别::存在||dv.size()!=1)
             throw 纯失败{纯概念状态::类别冲突};
-        const auto edges=关系(out.定义记录,t.定义模板,false,g,h,budget.最大关系数);
+        const auto edges=关系(out.定义记录,t.定义模板,false,g,h,budget.最大关系数,session);
         if(edges.empty()) throw 纯失败{纯概念状态::定义不相容};
         纯合取存在概念定义 def;
         for(std::size_t i=0;i<edges.size();++i) {
@@ -1948,7 +2376,7 @@ bool 特征概念出生使用结构登记结果::成功(
         for(std::size_t i=1;i<def.特征模板组.size();++i)
             if(def.特征模板组[i-1].值.值>=def.特征模板组[i].值.值)
                 throw 纯失败{纯概念状态::内部不一致};
-        const auto normalized=规范化纯概念定义(def,g,h,budget);
+        const auto normalized=规范化纯概念定义(def,g,h,budget,session,featureSession);
         if(normalized!=纯概念定义{def})
             throw 纯失败{纯概念状态::内部不一致};
         out.定义=std::move(def);
@@ -1958,13 +2386,14 @@ bool 特征概念出生使用结构登记结果::成功(
             throw 纯失败{纯概念状态::定义不支持};
         out.定义=通用存在概念定义{1,通用存在定义规则::不预设特征};
     } else throw 纯失败{纯概念状态::定义不支持};
-    const auto parents=关系(id.值,t.直接上位,true,g,h,budget.最大关系数);
+    const auto parents=关系(id.值,t.直接上位,true,g,h,budget.最大关系数,session);
     std::set<std::uint64_t> seen;
     for(const auto &e:parents) {
         if(e.角色或顺序!=1||e.源节点==id.值||!seen.insert(e.源节点.值).second)
             throw 纯失败{纯概念状态::上位成环};
         out.直接上位.push_back({e.编码,概念树概念身份{e.源节点},id,投影纯生命(e,g)});
     }
+    if(session) session->已完整概念_.insert(id.值.值);
     return out;
 }
 
@@ -2005,34 +2434,43 @@ bool 特征概念值域基础读取结果_v1::成功(
         && Gread == r.Gread && H == r.H && H != 0 && H <= Gread && 事实
         && 事实->Gread == r.Gread && 事实->H == r.H && 事实->FC == r.FC
         && 有效(事实->FC.值) && 有效(事实->FT) && 事实->表示 == 特征值表示类型::I64
-        && 事实->I64域.has_value() && !事实->I64域->区间.empty();
+        && 事实->I64域.has_value() && !事实->I64域->区间.empty()
+        && 读取用量.节点数 <= r.读取预算.最大节点数
+        && 读取用量.关系数 <= r.读取预算.最大关系数
+        && 读取用量.值数 <= r.读取预算.最大值数
+        && 读取用量.材料总数 <= r.读取预算.最大材料总数
+        && 读取用量.材料总数 == 读取用量.节点数 + 读取用量.关系数 + 读取用量.值数;
 }
 
 特征概念值域基础读取结果_v1 概念树类数据服务::读取特征概念值域基础(
     const 特征概念值域基础读取请求_v1& r) const noexcept {
+    概念事实读取会话_v1 session(port_.所有者身份(),r.Gread,r.H,r.读取预算,
+                                  r.预算.最大概念数);
+    return 读取特征概念值域基础共享(r,session);
+}
+
+特征概念值域基础读取结果_v1 概念树类数据服务::读取特征概念值域基础共享(
+    const 特征概念值域基础读取请求_v1& r,
+    概念事实读取会话_v1& session) const noexcept {
     特征概念值域基础读取结果_v1 out; out.Gread = r.Gread;
+    struct 用量回填 final {
+        特征概念值域基础读取结果_v1& 输出;
+        const 有界事实读取用量_B1& 用量;
+        ~用量回填() { 输出.读取用量=用量; }
+    } guard{out,session.用量_};
     try {
         if (r.版本 != 1 || !r.Gread || !r.H || r.H > r.Gread || !有效(r.FC.值)
-            || !r.预算.最大概念数 || !r.预算.最大关系数 || !r.预算.最大特征属性数) {
+            || !r.预算.最大概念数 || !r.预算.最大关系数 || !r.预算.最大特征属性数
+            || !r.读取预算.最大节点数 || !r.读取预算.最大关系数
+            || !r.读取预算.最大值数 || !r.读取预算.最大材料总数
+            || session.所有者_ != port_.所有者身份() || session.Gread_ != r.Gread
+            || session.H_ != r.H || session.预算_ != r.读取预算
+            || session.最大概念数_ != r.预算.最大概念数) {
             out.状态 = 特征概念值域基础读取状态_v1::入口拒绝;
             return out;
         }
-        const auto read = 读取纯概念({2, r.Gread, r.H, r.FC, r.预算});
-        if (!read.成功({2, r.Gread, r.H, r.FC, r.预算}) || !read.事实) {
-            switch (read.状态) {
-            case 纯概念状态::未找到: out.状态 = 特征概念值域基础读取状态_v1::未找到; break;
-            case 纯概念状态::目标已退出: case 纯概念状态::概念已退役:
-                out.状态 = 特征概念值域基础读取状态_v1::目标已退出; break;
-            case 纯概念状态::事实代次漂移: out.状态 = 特征概念值域基础读取状态_v1::事实代次漂移; break;
-            case 纯概念状态::数量预算不足: out.状态 = 特征概念值域基础读取状态_v1::数量预算不足; break;
-            case 纯概念状态::历史材料不可用: out.状态 = 特征概念值域基础读取状态_v1::历史材料不可用; break;
-            case 纯概念状态::资源失败: out.状态 = 特征概念值域基础读取状态_v1::资源失败; break;
-            case 纯概念状态::入口拒绝: out.状态 = 特征概念值域基础读取状态_v1::入口拒绝; break;
-            default: out.状态 = 特征概念值域基础读取状态_v1::内部不一致; break;
-            }
-            return out;
-        }
-        const auto& fact = *read.事实;
+        守卫代次(r.Gread);
+        const auto fact = 读取纯概念内部(r.FC,r.Gread,r.H,r.预算,&session);
         if (fact.类别 != 相关概念类别::特征) {
             out.状态 = 特征概念值域基础读取状态_v1::类别冲突;
             return out;
@@ -2062,6 +2500,7 @@ bool 特征概念值域基础读取结果_v1::成功(
             out.事实 = 特征概念值域基础事实_v1{r.FC, 特征类型身份{definition->特征类型.值},
                 特征值表示类型::I64, value->数据, fact.生命周期, r.Gread, r.H};
             out.状态 = 特征概念值域基础读取状态_v1::已读取;
+            守卫代次(r.Gread);
             return out;
         }
         const auto error = std::get<特征数据错误>(normalized);
@@ -2073,7 +2512,30 @@ bool 特征概念值域基础读取结果_v1::成功(
             error == 特征数据错误::未找到 ? 特征概念值域基础读取状态_v1::未找到 :
             error == 特征数据错误::已退出 ? 特征概念值域基础读取状态_v1::目标已退出 :
             特征概念值域基础读取状态_v1::内部不一致;
-    } catch (const std::bad_alloc&) { out.状态 = 特征概念值域基础读取状态_v1::资源失败; }
+    } catch (const 纯失败& e) {
+        switch(e.状态) {
+        case 纯概念状态::未找到: out.状态=特征概念值域基础读取状态_v1::未找到; break;
+        case 纯概念状态::目标已退出: case 纯概念状态::概念已退役:
+            out.状态=特征概念值域基础读取状态_v1::目标已退出; break;
+        case 纯概念状态::事实代次漂移: out.状态=特征概念值域基础读取状态_v1::事实代次漂移; break;
+        case 纯概念状态::数量预算不足: out.状态=特征概念值域基础读取状态_v1::数量预算不足; break;
+        case 纯概念状态::历史材料不可用: out.状态=特征概念值域基础读取状态_v1::历史材料不可用; break;
+        case 纯概念状态::资源失败: out.状态=特征概念值域基础读取状态_v1::资源失败; break;
+        case 纯概念状态::入口拒绝: out.状态=特征概念值域基础读取状态_v1::入口拒绝; break;
+        default: out.状态=特征概念值域基础读取状态_v1::内部不一致; break;
+        }
+      } catch (const 失败& e) {
+        switch(e.状态) {
+        case S::未找到: out.状态=特征概念值域基础读取状态_v1::未找到; break;
+        case S::目标已退出: out.状态=特征概念值域基础读取状态_v1::目标已退出; break;
+        case S::事实代次漂移: out.状态=特征概念值域基础读取状态_v1::事实代次漂移; break;
+        case S::数量预算不足: out.状态=特征概念值域基础读取状态_v1::数量预算不足; break;
+        case S::历史材料不可用: out.状态=特征概念值域基础读取状态_v1::历史材料不可用; break;
+        case S::资源失败: out.状态=特征概念值域基础读取状态_v1::资源失败; break;
+        case S::入口拒绝: out.状态=特征概念值域基础读取状态_v1::入口拒绝; break;
+        default: out.状态=特征概念值域基础读取状态_v1::内部不一致; break;
+        }
+      } catch (const std::bad_alloc&) { out.状态 = 特征概念值域基础读取状态_v1::资源失败; }
       catch (const std::length_error&) { out.状态 = 特征概念值域基础读取状态_v1::资源失败; }
       catch (...) { out.状态 = 特征概念值域基础读取状态_v1::内部不一致; }
     out.H = 0; out.事实.reset();
@@ -2980,6 +3442,1651 @@ bool 概念树类数据服务::原子I64结构已就绪() const noexcept {
 
 bool 原子I64特征出生使用读取结果::成功(const 原子I64特征出生使用读取请求& r) const noexcept {
     return 版本==1&&r.版本==1&&状态==原子I64特征出生使用读取状态::已读取&&Gread==r.Gread&&H==r.H&&事实.has_value()&&事实->F.编码==r.F;
+}
+
+namespace {
+bool 二次预算完整(const 二次关系预算& b) noexcept {
+    return b.最大节点数&&b.最大关系数&&b.最大值数&&b.最大材料数&&
+        b.最大概念数&&b.最大原子数&&
+        b.最大展开深度&&b.最大候选数&&b.最大来源数&&b.最大用途数&&b.最大首次材料数;
+}
+bool 约束小于(const 二次关系概念约束&a,const 二次关系概念约束&b) noexcept {
+    if(a.角色!=b.角色)return static_cast<unsigned>(a.角色)<static_cast<unsigned>(b.角色);
+    return a.概念.值.值<b.概念.值.值;
+}
+template<class T>
+void 二次计量增加(T& value,std::uint64_t delta,std::uint64_t limit) {
+    if(delta>limit||value>limit-delta)throw 二次关系数据状态::预算不足;
+    value+=delta;
+}
+bool 二次安全计量(std::uint64_t& value,std::uint64_t delta,
+                  std::uint64_t limit) noexcept {
+    if(delta>limit||value>limit-delta)return false;
+    value+=delta;
+    return true;
+}
+bool 二次合并用量(二次关系读取用量&,const 二次关系读取用量&,
+                    const 二次关系预算&) noexcept;
+void 二次规范化写集(L1所有者范围写集请求& writeSet) {
+    const auto referenceKey=[](const L1所有者范围事实引用& reference) {
+        return std::visit([](const auto& value)->std::uint64_t {
+            using T=std::decay_t<decltype(value)>;
+            if constexpr(std::is_same_v<T,稳定编码>)return value.值;
+            else return (1ULL<<63)|value.值;
+        },reference);
+    };
+    std::sort(writeSet.节点.begin(),writeSet.节点.end(),
+        [](const auto&a,const auto&b){return a.本地键<b.本地键;});
+    std::sort(writeSet.关系.begin(),writeSet.关系.end(),
+        [](const auto&a,const auto&b){return a.本地键<b.本地键;});
+    std::sort(writeSet.值.begin(),writeSet.值.end(),
+        [](const auto&a,const auto&b){return a.本地键<b.本地键;});
+    std::sort(writeSet.属性槽变更.begin(),writeSet.属性槽变更.end(),
+        [&](const auto&a,const auto&b) {
+            const auto ao=referenceKey(a.所属节点),bo=referenceKey(b.所属节点);
+            if(ao!=bo)return ao<bo;
+            const auto at=referenceKey(a.属性类型节点),bt=referenceKey(b.属性类型节点);
+            if(at!=bt)return at<bt;
+            return a.新当前值<b.新当前值;
+        });
+    std::sort(writeSet.退出事实.begin(),writeSet.退出事实.end());
+}
+bool 约束组小于(const std::vector<二次关系概念约束>&a,
+                const std::vector<二次关系概念约束>&b) noexcept {
+    if(a.size()!=b.size())return a.size()<b.size();
+    return std::lexicographical_compare(a.begin(),a.end(),b.begin(),b.end(),约束小于);
+}
+void 规范约束组(二次关系约束组& q) {
+    const auto one=[](std::vector<二次关系概念约束>& v) {
+        for(const auto&x:v)if(!有效(x.概念.值)||static_cast<unsigned>(x.角色)<1||static_cast<unsigned>(x.角色)>3)
+            throw 二次关系数据状态::入口拒绝;
+        std::sort(v.begin(),v.end(),约束小于);v.erase(std::unique(v.begin(),v.end()),v.end());
+        std::vector<概念树概念身份> common,a,b;
+        for(const auto&x:v) {
+            if(x.角色==二次关系约束角色::共同){common.push_back(x.概念);a.push_back(x.概念);b.push_back(x.概念);}
+            else if(x.角色==二次关系约束角色::A)a.push_back(x.概念);else b.push_back(x.概念);
+        }
+        const auto sort=[](auto&x){std::sort(x.begin(),x.end(),[](auto p,auto q){return p.值.值<q.值.值;});x.erase(std::unique(x.begin(),x.end()),x.end());};
+        sort(a);sort(b);std::vector<概念树概念身份> both;std::set_intersection(a.begin(),a.end(),b.begin(),b.end(),std::back_inserter(both),[](auto p,auto q){return p.值.值<q.值.值;});
+        v.clear();for(auto x:both)v.push_back({二次关系约束角色::共同,x});
+        for(auto x:a)if(std::find(both.begin(),both.end(),x)==both.end())v.push_back({二次关系约束角色::A,x});
+        for(auto x:b)if(std::find(both.begin(),both.end(),x)==both.end())v.push_back({二次关系约束角色::B,x});
+        std::sort(v.begin(),v.end(),约束小于);
+    }; one(q.FC);one(q.EC);
+}
+bool 原子同量(const 二次关系原子定义&a,const 二次关系原子定义&b) noexcept {
+    return a.K==b.K&&a.输出==b.输出&&a.约束==b.约束;
+}
+bool 原子小于(const 二次关系原子定义&a,const 二次关系原子定义&b) noexcept {
+    if(a.K.编码.值!=b.K.编码.值)return a.K.编码.值<b.K.编码.值;
+    if(a.输出!=b.输出)return static_cast<unsigned>(a.输出)<static_cast<unsigned>(b.输出);
+    if(a.约束.FC!=b.约束.FC)return 约束组小于(a.约束.FC,b.约束.FC);
+    if(a.约束.EC!=b.约束.EC)return 约束组小于(a.约束.EC,b.约束.EC);
+    return a.D.掩码<b.D.掩码;
+}
+二次关系数据状态 映射纯二次失败(纯概念状态 s) noexcept {
+    switch(s){
+    case 纯概念状态::入口拒绝:return 二次关系数据状态::入口拒绝;
+    case 纯概念状态::未找到:return 二次关系数据状态::未找到;
+    case 纯概念状态::目标已退出:return 二次关系数据状态::目标已退出;
+    case 纯概念状态::概念已退役:return 二次关系数据状态::退役命中;
+    case 纯概念状态::定义不支持:case 纯概念状态::旧格式不支持:return 二次关系数据状态::格式不支持;
+    case 纯概念状态::定义不相容:case 纯概念状态::类别冲突:return 二次关系数据状态::规则不支持;
+    case 纯概念状态::组织冲突:case 纯概念状态::引用冲突:return 二次关系数据状态::引用冲突;
+    case 纯概念状态::上位成环:return 二次关系数据状态::形成环;
+    case 纯概念状态::事实代次漂移:return 二次关系数据状态::事实代次漂移;
+    case 纯概念状态::幂等冲突:return 二次关系数据状态::幂等冲突;
+    case 纯概念状态::数量预算不足:return 二次关系数据状态::预算不足;
+    case 纯概念状态::历史材料不可用:return 二次关系数据状态::历史材料不可用;
+    case 纯概念状态::资源失败:return 二次关系数据状态::资源失败;
+    case 纯概念状态::已可能发布:return 二次关系数据状态::发布未知;
+    default:return 二次关系数据状态::内部不一致;
+    }
+}
+二次关系数据状态 映射二次失败(概念树数据状态 s) noexcept {
+    switch(s){case 概念树数据状态::入口拒绝:return 二次关系数据状态::入口拒绝;case 概念树数据状态::未找到:return 二次关系数据状态::未找到;case 概念树数据状态::目标已退出:return 二次关系数据状态::目标已退出;case 概念树数据状态::事实代次漂移:return 二次关系数据状态::事实代次漂移;case 概念树数据状态::数量预算不足:return 二次关系数据状态::预算不足;case 概念树数据状态::历史材料不可用:return 二次关系数据状态::历史材料不可用;case 概念树数据状态::资源失败:return 二次关系数据状态::资源失败;default:return 二次关系数据状态::内部不一致;}
+}
+二次关系发布见证 二次见证(const L1所有者范围写入结果&r,bool replay){二次关系发布见证 x;x.幂等身份=r.写入幂等身份.值;x.发布H=r.事实代次;x.已确认发布=r.是否形成内存权威发布;x.精确重放=replay;for(const auto&[k,v]:r.新编码映射)x.新编码映射.push_back({k.值,v});std::sort(x.新编码映射.begin(),x.新编码映射.end(),[](auto&a,auto&b){return a.first<b.first;});return x;}
+bool 二次物理用量一致(const 二次关系读取用量& u) noexcept {
+    return u.节点数<=UINT64_MAX-u.关系数 &&
+        u.节点数+u.关系数<=UINT64_MAX-u.值数 &&
+        u.材料数==u.节点数+u.关系数+u.值数;
+}
+}
+
+bool 二次关系约束读取结果::成功() const noexcept {return 版本==1&&状态==二次关系数据状态::已读取&&Gread&&H&&H<=Gread&&定义.has_value()&&二次物理用量一致(用量);}
+
+二次关系规范形 概念树类数据服务::规范化二次关系内部(const 二次关系定义& input,std::uint64_t g,std::uint64_t h,const 二次关系预算& b,二次关系读取用量& u,std::vector<概念树概念身份>& stack,概念事实读取会话_v1* sharedConceptSession,特征值域事实读取会话_v1* sharedFeatureSession) const {
+    if(!二次预算完整(b)||!g||!h||h>g)throw 二次关系失败{二次关系数据状态::入口拒绝};
+    std::vector<二次关系原子定义> atoms;
+    if(u.节点数>=b.最大节点数||u.关系数>=b.最大关系数||u.值数>=b.最大值数||
+       u.材料数>=b.最大材料数||u.概念数>=b.最大概念数)
+        throw 二次关系失败{二次关系数据状态::预算不足};
+    概念事实读取会话_v1 localConceptSession(port_.所有者身份(),g,h,
+        {b.最大节点数-u.节点数,b.最大关系数-u.关系数,
+         b.最大值数-u.值数,b.最大材料数-u.材料数},b.最大概念数-u.概念数);
+    if(!sharedConceptSession)sharedConceptSession=&localConceptSession;
+    世界结构预算_B1 featureBudget{b.最大节点数,b.最大关系数,b.最大值数,
+        b.最大材料数,b.最大材料数,b.最大候选数,b.最大材料数,b.最大材料数,b.最大原子数};
+    特征值域事实读取会话_v1 localFeatureSession(featureBudget);
+    if(!sharedFeatureSession)sharedFeatureSession=&localFeatureSession;
+    const auto combinedUsage=[&]() {
+        const auto& c=sharedConceptSession->用量_;const auto& f=sharedFeatureSession->计量_.用量;
+        if(c.节点数>UINT64_MAX-f.节点数||c.关系数>UINT64_MAX-f.关系数||
+           c.值数>UINT64_MAX-f.属性值数||c.材料总数>UINT64_MAX-f.材料总数)
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        return 有界事实读取用量_B1{c.节点数+f.节点数,c.关系数+f.关系数,
+            c.值数+f.属性值数,c.材料总数+f.材料总数};
+    };
+    有界事实读取用量_B1 mergedConstraintUsage=combinedUsage();
+    std::uint64_t mergedConstraintConcepts=static_cast<std::uint64_t>(sharedConceptSession->已完整概念_.size());
+    const auto syncConstraints=[&](const 二次关系读取用量& cumulative) {
+        if(cumulative.节点数<mergedConstraintUsage.节点数||
+           cumulative.关系数<mergedConstraintUsage.关系数||
+           cumulative.值数<mergedConstraintUsage.值数||
+           cumulative.材料数<mergedConstraintUsage.材料总数||
+           cumulative.概念数<mergedConstraintConcepts)
+            throw 二次关系失败{二次关系数据状态::内部不一致};
+        try {
+            二次计量增加(u.节点数,cumulative.节点数-mergedConstraintUsage.节点数,b.最大节点数);
+            二次计量增加(u.关系数,cumulative.关系数-mergedConstraintUsage.关系数,b.最大关系数);
+            二次计量增加(u.值数,cumulative.值数-mergedConstraintUsage.值数,b.最大值数);
+            二次计量增加(u.材料数,cumulative.材料数-mergedConstraintUsage.材料总数,b.最大材料数);
+            二次计量增加(u.概念数,cumulative.概念数-mergedConstraintConcepts,b.最大概念数);
+        } catch(二次关系数据状态 s) { throw 二次关系失败{s}; }
+        mergedConstraintUsage={cumulative.节点数,cumulative.关系数,
+            cumulative.值数,cumulative.材料数};
+        mergedConstraintConcepts=cumulative.概念数;
+        if(u.材料数!=u.节点数+u.关系数+u.值数)
+            throw 二次关系失败{二次关系数据状态::内部不一致};
+    };
+    const auto refreshConstraintBudget=[&]() {
+        if(u.节点数>b.最大节点数||u.关系数>b.最大关系数||u.值数>b.最大值数||
+           u.材料数>b.最大材料数||u.概念数>b.最大概念数)
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        sharedConceptSession->预算_={
+            sharedConceptSession->用量_.节点数+(b.最大节点数-u.节点数),
+            sharedConceptSession->用量_.关系数+(b.最大关系数-u.关系数),
+            sharedConceptSession->用量_.值数+(b.最大值数-u.值数),
+            sharedConceptSession->用量_.材料总数+(b.最大材料数-u.材料数)};
+        sharedConceptSession->最大概念数_=static_cast<std::uint64_t>(sharedConceptSession->已完整概念_.size())+
+            (b.最大概念数-u.概念数);
+        sharedFeatureSession->计量_.上限={
+            sharedFeatureSession->计量_.用量.节点数+(b.最大节点数-u.节点数),
+            sharedFeatureSession->计量_.用量.关系数+(b.最大关系数-u.关系数),
+            sharedFeatureSession->计量_.用量.属性值数+(b.最大值数-u.值数),
+            sharedFeatureSession->计量_.用量.材料总数+(b.最大材料数-u.材料数)};
+        if(!sharedConceptSession->预算_.最大节点数||!sharedConceptSession->预算_.最大关系数||
+           !sharedConceptSession->预算_.最大值数||!sharedConceptSession->预算_.最大材料总数||
+           !sharedConceptSession->最大概念数_)
+            throw 二次关系失败{二次关系数据状态::预算不足};
+    };
+    const auto validateAtom=[&](二次关系原子定义 a) {
+        if(a.D.掩码<1||a.D.掩码>7||!有效(a.K)||a.输出!=特征类标量结果角色::差异)throw 二次关系失败{二次关系数据状态::规则不支持};
+        try{规范约束组(a.约束);}catch(二次关系数据状态 s){throw 二次关系失败{s};}
+        const auto remaining=[&]() {
+            if(u.节点数>=b.最大节点数||u.关系数>=b.最大关系数||
+               u.值数>=b.最大值数||u.材料数>=b.最大材料数)
+                throw 二次关系失败{二次关系数据状态::预算不足};
+            return 有界事实读取预算_B1{b.最大节点数-u.节点数,b.最大关系数-u.关系数,
+                b.最大值数-u.值数,b.最大材料数-u.材料数};
+        };
+        const auto mergePhysical=[&](const 有界事实读取用量_B1& x) {
+            try {
+                二次计量增加(u.节点数,x.节点数,b.最大节点数);
+                二次计量增加(u.关系数,x.关系数,b.最大关系数);
+                二次计量增加(u.值数,x.值数,b.最大值数);
+                二次计量增加(u.材料数,x.材料总数,b.最大材料数);
+            } catch(二次关系数据状态 s) { throw 二次关系失败{s}; }
+            if(u.材料数!=u.节点数+u.关系数+u.值数)
+                throw 二次关系失败{二次关系数据状态::内部不一致};
+        };
+        const auto mapK=[](特征I64比较绑定状态 s) {
+            switch(s) {
+            case 特征I64比较绑定状态::数量预算不足:return 二次关系数据状态::预算不足;
+            case 特征I64比较绑定状态::事实代次漂移:return 二次关系数据状态::事实代次漂移;
+            case 特征I64比较绑定状态::历史材料不可用:return 二次关系数据状态::历史材料不可用;
+            case 特征I64比较绑定状态::资源失败:return 二次关系数据状态::资源失败;
+            case 特征I64比较绑定状态::内部不一致:return 二次关系数据状态::内部不一致;
+            default:return 二次关系数据状态::规则不支持;
+            }
+        };
+        const auto k=features_.读取I64比较绑定({1,g,g,a.K,remaining()});
+        mergePhysical(k.读取用量);
+        if(!k.成功()||!k.事实)throw 二次关系失败{mapK(k.状态)};
+        const auto current=features_.读取当前I64比较绑定({1,g,k.事实->定义.输入FT,
+            k.事实->定义.用途,b.最大候选数,remaining()});
+        mergePhysical(current.读取用量);
+        if(!current.成功()||!current.事实||current.事实->身份!=a.K)
+            throw 二次关系失败{mapK(current.状态)};
+        bool difference=false;for(const auto&o:k.事实->定义.输出组)if(o.输出.角色==特征类标量结果角色::差异)difference=true;if(!difference)throw 二次关系失败{二次关系数据状态::规则不支持};
+        refreshConstraintBudget();
+        auto constraintBudget=b;
+        constraintBudget.最大节点数=sharedConceptSession->预算_.最大节点数;
+        constraintBudget.最大关系数=sharedConceptSession->预算_.最大关系数;
+        constraintBudget.最大值数=sharedConceptSession->预算_.最大值数;
+        constraintBudget.最大材料数=sharedConceptSession->预算_.最大材料总数;
+        constraintBudget.最大概念数=sharedConceptSession->最大概念数_;
+        bool af=false,bf=false,ae=false,be=false;
+        std::array<std::vector<概念树I64区间>,2> domains;
+        const auto check=[&](const auto& group,bool fc){for(const auto&q:group){
+            const auto rr=读取二次关系约束定义共享(
+                {1,{1,g,h},q.概念,constraintBudget},*sharedConceptSession,sharedFeatureSession);
+            syncConstraints(rr.用量);
+            if(!rr.成功())throw 二次关系失败{rr.状态};
+            if(fc) {
+                const auto* pure=std::get_if<纯概念事实>(&*rr.定义);
+                const auto* definition=pure?std::get_if<纯I64特征概念定义>(&pure->定义):nullptr;
+                if(!definition||definition->特征类型.值!=k.事实->定义.输入FT.编码)
+                    throw 二次关系失败{二次关系数据状态::规则不支持};
+                const auto addDomain=[&](std::size_t side){
+                    if(domains[side].empty())domains[side]=definition->规范域;
+                    else {
+                        std::vector<概念树I64区间> next;
+                        for(const auto&x:domains[side])for(const auto&y:definition->规范域){
+                            const auto lo=std::max(x.下界,y.下界),hi=std::min(x.上界,y.上界);
+                            if(lo<=hi)next.push_back({lo,hi});
+                        }
+                        domains[side]=std::move(next);
+                        if(domains[side].empty())throw 二次关系失败{二次关系数据状态::定义矛盾};
+                    }
+                };
+                if(q.角色==二次关系约束角色::共同||q.角色==二次关系约束角色::A){af=true;addDomain(0);}
+                if(q.角色==二次关系约束角色::共同||q.角色==二次关系约束角色::B){bf=true;addDomain(1);}
+            } else {
+                bool ec=false;
+                if(const auto*p=std::get_if<纯概念事实>(&*rr.定义))
+                    ec=p->类别==相关概念类别::存在&&std::holds_alternative<通用存在概念定义>(p->定义);
+                else ec=std::holds_alternative<存在概念两组事实_v3>(*rr.定义);
+                if(!ec)throw 二次关系失败{二次关系数据状态::规则不支持};
+                if(q.角色==二次关系约束角色::共同||q.角色==二次关系约束角色::A)ae=true;
+                if(q.角色==二次关系约束角色::共同||q.角色==二次关系约束角色::B)be=true;
+            }
+        }};
+        check(a.约束.FC,true);check(a.约束.EC,false);if(!af||!bf||!ae||!be)throw 二次关系失败{二次关系数据状态::来源不足};
+        try{二次计量增加(u.原子数,1,b.最大原子数);}catch(二次关系数据状态 s){throw 二次关系失败{s};}
+        atoms.push_back(std::move(a));
+    };
+    if(const auto*a=std::get_if<二次关系原子定义>(&input))validateAtom(*a);else {
+        const auto&andd=std::get<二次关系合取定义>(input);if(andd.条件组.empty())throw 二次关系失败{二次关系数据状态::入口拒绝};
+        if(stack.size()+1>b.最大展开深度)throw 二次关系失败{二次关系数据状态::预算不足};u.展开深度=std::max<std::uint64_t>(u.展开深度,stack.size()+1);
+        for(const auto&item:andd.条件组){if(!有效(item.子RC.值)||std::find(stack.begin(),stack.end(),item.子RC)!=stack.end())throw 二次关系失败{二次关系数据状态::形成环};stack.push_back(item.子RC);auto child=读取二次关系内部(item.子RC,g,h,b,u,stack,sharedConceptSession,sharedFeatureSession);stack.pop_back();for(auto a:child.规范形.原子组){a.约束.FC.insert(a.约束.FC.end(),andd.共同约束.FC.begin(),andd.共同约束.FC.end());a.约束.FC.insert(a.约束.FC.end(),item.附加约束.FC.begin(),item.附加约束.FC.end());a.约束.EC.insert(a.约束.EC.end(),andd.共同约束.EC.begin(),andd.共同约束.EC.end());a.约束.EC.insert(a.约束.EC.end(),item.附加约束.EC.begin(),item.附加约束.EC.end());validateAtom(std::move(a));}}
+    }
+    std::sort(atoms.begin(),atoms.end(),原子小于);std::vector<二次关系原子定义> merged;for(auto&a:atoms){if(!merged.empty()&&原子同量(merged.back(),a)){merged.back().D.掩码&=a.D.掩码;if(!merged.back().D.掩码)throw 二次关系失败{二次关系数据状态::定义矛盾};}else merged.push_back(a);}return {1,std::move(merged)};
+}
+
+二次关系概念事实 概念树类数据服务::读取二次关系内部(
+    概念树概念身份 id,std::uint64_t g,std::uint64_t h,
+    const 二次关系预算& b,二次关系读取用量& u,
+    std::vector<概念树概念身份>& stack,概念事实读取会话_v1* sharedSession,
+    特征值域事实读取会话_v1* featureSession) const {
+    if(!secondary_relation_layout_||!pure_layout_)throw 二次关系失败{二次关系数据状态::格式不支持};
+    if(!有效(id.值)||!g||!h||h>g||!二次预算完整(b))throw 二次关系失败{二次关系数据状态::入口拒绝};
+    const auto add=[&](std::uint64_t&v,std::uint64_t n,std::uint64_t limit){try{二次计量增加(v,n,limit);}catch(二次关系数据状态 s){throw 二次关系失败{s};}};
+    if(u.节点数>=b.最大节点数||u.关系数>=b.最大关系数||u.值数>=b.最大值数||u.材料数>=b.最大材料数)
+        throw 二次关系失败{二次关系数据状态::预算不足};
+    概念事实读取会话_v1 localSession(port_.所有者身份(),g,h,
+        {b.最大节点数-u.节点数,b.最大关系数-u.关系数,
+         b.最大值数-u.值数,b.最大材料数-u.材料数},b.最大概念数-u.概念数);
+    if(!sharedSession)sharedSession=&localSession;
+    有界事实读取用量_B1 mergedOwnUsage=sharedSession->用量_;
+    const auto refreshOwnBudget=[&]() {
+        if(u.节点数>b.最大节点数||u.关系数>b.最大关系数||u.值数>b.最大值数||u.材料数>b.最大材料数)
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        sharedSession->预算_={sharedSession->用量_.节点数+(b.最大节点数-u.节点数),
+            sharedSession->用量_.关系数+(b.最大关系数-u.关系数),
+            sharedSession->用量_.值数+(b.最大值数-u.值数),
+            sharedSession->用量_.材料总数+(b.最大材料数-u.材料数)};
+    };
+    const auto syncOwn=[&]() {
+        const auto& cumulative=sharedSession->用量_;
+        if(cumulative.节点数<mergedOwnUsage.节点数||cumulative.关系数<mergedOwnUsage.关系数||
+           cumulative.值数<mergedOwnUsage.值数||cumulative.材料总数<mergedOwnUsage.材料总数)
+            throw 二次关系失败{二次关系数据状态::内部不一致};
+        add(u.节点数,cumulative.节点数-mergedOwnUsage.节点数,b.最大节点数);
+        add(u.关系数,cumulative.关系数-mergedOwnUsage.关系数,b.最大关系数);
+        add(u.值数,cumulative.值数-mergedOwnUsage.值数,b.最大值数);
+        add(u.材料数,cumulative.材料总数-mergedOwnUsage.材料总数,b.最大材料数);
+        mergedOwnUsage=cumulative;
+        if(u.材料数!=u.节点数+u.关系数+u.值数)
+            throw 二次关系失败{二次关系数据状态::内部不一致};
+    };
+    const auto& p=pure_layout_->类型;const auto&t=secondary_relation_layout_->类型;
+    二次关系概念事实 out;out.Gread=g;out.H=h;out.身份=id;out.类别=相关概念类别::特征;out.规则=secondary_relation_layout_->规范化规则;
+    const auto readNode=[&](稳定编码 code){refreshOwnBudget();const auto value=节点(code,g,h,sharedSession);syncOwn();return value;};
+    const auto readEdges=[&](稳定编码 endpoint,稳定编码 type,bool incoming,std::uint64_t wanted){
+        refreshOwnBudget();const auto values=关系(endpoint,type,incoming,g,h,wanted,sharedSession);
+        syncOwn();
+        return values;
+    };
+    const auto readValues=[&](稳定编码 code){
+        refreshOwnBudget();const auto values=属性(code,g,h,sharedSession);
+        syncOwn();
+        return values;
+    };
+    const auto addNode=[&](const N&n){out.自有节点.push_back({n.编码,投影纯生命(n,g)});};
+    const auto addEdge=[&](const E&e){out.自有关系.push_back({e.编码,e.源节点,e.目标节点,e.关系类型节点,e.角色或顺序,投影纯生命(e,g)});};
+    const auto addValue=[&](const V&v){二次关系值见证 x;x.编码=v.编码;x.所属节点=v.所属节点;x.属性类型=v.属性类型节点;x.来源=v.来源节点;if(const auto*i=std::get_if<std::int64_t>(&v.材料))x.材料=*i;else if(const auto*q=std::get_if<std::vector<std::uint64_t>>(&v.材料))x.材料=*q;else throw 二次关系失败{二次关系数据状态::内部不一致};x.生命周期=投影纯生命(v,g);out.自有值.push_back(std::move(x));};
+
+    const auto conceptNode=readNode(id.值);if(conceptNode.种类!=节点种类::普通||conceptNode.属性类型表示)throw 二次关系失败{二次关系数据状态::内部不一致};
+    add(u.概念数,1,b.最大概念数);addNode(conceptNode);out.生命周期=投影纯生命(conceptNode,g);
+    const auto member=readEdges(id.值,p.概念族成员,true,2);if(member.size()!=1||member.front().源节点!=pure_layout_->概念族锚点||member.front().角色或顺序!=1)throw 二次关系失败{二次关系数据状态::格式不支持};addEdge(member.front());
+    const auto cv=readValues(id.值);for(const auto&v:cv)addValue(v);
+    const auto category=std::get_if<std::int64_t>(&唯一属性(cv,p.概念类别).材料);
+    const auto lifecycle=std::get_if<std::int64_t>(&唯一属性(cv,p.生命周期).材料);
+    if(!category||*category!=2||!lifecycle||*lifecycle<1||*lifecycle>3)throw 二次关系失败{二次关系数据状态::规则不支持};
+    out.治理状态=static_cast<概念树生命周期状态>(*lifecycle);
+    const auto defEdge=readEdges(id.值,p.定义成员,false,2);if(defEdge.size()!=1||defEdge.front().角色或顺序!=1)throw 二次关系失败{二次关系数据状态::格式不支持};addEdge(defEdge.front());
+    const auto defNode=readNode(defEdge.front().目标节点);if(defNode.种类!=节点种类::普通||defNode.属性类型表示)throw 二次关系失败{二次关系数据状态::内部不一致};addNode(defNode);
+    const auto dv=readValues(defNode.编码);for(const auto&v:dv)addValue(v);
+    const auto format=std::get_if<std::int64_t>(&唯一属性(dv,t.定义格式).材料);
+    const auto kind=std::get_if<std::int64_t>(&唯一属性(dv,t.定义种类).材料);
+    if(!format||*format!=1||!kind||(*kind!=1&&*kind!=2)||dv.size()!=2)throw 二次关系失败{二次关系数据状态::格式不支持};
+    const auto rule=readEdges(id.值,t.规范化规则归属,false,2);if(rule.size()!=1||rule.front().角色或顺序!=1||rule.front().目标节点!=secondary_relation_layout_->规范化规则.值)throw 二次关系失败{二次关系数据状态::规则不支持};addEdge(rule.front());
+    const auto parents=readEdges(id.值,p.直接上位,true,b.最大关系数);std::set<std::uint64_t> parentIds;for(const auto&e:parents){if(e.角色或顺序!=1||e.目标节点!=id.值||e.源节点==id.值||!parentIds.insert(e.源节点.值).second)throw 二次关系失败{二次关系数据状态::形成环};addEdge(e);}
+
+    const auto readConstraints=[&](稳定编码 holder,std::uint64_t itemOrder){
+        二次关系约束组 group;const auto rows=readEdges(holder,t.约束成员,false,b.最大关系数);
+        for(std::size_t i=0;i<rows.size();++i){const auto&e=rows[i];if(e.角色或顺序!=static_cast<std::int64_t>(i+1))throw 二次关系失败{二次关系数据状态::内部不一致};addEdge(e);const auto record=readNode(e.目标节点);if(record.种类!=节点种类::普通||record.属性类型表示||!readValues(record.编码).empty())throw 二次关系失败{二次关系数据状态::内部不一致};addNode(record);const auto fc=readEdges(record.编码,t.约束FC,false,2);const auto ec=readEdges(record.编码,t.约束EC,false,2);if((fc.size()+ec.size())!=1)throw 二次关系失败{二次关系数据状态::内部不一致};const auto&target=fc.empty()?ec.front():fc.front();if(target.角色或顺序<1||target.角色或顺序>3)throw 二次关系失败{二次关系数据状态::内部不一致};addEdge(target);二次关系概念约束 q{static_cast<二次关系约束角色>(target.角色或顺序),概念树概念身份{target.目标节点}};(fc.empty()?group.EC:group.FC).push_back(q);out.定义引用.push_back({fc.empty()?二次关系引用种类::EC:二次关系引用种类::FC,record.编码,e.编码,target.编码,itemOrder,i+1,q.角色,q.概念});}
+        return group;
+    };
+
+    if(*kind==1){
+        if(cv.size()!=4)throw 二次关系失败{二次关系数据状态::内部不一致};
+        const auto*d=std::get_if<std::int64_t>(&唯一属性(cv,t.域掩码).材料);const auto*output=std::get_if<std::int64_t>(&唯一属性(cv,t.输出角色).材料);
+        if(!d||*d<1||*d>7||!output||*output!=static_cast<std::int64_t>(特征类标量结果角色::差异))throw 二次关系失败{二次关系数据状态::规则不支持};
+        const auto k=readEdges(id.值,t.固定K,false,2);if(k.size()!=1||k.front().角色或顺序!=1)throw 二次关系失败{二次关系数据状态::内部不一致};addEdge(k.front());
+        if(!readEdges(id.值,t.合取成员,false,1).empty())throw 二次关系失败{二次关系数据状态::内部不一致};
+        二次关系原子定义 atom{{static_cast<std::uint8_t>(*d)},readConstraints(id.值,0),特征I64比较绑定身份{k.front().目标节点},static_cast<特征类标量结果角色>(*output)};out.定义=atom;out.定义引用.push_back({二次关系引用种类::K,id.值,k.front().编码,k.front().编码,0,0,二次关系约束角色::共同,atom.K});
+    }else{
+        if(cv.size()!=2||!readEdges(id.值,t.固定K,false,1).empty())throw 二次关系失败{二次关系数据状态::内部不一致};
+        二次关系合取定义 definition;definition.共同约束=readConstraints(id.值,0);const auto items=readEdges(id.值,t.合取成员,false,b.最大关系数);if(items.empty())throw 二次关系失败{二次关系数据状态::内部不一致};
+        for(std::size_t i=0;i<items.size();++i){const auto&e=items[i];if(e.角色或顺序!=static_cast<std::int64_t>(i+1))throw 二次关系失败{二次关系数据状态::内部不一致};addEdge(e);const auto item=readNode(e.目标节点);if(item.种类!=节点种类::普通||item.属性类型表示||!readValues(item.编码).empty())throw 二次关系失败{二次关系数据状态::内部不一致};addNode(item);const auto child=readEdges(item.编码,t.子RC,false,2);if(child.size()!=1||child.front().角色或顺序!=1)throw 二次关系失败{二次关系数据状态::内部不一致};addEdge(child.front());definition.条件组.push_back({概念树概念身份{child.front().目标节点},readConstraints(item.编码,i+1)});out.定义引用.push_back({二次关系引用种类::子RC,item.编码,e.编码,child.front().编码,i+1,0,二次关系约束角色::共同,概念树概念身份{child.front().目标节点}});}
+        out.定义=std::move(definition);
+    }
+    out.规范形=规范化二次关系内部(out.定义,g,h,b,u,stack,sharedSession,featureSession);
+    std::sort(out.定义引用.begin(),out.定义引用.end(),[](const auto&a,const auto&b){return a.记录.值<b.记录.值;});
+    const auto sortId=[](const auto&a,const auto&b){return a.编码.值<b.编码.值;};std::sort(out.自有节点.begin(),out.自有节点.end(),sortId);std::sort(out.自有关系.begin(),out.自有关系.end(),sortId);std::sort(out.自有值.begin(),out.自有值.end(),sortId);
+    return out;
+}
+
+二次关系定义核验结果 概念树类数据服务::规范化二次关系定义(const 二次关系定义查找请求&r) const {
+    二次关系定义核验结果 out;out.Gread=r.读取头.Gread;out.H=r.读取头.H;
+    try{if(!secondary_relation_layout_)throw 二次关系失败{二次关系数据状态::格式不支持};if(r.版本!=1||r.读取头.合同版本!=1||!r.读取头.Gread||!r.读取头.H||r.读取头.H>r.读取头.Gread||!二次预算完整(r.预算))throw 二次关系失败{二次关系数据状态::入口拒绝};守卫代次(r.读取头.Gread);std::vector<概念树概念身份> stack;out.规范形=规范化二次关系内部(r.定义,r.读取头.Gread,r.读取头.H,r.预算,out.用量,stack);out.状态=二次关系数据状态::已读取;守卫代次(r.读取头.Gread);}catch(const 二次关系失败&e){out.状态=e.状态;out.规范形.reset();}catch(const 失败&e){out.状态=映射二次失败(e.状态);out.规范形.reset();}catch(const std::bad_alloc&){out.状态=二次关系数据状态::资源失败;out.规范形.reset();}catch(...){out.状态=二次关系数据状态::内部不一致;out.规范形.reset();}return out;
+}
+
+二次关系概念读取结果 概念树类数据服务::读取二次关系概念(const 二次关系概念读取请求&r) const {
+    二次关系概念读取结果 out;out.Gread=r.读取头.Gread;out.H=r.读取头.H;
+    try{if(!secondary_relation_layout_)throw 二次关系失败{二次关系数据状态::格式不支持};if(r.版本!=1||r.读取头.合同版本!=1||!r.读取头.Gread||!r.读取头.H||r.读取头.H>r.读取头.Gread||!有效(r.RC.值)||!二次预算完整(r.预算))throw 二次关系失败{二次关系数据状态::入口拒绝};守卫代次(r.读取头.Gread);std::vector<概念树概念身份> stack{r.RC};out.事实=读取二次关系内部(r.RC,r.读取头.Gread,r.读取头.H,r.预算,out.用量,stack);out.状态=二次关系数据状态::已读取;守卫代次(r.读取头.Gread);}catch(const 二次关系失败&e){out.状态=e.状态;out.事实.reset();}catch(const 失败&e){out.状态=映射二次失败(e.状态);out.事实.reset();}catch(const std::bad_alloc&){out.状态=二次关系数据状态::资源失败;out.事实.reset();}catch(...){out.状态=二次关系数据状态::内部不一致;out.事实.reset();}return out;
+}
+
+std::vector<概念树概念身份> 概念树类数据服务::枚举二次关系身份(std::uint64_t g,std::uint64_t h,const 二次关系预算&b,二次关系读取用量&u,概念事实读取会话_v1* sharedSession) const {
+    if(!secondary_relation_layout_||!pure_layout_||!二次预算完整(b))
+        throw 二次关系失败{二次关系数据状态::格式不支持};
+    概念事实读取会话_v1 localSession(port_.所有者身份(),g,h,
+        {b.最大节点数-u.节点数,b.最大关系数-u.关系数,
+         b.最大值数-u.值数,b.最大材料数-u.材料数},b.最大概念数-u.概念数);
+    if(!sharedSession)sharedSession=&localSession;
+    auto merged=sharedSession->用量_;
+    const auto sync=[&]() {const auto& x=sharedSession->用量_;if(x.节点数<merged.节点数||x.关系数<merged.关系数||x.值数<merged.值数||x.材料总数<merged.材料总数)throw 二次关系失败{二次关系数据状态::内部不一致};try{二次计量增加(u.节点数,x.节点数-merged.节点数,b.最大节点数);二次计量增加(u.关系数,x.关系数-merged.关系数,b.最大关系数);二次计量增加(u.值数,x.值数-merged.值数,b.最大值数);二次计量增加(u.材料数,x.材料总数-merged.材料总数,b.最大材料数);}catch(二次关系数据状态 s){throw 二次关系失败{s};}merged=x;};
+    const auto relationLimit=[&]() {
+        if(u.关系数>=b.最大关系数||u.材料数>=b.最大材料数)
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        return std::min(b.最大关系数-u.关系数,b.最大材料数-u.材料数);
+    };
+    std::vector<概念树概念身份> out;
+    const auto members=关系(pure_layout_->概念族锚点,pure_layout_->类型.概念族成员,
+        false,g,h,relationLimit(),sharedSession);sync();
+    for(const auto& member:members) {
+        if(member.角色或顺序!=1)
+            throw 二次关系失败{二次关系数据状态::内部不一致};
+        const auto rules=关系(member.目标节点,
+            secondary_relation_layout_->类型.规范化规则归属,false,g,h,relationLimit(),sharedSession);sync();
+        if(rules.empty())continue;
+        if(rules.size()!=1||rules.front().角色或顺序!=1||
+           rules.front().目标节点!=secondary_relation_layout_->规范化规则.值)
+            throw 二次关系失败{二次关系数据状态::内部不一致};
+        if(!二次安全计量(u.候选数,1,b.最大候选数))
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        out.emplace_back(member.目标节点);
+    }
+    std::sort(out.begin(),out.end(),身份小于);
+    if(std::adjacent_find(out.begin(),out.end())!=out.end())
+        throw 二次关系失败{二次关系数据状态::内部不一致};
+    return out;
+}
+
+二次关系概念读取结果 概念树类数据服务::查找二次关系完整定义(const 二次关系定义查找请求&r) const {
+    二次关系概念读取结果 out;out.Gread=r.读取头.Gread;out.H=r.读取头.H;
+    try{if(r.版本!=1||r.读取头.合同版本!=1||!r.读取头.Gread||!r.读取头.H||r.读取头.H>r.读取头.Gread||!二次预算完整(r.预算))throw 二次关系失败{二次关系数据状态::入口拒绝};守卫代次(r.读取头.Gread);概念事实读取会话_v1 session(port_.所有者身份(),r.读取头.Gread,r.读取头.H,{r.预算.最大节点数,r.预算.最大关系数,r.预算.最大值数,r.预算.最大材料数},r.预算.最大概念数);世界结构预算_B1 wb{r.预算.最大节点数,r.预算.最大关系数,r.预算.最大值数,r.预算.最大材料数,r.预算.最大材料数,r.预算.最大候选数,r.预算.最大材料数,r.预算.最大材料数,r.预算.最大原子数};特征值域事实读取会话_v1 featureSession(wb);std::vector<概念树概念身份> stack;const auto expected=规范化二次关系内部(r.定义,r.读取头.Gread,r.读取头.H,r.预算,out.用量,stack,&session,&featureSession);std::optional<二次关系概念事实> found;for(const auto id:枚举二次关系身份(r.读取头.Gread,r.读取头.H,r.预算,out.用量,&session)){std::vector<概念树概念身份> path{id};auto fact=读取二次关系内部(id,r.读取头.Gread,r.读取头.H,r.预算,out.用量,path,&session,&featureSession);if(fact.规范形==expected){if(found)throw 二次关系失败{二次关系数据状态::内部不一致};found=std::move(fact);}}if(!found)out.状态=二次关系数据状态::同义缺失;else{out.状态=found->治理状态==概念树生命周期状态::活跃 ? 二次关系数据状态::已读取 : (found->治理状态==概念树生命周期状态::冷却 ? 二次关系数据状态::冷却命中 : 二次关系数据状态::退役命中);out.事实=std::move(found);}守卫代次(r.读取头.Gread);}catch(const 二次关系失败&e){out.状态=e.状态;out.事实.reset();}catch(const 失败&e){out.状态=映射二次失败(e.状态);out.事实.reset();}catch(const std::bad_alloc&){out.状态=二次关系数据状态::资源失败;out.事实.reset();}catch(...){out.状态=二次关系数据状态::内部不一致;out.事实.reset();}return out;
+}
+
+L1所有者范围写集请求 概念树类数据服务::形成二次关系建立写集(
+    const 二次关系概念建立请求&r,const 二次关系规范形& normalized) const {
+    const auto&p=pure_layout_->类型;const auto&t=secondary_relation_layout_->类型;
+    L1所有者范围写集请求 ws{L1所有者范围CRUD合同版本,r.写入头.期望事实代次,r.写入头.幂等身份};
+    std::uint32_t nodeKey=1,edgeKey=0x51001,valueKey=0x52001;
+    const Key conceptKey{nodeKey++},definitionKey{nodeKey++};ws.节点.push_back({conceptKey,节点种类::普通,std::nullopt});ws.节点.push_back({definitionKey,节点种类::普通,std::nullopt});
+    const auto edge=[&](Ref source,Ref target,稳定编码 type,std::int64_t role=1){ws.关系.push_back({Key{edgeKey++},source,target,Ref{type},role});};
+    const auto value=[&](Ref node,稳定编码 type,L1所有者范围原始值材料 material){const Key key{valueKey++};ws.值.push_back({key,node,Ref{type},std::move(material),node});ws.属性槽变更.push_back({node,Ref{type},key});};
+    edge(Ref{pure_layout_->概念族锚点},Ref{conceptKey},p.概念族成员);edge(Ref{conceptKey},Ref{definitionKey},p.定义成员);edge(Ref{conceptKey},Ref{secondary_relation_layout_->规范化规则.值},t.规范化规则归属);
+    value(Ref{conceptKey},p.概念类别,std::int64_t{2});value(Ref{conceptKey},p.生命周期,std::int64_t{static_cast<std::uint8_t>(概念树生命周期状态::活跃)});value(Ref{definitionKey},t.定义格式,std::int64_t{1});
+    auto parents=r.初始父组;std::sort(parents.begin(),parents.end(),身份小于);for(const auto parent:parents)edge(Ref{parent.值},Ref{conceptKey},p.直接上位);
+    const auto writeConstraints=[&](Ref holder,二次关系约束组 q){规范约束组(q);std::vector<std::pair<bool,二次关系概念约束>> all;for(const auto&x:q.FC)all.emplace_back(true,x);for(const auto&x:q.EC)all.emplace_back(false,x);std::sort(all.begin(),all.end(),[](const auto&a,const auto&b){if(a.first!=b.first)return a.first>b.first;return 约束小于(a.second,b.second);});for(std::size_t i=0;i<all.size();++i){const Key record{nodeKey++};ws.节点.push_back({record,节点种类::普通,std::nullopt});edge(holder,Ref{record},t.约束成员,static_cast<std::int64_t>(i+1));edge(Ref{record},Ref{all[i].second.概念.值},all[i].first?t.约束FC:t.约束EC,static_cast<std::int64_t>(all[i].second.角色));}};
+    if(normalized.原子组.size()==1){const auto&a=normalized.原子组.front();value(Ref{definitionKey},t.定义种类,std::int64_t{1});value(Ref{conceptKey},t.域掩码,std::int64_t{a.D.掩码});value(Ref{conceptKey},t.输出角色,std::int64_t{static_cast<std::uint8_t>(a.输出)});edge(Ref{conceptKey},Ref{a.K.编码},t.固定K);writeConstraints(Ref{conceptKey},a.约束);}else{value(Ref{definitionKey},t.定义种类,std::int64_t{2});const auto*andd=std::get_if<二次关系合取定义>(&r.定义);if(!andd)throw 二次关系失败{二次关系数据状态::规则不支持};auto items=andd->条件组;for(auto&i:items)规范约束组(i.附加约束);std::sort(items.begin(),items.end(),[](const auto&a,const auto&b){if(a.子RC.值.值!=b.子RC.值.值)return a.子RC.值.值<b.子RC.值.值;if(a.附加约束.FC!=b.附加约束.FC)return 约束组小于(a.附加约束.FC,b.附加约束.FC);return 约束组小于(a.附加约束.EC,b.附加约束.EC);});if(std::adjacent_find(items.begin(),items.end())!=items.end())items.erase(std::unique(items.begin(),items.end()),items.end());auto common=andd->共同约束;规范约束组(common);writeConstraints(Ref{conceptKey},common);for(std::size_t i=0;i<items.size();++i){const Key item{nodeKey++};ws.节点.push_back({item,节点种类::普通,std::nullopt});edge(Ref{conceptKey},Ref{item},t.合取成员,static_cast<std::int64_t>(i+1));edge(Ref{item},Ref{items[i].子RC.值},t.子RC);writeConstraints(Ref{item},items[i].附加约束);}}
+    auto sources=r.形成来源;const auto sourceCode=[](const 二次关系形成来源&s){return std::visit([](const auto&v){if constexpr(std::is_same_v<std::decay_t<decltype(v)>,特征信息身份>)return std::pair{1u,v.编码.值};else if constexpr(std::is_same_v<std::decay_t<decltype(v)>,状态使用绑定身份>)return std::pair{2u,v.编码.值};else return std::pair{3u,v.值.值};},s.来源);};std::sort(sources.begin(),sources.end(),[&](const auto&a,const auto&b){const auto x=sourceCode(a),y=sourceCode(b);return x!=y?x<y:a.H<b.H;});
+    for(const auto&s:sources){const Key record{nodeKey++};ws.节点.push_back({record,节点种类::普通,std::nullopt});edge(Ref{conceptKey},Ref{record},t.来源成员);std::visit([&](const auto&v){if constexpr(std::is_same_v<std::decay_t<decltype(v)>,特征信息身份>)edge(Ref{record},Ref{v.编码},t.来源F);else if constexpr(std::is_same_v<std::decay_t<decltype(v)>,状态使用绑定身份>)edge(Ref{record},Ref{v.编码},t.来源B);else edge(Ref{record},Ref{v.值},t.来源概念);},s.来源);value(Ref{record},t.来源截止,std::vector<std::uint64_t>{s.H});}
+    二次规范化写集(ws);
+    return ws;
+}
+
+namespace {
+bool 二次约束包含(const std::vector<二次关系概念约束>& child,const std::vector<二次关系概念约束>& parent){return std::includes(child.begin(),child.end(),parent.begin(),parent.end(),约束小于);}
+bool 二次原子收窄(const 二次关系原子定义&child,const 二次关系原子定义&parent){return child.K==parent.K&&child.输出==parent.输出&&(child.D.掩码&parent.D.掩码)==child.D.掩码&&二次约束包含(child.约束.FC,parent.约束.FC)&&二次约束包含(child.约束.EC,parent.约束.EC);}
+二次关系数据状态 映射二次写入(L1所有者范围写入状态 s) noexcept{switch(s){case L1所有者范围写入状态::事实代次漂移:return 二次关系数据状态::事实代次漂移;case L1所有者范围写入状态::幂等冲突:return 二次关系数据状态::幂等冲突;case L1所有者范围写入状态::引用冲突:case L1所有者范围写入状态::未找到:case L1所有者范围写入状态::已退出:return 二次关系数据状态::引用冲突;case L1所有者范围写入状态::资源失败:return 二次关系数据状态::资源失败;case L1所有者范围写入状态::入口拒绝:return 二次关系数据状态::入口拒绝;default:return 二次关系数据状态::发布未知;}}
+
+std::pair<unsigned,std::uint64_t> 二次来源键(const 二次关系形成来源& source) {
+    return std::visit([](const auto& value) {
+        if constexpr(std::is_same_v<std::decay_t<decltype(value)>,特征信息身份>)
+            return std::pair{1u,value.编码.值};
+        else if constexpr(std::is_same_v<std::decay_t<decltype(value)>,状态使用绑定身份>)
+            return std::pair{2u,value.编码.值};
+        else
+            return std::pair{3u,value.值.值};
+    },source.来源);
+}
+
+bool 二次计量首次写集(const L1所有者范围写集请求& writeSet,
+                       二次关系读取用量& usage,const 二次关系预算& budget) noexcept {
+    std::uint64_t total=0;
+    const auto add=[&](std::size_t count) {
+        const auto delta=static_cast<std::uint64_t>(count);
+        if(delta>UINT64_MAX-total)return false;
+        total+=delta;
+        return true;
+    };
+    return add(writeSet.节点.size())&&add(writeSet.关系.size())&&
+        add(writeSet.值.size())&&add(writeSet.退出事实.size())&&
+        二次安全计量(usage.首次材料数,total,budget.最大首次材料数);
+}
+
+bool 二次合并用量(二次关系读取用量& target,const 二次关系读取用量& source,
+                    const 二次关系预算& budget) noexcept {
+    if(source.节点数>UINT64_MAX-source.关系数||
+       source.节点数+source.关系数>UINT64_MAX-source.值数||
+       source.材料数!=source.节点数+source.关系数+source.值数)
+        return false;
+    if(!二次安全计量(target.节点数,source.节点数,budget.最大节点数)||
+       !二次安全计量(target.关系数,source.关系数,budget.最大关系数)||
+       !二次安全计量(target.值数,source.值数,budget.最大值数)||
+       !二次安全计量(target.材料数,source.材料数,budget.最大材料数)||
+       target.材料数!=target.节点数+target.关系数+target.值数||
+       !二次安全计量(target.概念数,source.概念数,budget.最大概念数)||
+       !二次安全计量(target.原子数,source.原子数,budget.最大原子数)||
+       !二次安全计量(target.候选数,source.候选数,budget.最大候选数)||
+       !二次安全计量(target.来源数,source.来源数,budget.最大来源数)||
+       !二次安全计量(target.用途数,source.用途数,budget.最大用途数)||
+       !二次安全计量(target.首次材料数,source.首次材料数,budget.最大首次材料数))
+        return false;
+    target.展开深度=std::max(target.展开深度,source.展开深度);
+    return target.展开深度<=budget.最大展开深度;
+}
+
+enum class 二次子读取类别 : std::uint8_t { 约束, 查找, 来源, 用途, 图 };
+
+std::optional<二次关系预算> 二次子读取剩余预算(
+                                  const 二次关系预算& budget,
+                                  const 二次关系读取用量& usage,
+                                  二次子读取类别 kind) noexcept {
+    if(usage.节点数>=budget.最大节点数||usage.关系数>=budget.最大关系数||
+       usage.值数>=budget.最大值数||usage.材料数>=budget.最大材料数||
+       usage.概念数>=budget.最大概念数)
+        return std::nullopt;
+    auto remaining=budget;
+    remaining.最大节点数-=usage.节点数;
+    remaining.最大关系数-=usage.关系数;
+    remaining.最大值数-=usage.值数;
+    remaining.最大材料数-=usage.材料数;
+    remaining.最大概念数-=usage.概念数;
+    switch(kind) {
+    case 二次子读取类别::约束:
+        break;
+    case 二次子读取类别::查找:
+    case 二次子读取类别::图:
+        if(usage.原子数>=budget.最大原子数||usage.候选数>=budget.最大候选数)
+            return std::nullopt;
+        remaining.最大原子数-=usage.原子数;
+        remaining.最大候选数-=usage.候选数;
+        break;
+    case 二次子读取类别::来源:
+        if(usage.原子数>=budget.最大原子数||usage.来源数>=budget.最大来源数)
+            return std::nullopt;
+        remaining.最大原子数-=usage.原子数;
+        remaining.最大来源数-=usage.来源数;
+        break;
+    case 二次子读取类别::用途:
+        if(usage.原子数>=budget.最大原子数||usage.用途数>=budget.最大用途数)
+            return std::nullopt;
+        remaining.最大原子数-=usage.原子数;
+        remaining.最大用途数-=usage.用途数;
+        break;
+    }
+    return remaining;
+}
+
+bool 二次计量单节点读取(二次关系读取用量& usage,
+                          const 二次关系预算& budget) noexcept {
+    if(usage.节点数>=budget.最大节点数||usage.材料数>=budget.最大材料数)
+        return false;
+    ++usage.节点数;
+    ++usage.材料数;
+    return true;
+}
+
+bool 二次首次发布已确认(const L1所有者范围首次写入读取结果& first) noexcept {
+    return first.状态==L1所有者范围读取状态::成功&&first.首次规范化写集&&
+        first.首次写入结果&&first.首次写入结果->状态==L1所有者范围写入状态::成功&&
+        first.首次写入结果->是否形成内存权威发布&&first.首次写入结果->事实代次;
+}
+
+bool 二次提交状态符合(const L1所有者范围写入结果& saved,bool replay) noexcept {
+    if(replay)return saved.状态==L1所有者范围写入状态::精确重复;
+    return saved.状态==L1所有者范围写入状态::成功&&
+        saved.是否形成内存权威发布&&saved.事实代次;
+}
+}
+
+二次关系概念写入结果 概念树类数据服务::建立二次关系概念(const 二次关系概念建立请求&r){
+    二次关系概念写入结果 out;out.建立原请求=r;bool dispatched=false;
+    try {
+        std::scoped_lock lock(mutex_);
+        if(!secondary_relation_layout_||r.版本!=1||r.写入头.合同版本!=1||
+           !r.写入头.期望事实代次||r.写入头.期望事实代次==UINT64_MAX||
+           !有效(r.写入头.幂等身份)||!二次预算完整(r.预算)||
+           (r.组织!=概念初始组织指定::显式顶层&&
+            r.组织!=概念初始组织指定::具名上位))
+            throw 二次关系失败{二次关系数据状态::入口拒绝};
+
+        const auto current=当前代次();
+        out.Gread=current;
+        const auto first=port_.读取首次写入材料(
+            {L1所有者范围首次写入读取合同版本,r.写入头.幂等身份});
+        if(first.合同版本!=L1所有者范围首次写入读取合同版本||
+           first.所有者!=port_.所有者身份()||
+           first.写入幂等身份!=r.写入头.幂等身份)
+            throw 二次关系失败{二次关系数据状态::内部不一致};
+        const bool replay=first.状态==L1所有者范围读取状态::成功;
+        if(replay&&!二次首次发布已确认(first))
+            throw 二次关系失败{二次关系数据状态::发布未知};
+        if(!replay&&first.状态!=L1所有者范围读取状态::未找到)
+            throw 二次关系失败{first.状态==L1所有者范围读取状态::资源失败 ?
+                二次关系数据状态::资源失败 : 二次关系数据状态::内部不一致};
+        if(!replay&&current!=r.写入头.期望事实代次)
+            throw 二次关系失败{二次关系数据状态::事实代次漂移};
+        守卫代次(current);
+
+        auto parents=r.初始父组;
+        std::sort(parents.begin(),parents.end(),身份小于);
+        if(std::adjacent_find(parents.begin(),parents.end())!=parents.end()||
+           (r.组织==概念初始组织指定::显式顶层&&!parents.empty())||
+           (r.组织==概念初始组织指定::具名上位&&parents.empty()))
+            throw 二次关系失败{二次关系数据状态::引用冲突};
+
+        const auto h=r.写入头.期望事实代次;
+        std::vector<概念树概念身份> path;
+        const auto norm=规范化二次关系内部(r.定义,current,h,r.预算,out.用量,path);
+        for(const auto parent:parents) {
+            std::vector<概念树概念身份> parentPath{parent};
+            const auto parentFact=读取二次关系内部(parent,current,h,r.预算,out.用量,parentPath);
+            if(parentFact.治理状态==概念树生命周期状态::退役)
+                throw 二次关系失败{二次关系数据状态::退役命中};
+            for(const auto& parentAtom:parentFact.规范形.原子组) {
+                const bool matched=std::any_of(norm.原子组.begin(),norm.原子组.end(),
+                    [&](const auto& childAtom){return 二次原子收窄(childAtom,parentAtom);});
+                if(!matched)throw 二次关系失败{二次关系数据状态::引用冲突};
+            }
+        }
+
+        std::set<std::pair<unsigned,std::uint64_t>> sourceSet;
+        for(const auto& source:r.形成来源) {
+            if(!source.H||source.H>h||!sourceSet.insert(二次来源键(source)).second)
+                throw 二次关系失败{二次关系数据状态::引用冲突};
+            std::visit([&](const auto& value) {
+                if constexpr(std::is_same_v<std::decay_t<decltype(value)>,特征信息身份>) {
+                    if(std::holds_alternative<特征数据错误>(
+                        features_.读取准确特征事实({1,current,source.H,value})))
+                        throw 二次关系失败{二次关系数据状态::来源不足};
+                } else if constexpr(std::is_same_v<std::decay_t<decltype(value)>,状态使用绑定身份>) {
+                    if(!state_use_bindings_||
+                       !state_use_bindings_->读取状态使用绑定历史({1,current,source.H,value}).成功())
+                        throw 二次关系失败{二次关系数据状态::来源不足};
+                } else {
+                    const auto constraintBudget=二次子读取剩余预算(
+                        r.预算,out.用量,二次子读取类别::约束);
+                    if(!constraintBudget)
+                        throw 二次关系失败{二次关系数据状态::预算不足};
+                    const auto constraint=读取二次关系约束定义(
+                        {1,{1,current,source.H},value,*constraintBudget});
+                    if(!二次合并用量(out.用量,constraint.用量,r.预算))
+                        throw 二次关系失败{二次关系数据状态::预算不足};
+                    if(!constraint.成功()) {
+                        std::vector<概念树概念身份> conceptPath{value};
+                        try {
+                            (void)读取二次关系内部(
+                                value,current,source.H,r.预算,out.用量,conceptPath);
+                        } catch(...) {
+                            throw 二次关系失败{二次关系数据状态::来源不足};
+                        }
+                    }
+                }
+            },source.来源);
+        }
+
+        const auto writeSet=形成二次关系建立写集(r,norm);
+        if(!二次计量首次写集(writeSet,out.用量,r.预算))
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        if(replay) {
+            if(*first.首次规范化写集!=writeSet)
+                throw 二次关系失败{二次关系数据状态::幂等冲突};
+        } else {
+            const auto findBudget=二次子读取剩余预算(
+                r.预算,out.用量,二次子读取类别::查找);
+            if(!findBudget)
+                throw 二次关系失败{二次关系数据状态::预算不足};
+            const auto found=查找二次关系完整定义(
+                {1,{1,current,current},r.定义,*findBudget});
+            if(!二次合并用量(out.用量,found.用量,r.预算))
+                throw 二次关系失败{二次关系数据状态::预算不足};
+            if(found.事实) {
+                out.事实=found.事实;
+                out.状态=found.状态==二次关系数据状态::冷却命中 ?
+                    二次关系数据状态::冷却命中 :
+                    (found.状态==二次关系数据状态::退役命中 ?
+                        二次关系数据状态::退役命中 : 二次关系数据状态::已复用);
+                out.建立原请求.reset();
+                return out;
+            }
+            if(found.状态!=二次关系数据状态::同义缺失)
+                throw 二次关系失败{found.状态};
+        }
+
+        dispatched=true;
+        const auto saved=port_.提交所有者范围中性写集(writeSet);
+        if(!二次提交状态符合(saved,replay))
+            throw 二次关系失败{映射二次写入(saved.状态)};
+        const auto& published=replay ? *first.首次写入结果 : saved;
+        if(published.事实代次!=r.写入头.期望事实代次+1)
+            throw 二次关系失败{二次关系数据状态::发布未知};
+        稳定编码 id{};
+        for(const auto&[key,value]:published.新编码映射)
+            if(key.值==1)id=value;
+        if(!有效(id))throw 二次关系失败{二次关系数据状态::发布未知};
+        out.首次H=published.事实代次;
+        out.正式回执=二次见证(published,replay);
+        const auto tail=当前代次();
+        out.Gread=tail;
+        std::vector<概念树概念身份> readPath{概念树概念身份{id}};
+        out.事实=读取二次关系内部(
+            概念树概念身份{id},tail,published.事实代次,r.预算,out.用量,readPath);
+        out.状态=replay ? 二次关系数据状态::精确重放 : 二次关系数据状态::已创建;
+    }catch(const 二次关系失败&e){out.状态=dispatched ? 二次关系数据状态::发布未知 : e.状态;out.事实.reset();if(out.状态!=二次关系数据状态::发布未知){out.首次H.reset();out.正式回执.reset();out.建立原请求.reset();}}catch(const 失败&e){out.状态=dispatched ? 二次关系数据状态::发布未知 : 映射二次失败(e.状态);out.事实.reset();}catch(const std::bad_alloc&){out.状态=dispatched ? 二次关系数据状态::发布未知 : 二次关系数据状态::资源失败;out.事实.reset();}catch(...){out.状态=dispatched ? 二次关系数据状态::发布未知 : 二次关系数据状态::内部不一致;out.事实.reset();}return out;
+}
+
+二次关系概念写入结果 概念树类数据服务::收敛二次关系概念建立(const 二次关系概念建立请求&r){
+    二次关系概念写入结果 out;out.建立原请求=r;bool dispatched=false;
+    try{std::scoped_lock lock(mutex_);if(!secondary_relation_layout_||r.版本!=1||r.写入头.合同版本!=1||!r.写入头.期望事实代次||!有效(r.写入头.幂等身份)||!二次预算完整(r.预算))throw 二次关系失败{二次关系数据状态::入口拒绝};const auto current=当前代次();out.Gread=current;const auto first=port_.读取首次写入材料({L1所有者范围首次写入读取合同版本,r.写入头.幂等身份});if(first.状态==L1所有者范围读取状态::未找到){out.状态=二次关系数据状态::未找到;out.建立原请求.reset();return out;}if(!二次首次发布已确认(first))throw 二次关系失败{first.状态==L1所有者范围读取状态::资源失败 ? 二次关系数据状态::资源失败 : 二次关系数据状态::发布未知};std::vector<概念树概念身份> path;const auto norm=规范化二次关系内部(r.定义,current,r.写入头.期望事实代次,r.预算,out.用量,path);const auto ws=形成二次关系建立写集(r,norm);if(!二次计量首次写集(ws,out.用量,r.预算))throw 二次关系失败{二次关系数据状态::预算不足};if(ws!=*first.首次规范化写集)throw 二次关系失败{二次关系数据状态::幂等冲突};dispatched=true;const auto saved=port_.提交所有者范围中性写集(ws);if(!二次提交状态符合(saved,true))throw 二次关系失败{映射二次写入(saved.状态)};稳定编码 id{};for(const auto&[key,value]:first.首次写入结果->新编码映射)if(key.值==1)id=value;if(!有效(id))throw 二次关系失败{二次关系数据状态::发布未知};out.首次H=first.首次写入结果->事实代次;out.正式回执=二次见证(*first.首次写入结果,true);const auto tail=当前代次();out.Gread=tail;std::vector<概念树概念身份> rp{概念树概念身份{id}};out.事实=读取二次关系内部(概念树概念身份{id},tail,*out.首次H,r.预算,out.用量,rp);out.状态=二次关系数据状态::精确重放;
+    }catch(const 二次关系失败&e){out.状态=dispatched ? 二次关系数据状态::发布未知 : e.状态;out.事实.reset();if(out.状态!=二次关系数据状态::发布未知){out.首次H.reset();out.正式回执.reset();out.建立原请求.reset();}}catch(const 失败&e){out.状态=dispatched ? 二次关系数据状态::发布未知 : 映射二次失败(e.状态);out.事实.reset();}catch(const std::bad_alloc&){out.状态=dispatched ? 二次关系数据状态::发布未知 : 二次关系数据状态::资源失败;out.事实.reset();}catch(...){out.状态=dispatched ? 二次关系数据状态::发布未知 : 二次关系数据状态::内部不一致;out.事实.reset();}return out;
+}
+
+二次关系关联结果 概念树类数据服务::读取二次关系来源(const 二次关系关联读取请求&r) const {
+    二次关系关联结果 out;out.Gread=r.读取头.Gread;out.H=r.读取头.H;
+    try {
+        if(!secondary_relation_layout_||r.版本!=1||r.读取头.合同版本!=1||
+           !r.读取头.Gread||!r.读取头.H||r.读取头.H>r.读取头.Gread||
+           !有效(r.RC.值)||!二次预算完整(r.预算))
+            throw 二次关系失败{二次关系数据状态::入口拒绝};
+        守卫代次(r.读取头.Gread);
+        概念事实读取会话_v1 session(port_.所有者身份(),r.读取头.Gread,
+            r.读取头.H,{r.预算.最大节点数,r.预算.最大关系数,
+                r.预算.最大值数,r.预算.最大材料数},r.预算.最大概念数);
+        世界结构预算_B1 wb{r.预算.最大节点数,r.预算.最大关系数,
+            r.预算.最大值数,r.预算.最大材料数,r.预算.最大材料数,
+            r.预算.最大候选数,r.预算.最大材料数,r.预算.最大材料数,
+            r.预算.最大原子数};
+        特征值域事实读取会话_v1 featureSession(wb);
+        std::vector<概念树概念身份> path{r.RC};
+        (void)读取二次关系内部(
+            r.RC,r.读取头.Gread,r.读取头.H,r.预算,out.用量,path,&session,
+            &featureSession);
+        auto merged=session.用量_;
+        const auto refresh=[&]() {
+            session.预算_={session.用量_.节点数+(r.预算.最大节点数-out.用量.节点数),
+                session.用量_.关系数+(r.预算.最大关系数-out.用量.关系数),
+                session.用量_.值数+(r.预算.最大值数-out.用量.值数),
+                session.用量_.材料总数+(r.预算.最大材料数-out.用量.材料数)};
+        };
+        const auto sync=[&]() {const auto&x=session.用量_;if(x.节点数<merged.节点数||x.关系数<merged.关系数||x.值数<merged.值数||x.材料总数<merged.材料总数)throw 二次关系失败{二次关系数据状态::内部不一致};try{二次计量增加(out.用量.节点数,x.节点数-merged.节点数,r.预算.最大节点数);二次计量增加(out.用量.关系数,x.关系数-merged.关系数,r.预算.最大关系数);二次计量增加(out.用量.值数,x.值数-merged.值数,r.预算.最大值数);二次计量增加(out.用量.材料数,x.材料总数-merged.材料总数,r.预算.最大材料数);}catch(二次关系数据状态 s){throw 二次关系失败{s};}merged=x;};
+        const auto relationLimit=[&]() {
+            if(out.用量.关系数>=r.预算.最大关系数||
+               out.用量.材料数>=r.预算.最大材料数)
+                throw 二次关系失败{二次关系数据状态::预算不足};
+            return std::min(r.预算.最大关系数-out.用量.关系数,
+                            r.预算.最大材料数-out.用量.材料数);
+        };
+        const auto&t=secondary_relation_layout_->类型;
+        refresh();
+        const auto rows=关系(r.RC.值,t.来源成员,false,r.读取头.Gread,
+            r.读取头.H,std::min(relationLimit(),r.预算.最大来源数),&session);sync();
+        std::set<std::pair<unsigned,std::uint64_t>> sourceKeys;
+        for(const auto& member:rows) {
+            if(!二次安全计量(out.用量.来源数,1,r.预算.最大来源数))
+                throw 二次关系失败{二次关系数据状态::预算不足};
+            if(member.角色或顺序!=1)
+                throw 二次关系失败{二次关系数据状态::内部不一致};
+            refresh();const auto node=节点(member.目标节点,r.读取头.Gread,r.读取头.H,&session);sync();
+            if(node.种类!=节点种类::普通||node.属性类型表示)
+                throw 二次关系失败{二次关系数据状态::内部不一致};
+            refresh();const auto f=关系(node.编码,t.来源F,false,r.读取头.Gread,r.读取头.H,relationLimit(),&session);sync();
+            refresh();const auto b=关系(node.编码,t.来源B,false,r.读取头.Gread,r.读取头.H,relationLimit(),&session);sync();
+            refresh();const auto c=关系(node.编码,t.来源概念,false,r.读取头.Gread,r.读取头.H,relationLimit(),&session);sync();
+            const auto targetCount=f.size()+b.size()+c.size();
+            if(targetCount!=1)throw 二次关系失败{二次关系数据状态::内部不一致};
+            const E& target=!f.empty()?f.front():(!b.empty()?b.front():c.front());
+            if(target.角色或顺序!=1)
+                throw 二次关系失败{二次关系数据状态::内部不一致};
+            refresh();const auto values=属性(node.编码,r.读取头.Gread,r.读取头.H,&session);sync();
+            if(values.size()!=1)throw 二次关系失败{二次关系数据状态::内部不一致};
+            const auto& cutoff=唯一属性(values,t.来源截止);
+            const auto* raw=std::get_if<std::vector<std::uint64_t>>(&cutoff.材料);
+            if(!raw||raw->size()!=1||!raw->front()||raw->front()>r.读取头.H)
+                throw 二次关系失败{二次关系数据状态::内部不一致};
+            二次关系形成来源 source;source.H=raw->front();
+            if(!f.empty())source.来源=特征信息身份{target.目标节点};
+            else if(!b.empty())source.来源=状态使用绑定身份{target.目标节点};
+            else source.来源=概念树概念身份{target.目标节点};
+            if(!sourceKeys.insert(二次来源键(source)).second)
+                throw 二次关系失败{二次关系数据状态::内部不一致};
+            out.来源组.push_back({node.编码,member.编码,target.编码,cutoff.编码,
+                r.RC,source,投影纯生命(node,r.读取头.Gread)});
+        }
+        std::sort(out.来源组.begin(),out.来源组.end(),
+            [](const auto&a,const auto&b){return a.记录.值<b.记录.值;});
+        out.状态=二次关系数据状态::已读取;
+        守卫代次(r.读取头.Gread);
+    }catch(const 二次关系失败&e){out.状态=e.状态;out.来源组.clear();}catch(const 失败&e){out.状态=映射二次失败(e.状态);out.来源组.clear();}catch(const std::bad_alloc&){out.状态=二次关系数据状态::资源失败;out.来源组.clear();}catch(...){out.状态=二次关系数据状态::内部不一致;out.来源组.clear();}return out;
+}
+
+二次关系关联结果 概念树类数据服务::读取二次关系用途(const 二次关系关联读取请求&r) const {
+    二次关系关联结果 out;out.Gread=r.读取头.Gread;out.H=r.读取头.H;
+    try {
+        if(!secondary_relation_layout_||r.版本!=1||r.读取头.合同版本!=1||
+           !r.读取头.Gread||!r.读取头.H||r.读取头.H>r.读取头.Gread||
+           !有效(r.RC.值)||!二次预算完整(r.预算))
+            throw 二次关系失败{二次关系数据状态::入口拒绝};
+        守卫代次(r.读取头.Gread);
+        概念事实读取会话_v1 session(port_.所有者身份(),r.读取头.Gread,
+            r.读取头.H,{r.预算.最大节点数,r.预算.最大关系数,
+                r.预算.最大值数,r.预算.最大材料数},r.预算.最大概念数);
+        世界结构预算_B1 wb{r.预算.最大节点数,r.预算.最大关系数,
+            r.预算.最大值数,r.预算.最大材料数,r.预算.最大材料数,
+            r.预算.最大候选数,r.预算.最大材料数,r.预算.最大材料数,
+            r.预算.最大原子数};
+        特征值域事实读取会话_v1 featureSession(wb);
+        std::vector<概念树概念身份> path{r.RC};
+        (void)读取二次关系内部(
+            r.RC,r.读取头.Gread,r.读取头.H,r.预算,out.用量,path,&session,
+            &featureSession);
+        auto merged=session.用量_;
+        const auto refresh=[&]() {session.预算_={session.用量_.节点数+(r.预算.最大节点数-out.用量.节点数),session.用量_.关系数+(r.预算.最大关系数-out.用量.关系数),session.用量_.值数+(r.预算.最大值数-out.用量.值数),session.用量_.材料总数+(r.预算.最大材料数-out.用量.材料数)};};
+        const auto sync=[&]() {const auto&x=session.用量_;if(x.节点数<merged.节点数||x.关系数<merged.关系数||x.值数<merged.值数||x.材料总数<merged.材料总数)throw 二次关系失败{二次关系数据状态::内部不一致};try{二次计量增加(out.用量.节点数,x.节点数-merged.节点数,r.预算.最大节点数);二次计量增加(out.用量.关系数,x.关系数-merged.关系数,r.预算.最大关系数);二次计量增加(out.用量.值数,x.值数-merged.值数,r.预算.最大值数);二次计量增加(out.用量.材料数,x.材料总数-merged.材料总数,r.预算.最大材料数);}catch(二次关系数据状态 s){throw 二次关系失败{s};}merged=x;};
+        const auto relationLimit=[&]() {
+            if(out.用量.关系数>=r.预算.最大关系数||
+               out.用量.材料数>=r.预算.最大材料数)
+                throw 二次关系失败{二次关系数据状态::预算不足};
+            return std::min(r.预算.最大关系数-out.用量.关系数,
+                            r.预算.最大材料数-out.用量.材料数);
+        };
+        const auto&t=secondary_relation_layout_->类型;
+        refresh();
+        const auto rows=关系(r.RC.值,t.用途成员,false,r.读取头.Gread,
+            r.读取头.H,std::min(relationLimit(),r.预算.最大用途数),&session);sync();
+        std::set<std::tuple<std::uint64_t,std::uint64_t,std::uint32_t>> useKeys;
+        for(const auto& member:rows) {
+            if(!二次安全计量(out.用量.用途数,1,r.预算.最大用途数))
+                throw 二次关系失败{二次关系数据状态::预算不足};
+            if(member.角色或顺序!=1)
+                throw 二次关系失败{二次关系数据状态::内部不一致};
+            refresh();const auto node=节点(member.目标节点,r.读取头.Gread,r.读取头.H,&session);sync();
+            refresh();const auto target=关系(node.编码,t.用途目标,false,
+                r.读取头.Gread,r.读取头.H,relationLimit(),&session);sync();
+            refresh();const auto basis=关系(node.编码,t.用途业务依据,false,
+                r.读取头.Gread,r.读取头.H,relationLimit(),&session);sync();
+            if(target.size()!=1||basis.size()!=1)
+                throw 二次关系失败{二次关系数据状态::内部不一致};
+            if(target.front().目标节点!=r.RC.值||target.front().角色或顺序!=1||
+               basis.front().角色或顺序!=1)
+                throw 二次关系失败{二次关系数据状态::内部不一致};
+            refresh();const auto values=属性(node.编码,r.读取头.Gread,r.读取头.H,&session);sync();
+            if(values.size()!=4)throw 二次关系失败{二次关系数据状态::内部不一致};
+            const auto* business=std::get_if<std::vector<std::uint64_t>>(
+                &唯一属性(values,t.用途业务标识).材料);
+            const auto* role=std::get_if<std::int64_t>(&唯一属性(values,t.用途角色).材料);
+            const auto* time=std::get_if<std::int64_t>(&唯一属性(values,t.用途时间).材料);
+            const auto* evidence=std::get_if<std::vector<std::uint64_t>>(
+                &唯一属性(values,t.来源截止).材料);
+            if(!business||business->size()!=1||!business->front()||!role||*role<1||
+               *role>4||!time||*time<0||!evidence||evidence->size()!=1||
+               !evidence->front()||evidence->front()>r.读取头.H)
+                throw 二次关系失败{二次关系数据状态::内部不一致};
+            const auto roleValue=static_cast<std::uint32_t>(*role);
+            if(!useKeys.emplace(business->front(),r.RC.值.值,roleValue).second)
+                throw 二次关系失败{二次关系数据状态::内部不一致};
+            out.用途组.push_back({node.编码,member.编码,target.front().编码,
+                basis.front().编码,r.RC,business->front(),roleValue,*time,
+                basis.front().目标节点,evidence->front(),
+                投影纯生命(node,r.读取头.Gread)});
+        }
+        std::sort(out.用途组.begin(),out.用途组.end(),
+            [](const auto&a,const auto&b){return a.记录.值<b.记录.值;});
+        out.状态=二次关系数据状态::已读取;
+        守卫代次(r.读取头.Gread);
+    }catch(const 二次关系失败&e){out.状态=e.状态;out.用途组.clear();}catch(const 失败&e){out.状态=映射二次失败(e.状态);out.用途组.clear();}catch(const std::bad_alloc&){out.状态=二次关系数据状态::资源失败;out.用途组.clear();}catch(...){out.状态=二次关系数据状态::内部不一致;out.用途组.clear();}return out;
+}
+
+二次关系关联结果 概念树类数据服务::添加二次关系形成来源(const 二次关系来源写入请求&r){
+    二次关系关联结果 out;bool dispatched=false;
+    try {
+        std::scoped_lock lock(mutex_);
+        if(!secondary_relation_layout_||r.版本!=1||r.写入头.合同版本!=1||
+           !r.写入头.期望事实代次||!有效(r.写入头.幂等身份)||
+           !有效(r.RC.值)||r.来源.empty()||!二次预算完整(r.预算))
+            throw 二次关系失败{二次关系数据状态::入口拒绝};
+        const auto g=当前代次();
+        out.Gread=g;
+        const auto first=port_.读取首次写入材料(
+            {L1所有者范围首次写入读取合同版本,r.写入头.幂等身份});
+        const bool replay=first.状态==L1所有者范围读取状态::成功;
+        if(replay&&!二次首次发布已确认(first))
+            throw 二次关系失败{二次关系数据状态::发布未知};
+        if(!replay&&first.状态!=L1所有者范围读取状态::未找到)
+            throw 二次关系失败{first.状态==L1所有者范围读取状态::资源失败 ?
+                二次关系数据状态::资源失败 : 二次关系数据状态::内部不一致};
+        if(!replay&&g!=r.写入头.期望事实代次)
+            throw 二次关系失败{二次关系数据状态::事实代次漂移};
+        const auto h=r.写入头.期望事实代次;
+        const auto existingBudget=二次子读取剩余预算(
+            r.预算,out.用量,二次子读取类别::来源);
+        if(!existingBudget)
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        const auto existing=读取二次关系来源({1,{1,g,h},r.RC,*existingBudget});
+        if(!二次合并用量(out.用量,existing.用量,r.预算))
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        if(!existing.成功())throw 二次关系失败{existing.状态};
+
+        auto requested=r.来源;
+        std::sort(requested.begin(),requested.end(),[](const auto&a,const auto&b){
+            const auto ka=二次来源键(a),kb=二次来源键(b);
+            return ka!=kb ? ka<kb : a.H<b.H;
+        });
+        for(std::size_t i=0;i<requested.size();++i) {
+            if(!requested[i].H||requested[i].H>h||
+               (i&&二次来源键(requested[i-1])==二次来源键(requested[i])))
+                throw 二次关系失败{二次关系数据状态::引用冲突};
+        }
+
+        std::vector<二次关系形成来源> missing;
+        for(const auto& source:requested) {
+            const auto same=std::find_if(existing.来源组.begin(),existing.来源组.end(),
+                [&](const auto& item){return 二次来源键(item.来源)==二次来源键(source);});
+            if(same!=existing.来源组.end()) {
+                if(same->来源.H!=source.H)
+                    throw 二次关系失败{二次关系数据状态::引用冲突};
+                continue;
+            }
+            std::visit([&](const auto& value) {
+                if constexpr(std::is_same_v<std::decay_t<decltype(value)>,特征信息身份>) {
+                    if(std::holds_alternative<特征数据错误>(
+                        features_.读取准确特征事实({1,g,source.H,value})))
+                        throw 二次关系失败{二次关系数据状态::来源不足};
+                } else if constexpr(std::is_same_v<std::decay_t<decltype(value)>,状态使用绑定身份>) {
+                    if(!state_use_bindings_||
+                       !state_use_bindings_->读取状态使用绑定历史({1,g,source.H,value}).成功())
+                        throw 二次关系失败{二次关系数据状态::来源不足};
+                } else {
+                    const auto constraintBudget=二次子读取剩余预算(
+                        r.预算,out.用量,二次子读取类别::约束);
+                    if(!constraintBudget)
+                        throw 二次关系失败{二次关系数据状态::预算不足};
+                    const auto constraint=读取二次关系约束定义(
+                        {1,{1,g,source.H},value,*constraintBudget});
+                    if(!二次合并用量(out.用量,constraint.用量,r.预算))
+                        throw 二次关系失败{二次关系数据状态::预算不足};
+                    if(!constraint.成功()) {
+                        std::vector<概念树概念身份> path{value};
+                        (void)读取二次关系内部(
+                            value,g,source.H,r.预算,out.用量,path);
+                    }
+                }
+            },source.来源);
+            missing.push_back(source);
+        }
+
+        if(!replay&&missing.empty()) {
+            out.Gread=g;out.H=g;out.状态=二次关系数据状态::已复用;
+            for(const auto& source:requested) {
+                const auto found=std::find_if(existing.来源组.begin(),existing.来源组.end(),
+                    [&](const auto& item){return item.来源==source;});
+                if(found==existing.来源组.end())
+                    throw 二次关系失败{二次关系数据状态::内部不一致};
+                out.来源组.push_back(*found);
+            }
+            return out;
+        }
+
+        L1所有者范围写集请求 writeSet{
+            L1所有者范围CRUD合同版本,h,r.写入头.幂等身份};
+        const auto&t=secondary_relation_layout_->类型;
+        std::uint32_t nodeKey=1,edgeKey=0x61001,valueKey=0x62001;
+        const auto edge=[&](Ref source,Ref target,稳定编码 type) {
+            writeSet.关系.push_back({Key{edgeKey++},source,target,Ref{type},1});
+        };
+        for(const auto& source:missing) {
+            const Key record{nodeKey++};
+            writeSet.节点.push_back({record,节点种类::普通,std::nullopt});
+            edge(Ref{r.RC.值},Ref{record},t.来源成员);
+            std::visit([&](const auto& value) {
+                if constexpr(std::is_same_v<std::decay_t<decltype(value)>,特征信息身份>)
+                    edge(Ref{record},Ref{value.编码},t.来源F);
+                else if constexpr(std::is_same_v<std::decay_t<decltype(value)>,状态使用绑定身份>)
+                    edge(Ref{record},Ref{value.编码},t.来源B);
+                else edge(Ref{record},Ref{value.值},t.来源概念);
+            },source.来源);
+            const Key value{valueKey++};
+            writeSet.值.push_back({value,Ref{record},Ref{t.来源截止},
+                std::vector<std::uint64_t>{source.H},Ref{record}});
+            writeSet.属性槽变更.push_back({Ref{record},Ref{t.来源截止},value});
+        }
+        二次规范化写集(writeSet);
+        if(!二次计量首次写集(writeSet,out.用量,r.预算))
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        if(replay&&*first.首次规范化写集!=writeSet)
+            throw 二次关系失败{二次关系数据状态::幂等冲突};
+
+        dispatched=true;
+        const auto saved=port_.提交所有者范围中性写集(writeSet);
+        if(!二次提交状态符合(saved,replay))
+            throw 二次关系失败{映射二次写入(saved.状态)};
+        const auto& published=replay ? *first.首次写入结果 : saved;
+        out.首次H=published.事实代次;
+        out.正式回执=二次见证(published,replay);
+        const auto tail=当前代次();
+        const auto readbackBudget=二次子读取剩余预算(
+            r.预算,out.用量,二次子读取类别::来源);
+        if(!readbackBudget)
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        const auto readback=读取二次关系来源(
+            {1,{1,tail,published.事实代次},r.RC,*readbackBudget});
+        if(!readback.成功())throw 二次关系失败{readback.状态};
+        if(!二次合并用量(out.用量,readback.用量,r.预算))
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        for(const auto& source:requested) {
+            const auto found=std::find_if(readback.来源组.begin(),readback.来源组.end(),
+                [&](const auto& item){return item.来源==source;});
+            if(found==readback.来源组.end())
+                throw 二次关系失败{二次关系数据状态::内部不一致};
+            out.来源组.push_back(*found);
+        }
+        out.Gread=tail;out.H=published.事实代次;
+        out.状态=replay ? 二次关系数据状态::精确重放 : 二次关系数据状态::已变更;
+    }catch(const 二次关系失败&e){out.状态=dispatched ? 二次关系数据状态::发布未知 : e.状态;out.来源组.clear();out.用途组.clear();}catch(const 失败&e){out.状态=dispatched ? 二次关系数据状态::发布未知 : 映射二次失败(e.状态);out.来源组.clear();}catch(const std::bad_alloc&){out.状态=dispatched ? 二次关系数据状态::发布未知 : 二次关系数据状态::资源失败;out.来源组.clear();}catch(...){out.状态=dispatched ? 二次关系数据状态::发布未知 : 二次关系数据状态::内部不一致;out.来源组.clear();}return out;
+}
+
+二次关系关联结果 概念树类数据服务::记录二次关系实际采用(const 二次关系用途请求&r){
+    二次关系关联结果 out;bool dispatched=false;
+    try {
+        std::scoped_lock lock(mutex_);
+        if(!secondary_relation_layout_||r.版本!=1||r.写入头.合同版本!=1||
+           !r.写入头.期望事实代次||!有效(r.写入头.幂等身份)||
+           !有效(r.RC.值)||!r.业务标识||r.用途角色<1||r.用途角色>4||
+           r.时间<0||!有效(r.业务依据)||!r.证据H||
+           r.证据H>r.写入头.期望事实代次||!二次预算完整(r.预算))
+            throw 二次关系失败{二次关系数据状态::入口拒绝};
+        const auto g=当前代次();out.Gread=g;
+        const auto first=port_.读取首次写入材料(
+            {L1所有者范围首次写入读取合同版本,r.写入头.幂等身份});
+        const bool replay=first.状态==L1所有者范围读取状态::成功;
+        if(replay&&!二次首次发布已确认(first))
+            throw 二次关系失败{二次关系数据状态::发布未知};
+        if(!replay&&first.状态!=L1所有者范围读取状态::未找到)
+            throw 二次关系失败{first.状态==L1所有者范围读取状态::资源失败 ?
+                二次关系数据状态::资源失败 : 二次关系数据状态::内部不一致};
+        if(!replay&&g!=r.写入头.期望事实代次)
+            throw 二次关系失败{二次关系数据状态::事实代次漂移};
+        const auto h=r.写入头.期望事实代次;
+        if(!二次计量单节点读取(out.用量,r.预算))
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        核验外部节点(r.业务依据,g,r.证据H);
+        const auto existingBudget=二次子读取剩余预算(
+            r.预算,out.用量,二次子读取类别::用途);
+        if(!existingBudget)
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        const auto existing=读取二次关系用途({1,{1,g,h},r.RC,*existingBudget});
+        if(!二次合并用量(out.用量,existing.用量,r.预算))
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        if(!existing.成功())throw 二次关系失败{existing.状态};
+        const auto same=std::find_if(existing.用途组.begin(),existing.用途组.end(),
+            [&](const auto& item){return item.业务标识==r.业务标识&&
+                item.RC==r.RC&&item.用途角色==r.用途角色;});
+        if(same!=existing.用途组.end()) {
+            if(same->时间!=r.时间||same->业务依据!=r.业务依据||same->证据H!=r.证据H)
+                throw 二次关系失败{二次关系数据状态::引用冲突};
+            if(!replay) {
+                out.Gread=g;out.H=g;out.用途组={*same};
+                out.状态=二次关系数据状态::已复用;
+                return out;
+            }
+        }
+
+        const auto&t=secondary_relation_layout_->类型;
+        L1所有者范围写集请求 writeSet{
+            L1所有者范围CRUD合同版本,h,r.写入头.幂等身份};
+        const Key record{1};
+        writeSet.节点.push_back({record,节点种类::普通,std::nullopt});
+        std::uint32_t edgeKey=0x71001,valueKey=0x72001;
+        const auto edge=[&](Ref source,Ref target,稳定编码 type) {
+            writeSet.关系.push_back({Key{edgeKey++},source,target,Ref{type},1});
+        };
+        const auto value=[&](稳定编码 type,L1所有者范围原始值材料 material) {
+            const Key key{valueKey++};
+            writeSet.值.push_back({key,Ref{record},Ref{type},std::move(material),Ref{record}});
+            writeSet.属性槽变更.push_back({Ref{record},Ref{type},key});
+        };
+        edge(Ref{r.RC.值},Ref{record},t.用途成员);
+        edge(Ref{record},Ref{r.RC.值},t.用途目标);
+        edge(Ref{record},Ref{r.业务依据},t.用途业务依据);
+        value(t.用途业务标识,std::vector<std::uint64_t>{r.业务标识});
+        value(t.用途角色,std::int64_t{r.用途角色});
+        value(t.用途时间,r.时间);
+        value(t.来源截止,std::vector<std::uint64_t>{r.证据H});
+        二次规范化写集(writeSet);
+        if(!二次计量首次写集(writeSet,out.用量,r.预算))
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        if(replay&&*first.首次规范化写集!=writeSet)
+            throw 二次关系失败{二次关系数据状态::幂等冲突};
+
+        dispatched=true;
+        const auto saved=port_.提交所有者范围中性写集(writeSet);
+        if(!二次提交状态符合(saved,replay))
+            throw 二次关系失败{映射二次写入(saved.状态)};
+        const auto& published=replay ? *first.首次写入结果 : saved;
+        out.首次H=published.事实代次;
+        out.正式回执=二次见证(published,replay);
+        const auto tail=当前代次();
+        const auto readbackBudget=二次子读取剩余预算(
+            r.预算,out.用量,二次子读取类别::用途);
+        if(!readbackBudget)
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        const auto readback=读取二次关系用途(
+            {1,{1,tail,published.事实代次},r.RC,*readbackBudget});
+        if(!readback.成功())throw 二次关系失败{readback.状态};
+        if(!二次合并用量(out.用量,readback.用量,r.预算))
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        const auto written=std::find_if(readback.用途组.begin(),readback.用途组.end(),
+            [&](const auto& item){return item.业务标识==r.业务标识&&
+                item.RC==r.RC&&item.用途角色==r.用途角色&&item.时间==r.时间&&
+                item.业务依据==r.业务依据&&item.证据H==r.证据H;});
+        if(written==readback.用途组.end())
+            throw 二次关系失败{二次关系数据状态::内部不一致};
+        out.用途组={*written};out.Gread=tail;out.H=published.事实代次;
+        out.状态=replay ? 二次关系数据状态::精确重放 : 二次关系数据状态::已变更;
+    }catch(const 二次关系失败&e){out.状态=dispatched ? 二次关系数据状态::发布未知 : e.状态;out.用途组.clear();out.来源组.clear();}catch(const 失败&e){out.状态=dispatched ? 二次关系数据状态::发布未知 : 映射二次失败(e.状态);out.用途组.clear();}catch(const std::bad_alloc&){out.状态=dispatched ? 二次关系数据状态::发布未知 : 二次关系数据状态::资源失败;out.用途组.clear();}catch(...){out.状态=dispatched ? 二次关系数据状态::发布未知 : 二次关系数据状态::内部不一致;out.用途组.clear();}return out;
+}
+
+二次关系图结果 概念树类数据服务::读取二次关系概念图(const 二次关系图读取请求&r) const {
+    二次关系图结果 out;out.Gread=r.读取头.Gread;out.H=r.读取头.H;
+    try{if(r.版本!=1||r.读取头.合同版本!=1||!r.读取头.Gread||!r.读取头.H||r.读取头.H>r.读取头.Gread||!二次预算完整(r.预算))throw 二次关系失败{二次关系数据状态::入口拒绝};守卫代次(r.读取头.Gread);概念事实读取会话_v1 session(port_.所有者身份(),r.读取头.Gread,r.读取头.H,{r.预算.最大节点数,r.预算.最大关系数,r.预算.最大值数,r.预算.最大材料数},r.预算.最大概念数);世界结构预算_B1 wb{r.预算.最大节点数,r.预算.最大关系数,r.预算.最大值数,r.预算.最大材料数,r.预算.最大材料数,r.预算.最大候选数,r.预算.最大材料数,r.预算.最大材料数,r.预算.最大原子数};特征值域事实读取会话_v1 featureSession(wb);const auto ids=枚举二次关系身份(r.读取头.Gread,r.读取头.H,r.预算,out.用量,&session);std::set<std::uint64_t> known;for(const auto id:ids)known.insert(id.值.值);for(const auto id:ids){std::vector<概念树概念身份> path{id};auto f=读取二次关系内部(id,r.读取头.Gread,r.读取头.H,r.预算,out.用量,path,&session,&featureSession);for(const auto&e:f.自有关系)if(e.类型==pure_layout_->类型.直接上位&&known.contains(e.源.值)&&known.contains(e.目标.值))out.直接边.push_back(e);out.RC组.push_back(std::move(f));}std::sort(out.直接边.begin(),out.直接边.end(),[](const auto&a,const auto&b){return a.编码.值<b.编码.值;});std::map<std::uint64_t,std::vector<std::uint64_t>> children;for(const auto&e:out.直接边)children[e.源.值].push_back(e.目标.值);std::set<std::uint64_t> gray,black;std::function<void(std::uint64_t)> dfs=[&](auto x){if(gray.contains(x))throw 二次关系失败{二次关系数据状态::形成环};if(black.contains(x))return;gray.insert(x);for(auto y:children[x])dfs(y);gray.erase(x);black.insert(x);};for(auto id:known)dfs(id);out.状态=二次关系数据状态::已读取;守卫代次(r.读取头.Gread);}catch(const 二次关系失败&e){out.状态=e.状态;out.RC组.clear();out.直接边.clear();}catch(const 失败&e){out.状态=映射二次失败(e.状态);out.RC组.clear();out.直接边.clear();}catch(const std::bad_alloc&){out.状态=二次关系数据状态::资源失败;out.RC组.clear();out.直接边.clear();}catch(...){out.状态=二次关系数据状态::内部不一致;out.RC组.clear();out.直接边.clear();}return out;
+}
+
+二次关系治理结果 概念树类数据服务::替换二次关系父组(const 二次关系父组请求&r){
+    二次关系治理结果 out;bool dispatched=false;
+    try {
+        std::scoped_lock lock(mutex_);
+        if(!secondary_relation_layout_||r.版本!=1||r.写入头.合同版本!=1||
+           !r.写入头.期望事实代次||!有效(r.写入头.幂等身份)||
+           !有效(r.RC.值)||!二次预算完整(r.预算))
+            throw 二次关系失败{二次关系数据状态::入口拒绝};
+        const auto g=当前代次();out.Gread=g;
+        const auto first=port_.读取首次写入材料(
+            {L1所有者范围首次写入读取合同版本,r.写入头.幂等身份});
+        const bool replay=first.状态==L1所有者范围读取状态::成功;
+        if(replay&&!二次首次发布已确认(first))
+            throw 二次关系失败{二次关系数据状态::发布未知};
+        if(!replay&&first.状态!=L1所有者范围读取状态::未找到)
+            throw 二次关系失败{first.状态==L1所有者范围读取状态::资源失败 ?
+                二次关系数据状态::资源失败 : 二次关系数据状态::内部不一致};
+        if(!replay&&g!=r.写入头.期望事实代次)
+            throw 二次关系失败{二次关系数据状态::事实代次漂移};
+        const auto h=r.写入头.期望事实代次;
+        std::vector<概念树概念身份> path{r.RC};
+        const auto before=读取二次关系内部(r.RC,g,h,r.预算,out.用量,path);
+        std::vector<二次关系关系见证> actual;
+        for(const auto& edge:before.自有关系)
+            if(edge.类型==pure_layout_->类型.直接上位&&edge.目标==r.RC.值)
+                actual.push_back(edge);
+        auto expected=r.预期直接父边;
+        const auto byId=[](const auto&a,const auto&b){return a.编码.值<b.编码.值;};
+        std::sort(actual.begin(),actual.end(),byId);
+        std::sort(expected.begin(),expected.end(),byId);
+        if(actual!=expected)throw 二次关系失败{二次关系数据状态::引用冲突};
+
+        auto parents=r.新父组;
+        std::sort(parents.begin(),parents.end(),身份小于);
+        if(std::adjacent_find(parents.begin(),parents.end())!=parents.end()||
+           std::find(parents.begin(),parents.end(),r.RC)!=parents.end())
+            throw 二次关系失败{二次关系数据状态::形成环};
+        const auto graphBudget=二次子读取剩余预算(
+            r.预算,out.用量,二次子读取类别::图);
+        if(!graphBudget)
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        const auto graph=读取二次关系概念图({1,{1,g,h},*graphBudget});
+        if(!二次合并用量(out.用量,graph.用量,r.预算))
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        if(!graph.成功())throw 二次关系失败{graph.状态};
+        std::map<std::uint64_t,std::vector<std::uint64_t>> children;
+        for(const auto& edge:graph.直接边)children[edge.源.值].push_back(edge.目标.值);
+        std::set<std::uint64_t> descendants;
+        std::function<void(std::uint64_t)> visit=[&](std::uint64_t id) {
+            if(!descendants.insert(id).second)return;
+            for(const auto child:children[id])visit(child);
+        };
+        visit(r.RC.值.值);
+        for(const auto parent:parents) {
+            if(descendants.contains(parent.值.值))
+                throw 二次关系失败{二次关系数据状态::形成环};
+            std::vector<概念树概念身份> parentPath{parent};
+            const auto parentFact=读取二次关系内部(
+                parent,g,h,r.预算,out.用量,parentPath);
+            for(const auto& parentAtom:parentFact.规范形.原子组) {
+                const bool contained=std::any_of(before.规范形.原子组.begin(),
+                    before.规范形.原子组.end(),[&](const auto& childAtom) {
+                        return 二次原子收窄(childAtom,parentAtom);
+                    });
+                if(!contained)throw 二次关系失败{二次关系数据状态::引用冲突};
+            }
+        }
+
+        L1所有者范围写集请求 writeSet{
+            L1所有者范围CRUD合同版本,h,r.写入头.幂等身份};
+        for(const auto& edge:actual)writeSet.退出事实.push_back(edge.编码);
+        std::uint32_t edgeKey=0x81001;
+        for(const auto parent:parents)
+            writeSet.关系.push_back({Key{edgeKey++},Ref{parent.值},Ref{r.RC.值},
+                Ref{pure_layout_->类型.直接上位},1});
+        二次规范化写集(writeSet);
+        if(!二次计量首次写集(writeSet,out.用量,r.预算))
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        if(replay&&*first.首次规范化写集!=writeSet)
+            throw 二次关系失败{二次关系数据状态::幂等冲突};
+        dispatched=true;
+        const auto saved=port_.提交所有者范围中性写集(writeSet);
+        if(!二次提交状态符合(saved,replay))
+            throw 二次关系失败{映射二次写入(saved.状态)};
+        const auto& published=replay ? *first.首次写入结果 : saved;
+        out.首次H=published.事实代次;
+        out.正式回执=二次见证(published,replay);
+        out.Gread=当前代次();out.H=published.事实代次;
+        std::vector<概念树概念身份> readPath{r.RC};
+        out.事实=读取二次关系内部(
+            r.RC,out.Gread,published.事实代次,r.预算,out.用量,readPath);
+        for(const auto& edge:out.事实->自有关系)
+            if(edge.类型==pure_layout_->类型.直接上位&&edge.目标==r.RC.值)
+                out.新直接边.push_back(edge);
+        out.状态=replay ? 二次关系数据状态::精确重放 : 二次关系数据状态::已变更;
+    }catch(const 二次关系失败&e){out.状态=dispatched ? 二次关系数据状态::发布未知 : e.状态;out.事实.reset();out.新直接边.clear();}catch(const 失败&e){out.状态=dispatched ? 二次关系数据状态::发布未知 : 映射二次失败(e.状态);out.事实.reset();}catch(const std::bad_alloc&){out.状态=dispatched ? 二次关系数据状态::发布未知 : 二次关系数据状态::资源失败;out.事实.reset();}catch(...){out.状态=dispatched ? 二次关系数据状态::发布未知 : 二次关系数据状态::内部不一致;out.事实.reset();}return out;
+}
+
+二次关系治理结果 概念树类数据服务::迁移二次关系生命周期(const 二次关系生命周期请求&r){
+    二次关系治理结果 out;bool dispatched=false;
+    try {
+        std::scoped_lock lock(mutex_);
+        const bool transition=
+            (r.预期==概念树生命周期状态::活跃&&r.目标==概念树生命周期状态::冷却)||
+            (r.预期==概念树生命周期状态::冷却&&
+                (r.目标==概念树生命周期状态::活跃||r.目标==概念树生命周期状态::退役))||
+            (r.预期==概念树生命周期状态::退役&&r.目标==概念树生命周期状态::活跃);
+        if(!secondary_relation_layout_||r.版本!=1||r.写入头.合同版本!=1||
+           !r.写入头.期望事实代次||!有效(r.写入头.幂等身份)||
+           !有效(r.RC.值)||!有效(r.治理依据)||!transition||!二次预算完整(r.预算))
+            throw 二次关系失败{二次关系数据状态::入口拒绝};
+        const auto g=当前代次();out.Gread=g;
+        const auto first=port_.读取首次写入材料(
+            {L1所有者范围首次写入读取合同版本,r.写入头.幂等身份});
+        const bool replay=first.状态==L1所有者范围读取状态::成功;
+        if(replay&&!二次首次发布已确认(first))
+            throw 二次关系失败{二次关系数据状态::发布未知};
+        if(!replay&&first.状态!=L1所有者范围读取状态::未找到)
+            throw 二次关系失败{first.状态==L1所有者范围读取状态::资源失败 ?
+                二次关系数据状态::资源失败 : 二次关系数据状态::内部不一致};
+        if(!replay&&g!=r.写入头.期望事实代次)
+            throw 二次关系失败{二次关系数据状态::事实代次漂移};
+        const auto h=r.写入头.期望事实代次;
+        if(!二次计量单节点读取(out.用量,r.预算))
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        核验外部节点(r.治理依据,g,h);
+        std::vector<概念树概念身份> path{r.RC};
+        const auto before=读取二次关系内部(r.RC,g,h,r.预算,out.用量,path);
+        if(before.治理状态!=r.预期)
+            throw 二次关系失败{二次关系数据状态::引用冲突};
+        const auto life=std::find_if(before.自有值.begin(),before.自有值.end(),
+            [&](const auto& value){return value.所属节点==r.RC.值&&
+                value.属性类型==pure_layout_->类型.生命周期;});
+        if(life==before.自有值.end())
+            throw 二次关系失败{二次关系数据状态::内部不一致};
+        L1所有者范围写集请求 writeSet{
+            L1所有者范围CRUD合同版本,h,r.写入头.幂等身份};
+        writeSet.退出事实.push_back(life->编码);
+        const Key value{0x82001};
+        writeSet.值.push_back({value,Ref{r.RC.值},Ref{pure_layout_->类型.生命周期},
+            std::int64_t{static_cast<std::uint8_t>(r.目标)},Ref{r.RC.值}});
+        writeSet.属性槽变更.push_back(
+            {Ref{r.RC.值},Ref{pure_layout_->类型.生命周期},value});
+        二次规范化写集(writeSet);
+        if(!二次计量首次写集(writeSet,out.用量,r.预算))
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        if(replay&&*first.首次规范化写集!=writeSet)
+            throw 二次关系失败{二次关系数据状态::幂等冲突};
+        dispatched=true;
+        const auto saved=port_.提交所有者范围中性写集(writeSet);
+        if(!二次提交状态符合(saved,replay))
+            throw 二次关系失败{映射二次写入(saved.状态)};
+        const auto& published=replay ? *first.首次写入结果 : saved;
+        out.首次H=published.事实代次;
+        out.正式回执=二次见证(published,replay);
+        out.Gread=当前代次();out.H=published.事实代次;
+        std::vector<概念树概念身份> readPath{r.RC};
+        out.事实=读取二次关系内部(
+            r.RC,out.Gread,published.事实代次,r.预算,out.用量,readPath);
+        if(out.事实->治理状态!=r.目标)
+            throw 二次关系失败{二次关系数据状态::内部不一致};
+        out.已退出事实={life->编码};
+        out.状态=replay ? 二次关系数据状态::精确重放 : 二次关系数据状态::已变更;
+    }catch(const 二次关系失败&e){out.状态=dispatched ? 二次关系数据状态::发布未知 : e.状态;out.事实.reset();out.已退出事实.clear();}catch(const 失败&e){out.状态=dispatched ? 二次关系数据状态::发布未知 : 映射二次失败(e.状态);out.事实.reset();}catch(const std::bad_alloc&){out.状态=dispatched ? 二次关系数据状态::发布未知 : 二次关系数据状态::资源失败;out.事实.reset();}catch(...){out.状态=dispatched ? 二次关系数据状态::发布未知 : 二次关系数据状态::内部不一致;out.事实.reset();}return out;
+}
+
+二次关系治理结果 概念树类数据服务::释放二次关系形成来源(const 二次关系来源释放请求&r){
+    二次关系治理结果 out;bool dispatched=false;
+    try {
+        std::scoped_lock lock(mutex_);
+        if(!secondary_relation_layout_||r.版本!=1||r.写入头.合同版本!=1||
+           !r.写入头.期望事实代次||!有效(r.写入头.幂等身份)||
+           !有效(r.RC.值)||r.预期来源.empty()||!二次预算完整(r.预算))
+            throw 二次关系失败{二次关系数据状态::入口拒绝};
+        const auto g=当前代次();out.Gread=g;
+        const auto first=port_.读取首次写入材料(
+            {L1所有者范围首次写入读取合同版本,r.写入头.幂等身份});
+        const bool replay=first.状态==L1所有者范围读取状态::成功;
+        if(replay&&!二次首次发布已确认(first))
+            throw 二次关系失败{二次关系数据状态::发布未知};
+        if(!replay&&first.状态!=L1所有者范围读取状态::未找到)
+            throw 二次关系失败{first.状态==L1所有者范围读取状态::资源失败 ?
+                二次关系数据状态::资源失败 : 二次关系数据状态::内部不一致};
+        if(!replay&&g!=r.写入头.期望事实代次)
+            throw 二次关系失败{二次关系数据状态::事实代次漂移};
+        const auto h=r.写入头.期望事实代次;
+        const auto currentBudget=二次子读取剩余预算(
+            r.预算,out.用量,二次子读取类别::来源);
+        if(!currentBudget)
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        const auto current=读取二次关系来源({1,{1,g,h},r.RC,*currentBudget});
+        if(!二次合并用量(out.用量,current.用量,r.预算))
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        if(!current.成功())throw 二次关系失败{current.状态};
+        auto expected=r.预期来源;
+        const auto byId=[](const auto&a,const auto&b){return a.记录.值<b.记录.值;};
+        std::sort(expected.begin(),expected.end(),byId);
+        if(std::adjacent_find(expected.begin(),expected.end(),
+            [](const auto&a,const auto&b){return a.记录==b.记录;})!=expected.end())
+            throw 二次关系失败{二次关系数据状态::引用冲突};
+        for(const auto& item:expected) {
+            const auto found=std::find_if(current.来源组.begin(),current.来源组.end(),
+                [&](const auto& currentItem) {
+                    if(currentItem.记录!=item.记录||
+                       currentItem.成员关系!=item.成员关系||
+                       currentItem.目标关系!=item.目标关系||
+                       currentItem.截止值!=item.截止值||
+                       currentItem.RC!=item.RC||currentItem.来源!=item.来源||
+                       currentItem.生命周期.创建事实代次!=
+                           item.生命周期.创建事实代次)
+                        return false;
+                    if(currentItem.生命周期.退出事实代次==
+                       item.生命周期.退出事实代次)
+                        return true;
+                    return replay&&!item.生命周期.退出事实代次&&
+                        currentItem.生命周期.退出事实代次==
+                            first.首次写入结果->事实代次;
+                });
+            if(found==current.来源组.end())
+                throw 二次关系失败{二次关系数据状态::引用冲突};
+        }
+        L1所有者范围写集请求 writeSet{
+            L1所有者范围CRUD合同版本,h,r.写入头.幂等身份};
+        for(const auto& item:expected)
+            writeSet.退出事实.insert(writeSet.退出事实.end(),
+                {item.记录,item.成员关系,item.目标关系,item.截止值});
+        std::sort(writeSet.退出事实.begin(),writeSet.退出事实.end(),编码小于);
+        writeSet.退出事实.erase(
+            std::unique(writeSet.退出事实.begin(),writeSet.退出事实.end()),
+            writeSet.退出事实.end());
+        二次规范化写集(writeSet);
+        if(!二次计量首次写集(writeSet,out.用量,r.预算))
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        if(replay&&*first.首次规范化写集!=writeSet)
+            throw 二次关系失败{二次关系数据状态::幂等冲突};
+        dispatched=true;
+        const auto saved=port_.提交所有者范围中性写集(writeSet);
+        if(!二次提交状态符合(saved,replay))
+            throw 二次关系失败{映射二次写入(saved.状态)};
+        const auto& published=replay ? *first.首次写入结果 : saved;
+        out.首次H=published.事实代次;
+        out.正式回执=二次见证(published,replay);
+        out.Gread=当前代次();out.H=published.事实代次;
+        std::vector<概念树概念身份> readPath{r.RC};
+        out.事实=读取二次关系内部(
+            r.RC,out.Gread,published.事实代次,r.预算,out.用量,readPath);
+        out.已退出事实=writeSet.退出事实;
+        out.状态=replay ? 二次关系数据状态::精确重放 : 二次关系数据状态::已变更;
+    }catch(const 二次关系失败&e){out.状态=dispatched ? 二次关系数据状态::发布未知 : e.状态;out.事实.reset();out.已退出事实.clear();}catch(const 失败&e){out.状态=dispatched ? 二次关系数据状态::发布未知 : 映射二次失败(e.状态);out.事实.reset();}catch(const std::bad_alloc&){out.状态=dispatched ? 二次关系数据状态::发布未知 : 二次关系数据状态::资源失败;out.事实.reset();}catch(...){out.状态=dispatched ? 二次关系数据状态::发布未知 : 二次关系数据状态::内部不一致;out.事实.reset();}return out;
+}
+
+二次关系治理结果 概念树类数据服务::退出二次关系概念(const 二次关系退出请求&r){
+    二次关系治理结果 out;bool dispatched=false;
+    try {
+        std::scoped_lock lock(mutex_);
+        if(!secondary_relation_layout_||r.版本!=1||r.写入头.合同版本!=1||
+           !r.写入头.期望事实代次||!有效(r.写入头.幂等身份)||
+           !有效(r.RC.值)||!二次预算完整(r.预算))
+            throw 二次关系失败{二次关系数据状态::入口拒绝};
+        const auto g=当前代次();out.Gread=g;
+        const auto first=port_.读取首次写入材料(
+            {L1所有者范围首次写入读取合同版本,r.写入头.幂等身份});
+        const bool replay=first.状态==L1所有者范围读取状态::成功;
+        if(replay&&!二次首次发布已确认(first))
+            throw 二次关系失败{二次关系数据状态::发布未知};
+        if(!replay&&first.状态!=L1所有者范围读取状态::未找到)
+            throw 二次关系失败{first.状态==L1所有者范围读取状态::资源失败 ?
+                二次关系数据状态::资源失败 : 二次关系数据状态::内部不一致};
+        if(!replay&&g!=r.写入头.期望事实代次)
+            throw 二次关系失败{二次关系数据状态::事实代次漂移};
+        const auto h=r.写入头.期望事实代次;
+        std::vector<概念树概念身份> path{r.RC};
+        auto before=读取二次关系内部(r.RC,g,h,r.预算,out.用量,path);
+        if(before.治理状态!=概念树生命周期状态::退役)
+            throw 二次关系失败{二次关系数据状态::引用冲突};
+        const auto sourceBudget=二次子读取剩余预算(
+            r.预算,out.用量,二次子读取类别::来源);
+        if(!sourceBudget)
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        const auto sources=读取二次关系来源({1,{1,g,h},r.RC,*sourceBudget});
+        if(!二次合并用量(out.用量,sources.用量,r.预算))
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        if(!sources.成功())throw 二次关系失败{sources.状态};
+        if(!sources.来源组.empty())throw 二次关系失败{二次关系数据状态::引用冲突};
+        const auto useBudget=二次子读取剩余预算(
+            r.预算,out.用量,二次子读取类别::用途);
+        if(!useBudget)
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        const auto uses=读取二次关系用途({1,{1,g,h},r.RC,*useBudget});
+        if(!二次合并用量(out.用量,uses.用量,r.预算))
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        if(!uses.成功())throw 二次关系失败{uses.状态};
+        const auto graphBudget=二次子读取剩余预算(
+            r.预算,out.用量,二次子读取类别::图);
+        if(!graphBudget)
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        const auto graph=读取二次关系概念图({1,{1,g,h},*graphBudget});
+        if(!二次合并用量(out.用量,graph.用量,r.预算))
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        if(!graph.成功())throw 二次关系失败{graph.状态};
+        for(const auto& fact:graph.RC组)
+            if(fact.身份!=r.RC)
+                for(const auto& reference:fact.定义引用)
+                    if(reference.种类==二次关系引用种类::子RC&&
+                       std::get<概念树概念身份>(reference.目标)==r.RC)
+                        throw 二次关系失败{二次关系数据状态::引用冲突};
+
+        L1所有者范围写集请求 writeSet{
+            L1所有者范围CRUD合同版本,h,r.写入头.幂等身份};
+        std::vector<稳定编码> protectedNodes;
+        for(const auto& node:before.自有节点) {
+            writeSet.退出事实.push_back(node.编码);
+            protectedNodes.push_back(node.编码);
+        }
+        for(const auto& edge:before.自有关系)writeSet.退出事实.push_back(edge.编码);
+        for(const auto& value:before.自有值)writeSet.退出事实.push_back(value.编码);
+        if(!uses.用途组.empty()&&(out.用量.值数>=r.预算.最大值数||
+           out.用量.材料数>=r.预算.最大材料数))
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        概念事实读取会话_v1 cleanupSession(port_.所有者身份(),g,h,
+            {std::max<std::uint64_t>(1,r.预算.最大节点数-out.用量.节点数),
+             std::max<std::uint64_t>(1,r.预算.最大关系数-out.用量.关系数),
+             std::max<std::uint64_t>(1,r.预算.最大值数-out.用量.值数),
+             std::max<std::uint64_t>(1,r.预算.最大材料数-out.用量.材料数)},
+            std::max<std::uint64_t>(1,r.预算.最大概念数-out.用量.概念数));
+        有界事实读取用量_B1 cleanupMerged{};
+        const auto syncCleanup=[&]() {const auto&x=cleanupSession.用量_;try{二次计量增加(out.用量.节点数,x.节点数-cleanupMerged.节点数,r.预算.最大节点数);二次计量增加(out.用量.关系数,x.关系数-cleanupMerged.关系数,r.预算.最大关系数);二次计量增加(out.用量.值数,x.值数-cleanupMerged.值数,r.预算.最大值数);二次计量增加(out.用量.材料数,x.材料总数-cleanupMerged.材料总数,r.预算.最大材料数);}catch(二次关系数据状态 s){throw 二次关系失败{s};}cleanupMerged=x;};
+        for(const auto& use:uses.用途组) {
+            protectedNodes.push_back(use.记录);
+            writeSet.退出事实.insert(writeSet.退出事实.end(),
+                {use.记录,use.成员关系,use.概念关系,use.依据关系});
+            const auto values=属性(use.记录,g,h,&cleanupSession);syncCleanup();
+            for(const auto& value:values)writeSet.退出事实.push_back(value.编码);
+        }
+
+        std::vector<概念树概念身份> parents;
+        for(const auto& edge:before.自有关系)
+            if(edge.类型==pure_layout_->类型.直接上位&&edge.目标==r.RC.值)
+                parents.emplace_back(edge.源);
+        std::sort(parents.begin(),parents.end(),身份小于);
+        std::set<std::pair<std::uint64_t,std::uint64_t>> existingEdges;
+        for(const auto& edge:graph.直接边)
+            existingEdges.emplace(edge.源.值,edge.目标.值);
+        std::set<std::pair<std::uint64_t,std::uint64_t>> replacements;
+        for(const auto& edge:graph.直接边) {
+            if(edge.源!=r.RC.值)continue;
+            writeSet.退出事实.push_back(edge.编码);
+            for(const auto parent:parents) {
+                const auto pair=std::pair{parent.值.值,edge.目标.值};
+                if(parent.值!=edge.目标&&!existingEdges.contains(pair))
+                    replacements.insert(pair);
+            }
+        }
+        std::uint32_t edgeKey=0x91001;
+        for(const auto& [parent,child]:replacements)
+            writeSet.关系.push_back({Key{edgeKey++},Ref{稳定编码{parent}},
+                Ref{稳定编码{child}},Ref{pure_layout_->类型.直接上位},1});
+        std::sort(writeSet.退出事实.begin(),writeSet.退出事实.end(),编码小于);
+        writeSet.退出事实.erase(
+            std::unique(writeSet.退出事实.begin(),writeSet.退出事实.end()),
+            writeSet.退出事实.end());
+
+        if(!replay) {
+            std::sort(protectedNodes.begin(),protectedNodes.end(),编码小于);
+            protectedNodes.erase(std::unique(protectedNodes.begin(),protectedNodes.end()),
+                protectedNodes.end());
+            std::set<std::uint64_t> allowed;
+            for(const auto id:writeSet.退出事实)allowed.insert(id.值);
+            const auto mapReferenceFailure=[](L1节点当前引用读取状态 state) {
+                switch(state) {
+                case L1节点当前引用读取状态::事实代次漂移:
+                    return 二次关系数据状态::事实代次漂移;
+                case L1节点当前引用读取状态::数量预算不足:
+                    return 二次关系数据状态::预算不足;
+                case L1节点当前引用读取状态::资源失败:
+                    return 二次关系数据状态::资源失败;
+                case L1节点当前引用读取状态::未找到:
+                case L1节点当前引用读取状态::已退出:
+                    return 二次关系数据状态::引用冲突;
+                default:return 二次关系数据状态::内部不一致;
+                }
+            };
+            std::set<std::uint64_t> seenReferences;
+            for(const auto node:protectedNodes) {
+                const auto remaining=r.预算.最大材料数-out.用量.材料数;
+                if(!remaining)throw 二次关系失败{二次关系数据状态::预算不足};
+                const L1节点当前引用读取请求 request{
+                    L1节点当前引用读取合同版本,node,g,remaining};
+                const auto read=l1_.读取节点全部当前引用(request);
+                if(!read.成功(request))
+                    throw 二次关系失败{mapReferenceFailure(read.状态)};
+                for(const auto& reference:read.引用) {
+                    const auto id=std::visit([](const auto& value){return value.编码;},reference);
+                    if(!seenReferences.insert(id.值).second)continue;
+                    const bool counted=std::visit([&](const auto& fact){
+                        using T=std::decay_t<decltype(fact)>;
+                        if constexpr(std::is_same_v<T,N>)
+                            return 二次安全计量(out.用量.节点数,1,r.预算.最大节点数);
+                        else if constexpr(std::is_same_v<T,E>)
+                            return 二次安全计量(out.用量.关系数,1,r.预算.最大关系数);
+                        else
+                            return 二次安全计量(out.用量.值数,1,r.预算.最大值数);
+                    },reference);
+                    if(!counted)throw 二次关系失败{二次关系数据状态::预算不足};
+                    if(!二次安全计量(out.用量.材料数,1,r.预算.最大材料数))
+                        throw 二次关系失败{二次关系数据状态::预算不足};
+                    if(!allowed.contains(id.值))
+                        throw 二次关系失败{二次关系数据状态::引用冲突};
+                }
+            }
+        }
+
+        二次规范化写集(writeSet);
+        if(!二次计量首次写集(writeSet,out.用量,r.预算))
+            throw 二次关系失败{二次关系数据状态::预算不足};
+        if(replay&&*first.首次规范化写集!=writeSet)
+            throw 二次关系失败{二次关系数据状态::幂等冲突};
+        dispatched=true;
+        const auto saved=port_.提交所有者范围中性写集(writeSet);
+        if(!二次提交状态符合(saved,replay))
+            throw 二次关系失败{映射二次写入(saved.状态)};
+        const auto& published=replay ? *first.首次写入结果 : saved;
+        out.首次H=published.事实代次;
+        out.正式回执=二次见证(published,replay);
+        out.Gread=当前代次();out.H=published.事实代次-1;
+        before.Gread=out.Gread;before.H=out.H;out.事实=std::move(before);
+        out.已退出事实=writeSet.退出事实;
+        for(const auto&[key,id]:published.新编码映射) {
+            const auto raw=原始事实(id,out.Gread);
+            const bool counted=std::visit([&](const auto& fact){
+                using T=std::decay_t<decltype(fact)>;
+                if constexpr(std::is_same_v<T,N>)
+                    return 二次安全计量(out.用量.节点数,1,r.预算.最大节点数);
+                else if constexpr(std::is_same_v<T,E>)
+                    return 二次安全计量(out.用量.关系数,1,r.预算.最大关系数);
+                else
+                    return 二次安全计量(out.用量.值数,1,r.预算.最大值数);
+            },raw);
+            if(!counted||!二次安全计量(out.用量.材料数,1,r.预算.最大材料数))
+                throw 二次关系失败{二次关系数据状态::预算不足};
+            if(const auto* edge=std::get_if<E>(&raw)) {
+                out.新直接边.push_back({edge->编码,edge->源节点,edge->目标节点,
+                    edge->关系类型节点,edge->角色或顺序,投影纯生命(*edge,out.Gread)});
+            }
+        }
+        std::sort(out.新直接边.begin(),out.新直接边.end(),
+            [](const auto&a,const auto&b){return a.编码.值<b.编码.值;});
+        out.状态=replay ? 二次关系数据状态::精确重放 : 二次关系数据状态::已变更;
+    }catch(const 二次关系失败&e){out.状态=dispatched ? 二次关系数据状态::发布未知 : e.状态;out.事实.reset();out.已退出事实.clear();out.新直接边.clear();}catch(const 失败&e){out.状态=dispatched ? 二次关系数据状态::发布未知 : 映射二次失败(e.状态);out.事实.reset();}catch(const std::bad_alloc&){out.状态=dispatched ? 二次关系数据状态::发布未知 : 二次关系数据状态::资源失败;out.事实.reset();}catch(...){out.状态=dispatched ? 二次关系数据状态::发布未知 : 二次关系数据状态::内部不一致;out.事实.reset();}return out;
+}
+
+二次关系约束读取结果 概念树类数据服务::读取二次关系约束定义(
+    const 二次关系约束读取请求& r) const {
+    const 有界事实读取预算_B1 physical{r.预算.最大节点数,r.预算.最大关系数,
+        r.预算.最大值数,r.预算.最大材料数};
+    概念事实读取会话_v1 session(port_.所有者身份(),r.读取头.Gread,
+        r.读取头.H,physical,r.预算.最大概念数);
+    世界结构预算_B1 featureBudget{r.预算.最大节点数,r.预算.最大关系数,
+        r.预算.最大值数,r.预算.最大材料数,r.预算.最大材料数,
+        r.预算.最大候选数,r.预算.最大材料数,r.预算.最大材料数,
+        r.预算.最大原子数};
+    特征值域事实读取会话_v1 featureSession(featureBudget);
+    return 读取二次关系约束定义共享(r,session,&featureSession);
+}
+
+二次关系约束读取结果 概念树类数据服务::读取二次关系约束定义共享(
+    const 二次关系约束读取请求& r, 概念事实读取会话_v1& session,
+    特征值域事实读取会话_v1* featureSession) const {
+    二次关系约束读取结果 out;out.Gread=r.读取头.Gread;out.H=r.读取头.H;
+    if(!secondary_relation_layout_){out.状态=二次关系数据状态::格式不支持;return out;}
+    if(r.版本!=1||r.读取头.合同版本!=1||!r.读取头.Gread||!r.读取头.H||r.读取头.H>r.读取头.Gread||!有效(r.概念.值)||!二次预算完整(r.预算))return out;
+    const 有界事实读取预算_B1 physical{r.预算.最大节点数,r.预算.最大关系数,
+        r.预算.最大值数,r.预算.最大材料数};
+    if(session.所有者_!=port_.所有者身份()||session.Gread_!=r.读取头.Gread||
+       session.H_!=r.读取头.H||session.预算_.最大节点数<session.用量_.节点数||
+       session.预算_.最大关系数<session.用量_.关系数||
+       session.预算_.最大值数<session.用量_.值数||
+       session.预算_.最大材料总数<session.用量_.材料总数||
+       session.最大概念数_<session.已完整概念_.size())return out;
+    世界结构预算_B1 featureBudget{r.预算.最大节点数,r.预算.最大关系数,
+        r.预算.最大值数,r.预算.最大材料数,r.预算.最大材料数,
+        r.预算.最大候选数,r.预算.最大材料数,r.预算.最大材料数,
+        r.预算.最大原子数};
+    特征值域事实读取会话_v1 localFeatureSession(featureBudget);
+    if(!featureSession)featureSession=&localFeatureSession;
+    struct 二次用量回填 final {
+        二次关系读取用量& 目标;
+        const 有界事实读取用量_B1& 物理;
+        const 有界准确特征读取用量& 特征物理;
+        const std::set<std::uint64_t>& 概念组;
+        ~二次用量回填() {
+            目标.节点数=物理.节点数+特征物理.节点数;
+            目标.关系数=物理.关系数+特征物理.关系数;
+            目标.值数=物理.值数+特征物理.属性值数;
+            目标.材料数=物理.材料总数+特征物理.材料总数;
+            目标.概念数=static_cast<std::uint64_t>(概念组.size());
+        }
+    } usageGuard{out.用量,session.用量_,featureSession->计量_.用量,
+        session.已完整概念_};
+    try {
+    守卫代次(r.读取头.Gread);
+    const auto& two=*two_group_definition_layout_;
+    const auto twoEdges=关系(r.概念.值,two.类型.两组定义成员,false,
+        r.读取头.Gread,r.读取头.H,2,&session);
+    if(!twoEdges.empty()) {
+        if(twoEdges.size()!=1||twoEdges.front().角色或顺序!=1){out.状态=二次关系数据状态::内部不一致;return out;}
+        特征值域比较数据服务 comparison(*this,features_,values_);
+        const 概念树预算 base{r.预算.最大概念数,r.预算.最大关系数,
+            r.预算.最大来源数,r.预算.最大材料数,r.预算.最大材料数,
+            r.预算.最大材料数,r.预算.最大材料数,r.预算.最大候选数};
+        const 存在概念两组预算_v3 eb{base,r.预算.最大材料数,r.预算.最大概念数,
+            r.预算.最大候选数,r.预算.最大关系数,r.预算.最大首次材料数};
+        世界结构预算_B1 wb{r.预算.最大节点数,r.预算.最大关系数,r.预算.最大值数,
+            r.预算.最大材料数,r.预算.最大材料数,r.预算.最大候选数,
+            r.预算.最大材料数,r.预算.最大材料数,r.预算.最大原子数};
+        const 特征值域比较预算_v1 cb{wb,base,physical,r.预算.最大原子数};
+        const auto ec=读取两组定义内部(r.概念,r.读取头.Gread,r.读取头.H,
+            eb,comparison,cb,&session,featureSession);
+        out.定义=ec;out.状态=二次关系数据状态::已读取;
+        守卫代次(r.读取头.Gread);return out;
+    }
+    概念树预算 b{r.预算.最大概念数,r.预算.最大关系数,r.预算.最大来源数,
+        r.预算.最大材料数,r.预算.最大材料数,r.预算.最大材料数,
+        r.预算.最大材料数,r.预算.最大候选数};
+    const auto pure=读取纯概念内部(r.概念,r.读取头.Gread,r.读取头.H,b,
+        &session,featureSession);
+    {
+        const bool fc=std::holds_alternative<纯I64特征概念定义>(pure.定义);
+        const auto* ec=std::get_if<通用存在概念定义>(&pure.定义);
+        if(fc||(ec&&ec->规则版本==1&&ec->规则==通用存在定义规则::不预设特征&&
+                pure.类别==相关概念类别::存在&&pure.直接上位.empty())) {
+            if(pure.治理状态==概念树生命周期状态::退役){out.状态=二次关系数据状态::退役命中;return out;}
+            out.定义=pure;out.状态=二次关系数据状态::已读取;
+            守卫代次(r.读取头.Gread);return out;
+        }
+        out.状态=二次关系数据状态::规则不支持;return out;
+    }
+    } catch(const 纯失败&e){switch(e.状态){case 纯概念状态::未找到:out.状态=二次关系数据状态::未找到;break;case 纯概念状态::目标已退出:out.状态=二次关系数据状态::目标已退出;break;case 纯概念状态::概念已退役:out.状态=二次关系数据状态::退役命中;break;case 纯概念状态::事实代次漂移:out.状态=二次关系数据状态::事实代次漂移;break;case 纯概念状态::数量预算不足:out.状态=二次关系数据状态::预算不足;break;case 纯概念状态::历史材料不可用:out.状态=二次关系数据状态::历史材料不可用;break;case 纯概念状态::资源失败:out.状态=二次关系数据状态::资源失败;break;default:out.状态=二次关系数据状态::规则不支持;break;}}
+      catch(const 二次关系失败&e){out.状态=e.状态;}catch(const 失败&e){out.状态=映射二次失败(e.状态);}catch(const std::bad_alloc&){out.状态=二次关系数据状态::资源失败;}catch(...){out.状态=二次关系数据状态::内部不一致;}
+    out.定义.reset();return out;
 }
 
 } // namespace 海中鱼巣

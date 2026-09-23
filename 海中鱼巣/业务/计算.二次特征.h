@@ -261,8 +261,9 @@ public:
                 const auto key=std::make_pair(ft.编码.值,static_cast<unsigned>(purpose));
                 if(current.contains(key))return current.at(key);
                 const auto limit=remaining.最大读取材料数;要求(limit,S::预算不足);
-                auto value=feature_.读取当前I64比较绑定({1,r.G,ft,purpose,limit,limit});
-                take(remaining.最大读取材料数,value.当前读取用量.材料总数);
+                auto value=feature_.读取当前I64比较绑定(
+                    {1,r.G,ft,purpose,limit,{limit,limit,limit,limit}});
+                take(remaining.最大读取材料数,value.读取用量.材料总数);
                 if(!value.成功()) {
                     using K=特征I64比较绑定状态;
                     switch(value.状态) {

@@ -13,6 +13,7 @@ enum class 特征值域关系_v1 : std::uint8_t { 相等 = 1, 左包含右, 右�
 struct 特征值域比较预算_v1 final {
     世界结构预算_B1 值与材料预算;
     概念树预算 概念预算;
+    有界事实读取预算_B1 概念读取预算;
     std::uint64_t 最大域项数 = 0;
 };
 struct 特征值域读取请求_v1 final {
@@ -36,18 +37,21 @@ struct 特征值域事实_v1 final {
 struct 特征值域读取结果_v1 final {
     std::uint32_t 版本 = 1; 特征值域比较状态_v1 状态 = 特征值域比较状态_v1::入口拒绝;
     std::uint64_t Gread = 0, H = 0; std::optional<特征值域事实_v1> 域;
+    有界事实读取用量_B1 概念读取用量;
     bool 成功(const 特征值域读取请求_v1&) const noexcept;
 };
 struct 特征值域关系结果_v1 final {
     std::uint32_t 版本 = 1; 特征值域比较状态_v1 状态 = 特征值域比较状态_v1::入口拒绝;
     std::uint64_t Gread = 0, H = 0; std::optional<特征值域关系_v1> 关系;
     std::optional<特征值域事实_v1> 左域, 右域;
+    有界事实读取用量_B1 概念读取用量;
     bool 成功(const 特征值域关系核验请求_v1&) const noexcept;
 };
 struct 实例值域命中结果_v1 final {
     std::uint32_t 版本 = 1; 特征值域比较状态_v1 状态 = 特征值域比较状态_v1::入口拒绝;
     std::uint64_t Gread = 0, H = 0; std::optional<特征值域关系_v1> 关系;
     std::optional<特征值域事实_v1> 域;
+    有界事实读取用量_B1 概念读取用量;
     bool 成功(const 实例值域命中核验请求_v1&) const noexcept;
 };
 
@@ -62,6 +66,12 @@ public:
     特征值域关系结果_v1 核验特征值域关系(const 特征值域关系核验请求_v1&) const;
     实例值域命中结果_v1 核验实例值域命中(const 实例值域命中核验请求_v1&) const;
 private:
+    friend class 概念树类数据服务;
+    特征值域读取结果_v1 读取特征值域共享(
+        const 特征值域读取请求_v1&, 概念事实读取会话_v1&) const;
+    特征值域读取结果_v1 读取特征值域共享(
+        const 特征值域读取请求_v1&, 概念事实读取会话_v1&,
+        特征值域事实读取会话_v1&) const;
     // 待实现：I64组值域专用适配器；只能返回未实现或规则缺失，零写入。
     特征值域读取结果_v1 读取I64组值域待实现(const 特征值域读取请求_v1&, const 特征概念值域基础事实_v1&) const;
     // 待实现：U64组值域专用适配器；只能返回未实现或规则缺失，零写入。

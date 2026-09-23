@@ -43,6 +43,20 @@ struct 世界结构用量_B1 final {
                          const 世界结构用量_B1 &) = default;
 };
 
+// 跨结构只读 provider 共用的物理事实预算。四个字段都是硬上限，
+// 0 不表示无限；材料总数由节点、关系和值三类实际首次读回共同消耗。
+struct 有界事实读取预算_B1 final {
+  std::uint64_t 最大节点数{}, 最大关系数{}, 最大值数{}, 最大材料总数{};
+  friend bool operator==(const 有界事实读取预算_B1 &,
+                         const 有界事实读取预算_B1 &) = default;
+};
+
+struct 有界事实读取用量_B1 final {
+  std::uint64_t 节点数{}, 关系数{}, 值数{}, 材料总数{};
+  friend bool operator==(const 有界事实读取用量_B1 &,
+                         const 有界事实读取用量_B1 &) = default;
+};
+
 inline bool 世界结构预算有效(const 世界结构预算_B1 &b) noexcept {
   constexpr std::uint64_t normal = 1'048'576;
   return b.最大节点数 <= normal && b.最大关系数 <= normal &&

@@ -19,7 +19,11 @@
 
 
 #include "数据服务.特征值类.h"
+#include "合同.结构操作公共.h"
 namespace 海中鱼巣 {
+class 概念树类数据服务;
+class 特征值域比较数据服务;
+class 特征值域事实读取会话_v1;
 struct 特征信息身份 final {
     稳定编码 编码{};
     friend bool operator==(const 特征信息身份&, const 特征信息身份&) = default;
@@ -493,15 +497,17 @@ struct 特征I64比较绑定建立请求 final {
 };
 struct 特征I64比较绑定读取请求 final {
     std::uint32_t 版本=1; std::uint64_t Gread=0,H=0; 特征I64比较绑定身份 身份;
+    有界事实读取预算_B1 读取预算;
 };
 struct 特征I64当前比较绑定读取请求 final {
     std::uint32_t 版本=1; std::uint64_t Gread=0; 特征类型身份 输入FT;
     特征I64比较用途 用途=特征I64比较用途::识别区分;
-    std::uint64_t 最大扫描候选数量=0,最大读取材料数=0;
+    std::uint64_t 最大扫描候选数量=0;
+    有界事实读取预算_B1 读取预算;
     friend bool operator==(const 特征I64当前比较绑定读取请求&, const 特征I64当前比较绑定读取请求&) = default;
 };
 struct 特征I64当前比较绑定读取用量 final {
-    std::uint64_t 扫描候选数=0,匹配数量=0,关系数=0,材料总数=0;
+    std::uint64_t 扫描候选数=0,匹配数量=0;
 };
 struct 特征I64比较绑定退出请求 final {
     std::uint32_t 版本=1; std::uint64_t G=0;
@@ -520,25 +526,41 @@ struct 特征I64比较绑定结果 final {
     std::optional<L1所有者范围写入结果> 正式回执;
     std::optional<特征I64当前比较绑定读取请求> 当前读取原请求;
     特征I64当前比较绑定读取用量 当前读取用量;
+    有界事实读取用量_B1 读取用量;
     std::optional<特征I64比较绑定建立请求> 建立原请求;
     bool 成功() const noexcept {
         using O=特征I64比较绑定操作; using S=特征I64比较绑定状态;
         if (版本!=1 || !H || H>Gread || !事实 || (操作!=O::建立&&建立原请求)) return false;
+        const auto 用量和有效=[&]() noexcept {
+            if(读取用量.节点数>UINT64_MAX-读取用量.关系数)return false;
+            const auto 前两项=读取用量.节点数+读取用量.关系数;
+            return 前两项<=UINT64_MAX-读取用量.值数
+                &&读取用量.材料总数==前两项+读取用量.值数;
+        };
         if (操作==O::当前读取) {
             if (!当前读取原请求) return false;
             const auto& r=*当前读取原请求; const auto& u=当前读取用量;
+            const auto& b=r.读取预算;
             return r.版本==1 && r.Gread==Gread && H==Gread && 有效(r.输入FT)
                 && static_cast<unsigned>(r.用途)>=1 && static_cast<unsigned>(r.用途)<=5
-                && r.最大扫描候选数量 && r.最大读取材料数
+                && r.最大扫描候选数量 && b.最大节点数 && b.最大关系数
+                && b.最大值数 && b.最大材料总数 && 用量和有效()
                 && u.扫描候选数>=u.匹配数量 && u.匹配数量==1 && u.扫描候选数<=r.最大扫描候选数量
-                && u.关系数 && u.关系数<=u.材料总数 && u.材料总数<=r.最大读取材料数
+                && 读取用量.节点数<=b.最大节点数
+                && 读取用量.关系数<=b.最大关系数
+                && 读取用量.值数<=b.最大值数
+                && 读取用量.材料总数>0
+                && 读取用量.材料总数<=b.最大材料总数
                 && 状态==S::已读取 && !首次发布H && !正式回执
                 && I64绑定事实完整(*事实,H) && 事实->定义.输入FT==r.输入FT && 事实->定义.用途==r.用途;
         }
         if (当前读取原请求 || 当前读取用量.扫描候选数 || 当前读取用量.匹配数量
-            || 当前读取用量.关系数 || 当前读取用量.材料总数) return false;
+            || !用量和有效()) return false;
         if (操作==O::身份读取)
-            return 状态==S::已读取 && !首次发布H && !正式回执 && I64绑定事实完整(*事实,H);
+            return 状态==S::已读取 && !首次发布H && !正式回执
+                && 读取用量.材料总数>0 && I64绑定事实完整(*事实,H);
+        if (读取用量.材料总数 || 读取用量.节点数
+            || 读取用量.关系数 || 读取用量.值数) return false;
         if (!首次发布H || !*首次发布H || !正式回执 || *首次发布H!=H
             || 发布确定性!=特征类标量发布确定性::确认已发布 || 正式回执->事实代次!=H
             || (正式回执->状态!=L1所有者范围写入状态::成功 && 正式回执->状态!=L1所有者范围写入状态::精确重复)) return false;
@@ -895,6 +917,9 @@ struct 特征类标量派生写结果 final {
 };
 // 定义和准确内容使用两个既有技术分区；本类不保存名称、观察或当前采用。
 class 特征类数据服务 final : public 原子I64特征内容参与者 {
+    friend class 概念树类数据服务;
+    friend class 特征值域比较数据服务;
+    friend class 特征值域事实读取会话_v1;
     template<class T> using R = 特征数据结果<T>;
     using S = 特征数据错误;
     using N = L1所有者范围节点事实;
@@ -920,6 +945,16 @@ class 特征类数据服务 final : public 原子I64特征内容参与者 {
             ++n; ++用量.材料总数; 已读.emplace(id,raw);
         }
     };
+    static bool 绑定读取预算有效(const 有界事实读取预算_B1& b) noexcept {
+        return b.最大节点数 && b.最大关系数 && b.最大值数 && b.最大材料总数;
+    }
+    static 有界准确特征读取预算 转换绑定读取预算(
+        const 有界事实读取预算_B1& b) noexcept {
+        return {b.最大节点数,b.最大关系数,b.最大值数,b.最大材料总数};
+    }
+    static 有界事实读取用量_B1 转换绑定读取用量(const 读取计量& m) noexcept {
+        return {m.用量.节点数,m.用量.关系数,m.用量.属性值数,m.用量.材料总数};
+    }
     enum class 分区 : std::uint8_t { 定义, 信息 };
     enum 定义角色 : std::size_t {
         定义锚点, 定义归属, 类型规格属性, 规则误差属性, 外设来源关系, 单位关系,
@@ -1055,7 +1090,8 @@ private:
     struct 标量读取上下文;
     I64基础特征类型信息 读类型(特征类型身份, std::uint64_t, std::uint64_t,
         标量读取上下文* = nullptr, 读取计量* = nullptr) const;
-    特征规范I64域 读完整域(特征类型身份, std::uint64_t, std::uint64_t) const;
+    特征规范I64域 读完整域(特征类型身份, std::uint64_t, std::uint64_t,
+        读取计量* = nullptr) const;
     准确特征读取事实 读准确(特征信息身份, std::uint64_t, std::uint64_t, 标量读取上下文* = nullptr, 读取计量* = nullptr) const;
     特征域形成事实 形成I64特征域已持锁(const 准确特征读取请求&) const;
     std::int64_t 解析输入(const 特征准确值&, std::uint64_t, std::uint64_t,读取计量* = nullptr) const;
@@ -1292,13 +1328,13 @@ private:
     }
     特征I64比较绑定结果 读当前绑定(const 特征I64当前比较绑定读取请求& r) const {
         特征I64比较绑定结果 out;out.操作=特征I64比较绑定操作::当前读取;out.Gread=out.H=r.Gread;out.当前读取原请求=r;
-        读取计量 meter;meter.上限={UINT64_MAX,UINT64_MAX,UINT64_MAX,r.最大读取材料数};
-        auto sync=[&]{out.当前读取用量.关系数=meter.用量.关系数;out.当前读取用量.材料总数=meter.用量.材料总数;};
+        读取计量 meter;meter.上限=转换绑定读取预算(r.读取预算);
+        auto sync=[&]{out.读取用量=转换绑定读取用量(meter);};
         auto fail=[&](KS s){sync();out.状态=s;out.事实.reset();};
         try {
             const auto purpose=static_cast<unsigned>(r.用途);
             绑定要求(r.版本==1&&r.Gread&&有效(r.输入FT)&&purpose>=1&&purpose<=5
-                &&r.最大扫描候选数量&&r.最大读取材料数,KS::入口拒绝);
+                &&r.最大扫描候选数量&&绑定读取预算有效(r.读取预算),KS::入口拒绝);
             守卫(r.Gread);绑定就绪();
             const auto edges=关系(r.输入FT.编码,k_[I64比较绑定输入FT关系],true,r.Gread,r.Gread,分区::定义,&meter);
             std::set<稳定编码> scanned;
@@ -1359,11 +1395,19 @@ public:
     }
     特征I64比较绑定结果 读取I64比较绑定(const 特征I64比较绑定读取请求& r) const {
         特征I64比较绑定结果 out;out.Gread=r.Gread;out.H=r.H;
-        auto fail=[&](KS s){out.状态=s;out.事实.reset();};
+        读取计量 meter;
+        auto sync=[&]{out.读取用量=转换绑定读取用量(meter);};
+        auto fail=[&](KS s){sync();out.状态=s;out.事实.reset();};
         try {
             std::lock_guard<std::mutex> lock(mutex_);
-            截止有效(r.版本,r.Gread,r.H);要求(有效(r.身份),S::入口拒绝);守卫(r.Gread);
-            读取计量 meter;out.事实=读绑定(r.身份,r.Gread,r.H,meter);守卫(r.Gread);
+            截止有效(r.版本,r.Gread,r.H);
+            要求(有效(r.身份)&&绑定读取预算有效(r.读取预算),S::入口拒绝);
+            meter.上限=转换绑定读取预算(r.读取预算);守卫(r.Gread);
+            out.事实=读绑定(r.身份,r.Gread,r.H,meter);sync();守卫(r.Gread);
+            绑定要求(out.读取用量.节点数<=r.读取预算.最大节点数
+                &&out.读取用量.关系数<=r.读取预算.最大关系数
+                &&out.读取用量.值数<=r.读取预算.最大值数
+                &&out.读取用量.材料总数<=r.读取预算.最大材料总数);
             out.状态=KS::已读取;绑定要求(out.成功());
         } catch(const 绑定失败& e){fail(e.状态);}catch(S e){fail(绑定映射(e));}
         catch(const 标量失败& e){fail(绑定标量映射(e.状态));}
@@ -2091,5 +2135,22 @@ private:
     std::optional<待确认标量业务> scalar_pending_;
     std::optional<待确认I64绑定业务> binding_pending_;
     mutable std::mutex mutex_;
+};
+
+// 只在一次特征值域/概念递归读取内借用。构造和内部计量均不对业务调用者开放。
+class 特征值域事实读取会话_v1 final {
+    friend class 概念树类数据服务;
+    friend class 特征值域比较数据服务;
+
+    explicit 特征值域事实读取会话_v1(const 世界结构预算_B1& budget) {
+        std::uint64_t total=budget.最大节点数;
+        if(total>UINT64_MAX-budget.最大关系数) throw 特征数据错误::数量预算不足;
+        total+=budget.最大关系数;
+        if(total>UINT64_MAX-budget.最大值数) throw 特征数据错误::数量预算不足;
+        total+=budget.最大值数;
+        计量_.上限={budget.最大节点数,budget.最大关系数,budget.最大值数,total};
+    }
+
+    特征类数据服务::读取计量 计量_;
 };
 } // namespace 海中鱼巣

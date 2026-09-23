@@ -20,6 +20,7 @@
 #include <optional>
 #include <set>
 #include <stdexcept>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -27,11 +28,35 @@
 
 
 #include "合同.相关概念添加参与.h"
+#include "合同.二次关系概念.h"
 
 namespace 海中鱼巣 {
 
 class 特征值域比较数据服务;
 struct 特征值域比较预算_v1;
+
+class 概念事实读取会话_v1 final {
+    friend class 概念树类数据服务;
+    friend class 特征值域比较数据服务;
+
+    using 关系键 = std::tuple<std::uint64_t, std::uint64_t, bool>;
+
+    概念事实读取会话_v1(L1结构所有者身份 owner, std::uint64_t g,
+                          std::uint64_t h, 有界事实读取预算_B1 budget,
+                          std::uint64_t maxConcepts)
+        : 所有者_(owner), Gread_(g), H_(h), 预算_(budget),
+          最大概念数_(maxConcepts) {}
+
+    L1结构所有者身份 所有者_{};
+    std::uint64_t Gread_ = 0, H_ = 0;
+    有界事实读取预算_B1 预算_{};
+    有界事实读取用量_B1 用量_{};
+    std::uint64_t 最大概念数_ = 0;
+    std::set<std::uint64_t> 已完整概念_;
+    std::map<std::uint64_t, L1所有者范围节点事实> 节点缓存_;
+    std::map<关系键, std::vector<L1所有者范围关系事实>> 关系组缓存_;
+    std::map<std::uint64_t, std::vector<L1所有者范围值事实>> 属性值组缓存_;
+};
 
 enum class 概念树数据状态 : std::uint8_t {
     已创建 = 1,
@@ -116,6 +141,7 @@ struct 特征概念值域基础读取请求_v1 final {
     std::uint64_t Gread = 0, H = 0;
     概念树概念身份 FC;
     概念树预算 预算;
+    有界事实读取预算_B1 读取预算;
 };
 struct 特征概念值域基础事实_v1 final {
     概念树概念身份 FC;
@@ -130,12 +156,32 @@ struct 特征概念值域基础读取结果_v1 final {
     特征概念值域基础读取状态_v1 状态 = 特征概念值域基础读取状态_v1::入口拒绝;
     std::uint64_t Gread = 0, H = 0;
     std::optional<特征概念值域基础事实_v1> 事实;
+    有界事实读取用量_B1 读取用量;
     bool 成功(const 特征概念值域基础读取请求_v1&) const noexcept;
+};
+
+struct 二次关系约束读取请求 final {
+    std::uint32_t 版本 = 1;
+    概念树读取头 读取头;
+    概念树概念身份 概念;
+    二次关系预算 预算;
+    friend bool operator==(const 二次关系约束读取请求 &,
+                           const 二次关系约束读取请求 &) = default;
+};
+
+struct 二次关系约束读取结果 final {
+    std::uint32_t 版本 = 1;
+    二次关系数据状态 状态 = 二次关系数据状态::入口拒绝;
+    std::uint64_t Gread = 0, H = 0;
+    std::optional<std::variant<纯概念事实, 存在概念两组事实_v3>> 定义;
+    二次关系读取用量 用量;
+    bool 成功() const noexcept;
 };
 
 class 概念树类数据服务 final : public 相关概念添加参与者,
                               public 已发布概念引用参与者,
-                              public 原子I64特征概念参与者 {
+                              public 原子I64特征概念参与者,
+                              public 二次关系概念只读提供者 {
     using S = 概念树数据状态;
     using N = L1所有者范围节点事实;
     using E = L1所有者范围关系事实;
@@ -150,6 +196,9 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
     };
     struct 纯失败 {
         纯概念状态 状态;
+    };
+    struct 二次关系失败 {
+        二次关系数据状态 状态;
     };
 
   public:
@@ -168,6 +217,14 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
                      const 纯概念结构交付_v2 &,
                      const 特征概念出生使用结构交付 &,
                      const 存在概念两组结构交付_v1 &);
+    概念树类数据服务(const L1事实基座服务 &, const 特征类数据服务 &,
+                     const 存在类数据服务 &, const 特征值类数据服务 &,
+                     const 场景类数据服务 &, L1所有者范围写端口 &&,
+                     const 纯概念结构交付_v2 &,
+                     const 特征概念出生使用结构交付 &,
+                     const 存在概念两组结构交付_v1 &,
+                     const 二次关系结构交付 &,
+                     const 状态使用绑定只读提供者 &);
     bool 绑定于(const L1事实基座服务 &x) const noexcept override { return &l1_ == &x; }
     相关概念参与片段 准备相关概念片段(const 相关概念参与请求 &,
                                          std::uint64_t Gread,
@@ -203,6 +260,36 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
         const I64特征概念组织读取请求&) const noexcept;
     特征概念值域基础读取结果_v1 读取特征概念值域基础(
         const 特征概念值域基础读取请求_v1&) const noexcept;
+    二次关系概念读取结果 读取二次关系概念(
+        const 二次关系概念读取请求&) const override;
+    二次关系概念读取结果 查找二次关系完整定义(
+        const 二次关系定义查找请求&) const;
+    二次关系定义核验结果 规范化二次关系定义(
+        const 二次关系定义查找请求&) const;
+    二次关系概念写入结果 建立二次关系概念(
+        const 二次关系概念建立请求&);
+    二次关系概念写入结果 收敛二次关系概念建立(
+        const 二次关系概念建立请求&);
+    二次关系关联结果 添加二次关系形成来源(
+        const 二次关系来源写入请求&);
+    二次关系关联结果 记录二次关系实际采用(
+        const 二次关系用途请求&);
+    二次关系关联结果 读取二次关系来源(
+        const 二次关系关联读取请求&) const;
+    二次关系关联结果 读取二次关系用途(
+        const 二次关系关联读取请求&) const;
+    二次关系图结果 读取二次关系概念图(
+        const 二次关系图读取请求&) const;
+    二次关系治理结果 替换二次关系父组(
+        const 二次关系父组请求&);
+    二次关系治理结果 迁移二次关系生命周期(
+        const 二次关系生命周期请求&);
+    二次关系治理结果 释放二次关系形成来源(
+        const 二次关系来源释放请求&);
+    二次关系治理结果 退出二次关系概念(
+        const 二次关系退出请求&);
+    二次关系约束读取结果 读取二次关系约束定义(
+        const 二次关系约束读取请求&) const;
     纯概念写入结果 创建或复用纯概念(const 纯概念创建请求&) noexcept;
     纯概念创建恢复结果 读取纯概念创建首次结果(
         const 纯概念创建恢复请求&) const noexcept;
@@ -231,6 +318,7 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
     概念树类数据服务 &operator=(概念树类数据服务 &&) = delete;
 
   private:
+    friend class 特征值域比较数据服务;
     const L1事实基座服务 &l1_;
     const 特征类数据服务 &features_;
     const 存在类数据服务 &existences_;
@@ -241,10 +329,31 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
     std::optional<纯概念结构交付_v2> pure_layout_;
     std::optional<特征概念出生使用结构交付> feature_birth_layout_;
     std::optional<存在概念两组结构交付_v1> two_group_definition_layout_;
+    std::optional<二次关系结构交付> secondary_relation_layout_;
+    const 状态使用绑定只读提供者 *state_use_bindings_ = nullptr;
+    二次关系概念事实 读取二次关系内部(
+        概念树概念身份, std::uint64_t, std::uint64_t,
+        const 二次关系预算&, 二次关系读取用量&,
+        std::vector<概念树概念身份>&, 概念事实读取会话_v1* = nullptr,
+        特征值域事实读取会话_v1* = nullptr) const;
+    二次关系规范形 规范化二次关系内部(
+        const 二次关系定义&, std::uint64_t, std::uint64_t,
+        const 二次关系预算&, 二次关系读取用量&,
+        std::vector<概念树概念身份>&, 概念事实读取会话_v1* = nullptr,
+        特征值域事实读取会话_v1* = nullptr) const;
+    std::vector<概念树概念身份> 枚举二次关系身份(
+        std::uint64_t, std::uint64_t, const 二次关系预算&,
+        二次关系读取用量&, 概念事实读取会话_v1* = nullptr) const;
+    L1所有者范围写集请求 形成二次关系建立写集(
+        const 二次关系概念建立请求&, const 二次关系规范形&) const;
     纯概念定义 规范化纯概念定义(const 纯概念定义&, std::uint64_t,
-                              std::uint64_t, const 概念树预算&) const;
+                               std::uint64_t, const 概念树预算&,
+                               概念事实读取会话_v1* = nullptr,
+                               特征值域事实读取会话_v1* = nullptr) const;
     纯概念事实 读取纯概念内部(概念树概念身份, std::uint64_t,
-                            std::uint64_t, const 概念树预算&) const;
+                             std::uint64_t, const 概念树预算&,
+                             概念事实读取会话_v1* = nullptr,
+                             特征值域事实读取会话_v1* = nullptr) const;
     void 核验纯概念无保护引用(const 纯概念事实&, std::uint64_t,
                                const 概念树预算&) const;
     L1所有者范围写集请求 形成纯概念写集(
@@ -252,11 +361,20 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
     存在概念两组定义_v3 规范化两组定义内部(
         const 存在概念两组定义_v3&, std::uint64_t, std::uint64_t,
         const 存在概念两组预算_v3&, const 特征值域比较数据服务&,
-        const 特征值域比较预算_v1&) const;
+        const 特征值域比较预算_v1&, 概念事实读取会话_v1* = nullptr,
+        特征值域事实读取会话_v1* = nullptr) const;
     存在概念两组事实_v3 读取两组定义内部(
         概念树概念身份, std::uint64_t, std::uint64_t,
         const 存在概念两组预算_v3&, const 特征值域比较数据服务&,
-        const 特征值域比较预算_v1&) const;
+        const 特征值域比较预算_v1&, 概念事实读取会话_v1* = nullptr,
+        特征值域事实读取会话_v1* = nullptr) const;
+    特征概念值域基础读取结果_v1 读取特征概念值域基础共享(
+        const 特征概念值域基础读取请求_v1&,
+        概念事实读取会话_v1&) const noexcept;
+    二次关系约束读取结果 读取二次关系约束定义共享(
+        const 二次关系约束读取请求&,
+        概念事实读取会话_v1&,
+        特征值域事实读取会话_v1* = nullptr) const;
     L1所有者范围写端口& 借用存在概念引用写端口() noexcept override {
         return port_;
     }
@@ -298,11 +416,13 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
     void 守卫代次(std::uint64_t Gread) const;
     概念树定义 规范化定义(const 概念树定义 &) const;
     std::uint64_t 当前代次() const;
-    N 节点(稳定编码, std::uint64_t g, std::uint64_t h) const;
+    N 节点(稳定编码, std::uint64_t g, std::uint64_t h,
+           概念事实读取会话_v1* = nullptr) const;
     L1所有者范围事实副本 原始事实(稳定编码, std::uint64_t g) const;
     std::vector<E> 关系(稳定编码 端点, 稳定编码 类型, bool 入边, std::uint64_t g, std::uint64_t h,
-                        std::uint64_t 预算) const;
-    std::vector<V> 属性(稳定编码, std::uint64_t g, std::uint64_t h) const;
+                        std::uint64_t 预算, 概念事实读取会话_v1* = nullptr) const;
+    std::vector<V> 属性(稳定编码, std::uint64_t g, std::uint64_t h,
+                        概念事实读取会话_v1* = nullptr) const;
     static const V &唯一属性(const std::vector<V> &, 稳定编码);
     static void 预算有效(const 概念树预算 &);
     static void 检查数量(std::size_t n, std::uint64_t max);

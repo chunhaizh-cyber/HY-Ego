@@ -6,6 +6,7 @@ namespace 海中鱼巣 {
     case L1所有者范围读取状态::已退出: return S::已退出;
     case L1所有者范围读取状态::入口拒绝: return S::入口拒绝;
     case L1所有者范围读取状态::事实代次漂移: return S::并发变化;
+    case L1所有者范围读取状态::数量预算不足: return S::数量预算不足;
     case L1所有者范围读取状态::历史材料已清理: return S::历史材料不可用;
     case L1所有者范围读取状态::资源失败: return S::资源失败;
     default: return S::内部不一致;
@@ -56,23 +57,38 @@ std::vector<特征类数据服务::E> 特征类数据服务::关系(稳定编码
         return cached;
     }
     auto direction = incoming ? L1所有者范围关系端点方向::目标 : L1所有者范围关系端点方向::源;
-    auto r = l1_.读取所有者范围历史关系组({L1所有者范围CRUD合同版本, direction, id, type, h});
-    if (r.状态 != L1所有者范围读取状态::成功) throw 映射(r.状态);
-    要求(r.读取事实代次 == g, S::并发变化);
-    要求(r.合同版本 == L1所有者范围CRUD合同版本 && r.方向 == direction
-        && r.端点节点 == id && r.关系类型节点 == type && r.历史截止事实代次 == h);
+    std::vector<E> 关系组;
+    if(meter) {
+        const auto 剩余关系=meter->上限.最大关系数-meter->用量.关系数;
+        const auto 剩余总数=meter->上限.最大材料总数-meter->用量.材料总数;
+        const auto 最大数量=std::min(剩余关系,剩余总数);
+        要求(最大数量,S::数量预算不足);
+        const L1所有者范围有界历史关系组读取请求 request{
+            L1所有者范围有界历史组读取合同版本,direction,id,type,g,h,最大数量};
+        auto r=l1_.读取所有者范围有界历史关系组(request);
+        if(r.状态!=L1所有者范围读取状态::成功)throw 映射(r.状态);
+        要求(r.成功(request));关系组=std::move(r.关系组);
+    } else {
+        auto r = l1_.读取所有者范围历史关系组(
+            {L1所有者范围CRUD合同版本, direction, id, type, h});
+        if (r.状态 != L1所有者范围读取状态::成功) throw 映射(r.状态);
+        要求(r.读取事实代次 == g, S::并发变化);
+        要求(r.合同版本 == L1所有者范围CRUD合同版本 && r.方向 == direction
+            && r.端点节点 == id && r.关系类型节点 == type && r.历史截止事实代次 == h);
+        关系组=std::move(r.关系组);
+    }
     std::set<std::uint64_t> seen;
-    for (const auto& e : r.关系组) {
+    for (const auto& e : 关系组) {
         if (meter) meter->记(L1所有者范围事实副本{e});
         生命周期(e, g, h);
         要求(有效(e.编码) && e.关系类型节点 == type && (incoming ? e.目标节点 : e.源节点) == id
             && e.写入所有者 == 端口(p).所有者身份() && seen.insert(e.编码.值).second);
     }
-    std::sort(r.关系组.begin(), r.关系组.end(), [](const E& a, const E& b) {
+    std::sort(关系组.begin(), 关系组.end(), [](const E& a, const E& b) {
         return a.角色或顺序 != b.角色或顺序 ? a.角色或顺序 < b.角色或顺序 : a.编码 < b.编码;
     });
-    if(meter)meter->已读关系组.emplace(cacheKey,r.关系组);
-    return r.关系组;
+    if(meter)meter->已读关系组.emplace(cacheKey,关系组);
+    return 关系组;
 }
 std::vector<特征类数据服务::V> 特征类数据服务::属性(稳定编码 id,
     std::uint64_t g, std::uint64_t h, 分区 p, 读取计量* meter) const {
@@ -82,12 +98,28 @@ std::vector<特征类数据服务::V> 特征类数据服务::属性(稳定编码
         for(const auto& v:cached)要求(v.写入所有者==端口(p).所有者身份());
         return cached;
     }
-    auto r = l1_.读取所有者范围历史属性值组({L1所有者范围CRUD合同版本, id, h});
-    if (r.状态 != L1所有者范围读取状态::成功) throw 映射(r.状态);
-    要求(r.读取事实代次 == g, S::并发变化);
-    要求(r.合同版本 == L1所有者范围CRUD合同版本 && r.所属节点 == id && r.历史截止事实代次 == h);
+    std::vector<V> 属性组;
+    if(meter) {
+        const auto 剩余值=meter->上限.最大属性值数-meter->用量.属性值数;
+        const auto 剩余总数=meter->上限.最大材料总数-meter->用量.材料总数;
+        const auto 最大数量=std::min(剩余值,剩余总数);
+        要求(最大数量,S::数量预算不足);
+        const L1所有者范围有界历史属性值组读取请求 request{
+            L1所有者范围有界历史组读取合同版本,id,g,h,最大数量};
+        auto r=l1_.读取所有者范围有界历史属性值组(request);
+        if(r.状态!=L1所有者范围读取状态::成功)throw 映射(r.状态);
+        要求(r.成功(request));属性组=std::move(r.属性值组);
+    } else {
+        auto r = l1_.读取所有者范围历史属性值组(
+            {L1所有者范围CRUD合同版本, id, h});
+        if (r.状态 != L1所有者范围读取状态::成功) throw 映射(r.状态);
+        要求(r.读取事实代次 == g, S::并发变化);
+        要求(r.合同版本 == L1所有者范围CRUD合同版本 && r.所属节点 == id
+            && r.历史截止事实代次 == h);
+        属性组=std::move(r.属性值组);
+    }
     std::set<std::uint64_t> slots;
-    for (const auto& v : r.属性值组) {
+    for (const auto& v : 属性组) {
         if (meter) meter->记(L1所有者范围事实副本{v});
         生命周期(v, g, h);
         要求(有效(v.编码) && v.所属节点 == id && 有效(v.来源节点)
@@ -95,8 +127,8 @@ std::vector<特征类数据服务::V> 特征类数据服务::属性(稳定编码
             && L1所有者范围原始材料完整(v.材料));
         (void)节点(v.来源节点, g, h, std::nullopt, meter);
     }
-    if(meter)meter->已读属性组.emplace(cacheKey,r.属性值组);
-    return r.属性值组;
+    if(meter)meter->已读属性组.emplace(cacheKey,属性组);
+    return 属性组;
 }
 特征类数据服务::E 特征类数据服务::唯一关系(稳定编码 id, 稳定编码 type,
     std::uint64_t g, std::uint64_t h, 分区 p, 读取计量* meter) const {
@@ -247,15 +279,17 @@ I64基础特征类型信息 特征类数据服务::读类型(特征类型身份 
     检查规格(out.规格);
     return out;
 }
-特征规范I64域 特征类数据服务::读完整域(特征类型身份 id, std::uint64_t g, std::uint64_t h) const {
-    const auto n = 节点(id.编码, g, h, 分区::定义);
-    const auto attrs = 属性(id.编码, g, h, 分区::定义);
+特征规范I64域 特征类数据服务::读完整域(特征类型身份 id, std::uint64_t g,
+    std::uint64_t h, 读取计量* meter) const {
+    const auto n = 节点(id.编码, g, h, 分区::定义, meter);
+    const auto attrs = 属性(id.编码, g, h, 分区::定义, meter);
     const auto marker = std::find_if(attrs.begin(), attrs.end(), [&](const V& v) { return v.属性类型节点 == id.编码; });
-    if (marker == attrs.end()) return 规范域({读类型(id, g, h).规格.允许集合});
+    if (marker == attrs.end()) return 规范域({读类型(id, g, h, nullptr, meter).规格.允许集合});
     const auto* value = std::get_if<std::int64_t>(&marker->材料);
     要求(value && *value == 标量格式标记 && attrs.size() == 1, S::旧格式不支持);
     try {
         标量读取上下文 c{g, h, 标量业务准入预算};
+        if(meter)c.计量=meter;
         const auto edges = 标量关系(id.编码, d_[输出FT归属关系], true, c);
         标量要求(edges.size() == 1 && edges.front().角色或顺序 >= 1 && edges.front().角色或顺序 <= 3);
         标量展开(edges.front().源节点, true, c);
@@ -1274,7 +1308,8 @@ template<class BindingRequest> 特征I64比较绑定结果 特征类数据服务
         firstHead();绑定要求(!first.首次规范化写集&&!first.首次写入结果);dispatched=false;
         守卫(r.G);out.Gread=r.G;读取计量 meter;
         if constexpr(create){
-            const auto route=读当前绑定({1,r.G,r.定义.输入FT,r.定义.用途,UINT64_MAX,UINT64_MAX});
+            const auto route=读当前绑定({1,r.G,r.定义.输入FT,r.定义.用途,UINT64_MAX,
+                {UINT64_MAX,UINT64_MAX,UINT64_MAX,UINT64_MAX}});
             if(route.状态==KS::已读取){
                 绑定要求(route.成功());
                 throw 绑定失败{route.事实->定义==r.定义 ? KS::幂等冲突 : KS::注册不唯一};
@@ -1302,7 +1337,8 @@ template<class BindingRequest> 特征I64比较绑定结果 特征类数据服务
         if constexpr(create){
             // 不同原键竞争只进行一次最新 G 的唯一路由重扫，绝不换键再提交。
             const auto current=当前G();out.Gread=current;
-            const auto route=读当前绑定({1,current,r.定义.输入FT,r.定义.用途,UINT64_MAX,UINT64_MAX});
+            const auto route=读当前绑定({1,current,r.定义.输入FT,r.定义.用途,UINT64_MAX,
+                {UINT64_MAX,UINT64_MAX,UINT64_MAX,UINT64_MAX}});
             if(route.状态==KS::已读取){
                 绑定要求(route.成功());
                 throw 绑定失败{route.事实->定义==r.定义 ? KS::幂等冲突 : KS::注册不唯一};
