@@ -5,10 +5,10 @@
 - 目标编号：`GOAL-INSTINCT-RUNTIME`
 - 名称：构建本能系统基于世界事实、实例特征和现实锚点持续运行的基础架构
 - 类型：集成能力目标
-- 记录版本：v0.8
+- 记录版本：v0.9
 - 创建时间：2026-09-21
-- 更新时间：2026-09-22
-- 当前状态：候选；当前直接推进位置由`GOAL-SELF-GOVERNANCE-CLOSURE`下的M1-A自顶向下设计目标承担
+- 更新时间：2026-09-23
+- 当前状态：候选；当前直接推进位置由`GOAL-SELF-GOVERNANCE-CLOSURE`下的`GOAL-SELF-THREAD-G1-ISOLATED-SHELL-IMPLEMENTATION`承担
 - 直接上位目标：无
 - 直接下位目标：`GOAL-IF-R-FOUNDATION`（已完成）、`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`（已完成）、`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-IFR-ACTUAL-F-PROVIDER-DESIGN`（完成）、`GOAL-SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`（暂停）、`GOAL-SELF-GOVERNANCE-CLOSURE`（候选，当前路线）
 - 目标账所有者：交互智能体
@@ -46,14 +46,14 @@
 - 依赖：4115 IF/R、8120 启动顺序、8121 阶段21物理合同、8100 / 8200 运行边界、8300 验收，以及已发布的 ARCH-L4 根材料与特征组合provider。
 - 当前阻断：无直接阻断；旧锚点详细设计和计划仍为DRIFT，其替代设计纳入自我治理G0统一核对。
 - 当前风险：`规范/详细设计/20260915_INSTINCT-ROOT-RUNTIME-ANCHOR_本能根运行锚点详细设计_v0.1.md`已具名 DRIFT，不能作为施工依据；阶段21不得模拟或替代上游特征与 ARCH-L4 合同。
-- 下一动作：由`GOAL-SELF-THREAD-M1A-TOP-DOWN-DESIGN`先冻结上层线程首包；实际调用遇到锚点缺口后再恢复其设计目标，旧锚点计划不得直接恢复。
+- 下一动作：实施`SELF-THREAD-G1-ISOLATED-SHELL`隔离上层骨架；发布后回到实际调用点恢复阶段21锚点最小提供者设计，旧锚点计划不得直接恢复。
 
 ## 6. 状态证据上下文
 
-- 状态事实截止：`a8aaf58d413e8d5b3da97f8df3078291d8cb9584`
-- 关联计划身份：`ARCH-L4-INSTINCT-ROOT-DEMAND-PROVIDER`和`SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER`均已完成；`INSTINCT-ROOT-RUNTIME-ANCHOR`旧v0.1仅为待重建设计输入
-- 关联计划观察版本 / blob：已完成特征组合计划v1.0 / `c967a515b70a0302ce1380677a8c7cde32b4b8fd`；旧锚点计划v0.1 / `02d9c64185d45abebc42a50a49775db277071c37`不可执行
-- 最后实质进展：`576189d3c`发布双FT、双完整域概念、双实际F和普通应用初始化，并以Debug/Release及两进程恢复证据解除阶段21最后一个已知直接上游缺口
+- 状态事实截止：`eba11a5fc6a18bb2405483f9f9b71d30a6a1fa55`
+- 关联计划身份：当前`SELF-THREAD-G1-ISOLATED-SHELL`；`ARCH-L4-INSTINCT-ROOT-DEMAND-PROVIDER`和`SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER`均已完成；`INSTINCT-ROOT-RUNTIME-ANCHOR`旧v0.1仅为待重建设计输入
+- 关联计划观察版本 / blob：当前G1 v0.1 / `13d8dca640645c67ad8a26c0228dd0506ebd3638`；已完成特征组合计划v1.0 / `c967a515b70a0302ce1380677a8c7cde32b4b8fd`；旧锚点计划v0.1 / `02d9c64185d45abebc42a50a49775db277071c37`不可执行
+- 最后实质进展：`eba11a5fc`发布自我线程M1-A上层首包详细设计与G1可执行计划；生产代码、构建、运行、阶段21锚点和生产接线均未实施
 - 阻断证据来源：无；当前是设计闭合动作，不是等待外部依赖
 - 阻断解除条件：不适用
 - 自动复核触发：自我治理G0设计/计划发布；关联规范 / 设计 / 计划索引变更、相关代码或验收发布、所有权释放、用户同步或继续
