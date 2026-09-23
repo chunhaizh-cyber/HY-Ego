@@ -5,12 +5,12 @@
 - 目标编号：`GOAL-INSTINCT-RUNTIME`
 - 名称：构建本能系统基于世界事实、实例特征和现实锚点持续运行的基础架构
 - 类型：集成能力目标
-- 记录版本：v0.13
+- 记录版本：v0.14
 - 创建时间：2026-09-21
 - 更新时间：2026-09-23
-- 当前状态：候选；当前直接推进位置由`GOAL-SELF-GOVERNANCE-CLOSURE`下的`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER-IMPLEMENTATION`承担
+- 当前状态：候选；当前直接推进位置由`GOAL-SELF-GOVERNANCE-CLOSURE`下的`GOAL-INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER-DESIGN`承担
 - 直接上位目标：无
-- 直接下位目标：`GOAL-IF-R-FOUNDATION`（已完成）、`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`（已完成）、`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-IFR-ACTUAL-F-PROVIDER-DESIGN`（完成）、`GOAL-SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER-IMPLEMENTATION`（当前）、`GOAL-SELF-GOVERNANCE-CLOSURE`（候选，当前路线）
+- 直接下位目标：`GOAL-IF-R-FOUNDATION`（已完成）、`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`（已完成）、`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-IFR-ACTUAL-F-PROVIDER-DESIGN`（完成）、`GOAL-SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-SELF-GOVERNANCE-CLOSURE`（候选，当前路线）
 - 目标账所有者：交互智能体
 
 ## 1.1 目标问题与优先级
@@ -38,22 +38,22 @@
 - 已完成前置：`GOAL-IF-R-FOUNDATION` 已以代码实施目标完成，详见`目标/已完成/GOAL-IF-R-FOUNDATION.md`；其不证明构建、运行、恢复或本目标能力。
 - 已完成设计：`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`已冻结根目标合同、独立根 D、根列表 L 与成员关系的 ARCH-L4 物理合同，并登记`ARCH-L4-INSTINCT-ROOT-DEMAND-PROVIDER`为可执行计划。
 - 已完成下位目标：根材料 provider 与安全值/服务值先天FT、完整域概念和实际F组合provider均已按各自完成条件发布。
-- 后续方向：用户已确认以完整自我线程治理闭环反推数据服务需求，并采用先写上层、在真实调用点补最小下层能力的策略；当前由`GOAL-SELF-GOVERNANCE-CLOSURE`统一承接线程、运行门、阶段21锚点、需求/任务治理和验收路线，阶段21重新设计已经完成并进入组合provider代码实施。
+- 后续方向：用户已确认以完整自我线程治理闭环反推数据服务需求，并采用先写上层、在真实调用点补最小下层能力的策略；阶段21组合provider已经发布，当前由`GOAL-SELF-GOVERNANCE-CLOSURE`回到普通应用、启动和self真实消费调用点，先闭合生产接线设计与计划。
 - 设计承载方式：机器语义、DTO、所有权、事务、恢复和验收边界由现行规范、具名详细设计和后续计划组合承载；本目标记录不替代这些材料。
 
 ## 5. 依赖、风险与下一动作
 
 - 依赖：4115 IF/R、8120 启动顺序、8121 阶段21物理合同、8100 / 8200 运行边界、8300 验收，以及已发布的 ARCH-L4 根材料与特征组合provider。
-- 当前阻断：无。阶段19方法登记根空域预算缺陷已修复发布，阶段21组合provider恢复当前。
+- 当前阻断：无。阶段21组合provider已发布；RC-P1对普通应用和根工程的所有权只阻断后继代码实施，不阻断当前设计闭合。
 - 当前风险：`规范/详细设计/20260915_INSTINCT-ROOT-RUNTIME-ANCHOR_本能根运行锚点详细设计_v0.1.md`已具名 DRIFT，不能作为施工依据；阶段21不得模拟或替代上游特征与 ARCH-L4 合同。
-- 下一动作：从`8e20a8f40`重新S0并执行`INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER` v0.2；随后才形成普通应用、启动阶段21和self停门消费的紧邻后继。
+- 下一动作：完成普通应用、启动阶段21和self停门消费的精确设计与计划；在RC-P1所有权释放和计划变为可执行前不得修改接线代码。
 
 ## 6. 状态证据上下文
 
-- 状态事实截止：`8e20a8f40b5b47b087441067bb97cc72a8022054`
-- 关联计划身份：已完成G1、根材料、实际F provider和阶段19预算修复；当前为`INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER`；旧锚点计划不可执行
-- 关联计划观察版本 / blob：阶段21v0.2 / `c9cdcd70d8a98a38c8eb6601b6cccc2c8e594e93`；已完成G1 v0.1 / `13d8dca640645c67ad8a26c0228dd0506ebd3638`
-- 最后实质进展：`8e20a8f40`发布阶段19预算修复代码和验证，阶段21直接上游依赖门已满足；阶段21生产/专项WIP未发布，生产治理门和生产接线仍未实现
-- 阻断证据来源：无；当前是阶段21组合provider代码实施动作，不是等待外部依赖
+- 状态事实截止：`4c6cd9277fc0e428dcccb1e41fe1e66d4da797da`
+- 关联计划身份：阶段21provider计划已完成退出；生产消费设计目标尚未建立代码计划
+- 关联计划观察版本 / blob：不适用；已完成阶段21v0.2历史blob为`c9cdcd70d8a98a38c8eb6601b6cccc2c8e594e93`
+- 最后实质进展：`4c6cd9277`发布阶段21组合provider、专属专项及施工/验证记录；生产治理门和生产接线仍未实现
+- 阻断证据来源：RC-P1异主WIP只阻断后继代码实施；当前设计目标无阻断
 - 阻断解除条件：不适用
-- 自动复核触发：阶段21组合provider代码或记录发布；关联规范 / 设计 / 计划索引变更、后继生产接线或验收发布、所有权释放、用户同步或继续
+- 自动复核触发：生产消费设计/计划发布；RC-P1发布/交接；关联规范、计划索引、后继生产接线或验收发布、用户同步或继续
