@@ -7,15 +7,20 @@
 
 namespace 海中鱼巣 {
 
+inline constexpr std::uint64_t 方法登记根生产默认最大空域核验事实数 =
+    1'048'576ULL;
+
 struct 方法登记根生产初始化请求 final {
   std::uint32_t 合同版本 = 1;
+  std::uint64_t 最大空域核验事实数 =
+      方法登记根生产默认最大空域核验事实数;
   friend bool operator==(const 方法登记根生产初始化请求 &,
                          const 方法登记根生产初始化请求 &) = default;
 };
 
 enum class 方法登记根生产初始化状态 : std::uint8_t {
   已初始化, 精确重复, 入口拒绝, 根结构失败,
-  当前性漂移, 资源失败, 内部不一致
+  当前性漂移, 资源失败, 内部不一致, 数量预算不足
 };
 
 struct 方法登记根生产初始化结果 final {
