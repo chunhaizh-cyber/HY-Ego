@@ -62,9 +62,13 @@ struct 自我线程本能根启动材料_v1 final {
 };
 
 struct 自我线程上下文读取预算_v1 final {
-    std::uint64_t 最大自我候选数量 = 0;
-    std::uint64_t 每根最大候选数量 = 0;
-    std::uint64_t 最大关系材料数量 = 0;
+    std::uint64_t 最大世界场景数量 = 0;
+    std::uint64_t 最大世界关系数量 = 0;
+    std::uint64_t 最大自我位置祖先数量 = 0;
+    std::uint64_t 最大自我概念数量 = 0;
+    std::uint64_t 最大自我概念关系数量 = 0;
+    std::uint64_t 最大自我概念世界成员数量 = 0;
+    std::uint64_t 最大自我概念特征属性数量 = 0;
     [[nodiscard]] bool 完整() const noexcept;
     friend bool operator==(const 自我线程上下文读取预算_v1&, const 自我线程上下文读取预算_v1&) = default;
 };

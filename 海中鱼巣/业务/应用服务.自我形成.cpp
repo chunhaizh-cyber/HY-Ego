@@ -51,11 +51,27 @@ bool 生命周期有效(const 场景事实生命周期 &v, std::uint64_t h) noex
 }
 
 bool 同一父边(const 直接归属联合事实 &a,
-              const 直接归属联合事实 &b) noexcept {
+               const 直接归属联合事实 &b) noexcept {
   return a.Gread == b.Gread && a.H == b.H && a.来源 == b.来源 &&
          a.关系 == b.关系 && a.父 == b.父 && a.成员 == b.成员 &&
          a.创建事实代次 == b.创建事实代次 &&
          a.退出事实代次 == b.退出事实代次;
+}
+
+bool 同一存在身份见证(const 存在身份来源历史见证 &a,
+                       const 存在身份来源历史见证 &b) noexcept {
+  const auto 生命周期相同 = [](const 存在身份来源生命周期 &x,
+                               const 存在身份来源生命周期 &y) noexcept {
+    return x.创建事实代次 == y.创建事实代次 &&
+           x.退出事实代次 == y.退出事实代次;
+  };
+  return a.身份 == b.身份 && a.族锚点 == b.族锚点 &&
+         a.族归属关系类型 == b.族归属关系类型 &&
+         a.族归属关系 == b.族归属关系 && a.角色 == b.角色 &&
+         生命周期相同(a.节点生命周期, b.节点生命周期) &&
+         生命周期相同(a.族锚点生命周期, b.族锚点生命周期) &&
+         生命周期相同(a.关系类型生命周期, b.关系类型生命周期) &&
+         生命周期相同(a.归属关系生命周期, b.归属关系生命周期);
 }
 
 bool 父语境完整(const 场景父语境投影事实 &v,
@@ -133,9 +149,9 @@ bool 场景角色完整(const 场景角色历史事实 &v,
          registration.编码 != m[1] && registration.编码 != m[2];
 }
 
-bool 场景完整(const 场景树节点当前事实 &v,
-              const 直接归属联合事实 &parent,
-              std::uint64_t g) noexcept {
+bool 首次场景完整(const 场景树节点当前事实 &v,
+                   const 直接归属联合事实 &parent,
+                   std::uint64_t g) noexcept {
   const auto &role = v.场景角色;
   const auto &proof = v.树证明;
   const auto birth = role.对象存在来源.节点生命周期.创建事实代次;
@@ -200,9 +216,9 @@ bool 通用概念完整(const 纯概念事实 &c, std::uint64_t g) noexcept {
          edge.生命周期.创建事实代次 == c.生命周期.创建事实代次;
 }
 
-bool 投影完整(const 真实自我投影 &v, 稳定编码 root,
-              存在单例角色身份 role,
-              const 世界树绑定创建预算 &budget) noexcept {
+bool 首次投影完整(const 真实自我投影 &v, 稳定编码 root,
+                   存在单例角色身份 role,
+                   const 世界树绑定创建预算 &budget) noexcept {
   const auto g = v.Gread;
   if (!g || v.H != g || !有效(v.E) || v.E == root ||
       v.世界根 != root || v.角色.角色 != role || v.角色.E != v.E ||
@@ -216,7 +232,7 @@ bool 投影完整(const 真实自我投影 &v, 稳定编码 root,
       parent.来源 != 直接归属来源::直接子场景 ||
       !同一父边(parent, v.位置.上行路径.front()) ||
       !父语境完整(*v.位置.父场景语境, parent, g) ||
-      !场景完整(v.场景, parent, g) ||
+      !首次场景完整(v.场景, parent, g) ||
       v.位置.父场景语境->投影边.编码 !=
           v.场景.父语境投影->投影边.编码)
     return false;
@@ -228,6 +244,143 @@ bool 投影完整(const 真实自我投影 &v, 稳定编码 root,
   return roleResult.成功(roleRequest) &&
          存在身份来源历史见证完整(v.角色.存在身份, g, v.E) &&
          v.角色.存在身份.节点生命周期.创建事实代次 == birth &&
+         v.角色.目标生命周期.创建事实代次 == birth &&
+         通用概念完整(v.概念, g) && 有效(v.使用.关系) &&
+         v.使用.E == v.E && v.使用.EC == v.概念.概念 &&
+         生命周期有效(v.使用.生命周期, g) &&
+         v.使用.生命周期.创建事实代次 == birth &&
+          v.概念.生命周期.创建事实代次 < birth;
+}
+
+bool 当前上行路径完整(const 世界树层级位置 &v, 稳定编码 root,
+                       std::uint64_t g,
+                       const 世界树绑定创建预算 &budget) noexcept {
+  if (!v.直接结构父 || v.上行路径.empty() ||
+      v.上行路径.size() > budget.最大关系数量 ||
+      v.上行路径.size() > budget.最大祖先数量 ||
+      !同一父边(*v.直接结构父, v.上行路径.front()))
+    return false;
+
+  auto cursor = v.节点;
+  for (std::size_t i = 0; i < v.上行路径.size(); ++i) {
+    const auto &edge = v.上行路径[i];
+    if ((edge.来源 != 直接归属来源::存在组成 &&
+         edge.来源 != 直接归属来源::场景成员 &&
+         edge.来源 != 直接归属来源::直接子场景) ||
+        !联合父载荷完整(edge, g, g, edge.父, cursor) ||
+        edge.父 == v.节点)
+      return false;
+    for (std::size_t j = 0; j < i; ++j)
+      if (v.上行路径[j].父 == edge.父)
+        return false;
+    cursor = edge.父;
+  }
+  return cursor == root;
+}
+
+bool 当前场景完整(const 场景树节点当前事实 &v,
+                   const 世界树层级位置 &position,
+                   稳定编码 root, std::uint64_t g,
+                   const 世界树绑定创建预算 &budget,
+                   const 存在身份来源历史见证 &identity) noexcept {
+  if (!position.直接结构父 || !position.父场景语境 ||
+      !当前上行路径完整(position, root, g, budget))
+    return false;
+  const auto &parent = *position.直接结构父;
+  const auto &role = v.场景角色;
+  const auto &proof = v.树证明;
+  const auto birth = identity.节点生命周期.创建事实代次;
+  const 场景历史身份请求 request{2, g, g, position.节点};
+  const 场景角色历史结果 result{
+      2, 场景角色数据状态::已读取, g, g, role};
+  if (!result.成功(request) || !场景角色完整(role, g) ||
+      role.Gread != g || role.H != g || role.场景 != position.节点 ||
+      !同一存在身份见证(role.对象存在来源, identity) ||
+      role.场景角色登记边.生命周期.创建事实代次 != birth ||
+      !v.直接父 || !同一父边(*v.直接父, parent) ||
+      v.从上游场景到本场景路径.empty() ||
+      v.从上游场景到本场景路径.size() > position.上行路径.size() ||
+      v.从上游场景到本场景路径.size() > budget.最大关系数量 ||
+      v.从上游场景到本场景路径.size() > budget.最大祖先数量 ||
+      !v.父语境投影 ||
+      !父语境完整(*v.父语境投影, parent, g) ||
+      !父语境完整(*position.父场景语境, parent, g) ||
+      v.父语境投影->投影边.编码 !=
+          position.父场景语境->投影边.编码 ||
+      proof.Gread != g || proof.H != g ||
+      proof.种类 != 场景树证明种类::树归属 ||
+      proof.场景 != position.节点 || proof.树根 != root ||
+      !有效(proof.关系) || proof.关系 != proof.见证.编码 ||
+      proof.见证.源 != position.节点 || proof.见证.目标 != root ||
+      !有效(proof.见证.关系类型) || proof.见证.角色或顺序 != 1 ||
+      !生命周期有效(proof.见证.生命周期, g) ||
+      proof.见证.生命周期.创建事实代次 != birth)
+    return false;
+
+  const auto &scenePath = v.从上游场景到本场景路径;
+  for (std::size_t i = 0; i < scenePath.size(); ++i) {
+    const auto &edge = scenePath[i];
+    if ((edge.来源 != 直接归属来源::存在组成 &&
+         edge.来源 != 直接归属来源::场景成员 &&
+         edge.来源 != 直接归属来源::直接子场景) ||
+        !联合父载荷完整(edge, g, g, edge.父, edge.成员) ||
+        (i && scenePath[i - 1].成员 != edge.父) ||
+        edge.成员 == scenePath.front().父)
+      return false;
+    for (std::size_t j = 0; j < i; ++j)
+      if (scenePath[j].成员 == edge.成员)
+        return false;
+  }
+  if (scenePath.back().成员 != position.节点 ||
+      !同一父边(scenePath.back(), parent))
+    return false;
+  for (std::size_t i = 0; i < scenePath.size(); ++i)
+    if (!同一父边(scenePath[scenePath.size() - 1 - i],
+                   position.上行路径[i]))
+      return false;
+  for (const auto &rootFact : role.四根)
+    if (rootFact.根.生命周期.创建事实代次 != birth ||
+        rootFact.绑定.生命周期.创建事实代次 != birth)
+      return false;
+  for (const auto &member : v.直接存在成员组)
+    if (!场景直接包含事实完整(member, g) ||
+        member.种类 != 场景直接包含种类::存在成员 ||
+        member.父场景 != position.节点)
+      return false;
+  for (const auto &child : v.直接子场景组)
+    if (!场景直接包含事实完整(child, g) ||
+        child.种类 != 场景直接包含种类::子场景 ||
+        child.父场景 != position.节点)
+      return false;
+  return true;
+}
+
+bool 当前投影完整(const 真实自我投影 &v, 稳定编码 root,
+                   存在单例角色身份 role,
+                   const 世界树绑定创建预算 &budget) noexcept {
+  const auto g = v.Gread;
+  if (!g || v.H != g || !有效(v.E) || v.E == root ||
+      v.世界根 != root || v.角色.角色 != role || v.角色.E != v.E ||
+      v.位置.节点 != v.E || v.位置.世界根 != root ||
+      v.位置.视角 != 世界树节点视角::场景 ||
+      !v.位置.直接结构父 || !v.位置.父场景语境 ||
+      !当前上行路径完整(v.位置, root, g, budget))
+    return false;
+  const auto &parent = *v.位置.直接结构父;
+  if (!联合父载荷完整(parent, g, g, parent.父, v.E) ||
+      parent.来源 != 直接归属来源::直接子场景 ||
+      !父语境完整(*v.位置.父场景语境, parent, g) ||
+      !当前场景完整(v.场景, v.位置, root, g, budget,
+                      v.角色.存在身份))
+    return false;
+
+  const 存在单例角色读取请求 roleRequest{
+      1, g, g, role, budget.最大关系数量};
+  const 存在单例角色读取结果 roleResult{
+      1, 存在单例角色状态::已读取, g, g, v.角色};
+  const auto birth = v.角色.存在身份.节点生命周期.创建事实代次;
+  return roleResult.成功(roleRequest) &&
+         存在身份来源历史见证完整(v.角色.存在身份, g, v.E) &&
          v.角色.目标生命周期.创建事实代次 == birth &&
          通用概念完整(v.概念, g) && 有效(v.使用.关系) &&
          v.使用.E == v.E && v.使用.EC == v.概念.概念 &&
@@ -355,14 +508,16 @@ bool 真实自我形成结果::成功(const 真实自我形成请求 &r) const n
       !世界结果->世界首次H ||
       *世界结果->世界首次H != 投影->角色.目标生命周期.创建事实代次)
     return false;
-  return 自我形成内部::投影完整(*投影, r.期望世界根, r.角色, r.预算);
+  return 自我形成内部::首次投影完整(*投影, r.期望世界根, r.角色,
+                                        r.预算);
 }
 
 bool 真实自我形成结果::成功(const 真实自我读取请求 &r) const noexcept {
   return 版本 == 1 && 自我形成内部::请求有效(r) &&
          状态 == 真实自我形成状态::已读取 && !请求回显 && !世界结果 &&
          投影 && 投影->Gread == r.Gread &&
-         自我形成内部::投影完整(*投影, r.期望世界根, r.角色, r.预算);
+          自我形成内部::当前投影完整(*投影, r.期望世界根, r.角色,
+                                        r.预算);
 }
 
 真实自我形成服务::真实自我形成服务(
