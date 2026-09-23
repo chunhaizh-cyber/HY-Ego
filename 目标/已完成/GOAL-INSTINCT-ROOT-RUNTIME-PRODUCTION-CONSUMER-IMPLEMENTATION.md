@@ -5,9 +5,9 @@
 - 目标编号：`GOAL-INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER-IMPLEMENTATION`
 - 名称：阶段21生产消费、self停门与宿主分流代码实施
 - 类型：代码实施目标
-- 记录版本：v0.3
+- 记录版本：v0.4
 - 创建日期：2026-09-23
-- 当前状态：活动；计划已登记为`可执行`
+- 当前状态：完成
 - 直接上位目标：`GOAL-SELF-GOVERNANCE-CLOSURE`
 - 直接前置：`GOAL-INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER-DESIGN`（已完成）
 - 目标账所有者：交互智能体
@@ -26,12 +26,13 @@
 
 完成仍不证明治理门开放、普通控制面板窗口完成、任务线程组或完整内部治理闭环。
 
-## 3. 当前计划与执行状态
+## 3. 完成证据
 
 - 计划：`计划/20260923_INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER_本能根运行生产消费代码实施计划_v0.1.md`
 - 版本 / blob：v0.3 / `00ee1139293905a7e38bfe81117b2ae0180a88d2`
-- 状态：`可执行`
-- 正式事实截止：`04ff4679a`
+- 状态：已完成并退出当前计划索引
+- 代码结果：`f11d94000322e8fa24f89d0c63384c7ff35525f7`
+- 正式事实截止：`f11d94000322e8fa24f89d0c63384c7ff35525f7`
 
 RC-P1已由代码提交`873637e25`和证据回填提交`b3004e01e`发布，并释放：
 
@@ -39,10 +40,15 @@ RC-P1已由代码提交`873637e25`和证据回填提交`b3004e01e`发布，并�
 - `海中鱼巣.vcxproj`
 - `海中鱼巣.vcxproj.filters`
 
-计划支撑已从`04ff4679a`复核：阶段21 provider、self、普通应用、启动入口、现有无窗口宿主和根工程未发生改变机器合同的漂移；已跟踪的上层骨架专项仍消费待删除self字段并会在P1后编译失败。计划v0.3已把该专项`.cpp/.vcxproj`纳入白名单并冻结原位迁移合同，保持`可执行`。三份未提交目标业务流程图属于既有WIP，本代码切片禁止修改并原地保护。
+`f11d94000`已发布计划允许的self ABI原位迁移、阶段21生产消费、阶段20创建停门、普通控制面板阶段12诚实返回、无窗口既有宿主分流和安全回收。self专项Debug/Release各`29 PASS`，生产消费专项Debug/Release各`33 PASS`，根工程Debug/Release x64 Rebuild均为0错误0警告；发布后`HEAD == origin/main`且index为空。三份目标业务流程图WIP未修改、未暂存。
 
-## 4. 自动复核触发
+施工与验证证据：
 
-- 本计划代码提交或执行侧具名退回；
-- 普通应用、self、启动入口、阶段21 provider、根工程、相关规范或计划索引变化；
-- 用户改变目标或授权新的非重叠实施边界。
+- `施工记录/20260923_INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER_本能根运行生产消费施工记录_v0.1.md`
+- `验证记录/20260923_INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER_本能根运行生产消费验证记录_v0.1.md`
+
+本完成结论只覆盖计划冻结的生产接线和生命周期边界，不证明治理门开放、任务线程组、普通控制面板窗口或完整自我治理闭环。
+
+## 4. 后继
+
+下一代码目标为`GOAL-SELF-CONTEXT-FRESH-READ-PROVIDER-IMPLEMENTATION`，从G2-A只读上下文provider继续；旧计划文件和索引项按现行清理规则删除，不恢复为执行入口。

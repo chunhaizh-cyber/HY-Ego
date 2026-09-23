@@ -5,10 +5,10 @@
 - 目标编号：`GOAL-INSTINCT-RUNTIME`
 - 名称：构建本能系统基于世界事实、实例特征和现实锚点持续运行的基础架构
 - 类型：集成能力目标
-- 记录版本：v0.15
+- 记录版本：v0.16
 - 创建时间：2026-09-21
 - 更新时间：2026-09-23
-- 当前状态：候选；当前直接推进位置由`GOAL-SELF-GOVERNANCE-CLOSURE`下处于设计阻断的`GOAL-INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER-DESIGN`承担
+- 当前状态：候选；当前直接推进位置由`GOAL-SELF-GOVERNANCE-CLOSURE`下的`GOAL-SELF-CONTEXT-FRESH-READ-PROVIDER-IMPLEMENTATION`承担
 - 直接上位目标：无
 - 直接下位目标：`GOAL-IF-R-FOUNDATION`（已完成）、`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`（已完成）、`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-IFR-ACTUAL-F-PROVIDER-DESIGN`（完成）、`GOAL-SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-SELF-GOVERNANCE-CLOSURE`（候选，当前路线）
 - 目标账所有者：交互智能体
@@ -38,22 +38,22 @@
 - 已完成前置：`GOAL-IF-R-FOUNDATION` 已以代码实施目标完成，详见`目标/已完成/GOAL-IF-R-FOUNDATION.md`；其不证明构建、运行、恢复或本目标能力。
 - 已完成设计：`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`已冻结根目标合同、独立根 D、根列表 L 与成员关系的 ARCH-L4 物理合同，并登记`ARCH-L4-INSTINCT-ROOT-DEMAND-PROVIDER`为可执行计划。
 - 已完成下位目标：根材料 provider 与安全值/服务值先天FT、完整域概念和实际F组合provider均已按各自完成条件发布。
-- 后续方向：用户已确认以完整自我线程治理闭环反推数据服务需求，并采用先写上层、在真实调用点补最小下层能力的策略；阶段21组合provider已经发布，当前由`GOAL-SELF-GOVERNANCE-CLOSURE`回到普通应用、启动和self真实消费调用点，先闭合生产接线设计与计划。
+- 后续方向：用户已确认以完整自我线程治理闭环反推数据服务需求，并采用先写上层、在真实调用点补最小下层能力的策略；阶段21组合provider及其生产消费已经发布，当前由`GOAL-SELF-GOVERNANCE-CLOSURE`推进G2-A正式上下文纯读provider。
 - 设计承载方式：机器语义、DTO、所有权、事务、恢复和验收边界由现行规范、具名详细设计和后续计划组合承载；本目标记录不替代这些材料。
 
 ## 5. 依赖、风险与下一动作
 
 - 依赖：4115 IF/R、8120 启动顺序、8121 阶段21物理合同、8100 / 8200 运行边界、8300 验收，以及已发布的 ARCH-L4 根材料与特征组合provider。
-- 当前阻断：阶段21组合provider已发布，但生产消费设计缺少self运行身份、容量/预算/时限正式来源及普通控制面板宿主生命周期合同；RC-P1对普通应用和根工程的所有权另行阻断后继代码实施。
-- 当前风险：`规范/详细设计/20260915_INSTINCT-ROOT-RUNTIME-ANCHOR_本能根运行锚点详细设计_v0.1.md`已具名 DRIFT，不能作为施工依据；阶段21不得模拟或替代上游特征与 ARCH-L4 合同。
-- 下一动作：先裁决并正式发布运行身份、容量/预算/时限来源与普通控制面板宿主生命周期边界；再按新HEAD完成生产消费设计与计划。在RC-P1所有权释放和计划变为可执行前不得修改接线代码。
+- 当前阻断：无设计阻断；G2-A计划已登记为`可执行`。生产治理门仍关闭，这是当前分期边界而非阻断。
+- 当前风险：G2-A不得把纯读根材料实现成写入口转发，不得把方法根或当前特征值塞入正式上下文投影，也不得提前注入self或开放治理门。
+- 下一动作：执行`SELF-CONTEXT-FRESH-READ-PROVIDER` v0.1；代码发布后再从self真实消费点形成G2-B及G4-A所需直接后继设计。
 
 ## 6. 状态证据上下文
 
-- 状态事实截止：`27934691c7743fe195f1335ac99b9914cf603c36`
-- 关联计划身份：阶段21provider计划已完成退出；生产消费设计目标尚未建立代码计划
-- 关联计划观察版本 / blob：不适用；已完成阶段21v0.2历史blob为`c9cdcd70d8a98a38c8eb6601b6cccc2c8e594e93`
-- 最后实质进展：`4c6cd9277`发布阶段21组合provider、专属专项及施工/验证记录；生产治理门和生产接线仍未实现
-- 阻断证据来源：生产消费只读S0与现行self/启动/宿主合同；RC-P1异主WIP另行阻断后继代码实施
-- 阻断解除条件：运行身份、容量/预算/时限来源和普通控制面板宿主生命周期合同正式发布；RC-P1所有权释放后重新S0
-- 自动复核触发：生产消费设计/计划发布；RC-P1发布/交接；关联规范、计划索引、后继生产接线或验收发布、用户同步或继续
+- 状态事实截止：`f11d94000322e8fa24f89d0c63384c7ff35525f7`
+- 关联计划身份：`SELF-CONTEXT-FRESH-READ-PROVIDER`
+- 关联计划观察版本 / blob：v0.1 / `c5ff3b75c460943de978fbe751be1c0d7ae323e1`
+- 最后实质进展：`f11d94000`发布阶段21生产消费、阶段20唯一self创建停门和宿主安全回收；G2-A详细设计与计划已闭合
+- 阻断证据来源：不适用；当前无设计阻断
+- 阻断解除条件：不适用；执行侧按计划重新S0
+- 自动复核触发：G2-A施工/验证/发布或具名退回；关联规范、计划索引、生产代码或验收变化；用户同步或继续
