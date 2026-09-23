@@ -5,12 +5,12 @@
 - 目标编号：`GOAL-INSTINCT-RUNTIME`
 - 名称：构建本能系统基于世界事实、实例特征和现实锚点持续运行的基础架构
 - 类型：集成能力目标
-- 记录版本：v0.12
+- 记录版本：v0.13
 - 创建时间：2026-09-21
 - 更新时间：2026-09-23
-- 当前状态：候选；当前直接推进位置由`GOAL-SELF-GOVERNANCE-CLOSURE`下的`GOAL-METHOD-REGISTRY-ROOT-EMPTY-DOMAIN-BUDGET-REPAIR-IMPLEMENTATION`承担
+- 当前状态：候选；当前直接推进位置由`GOAL-SELF-GOVERNANCE-CLOSURE`下的`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER-IMPLEMENTATION`承担
 - 直接上位目标：无
-- 直接下位目标：`GOAL-IF-R-FOUNDATION`（已完成）、`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`（已完成）、`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-IFR-ACTUAL-F-PROVIDER-DESIGN`（完成）、`GOAL-SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER-IMPLEMENTATION`（阻断）、`GOAL-SELF-GOVERNANCE-CLOSURE`（候选，当前路线）
+- 直接下位目标：`GOAL-IF-R-FOUNDATION`（已完成）、`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`（已完成）、`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-IFR-ACTUAL-F-PROVIDER-DESIGN`（完成）、`GOAL-SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER-IMPLEMENTATION`（当前）、`GOAL-SELF-GOVERNANCE-CLOSURE`（候选，当前路线）
 - 目标账所有者：交互智能体
 
 ## 1.1 目标问题与优先级
@@ -44,16 +44,16 @@
 ## 5. 依赖、风险与下一动作
 
 - 依赖：4115 IF/R、8120 启动顺序、8121 阶段21物理合同、8100 / 8200 运行边界、8300 验收，以及已发布的 ARCH-L4 根材料与特征组合provider。
-- 当前阻断：无上位目标阻断；阶段21直接下位因阶段19方法登记根空域预算实现缺陷阻断，当前最小预算修复计划已发布可执行。
+- 当前阻断：无。阶段19方法登记根空域预算缺陷已修复发布，阶段21组合provider恢复当前。
 - 当前风险：`规范/详细设计/20260915_INSTINCT-ROOT-RUNTIME-ANCHOR_本能根运行锚点详细设计_v0.1.md`已具名 DRIFT，不能作为施工依据；阶段21不得模拟或替代上游特征与 ARCH-L4 合同。
-- 下一动作：先完成`METHOD-REGISTRY-ROOT-EMPTY-DOMAIN-BUDGET-REPAIR` v0.1，再恢复`INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER` v0.2；随后才形成普通应用、启动阶段21和self停门消费的紧邻后继。
+- 下一动作：从`8e20a8f40`重新S0并执行`INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER` v0.2；随后才形成普通应用、启动阶段21和self停门消费的紧邻后继。
 
 ## 6. 状态证据上下文
 
-- 状态事实截止：`da2b143e1790d530c852a12fd43cdce88b5d544b`
-- 关联计划身份：已完成G1、根材料和实际F provider；当前为`METHOD-REGISTRY-ROOT-EMPTY-DOMAIN-BUDGET-REPAIR`，直接后继为`INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER`；旧锚点计划不可执行
-- 关联计划观察版本 / blob：预算修复v0.1 / `3587326598e2f3c8912ed65158763116b864b80e`；阶段21v0.2 / `c9cdcd70d8a98a38c8eb6601b6cccc2c8e594e93`；已完成G1 v0.1 / `13d8dca640645c67ad8a26c0228dd0506ebd3638`
-- 最后实质进展：`da2b143e1`发布阶段19预算修复设计/计划和阶段21上游依赖门；阶段21生产/专项WIP未发布，生产治理门和生产接线仍未实现
+- 状态事实截止：`8e20a8f40b5b47b087441067bb97cc72a8022054`
+- 关联计划身份：已完成G1、根材料、实际F provider和阶段19预算修复；当前为`INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER`；旧锚点计划不可执行
+- 关联计划观察版本 / blob：阶段21v0.2 / `c9cdcd70d8a98a38c8eb6601b6cccc2c8e594e93`；已完成G1 v0.1 / `13d8dca640645c67ad8a26c0228dd0506ebd3638`
+- 最后实质进展：`8e20a8f40`发布阶段19预算修复代码和验证，阶段21直接上游依赖门已满足；阶段21生产/专项WIP未发布，生产治理门和生产接线仍未实现
 - 阻断证据来源：无；当前是阶段21组合provider代码实施动作，不是等待外部依赖
 - 阻断解除条件：不适用
 - 自动复核触发：阶段21组合provider代码或记录发布；关联规范 / 设计 / 计划索引变更、后继生产接线或验收发布、所有权释放、用户同步或继续
