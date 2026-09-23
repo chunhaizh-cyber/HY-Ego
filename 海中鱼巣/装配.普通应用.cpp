@@ -289,6 +289,11 @@ struct 普通应用上下文 final {
   std::unique_ptr<方法登记根生产初始化提供者> 方法登记根初始化;
   存在单例角色结构交付 角色结构;
   std::optional<std::uint64_t> 根原G0;
+  std::optional<本能根运行初始化结果_v1> 本能根运行初始化尝试;
+  std::optional<本能根运行锚点_v1> 本能根运行锚点;
+  std::optional<真实自我投影> 本能根运行自我投影;
+  std::optional<稳定编码> 本能根运行根场景;
+  自我线程 自我线程对象;
 };
 
 std::mutex 上下文锁;
@@ -517,7 +522,9 @@ std::unique_ptr<普通应用上下文> 建立上下文(
 
 普通应用配置 规范化配置(普通应用配置 config) {
   auto&storage=config.L1事实基座持久存储;
-  if(config.版本!=1||storage.合同版本!=L1事实基座持久恢复合同版本_v1||
+  if(config.版本!=2||storage.合同版本!=L1事实基座持久恢复合同版本_v1||
+     !config.自我线程邮箱容量||!config.自我线程进入停门等待毫秒||
+     !config.自我线程停止回收诊断等待毫秒||
      storage.受控根.empty()||!storage.受控根.is_absolute())
     throw 普通应用装配状态::入口拒绝;
   const auto original=storage.受控根.native();
@@ -537,7 +544,10 @@ std::unique_ptr<普通应用上下文> 建立上下文(
 
 bool 相同配置(const 普通应用配置&a,const 普通应用配置&b) noexcept {
   if(a.版本!=b.版本||
-     a.L1事实基座持久存储.合同版本!=b.L1事实基座持久存储.合同版本)
+     a.L1事实基座持久存储.合同版本!=b.L1事实基座持久存储.合同版本||
+     a.自我线程邮箱容量!=b.自我线程邮箱容量||
+     a.自我线程进入停门等待毫秒!=b.自我线程进入停门等待毫秒||
+     a.自我线程停止回收诊断等待毫秒!=b.自我线程停止回收诊断等待毫秒)
     return false;
   const auto&x=a.L1事实基座持久存储.受控根.native();
   const auto&y=b.L1事实基座持久存储.受控根.native();
@@ -568,7 +578,57 @@ bool 相同配置(const 普通应用配置&a,const 普通应用配置&b) noexcep
   std::filesystem::path root(std::wstring(buffer.data(),written));
   if(root.empty()||!root.is_absolute())throw 普通应用装配状态::入口拒绝;
   root/=L"海中鱼巣";root/=L"数据";root/=L"L1事实基座";
-  return 规范化配置({1,{L1事实基座持久恢复合同版本_v1,std::move(root)}});
+  return 规范化配置({2,{L1事实基座持久恢复合同版本_v1,std::move(root)},
+      普通应用默认自我线程邮箱容量,
+      普通应用默认自我线程进入停门等待毫秒,
+      普通应用默认自我线程停止回收诊断等待毫秒});
+}
+
+constexpr 世界树读取预算 本能根运行世界树读取预算{64,256};
+constexpr 世界树绑定创建预算 本能根运行自我读取预算{256,64,64};
+constexpr 概念树预算 本能根运行自我概念读取预算{
+    256,256,256,64,64,64};
+
+本能根运行初始化结果_v1 本能根运行失败(
+    const 本能根运行初始化请求_v1&request,
+    const 本能根运行初始化状态_v1 status) noexcept {
+  return {本能根运行初始化合同版本_v1,status,request,std::nullopt};
+}
+
+本能根运行初始化状态_v1 映射世界树读取失败(
+    const 世界树操作状态 status) noexcept {
+  if(status==世界树操作状态::事实代次漂移)
+    return 本能根运行初始化状态_v1::当前性漂移;
+  if(status==世界树操作状态::资源失败)
+    return 本能根运行初始化状态_v1::资源失败;
+  return 本能根运行初始化状态_v1::内部不一致;
+}
+
+本能根运行初始化状态_v1 映射自我读取失败(
+    const 真实自我形成状态 status) noexcept {
+  if(status==真实自我形成状态::读取未完成)
+    return 本能根运行初始化状态_v1::当前性漂移;
+  if(status==真实自我形成状态::资源失败)
+    return 本能根运行初始化状态_v1::资源失败;
+  return 本能根运行初始化状态_v1::内部不一致;
+}
+
+自我线程操作结果_v1 安全停止并回收自我线程(
+    普通应用上下文&context,const 普通应用配置&config) noexcept {
+  const auto stop=context.自我线程对象.请求停止();
+  const auto joined=context.自我线程对象.等待停止(
+      config.自我线程停止回收诊断等待毫秒);
+  if(joined.成功())return joined;
+  if(stop.状态!=自我线程操作状态::成功&&
+     stop.状态!=自我线程操作状态::精确重复&&
+     joined.状态==自我线程操作状态::入口拒绝)
+    return stop;
+  return joined;
+}
+
+自我线程创建结果_v1 回收失败结果(
+    const 自我线程操作结果_v1&result) noexcept {
+  return {result.状态,result.生命周期,std::nullopt,result.写业务事实};
 }
 
 } // namespace 普通应用装配内部
@@ -740,6 +800,188 @@ namespace 普通应用装配内部 {
     out.状态 = 方法登记根生产初始化状态::内部不一致;
   }
   return out;
+}
+
+本能根运行初始化结果_v1 初始化普通应用本能根运行锚点(
+    const 方法登记根生产初始化结果&method) noexcept {
+  using namespace 普通应用装配内部;
+  std::lock_guard lock(上下文锁);
+  本能根运行初始化请求_v1 request{};
+  const auto 清除候选缓存=[](普通应用上下文&context) noexcept {
+    context.本能根运行锚点.reset();
+    context.本能根运行自我投影.reset();
+    context.本能根运行根场景.reset();
+  };
+  if(!上下文||!上下文->世界树||!上下文->自我||
+     !上下文->特征概念||!上下文->存在||!上下文->需求||
+     !method.成功()||!method.最终Gread) {
+    if(上下文)清除候选缓存(*上下文);
+    auto out=本能根运行失败(request,
+        本能根运行初始化状态_v1::入口拒绝);
+    if(上下文)上下文->本能根运行初始化尝试=out;
+    return out;
+  }
+  if(上下文->自我线程对象.读取诊断快照().生命周期!=
+      自我线程生命周期状态::未创建) {
+    清除候选缓存(*上下文);
+    auto out=本能根运行失败(request,
+        本能根运行初始化状态_v1::入口拒绝);
+    上下文->本能根运行初始化尝试=out;
+    return out;
+  }
+  清除候选缓存(*上下文);
+  try {
+    const 世界树根验证请求 rootRequest{
+        2,method.最终Gread,本能根运行世界树读取预算};
+    const auto root=上下文->世界树->验证现实世界根(rootRequest);
+    if(!root.成功(rootRequest)||!root.树) {
+      auto out=本能根运行失败(request,
+          映射世界树读取失败(root.结果头.状态));
+      上下文->本能根运行初始化尝试=out;
+      return out;
+    }
+    const 真实自我读取请求 selfRequest{
+        1,method.最终Gread,root.树->根场景,
+        上下文->角色结构.项目角色,本能根运行自我读取预算,
+        本能根运行自我概念读取预算};
+    const auto self=上下文->自我->读取当前自我(selfRequest);
+    if(!self.成功(selfRequest)||!self.投影) {
+      auto out=本能根运行失败(request,
+          映射自我读取失败(self.状态));
+      上下文->本能根运行初始化尝试=out;
+      return out;
+    }
+    const auto&projection=*self.投影;
+    if(!有效(projection.E)||projection.Gread!=method.最终Gread||
+       projection.H!=method.最终Gread||
+       projection.世界根!=root.树->根场景||
+       !projection.位置.直接结构父||
+       projection.位置.直接结构父->来源!=直接归属来源::直接子场景||
+       projection.位置.直接结构父->父!=root.树->根场景||
+       projection.位置.直接结构父->成员!=projection.E) {
+      auto out=本能根运行失败(request,
+          本能根运行初始化状态_v1::内部不一致);
+      上下文->本能根运行初始化尝试=out;
+      return out;
+    }
+    request.唯一自我={projection.E};
+    本能根运行初始化提供者 provider(*上下文->特征概念,
+        *上下文->存在,*上下文->需求,selfRequest,self);
+    auto out=provider.初始化(request);
+    上下文->本能根运行初始化尝试=out;
+    if(!out.成功())return out;
+    上下文->本能根运行锚点=*out.锚点;
+    上下文->本能根运行自我投影=projection;
+    上下文->本能根运行根场景=root.树->根场景;
+    return out;
+  } catch(const std::bad_alloc&) {
+    清除候选缓存(*上下文);
+    auto out=本能根运行失败(request,
+        本能根运行初始化状态_v1::资源失败);
+    上下文->本能根运行初始化尝试=out;
+    return out;
+  } catch(const std::length_error&) {
+    清除候选缓存(*上下文);
+    auto out=本能根运行失败(request,
+        本能根运行初始化状态_v1::资源失败);
+    上下文->本能根运行初始化尝试=out;
+    return out;
+  } catch(...) {
+    清除候选缓存(*上下文);
+    auto out=本能根运行失败(request,
+        本能根运行初始化状态_v1::内部不一致);
+    上下文->本能根运行初始化尝试=out;
+    return out;
+  }
+}
+
+自我线程创建结果_v1 创建并停门普通应用自我线程() noexcept {
+  using namespace 普通应用装配内部;
+  std::lock_guard lock(上下文锁);
+  if(!上下文||!已选配置||!上下文->世界树||!上下文->自我||
+     !上下文->本能根运行锚点||!上下文->本能根运行自我投影||
+     !上下文->本能根运行根场景)
+    return {};
+  const auto 收口=[&](自我线程创建结果_v1 original) noexcept {
+    const auto snapshot=上下文->自我线程对象.读取诊断快照();
+    if(snapshot.生命周期==自我线程生命周期状态::未创建)
+      return original;
+    const auto cleanup=安全停止并回收自我线程(*上下文,*已选配置);
+    return cleanup.成功()?original:回收失败结果(cleanup);
+  };
+  try {
+    const auto&anchor=*上下文->本能根运行锚点;
+    const 世界树根验证请求 rootRequest{
+        2,anchor.事实截止代次,本能根运行世界树读取预算};
+    const auto root=上下文->世界树->验证现实世界根(rootRequest);
+    if(!root.成功(rootRequest)||!root.树||
+       root.树->根场景!=*上下文->本能根运行根场景)
+      return 收口({});
+    const 真实自我读取请求 selfRequest{
+        1,anchor.事实截止代次,root.树->根场景,
+        上下文->角色结构.项目角色,本能根运行自我读取预算,
+        本能根运行自我概念读取预算};
+    const auto self=上下文->自我->读取当前自我(selfRequest);
+    if(!self.成功(selfRequest)||!self.投影)return 收口({});
+    const auto&projection=*self.投影;
+    if(projection.E!=anchor.自我.编码||
+       projection.世界根!=root.树->根场景||
+       !projection.位置.直接结构父||
+       projection.位置.直接结构父->来源!=直接归属来源::直接子场景||
+       projection.位置.直接结构父->父!=root.树->根场景||
+       projection.位置.直接结构父->成员!=projection.E)
+      return 收口({});
+
+    自我线程创建请求_v1 request;
+    request.邮箱容量=已选配置->自我线程邮箱容量;
+    request.世界={{root.树->根场景.值},{root.树->根场景.值},
+        root.结果头.Gread};
+    request.自我={{projection.E.值},{projection.世界根.值},
+        {projection.位置.直接结构父->父.值},projection.Gread};
+    request.本能根.自我={anchor.自我.编码.值};
+    request.本能根.安全根={{anchor.安全根.需求.值},
+        {anchor.安全根.列表项.值},{anchor.安全根.实际特征.编码.值},
+        {anchor.安全根.目标合同.值}};
+    request.本能根.服务根={{anchor.服务根.需求.值},
+        {anchor.服务根.列表项.值},{anchor.服务根.实际特征.编码.值},
+        {anchor.服务根.目标合同.值}};
+    request.本能根.Gread=anchor.事实截止代次;
+    if(!request.完整())
+      return 收口({自我线程操作状态::内部错误,
+          自我线程生命周期状态::未创建,std::nullopt,false});
+
+    auto created=上下文->自我线程对象.创建并停在治理运行门(
+        request,已选配置->自我线程进入停门等待毫秒);
+    const auto snapshot=上下文->自我线程对象.读取诊断快照();
+    const bool postcondition=created.成功()&&created.见证&&
+        created.见证->完整()&&
+        snapshot.生命周期==自我线程生命周期状态::已停门&&
+        !snapshot.治理运行门开启&&snapshot.线程已进入&&
+        !snapshot.线程已完成&&snapshot.邮箱容量==request.邮箱容量&&
+        snapshot.邮箱数量==0&&!snapshot.当前消息&&
+        snapshot.已冻结批次数量==0&&!snapshot.内部错误锁存;
+    if(postcondition)return created;
+    if(created.成功())
+      created={自我线程操作状态::内部错误,snapshot.生命周期,
+          std::nullopt,false};
+    return 收口(created);
+  } catch(const std::bad_alloc&) {
+    return 收口({自我线程操作状态::资源失败,
+        自我线程生命周期状态::启动失败,std::nullopt,false});
+  } catch(const std::length_error&) {
+    return 收口({自我线程操作状态::资源失败,
+        自我线程生命周期状态::启动失败,std::nullopt,false});
+  } catch(...) {
+    return 收口({自我线程操作状态::内部错误,
+        自我线程生命周期状态::内部错误,std::nullopt,false});
+  }
+}
+
+自我线程操作结果_v1 停止并回收普通应用自我线程() noexcept {
+  using namespace 普通应用装配内部;
+  std::lock_guard lock(上下文锁);
+  if(!上下文||!已选配置)return {};
+  return 安全停止并回收自我线程(*上下文,*已选配置);
 }
 
 std::optional<本能先天特征概念初始化结果>

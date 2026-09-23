@@ -192,6 +192,21 @@
     <ClCompile Include="海中鱼巣\业务\应用服务.方法登记根生产初始化.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\本能根运行初始化.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\业务\应用服务.本能根运行初始化.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\应用服务.本能根运行初始化.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\线程\线程_自我.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\线程\线程_自我.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClInclude Include="海中鱼巣\核心\L1公共事实.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>

@@ -200,6 +200,11 @@
     <ClCompile Include="海中鱼巣\业务\应用服务.自我形成.cpp" />
     <ClInclude Include="海中鱼巣\业务\应用服务.方法登记根生产初始化.h" />
     <ClCompile Include="海中鱼巣\业务\应用服务.方法登记根生产初始化.cpp" />
+    <ClInclude Include="海中鱼巣\业务\本能根运行初始化.数据.h" />
+    <ClInclude Include="海中鱼巣\业务\应用服务.本能根运行初始化.h" />
+    <ClCompile Include="海中鱼巣\业务\应用服务.本能根运行初始化.cpp" />
+    <ClInclude Include="海中鱼巣\线程\线程_自我.h" />
+    <ClCompile Include="海中鱼巣\线程\线程_自我.cpp" />
     <ClCompile Include="海中鱼巣\入口.cpp" />
   </ItemGroup>
   <ItemGroup>
