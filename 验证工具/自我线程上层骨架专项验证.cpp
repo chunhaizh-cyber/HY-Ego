@@ -1,5 +1,6 @@
 #include "../海中鱼巣/线程/线程_自我.h"
 
+#include <atomic>
 #include <cstdint>
 #include <iostream>
 #include <string_view>
@@ -23,6 +24,22 @@ void 检查(const bool 条件, const std::string_view 名称) {
         std::cout << "FAIL " << 名称 << '\n';
     }
 }
+
+class 假正式上下文端口 final : public 自我线程正式上下文端口 {
+public:
+    自我线程正式上下文结果_v1 读取正式上下文(
+        const 自我线程正式上下文请求_v1&) noexcept override {
+        调用数量_.fetch_add(1, std::memory_order_relaxed);
+        return { 自我线程外部调用状态::依赖未就绪, std::nullopt, false };
+    }
+
+    [[nodiscard]] std::uint64_t 调用数量() const noexcept {
+        return 调用数量_.load(std::memory_order_relaxed);
+    }
+
+private:
+    std::atomic<std::uint64_t> 调用数量_{ 0 };
+};
 
 [[nodiscard]] 自我线程创建请求_v1 建立请求(const std::uint64_t 自我身份 = 40) {
     自我线程创建请求_v1 请求;
@@ -51,27 +68,33 @@ void 检查(const bool 条件, const std::string_view 名称) {
 }
 
 void 验证基础生命周期与邮箱() {
+    假正式上下文端口 端口A;
+    假正式上下文端口 端口B;
     自我线程 线程;
     auto 无效请求 = 建立请求();
     无效请求.邮箱容量 = 0;
-    const auto 无效结果 = 线程.创建并停在治理运行门(无效请求, 100);
+    const auto 无效结果 = 线程.创建并停在治理运行门(无效请求, 端口B, 100);
     检查(无效结果.状态 == 自我线程操作状态::入口拒绝, "invalid request rejected");
     检查(线程.读取诊断快照().生命周期 == 自我线程生命周期状态::未创建,
         "invalid request creates no thread");
 
     const auto 请求 = 建立请求();
-    const auto 创建 = 线程.创建并停在治理运行门(请求, 2000);
+    const auto 创建 = 线程.创建并停在治理运行门(请求, 端口A, 2000);
     检查(创建.状态 == 自我线程操作状态::成功 && 创建.成功(), "valid create reaches closed gate");
     检查(创建.见证.has_value() && 创建.见证->入口序号 < 创建.见证->停门序号,
         "entry and gate witness ordered");
 
-    const auto 重复 = 线程.创建并停在治理运行门(请求, 2000);
+    const auto 重复 = 线程.创建并停在治理运行门(请求, 端口A, 2000);
     检查(重复.状态 == 自我线程操作状态::精确重复 && 重复.成功(),
         "same request reuses physical selection");
     检查(重复.见证 == 创建.见证, "duplicate returns original witness");
 
-    const auto 冲突 = 线程.创建并停在治理运行门(建立请求(21), 2000);
-    检查(冲突.状态 == 自我线程操作状态::选择冲突, "different selection conflicts");
+    const auto 端口冲突 = 线程.创建并停在治理运行门(请求, 端口B, 2000);
+    检查(端口冲突.状态 == 自我线程操作状态::选择冲突,
+        "different context port conflicts");
+    const auto 请求冲突 = 线程.创建并停在治理运行门(建立请求(21), 端口A, 2000);
+    检查(请求冲突.状态 == 自我线程操作状态::选择冲突,
+        "different request conflicts");
 
     const auto 开门一 = 线程.复核前置并开放治理运行门(100);
     const auto 开门二 = 线程.复核前置并开放治理运行门(100);
@@ -120,19 +143,23 @@ void 验证基础生命周期与邮箱() {
         "repeated stop is idempotent");
     检查(线程.等待停止(100).状态 == 自我线程操作状态::精确重复,
         "repeated wait observes joined thread");
-    检查(线程.创建并停在治理运行门(请求, 100).状态 == 自我线程操作状态::入口拒绝 &&
-        线程.创建并停在治理运行门(建立请求(22), 100).状态 == 自我线程操作状态::入口拒绝,
+    检查(线程.创建并停在治理运行门(请求, 端口A, 100).状态 == 自我线程操作状态::入口拒绝 &&
+        线程.创建并停在治理运行门(请求, 端口B, 100).状态 == 自我线程操作状态::入口拒绝 &&
+        线程.创建并停在治理运行门(建立请求(22), 端口A, 100).状态 == 自我线程操作状态::入口拒绝,
         "stopped object cannot restart");
+    检查(端口A.调用数量() == 0 && 端口B.调用数量() == 0,
+        "lifecycle and mailbox paths never call context ports");
 }
 
 void 验证并发同选择只形成一个见证() {
+    假正式上下文端口 端口;
     自我线程 线程;
     const auto 请求 = 建立请求(200);
     std::vector<自我线程创建结果_v1> 结果(8);
     std::vector<std::thread> 调用方;
     for (std::size_t i = 0; i < 结果.size(); ++i) {
-        调用方.emplace_back([&线程, &请求, &结果, i] {
-            结果[i] = 线程.创建并停在治理运行门(请求, 2000);
+        调用方.emplace_back([&线程, &端口, &请求, &结果, i] {
+            结果[i] = 线程.创建并停在治理运行门(请求, 端口, 2000);
         });
     }
     for (auto& 调用 : 调用方) {
@@ -156,18 +183,57 @@ void 验证并发同选择只形成一个见证() {
         "concurrent duplicates share one witness");
     (void)线程.请求停止();
     检查(线程.等待停止(2000).成功(), "concurrent-create thread joins");
+    检查(端口.调用数量() == 0, "concurrent same-port create never calls context port");
+}
+
+void 验证并发不同端口只有一个选择() {
+    假正式上下文端口 端口A;
+    假正式上下文端口 端口B;
+    自我线程 线程;
+    const auto 请求 = 建立请求(250);
+    std::vector<自我线程创建结果_v1> 结果(8);
+    std::vector<std::thread> 调用方;
+    for (std::size_t i = 0; i < 结果.size(); ++i) {
+        调用方.emplace_back([&线程, &端口A, &端口B, &请求, &结果, i] {
+            auto& 端口 = (i % 2 == 0)
+                ? static_cast<自我线程正式上下文端口&>(端口A)
+                : static_cast<自我线程正式上下文端口&>(端口B);
+            结果[i] = 线程.创建并停在治理运行门(请求, 端口, 2000);
+        });
+    }
+    for (auto& 调用 : 调用方) {
+        调用.join();
+    }
+
+    std::uint64_t 首次数量 = 0;
+    std::uint64_t 重复数量 = 0;
+    std::uint64_t 冲突数量 = 0;
+    for (const auto& 结果项 : 结果) {
+        首次数量 += 结果项.状态 == 自我线程操作状态::成功 ? 1 : 0;
+        重复数量 += 结果项.状态 == 自我线程操作状态::精确重复 ? 1 : 0;
+        冲突数量 += 结果项.状态 == 自我线程操作状态::选择冲突 ? 1 : 0;
+    }
+    检查(首次数量 == 1 && 重复数量 == 3 && 冲突数量 == 4,
+        "concurrent different ports preserve one physical selection");
+    (void)线程.请求停止();
+    检查(线程.等待停止(2000).成功(), "different-port race thread joins");
+    检查(端口A.调用数量() == 0 && 端口B.调用数量() == 0,
+        "concurrent different-port create never calls context ports");
 }
 
 void 验证析构停止守恒() {
+    假正式上下文端口 端口;
     {
         自我线程 线程;
         const auto 请求 = 建立请求(300);
-        检查(线程.创建并停在治理运行门(请求, 2000).成功(), "destructor case created");
+        检查(线程.创建并停在治理运行门(请求, 端口, 2000).成功(),
+            "destructor case created");
         检查(线程.提交根需求复核消息(
             建立消息(400, 自我线程复核触发根::服务根, 60)).成功(),
             "destructor case queued");
     }
     检查(true, "destructor latched stop and joined");
+    检查(端口.调用数量() == 0, "destructor never calls context port");
 }
 
 } // namespace
@@ -175,6 +241,7 @@ void 验证析构停止守恒() {
 int main() {
     验证基础生命周期与邮箱();
     验证并发同选择只形成一个见证();
+    验证并发不同端口只有一个选择();
     验证析构停止守恒();
     std::cout << "SUMMARY pass=" << 通过数量 << " fail=" << 失败数量 << '\n';
     return 失败数量 == 0 ? 0 : 1;

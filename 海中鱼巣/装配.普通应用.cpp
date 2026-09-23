@@ -912,6 +912,7 @@ namespace 普通应用装配内部 {
   using namespace 普通应用装配内部;
   std::lock_guard lock(上下文锁);
   if(!上下文||!已选配置||!上下文->世界树||!上下文->自我||
+     !上下文->自我线程正式上下文||
      !上下文->本能根运行锚点||!上下文->本能根运行自我投影||
      !上下文->本能根运行根场景)
     return {};
@@ -964,7 +965,8 @@ namespace 普通应用装配内部 {
           自我线程生命周期状态::未创建,std::nullopt,false});
 
     auto created=上下文->自我线程对象.创建并停在治理运行门(
-        request,已选配置->自我线程进入停门等待毫秒);
+        request,*上下文->自我线程正式上下文,
+        已选配置->自我线程进入停门等待毫秒);
     const auto snapshot=上下文->自我线程对象.读取诊断快照();
     const bool postcondition=created.成功()&&created.见证&&
         created.见证->完整()&&

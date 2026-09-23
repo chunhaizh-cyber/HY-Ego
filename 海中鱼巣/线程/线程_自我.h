@@ -241,7 +241,9 @@ public:
     自我线程& operator=(自我线程&&) = delete;
 
     [[nodiscard]] 自我线程创建结果_v1 创建并停在治理运行门(
-        const 自我线程创建请求_v1& 请求, std::uint64_t 等待毫秒) noexcept;
+        const 自我线程创建请求_v1& 请求,
+        自我线程正式上下文端口& 正式上下文端口,
+        std::uint64_t 等待毫秒) noexcept;
     [[nodiscard]] 自我线程操作结果_v1 复核前置并开放治理运行门(
         std::uint64_t 等待毫秒) noexcept;
     [[nodiscard]] 自我线程操作结果_v1 提交根需求复核消息(
