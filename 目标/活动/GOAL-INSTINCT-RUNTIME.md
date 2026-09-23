@@ -5,10 +5,10 @@
 - 目标编号：`GOAL-INSTINCT-RUNTIME`
 - 名称：构建本能系统基于世界事实、实例特征和现实锚点持续运行的基础架构
 - 类型：集成能力目标
-- 记录版本：v0.17
+- 记录版本：v0.18
 - 创建时间：2026-09-21
-- 更新时间：2026-09-23
-- 当前状态：候选；当前直接推进位置由`GOAL-SELF-GOVERNANCE-CLOSURE`下的`GOAL-SELF-CONTEXT-FRESH-READ-PROVIDER-IMPLEMENTATION`承担
+- 更新时间：2026-09-24
+- 当前状态：候选；当前直接推进位置为`GOAL-SELF-GOVERNANCE-CLOSURE`的G4-A合同阻断闭合
 - 直接上位目标：无
 - 直接下位目标：`GOAL-IF-R-FOUNDATION`（已完成）、`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`（已完成）、`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-IFR-ACTUAL-F-PROVIDER-DESIGN`（完成）、`GOAL-SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-SELF-GOVERNANCE-CLOSURE`（候选，当前路线）
 - 目标账所有者：交互智能体
@@ -38,22 +38,21 @@
 - 已完成前置：`GOAL-IF-R-FOUNDATION` 已以代码实施目标完成，详见`目标/已完成/GOAL-IF-R-FOUNDATION.md`；其不证明构建、运行、恢复或本目标能力。
 - 已完成设计：`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`已冻结根目标合同、独立根 D、根列表 L 与成员关系的 ARCH-L4 物理合同，并登记`ARCH-L4-INSTINCT-ROOT-DEMAND-PROVIDER`为可执行计划。
 - 已完成下位目标：根材料 provider 与安全值/服务值先天FT、完整域概念和实际F组合provider均已按各自完成条件发布。
-- 后续方向：用户已确认以完整自我线程治理闭环反推数据服务需求，并采用先写上层、在真实调用点补最小下层能力的策略；阶段21组合provider及其生产消费已经发布，当前由`GOAL-SELF-GOVERNANCE-CLOSURE`推进G2-A正式上下文纯读provider。
+- 后续方向：用户已确认以完整自我线程治理闭环反推数据服务需求，并采用先写上层、在真实调用点补最小下层能力的策略；阶段21组合provider、生产消费和G2-A正式上下文纯读provider均已发布，当前由`GOAL-SELF-GOVERNANCE-CLOSURE`闭合G4-A合同阻断。
 - 设计承载方式：机器语义、DTO、所有权、事务、恢复和验收边界由现行规范、具名详细设计和后续计划组合承载；本目标记录不替代这些材料。
 
 ## 5. 依赖、风险与下一动作
 
 - 依赖：4115 IF/R、8120 启动顺序、8121 阶段21物理合同、8100 / 8200 运行边界、8300 验收，以及已发布的 ARCH-L4 根材料与特征组合provider。
-- 当前阻断：无设计阻断；G2-A执行发现的当前self读回漂移已由计划v0.2闭合并登记为`可执行`。生产治理门仍关闭，这是当前分期边界而非阻断。
-- 当前风险：G2-A不得把纯读根材料实现成写入口转发，不得把方法根或当前特征值塞入正式上下文投影，也不得提前注入self或开放治理门。
-- 下一动作：执行`SELF-CONTEXT-FRESH-READ-PROVIDER` v0.2；代码发布后再从self真实消费点形成G2-B及G4-A所需直接后继设计。
+- 当前阻断：G4-A缺少目标判断K生产来源、完整结果/预算/状态映射、触发范围和根治理sink/owner精确合同；任务管理/工作线程正式生产入口也未形成。
+- 当前风险：硬编码根比较绕过正式K、把技术非成功压成未满足、用空sink冒充任务承接，或在8120要求的生产者/消费者未就绪前开放治理门。
+- 下一动作：先闭合G4-A具名设计阻断；阻断解除后只登记最早可机械施工叶，G2-B开门另行设计。
 
 ## 6. 状态证据上下文
 
-- 状态事实截止：`5593eb2fc8f5dc33e0f0e6ec2ec33f1c8757232a`
-- 关联计划身份：`SELF-CONTEXT-FRESH-READ-PROVIDER`
-- 关联计划观察版本 / blob：v0.2 / `0e687f3f593a9137b20cd82a25b4d6e7ccf8bdfe`
-- 最后实质进展：`f11d94000`发布阶段21生产消费、阶段20唯一self创建停门和宿主安全回收；G2-A v0.2已闭合当前self多层位置读回漂移并恢复可执行
-- 阻断证据来源：不适用；当前无设计阻断
-- 阻断解除条件：不适用；执行侧按计划重新S0
-- 自动复核触发：G2-A施工/验证/发布或具名退回；关联规范、计划索引、生产代码或验收变化；用户同步或继续
+- 状态事实截止：`e04887112a740a5295ff7421b417ef1c77bb7c17`
+- 关联计划身份：无；当前计划索引为空
+- 最后实质进展：`e04887112`发布G2-A；目标与计划终态已同步，当前转入G4-A合同阻断闭合
+- 阻断证据来源：`规范/详细设计/20260924_SELF-ROOT-DEMAND-REVIEW_G4-A双根复核与根治理意图设计阻断_v0.1.md`
+- 阻断解除条件：G4-A比较K、结果、预算、状态、触发和sink/owner合同全部冻结
+- 自动复核触发：上述合同、任务管理/工作线程入口、关联规范、计划索引、生产代码或验收变化；用户改变目标
