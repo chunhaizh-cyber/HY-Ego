@@ -5,10 +5,10 @@
 - 目标编号：`GOAL-INSTINCT-RUNTIME`
 - 名称：构建本能系统基于世界事实、实例特征和现实锚点持续运行的基础架构
 - 类型：集成能力目标
-- 记录版本：v0.18
+- 记录版本：v0.19
 - 创建时间：2026-09-21
-- 更新时间：2026-09-24
-- 当前状态：候选；当前直接推进位置为`GOAL-SELF-GOVERNANCE-CLOSURE`的G4-A合同阻断闭合
+- 更新时间：2026-09-25
+- 当前状态：候选；当前直接推进位置为`GOAL-SELF-GOVERNANCE-CLOSURE`的根目标合同值求值来源裁决
 - 直接上位目标：无
 - 直接下位目标：`GOAL-IF-R-FOUNDATION`（已完成）、`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`（已完成）、`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-IFR-ACTUAL-F-PROVIDER-DESIGN`（完成）、`GOAL-SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-SELF-GOVERNANCE-CLOSURE`（候选，当前路线）
 - 目标账所有者：交互智能体
@@ -38,21 +38,21 @@
 - 已完成前置：`GOAL-IF-R-FOUNDATION` 已以代码实施目标完成，详见`目标/已完成/GOAL-IF-R-FOUNDATION.md`；其不证明构建、运行、恢复或本目标能力。
 - 已完成设计：`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`已冻结根目标合同、独立根 D、根列表 L 与成员关系的 ARCH-L4 物理合同，并登记`ARCH-L4-INSTINCT-ROOT-DEMAND-PROVIDER`为可执行计划。
 - 已完成下位目标：根材料 provider 与安全值/服务值先天FT、完整域概念和实际F组合provider均已按各自完成条件发布。
-- 后续方向：用户已确认以完整自我线程治理闭环反推数据服务需求，并采用先写上层、在真实调用点补最小下层能力的策略；阶段21组合provider、生产消费和G2-A正式上下文纯读provider均已发布，当前由`GOAL-SELF-GOVERNANCE-CLOSURE`闭合G4-A合同阻断。
+- 后续方向：用户已确认以完整自我线程治理闭环反推数据服务需求，并采用先写上层、在真实调用点补最小下层能力的策略；阶段21组合provider、生产消费、G2-A正式上下文纯读provider、双根RC初始化和4242求值器均已发布。当前由`GOAL-SELF-GOVERNANCE-CLOSURE`先裁决根目标合同值如何成为求值器合法操作数，再闭合G4-A根复核provider。
 - 设计承载方式：机器语义、DTO、所有权、事务、恢复和验收边界由现行规范、具名详细设计和后续计划组合承载；本目标记录不替代这些材料。
 
 ## 5. 依赖、风险与下一动作
 
 - 依赖：4115 IF/R、8120 启动顺序、8121 阶段21物理合同、8100 / 8200 运行边界、8300 验收，以及已发布的 ARCH-L4 根材料与特征组合provider。
-- 当前阻断：G4-A缺少目标判断K生产来源、完整结果/预算/状态映射、触发范围和根治理sink/owner精确合同；任务管理/工作线程正式生产入口也未形成。
-- 当前风险：硬编码根比较绕过正式K、把技术非成功压成未满足、用空sink冒充任务承接，或在8120要求的生产者/消费者未就绪前开放治理门。
-- 下一动作：先闭合G4-A具名设计阻断；阻断解除后只登记最早可机械施工叶，G2-B开门另行设计。
+- 当前阻断：G4-A所需双K、双RC和4242求值器已形成，但正式根目标`M`只作为需求目标合同值存在，4242操作数只允许F/B；现行规范尚未固定不制造世界F/B的目标合同值来源。根复核结果DTO、真实sink/manager和任务管理/工作线程入口继续作为后继缺口。
+- 当前风险：把裸`I64_MAX`、伪造目标F/B或专用复制算法当成已登记RC求值；把技术非成功压成未满足；用空sink冒充任务承接；在8120要求的生产者/消费者未就绪前开放治理门。
+- 下一动作：取得用户对目标合同值求值来源的确认并修订正式规范；随后只登记最早可机械施工的G4-A根复核provider叶，G2-B开门另行设计。
 
 ## 6. 状态证据上下文
 
-- 状态事实截止：`e04887112a740a5295ff7421b417ef1c77bb7c17`
+- 状态事实截止：`3af5c321e1f7e84ea0e5f359ad82d6312339bd82`
 - 关联计划身份：无；当前计划索引为空
-- 最后实质进展：`e04887112`发布G2-A；目标与计划终态已同步，当前转入G4-A合同阻断闭合
-- 阻断证据来源：`规范/详细设计/20260924_SELF-ROOT-DEMAND-REVIEW_G4-A双根复核与根治理意图设计阻断_v0.1.md`
-- 阻断解除条件：G4-A比较K、结果、预算、状态、触发和sink/owner合同全部冻结
+- 最后实质进展：`2cf115d5e`发布预算自由版本2读取链、4242求值器和普通应用装配；当前从真实G4-A消费者发现目标合同值无法进入F/B操作数合同
+- 阻断证据来源：`规范/详细设计/20260924_SELF-ROOT-DEMAND-REVIEW_G4-A双根复核与根治理意图设计阻断_v0.1.md` v0.4（待本次发布）
+- 阻断解除条件：先由用户确认并由正式规范固定目标合同值的合法求值来源；再冻结G4-A结果、状态及provider合同。sink/manager作为其正差距载荷的直接后继另行闭合。
 - 自动复核触发：上述合同、任务管理/工作线程入口、关联规范、计划索引、生产代码或验收变化；用户改变目标
