@@ -153,6 +153,7 @@
     <ClCompile Include="..\海中鱼巣\启动.应用程序.cpp" />
     <ClInclude Include="..\海中鱼巣\装配.普通应用.h" />
     <ClCompile Include="..\海中鱼巣\装配.普通应用.cpp" />
+    <ClCompile Include="..\海中鱼巣\业务\初始化.本能双根二次关系概念.cpp" />
     <ClInclude Include="..\海中鱼巣\核心\L1公共事实.数据.h" />
     <ClInclude Include="..\海中鱼巣\核心\L1事实基座.数据.h" />
     <ClInclude Include="..\海中鱼巣\核心\L1所有者范围CRUD.数据.h" />
@@ -163,12 +164,16 @@
     <ClInclude Include="..\海中鱼巣\适配\协议.D455采样材料.h" />
     <ClCompile Include="..\海中鱼巣\适配\协议.D455采样材料.cpp" />
     <ClCompile Include="..\海中鱼巣\业务\应用服务.自我形成.cpp" />
+    <ClCompile Include="..\海中鱼巣\业务\应用服务.自我线程正式上下文.cpp" />
     <ClCompile Include="..\海中鱼巣\业务\应用服务.方法登记根生产初始化.cpp" />
+    <ClCompile Include="..\海中鱼巣\业务\应用服务.本能根运行初始化.cpp" />
+    <ClCompile Include="..\海中鱼巣\线程\线程_自我.cpp" />
     <ClCompile Include="..\海中鱼巣\领域\数据服务.方法登记根.cpp" />
     <ClCompile Include="..\海中鱼巣\领域\数据服务.特征值类.cpp" />
     <ClCompile Include="..\海中鱼巣\业务\应用服务.特征概念类.cpp" />
     <ClCompile Include="..\海中鱼巣\领域\数据服务.特征值域比较类.cpp" />
     <ClCompile Include="..\海中鱼巣\领域\数据服务.不可变材料.cpp" />
+    <ClCompile Include="..\海中鱼巣\领域\数据服务.局部二值格解析类.cpp" />
     <ClInclude Include="..\海中鱼巣\适配\适配器.单调时钟.h" />
     <ClCompile Include="..\海中鱼巣\适配\适配器.单调时钟.cpp" />
     <ClInclude Include="..\海中鱼巣\适配\适配器.UTC时钟.h" />
@@ -211,6 +216,8 @@
     <ClInclude Include="..\海中鱼巣\领域\数据服务.存在类.h" />
     <ClInclude Include="..\海中鱼巣\领域\数据服务.概念树类.h" />
     <ClCompile Include="..\海中鱼巣\领域\数据服务.概念树类.cpp" />
+    <ClCompile Include="..\海中鱼巣\领域\合同.二次关系概念.cpp" />
+    <ClCompile Include="..\海中鱼巣\业务\初始化.二次关系概念结构.cpp" />
     <ClInclude Include="..\海中鱼巣\领域\数据服务.场景类.h" />
     <ClCompile Include="..\海中鱼巣\领域\数据服务.场景类.cpp" />
     <ClInclude Include="..\海中鱼巣\领域\数据服务.世界树根.h" />

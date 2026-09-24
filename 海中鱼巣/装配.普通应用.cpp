@@ -36,6 +36,9 @@ namespace 普通应用装配内部 {
 struct 概念结构异常 final { 纯概念状态 原因; };
 struct 角色结构异常 final { 存在单例角色状态 原因; };
 struct 本能先天特征概念异常 final { 本能先天特征概念初始化状态 原因; };
+struct 本能双根二次关系概念异常 final {
+  本能双根二次关系概念初始化状态 原因;
+};
 struct 持久恢复异常 final { L1事实基座持久恢复结果_v1 结果; };
 
 const wchar_t* 实例特征结构异常文本(实例特征结构异常 reason) noexcept {
@@ -279,6 +282,7 @@ struct 普通应用上下文 final {
   std::unique_ptr<场景类数据服务> 场景;
   std::unique_ptr<概念树类数据服务> 概念;
   本能先天特征概念初始化结果 本能先天特征概念初始化;
+  本能双根二次关系概念初始化结果 本能双根二次关系概念初始化;
   std::unique_ptr<特征值域比较数据服务> 特征值域比较;
   std::unique_ptr<原子I64特征出生数据服务> 原子I64特征出生;
   std::unique_ptr<特征概念应用服务> 特征概念;
@@ -502,6 +506,16 @@ std::unique_ptr<普通应用上下文> 建立上下文(
       {1,当前代次(l1),{64,256,0,0,0,64,0,0}});
   if(!result->本能先天特征概念初始化.成功())
     throw 本能先天特征概念异常{result->本能先天特征概念初始化.状态};
+  本能双根二次关系概念初始化提供者 rootRelationInitialization(
+      *result->特征, *result->概念);
+  result->本能双根二次关系概念初始化 = rootRelationInitialization.初始化(
+      {本能双根二次关系概念初始化合同版本,
+       当前代次(l1), result->本能先天特征概念初始化,
+       本能双根RC纯概念预算, 本能双根RCK读取预算,
+       本能双根RCK最大扫描候选数量, 本能双根RC二次关系预算});
+  if(!result->本能双根二次关系概念初始化.成功())
+    throw 本能双根二次关系概念异常{
+        result->本能双根二次关系概念初始化.状态};
   result->特征值域比较=std::make_unique<特征值域比较数据服务>(
       *result->概念,*result->特征,*result->特征值);
   result->原子I64特征出生=std::make_unique<原子I64特征出生数据服务>(
@@ -655,6 +669,12 @@ namespace 普通应用装配内部 {
         out.本能先天特征概念原因=上下文->本能先天特征概念初始化.状态;
         return out;
       }
+      if(!上下文->本能双根二次关系概念初始化.成功()) {
+        out.状态=普通应用装配状态::本能双根二次关系概念初始化失败;
+        out.本能双根二次关系概念原因=
+            上下文->本能双根二次关系概念初始化.状态;
+        return out;
+      }
       if(!上下文->自我) {
         try {上下文->自我=std::make_unique<真实自我形成服务>(
             *上下文->世界树,*上下文->存在,上下文->角色结构.项目角色);}
@@ -735,6 +755,9 @@ namespace 普通应用装配内部 {
   } catch(const 本能先天特征概念异常&e) {
     out.状态=普通应用装配状态::本能先天特征概念初始化失败;
     out.本能先天特征概念原因=e.原因;
+  } catch(const 本能双根二次关系概念异常&e) {
+    out.状态=普通应用装配状态::本能双根二次关系概念初始化失败;
+    out.本能双根二次关系概念原因=e.原因;
   } catch(const std::bad_alloc&) {
     out.状态=普通应用装配状态::资源失败;
   } catch(const std::length_error&) {
@@ -1005,6 +1028,15 @@ std::optional<本能先天特征概念初始化结果>
   std::lock_guard lock(上下文锁);
   if(!上下文||!上下文->本能先天特征概念初始化.成功())return std::nullopt;
   return 上下文->本能先天特征概念初始化;
+}
+
+std::optional<本能双根二次关系概念初始化结果>
+读取普通应用本能双根二次关系概念初始化() noexcept {
+  using namespace 普通应用装配内部;
+  std::lock_guard lock(上下文锁);
+  if(!上下文||!上下文->本能双根二次关系概念初始化.成功())
+    return std::nullopt;
+  return 上下文->本能双根二次关系概念初始化;
 }
 
 需求类数据服务* 读取普通应用需求服务() noexcept {

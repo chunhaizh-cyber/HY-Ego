@@ -2555,6 +2555,35 @@ bool 特征概念值域基础读取结果_v1::成功(
         std::optional<纯概念事实> found;
         for(const auto &m:members) {
             if(m.角色或顺序!=1) throw 纯失败{纯概念状态::内部不一致};
+            const auto conceptNode=节点(m.目标节点,r.Gread,r.H);
+            if(conceptNode.种类!=节点种类::普通||conceptNode.属性类型表示)
+                throw 纯失败{纯概念状态::内部不一致};
+            const auto definitions=关系(m.目标节点,pure_layout_->类型.定义成员,
+                                        false,r.Gread,r.H,r.预算.最大关系数);
+            if(definitions.size()!=1||definitions.front().角色或顺序!=1)
+                throw 纯失败{纯概念状态::内部不一致};
+            const auto definitionNode=节点(definitions.front().目标节点,r.Gread,r.H);
+            if(definitionNode.种类!=节点种类::普通||definitionNode.属性类型表示)
+                throw 纯失败{纯概念状态::内部不一致};
+            const auto definitionValues=属性(definitionNode.编码,r.Gread,r.H);
+            if(definitionValues.size()>r.预算.最大特征属性数)
+                throw 纯失败{纯概念状态::数量预算不足};
+            const auto pureKinds=std::count_if(definitionValues.begin(),definitionValues.end(),
+                [&](const auto& value) {
+                    return value.属性类型节点==pure_layout_->类型.定义种类;
+                });
+            if(pureKinds>1) throw 纯失败{纯概念状态::内部不一致};
+            if(!pureKinds) {
+                if(!secondary_relation_layout_)
+                    throw 纯失败{纯概念状态::内部不一致};
+                const auto rules=关系(m.目标节点,
+                    secondary_relation_layout_->类型.规范化规则归属,false,
+                    r.Gread,r.H,r.预算.最大关系数);
+                if(rules.size()!=1||rules.front().角色或顺序!=1||
+                   rules.front().目标节点!=secondary_relation_layout_->规范化规则.值)
+                    throw 纯失败{纯概念状态::内部不一致};
+                continue;
+            }
             const auto f=读取纯概念内部(概念树概念身份{m.目标节点},r.Gread,r.H,r.预算);
             if(f.定义==expected) {
                 if(found) throw 纯失败{纯概念状态::内部不一致};
@@ -2609,6 +2638,35 @@ I64特征概念组织读取结果 概念树类数据服务::读取当前I64特�
         };
         for(const auto& member:members) {
             if(member.角色或顺序!=1)throw 纯失败{纯概念状态::内部不一致};
+            const auto conceptNode=节点(member.目标节点,r.Gread,r.H);
+            if(conceptNode.种类!=节点种类::普通||conceptNode.属性类型表示)
+                throw 纯失败{纯概念状态::内部不一致};
+            const auto definitions=关系(member.目标节点,pure_layout_->类型.定义成员,
+                                        false,r.Gread,r.H,r.预算.最大关系数);
+            if(definitions.size()!=1||definitions.front().角色或顺序!=1)
+                throw 纯失败{纯概念状态::内部不一致};
+            const auto definitionNode=节点(definitions.front().目标节点,r.Gread,r.H);
+            if(definitionNode.种类!=节点种类::普通||definitionNode.属性类型表示)
+                throw 纯失败{纯概念状态::内部不一致};
+            const auto definitionValues=属性(definitionNode.编码,r.Gread,r.H);
+            if(definitionValues.size()>r.预算.最大特征属性数)
+                throw 纯失败{纯概念状态::数量预算不足};
+            const auto pureKinds=std::count_if(definitionValues.begin(),definitionValues.end(),
+                [&](const auto& value) {
+                    return value.属性类型节点==pure_layout_->类型.定义种类;
+                });
+            if(pureKinds>1)throw 纯失败{纯概念状态::内部不一致};
+            if(!pureKinds) {
+                if(!secondary_relation_layout_)
+                    throw 纯失败{纯概念状态::内部不一致};
+                const auto rules=关系(member.目标节点,
+                    secondary_relation_layout_->类型.规范化规则归属,false,
+                    r.Gread,r.H,r.预算.最大关系数);
+                if(rules.size()!=1||rules.front().角色或顺序!=1||
+                   rules.front().目标节点!=secondary_relation_layout_->规范化规则.值)
+                    throw 纯失败{纯概念状态::内部不一致};
+                continue;
+            }
             auto fact=读取纯概念内部(概念树概念身份{member.目标节点},r.Gread,r.H,r.预算);
             const auto* definition=std::get_if<纯I64特征概念定义>(&fact.定义);
             if(fact.治理状态==概念树生命周期状态::活跃&&definition&&
@@ -3817,7 +3875,33 @@ bool 二次关系约束读取结果::成功() const noexcept {return 版本==1&&
 
 二次关系概念读取结果 概念树类数据服务::读取二次关系概念(const 二次关系概念读取请求&r) const {
     二次关系概念读取结果 out;out.Gread=r.读取头.Gread;out.H=r.读取头.H;
-    try{if(!secondary_relation_layout_)throw 二次关系失败{二次关系数据状态::格式不支持};if(r.版本!=1||r.读取头.合同版本!=1||!r.读取头.Gread||!r.读取头.H||r.读取头.H>r.读取头.Gread||!有效(r.RC.值)||!二次预算完整(r.预算))throw 二次关系失败{二次关系数据状态::入口拒绝};守卫代次(r.读取头.Gread);std::vector<概念树概念身份> stack{r.RC};out.事实=读取二次关系内部(r.RC,r.读取头.Gread,r.读取头.H,r.预算,out.用量,stack);out.状态=二次关系数据状态::已读取;守卫代次(r.读取头.Gread);}catch(const 二次关系失败&e){out.状态=e.状态;out.事实.reset();}catch(const 失败&e){out.状态=映射二次失败(e.状态);out.事实.reset();}catch(const std::bad_alloc&){out.状态=二次关系数据状态::资源失败;out.事实.reset();}catch(...){out.状态=二次关系数据状态::内部不一致;out.事实.reset();}return out;
+    try {
+        if(!secondary_relation_layout_)
+            throw 二次关系失败{二次关系数据状态::格式不支持};
+        if(r.版本!=1||r.读取头.合同版本!=1||!r.读取头.Gread||
+           !r.读取头.H||r.读取头.H>r.读取头.Gread||!有效(r.RC.值)||
+           !二次预算完整(r.预算))
+            throw 二次关系失败{二次关系数据状态::入口拒绝};
+        守卫代次(r.读取头.Gread);
+        std::vector<概念树概念身份> stack{r.RC};
+        out.事实=读取二次关系内部(r.RC,r.读取头.Gread,r.读取头.H,
+                                    r.预算,out.用量,stack);
+        out.状态=out.事实->治理状态==概念树生命周期状态::活跃
+            ? 二次关系数据状态::已读取
+            : (out.事实->治理状态==概念树生命周期状态::冷却
+                ? 二次关系数据状态::冷却命中
+                : 二次关系数据状态::退役命中);
+        守卫代次(r.读取头.Gread);
+    } catch(const 二次关系失败&e) {
+        out.状态=e.状态;out.事实.reset();
+    } catch(const 失败&e) {
+        out.状态=映射二次失败(e.状态);out.事实.reset();
+    } catch(const std::bad_alloc&) {
+        out.状态=二次关系数据状态::资源失败;out.事实.reset();
+    } catch(...) {
+        out.状态=二次关系数据状态::内部不一致;out.事实.reset();
+    }
+    return out;
 }
 
 std::vector<概念树概念身份> 概念树类数据服务::枚举二次关系身份(std::uint64_t g,std::uint64_t h,const 二次关系预算&b,二次关系读取用量&u,概念事实读取会话_v1* sharedSession) const {

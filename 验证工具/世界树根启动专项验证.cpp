@@ -157,7 +157,7 @@ struct Fixture {
         l1, *existenceOwner.写入端口, roleRequest);
     require(role.成功(roleRequest) && role.交付, "existence-role-layout");
     const 实例特征结构登记请求 instanceFeatureRequest{
-        1, generation(l1), {0x4946525354525543ULL}};
+        2, generation(l1), {0x4946525354525632ULL}};
     const auto instanceFeature = 存在类数据服务::登记实例特征结构(
         l1, *existenceOwner.写入端口, instanceFeatureRequest);
     require(instanceFeature.成功(instanceFeatureRequest) && instanceFeature.交付,

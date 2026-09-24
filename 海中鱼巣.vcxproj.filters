@@ -144,6 +144,12 @@
     <ClCompile Include="海中鱼巣\业务\初始化.二次关系概念结构.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\初始化.本能双根二次关系概念.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\初始化.本能双根二次关系概念.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClInclude Include="海中鱼巣\领域\数据服务.世界树根.h">
       <Filter>头文件</Filter>
     </ClInclude>

@@ -7,8 +7,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{47533E60-D6AD-4CF4-9C95-0A97ED4105CA}</ProjectGuid>
-    <RootNamespace>本能根运行生产消费专项验证</RootNamespace>
+    <ProjectGuid>{BC3C8307-D21E-4E96-A39A-26B0BF1BE92A}</ProjectGuid>
+    <RootNamespace>本能双根二次关系概念初始化专项验证</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -38,9 +38,7 @@
     <Link><SubSystem>Console</SubSystem><GenerateDebugInformation>true</GenerateDebugInformation><AdditionalDependencies>bcrypt.lib;%(AdditionalDependencies)</AdditionalDependencies></Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="本能根运行生产消费专项验证.cpp" />
-    <ClCompile Include="..\海中鱼巣\启动.程序运行宿主.cpp" />
-    <ClCompile Include="..\海中鱼巣\启动.应用程序.cpp" />
+    <ClCompile Include="本能双根二次关系概念初始化专项验证.cpp" />
     <ClCompile Include="..\海中鱼巣\装配.普通应用.cpp" />
     <ClCompile Include="..\海中鱼巣\业务\初始化.本能双根二次关系概念.cpp" />
     <ClCompile Include="..\海中鱼巣\适配\适配器.单调时钟.cpp" />
