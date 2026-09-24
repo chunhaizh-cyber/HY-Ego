@@ -1,6 +1,6 @@
 # INSTINCT-ROOT-RC-PRODUCTION-INIT 安全服务双根RC生产初始化代码实施计划
 
-版本：v0.6
+版本：v0.7
 
 日期：2026-09-24
 
@@ -8,7 +8,7 @@
 
 代码事实基线：`98b3718acd29ae4059f9c56759c7ef0ac68d7560`
 
-详细设计：`规范/详细设计/20260924_INSTINCT-ROOT-RC-PRODUCTION-INIT_安全服务双根RC生产初始化与稳定定位详细设计_v0.1.md`（内部版本 v0.6）
+详细设计：`规范/详细设计/20260924_INSTINCT-ROOT-RC-PRODUCTION-INIT_安全服务双根RC生产初始化与稳定定位详细设计_v0.1.md`（内部版本 v0.7）
 
 ## 1. 目标与完成条件
 
@@ -44,7 +44,7 @@
 
 - `海中鱼巣/业务/初始化.本能双根二次关系概念.h`
 - `海中鱼巣/业务/初始化.本能双根二次关系概念.cpp`
-- `海中鱼巣/领域/数据服务.概念树类.cpp`（仅允许修正 `精确查询纯概念` 对同概念族独立扩展的候选过滤，以及 `读取二次关系概念` 的活跃/冷却/退役结果状态投影；不改公开 ABI、RC 结构、生命周期或其它概念操作）
+- `海中鱼巣/领域/数据服务.概念树类.cpp`（仅允许修正 `精确查询纯概念` 与 `读取当前I64特征概念` 对同概念族独立扩展的严格候选过滤，以及 `读取二次关系概念` 的活跃/冷却/退役结果状态投影；不改公开 ABI、预算 DTO、RC 结构、生命周期或其它概念操作）
 - `海中鱼巣/装配.普通应用.h`
 - `海中鱼巣/装配.普通应用.cpp`
 - `海中鱼巣.vcxproj`
@@ -82,7 +82,7 @@
 
 1. S0：核对计划 blob、HEAD、index、异主 WIP、现有 DTO/函数和知识条目；冻结本计划切片。
 2. 新建初始化头源，实现值式完整性、状态成功谓词、构造核验和请求入口核验。
-3. 在唯一概念 owner 完成两项局部修复：`精确查询纯概念` 继续按 v0.3 严格过滤合法 RC 独立扩展；`读取二次关系概念` 完整读回后按事实治理状态设置`活跃→已读取、冷却→冷却命中、退役→退役命中`。不得修改公开 DTO、概念族组织、RC 结构、生命周期、预算或写事务，也不得改动其它概念操作。
+3. 在唯一概念 owner 完成三项局部修复：`精确查询纯概念` 与 `读取当前I64特征概念` 都按详细设计第6.2节严格过滤合法 RC 独立扩展，后者只能在成员被证明为 pure v2 后调用 `读取纯概念内部`；`读取二次关系概念` 完整读回后按事实治理状态设置`活跃→已读取、冷却→冷却命中、退役→退役命中`。不得修改公开 DTO、概念族组织、RC 结构、生命周期、预算或写事务，也不得改动其它概念操作。
 4. 实现通用 EC 的查询→首次材料恢复→创建→正式读回，不复制 pure owner 逻辑；首次 RC 发布后的重复初始化和跨进程恢复仍必须通过同一 pure 精确查询复用原 EC，不得以首次键、缓存或 L1 直读绕过。
 5. 实现每根 K 的当前路由读取→定义核验→固定键建立→发布未知按完整原请求重放收敛→身份和当前路由双读回；K 读取预算及扫描上限只进入两个读取入口，建立与完整原请求重放调用现行无预算写入口，禁止补预算字段，并核验每次写调用返回结果的读取用量为零。
 6. 实现每根 RC 的完整定义查找→固定键建立→原请求收敛→身份完整读回。
@@ -121,21 +121,30 @@ msbuild 验证工具/世界树根启动专项验证.vcxproj /t:Rebuild /p:Config
 & 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\world-root\Release\out\WorldTreeRootStartupTests.exe'
 msbuild 验证工具/本能根运行生产消费专项验证.vcxproj /t:Rebuild /p:Configuration=Debug /p:Platform=x64 /p:TargetName=InstinctRootProductionConsumerTests /p:OutDir=D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Debug\out\ /p:IntDir=D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Debug\obj\
 msbuild 验证工具/本能根运行生产消费专项验证.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform=x64 /p:TargetName=InstinctRootProductionConsumerTests /p:OutDir=D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Release\out\ /p:IntDir=D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Release\obj\
-& 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Debug\out\InstinctRootProductionConsumerTests.exe'
-& 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Release\out\InstinctRootProductionConsumerTests.exe'
+& 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Debug\out\InstinctRootProductionConsumerTests.exe' config 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Debug\run-config'
+& 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Debug\out\InstinctRootProductionConsumerTests.exe' stage-first 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Debug\run-stage'
+& 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Debug\out\InstinctRootProductionConsumerTests.exe' stage-recover 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Debug\run-stage'
+& 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Debug\out\InstinctRootProductionConsumerTests.exe' ordinary 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Debug\run-ordinary'
+& 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Debug\out\InstinctRootProductionConsumerTests.exe' headless 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Debug\run-headless'
+& 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Release\out\InstinctRootProductionConsumerTests.exe' config 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Release\run-config'
+& 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Release\out\InstinctRootProductionConsumerTests.exe' stage-first 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Release\run-stage'
+& 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Release\out\InstinctRootProductionConsumerTests.exe' stage-recover 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Release\run-stage'
+& 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Release\out\InstinctRootProductionConsumerTests.exe' ordinary 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Release\run-ordinary'
+& 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Release\out\InstinctRootProductionConsumerTests.exe' headless 'D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\instinct-consumer\Release\run-headless'
 msbuild 海中鱼巣.vcxproj /t:Rebuild /p:Configuration=Debug /p:Platform=x64 /p:OutDir=D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\root\Debug\out\ /p:IntDir=D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\root\Debug\obj\
 msbuild 海中鱼巣.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform=x64 /p:OutDir=D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\root\Release\out\ /p:IntDir=D:\TEMP\HY-Ego\INSTINCT-ROOT-RC-PRODUCTION-INIT\root\Release\obj\
 git diff --check
 git diff --cached --check
 ```
 
-专项必须逐项报告详细设计第9节的十二类验证，其中必须证明 pure 与 RC 各公开调用使用对应预算、K 读取预算及扫描上限只进入两个 K 读取入口、K 建立与完整原请求重放没有读取预算字段且每次写调用返回结果的读取用量为零；还必须在双 RC 已存在后重新调用初始化并证明 pure 精确查询只依据完整 RC 规范化规则归属见证跳过 RC 独立定义、复用同一 EC、零新增 EC，且构造“缺 pure `定义种类`同时缺少/损坏 RC 见证”的族成员时返回`内部不一致`；跨进程恢复亦不得因合法 RC 族成员返回`内部不一致`。
+专项必须逐项报告详细设计第9节的十二类验证，其中必须证明 pure 与 RC 各公开调用使用对应预算、K 读取预算及扫描上限只进入两个 K 读取入口、K 建立与完整原请求重放没有读取预算字段且每次写调用返回结果的读取用量为零；还必须在双 RC 已存在后重新调用初始化并证明 `精确查询纯概念` 与 `读取当前I64特征概念` 都只依据完整 RC 规范化规则归属见证跳过 RC 独立定义，前者复用同一 EC、零新增 EC，后者允许阶段21继续形成单值 FC。构造“缺 pure `定义种类`同时缺少/损坏 RC 见证”的族成员时，两入口均须返回`内部不一致`；跨进程恢复亦不得因合法 RC 族成员返回`内部不一致`。
 
 专项必须分别把 RC 迁移为活跃、冷却和退役后调用`读取二次关系概念`，证明结果状态与事实治理状态严格对应且结果自身`成功()`为真；随后证明 provider 对冷却继续形成完整交付、对退役返回`类型或概念已退出`并清空双根交付。不得在 provider 侧绕过成功谓词或改写 owner 结果。
 
 发布未知不再要求伪造可运行故障：必须逐分支静态检查 pure/K/RC 的生产实现，列出源文件与行号并证明原请求/首次材料保留、现行收敛入口、正式读回成功门、未决返回`已可能发布`、零双根交付、零换键和零后续装配。专项运行项必须准确记为`未执行：现行公开ABI不可确定触达`，不得写 PASS；该项在静态防御检查通过时不阻断计划完成。禁止为触达该分支新增生产故障注入 ABI、可替换 owner 端口、测试开关，或扩大代码白名单。跨进程恢复仍是必须实际执行的运行验证，未覆盖不得写 PASS；不得以构建替代任何要求的运行项。
 两个受影响既有专项也必须完成 Debug/Release 构建与运行；任一项未实际执行都不得声明本计划完成。
 世界树根启动专项的 `existence-instance-feature-layout` 必须使用现行 `实例特征结构登记请求{2, G0, {0x4946525354525632}}`。该夹具修正后原有测试流程和断言必须继续执行；不得通过调整本计划验证入口、忽略无参数运行失败或给生产端增加 v1 接受路径规避。
+生产消费专项每个可执行文件都必须按命令表带两个参数运行五次，并严格按 `config -> stage-first -> stage-recover -> ordinary -> headless` 串行。仅 `stage-first/stage-recover` 复用同一配置内的阶段根；Debug、Release 和其它模式使用独立绝对根。阶段链、控制面板阶段12和无窗口停止信号后的成功断言不得删除或放宽。若 owner 过滤修复后 `ordinary/headless` 仍失败，停止并形成新的具名漂移，不得在本计划内扩展宿主代码范围。
 
 ## 8. 发布和完成声明
 
@@ -147,6 +156,7 @@ git diff --cached --check
 
 | 日期 | 版本 | 修订内容 |
 | --- | --- | --- |
+| 2026-09-24 | v0.7 | 按 `DESIGN-DRIFT-I64-CONCEPT-READ-RC-FAMILY-FILTER` 把 `读取当前I64特征概念` 的同族严格过滤纳入既有概念 owner 白名单，完全复用 v0.3 的 pure/RC 判别与失败边界；修正生产消费专项为 Debug/Release 各五模式、带绝对根、串行运行。普通/无窗口先复验阶段21前置链，不提前扩宿主范围。 |
 | 2026-09-24 | v0.6 | 按 `DESIGN-DRIFT-WORLD-ROOT-IF-V2-FIXTURE` 将 `验证工具/世界树根启动专项验证.cpp` 的单一实例特征结构请求夹具纳入白名单，固定迁移到版本2和 `0x4946525354525632`；保留原验证入口及断言，不改生产 ABI 或兼容旧请求。 |
 | 2026-09-24 | v0.5 | 按 `DESIGN-DRIFT-RC-READ-LIFECYCLE-PROJECTION` 将 `读取二次关系概念` 的活跃/冷却/退役状态投影最小修复纳入既有概念 owner 文件白名单；增加三生命周期身份读取与 provider 冷却/退役分流验证，不改 ABI 或生命周期语义。 |
 | 2026-09-24 | v0.4 | 按 `DESIGN-DRIFT-PUBLISH-UNKNOWN-TESTABILITY` 将发布未知拆为必须通过的静态防御实现检查和明确不可确定触达的运行项；后者记为未执行而非 PASS，但不阻断完成。保持跨进程等其余运行门禁，不新增生产故障注入 ABI、不扩大白名单。 |
