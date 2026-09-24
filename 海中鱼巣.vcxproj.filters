@@ -72,6 +72,12 @@
     <ClCompile Include="海中鱼巣\业务\计算.二次特征.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\计算.二次关系求值.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\计算.二次关系求值.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClInclude Include="海中鱼巣\业务\应用服务.需求目标方向.h">
       <Filter>头文件</Filter>
     </ClInclude>

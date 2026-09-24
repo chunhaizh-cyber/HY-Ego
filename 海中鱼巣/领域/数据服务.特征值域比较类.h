@@ -55,6 +55,78 @@ struct 实例值域命中结果_v1 final {
     bool 成功(const 实例值域命中核验请求_v1&) const noexcept;
 };
 
+enum class 特征值域比较状态_v2 : std::uint8_t {
+    已读取 = 1, 已核验, 未找到, 目标已退出, 类别冲突, 类型不相容,
+    规则缺失, 未实现, 事实代次漂移, 历史材料不可用,
+    资源失败, 内部不一致, 入口拒绝
+};
+enum class 特征值域关系_v2 : std::uint8_t { 相等 = 1, 左包含右, 右包含左, 不包含 };
+struct 特征值域读取请求_v2 final {
+    std::uint32_t 版本 = 2; std::uint64_t Gread = 0, H = 0;
+    概念树概念身份 FC;
+};
+struct 特征值域关系核验请求_v2 final {
+    std::uint32_t 版本 = 2; std::uint64_t Gread = 0, H = 0;
+    概念树概念身份 左FC, 右FC;
+};
+struct 实例值域命中核验请求_v2 final {
+    std::uint32_t 版本 = 2; std::uint64_t Gread = 0, H = 0;
+    特征信息身份 F; 概念树概念身份 FC;
+};
+struct 特征I64组有限域_v2 final {
+    std::vector<std::vector<std::int64_t>> 点组;
+    friend bool operator==(const 特征I64组有限域_v2 &,
+                           const 特征I64组有限域_v2 &) = default;
+};
+struct 特征U64组有限域_v2 final {
+    std::vector<std::vector<std::uint64_t>> 点组;
+    friend bool operator==(const 特征U64组有限域_v2 &,
+                           const 特征U64组有限域_v2 &) = default;
+};
+struct 特征独立材料域项_v2 final {
+    不可变材料格式身份_B1 格式;
+    std::vector<std::uint8_t> 完整载荷;
+    friend bool operator==(const 特征独立材料域项_v2 &,
+                           const 特征独立材料域项_v2 &) = default;
+};
+struct 特征独立材料有限域_v2 final {
+    std::vector<特征独立材料域项_v2> 材料组;
+    friend bool operator==(const 特征独立材料有限域_v2 &,
+                           const 特征独立材料有限域_v2 &) = default;
+};
+using 特征规范值域_v2 = std::variant<特征规范I64域, 特征I64组有限域_v2,
+                                     特征U64组有限域_v2, 特征独立材料有限域_v2>;
+struct 特征值域事实_v2 final {
+    概念树概念身份 FC; 特征类型身份 FT;
+    特征值表示类型 原始表示 = 特征值表示类型::I64;
+    特征比较规则身份 规则身份; std::uint32_t 规则版本 = 0;
+    特征规范值域_v2 规范化值域;
+    特征概念值域基础事实_v2 基础读回;
+};
+struct 特征值域读取结果_v2 final {
+    std::uint32_t 版本 = 2;
+    特征值域比较状态_v2 状态 = 特征值域比较状态_v2::入口拒绝;
+    std::uint64_t Gread = 0, H = 0;
+    std::optional<特征值域事实_v2> 域;
+    bool 成功(const 特征值域读取请求_v2 &) const noexcept;
+};
+struct 特征值域关系结果_v2 final {
+    std::uint32_t 版本 = 2;
+    特征值域比较状态_v2 状态 = 特征值域比较状态_v2::入口拒绝;
+    std::uint64_t Gread = 0, H = 0;
+    std::optional<特征值域关系_v2> 关系;
+    std::optional<特征值域事实_v2> 左域, 右域;
+    bool 成功(const 特征值域关系核验请求_v2 &) const noexcept;
+};
+struct 实例值域命中结果_v2 final {
+    std::uint32_t 版本 = 2;
+    特征值域比较状态_v2 状态 = 特征值域比较状态_v2::入口拒绝;
+    std::uint64_t Gread = 0, H = 0;
+    std::optional<特征值域关系_v2> 关系;
+    std::optional<特征值域事实_v2> 域;
+    bool 成功(const 实例值域命中核验请求_v2 &) const noexcept;
+};
+
 class 特征值域比较数据服务 final {
 public:
     特征值域比较数据服务(const 概念树类数据服务&, const 特征类数据服务&, const 特征值类数据服务&) noexcept;
@@ -65,6 +137,11 @@ public:
     特征值域读取结果_v1 读取特征值域(const 特征值域读取请求_v1&) const;
     特征值域关系结果_v1 核验特征值域关系(const 特征值域关系核验请求_v1&) const;
     实例值域命中结果_v1 核验实例值域命中(const 实例值域命中核验请求_v1&) const;
+    特征值域读取结果_v2 读取特征值域_v2(const 特征值域读取请求_v2 &) const noexcept;
+    特征值域关系结果_v2 核验特征值域关系_v2(
+        const 特征值域关系核验请求_v2 &) const noexcept;
+    实例值域命中结果_v2 核验实例值域命中_v2(
+        const 实例值域命中核验请求_v2 &) const noexcept;
 private:
     friend class 概念树类数据服务;
     特征值域读取结果_v1 读取特征值域共享(

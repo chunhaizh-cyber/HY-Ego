@@ -66,24 +66,6 @@ struct 二次关系规范形 final {
                          const 二次关系规范形 &) = default;
 };
 
-struct 二次关系预算 final {
-  std::uint64_t 最大节点数 = 0, 最大关系数 = 0, 最大值数 = 0,
-                最大材料数 = 0, 最大概念数 = 0,
-                最大原子数 = 0, 最大展开深度 = 0, 最大候选数 = 0,
-                最大来源数 = 0, 最大用途数 = 0, 最大首次材料数 = 0;
-  friend bool operator==(const 二次关系预算 &,
-                         const 二次关系预算 &) = default;
-};
-
-struct 二次关系读取用量 final {
-  std::uint64_t 节点数 = 0, 关系数 = 0, 值数 = 0, 材料数 = 0,
-                概念数 = 0,
-                原子数 = 0, 展开深度 = 0, 候选数 = 0,
-                来源数 = 0, 用途数 = 0, 首次材料数 = 0;
-  friend bool operator==(const 二次关系读取用量 &,
-                         const 二次关系读取用量 &) = default;
-};
-
 struct 二次关系结构类型 final {
   稳定编码 规范化规则归属{}, 规则版本{}, 定义种类{}, 定义格式{}, 域掩码{}, 输出角色{},
       固定K{}, 约束成员{}, 约束FC{}, 约束EC{}, 合取成员{}, 子RC{}, 来源成员{},
@@ -167,7 +149,7 @@ enum class 二次关系数据状态 : std::uint8_t {
   已读取 = 1, 已创建 = 2, 已复用 = 3, 精确重放 = 4, 已变更 = 5,
   同义缺失 = 6, 冷却命中 = 7, 退役命中 = 8, 目标已退出 = 9,
   入口拒绝 = 10, 格式不支持 = 11, 规则不支持 = 12, 来源不足 = 13,
-  引用冲突 = 14, 定义矛盾 = 15, 形成环 = 16, 预算不足 = 17,
+  引用冲突 = 14, 定义矛盾 = 15, 形成环 = 16, 旧预算不足 = 17,
   事实代次漂移 = 18, 历史材料不可用 = 19, 幂等冲突 = 20,
   资源失败 = 21, 内部不一致 = 22, 发布未知 = 23, 未找到 = 24
 };
@@ -192,29 +174,26 @@ struct 二次关系初始化结果 final {
 };
 
 struct 二次关系概念读取请求 final {
-  std::uint32_t 版本 = 1;
+  std::uint32_t 版本 = 2;
   概念树读取头 读取头;
   概念树概念身份 RC;
-  二次关系预算 预算;
   friend bool operator==(const 二次关系概念读取请求 &,
                          const 二次关系概念读取请求 &) = default;
 };
 
 struct 二次关系定义查找请求 final {
-  std::uint32_t 版本 = 1;
+  std::uint32_t 版本 = 2;
   概念树读取头 读取头;
   二次关系定义 定义;
-  二次关系预算 预算;
   friend bool operator==(const 二次关系定义查找请求 &,
                          const 二次关系定义查找请求 &) = default;
 };
 
 struct 二次关系定义核验结果 final {
-  std::uint32_t 版本 = 1;
+  std::uint32_t 版本 = 2;
   二次关系数据状态 状态 = 二次关系数据状态::入口拒绝;
   std::uint64_t Gread = 0, H = 0;
   std::optional<二次关系规范形> 规范形;
-  二次关系读取用量 用量;
   bool 成功() const noexcept;
 };
 
@@ -226,35 +205,32 @@ struct 二次关系形成来源 final {
 };
 
 struct 二次关系概念建立请求 final {
-  std::uint32_t 版本 = 1;
+  std::uint32_t 版本 = 2;
   概念树写入头 写入头;
   二次关系定义 定义;
   概念初始组织指定 组织 = 概念初始组织指定::未指定;
   std::vector<概念树概念身份> 初始父组;
   std::vector<二次关系形成来源> 形成来源;
-  二次关系预算 预算;
   friend bool operator==(const 二次关系概念建立请求 &,
                          const 二次关系概念建立请求 &) = default;
 };
 
 struct 二次关系概念读取结果 final {
-  std::uint32_t 版本 = 1;
+  std::uint32_t 版本 = 2;
   二次关系数据状态 状态 = 二次关系数据状态::入口拒绝;
   std::uint64_t Gread = 0, H = 0;
-  二次关系读取用量 用量;
   std::optional<二次关系概念事实> 事实;
   bool 成功() const noexcept;
 };
 
 struct 二次关系概念写入结果 final {
-  std::uint32_t 版本 = 1;
+  std::uint32_t 版本 = 2;
   二次关系数据状态 状态 = 二次关系数据状态::入口拒绝;
   std::uint64_t Gread = 0;
   std::optional<std::uint64_t> 首次H;
   std::optional<二次关系发布见证> 正式回执;
   std::optional<二次关系概念事实> 事实;
   std::optional<二次关系概念建立请求> 建立原请求;
-  二次关系读取用量 用量;
   bool 成功() const noexcept;
 };
 
@@ -267,11 +243,10 @@ public:
 };
 
 struct 二次关系来源写入请求 final {
-  std::uint32_t 版本 = 1;
+  std::uint32_t 版本 = 2;
   概念树写入头 写入头;
   概念树概念身份 RC;
   std::vector<二次关系形成来源> 来源;
-  二次关系预算 预算;
   friend bool operator==(const 二次关系来源写入请求 &,
                          const 二次关系来源写入请求 &) = default;
 };
@@ -286,7 +261,7 @@ struct 二次关系来源事实 final {
 };
 
 struct 二次关系用途请求 final {
-  std::uint32_t 版本 = 1;
+  std::uint32_t 版本 = 2;
   概念树写入头 写入头;
   概念树概念身份 RC;
   std::uint64_t 业务标识 = 0;
@@ -294,7 +269,6 @@ struct 二次关系用途请求 final {
   std::int64_t 时间 = 0;
   稳定编码 业务依据{};
   std::uint64_t 证据H = 0;
-  二次关系预算 预算;
   friend bool operator==(const 二次关系用途请求 &,
                          const 二次关系用途请求 &) = default;
 };
@@ -313,89 +287,81 @@ struct 二次关系用途事实 final {
 };
 
 struct 二次关系关联读取请求 final {
-  std::uint32_t 版本 = 1;
+  std::uint32_t 版本 = 2;
   概念树读取头 读取头;
   概念树概念身份 RC;
-  二次关系预算 预算;
   friend bool operator==(const 二次关系关联读取请求 &,
                          const 二次关系关联读取请求 &) = default;
 };
 
 struct 二次关系关联结果 final {
-  std::uint32_t 版本 = 1;
+  std::uint32_t 版本 = 2;
   二次关系数据状态 状态 = 二次关系数据状态::入口拒绝;
   std::uint64_t Gread = 0, H = 0;
   std::optional<std::uint64_t> 首次H;
   std::optional<二次关系发布见证> 正式回执;
   std::vector<二次关系来源事实> 来源组;
   std::vector<二次关系用途事实> 用途组;
-  二次关系读取用量 用量;
   bool 成功() const noexcept;
 };
 
 struct 二次关系图读取请求 final {
-  std::uint32_t 版本 = 1;
+  std::uint32_t 版本 = 2;
   概念树读取头 读取头;
-  二次关系预算 预算;
   friend bool operator==(const 二次关系图读取请求 &,
                          const 二次关系图读取请求 &) = default;
 };
 
 struct 二次关系图结果 final {
-  std::uint32_t 版本 = 1;
+  std::uint32_t 版本 = 2;
   二次关系数据状态 状态 = 二次关系数据状态::入口拒绝;
   std::uint64_t Gread = 0, H = 0;
   相关概念类别 类别 = 相关概念类别::特征;
   std::vector<二次关系概念事实> RC组;
   std::vector<二次关系关系见证> 直接边;
-  二次关系读取用量 用量;
   bool 成功() const noexcept;
 };
 
 struct 二次关系父组请求 final {
-  std::uint32_t 版本 = 1;
+  std::uint32_t 版本 = 2;
   概念树写入头 写入头;
   概念树概念身份 RC;
   std::vector<二次关系关系见证> 预期直接父边;
   std::vector<概念树概念身份> 新父组;
-  二次关系预算 预算;
   friend bool operator==(const 二次关系父组请求 &,
                          const 二次关系父组请求 &) = default;
 };
 
 struct 二次关系生命周期请求 final {
-  std::uint32_t 版本 = 1;
+  std::uint32_t 版本 = 2;
   概念树写入头 写入头;
   概念树概念身份 RC;
   概念树生命周期状态 预期 = 概念树生命周期状态::活跃;
   概念树生命周期状态 目标 = 概念树生命周期状态::冷却;
   稳定编码 治理依据{};
-  二次关系预算 预算;
   friend bool operator==(const 二次关系生命周期请求 &,
                          const 二次关系生命周期请求 &) = default;
 };
 
 struct 二次关系来源释放请求 final {
-  std::uint32_t 版本 = 1;
+  std::uint32_t 版本 = 2;
   概念树写入头 写入头;
   概念树概念身份 RC;
   std::vector<二次关系来源事实> 预期来源;
-  二次关系预算 预算;
   friend bool operator==(const 二次关系来源释放请求 &,
                          const 二次关系来源释放请求 &) = default;
 };
 
 struct 二次关系退出请求 final {
-  std::uint32_t 版本 = 1;
+  std::uint32_t 版本 = 2;
   概念树写入头 写入头;
   概念树概念身份 RC;
-  二次关系预算 预算;
   friend bool operator==(const 二次关系退出请求 &,
                          const 二次关系退出请求 &) = default;
 };
 
 struct 二次关系治理结果 final {
-  std::uint32_t 版本 = 1;
+  std::uint32_t 版本 = 2;
   二次关系数据状态 状态 = 二次关系数据状态::入口拒绝;
   std::uint64_t Gread = 0, H = 0;
   std::optional<std::uint64_t> 首次H;
@@ -403,7 +369,6 @@ struct 二次关系治理结果 final {
   std::optional<二次关系概念事实> 事实;
   std::vector<稳定编码> 已退出事实;
   std::vector<二次关系关系见证> 新直接边;
-  二次关系读取用量 用量;
   bool 成功() const noexcept;
 };
 

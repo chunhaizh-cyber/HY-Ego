@@ -260,15 +260,11 @@ public:
             auto loadCurrent=[&](特征类型身份 ft,特征I64比较用途 purpose)->有序I64比较合同快照 {
                 const auto key=std::make_pair(ft.编码.值,static_cast<unsigned>(purpose));
                 if(current.contains(key))return current.at(key);
-                const auto limit=remaining.最大读取材料数;要求(limit,S::预算不足);
-                auto value=feature_.读取当前I64比较绑定(
-                    {1,r.G,ft,purpose,limit,{limit,limit,limit,limit}});
-                take(remaining.最大读取材料数,value.读取用量.材料总数);
+                auto value=feature_.读取当前I64比较绑定_v2({2,r.G,ft,purpose});
                 if(!value.成功()) {
-                    using K=特征I64比较绑定状态;
+                    using K=特征I64比较绑定读取状态_v2;
                     switch(value.状态) {
                     case K::未找到:throw 失败{S::未注册};
-                    case K::数量预算不足:throw 失败{S::预算不足};
                     case K::事实代次漂移:throw 失败{S::事实代次漂移};
                     case K::历史材料不可用:throw 失败{S::历史材料不可用};
                     case K::资源失败:throw 失败{S::资源失败};

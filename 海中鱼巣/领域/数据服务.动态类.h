@@ -532,16 +532,11 @@ private:
 
     动态数据状态 核验比较(const 动态原子创建请求&r,const 状态内容事实&s,std::int64_t left,std::int64_t right,
         std::uint64_t maxCandidates,std::uint64_t maxMaterials,std::uint64_t& usedMaterials)const{
-        const auto binding=feature_.读取当前I64比较绑定({1,r.G0,s.信息.正式特征类型,特征I64比较用途::变化分析,
-            maxCandidates,{maxMaterials,maxMaterials,maxMaterials,maxMaterials}});
+        (void)maxCandidates;(void)maxMaterials;usedMaterials=0;
+        const auto binding=feature_.读取当前I64比较绑定_v2(
+            {2,r.G0,s.信息.正式特征类型,特征I64比较用途::变化分析});
         if(!binding.成功())return 映射比较绑定(binding.状态);
         if(!binding.事实||binding.Gread!=r.G0||binding.H!=r.G0)return 动态数据状态::内部不一致;
-        if(!binding.当前读取原请求||binding.当前读取原请求->最大扫描候选数量!=maxCandidates
-            ||binding.当前读取原请求->读取预算!=有界事实读取预算_B1{
-                maxMaterials,maxMaterials,maxMaterials,maxMaterials}
-            ||binding.读取用量.材料总数>maxMaterials
-            ||binding.当前读取用量.扫描候选数>maxCandidates)return 动态数据状态::内部不一致;
-        usedMaterials=binding.读取用量.材料总数;
         const auto&f=*binding.事实;
         if(f.定义.输入FT!=s.信息.正式特征类型||f.定义.用途!=特征I64比较用途::变化分析
             ||f.定义.左角色!=特征I64输入角色::旧状态||f.定义.右角色!=特征I64输入角色::新状态
@@ -896,13 +891,12 @@ private:
         case 特征值读取错误::能力未提供:return 动态数据状态::比较依据不支持;
         case 特征值读取错误::资源失败:return 动态数据状态::资源失败;
         default:return 动态数据状态::内部不一致;}}
-    static 动态数据状态 映射比较绑定(特征I64比较绑定状态 s)noexcept{switch(s){
-        case 特征I64比较绑定状态::未找到:case 特征I64比较绑定状态::目标已退出:
-        case 特征I64比较绑定状态::格式不支持:case 特征I64比较绑定状态::注册不唯一:return 动态数据状态::比较依据不支持;
-        case 特征I64比较绑定状态::历史材料不可用:return 动态数据状态::历史材料已清理;
-        case 特征I64比较绑定状态::事实代次漂移:return 动态数据状态::事实代次漂移;
-        case 特征I64比较绑定状态::资源失败:return 动态数据状态::资源失败;
-        case 特征I64比较绑定状态::数量预算不足:return 动态数据状态::数量预算不足;
+    static 动态数据状态 映射比较绑定(特征I64比较绑定读取状态_v2 s)noexcept{switch(s){
+        case 特征I64比较绑定读取状态_v2::未找到:case 特征I64比较绑定读取状态_v2::目标已退出:
+        case 特征I64比较绑定读取状态_v2::格式不支持:case 特征I64比较绑定读取状态_v2::注册不唯一:return 动态数据状态::比较依据不支持;
+        case 特征I64比较绑定读取状态_v2::历史材料不可用:return 动态数据状态::历史材料已清理;
+        case 特征I64比较绑定读取状态_v2::事实代次漂移:return 动态数据状态::事实代次漂移;
+        case 特征I64比较绑定读取状态_v2::资源失败:return 动态数据状态::资源失败;
         default:return 动态数据状态::内部不一致;}}
     static 动态数据状态 映射来源动态(动态数据状态 s)noexcept{switch(s){
         case 动态数据状态::未找到:return 动态数据状态::来源未找到;

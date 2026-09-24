@@ -104,7 +104,7 @@ void 报告实例特征结构异常(存在信息身份 e, 特征类型身份 ft,
   case 二次关系数据状态::引用冲突: return 纯概念状态::引用冲突;
   case 二次关系数据状态::事实代次漂移: return 纯概念状态::事实代次漂移;
   case 二次关系数据状态::幂等冲突: return 纯概念状态::幂等冲突;
-  case 二次关系数据状态::预算不足: return 纯概念状态::数量预算不足;
+  case 二次关系数据状态::旧预算不足: return 纯概念状态::旧格式不支持;
   case 二次关系数据状态::历史材料不可用: return 纯概念状态::历史材料不可用;
   case 二次关系数据状态::资源失败: return 纯概念状态::资源失败;
   case 二次关系数据状态::发布未知: return 纯概念状态::已可能发布;
@@ -284,6 +284,8 @@ struct 普通应用上下文 final {
   本能先天特征概念初始化结果 本能先天特征概念初始化;
   本能双根二次关系概念初始化结果 本能双根二次关系概念初始化;
   std::unique_ptr<特征值域比较数据服务> 特征值域比较;
+  std::unique_ptr<有序I64特征比较提供者> 二次关系I64比较;
+  std::unique_ptr<二次关系求值应用服务> 二次关系求值;
   std::unique_ptr<原子I64特征出生数据服务> 原子I64特征出生;
   std::unique_ptr<特征概念应用服务> 特征概念;
   std::unique_ptr<场景成员概念应用服务> 场景成员概念;
@@ -510,14 +512,16 @@ std::unique_ptr<普通应用上下文> 建立上下文(
       *result->特征, *result->概念);
   result->本能双根二次关系概念初始化 = rootRelationInitialization.初始化(
       {本能双根二次关系概念初始化合同版本,
-       当前代次(l1), result->本能先天特征概念初始化,
-       本能双根RC纯概念预算, 本能双根RCK读取预算,
-       本能双根RCK最大扫描候选数量, 本能双根RC二次关系预算});
+       当前代次(l1), result->本能先天特征概念初始化});
   if(!result->本能双根二次关系概念初始化.成功())
     throw 本能双根二次关系概念异常{
         result->本能双根二次关系概念初始化.状态};
   result->特征值域比较=std::make_unique<特征值域比较数据服务>(
       *result->概念,*result->特征,*result->特征值);
+  result->二次关系I64比较=std::make_unique<有序I64特征比较提供者>();
+  result->二次关系求值=std::make_unique<二次关系求值应用服务>(
+      l1,*result->概念,*result->场景,*result->状态,*result->存在,
+      *result->特征,*result->特征值,*result->二次关系I64比较);
   result->原子I64特征出生=std::make_unique<原子I64特征出生数据服务>(
       *result->特征,*result->存在,*result->场景,*result->概念);
   result->特征概念=std::make_unique<特征概念应用服务>(
@@ -1037,6 +1041,13 @@ std::optional<本能双根二次关系概念初始化结果>
   if(!上下文||!上下文->本能双根二次关系概念初始化.成功())
     return std::nullopt;
   return 上下文->本能双根二次关系概念初始化;
+}
+
+二次关系求值应用服务* 读取普通应用二次关系求值服务() noexcept {
+  using namespace 普通应用装配内部;
+  std::lock_guard lock(上下文锁);
+  return 上下文 && 上下文->二次关系求值
+      ? 上下文->二次关系求值.get() : nullptr;
 }
 
 需求类数据服务* 读取普通应用需求服务() noexcept {

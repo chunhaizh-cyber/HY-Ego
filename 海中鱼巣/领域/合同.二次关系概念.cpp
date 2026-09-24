@@ -8,33 +8,6 @@
 namespace 海中鱼巣 {
 namespace {
 
-bool 预算已给出(const 二次关系预算 &v) noexcept {
-  return v.最大节点数 && v.最大关系数 && v.最大值数 && v.最大材料数 &&
-         v.最大概念数 &&
-         v.最大原子数 && v.最大展开深度 && v.最大候选数 &&
-         v.最大来源数 && v.最大用途数 && v.最大首次材料数;
-}
-
-bool 用量受限(const 二次关系读取用量 &u,
-              const 二次关系预算 &b) noexcept {
-  return 预算已给出(b) && u.节点数 <= b.最大节点数 &&
-         u.关系数 <= b.最大关系数 && u.值数 <= b.最大值数 &&
-         u.材料数 <= b.最大材料数 && u.概念数 <= b.最大概念数 &&
-         u.原子数 <= b.最大原子数 && u.展开深度 <= b.最大展开深度 &&
-         u.候选数 <= b.最大候选数 && u.来源数 <= b.最大来源数 &&
-         u.用途数 <= b.最大用途数 &&
-         u.首次材料数 <= b.最大首次材料数 &&
-         u.节点数 <= UINT64_MAX-u.关系数 &&
-         u.节点数+u.关系数 <= UINT64_MAX-u.值数 &&
-         u.材料数 == u.节点数+u.关系数+u.值数;
-}
-
-bool 物理用量一致(const 二次关系读取用量 &u) noexcept {
-  return u.节点数 <= UINT64_MAX-u.关系数 &&
-         u.节点数+u.关系数 <= UINT64_MAX-u.值数 &&
-         u.材料数 == u.节点数+u.关系数+u.值数;
-}
-
 bool 读取头完整(const 概念树读取头 &h) noexcept {
   return h.合同版本 == 1 && h.Gread && h.H && h.H <= h.Gread;
 }
@@ -266,9 +239,8 @@ bool 二次关系初始化结果::成功() const noexcept {
 }
 
 bool 二次关系定义核验结果::成功() const noexcept {
-  return 版本 == 1 && 状态 == 二次关系数据状态::已读取 && Gread &&
-         H && H <= Gread && 规范形 && 规范形完整(*规范形) &&
-         物理用量一致(用量);
+  return 版本 == 2 && 状态 == 二次关系数据状态::已读取 && Gread &&
+         H && H <= Gread && 规范形 && 规范形完整(*规范形);
 }
 
 bool 二次关系概念读取结果::成功() const noexcept {
@@ -276,14 +248,13 @@ bool 二次关系概念读取结果::成功() const noexcept {
       ((状态==二次关系数据状态::已读取&&事实->治理状态==概念树生命周期状态::活跃)||
        (状态==二次关系数据状态::冷却命中&&事实->治理状态==概念树生命周期状态::冷却)||
        (状态==二次关系数据状态::退役命中&&事实->治理状态==概念树生命周期状态::退役));
-  return 版本 == 1 && 读成功状态(状态) && stateMatches && Gread && H && H <= Gread &&
+  return 版本 == 2 && 读成功状态(状态) && stateMatches && Gread && H && H <= Gread &&
          事实 && 事实->Gread == Gread && 事实->H == H &&
-         事实头完整(*事实) && 物理用量一致(用量);
+         事实头完整(*事实);
 }
 
 bool 二次关系概念写入结果::成功() const noexcept {
-  if (版本 != 1 || !Gread || !事实 || !事实头完整(*事实) ||
-      !物理用量一致(用量) ||
+  if (版本 != 2 || !Gread || !事实 || !事实头完整(*事实) ||
       事实->Gread != Gread)
     return false;
   if (状态 == 二次关系数据状态::已复用 ||
@@ -303,8 +274,7 @@ bool 二次关系概念写入结果::成功() const noexcept {
 }
 
 bool 二次关系关联结果::成功() const noexcept {
-  if (版本 != 1 || !Gread || !H || H > Gread ||
-      !物理用量一致(用量))
+  if (版本 != 2 || !Gread || !H || H > Gread)
     return false;
   const bool sourcesValid=来源组完整(来源组,H);
   const bool usesValid=用途组完整(用途组,H);
@@ -346,9 +316,8 @@ bool 二次关系关联结果::成功() const noexcept {
 }
 
 bool 二次关系图结果::成功() const noexcept {
-  if (版本 != 1 || 状态 != 二次关系数据状态::已读取 || !Gread ||
-      !H || H > Gread || 类别 != 相关概念类别::特征 ||
-      !物理用量一致(用量))
+  if (版本 != 2 || 状态 != 二次关系数据状态::已读取 || !Gread ||
+      !H || H > Gread || 类别 != 相关概念类别::特征)
     return false;
   std::uint64_t prior = 0;
   std::map<std::uint64_t,std::size_t> index;
@@ -382,8 +351,7 @@ bool 二次关系图结果::成功() const noexcept {
 }
 
 bool 二次关系治理结果::成功() const noexcept {
-  if (版本 != 1 || !Gread || !H || H > Gread || !首次H ||
-      !物理用量一致(用量) ||
+  if (版本 != 2 || !Gread || !H || H > Gread || !首次H ||
       !正式回执 || *首次H != 正式回执->发布H ||
       !发布见证完整(*正式回执) ||
       正式回执->精确重放 !=

@@ -5,6 +5,7 @@
 #include "业务/应用服务.特征概念类.h"
 #include "业务/应用服务.方法登记根生产初始化.h"
 #include "业务/初始化.本能双根二次关系概念.h"
+#include "业务/计算.二次关系求值.h"
 #include "线程/线程_自我.h"
 
 #include <cstdint>
@@ -78,6 +79,7 @@ std::optional<本能先天特征概念初始化结果>
 读取普通应用本能先天特征概念初始化() noexcept;
 std::optional<本能双根二次关系概念初始化结果>
 读取普通应用本能双根二次关系概念初始化() noexcept;
+二次关系求值应用服务* 读取普通应用二次关系求值服务() noexcept;
 需求类数据服务* 读取普通应用需求服务() noexcept;
 
 } // namespace 海中鱼巣

@@ -168,6 +168,8 @@
     <ClInclude Include="海中鱼巣\领域\数据服务.绑定存在.h" />
     <ClInclude Include="海中鱼巣\业务\计算.二次特征.h" />
     <ClCompile Include="海中鱼巣\业务\计算.二次特征.cpp" />
+    <ClInclude Include="海中鱼巣\业务\计算.二次关系求值.h" />
+    <ClCompile Include="海中鱼巣\业务\计算.二次关系求值.cpp" />
     <ClInclude Include="海中鱼巣\业务\应用服务.需求目标方向.h" />
     <ClInclude Include="海中鱼巣\业务\应用服务.任务目标方向.h" />
     <ClInclude Include="海中鱼巣\领域\数据服务.方法类.h" />

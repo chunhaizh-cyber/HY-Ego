@@ -129,6 +129,34 @@ struct 存在当前采用读取请求 final {
   特征类型身份 FT;
   std::uint64_t 关系预算 = 0;
 };
+struct 存在当前采用完整读取请求_v2 final {
+  std::uint32_t 版本 = 2;
+  std::uint64_t Gread = 0, H = 0;
+  稳定编码 E;
+  特征类型身份 FT;
+  friend bool operator==(const 存在当前采用完整读取请求_v2 &,
+                         const 存在当前采用完整读取请求_v2 &) = default;
+};
+enum class 存在当前采用完整读取状态_v2 : std::uint8_t {
+  已读取 = 1,
+  入口拒绝 = 2,
+  未找到 = 3,
+  目标已退出 = 4,
+  事实代次漂移 = 5,
+  历史材料不可用 = 6,
+  资源失败 = 7,
+  内部不一致 = 8
+};
+struct 存在当前采用完整读取结果_v2 final {
+  std::uint32_t 版本 = 2;
+  存在当前采用完整读取状态_v2 状态 =
+      存在当前采用完整读取状态_v2::入口拒绝;
+  std::uint64_t Gread = 0, H = 0;
+  std::optional<存在当前采用事实> 采用;
+  bool 成功(const 存在当前采用完整读取请求_v2 &) const noexcept;
+  friend bool operator==(const 存在当前采用完整读取结果_v2 &,
+                         const 存在当前采用完整读取结果_v2 &) = default;
+};
 struct 存在当前采用建立 final {
   特征信息身份 F;
   friend bool operator==(const 存在当前采用建立 &,
@@ -1543,6 +1571,8 @@ public:
     }
   }
   存在当前采用结果 读取当前采用(const 存在当前采用读取请求 &) const;
+  存在当前采用完整读取结果_v2 读取当前采用完整_v2(
+      const 存在当前采用完整读取请求_v2 &) const noexcept;
   存在当前采用结果 变更当前采用(const 存在当前采用写请求 &);
   存在当前采用结果 收敛当前采用(const 存在当前采用写请求 &r) {
     return 变更当前采用(r);
@@ -5167,6 +5197,132 @@ inline 存在当前采用结果
   out.采用.reset();
   return out;
 }
+inline 存在当前采用完整读取结果_v2
+存在类数据服务::读取当前采用完整_v2(
+    const 存在当前采用完整读取请求_v2 &r) const noexcept {
+  using S = 存在当前采用完整读取状态_v2;
+  using LS = L1所有者范围历史完整关系组读取状态_v2;
+  存在当前采用完整读取结果_v2 out;
+  out.Gread = r.Gread;
+  out.H = r.H;
+  const auto fail = [&](S state) {
+    out.状态 = state;
+    out.采用.reset();
+  };
+  try {
+    if (r.版本 != 2 || !r.Gread || !r.H || r.H > r.Gread || !有效(r.E) ||
+        !有效(r.FT)) {
+      fail(S::入口拒绝);
+      return out;
+    }
+    采用守卫(r.Gread);
+    const auto nodeRead = 第一层服务_.读取所有者范围历史事实(
+        {L1所有者范围CRUD合同版本, r.E});
+    if (nodeRead.状态 != L1所有者范围读取状态::成功) {
+      fail(nodeRead.状态 == L1所有者范围读取状态::未找到
+               ? S::未找到
+           : nodeRead.状态 == L1所有者范围读取状态::已退出
+               ? S::目标已退出
+           : nodeRead.状态 == L1所有者范围读取状态::事实代次漂移
+               ? S::事实代次漂移
+           : nodeRead.状态 == L1所有者范围读取状态::历史材料已清理
+               ? S::历史材料不可用
+           : nodeRead.状态 == L1所有者范围读取状态::资源失败
+               ? S::资源失败
+               : S::内部不一致);
+      return out;
+    }
+    const auto *node = nodeRead.事实
+                           ? std::get_if<L1所有者范围节点事实>(&*nodeRead.事实)
+                           : nullptr;
+    if (nodeRead.合同版本 != L1所有者范围CRUD合同版本 ||
+        nodeRead.查询编码 != r.E || nodeRead.读取事实代次 != r.Gread || !node ||
+        node->编码 != r.E || node->写入所有者 != 所有者_ ||
+        node->种类 != 节点种类::普通 || node->属性类型表示) {
+      fail(S::内部不一致);
+      return out;
+    }
+    if (!node->创建事实代次 || node->创建事实代次 > r.H) {
+      fail(S::未找到);
+      return out;
+    }
+    if (node->退出事实代次 && *node->退出事实代次 <= r.H) {
+      fail(S::目标已退出);
+      return out;
+    }
+    const auto mapReadState = [](LS state) noexcept {
+      return state == LS::入口拒绝 ? S::入口拒绝
+           : state == LS::未找到 ? S::未找到
+           : state == LS::已退出 ? S::目标已退出
+           : state == LS::事实代次漂移 ? S::事实代次漂移
+           : state == LS::历史材料已清理 ? S::历史材料不可用
+           : state == LS::资源失败 ? S::资源失败
+           : S::内部不一致;
+    };
+    const auto readRelations = [&](稳定编码 type) {
+      const L1所有者范围历史完整关系组读取请求_v2 request{
+          L1所有者范围历史完整关系组读取合同版本,
+          L1所有者范围关系端点方向::源, r.E, type, r.Gread, r.H};
+      const auto result = 第一层服务_.读取所有者范围历史完整关系组(request);
+      if (!result.成功(request))
+        throw mapReadState(result.状态);
+      return result.关系组;
+    };
+    std::map<std::uint64_t, 特征类型身份> knownFeatures;
+    for (const auto &edge : readRelations(特征关系类型_)) {
+      if (edge.写入所有者 != 所有者_ || edge.源节点 != r.E ||
+          edge.关系类型节点 != 特征关系类型_ || edge.角色或顺序 != 1) {
+        fail(S::内部不一致);
+        return out;
+      }
+      const auto feature = 采用读F({edge.目标节点}, r.Gread, r.H);
+      if (!knownFeatures.emplace(edge.目标节点.值, feature.信息.类型).second) {
+        fail(S::内部不一致);
+        return out;
+      }
+    }
+    std::set<std::uint64_t> selectedFeatures;
+    std::set<std::uint64_t> selectedTypes;
+    for (const auto &edge : readRelations(当前采用关系类型_)) {
+      if (edge.写入所有者 != 所有者_ || edge.源节点 != r.E ||
+          edge.关系类型节点 != 当前采用关系类型_ || edge.角色或顺序 != 1) {
+        fail(S::内部不一致);
+        return out;
+      }
+      const auto feature = 采用读F({edge.目标节点}, r.Gread, r.H);
+      const auto known = knownFeatures.find(edge.目标节点.值);
+      if (known == knownFeatures.end() || known->second != feature.信息.类型 ||
+          !selectedFeatures.insert(edge.目标节点.值).second ||
+          !selectedTypes.insert(feature.信息.类型.编码.值).second) {
+        fail(S::内部不一致);
+        return out;
+      }
+      if (feature.信息.类型 == r.FT) {
+        out.采用 = 存在当前采用事实{edge.编码, r.E, r.FT, feature.信息.身份};
+      }
+    }
+    采用守卫(r.Gread);
+    out.状态 = S::已读取;
+    if (!out.成功(r)) fail(S::内部不一致);
+  } catch (const S &state) {
+    fail(state);
+  } catch (const 采用失败 &e) {
+    fail(e.状态 == 采用S::未找到 ? S::未找到
+         : e.状态 == 采用S::目标已退出 ? S::目标已退出
+         : e.状态 == 采用S::事实代次漂移 ? S::事实代次漂移
+         : e.状态 == 采用S::历史材料已清理 ? S::历史材料不可用
+         : e.状态 == 采用S::资源失败 ? S::资源失败
+         : e.状态 == 采用S::入口拒绝 ? S::入口拒绝
+         : S::内部不一致);
+  } catch (const std::bad_alloc &) {
+    fail(S::资源失败);
+  } catch (const std::length_error &) {
+    fail(S::资源失败);
+  } catch (...) {
+    fail(S::内部不一致);
+  }
+  return out;
+}
 inline 存在当前采用结果
 存在类数据服务::变更当前采用(const 存在当前采用写请求 &r) {
   存在当前采用结果 out;
@@ -5353,6 +5509,16 @@ inline bool 存在当前采用结果::成功() const noexcept {
         }
       },
       原请求->操作);
+}
+
+inline bool 存在当前采用完整读取结果_v2::成功(
+    const 存在当前采用完整读取请求_v2 &r) const noexcept {
+  if (版本 != 2 || r.版本 != 2 ||
+      状态 != 存在当前采用完整读取状态_v2::已读取 || !r.Gread || !r.H ||
+      r.H > r.Gread || !有效(r.E) || !有效(r.FT) || Gread != r.Gread || H != r.H)
+    return false;
+  return !采用 || (有效(采用->关系) && 采用->E == r.E && 采用->FT == r.FT &&
+                    有效(采用->F));
 }
 
 inline 实例特征IFR结果 存在类数据服务::读取实例特征IFR(

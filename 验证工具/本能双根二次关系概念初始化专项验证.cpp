@@ -29,6 +29,10 @@ using namespace 海中鱼巣;
 
 int 通过数 = 0;
 
+// 仅供仍保留的 I64 特征概念组织 v2 读取回归夹具使用。
+constexpr 概念树预算 测试纯概念预算{
+    1024, 8192, 1024, 1024, 1024, 1024, 1024, 1024};
+
 void 要求(bool 成立, std::string_view 名称) {
   if (!成立) {
     std::cerr << "FAIL " << 名称 << '\n';
@@ -272,9 +276,7 @@ struct 夹具 final {
     if (!innate.成功()) 夹具失败("fixture innate initialization failed");
     本能双根二次关系概念初始化提供者 provider(*特征, *概念);
     return provider.初始化(
-        {本能双根二次关系概念初始化合同版本, 当前代次(l1()), innate,
-         本能双根RC纯概念预算, 本能双根RCK读取预算,
-         本能双根RCK最大扫描候选数量, 本能双根RC二次关系预算});
+        {本能双根二次关系概念初始化合同版本, 当前代次(l1()), innate});
   }
 };
 
@@ -285,13 +287,12 @@ void 验证损坏纯概念候选不被跳过() {
     const auto g = 当前代次(f.l1());
     const 纯概念定义 universal =
         通用存在概念定义{1, 通用存在定义规则::不预设特征};
-    const 纯概念查询请求 request{
-        2, g, g, universal, 本能双根RC纯概念预算};
-    const auto result = f.概念->精确查询纯概念(request);
+    const 纯概念查询请求_v3 request{3, g, g, universal};
+    const auto result = f.概念->精确查询纯概念_v3(request);
     要求(result.状态 == 纯概念状态::内部不一致 && !result.事实,
          std::string(name) + "-exact-query");
     const auto concepts = f.概念->读取当前I64特征概念(
-        {2, g, g, 特征类型身份{{1}}, 本能双根RC纯概念预算});
+        {2, g, g, 特征类型身份{{1}}, 测试纯概念预算});
     要求(concepts.状态 == 纯概念状态::内部不一致 &&
              concepts.概念组.empty(),
          std::string(name) + "-current-i64-query");
@@ -302,11 +303,6 @@ void 验证损坏纯概念候选不被跳过() {
          "family-member-with-wrong-rc-witness-role-is-rejected");
   verify(损坏纯概念候选模式::RC见证错目标,
          "family-member-with-wrong-rc-witness-target-is-rejected");
-}
-
-bool K写读取用量为零(const 特征I64比较绑定结果& r) {
-  return !r.读取用量.节点数 && !r.读取用量.关系数 &&
-         !r.读取用量.值数 && !r.读取用量.材料总数;
 }
 
 特征I64比较绑定定义 目标判断定义(特征类型身份 ft) {
@@ -345,10 +341,9 @@ bool K写读取用量为零(const 特征I64比较绑定结果& r) {
   const auto g = 当前代次(f.l1());
   const 纯概念定义 definition =
       通用存在概念定义{1, 通用存在定义规则::不预设特征};
-  const 纯概念创建请求 request{
-      2, g, {0x3001}, definition, 概念初始组织指定::显式顶层, {},
-      本能双根RC纯概念预算};
-  const auto result = f.概念->创建或复用纯概念(request);
+  const 纯概念创建请求_v3 request{
+      3, g, {0x3001}, definition, 概念初始组织指定::显式顶层, {}};
+  const auto result = f.概念->创建或复用纯概念_v3(request);
   if (!result.成功(request) || !result.事实)
     夹具失败("prebuilt universal EC failed");
   return *result.事实;
@@ -361,7 +356,7 @@ bool K写读取用量为零(const 特征I64比较绑定结果& r) {
   const 特征I64比较绑定建立请求 request{
       1, 当前代次(f.l1()), {key}, definition.value_or(目标判断定义(ft))};
   const auto result = f.特征->建立I64比较绑定(request);
-  if (!result.成功() || !result.事实 || !K写读取用量为零(result))
+  if (!result.成功() || !result.事实)
     夹具失败("prebuilt K failed");
   return *result.事实;
 }
@@ -370,8 +365,8 @@ bool K写读取用量为零(const 特征I64比较绑定结果& r) {
                          std::uint64_t key) {
   const auto g = 当前代次(f.l1());
   const 二次关系概念建立请求 request{
-      1, {1, g, {key}}, definition, 概念初始组织指定::显式顶层,
-      {}, {}, 本能双根RC二次关系预算};
+      2, {1, g, {key}}, definition, 概念初始组织指定::显式顶层,
+      {}, {}};
   const auto result = f.概念->建立二次关系概念(request);
   if (!result.成功() || !result.事实) 夹具失败("prebuilt RC failed");
   return *result.事实;
@@ -395,9 +390,7 @@ void 验证部分材料收敛() {
                          0x49524B5341460001ULL);
     本能双根二次关系概念初始化提供者 provider(*f.特征, *f.概念);
     const auto result = provider.初始化(
-        {1, 当前代次(f.l1()), f.读取先天(), 本能双根RC纯概念预算,
-         本能双根RCK读取预算, 本能双根RCK最大扫描候选数量,
-         本能双根RC二次关系预算});
+        {2, 当前代次(f.l1()), f.读取先天()});
     要求(result.成功() && result.安全根->目标判断K.身份 == k.身份,
          "prebuilt-single-k-converges");
   }
@@ -415,9 +408,7 @@ void 验证部分材料收敛() {
     本能双根二次关系概念初始化提供者 provider(*f.特征, *f.概念);
     const auto freshInnate = f.读取先天();
     const auto result = provider.初始化(
-        {1, 当前代次(f.l1()), freshInnate, 本能双根RC纯概念预算,
-         本能双根RCK读取预算, 本能双根RCK最大扫描候选数量,
-         本能双根RC二次关系预算});
+        {2, 当前代次(f.l1()), freshInnate});
     要求(result.成功() && result.安全根->正差距RC.身份 == rc.身份,
          "prebuilt-single-rc-converges");
   }
@@ -438,9 +429,7 @@ void 验证结构化失败() {
     本能双根二次关系概念初始化提供者 provider(*f.特征, *f.概念);
     const auto freshInnate = f.读取先天();
     const auto result = provider.初始化(
-        {1, 当前代次(f.l1()), freshInnate, 本能双根RC纯概念预算,
-         本能双根RCK读取预算, 本能双根RCK最大扫描候选数量,
-         本能双根RC二次关系预算});
+        {2, 当前代次(f.l1()), freshInnate});
     要求(result.状态 == 本能双根二次关系概念初始化状态::幂等冲突 &&
              !result.安全根 && !result.服务根,
          "wrong-rc-on-fixed-key-is-idempotency-conflict");
@@ -454,20 +443,17 @@ void 验证结构化失败() {
                             std::uint64_t key) {
       const auto g = 当前代次(f.l1());
       return f.概念->迁移二次关系生命周期(
-          {1, {1, g, {key}}, first.安全根->正差距RC.身份, from, to,
-           first.安全根->目标判断K.身份.编码,
-           本能双根RC二次关系预算});
+          {2, {1, g, {key}}, first.安全根->正差距RC.身份, from, to,
+           first.安全根->目标判断K.身份.编码});
     };
     const auto cooling = retire(概念树生命周期状态::活跃,
                                 概念树生命周期状态::冷却, 0x71E01);
     要求(cooling.成功(), "rc-retirement-fixture-cooling");
     const auto cooledG = 当前代次(f.l1());
     const auto cooledLookup = f.概念->查找二次关系完整定义(
-        {1, {1, cooledG, cooledG}, first.安全根->正差距RC.定义,
-         本能双根RC二次关系预算});
+        {2, {1, cooledG, cooledG}, first.安全根->正差距RC.定义});
     const auto cooledRead = f.概念->读取二次关系概念(
-        {1, {1, cooledG, cooledG}, first.安全根->正差距RC.身份,
-         本能双根RC二次关系预算});
+        {2, {1, cooledG, cooledG}, first.安全根->正差距RC.身份});
     要求(cooledLookup.成功() && cooledLookup.状态 ==
                二次关系数据状态::冷却命中 &&
                cooledRead.成功() &&
@@ -489,7 +475,7 @@ void 验证结构化失败() {
   }
 }
 
-void 验证首次重复定义与预算() {
+void 验证首次重复定义与完整读取() {
   夹具 f;
   const auto first = f.初始化();
   要求(first.成功() &&
@@ -538,32 +524,27 @@ void 验证首次重复定义与预算() {
     const auto replay = f.特征->建立I64比较绑定(
         {1, root->目标判断K.创建G - 1, {key}, root->目标判断K.定义});
     要求(replay.成功() &&
-             replay.状态 == 特征I64比较绑定状态::精确重复 &&
-             K写读取用量为零(replay),
-         "k-write-replay-is-budgetless-and-zero-read-usage");
-    const auto current = f.特征->读取当前I64比较绑定(
-        {1, first.Gread, root->先天.类型.身份,
-         特征I64比较用途::目标判断, 本能双根RCK最大扫描候选数量,
-         本能双根RCK读取预算});
-    const auto byId = f.特征->读取I64比较绑定(
-        {1, first.Gread, first.Gread, root->目标判断K.身份,
-         本能双根RCK读取预算});
-    要求(current.成功() && byId.成功() &&
+             replay.状态 == 特征I64比较绑定状态::精确重复,
+         "k-write-replay-is-exact");
+    const auto current = f.特征->读取当前I64比较绑定_v2(
+        {2, first.Gread, root->先天.类型.身份,
+         特征I64比较用途::目标判断});
+    const auto byId = f.特征->读取I64比较绑定_v2(
+        {2, first.Gread, first.Gread, root->目标判断K.身份});
+    要求(current.成功() && byId.成功() && current.Gread==first.Gread &&
+             current.H==first.Gread && byId.Gread==first.Gread &&
+             byId.H==first.Gread &&
              current.事实->身份 == root->目标判断K.身份 &&
-             byId.事实->身份 == root->目标判断K.身份 &&
-             current.当前读取原请求 &&
-             current.当前读取原请求->最大扫描候选数量 ==
-                 本能双根RCK最大扫描候选数量 &&
-             current.当前读取原请求->读取预算 == 本能双根RCK读取预算,
-         "k-current-and-identity-read-use-named-budget");
+             byId.事实->身份 == root->目标判断K.身份,
+         "k-current-and-identity-complete-read-v2");
   }
 
   const auto beforeRepeat = 当前代次(f.l1());
   const 纯概念定义 universal =
       通用存在概念定义{1, 通用存在定义规则::不预设特征};
-  const 纯概念查询请求 universalRequest{
-      2, beforeRepeat, beforeRepeat, universal, 本能双根RC纯概念预算};
-  const auto universalRead = f.概念->精确查询纯概念(universalRequest);
+  const 纯概念查询请求_v3 universalRequest{
+      3, beforeRepeat, beforeRepeat, universal};
+  const auto universalRead = f.概念->精确查询纯概念_v3(universalRequest);
   要求(universalRead.成功(universalRequest) && universalRead.事实 &&
              universalRead.事实->概念 ==
                  first.安全根->通用存在概念.概念 &&
@@ -571,7 +552,7 @@ void 验证首次重复定义与预算() {
          "pure-query-skips-valid-rc-family-members-and-reuses-ec");
   const I64特征概念组织读取请求 safeConceptRequest{
       2, beforeRepeat, beforeRepeat, first.安全根->先天.类型.身份,
-      本能双根RC纯概念预算};
+      测试纯概念预算};
   const auto safeConcepts =
       f.概念->读取当前I64特征概念(safeConceptRequest);
   要求(safeConcepts.成功(safeConceptRequest) &&
@@ -609,47 +590,10 @@ void 验证首次重复定义与预算() {
        "drift-fixture-published");
   本能双根二次关系概念初始化提供者 provider(*f.特征, *f.概念);
   const auto drift = provider.初始化(
-      {1, staleInnate.Gread, staleInnate, 本能双根RC纯概念预算,
-       本能双根RCK读取预算, 本能双根RCK最大扫描候选数量,
-       本能双根RC二次关系预算});
+      {2, staleInnate.Gread, staleInnate});
   要求(drift.状态 == 本能双根二次关系概念初始化状态::当前性漂移 &&
            !drift.安全根 && !drift.服务根,
        "generation-drift-is-structured-and-clears-delivery");
-}
-
-void 验证读取预算不足() {
-  夹具 f;
-  const auto initialized = f.初始化();
-  if (!initialized.成功()) 夹具失败("budget fixture initialization failed");
-  const auto g = 当前代次(f.l1());
-
-  auto tinyPure = 本能双根RC纯概念预算;
-  tinyPure.最大概念数 = 1;
-  tinyPure.最大关系数 = 1;
-  tinyPure.最大特征属性数 = 1;
-  const 纯概念定义 universal =
-      通用存在概念定义{1, 通用存在定义规则::不预设特征};
-  const auto pure = f.概念->精确查询纯概念(
-      {2, g, g, universal, tinyPure});
-  要求(pure.状态 == 纯概念状态::数量预算不足 && !pure.事实,
-       "pure-read-budget-shortage-is-structured");
-
-  const 有界事实读取预算_B1 tinyK{1, 1, 1, 1};
-  const auto k = f.特征->读取I64比较绑定(
-      {1, g, g, initialized.安全根->目标判断K.身份, tinyK});
-  要求(k.状态 == 特征I64比较绑定状态::数量预算不足 && !k.事实,
-       "k-read-budget-shortage-is-structured");
-
-  二次关系预算 tinyRc;
-  tinyRc.最大节点数 = tinyRc.最大关系数 = tinyRc.最大值数 =
-      tinyRc.最大材料数 = tinyRc.最大概念数 = tinyRc.最大原子数 =
-          tinyRc.最大展开深度 = tinyRc.最大候选数 =
-              tinyRc.最大来源数 = tinyRc.最大用途数 =
-                  tinyRc.最大首次材料数 = 1;
-  const auto rc = f.概念->读取二次关系概念(
-      {1, {1, g, g}, initialized.安全根->正差距RC.身份, tinyRc});
-  要求(rc.状态 == 二次关系数据状态::预算不足 && !rc.事实,
-       "rc-read-budget-shortage-is-structured");
 }
 
 void 验证异义K() {
@@ -710,6 +654,52 @@ int 普通应用种子(const std::filesystem::path& root,
   要求(self.请求回显 && self.成功(*self.请求回显) && self.投影 &&
            self.投影->概念.概念 == delivery->安全根->通用存在概念.概念,
        "self-form-reuses-the-same-universal-ec");
+  const auto method = 初始化普通应用方法登记根();
+  要求(method.成功(), "evaluator-fixture-method-root-ready");
+  const auto anchor = 初始化普通应用本能根运行锚点(method);
+  要求(anchor.成功() && anchor.锚点,
+       "evaluator-fixture-instinct-anchor-ready");
+  auto* evaluator = 读取普通应用二次关系求值服务();
+  要求(evaluator != nullptr, "ordinary-context-exposes-unique-evaluator");
+  const 二次关系参与者材料 participant{
+      anchor.锚点->自我.编码,
+      {二次关系准确F来源{anchor.锚点->安全根.实际特征}}};
+  const 二次关系求值请求 relationRequest{
+      2, anchor.锚点->事实截止代次, anchor.锚点->事实截止代次,
+      0xE001, delivery->安全根->正差距RC.身份, participant, participant};
+  const auto relation = evaluator->求值二次关系(relationRequest);
+  要求(relation.状态 == 二次关系判断状态::不命中 &&
+             relation.Gread == relationRequest.Gread &&
+             relation.H == relationRequest.H &&
+             relation.定义H == relationRequest.Gread &&
+             relation.请求身份 == relationRequest.请求身份 &&
+             relation.条件组.size() == 1 && relation.来源组.size() == 2 &&
+             relation.条件组.front().计算.成功(),
+         "evaluator-real-f-zero-difference-misses-d-pos");
+  auto zeroDefinition = delivery->安全根->正差距RC.定义;
+  auto* zeroAtom = std::get_if<二次关系原子定义>(&zeroDefinition);
+  if (!zeroAtom) 夹具失败("evaluator zero candidate definition malformed");
+  zeroAtom->D.掩码 = 2;
+  const 二次关系候选求值请求 candidateRequest{
+      2, anchor.锚点->事实截止代次, anchor.锚点->事实截止代次,
+      0xE002, zeroDefinition, participant, participant};
+  const auto candidate = evaluator->求值候选定义(candidateRequest);
+  要求(candidate.状态 == 二次关系判断状态::命中 &&
+             candidate.Gread == candidateRequest.Gread &&
+             candidate.H == candidateRequest.H &&
+             candidate.定义H == candidateRequest.Gread &&
+             candidate.请求身份 == candidateRequest.请求身份 &&
+             candidate.条件组.size() == 1 && candidate.来源组.size() == 2 &&
+             candidate.条件组.front().计算.成功(),
+         "evaluator-real-f-zero-difference-hits-zero-domain");
+  auto invalidRequest = relationRequest;
+  invalidRequest.版本 = 1;
+  const auto invalid = evaluator->求值二次关系(invalidRequest);
+  要求(invalid.状态 == 二次关系判断状态::入口拒绝 &&
+             invalid.Gread == 0 && invalid.H == 0 && invalid.定义H == 0 &&
+             invalid.条件组.empty() && invalid.来源组.empty() &&
+             invalid.已核验概念.empty(),
+         "evaluator-invalid-request-clears-cutoff-and-all-business-payloads");
   const auto repeated = 构造普通应用上下文(配置(root));
   const auto repeatedDelivery = 读取普通应用本能双根二次关系概念初始化();
   要求(repeated.成功() && repeatedDelivery && repeatedDelivery->成功() &&
@@ -763,11 +753,10 @@ int main(int argc, char** argv) {
                             std::filesystem::absolute(argv[3]));
     }
     if (argc != 1) 夹具失败("invalid validation arguments");
-    验证首次重复定义与预算();
+    验证首次重复定义与完整读取();
     验证部分材料收敛();
     验证结构化失败();
     验证损坏纯概念候选不被跳过();
-    验证读取预算不足();
     验证异义K();
     std::cout << "PASS total=" << 通过数 << '\n';
     return 0;

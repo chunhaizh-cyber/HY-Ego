@@ -129,8 +129,9 @@ void bounded_history_group_probe() {
   const auto afterCleanup=generation(l1);
   auto cleanedHistory=relationRequest;cleanedHistory.期望读取事实代次=afterCleanup;
   const auto cleanedRead=l1.读取所有者范围有界历史关系组(cleanedHistory);
-  require(cleanedRead.成功(cleanedHistory)&&cleanedRead.关系组.size()==1,
-          "bounded-relations-cleaned-item-excluded");
+  require(cleanedRead.状态==L1所有者范围读取状态::历史材料已清理&&
+          cleanedRead.关系组.empty(),
+          "bounded-relations-cleaned-item-reported");
   L1所有者范围写集请求 exitNode{L1所有者范围CRUD合同版本,afterCleanup,{0xB105}};
   exitNode.退出事实.push_back(isolated);
   const auto exitedNode=delivery.写入端口->提交所有者范围中性写集(exitNode);
@@ -149,7 +150,6 @@ void bounded_history_group_probe() {
 }
 
 概念树预算 concept_budget() { return {1024,8192,1024,1024,1024,1024,1024,1024}; }
-二次关系预算 rc_budget() { return {16384,16384,16384,32768,1024,1024,64,1024,1024,1024,32768}; }
 
 struct Fixture {
   std::unique_ptr<L1事实基座运行包> runtime;
@@ -362,6 +362,90 @@ void rc_core_probe() {
   if(!(ftResult.成功()&&ftResult.事实)) std::cerr<<"ft-state="<<static_cast<unsigned>(ftResult.状态)<<'\n';
   require(ftResult.成功()&&ftResult.事实,"i64-ft-create");
   const auto ft=ftResult.事实->数据.身份;
+  L1所有者范围写集请求 valueWrite{
+    L1所有者范围CRUD合同版本,generation(l1),{0xA20101}};
+  valueWrite.节点={
+    {{1},节点种类::普通,std::nullopt},
+    {{2},节点种类::属性类型,L1所有者范围值表示种类::I64},
+    {{3},节点种类::属性类型,L1所有者范围值表示种类::I64组},
+    {{4},节点种类::普通,std::nullopt}};
+  valueWrite.值={
+    {{5},L1所有者范围写集本地键{1},L1所有者范围写集本地键{2},
+     std::int64_t{7},L1所有者范围写集本地键{4}},
+    {{6},L1所有者范围写集本地键{1},L1所有者范围写集本地键{3},
+     std::vector<std::int64_t>{7},L1所有者范围写集本地键{4}}};
+  valueWrite.属性槽变更={
+    {L1所有者范围写集本地键{1},L1所有者范围写集本地键{2},{5}},
+    {L1所有者范围写集本地键{1},L1所有者范围写集本地键{3},{6}}};
+  const auto valuesSaved=
+      f.externalOwner.写入端口->提交所有者范围中性写集(valueWrite);
+  require(valuesSaved.状态==L1所有者范围写入状态::成功,
+          "i64-parser-reference-fixture");
+  const auto mapped=[&](std::uint64_t key) {
+    const auto it=std::find_if(valuesSaved.新编码映射.begin(),
+        valuesSaved.新编码映射.end(),[&](const auto& item) {
+          return item.first.值==key;
+        });
+    return it==valuesSaved.新编码映射.end() ? 稳定编码{} : it->second;
+  };
+  const 特征值身份 i64Value{mapped(5)}, nonI64Value{mapped(6)};
+  require(有效(i64Value)&&有效(nonI64Value),"i64-parser-reference-mapping");
+  const auto valueG=generation(l1);
+  const 特征正式准确I64解析请求_v2 inlineRequest{2,valueG,valueG,ft,
+                                                        std::int64_t{7}};
+  const 特征正式准确I64解析请求_v2 referenceRequest{2,valueG,valueG,ft,
+        i64Value};
+  const auto inlineParsed=f.features->解析正式特征类型准确I64_v2(inlineRequest);
+  const auto referenceParsed=
+      f.features->解析正式特征类型准确I64_v2(referenceRequest);
+  require(inlineParsed.成功(inlineRequest)&&referenceParsed.成功(referenceRequest)
+          &&inlineParsed.事实->I64==7&&referenceParsed.事实->I64==7,
+          "i64-parser-inline-reference-same-value");
+  const 特征正式准确I64解析请求_v2 nonI64Request{2,valueG,valueG,ft,
+        nonI64Value};
+  const auto nonI64Parsed=f.features->解析正式特征类型准确I64_v2(nonI64Request);
+  require(nonI64Parsed.状态==特征正式准确I64解析状态_v2::非I64&&
+          !nonI64Parsed.事实,"i64-parser-non-i64-zero-fact");
+  const 特征正式准确I64解析请求_v2 outsideRequest{2,valueG,valueG,ft,
+                                                       std::int64_t{101}};
+  const auto outside=f.features->解析正式特征类型准确I64_v2(outsideRequest);
+  require(outside.状态==特征正式准确I64解析状态_v2::准确值不相容&&
+          !outside.事实,"i64-parser-outside-domain-zero-fact");
+  auto driftRequest=inlineRequest;
+  --driftRequest.Gread;
+  driftRequest.H=driftRequest.Gread;
+  const auto driftParsed=f.features->解析正式特征类型准确I64_v2(driftRequest);
+  require(driftParsed.状态==特征正式准确I64解析状态_v2::事实代次漂移&&
+          !driftParsed.事实,"i64-parser-generation-drift-zero-fact");
+  L1所有者范围写集请求 valueExit{
+    L1所有者范围CRUD合同版本,valueG,{0xA20102}};
+  valueExit.退出事实.push_back(i64Value.编码);
+  const auto valueExited=
+      f.externalOwner.写入端口->提交所有者范围中性写集(valueExit);
+  require(valueExited.状态==L1所有者范围写入状态::成功,
+          "i64-parser-reference-exit");
+  const auto valueExitG=generation(l1);
+  const 特征正式准确I64解析请求_v2 beforeExitRequest{
+      2,valueExitG,valueG,ft,i64Value};
+  const auto beforeExit=
+      f.features->解析正式特征类型准确I64_v2(beforeExitRequest);
+  require(beforeExit.成功(beforeExitRequest)&&beforeExit.事实->I64==7,
+          "i64-parser-reference-historical-before-exit");
+  const 特征正式准确I64解析请求_v2 atExitRequest{
+      2,valueExitG,valueExitG,ft,i64Value};
+  const auto atExit=f.features->解析正式特征类型准确I64_v2(atExitRequest);
+  require(atExit.状态==特征正式准确I64解析状态_v2::准确值已退出&&
+          !atExit.事实,"i64-parser-reference-at-exit-zero-fact");
+  const auto valueCleaned=l1.执行L1物理清理({
+      L1物理清理合同版本,valueExitG,{0xA20103},
+      {{L1物理清理事实种类::值,i64Value.编码}}});
+  require(valueCleaned.成功(),"i64-parser-reference-cleanup");
+  const auto cleanupG=generation(l1);
+  const 特征正式准确I64解析请求_v2 cleanedRequest{
+      2,cleanupG,valueG,ft,i64Value};
+  const auto cleaned=f.features->解析正式特征类型准确I64_v2(cleanedRequest);
+  require(cleaned.状态==特征正式准确I64解析状态_v2::历史材料不可用&&
+          !cleaned.事实,"i64-parser-reference-cleaned-zero-fact");
   const 特征类标量量化合同 q{ft.编码,ft.编码,ft.编码,1,1,-100,100,特征类标量量纲::有量纲};
   特征I64比较绑定定义 kd; kd.输入FT=ft; kd.用途=特征I64比较用途::概念材料;
   kd.左角色=特征I64输入角色::概念参照B; kd.右角色=特征I64输入角色::概念被描述A;
@@ -371,51 +455,35 @@ void rc_core_probe() {
   require(kResult.成功()&&kResult.事实,"comparison-binding-create");
   const auto k=kResult.事实->身份;
   const auto kg=generation(l1);
-  const 有界事实读取预算_B1 fullKBudget{4096,4096,4096,8192};
-  const auto fixedK=f.features->读取I64比较绑定({1,kg,kg,k,fullKBudget});
-  require(fixedK.成功()&&fixedK.事实&&fixedK.读取用量.材料总数==
-          fixedK.读取用量.节点数+fixedK.读取用量.关系数+fixedK.读取用量.值数,
-          "fixed-k-real-usage");
-  const auto fixedLessOne=[&](unsigned axis,std::string_view name) {
-    auto budget=fullKBudget;
-    const std::uint64_t used[]={fixedK.读取用量.节点数,fixedK.读取用量.关系数,
-      fixedK.读取用量.值数,fixedK.读取用量.材料总数};
-    require(used[axis]>0,"fixed-k-axis-used");
-    if(axis==0)budget.最大节点数=used[axis]-1;
-    else if(axis==1)budget.最大关系数=used[axis]-1;
-    else if(axis==2)budget.最大值数=used[axis]-1;
-    else budget.最大材料总数=used[axis]-1;
-    const auto rejected=f.features->读取I64比较绑定({1,kg,kg,k,budget});
-    require(rejected.状态==特征I64比较绑定状态::数量预算不足&&!rejected.事实,name);
-  };
-  fixedLessOne(0,"fixed-k-node-less-one");fixedLessOne(1,"fixed-k-edge-less-one");
-  fixedLessOne(2,"fixed-k-value-less-one");fixedLessOne(3,"fixed-k-total-less-one");
-  const 特征I64当前比较绑定读取请求 currentKRequest{
-    1,kg,ft,特征I64比较用途::概念材料,1024,fullKBudget};
-  const auto currentK=f.features->读取当前I64比较绑定(currentKRequest);
-  require(currentK.成功()&&currentK.事实->身份==k&&currentK.读取用量.材料总数==
-          currentK.读取用量.节点数+currentK.读取用量.关系数+currentK.读取用量.值数,
-          "current-k-real-usage");
-  const auto currentLessOne=[&](unsigned axis,std::string_view name) {
-    auto request=currentKRequest;
-    const std::uint64_t used[]={currentK.读取用量.节点数,currentK.读取用量.关系数,
-      currentK.读取用量.值数,currentK.读取用量.材料总数};
-    require(used[axis]>0,"current-k-axis-used");
-    if(axis==0)request.读取预算.最大节点数=used[axis]-1;
-    else if(axis==1)request.读取预算.最大关系数=used[axis]-1;
-    else if(axis==2)request.读取预算.最大值数=used[axis]-1;
-    else request.读取预算.最大材料总数=used[axis]-1;
-    const auto rejected=f.features->读取当前I64比较绑定(request);
-    require(rejected.状态==特征I64比较绑定状态::数量预算不足&&!rejected.事实,name);
-  };
-  currentLessOne(0,"current-k-node-less-one");currentLessOne(1,"current-k-edge-less-one");
-  currentLessOne(2,"current-k-value-less-one");currentLessOne(3,"current-k-total-less-one");
+  const 特征I64比较绑定读取请求_v2 fixedKRequest{2,kg,kg,k};
+  const auto fixedK=f.features->读取I64比较绑定_v2(fixedKRequest);
+  require(fixedK.成功()&&fixedK.Gread==kg&&fixedK.H==kg&&fixedK.事实&&
+          fixedK.事实->身份==k,"fixed-k-complete-read-v2");
+  const 特征I64当前比较绑定读取请求_v2 currentKRequest{
+    2,kg,ft,特征I64比较用途::概念材料};
+  const auto currentK=f.features->读取当前I64比较绑定_v2(currentKRequest);
+  require(currentK.成功()&&currentK.Gread==kg&&currentK.H==kg&&currentK.事实&&
+          currentK.事实->身份==k,"current-k-complete-read-v2");
+  auto driftKRequest=fixedKRequest;
+  --driftKRequest.Gread;
+  driftKRequest.H=driftKRequest.Gread;
+  const auto driftK=f.features->读取I64比较绑定_v2(driftKRequest);
+  require(driftK.状态==特征I64比较绑定读取状态_v2::事实代次漂移&&
+          !driftK.事实,"fixed-k-v2-generation-drift");
   const auto cb=concept_budget();
   const 纯概念创建请求 fcRequest{2,generation(l1),{0xA203},
     纯I64特征概念定义{概念树特征类型引用{ft.编码},{{-10,10}}},概念初始组织指定::显式顶层,{},cb};
   const auto fcResult=f.concepts->创建或复用纯概念(fcRequest);
   require(fcResult.成功(fcRequest)&&fcResult.事实,"fc-create");
   const auto fc=fcResult.事实->概念;
+  const 纯概念创建恢复请求_v3 fcRecoveryRequest{
+    3,generation(l1),fcRequest.幂等身份,fcRequest.定义,
+    fcRequest.组织,fcRequest.直接上位};
+  const auto fcRecovered=f.concepts->读取纯概念创建首次结果_v3(
+    fcRecoveryRequest);
+  require(fcRecovered.成功(fcRecoveryRequest)&&fcRecovered.事实&&
+          fcRecovered.事实->概念==fc,
+          "pure-v3-recovers-v2-first-material");
   特征值域比较数据服务 comparison(*f.concepts,*f.features,*f.values);
   const 特征值域比较预算_v1 comparisonBudget{
     {4096,4096,4096,4096,4096,4096,4096,4096,4096},cb,
@@ -453,88 +521,56 @@ void rc_core_probe() {
   require(specificEcResult.成功(specificEcRequest)&&specificEcResult.事实,
           "specific-ec-create");
   const auto specificEc=specificEcResult.事实->概念;
-  const 纯概念创建请求 ecRequest{2,generation(l1),{0xA204},
-    通用存在概念定义{1,通用存在定义规则::不预设特征},概念初始组织指定::显式顶层,{},cb};
-  const auto ecResult=f.concepts->创建或复用纯概念(ecRequest);
+  const 纯概念创建请求_v3 ecRequest{3,generation(l1),{0xA204},
+    通用存在概念定义{1,通用存在定义规则::不预设特征},
+    概念初始组织指定::显式顶层,{}};
+  const auto ecResult=f.concepts->创建或复用纯概念_v3(ecRequest);
   require(ecResult.成功(ecRequest)&&ecResult.事实,"ec-create");
   const auto ec=ecResult.事实->概念;
-  const auto rb=rc_budget(); const auto g=generation(l1);
+  const auto ecReadG=generation(l1);
+  const 纯概念查询请求_v3 ecQuery{
+    3,ecReadG,ecReadG,ecRequest.定义};
+  const auto ecQueryResult=f.concepts->精确查询纯概念_v3(ecQuery);
+  require(ecQueryResult.成功(ecQuery)&&ecQueryResult.事实&&
+          ecQueryResult.事实->概念==ec,"pure-v3-exact-query");
+  const 纯概念创建恢复请求_v3 ecRecovery{
+    3,ecReadG,ecRequest.幂等身份,ecRequest.定义,
+    ecRequest.组织,ecRequest.直接上位};
+  const auto ecRecoveryResult=
+    f.concepts->读取纯概念创建首次结果_v3(ecRecovery);
+  require(ecRecoveryResult.成功(ecRecovery)&&ecRecoveryResult.事实&&
+          ecRecoveryResult.事实->概念==ec,"pure-v3-first-result");
+  auto conflictingEc=ecRequest;
+  conflictingEc.定义=fcRequest.定义;
+  const auto conflict=f.concepts->创建或复用纯概念_v3(conflictingEc);
+  require(conflict.状态==纯概念状态::幂等冲突&&!conflict.事实,
+          "pure-v3-same-key-different-definition-conflicts");
+  const auto g=generation(l1);
   const auto specificConstraint=f.concepts->读取二次关系约束定义(
-    {1,{1,g,g},specificEc,rb});
+    {2,{1,g,g},specificEc});
   require(specificConstraint.成功()&&specificConstraint.定义&&
-          std::holds_alternative<存在概念两组事实_v3>(*specificConstraint.定义)&&
-          specificConstraint.用量.材料数==specificConstraint.用量.节点数+
-            specificConstraint.用量.关系数+specificConstraint.用量.值数,
-          "specific-ec-constraint-real-usage");
+          std::holds_alternative<存在概念两组事实_v3>(*specificConstraint.定义),
+          "specific-ec-constraint-complete-read");
   二次关系原子定义 atom{{7},{{{二次关系约束角色::共同,fc}},{{二次关系约束角色::共同,ec}}},
                            k,特征类标量结果角色::差异};
-  const auto normalized=f.concepts->规范化二次关系定义({1,{1,g,g},atom,rb});
+  const auto normalized=f.concepts->规范化二次关系定义({2,{1,g,g},atom});
   require(normalized.成功()&&normalized.规范形&&normalized.规范形->原子组.size()==1,"rc-atom-normalize");
-  require(normalized.用量.材料数==normalized.用量.节点数+
-          normalized.用量.关系数+normalized.用量.值数,
-          "rc-normalize-physical-usage-sum");
-  const auto rcLessOne=[&](unsigned axis,std::string_view name) {
-    auto budget=rb;
-    const std::array<std::uint64_t,4> used{normalized.用量.节点数,
-      normalized.用量.关系数,normalized.用量.值数,normalized.用量.材料数};
-    require(used[axis]>0,"rc-normalize-axis-used");
-    if(axis==0)budget.最大节点数=used[axis]-1;
-    else if(axis==1)budget.最大关系数=used[axis]-1;
-    else if(axis==2)budget.最大值数=used[axis]-1;
-    else budget.最大材料数=used[axis]-1;
-    const auto low=f.concepts->规范化二次关系定义({1,{1,g,g},atom,budget});
-    require(low.状态==二次关系数据状态::预算不足&&!low.规范形,name);
-  };
-  rcLessOne(0,"rc-normalize-node-less-one");
-  rcLessOne(1,"rc-normalize-edge-less-one");
-  rcLessOne(2,"rc-normalize-value-less-one");
-  rcLessOne(3,"rc-normalize-total-less-one");
   二次关系原子定义 specificAtom{
     {7},{{{二次关系约束角色::共同,fc}},
          {{二次关系约束角色::共同,specificEc}}},
     k,特征类标量结果角色::差异};
   const auto specificNormalized=f.concepts->规范化二次关系定义(
-    {1,{1,g,g},specificAtom,rb});
-  require(specificNormalized.成功()&&specificNormalized.规范形&&
-          specificNormalized.用量.材料数==specificNormalized.用量.节点数+
-            specificNormalized.用量.关系数+specificNormalized.用量.值数,
-          "specific-ec-rc-normalize-real-usage");
-  const auto specificLessOne=[&](unsigned axis,std::string_view name) {
-    auto budget=rb;
-    const std::array<std::uint64_t,4> used{
-      specificNormalized.用量.节点数,specificNormalized.用量.关系数,
-      specificNormalized.用量.值数,specificNormalized.用量.材料数};
-    require(used[axis]>0,"specific-ec-rc-axis-used");
-    if(axis==0)budget.最大节点数=used[axis]-1;
-    else if(axis==1)budget.最大关系数=used[axis]-1;
-    else if(axis==2)budget.最大值数=used[axis]-1;
-    else budget.最大材料数=used[axis]-1;
-    const auto low=f.concepts->规范化二次关系定义(
-      {1,{1,g,g},specificAtom,budget});
-    require(low.状态==二次关系数据状态::预算不足&&!low.规范形,name);
-  };
-  specificLessOne(0,"specific-ec-rc-node-less-one");
-  specificLessOne(1,"specific-ec-rc-edge-less-one");
-  specificLessOne(2,"specific-ec-rc-value-less-one");
-  specificLessOne(3,"specific-ec-rc-total-less-one");
+    {2,{1,g,g},specificAtom});
+  require(specificNormalized.成功()&&specificNormalized.规范形,
+          "specific-ec-rc-normalize-complete-read");
   auto bad=atom; bad.D.掩码=0;
-  const auto rejected=f.concepts->规范化二次关系定义({1,{1,g,g},bad,rb});
+  const auto rejected=f.concepts->规范化二次关系定义({2,{1,g,g},bad});
   require(!rejected.成功()&&!rejected.规范形,"rc-domain-zero-rejected");
-  const 二次关系概念建立请求 create{1,{1,g,{0xA205}},atom,概念初始组织指定::显式顶层,{}, {},rb};
+  const 二次关系概念建立请求 create{2,{1,g,{0xA205}},atom,概念初始组织指定::显式顶层,{}, {}};
   const auto created=f.concepts->建立二次关系概念(create);
-  if(!created.成功())
-    std::cerr<<"create-state="<<static_cast<unsigned>(created.状态)
-             <<" usage="<<created.用量.节点数<<'/'<<created.用量.关系数<<'/'
-             <<created.用量.值数<<'/'<<created.用量.材料数
-             <<" concepts="<<created.用量.概念数<<" first="<<created.用量.首次材料数<<'\n';
   require(created.成功()&&created.状态==二次关系数据状态::已创建&&created.事实,"rc-create-and-readback");
   const auto rcid=created.事实->身份; const auto current=generation(l1);
   const auto createReplay=f.concepts->建立二次关系概念(create);
-  if(!createReplay.成功())
-    std::cerr<<"create-replay-state="<<static_cast<unsigned>(createReplay.状态)
-             <<" G="<<createReplay.Gread<<" H="
-             <<(createReplay.首次H.has_value()?createReplay.首次H.value():0)
-             <<" usage="<<createReplay.用量.材料数<<'/'<<createReplay.用量.首次材料数<<'\n';
   require(createReplay.成功()&&createReplay.状态==二次关系数据状态::精确重放&&
           createReplay.事实->身份==rcid&&generation(l1)==current,
           "rc-create-exact-replay-after-generation-advance");
@@ -543,23 +579,23 @@ void rc_core_probe() {
   const auto createConflictResult=f.concepts->建立二次关系概念(createConflict);
   require(createConflictResult.状态==二次关系数据状态::幂等冲突&&generation(l1)==current,
           "rc-create-same-key-different-definition");
-  const auto read=f.concepts->读取二次关系概念({1,{1,current,current},rcid,rb});
+  const auto read=f.concepts->读取二次关系概念({2,{1,current,current},rcid});
   require(read.成功()&&read.事实->身份==rcid,"rc-current-read");
-  const auto found=f.concepts->查找二次关系完整定义({1,{1,current,current},atom,rb});
+  const auto found=f.concepts->查找二次关系完整定义({2,{1,current,current},atom});
   require(found.成功()&&found.事实->身份==rcid,"rc-full-definition-find");
-  const 二次关系概念建立请求 reuse{1,{1,current,{0xA206}},atom,概念初始组织指定::显式顶层,{}, {},rb};
+  const 二次关系概念建立请求 reuse{2,{1,current,{0xA206}},atom,概念初始组织指定::显式顶层,{}, {}};
   const auto reused=f.concepts->建立二次关系概念(reuse);
   require(reused.成功()&&reused.状态==二次关系数据状态::已复用&&reused.事实->身份==rcid,
           "rc-different-key-synonym-reuse");
-  const auto sources=f.concepts->读取二次关系来源({1,{1,current,current},rcid,rb});
-  const auto uses=f.concepts->读取二次关系用途({1,{1,current,current},rcid,rb});
+  const auto sources=f.concepts->读取二次关系来源({2,{1,current,current},rcid});
+  const auto uses=f.concepts->读取二次关系用途({2,{1,current,current},rcid});
   require(sources.成功()&&sources.来源组.empty()&&uses.成功()&&uses.用途组.empty(),"rc-empty-source-use-read");
-  const auto graph=f.concepts->读取二次关系概念图({1,{1,current,current},rb});
+  const auto graph=f.concepts->读取二次关系概念图({2,{1,current,current}});
   require(graph.成功()&&graph.RC组.size()==1&&graph.直接边.empty(),"rc-single-top-level-graph");
 
   const auto sourceG=generation(l1);
   const 二次关系形成来源 source{fc,sourceG};
-  const 二次关系来源写入请求 sourceRequest{1,{1,sourceG,{0xA207}},rcid,{source},rb};
+  const 二次关系来源写入请求 sourceRequest{2,{1,sourceG,{0xA207}},rcid,{source}};
   const auto sourceAdded=f.concepts->添加二次关系形成来源(sourceRequest);
   require(sourceAdded.成功()&&sourceAdded.状态==二次关系数据状态::已变更&&
           sourceAdded.来源组.size()==1&&sourceAdded.来源组.front().来源==source,
@@ -577,8 +613,8 @@ void rc_core_probe() {
           "rc-source-same-identity-different-h");
 
   const auto useG=generation(l1);
-  const 二次关系用途请求 useRequest{1,{1,useG,{0xA209}},rcid,0xB001,1,7,
-                                        f.provider,useG,rb};
+  const 二次关系用途请求 useRequest{2,{1,useG,{0xA209}},rcid,0xB001,1,7,
+                                        f.provider,useG};
   const auto useAdded=f.concepts->记录二次关系实际采用(useRequest);
   require(useAdded.成功()&&useAdded.状态==二次关系数据状态::已变更&&
           useAdded.用途组.size()==1,"rc-use-add");
@@ -593,10 +629,10 @@ void rc_core_probe() {
           "rc-use-same-key-different-payload");
 
   const auto currentSources=f.concepts->读取二次关系来源(
-      {1,{1,useAfter,useAfter},rcid,rb});
+      {2,{1,useAfter,useAfter},rcid});
   require(currentSources.成功()&&currentSources.来源组.size()==1,"rc-source-read-for-release");
   const 二次关系来源释放请求 releaseRequest{
-      1,{1,useAfter,{0xA20A}},rcid,currentSources.来源组,rb};
+      2,{1,useAfter,{0xA20A}},rcid,currentSources.来源组};
   const auto released=f.concepts->释放二次关系形成来源(releaseRequest);
   require(released.成功()&&released.状态==二次关系数据状态::已变更,
           "rc-source-release");
@@ -608,7 +644,7 @@ void rc_core_probe() {
   auto middleAtom=atom; middleAtom.D.掩码=3;
   const auto middleG=generation(l1);
   const 二次关系概念建立请求 middleRequest{
-      1,{1,middleG,{0xA20B}},middleAtom,概念初始组织指定::具名上位,{rcid},{},rb};
+      2,{1,middleG,{0xA20B}},middleAtom,概念初始组织指定::具名上位,{rcid},{}};
   const auto middleResult=f.concepts->建立二次关系概念(middleRequest);
   require(middleResult.成功()&&middleResult.状态==二次关系数据状态::已创建,
           "rc-middle-create");
@@ -616,14 +652,14 @@ void rc_core_probe() {
   auto leafAtom=atom; leafAtom.D.掩码=1;
   const auto leafG=generation(l1);
   const 二次关系概念建立请求 leafRequest{
-      1,{1,leafG,{0xA20C}},leafAtom,概念初始组织指定::具名上位,{middle},{},rb};
+      2,{1,leafG,{0xA20C}},leafAtom,概念初始组织指定::具名上位,{middle},{}};
   const auto leafResult=f.concepts->建立二次关系概念(leafRequest);
   require(leafResult.成功()&&leafResult.状态==二次关系数据状态::已创建,
           "rc-leaf-create");
   const auto leaf=leafResult.事实->身份;
   const auto cycleG=generation(l1);
   const 二次关系父组请求 cycleRequest{
-      1,{1,cycleG,{0xA20D}},rcid,{}, {leaf},rb};
+      2,{1,cycleG,{0xA20D}},rcid,{}, {leaf}};
   const auto cycleResult=f.concepts->替换二次关系父组(cycleRequest);
   require(cycleResult.状态==二次关系数据状态::形成环&&generation(l1)==cycleG,
           "rc-parent-descendant-cycle-rejected");
@@ -632,7 +668,7 @@ void rc_core_probe() {
                    概念树生命周期状态 to,std::string_view name) {
     const auto before=generation(l1);
     const 二次关系生命周期请求 request{
-        1,{1,before,{key}},leaf,from,to,f.provider,rb};
+        2,{1,before,{key}},leaf,from,to,f.provider};
     const auto result=f.concepts->迁移二次关系生命周期(request);
     require(result.成功()&&result.事实&&result.事实->治理状态==to,name);
   };
@@ -658,7 +694,7 @@ void rc_core_probe() {
           externalSaved.新编码映射.size()==3,"rc-external-reference-create");
   const auto blockedExitG=generation(l1);
   const 二次关系退出请求 blockedExit{
-      1,{1,blockedExitG,{0xA214}},leaf,rb};
+      2,{1,blockedExitG,{0xA214}},leaf};
   const auto blockedExitResult=f.concepts->退出二次关系概念(blockedExit);
   require(blockedExitResult.状态==二次关系数据状态::引用冲突&&
           generation(l1)==blockedExitG,"rc-exit-external-reference-rejected");
@@ -673,7 +709,7 @@ void rc_core_probe() {
   const auto removed=f.externalOwner.写入端口->提交所有者范围中性写集(removeExternal);
   require(removed.状态==L1所有者范围写入状态::成功,"rc-external-reference-remove");
   const auto exitG=generation(l1);
-  const 二次关系退出请求 exitRequest{1,{1,exitG,{0xA216}},leaf,rb};
+  const 二次关系退出请求 exitRequest{2,{1,exitG,{0xA216}},leaf};
   const auto exited=f.concepts->退出二次关系概念(exitRequest);
   require(exited.成功()&&exited.状态==二次关系数据状态::已变更,
           "rc-exit-after-reference-release");

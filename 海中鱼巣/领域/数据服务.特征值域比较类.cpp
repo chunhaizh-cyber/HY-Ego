@@ -75,6 +75,49 @@ bool 读取请求有效(const 特征值域读取请求_v1& r) noexcept {
     default: return 特征值域比较状态_v1::内部不一致;
     }
 }
+特征值域比较状态_v2 映射基础状态_v2(特征概念值域基础读取状态_v2 s) noexcept {
+    switch (s) {
+    case 特征概念值域基础读取状态_v2::未找到: return 特征值域比较状态_v2::未找到;
+    case 特征概念值域基础读取状态_v2::目标已退出: return 特征值域比较状态_v2::目标已退出;
+    case 特征概念值域基础读取状态_v2::类别冲突: return 特征值域比较状态_v2::类别冲突;
+    case 特征概念值域基础读取状态_v2::规则缺失: return 特征值域比较状态_v2::规则缺失;
+    case 特征概念值域基础读取状态_v2::未实现: return 特征值域比较状态_v2::未实现;
+    case 特征概念值域基础读取状态_v2::事实代次漂移: return 特征值域比较状态_v2::事实代次漂移;
+    case 特征概念值域基础读取状态_v2::历史材料不可用: return 特征值域比较状态_v2::历史材料不可用;
+    case 特征概念值域基础读取状态_v2::资源失败: return 特征值域比较状态_v2::资源失败;
+    case 特征概念值域基础读取状态_v2::入口拒绝: return 特征值域比较状态_v2::入口拒绝;
+    default: return 特征值域比较状态_v2::内部不一致;
+    }
+}
+特征值域比较状态_v2 映射特征错误_v2(特征数据错误 e) noexcept {
+    switch (e) {
+    case 特征数据错误::未找到: return 特征值域比较状态_v2::未找到;
+    case 特征数据错误::已退出: return 特征值域比较状态_v2::目标已退出;
+    case 特征数据错误::类型不相容: return 特征值域比较状态_v2::类型不相容;
+    case 特征数据错误::规则缺失: return 特征值域比较状态_v2::规则缺失;
+    case 特征数据错误::能力未提供: return 特征值域比较状态_v2::未实现;
+    case 特征数据错误::并发变化: return 特征值域比较状态_v2::事实代次漂移;
+    case 特征数据错误::历史材料不可用: return 特征值域比较状态_v2::历史材料不可用;
+    case 特征数据错误::资源失败: return 特征值域比较状态_v2::资源失败;
+    case 特征数据错误::入口拒绝: return 特征值域比较状态_v2::入口拒绝;
+    default: return 特征值域比较状态_v2::内部不一致;
+    }
+}
+bool 规范值域完整(const 特征规范值域_v2 &domain) noexcept {
+    return std::visit([](const auto &value) noexcept {
+        using T = std::decay_t<decltype(value)>;
+        if constexpr (std::is_same_v<T, 特征规范I64域>)
+            return !value.区间.empty();
+        else if constexpr (std::is_same_v<T, 特征I64组有限域_v2> ||
+                           std::is_same_v<T, 特征U64组有限域_v2>)
+            return !value.点组.empty();
+        else
+            return !value.材料组.empty() &&
+                   std::all_of(value.材料组.begin(), value.材料组.end(), [](const auto &item) {
+                       return 有效(item.格式) && !item.完整载荷.empty();
+                   });
+    }, domain);
+}
 }
 
 特征值域比较数据服务::特征值域比较数据服务(
@@ -115,6 +158,35 @@ bool 实例值域命中结果_v1::成功(const 实例值域命中核验请求_v1
         && 域 && 域->FC == r.FC
         && 值与材料用量有效(域->值与材料用量,r.预算.值与材料预算)
         && 概念读取用量有效(概念读取用量,r.预算.概念读取预算);
+}
+
+bool 特征值域读取结果_v2::成功(const 特征值域读取请求_v2 &r) const noexcept {
+    return 版本 == 2 && r.版本 == 2 && r.Gread && r.H && r.H <= r.Gread &&
+        有效(r.FC.值) && 状态 == 特征值域比较状态_v2::已读取 &&
+        Gread == r.Gread && H == r.H && 域 && 域->FC == r.FC &&
+        有效(域->FT) && 有效(域->规则身份) && 域->规则版本 == 1 &&
+        域->基础读回.FC == r.FC && 域->基础读回.FT == 域->FT &&
+        域->基础读回.原始表示 == 域->原始表示 &&
+        域->基础读回.规则身份 == 域->规则身份 &&
+        域->基础读回.规则版本 == 域->规则版本 && 规范值域完整(域->规范化值域);
+}
+
+bool 特征值域关系结果_v2::成功(const 特征值域关系核验请求_v2 &r) const noexcept {
+    return 版本 == 2 && r.版本 == 2 && r.Gread && r.H && r.H <= r.Gread &&
+        有效(r.左FC.值) && 有效(r.右FC.值) &&
+        状态 == 特征值域比较状态_v2::已核验 && Gread == r.Gread && H == r.H &&
+        关系 && 左域 && 右域 && 左域->FC == r.左FC && 右域->FC == r.右FC &&
+        左域->FT == 右域->FT && 左域->原始表示 == 右域->原始表示 &&
+        左域->规则身份 == 右域->规则身份 && 左域->规则版本 == 右域->规则版本 &&
+        规范值域完整(左域->规范化值域) && 规范值域完整(右域->规范化值域);
+}
+
+bool 实例值域命中结果_v2::成功(const 实例值域命中核验请求_v2 &r) const noexcept {
+    return 版本 == 2 && r.版本 == 2 && r.Gread && r.H && r.H <= r.Gread &&
+        有效(r.F) && 有效(r.FC.值) && 状态 == 特征值域比较状态_v2::已核验 &&
+        Gread == r.Gread && H == r.H && 关系 && 域 && 域->FC == r.FC &&
+        (*关系 == 特征值域关系_v2::左包含右 ||
+         *关系 == 特征值域关系_v2::不包含) && 规范值域完整(域->规范化值域);
 }
 
 特征值域读取结果_v1 特征值域比较数据服务::读取特征值域(
@@ -251,6 +323,198 @@ bool 实例值域命中结果_v1::成功(const 实例值域命中核验请求_v1
       catch (const std::length_error&) { out.状态 = 特征值域比较状态_v1::资源失败; }
       catch (...) { out.状态 = 特征值域比较状态_v1::内部不一致; }
     if (out.状态 != 特征值域比较状态_v1::已核验) { out.H = 0; out.关系.reset(); out.域.reset(); }
+    return out;
+}
+
+特征值域读取结果_v2 特征值域比较数据服务::读取特征值域_v2(
+    const 特征值域读取请求_v2 &r) const noexcept {
+    特征值域读取结果_v2 out;
+    out.Gread = r.Gread;
+    const auto fail = [&](特征值域比较状态_v2 state) {
+        out.状态 = state;
+        out.H = 0;
+        out.域.reset();
+    };
+    try {
+        if (r.版本 != 2 || !r.Gread || !r.H || r.H > r.Gread || !有效(r.FC.值)) {
+            fail(特征值域比较状态_v2::入口拒绝);
+            return out;
+        }
+        const 特征概念值域基础读取请求_v2 baseRequest{2, r.Gread, r.H, r.FC};
+        const auto base = concepts_.读取特征概念值域基础_v2(baseRequest);
+        if (!base.成功(baseRequest) || !base.事实) {
+            fail(映射基础状态_v2(base.状态));
+            return out;
+        }
+        const auto *definition =
+            std::get_if<纯I64特征概念定义>(&base.事实->完整纯概念事实.定义);
+        // 待实现：I64组、U64组和独立材料的完整域适配器尚未交付。
+        if (!definition) {
+            fail(特征值域比较状态_v2::未实现);
+            return out;
+        }
+        特征规范I64域 raw;
+        raw.区间.reserve(definition->规范域.size());
+        for (const auto &interval : definition->规范域)
+            raw.区间.push_back({interval.下界, interval.上界});
+        const auto provider = features_.保护<std::pair<I64基础特征类型信息,
+                                                       特征规范I64域>>([&] {
+            features_.截止有效(1, r.Gread, r.H);
+            features_.守卫(r.Gread);
+            auto type = features_.读类型(base.事实->FT, r.Gread, r.H);
+            if (!type.规则) throw 特征数据错误::规则缺失;
+            auto full = features_.读完整域(base.事实->FT, r.Gread, r.H);
+            auto domain = features_.规范域(raw);
+            features_.要求(features_.包含(full, domain), 特征数据错误::类型不相容);
+            features_.守卫(r.Gread);
+            return std::pair{std::move(type), std::move(domain)};
+        });
+        const auto *provided =
+            std::get_if<std::pair<I64基础特征类型信息, 特征规范I64域>>(&provider);
+        if (!provided) {
+            fail(映射特征错误_v2(std::get<特征数据错误>(provider)));
+            return out;
+        }
+        if (!provided->first.规则 || *provided->first.规则 != base.事实->规则身份 ||
+            base.事实->规则版本 != 1 || provided->second.区间.empty()) {
+            fail(特征值域比较状态_v2::内部不一致);
+            return out;
+        }
+        out.H = r.H;
+        out.域 = 特征值域事实_v2{
+            r.FC, base.事实->FT, base.事实->原始表示, *provided->first.规则, 1,
+            特征规范值域_v2{provided->second}, *base.事实};
+        out.状态 = 特征值域比较状态_v2::已读取;
+        if (!out.成功(r)) fail(特征值域比较状态_v2::内部不一致);
+    } catch (const std::bad_alloc &) {
+        fail(特征值域比较状态_v2::资源失败);
+    } catch (const std::length_error &) {
+        fail(特征值域比较状态_v2::资源失败);
+    } catch (...) {
+        fail(特征值域比较状态_v2::内部不一致);
+    }
+    return out;
+}
+
+特征值域关系结果_v2 特征值域比较数据服务::核验特征值域关系_v2(
+    const 特征值域关系核验请求_v2 &r) const noexcept {
+    特征值域关系结果_v2 out;
+    out.Gread = r.Gread;
+    const auto fail = [&](特征值域比较状态_v2 state) {
+        out.状态 = state;
+        out.H = 0;
+        out.关系.reset();
+        out.左域.reset();
+        out.右域.reset();
+    };
+    try {
+        const 特征值域读取请求_v2 leftRequest{2, r.Gread, r.H, r.左FC};
+        const 特征值域读取请求_v2 rightRequest{2, r.Gread, r.H, r.右FC};
+        if (r.版本 != 2 || !r.Gread || !r.H || r.H > r.Gread ||
+            !有效(r.左FC.值) || !有效(r.右FC.值)) {
+            fail(特征值域比较状态_v2::入口拒绝);
+            return out;
+        }
+        const auto left = 读取特征值域_v2(leftRequest);
+        if (!left.成功(leftRequest)) {
+            fail(left.状态);
+            return out;
+        }
+        const auto right = 读取特征值域_v2(rightRequest);
+        if (!right.成功(rightRequest)) {
+            fail(right.状态);
+            return out;
+        }
+        if (left.域->FT != right.域->FT ||
+            left.域->原始表示 != right.域->原始表示 ||
+            left.域->规则身份 != right.域->规则身份 ||
+            left.域->规则版本 != right.域->规则版本) {
+            fail(特征值域比较状态_v2::类型不相容);
+            return out;
+        }
+        const auto *leftI64 = std::get_if<特征规范I64域>(&left.域->规范化值域);
+        const auto *rightI64 = std::get_if<特征规范I64域>(&right.域->规范化值域);
+        if (!leftI64 || !rightI64) {
+            fail(特征值域比较状态_v2::未实现);
+            return out;
+        }
+        const bool leftContains = features_.包含(*leftI64, *rightI64);
+        const bool rightContains = features_.包含(*rightI64, *leftI64);
+        out.H = r.H;
+        out.左域 = left.域;
+        out.右域 = right.域;
+        out.关系 = leftContains && rightContains ? 特征值域关系_v2::相等
+                   : leftContains ? 特征值域关系_v2::左包含右
+                   : rightContains ? 特征值域关系_v2::右包含左
+                                   : 特征值域关系_v2::不包含;
+        out.状态 = 特征值域比较状态_v2::已核验;
+        if (!out.成功(r)) fail(特征值域比较状态_v2::内部不一致);
+    } catch (const std::bad_alloc &) {
+        fail(特征值域比较状态_v2::资源失败);
+    } catch (const std::length_error &) {
+        fail(特征值域比较状态_v2::资源失败);
+    } catch (...) {
+        fail(特征值域比较状态_v2::内部不一致);
+    }
+    return out;
+}
+
+实例值域命中结果_v2 特征值域比较数据服务::核验实例值域命中_v2(
+    const 实例值域命中核验请求_v2 &r) const noexcept {
+    实例值域命中结果_v2 out;
+    out.Gread = r.Gread;
+    const auto fail = [&](特征值域比较状态_v2 state) {
+        out.状态 = state;
+        out.H = 0;
+        out.关系.reset();
+        out.域.reset();
+    };
+    try {
+        const 特征值域读取请求_v2 domainRequest{2, r.Gread, r.H, r.FC};
+        if (r.版本 != 2 || !r.Gread || !r.H || r.H > r.Gread ||
+            !有效(r.F) || !有效(r.FC.值)) {
+            fail(特征值域比较状态_v2::入口拒绝);
+            return out;
+        }
+        const auto domain = 读取特征值域_v2(domainRequest);
+        if (!domain.成功(domainRequest)) {
+            fail(domain.状态);
+            return out;
+        }
+        const auto *i64 = std::get_if<特征规范I64域>(&domain.域->规范化值域);
+        if (!i64) {
+            fail(特征值域比较状态_v2::未实现);
+            return out;
+        }
+        const auto matched = features_.保护<bool>([&] {
+            features_.截止有效(1, r.Gread, r.H);
+            features_.守卫(r.Gread);
+            const auto actual = features_.读准确(r.F, r.Gread, r.H);
+            features_.要求(actual.信息.类型 == domain.域->FT,
+                           特征数据错误::类型不相容);
+            const auto value = features_.完整整数(actual);
+            const auto hit = features_.包含(*i64, 特征规范I64域{{{value, value}}});
+            features_.守卫(r.Gread);
+            return hit;
+        });
+        const auto *hit = std::get_if<bool>(&matched);
+        if (!hit) {
+            fail(映射特征错误_v2(std::get<特征数据错误>(matched)));
+            return out;
+        }
+        out.H = r.H;
+        out.域 = domain.域;
+        out.关系 = *hit ? 特征值域关系_v2::左包含右
+                        : 特征值域关系_v2::不包含;
+        out.状态 = 特征值域比较状态_v2::已核验;
+        if (!out.成功(r)) fail(特征值域比较状态_v2::内部不一致);
+    } catch (const std::bad_alloc &) {
+        fail(特征值域比较状态_v2::资源失败);
+    } catch (const std::length_error &) {
+        fail(特征值域比较状态_v2::资源失败);
+    } catch (...) {
+        fail(特征值域比较状态_v2::内部不一致);
+    }
     return out;
 }
 

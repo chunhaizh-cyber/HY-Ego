@@ -207,6 +207,50 @@ struct I64基础特征类型定义结果 final {
             && 有效(事实->数据.身份) && 事实->数据.规格.来源 == 原请求.规格.来源;
     }
 };
+
+struct 特征正式准确I64解析请求_v2 final {
+    std::uint32_t 版本 = 2;
+    std::uint64_t Gread = 0, H = 0;
+    特征类型身份 正式特征类型;
+    特征准确值 准确值;
+};
+
+enum class 特征正式准确I64解析状态_v2 : std::uint8_t {
+    已解析 = 1,
+    入口拒绝 = 2,
+    正式特征类型未找到 = 3,
+    正式特征类型已退出 = 4,
+    准确值未找到 = 5,
+    准确值已退出 = 6,
+    准确值不相容 = 7,
+    非I64 = 8,
+    历史材料不可用 = 9,
+    事实代次漂移 = 10,
+    资源失败 = 11,
+    内部不一致 = 12
+};
+
+struct 特征正式准确I64解析事实_v2 final {
+    std::uint64_t Gread = 0, H = 0;
+    特征类型身份 正式特征类型;
+    特征准确值 原始准确值;
+    std::int64_t I64 = 0;
+};
+
+struct 特征正式准确I64解析结果_v2 final {
+    std::uint32_t 版本 = 2;
+    特征正式准确I64解析状态_v2 状态 = 特征正式准确I64解析状态_v2::入口拒绝;
+    std::optional<特征正式准确I64解析事实_v2> 事实;
+    bool 成功(const 特征正式准确I64解析请求_v2& 请求) const noexcept {
+        return 请求.版本 == 2 && 请求.Gread != 0 && 请求.H != 0
+            && 请求.H <= 请求.Gread && 有效(请求.正式特征类型)
+            && 浅层结构有效(请求.准确值)
+            && 版本 == 2 && 状态 == 特征正式准确I64解析状态_v2::已解析
+            && 事实 && 事实->Gread == 请求.Gread && 事实->H == 请求.H
+            && 事实->正式特征类型 == 请求.正式特征类型
+            && 事实->原始准确值 == 请求.准确值;
+    }
+};
 // FCv 是概念 owner 已同截止核验后的投影；特征类不读取 F→FCv 关系。
 struct 特征R成员规则投影 final {
     特征信息身份 F;
@@ -404,7 +448,7 @@ enum class 特征I64比较绑定状态 : std::uint8_t {
     目标已退出=7, 格式不支持=8, 注册不唯一=9, 幂等冲突=10, 引用冲突=11,
     事实代次漂移=12, 历史材料不可用=13, 资源失败=14, 内部不一致=15, 已可能发布=16, 数量预算不足=17
 };
-enum class 特征I64比较绑定操作 : std::uint8_t { 建立=1, 身份读取=2, 当前读取=3, 退出=4 };
+enum class 特征I64比较绑定操作 : std::uint8_t { 建立=1, 退出=4 };
 struct 特征I64关系编码 final {
     std::int64_t 左小于{}, 等价{}, 左大于{};
     friend bool operator==(const 特征I64关系编码&, const 特征I64关系编码&) = default;
@@ -495,19 +539,37 @@ struct 特征I64比较绑定建立请求 final {
     特征I64比较绑定定义 定义;
     friend bool operator==(const 特征I64比较绑定建立请求&,const 特征I64比较绑定建立请求&)=default;
 };
-struct 特征I64比较绑定读取请求 final {
-    std::uint32_t 版本=1; std::uint64_t Gread=0,H=0; 特征I64比较绑定身份 身份;
-    有界事实读取预算_B1 读取预算;
+enum class 特征I64比较绑定读取状态_v2 : std::uint8_t {
+    已读取=1,入口拒绝=2,未找到=3,目标已退出=4,格式不支持=5,
+    注册不唯一=6,事实代次漂移=7,历史材料不可用=8,
+    资源失败=9,内部不一致=10
 };
-struct 特征I64当前比较绑定读取请求 final {
-    std::uint32_t 版本=1; std::uint64_t Gread=0; 特征类型身份 输入FT;
+struct 特征I64比较绑定读取请求_v2 final {
+    std::uint32_t 版本=2;
+    std::uint64_t Gread=0,H=0;
+    特征I64比较绑定身份 身份;
+    friend bool operator==(const 特征I64比较绑定读取请求_v2&,
+        const 特征I64比较绑定读取请求_v2&)=default;
+};
+struct 特征I64当前比较绑定读取请求_v2 final {
+    std::uint32_t 版本=2;
+    std::uint64_t Gread=0;
+    特征类型身份 输入FT;
     特征I64比较用途 用途=特征I64比较用途::识别区分;
-    std::uint64_t 最大扫描候选数量=0;
-    有界事实读取预算_B1 读取预算;
-    friend bool operator==(const 特征I64当前比较绑定读取请求&, const 特征I64当前比较绑定读取请求&) = default;
+    friend bool operator==(const 特征I64当前比较绑定读取请求_v2&,
+        const 特征I64当前比较绑定读取请求_v2&)=default;
 };
-struct 特征I64当前比较绑定读取用量 final {
-    std::uint64_t 扫描候选数=0,匹配数量=0;
+struct 特征I64比较绑定读取结果_v2 final {
+    std::uint32_t 版本=2;
+    特征I64比较绑定读取状态_v2 状态=特征I64比较绑定读取状态_v2::入口拒绝;
+    std::uint64_t Gread=0,H=0;
+    std::optional<特征I64比较绑定事实> 事实;
+    bool 成功() const noexcept {
+        return 版本==2 && 状态==特征I64比较绑定读取状态_v2::已读取
+            && H && H<=Gread && 事实 && I64绑定事实完整(*事实,H);
+    }
+    friend bool operator==(const 特征I64比较绑定读取结果_v2&,
+        const 特征I64比较绑定读取结果_v2&)=default;
 };
 struct 特征I64比较绑定退出请求 final {
     std::uint32_t 版本=1; std::uint64_t G=0;
@@ -517,50 +579,17 @@ struct 特征I64比较绑定退出请求 final {
 };
 struct 特征I64比较绑定结果 final {
     std::uint32_t 版本=1;
-    特征I64比较绑定操作 操作=特征I64比较绑定操作::身份读取;
+    特征I64比较绑定操作 操作=特征I64比较绑定操作::建立;
     特征I64比较绑定状态 状态=特征I64比较绑定状态::入口拒绝;
     std::uint64_t Gread=0,H=0;
     std::optional<std::uint64_t> 首次发布H;
     特征类标量发布确定性 发布确定性=特征类标量发布确定性::未派发;
     std::optional<特征I64比较绑定事实> 事实;
     std::optional<L1所有者范围写入结果> 正式回执;
-    std::optional<特征I64当前比较绑定读取请求> 当前读取原请求;
-    特征I64当前比较绑定读取用量 当前读取用量;
-    有界事实读取用量_B1 读取用量;
     std::optional<特征I64比较绑定建立请求> 建立原请求;
     bool 成功() const noexcept {
         using O=特征I64比较绑定操作; using S=特征I64比较绑定状态;
         if (版本!=1 || !H || H>Gread || !事实 || (操作!=O::建立&&建立原请求)) return false;
-        const auto 用量和有效=[&]() noexcept {
-            if(读取用量.节点数>UINT64_MAX-读取用量.关系数)return false;
-            const auto 前两项=读取用量.节点数+读取用量.关系数;
-            return 前两项<=UINT64_MAX-读取用量.值数
-                &&读取用量.材料总数==前两项+读取用量.值数;
-        };
-        if (操作==O::当前读取) {
-            if (!当前读取原请求) return false;
-            const auto& r=*当前读取原请求; const auto& u=当前读取用量;
-            const auto& b=r.读取预算;
-            return r.版本==1 && r.Gread==Gread && H==Gread && 有效(r.输入FT)
-                && static_cast<unsigned>(r.用途)>=1 && static_cast<unsigned>(r.用途)<=5
-                && r.最大扫描候选数量 && b.最大节点数 && b.最大关系数
-                && b.最大值数 && b.最大材料总数 && 用量和有效()
-                && u.扫描候选数>=u.匹配数量 && u.匹配数量==1 && u.扫描候选数<=r.最大扫描候选数量
-                && 读取用量.节点数<=b.最大节点数
-                && 读取用量.关系数<=b.最大关系数
-                && 读取用量.值数<=b.最大值数
-                && 读取用量.材料总数>0
-                && 读取用量.材料总数<=b.最大材料总数
-                && 状态==S::已读取 && !首次发布H && !正式回执
-                && I64绑定事实完整(*事实,H) && 事实->定义.输入FT==r.输入FT && 事实->定义.用途==r.用途;
-        }
-        if (当前读取原请求 || 当前读取用量.扫描候选数 || 当前读取用量.匹配数量
-            || !用量和有效()) return false;
-        if (操作==O::身份读取)
-            return 状态==S::已读取 && !首次发布H && !正式回执
-                && 读取用量.材料总数>0 && I64绑定事实完整(*事实,H);
-        if (读取用量.材料总数 || 读取用量.节点数
-            || 读取用量.关系数 || 读取用量.值数) return false;
         if (!首次发布H || !*首次发布H || !正式回执 || *首次发布H!=H
             || 发布确定性!=特征类标量发布确定性::确认已发布 || 正式回执->事实代次!=H
             || (正式回执->状态!=L1所有者范围写入状态::成功 && 正式回执->状态!=L1所有者范围写入状态::精确重复)) return false;
@@ -930,31 +959,28 @@ class 特征类数据服务 final : public 原子I64特征内容参与者 {
     using WS = L1所有者范围写集请求;
     // 每次调用独立计量；缓存只抑制同一事实的重复公开读取，不跨调用保存。
     struct 读取计量 {
-        有界准确特征读取预算 上限{UINT64_MAX,UINT64_MAX,UINT64_MAX,UINT64_MAX};
+        struct 完整读取标签 final {};
+        有界准确特征读取预算 上限;
         有界准确特征读取用量 用量;
+        bool 预算自由=false;
         std::map<稳定编码,L1所有者范围事实副本> 已读;
         std::map<std::tuple<std::uint64_t,std::uint64_t,稳定编码,稳定编码,bool>,std::vector<E>> 已读关系组;
         std::map<std::tuple<std::uint64_t,std::uint64_t,稳定编码>,std::vector<V>> 已读属性组;
+        读取计量():上限{UINT64_MAX,UINT64_MAX,UINT64_MAX,UINT64_MAX}{}
+        explicit 读取计量(完整读取标签):上限{},预算自由(true){}
         void 记(const L1所有者范围事实副本& raw) {
             const auto id=std::visit([](const auto& f){return f.编码;},raw);
             if(!有效(id))throw S::内部不一致;
             if (已读.contains(id)) {if(已读.at(id)!=raw)throw S::内部不一致;return;}
             auto& n=std::holds_alternative<N>(raw) ? 用量.节点数:std::holds_alternative<E>(raw) ? 用量.关系数:用量.属性值数;
             const auto limit=std::holds_alternative<N>(raw) ? 上限.最大节点数:std::holds_alternative<E>(raw) ? 上限.最大关系数:上限.最大属性值数;
-            if (n>=limit || 用量.材料总数>=上限.最大材料总数) throw S::数量预算不足;
-            ++n; ++用量.材料总数; 已读.emplace(id,raw);
+            if (!预算自由) {
+                if (n>=limit || 用量.材料总数>=上限.最大材料总数) throw S::数量预算不足;
+                ++n; ++用量.材料总数;
+            }
+            已读.emplace(id,raw);
         }
     };
-    static bool 绑定读取预算有效(const 有界事实读取预算_B1& b) noexcept {
-        return b.最大节点数 && b.最大关系数 && b.最大值数 && b.最大材料总数;
-    }
-    static 有界准确特征读取预算 转换绑定读取预算(
-        const 有界事实读取预算_B1& b) noexcept {
-        return {b.最大节点数,b.最大关系数,b.最大值数,b.最大材料总数};
-    }
-    static 有界事实读取用量_B1 转换绑定读取用量(const 读取计量& m) noexcept {
-        return {m.用量.节点数,m.用量.关系数,m.用量.属性值数,m.用量.材料总数};
-    }
     enum class 分区 : std::uint8_t { 定义, 信息 };
     enum 定义角色 : std::size_t {
         定义锚点, 定义归属, 类型规格属性, 规则误差属性, 外设来源关系, 单位关系,
@@ -1037,6 +1063,8 @@ public:
     R<补齐I64默认R规则结果> 补齐I64默认R规则(const 补齐I64默认R规则请求&);
     特征类型准确值核验结果 核验正式特征类型准确值(
         const 特征类型准确值核验请求&) const;
+    特征正式准确I64解析结果_v2 解析正式特征类型准确I64_v2(
+        const 特征正式准确I64解析请求_v2&) const noexcept;
     R<特征截止事实<I64基础特征类型信息>> 读取I64基础特征类型事实(
         const 特征类型截止请求&) const;
     R<特征截止事实<特征规范I64域>> 读取I64类型完整域(const 特征类型截止请求&) const;
@@ -1063,6 +1091,8 @@ private:
         catch (...) { return S::内部不一致; }
     }
     static S 映射(L1所有者范围读取状态);
+    static S 映射(L1所有者范围历史完整关系组读取状态_v2);
+    static S 映射(L1所有者范围历史完整属性值组读取状态_v2);
     static S 映射(L1所有者范围写入状态);
     L1所有者范围写端口& 端口(分区 p) { return p == 分区::定义 ? definitions_ : information_; }
     const L1所有者范围写端口& 端口(分区 p) const { return p == 分区::定义 ? definitions_ : information_; }
@@ -1094,6 +1124,8 @@ private:
         读取计量* = nullptr) const;
     准确特征读取事实 读准确(特征信息身份, std::uint64_t, std::uint64_t, 标量读取上下文* = nullptr, 读取计量* = nullptr) const;
     特征域形成事实 形成I64特征域已持锁(const 准确特征读取请求&) const;
+    特征正式准确I64解析结果_v2 解析正式特征类型准确I64_v2已持锁(
+        const 特征正式准确I64解析请求_v2&) const;
     std::int64_t 解析输入(const 特征准确值&, std::uint64_t, std::uint64_t,读取计量* = nullptr) const;
     static std::int64_t 完整整数(const 准确特征读取事实&);
     static Key 新键(const WS&);
@@ -1326,40 +1358,8 @@ private:
         for(std::size_t i=0;i<outputs.size();++i)result.输出组.push_back({result.定义.输出组[i].输出,result.定义.输出组[i].输出FT,outputs[i].编码});
         绑定要求(I64绑定事实完整(result,h));return result;
     }
-    特征I64比较绑定结果 读当前绑定(const 特征I64当前比较绑定读取请求& r) const {
-        特征I64比较绑定结果 out;out.操作=特征I64比较绑定操作::当前读取;out.Gread=out.H=r.Gread;out.当前读取原请求=r;
-        读取计量 meter;meter.上限=转换绑定读取预算(r.读取预算);
-        auto sync=[&]{out.读取用量=转换绑定读取用量(meter);};
-        auto fail=[&](KS s){sync();out.状态=s;out.事实.reset();};
-        try {
-            const auto purpose=static_cast<unsigned>(r.用途);
-            绑定要求(r.版本==1&&r.Gread&&有效(r.输入FT)&&purpose>=1&&purpose<=5
-                &&r.最大扫描候选数量&&绑定读取预算有效(r.读取预算),KS::入口拒绝);
-            守卫(r.Gread);绑定就绪();
-            const auto edges=关系(r.输入FT.编码,k_[I64比较绑定输入FT关系],true,r.Gread,r.Gread,分区::定义,&meter);
-            std::set<稳定编码> scanned;
-            for(const auto& edge:edges) {
-                绑定要求(!scanned.contains(edge.源节点));
-                绑定要求(out.当前读取用量.扫描候选数<r.最大扫描候选数量,KS::数量预算不足);
-                scanned.insert(edge.源节点);++out.当前读取用量.扫描候选数;
-                auto candidate=读绑定({edge.源节点},r.Gread,r.Gread,meter);
-                if(candidate.定义.输入FT==r.输入FT&&candidate.定义.用途==r.用途) {
-                    ++out.当前读取用量.匹配数量;
-                    if(out.当前读取用量.匹配数量==1)out.事实=std::move(candidate);
-                }
-            }
-            sync();守卫(r.Gread);
-            if(out.当前读取用量.匹配数量==0)fail(KS::未找到);
-            else if(out.当前读取用量.匹配数量>1)fail(KS::注册不唯一);
-            else {out.状态=KS::已读取;绑定要求(out.成功());}
-        } catch(const 绑定失败& e){fail(e.状态);}
-        catch(S e){fail(绑定映射(e));}
-        catch(const 标量失败& e){fail(绑定标量映射(e.状态));}
-        catch(const std::bad_alloc&){fail(KS::资源失败);}
-        catch(const std::length_error&){fail(KS::资源失败);}
-        catch(...){fail(KS::内部不一致);}
-        return out;
-    }
+    特征I64比较绑定读取结果_v2 读当前绑定完整_v2_已锁(
+        const 特征I64当前比较绑定读取请求_v2&) const noexcept;
     WS 绑定建立写集(const 特征I64比较绑定建立请求& r) const {
         WS w;w.期望事实代次=r.G;w.写入幂等身份=r.幂等身份;
         const auto encoded=绑定编码(r.定义);
@@ -1390,30 +1390,10 @@ private:
 public:
     特征I64比较绑定结果 建立I64比较绑定(const 特征I64比较绑定建立请求&);
     特征I64比较绑定结果 退出I64比较绑定(const 特征I64比较绑定退出请求&);
-    特征I64比较绑定结果 读取当前I64比较绑定(const 特征I64当前比较绑定读取请求& r) const {
-        std::lock_guard<std::mutex> lock(mutex_);return 读当前绑定(r);
-    }
-    特征I64比较绑定结果 读取I64比较绑定(const 特征I64比较绑定读取请求& r) const {
-        特征I64比较绑定结果 out;out.Gread=r.Gread;out.H=r.H;
-        读取计量 meter;
-        auto sync=[&]{out.读取用量=转换绑定读取用量(meter);};
-        auto fail=[&](KS s){sync();out.状态=s;out.事实.reset();};
-        try {
-            std::lock_guard<std::mutex> lock(mutex_);
-            截止有效(r.版本,r.Gread,r.H);
-            要求(有效(r.身份)&&绑定读取预算有效(r.读取预算),S::入口拒绝);
-            meter.上限=转换绑定读取预算(r.读取预算);守卫(r.Gread);
-            out.事实=读绑定(r.身份,r.Gread,r.H,meter);sync();守卫(r.Gread);
-            绑定要求(out.读取用量.节点数<=r.读取预算.最大节点数
-                &&out.读取用量.关系数<=r.读取预算.最大关系数
-                &&out.读取用量.值数<=r.读取预算.最大值数
-                &&out.读取用量.材料总数<=r.读取预算.最大材料总数);
-            out.状态=KS::已读取;绑定要求(out.成功());
-        } catch(const 绑定失败& e){fail(e.状态);}catch(S e){fail(绑定映射(e));}
-        catch(const 标量失败& e){fail(绑定标量映射(e.状态));}
-        catch(const std::bad_alloc&){fail(KS::资源失败);}catch(const std::length_error&){fail(KS::资源失败);}
-        catch(...){fail(KS::内部不一致);}return out;
-    }
+    特征I64比较绑定读取结果_v2 读取I64比较绑定_v2(
+        const 特征I64比较绑定读取请求_v2&) const noexcept;
+    特征I64比较绑定读取结果_v2 读取当前I64比较绑定_v2(
+        const 特征I64当前比较绑定读取请求_v2&) const noexcept;
 private:
 
     using SP = 特征类标量发布确定性;

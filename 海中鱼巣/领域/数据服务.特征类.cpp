@@ -12,6 +12,32 @@ namespace 海中鱼巣 {
     default: return S::内部不一致;
     }
 }
+特征数据错误 特征类数据服务::映射(
+    L1所有者范围历史完整关系组读取状态_v2 s) {
+    using T=L1所有者范围历史完整关系组读取状态_v2;
+    switch(s){
+    case T::未找到:return S::未找到;
+    case T::已退出:return S::已退出;
+    case T::入口拒绝:case T::许可拒绝:return S::入口拒绝;
+    case T::事实代次漂移:return S::并发变化;
+    case T::历史材料已清理:return S::历史材料不可用;
+    case T::资源失败:return S::资源失败;
+    default:return S::内部不一致;
+    }
+}
+特征数据错误 特征类数据服务::映射(
+    L1所有者范围历史完整属性值组读取状态_v2 s) {
+    using T=L1所有者范围历史完整属性值组读取状态_v2;
+    switch(s){
+    case T::未找到:return S::未找到;
+    case T::已退出:return S::已退出;
+    case T::入口拒绝:case T::许可拒绝:return S::入口拒绝;
+    case T::事实代次漂移:return S::并发变化;
+    case T::历史材料已清理:return S::历史材料不可用;
+    case T::资源失败:return S::资源失败;
+    default:return S::内部不一致;
+    }
+}
 特征数据错误 特征类数据服务::映射(L1所有者范围写入状态 s) {
     switch (s) {
     case L1所有者范围写入状态::未找到: return S::未找到;
@@ -34,7 +60,8 @@ std::uint64_t 特征类数据服务::当前G() const {
 L1所有者范围事实副本 特征类数据服务::原始事实(稳定编码 id, std::uint64_t g, 读取计量* meter) const {
     要求(有效(id), S::入口拒绝);
     if (meter && meter->已读.contains(id)) return meter->已读.at(id);
-    if (meter) 要求(meter->用量.材料总数<meter->上限.最大材料总数,S::数量预算不足);
+    if (meter && !meter->预算自由)
+        要求(meter->用量.材料总数<meter->上限.最大材料总数,S::数量预算不足);
     auto r = l1_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, id});
     if (r.状态 != L1所有者范围读取状态::成功) throw 映射(r.状态);
     要求(r.读取事实代次 == g, S::并发变化);
@@ -58,7 +85,15 @@ std::vector<特征类数据服务::E> 特征类数据服务::关系(稳定编码
     }
     auto direction = incoming ? L1所有者范围关系端点方向::目标 : L1所有者范围关系端点方向::源;
     std::vector<E> 关系组;
-    if(meter) {
+    if(meter && meter->预算自由) {
+        const L1所有者范围历史完整关系组读取请求_v2 request{
+            L1所有者范围历史完整关系组读取合同版本,
+            direction,id,type,g,h};
+        auto r=l1_.读取所有者范围历史完整关系组(request);
+        if(r.状态!=L1所有者范围历史完整关系组读取状态_v2::成功)
+            throw 映射(r.状态);
+        要求(r.成功(request));关系组=std::move(r.关系组);
+    } else if(meter) {
         const auto 剩余关系=meter->上限.最大关系数-meter->用量.关系数;
         const auto 剩余总数=meter->上限.最大材料总数-meter->用量.材料总数;
         const auto 最大数量=std::min(剩余关系,剩余总数);
@@ -99,7 +134,14 @@ std::vector<特征类数据服务::V> 特征类数据服务::属性(稳定编码
         return cached;
     }
     std::vector<V> 属性组;
-    if(meter) {
+    if(meter && meter->预算自由) {
+        const L1所有者范围历史完整属性值组读取请求_v2 request{
+            L1所有者范围历史完整属性值组读取合同版本,id,g,h};
+        auto r=l1_.读取所有者范围历史完整属性值组(request);
+        if(r.状态!=L1所有者范围历史完整属性值组读取状态_v2::成功)
+            throw 映射(r.状态);
+        要求(r.成功(request));属性组=std::move(r.属性值组);
+    } else if(meter) {
         const auto 剩余值=meter->上限.最大属性值数-meter->用量.属性值数;
         const auto 剩余总数=meter->上限.最大材料总数-meter->用量.材料总数;
         const auto 最大数量=std::min(剩余值,剩余总数);
@@ -761,11 +803,11 @@ I64基础特征类型定义结果 特征类数据服务::形成或读取I64基�
         auto out = 读准确(r.身份, r.Gread, r.H); 守卫(r.Gread); return out;
     });
 }
-inline 特征类型准确值核验结果
-特征类数据服务::核验正式特征类型准确值(
-    const 特征类型准确值核验请求& r) const {
-    using V = 特征类型准确值核验状态;
-    特征类型准确值核验结果 out;
+特征正式准确I64解析结果_v2
+特征类数据服务::解析正式特征类型准确I64_v2已持锁(
+    const 特征正式准确I64解析请求_v2& r) const {
+    using V = 特征正式准确I64解析状态_v2;
+    特征正式准确I64解析结果_v2 out;
     const auto fail = [&](V state) { out.状态 = state; out.事实.reset(); };
     const auto common = [](S state) noexcept {
         switch (state) {
@@ -777,9 +819,8 @@ inline 特征类型准确值核验结果
         }
     };
     try {
-        std::lock_guard<std::mutex> lock(mutex_);
-        截止有效(r.合同版本, r.Gread, r.H);
-        要求(有效(r.正式特征类型) && 浅层结构有效(r.准确值), S::入口拒绝);
+        要求(r.版本 == 2 && r.Gread != 0 && r.H != 0 && r.H <= r.Gread
+            && 有效(r.正式特征类型) && 浅层结构有效(r.准确值), S::入口拒绝);
         守卫(r.Gread);
         I64基础特征类型信息 type;
         try { type = 读类型(r.正式特征类型, r.Gread, r.H); }
@@ -795,16 +836,72 @@ inline 特征类型准确值核验结果
         catch (S state) {
             if (state == S::未找到) fail(V::准确值未找到);
             else if (state == S::已退出) fail(V::准确值已退出);
-            else if (state == S::类型不相容 || state == S::能力未提供)
-                fail(V::准确值不相容);
+            else if (state == S::能力未提供) fail(V::非I64);
+            else if (state == S::类型不相容) fail(V::准确值不相容);
             else if (state == S::入口拒绝) fail(V::内部不一致);
             else fail(common(state));
             return out;
         }
         if (!包含(规范域({type.规格.允许集合}), 特征规范I64域{{{value, value}}})) {
-            fail(V::准确值不相容); return out;
+            fail(V::准确值不相容);
+            return out;
         }
         守卫(r.Gread);
+        out.状态 = V::已解析;
+        out.事实 = 特征正式准确I64解析事实_v2{
+            r.Gread, r.H, r.正式特征类型, r.准确值, value};
+        if (!out.成功(r)) fail(V::内部不一致);
+    } catch (S state) { fail(common(state)); }
+    return out;
+}
+
+特征正式准确I64解析结果_v2
+特征类数据服务::解析正式特征类型准确I64_v2(
+    const 特征正式准确I64解析请求_v2& r) const noexcept {
+    using V = 特征正式准确I64解析状态_v2;
+    特征正式准确I64解析结果_v2 out;
+    const auto fail = [&](V state) { out.状态 = state; out.事实.reset(); };
+    try {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return 解析正式特征类型准确I64_v2已持锁(r);
+    } catch (const std::bad_alloc&) { fail(V::资源失败); }
+    catch (const std::length_error&) { fail(V::资源失败); }
+    catch (...) { fail(V::内部不一致); }
+    return out;
+}
+
+特征类型准确值核验结果
+特征类数据服务::核验正式特征类型准确值(
+    const 特征类型准确值核验请求& r) const {
+    using V = 特征类型准确值核验状态;
+    using P = 特征正式准确I64解析状态_v2;
+    特征类型准确值核验结果 out;
+    const auto fail = [&](V state) { out.状态 = state; out.事实.reset(); };
+    const auto map = [](P state) noexcept {
+        switch (state) {
+        case P::入口拒绝: return V::入口拒绝;
+        case P::正式特征类型未找到: return V::正式特征类型未找到;
+        case P::正式特征类型已退出: return V::正式特征类型已退出;
+        case P::准确值未找到: return V::准确值未找到;
+        case P::准确值已退出: return V::准确值已退出;
+        case P::准确值不相容:
+        case P::非I64: return V::准确值不相容;
+        case P::历史材料不可用: return V::历史材料不可用;
+        case P::事实代次漂移: return V::事实代次漂移;
+        case P::资源失败: return V::资源失败;
+        default: return V::内部不一致;
+        }
+    };
+    try {
+        std::lock_guard<std::mutex> lock(mutex_);
+        截止有效(r.合同版本, r.Gread, r.H);
+        const 特征正式准确I64解析请求_v2 request{
+            2, r.Gread, r.H, r.正式特征类型, r.准确值};
+        const auto parsed = 解析正式特征类型准确I64_v2已持锁(request);
+        if (!parsed.成功(request)) {
+            fail(map(parsed.状态));
+            return out;
+        }
         out.状态 = V::已核验;
         out.事实 = 特征类型准确值核验事实{
             r.Gread, r.H, r.正式特征类型, r.准确值};
@@ -812,8 +909,13 @@ inline 特征类型准确值核验结果
             || out.事实->正式特征类型 != r.正式特征类型
             || out.事实->准确值 != r.准确值)
             fail(V::内部不一致);
-    } catch (S state) { fail(common(state)); }
-    catch (const std::bad_alloc&) { fail(V::资源失败); }
+    } catch (S state) {
+        if (state == S::入口拒绝) fail(V::入口拒绝);
+        else if (state == S::历史材料不可用) fail(V::历史材料不可用);
+        else if (state == S::并发变化) fail(V::事实代次漂移);
+        else if (state == S::资源失败) fail(V::资源失败);
+        else fail(V::内部不一致);
+    } catch (const std::bad_alloc&) { fail(V::资源失败); }
     catch (const std::length_error&) { fail(V::资源失败); }
     catch (...) { fail(V::内部不一致); }
     return out;
@@ -1308,13 +1410,21 @@ template<class BindingRequest> 特征I64比较绑定结果 特征类数据服务
         firstHead();绑定要求(!first.首次规范化写集&&!first.首次写入结果);dispatched=false;
         守卫(r.G);out.Gread=r.G;读取计量 meter;
         if constexpr(create){
-            const auto route=读当前绑定({1,r.G,r.定义.输入FT,r.定义.用途,UINT64_MAX,
-                {UINT64_MAX,UINT64_MAX,UINT64_MAX,UINT64_MAX}});
-            if(route.状态==KS::已读取){
+            const auto route=读当前绑定完整_v2_已锁(
+                {2,r.G,r.定义.输入FT,r.定义.用途});
+            if(route.状态==特征I64比较绑定读取状态_v2::已读取){
                 绑定要求(route.成功());
                 throw 绑定失败{route.事实->定义==r.定义 ? KS::幂等冲突 : KS::注册不唯一};
             }
-            if(route.状态!=KS::未找到)throw 绑定失败{route.状态};
+            if(route.状态!=特征I64比较绑定读取状态_v2::未找到)
+                throw 绑定失败{route.状态==特征I64比较绑定读取状态_v2::入口拒绝 ? KS::入口拒绝
+                    : route.状态==特征I64比较绑定读取状态_v2::目标已退出 ? KS::目标已退出
+                    : route.状态==特征I64比较绑定读取状态_v2::格式不支持 ? KS::格式不支持
+                    : route.状态==特征I64比较绑定读取状态_v2::注册不唯一 ? KS::注册不唯一
+                    : route.状态==特征I64比较绑定读取状态_v2::事实代次漂移 ? KS::事实代次漂移
+                    : route.状态==特征I64比较绑定读取状态_v2::历史材料不可用 ? KS::历史材料不可用
+                    : route.状态==特征I64比较绑定读取状态_v2::资源失败 ? KS::资源失败
+                    : KS::内部不一致};
             核验绑定FT(r.定义.输入FT,r.定义.输入量化,r.G,r.G,meter);
             for(const auto& output:r.定义.输出组)核验绑定FT(output.输出FT,output.输出.量化,r.G,r.G,meter);
         }else w=绑定退出写集(r,r.G,meter);
@@ -1337,13 +1447,21 @@ template<class BindingRequest> 特征I64比较绑定结果 特征类数据服务
         if constexpr(create){
             // 不同原键竞争只进行一次最新 G 的唯一路由重扫，绝不换键再提交。
             const auto current=当前G();out.Gread=current;
-            const auto route=读当前绑定({1,current,r.定义.输入FT,r.定义.用途,UINT64_MAX,
-                {UINT64_MAX,UINT64_MAX,UINT64_MAX,UINT64_MAX}});
-            if(route.状态==KS::已读取){
+            const auto route=读当前绑定完整_v2_已锁(
+                {2,current,r.定义.输入FT,r.定义.用途});
+            if(route.状态==特征I64比较绑定读取状态_v2::已读取){
                 绑定要求(route.成功());
                 throw 绑定失败{route.事实->定义==r.定义 ? KS::幂等冲突 : KS::注册不唯一};
             }
-            if(route.状态!=KS::未找到)throw 绑定失败{route.状态};
+            if(route.状态!=特征I64比较绑定读取状态_v2::未找到)
+                throw 绑定失败{route.状态==特征I64比较绑定读取状态_v2::入口拒绝 ? KS::入口拒绝
+                    : route.状态==特征I64比较绑定读取状态_v2::目标已退出 ? KS::目标已退出
+                    : route.状态==特征I64比较绑定读取状态_v2::格式不支持 ? KS::格式不支持
+                    : route.状态==特征I64比较绑定读取状态_v2::注册不唯一 ? KS::注册不唯一
+                    : route.状态==特征I64比较绑定读取状态_v2::事实代次漂移 ? KS::事实代次漂移
+                    : route.状态==特征I64比较绑定读取状态_v2::历史材料不可用 ? KS::历史材料不可用
+                    : route.状态==特征I64比较绑定读取状态_v2::资源失败 ? KS::资源失败
+                    : KS::内部不一致};
         }
         throw 绑定失败{original};
     }catch(const 绑定失败& e){return fail(e.状态);}
@@ -1355,6 +1473,93 @@ template<class BindingRequest> 特征I64比较绑定结果 特征类数据服务
 }
 特征I64比较绑定结果 特征类数据服务::建立I64比较绑定(const 特征I64比较绑定建立请求& r){return 绑定执行写(r);}
 特征I64比较绑定结果 特征类数据服务::退出I64比较绑定(const 特征I64比较绑定退出请求& r){return 绑定执行写(r);}
+
+namespace {
+特征I64比较绑定读取状态_v2 转换I64比较绑定读取状态_v2(
+    特征I64比较绑定状态 状态) noexcept {
+    using 旧状态=特征I64比较绑定状态;
+    using 新状态=特征I64比较绑定读取状态_v2;
+    switch(状态) {
+    case 旧状态::已读取:return 新状态::已读取;
+    case 旧状态::入口拒绝:return 新状态::入口拒绝;
+    case 旧状态::未找到:return 新状态::未找到;
+    case 旧状态::目标已退出:case 旧状态::已退出:return 新状态::目标已退出;
+    case 旧状态::格式不支持:return 新状态::格式不支持;
+    case 旧状态::注册不唯一:return 新状态::注册不唯一;
+    case 旧状态::事实代次漂移:return 新状态::事实代次漂移;
+    case 旧状态::历史材料不可用:return 新状态::历史材料不可用;
+    case 旧状态::资源失败:return 新状态::资源失败;
+    default:return 新状态::内部不一致;
+    }
+}
+}
+
+特征I64比较绑定读取结果_v2 特征类数据服务::读取I64比较绑定_v2(
+    const 特征I64比较绑定读取请求_v2& r) const noexcept {
+    using 新状态=特征I64比较绑定读取状态_v2;
+    特征I64比较绑定读取结果_v2 out;
+    out.Gread=r.Gread;out.H=r.H;
+    const auto fail=[&](新状态 状态){out.状态=状态;out.事实.reset();};
+    try {
+        绑定要求(r.版本==2&&r.Gread&&r.H&&r.H<=r.Gread&&有效(r.身份),KS::入口拒绝);
+        std::lock_guard<std::mutex> lock(mutex_);
+        守卫(r.Gread);
+        读取计量 meter{读取计量::完整读取标签{}};
+        out.事实=读绑定(r.身份,r.Gread,r.H,meter);
+        守卫(r.Gread);
+        out.状态=新状态::已读取;
+        绑定要求(out.成功());
+    } catch(const 绑定失败& e){fail(转换I64比较绑定读取状态_v2(e.状态));}
+    catch(S e){fail(转换I64比较绑定读取状态_v2(绑定映射(e)));}
+    catch(const 标量失败& e){fail(转换I64比较绑定读取状态_v2(绑定标量映射(e.状态)));}
+    catch(const std::bad_alloc&){fail(新状态::资源失败);}
+    catch(const std::length_error&){fail(新状态::资源失败);}
+    catch(...){fail(新状态::内部不一致);}
+    return out;
+}
+
+特征I64比较绑定读取结果_v2 特征类数据服务::读取当前I64比较绑定_v2(
+    const 特征I64当前比较绑定读取请求_v2& r) const noexcept {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return 读当前绑定完整_v2_已锁(r);
+}
+
+特征I64比较绑定读取结果_v2 特征类数据服务::读当前绑定完整_v2_已锁(
+    const 特征I64当前比较绑定读取请求_v2& r) const noexcept {
+    using 新状态=特征I64比较绑定读取状态_v2;
+    特征I64比较绑定读取结果_v2 out;
+    out.Gread=out.H=r.Gread;
+    const auto fail=[&](新状态 状态){out.状态=状态;out.事实.reset();};
+    try {
+        const auto purpose=static_cast<unsigned>(r.用途);
+        绑定要求(r.版本==2&&r.Gread&&有效(r.输入FT)
+            &&purpose>=1&&purpose<=5,KS::入口拒绝);
+        守卫(r.Gread);绑定就绪();
+        读取计量 meter{读取计量::完整读取标签{}};
+        const auto edges=关系(r.输入FT.编码,k_[I64比较绑定输入FT关系],true,
+            r.Gread,r.Gread,分区::定义,&meter);
+        std::set<稳定编码> scanned;
+        std::size_t 匹配数量=0;
+        for(const auto& edge:edges) {
+            绑定要求(scanned.insert(edge.源节点).second);
+            auto candidate=读绑定({edge.源节点},r.Gread,r.Gread,meter);
+            if(candidate.定义.输入FT==r.输入FT&&candidate.定义.用途==r.用途) {
+                ++匹配数量;
+                if(匹配数量==1)out.事实=std::move(candidate);
+            }
+        }
+        守卫(r.Gread);
+        if(匹配数量==0)fail(新状态::未找到);
+        else if(匹配数量>1)fail(新状态::注册不唯一);
+        else {out.状态=新状态::已读取;绑定要求(out.成功());}
+    } catch(const 绑定失败& e){fail(转换I64比较绑定读取状态_v2(e.状态));}
+    catch(S e){fail(转换I64比较绑定读取状态_v2(绑定映射(e)));}
+    catch(const 标量失败& e){fail(转换I64比较绑定读取状态_v2(绑定标量映射(e.状态)));}
+    catch(const std::bad_alloc&){fail(新状态::资源失败);}
+    catch(const std::length_error&){fail(新状态::资源失败);}
+    catch(...){fail(新状态::内部不一致);}
+    return out;
+}
 
 
 bool 特征类标量派生批量读取结果::成功() const noexcept {
