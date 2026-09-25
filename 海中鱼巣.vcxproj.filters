@@ -81,9 +81,6 @@
     <ClInclude Include="海中鱼巣\业务\应用服务.需求目标方向.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="海中鱼巣\业务\应用服务.任务目标方向.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="海中鱼巣\领域\数据服务.方法类.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -96,9 +93,12 @@
     <ClInclude Include="海中鱼巣\领域\数据服务.需求类.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="海中鱼巣\领域\数据服务.任务类.h">
+    <ClInclude Include="海中鱼巣\领域\任务治理.本能根任务核心.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClCompile Include="海中鱼巣\领域\任务治理.本能根任务核心.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClInclude Include="海中鱼巣\领域\数据服务.状态类.h">
       <Filter>头文件</Filter>
     </ClInclude>

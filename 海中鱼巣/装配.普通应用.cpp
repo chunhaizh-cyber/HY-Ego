@@ -29,6 +29,7 @@
 #include "领域/数据服务.世界树根.h"
 #include "领域/数据服务.特征值域比较类.h"
 #include "领域/数据服务.需求类.h"
+#include "领域/任务治理.本能根任务核心.h"
 
 namespace 海中鱼巣 {
 namespace 普通应用装配内部 {
@@ -273,11 +274,13 @@ struct 普通应用上下文 final {
   L1所有者范围交付 状态所有者;
   L1所有者范围交付 概念所有者;
   L1所有者范围交付 需求所有者;
+  L1所有者范围交付 本能根任务核心所有者;
   L1所有者范围交付 方法登记根初始化结构所有者;
   std::unique_ptr<特征值类数据服务> 特征值;
   std::unique_ptr<特征类数据服务> 特征;
   std::unique_ptr<存在类数据服务> 存在;
   std::unique_ptr<需求类数据服务> 需求;
+  std::unique_ptr<本能根任务核心服务_v1> 本能根任务核心;
   std::unique_ptr<状态类数据服务> 状态;
   std::unique_ptr<场景类数据服务> 场景;
   std::unique_ptr<概念树类数据服务> 概念;
@@ -330,6 +333,7 @@ std::unique_ptr<普通应用上下文> 建立上下文(
   result->状态所有者 = 建立所有者(issuer,l1,0x1005);
   result->概念所有者 = 建立所有者(issuer,l1,0x1006);
   result->需求所有者 = 建立所有者(issuer,l1,0x1007);
+  result->本能根任务核心所有者 = 建立所有者(issuer,l1,0x1008);
 
   const auto producers = 建立并读回元节点(
       *result->特征定义所有者.写入端口, l1, 0x1101,
@@ -442,6 +446,16 @@ std::unique_ptr<普通应用上下文> 建立上下文(
   result->需求 = std::make_unique<需求类数据服务>(l1, *result->特征,
       *result->存在, std::move(*result->需求所有者.写入端口),
       *demandRegistration.交付);
+  const 本能根任务核心结构登记请求_v1 taskOwnerRequest{
+      1, 当前代次(l1), {0x544F000000000001ULL}};
+  const auto taskOwnerRegistration = 本能根任务核心服务_v1::登记结构(
+      l1, *result->本能根任务核心所有者.写入端口, taskOwnerRequest);
+  if (!taskOwnerRegistration.成功(taskOwnerRequest) || !taskOwnerRegistration.交付)
+    throw 普通应用装配状态::服务建立失败;
+  result->本能根任务核心 = std::make_unique<本能根任务核心服务_v1>(
+      l1, *result->需求, *result->存在, *result->特征,
+      std::move(*result->本能根任务核心所有者.写入端口),
+      *taskOwnerRegistration.交付, result->角色结构.项目角色);
   result->状态 = std::make_unique<状态类数据服务>(
       l1, *result->特征, std::move(*result->状态所有者.写入端口),
       状态类结构交付{stateLayout[0], stateLayout[1], stateLayout[2],
@@ -1066,6 +1080,13 @@ std::optional<本能双根二次关系概念初始化结果>
   using namespace 普通应用装配内部;
   std::lock_guard lock(上下文锁);
   return 上下文 && 上下文->需求 ? 上下文->需求.get() : nullptr;
+}
+
+本能根任务核心端口_v1& 本能根任务核心() noexcept {
+  using namespace 普通应用装配内部;
+  std::lock_guard lock(上下文锁);
+  if (!上下文 || !上下文->本能根任务核心) std::terminate();
+  return *上下文->本能根任务核心;
 }
 
 } // namespace 海中鱼巣
