@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../领域/数据服务.概念树类.h"
+#include "../领域/数据服务.需求类.h"
 #include "../领域/算法.有序I64特征比较.h"
 
 #include <cstdint>
@@ -22,8 +23,17 @@ struct 二次关系状态端点来源 final {
                          const 二次关系状态端点来源 &) = default;
 };
 
+struct 二次关系本能根目标合同值来源 final {
+  本能根角色 角色 = 本能根角色::安全;
+  稳定编码 根需求{}, 根目标合同{}, 目标值事实{};
+  特征信息身份 对应实际特征;
+  friend bool operator==(const 二次关系本能根目标合同值来源 &,
+                         const 二次关系本能根目标合同值来源 &) = default;
+};
+
 using 二次关系特征来源 =
-    std::variant<二次关系准确F来源, 二次关系状态端点来源>;
+    std::variant<二次关系准确F来源, 二次关系状态端点来源,
+                 二次关系本能根目标合同值来源>;
 
 struct 二次关系参与者材料 final {
   稳定编码 E{};
@@ -79,13 +89,19 @@ enum class 二次关系判断状态 : std::uint8_t {
   参照不相容 = 15
 };
 
+struct 二次关系本能根目标合同值见证 final {
+  本能根材料 根材料;
+  存在当前采用事实 根形成采用;
+};
+
 struct 二次关系准确来源见证 final {
   稳定编码 E{};
   二次关系特征来源 来源;
   存在身份来源历史见证 存在见证;
   特征类型身份 FT;
   std::int64_t 值 = 0;
-  std::variant<准确特征读取事实, 状态内容事实> 内容;
+  std::variant<准确特征读取事实, 状态内容事实,
+               二次关系本能根目标合同值见证> 内容;
   std::optional<状态使用绑定事实> 绑定;
   std::optional<存在当前采用事实> 采用;
 };
@@ -116,6 +132,7 @@ public:
                          const 存在类数据服务 &,
                          const 特征类数据服务 &,
                          const 特征值类数据服务 &,
+                         const 需求类数据服务 &,
                          const 有序I64特征比较提供者 &);
 
   二次关系判断结果 求值二次关系(const 二次关系求值请求 &) const noexcept;
@@ -141,6 +158,7 @@ private:
   const 存在类数据服务 &存在_;
   const 特征类数据服务 &特征_;
   const 特征值类数据服务 &特征值_;
+  const 需求类数据服务 &需求_;
   const 有序I64特征比较提供者 &比较_;
 };
 

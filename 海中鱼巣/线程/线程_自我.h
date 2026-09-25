@@ -73,14 +73,6 @@ struct 自我线程上下文读取预算_v1 final {
     friend bool operator==(const 自我线程上下文读取预算_v1&, const 自我线程上下文读取预算_v1&) = default;
 };
 
-struct 自我线程根复核读取预算_v1 final {
-    std::uint64_t 每根最大当前采用候选数量 = 0;
-    std::uint64_t 最大目标合同材料数量 = 0;
-    std::uint64_t 最大关系材料数量 = 0;
-    [[nodiscard]] bool 完整() const noexcept;
-    friend bool operator==(const 自我线程根复核读取预算_v1&, const 自我线程根复核读取预算_v1&) = default;
-};
-
 struct 自我线程创建请求_v1 final {
     std::uint32_t 合同版本 = 自我线程合同版本_v1;
     std::uint64_t 邮箱容量 = 0;
@@ -183,44 +175,6 @@ public:
 };
 
 enum class 自我线程复核触发根 : std::uint8_t { 双根 = 1, 安全根 = 2, 服务根 = 3 };
-enum class 自我线程根当前满足状态 : std::uint8_t { 满足 = 1, 未满足 = 2 };
-
-struct 自我线程单根复核投影_v1 final {
-    自我线程需求身份 需求;
-    自我线程特征身份 当前实际特征;
-    自我线程目标合同身份 目标合同;
-    自我线程根当前满足状态 当前满足 = 自我线程根当前满足状态::满足;
-    [[nodiscard]] bool 完整() const noexcept;
-    friend bool operator==(const 自我线程单根复核投影_v1&, const 自我线程单根复核投影_v1&) = default;
-};
-
-struct 自我线程根需求复核请求_v1 final {
-    std::uint32_t 合同版本 = 自我线程合同版本_v1;
-    自我线程正式上下文投影_v1 上下文;
-    自我线程复核触发根 触发根 = 自我线程复核触发根::双根;
-    自我线程需求身份 正式需求定位;
-    自我线程消息身份 来源消息;
-    自我线程原请求身份 原请求;
-    自我线程根复核读取预算_v1 预算;
-    [[nodiscard]] bool 完整() const noexcept;
-    friend bool operator==(const 自我线程根需求复核请求_v1&, const 自我线程根需求复核请求_v1&) = default;
-};
-
-struct 自我线程根需求复核结果_v1 final {
-    自我线程外部调用状态 状态 = 自我线程外部调用状态::待实现;
-    std::uint64_t Gread = 0;
-    std::optional<自我线程单根复核投影_v1> 安全根;
-    std::optional<自我线程单根复核投影_v1> 服务根;
-    bool 写业务事实 = false;
-    [[nodiscard]] bool 成功() const noexcept;
-};
-
-class 自我线程根需求复核端口 {
-public:
-    virtual ~自我线程根需求复核端口() = default;
-    virtual 自我线程根需求复核结果_v1 复核双根当前需求(
-        const 自我线程根需求复核请求_v1&) noexcept = 0;
-};
 
 struct 自我线程根需求复核消息_v1 final {
     std::uint32_t 合同版本 = 自我线程合同版本_v1;

@@ -204,6 +204,12 @@
     <ClCompile Include="海中鱼巣\业务\应用服务.自我线程正式上下文.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\应用服务.自我根需求复核.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\应用服务.自我根需求复核.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClInclude Include="海中鱼巣\业务\应用服务.方法登记根生产初始化.h">
       <Filter>头文件</Filter>
     </ClInclude>

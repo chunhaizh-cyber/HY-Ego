@@ -56,6 +56,27 @@ struct 求值失败 final {
   }
 }
 
+二次关系判断状态 映射根材料状态(本能根材料状态 状态) noexcept {
+  switch (状态) {
+  case 本能根材料状态::实际特征未找到:
+  case 本能根材料状态::根材料未闭合:
+    return 二次关系判断状态::证据不足;
+  case 本能根材料状态::实际特征已退出:
+  case 本能根材料状态::根材料已退出:
+    return 二次关系判断状态::退役不可用;
+  case 本能根材料状态::实际特征类型不匹配:
+    return 二次关系判断状态::类型不相容;
+  case 本能根材料状态::事实代次漂移:
+    return 二次关系判断状态::事实代次漂移;
+  case 本能根材料状态::资源失败:
+    return 二次关系判断状态::资源失败;
+  case 本能根材料状态::入口拒绝:
+    return 二次关系判断状态::入口拒绝;
+  default:
+    return 二次关系判断状态::内部不一致;
+  }
+}
+
 二次关系判断状态 映射存在状态(存在结构身份只读状态 状态) noexcept {
   switch (状态) {
   case 存在结构身份只读状态::未找到:
@@ -221,7 +242,7 @@ bool 命中I64域(const std::vector<概念树I64区间> &域, std::int64_t 值) 
 }
 
 bool 见证形状有效(const 二次关系准确来源见证 &v,
-                  std::uint64_t g, std::uint64_t h) noexcept {
+                   std::uint64_t g, std::uint64_t h) noexcept {
   if (!有效(v.E) || !有效(v.FT) || v.存在见证.身份 != v.E)
     return false;
   if (const auto *f = std::get_if<准确特征读取事实>(&v.内容)) {
@@ -230,12 +251,31 @@ bool 见证形状有效(const 二次关系准确来源见证 &v,
         && f->信息.类型 == v.FT && v.采用 && v.采用->E == v.E
         && v.采用->FT == v.FT && v.采用->F == source->F && !v.绑定;
   }
-  const auto *s = std::get_if<状态内容事实>(&v.内容);
-  const auto *source = std::get_if<二次关系状态端点来源>(&v.来源);
-  return s && source && s->Gread == g && s->H == h && s->信息.正式特征类型 == v.FT
-      && v.绑定 && v.绑定->信息.身份 == source->B
-      && v.绑定->信息.被描述存在 == v.E
-      && v.绑定->信息.状态 == s->信息.身份 && !v.采用;
+  if (const auto *s = std::get_if<状态内容事实>(&v.内容)) {
+    const auto *source = std::get_if<二次关系状态端点来源>(&v.来源);
+    return s && source && s->Gread == g && s->H == h
+        && s->信息.正式特征类型 == v.FT
+        && v.绑定 && v.绑定->信息.身份 == source->B
+        && v.绑定->信息.被描述存在 == v.E
+        && v.绑定->信息.状态 == s->信息.身份 && !v.采用;
+  }
+  const auto *target =
+      std::get_if<二次关系本能根目标合同值见证>(&v.内容);
+  const auto *source =
+      std::get_if<二次关系本能根目标合同值来源>(&v.来源);
+  return target && source && g == h && target->根材料.完整()
+      && target->根材料.角色 == source->角色
+      && target->根材料.根需求 == source->根需求
+      && target->根材料.根目标合同 == source->根目标合同
+      && target->根材料.目标值 == source->目标值事实
+      && target->根材料.实际特征 == source->对应实际特征.编码
+      && target->根材料.目标I64值 == v.值
+      && target->根材料.读取事实代次 == g
+      && target->根材料.创建事实代次 <= g
+      && target->根形成采用.E == v.E
+      && target->根形成采用.FT == v.FT
+      && target->根形成采用.F == source->对应实际特征
+      && !v.绑定 && !v.采用;
 }
 
 void 校验参与者形状(const 二次关系参与者材料 &参与者) {
@@ -250,12 +290,22 @@ void 校验参与者形状(const 二次关系参与者材料 &参与者) {
       if constexpr (std::is_same_v<std::decay_t<decltype(item)>,
                                    二次关系准确F来源>)
         return item.F.编码.值;
-      else
+      else if constexpr (std::is_same_v<std::decay_t<decltype(item)>,
+                                        二次关系状态端点来源>)
         return item.B.编码.值;
+      else
+        return item.目标值事实.值;
     }, source);
     if (!identity || !identities.insert(identity).second)
       失败(二次关系判断状态::入口拒绝);
   }
+}
+
+bool 包含目标合同值来源(const 二次关系参与者材料 &参与者) noexcept {
+  return std::any_of(参与者.来源组.begin(), 参与者.来源组.end(),
+                     [](const auto &source) {
+    return std::holds_alternative<二次关系本能根目标合同值来源>(source);
+  });
 }
 
 bool 来源对应(const 二次关系准确来源见证 &witness,
@@ -380,10 +430,11 @@ public:
              const 状态类数据服务 &状态,
              const 存在类数据服务 &存在,
              const 特征类数据服务 &特征,
+             const 需求类数据服务 &需求,
              const 有序I64特征比较提供者 &比较,
              std::uint64_t g, std::uint64_t h, std::uint64_t request)
       : 概念_(概念), 绑定_(绑定), 状态_(状态), 存在_(存在), 特征_(特征),
-        比较_(比较), g_(g), h_(h), 请求身份_(request) {}
+        需求_(需求), 比较_(比较), g_(g), h_(h), 请求身份_(request) {}
 
   void 预读FC(概念树概念身份 fc) {
     const auto result = 概念_.读取二次关系约束定义({2, {1, g_, g_}, fc});
@@ -438,7 +489,11 @@ public:
       const auto sourceCode = std::visit([](const auto &x) {
         if constexpr (std::is_same_v<std::decay_t<decltype(x)>, 二次关系准确F来源>)
           return x.F.编码.值;
-        else return x.B.编码.值;
+        else if constexpr (std::is_same_v<std::decay_t<decltype(x)>,
+                                          二次关系状态端点来源>)
+          return x.B.编码.值;
+        else
+          return x.目标值事实.值;
       }, source);
       if (!sourceCode || !sourceIds.insert(sourceCode).second)
         失败(二次关系判断状态::入口拒绝);
@@ -472,15 +527,15 @@ public:
           失败(二次关系判断状态::内部不一致);
         witness.内容 = *fact;
         witness.采用 = *adoption.采用;
-      } else {
-        const auto &bSource = std::get<二次关系状态端点来源>(source);
-        if (!有效(bSource.B)) 失败(二次关系判断状态::入口拒绝);
-        const 状态使用绑定历史读取请求 bindingRequest{1, g_, h_, bSource.B};
+      } else if (const auto *bSource =
+                     std::get_if<二次关系状态端点来源>(&source)) {
+        if (!有效(bSource->B)) 失败(二次关系判断状态::入口拒绝);
+        const 状态使用绑定历史读取请求 bindingRequest{1, g_, h_, bSource->B};
         const auto binding = 绑定_.读取状态使用绑定历史(bindingRequest);
         if (!binding.成功()) 失败(映射绑定状态(binding.结果头.状态));
         if (!binding.绑定 || binding.结果头.事实截止代次 != g_
             || binding.绑定->Gread != g_ || binding.绑定->H != h_
-            || binding.绑定->信息.身份 != bSource.B
+            || binding.绑定->信息.身份 != bSource->B
             || binding.绑定->信息.被描述存在 != 参与者.E)
           失败(二次关系判断状态::入口拒绝);
         const 状态历史读取请求 stateRequest{2, g_, h_, binding.绑定->信息.状态};
@@ -506,6 +561,54 @@ public:
                    || *commonTime != state.内容->信息.强时间) {
           失败(二次关系判断状态::入口拒绝);
         }
+      } else if (const auto *targetSource =
+                     std::get_if<二次关系本能根目标合同值来源>(&source)) {
+        if (h_ != g_
+            || (targetSource->角色 != 本能根角色::安全
+                && targetSource->角色 != 本能根角色::服务)
+            || !有效(targetSource->根需求)
+            || !有效(targetSource->根目标合同)
+            || !有效(targetSource->目标值事实)
+            || !有效(targetSource->对应实际特征))
+          失败(二次关系判断状态::入口拒绝);
+        const 本能根材料请求 rootRequest{
+            本能根材料合同版本, g_, targetSource->角色,
+            targetSource->对应实际特征.编码};
+        const auto root = 需求_.读取本能根材料(rootRequest);
+        if (!root.成功(rootRequest)) 失败(映射根材料状态(root.状态));
+        if (!root.材料 || root.事实代次 != g_
+            || root.材料->读取事实代次 != g_
+            || root.材料->角色 != targetSource->角色
+            || root.材料->根需求 != targetSource->根需求
+            || root.材料->根目标合同 != targetSource->根目标合同
+            || root.材料->目标值 != targetSource->目标值事实
+            || root.材料->实际特征 != targetSource->对应实际特征.编码)
+          失败(二次关系判断状态::内部不一致);
+        const 准确特征读取请求 featureRequest{
+            1, g_, g_, targetSource->对应实际特征};
+        const auto feature = 特征_.读取准确特征事实(featureRequest);
+        const auto *featureFact = std::get_if<准确特征读取事实>(&feature);
+        if (!featureFact)
+          失败(映射特征错误(std::get<特征数据错误>(feature)));
+        if (featureFact->Gread != g_ || featureFact->H != g_
+            || featureFact->信息.身份 != targetSource->对应实际特征)
+          失败(二次关系判断状态::内部不一致);
+        witness.FT = featureFact->信息.类型;
+        const 存在当前采用完整读取请求_v2 adoptionRequest{
+            2, g_, root.材料->创建事实代次, 参与者.E, witness.FT};
+        const auto adoption = 存在_.读取当前采用完整_v2(adoptionRequest);
+        if (!adoption.成功(adoptionRequest))
+          失败(映射采用状态(adoption.状态));
+        if (!adoption.采用
+            || adoption.采用->E != 参与者.E
+            || adoption.采用->FT != witness.FT
+            || adoption.采用->F != targetSource->对应实际特征)
+          失败(二次关系判断状态::内部不一致);
+        witness.值 = root.材料->目标I64值;
+        witness.内容 = 二次关系本能根目标合同值见证{
+            *root.材料, *adoption.采用};
+      } else {
+        失败(二次关系判断状态::入口拒绝);
       }
       if (!有效(witness.FT) || !featureTypes.insert(witness.FT.编码.值).second)
         失败(二次关系判断状态::入口拒绝);
@@ -736,6 +839,7 @@ private:
   const 状态类数据服务 &状态_;
   const 存在类数据服务 &存在_;
   const 特征类数据服务 &特征_;
+  const 需求类数据服务 &需求_;
   const 有序I64特征比较提供者 &比较_;
   std::uint64_t g_, h_, 请求身份_;
   std::set<std::uint64_t> ecStack_;
@@ -793,14 +897,16 @@ void 校验请求头(std::uint32_t version, std::uint64_t g,
     const 状态使用绑定只读提供者 &bindings,
     const 状态类数据服务 &states, const 存在类数据服务 &existences,
     const 特征类数据服务 &features, const 特征值类数据服务 &values,
+    const 需求类数据服务 &demands,
     const 有序I64特征比较提供者 &comparison)
     : l1_(l1), 概念_(concepts), 绑定_(bindings), 状态_(states),
-      存在_(existences), 特征_(features), 特征值_(values), 比较_(comparison) {
+      存在_(existences), 特征_(features), 特征值_(values), 需求_(demands),
+      比较_(comparison) {
   if (!概念_.绑定于(l1_) || !概念_.使用特征服务(特征_)
       || !概念_.使用存在服务(存在_) || !概念_.使用特征值服务(特征值_)
       || !概念_.使用状态使用绑定提供者(绑定_) || !绑定_.绑定于(l1_)
       || !状态_.绑定于(l1_) || !存在_.绑定于(l1_) || !特征_.绑定于(l1_)
-      || !特征值_.绑定于(l1_))
+      || !特征值_.绑定于(l1_) || !需求_.绑定于(l1_))
     throw std::invalid_argument("二次关系求值服务绑定");
 }
 
@@ -829,7 +935,7 @@ bool 二次关系求值应用服务::使用概念服务(
       失败(二次关系判断状态::内部不一致);
     if (read.事实->治理状态 == 概念树生命周期状态::退役)
       失败(二次关系判断状态::退役不可用);
-    求值上下文 context{概念_, 绑定_, 状态_, 存在_, 特征_, 比较_,
+    求值上下文 context{概念_, 绑定_, 状态_, 存在_, 特征_, 需求_, 比较_,
                        request.Gread, request.H, request.请求身份};
     auto a = context.解析参与者(request.A);
     auto b = context.解析参与者(request.B);
@@ -864,12 +970,14 @@ bool 二次关系求值应用服务::使用概念服务(
     校验请求头(request.版本, request.Gread, request.H, request.请求身份);
     校验参与者形状(request.A);
     校验参与者形状(request.B);
+    if (包含目标合同值来源(request.A) || 包含目标合同值来源(request.B))
+      失败(二次关系判断状态::入口拒绝);
     const auto normalized = 概念_.规范化二次关系定义(
         {2, {1, request.Gread, request.Gread}, request.定义});
     if (!normalized.成功()) 失败(映射概念状态(normalized.状态));
     if (!normalized.规范形)
       失败(二次关系判断状态::内部不一致);
-    求值上下文 context{概念_, 绑定_, 状态_, 存在_, 特征_, 比较_,
+    求值上下文 context{概念_, 绑定_, 状态_, 存在_, 特征_, 需求_, 比较_,
                        request.Gread, request.H, request.请求身份};
     auto a = context.解析参与者(request.A);
     auto b = context.解析参与者(request.B);
@@ -902,9 +1010,11 @@ bool 二次关系求值应用服务::使用概念服务(
     校验请求头(request.版本, request.Gread, request.H, request.请求身份);
     if (!有效(request.FC.值)) 失败(二次关系判断状态::入口拒绝);
     校验参与者形状(request.参与者);
+    if (包含目标合同值来源(request.参与者))
+      失败(二次关系判断状态::入口拒绝);
     if (request.来源下标 >= request.参与者.来源组.size())
       失败(二次关系判断状态::入口拒绝);
-    求值上下文 context{概念_, 绑定_, 状态_, 存在_, 特征_, 比较_,
+    求值上下文 context{概念_, 绑定_, 状态_, 存在_, 特征_, 需求_, 比较_,
                        request.Gread, request.H, request.请求身份};
     context.预读FC(request.FC);
     auto sources = context.解析参与者(request.参与者);
@@ -928,7 +1038,9 @@ bool 二次关系求值应用服务::使用概念服务(
     校验请求头(request.版本, request.Gread, request.H, request.请求身份);
     if (!有效(request.EC.值)) 失败(二次关系判断状态::入口拒绝);
     校验参与者形状(request.参与者);
-    求值上下文 context{概念_, 绑定_, 状态_, 存在_, 特征_, 比较_,
+    if (包含目标合同值来源(request.参与者))
+      失败(二次关系判断状态::入口拒绝);
+    求值上下文 context{概念_, 绑定_, 状态_, 存在_, 特征_, 需求_, 比较_,
                        request.Gread, request.H, request.请求身份};
     context.预读EC(request.EC);
     auto sources = context.解析参与者(request.参与者);

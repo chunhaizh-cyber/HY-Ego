@@ -50,6 +50,9 @@
     <ClCompile Include="..\海中鱼巣\领域\数据服务.概念树类.cpp" />
     <ClCompile Include="..\海中鱼巣\领域\合同.二次关系概念.cpp" />
     <ClCompile Include="..\海中鱼巣\业务\初始化.二次关系概念结构.cpp" />
+    <ClCompile Include="..\海中鱼巣\业务\初始化.本能双根二次关系概念.cpp" />
+    <ClCompile Include="..\海中鱼巣\业务\计算.二次关系求值.cpp" />
+    <ClCompile Include="..\海中鱼巣\业务\应用服务.自我根需求复核.cpp" />
     <ClCompile Include="..\海中鱼巣\领域\数据服务.场景类.cpp" />
     <ClCompile Include="..\海中鱼巣\领域\数据服务.因果类.cpp" />
     <ClCompile Include="..\海中鱼巣\业务\应用服务.特征概念类.cpp" />

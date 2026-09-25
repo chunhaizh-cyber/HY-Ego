@@ -286,6 +286,7 @@ struct 普通应用上下文 final {
   std::unique_ptr<特征值域比较数据服务> 特征值域比较;
   std::unique_ptr<有序I64特征比较提供者> 二次关系I64比较;
   std::unique_ptr<二次关系求值应用服务> 二次关系求值;
+  std::unique_ptr<自我根需求复核提供者> 自我根需求复核;
   std::unique_ptr<原子I64特征出生数据服务> 原子I64特征出生;
   std::unique_ptr<特征概念应用服务> 特征概念;
   std::unique_ptr<场景成员概念应用服务> 场景成员概念;
@@ -521,7 +522,11 @@ std::unique_ptr<普通应用上下文> 建立上下文(
   result->二次关系I64比较=std::make_unique<有序I64特征比较提供者>();
   result->二次关系求值=std::make_unique<二次关系求值应用服务>(
       l1,*result->概念,*result->场景,*result->状态,*result->存在,
-      *result->特征,*result->特征值,*result->二次关系I64比较);
+      *result->特征,*result->特征值,*result->需求,
+      *result->二次关系I64比较);
+  result->自我根需求复核=std::make_unique<自我根需求复核提供者>(
+      l1,*result->需求,*result->存在,*result->二次关系求值,
+      result->本能双根二次关系概念初始化);
   result->原子I64特征出生=std::make_unique<原子I64特征出生数据服务>(
       *result->特征,*result->存在,*result->场景,*result->概念);
   result->特征概念=std::make_unique<特征概念应用服务>(
@@ -1048,6 +1053,13 @@ std::optional<本能双根二次关系概念初始化结果>
   std::lock_guard lock(上下文锁);
   return 上下文 && 上下文->二次关系求值
       ? 上下文->二次关系求值.get() : nullptr;
+}
+
+自我根需求复核提供者* 读取普通应用自我根需求复核服务() noexcept {
+  using namespace 普通应用装配内部;
+  std::lock_guard lock(上下文锁);
+  return 上下文 && 上下文->自我根需求复核
+      ? 上下文->自我根需求复核.get() : nullptr;
 }
 
 需求类数据服务* 读取普通应用需求服务() noexcept {

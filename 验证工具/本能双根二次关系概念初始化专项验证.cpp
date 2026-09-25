@@ -659,6 +659,105 @@ int 普通应用种子(const std::filesystem::path& root,
   const auto anchor = 初始化普通应用本能根运行锚点(method);
   要求(anchor.成功() && anchor.锚点,
        "evaluator-fixture-instinct-anchor-ready");
+  if (!self.投影 || !self.投影->位置.直接结构父)
+    夹具失败("root-review self projection incomplete");
+  自我线程正式上下文投影_v1 reviewContext;
+  reviewContext.Gread = anchor.锚点->事实截止代次;
+  reviewContext.世界 = {self.投影->世界根.值};
+  reviewContext.自我所在场景 = {
+      self.投影->位置.直接结构父->父.值};
+  reviewContext.自我 = {anchor.锚点->自我.编码.值};
+  reviewContext.安全根 = {{anchor.锚点->安全根.需求.值},
+      {anchor.锚点->安全根.列表项.值},
+      {anchor.锚点->安全根.实际特征.编码.值},
+      {anchor.锚点->安全根.目标合同.值}};
+  reviewContext.服务根 = {{anchor.锚点->服务根.需求.值},
+      {anchor.锚点->服务根.列表项.值},
+      {anchor.锚点->服务根.实际特征.编码.值},
+      {anchor.锚点->服务根.目标合同.值}};
+  const 自我线程根需求复核请求_v2 reviewRequest{
+      自我线程根需求复核合同版本_v2, reviewContext,
+      自我线程复核触发根::双根, {}, {0xE1001}, {0xE1002}};
+  auto* reviewProvider = 读取普通应用自我根需求复核服务();
+  要求(reviewProvider && reviewRequest.完整(),
+       "ordinary-context-exposes-unique-root-review-provider");
+  const auto beforeReviewG = reviewContext.Gread;
+  const auto reviewed = reviewProvider->复核双根当前需求(reviewRequest);
+  if (!reviewed.成功(reviewRequest))
+    std::cerr << "root-review-state=" << static_cast<unsigned>(reviewed.状态)
+              << " safe="
+              << static_cast<unsigned>(reviewed.安全根技术状态)
+              << " service="
+              << static_cast<unsigned>(reviewed.服务根技术状态)
+              << " g=" << reviewed.Gread << " expected=" << beforeReviewG
+              << '\n';
+  if (reviewed.安全根 && reviewed.服务根)
+    std::cout << "ROOT-REVIEW safe-difference="
+              << reviewed.安全根->准确差异
+              << " service-difference=" << reviewed.服务根->准确差异 << '\n';
+  要求(reviewed.成功(reviewRequest) && reviewed.安全根 && reviewed.服务根 &&
+             !reviewed.写业务事实 && reviewed.Gread == beforeReviewG,
+         "root-review-both-roots-success-on-one-g0");
+  要求(reviewed.安全根->角色 == 本能根角色::安全 &&
+             reviewed.服务根->角色 == 本能根角色::服务 &&
+             reviewed.安全根->FT != reviewed.服务根->FT &&
+             reviewed.安全根->K != reviewed.服务根->K &&
+             reviewed.安全根->RC != reviewed.服务根->RC &&
+             reviewed.安全根->求值见证.来源组.size() == 2 &&
+             reviewed.服务根->求值见证.来源组.size() == 2,
+         "root-review-witnesses-are-ordered-and-not-crossed");
+  要求(reviewed.安全根->准确差异 >= 0 &&
+             reviewed.服务根->准确差异 >= 0 &&
+             (reviewed.安全根->业务结果 ==
+                  自我线程根复核业务结果_v2::正差距) ==
+                 (reviewed.安全根->准确差异 > 0) &&
+             (reviewed.服务根->业务结果 ==
+                  自我线程根复核业务结果_v2::正差距) ==
+                 (reviewed.服务根->准确差异 > 0),
+         "root-review-only-positive-gap-or-current-satisfied");
+
+  auto badSafeRequest = reviewRequest;
+  badSafeRequest.上下文.安全根.实际特征 = {0x7FFFFFFFFFFF1001ULL};
+  要求(badSafeRequest.完整(), "bad-safe-review-request-remains-well-formed");
+  const auto badSafe = reviewProvider->复核双根当前需求(badSafeRequest);
+  if (badSafe.安全根技术状态 !=
+          自我线程单根复核技术状态_v2::内部不一致 ||
+      badSafe.服务根技术状态 !=
+          自我线程单根复核技术状态_v2::已复核)
+    std::cerr << "bad-safe-state=" << static_cast<unsigned>(badSafe.状态)
+              << " safe="
+              << static_cast<unsigned>(badSafe.安全根技术状态)
+              << " service="
+              << static_cast<unsigned>(badSafe.服务根技术状态) << '\n';
+  要求(badSafe.安全根技术状态 ==
+                 自我线程单根复核技术状态_v2::内部不一致 &&
+             badSafe.服务根技术状态 ==
+                 自我线程单根复核技术状态_v2::已复核 &&
+             !badSafe.安全根 && !badSafe.服务根,
+         "safe-ordinary-failure-still-reviews-service-and-clears-both-projections");
+  auto badServiceRequest = reviewRequest;
+  badServiceRequest.上下文.服务根.实际特征 = {0x7FFFFFFFFFFF1002ULL};
+  要求(badServiceRequest.完整(),
+       "bad-service-review-request-remains-well-formed");
+  const auto badService = reviewProvider->复核双根当前需求(badServiceRequest);
+  要求(badService.安全根技术状态 ==
+                 自我线程单根复核技术状态_v2::已复核 &&
+             badService.服务根技术状态 ==
+                 自我线程单根复核技术状态_v2::内部不一致 &&
+             !badService.安全根 && !badService.服务根,
+         "service-ordinary-failure-preserves-safe-status-and-clears-both-projections");
+  auto singleTriggerRequest = reviewRequest;
+  singleTriggerRequest.触发根 = 自我线程复核触发根::安全根;
+  singleTriggerRequest.正式需求定位 = singleTriggerRequest.上下文.安全根.需求;
+  const auto singleTriggered =
+      reviewProvider->复核双根当前需求(singleTriggerRequest);
+  要求(singleTriggered.成功(singleTriggerRequest) &&
+             singleTriggered.安全根技术状态 ==
+                 自我线程单根复核技术状态_v2::已复核 &&
+             singleTriggered.服务根技术状态 ==
+                 自我线程单根复核技术状态_v2::已复核,
+         "single-root-trigger-still-reviews-both-roots");
+
   auto* evaluator = 读取普通应用二次关系求值服务();
   要求(evaluator != nullptr, "ordinary-context-exposes-unique-evaluator");
   const 二次关系参与者材料 participant{
@@ -692,6 +791,131 @@ int 普通应用种子(const std::filesystem::path& root,
              candidate.条件组.size() == 1 && candidate.来源组.size() == 2 &&
              candidate.条件组.front().计算.成功(),
          "evaluator-real-f-zero-difference-hits-zero-domain");
+
+  const auto &safeReview = *reviewed.安全根;
+  const 二次关系本能根目标合同值来源 targetSource{
+      本能根角色::安全, safeReview.根材料.根需求,
+      safeReview.根材料.根目标合同, safeReview.根材料.目标值,
+      {safeReview.根材料.实际特征}};
+  const 二次关系参与者材料 targetParticipant{
+      anchor.锚点->自我.编码, {targetSource}};
+  const 二次关系参与者材料 currentParticipant{
+      anchor.锚点->自我.编码,
+      {二次关系准确F来源{safeReview.当前实际特征}}};
+  const 二次关系求值请求 targetRequest{
+      2, reviewContext.Gread, reviewContext.Gread, reviewRequest.原请求.值,
+      safeReview.RC, targetParticipant, currentParticipant};
+  const auto targetRelation = evaluator->求值二次关系(targetRequest);
+  要求((targetRelation.状态 == 二次关系判断状态::命中 ||
+              targetRelation.状态 == 二次关系判断状态::不命中) &&
+             targetRelation.来源组.size() == 2 &&
+             std::holds_alternative<二次关系本能根目标合同值来源>(
+                 targetRelation.来源组[0].来源) &&
+              std::holds_alternative<二次关系本能根目标合同值见证>(
+                  targetRelation.来源组[0].内容),
+          "evaluator-target-contract-source-produces-dedicated-witness");
+  const auto 要求目标请求结构化失败 = [&](const 二次关系求值请求& 请求,
+                                             const char* 名称) {
+    const auto 结果 = evaluator->求值二次关系(请求);
+    要求(结果.状态 != 二次关系判断状态::命中 &&
+             结果.状态 != 二次关系判断状态::不命中 &&
+             结果.来源组.empty() && 结果.条件组.empty(),
+         名称);
+  };
+  auto wrongTargetE = targetRequest;
+  wrongTargetE.A.E = {reviewContext.世界.值};
+  要求目标请求结构化失败(
+      wrongTargetE, "target-source-wrong-existence-is-structured-failure");
+  auto wrongTargetRole = targetRequest;
+  std::get<二次关系本能根目标合同值来源>(
+      wrongTargetRole.A.来源组.front()).角色 = 本能根角色::服务;
+  要求目标请求结构化失败(
+      wrongTargetRole, "target-source-wrong-role-is-structured-failure");
+  auto wrongTargetDemand = targetRequest;
+  std::get<二次关系本能根目标合同值来源>(
+      wrongTargetDemand.A.来源组.front()).根需求 = reviewed.服务根->根材料.根需求;
+  要求目标请求结构化失败(
+      wrongTargetDemand, "target-source-wrong-demand-is-structured-failure");
+  auto wrongTargetContract = targetRequest;
+  std::get<二次关系本能根目标合同值来源>(
+      wrongTargetContract.A.来源组.front()).根目标合同 =
+          reviewed.服务根->根材料.根目标合同;
+  要求目标请求结构化失败(
+      wrongTargetContract, "target-source-wrong-contract-is-structured-failure");
+  auto wrongTargetValue = targetRequest;
+  std::get<二次关系本能根目标合同值来源>(
+      wrongTargetValue.A.来源组.front()).目标值事实 =
+          reviewed.服务根->根材料.目标值;
+  要求目标请求结构化失败(
+      wrongTargetValue, "target-source-wrong-value-fact-is-structured-failure");
+  auto wrongTargetFormedF = targetRequest;
+  std::get<二次关系本能根目标合同值来源>(
+      wrongTargetFormedF.A.来源组.front()).对应实际特征 =
+          {reviewed.服务根->根材料.实际特征};
+  要求目标请求结构化失败(
+      wrongTargetFormedF, "target-source-wrong-formed-f-is-structured-failure");
+  const 二次关系求值请求 reversedTargetRequest{
+      2, reviewContext.Gread, reviewContext.Gread, 0xE1003,
+      safeReview.RC, currentParticipant, targetParticipant};
+  const auto reversedTarget =
+      evaluator->求值二次关系(reversedTargetRequest);
+  要求(reversedTarget.状态 == 二次关系判断状态::类型不相容 &&
+             reversedTarget.来源组.empty() && reversedTarget.条件组.empty(),
+         "reversed-current-target-against-target-k-is-structured-type-failure");
+  const 二次关系求值请求 targetInBothRolesRequest{
+      2, reviewContext.Gread, reviewContext.Gread, 0xE1007,
+      safeReview.RC, targetParticipant, targetParticipant};
+  const auto targetInBothRoles =
+      evaluator->求值二次关系(targetInBothRolesRequest);
+  要求(targetInBothRoles.状态 == 二次关系判断状态::不命中 &&
+             targetInBothRoles.来源组.size() == 2 &&
+             std::holds_alternative<二次关系本能根目标合同值来源>(
+                 targetInBothRoles.来源组[1].来源),
+         "generic-evaluator-reaches-target-source-in-b-role");
+  auto historicalTargetRequest = targetRequest;
+  historicalTargetRequest.H = historicalTargetRequest.Gread - 1;
+  const auto historicalTarget =
+      evaluator->求值二次关系(historicalTargetRequest);
+  要求(historicalTarget.状态 == 二次关系判断状态::入口拒绝 &&
+             historicalTarget.来源组.empty() && historicalTarget.条件组.empty(),
+         "target-source-requires-current-cutoff");
+  auto mixedTargetRequest = targetRequest;
+  mixedTargetRequest.A.来源组.push_back(
+      二次关系准确F来源{safeReview.当前实际特征});
+  const auto mixedTarget = evaluator->求值二次关系(mixedTargetRequest);
+  要求(mixedTarget.状态 == 二次关系判断状态::入口拒绝 &&
+             mixedTarget.来源组.empty() && mixedTarget.条件组.empty(),
+         "target-source-cannot-mix-with-f-source-in-one-participant");
+  auto duplicateTargetRequest = targetRequest;
+  duplicateTargetRequest.A.来源组.push_back(targetSource);
+  const auto duplicateTarget =
+      evaluator->求值二次关系(duplicateTargetRequest);
+  要求(duplicateTarget.状态 == 二次关系判断状态::入口拒绝 &&
+             duplicateTarget.来源组.empty(),
+         "target-source-duplicate-is-rejected");
+  const 二次关系候选求值请求 targetCandidateRequest{
+      2, reviewContext.Gread, reviewContext.Gread, 0xE1004,
+      delivery->安全根->正差距RC.定义, targetParticipant,
+      currentParticipant};
+  const auto targetCandidate =
+      evaluator->求值候选定义(targetCandidateRequest);
+  要求(targetCandidate.状态 == 二次关系判断状态::入口拒绝 &&
+             targetCandidate.来源组.empty() && targetCandidate.条件组.empty(),
+         "target-source-is-rejected-before-candidate-read");
+  const 二次关系FC求值请求 targetFcRequest{
+      2, reviewContext.Gread, reviewContext.Gread, 0xE1005,
+      delivery->安全根->先天.完整域概念.概念, targetParticipant, 0};
+  const auto targetFc = evaluator->求值特征概念(targetFcRequest);
+  要求(targetFc.状态 == 二次关系判断状态::入口拒绝 &&
+             targetFc.来源组.empty() && targetFc.已核验概念.empty(),
+         "target-source-is-rejected-before-fc-read");
+  const 二次关系EC求值请求 targetEcRequest{
+      2, reviewContext.Gread, reviewContext.Gread, 0xE1006,
+      delivery->安全根->通用存在概念.概念, targetParticipant};
+  const auto targetEc = evaluator->求值存在概念(targetEcRequest);
+  要求(targetEc.状态 == 二次关系判断状态::入口拒绝 &&
+             targetEc.来源组.empty() && targetEc.已核验概念.empty(),
+         "target-source-is-rejected-before-ec-read");
   auto invalidRequest = relationRequest;
   invalidRequest.版本 = 1;
   const auto invalid = evaluator->求值二次关系(invalidRequest);
@@ -709,6 +933,8 @@ int 普通应用种子(const std::filesystem::path& root,
            repeatedDelivery->服务根->正差距RC.身份 ==
                delivery->服务根->正差距RC.身份,
        "ordinary-repeat-revalidates-cached-value-delivery");
+  要求(读取普通应用自我根需求复核服务() == reviewProvider,
+       "ordinary-repeat-preserves-unique-root-review-provider");
   写身份(state, *delivery);
   std::cout << "PASS total=" << 通过数 << '\n';
   return 0;

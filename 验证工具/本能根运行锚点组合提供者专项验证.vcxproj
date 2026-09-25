@@ -57,6 +57,7 @@
   <ItemGroup>
     <ClCompile Include="..\海中鱼巣\领域\数据服务.特征类.cpp" />
     <ClCompile Include="..\海中鱼巣\领域\合同.场景角色组织.cpp" />
+    <ClCompile Include="..\海中鱼巣\领域\合同.二次关系概念.cpp" />
     <ClCompile Include="..\海中鱼巣\领域\数据服务.场景类.cpp" />
     <ClCompile Include="..\海中鱼巣\领域\数据服务.概念树类.cpp" />
     <ClCompile Include="..\海中鱼巣\领域\数据服务.特征值域比较类.cpp" />
