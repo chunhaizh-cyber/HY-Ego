@@ -447,6 +447,40 @@ struct 场景直接包含组结果 final {
   bool 父组读取成功(const 场景直接包含反向读取请求 &) const noexcept;
   bool 子组读取成功(const 场景直接包含组读取请求 &) const noexcept;
 };
+
+inline constexpr std::uint32_t 场景直接包含当前完整读取合同版本_v2 = 2;
+
+enum class 场景直接包含当前完整读取状态_v2 : std::uint8_t {
+  已读取 = 1,
+  入口拒绝 = 2,
+  未找到 = 3,
+  目标已退出 = 4,
+  事实代次漂移 = 5,
+  资源失败 = 6,
+  内部不一致 = 7
+};
+
+struct 场景直接包含父组当前完整读取请求_v2 final {
+  std::uint32_t 版本 = 场景直接包含当前完整读取合同版本_v2;
+  std::uint64_t G0 = 0;
+  稳定编码 成员{};
+};
+
+struct 场景直接包含子组当前完整读取请求_v2 final {
+  std::uint32_t 版本 = 场景直接包含当前完整读取合同版本_v2;
+  std::uint64_t G0 = 0;
+  稳定编码 父{};
+};
+
+struct 场景直接包含当前完整读取结果_v2 final {
+  场景直接包含当前完整读取状态_v2 状态 =
+      场景直接包含当前完整读取状态_v2::入口拒绝;
+  std::uint32_t 版本 = 场景直接包含当前完整读取合同版本_v2;
+  std::uint64_t Gread = 0;
+  std::vector<场景直接包含事实> 包含组;
+  bool 父组读取成功(const 场景直接包含父组当前完整读取请求_v2 &) const noexcept;
+  bool 子组读取成功(const 场景直接包含子组当前完整读取请求_v2 &) const noexcept;
+};
 struct 场景树节点当前事实 final {
   场景角色历史事实 场景角色;
   场景树证明事实 树证明;
@@ -480,6 +514,10 @@ public:
   读取当前场景包含父组(const 场景直接包含反向读取请求 &) const = 0;
   virtual 场景直接包含组结果
   读取当前场景包含子组(const 场景直接包含组读取请求 &) const = 0;
+  virtual 场景直接包含当前完整读取结果_v2
+  读取当前场景包含父组_v2(const 场景直接包含父组当前完整读取请求_v2 &) const = 0;
+  virtual 场景直接包含当前完整读取结果_v2
+  读取当前场景包含子组_v2(const 场景直接包含子组当前完整读取请求_v2 &) const = 0;
   virtual 直接归属场景角色读取结果
   读取当前场景角色位置(const 直接归属场景角色读取请求 &) const = 0;
 };
@@ -495,6 +533,10 @@ public:
   读取当前联合父(const 直接归属联合父读取请求 &) const override;
   直接归属联合读取结果
   读取当前联合子组(const 直接归属联合子组读取请求 &) const override;
+  直接归属联合当前完整读取结果_v2
+  读取当前联合父_v2(const 直接归属联合父当前完整读取请求_v2 &) const override;
+  直接归属联合当前完整读取结果_v2
+  读取当前联合子组_v2(const 直接归属联合子组当前完整读取请求_v2 &) const override;
   直接归属场景角色读取结果
   读取当前场景角色位置(const 直接归属场景角色读取请求 &r) const override {
     return s_.读取当前场景角色位置(r);

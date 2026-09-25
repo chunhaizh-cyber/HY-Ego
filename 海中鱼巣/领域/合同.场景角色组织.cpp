@@ -1,4 +1,6 @@
 #include "合同.场景角色组织.h"
+#include <system_error>
+#include <unordered_set>
 namespace 海中鱼巣 {
 
 namespace 场景合同细节 {
@@ -641,6 +643,71 @@ inline 直接归属联合只读状态 联合映射(场景直接包含状态 s) n
     return B::内部不一致;
   }
 }
+
+bool 场景直接包含当前完整读取结果_v2::父组读取成功(
+    const 场景直接包含父组当前完整读取请求_v2 &r) const noexcept {
+  if (r.版本 != 场景直接包含当前完整读取合同版本_v2 || !r.G0 ||
+      !有效(r.成员) || 版本 != 场景直接包含当前完整读取合同版本_v2 ||
+      状态 != 场景直接包含当前完整读取状态_v2::已读取 || Gread != r.G0 ||
+      包含组.size() > 1)
+    return false;
+  for (std::size_t i = 0; i < 包含组.size(); ++i) {
+    const auto &x = 包含组[i];
+    if (!场景直接包含事实完整(x, Gread) || x.成员 != r.成员 ||
+        x.父场景 == x.成员 ||
+        (i && 包含组[i - 1].关系.编码.值 >= x.关系.编码.值))
+      return false;
+  }
+  return true;
+}
+
+bool 场景直接包含当前完整读取结果_v2::子组读取成功(
+    const 场景直接包含子组当前完整读取请求_v2 &r) const noexcept {
+  if (r.版本 != 场景直接包含当前完整读取合同版本_v2 || !r.G0 ||
+      !有效(r.父) || 版本 != 场景直接包含当前完整读取合同版本_v2 ||
+      状态 != 场景直接包含当前完整读取状态_v2::已读取 || Gread != r.G0)
+    return false;
+  for (std::size_t i = 0; i < 包含组.size(); ++i) {
+    const auto &x = 包含组[i];
+    if (!场景直接包含事实完整(x, Gread) || x.父场景 != r.父 ||
+        x.父场景 == x.成员 ||
+        (i && 包含组[i - 1].关系.编码.值 >= x.关系.编码.值))
+      return false;
+  }
+  return true;
+}
+
+namespace {
+直接归属联合当前完整读取状态_v2 联合映射_v2(
+    存在组成当前完整读取状态_v2 状态) noexcept {
+  using A = 存在组成当前完整读取状态_v2;
+  using B = 直接归属联合当前完整读取状态_v2;
+  switch (状态) {
+  case A::已读取: return B::已读取;
+  case A::入口拒绝: return B::内部不一致;
+  case A::未找到: return B::未找到;
+  case A::目标已退出: return B::目标已退出;
+  case A::事实代次漂移: return B::事实代次漂移;
+  case A::资源失败: return B::资源失败;
+  default: return B::内部不一致;
+  }
+}
+
+直接归属联合当前完整读取状态_v2 联合映射_v2(
+    场景直接包含当前完整读取状态_v2 状态) noexcept {
+  using A = 场景直接包含当前完整读取状态_v2;
+  using B = 直接归属联合当前完整读取状态_v2;
+  switch (状态) {
+  case A::已读取: return B::已读取;
+  case A::入口拒绝: return B::内部不一致;
+  case A::未找到: return B::未找到;
+  case A::目标已退出: return B::目标已退出;
+  case A::事实代次漂移: return B::事实代次漂移;
+  case A::资源失败: return B::资源失败;
+  default: return B::内部不一致;
+  }
+}
+} // namespace
 直接归属联合读取结果
 直接归属联合只读组合器::读取当前联合父(const 直接归属联合父读取请求 &r) const {
   直接归属联合读取结果 o;
@@ -751,5 +818,142 @@ inline 直接归属联合只读状态 联合映射(场景直接包含状态 s) n
   if (o.状态 != 直接归属联合只读状态::已读取)
     o.子组.clear();
   return o;
+}
+
+直接归属联合当前完整读取结果_v2
+直接归属联合只读组合器::读取当前联合父_v2(
+    const 直接归属联合父当前完整读取请求_v2 &r) const {
+  直接归属联合当前完整读取结果_v2 out;
+  out.Gread = r.G0;
+  if (r.版本 != 直接归属联合当前完整读取合同版本_v2 || !r.G0 ||
+      !有效(r.成员))
+    return out;
+  try {
+    const 存在组成父当前完整读取请求_v2 组成请求{
+        存在组成当前完整读取合同版本_v2, r.G0, r.成员};
+    const auto 组成 = e_.读取当前组成父_v2(组成请求);
+    if (!组成.父读取成功(组成请求)) {
+      out.状态 = 组成.状态 == 存在组成当前完整读取状态_v2::已读取
+                       ? 直接归属联合当前完整读取状态_v2::内部不一致
+                       : 联合映射_v2(组成.状态);
+      out.Gread = 组成.Gread;
+      return out;
+    }
+    const 场景直接包含父组当前完整读取请求_v2 场景请求{
+        场景直接包含当前完整读取合同版本_v2, r.G0, r.成员};
+    const auto 场景 = s_.读取当前场景包含父组_v2(场景请求);
+    if (!场景.父组读取成功(场景请求)) {
+      out.状态 = 场景.状态 == 场景直接包含当前完整读取状态_v2::已读取
+                       ? 直接归属联合当前完整读取状态_v2::内部不一致
+                       : 联合映射_v2(场景.状态);
+      out.Gread = 场景.Gread;
+      return out;
+    }
+    std::vector<直接归属联合事实> 候选;
+    if (组成.父) {
+      const auto &x = *组成.父;
+      候选.push_back({r.G0, r.G0, 直接归属来源::存在组成, x.关系,
+                    x.父存在, x.子存在, x.创建事实代次, x.退出事实代次});
+    }
+    for (const auto &x : 场景.包含组) {
+      候选.push_back({r.G0, r.G0,
+                    x.种类 == 场景直接包含种类::存在成员
+                        ? 直接归属来源::场景成员
+                        : 直接归属来源::直接子场景,
+                    x.关系.编码, x.父场景, x.成员,
+                    x.关系.生命周期.创建事实代次,
+                    x.关系.生命周期.退出事实代次});
+    }
+    if (候选.size() > 1) {
+      out.状态 = 直接归属联合当前完整读取状态_v2::内部不一致;
+      return out;
+    }
+    if (!候选.empty())
+      out.父 = 候选.front();
+    out.状态 = 直接归属联合当前完整读取状态_v2::已读取;
+  } catch (const std::bad_alloc &) {
+    out.状态 = 直接归属联合当前完整读取状态_v2::资源失败;
+  } catch (const std::length_error &) {
+    out.状态 = 直接归属联合当前完整读取状态_v2::资源失败;
+  } catch (const std::system_error &) {
+    out.状态 = 直接归属联合当前完整读取状态_v2::资源失败;
+  } catch (...) {
+    out.状态 = 直接归属联合当前完整读取状态_v2::内部不一致;
+  }
+  if (out.状态 != 直接归属联合当前完整读取状态_v2::已读取)
+    out.父.reset();
+  return out;
+}
+
+直接归属联合当前完整读取结果_v2
+直接归属联合只读组合器::读取当前联合子组_v2(
+    const 直接归属联合子组当前完整读取请求_v2 &r) const {
+  直接归属联合当前完整读取结果_v2 out;
+  out.Gread = r.G0;
+  if (r.版本 != 直接归属联合当前完整读取合同版本_v2 || !r.G0 ||
+      !有效(r.父))
+    return out;
+  try {
+    const 存在组成子组当前完整读取请求_v2 组成请求{
+        存在组成当前完整读取合同版本_v2, r.G0, r.父};
+    const auto 组成 = e_.读取当前组成子组_v2(组成请求);
+    if (!组成.子组读取成功(组成请求)) {
+      out.状态 = 组成.状态 == 存在组成当前完整读取状态_v2::已读取
+                       ? 直接归属联合当前完整读取状态_v2::内部不一致
+                       : 联合映射_v2(组成.状态);
+      out.Gread = 组成.Gread;
+      return out;
+    }
+    const 场景直接包含子组当前完整读取请求_v2 场景请求{
+        场景直接包含当前完整读取合同版本_v2, r.G0, r.父};
+    const auto 场景 = s_.读取当前场景包含子组_v2(场景请求);
+    if (!场景.子组读取成功(场景请求)) {
+      out.状态 = 场景.状态 == 场景直接包含当前完整读取状态_v2::已读取
+                       ? 直接归属联合当前完整读取状态_v2::内部不一致
+                       : 联合映射_v2(场景.状态);
+      out.Gread = 场景.Gread;
+      return out;
+    }
+    for (const auto &x : 组成.子组)
+      out.子组.push_back({r.G0, r.G0, 直接归属来源::存在组成, x.关系,
+                        x.父存在, x.子存在, x.创建事实代次,
+                        x.退出事实代次});
+    for (const auto &x : 场景.包含组)
+      out.子组.push_back(
+          {r.G0, r.G0,
+           x.种类 == 场景直接包含种类::存在成员 ? 直接归属来源::场景成员
+                                                : 直接归属来源::直接子场景,
+           x.关系.编码, x.父场景, x.成员,
+           x.关系.生命周期.创建事实代次,
+           x.关系.生命周期.退出事实代次});
+    std::sort(out.子组.begin(), out.子组.end(), [](const auto &a, const auto &b) {
+      if (a.成员 != b.成员)
+        return a.成员.值 < b.成员.值;
+      if (a.来源 != b.来源)
+        return static_cast<unsigned>(a.来源) < static_cast<unsigned>(b.来源);
+      return a.关系.值 < b.关系.值;
+    });
+    std::unordered_set<std::uint64_t> 关系组;
+    for (std::size_t i = 0; i < out.子组.size(); ++i) {
+      if (!关系组.insert(out.子组[i].关系.值).second ||
+          (i && out.子组[i - 1].成员 == out.子组[i].成员)) {
+        out.状态 = 直接归属联合当前完整读取状态_v2::内部不一致;
+        out.子组.clear();
+        return out;
+      }
+    }
+    out.状态 = 直接归属联合当前完整读取状态_v2::已读取;
+  } catch (const std::bad_alloc &) {
+    out.状态 = 直接归属联合当前完整读取状态_v2::资源失败;
+  } catch (const std::length_error &) {
+    out.状态 = 直接归属联合当前完整读取状态_v2::资源失败;
+  } catch (const std::system_error &) {
+    out.状态 = 直接归属联合当前完整读取状态_v2::资源失败;
+  } catch (...) {
+    out.状态 = 直接归属联合当前完整读取状态_v2::内部不一致;
+  }
+  if (out.状态 != 直接归属联合当前完整读取状态_v2::已读取)
+    out.子组.clear();
+  return out;
 }
 } // namespace 海中鱼巣

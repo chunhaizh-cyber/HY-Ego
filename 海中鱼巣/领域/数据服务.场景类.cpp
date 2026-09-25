@@ -1,4 +1,6 @@
 #include "数据服务.场景类.h"
+#include <system_error>
+#include <unordered_map>
 
 namespace 海中鱼巣 {
 
@@ -2883,6 +2885,182 @@ bool 场景类数据服务::登记材料匹配() const {
     out.结果头.状态 = 场景直接包含状态::内部不一致;
     out.包含组.clear();
   }
+  return out;
+}
+
+场景直接包含当前完整读取结果_v2
+场景类数据服务::读取当前场景包含父组_v2(
+    const 场景直接包含父组当前完整读取请求_v2 &r) const {
+  场景直接包含当前完整读取结果_v2 out;
+  out.Gread = r.G0;
+  if (r.版本 != 场景直接包含当前完整读取合同版本_v2 || !r.G0 ||
+      !有效(r.成员))
+    return out;
+  try {
+    const L1节点当前完整引用读取请求_v2 请求{
+        L1节点当前完整引用读取合同版本, r.成员, r.G0};
+    const auto 读取 = l1_.读取节点全部当前引用_v2(请求);
+    out.Gread = 读取.读取事实代次;
+    if (!读取.成功(请求)) {
+      switch (读取.状态) {
+      case L1节点当前完整引用读取状态_v2::未找到:
+        out.状态 = 场景直接包含当前完整读取状态_v2::未找到;
+        break;
+      case L1节点当前完整引用读取状态_v2::已退出:
+        out.状态 = 场景直接包含当前完整读取状态_v2::目标已退出;
+        break;
+      case L1节点当前完整引用读取状态_v2::事实代次漂移:
+        out.状态 = 场景直接包含当前完整读取状态_v2::事实代次漂移;
+        break;
+      case L1节点当前完整引用读取状态_v2::资源失败:
+        out.状态 = 场景直接包含当前完整读取状态_v2::资源失败;
+        break;
+      default:
+        out.状态 = 场景直接包含当前完整读取状态_v2::内部不一致;
+        break;
+      }
+      return out;
+    }
+    std::unordered_map<std::uint64_t, 场景直接包含种类> 成员种类;
+    for (const auto &引用 : 读取.引用) {
+      const auto *关系 = std::get_if<L1所有者范围关系事实>(&引用);
+      if (!关系)
+        continue;
+      场景直接包含种类 种类{};
+      if (关系->关系类型节点 == includeLayout_.直接存在成员关系类型)
+        种类 = 场景直接包含种类::存在成员;
+      else if (关系->关系类型节点 == includeLayout_.直接子场景关系类型)
+        种类 = 场景直接包含种类::子场景;
+      else
+        continue;
+      if (关系->目标节点 != r.成员)
+        continue;
+      if (关系->写入所有者 != owner_ || 关系->角色或顺序 != 1 ||
+          !有效(关系->编码) || !有效(关系->源节点) ||
+          关系->源节点 == r.成员 || !关系->创建事实代次 ||
+          关系->创建事实代次 > out.Gread || 关系->退出事实代次) {
+        out.状态 = 场景直接包含当前完整读取状态_v2::内部不一致;
+        out.包含组.clear();
+        return out;
+      }
+      const auto [既有, 新成员] = 成员种类.emplace(关系->目标节点.值, 种类);
+      if (!新成员 && 既有->second != 种类) {
+        out.状态 = 场景直接包含当前完整读取状态_v2::内部不一致;
+        out.包含组.clear();
+        return out;
+      }
+      out.包含组.push_back(
+          {out.Gread, out.Gread, 种类, 关系->源节点, 关系->目标节点, 转边(*关系)});
+    }
+    std::sort(out.包含组.begin(), out.包含组.end(), [](const auto &a, const auto &b) {
+      return a.关系.编码.值 < b.关系.编码.值;
+    });
+    if (out.包含组.size() > 1) {
+      out.状态 = 场景直接包含当前完整读取状态_v2::内部不一致;
+      out.包含组.clear();
+      return out;
+    }
+    out.状态 = 场景直接包含当前完整读取状态_v2::已读取;
+  } catch (const std::bad_alloc &) {
+    out.状态 = 场景直接包含当前完整读取状态_v2::资源失败;
+  } catch (const std::length_error &) {
+    out.状态 = 场景直接包含当前完整读取状态_v2::资源失败;
+  } catch (const std::system_error &) {
+    out.状态 = 场景直接包含当前完整读取状态_v2::资源失败;
+  } catch (...) {
+    out.状态 = 场景直接包含当前完整读取状态_v2::内部不一致;
+  }
+  if (out.状态 != 场景直接包含当前完整读取状态_v2::已读取)
+    out.包含组.clear();
+  return out;
+}
+
+场景直接包含当前完整读取结果_v2
+场景类数据服务::读取当前场景包含子组_v2(
+    const 场景直接包含子组当前完整读取请求_v2 &r) const {
+  场景直接包含当前完整读取结果_v2 out;
+  out.Gread = r.G0;
+  if (r.版本 != 场景直接包含当前完整读取合同版本_v2 || !r.G0 ||
+      !有效(r.父))
+    return out;
+  try {
+    const L1节点当前完整引用读取请求_v2 请求{
+        L1节点当前完整引用读取合同版本, r.父, r.G0};
+    const auto 读取 = l1_.读取节点全部当前引用_v2(请求);
+    out.Gread = 读取.读取事实代次;
+    if (!读取.成功(请求)) {
+      switch (读取.状态) {
+      case L1节点当前完整引用读取状态_v2::未找到:
+        out.状态 = 场景直接包含当前完整读取状态_v2::未找到;
+        break;
+      case L1节点当前完整引用读取状态_v2::已退出:
+        out.状态 = 场景直接包含当前完整读取状态_v2::目标已退出;
+        break;
+      case L1节点当前完整引用读取状态_v2::事实代次漂移:
+        out.状态 = 场景直接包含当前完整读取状态_v2::事实代次漂移;
+        break;
+      case L1节点当前完整引用读取状态_v2::资源失败:
+        out.状态 = 场景直接包含当前完整读取状态_v2::资源失败;
+        break;
+      default:
+        out.状态 = 场景直接包含当前完整读取状态_v2::内部不一致;
+        break;
+      }
+      return out;
+    }
+    std::unordered_map<std::uint64_t, 场景直接包含种类> 子成员种类;
+    for (const auto &引用 : 读取.引用) {
+      const auto *关系 = std::get_if<L1所有者范围关系事实>(&引用);
+      if (!关系)
+        continue;
+      场景直接包含种类 种类{};
+      if (关系->关系类型节点 == includeLayout_.直接存在成员关系类型)
+        种类 = 场景直接包含种类::存在成员;
+      else if (关系->关系类型节点 == includeLayout_.直接子场景关系类型)
+        种类 = 场景直接包含种类::子场景;
+      else
+        continue;
+      if (关系->源节点 != r.父)
+        continue;
+      if (关系->写入所有者 != owner_ || 关系->角色或顺序 != 1 ||
+          !有效(关系->编码) || !有效(关系->目标节点) ||
+          关系->目标节点 == r.父 || !关系->创建事实代次 ||
+          关系->创建事实代次 > out.Gread || 关系->退出事实代次) {
+        out.状态 = 场景直接包含当前完整读取状态_v2::内部不一致;
+        out.包含组.clear();
+        return out;
+      }
+      const auto [既有, 新成员] = 子成员种类.emplace(关系->目标节点.值, 种类);
+      if (!新成员 && 既有->second != 种类) {
+        out.状态 = 场景直接包含当前完整读取状态_v2::内部不一致;
+        out.包含组.clear();
+        return out;
+      }
+      out.包含组.push_back(
+          {out.Gread, out.Gread, 种类, 关系->源节点, 关系->目标节点, 转边(*关系)});
+    }
+    std::sort(out.包含组.begin(), out.包含组.end(), [](const auto &a, const auto &b) {
+      return a.关系.编码.值 < b.关系.编码.值;
+    });
+    for (std::size_t i = 1; i < out.包含组.size(); ++i) {
+      if (out.包含组[i - 1].关系.编码 == out.包含组[i].关系.编码) {
+        out.状态 = 场景直接包含当前完整读取状态_v2::内部不一致;
+        out.包含组.clear();
+        return out;
+      }
+    }
+    out.状态 = 场景直接包含当前完整读取状态_v2::已读取;
+  } catch (const std::bad_alloc &) {
+    out.状态 = 场景直接包含当前完整读取状态_v2::资源失败;
+  } catch (const std::length_error &) {
+    out.状态 = 场景直接包含当前完整读取状态_v2::资源失败;
+  } catch (const std::system_error &) {
+    out.状态 = 场景直接包含当前完整读取状态_v2::资源失败;
+  } catch (...) {
+    out.状态 = 场景直接包含当前完整读取状态_v2::内部不一致;
+  }
+  if (out.状态 != 场景直接包含当前完整读取状态_v2::已读取)
+    out.包含组.clear();
   return out;
 }
 

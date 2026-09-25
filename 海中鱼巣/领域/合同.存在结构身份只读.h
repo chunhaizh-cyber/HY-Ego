@@ -197,6 +197,40 @@ struct 存在组成读取结果 final {
   bool 子组读取成功(const 存在组成子组读取请求 &) const noexcept;
 };
 
+inline constexpr std::uint32_t 存在组成当前完整读取合同版本_v2 = 2;
+
+enum class 存在组成当前完整读取状态_v2 : std::uint8_t {
+  已读取 = 1,
+  入口拒绝 = 2,
+  未找到 = 3,
+  目标已退出 = 4,
+  事实代次漂移 = 5,
+  资源失败 = 6,
+  内部不一致 = 7
+};
+
+struct 存在组成父当前完整读取请求_v2 final {
+  std::uint32_t 版本 = 存在组成当前完整读取合同版本_v2;
+  std::uint64_t G0 = 0;
+  稳定编码 子存在{};
+};
+
+struct 存在组成子组当前完整读取请求_v2 final {
+  std::uint32_t 版本 = 存在组成当前完整读取合同版本_v2;
+  std::uint64_t G0 = 0;
+  稳定编码 父存在{};
+};
+
+struct 存在组成当前完整读取结果_v2 final {
+  存在组成当前完整读取状态_v2 状态 = 存在组成当前完整读取状态_v2::入口拒绝;
+  std::uint32_t 版本 = 存在组成当前完整读取合同版本_v2;
+  std::uint64_t Gread = 0;
+  std::optional<存在组成关系事实> 父;
+  std::vector<存在组成关系事实> 子组;
+  bool 父读取成功(const 存在组成父当前完整读取请求_v2 &) const noexcept;
+  bool 子组读取成功(const 存在组成子组当前完整读取请求_v2 &) const noexcept;
+};
+
 class 存在组成结构只读提供者 {
 public:
   virtual ~存在组成结构只读提供者() = default;
@@ -204,6 +238,10 @@ public:
   virtual 存在组成读取结果 读取当前组成父(const 存在组成父读取请求 &) const = 0;
   virtual 存在组成读取结果
   读取当前组成子组(const 存在组成子组读取请求 &) const = 0;
+  virtual 存在组成当前完整读取结果_v2
+  读取当前组成父_v2(const 存在组成父当前完整读取请求_v2 &) const = 0;
+  virtual 存在组成当前完整读取结果_v2
+  读取当前组成子组_v2(const 存在组成子组当前完整读取请求_v2 &) const = 0;
 };
 
 inline constexpr std::uint32_t 直接归属联合只读合同版本 = 1;
@@ -251,6 +289,41 @@ struct 直接归属联合读取结果 final {
   bool 父读取成功(const 直接归属联合父读取请求 &) const noexcept;
   bool 子组读取成功(const 直接归属联合子组读取请求 &) const noexcept;
 };
+
+inline constexpr std::uint32_t 直接归属联合当前完整读取合同版本_v2 = 2;
+
+enum class 直接归属联合当前完整读取状态_v2 : std::uint8_t {
+  已读取 = 1,
+  入口拒绝 = 2,
+  未找到 = 3,
+  目标已退出 = 4,
+  事实代次漂移 = 5,
+  资源失败 = 6,
+  内部不一致 = 7
+};
+
+struct 直接归属联合父当前完整读取请求_v2 final {
+  std::uint32_t 版本 = 直接归属联合当前完整读取合同版本_v2;
+  std::uint64_t G0 = 0;
+  稳定编码 成员{};
+};
+
+struct 直接归属联合子组当前完整读取请求_v2 final {
+  std::uint32_t 版本 = 直接归属联合当前完整读取合同版本_v2;
+  std::uint64_t G0 = 0;
+  稳定编码 父{};
+};
+
+struct 直接归属联合当前完整读取结果_v2 final {
+  直接归属联合当前完整读取状态_v2 状态 =
+      直接归属联合当前完整读取状态_v2::入口拒绝;
+  std::uint32_t 版本 = 直接归属联合当前完整读取合同版本_v2;
+  std::uint64_t Gread = 0;
+  std::optional<直接归属联合事实> 父;
+  std::vector<直接归属联合事实> 子组;
+  bool 父读取成功(const 直接归属联合父当前完整读取请求_v2 &) const noexcept;
+  bool 子组读取成功(const 直接归属联合子组当前完整读取请求_v2 &) const noexcept;
+};
 enum class 直接归属场景位置 : std::uint8_t {
   未纳入场景树 = 1,
   场景树根 = 2,
@@ -282,6 +355,10 @@ public:
   读取当前联合父(const 直接归属联合父读取请求 &) const = 0;
   virtual 直接归属联合读取结果
   读取当前联合子组(const 直接归属联合子组读取请求 &) const = 0;
+  virtual 直接归属联合当前完整读取结果_v2
+  读取当前联合父_v2(const 直接归属联合父当前完整读取请求_v2 &) const = 0;
+  virtual 直接归属联合当前完整读取结果_v2
+  读取当前联合子组_v2(const 直接归属联合子组当前完整读取请求_v2 &) const = 0;
   virtual 直接归属场景角色读取结果
   读取当前场景角色位置(const 直接归属场景角色读取请求 &) const = 0;
 };
@@ -309,6 +386,37 @@ inline bool
          (!父 || (父->Gread == Gread && 父->H == Gread &&
                   父->子存在 == r.子存在 && 有效(父->关系) &&
                   有效(父->父存在) && 父->创建事实代次 && !父->退出事实代次));
+}
+inline bool 存在组成当前完整读取结果_v2::父读取成功(
+    const 存在组成父当前完整读取请求_v2 &r) const noexcept {
+  if (r.版本 != 存在组成当前完整读取合同版本_v2 || !r.G0 ||
+      !有效(r.子存在) || 版本 != 存在组成当前完整读取合同版本_v2 ||
+      状态 != 存在组成当前完整读取状态_v2::已读取 || Gread != r.G0 ||
+      !子组.empty())
+    return false;
+  if (!父)
+    return true;
+  return 父->Gread == Gread && 父->H == Gread && 父->子存在 == r.子存在 &&
+         有效(父->关系) && 有效(父->父存在) && 父->父存在 != 父->子存在 &&
+         父->创建事实代次 &&
+         父->创建事实代次 <= Gread && !父->退出事实代次;
+}
+inline bool 存在组成当前完整读取结果_v2::子组读取成功(
+    const 存在组成子组当前完整读取请求_v2 &r) const noexcept {
+  if (r.版本 != 存在组成当前完整读取合同版本_v2 || !r.G0 ||
+      !有效(r.父存在) || 版本 != 存在组成当前完整读取合同版本_v2 ||
+      状态 != 存在组成当前完整读取状态_v2::已读取 || Gread != r.G0 || 父)
+    return false;
+  for (std::size_t i = 0; i < 子组.size(); ++i) {
+    const auto &x = 子组[i];
+    if (x.Gread != Gread || x.H != Gread || x.父存在 != r.父存在 ||
+        !有效(x.关系) || !有效(x.子存在) || x.父存在 == x.子存在 ||
+        !x.创建事实代次 ||
+        x.创建事实代次 > Gread || x.退出事实代次 ||
+        (i && 子组[i - 1].关系.值 >= x.关系.值))
+      return false;
+  }
+  return true;
 }
 inline bool
 存在组成读取结果::子组读取成功(const 存在组成子组读取请求 &r) const noexcept {
@@ -354,6 +462,52 @@ inline bool 直接归属联合读取结果::子组读取成功(
           (p.成员 == x.成员 &&
            (static_cast<unsigned>(p.来源) > static_cast<unsigned>(x.来源) ||
             (p.来源 == x.来源 && p.关系.值 >= x.关系.值))))
+        return false;
+    }
+  }
+  return true;
+}
+inline bool 直接归属联合当前完整读取结果_v2::父读取成功(
+    const 直接归属联合父当前完整读取请求_v2 &r) const noexcept {
+  if (r.版本 != 直接归属联合当前完整读取合同版本_v2 || !r.G0 ||
+      !有效(r.成员) || 版本 != 直接归属联合当前完整读取合同版本_v2 ||
+      状态 != 直接归属联合当前完整读取状态_v2::已读取 || Gread != r.G0 ||
+      !子组.empty())
+    return false;
+  if (!父)
+    return true;
+  return 父->Gread == Gread && 父->H == Gread && 父->成员 == r.成员 &&
+         有效(父->关系) && 有效(父->父) && 父->父 != 父->成员 &&
+         父->创建事实代次 &&
+         父->创建事实代次 <= Gread && !父->退出事实代次 &&
+         (父->来源 == 直接归属来源::存在组成 ||
+          父->来源 == 直接归属来源::场景成员 ||
+          父->来源 == 直接归属来源::直接子场景);
+}
+inline bool 直接归属联合当前完整读取结果_v2::子组读取成功(
+    const 直接归属联合子组当前完整读取请求_v2 &r) const noexcept {
+  if (r.版本 != 直接归属联合当前完整读取合同版本_v2 || !r.G0 ||
+      !有效(r.父) || 版本 != 直接归属联合当前完整读取合同版本_v2 ||
+      状态 != 直接归属联合当前完整读取状态_v2::已读取 || Gread != r.G0 || 父)
+    return false;
+  for (std::size_t i = 0; i < 子组.size(); ++i) {
+    const auto &x = 子组[i];
+    if (x.Gread != Gread || x.H != Gread || x.父 != r.父 || !有效(x.关系) ||
+        !有效(x.成员) || x.父 == x.成员 || !x.创建事实代次 ||
+        x.创建事实代次 > Gread ||
+        x.退出事实代次 ||
+        (x.来源 != 直接归属来源::存在组成 &&
+         x.来源 != 直接归属来源::场景成员 &&
+         x.来源 != 直接归属来源::直接子场景))
+      return false;
+    if (i) {
+      const auto &p = 子组[i - 1];
+      if (p.成员.值 > x.成员.值 ||
+          (p.成员 == x.成员 &&
+           (static_cast<unsigned>(p.来源) > static_cast<unsigned>(x.来源) ||
+            (p.来源 == x.来源 && p.关系.值 >= x.关系.值))))
+        return false;
+      if (p.成员 == x.成员)
         return false;
     }
   }

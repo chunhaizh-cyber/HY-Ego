@@ -14,6 +14,7 @@
 #include <optional>
 #include <set>
 #include <stdexcept>
+#include <system_error>
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
@@ -697,11 +698,134 @@ public:
     }
     return o;
   }
+
+  存在组成当前完整读取结果_v2
+  读取当前组成父_v2(const 存在组成父当前完整读取请求_v2 &r) const override {
+    if (r.版本 != 存在组成当前完整读取合同版本_v2)
+      return {};
+    return 读取当前组成_v2(r.G0, r.子存在, true);
+  }
+
+  存在组成当前完整读取结果_v2
+  读取当前组成子组_v2(const 存在组成子组当前完整读取请求_v2 &r) const override {
+    if (r.版本 != 存在组成当前完整读取合同版本_v2)
+      return {};
+    return 读取当前组成_v2(r.G0, r.父存在, false);
+  }
   存在历史读取结果 读取存在历史事实(const 存在历史读取请求 &r) const {
     return 读取存在历史事实核心(r, true);
   }
 
 private:
+  存在组成当前完整读取结果_v2 读取当前组成_v2(
+      std::uint64_t G0, 稳定编码 端点, bool 读取父) const {
+    存在组成当前完整读取结果_v2 out;
+    out.Gread = G0;
+    if (!G0 || !有效(端点))
+      return out;
+    try {
+      const auto 身份 = 确认当前存在结构身份(G0, 端点);
+      out.Gread = 身份.Gread;
+      if (!身份.成功(G0)) {
+        switch (身份.状态) {
+        case 存在结构身份只读状态::入口拒绝:
+          out.状态 = 存在组成当前完整读取状态_v2::入口拒绝;
+          break;
+        case 存在结构身份只读状态::未找到:
+          out.状态 = 存在组成当前完整读取状态_v2::未找到;
+          break;
+        case 存在结构身份只读状态::目标已退出:
+          out.状态 = 存在组成当前完整读取状态_v2::目标已退出;
+          break;
+        case 存在结构身份只读状态::事实代次漂移:
+          out.状态 = 存在组成当前完整读取状态_v2::事实代次漂移;
+          break;
+        case 存在结构身份只读状态::资源失败:
+          out.状态 = 存在组成当前完整读取状态_v2::资源失败;
+          break;
+        default:
+          out.状态 = 存在组成当前完整读取状态_v2::内部不一致;
+          break;
+        }
+        return out;
+      }
+
+      const L1节点当前完整引用读取请求_v2 请求{
+          L1节点当前完整引用读取合同版本, 端点, G0};
+      const auto 读取 = 第一层服务_.读取节点全部当前引用_v2(请求);
+      out.Gread = 读取.读取事实代次;
+      if (!读取.成功(请求)) {
+        switch (读取.状态) {
+        case L1节点当前完整引用读取状态_v2::未找到:
+          out.状态 = 存在组成当前完整读取状态_v2::未找到;
+          break;
+        case L1节点当前完整引用读取状态_v2::已退出:
+          out.状态 = 存在组成当前完整读取状态_v2::目标已退出;
+          break;
+        case L1节点当前完整引用读取状态_v2::事实代次漂移:
+          out.状态 = 存在组成当前完整读取状态_v2::事实代次漂移;
+          break;
+        case L1节点当前完整引用读取状态_v2::资源失败:
+          out.状态 = 存在组成当前完整读取状态_v2::资源失败;
+          break;
+        default:
+          out.状态 = 存在组成当前完整读取状态_v2::内部不一致;
+          break;
+        }
+        return out;
+      }
+
+      for (const auto &引用 : 读取.引用) {
+        const auto *关系 = std::get_if<L1所有者范围关系事实>(&引用);
+        if (!关系 || 关系->关系类型节点 != 子存在关系类型_)
+          continue;
+        const bool 方向正确 = 读取父 ? 关系->目标节点 == 端点
+                                   : 关系->源节点 == 端点;
+        if (!方向正确)
+          continue;
+        const auto 另一端 = 读取父 ? 关系->源节点 : 关系->目标节点;
+        if (关系->写入所有者 != 所有者_ || 关系->角色或顺序 != 1 ||
+            !有效(关系->编码) || !有效(关系->源节点) ||
+            !有效(关系->目标节点) || 另一端 == 端点 || !关系->创建事实代次 ||
+            关系->创建事实代次 > out.Gread || 关系->退出事实代次) {
+          out.状态 = 存在组成当前完整读取状态_v2::内部不一致;
+          out.父.reset();
+          out.子组.clear();
+          return out;
+        }
+        存在组成关系事实 事实{out.Gread, out.Gread, 关系->编码,
+                              关系->源节点, 关系->目标节点,
+                              关系->创建事实代次, 关系->退出事实代次};
+        if (读取父) {
+          if (out.父) {
+            out.状态 = 存在组成当前完整读取状态_v2::内部不一致;
+            out.父.reset();
+            return out;
+          }
+          out.父 = std::move(事实);
+        } else {
+          out.子组.push_back(std::move(事实));
+        }
+      }
+      std::sort(out.子组.begin(), out.子组.end(), [](const auto &a, const auto &b) {
+        return a.关系.值 < b.关系.值;
+      });
+      out.状态 = 存在组成当前完整读取状态_v2::已读取;
+      return out;
+    } catch (const std::bad_alloc &) {
+      out.状态 = 存在组成当前完整读取状态_v2::资源失败;
+    } catch (const std::length_error &) {
+      out.状态 = 存在组成当前完整读取状态_v2::资源失败;
+    } catch (const std::system_error &) {
+      out.状态 = 存在组成当前完整读取状态_v2::资源失败;
+    } catch (...) {
+      out.状态 = 存在组成当前完整读取状态_v2::内部不一致;
+    }
+    out.父.reset();
+    out.子组.clear();
+    return out;
+  }
+
   friend class ::海中鱼巣::世界树根数据服务;
   L1所有者范围写端口 &世界树根协调端口() noexcept { return 写入端口_; }
   存在历史读取结果 读取存在历史事实核心(const 存在历史读取请求 &r,
