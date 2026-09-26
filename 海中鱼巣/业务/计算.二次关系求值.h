@@ -44,14 +44,14 @@ struct 二次关系参与者材料 final {
 
 struct 二次关系求值请求 final {
   std::uint32_t 版本 = 2;
-  std::uint64_t Gread = 0, H = 0, 请求身份 = 0;
+  std::uint64_t Gread = 0, 请求身份 = 0;
   概念树概念身份 RC;
   二次关系参与者材料 A, B;
 };
 
 struct 二次关系FC求值请求 final {
   std::uint32_t 版本 = 2;
-  std::uint64_t Gread = 0, H = 0, 请求身份 = 0;
+  std::uint64_t Gread = 0, 请求身份 = 0;
   概念树概念身份 FC;
   二次关系参与者材料 参与者;
   std::uint64_t 来源下标 = 0;
@@ -59,14 +59,14 @@ struct 二次关系FC求值请求 final {
 
 struct 二次关系EC求值请求 final {
   std::uint32_t 版本 = 2;
-  std::uint64_t Gread = 0, H = 0, 请求身份 = 0;
+  std::uint64_t Gread = 0, 请求身份 = 0;
   概念树概念身份 EC;
   二次关系参与者材料 参与者;
 };
 
 struct 二次关系候选求值请求 final {
   std::uint32_t 版本 = 2;
-  std::uint64_t Gread = 0, H = 0, 请求身份 = 0;
+  std::uint64_t Gread = 0, 请求身份 = 0;
   二次关系定义 定义;
   二次关系参与者材料 A, B;
 };
@@ -77,9 +77,7 @@ enum class 二次关系判断状态 : std::uint8_t {
   证据不足 = 3,
   规则不支持 = 4,
   入口拒绝 = 5,
-  旧预算不足 = 6,
   事实代次漂移 = 7,
-  历史材料不可用 = 8,
   运算溢出 = 9,
   资源失败 = 10,
   内部不一致 = 11,
@@ -97,7 +95,7 @@ struct 二次关系本能根目标合同值见证 final {
 struct 二次关系准确来源见证 final {
   稳定编码 E{};
   二次关系特征来源 来源;
-  存在身份来源历史见证 存在见证;
+  存在身份来源当前见证 存在见证;
   特征类型身份 FT;
   std::int64_t 值 = 0;
   std::variant<准确特征读取事实, 状态内容事实,
@@ -117,7 +115,7 @@ struct 二次关系条件见证 final {
 struct 二次关系判断结果 final {
   std::uint32_t 版本 = 2;
   二次关系判断状态 状态 = 二次关系判断状态::入口拒绝;
-  std::uint64_t Gread = 0, H = 0, 定义H = 0, 请求身份 = 0;
+  std::uint64_t Gread = 0, 请求身份 = 0;
   std::vector<二次关系条件见证> 条件组;
   std::vector<二次关系准确来源见证> 来源组;
   std::vector<概念树概念身份> 已核验概念;

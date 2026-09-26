@@ -28,10 +28,10 @@ enum class 不可变材料格式种类_B1 : std::uint8_t {
 };
 
 enum class 材料状态_B1 : std::uint8_t {
-  已读取=1, 已创建=2, 已复用=3, 精确重复=4, 已退出=6,
-  未找到=8, 入口拒绝=9, 目标已退出=11, 规则未提供=17,
+  已读取=1, 已创建=2, 已复用=3, 精确重复=4, 已删除=6,
+  未找到=8, 入口拒绝=9, 规则未提供=17,
   引用保护=18, 事实代次漂移=22, 幂等冲突=23,
-  数量预算不足=24, 历史材料不可用=25, 资源失败=26,
+  数量预算不足=24, 资源失败=26,
   内部不一致=27, 可能已发布=28, 旧格式不支持=29
 };
 enum class 材料发布状态_B1 : std::uint8_t {
@@ -99,7 +99,7 @@ struct 材料发布请求_B1 final {
   friend bool operator==(const 材料发布请求_B1&, const 材料发布请求_B1&) = default;
 };
 struct 材料读取请求_B1 final {
-  std::uint32_t 版本{1}; std::uint64_t Gread{}, H{};
+  std::uint32_t 版本{1}; std::uint64_t Gread{};
   不可变材料身份_B1 材料{}; 世界结构预算_B1 预算{};
   friend bool operator==(const 材料读取请求_B1&, const 材料读取请求_B1&) = default;
 };
@@ -110,7 +110,7 @@ struct 材料退出请求_B1 final {
   friend bool operator==(const 材料退出请求_B1&, const 材料退出请求_B1&) = default;
 };
 struct 材料格式读取请求_B1 final {
-  std::uint32_t 版本{1}; std::uint64_t Gread{}, H{};
+  std::uint32_t 版本{1}; std::uint64_t Gread{};
   不可变材料格式种类_B1 种类{不可变材料格式种类_B1::有序I64载荷};
   世界结构预算_B1 预算{};
   friend bool operator==(const 材料格式读取请求_B1&, const 材料格式读取请求_B1&) = default;
@@ -138,13 +138,13 @@ struct 材料事实_B1 final {
 };
 struct 材料读取结果_B1 final {
   std::uint32_t 版本{1}; 材料状态_B1 状态{材料状态_B1::入口拒绝};
-  std::uint64_t Gread{},H{}; 世界结构用量_B1 用量{};
+  std::uint64_t Gread{}; 世界结构用量_B1 用量{};
   std::optional<材料事实_B1> 材料;
   bool 成功(const 材料读取请求_B1&) const noexcept;
 };
 struct 材料格式读取结果_B1 final {
   std::uint32_t 版本{1}; 材料状态_B1 状态{材料状态_B1::入口拒绝};
-  std::uint64_t Gread{},H{}; 世界结构用量_B1 用量{};
+  std::uint64_t Gread{}; 世界结构用量_B1 用量{};
   std::optional<材料格式事实_B1> 格式;
   bool 成功(const 材料格式读取请求_B1&) const noexcept;
 };
@@ -162,9 +162,6 @@ struct 材料退出结果_B1 final {
   std::uint64_t Gread{}; 世界结构用量_B1 用量{};
   std::optional<std::uint64_t> 首次H; 材料发布状态_B1 发布{材料发布状态_B1::未进入};
   std::optional<材料退出请求_B1> 原请求; 当前终态_B1 当前终态{当前终态_B1::未读取};
-  std::optional<材料事实_B1> 退出前材料; std::optional<结构生命周期_B1> 当前生命周期;
-  std::vector<结构关系见证_B1> 已退出关系; std::vector<材料属性见证_B1> 已退出属性;
-  std::vector<结构关系见证_B1> 退出前关系; std::vector<材料属性见证_B1> 退出前属性;
   bool 成功(const 材料退出请求_B1&) const noexcept;
   bool 原操作已确认() const noexcept;
 };

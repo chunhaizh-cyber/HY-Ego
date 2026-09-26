@@ -5,9 +5,18 @@
 namespace 海中鱼巣 {
 
 enum class 特征值域比较状态_v1 : std::uint8_t {
-    已读取 = 1, 已核验, 未找到, 目标已退出, 类别冲突, 类型不相容,
-    规则缺失, 未实现, 事实代次漂移, 数量预算不足, 历史材料不可用,
-    资源失败, 内部不一致, 入口拒绝
+    已读取 = 1,
+    已核验 = 2,
+    未找到 = 3,
+    类别冲突 = 5,
+    类型不相容 = 6,
+    规则缺失 = 7,
+    未实现 = 8,
+    事实代次漂移 = 9,
+    数量预算不足 = 10,
+    资源失败 = 12,
+    内部不一致 = 13,
+    入口拒绝 = 14
 };
 enum class 特征值域关系_v1 : std::uint8_t { 相等 = 1, 左包含右, 右包含左, 不包含 };
 struct 特征值域比较预算_v1 final {
@@ -17,15 +26,15 @@ struct 特征值域比较预算_v1 final {
     std::uint64_t 最大域项数 = 0;
 };
 struct 特征值域读取请求_v1 final {
-    std::uint32_t 版本 = 1; std::uint64_t Gread = 0, H = 0;
+    std::uint32_t 版本 = 1; std::uint64_t Gread = 0;
     概念树概念身份 FC; 特征值域比较预算_v1 预算;
 };
 struct 特征值域关系核验请求_v1 final {
-    std::uint32_t 版本 = 1; std::uint64_t Gread = 0, H = 0;
+    std::uint32_t 版本 = 1; std::uint64_t Gread = 0;
     概念树概念身份 左FC, 右FC; 特征值域比较预算_v1 预算;
 };
 struct 实例值域命中核验请求_v1 final {
-    std::uint32_t 版本 = 1; std::uint64_t Gread = 0, H = 0;
+    std::uint32_t 版本 = 1; std::uint64_t Gread = 0;
     特征信息身份 F; 概念树概念身份 FC; 特征值域比较预算_v1 预算;
 };
 struct 特征值域事实_v1 final {
@@ -36,41 +45,49 @@ struct 特征值域事实_v1 final {
 };
 struct 特征值域读取结果_v1 final {
     std::uint32_t 版本 = 1; 特征值域比较状态_v1 状态 = 特征值域比较状态_v1::入口拒绝;
-    std::uint64_t Gread = 0, H = 0; std::optional<特征值域事实_v1> 域;
+    std::uint64_t Gread = 0; std::optional<特征值域事实_v1> 域;
     有界事实读取用量_B1 概念读取用量;
     bool 成功(const 特征值域读取请求_v1&) const noexcept;
 };
 struct 特征值域关系结果_v1 final {
     std::uint32_t 版本 = 1; 特征值域比较状态_v1 状态 = 特征值域比较状态_v1::入口拒绝;
-    std::uint64_t Gread = 0, H = 0; std::optional<特征值域关系_v1> 关系;
+    std::uint64_t Gread = 0; std::optional<特征值域关系_v1> 关系;
     std::optional<特征值域事实_v1> 左域, 右域;
     有界事实读取用量_B1 概念读取用量;
     bool 成功(const 特征值域关系核验请求_v1&) const noexcept;
 };
 struct 实例值域命中结果_v1 final {
     std::uint32_t 版本 = 1; 特征值域比较状态_v1 状态 = 特征值域比较状态_v1::入口拒绝;
-    std::uint64_t Gread = 0, H = 0; std::optional<特征值域关系_v1> 关系;
+    std::uint64_t Gread = 0; std::optional<特征值域关系_v1> 关系;
     std::optional<特征值域事实_v1> 域;
     有界事实读取用量_B1 概念读取用量;
     bool 成功(const 实例值域命中核验请求_v1&) const noexcept;
 };
 
 enum class 特征值域比较状态_v2 : std::uint8_t {
-    已读取 = 1, 已核验, 未找到, 目标已退出, 类别冲突, 类型不相容,
-    规则缺失, 未实现, 事实代次漂移, 历史材料不可用,
-    资源失败, 内部不一致, 入口拒绝
+    已读取 = 1,
+    已核验 = 2,
+    未找到 = 3,
+    类别冲突 = 5,
+    类型不相容 = 6,
+    规则缺失 = 7,
+    未实现 = 8,
+    事实代次漂移 = 9,
+    资源失败 = 11,
+    内部不一致 = 12,
+    入口拒绝 = 13
 };
 enum class 特征值域关系_v2 : std::uint8_t { 相等 = 1, 左包含右, 右包含左, 不包含 };
 struct 特征值域读取请求_v2 final {
-    std::uint32_t 版本 = 2; std::uint64_t Gread = 0, H = 0;
+    std::uint32_t 版本 = 2; std::uint64_t Gread = 0;
     概念树概念身份 FC;
 };
 struct 特征值域关系核验请求_v2 final {
-    std::uint32_t 版本 = 2; std::uint64_t Gread = 0, H = 0;
+    std::uint32_t 版本 = 2; std::uint64_t Gread = 0;
     概念树概念身份 左FC, 右FC;
 };
 struct 实例值域命中核验请求_v2 final {
-    std::uint32_t 版本 = 2; std::uint64_t Gread = 0, H = 0;
+    std::uint32_t 版本 = 2; std::uint64_t Gread = 0;
     特征信息身份 F; 概念树概念身份 FC;
 };
 struct 特征I64组有限域_v2 final {
@@ -106,14 +123,14 @@ struct 特征值域事实_v2 final {
 struct 特征值域读取结果_v2 final {
     std::uint32_t 版本 = 2;
     特征值域比较状态_v2 状态 = 特征值域比较状态_v2::入口拒绝;
-    std::uint64_t Gread = 0, H = 0;
+    std::uint64_t Gread = 0;
     std::optional<特征值域事实_v2> 域;
     bool 成功(const 特征值域读取请求_v2 &) const noexcept;
 };
 struct 特征值域关系结果_v2 final {
     std::uint32_t 版本 = 2;
     特征值域比较状态_v2 状态 = 特征值域比较状态_v2::入口拒绝;
-    std::uint64_t Gread = 0, H = 0;
+    std::uint64_t Gread = 0;
     std::optional<特征值域关系_v2> 关系;
     std::optional<特征值域事实_v2> 左域, 右域;
     bool 成功(const 特征值域关系核验请求_v2 &) const noexcept;
@@ -121,7 +138,7 @@ struct 特征值域关系结果_v2 final {
 struct 实例值域命中结果_v2 final {
     std::uint32_t 版本 = 2;
     特征值域比较状态_v2 状态 = 特征值域比较状态_v2::入口拒绝;
-    std::uint64_t Gread = 0, H = 0;
+    std::uint64_t Gread = 0;
     std::optional<特征值域关系_v2> 关系;
     std::optional<特征值域事实_v2> 域;
     bool 成功(const 实例值域命中核验请求_v2 &) const noexcept;

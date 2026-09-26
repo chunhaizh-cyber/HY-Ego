@@ -23,22 +23,20 @@ enum class 本能根任务阶段状态_v1 : std::uint8_t {
   未执行=1, 不适用=2, 已发布=3, 精确重复=4, 已读取=5,
   入口拒绝=6, 未找到=7, 当前任务不可复用=8, 目标不一致=9,
   事实代次漂移=10, 幂等冲突=11, 引用冲突=12,
-  历史材料不可用=13, 已可能发布=14, 号段耗尽=15,
+  已可能发布=14, 号段耗尽=15,
   待迁移=16, 资源失败=17, 内部不一致=18
 };
 enum class 本能根任务承接总状态_v1 : std::uint8_t {
   已完成=1, 精确重复=2, 已承接到当前任务=3, 入口拒绝=4,
   未找到=5, 当前任务不可复用=6, 目标不一致=7, 事实代次漂移=8,
-  幂等冲突=9, 引用冲突=10, 历史材料不可用=11, 已可能发布=12,
+  幂等冲突=9, 引用冲突=10, 已可能发布=12,
   号段耗尽=13, 待迁移=14, 资源失败=15, 内部不一致=16
 };
-enum class 本能根任务读取种类_v1 : std::uint8_t { 当前=1, 历史=2 };
 
 struct 本能根任务目标来源定位_v1 final {
   本能根角色 根角色 = 本能根角色::安全;
   需求类记录身份 D;
   稳定编码 L{};
-  std::uint64_t 来源截止H = 0;
   特征信息身份 根形成F;
   friend bool operator==(const 本能根任务目标来源定位_v1&, const 本能根任务目标来源定位_v1&) = default;
 };
@@ -49,7 +47,6 @@ struct 本能根任务目标投影_v1 final {
   特征类型身份 目标FT;
   稳定编码 目标状态合同{};
   std::int64_t 目标I64值 = 0;
-  std::uint64_t H = 0;
   friend bool operator==(const 本能根任务目标投影_v1&, const 本能根任务目标投影_v1&) = default;
 };
 
@@ -113,7 +110,7 @@ struct 本能根任务核心投影_v1 final {
   本能根任务Vt状态_v1 Vt状态 = 本能根任务Vt状态_v1::已建立待首轮准备;
   本能根任务目标来源定位_v1 首次来源;
   L1所有者范围写入幂等身份 核心键{}, P1键{}, 首迁移键{};
-  std::uint64_t 核心形成截止=0, P1形成截止=0, 首迁移形成截止=0;
+  std::uint64_t 核心首次发布代次=0, P1首次发布代次=0, 首迁移首次发布代次=0;
   friend bool operator==(const 本能根任务核心投影_v1&, const 本能根任务核心投影_v1&) = default;
 };
 struct 本能根任务承接结果_v1 final {
@@ -130,21 +127,21 @@ struct 本能根任务承接结果_v1 final {
 
 struct 本能根任务身份读取请求_v1 final { std::uint32_t 合同版本=1; std::uint64_t Gread=0; 本能根任务身份_v1 T; };
 struct 本能根任务锚点读取请求_v1 final { std::uint32_t 合同版本=1; std::uint64_t Gread=0; 稳定编码 L{}; };
-struct 本能根任务目标投影读取请求_v1 final { std::uint32_t 合同版本=1; std::uint64_t Gread=0,H=0; 本能根任务读取种类_v1 读取种类=本能根任务读取种类_v1::当前; 本能根任务身份_v1 T; };
+struct 本能根任务目标投影读取请求_v1 final { std::uint32_t 合同版本=1; std::uint64_t Gread=0; 本能根任务身份_v1 T; };
 struct 本能根任务核心读取结果_v1 final {
   本能根任务阶段状态_v1 状态=本能根任务阶段状态_v1::入口拒绝; std::uint32_t 合同版本=1; std::uint64_t Gread=0; std::optional<本能根任务核心投影_v1> 核心;
   bool 成功(const 本能根任务身份读取请求_v1&) const noexcept;
   bool 成功(const 本能根任务锚点读取请求_v1&) const noexcept;
 };
 struct 本能根任务目标投影结果_v1 final {
-  本能根任务阶段状态_v1 状态=本能根任务阶段状态_v1::入口拒绝; std::uint32_t 合同版本=1; std::uint64_t Gread=0,H=0; 本能根任务读取种类_v1 读取种类=本能根任务读取种类_v1::当前; std::optional<本能根任务目标投影_v1> 投影;
+  本能根任务阶段状态_v1 状态=本能根任务阶段状态_v1::入口拒绝; std::uint32_t 合同版本=1; std::uint64_t Gread=0; std::optional<本能根任务目标投影_v1> 投影;
   bool 成功(const 本能根任务目标投影读取请求_v1&) const noexcept;
 };
 struct 本能根任务当前资格退出请求_v1 final {
   std::uint32_t 合同版本=1; std::uint64_t 期望事实代次=0; 本能根任务身份_v1 T; 稳定编码 L{}; 本能根任务生命周期_v1 期望前生命周期=本能根任务生命周期_v1::当前可治理,目标生命周期=本能根任务生命周期_v1::已退出当前资格; L1所有者范围写入幂等身份 幂等身份{};
 };
 struct 本能根任务当前资格退出结果_v1 final {
-  本能根任务阶段状态_v1 状态=本能根任务阶段状态_v1::入口拒绝; std::uint32_t 合同版本=1; std::uint64_t 事实代次=0; 本能根任务身份_v1 T; 稳定编码 L{}; 本能根任务生命周期_v1 目标生命周期=本能根任务生命周期_v1::已退出当前资格; std::optional<稳定编码> 已退出L当前任务关系,已退出旧生命周期值,新生命周期值; std::optional<本能根任务退出回执身份_v1> 退出回执;
+  本能根任务阶段状态_v1 状态=本能根任务阶段状态_v1::入口拒绝; std::uint32_t 合同版本=1; std::uint64_t 事实代次=0; 本能根任务身份_v1 T; 稳定编码 L{}; 本能根任务生命周期_v1 目标生命周期=本能根任务生命周期_v1::已退出当前资格; std::optional<稳定编码> 新生命周期值; std::optional<本能根任务退出回执身份_v1> 退出回执;
   bool 成功(const 本能根任务当前资格退出请求_v1&) const noexcept;
 };
 
@@ -156,7 +153,7 @@ public:
   virtual 本能根任务承接结果_v1 恢复任务初始化(const 不可变本能根任务初始化包_v1&) noexcept = 0;
   virtual 本能根任务核心读取结果_v1 按任务读取核心(const 本能根任务身份读取请求_v1&) const noexcept = 0;
   virtual 本能根任务核心读取结果_v1 按查询锚点读取当前任务(const 本能根任务锚点读取请求_v1&) const noexcept = 0;
-  virtual 本能根任务目标投影结果_v1 按任务与显式截止读取目标投影(const 本能根任务目标投影读取请求_v1&) const noexcept = 0;
+  virtual 本能根任务目标投影结果_v1 按任务读取目标投影(const 本能根任务目标投影读取请求_v1&) const noexcept = 0;
   virtual 本能根任务当前资格退出结果_v1 退出任务当前资格(const 本能根任务当前资格退出请求_v1&) noexcept = 0;
 };
 
@@ -169,7 +166,7 @@ public:
   本能根任务承接结果_v1 恢复任务初始化(const 不可变本能根任务初始化包_v1&) noexcept override;
   本能根任务核心读取结果_v1 按任务读取核心(const 本能根任务身份读取请求_v1&) const noexcept override;
   本能根任务核心读取结果_v1 按查询锚点读取当前任务(const 本能根任务锚点读取请求_v1&) const noexcept override;
-  本能根任务目标投影结果_v1 按任务与显式截止读取目标投影(const 本能根任务目标投影读取请求_v1&) const noexcept override;
+  本能根任务目标投影结果_v1 按任务读取目标投影(const 本能根任务目标投影读取请求_v1&) const noexcept override;
   本能根任务当前资格退出结果_v1 退出任务当前资格(const 本能根任务当前资格退出请求_v1&) noexcept override;
   bool 绑定于(const L1事实基座服务&) const noexcept;
 private:

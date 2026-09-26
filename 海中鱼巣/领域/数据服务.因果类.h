@@ -44,7 +44,7 @@ public:
     if (owner.状态 != L1所有者范围读取状态::成功 || !owner.所有者事实 ||
         owner.所有者事实->所有者 != owner_ ||
         owner.所有者事实->范围种类 != L1所有者范围种类::独占结构范围 ||
-        owner.所有者事实->退出事实代次 || !布局材料有效())
+        !布局材料有效())
       throw std::invalid_argument("invalid causal structure");
   }
 
@@ -72,7 +72,7 @@ public:
       if (guard.Gread != r.G0)
         return 单项失败(因果数据状态::事实代次漂移, guard.Gread);
       const auto checked =
-          concepts_.核验因果定义概念({1, r.G0, r.G0, definition, r.预算});
+          concepts_.核验因果定义概念({1, r.G0, definition, r.预算});
       const auto conceptStatus =
           核验概念回显(checked, definition, r.预算, r.G0);
       if (conceptStatus != 因果数据状态::已读取)
@@ -82,18 +82,17 @@ public:
         return 单项失败(因果数据状态::内部不一致, r.G0);
       for (const auto &source : definition.来源组)
         if (const auto *q = std::get_if<因果信息身份>(&source.目标)) {
-          const auto prior = 读取历史({1, r.G0, r.G0, *q, remaining}, std::nullopt,
-                                    &remaining);
+          const auto prior = 读取当前({1, r.G0, *q, remaining}, &remaining);
           if (!prior.成功())
             return 单项失败(映射来源(prior.操作.状态), prior.操作.Gread, r.G0);
         }
-      const auto duplicate = 查询同义(r.G0, r.G0, definition, remaining, &remaining);
+      const auto duplicate = 查询同义(r.G0, definition, remaining, &remaining);
       if (!duplicate.成功())
         return 单项失败(duplicate.操作.状态, duplicate.操作.Gread, r.G0);
       if (duplicate.因果组.size() > 1)
         return 单项失败(因果数据状态::内部不一致, r.G0, r.G0);
       if (duplicate.因果组.size() == 1)
-        return {{因果数据状态::已复用, 1, r.G0, r.G0, std::nullopt,
+        return {{因果数据状态::已复用, 1, r.G0, std::nullopt,
                  因果发布阶段::无写入},
                 duplicate.因果组.front()};
       编码结果 encoded;
@@ -117,11 +116,10 @@ public:
       const auto after = 读取当前代次();
       if (after.状态 != 因果数据状态::已读取)
         return 提交后失败(saved.事实代次, after.Gread);
-      auto out = 读取历史({1, after.Gread, saved.事实代次, {*id}, r.预算},
-                          std::nullopt);
+      auto out = 读取当前({1, after.Gread, {*id}, r.预算});
       if (!out.成功() || out.内容->信息.定义 != definition)
         return 提交后失败(saved.事实代次, out.操作.Gread);
-      return {{status, 1, after.Gread, saved.事实代次, saved.事实代次,
+      return {{status, 1, after.Gread, saved.事实代次,
                因果发布阶段::已读回},
               std::move(out.内容)};
     } catch (const std::bad_alloc &) {
@@ -142,7 +140,7 @@ public:
         return 单项失败(guard.状态, guard.Gread);
       if (guard.Gread != r.G0)
         return 单项失败(因果数据状态::事实代次漂移, guard.Gread);
-      auto out = 读取历史({1, r.G0, r.G0, r.身份, r.预算}, std::nullopt);
+      auto out = 读取当前({r.合同版本, r.G0, r.身份, r.预算});
       const auto after = 读取当前代次();
       if (out.成功() &&
           (after.状态 != 因果数据状态::已读取 || after.Gread != r.G0))
@@ -158,31 +156,6 @@ public:
     }
   }
 
-  因果单项结果 读取因果历史(const 因果历史读取请求 &r) const override {
-    if (!历史请求有效(r))
-      return 单项失败(因果数据状态::入口拒绝);
-    try {
-      const auto guard = 读取当前代次();
-      if (guard.状态 != 因果数据状态::已读取)
-        return 单项失败(guard.状态, guard.Gread, r.H);
-      if (guard.Gread != r.Gread)
-        return 单项失败(因果数据状态::事实代次漂移, guard.Gread, r.H);
-      auto out = 读取历史(r, std::nullopt);
-      const auto after = 读取当前代次();
-      if (out.成功() &&
-          (after.状态 != 因果数据状态::已读取 || after.Gread != r.Gread))
-        return 单项失败(after.状态 == 因果数据状态::已读取
-                            ? 因果数据状态::事实代次漂移
-                            : after.状态,
-                        after.Gread, r.H);
-      return out;
-    } catch (const std::bad_alloc &) {
-      return 单项失败(因果数据状态::资源失败);
-    } catch (...) {
-      return 单项失败(因果数据状态::内部不一致);
-    }
-  }
-
   因果组结果 查询精确定义(const 因果精确定义查询请求 &r) const override {
     if (!查询请求有效(r))
       return 组失败(因果数据状态::入口拒绝);
@@ -190,18 +163,18 @@ public:
       auto d = r.定义;
       const auto s = 规范化并核验(d);
       if (s != 因果数据状态::已读取)
-        return 组失败(s, r.Gread, r.H);
+        return 组失败(s, r.Gread);
       const auto definitionItems = 定义项总数(d);
       if (!definitionItems || *definitionItems > r.预算.最大定义项数)
-        return 组失败(因果数据状态::数量预算不足, r.Gread, r.H);
-      auto out = 查询同义(r.Gread, r.H, d, r.预算);
+        return 组失败(因果数据状态::数量预算不足, r.Gread);
+      auto out = 查询同义(r.Gread, d, r.预算);
       const auto after = 读取当前代次();
       if (out.成功() &&
           (after.状态 != 因果数据状态::已读取 || after.Gread != r.Gread))
         return 组失败(after.状态 == 因果数据状态::已读取
                           ? 因果数据状态::事实代次漂移
                           : after.状态,
-                      after.Gread, r.H);
+                      after.Gread);
       return out;
     } catch (const std::bad_alloc &) {
       return 组失败(因果数据状态::资源失败);
@@ -211,32 +184,31 @@ public:
   }
 
   因果组结果 按特征概念查询因果(const 因果按特征查询请求 &r) const override {
-    if (r.合同版本 != 1 || !r.Gread || !r.H || r.H > r.Gread ||
+    if (r.合同版本 != 1 || !r.Gread ||
         !有效(r.特征概念) || !预算有效(r.预算) ||
         (r.方向 != 因果特征召回方向::条件 && r.方向 != 因果特征召回方向::结果))
       return 组失败(因果数据状态::入口拒绝);
     try {
       const auto guard = 读取当前代次();
       if (guard.状态 != 因果数据状态::已读取)
-        return 组失败(guard.状态, guard.Gread, r.H);
+        return 组失败(guard.状态, guard.Gread);
       if (guard.Gread != r.Gread)
-        return 组失败(因果数据状态::事实代次漂移, guard.Gread, r.H);
+        return 组失败(因果数据状态::事实代次漂移, guard.Gread);
       const auto type = r.方向 == 因果特征召回方向::条件
                             ? layout_.条件FC关系类型
                             : layout_.结果FC关系类型;
-      const auto q = l1_.读取所有者范围历史关系组(
-          {L1所有者范围CRUD合同版本, L1所有者范围关系端点方向::目标,
-           r.特征概念.编码, type, r.H});
+      const auto q = l1_.读取所有者范围当前目标关系组(
+          {L1所有者范围CRUD合同版本,r.特征概念.编码,type});
       if (q.状态 != L1所有者范围读取状态::成功)
-        return 组失败(映射读取(q.状态), q.读取事实代次, r.H);
+        return 组失败(映射读取(q.状态), q.读取事实代次);
       if (q.读取事实代次 != r.Gread)
-        return 组失败(因果数据状态::事实代次漂移, q.读取事实代次, r.H);
+        return 组失败(因果数据状态::事实代次漂移, q.读取事实代次);
       std::vector<因果信息身份> ids;
       std::map<std::uint64_t, std::set<std::uint64_t>> alreadyCountedByQ;
       for (const auto &e : q.关系组) {
         if (e.写入所有者 != owner_ || e.目标节点 != r.特征概念.编码 ||
             e.关系类型节点 != type)
-          return 组失败(因果数据状态::内部不一致, r.Gread, r.H);
+          return 组失败(因果数据状态::内部不一致, r.Gread);
         ids.push_back({e.源节点});
         alreadyCountedByQ[e.源节点.值].insert(e.编码.值);
       }
@@ -247,17 +219,17 @@ public:
       if (ids.size() > remaining.最大候选数 ||
           q.关系组.size() > remaining.最大关系数 ||
           q.关系组.size() > remaining.最大来源材料数)
-        return 组失败(因果数据状态::数量预算不足, r.Gread, r.H);
+        return 组失败(因果数据状态::数量预算不足, r.Gread);
       remaining.最大候选数 -= ids.size();
       remaining.最大关系数 -= q.关系组.size();
       remaining.最大来源材料数 -= q.关系组.size();
-      因果组结果 out{读取头(r.Gread, r.H), {}};
+      因果组结果 out{读取头(r.Gread), {}};
       for (auto id : ids) {
-        auto one = 读取历史({1, r.Gread, r.H, id, remaining}, std::nullopt,
-                           &remaining, false, &alreadyCountedByQ.at(id.编码.值),
+        auto one = 读取当前({1, r.Gread, id, remaining}, &remaining, false,
+                           &alreadyCountedByQ.at(id.编码.值),
                            type, r.特征概念.编码);
         if (!one.成功())
-          return 组失败(one.操作.状态, one.操作.Gread, r.H);
+          return 组失败(one.操作.状态, one.操作.Gread);
         out.因果组.push_back(*one.内容);
       }
       const auto after = 读取当前代次();
@@ -265,7 +237,7 @@ public:
         return 组失败(after.状态 == 因果数据状态::已读取
                           ? 因果数据状态::事实代次漂移
                           : after.状态,
-                      after.Gread, r.H);
+                      after.Gread);
       return out;
     } catch (const std::bad_alloc &) {
       return 组失败(因果数据状态::资源失败);
@@ -286,8 +258,7 @@ public:
       if (guard.Gread != r.G0)
         return 证据失败(因果数据状态::事实代次漂移, guard.Gread);
       auto remaining = r.预算;
-      const auto q =
-          读取历史({1, r.G0, r.G0, r.因果, remaining}, std::nullopt, &remaining);
+      const auto q = 读取当前({1, r.G0, r.因果, remaining}, &remaining);
       if (!q.成功())
         return 证据失败(q.操作.状态, q.操作.Gread);
       if (q.内容->信息.定义.类型 == 因果类型::主动)
@@ -295,14 +266,14 @@ public:
       if (r.证据.动作来源)
         return 证据失败(因果数据状态::入口拒绝, r.G0);
       const auto checked = concepts_.核验因果定义概念(
-          {1, r.G0, r.G0, q.内容->信息.定义, remaining});
+          {1, r.G0, q.内容->信息.定义, remaining});
       const auto cs = 核验概念回显(checked, q.内容->信息.定义, remaining, r.G0);
       if (cs != 因果数据状态::已读取)
         return 证据失败(cs, r.G0);
       if (!扣减概念用量(remaining, checked))
         return 证据失败(因果数据状态::内部不一致, r.G0);
       证据索引 index;
-      const auto is = 读取证据索引(r.因果, r.G0, r.G0, index);
+      const auto is = 读取证据索引(r.因果, r.G0, index);
       if (is != 因果数据状态::已读取)
         return 证据失败(is, r.G0);
       auto normalized = r.证据;
@@ -315,8 +286,8 @@ public:
       if (existing != index.项目组.end() &&
           existing->内容.发生锚点 == normalized.发生锚点) {
         if (existing->内容 == normalized) {
-          auto fact = 投影证据事实(r.因果, *existing, r.G0, r.G0);
-          return {{因果数据状态::已复用, 1, r.G0, r.G0, std::nullopt,
+          auto fact = 投影证据事实(r.因果, *existing, r.G0);
+          return {{因果数据状态::已复用, 1, r.G0, std::nullopt,
                    因果发布阶段::无写入},
                   {std::move(fact)}};
         }
@@ -347,13 +318,12 @@ public:
       const auto after = 读取当前代次();
       if (after.状态 != 因果数据状态::已读取)
         return 证据提交后失败(saved.事实代次, after.Gread);
-      auto read = 读取因果证据({1, after.Gread, saved.事实代次, r.因果,
-                                normalized.发生锚点, r.预算});
+      auto read = 读取因果证据({1, after.Gread, r.因果,
+                                 normalized.发生锚点, r.预算});
       if (!read.成功() || read.证据组.size() != 1)
         return 证据提交后失败(saved.事实代次, read.操作.Gread);
-      read.操作 = {status,         1,
-                   after.Gread,    saved.事实代次,
-                   saved.事实代次, 因果发布阶段::已读回};
+      read.操作 = {status, 1, after.Gread, saved.事实代次,
+                    因果发布阶段::已读回};
       return read;
     } catch (const std::bad_alloc &) {
       return 证据失败(因果数据状态::资源失败);
@@ -365,43 +335,42 @@ public:
   }
 
   因果证据结果 读取因果证据(const 因果证据读取请求 &r) const override {
-    if (r.合同版本 != 1 || !r.Gread || !r.H || r.H > r.Gread || !有效(r.因果) ||
+    if (r.合同版本 != 1 || !r.Gread || !有效(r.因果) ||
         !预算有效(r.预算) || (r.发生锚点 && !有效(*r.发生锚点)))
       return 证据失败(因果数据状态::入口拒绝);
     try {
       const auto guard = 读取当前代次();
       if (guard.状态 != 因果数据状态::已读取)
-        return 证据失败(guard.状态, guard.Gread, r.H);
+        return 证据失败(guard.状态, guard.Gread);
       if (guard.Gread != r.Gread)
-        return 证据失败(因果数据状态::事实代次漂移, guard.Gread, r.H);
+        return 证据失败(因果数据状态::事实代次漂移, guard.Gread);
       auto remaining = r.预算;
-      const auto q = 读取历史({1, r.Gread, r.H, r.因果, remaining}, std::nullopt,
-                             &remaining);
+      const auto q = 读取当前({1, r.Gread, r.因果, remaining}, &remaining);
       if (!q.成功())
-        return 证据失败(q.操作.状态, q.操作.Gread, r.H);
+        return 证据失败(q.操作.状态, q.操作.Gread);
       证据索引 index;
-      const auto s = 读取证据索引(r.因果, r.Gread, r.H, index);
+      const auto s = 读取证据索引(r.因果, r.Gread, index);
       if (s != 因果数据状态::已读取)
-        return 证据失败(s, r.Gread, r.H);
-      因果证据结果 out{读取头(r.Gread, r.H), {}};
+        return 证据失败(s, r.Gread);
+      因果证据结果 out{读取头(r.Gread), {}};
       来源读取缓存 sourceCache;
       for (const auto &v : index.项目组) {
         if (r.发生锚点 && v.内容.发生锚点 != *r.发生锚点)
           continue;
         const auto valid = 核验证据来源(q.内容->信息.定义, v.内容, {}, r.Gread,
-                                      remaining, sourceCache, false);
+                                      remaining, sourceCache);
         if (valid != 因果数据状态::已读取)
-          return 证据失败(valid, r.Gread, r.H);
-        out.证据组.push_back(投影证据事实(r.因果, v, r.Gread, r.H));
+          return 证据失败(valid, r.Gread);
+        out.证据组.push_back(投影证据事实(r.因果, v, r.Gread));
       }
       if (r.发生锚点 && out.证据组.empty())
-        return 证据失败(因果数据状态::未找到, r.Gread, r.H);
+        return 证据失败(因果数据状态::未找到, r.Gread);
       const auto after = 读取当前代次();
       if (after.状态 != 因果数据状态::已读取 || after.Gread != r.Gread)
         return 证据失败(after.状态 == 因果数据状态::已读取
                             ? 因果数据状态::事实代次漂移
                             : after.状态,
-                        after.Gread, r.H);
+                        after.Gread);
       return out;
     } catch (const std::bad_alloc &) {
       return 证据失败(因果数据状态::资源失败);
@@ -425,7 +394,7 @@ public:
       if (guard.Gread != r.G0)
         return 证据失败(因果数据状态::事实代次漂移, guard.Gread);
       证据索引 index;
-      const auto s = 读取证据索引(r.定位.因果, r.G0, r.G0, index);
+      const auto s = 读取证据索引(r.定位.因果, r.G0, index);
       if (s != 因果数据状态::已读取)
         return 证据失败(s, r.G0);
       auto remaining = r.预算;
@@ -446,8 +415,8 @@ public:
         return 证据失败(因果数据状态::数量预算不足, r.G0);
       auto ws = 形成证据退出写集(r, index, old);
       const auto saved = port_.提交所有者范围中性写集(ws);
-      const auto status = 映射写入(saved.状态, 因果数据状态::已退出);
-      if (status != 因果数据状态::已退出 && status != 因果数据状态::精确重复)
+      const auto status = 映射写入(saved.状态, 因果数据状态::已删除);
+      if (status != 因果数据状态::已删除 && status != 因果数据状态::精确重复)
         return 证据提交失败(status, saved.事实代次);
       if (!写入头完整(saved, r.幂等身份, r.G0))
         return 证据提交后失败(saved.事实代次);
@@ -455,23 +424,18 @@ public:
       if (after.状态 != 因果数据状态::已读取)
         return 证据提交后失败(saved.事实代次, after.Gread);
       证据索引 confirmed;
-      if (读取证据索引(r.定位.因果, after.Gread, saved.事实代次 - 1,
-                       confirmed) != 因果数据状态::已读取)
+      if (读取证据索引(r.定位.因果, after.Gread, confirmed) !=
+          因果数据状态::已读取)
         return 证据提交后失败(saved.事实代次, after.Gread);
       const auto confirmedItem =
           std::find_if(confirmed.项目组.begin(), confirmed.项目组.end(),
                        [&](const auto &v) {
                          return v.内容.发生锚点 == r.定位.发生锚点;
                        });
-      if (confirmedItem == confirmed.项目组.end() ||
-          confirmedItem->内容 != old.内容 ||
-          confirmedItem->退出事实代次 != saved.事实代次)
+      if (confirmedItem != confirmed.项目组.end())
         return 证据提交后失败(saved.事实代次, after.Gread);
-      auto fact = 投影证据事实(r.定位.因果, *confirmedItem, after.Gread,
-                               saved.事实代次 - 1, saved.事实代次);
-      return {{status, 1, after.Gread, saved.事实代次 - 1, saved.事实代次,
-               因果发布阶段::已读回},
-              {std::move(fact)}};
+      return {{status, 1, after.Gread, saved.事实代次,
+               因果发布阶段::已读回}, {}};
     } catch (const std::bad_alloc &) {
       return 证据失败(因果数据状态::资源失败);
     } catch (...) {
@@ -493,34 +457,30 @@ public:
       if (guard.Gread != r.G0)
         return 单项失败(因果数据状态::事实代次漂移, guard.Gread);
       auto remaining = r.预算;
-      const auto current = 读取历史({1, r.G0, r.G0, r.身份, remaining},
-                                  std::nullopt, &remaining);
+      const auto current = 读取当前({1, r.G0, r.身份, remaining}, &remaining);
       if (!current.成功())
         return current;
       证据索引 index;
-      const auto is = 读取证据索引(r.身份, r.G0, r.G0, index);
+      const auto is = 读取证据索引(r.身份, r.G0, index);
       if (is != 因果数据状态::已读取)
         return 单项失败(is, r.G0);
       if (!index.项目组.empty())
         return 单项失败(因果数据状态::引用冲突, r.G0);
       auto ws = 形成因果退出写集(r, *current.内容, index);
       const auto saved = port_.提交所有者范围中性写集(ws);
-      const auto status = 映射写入(saved.状态, 因果数据状态::已退出);
-      if (status != 因果数据状态::已退出 && status != 因果数据状态::精确重复)
+      const auto status = 映射写入(saved.状态, 因果数据状态::已删除);
+      if (status != 因果数据状态::已删除 && status != 因果数据状态::精确重复)
         return 提交失败(status, saved.事实代次);
       if (!写入头完整(saved, r.幂等身份, r.G0))
         return 提交后失败(saved.事实代次);
       const auto after = 读取当前代次();
       if (after.状态 != 因果数据状态::已读取)
         return 提交后失败(saved.事实代次, after.Gread);
-      auto read =
-          读取历史({1, after.Gread, saved.事实代次 - 1, r.身份, r.预算},
-                   saved.事实代次);
-      if (!read.成功())
+      auto read = 读取当前({1, after.Gread, r.身份, r.预算});
+      if (read.操作.状态 != 因果数据状态::未找到 || read.内容)
         return 提交后失败(saved.事实代次, read.操作.Gread);
-      return {{status, 1, after.Gread, saved.事实代次 - 1, saved.事实代次,
-               因果发布阶段::已读回},
-              std::move(read.内容)};
+      return {{status, 1, after.Gread, saved.事实代次,
+               因果发布阶段::已读回}, std::nullopt};
     } catch (const std::bad_alloc &) {
       return 单项失败(因果数据状态::资源失败);
     } catch (...) {
@@ -537,44 +497,19 @@ public:
         return 失败头(guard.状态, guard.Gread);
       if (guard.Gread != r.G0)
         return 失败头(因果数据状态::事实代次漂移, guard.Gread);
-      auto h = 读取身份({1, r.G0, r.G0, r.身份});
+      auto h = 读取身份当前(r);
       const auto after = 读取当前代次();
-      if (h.成功() &&
+      if (h.状态 == 因果数据状态::已读取 &&
           (after.状态 != 因果数据状态::已读取 || after.Gread != r.G0))
         return 失败头(after.状态 == 因果数据状态::已读取
                           ? 因果数据状态::事实代次漂移
                           : after.状态,
                       after.Gread);
-      return h.成功() ? 读取头(r.G0, r.G0) : h.操作;
+      return h;
     } catch (const std::bad_alloc &) {
       return 失败头(因果数据状态::资源失败);
     } catch (...) {
       return 失败头(因果数据状态::内部不一致);
-    }
-  }
-
-  因果身份历史结果 读取因果身份历史(const 因果历史身份请求 &r) const override {
-    if (r.合同版本 != 1 || !r.Gread || !r.H || r.H > r.Gread || !有效(r.身份))
-      return 身份失败(因果数据状态::入口拒绝);
-    try {
-      const auto guard = 读取当前代次();
-      if (guard.状态 != 因果数据状态::已读取)
-        return 身份失败(guard.状态, guard.Gread, r.H);
-      if (guard.Gread != r.Gread)
-        return 身份失败(因果数据状态::事实代次漂移, guard.Gread, r.H);
-      auto out = 读取身份(r);
-      const auto after = 读取当前代次();
-      if (out.成功() &&
-          (after.状态 != 因果数据状态::已读取 || after.Gread != r.Gread))
-        return 身份失败(after.状态 == 因果数据状态::已读取
-                            ? 因果数据状态::事实代次漂移
-                            : after.状态,
-                        after.Gread, r.H);
-      return out;
-    } catch (const std::bad_alloc &) {
-      return 身份失败(因果数据状态::资源失败);
-    } catch (...) {
-      return 身份失败(因果数据状态::内部不一致);
     }
   }
 
@@ -593,10 +528,15 @@ private:
     std::vector<std::uint64_t> 值;
     std::vector<引用槽> 引用组;
   };
+  struct 当前读取参数 {
+    std::uint32_t 合同版本 = 1;
+    std::uint64_t Gread = 0;
+    因果信息身份 身份;
+    因果读取预算 预算;
+  };
   struct 证据索引项 {
     因果证据提交 内容;
     std::uint64_t 创建事实代次 = 0;
-    std::optional<std::uint64_t> 退出事实代次;
     std::vector<std::pair<std::uint64_t, 稳定编码>> 引用关系组;
   };
   struct 证据索引 {
@@ -713,7 +653,7 @@ private:
       const auto r = static_cast<std::uint64_t>(item.内容.角色绑定组.size());
       const auto s = static_cast<std::uint64_t>(item.内容.状态证据组.size());
       const auto n = static_cast<std::uint64_t>(item.引用关系组.size());
-      const std::uint64_t fixed = 6 + (item.内容.动作来源 ? 1 : 0);
+      const std::uint64_t fixed = 5 + (item.内容.动作来源 ? 1 : 0);
       if (r > (std::numeric_limits<std::uint64_t>::max() - fixed) / 2 ||
           s > (std::numeric_limits<std::uint64_t>::max() - fixed - 2 * r) / 4 ||
           n > std::numeric_limits<std::uint64_t>::max() - fixed - 2 * r - 4 * s ||
@@ -745,13 +685,8 @@ private:
     remaining.最大来源材料数 -= relations + 1;
     return true;
   }
-  static bool 历史请求有效(const 因果历史读取请求 &r) noexcept {
-    return r.合同版本 == 1 && r.Gread && r.H && r.H <= r.Gread &&
-           有效(r.身份) && 预算有效(r.预算);
-  }
   static bool 查询请求有效(const 因果精确定义查询请求 &r) noexcept {
-    return r.合同版本 == 1 && r.Gread && r.H && r.H <= r.Gread &&
-           预算有效(r.预算);
+    return r.合同版本 == 1 && r.Gread && 预算有效(r.预算);
   }
   static bool 发布请求有效(const 因果发布请求 &r) noexcept {
     return r.合同版本 == 1 && r.G0 &&
@@ -761,8 +696,8 @@ private:
   static bool 证据关联请求有效(const 因果证据关联请求 &r) noexcept {
     return r.合同版本 == 1 && r.G0 &&
            r.G0 != std::numeric_limits<std::uint64_t>::max() &&
-           有效(r.幂等身份) && 有效(r.因果) && 有效(r.证据.发生锚点) &&
-           r.证据.证据截止 && r.证据.证据截止 <= r.G0 && 预算有效(r.预算);
+            有效(r.幂等身份) && 有效(r.因果) && 有效(r.证据.发生锚点) &&
+            预算有效(r.预算);
   }
   代次结果 读取当前代次() const {
     const auto q = l1_.读取中性当前事实代次({L1中性CRUD合同版本});
@@ -775,31 +710,27 @@ private:
   }
 
   static 因果操作结果 失败头(因果数据状态 s, std::uint64_t g = 0,
-                             std::uint64_t h = 0) noexcept {
-    return {s, 1, g, h, std::nullopt, 因果发布阶段::无写入};
+                              std::uint64_t = 0) noexcept {
+    return {s, 1, g, std::nullopt, 因果发布阶段::无写入};
   }
-  static 因果操作结果 读取头(std::uint64_t g, std::uint64_t h) noexcept {
-    return {因果数据状态::已读取, 1, g, h, std::nullopt, 因果发布阶段::无写入};
+  static 因果操作结果 读取头(std::uint64_t g) noexcept {
+    return {因果数据状态::已读取, 1, g, std::nullopt, 因果发布阶段::无写入};
   }
   static 因果单项结果 单项失败(因果数据状态 s, std::uint64_t g = 0,
-                               std::uint64_t h = 0) noexcept {
-    return {失败头(s, g, h), std::nullopt};
+                                std::uint64_t = 0) noexcept {
+    return {失败头(s, g), std::nullopt};
   }
   static 因果组结果 组失败(因果数据状态 s, std::uint64_t g = 0,
-                           std::uint64_t h = 0) noexcept {
-    return {失败头(s, g, h), {}};
+                            std::uint64_t = 0) noexcept {
+    return {失败头(s, g), {}};
   }
   static 因果证据结果 证据失败(因果数据状态 s, std::uint64_t g = 0,
-                               std::uint64_t h = 0) noexcept {
-    return {失败头(s, g, h), {}};
-  }
-  static 因果身份历史结果 身份失败(因果数据状态 s, std::uint64_t g = 0,
-                                   std::uint64_t h = 0) noexcept {
-    return {失败头(s, g, h), std::nullopt};
+                                std::uint64_t = 0) noexcept {
+    return {失败头(s, g), {}};
   }
   static 因果单项结果 提交失败(因果数据状态 s, std::uint64_t g) noexcept {
     if (s == 因果数据状态::已可能发布)
-      return {{s, 1, g, 0, g ? std::optional<std::uint64_t>{g} : std::nullopt,
+      return {{s, 1, g, g ? std::optional<std::uint64_t>{g} : std::nullopt,
                因果发布阶段::未知},
               std::nullopt};
     return 单项失败(s, g);
@@ -807,12 +738,12 @@ private:
   static 因果单项结果 提交后失败(std::uint64_t g,
                                  std::uint64_t read = 0) noexcept {
     return {
-        {因果数据状态::内部不一致, 1, read, 0, g, 因果发布阶段::已提交待读回},
+        {因果数据状态::内部不一致, 1, read, g, 因果发布阶段::已提交待读回},
         std::nullopt};
   }
   static 因果证据结果 证据提交失败(因果数据状态 s, std::uint64_t g) noexcept {
     if (s == 因果数据状态::已可能发布)
-      return {{s, 1, g, 0, g ? std::optional<std::uint64_t>{g} : std::nullopt,
+      return {{s, 1, g, g ? std::optional<std::uint64_t>{g} : std::nullopt,
                因果发布阶段::未知},
               {}};
     return 证据失败(s, g);
@@ -820,7 +751,7 @@ private:
   static 因果证据结果 证据提交后失败(std::uint64_t g,
                                      std::uint64_t read = 0) noexcept {
     return {
-        {因果数据状态::内部不一致, 1, read, 0, g, 因果发布阶段::已提交待读回},
+        {因果数据状态::内部不一致, 1, read, g, 因果发布阶段::已提交待读回},
         {}};
   }
 
@@ -862,7 +793,7 @@ private:
         q.事实 ? std::get_if<L1所有者范围节点事实>(&*q.事实) : nullptr;
     return q.状态 == L1所有者范围读取状态::成功 && n && n->编码 == id &&
            n->写入所有者 == owner_ && n->种类 == kind &&
-           n->属性类型表示 == repr && !n->退出事实代次;
+           n->属性类型表示 == repr;
   }
   bool 布局材料有效() const {
     const 稳定编码 plain[]{layout_.格式锚点,         layout_.字段登记关系类型,
@@ -900,7 +831,7 @@ private:
         if (e.角色或顺序 == static_cast<std::int64_t>(i + 1)) {
           if (e.写入所有者 != owner_ || e.源节点 != layout_.格式锚点 ||
               e.关系类型节点 != layout_.字段登记关系类型 ||
-              e.目标节点 != expected[i] || e.退出事实代次)
+              e.目标节点 != expected[i])
             return false;
           ++count;
         }
@@ -939,10 +870,6 @@ private:
     switch (s) {
     case L1所有者范围读取状态::未找到:
       return 因果数据状态::未找到;
-    case L1所有者范围读取状态::已退出:
-      return 因果数据状态::目标已退出;
-    case L1所有者范围读取状态::历史材料已清理:
-      return 因果数据状态::历史材料已清理;
     case L1所有者范围读取状态::事实代次漂移:
       return 因果数据状态::事实代次漂移;
     case L1所有者范围读取状态::资源失败:
@@ -973,7 +900,7 @@ private:
     }
   }
   static 因果数据状态 映射来源(因果数据状态 s) noexcept {
-    if (s == 因果数据状态::未找到 || s == 因果数据状态::目标已退出)
+    if (s == 因果数据状态::未找到)
       return 因果数据状态::来源不足;
     return s;
   }
@@ -982,12 +909,8 @@ private:
     case 动态数据状态::依赖未实现:
       return 因果数据状态::依赖未实现;
     case 动态数据状态::未找到:
-    case 动态数据状态::目标已退出:
     case 动态数据状态::来源未找到:
-    case 动态数据状态::来源已退出:
       return 因果数据状态::来源不足;
-    case 动态数据状态::历史材料已清理:
-      return 因果数据状态::历史材料已清理;
     case 动态数据状态::事实代次漂移:
       return 因果数据状态::事实代次漂移;
     case 动态数据状态::数量预算不足:
@@ -1003,16 +926,10 @@ private:
     case 状态使用绑定数据状态::未实现:
       return 因果数据状态::依赖未实现;
     case 状态使用绑定数据状态::未找到:
-    case 状态使用绑定数据状态::目标已退出:
     case 状态使用绑定数据状态::场景未找到:
-    case 状态使用绑定数据状态::场景已退出:
     case 状态使用绑定数据状态::存在未找到:
-    case 状态使用绑定数据状态::存在已退出:
     case 状态使用绑定数据状态::状态未找到:
-    case 状态使用绑定数据状态::状态已退出:
       return 因果数据状态::来源不足;
-    case 状态使用绑定数据状态::历史材料已清理:
-      return 因果数据状态::历史材料已清理;
     case 状态使用绑定数据状态::事实代次漂移:
       return 因果数据状态::事实代次漂移;
     case 状态使用绑定数据状态::数量预算不足:
@@ -1030,8 +947,6 @@ private:
     case 因果数据状态::概念不相容:
       return s;
     case 因果数据状态::约束不支持:
-      return s;
-    case 因果数据状态::历史材料已清理:
       return s;
     case 因果数据状态::事实代次漂移:
       return s;
@@ -1052,27 +967,25 @@ private:
                 因果数据状态 *) const;
   因果数据状态 核验概念回显(const 因果概念核验结果 &, const 因果定义 &,
                             const 因果读取预算 &, std::uint64_t) const;
-  因果组结果 查询同义(std::uint64_t, std::uint64_t, const 因果定义 &,
+  因果组结果 查询同义(std::uint64_t, const 因果定义 &,
                        const 因果读取预算 &, 因果读取预算 * = nullptr) const;
-  因果单项结果 读取历史(const 因果历史读取请求 &,
-                       std::optional<std::uint64_t>, 因果读取预算 * = nullptr,
-                       bool = false, const std::set<std::uint64_t> * = nullptr,
-                       std::optional<稳定编码> = std::nullopt,
-                       std::optional<稳定编码> = std::nullopt) const;
-  因果身份历史结果 读取身份(const 因果历史身份请求 &) const;
+  因果单项结果 读取当前(const 当前读取参数 &, 因果读取预算 * = nullptr,
+                        bool = false, const std::set<std::uint64_t> * = nullptr,
+                        std::optional<稳定编码> = std::nullopt,
+                        std::optional<稳定编码> = std::nullopt) const;
+  因果操作结果 读取身份当前(const 因果当前身份请求 &) const;
   L1所有者范围写集请求 形成发布写集(const 因果发布请求 &,
                                     const 编码结果 &) const;
   std::optional<因果单项结果> 重放发布(const 因果发布请求 &, const 因果定义 &);
   std::optional<因果单项结果> 重放退出(const 因果退出请求 &);
   std::optional<因果证据结果> 重放证据关联(const 因果证据关联请求 &);
   std::optional<因果证据结果> 重放证据退出(const 因果证据退出请求 &);
-  因果数据状态 读取证据索引(因果信息身份, std::uint64_t, std::uint64_t,
-                            证据索引 &) const;
+  因果数据状态 读取证据索引(因果信息身份, std::uint64_t, 证据索引 &) const;
   static void 规范化证据(因果证据提交 &);
   static bool 添加证据索引项(证据索引 &, const 因果证据提交 &);
   因果数据状态 核验证据来源(const 因果定义 &, const 因果证据提交 &,
                              const 因果概念核验结果 &, std::uint64_t,
-                             因果读取预算 &, 来源读取缓存 &, bool = true) const;
+                             因果读取预算 &, 来源读取缓存 &) const;
   L1所有者范围写集请求 形成证据关联写集(const 因果证据关联请求 &,
                                         const 证据索引 &) const;
   L1所有者范围写集请求 形成证据退出写集(const 因果证据退出请求 &,
@@ -1082,8 +995,7 @@ private:
                                         const 因果内容事实 &,
                                         const 证据索引 &) const;
   static 因果证据事实 投影证据事实(因果信息身份, const 证据索引项 &,
-                                   std::uint64_t, std::uint64_t,
-                                   std::optional<std::uint64_t> = {});
+                                   std::uint64_t);
 
   L1事实基座服务 &l1_;
   L1所有者范围写端口 port_;

@@ -67,42 +67,39 @@ enum class 特征数据错误 : std::uint8_t {
     未找到 = 0, 未设置 = 1, 入口拒绝 = 2, 类型不相容 = 3, 能力未提供 = 4,
     规则缺失 = 5, 引用冲突 = 6, 算术不可表示 = 7, 并发变化 = 8,
     资源失败 = 9, 内部不一致 = 10, 发布结果未确认 = 11, 前次写入待收敛 = 12,
-    旧格式不支持 = 13, 已退出 = 14, 历史材料不可用 = 15, 幂等冲突 = 16, 数量预算不足 = 17
+    旧格式不支持 = 13, 幂等冲突 = 14, 数量预算不足 = 15
 };
 template<class T> using 特征数据结果 = std::variant<T, 特征数据错误>;
 struct 准确特征读取请求 final {
     std::uint32_t 合同版本 = 1;
-    std::uint64_t Gread = 0, H = 0;
+    std::uint64_t Gread = 0;
     特征信息身份 身份;
     friend bool operator==(const 准确特征读取请求&, const 准确特征读取请求&) = default;
 };
 struct 准确特征读取事实 final {
-    std::uint64_t Gread = 0, H = 0;
+    std::uint64_t Gread = 0;
     特征信息 信息;
     std::variant<std::int64_t, 特征值信息> 完整值;
     稳定编码 类型关系;
     std::optional<稳定编码> 准确值事实;
     std::uint64_t 创建G = 0;
-    std::optional<std::uint64_t> 退出G;
     friend bool operator==(const 准确特征读取事实&, const 准确特征读取事实&) = default;
 };
 struct 特征类型准确值核验请求 final {
     std::uint32_t 合同版本 = 1;
-    std::uint64_t Gread = 0, H = 0;
+    std::uint64_t Gread = 0;
     特征类型身份 正式特征类型;
     特征准确值 准确值;
 };
 struct 特征类型准确值核验事实 final {
-    std::uint64_t Gread = 0, H = 0;
+    std::uint64_t Gread = 0;
     特征类型身份 正式特征类型;
     特征准确值 准确值;
 };
 enum class 特征类型准确值核验状态 : std::uint8_t {
     已核验 = 1, 入口拒绝 = 2,
-    正式特征类型未找到 = 3, 正式特征类型已退出 = 4,
-    准确值未找到 = 5, 准确值已退出 = 6, 准确值不相容 = 7,
-    历史材料不可用 = 8, 事实代次漂移 = 9,
-    资源失败 = 10, 内部不一致 = 11
+    正式特征类型未找到 = 3, 准确值未找到 = 4, 准确值不相容 = 5,
+    事实代次漂移 = 6, 资源失败 = 7, 内部不一致 = 8
 };
 struct 特征类型准确值核验结果 final {
     std::uint32_t 合同版本 = 1;
@@ -110,8 +107,7 @@ struct 特征类型准确值核验结果 final {
     std::optional<特征类型准确值核验事实> 事实;
     bool 成功() const noexcept {
         return 合同版本 == 1 && 状态 == 特征类型准确值核验状态::已核验
-            && 事实 && 事实->Gread != 0 && 事实->H != 0
-            && 事实->H <= 事实->Gread && 有效(事实->正式特征类型)
+            && 事实 && 事实->Gread != 0 && 有效(事实->正式特征类型)
             && 浅层结构有效(事实->准确值);
     }
 };
@@ -160,17 +156,17 @@ struct 特征域形成事实 final {
     特征规范I64域 域;
     特征信息身份 准确来源;
     特征比较规则身份 规则;
-    std::uint64_t Gread = 0, H = 0;
+    std::uint64_t Gread = 0;
 };
 struct 特征类型截止请求 final {
     std::uint32_t 版本 = 1;
-    std::uint64_t Gread = 0, H = 0;
+    std::uint64_t Gread = 0;
     特征类型身份 类型;
 };
 struct 特征I64域判定请求 final { 特征类型截止请求 类型; 特征规范I64域 域; };
 struct 特征I64域包含请求 final { 特征类型截止请求 类型; 特征规范I64域 外, 内; };
 struct 准确特征域命中请求 final { 准确特征读取请求 特征; 特征规范I64域 域; };
-template<class T> struct 特征截止事实 final { std::uint64_t Gread = 0, H = 0; T 数据; };
+template<class T> struct 特征截止事实 final { std::uint64_t Gread = 0; T 数据; };
 
 inline constexpr std::uint32_t 标量派生合同版本 = 2;
 enum class 特征类比较用途 : std::uint8_t { 目标判断 = 1, 状态迁移 = 2 };
@@ -191,7 +187,7 @@ struct I64基础特征类型定义请求 final {
 };
 enum class I64基础特征类型定义状态 : std::uint8_t {
     已形成 = 1, 已恢复 = 2, 入口拒绝 = 3, 当前性漂移 = 4,
-    幂等冲突 = 5, 首次材料不一致 = 6, 类型已退出 = 7,
+    幂等冲突 = 5, 首次材料不一致 = 6,
     引用冲突 = 8, 已可能发布 = 9, 资源失败 = 10, 内部不一致 = 11
 };
 struct I64基础特征类型定义结果 final {
@@ -203,14 +199,14 @@ struct I64基础特征类型定义结果 final {
     bool 成功() const noexcept {
         return 版本 == 1 && (状态 == I64基础特征类型定义状态::已形成
             || 状态 == I64基础特征类型定义状态::已恢复)
-            && 事实 && 事实->Gread && 事实->H && 事实->H <= 事实->Gread
+            && 事实 && 事实->Gread
             && 有效(事实->数据.身份) && 事实->数据.规格.来源 == 原请求.规格.来源;
     }
 };
 
 struct 特征正式准确I64解析请求_v2 final {
     std::uint32_t 版本 = 2;
-    std::uint64_t Gread = 0, H = 0;
+    std::uint64_t Gread = 0;
     特征类型身份 正式特征类型;
     特征准确值 准确值;
 };
@@ -219,19 +215,16 @@ enum class 特征正式准确I64解析状态_v2 : std::uint8_t {
     已解析 = 1,
     入口拒绝 = 2,
     正式特征类型未找到 = 3,
-    正式特征类型已退出 = 4,
-    准确值未找到 = 5,
-    准确值已退出 = 6,
-    准确值不相容 = 7,
-    非I64 = 8,
-    历史材料不可用 = 9,
-    事实代次漂移 = 10,
-    资源失败 = 11,
-    内部不一致 = 12
+    准确值未找到 = 4,
+    准确值不相容 = 5,
+    非I64 = 6,
+    事实代次漂移 = 7,
+    资源失败 = 8,
+    内部不一致 = 9
 };
 
 struct 特征正式准确I64解析事实_v2 final {
-    std::uint64_t Gread = 0, H = 0;
+    std::uint64_t Gread = 0;
     特征类型身份 正式特征类型;
     特征准确值 原始准确值;
     std::int64_t I64 = 0;
@@ -242,16 +235,15 @@ struct 特征正式准确I64解析结果_v2 final {
     特征正式准确I64解析状态_v2 状态 = 特征正式准确I64解析状态_v2::入口拒绝;
     std::optional<特征正式准确I64解析事实_v2> 事实;
     bool 成功(const 特征正式准确I64解析请求_v2& 请求) const noexcept {
-        return 请求.版本 == 2 && 请求.Gread != 0 && 请求.H != 0
-            && 请求.H <= 请求.Gread && 有效(请求.正式特征类型)
+        return 请求.版本 == 2 && 请求.Gread != 0 && 有效(请求.正式特征类型)
             && 浅层结构有效(请求.准确值)
             && 版本 == 2 && 状态 == 特征正式准确I64解析状态_v2::已解析
-            && 事实 && 事实->Gread == 请求.Gread && 事实->H == 请求.H
+            && 事实 && 事实->Gread == 请求.Gread
             && 事实->正式特征类型 == 请求.正式特征类型
             && 事实->原始准确值 == 请求.准确值;
     }
 };
-// FCv 是概念 owner 已同截止核验后的投影；特征类不读取 F→FCv 关系。
+// FCv 是概念 owner 已按当前事实代次核验后的投影；特征类不读取 F→FCv 关系。
 struct 特征R成员规则投影 final {
     特征信息身份 F;
     稳定编码 FCv;
@@ -277,30 +269,30 @@ struct 特征R规则读取预算 final {
 };
 enum class 特征R规则状态 : std::uint8_t {
     唯一命中 = 1, 形成新R = 2, 已取得代表值 = 3, 已归并零输出 = 4, 已归并输出 = 5,
-    规则未启用 = 6, 入口拒绝 = 7, 特征类型未找到 = 8, 特征类型已退出 = 9,
+    规则未启用 = 6, 入口拒绝 = 7, 特征类型未找到 = 8,
     候选值不可读 = 10, 材料格式不支持 = 11, 数量预算不足 = 12,
     事实代次漂移 = 13, 资源失败 = 14, 内部不一致 = 15
 };
 struct 特征R归组规则请求 final {
-    std::uint32_t 合同版本 = 1; std::uint64_t Gread = 0, H = 0;
+    std::uint32_t 合同版本 = 1; std::uint64_t Gread = 0;
     特征类型身份 FT; 特征准确值 候选值;
     std::vector<特征R规则项投影> 当前R项; 特征R规则读取预算 预算;
 };
 struct 特征R归组规则结果 final {
     std::uint32_t 合同版本 = 1; 特征R规则状态 状态 = 特征R规则状态::入口拒绝;
-    std::uint64_t Gread = 0, H = 0;
+    std::uint64_t Gread = 0;
     std::optional<稳定编码> 命中R; std::optional<特征R区间材料> 规范化材料;
 };
 struct 特征R代表值请求 final {
-    std::uint32_t 合同版本 = 1; std::uint64_t Gread = 0, H = 0;
+    std::uint32_t 合同版本 = 1; std::uint64_t Gread = 0;
     特征类型身份 FT; 特征R区间材料 材料; 特征R规则读取预算 预算;
 };
 struct 特征R代表值结果 final {
     std::uint32_t 合同版本 = 1; 特征R规则状态 状态 = 特征R规则状态::入口拒绝;
-    std::uint64_t Gread = 0, H = 0; std::optional<特征准确值> 代表值;
+    std::uint64_t Gread = 0; std::optional<特征准确值> 代表值;
 };
 struct 特征R概念归并请求 final {
-    std::uint32_t 合同版本 = 2; std::uint64_t Gread = 0, H = 0;
+    std::uint32_t 合同版本 = 2; std::uint64_t Gread = 0;
     特征类型身份 FT; 特征R集合版本规则投影 R集合版本; 特征R规则读取预算 预算;
 };
 struct 特征RI64概念归并项 final {
@@ -309,7 +301,7 @@ struct 特征RI64概念归并项 final {
 };
 struct 特征R概念归并结果 final {
     std::uint32_t 合同版本 = 2; 特征R规则状态 状态 = 特征R规则状态::入口拒绝;
-    std::uint64_t Gread = 0, H = 0; 稳定编码 R集合, 版本;
+    std::uint64_t Gread = 0; 稳定编码 R集合, 版本;
     std::vector<特征RI64概念归并项> 项;
 };
 struct 补齐I64默认R规则请求 final {
@@ -339,9 +331,9 @@ enum class 特征类标量舍入 : std::uint8_t { 不转换 = 1 };
 enum class 特征类标量溢出 : std::uint8_t { 拒绝 = 1 };
 enum class 特征类标量方向 : std::uint8_t { 左对右 = 1, 左到右 = 2, 右减左 = 3 };
 enum class 特征类标量状态 : std::uint8_t {
-    已读取 = 1, 已比较, 入口拒绝, 未找到, 已退出, 格式不支持, 算法不支持,
+    已读取 = 1, 已比较, 入口拒绝, 未找到, 已删除, 格式不支持, 算法不支持,
     类型不匹配, 来源不匹配, 单位量化不匹配, 结果范围不满足, 运算溢出,
-    预算不足, 历史材料不可用, 事实代次漂移, 资源失败, 内部不一致,
+    预算不足, 事实代次漂移, 资源失败, 内部不一致,
     已创建, 精确重复, 幂等冲突, 引用冲突, 已可能发布
 };
 inline constexpr std::uint32_t 特征当前事实代次核验合同版本 = 1;
@@ -444,9 +436,9 @@ enum class 特征I64输入角色 : std::uint8_t {
 enum class 特征比较算法族 : std::uint8_t { 标量有序比较与安全差异=1 };
 enum class 特征I64上下文要求 : std::uint8_t { 无=0, 参与者A=1, 参与者B=2, 左时间=4, 右时间=8, 参照=16 };
 enum class 特征I64比较绑定状态 : std::uint8_t {
-    已读取=1, 已创建=2, 已退出=3, 精确重复=4, 入口拒绝=5, 未找到=6,
-    目标已退出=7, 格式不支持=8, 注册不唯一=9, 幂等冲突=10, 引用冲突=11,
-    事实代次漂移=12, 历史材料不可用=13, 资源失败=14, 内部不一致=15, 已可能发布=16, 数量预算不足=17
+    已读取=1, 已创建=2, 已删除=3, 精确重复=4, 入口拒绝=5, 未找到=6,
+    格式不支持=7, 注册不唯一=8, 幂等冲突=9, 引用冲突=10,
+    事实代次漂移=11, 资源失败=12, 内部不一致=13, 已可能发布=14, 数量预算不足=15
 };
 enum class 特征I64比较绑定操作 : std::uint8_t { 建立=1, 退出=4 };
 struct 特征I64关系编码 final {
@@ -521,11 +513,10 @@ struct 特征I64比较绑定事实 final {
     特征I64比较绑定定义 定义;
     std::vector<特征I64比较绑定输出事实> 输出组;
     std::uint64_t 创建G=0;
-    std::optional<std::uint64_t> 退出G;
 };
-inline bool I64绑定事实完整(const 特征I64比较绑定事实& f, std::uint64_t h) noexcept {
-    if (!h || !有效(f.身份) || !I64绑定定义完整(f.定义) || !f.创建G || f.创建G>h
-        || (f.退出G && *f.退出G<=h) || f.输出组.size()!=f.定义.输出组.size()) return false;
+inline bool I64绑定事实完整(const 特征I64比较绑定事实& f, std::uint64_t g) noexcept {
+    if (!g || !有效(f.身份) || !I64绑定定义完整(f.定义) || !f.创建G || f.创建G>g
+        || f.输出组.size()!=f.定义.输出组.size()) return false;
     for (std::size_t i=0;i<f.输出组.size();++i) {
         const auto& o=f.输出组[i]; const auto& d=f.定义.输出组[i];
         if (!有效(o.输出关系) || o.输出!=d.输出 || o.输出FT!=d.输出FT) return false;
@@ -540,13 +531,12 @@ struct 特征I64比较绑定建立请求 final {
     friend bool operator==(const 特征I64比较绑定建立请求&,const 特征I64比较绑定建立请求&)=default;
 };
 enum class 特征I64比较绑定读取状态_v2 : std::uint8_t {
-    已读取=1,入口拒绝=2,未找到=3,目标已退出=4,格式不支持=5,
-    注册不唯一=6,事实代次漂移=7,历史材料不可用=8,
-    资源失败=9,内部不一致=10
+    已读取=1,入口拒绝=2,未找到=3,格式不支持=4,
+    注册不唯一=5,事实代次漂移=6,资源失败=7,内部不一致=8
 };
 struct 特征I64比较绑定读取请求_v2 final {
     std::uint32_t 版本=2;
-    std::uint64_t Gread=0,H=0;
+    std::uint64_t Gread=0;
     特征I64比较绑定身份 身份;
     friend bool operator==(const 特征I64比较绑定读取请求_v2&,
         const 特征I64比较绑定读取请求_v2&)=default;
@@ -562,11 +552,11 @@ struct 特征I64当前比较绑定读取请求_v2 final {
 struct 特征I64比较绑定读取结果_v2 final {
     std::uint32_t 版本=2;
     特征I64比较绑定读取状态_v2 状态=特征I64比较绑定读取状态_v2::入口拒绝;
-    std::uint64_t Gread=0,H=0;
+    std::uint64_t Gread=0;
     std::optional<特征I64比较绑定事实> 事实;
     bool 成功() const noexcept {
         return 版本==2 && 状态==特征I64比较绑定读取状态_v2::已读取
-            && H && H<=Gread && 事实 && I64绑定事实完整(*事实,H);
+            && Gread && 事实 && I64绑定事实完整(*事实,Gread);
     }
     friend bool operator==(const 特征I64比较绑定读取结果_v2&,
         const 特征I64比较绑定读取结果_v2&)=default;
@@ -581,23 +571,23 @@ struct 特征I64比较绑定结果 final {
     std::uint32_t 版本=1;
     特征I64比较绑定操作 操作=特征I64比较绑定操作::建立;
     特征I64比较绑定状态 状态=特征I64比较绑定状态::入口拒绝;
-    std::uint64_t Gread=0,H=0;
-    std::optional<std::uint64_t> 首次发布H;
+    std::uint64_t Gread=0;
+    std::optional<std::uint64_t> 首次发布代次;
     特征类标量发布确定性 发布确定性=特征类标量发布确定性::未派发;
     std::optional<特征I64比较绑定事实> 事实;
     std::optional<L1所有者范围写入结果> 正式回执;
     std::optional<特征I64比较绑定建立请求> 建立原请求;
     bool 成功() const noexcept {
         using O=特征I64比较绑定操作; using S=特征I64比较绑定状态;
-        if (版本!=1 || !H || H>Gread || !事实 || (操作!=O::建立&&建立原请求)) return false;
-        if (!首次发布H || !*首次发布H || !正式回执 || *首次发布H!=H
-            || 发布确定性!=特征类标量发布确定性::确认已发布 || 正式回执->事实代次!=H
+        if (版本!=1 || !Gread || (操作!=O::建立&&建立原请求)) return false;
+        if (!首次发布代次 || !*首次发布代次 || !正式回执 || *首次发布代次>Gread
+            || 发布确定性!=特征类标量发布确定性::确认已发布 || 正式回执->事实代次!=*首次发布代次
             || (正式回执->状态!=L1所有者范围写入状态::成功 && 正式回执->状态!=L1所有者范围写入状态::精确重复)) return false;
         if (操作==O::建立) {
-            if(!建立原请求)return false;
+            if(!建立原请求||!事实)return false;
             const auto& r=*建立原请求;const auto& w=*正式回执;
-            if(r.版本!=1||!r.G||r.G>=H||!有效(r.幂等身份)||!I64绑定定义完整(r.定义)
-                ||(状态!=S::已创建&&状态!=S::精确重复)||事实->退出G||事实->创建G!=H
+            if(r.版本!=1||!r.G||r.G>=*首次发布代次||!有效(r.幂等身份)||!I64绑定定义完整(r.定义)
+                ||(状态!=S::已创建&&状态!=S::精确重复)||事实->创建G!=*首次发布代次
                 ||!I64绑定事实完整(*事实,Gread)||事实->定义!=r.定义
                 ||w.合同版本!=L1所有者范围CRUD合同版本||!有效(w.所有者)||w.写入幂等身份!=r.幂等身份
                 ||w.状态!=L1所有者范围写入状态::成功||!w.是否形成内存权威发布
@@ -619,8 +609,7 @@ struct 特征I64比较绑定结果 final {
             return true;
         }
         if (操作==O::退出)
-            return (状态==S::已退出 || 状态==S::精确重复) && 事实->退出G==H
-                && H>1 && I64绑定事实完整(*事实,H-1)
+            return (状态==S::已删除 || 状态==S::精确重复) && !事实
                 && 正式回执->合同版本==L1所有者范围CRUD合同版本&&有效(正式回执->所有者)
                 && 有效(正式回执->写入幂等身份)&&正式回执->新编码映射.empty()
                 && 正式回执->状态==L1所有者范围写入状态::成功&&正式回执->是否形成内存权威发布
@@ -637,7 +626,7 @@ struct 有界准确特征读取用量 final {
     std::uint64_t 节点数=0,关系数=0,属性值数=0,材料总数=0;
 };
 struct 有界准确特征读取请求 final {
-    std::uint32_t 版本=1; std::uint64_t Gread=0,H=0; 特征信息身份 身份;
+    std::uint32_t 版本=1; std::uint64_t Gread=0; 特征信息身份 身份;
     有界准确特征读取预算 预算;
 };
 struct 有界准确特征读取结果 final {
@@ -647,10 +636,10 @@ struct 有界准确特征读取结果 final {
     有界准确特征读取用量 用量;
     bool 成功() const noexcept {
         const auto& r=原请求; const auto& u=用量;
-        if (版本!=1 || r.版本!=1 || 状态!=特征类标量状态::已读取 || !r.H || r.H>r.Gread
-            || !有效(r.身份) || !r.预算.有效() || !事实 || 事实->Gread!=r.Gread || 事实->H!=r.H
+        if (版本!=1 || r.版本!=1 || 状态!=特征类标量状态::已读取 || !r.Gread
+            || !有效(r.身份) || !r.预算.有效() || !事实 || 事实->Gread!=r.Gread
             || 事实->信息.身份!=r.身份 || !浅层结构有效(事实->信息) || !有效(事实->类型关系)
-            || !事实->创建G || 事实->创建G>r.H || (事实->退出G && *事实->退出G<=r.H)
+            || !事实->创建G || 事实->创建G>r.Gread
             || !u.节点数 || !u.关系数 || !u.属性值数
             || u.节点数>r.预算.最大节点数 || u.关系数>r.预算.最大关系数 || u.属性值数>r.预算.最大属性值数
             || u.节点数>UINT64_MAX-u.关系数 || u.节点数+u.关系数>UINT64_MAX-u.属性值数
@@ -689,7 +678,7 @@ struct 特征类标量派生建立请求 final {
 };
 struct 特征类标量派生读取请求 final {
     std::uint32_t 版本 = 标量派生合同版本;
-    std::uint64_t Gread = 0, H = 0;
+    std::uint64_t Gread = 0;
     特征类定义身份 定义身份;
     特征类派生读取预算 预算;
 };
@@ -700,42 +689,6 @@ struct 特征类标量派生退出请求 final {
     特征类定义身份 定义身份;
     特征类派生读取预算 预算;
     friend bool operator==(const 特征类标量派生退出请求&, const 特征类标量派生退出请求&) = default;
-};
-struct 旧v1派生治理结构交付 final {
-    std::uint32_t 格式 = 1;
-    稳定编码 实际阶次属性类型, 派生规则属性类型, 直接来源关系类型, 宿主关系类型,
-        比较注册归属关系类型, 比较注册U64属性类型, 比较注册I64属性类型;
-};
-struct 旧派生治理事实 final {
-    特征类定义身份 身份;
-    std::uint32_t 实际阶次 = 0;
-    std::optional<稳定编码> 宿主;
-    特征类比较用途 用途 = 特征类比较用途::目标判断;
-    特征类比较角色 左角色 = 特征类比较角色::当前事实, 右角色 = 特征类比较角色::目标状态;
-    std::uint64_t 创建G = 0;
-    std::optional<std::uint64_t> 退出G;
-};
-inline bool 旧治理投影完整(const 旧派生治理事实& f, std::uint64_t h) noexcept {
-    return h && 有效(f.身份.结点) && f.实际阶次 > 1 && f.创建G && f.创建G <= h
-        && (!f.退出G || *f.退出G > h) && (!f.宿主 || 有效(*f.宿主))
-        && ((f.用途 == 特征类比较用途::目标判断 && f.左角色 == 特征类比较角色::当前事实
-                && f.右角色 == 特征类比较角色::目标状态)
-            || (f.用途 == 特征类比较用途::状态迁移 && f.左角色 == 特征类比较角色::前状态
-                && f.右角色 == 特征类比较角色::后当前事实));
-}
-struct 旧派生治理读取结果 final {
-    std::uint32_t 版本 = 2;
-    特征类标量状态 状态 = 特征类标量状态::入口拒绝;
-    std::uint64_t Gread = 0, H = 0;
-    std::optional<旧派生治理事实> 事实;
-    bool 成功() const noexcept {
-        if (版本 != 2 || 状态 != 特征类标量状态::已读取 || !H || H > Gread || !事实) return false;
-        return 旧治理投影完整(*事实, H);
-    }
-};
-struct 旧派生治理退出事实 final {
-    旧派生治理事实 定义;
-    std::vector<稳定编码> 已退出事实;
 };
 struct 特征类标量派生事实 final {
     特征类定义身份 定义身份;
@@ -748,10 +701,9 @@ struct 特征类标量派生事实 final {
     特征类标量比较注册合同 注册;
     std::vector<特征类标量输出事实> 输出组;
     std::uint64_t 创建G = 0;
-    std::optional<std::uint64_t> 退出G;
-    bool 完整(std::uint64_t h) const noexcept {
-        if (!有效(定义身份.结点) || 真实阶次 <= 1 || !创建G || 创建G > h
-            || (退出G && (*退出G <= 创建G || *退出G <= h)) || 来源组.size() != 2
+    bool 完整(std::uint64_t g) const noexcept {
+        if (!有效(定义身份.结点) || 真实阶次 <= 1 || !创建G || 创建G > g
+            || 来源组.size() != 2
             || !有效(派生规则.规则身份) || 派生规则.规则版本 != 1 || !有效(注册身份.值)
             || !有效(注册归属) || !有效(阶次值) || !有效(规则值) || !有效(注册U64值) || !有效(注册I64值)
             || 宿主E.has_value() != 宿主关系.has_value() || (宿主E && (!有效(*宿主E) || !有效(*宿主关系)))
@@ -788,14 +740,13 @@ struct 特征类标量叶回执 final {
     稳定编码 类型关系;
     std::uint64_t Gread = 0;
     std::int64_t 值 = 0;
-    std::uint64_t G = 0, 创建G = 0;
-    std::optional<std::uint64_t> 退出G;
+    std::uint64_t 创建G = 0;
     friend bool operator==(const 特征类标量叶回执&, const 特征类标量叶回执&) = default;
 };
-inline bool 标量叶完整(const 特征类标量叶回执& leaf, std::uint64_t g, std::uint64_t h) noexcept {
-    if (!h || g < h || !有效(leaf.F) || !有效(leaf.FT) || !有效(leaf.类型关系)
-        || (leaf.值事实 && !有效(*leaf.值事实)) || leaf.G != h || leaf.Gread != g
-        || !leaf.创建G || leaf.创建G > h || (leaf.退出G && *leaf.退出G <= h)) return false;
+inline bool 标量叶完整(const 特征类标量叶回执& leaf, std::uint64_t g) noexcept {
+    if (!g || !有效(leaf.F) || !有效(leaf.FT) || !有效(leaf.类型关系)
+        || (leaf.值事实 && !有效(*leaf.值事实)) || leaf.Gread != g
+        || !leaf.创建G || leaf.创建G > g) return false;
     if (const auto* direct = std::get_if<std::int64_t>(&leaf.完整值)) {
         // 内联值可同时回显真实 L1 属性值事实，该事实不是材料引用表示。
         return *direct == leaf.值;
@@ -808,15 +759,15 @@ inline bool 标量叶完整(const 特征类标量叶回执& leaf, std::uint64_t 
 struct 特征类标量派生读取结果 final {
     std::uint32_t 版本 = 标量派生合同版本;
     特征类标量状态 状态 = 特征类标量状态::入口拒绝;
-    std::uint64_t Gread = 0, H = 0;
+    std::uint64_t Gread = 0;
     std::optional<特征类标量派生事实> 定义事实;
     std::vector<特征类标量派生事实> 完整定义组;
     std::vector<特征类标量叶回执> 基础叶组;
     std::vector<稳定编码> 左叶组, 右叶组;
     特征类派生读取用量 用量;
     bool 成功() const noexcept {
-        if (版本 != 2 || 状态 != 特征类标量状态::已读取 || !H || Gread < H
-            || !定义事实 || !定义事实->完整(H) || 基础叶组.empty() || 左叶组.empty() || 右叶组.empty()) return false;
+        if (版本 != 2 || 状态 != 特征类标量状态::已读取 || !Gread
+            || !定义事实 || !定义事实->完整(Gread) || 基础叶组.empty() || 左叶组.empty() || 右叶组.empty()) return false;
         if (完整定义组.empty() || 用量.定义数!=完整定义组.size() || 用量.叶数!=基础叶组.size()
             || !用量.关系数 || !用量.属性值数 || !用量.最大深度
             || 用量.定义数>UINT64_MAX-用量.关系数 || 用量.定义数+用量.关系数>UINT64_MAX-用量.叶数
@@ -824,7 +775,7 @@ struct 特征类标量派生读取结果 final {
             || 用量.材料总数<用量.定义数+用量.关系数+用量.叶数+用量.属性值数) return false;
         稳定编码 prevDefinition{}; unsigned roots=0;
         for (const auto& d:完整定义组) {
-            if (!d.完整(H) || (有效(prevDefinition)&&!(prevDefinition<d.定义身份.结点))) return false;
+            if (!d.完整(Gread) || (有效(prevDefinition)&&!(prevDefinition<d.定义身份.结点))) return false;
             prevDefinition=d.定义身份.结点;
             if (d.定义身份==定义事实->定义身份) { if(d!=*定义事实) return false; ++roots; }
             for (const auto& s:d.来源组) {
@@ -839,7 +790,7 @@ struct 特征类标量派生读取结果 final {
         if (roots!=1) return false;
         稳定编码 previous{};
         for (const auto& x : 基础叶组) {
-            if (!标量叶完整(x, Gread, H) || (有效(previous) && !(previous < x.F))) return false;
+            if (!标量叶完整(x, Gread) || (有效(previous) && !(previous < x.F))) return false;
             if (std::find(左叶组.begin(), 左叶组.end(), x.F) == 左叶组.end()
                 && std::find(右叶组.begin(), 右叶组.end(), x.F) == 右叶组.end()) return false;
             previous = x.F;
@@ -880,7 +831,7 @@ struct 特征类标量派生读取结果 final {
 inline constexpr std::uint32_t 特征类标量派生批量读取合同版本=1;
 struct 特征类标量派生批量读取请求 final {
     std::uint32_t 版本=特征类标量派生批量读取合同版本;
-    std::uint64_t Gread=0,H=0;
+    std::uint64_t Gread=0;
     std::vector<特征类定义身份> 根定义组;
     特征类派生读取预算 预算;
 };
@@ -891,7 +842,7 @@ struct 特征类标量派生根读取回执 final {
 struct 特征类标量派生批量读取结果 final {
     std::uint32_t 版本=特征类标量派生批量读取合同版本;
     特征类标量状态 状态=特征类标量状态::入口拒绝;
-    std::uint64_t Gread=0,H=0;
+    std::uint64_t Gread=0;
     特征类标量派生批量读取请求 原请求;
     std::vector<特征类标量派生根读取回执> 根回执组;
     std::vector<特征类标量派生事实> 完整定义组;
@@ -903,44 +854,21 @@ struct 特征类标量派生写结果 final {
     std::uint32_t 版本 = 标量派生合同版本;
     特征类标量状态 状态 = 特征类标量状态::入口拒绝;
     std::uint64_t Gread = 0;
-    std::optional<std::uint64_t> 首次发布H;
+    std::optional<std::uint64_t> 首次发布代次;
     特征类标量发布确定性 发布确定性 = 特征类标量发布确定性::未派发;
     std::optional<特征类标量派生事实> 定义事实;
     std::optional<L1所有者范围写入结果> 正式回执;
-    std::optional<特征类标量派生退出请求> 旧治理原请求;
-    std::optional<旧派生治理退出事实> 旧治理退出;
     bool 成功() const noexcept {
-        if (旧治理原请求 || 旧治理退出) {
-            if (定义事实 || !旧治理原请求 || !旧治理退出 || !正式回执 || 版本 != 2
-                || !首次发布H || !*首次发布H || Gread < *首次发布H
-                || 发布确定性 != 特征类标量发布确定性::确认已发布
-                || (状态 != 特征类标量状态::已退出 && 状态 != 特征类标量状态::精确重复)) return false;
-            const auto& r = *旧治理原请求; const auto& f = 旧治理退出->定义; const auto& w = *正式回执;
-            if (r.版本 != 2 || !r.G || r.G >= *首次发布H || !有效(r.幂等身份) || !r.预算.有效()
-                || !旧治理投影完整(f, r.G)
-                || w.合同版本 != L1所有者范围CRUD合同版本 || w.写入幂等身份 != r.幂等身份
-                || w.事实代次 != *首次发布H || !w.新编码映射.empty()
-                || (状态 == 特征类标量状态::已退出 ? w.状态 != L1所有者范围写入状态::成功 || !w.是否形成内存权威发布
-                    : w.状态 != L1所有者范围写入状态::精确重复 || w.是否形成内存权威发布)
-                || f.身份 != r.定义身份 || !f.创建G || f.创建G >= *首次发布H
-                || f.退出G != 首次发布H || f.实际阶次 <= 1
-                || 旧治理退出->已退出事实.size() != 9 + (f.宿主 ? 1 : 0)) return false;
-            稳定编码 previous{}; std::size_t targets = 0;
-            for (auto id : 旧治理退出->已退出事实) {
-                if (!有效(id) || (有效(previous) && !(previous < id))) return false;
-                if (id == r.定义身份.结点) ++targets; previous = id;
-            }
-            return targets == 1;
-        }
-        return 版本 == 2 && (状态 == 特征类标量状态::已创建 || 状态 == 特征类标量状态::已退出
+        return 版本 == 2 && (状态 == 特征类标量状态::已创建 || 状态 == 特征类标量状态::已删除
                 || 状态 == 特征类标量状态::精确重复)
-            && 首次发布H && *首次发布H && Gread >= *首次发布H && 定义事实
-            && 定义事实->完整(定义事实->创建G)
-            && (*首次发布H == 定义事实->创建G || 定义事实->退出G == 首次发布H)
-            && (状态 != 特征类标量状态::已创建 || *首次发布H == 定义事实->创建G)
-            && (状态 != 特征类标量状态::已退出 || 定义事实->退出G == 首次发布H)
+            && 首次发布代次 && *首次发布代次 && Gread >= *首次发布代次
+            && ((状态 == 特征类标量状态::已创建 && 定义事实
+                    && 定义事实->完整(Gread) && *首次发布代次 == 定义事实->创建G)
+                || (状态 == 特征类标量状态::精确重复
+                    && (!定义事实 || 定义事实->完整(Gread)))
+                || (状态 == 特征类标量状态::已删除 && !定义事实))
             && 发布确定性 == 特征类标量发布确定性::确认已发布 && 正式回执
-            && 正式回执->合同版本 == L1所有者范围CRUD合同版本 && 正式回执->事实代次 == *首次发布H
+            && 正式回执->合同版本 == L1所有者范围CRUD合同版本 && 正式回执->事实代次 == *首次发布代次
             && (正式回执->状态 == L1所有者范围写入状态::成功 || 正式回执->状态 == L1所有者范围写入状态::精确重复);
     }
 };
@@ -964,8 +892,8 @@ class 特征类数据服务 final : public 原子I64特征内容参与者 {
         有界准确特征读取用量 用量;
         bool 预算自由=false;
         std::map<稳定编码,L1所有者范围事实副本> 已读;
-        std::map<std::tuple<std::uint64_t,std::uint64_t,稳定编码,稳定编码,bool>,std::vector<E>> 已读关系组;
-        std::map<std::tuple<std::uint64_t,std::uint64_t,稳定编码>,std::vector<V>> 已读属性组;
+        std::map<std::tuple<std::uint64_t,稳定编码,稳定编码,bool>,std::vector<E>> 已读关系组;
+        std::map<std::tuple<std::uint64_t,稳定编码>,std::vector<V>> 已读属性组;
         读取计量():上限{UINT64_MAX,UINT64_MAX,UINT64_MAX,UINT64_MAX}{}
         explicit 读取计量(完整读取标签):上限{},预算自由(true){}
         void 记(const L1所有者范围事实副本& raw) {
@@ -990,12 +918,10 @@ class 特征类数据服务 final : public 原子I64特征内容参与者 {
     enum 信息角色 : std::size_t { 信息锚点, 信息归属, 准确内联属性, 准确引用属性, 准确类型关系, 信息角色数 };
     struct 待确认写入 final {
         分区 区; WS 请求; bool 初始化 = false;
-        std::optional<特征类标量派生退出请求> 旧治理;
         bool I64扩展初始化=false;
         bool R规则扩展初始化=false;
     };
     struct 待确认标量业务 final {
-        bool 旧治理=false;
         std::variant<特征类标量派生建立请求,特征类标量派生退出请求> 原请求;
     };
     struct 待确认I64绑定业务 final {
@@ -1009,12 +935,6 @@ public:
           values_(values), producer_(producer) {
         if(!绑定于(l1)||!definitions_.有效()||!information_.有效())
             throw std::invalid_argument("特征数据端口绑定");
-    }
-    特征类数据服务(const L1事实基座服务& l1, L1所有者范围写端口&& definitions,
-        L1所有者范围写端口&& information, const 特征值类数据服务& values, 稳定编码 producer,
-        const 旧v1派生治理结构交付& legacy)
-        : 特征类数据服务(l1, std::move(definitions), std::move(information), values, producer) {
-        legacy_ = legacy;
     }
     特征类数据服务(const 特征类数据服务&) = delete;
     特征类数据服务& operator=(const 特征类数据服务&) = delete;
@@ -1072,16 +992,7 @@ public:
     R<特征截止事实<特征规范I64域>> 规范化I64特征域(const 特征I64域判定请求&) const;
     R<特征截止事实<bool>> 判定准确特征命中域(const 准确特征域命中请求&) const;
     R<特征截止事实<bool>> 判定I64域包含(const 特征I64域包含请求&) const;
-    旧派生治理读取结果 读取旧派生治理事实(const 特征类标量派生读取请求&) const;
-    特征类标量派生写结果 退出旧派生治理定义(const 特征类标量派生退出请求&);
 private:
-    struct 旧治理布局 {
-        旧派生治理事实 事实;
-        std::vector<稳定编码> 自有, 来源;
-    };
-    分区 旧路由(std::uint64_t Gread, std::uint64_t H) const;
-    旧治理布局 旧读取闭包(特征类定义身份, std::uint64_t Gread, std::uint64_t H,
-        分区, const 特征类派生读取预算&) const;
     static void 要求(bool ok, S s = S::内部不一致) { if (!ok) throw s; }
     template<class T, class F> R<T> 保护(F&& f) const {
         try { std::lock_guard<std::mutex> lock(mutex_); return R<T>{std::in_place_index<0>, f()}; }
@@ -1091,42 +1002,37 @@ private:
         catch (...) { return S::内部不一致; }
     }
     static S 映射(L1所有者范围读取状态);
-    static S 映射(L1所有者范围历史完整关系组读取状态_v2);
-    static S 映射(L1所有者范围历史完整属性值组读取状态_v2);
     static S 映射(L1所有者范围写入状态);
     L1所有者范围写端口& 端口(分区 p) { return p == 分区::定义 ? definitions_ : information_; }
     const L1所有者范围写端口& 端口(分区 p) const { return p == 分区::定义 ? definitions_ : information_; }
     std::uint64_t 当前G() const;
     void 守卫(std::uint64_t g) const { 要求(当前G() == g, S::并发变化); }
-    static void 截止有效(std::uint32_t v, std::uint64_t g, std::uint64_t h) { 要求(v == 1 && h && g >= h, S::入口拒绝); }
-    template<class T> static void 生命周期(const T& f, std::uint64_t g, std::uint64_t h) {
-        要求(f.创建事实代次 && f.创建事实代次 <= g
-            && (!f.退出事实代次 || (*f.退出事实代次 >= f.创建事实代次 && *f.退出事实代次 <= g)));
-        要求(f.创建事实代次 <= h, S::未找到);
-        要求(!f.退出事实代次 || *f.退出事实代次 > h, S::已退出);
+    static void 当前读取有效(std::uint32_t v, std::uint64_t g) { 要求(v == 1 && g, S::入口拒绝); }
+    template<class T> static void 生命周期(const T& f, std::uint64_t g) {
+        要求(f.创建事实代次 && f.创建事实代次 <= g);
     }
     L1所有者范围事实副本 原始事实(稳定编码, std::uint64_t, 读取计量* = nullptr) const;
-    N 节点(稳定编码, std::uint64_t, std::uint64_t, std::optional<分区> = std::nullopt, 读取计量* = nullptr) const;
-    std::vector<E> 关系(稳定编码, 稳定编码, bool, std::uint64_t, std::uint64_t, 分区, 读取计量* = nullptr) const;
-    std::vector<V> 属性(稳定编码, std::uint64_t, std::uint64_t, 分区, 读取计量* = nullptr) const;
-    E 唯一关系(稳定编码, 稳定编码, std::uint64_t, std::uint64_t, 分区, 读取计量* = nullptr) const;
+    N 节点(稳定编码, std::uint64_t, std::optional<分区> = std::nullopt, 读取计量* = nullptr) const;
+    std::vector<E> 关系(稳定编码, 稳定编码, bool, std::uint64_t, 分区, 读取计量* = nullptr) const;
+    std::vector<V> 属性(稳定编码, std::uint64_t, 分区, 读取计量* = nullptr) const;
+    E 唯一关系(稳定编码, 稳定编码, std::uint64_t, 分区, 读取计量* = nullptr) const;
     static const V& 唯一属性(const std::vector<V>&, 稳定编码);
-    void 结构就绪(分区, std::uint64_t, std::uint64_t, 读取计量* = nullptr) const;
-    E 核对归属(稳定编码, std::uint64_t, std::uint64_t, 分区, 读取计量* = nullptr) const;
+    void 结构就绪(分区, std::uint64_t, 读取计量* = nullptr) const;
+    E 核对归属(稳定编码, std::uint64_t, 分区, 读取计量* = nullptr) const;
     static 特征规范I64域 规范域(特征规范I64域);
     static bool 包含(const 特征规范I64域&, const 特征规范I64域&);
     static void 检查形成规格(const I64基础特征类型形成规格&);
     static void 检查规格(const I64基础特征类型规格&);
     struct 标量读取上下文;
-    I64基础特征类型信息 读类型(特征类型身份, std::uint64_t, std::uint64_t,
+    I64基础特征类型信息 读类型(特征类型身份, std::uint64_t,
         标量读取上下文* = nullptr, 读取计量* = nullptr) const;
-    特征规范I64域 读完整域(特征类型身份, std::uint64_t, std::uint64_t,
+    特征规范I64域 读完整域(特征类型身份, std::uint64_t,
         读取计量* = nullptr) const;
-    准确特征读取事实 读准确(特征信息身份, std::uint64_t, std::uint64_t, 标量读取上下文* = nullptr, 读取计量* = nullptr) const;
+    准确特征读取事实 读准确(特征信息身份, std::uint64_t, 标量读取上下文* = nullptr, 读取计量* = nullptr) const;
     特征域形成事实 形成I64特征域已持锁(const 准确特征读取请求&) const;
     特征正式准确I64解析结果_v2 解析正式特征类型准确I64_v2已持锁(
         const 特征正式准确I64解析请求_v2&) const;
-    std::int64_t 解析输入(const 特征准确值&, std::uint64_t, std::uint64_t,读取计量* = nullptr) const;
+    std::int64_t 解析输入(const 特征准确值&, std::uint64_t,读取计量* = nullptr) const;
     static std::int64_t 完整整数(const 准确特征读取事实&);
     static Key 新键(const WS&);
     static Key 加节点(WS&, std::optional<L1所有者范围值表示种类> = std::nullopt);
@@ -1170,7 +1076,7 @@ private:
             确认发布(分区::定义,ws,*first.首次写入结果);接受I64扩展(*first.首次写入结果);
         } else if(first.状态==L1所有者范围读取状态::未找到) {
             auto ws=I64扩展写集(g);
-            pending_.emplace(待确认写入{分区::定义,std::move(ws),false,{},true});
+            pending_.emplace(待确认写入{分区::定义,std::move(ws),false,true,false});
             (void)收敛原请求();
         } else throw 映射(first.状态);
     }
@@ -1212,13 +1118,11 @@ private:
         const L1所有者范围写入结果&, std::uint64_t) const;
     void 添加I64默认R规则(WS&, Ref FT, bool 有域形成) const;
     std::optional<稳定编码> 读取R规则(特征类型身份, std::int64_t 用途,
-        std::uint64_t Gread, std::uint64_t H, const 特征R规则读取预算&) const;
+        std::uint64_t Gread, const 特征R规则读取预算&) const;
     using SS = 特征类标量状态;
     static SS 标量映射(S s) noexcept {
         switch (s) {
         case S::未找到: return SS::未找到;
-        case S::已退出: return SS::已退出;
-        case S::历史材料不可用: return SS::历史材料不可用;
         case S::并发变化: return SS::事实代次漂移;
         case S::资源失败: return SS::资源失败;
         case S::入口拒绝: return SS::入口拒绝;
@@ -1253,8 +1157,8 @@ private:
     static KS 绑定映射(S s) noexcept {
         switch(s) {
         case S::入口拒绝:return KS::入口拒绝;case S::未找到:return KS::未找到;
-        case S::已退出:return KS::目标已退出;case S::旧格式不支持:return KS::格式不支持;
-        case S::并发变化:return KS::事实代次漂移;case S::历史材料不可用:return KS::历史材料不可用;
+        case S::旧格式不支持:return KS::格式不支持;
+        case S::并发变化:return KS::事实代次漂移;
         case S::资源失败:return KS::资源失败;case S::幂等冲突:return KS::幂等冲突;
         case S::引用冲突:return KS::引用冲突;case S::数量预算不足:return KS::数量预算不足;
         case S::发布结果未确认:case S::前次写入待收敛:return KS::已可能发布;
@@ -1267,8 +1171,8 @@ private:
     static KS 绑定标量映射(特征类标量状态 s) noexcept {
         using T=特征类标量状态;
         switch(s){
-        case T::未找到:return KS::未找到;case T::已退出:return KS::目标已退出;
-        case T::预算不足:return KS::数量预算不足;case T::历史材料不可用:return KS::历史材料不可用;
+        case T::未找到:return KS::未找到;
+        case T::预算不足:return KS::数量预算不足;
         case T::事实代次漂移:return KS::事实代次漂移;case T::资源失败:return KS::资源失败;
         case T::格式不支持:case T::类型不匹配:case T::单位量化不匹配:return KS::格式不支持;
         case T::入口拒绝:return KS::入口拒绝;default:return KS::内部不一致;
@@ -1315,48 +1219,50 @@ private:
         }
         绑定要求(I64绑定定义完整(d),KS::格式不支持);return d;
     }
-    void 核验绑定FT(特征类型身份 id,const 特征类标量量化合同& q,std::uint64_t g,std::uint64_t h,读取计量& meter) const {
-        for(auto dependency:{q.单位,q.维度,q.分量角色})(void)节点(dependency,g,h,std::nullopt,&meter);
-        const auto n=节点(id.编码,g,h,分区::定义,&meter);
-        (void)核对归属(id.编码,g,h,分区::定义,&meter);
+    void 核验绑定FT(特征类型身份 id,const 特征类标量量化合同& q,std::uint64_t g,读取计量& meter) const {
+        绑定要求(g,KS::事实代次漂移);
+        for(auto dependency:{q.单位,q.维度,q.分量角色})(void)节点(dependency,g,std::nullopt,&meter);
+        const auto n=节点(id.编码,g,分区::定义,&meter);
+        (void)核对归属(id.编码,g,分区::定义,&meter);
         绑定要求(n.种类==节点种类::属性类型&&n.属性类型表示==L1所有者范围值表示种类::I64,KS::格式不支持);
-        const auto attrs=属性(id.编码,g,h,分区::定义,&meter);
+        const auto attrs=属性(id.编码,g,分区::定义,&meter);
         if(attrs.size()==1&&attrs[0].属性类型节点==id.编码) {
             const auto* marker=std::get_if<std::int64_t>(&attrs[0].材料);
             绑定要求(marker&&*marker==标量格式标记,KS::格式不支持);
-            const auto source=关系(id.编码,d_[输出FT归属关系],true,g,h,分区::定义,&meter);
+            const auto source=关系(id.编码,d_[输出FT归属关系],true,g,分区::定义,&meter);
             绑定要求(source.size()==1,KS::格式不支持);
-            标量读取上下文 c{g,h,{UINT64_MAX,UINT64_MAX,UINT64_MAX,UINT64_MAX,UINT64_MAX,UINT64_MAX}};
+            标量读取上下文 c{g,{UINT64_MAX,UINT64_MAX,UINT64_MAX,UINT64_MAX,UINT64_MAX,UINT64_MAX}};
             c.计量=&meter;
             const auto d=标量自有定义(source[0].源节点,c);
             const auto it=std::find_if(d.输出组.begin(),d.输出组.end(),[&](const auto& x){return x.特征类型==id.编码;});
             绑定要求(it!=d.输出组.end()&&it->声明.量化==q,KS::格式不支持);
         } else {
-            const auto ft=读类型(id,g,h,nullptr,&meter);
+            const auto ft=读类型(id,g,nullptr,&meter);
             绑定要求(ft.规格.单位==q.单位&&ft.规格.缩放分子==q.缩放分子&&ft.规格.缩放分母==q.缩放分母
                 &&包含(规范域({ft.规格.允许集合}),特征规范I64域{{{q.下界,q.上界}}}),KS::格式不支持);
         }
     }
-    特征I64比较绑定事实 读绑定(特征I64比较绑定身份 id,std::uint64_t g,std::uint64_t h,读取计量& meter) const {
+    特征I64比较绑定事实 读绑定(特征I64比较绑定身份 id,std::uint64_t g,读取计量& meter) const {
         绑定就绪();
-        const auto n=节点(id.编码,g,h,分区::定义,&meter);
+        绑定要求(g,KS::事实代次漂移);
+        const auto n=节点(id.编码,g,分区::定义,&meter);
         绑定要求(n.种类==节点种类::普通&&!n.属性类型表示,KS::格式不支持);
-        const auto family=核对归属(id.编码,g,h,分区::定义,&meter);
-        const auto input=关系(id.编码,k_[I64比较绑定输入FT关系],false,g,h,分区::定义,&meter);
-        const auto outputs=关系(id.编码,k_[I64比较绑定输出FT关系],false,g,h,分区::定义,&meter);
-        const auto attrs=属性(id.编码,g,h,分区::定义,&meter);
+        const auto family=核对归属(id.编码,g,分区::定义,&meter);
+        const auto input=关系(id.编码,k_[I64比较绑定输入FT关系],false,g,分区::定义,&meter);
+        const auto outputs=关系(id.编码,k_[I64比较绑定输出FT关系],false,g,分区::定义,&meter);
+        const auto attrs=属性(id.编码,g,分区::定义,&meter);
         绑定要求(input.size()==1&&input[0].角色或顺序==1&&attrs.size()==2,KS::格式不支持);
         const auto& uv=唯一属性(attrs,k_[I64比较绑定U64属性]);const auto& iv=唯一属性(attrs,k_[I64比较绑定I64属性]);
         const auto* u=std::get_if<std::vector<std::uint64_t>>(&uv.材料);const auto* v=std::get_if<std::vector<std::int64_t>>(&iv.材料);
         绑定要求(u&&v,KS::格式不支持);
-        auto same=[&](const auto& x){绑定要求(x.创建事实代次==n.创建事实代次&&x.退出事实代次==n.退出事实代次);};
+        auto same=[&](const auto& x){绑定要求(x.创建事实代次==n.创建事实代次);};
         same(family);same(input[0]);same(uv);same(iv);for(const auto& x:outputs)same(x);
         auto definition=绑定解码(*u,*v,{input[0].目标节点},outputs);
-        核验绑定FT(definition.输入FT,definition.输入量化,g,h,meter);
-        for(const auto& o:definition.输出组)核验绑定FT(o.输出FT,o.输出.量化,g,h,meter);
-        特征I64比较绑定事实 result{id,std::move(definition),{},n.创建事实代次,n.退出事实代次};
+        核验绑定FT(definition.输入FT,definition.输入量化,g,meter);
+        for(const auto& o:definition.输出组)核验绑定FT(o.输出FT,o.输出.量化,g,meter);
+        特征I64比较绑定事实 result{id,std::move(definition),{},n.创建事实代次};
         for(std::size_t i=0;i<outputs.size();++i)result.输出组.push_back({result.定义.输出组[i].输出,result.定义.输出组[i].输出FT,outputs[i].编码});
-        绑定要求(I64绑定事实完整(result,h));return result;
+        绑定要求(I64绑定事实完整(result,g));return result;
     }
     特征I64比较绑定读取结果_v2 读当前绑定完整_v2_已锁(
         const 特征I64当前比较绑定读取请求_v2&) const noexcept;
@@ -1377,13 +1283,13 @@ private:
         规范化写集(w);return w;
     }
     WS 绑定退出写集(const 特征I64比较绑定退出请求& r,std::uint64_t g,读取计量& meter) const {
-        (void)读绑定(r.身份,g,r.G,meter);
+        (void)读绑定(r.身份,g,meter);
         WS w;w.期望事实代次=r.G;w.写入幂等身份=r.幂等身份;w.退出事实.push_back(r.身份.编码);
-        const auto family=核对归属(r.身份.编码,g,r.G,分区::定义,&meter);
+        const auto family=核对归属(r.身份.编码,g,分区::定义,&meter);
         w.退出事实.push_back(family.编码);
         for(auto type:{k_[I64比较绑定输入FT关系],k_[I64比较绑定输出FT关系]})
-            for(const auto& edge:关系(r.身份.编码,type,false,g,r.G,分区::定义,&meter))w.退出事实.push_back(edge.编码);
-        for(const auto& value:属性(r.身份.编码,g,r.G,分区::定义,&meter))w.退出事实.push_back(value.编码);
+            for(const auto& edge:关系(r.身份.编码,type,false,g,分区::定义,&meter))w.退出事实.push_back(edge.编码);
+        for(const auto& value:属性(r.身份.编码,g,分区::定义,&meter))w.退出事实.push_back(value.编码);
         规范化写集(w);return w;
     }
     template<class R> 特征I64比较绑定结果 绑定执行写(const R& r);
@@ -1404,7 +1310,7 @@ private:
     static constexpr std::int64_t 标量格式标记 = 0x5343414C41520002LL;
     struct 标量失败 { SS 状态; };
     struct 标量读取上下文 {
-        std::uint64_t G = 0, H = 0;
+        std::uint64_t G = 0;
         特征类派生读取预算 预算;
         std::set<稳定编码> 定义计数, 关系计数, 叶计数, 值计数;
         std::map<稳定编码, 特征类标量派生事实> 定义;
@@ -1415,7 +1321,7 @@ private:
         std::uint64_t 最大实际深度=0;
         读取计量 自有计量;
         读取计量* 计量=&自有计量;
-        标量读取上下文(std::uint64_t g,std::uint64_t h,const 特征类派生读取预算& b):G(g),H(h),预算(b){
+        标量读取上下文(std::uint64_t g,const 特征类派生读取预算& b):G(g),预算(b){
             自有计量.上限={UINT64_MAX,b.最大关系数,b.最大属性值数,b.最大材料总数};
         }
         标量读取上下文(const 标量读取上下文&)=delete;
@@ -1428,8 +1334,6 @@ private:
         switch (s) {
         case L1所有者范围读取状态::成功: return SS::已读取;
         case L1所有者范围读取状态::未找到: return SS::未找到;
-        case L1所有者范围读取状态::已退出: return SS::已退出;
-        case L1所有者范围读取状态::历史材料已清理: return SS::历史材料不可用;
         case L1所有者范围读取状态::事实代次漂移: return SS::事实代次漂移;
         case L1所有者范围读取状态::资源失败: return SS::资源失败;
         case L1所有者范围读取状态::入口拒绝: return SS::入口拒绝;
@@ -1445,8 +1349,7 @@ private:
     }
     void 标量守卫(std::uint64_t g) const { 标量要求(标量当前G() == g, SS::事实代次漂移); }
     template<class T> static bool 标量活动(const T& f, std::uint64_t h) noexcept {
-        return f.创建事实代次 && f.创建事实代次 <= h
-            && (!f.退出事实代次 || *f.退出事实代次 > h);
+        return f.创建事实代次 && f.创建事实代次 <= h;
     }
     static void 标量计数(std::set<稳定编码>& ids, 稳定编码 id, std::uint64_t limit) {
         if(ids.contains(id))return;
@@ -1463,52 +1366,44 @@ private:
         if(c.计量){
             const auto raw=原始事实(id,c.G,c.计量);const auto* n=std::get_if<SN>(&raw);
             标量要求(n&&n->编码==id&&(!own||n->写入所有者==definitions_.所有者身份()));
-            标量要求(标量活动(*n,c.H),n->退出事实代次&&*n->退出事实代次<=c.H ? SS::已退出 : SS::未找到);
+            标量要求(标量活动(*n,c.G),SS::未找到);
             return *n;
         }
-        const auto r = l1_.读取所有者范围历史事实({L1所有者范围CRUD合同版本, id});
-        if (r.状态 != L1所有者范围读取状态::成功) {
-            标量守卫(c.G);
-            throw 标量失败{标量映射(r.状态)};
-        }
-        标量要求(r.读取事实代次 == c.G, SS::事实代次漂移);
-        const auto* n = r.事实 ? std::get_if<SN>(&*r.事实) : nullptr;
-        标量要求(r.合同版本 == L1所有者范围CRUD合同版本 && r.查询编码 == id
-            && n && n->编码 == id && (!own || n->写入所有者 == definitions_.所有者身份()));
-        标量要求(标量活动(*n, c.H), n->退出事实代次 && *n->退出事实代次 <= c.H ? SS::已退出 : SS::未找到);
+        const auto raw=原始事实(id,c.G);const auto* n=std::get_if<SN>(&raw);
+        标量要求(n && n->编码 == id && (!own || n->写入所有者 == definitions_.所有者身份()));
+        标量要求(标量活动(*n, c.G), SS::未找到);
         if(c.计量) c.计量->记(L1所有者范围事实副本{*n});
         return *n;
     }
     SV 标量属性(const SN& n, 稳定编码 type, 标量读取上下文& c) const {
-        const auto values = 属性(n.编码, c.G, c.H, 分区::定义,c.计量);
+        const auto values = 属性(n.编码, c.G, 分区::定义,c.计量);
         const auto& v = 唯一属性(values, type);
         标量计数(c, c.值计数, v.编码, c.预算.最大属性值数);
-        标量要求(v.来源节点 == n.编码 && v.创建事实代次 == n.创建事实代次 && v.退出事实代次 == n.退出事实代次);
+        标量要求(v.来源节点 == n.编码 && v.创建事实代次 == n.创建事实代次);
         return v;
     }
     std::vector<SE> 标量关系(稳定编码 id, 稳定编码 type, bool incoming, 标量读取上下文& c) const {
         if(c.计量){
-            auto out=关系(id,type,incoming,c.G,c.H,分区::定义,c.计量);
+            auto out=关系(id,type,incoming,c.G,分区::定义,c.计量);
             for(const auto& edge:out)标量计数(c,c.关系计数,edge.编码,c.预算.最大关系数);
             return out;
         }
-        const auto direction = incoming ? L1所有者范围关系端点方向::目标 : L1所有者范围关系端点方向::源;
-        const auto r = l1_.读取所有者范围历史关系组({L1所有者范围CRUD合同版本, direction, id, type, c.H});
-        if (r.状态 != L1所有者范围读取状态::成功) {
-            标量守卫(c.G); throw 标量失败{标量映射(r.状态)};
-        }
-        标量要求(r.读取事实代次 == c.G, SS::事实代次漂移);
-        标量要求(r.合同版本 == L1所有者范围CRUD合同版本 && r.方向 == direction
-            && r.端点节点 == id && r.关系类型节点 == type && r.历史截止事实代次 == c.H);
+        std::vector<SE> current;
+        if(incoming){const auto r=l1_.读取所有者范围当前目标关系组({L1所有者范围CRUD合同版本,id,type});
+            if(r.状态!=L1所有者范围读取状态::成功){标量守卫(c.G);throw 标量失败{标量映射(r.状态)};}
+            标量要求(r.读取事实代次==c.G,SS::事实代次漂移);current=r.关系组;
+        }else{const auto r=l1_.读取所有者范围当前源关系组({L1所有者范围CRUD合同版本,id,type});
+            if(r.状态!=L1所有者范围读取状态::成功){标量守卫(c.G);throw 标量失败{标量映射(r.状态)};}
+            标量要求(r.读取事实代次==c.G,SS::事实代次漂移);current=r.关系组;}
         std::uint64_t extra = 0;
-        for (const auto& e : r.关系组) if (!c.关系计数.contains(e.编码)) ++extra;
+        for (const auto& e : current) if (!c.关系计数.contains(e.编码)) ++extra;
         标量要求(extra <= c.预算.最大关系数 - c.关系计数.size(), SS::预算不足);
         std::set<稳定编码> unique;
-        auto out = r.关系组;
+        auto out = std::move(current);
         for (const auto& e : out) {
             if(c.计量) c.计量->记(L1所有者范围事实副本{e});
             标量要求(有效(e.编码) && e.写入所有者 == definitions_.所有者身份() && e.关系类型节点 == type
-                && (incoming ? e.目标节点 : e.源节点) == id && 标量活动(e, c.H)
+                && (incoming ? e.目标节点 : e.源节点) == id && 标量活动(e, c.G)
                 && unique.insert(e.编码).second);
             标量计数(c,c.关系计数,e.编码,c.预算.最大关系数);
         }
@@ -1617,8 +1512,8 @@ private:
         const auto n = 标量节点(id, c);
         标量要求(n.种类==节点种类::普通&&!n.属性类型表示,SS::类型不匹配);
         标量计数(c,c.定义计数,id,c.预算.最大定义数);
-        标量计数(c, c.关系计数, 核对归属(id, c.G, c.H, 分区::定义,c.计量).编码, c.预算.最大关系数);
-        标量要求(属性(id,c.G,c.H,分区::定义,c.计量).size()==2,SS::类型不匹配);
+        标量计数(c, c.关系计数, 核对归属(id, c.G, 分区::定义,c.计量).编码, c.预算.最大关系数);
+        标量要求(属性(id,c.G,分区::定义,c.计量).size()==2,SS::类型不匹配);
         const auto order = 标量属性(n, d_[阶次属性], c);
         const auto rule = 标量属性(n, d_[派生规则属性], c);
         const auto* level = std::get_if<std::int64_t>(&order.材料);
@@ -1629,13 +1524,13 @@ private:
         d.定义身份 = {id}; d.真实阶次 = static_cast<std::uint32_t>(*level);
         d.阶次值 = order.编码; d.规则值 = rule.编码;
         d.派生规则 = {{(*rules)[0]}, static_cast<std::uint32_t>((*rules)[1])};
-        d.创建G = n.创建事实代次; d.退出G = n.退出事实代次;
+        d.创建G = n.创建事实代次;
         (void)标量节点(d.派生规则.规则身份, c, false);
         const auto sources = 标量关系(id, d_[直接来源关系], false, c);
         const auto host = 标量关系(id, d_[派生宿主关系], false, c);
         const auto reg = 标量关系(id, d_[注册归属关系], false, c);
         标量要求(sources.size() == 2 && host.size() <= 1 && reg.size() == 1);
-        auto sameLife = [&](const SE& e) { 标量要求(e.创建事实代次 == n.创建事实代次 && e.退出事实代次 == n.退出事实代次); };
+        auto sameLife = [&](const SE& e) { 标量要求(e.创建事实代次 == n.创建事实代次); };
         for (unsigned i = 0; i < 2; ++i) {
             const auto& e = sources[i]; sameLife(e);
             const auto bits = static_cast<std::uint64_t>(e.角色或顺序);
@@ -1652,8 +1547,8 @@ private:
         sameLife(reg[0]); 标量要求(reg[0].角色或顺序 == 1);
         const auto rn = 标量节点(reg[0].目标节点, c);
         标量要求(rn.种类 == 节点种类::普通 && !rn.属性类型表示
-            && 属性(rn.编码,c.G,c.H,分区::定义,c.计量).size()==2
-            && rn.创建事实代次 == n.创建事实代次 && rn.退出事实代次 == n.退出事实代次);
+            && 属性(rn.编码,c.G,分区::定义,c.计量).size()==2
+            && rn.创建事实代次 == n.创建事实代次);
         const auto uv = 标量属性(rn, d_[注册U64属性], c);
         const auto iv = 标量属性(rn, d_[注册I64属性], c);
         const auto* u = std::get_if<std::vector<std::uint64_t>>(&uv.材料);
@@ -1666,10 +1561,10 @@ private:
             const auto& e = outputs[i]; sameLife(e);
             标量要求(e.角色或顺序 == static_cast<std::int64_t>(d.注册.输出组[i].角色));
             const auto ft = 标量节点(e.目标节点, c);
-            标量计数(c, c.关系计数, 核对归属(ft.编码, c.G, c.H, 分区::定义,c.计量).编码, c.预算.最大关系数);
+            标量计数(c, c.关系计数, 核对归属(ft.编码, c.G, 分区::定义,c.计量).编码, c.预算.最大关系数);
             标量要求(ft.种类 == 节点种类::属性类型 && ft.属性类型表示 == L1所有者范围值表示种类::I64
-                && 属性(ft.编码,c.G,c.H,分区::定义,c.计量).size()==1
-                && ft.创建事实代次 == n.创建事实代次 && ft.退出事实代次 == n.退出事实代次);
+                && 属性(ft.编码,c.G,分区::定义,c.计量).size()==1
+                && ft.创建事实代次 == n.创建事实代次);
             const auto marker = 标量属性(ft, ft.编码, c);
             const auto* value = std::get_if<std::int64_t>(&marker.材料);
             标量要求(value && *value == 标量格式标记);
@@ -1683,12 +1578,12 @@ private:
     }
     特征类标量叶回执 标量读叶(稳定编码 id, 标量读取上下文& c) const {
         标量要求(c.叶计数.contains(id)||c.叶计数.size()<c.预算.最大叶数,SS::预算不足);
-        const auto f = 读准确({id}, c.G, c.H, &c,c.计量);
+        const auto f = 读准确({id}, c.G, &c,c.计量);
         标量计数(c,c.叶计数,id,c.预算.最大叶数);
         特征类标量叶回执 out;
         out.F = id; out.FT = f.信息.类型.编码; out.值事实 = f.准确值事实;
         out.完整值 = f.完整值; out.类型关系 = f.类型关系; out.Gread = c.G;
-        out.值 = 完整整数(f); out.G = c.H; out.创建G = f.创建G; out.退出G = f.退出G;
+        out.值 = 完整整数(f); out.创建G = f.创建G;
         return out;
     }
     const 特征类标量输出事实& 标量输出(const 特征类标量派生事实& d, unsigned role) const {
@@ -1741,7 +1636,7 @@ private:
     }
     特征类标量派生读取结果 标量读取结果(稳定编码 id, 标量读取上下文& c) const {
         特征类标量派生读取结果 out;
-        out.状态 = SS::已读取; out.Gread = c.G; out.H = c.H; out.定义事实 = c.定义.at(id);
+        out.状态 = SS::已读取; out.Gread = c.G; out.定义事实 = c.定义.at(id);
         for (const auto& leaf : c.闭包.at(id)) out.基础叶组.push_back(c.叶.at(leaf));
         const auto& d = *out.定义事实;
         const auto& left = c.闭包.at(标量来源编码(d.来源组[0].内容.来源));
@@ -1756,11 +1651,11 @@ public:
     特征类标量派生批量读取结果 批量读取标量派生定义(const 特征类标量派生批量读取请求&) const;
     特征类标量派生读取结果 读取标量派生定义(const 特征类标量派生读取请求& r) const {
         特征类标量派生读取结果 out;
-        标量读取上下文 c{r.Gread,r.H,r.预算};
-        auto fail = [&](SS e) { 特征类标量派生读取结果 f; f.状态 = e; f.Gread = out.Gread; f.H = r.H; f.用量={c.定义计数.size(),c.计量->用量.关系数,c.叶计数.size(),c.计量->用量.属性值数,c.最大实际深度,c.计量->用量.材料总数}; return f; };
+        标量读取上下文 c{r.Gread,r.预算};
+        auto fail = [&](SS e) { 特征类标量派生读取结果 f; f.状态 = e; f.Gread = out.Gread; f.用量={c.定义计数.size(),c.计量->用量.关系数,c.叶计数.size(),c.计量->用量.属性值数,c.最大实际深度,c.计量->用量.材料总数}; return f; };
         try {
             std::lock_guard<std::mutex> lock(mutex_);
-            标量要求(r.版本 == 2 && r.H && r.Gread >= r.H && 有效(r.定义身份.结点) && r.预算.有效(), SS::入口拒绝);
+            标量要求(r.版本 == 2 && r.Gread && 有效(r.定义身份.结点) && r.预算.有效(), SS::入口拒绝);
             标量守卫(r.Gread); out.Gread = r.Gread;
             标量展开(r.定义身份.结点, true, c);
             out = 标量读取结果(r.定义身份.结点, c); 标量守卫(r.Gread);
@@ -1825,12 +1720,12 @@ private:
             d.注册U64值, d.注册I64值, d.注册归属};
         for (const auto& x : d.来源组) w.退出事实.push_back(x.关系);
         if (d.宿主关系) w.退出事实.push_back(*d.宿主关系);
-        // L1 退出节点时保存完整历史属性；不能再向退出节点提交槽变更。
+        // 退出节点时直接删除当前事实；不能再向退出节点提交槽变更。
         for (const auto& x : d.输出组) {
             w.退出事实.insert(w.退出事实.end(), {x.特征类型, x.归属关系, x.格式标记值事实});
         }
-        w.退出事实.push_back(核对归属(d.定义身份.结点, g, r.G, 分区::定义).编码);
-        for (const auto& x : d.输出组) w.退出事实.push_back(核对归属(x.特征类型, g, r.G, 分区::定义).编码);
+        w.退出事实.push_back(核对归属(d.定义身份.结点, g, 分区::定义).编码);
+        for (const auto& x : d.输出组) w.退出事实.push_back(核对归属(x.特征类型, g, 分区::定义).编码);
         标量排序写集(w); return w;
     }
     std::uint32_t 标量准入来源(const 特征类标量派生建立请求& r, 标量读取上下文& c) const {
@@ -1901,27 +1796,26 @@ private:
             标量要求(!pending_&&!binding_pending_, SS::已可能发布);
             if(scalar_pending_) {
                 const auto* original=std::get_if<R>(&scalar_pending_->原请求);
-                标量要求(!scalar_pending_->旧治理&&original&&*original==r,SS::已可能发布);
+                标量要求(original&&*original==r,SS::已可能发布);
             }
-            out.Gread = 标量当前G(); 结构就绪(分区::定义, out.Gread, out.Gread);
-            if(!scalar_pending_)scalar_pending_.emplace(待确认标量业务{false,r});
+            out.Gread = 标量当前G(); 结构就绪(分区::定义, out.Gread);
+            if(!scalar_pending_)scalar_pending_.emplace(待确认标量业务{r});
             ownsRecovery=true;keyUnknown=true;
             const auto first = definitions_.读取首次写入材料({L1所有者范围首次写入读取合同版本, r.幂等身份});
             L1所有者范围写集请求 w;
             稳定编码 target{};
-            std::uint64_t readH = r.G;
             if (first.状态 == L1所有者范围读取状态::成功) {
                 标量要求(first.合同版本 == L1所有者范围首次写入读取合同版本
                     && first.所有者 == definitions_.所有者身份() && first.写入幂等身份 == r.幂等身份
                     && first.首次规范化写集 && first.首次写入结果);
                 const auto& saved = *first.首次写入结果;
-                if (saved.事实代次 && saved.事实代次 <= out.Gread) out.首次发布H = saved.事实代次;
+                if (saved.事实代次 && saved.事实代次 <= out.Gread) out.首次发布代次 = saved.事实代次;
                 out.正式回执 = saved; prior = true; keyUnknown = false;
                 标量要求(saved.状态 == L1所有者范围写入状态::成功 && 写入结果头完整(saved, r.幂等身份)
-                    && out.首次发布H && first.读取事实代次 == out.Gread);
+                    && out.首次发布代次 && first.读取事实代次 == out.Gread);
                 标量守卫(out.Gread);
                 标量要求(first.首次规范化写集->期望事实代次 == r.G, SS::幂等冲突);
-                标量读取上下文 c{out.Gread, create ? *out.首次发布H : r.G, r.预算};
+                标量读取上下文 c{out.Gread, r.预算};
                 if constexpr (create) {
                     const auto id = 标量查找编码(saved, SK{1});
                     标量要求(id.has_value()); target = *id;
@@ -1929,9 +1823,11 @@ private:
                     w = 标量建立写集(r, c.定义.at(target).真实阶次);
                     标量映射互证(saved, c.定义.at(target));
                 } else {
-                    target = r.定义身份.结点; 标量展开(target, true, c);
-                    w = 标量退出写集(r, c.定义.at(target), c.G);
-                    标量要求(saved.新编码映射.empty());
+                    target = r.定义身份.结点;
+                    w = *first.首次规范化写集;
+                    标量要求(saved.新编码映射.empty() && w.节点.empty() && w.关系.empty()
+                        && w.值.empty() && w.属性槽变更.empty()
+                        && std::count(w.退出事实.begin(), w.退出事实.end(), target) == 1);
                 }
                 标量要求(w == *first.首次规范化写集, SS::幂等冲突);
             } else if (first.状态 == L1所有者范围读取状态::未找到) {
@@ -1939,7 +1835,7 @@ private:
                     && first.所有者 == definitions_.所有者身份() && first.写入幂等身份 == r.幂等身份);
                 keyUnknown = false; out.发布确定性 = SP::确认未发布;
                 标量守卫(r.G); out.Gread = r.G;
-                标量读取上下文 c{r.G, r.G, r.预算};
+                标量读取上下文 c{r.G, r.预算};
                 if constexpr (create) w = 标量建立写集(r, 标量准入来源(r, c));
                 else {
                     target = r.定义身份.结点; 标量展开(target, true, c);
@@ -1966,26 +1862,34 @@ private:
                 }
                 return fail(committed.状态 == L1所有者范围写入状态::幂等冲突 ? SS::幂等冲突 : SS::已可能发布);
             }
-            if (committed.事实代次) out.首次发布H = committed.事实代次;
-            标量要求(写入结果头完整(committed, r.幂等身份) && out.首次发布H);
+            if (committed.事实代次) out.首次发布代次 = committed.事实代次;
+            标量要求(写入结果头完整(committed, r.幂等身份) && out.首次发布代次);
             out.Gread = 标量当前G();
-            标量要求(out.Gread >= *out.首次发布H);
+            标量要求(out.Gread >= *out.首次发布代次);
             if constexpr (create) {
                 const auto id = 标量查找编码(committed, SK{1});
-                标量要求(id.has_value()); target = *id; readH = *out.首次发布H;
-            }
-            标量读取上下文 c{out.Gread, readH, r.预算};
-            标量展开(target, true, c);
-            auto d = c.定义.at(target);
-            if constexpr (create) {
+                标量要求(id.has_value()); target = *id;
+                标量读取上下文 c{out.Gread, r.预算};
+                标量展开(target, true, c);
+                auto d = c.定义.at(target);
                 标量映射互证(committed, d);
                 标量要求(标量建立写集(r, d.真实阶次) == w);
+                out.定义事实 = std::move(d);
             } else {
-                标量要求(committed.新编码映射.empty() && d.退出G == out.首次发布H && 标量退出写集(r, d, c.G) == w);
+                标量要求(committed.新编码映射.empty());
+                for (const auto id : w.退出事实) {
+                    const auto fact = l1_.读取所有者范围当前事实({
+                        L1所有者范围当前事实读取合同版本_v2, definitions_.所有者身份(), id, out.Gread});
+                    标量要求(fact.状态 == L1所有者范围当前事实读取状态_v2::未找到
+                        && fact.合同版本 == L1所有者范围当前事实读取合同版本_v2
+                        && fact.所有者 == definitions_.所有者身份() && fact.事实编码 == id
+                        && fact.期望事实代次 == out.Gread && fact.读取事实代次 == out.Gread && !fact.载荷);
+                }
+                out.定义事实.reset();
             }
             标量守卫(out.Gread);
-            out.定义事实 = std::move(d); out.发布确定性 = SP::确认已发布;
-            out.状态 = committed.状态 == L1所有者范围写入状态::精确重复 ? SS::精确重复 : create ? SS::已创建 : SS::已退出;
+            out.发布确定性 = SP::确认已发布;
+            out.状态 = committed.状态 == L1所有者范围写入状态::精确重复 ? SS::精确重复 : create ? SS::已创建 : SS::已删除;
             标量要求(out.成功()); scalar_pending_.reset();return out;
         } catch (const 标量失败& e) { return fail(e.状态); }
         catch (const std::bad_alloc&) { return fail(SS::资源失败); }
@@ -2006,9 +1910,7 @@ private:
         原子I64特征候选查询结果 out;out.Gread=r.Gread;out.原请求=r;
         auto map=[](L1所有者范围读取状态 s) {
             using Q=原子I64特征候选查询状态;
-            switch(s) {case L1所有者范围读取状态::已退出:return Q::目标已退出;
-                case L1所有者范围读取状态::事实代次漂移:return Q::事实代次漂移;
-                case L1所有者范围读取状态::历史材料已清理:return Q::历史材料不可用;
+            switch(s) {case L1所有者范围读取状态::事实代次漂移:return Q::事实代次漂移;
                 case L1所有者范围读取状态::资源失败:return Q::资源失败;default:return Q::内部不一致;}
         };
         try {
@@ -2022,8 +1924,8 @@ private:
                     throw 原子I64特征候选查询状态::事实代次漂移;
             };
             guard();
-            const auto rows=l1_.读取所有者范围历史关系组({L1所有者范围CRUD合同版本,
-                L1所有者范围关系端点方向::目标,r.正式特征类型,f_[准确类型关系],r.Gread});
+            const auto rows=l1_.读取所有者范围当前目标关系组({L1所有者范围CRUD合同版本,
+                r.正式特征类型,f_[准确类型关系]});
             if(rows.读取事实代次!=r.Gread)throw 原子I64特征候选查询状态::事实代次漂移;
             if(rows.状态!=L1所有者范围读取状态::成功)throw map(rows.状态);
             if(rows.关系组.size()>r.候选读取预算.最大候选数)
@@ -2031,24 +1933,28 @@ private:
             for(const auto& edge:rows.关系组) {
                 if(edge.写入所有者!=information_.所有者身份()||edge.目标节点!=r.正式特征类型||
                    edge.关系类型节点!=f_[准确类型关系]||edge.角色或顺序!=1||
-                   edge.创建事实代次>r.Gread||edge.退出事实代次)
+                   edge.创建事实代次>r.Gread)
                     throw 原子I64特征候选查询状态::内部不一致;
                 if(std::find_if(out.候选.begin(),out.候选.end(),[&](const auto& x){return x.F==edge.源节点;})!=out.候选.end())
                     throw 原子I64特征候选查询状态::内部不一致;
-                const auto node=l1_.读取所有者范围历史事实({L1所有者范围CRUD合同版本,edge.源节点});
-                const auto values=l1_.读取所有者范围历史属性值组({L1所有者范围CRUD合同版本,edge.源节点,r.Gread});
+                const L1所有者范围当前事实读取请求_v2 nodeRequest{
+                    L1所有者范围当前事实读取合同版本_v2,information_.所有者身份(),edge.源节点,r.Gread};
+                const auto node=l1_.读取所有者范围当前事实(nodeRequest);
+                const L1所有者范围所属节点当前完整值组读取请求_v2 valuesRequest{
+                    L1所有者范围所属节点当前完整值组读取合同版本_v2,information_.所有者身份(),edge.源节点,r.Gread};
+                const auto values=l1_.读取所有者范围所属节点当前完整值组(valuesRequest);
                 if(node.读取事实代次!=r.Gread||values.读取事实代次!=r.Gread)
                     throw 原子I64特征候选查询状态::事实代次漂移;
-                if(node.状态!=L1所有者范围读取状态::成功)throw map(node.状态);
-                if(values.状态!=L1所有者范围读取状态::成功)throw map(values.状态);
-                const auto* n = node.事实 ? std::get_if<L1所有者范围节点事实>(&*node.事实) : nullptr;
+                if(node.状态!=L1所有者范围当前事实读取状态_v2::成功)throw 原子I64特征候选查询状态::内部不一致;
+                if(values.状态!=L1所有者范围所属节点当前完整值组读取状态_v2::成功)throw 原子I64特征候选查询状态::内部不一致;
+                const auto* n = node.载荷 ? std::get_if<L1所有者范围节点事实>(&*node.载荷) : nullptr;
                 if(!n||n->写入所有者!=information_.所有者身份()||n->创建事实代次>r.Gread||
-                   (n->退出事实代次&&*n->退出事实代次<=r.Gread)||values.属性值组.size()!=1)
+                   values.载荷.size()!=1)
                     throw 原子I64特征候选查询状态::内部不一致;
-                const auto& value=values.属性值组.front();
+                const auto& value=values.载荷.front();
                 if(value.写入所有者!=information_.所有者身份()||value.所属节点!=edge.源节点||
                    value.属性类型节点!=f_[准确内联属性]||value.创建事实代次!=n->创建事实代次||
-                   value.退出事实代次||!std::holds_alternative<std::int64_t>(value.材料))
+                   !std::holds_alternative<std::int64_t>(value.材料))
                     throw 原子I64特征候选查询状态::内部不一致;
                 if(std::get<std::int64_t>(value.材料)!=r.准确I64)continue;
                 out.候选.push_back({edge.源节点,n->创建事实代次});
@@ -2061,9 +1967,9 @@ private:
     }
     原子I64特征参与结果<L1有限N分区原子参与者写集_v3>
     准备原子I64出生片段(const 原子I64特征出生请求& r,std::uint64_t g) const override {
-        原子I64特征参与结果<L1有限N分区原子参与者写集_v3> out;out.Gread=g;out.H=r.G0;
-        try { std::lock_guard<std::mutex> lock(mutex_);截止有效(1,g,r.G0);守卫(g);
-            结构就绪(分区::信息,g,r.G0);const auto ft=读类型({r.正式特征类型},g,r.G0);
+        原子I64特征参与结果<L1有限N分区原子参与者写集_v3> out;out.Gread=g;
+        try { std::lock_guard<std::mutex> lock(mutex_);当前读取有效(1,g);要求(g==r.G0,S::并发变化);守卫(g);
+            结构就绪(分区::信息,g);const auto ft=读类型({r.正式特征类型},g);
             要求(包含(规范域({ft.规格.允许集合}),特征规范I64域{{{r.准确I64,r.准确I64}}}),S::类型不相容);
             L1有限N分区原子参与者写集_v3 p; p.参与者={1};p.所有者=information_.所有者身份();auto&w=p.写集;
             w={L1所有者范围CRUD合同版本,r.G0,r.键.内容};const Key f{1};w.节点.push_back({f,节点种类::普通,{}});
@@ -2074,29 +1980,31 @@ private:
         return out;
     }
     原子I64特征窄读取结果<原子I64特征内容事实> 读取原子I64内容(const 原子I64特征内容读取请求& r) const override {
-        原子I64特征窄读取结果<原子I64特征内容事实> out;out.Gread=r.Gread;out.H=r.H;
+        原子I64特征窄读取结果<原子I64特征内容事实> out;out.Gread=r.Gread;
         auto map=[](L1所有者范围读取状态 s) {
             using X=原子I64特征窄读取状态;
             switch(s) {case L1所有者范围读取状态::未找到:return X::未找到;
-                case L1所有者范围读取状态::已退出:return X::目标已退出;
                 case L1所有者范围读取状态::事实代次漂移:return X::事实代次漂移;
-                case L1所有者范围读取状态::历史材料已清理:return X::历史材料不可用;
                 case L1所有者范围读取状态::资源失败:return X::资源失败;default:return X::内部不一致;}
         };
-        try { if(r.版本!=1||!r.Gread||!r.H||r.H>r.Gread||!有效(r.F))return out;
+        try { if(r.版本!=1||!r.Gread||!有效(r.F))return out;
             const auto guard=[&]{const auto x=l1_.读取中性当前事实代次({L1中性CRUD合同版本});if(x.状态!=L1中性读取状态::成功||x.事实代次!=r.Gread)throw 原子I64特征窄读取状态::事实代次漂移;};guard();
-            const auto node=l1_.读取所有者范围历史事实({L1所有者范围CRUD合同版本,r.F});
-            const auto edges=l1_.读取所有者范围历史关系组({L1所有者范围CRUD合同版本,L1所有者范围关系端点方向::源,r.F,f_[准确类型关系],r.H});
-            const auto values=l1_.读取所有者范围历史属性值组({L1所有者范围CRUD合同版本,r.F,r.H});
+            const L1所有者范围当前事实读取请求_v2 nodeRequest{
+                L1所有者范围当前事实读取合同版本_v2,information_.所有者身份(),r.F,r.Gread};
+            const auto node=l1_.读取所有者范围当前事实(nodeRequest);
+            const auto edges=l1_.读取所有者范围当前源关系组({L1所有者范围CRUD合同版本,r.F,f_[准确类型关系]});
+            const L1所有者范围所属节点当前完整值组读取请求_v2 valuesRequest{
+                L1所有者范围所属节点当前完整值组读取合同版本_v2,information_.所有者身份(),r.F,r.Gread};
+            const auto values=l1_.读取所有者范围所属节点当前完整值组(valuesRequest);
             if(node.读取事实代次!=r.Gread||edges.读取事实代次!=r.Gread||values.读取事实代次!=r.Gread)throw 原子I64特征窄读取状态::事实代次漂移;
-            if(node.状态!=L1所有者范围读取状态::成功)throw map(node.状态);
+            if(node.状态!=L1所有者范围当前事实读取状态_v2::成功)throw 原子I64特征窄读取状态::内部不一致;
             if(edges.状态!=L1所有者范围读取状态::成功)throw map(edges.状态);
-            if(values.状态!=L1所有者范围读取状态::成功)throw map(values.状态);
-            const auto* n = node.事实 ? std::get_if<L1所有者范围节点事实>(&*node.事实) : nullptr;
-            if(!n||n->写入所有者!=information_.所有者身份()||n->创建事实代次>r.H||
-               (n->退出事实代次&&*n->退出事实代次<=r.H))throw 原子I64特征窄读取状态::目标已退出;
-            if(edges.关系组.size()!=1||values.属性值组.size()!=1)throw 原子I64特征窄读取状态::内部不一致;
-            const auto& e=edges.关系组.front();const auto& v=values.属性值组.front();if(e.写入所有者!=information_.所有者身份()||e.角色或顺序!=1||e.创建事实代次!=n->创建事实代次||e.退出事实代次||v.写入所有者!=information_.所有者身份()||v.属性类型节点!=f_[准确内联属性]||v.创建事实代次!=n->创建事实代次||v.退出事实代次||!std::holds_alternative<std::int64_t>(v.材料))throw 原子I64特征窄读取状态::内部不一致;
+            if(values.状态!=L1所有者范围所属节点当前完整值组读取状态_v2::成功)throw 原子I64特征窄读取状态::内部不一致;
+            const auto* n = node.载荷 ? std::get_if<L1所有者范围节点事实>(&*node.载荷) : nullptr;
+            if(!n||n->写入所有者!=information_.所有者身份()||n->创建事实代次>r.Gread)
+                throw 原子I64特征窄读取状态::未找到;
+            if(edges.关系组.size()!=1||values.载荷.size()!=1)throw 原子I64特征窄读取状态::内部不一致;
+            const auto& e=edges.关系组.front();const auto& v=values.载荷.front();if(e.写入所有者!=information_.所有者身份()||e.角色或顺序!=1||e.创建事实代次!=n->创建事实代次||v.写入所有者!=information_.所有者身份()||v.属性类型节点!=f_[准确内联属性]||v.创建事实代次!=n->创建事实代次||!std::holds_alternative<std::int64_t>(v.材料))throw 原子I64特征窄读取状态::内部不一致;
             guard();out.事实=原子I64特征内容事实{r.F,e.目标节点,e.编码,v.编码,std::get<std::int64_t>(v.材料),n->创建事实代次};out.状态=原子I64特征窄读取状态::已读取;
         }catch(原子I64特征窄读取状态 s){out.状态=s;out.事实.reset();}catch(...){out.状态=原子I64特征窄读取状态::内部不一致;out.事实.reset();}return out;
     }
@@ -2110,7 +2018,6 @@ private:
     std::array<稳定编码, R规则结构角色数> r_{};
     std::array<稳定编码, 类型来源结构角色数> source_{};
     bool definition_ready_ = false, information_ready_ = false;
-    std::optional<旧v1派生治理结构交付> legacy_;
     std::optional<待确认写入> pending_;
     std::optional<待确认标量业务> scalar_pending_;
     std::optional<待确认I64绑定业务> binding_pending_;

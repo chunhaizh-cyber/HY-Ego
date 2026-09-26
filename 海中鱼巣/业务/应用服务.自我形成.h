@@ -41,7 +41,7 @@ enum class 真实自我形成状态 : std::uint8_t {
 };
 
 struct 真实自我投影 final {
-  std::uint64_t Gread = 0, H = 0;
+  std::uint64_t Gread = 0;
   稳定编码 E{}, 世界根{};
   存在单例角色事实 角色;
   世界树层级位置 位置;

@@ -14,6 +14,20 @@ using Ref = L1所有者范围事实引用;
 
 struct 初始化失败 final { S 状态; };
 
+L1所有者范围当前读取结果 读取任一当前事实(
+    const L1事实基座服务& l1,稳定编码 id) {
+  const L1所有者范围事实读取请求 request{L1所有者范围CRUD合同版本,id};
+  const std::array reads{l1.读取所有者范围当前节点(request),
+      l1.读取所有者范围当前关系(request),l1.读取所有者范围当前值(request)};
+  std::optional<L1所有者范围当前读取结果> hit;
+  for(const auto&read:reads){
+    if(read.状态==L1所有者范围读取状态::成功){if(hit)return {};
+      hit=read;
+    }else if(read.状态!=L1所有者范围读取状态::未找到)return read;
+  }
+  return hit?*hit:reads.front();
+}
+
 bool 已发布纯概念结构(const L1事实基座服务 &l1,
                       const L1所有者范围写端口 &port,
                       const 纯概念结构交付_v2 &pure,
@@ -29,11 +43,9 @@ bool 已发布纯概念结构(const L1事实基座服务 &l1,
   std::set<std::uint64_t> unique;
   for (std::size_t i = 0; i != ids.size(); ++i) {
     if (!有效(ids[i]) || !unique.insert(ids[i].值).second) return false;
-    const auto read = l1.读取所有者范围历史事实(
-        {L1所有者范围CRUD合同版本, ids[i]});
+    const auto read = 读取任一当前事实(l1,ids[i]);
     if (read.状态 != L1所有者范围读取状态::成功 ||
-        read.读取事实代次 != g || !read.事实 || read.物理清理墓碑 ||
-        read.物理清理事实代次)
+        read.读取事实代次 != g || !read.事实)
       return false;
     const auto *node = std::get_if<L1所有者范围节点事实>(&*read.事实);
     std::optional<L1所有者范围值表示种类> representation;
@@ -46,15 +58,13 @@ bool 已发布纯概念结构(const L1事实基座服务 &l1,
     if (!node || node->写入所有者 != port.所有者身份() ||
         node->种类 !=
             (representation ? 节点种类::属性类型 : 节点种类::普通) ||
-        node->属性类型表示 != representation || node->退出事实代次)
+        node->属性类型表示 != representation)
       return false;
   }
-  const auto registrations = l1.读取所有者范围历史关系组(
-      {L1所有者范围CRUD合同版本, L1所有者范围关系端点方向::源,
-       pure.格式锚点, t.类型登记, g});
+  const auto registrations = l1.读取所有者范围当前源关系组(
+      {L1所有者范围CRUD合同版本, pure.格式锚点, t.类型登记});
   if (registrations.状态 != L1所有者范围读取状态::成功 ||
       registrations.读取事实代次 != g ||
-      registrations.历史截止事实代次 != g ||
       registrations.关系组.size() < 13)
     return false;
   std::array<bool, 13> seen{};
@@ -64,24 +74,29 @@ bool 已发布纯概念结构(const L1事实基座服务 &l1,
     if (seen[slot] || edge.写入所有者 != port.所有者身份() ||
         edge.源节点 != pure.格式锚点 ||
         edge.目标节点 != ids[slot + 2] ||
-        edge.关系类型节点 != t.类型登记 || edge.退出事实代次)
+        edge.关系类型节点 != t.类型登记)
       return false;
     seen[slot] = true;
   }
   if (std::ranges::any_of(seen, [](bool value) { return !value; }))
     return false;
-  const auto values = l1.读取所有者范围历史属性值组(
-      {L1所有者范围CRUD合同版本, pure.格式锚点, g});
-  if (values.状态 != L1所有者范围读取状态::成功 ||
-      values.读取事实代次 != g || values.历史截止事实代次 != g)
+  const L1所有者范围所属节点当前完整值组读取请求_v2 valuesRequest{
+      L1所有者范围所属节点当前完整值组读取合同版本_v2,
+      port.所有者身份(), pure.格式锚点, g};
+  const auto values = l1.读取所有者范围所属节点当前完整值组(valuesRequest);
+  if (values.状态 != L1所有者范围所属节点当前完整值组读取状态_v2::成功 ||
+      values.合同版本 != valuesRequest.合同版本 ||
+      values.所有者 != valuesRequest.所有者 ||
+      values.所属节点 != valuesRequest.所属节点 ||
+      values.期望事实代次 != g || values.读取事实代次 != g)
     return false;
   std::size_t formatCount = 0;
-  for (const auto &value : values.属性值组) {
+  for (const auto &value : values.载荷) {
     if (value.属性类型节点 != t.格式版本) continue;
     ++formatCount;
     if (value.写入所有者 != port.所有者身份() ||
         value.所属节点 != pure.格式锚点 ||
-        value.来源节点 != pure.格式锚点 || value.退出事实代次 ||
+        value.来源节点 != pure.格式锚点 ||
         !std::holds_alternative<std::int64_t>(value.材料) ||
         std::get<std::int64_t>(value.材料) != 2)
       return false;
@@ -92,9 +107,7 @@ bool 已发布纯概念结构(const L1事实基座服务 &l1,
 S 映射读取(L1所有者范围读取状态 v) noexcept {
   switch (v) {
   case L1所有者范围读取状态::未找到: return S::未找到;
-  case L1所有者范围读取状态::已退出: return S::目标已退出;
   case L1所有者范围读取状态::事实代次漂移: return S::事实代次漂移;
-  case L1所有者范围读取状态::历史材料已清理: return S::历史材料不可用;
   case L1所有者范围读取状态::资源失败: return S::资源失败;
   case L1所有者范围读取状态::入口拒绝: return S::入口拒绝;
   default: return S::内部不一致;
@@ -106,36 +119,35 @@ S 映射写入(L1所有者范围写入状态 v) noexcept {
   case L1所有者范围写入状态::事实代次漂移: return S::事实代次漂移;
   case L1所有者范围写入状态::幂等冲突: return S::幂等冲突;
   case L1所有者范围写入状态::引用冲突:
-  case L1所有者范围写入状态::未找到:
-  case L1所有者范围写入状态::已退出: return S::引用冲突;
+  case L1所有者范围写入状态::未找到: return S::引用冲突;
   case L1所有者范围写入状态::资源失败: return S::资源失败;
   case L1所有者范围写入状态::入口拒绝: return S::入口拒绝;
   default: return S::发布未知;
   }
 }
 
-std::array<稳定编码 *, 23> 类型指针(二次关系结构类型 &t) noexcept {
+std::array<稳定编码 *, 22> 类型指针(二次关系结构类型 &t) noexcept {
   return {&t.规范化规则归属, &t.规则版本, &t.定义种类, &t.定义格式,
           &t.域掩码, &t.输出角色, &t.固定K, &t.约束成员, &t.约束FC,
           &t.约束EC, &t.合取成员, &t.子RC, &t.来源成员, &t.来源F,
-          &t.来源B, &t.来源概念, &t.来源截止, &t.用途成员, &t.用途目标,
+          &t.来源B, &t.来源概念, &t.用途成员, &t.用途目标,
           &t.用途业务依据, &t.用途业务标识, &t.用途角色, &t.用途时间};
 }
 
-std::array<稳定编码, 23> 类型值(const 二次关系结构类型 &t) noexcept {
+std::array<稳定编码, 22> 类型值(const 二次关系结构类型 &t) noexcept {
   return {t.规范化规则归属, t.规则版本, t.定义种类, t.定义格式,
           t.域掩码, t.输出角色, t.固定K, t.约束成员, t.约束FC,
           t.约束EC, t.合取成员, t.子RC, t.来源成员, t.来源F, t.来源B,
-          t.来源概念, t.来源截止, t.用途成员, t.用途目标,
+          t.来源概念, t.用途成员, t.用途目标,
           t.用途业务依据, t.用途业务标识, t.用途角色, t.用途时间};
 }
 
 bool 属性类型位置(std::size_t i,
                     L1所有者范围值表示种类 &kind) noexcept {
   switch (i + 1) {
-  case 2: case 3: case 4: case 5: case 6: case 22: case 23:
+  case 2: case 3: case 4: case 5: case 6: case 21: case 22:
     kind = L1所有者范围值表示种类::I64; return true;
-  case 17: case 21:
+  case 20:
     kind = L1所有者范围值表示种类::U64组; return true;
   default: return false;
   }
@@ -146,62 +158,66 @@ L1所有者范围写集请求 形成写集(const 二次关系初始化请求 &r)
   L1所有者范围写集请求 w{L1所有者范围CRUD合同版本, r.G0,
                               r.幂等身份};
   w.节点.push_back({Key{1}, 节点种类::普通, std::nullopt});
-  for (std::size_t i = 0; i != 23; ++i) {
+  for (std::size_t i = 0; i != 22; ++i) {
     L1所有者范围值表示种类 kind{};
     const bool attribute = 属性类型位置(i, kind);
     w.节点.push_back({Key{static_cast<std::uint32_t>(i + 2)},
                       attribute ? 节点种类::属性类型 : 节点种类::普通,
                       attribute ? std::optional{kind} : std::nullopt});
   }
-  w.节点.push_back({Key{25}, 节点种类::普通, std::nullopt});
-  w.值.push_back({Key{26}, Ref{Key{1}}, Ref{p.格式版本}, std::int64_t{1},
+  w.节点.push_back({Key{24}, 节点种类::普通, std::nullopt});
+  w.值.push_back({Key{25}, Ref{Key{1}}, Ref{p.格式版本}, std::int64_t{1},
                     Ref{Key{1}}});
-  w.值.push_back({Key{27}, Ref{Key{25}}, Ref{p.格式版本}, std::int64_t{1},
-                    Ref{Key{25}}});
-  w.值.push_back({Key{28}, Ref{Key{25}}, Ref{Key{3}}, std::int64_t{1},
-                    Ref{Key{25}}});
-  w.属性槽变更.push_back({Ref{Key{1}}, Ref{p.格式版本}, Key{26}});
-  w.属性槽变更.push_back({Ref{Key{25}}, Ref{p.格式版本}, Key{27}});
-  w.属性槽变更.push_back({Ref{Key{25}}, Ref{Key{3}}, Key{28}});
-  w.关系.push_back({Key{29}, Ref{r.纯概念结构.格式锚点}, Ref{Key{1}},
+  w.值.push_back({Key{26}, Ref{Key{24}}, Ref{p.格式版本}, std::int64_t{1},
+                    Ref{Key{24}}});
+  w.值.push_back({Key{27}, Ref{Key{24}}, Ref{Key{3}}, std::int64_t{1},
+                    Ref{Key{24}}});
+  w.属性槽变更.push_back({Ref{Key{1}}, Ref{p.格式版本}, Key{25}});
+  w.属性槽变更.push_back({Ref{Key{24}}, Ref{p.格式版本}, Key{26}});
+  w.属性槽变更.push_back({Ref{Key{24}}, Ref{Key{3}}, Key{27}});
+  w.关系.push_back({Key{28}, Ref{r.纯概念结构.格式锚点}, Ref{Key{1}},
                       Ref{p.类型登记}, 4242});
-  for (std::uint32_t i = 0; i != 23; ++i)
-    w.关系.push_back({Key{30 + i}, Ref{Key{1}}, Ref{Key{2 + i}},
+  for (std::uint32_t i = 0; i != 22; ++i)
+    w.关系.push_back({Key{29 + i}, Ref{Key{1}}, Ref{Key{2 + i}},
                       Ref{p.类型登记}, static_cast<std::int64_t>(i + 1)});
-  w.关系.push_back({Key{53}, Ref{Key{1}}, Ref{Key{25}}, Ref{Key{2}}, 1});
+  w.关系.push_back({Key{51}, Ref{Key{1}}, Ref{Key{24}}, Ref{Key{2}}, 1});
   return w;
 }
 
 L1所有者范围事实副本 读事实(const L1事实基座服务 &l1, 稳定编码 id,
                                   std::uint64_t g) {
-  const auto r = l1.读取所有者范围历史事实(
-      {L1所有者范围CRUD合同版本, id});
+  const auto r = 读取任一当前事实(l1,id);
   if (r.状态 != L1所有者范围读取状态::成功 || r.读取事实代次 != g ||
-      !r.事实 || r.物理清理墓碑 || r.物理清理事实代次)
+      !r.事实)
     throw 初始化失败{映射读取(r.状态)};
   return *r.事实;
 }
 
 std::vector<L1所有者范围关系事实> 读关系(
-    const L1事实基座服务 &l1, 稳定编码 source, 稳定编码 type,
+    const L1事实基座服务 &l1, L1结构所有者身份 owner,
+    稳定编码 source, 稳定编码 type,
     std::uint64_t g) {
-  const auto r = l1.读取所有者范围历史关系组(
-      {L1所有者范围CRUD合同版本, L1所有者范围关系端点方向::源,
-       source, type, g});
-  if (r.状态 != L1所有者范围读取状态::成功 || r.读取事实代次 != g ||
-      r.历史截止事实代次 != g)
+  const auto r = l1.读取所有者范围当前源关系组(
+      {L1所有者范围CRUD合同版本, source, type});
+  if (r.状态 != L1所有者范围读取状态::成功 || r.读取事实代次 != g)
     throw 初始化失败{映射读取(r.状态)};
+  for (const auto &edge : r.关系组)
+    if (edge.写入所有者 != owner)
+      throw 初始化失败{S::内部不一致};
   return r.关系组;
 }
 
 std::vector<L1所有者范围值事实> 读属性(
-    const L1事实基座服务 &l1, 稳定编码 node, std::uint64_t g) {
-  const auto r = l1.读取所有者范围历史属性值组(
-      {L1所有者范围CRUD合同版本, node, g});
-  if (r.状态 != L1所有者范围读取状态::成功 || r.读取事实代次 != g ||
-      r.历史截止事实代次 != g)
-    throw 初始化失败{映射读取(r.状态)};
-  return r.属性值组;
+    const L1事实基座服务 &l1, L1结构所有者身份 owner,
+    稳定编码 node, std::uint64_t g) {
+  const L1所有者范围所属节点当前完整值组读取请求_v2 request{
+      L1所有者范围所属节点当前完整值组读取合同版本_v2, owner, node, g};
+  const auto r = l1.读取所有者范围所属节点当前完整值组(request);
+  if (r.状态 != L1所有者范围所属节点当前完整值组读取状态_v2::成功 ||
+      r.合同版本 != request.合同版本 || r.所有者 != owner ||
+      r.所属节点 != node || r.期望事实代次 != g || r.读取事实代次 != g)
+    throw 初始化失败{S::内部不一致};
+  return r.载荷;
 }
 
 二次关系结构交付 核验并形成交付(
@@ -212,26 +228,25 @@ std::vector<L1所有者范围值事实> 读属性(
   const auto anchorRaw = 读事实(l1, anchor, g);
   const auto *anchorNode = std::get_if<L1所有者范围节点事实>(&anchorRaw);
   if (!anchorNode || anchorNode->写入所有者 != owner ||
-      anchorNode->种类 != 节点种类::普通 || anchorNode->属性类型表示 ||
-      anchorNode->退出事实代次)
+      anchorNode->种类 != 节点种类::普通 || anchorNode->属性类型表示)
     throw 初始化失败{S::内部不一致};
 
   二次关系结构交付 out;
   out.锚点 = anchor;
-  auto edges = 读关系(l1, anchor, pure.类型.类型登记, g);
-  std::array<bool, 23> seen{};
+  auto edges = 读关系(l1, owner, anchor, pure.类型.类型登记, g);
+  std::array<bool, 22> seen{};
   auto ptrs = 类型指针(out.类型);
   for (const auto &e : edges) {
-    if (e.角色或顺序 < 1 || e.角色或顺序 > 23)
+    if (e.角色或顺序 < 1 || e.角色或顺序 > 22)
       throw 初始化失败{S::内部不一致};
     const auto i = static_cast<std::size_t>(e.角色或顺序 - 1);
     if (seen[i] || e.写入所有者 != owner || e.源节点 != anchor ||
-        e.关系类型节点 != pure.类型.类型登记 || e.退出事实代次)
+        e.关系类型节点 != pure.类型.类型登记)
       throw 初始化失败{S::内部不一致};
     seen[i] = true;
     *ptrs[i] = e.目标节点;
   }
-  if (edges.size() != 23) throw 初始化失败{S::内部不一致};
+  if (edges.size() != 22) throw 初始化失败{S::内部不一致};
 
   std::set<std::uint64_t> unique{anchor.值};
   const auto ids = 类型值(out.类型);
@@ -242,17 +257,16 @@ std::vector<L1所有者范围值事实> 读属性(
     const auto *node = std::get_if<L1所有者范围节点事实>(&raw);
     L1所有者范围值表示种类 kind{};
     const bool attribute = 属性类型位置(i, kind);
-    if (!node || node->写入所有者 != owner || node->退出事实代次 ||
+    if (!node || node->写入所有者 != owner ||
         node->种类 != (attribute ? 节点种类::属性类型 : 节点种类::普通) ||
         node->属性类型表示 !=
             (attribute ? std::optional{kind} : std::nullopt))
       throw 初始化失败{S::内部不一致};
   }
 
-  const auto ruleEdges = 读关系(l1, anchor, out.类型.规范化规则归属, g);
+  const auto ruleEdges = 读关系(l1, owner, anchor, out.类型.规范化规则归属, g);
   if (ruleEdges.size() != 1 || ruleEdges[0].写入所有者 != owner ||
-      ruleEdges[0].源节点 != anchor || ruleEdges[0].角色或顺序 != 1 ||
-      ruleEdges[0].退出事实代次)
+      ruleEdges[0].源节点 != anchor || ruleEdges[0].角色或顺序 != 1)
     throw 初始化失败{S::内部不一致};
   out.规范化规则 = 概念树规则身份{ruleEdges[0].目标节点};
   if (!有效(out.规范化规则.值) ||
@@ -261,18 +275,17 @@ std::vector<L1所有者范围值事实> 读属性(
   const auto ruleRaw = 读事实(l1, out.规范化规则.值, g);
   const auto *rule = std::get_if<L1所有者范围节点事实>(&ruleRaw);
   if (!rule || rule->写入所有者 != owner ||
-      rule->种类 != 节点种类::普通 || rule->属性类型表示 ||
-      rule->退出事实代次)
+      rule->种类 != 节点种类::普通 || rule->属性类型表示)
     throw 初始化失败{S::内部不一致};
 
   const auto checkI64 = [&](稳定编码 node, 稳定编码 type) {
-    const auto values = 读属性(l1, node, g);
+    const auto values = 读属性(l1, owner, node, g);
     std::size_t count = 0;
     for (const auto &v : values)
       if (v.属性类型节点 == type) {
         ++count;
         if (v.写入所有者 != owner || v.所属节点 != node ||
-            v.来源节点 != node || v.退出事实代次 ||
+            v.来源节点 != node ||
             !std::holds_alternative<std::int64_t>(v.材料) ||
             std::get<std::int64_t>(v.材料) != 1)
           throw 初始化失败{S::内部不一致};
@@ -288,13 +301,14 @@ std::vector<L1所有者范围值事实> 读属性(
 std::optional<二次关系结构交付> 定位既有(
     const L1事实基座服务 &l1, const L1所有者范围写端口 &port,
     const 纯概念结构交付_v2 &pure, std::uint64_t g) {
-  const auto edges = 读关系(l1, pure.格式锚点, pure.类型.类型登记, g);
+  const auto edges = 读关系(l1, port.所有者身份(), pure.格式锚点,
+                            pure.类型.类型登记, g);
   std::optional<稳定编码> anchor;
   for (const auto &e : edges) {
     if (e.角色或顺序 != 4242) continue;
     if (e.写入所有者 != port.所有者身份() ||
         e.源节点 != pure.格式锚点 ||
-        e.关系类型节点 != pure.类型.类型登记 || e.退出事实代次 ||
+        e.关系类型节点 != pure.类型.类型登记 ||
         !有效(e.目标节点))
       throw 初始化失败{S::内部不一致};
     if (anchor) throw 初始化失败{S::内部不一致};
@@ -329,7 +343,7 @@ std::optional<二次关系结构交付> 定位既有(
   bool dispatched = false;
   try {
     if (r.版本 != 1 || !r.G0 || r.G0 == UINT64_MAX ||
-        !有效(r.幂等身份) || r.最大首次材料项数 < 53 ||
+        !有效(r.幂等身份) || r.最大首次材料项数 < 51 ||
         !port.有效() || !port.绑定于(l1) ||
         r.纯概念结构.版本 != 2 || !有效(r.纯概念结构.格式锚点) ||
         !有效(r.纯概念结构.类型.类型登记) ||
@@ -364,7 +378,7 @@ std::optional<二次关系结构交付> 定位既有(
                                : S::内部不一致};
       if (auto existing = 定位既有(l1, port, r.纯概念结构, r.G0)) {
         out.状态 = S::已复用;
-        out.Gread = out.H = r.G0;
+        out.Gread = r.G0;
         out.交付 = *existing;
         return out;
       }
@@ -376,7 +390,6 @@ std::optional<二次关系结构交付> 定位既有(
     const auto saved = port.提交所有者范围中性写集(expected);
     out.Gread = saved.事实代次;
     const auto &published = replay ? *first.首次写入结果 : saved;
-    out.H = published.事实代次;
     out.正式回执 = 形成见证(published, replay);
     const auto wanted = replay ? L1所有者范围写入状态::精确重复
                                : L1所有者范围写入状态::成功;
@@ -385,7 +398,7 @@ std::optional<二次关系结构交付> 定位既有(
         saved.写入幂等身份 != r.幂等身份 || saved.事实代次 != r.G0 + 1 ||
         (!replay && !saved.是否形成内存权威发布))
       throw 初始化失败{映射写入(saved.状态)};
-    if (published.新编码映射.size() != 53)
+    if (published.新编码映射.size() != 51)
       throw 初始化失败{S::发布未知};
     稳定编码 anchor{};
     for (const auto &[key, id] : published.新编码映射)
@@ -412,16 +425,15 @@ std::optional<二次关系结构交付> 定位既有(
     out.交付.reset();
     if (out.状态 != S::发布未知) {
       out.正式回执.reset();
-      out.H = 0;
     }
   } catch (const std::bad_alloc &) {
     out.状态 = dispatched ? S::发布未知 : S::资源失败;
     out.交付.reset();
-    if (!dispatched) { out.正式回执.reset(); out.H = 0; }
+    if (!dispatched) out.正式回执.reset();
   } catch (...) {
     out.状态 = dispatched ? S::发布未知 : S::内部不一致;
     out.交付.reset();
-    if (!dispatched) { out.正式回执.reset(); out.H = 0; }
+    if (!dispatched) out.正式回执.reset();
   }
   return out;
 }

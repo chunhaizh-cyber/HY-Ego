@@ -193,7 +193,6 @@ bool 本能先天特征概念初始化结果::成功() const noexcept {
                 conceptResult.状态 = 纯概念状态::精确重复;
                 conceptResult.发布 = 纯概念发布状态::确认发布;
                 conceptResult.Gread = recovered.Gread;
-                conceptResult.H = *recovered.首次发布H;
                 conceptResult.首次发布H = recovered.首次发布H;
                 conceptResult.原请求 = original;
                 conceptResult.事实 = recovered.事实;
@@ -213,7 +212,7 @@ bool 本能先天特征概念初始化结果::成功() const noexcept {
             } else {
                 if (recovered.状态 == 纯概念恢复状态::事实代次漂移) out.状态 = V::当前性漂移;
                 else if (recovered.状态 == 纯概念恢复状态::幂等冲突) out.状态 = V::幂等冲突;
-                else if (recovered.状态 == 纯概念恢复状态::目标已退出) out.状态 = V::类型或概念已退出;
+                else if (recovered.状态 == 纯概念恢复状态::未找到) out.状态 = V::首次材料不一致;
                 else if (recovered.状态 == 纯概念恢复状态::已可能发布) out.状态 = V::已可能发布;
                 else if (recovered.状态 == 纯概念恢复状态::资源失败) out.状态 = V::资源失败;
                 else out.状态 = V::概念失败;
@@ -233,16 +232,17 @@ bool 本能先天特征概念初始化结果::成功() const noexcept {
             out.状态 = V::当前性漂移; return out;
         }
         const auto finish = [&](const 前缀& prefix) -> std::optional<先天I64特征概念交付> {
+            if (!prefix.FT.首次写入回执) return std::nullopt;
             const auto type = 特征服务_.读取I64基础特征类型事实(
-                {1, current.Gread, prefix.FT.事实->H, prefix.FT.事实->数据.身份});
+                {1, current.Gread, prefix.FT.事实->数据.身份});
             const auto* typeFact = std::get_if<特征截止事实<I64基础特征类型信息>>(&type);
             if (!typeFact || typeFact->Gread != current.Gread) return std::nullopt;
             const 纯概念读取请求 conceptRequest{2, current.Gread,
-                *prefix.概念.首次发布H, prefix.概念.事实->概念, request.概念预算};
+                prefix.概念.事实->概念, request.概念预算};
             const auto conceptResult = 概念服务_.读取纯概念(conceptRequest);
             if (!conceptResult.成功(conceptRequest) || !conceptResult.事实) return std::nullopt;
             return 先天I64特征概念交付{prefix.角色, typeFact->数据, *conceptResult.事实,
-                typeFact->H, *prefix.概念.首次发布H, current.Gread};
+                prefix.FT.首次写入回执->事实代次, *prefix.概念.首次发布H, current.Gread};
         };
         out.安全值交付 = finish(safety); out.服务值交付 = finish(service);
         out.Gread = current.Gread;
@@ -294,7 +294,6 @@ I64单值出生概念确保状态 特征概念应用服务::映射概念状态(�
     switch(s) {
     case 纯概念状态::事实代次漂移: return I64单值出生概念确保状态::事实代次漂移;
     case 纯概念状态::幂等冲突: return I64单值出生概念确保状态::幂等冲突;
-    case 纯概念状态::历史材料不可用: return I64单值出生概念确保状态::历史材料不可用;
     case 纯概念状态::资源失败: return I64单值出生概念确保状态::资源失败;
     case 纯概念状态::已可能发布: return I64单值出生概念确保状态::已可能发布;
     case 纯概念状态::入口拒绝: return I64单值出生概念确保状态::入口拒绝;
@@ -347,7 +346,7 @@ I64单值出生概念确保结果 特征概念应用服务::确保FCv(
     I64单值出生概念确保结果 out;
     const 纯I64特征概念定义 definition{
         概念树特征类型引用{source.FT.编码},{{source.准确I64,source.准确I64}}};
-    const 纯概念查询请求 exact{2,source.G0,source.G0,definition,source.FCv概念预算};
+    const 纯概念查询请求 exact{2,source.G0,definition,source.FCv概念预算};
     const auto found=概念服务_.精确查询纯概念(exact);
     if(found.成功(exact)) {
         out.状态=I64单值出生概念确保状态::已复用;
@@ -369,12 +368,12 @@ I64单值出生概念确保结果 特征概念应用服务::确保FCv(
         out.状态=I64单值出生概念确保状态::资源失败;
         return out;
     }
-    const 特征类型截止请求 typeRead{1,current.Gread,current.Gread,source.FT};
-    const I64特征概念组织读取请求 conceptRead{2,current.Gread,current.Gread,source.FT,source.FCv概念预算};
+    const 特征类型截止请求 typeRead{1,current.Gread,source.FT};
+    const I64特征概念组织读取请求 conceptRead{2,current.Gread,source.FT,source.FCv概念预算};
     const auto complete=特征服务_.读取I64类型完整域(typeRead);
     const auto allConcepts=概念服务_.读取当前I64特征概念(conceptRead);
     const auto* completeFact=std::get_if<特征截止事实<特征规范I64域>>(&complete);
-    if(!completeFact||completeFact->Gread!=current.Gread||completeFact->H!=current.Gread) {
+    if(!completeFact||completeFact->Gread!=current.Gread) {
         out.状态=I64单值出生概念确保状态::规则缺失;
         return out;
     }
@@ -447,10 +446,10 @@ I64原子准确特征出生应用结果 特征概念应用服务::处理I64原�
             return out;
         }
         for(const auto& candidate:out.候选查询->候选) {
-            if(!有效(candidate.F)||!candidate.出生H||candidate.出生H>query.Gread) {
+            if(!有效(candidate.F)||!candidate.出生事实代次||candidate.出生事实代次>query.Gread) {
                 out.状态=I64原子准确特征出生应用状态::候选读取失败; out.Gread=query.Gread; return out;
             }
-            const 原子I64特征出生读取请求 read{1,query.Gread,candidate.出生H,candidate.F,r.位置,
+            const 原子I64特征出生读取请求 read{1,query.Gread,candidate.F,r.位置,
                                                   r.组织读取预算,r.出生概念读取预算};
             auto material=原子服务_.读取(read);
             out.候选读取组.push_back(material);
@@ -567,13 +566,12 @@ I64原子准确特征出生应用结果 特征概念应用服务::处理I64原�
                     previousF = member.编码;
                     allMembers.push_back(member.编码);
                     const 原子I64特征出生使用读取请求 useRequest{
-                        1, g, h, member.编码, r.概念读取预算};
+                        1, g, member.编码, r.概念读取预算};
                     const auto use = 概念服务_.读取原子I64出生使用(useRequest);
                     if (!use.成功(useRequest) || !use.事实 || use.事实->F != member ||
                         !有效(use.事实->FCv.值)) {
                         switch (use.状态) {
                         case 原子I64特征出生使用读取状态::未找到:
-                        case 原子I64特征出生使用读取状态::目标已退出:
                         case 原子I64特征出生使用读取状态::概念不适配:
                         case 原子I64特征出生使用读取状态::内部不一致:
                             diagnostic = 实例特征结构异常::半结构;
@@ -600,7 +598,7 @@ I64原子准确特征出生应用结果 特征概念应用服务::处理I64原�
         }
     };
 
-    auto 归组 = [&](std::uint64_t g, std::uint64_t h,
+    auto 归组 = [&](std::uint64_t g,
                     std::vector<特征R规则项投影> current,
                     bool first) noexcept {
         auto budget = r.R规则预算;
@@ -609,7 +607,7 @@ I64原子准确特征出生应用结果 特征概念应用服务::处理I64原�
             budget.最大R成员数 = 0;
             budget.最大材料U64项数 = 0;
         }
-        return 特征服务_.归组特征R({1, g, h, r.FT, r.候选值,
+        return 特征服务_.归组特征R({1, g, r.FT, r.候选值,
                                        std::move(current), std::move(budget)});
     };
 
@@ -667,12 +665,11 @@ I64原子准确特征出生应用结果 特征概念应用服务::处理I64原�
         }
 
         std::vector<特征R规则项投影> currentItems;
-        if (!first && !归组输入(*out.IFR->投影, out.IFR->Gread, out.IFR->H, currentItems)) {
+        if (!first && !归组输入(*out.IFR->投影, out.IFR->Gread, out.IFR->Gread, currentItems)) {
             out.状态 = diagnostic ? 观察状态::结构异常 : 观察状态::归组失败;
             return finish();
         }
-        auto grouped = 归组(out.IFR->Gread, first ? out.IFR->Gread : out.IFR->H,
-                            std::move(currentItems), first);
+        auto grouped = 归组(out.IFR->Gread, std::move(currentItems), first);
         out.Gread = grouped.Gread;
         if (grouped.状态 == 特征R规则状态::规则未启用) {
             out.状态 = 观察状态::比较未启用;
@@ -721,13 +718,11 @@ I64原子准确特征出生应用结果 特征概念应用服务::处理I64原�
 
         currentItems.clear();
         if (!afterBirthFirst && !归组输入(*out.IFR->投影, out.IFR->Gread,
-                                               out.IFR->H, currentItems)) {
+                                               out.IFR->Gread, currentItems)) {
             out.状态 = diagnostic ? 观察状态::结构异常 : 观察状态::归组失败;
             return finish();
         }
-        grouped = 归组(out.IFR->Gread,
-                       afterBirthFirst ? out.IFR->Gread : out.IFR->H,
-                       std::move(currentItems), afterBirthFirst);
+        grouped = 归组(out.IFR->Gread, std::move(currentItems), afterBirthFirst);
         out.Gread = grouped.Gread;
         if (grouped.状态 == 特征R规则状态::规则未启用) {
             out.状态 = 观察状态::比较未启用;
@@ -783,9 +778,9 @@ I64原子准确特征出生应用结果 特征概念应用服务::处理I64原�
             out.状态 = 本能根I64实际F状态::事实代次漂移; return out;
         }
         const auto typeRead = 特征服务_.读取I64基础特征类型事实(
-            {1,current.Gread,delivered.FT首次H,delivered.类型.身份});
+            {1,current.Gread,delivered.类型.身份});
         const auto* typeFact = std::get_if<特征截止事实<I64基础特征类型信息>>(&typeRead);
-        const 纯概念读取请求 fullRequest{2,current.Gread,delivered.概念首次H,
+        const 纯概念读取请求 fullRequest{2,current.Gread,
             delivered.完整域概念.概念,r.概念预算};
         const auto full = 概念服务_.读取纯概念(fullRequest);
         const auto maximum = std::numeric_limits<std::int64_t>::max();
@@ -803,10 +798,10 @@ I64原子准确特征出生应用结果 特征概念应用服务::处理I64原�
             out.状态 = 本能根I64实际F状态::初始化交付不完整; return out;
         }
         out.初始化交付 = 先天I64特征概念交付{r.角色,typeFact->数据,*full.事实,
-            typeFact->H,delivered.概念首次H,current.Gread};
+            delivered.FT首次H,delivered.概念首次H,current.Gread};
         const auto ft = typeFact->数据.身份;
         const auto initial = maximum / 2;
-        auto adopted = 存在服务_.读取当前采用({1, current.Gread, current.Gread, r.E.编码, ft, r.当前采用关系预算});
+        auto adopted = 存在服务_.读取当前采用({1, current.Gread, r.E.编码, ft, r.当前采用关系预算});
         if (adopted.状态 != 存在类数据状态::已读取) { out.状态 = 本能根I64实际F状态::当前采用读取失败; return out; }
         const bool formed = !adopted.采用;
         特征信息身份 f{};
@@ -841,7 +836,7 @@ I64原子准确特征出生应用结果 特征概念应用服务::处理I64原�
             }
             std::vector<特征信息身份> matches;
             for (const auto& x : projection->F成员) {
-                const auto read = 特征服务_.读取准确特征事实({1, current.Gread, current.Gread, x});
+                const auto read = 特征服务_.读取准确特征事实({1, current.Gread, x});
                 if (const auto* fact = std::get_if<准确特征读取事实>(&read)) {
                     if (fact->信息.类型 == ft && std::get_if<std::int64_t>(&fact->信息.准确值)
                         && *std::get_if<std::int64_t>(&fact->信息.准确值) == initial) matches.push_back(x);
@@ -856,7 +851,7 @@ I64原子准确特征出生应用结果 特征概念应用服务::处理I64原�
             if (!current.成功() || current.Gread != out.当前采用->Gread) { out.状态 = 本能根I64实际F状态::事实代次漂移; return out; }
         }
         adopted = 存在服务_.读取当前采用(
-            {1,current.Gread,current.Gread,r.E.编码,ft,r.当前采用关系预算});
+            {1,current.Gread,r.E.编码,ft,r.当前采用关系预算});
         if (adopted.状态 != 存在类数据状态::已读取 || !adopted.采用 || adopted.采用->F != f) {
             out.状态 = 本能根I64实际F状态::当前采用读取失败; return out;
         }
@@ -866,11 +861,11 @@ I64原子准确特征出生应用结果 特征概念应用服务::处理I64原�
             || std::count(out.IFR读回->投影->F成员.begin(),out.IFR读回->投影->F成员.end(),f) != 1) {
             out.状态 = 本能根I64实际F状态::IFR失败; return out;
         }
-        const auto exact = 特征服务_.读取准确特征事实({1, current.Gread, current.Gread, f});
+        const auto exact = 特征服务_.读取准确特征事实({1, current.Gread, f});
         const auto* fact = std::get_if<准确特征读取事实>(&exact);
         if (!fact || fact->信息.类型 != ft || !std::holds_alternative<std::int64_t>(fact->信息.准确值)
             || std::get<std::int64_t>(fact->信息.准确值) != initial) { out.状态 = 本能根I64实际F状态::引用冲突; return out; }
-        const 原子I64特征出生读取请求 atomRequest{1,current.Gread,fact->创建G,f.编码,r.位置,
+        const 原子I64特征出生读取请求 atomRequest{1,current.Gread,f.编码,r.位置,
             r.组织预算,r.概念读取预算};
         out.原子读回 = 原子服务_.读取(atomRequest);
         if (!out.原子读回->成功(atomRequest) || !out.原子读回->事实
@@ -879,7 +874,7 @@ I64原子准确特征出生应用结果 特征概念应用服务::处理I64原�
             out.状态 = 本能根I64实际F状态::引用冲突; return out;
         }
         const auto singleConcept = 概念树概念身份{out.原子读回->事实->FCv};
-        const 纯概念读取请求 singleRequest{2,current.Gread,current.Gread,singleConcept,r.概念预算};
+        const 纯概念读取请求 singleRequest{2,current.Gread,singleConcept,r.概念预算};
         out.单值概念读回 = 概念服务_.读取纯概念(singleRequest);
         if (!out.单值概念读回->成功(singleRequest) || !out.单值概念读回->事实) {
             out.状态 = 本能根I64实际F状态::引用冲突; return out;

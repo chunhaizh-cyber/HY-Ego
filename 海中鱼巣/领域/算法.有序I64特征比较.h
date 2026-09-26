@@ -13,7 +13,7 @@
 namespace 海中鱼巣 {
 enum class 特征比较状态 : std::uint8_t {
     已比较=1,未注册=2,入口拒绝=3,版本漂移=4,
-    许可拒绝=5, // 4180 历史数值洞；本 provider 永不产出。
+    许可拒绝=5, // 4180 保留数值空洞；本 provider 永不产出。
     资源失败=6,内部不一致=7,未实现=8
 };
 enum class 特征比较拒绝原因 : std::uint8_t {
@@ -39,7 +39,7 @@ struct 有序I64比较合同快照 final {
     std::optional<std::int64_t> 误差预算,相等容差;
     std::optional<特征I64关系编码> 关系编码;
     std::vector<特征I64比较绑定输出事实> 输出组;
-    std::uint64_t Gread=0,H=0;
+    std::uint64_t Gread=0;
     friend bool operator==(const 有序I64比较合同快照&,const 有序I64比较合同快照&)=default;
 };
 struct 特征比较输入 final {
@@ -94,7 +94,7 @@ public:
         try {
             if(r.版本!=1) {fail(S::版本漂移,E::请求合同版本不匹配);return out;}
             const auto& k=r.K;
-            if(!r.请求身份 || !有效(k.K) || !有效(k.输入FT) || !k.H || k.H>k.Gread
+            if(!r.请求身份 || !有效(k.K) || !有效(k.输入FT) || !k.Gread
                 || (k.来源!=特征比较合同来源::当前独立绑定 && k.来源!=特征比较合同来源::已保存定义固定K)) {
                 fail(S::入口拒绝,E::请求身份或特征定义不完整);return out;
             }

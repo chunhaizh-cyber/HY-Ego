@@ -69,7 +69,7 @@ struct 二次关系规范形 final {
 struct 二次关系结构类型 final {
   稳定编码 规范化规则归属{}, 规则版本{}, 定义种类{}, 定义格式{}, 域掩码{}, 输出角色{},
       固定K{}, 约束成员{}, 约束FC{}, 约束EC{}, 合取成员{}, 子RC{}, 来源成员{},
-      来源F{}, 来源B{}, 来源概念{}, 来源截止{}, 用途成员{}, 用途目标{},
+      来源F{}, 来源B{}, 来源概念{}, 用途成员{}, 用途目标{},
       用途业务依据{}, 用途业务标识{}, 用途角色{}, 用途时间{};
   friend bool operator==(const 二次关系结构类型 &,
                          const 二次关系结构类型 &) = default;
@@ -129,7 +129,7 @@ struct 二次关系发布见证 final {
 };
 
 struct 二次关系概念事实 final {
-  std::uint64_t Gread = 0, H = 0;
+  std::uint64_t Gread = 0;
   概念树概念身份 身份;
   相关概念类别 类别 = 相关概念类别::特征;
   概念树规则身份 规则;
@@ -147,10 +147,10 @@ struct 二次关系概念事实 final {
 
 enum class 二次关系数据状态 : std::uint8_t {
   已读取 = 1, 已创建 = 2, 已复用 = 3, 精确重放 = 4, 已变更 = 5,
-  同义缺失 = 6, 冷却命中 = 7, 退役命中 = 8, 目标已退出 = 9,
+  同义缺失 = 6, 冷却命中 = 7, 退役命中 = 8,
   入口拒绝 = 10, 格式不支持 = 11, 规则不支持 = 12, 来源不足 = 13,
   引用冲突 = 14, 定义矛盾 = 15, 形成环 = 16, 旧预算不足 = 17,
-  事实代次漂移 = 18, 历史材料不可用 = 19, 幂等冲突 = 20,
+  事实代次漂移 = 18, 幂等冲突 = 20,
   资源失败 = 21, 内部不一致 = 22, 发布未知 = 23, 未找到 = 24
 };
 
@@ -167,7 +167,7 @@ struct 二次关系初始化请求 final {
 struct 二次关系初始化结果 final {
   std::uint32_t 版本 = 1;
   二次关系数据状态 状态 = 二次关系数据状态::入口拒绝;
-  std::uint64_t Gread = 0, H = 0;
+  std::uint64_t Gread = 0;
   std::optional<二次关系发布见证> 正式回执;
   std::optional<二次关系结构交付> 交付;
   bool 成功() const noexcept;
@@ -192,14 +192,13 @@ struct 二次关系定义查找请求 final {
 struct 二次关系定义核验结果 final {
   std::uint32_t 版本 = 2;
   二次关系数据状态 状态 = 二次关系数据状态::入口拒绝;
-  std::uint64_t Gread = 0, H = 0;
+  std::uint64_t Gread = 0;
   std::optional<二次关系规范形> 规范形;
   bool 成功() const noexcept;
 };
 
 struct 二次关系形成来源 final {
   std::variant<特征信息身份, 状态使用绑定身份, 概念树概念身份> 来源;
-  std::uint64_t H = 0;
   friend bool operator==(const 二次关系形成来源 &,
                          const 二次关系形成来源 &) = default;
 };
@@ -218,7 +217,7 @@ struct 二次关系概念建立请求 final {
 struct 二次关系概念读取结果 final {
   std::uint32_t 版本 = 2;
   二次关系数据状态 状态 = 二次关系数据状态::入口拒绝;
-  std::uint64_t Gread = 0, H = 0;
+  std::uint64_t Gread = 0;
   std::optional<二次关系概念事实> 事实;
   bool 成功() const noexcept;
 };
@@ -252,7 +251,7 @@ struct 二次关系来源写入请求 final {
 };
 
 struct 二次关系来源事实 final {
-  稳定编码 记录{}, 成员关系{}, 目标关系{}, 截止值{};
+  稳定编码 记录{}, 成员关系{}, 目标关系{};
   概念树概念身份 RC;
   二次关系形成来源 来源;
   概念树生命周期 生命周期;
@@ -268,7 +267,6 @@ struct 二次关系用途请求 final {
   std::uint32_t 用途角色 = 0;
   std::int64_t 时间 = 0;
   稳定编码 业务依据{};
-  std::uint64_t 证据H = 0;
   friend bool operator==(const 二次关系用途请求 &,
                          const 二次关系用途请求 &) = default;
 };
@@ -280,7 +278,6 @@ struct 二次关系用途事实 final {
   std::uint32_t 用途角色 = 0;
   std::int64_t 时间 = 0;
   稳定编码 业务依据{};
-  std::uint64_t 证据H = 0;
   概念树生命周期 生命周期;
   friend bool operator==(const 二次关系用途事实 &,
                          const 二次关系用途事实 &) = default;
@@ -297,7 +294,7 @@ struct 二次关系关联读取请求 final {
 struct 二次关系关联结果 final {
   std::uint32_t 版本 = 2;
   二次关系数据状态 状态 = 二次关系数据状态::入口拒绝;
-  std::uint64_t Gread = 0, H = 0;
+  std::uint64_t Gread = 0;
   std::optional<std::uint64_t> 首次H;
   std::optional<二次关系发布见证> 正式回执;
   std::vector<二次关系来源事实> 来源组;
@@ -315,7 +312,7 @@ struct 二次关系图读取请求 final {
 struct 二次关系图结果 final {
   std::uint32_t 版本 = 2;
   二次关系数据状态 状态 = 二次关系数据状态::入口拒绝;
-  std::uint64_t Gread = 0, H = 0;
+  std::uint64_t Gread = 0;
   相关概念类别 类别 = 相关概念类别::特征;
   std::vector<二次关系概念事实> RC组;
   std::vector<二次关系关系见证> 直接边;
@@ -363,11 +360,10 @@ struct 二次关系退出请求 final {
 struct 二次关系治理结果 final {
   std::uint32_t 版本 = 2;
   二次关系数据状态 状态 = 二次关系数据状态::入口拒绝;
-  std::uint64_t Gread = 0, H = 0;
+  std::uint64_t Gread = 0;
   std::optional<std::uint64_t> 首次H;
   std::optional<二次关系发布见证> 正式回执;
   std::optional<二次关系概念事实> 事实;
-  std::vector<稳定编码> 已退出事实;
   std::vector<二次关系关系见证> 新直接边;
   bool 成功() const noexcept;
 };

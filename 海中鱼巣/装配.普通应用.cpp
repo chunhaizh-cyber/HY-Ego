@@ -82,7 +82,7 @@ void 报告实例特征结构异常(存在信息身份 e, 特征类型身份 ft,
 纯概念状态 映射两组定义失败(存在概念两组状态_v3 state) noexcept {
   switch (state) {
   case 存在概念两组状态_v3::入口拒绝: return 纯概念状态::入口拒绝;
-  case 存在概念两组状态_v3::目标已退出: return 纯概念状态::目标已退出;
+  case 存在概念两组状态_v3::未找到: return 纯概念状态::未找到;
   case 存在概念两组状态_v3::概念已退役: return 纯概念状态::概念已退役;
   case 存在概念两组状态_v3::类别冲突: return 纯概念状态::类别冲突;
   case 存在概念两组状态_v3::定义不相容: return 纯概念状态::定义不相容;
@@ -90,7 +90,6 @@ void 报告实例特征结构异常(存在信息身份 e, 特征类型身份 ft,
   case 存在概念两组状态_v3::事实代次漂移: return 纯概念状态::事实代次漂移;
   case 存在概念两组状态_v3::幂等冲突: return 纯概念状态::幂等冲突;
   case 存在概念两组状态_v3::数量预算不足: return 纯概念状态::数量预算不足;
-  case 存在概念两组状态_v3::历史材料不可用: return 纯概念状态::历史材料不可用;
   case 存在概念两组状态_v3::资源失败: return 纯概念状态::资源失败;
   case 存在概念两组状态_v3::已可能发布: return 纯概念状态::已可能发布;
   case 存在概念两组状态_v3::旧格式不支持: return 纯概念状态::旧格式不支持;
@@ -101,12 +100,10 @@ void 报告实例特征结构异常(存在信息身份 e, 特征类型身份 ft,
 纯概念状态 映射二次关系结构失败(二次关系数据状态 state) noexcept {
   switch (state) {
   case 二次关系数据状态::入口拒绝: return 纯概念状态::入口拒绝;
-  case 二次关系数据状态::目标已退出: return 纯概念状态::目标已退出;
+  case 二次关系数据状态::未找到: return 纯概念状态::未找到;
   case 二次关系数据状态::引用冲突: return 纯概念状态::引用冲突;
   case 二次关系数据状态::事实代次漂移: return 纯概念状态::事实代次漂移;
   case 二次关系数据状态::幂等冲突: return 纯概念状态::幂等冲突;
-  case 二次关系数据状态::旧预算不足: return 纯概念状态::旧格式不支持;
-  case 二次关系数据状态::历史材料不可用: return 纯概念状态::历史材料不可用;
   case 二次关系数据状态::资源失败: return 纯概念状态::资源失败;
   case 二次关系数据状态::发布未知: return 纯概念状态::已可能发布;
   case 二次关系数据状态::格式不支持: return 纯概念状态::旧格式不支持;
@@ -138,7 +135,6 @@ L1所有者范围交付 建立所有者(L1所有者范围签发器 &issuer,
       result.建立结果.建立幂等身份!=request.建立幂等身份||
       !result.建立结果.所有者事实||
       result.建立结果.所有者事实->范围种类!=L1所有者范围种类::独占结构范围||
-      result.建立结果.所有者事实->退出事实代次||
       (state==L1所有者范围管理状态::成功)!=
           result.建立结果.是否形成内存权威发布||
       !result.写入端口||!result.写入端口->有效()||
@@ -154,7 +150,7 @@ L1所有者范围交付 建立所有者(L1所有者范围签发器 &issuer,
 }
 
 struct 首次定位 final {
-  bool 已有=false;std::uint64_t G0=0,H=0,Gread=0;
+  bool 已有=false;std::uint64_t G0=0,首次发布代次=0,Gread=0;
   std::optional<L1所有者范围首次写入读取结果> 材料;
 };
 
@@ -256,7 +252,7 @@ std::vector<稳定编码>
         node->编码 != ids[i] || node->种类 != specs[i].first ||
         node->属性类型表示 != specs[i].second ||
         node->写入所有者 != port.所有者身份() ||
-        node->创建事实代次 != located.G0+1 || node->退出事实代次)
+        node->创建事实代次 != located.G0+1)
       throw 普通应用装配状态::元结构建立失败;
   }
   if(当前代次(l1)!=gread)throw 普通应用装配状态::元结构建立失败;
@@ -319,7 +315,20 @@ std::unique_ptr<普通应用上下文> 建立上下文(
   auto persistent=建立L1事实基座持久运行包_v1(config.L1事实基座持久存储);
   recovery=persistent.恢复;
   result->持久恢复=persistent.恢复;
-  if(!persistent.成功()||!persistent.运行包)
+  const bool recovered = persistent.恢复.状态 ==
+          L1事实基座持久恢复状态_v1::已恢复
+      && persistent.恢复.恢复见证
+      && persistent.恢复.恢复见证->格式版本 ==
+          L1事实基座持久快照格式版本_v1
+      && persistent.恢复.恢复见证->快照序号 != 0
+      && persistent.恢复.恢复见证->事实代次 != 0
+      && std::any_of(persistent.恢复.恢复见证->载荷SHA256.begin(),
+          persistent.恢复.恢复见证->载荷SHA256.end(),
+          [](std::uint8_t value) { return value != 0; });
+  const bool empty = persistent.恢复.状态 ==
+          L1事实基座持久恢复状态_v1::已建立空仓
+      && !persistent.恢复.恢复见证;
+  if((!recovered && !empty)||!persistent.运行包)
     throw 持久恢复异常{persistent.恢复};
   result->运行包=std::move(persistent.运行包);
   auto &l1 = result->运行包->读取服务();
@@ -394,7 +403,8 @@ std::unique_ptr<普通应用上下文> 建立上下文(
   if(existenceRoot.Gread!=sceneRoot.Gread||existenceRoot.已有!=sceneRoot.已有)
     throw 普通应用装配状态::世界树根失败;
   if(existenceRoot.已有) {
-    if(existenceRoot.G0!=sceneRoot.G0||existenceRoot.H!=sceneRoot.H||
+    if(existenceRoot.G0!=sceneRoot.G0||
+       existenceRoot.首次发布代次!=sceneRoot.首次发布代次||
        !existenceRoot.材料||!sceneRoot.材料||
        existenceRoot.材料->首次写入结果->新编码映射.size()!=2||
        sceneRoot.材料->首次写入结果->新编码映射.size()!=10)
@@ -912,7 +922,6 @@ namespace 普通应用装配内部 {
     }
     const auto&projection=*self.投影;
     if(!有效(projection.E)||projection.Gread!=method.最终Gread||
-       projection.H!=method.最终Gread||
        projection.世界根!=root.树->根场景||
        !projection.位置.直接结构父||
        projection.位置.直接结构父->来源!=直接归属来源::直接子场景||

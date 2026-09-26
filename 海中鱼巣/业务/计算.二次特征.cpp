@@ -57,7 +57,7 @@ bool 准确来源完整(const 准确特征读取事实& f) noexcept {
         &&material->值身份.编码==*f.准确值事实&&std::holds_alternative<std::int64_t>(material->值内容);
 }
 bool 快照完整(const 有序I64比较合同快照& k) {
-    if(!有效(k.K)||!k.H||k.H>k.Gread
+    if(!有效(k.K)||!k.Gread
         ||(k.来源!=特征比较合同来源::当前独立绑定&&k.来源!=特征比较合同来源::已保存定义固定K))return false;
     特征I64比较绑定定义 definition{k.输入FT,k.用途,k.算法族,k.算法版本,k.左角色,k.右角色,
         k.上下文要求位,k.输入量化,k.误差合同版本,k.误差预算,k.相等容差,k.关系编码,{}};
@@ -74,7 +74,7 @@ bool 同量化(const 特征类标量量化合同& a,const 特征类标量量化�
 有序I64比较合同快照 快照(const 特征I64比较绑定事实& f,std::uint64_t g) {
     const auto& d=f.定义;
     return {特征比较合同来源::当前独立绑定,f.身份,d.输入FT,d.用途,d.算法族,d.算法版本,d.左角色,d.右角色,
-        d.上下文要求位,d.输入量化,d.误差合同版本,d.误差预算,d.相等容差,d.关系编码,f.输出组,g,g};
+        d.上下文要求位,d.输入量化,d.误差合同版本,d.误差预算,d.相等容差,d.关系编码,f.输出组,g};
 }
 bool 固定相容(const 有序I64比较合同快照& a,const 有序I64比较合同快照& b) noexcept {
     if(a.输入FT!=b.输入FT||a.用途!=b.用途||a.算法族!=b.算法族||a.算法版本!=b.算法版本
@@ -91,19 +91,19 @@ namespace 海中鱼巣 {
 bool 二次准确计算结果::成功() const noexcept {
     using namespace 二次计算内部;
     try {
-        if(版本!=1||状态!=二次计算状态::已计算||!G||!H||H>G||!请求身份||!上下文有效(上下文)
+        if(版本!=1||状态!=二次计算状态::已计算||!G||!请求身份||!上下文有效(上下文)
             ||根输出组.empty()||结果组.size()!=根输出组.size()||基础叶组.empty()||计算项组.empty())return false;
         std::map<std::uint64_t,const 准确特征读取事实*> leaves;
         for(const auto& leaf:基础叶组) {
             const auto& f=leaf.事实;
-            if(f.Gread!=G||f.H!=H||!准确来源完整(f)||!f.创建G||f.创建G>H
-                ||(f.退出G&&*f.退出G<=H)||!整数(f)||!leaves.emplace(f.信息.身份.编码.值,&f).second)return false;
+            if(f.Gread!=G||!准确来源完整(f)||!f.创建G||f.创建G>G
+                ||!整数(f)||!leaves.emplace(f.信息.身份.编码.值,&f).second)return false;
         }
         std::map<节点键,const 二次计算项回执*> nodes;unsigned contexts=0;
         for(const auto& node:计算项组) {
             const auto id=键(node.节点);const auto& k=node.K;
             if(!id.second||nodes.contains(id)||!快照完整(k)||k.Gread!=G
-                ||k.H!=(k.来源==特征比较合同来源::当前独立绑定 ? G:H)||k.上下文要求位>31
+                ||k.Gread!=G||k.上下文要求位>31
                 ||node.输出组.empty()||node.真实阶次<=1
                 ||(id.first!=(k.来源==特征比较合同来源::当前独立绑定)))return false;
             contexts|=k.上下文要求位;

@@ -17,6 +17,7 @@ namespace {
 using 阶段 = 本能根任务阶段状态_v1;
 using 总状态 = 本能根任务承接总状态_v1;
 using Key = L1所有者范围写集本地键;
+enum class 关系端点方向 : std::uint8_t { 源, 目标 };
 
 constexpr L1所有者范围写入幂等身份 结构登记键{0x544F000000000001ULL};
 constexpr L1所有者范围写入幂等身份 高水位首次键{0x544F000000000002ULL};
@@ -39,12 +40,11 @@ bool 退出目标有效(本能根任务生命周期_v1 v) noexcept {
 }
 bool 来源有效(const 本能根任务目标来源定位_v1& s) noexcept {
   return 角色有效(s.根角色) && 有效(s.D.值) && 有效(s.L)
-      && s.来源截止H != 0 && 有效(s.根形成F.编码);
+      && 有效(s.根形成F.编码);
 }
 bool 初始化请求有效(const 本能根任务初始化语义请求_v1& r) noexcept {
   return r.合同版本 == 本能根任务核心合同版本_v1 && 有效(r.意图.值)
       && r.期望事实代次 != 0 && 来源有效(r.来源)
-      && r.来源.来源截止H == r.期望事实代次
       && (!r.前序任务 || 有效(r.前序任务->值));
 }
 bool 初始化包有效(const 不可变本能根任务初始化包_v1& p) noexcept {
@@ -87,23 +87,44 @@ std::optional<std::uint64_t> 当前G(const L1事实基座服务& l1) noexcept {
   switch (s) {
   case L1所有者范围读取状态::入口拒绝: return 阶段::入口拒绝;
   case L1所有者范围读取状态::未找到: return 阶段::未找到;
-  case L1所有者范围读取状态::已退出:
-  case L1所有者范围读取状态::历史材料已清理: return 阶段::历史材料不可用;
   case L1所有者范围读取状态::事实代次漂移: return 阶段::事实代次漂移;
   case L1所有者范围读取状态::资源失败: return 阶段::资源失败;
   default: return 阶段::内部不一致;
   }
 }
-阶段 映射根历史状态(本能根历史材料状态_v1 s) noexcept {
+阶段 映射当前事实读取状态(L1所有者范围当前事实读取状态_v2 s) noexcept {
   switch (s) {
-  case 本能根历史材料状态_v1::入口拒绝: return 阶段::入口拒绝;
-  case 本能根历史材料状态_v1::未找到: return 阶段::未找到;
-  case 本能根历史材料状态_v1::已退出:
-  case 本能根历史材料状态_v1::历史材料不可用: return 阶段::历史材料不可用;
-  case 本能根历史材料状态_v1::事实代次漂移: return 阶段::事实代次漂移;
-  case 本能根历史材料状态_v1::幂等冲突: return 阶段::幂等冲突;
-  case 本能根历史材料状态_v1::引用冲突: return 阶段::引用冲突;
-  case 本能根历史材料状态_v1::资源失败: return 阶段::资源失败;
+  case L1所有者范围当前事实读取状态_v2::入口拒绝: return 阶段::入口拒绝;
+  case L1所有者范围当前事实读取状态_v2::未找到: return 阶段::未找到;
+  case L1所有者范围当前事实读取状态_v2::事实代次漂移: return 阶段::事实代次漂移;
+  case L1所有者范围当前事实读取状态_v2::资源失败: return 阶段::资源失败;
+  default: return 阶段::内部不一致;
+  }
+}
+阶段 映射当前值组读取状态(
+    L1所有者范围所属节点当前完整值组读取状态_v2 s) noexcept {
+  switch (s) {
+  case L1所有者范围所属节点当前完整值组读取状态_v2::入口拒绝:
+    return 阶段::入口拒绝;
+  case L1所有者范围所属节点当前完整值组读取状态_v2::未找到:
+    return 阶段::未找到;
+  case L1所有者范围所属节点当前完整值组读取状态_v2::事实代次漂移:
+    return 阶段::事实代次漂移;
+  case L1所有者范围所属节点当前完整值组读取状态_v2::资源失败:
+    return 阶段::资源失败;
+  default:
+    return 阶段::内部不一致;
+  }
+}
+阶段 映射根材料状态(本能根材料状态 s) noexcept {
+  switch (s) {
+  case 本能根材料状态::入口拒绝: return 阶段::入口拒绝;
+  case 本能根材料状态::实际特征未找到:
+  case 本能根材料状态::根材料未闭合: return 阶段::未找到;
+  case 本能根材料状态::事实代次漂移: return 阶段::事实代次漂移;
+  case 本能根材料状态::幂等冲突: return 阶段::幂等冲突;
+  case 本能根材料状态::引用冲突: return 阶段::引用冲突;
+  case 本能根材料状态::资源失败: return 阶段::资源失败;
   default: return 阶段::内部不一致;
   }
 }
@@ -116,7 +137,6 @@ std::optional<std::uint64_t> 当前G(const L1事实基座服务& l1) noexcept {
   case 阶段::事实代次漂移: return 总状态::事实代次漂移;
   case 阶段::幂等冲突: return 总状态::幂等冲突;
   case 阶段::引用冲突: return 总状态::引用冲突;
-  case 阶段::历史材料不可用: return 总状态::历史材料不可用;
   case 阶段::已可能发布: return 总状态::已可能发布;
   case 阶段::号段耗尽: return 总状态::号段耗尽;
   case 阶段::待迁移: return 总状态::待迁移;
@@ -217,35 +237,32 @@ struct 材料读取结果 final {
 };
 
 材料读取结果 读取属性(const L1事实基座服务& l1, L1结构所有者身份 owner,
-    稳定编码 node, 稳定编码 type, std::uint64_t Gread, std::uint64_t H,
+    稳定编码 node, 稳定编码 type, std::uint64_t Gread,
     L1所有者范围值表示种类 kind) noexcept {
   材料读取结果 out; out.Gread = Gread;
+  if (!Gread) { out.状态 = 阶段::入口拒绝; return out; }
   try {
-    const L1所有者范围历史完整属性值组读取请求_v2 req{
-        L1所有者范围历史完整属性值组读取合同版本, node, Gread, H};
-    const auto q = l1.读取所有者范围历史完整属性值组(req);
+    const L1所有者范围所属节点当前完整值组读取请求_v2 req{
+        L1所有者范围所属节点当前完整值组读取合同版本_v2,
+        owner, node, Gread};
+    const auto q = l1.读取所有者范围所属节点当前完整值组(req);
     if (q.读取事实代次 != Gread) { out.状态 = 阶段::事实代次漂移; out.Gread=q.读取事实代次; return out; }
-    if (!q.成功(req)) {
-      using S = L1所有者范围历史完整属性值组读取状态_v2;
-      switch (q.状态) {
-      case S::入口拒绝: out.状态=阶段::入口拒绝; break;
-      case S::未找到: out.状态=阶段::未找到; break;
-      case S::已退出: case S::历史材料已清理: out.状态=阶段::历史材料不可用; break;
-      case S::事实代次漂移: out.状态=阶段::事实代次漂移; break;
-      case S::资源失败: out.状态=阶段::资源失败; break;
-      default: out.状态=阶段::内部不一致; break;
-      }
+    using S = L1所有者范围所属节点当前完整值组读取状态_v2;
+    if (q.状态 != S::成功) {
+      out.状态 = 映射当前值组读取状态(q.状态);
       return out;
     }
+    if (q.合同版本 != L1所有者范围所属节点当前完整值组读取合同版本_v2
+        || q.所有者 != owner || q.所属节点 != node
+        || q.期望事实代次 != Gread) return out;
     const L1所有者范围值事实* found = nullptr;
-    for (const auto& v : q.属性值组) {
+    for (const auto& v : q.载荷) {
       if (v.属性类型节点 != type) continue;
       if (found) return out;
       found = &v;
     }
     if (!found || found->所属节点 != node || found->属性类型节点 != type
-        || found->写入所有者 != owner || found->创建事实代次 > H
-        || (found->退出事实代次 && *found->退出事实代次 <= H)
+        || found->写入所有者 != owner || found->创建事实代次 > Gread
         || !有效(found->编码)) return out;
     if (kind == L1所有者范围值表示种类::I64) {
       const auto* p = std::get_if<std::int64_t>(&found->材料);
@@ -270,35 +287,36 @@ struct 关系读取结果 final {
   std::vector<L1所有者范围关系事实> 关系;
 };
 关系读取结果 读取关系(const L1事实基座服务& l1, L1结构所有者身份 owner,
-    L1所有者范围关系端点方向 direction, 稳定编码 endpoint, 稳定编码 type,
-    std::uint64_t Gread, std::uint64_t H) noexcept {
+    关系端点方向 direction, 稳定编码 endpoint, 稳定编码 type,
+    std::uint64_t Gread) noexcept {
   关系读取结果 out; out.Gread=Gread;
+  if (!Gread) { out.状态=阶段::入口拒绝; return out; }
   try {
-    const L1所有者范围历史完整关系组读取请求_v2 req{
-        L1所有者范围历史完整关系组读取合同版本, direction,
-        endpoint, type, Gread, H};
-    const auto q=l1.读取所有者范围历史完整关系组(req);
-    if (q.读取事实代次 != Gread) {out.状态=阶段::事实代次漂移;out.Gread=q.读取事实代次;return out;}
-    if (!q.成功(req)) {
-      using S=L1所有者范围历史完整关系组读取状态_v2;
-      switch(q.状态) {
-      case S::入口拒绝:out.状态=阶段::入口拒绝;break;
-      case S::未找到:out.状态=阶段::未找到;break;
-      case S::已退出:case S::历史材料已清理:out.状态=阶段::历史材料不可用;break;
-      case S::事实代次漂移:out.状态=阶段::事实代次漂移;break;
-      case S::资源失败:out.状态=阶段::资源失败;break;
-      default:out.状态=阶段::内部不一致;break;
-      }
-      return out;
+    if (direction == 关系端点方向::源) {
+      const auto q=l1.读取所有者范围当前源关系组(
+          {L1所有者范围CRUD合同版本,endpoint,type});
+      if (q.读取事实代次 != Gread) {out.状态=阶段::事实代次漂移;out.Gread=q.读取事实代次;return out;}
+      if (q.状态 != L1所有者范围读取状态::成功) {out.状态=映射读取状态(q.状态);return out;}
+      if(q.合同版本!=L1所有者范围CRUD合同版本||q.源节点!=endpoint
+          ||q.关系类型节点!=type)return out;
+      out.关系=q.关系组;
+    } else {
+      const auto q=l1.读取所有者范围当前目标关系组(
+          {L1所有者范围CRUD合同版本,endpoint,type});
+      if (q.读取事实代次 != Gread) {out.状态=阶段::事实代次漂移;out.Gread=q.读取事实代次;return out;}
+      if (q.状态 != L1所有者范围读取状态::成功) {out.状态=映射读取状态(q.状态);return out;}
+      if(q.合同版本!=L1所有者范围CRUD合同版本||q.目标节点!=endpoint
+          ||q.关系类型节点!=type)return out;
+      out.关系=q.关系组;
     }
-    for(const auto& e:q.关系组) {
+    for(const auto& e:out.关系) {
       if(e.写入所有者!=owner||e.关系类型节点!=type||e.角色或顺序!=0
-          ||e.创建事实代次>H||(e.退出事实代次&&*e.退出事实代次<=H)
-          || (direction == L1所有者范围关系端点方向::源
+          ||e.创建事实代次>Gread
+          || (direction == 关系端点方向::源
               ? e.源节点 != endpoint : e.目标节点 != endpoint))
         return out;
     }
-    out.关系=q.关系组;out.状态=阶段::已读取;return out;
+    out.状态=阶段::已读取;return out;
   } catch(const std::bad_alloc&){out.状态=阶段::资源失败;}
     catch(const std::length_error&){out.状态=阶段::资源失败;}
     catch(...){out.状态=阶段::内部不一致;}
@@ -322,15 +340,15 @@ bool 核心投影完整(const 本能根任务核心投影_v1& c) noexcept {
       && (!c.P1 || 有效(c.P1->值)) && 生命周期有效(c.生命周期)
       && 来源有效(c.首次来源) && c.D == c.首次来源.D
       && c.L == c.首次来源.L && 有效(c.核心键) && 有效(c.P1键)
-      && 有效(c.首迁移键) && c.核心形成截止 != 0
-      && (!c.P1形成截止 || (c.P1 && c.P1形成截止 >= c.核心形成截止))
-      && (!c.首迁移形成截止 || c.首迁移形成截止 >= c.核心形成截止);
+      && 有效(c.首迁移键) && c.核心首次发布代次 != 0
+      && (!c.P1首次发布代次 || (c.P1 && c.P1首次发布代次 >= c.核心首次发布代次))
+      && (!c.首迁移首次发布代次 || c.首迁移首次发布代次 >= c.核心首次发布代次);
 }
 
 bool 目标投影完整(const 本能根任务目标投影_v1& p) noexcept {
   return 角色有效(p.根角色) && 有效(p.D.值) && 有效(p.L)
       && 有效(p.目标宿主E) && 有效(p.目标FT.编码)
-      && 有效(p.目标状态合同) && p.H != 0;
+      && 有效(p.目标状态合同);
 }
 
 } // namespace
@@ -376,12 +394,9 @@ bool 本能根任务核心读取结果_v1::成功(
 }
 bool 本能根任务目标投影结果_v1::成功(
     const 本能根任务目标投影读取请求_v1& r) const noexcept {
-  return r.合同版本==1&&r.Gread!=0&&r.H!=0&&r.H<=r.Gread&&有效(r.T.值)
-      &&((r.读取种类==本能根任务读取种类_v1::当前&&r.H==r.Gread)
-          ||r.读取种类==本能根任务读取种类_v1::历史)
-      &&状态==阶段::已读取&&合同版本==r.合同版本&&Gread==r.Gread&&H==r.H
-      &&读取种类==r.读取种类&&投影&&投影->H==r.H
-      &&投影->H<=Gread&&目标投影完整(*投影);
+  return r.合同版本==1&&r.Gread!=0&&有效(r.T.值)
+      &&状态==阶段::已读取&&合同版本==r.合同版本&&Gread==r.Gread
+      &&投影&&目标投影完整(*投影);
 }
 bool 本能根任务当前资格退出结果_v1::成功(
     const 本能根任务当前资格退出请求_v1& r) const noexcept {
@@ -390,9 +405,7 @@ bool 本能根任务当前资格退出结果_v1::成功(
       &&退出目标有效(r.目标生命周期)&&有效(r.幂等身份)
       &&(状态==阶段::已发布||状态==阶段::精确重复)&&合同版本==r.合同版本
       &&事实代次>=r.期望事实代次&&T==r.T&&L==r.L&&目标生命周期==r.目标生命周期
-      &&已退出L当前任务关系&&已退出旧生命周期值&&新生命周期值&&退出回执
-      &&有效(*已退出L当前任务关系)&&有效(*已退出旧生命周期值)
-      &&有效(*新生命周期值)&&有效(退出回执->值);
+      &&新生命周期值&&退出回执&&有效(*新生命周期值)&&有效(退出回执->值);
 }
 
 本能根任务核心结构登记结果_v1 本能根任务核心服务_v1::登记结构(
@@ -473,8 +486,7 @@ bool 本能根任务当前资格退出结果_v1::成功(
   const auto q=l1_.读取当前结构所有者({L1所有者范围CRUD合同版本,owner_});
   if(q.状态!=L1所有者范围读取状态::成功||q.合同版本!=L1所有者范围CRUD合同版本
       ||!q.所有者事实||q.所有者事实->所有者!=owner_
-      ||q.所有者事实->范围种类!=L1所有者范围种类::独占结构范围
-      ||q.所有者事实->退出事实代次)
+      ||q.所有者事实->范围种类!=L1所有者范围种类::独占结构范围)
     throw std::invalid_argument("invalid instinct-root task owner");
 }
 bool 本能根任务核心服务_v1::绑定于(const L1事实基座服务& l1) const noexcept{return &l1==&l1_;}
@@ -485,20 +497,20 @@ std::vector<std::uint64_t> 编码预留材料(const 本能根任务初始化语�
     std::uint64_t n) {
   const auto control=控制键基址+n,base=阶段键基址+4*n;
   return {1,r.意图.值.值,r.期望事实代次,static_cast<std::uint64_t>(r.来源.根角色),
-    r.来源.D.值.值,r.来源.L.值,r.来源.来源截止H,r.来源.根形成F.编码.值,
+    r.来源.D.值.值,r.来源.L.值,r.来源.根形成F.编码.值,
     r.前序任务 ? r.前序任务->值.值 : 0,n,control,base,base+1,base+2};
 }
 
 std::optional<不可变本能根任务初始化包_v1> 解析预留材料(
     const std::vector<std::uint64_t>& v, 稳定编码 record, std::uint64_t created) noexcept {
-  if(v.size()!=14||v[0]!=1||v[1]==0||v[2]==0||(v[3]!=1&&v[3]!=2)
-      ||v[4]==0||v[5]==0||v[6]==0||v[7]==0||v[9]==0||v[9]>最大预留序号
-      ||v[10]!=控制键基址+v[9]||v[11]!=阶段键基址+4*v[9]
-      ||v[12]!=v[11]+1||v[13]!=v[11]+2||!有效(record)||created==0)return std::nullopt;
+  if(v.size()!=13||v[0]!=1||v[1]==0||v[2]==0||(v[3]!=1&&v[3]!=2)
+      ||v[4]==0||v[5]==0||v[6]==0||v[8]==0||v[8]>最大预留序号
+      ||v[9]!=控制键基址+v[8]||v[10]!=阶段键基址+4*v[8]
+      ||v[11]!=v[10]+1||v[12]!=v[10]+2||!有效(record)||created==0)return std::nullopt;
   本能根任务初始化语义请求_v1 r{1,{{v[1]}},v[2],
-    {static_cast<本能根角色>(v[3]),{{v[4]}},{v[5]},v[6],{{v[7]}}},std::nullopt};
-  if(v[8])r.前序任务=本能根任务身份_v1{{v[8]}};
-  不可变本能根任务初始化包_v1 p{r,{record},v[9],{v[10]},{v[11]},{v[12]},{v[13]},created};
+    {static_cast<本能根角色>(v[3]),{{v[4]}},{v[5]},{{v[6]}}},std::nullopt};
+  if(v[7])r.前序任务=本能根任务身份_v1{{v[7]}};
+  不可变本能根任务初始化包_v1 p{r,{record},v[8],{v[9]},{v[10]},{v[11]},{v[12]},created};
   return 初始化包有效(p) ? std::optional{p} : std::nullopt;
 }
 
@@ -511,14 +523,14 @@ struct 预留扫描结果 final {
     const 本能根任务核心结构交付_v1& s,const 本能根任务初始化语义请求_v1& request,
     std::uint64_t g) noexcept {
   预留扫描结果 out;out.G=g;
-  const auto rows=读取关系(l1,owner,L1所有者范围关系端点方向::源,
-      s.预留记录族根,s.预留记录成员关系类型,g,g);
+  const auto rows=读取关系(l1,owner,关系端点方向::源,
+      s.预留记录族根,s.预留记录成员关系类型,g);
   if(rows.状态!=阶段::已读取){out.状态=rows.状态;out.G=rows.Gread;return out;}
   std::optional<不可变本能根任务初始化包_v1> found;
   bool sameIntentDifferent=false;
   for(const auto& edge:rows.关系){
     if(edge.源节点!=s.预留记录族根){out.状态=阶段::内部不一致;return out;}
-    const auto material=读取属性(l1,owner,edge.目标节点,s.预留材料属性类型,g,g,
+    const auto material=读取属性(l1,owner,edge.目标节点,s.预留材料属性类型,g,
         L1所有者范围值表示种类::U64组);
     if(material.状态!=阶段::已读取||!material.U64){out.状态=material.状态;out.G=material.Gread;return out;}
     const auto parsed=解析预留材料(*material.U64,edge.目标节点,edge.创建事实代次);
@@ -547,7 +559,7 @@ struct 预留扫描结果 final {
     if(scan.状态!=阶段::未找到){out.状态=scan.状态;out.事实代次=scan.G;return out;}
     if(*g!=r.期望事实代次){out.状态=阶段::事实代次漂移;return out;}
 
-    const auto high=读取属性(l1_,owner_,结构_.任务族根,结构_.私有高水位属性类型,*g,*g,
+    const auto high=读取属性(l1_,owner_,结构_.任务族根,结构_.私有高水位属性类型,*g,
         L1所有者范围值表示种类::I64);
     if(high.状态!=阶段::已读取||!high.I64||!high.值身份||*high.I64<0){out.状态=high.状态;out.事实代次=high.Gread;return out;}
     const auto old=static_cast<std::uint64_t>(*high.I64);
@@ -615,11 +627,9 @@ std::vector<std::uint64_t> 编码首迁移回执(
   return {1,3,p.预留记录.值.值,T.值.值,Vt.值,旧状态值.值};
 }
 std::vector<std::uint64_t> 编码退出回执(
-    const 本能根任务当前资格退出请求_v1& r,
-    稳定编码 旧当前关系, 稳定编码 旧生命周期值) {
+    const 本能根任务当前资格退出请求_v1& r) {
   return {2,r.T.值.值,r.L.值,static_cast<std::uint64_t>(r.期望前生命周期),
-    static_cast<std::uint64_t>(r.目标生命周期),r.幂等身份.值,
-    旧当前关系.值,旧生命周期值.值};
+    static_cast<std::uint64_t>(r.目标生命周期),r.幂等身份.值};
 }
 
 L1所有者范围写集请求 构造核心新建写集(
@@ -631,7 +641,7 @@ L1所有者范围写集请求 构造核心新建写集(
   const auto base=p.任务核心建立幂等身份.值;
   ws.值={{Key{10},Key{1},s.根来源定位属性类型,
       std::vector<std::uint64_t>{1,static_cast<std::uint64_t>(p.原请求.来源.根角色),
-        p.原请求.来源.D.值.值,p.原请求.来源.L.值,p.原请求.来源.来源截止H,
+        p.原请求.来源.D.值.值,p.原请求.来源.L.值,
         p.原请求.来源.根形成F.编码.值,p.预留记录.值.值,base},Key{1}},
     {Key{11},Key{1},s.任务生命周期属性类型,
       static_cast<std::int64_t>(本能根任务生命周期_v1::当前可治理),Key{1}},
@@ -704,7 +714,7 @@ L1所有者范围写集请求 构造退出写集(
   ws.值={{Key{10},r.T.值,s.任务生命周期属性类型,
       static_cast<std::int64_t>(r.目标生命周期),r.T.值},
     {Key{11},Key{1},s.初始化回执材料属性类型,
-      编码退出回执(r,oldCurrent,oldLife),Key{1}}};
+      编码退出回执(r),Key{1}}};
   ws.关系={{Key{20},s.初始化回执族根,Key{1},s.初始化回执成员关系类型,0}};
   ws.属性槽变更={{r.T.值,s.任务生命周期属性类型,Key{10}},
     {Key{1},s.初始化回执材料属性类型,Key{11}}};
@@ -729,26 +739,28 @@ bool 映射键精确(const L1所有者范围写入结果&,
 
 bool 核验回执闭包(const L1事实基座服务& l1,L1结构所有者身份 owner,
     const 本能根任务核心结构交付_v1& s,
-    const L1所有者范围写入结果& written,std::uint64_t G,std::uint64_t H,
+    const L1所有者范围写入结果& written,std::uint64_t G,
     std::uint32_t nodeKey,std::uint32_t valueKey,std::uint32_t edgeKey,
     const std::vector<std::uint64_t>& expected) noexcept {
   const auto nodeId=映射编码(written,nodeKey),valueId=映射编码(written,valueKey),
       edgeId=映射编码(written,edgeKey);
   if(!nodeId||!valueId||!edgeId)return false;
-  const auto node=l1.读取所有者范围历史事实(
-      {L1所有者范围CRUD合同版本,*nodeId});
-  const auto* fact=node.事实
-      ?std::get_if<L1所有者范围节点事实>(&*node.事实):nullptr;
+  const auto node=l1.读取所有者范围当前事实(
+      {L1所有者范围当前事实读取合同版本_v2,owner,*nodeId,G});
+  const auto* fact=node.载荷
+      ?std::get_if<L1所有者范围节点事实>(&*node.载荷):nullptr;
   const auto material=读取属性(l1,owner,*nodeId,s.初始化回执材料属性类型,
-      G,H,L1所有者范围值表示种类::U64组);
-  const auto member=读取关系(l1,owner,L1所有者范围关系端点方向::目标,
-      *nodeId,s.初始化回执成员关系类型,G,H);
-  return node.状态==L1所有者范围读取状态::成功
-      &&node.合同版本==L1所有者范围CRUD合同版本&&node.读取事实代次==G
+      G,L1所有者范围值表示种类::U64组);
+  const auto member=读取关系(l1,owner,关系端点方向::目标,
+      *nodeId,s.初始化回执成员关系类型,G);
+  return node.状态==L1所有者范围当前事实读取状态_v2::成功
+      &&node.合同版本==L1所有者范围当前事实读取合同版本_v2
+      &&node.所有者==owner&&node.事实编码==*nodeId&&node.期望事实代次==G
+      &&node.读取事实代次==G
       &&fact&&fact->编码==*nodeId&&fact->写入所有者==owner
       &&fact->种类==节点种类::普通&&!fact->属性类型表示
       &&fact->创建事实代次==written.事实代次
-      &&fact->创建事实代次<=H&&(!fact->退出事实代次||*fact->退出事实代次>H)
+      &&fact->创建事实代次<=G
       &&material.状态==阶段::已读取&&material.值身份==valueId
       &&material.创建G==written.事实代次&&material.U64
       &&*material.U64==expected&&member.状态==阶段::已读取
@@ -768,39 +780,14 @@ bool 核验退出闭包(const L1事实基座服务& l1,L1结构所有者身份 o
   const auto expected=构造退出写集(s,request,oldCurrent,oldLife);
   if(!忽略G写集相同(firstWrite,expected)
       ||!映射键精确(written,{1,10,11,20})
-      ||!核验回执闭包(l1,owner,s,written,G,G,1,11,20,
-          编码退出回执(request,oldCurrent,oldLife)))return false;
+      ||!核验回执闭包(l1,owner,s,written,G,1,11,20,
+          编码退出回执(request)))return false;
   const auto newLife=映射编码(written,10);
-  const auto oldRelation=l1.读取所有者范围历史事实(
-      {L1所有者范围CRUD合同版本,oldCurrent});
-  const auto oldValue=l1.读取所有者范围历史事实(
-      {L1所有者范围CRUD合同版本,oldLife});
-  const auto* relation=oldRelation.事实
-      ?std::get_if<L1所有者范围关系事实>(&*oldRelation.事实):nullptr;
-  const auto* value=oldValue.事实
-      ?std::get_if<L1所有者范围值事实>(&*oldValue.事实):nullptr;
-  const auto* oldI64=value?std::get_if<std::int64_t>(&value->材料):nullptr;
-  const auto current=读取关系(l1,owner,L1所有者范围关系端点方向::源,
-      request.L,s.L当前任务关系类型,G,G);
+  const auto current=读取关系(l1,owner,关系端点方向::源,
+      request.L,s.L当前任务关系类型,G);
   const auto lifecycle=读取属性(l1,owner,request.T.值,
-      s.任务生命周期属性类型,G,G,L1所有者范围值表示种类::I64);
-  return newLife&&oldRelation.状态==L1所有者范围读取状态::成功
-      &&oldRelation.合同版本==L1所有者范围CRUD合同版本
-      &&oldRelation.查询编码==oldCurrent&&oldRelation.读取事实代次==G
-      &&relation&&relation->编码==oldCurrent
-      &&relation->源节点==request.L&&relation->目标节点==request.T.值
-      &&relation->关系类型节点==s.L当前任务关系类型
-      &&relation->角色或顺序==0&&relation->写入所有者==owner
-      &&relation->退出事实代次==written.事实代次
-      &&oldValue.状态==L1所有者范围读取状态::成功
-      &&oldValue.合同版本==L1所有者范围CRUD合同版本
-      &&oldValue.查询编码==oldLife&&oldValue.读取事实代次==G
-      &&value&&value->编码==oldLife
-      &&value->所属节点==request.T.值
-      &&value->属性类型节点==s.任务生命周期属性类型
-      &&value->来源节点==request.T.值&&value->写入所有者==owner&&oldI64
-      &&*oldI64==static_cast<std::int64_t>(request.期望前生命周期)
-      &&value->退出事实代次==written.事实代次
+      s.任务生命周期属性类型,G,L1所有者范围值表示种类::I64);
+  return newLife
       &&current.状态==阶段::已读取&&current.关系.empty()
       &&lifecycle.状态==阶段::已读取&&lifecycle.值身份==newLife
       &&lifecycle.创建G==written.事实代次&&lifecycle.I64
@@ -818,12 +805,14 @@ bool 核验核心首次闭包(const L1事实基座服务& l1,L1结构所有者�
       vtStateId=映射编码(written,12);
   if(!T||!Vt||!R1||!originId||!lifeId||!vtStateId)return false;
   const auto read=[&](稳定编码 id)->std::optional<L1所有者范围事实副本>{
-    const auto q=l1.读取所有者范围历史事实({L1所有者范围CRUD合同版本,id});
-    if(q.状态!=L1所有者范围读取状态::成功
-        ||q.合同版本!=L1所有者范围CRUD合同版本||q.查询编码!=id
-        ||q.读取事实代次!=G||!q.事实)
+    const auto q=l1.读取所有者范围当前事实(
+        {L1所有者范围当前事实读取合同版本_v2,owner,id,G});
+    if(q.状态!=L1所有者范围当前事实读取状态_v2::成功
+        ||q.合同版本!=L1所有者范围当前事实读取合同版本_v2
+        ||q.所有者!=owner||q.事实编码!=id||q.期望事实代次!=G
+        ||q.读取事实代次!=G||!q.载荷)
       return std::nullopt;
-    return q.事实;
+    return q.载荷;
   };
   const auto nodeVt=read(*Vt),nodeR1=read(*R1),origin=read(*originId),
       life=read(*lifeId),vtState=read(*vtStateId);
@@ -878,7 +867,7 @@ bool 核验核心首次闭包(const L1事实基座服务& l1,L1结构所有者�
         ||relation->角色或顺序!=0||relation->写入所有者!=owner
         ||relation->创建事实代次!=written.事实代次)return false;
   }
-  return 核验回执闭包(l1,owner,s,written,G,G,4,13,26,
+  return 核验回执闭包(l1,owner,s,written,G,4,13,26,
       编码核心回执(package,1));
 }
 
@@ -886,57 +875,60 @@ struct 核心内部结果 final{阶段 状态=阶段::入口拒绝;std::uint64_t
 核心内部结果 读取核心内部(const L1事实基座服务& l1,
     L1所有者范围写端口& port,L1结构所有者身份 owner,
     const 本能根任务核心结构交付_v1& s,本能根任务身份_v1 T,
-    std::uint64_t G,std::uint64_t H) noexcept{
+    std::uint64_t G) noexcept{
   核心内部结果 out;out.G=G;
-  if(!有效(T.值)||!G||!H||H>G)return out;
+  if(!有效(T.值)||!G)return out;
   try{
-    const auto node=l1.读取所有者范围历史事实({L1所有者范围CRUD合同版本,T.值});
+    const auto node=l1.读取所有者范围当前事实(
+        {L1所有者范围当前事实读取合同版本_v2,owner,T.值,G});
     if(node.读取事实代次!=G){out.状态=阶段::事实代次漂移;out.G=node.读取事实代次;return out;}
-    if(node.状态!=L1所有者范围读取状态::成功){out.状态=映射读取状态(node.状态);return out;}
-    const auto* tn = node.事实
-        ? std::get_if<L1所有者范围节点事实>(&*node.事实) : nullptr;
+    if(node.状态!=L1所有者范围当前事实读取状态_v2::成功){out.状态=映射当前事实读取状态(node.状态);return out;}
+    if(node.合同版本!=L1所有者范围当前事实读取合同版本_v2
+        ||node.所有者!=owner||node.事实编码!=T.值||node.期望事实代次!=G){
+      out.状态=阶段::内部不一致;return out;}
+    const auto* tn = node.载荷
+        ? std::get_if<L1所有者范围节点事实>(&*node.载荷) : nullptr;
     if(!tn||tn->编码!=T.值||tn->写入所有者!=owner||tn->种类!=节点种类::普通
         ||tn->属性类型表示){out.状态=阶段::内部不一致;return out;}
-    if(tn->创建事实代次>H){out.状态=阶段::未找到;return out;}
-    if(tn->退出事实代次&&*tn->退出事实代次<=H){out.状态=阶段::历史材料不可用;return out;}
-    const auto one=[&](L1所有者范围关系端点方向 dir,稳定编码 endpoint,稳定编码 type)
+    if(tn->创建事实代次>G){out.状态=阶段::未找到;return out;}
+    const auto one=[&](关系端点方向 dir,稳定编码 endpoint,稳定编码 type)
         ->std::pair<阶段,std::optional<L1所有者范围关系事实>>{
-      auto q=读取关系(l1,owner,dir,endpoint,type,G,H);
+      auto q=读取关系(l1,owner,dir,endpoint,type,G);
       if(q.状态!=阶段::已读取)return {q.状态,std::nullopt};
       if(q.关系.size()!=1)return {q.关系.empty() ? 阶段::未找到 : 阶段::内部不一致,std::nullopt};
       return {阶段::已读取,q.关系.front()};
     };
-    const auto member=one(L1所有者范围关系端点方向::目标,T.值,s.任务族成员关系类型);
-    const auto anchor=one(L1所有者范围关系端点方向::源,T.值,s.任务查询锚点关系类型);
-    const auto source=one(L1所有者范围关系端点方向::源,T.值,s.任务来源D关系类型);
-    const auto vt=one(L1所有者范围关系端点方向::源,T.值,s.任务Vt关系类型);
-    const auto r1=one(L1所有者范围关系端点方向::源,T.值,s.任务R1关系类型);
+    const auto member=one(关系端点方向::目标,T.值,s.任务族成员关系类型);
+    const auto anchor=one(关系端点方向::源,T.值,s.任务查询锚点关系类型);
+    const auto source=one(关系端点方向::源,T.值,s.任务来源D关系类型);
+    const auto vt=one(关系端点方向::源,T.值,s.任务Vt关系类型);
+    const auto r1=one(关系端点方向::源,T.值,s.任务R1关系类型);
     for(const auto* x:{&member,&anchor,&source,&vt,&r1})if(x->first!=阶段::已读取){out.状态=x->first;return out;}
     if(member.second->源节点!=s.任务族根||member.second->目标节点!=T.值
         ||anchor.second->源节点!=T.值||source.second->源节点!=T.值
         ||vt.second->源节点!=T.值||r1.second->源节点!=T.值){out.状态=阶段::内部不一致;return out;}
-    const auto lifecycle=读取属性(l1,owner,T.值,s.任务生命周期属性类型,G,H,L1所有者范围值表示种类::I64);
-    const auto origin=读取属性(l1,owner,T.值,s.根来源定位属性类型,G,H,L1所有者范围值表示种类::U64组);
-    const auto vtstate=读取属性(l1,owner,vt.second->目标节点,s.Vt状态属性类型,G,H,L1所有者范围值表示种类::I64);
+    const auto lifecycle=读取属性(l1,owner,T.值,s.任务生命周期属性类型,G,L1所有者范围值表示种类::I64);
+    const auto origin=读取属性(l1,owner,T.值,s.根来源定位属性类型,G,L1所有者范围值表示种类::U64组);
+    const auto vtstate=读取属性(l1,owner,vt.second->目标节点,s.Vt状态属性类型,G,L1所有者范围值表示种类::I64);
     if(lifecycle.状态!=阶段::已读取||origin.状态!=阶段::已读取||vtstate.状态!=阶段::已读取
         ||!lifecycle.I64||!origin.U64||!vtstate.I64){
       out.状态 = lifecycle.状态 != 阶段::已读取 ? lifecycle.状态
           : origin.状态 != 阶段::已读取 ? origin.状态 : vtstate.状态;
       return out;
     }
-    if(*lifecycle.I64<1||*lifecycle.I64>5||*vtstate.I64<1||*vtstate.I64>2||origin.U64->size()!=8
+    if(*lifecycle.I64<1||*lifecycle.I64>5||*vtstate.I64<1||*vtstate.I64>2||origin.U64->size()!=7
         ||(*origin.U64)[0]!=1||((*origin.U64)[1]!=1&&(*origin.U64)[1]!=2)
         ||(*origin.U64)[2]!=source.second->目标节点.值||(*origin.U64)[3]!=anchor.second->目标节点.值
-        ||(*origin.U64)[4]==0||(*origin.U64)[5]==0||(*origin.U64)[6]==0
-        ||(*origin.U64)[7]<阶段键基址||(*origin.U64)[7]>std::numeric_limits<std::uint64_t>::max()-2){
+        ||(*origin.U64)[4]==0||(*origin.U64)[5]==0
+        ||(*origin.U64)[6]<阶段键基址||(*origin.U64)[6]>std::numeric_limits<std::uint64_t>::max()-2){
       out.状态=阶段::内部不一致;return out;}
-    const auto base=(*origin.U64)[7];
+    const auto base=(*origin.U64)[6];
     const L1所有者范围写入幂等身份 coreKey{base},p1Key{base+1},migrationKey{base+2};
-    const 稳定编码 reserveRecord{(*origin.U64)[6]};
-    const auto reserveMember=one(L1所有者范围关系端点方向::目标,
+    const 稳定编码 reserveRecord{(*origin.U64)[5]};
+    const auto reserveMember=one(关系端点方向::目标,
         reserveRecord,s.预留记录成员关系类型);
     const auto reserveMaterial=读取属性(l1,owner,reserveRecord,
-        s.预留材料属性类型,G,H,L1所有者范围值表示种类::U64组);
+        s.预留材料属性类型,G,L1所有者范围值表示种类::U64组);
     if(reserveMember.first!=阶段::已读取||!reserveMember.second
         ||reserveMember.second->源节点!=s.预留记录族根
         ||reserveMember.second->目标节点!=reserveRecord
@@ -951,8 +943,7 @@ struct 核心内部结果 final{阶段 状态=阶段::入口拒绝;std::uint64_t
         ||package->原请求.来源.根角色!=static_cast<本能根角色>((*origin.U64)[1])
         ||package->原请求.来源.D.值.值!=(*origin.U64)[2]
         ||package->原请求.来源.L.值!=(*origin.U64)[3]
-        ||package->原请求.来源.来源截止H!=(*origin.U64)[4]
-        ||package->原请求.来源.根形成F.编码.值!=(*origin.U64)[5]
+        ||package->原请求.来源.根形成F.编码.值!=(*origin.U64)[4]
         ||package->任务核心建立幂等身份!=coreKey){
       out.状态=阶段::内部不一致;return out;
     }
@@ -972,8 +963,8 @@ struct 核心内部结果 final{阶段 状态=阶段::入口拒绝;std::uint64_t
         ||tn->创建事实代次!=coreFirst.首次写入结果->事实代次){
       out.状态=阶段::内部不一致;return out;
     }
-    const auto p1rows=读取关系(l1,owner,L1所有者范围关系端点方向::源,
-        r1.second->目标节点,s.R1的P1关系类型,G,H);
+    const auto p1rows=读取关系(l1,owner,关系端点方向::源,
+        r1.second->目标节点,s.R1的P1关系类型,G);
     if(p1rows.状态!=阶段::已读取||p1rows.关系.size()>1){
       out.状态 = p1rows.状态 == 阶段::已读取 ? 阶段::内部不一致 : p1rows.状态;
       return out;
@@ -985,28 +976,30 @@ struct 核心内部结果 final{阶段 状态=阶段::入口拒绝;std::uint64_t
     if(p1First.状态==L1所有者范围读取状态::成功){
       if(核验首次读取头(p1First,owner,p1Key,G)!=阶段::已读取){
         out.状态=阶段::内部不一致;return out;}
-      if(p1First.首次写入结果->事实代次<=H){
+      if(p1First.首次写入结果->事实代次<=G){
         if(p1rows.关系.size()!=1){out.状态=阶段::内部不一致;return out;}
         const auto mappedP1=映射编码(*p1First.首次写入结果,1);
         const auto mappedP1Relation=映射编码(*p1First.首次写入结果,20);
-        const auto p1Node=mappedP1?l1.读取所有者范围历史事实(
-            {L1所有者范围CRUD合同版本,*mappedP1}):L1所有者范围历史读取结果{};
-        const auto* p1Fact=p1Node.事实
-            ?std::get_if<L1所有者范围节点事实>(&*p1Node.事实):nullptr;
+        const auto p1Node=mappedP1?l1.读取所有者范围当前事实(
+            {L1所有者范围当前事实读取合同版本_v2,owner,*mappedP1,G})
+            :L1所有者范围当前事实读取结果_v2{};
+        const auto* p1Fact=p1Node.载荷
+            ?std::get_if<L1所有者范围节点事实>(&*p1Node.载荷):nullptr;
         const auto expectedReceipt=编码P1回执(*package,T,{r1.second->目标节点});
         const auto expectedWrite=构造P1写集(s,*package,1,T,{r1.second->目标节点});
         if(!映射键精确(*p1First.首次写入结果,{1,2,10,20,21})
             ||!忽略G写集相同(*p1First.首次规范化写集,expectedWrite)
             ||!mappedP1||!mappedP1Relation||*mappedP1!=p1rows.关系.front().目标节点
-            ||p1Node.状态!=L1所有者范围读取状态::成功
-            ||p1Node.合同版本!=L1所有者范围CRUD合同版本
-            ||p1Node.查询编码!=*mappedP1||p1Node.读取事实代次!=G
+            ||p1Node.状态!=L1所有者范围当前事实读取状态_v2::成功
+            ||p1Node.合同版本!=L1所有者范围当前事实读取合同版本_v2
+            ||p1Node.所有者!=owner||p1Node.事实编码!=*mappedP1
+            ||p1Node.期望事实代次!=G||p1Node.读取事实代次!=G
             ||!p1Fact||p1Fact->编码!=*mappedP1||p1Fact->写入所有者!=owner
             ||p1Fact->种类!=节点种类::普通||p1Fact->属性类型表示
             ||p1Fact->创建事实代次!=p1First.首次写入结果->事实代次
             ||p1rows.关系.front().编码!=*mappedP1Relation
             ||p1rows.关系.front().创建事实代次!=p1First.首次写入结果->事实代次
-            ||!核验回执闭包(l1,owner,s,*p1First.首次写入结果,G,H,
+            ||!核验回执闭包(l1,owner,s,*p1First.首次写入结果,G,
                 2,10,21,expectedReceipt)){
           out.状态=阶段::内部不一致;return out;}
         P1=本能根任务准备身份_v1{*mappedP1};Gp1=p1First.首次写入结果->事实代次;
@@ -1021,7 +1014,7 @@ struct 核心内部结果 final{阶段 状态=阶段::入口拒绝;std::uint64_t
     if(migrationFirst.状态==L1所有者范围读取状态::成功){
       if(核验首次读取头(migrationFirst,owner,migrationKey,G)!=阶段::已读取){
         out.状态=阶段::内部不一致;return out;}
-      if(migrationFirst.首次写入结果->事实代次<=H){
+      if(migrationFirst.首次写入结果->事实代次<=G){
         const auto* receipt=查找U64材料(*migrationFirst.首次规范化写集,11);
         if(!receipt||receipt->size()!=6||(*receipt)[0]!=1||(*receipt)[1]!=3
             ||(*receipt)[2]!=package->预留记录.值.值||(*receipt)[3]!=T.值.值
@@ -1030,25 +1023,13 @@ struct 核心内部结果 final{阶段 状态=阶段::入口拒绝;std::uint64_t
         const 稳定编码 oldState{(*receipt)[5]};
         const auto expectedWrite=构造首迁移写集(s,*package,1,T,
             vt.second->目标节点,oldState);
-        const auto old=l1.读取所有者范围历史事实(
-            {L1所有者范围CRUD合同版本,oldState});
-        const auto* oldFact=old.事实
-            ?std::get_if<L1所有者范围值事实>(&*old.事实):nullptr;
-        const auto* oldI64=oldFact?std::get_if<std::int64_t>(&oldFact->材料):nullptr;
         if(!映射键精确(*migrationFirst.首次写入结果,{1,10,11,20})
             ||!忽略G写集相同(*migrationFirst.首次规范化写集,expectedWrite)
-            ||!核验回执闭包(l1,owner,s,*migrationFirst.首次写入结果,G,H,
+            ||!核验回执闭包(l1,owner,s,*migrationFirst.首次写入结果,G,
                 1,11,20,*receipt)
             ||*vtstate.I64!=static_cast<std::int64_t>(本能根任务Vt状态_v1::待找方法)
             ||vtstate.值身份!=映射编码(*migrationFirst.首次写入结果,10)
-            ||vtstate.创建G!=migrationFirst.首次写入结果->事实代次
-            ||old.状态!=L1所有者范围读取状态::成功||old.读取事实代次!=G
-            ||!oldFact||oldFact->写入所有者!=owner
-            ||oldFact->所属节点!=vt.second->目标节点
-            ||oldFact->属性类型节点!=s.Vt状态属性类型
-            ||oldFact->来源节点!=vt.second->目标节点||!oldI64
-            ||*oldI64!=static_cast<std::int64_t>(本能根任务Vt状态_v1::已建立待首轮准备)
-            ||oldFact->退出事实代次!=migrationFirst.首次写入结果->事实代次){
+            ||vtstate.创建G!=migrationFirst.首次写入结果->事实代次){
           out.状态=阶段::内部不一致;return out;}
         Gmigration=migrationFirst.首次写入结果->事实代次;
       }else if(*vtstate.I64!=static_cast<std::int64_t>(
@@ -1064,7 +1045,7 @@ struct 核心内部结果 final{阶段 状态=阶段::入口拒绝;std::uint64_t
       static_cast<本能根任务生命周期_v1>(*lifecycle.I64),
       static_cast<本能根任务Vt状态_v1>(*vtstate.I64),
       {static_cast<本能根角色>((*origin.U64)[1]),{{(*origin.U64)[2]}},{(*origin.U64)[3]},
-        (*origin.U64)[4],{{(*origin.U64)[5]}}},coreKey,p1Key,migrationKey,
+        {{(*origin.U64)[4]}}},coreKey,p1Key,migrationKey,
       coreFirst.首次写入结果->事实代次,Gp1,Gmigration};
     if(!来源有效(core.首次来源)||core.D!=core.首次来源.D||core.L!=core.首次来源.L
         ||!生命周期有效(core.生命周期)||!有效(core.Vt)||!有效(core.R1.值)
@@ -1080,21 +1061,19 @@ struct 核心内部结果 final{阶段 状态=阶段::入口拒绝;std::uint64_t
 阶段 映射角色状态(存在单例角色状态 s)noexcept{
   switch(s){case 存在单例角色状态::入口拒绝:return 阶段::入口拒绝;
     case 存在单例角色状态::未绑定:case 存在单例角色状态::未找到:return 阶段::未找到;
-    case 存在单例角色状态::目标已退出:case 存在单例角色状态::历史材料不可用:return 阶段::历史材料不可用;
     case 存在单例角色状态::事实代次漂移:return 阶段::事实代次漂移;
     case 存在单例角色状态::资源失败:return 阶段::资源失败;default:return 阶段::内部不一致;}
 }
 阶段 映射采用状态(存在当前采用完整读取状态_v2 s)noexcept{
   switch(s){case 存在当前采用完整读取状态_v2::入口拒绝:return 阶段::入口拒绝;
     case 存在当前采用完整读取状态_v2::未找到:return 阶段::未找到;
-    case 存在当前采用完整读取状态_v2::目标已退出:case 存在当前采用完整读取状态_v2::历史材料不可用:return 阶段::历史材料不可用;
     case 存在当前采用完整读取状态_v2::事实代次漂移:return 阶段::事实代次漂移;
     case 存在当前采用完整读取状态_v2::资源失败:return 阶段::资源失败;default:return 阶段::内部不一致;}
 }
 阶段 映射特征错误(特征数据错误 s)noexcept{
   switch(s){case 特征数据错误::入口拒绝:return 阶段::入口拒绝;
     case 特征数据错误::未找到:case 特征数据错误::未设置:return 阶段::未找到;
-    case 特征数据错误::已退出:case 特征数据错误::历史材料不可用:case 特征数据错误::旧格式不支持:return 阶段::历史材料不可用;
+    case 特征数据错误::旧格式不支持:return 阶段::内部不一致;
     case 特征数据错误::并发变化:return 阶段::事实代次漂移;
     case 特征数据错误::引用冲突:case 特征数据错误::类型不相容:return 阶段::引用冲突;
     case 特征数据错误::资源失败:return 阶段::资源失败;
@@ -1113,22 +1092,23 @@ bool 映射键精确(const L1所有者范围写入结果& w,
     存在单例角色身份 selfRole,const 本能根任务目标来源定位_v1& source,
     std::uint64_t Gread) noexcept {
   try{
-    const 本能根历史材料请求_v1 dr{1,Gread,source.来源截止H,source.根角色,source.根形成F};
-    const auto demand=demandService.读取本能根历史材料(dr);
-    if(!demand.成功(dr)||!demand.材料)return 映射根历史状态(demand.状态);
+    const 本能根材料请求 dr{本能根材料合同版本,Gread,source.根角色,source.根形成F.编码};
+    const auto demand=demandService.读取本能根材料(dr);
+    if(demand.状态!=本能根材料状态::已读取||demand.合同版本!=本能根材料合同版本
+        ||demand.事实代次!=Gread||!demand.材料)return 映射根材料状态(demand.状态);
     if(demand.材料->根需求!=source.D.值||demand.材料->根列表项!=source.L
         ||demand.材料->实际特征!=source.根形成F.编码)return 阶段::目标不一致;
-    const 存在单例角色读取请求 er{1,Gread,source.来源截止H,selfRole,1};
+    const 存在单例角色读取请求 er{1,Gread,selfRole,1};
     const auto self=existenceService.读取单例角色(er);
     if(!self.成功(er)||!self.事实)return 映射角色状态(self.状态);
-    const 准确特征读取请求 fr{1,Gread,demand.材料->创建事实代次,source.根形成F};
+    const 准确特征读取请求 fr{1,Gread,source.根形成F};
     const auto feature=featureService.读取准确特征事实(fr);
     if(const auto* e=std::get_if<特征数据错误>(&feature))return 映射特征错误(*e);
     const auto* ff=std::get_if<准确特征读取事实>(&feature);
-    if(!ff||ff->Gread!=Gread||ff->H!=demand.材料->创建事实代次
+    if(!ff||ff->Gread!=Gread
         ||ff->信息.身份!=source.根形成F||!有效(ff->信息.类型)||!有效(ff->类型关系))
       return 阶段::内部不一致;
-    const 存在当前采用完整读取请求_v2 ar{2,Gread,demand.材料->创建事实代次,
+    const 存在当前采用完整读取请求_v2 ar{2,Gread,
       self.事实->E,ff->信息.类型};
     const auto adopted=existenceService.读取当前采用完整_v2(ar);
     if(!adopted.成功(ar)||!adopted.采用)return 映射采用状态(adopted.状态);
@@ -1147,51 +1127,50 @@ bool 映射键精确(const L1所有者范围写入结果& w,
     const 本能根任务身份读取请求_v1& r) const noexcept{
   本能根任务核心读取结果_v1 out;out.Gread=r.Gread;
   if(r.合同版本!=1||!r.Gread||!有效(r.T.值))return out;
-  const auto q=读取核心内部(l1_,写端口_,owner_,结构_,r.T,r.Gread,r.Gread);
+  const auto q=读取核心内部(l1_,写端口_,owner_,结构_,r.T,r.Gread);
   out.状态=q.状态;out.Gread=q.G;out.核心=q.核心;return out;
 }
 本能根任务核心读取结果_v1 本能根任务核心服务_v1::按查询锚点读取当前任务(
     const 本能根任务锚点读取请求_v1& r) const noexcept{
   本能根任务核心读取结果_v1 out;out.Gread=r.Gread;
   if(r.合同版本!=1||!r.Gread||!有效(r.L))return out;
-  const auto rows=读取关系(l1_,owner_,L1所有者范围关系端点方向::源,r.L,
-      结构_.L当前任务关系类型,r.Gread,r.Gread);
+  const auto rows=读取关系(l1_,owner_,关系端点方向::源,r.L,
+      结构_.L当前任务关系类型,r.Gread);
   if(rows.状态!=阶段::已读取){out.状态=rows.状态;out.Gread=rows.Gread;return out;}
   if(rows.关系.empty()){out.状态=阶段::未找到;return out;}
   if(rows.关系.size()!=1){out.状态=阶段::内部不一致;return out;}
-  const auto q=读取核心内部(l1_,写端口_,owner_,结构_,{rows.关系.front().目标节点},r.Gread,r.Gread);
+  const auto q=读取核心内部(l1_,写端口_,owner_,结构_,{rows.关系.front().目标节点},r.Gread);
   out.状态=q.状态;out.Gread=q.G;out.核心=q.核心;
   if(out.状态==阶段::已读取&&(!out.核心||out.核心->L!=r.L)){out.状态=阶段::内部不一致;out.核心.reset();}
   return out;
 }
-本能根任务目标投影结果_v1 本能根任务核心服务_v1::按任务与显式截止读取目标投影(
+本能根任务目标投影结果_v1 本能根任务核心服务_v1::按任务读取目标投影(
     const 本能根任务目标投影读取请求_v1& r) const noexcept{
-  本能根任务目标投影结果_v1 out;out.Gread=r.Gread;out.H=r.H;out.读取种类=r.读取种类;
-  if(r.合同版本!=1||!r.Gread||!r.H||r.H>r.Gread||!有效(r.T.值)
-      ||(r.读取种类==本能根任务读取种类_v1::当前&&r.H!=r.Gread)
-      ||(r.读取种类!=本能根任务读取种类_v1::当前&&r.读取种类!=本能根任务读取种类_v1::历史))return out;
+  本能根任务目标投影结果_v1 out;out.Gread=r.Gread;
+  if(r.合同版本!=1||!r.Gread||!有效(r.T.值))return out;
   try{
-    const auto core=读取核心内部(l1_,写端口_,owner_,结构_,r.T,r.Gread,r.H);
+    const auto core=读取核心内部(l1_,写端口_,owner_,结构_,r.T,r.Gread);
     if(core.状态!=阶段::已读取||!core.核心){out.状态=core.状态;out.Gread=core.G;return out;}
-    const 本能根历史材料请求_v1 dr{1,r.Gread,r.H,core.核心->首次来源.根角色,core.核心->首次来源.根形成F};
-    const auto demand=需求_.读取本能根历史材料(dr);
-    if(!demand.成功(dr)){out.状态=映射根历史状态(demand.状态);return out;}
+    const 本能根材料请求 dr{本能根材料合同版本,r.Gread,
+      core.核心->首次来源.根角色,core.核心->首次来源.根形成F.编码};
+    const auto demand=需求_.读取本能根材料(dr);
+    if(demand.状态!=本能根材料状态::已读取||demand.合同版本!=本能根材料合同版本
+        ||demand.事实代次!=r.Gread){out.状态=映射根材料状态(demand.状态);return out;}
     if(!demand.材料||demand.材料->根需求!=core.核心->D.值
         ||demand.材料->根列表项!=core.核心->L
         ||demand.材料->实际特征!=core.核心->首次来源.根形成F.编码){out.状态=阶段::内部不一致;return out;}
-    const 存在单例角色读取请求 er{1,r.Gread,r.H,self角色_,1};
+    const 存在单例角色读取请求 er{1,r.Gread,self角色_,1};
     const auto self=存在_.读取单例角色(er);
     if(!self.成功(er)||!self.事实){out.状态=映射角色状态(self.状态);return out;}
-    const 准确特征读取请求 fr{1,r.Gread,demand.材料->创建事实代次,core.核心->首次来源.根形成F};
+    const 准确特征读取请求 fr{1,r.Gread,core.核心->首次来源.根形成F};
     const auto feature=特征_.读取准确特征事实(fr);
     if(const auto* e=std::get_if<特征数据错误>(&feature)){out.状态=映射特征错误(*e);return out;}
     const auto* ff=std::get_if<准确特征读取事实>(&feature);
-    if(!ff||ff->Gread!=r.Gread||ff->H!=demand.材料->创建事实代次
+    if(!ff||ff->Gread!=r.Gread
         ||ff->信息.身份!=core.核心->首次来源.根形成F||!有效(ff->信息.类型)
-        ||ff->创建G>demand.材料->创建事实代次
-        ||(ff->退出G&&*ff->退出G<=demand.材料->创建事实代次)||!有效(ff->类型关系)){
+        ||ff->创建G>r.Gread||!有效(ff->类型关系)){
       out.状态=阶段::内部不一致;return out;}
-    const 存在当前采用完整读取请求_v2 ar{2,r.Gread,demand.材料->创建事实代次,
+    const 存在当前采用完整读取请求_v2 ar{2,r.Gread,
       self.事实->E,ff->信息.类型};
     const auto adopted=存在_.读取当前采用完整_v2(ar);
     if(!adopted.成功(ar)||!adopted.采用){out.状态=映射采用状态(adopted.状态);return out;}
@@ -1200,7 +1179,7 @@ bool 映射键精确(const L1所有者范围写入结果& w,
       out.状态=阶段::内部不一致;return out;}
     out.投影=本能根任务目标投影_v1{core.核心->首次来源.根角色,core.核心->D,
       core.核心->L,self.事实->E,ff->信息.类型,demand.材料->根目标合同,
-      demand.材料->目标I64值,r.H};out.状态=阶段::已读取;return out;
+      demand.材料->目标I64值};out.状态=阶段::已读取;return out;
   }catch(const std::bad_alloc&){out.状态=阶段::资源失败;}
    catch(const std::length_error&){out.状态=阶段::资源失败;}
    catch(...){out.状态=阶段::内部不一致;}
@@ -1241,7 +1220,7 @@ bool 映射键精确(const L1所有者范围写入结果& w,
           out.状态=总状态::内部不一致;return out;}
         const auto tid=映射编码(*coreFirst.首次写入结果,1);
         if(!tid){out.状态=总状态::内部不一致;return out;}
-        const auto core=读取核心内部(l1_,写端口_,owner_,结构_,{*tid},*g,*g);
+        const auto core=读取核心内部(l1_,写端口_,owner_,结构_,{*tid},*g);
         if(core.状态!=阶段::已读取||!core.核心){out.状态=映射总状态(core.状态);return out;}
         out.核心=core.核心;newBranch=true;
       }else if(branch==2&&(*receipt)[5]!=0){
@@ -1249,10 +1228,10 @@ bool 映射键精确(const L1所有者范围写入结果& w,
         const auto expected=构造核心既有回执写集(结构_,p,1,existing,2);
         if(!映射键精确(*coreFirst.首次写入结果,{1,10,20})
             ||!忽略G写集相同(*coreFirst.首次规范化写集,expected)
-            ||!核验回执闭包(l1_,owner_,结构_,*coreFirst.首次写入结果,*g,*g,
+            ||!核验回执闭包(l1_,owner_,结构_,*coreFirst.首次写入结果,*g,
                 1,10,20,编码核心回执(p,2,existing))){
           out.状态=总状态::内部不一致;return out;}
-        const auto core=读取核心内部(l1_,写端口_,owner_,结构_,existing,*g,*g);
+        const auto core=读取核心内部(l1_,写端口_,owner_,结构_,existing,*g);
         if(core.状态!=阶段::已读取||!core.核心){out.状态=映射总状态(core.状态);return out;}
         out.核心=core.核心;out.核心阶段=阶段::精确重复;
         out.P1阶段=阶段::不适用;out.首迁移阶段=阶段::不适用;
@@ -1263,8 +1242,8 @@ bool 映射键精确(const L1所有者范围写入结果& w,
     }else if(coreFirst.状态==L1所有者范围读取状态::未找到){
       const auto sourceStatus=验证根来源(l1_,需求_,存在_,特征_,self角色_,p.原请求.来源,*g);
       if(sourceStatus!=阶段::已读取){out.状态=映射总状态(sourceStatus);return out;}
-      const auto currentRows=读取关系(l1_,owner_,L1所有者范围关系端点方向::源,
-          p.原请求.来源.L,结构_.L当前任务关系类型,*g,*g);
+      const auto currentRows=读取关系(l1_,owner_,关系端点方向::源,
+          p.原请求.来源.L,结构_.L当前任务关系类型,*g);
       if(currentRows.状态!=阶段::已读取){out.状态=映射总状态(currentRows.状态);return out;}
       L1所有者范围写集请求 ws;
       if(currentRows.关系.empty()){
@@ -1273,7 +1252,7 @@ bool 映射键精确(const L1所有者范围写入结果& w,
       }else{
         if(currentRows.关系.size()!=1){out.状态=总状态::内部不一致;return out;}
         const 本能根任务身份_v1 existing{currentRows.关系.front().目标节点};
-        const auto core=读取核心内部(l1_,写端口_,owner_,结构_,existing,*g,*g);
+        const auto core=读取核心内部(l1_,写端口_,owner_,结构_,existing,*g);
         if(core.状态!=阶段::已读取||!core.核心){out.状态=映射总状态(core.状态);return out;}
         if(core.核心->D!=p.原请求.来源.D||core.核心->L!=p.原请求.来源.L
             ||core.核心->首次来源.根角色!=p.原请求.来源.根角色
@@ -1298,13 +1277,13 @@ bool 映射键精确(const L1所有者范围写入结果& w,
         if(!映射键精确(written,{1,2,3,4,10,11,12,13,20,21,22,23,24,25,26})){
           out.状态=总状态::已可能发布;return out;}
         const auto tid=映射编码(written,1);if(!tid){out.状态=总状态::已可能发布;return out;}
-        const auto core=读取核心内部(l1_,写端口_,owner_,结构_,{*tid},*coreReadG,*coreReadG);
+        const auto core=读取核心内部(l1_,写端口_,owner_,结构_,{*tid},*coreReadG);
         if(core.状态!=阶段::已读取||!core.核心){out.状态=总状态::已可能发布;return out;}
         out.核心=core.核心;*g=*coreReadG;
       }else{
         if(!映射键精确(written,{1,10,20})){out.状态=总状态::已可能发布;return out;}
         const auto existing=currentRows.关系.front().目标节点;
-        const auto core=读取核心内部(l1_,写端口_,owner_,结构_,{existing},*coreReadG,*coreReadG);
+        const auto core=读取核心内部(l1_,写端口_,owner_,结构_,{existing},*coreReadG);
         if(core.状态!=阶段::已读取||!core.核心){out.状态=总状态::已可能发布;return out;}
         out.核心=core.核心;out.P1阶段=阶段::不适用;out.首迁移阶段=阶段::不适用;
         out.状态=out.核心阶段==阶段::精确重复
@@ -1345,18 +1324,18 @@ bool 映射键精确(const L1所有者范围写入结果& w,
       if(*receipt!=expected
           ||!忽略G写集相同(*p1First.首次规范化写集,expectedWrite)
           ||!映射键精确(*p1First.首次写入结果,{1,2,10,20,21})
-          ||!核验回执闭包(l1_,owner_,结构_,*p1First.首次写入结果,*g,*g,
+          ||!核验回执闭包(l1_,owner_,结构_,*p1First.首次写入结果,*g,
               2,10,21,expected)){
         return 失败(总状态::内部不一致);}
       out.P1阶段=阶段::精确重复;
     }else{out.P1阶段=映射读取状态(p1First.状态);return 失败(映射总状态(out.P1阶段));}
 
-    auto coreAfterP1=读取核心内部(l1_,写端口_,owner_,结构_,out.核心->T,*g,*g);
+    auto coreAfterP1=读取核心内部(l1_,写端口_,owner_,结构_,out.核心->T,*g);
     if(coreAfterP1.状态!=阶段::已读取||!coreAfterP1.核心||!coreAfterP1.核心->P1){
       return 失败(总状态::已可能发布);}out.核心=coreAfterP1.核心;
     auto migrationFirst=写端口_.读取首次写入材料({L1所有者范围首次写入读取合同版本,p.Vt首迁移幂等身份});
     if(migrationFirst.状态==L1所有者范围读取状态::未找到){
-      const auto oldState=读取属性(l1_,owner_,out.核心->Vt,结构_.Vt状态属性类型,*g,*g,L1所有者范围值表示种类::I64);
+      const auto oldState=读取属性(l1_,owner_,out.核心->Vt,结构_.Vt状态属性类型,*g,L1所有者范围值表示种类::I64);
       if(oldState.状态!=阶段::已读取||!oldState.I64||!oldState.值身份
           ||*oldState.I64!=static_cast<std::int64_t>(本能根任务Vt状态_v1::已建立待首轮准备)){
         return 失败(总状态::内部不一致);}
@@ -1388,27 +1367,15 @@ bool 映射键精确(const L1所有者范围写入结果& w,
       const auto expected=编码首迁移回执(p,out.核心->T,out.核心->Vt,oldState);
       const auto expectedWrite=构造首迁移写集(
           结构_,p,1,out.核心->T,out.核心->Vt,oldState);
-      const auto old=l1_.读取所有者范围历史事实(
-          {L1所有者范围CRUD合同版本,oldState});
-      const auto* oldFact=old.事实
-          ?std::get_if<L1所有者范围值事实>(&*old.事实):nullptr;
-      const auto* oldI64=oldFact?std::get_if<std::int64_t>(&oldFact->材料):nullptr;
       if(*receipt!=expected
           ||!忽略G写集相同(*migrationFirst.首次规范化写集,expectedWrite)
           ||!映射键精确(*migrationFirst.首次写入结果,{1,10,11,20})
-          ||!核验回执闭包(l1_,owner_,结构_,*migrationFirst.首次写入结果,*g,*g,
-              1,11,20,expected)
-          ||old.状态!=L1所有者范围读取状态::成功||old.读取事实代次!=*g
-          ||!oldFact||oldFact->写入所有者!=owner_
-          ||oldFact->所属节点!=out.核心->Vt
-          ||oldFact->属性类型节点!=结构_.Vt状态属性类型
-          ||oldFact->来源节点!=out.核心->Vt||!oldI64
-          ||*oldI64!=static_cast<std::int64_t>(本能根任务Vt状态_v1::已建立待首轮准备)
-          ||oldFact->退出事实代次!=migrationFirst.首次写入结果->事实代次){
+          ||!核验回执闭包(l1_,owner_,结构_,*migrationFirst.首次写入结果,*g,
+              1,11,20,expected)){
         return 失败(总状态::内部不一致);}
       out.首迁移阶段=阶段::精确重复;
     }else{out.首迁移阶段=映射读取状态(migrationFirst.状态);return 失败(映射总状态(out.首迁移阶段));}
-    const auto finalCore=读取核心内部(l1_,写端口_,owner_,结构_,out.核心->T,*g,*g);
+    const auto finalCore=读取核心内部(l1_,写端口_,owner_,结构_,out.核心->T,*g);
     if(finalCore.状态!=阶段::已读取||!finalCore.核心
         ||finalCore.核心->Vt状态!=本能根任务Vt状态_v1::待找方法){
       return 失败(总状态::已可能发布);}
@@ -1433,8 +1400,7 @@ bool 映射键精确(const L1所有者范围写入结果& w,
   本能根任务当前资格退出结果_v1 out;
   bool 提交调用中=false;
   const auto 失败=[&](阶段 status){
-    out.状态=status;out.已退出L当前任务关系.reset();
-    out.已退出旧生命周期值.reset();out.新生命周期值.reset();
+    out.状态=status;out.新生命周期值.reset();
     out.退出回执.reset();return out;
   };
   out.T = r.T; out.L = r.L; out.目标生命周期 = r.目标生命周期;
@@ -1450,20 +1416,19 @@ bool 映射键精确(const L1所有者范围写入结果& w,
       const auto head=核验首次读取头(first,owner_,r.幂等身份,*g);
       if(head!=阶段::已读取){out.状态=head;return out;}
       const auto* receipt=查找U64材料(*first.首次规范化写集,11);
-      if(!receipt||receipt->size()!=8||(*receipt)[0]!=2
-          ||(*receipt)[6]==0||(*receipt)[7]==0){
+      if(!receipt||receipt->size()!=6||(*receipt)[0]!=2
+          ||first.首次规范化写集->退出事实.size()!=2){
         out.状态=阶段::内部不一致;return out;}
       if((*receipt)[1]!=r.T.值.值||(*receipt)[2]!=r.L.值
           ||(*receipt)[3]!=static_cast<std::uint64_t>(r.期望前生命周期)
           ||(*receipt)[4]!=static_cast<std::uint64_t>(r.目标生命周期)
           ||(*receipt)[5]!=r.幂等身份.值){out.状态=阶段::幂等冲突;return out;}
-      const 稳定编码 oldCurrent{(*receipt)[6]},oldLife{(*receipt)[7]};
+      const auto oldCurrent=first.首次规范化写集->退出事实[0];
+      const auto oldLife=first.首次规范化写集->退出事实[1];
       if(!核验退出闭包(l1_,owner_,结构_,r,*first.首次规范化写集,
           *first.首次写入结果,*g,oldCurrent,oldLife)){
         out.状态=阶段::内部不一致;return out;}
       out.状态=阶段::精确重复;out.事实代次=first.首次写入结果->事实代次;
-      out.已退出L当前任务关系=oldCurrent;
-      out.已退出旧生命周期值=oldLife;
       out.新生命周期值=映射编码(*first.首次写入结果,10);
       const auto rid=映射编码(*first.首次写入结果,1);
       if(rid)out.退出回执=本能根任务退出回执身份_v1{*rid};
@@ -1471,12 +1436,12 @@ bool 映射键精确(const L1所有者范围写入结果& w,
     }
     if(first.状态!=L1所有者范围读取状态::未找到){out.状态=映射读取状态(first.状态);out.事实代次=first.读取事实代次;return out;}
     if(*g!=r.期望事实代次){out.状态=阶段::事实代次漂移;return out;}
-    const auto core=读取核心内部(l1_,写端口_,owner_,结构_,r.T,*g,*g);
+    const auto core=读取核心内部(l1_,写端口_,owner_,结构_,r.T,*g);
     if(core.状态!=阶段::已读取||!core.核心){out.状态=core.状态;return out;}
     if(core.核心->L!=r.L||core.核心->生命周期!=r.期望前生命周期){out.状态=阶段::当前任务不可复用;return out;}
-    const auto current=读取关系(l1_,owner_,L1所有者范围关系端点方向::源,
-        r.L,结构_.L当前任务关系类型,*g,*g);
-    const auto oldLife=读取属性(l1_,owner_,r.T.值,结构_.任务生命周期属性类型,*g,*g,L1所有者范围值表示种类::I64);
+    const auto current=读取关系(l1_,owner_,关系端点方向::源,
+        r.L,结构_.L当前任务关系类型,*g);
+    const auto oldLife=读取属性(l1_,owner_,r.T.值,结构_.任务生命周期属性类型,*g,L1所有者范围值表示种类::I64);
     if(current.状态!=阶段::已读取||current.关系.size()!=1||current.关系.front().目标节点!=r.T.值
         ||oldLife.状态!=阶段::已读取||!oldLife.值身份||!oldLife.I64
         ||*oldLife.I64!=static_cast<std::int64_t>(r.期望前生命周期)){
@@ -1496,8 +1461,7 @@ bool 映射键精确(const L1所有者范围写入结果& w,
       out.状态=阶段::已可能发布;out.事实代次=w.事实代次;return out;}
     提交调用中=false;
     out.状态=映射写入状态(w.状态);out.事实代次=w.事实代次;
-    out.已退出L当前任务关系=current.关系.front().编码;
-    out.已退出旧生命周期值=*oldLife.值身份;out.新生命周期值=映射编码(w,10);
+    out.新生命周期值=映射编码(w,10);
     const auto rid=映射编码(w,1);if(rid)out.退出回执=本能根任务退出回执身份_v1{*rid};
     if(!out.成功(r))return 失败(阶段::已可能发布);return out;
   }catch(const std::bad_alloc&){return 失败(提交调用中 ? 阶段::已可能发布 : 阶段::资源失败);}

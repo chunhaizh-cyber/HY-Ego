@@ -22,13 +22,6 @@ struct 不可变材料格式身份_B1 final {
 };
 inline bool 有效(不可变材料格式身份_B1 v) noexcept { return 有效(v.值); }
 
-struct 结构读取截止_B1 final {
-  std::uint64_t Gread{};
-  std::uint64_t H{};
-  friend bool operator==(const 结构读取截止_B1 &,
-                         const 结构读取截止_B1 &) = default;
-};
-
 struct 世界结构预算_B1 final {
   std::uint64_t 最大节点数{}, 最大关系数{}, 最大值数{}, 最大祖先数{}, 最大后代数{};
   std::uint64_t 最大候选数{}, 最大值元素数{}, 最大材料字节数{}, 最大域原子数{};
@@ -67,18 +60,16 @@ inline bool 世界结构预算有效(const 世界结构预算_B1 &b) noexcept {
 }
 
 struct 结构生命周期_B1 final {
-  std::uint64_t 创建H{};
-  std::optional<std::uint64_t> 退出H;
+  std::uint64_t 创建事实代次{};
   friend bool operator==(const 结构生命周期_B1 &,
                          const 结构生命周期_B1 &) = default;
 };
 inline bool 生命周期完整(const 结构生命周期_B1 &v,
                          std::uint64_t g) noexcept {
-  return v.创建H != 0 && v.创建H <= g &&
-         (!v.退出H || (*v.退出H > v.创建H && *v.退出H <= g));
+  return v.创建事实代次 != 0 && v.创建事实代次 <= g;
 }
-inline bool 活动于(const 结构生命周期_B1 &v, std::uint64_t h) noexcept {
-  return v.创建H != 0 && v.创建H <= h && (!v.退出H || h < *v.退出H);
+inline bool 当前有效(const 结构生命周期_B1 &v, std::uint64_t g) noexcept {
+  return 生命周期完整(v, g);
 }
 
 struct 结构节点见证_B1 final {
@@ -102,7 +93,7 @@ enum class 当前终态_B1 : std::uint8_t {
   未读取 = 0,
   原后态仍成立 = 1,
   合法后继 = 2,
-  已退出 = 3
+  已删除 = 3
 };
 
 struct 结构事务键_B1 final {

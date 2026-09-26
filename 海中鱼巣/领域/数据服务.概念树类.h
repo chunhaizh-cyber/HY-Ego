@@ -42,13 +42,13 @@ class 概念事实读取会话_v1 final {
     using 关系键 = std::tuple<std::uint64_t, std::uint64_t, bool>;
 
     概念事实读取会话_v1(L1结构所有者身份 owner, std::uint64_t g,
-                          std::uint64_t h, 有界事实读取预算_B1 budget,
+                          有界事实读取预算_B1 budget,
                           std::uint64_t maxConcepts)
-        : 所有者_(owner), Gread_(g), H_(h), 预算_(budget),
+        : 所有者_(owner), Gread_(g), 预算_(budget),
           最大概念数_(maxConcepts) {}
 
     L1结构所有者身份 所有者_{};
-    std::uint64_t Gread_ = 0, H_ = 0;
+    std::uint64_t Gread_ = 0;
     有界事实读取预算_B1 预算_{};
     有界事实读取用量_B1 用量_{};
     std::uint64_t 最大概念数_ = 0;
@@ -63,28 +63,26 @@ enum class 概念树数据状态 : std::uint8_t {
     精确重复,
     已读取,
     已添加支持,
-    已退出支持,
+    已删除支持,
     已添加上位,
     已替换上位,
-    已退出上位,
+    已删除上位,
     已迁移生命周期,
-    已退出概念,
+    已删除概念,
     已释放引用,
     无须变更,
     入口拒绝,
     未找到,
-    目标已退出,
-    引用冲突,
+    引用冲突 = 16,
     形成环,
     根不可退出,
     事实代次漂移,
     幂等冲突,
     数量预算不足,
-    历史材料不可用,
     资源失败,
     内部不一致,
     已可能发布,
-    已创建共享定义 = 26, 已绑定共享名称, 已退出共享名称, 已记录共享用途, 不支持, 差异不可表示,
+    已创建共享定义 = 26, 已绑定共享名称, 已删除共享名称, 已记录共享用途, 不支持, 差异不可表示,
     已登记类型观察 = 32, 已登记特征概念命中 = 33, 已变更特征概念组织 = 34,
     旧格式不支持 = 35, 规则缺失 = 36, 类型不相容 = 37, 前次写入待收敛 = 38
 };
@@ -132,13 +130,13 @@ struct 特征概念出生使用结构登记结果 final {
     bool 成功(const 特征概念出生使用结构登记请求 &) const noexcept;
 };
 enum class 特征概念值域基础读取状态_v1 : std::uint8_t {
-    已读取 = 1, 未找到, 目标已退出, 类别冲突, 规则缺失, 未实现,
-    事实代次漂移, 数量预算不足, 历史材料不可用, 资源失败,
+    已读取 = 1, 未找到, 类别冲突 = 4, 规则缺失, 未实现,
+    事实代次漂移, 数量预算不足, 资源失败,
     内部不一致, 入口拒绝
 };
 struct 特征概念值域基础读取请求_v1 final {
     std::uint32_t 版本 = 1;
-    std::uint64_t Gread = 0, H = 0;
+    std::uint64_t Gread = 0;
     概念树概念身份 FC;
     概念树预算 预算;
     有界事实读取预算_B1 读取预算;
@@ -149,23 +147,23 @@ struct 特征概念值域基础事实_v1 final {
     特征值表示类型 表示 = 特征值表示类型::I64;
     std::optional<特征规范I64域> I64域;
     概念树生命周期 生命周期;
-    std::uint64_t Gread = 0, H = 0;
+    std::uint64_t Gread = 0;
 };
 struct 特征概念值域基础读取结果_v1 final {
     std::uint32_t 版本 = 1;
     特征概念值域基础读取状态_v1 状态 = 特征概念值域基础读取状态_v1::入口拒绝;
-    std::uint64_t Gread = 0, H = 0;
+    std::uint64_t Gread = 0;
     std::optional<特征概念值域基础事实_v1> 事实;
     有界事实读取用量_B1 读取用量;
     bool 成功(const 特征概念值域基础读取请求_v1&) const noexcept;
 };
 enum class 特征概念值域基础读取状态_v2 : std::uint8_t {
-    已读取 = 1, 未找到, 目标已退出, 类别冲突, 规则缺失, 未实现,
-    事实代次漂移, 历史材料不可用, 资源失败, 内部不一致, 入口拒绝
+    已读取 = 1, 未找到, 类别冲突 = 4, 规则缺失, 未实现,
+    事实代次漂移, 资源失败, 内部不一致, 入口拒绝
 };
 struct 特征概念值域基础读取请求_v2 final {
     std::uint32_t 版本 = 2;
-    std::uint64_t Gread = 0, H = 0;
+    std::uint64_t Gread = 0;
     概念树概念身份 FC;
     friend bool operator==(const 特征概念值域基础读取请求_v2 &,
                            const 特征概念值域基础读取请求_v2 &) = default;
@@ -184,7 +182,7 @@ struct 特征概念值域基础读取结果_v2 final {
     std::uint32_t 版本 = 2;
     特征概念值域基础读取状态_v2 状态 =
         特征概念值域基础读取状态_v2::入口拒绝;
-    std::uint64_t Gread = 0, H = 0;
+    std::uint64_t Gread = 0;
     std::optional<特征概念值域基础事实_v2> 事实;
     bool 成功(const 特征概念值域基础读取请求_v2 &) const noexcept;
 };
@@ -200,7 +198,7 @@ struct 二次关系约束读取请求 final {
 struct 二次关系约束读取结果 final {
     std::uint32_t 版本 = 2;
     二次关系数据状态 状态 = 二次关系数据状态::入口拒绝;
-    std::uint64_t Gread = 0, H = 0;
+    std::uint64_t Gread = 0;
     std::optional<std::variant<纯概念事实, 存在概念两组事实_v3>> 定义;
     bool 成功() const noexcept;
 };
@@ -272,9 +270,8 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
     相关概念组合提交结果 提交相关概念组合事务(
         const 相关概念组合提交请求 &,
         std::span<L1所有者范围写端口 *const>) noexcept override;
-    相关概念参与读回 读取相关概念结果(const 相关概念参与请求 &,
-                                         std::uint64_t Gread,
-                                         std::uint64_t H) const noexcept override;
+    相关概念参与读回 读取相关概念结果(
+        const 相关概念参与请求 &, std::uint64_t Gread) const noexcept override;
     概念树类数据服务(const L1事实基座服务 &, const 特征类数据服务 &,
                      const 存在类数据服务 &, const 特征值类数据服务 &,
                      const 场景类数据服务 &, L1所有者范围写端口 &&,
@@ -385,29 +382,27 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
     std::optional<二次关系结构交付> secondary_relation_layout_;
     const 状态使用绑定只读提供者 *state_use_bindings_ = nullptr;
     二次关系概念事实 读取二次关系内部(
-        概念树概念身份, std::uint64_t, std::uint64_t,
+        概念树概念身份, std::uint64_t,
         std::vector<概念树概念身份>&) const;
     二次关系规范形 规范化二次关系内部(
-        const 二次关系定义&, std::uint64_t, std::uint64_t,
+        const 二次关系定义&, std::uint64_t,
         std::vector<概念树概念身份>&) const;
-    std::vector<概念树概念身份> 枚举二次关系身份(
-        std::uint64_t, std::uint64_t) const;
+    std::vector<概念树概念身份> 枚举二次关系身份(std::uint64_t) const;
     L1所有者范围写集请求 形成二次关系建立写集(
         const 二次关系概念建立请求&, const 二次关系规范形&) const;
     纯概念定义 规范化纯概念定义(const 纯概念定义&, std::uint64_t,
-                               std::uint64_t, const 概念树预算&,
+                               const 概念树预算&,
                                概念事实读取会话_v1* = nullptr,
                                特征值域事实读取会话_v1* = nullptr) const;
     纯概念定义 规范化纯概念定义完整(
-        const 纯概念定义 &, std::uint64_t, std::uint64_t) const;
+        const 纯概念定义 &, std::uint64_t) const;
     纯概念事实 读取纯概念内部(概念树概念身份, std::uint64_t,
-                             std::uint64_t, const 概念树预算&,
+                             const 概念树预算&,
                              概念事实读取会话_v1* = nullptr,
                               特征值域事实读取会话_v1* = nullptr) const;
+    纯概念事实 读取纯概念完整内部(概念树概念身份, std::uint64_t) const;
     纯概念事实 读取纯概念完整内部(概念树概念身份, std::uint64_t,
-                                   std::uint64_t) const;
-    纯概念事实 读取纯概念完整内部(概念树概念身份, std::uint64_t,
-                                   std::uint64_t, std::set<std::uint64_t> &) const;
+                                   std::set<std::uint64_t> &) const;
     void 核验纯概念无保护引用(const 纯概念事实&, std::uint64_t,
                                const 概念树预算&) const;
     L1所有者范围写集请求 形成纯概念写集(
@@ -416,17 +411,17 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
         std::uint64_t, L1所有者范围写入幂等身份,
         const std::vector<概念树概念身份> &, const 纯概念定义 &) const;
     存在概念两组定义_v3 规范化两组定义内部(
-        const 存在概念两组定义_v3&, std::uint64_t, std::uint64_t,
+        const 存在概念两组定义_v3&, std::uint64_t,
         const 存在概念两组预算_v3&, const 特征值域比较数据服务&,
         const 特征值域比较预算_v1&, 概念事实读取会话_v1* = nullptr,
         特征值域事实读取会话_v1* = nullptr) const;
     存在概念两组事实_v3 读取两组定义内部(
-        概念树概念身份, std::uint64_t, std::uint64_t,
+        概念树概念身份, std::uint64_t,
         const 存在概念两组预算_v3&, const 特征值域比较数据服务&,
         const 特征值域比较预算_v1&, 概念事实读取会话_v1* = nullptr,
         特征值域事实读取会话_v1* = nullptr) const;
     存在概念两组事实_v3 读取两组完整内部(
-        概念树概念身份, std::uint64_t, std::uint64_t,
+        概念树概念身份, std::uint64_t,
         const 特征值域比较数据服务 &, std::set<std::uint64_t> &) const;
     特征概念值域基础读取结果_v1 读取特征概念值域基础共享(
         const 特征概念值域基础读取请求_v1&,
@@ -448,10 +443,9 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
         概念树生命周期 生命周期;
     };
     相关概念展开 展开相关概念(概念树概念身份, std::uint64_t,
-                                  std::uint64_t, const 相关概念读取预算 &) const;
+                                  const 相关概念读取预算 &) const;
     相关概念完整事实 读取相关概念内部(const 相关概念参与请求 &,
-                                      概念树概念身份, std::uint64_t,
-                                      std::uint64_t) const;
+                                      概念树概念身份, std::uint64_t) const;
     相关概念参与状态 映射相关状态(S) const noexcept;
     void 验证相关世界(const 相关概念世界挂靠 &, std::uint64_t,
                       const 相关概念读取预算 &) const;
@@ -465,29 +459,26 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
         if (auto* e = std::get_if<特征数据错误>(&r)) throw 失败{共享映射(*e)};
         return std::get<T>(std::move(r));
     }
-    void 验证世界(const 概念树形成世界引用 &, std::uint64_t, std::uint64_t,
+    void 验证世界(const 概念树形成世界引用 &, std::uint64_t,
                   const 概念树预算 &) const;
-    void 核验外部节点(稳定编码, std::uint64_t, std::uint64_t) const;
+    void 核验外部节点(稳定编码, std::uint64_t) const;
     mutable std::mutex mutex_;
     void 守卫代次(std::uint64_t Gread) const;
     概念树定义 规范化定义(const 概念树定义 &) const;
     std::uint64_t 当前代次() const;
-    N 节点(稳定编码, std::uint64_t g, std::uint64_t h,
+    N 节点(稳定编码, std::uint64_t g,
            概念事实读取会话_v1* = nullptr) const;
     L1所有者范围事实副本 原始事实(稳定编码, std::uint64_t g) const;
-    std::vector<E> 完整关系组(稳定编码, 稳定编码, bool,
-                               std::uint64_t, std::uint64_t) const;
-    std::vector<V> 完整属性值组(稳定编码, std::uint64_t,
-                                 std::uint64_t) const;
-    std::vector<E> 关系(稳定编码 端点, 稳定编码 类型, bool 入边, std::uint64_t g, std::uint64_t h,
+    std::vector<E> 完整关系组(稳定编码, 稳定编码, bool, std::uint64_t) const;
+    std::vector<V> 完整属性值组(稳定编码, std::uint64_t) const;
+    std::vector<E> 关系(稳定编码 端点, 稳定编码 类型, bool 入边, std::uint64_t g,
                         std::uint64_t 预算, 概念事实读取会话_v1* = nullptr) const;
-    std::vector<V> 属性(稳定编码, std::uint64_t g, std::uint64_t h,
+    std::vector<V> 属性(稳定编码, std::uint64_t g,
                         概念事实读取会话_v1* = nullptr) const;
     static const V &唯一属性(const std::vector<V> &, 稳定编码);
     static void 预算有效(const 概念树预算 &);
     static void 检查数量(std::size_t n, std::uint64_t max);
     static S 映射(L1所有者范围读取状态);
-    static S 映射(存在历史读取状态);
     static bool 编码小于(稳定编码 a, 稳定编码 b) {
         return a.值 < b.值;
     }
@@ -497,15 +488,11 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
     template <class W> static 稳定编码 世界编码(const W &w) {
         return std::visit([](const auto &v) { return v.值; }, w);
     }
-    template <class T> static 概念树生命周期 投影生命(const T &v, std::uint64_t h) {
-        return {v.创建事实代次,
-                v.退出事实代次 && *v.退出事实代次 <= h ? v.退出事实代次 : std::nullopt};
+    template <class T> static 概念树生命周期 投影生命(const T &v) {
+        return {v.创建事实代次};
     }
-    template <class T> static 概念树生命周期 投影纯生命(const T &v, std::uint64_t g) {
-        return {v.创建事实代次, v.退出事实代次 && *v.退出事实代次 <= g ? v.退出事实代次 : std::nullopt};
-    }
-    template <class T> static bool 有效于(const T &v, std::uint64_t h) {
-        return v.创建事实代次 && v.创建事实代次 <= h && (!v.退出事实代次 || h < *v.退出事实代次);
+    template <class T> static 概念树生命周期 投影纯生命(const T &v) {
+        return {v.创建事实代次};
     }
 };
 

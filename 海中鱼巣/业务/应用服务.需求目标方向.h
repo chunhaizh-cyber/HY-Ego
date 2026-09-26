@@ -14,12 +14,12 @@
 namespace 海中鱼巣 {
 inline constexpr std::uint32_t 需求目标方向合同版本 = 1;
 enum class 需求目标方向状态 : std::uint8_t {
-    已计算=1, 入口拒绝=2, 需求未找到=3, 需求已退出=4,
-    目标宿主未找到=5, 目标宿主已退出=6, 当前F未找到=7,
-    当前F已退出=8, 目标F未找到=9, 目标F已退出=10,
+    已计算=1, 入口拒绝=2, 需求未找到=3,
+    目标宿主未找到=5, 当前F未找到=7,
+    目标F未找到=9,
     当前F不属于宿主=11, 目标F不属于宿主=12, 当前采用不匹配=13,
-    方向定义未找到=14, 方向定义已退出=15, 方向定义不匹配=16,
-    方向来源不匹配=17, 方向计算失败=18, 历史材料不可用=19,
+    方向定义未找到=14, 方向定义不匹配=16,
+    方向来源不匹配=17, 方向计算失败=18,
     事实代次漂移=20, 预算不足=21, 资源失败=22, 内部不一致=23
 };
 struct 需求目标方向请求 final {
@@ -50,7 +50,7 @@ inline bool 需求目标方向结果::成功() const noexcept {
     if(版本!=1||状态!=需求目标方向状态::已计算||r.版本!=1||!r.G||!r.请求身份
         ||!有效(r.需求.值)||!有效(r.当前F)||r.要求结果位<1||r.要求结果位>7||!r.预算.有效()
         ||G!=r.G||需求!=r.需求||当前F!=r.当前F||!有效(目标宿主)||!有效(目标F)||!有效(方向定义.结点)
-        ||!计算||!计算->成功()||计算->G!=G||计算->H!=G||计算->请求身份!=r.请求身份
+        ||!计算||!计算->成功()||计算->G!=G||计算->请求身份!=r.请求身份
         ||计算->上下文!=二次计算上下文{}||计算->根输出组.size()!=std::popcount(r.要求结果位))return false;
     std::size_t index=0;
     for(unsigned role=1;role<=3;++role)if(r.要求结果位&(1U<<(role-1))) {
@@ -94,11 +94,11 @@ class 需求目标方向应用服务 final {
         using D=需求类数据状态;
         switch(s) {
         case D::入口拒绝:return S::入口拒绝;case D::未找到:return S::需求未找到;
-        case D::目标宿主未找到:return S::目标宿主未找到;case D::目标宿主已退出:return S::目标宿主已退出;
-        case D::静态目标特征未找到:return S::目标F未找到;case D::静态目标特征已退出:return S::目标F已退出;
-        case D::当前事实特征未找到:return S::当前F未找到;case D::当前事实特征已退出:return S::当前F已退出;
+        case D::目标宿主未找到:return S::目标宿主未找到;
+        case D::静态目标特征未找到:return S::目标F未找到;
+        case D::当前事实特征未找到:return S::当前F未找到;
         case D::目标特征不属于宿主:return S::目标F不属于宿主;case D::当前特征不属于宿主:return S::当前F不属于宿主;
-        case D::方向定义未找到:return S::方向定义未找到;case D::方向定义已退出:return S::方向定义已退出;
+        case D::方向定义未找到:return S::方向定义未找到;
         case D::方向定义不匹配:return S::方向定义不匹配;case D::方向来源不匹配:return S::方向来源不匹配;
         case D::数量预算不足:return S::预算不足;case D::事实代次漂移:return S::事实代次漂移;
         case D::资源失败:return S::资源失败;default:return S::内部不一致;
@@ -107,19 +107,19 @@ class 需求目标方向应用服务 final {
     static S 映射(存在类数据状态 s) noexcept {
         using E=存在类数据状态;
         switch(s) {
-        case E::未找到:return S::目标宿主未找到;case E::目标已退出:return S::目标宿主已退出;
+        case E::未找到:return S::目标宿主未找到;
         case E::成员未找到:return S::当前采用不匹配;case E::事实代次漂移:return S::事实代次漂移;
         case E::数量预算不足:return S::预算不足;case E::资源失败:return S::资源失败;
-        case E::历史材料已清理:return S::历史材料不可用;default:return S::内部不一致;
+        default:return S::内部不一致;
         }
     }
     static S 映射(特征类标量状态 s) noexcept {
         using D=特征类标量状态;
         switch(s) {
-        case D::未找到:return S::方向定义未找到;case D::已退出:return S::方向定义已退出;
+        case D::未找到:return S::方向定义未找到;
         case D::来源不匹配:return S::方向来源不匹配;
         case D::类型不匹配:case D::格式不支持:return S::方向定义不匹配;
-        case D::预算不足:return S::预算不足;case D::历史材料不可用:return S::历史材料不可用;
+        case D::预算不足:return S::预算不足;
         case D::事实代次漂移:return S::事实代次漂移;case D::资源失败:return S::资源失败;
         default:return S::内部不一致;
         }
@@ -127,10 +127,8 @@ class 需求目标方向应用服务 final {
     static S 映射(特征数据错误 s,bool target) noexcept {
         switch(s) {
         case 特征数据错误::未找到:return target ? S::目标F未找到:S::当前F未找到;
-        case 特征数据错误::已退出:return target ? S::目标F已退出:S::当前F已退出;
         case 特征数据错误::类型不相容:case 特征数据错误::旧格式不支持:return S::方向定义不匹配;
         case 特征数据错误::数量预算不足:return S::预算不足;
-        case 特征数据错误::历史材料不可用:return S::历史材料不可用;
         case 特征数据错误::并发变化:return S::事实代次漂移;
         case 特征数据错误::资源失败:return S::资源失败;default:return S::内部不一致;
         }
@@ -184,25 +182,25 @@ public:
                     [&](const auto& member){return member.目标结点==id&&有效(member.成员关系);})==1;
             };
             auto readF=[&](特征信息身份 id,bool target) {
-                auto value=feature_.读取准确特征事实({1,r.G,r.G,id});
+                auto value=feature_.读取准确特征事实({1,r.G,id});
                 if(const auto* e=std::get_if<特征数据错误>(&value))throw 失败{映射(*e,target)};
                 const auto f=std::get<准确特征读取事实>(value);
-                要求(f.Gread==r.G&&f.H==r.G&&f.信息.身份==id&&浅层结构有效(f.信息)
-                    &&f.创建G&&f.创建G<=r.G&&(!f.退出G||*f.退出G>r.G));
+                要求(f.Gread==r.G&&f.信息.身份==id&&浅层结构有效(f.信息)
+                    &&f.创建G&&f.创建G<=r.G);
                 return f;
             };
             const auto now=readF(r.当前F,false);const auto target=readF(out.目标F,true);
             要求(own(now.信息.身份.编码),S::当前F不属于宿主);要求(own(target.信息.身份.编码),S::目标F不属于宿主);
-            const auto adoption=existence_.读取当前采用({1,r.G,r.G,d.目标宿主,now.信息.类型,r.预算.最大读取材料数});
+            const auto adoption=existence_.读取当前采用({1,r.G,d.目标宿主,now.信息.类型,r.预算.最大读取材料数});
             if(adoption.状态!=存在类数据状态::已读取)throw 失败{映射(adoption.状态)};
-            要求(adoption.成功()&&adoption.Gread==r.G&&adoption.H==r.G);
+            要求(adoption.成功()&&adoption.Gread==r.G);
             要求(adoption.采用.has_value(),S::当前采用不匹配);
             要求(adoption.采用->E==d.目标宿主&&adoption.采用->FT==now.信息.类型&&adoption.采用->F==r.当前F,S::当前采用不匹配);
             const auto budget=特征类派生读取预算{r.预算.最大图项数,r.预算.最大读取材料数,
                 r.预算.最大基础叶数,r.预算.最大读取材料数,r.预算.最大展开深度,r.预算.最大读取材料数};
-            const auto definition=feature_.读取标量派生定义({2,r.G,r.G,d.方向二次特征,budget});
+            const auto definition=feature_.读取标量派生定义({2,r.G,d.方向二次特征,budget});
             if(definition.状态!=特征类标量状态::已读取)throw 失败{映射(definition.状态)};
-            要求(definition.成功()&&definition.Gread==r.G&&definition.H==r.G
+            要求(definition.成功()&&definition.Gread==r.G
                 &&definition.定义事实->定义身份==d.方向二次特征);
             const auto& f=*definition.定义事实;
             要求(f.宿主E&&*f.宿主E==d.目标宿主&&f.注册.用途==特征类比较用途::目标判断
@@ -210,13 +208,12 @@ public:
             要求(std::find(definition.左叶组.begin(),definition.左叶组.end(),r.当前F.编码)!=definition.左叶组.end()
                 &&std::find(definition.右叶组.begin(),definition.右叶组.end(),out.目标F.编码)!=definition.右叶组.end(),S::方向来源不匹配);
             for(const auto& leaf:definition.基础叶组)要求(own(leaf.F),S::方向来源不匹配);
-            二次计算请求 request;request.G=request.H=r.G;request.请求身份=r.请求身份;request.预算=r.预算;
+            二次计算请求 request;request.G=r.G;request.请求身份=r.请求身份;request.预算=r.预算;
             for(unsigned role=1;role<=3;++role)if(r.要求结果位&(1U<<(role-1)))
                 request.根输出组.push_back({二次已保存定义输出来源{d.方向二次特征,static_cast<特征类标量结果角色>(role)}});
             out.计算=calculation_.计算(request);
             if(!out.计算->成功()) {
                 switch(out.计算->状态) {
-                case 二次计算状态::历史材料不可用:throw 失败{S::历史材料不可用};
                 case 二次计算状态::事实代次漂移:throw 失败{S::事实代次漂移};
                 case 二次计算状态::预算不足:throw 失败{S::预算不足};
                 case 二次计算状态::资源失败:throw 失败{S::资源失败};

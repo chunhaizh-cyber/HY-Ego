@@ -47,7 +47,6 @@ enum class 世界树操作状态 : std::uint8_t {
   事实代次漂移 = 16,
   幂等冲突 = 17,
   数量预算不足 = 18,
-  历史材料已清理 = 19,
   资源失败 = 20,
   内部不一致 = 21,
   部分已发布 = 22,
@@ -119,7 +118,7 @@ struct 世界树存在位置 final {
   场景直接包含事实 成员关系;
 };
 struct 世界树移动投影 final {
-  稳定编码 成员{}, 原场景{}, 目标场景{}, 旧关系{}, 新关系{};
+  稳定编码 成员{}, 原场景{}, 目标场景{}, 新关系{};
   std::uint64_t 首次发布H = 0;
 };
 struct 世界树移动进度 final {
@@ -210,7 +209,7 @@ struct 世界树存在位置结果 final {
            结果头.阶段 == 世界树操作阶段::现实树预读 && 结果头.Gread == r.G0 &&
            !结果头.首次发布H && !结果头.存在原因 && !结果头.场景原因 && 位置 &&
            位置->存在 == r.存在 && 有效(位置->所在场景) &&
-           位置->成员关系.Gread == r.G0 && 位置->成员关系.H == r.G0 &&
+           位置->成员关系.Gread == r.G0 &&
            位置->成员关系.种类 == 场景直接包含种类::存在成员 &&
            位置->成员关系.父场景 == 位置->所在场景 &&
            位置->成员关系.成员 == r.存在;
@@ -230,7 +229,7 @@ struct 世界树移动结果 final {
            *原请求 == r && 投影 && !进度 && !结果头.存在原因 &&
            !结果头.场景原因 && 投影->成员 == r.成员 &&
            投影->原场景 == r.原场景 && 投影->目标场景 == r.目标场景 &&
-           有效(投影->旧关系) && 有效(投影->新关系) &&
+           有效(投影->新关系) &&
            投影->首次发布H == *结果头.首次发布H;
   }
 };
@@ -254,12 +253,12 @@ struct 世界树场景创建结果 final {
     const auto &n = 投影->场景;
     const auto &role = n.场景角色;
     const auto current = [&](const 场景事实生命周期 &life) {
-      return life.创建事实代次 && life.创建事实代次 <= g && !life.退出事实代次;
+      return life.创建事实代次 && life.创建事实代次 <= g;
     };
     if (!有效(r.父场景) || !有效(投影->E) || 投影->E == r.父场景 ||
-        role.Gread != g || role.H != g ||
-        !存在身份来源历史见证完整(role.对象存在来源, g, 投影->E) ||
-        role.对象存在来源.节点生命周期.创建事实代次 != h ||
+        role.Gread != g ||
+        !存在身份来源当前见证完整(role.对象存在来源, g, 投影->E) ||
+        role.对象存在来源.节点创建事实代次 != h ||
         !有效(role.场景族锚点.编码) || !有效(role.场景族归属类型.编码) ||
         !有效(role.根绑定类型.编码) || !current(role.场景族锚点.生命周期) ||
         !current(role.场景族归属类型.生命周期) ||
@@ -286,7 +285,7 @@ struct 世界树场景创建结果 final {
             root.绑定.编码 == role.四根[j].绑定.编码)
           return false;
     }
-    return n.树证明.Gread == g && n.树证明.H == g &&
+    return n.树证明.Gread == g &&
            n.树证明.种类 == 场景树证明种类::树归属 &&
            n.树证明.场景 == 投影->E && 有效(n.树证明.树根) &&
            n.树证明.树根 != 投影->E && 有效(n.树证明.关系) &&
@@ -295,10 +294,10 @@ struct 世界树场景创建结果 final {
            有效(n.树证明.见证.关系类型) && n.树证明.见证.角色或顺序 == 1 &&
            n.树证明.见证.生命周期.创建事实代次 == h &&
            current(n.树证明.见证.生命周期) && n.直接父 &&
-           n.直接父->Gread == g && n.直接父->H == g &&
+           n.直接父->Gread == g &&
            n.直接父->父 == r.父场景 && n.直接父->成员 == 投影->E &&
            n.直接父->来源 == 直接归属来源::直接子场景 && 有效(n.直接父->关系) &&
-           n.直接父->创建事实代次 == h && !n.直接父->退出事实代次 &&
+           n.直接父->创建事实代次 == h &&
            n.从上游场景到本场景路径.size() == 1 &&
            n.从上游场景到本场景路径.front().关系 == n.直接父->关系;
   }
@@ -347,7 +346,7 @@ struct 世界树存在创建请求_v4 final {
 };
 using 世界树创建原请求_v4=std::variant<世界树场景创建请求_v4,世界树存在创建请求_v4>;
 enum class 世界树概念创建阶段_v4:std::uint8_t{无=0,输入定位=1,概念查询=2,概念发布=3,世界发布=4,最终读回=5};
-enum class 世界树概念创建状态_v4:std::uint8_t{已完成=1,精确重复=2,入口拒绝=3,位置失败=4,概念失败=5,世界失败=6,角色冲突=7,事实代次漂移=8,幂等冲突=9,数量预算不足=10,历史材料不可用=11,资源失败=12,内部不一致=13,已发布待复核=14,已可能发布=15,后继覆盖=16};
+enum class 世界树概念创建状态_v4:std::uint8_t{已完成=1,精确重复=2,入口拒绝=3,位置失败=4,概念失败=5,世界失败=6,角色冲突=7,事实代次漂移=8,幂等冲突=9,数量预算不足=10,资源失败=12,内部不一致=13,已发布待复核=14,已可能发布=15,后继覆盖=16};
 struct 世界树概念创建投影_v4 final {
   稳定编码 E{},世界根{}; 世界树层级位置 位置; 已发布概念绑定投影 内容;
 };
@@ -369,7 +368,7 @@ struct 世界树存在信息读取请求_v4 final {
 };
 struct 世界树存在信息结果_v4 final {
   std::uint32_t 版本=4;世界树概念创建状态_v4 状态=世界树概念创建状态_v4::入口拒绝;
-  std::uint64_t Gread=0,H=0;std::optional<世界树概念创建投影_v4> 投影;
+  std::uint64_t Gread=0;std::optional<世界树概念创建投影_v4> 投影;
   std::optional<世界树操作状态> 位置原因;std::optional<纯概念状态> 概念原因;
   bool 成功(const 世界树存在信息读取请求_v4&) const noexcept;
 };
@@ -613,8 +612,6 @@ private:
       return 世界树操作状态::幂等冲突;
     case 场景直接包含状态::数量预算不足:
       return 世界树操作状态::数量预算不足;
-    case 场景直接包含状态::历史材料已清理:
-      return 世界树操作状态::历史材料已清理;
     case 场景直接包含状态::资源失败:
       return 世界树操作状态::资源失败;
     case 场景直接包含状态::形成场景环:
@@ -626,7 +623,6 @@ private:
     case 场景直接包含状态::目标父相同:
       return 世界树操作状态::目标位置相同;
     case 场景直接包含状态::场景未找到:
-    case 场景直接包含状态::场景已退出:
       return 世界树操作状态::场景不在现实树;
     default:
       return 世界树操作状态::内部不一致;
@@ -719,7 +715,6 @@ private:
           世界树移动投影{r.成员,
                          r.原场景,
                          r.目标场景,
-                         moved.已退出原包含->关系.编码,
                          moved.已建立新包含->关系.编码,
                          moved.结果头.首次发布H.value_or(moved.结果头.Gread)};
       o.结果头.状态 = moved.结果头.状态 == 场景直接包含状态::精确重复
@@ -766,7 +761,7 @@ inline 世界树根验证结果 世界树应用服务::读取当前现实世界�
 
 inline 世界树存在信息结果_v4 世界树应用服务::读取世界存在信息(
     const 世界树存在信息读取请求_v4 &r) const noexcept {
-  世界树存在信息结果_v4 out;out.Gread=r.G0;out.H=r.G0;
+  世界树存在信息结果_v4 out;out.Gread=r.G0;
   try {
     if(r.版本!=4||!r.G0||!有效(r.E)||r.视角==世界树节点视角::世界根场景||
        !r.预算.最大场景数量||!r.预算.最大关系数量||!r.预算.最大祖先数量||
@@ -784,11 +779,11 @@ inline 世界树存在信息结果_v4 世界树应用服务::读取世界存在�
         out.状态=世界树概念创建状态_v4::数量预算不足;
       return out;
     }
-    const auto identity=existence_.读取存在身份来源历史见证(r.G0,r.G0,r.E);
-    if(!identity.成功(r.G0,r.G0,r.E)||!identity.见证) {
+    const auto identity=existence_.读取当前存在身份来源见证(r.G0,r.E);
+    if(!identity.成功(r.G0,r.E)||!identity.见证) {
       out.状态=世界树概念创建状态_v4::世界失败;return out;
     }
-    const 存在概念使用读取请求 uq{2,r.G0,r.G0,概念树存在引用{r.E},r.概念预算};
+    const 存在概念使用读取请求 uq{2,r.G0,概念树存在引用{r.E},r.概念预算};
     const auto use=concept_.读取存在概念使用(uq);
     if(!use.成功(uq)||!use.使用||!use.概念) {
       out.概念原因=use.状态;
@@ -821,8 +816,8 @@ inline 世界树存在信息结果_v4 世界树应用服务::读取世界存在�
       if(!sceneFact) {out.状态=世界树概念创建状态_v4::位置失败;return out;}
     } else {
       if(kind==存在初始绑定种类::父存在组成) {
-        const auto parentIdentity=existence_.读取存在身份来源历史见证(r.G0,r.G0,parent.父);
-        if(!parentIdentity.成功(r.G0,r.G0,parent.父)) {
+        const auto parentIdentity=existence_.读取当前存在身份来源见证(r.G0,parent.父);
+        if(!parentIdentity.成功(r.G0,parent.父)) {
           out.状态=世界树概念创建状态_v4::内部不一致;return out;
         }
       }
@@ -846,13 +841,12 @@ inline 世界树存在信息结果_v4 世界树应用服务::读取世界存在�
 namespace 世界树存在信息结果内部 {
 template<class T>
 inline bool 生命周期有效(const T &v, std::uint64_t h) noexcept {
-  return v.创建事实代次 && v.创建事实代次 <= h &&
-         (!v.退出事实代次 || *v.退出事实代次 > h);
+  return v.创建事实代次 && v.创建事实代次 <= h;
 }
-inline bool 场景角色完整(const 场景角色历史事实 &v, std::uint64_t g,
+inline bool 场景角色完整(const 场景角色当前事实 &v, std::uint64_t g,
                          稳定编码 scene) noexcept {
-  if (v.Gread != g || v.H != g || v.场景 != scene ||
-      !存在身份来源历史见证完整(v.对象存在来源, g, scene)) return false;
+  if (v.Gread != g || v.场景 != scene ||
+      !存在身份来源当前见证完整(v.对象存在来源, g, scene)) return false;
   const 场景节点见证 *meta[]{&v.场景族锚点,&v.场景族归属类型,&v.根绑定类型};
   for(std::size_t i=0;i<3;++i) {
     if(!有效(meta[i]->编码)||!生命周期有效(meta[i]->生命周期,g))return false;
@@ -870,8 +864,7 @@ inline bool 场景角色完整(const 场景角色历史事实 &v, std::uint64_t 
        x.绑定.源!=scene||x.绑定.目标!=x.根.编码||
        x.绑定.关系类型!=v.根绑定类型.编码||x.绑定.角色或顺序!=i+1||
        !生命周期有效(x.根.生命周期,g)||!生命周期有效(x.绑定.生命周期,g)||
-       x.根.生命周期.创建事实代次!=x.绑定.生命周期.创建事实代次||
-       x.根.生命周期.退出事实代次!=x.绑定.生命周期.退出事实代次)return false;
+       x.根.生命周期.创建事实代次!=x.绑定.生命周期.创建事实代次)return false;
     own[i*2]=x.根.编码;own[i*2+1]=x.绑定.编码;
   }
   for(std::size_t i=0;i<own.size();++i) {
@@ -889,23 +882,22 @@ inline bool 位置完整(const 世界树层级位置 &p,
      p.上行路径.size()>r.预算.最大祖先数量)return false;
   const auto&direct=*p.直接结构父;
   const auto&first=p.上行路径.front();
-  if(direct.Gread!=first.Gread||direct.H!=first.H||direct.来源!=first.来源||
+  if(direct.Gread!=first.Gread||direct.来源!=first.来源||
      direct.关系!=first.关系||direct.父!=first.父||direct.成员!=first.成员||
-     direct.创建事实代次!=first.创建事实代次||
-     direct.退出事实代次!=first.退出事实代次)return false;
+     direct.创建事实代次!=first.创建事实代次)return false;
   std::unordered_set<std::uint64_t> seen{r.E.值};
   auto cursor=r.E;
   for(const auto&e:p.上行路径) {
     if((e.来源!=直接归属来源::存在组成&&e.来源!=直接归属来源::场景成员&&
         e.来源!=直接归属来源::直接子场景)||
-       !联合父载荷完整(e,r.G0,r.G0,e.父,cursor)||!seen.insert(e.父.值).second)
+       !联合父载荷完整(e,r.G0,e.父,cursor)||!seen.insert(e.父.值).second)
       return false;
     cursor=e.父;
   }
   if(cursor!=p.世界根)return false;
   if(r.视角==世界树节点视角::场景)
     return p.父场景语境&&p.父场景语境->Gread==r.G0&&
-      p.父场景语境->H==r.G0&&p.父场景语境->场景==r.E&&
+      p.父场景语境->场景==r.E&&
       p.父场景语境->结构父.关系==p.直接结构父->关系&&
       p.父场景语境->结构父.父==p.直接结构父->父&&
       p.父场景语境->结构父.成员==r.E;
@@ -922,13 +914,13 @@ inline bool 世界树存在信息结果_v4::成功(const 世界树存在信息�
        !r.预算.最大祖先数量||r.预算.最大祖先数量>4096||
        !r.概念预算.最大概念数||!r.概念预算.最大关系数||
        !r.概念预算.最大特征属性数||状态!=世界树概念创建状态_v4::已完成||
-       Gread!=r.G0||H!=r.G0||位置原因||概念原因||!投影)return false;
+       Gread!=r.G0||位置原因||概念原因||!投影)return false;
     const auto&p=*投影;const auto&c=p.内容;
     if(p.E!=r.E||p.世界根!=p.位置.世界根||
        !世界树存在信息结果内部::位置完整(p.位置,r)||
        c.绑定.新存在!=r.E||c.绑定.绑定节点!=p.位置.直接结构父->父||
        c.绑定.绑定关系!=p.位置.直接结构父->关系||
-       c.存在身份.身份!=r.E||!存在身份来源历史见证完整(c.存在身份,r.G0,r.E)||
+       c.存在身份.身份!=r.E||!存在身份来源当前见证完整(c.存在身份,r.G0,r.E)||
        c.角色)return false;
     const auto source=p.位置.直接结构父->来源;
     if(source!=直接归属来源::存在组成&&source!=直接归属来源::场景成员&&
@@ -938,21 +930,20 @@ inline bool 世界树存在信息结果_v4::成功(const 世界树存在信息�
     else if(source==直接归属来源::场景成员)kind=存在初始绑定种类::场景成员;
     else if(source==直接归属来源::直接子场景)kind=存在初始绑定种类::直接子场景;
     if(c.绑定.种类!=kind)return false;
-    const 纯概念读取请求 conceptRequest{2,r.G0,r.G0,c.概念.概念,r.概念预算};
-    const 纯概念读取结果 conceptResult{2,纯概念状态::已读取,r.G0,r.G0,c.概念};
+    const 纯概念读取请求 conceptRequest{2,r.G0,c.概念.概念,r.概念预算};
+    const 纯概念读取结果 conceptResult{2,纯概念状态::已读取,r.G0,c.概念};
     if(!conceptResult.成功(conceptRequest)||c.概念.类别!=相关概念类别::存在||
        c.使用.E!=r.E||c.使用.EC!=c.概念.概念||!有效(c.使用.关系)||
        !世界树存在信息结果内部::生命周期有效(c.使用.生命周期,r.G0))return false;
     if(r.视角==世界树节点视角::场景)
       return kind==存在初始绑定种类::直接子场景&&c.场景&&c.场景->直接父&&
         c.场景->直接父->Gread==p.位置.直接结构父->Gread&&
-        c.场景->直接父->H==p.位置.直接结构父->H&&
         c.场景->直接父->来源==p.位置.直接结构父->来源&&
         c.场景->直接父->关系==p.位置.直接结构父->关系&&
         c.场景->直接父->父==p.位置.直接结构父->父&&
         c.场景->直接父->成员==p.位置.直接结构父->成员&&
         世界树存在信息结果内部::场景角色完整(c.场景->场景角色,r.G0,r.E)&&
-        c.场景->树证明.Gread==r.G0&&c.场景->树证明.H==r.G0&&
+        c.场景->树证明.Gread==r.G0&&
         c.场景->树证明.种类==场景树证明种类::树归属&&
         c.场景->树证明.场景==r.E&&c.场景->树证明.树根==p.世界根&&
         有效(c.场景->树证明.关系)&&
@@ -976,7 +967,6 @@ inline 世界树概念创建结果_v4 世界树应用服务::创建概念世界(
     case 纯概念状态::事实代次漂移:return 世界树概念创建状态_v4::事实代次漂移;
     case 纯概念状态::幂等冲突:return 世界树概念创建状态_v4::幂等冲突;
     case 纯概念状态::数量预算不足:return 世界树概念创建状态_v4::数量预算不足;
-    case 纯概念状态::历史材料不可用:return 世界树概念创建状态_v4::历史材料不可用;
     case 纯概念状态::资源失败:return 世界树概念创建状态_v4::资源失败;
     case 纯概念状态::内部不一致:return 世界树概念创建状态_v4::内部不一致;
     case 纯概念状态::已可能发布:return 世界树概念创建状态_v4::已可能发布;
@@ -989,11 +979,10 @@ inline 世界树概念创建结果_v4 世界树应用服务::创建概念世界(
     case 已发布概念绑定状态::事实代次漂移:return 世界树概念创建状态_v4::事实代次漂移;
     case 已发布概念绑定状态::幂等冲突:return 世界树概念创建状态_v4::幂等冲突;
     case 已发布概念绑定状态::数量预算不足:return 世界树概念创建状态_v4::数量预算不足;
-    case 已发布概念绑定状态::历史材料不可用:return 世界树概念创建状态_v4::历史材料不可用;
     case 已发布概念绑定状态::资源失败:return 世界树概念创建状态_v4::资源失败;
     case 已发布概念绑定状态::内部不一致:return 世界树概念创建状态_v4::内部不一致;
     case 已发布概念绑定状态::已可能发布:return 世界树概念创建状态_v4::已可能发布;
-    case 已发布概念绑定状态::既有操作已被后继事实覆盖:return 世界树概念创建状态_v4::后继覆盖;
+    case 已发布概念绑定状态::当前事实不再匹配:return 世界树概念创建状态_v4::后继覆盖;
     case 已发布概念绑定状态::入口拒绝:return 世界树概念创建状态_v4::入口拒绝;
     default:return 世界树概念创建状态_v4::世界失败;
     }
@@ -1057,8 +1046,6 @@ inline 世界树概念创建结果_v4 世界树应用服务::创建概念世界(
         out.状态=世界树概念创建状态_v4::资源失败;
       else if(root.结果头.状态==世界树操作状态::数量预算不足)
         out.状态=世界树概念创建状态_v4::数量预算不足;
-      else if(root.结果头.状态==世界树操作状态::历史材料已清理)
-        out.状态=世界树概念创建状态_v4::历史材料不可用;
       else out.状态=世界树概念创建状态_v4::位置失败;
       out.位置原因=root.结果头.状态;
       return out;
@@ -1075,7 +1062,7 @@ inline 世界树概念创建结果_v4 世界树应用服务::创建概念世界(
         .概念预算=r.概念预算,
         .初始角色=r.初始角色};
     out.恢复读取=binding_.读取已发布概念绑定创建(recoverReq,concept_);
-    out.世界首次H=out.恢复读取->首次H;
+    out.世界首次H=out.恢复读取->首次发布代次;
     out.Gread=out.恢复读取->Gread;
     if(out.世界首次H)out.阶段=世界树概念创建阶段_v4::世界发布;
     if(out.恢复读取->成功(recoverReq)) {
@@ -1119,8 +1106,6 @@ inline 世界树概念创建结果_v4 世界树应用服务::创建概念世界(
         out.状态=世界树概念创建状态_v4::幂等冲突;
       else if(out.概念恢复->状态==纯概念恢复状态::数量预算不足)
         out.状态=世界树概念创建状态_v4::数量预算不足;
-      else if(out.概念恢复->状态==纯概念恢复状态::历史材料不可用)
-        out.状态=世界树概念创建状态_v4::历史材料不可用;
       else if(out.概念恢复->状态==纯概念恢复状态::资源失败)
         out.状态=世界树概念创建状态_v4::资源失败;
       return out;
@@ -1154,7 +1139,7 @@ inline 世界树概念创建结果_v4 世界树应用服务::创建概念世界(
 
     out.阶段=世界树概念创建阶段_v4::概念查询;
     if(!conceptFact) {
-      const 纯概念查询请求 qq{2,guardG,guardG,normalizedDefinition,r.概念预算};
+      const 纯概念查询请求 qq{2,guardG,normalizedDefinition,r.概念预算};
       if(!out.概念查询||out.概念查询->Gread!=guardG)
         out.概念查询=concept_.精确查询纯概念(qq);
       if(out.概念查询->成功(qq))conceptFact=out.概念查询->事实;
@@ -1207,7 +1192,7 @@ inline 世界树概念创建结果_v4 世界树应用服务::创建概念世界(
     out.阶段=世界树概念创建阶段_v4::世界发布;
     if(sceneNode) out.世界写入=scene_.添加场景节点(child,binding_,concept_);
     else out.世界写入=existence_.添加存在节点(child,binding_,concept_);
-    out.世界首次H=out.世界写入->首次H;
+    out.世界首次H=out.世界写入->首次发布代次;
     out.Gread=out.世界写入->Gread;
     if(!out.世界写入->成功(child)){out.状态=mapWorld(out.世界写入->状态);return out;}
     const auto E=out.世界写入->投影->绑定.新存在;
@@ -1268,18 +1253,14 @@ inline bool 相同概念事实(const 纯概念事实&a,const 纯概念事实&b) 
   }
   return true;
 }
-inline bool 相同存在身份(const 存在身份来源历史见证&a,
-                         const 存在身份来源历史见证&b) noexcept {
+inline bool 相同存在身份(const 存在身份来源当前见证&a,
+                         const 存在身份来源当前见证&b) noexcept {
   return a.身份==b.身份&&a.族锚点==b.族锚点&&
       a.族归属关系类型==b.族归属关系类型&&a.族归属关系==b.族归属关系&&
-      a.角色==b.角色&&a.节点生命周期.创建事实代次==b.节点生命周期.创建事实代次&&
-      a.节点生命周期.退出事实代次==b.节点生命周期.退出事实代次&&
-      a.族锚点生命周期.创建事实代次==b.族锚点生命周期.创建事实代次&&
-      a.族锚点生命周期.退出事实代次==b.族锚点生命周期.退出事实代次&&
-      a.关系类型生命周期.创建事实代次==b.关系类型生命周期.创建事实代次&&
-      a.关系类型生命周期.退出事实代次==b.关系类型生命周期.退出事实代次&&
-      a.归属关系生命周期.创建事实代次==b.归属关系生命周期.创建事实代次&&
-      a.归属关系生命周期.退出事实代次==b.归属关系生命周期.退出事实代次;
+      a.角色==b.角色&&a.节点创建事实代次==b.节点创建事实代次&&
+      a.族锚点创建事实代次==b.族锚点创建事实代次&&
+      a.关系类型创建事实代次==b.关系类型创建事实代次&&
+      a.归属关系创建事实代次==b.归属关系创建事实代次;
 }
 inline bool 相同绑定内容(const 已发布概念绑定投影&a,
                          const 已发布概念绑定投影&b) noexcept {
@@ -1338,7 +1319,7 @@ inline bool 概念事实匹配(const 世界树概念创建结果_v4&out,const R&
          相同概念事实(*out.概念恢复->事实,fact))return true;
     }
     if(out.概念查询) {
-      const 纯概念查询请求 q{2,out.概念查询->Gread,out.概念查询->H,
+      const 纯概念查询请求 q{2,out.概念查询->Gread,
           expected,r.概念预算};
       if(out.概念查询->成功(q)&&out.概念查询->事实&&
          相同概念事实(*out.概念查询->事实,fact))return true;
@@ -1368,14 +1349,14 @@ inline bool 绑定结果匹配(const 世界树概念创建结果_v4&out,const R&
     if(!out.世界写入->原实际子请求)return false;
     const auto&q=*out.世界写入->原实际子请求;
     return out.世界写入->成功(q)&&out.世界写入->Gread==out.Gread&&
-        out.世界写入->首次H==out.世界首次H&&q.G0<*out.世界首次H&&
+        out.世界写入->首次发布代次==out.世界首次H&&q.G0<*out.世界首次H&&
         q.绑定==binding&&q.期望现实树根==final.世界根&&q.键==rr.键&&
         q.预算==rr.预算&&q.EC==final.内容.概念.概念&&
         q.预期定义==final.内容.概念.定义&&q.概念预算==r.概念预算&&
         q.初始角色==r.初始角色&&out.世界写入->投影&&
         相同绑定内容(*out.世界写入->投影,final.内容);
   }
-  return out.恢复读取&&out.恢复读取->首次H==out.世界首次H&&
+  return out.恢复读取&&out.恢复读取->首次发布代次==out.世界首次H&&
       out.恢复读取->Gread==out.Gread&&out.恢复读取->成功(rr)&&
       out.恢复读取->投影&&相同绑定内容(*out.恢复读取->投影,final.内容);
 }
@@ -1485,7 +1466,7 @@ inline 世界树应用服务建立结果
       return out;
     }
     const auto &rootNode = *rootPosition;
-    const auto firstH = rootNode.场景角色.对象存在来源.节点生命周期.创建事实代次;
+    const auto firstH = rootNode.场景角色.对象存在来源.节点创建事实代次;
     世界树全局根投影 projection{root, firstH, r.G0};
     auto candidate=std::unique_ptr<世界树应用服务>(new 世界树应用服务(
         scene, existence, concepts, 世界树应用服务::已验证世界根令牌{}));

@@ -16,7 +16,7 @@
 namespace 海中鱼巣 {
 inline constexpr std::uint32_t 二次特征计算合同版本 = 1;
 enum class 二次计算状态 : std::uint8_t {
-    已计算=1, 入口拒绝=2, 来源缺失=3, 历史材料不可用=4,
+    已计算=1, 入口拒绝=2, 来源缺失=3,
     事实冲突=5, 未注册=6, 算法未实现=7, 类型不匹配=8,
     单位量化不匹配=9, 参照不相容=10, 运算溢出=11,
     预算不足=12, 事实代次漂移=13, 固定规则不兼容=14,
@@ -75,7 +75,7 @@ struct 二次计算预算 final {
 };
 struct 二次计算请求 final {
     std::uint32_t 版本 = 1;
-    std::uint64_t G = 0, H = 0, 请求身份 = 0;
+    std::uint64_t G = 0, 请求身份 = 0;
     std::vector<二次计算项> 图项组;
     std::vector<二次根输出> 根输出组;
     二次计算上下文 上下文;
@@ -114,7 +114,7 @@ struct 二次计算项回执 final {
 struct 二次准确计算结果 final {
     std::uint32_t 版本 = 1;
     二次计算状态 状态 = 二次计算状态::入口拒绝;
-    std::uint64_t G = 0, H = 0, 请求身份 = 0;
+    std::uint64_t G = 0, 请求身份 = 0;
     二次计算上下文 上下文;
     std::vector<二次根输出> 根输出组;
     std::vector<二次基础叶回执> 基础叶组;
@@ -159,8 +159,7 @@ class 二次特征计算应用服务 final {
     }
     static S 映射(特征类标量状态 s) noexcept {
         switch(s) {
-        case 特征类标量状态::未找到:case 特征类标量状态::已退出:return S::来源缺失;
-        case 特征类标量状态::历史材料不可用:return S::历史材料不可用;
+        case 特征类标量状态::未找到:return S::来源缺失;
         case 特征类标量状态::预算不足:return S::预算不足;
         case 特征类标量状态::事实代次漂移:return S::事实代次漂移;
         case 特征类标量状态::资源失败:return S::资源失败;
@@ -184,10 +183,10 @@ public:
     }
     二次准确计算结果 计算(const 二次计算请求& r) const noexcept {
         using namespace 二次计算内部;
-        二次准确计算结果 out;out.版本=1;out.G=r.G;out.H=r.H;out.请求身份=r.请求身份;out.上下文=r.上下文;
+        二次准确计算结果 out;out.版本=1;out.G=r.G;out.请求身份=r.请求身份;out.上下文=r.上下文;
         auto fail=[&](S s){out.状态=s;out.根输出组.clear();out.基础叶组.clear();out.计算项组.clear();out.结果组.clear();};
         try {
-            要求(r.版本==1&&r.G&&r.H&&r.H<=r.G&&r.请求身份&&r.预算.有效()&&上下文有效(r.上下文)
+            要求(r.版本==1&&r.G&&r.请求身份&&r.预算.有效()&&上下文有效(r.上下文)
                 &&!r.根输出组.empty(),S::入口拒绝);
             要求(r.图项组.size()<=r.预算.最大图项数&&r.根输出组.size()<=r.预算.最大结果项数,S::预算不足);
             守卫(r.G);
@@ -215,10 +214,10 @@ public:
                 if(leaves.contains(id.编码.值))return leaves.at(id.编码.值);
                 要求(remaining.最大基础叶数&&remaining.最大读取材料数,S::预算不足);
                 const auto limit=remaining.最大读取材料数;
-                auto value=feature_.读取有界准确特征事实({1,r.G,r.H,id,{limit,limit,limit,limit}});
+                auto value=feature_.读取有界准确特征事实({1,r.G,id,{limit,limit,limit,limit}});
                 take(remaining.最大读取材料数,value.用量.材料总数);
                 if(!value.成功())throw 失败{映射(value.状态)};
-                要求(value.事实->Gread==r.G&&value.事实->H==r.H&&value.事实->信息.身份==id);
+                要求(value.事实->Gread==r.G&&value.事实->信息.身份==id);
                 take(remaining.最大基础叶数,1);
                 return leaves.emplace(id.编码.值,std::move(*value.事实)).first->second;
             };
@@ -231,14 +230,14 @@ public:
             if(!savedRoots.empty()){
                 const auto limit=remaining.最大读取材料数;
                 特征类标量派生批量读取请求 request;
-                request.Gread=r.G;request.H=r.H;
+                request.Gread=r.G;
                 request.预算={std::min(remaining.最大图项数,limit),limit,
                     std::min(remaining.最大基础叶数,limit),limit,remaining.最大展开深度,limit};
                 要求(request.预算.有效(),S::预算不足);
                 for(auto id:savedRoots)request.根定义组.push_back({id});
                 auto value=feature_.批量读取标量派生定义(request);
                 if(!value.成功())throw 失败{value.状态==特征类标量状态::已读取 ? S::内部不一致 : 映射(value.状态)};
-                要求(value.Gread==r.G&&value.H==r.H&&value.原请求.根定义组==request.根定义组
+                要求(value.Gread==r.G&&value.原请求.根定义组==request.根定义组
                     &&value.原请求.预算==request.预算);
                 const auto count=static_cast<std::uint64_t>(value.完整定义组.size());
                 要求(count<=remaining.最大图项数&&count<=UINT64_MAX/2&&2*count<=remaining.最大来源边数
@@ -247,11 +246,11 @@ public:
                 remaining.最大图项数-=count;remaining.最大来源边数-=2*count;
                 remaining.最大基础叶数-=value.基础叶组.size();remaining.最大读取材料数-=value.用量.材料总数;
                 for(const auto& leaf:value.基础叶组){
-                    准确特征读取事实 f;f.Gread=r.G;f.H=r.H;f.信息.身份={leaf.F};f.信息.类型={leaf.FT};
+                    准确特征读取事实 f;f.Gread=r.G;f.信息.身份={leaf.F};f.信息.类型={leaf.FT};
                     f.信息.准确值=std::holds_alternative<std::int64_t>(leaf.完整值) ? 特征准确值{leaf.值}
                         :特征准确值{std::get<特征值信息>(leaf.完整值).值身份};
                     f.完整值=leaf.完整值;f.类型关系=leaf.类型关系;f.准确值事实=leaf.值事实;
-                    f.创建G=leaf.创建G;f.退出G=leaf.退出G;
+                    f.创建G=leaf.创建G;
                     要求(准确来源完整(f)&&leaves.emplace(leaf.F.值,std::move(f)).second);
                 }
                 for(auto& definition:value.完整定义组)
@@ -266,9 +265,8 @@ public:
                     switch(value.状态) {
                     case K::未找到:throw 失败{S::未注册};
                     case K::事实代次漂移:throw 失败{S::事实代次漂移};
-                    case K::历史材料不可用:throw 失败{S::历史材料不可用};
                     case K::资源失败:throw 失败{S::资源失败};
-                    case K::注册不唯一:case K::目标已退出:case K::格式不支持:throw 失败{S::事实冲突};
+                    case K::注册不唯一:case K::格式不支持:throw 失败{S::事实冲突};
                     default:throw 失败{S::内部不一致};
                     }
                 }
@@ -332,7 +330,7 @@ public:
                     k.用途=old.用途==特征类比较用途::目标判断 ? 特征I64比较用途::目标判断:特征I64比较用途::变化分析;
                     k.左角色=inputs[0].角色;k.右角色=inputs[1].角色;k.上下文要求位=0;
                     k.算法版本=old.算法版本;k.输入量化=old.输入量化;k.误差合同版本=old.误差合同版本;
-                    k.误差预算=old.误差预算;k.相等容差=old.相等容差;k.Gread=r.G;k.H=r.H;
+                    k.误差预算=old.误差预算;k.相等容差=old.相等容差;k.Gread=r.G;
                     for(const auto& output:definition->输出组) {
                         k.输出组.push_back({output.声明,{output.特征类型},output.归属关系});
                         if(output.声明.角色==特征类标量结果角色::关系)

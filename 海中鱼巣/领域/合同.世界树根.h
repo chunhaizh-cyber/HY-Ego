@@ -24,7 +24,6 @@ enum class 世界树根状态 : std::uint8_t {
   幂等冲突 = 6,
   引用冲突 = 7,
   数量预算不足 = 8,
-  历史材料已清理 = 9,
   资源失败 = 10,
   内部不一致 = 11,
   已可能发布 = 12
@@ -48,9 +47,9 @@ struct 世界树根场景片段 final {
 };
 
 struct 世界树根存在来源 final {
-  std::uint64_t Gread = 0, H = 0;
+  std::uint64_t Gread = 0;
   稳定编码 根{};
-  存在身份来源历史见证 来源;
+  存在身份来源当前见证 来源;
 };
 
 struct 世界树根组读取请求 final {
@@ -97,7 +96,7 @@ public:
   virtual L1所有者范围首次写入读取结果
   读取世界树根存在首次材料(L1所有者范围写入幂等身份) const = 0;
   virtual std::optional<世界树根存在来源>
-  读取世界树根存在来源(std::uint64_t, std::uint64_t, 稳定编码) const = 0;
+  读取世界树根存在来源(std::uint64_t, 稳定编码) const = 0;
 };
 
 class 世界树根场景参与者 {

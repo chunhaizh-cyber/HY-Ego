@@ -52,7 +52,6 @@ struct L1中性节点事实 final {
     节点种类 种类 = 节点种类::普通;
     std::optional<L1中性值表示种类> 属性类型表示;
     std::uint64_t 创建事实代次 = 0;
-    std::optional<std::uint64_t> 退出事实代次;
     std::vector<L1中性属性槽> 当前属性;
     friend bool operator==(const L1中性节点事实&, const L1中性节点事实&) = default;
 };
@@ -64,7 +63,6 @@ struct L1中性关系事实 final {
     稳定编码 关系类型节点;
     std::int64_t 角色或顺序 = 0;
     std::uint64_t 创建事实代次 = 0;
-    std::optional<std::uint64_t> 退出事实代次;
     friend bool operator==(const L1中性关系事实&, const L1中性关系事实&) = default;
 };
 
@@ -75,7 +73,6 @@ struct L1中性值事实 final {
     L1中性原始值材料 材料;
     稳定编码 来源节点;
     std::uint64_t 创建事实代次 = 0;
-    std::optional<std::uint64_t> 退出事实代次;
     friend bool operator==(const L1中性值事实&, const L1中性值事实&) = default;
 };
 
@@ -127,7 +124,7 @@ struct L1中性写集请求 final {
 };
 
 enum class L1中性写入状态 : std::uint8_t {
-    成功 = 1, 精确重复 = 2, 入口拒绝 = 3, 未找到 = 4, 已退出 = 5,
+    成功 = 1, 精确重复 = 2, 入口拒绝 = 3, 未找到 = 4,
     事实代次漂移 = 6, 幂等冲突 = 7, 资源失败 = 8, 内部不一致 = 9,
     引用冲突 = 10
 };
@@ -174,37 +171,13 @@ struct L1中性写入首次结果读取结果 final {
     std::optional<L1中性写入状态> 首次状态;
     std::uint64_t 首次事实代次 = 0;
     std::vector<std::pair<L1中性写集本地键, 稳定编码>> 首次稳定编码映射;
-    bool 成功() const noexcept {
-        return 状态 == L1中性写入首次结果读取状态::已读取
-            && 读取事实代次 != 0 && 首次事实代次 != 0
-            && 首次事实代次 <= 读取事实代次
-            && 首次规范请求等价材料
-            && 首次规范请求等价材料->幂等键 == 幂等键
-            && 首次状态 == L1中性写入状态::成功;
-    }
     friend bool operator==(const L1中性写入首次结果读取结果&,
         const L1中性写入首次结果读取结果&) = default;
 };
 
-enum class L1中性物理清理事实种类 : std::uint8_t {
-    节点 = 1, 关系 = 2, 值 = 3
-};
-
-struct L1中性物理清理墓碑 final {
-    稳定编码 编码;
-    L1中性物理清理事实种类 事实种类 = L1中性物理清理事实种类::节点;
-    稳定编码 内部结构分区;
-    std::uint64_t 创建事实代次 = 0;
-    std::uint64_t 退出事实代次 = 0;
-    std::uint64_t 物理清理事实代次 = 0;
-    friend bool operator==(const L1中性物理清理墓碑&,
-        const L1中性物理清理墓碑&) = default;
-};
-
 enum class L1中性读取状态 : std::uint8_t {
-    成功 = 1, 入口拒绝 = 2, 未找到 = 3, 已退出 = 4,
-    属性未设置 = 5, 资源失败 = 6, 内部不一致 = 7, 许可拒绝 = 8,
-    历史材料已清理 = 9
+    成功 = 1, 入口拒绝 = 2, 未找到 = 3,
+    属性未设置 = 5, 资源失败 = 6, 内部不一致 = 7, 许可拒绝 = 8
 };
 
 struct L1中性事实读取请求 final {
@@ -242,71 +215,6 @@ struct L1中性源关系读取请求 final {
         const L1中性源关系读取请求&) = default;
 };
 
-enum class L1中性关系端点方向 : std::uint8_t {
-    源 = 1,
-    目标 = 2
-};
-
-enum class L1中性历史关系组读取状态 : std::uint8_t {
-    成功 = 1,
-    入口拒绝 = 2,
-    事实代次漂移 = 3,
-    资源失败 = 4,
-    内部不一致 = 5
-};
-
-struct L1中性历史关系组读取请求 final {
-    std::uint32_t 合同版本 = L1中性CRUD合同版本;
-    L1中性关系端点方向 方向 = L1中性关系端点方向::源;
-    稳定编码 端点节点;
-    稳定编码 关系类型节点;
-    std::uint64_t 历史截止事实代次 = 0;
-    friend bool operator==(const L1中性历史关系组读取请求&,
-        const L1中性历史关系组读取请求&) = default;
-};
-
-struct L1中性历史关系组读取结果 final {
-    L1中性历史关系组读取状态 状态 =
-        L1中性历史关系组读取状态::入口拒绝;
-    std::uint32_t 合同版本 = L1中性CRUD合同版本;
-    L1中性关系端点方向 方向 = L1中性关系端点方向::源;
-    稳定编码 端点节点;
-    稳定编码 关系类型节点;
-    std::uint64_t 历史截止事实代次 = 0;
-    std::uint64_t 读取事实代次 = 0;
-    std::vector<L1中性关系事实> 关系组;
-    friend bool operator==(const L1中性历史关系组读取结果&,
-        const L1中性历史关系组读取结果&) = default;
-};
-
-enum class L1中性历史属性值组读取状态 : std::uint8_t {
-    成功 = 1,
-    入口拒绝 = 2,
-    事实代次漂移 = 3,
-    资源失败 = 4,
-    内部不一致 = 5
-};
-
-struct L1中性历史属性值组读取请求 final {
-    std::uint32_t 合同版本 = L1中性CRUD合同版本;
-    稳定编码 所属节点;
-    std::uint64_t 历史截止事实代次 = 0;
-    friend bool operator==(const L1中性历史属性值组读取请求&,
-        const L1中性历史属性值组读取请求&) = default;
-};
-
-struct L1中性历史属性值组读取结果 final {
-    L1中性历史属性值组读取状态 状态 =
-        L1中性历史属性值组读取状态::入口拒绝;
-    std::uint32_t 合同版本 = L1中性CRUD合同版本;
-    稳定编码 所属节点;
-    std::uint64_t 历史截止事实代次 = 0;
-    std::uint64_t 读取事实代次 = 0;
-    std::vector<L1中性值事实> 属性值组;
-    friend bool operator==(const L1中性历史属性值组读取结果&,
-        const L1中性历史属性值组读取结果&) = default;
-};
-
 template<class 事实类型>
 struct L1中性具名事实读取结果 final {
     L1中性读取状态 状态 = L1中性读取状态::入口拒绝;
@@ -314,8 +222,6 @@ struct L1中性具名事实读取结果 final {
     稳定编码 查询编码;
     std::uint64_t 读取事实代次 = 0;
     std::optional<事实类型> 事实;
-    std::optional<std::uint64_t> 物理清理事实代次;
-    std::optional<L1中性物理清理墓碑> 物理清理墓碑;
     friend bool operator==(const L1中性具名事实读取结果&,
         const L1中性具名事实读取结果&) = default;
 };
@@ -356,17 +262,6 @@ struct L1中性属性读取结果 final {
     friend bool operator==(const L1中性属性读取结果&, const L1中性属性读取结果&) = default;
 };
 
-struct L1中性历史读取结果 final {
-    L1中性读取状态 状态 = L1中性读取状态::入口拒绝;
-    std::uint32_t 合同版本 = L1中性CRUD合同版本;
-    稳定编码 查询编码;
-    std::uint64_t 读取事实代次 = 0;
-    std::optional<L1中性事实副本> 事实;
-    std::optional<std::uint64_t> 物理清理事实代次;
-    std::optional<L1中性物理清理墓碑> 物理清理墓碑;
-    friend bool operator==(const L1中性历史读取结果&, const L1中性历史读取结果&) = default;
-};
-
 struct L1中性事实代次读取结果 final {
     L1中性读取状态 状态 = L1中性读取状态::入口拒绝;
     std::uint32_t 合同版本 = L1中性CRUD合同版本;
@@ -383,8 +278,8 @@ enum class L1中性一致当前读取状态 : std::uint8_t {
 };
 
 enum class L1中性一致当前读取项目状态 : std::uint8_t {
-    成功 = 1, 未找到 = 2, 已退出 = 3,
-    属性未设置 = 4, 种类不匹配 = 5, 历史材料已清理 = 6
+    成功 = 1, 未找到 = 2,
+    属性未设置 = 4, 种类不匹配 = 5
 };
 
 struct L1中性一致属性值选择项 final {
@@ -427,8 +322,6 @@ struct L1中性一致具名事实读取结果项 final {
     L1中性一致当前读取项目状态 状态 =
         L1中性一致当前读取项目状态::未找到;
     std::optional<事实类型> 事实;
-    std::optional<std::uint64_t> 物理清理事实代次;
-    std::optional<L1中性物理清理墓碑> 物理清理墓碑;
     friend bool operator==(const L1中性一致具名事实读取结果项&,
         const L1中性一致具名事实读取结果项&) = default;
 };

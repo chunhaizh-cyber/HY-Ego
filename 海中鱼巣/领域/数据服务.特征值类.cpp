@@ -15,7 +15,6 @@ template<class T> bool 是成功写入(T s) noexcept {
     switch (s) {
     case L1所有者范围写入状态::许可拒绝: return 特征值U64组保存状态_B2::许可拒绝;
     case L1所有者范围写入状态::未找到: return 特征值U64组保存状态_B2::未找到;
-    case L1所有者范围写入状态::已退出: return 特征值U64组保存状态_B2::已退出;
     case L1所有者范围写入状态::事实代次漂移: return 特征值U64组保存状态_B2::事实代次漂移;
     case L1所有者范围写入状态::幂等冲突: return 特征值U64组保存状态_B2::幂等冲突;
     case L1所有者范围写入状态::引用冲突: return 特征值U64组保存状态_B2::引用冲突;
@@ -25,13 +24,11 @@ template<class T> bool 是成功写入(T s) noexcept {
     }
 }
 
-特征值U64组保存状态_B2 映射读取(L1所有者范围属性类型当前值组读取状态 s) noexcept {
+特征值U64组保存状态_B2 映射读取(L1所有者范围属性类型当前完整值组读取状态_v2 s) noexcept {
     switch (s) {
-    case L1所有者范围属性类型当前值组读取状态::未找到: return 特征值U64组保存状态_B2::未找到;
-    case L1所有者范围属性类型当前值组读取状态::已退出: return 特征值U64组保存状态_B2::已退出;
-    case L1所有者范围属性类型当前值组读取状态::事实代次漂移: return 特征值U64组保存状态_B2::事实代次漂移;
-    case L1所有者范围属性类型当前值组读取状态::数量预算不足: return 特征值U64组保存状态_B2::数量预算不足;
-    case L1所有者范围属性类型当前值组读取状态::资源失败: return 特征值U64组保存状态_B2::资源失败;
+    case L1所有者范围属性类型当前完整值组读取状态_v2::未找到: return 特征值U64组保存状态_B2::未找到;
+    case L1所有者范围属性类型当前完整值组读取状态_v2::事实代次漂移: return 特征值U64组保存状态_B2::事实代次漂移;
+    case L1所有者范围属性类型当前完整值组读取状态_v2::资源失败: return 特征值U64组保存状态_B2::资源失败;
     default: return 特征值U64组保存状态_B2::内部不一致;
     }
 }
@@ -40,7 +37,6 @@ template<class T> bool 是成功写入(T s) noexcept {
     switch (s) {
     case L1所有者范围写入状态::许可拒绝: return 特征值U64组结构登记状态_B2::许可拒绝;
     case L1所有者范围写入状态::未找到: return 特征值U64组结构登记状态_B2::未找到;
-    case L1所有者范围写入状态::已退出: return 特征值U64组结构登记状态_B2::已退出;
     case L1所有者范围写入状态::事实代次漂移: return 特征值U64组结构登记状态_B2::事实代次漂移;
     case L1所有者范围写入状态::幂等冲突: return 特征值U64组结构登记状态_B2::幂等冲突;
     case L1所有者范围写入状态::引用冲突: return 特征值U64组结构登记状态_B2::引用冲突;
@@ -69,7 +65,7 @@ bool U64节点结构当前(const L1事实基座服务& l1, 稳定编码 node,
     const auto* fact = raw.事实 ? std::get_if<L1所有者范围节点事实>(&*raw.事实) : nullptr;
     return raw.状态 == L1所有者范围读取状态::成功 && raw.读取事实代次 == g && fact
         && fact->编码 == node && fact->写入所有者 == owner && fact->种类 == kind
-        && fact->属性类型表示 == representation && !fact->退出事实代次;
+        && fact->属性类型表示 == representation;
 }
 
 }
@@ -149,11 +145,11 @@ bool 特征值U64组结构登记结果_B2::成功(const 特征值U64组结构登
     if (!写端口_ || !U64组结构_) { out.状态 = 特征值U64组保存状态_B2::结构未就绪; return out; }
     try {
         const auto& layout = *U64组结构_;
-        const auto all = 第一层服务_.按属性类型读取所有者范围全部当前值(
-            {L1所有者范围属性类型当前值组读取合同版本, layout.所有者,
-             layout.U64组属性类型节点, r.G0, r.预算.最大候选数});
+        const auto all = 第一层服务_.读取所有者范围属性类型当前完整值组(
+            {L1所有者范围属性类型当前完整值组读取合同版本, layout.所有者,
+             layout.U64组属性类型节点, r.G0});
         out.Gread = all.读取事实代次; out.用量.最大值数 = 1;
-        if (all.状态 != L1所有者范围属性类型当前值组读取状态::成功) {
+        if (all.状态 != L1所有者范围属性类型当前完整值组读取状态_v2::成功) {
             out.状态 = 映射读取(all.状态); return out;
         }
         if (all.读取事实代次 != r.G0 || all.所有者 != layout.所有者
@@ -163,7 +159,7 @@ bool 特征值U64组结构登记结果_B2::成功(const 特征值U64组结构登
             const auto* bytes = std::get_if<std::vector<std::uint64_t>>(&value.材料);
             if (value.写入所有者 != layout.所有者 || value.所属节点 != layout.承载节点
                 || value.属性类型节点 != layout.U64组属性类型节点 || value.来源节点 != layout.来源节点
-                || value.退出事实代次 || !bytes) { out.状态 = 特征值U64组保存状态_B2::内部不一致; return out; }
+                || !bytes) { out.状态 = 特征值U64组保存状态_B2::内部不一致; return out; }
             if (*bytes == r.内容) { if (hit) { out.状态 = 特征值U64组保存状态_B2::内部不一致; return out; } hit = {value.编码}; }
         }
         if (hit) { out.状态 = 特征值U64组保存状态_B2::已复用; out.值 = hit; return out; }
@@ -182,8 +178,8 @@ bool 特征值U64组结构登记结果_B2::成功(const 特征值U64组结构登
         }
         auto readBudget = r.预算;
         if (readBudget.最大值元素数 < r.内容.size()) { out.状态 = 特征值U64组保存状态_B2::数量预算不足; return out; }
-        auto read = 读取完整U64组_B2({1, tail.事实代次, tail.事实代次, {*id}, readBudget});
-        if (!read.成功({1, tail.事实代次, tail.事实代次, {*id}, readBudget})
+        auto read = 读取完整U64组_B2({1, tail.事实代次, {*id}, readBudget});
+        if (!read.成功({1, tail.事实代次, {*id}, readBudget})
             || !read.值 || std::get<std::vector<std::uint64_t>>(read.值->内容) != r.内容) {
             out.状态 = 特征值U64组保存状态_B2::已可能发布; return out;
         }

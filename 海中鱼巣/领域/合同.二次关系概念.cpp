@@ -9,7 +9,7 @@ namespace 海中鱼巣 {
 namespace {
 
 bool 读取头完整(const 概念树读取头 &h) noexcept {
-  return h.合同版本 == 1 && h.Gread && h.H && h.H <= h.Gread;
+  return h.合同版本 == 1 && h.Gread;
 }
 
 bool 发布见证完整(const 二次关系发布见证 &v) noexcept {
@@ -26,8 +26,7 @@ bool 发布见证完整(const 二次关系发布见证 &v) noexcept {
 }
 
 bool 生命周期覆盖(const 概念树生命周期 &v, std::uint64_t h) noexcept {
-  return v.创建事实代次 && v.创建事实代次 <= h &&
-         (!v.退出事实代次 || h < *v.退出事实代次);
+  return v.创建事实代次 && v.创建事实代次 <= h;
 }
 
 bool 约束完整(const 二次关系概念约束 &v) noexcept {
@@ -99,8 +98,7 @@ bool 定义完整(const 二次关系定义 &v) noexcept {
 
 bool 来源完整(const 二次关系来源事实 &v, std::uint64_t h) noexcept {
   if (!有效(v.记录) || !有效(v.成员关系) || !有效(v.目标关系) ||
-      !有效(v.截止值) || !有效(v.RC.值) || !v.来源.H ||
-      v.来源.H > h || !生命周期覆盖(v.生命周期,h))
+      !有效(v.RC.值) || !生命周期覆盖(v.生命周期,h))
     return false;
   return std::visit([](const auto &source) {
     if constexpr (requires { source.值; }) return 有效(source.值);
@@ -113,22 +111,21 @@ bool 用途完整(const 二次关系用途事实 &v, std::uint64_t h) noexcept {
   return 有效(v.记录) && 有效(v.成员关系) && 有效(v.概念关系) &&
          有效(v.依据关系) && 有效(v.RC.值) && v.业务标识 &&
          v.用途角色 >= 1 && v.用途角色 <= 4 && v.时间 >= 0 &&
-         有效(v.业务依据) && v.证据H && v.证据H <= h &&
-         生命周期覆盖(v.生命周期,h);
+         有效(v.业务依据) && 生命周期覆盖(v.生命周期,h);
 }
 
 bool 事实头完整(const 二次关系概念事实 &v) noexcept {
-  if (!(v.Gread && v.H && v.H <= v.Gread && 有效(v.身份.值) &&
+  if (!(v.Gread && 有效(v.身份.值) &&
          v.类别 == 相关概念类别::特征 && 有效(v.规则.值) &&
          定义完整(v.定义) && 规范形完整(v.规范形) &&
-         生命周期覆盖(v.生命周期,v.H) &&
+         生命周期覆盖(v.生命周期,v.Gread) &&
          (v.治理状态 == 概念树生命周期状态::活跃 ||
           v.治理状态 == 概念树生命周期状态::冷却 ||
           v.治理状态 == 概念树生命周期状态::退役)))
     return false;
   std::set<std::uint64_t> owned;
   const auto own=[&](稳定编码 id,const 概念树生命周期 &life) {
-    return 有效(id) && owned.insert(id.值).second && 生命周期覆盖(life,v.H);
+    return 有效(id) && owned.insert(id.值).second && 生命周期覆盖(life,v.Gread);
   };
   for (const auto &node:v.自有节点)
     if (!own(node.编码,node.生命周期)) return false;
@@ -183,10 +180,10 @@ bool 结构交付形状完整(const 二次关系结构交付 &v) noexcept {
   if (v.版本 != 1 || !有效(v.锚点) || !有效(v.规范化规则.值))
     return false;
   const auto &t=v.类型;
-  const std::array<稳定编码,23> ids{
+  const std::array<稳定编码,22> ids{
       t.规范化规则归属,t.规则版本,t.定义种类,t.定义格式,t.域掩码,
       t.输出角色,t.固定K,t.约束成员,t.约束FC,t.约束EC,t.合取成员,
-      t.子RC,t.来源成员,t.来源F,t.来源B,t.来源概念,t.来源截止,
+      t.子RC,t.来源成员,t.来源F,t.来源B,t.来源概念,
       t.用途成员,t.用途目标,t.用途业务依据,t.用途业务标识,t.用途角色,
       t.用途时间};
   std::set<std::uint64_t> unique{v.锚点.值,v.规范化规则.值.值};
@@ -224,23 +221,23 @@ bool 直接边完整(const 二次关系关系见证 &edge,std::uint64_t h) noexc
 } // namespace
 
 bool 二次关系初始化结果::成功() const noexcept {
-  if (版本 != 1 || !Gread || !H || H > Gread || !交付 ||
+  if (版本 != 1 || !Gread || !交付 ||
       !结构交付形状完整(*交付))
     return false;
   if (状态 == 二次关系数据状态::已复用)
-    return H == Gread && !正式回执;
+    return !正式回执;
   if (状态 != 二次关系数据状态::已创建 &&
       状态 != 二次关系数据状态::精确重放)
     return false;
   return 正式回执 && 发布见证完整(*正式回执) &&
-         正式回执->发布H == H &&
+         正式回执->发布H <= Gread &&
          正式回执->精确重放 ==
              (状态 == 二次关系数据状态::精确重放);
 }
 
 bool 二次关系定义核验结果::成功() const noexcept {
   return 版本 == 2 && 状态 == 二次关系数据状态::已读取 && Gread &&
-         H && H <= Gread && 规范形 && 规范形完整(*规范形);
+         规范形 && 规范形完整(*规范形);
 }
 
 bool 二次关系概念读取结果::成功() const noexcept {
@@ -248,8 +245,8 @@ bool 二次关系概念读取结果::成功() const noexcept {
       ((状态==二次关系数据状态::已读取&&事实->治理状态==概念树生命周期状态::活跃)||
        (状态==二次关系数据状态::冷却命中&&事实->治理状态==概念树生命周期状态::冷却)||
        (状态==二次关系数据状态::退役命中&&事实->治理状态==概念树生命周期状态::退役));
-  return 版本 == 2 && 读成功状态(状态) && stateMatches && Gread && H && H <= Gread &&
-         事实 && 事实->Gread == Gread && 事实->H == H &&
+  return 版本 == 2 && 读成功状态(状态) && stateMatches && Gread &&
+         事实 && 事实->Gread == Gread &&
          事实头完整(*事实);
 }
 
@@ -259,7 +256,7 @@ bool 二次关系概念写入结果::成功() const noexcept {
     return false;
   if (状态 == 二次关系数据状态::已复用 ||
       状态 == 二次关系数据状态::冷却命中)
-    return !首次H && !正式回执 && 事实->H == Gread &&
+    return !首次H && !正式回执 &&
            事实->治理状态==(状态==二次关系数据状态::已复用 ?
              概念树生命周期状态::活跃 : 概念树生命周期状态::冷却);
   if ((状态 != 二次关系数据状态::已创建 &&
@@ -268,16 +265,16 @@ bool 二次关系概念写入结果::成功() const noexcept {
     return false;
   return 事实->治理状态==概念树生命周期状态::活跃 &&
          正式回执->发布H == *首次H && 发布见证完整(*正式回执) &&
-         事实->H == *首次H &&
+         *首次H <= Gread &&
          正式回执->精确重放 ==
              (状态 == 二次关系数据状态::精确重放);
 }
 
 bool 二次关系关联结果::成功() const noexcept {
-  if (版本 != 2 || !Gread || !H || H > Gread)
+  if (版本 != 2 || !Gread)
     return false;
-  const bool sourcesValid=来源组完整(来源组,H);
-  const bool usesValid=用途组完整(用途组,H);
+  const bool sourcesValid=来源组完整(来源组,Gread);
+  const bool usesValid=用途组完整(用途组,Gread);
   const bool notMixed=来源组.empty() || 用途组.empty();
   if (!sourcesValid || !usesValid || !notMixed) return false;
   std::optional<概念树概念身份> rc;
@@ -303,26 +300,26 @@ bool 二次关系关联结果::成功() const noexcept {
   if (状态 == 二次关系数据状态::已读取)
     return !首次H && !正式回执;
   if (状态 == 二次关系数据状态::已复用)
-    return H == Gread && !首次H && !正式回执 &&
+    return !首次H && !正式回执 &&
            (!来源组.empty() != !用途组.empty());
   if (状态 != 二次关系数据状态::已变更 &&
       状态 != 二次关系数据状态::精确重放)
     return false;
   return (!来源组.empty() != !用途组.empty()) && 首次H && 正式回执 &&
-         *首次H == H &&
-         正式回执->发布H == H && 发布见证完整(*正式回执) &&
+         *首次H <= Gread &&
+         正式回执->发布H == *首次H && 发布见证完整(*正式回执) &&
          正式回执->精确重放 ==
              (状态 == 二次关系数据状态::精确重放);
 }
 
 bool 二次关系图结果::成功() const noexcept {
   if (版本 != 2 || 状态 != 二次关系数据状态::已读取 || !Gread ||
-      !H || H > Gread || 类别 != 相关概念类别::特征)
+      类别 != 相关概念类别::特征)
     return false;
   std::uint64_t prior = 0;
   std::map<std::uint64_t,std::size_t> index;
   for (const auto &rc : RC组) {
-    if (!事实头完整(rc) || rc.Gread != Gread || rc.H != H ||
+    if (!事实头完整(rc) || rc.Gread != Gread ||
         rc.身份.值.值 <= prior)
       return false;
     prior = rc.身份.值.值;
@@ -331,7 +328,7 @@ bool 二次关系图结果::成功() const noexcept {
   std::vector<std::vector<std::size_t>> graph(RC组.size());
   prior=0;
   for(const auto &edge:直接边) {
-    if(!直接边完整(edge,H)||edge.编码.值<=prior) return false;
+    if(!直接边完整(edge,Gread)||edge.编码.值<=prior) return false;
     const auto from=index.find(edge.源.值),to=index.find(edge.目标.值);
     if(from==index.end()||to==index.end()) return false;
     graph[from->second].push_back(to->second);
@@ -351,7 +348,7 @@ bool 二次关系图结果::成功() const noexcept {
 }
 
 bool 二次关系治理结果::成功() const noexcept {
-  if (版本 != 2 || !Gread || !H || H > Gread || !首次H ||
+  if (版本 != 2 || !Gread || !首次H ||
       !正式回执 || *首次H != 正式回执->发布H ||
       !发布见证完整(*正式回执) ||
       正式回执->精确重放 !=
@@ -359,23 +356,14 @@ bool 二次关系治理结果::成功() const noexcept {
       (状态 != 二次关系数据状态::已变更 &&
        状态 != 二次关系数据状态::精确重放))
     return false;
-  if (!事实 || !事实头完整(*事实) || 事实->Gread != Gread)
-    return false;
-  const bool exitShape = *首次H > 0 && 事实->H == *首次H - 1 && H == 事实->H;
-  const bool changeShape = 事实->H == *首次H && H == *首次H;
-  if (!exitShape && !changeShape) return false;
+  if (*首次H > Gread) return false;
+  if (事实 && (!事实头完整(*事实) || 事实->Gread != Gread)) return false;
   std::uint64_t prior=0;
-  for(const auto id:已退出事实) {
-    if(!有效(id)||id.值<=prior) return false;
-    prior=id.值;
-  }
-  prior=0;
   for(const auto &edge:新直接边) {
     if(!直接边完整(edge,*首次H)||edge.编码.值<=prior) return false;
     prior=edge.编码.值;
   }
-  return (!已退出事实.empty() || !新直接边.empty()) &&
-         (!exitShape || !已退出事实.empty());
+  return 事实.has_value() || 新直接边.empty();
 }
 
 } // namespace 海中鱼巣

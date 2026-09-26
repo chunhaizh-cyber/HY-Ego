@@ -91,7 +91,6 @@ using 概念树定义 = std::variant<概念树特征定义, 概念树存在定�
 
 struct 概念树来源项 final {
   概念树世界引用 世界事实;
-  std::uint64_t 证据截止 = 0;
   friend bool operator==(const 概念树来源项 &,
                          const 概念树来源项 &) = default;
 };
@@ -111,7 +110,6 @@ struct 概念树预算 final {
 
 struct 概念树生命周期 final {
   std::uint64_t 创建事实代次 = 0;
-  std::optional<std::uint64_t> 退出事实代次;
   friend bool operator==(const 概念树生命周期 &,
                          const 概念树生命周期 &) = default;
 };
@@ -139,11 +137,11 @@ enum class 相关概念类别 : std::uint8_t { 存在 = 1, 特征 = 2 };
 
 enum class 概念树生命周期状态 : std::uint8_t { 活跃=1, 冷却=2, 退役=3 };
 enum class 纯概念状态 : std::uint8_t {
-  已读取=1, 已创建=2, 精确重复=3, 已退出=4, 未找到=5,
+  已读取=1, 已创建=2, 精确重复=3, 已删除=4, 未找到=5,
   入口拒绝=6, 类别冲突=7, 定义不支持=8, 定义不相容=9,
-  组织冲突=10, 上位成环=11, 概念已退役=12, 目标已退出=13,
+  组织冲突=10, 上位成环=11, 概念已退役=12,
   引用冲突=14, 事实代次漂移=15, 幂等冲突=16, 数量预算不足=17,
-  历史材料不可用=18, 资源失败=19, 内部不一致=20,
+  资源失败=19, 内部不一致=20,
   已可能发布=21, 旧格式不支持=22, 已迁移生命周期=23
 };
 
@@ -175,7 +173,7 @@ struct 概念树规则身份 final {
 
 struct 概念树读取头 final {
   std::uint32_t 合同版本 = 1;
-  std::uint64_t Gread = 0, H = 0;
+  std::uint64_t Gread = 0;
   friend bool operator==(const 概念树读取头 &,
                          const 概念树读取头 &) = default;
 };
@@ -192,20 +190,20 @@ using 纯概念定义 = std::variant<纯I64特征概念定义,
 enum class 概念初始组织指定 : std::uint8_t { 未指定 = 0, 显式顶层 = 1, 具名上位 = 2 };
 struct 纯概念读取请求 final {
   std::uint32_t 版本 = 2;
-  std::uint64_t Gread = 0, H = 0;
+  std::uint64_t Gread = 0;
   概念树概念身份 概念;
   概念树预算 预算;
 };
 struct 纯概念完整读取请求_v3 final {
   std::uint32_t 版本 = 3;
-  std::uint64_t Gread = 0, H = 0;
+  std::uint64_t Gread = 0;
   概念树概念身份 概念;
   friend bool operator==(const 纯概念完整读取请求_v3 &,
                          const 纯概念完整读取请求_v3 &) = default;
 };
 struct 纯概念查询请求 final {
   std::uint32_t 版本 = 2;
-  std::uint64_t Gread = 0, H = 0;
+  std::uint64_t Gread = 0;
   纯概念定义 定义;
   概念树预算 预算;
 };
@@ -248,13 +246,13 @@ struct 纯概念事实 final {
 };
 struct I64特征概念组织读取请求 final {
   std::uint32_t 版本 = 2;
-  std::uint64_t Gread = 0, H = 0;
+  std::uint64_t Gread = 0;
   特征类型身份 FT;
   概念树预算 预算;
 };
 struct 纯概念查询请求_v3 final {
   std::uint32_t 版本 = 3;
-  std::uint64_t Gread = 0, H = 0;
+  std::uint64_t Gread = 0;
   纯概念定义 定义;
 };
 struct 纯概念创建请求_v3 final {
@@ -268,7 +266,7 @@ struct 纯概念创建请求_v3 final {
 struct I64特征概念组织读取结果 final {
   std::uint32_t 版本 = 2;
   纯概念状态 状态 = 纯概念状态::入口拒绝;
-  std::uint64_t Gread = 0, H = 0;
+  std::uint64_t Gread = 0;
   std::vector<纯概念事实> 概念组;
   bool 成功(const I64特征概念组织读取请求 &) const noexcept;
 };
@@ -321,8 +319,8 @@ struct 存在概念两组预算_v3 final {
 };
 enum class 存在概念两组状态_v3 : std::uint8_t {
   入口拒绝=1, 已规范化, 已枚举, 已读取, 未找到, 已创建, 精确重复,
-  目标已退出, 概念已退役, 类别冲突, 定义不相容, 规则缺失,
-  事实代次漂移, 幂等冲突, 数量预算不足, 历史材料不可用, 资源失败,
+  概念已退役=9, 类别冲突, 定义不相容, 规则缺失,
+  事实代次漂移, 幂等冲突, 数量预算不足, 资源失败=17,
   内部不一致, 已可能发布, 旧格式不支持
 };
 struct 存在概念两组结构类型_v1 final {
@@ -387,42 +385,40 @@ struct 存在概念两组事实_v3 final {
                          const 存在概念两组事实_v3&) = default;
 };
 struct 存在概念两组规范化请求_v1 final {
-  std::uint32_t 版本 = 1; std::uint64_t Gread = 0, H = 0;
+  std::uint32_t 版本 = 1; std::uint64_t Gread = 0;
   存在概念两组定义_v3 定义; 存在概念两组预算_v3 预算;
 };
 struct 存在概念两组枚举请求_v1 final {
-  std::uint32_t 版本 = 1; std::uint64_t Gread = 0, H = 0;
+  std::uint32_t 版本 = 1; std::uint64_t Gread = 0;
   存在概念两组预算_v3 预算;
 };
 struct 存在概念两组读取请求_v1 final {
-  std::uint32_t 版本 = 1; std::uint64_t Gread = 0, H = 0;
+  std::uint32_t 版本 = 1; std::uint64_t Gread = 0;
   概念树概念身份 EC; 存在概念两组预算_v3 预算;
 };
 enum class 存在概念两组完整读取状态_v2 : std::uint8_t {
   已读取 = 1,
   入口拒绝,
   未找到,
-  目标已退出,
-  概念已退役,
+  概念已退役 = 5,
   类别冲突,
   定义不相容,
   规则缺失,
   未实现,
   事实代次漂移,
-  历史材料不可用,
-  资源失败,
+  资源失败=12,
   内部不一致,
   旧格式不支持
 };
 struct 存在概念两组完整读取请求_v2 final {
   std::uint32_t 版本 = 2;
-  std::uint64_t Gread = 0, H = 0;
+  std::uint64_t Gread = 0;
   概念树概念身份 EC;
   friend bool operator==(const 存在概念两组完整读取请求_v2 &,
                          const 存在概念两组完整读取请求_v2 &) = default;
 };
 struct 存在概念两组查询请求_v1 final {
-  std::uint32_t 版本 = 1; std::uint64_t Gread = 0, H = 0;
+  std::uint32_t 版本 = 1; std::uint64_t Gread = 0;
   存在概念两组定义_v3 定义; 存在概念两组预算_v3 预算;
 };
 struct 存在概念两组创建请求_v1 final {
@@ -434,37 +430,37 @@ struct 存在概念两组创建请求_v1 final {
 };
 struct 存在概念两组规范化结果_v1 final {
   std::uint32_t 版本 = 1; 存在概念两组状态_v3 状态 = 存在概念两组状态_v3::入口拒绝;
-  std::uint64_t Gread = 0, H = 0; std::optional<存在概念两组定义_v3> 定义;
+  std::uint64_t Gread = 0; std::optional<存在概念两组定义_v3> 定义;
   bool 成功(const 存在概念两组规范化请求_v1&) const noexcept;
 };
 struct 存在概念两组枚举结果_v1 final {
   std::uint32_t 版本 = 1; 存在概念两组状态_v3 状态 = 存在概念两组状态_v3::入口拒绝;
-  std::uint64_t Gread = 0, H = 0; std::vector<存在概念两组事实_v3> 候选;
+  std::uint64_t Gread = 0; std::vector<存在概念两组事实_v3> 候选;
   bool 成功(const 存在概念两组枚举请求_v1&) const noexcept;
 };
 struct 存在概念两组读取结果_v1 final {
   std::uint32_t 版本 = 1; 存在概念两组状态_v3 状态 = 存在概念两组状态_v3::入口拒绝;
-  std::uint64_t Gread = 0, H = 0; std::optional<存在概念两组事实_v3> 事实;
+  std::uint64_t Gread = 0; std::optional<存在概念两组事实_v3> 事实;
   bool 成功(const 存在概念两组读取请求_v1&) const noexcept;
 };
 struct 存在概念两组完整读取结果_v2 final {
   std::uint32_t 版本 = 2;
   存在概念两组完整读取状态_v2 状态 =
       存在概念两组完整读取状态_v2::入口拒绝;
-  std::uint64_t Gread = 0, H = 0;
+  std::uint64_t Gread = 0;
   std::optional<存在概念两组事实_v3> 事实;
   bool 成功(const 存在概念两组完整读取请求_v2 &) const noexcept;
 };
 struct 存在概念两组查询结果_v1 final {
   std::uint32_t 版本 = 1; 存在概念两组状态_v3 状态 = 存在概念两组状态_v3::入口拒绝;
-  std::uint64_t Gread = 0, H = 0; std::optional<存在概念两组事实_v3> 事实;
+  std::uint64_t Gread = 0; std::optional<存在概念两组事实_v3> 事实;
   bool 成功(const 存在概念两组查询请求_v1&) const noexcept;
   bool 确认未找到(const 存在概念两组查询请求_v1&) const noexcept;
 };
 struct 存在概念两组写入结果_v1 final {
   std::uint32_t 版本 = 1; 存在概念两组状态_v3 状态 = 存在概念两组状态_v3::入口拒绝;
   纯概念发布状态 发布 = 纯概念发布状态::未进入;
-  std::uint64_t Gread = 0, H = 0; std::optional<std::uint64_t> 首次发布H;
+  std::uint64_t Gread = 0; std::optional<std::uint64_t> 首次发布H;
   std::optional<存在概念两组创建请求_v1> 原请求;
   std::optional<存在概念两组事实_v3> 事实;
   bool 成功(const 存在概念两组创建请求_v1&) const noexcept;
@@ -472,26 +468,26 @@ struct 存在概念两组写入结果_v1 final {
 
 struct 纯概念读取结果 final {
   std::uint32_t 版本=2; 纯概念状态 状态=纯概念状态::入口拒绝;
-  std::uint64_t Gread=0,H=0; std::optional<纯概念事实> 事实;
+  std::uint64_t Gread=0; std::optional<纯概念事实> 事实;
   bool 成功(const 纯概念读取请求&) const noexcept;
 };
 struct 纯概念完整读取结果_v3 final {
   std::uint32_t 版本 = 3;
   纯概念状态 状态 = 纯概念状态::入口拒绝;
-  std::uint64_t Gread = 0, H = 0;
+  std::uint64_t Gread = 0;
   std::optional<纯概念事实> 事实;
   bool 成功(const 纯概念完整读取请求_v3 &) const noexcept;
 };
 struct 纯概念查询结果 final {
   std::uint32_t 版本=2; 纯概念状态 状态=纯概念状态::入口拒绝;
-  std::uint64_t Gread=0,H=0; std::optional<纯概念事实> 事实;
+  std::uint64_t Gread=0; std::optional<纯概念事实> 事实;
   bool 成功(const 纯概念查询请求&) const noexcept;
   bool 确认未找到(const 纯概念查询请求&) const noexcept;
 };
 struct 纯概念查询结果_v3 final {
   std::uint32_t 版本 = 3;
   纯概念状态 状态 = 纯概念状态::入口拒绝;
-  std::uint64_t Gread = 0, H = 0;
+  std::uint64_t Gread = 0;
   std::optional<纯概念事实> 事实;
   bool 成功(const 纯概念查询请求_v3 &) const noexcept;
   bool 确认未找到(const 纯概念查询请求_v3 &) const noexcept;
@@ -499,7 +495,7 @@ struct 纯概念查询结果_v3 final {
 struct 纯概念写入结果 final {
   std::uint32_t 版本=2; 纯概念状态 状态=纯概念状态::入口拒绝;
   纯概念发布状态 发布=纯概念发布状态::未进入;
-  std::uint64_t Gread=0,H=0; std::optional<std::uint64_t> 首次发布H;
+  std::uint64_t Gread=0; std::optional<std::uint64_t> 首次发布H;
   std::optional<纯概念创建请求> 原请求; std::optional<纯概念事实> 事实;
   bool 成功(const 纯概念创建请求&) const noexcept;
 };
@@ -507,7 +503,7 @@ struct 纯概念写入结果_v3 final {
   std::uint32_t 版本 = 3;
   纯概念状态 状态 = 纯概念状态::入口拒绝;
   纯概念发布状态 发布 = 纯概念发布状态::未进入;
-  std::uint64_t Gread = 0, H = 0;
+  std::uint64_t Gread = 0;
   std::optional<std::uint64_t> 首次发布H;
   std::optional<纯概念创建请求_v3> 原请求;
   std::optional<纯概念事实> 事实;
@@ -522,8 +518,8 @@ struct 纯概念创建恢复请求 final {
 };
 enum class 纯概念恢复状态 : std::uint8_t {
   已读回=1, 未派发=2, 入口拒绝=3, 幂等冲突=4, 事实代次漂移=5,
-  数量预算不足=6, 历史材料不可用=7, 已可能发布=8,
-  资源失败=9, 内部不一致=10, 目标已退出=11
+  数量预算不足=6, 已可能发布=8,
+  资源失败=9, 内部不一致=10, 未找到=11
 };
 struct 纯概念创建恢复结果 final {
   std::uint32_t 版本=2;
@@ -558,7 +554,7 @@ struct 纯概念生命周期请求 final {
 struct 纯概念生命周期结果 final {
   std::uint32_t 版本=2; 纯概念状态 状态=纯概念状态::入口拒绝;
   纯概念发布状态 发布=纯概念发布状态::未进入;
-  std::uint64_t Gread=0,H=0; std::optional<std::uint64_t> 首次发布H;
+  std::uint64_t Gread=0; std::optional<std::uint64_t> 首次发布H;
   std::optional<纯概念生命周期请求> 原请求; std::optional<纯概念事实> 事实;
   bool 成功(const 纯概念生命周期请求&) const noexcept;
 };
@@ -570,26 +566,26 @@ struct 纯概念退出请求 final {
 struct 纯概念退出结果 final {
   std::uint32_t 版本=2; 纯概念状态 状态=纯概念状态::入口拒绝;
   纯概念发布状态 发布=纯概念发布状态::未进入;
-  std::uint64_t Gread=0,H=0; std::optional<std::uint64_t> 首次发布H;
-  std::optional<纯概念退出请求> 原请求; std::optional<纯概念事实> 历史事实;
+  std::uint64_t Gread=0; std::optional<std::uint64_t> 首次发布H;
+  std::optional<纯概念退出请求> 原请求;
   bool 成功(const 纯概念退出请求&) const noexcept;
 };
 struct 存在概念使用读取请求 final {
-  std::uint32_t 版本=2; std::uint64_t Gread=0,H=0;
+  std::uint32_t 版本=2; std::uint64_t Gread=0;
   概念树存在引用 E; 概念树预算 预算;
 };
 struct 存在概念使用读取结果 final {
   std::uint32_t 版本=2; 纯概念状态 状态=纯概念状态::入口拒绝;
-  std::uint64_t Gread=0,H=0;
+  std::uint64_t Gread=0;
   std::optional<存在概念使用事实> 使用; std::optional<纯概念事实> 概念;
   bool 成功(const 存在概念使用读取请求&) const noexcept;
 };
 
 enum class 已发布概念引用参与状态 : std::uint8_t {
   已准备=1, 精确重复=2, 入口拒绝=3, 概念未找到=4, 概念已退役=5,
-  目标已退出=6, 类别冲突=7, 定义不相容=8, 引用冲突=9,
+  类别冲突=7, 定义不相容=8, 引用冲突=9,
   事实代次漂移=10, 幂等冲突=11, 数量预算不足=12,
-  历史材料不可用=13, 资源失败=14, 内部不一致=15,
+  资源失败=14, 内部不一致=15,
   已可能发布=16, 旧格式不支持=17, 已读取=18, 未派发=19
 };
 struct 已发布存在概念引用准备请求 final {
@@ -619,7 +615,6 @@ enum class 相关概念参与状态 : std::uint8_t {
   精确重复 = 3,
   入口拒绝 = 4,
   概念未找到 = 5,
-  概念已退出 = 6,
   类别冲突 = 7,
   签名冲突 = 8,
   上位成环 = 9,
@@ -627,7 +622,6 @@ enum class 相关概念参与状态 : std::uint8_t {
   事实代次漂移 = 11,
   幂等冲突 = 12,
   数量预算不足 = 13,
-  历史材料不可用 = 14,
   资源失败 = 15,
   内部不一致 = 16,
   已可能发布 = 17,
@@ -638,7 +632,6 @@ using 相关概念读取预算 = 概念树预算;
 
 struct 相关概念世界挂靠 final {
   概念树形成世界引用 世界事实;
-  std::uint64_t 证据截止 = 0;
 };
 struct 相关概念精确复用方案 final {
   概念树概念身份 概念;
@@ -676,7 +669,6 @@ struct 相关概念完整事实 final {
 struct 相关概念参与读回 final {
   相关概念参与状态 状态 = 相关概念参与状态::入口拒绝;
   std::uint64_t Gread = 0;
-  std::uint64_t H = 0;
   std::optional<相关概念完整事实> 概念;
 };
 struct 相关概念组合提交请求 final {
@@ -705,8 +697,8 @@ public:
   提交相关概念组合事务(const 相关概念组合提交请求 &,
       std::span<L1所有者范围写端口 *const> 前序参与者端口组) noexcept = 0;
   virtual 相关概念参与读回
-  读取相关概念结果(const 相关概念参与请求 &, std::uint64_t Gread,
-                     std::uint64_t H) const noexcept = 0;
+  读取相关概念结果(const 相关概念参与请求 &,
+                     std::uint64_t Gread) const noexcept = 0;
 };
 
 struct 相关概念结构类型 final {
@@ -715,7 +707,7 @@ struct 相关概念结构类型 final {
   稳定编码 精确I64, 精确I64组, 精确U64组, 区间下界, 区间上界;
   稳定编码 直接上位, 形成成员, 形成存在, 形成特征, 形成特征类型,
       形成场景;
-  稳定编码 证据截止, 生命周期;
+  稳定编码 生命周期;
 };
 struct 相关概念结构交付 final {
   std::uint32_t 版本 = 1, 格式 = 1;
@@ -725,8 +717,7 @@ struct 相关概念结构交付 final {
 
 namespace 纯概念结果内部 {
 inline bool 生命周期有效(const 概念树生命周期&x,std::uint64_t h) noexcept {
-    return x.创建事实代次&&x.创建事实代次<=h&&
-        (!x.退出事实代次||h<*x.退出事实代次);
+    return x.创建事实代次&&x.创建事实代次<=h;
 }
 inline bool 允许生命周期迁移(概念树生命周期状态 from,
                               概念树生命周期状态 to) noexcept {
@@ -843,67 +834,67 @@ inline bool 纯概念结构登记结果_v2::成功(const 纯概念结构登记�
     return true;
 }
 inline bool 纯概念读取结果::成功(const 纯概念读取请求&r) const noexcept {
-    return 版本==2&&r.版本==2&&r.Gread&&r.H&&r.H<=r.Gread&&有效(r.概念.值)&&
-        状态==纯概念状态::已读取&&Gread==r.Gread&&H==r.H&&事实&&
-        事实->概念==r.概念&&纯概念结果内部::事实完整(*事实,H);
+    return 版本==2&&r.版本==2&&r.Gread&&有效(r.概念.值)&&
+        状态==纯概念状态::已读取&&Gread==r.Gread&&事实&&
+        事实->概念==r.概念&&纯概念结果内部::事实完整(*事实,Gread);
 }
 inline bool 纯概念完整读取结果_v3::成功(
     const 纯概念完整读取请求_v3 &r) const noexcept {
-    return 版本 == 3 && r.版本 == 3 && r.Gread && r.H && r.H <= r.Gread &&
+    return 版本 == 3 && r.版本 == 3 && r.Gread &&
            有效(r.概念.值) && 状态 == 纯概念状态::已读取 &&
-           Gread == r.Gread && H == r.H && 事实 && 事实->概念 == r.概念 &&
-           纯概念结果内部::事实完整(*事实, H);
+           Gread == r.Gread && 事实 && 事实->概念 == r.概念 &&
+           纯概念结果内部::事实完整(*事实, Gread);
 }
 inline bool I64特征概念组织读取结果::成功(const I64特征概念组织读取请求&r) const noexcept {
-    if(版本!=2||r.版本!=2||!r.Gread||!r.H||r.H>r.Gread||!有效(r.FT.编码)||
-       状态!=纯概念状态::已读取||Gread!=r.Gread||H!=r.H)return false;
+    if(版本!=2||r.版本!=2||!r.Gread||!有效(r.FT.编码)||
+       状态!=纯概念状态::已读取||Gread!=r.Gread)return false;
     std::uint64_t previous=0;
     for(const auto& f:概念组) {
         const auto* d=std::get_if<纯I64特征概念定义>(&f.定义);
-        if(!纯概念结果内部::事实完整(f,H)||f.类别!=相关概念类别::特征||!d||
+        if(!纯概念结果内部::事实完整(f,Gread)||f.类别!=相关概念类别::特征||!d||
            d->特征类型!=概念树特征类型引用{r.FT.编码}||!f.概念.值.值||f.概念.值.值<=previous)return false;
         previous=f.概念.值.值;
     }
     return true;
 }
 inline bool 纯概念查询结果::成功(const 纯概念查询请求&r) const noexcept {
-    return 版本==2&&r.版本==2&&r.Gread&&r.H&&r.H<=r.Gread&&
-        状态==纯概念状态::已读取&&Gread==r.Gread&&H==r.H&&事实&&
+    return 版本==2&&r.版本==2&&r.Gread&&
+        状态==纯概念状态::已读取&&Gread==r.Gread&&事实&&
         纯概念结果内部::定义匹配(事实->定义,r.定义)&&
-        纯概念结果内部::事实完整(*事实,H);
+        纯概念结果内部::事实完整(*事实,Gread);
 }
 inline bool 纯概念查询结果::确认未找到(const 纯概念查询请求&r) const noexcept {
-    return 版本==2&&r.版本==2&&r.Gread&&r.H&&r.H<=r.Gread&&
+    return 版本==2&&r.版本==2&&r.Gread&&
         r.预算.最大概念数&&r.预算.最大关系数&&r.预算.最大特征属性数&&
-        状态==纯概念状态::未找到&&Gread==r.Gread&&H==r.H&&!事实;
+        状态==纯概念状态::未找到&&Gread==r.Gread&&!事实;
 }
 inline bool 纯概念查询结果_v3::成功(
     const 纯概念查询请求_v3 &r) const noexcept {
-    return 版本 == 3 && r.版本 == 3 && r.Gread && r.H && r.H <= r.Gread &&
-           状态 == 纯概念状态::已读取 && Gread == r.Gread && H == r.H &&
+    return 版本 == 3 && r.版本 == 3 && r.Gread &&
+           状态 == 纯概念状态::已读取 && Gread == r.Gread &&
            事实 && 纯概念结果内部::定义匹配(事实->定义, r.定义) &&
-           纯概念结果内部::事实完整(*事实, H);
+           纯概念结果内部::事实完整(*事实, Gread);
 }
 inline bool 纯概念查询结果_v3::确认未找到(
     const 纯概念查询请求_v3 &r) const noexcept {
-    return 版本 == 3 && r.版本 == 3 && r.Gread && r.H && r.H <= r.Gread &&
-           状态 == 纯概念状态::未找到 && Gread == r.Gread && H == r.H &&
+    return 版本 == 3 && r.版本 == 3 && r.Gread &&
+           状态 == 纯概念状态::未找到 && Gread == r.Gread &&
            !事实;
 }
 inline bool 纯概念写入结果::成功(const 纯概念创建请求&r) const noexcept {
     try {
         if(版本!=2||r.版本!=2||
            (状态!=纯概念状态::已创建&&状态!=纯概念状态::精确重复)||
-           !Gread||!H||H>Gread||!原请求||!事实||
+           !Gread||!原请求||!事实||
            原请求->版本!=r.版本||原请求->G0!=r.G0||
            原请求->幂等身份!=r.幂等身份||原请求->定义!=r.定义||
            原请求->组织!=r.组织||原请求->直接上位!=r.直接上位||
            原请求->预算!=r.预算)
             return false;
         const bool ownWrite=发布==纯概念发布状态::确认发布&&首次发布H&&
-            *首次发布H==r.G0+1&&H==*首次发布H;
+            *首次发布H==r.G0+1&&*首次发布H<=Gread;
         const bool reused=状态==纯概念状态::精确重复&&
-            发布==纯概念发布状态::确认未发布&&!首次发布H&&H==Gread;
+            发布==纯概念发布状态::确认未发布&&!首次发布H;
         if(!ownWrite&&!reused)return false;
 
         纯概念定义 expected=r.定义;
@@ -939,15 +930,10 @@ inline bool 纯概念写入结果::成功(const 纯概念创建请求&r) const n
            (事实->治理状态!=概念树生命周期状态::活跃&&
             事实->治理状态!=概念树生命周期状态::冷却)||
            !有效(事实->生命周期值事实)||
-           !事实->生命周期.创建事实代次||事实->生命周期.创建事实代次>H||
-           (事实->生命周期.退出事实代次&&*事实->生命周期.退出事实代次<=H)||
+           !事实->生命周期.创建事实代次||事实->生命周期.创建事实代次>Gread||
            事实->定义记录生命周期.创建事实代次!=事实->生命周期.创建事实代次||
-           (事实->定义记录生命周期.退出事实代次&&
-            *事实->定义记录生命周期.退出事实代次<=H)||
            !事实->生命周期值生命周期.创建事实代次||
-           事实->生命周期值生命周期.创建事实代次>H||
-           (事实->生命周期值生命周期.退出事实代次&&
-            *事实->生命周期值生命周期.退出事实代次<=H))
+           事实->生命周期值生命周期.创建事实代次>Gread)
             return false;
         const auto expectedCategory=std::holds_alternative<纯I64特征概念定义>(expected)?
             相关概念类别::特征:相关概念类别::存在;
@@ -962,8 +948,7 @@ inline bool 纯概念写入结果::成功(const 纯概念创建请求&r) const n
         std::vector<概念树概念身份> actualParents;
         for(const auto &edge:事实->直接上位) {
             if(!有效(edge.关系)||!有效(edge.上位.值)||edge.下位!=事实->概念||
-               edge.上位==事实->概念||edge.生命周期.创建事实代次>H||
-               (edge.生命周期.退出事实代次&&*edge.生命周期.退出事实代次<=H))
+               edge.上位==事实->概念||edge.生命周期.创建事实代次>Gread)
                 return false;
             actualParents.push_back(edge.上位);
         }
@@ -976,8 +961,7 @@ inline bool 纯概念写入结果::成功(const 纯概念创建请求&r) const n
         if(member.种类!=纯概念定义关系种类::定义成员||member.顺序!=1||
            member.源!=事实->概念.值||member.目标!=事实->定义记录||
            !有效(member.关系)||!有效(member.关系类型)||
-           member.生命周期.创建事实代次!=事实->生命周期.创建事实代次||
-           (member.生命周期.退出事实代次&&*member.生命周期.退出事实代次<=H))
+           member.生命周期.创建事实代次!=事实->生命周期.创建事实代次)
             return false;
         if(const auto *fc=std::get_if<纯I64特征概念定义>(&expected)) {
             if(relations.size()!=2)return false;
@@ -985,8 +969,7 @@ inline bool 纯概念写入结果::成功(const 纯概念创建请求&r) const n
             if(edge.种类!=纯概念定义关系种类::定义特征类型||edge.顺序!=1||
                edge.源!=事实->定义记录||edge.目标!=fc->特征类型.值||
                !有效(edge.关系)||!有效(edge.关系类型)||
-               edge.生命周期.创建事实代次!=事实->生命周期.创建事实代次||
-               (edge.生命周期.退出事实代次&&*edge.生命周期.退出事实代次<=H))
+               edge.生命周期.创建事实代次!=事实->生命周期.创建事实代次)
                 return false;
         } else if(const auto *ec=std::get_if<纯合取存在概念定义>(&expected)) {
             if(relations.size()!=ec->特征模板组.size()+1)return false;
@@ -995,8 +978,7 @@ inline bool 纯概念写入结果::成功(const 纯概念创建请求&r) const n
                 if(edge.种类!=纯概念定义关系种类::定义模板||edge.顺序!=i+1||
                    edge.源!=事实->定义记录||edge.目标!=ec->特征模板组[i].值||
                    !有效(edge.关系)||!有效(edge.关系类型)||
-                   edge.生命周期.创建事实代次!=事实->生命周期.创建事实代次||
-                   (edge.生命周期.退出事实代次&&*edge.生命周期.退出事实代次<=H))
+                   edge.生命周期.创建事实代次!=事实->生命周期.创建事实代次)
                     return false;
             }
         } else if(relations.size()!=1)return false;
@@ -1010,17 +992,17 @@ inline bool 纯概念写入结果_v3::成功(
             !有效(r.幂等身份) ||
             (状态 != 纯概念状态::已创建 &&
              状态 != 纯概念状态::精确重复) ||
-            !Gread || !H || H > Gread || !原请求 || !事实 ||
+            !Gread || !原请求 || !事实 ||
             原请求->版本 != r.版本 || 原请求->G0 != r.G0 ||
             原请求->幂等身份 != r.幂等身份 || 原请求->定义 != r.定义 ||
             原请求->组织 != r.组织 || 原请求->直接上位 != r.直接上位)
             return false;
         const bool ownWrite = 发布 == 纯概念发布状态::确认发布 &&
                               首次发布H && *首次发布H == r.G0 + 1 &&
-                              H == *首次发布H;
+                              *首次发布H <= Gread;
         const bool reused = 状态 == 纯概念状态::精确重复 &&
                             发布 == 纯概念发布状态::确认未发布 &&
-                            !首次发布H && H == Gread;
+                            !首次发布H;
         return (ownWrite || reused) &&
                纯概念结果内部::定义匹配(事实->定义, r.定义) &&
                纯概念结果内部::父组匹配(*事实, r.直接上位) &&
@@ -1028,7 +1010,7 @@ inline bool 纯概念写入结果_v3::成功(
                  r.直接上位.empty()) ||
                 (r.组织 == 概念初始组织指定::具名上位 &&
                  !r.直接上位.empty())) &&
-               纯概念结果内部::事实完整(*事实, H);
+               纯概念结果内部::事实完整(*事实, Gread);
     } catch (...) {
         return false;
     }
@@ -1041,7 +1023,7 @@ inline bool 纯概念创建恢复结果::成功(const 纯概念创建恢复请�
         纯概念结果内部::父组匹配(*事实,r.直接上位)&&
         ((r.组织==概念初始组织指定::显式顶层&&r.直接上位.empty())||
          (r.组织==概念初始组织指定::具名上位&&!r.直接上位.empty()))&&
-        纯概念结果内部::事实完整(*事实,*首次发布H);
+        纯概念结果内部::事实完整(*事实,Gread);
 }
 inline bool 纯概念创建恢复结果_v3::成功(
     const 纯概念创建恢复请求_v3 &r) const noexcept {
@@ -1054,7 +1036,7 @@ inline bool 纯概念创建恢复结果_v3::成功(
              r.直接上位.empty()) ||
             (r.组织 == 概念初始组织指定::具名上位 &&
              !r.直接上位.empty())) &&
-           纯概念结果内部::事实完整(*事实, *首次发布H);
+           纯概念结果内部::事实完整(*事实, Gread);
 }
 inline bool 纯概念生命周期结果::成功(const 纯概念生命周期请求&r) const noexcept {
     return 版本==2&&r.版本==2&&
@@ -1063,42 +1045,32 @@ inline bool 纯概念生命周期结果::成功(const 纯概念生命周期请�
         纯概念结果内部::允许生命周期迁移(r.预期治理状态,r.目标治理状态)&&
         r.预算.最大概念数&&r.预算.最大关系数&&r.预算.最大特征属性数&&
         (状态==纯概念状态::已迁移生命周期||状态==纯概念状态::精确重复)&&
-        发布==纯概念发布状态::确认发布&&Gread&&H&&H<=Gread&&
-        首次发布H&&*首次发布H==r.G0+1&&H==*首次发布H&&原请求&&
+        发布==纯概念发布状态::确认发布&&Gread&&
+        首次发布H&&*首次发布H==r.G0+1&&*首次发布H<=Gread&&原请求&&
         原请求->版本==r.版本&&原请求->G0==r.G0&&原请求->幂等身份==r.幂等身份&&
         原请求->概念==r.概念&&原请求->预期生命周期值事实==r.预期生命周期值事实&&
         原请求->预期治理状态==r.预期治理状态&&原请求->目标治理状态==r.目标治理状态&&
         原请求->预算==r.预算&&事实&&
         事实->概念==r.概念&&事实->治理状态==r.目标治理状态&&
         事实->生命周期值事实!=r.预期生命周期值事实&&
-        事实->生命周期值生命周期.创建事实代次==H&&
-        纯概念结果内部::事实完整(*事实,H);
+        事实->生命周期值生命周期.创建事实代次==*首次发布H&&
+        纯概念结果内部::事实完整(*事实,Gread);
 }
 inline bool 纯概念退出结果::成功(const 纯概念退出请求&r) const noexcept {
     return 版本==2&&r.版本==2&&
         r.G0&&r.G0!=UINT64_MAX&&有效(r.幂等身份)&&有效(r.概念.值)&&
         有效(r.预期生命周期值事实)&&r.预算.最大概念数&&
         r.预算.最大关系数&&r.预算.最大特征属性数&&
-        (状态==纯概念状态::已退出||状态==纯概念状态::精确重复)&&
-        发布==纯概念发布状态::确认发布&&Gread&&H&&H<=Gread&&
+        (状态==纯概念状态::已删除||状态==纯概念状态::精确重复)&&
+        发布==纯概念发布状态::确认发布&&Gread&&
         首次发布H&&*首次发布H<=Gread&&*首次发布H==r.G0+1&&
-        H!=UINT64_MAX&&H+1==*首次发布H&&
         原请求&&原请求->版本==r.版本&&原请求->G0==r.G0&&
         原请求->幂等身份==r.幂等身份&&原请求->概念==r.概念&&
         原请求->预期生命周期值事实==r.预期生命周期值事实&&
-        原请求->预算==r.预算&&历史事实&&历史事实->概念==r.概念&&
-        历史事实->治理状态==概念树生命周期状态::退役&&
-        历史事实->生命周期值事实==r.预期生命周期值事实&&
-        历史事实->生命周期.退出事实代次==首次发布H&&
-        历史事实->定义记录生命周期.退出事实代次==首次发布H&&
-        纯概念结果内部::事实完整(*历史事实,H)&&
-        std::all_of(历史事实->定义关系组.begin(),历史事实->定义关系组.end(),
-          [&](const auto&e){return e.生命周期.退出事实代次==首次发布H;})&&
-        std::all_of(历史事实->直接上位.begin(),历史事实->直接上位.end(),
-          [&](const auto&e){return e.生命周期.退出事实代次==首次发布H;});
+        原请求->预算==r.预算;
 }
 inline bool 存在概念使用读取结果::成功(const 存在概念使用读取请求&r) const noexcept {
-    return 版本==2&&r.版本==2&&状态==纯概念状态::已读取&&Gread==r.Gread&&H==r.H&&
+    return 版本==2&&r.版本==2&&状态==纯概念状态::已读取&&Gread==r.Gread&&
         使用&&概念&&使用->E==r.E.值&&使用->EC==概念->概念;
 }
 inline bool 存在概念两组结构登记结果_v1::成功(
@@ -1120,30 +1092,30 @@ inline bool 存在概念两组结构登记结果_v1::成功(
 }
 inline bool 存在概念两组规范化结果_v1::成功(
     const 存在概念两组规范化请求_v1& r) const noexcept {
-    return 版本 == 1 && r.版本 == 1 && r.Gread && r.H && r.H <= r.Gread &&
-        状态 == 存在概念两组状态_v3::已规范化 && Gread == r.Gread && H == r.H && 定义;
+    return 版本 == 1 && r.版本 == 1 && r.Gread &&
+        状态 == 存在概念两组状态_v3::已规范化 && Gread == r.Gread && 定义;
 }
 inline bool 存在概念两组枚举结果_v1::成功(
     const 存在概念两组枚举请求_v1& r) const noexcept {
-    return 版本 == 1 && r.版本 == 1 && r.Gread && r.H && r.H <= r.Gread &&
-        状态 == 存在概念两组状态_v3::已枚举 && Gread == r.Gread && H == r.H;
+    return 版本 == 1 && r.版本 == 1 && r.Gread &&
+        状态 == 存在概念两组状态_v3::已枚举 && Gread == r.Gread;
 }
 inline bool 存在概念两组读取结果_v1::成功(
     const 存在概念两组读取请求_v1& r) const noexcept {
-    return 版本 == 1 && r.版本 == 1 && r.Gread && r.H && r.H <= r.Gread &&
+    return 版本 == 1 && r.版本 == 1 && r.Gread &&
         有效(r.EC.值) && 状态 == 存在概念两组状态_v3::已读取 &&
-        Gread == r.Gread && H == r.H && 事实 && 事实->概念 == r.EC;
+        Gread == r.Gread && 事实 && 事实->概念 == r.EC;
 }
 inline bool 存在概念两组完整读取结果_v2::成功(
     const 存在概念两组完整读取请求_v2 &r) const noexcept {
-    if (版本 != 2 || r.版本 != 2 || !r.Gread || !r.H || r.H > r.Gread ||
+    if (版本 != 2 || r.版本 != 2 || !r.Gread ||
         !有效(r.EC.值) || 状态 != 存在概念两组完整读取状态_v2::已读取 ||
-        Gread != r.Gread || H != r.H || !事实 || 事实->概念 != r.EC ||
+        Gread != r.Gread || !事实 || 事实->概念 != r.EC ||
         !事实->定义.自身特征组已完整声明 ||
         !事实->定义.子存在概念组已完整声明 ||
-        !纯概念结果内部::生命周期有效(事实->概念生命周期, H) ||
-        !纯概念结果内部::生命周期有效(事实->定义记录生命周期, H) ||
-        !纯概念结果内部::生命周期有效(事实->状态生命周期, H))
+        !纯概念结果内部::生命周期有效(事实->概念生命周期, Gread) ||
+        !纯概念结果内部::生命周期有效(事实->定义记录生命周期, Gread) ||
+        !纯概念结果内部::生命周期有效(事实->状态生命周期, Gread))
       return false;
     if (事实->定义.自身特征值域组.size() != 事实->自身特征项关系组.size() ||
         事实->定义.已知子存在概念组.size() != 事实->子概念关系组.size())
@@ -1155,7 +1127,7 @@ inline bool 存在概念两组完整读取结果_v2::成功(
       if (!有效(item.FT) || !有效(item.FC.值) || item.FT.编码.值 <= previousFt ||
           !有效(edge.关系) || edge.源 != 事实->定义记录 ||
           !有效(edge.目标) || edge.顺序 != i + 1 ||
-          !纯概念结果内部::生命周期有效(edge.生命周期, H))
+          !纯概念结果内部::生命周期有效(edge.生命周期, Gread))
         return false;
       previousFt = item.FT.编码.值;
     }
@@ -1165,7 +1137,7 @@ inline bool 存在概念两组完整读取结果_v2::成功(
       if (!有效(child.值) || child.值.值 <= previousChild || !有效(edge.关系) ||
           edge.源 != 事实->定义记录 || edge.目标 != child.值 ||
           edge.顺序 != i + 1 ||
-          !纯概念结果内部::生命周期有效(edge.生命周期, H))
+          !纯概念结果内部::生命周期有效(edge.生命周期, Gread))
         return false;
       previousChild = child.值.值;
     }
@@ -1173,23 +1145,23 @@ inline bool 存在概念两组完整读取结果_v2::成功(
 }
 inline bool 存在概念两组查询结果_v1::成功(
     const 存在概念两组查询请求_v1& r) const noexcept {
-    return 版本 == 1 && r.版本 == 1 && r.Gread && r.H && r.H <= r.Gread &&
-        状态 == 存在概念两组状态_v3::已读取 && Gread == r.Gread && H == r.H &&
+    return 版本 == 1 && r.版本 == 1 && r.Gread &&
+        状态 == 存在概念两组状态_v3::已读取 && Gread == r.Gread &&
         事实 && 事实->定义 == r.定义;
 }
 inline bool 存在概念两组查询结果_v1::确认未找到(
     const 存在概念两组查询请求_v1& r) const noexcept {
-    return 版本 == 1 && r.版本 == 1 && r.Gread && r.H && r.H <= r.Gread &&
-        状态 == 存在概念两组状态_v3::未找到 && Gread == r.Gread && H == r.H && !事实;
+    return 版本 == 1 && r.版本 == 1 && r.Gread &&
+        状态 == 存在概念两组状态_v3::未找到 && Gread == r.Gread && !事实;
 }
 inline bool 存在概念两组写入结果_v1::成功(
     const 存在概念两组创建请求_v1& r) const noexcept {
     const bool created = 状态 == 存在概念两组状态_v3::已创建 &&
-        发布 == 纯概念发布状态::确认发布 && 首次发布H && *首次发布H == r.G0 + 1 && H == *首次发布H;
+        发布 == 纯概念发布状态::确认发布 && 首次发布H && *首次发布H == r.G0 + 1 && *首次发布H <= Gread;
     const bool replay = 状态 == 存在概念两组状态_v3::精确重复 &&
-        ((发布 == 纯概念发布状态::确认未发布 && !首次发布H && H == Gread) ||
-         (发布 == 纯概念发布状态::确认发布 && 首次发布H && H == *首次发布H && *首次发布H <= Gread));
-    return 版本 == 1 && r.版本 == 1 && r.G0 && 有效(r.幂等身份) && Gread && H && H <= Gread &&
+        ((发布 == 纯概念发布状态::确认未发布 && !首次发布H) ||
+         (发布 == 纯概念发布状态::确认发布 && 首次发布H && *首次发布H <= Gread));
+    return 版本 == 1 && r.版本 == 1 && r.G0 && 有效(r.幂等身份) && Gread &&
         (created || replay) && 原请求 && 原请求->版本 == r.版本 && 原请求->G0 == r.G0 &&
         原请求->幂等身份 == r.幂等身份 && 原请求->定义 == r.定义 &&
         原请求->直接上位 == r.直接上位 && 原请求->预算 == r.预算 &&

@@ -165,8 +165,7 @@ public:
         return out;
       }
       out.Gread = *current;
-      const auto source =
-          existence_.读取世界树根存在来源(*current, *out.首次发布H, root);
+      const auto source = existence_.读取世界树根存在来源(*current, root);
       if (!source) {
         out.状态 = 世界树根状态::已可能发布;
         return out;
