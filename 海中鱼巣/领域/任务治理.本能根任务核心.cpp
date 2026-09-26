@@ -546,7 +546,89 @@ struct 预留扫描结果 final {
   out.状态=阶段::未找到;return out;
 }
 
+struct 核心内部结果 final {
+  阶段 状态=阶段::入口拒绝;
+  std::uint64_t G=0;
+  std::optional<本能根任务核心投影_v1> 核心;
+};
+const std::vector<std::uint64_t>* 查找U64材料(
+    const L1所有者范围写集请求&,std::uint32_t) noexcept;
+核心内部结果 读取核心内部(const L1事实基座服务&,
+    L1所有者范围写端口&,L1结构所有者身份,
+    const 本能根任务核心结构交付_v1&,本能根任务身份_v1,
+    std::uint64_t) noexcept;
+
 } // namespace
+
+本能根任务初始化包按意图读取结果_v1
+本能根任务核心服务_v1::按初始化意图读取不可变包(
+    const 本能根任务初始化包按意图读取请求_v1& r) const noexcept {
+  本能根任务初始化包按意图读取结果_v1 out;
+  out.意图=r.意图;
+  if(r.合同版本!=本能根任务核心合同版本_v1||!有效(r.意图.值))return out;
+  try {
+    const auto g=当前G(l1_);
+    if(!g){out.状态=阶段::内部不一致;return out;}
+    out.Gread=*g;
+    const auto rows=读取关系(l1_,owner_,关系端点方向::源,
+        结构_.预留记录族根,结构_.预留记录成员关系类型,*g);
+    if(rows.状态!=阶段::已读取){out.状态=rows.状态;out.Gread=rows.Gread;return out;}
+    std::optional<不可变本能根任务初始化包_v1> found;
+    for(const auto& edge:rows.关系){
+      if(edge.源节点!=结构_.预留记录族根){out.状态=阶段::内部不一致;return out;}
+      const auto material=读取属性(l1_,owner_,edge.目标节点,
+          结构_.预留材料属性类型,*g,L1所有者范围值表示种类::U64组);
+      if(material.状态!=阶段::已读取||!material.U64){
+        out.状态=material.状态;out.Gread=material.Gread;return out;}
+      const auto parsed=解析预留材料(*material.U64,edge.目标节点,edge.创建事实代次);
+      if(!parsed){out.状态=阶段::内部不一致;return out;}
+      if(parsed->原请求.意图!=r.意图)continue;
+      if(found){out.状态=阶段::内部不一致;return out;}
+      found=*parsed;
+    }
+    if(!found){out.状态=阶段::未找到;return out;}
+
+    const auto first=写端口_.读取首次写入材料(
+        {L1所有者范围首次写入读取合同版本,found->任务核心建立幂等身份});
+    if(first.读取事实代次!=*g){out.状态=阶段::事实代次漂移;out.Gread=first.读取事实代次;return out;}
+    if(first.状态==L1所有者范围读取状态::未找到){
+      out.包=*found;out.状态=阶段::已读取;return out;}
+    if(first.状态!=L1所有者范围读取状态::成功||
+       first.合同版本!=L1所有者范围首次写入读取合同版本||
+       first.所有者!=owner_||!first.首次规范化写集||!first.首次写入结果){
+      if(first.状态==L1所有者范围读取状态::资源失败)
+        out.状态=阶段::资源失败;
+      else if(first.状态==L1所有者范围读取状态::事实代次漂移)
+        out.状态=阶段::事实代次漂移;
+      else out.状态=阶段::内部不一致;
+      return out;
+    }
+    const auto* receipt=查找U64材料(*first.首次规范化写集,
+        first.首次规范化写集->节点.size()==4?13:10);
+    if(!receipt||receipt->size()!=6||(*receipt)[0]!=1||(*receipt)[1]!=1||
+       (*receipt)[2]!=found->预留记录.值.值||(*receipt)[3]!=r.意图.值.值){
+      out.状态=阶段::内部不一致;return out;
+    }
+    std::optional<本能根任务身份_v1> task;
+    if((*receipt)[4]==1&&(*receipt)[5]==0){
+      const auto id=映射编码(*first.首次写入结果,1);
+      if(!id){out.状态=阶段::内部不一致;return out;}
+      task=本能根任务身份_v1{*id};
+    } else if((*receipt)[4]==2&&(*receipt)[5]!=0) {
+      task=本能根任务身份_v1{{(*receipt)[5]}};
+    } else {out.状态=阶段::内部不一致;return out;}
+    const auto core=读取核心内部(l1_,写端口_,owner_,结构_,*task,*g);
+    if(core.状态!=阶段::已读取||!core.核心){out.状态=core.状态;return out;}
+    if(core.核心->首次来源!=found->原请求.来源){out.状态=阶段::内部不一致;return out;}
+    out.包=*found;
+    out.状态=core.核心->生命周期==本能根任务生命周期_v1::当前可治理
+        ?阶段::已读取:阶段::当前任务不可复用;
+  } catch(const std::bad_alloc&){out.状态=阶段::资源失败;out.包.reset();}
+    catch(const std::length_error&){out.状态=阶段::资源失败;out.包.reset();}
+    catch(...){out.状态=阶段::内部不一致;out.包.reset();}
+  if(out.状态!=阶段::已读取&&out.状态!=阶段::当前任务不可复用)out.包.reset();
+  return out;
+}
 
 本能根任务初始化包结果_v1 本能根任务核心服务_v1::签发或恢复不可变初始化包(
     const 本能根任务初始化语义请求_v1& r) noexcept {
@@ -814,17 +896,12 @@ bool 核验核心首次闭包(const L1事实基座服务& l1,L1结构所有者�
       return std::nullopt;
     return q.载荷;
   };
-  const auto nodeVt=read(*Vt),nodeR1=read(*R1),origin=read(*originId),
-      life=read(*lifeId),vtState=read(*vtStateId);
+  const auto nodeVt=read(*Vt),nodeR1=read(*R1),origin=read(*originId);
   const auto* nVt=nodeVt?std::get_if<L1所有者范围节点事实>(&*nodeVt):nullptr;
   const auto* nR1=nodeR1?std::get_if<L1所有者范围节点事实>(&*nodeR1):nullptr;
   const auto* originFact=origin?std::get_if<L1所有者范围值事实>(&*origin):nullptr;
-  const auto* lifeFact=life?std::get_if<L1所有者范围值事实>(&*life):nullptr;
-  const auto* stateFact=vtState?std::get_if<L1所有者范围值事实>(&*vtState):nullptr;
   const auto* originU64=originFact
       ?std::get_if<std::vector<std::uint64_t>>(&originFact->材料):nullptr;
-  const auto* lifeI64=lifeFact?std::get_if<std::int64_t>(&lifeFact->材料):nullptr;
-  const auto* stateI64=stateFact?std::get_if<std::int64_t>(&stateFact->材料):nullptr;
   const auto expectedWrite=构造核心新建写集(s,package,1);
   const auto* expectedOrigin=std::get_if<std::vector<std::uint64_t>>(
       &expectedWrite.值.front().材料);
@@ -834,27 +911,17 @@ bool 核验核心首次闭包(const L1事实基座服务& l1,L1结构所有者�
       ||nVt->属性类型表示||nR1->属性类型表示
       ||nVt->创建事实代次!=written.事实代次
       ||nR1->创建事实代次!=written.事实代次
-      ||!originFact||!lifeFact||!stateFact||!originU64||!lifeI64||!stateI64
+      ||!originFact||!originU64
       ||!expectedOrigin
-      ||originFact->编码!=*originId||lifeFact->编码!=*lifeId
-      ||stateFact->编码!=*vtStateId
+      ||originFact->编码!=*originId
       ||originFact->所属节点!=*T||originFact->属性类型节点!=s.根来源定位属性类型
       ||originFact->来源节点!=*T||originFact->写入所有者!=owner
       ||originFact->创建事实代次!=written.事实代次
-      ||*originU64!=*expectedOrigin
-      ||lifeFact->所属节点!=*T||lifeFact->属性类型节点!=s.任务生命周期属性类型
-      ||lifeFact->来源节点!=*T||lifeFact->写入所有者!=owner
-      ||lifeFact->创建事实代次!=written.事实代次
-      ||*lifeI64!=static_cast<std::int64_t>(本能根任务生命周期_v1::当前可治理)
-      ||stateFact->所属节点!=*Vt||stateFact->属性类型节点!=s.Vt状态属性类型
-      ||stateFact->来源节点!=*Vt||stateFact->写入所有者!=owner
-      ||stateFact->创建事实代次!=written.事实代次
-      ||*stateI64!=static_cast<std::int64_t>(本能根任务Vt状态_v1::已建立待首轮准备))
+      ||*originU64!=*expectedOrigin)
     return false;
-  const std::array<std::tuple<std::uint32_t,稳定编码,稳定编码,稳定编码>,6> expected{{
+  const std::array<std::tuple<std::uint32_t,稳定编码,稳定编码,稳定编码>,5> expected{{
     {20,s.任务族根,*T,s.任务族成员关系类型},
     {21,*T,package.原请求.来源.L,s.任务查询锚点关系类型},
-    {22,package.原请求.来源.L,*T,s.L当前任务关系类型},
     {23,*T,package.原请求.来源.D.值,s.任务来源D关系类型},
     {24,*T,*Vt,s.任务Vt关系类型},
     {25,*T,*R1,s.任务R1关系类型}}};
@@ -871,7 +938,6 @@ bool 核验核心首次闭包(const L1事实基座服务& l1,L1结构所有者�
       编码核心回执(package,1));
 }
 
-struct 核心内部结果 final{阶段 状态=阶段::入口拒绝;std::uint64_t G=0;std::optional<本能根任务核心投影_v1> 核心;};
 核心内部结果 读取核心内部(const L1事实基座服务& l1,
     L1所有者范围写端口& port,L1结构所有者身份 owner,
     const 本能根任务核心结构交付_v1& s,本能根任务身份_v1 T,

@@ -228,7 +228,13 @@
     <ClInclude Include="海中鱼巣\线程\线程_自我.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\线程\线程_任务管理.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClCompile Include="海中鱼巣\线程\线程_自我.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\线程\线程_任务管理.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClInclude Include="海中鱼巣\核心\L1公共事实.数据.h">

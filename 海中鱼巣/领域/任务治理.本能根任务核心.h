@@ -99,6 +99,17 @@ struct 本能根任务初始化包结果_v1 final {
   std::optional<不可变本能根任务初始化包_v1> 包;
   bool 成功(const 本能根任务初始化语义请求_v1&) const noexcept;
 };
+struct 本能根任务初始化包按意图读取请求_v1 final {
+  std::uint32_t 合同版本=本能根任务核心合同版本_v1;
+  本能根任务初始化意图身份_v1 意图;
+};
+struct 本能根任务初始化包按意图读取结果_v1 final {
+  本能根任务阶段状态_v1 状态=本能根任务阶段状态_v1::入口拒绝;
+  std::uint32_t 合同版本=本能根任务核心合同版本_v1;
+  std::uint64_t Gread=0;
+  本能根任务初始化意图身份_v1 意图;
+  std::optional<不可变本能根任务初始化包_v1> 包;
+};
 struct 本能根任务核心投影_v1 final {
   本能根任务身份_v1 T;
   稳定编码 L{};
@@ -149,6 +160,8 @@ class 本能根任务核心端口_v1 {
 public:
   virtual ~本能根任务核心端口_v1() = default;
   virtual 本能根任务初始化包结果_v1 签发或恢复不可变初始化包(const 本能根任务初始化语义请求_v1&) noexcept = 0;
+  virtual 本能根任务初始化包按意图读取结果_v1 按初始化意图读取不可变包(
+      const 本能根任务初始化包按意图读取请求_v1&) const noexcept = 0;
   virtual 本能根任务承接结果_v1 承接或建立任务(const 不可变本能根任务初始化包_v1&) noexcept = 0;
   virtual 本能根任务承接结果_v1 恢复任务初始化(const 不可变本能根任务初始化包_v1&) noexcept = 0;
   virtual 本能根任务核心读取结果_v1 按任务读取核心(const 本能根任务身份读取请求_v1&) const noexcept = 0;
@@ -162,6 +175,8 @@ public:
   static 本能根任务核心结构登记结果_v1 登记结构(const L1事实基座服务&,L1所有者范围写端口&,const 本能根任务核心结构登记请求_v1&) noexcept;
   本能根任务核心服务_v1(const L1事实基座服务&,const 需求类数据服务&,const 存在类数据服务&,const 特征类数据服务&,L1所有者范围写端口&&,const 本能根任务核心结构交付_v1&,存在单例角色身份);
   本能根任务初始化包结果_v1 签发或恢复不可变初始化包(const 本能根任务初始化语义请求_v1&) noexcept override;
+  本能根任务初始化包按意图读取结果_v1 按初始化意图读取不可变包(
+      const 本能根任务初始化包按意图读取请求_v1&) const noexcept override;
   本能根任务承接结果_v1 承接或建立任务(const 不可变本能根任务初始化包_v1&) noexcept override;
   本能根任务承接结果_v1 恢复任务初始化(const 不可变本能根任务初始化包_v1&) noexcept override;
   本能根任务核心读取结果_v1 按任务读取核心(const 本能根任务身份读取请求_v1&) const noexcept override;

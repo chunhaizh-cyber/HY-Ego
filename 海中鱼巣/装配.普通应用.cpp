@@ -30,9 +30,19 @@
 #include "领域/数据服务.特征值域比较类.h"
 #include "领域/数据服务.需求类.h"
 #include "领域/任务治理.本能根任务核心.h"
+#include "线程/线程_任务管理.h"
 
 namespace 海中鱼巣 {
 namespace 普通应用装配内部 {
+
+inline constexpr 自我线程消息身份 首次双根复核消息身份{
+    0x5347524D00000001ULL};
+inline constexpr 自我线程原请求身份 首次双根复核原请求身份{
+    0x5347525100000001ULL};
+inline constexpr 本能根任务初始化意图身份_v1 首次安全根任务意图{
+    {0x5347495300000001ULL}};
+inline constexpr 本能根任务初始化意图身份_v1 首次服务根任务意图{
+    {0x5347495600000001ULL}};
 
 struct 概念结构异常 final { 纯概念状态 原因; };
 struct 角色结构异常 final { 存在单例角色状态 原因; };
@@ -277,6 +287,7 @@ struct 普通应用上下文 final {
   std::unique_ptr<存在类数据服务> 存在;
   std::unique_ptr<需求类数据服务> 需求;
   std::unique_ptr<本能根任务核心服务_v1> 本能根任务核心;
+  任务管理线程 任务管理线程对象;
   std::unique_ptr<状态类数据服务> 状态;
   std::unique_ptr<场景类数据服务> 场景;
   std::unique_ptr<概念树类数据服务> 概念;
@@ -675,6 +686,37 @@ constexpr 概念树预算 本能根运行自我概念读取预算{
   return joined;
 }
 
+自我线程操作结果_v1 映射任务管理失败(
+    const 任务管理线程操作结果_v1& 结果) noexcept {
+  自我线程操作状态 状态=自我线程操作状态::依赖未就绪;
+  if(结果.状态==任务管理线程操作状态_v1::资源失败)
+    状态=自我线程操作状态::资源失败;
+  else if(结果.状态==任务管理线程操作状态_v1::内部不一致)
+    状态=自我线程操作状态::内部错误;
+  else if(结果.状态==任务管理线程操作状态_v1::等待超时)
+    状态=自我线程操作状态::等待超时;
+  else if(结果.状态==任务管理线程操作状态_v1::选择冲突)
+    状态=自我线程操作状态::选择冲突;
+  return {状态,自我线程生命周期状态::已停门,false};
+}
+
+自我线程操作结果_v1 安全停止并回收治理线程(
+    普通应用上下文& context,const 普通应用配置& config) noexcept {
+  const auto self=安全停止并回收自我线程(context,config);
+  const auto stop=context.任务管理线程对象.请求停止();
+  const auto joined=context.任务管理线程对象.等待停止(
+      config.自我线程停止回收诊断等待毫秒);
+  const bool managerStopped=
+      (stop.状态==任务管理线程操作状态_v1::已请求停止||
+       stop.状态==任务管理线程操作状态_v1::精确重复||
+       stop.状态==任务管理线程操作状态_v1::已停止)&&
+      (joined.状态==任务管理线程操作状态_v1::已停止||
+       joined.状态==任务管理线程操作状态_v1::精确重复);
+  if(!self.成功())return self;
+  if(!managerStopped)return 映射任务管理失败(joined);
+  return self;
+}
+
 自我线程创建结果_v1 回收失败结果(
     const 自我线程操作结果_v1&result) noexcept {
   return {result.状态,result.生命周期,std::nullopt,result.写业务事实};
@@ -719,14 +761,15 @@ namespace 普通应用装配内部 {
                 *上下文->世界树,*上下文->自我,*上下文->需求,
                 上下文->方法结构聚合->取得L2方法结构服务(),
                 上下文->角色结构.项目角色);
-      const 世界树读取预算 rootBudget{64,256};
-      const auto root=上下文->世界树->读取当前现实世界根(rootBudget);
-      if(!root.成功(rootBudget)) {
+      const auto root=上下文->世界树->读取当前现实世界根_v3(
+          {世界树现实根当前完整读取合同版本_v3});
+      if(root.版本!=世界树现实根当前完整读取合同版本_v3||
+         root.状态!=世界树现实根当前完整读取状态_v3::已读取||!root.树) {
         out.状态=普通应用装配状态::内部不一致;
         return out;
       }
       out.状态=普通应用装配状态::已装配;
-      out.根事实代次=root.结果头.Gread;
+      out.根事实代次=root.Gread;
       return out;
     }
 
@@ -768,14 +811,15 @@ namespace 普通应用装配内部 {
             *上下文->世界树,*上下文->自我,*上下文->需求,
             上下文->方法结构聚合->取得L2方法结构服务(),
             上下文->角色结构.项目角色);
-    const 世界树读取预算 rootBudget{64,256};
-    const auto root=上下文->世界树->读取当前现实世界根(rootBudget);
-    if(!root.成功(rootBudget)) {
+    const auto root=上下文->世界树->读取当前现实世界根_v3(
+        {世界树现实根当前完整读取合同版本_v3});
+    if(root.版本!=世界树现实根当前完整读取合同版本_v3||
+       root.状态!=世界树现实根当前完整读取状态_v3::已读取||!root.树) {
       out.状态=普通应用装配状态::内部不一致;
       return out;
     }
     out.状态=普通应用装配状态::已装配;
-    out.根事实代次=root.结果头.Gread;
+    out.根事实代次=root.Gread;
   } catch(const 持久恢复异常&e) {
     out.状态=普通应用装配状态::L1事实基座持久恢复失败;
     out.持久恢复=e.结果;
@@ -967,7 +1011,8 @@ namespace 普通应用装配内部 {
   using namespace 普通应用装配内部;
   std::lock_guard lock(上下文锁);
   if(!上下文||!已选配置||!上下文->世界树||!上下文->自我||
-     !上下文->自我线程正式上下文||
+     !上下文->自我线程正式上下文||!上下文->自我根需求复核||
+     !上下文->本能根任务核心||
      !上下文->本能根运行锚点||!上下文->本能根运行自我投影||
      !上下文->本能根运行根场景)
     return {};
@@ -980,18 +1025,19 @@ namespace 普通应用装配内部 {
   };
   try {
     const auto&anchor=*上下文->本能根运行锚点;
-    const 世界树根验证请求 rootRequest{
-        2,anchor.事实截止代次,本能根运行世界树读取预算};
-    const auto root=上下文->世界树->验证现实世界根(rootRequest);
-    if(!root.成功(rootRequest)||!root.树||
-       root.树->根场景!=*上下文->本能根运行根场景)
+    const auto root=上下文->世界树->读取当前现实世界根_v3(
+        {世界树现实根当前完整读取合同版本_v3});
+    if(root.版本!=世界树现实根当前完整读取合同版本_v3||
+       root.状态!=世界树现实根当前完整读取状态_v3::已读取||
+       !root.树||root.树->根场景!=*上下文->本能根运行根场景)
       return 收口({});
-    const 真实自我读取请求 selfRequest{
-        1,anchor.事实截止代次,root.树->根场景,
-        上下文->角色结构.项目角色,本能根运行自我读取预算,
-        本能根运行自我概念读取预算};
-    const auto self=上下文->自我->读取当前自我(selfRequest);
-    if(!self.成功(selfRequest)||!self.投影)return 收口({});
+    const 真实自我当前完整读取请求_v2 selfRequest{
+        真实自我当前完整读取合同版本_v2,root.Gread,root.树->根场景,
+        上下文->角色结构.项目角色};
+    const auto self=上下文->自我->读取当前自我_v2(selfRequest);
+    if(self.版本!=真实自我当前完整读取合同版本_v2||
+       self.状态!=真实自我形成状态::已读取||self.Gread!=root.Gread||
+       !self.投影)return 收口({});
     const auto&projection=*self.投影;
     if(projection.E!=anchor.自我.编码||
        projection.世界根!=root.树->根场景||
@@ -1004,7 +1050,7 @@ namespace 普通应用装配内部 {
     自我线程创建请求_v1 request;
     request.邮箱容量=已选配置->自我线程邮箱容量;
     request.世界={{root.树->根场景.值},{root.树->根场景.值},
-        root.结果头.Gread};
+        root.Gread};
     request.自我={{projection.E.值},{projection.世界根.值},
         {projection.位置.直接结构父->父.值},projection.Gread};
     request.本能根.自我={anchor.自我.编码.值};
@@ -1021,6 +1067,8 @@ namespace 普通应用装配内部 {
 
     auto created=上下文->自我线程对象.创建并停在治理运行门(
         request,*上下文->自我线程正式上下文,
+        *上下文->自我根需求复核,*上下文->本能根任务核心,
+        上下文->任务管理线程对象,
         已选配置->自我线程进入停门等待毫秒);
     const auto snapshot=上下文->自我线程对象.读取诊断快照();
     const bool postcondition=created.成功()&&created.见证&&
@@ -1052,6 +1100,54 @@ namespace 普通应用装配内部 {
   std::lock_guard lock(上下文锁);
   if(!上下文||!已选配置)return {};
   return 安全停止并回收自我线程(*上下文,*已选配置);
+}
+
+自我线程操作结果_v1 启动并开放普通应用首个根治理批次() noexcept {
+  using namespace 普通应用装配内部;
+  std::lock_guard lock(上下文锁);
+  if(!上下文||!已选配置||!上下文->本能根任务核心)return {};
+  const auto manager=上下文->任务管理线程对象.创建并等待就绪(
+      {任务管理线程合同版本_v1,已选配置->自我线程邮箱容量},
+      *上下文->本能根任务核心,
+      已选配置->自我线程进入停门等待毫秒);
+  if(manager.状态!=任务管理线程操作状态_v1::已创建&&
+     manager.状态!=任务管理线程操作状态_v1::精确重复) {
+    const auto failure=映射任务管理失败(manager);
+    (void)安全停止并回收治理线程(*上下文,*已选配置);
+    return failure;
+  }
+  const 自我线程根需求复核消息_v2 first{
+      2,首次双根复核消息身份,首次双根复核原请求身份,
+      自我线程复核触发根::双根,{},首次安全根任务意图,首次服务根任务意图};
+  const auto submitted=上下文->自我线程对象.提交根需求复核消息(first);
+  if(submitted.状态!=自我线程操作状态::成功&&
+     submitted.状态!=自我线程操作状态::精确重复) {
+    (void)安全停止并回收治理线程(*上下文,*已选配置);
+    return submitted;
+  }
+  const auto opened=上下文->自我线程对象.复核前置并开放治理运行门(
+      已选配置->自我线程进入停门等待毫秒);
+  if(!opened.成功()) {
+    (void)安全停止并回收治理线程(*上下文,*已选配置);
+    return opened;
+  }
+  const auto snapshot=上下文->自我线程对象.读取诊断快照();
+  if(!snapshot.治理运行门开启||
+     snapshot.生命周期!=自我线程生命周期状态::治理中||
+     snapshot.成功治理批次数量==0||snapshot.内部错误锁存) {
+    const 自我线程操作结果_v1 failed{
+        自我线程操作状态::内部错误,snapshot.生命周期,false};
+    (void)安全停止并回收治理线程(*上下文,*已选配置);
+    return failed;
+  }
+  return opened;
+}
+
+自我线程操作结果_v1 停止并回收普通应用治理线程() noexcept {
+  using namespace 普通应用装配内部;
+  std::lock_guard lock(上下文锁);
+  if(!上下文||!已选配置)return {};
+  return 安全停止并回收治理线程(*上下文,*已选配置);
 }
 
 std::optional<本能先天特征概念初始化结果>

@@ -29,15 +29,18 @@ void 检查(bool ok,std::string_view s){if(!ok)失败(s);std::cout<<"PASS "<<s<<
 
 本能根任务初始化语义请求_v1 请求(const 本能根运行单根锚点_v1& root,
     本能根角色 role,std::uint64_t H,std::uint64_t intent){
-  return {1,{{intent}},H,{role,{root.需求},root.列表项,H,root.实际特征},std::nullopt};
+  本能根任务初始化语义请求_v1 r;
+  r.意图={{intent}};r.期望事实代次=H;
+  r.来源={role,{root.需求},root.列表项,root.实际特征};
+  return r;
 }
 
 void 保存包(const std::filesystem::path& path,const 不可变本能根任务初始化包_v1& p){
   std::ofstream o(path,std::ios::trunc);if(!o)失败("package file open");
   o<<p.原请求.意图.值.值<<' '<<p.原请求.期望事实代次<<' '
    <<static_cast<unsigned>(p.原请求.来源.根角色)<<' '<<p.原请求.来源.D.值.值<<' '
-   <<p.原请求.来源.L.值<<' '<<p.原请求.来源.来源截止H<<' '
-   <<p.原请求.来源.根形成F.编码.值<<' '<<p.预留记录.值.值<<' '<<p.预留序号<<' '
+   <<p.原请求.来源.L.值<<' '<<p.原请求.来源.根形成F.编码.值<<' '
+   <<p.预留记录.值.值<<' '<<p.预留序号<<' '
    <<p.控制幂等身份.值<<' '<<p.任务核心建立幂等身份.值<<' '
    <<p.P1建立幂等身份.值<<' '<<p.Vt首迁移幂等身份.值<<' '
    <<p.预留形成事实代次<<'\n';
@@ -50,7 +53,7 @@ std::filesystem::path 包路径(const std::filesystem::path& root){
   std::ifstream i(path);if(!i)失败("package file read");
   不可变本能根任务初始化包_v1 p;unsigned role=0;
   i>>p.原请求.意图.值.值>>p.原请求.期望事实代次>>role
-   >>p.原请求.来源.D.值.值>>p.原请求.来源.L.值>>p.原请求.来源.来源截止H
+   >>p.原请求.来源.D.值.值>>p.原请求.来源.L.值
    >>p.原请求.来源.根形成F.编码.值>>p.预留记录.值.值>>p.预留序号
    >>p.控制幂等身份.值>>p.任务核心建立幂等身份.值
    >>p.P1建立幂等身份.值>>p.Vt首迁移幂等身份.值>>p.预留形成事实代次;
@@ -63,6 +66,9 @@ void 验证首跑(const std::filesystem::path& root){
   const auto req=请求(anchor.安全根,本能根角色::安全,anchor.事实截止代次,0x544F300000000001ULL);
   const auto package=service.签发或恢复不可变初始化包(req);
   检查(package.成功(req)&&package.包,"initialization package issued");
+  const auto byIntent=service.按初始化意图读取不可变包({1,req.意图});
+  检查(byIntent.状态==本能根任务阶段状态_v1::已读取&&
+      byIntent.包==package.包,"package read back by stable intent");
   const auto sameRootReq=请求(anchor.安全根,本能根角色::安全,package.事实代次,
       0x544F300000000002ULL);
   const auto sameRootPackage=service.签发或恢复不可变初始化包(sameRootReq);
@@ -83,19 +89,13 @@ void 验证首跑(const std::filesystem::path& root){
   const auto replay=service.恢复任务初始化(*package.包);
   检查(replay.成功(*package.包)&&replay.状态==本能根任务承接总状态_v1::精确重复
       &&replay.核心==formed.核心,"three-stage replay stable");
-  const 本能根任务目标投影读取请求_v1 tr{1,replay.事实代次,replay.事实代次,
-      本能根任务读取种类_v1::当前,replay.核心->T};
-  const auto target=service.按任务与显式截止读取目标投影(tr);
+  const 本能根任务目标投影读取请求_v1 tr{1,replay.事实代次,replay.核心->T};
+  const auto target=service.按任务读取目标投影(tr);
   检查(target.成功(tr)&&target.投影->D==req.来源.D&&target.投影->L==req.来源.L,
       "current root target reconstructed");
-  const 本能根任务目标投影读取请求_v1 history{1,replay.事实代次,
-      replay.核心->核心形成截止,本能根任务读取种类_v1::历史,replay.核心->T};
-  const auto historicalTarget=service.按任务与显式截止读取目标投影(history);
-  检查(historicalTarget.成功(history)&&historicalTarget.投影->D==req.来源.D,
-      "historical target before P1 and migration reconstructed");
   const 本能根任务当前资格退出请求_v1 er{1,replay.事实代次,replay.核心->T,
       replay.核心->L,本能根任务生命周期_v1::当前可治理,
-      本能根任务生命周期_v1::已完成,{0x544F300000000101ULL}};
+      本能根任务生命周期_v1::已退出当前资格,{0x544F300000000101ULL}};
   const auto exited=service.退出任务当前资格(er);
   检查(exited.成功(er),"current qualification exited");
   检查(service.退出任务当前资格(er).成功(er),"exit replay stable");
@@ -114,6 +114,9 @@ void 验证恢复(const std::filesystem::path& root){
   (void)初始化(root);auto& service=本能根任务核心();const auto package=读取包(包路径(root));
   const auto issued=service.签发或恢复不可变初始化包(package.原请求);
   检查(issued.成功(package.原请求)&&issued.包==package,"package recovered across process");
+  const auto byIntent=service.按初始化意图读取不可变包({1,package.原请求.意图});
+  检查(byIntent.状态==本能根任务阶段状态_v1::当前任务不可复用&&
+      byIntent.包==package,"finished task reported by stable intent");
   const auto task=service.恢复任务初始化(package);
   检查(task.成功(package)&&task.状态==本能根任务承接总状态_v1::精确重复,
       "task recovered across process");

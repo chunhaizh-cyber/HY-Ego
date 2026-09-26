@@ -349,6 +349,8 @@ class 概念树类数据服务 final : public 相关概念添加参与者,
     纯概念退出结果 退出无引用叶概念(const 纯概念退出请求&) noexcept;
     存在概念使用读取结果 读取存在概念使用(
         const 存在概念使用读取请求&) const noexcept override;
+    存在概念使用当前完整读取结果_v3 读取存在概念使用当前完整_v3(
+        const 存在概念使用当前完整读取请求_v3&) const noexcept;
     const L1事实基座服务& 原子I64底座() const noexcept override;
     L1所有者范围写端口& 原子I64端口() noexcept override;
     bool 原子I64结构已就绪() const noexcept override;

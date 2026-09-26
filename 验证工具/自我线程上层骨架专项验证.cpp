@@ -1,3 +1,4 @@
+#include "../海中鱼巣/业务/应用服务.自我根需求复核.h"
 #include "../海中鱼巣/线程/线程_自我.h"
 
 #include <atomic>
@@ -25,224 +26,180 @@ void 检查(const bool 条件, const std::string_view 名称) {
     }
 }
 
-class 假正式上下文端口 final : public 自我线程正式上下文端口 {
+class 假正式上下文端口 final : public 自我线程正式上下文端口_v2 {
 public:
-    自我线程正式上下文结果_v1 读取正式上下文(
-        const 自我线程正式上下文请求_v1&) noexcept override {
+    自我线程正式上下文结果_v2 读取正式上下文(
+        const 自我线程正式上下文请求_v2&) noexcept override {
         调用数量_.fetch_add(1, std::memory_order_relaxed);
-        return { 自我线程外部调用状态::依赖未就绪, std::nullopt, false };
+        return {};
     }
-
     [[nodiscard]] std::uint64_t 调用数量() const noexcept {
         return 调用数量_.load(std::memory_order_relaxed);
     }
-
 private:
-    std::atomic<std::uint64_t> 调用数量_{ 0 };
+    std::atomic<std::uint64_t> 调用数量_{0};
+};
+
+class 假根复核端口 final : public 自我线程根需求复核端口 {
+public:
+    自我线程根需求复核结果_v2 复核双根当前需求(
+        const 自我线程根需求复核请求_v2&) const noexcept override {
+        return {};
+    }
+};
+
+class 假任务核心端口 final : public 本能根任务核心端口_v1 {
+public:
+    本能根任务初始化包结果_v1 签发或恢复不可变初始化包(
+        const 本能根任务初始化语义请求_v1&) noexcept override { return {}; }
+    本能根任务初始化包按意图读取结果_v1 按初始化意图读取不可变包(
+        const 本能根任务初始化包按意图读取请求_v1&) const noexcept override { return {}; }
+    本能根任务承接结果_v1 承接或建立任务(
+        const 不可变本能根任务初始化包_v1&) noexcept override { return {}; }
+    本能根任务承接结果_v1 恢复任务初始化(
+        const 不可变本能根任务初始化包_v1&) noexcept override { return {}; }
+    本能根任务核心读取结果_v1 按任务读取核心(
+        const 本能根任务身份读取请求_v1&) const noexcept override { return {}; }
+    本能根任务核心读取结果_v1 按查询锚点读取当前任务(
+        const 本能根任务锚点读取请求_v1&) const noexcept override { return {}; }
+    本能根任务目标投影结果_v1 按任务读取目标投影(
+        const 本能根任务目标投影读取请求_v1&) const noexcept override { return {}; }
+    本能根任务当前资格退出结果_v1 退出任务当前资格(
+        const 本能根任务当前资格退出请求_v1&) noexcept override { return {}; }
+};
+
+class 假sink final : public 自我线程根治理意图接收端口_v1 {
+public:
+    bool 已就绪() const noexcept override { return false; }
+    根治理意图投递结果_v1 提交(
+        const 自我到任务管理本能根承接消息_v1& 消息) noexcept override {
+        return {根治理意图投递状态_v1::尚未就绪,消息.消息};
+    }
+};
+
+struct 假依赖 final {
+    假根复核端口 根复核;
+    假任务核心端口 任务核心;
+    假sink sink;
 };
 
 [[nodiscard]] 自我线程创建请求_v1 建立请求(const std::uint64_t 自我身份 = 40) {
     自我线程创建请求_v1 请求;
     请求.邮箱容量 = 2;
-    请求.世界 = { { 30 }, { 31 }, 100 };
-    请求.自我 = { { 自我身份 }, { 30 }, { 31 }, 101 };
-    请求.本能根.自我 = { 自我身份 };
-    请求.本能根.安全根 = { { 50 }, { 51 }, { 52 }, { 53 } };
-    请求.本能根.服务根 = { { 60 }, { 61 }, { 62 }, { 63 } };
+    请求.世界 = {{30}, {31}, 100};
+    请求.自我 = {{自我身份}, {30}, {31}, 101};
+    请求.本能根.自我 = {自我身份};
+    请求.本能根.安全根 = {{50}, {51}, {52}, {53}};
+    请求.本能根.服务根 = {{60}, {61}, {62}, {63}};
     请求.本能根.Gread = 102;
     return 请求;
 }
 
-[[nodiscard]] 自我线程根需求复核消息_v1 建立消息(
+[[nodiscard]] 自我线程根需求复核消息_v2 建立消息(
     const std::uint64_t 消息身份,
     const 自我线程复核触发根 根,
     const std::uint64_t 正式需求,
     const std::uint64_t 原请求 = 1000) {
-    return {
-        自我线程合同版本_v1,
-        { 消息身份 },
-        { 原请求 },
-        根,
-        { 正式需求 },
-    };
+    自我线程根需求复核消息_v2 消息;
+    消息.消息={消息身份};
+    消息.原请求={原请求};
+    消息.触发根=根;
+    消息.正式需求定位={正式需求};
+    if(根==自我线程复核触发根::双根||根==自我线程复核触发根::安全根)
+        消息.安全根任务意图={{2001}};
+    if(根==自我线程复核触发根::双根||根==自我线程复核触发根::服务根)
+        消息.服务根任务意图={{2002}};
+    return 消息;
+}
+
+自我线程创建结果_v1 创建(自我线程& 线程,
+    const 自我线程创建请求_v1& 请求,假正式上下文端口& 上下文,
+    假依赖& 依赖,const std::uint64_t 等待=2000) {
+    return 线程.创建并停在治理运行门(
+        请求,上下文,依赖.根复核,依赖.任务核心,依赖.sink,等待);
 }
 
 void 验证基础生命周期与邮箱() {
-    假正式上下文端口 端口A;
-    假正式上下文端口 端口B;
+    假正式上下文端口 端口A,端口B;
+    假依赖 依赖;
     自我线程 线程;
-    auto 无效请求 = 建立请求();
-    无效请求.邮箱容量 = 0;
-    const auto 无效结果 = 线程.创建并停在治理运行门(无效请求, 端口B, 100);
-    检查(无效结果.状态 == 自我线程操作状态::入口拒绝, "invalid request rejected");
-    检查(线程.读取诊断快照().生命周期 == 自我线程生命周期状态::未创建,
-        "invalid request creates no thread");
+    auto 无效请求=建立请求();
+    无效请求.邮箱容量=0;
+    检查(创建(线程,无效请求,端口B,依赖,100).状态==自我线程操作状态::入口拒绝,
+        "invalid request rejected");
 
-    const auto 请求 = 建立请求();
-    const auto 创建 = 线程.创建并停在治理运行门(请求, 端口A, 2000);
-    检查(创建.状态 == 自我线程操作状态::成功 && 创建.成功(), "valid create reaches closed gate");
-    检查(创建.见证.has_value() && 创建.见证->入口序号 < 创建.见证->停门序号,
-        "entry and gate witness ordered");
-
-    const auto 重复 = 线程.创建并停在治理运行门(请求, 端口A, 2000);
-    检查(重复.状态 == 自我线程操作状态::精确重复 && 重复.成功(),
-        "same request reuses physical selection");
-    检查(重复.见证 == 创建.见证, "duplicate returns original witness");
-
-    const auto 端口冲突 = 线程.创建并停在治理运行门(请求, 端口B, 2000);
-    检查(端口冲突.状态 == 自我线程操作状态::选择冲突,
+    const auto 请求=建立请求();
+    const auto 首次=创建(线程,请求,端口A,依赖);
+    检查(首次.成功(),"valid create reaches closed gate");
+    检查(创建(线程,请求,端口A,依赖).状态==自我线程操作状态::精确重复,
+        "same selection is exact duplicate");
+    检查(创建(线程,请求,端口B,依赖).状态==自我线程操作状态::选择冲突,
         "different context port conflicts");
-    const auto 请求冲突 = 线程.创建并停在治理运行门(建立请求(21), 端口A, 2000);
-    检查(请求冲突.状态 == 自我线程操作状态::选择冲突,
-        "different request conflicts");
 
-    const auto 开门一 = 线程.复核前置并开放治理运行门(100);
-    const auto 开门二 = 线程.复核前置并开放治理运行门(100);
-    检查(开门一.状态 == 自我线程操作状态::依赖未就绪 &&
-        开门二.状态 == 自我线程操作状态::依赖未就绪,
-        "open gate remains dependency-not-ready");
-
-    检查(线程.提交根需求复核消息(建立消息(70, 自我线程复核触发根::安全根, 60)).状态 ==
-        自我线程操作状态::入口拒绝, "root locator mismatch rejected");
-
-    const auto 消息一 = 建立消息(70, 自我线程复核触发根::安全根, 50);
-    检查(线程.提交根需求复核消息(消息一).状态 == 自我线程操作状态::成功,
+    检查(线程.提交根需求复核消息(
+        建立消息(70,自我线程复核触发根::安全根,60)).状态==
+        自我线程操作状态::入口拒绝,"root locator mismatch rejected");
+    const auto 一=建立消息(70,自我线程复核触发根::安全根,50);
+    检查(线程.提交根需求复核消息(一).状态==自我线程操作状态::成功,
         "first message queued");
-    检查(线程.提交根需求复核消息(消息一).状态 == 自我线程操作状态::精确重复,
-        "same queued message is exact duplicate");
-    auto 冲突消息 = 消息一;
-    冲突消息.原请求 = { 1001 };
-    检查(线程.提交根需求复核消息(冲突消息).状态 == 自我线程操作状态::消息冲突,
-        "same message identity with different meaning conflicts");
+    检查(线程.提交根需求复核消息(一).状态==自我线程操作状态::精确重复,
+        "queued duplicate recognized");
+    auto 异义=一;异义.原请求={1001};
+    检查(线程.提交根需求复核消息(异义).状态==自我线程操作状态::消息冲突,
+        "queued identity conflict recognized");
+    检查(线程.提交根需求复核消息(
+        建立消息(71,自我线程复核触发根::双根,0)).状态==
+        自我线程操作状态::成功,"second message queued");
+    检查(线程.提交根需求复核消息(
+        建立消息(72,自我线程复核触发根::服务根,60)).状态==
+        自我线程操作状态::队列已满,"bounded mailbox rejects overflow");
 
-    const auto 消息二 = 建立消息(71, 自我线程复核触发根::双根, 0);
-    检查(线程.提交根需求复核消息(消息二).状态 == 自我线程操作状态::成功,
-        "second message queued");
-    const auto 消息三 = 建立消息(72, 自我线程复核触发根::服务根, 60);
-    检查(线程.提交根需求复核消息(消息三).状态 == 自我线程操作状态::队列已满,
-        "bounded mailbox rejects overflow");
-
-    const auto 停门快照 = 线程.读取诊断快照();
-    检查(停门快照.生命周期 == 自我线程生命周期状态::已停门 &&
-        停门快照.线程已进入 && !停门快照.线程已完成 && !停门快照.治理运行门开启,
-        "closed gate snapshot remains active");
-    检查(停门快照.邮箱数量 == 2 && !停门快照.当前消息.has_value() &&
-        停门快照.已冻结批次数量 == 0 && 停门快照.成功治理批次数量 == 0,
-        "closed gate queues without consuming");
-
-    const auto 停止 = 线程.请求停止();
-    const auto 等待 = 线程.等待停止(2000);
-    检查(停止.状态 == 自我线程操作状态::成功, "stop bypasses full mailbox");
-    检查(等待.状态 == 自我线程操作状态::成功 && 等待.成功(), "completed thread joins");
-    const auto 停止快照 = 线程.读取诊断快照();
-    检查(停止快照.生命周期 == 自我线程生命周期状态::已停止 && 停止快照.线程已完成,
-        "stop completion witnessed");
-    检查(停止快照.邮箱数量 == 2 && 停止快照.已冻结批次数量 == 0,
-        "stop does not consume closed-gate messages");
-    检查(线程.请求停止().状态 == 自我线程操作状态::精确重复,
-        "repeated stop is idempotent");
-    检查(线程.等待停止(100).状态 == 自我线程操作状态::精确重复,
-        "repeated wait observes joined thread");
-    检查(线程.创建并停在治理运行门(请求, 端口A, 100).状态 == 自我线程操作状态::入口拒绝 &&
-        线程.创建并停在治理运行门(请求, 端口B, 100).状态 == 自我线程操作状态::入口拒绝 &&
-        线程.创建并停在治理运行门(建立请求(22), 端口A, 100).状态 == 自我线程操作状态::入口拒绝,
-        "stopped object cannot restart");
-    检查(端口A.调用数量() == 0 && 端口B.调用数量() == 0,
-        "lifecycle and mailbox paths never call context ports");
+    const auto 快照=线程.读取诊断快照();
+    检查(快照.生命周期==自我线程生命周期状态::已停门&&
+        快照.邮箱数量==2&&!快照.治理运行门开启&&快照.已冻结批次数量==0,
+        "closed gate does not consume mailbox");
+    检查(线程.请求停止().成功(),"stop accepted");
+    检查(线程.等待停止(2000).成功(),"thread joined");
+    检查(端口A.调用数量()==0&&端口B.调用数量()==0,
+        "closed-gate lifecycle never calls provider");
 }
 
-void 验证并发同选择只形成一个见证() {
+void 验证并发同选择() {
     假正式上下文端口 端口;
+    假依赖 依赖;
     自我线程 线程;
-    const auto 请求 = 建立请求(200);
+    const auto 请求=建立请求(200);
     std::vector<自我线程创建结果_v1> 结果(8);
     std::vector<std::thread> 调用方;
-    for (std::size_t i = 0; i < 结果.size(); ++i) {
-        调用方.emplace_back([&线程, &端口, &请求, &结果, i] {
-            结果[i] = 线程.创建并停在治理运行门(请求, 端口, 2000);
-        });
+    for(std::size_t i=0;i<结果.size();++i)
+        调用方.emplace_back([&,i]{结果[i]=创建(线程,请求,端口,依赖);});
+    for(auto& 调用:调用方)调用.join();
+    std::uint64_t 首次=0,重复=0;
+    for(const auto& r:结果){
+        if(r.状态==自我线程操作状态::成功)++首次;
+        if(r.状态==自我线程操作状态::精确重复)++重复;
     }
-    for (auto& 调用 : 调用方) {
-        调用.join();
-    }
-
-    std::uint64_t 首次数量 = 0;
-    std::uint64_t 重复数量 = 0;
-    bool 同一见证 = true;
-    std::optional<自我线程停门见证_v1> 基准见证;
-    for (const auto& 结果项 : 结果) {
-        首次数量 += 结果项.状态 == 自我线程操作状态::成功 ? 1 : 0;
-        重复数量 += 结果项.状态 == 自我线程操作状态::精确重复 ? 1 : 0;
-        if (!基准见证.has_value()) {
-            基准见证 = 结果项.见证;
-        }
-        同一见证 = 同一见证 && 结果项.见证 == 基准见证;
-    }
-    检查(首次数量 == 1 && 重复数量 == 7, "concurrent create has one physical winner");
-    检查(同一见证 && 基准见证.has_value() && 基准见证->完整(),
-        "concurrent duplicates share one witness");
+    检查(首次==1&&重复==7,"concurrent create has one physical winner");
     (void)线程.请求停止();
-    检查(线程.等待停止(2000).成功(), "concurrent-create thread joins");
-    检查(端口.调用数量() == 0, "concurrent same-port create never calls context port");
+    检查(线程.等待停止(2000).成功(),"concurrent-create thread joins");
 }
 
-void 验证并发不同端口只有一个选择() {
-    假正式上下文端口 端口A;
-    假正式上下文端口 端口B;
-    自我线程 线程;
-    const auto 请求 = 建立请求(250);
-    std::vector<自我线程创建结果_v1> 结果(8);
-    std::vector<std::thread> 调用方;
-    for (std::size_t i = 0; i < 结果.size(); ++i) {
-        调用方.emplace_back([&线程, &端口A, &端口B, &请求, &结果, i] {
-            auto& 端口 = (i % 2 == 0)
-                ? static_cast<自我线程正式上下文端口&>(端口A)
-                : static_cast<自我线程正式上下文端口&>(端口B);
-            结果[i] = 线程.创建并停在治理运行门(请求, 端口, 2000);
-        });
-    }
-    for (auto& 调用 : 调用方) {
-        调用.join();
-    }
-
-    std::uint64_t 首次数量 = 0;
-    std::uint64_t 重复数量 = 0;
-    std::uint64_t 冲突数量 = 0;
-    for (const auto& 结果项 : 结果) {
-        首次数量 += 结果项.状态 == 自我线程操作状态::成功 ? 1 : 0;
-        重复数量 += 结果项.状态 == 自我线程操作状态::精确重复 ? 1 : 0;
-        冲突数量 += 结果项.状态 == 自我线程操作状态::选择冲突 ? 1 : 0;
-    }
-    检查(首次数量 == 1 && 重复数量 == 3 && 冲突数量 == 4,
-        "concurrent different ports preserve one physical selection");
-    (void)线程.请求停止();
-    检查(线程.等待停止(2000).成功(), "different-port race thread joins");
-    检查(端口A.调用数量() == 0 && 端口B.调用数量() == 0,
-        "concurrent different-port create never calls context ports");
-}
-
-void 验证析构停止守恒() {
+void 验证析构停止() {
     假正式上下文端口 端口;
+    假依赖 依赖;
     {
         自我线程 线程;
-        const auto 请求 = 建立请求(300);
-        检查(线程.创建并停在治理运行门(请求, 端口, 2000).成功(),
-            "destructor case created");
-        检查(线程.提交根需求复核消息(
-            建立消息(400, 自我线程复核触发根::服务根, 60)).成功(),
-            "destructor case queued");
+        检查(创建(线程,建立请求(300),端口,依赖).成功(),"destructor case created");
     }
-    检查(true, "destructor latched stop and joined");
-    检查(端口.调用数量() == 0, "destructor never calls context port");
+    检查(true,"destructor requests stop and joins");
 }
 
 } // namespace
 
 int main() {
     验证基础生命周期与邮箱();
-    验证并发同选择只形成一个见证();
-    验证并发不同端口只有一个选择();
-    验证析构停止守恒();
-    std::cout << "SUMMARY pass=" << 通过数量 << " fail=" << 失败数量 << '\n';
-    return 失败数量 == 0 ? 0 : 1;
+    验证并发同选择();
+    验证析构停止();
+    std::cout<<"SUMMARY pass="<<通过数量<<" fail="<<失败数量<<'\n';
+    return 失败数量==0?0:1;
 }

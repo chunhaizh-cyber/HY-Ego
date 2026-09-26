@@ -593,6 +593,81 @@ bool 真实自我形成结果::成功(const 真实自我读取请求 &r) const n
   return 自我形成内部::读取当前自我实现(r,世界_,存在_,角色_);
 }
 
+真实自我当前完整读取结果_v2
+真实自我形成服务::读取当前自我_v2(
+    const 真实自我当前完整读取请求_v2 &r) const noexcept {
+  真实自我当前完整读取结果_v2 out;out.Gread=r.Gread;
+  if(r.版本!=真实自我当前完整读取合同版本_v2||!r.Gread||
+     !有效(r.期望世界根)||!有效(r.角色.值)||r.角色!=角色_)return out;
+  try {
+    const auto root=世界_.读取当前现实世界根_v3(
+        {世界树现实根当前完整读取合同版本_v3});
+    if(root.版本!=世界树现实根当前完整读取合同版本_v3||
+       root.状态!=世界树现实根当前完整读取状态_v3::已读取||!root.树){
+      out.Gread=root.Gread;
+      if(root.状态==世界树现实根当前完整读取状态_v3::资源失败)
+        out.状态=真实自我形成状态::资源失败;
+      else if(root.状态==世界树现实根当前完整读取状态_v3::根未找到)
+        out.状态=真实自我形成状态::根无效;
+      else if(root.状态==世界树现实根当前完整读取状态_v3::事实代次漂移)
+        out.状态=真实自我形成状态::读取未完成;
+      else out.状态=真实自我形成状态::内部不一致;
+      return out;
+    }
+    if(root.Gread!=r.Gread){out.Gread=root.Gread;out.状态=真实自我形成状态::读取未完成;return out;}
+    if(root.树->根场景!=r.期望世界根){out.状态=真实自我形成状态::根无效;return out;}
+    const auto role=存在_.读取单例角色当前完整_v2(
+        {存在单例角色当前完整读取合同版本_v2,r.Gread,r.角色});
+    if(role.版本!=存在单例角色当前完整读取合同版本_v2||
+       role.Gread!=r.Gread||
+       role.状态!=存在单例角色当前完整读取状态_v2::已读取||!role.事实){
+      if(role.状态==存在单例角色当前完整读取状态_v2::未绑定)
+        out.状态=真实自我形成状态::读取未完成;
+      else if(role.状态==存在单例角色当前完整读取状态_v2::角色冲突)
+        out.状态=真实自我形成状态::角色冲突;
+      else if(role.状态==存在单例角色当前完整读取状态_v2::事实代次漂移)
+        out.状态=真实自我形成状态::读取未完成;
+      else if(role.状态==存在单例角色当前完整读取状态_v2::资源失败)
+        out.状态=真实自我形成状态::资源失败;
+      else out.状态=真实自我形成状态::内部不一致;
+      return out;
+    }
+    const auto world=世界_.读取世界存在信息当前完整_v5(
+        {世界树存在信息当前完整读取合同版本_v5,r.Gread,role.事实->E,
+         世界树节点视角::场景});
+    if(world.版本!=世界树存在信息当前完整读取合同版本_v5||
+       world.Gread!=r.Gread||
+       world.状态!=世界树存在信息当前完整读取状态_v5::已读取||!world.投影||
+       !world.投影->内容.场景){
+      if(world.状态==世界树存在信息当前完整读取状态_v5::事实代次漂移)
+        out.状态=真实自我形成状态::读取未完成;
+      else if(world.状态==世界树存在信息当前完整读取状态_v5::资源失败)
+        out.状态=真实自我形成状态::资源失败;
+      else if(world.状态==世界树存在信息当前完整读取状态_v5::位置未找到)
+        out.状态=真实自我形成状态::读取未完成;
+      else out.状态=真实自我形成状态::内部不一致;
+      return out;
+    }
+    const auto &w=*world.投影;
+    if(w.E!=role.事实->E||w.世界根!=r.期望世界根||w.内容.角色||
+       w.位置.视角!=世界树节点视角::场景||!w.位置.直接结构父||
+       w.位置.上行路径.empty()||
+       w.位置.上行路径.back().父!=r.期望世界根||
+       w.内容.使用.E!=role.事实->E||w.内容.使用.EC!=w.内容.概念.概念){
+      out.状态=真实自我形成状态::内部不一致;return out;
+    }
+    真实自我投影 projection;
+    projection.Gread=r.Gread;projection.E=role.事实->E;
+    projection.世界根=r.期望世界根;projection.角色=*role.事实;
+    projection.位置=w.位置;projection.场景=*w.内容.场景;
+    projection.概念=w.内容.概念;projection.使用=w.内容.使用;
+    out.投影=std::move(projection);out.状态=真实自我形成状态::已读取;
+  } catch(const std::bad_alloc&){out.状态=真实自我形成状态::资源失败;out.投影.reset();}
+    catch(const std::length_error&){out.状态=真实自我形成状态::资源失败;out.投影.reset();}
+    catch(...){out.状态=真实自我形成状态::内部不一致;out.投影.reset();}
+  return out;
+}
+
 真实自我形成结果
 真实自我形成服务::形成(const 真实自我形成请求 &r) noexcept {
   using S = 真实自我形成状态;

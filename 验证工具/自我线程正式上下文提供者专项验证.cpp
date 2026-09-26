@@ -33,7 +33,14 @@ void 检查(const bool 条件, const std::string_view 消息) {
   return *普通应用装配内部::上下文;
 }
 
-自我线程正式上下文请求_v1 建立上下文请求() {
+bool 正式上下文成功(const 自我线程正式上下文结果_v2& 结果) {
+  return (结果.状态==自我线程外部调用状态::成功||
+          结果.状态==自我线程外部调用状态::精确重复)&&
+      结果.合同版本==自我线程正式上下文合同版本_v2&&
+      结果.投影&&结果.投影->完整()&&!结果.写业务事实;
+}
+
+自我线程正式上下文请求_v2 建立上下文请求() {
   auto& 上下文 = 取得上下文();
   if (!上下文.本能根运行锚点 || !上下文.本能根运行自我投影 ||
       !上下文.本能根运行根场景)
@@ -42,7 +49,7 @@ void 检查(const bool 条件, const std::string_view 消息) {
   const auto& 自我 = *上下文.本能根运行自我投影;
   if (!自我.位置.直接结构父) 失败("self direct parent is absent");
 
-  自我线程正式上下文请求_v1 请求;
+  自我线程正式上下文请求_v2 请求;
   请求.锁定世界 = {{上下文.本能根运行根场景->值},
       {上下文.本能根运行根场景->值}, 自我.Gread};
   请求.锁定自我 = {{自我.E.值}, {自我.世界根.值},
@@ -55,17 +62,18 @@ void 检查(const bool 条件, const std::string_view 消息) {
       {锚点.服务根.列表项.值}, {锚点.服务根.实际特征.编码.值},
       {锚点.服务根.目标合同.值}};
   请求.锁定本能根.Gread = 锚点.事实截止代次;
-  请求.预算 = {64, 256, 64, 256, 256, 64, 256};
   if (!请求.完整()) 失败("formal context request is incomplete");
   return 请求;
 }
 
 std::uint64_t 当前代次() {
   auto& 上下文 = 取得上下文();
-  const 世界树读取预算 预算{64, 256};
-  const auto 根 = 上下文.世界树->读取当前现实世界根(预算);
-  if (!根.成功(预算)) 失败("current world generation unavailable");
-  return 根.结果头.Gread;
+  const auto 根 = 上下文.世界树->读取当前现实世界根_v3(
+      {世界树现实根当前完整读取合同版本_v3});
+  if (根.版本!=世界树现实根当前完整读取合同版本_v3||
+      根.状态!=世界树现实根当前完整读取状态_v3::已读取||!根.树)
+    失败("current world generation unavailable");
+  return 根.Gread;
 }
 
 void 验证缺根纯读(const std::filesystem::path& 根) {
@@ -88,23 +96,24 @@ void 验证方法门未就绪(const std::filesystem::path& 根) {
   const auto 自我 = 初始化普通应用自我();
   检查(自我.请求回显 && 自我.成功(*自我.请求回显), "formal self ready before dependency test");
   auto& 上下文 = 取得上下文();
-  const 世界树读取预算 世界预算{64, 256};
-  const auto 根读 = 上下文.世界树->读取当前现实世界根(世界预算);
-  检查(根读.成功(世界预算) && 根读.树.has_value(), "world root ready before dependency test");
-  const 真实自我读取请求 自我请求{1, 根读.结果头.Gread, 根读.树->根场景,
-      上下文.角色结构.项目角色, {256, 64, 64}, {256, 256, 0, 0, 64, 256, 0, 0}};
-  const auto 当前自我 = 上下文.自我->读取当前自我(自我请求);
-  检查(当前自我.成功(自我请求) && 当前自我.投影 &&
+  const auto 根读 = 上下文.世界树->读取当前现实世界根_v3(
+      {世界树现实根当前完整读取合同版本_v3});
+  检查(根读.状态==世界树现实根当前完整读取状态_v3::已读取&&根读.树,
+      "world root ready before dependency test");
+  const 真实自我当前完整读取请求_v2 自我请求{
+      真实自我当前完整读取合同版本_v2,根读.Gread,根读.树->根场景,
+      上下文.角色结构.项目角色};
+  const auto 当前自我 = 上下文.自我->读取当前自我_v2(自我请求);
+  检查(当前自我.状态==真实自我形成状态::已读取&&当前自我.投影 &&
       当前自我.投影->位置.直接结构父, "fresh self ready before dependency test");
-  自我线程正式上下文请求_v1 请求;
-  请求.锁定世界 = {{根读.树->根场景.值}, {根读.树->根场景.值}, 根读.结果头.Gread};
+  自我线程正式上下文请求_v2 请求;
+  请求.锁定世界 = {{根读.树->根场景.值}, {根读.树->根场景.值}, 根读.Gread};
   请求.锁定自我 = {{当前自我.投影->E.值}, {当前自我.投影->世界根.值},
       {当前自我.投影->位置.直接结构父->父.值}, 当前自我.投影->Gread};
   请求.锁定本能根.自我 = {当前自我.投影->E.值};
   请求.锁定本能根.安全根 = {{11}, {12}, {13}, {14}};
   请求.锁定本能根.服务根 = {{21}, {22}, {23}, {24}};
-  请求.锁定本能根.Gread = 根读.结果头.Gread;
-  请求.预算 = {64, 256, 64, 256, 256, 64, 256};
+  请求.锁定本能根.Gread = 根读.Gread;
   检查(请求.完整(), "dependency request is structurally complete");
   const auto 前 = 当前代次();
   const auto 结果 = 上下文.自我线程正式上下文->读取正式上下文(请求);
@@ -135,7 +144,7 @@ void 验证完整链(const std::filesystem::path& 根, const bool 期望恢复) 
   const auto 请求 = 建立上下文请求();
   const auto 前 = 当前代次();
   const auto 结果 = 上下文.自我线程正式上下文->读取正式上下文(请求);
-  检查(结果.成功() && 结果.投影 && 结果.投影->完整(),
+  检查(正式上下文成功(结果),
       "fresh formal context read succeeds");
   检查(结果.投影->Gread == 前 &&
       结果.投影->世界 == 请求.锁定世界.世界 &&
@@ -146,22 +155,13 @@ void 验证完整链(const std::filesystem::path& 根, const bool 期望恢复) 
   检查(当前代次() == 前 && !结果.写业务事实,
       "successful formal context read writes no business fact");
 
-  for (std::size_t i = 0; i < 7; ++i) {
-    auto 无效 = 请求;
-    std::uint64_t* 字段[]{&无效.预算.最大世界场景数量,
-        &无效.预算.最大世界关系数量,
-        &无效.预算.最大自我位置祖先数量,
-        &无效.预算.最大自我概念数量,
-        &无效.预算.最大自我概念关系数量,
-        &无效.预算.最大自我概念世界成员数量,
-        &无效.预算.最大自我概念特征属性数量};
-    *字段[i] = 0;
-    const auto 拒绝 = 上下文.自我线程正式上下文->读取正式上下文(无效);
-    检查(拒绝.状态 == 自我线程外部调用状态::入口拒绝 &&
-        !拒绝.投影 && !拒绝.写业务事实,
-        "each zero context budget field is rejected");
-  }
-  检查(当前代次() == 前, "budget rejection writes no business fact");
+  auto 无效=请求;
+  无效.合同版本=1;
+  const auto 拒绝=上下文.自我线程正式上下文->读取正式上下文(无效);
+  检查(拒绝.状态==自我线程外部调用状态::入口拒绝&&
+      !拒绝.投影&&!拒绝.写业务事实,
+      "legacy formal-context version is rejected");
+  检查(当前代次() == 前, "version rejection writes no business fact");
 
   const 本能根材料请求 安全读取请求{
       本能根材料合同版本, 前, 本能根角色::安全,
@@ -194,7 +194,7 @@ void 验证完整链(const std::filesystem::path& 根, const bool 期望恢复) 
           本能根材料状态::入口拒绝,
       "unknown root role is rejected instead of aliasing the service root");
 
-  const auto 检查引用冲突 = [&](自我线程正式上下文请求_v1 异义,
+  const auto 检查引用冲突 = [&](自我线程正式上下文请求_v2 异义,
                                   const std::string_view 消息) {
     检查(异义.完整(), "mutated reference request remains structurally complete");
     const auto 冲突 = 上下文.自我线程正式上下文->读取正式上下文(异义);
@@ -300,13 +300,13 @@ void 验证移动后当前读回(const std::filesystem::path& 根) {
       当前.位置.上行路径.size() > 1,
       "fresh self position reports the new parent and a multi-edge path");
   检查(当前.位置.直接结构父->创建事实代次 !=
-          当前.角色.存在身份.节点生命周期.创建事实代次,
+          当前.角色.存在身份.节点创建事实代次,
       "current parent-edge generation is independent from self birth generation");
 
   const auto 上下文请求 = 建立上下文请求();
   const auto 正式上下文 =
       上下文.自我线程正式上下文->读取正式上下文(上下文请求);
-  检查(正式上下文.成功() && 正式上下文.投影 &&
+  检查(正式上下文成功(正式上下文) &&
       正式上下文.投影->自我所在场景.值 == 新场景.投影->E.值 &&
       正式上下文.投影->安全根 == 上下文请求.锁定本能根.安全根 &&
       正式上下文.投影->服务根 == 上下文请求.锁定本能根.服务根,

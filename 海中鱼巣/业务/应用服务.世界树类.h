@@ -373,6 +373,41 @@ struct 世界树存在信息结果_v4 final {
   bool 成功(const 世界树存在信息读取请求_v4&) const noexcept;
 };
 
+inline constexpr std::uint32_t 世界树现实根当前完整读取合同版本_v3=3;
+enum class 世界树现实根当前完整读取状态_v3:std::uint8_t{
+  已读取=1,入口拒绝=2,根未找到=3,根角色未启用=4,
+  事实代次漂移=5,形成场景环=6,引用冲突=7,资源失败=8,内部不一致=9
+};
+struct 世界树现实根当前完整读取请求_v3 final{
+  std::uint32_t 版本=世界树现实根当前完整读取合同版本_v3;
+};
+struct 世界树现实根当前完整读取结果_v3 final{
+  世界树现实根当前完整读取状态_v3 状态=
+      世界树现实根当前完整读取状态_v3::入口拒绝;
+  std::uint32_t 版本=世界树现实根当前完整读取合同版本_v3;
+  std::uint64_t Gread=0;
+  std::optional<场景树当前事实> 树;
+};
+
+inline constexpr std::uint32_t 世界树存在信息当前完整读取合同版本_v5=5;
+enum class 世界树存在信息当前完整读取状态_v5:std::uint8_t{
+  已读取=1,入口拒绝=2,位置未找到=3,概念未找到=4,
+  事实代次漂移=5,引用冲突=6,形成场景环=7,资源失败=8,内部不一致=9
+};
+struct 世界树存在信息当前完整读取请求_v5 final{
+  std::uint32_t 版本=世界树存在信息当前完整读取合同版本_v5;
+  std::uint64_t Gread=0;
+  稳定编码 E{};
+  世界树节点视角 视角=世界树节点视角::存在;
+};
+struct 世界树存在信息当前完整读取结果_v5 final{
+  世界树存在信息当前完整读取状态_v5 状态=
+      世界树存在信息当前完整读取状态_v5::入口拒绝;
+  std::uint32_t 版本=世界树存在信息当前完整读取合同版本_v5;
+  std::uint64_t Gread=0;
+  std::optional<世界树概念创建投影_v4> 投影;
+};
+
 class 世界树应用服务 final {
 public:
   世界树应用服务() = delete;
@@ -561,6 +596,10 @@ public:
   世界树存在信息结果_v4 读取世界存在信息(
       const 世界树存在信息读取请求_v4 &r) const noexcept;
   世界树根验证结果 读取当前现实世界根(const 世界树读取预算&) const noexcept;
+  世界树现实根当前完整读取结果_v3 读取当前现实世界根_v3(
+      const 世界树现实根当前完整读取请求_v3&) const noexcept;
+  世界树存在信息当前完整读取结果_v5 读取世界存在信息当前完整_v5(
+      const 世界树存在信息当前完整读取请求_v5&) const noexcept;
   bool 使用存在提供者(const 存在类数据服务 &p) const noexcept {
     return &p==&existence_;
   }
@@ -759,6 +798,48 @@ inline 世界树根验证结果 世界树应用服务::读取当前现实世界�
   return out;
 }
 
+inline 世界树现实根当前完整读取结果_v3
+世界树应用服务::读取当前现实世界根_v3(
+    const 世界树现实根当前完整读取请求_v3 &r) const noexcept {
+  世界树现实根当前完整读取结果_v3 out;
+  if(r.版本!=世界树现实根当前完整读取合同版本_v3)return out;
+  try {
+    const auto global=读取世界树根节点();
+    if(!global.成功()){out.状态=世界树现实根当前完整读取状态_v3::根未找到;return out;}
+    const auto cut=concept_.读取当前事实代次();
+    if(!cut.成功()){out.状态=(cut.状态==概念树数据状态::资源失败)
+        ? 世界树现实根当前完整读取状态_v3::资源失败
+        : 世界树现实根当前完整读取状态_v3::内部不一致;return out;}
+    out.Gread=cut.Gread;
+    const 场景树当前完整读取请求_v2 request{
+        场景树当前完整读取合同版本_v2,cut.Gread,global.投影->根};
+    const auto tree=scene_.读取当前场景树_v2(request,joint_);
+    if(!tree.成功(request)||!tree.树){
+      switch(tree.状态){
+      case 场景树当前完整读取状态_v2::根未找到:out.状态=世界树现实根当前完整读取状态_v3::根未找到;break;
+      case 场景树当前完整读取状态_v2::根角色未启用:out.状态=世界树现实根当前完整读取状态_v3::根角色未启用;break;
+      case 场景树当前完整读取状态_v2::事实代次漂移:out.状态=世界树现实根当前完整读取状态_v3::事实代次漂移;break;
+      case 场景树当前完整读取状态_v2::形成场景环:out.状态=世界树现实根当前完整读取状态_v3::形成场景环;break;
+      case 场景树当前完整读取状态_v2::引用冲突:out.状态=世界树现实根当前完整读取状态_v3::引用冲突;break;
+      case 场景树当前完整读取状态_v2::资源失败:out.状态=世界树现实根当前完整读取状态_v3::资源失败;break;
+      default:out.状态=世界树现实根当前完整读取状态_v3::内部不一致;break;
+      }
+      return out;
+    }
+    if(tree.Gread!=cut.Gread||tree.树->Gread!=cut.Gread||
+       tree.树->根场景!=global.投影->根){out.状态=世界树现实根当前完整读取状态_v3::引用冲突;return out;}
+    const auto tail=concept_.读取当前事实代次();
+    if(!tail.成功()){out.状态=(tail.状态==概念树数据状态::资源失败)
+        ? 世界树现实根当前完整读取状态_v3::资源失败
+        : 世界树现实根当前完整读取状态_v3::内部不一致;return out;}
+    if(tail.Gread!=cut.Gread){out.Gread=tail.Gread;out.状态=世界树现实根当前完整读取状态_v3::事实代次漂移;return out;}
+    out.树=*tree.树;out.状态=世界树现实根当前完整读取状态_v3::已读取;
+  } catch(const std::bad_alloc&){out.状态=世界树现实根当前完整读取状态_v3::资源失败;out.树.reset();}
+    catch(const std::length_error&){out.状态=世界树现实根当前完整读取状态_v3::资源失败;out.树.reset();}
+    catch(...){out.状态=世界树现实根当前完整读取状态_v3::内部不一致;out.树.reset();}
+  return out;
+}
+
 inline 世界树存在信息结果_v4 世界树应用服务::读取世界存在信息(
     const 世界树存在信息读取请求_v4 &r) const noexcept {
   世界树存在信息结果_v4 out;out.Gread=r.G0;
@@ -835,6 +916,125 @@ inline 世界树存在信息结果_v4 世界树应用服务::读取世界存在�
   } catch(const std::bad_alloc&){out.状态=世界树概念创建状态_v4::资源失败;out.投影.reset();}
     catch(const std::length_error&){out.状态=世界树概念创建状态_v4::资源失败;out.投影.reset();}
     catch(...){out.状态=世界树概念创建状态_v4::内部不一致;out.投影.reset();}
+  return out;
+}
+
+inline 世界树存在信息当前完整读取结果_v5
+世界树应用服务::读取世界存在信息当前完整_v5(
+    const 世界树存在信息当前完整读取请求_v5 &r) const noexcept {
+  世界树存在信息当前完整读取结果_v5 out;out.Gread=r.Gread;
+  if(r.版本!=世界树存在信息当前完整读取合同版本_v5||!r.Gread||
+     !有效(r.E)||r.视角==世界树节点视角::世界根场景)return out;
+  try {
+    const auto root=读取当前现实世界根_v3({世界树现实根当前完整读取合同版本_v3});
+    if(root.状态!=世界树现实根当前完整读取状态_v3::已读取||!root.树){
+      out.Gread=root.Gread;
+      if(root.状态==世界树现实根当前完整读取状态_v3::事实代次漂移)
+        out.状态=世界树存在信息当前完整读取状态_v5::事实代次漂移;
+      else if(root.状态==世界树现实根当前完整读取状态_v3::形成场景环)
+        out.状态=世界树存在信息当前完整读取状态_v5::形成场景环;
+      else if(root.状态==世界树现实根当前完整读取状态_v3::资源失败)
+        out.状态=世界树存在信息当前完整读取状态_v5::资源失败;
+      else if(root.状态==世界树现实根当前完整读取状态_v3::引用冲突)
+        out.状态=世界树存在信息当前完整读取状态_v5::引用冲突;
+      else out.状态=世界树存在信息当前完整读取状态_v5::内部不一致;
+      return out;
+    }
+    if(root.Gread!=r.Gread){out.Gread=root.Gread;out.状态=世界树存在信息当前完整读取状态_v5::事实代次漂移;return out;}
+    世界树层级位置 position{r.E,root.树->根场景,r.视角};
+    std::optional<场景树节点当前事实> scene;
+    const auto appendSceneAncestry=[&](稳定编码 start,
+        std::vector<直接归属联合事实>& path) {
+      std::unordered_set<std::uint64_t> visited;
+      auto cursor=start;
+      while(cursor!=root.树->根场景){
+        if(!visited.insert(cursor.值).second)return false;
+        const 场景树节点当前事实* node=nullptr;
+        for(const auto& candidate:root.树->场景组)
+          if(candidate.场景角色.场景==cursor){
+            if(node)return false;
+            node=&candidate;
+          }
+        if(!node||node->从上游场景到本场景路径.empty())return false;
+        for(auto it=node->从上游场景到本场景路径.rbegin();
+            it!=node->从上游场景到本场景路径.rend();++it){
+          if(it->成员!=cursor)return false;
+          path.push_back(*it);
+          cursor=it->父;
+        }
+      }
+      return true;
+    };
+    if(r.视角==世界树节点视角::场景){
+      for(const auto &node:root.树->场景组)if(node.场景角色.场景==r.E){
+        if(scene){out.状态=世界树存在信息当前完整读取状态_v5::引用冲突;return out;}scene=node;
+      }
+      if(!scene){out.状态=世界树存在信息当前完整读取状态_v5::位置未找到;return out;}
+      position.直接结构父=scene->直接父;
+      position.父场景语境=scene->父语境投影;
+      if(!appendSceneAncestry(r.E,position.上行路径)){
+        out.状态=世界树存在信息当前完整读取状态_v5::引用冲突;return out;}
+    } else {
+      const 场景树节点当前事实 *parentScene=nullptr;
+      场景直接包含事实 member;
+      bool found=false;
+      for(const auto &node:root.树->场景组)for(const auto &candidate:node.直接存在成员组)
+        if(candidate.成员==r.E){if(found){out.状态=世界树存在信息当前完整读取状态_v5::引用冲突;return out;}
+          found=true;member=candidate;parentScene=&node;}
+      if(!found||!parentScene){out.状态=世界树存在信息当前完整读取状态_v5::位置未找到;return out;}
+      scene=*parentScene;
+      直接归属联合事实 direct{r.Gread,直接归属来源::场景成员,
+          member.关系.编码,member.父场景,member.成员,
+          member.关系.生命周期.创建事实代次};
+      position.直接结构父=direct;
+      position.上行路径.push_back(direct);
+      if(!appendSceneAncestry(parentScene->场景角色.场景,position.上行路径)){
+        out.状态=世界树存在信息当前完整读取状态_v5::引用冲突;return out;}
+    }
+    if(!position.直接结构父||position.上行路径.empty()||
+       position.上行路径.back().父!=root.树->根场景){
+      out.状态=世界树存在信息当前完整读取状态_v5::引用冲突;return out;
+    }
+    std::unordered_set<std::uint64_t> seen;
+    for(const auto &edge:position.上行路径)
+      if(!seen.insert(edge.成员.值).second){out.状态=世界树存在信息当前完整读取状态_v5::形成场景环;return out;}
+    const auto identity=existence_.读取当前存在身份来源见证(r.Gread,r.E);
+    if(!identity.成功(r.Gread,r.E)||!identity.见证){
+      if(identity.状态==存在结构身份只读状态::事实代次漂移)
+        out.状态=世界树存在信息当前完整读取状态_v5::事实代次漂移;
+      else if(identity.状态==存在结构身份只读状态::资源失败)
+        out.状态=世界树存在信息当前完整读取状态_v5::资源失败;
+      else out.状态=世界树存在信息当前完整读取状态_v5::引用冲突;
+      return out;
+    }
+    const auto 概念结果=concept_.读取存在概念使用当前完整_v3(
+        {存在概念使用当前完整读取合同版本_v3,r.Gread,概念树存在引用{r.E}});
+    if(概念结果.状态!=存在概念使用当前完整读取状态_v3::已读取||
+       !概念结果.使用||!概念结果.概念){
+      if(概念结果.状态==存在概念使用当前完整读取状态_v3::未找到)
+        out.状态=世界树存在信息当前完整读取状态_v5::概念未找到;
+      else if(概念结果.状态==存在概念使用当前完整读取状态_v3::事实代次漂移)
+        out.状态=世界树存在信息当前完整读取状态_v5::事实代次漂移;
+      else if(概念结果.状态==存在概念使用当前完整读取状态_v3::资源失败)
+        out.状态=世界树存在信息当前完整读取状态_v5::资源失败;
+      else if(概念结果.状态==存在概念使用当前完整读取状态_v3::类别冲突)
+        out.状态=世界树存在信息当前完整读取状态_v5::引用冲突;
+      else out.状态=世界树存在信息当前完整读取状态_v5::内部不一致;
+      return out;
+    }
+    const auto &parent=*position.直接结构父;
+    存在初始绑定种类 kind=存在初始绑定种类::父存在组成;
+    if(parent.来源==直接归属来源::场景成员)kind=存在初始绑定种类::场景成员;
+    else if(parent.来源==直接归属来源::直接子场景)kind=存在初始绑定种类::直接子场景;
+    已发布概念绑定投影 content;
+    content.绑定={kind,parent.父,r.E,parent.关系};
+    content.存在身份=*identity.见证;content.概念=*概念结果.概念;content.使用=*概念结果.使用;
+    content.场景=scene;
+    out.投影=世界树概念创建投影_v4{r.E,root.树->根场景,std::move(position),std::move(content)};
+    out.状态=世界树存在信息当前完整读取状态_v5::已读取;
+  } catch(const std::bad_alloc&){out.状态=世界树存在信息当前完整读取状态_v5::资源失败;out.投影.reset();}
+    catch(const std::length_error&){out.状态=世界树存在信息当前完整读取状态_v5::资源失败;out.投影.reset();}
+    catch(...){out.状态=世界树存在信息当前完整读取状态_v5::内部不一致;out.投影.reset();}
   return out;
 }
 

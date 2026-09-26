@@ -212,7 +212,9 @@
     <ClInclude Include="海中鱼巣\业务\应用服务.本能根运行初始化.h" />
     <ClCompile Include="海中鱼巣\业务\应用服务.本能根运行初始化.cpp" />
     <ClInclude Include="海中鱼巣\线程\线程_自我.h" />
+    <ClInclude Include="海中鱼巣\线程\线程_任务管理.h" />
     <ClCompile Include="海中鱼巣\线程\线程_自我.cpp" />
+    <ClCompile Include="海中鱼巣\线程\线程_任务管理.cpp" />
     <ClCompile Include="海中鱼巣\入口.cpp" />
   </ItemGroup>
   <ItemGroup>

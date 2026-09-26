@@ -147,6 +147,24 @@ struct 存在当前采用完整读取结果_v2 final {
   friend bool operator==(const 存在当前采用完整读取结果_v2 &,
                          const 存在当前采用完整读取结果_v2 &) = default;
 };
+
+inline constexpr std::uint32_t 存在单例角色当前完整读取合同版本_v2 = 2;
+enum class 存在单例角色当前完整读取状态_v2 : std::uint8_t {
+  已读取=1, 入口拒绝=2, 未绑定=3, 角色冲突=4,
+  事实代次漂移=5, 资源失败=7, 内部不一致=8
+};
+struct 存在单例角色当前完整读取请求_v2 final {
+  std::uint32_t 版本=存在单例角色当前完整读取合同版本_v2;
+  std::uint64_t Gread=0;
+  存在单例角色身份 角色;
+};
+struct 存在单例角色当前完整读取结果_v2 final {
+  存在单例角色当前完整读取状态_v2 状态=
+      存在单例角色当前完整读取状态_v2::入口拒绝;
+  std::uint32_t 版本=存在单例角色当前完整读取合同版本_v2;
+  std::uint64_t Gread=0;
+  std::optional<存在单例角色事实> 事实;
+};
 struct 存在当前采用建立 final {
   特征信息身份 F;
   friend bool operator==(const 存在当前采用建立 &,
@@ -849,6 +867,8 @@ public:
 
   存在单例角色读取结果 读取单例角色(
       const 存在单例角色读取请求 &) const noexcept;
+  存在单例角色当前完整读取结果_v2 读取单例角色当前完整_v2(
+      const 存在单例角色当前完整读取请求_v2 &) const noexcept;
   已发布概念绑定创建结果 添加存在节点(
       const 已发布概念绑定创建请求 &r, 绑定存在数据服务 &binding,
       已发布概念引用参与者 &concepts) noexcept {
@@ -3547,6 +3567,67 @@ inline 存在当前采用结果
     out.状态 = 采用S::内部不一致;
   }
   out.采用.reset();
+  return out;
+}
+
+inline 存在单例角色当前完整读取结果_v2
+存在类数据服务::读取单例角色当前完整_v2(
+    const 存在单例角色当前完整读取请求_v2 &r) const noexcept {
+  using 状态 = 存在单例角色当前完整读取状态_v2;
+  存在单例角色当前完整读取结果_v2 out;
+  out.Gread=r.Gread;
+  try {
+    if(!角色结构_||r.版本!=存在单例角色当前完整读取合同版本_v2||
+       !r.Gread||r.角色!=角色结构_->项目角色)
+      throw 状态::入口拒绝;
+    核验单例角色结构首次材料(r.Gread);
+    const auto registration=第一层服务_.读取所有者范围当前目标关系组(
+        {L1所有者范围CRUD合同版本,r.角色.值,角色结构_->角色登记类型});
+    if(registration.读取事实代次!=r.Gread)throw 状态::事实代次漂移;
+    if(registration.状态!=L1所有者范围读取状态::成功) {
+      if(registration.状态==L1所有者范围读取状态::资源失败)throw 状态::资源失败;
+      if(registration.状态==L1所有者范围读取状态::事实代次漂移)throw 状态::事实代次漂移;
+      if(registration.状态==L1所有者范围读取状态::未找到)throw 状态::内部不一致;
+      throw 状态::内部不一致;
+    }
+    if(registration.关系组.size()!=1)throw 状态::内部不一致;
+    const auto &reg=registration.关系组.front();
+    if(reg.写入所有者!=所有者_||reg.源节点!=存在族锚点_||
+       reg.目标节点!=r.角色.值||reg.关系类型节点!=角色结构_->角色登记类型||
+       reg.角色或顺序!=1||!reg.创建事实代次||reg.创建事实代次>r.Gread)
+      throw 状态::内部不一致;
+    const auto targets=第一层服务_.读取所有者范围当前源关系组(
+        {L1所有者范围CRUD合同版本,r.角色.值,角色结构_->角色目标类型});
+    if(targets.读取事实代次!=r.Gread)throw 状态::事实代次漂移;
+    if(targets.状态!=L1所有者范围读取状态::成功) {
+      if(targets.状态==L1所有者范围读取状态::资源失败)throw 状态::资源失败;
+      if(targets.状态==L1所有者范围读取状态::事实代次漂移)throw 状态::事实代次漂移;
+      throw 状态::内部不一致;
+    }
+    std::vector<L1所有者范围关系事实> active;
+    for(const auto &x:targets.关系组)
+      if(x.创建事实代次&&x.创建事实代次<=r.Gread)active.push_back(x);
+    if(active.empty()){out.状态=状态::未绑定;return out;}
+    if(active.size()!=1)throw 状态::角色冲突;
+    const auto &target=active.front();
+    if(target.写入所有者!=所有者_||target.源节点!=r.角色.值||
+       target.关系类型节点!=角色结构_->角色目标类型||target.角色或顺序!=1)
+      throw 状态::内部不一致;
+    const auto identity=读取当前存在身份来源见证(r.Gread,target.目标节点);
+    if(!identity.成功(r.Gread,target.目标节点)||!identity.见证) {
+      if(identity.状态==存在结构身份只读状态::事实代次漂移)throw 状态::事实代次漂移;
+      if(identity.状态==存在结构身份只读状态::资源失败)throw 状态::资源失败;
+      throw 状态::内部不一致;
+    }
+    out.事实=存在单例角色事实{r.角色,reg.编码,target.编码,target.目标节点,
+        reg.创建事实代次,target.创建事实代次,*identity.见证};
+    out.状态=状态::已读取;
+    const auto tail=读取当前事实代次();
+    if(tail.first!=存在结构身份只读状态::已读取||tail.second!=r.Gread)
+      throw 状态::事实代次漂移;
+  } catch(状态 s){out.状态=s;out.事实.reset();}
+    catch(const std::bad_alloc&){out.状态=状态::资源失败;out.事实.reset();}
+    catch(...){out.状态=状态::内部不一致;out.事实.reset();}
   return out;
 }
 inline 存在当前采用完整读取结果_v2

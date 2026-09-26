@@ -33,6 +33,14 @@ struct 真实自我读取请求 final {
                          const 真实自我读取请求 &) = default;
 };
 
+inline constexpr std::uint32_t 真实自我当前完整读取合同版本_v2=2;
+struct 真实自我当前完整读取请求_v2 final {
+  std::uint32_t 版本=真实自我当前完整读取合同版本_v2;
+  std::uint64_t Gread=0;
+  稳定编码 期望世界根{};
+  存在单例角色身份 角色;
+};
+
 enum class 真实自我形成状态 : std::uint8_t {
   已形成 = 1, 精确重复 = 2, 已读取 = 3, 入口拒绝 = 4,
   请求冲突 = 5, 根无效 = 6, 角色冲突 = 7, 概念阶段失败 = 8,
@@ -63,6 +71,12 @@ struct 真实自我形成结果 final {
   friend bool operator==(const 真实自我形成结果 &,
                          const 真实自我形成结果 &) = default;
 };
+struct 真实自我当前完整读取结果_v2 final {
+  std::uint32_t 版本=真实自我当前完整读取合同版本_v2;
+  真实自我形成状态 状态=真实自我形成状态::入口拒绝;
+  std::uint64_t Gread=0;
+  std::optional<真实自我投影> 投影;
+};
 
 class 真实自我形成服务 final {
 public:
@@ -77,6 +91,8 @@ public:
   真实自我形成结果 形成(const 真实自我形成请求 &) noexcept;
   真实自我形成结果
   读取当前自我(const 真实自我读取请求 &) const noexcept;
+  真实自我当前完整读取结果_v2 读取当前自我_v2(
+      const 真实自我当前完整读取请求_v2 &) const noexcept;
 
 private:
   世界树应用服务 &世界_;
