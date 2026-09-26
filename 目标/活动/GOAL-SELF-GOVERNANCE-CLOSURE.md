@@ -5,17 +5,17 @@
 - 目标编号：`GOAL-SELF-GOVERNANCE-CLOSURE`
 - 名称：自我线程内部治理闭环实现
 - 类型：集成能力目标
-- 记录版本：v0.25
+- 记录版本：v0.26
 - 创建时间：2026-09-22
-- 更新时间：2026-09-25
-- 当前状态：当前；四项机器语义已冻结，安全根/服务根专用的最早task owner provider详细设计与单一代码计划已闭合并进入执行队列
+- 更新时间：2026-09-26
+- 当前状态：当前；task owner与DATA-L1 current-only已经发布，首个根治理批次消费者详细设计与单一代码计划已经闭合并进入执行队列
 - 直接上位目标：`GOAL-INSTINCT-RUNTIME`
-- 直接下位目标：`GOAL-SELF-THREAD-M1A-TOP-DOWN-DESIGN`（已完成）；`GOAL-SELF-THREAD-G1-ISOLATED-SHELL-IMPLEMENTATION`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER-IMPLEMENTATION`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER-DESIGN`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER-IMPLEMENTATION`（已完成）；`GOAL-SELF-CONTEXT-FRESH-READ-PROVIDER-IMPLEMENTATION`（已完成）；G4-A消费/sink及G2-B后继达到设计闭合条件时再建立稳定目标身份
+- 直接下位目标：`GOAL-SELF-THREAD-M1A-TOP-DOWN-DESIGN`（已完成）；`GOAL-SELF-THREAD-G1-ISOLATED-SHELL-IMPLEMENTATION`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER-IMPLEMENTATION`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER-DESIGN`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER-IMPLEMENTATION`（已完成）；`GOAL-SELF-CONTEXT-FRESH-READ-PROVIDER-IMPLEMENTATION`（已完成）；首个根治理批次当前由本目标及`SELF-ROOT-GOVERNANCE-INTENT-CONSUMER`计划直接承载，不另造下位目标身份
 - 目标账所有者：交互智能体
 
 ## 1.1 目标问题与优先级
 
-现行生产代码已经形成单对象self线程骨架、阶段21生产消费、阶段20唯一self创建停门和宿主安全回收，并由G2-A形成纯读双根材料、fresh正式上下文provider及普通应用生产所有权。`c1cba465d`完成通用EC、双目标判断K和双`D_POS` RC生产初始化，`2cf115d5e`发布预算自由版本2读取链与4242求值器，`90d9b747b`又发布根目标合同值第三来源、逐根技术状态、双根完整复核provider和普通应用唯一所有权。self停门期间仍对fresh上下文和G4-A provider保持零调用、零邮箱消费；根治理意图sink、任务交接、执行前判断、结果结算及安全/服务治理闭环均未形成。继续从self真实消费点反推最小sink/owner能力，不以空回调、日志、消息或直接DATA写入替代。
+现行生产代码已经形成单对象self线程骨架、阶段21生产消费、阶段20唯一self创建停门和宿主安全回收，并由G2-A形成纯读双根材料、fresh正式上下文provider及普通应用生产所有权。`c1cba465d`完成通用EC、双目标判断K和双`D_POS` RC生产初始化，`2cf115d5e`发布预算自由版本2读取链与4242求值器，`90d9b747b`发布双根完整复核provider，`fb635058b`发布根专用task owner，`d13e2b45d`与`2128005e2`完成DATA-L1 current-only代码与独立证据。self仍未消费fresh/G4-A，生产代码也没有manager或真实开门；首个根治理批次消费者合同现已闭合，继续以单一计划取得真实代码结果，不以空回调、日志、消息或直接DATA写入替代。
 
 用户于2026-09-22明确将本目标设为新的产品级长期目标并替换原当前优先级。动态能力路线不作废；RC-P1随后已正式发布并归档。当前继续取得自我治理主链的最早独立结果。
 
@@ -63,21 +63,21 @@ G1—G8现在只表示目标路线，不是已冻结合同、活动目标或可�
 
 ## 5. 依赖、风险与下一动作
 
-- 当前直接依赖：0050、3100、3200、4151、4242、5170、5260、6120、8000、8100、8120、8121和8200的现行版本，以及`e04887112`发布的G2-A、`cf934660`发布的停门端口预绑定、`c1cba465d`发布的双根RC初始化、`2cf115d5e`发布的4242求值器和`90d9b747b`发布的G4-A provider。四项机器语义由规范目录v6.153及其登记版本承担。
-- 已完成叶：停门端口预绑定、双根RC初始化、预算自由读取与求值器、根目标合同值第三来源和G4-A双根只读复核provider均已发布。以上结果仍未完成self对fresh上下文/G4-A结果的实际消费、G3业务循环、根治理意图sink或治理门开放。
-- 当前实现差异：普通应用已经唯一拥有fresh正式上下文provider和G4-A provider，但self只在创建选择中绑定上下文端口且保持零调用；生产代码没有根治理意图sink、任务管理线程或任务工作线程。现行任务版本3只按“所属存在 + 单一来源需求”建立薄记录，既不能承接无所属存在的双根D，也没有5260要求的L锚点、`T→D`组、`Vt + R1 + 首态`核心、P1、首迁移和恢复入口。
-- 主要风险：把只读provider存在误当成self已消费；用旧任务版本3、空sink、消息或日志冒充正式任务意图；让self直接写需求/任务/DATA事实；临场发明根任务目标宿主或三项幂等身份；在正式sink、消费失败收口和恢复合同未闭合前开放治理门。
-- 下一动作：实施计划索引中的`TASK-OWNER-CORE-PROVIDER` v0.1；其范围只包含安全根/服务根专用task owner首版、普通应用唯一持有、恢复和旧v3退出，不实现普通D、普通需求列表或多D。provider发布后再按`SELF-ROOT-GOVERNANCE-INTENT-SINK` v0.3建立首次治理意图身份、self消费与manager异步交接后继；G2-B开门继续后置。
+- 当前直接依赖：0050、3100、3200、4151、4242、5170、5260、6120、8000、8100、8120、8121和8200的现行版本，以及`e04887112`发布的G2-A、`cf934660`发布的停门端口预绑定、`c1cba465d`发布的双根RC初始化、`2cf115d5e`发布的4242求值器、`90d9b747b`发布的G4-A provider、`fb635058b`发布的task owner和`d13e2b45d`发布的DATA-L1 current-only。
+- 已完成叶：停门端口预绑定、双根RC初始化、预算自由读取与求值器、G4-A双根复核、根专用task owner和DATA-L1 current-only均已发布。以上结果仍未完成self真实消费、manager异步承接、G3业务循环或治理门开放。
+- 当前实现差异：普通应用已经唯一拥有fresh、G4-A和task owner，但self只绑定fresh端口且保持零调用；生产代码没有manager，fresh公开请求及其世界/自我读取链仍保留旧数量预算，开门入口固定返回依赖未就绪。
+- 主要风险：把计划可执行或队列接收误当成任务事实；在预算ABI、按意图恢复、manager失败收口或G2-B真实成功条件未实现前开放治理门；让self/manager直达DATA-L1/L2；把进程内消息去重扩张为持久处理账。
+- 下一动作：执行计划索引中的`SELF-ROOT-GOVERNANCE-INTENT-CONSUMER` v0.1，由单一执行智能体闭合budget-free fresh、固定首次意图、self真实消费、task owner按意图恢复、manager异步承接与独立读回、普通应用接线和G2-B真实开门；普通D、多D、筹办、worker、执行前判断、结算和安全/服务值写入不在本叶。
 - 转入条件：所有下位能力和最终具名集成验收满足本节完成条件后移入`目标/已完成/`；任何局部结果只推进相应下位目标，不提前完成本目标。
 
 ## 6. 状态证据上下文
 
-- 状态事实截止：`42556450a1554f84ead96bcdc03c512ddc338c1a`
-- 关联计划身份：`TASK-OWNER-CORE-PROVIDER` v0.1，状态与精确blob以`计划/计划索引.md`为准
-- 关联治理输入：`TASK-OWNER-CORE-PROVIDER`详细设计v0.1；`SELF-ROOT-GOVERNANCE-INTENT-SINK` v0.3只保留后继消费者边界；`SELF-ROOT-DEMAND-REVIEW` v0.5及`G4-A-4242-EVALUATOR-PRECONDITION` v0.2只作已完成前置追溯
-- 最后实质进展：`90d9b747b`发布4242目标合同值第三来源、G4-A双根只读复核provider、普通应用唯一装配、旧预算/二态骨架退出及实施记录；完成计划已退出索引。
-- 已验证证据：实施记录中的根工程双配置构建；双根专项无参34、seed35、recover4；世界树205、二次关系176、自我骨架36、正式上下文五模式、锚点组合46/2/3及生产消费五模式均在Debug/Release通过。证据只覆盖G4-A provider及具名回归。
-- 未验证范围：`current=M`和当前F换代的普通应用运行覆盖；self对fresh正式上下文/G4-A provider的实际消费；G3业务消息循环、根治理意图sink、治理门开放、任务管理/工作线程、需求/任务/方法/安全治理、连续治理和具名集成验收
-- 当前差异证据来源：HEAD `42556450a`上的`线程_自我.h/.cpp`、两个self只读provider、普通应用装配、旧`数据服务.任务类.h`及旧`应用服务.任务目标方向.h`；旧任务v3无生产装配或调用，普通应用仍无task owner
-- 转入代码计划条件：已满足；`TASK-OWNER-CORE-PROVIDER` v0.1已经冻结根专用公开ABI、owner、事务、生命周期、恢复、旧入口退出和验证矩阵，并明确普通D/列表/多D仍未实现。计划可执行不证明代码已实现，也不得据此解除治理门。
+- 状态事实截止：`2128005e2d66361d3ecfadb143afbdd65ee3f7ff`
+- 关联计划身份：`SELF-ROOT-GOVERNANCE-INTENT-CONSUMER` v0.1，计划blob=`e357f1e3484758c02cfe3fcdea1c288ebd91e809`，状态以`计划/计划索引.md`为准
+- 关联治理输入：`SELF-ROOT-GOVERNANCE-INTENT-CONSUMER`详细设计v0.1；`SELF-ROOT-GOVERNANCE-INTENT-SINK` v0.3只保留来源边界；task owner、G4-A、G2-A及DATA-L1 current-only作已完成前置追溯
+- 最后实质进展：`fb635058b`发布根专用task owner；`d13e2b45d`发布DATA-L1 current-only代码，`2128005e2`发布其独立自检证据；完成计划均已退出当前计划目录。
+- 已验证证据：task owner专项与根工程Debug/Release及seed/recover、旧库recover；DATA-L1 current-only根工程双配置、21/21、103/103和4097结构边226/226。证据不覆盖新消费者计划的代码、运行或开门。
+- 未验证范围：self对fresh/G4-A/task owner的真实消费；budget-free fresh v2；manager线程与异步承接；G3业务消息循环、治理门开放、普通D、筹办/worker、执行前判断、结果结算、安全/服务治理、连续多轮和具名集成验收
+- 当前差异证据来源：HEAD `2128005e2`上的`线程_自我.h/.cpp`、fresh与G4-A provider、task owner、普通应用和启动入口；两路只读审计确认self只停门等待、邮箱只入不出、开门固定未实现且生产无manager
+- 转入代码计划条件：已满足；`SELF-ROOT-GOVERNANCE-INTENT-CONSUMER` v0.1已经冻结公开DTO、budget-free依赖、任务意图恢复、manager生命周期、失败恢复、装配和验证矩阵。计划可执行不证明代码已实现，也不得据此提前开放治理门。
 - 自动复核触发：相关详细设计、计划索引、求值器、需求根材料、provider、消费者、装配或生产代码变化；任务管理/工作线程生产入口形成；用户改变目标
