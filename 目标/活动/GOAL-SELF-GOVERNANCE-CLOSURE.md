@@ -5,17 +5,17 @@
 - 目标编号：`GOAL-SELF-GOVERNANCE-CLOSURE`
 - 名称：自我线程内部治理闭环实现
 - 类型：集成能力目标
-- 记录版本：v0.26
+- 记录版本：v0.27
 - 创建时间：2026-09-22
 - 更新时间：2026-09-26
-- 当前状态：当前；task owner与DATA-L1 current-only已经发布，首个根治理批次消费者详细设计与单一代码计划已经闭合并进入执行队列
+- 当前状态：阻断；首个根治理批次已经发布，下一G5首次找方法筹办叶缺正式身份、owner、worker与恢复合同
 - 直接上位目标：`GOAL-INSTINCT-RUNTIME`
 - 直接下位目标：`GOAL-SELF-THREAD-M1A-TOP-DOWN-DESIGN`（已完成）；`GOAL-SELF-THREAD-G1-ISOLATED-SHELL-IMPLEMENTATION`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER-IMPLEMENTATION`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER-DESIGN`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER-IMPLEMENTATION`（已完成）；`GOAL-SELF-CONTEXT-FRESH-READ-PROVIDER-IMPLEMENTATION`（已完成）；首个根治理批次当前由本目标及`SELF-ROOT-GOVERNANCE-INTENT-CONSUMER`计划直接承载，不另造下位目标身份
 - 目标账所有者：交互智能体
 
 ## 1.1 目标问题与优先级
 
-现行生产代码已经形成单对象self线程骨架、阶段21生产消费、阶段20唯一self创建停门和宿主安全回收，并由G2-A形成纯读双根材料、fresh正式上下文provider及普通应用生产所有权。`c1cba465d`完成通用EC、双目标判断K和双`D_POS` RC生产初始化，`2cf115d5e`发布预算自由版本2读取链与4242求值器，`90d9b747b`发布双根完整复核provider，`fb635058b`发布根专用task owner，`d13e2b45d`与`2128005e2`完成DATA-L1 current-only代码与独立证据。self仍未消费fresh/G4-A，生产代码也没有manager或真实开门；首个根治理批次消费者合同现已闭合，继续以单一计划取得真实代码结果，不以空回调、日志、消息或直接DATA写入替代。
+现行生产代码已经形成单对象self线程骨架、budget-free fresh、G4-A双根复核、根专用task owner、最小manager和首个真实根治理批次。`47cc48135`已经让self消费双根触发、按固定意图恢复或签发初始化包、异步交manager、独立读回并在本叶成功条件满足时开放治理门。当前根T停在`Vt=待找方法`；生产代码尚无筹办轮次/工作包/占用/结果/迁移公开面、现行method owner完整读取、worker或三方消息，因此不能越过G5直接发布G4-B普通需求。
 
 用户于2026-09-22明确将本目标设为新的产品级长期目标并替换原当前优先级。动态能力路线不作废；RC-P1随后已正式发布并归档。当前继续取得自我治理主链的最早独立结果。
 
@@ -67,17 +67,17 @@ G1—G8现在只表示目标路线，不是已冻结合同、活动目标或可�
 - 已完成叶：停门端口预绑定、双根RC初始化、预算自由读取与求值器、G4-A双根复核、根专用task owner和DATA-L1 current-only均已发布。以上结果仍未完成self真实消费、manager异步承接、G3业务循环或治理门开放。
 - 当前实现差异：普通应用已经唯一拥有fresh、G4-A和task owner，但self只绑定fresh端口且保持零调用；生产代码没有manager，fresh公开请求及其世界/自我读取链仍保留旧数量预算，开门入口固定返回依赖未就绪。
 - 主要风险：把计划可执行或队列接收误当成任务事实；在预算ABI、按意图恢复、manager失败收口或G2-B真实成功条件未实现前开放治理门；让self/manager直达DATA-L1/L2；把进程内消息去重扩张为持久处理账。
-- 下一动作：执行计划索引中的`SELF-ROOT-GOVERNANCE-INTENT-CONSUMER` v0.1，由单一执行智能体闭合budget-free fresh、固定首次意图、self真实消费、task owner按意图恢复、manager异步承接与独立读回、普通应用接线和G2-B真实开门；普通D、多D、筹办、worker、执行前判断、结算和安全/服务值写入不在本叶。
+- 下一动作：依据`SELF-GOVERNANCE-G5-FIRST-PLANNING-DISPATCH`详细设计阻断v0.1，先由用户确认task owner身份签发、不可变筹办包边界和method owner旧结构迁移方向，再修订正式规范并闭合G5单一代码计划；G4-B等待真实父任务筹办材料。
 - 转入条件：所有下位能力和最终具名集成验收满足本节完成条件后移入`目标/已完成/`；任何局部结果只推进相应下位目标，不提前完成本目标。
 
 ## 6. 状态证据上下文
 
-- 状态事实截止：`2128005e2d66361d3ecfadb143afbdd65ee3f7ff`
-- 关联计划身份：`SELF-ROOT-GOVERNANCE-INTENT-CONSUMER` v0.1，计划blob=`e357f1e3484758c02cfe3fcdea1c288ebd91e809`，状态以`计划/计划索引.md`为准
-- 关联治理输入：`SELF-ROOT-GOVERNANCE-INTENT-CONSUMER`详细设计v0.1；`SELF-ROOT-GOVERNANCE-INTENT-SINK` v0.3只保留来源边界；task owner、G4-A、G2-A及DATA-L1 current-only作已完成前置追溯
-- 最后实质进展：`fb635058b`发布根专用task owner；`d13e2b45d`发布DATA-L1 current-only代码，`2128005e2`发布其独立自检证据；完成计划均已退出当前计划目录。
-- 已验证证据：task owner专项与根工程Debug/Release及seed/recover、旧库recover；DATA-L1 current-only根工程双配置、21/21、103/103和4097结构边226/226。证据不覆盖新消费者计划的代码、运行或开门。
-- 未验证范围：self对fresh/G4-A/task owner的真实消费；budget-free fresh v2；manager线程与异步承接；G3业务消息循环、治理门开放、普通D、筹办/worker、执行前判断、结果结算、安全/服务治理、连续多轮和具名集成验收
-- 当前差异证据来源：HEAD `2128005e2`上的`线程_自我.h/.cpp`、fresh与G4-A provider、task owner、普通应用和启动入口；两路只读审计确认self只停门等待、邮箱只入不出、开门固定未实现且生产无manager
-- 转入代码计划条件：已满足；`SELF-ROOT-GOVERNANCE-INTENT-CONSUMER` v0.1已经冻结公开DTO、budget-free依赖、任务意图恢复、manager生命周期、失败恢复、装配和验证矩阵。计划可执行不证明代码已实现，也不得据此提前开放治理门。
+- 状态事实截止：`47cc48135147aca1be5cf56fe12245da8fbdd391`
+- 关联计划身份：当前无可执行计划；已完成`SELF-ROOT-GOVERNANCE-INTENT-CONSUMER`已退出
+- 关联治理输入：`SELF-GOVERNANCE-G5-FIRST-PLANNING-DISPATCH`详细设计阻断v0.1；首批消费者详细设计、task owner、G4-A、G2-A及DATA-L1 current-only作已完成前置追溯
+- 最后实质进展：`47cc48135`发布首个根治理批次、最小manager、budget-free fresh v2、按意图恢复和普通应用生产接线。
+- 已验证证据：Debug/Release四专项、fresh五模式、task owner与首批消费seed/recover、根工程双配置及旧ABI静态零残留。精确覆盖与NOT_RUN读取首批实施记录。
+- 未验证范围：实施记录列出的manager故障注入、单根/当前满足、阶段12/13进程级失败及崩溃/断电/压力；G5筹办、worker、G4-B、执行前判断、结果结算、安全/服务治理、连续多轮和具名集成验收
+- 当前差异证据来源：HEAD `47cc48135`及首批实施记录；下一叶阻断文件已核对task owner、method owner、self/manager和需求owner当前公开面
+- 转入代码计划条件：未满足；必须先冻结task owner筹办身份/包/状态迁移、method owner现行结构与budget-free读取、worker与三方消息/恢复合同，且正式规范修改须经用户确认。
 - 自动复核触发：相关详细设计、计划索引、求值器、需求根材料、provider、消费者、装配或生产代码变化；任务管理/工作线程生产入口形成；用户改变目标
