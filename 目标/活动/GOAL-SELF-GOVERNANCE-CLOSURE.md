@@ -3,25 +3,25 @@
 ## 1. 目标身份
 
 - 目标编号：`GOAL-SELF-GOVERNANCE-CLOSURE`
-- 名称：自我线程内部治理闭环实现
+- 名称：自我内部治理闭环实现
 - 类型：集成能力目标
 - 记录版本：v0.27
 - 创建时间：2026-09-22
 - 更新时间：2026-09-26
-- 当前状态：阻断；首个根治理批次已经发布，下一G5首次找方法筹办叶缺正式身份、owner、worker与恢复合同
+- 当前状态：候选；整体闭环由self、manager、worker及各领域owner共同完成，当前优先推进下位目标`GOAL-SELF-THREAD-CAPABILITIES`
 - 直接上位目标：`GOAL-INSTINCT-RUNTIME`
-- 直接下位目标：`GOAL-SELF-THREAD-M1A-TOP-DOWN-DESIGN`（已完成）；`GOAL-SELF-THREAD-G1-ISOLATED-SHELL-IMPLEMENTATION`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER-IMPLEMENTATION`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER-DESIGN`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER-IMPLEMENTATION`（已完成）；`GOAL-SELF-CONTEXT-FRESH-READ-PROVIDER-IMPLEMENTATION`（已完成）；首个根治理批次当前由本目标及`SELF-ROOT-GOVERNANCE-INTENT-CONSUMER`计划直接承载，不另造下位目标身份
+- 直接下位目标：`GOAL-SELF-THREAD-CAPABILITIES`（当前）；`GOAL-SELF-THREAD-M1A-TOP-DOWN-DESIGN`（已完成）；`GOAL-SELF-THREAD-G1-ISOLATED-SHELL-IMPLEMENTATION`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER-IMPLEMENTATION`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER-DESIGN`（已完成）；`GOAL-INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER-IMPLEMENTATION`（已完成）；`GOAL-SELF-CONTEXT-FRESH-READ-PROVIDER-IMPLEMENTATION`（已完成）
 - 目标账所有者：交互智能体
 
 ## 1.1 目标问题与优先级
 
-现行生产代码已经形成单对象self线程骨架、budget-free fresh、G4-A双根复核、根专用task owner、最小manager和首个真实根治理批次。`47cc48135`已经让self消费双根触发、按固定意图恢复或签发初始化包、异步交manager、独立读回并在本叶成功条件满足时开放治理门。当前根T停在`Vt=待找方法`；生产代码尚无筹办轮次/工作包/占用/结果/迁移公开面、现行method owner完整读取、worker或三方消息，因此不能越过G5直接发布G4-B普通需求。
+现行生产代码已经形成单对象self线程骨架、budget-free fresh、G4-A双根复核、根专用task owner、最小manager和首个真实根治理批次。`47cc48135`已经让self消费双根触发、按固定意图恢复或签发初始化包、异步交manager、独立读回并在本叶成功条件满足时开放治理门。
 
-用户于2026-09-22明确将本目标设为新的产品级长期目标并替换原当前优先级。动态能力路线不作废；RC-P1随后已正式发布并归档。当前继续取得自我治理主链的最早独立结果。
+用户于2026-09-26进一步裁决：本目标是跨组件的整体内部治理闭环，自我线程只是其中一个运行和决策组件；当前应先实现自我线程通过处理消息完成的自身能力。整体目标因此保留为上位候选路线，当前推进`GOAL-SELF-THREAD-CAPABILITIES`，不再把manager、worker或领域owner的能力归入self线程。
 
 ## 2. 目标结果、完成条件与证据下限
 
-目标结果是在普通应用正式启动/恢复后，由唯一自我线程作为内部治理编排载体，持续完成：合法启动与运行门、正式上下文读回、消息定位和独立事实读回、需求复核与必要后继需求确认、任务意图交接、冻结后的执行前综合判断、现实执行授权、结果核验、同任务唯一完成结算、安全控制和服务目标比较，并可停止、恢复和再次继续治理。
+目标结果是在普通应用正式启动/恢复后，由self线程、任务管理线程、任务工作线程以及需求、任务、方法、世界和安全各正式owner协作完成自我内部治理闭环。self线程只承担self决策、需求治理及跨域后继编排；任务状态推进归manager，工作包执行归worker，正式事实写入归对应owner。
 
 完成条件：
 
@@ -37,7 +37,7 @@
 
 ## 3. 范围、排除与设计承载
 
-- 范围：自我线程生命周期、运行门、上下文读回、治理邮箱和消息循环、需求治理、任务交接、执行前判断、自我现实执行授权、结果与结算、安全控制/维护调用、服务目标比较、恢复和正式验收。
+- 范围：self、manager、worker和各领域owner共同组成的内部治理闭环及正式集成验收。自我线程自身能力由下位目标`GOAL-SELF-THREAD-CAPABILITIES`单独承载，不把manager推进、worker执行或领域事实写入计作self线程能力。
 - 设计承载方式：`目标/20260922_SELF-GOVERNANCE_自我线程内部治理闭环实现方案_v0.1.md`作为已确认路线输入；机器语义继续由8000、8100、8200及其转引规范承担；具体公开函数、DTO、物理位置、依赖和验证合同由G0及后继逐叶设计/计划冻结。
 - 依赖方向：自我线程调用自我/世界上下文、需求、任务、方法、自我授权和安全治理的具名上层公开服务；各服务内部再按正式分层调用其合法下层接口。
 - 明确排除：恢复旧`.ixx`自我线程或旧本能根计划；新建万能数据服务、DATA-L4/L5、持久消息账、第二需求/任务账、服务合同或奖励账户；把任务/Vt/Vm塞入世界树；以日志、缓存或消息代替正式事实；把D455、体素、SQL或新控制面板设为本目标前置。
@@ -49,11 +49,11 @@
 2. `G1 线程运行骨架`：唯一线程、停门/开门、等待、停止、唤醒和`join`。
 3. `G2 自我上下文正式读回`：闭合唯一自我、场景、双根、方法根、本能锚点和当前特征事实读取。
 4. `G3 治理消息循环`：强类型消息、有界邮箱、批次、来源校验、原请求关联和正式读回。
-5. `G4 需求治理闭环`：先闭合G4-A根需求复核，再以合法父任务材料闭合G4-B后继需求确认、发布/复用和读回。
-6. `G5 任务管理交接闭环`：具体D承接、任务状态/筹办材料读回和合法后继意图；G4-B所需最小任务材料片段按依赖前置。
-7. `G6 执行前判断闭环`：冻结材料、方法事实、安全硬门、综合判断和现实执行授权。
-8. `G7 结果与结算闭环`：执行/观察两路结果、验证、未完成后继、同T唯一结算和恢复。
-9. `G8 安全、服务与持续治理闭环`：合法安全维护、控制态、服务目标比较、连续多轮和最终验收。
+5. `G4 self需求治理能力`：先闭合G4-A根需求复核，再以合法父任务材料闭合self对后继目标的产生、确认和后继决议。
+6. `G5 任务管理交接闭环`：由self形成意图，manager承接并按正式任务状态推进；工作包执行不归self线程。
+7. `G6 执行前判断闭环`：任务应用面完成选择与冻结，manager提交定位，self处理消息并作综合判断；现实改变时编排唯一授权。
+8. `G7 结果与结算闭环`：manager收束并通知，self处理结果定位、形成未完成后继或编排同T唯一完成结算。
+9. `G8 安全、服务与持续治理闭环`：self调用具名安全治理入口并消费正式结果；安全事实由安全owner发布，连续多轮由全链协作完成。
 
 G1—G8现在只表示目标路线，不是已冻结合同、活动目标或可执行计划。采用自顶向下推进：每次先实现上层当前步骤，由真实调用点反推最小下层能力；同一依赖链最多前视一个合同已冻结的紧邻后继。
 
@@ -64,20 +64,20 @@ G1—G8现在只表示目标路线，不是已冻结合同、活动目标或可�
 ## 5. 依赖、风险与下一动作
 
 - 当前直接依赖：0050、3100、3200、4151、4242、5170、5260、6120、8000、8100、8120、8121和8200的现行版本，以及`e04887112`发布的G2-A、`cf934660`发布的停门端口预绑定、`c1cba465d`发布的双根RC初始化、`2cf115d5e`发布的4242求值器、`90d9b747b`发布的G4-A provider、`fb635058b`发布的task owner和`d13e2b45d`发布的DATA-L1 current-only。
-- 已完成叶：停门端口预绑定、双根RC初始化、预算自由读取与求值器、G4-A双根复核、根专用task owner和DATA-L1 current-only均已发布。以上结果仍未完成self真实消费、manager异步承接、G3业务循环或治理门开放。
-- 当前实现差异：普通应用已经唯一拥有fresh、G4-A和task owner，但self只绑定fresh端口且保持零调用；生产代码没有manager，fresh公开请求及其世界/自我读取链仍保留旧数量预算，开门入口固定返回依赖未就绪。
-- 主要风险：把计划可执行或队列接收误当成任务事实；在预算ABI、按意图恢复、manager失败收口或G2-B真实成功条件未实现前开放治理门；让self/manager直达DATA-L1/L2；把进程内消息去重扩张为持久处理账。
-- 下一动作：依据`SELF-GOVERNANCE-G5-FIRST-PLANNING-DISPATCH`详细设计阻断v0.1，先由用户确认task owner身份签发、不可变筹办包边界和method owner旧结构迁移方向，再修订正式规范并闭合G5单一代码计划；G4-B等待真实父任务筹办材料。
+- 已完成叶：停门端口预绑定、双根RC初始化、预算自由读取与求值器、G4-A双根复核、根专用task owner、DATA-L1 current-only及首个根治理批次均已发布。
+- 当前实现差异：self已经真实消费fresh和双根复核并向最小manager异步交付根任务意图；但邮箱只接受一种根复核业务消息，普通需求后继、筹办缺口、执行前判断、任务结果/结算、安全治理和后继决议分支尚未实现。
+- 主要风险：继续把manager/worker能力写入self线程；让消息正文代替正式事实；让self直达DATA-L1/DATA-L2；为通用化消息框架提前增加没有消费者的字段、账或接口。
+- 下一动作：沿下位目标`GOAL-SELF-THREAD-CAPABILITIES`，按“强类型消息 -> 独立读回 -> self裁决 -> 意图/定位输出”逐分支闭合自我线程能力；需要manager、worker或领域owner的新合同只作为该分支的提供者依赖，不再误计为self线程实现。
 - 转入条件：所有下位能力和最终具名集成验收满足本节完成条件后移入`目标/已完成/`；任何局部结果只推进相应下位目标，不提前完成本目标。
 
 ## 6. 状态证据上下文
 
-- 状态事实截止：`47cc48135147aca1be5cf56fe12245da8fbdd391`
+- 状态事实截止：`b4e045ad1b6a6ad1811a849cd5985a96906f6a20`
 - 关联计划身份：当前无可执行计划；已完成`SELF-ROOT-GOVERNANCE-INTENT-CONSUMER`已退出
-- 关联治理输入：`SELF-GOVERNANCE-G5-FIRST-PLANNING-DISPATCH`详细设计阻断v0.1；首批消费者详细设计、task owner、G4-A、G2-A及DATA-L1 current-only作已完成前置追溯
-- 最后实质进展：`47cc48135`发布首个根治理批次、最小manager、budget-free fresh v2、按意图恢复和普通应用生产接线。
+- 关联治理输入：`GOAL-SELF-THREAD-CAPABILITIES`；首批消费者详细设计、task owner、G4-A、G2-A及DATA-L1 current-only只作已完成前置追溯
+- 最后实质进展：`b4e045ad1`发布首个根治理批次的目标治理记录；当前目标账已经把整体闭环与self线程能力分账。
 - 已验证证据：Debug/Release四专项、fresh五模式、task owner与首批消费seed/recover、根工程双配置及旧ABI静态零残留。精确覆盖与NOT_RUN读取首批实施记录。
-- 未验证范围：实施记录列出的manager故障注入、单根/当前满足、阶段12/13进程级失败及崩溃/断电/压力；G5筹办、worker、G4-B、执行前判断、结果结算、安全/服务治理、连续多轮和具名集成验收
-- 当前差异证据来源：HEAD `47cc48135`及首批实施记录；下一叶阻断文件已核对task owner、method owner、self/manager和需求owner当前公开面
-- 转入代码计划条件：未满足；必须先冻结task owner筹办身份/包/状态迁移、method owner现行结构与budget-free读取、worker与三方消息/恢复合同，且正式规范修改须经用户确认。
+- 未验证范围：实施记录列出的manager故障注入、单根/当前满足、阶段12/13进程级失败及崩溃/断电/压力；self除双根复核外的业务消息分支、执行前判断、结果结算、安全治理、连续多轮和具名集成验收
+- 当前差异证据来源：HEAD `b4e045ad1`、首批实施记录及8000/8100/8200逐项代码审计
+- 转入代码计划条件：为最早缺失self消息分支冻结精确消息、端口、读回、判断、输出及非成功合同；如果该分支依赖尚未冻结的manager/worker或领域owner能力，先形成最小提供者设计，不在self线程中补造。
 - 自动复核触发：相关详细设计、计划索引、求值器、需求根材料、provider、消费者、装配或生产代码变化；任务管理/工作线程生产入口形成；用户改变目标
