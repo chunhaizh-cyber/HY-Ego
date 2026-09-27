@@ -4,6 +4,7 @@
 #include <map>
 #include <optional>
 #include <shared_mutex>
+#include <string>
 #include <variant>
 #include <vector>
 
@@ -13,7 +14,7 @@ namespace 海中鱼巣 {
 
 // 直接值只是字段末端的原始材料，不取得独立稳定编码或业务语义。
 using 基础原始值 = std::variant<std::int64_t,
-    std::vector<std::int64_t>, std::vector<std::uint64_t>>;
+    std::vector<std::int64_t>, std::vector<std::uint64_t>, std::string>;
 
 struct 基础值 final {
     基础原始值 材料;
