@@ -1,6 +1,9 @@
 #include "服务.L1事实基座.h"
 
 #include <algorithm>
+#include <atomic>
+#include <chrono>
+#include <limits>
 #include <mutex>
 #include <new>
 #include <stdexcept>
@@ -18,6 +21,48 @@ struct L1事实基座实例状态 final {
 };
 
 namespace {
+constexpr L1中性写集幂等键 外部关系类型初始化幂等键{
+    (std::numeric_limits<std::uint64_t>::max)()};
+constexpr L1中性写集本地键 父子关系类型本地键{1};
+constexpr L1中性写集本地键 兄弟关系类型本地键{2};
+constexpr L1中性写集本地键 新节点本地键{1};
+constexpr L1中性写集本地键 父子关系本地键{2};
+
+std::optional<稳定编码> 查找新编码(
+    const L1中性写入结果& 结果, L1中性写集本地键 本地键) noexcept {
+    for (const auto& [键, 编码] : 结果.新编码映射) {
+        if (键 == 本地键) return 编码;
+    }
+    return std::nullopt;
+}
+
+std::uint64_t 生成内部写入幂等键() noexcept {
+    static std::atomic<std::uint64_t> 序号{1};
+    const auto 时钟值 = static_cast<std::uint64_t>(
+        std::chrono::steady_clock::now().time_since_epoch().count());
+    auto 值 = (时钟值 << 17) ^ 序号.fetch_add(1, std::memory_order_relaxed)
+        ^ 0x4c314e4f44450000ULL;
+    if (值 == 0 || 值 == 外部关系类型初始化幂等键.值) 值 ^= 0x100ULL;
+    return 值;
+}
+
+std::optional<std::pair<稳定编码, 稳定编码>>
+确保外部关系类型(L1事实基座仓库& 仓库) {
+    L1中性写集请求 请求{外部关系类型初始化幂等键};
+    请求.节点.push_back({父子关系类型本地键, 节点种类::普通, std::nullopt});
+    请求.节点.push_back({兄弟关系类型本地键, 节点种类::普通, std::nullopt});
+    const auto 写入 = 仓库.提交中性写集(请求);
+    if (写入.状态 != L1中性写入状态::成功
+        && 写入.状态 != L1中性写入状态::精确重复) {
+        return std::nullopt;
+    }
+    const auto 父子 = 查找新编码(写入, 父子关系类型本地键);
+    const auto 兄弟 = 查找新编码(写入, 兄弟关系类型本地键);
+    if (!父子 || !兄弟 || !有效(*父子) || !有效(*兄弟) || *父子 == *兄弟)
+        return std::nullopt;
+    return std::pair{*父子, *兄弟};
+}
+
 L1事实基座持久恢复状态 映射持久恢复状态(
     L1事实基座核心持久恢复状态 状态) noexcept {
     switch (状态) {
@@ -94,6 +139,37 @@ L1中性一致当前读取结果 L1事实基座服务::尝试读取中性一致�
 }
 L1中性写入结果 L1事实基座服务::提交中性写集(const L1中性写集请求& 请求) {
     return 仓库_.提交中性写集(请求);
+}
+
+稳定编码 L1事实基座服务::新建节点(稳定编码 上级节点) noexcept {
+    if (!有效(上级节点)) return {};
+    try {
+        const auto 上级 = 仓库_.读取当前节点(上级节点);
+        if (上级.状态 != L1读取状态::成功 || !上级.事实
+            || !std::holds_alternative<节点事实>(*上级.事实)) {
+            return {};
+        }
+        const auto 外部关系类型 = 确保外部关系类型(仓库_);
+        if (!外部关系类型) return {};
+
+        for (std::uint32_t 尝试 = 0; 尝试 != 16; ++尝试) {
+            L1中性写集请求 请求{{生成内部写入幂等键()}};
+            请求.节点.push_back({新节点本地键, 节点种类::普通, std::nullopt});
+            请求.关系.push_back({父子关系本地键, 上级节点, 新节点本地键,
+                外部关系类型->first, 0});
+            const auto 写入 = 仓库_.提交中性写集(请求);
+            if (写入.状态 == L1中性写入状态::幂等冲突
+                || 写入.状态 == L1中性写入状态::精确重复) {
+                continue;
+            }
+            if (写入.状态 != L1中性写入状态::成功) return {};
+            const auto 新节点 = 查找新编码(写入, 新节点本地键);
+            return 新节点 && 有效(*新节点) ? *新节点 : 稳定编码{};
+        }
+    } catch (...) {
+        return {};
+    }
+    return {};
 }
 L1中性写入首次结果读取结果 L1事实基座服务::读取中性写入首次结果(
     const L1中性写入首次结果读取请求& 请求) const noexcept {
