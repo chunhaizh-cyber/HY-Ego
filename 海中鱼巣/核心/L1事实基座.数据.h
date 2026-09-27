@@ -41,7 +41,6 @@ struct 节点事实 final {
     稳定编码 编码;
     节点种类 种类 = 节点种类::普通;
     std::optional<值表示种类> 属性类型表示;
-    std::uint64_t 创建事实代次 = 0;
     std::vector<属性槽> 当前属性;
     L1结构所有者身份 写入所有者;
     friend bool operator==(const 节点事实&, const 节点事实&) = default;
@@ -53,7 +52,6 @@ struct 关系事实 final {
     稳定编码 目标节点;
     稳定编码 关系类型节点;
     std::int64_t 角色或顺序 = 0;
-    std::uint64_t 创建事实代次 = 0;
     L1结构所有者身份 写入所有者;
     friend bool operator==(const 关系事实&, const 关系事实&) = default;
 };
@@ -64,7 +62,6 @@ struct 值事实 final {
     稳定编码 属性类型节点;
     原始值材料 材料;
     稳定编码 来源节点;
-    std::uint64_t 创建事实代次 = 0;
     L1结构所有者身份 写入所有者;
     friend bool operator==(const 值事实&, const 值事实&) = default;
 };
@@ -78,7 +75,7 @@ struct L1属性读取副本 final {
 
 enum class L1读取状态 : std::uint8_t {
     成功 = 1, 入口拒绝 = 2, 未找到 = 3,
-    属性未设置 = 5, 事实代次漂移 = 6, 资源失败 = 7,
+    属性未设置 = 5, 资源失败 = 7,
     内部不一致 = 8, 许可拒绝 = 9
 };
 
@@ -86,23 +83,14 @@ using L1事实副本 = std::variant<节点事实, 关系事实, 值事实>;
 
 struct L1读取结果 final {
     L1读取状态 状态 = L1读取状态::入口拒绝;
-    std::uint64_t 读取事实代次 = 0;
     std::optional<L1事实副本> 事实;
 };
 
 struct L1属性读取结果 final {
     L1读取状态 状态 = L1读取状态::入口拒绝;
-    std::uint64_t 读取事实代次 = 0;
     std::optional<L1属性读取副本> 属性;
 };
 
-struct L1事实代次读取结果 final {
-    L1读取状态 状态 = L1读取状态::入口拒绝;
-    std::uint64_t 事实截止代次 = 0;
-    // 诊断责任：无适用错误分支；默认比较只比较纯值结果。
-    friend bool operator==(const L1事实代次读取结果&,
-        const L1事实代次读取结果&) = default;
-};
 
 // 诊断责任：无适用错误分支；只核对属性槽稳定排序和编码有效性。
 inline bool 属性排序唯一(const std::vector<属性槽>& 槽组) noexcept {

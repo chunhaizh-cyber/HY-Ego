@@ -1,13 +1,12 @@
 #pragma once
 
 #include "应用服务.特征概念类.h"
+#include "../领域/合同.二次关系概念.h"
 
 #include <cstdint>
 #include <optional>
 
 namespace 海中鱼巣 {
-
-inline constexpr std::uint32_t 本能双根二次关系概念初始化合同版本 = 2;
 
 enum class 本能双根二次关系概念初始化状态 : std::uint8_t {
   已形成 = 1,
@@ -17,18 +16,17 @@ enum class 本能双根二次关系概念初始化状态 : std::uint8_t {
   通用存在概念失败 = 5,
   比较绑定失败 = 6,
   二次关系概念失败 = 7,
-  当前性漂移 = 8,
+  // 8 对应已经退出的旧技术状态，稳定数值不复用。
   幂等冲突 = 9,
   引用冲突 = 10,
   类型或概念已退出 = 11,
   已可能发布 = 14,
   资源失败 = 15,
-  内部不一致 = 16
+  内部不一致 = 16,
+  未实现 = 17
 };
 
 struct 本能双根二次关系概念初始化请求 final {
-  std::uint32_t 版本 = 本能双根二次关系概念初始化合同版本;
-  std::uint64_t G0 = 0;
   本能先天特征概念初始化结果 先天交付;
 };
 
@@ -37,20 +35,18 @@ struct 本能根二次关系概念交付 final {
   先天I64特征概念交付 先天;
   纯概念事实 通用存在概念;
   特征I64比较绑定事实 目标判断K;
-  二次关系概念事实 正差距RC;
-  std::uint64_t Gread = 0;
+  概念树概念身份 正差距RC;
+  二次关系定义 正差距定义;
 
   bool 完整() const noexcept;
 };
 
 struct 本能双根二次关系概念初始化结果 final {
-  std::uint32_t 版本 = 本能双根二次关系概念初始化合同版本;
   本能双根二次关系概念初始化状态 状态 =
       本能双根二次关系概念初始化状态::入口拒绝;
   本能双根二次关系概念初始化请求 原请求;
   std::optional<本能根二次关系概念交付> 安全根;
   std::optional<本能根二次关系概念交付> 服务根;
-  std::uint64_t Gread = 0;
 
   bool 成功() const noexcept;
 };
@@ -76,4 +72,4 @@ public:
       const 本能双根二次关系概念初始化请求&) noexcept;
 };
 
-}  // namespace 海中鱼巣
+} // namespace 海中鱼巣

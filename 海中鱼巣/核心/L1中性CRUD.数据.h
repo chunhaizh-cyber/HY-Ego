@@ -12,8 +12,6 @@
 
 namespace 海中鱼巣 {
 
-inline constexpr std::uint32_t L1中性CRUD合同版本 = 1;
-
 struct L1中性写集本地键 final {
     std::uint32_t 值 = 0;
     friend bool operator==(const L1中性写集本地键&, const L1中性写集本地键&) = default;
@@ -51,7 +49,6 @@ struct L1中性节点事实 final {
     稳定编码 编码;
     节点种类 种类 = 节点种类::普通;
     std::optional<L1中性值表示种类> 属性类型表示;
-    std::uint64_t 创建事实代次 = 0;
     std::vector<L1中性属性槽> 当前属性;
     friend bool operator==(const L1中性节点事实&, const L1中性节点事实&) = default;
 };
@@ -62,7 +59,6 @@ struct L1中性关系事实 final {
     稳定编码 目标节点;
     稳定编码 关系类型节点;
     std::int64_t 角色或顺序 = 0;
-    std::uint64_t 创建事实代次 = 0;
     friend bool operator==(const L1中性关系事实&, const L1中性关系事实&) = default;
 };
 
@@ -72,7 +68,6 @@ struct L1中性值事实 final {
     稳定编码 属性类型节点;
     L1中性原始值材料 材料;
     稳定编码 来源节点;
-    std::uint64_t 创建事实代次 = 0;
     friend bool operator==(const L1中性值事实&, const L1中性值事实&) = default;
 };
 
@@ -112,8 +107,6 @@ struct L1中性属性槽变更项 final {
 };
 
 struct L1中性写集请求 final {
-    std::uint32_t 合同版本 = L1中性CRUD合同版本;
-    std::uint64_t 期望事实代次 = 0;
     L1中性写集幂等键 幂等键;
     std::vector<L1中性节点新建项> 节点;
     std::vector<L1中性关系新建项> 关系;
@@ -125,7 +118,7 @@ struct L1中性写集请求 final {
 
 enum class L1中性写入状态 : std::uint8_t {
     成功 = 1, 精确重复 = 2, 入口拒绝 = 3, 未找到 = 4,
-    事实代次漂移 = 6, 幂等冲突 = 7, 资源失败 = 8, 内部不一致 = 9,
+    幂等冲突 = 7, 资源失败 = 8, 内部不一致 = 9,
     引用冲突 = 10
 };
 
@@ -135,19 +128,14 @@ enum class L1中性重试边界 : std::uint8_t {
 
 struct L1中性写入结果 final {
     L1中性写入状态 状态 = L1中性写入状态::入口拒绝;
-    std::uint32_t 合同版本 = L1中性CRUD合同版本;
     L1中性写集幂等键 幂等键;
-    std::uint64_t 事实代次 = 0;
     bool 是否形成内存权威发布 = false;
     L1中性重试边界 重试边界 = L1中性重试边界::修正请求后可重试;
     std::vector<std::pair<L1中性写集本地键, 稳定编码>> 新编码映射;
     friend bool operator==(const L1中性写入结果&, const L1中性写入结果&) = default;
 };
 
-inline constexpr std::uint32_t L1中性写入首次结果读取合同版本 = 1;
-
 struct L1中性写入首次结果读取请求 final {
-    std::uint32_t 合同版本 = L1中性写入首次结果读取合同版本;
     L1中性写集幂等键 幂等键;
     friend bool operator==(const L1中性写入首次结果读取请求&,
         const L1中性写入首次结果读取请求&) = default;
@@ -164,12 +152,9 @@ enum class L1中性写入首次结果读取状态 : std::uint8_t {
 struct L1中性写入首次结果读取结果 final {
     L1中性写入首次结果读取状态 状态 =
         L1中性写入首次结果读取状态::入口拒绝;
-    std::uint32_t 合同版本 = L1中性写入首次结果读取合同版本;
     L1中性写集幂等键 幂等键;
-    std::uint64_t 读取事实代次 = 0;
     std::optional<L1中性写集请求> 首次规范请求等价材料;
     std::optional<L1中性写入状态> 首次状态;
-    std::uint64_t 首次事实代次 = 0;
     std::vector<std::pair<L1中性写集本地键, 稳定编码>> 首次稳定编码映射;
     friend bool operator==(const L1中性写入首次结果读取结果&,
         const L1中性写入首次结果读取结果&) = default;
@@ -181,26 +166,18 @@ enum class L1中性读取状态 : std::uint8_t {
 };
 
 struct L1中性事实读取请求 final {
-    std::uint32_t 合同版本 = L1中性CRUD合同版本;
     稳定编码 编码;
     friend bool operator==(const L1中性事实读取请求&, const L1中性事实读取请求&) = default;
 };
 
 struct L1中性属性读取请求 final {
-    std::uint32_t 合同版本 = L1中性CRUD合同版本;
     稳定编码 节点;
     稳定编码 属性类型;
     friend bool operator==(const L1中性属性读取请求&, const L1中性属性读取请求&) = default;
 };
 
-struct L1中性事实代次读取请求 final {
-    std::uint32_t 合同版本 = L1中性CRUD合同版本;
-    friend bool operator==(const L1中性事实代次读取请求&,
-        const L1中性事实代次读取请求&) = default;
-};
 
 struct L1中性目标关系读取请求 final {
-    std::uint32_t 合同版本 = L1中性CRUD合同版本;
     稳定编码 目标节点;
     稳定编码 关系类型节点;
     friend bool operator==(const L1中性目标关系读取请求&,
@@ -208,7 +185,6 @@ struct L1中性目标关系读取请求 final {
 };
 
 struct L1中性源关系读取请求 final {
-    std::uint32_t 合同版本 = L1中性CRUD合同版本;
     稳定编码 源节点;
     稳定编码 关系类型节点;
     friend bool operator==(const L1中性源关系读取请求&,
@@ -218,9 +194,7 @@ struct L1中性源关系读取请求 final {
 template<class 事实类型>
 struct L1中性具名事实读取结果 final {
     L1中性读取状态 状态 = L1中性读取状态::入口拒绝;
-    std::uint32_t 合同版本 = L1中性CRUD合同版本;
     稳定编码 查询编码;
-    std::uint64_t 读取事实代次 = 0;
     std::optional<事实类型> 事实;
     friend bool operator==(const L1中性具名事实读取结果&,
         const L1中性具名事实读取结果&) = default;
@@ -232,10 +206,8 @@ using L1中性值读取结果 = L1中性具名事实读取结果<L1中性值事�
 
 struct L1中性目标关系读取结果 final {
     L1中性读取状态 状态 = L1中性读取状态::入口拒绝;
-    std::uint32_t 合同版本 = L1中性CRUD合同版本;
     稳定编码 目标节点;
     稳定编码 关系类型节点;
-    std::uint64_t 读取事实代次 = 0;
     std::vector<L1中性关系事实> 关系组;
     friend bool operator==(const L1中性目标关系读取结果&,
         const L1中性目标关系读取结果&) = default;
@@ -243,10 +215,8 @@ struct L1中性目标关系读取结果 final {
 
 struct L1中性源关系读取结果 final {
     L1中性读取状态 状态 = L1中性读取状态::入口拒绝;
-    std::uint32_t 合同版本 = L1中性CRUD合同版本;
     稳定编码 源节点;
     稳定编码 关系类型节点;
-    std::uint64_t 读取事实代次 = 0;
     std::vector<L1中性关系事实> 关系组;
     friend bool operator==(const L1中性源关系读取结果&,
         const L1中性源关系读取结果&) = default;
@@ -254,27 +224,16 @@ struct L1中性源关系读取结果 final {
 
 struct L1中性属性读取结果 final {
     L1中性读取状态 状态 = L1中性读取状态::入口拒绝;
-    std::uint32_t 合同版本 = L1中性CRUD合同版本;
     稳定编码 节点;
     稳定编码 属性类型;
-    std::uint64_t 读取事实代次 = 0;
     std::optional<稳定编码> 当前值;
     friend bool operator==(const L1中性属性读取结果&, const L1中性属性读取结果&) = default;
 };
 
-struct L1中性事实代次读取结果 final {
-    L1中性读取状态 状态 = L1中性读取状态::入口拒绝;
-    std::uint32_t 合同版本 = L1中性CRUD合同版本;
-    std::uint64_t 事实代次 = 0;
-    friend bool operator==(const L1中性事实代次读取结果&,
-        const L1中性事实代次读取结果&) = default;
-};
-
-inline constexpr std::uint32_t L1中性一致当前读取合同版本 = 1;
 
 enum class L1中性一致当前读取状态 : std::uint8_t {
     成功 = 1, 入口拒绝 = 2, 许可拒绝 = 3,
-    事实代次漂移 = 4, 资源失败 = 5, 内部不一致 = 6
+    资源失败 = 5, 内部不一致 = 6
 };
 
 enum class L1中性一致当前读取项目状态 : std::uint8_t {
@@ -304,8 +263,6 @@ struct L1中性一致目标关系组选择项 final {
 };
 
 struct L1中性一致当前读取请求 final {
-    std::uint32_t 合同版本 = L1中性一致当前读取合同版本;
-    std::uint64_t 期望事实代次 = 0;
     std::vector<稳定编码> 节点;
     std::vector<稳定编码> 关系;
     std::vector<稳定编码> 值;
@@ -376,9 +333,6 @@ struct L1中性一致目标关系组读取结果项 final {
 struct L1中性一致当前读取结果 final {
     L1中性一致当前读取状态 状态 =
         L1中性一致当前读取状态::入口拒绝;
-    std::uint32_t 合同版本 = L1中性一致当前读取合同版本;
-    std::uint64_t 期望事实代次 = 0;
-    std::uint64_t 读取事实代次 = 0;
     std::vector<L1中性一致节点读取结果项> 节点;
     std::vector<L1中性一致关系读取结果项> 关系;
     std::vector<L1中性一致值读取结果项> 值;

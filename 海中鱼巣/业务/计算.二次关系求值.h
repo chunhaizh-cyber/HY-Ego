@@ -3,6 +3,7 @@
 #include "../领域/数据服务.概念树类.h"
 #include "../领域/数据服务.需求类.h"
 #include "../领域/算法.有序I64特征比较.h"
+#include "../领域/合同.二次关系概念.h"
 
 #include <cstdint>
 #include <optional>
@@ -13,14 +14,12 @@ namespace 海中鱼巣 {
 
 struct 二次关系准确F来源 final {
   特征信息身份 F;
-  friend bool operator==(const 二次关系准确F来源 &,
-                         const 二次关系准确F来源 &) = default;
+  friend bool operator==(const 二次关系准确F来源 &, const 二次关系准确F来源 &) = default;
 };
 
 struct 二次关系状态端点来源 final {
   状态使用绑定身份 B;
-  friend bool operator==(const 二次关系状态端点来源 &,
-                         const 二次关系状态端点来源 &) = default;
+  friend bool operator==(const 二次关系状态端点来源 &, const 二次关系状态端点来源 &) = default;
 };
 
 struct 二次关系本能根目标合同值来源 final {
@@ -38,35 +37,30 @@ using 二次关系特征来源 =
 struct 二次关系参与者材料 final {
   稳定编码 E{};
   std::vector<二次关系特征来源> 来源组;
-  friend bool operator==(const 二次关系参与者材料 &,
-                         const 二次关系参与者材料 &) = default;
+  friend bool operator==(const 二次关系参与者材料 &, const 二次关系参与者材料 &) = default;
 };
 
 struct 二次关系求值请求 final {
-  std::uint32_t 版本 = 2;
-  std::uint64_t Gread = 0, 请求身份 = 0;
+  std::uint64_t 请求身份 = 0;
   概念树概念身份 RC;
   二次关系参与者材料 A, B;
 };
 
 struct 二次关系FC求值请求 final {
-  std::uint32_t 版本 = 2;
-  std::uint64_t Gread = 0, 请求身份 = 0;
+  std::uint64_t 请求身份 = 0;
   概念树概念身份 FC;
   二次关系参与者材料 参与者;
   std::uint64_t 来源下标 = 0;
 };
 
 struct 二次关系EC求值请求 final {
-  std::uint32_t 版本 = 2;
-  std::uint64_t Gread = 0, 请求身份 = 0;
+  std::uint64_t 请求身份 = 0;
   概念树概念身份 EC;
   二次关系参与者材料 参与者;
 };
 
 struct 二次关系候选求值请求 final {
-  std::uint32_t 版本 = 2;
-  std::uint64_t Gread = 0, 请求身份 = 0;
+  std::uint64_t 请求身份 = 0;
   二次关系定义 定义;
   二次关系参与者材料 A, B;
 };
@@ -77,14 +71,15 @@ enum class 二次关系判断状态 : std::uint8_t {
   证据不足 = 3,
   规则不支持 = 4,
   入口拒绝 = 5,
-  事实代次漂移 = 7,
+  // 7 对应已经退出的旧技术状态，稳定数值不复用。
   运算溢出 = 9,
   资源失败 = 10,
   内部不一致 = 11,
   退役不可用 = 12,
   类型不相容 = 13,
   单位量化不相容 = 14,
-  参照不相容 = 15
+  参照不相容 = 15,
+  未实现 = 16
 };
 
 struct 二次关系本能根目标合同值见证 final {
@@ -113,9 +108,8 @@ struct 二次关系条件见证 final {
 };
 
 struct 二次关系判断结果 final {
-  std::uint32_t 版本 = 2;
   二次关系判断状态 状态 = 二次关系判断状态::入口拒绝;
-  std::uint64_t Gread = 0, 请求身份 = 0;
+  std::uint64_t 请求身份 = 0;
   std::vector<二次关系条件见证> 条件组;
   std::vector<二次关系准确来源见证> 来源组;
   std::vector<概念树概念身份> 已核验概念;
@@ -136,8 +130,7 @@ public:
   二次关系判断结果 求值二次关系(const 二次关系求值请求 &) const noexcept;
   二次关系判断结果 求值特征概念(const 二次关系FC求值请求 &) const noexcept;
   二次关系判断结果 求值存在概念(const 二次关系EC求值请求 &) const noexcept;
-  二次关系判断结果 求值候选定义(
-      const 二次关系候选求值请求 &) const noexcept;
+  二次关系判断结果 求值候选定义(const 二次关系候选求值请求 &) const noexcept;
 
   bool 绑定于(const L1事实基座服务 &) const noexcept;
   bool 使用概念服务(const 概念树类数据服务 &) const noexcept;

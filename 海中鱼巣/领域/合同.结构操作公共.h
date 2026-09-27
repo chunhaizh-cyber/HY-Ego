@@ -59,24 +59,10 @@ inline bool 世界结构预算有效(const 世界结构预算_B1 &b) noexcept {
          b.最大材料字节数 <= 16'777'216 && b.最大域原子数 <= normal;
 }
 
-struct 结构生命周期_B1 final {
-  std::uint64_t 创建事实代次{};
-  friend bool operator==(const 结构生命周期_B1 &,
-                         const 结构生命周期_B1 &) = default;
-};
-inline bool 生命周期完整(const 结构生命周期_B1 &v,
-                         std::uint64_t g) noexcept {
-  return v.创建事实代次 != 0 && v.创建事实代次 <= g;
-}
-inline bool 当前有效(const 结构生命周期_B1 &v, std::uint64_t g) noexcept {
-  return 生命周期完整(v, g);
-}
-
 struct 结构节点见证_B1 final {
   稳定编码 编码{};
   节点种类 种类{节点种类::普通};
   std::optional<L1所有者范围值表示种类> 属性表示;
-  结构生命周期_B1 生命周期;
   friend bool operator==(const 结构节点见证_B1 &,
                          const 结构节点见证_B1 &) = default;
 };
@@ -84,7 +70,6 @@ struct 结构节点见证_B1 final {
 struct 结构关系见证_B1 final {
   稳定编码 编码{}, 源{}, 目标{}, 类型{};
   std::int64_t 角色{};
-  结构生命周期_B1 生命周期;
   friend bool operator==(const 结构关系见证_B1 &,
                          const 结构关系见证_B1 &) = default;
 };

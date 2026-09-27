@@ -1,5 +1,10 @@
 #include "数据服务.特征值类.h"
 
+#include <new>
+#include <stdexcept>
+#include <type_traits>
+#include <utility>
+
 namespace 海中鱼巣 {
 namespace {
 
@@ -7,186 +12,527 @@ constexpr L1所有者范围写集本地键 承载键{1};
 constexpr L1所有者范围写集本地键 U64类型键{2};
 constexpr L1所有者范围写集本地键 值键{1};
 
-template<class T> bool 是成功写入(T s) noexcept {
-    return s == T::成功 || s == T::精确重复;
+template<class T>
+bool 是成功写入(T 状态) noexcept {
+    return 状态 == T::成功 || 状态 == T::精确重复;
 }
 
-特征值U64组保存状态_B2 映射写入(L1所有者范围写入状态 s) noexcept {
-    switch (s) {
-    case L1所有者范围写入状态::许可拒绝: return 特征值U64组保存状态_B2::许可拒绝;
-    case L1所有者范围写入状态::未找到: return 特征值U64组保存状态_B2::未找到;
-    case L1所有者范围写入状态::事实代次漂移: return 特征值U64组保存状态_B2::事实代次漂移;
-    case L1所有者范围写入状态::幂等冲突: return 特征值U64组保存状态_B2::幂等冲突;
-    case L1所有者范围写入状态::引用冲突: return 特征值U64组保存状态_B2::引用冲突;
-    case L1所有者范围写入状态::资源失败: return 特征值U64组保存状态_B2::资源失败;
-    case L1所有者范围写入状态::内部不一致: return 特征值U64组保存状态_B2::内部不一致;
-    default: return 特征值U64组保存状态_B2::入口拒绝;
+特征值U64组保存状态_B2 映射写入(
+    L1所有者范围写入状态 状态) noexcept {
+    switch (状态) {
+    case L1所有者范围写入状态::许可拒绝:
+        return 特征值U64组保存状态_B2::许可拒绝;
+    case L1所有者范围写入状态::未找到:
+        return 特征值U64组保存状态_B2::未找到;
+    case L1所有者范围写入状态::幂等冲突:
+        return 特征值U64组保存状态_B2::幂等冲突;
+    case L1所有者范围写入状态::引用冲突:
+        return 特征值U64组保存状态_B2::引用冲突;
+    case L1所有者范围写入状态::资源失败:
+        return 特征值U64组保存状态_B2::资源失败;
+    case L1所有者范围写入状态::内部不一致:
+        return 特征值U64组保存状态_B2::内部不一致;
+    default:
+        return 特征值U64组保存状态_B2::入口拒绝;
     }
 }
 
-特征值U64组保存状态_B2 映射读取(L1所有者范围属性类型当前完整值组读取状态_v2 s) noexcept {
-    switch (s) {
-    case L1所有者范围属性类型当前完整值组读取状态_v2::未找到: return 特征值U64组保存状态_B2::未找到;
-    case L1所有者范围属性类型当前完整值组读取状态_v2::事实代次漂移: return 特征值U64组保存状态_B2::事实代次漂移;
-    case L1所有者范围属性类型当前完整值组读取状态_v2::资源失败: return 特征值U64组保存状态_B2::资源失败;
-    default: return 特征值U64组保存状态_B2::内部不一致;
+特征值U64组保存状态_B2 映射读取(
+    L1所有者范围属性类型当前完整值组读取状态 状态) noexcept {
+    switch (状态) {
+    case L1所有者范围属性类型当前完整值组读取状态::未找到:
+        return 特征值U64组保存状态_B2::未找到;
+    case L1所有者范围属性类型当前完整值组读取状态::资源失败:
+        return 特征值U64组保存状态_B2::资源失败;
+    case L1所有者范围属性类型当前完整值组读取状态::入口拒绝:
+        return 特征值U64组保存状态_B2::入口拒绝;
+    default:
+        return 特征值U64组保存状态_B2::内部不一致;
     }
 }
 
-特征值U64组结构登记状态_B2 映射登记写入(L1所有者范围写入状态 s) noexcept {
-    switch (s) {
-    case L1所有者范围写入状态::许可拒绝: return 特征值U64组结构登记状态_B2::许可拒绝;
-    case L1所有者范围写入状态::未找到: return 特征值U64组结构登记状态_B2::未找到;
-    case L1所有者范围写入状态::事实代次漂移: return 特征值U64组结构登记状态_B2::事实代次漂移;
-    case L1所有者范围写入状态::幂等冲突: return 特征值U64组结构登记状态_B2::幂等冲突;
-    case L1所有者范围写入状态::引用冲突: return 特征值U64组结构登记状态_B2::引用冲突;
-    case L1所有者范围写入状态::资源失败: return 特征值U64组结构登记状态_B2::资源失败;
-    default: return 特征值U64组结构登记状态_B2::内部不一致;
+特征值U64组结构登记状态_B2 映射登记写入(
+    L1所有者范围写入状态 状态) noexcept {
+    switch (状态) {
+    case L1所有者范围写入状态::许可拒绝:
+        return 特征值U64组结构登记状态_B2::许可拒绝;
+    case L1所有者范围写入状态::未找到:
+        return 特征值U64组结构登记状态_B2::未找到;
+    case L1所有者范围写入状态::幂等冲突:
+        return 特征值U64组结构登记状态_B2::幂等冲突;
+    case L1所有者范围写入状态::引用冲突:
+        return 特征值U64组结构登记状态_B2::引用冲突;
+    case L1所有者范围写入状态::资源失败:
+        return 特征值U64组结构登记状态_B2::资源失败;
+    case L1所有者范围写入状态::入口拒绝:
+        return 特征值U64组结构登记状态_B2::入口拒绝;
+    default:
+        return 特征值U64组结构登记状态_B2::内部不一致;
     }
 }
 
-std::optional<稳定编码> 映射(const L1所有者范围写入结果& r,
-                              L1所有者范围写集本地键 key) noexcept {
-    std::optional<稳定编码> out;
-    for (const auto& [local, id] : r.新编码映射) {
-        if (local == key) {
-            if (out || !有效(id)) return std::nullopt;
-            out = id;
+std::optional<稳定编码> 映射(const L1所有者范围写入结果& 结果,
+    L1所有者范围写集本地键 本地键) noexcept {
+    std::optional<稳定编码> 输出;
+    for (const auto& [候选键, 编码] : 结果.新编码映射) {
+        if (候选键 != 本地键) continue;
+        if (输出 || !有效(编码)) return std::nullopt;
+        输出 = 编码;
+    }
+    return 输出;
+}
+
+bool 节点结构匹配(const L1所有者范围一致节点读取结果项& 项,
+    稳定编码 编码, L1结构所有者身份 所有者, 节点种类 种类,
+    std::optional<L1所有者范围值表示种类> 表示) noexcept {
+    return 项.查询编码 == 编码
+        && 项.状态 == L1所有者范围一致当前读取项目状态::成功
+        && 项.事实 && 项.事实->编码 == 编码
+        && 项.事实->写入所有者 == 所有者
+        && 项.事实->种类 == 种类
+        && 项.事实->属性类型表示 == 表示;
+}
+
+bool U64结构当前(const L1事实基座服务& 第一层服务,
+    稳定编码 承载节点, 稳定编码 类型节点,
+    L1结构所有者身份 所有者) {
+    L1所有者范围一致当前读取请求 请求;
+    请求.所有者.push_back(所有者);
+    请求.节点 = {承载节点, 类型节点};
+    const auto 读取 = 第一层服务.尝试读取所有者范围一致当前投影(请求);
+    if (读取.状态 != L1所有者范围一致当前读取状态::成功
+        || 读取.所有者.size() != 1 || 读取.节点.size() != 2
+        || 读取.所有者.front().查询所有者 != 所有者
+        || 读取.所有者.front().状态
+            != L1所有者范围一致当前读取项目状态::成功
+        || !读取.所有者.front().所有者事实) {
+        return false;
+    }
+
+    const L1所有者范围一致节点读取结果项* 承载 = nullptr;
+    const L1所有者范围一致节点读取结果项* 类型 = nullptr;
+    for (const auto& 项 : 读取.节点) {
+        if (项.查询编码 == 承载节点) 承载 = &项;
+        if (项.查询编码 == 类型节点) 类型 = &项;
+    }
+    return 承载 && 类型
+        && 节点结构匹配(*承载, 承载节点, 所有者,
+            节点种类::普通, std::nullopt)
+        && 节点结构匹配(*类型, 类型节点, 所有者,
+            节点种类::属性类型, L1所有者范围值表示种类::U64组);
+}
+
+} // namespace
+
+bool 特征值完整读取结果_B1::成功(
+    const 特征值完整读取请求_B1& 请求) const noexcept {
+    try {
+        if (请求.版本 != 1 || !有效(请求.值)
+            || !世界结构预算有效(请求.预算)
+            || 版本 != 1 || 状态 != 特征值读取状态_B1::已读取
+            || !值 || 值->身份 != 请求.值
+            || 值->内容.valueless_by_exception()
+            || 材料 || 用量.最大值数 != 1
+            || 用量.最大节点数 > 请求.预算.最大节点数
+            || 用量.最大关系数 > 请求.预算.最大关系数
+            || 用量.最大值数 > 请求.预算.最大值数
+            || 用量.最大祖先数 > 请求.预算.最大祖先数
+            || 用量.最大后代数 > 请求.预算.最大后代数
+            || 用量.最大候选数 > 请求.预算.最大候选数
+            || 用量.最大值元素数 > 请求.预算.最大值元素数
+            || 用量.最大材料字节数 > 请求.预算.最大材料字节数
+            || 用量.最大域原子数 > 请求.预算.最大域原子数) {
+            return false;
         }
+
+        const auto 索引 = 值->内容.index();
+        switch (值->表示) {
+        case 特征值表示类型::I64:
+            return 索引 == 0 && 用量.最大值元素数 == 0;
+        case 特征值表示类型::I64组: {
+            const auto* 组 = std::get_if<std::vector<std::int64_t>>(&值->内容);
+            return 索引 == 1 && 组 && 用量.最大值元素数 == 组->size();
+        }
+        case 特征值表示类型::U64组: {
+            const auto* 组 = std::get_if<std::vector<std::uint64_t>>(&值->内容);
+            return 索引 == 2 && 组 && 用量.最大值元素数 == 组->size();
+        }
+        case 特征值表示类型::独立材料引用:
+            // 当前没有跨特征值事实与不可变材料的单次组合读取入口。
+            return false;
+        default:
+            return false;
+        }
+    } catch (...) {
+        return false;
     }
-    return out;
 }
 
-bool U64节点结构当前(const L1事实基座服务& l1, 稳定编码 node,
-                     L1结构所有者身份 owner, 节点种类 kind,
-                     std::optional<L1所有者范围值表示种类> representation,
-                     std::uint64_t g) noexcept {
-    const auto raw = l1.读取所有者范围当前节点({L1所有者范围CRUD合同版本, node});
-    const auto* fact = raw.事实 ? std::get_if<L1所有者范围节点事实>(&*raw.事实) : nullptr;
-    return raw.状态 == L1所有者范围读取状态::成功 && raw.读取事实代次 == g && fact
-        && fact->编码 == node && fact->写入所有者 == owner && fact->种类 == kind
-        && fact->属性类型表示 == representation;
+bool 特征值U64组保存结果_B2::成功(
+    const 特征值U64组保存请求_B2& 请求) const noexcept {
+    return 请求.版本 == 1 && !请求.内容.empty() && 有效(请求.幂等)
+        && (状态 == 特征值U64组保存状态_B2::已复用
+            || 状态 == 特征值U64组保存状态_B2::已保存)
+        && 值 && 有效(*值);
 }
 
+bool 特征值U64组结构登记结果_B2::成功(
+    const 特征值U64组结构登记请求_B2& 请求) const noexcept {
+    return 请求.版本 == 1 && 有效(请求.幂等)
+        && 状态 == 特征值U64组结构登记状态_B2::已登记
+        && 交付 && 有效(交付->所有者) && 有效(交付->承载节点)
+        && 有效(交付->U64组属性类型节点)
+        && 交付->来源节点 == 交付->承载节点;
 }
 
-bool 特征值U64组保存结果_B2::成功(const 特征值U64组保存请求_B2& r) const noexcept {
-    return r.版本 == 1 && r.G0 != 0 && !r.内容.empty() && 有效(r.幂等)
-        && 状态 == 特征值U64组保存状态_B2::已复用 && Gread == r.G0 && 值 && 有效(*值)
-        || (r.版本 == 1 && r.G0 != 0 && !r.内容.empty() && 有效(r.幂等)
-            && 状态 == 特征值U64组保存状态_B2::已保存 && Gread > r.G0 && 值 && 有效(*值));
-}
+特征值类数据服务::特征值类数据服务(
+    const L1事实基座服务& 第一层服务) noexcept
+    : 第一层服务_(第一层服务), 材料服务_(nullptr) {}
 
-bool 特征值U64组结构登记结果_B2::成功(const 特征值U64组结构登记请求_B2& r) const noexcept {
-    return r.版本 == 1 && r.G0 != 0 && 有效(r.幂等)
-        && 状态 == 特征值U64组结构登记状态_B2::已登记 && Gread >= r.G0 && 交付
-        && 有效(交付->所有者) && 有效(交付->承载节点)
-        && 有效(交付->U64组属性类型节点) && 交付->来源节点 == 交付->承载节点;
-}
+特征值类数据服务::特征值类数据服务(
+    const L1事实基座服务& 第一层服务,
+    const 不可变材料数据服务& 材料服务) noexcept
+    : 第一层服务_(第一层服务),
+      材料服务_(材料服务.绑定于(第一层服务) ? &材料服务 : nullptr) {}
 
-特征值类数据服务::特征值类数据服务(const L1事实基座服务& l1,
-    L1所有者范围写端口&& port, const 特征值U64组结构交付_B2& layout) noexcept
-    : 第一层服务_(l1), 材料服务_(nullptr), 写端口_(std::move(port)), U64组结构_(layout) {
-    if (!写端口_ || !写端口_->绑定于(l1) || !有效(layout.所有者)
-        || 写端口_->所有者身份() != layout.所有者 || !有效(layout.承载节点)
-        || !有效(layout.U64组属性类型节点) || layout.来源节点 != layout.承载节点)
+特征值类数据服务::特征值类数据服务(const L1事实基座服务& 第一层服务,
+    L1所有者范围写端口&& 写端口,
+    const 特征值U64组结构交付_B2& 结构) noexcept
+    : 第一层服务_(第一层服务), 材料服务_(nullptr),
+      写端口_(std::move(写端口)), U64组结构_(结构) {
+    if (!写端口_ || !写端口_->绑定于(第一层服务)
+        || !有效(结构.所有者)
+        || 写端口_->所有者身份() != 结构.所有者
+        || !有效(结构.承载节点)
+        || !有效(结构.U64组属性类型节点)
+        || 结构.来源节点 != 结构.承载节点) {
         U64组结构_.reset();
+    }
+}
+
+bool 特征值类数据服务::绑定于(
+    const L1事实基座服务& 第一层服务) const noexcept {
+    return &第一层服务 == &第一层服务_;
+}
+
+特征值表示类型 特征值类数据服务::获取值表示类型(
+    const 特征值信息& 特征值) noexcept {
+    return std::visit([](const auto& 值) noexcept {
+        using 类型 = std::decay_t<decltype(值)>;
+        if constexpr (std::is_same_v<类型, std::int64_t>) {
+            return 特征值表示类型::I64;
+        } else if constexpr (std::is_same_v<类型,
+                std::vector<std::int64_t>>) {
+            return 特征值表示类型::I64组;
+        } else if constexpr (std::is_same_v<类型,
+                std::vector<std::uint64_t>>) {
+            return 特征值表示类型::U64组;
+        } else {
+            return 特征值表示类型::独立材料引用;
+        }
+    }, 特征值.值内容);
+}
+
+特征值身份 特征值类数据服务::获取值身份(
+    const 特征值信息& 特征值) noexcept {
+    return 特征值.值身份;
+}
+
+const 特征值内容& 特征值类数据服务::获取值内容(
+    const 特征值信息& 特征值) noexcept {
+    return 特征值.值内容;
+}
+
+bool 特征值类数据服务::内容结构有效(
+    const 特征值内容& 内容) noexcept {
+    if (内容.valueless_by_exception()) return false;
+    if (const auto* 引用 = std::get_if<特征值独立材料引用>(&内容)) {
+        return 有效(引用->身份);
+    }
+    return true;
+}
+
+特征值读取错误 特征值类数据服务::映射读取错误(
+    L1所有者范围读取状态 状态) noexcept {
+    switch (状态) {
+    case L1所有者范围读取状态::未找到:
+        return 特征值读取错误::未找到;
+    case L1所有者范围读取状态::入口拒绝:
+        return 特征值读取错误::入口拒绝;
+    case L1所有者范围读取状态::资源失败:
+        return 特征值读取错误::资源失败;
+    default:
+        return 特征值读取错误::内部不一致;
+    }
+}
+
+std::optional<特征值内容> 特征值类数据服务::转换为特征值内容(
+    const L1所有者范围原始值材料& 材料) {
+    return std::visit([](const auto& 值) -> std::optional<特征值内容> {
+        using 类型 = std::decay_t<decltype(值)>;
+        if constexpr (std::is_same_v<类型, L1所有者范围独立材料引用>) {
+            return std::nullopt;
+        } else {
+            return 特征值内容{值};
+        }
+    }, 材料);
+}
+
+特征值读取结果 特征值类数据服务::投影读取事实(特征值身份 身份,
+    const std::optional<L1所有者范围事实副本>& 事实) {
+    if (!事实) return 特征值读取错误::内部不一致;
+    const auto* 值 = std::get_if<L1所有者范围值事实>(&*事实);
+    if (!值) return 特征值读取错误::入口拒绝;
+    if (值->编码 != 身份.编码 || !有效(值->所属节点)
+        || !有效(值->属性类型节点) || !有效(值->来源节点)
+        || !有效(值->写入所有者)
+        || !L1所有者范围原始材料完整(值->材料)) {
+        return 特征值读取错误::内部不一致;
+    }
+    auto 内容 = 转换为特征值内容(值->材料);
+    if (!内容) return 特征值读取错误::能力未提供;
+    return 特征值信息{身份, std::move(*内容)};
+}
+
+特征值读取结果 特征值类数据服务::获取特征值(特征值身份 身份) const {
+    if (!有效(身份)) return 特征值读取错误::入口拒绝;
+    try {
+        const auto 当前 = 第一层服务_.读取所有者范围当前值({身份.编码});
+        if (当前.状态 == L1所有者范围读取状态::成功) {
+            return 投影读取事实(身份, 当前.事实);
+        }
+        return 映射读取错误(当前.状态);
+    } catch (const std::bad_alloc&) {
+        return 特征值读取错误::资源失败;
+    } catch (const std::length_error&) {
+        return 特征值读取错误::资源失败;
+    } catch (...) {
+        return 特征值读取错误::内部不一致;
+    }
+}
+
+特征值完整读取结果_B1 特征值类数据服务::获取完整值(
+    const 特征值完整读取请求_B1& 请求) const noexcept {
+    特征值完整读取结果_B1 输出;
+    try {
+        if (请求.版本 != 1 || !有效(请求.值)
+            || !世界结构预算有效(请求.预算)) {
+            return 输出;
+        }
+        if (请求.预算.最大值数 < 1) {
+            输出.状态 = 特征值读取状态_B1::数量预算不足;
+            return 输出;
+        }
+
+        const auto 当前 = 第一层服务_.读取所有者范围当前值({请求.值.编码});
+        ++输出.用量.最大值数;
+        if (当前.状态 != L1所有者范围读取状态::成功 || !当前.事实) {
+            switch (当前.状态) {
+            case L1所有者范围读取状态::未找到:
+                输出.状态 = 特征值读取状态_B1::未找到;
+                break;
+            case L1所有者范围读取状态::资源失败:
+                输出.状态 = 特征值读取状态_B1::资源失败;
+                break;
+            case L1所有者范围读取状态::入口拒绝:
+                输出.状态 = 特征值读取状态_B1::入口拒绝;
+                break;
+            default:
+                输出.状态 = 特征值读取状态_B1::内部不一致;
+                break;
+            }
+            return 输出;
+        }
+
+        const auto* 值 = std::get_if<L1所有者范围值事实>(&*当前.事实);
+        if (!值 || 值->编码 != 请求.值.编码) {
+            输出.状态 = 特征值读取状态_B1::内部不一致;
+            return 输出;
+        }
+
+        特征值内容 内容;
+        特征值表示类型 表示;
+        if (const auto* 标量 = std::get_if<std::int64_t>(&值->材料)) {
+            内容 = *标量;
+            表示 = 特征值表示类型::I64;
+        } else if (const auto* 组 =
+                std::get_if<std::vector<std::int64_t>>(&值->材料)) {
+            if (组->size() > 请求.预算.最大值元素数) {
+                输出.状态 = 特征值读取状态_B1::数量预算不足;
+                return 输出;
+            }
+            内容 = *组;
+            输出.用量.最大值元素数 = 组->size();
+            表示 = 特征值表示类型::I64组;
+        } else if (const auto* 组 =
+                std::get_if<std::vector<std::uint64_t>>(&值->材料)) {
+            if (组->size() > 请求.预算.最大值元素数) {
+                输出.状态 = 特征值读取状态_B1::数量预算不足;
+                return 输出;
+            }
+            内容 = *组;
+            输出.用量.最大值元素数 = 组->size();
+            表示 = 特征值表示类型::U64组;
+        } else {
+            // 特征值事实与不可变材料目前没有一次锁内的组合读取入口，
+            // 因此不能由多次独立读取拼装一致成功。
+            输出.状态 = 特征值读取状态_B1::规则未提供;
+            return 输出;
+        }
+
+        输出.值 = 完整特征值_B1{请求.值, 表示, std::move(内容)};
+        输出.状态 = 特征值读取状态_B1::已读取;
+    } catch (const std::bad_alloc&) {
+        输出.状态 = 特征值读取状态_B1::资源失败;
+    } catch (const std::length_error&) {
+        输出.状态 = 特征值读取状态_B1::资源失败;
+    } catch (...) {
+        输出.状态 = 特征值读取状态_B1::内部不一致;
+    }
+    return 输出;
 }
 
 特征值U64组结构登记结果_B2 特征值类数据服务::登记U64组结构_B2(
-    const L1事实基座服务& l1, L1所有者范围写端口& port,
-    const 特征值U64组结构登记请求_B2& r) noexcept {
-    特征值U64组结构登记结果_B2 out;
-    if (r.版本 != 1 || !r.G0 || !有效(r.幂等) || !port.绑定于(l1)) return out;
+    const L1事实基座服务& 第一层服务, L1所有者范围写端口& 写端口,
+    const 特征值U64组结构登记请求_B2& 请求) noexcept {
+    特征值U64组结构登记结果_B2 输出;
+    if (请求.版本 != 1 || !有效(请求.幂等)
+        || !写端口.绑定于(第一层服务)) {
+        return 输出;
+    }
     try {
-        L1所有者范围写集请求 ws{L1所有者范围CRUD合同版本, r.G0, r.幂等};
-        ws.节点 = {{承载键, 节点种类::普通, std::nullopt},
-            {U64类型键, 节点种类::属性类型, L1所有者范围值表示种类::U64组}};
-        const auto saved = port.提交所有者范围中性写集(ws);
-        out.Gread = saved.事实代次;
-        if (!是成功写入(saved.状态)) { out.状态 = 映射登记写入(saved.状态); return out; }
-        const auto carrier = 映射(saved, 承载键); const auto type = 映射(saved, U64类型键);
-        if (!carrier || !type || *carrier == *type || saved.新编码映射.size() != 2) {
-            out.状态 = 特征值U64组结构登记状态_B2::已可能发布; return out;
+        L1所有者范围写集请求 写集{请求.幂等};
+        写集.节点 = {
+            {承载键, 节点种类::普通, std::nullopt},
+            {U64类型键, 节点种类::属性类型,
+                L1所有者范围值表示种类::U64组}
+        };
+        const auto 保存 = 写端口.提交所有者范围中性写集(写集);
+        if (!是成功写入(保存.状态)) {
+            输出.状态 = 映射登记写入(保存.状态);
+            return 输出;
         }
-        const auto tail = l1.读取中性当前事实代次({L1中性CRUD合同版本});
-        if (tail.状态 != L1中性读取状态::成功 || !tail.事实代次
-            || saved.事实代次 != r.G0 + 1 || tail.事实代次 < saved.事实代次
-            || (saved.状态 == L1所有者范围写入状态::成功
-                && tail.事实代次 != saved.事实代次)) {
-            out.状态 = 特征值U64组结构登记状态_B2::已可能发布; return out;
+
+        const auto 承载 = 映射(保存, 承载键);
+        const auto 类型 = 映射(保存, U64类型键);
+        if (!承载 || !类型 || *承载 == *类型 || 保存.新编码映射.size() != 2
+            || !U64结构当前(第一层服务, *承载, *类型,
+                写端口.所有者身份())) {
+            输出.状态 = 特征值U64组结构登记状态_B2::已可能发布;
+            return 输出;
         }
-        const auto g = tail.事实代次;
-        if (!U64节点结构当前(l1, *carrier, port.所有者身份(), 节点种类::普通, std::nullopt, g)
-            || !U64节点结构当前(l1, *type, port.所有者身份(), 节点种类::属性类型,
-                L1所有者范围值表示种类::U64组, g)) {
-            out.状态 = 特征值U64组结构登记状态_B2::已可能发布; return out;
-        }
-        out.Gread = g; out.交付 = {port.所有者身份(), *carrier, *type, *carrier};
-        out.状态 = 特征值U64组结构登记状态_B2::已登记;
-    } catch (const std::bad_alloc&) { out.状态 = 特征值U64组结构登记状态_B2::资源失败;
-    } catch (...) { out.状态 = 特征值U64组结构登记状态_B2::内部不一致; }
-    return out;
+
+        输出.交付 = 特征值U64组结构交付_B2{
+            写端口.所有者身份(), *承载, *类型, *承载};
+        输出.状态 = 特征值U64组结构登记状态_B2::已登记;
+    } catch (const std::bad_alloc&) {
+        输出.状态 = 特征值U64组结构登记状态_B2::资源失败;
+    } catch (...) {
+        输出.状态 = 特征值U64组结构登记状态_B2::内部不一致;
+    }
+    return 输出;
 }
 
 特征值完整读取结果_B1 特征值类数据服务::读取完整U64组_B2(
-    const 特征值完整读取请求_B1& r) const noexcept {
-    auto out = 获取完整值(r);
-    if (out.状态 == 特征值读取状态_B1::已读取 && (!out.值 || out.值->表示 != 特征值表示类型::U64组)) {
-        out.状态 = 特征值读取状态_B1::类型不相容; out.值.reset(); out.材料.reset(); out.用量 = {};
+    const 特征值完整读取请求_B1& 请求) const noexcept {
+    auto 输出 = 获取完整值(请求);
+    if (输出.状态 == 特征值读取状态_B1::已读取
+        && (!输出.值 || 输出.值->表示 != 特征值表示类型::U64组)) {
+        输出.状态 = 特征值读取状态_B1::类型不相容;
+        输出.值.reset();
+        输出.材料.reset();
+        输出.用量 = {};
     }
-    return out;
+    return 输出;
 }
 
 特征值U64组保存结果_B2 特征值类数据服务::保存U64组(
-    const 特征值U64组保存请求_B2& r) noexcept {
-    特征值U64组保存结果_B2 out;
-    if (r.版本 != 1 || !r.G0 || !有效(r.幂等) || r.内容.empty() || !世界结构预算有效(r.预算)) return out;
-    if (!写端口_ || !U64组结构_) { out.状态 = 特征值U64组保存状态_B2::结构未就绪; return out; }
+    const 特征值U64组保存请求_B2& 请求) noexcept {
+    特征值U64组保存结果_B2 输出;
+    if (请求.版本 != 1 || !有效(请求.幂等) || 请求.内容.empty()
+        || !世界结构预算有效(请求.预算)) {
+        return 输出;
+    }
+    if (!写端口_ || !U64组结构_) {
+        输出.状态 = 特征值U64组保存状态_B2::结构未就绪;
+        return 输出;
+    }
+
     try {
-        const auto& layout = *U64组结构_;
-        const auto all = 第一层服务_.读取所有者范围属性类型当前完整值组(
-            {L1所有者范围属性类型当前完整值组读取合同版本, layout.所有者,
-             layout.U64组属性类型节点, r.G0});
-        out.Gread = all.读取事实代次; out.用量.最大值数 = 1;
-        if (all.状态 != L1所有者范围属性类型当前完整值组读取状态_v2::成功) {
-            out.状态 = 映射读取(all.状态); return out;
+        const auto& 结构 = *U64组结构_;
+        const auto 当前组 = 第一层服务_.读取所有者范围属性类型当前完整值组(
+            {结构.所有者, 结构.U64组属性类型节点});
+        输出.用量.最大值数 = 1;
+        if (当前组.状态
+            != L1所有者范围属性类型当前完整值组读取状态::成功) {
+            输出.状态 = 映射读取(当前组.状态);
+            return 输出;
         }
-        if (all.读取事实代次 != r.G0 || all.所有者 != layout.所有者
-            || all.属性类型节点 != layout.U64组属性类型节点) { out.状态 = 特征值U64组保存状态_B2::内部不一致; return out; }
-        std::optional<特征值身份> hit;
-        for (const auto& value : all.当前值) {
-            const auto* bytes = std::get_if<std::vector<std::uint64_t>>(&value.材料);
-            if (value.写入所有者 != layout.所有者 || value.所属节点 != layout.承载节点
-                || value.属性类型节点 != layout.U64组属性类型节点 || value.来源节点 != layout.来源节点
-                || !bytes) { out.状态 = 特征值U64组保存状态_B2::内部不一致; return out; }
-            if (*bytes == r.内容) { if (hit) { out.状态 = 特征值U64组保存状态_B2::内部不一致; return out; } hit = {value.编码}; }
+        if (当前组.所有者 != 结构.所有者
+            || 当前组.属性类型节点 != 结构.U64组属性类型节点) {
+            输出.状态 = 特征值U64组保存状态_B2::内部不一致;
+            return 输出;
         }
-        if (hit) { out.状态 = 特征值U64组保存状态_B2::已复用; out.值 = hit; return out; }
-        L1所有者范围写集请求 ws{L1所有者范围CRUD合同版本, r.G0, r.幂等};
-        ws.值.push_back({值键, layout.承载节点, layout.U64组属性类型节点, r.内容, layout.来源节点});
-        const auto saved = 写端口_->提交所有者范围中性写集(ws);
-        out.Gread = saved.事实代次;
-        if (!是成功写入(saved.状态)) { out.状态 = 映射写入(saved.状态); return out; }
-        const auto id = 映射(saved, 值键);
-        if (!id || saved.新编码映射.size() != 1) { out.状态 = 特征值U64组保存状态_B2::已可能发布; return out; }
-        const auto tail = 第一层服务_.读取中性当前事实代次({L1中性CRUD合同版本});
-        if (tail.状态 != L1中性读取状态::成功 || !tail.事实代次
-            || (saved.状态 == L1所有者范围写入状态::成功 && tail.事实代次 != r.G0 + 1)
-            || (saved.状态 == L1所有者范围写入状态::精确重复 && tail.事实代次 != r.G0)) {
-            out.状态 = 特征值U64组保存状态_B2::已可能发布; return out;
+
+        std::optional<特征值身份> 命中;
+        for (const auto& 值 : 当前组.当前值) {
+            const auto* 内容 = std::get_if<std::vector<std::uint64_t>>(&值.材料);
+            if (值.写入所有者 != 结构.所有者
+                || 值.所属节点 != 结构.承载节点
+                || 值.属性类型节点 != 结构.U64组属性类型节点
+                || 值.来源节点 != 结构.来源节点 || !内容) {
+                输出.状态 = 特征值U64组保存状态_B2::内部不一致;
+                return 输出;
+            }
+            if (*内容 == 请求.内容) {
+                if (命中) {
+                    输出.状态 = 特征值U64组保存状态_B2::内部不一致;
+                    return 输出;
+                }
+                命中 = 特征值身份{值.编码};
+            }
         }
-        auto readBudget = r.预算;
-        if (readBudget.最大值元素数 < r.内容.size()) { out.状态 = 特征值U64组保存状态_B2::数量预算不足; return out; }
-        auto read = 读取完整U64组_B2({1, tail.事实代次, {*id}, readBudget});
-        if (!read.成功({1, tail.事实代次, {*id}, readBudget})
-            || !read.值 || std::get<std::vector<std::uint64_t>>(read.值->内容) != r.内容) {
-            out.状态 = 特征值U64组保存状态_B2::已可能发布; return out;
+        if (命中) {
+            输出.状态 = 特征值U64组保存状态_B2::已复用;
+            输出.值 = 命中;
+            return 输出;
         }
-        out.Gread = tail.事实代次; out.值 = {*id}; out.状态 = 特征值U64组保存状态_B2::已保存;
-    } catch (const std::bad_alloc&) { out.状态 = 特征值U64组保存状态_B2::资源失败;
-    } catch (...) { out.状态 = 特征值U64组保存状态_B2::内部不一致; }
-    return out;
+
+        L1所有者范围写集请求 写集{请求.幂等};
+        写集.值.push_back({值键, 结构.承载节点,
+            结构.U64组属性类型节点, 请求.内容, 结构.来源节点});
+        const auto 保存 = 写端口_->提交所有者范围中性写集(写集);
+        if (!是成功写入(保存.状态)) {
+            输出.状态 = 映射写入(保存.状态);
+            return 输出;
+        }
+
+        const auto 编码 = 映射(保存, 值键);
+        if (!编码 || 保存.新编码映射.size() != 1) {
+            输出.状态 = 特征值U64组保存状态_B2::已可能发布;
+            return 输出;
+        }
+        auto 读取预算 = 请求.预算;
+        if (读取预算.最大值元素数 < 请求.内容.size()) {
+            输出.状态 = 特征值U64组保存状态_B2::数量预算不足;
+            return 输出;
+        }
+        const 特征值完整读取请求_B1 读取请求{1, {*编码}, 读取预算};
+        const auto 读取 = 读取完整U64组_B2(读取请求);
+        if (!读取.成功(读取请求) || !读取.值
+            || std::get<std::vector<std::uint64_t>>(读取.值->内容)
+                != 请求.内容) {
+            输出.状态 = 特征值U64组保存状态_B2::已可能发布;
+            return 输出;
+        }
+        输出.值 = 特征值身份{*编码};
+        输出.状态 = 特征值U64组保存状态_B2::已保存;
+    } catch (const std::bad_alloc&) {
+        输出.状态 = 特征值U64组保存状态_B2::资源失败;
+    } catch (...) {
+        输出.状态 = 特征值U64组保存状态_B2::内部不一致;
+    }
+    return 输出;
 }
 
 } // namespace 海中鱼巣

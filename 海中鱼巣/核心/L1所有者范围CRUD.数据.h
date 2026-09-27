@@ -13,17 +13,6 @@
 
 namespace 海中鱼巣 {
 
-inline constexpr std::uint32_t L1所有者范围CRUD合同版本 = 2;
-inline constexpr std::uint32_t L1所有者范围一致当前读取合同版本 = 2;
-inline constexpr std::uint32_t L1所有者范围一致关系类型闭包读取合同版本 = 1;
-inline constexpr std::uint32_t L1所有者范围首次写入读取合同版本 = 1;
-inline constexpr std::uint32_t L1所有者范围来源当前完整值组读取合同版本 = 2;
-inline constexpr std::uint32_t L1所有者范围属性类型当前完整值组读取合同版本 = 2;
-inline constexpr std::uint32_t L1所有者范围空域完整读取合同版本 = 2;
-inline constexpr std::uint32_t L1节点当前完整引用读取合同版本 = 2;
-inline constexpr std::uint32_t L1所有者范围当前事实读取合同版本_v2 = 2;
-inline constexpr std::uint32_t L1所有者范围所属节点当前完整值组读取合同版本_v2 = 2;
-
 struct L1结构所有者身份 final {
     稳定编码 编码;
     friend bool operator==(const L1结构所有者身份&,
@@ -38,7 +27,6 @@ enum class L1所有者范围种类 : std::uint8_t {
 struct L1结构所有者事实 final {
     L1结构所有者身份 所有者;
     L1所有者范围种类 范围种类 = L1所有者范围种类::旧共享范围;
-    std::uint64_t 创建事实代次 = 0;
     friend bool operator==(const L1结构所有者事实&,
         const L1结构所有者事实&) = default;
 };
@@ -57,7 +45,7 @@ struct L1所有者范围写入幂等身份 final {
 
 enum class L1所有者范围管理状态 : std::uint8_t {
     成功 = 1, 精确重复 = 2, 入口拒绝 = 3, 许可拒绝 = 4,
-    未找到 = 5, 事实代次漂移 = 7, 幂等冲突 = 8,
+    未找到 = 5, 幂等冲突 = 8,
     引用冲突 = 9, 资源失败 = 10, 内部不一致 = 11
 };
 
@@ -67,7 +55,6 @@ enum class L1所有者范围重试边界 : std::uint8_t {
 };
 
 struct L1所有者范围建立请求 final {
-    std::uint32_t 合同版本 = L1所有者范围CRUD合同版本;
     L1所有者范围建立幂等身份 建立幂等身份;
     L1所有者范围种类 范围种类 = L1所有者范围种类::独占结构范围;
     friend bool operator==(const L1所有者范围建立请求&,
@@ -75,7 +62,6 @@ struct L1所有者范围建立请求 final {
 };
 
 struct L1所有者范围重入请求 final {
-    std::uint32_t 合同版本 = L1所有者范围CRUD合同版本;
     L1结构所有者身份 所有者;
     L1所有者范围建立幂等身份 建立幂等身份;
     friend bool operator==(const L1所有者范围重入请求&,
@@ -83,16 +69,13 @@ struct L1所有者范围重入请求 final {
 };
 
 struct L1所有者范围退出请求 final {
-    std::uint32_t 合同版本 = L1所有者范围CRUD合同版本;
     L1结构所有者身份 所有者;
     L1所有者范围建立幂等身份 建立幂等身份;
-    std::uint64_t 期望事实代次 = 0;
     friend bool operator==(const L1所有者范围退出请求&,
         const L1所有者范围退出请求&) = default;
 };
 
 struct L1结构所有者读取请求 final {
-    std::uint32_t 合同版本 = L1所有者范围CRUD合同版本;
     L1结构所有者身份 所有者;
     friend bool operator==(const L1结构所有者读取请求&,
         const L1结构所有者读取请求&) = default;
@@ -101,10 +84,8 @@ struct L1结构所有者读取请求 final {
 #define 定义L1所有者管理结果(类型名) \
     struct 类型名 final { \
         L1所有者范围管理状态 状态 = L1所有者范围管理状态::入口拒绝; \
-        std::uint32_t 合同版本 = L1所有者范围CRUD合同版本; \
         L1所有者范围建立幂等身份 建立幂等身份; \
         std::optional<L1结构所有者事实> 所有者事实; \
-        std::uint64_t 事实代次 = 0; \
         bool 是否形成内存权威发布 = false; \
         L1所有者范围重试边界 重试边界 = \
             L1所有者范围重试边界::修正请求后可重试; \
@@ -116,9 +97,7 @@ struct L1结构所有者读取请求 final {
 
 struct L1所有者范围退出结果 final {
     L1所有者范围管理状态 状态 = L1所有者范围管理状态::入口拒绝;
-    std::uint32_t 合同版本 = L1所有者范围CRUD合同版本;
     L1所有者范围建立幂等身份 建立幂等身份;
-    std::uint64_t 事实代次 = 0;
     bool 是否形成内存权威发布 = false;
     L1所有者范围重试边界 重试边界 =
         L1所有者范围重试边界::修正请求后可重试;
@@ -196,8 +175,6 @@ struct L1所有者范围属性槽变更项 final {
 };
 
 struct L1所有者范围写集请求 final {
-    std::uint32_t 合同版本 = L1所有者范围CRUD合同版本;
-    std::uint64_t 期望事实代次 = 0;
     L1所有者范围写入幂等身份 写入幂等身份;
     std::vector<L1所有者范围节点新建项> 节点;
     std::vector<L1所有者范围关系新建项> 关系;
@@ -210,16 +187,14 @@ struct L1所有者范围写集请求 final {
 
 enum class L1所有者范围写入状态 : std::uint8_t {
     成功 = 1, 精确重复 = 2, 入口拒绝 = 3, 许可拒绝 = 4,
-    未找到 = 5, 事实代次漂移 = 7, 幂等冲突 = 8,
+    未找到 = 5, 幂等冲突 = 8,
     引用冲突 = 9, 资源失败 = 10, 内部不一致 = 11
 };
 
 struct L1所有者范围写入结果 final {
     L1所有者范围写入状态 状态 = L1所有者范围写入状态::入口拒绝;
-    std::uint32_t 合同版本 = L1所有者范围CRUD合同版本;
     L1结构所有者身份 所有者;
     L1所有者范围写入幂等身份 写入幂等身份;
-    std::uint64_t 事实代次 = 0;
     bool 是否形成内存权威发布 = false;
     L1所有者范围重试边界 重试边界 =
         L1所有者范围重试边界::修正请求后可重试;
@@ -229,7 +204,6 @@ struct L1所有者范围写入结果 final {
 };
 
 // ARCH-L2 跨结构组合发布只使用中性参与者合同；普通 owner CRUD 不经过此合同。
-inline constexpr std::uint32_t L1跨所有者原子事务合同版本 = 1;
 
 enum class L1跨所有者原子事务参与者序号 : std::uint8_t {
     状态 = 1,
@@ -242,7 +216,6 @@ enum class L1跨所有者原子事务状态 : std::uint8_t {
     入口拒绝 = 3,
     许可拒绝 = 4,
     未找到 = 5,
-    事实代次漂移 = 7,
     幂等冲突 = 8,
     引用冲突 = 9,
     资源失败 = 10,
@@ -301,8 +274,6 @@ struct L1跨所有者原子属性槽变更项 final {
 };
 
 struct L1跨所有者原子写集请求 final {
-    std::uint32_t 合同版本 = L1所有者范围CRUD合同版本;
-    std::uint64_t 期望事实代次 = 0;
     L1所有者范围写入幂等身份 写入幂等身份;
     std::vector<L1跨所有者原子节点新建项> 节点;
     std::vector<L1跨所有者原子关系新建项> 关系;
@@ -323,8 +294,6 @@ struct L1跨所有者原子参与者写集 final {
 };
 
 struct L1跨所有者原子事务请求 final {
-    std::uint32_t 合同版本 = L1跨所有者原子事务合同版本;
-    std::uint64_t 共同期望事实代次 = 0;
     L1所有者范围写入幂等身份 组合写入幂等身份;
     L1跨所有者原子参与者写集 状态写集;
     L1跨所有者原子参与者写集 动态写集;
@@ -335,8 +304,6 @@ struct L1跨所有者原子事务请求 final {
 struct L1跨所有者原子事务结果 final {
     L1跨所有者原子事务状态 状态 =
         L1跨所有者原子事务状态::入口拒绝;
-    std::uint32_t 合同版本 = L1跨所有者原子事务合同版本;
-    std::uint64_t 共同事实代次 = 0;
     bool 是否形成内存权威发布 = false;
     L1所有者范围重试边界 重试边界 =
         L1所有者范围重试边界::修正请求后可重试;
@@ -348,97 +315,91 @@ struct L1跨所有者原子事务结果 final {
 
 // 恰好三个中性内部结构分区的一次原子发布合同。该 v2 合同与上方
 // 固定状态/动态双参与者 v1 物理隔离，不复义也不迁移旧请求。
-inline constexpr std::uint32_t L1三分区原子事务合同版本_v2 = 2;
 
-struct L1三分区原子参与者身份_v2 final {
+struct L1三分区原子参与者身份 final {
     std::uint8_t 值 = 0;
-    friend bool operator==(const L1三分区原子参与者身份_v2&,
-        const L1三分区原子参与者身份_v2&) = default;
+    friend bool operator==(const L1三分区原子参与者身份&,
+        const L1三分区原子参与者身份&) = default;
 };
 
-struct L1三分区原子事实引用_v2 final {
-    L1三分区原子参与者身份_v2 参与者;
+struct L1三分区原子事实引用 final {
+    L1三分区原子参与者身份 参与者;
     L1所有者范围写集本地键 本地键;
-    friend bool operator==(const L1三分区原子事实引用_v2&,
-        const L1三分区原子事实引用_v2&) = default;
+    friend bool operator==(const L1三分区原子事实引用&,
+        const L1三分区原子事实引用&) = default;
 };
 
-using L1三分区原子事实引用值_v2 = std::variant<
+using L1三分区原子事实引用值 = std::variant<
     稳定编码,
     L1所有者范围写集本地键,
-    L1三分区原子事实引用_v2>;
+    L1三分区原子事实引用>;
 
-struct L1三分区原子节点新建项_v2 final {
+struct L1三分区原子节点新建项 final {
     L1所有者范围写集本地键 本地键;
     节点种类 种类 = 节点种类::普通;
     std::optional<L1所有者范围值表示种类> 属性类型表示;
-    friend bool operator==(const L1三分区原子节点新建项_v2&,
-        const L1三分区原子节点新建项_v2&) = default;
+    friend bool operator==(const L1三分区原子节点新建项&,
+        const L1三分区原子节点新建项&) = default;
 };
 
-struct L1三分区原子关系新建项_v2 final {
+struct L1三分区原子关系新建项 final {
     L1所有者范围写集本地键 本地键;
-    L1三分区原子事实引用值_v2 源节点;
-    L1三分区原子事实引用值_v2 目标节点;
-    L1三分区原子事实引用值_v2 关系类型节点;
+    L1三分区原子事实引用值 源节点;
+    L1三分区原子事实引用值 目标节点;
+    L1三分区原子事实引用值 关系类型节点;
     std::int64_t 角色或顺序 = 0;
-    friend bool operator==(const L1三分区原子关系新建项_v2&,
-        const L1三分区原子关系新建项_v2&) = default;
+    friend bool operator==(const L1三分区原子关系新建项&,
+        const L1三分区原子关系新建项&) = default;
 };
 
-struct L1三分区原子值新建项_v2 final {
+struct L1三分区原子值新建项 final {
     L1所有者范围写集本地键 本地键;
-    L1三分区原子事实引用值_v2 所属节点;
-    L1三分区原子事实引用值_v2 属性类型节点;
+    L1三分区原子事实引用值 所属节点;
+    L1三分区原子事实引用值 属性类型节点;
     L1所有者范围原始值材料 材料;
-    L1三分区原子事实引用值_v2 来源节点;
-    friend bool operator==(const L1三分区原子值新建项_v2&,
-        const L1三分区原子值新建项_v2&) = default;
+    L1三分区原子事实引用值 来源节点;
+    friend bool operator==(const L1三分区原子值新建项&,
+        const L1三分区原子值新建项&) = default;
 };
 
-struct L1三分区原子属性槽变更项_v2 final {
-    L1三分区原子事实引用值_v2 所属节点;
-    L1三分区原子事实引用值_v2 属性类型节点;
+struct L1三分区原子属性槽变更项 final {
+    L1三分区原子事实引用值 所属节点;
+    L1三分区原子事实引用值 属性类型节点;
     L1所有者范围写集本地键 新当前值;
-    friend bool operator==(const L1三分区原子属性槽变更项_v2&,
-        const L1三分区原子属性槽变更项_v2&) = default;
+    friend bool operator==(const L1三分区原子属性槽变更项&,
+        const L1三分区原子属性槽变更项&) = default;
 };
 
-struct L1三分区原子写集请求_v2 final {
-    std::uint32_t 合同版本 = L1所有者范围CRUD合同版本;
-    std::uint64_t 期望事实代次 = 0;
+struct L1三分区原子写集请求 final {
     L1所有者范围写入幂等身份 写入幂等身份;
-    std::vector<L1三分区原子节点新建项_v2> 节点;
-    std::vector<L1三分区原子关系新建项_v2> 关系;
-    std::vector<L1三分区原子值新建项_v2> 值;
-    std::vector<L1三分区原子属性槽变更项_v2> 属性槽变更;
+    std::vector<L1三分区原子节点新建项> 节点;
+    std::vector<L1三分区原子关系新建项> 关系;
+    std::vector<L1三分区原子值新建项> 值;
+    std::vector<L1三分区原子属性槽变更项> 属性槽变更;
     std::vector<稳定编码> 退出事实;
-    friend bool operator==(const L1三分区原子写集请求_v2&,
-        const L1三分区原子写集请求_v2&) = default;
+    friend bool operator==(const L1三分区原子写集请求&,
+        const L1三分区原子写集请求&) = default;
 };
 
-struct L1三分区原子参与者写集_v2 final {
-    L1三分区原子参与者身份_v2 参与者;
+struct L1三分区原子参与者写集 final {
+    L1三分区原子参与者身份 参与者;
     L1结构所有者身份 所有者;
-    L1三分区原子写集请求_v2 写集;
-    friend bool operator==(const L1三分区原子参与者写集_v2&,
-        const L1三分区原子参与者写集_v2&) = default;
+    L1三分区原子写集请求 写集;
+    friend bool operator==(const L1三分区原子参与者写集&,
+        const L1三分区原子参与者写集&) = default;
 };
 
-struct L1三分区原子事务请求_v2 final {
-    std::uint32_t 合同版本 = L1三分区原子事务合同版本_v2;
-    std::uint64_t 共同期望事实代次 = 0;
+struct L1三分区原子事务请求 final {
     L1所有者范围写入幂等身份 组合写入幂等身份;
-    std::vector<L1三分区原子参与者写集_v2> 参与者写集组;
-    friend bool operator==(const L1三分区原子事务请求_v2&,
-        const L1三分区原子事务请求_v2&) = default;
+    std::vector<L1三分区原子参与者写集> 参与者写集组;
+    friend bool operator==(const L1三分区原子事务请求&,
+        const L1三分区原子事务请求&) = default;
 };
 
-enum class L1三分区原子事务状态_v2 : std::uint8_t {
+enum class L1三分区原子事务状态 : std::uint8_t {
     已提交 = 1,
     精确重复 = 2,
     入口拒绝 = 3,
-    事实代次漂移 = 4,
     幂等冲突 = 5,
     引用冲突 = 6,
     资源失败 = 7,
@@ -446,59 +407,53 @@ enum class L1三分区原子事务状态_v2 : std::uint8_t {
     已可能发布 = 9
 };
 
-struct L1三分区原子参与者结果_v2 final {
-    L1三分区原子参与者身份_v2 参与者;
+struct L1三分区原子参与者结果 final {
+    L1三分区原子参与者身份 参与者;
     L1结构所有者身份 所有者;
     std::vector<std::pair<L1所有者范围写集本地键, 稳定编码>> 新编码映射;
-    friend bool operator==(const L1三分区原子参与者结果_v2&,
-        const L1三分区原子参与者结果_v2&) = default;
+    friend bool operator==(const L1三分区原子参与者结果&,
+        const L1三分区原子参与者结果&) = default;
 };
 
-struct L1三分区原子事务结果_v2 final {
-    L1三分区原子事务状态_v2 状态 =
-        L1三分区原子事务状态_v2::入口拒绝;
-    std::uint32_t 合同版本 = L1三分区原子事务合同版本_v2;
+struct L1三分区原子事务结果 final {
+    L1三分区原子事务状态 状态 =
+        L1三分区原子事务状态::入口拒绝;
     L1所有者范围写入幂等身份 组合写入幂等身份;
-    std::uint64_t 共同事实代次 = 0;
     bool 是否已确认形成内存权威发布 = false;
     L1所有者范围重试边界 重试边界 =
         L1所有者范围重试边界::修正请求后可重试;
-    std::vector<L1三分区原子参与者结果_v2> 参与者结果组;
-    friend bool operator==(const L1三分区原子事务结果_v2&,
-        const L1三分区原子事务结果_v2&) = default;
+    std::vector<L1三分区原子参与者结果> 参与者结果组;
+    friend bool operator==(const L1三分区原子事务结果&,
+        const L1三分区原子事务结果&) = default;
 };
 
 // 有限 2..255 个中性内部结构分区的一次原子发布合同。v3 只复用
 // v2 的业务中性写项布局；顶层请求、结果、幂等域和持久账保持隔离。
-inline constexpr std::uint32_t L1有限N分区原子事务合同版本_v3 = 3;
-inline constexpr std::size_t L1有限N分区原子事务最小参与者数_v3 = 2;
-inline constexpr std::size_t L1有限N分区原子事务最大参与者数_v3 = 255;
+inline constexpr std::size_t L1有限N分区原子事务最小参与者数 = 2;
+inline constexpr std::size_t L1有限N分区原子事务最大参与者数 = 255;
 
-using L1有限N分区原子参与者身份_v3 = L1三分区原子参与者身份_v2;
-using L1有限N分区原子事实引用_v3 = L1三分区原子事实引用_v2;
-using L1有限N分区原子事实引用值_v3 = L1三分区原子事实引用值_v2;
-using L1有限N分区原子节点新建项_v3 = L1三分区原子节点新建项_v2;
-using L1有限N分区原子关系新建项_v3 = L1三分区原子关系新建项_v2;
-using L1有限N分区原子值新建项_v3 = L1三分区原子值新建项_v2;
-using L1有限N分区原子属性槽变更项_v3 = L1三分区原子属性槽变更项_v2;
-using L1有限N分区原子写集请求_v3 = L1三分区原子写集请求_v2;
-using L1有限N分区原子参与者写集_v3 = L1三分区原子参与者写集_v2;
-using L1有限N分区原子参与者结果_v3 = L1三分区原子参与者结果_v2;
+using L1有限N分区原子参与者身份 = L1三分区原子参与者身份;
+using L1有限N分区原子事实引用 = L1三分区原子事实引用;
+using L1有限N分区原子事实引用值 = L1三分区原子事实引用值;
+using L1有限N分区原子节点新建项 = L1三分区原子节点新建项;
+using L1有限N分区原子关系新建项 = L1三分区原子关系新建项;
+using L1有限N分区原子值新建项 = L1三分区原子值新建项;
+using L1有限N分区原子属性槽变更项 = L1三分区原子属性槽变更项;
+using L1有限N分区原子写集请求 = L1三分区原子写集请求;
+using L1有限N分区原子参与者写集 = L1三分区原子参与者写集;
+using L1有限N分区原子参与者结果 = L1三分区原子参与者结果;
 
-struct L1有限N分区原子事务请求_v3 final {
-    std::uint32_t 合同版本 = L1有限N分区原子事务合同版本_v3;
-    std::uint64_t 共同期望事实代次 = 0;
+struct L1有限N分区原子事务请求 final {
     L1所有者范围写入幂等身份 组合写入幂等身份;
-    std::vector<L1有限N分区原子参与者写集_v3> 参与者写集组;
-    friend bool operator==(const L1有限N分区原子事务请求_v3&,
-        const L1有限N分区原子事务请求_v3&) = default;
+    std::vector<L1有限N分区原子参与者写集> 参与者写集组;
+    friend bool operator==(const L1有限N分区原子事务请求&,
+        const L1有限N分区原子事务请求&) = default;
 };
 
-enum class L1有限N分区原子事务状态_v3 : std::uint8_t {
+enum class L1有限N分区原子事务状态 : std::uint8_t {
     已提交 = 1,
     精确重复 = 2,
     入口拒绝 = 3,
-    事实代次漂移 = 4,
     幂等冲突 = 5,
     引用冲突 = 6,
     资源失败 = 7,
@@ -506,18 +461,16 @@ enum class L1有限N分区原子事务状态_v3 : std::uint8_t {
     已可能发布 = 9
 };
 
-struct L1有限N分区原子事务结果_v3 final {
-    L1有限N分区原子事务状态_v3 状态 =
-        L1有限N分区原子事务状态_v3::入口拒绝;
-    std::uint32_t 合同版本 = L1有限N分区原子事务合同版本_v3;
+struct L1有限N分区原子事务结果 final {
+    L1有限N分区原子事务状态 状态 =
+        L1有限N分区原子事务状态::入口拒绝;
     L1所有者范围写入幂等身份 组合写入幂等身份;
-    std::uint64_t 共同事实代次 = 0;
     bool 是否已确认形成内存权威发布 = false;
     L1所有者范围重试边界 重试边界 =
         L1所有者范围重试边界::修正请求后可重试;
-    std::vector<L1有限N分区原子参与者结果_v3> 参与者结果组;
-    friend bool operator==(const L1有限N分区原子事务结果_v3&,
-        const L1有限N分区原子事务结果_v3&) = default;
+    std::vector<L1有限N分区原子参与者结果> 参与者结果组;
+    friend bool operator==(const L1有限N分区原子事务结果&,
+        const L1有限N分区原子事务结果&) = default;
 };
 
 struct L1所有者范围节点事实 final {
@@ -525,7 +478,6 @@ struct L1所有者范围节点事实 final {
     节点种类 种类 = 节点种类::普通;
     std::optional<L1所有者范围值表示种类> 属性类型表示;
     L1结构所有者身份 写入所有者;
-    std::uint64_t 创建事实代次 = 0;
     std::vector<L1所有者范围属性槽> 当前属性;
     friend bool operator==(const L1所有者范围节点事实&,
         const L1所有者范围节点事实&) = default;
@@ -538,7 +490,6 @@ struct L1所有者范围关系事实 final {
     稳定编码 关系类型节点;
     std::int64_t 角色或顺序 = 0;
     L1结构所有者身份 写入所有者;
-    std::uint64_t 创建事实代次 = 0;
     friend bool operator==(const L1所有者范围关系事实&,
         const L1所有者范围关系事实&) = default;
 };
@@ -550,7 +501,6 @@ struct L1所有者范围值事实 final {
     L1所有者范围原始值材料 材料;
     稳定编码 来源节点;
     L1结构所有者身份 写入所有者;
-    std::uint64_t 创建事实代次 = 0;
     friend bool operator==(const L1所有者范围值事实&,
         const L1所有者范围值事实&) = default;
 };
@@ -562,12 +512,10 @@ using L1节点当前引用事实 = std::variant<
 
 enum class L1所有者范围读取状态 : std::uint8_t {
     成功 = 1, 入口拒绝 = 2, 许可拒绝 = 3, 未找到 = 4,
-    属性未设置 = 6, 事实代次漂移 = 7,
-    资源失败 = 8, 内部不一致 = 9
+    属性未设置 = 6, 资源失败 = 8, 内部不一致 = 9
 };
 
 struct L1所有者范围首次写入读取请求 final {
-    std::uint32_t 合同版本 = L1所有者范围首次写入读取合同版本;
     L1所有者范围写入幂等身份 写入幂等身份;
     friend bool operator==(const L1所有者范围首次写入读取请求&,
         const L1所有者范围首次写入读取请求&) = default;
@@ -575,10 +523,8 @@ struct L1所有者范围首次写入读取请求 final {
 
 struct L1所有者范围首次写入读取结果 final {
     L1所有者范围读取状态 状态 = L1所有者范围读取状态::入口拒绝;
-    std::uint32_t 合同版本 = L1所有者范围首次写入读取合同版本;
     L1结构所有者身份 所有者;
     L1所有者范围写入幂等身份 写入幂等身份;
-    std::uint64_t 读取事实代次 = 0;
     std::optional<L1所有者范围写集请求> 首次规范化写集;
     std::optional<L1所有者范围写入结果> 首次写入结果;
     friend bool operator==(const L1所有者范围首次写入读取结果&,
@@ -586,7 +532,6 @@ struct L1所有者范围首次写入读取结果 final {
 };
 
 struct L1所有者范围事实读取请求 final {
-    std::uint32_t 合同版本 = L1所有者范围CRUD合同版本;
     稳定编码 编码;
     friend bool operator==(const L1所有者范围事实读取请求&,
         const L1所有者范围事实读取请求&) = default;
@@ -594,16 +539,13 @@ struct L1所有者范围事实读取请求 final {
 
 struct L1所有者范围当前读取结果 final {
     L1所有者范围读取状态 状态 = L1所有者范围读取状态::入口拒绝;
-    std::uint32_t 合同版本 = L1所有者范围CRUD合同版本;
     稳定编码 查询编码;
-    std::uint64_t 读取事实代次 = 0;
     std::optional<L1所有者范围事实副本> 事实;
     friend bool operator==(const L1所有者范围当前读取结果&,
         const L1所有者范围当前读取结果&) = default;
 };
 
 struct L1所有者范围源关系组读取请求 final {
-    std::uint32_t 合同版本 = L1所有者范围CRUD合同版本;
     稳定编码 源节点;
     稳定编码 关系类型节点;
     friend bool operator==(const L1所有者范围源关系组读取请求&,
@@ -611,7 +553,6 @@ struct L1所有者范围源关系组读取请求 final {
 };
 
 struct L1所有者范围目标关系组读取请求 final {
-    std::uint32_t 合同版本 = L1所有者范围CRUD合同版本;
     稳定编码 目标节点;
     稳定编码 关系类型节点;
     friend bool operator==(const L1所有者范围目标关系组读取请求&,
@@ -620,10 +561,8 @@ struct L1所有者范围目标关系组读取请求 final {
 
 struct L1所有者范围源关系组读取结果 final {
     L1所有者范围读取状态 状态 = L1所有者范围读取状态::入口拒绝;
-    std::uint32_t 合同版本 = L1所有者范围CRUD合同版本;
     稳定编码 源节点;
     稳定编码 关系类型节点;
-    std::uint64_t 读取事实代次 = 0;
     std::vector<L1所有者范围关系事实> 关系组;
     friend bool operator==(const L1所有者范围源关系组读取结果&,
         const L1所有者范围源关系组读取结果&) = default;
@@ -631,179 +570,147 @@ struct L1所有者范围源关系组读取结果 final {
 
 struct L1所有者范围目标关系组读取结果 final {
     L1所有者范围读取状态 状态 = L1所有者范围读取状态::入口拒绝;
-    std::uint32_t 合同版本 = L1所有者范围CRUD合同版本;
     稳定编码 目标节点;
     稳定编码 关系类型节点;
-    std::uint64_t 读取事实代次 = 0;
     std::vector<L1所有者范围关系事实> 关系组;
     friend bool operator==(const L1所有者范围目标关系组读取结果&,
         const L1所有者范围目标关系组读取结果&) = default;
 };
 
 
-enum class L1所有者范围当前事实读取状态_v2 : std::uint8_t {
+enum class L1所有者范围当前事实读取状态 : std::uint8_t {
     成功 = 1, 入口拒绝 = 2, 未找到 = 3,
-    事实代次漂移 = 5, 资源失败 = 7, 内部不一致 = 8
+    资源失败 = 7, 内部不一致 = 8
 };
 
-struct L1所有者范围当前事实读取请求_v2 final {
-    std::uint32_t 合同版本 = L1所有者范围当前事实读取合同版本_v2;
+struct L1所有者范围当前事实读取请求 final {
     L1结构所有者身份 所有者;
     稳定编码 事实编码;
-    std::uint64_t 期望事实代次 = 0;
-    friend bool operator==(const L1所有者范围当前事实读取请求_v2&,
-        const L1所有者范围当前事实读取请求_v2&) = default;
+    friend bool operator==(const L1所有者范围当前事实读取请求&,
+        const L1所有者范围当前事实读取请求&) = default;
 };
 
-struct L1所有者范围当前事实读取结果_v2 final {
-    L1所有者范围当前事实读取状态_v2 状态 =
-        L1所有者范围当前事实读取状态_v2::入口拒绝;
-    std::uint32_t 合同版本 = L1所有者范围当前事实读取合同版本_v2;
+struct L1所有者范围当前事实读取结果 final {
+    L1所有者范围当前事实读取状态 状态 =
+        L1所有者范围当前事实读取状态::入口拒绝;
     L1结构所有者身份 所有者;
     稳定编码 事实编码;
-    std::uint64_t 期望事实代次 = 0;
-    std::uint64_t 读取事实代次 = 0;
     std::optional<L1所有者范围事实副本> 载荷;
-    friend bool operator==(const L1所有者范围当前事实读取结果_v2&,
-        const L1所有者范围当前事实读取结果_v2&) = default;
+    friend bool operator==(const L1所有者范围当前事实读取结果&,
+        const L1所有者范围当前事实读取结果&) = default;
 };
 
-enum class L1所有者范围所属节点当前完整值组读取状态_v2 : std::uint8_t {
+enum class L1所有者范围所属节点当前完整值组读取状态 : std::uint8_t {
     成功 = 1, 入口拒绝 = 2, 未找到 = 3,
-    事实代次漂移 = 5, 资源失败 = 7, 内部不一致 = 8
+    资源失败 = 7, 内部不一致 = 8
 };
 
-struct L1所有者范围所属节点当前完整值组读取请求_v2 final {
-    std::uint32_t 合同版本 =
-        L1所有者范围所属节点当前完整值组读取合同版本_v2;
+struct L1所有者范围所属节点当前完整值组读取请求 final {
     L1结构所有者身份 所有者;
     稳定编码 所属节点;
-    std::uint64_t 期望事实代次 = 0;
     friend bool operator==(
-        const L1所有者范围所属节点当前完整值组读取请求_v2&,
-        const L1所有者范围所属节点当前完整值组读取请求_v2&) = default;
+        const L1所有者范围所属节点当前完整值组读取请求&,
+        const L1所有者范围所属节点当前完整值组读取请求&) = default;
 };
 
-struct L1所有者范围所属节点当前完整值组读取结果_v2 final {
-    L1所有者范围所属节点当前完整值组读取状态_v2 状态 =
-        L1所有者范围所属节点当前完整值组读取状态_v2::入口拒绝;
-    std::uint32_t 合同版本 =
-        L1所有者范围所属节点当前完整值组读取合同版本_v2;
+struct L1所有者范围所属节点当前完整值组读取结果 final {
+    L1所有者范围所属节点当前完整值组读取状态 状态 =
+        L1所有者范围所属节点当前完整值组读取状态::入口拒绝;
     L1结构所有者身份 所有者;
     稳定编码 所属节点;
-    std::uint64_t 期望事实代次 = 0;
-    std::uint64_t 读取事实代次 = 0;
     std::vector<L1所有者范围值事实> 载荷;
     friend bool operator==(
-        const L1所有者范围所属节点当前完整值组读取结果_v2&,
-        const L1所有者范围所属节点当前完整值组读取结果_v2&) = default;
+        const L1所有者范围所属节点当前完整值组读取结果&,
+        const L1所有者范围所属节点当前完整值组读取结果&) = default;
 };
 
-enum class L1所有者范围来源当前完整值组读取状态_v2 : std::uint8_t {
+enum class L1所有者范围来源当前完整值组读取状态 : std::uint8_t {
     成功 = 1, 入口拒绝 = 2, 未找到 = 3,
-    事实代次漂移 = 5, 资源失败 = 7, 内部不一致 = 8
+    资源失败 = 7, 内部不一致 = 8
 };
 
-struct L1所有者范围来源当前完整值组读取请求_v2 final {
-    std::uint32_t 合同版本 = L1所有者范围来源当前完整值组读取合同版本;
+struct L1所有者范围来源当前完整值组读取请求 final {
     L1结构所有者身份 所有者;
     稳定编码 来源节点;
-    std::uint64_t 期望事实代次 = 0;
-    friend bool operator==(const L1所有者范围来源当前完整值组读取请求_v2&,
-        const L1所有者范围来源当前完整值组读取请求_v2&) = default;
+    friend bool operator==(const L1所有者范围来源当前完整值组读取请求&,
+        const L1所有者范围来源当前完整值组读取请求&) = default;
 };
 
-struct L1所有者范围来源当前完整值组读取结果_v2 final {
-    L1所有者范围来源当前完整值组读取状态_v2 状态 =
-        L1所有者范围来源当前完整值组读取状态_v2::入口拒绝;
-    std::uint32_t 合同版本 = L1所有者范围来源当前完整值组读取合同版本;
+struct L1所有者范围来源当前完整值组读取结果 final {
+    L1所有者范围来源当前完整值组读取状态 状态 =
+        L1所有者范围来源当前完整值组读取状态::入口拒绝;
     L1结构所有者身份 所有者;
     稳定编码 来源节点;
-    std::uint64_t 期望事实代次 = 0, 读取事实代次 = 0;
     std::vector<L1所有者范围值事实> 当前值;
-    friend bool operator==(const L1所有者范围来源当前完整值组读取结果_v2&,
-        const L1所有者范围来源当前完整值组读取结果_v2&) = default;
+    friend bool operator==(const L1所有者范围来源当前完整值组读取结果&,
+        const L1所有者范围来源当前完整值组读取结果&) = default;
 };
 
-enum class L1所有者范围属性类型当前完整值组读取状态_v2 : std::uint8_t {
+enum class L1所有者范围属性类型当前完整值组读取状态 : std::uint8_t {
     成功 = 1, 入口拒绝 = 2, 未找到 = 3,
-    事实代次漂移 = 5, 资源失败 = 7, 内部不一致 = 8
+    资源失败 = 7, 内部不一致 = 8
 };
 
-struct L1所有者范围属性类型当前完整值组读取请求_v2 final {
-    std::uint32_t 合同版本 = L1所有者范围属性类型当前完整值组读取合同版本;
+struct L1所有者范围属性类型当前完整值组读取请求 final {
     L1结构所有者身份 所有者;
     稳定编码 属性类型节点;
-    std::uint64_t 期望事实代次 = 0;
-    friend bool operator==(const L1所有者范围属性类型当前完整值组读取请求_v2&,
-        const L1所有者范围属性类型当前完整值组读取请求_v2&) = default;
+    friend bool operator==(const L1所有者范围属性类型当前完整值组读取请求&,
+        const L1所有者范围属性类型当前完整值组读取请求&) = default;
 };
 
-struct L1所有者范围属性类型当前完整值组读取结果_v2 final {
-    L1所有者范围属性类型当前完整值组读取状态_v2 状态 =
-        L1所有者范围属性类型当前完整值组读取状态_v2::入口拒绝;
-    std::uint32_t 合同版本 = L1所有者范围属性类型当前完整值组读取合同版本;
+struct L1所有者范围属性类型当前完整值组读取结果 final {
+    L1所有者范围属性类型当前完整值组读取状态 状态 =
+        L1所有者范围属性类型当前完整值组读取状态::入口拒绝;
     L1结构所有者身份 所有者;
     稳定编码 属性类型节点;
-    std::uint64_t 期望事实代次 = 0, 读取事实代次 = 0;
     std::vector<L1所有者范围值事实> 当前值;
-    friend bool operator==(const L1所有者范围属性类型当前完整值组读取结果_v2&,
-        const L1所有者范围属性类型当前完整值组读取结果_v2&) = default;
+    friend bool operator==(const L1所有者范围属性类型当前完整值组读取结果&,
+        const L1所有者范围属性类型当前完整值组读取结果&) = default;
 };
 
-enum class L1所有者范围空域完整读取状态_v2 : std::uint8_t {
+enum class L1所有者范围空域完整读取状态 : std::uint8_t {
     成功 = 1, 入口拒绝 = 2, 未找到 = 3,
-    事实代次漂移 = 5, 资源失败 = 7, 内部不一致 = 8, 范围不支持 = 9
+    资源失败 = 7, 内部不一致 = 8, 范围不支持 = 9
 };
 
-struct L1所有者范围空域完整读取请求_v2 final {
-    std::uint32_t 合同版本 = L1所有者范围空域完整读取合同版本;
+struct L1所有者范围空域完整读取请求 final {
     L1结构所有者身份 所有者{};
-    std::uint64_t 期望事实代次 = 0;
-    friend bool operator==(const L1所有者范围空域完整读取请求_v2&,
-        const L1所有者范围空域完整读取请求_v2&) = default;
+    friend bool operator==(const L1所有者范围空域完整读取请求&,
+        const L1所有者范围空域完整读取请求&) = default;
 };
 
-struct L1所有者范围空域完整读取结果_v2 final {
-    L1所有者范围空域完整读取状态_v2 状态 =
-        L1所有者范围空域完整读取状态_v2::入口拒绝;
-    std::uint32_t 合同版本 = L1所有者范围空域完整读取合同版本;
+struct L1所有者范围空域完整读取结果 final {
+    L1所有者范围空域完整读取状态 状态 =
+        L1所有者范围空域完整读取状态::入口拒绝;
     L1结构所有者身份 所有者{};
-    std::uint64_t 期望事实代次 = 0, 读取事实代次 = 0;
     std::optional<bool> 空域{};
-    friend bool operator==(const L1所有者范围空域完整读取结果_v2&,
-        const L1所有者范围空域完整读取结果_v2&) = default;
+    friend bool operator==(const L1所有者范围空域完整读取结果&,
+        const L1所有者范围空域完整读取结果&) = default;
 };
 
-enum class L1节点当前完整引用读取状态_v2 : std::uint8_t {
+enum class L1节点当前完整引用读取状态 : std::uint8_t {
     成功 = 1, 入口拒绝 = 2, 未找到 = 3,
-    事实代次漂移 = 5, 资源失败 = 7, 内部不一致 = 8
+    资源失败 = 7, 内部不一致 = 8
 };
 
-struct L1节点当前完整引用读取请求_v2 final {
-    std::uint32_t 合同版本 = L1节点当前完整引用读取合同版本;
+struct L1节点当前完整引用读取请求 final {
     稳定编码 节点{};
-    std::uint64_t 期望事实代次 = 0;
-    friend bool operator==(const L1节点当前完整引用读取请求_v2&,
-        const L1节点当前完整引用读取请求_v2&) = default;
+    friend bool operator==(const L1节点当前完整引用读取请求&,
+        const L1节点当前完整引用读取请求&) = default;
 };
 
-struct L1节点当前完整引用读取结果_v2 final {
-    L1节点当前完整引用读取状态_v2 状态 =
-        L1节点当前完整引用读取状态_v2::入口拒绝;
-    std::uint32_t 合同版本 = L1节点当前完整引用读取合同版本;
+struct L1节点当前完整引用读取结果 final {
+    L1节点当前完整引用读取状态 状态 =
+        L1节点当前完整引用读取状态::入口拒绝;
     稳定编码 节点{};
-    std::uint64_t 期望事实代次 = 0, 读取事实代次 = 0;
     std::vector<L1节点当前引用事实> 引用{};
-    friend bool operator==(const L1节点当前完整引用读取结果_v2&,
-        const L1节点当前完整引用读取结果_v2&) = default;
+    friend bool operator==(const L1节点当前完整引用读取结果&,
+        const L1节点当前完整引用读取结果&) = default;
 };
 
 struct L1结构所有者当前读取结果 final {
     L1所有者范围读取状态 状态 = L1所有者范围读取状态::入口拒绝;
-    std::uint32_t 合同版本 = L1所有者范围CRUD合同版本;
     L1结构所有者身份 查询所有者;
-    std::uint64_t 读取事实代次 = 0;
     std::optional<L1结构所有者事实> 所有者事实;
     friend bool operator==(const L1结构所有者当前读取结果&,
         const L1结构所有者当前读取结果&) = default;
@@ -832,7 +739,7 @@ struct L1所有者范围一致目标关系组选择项 final {
 
 enum class L1所有者范围一致当前读取状态 : std::uint8_t {
     成功 = 1, 入口拒绝 = 2, 许可拒绝 = 3,
-    事实代次漂移 = 4, 资源失败 = 5, 内部不一致 = 6
+    资源失败 = 5, 内部不一致 = 6
 };
 
 enum class L1所有者范围一致当前读取项目状态 : std::uint8_t {
@@ -841,8 +748,6 @@ enum class L1所有者范围一致当前读取项目状态 : std::uint8_t {
 };
 
 struct L1所有者范围一致当前读取请求 final {
-    std::uint32_t 合同版本 = L1所有者范围一致当前读取合同版本;
-    std::uint64_t 期望事实代次 = 0;
     std::vector<L1结构所有者身份> 所有者;
     std::vector<稳定编码> 节点;
     std::vector<稳定编码> 关系;
@@ -923,9 +828,6 @@ struct L1所有者范围一致目标关系组读取结果项 final {
 struct L1所有者范围一致当前读取结果 final {
     L1所有者范围一致当前读取状态 状态 =
         L1所有者范围一致当前读取状态::入口拒绝;
-    std::uint32_t 合同版本 = L1所有者范围一致当前读取合同版本;
-    std::uint64_t 期望事实代次 = 0;
-    std::uint64_t 读取事实代次 = 0;
     std::vector<L1所有者范围一致所有者读取结果项> 所有者;
     std::vector<L1所有者范围一致节点读取结果项> 节点;
     std::vector<L1所有者范围一致关系读取结果项> 关系;
@@ -989,9 +891,6 @@ struct L1所有者范围一致关系类型闭包读取结果项 final {
 };
 
 struct L1所有者范围一致关系类型闭包读取请求 final {
-    std::uint32_t 合同版本 =
-        L1所有者范围一致关系类型闭包读取合同版本;
-    std::uint64_t 期望事实代次 = 0;
     std::vector<L1结构所有者身份> 所有者;
     std::vector<稳定编码> 节点;
     std::vector<稳定编码> 关系;
@@ -1007,10 +906,6 @@ struct L1所有者范围一致关系类型闭包读取请求 final {
 struct L1所有者范围一致关系类型闭包读取结果 final {
     L1所有者范围一致当前读取状态 状态 =
         L1所有者范围一致当前读取状态::入口拒绝;
-    std::uint32_t 合同版本 =
-        L1所有者范围一致关系类型闭包读取合同版本;
-    std::uint64_t 期望事实代次 = 0;
-    std::uint64_t 读取事实代次 = 0;
     std::vector<L1所有者范围一致所有者读取结果项> 所有者;
     std::vector<L1所有者范围一致节点读取结果项> 节点;
     std::vector<L1所有者范围一致关系读取结果项> 关系;

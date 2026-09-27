@@ -76,7 +76,6 @@ struct 材料解析见证_B1 final {
   完整材料解析族_B1 解析族{完整材料解析族_B1::有序I64完整载荷};
   std::uint32_t 规则版本{1};
   完整向量点_B1 完整点;
-  结构生命周期_B1 材料生命周期;
   friend bool operator==(const 材料解析见证_B1 &,
                          const 材料解析见证_B1 &) = default;
 };
@@ -84,7 +83,6 @@ struct 材料解析见证_B1 final {
 struct 完整属性见证_B1 final {
   稳定编码 编码{}, 所属{}, 属性类型{}, 来源{};
   特征值内容 内容;
-  结构生命周期_B1 生命周期;
   friend bool operator==(const 完整属性见证_B1 &,
                          const 完整属性见证_B1 &) = default;
 };

@@ -12,8 +12,6 @@
 
 namespace 海中鱼巣 {
 
-inline constexpr std::uint32_t 因果数据合同版本 = 1;
-
 struct 因果信息身份 final {
   稳定编码 编码{};
   friend bool operator==(const 因果信息身份 &, const 因果信息身份 &) = default;
@@ -170,12 +168,6 @@ struct 因果信息 final {
   因果定义 定义;
   friend bool operator==(const 因果信息 &, const 因果信息 &) = default;
 };
-struct 因果读取预算 final {
-  std::uint64_t 最大候选数 = 0, 最大定义项数 = 0, 最大关系数 = 0,
-                最大值元素数 = 0, 最大来源材料数 = 0, 最大展开深度 = 0;
-  friend bool operator==(const 因果读取预算 &, const 因果读取预算 &) = default;
-};
-
 enum class 因果数据状态 : std::uint8_t {
   已创建 = 1,
   已复用 = 2,
@@ -191,8 +183,6 @@ enum class 因果数据状态 : std::uint8_t {
   时序冲突 = 13,
   来源不足 = 14,
   动作来源未实现 = 15,
-  数量预算不足 = 17,
-  事实代次漂移 = 18,
   幂等冲突 = 19,
   引用冲突 = 20,
   旧格式不支持 = 21,
@@ -209,18 +199,13 @@ enum class 因果发布阶段 : std::uint8_t {
 };
 struct 因果操作结果 final {
   因果数据状态 状态 = 因果数据状态::入口拒绝;
-  std::uint32_t 合同版本 = 1;
-  std::uint64_t Gread = 0;
-  std::optional<std::uint64_t> 发布代次;
   因果发布阶段 阶段 = 因果发布阶段::无写入;
   friend bool operator==(const 因果操作结果 &, const 因果操作结果 &) = default;
 };
 struct 因果内容事实 final {
-  std::uint64_t Gread = 0;
   因果信息 信息;
   稳定编码 族归属关系{}, 定义值{};
   std::vector<稳定编码> 定义引用关系组;
-  std::uint64_t 创建事实代次 = 0;
   friend bool operator==(const 因果内容事实 &, const 因果内容事实 &) = default;
 };
 struct 因果证据角色绑定 final {
@@ -256,79 +241,51 @@ struct 因果证据定位 final {
   friend bool operator==(const 因果证据定位 &, const 因果证据定位 &) = default;
 };
 struct 因果证据事实 final {
-  std::uint64_t Gread = 0;
   因果信息身份 因果;
   因果证据提交 内容;
   稳定编码 锚点关系{};
   std::vector<稳定编码> 来源关系组;
-  std::uint64_t 创建事实代次 = 0;
   friend bool operator==(const 因果证据事实 &, const 因果证据事实 &) = default;
 };
 struct 因果发布请求 final {
-  std::uint32_t 合同版本 = 1;
-  std::uint64_t G0 = 0;
   L1所有者范围写入幂等身份 幂等身份{};
   因果定义 定义;
-  因果读取预算 预算;
   friend bool operator==(const 因果发布请求 &, const 因果发布请求 &) = default;
 };
 struct 因果当前读取请求 final {
-  std::uint32_t 合同版本 = 1;
-  std::uint64_t G0 = 0;
   因果信息身份 身份;
-  因果读取预算 预算;
 };
 struct 因果精确定义查询请求 final {
-  std::uint32_t 合同版本 = 1;
-  std::uint64_t Gread = 0;
   因果定义 定义;
-  因果读取预算 预算;
 };
 enum class 因果特征召回方向 : std::uint8_t { 条件 = 1, 结果 = 2 };
 struct 因果按特征查询请求 final {
-  std::uint32_t 合同版本 = 1;
-  std::uint64_t Gread = 0;
   因果特征概念引用 特征概念;
   因果特征召回方向 方向 = 因果特征召回方向::结果;
-  因果读取预算 预算;
 };
 struct 因果证据关联请求 final {
-  std::uint32_t 合同版本 = 1;
-  std::uint64_t G0 = 0;
   L1所有者范围写入幂等身份 幂等身份{};
   因果信息身份 因果;
   因果证据提交 证据;
-  因果读取预算 预算;
   friend bool operator==(const 因果证据关联请求 &,
                          const 因果证据关联请求 &) = default;
 };
 struct 因果证据读取请求 final {
-  std::uint32_t 合同版本 = 1;
-  std::uint64_t Gread = 0;
   因果信息身份 因果;
   std::optional<动态信息身份> 发生锚点;
-  因果读取预算 预算;
 };
 struct 因果证据退出请求 final {
-  std::uint32_t 合同版本 = 1;
-  std::uint64_t G0 = 0;
   L1所有者范围写入幂等身份 幂等身份{};
   因果证据定位 定位;
-  因果读取预算 预算;
   friend bool operator==(const 因果证据退出请求 &,
                          const 因果证据退出请求 &) = default;
 };
 struct 因果退出请求 final {
-  std::uint32_t 合同版本 = 1;
-  std::uint64_t G0 = 0;
   L1所有者范围写入幂等身份 幂等身份{};
   因果信息身份 身份;
-  因果读取预算 预算;
   friend bool operator==(const 因果退出请求 &, const 因果退出请求 &) = default;
 };
 struct 因果当前身份请求 final {
-  std::uint32_t 合同版本 = 1;
-  std::uint64_t G0 = 0;
   因果信息身份 身份;
 };
 struct 因果单项结果 final {
@@ -359,21 +316,16 @@ struct 因果概念核验项 final {
   因果概念类别 类别 = 因果概念类别::存在;
   稳定编码 本体根{}, 根归属关系{};
   std::optional<特征类型身份> 正式特征类型;
-  std::uint64_t 创建事实代次 = 0;
   friend bool operator==(const 因果概念核验项 &,
                          const 因果概念核验项 &) = default;
 };
 struct 因果概念核验请求 final {
-  std::uint32_t 合同版本 = 1;
-  std::uint64_t Gread = 0;
   因果定义 定义;
-  因果读取预算 预算;
 };
 struct 因果概念核验结果 final {
   因果操作结果 操作;
   std::optional<因果定义> 已核验定义;
   std::vector<因果概念核验项> 概念组;
-  std::uint64_t 已读取关系数 = 0, 已读取值元素数 = 0, 已读取材料数 = 0;
   bool 成功() const noexcept;
 };
 class 因果概念核验提供者 {
@@ -409,13 +361,12 @@ struct 因果结构交付 final {
 namespace 因果合同细节 {
 using namespace 海中鱼巣;
 inline bool 读取头(const 因果操作结果 &o) noexcept {
-  return o.状态 == 因果数据状态::已读取 && o.合同版本 == 1 && o.Gread &&
-         !o.发布代次 && o.阶段 == 因果发布阶段::无写入;
+  return o.状态 == 因果数据状态::已读取 &&
+         o.阶段 == 因果发布阶段::无写入;
 }
 inline bool 内容完整(const 因果内容事实 &v) noexcept {
   try {
-    if (!v.Gread || !有效(v.信息.身份) ||
-        !v.创建事实代次 || v.创建事实代次 > v.Gread || !有效(v.族归属关系) ||
+    if (!有效(v.信息.身份) || !有效(v.族归属关系) ||
         !有效(v.定义值))
       return false;
     std::vector<稳定编码> ids{v.信息.身份.编码, v.族归属关系, v.定义值};
@@ -434,9 +385,7 @@ inline bool 内容完整(const 因果内容事实 &v) noexcept {
 }
 inline bool 证据完整(const 因果证据事实 &v) noexcept {
   try {
-    if (!v.Gread || !有效(v.因果) ||
-        !有效(v.内容.发生锚点) || !有效(v.锚点关系) ||
-        !v.创建事实代次 || v.创建事实代次 > v.Gread)
+    if (!有效(v.因果) || !有效(v.内容.发生锚点) || !有效(v.锚点关系))
       return false;
     std::vector<稳定编码> ids{v.锚点关系};
     ids.insert(ids.end(), v.来源关系组.begin(), v.来源关系组.end());
@@ -451,34 +400,22 @@ inline bool 证据完整(const 因果证据事实 &v) noexcept {
 
 namespace 海中鱼巣 {
 inline bool 因果单项结果::成功() const noexcept {
-  const bool repeated = 操作.状态 == 因果数据状态::精确重复;
-  const bool create =
-      操作.状态 == 因果数据状态::已创建 || 操作.状态 == 因果数据状态::已复用 ||
-      (repeated && 内容 && 操作.发布代次);
-  const bool read = 操作.状态 == 因果数据状态::已读取;
-  const bool removed = 操作.状态 == 因果数据状态::已删除 || (repeated && !内容);
-  if (removed)
-    return 操作.合同版本 == 1 && 操作.发布代次 &&
-           操作.阶段 == 因果发布阶段::已读回 && 操作.Gread >= *操作.发布代次 && !内容;
-  if (!内容 || !因果合同细节::内容完整(*内容) || 内容->Gread != 操作.Gread)
-    return false;
-  if (操作.状态 == 因果数据状态::已复用)
-    return 操作.合同版本 == 1 && !操作.发布代次 &&
-           操作.阶段 == 因果发布阶段::无写入;
-  if (create)
-    return 操作.合同版本 == 1 && 操作.发布代次 && *操作.发布代次 &&
-           操作.阶段 == 因果发布阶段::已读回 && 操作.Gread >= *操作.发布代次 &&
-           内容->创建事实代次 == *操作.发布代次;
-  if (read)
-    return 因果合同细节::读取头(操作);
-  return false;
+  if (操作.状态 == 因果数据状态::已删除)
+    return 操作.阶段 == 因果发布阶段::已读回 && !内容;
+  if (!内容 || !因果合同细节::内容完整(*内容)) return false;
+  if (操作.状态 == 因果数据状态::已读取 ||
+      操作.状态 == 因果数据状态::已复用)
+    return 操作.阶段 == 因果发布阶段::无写入;
+  return (操作.状态 == 因果数据状态::已创建 ||
+          操作.状态 == 因果数据状态::精确重复) &&
+         操作.阶段 == 因果发布阶段::已读回;
 }
 inline bool 因果组结果::成功() const noexcept {
   if (!因果合同细节::读取头(操作))
     return false;
   稳定编码 previous{};
   for (const auto &v : 因果组) {
-    if (!因果合同细节::内容完整(v) || v.Gread != 操作.Gread ||
+    if (!因果合同细节::内容完整(v) ||
         (有效(previous) && !(previous < v.信息.身份.编码)))
       return false;
     previous = v.信息.身份.编码;
@@ -493,10 +430,9 @@ inline bool 因果证据结果::成功() const noexcept {
                      操作.状态 == 因果数据状态::精确重复;
   if (read && !因果合同细节::读取头(操作))
     return false;
-  if (reuse && (操作.发布代次 || 操作.阶段 != 因果发布阶段::无写入))
+  if (reuse && 操作.阶段 != 因果发布阶段::无写入)
     return false;
-  if (write && (!操作.发布代次 || 操作.阶段 != 因果发布阶段::已读回 ||
-                操作.Gread < *操作.发布代次))
+  if (write && 操作.阶段 != 因果发布阶段::已读回)
     return false;
   if (!read && !reuse && !write)
     return false;
@@ -508,17 +444,11 @@ inline bool 因果证据结果::成功() const noexcept {
     return false;
   动态信息身份 previous{};
   for (const auto &v : 证据组) {
-    if (!因果合同细节::证据完整(v) || v.Gread != 操作.Gread ||
+    if (!因果合同细节::证据完整(v) ||
         (有效(previous) && !(previous.编码 < v.内容.发生锚点.编码)))
       return false;
     previous = v.内容.发生锚点;
   }
-  if (操作.状态 == 因果数据状态::已关联)
-    return 证据组.front().创建事实代次 == *操作.发布代次;
-  if (操作.状态 == 因果数据状态::已删除)
-    return 证据组.empty();
-  if (操作.状态 == 因果数据状态::精确重复)
-    return 证据组.empty() || 证据组.front().创建事实代次 == *操作.发布代次;
   return true;
 }
 inline bool 因果概念核验结果::成功() const noexcept {
@@ -527,7 +457,7 @@ inline bool 因果概念核验结果::成功() const noexcept {
   std::uint32_t expected = 1;
   for (const auto &v : 概念组) {
     if (v.引用序号 != expected++ || !有效(v.概念) || !有效(v.本体根) ||
-        !有效(v.根归属关系) || !v.创建事实代次 || v.创建事实代次 > 操作.Gread)
+        !有效(v.根归属关系))
       return false;
     if (v.类别 == 因果概念类别::特征域) {
       if (!v.正式特征类型 || !有效(*v.正式特征类型))
