@@ -13,6 +13,10 @@ namespace {
 std::recursive_mutex 特征概念树互斥;
 
 bool 是I64类型(特征概念材料物理类型 类型) noexcept;
+std::optional<材料物理类型> 转换特征值材料类型(
+    特征概念材料物理类型 类型) noexcept;
+std::uint64_t 计算I64绝对差(
+    std::int64_t 左值, std::int64_t 右值) noexcept;
 bool 相邻或重叠(
     const 特征概念I64闭区间& 左,
     const 特征概念I64闭区间& 右) noexcept;
@@ -59,7 +63,8 @@ bool 结构仍存在() noexcept {
 }
 
 稳定编码 新建结构节点() noexcept {
-    return 全局基础数据集.新建节点(特征概念树);
+    // 字段定义节点只作为内部字段关系的键，不进入概念树外部根链。
+    return 全局基础数据集.新建节点();
 }
 
 bool 是支持的材料类型(特征概念材料物理类型 类型) noexcept {
@@ -145,6 +150,98 @@ std::optional<特征概念定义> 规范化定义(const 特征概念定义& 输�
         std::unique(结果.名称关系.begin(), 结果.名称关系.end()),
         结果.名称关系.end());
     return 结果;
+}
+
+特征概念定义 转为定义(const 特征概念信息& 信息) {
+    return {
+        信息.材料类型,
+        信息.值域,
+        信息.单位,
+        信息.比较规则,
+        信息.聚合规则,
+        信息.名称关系};
+}
+
+bool 结构定义相同(
+    const 特征概念定义& 左,
+    const 特征概念定义& 右) noexcept {
+    return 左.材料类型 == 右.材料类型
+        && 左.值域 == 右.值域
+        && 左.单位 == 右.单位
+        && 左.比较规则 == 右.比较规则
+        && 左.聚合规则 == 右.聚合规则;
+}
+
+bool I64值域包含(
+    const std::vector<特征概念I64闭区间>& 父域,
+    const std::vector<特征概念I64闭区间>& 子域) noexcept {
+    return std::all_of(子域.begin(), 子域.end(),
+        [&](const 特征概念I64闭区间& 子区间) {
+            return std::any_of(父域.begin(), 父域.end(),
+                [&](const 特征概念I64闭区间& 父区间) {
+                    return 父区间.下界 <= 子区间.下界
+                        && 父区间.上界 >= 子区间.上界;
+                });
+        });
+}
+
+bool 节点集合包含(
+    const std::vector<稳定编码>& 父域,
+    const std::vector<稳定编码>& 子域) noexcept {
+    return std::all_of(子域.begin(), 子域.end(), [&](稳定编码 子项) {
+        return std::binary_search(父域.begin(), 父域.end(), 子项);
+    });
+}
+
+bool 是严格子值域(
+    const 特征概念定义& 父,
+    const 特征概念定义& 子) noexcept {
+    if (父.材料类型 != 子.材料类型 || 父.单位 != 子.单位
+        || 父.值域.index() != 子.值域.index()) {
+        return false;
+    }
+    if (const auto* 父I64 =
+        std::get_if<std::vector<特征概念I64闭区间>>(&父.值域)) {
+        const auto& 子I64 = std::get<std::vector<特征概念I64闭区间>>(子.值域);
+        return *父I64 != 子I64 && I64值域包含(*父I64, 子I64);
+    }
+    const auto& 父节点组 = std::get<std::vector<稳定编码>>(父.值域);
+    const auto& 子节点组 = std::get<std::vector<稳定编码>>(子.值域);
+    return 父节点组 != 子节点组 && 节点集合包含(父节点组, 子节点组);
+}
+
+std::optional<std::uint64_t> I64命中区间宽度(
+    const std::vector<特征概念I64闭区间>& 值域,
+    std::int64_t 值) noexcept {
+    std::optional<std::uint64_t> 最小宽度;
+    for (const auto& 区间 : 值域) {
+        if (值 < 区间.下界 || 值 > 区间.上界) continue;
+        const auto 宽度 = 计算I64绝对差(区间.下界, 区间.上界);
+        if (!最小宽度 || 宽度 < *最小宽度) 最小宽度 = 宽度;
+    }
+    return 最小宽度;
+}
+
+std::optional<std::uint64_t> 值域匹配尺度(
+    const 特征概念信息& 概念,
+    const 特征概念准确值& 值,
+    const 新_特征值类& 特征值服务) noexcept {
+    if (概念.材料类型 == 特征概念材料物理类型::I64标量) {
+        const auto* I64 = std::get_if<std::int64_t>(&值);
+        if (!I64) return std::nullopt;
+        return I64命中区间宽度(
+            std::get<std::vector<特征概念I64闭区间>>(概念.值域), *I64);
+    }
+
+    const auto 期望类型 = 转换特征值材料类型(概念.材料类型);
+    const auto* 值节点 = std::get_if<稳定编码>(&值);
+    if (!期望类型 || !值节点 || !有效(*值节点)) return std::nullopt;
+    const auto 值信息 = 特征值服务.获取特征值(*值节点);
+    if (!值信息 || 值信息->物理类型 != *期望类型) return std::nullopt;
+    const auto& 值域 = std::get<std::vector<稳定编码>>(概念.值域);
+    return std::binary_search(值域.begin(), 值域.end(), *值节点)
+        ? std::optional<std::uint64_t>{static_cast<std::uint64_t>(值域.size())}
+        : std::nullopt;
 }
 
 std::optional<std::int64_t> 读取唯一I64字段(
@@ -302,19 +399,55 @@ bool 概念_特征类::初始化() noexcept {
             }
         }
 
-        const auto 已有 = 查询特征概念(*规范定义);
-        if (!已有.empty()) {
-            if (已有.size() != 1) return {};
-            const auto 节点 = 已有.front();
-            const auto 父关系 = 全局基础数据集.查询源关系(
-                父节点, 基础外部关系类型::父子);
-            const bool 已挂接 = std::any_of(父关系.begin(), 父关系.end(),
-                [节点](const 基础外部关系& 关系) { return 关系.目标节点 == 节点; });
-            if (!已挂接 && !有效(全局基础数据集.添加关系(
-                父节点, 节点, 基础外部关系类型::父子))) {
-                return {};
+        if (父节点 != 特征概念树) {
+            const auto 父信息 = 获取特征概念(父节点);
+            if (!父信息) return {};
+            const auto 父定义 = 规范化定义(转为定义(*父信息));
+            if (!父定义 || !是严格子值域(*父定义, *规范定义)) return {};
+        }
+
+        // 根链节点自身就是不同特征类型的身份。即使物理材料、单位和值域
+        // 完全相同，也不能把X/Y/Z坐标等不同根链类型合并成同一节点。
+        if (父节点 != 特征概念树) {
+            std::vector<稳定编码> 同定义直接子节点;
+            for (const auto& 关系 : 全局基础数据集.查询源关系(
+                父节点, 基础外部关系类型::父子)) {
+                const auto 子信息 = 获取特征概念(关系.目标节点);
+                if (!子信息) continue;
+                const auto 子定义 = 规范化定义(转为定义(*子信息));
+                if (子定义 && 结构定义相同(*子定义, *规范定义)) {
+                    同定义直接子节点.push_back(关系.目标节点);
+                }
             }
-            return 节点;
+            std::sort(同定义直接子节点.begin(), 同定义直接子节点.end());
+            同定义直接子节点.erase(
+                std::unique(同定义直接子节点.begin(), 同定义直接子节点.end()),
+                同定义直接子节点.end());
+            if (同定义直接子节点.size() > 1) return {};
+            if (同定义直接子节点.size() == 1) {
+                const auto 节点 = 同定义直接子节点.front();
+                const auto 已有信息 = 获取特征概念(节点);
+                if (!已有信息) return {};
+                std::vector<稳定编码> 本次新增名称字段;
+                for (const auto 名称 : 规范定义->名称关系) {
+                    if (std::find(已有信息->名称关系.begin(),
+                        已有信息->名称关系.end(), 名称)
+                        != 已有信息->名称关系.end()) {
+                        continue;
+                    }
+                    const auto 字段关系 = 全局基础数据集.添加字段节点(
+                        节点, 名称关系字段, 名称);
+                    if (!有效(字段关系)) {
+                        for (auto 位置 = 本次新增名称字段.rbegin();
+                            位置 != 本次新增名称字段.rend(); ++位置) {
+                            全局基础数据集.删除字段(*位置);
+                        }
+                        return {};
+                    }
+                    本次新增名称字段.push_back(字段关系);
+                }
+                return 节点;
+            }
         }
 
         const auto 节点 = 全局基础数据集.新建节点();
@@ -480,10 +613,10 @@ std::vector<稳定编码> 概念_特征类::查询特征概念(
                 待查.push_back(子节点);
                 const auto 信息 = 获取特征概念(子节点);
                 if (!信息) continue;
-                const 特征概念定义 候选{
-                    信息->材料类型, 信息->值域, 信息->单位,
-                    信息->比较规则, 信息->聚合规则, 信息->名称关系};
-                if (候选 == *规范定义) 结果.push_back(子节点);
+                const auto 候选 = 规范化定义(转为定义(*信息));
+                if (候选 && 结构定义相同(*候选, *规范定义)) {
+                    结果.push_back(子节点);
+                }
             }
         }
         std::sort(结果.begin(), 结果.end());
@@ -491,6 +624,158 @@ std::vector<稳定编码> 概念_特征类::查询特征概念(
         return 结果;
     } catch (...) {
         return {};
+    }
+}
+
+特征概念按值查找结果 概念_特征类::查找值对应的最具体概念(
+    稳定编码 特征类型概念,
+    const 特征概念准确值& 特征值,
+    std::optional<稳定编码> 单位,
+    const 新_特征值类& 特征值服务) const noexcept {
+    特征概念按值查找结果 结果;
+    try {
+        std::lock_guard 锁(特征概念树互斥);
+        if (!结构仍存在() || !是特征概念节点(特征类型概念)) return 结果;
+
+        const auto 根链关系 = 全局基础数据集.查询目标关系(
+            特征类型概念, 基础外部关系类型::父子);
+        if (根链关系.size() != 1
+            || 根链关系.front().源节点 != 特征概念树) {
+            结果.状态 = 特征概念查找状态::结构不一致;
+            return 结果;
+        }
+
+        const auto 根信息 = 获取特征概念(特征类型概念);
+        if (!根信息) {
+            结果.状态 = 特征概念查找状态::结构不一致;
+            return 结果;
+        }
+        if (根信息->单位 != 单位) {
+            结果.状态 = 特征概念查找状态::单位不相容;
+            return 结果;
+        }
+        if (根信息->材料类型 == 特征概念材料物理类型::I64标量) {
+            if (!std::holds_alternative<std::int64_t>(特征值)) {
+                结果.状态 = 特征概念查找状态::材料类型不相容;
+                return 结果;
+            }
+        } else {
+            const auto 期望类型 = 转换特征值材料类型(根信息->材料类型);
+            const auto* 值节点 = std::get_if<稳定编码>(&特征值);
+            const auto 值信息 = 值节点
+                ? 特征值服务.获取特征值(*值节点) : std::nullopt;
+            if (!期望类型 || !值信息 || 值信息->物理类型 != *期望类型) {
+                结果.状态 = 特征概念查找状态::材料类型不相容;
+                return 结果;
+            }
+        }
+
+        struct 待查项 final {
+            稳定编码 节点;
+            std::vector<稳定编码> 路径;
+        };
+        struct 命中项 final {
+            稳定编码 节点;
+            std::uint64_t 尺度 = 0;
+            std::vector<稳定编码> 路径;
+        };
+        std::vector<待查项> 待查{{特征类型概念, {特征类型概念}}};
+        std::vector<稳定编码> 已查;
+        std::vector<命中项> 命中组;
+
+        while (!待查.empty()) {
+            auto 当前 = std::move(待查.back());
+            待查.pop_back();
+            if (std::find(已查.begin(), 已查.end(), 当前.节点) != 已查.end()) {
+                结果.状态 = 特征概念查找状态::结构不一致;
+                return 结果;
+            }
+            已查.push_back(当前.节点);
+
+            const auto 当前信息 = 获取特征概念(当前.节点);
+            if (!当前信息 || 当前信息->材料类型 != 根信息->材料类型
+                || 当前信息->单位 != 根信息->单位) {
+                结果.状态 = 特征概念查找状态::结构不一致;
+                return 结果;
+            }
+            const auto 当前尺度 = 值域匹配尺度(*当前信息, 特征值, 特征值服务);
+            if (!当前尺度) continue;
+            命中组.push_back({
+                当前.节点, *当前尺度, 当前.路径});
+
+            const auto 当前定义 = 规范化定义(转为定义(*当前信息));
+            if (!当前定义) {
+                结果.状态 = 特征概念查找状态::结构不一致;
+                return 结果;
+            }
+            for (const auto& 关系 : 全局基础数据集.查询源关系(
+                当前.节点, 基础外部关系类型::父子)) {
+                if (std::find(当前.路径.begin(), 当前.路径.end(), 关系.目标节点)
+                    != 当前.路径.end()) {
+                    结果.状态 = 特征概念查找状态::结构不一致;
+                    return 结果;
+                }
+                const auto 子信息 = 获取特征概念(关系.目标节点);
+                if (!子信息) {
+                    结果.状态 = 特征概念查找状态::结构不一致;
+                    return 结果;
+                }
+                const auto 子定义 = 规范化定义(转为定义(*子信息));
+                if (!子定义 || !是严格子值域(*当前定义, *子定义)) {
+                    结果.状态 = 特征概念查找状态::结构不一致;
+                    return 结果;
+                }
+                auto 子路径 = 当前.路径;
+                子路径.push_back(关系.目标节点);
+                待查.push_back({关系.目标节点, std::move(子路径)});
+            }
+        }
+
+        if (命中组.empty()) {
+            结果.状态 = 特征概念查找状态::未找到;
+            return 结果;
+        }
+        const auto 最佳尺度 = std::min_element(
+            命中组.begin(), 命中组.end(),
+            [](const 命中项& 左, const 命中项& 右) {
+                return 左.尺度 < 右.尺度;
+            })->尺度;
+        std::vector<const 命中项*> 最具体候选;
+        for (const auto& 候选 : 命中组) {
+            if (候选.尺度 != 最佳尺度) continue;
+            const bool 是同尺度候选的祖先 = std::any_of(
+                命中组.begin(), 命中组.end(),
+                [&](const 命中项& 其它) {
+                    return 其它.尺度 == 最佳尺度
+                        && 其它.节点 != 候选.节点
+                        && std::find(其它.路径.begin(), 其它.路径.end(), 候选.节点)
+                            != 其它.路径.end();
+                });
+            if (!是同尺度候选的祖先) 最具体候选.push_back(&候选);
+        }
+        if (最具体候选.size() > 1) {
+            std::vector<稳定编码> 冲突候选;
+            冲突候选.reserve(最具体候选.size());
+            for (const auto* 候选 : 最具体候选) {
+                冲突候选.push_back(候选->节点);
+            }
+            std::sort(冲突候选.begin(), 冲突候选.end());
+            结果.状态 = 特征概念查找状态::匹配冲突;
+            结果.冲突候选 = std::move(冲突候选);
+            return 结果;
+        }
+        if (最具体候选.size() != 1) {
+            结果.状态 = 特征概念查找状态::结构不一致;
+            return 结果;
+        }
+        结果.状态 = 特征概念查找状态::已找到;
+        结果.概念节点 = 最具体候选.front()->节点;
+        return 结果;
+    } catch (...) {
+        结果.状态 = 特征概念查找状态::资源失败;
+        结果.概念节点.reset();
+        结果.冲突候选.clear();
+        return 结果;
     }
 }
 

@@ -12,6 +12,9 @@ std::recursive_mutex 新特征互斥;
 稳定编码 节点类型字段{};
 稳定编码 特征节点类型{};
 稳定编码 特征概念字段{};
+稳定编码 I64实例值域字段{};
+稳定编码 非I64实例值域字段{};
+稳定编码 实例单位字段{};
 稳定编码 当前值字段{};
 稳定编码 历史值字段{};
 
@@ -23,6 +26,9 @@ bool 结构已初始化() noexcept {
     return 有效(节点类型字段)
         && 有效(特征节点类型)
         && 有效(特征概念字段)
+        && 有效(I64实例值域字段)
+        && 有效(非I64实例值域字段)
+        && 有效(实例单位字段)
         && 有效(当前值字段)
         && 有效(历史值字段);
 }
@@ -32,6 +38,9 @@ bool 结构仍存在() noexcept {
         && 节点仍存在(节点类型字段)
         && 节点仍存在(特征节点类型)
         && 节点仍存在(特征概念字段)
+        && 节点仍存在(I64实例值域字段)
+        && 节点仍存在(非I64实例值域字段)
+        && 节点仍存在(实例单位字段)
         && 节点仍存在(当前值字段)
         && 节点仍存在(历史值字段);
 }
@@ -110,6 +119,128 @@ bool 准确值材料相容(
     return 信息 && 信息->物理类型 == *期望类型;
 }
 
+std::vector<std::int64_t> 展平I64值域(
+    const std::vector<特征概念I64闭区间>& 区间组) {
+    std::vector<std::int64_t> 结果;
+    结果.reserve(区间组.size() * 2);
+    for (const auto& 区间 : 区间组) {
+        结果.push_back(区间.下界);
+        结果.push_back(区间.上界);
+    }
+    return 结果;
+}
+
+bool 写入实例值域(
+    稳定编码 特征节点,
+    const 特征概念值域& 值域,
+    std::vector<稳定编码>& 已写字段) {
+    if (const auto* I64域 =
+        std::get_if<std::vector<特征概念I64闭区间>>(&值域)) {
+        const auto 关系 = 全局基础数据集.添加字段值(
+            特征节点, I64实例值域字段,
+            基础值{基础原始值{展平I64值域(*I64域)}});
+        if (有效(关系)) 已写字段.push_back(关系);
+        return 有效(关系);
+    }
+    for (const auto 值节点 : std::get<std::vector<稳定编码>>(值域)) {
+        const auto 关系 = 全局基础数据集.添加字段节点(
+            特征节点, 非I64实例值域字段, 值节点);
+        if (!有效(关系)) return false;
+        已写字段.push_back(关系);
+    }
+    return true;
+}
+
+std::optional<特征概念值域> 读取实例值域(
+    稳定编码 特征节点,
+    特征概念材料物理类型 材料类型) {
+    const auto I64字段组 = 全局基础数据集.查询字段(
+        特征节点, I64实例值域字段);
+    const auto 非I64字段组 = 全局基础数据集.查询字段(
+        特征节点, 非I64实例值域字段);
+    if (材料类型 == 特征概念材料物理类型::I64标量) {
+        if (I64字段组.size() != 1 || !非I64字段组.empty()) return std::nullopt;
+        const auto* 值 = std::get_if<基础值>(&I64字段组.front().内容);
+        if (!值) return std::nullopt;
+        const auto* 展平 = std::get_if<std::vector<std::int64_t>>(&值->材料);
+        if (!展平 || 展平->empty() || 展平->size() % 2 != 0) return std::nullopt;
+        std::vector<特征概念I64闭区间> 区间组;
+        for (std::size_t i = 0; i < 展平->size(); i += 2) {
+            if ((*展平)[i] > (*展平)[i + 1]) return std::nullopt;
+            区间组.push_back({(*展平)[i], (*展平)[i + 1]});
+        }
+        return 特征概念值域{std::move(区间组)};
+    }
+
+    if (!I64字段组.empty() || 非I64字段组.empty()) return std::nullopt;
+    std::vector<稳定编码> 节点组;
+    for (const auto& 字段 : 非I64字段组) {
+        const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
+        if (!目标) return std::nullopt;
+        节点组.push_back(*目标);
+    }
+    std::sort(节点组.begin(), 节点组.end());
+    const auto 去重末尾 = std::unique(节点组.begin(), 节点组.end());
+    if (去重末尾 != 节点组.end()) return std::nullopt;
+    return 特征概念值域{std::move(节点组)};
+}
+
+bool 写回实例值域(
+    稳定编码 特征节点,
+    const 特征概念值域& 新值域) noexcept {
+    if (const auto* I64域 =
+        std::get_if<std::vector<特征概念I64闭区间>>(&新值域)) {
+        const auto I64字段组 = 全局基础数据集.查询字段(
+            特征节点, I64实例值域字段);
+        if (I64字段组.size() != 1
+            || !全局基础数据集.查询字段(
+                特征节点, 非I64实例值域字段).empty()) {
+            return false;
+        }
+        return 全局基础数据集.修改字段值(
+            I64字段组.front().编码,
+            基础值{基础原始值{展平I64值域(*I64域)}});
+    }
+
+    if (!全局基础数据集.查询字段(
+        特征节点, I64实例值域字段).empty()) {
+        return false;
+    }
+    const auto& 目标节点组 = std::get<std::vector<稳定编码>>(新值域);
+    std::vector<稳定编码> 已有节点组;
+    for (const auto& 字段 : 全局基础数据集.查询字段(
+        特征节点, 非I64实例值域字段)) {
+        const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
+        if (!目标) return false;
+        已有节点组.push_back(*目标);
+    }
+    std::sort(已有节点组.begin(), 已有节点组.end());
+    if (std::unique(已有节点组.begin(), 已有节点组.end()) != 已有节点组.end()) {
+        return false;
+    }
+    if (!std::all_of(已有节点组.begin(), 已有节点组.end(),
+        [&](稳定编码 节点) {
+            return std::binary_search(目标节点组.begin(), 目标节点组.end(), 节点);
+        })) {
+        return false;
+    }
+
+    std::vector<稳定编码> 新增字段;
+    for (const auto 节点 : 目标节点组) {
+        if (std::binary_search(已有节点组.begin(), 已有节点组.end(), 节点)) continue;
+        const auto 字段 = 全局基础数据集.添加字段节点(
+            特征节点, 非I64实例值域字段, 节点);
+        if (!有效(字段)) {
+            for (auto 位置 = 新增字段.rbegin(); 位置 != 新增字段.rend(); ++位置) {
+                全局基础数据集.删除字段(*位置);
+            }
+            return false;
+        }
+        新增字段.push_back(字段);
+    }
+    return true;
+}
+
 void 回滚字段和节点(
     稳定编码 节点, const std::vector<稳定编码>& 字段关系组) noexcept {
     for (auto 位置 = 字段关系组.rbegin(); 位置 != 字段关系组.rend(); ++位置) {
@@ -139,6 +270,9 @@ bool 新_特征类::初始化() noexcept {
         return 建立(节点类型字段)
             && 建立(特征节点类型)
             && 建立(特征概念字段)
+            && 建立(I64实例值域字段)
+            && 建立(非I64实例值域字段)
+            && 建立(实例单位字段)
             && 建立(当前值字段)
             && 建立(历史值字段);
     } catch (...) {
@@ -156,6 +290,8 @@ bool 新_特征类::初始化() noexcept {
             || !特征概念服务_.是特征概念节点(特征概念节点)) {
             return {};
         }
+        const auto 概念信息 = 特征概念服务_.获取特征概念(特征概念节点);
+        if (!概念信息) return {};
 
         std::vector<稳定编码> 已有;
         for (const auto& 关系 : 全局基础数据集.查询源关系(
@@ -169,7 +305,10 @@ bool 新_特征类::初始化() noexcept {
         }
         std::sort(已有.begin(), 已有.end());
         已有.erase(std::unique(已有.begin(), 已有.end()), 已有.end());
-        if (已有.size() == 1) return 已有.front();
+        if (已有.size() == 1) {
+            return 获取特征(已有.front())
+                ? 已有.front() : 稳定编码{};
+        }
         if (!已有.empty()) return {};
 
         const auto 节点 = 全局基础数据集.新建节点();
@@ -183,7 +322,17 @@ bool 新_特征类::初始化() noexcept {
                 节点, 特征概念字段, 特征概念节点)
             : 稳定编码{};
         if (有效(概念关系)) 已写字段.push_back(概念关系);
-        if (!有效(类型关系) || !有效(概念关系)) {
+        bool 完成 = 有效(类型关系) && 有效(概念关系);
+        if (完成) {
+            完成 = 写入实例值域(节点, 概念信息->值域, 已写字段);
+        }
+        if (完成 && 概念信息->单位) {
+            const auto 单位关系 = 全局基础数据集.添加字段节点(
+                节点, 实例单位字段, *概念信息->单位);
+            if (有效(单位关系)) 已写字段.push_back(单位关系);
+            完成 = 有效(单位关系);
+        }
+        if (!完成) {
             回滚字段和节点(节点, 已写字段);
             return {};
         }
@@ -248,6 +397,32 @@ std::optional<新特征信息> 新_特征类::获取特征(
         结果.节点 = 特征节点;
         结果.持有节点 = 父关系.front().源节点;
         结果.特征概念节点 = *概念;
+        const auto 实例值域 = 读取实例值域(特征节点, 概念信息->材料类型);
+        if (!实例值域) return std::nullopt;
+        if (const auto* 值节点组 = std::get_if<std::vector<稳定编码>>(&*实例值域)) {
+            for (const auto 值节点 : *值节点组) {
+                if (!准确值材料相容(
+                    *概念信息, 新特征准确值{值节点}, 特征值服务_)) {
+                    return std::nullopt;
+                }
+            }
+        }
+        结果.实例值域 = *实例值域;
+
+        const auto 单位字段组 = 全局基础数据集.查询字段(
+            特征节点, 实例单位字段);
+        if (单位字段组.size() > 1) return std::nullopt;
+        if (概念信息->单位.has_value() != !单位字段组.empty()) {
+            return std::nullopt;
+        }
+        if (概念信息->单位) {
+            const auto* 单位节点 = std::get_if<稳定编码>(&单位字段组.front().内容);
+            if (!单位节点 || !节点仍存在(*单位节点)
+                || *单位节点 != *概念信息->单位) {
+                return std::nullopt;
+            }
+            结果.实例单位 = *单位节点;
+        }
 
         const auto 当前字段组 = 全局基础数据集.查询字段(特征节点, 当前值字段);
         if (当前字段组.size() > 1) return std::nullopt;
@@ -410,15 +585,8 @@ bool 新_特征类::是特征节点(稳定编码 节点) const noexcept {
             结果.当前值已改变 = true;
         }
 
-        if (!结果.历史集合已增加) {
-            结果.状态 = 结果.当前值已改变
-                ? 新特征写入状态::已完成
-                : 新特征写入状态::无变化;
-            return 结果;
-        }
-
         auto 聚合输入 = 特征->历史不同值;
-        聚合输入.push_back(新值);
+        if (结果.历史集合已增加) 聚合输入.push_back(新值);
         结果.聚合结果 = 特征概念服务_.执行聚合规则(
             概念->材料类型, 概念->聚合规则, 聚合输入, 特征值服务_);
         if (结果.聚合结果->状态 != 特征概念规则状态::已完成
@@ -426,10 +594,26 @@ bool 新_特征类::是特征节点(稳定编码 节点) const noexcept {
             结果.状态 = 新特征写入状态::值已更新但聚合未完成;
             return 结果;
         }
+        if (!结果.聚合结果->值域) {
+            结果.状态 = 新特征写入状态::值已更新但聚合未完成;
+            return 结果;
+        }
+        const bool 值域需要写回 = 特征->实例值域 != *结果.聚合结果->值域;
+        if (值域需要写回
+            && !写回实例值域(特征节点, *结果.聚合结果->值域)) {
+            结果.状态 = 新特征写入状态::值已更新但聚合未完成;
+            return 结果;
+        }
+        if (!结果.历史集合已增加 && !结果.当前值已改变 && !值域需要写回) {
+            结果.状态 = 新特征写入状态::无变化;
+            return 结果;
+        }
         结果.状态 = 新特征写入状态::已完成;
         return 结果;
     } catch (...) {
-        结果.状态 = 新特征写入状态::资源失败;
+        结果.状态 = 结果.历史集合已增加 || 结果.当前值已改变
+            ? 新特征写入状态::值已更新但聚合未完成
+            : 新特征写入状态::资源失败;
         return 结果;
     }
 }

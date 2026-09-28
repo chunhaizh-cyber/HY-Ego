@@ -16,6 +16,8 @@ struct 新特征信息 final {
     稳定编码 节点;
     稳定编码 持有节点;
     稳定编码 特征概念节点;
+    特征概念值域 实例值域;
+    std::optional<稳定编码> 实例单位;
     std::optional<新特征准确值> 当前值;
     std::vector<新特征准确值> 历史不同值;
     friend bool operator==(const 新特征信息&, const 新特征信息&) = default;
