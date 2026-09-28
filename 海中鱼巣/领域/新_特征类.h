@@ -12,6 +12,13 @@ namespace 海中鱼巣 {
 
 using 新特征准确值 = 特征概念准确值;
 
+struct 新特征值命中信息 final {
+    新特征准确值 值;
+    std::int64_t 命中次数 = 0;
+    friend bool operator==(const 新特征值命中信息&,
+        const 新特征值命中信息&) = default;
+};
+
 struct 新特征信息 final {
     稳定编码 节点;
     稳定编码 持有节点;
@@ -20,7 +27,9 @@ struct 新特征信息 final {
     std::optional<特征概念值域> 实例历史聚合值域;
     std::optional<稳定编码> 实例单位;
     std::optional<新特征准确值> 当前值;
+    std::optional<新特征准确值> 标准值;
     std::vector<新特征准确值> 历史不同值;
+    std::vector<新特征值命中信息> 历史值命中信息;
     friend bool operator==(const 新特征信息&, const 新特征信息&) = default;
 };
 
@@ -40,6 +49,9 @@ struct 新特征值添加结果 final {
     新特征写入状态 状态 = 新特征写入状态::入口拒绝;
     bool 当前值已改变 = false;
     bool 历史集合已增加 = false;
+    bool 命中次数已增加 = false;
+    bool 标准值已改变 = false;
+    std::optional<稳定编码> 接收子特征节点;
     std::optional<特征概念聚合结果> 聚合结果;
 };
 
@@ -121,8 +133,10 @@ public:
 
     bool 是特征节点(稳定编码 节点) const noexcept;
 
-    // 更新当前值；历史集合仅在首次出现该准确值时增加。
-    // 每次调用都尝试使历史聚合值域与完整历史集合一致；准入值域不变。
+    // 更新当前值；每次调用给该准确值增加一次命中次数，首次出现时加入历史集合。
+    // 标准值首次出现时建立；以后只有候选命中次数严格超过当前标准值时才替换。
+    // 每次调用都尝试使历史聚合值域与完整历史集合一致；归组区间扩大时，
+    // 对应子特征可切换到扩大后的概念和值域，但不得原地串改共享概念。
     新特征值添加结果 添加特征值(
         稳定编码 特征节点,
         const 新特征准确值& 新值) noexcept;

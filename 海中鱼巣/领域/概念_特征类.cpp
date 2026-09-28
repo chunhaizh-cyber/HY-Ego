@@ -257,6 +257,40 @@ bool 节点集合包含(
     });
 }
 
+bool 有限材料节点受定义包含(
+    const 特征概念定义& 父,
+    const 特征概念定义& 子,
+    const 新_特征值类& 特征值服务) noexcept {
+    const auto* 子节点组 = std::get_if<std::vector<稳定编码>>(&子.值域);
+    if (!子节点组 || 子节点组->empty()
+        || 父.材料类型 != 子.材料类型 || 父.单位 != 子.单位) {
+        return false;
+    }
+    if (std::holds_alternative<特征概念全材料值域>(父.值域)) return true;
+    if (const auto* 父节点组 = std::get_if<std::vector<稳定编码>>(&父.值域)) {
+        return 节点集合包含(*父节点组, *子节点组);
+    }
+    const auto* 父结构 = std::get_if<特征概念结构化I64值域>(&父.值域);
+    if (!父结构 || 父.材料类型 != 特征概念材料物理类型::I64数组) {
+        return false;
+    }
+    for (const auto 值节点 : *子节点组) {
+        const auto 信息 = 特征值服务.获取特征值(值节点);
+        const auto* 数组 = 信息
+            ? std::get_if<std::vector<std::int64_t>>(&信息->材料) : nullptr;
+        if (!数组 || 数组->size() != 父结构->分量.size()) return false;
+        for (std::size_t i = 0; i < 数组->size(); ++i) {
+            const bool 命中 = std::any_of(
+                父结构->分量[i].值域.begin(), 父结构->分量[i].值域.end(),
+                [&](const auto& 区间) {
+                    return 区间.下界 <= (*数组)[i] && (*数组)[i] <= 区间.上界;
+                });
+            if (!命中) return false;
+        }
+    }
+    return true;
+}
+
 bool 是严格子值域(
     const 特征概念定义& 父,
     const 特征概念定义& 子) noexcept {
@@ -687,7 +721,12 @@ std::optional<先天特征概念集合> 概念_特征类::获取先天特征概�
             const auto 父信息 = 获取特征概念(父节点);
             if (!父信息) return {};
             const auto 父定义 = 规范化定义(转为定义(*父信息));
-            if (!父定义 || !是严格子值域(*父定义, *规范定义)) return {};
+            if (!父定义
+                || (!是严格子值域(*父定义, *规范定义)
+                    && !有限材料节点受定义包含(
+                        *父定义, *规范定义, 特征值服务))) {
+                return {};
+            }
         }
 
         // 根链节点自身就是不同特征类型的身份。即使物理材料、单位和值域
@@ -1138,7 +1177,10 @@ std::vector<稳定编码> 概念_特征类::查询特征概念(
                     return 结果;
                 }
                 const auto 子定义 = 规范化定义(转为定义(*子信息));
-                if (!子定义 || !是严格子值域(*当前定义, *子定义)) {
+                if (!子定义
+                    || (!是严格子值域(*当前定义, *子定义)
+                        && !有限材料节点受定义包含(
+                            *当前定义, *子定义, 特征值服务))) {
                     结果.状态 = 特征概念查找状态::结构不一致;
                     return 结果;
                 }
