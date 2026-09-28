@@ -203,6 +203,13 @@ public:
     std::optional<特征概念信息> 获取特征概念(
         稳定编码 特征概念节点) const noexcept;
 
+    // 直接修改既有概念的值域；由概念生成的实例保留各自的值域副本，
+    // 不因概念变化自动同步。
+    bool 更新特征概念值域(
+        稳定编码 特征概念节点,
+        const 特征概念值域& 新值域,
+        const 新_特征值类& 特征值服务) noexcept;
+
     std::vector<稳定编码> 查询特征概念(
         const 特征概念定义& 定义) const noexcept;
 

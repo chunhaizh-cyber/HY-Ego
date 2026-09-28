@@ -1048,6 +1048,148 @@ std::optional<特征概念信息> 概念_特征类::获取特征概念(
     }
 }
 
+bool 概念_特征类::更新特征概念值域(
+    稳定编码 特征概念节点,
+    const 特征概念值域& 新值域,
+    const 新_特征值类& 特征值服务) noexcept {
+    try {
+        std::lock_guard 锁(特征概念树互斥);
+        const auto 原信息 = 获取特征概念(特征概念节点);
+        if (!原信息) return false;
+
+        auto 新定义 = 转为定义(*原信息);
+        新定义.值域 = 新值域;
+        const auto 规范新定义 = 规范化定义(新定义);
+        const auto 规范原定义 = 规范化定义(转为定义(*原信息));
+        if (!规范新定义 || !规范原定义) return false;
+        if (规范新定义->值域 == 规范原定义->值域) return true;
+
+        if (const auto* 值节点组 =
+            std::get_if<std::vector<稳定编码>>(&规范新定义->值域)) {
+            const auto 期望类型 = 转换特征值材料类型(
+                规范新定义->材料类型);
+            if (!期望类型) return false;
+            for (const auto 值节点 : *值节点组) {
+                const auto 值信息 = 特征值服务.获取特征值(值节点);
+                if (!值信息 || 值信息->物理类型 != *期望类型) {
+                    return false;
+                }
+            }
+        }
+
+        const auto 父关系 = 全局基础数据集.查询目标关系(
+            特征概念节点, 基础外部关系类型::父子);
+        if (父关系.size() != 1) return false;
+        if (父关系.front().源节点 != 特征概念树) {
+            const auto 父信息 = 获取特征概念(父关系.front().源节点);
+            const auto 父定义 = 父信息
+                ? 规范化定义(转为定义(*父信息)) : std::nullopt;
+            if (!父定义
+                || (!是严格子值域(*父定义, *规范新定义)
+                    && !有限材料节点受定义包含(
+                        *父定义, *规范新定义, 特征值服务))) {
+                return false;
+            }
+        }
+        for (const auto& 子关系 : 全局基础数据集.查询源关系(
+            特征概念节点, 基础外部关系类型::父子)) {
+            const auto 子信息 = 获取特征概念(子关系.目标节点);
+            const auto 子定义 = 子信息
+                ? 规范化定义(转为定义(*子信息)) : std::nullopt;
+            if (!子定义
+                || (!是严格子值域(*规范新定义, *子定义)
+                    && !有限材料节点受定义包含(
+                        *规范新定义, *子定义, 特征值服务))) {
+                return false;
+            }
+        }
+
+        if (const auto* 新区间组 =
+            std::get_if<std::vector<特征概念I64闭区间>>(
+                &规范新定义->值域)) {
+            const auto* 原区间组 =
+                std::get_if<std::vector<特征概念I64闭区间>>(
+                    &规范原定义->值域);
+            const auto 字段组 = 全局基础数据集.查询字段(
+                特征概念节点, I64值域字段);
+            if (!原区间组 || 字段组.size() != 1) return false;
+            std::vector<std::int64_t> 新展平;
+            新展平.reserve(新区间组->size() * 2);
+            for (const auto& 区间 : *新区间组) {
+                新展平.push_back(区间.下界);
+                新展平.push_back(区间.上界);
+            }
+            std::vector<std::int64_t> 原展平;
+            原展平.reserve(原区间组->size() * 2);
+            for (const auto& 区间 : *原区间组) {
+                原展平.push_back(区间.下界);
+                原展平.push_back(区间.上界);
+            }
+            if (!全局基础数据集.修改字段值(
+                字段组.front().编码,
+                基础值{基础原始值{std::move(新展平)}})) {
+                return false;
+            }
+            const auto 读回 = 获取特征概念(特征概念节点);
+            if (读回 && 读回->值域 == 规范新定义->值域) return true;
+            (void)全局基础数据集.修改字段值(
+                字段组.front().编码,
+                基础值{基础原始值{std::move(原展平)}});
+            return false;
+        }
+
+        const auto* 新节点组 =
+            std::get_if<std::vector<稳定编码>>(&规范新定义->值域);
+        const auto* 原节点组 =
+            std::get_if<std::vector<稳定编码>>(&规范原定义->值域);
+        if (!新节点组 || !原节点组) return false;
+
+        const auto 原字段组 = 全局基础数据集.查询字段(
+            特征概念节点, 非I64值域字段);
+        if (原字段组.size() != 原节点组->size()) return false;
+        std::vector<稳定编码> 新增字段;
+        for (const auto 节点 : *新节点组) {
+            if (std::binary_search(原节点组->begin(), 原节点组->end(), 节点)) {
+                continue;
+            }
+            const auto 关系 = 全局基础数据集.添加字段节点(
+                特征概念节点, 非I64值域字段, 节点);
+            if (!有效(关系)) {
+                for (const auto 已增 : 新增字段) {
+                    (void)全局基础数据集.删除字段(已增);
+                }
+                return false;
+            }
+            新增字段.push_back(关系);
+        }
+
+        std::vector<稳定编码> 已删原节点;
+        for (const auto& 字段 : 原字段组) {
+            const auto* 节点 = std::get_if<稳定编码>(&字段.内容);
+            if (!节点) return false;
+            if (std::binary_search(新节点组->begin(), 新节点组->end(), *节点)) {
+                continue;
+            }
+            if (!全局基础数据集.删除字段(字段.编码)) {
+                for (const auto 已删节点 : 已删原节点) {
+                    (void)全局基础数据集.添加字段节点(
+                        特征概念节点, 非I64值域字段, 已删节点);
+                }
+                for (const auto 已增 : 新增字段) {
+                    (void)全局基础数据集.删除字段(已增);
+                }
+                return false;
+            }
+            已删原节点.push_back(*节点);
+        }
+
+        const auto 读回 = 获取特征概念(特征概念节点);
+        return 读回 && 读回->值域 == 规范新定义->值域;
+    } catch (...) {
+        return false;
+    }
+}
+
 std::vector<稳定编码> 概念_特征类::查询特征概念(
     const 特征概念定义& 定义) const noexcept {
     try {
