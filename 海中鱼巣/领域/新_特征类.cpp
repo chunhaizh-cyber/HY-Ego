@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <limits>
 #include <mutex>
 
@@ -851,6 +852,172 @@ std::optional<std::int64_t> 比较三维体素投影(
     return static_cast<std::int64_t>(总分 / 3);
 }
 
+std::uint64_t I64有序编码(std::int64_t 值) noexcept {
+    return std::bit_cast<std::uint64_t>(值) ^ (std::uint64_t{1} << 63);
+}
+
+std::int64_t I64有序编码还原(std::uint64_t 值) noexcept {
+    return std::bit_cast<std::int64_t>(值 ^ (std::uint64_t{1} << 63));
+}
+
+long double I64区间测度(const 特征概念I64闭区间& 区间) noexcept {
+    const auto 下界 = I64有序编码(区间.下界);
+    const auto 上界 = I64有序编码(区间.上界);
+    const auto 差值 = 上界 - 下界;
+    return 差值 == (std::numeric_limits<std::uint64_t>::max)()
+        ? 18446744073709551616.0L
+        : static_cast<long double>(差值 + 1);
+}
+
+long double I64区间集合测度(
+    const std::vector<特征概念I64闭区间>& 值域) noexcept {
+    long double 总量 = 0;
+    for (const auto& 区间 : 值域) {
+        总量 += I64区间测度(区间);
+    }
+    return 总量;
+}
+
+long double I64区间集合交集测度(
+    const std::vector<特征概念I64闭区间>& 左值域,
+    const std::vector<特征概念I64闭区间>& 右值域) noexcept {
+    long double 总量 = 0;
+    std::size_t 左位置 = 0;
+    std::size_t 右位置 = 0;
+    while (左位置 < 左值域.size() && 右位置 < 右值域.size()) {
+        const auto 下界 = (std::max)(
+            左值域[左位置].下界, 右值域[右位置].下界);
+        const auto 上界 = (std::min)(
+            左值域[左位置].上界, 右值域[右位置].上界);
+        if (下界 <= 上界) {
+            总量 += I64区间测度({下界, 上界});
+        }
+        if (左值域[左位置].上界 < 右值域[右位置].上界) {
+            ++左位置;
+        } else {
+            ++右位置;
+        }
+    }
+    return 总量;
+}
+
+std::optional<std::int64_t> 测度转重叠度(
+    long double 左测度,
+    long double 右测度,
+    long double 交集测度) noexcept {
+    const auto 并集测度 = 左测度 + 右测度 - 交集测度;
+    if (!(并集测度 > 0.0L) || 交集测度 < 0.0L) return std::nullopt;
+    const auto 比例 = (std::max)(0.0L,
+        (std::min)(1.0L, 交集测度 / 并集测度));
+    return static_cast<std::int64_t>(比例 * 10000.0L + 0.5L);
+}
+
+std::optional<std::int64_t> 计算值域重叠度(
+    const 特征概念值域& 左值域,
+    const 特征概念值域& 右值域) noexcept {
+    if (左值域 == 右值域) return 10000;
+    if (std::holds_alternative<特征概念全材料值域>(左值域)
+        || std::holds_alternative<特征概念全材料值域>(右值域)) {
+        return std::nullopt;
+    }
+    if (const auto* 左I64 =
+        std::get_if<std::vector<特征概念I64闭区间>>(&左值域)) {
+        const auto* 右I64 =
+            std::get_if<std::vector<特征概念I64闭区间>>(&右值域);
+        if (!右I64) return std::nullopt;
+        return 测度转重叠度(
+            I64区间集合测度(*左I64),
+            I64区间集合测度(*右I64),
+            I64区间集合交集测度(*左I64, *右I64));
+    }
+    if (const auto* 左节点 =
+        std::get_if<std::vector<稳定编码>>(&左值域)) {
+        const auto* 右节点 = std::get_if<std::vector<稳定编码>>(&右值域);
+        if (!右节点 || 左节点->empty() || 右节点->empty()) return std::nullopt;
+        std::size_t 交集数量 = 0;
+        std::size_t 左位置 = 0;
+        std::size_t 右位置 = 0;
+        while (左位置 < 左节点->size() && 右位置 < 右节点->size()) {
+            if ((*左节点)[左位置] == (*右节点)[右位置]) {
+                ++交集数量;
+                ++左位置;
+                ++右位置;
+            } else if ((*左节点)[左位置].值 < (*右节点)[右位置].值) {
+                ++左位置;
+            } else {
+                ++右位置;
+            }
+        }
+        return 测度转重叠度(
+            static_cast<long double>(左节点->size()),
+            static_cast<long double>(右节点->size()),
+            static_cast<long double>(交集数量));
+    }
+
+    const auto* 左结构 = std::get_if<特征概念结构化I64值域>(&左值域);
+    const auto* 右结构 = std::get_if<特征概念结构化I64值域>(&右值域);
+    if (!左结构 || !右结构
+        || 左结构->分量.size() != 右结构->分量.size()
+        || 左结构->分量.empty()) {
+        return std::nullopt;
+    }
+    long double 交占左比例 = 1.0L;
+    long double 交占右比例 = 1.0L;
+    for (std::size_t i = 0; i < 左结构->分量.size(); ++i) {
+        const auto& 左分量 = 左结构->分量[i];
+        const auto& 右分量 = 右结构->分量[i];
+        if (左分量.角色 != 右分量.角色 || 左分量.单位 != 右分量.单位) {
+            return std::nullopt;
+        }
+        const auto 左测度 = I64区间集合测度(左分量.值域);
+        const auto 右测度 = I64区间集合测度(右分量.值域);
+        const auto 交集测度 = I64区间集合交集测度(
+            左分量.值域, 右分量.值域);
+        if (!(左测度 > 0.0L) || !(右测度 > 0.0L)) return std::nullopt;
+        if (!(交集测度 > 0.0L)) return 0;
+        交占左比例 *= 交集测度 / 左测度;
+        交占右比例 *= 交集测度 / 右测度;
+    }
+    if (!(交占左比例 > 0.0L) || !(交占右比例 > 0.0L)) return 0;
+    const auto 分母 = 1.0L / 交占左比例 + 1.0L / 交占右比例 - 1.0L;
+    if (!(分母 >= 1.0L)) return std::nullopt;
+    const auto 比例 = (std::max)(0.0L, (std::min)(1.0L, 1.0L / 分母));
+    return static_cast<std::int64_t>(比例 * 10000.0L + 0.5L);
+}
+
+std::optional<std::int64_t> 取得I64值域代表值(
+    const std::vector<特征概念I64闭区间>& 值域) noexcept {
+    std::uint64_t 总量 = 0;
+    bool 全I64域数量 = false;
+    for (const auto& 区间 : 值域) {
+        const auto 差值 = I64有序编码(区间.上界) - I64有序编码(区间.下界);
+        if (差值 == (std::numeric_limits<std::uint64_t>::max)()) {
+            全I64域数量 = true;
+            break;
+        }
+        const auto 长度 = 差值 + 1;
+        if (总量 > (std::numeric_limits<std::uint64_t>::max)() - 长度) {
+            全I64域数量 = true;
+            break;
+        }
+        总量 += 长度;
+    }
+    if (!全I64域数量 && 总量 == 0) return std::nullopt;
+    std::uint64_t 位置 = 全I64域数量
+        ? ((std::numeric_limits<std::uint64_t>::max)() >> 1)
+        : (总量 - 1) / 2;
+    for (const auto& 区间 : 值域) {
+        const auto 下界 = I64有序编码(区间.下界);
+        const auto 差值 = I64有序编码(区间.上界) - 下界;
+        if (差值 == (std::numeric_limits<std::uint64_t>::max)()
+            || 位置 <= 差值) {
+            return I64有序编码还原(下界 + 位置);
+        }
+        位置 -= 差值 + 1;
+    }
+    return std::nullopt;
+}
+
 新特征比较状态 映射概念规则状态(特征概念规则状态 状态) noexcept {
     switch (状态) {
     case 特征概念规则状态::已完成:
@@ -863,13 +1030,50 @@ std::optional<std::int64_t> 比较三维体素投影(
     case 特征概念规则状态::值不存在:
         return 新特征比较状态::值不存在;
     case 特征概念规则状态::规则不支持:
-        return 新特征比较状态::概念不相容;
+        return 新特征比较状态::规则不支持;
     case 特征概念规则状态::资源失败:
         return 新特征比较状态::资源失败;
     case 特征概念规则状态::内部不一致:
         return 新特征比较状态::结构不一致;
     }
     return 新特征比较状态::结构不一致;
+}
+
+struct 同类型特征概念上下文 final {
+    特征概念信息 左;
+    特征概念信息 右;
+    稳定编码 特征类型根;
+};
+
+新特征比较状态 读取同类型特征概念(
+    稳定编码 左概念节点,
+    稳定编码 右概念节点,
+    概念_特征类& 特征概念服务,
+    std::optional<同类型特征概念上下文>& 上下文) noexcept {
+    if (!有效(左概念节点) || !有效(右概念节点)) {
+        return 新特征比较状态::入口拒绝;
+    }
+    const auto 左 = 特征概念服务.获取特征概念(左概念节点);
+    const auto 右 = 特征概念服务.获取特征概念(右概念节点);
+    if (!左 || !右) return 新特征比较状态::概念不存在;
+    const auto 定位 = 特征概念服务.比较单特征概念(
+        左概念节点, 右概念节点);
+    if (定位.状态 != 特征概念规则状态::已完成 || !定位.关系) {
+        return 映射概念规则状态(定位.状态);
+    }
+    if (*定位.关系 == 单特征概念关系::无可比关系
+        || !定位.特征类型根) {
+        return 新特征比较状态::概念不相容;
+    }
+    if (左->材料类型 != 右->材料类型) {
+        return 新特征比较状态::材料类型不相容;
+    }
+    if (左->单位 != 右->单位) return 新特征比较状态::单位不相容;
+    if (左->比较规则 != 右->比较规则) {
+        return 新特征比较状态::结构不一致;
+    }
+    上下文 = 同类型特征概念上下文{*左, *右, *定位.特征类型根};
+    return 新特征比较状态::已完成;
 }
 
 新特征比较结果 比较双准确值(
@@ -998,6 +1202,55 @@ std::optional<std::int64_t> 比较三维体素投影(
     结果.比较值 = -1;
     结果.状态 = 新特征比较状态::已完成;
     return 结果;
+}
+
+std::optional<std::int64_t> 计算节点材料接近度(
+    稳定编码 特征类型根,
+    特征概念材料物理类型 材料类型,
+    稳定编码 左值节点,
+    稳定编码 右值节点,
+    新_特征值类& 特征值服务,
+    概念_特征类& 特征概念服务) noexcept {
+    const auto 期望类型 = 转换特征值材料类型(材料类型);
+    const auto 左信息 = 特征值服务.获取特征值(左值节点);
+    const auto 右信息 = 特征值服务.获取特征值(右值节点);
+    if (!期望类型 || !左信息 || !右信息
+        || 左信息->物理类型 != *期望类型
+        || 右信息->物理类型 != *期望类型) {
+        return std::nullopt;
+    }
+    if (左信息->材料 == 右信息->材料) return 10000;
+
+    if (材料类型 == 特征概念材料物理类型::I64数组) {
+        const auto* 左数组 =
+            std::get_if<std::vector<std::int64_t>>(&左信息->材料);
+        const auto* 右数组 =
+            std::get_if<std::vector<std::int64_t>>(&右信息->材料);
+        if (!左数组 || !右数组 || 左数组->size() != 右数组->size()) {
+            return std::nullopt;
+        }
+        const auto 先天 = 特征概念服务.获取先天特征概念();
+        return 先天 && 特征类型根 == 先天->RGB颜色
+            ? 计算RGB相似度(*左数组, *右数组)
+            : 计算多维相似度(*左数组, *右数组);
+    }
+    if (材料类型 == 特征概念材料物理类型::二维二值格) {
+        const auto* 左轮廓 =
+            std::get_if<std::vector<std::uint64_t>>(&左信息->材料);
+        const auto* 右轮廓 =
+            std::get_if<std::vector<std::uint64_t>>(&右信息->材料);
+        return 左轮廓 && 右轮廓
+            ? 比较二维轮廓材料(*左轮廓, *右轮廓) : std::nullopt;
+    }
+    if (材料类型 == 特征概念材料物理类型::三维二值格) {
+        const auto* 左体素 =
+            std::get_if<std::vector<std::uint64_t>>(&左信息->材料);
+        const auto* 右体素 =
+            std::get_if<std::vector<std::uint64_t>>(&右信息->材料);
+        return 左体素 && 右体素
+            ? 比较三维体素投影(*左体素, *右体素) : std::nullopt;
+    }
+    return std::nullopt;
 }
 
 void 回滚字段和节点(
@@ -1453,6 +1706,169 @@ bool 新_特征类::是特征节点(稳定编码 节点) const noexcept {
         return 结果;
     } catch (...) {
         结果.状态 = 新特征比较状态::资源失败;
+        return 结果;
+    }
+}
+
+新特征概念值域关系结果 新_特征类::比较特征概念值域关系(
+    稳定编码 左概念节点,
+    稳定编码 右概念节点) const noexcept {
+    新特征概念值域关系结果 结果;
+    try {
+        std::lock_guard 锁(新特征互斥);
+        std::optional<同类型特征概念上下文> 上下文;
+        结果.状态 = 读取同类型特征概念(
+            左概念节点, 右概念节点, 特征概念服务_, 上下文);
+        if (结果.状态 != 新特征比较状态::已完成 || !上下文) return 结果;
+        const auto 值域结果 = 特征概念服务_.比较值域(
+            上下文->左.材料类型, 上下文->左.值域, 上下文->右.值域);
+        结果.状态 = 映射概念规则状态(值域结果.状态);
+        结果.关系 = 值域结果.关系;
+        return 结果;
+    } catch (...) {
+        结果.状态 = 新特征比较状态::资源失败;
+        结果.关系.reset();
+        return 结果;
+    }
+}
+
+新特征概念相似度结果 新_特征类::计算特征概念值域重叠度(
+    稳定编码 左概念节点,
+    稳定编码 右概念节点) const noexcept {
+    新特征概念相似度结果 结果;
+    try {
+        std::lock_guard 锁(新特征互斥);
+        std::optional<同类型特征概念上下文> 上下文;
+        结果.状态 = 读取同类型特征概念(
+            左概念节点, 右概念节点, 特征概念服务_, 上下文);
+        if (结果.状态 != 新特征比较状态::已完成 || !上下文) return 结果;
+        const auto 值域关系 = 特征概念服务_.比较值域(
+            上下文->左.材料类型, 上下文->左.值域, 上下文->右.值域);
+        if (值域关系.状态 != 特征概念规则状态::已完成
+            || !值域关系.关系) {
+            结果.状态 = 映射概念规则状态(值域关系.状态);
+            return 结果;
+        }
+        结果.相似度 = 计算值域重叠度(上下文->左.值域, 上下文->右.值域);
+        if (!结果.相似度) 结果.状态 = 新特征比较状态::规则不支持;
+        return 结果;
+    } catch (...) {
+        结果.状态 = 新特征比较状态::资源失败;
+        结果.相似度.reset();
+        return 结果;
+    }
+}
+
+新特征概念相似度结果 新_特征类::计算特征概念材料接近度(
+    稳定编码 左概念节点,
+    稳定编码 右概念节点) const noexcept {
+    新特征概念相似度结果 结果;
+    try {
+        std::lock_guard 锁(新特征互斥);
+        std::optional<同类型特征概念上下文> 上下文;
+        结果.状态 = 读取同类型特征概念(
+            左概念节点, 右概念节点, 特征概念服务_, 上下文);
+        if (结果.状态 != 新特征比较状态::已完成 || !上下文) return 结果;
+        if (上下文->左.值域 == 上下文->右.值域) {
+            结果.相似度 = 10000;
+            return 结果;
+        }
+
+        if (const auto* 左I64 =
+            std::get_if<std::vector<特征概念I64闭区间>>(&上下文->左.值域)) {
+            const auto* 右I64 =
+                std::get_if<std::vector<特征概念I64闭区间>>(&上下文->右.值域);
+            const auto 左代表 = 左I64 ? 取得I64值域代表值(*左I64) : std::nullopt;
+            const auto 右代表 = 右I64 ? 取得I64值域代表值(*右I64) : std::nullopt;
+            if (!左代表 || !右代表) {
+                结果.状态 = 新特征比较状态::结构不一致;
+                return 结果;
+            }
+            结果.相似度 = 计算单维相对相似度(*左代表, *右代表);
+            return 结果;
+        }
+
+        if (const auto* 左结构 =
+            std::get_if<特征概念结构化I64值域>(&上下文->左.值域)) {
+            const auto* 右结构 =
+                std::get_if<特征概念结构化I64值域>(&上下文->右.值域);
+            if (!右结构 || 左结构->分量.size() != 右结构->分量.size()
+                || 左结构->分量.empty()) {
+                结果.状态 = 新特征比较状态::结构不一致;
+                return 结果;
+            }
+            std::vector<std::int64_t> 左代表;
+            std::vector<std::int64_t> 右代表;
+            左代表.reserve(左结构->分量.size());
+            右代表.reserve(右结构->分量.size());
+            for (std::size_t i = 0; i < 左结构->分量.size(); ++i) {
+                const auto& 左分量 = 左结构->分量[i];
+                const auto& 右分量 = 右结构->分量[i];
+                if (左分量.角色 != 右分量.角色
+                    || 左分量.单位 != 右分量.单位) {
+                    结果.状态 = 新特征比较状态::结构不一致;
+                    return 结果;
+                }
+                const auto 左值 = 取得I64值域代表值(左分量.值域);
+                const auto 右值 = 取得I64值域代表值(右分量.值域);
+                if (!左值 || !右值) {
+                    结果.状态 = 新特征比较状态::结构不一致;
+                    return 结果;
+                }
+                左代表.push_back(*左值);
+                右代表.push_back(*右值);
+            }
+            const auto 先天 = 特征概念服务_.获取先天特征概念();
+            结果.相似度 = 先天 && 上下文->特征类型根 == 先天->RGB颜色
+                ? 计算RGB相似度(左代表, 右代表)
+                : 计算多维相似度(左代表, 右代表);
+            if (!结果.相似度) 结果.状态 = 新特征比较状态::规则不支持;
+            return 结果;
+        }
+
+        const auto* 左节点组 =
+            std::get_if<std::vector<稳定编码>>(&上下文->左.值域);
+        const auto* 右节点组 =
+            std::get_if<std::vector<稳定编码>>(&上下文->右.值域);
+        if (!左节点组 || !右节点组 || 左节点组->empty() || 右节点组->empty()) {
+            结果.状态 = 新特征比较状态::规则不支持;
+            return 结果;
+        }
+        const auto 成对相似度 = [&](稳定编码 左值, 稳定编码 右值)
+            -> std::optional<std::int64_t> {
+            return 计算节点材料接近度(
+                上下文->特征类型根, 上下文->左.材料类型,
+                左值, 右值,
+                特征值服务_, 特征概念服务_);
+        };
+        const auto 单向最佳平均 = [&](const std::vector<稳定编码>& 来源,
+                                     const std::vector<稳定编码>& 目标)
+            -> std::optional<long double> {
+            long double 总分 = 0;
+            for (const auto 来源值 : 来源) {
+                std::optional<std::int64_t> 最佳;
+                for (const auto 目标值 : 目标) {
+                    const auto 当前 = 成对相似度(来源值, 目标值);
+                    if (!当前) return std::nullopt;
+                    最佳 = 最佳 ? (std::max)(*最佳, *当前) : *当前;
+                }
+                if (!最佳) return std::nullopt;
+                总分 += *最佳;
+            }
+            return 总分 / static_cast<long double>(来源.size());
+        };
+        const auto 左到右 = 单向最佳平均(*左节点组, *右节点组);
+        const auto 右到左 = 单向最佳平均(*右节点组, *左节点组);
+        if (!左到右 || !右到左) {
+            结果.状态 = 新特征比较状态::规则不支持;
+            return 结果;
+        }
+        结果.相似度 = static_cast<std::int64_t>(
+            (*左到右 + *右到左) / 2.0L + 0.5L);
+        return 结果;
+    } catch (...) {
+        结果.状态 = 新特征比较状态::资源失败;
+        结果.相似度.reset();
         return 结果;
     }
 }
