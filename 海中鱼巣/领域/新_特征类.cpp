@@ -506,6 +506,256 @@ std::optional<std::int64_t> 计算多维相似度(
     return static_cast<std::int64_t>(总分 / 左值.size());
 }
 
+std::optional<std::int64_t> 计算RGB相似度(
+    const std::vector<std::int64_t>& 左值,
+    const std::vector<std::int64_t>& 右值) noexcept {
+    if (左值.size() != 3 || 右值.size() != 3) return std::nullopt;
+    std::uint64_t 总差 = 0;
+    for (std::size_t i = 0; i < 3; ++i) {
+        if (左值[i] < 0 || 左值[i] > 255 || 右值[i] < 0 || 右值[i] > 255) {
+            return std::nullopt;
+        }
+        总差 += static_cast<std::uint64_t>(
+            左值[i] >= 右值[i] ? 左值[i] - 右值[i] : 右值[i] - 左值[i]);
+    }
+    constexpr std::uint64_t 最大总差 = 3 * 255;
+    const auto 扣分 = (总差 * 10000 + 最大总差 / 2) / 最大总差;
+    return static_cast<std::int64_t>(10000 - (std::min)(扣分, std::uint64_t{10000}));
+}
+
+bool 读取二值位(
+    const std::vector<std::uint64_t>& 材料,
+    std::size_t 位置) noexcept {
+    return 位置 / 64 < 材料.size()
+        && (材料[位置 / 64] & (std::uint64_t{1} << (位置 % 64))) != 0;
+}
+
+void 写入二值位(
+    std::vector<std::uint64_t>& 材料,
+    std::size_t 位置) noexcept {
+    if (位置 / 64 < 材料.size()) {
+        材料[位置 / 64] |= std::uint64_t{1} << (位置 % 64);
+    }
+}
+
+std::optional<std::size_t> 推导二维边长(
+    const std::vector<std::uint64_t>& 材料) noexcept {
+    if (材料.empty()
+        || 材料.size() > (std::numeric_limits<std::size_t>::max)() / 64) {
+        return std::nullopt;
+    }
+    const auto 总位数 = 材料.size() * 64;
+    std::size_t 边长 = 8;
+    for (;;) {
+        if (边长 > (std::numeric_limits<std::size_t>::max)() / 边长) {
+            return std::nullopt;
+        }
+        const auto 当前位数 = 边长 * 边长;
+        if (当前位数 == 总位数) return 边长;
+        if (当前位数 > 总位数
+            || 边长 > (std::numeric_limits<std::size_t>::max)() / 2) {
+            return std::nullopt;
+        }
+        边长 *= 2;
+    }
+}
+
+std::optional<std::size_t> 推导三维边长(
+    const std::vector<std::uint64_t>& 材料) noexcept {
+    if (材料.empty()
+        || 材料.size() > (std::numeric_limits<std::size_t>::max)() / 64) {
+        return std::nullopt;
+    }
+    const auto 总位数 = 材料.size() * 64;
+    std::size_t 边长 = 4;
+    for (;;) {
+        if (边长 > (std::numeric_limits<std::size_t>::max)() / 边长) {
+            return std::nullopt;
+        }
+        const auto 平方 = 边长 * 边长;
+        if (边长 != 0 && 平方 > (std::numeric_limits<std::size_t>::max)() / 边长) {
+            return std::nullopt;
+        }
+        const auto 当前位数 = 平方 * 边长;
+        if (当前位数 == 总位数) return 边长;
+        if (当前位数 > 总位数
+            || 边长 > (std::numeric_limits<std::size_t>::max)() / 2) {
+            return std::nullopt;
+        }
+        边长 *= 2;
+    }
+}
+
+std::vector<std::uint64_t> 压缩二维比较层(
+    const std::vector<std::uint64_t>& 下层,
+    std::size_t 下层边长) {
+    const auto 上层边长 = 下层边长 / 2;
+    const auto 上层位数 = 上层边长 * 上层边长;
+    std::vector<std::uint64_t> 上层((上层位数 + 63) / 64, 0);
+    for (std::size_t y = 0; y < 上层边长; ++y) {
+        for (std::size_t x = 0; x < 上层边长; ++x) {
+            bool 占用 = false;
+            for (std::size_t dy = 0; dy < 2 && !占用; ++dy) {
+                for (std::size_t dx = 0; dx < 2; ++dx) {
+                    if (读取二值位(
+                        下层, (y * 2 + dy) * 下层边长 + x * 2 + dx)) {
+                        占用 = true;
+                        break;
+                    }
+                }
+            }
+            if (占用) 写入二值位(上层, y * 上层边长 + x);
+        }
+    }
+    return 上层;
+}
+
+std::optional<std::vector<std::vector<std::uint64_t>>> 生成二维比较层级(
+    const std::vector<std::uint64_t>& 叶子材料,
+    std::size_t 叶子边长) {
+    if (叶子边长 < 8 || 叶子边长 % 8 != 0
+        || 叶子边长 > (std::numeric_limits<std::size_t>::max)() / 叶子边长) {
+        return std::nullopt;
+    }
+    const auto 叶子位数 = 叶子边长 * 叶子边长;
+    if (叶子材料.size() != (叶子位数 + 63) / 64) return std::nullopt;
+
+    std::vector<std::vector<std::uint64_t>> 从叶到根;
+    从叶到根.push_back(叶子材料);
+    auto 当前边长 = 叶子边长;
+    while (当前边长 > 8) {
+        if (当前边长 % 2 != 0) return std::nullopt;
+        从叶到根.push_back(压缩二维比较层(从叶到根.back(), 当前边长));
+        当前边长 /= 2;
+    }
+    std::reverse(从叶到根.begin(), 从叶到根.end());
+    if (从叶到根.empty() || 从叶到根.front().size() != 1) return std::nullopt;
+    return 从叶到根;
+}
+
+std::optional<std::int64_t> 计算二值层相似度(
+    const std::vector<std::uint64_t>& 左层,
+    const std::vector<std::uint64_t>& 右层,
+    std::size_t 有效位数) noexcept {
+    if (有效位数 == 0 || 左层.size() != 右层.size()
+        || 左层.size() != (有效位数 + 63) / 64) {
+        return std::nullopt;
+    }
+    std::size_t 相同位数 = 0;
+    for (std::size_t i = 0; i < 有效位数; ++i) {
+        if (读取二值位(左层, i) == 读取二值位(右层, i)) ++相同位数;
+    }
+    return static_cast<std::int64_t>(
+        (static_cast<std::uint64_t>(相同位数) * 10000) / 有效位数);
+}
+
+std::optional<std::int64_t> 比较二维轮廓材料(
+    const std::vector<std::uint64_t>& 左材料,
+    const std::vector<std::uint64_t>& 右材料) {
+    const auto 左边长 = 推导二维边长(左材料);
+    const auto 右边长 = 推导二维边长(右材料);
+    if (!左边长 || !右边长) return std::nullopt;
+    const auto 左层级 = 生成二维比较层级(左材料, *左边长);
+    const auto 右层级 = 生成二维比较层级(右材料, *右边长);
+    if (!左层级 || !右层级 || 左层级->front()[0] != 右层级->front()[0]) {
+        return 左层级 && 右层级 ? std::optional<std::int64_t>{0} : std::nullopt;
+    }
+
+    const auto 共同层数 = (std::min)(左层级->size(), 右层级->size());
+    std::int64_t 相似度 = 10000;
+    std::size_t 当前边长 = 8;
+    for (std::size_t 层号 = 1; 层号 < 共同层数; ++层号) {
+        当前边长 *= 2;
+        const auto 当前 = 计算二值层相似度(
+            (*左层级)[层号], (*右层级)[层号], 当前边长 * 当前边长);
+        if (!当前) return std::nullopt;
+        相似度 = *当前;
+        if (相似度 < 5000) return 0;
+    }
+    return 相似度;
+}
+
+std::optional<std::array<std::vector<std::uint64_t>, 3>> 生成体素正交投影(
+    const std::vector<std::uint64_t>& 体素,
+    std::size_t 边长) {
+    if (边长 == 0 || 边长 > (std::numeric_limits<std::size_t>::max)() / 边长) {
+        return std::nullopt;
+    }
+    const auto 投影位数 = 边长 * 边长;
+    std::array<std::vector<std::uint64_t>, 3> 投影{
+        std::vector<std::uint64_t>((投影位数 + 63) / 64, 0),
+        std::vector<std::uint64_t>((投影位数 + 63) / 64, 0),
+        std::vector<std::uint64_t>((投影位数 + 63) / 64, 0)};
+    for (std::size_t z = 0; z < 边长; ++z) {
+        for (std::size_t y = 0; y < 边长; ++y) {
+            for (std::size_t x = 0; x < 边长; ++x) {
+                const auto 位置 = (z * 边长 + y) * 边长 + x;
+                if (!读取二值位(体素, 位置)) continue;
+                写入二值位(投影[0], y * 边长 + x); // XY，沿Z投影
+                写入二值位(投影[1], z * 边长 + x); // XZ，沿Y投影
+                写入二值位(投影[2], z * 边长 + y); // YZ，沿X投影
+            }
+        }
+    }
+    return 投影;
+}
+
+std::optional<std::int64_t> 比较三维体素投影(
+    const std::vector<std::uint64_t>& 左体素,
+    const std::vector<std::uint64_t>& 右体素) {
+    const auto 左边长 = 推导三维边长(左体素);
+    const auto 右边长 = 推导三维边长(右体素);
+    if (!左边长 || !右边长) return std::nullopt;
+    const auto 左投影 = 生成体素正交投影(左体素, *左边长);
+    const auto 右投影 = 生成体素正交投影(右体素, *右边长);
+    if (!左投影 || !右投影) return std::nullopt;
+    std::uint64_t 总分 = 0;
+    for (std::size_t i = 0; i < 3; ++i) {
+        auto 左投影边长 = *左边长;
+        auto 右投影边长 = *右边长;
+        auto 左轮廓 = (*左投影)[i];
+        auto 右轮廓 = (*右投影)[i];
+        while (左投影边长 < 8) {
+            std::vector<std::uint64_t> 放大后(1, 0);
+            for (std::size_t y = 0; y < 左投影边长; ++y) {
+                for (std::size_t x = 0; x < 左投影边长; ++x) {
+                    if (读取二值位(左轮廓, y * 左投影边长 + x)) {
+                        for (std::size_t dy = 0; dy < 2; ++dy) {
+                            for (std::size_t dx = 0; dx < 2; ++dx) {
+                                写入二值位(放大后,
+                                    (y * 2 + dy) * (左投影边长 * 2) + x * 2 + dx);
+                            }
+                        }
+                    }
+                }
+            }
+            左轮廓 = std::move(放大后);
+            左投影边长 *= 2;
+        }
+        while (右投影边长 < 8) {
+            std::vector<std::uint64_t> 放大后(1, 0);
+            for (std::size_t y = 0; y < 右投影边长; ++y) {
+                for (std::size_t x = 0; x < 右投影边长; ++x) {
+                    if (读取二值位(右轮廓, y * 右投影边长 + x)) {
+                        for (std::size_t dy = 0; dy < 2; ++dy) {
+                            for (std::size_t dx = 0; dx < 2; ++dx) {
+                                写入二值位(放大后,
+                                    (y * 2 + dy) * (右投影边长 * 2) + x * 2 + dx);
+                            }
+                        }
+                    }
+                }
+            }
+            右轮廓 = std::move(放大后);
+            右投影边长 *= 2;
+        }
+        const auto 分数 = 比较二维轮廓材料(左轮廓, 右轮廓);
+        if (!分数) return std::nullopt;
+        总分 += static_cast<std::uint64_t>(*分数);
+    }
+    return static_cast<std::int64_t>(总分 / 3);
+}
+
 新特征比较状态 映射概念规则状态(特征概念规则状态 状态) noexcept {
     switch (状态) {
     case 特征概念规则状态::已完成:
@@ -609,22 +859,48 @@ std::optional<std::int64_t> 计算多维相似度(
         结果.状态 = 新特征比较状态::已完成;
         return 结果;
     }
-    if (概念->材料类型 != 特征概念材料物理类型::I64数组) {
-        结果.比较值 = -1;
+    if (概念->材料类型 == 特征概念材料物理类型::I64数组) {
+        const auto* 结构化 =
+            std::get_if<特征概念结构化I64值域>(&概念->值域);
+        const auto* 左数组 =
+            std::get_if<std::vector<std::int64_t>>(&左信息->材料);
+        const auto* 右数组 =
+            std::get_if<std::vector<std::int64_t>>(&右信息->材料);
+        if (!结构化 || !左数组 || !右数组
+            || 左数组->size() != 结构化->分量.size()
+            || 右数组->size() != 结构化->分量.size()) {
+            结果.比较值 = -1;
+            结果.状态 = 新特征比较状态::已完成;
+            return 结果;
+        }
+        const auto 先天 = 特征概念服务.获取先天特征概念();
+        结果.比较值 = 先天 && 特征类型根 == 先天->RGB颜色
+            ? 计算RGB相似度(*左数组, *右数组).value_or(-1)
+            : 计算多维相似度(*左数组, *右数组).value_or(-1);
         结果.状态 = 新特征比较状态::已完成;
         return 结果;
     }
-    const auto* 结构化 = std::get_if<特征概念结构化I64值域>(&概念->值域);
-    const auto* 左数组 = std::get_if<std::vector<std::int64_t>>(&左信息->材料);
-    const auto* 右数组 = std::get_if<std::vector<std::int64_t>>(&右信息->材料);
-    if (!结构化 || !左数组 || !右数组
-        || 左数组->size() != 结构化->分量.size()
-        || 右数组->size() != 结构化->分量.size()) {
-        结果.比较值 = -1;
+    if (概念->材料类型 == 特征概念材料物理类型::二维二值格) {
+        const auto* 左轮廓 =
+            std::get_if<std::vector<std::uint64_t>>(&左信息->材料);
+        const auto* 右轮廓 =
+            std::get_if<std::vector<std::uint64_t>>(&右信息->材料);
+        结果.比较值 = 左轮廓 && 右轮廓
+            ? 比较二维轮廓材料(*左轮廓, *右轮廓).value_or(-1) : -1;
         结果.状态 = 新特征比较状态::已完成;
         return 结果;
     }
-    结果.比较值 = 计算多维相似度(*左数组, *右数组).value_or(-1);
+    if (概念->材料类型 == 特征概念材料物理类型::三维二值格) {
+        const auto* 左体素 =
+            std::get_if<std::vector<std::uint64_t>>(&左信息->材料);
+        const auto* 右体素 =
+            std::get_if<std::vector<std::uint64_t>>(&右信息->材料);
+        结果.比较值 = 左体素 && 右体素
+            ? 比较三维体素投影(*左体素, *右体素).value_or(-1) : -1;
+        结果.状态 = 新特征比较状态::已完成;
+        return 结果;
+    }
+    结果.比较值 = -1;
     结果.状态 = 新特征比较状态::已完成;
     return 结果;
 }
