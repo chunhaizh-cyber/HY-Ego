@@ -627,41 +627,67 @@ std::optional<std::vector<std::uint64_t>> 从原图生成二维面积层(
     }
     const auto 目标像素数 = 目标边长 * 目标边长;
     std::vector<std::uint64_t> 结果((目标像素数 + 7) / 8, 0);
+    std::size_t 最小X = 原始边长;
+    std::size_t 最小Y = 原始边长;
+    std::size_t 最大X = 0;
+    std::size_t 最大Y = 0;
+    bool 有占用 = false;
+    for (std::size_t y = 0; y < 原始边长; ++y) {
+        for (std::size_t x = 0; x < 原始边长; ++x) {
+            if (!读取二值位(原始材料, y * 原始边长 + x)) continue;
+            有占用 = true;
+            最小X = (std::min)(最小X, x);
+            最小Y = (std::min)(最小Y, y);
+            最大X = (std::max)(最大X, x);
+            最大Y = (std::max)(最大Y, y);
+        }
+    }
+    if (!有占用) return 结果;
     const bool 保留空白外圈 = 二维外圈空白(原始材料, 原始边长);
-    const std::size_t 原始起点 = 保留空白外圈 ? 1 : 0;
-    const std::size_t 目标起点 = 保留空白外圈 ? 1 : 0;
-    const std::size_t 原始范围 = 原始边长 - (保留空白外圈 ? 2 : 0);
-    const std::size_t 目标范围 = 目标边长 - (保留空白外圈 ? 2 : 0);
-    if (原始范围 == 0 || 目标范围 == 0
-        || 原始范围 > (std::numeric_limits<std::uint64_t>::max)() / 原始范围) {
+    const std::size_t 边距 = 保留空白外圈 ? 1 : 0;
+    const std::size_t 可用边长 = 目标边长 - 边距 * 2;
+    const std::size_t 原始宽 = 最大X - 最小X + 1;
+    const std::size_t 原始高 = 最大Y - 最小Y + 1;
+    std::size_t 目标宽 = 可用边长;
+    std::size_t 目标高 = 可用边长;
+    if (原始宽 >= 原始高) {
+        目标高 = (std::max)(std::size_t{1},
+            (原始高 * 可用边长 + 原始宽 / 2) / 原始宽);
+    } else {
+        目标宽 = (std::max)(std::size_t{1},
+            (原始宽 * 可用边长 + 原始高 / 2) / 原始高);
+    }
+    const std::size_t 目标起点X = 边距 + (可用边长 - 目标宽) / 2;
+    const std::size_t 目标起点Y = 边距 + (可用边长 - 目标高) / 2;
+    if (原始宽 > (std::numeric_limits<std::uint64_t>::max)() / 原始高) {
         return std::nullopt;
     }
-    const auto 单格总权重 = static_cast<std::uint64_t>(原始范围) * 原始范围;
-    for (std::size_t 目标Y = 0; 目标Y < 目标范围; ++目标Y) {
-        const auto 上边界 = 目标Y * 原始范围;
-        const auto 下边界 = (目标Y + 1) * 原始范围;
-        const auto 原始Y首 = 上边界 / 目标范围;
-        const auto 原始Y尾 = 下边界 / 目标范围
-            + static_cast<std::size_t>(下边界 % 目标范围 != 0);
-        for (std::size_t 目标X = 0; 目标X < 目标范围; ++目标X) {
-            const auto 左边界 = 目标X * 原始范围;
-            const auto 右边界 = (目标X + 1) * 原始范围;
-            const auto 原始X首 = 左边界 / 目标范围;
-            const auto 原始X尾 = 右边界 / 目标范围
-                + static_cast<std::size_t>(右边界 % 目标范围 != 0);
+    const auto 单格总权重 = static_cast<std::uint64_t>(原始宽) * 原始高;
+    for (std::size_t 目标Y = 0; 目标Y < 目标高; ++目标Y) {
+        const auto 上边界 = 目标Y * 原始高;
+        const auto 下边界 = (目标Y + 1) * 原始高;
+        const auto 原始Y首 = 上边界 / 目标高;
+        const auto 原始Y尾 = 下边界 / 目标高
+            + static_cast<std::size_t>(下边界 % 目标高 != 0);
+        for (std::size_t 目标X = 0; 目标X < 目标宽; ++目标X) {
+            const auto 左边界 = 目标X * 原始宽;
+            const auto 右边界 = (目标X + 1) * 原始宽;
+            const auto 原始X首 = 左边界 / 目标宽;
+            const auto 原始X尾 = 右边界 / 目标宽
+                + static_cast<std::size_t>(右边界 % 目标宽 != 0);
             std::uint64_t 占用权重 = 0;
             for (std::size_t 原始Y = 原始Y首; 原始Y < 原始Y尾; ++原始Y) {
-                const auto 像素上 = 原始Y * 目标范围;
-                const auto 像素下 = (原始Y + 1) * 目标范围;
+                const auto 像素上 = 原始Y * 目标高;
+                const auto 像素下 = (原始Y + 1) * 目标高;
                 const auto Y权重 = (std::min)(下边界, 像素下)
                     - (std::max)(上边界, 像素上);
                 for (std::size_t 原始X = 原始X首; 原始X < 原始X尾; ++原始X) {
                     if (!读取二值位(原始材料,
-                        (原始Y + 原始起点) * 原始边长 + 原始X + 原始起点)) {
+                        (原始Y + 最小Y) * 原始边长 + 原始X + 最小X)) {
                         continue;
                     }
-                    const auto 像素左 = 原始X * 目标范围;
-                    const auto 像素右 = (原始X + 1) * 目标范围;
+                    const auto 像素左 = 原始X * 目标宽;
+                    const auto 像素右 = (原始X + 1) * 目标宽;
                     const auto X权重 = (std::min)(右边界, 像素右)
                         - (std::max)(左边界, 像素左);
                     占用权重 += static_cast<std::uint64_t>(X权重) * Y权重;
@@ -671,7 +697,7 @@ std::optional<std::vector<std::uint64_t>> 从原图生成二维面积层(
                 static_cast<long double>(占用权重) * 255.0L
                     / static_cast<long double>(单格总权重) + 0.5L);
             写入灰度(结果,
-                (目标Y + 目标起点) * 目标边长 + 目标X + 目标起点, 灰度);
+                (目标Y + 目标起点Y) * 目标边长 + 目标X + 目标起点X, 灰度);
         }
     }
     return 结果;
