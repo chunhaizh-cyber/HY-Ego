@@ -586,28 +586,95 @@ std::optional<std::size_t> 推导三维边长(
     }
 }
 
-std::vector<std::uint64_t> 压缩二维比较层(
-    const std::vector<std::uint64_t>& 下层,
-    std::size_t 下层边长) {
-    const auto 上层边长 = 下层边长 / 2;
-    const auto 上层位数 = 上层边长 * 上层边长;
-    std::vector<std::uint64_t> 上层((上层位数 + 63) / 64, 0);
-    for (std::size_t y = 0; y < 上层边长; ++y) {
-        for (std::size_t x = 0; x < 上层边长; ++x) {
-            bool 占用 = false;
-            for (std::size_t dy = 0; dy < 2 && !占用; ++dy) {
-                for (std::size_t dx = 0; dx < 2; ++dx) {
-                    if (读取二值位(
-                        下层, (y * 2 + dy) * 下层边长 + x * 2 + dx)) {
-                        占用 = true;
-                        break;
-                    }
-                }
-            }
-            if (占用) 写入二值位(上层, y * 上层边长 + x);
+std::uint8_t 读取灰度(
+    const std::vector<std::uint64_t>& 材料,
+    std::size_t 位置) noexcept {
+    const auto 位移 = static_cast<unsigned>((位置 % 8) * 8);
+    return static_cast<std::uint8_t>((材料[位置 / 8] >> 位移) & 0xFF);
+}
+
+void 写入灰度(
+    std::vector<std::uint64_t>& 材料,
+    std::size_t 位置,
+    std::uint8_t 灰度) noexcept {
+    const auto 位移 = static_cast<unsigned>((位置 % 8) * 8);
+    const auto 掩码 = std::uint64_t{0xFF} << 位移;
+    材料[位置 / 8] = (材料[位置 / 8] & ~掩码)
+        | (static_cast<std::uint64_t>(灰度) << 位移);
+}
+
+bool 二维外圈空白(
+    const std::vector<std::uint64_t>& 原始材料,
+    std::size_t 边长) noexcept {
+    for (std::size_t i = 0; i < 边长; ++i) {
+        if (读取二值位(原始材料, i)
+            || 读取二值位(原始材料, (边长 - 1) * 边长 + i)
+            || 读取二值位(原始材料, i * 边长)
+            || 读取二值位(原始材料, i * 边长 + 边长 - 1)) {
+            return false;
         }
     }
-    return 上层;
+    return true;
+}
+
+std::optional<std::vector<std::uint64_t>> 从原图生成二维面积层(
+    const std::vector<std::uint64_t>& 原始材料,
+    std::size_t 原始边长,
+    std::size_t 目标边长) {
+    if (原始边长 < 8 || 目标边长 < 8 || 目标边长 > 原始边长
+        || 原始边长 > (std::numeric_limits<std::uint64_t>::max)() / 原始边长) {
+        return std::nullopt;
+    }
+    const auto 目标像素数 = 目标边长 * 目标边长;
+    std::vector<std::uint64_t> 结果((目标像素数 + 7) / 8, 0);
+    const bool 保留空白外圈 = 二维外圈空白(原始材料, 原始边长);
+    const std::size_t 原始起点 = 保留空白外圈 ? 1 : 0;
+    const std::size_t 目标起点 = 保留空白外圈 ? 1 : 0;
+    const std::size_t 原始范围 = 原始边长 - (保留空白外圈 ? 2 : 0);
+    const std::size_t 目标范围 = 目标边长 - (保留空白外圈 ? 2 : 0);
+    if (原始范围 == 0 || 目标范围 == 0
+        || 原始范围 > (std::numeric_limits<std::uint64_t>::max)() / 原始范围) {
+        return std::nullopt;
+    }
+    const auto 单格总权重 = static_cast<std::uint64_t>(原始范围) * 原始范围;
+    for (std::size_t 目标Y = 0; 目标Y < 目标范围; ++目标Y) {
+        const auto 上边界 = 目标Y * 原始范围;
+        const auto 下边界 = (目标Y + 1) * 原始范围;
+        const auto 原始Y首 = 上边界 / 目标范围;
+        const auto 原始Y尾 = 下边界 / 目标范围
+            + static_cast<std::size_t>(下边界 % 目标范围 != 0);
+        for (std::size_t 目标X = 0; 目标X < 目标范围; ++目标X) {
+            const auto 左边界 = 目标X * 原始范围;
+            const auto 右边界 = (目标X + 1) * 原始范围;
+            const auto 原始X首 = 左边界 / 目标范围;
+            const auto 原始X尾 = 右边界 / 目标范围
+                + static_cast<std::size_t>(右边界 % 目标范围 != 0);
+            std::uint64_t 占用权重 = 0;
+            for (std::size_t 原始Y = 原始Y首; 原始Y < 原始Y尾; ++原始Y) {
+                const auto 像素上 = 原始Y * 目标范围;
+                const auto 像素下 = (原始Y + 1) * 目标范围;
+                const auto Y权重 = (std::min)(下边界, 像素下)
+                    - (std::max)(上边界, 像素上);
+                for (std::size_t 原始X = 原始X首; 原始X < 原始X尾; ++原始X) {
+                    if (!读取二值位(原始材料,
+                        (原始Y + 原始起点) * 原始边长 + 原始X + 原始起点)) {
+                        continue;
+                    }
+                    const auto 像素左 = 原始X * 目标范围;
+                    const auto 像素右 = (原始X + 1) * 目标范围;
+                    const auto X权重 = (std::min)(右边界, 像素右)
+                        - (std::max)(左边界, 像素左);
+                    占用权重 += static_cast<std::uint64_t>(X权重) * Y权重;
+                }
+            }
+            const auto 灰度 = static_cast<std::uint8_t>(
+                static_cast<long double>(占用权重) * 255.0L
+                    / static_cast<long double>(单格总权重) + 0.5L);
+            写入灰度(结果,
+                (目标Y + 目标起点) * 目标边长 + 目标X + 目标起点, 灰度);
+        }
+    }
+    return 结果;
 }
 
 std::optional<std::vector<std::vector<std::uint64_t>>> 生成二维比较层级(
@@ -620,33 +687,37 @@ std::optional<std::vector<std::vector<std::uint64_t>>> 生成二维比较层级(
     const auto 叶子位数 = 叶子边长 * 叶子边长;
     if (叶子材料.size() != (叶子位数 + 63) / 64) return std::nullopt;
 
-    std::vector<std::vector<std::uint64_t>> 从叶到根;
-    从叶到根.push_back(叶子材料);
-    auto 当前边长 = 叶子边长;
-    while (当前边长 > 8) {
-        if (当前边长 % 2 != 0) return std::nullopt;
-        从叶到根.push_back(压缩二维比较层(从叶到根.back(), 当前边长));
-        当前边长 /= 2;
+    std::vector<std::vector<std::uint64_t>> 从根到叶;
+    for (std::size_t 目标边长 = 8;; 目标边长 *= 2) {
+        const auto 当前层 = 从原图生成二维面积层(
+            叶子材料, 叶子边长, 目标边长);
+        if (!当前层) return std::nullopt;
+        从根到叶.push_back(*当前层);
+        if (目标边长 == 叶子边长) break;
+        if (目标边长 > 叶子边长 / 2) return std::nullopt;
     }
-    std::reverse(从叶到根.begin(), 从叶到根.end());
-    if (从叶到根.empty() || 从叶到根.front().size() != 1) return std::nullopt;
-    return 从叶到根;
+    return 从根到叶;
 }
 
-std::optional<std::int64_t> 计算二值层相似度(
+std::optional<std::int64_t> 计算灰度层相似度(
     const std::vector<std::uint64_t>& 左层,
     const std::vector<std::uint64_t>& 右层,
-    std::size_t 有效位数) noexcept {
-    if (有效位数 == 0 || 左层.size() != 右层.size()
-        || 左层.size() != (有效位数 + 63) / 64) {
+    std::size_t 像素数) noexcept {
+    if (像素数 == 0
+        || 像素数 > (std::numeric_limits<std::uint64_t>::max)() / 255
+        || 左层.size() != 右层.size()
+        || 左层.size() != (像素数 + 7) / 8) {
         return std::nullopt;
     }
-    std::size_t 相同位数 = 0;
-    for (std::size_t i = 0; i < 有效位数; ++i) {
-        if (读取二值位(左层, i) == 读取二值位(右层, i)) ++相同位数;
+    std::uint64_t 总差 = 0;
+    for (std::size_t i = 0; i < 像素数; ++i) {
+        const auto 左 = 读取灰度(左层, i);
+        const auto 右 = 读取灰度(右层, i);
+        总差 += 左 >= 右 ? 左 - 右 : 右 - 左;
     }
-    return static_cast<std::int64_t>(
-        (static_cast<std::uint64_t>(相同位数) * 10000) / 有效位数);
+    const auto 最大总差 = static_cast<std::uint64_t>(像素数) * 255;
+    return static_cast<std::int64_t>(10000
+        - (总差 * 10000 + 最大总差 / 2) / 最大总差);
 }
 
 std::optional<std::int64_t> 比较二维轮廓材料(
@@ -657,20 +728,18 @@ std::optional<std::int64_t> 比较二维轮廓材料(
     if (!左边长 || !右边长) return std::nullopt;
     const auto 左层级 = 生成二维比较层级(左材料, *左边长);
     const auto 右层级 = 生成二维比较层级(右材料, *右边长);
-    if (!左层级 || !右层级 || 左层级->front()[0] != 右层级->front()[0]) {
-        return 左层级 && 右层级 ? std::optional<std::int64_t>{0} : std::nullopt;
-    }
+    if (!左层级 || !右层级) return std::nullopt;
 
     const auto 共同层数 = (std::min)(左层级->size(), 右层级->size());
     std::int64_t 相似度 = 10000;
     std::size_t 当前边长 = 8;
-    for (std::size_t 层号 = 1; 层号 < 共同层数; ++层号) {
-        当前边长 *= 2;
-        const auto 当前 = 计算二值层相似度(
+    for (std::size_t 层号 = 0; 层号 < 共同层数; ++层号) {
+        const auto 当前 = 计算灰度层相似度(
             (*左层级)[层号], (*右层级)[层号], 当前边长 * 当前边长);
         if (!当前) return std::nullopt;
         相似度 = *当前;
         if (相似度 < 5000) return 0;
+        当前边长 *= 2;
     }
     return 相似度;
 }

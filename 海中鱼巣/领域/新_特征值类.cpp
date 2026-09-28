@@ -101,29 +101,88 @@ void 写入位(std::vector<std::uint64_t>& 材料, std::size_t 位置) noexcept 
     材料[位置 / 64] |= std::uint64_t{1} << (位置 % 64);
 }
 
-std::vector<std::uint64_t> 压缩二维一层(
-    const std::vector<std::uint64_t>& 下层, std::size_t 下层边长) {
-    const std::size_t 上层边长 = 下层边长 / 2;
-    const std::size_t 上层位数 = 上层边长 * 上层边长;
-    std::vector<std::uint64_t> 上层(上层位数 / 64, 0);
+void 写入灰度(std::vector<std::uint64_t>& 材料,
+    std::size_t 位置, std::uint8_t 灰度) noexcept {
+    const auto 位移 = static_cast<unsigned>((位置 % 8) * 8);
+    const auto 掩码 = std::uint64_t{0xFF} << 位移;
+    材料[位置 / 8] = (材料[位置 / 8] & ~掩码)
+        | (static_cast<std::uint64_t>(灰度) << 位移);
+}
 
-    for (std::size_t 上层Y = 0; 上层Y < 上层边长; ++上层Y) {
-        for (std::size_t 上层X = 0; 上层X < 上层边长; ++上层X) {
-            bool 占用 = false;
-            for (std::size_t 偏移Y = 0; 偏移Y < 2 && !占用; ++偏移Y) {
-                for (std::size_t 偏移X = 0; 偏移X < 2; ++偏移X) {
-                    const std::size_t 下层X = 上层X * 2 + 偏移X;
-                    const std::size_t 下层Y = 上层Y * 2 + 偏移Y;
-                    if (读取位(下层, 下层Y * 下层边长 + 下层X)) {
-                        占用 = true;
-                        break;
-                    }
-                }
-            }
-            if (占用) 写入位(上层, 上层Y * 上层边长 + 上层X);
+bool 二维外圈空白(
+    const std::vector<std::uint64_t>& 原始材料,
+    std::size_t 边长) noexcept {
+    for (std::size_t i = 0; i < 边长; ++i) {
+        if (读取位(原始材料, i)
+            || 读取位(原始材料, (边长 - 1) * 边长 + i)
+            || 读取位(原始材料, i * 边长)
+            || 读取位(原始材料, i * 边长 + 边长 - 1)) {
+            return false;
         }
     }
-    return 上层;
+    return true;
+}
+
+std::optional<std::vector<std::uint64_t>> 从原图生成二维面积层(
+    const std::vector<std::uint64_t>& 原始材料,
+    std::size_t 原始边长,
+    std::size_t 目标边长) {
+    if (原始边长 < 8 || 目标边长 < 8 || 目标边长 > 原始边长) {
+        return std::nullopt;
+    }
+    std::size_t 目标像素数 = 0;
+    if (!安全平方(目标边长, 目标像素数)) return std::nullopt;
+    std::vector<std::uint64_t> 结果((目标像素数 + 7) / 8, 0);
+
+    const bool 保留空白外圈 = 二维外圈空白(原始材料, 原始边长);
+    const std::size_t 原始起点 = 保留空白外圈 ? 1 : 0;
+    const std::size_t 目标起点 = 保留空白外圈 ? 1 : 0;
+    const std::size_t 原始范围 = 原始边长 - (保留空白外圈 ? 2 : 0);
+    const std::size_t 目标范围 = 目标边长 - (保留空白外圈 ? 2 : 0);
+    if (原始范围 == 0 || 目标范围 == 0) return std::nullopt;
+    if (原始范围 > (std::numeric_limits<std::uint64_t>::max)() / 原始范围) {
+        return std::nullopt;
+    }
+    const auto 单格总权重 = static_cast<std::uint64_t>(原始范围) * 原始范围;
+
+    for (std::size_t 目标Y = 0; 目标Y < 目标范围; ++目标Y) {
+        const auto 上边界 = 目标Y * 原始范围;
+        const auto 下边界 = (目标Y + 1) * 原始范围;
+        const auto 原始Y首 = 上边界 / 目标范围;
+        const auto 原始Y尾 = 下边界 / 目标范围
+            + static_cast<std::size_t>(下边界 % 目标范围 != 0);
+        for (std::size_t 目标X = 0; 目标X < 目标范围; ++目标X) {
+            const auto 左边界 = 目标X * 原始范围;
+            const auto 右边界 = (目标X + 1) * 原始范围;
+            const auto 原始X首 = 左边界 / 目标范围;
+            const auto 原始X尾 = 右边界 / 目标范围
+                + static_cast<std::size_t>(右边界 % 目标范围 != 0);
+            std::uint64_t 占用权重 = 0;
+            for (std::size_t 原始Y = 原始Y首; 原始Y < 原始Y尾; ++原始Y) {
+                const auto 像素上 = 原始Y * 目标范围;
+                const auto 像素下 = (原始Y + 1) * 目标范围;
+                const auto Y权重 = (std::min)(下边界, 像素下)
+                    - (std::max)(上边界, 像素上);
+                for (std::size_t 原始X = 原始X首; 原始X < 原始X尾; ++原始X) {
+                    if (!读取位(原始材料,
+                        (原始Y + 原始起点) * 原始边长 + 原始X + 原始起点)) {
+                        continue;
+                    }
+                    const auto 像素左 = 原始X * 目标范围;
+                    const auto 像素右 = (原始X + 1) * 目标范围;
+                    const auto X权重 = (std::min)(右边界, 像素右)
+                        - (std::max)(左边界, 像素左);
+                    占用权重 += static_cast<std::uint64_t>(X权重) * Y权重;
+                }
+            }
+            const auto 灰度 = static_cast<std::uint8_t>(
+                static_cast<long double>(占用权重) * 255.0L
+                    / static_cast<long double>(单格总权重) + 0.5L);
+            写入灰度(结果,
+                (目标Y + 目标起点) * 目标边长 + 目标X + 目标起点, 灰度);
+        }
+    }
+    return 结果;
 }
 
 std::vector<std::uint64_t> 压缩三维一层(
@@ -180,14 +239,21 @@ std::optional<std::vector<std::vector<std::uint64_t>>> 生成压缩层(
     if (!边长) return std::nullopt;
 
     std::vector<std::vector<std::uint64_t>> 层;
+    if (类型 == 材料物理类型::二维二值格) {
+        for (std::size_t 目标边长 = *边长;; 目标边长 /= 2) {
+            const auto 当前层 = 从原图生成二维面积层(
+                *原始材料, *边长, 目标边长);
+            if (!当前层) return std::nullopt;
+            层.push_back(*当前层);
+            if (目标边长 == 8) break;
+        }
+        return 层;
+    }
+
     层.push_back(*原始材料);
     std::size_t 当前边长 = *边长;
-    const std::size_t 根边长 =
-        类型 == 材料物理类型::二维二值格 ? 8 : 4;
-    while (当前边长 > 根边长) {
-        层.push_back(类型 == 材料物理类型::二维二值格
-            ? 压缩二维一层(层.back(), 当前边长)
-            : 压缩三维一层(层.back(), 当前边长));
+    while (当前边长 > 4) {
+        层.push_back(压缩三维一层(层.back(), 当前边长));
         当前边长 /= 2;
     }
     return 层;
