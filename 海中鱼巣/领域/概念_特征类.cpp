@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <limits>
 #include <mutex>
+#include <utility>
 
 namespace 海中鱼巣 {
 
@@ -25,11 +26,30 @@ bool 相邻或重叠(
 稳定编码 特征概念节点类型{};
 稳定编码 材料类型字段{};
 稳定编码 I64值域字段{};
+稳定编码 全材料值域字段{};
 稳定编码 非I64值域字段{};
+稳定编码 结构化分量字段{};
+稳定编码 结构化分量节点类型{};
+稳定编码 分量顺序字段{};
+稳定编码 分量角色字段{};
+稳定编码 分量材料类型字段{};
+稳定编码 分量I64值域字段{};
+稳定编码 分量单位字段{};
 稳定编码 单位字段{};
 稳定编码 比较规则字段{};
 稳定编码 聚合规则字段{};
 稳定编码 名称关系字段{};
+
+稳定编码 三维坐标X角色{};
+稳定编码 三维坐标Y角色{};
+稳定编码 三维坐标Z角色{};
+稳定编码 三维尺寸X跨度角色{};
+稳定编码 三维尺寸Y跨度角色{};
+稳定编码 三维尺寸Z跨度角色{};
+稳定编码 RGB红色角色{};
+稳定编码 RGB绿色角色{};
+稳定编码 RGB蓝色角色{};
+先天特征概念集合 先天概念{};
 
 bool 结构已初始化() noexcept {
     return 有效(特征概念树)
@@ -37,7 +57,15 @@ bool 结构已初始化() noexcept {
         && 有效(特征概念节点类型)
         && 有效(材料类型字段)
         && 有效(I64值域字段)
+        && 有效(全材料值域字段)
         && 有效(非I64值域字段)
+        && 有效(结构化分量字段)
+        && 有效(结构化分量节点类型)
+        && 有效(分量顺序字段)
+        && 有效(分量角色字段)
+        && 有效(分量材料类型字段)
+        && 有效(分量I64值域字段)
+        && 有效(分量单位字段)
         && 有效(单位字段)
         && 有效(比较规则字段)
         && 有效(聚合规则字段)
@@ -55,7 +83,15 @@ bool 结构仍存在() noexcept {
         && 节点仍存在(特征概念节点类型)
         && 节点仍存在(材料类型字段)
         && 节点仍存在(I64值域字段)
+        && 节点仍存在(全材料值域字段)
         && 节点仍存在(非I64值域字段)
+        && 节点仍存在(结构化分量字段)
+        && 节点仍存在(结构化分量节点类型)
+        && 节点仍存在(分量顺序字段)
+        && 节点仍存在(分量角色字段)
+        && 节点仍存在(分量材料类型字段)
+        && 节点仍存在(分量I64值域字段)
+        && 节点仍存在(分量单位字段)
         && 节点仍存在(单位字段)
         && 节点仍存在(比较规则字段)
         && 节点仍存在(聚合规则字段)
@@ -91,6 +127,27 @@ bool 是支持的聚合规则(特征概念聚合规则 规则) noexcept {
         || 规则 == 特征概念聚合规则::完整材料精确集合;
 }
 
+bool 规范化I64区间组(std::vector<特征概念I64闭区间>& 区间组) {
+    if (区间组.empty()) return false;
+    for (const auto& 区间 : 区间组) {
+        if (区间.下界 > 区间.上界) return false;
+    }
+    std::sort(区间组.begin(), 区间组.end(), [](const auto& 左, const auto& 右) {
+        return 左.下界 < 右.下界
+            || (左.下界 == 右.下界 && 左.上界 < 右.上界);
+    });
+    std::vector<特征概念I64闭区间> 归并;
+    for (const auto& 区间 : 区间组) {
+        if (归并.empty() || !相邻或重叠(归并.back(), 区间)) {
+            归并.push_back(区间);
+        } else if (区间.上界 > 归并.back().上界) {
+            归并.back().上界 = 区间.上界;
+        }
+    }
+    区间组 = std::move(归并);
+    return true;
+}
+
 bool 规则与材料相容(const 特征概念定义& 定义) noexcept {
     if (!是支持的材料类型(定义.材料类型)
         || !是支持的比较规则(定义.比较规则)
@@ -102,9 +159,15 @@ bool 规则与材料相容(const 特征概念定义& 定义) noexcept {
             && 定义.聚合规则 != 特征概念聚合规则::完整材料精确集合
             && std::holds_alternative<std::vector<特征概念I64闭区间>>(定义.值域);
     }
-    return 定义.比较规则 == 特征概念比较规则::完整材料精确
-        && 定义.聚合规则 != 特征概念聚合规则::I64连续值归组
-        && std::holds_alternative<std::vector<稳定编码>>(定义.值域);
+    if (定义.比较规则 != 特征概念比较规则::完整材料精确
+        || 定义.聚合规则 == 特征概念聚合规则::I64连续值归组) {
+        return false;
+    }
+    if (std::holds_alternative<特征概念结构化I64值域>(定义.值域)) {
+        return 定义.材料类型 == 特征概念材料物理类型::I64数组;
+    }
+    return std::holds_alternative<特征概念全材料值域>(定义.值域)
+        || std::holds_alternative<std::vector<稳定编码>>(定义.值域);
 }
 
 std::optional<特征概念定义> 规范化定义(const 特征概念定义& 输入) {
@@ -112,32 +175,31 @@ std::optional<特征概念定义> 规范化定义(const 特征概念定义& 输�
 
     特征概念定义 结果 = 输入;
     if (auto* 区间组 = std::get_if<std::vector<特征概念I64闭区间>>(&结果.值域)) {
-        if (区间组->empty()) return std::nullopt;
-        for (const auto& 区间 : *区间组) {
-            if (区间.下界 > 区间.上界) return std::nullopt;
-        }
-        std::sort(区间组->begin(), 区间组->end(), [](const auto& 左, const auto& 右) {
-            return 左.下界 < 右.下界
-                || (左.下界 == 右.下界 && 左.上界 < 右.上界);
-        });
-        std::vector<特征概念I64闭区间> 归并;
-        for (const auto& 区间 : *区间组) {
-            if (归并.empty() || !相邻或重叠(归并.back(), 区间)) {
-                归并.push_back(区间);
-            } else if (区间.上界 > 归并.back().上界) {
-                归并.back().上界 = 区间.上界;
-            }
-        }
-        *区间组 = std::move(归并);
-    } else {
-        auto& 节点组 = std::get<std::vector<稳定编码>>(结果.值域);
-        if (节点组.empty()
-            || std::any_of(节点组.begin(), 节点组.end(),
+        if (!规范化I64区间组(*区间组)) return std::nullopt;
+    } else if (auto* 节点组 = std::get_if<std::vector<稳定编码>>(&结果.值域)) {
+        if (节点组->empty()
+            || std::any_of(节点组->begin(), 节点组->end(),
                 [](稳定编码 节点) { return !有效(节点); })) {
             return std::nullopt;
         }
-        std::sort(节点组.begin(), 节点组.end());
-        节点组.erase(std::unique(节点组.begin(), 节点组.end()), 节点组.end());
+        std::sort(节点组->begin(), 节点组->end());
+        节点组->erase(
+            std::unique(节点组->begin(), 节点组->end()), 节点组->end());
+    } else if (auto* 结构化 =
+        std::get_if<特征概念结构化I64值域>(&结果.值域)) {
+        if (结构化->分量.empty()) return std::nullopt;
+        std::vector<稳定编码> 已有角色;
+        for (auto& 分量 : 结构化->分量) {
+            if (!有效(分量.角色) || !规范化I64区间组(分量.值域)
+                || (分量.单位 && !有效(*分量.单位))) {
+                return std::nullopt;
+            }
+            if (std::find(已有角色.begin(), 已有角色.end(), 分量.角色)
+                != 已有角色.end()) {
+                return std::nullopt;
+            }
+            已有角色.push_back(分量.角色);
+        }
     }
 
     if (结果.单位 && !有效(*结果.单位)) return std::nullopt;
@@ -196,18 +258,41 @@ bool 节点集合包含(
 bool 是严格子值域(
     const 特征概念定义& 父,
     const 特征概念定义& 子) noexcept {
-    if (父.材料类型 != 子.材料类型 || 父.单位 != 子.单位
-        || 父.值域.index() != 子.值域.index()) {
+    if (父.材料类型 != 子.材料类型 || 父.单位 != 子.单位) {
         return false;
     }
     if (const auto* 父I64 =
         std::get_if<std::vector<特征概念I64闭区间>>(&父.值域)) {
-        const auto& 子I64 = std::get<std::vector<特征概念I64闭区间>>(子.值域);
-        return *父I64 != 子I64 && I64值域包含(*父I64, 子I64);
+        const auto* 子I64 =
+            std::get_if<std::vector<特征概念I64闭区间>>(&子.值域);
+        if (!子I64) return false;
+        return *父I64 != *子I64 && I64值域包含(*父I64, *子I64);
     }
-    const auto& 父节点组 = std::get<std::vector<稳定编码>>(父.值域);
-    const auto& 子节点组 = std::get<std::vector<稳定编码>>(子.值域);
-    return 父节点组 != 子节点组 && 节点集合包含(父节点组, 子节点组);
+    if (std::holds_alternative<特征概念全材料值域>(父.值域)) {
+        return std::holds_alternative<std::vector<稳定编码>>(子.值域);
+    }
+    if (const auto* 父节点组 = std::get_if<std::vector<稳定编码>>(&父.值域)) {
+        const auto* 子节点组 = std::get_if<std::vector<稳定编码>>(&子.值域);
+        return 子节点组 && *父节点组 != *子节点组
+            && 节点集合包含(*父节点组, *子节点组);
+    }
+    const auto* 父结构 = std::get_if<特征概念结构化I64值域>(&父.值域);
+    const auto* 子结构 = std::get_if<特征概念结构化I64值域>(&子.值域);
+    if (!父结构 || !子结构
+        || 父结构->分量.size() != 子结构->分量.size()) {
+        return false;
+    }
+    bool 存在严格收缩 = false;
+    for (std::size_t i = 0; i < 父结构->分量.size(); ++i) {
+        const auto& 父分量 = 父结构->分量[i];
+        const auto& 子分量 = 子结构->分量[i];
+        if (父分量.角色 != 子分量.角色 || 父分量.单位 != 子分量.单位
+            || !I64值域包含(父分量.值域, 子分量.值域)) {
+            return false;
+        }
+        存在严格收缩 = 存在严格收缩 || 父分量.值域 != 子分量.值域;
+    }
+    return 存在严格收缩;
 }
 
 std::optional<std::uint64_t> I64命中区间宽度(
@@ -238,10 +323,26 @@ std::optional<std::uint64_t> 值域匹配尺度(
     if (!期望类型 || !值节点 || !有效(*值节点)) return std::nullopt;
     const auto 值信息 = 特征值服务.获取特征值(*值节点);
     if (!值信息 || 值信息->物理类型 != *期望类型) return std::nullopt;
-    const auto& 值域 = std::get<std::vector<稳定编码>>(概念.值域);
-    return std::binary_search(值域.begin(), 值域.end(), *值节点)
-        ? std::optional<std::uint64_t>{static_cast<std::uint64_t>(值域.size())}
-        : std::nullopt;
+    if (std::holds_alternative<特征概念全材料值域>(概念.值域)) {
+        return (std::numeric_limits<std::uint64_t>::max)();
+    }
+    if (const auto* 值域 = std::get_if<std::vector<稳定编码>>(&概念.值域)) {
+        return std::binary_search(值域->begin(), 值域->end(), *值节点)
+            ? std::optional<std::uint64_t>{static_cast<std::uint64_t>(值域->size())}
+            : std::nullopt;
+    }
+    const auto* 结构化 = std::get_if<特征概念结构化I64值域>(&概念.值域);
+    const auto* I64组 = std::get_if<std::vector<std::int64_t>>(&值信息->材料);
+    if (!结构化 || !I64组 || I64组->size() != 结构化->分量.size()) {
+        return std::nullopt;
+    }
+    for (std::size_t i = 0; i < I64组->size(); ++i) {
+        if (!I64命中区间宽度(结构化->分量[i].值域, (*I64组)[i])) {
+            return std::nullopt;
+        }
+    }
+    // 结构化概念的具体性由已建立的严格子值域层级裁决；维度数量不作为尺度。
+    return (std::numeric_limits<std::uint64_t>::max)();
 }
 
 std::optional<std::int64_t> 读取唯一I64字段(
@@ -343,10 +444,16 @@ bool 特征概念聚合结果::成功() const noexcept {
         && 值域.has_value();
 }
 
-bool 概念_特征类::初始化() noexcept {
+bool 先天特征概念集合::完整() const noexcept {
+    return 有效(毫米单位) && 有效(三维空间坐标)
+        && 有效(三维空间尺寸) && 有效(RGB颜色)
+        && 有效(二维轮廓) && 有效(三维体素);
+}
+
+bool 概念_特征类::初始化(const 新_特征值类& 特征值服务) noexcept {
     try {
         std::lock_guard 锁(特征概念树互斥);
-        if (结构已初始化()) return 结构仍存在();
+        if (结构已初始化() && !结构仍存在()) return false;
         if (有效(特征概念树) && !节点仍存在(特征概念树)) return false;
         if (!有效(特征概念树)) {
             特征概念树 = 全局基础数据集.新建节点();
@@ -358,17 +465,118 @@ bool 概念_特征类::初始化() noexcept {
             节点 = 新建结构节点();
             return 有效(节点);
         };
-        return 建立(节点类型字段)
+        if (!(建立(节点类型字段)
             && 建立(特征概念节点类型)
             && 建立(材料类型字段)
             && 建立(I64值域字段)
+            && 建立(全材料值域字段)
             && 建立(非I64值域字段)
+            && 建立(结构化分量字段)
+            && 建立(结构化分量节点类型)
+            && 建立(分量顺序字段)
+            && 建立(分量角色字段)
+            && 建立(分量材料类型字段)
+            && 建立(分量I64值域字段)
+            && 建立(分量单位字段)
             && 建立(单位字段)
             && 建立(比较规则字段)
             && 建立(聚合规则字段)
-            && 建立(名称关系字段);
+            && 建立(名称关系字段))) {
+            return false;
+        }
+
+        if (!(建立(先天概念.毫米单位)
+            && 建立(三维坐标X角色)
+            && 建立(三维坐标Y角色)
+            && 建立(三维坐标Z角色)
+            && 建立(三维尺寸X跨度角色)
+            && 建立(三维尺寸Y跨度角色)
+            && 建立(三维尺寸Z跨度角色)
+            && 建立(RGB红色角色)
+            && 建立(RGB绿色角色)
+            && 建立(RGB蓝色角色))) {
+            return false;
+        }
+
+        const auto I64最小 = (std::numeric_limits<std::int64_t>::min)();
+        const auto I64最大 = (std::numeric_limits<std::int64_t>::max)();
+        const std::vector<特征概念I64闭区间> 有符号全域{{I64最小, I64最大}};
+        const std::vector<特征概念I64闭区间> 非负全域{{0, I64最大}};
+        const std::vector<特征概念I64闭区间> 颜色分量域{{0, 255}};
+
+        const auto 结构化定义 = [](
+            std::vector<特征概念I64分量定义> 分量) {
+            特征概念定义 定义;
+            定义.材料类型 = 特征概念材料物理类型::I64数组;
+            定义.值域 = 特征概念结构化I64值域{std::move(分量)};
+            定义.比较规则 = 特征概念比较规则::完整材料精确;
+            定义.聚合规则 = 特征概念聚合规则::完整材料精确集合;
+            return 定义;
+        };
+        const auto 全材料定义 = [](特征概念材料物理类型 材料类型) {
+            特征概念定义 定义;
+            定义.材料类型 = 材料类型;
+            定义.值域 = 特征概念全材料值域{};
+            定义.比较规则 = 特征概念比较规则::完整材料精确;
+            定义.聚合规则 = 特征概念聚合规则::完整材料精确集合;
+            return 定义;
+        };
+        const auto 确保根概念 = [&](稳定编码& 节点, const 特征概念定义& 定义) {
+            if (有效(节点)) {
+                const auto 信息 = 获取特征概念(节点);
+                const auto 规范定义 = 规范化定义(定义);
+                if (!信息 || !规范定义
+                    || !结构定义相同(转为定义(*信息), *规范定义)) {
+                    return false;
+                }
+                const auto 上位 = 全局基础数据集.查询目标关系(
+                    节点, 基础外部关系类型::父子);
+                return 上位.size() == 1 && 上位.front().源节点 == 特征概念树;
+            }
+            节点 = 建立或取得特征概念(定义, 特征值服务);
+            return 有效(节点);
+        };
+
+        const auto 三维坐标定义 = 结构化定义({
+            {三维坐标X角色, 先天概念.毫米单位, 有符号全域},
+            {三维坐标Y角色, 先天概念.毫米单位, 有符号全域},
+            {三维坐标Z角色, 先天概念.毫米单位, 有符号全域}});
+        const auto 三维尺寸定义 = 结构化定义({
+            {三维尺寸X跨度角色, 先天概念.毫米单位, 非负全域},
+            {三维尺寸Y跨度角色, 先天概念.毫米单位, 非负全域},
+            {三维尺寸Z跨度角色, 先天概念.毫米单位, 非负全域}});
+        const auto RGB定义 = 结构化定义({
+            {RGB红色角色, std::nullopt, 颜色分量域},
+            {RGB绿色角色, std::nullopt, 颜色分量域},
+            {RGB蓝色角色, std::nullopt, 颜色分量域}});
+
+        return 确保根概念(先天概念.三维空间坐标, 三维坐标定义)
+            && 确保根概念(先天概念.三维空间尺寸, 三维尺寸定义)
+            && 确保根概念(先天概念.RGB颜色, RGB定义)
+            && 确保根概念(先天概念.二维轮廓,
+                全材料定义(特征概念材料物理类型::二维二值格))
+            && 确保根概念(先天概念.三维体素,
+                全材料定义(特征概念材料物理类型::三维二值格));
     } catch (...) {
         return false;
+    }
+}
+
+std::optional<先天特征概念集合> 概念_特征类::获取先天特征概念() const noexcept {
+    try {
+        std::lock_guard 锁(特征概念树互斥);
+        if (!结构仍存在() || !先天概念.完整()
+            || !节点仍存在(先天概念.毫米单位)
+            || !是特征概念节点(先天概念.三维空间坐标)
+            || !是特征概念节点(先天概念.三维空间尺寸)
+            || !是特征概念节点(先天概念.RGB颜色)
+            || !是特征概念节点(先天概念.二维轮廓)
+            || !是特征概念节点(先天概念.三维体素)) {
+            return std::nullopt;
+        }
+        return 先天概念;
+    } catch (...) {
+        return std::nullopt;
     }
 }
 
@@ -396,6 +604,15 @@ bool 概念_特征类::初始化() noexcept {
             for (const auto 值节点 : *值节点组) {
                 const auto 值信息 = 特征值服务.获取特征值(值节点);
                 if (!值信息 || 值信息->物理类型 != *期望类型) return {};
+            }
+        }
+        if (const auto* 结构化 =
+            std::get_if<特征概念结构化I64值域>(&规范定义->值域)) {
+            for (const auto& 分量 : 结构化->分量) {
+                if (!节点仍存在(分量.角色)
+                    || (分量.单位 && !节点仍存在(*分量.单位))) {
+                    return {};
+                }
             }
         }
 
@@ -453,6 +670,18 @@ bool 概念_特征类::初始化() noexcept {
         const auto 节点 = 全局基础数据集.新建节点();
         if (!有效(节点)) return {};
         std::vector<稳定编码> 已写字段;
+        struct 已建分量节点 final {
+            稳定编码 节点;
+            std::vector<稳定编码> 字段;
+        };
+        std::vector<已建分量节点> 已建分量;
+        const auto 清理本次节点 = [&]() noexcept {
+            回滚字段和节点(节点, 已写字段);
+            for (auto 分量位置 = 已建分量.rbegin();
+                分量位置 != 已建分量.rend(); ++分量位置) {
+                回滚字段和节点(分量位置->节点, 分量位置->字段);
+            }
+        };
         auto 写节点字段 = [&](稳定编码 字段, 稳定编码 目标) {
             const auto 关系 = 全局基础数据集.添加字段节点(节点, 字段, 目标);
             if (有效(关系)) 已写字段.push_back(关系);
@@ -481,12 +710,71 @@ bool 概念_特征类::初始化() noexcept {
                     节点, I64值域字段, 基础值{基础原始值{std::move(展平值域)}});
                 if (有效(关系)) 已写字段.push_back(关系);
                 完成 = 有效(关系);
-            } else {
-                for (const auto 值节点 : std::get<std::vector<稳定编码>>(规范定义->值域)) {
+            } else if (std::holds_alternative<特征概念全材料值域>(规范定义->值域)) {
+                const auto 关系 = 全局基础数据集.添加字段值(
+                    节点, 全材料值域字段, 基础值{基础原始值{std::int64_t{1}}});
+                if (有效(关系)) 已写字段.push_back(关系);
+                完成 = 有效(关系);
+            } else if (const auto* 值节点组 =
+                std::get_if<std::vector<稳定编码>>(&规范定义->值域)) {
+                for (const auto 值节点 : *值节点组) {
                     if (!写节点字段(非I64值域字段, 值节点)) {
                         完成 = false;
                         break;
                     }
+                }
+            } else {
+                const auto& 结构化 =
+                    std::get<特征概念结构化I64值域>(规范定义->值域);
+                for (std::size_t 顺序 = 0; 顺序 < 结构化.分量.size(); ++顺序) {
+                    const auto& 分量定义 = 结构化.分量[顺序];
+                    已建分量.push_back({全局基础数据集.新建节点(), {}});
+                    auto& 分量 = 已建分量.back();
+                    if (!有效(分量.节点)) {
+                        已建分量.pop_back();
+                        完成 = false;
+                        break;
+                    }
+                    const auto 写分量节点字段 = [&](稳定编码 字段, 稳定编码 目标) {
+                        const auto 关系 = 全局基础数据集.添加字段节点(
+                            分量.节点, 字段, 目标);
+                        if (有效(关系)) 分量.字段.push_back(关系);
+                        return 有效(关系);
+                    };
+                    const auto 写分量I64字段 = [&](稳定编码 字段, std::int64_t 值) {
+                        const auto 关系 = 全局基础数据集.添加字段值(
+                            分量.节点, 字段, 基础值{基础原始值{值}});
+                        if (有效(关系)) 分量.字段.push_back(关系);
+                        return 有效(关系);
+                    };
+                    std::vector<std::int64_t> 展平分量域;
+                    展平分量域.reserve(分量定义.值域.size() * 2);
+                    for (const auto& 区间 : 分量定义.值域) {
+                        展平分量域.push_back(区间.下界);
+                        展平分量域.push_back(区间.上界);
+                    }
+                    完成 = 写分量节点字段(节点类型字段, 结构化分量节点类型)
+                        && 写分量I64字段(分量顺序字段,
+                            static_cast<std::int64_t>(顺序))
+                        && 写分量节点字段(分量角色字段, 分量定义.角色)
+                        && 写分量I64字段(分量材料类型字段,
+                            static_cast<std::int64_t>(
+                                特征概念材料物理类型::I64标量));
+                    if (完成) {
+                        const auto 域关系 = 全局基础数据集.添加字段值(
+                            分量.节点, 分量I64值域字段,
+                            基础值{基础原始值{std::move(展平分量域)}});
+                        if (有效(域关系)) 分量.字段.push_back(域关系);
+                        完成 = 有效(域关系);
+                    }
+                    if (完成 && 分量定义.单位) {
+                        完成 = 写分量节点字段(
+                            分量单位字段, *分量定义.单位);
+                    }
+                    if (完成) {
+                        完成 = 写节点字段(结构化分量字段, 分量.节点);
+                    }
+                    if (!完成) break;
                 }
             }
         }
@@ -508,13 +796,13 @@ bool 概念_特征类::初始化() noexcept {
             }
         }
         if (!完成) {
-            回滚字段和节点(节点, 已写字段);
+            清理本次节点();
             return {};
         }
 
         if (!有效(全局基础数据集.添加关系(
             父节点, 节点, 基础外部关系类型::父子))) {
-            回滚字段和节点(节点, 已写字段);
+            清理本次节点();
             return {};
         }
         return 节点;
@@ -540,10 +828,23 @@ std::optional<特征概念信息> 概念_特征类::获取特征概念(
         定义.材料类型 = static_cast<特征概念材料物理类型>(*材料);
         定义.比较规则 = static_cast<特征概念比较规则>(*比较);
         定义.聚合规则 = static_cast<特征概念聚合规则>(*聚合);
-        if (定义.材料类型 == 特征概念材料物理类型::I64标量) {
+        const auto I64字段组 = 全局基础数据集.查询字段(
+            特征概念节点, I64值域字段);
+        const auto 全材料字段组 = 全局基础数据集.查询字段(
+            特征概念节点, 全材料值域字段);
+        const auto 非I64字段组 = 全局基础数据集.查询字段(
+            特征概念节点, 非I64值域字段);
+        const auto 结构化字段组 = 全局基础数据集.查询字段(
+            特征概念节点, 结构化分量字段);
+        const auto 表示数量 = static_cast<int>(!I64字段组.empty())
+            + static_cast<int>(!全材料字段组.empty())
+            + static_cast<int>(!非I64字段组.empty())
+            + static_cast<int>(!结构化字段组.empty());
+        if (表示数量 != 1) return std::nullopt;
+
+        if (!I64字段组.empty()) {
             const auto 展平值域 = 读取唯一I64组字段(特征概念节点, I64值域字段);
-            if (!展平值域 || 展平值域->empty() || 展平值域->size() % 2 != 0
-                || !全局基础数据集.查询字段(特征概念节点, 非I64值域字段).empty()) {
+            if (!展平值域 || 展平值域->empty() || 展平值域->size() % 2 != 0) {
                 return std::nullopt;
             }
             std::vector<特征概念I64闭区间> 区间组;
@@ -551,17 +852,66 @@ std::optional<特征概念信息> 概念_特征类::获取特征概念(
                 区间组.push_back({(*展平值域)[i], (*展平值域)[i + 1]});
             }
             定义.值域 = std::move(区间组);
-        } else {
-            if (!全局基础数据集.查询字段(特征概念节点, I64值域字段).empty()) {
-                return std::nullopt;
-            }
-            const auto 原始值域字段组 =
-                全局基础数据集.查询字段(特征概念节点, 非I64值域字段);
+        } else if (!全材料字段组.empty()) {
+            if (全材料字段组.size() != 1) return std::nullopt;
+            const auto* 标记值 = std::get_if<基础值>(&全材料字段组.front().内容);
+            const auto* 标记 = 标记值
+                ? std::get_if<std::int64_t>(&标记值->材料) : nullptr;
+            if (!标记 || *标记 != 1) return std::nullopt;
+            定义.值域 = 特征概念全材料值域{};
+        } else if (!非I64字段组.empty()) {
             auto 值域 = 读取多节点字段(特征概念节点, 非I64值域字段);
-            if (值域.empty() || 值域.size() != 原始值域字段组.size()) {
+            if (值域.empty() || 值域.size() != 非I64字段组.size()) {
                 return std::nullopt;
             }
             定义.值域 = std::move(值域);
+        } else {
+            std::vector<std::pair<std::size_t, 特征概念I64分量定义>> 有序分量;
+            有序分量.reserve(结构化字段组.size());
+            for (const auto& 分量字段 : 结构化字段组) {
+                const auto* 分量节点 = std::get_if<稳定编码>(&分量字段.内容);
+                if (!分量节点 || !节点仍存在(*分量节点)) return std::nullopt;
+                const auto 分量类型 = 读取唯一节点字段(*分量节点, 节点类型字段);
+                const auto 顺序 = 读取唯一I64字段(*分量节点, 分量顺序字段);
+                const auto 角色 = 读取唯一节点字段(*分量节点, 分量角色字段);
+                const auto 分量材料 = 读取唯一I64字段(
+                    *分量节点, 分量材料类型字段);
+                const auto 展平分量域 = 读取唯一I64组字段(
+                    *分量节点, 分量I64值域字段);
+                if (!分量类型 || *分量类型 != 结构化分量节点类型
+                    || !顺序 || *顺序 < 0 || !角色 || !分量材料
+                    || *分量材料 != static_cast<std::int64_t>(
+                        特征概念材料物理类型::I64标量)
+                    || !展平分量域 || 展平分量域->empty()
+                    || 展平分量域->size() % 2 != 0) {
+                    return std::nullopt;
+                }
+                特征概念I64分量定义 分量;
+                分量.角色 = *角色;
+                for (std::size_t i = 0; i < 展平分量域->size(); i += 2) {
+                    分量.值域.push_back({
+                        (*展平分量域)[i], (*展平分量域)[i + 1]});
+                }
+                const auto 分量单位组 = 全局基础数据集.查询字段(
+                    *分量节点, 分量单位字段);
+                if (分量单位组.size() > 1) return std::nullopt;
+                if (!分量单位组.empty()) {
+                    const auto* 单位节点 =
+                        std::get_if<稳定编码>(&分量单位组.front().内容);
+                    if (!单位节点) return std::nullopt;
+                    分量.单位 = *单位节点;
+                }
+                有序分量.emplace_back(static_cast<std::size_t>(*顺序), std::move(分量));
+            }
+            std::sort(有序分量.begin(), 有序分量.end(),
+                [](const auto& 左, const auto& 右) { return 左.first < 右.first; });
+            特征概念结构化I64值域 结构化;
+            结构化.分量.reserve(有序分量.size());
+            for (std::size_t i = 0; i < 有序分量.size(); ++i) {
+                if (有序分量[i].first != i) return std::nullopt;
+                结构化.分量.push_back(std::move(有序分量[i].second));
+            }
+            定义.值域 = std::move(结构化);
         }
 
         const auto 单位组 = 全局基础数据集.查询字段(特征概念节点, 单位字段);

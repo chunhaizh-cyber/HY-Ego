@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <variant>
@@ -27,10 +28,35 @@ struct 特征概念I64闭区间 final {
         const 特征概念I64闭区间&) = default;
 };
 
-// I64概念使用规范化闭区间；其它材料使用完整特征值节点身份集合。
+// 表示该材料物理类型下的全部合法元素。它不是空集合。
+struct 特征概念全材料值域 final {
+    friend bool operator==(const 特征概念全材料值域&,
+        const 特征概念全材料值域&) = default;
+};
+
+struct 特征概念I64分量定义 final {
+    稳定编码 角色;
+    std::optional<稳定编码> 单位;
+    std::vector<特征概念I64闭区间> 值域;
+    friend bool operator==(const 特征概念I64分量定义&,
+        const 特征概念I64分量定义&) = default;
+};
+
+// 维度数量由分量.size()唯一得出，不另存第二份数量事实。
+struct 特征概念结构化I64值域 final {
+    std::vector<特征概念I64分量定义> 分量;
+    std::size_t 维度数量() const noexcept { return 分量.size(); }
+    friend bool operator==(const 特征概念结构化I64值域&,
+        const 特征概念结构化I64值域&) = default;
+};
+
+// I64标量使用规范化闭区间；结构化I64材料使用有序分量值域；
+// 其它材料可使用全材料值域或完整特征值节点身份集合。
 using 特征概念值域 = std::variant<
     std::vector<特征概念I64闭区间>,
-    std::vector<稳定编码>>;
+    特征概念全材料值域,
+    std::vector<稳定编码>,
+    特征概念结构化I64值域>;
 
 using 特征概念准确值 = std::variant<std::int64_t, 稳定编码>;
 
@@ -117,12 +143,26 @@ struct 特征概念按值查找结果 final {
     std::vector<稳定编码> 冲突候选;
 };
 
+struct 先天特征概念集合 final {
+    稳定编码 毫米单位;
+    稳定编码 三维空间坐标;
+    稳定编码 三维空间尺寸;
+    稳定编码 RGB颜色;
+    稳定编码 二维轮廓;
+    稳定编码 三维体素;
+    bool 完整() const noexcept;
+    friend bool operator==(const 先天特征概念集合&,
+        const 先天特征概念集合&) = default;
+};
+
 // 全局基础数据集中的特征概念树根节点。
 extern 稳定编码 特征概念树;
 
 class 概念_特征类 final {
 public:
-    bool 初始化() noexcept;
+    bool 初始化(const 新_特征值类& 特征值服务) noexcept;
+
+    std::optional<先天特征概念集合> 获取先天特征概念() const noexcept;
 
     // 未给上位概念时建立新的根链特征类型概念；根链节点自身就是类型身份，
     // 不按相同材料和值域合并。给出上位概念时，在其直接子链复用或建立
