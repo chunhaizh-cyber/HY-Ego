@@ -6,6 +6,8 @@
 
 namespace 海中鱼巣 {
 
+基础数据集 全局基础数据集;
+
 namespace {
 
 bool 有效(基础外部关系类型 类型) noexcept {

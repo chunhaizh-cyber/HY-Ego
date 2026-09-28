@@ -1,0 +1,138 @@
+#pragma once
+
+#include <cstdint>
+#include <optional>
+#include <variant>
+#include <vector>
+
+#include "../核心/基础数据集.h"
+#include "新_特征值类.h"
+
+namespace 海中鱼巣 {
+
+// I64标量直接保存在特征节点中，其余材料由新_特征值类保存。
+enum class 特征概念材料物理类型 : std::int64_t {
+    I64标量 = 1,
+    U64数组 = 2,
+    I64数组 = 3,
+    UTF8字符串 = 4,
+    二维二值格 = 5,
+    三维二值格 = 6
+};
+
+struct 特征概念I64闭区间 final {
+    std::int64_t 下界 = 0;
+    std::int64_t 上界 = 0;
+    friend bool operator==(const 特征概念I64闭区间&,
+        const 特征概念I64闭区间&) = default;
+};
+
+// I64概念使用规范化闭区间；其它材料使用完整特征值节点身份集合。
+using 特征概念值域 = std::variant<
+    std::vector<特征概念I64闭区间>,
+    std::vector<稳定编码>>;
+
+using 特征概念准确值 = std::variant<std::int64_t, 稳定编码>;
+
+enum class 特征概念比较规则 : std::int64_t {
+    I64数值 = 1,
+    完整材料精确 = 2
+};
+
+enum class 特征概念聚合规则 : std::int64_t {
+    不自动聚合 = 1,
+    I64连续值归组 = 2,
+    完整材料精确集合 = 3
+};
+
+struct 特征概念定义 final {
+    特征概念材料物理类型 材料类型 = 特征概念材料物理类型::I64标量;
+    特征概念值域 值域;
+    std::optional<稳定编码> 单位;
+    特征概念比较规则 比较规则 = 特征概念比较规则::I64数值;
+    特征概念聚合规则 聚合规则 = 特征概念聚合规则::不自动聚合;
+    std::vector<稳定编码> 名称关系;
+    friend bool operator==(const 特征概念定义&, const 特征概念定义&) = default;
+};
+
+struct 特征概念信息 final {
+    稳定编码 节点;
+    特征概念材料物理类型 材料类型 = 特征概念材料物理类型::I64标量;
+    特征概念值域 值域;
+    std::optional<稳定编码> 单位;
+    特征概念比较规则 比较规则 = 特征概念比较规则::I64数值;
+    特征概念聚合规则 聚合规则 = 特征概念聚合规则::不自动聚合;
+
+    // 保存由自然语言类建立的名称关系身份；词条和关系操作稍后实现。
+    std::vector<稳定编码> 名称关系;
+
+    friend bool operator==(const 特征概念信息&, const 特征概念信息&) = default;
+};
+
+enum class 特征概念规则状态 : std::uint8_t {
+    已完成 = 1,
+    无变化 = 2,
+    入口拒绝 = 3,
+    材料类型不相容 = 4,
+    值不存在 = 5,
+    规则不支持 = 6,
+    资源失败 = 7,
+    内部不一致 = 8
+};
+
+enum class 特征概念比较次序 : std::int8_t {
+    小于 = -1,
+    相等 = 0,
+    大于 = 1
+};
+
+struct 特征概念比较结果 final {
+    特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
+    std::optional<bool> 相等;
+    std::optional<特征概念比较次序> 次序;
+    std::optional<std::uint64_t> I64绝对差;
+    bool 成功() const noexcept;
+};
+
+struct 特征概念聚合结果 final {
+    特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
+    std::optional<特征概念值域> 值域;
+    bool 成功() const noexcept;
+};
+
+// 全局基础数据集中的特征概念树根节点。
+extern 稳定编码 特征概念树;
+
+class 概念_特征类 final {
+public:
+    bool 初始化() noexcept;
+
+    稳定编码 建立或取得特征概念(
+        const 特征概念定义& 定义,
+        const 新_特征值类& 特征值服务,
+        std::optional<稳定编码> 上位概念 = std::nullopt) noexcept;
+
+    std::optional<特征概念信息> 获取特征概念(
+        稳定编码 特征概念节点) const noexcept;
+
+    std::vector<稳定编码> 查询特征概念(
+        const 特征概念定义& 定义) const noexcept;
+
+    bool 是特征概念节点(稳定编码 节点) const noexcept;
+
+    特征概念比较结果 执行比较规则(
+        特征概念材料物理类型 材料类型,
+        特征概念比较规则 规则,
+        const 特征概念准确值& 左值,
+        const 特征概念准确值& 右值,
+        const 新_特征值类& 特征值服务) const noexcept;
+
+    // 只计算规范化值域，不在本函数中建立新概念节点。
+    特征概念聚合结果 执行聚合规则(
+        特征概念材料物理类型 材料类型,
+        特征概念聚合规则 规则,
+        const std::vector<特征概念准确值>& 历史不同值,
+        const 新_特征值类& 特征值服务) const noexcept;
+};
+
+} // namespace 海中鱼巣
