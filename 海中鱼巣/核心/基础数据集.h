@@ -86,6 +86,9 @@ public:
     std::optional<基础字段关系> 查询字段关系(稳定编码 字段关系) const noexcept;
     std::vector<基础字段关系> 查询字段(
         稳定编码 节点, 稳定编码 字段节点) const;
+    // 反向查询某个字段节点中指向目标节点的全部字段关系。
+    std::vector<基础字段关系> 查询目标字段(
+        稳定编码 目标节点, 稳定编码 字段节点) const;
 
 private:
     稳定编码 分配编码() noexcept;

@@ -264,4 +264,17 @@ std::vector<基础字段关系> 基础数据集::查询字段(
     return 结果;
 }
 
+std::vector<基础字段关系> 基础数据集::查询目标字段(
+    稳定编码 目标节点, 稳定编码 字段节点) const {
+    std::shared_lock 锁(互斥_);
+    std::vector<基础字段关系> 结果;
+    if (!节点存在(目标节点) || !节点存在(字段节点)) return 结果;
+    for (const auto& [_, 字段] : 字段关系_) {
+        if (字段.字段节点 != 字段节点) continue;
+        const auto* 内容节点 = std::get_if<稳定编码>(&字段.内容);
+        if (内容节点 && *内容节点 == 目标节点) 结果.push_back(字段);
+    }
+    return 结果;
+}
+
 } // namespace 海中鱼巣

@@ -85,7 +85,6 @@ void 排序特征项(std::vector<存在概念特征项>& 特征组) {
 std::optional<std::vector<存在概念特征项>> 规范化特征组(
     const std::vector<稳定编码>& 具体特征概念组,
     概念_特征类& 特征概念服务) {
-    if (具体特征概念组.empty()) return std::nullopt;
     std::vector<存在概念特征项> 结果;
     for (const auto 具体概念 : 具体特征概念组) {
         if (!特征概念服务.是特征概念节点(具体概念)) return std::nullopt;
@@ -132,7 +131,6 @@ std::optional<std::vector<存在概念特征项>> 读取特征组(
         }
         结果.push_back({*特征类型, *具体概念});
     }
-    if (结果.empty()) return std::nullopt;
     排序特征项(结果);
     for (std::size_t i = 1; i < 结果.size(); ++i) {
         if (结果[i - 1].特征类型概念 == 结果[i].特征类型概念) {
@@ -643,6 +641,9 @@ std::optional<存在概念信息> 概念_存在类::获取存在概念(
         const auto 种类 = 读取概念种类(概念节点);
         const auto 特征组 = 读取特征组(概念节点, 特征概念服务_);
         if (!种类 || !特征组) return std::nullopt;
+        if (*种类 == 存在概念种类::抽象 && 特征组->empty()) {
+            return std::nullopt;
+        }
         存在概念信息 结果;
         结果.节点 = 概念节点;
         结果.种类 = *种类;
