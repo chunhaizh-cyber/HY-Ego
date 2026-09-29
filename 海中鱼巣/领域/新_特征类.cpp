@@ -1872,46 +1872,17 @@ bool 新_特征类::初始化() noexcept {
     }
 }
 
-稳定编码 新_特征类::建立或取得特征(
-    稳定编码 持有节点,
+稳定编码 新_特征类::建立特征(
     稳定编码 特征概念节点,
     std::optional<新特征准确值> 实际值) noexcept {
     try {
         std::lock_guard 锁(新特征互斥);
         if (!结构仍存在()
-            || !节点仍存在(持有节点)
             || !特征概念服务_.是特征概念节点(特征概念节点)) {
             return {};
         }
         const auto 概念信息 = 特征概念服务_.获取特征概念(特征概念节点);
         if (!概念信息) return {};
-
-        const auto 查找已有实例 = [&](稳定编码 概念节点)
-            -> std::optional<稳定编码> {
-            std::vector<稳定编码> 已有;
-            for (const auto& 关系 : 全局基础数据集.查询源关系(
-                持有节点, 基础外部关系类型::父子)) {
-                const auto 类型 = 读取唯一节点字段(
-                    关系.目标节点, 节点类型字段);
-                const auto 概念 = 读取唯一节点字段(
-                    关系.目标节点, 特征概念字段);
-                if (类型 && *类型 == 特征节点类型
-                    && 概念 && *概念 == 概念节点) {
-                    已有.push_back(关系.目标节点);
-                }
-            }
-            std::sort(已有.begin(), 已有.end());
-            已有.erase(std::unique(已有.begin(), 已有.end()), 已有.end());
-            if (已有.size() > 1) return 稳定编码{};
-            if (已有.empty()) return std::nullopt;
-            return 获取特征(已有.front())
-                ? std::optional<稳定编码>{已有.front()}
-                : std::optional<稳定编码>{稳定编码{}};
-        };
-
-        if (const auto 已有 = 查找已有实例(特征概念节点)) {
-            return *已有;
-        }
 
         auto 模板概念节点 = 特征概念节点;
         auto 模板概念信息 = 概念信息;
@@ -1940,9 +1911,6 @@ bool 新_特征类::初始化() noexcept {
             }
             模板概念信息 = 特征概念服务_.获取特征概念(模板概念节点);
             if (!模板概念信息) return {};
-            if (const auto 已有 = 查找已有实例(模板概念节点)) {
-                return *已有;
-            }
         }
 
         const auto 节点 = 全局基础数据集.新建节点();
@@ -1967,14 +1935,7 @@ bool 新_特征类::初始化() noexcept {
             回滚字段和节点(节点, 已写字段);
             return {};
         }
-        const auto 持有关系 = 全局基础数据集.添加关系(
-            持有节点, 节点, 基础外部关系类型::父子);
-        if (!有效(持有关系)) {
-            回滚字段和节点(节点, 已写字段);
-            return {};
-        }
         if (!特征概念服务_.增加当前实例引用(模板概念节点)) {
-            (void)全局基础数据集.删除关系(持有关系);
             回滚字段和节点(节点, 已写字段);
             return {};
         }
@@ -2036,37 +1997,28 @@ bool 新_特征类::初始化() noexcept {
                 && 概念父关系.front().源节点 != 上位概念)) {
             return {};
         }
-        return 建立或取得特征(父特征节点, 子概念节点);
-    } catch (...) {
-        return {};
-    }
-}
-
-std::optional<稳定编码> 新_特征类::查询特征(
-    稳定编码 持有节点,
-    稳定编码 特征概念节点) const noexcept {
-    try {
-        std::lock_guard 锁(新特征互斥);
-        if (!结构仍存在() || !节点仍存在(持有节点)
-            || !特征概念服务_.是特征概念节点(特征概念节点)) {
-            return std::nullopt;
-        }
-        std::vector<稳定编码> 结果;
+        std::vector<稳定编码> 已有;
         for (const auto& 关系 : 全局基础数据集.查询源关系(
-            持有节点, 基础外部关系类型::父子)) {
-            const auto 类型 = 读取唯一节点字段(关系.目标节点, 节点类型字段);
-            const auto 概念 = 读取唯一节点字段(关系.目标节点, 特征概念字段);
-            if (类型 && *类型 == 特征节点类型
-                && 概念 && *概念 == 特征概念节点) {
-                结果.push_back(关系.目标节点);
+            父特征节点, 基础外部关系类型::父子)) {
+            const auto 子特征 = 获取特征(关系.目标节点);
+            if (子特征 && 子特征->特征概念节点 == 子概念节点) {
+                已有.push_back(关系.目标节点);
             }
         }
-        std::sort(结果.begin(), 结果.end());
-        结果.erase(std::unique(结果.begin(), 结果.end()), 结果.end());
-        return 结果.size() == 1
-            ? std::optional<稳定编码>{结果.front()} : std::nullopt;
+        std::sort(已有.begin(), 已有.end());
+        已有.erase(std::unique(已有.begin(), 已有.end()), 已有.end());
+        if (已有.size() == 1) return 已有.front();
+        if (!已有.empty()) return {};
+
+        const auto 子特征节点 = 建立特征(子概念节点);
+        if (!有效(子特征节点)) return {};
+        const auto 父子关系 = 全局基础数据集.添加关系(
+            父特征节点, 子特征节点, 基础外部关系类型::父子);
+        if (有效(父子关系)) return 子特征节点;
+        (void)删除特征(子特征节点);
+        return {};
     } catch (...) {
-        return std::nullopt;
+        return {};
     }
 }
 
@@ -2086,11 +2038,16 @@ std::optional<新特征信息> 新_特征类::获取特征(
 
         const auto 父关系 = 全局基础数据集.查询目标关系(
             特征节点, 基础外部关系类型::父子);
-        if (父关系.size() != 1) return std::nullopt;
+        if (父关系.size() > 1) return std::nullopt;
+        if (!父关系.empty()) {
+            const auto 上级类型 = 读取唯一节点字段(
+                父关系.front().源节点, 节点类型字段);
+            if (!上级类型 || *上级类型 != 特征节点类型) return std::nullopt;
+        }
 
         新特征信息 结果;
         结果.节点 = 特征节点;
-        结果.持有节点 = 父关系.front().源节点;
+        if (!父关系.empty()) 结果.上级特征节点 = 父关系.front().源节点;
         结果.特征概念节点 = *概念;
 
         const auto 聚合引用组 = 全局基础数据集.查询字段(
@@ -2238,6 +2195,74 @@ std::optional<新特征信息> 新_特征类::获取特征(
         return 结果;
     } catch (...) {
         return std::nullopt;
+    }
+}
+
+bool 新_特征类::删除特征(稳定编码 特征节点) noexcept {
+    try {
+        std::lock_guard 锁(新特征互斥);
+        const auto 特征 = 获取特征(特征节点);
+        if (!特征) return false;
+
+        std::vector<稳定编码> 子特征组;
+        for (const auto& 关系 : 全局基础数据集.查询源关系(
+            特征节点, 基础外部关系类型::父子)) {
+            if (!是特征节点(关系.目标节点)) return false;
+            子特征组.push_back(关系.目标节点);
+        }
+        std::sort(子特征组.begin(), 子特征组.end());
+        子特征组.erase(std::unique(子特征组.begin(), 子特征组.end()),
+            子特征组.end());
+        for (const auto 子特征 : 子特征组) {
+            if (!删除特征(子特征)) return false;
+        }
+
+        const auto 父关系组 = 全局基础数据集.查询目标关系(
+            特征节点, 基础外部关系类型::父子);
+        if (父关系组.size() > 1) return false;
+        if (!父关系组.empty()
+            && !全局基础数据集.删除关系(父关系组.front().编码)) {
+            return false;
+        }
+
+        const auto 命中记录组 = 读取历史值命中记录(特征节点);
+        if (!命中记录组) return false;
+        for (const auto& 记录 : *命中记录组) 删除历史值命中记录(记录);
+
+        const auto 聚合引用组 = 全局基础数据集.查询字段(
+            特征节点, 实例历史聚合值域字段);
+        if (聚合引用组.size() > 1) return false;
+        if (!聚合引用组.empty()) {
+            const auto* 值域节点 =
+                std::get_if<稳定编码>(&聚合引用组.front().内容);
+            if (!值域节点
+                || !全局基础数据集.删除字段(聚合引用组.front().编码)) {
+                return false;
+            }
+            删除值域节点(*值域节点);
+        }
+
+        const auto 概念字段组 = 全局基础数据集.查询字段(
+            特征节点, 特征概念字段);
+        if (概念字段组.size() != 1) return false;
+        const auto* 概念节点 =
+            std::get_if<稳定编码>(&概念字段组.front().内容);
+        if (!概念节点) return false;
+
+        const std::array 普通字段组{
+            节点类型字段, 特征概念字段, 实例单位字段,
+            当前值字段, 历史值字段, 标准值字段,
+            历史值命中记录字段, 归组子特征标记字段};
+        for (const auto 字段 : 普通字段组) {
+            for (const auto& 关系 : 全局基础数据集.查询字段(
+                特征节点, 字段)) {
+                if (!全局基础数据集.删除字段(关系.编码)) return false;
+            }
+        }
+        if (!特征概念服务_.减少当前实例引用(*概念节点)) return false;
+        return 全局基础数据集.删除节点(特征节点);
+    } catch (...) {
+        return false;
     }
 }
 
