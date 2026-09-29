@@ -700,14 +700,20 @@ bool 切换实例所属概念(
     const auto* 原概念 = std::get_if<稳定编码>(&字段组.front().内容);
     if (!原概念) return false;
     if (*原概念 == 新概念节点) return true;
-    if (!特征概念服务.转移当前实例引用(*原概念, 新概念节点)) {
+    if (!特征概念服务.增加当前实例引用(新概念节点)) {
         return false;
     }
-    if (全局基础数据集.修改字段节点(
+    if (!全局基础数据集.修改字段节点(
         字段组.front().编码, 新概念节点)) {
-        return true;
+        (void)特征概念服务.减少当前实例引用(新概念节点);
+        return false;
     }
-    (void)特征概念服务.转移当前实例引用(新概念节点, *原概念);
+    if (特征概念服务.减少当前实例引用(*原概念)) return true;
+    if (!全局基础数据集.修改字段节点(
+        字段组.front().编码, *原概念)) {
+        return false;
+    }
+    (void)特征概念服务.减少当前实例引用(新概念节点);
     return false;
 }
 
