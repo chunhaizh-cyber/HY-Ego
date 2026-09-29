@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <optional>
 #include <vector>
@@ -48,6 +49,79 @@ struct 新场景成员建立结果 final {
     新场景操作状态 状态 = 新场景操作状态::入口拒绝;
     std::optional<稳定编码> 存在节点;
     std::optional<稳定编码> 专属存在概念节点;
+};
+
+struct 三维毫米坐标 final {
+    std::int64_t X = 0;
+    std::int64_t Y = 0;
+    std::int64_t Z = 0;
+    friend bool operator==(const 三维毫米坐标&, const 三维毫米坐标&) = default;
+};
+
+// 行主序；将自我局部坐标旋转到场景定位坐标系。
+struct 三维朝向矩阵 final {
+    std::array<double, 9> 分量{};
+    friend bool operator==(const 三维朝向矩阵&, const 三维朝向矩阵&) = default;
+};
+
+struct 场景定位坐标读回 final {
+    稳定编码 存在节点;
+    三维毫米坐标 定位坐标;
+    std::uint64_t 定位序号 = 0;
+    std::uint64_t 形成时刻 = 0;
+    std::uint64_t 有效截止时刻 = 0;
+};
+
+// 后继定位/状态服务实现此只读边界；场景类不在刷新过程中修改定位事实。
+class 场景定位坐标读取接口 {
+public:
+    virtual ~场景定位坐标读取接口() = default;
+    virtual std::optional<场景定位坐标读回> 读取存在定位坐标(
+        稳定编码 场景节点,
+        稳定编码 存在节点) const noexcept = 0;
+};
+
+struct 自我场景姿态 final {
+    稳定编码 自我节点;
+    稳定编码 场景节点;
+    std::optional<三维毫米坐标> 定位坐标;
+    std::optional<三维朝向矩阵> 朝向矩阵;
+    std::uint64_t 定位序号 = 0;
+    std::uint64_t 姿态序号 = 0;
+    std::uint64_t 边界定义序号 = 0;
+    std::uint64_t 形成时刻 = 0;
+    std::uint64_t 有效截止时刻 = 0;
+};
+
+struct 场景存在相对坐标 final {
+    稳定编码 存在节点;
+    三维毫米坐标 相对坐标;
+    std::uint64_t 来源定位序号 = 0;
+    std::uint64_t 自我姿态序号 = 0;
+    std::uint64_t 边界定义序号 = 0;
+    std::uint64_t 形成时刻 = 0;
+    std::uint64_t 有效截止时刻 = 0;
+    friend bool operator==(const 场景存在相对坐标&, const 场景存在相对坐标&) = default;
+};
+
+enum class 场景相对坐标刷新状态 : std::uint8_t {
+    已完成 = 1,
+    部分完成 = 2,
+    场景不存在 = 3,
+    存在不属于场景 = 4,
+    需要自我定位坐标 = 5,
+    需要自我朝向 = 6,
+    自我姿态已失效 = 7,
+    朝向矩阵不合法 = 8,
+    坐标超出范围 = 9,
+    结构不一致 = 10,
+    资源失败 = 11
+};
+
+struct 场景相对坐标刷新结果 final {
+    场景相对坐标刷新状态 状态 = 场景相对坐标刷新状态::资源失败;
+    std::vector<场景存在相对坐标> 相对坐标组;
+    std::vector<稳定编码> 需要获取定位坐标的存在组;
 };
 
 class 新_场景类 final {
@@ -104,6 +178,18 @@ public:
         const 新特征准确值& 新值) noexcept;
     std::vector<稳定编码> 查询场景全部特征(
         稳定编码 场景节点) const noexcept;
+
+    // 返回当前场景直接成员的完整替换结果；结果容器随成员数量扩展。
+    // 缺少定位坐标的成员不计算，并进入“需要获取定位坐标”集合。
+    场景相对坐标刷新结果 刷新场景存在相对坐标(
+        const 场景定位坐标读取接口& 定位读取,
+        const 自我场景姿态& 自我姿态,
+        std::uint64_t 当前时刻) const noexcept;
+    场景相对坐标刷新结果 刷新单个存在相对坐标(
+        const 场景定位坐标读取接口& 定位读取,
+        const 自我场景姿态& 自我姿态,
+        稳定编码 存在节点,
+        std::uint64_t 当前时刻) const noexcept;
 
 private:
     新_存在类& 存在服务_;

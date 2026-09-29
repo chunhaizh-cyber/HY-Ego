@@ -1,6 +1,8 @@
 #include "新_场景类.h"
 
 #include <algorithm>
+#include <cmath>
+#include <limits>
 #include <mutex>
 #include <set>
 
@@ -83,6 +85,158 @@ bool 子场景向下可达(稳定编码 起点, 稳定编码 目标) {
         }
     }
     return false;
+}
+
+constexpr long double 朝向误差上限 = 0.001L;
+
+long double 朝向行点积(
+    const 三维朝向矩阵& 矩阵,
+    std::size_t 左行,
+    std::size_t 右行) {
+    long double 结果 = 0;
+    for (std::size_t 列 = 0; 列 < 3; ++列) {
+        结果 += static_cast<long double>(矩阵.分量[左行 * 3 + 列])
+            * static_cast<long double>(矩阵.分量[右行 * 3 + 列]);
+    }
+    return 结果;
+}
+
+bool 朝向矩阵有效(const 三维朝向矩阵& 矩阵) {
+    for (const auto 分量 : 矩阵.分量) {
+        if (!std::isfinite(分量)) return false;
+    }
+    for (std::size_t 行 = 0; 行 < 3; ++行) {
+        if (std::fabs(朝向行点积(矩阵, 行, 行) - 1.0L)
+            > 朝向误差上限) {
+            return false;
+        }
+        for (std::size_t 其它行 = 行 + 1; 其它行 < 3; ++其它行) {
+            if (std::fabs(朝向行点积(矩阵, 行, 其它行))
+                > 朝向误差上限) {
+                return false;
+            }
+        }
+    }
+    const auto& 值 = 矩阵.分量;
+    const long double 行列式 =
+        static_cast<long double>(值[0])
+            * (static_cast<long double>(值[4]) * 值[8]
+                - static_cast<long double>(值[5]) * 值[7])
+        - static_cast<long double>(值[1])
+            * (static_cast<long double>(值[3]) * 值[8]
+                - static_cast<long double>(值[5]) * 值[6])
+        + static_cast<long double>(值[2])
+            * (static_cast<long double>(值[3]) * 值[7]
+                - static_cast<long double>(值[4]) * 值[6]);
+    return std::fabs(行列式 - 1.0L) <= 朝向误差上限;
+}
+
+std::optional<std::int64_t> 舍入毫米(long double 数值) {
+    if (!std::isfinite(数值)) return std::nullopt;
+    constexpr auto 最小 = static_cast<long double>(
+        std::numeric_limits<std::int64_t>::min());
+    constexpr auto 最大 = static_cast<long double>(
+        std::numeric_limits<std::int64_t>::max());
+    if (数值 < 最小 || 数值 > 最大) return std::nullopt;
+    return static_cast<std::int64_t>(std::llround(数值));
+}
+
+std::optional<三维毫米坐标> 计算相对坐标(
+    const 三维毫米坐标& 自我坐标,
+    const 三维朝向矩阵& 自我朝向,
+    const 三维毫米坐标& 存在坐标) {
+    const std::array<long double, 3> 差值{
+        static_cast<long double>(存在坐标.X) - 自我坐标.X,
+        static_cast<long double>(存在坐标.Y) - 自我坐标.Y,
+        static_cast<long double>(存在坐标.Z) - 自我坐标.Z};
+    std::array<std::optional<std::int64_t>, 3> 分量;
+    // 朝向矩阵把自我坐标旋转到场景坐标；转置矩阵执行逆旋转。
+    for (std::size_t 自我轴 = 0; 自我轴 < 3; ++自我轴) {
+        long double 数值 = 0;
+        for (std::size_t 场景轴 = 0; 场景轴 < 3; ++场景轴) {
+            数值 += static_cast<long double>(
+                自我朝向.分量[场景轴 * 3 + 自我轴]) * 差值[场景轴];
+        }
+        分量[自我轴] = 舍入毫米(数值);
+        if (!分量[自我轴]) return std::nullopt;
+    }
+    return 三维毫米坐标{*分量[0], *分量[1], *分量[2]};
+}
+
+场景相对坐标刷新状态 核验自我姿态(
+    稳定编码 场景节点,
+    const 自我场景姿态& 姿态,
+    std::uint64_t 当前时刻) {
+    if (!有效(姿态.自我节点) || 姿态.场景节点 != 场景节点
+        || !姿态.定位坐标) {
+        return 场景相对坐标刷新状态::需要自我定位坐标;
+    }
+    if (!姿态.朝向矩阵) {
+        return 场景相对坐标刷新状态::需要自我朝向;
+    }
+    if (!朝向矩阵有效(*姿态.朝向矩阵)) {
+        return 场景相对坐标刷新状态::朝向矩阵不合法;
+    }
+    if (姿态.定位序号 == 0 || 姿态.姿态序号 == 0
+        || 姿态.边界定义序号 == 0
+        || 姿态.有效截止时刻 < 姿态.形成时刻
+        || 当前时刻 > 姿态.有效截止时刻) {
+        return 场景相对坐标刷新状态::自我姿态已失效;
+    }
+    return 场景相对坐标刷新状态::已完成;
+}
+
+enum class 相对坐标项形成状态 : std::uint8_t {
+    已完成,
+    需要定位坐标,
+    坐标超出范围
+};
+
+struct 相对坐标项形成结果 final {
+    相对坐标项形成状态 状态 = 相对坐标项形成状态::需要定位坐标;
+    std::optional<场景存在相对坐标> 坐标项;
+};
+
+相对坐标项形成结果 形成相对坐标项(
+    稳定编码 存在节点,
+    const 场景定位坐标读回& 定位,
+    const 自我场景姿态& 自我姿态,
+    std::uint64_t 当前时刻) {
+    if (定位.存在节点 != 存在节点 || 定位.定位序号 == 0
+        || 定位.有效截止时刻 < 定位.形成时刻
+        || 当前时刻 > 定位.有效截止时刻) {
+        return {};
+    }
+    const auto 相对坐标 = 计算相对坐标(
+        *自我姿态.定位坐标, *自我姿态.朝向矩阵, 定位.定位坐标);
+    if (!相对坐标) {
+        return {相对坐标项形成状态::坐标超出范围, std::nullopt};
+    }
+    const auto 形成时刻 = std::max(
+        定位.形成时刻, 自我姿态.形成时刻);
+    const auto 有效截止时刻 = std::min(
+        定位.有效截止时刻, 自我姿态.有效截止时刻);
+    if (有效截止时刻 < 形成时刻) return {};
+    return {
+        相对坐标项形成状态::已完成,
+        场景存在相对坐标{
+            存在节点,
+            *相对坐标,
+            定位.定位序号,
+            自我姿态.姿态序号,
+            自我姿态.边界定义序号,
+            形成时刻,
+            有效截止时刻}};
+}
+
+场景定位坐标读回 形成自我定位读回(
+    const 自我场景姿态& 自我姿态) {
+    return {
+        自我姿态.自我节点,
+        *自我姿态.定位坐标,
+        自我姿态.定位序号,
+        自我姿态.形成时刻,
+        自我姿态.有效截止时刻};
 }
 
 新场景操作状态 映射存在失败(新存在操作状态 状态) noexcept {
@@ -540,6 +694,116 @@ std::vector<稳定编码> 新_场景类::查询场景全部特征(
     return 是场景节点(场景节点)
         ? 存在服务_.查询全部特征(场景节点)
         : std::vector<稳定编码>{};
+}
+
+场景相对坐标刷新结果 新_场景类::刷新场景存在相对坐标(
+    const 场景定位坐标读取接口& 定位读取,
+    const 自我场景姿态& 自我姿态,
+    std::uint64_t 当前时刻) const noexcept {
+    场景相对坐标刷新结果 结果;
+    try {
+        if (!是场景节点(自我姿态.场景节点)) {
+            结果.状态 = 场景相对坐标刷新状态::场景不存在;
+            return 结果;
+        }
+        const auto 场景信息 = 获取场景(自我姿态.场景节点);
+        if (!场景信息) {
+            结果.状态 = 场景相对坐标刷新状态::结构不一致;
+            return 结果;
+        }
+        结果.状态 = 核验自我姿态(
+            自我姿态.场景节点, 自我姿态, 当前时刻);
+        if (结果.状态 != 场景相对坐标刷新状态::已完成) return 结果;
+
+        结果.相对坐标组.reserve(场景信息->直接成员存在组.size());
+        for (const auto 存在节点 : 场景信息->直接成员存在组) {
+            const auto 定位 = 存在节点 == 自我姿态.自我节点
+                ? std::optional<场景定位坐标读回>{
+                    形成自我定位读回(自我姿态)}
+                : 定位读取.读取存在定位坐标(
+                    自我姿态.场景节点, 存在节点);
+            const auto 形成结果 = 定位
+                ? 形成相对坐标项(
+                    存在节点, *定位, 自我姿态, 当前时刻)
+                : 相对坐标项形成结果{};
+            if (形成结果.状态 == 相对坐标项形成状态::坐标超出范围) {
+                结果.状态 = 场景相对坐标刷新状态::坐标超出范围;
+                结果.相对坐标组.clear();
+                结果.需要获取定位坐标的存在组.clear();
+                return 结果;
+            }
+            if (!形成结果.坐标项) {
+                结果.需要获取定位坐标的存在组.push_back(存在节点);
+                continue;
+            }
+            结果.相对坐标组.push_back(*形成结果.坐标项);
+        }
+        结果.状态 = 结果.需要获取定位坐标的存在组.empty()
+            ? 场景相对坐标刷新状态::已完成
+            : 场景相对坐标刷新状态::部分完成;
+        return 结果;
+    } catch (...) {
+        结果.状态 = 场景相对坐标刷新状态::资源失败;
+        结果.相对坐标组.clear();
+        结果.需要获取定位坐标的存在组.clear();
+        return 结果;
+    }
+}
+
+场景相对坐标刷新结果 新_场景类::刷新单个存在相对坐标(
+    const 场景定位坐标读取接口& 定位读取,
+    const 自我场景姿态& 自我姿态,
+    稳定编码 存在节点,
+    std::uint64_t 当前时刻) const noexcept {
+    场景相对坐标刷新结果 结果;
+    try {
+        if (!是场景节点(自我姿态.场景节点)) {
+            结果.状态 = 场景相对坐标刷新状态::场景不存在;
+            return 结果;
+        }
+        const auto 场景信息 = 获取场景(自我姿态.场景节点);
+        if (!场景信息) {
+            结果.状态 = 场景相对坐标刷新状态::结构不一致;
+            return 结果;
+        }
+        结果.状态 = 核验自我姿态(
+            自我姿态.场景节点, 自我姿态, 当前时刻);
+        if (结果.状态 != 场景相对坐标刷新状态::已完成) return 结果;
+        if (std::find(
+                场景信息->直接成员存在组.begin(),
+                场景信息->直接成员存在组.end(),
+                存在节点)
+            == 场景信息->直接成员存在组.end()) {
+            结果.状态 = 场景相对坐标刷新状态::存在不属于场景;
+            return 结果;
+        }
+
+        const auto 定位 = 存在节点 == 自我姿态.自我节点
+            ? std::optional<场景定位坐标读回>{
+                形成自我定位读回(自我姿态)}
+            : 定位读取.读取存在定位坐标(
+                自我姿态.场景节点, 存在节点);
+        const auto 形成结果 = 定位
+            ? 形成相对坐标项(存在节点, *定位, 自我姿态, 当前时刻)
+            : 相对坐标项形成结果{};
+        if (形成结果.状态 == 相对坐标项形成状态::坐标超出范围) {
+            结果.状态 = 场景相对坐标刷新状态::坐标超出范围;
+            return 结果;
+        }
+        if (!形成结果.坐标项) {
+            结果.状态 = 场景相对坐标刷新状态::部分完成;
+            结果.需要获取定位坐标的存在组.push_back(存在节点);
+            return 结果;
+        }
+        结果.状态 = 场景相对坐标刷新状态::已完成;
+        结果.相对坐标组.push_back(*形成结果.坐标项);
+        return 结果;
+    } catch (...) {
+        结果.状态 = 场景相对坐标刷新状态::资源失败;
+        结果.相对坐标组.clear();
+        结果.需要获取定位坐标的存在组.clear();
+        return 结果;
+    }
 }
 
 } // namespace 海中鱼巣
