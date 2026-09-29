@@ -92,6 +92,9 @@ struct 特征概念信息 final {
     // 保存由自然语言类建立的名称关系身份；词条和关系操作稍后实现。
     std::vector<稳定编码> 名称关系;
 
+    // 当前通过正式特征概念字段直接引用本概念的实例特征节点数量。
+    std::int64_t 当前引用实例数量 = 0;
+
     friend bool operator==(const 特征概念信息&, const 特征概念信息&) = default;
 };
 
@@ -209,6 +212,13 @@ public:
         稳定编码 特征概念节点,
         const 特征概念值域& 新值域,
         const 新_特征值类& 特征值服务) noexcept;
+
+    // 只维护实例特征对概念的直接引用数量；概念父子关系不计数。
+    bool 增加当前实例引用(稳定编码 特征概念节点) noexcept;
+    bool 减少当前实例引用(稳定编码 特征概念节点) noexcept;
+    bool 转移当前实例引用(
+        稳定编码 原概念节点,
+        稳定编码 新概念节点) noexcept;
 
     std::vector<稳定编码> 查询特征概念(
         const 特征概念定义& 定义) const noexcept;
