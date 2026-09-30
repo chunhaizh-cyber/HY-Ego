@@ -32,6 +32,9 @@ struct 新二次特征计算请求 final {
     稳定编码 二次特征类型概念节点;
     二次特征准确输入 左输入;
     二次特征准确输入 右输入;
+    // 类型节点为空时：优先按此完整定义建立；未提供时根据输入和实际
+    // 比较算法推导最小定义。每次成功计算都会确保结果域概念存在。
+    std::optional<二次特征概念定义> 概念定义;
     friend bool operator==(const 新二次特征计算请求&,
         const 新二次特征计算请求&) = default;
 };
@@ -86,6 +89,8 @@ struct 新二次跨类型变化比较请求 final {
     // 自己的比较规则取得，不直接比较两个不同单位的原始值。
     二次特征变化输入 参照变化;
     二次特征变化输入 目标变化;
+    // 可选参照只用于划分计算结果域；不改变两侧变化量的计算方式。
+    std::optional<稳定编码> 参照特征概念节点;
     friend bool operator==(const 新二次跨类型变化比较请求&,
         const 新二次跨类型变化比较请求&) = default;
 };
@@ -113,6 +118,8 @@ struct 新二次跨类型变化比较结果 final {
     std::optional<std::int64_t> 单位参照目标变化量;
     std::optional<std::int64_t> 归一化余数;
     bool 结果已饱和 = false;
+    std::optional<稳定编码> 二次特征类型概念节点;
+    std::optional<稳定编码> 结果值域概念节点;
     std::optional<二次特征变化输入> 参照来源;
     std::optional<二次特征变化输入> 目标来源;
 };
