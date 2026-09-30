@@ -755,6 +755,50 @@ std::vector<稳定编码> 新_场景类::查询直接成员存在(
     }
 }
 
+std::vector<稳定编码> 新_场景类::查询场景范围存在(
+    稳定编码 场景节点) const noexcept {
+    try {
+        std::lock_guard 锁(新场景互斥);
+        std::vector<稳定编码> 结果;
+        if (!是场景节点(场景节点)) return 结果;
+        std::vector<稳定编码> 待访问{场景节点};
+        std::set<std::uint64_t> 已访问场景;
+        while (!待访问.empty()) {
+            const auto 当前场景 = 待访问.back();
+            待访问.pop_back();
+            if (!已访问场景.insert(当前场景.值).second) return {};
+            const auto 直接成员 = 查询直接成员存在(当前场景);
+            结果.insert(结果.end(), 直接成员.begin(), 直接成员.end());
+            const auto 子场景组 = 查询直接子场景(当前场景);
+            待访问.insert(待访问.end(), 子场景组.begin(), 子场景组.end());
+        }
+        排序去重(结果);
+        return 结果;
+    } catch (...) {
+        return {};
+    }
+}
+
+bool 新_场景类::存在属于场景范围(
+    稳定编码 场景节点,
+    稳定编码 存在节点) const noexcept {
+    try {
+        std::lock_guard 锁(新场景互斥);
+        if (!是场景节点(场景节点)
+            || !存在服务_.是存在节点(存在节点)) {
+            return false;
+        }
+        if (是场景节点(存在节点)) {
+            return 子场景向下可达(场景节点, 存在节点);
+        }
+        const auto 所属场景 = 查询所属场景(存在节点);
+        return 所属场景
+            && 子场景向下可达(场景节点, *所属场景);
+    } catch (...) {
+        return false;
+    }
+}
+
 新场景操作状态 新_场景类::添加边界存在(
     稳定编码 场景节点,
     稳定编码 边界存在节点) noexcept {
@@ -865,12 +909,11 @@ std::vector<稳定编码> 新_场景类::查询边界存在(
                 距离组.push_back(*距离);
             }
 
-            const auto 所属场景 = 查询所属场景(边界存在节点);
-            const bool 直接属于当前场景 = 所属场景
-                && *所属场景 == 场景节点;
+            const bool 属于当前场景范围 = 存在属于场景范围(
+                场景节点, 边界存在节点);
             std::size_t 选择位置 = 0;
             for (std::size_t i = 1; i < 距离组.size(); ++i) {
-                const bool 更合适 = 直接属于当前场景
+                const bool 更合适 = 属于当前场景范围
                     ? 距离组[i] > 距离组[选择位置]
                     : 距离组[i] < 距离组[选择位置];
                 if (更合适) 选择位置 = i;
@@ -887,7 +930,7 @@ std::vector<稳定编码> 新_场景类::查询边界存在(
             结果.边界面组.push_back({
                 边界存在节点,
                 选择面.面序号,
-                直接属于当前场景,
+                属于当前场景范围,
                 选择面.顶点组});
         }
         if (结果.需要获取边界几何的存在组.empty()) {
