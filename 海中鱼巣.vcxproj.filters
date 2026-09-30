@@ -413,6 +413,12 @@
     <ClCompile Include="海中鱼巣\领域\新_状态类.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClInclude Include="海中鱼巣\领域\新_动态类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\领域\新_动态类.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClInclude Include="海中鱼巣\领域\合同.结构操作公共.h">
       <Filter>头文件</Filter>
     </ClInclude>
