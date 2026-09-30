@@ -7,6 +7,7 @@
 #include "新_状态类.h"
 #include "新_特征值类.h"
 #include "概念_特征类.h"
+#include "概念_二次特征类.h"
 
 namespace 海中鱼巣 {
 
@@ -25,11 +26,25 @@ struct 动态概念状态项 final {
         const 动态概念状态项&) = default;
 };
 
+// 动态概念自身保存的可复用变化特征。实例概念保留来源状态；后续由
+// 多个实例抽象出的概念可以省略具体来源，但类型、结果和值域仍须完整。
+struct 动态概念特征项 final {
+    std::int64_t 状态间位置 = 0;
+    稳定编码 二次特征类型概念节点;
+    std::int64_t 准确结果 = 0;
+    稳定编码 结果值域概念节点;
+    std::optional<稳定编码> 前来源状态节点;
+    std::optional<稳定编码> 后来源状态节点;
+    friend bool operator==(const 动态概念特征项&,
+        const 动态概念特征项&) = default;
+};
+
 struct 动态概念信息 final {
     稳定编码 节点;
     动态概念种类 种类 = 动态概念种类::实例;
     std::optional<稳定编码> 对应动态节点;
     std::vector<动态概念状态项> 状态变化组;
+    std::vector<动态概念特征项> 动态特征组;
     std::vector<稳定编码> 上位概念组;
     std::vector<稳定编码> 下位概念组;
     friend bool operator==(const 动态概念信息&,
@@ -73,7 +88,8 @@ class 概念_动态类 final {
 public:
     概念_动态类(
         概念_特征类& 特征概念服务,
-        const 新_特征值类& 特征值服务) noexcept;
+        const 新_特征值类& 特征值服务,
+        概念_二次特征类& 二次特征概念服务) noexcept;
 
     bool 初始化() noexcept;
 
@@ -92,6 +108,12 @@ public:
     动态概念聚合结果 聚合共同动态概念(
         const std::vector<稳定编码>& 来源概念组) noexcept;
 
+    // 保存调用方已经通过新版二次特征计算确认的完整特征组。同一内容
+    // 重复保存无写入；概念已有不同特征组时拒绝静默覆盖。
+    动态概念操作状态 保存动态特征(
+        稳定编码 概念节点,
+        const std::vector<动态概念特征项>& 动态特征组) noexcept;
+
     std::optional<动态概念信息> 获取动态概念(
         稳定编码 概念节点) const noexcept;
     bool 是动态概念节点(稳定编码 节点) const noexcept;
@@ -105,6 +127,7 @@ public:
 private:
     概念_特征类& 特征概念服务_;
     const 新_特征值类& 特征值服务_;
+    概念_二次特征类& 二次特征概念服务_;
 };
 
 } // namespace 海中鱼巣
