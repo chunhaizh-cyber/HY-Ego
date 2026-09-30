@@ -17,6 +17,7 @@ std::recursive_mutex 新场景互斥;
 稳定编码 场景身份字段{};
 稳定编码 场景节点类型{};
 稳定编码 成员存在字段{};
+稳定编码 边界存在字段{};
 
 constexpr std::int64_t 场景组成子场景关系角色 = 3;
 
@@ -27,14 +28,16 @@ bool 节点仍存在(稳定编码 节点) noexcept {
 bool 结构已初始化() noexcept {
     return 有效(场景身份字段)
         && 有效(场景节点类型)
-        && 有效(成员存在字段);
+        && 有效(成员存在字段)
+        && 有效(边界存在字段);
 }
 
 bool 结构仍存在() noexcept {
     return 结构已初始化()
         && 节点仍存在(场景身份字段)
         && 节点仍存在(场景节点类型)
-        && 节点仍存在(成员存在字段);
+        && 节点仍存在(成员存在字段)
+        && 节点仍存在(边界存在字段);
 }
 
 std::optional<稳定编码> 读取唯一节点字段(
@@ -48,6 +51,66 @@ std::optional<稳定编码> 读取唯一节点字段(
 void 排序去重(std::vector<稳定编码>& 节点组) {
     std::sort(节点组.begin(), 节点组.end());
     节点组.erase(std::unique(节点组.begin(), 节点组.end()), 节点组.end());
+}
+
+std::optional<long double> 面到参考点平方距离(
+    const 场景边界候选面& 面,
+    const 三维毫米坐标& 参考点) {
+    if (面.面序号 == 0 || 面.顶点组.size() < 3) return std::nullopt;
+    const auto& 原点 = 面.顶点组.front();
+    std::array<long double, 3> 法向量{};
+    bool 已找到法向量 = false;
+    for (std::size_t i = 1; i + 1 < 面.顶点组.size(); ++i) {
+        const std::array<long double, 3> 左{
+            static_cast<long double>(面.顶点组[i].X) - 原点.X,
+            static_cast<long double>(面.顶点组[i].Y) - 原点.Y,
+            static_cast<long double>(面.顶点组[i].Z) - 原点.Z};
+        for (std::size_t j = i + 1; j < 面.顶点组.size(); ++j) {
+            const std::array<long double, 3> 右{
+                static_cast<long double>(面.顶点组[j].X) - 原点.X,
+                static_cast<long double>(面.顶点组[j].Y) - 原点.Y,
+                static_cast<long double>(面.顶点组[j].Z) - 原点.Z};
+            法向量 = {
+                左[1] * 右[2] - 左[2] * 右[1],
+                左[2] * 右[0] - 左[0] * 右[2],
+                左[0] * 右[1] - 左[1] * 右[0]};
+            const auto 模平方 = 法向量[0] * 法向量[0]
+                + 法向量[1] * 法向量[1]
+                + 法向量[2] * 法向量[2];
+            if (模平方 > 0) {
+                已找到法向量 = true;
+                break;
+            }
+        }
+        if (已找到法向量) break;
+    }
+    if (!已找到法向量) return std::nullopt;
+
+    const auto 模平方 = 法向量[0] * 法向量[0]
+        + 法向量[1] * 法向量[1]
+        + 法向量[2] * 法向量[2];
+    constexpr long double 共面相对误差 = 1e-12L;
+    for (const auto& 顶点 : 面.顶点组) {
+        const auto 点积 = 法向量[0]
+                * (static_cast<long double>(顶点.X) - 原点.X)
+            + 法向量[1]
+                * (static_cast<long double>(顶点.Y) - 原点.Y)
+            + 法向量[2]
+                * (static_cast<long double>(顶点.Z) - 原点.Z);
+        if (点积 * 点积 > 模平方 * 共面相对误差) return std::nullopt;
+    }
+    const auto 参考点积 = 法向量[0]
+            * (static_cast<long double>(参考点.X) - 原点.X)
+        + 法向量[1]
+            * (static_cast<long double>(参考点.Y) - 原点.Y)
+        + 法向量[2]
+            * (static_cast<long double>(参考点.Z) - 原点.Z);
+    return 参考点积 * 参考点积 / 模平方;
+}
+
+bool 距离相同(long double 左, long double 右) {
+    const auto 尺度 = (std::max)({1.0L, std::fabs(左), std::fabs(右)});
+    return std::fabs(左 - 右) <= 尺度 * 1e-12L;
 }
 
 std::vector<基础外部关系> 查询父场景关系(稳定编码 场景节点) {
@@ -271,7 +334,8 @@ bool 新_场景类::初始化() noexcept {
         };
         return 建立(场景身份字段)
             && 建立(场景节点类型)
-            && 建立(成员存在字段);
+            && 建立(成员存在字段)
+            && 建立(边界存在字段);
     } catch (...) {
         return false;
     }
@@ -428,13 +492,26 @@ bool 新_场景类::初始化() noexcept {
         if (!子场景关系组.empty() || !成员字段组.empty()) {
             return 新场景操作状态::场景非空;
         }
+        for (const auto& 字段 : 全局基础数据集.查询目标字段(
+            场景节点, 边界存在字段)) {
+            if (字段.所属节点 != 场景节点) {
+                return 新场景操作状态::存在仍被边界引用;
+            }
+        }
         const auto 父关系 = 查询父场景关系(场景节点);
         const auto 场景字段组 = 全局基础数据集.查询字段(
             场景节点, 场景身份字段);
+        const auto 边界字段组 = 全局基础数据集.查询字段(
+            场景节点, 边界存在字段);
         if (父关系.size() != 1
             || !是场景节点(父关系.front().源节点)
             || 场景字段组.size() != 1) {
             return 新场景操作状态::结构不一致;
+        }
+        for (const auto& 字段 : 边界字段组) {
+            if (!全局基础数据集.删除字段(字段.编码)) {
+                return 新场景操作状态::资源失败;
+            }
         }
         const auto 清理状态 = 存在服务_.清理存在节点内容(场景节点);
         if (清理状态 != 新存在操作状态::已完成) {
@@ -469,6 +546,7 @@ std::optional<新场景信息> 新_场景类::获取场景(
         结果.专属存在概念节点 = 存在信息->专属存在概念节点;
         结果.特征节点组 = 存在信息->特征节点组;
         结果.直接成员存在组 = 查询直接成员存在(场景节点);
+        结果.边界存在组 = 查询边界存在(场景节点);
         结果.直接子场景组 = 查询直接子场景(场景节点);
         return 结果;
     } catch (...) {
@@ -586,6 +664,10 @@ bool 新_场景类::是场景节点(稳定编码 节点) const noexcept {
         if (!存在服务_.查询直接子存在(存在节点).empty()) {
             return 新场景操作状态::存在仍有子存在;
         }
+        if (!全局基础数据集.查询目标字段(
+            存在节点, 边界存在字段).empty()) {
+            return 新场景操作状态::存在仍被边界引用;
+        }
         if (!全局基础数据集.删除字段(字段组.front().编码)) {
             return 新场景操作状态::资源失败;
         }
@@ -670,6 +752,157 @@ std::vector<稳定编码> 新_场景类::查询直接成员存在(
         return 结果;
     } catch (...) {
         return {};
+    }
+}
+
+新场景操作状态 新_场景类::添加边界存在(
+    稳定编码 场景节点,
+    稳定编码 边界存在节点) noexcept {
+    try {
+        std::lock_guard 锁(新场景互斥);
+        if (!是场景节点(场景节点)) return 新场景操作状态::场景不存在;
+        if (!存在服务_.是存在节点(边界存在节点)) {
+            return 新场景操作状态::存在不存在;
+        }
+        const auto 已有字段 = 全局基础数据集.查询字段(
+            场景节点, 边界存在字段);
+        for (const auto& 字段 : 已有字段) {
+            const auto* 已有节点 = std::get_if<稳定编码>(&字段.内容);
+            if (!已有节点) return 新场景操作状态::结构不一致;
+            if (*已有节点 == 边界存在节点) return 新场景操作状态::无变化;
+        }
+        return 有效(全局基础数据集.添加字段节点(
+            场景节点, 边界存在字段, 边界存在节点))
+            ? 新场景操作状态::已完成
+            : 新场景操作状态::资源失败;
+    } catch (...) {
+        return 新场景操作状态::资源失败;
+    }
+}
+
+新场景操作状态 新_场景类::移除边界存在(
+    稳定编码 场景节点,
+    稳定编码 边界存在节点) noexcept {
+    try {
+        std::lock_guard 锁(新场景互斥);
+        if (!是场景节点(场景节点)) return 新场景操作状态::场景不存在;
+        std::optional<稳定编码> 待删除字段;
+        for (const auto& 字段 : 全局基础数据集.查询字段(
+            场景节点, 边界存在字段)) {
+            const auto* 已有节点 = std::get_if<稳定编码>(&字段.内容);
+            if (!已有节点) return 新场景操作状态::结构不一致;
+            if (*已有节点 != 边界存在节点) continue;
+            if (待删除字段) return 新场景操作状态::结构不一致;
+            待删除字段 = 字段.编码;
+        }
+        if (!待删除字段) return 新场景操作状态::无变化;
+        return 全局基础数据集.删除字段(*待删除字段)
+            ? 新场景操作状态::已完成
+            : 新场景操作状态::资源失败;
+    } catch (...) {
+        return 新场景操作状态::资源失败;
+    }
+}
+
+std::vector<稳定编码> 新_场景类::查询边界存在(
+    稳定编码 场景节点) const noexcept {
+    try {
+        std::lock_guard 锁(新场景互斥);
+        std::vector<稳定编码> 结果;
+        if (!是场景节点(场景节点)) return 结果;
+        for (const auto& 字段 : 全局基础数据集.查询字段(
+            场景节点, 边界存在字段)) {
+            const auto* 存在节点 = std::get_if<稳定编码>(&字段.内容);
+            if (!存在节点 || !存在服务_.是存在节点(*存在节点)) return {};
+            结果.push_back(*存在节点);
+        }
+        排序去重(结果);
+        return 结果;
+    } catch (...) {
+        return {};
+    }
+}
+
+场景边界计算结果 新_场景类::计算场景边界(
+    const 场景边界几何读取接口& 几何读取,
+    稳定编码 场景节点,
+    const 三维毫米坐标& 场景内部参考点) const noexcept {
+    场景边界计算结果 结果;
+    try {
+        std::lock_guard 锁(新场景互斥);
+        if (!是场景节点(场景节点)) {
+            结果.状态 = 场景边界计算状态::场景不存在;
+            return 结果;
+        }
+        const auto 边界存在组 = 查询边界存在(场景节点);
+        if (边界存在组.empty()) {
+            结果.状态 = 场景边界计算状态::边界存在组为空;
+            return 结果;
+        }
+        结果.边界面组.reserve(边界存在组.size());
+        for (const auto 边界存在节点 : 边界存在组) {
+            if (!存在服务_.是存在节点(边界存在节点)) {
+                结果.状态 = 场景边界计算状态::边界存在不存在;
+                结果.边界面组.clear();
+                return 结果;
+            }
+            const auto 候选面组 = 几何读取.读取边界候选面(
+                场景节点, 边界存在节点);
+            if (候选面组.empty()) {
+                结果.需要获取边界几何的存在组.push_back(边界存在节点);
+                continue;
+            }
+            std::vector<long double> 距离组;
+            距离组.reserve(候选面组.size());
+            for (const auto& 候选面 : 候选面组) {
+                const auto 距离 = 面到参考点平方距离(
+                    候选面, 场景内部参考点);
+                if (!距离) {
+                    结果.状态 = 场景边界计算状态::边界几何不合法;
+                    结果.边界面组.clear();
+                    return 结果;
+                }
+                距离组.push_back(*距离);
+            }
+
+            const auto 所属场景 = 查询所属场景(边界存在节点);
+            const bool 直接属于当前场景 = 所属场景
+                && *所属场景 == 场景节点;
+            std::size_t 选择位置 = 0;
+            for (std::size_t i = 1; i < 距离组.size(); ++i) {
+                const bool 更合适 = 直接属于当前场景
+                    ? 距离组[i] > 距离组[选择位置]
+                    : 距离组[i] < 距离组[选择位置];
+                if (更合适) 选择位置 = i;
+            }
+            for (std::size_t i = 0; i < 距离组.size(); ++i) {
+                if (i != 选择位置
+                    && 距离相同(距离组[i], 距离组[选择位置])) {
+                    结果.状态 = 场景边界计算状态::边界面无法唯一确定;
+                    结果.边界面组.clear();
+                    return 结果;
+                }
+            }
+            const auto& 选择面 = 候选面组[选择位置];
+            结果.边界面组.push_back({
+                边界存在节点,
+                选择面.面序号,
+                直接属于当前场景,
+                选择面.顶点组});
+        }
+        if (结果.需要获取边界几何的存在组.empty()) {
+            结果.状态 = 场景边界计算状态::已完成;
+        } else if (结果.边界面组.empty()) {
+            结果.状态 = 场景边界计算状态::边界几何缺失;
+        } else {
+            结果.状态 = 场景边界计算状态::部分完成;
+        }
+        return 结果;
+    } catch (...) {
+        结果.状态 = 场景边界计算状态::资源失败;
+        结果.边界面组.clear();
+        结果.需要获取边界几何的存在组.clear();
+        return 结果;
     }
 }
 
