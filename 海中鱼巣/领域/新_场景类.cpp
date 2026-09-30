@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <map>
 #include <mutex>
 #include <set>
 
@@ -54,7 +55,7 @@ void 排序去重(std::vector<稳定编码>& 节点组) {
 }
 
 std::optional<long double> 面到参考点平方距离(
-    const 场景边界候选面& 面,
+    const 场景三维边界候选面& 面,
     const 三维毫米坐标& 参考点) {
     if (面.面序号 == 0 || 面.顶点组.size() < 3) return std::nullopt;
     const auto& 原点 = 面.顶点组.front();
@@ -106,6 +107,152 @@ std::optional<long double> 面到参考点平方距离(
         + 法向量[2]
             * (static_cast<long double>(参考点.Z) - 原点.Z);
     return 参考点积 * 参考点积 / 模平方;
+}
+
+std::optional<long double> 线段到参考点平方距离(
+    const 场景二维边界候选线段& 线段,
+    const 二维毫米坐标& 参考点) {
+    if (线段.线段序号 == 0 || 线段.起点 == 线段.终点) return std::nullopt;
+    const auto X差 = static_cast<long double>(线段.终点.X) - 线段.起点.X;
+    const auto Y差 = static_cast<long double>(线段.终点.Y) - 线段.起点.Y;
+    const auto 长度平方 = X差 * X差 + Y差 * Y差;
+    if (长度平方 <= 0) return std::nullopt;
+    const auto 参考X = static_cast<long double>(参考点.X) - 线段.起点.X;
+    const auto 参考Y = static_cast<long double>(参考点.Y) - 线段.起点.Y;
+    const auto 比例 = (std::clamp)(
+        (参考X * X差 + 参考Y * Y差) / 长度平方, 0.0L, 1.0L);
+    const auto 最近X = static_cast<long double>(线段.起点.X) + 比例 * X差;
+    const auto 最近Y = static_cast<long double>(线段.起点.Y) + 比例 * Y差;
+    const auto 距离X = static_cast<long double>(参考点.X) - 最近X;
+    const auto 距离Y = static_cast<long double>(参考点.Y) - 最近Y;
+    return 距离X * 距离X + 距离Y * 距离Y;
+}
+
+struct 二维点小于 final {
+    bool operator()(const 二维毫米坐标& 左, const 二维毫米坐标& 右) const {
+        return 左.X < 右.X || (左.X == 右.X && 左.Y < 右.Y);
+    }
+};
+
+struct 三维点小于 final {
+    bool operator()(const 三维毫米坐标& 左, const 三维毫米坐标& 右) const {
+        if (左.X != 右.X) return 左.X < 右.X;
+        if (左.Y != 右.Y) return 左.Y < 右.Y;
+        return 左.Z < 右.Z;
+    }
+};
+
+struct 二维无向边 final {
+    二维毫米坐标 一端;
+    二维毫米坐标 另一端;
+};
+
+struct 二维无向边小于 final {
+    bool operator()(const 二维无向边& 左, const 二维无向边& 右) const {
+        二维点小于 比较;
+        if (比较(左.一端, 右.一端)) return true;
+        if (比较(右.一端, 左.一端)) return false;
+        return 比较(左.另一端, 右.另一端);
+    }
+};
+
+struct 三维无向边 final {
+    三维毫米坐标 一端;
+    三维毫米坐标 另一端;
+};
+
+struct 三维无向边小于 final {
+    bool operator()(const 三维无向边& 左, const 三维无向边& 右) const {
+        三维点小于 比较;
+        if (比较(左.一端, 右.一端)) return true;
+        if (比较(右.一端, 左.一端)) return false;
+        return 比较(左.另一端, 右.另一端);
+    }
+};
+
+二维无向边 形成无向边(二维毫米坐标 左, 二维毫米坐标 右) {
+    return 二维点小于{}(右, 左)
+        ? 二维无向边{右, 左} : 二维无向边{左, 右};
+}
+
+三维无向边 形成无向边(三维毫米坐标 左, 三维毫米坐标 右) {
+    return 三维点小于{}(右, 左)
+        ? 三维无向边{右, 左} : 三维无向边{左, 右};
+}
+
+std::optional<std::vector<场景二维边界闭合环>> 形成二维闭合环(
+    const std::vector<场景二维边界线段>& 线段组) {
+    if (线段组.size() < 3) return std::nullopt;
+    std::map<二维毫米坐标, std::vector<std::size_t>, 二维点小于> 邻接;
+    std::map<二维无向边, std::size_t, 二维无向边小于> 边计数;
+    for (std::size_t i = 0; i < 线段组.size(); ++i) {
+        const auto& 线段 = 线段组[i];
+        if (线段.起点 == 线段.终点) return std::nullopt;
+        邻接[线段.起点].push_back(i);
+        邻接[线段.终点].push_back(i);
+        if (++边计数[形成无向边(线段.起点, 线段.终点)] != 1) {
+            return std::nullopt;
+        }
+    }
+    for (const auto& [_, 相邻线段] : 邻接) {
+        if (相邻线段.size() != 2) return std::nullopt;
+    }
+
+    std::vector<bool> 已访问(线段组.size(), false);
+    std::vector<场景二维边界闭合环> 结果;
+    for (std::size_t 起始线段 = 0; 起始线段 < 线段组.size(); ++起始线段) {
+        if (已访问[起始线段]) continue;
+        场景二维边界闭合环 环;
+        auto 当前点 = 线段组[起始线段].起点;
+        const auto 起点 = 当前点;
+        auto 当前线段 = 起始线段;
+        for (;;) {
+            if (已访问[当前线段]) return std::nullopt;
+            已访问[当前线段] = true;
+            环.顶点组.push_back(当前点);
+            环.来源边界存在组.push_back(线段组[当前线段].边界存在节点);
+            const auto& 线段 = 线段组[当前线段];
+            二维毫米坐标 下一点;
+            if (线段.起点 == 当前点) 下一点 = 线段.终点;
+            else if (线段.终点 == 当前点) 下一点 = 线段.起点;
+            else return std::nullopt;
+            if (下一点 == 起点) break;
+            const auto 位置 = 邻接.find(下一点);
+            if (位置 == 邻接.end() || 位置->second.size() != 2) {
+                return std::nullopt;
+            }
+            const auto& 相邻 = 位置->second;
+            const auto 下一线段 = 相邻[0] == 当前线段 ? 相邻[1] : 相邻[0];
+            当前点 = 下一点;
+            当前线段 = 下一线段;
+        }
+        if (环.顶点组.size() < 3) return std::nullopt;
+        排序去重(环.来源边界存在组);
+        结果.push_back(std::move(环));
+    }
+    return 结果;
+}
+
+std::optional<std::vector<场景三维边界线段>> 形成三维闭合边线(
+    const std::vector<场景三维边界面>& 面组) {
+    if (面组.size() < 4) return std::nullopt;
+    std::map<三维无向边, std::size_t, 三维无向边小于> 边计数;
+    for (const auto& 面 : 面组) {
+        if (面.顶点组.size() < 3) return std::nullopt;
+        for (std::size_t i = 0; i < 面.顶点组.size(); ++i) {
+            const auto& 起点 = 面.顶点组[i];
+            const auto& 终点 = 面.顶点组[(i + 1) % 面.顶点组.size()];
+            if (起点 == 终点) return std::nullopt;
+            ++边计数[形成无向边(起点, 终点)];
+        }
+    }
+    std::vector<场景三维边界线段> 结果;
+    结果.reserve(边计数.size());
+    for (const auto& [边, 次数] : 边计数) {
+        if (次数 != 2) return std::nullopt;
+        结果.push_back({边.一端, 边.另一端});
+    }
+    return 结果;
 }
 
 bool 距离相同(long double 左, long double 右) {
@@ -867,11 +1014,101 @@ std::vector<稳定编码> 新_场景类::查询边界存在(
     }
 }
 
-场景边界计算结果 新_场景类::计算场景边界(
-    const 场景边界几何读取接口& 几何读取,
+场景二维边界计算结果 新_场景类::计算二维场景边界(
+    const 场景二维边界几何读取接口& 几何读取,
+    稳定编码 场景节点,
+    const 二维毫米坐标& 场景内部参考点) const noexcept {
+    场景二维边界计算结果 结果;
+    try {
+        std::lock_guard 锁(新场景互斥);
+        if (!是场景节点(场景节点)) {
+            结果.状态 = 场景边界计算状态::场景不存在;
+            return 结果;
+        }
+        const auto 边界存在组 = 查询边界存在(场景节点);
+        if (边界存在组.empty()) {
+            结果.状态 = 场景边界计算状态::边界存在组为空;
+            return 结果;
+        }
+        结果.边界线段组.reserve(边界存在组.size());
+        for (const auto 边界存在节点 : 边界存在组) {
+            if (!存在服务_.是存在节点(边界存在节点)) {
+                结果.状态 = 场景边界计算状态::边界存在不存在;
+                结果.边界线段组.clear();
+                return 结果;
+            }
+            const auto 候选线段组 = 几何读取.读取二维边界候选线段(
+                场景节点, 边界存在节点);
+            if (候选线段组.empty()) {
+                结果.需要获取边界几何的存在组.push_back(边界存在节点);
+                continue;
+            }
+            std::vector<long double> 距离组;
+            距离组.reserve(候选线段组.size());
+            for (const auto& 候选线段 : 候选线段组) {
+                const auto 距离 = 线段到参考点平方距离(
+                    候选线段, 场景内部参考点);
+                if (!距离) {
+                    结果.状态 = 场景边界计算状态::边界几何不合法;
+                    结果.边界线段组.clear();
+                    return 结果;
+                }
+                距离组.push_back(*距离);
+            }
+
+            const bool 属于当前场景范围 = 存在属于场景范围(
+                场景节点, 边界存在节点);
+            std::size_t 选择位置 = 0;
+            for (std::size_t i = 1; i < 距离组.size(); ++i) {
+                const bool 更合适 = 属于当前场景范围
+                    ? 距离组[i] > 距离组[选择位置]
+                    : 距离组[i] < 距离组[选择位置];
+                if (更合适) 选择位置 = i;
+            }
+            for (std::size_t i = 0; i < 距离组.size(); ++i) {
+                if (i != 选择位置
+                    && 距离相同(距离组[i], 距离组[选择位置])) {
+                    结果.状态 = 场景边界计算状态::边界线段无法唯一确定;
+                    结果.边界线段组.clear();
+                    return 结果;
+                }
+            }
+            const auto& 选择线段 = 候选线段组[选择位置];
+            结果.边界线段组.push_back({
+                边界存在节点,
+                选择线段.线段序号,
+                属于当前场景范围,
+                选择线段.起点,
+                选择线段.终点});
+        }
+        if (!结果.需要获取边界几何的存在组.empty()) {
+            结果.状态 = 结果.边界线段组.empty()
+                ? 场景边界计算状态::边界几何缺失
+                : 场景边界计算状态::部分完成;
+            return 结果;
+        }
+        const auto 闭合环组 = 形成二维闭合环(结果.边界线段组);
+        if (!闭合环组) {
+            结果.状态 = 场景边界计算状态::边界未闭合;
+            return 结果;
+        }
+        结果.闭合环组 = *闭合环组;
+        结果.状态 = 场景边界计算状态::已完成;
+        return 结果;
+    } catch (...) {
+        结果.状态 = 场景边界计算状态::资源失败;
+        结果.边界线段组.clear();
+        结果.闭合环组.clear();
+        结果.需要获取边界几何的存在组.clear();
+        return 结果;
+    }
+}
+
+场景三维边界计算结果 新_场景类::计算三维场景边界(
+    const 场景三维边界几何读取接口& 几何读取,
     稳定编码 场景节点,
     const 三维毫米坐标& 场景内部参考点) const noexcept {
-    场景边界计算结果 结果;
+    场景三维边界计算结果 结果;
     try {
         std::lock_guard 锁(新场景互斥);
         if (!是场景节点(场景节点)) {
@@ -890,7 +1127,7 @@ std::vector<稳定编码> 新_场景类::查询边界存在(
                 结果.边界面组.clear();
                 return 结果;
             }
-            const auto 候选面组 = 几何读取.读取边界候选面(
+            const auto 候选面组 = 几何读取.读取三维边界候选面(
                 场景节点, 边界存在节点);
             if (候选面组.empty()) {
                 结果.需要获取边界几何的存在组.push_back(边界存在节点);
@@ -927,23 +1164,34 @@ std::vector<稳定编码> 新_场景类::查询边界存在(
                 }
             }
             const auto& 选择面 = 候选面组[选择位置];
+            auto 顶点组 = 选择面.顶点组;
+            if (顶点组.size() > 3 && 顶点组.front() == 顶点组.back()) {
+                顶点组.pop_back();
+            }
             结果.边界面组.push_back({
                 边界存在节点,
                 选择面.面序号,
                 属于当前场景范围,
-                选择面.顶点组});
+                std::move(顶点组)});
         }
-        if (结果.需要获取边界几何的存在组.empty()) {
-            结果.状态 = 场景边界计算状态::已完成;
-        } else if (结果.边界面组.empty()) {
-            结果.状态 = 场景边界计算状态::边界几何缺失;
-        } else {
-            结果.状态 = 场景边界计算状态::部分完成;
+        if (!结果.需要获取边界几何的存在组.empty()) {
+            结果.状态 = 结果.边界面组.empty()
+                ? 场景边界计算状态::边界几何缺失
+                : 场景边界计算状态::部分完成;
+            return 结果;
         }
+        const auto 边界线段组 = 形成三维闭合边线(结果.边界面组);
+        if (!边界线段组) {
+            结果.状态 = 场景边界计算状态::边界未闭合;
+            return 结果;
+        }
+        结果.边界线段组 = *边界线段组;
+        结果.状态 = 场景边界计算状态::已完成;
         return 结果;
     } catch (...) {
         结果.状态 = 场景边界计算状态::资源失败;
         结果.边界面组.clear();
+        结果.边界线段组.clear();
         结果.需要获取边界几何的存在组.clear();
         return 结果;
     }

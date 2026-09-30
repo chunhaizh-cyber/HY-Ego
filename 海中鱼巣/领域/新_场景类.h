@@ -61,6 +61,12 @@ struct 三维毫米坐标 final {
     friend bool operator==(const 三维毫米坐标&, const 三维毫米坐标&) = default;
 };
 
+struct 二维毫米坐标 final {
+    std::int64_t X = 0;
+    std::int64_t Y = 0;
+    friend bool operator==(const 二维毫米坐标&, const 二维毫米坐标&) = default;
+};
+
 // 行主序；将自我局部坐标旋转到场景定位坐标系。
 struct 三维朝向矩阵 final {
     std::array<double, 9> 分量{};
@@ -127,29 +133,70 @@ struct 场景相对坐标刷新结果 final {
     std::vector<稳定编码> 需要获取定位坐标的存在组;
 };
 
-// 候选面已经位于目标场景的定位坐标系中。面序号只要求在同一存在内
-// 稳定且非零，用于把计算结果对应回提供者的具体面。
-struct 场景边界候选面 final {
-    std::uint64_t 面序号 = 0;
-    std::vector<三维毫米坐标> 顶点组;
-    friend bool operator==(const 场景边界候选面&,
-        const 场景边界候选面&) = default;
+struct 场景二维边界候选线段 final {
+    std::uint64_t 线段序号 = 0;
+    二维毫米坐标 起点;
+    二维毫米坐标 终点;
+    friend bool operator==(const 场景二维边界候选线段&,
+        const 场景二维边界候选线段&) = default;
 };
 
-class 场景边界几何读取接口 {
+class 场景二维边界几何读取接口 {
 public:
-    virtual ~场景边界几何读取接口() = default;
-    virtual std::vector<场景边界候选面> 读取边界候选面(
+    virtual ~场景二维边界几何读取接口() = default;
+    virtual std::vector<场景二维边界候选线段> 读取二维边界候选线段(
         稳定编码 场景节点,
         稳定编码 边界存在节点) const noexcept = 0;
 };
 
-struct 场景边界面 final {
+// 候选面已经位于目标场景的定位坐标系中。面序号只要求在同一存在内
+// 稳定且非零，用于把计算结果对应回提供者的具体面。
+struct 场景三维边界候选面 final {
+    std::uint64_t 面序号 = 0;
+    std::vector<三维毫米坐标> 顶点组;
+    friend bool operator==(const 场景三维边界候选面&,
+        const 场景三维边界候选面&) = default;
+};
+
+class 场景三维边界几何读取接口 {
+public:
+    virtual ~场景三维边界几何读取接口() = default;
+    virtual std::vector<场景三维边界候选面> 读取三维边界候选面(
+        稳定编码 场景节点,
+        稳定编码 边界存在节点) const noexcept = 0;
+};
+
+struct 场景二维边界线段 final {
+    稳定编码 边界存在节点;
+    std::uint64_t 线段序号 = 0;
+    bool 边界存在属于当前场景范围 = false;
+    二维毫米坐标 起点;
+    二维毫米坐标 终点;
+    friend bool operator==(const 场景二维边界线段&,
+        const 场景二维边界线段&) = default;
+};
+
+struct 场景二维边界闭合环 final {
+    std::vector<二维毫米坐标> 顶点组;
+    std::vector<稳定编码> 来源边界存在组;
+    friend bool operator==(const 场景二维边界闭合环&,
+        const 场景二维边界闭合环&) = default;
+};
+
+struct 场景三维边界线段 final {
+    三维毫米坐标 起点;
+    三维毫米坐标 终点;
+    friend bool operator==(const 场景三维边界线段&,
+        const 场景三维边界线段&) = default;
+};
+
+struct 场景三维边界面 final {
     稳定编码 边界存在节点;
     std::uint64_t 面序号 = 0;
     bool 边界存在属于当前场景范围 = false;
     std::vector<三维毫米坐标> 顶点组;
-    friend bool operator==(const 场景边界面&, const 场景边界面&) = default;
+    friend bool operator==(const 场景三维边界面&,
+        const 场景三维边界面&) = default;
 };
 
 enum class 场景边界计算状态 : std::uint8_t {
@@ -161,13 +208,23 @@ enum class 场景边界计算状态 : std::uint8_t {
     边界几何缺失 = 6,
     边界几何不合法 = 7,
     边界面无法唯一确定 = 8,
-    结构不一致 = 9,
-    资源失败 = 10
+    边界线段无法唯一确定 = 9,
+    边界未闭合 = 10,
+    结构不一致 = 11,
+    资源失败 = 12
 };
 
-struct 场景边界计算结果 final {
+struct 场景二维边界计算结果 final {
     场景边界计算状态 状态 = 场景边界计算状态::资源失败;
-    std::vector<场景边界面> 边界面组;
+    std::vector<场景二维边界线段> 边界线段组;
+    std::vector<场景二维边界闭合环> 闭合环组;
+    std::vector<稳定编码> 需要获取边界几何的存在组;
+};
+
+struct 场景三维边界计算结果 final {
+    场景边界计算状态 状态 = 场景边界计算状态::资源失败;
+    std::vector<场景三维边界面> 边界面组;
+    std::vector<场景三维边界线段> 边界线段组;
     std::vector<稳定编码> 需要获取边界几何的存在组;
 };
 
@@ -230,11 +287,16 @@ public:
     std::vector<稳定编码> 查询边界存在(
         稳定编码 场景节点) const noexcept;
 
-    // 使用内部参考点判定朝向场景内部的一侧。当前场景完整子树内的存在
-    // 采用距参考点最远的合法面；外部引用采用最近的合法面。函数不写入
-    // 边界结果，也不把几何缺失伪装成已经取得的边界面。
-    场景边界计算结果 计算场景边界(
-        const 场景边界几何读取接口& 几何读取,
+    // 二维：点连接为线段，线段必须形成一个或多个精确闭合环。
+    场景二维边界计算结果 计算二维场景边界(
+        const 场景二维边界几何读取接口& 几何读取,
+        稳定编码 场景节点,
+        const 二维毫米坐标& 场景内部参考点) const noexcept;
+
+    // 三维：候选面顶点依序连线；闭合空间中的每条无向边必须恰好由
+    // 两个边界面共享。两个函数都不写入边界结果或补造缺失几何。
+    场景三维边界计算结果 计算三维场景边界(
+        const 场景三维边界几何读取接口& 几何读取,
         稳定编码 场景节点,
         const 三维毫米坐标& 场景内部参考点) const noexcept;
 
