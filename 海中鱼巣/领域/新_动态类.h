@@ -41,7 +41,8 @@ struct 新动态信息 final {
     std::vector<稳定编码> 状态节点组;
     std::vector<稳定编码> 成员动态节点组;
     std::vector<新动态跨特征时间项> 跨特征时间组;
-    // 只有原子动态立即形成实例动态概念；复合动态不复制第二套概念事实。
+    // 每个正式动态实例都先引用自己的专属实例动态概念；聚合稳定后可改为
+    // 引用共享聚合动态概念。
     std::optional<稳定编码> 动态概念节点;
     std::int64_t 被引用次数 = 0;
     friend bool operator==(const 新动态信息&, const 新动态信息&) = default;
