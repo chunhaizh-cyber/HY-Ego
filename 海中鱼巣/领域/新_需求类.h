@@ -41,6 +41,8 @@ struct 新根需求定义 final {
     稳定编码 实际特征节点;
     稳定编码 目标值域概念节点;
     稳定编码 目标比较关系概念节点;
+    // 根权重由具名运行配置明确提供；普通子需求不能自行指定权重。
+    std::int64_t 初始权重;
     friend bool operator==(const 新根需求定义&,
         const 新根需求定义&) = default;
 };
@@ -69,6 +71,7 @@ struct 新需求信息 final {
     新需求目标定义 目标;
     std::optional<稳定编码> 来源承接节点;
     std::optional<稳定编码> 根实际特征节点;
+    std::int64_t 权重 = 0;
     新需求活动状态 活动状态 = 新需求活动状态::活动;
     friend bool operator==(const 新需求信息&, const 新需求信息&) = default;
 };
@@ -104,7 +107,8 @@ enum class 新需求操作状态 : std::uint8_t {
     任务来源未接通 = 17,
     会形成环 = 18,
     结构不一致 = 19,
-    资源失败 = 20
+    资源失败 = 20,
+    权重不合法 = 21
 };
 
 struct 新需求建立结果 final {
@@ -189,6 +193,12 @@ public:
 
     新需求当前满足结果 复核当前满足(
         稳定编码 需求节点) const noexcept;
+    std::optional<std::int64_t> 查询需求权重(
+        稳定编码 需求节点) const noexcept;
+    // 只有双根权重可以由配置修改；普通子需求权重始终由父需求平分。
+    新需求操作状态 修改根需求权重(
+        稳定编码 根需求节点,
+        std::int64_t 新权重) noexcept;
     新需求操作状态 修改活动状态(
         稳定编码 需求节点,
         新需求活动状态 新状态) noexcept;
