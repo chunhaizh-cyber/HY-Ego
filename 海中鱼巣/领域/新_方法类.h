@@ -1,0 +1,71 @@
+#pragma once
+
+#include <memory>
+#include <optional>
+#include <vector>
+
+#include "新_方法公共类型.h"
+#include "新_方法参数场景.h"
+
+namespace 海中鱼巣 {
+
+class 新_存在类;
+class 新_场景类;
+class 新_特征类;
+class 概念_存在类;
+class 概念_特征类;
+
+// 方法拥有自己的独立根；该根不挂入世界树、需求树或任务集合根。
+extern 稳定编码 新方法组织根节点;
+
+struct 新方法参数场景结果 final {
+    新方法操作状态 状态 = 新方法操作状态::入口拒绝;
+    std::shared_ptr<const 方法参数场景> 参数场景;
+};
+
+class 新_方法类 final {
+public:
+    新_方法类(
+        新_存在类& 存在服务,
+        新_场景类& 场景服务,
+        新_特征类& 特征服务,
+        概念_存在类& 存在概念服务,
+        概念_特征类& 特征概念服务) noexcept;
+
+    // 只建立独立方法组织根以及本类使用的类型、字段节点。
+    bool 初始化() noexcept;
+
+    新方法建立结果 登记方法(
+        const 新方法登记请求& 请求) noexcept;
+    std::optional<新方法信息> 获取方法(
+        稳定编码 方法节点) const noexcept;
+    bool 是方法节点(稳定编码 节点) const noexcept;
+    新方法候选结果 查询候选方法(
+        const 新方法候选查询& 查询) const noexcept;
+
+    新方法操作状态 修改启用状态(
+        稳定编码 方法节点,
+        新方法启用状态 新状态) noexcept;
+
+    新方法结构节点结果 添加组合步骤(
+        const 新方法组合步骤添加请求& 请求) noexcept;
+    新方法操作状态 设置组合入口步骤(
+        稳定编码 组合方法节点,
+        稳定编码 步骤节点) noexcept;
+    新方法结构节点结果 添加结果转移(
+        const 新方法结果转移添加请求& 请求) noexcept;
+
+    // 形成一次调用期只读视图。这里仅绑定并校验实时节点，不复制当前值。
+    新方法参数场景结果 建立参数场景(
+        稳定编码 方法节点,
+        std::vector<新方法参数角色绑定> 角色绑定组) const noexcept;
+
+private:
+    新_存在类& 存在服务_;
+    新_场景类& 场景服务_;
+    新_特征类& 特征服务_;
+    概念_存在类& 存在概念服务_;
+    概念_特征类& 特征概念服务_;
+};
+
+} // namespace 海中鱼巣
