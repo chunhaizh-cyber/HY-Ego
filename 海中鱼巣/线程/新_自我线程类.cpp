@@ -1,6 +1,8 @@
 #include "新_自我线程类.h"
 
 #include <algorithm>
+#include <array>
+#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <limits>
@@ -19,6 +21,7 @@ namespace {
 std::mutex 唯一自我互斥;
 新_自我线程类* 唯一自我线程所有者 = nullptr;
 std::optional<新自我线程初始化请求> 唯一自我初始化请求;
+std::atomic_uint64_t 下一自动决议消息编号{1};
 
 struct 未完成自我建立前缀 final {
     新自我线程初始化请求 请求;
@@ -157,6 +160,14 @@ struct 新_自我线程类::实现 final {
     // 处理中项仍留在活动组，接收方查重与容量计算不会漏算。
     std::vector<std::shared_ptr<消息项>> 活动消息;
 
+    struct 自动承接项 final {
+        新任务承接消息 消息;
+        std::chrono::steady_clock::time_point 可处理时点{};
+        std::shared_future<新任务承接处理结果> 管理结果;
+    };
+    // 这是self内部治理进度，不是外部邮箱消息；每个本能根至多一项。
+    std::array<std::optional<自动承接项>, 2> 自动承接;
+
     新自我线程操作结果 操作结果(
         新自我线程操作状态 状态) const noexcept {
         return {状态, 生命周期};
@@ -168,6 +179,88 @@ struct 新_自我线程类::实现 final {
         return 世界树服务->复核自我本能需求(
             *初始化结果->自我存在, *初始化结果->安全根需求,
             *初始化结果->服务根需求, 来源);
+    }
+
+    static std::uint64_t 取得自动消息编号() noexcept {
+        auto 编号 = 下一自动决议消息编号.fetch_add(1, std::memory_order_relaxed);
+        if (编号 == 0) {
+            编号 = 下一自动决议消息编号.fetch_add(1, std::memory_order_relaxed);
+        }
+        return 编号;
+    }
+
+    // 调用者持有状态互斥。只有根结果明确“需增加”才形成自动承接；
+    // 同根已有在途项时保持原决议和原manager结果，不重复交接。
+    void 安排自动承接(const 新世界本能需求复核结果& 复核) noexcept {
+        if (!消息配置 || !任务管理
+            || 复核.状态 != 新世界需求复核状态::已复核) return;
+        const auto 安排一个 = [&](稳定编码 需求,
+            const std::optional<新需求当前满足结果>& 根结果) noexcept {
+            if (!根结果 || 根结果->状态 != 新需求当前满足状态::需增加) return;
+            if (std::any_of(自动承接.begin(), 自动承接.end(),
+                    [&](const auto& 项) {
+                        return 项 && 项->消息.需求节点 == 需求;
+                    })) return;
+            auto 空位 = std::find_if(自动承接.begin(), 自动承接.end(),
+                [](const auto& 项) { return !项; });
+            if (空位 == 自动承接.end()) return;
+            新任务承接消息 消息;
+            消息.消息编号 = 取得自动消息编号();
+            消息.需求节点 = 需求;
+            if (复核.来源状态) {
+                消息.依据 = 新任务承接依据::自我状态变化复核;
+                消息.来源状态节点 = 复核.来源状态;
+            } else {
+                消息.依据 = 新任务承接依据::自我首次复核;
+            }
+            空位->emplace(自动承接项{
+                std::move(消息), std::chrono::steady_clock::now(), {}});
+        };
+        安排一个(复核.安全需求, 复核.安全结果);
+        安排一个(复核.服务需求, 复核.服务结果);
+    }
+
+    // true表示本自动项已经得到终结反馈；false表示保留原决议后重试。
+    bool 处理自动承接(自动承接项& 项) noexcept {
+        if (!任务管理) return false;
+        if (!项.管理结果.valid()) {
+            const auto 接收 = 任务管理->提交消息(项.消息);
+            switch (接收.状态) {
+            case 新任务承接接收状态::已接收:
+            case 新任务承接接收状态::精确重复:
+                项.管理结果 = 接收.处理结果;
+                if (!项.管理结果.valid()) return true;
+                break;
+            case 新任务承接接收状态::邮箱已满:
+            case 新任务承接接收状态::资源失败:
+            case 新任务承接接收状态::尚未启动:
+                return false;
+            case 新任务承接接收状态::过期决议:
+            case 新任务承接接收状态::已停止接收:
+            case 新任务承接接收状态::入口拒绝:
+            case 新任务承接接收状态::身份冲突:
+            case 新任务承接接收状态::内部错误:
+            default:
+                return true;
+            }
+        }
+        if (项.管理结果.wait_for(std::chrono::milliseconds(0))
+            != std::future_status::ready) return false;
+        const auto 结果 = 项.管理结果.get();
+        if (结果.原消息 != 项.消息) return true;
+        switch (结果.状态) {
+        case 新任务承接处理状态::已承接:
+        case 新任务承接处理状态::已重新启用:
+        case 新任务承接处理状态::既有终结:
+        case 新任务承接处理状态::需求当前已满足:
+        case 新任务承接处理状态::入口拒绝:
+        case 新任务承接处理状态::服务未就绪:
+        case 新任务承接处理状态::需核查:
+        case 新任务承接处理状态::停止取消:
+        case 新任务承接处理状态::内部错误:
+        default:
+            return true;
+        }
     }
 
     新自我消息处理结果 处理消息(const 新自我治理消息& 消息) noexcept {
@@ -228,6 +321,9 @@ struct 新_自我线程类::实现 final {
             case 新任务承接接收状态::邮箱已满:
             case 新任务承接接收状态::资源失败:
                 return std::nullopt;
+            case 新任务承接接收状态::过期决议:
+                结果.状态 = 新自我消息处理状态::入口拒绝;
+                return 结果;
             case 新任务承接接收状态::尚未启动:
             case 新任务承接接收状态::已停止接收:
                 结果.状态 = 新自我消息处理状态::任务管理未就绪;
@@ -250,6 +346,7 @@ struct 新_自我线程类::实现 final {
             return 结果;
         }
         if (承接.状态 == 新任务承接处理状态::已承接
+            || 承接.状态 == 新任务承接处理状态::已重新启用
             || 承接.状态 == 新任务承接处理状态::既有终结) {
             if (!承接.承接 || !承接.承接->任务) {
                 结果.状态 = 新自我消息处理状态::内部不一致;
@@ -260,6 +357,7 @@ struct 新_自我线程类::实现 final {
                 项.消息.需求节点, 承接.承接->任务->节点);
             switch (结果.任务独立读回->状态) {
             case 新世界任务承接状态::已读回:
+        case 新世界任务承接状态::已重新启用:
                 结果.状态 = 新自我消息处理状态::任务已承接; break;
             case 新世界任务承接状态::既有终结任务:
                 结果.状态 = 新自我消息处理状态::既有终结任务; break;
@@ -276,6 +374,8 @@ struct 新_自我线程类::实现 final {
                 结果.状态 = 新自我消息处理状态::任务管理未就绪; break;
             case 新任务承接处理状态::内部错误:
                 结果.状态 = 新自我消息处理状态::内部错误; break;
+            case 新任务承接处理状态::需求当前已满足:
+                结果.状态 = 新自我消息处理状态::已复核; break;
             default:
                 结果.状态 = 新自我消息处理状态::任务承接需核查; break;
             }
@@ -302,6 +402,7 @@ struct 新_自我线程类::实现 final {
             const auto 首次结果 = 复核需求();
             std::unique_lock 锁(状态互斥);
             首次需求复核 = 首次结果;
+            安排自动承接(首次结果);
             线程已进入 = true;
             生命周期 = 停止已请求
                 ? 新自我线程生命周期::正在停止
@@ -318,6 +419,7 @@ struct 新_自我线程类::实现 final {
                     const auto 重试结果 = 复核需求();
                     锁.lock();
                     首次需求复核 = 重试结果;
+                    安排自动承接(重试结果);
                     if (重试结果.状态 == 新世界需求复核状态::资源失败) {
                         首次重试 = std::chrono::steady_clock::now()
                             + 有界等待时长(消息配置->资源重试间隔毫秒);
@@ -326,16 +428,49 @@ struct 新_自我线程类::实现 final {
                     }
                     continue;
                 }
-                if (活动消息.empty()) {
+                const bool 有自动承接 = std::any_of(
+                    自动承接.begin(), 自动承接.end(),
+                    [](const auto& 项) { return 项.has_value(); });
+                if (活动消息.empty() && !有自动承接) {
                     生命周期 = 新自我线程生命周期::等待治理消息;
                     if (首次重试) {
                         状态变化.wait_until(锁, *首次重试);
                     } else {
                         状态变化.wait(锁, [this] {
-                            return 停止已请求 || !活动消息.empty();
+                            return 停止已请求 || !活动消息.empty()
+                                || std::any_of(自动承接.begin(), 自动承接.end(),
+                                    [](const auto& 项) { return 项.has_value(); });
                         });
                     }
                     continue;
+                }
+                auto 自动位置 = std::min_element(
+                    自动承接.begin(), 自动承接.end(),
+                    [](const auto& 左, const auto& 右) {
+                        if (!左) return false;
+                        if (!右) return true;
+                        return 左->可处理时点 < 右->可处理时点;
+                    });
+                if (自动位置 != 自动承接.end() && *自动位置) {
+                    auto& 自动项 = **自动位置;
+                    if (自动项.可处理时点 <= std::chrono::steady_clock::now()) {
+                        生命周期 = 新自我线程生命周期::正在处理消息;
+                        锁.unlock();
+                        const bool 已终结 = 处理自动承接(自动项);
+                        锁.lock();
+                        if (已终结) {
+                            自动位置->reset();
+                        } else {
+                            自动项.可处理时点 = std::chrono::steady_clock::now()
+                                + 有界等待时长(消息配置->资源重试间隔毫秒);
+                        }
+                        continue;
+                    }
+                    if (活动消息.empty()) {
+                        生命周期 = 新自我线程生命周期::等待治理消息;
+                        状态变化.wait_until(锁, 自动项.可处理时点);
+                        continue;
+                    }
                 }
                 const auto 最早 = std::min_element(活动消息.begin(), 活动消息.end(),
                     [](const auto& 左, const auto& 右) {
@@ -345,9 +480,13 @@ struct 新_自我线程类::实现 final {
                 if (项->可处理时点 > std::chrono::steady_clock::now()) {
                     生命周期 = 新自我线程生命周期::等待治理消息;
                     // 新消息、停止或时点到达都重新检查条件；通知不代表依赖成功。
-                    状态变化.wait_until(锁, 首次重试
+                    auto 唤醒时点 = 首次重试
                         ? (std::min)(*首次重试, 项->可处理时点)
-                        : 项->可处理时点);
+                        : 项->可处理时点;
+                    if (自动位置 != 自动承接.end() && *自动位置) {
+                        唤醒时点 = (std::min)(唤醒时点, (*自动位置)->可处理时点);
+                    }
+                    状态变化.wait_until(锁, 唤醒时点);
                     continue;
                 }
                 生命周期 = 新自我线程生命周期::正在处理消息;
@@ -363,6 +502,7 @@ struct 新_自我线程类::实现 final {
                     continue;
                 }
                 auto& 结果 = *单次结果;
+                if (结果.需求复核) 安排自动承接(*结果.需求复核);
                 if (结果.需求复核
                     && 结果.需求复核->状态 == 新世界需求复核状态::资源失败
                     && !停止已请求) {
@@ -379,6 +519,7 @@ struct 新_自我线程类::实现 final {
                 生命周期 = 新自我线程生命周期::等待治理消息;
             }
             生命周期 = 新自我线程生命周期::正在停止;
+            for (auto& 项 : 自动承接) 项.reset();
             终结剩余消息(新自我消息处理状态::停止取消);
             生命周期 = 新自我线程生命周期::已停止;
             线程已完成 = true;
