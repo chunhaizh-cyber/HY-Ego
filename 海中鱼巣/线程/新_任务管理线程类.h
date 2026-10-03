@@ -5,6 +5,7 @@
 #include <memory>
 #include <optional>
 #include "../业务/新_世界树类.h"
+#include "新_任务工作线程类.h"
 
 namespace 海中鱼巣 {
 
@@ -71,11 +72,30 @@ struct 新任务承接接收结果 final {
 struct 新任务管理快照 final {
     新任务管理生命周期 生命周期 = 新任务管理生命周期::未启动;
     std::uint64_t 活动消息数 = 0;
+    std::uint64_t 活动工作数 = 0;
     bool 停止已请求 = false;
     bool 线程已完成 = false;
 };
 
-// M1仅承接、读回和反馈，不筹办、不调度现实动作。
+enum class 新任务筹办处理状态 : std::uint8_t {
+    有候选并进入条件检查 = 1,
+    完整无候选并进入等待,
+    任务状态已变化,
+    工作未完成,
+    独立读回失败,
+    状态推进失败,
+    停止取消,
+    内部错误
+};
+
+struct 新任务筹办处理结果 final {
+    新任务工作请求 原工作;
+    新任务筹办处理状态 状态 = 新任务筹办处理状态::内部错误;
+    std::optional<新任务工作处理结果> 工作结果;
+    std::optional<新世界任务候选消费结果> 独立消费;
+};
+
+// 当前完成M1承接与W1查找方法筹办；不检查方法条件、不批准或执行现实动作。
 class 新_任务管理线程类 final {
 public:
     // 世界树必须比本对象存活更久；绑定本对象的self必须先回收。
@@ -92,6 +112,8 @@ public:
     新任务管理操作结果 请求停止() noexcept;
     新任务管理操作结果 等待停止(std::uint64_t 等待毫秒) noexcept;
     新任务管理快照 读取快照() const noexcept;
+    std::optional<新任务筹办处理结果> 读取最近筹办结果(
+        稳定编码 任务节点) const noexcept;
 
 private:
     friend class 新_自我线程类;
