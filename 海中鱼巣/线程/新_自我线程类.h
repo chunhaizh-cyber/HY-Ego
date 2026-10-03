@@ -20,6 +20,7 @@ struct 新自我线程初始化请求 final {
     std::optional<稳定编码> 新场景父节点;
     新存在建立请求 自我建立请求;
     新状态强时间 初始状态时间;
+    新世界本能双根定义 本能双根;
 
     bool 完整() const noexcept;
     friend bool operator==(
@@ -54,7 +55,10 @@ enum class 新自我线程操作状态 : std::uint8_t {
     不能等待自身 = 13,
     结构不一致 = 14,
     资源失败 = 15,
-    内部错误 = 16
+    内部错误 = 16,
+    本能双根初始化失败 = 17,
+    需求树初始化失败 = 18,
+    方法根初始化失败 = 19
 };
 
 struct 新自我线程初始化结果 final {
@@ -62,8 +66,13 @@ struct 新自我线程初始化结果 final {
     std::optional<新世界初始化结果> 世界树结果;
     std::optional<新场景建立结果> 场景建立结果;
     std::optional<新场景成员建立结果> 自我建立结果;
+    std::optional<新世界本能双根初始化结果> 本能双根结果;
     std::optional<稳定编码> 自我所在场景;
     std::optional<稳定编码> 自我存在;
+    std::optional<稳定编码> 需求树根;
+    std::optional<稳定编码> 安全根需求;
+    std::optional<稳定编码> 服务根需求;
+    std::optional<稳定编码> 方法组织根;
 
     bool 成功() const noexcept;
 };
@@ -78,6 +87,10 @@ struct 新自我线程快照 final {
     新自我线程生命周期 生命周期 = 新自我线程生命周期::未初始化;
     std::optional<稳定编码> 自我所在场景;
     std::optional<稳定编码> 自我存在;
+    std::optional<稳定编码> 需求树根;
+    std::optional<稳定编码> 安全根需求;
+    std::optional<稳定编码> 服务根需求;
+    std::optional<稳定编码> 方法组织根;
     bool 线程已进入 = false;
     bool 停止已请求 = false;
     bool 线程已完成 = false;
@@ -96,8 +109,8 @@ public:
     新_自我线程类(新_自我线程类&&) = delete;
     新_自我线程类& operator=(新_自我线程类&&) = delete;
 
-    // 本函数在调用线程中完成世界树、自我所在场景和唯一自我存在的
-    // 建立及读回；不会在内部创建 OS 线程。
+    // 本函数在调用线程中依次完成世界树、自我所在场景、唯一自我存在、
+    // 需求双根和方法根的建立及读回；不会在内部创建 OS 线程。
     新自我线程初始化结果 初始化(
         const 新自我线程初始化请求& 请求) noexcept;
 
