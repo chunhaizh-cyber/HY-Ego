@@ -176,6 +176,7 @@
     <ClCompile Include="海中鱼巣\领域\新_任务类.cpp" />
     <ClCompile Include="海中鱼巣\领域\新_方法参数场景.cpp" />
     <ClCompile Include="海中鱼巣\领域\新_方法类.cpp" />
+    <ClCompile Include="海中鱼巣\领域\新_因果类.cpp" />
     <ClCompile Include="海中鱼巣\适配\适配器.单调时钟.cpp" />
     <ClCompile Include="海中鱼巣\适配\适配器.UTC时钟.cpp" />
     <ClCompile Include="海中鱼巣\适配\采集器.D455相机.cpp">
@@ -295,6 +296,8 @@
     <ClInclude Include="海中鱼巣\领域\新_方法公共类型.h" />
     <ClInclude Include="海中鱼巣\领域\新_方法参数场景.h" />
     <ClInclude Include="海中鱼巣\领域\新_方法类.h" />
+    <ClInclude Include="海中鱼巣\领域\新_因果公共类型.h" />
+    <ClInclude Include="海中鱼巣\领域\新_因果类.h" />
     <ClInclude Include="海中鱼巣\领域\合同.结构操作公共.h" />
     <ClInclude Include="海中鱼巣\领域\数据服务.不可变材料.h" />
     <ClInclude Include="海中鱼巣\领域\数据服务.特征值类.h" />
