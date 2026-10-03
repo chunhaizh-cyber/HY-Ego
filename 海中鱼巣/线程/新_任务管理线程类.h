@@ -128,6 +128,11 @@ enum class 新自我筹办裁决状态 : std::uint8_t {
 struct 新自我筹办裁决 final {
     新任务筹办反馈定位 定位;
     新自我筹办裁决状态 状态 = 新自我筹办裁决状态::需核查;
+    // 只有W2中恰好一个具备的条件结果配对时才填写；它们只是
+    // 后继执行前判断定位，不表示已经选定、批准或执行方法。
+    std::optional<稳定编码> 唯一具备方法节点;
+    std::optional<稳定编码> 唯一具备配对节点;
+    std::optional<稳定编码> 唯一对应结果节点;
     friend bool operator==(const 新自我筹办裁决&,
         const 新自我筹办裁决&) = default;
 };
