@@ -76,6 +76,7 @@ struct 新任务管理快照 final {
     std::uint64_t 活动工作数 = 0;
     std::uint64_t 待反馈任务数 = 0;
     std::uint64_t 自我筹办裁决数 = 0;
+    std::uint64_t 执行结果数 = 0;
     bool 停止已请求 = false;
     bool 线程已完成 = false;
 };
@@ -116,6 +117,16 @@ enum class 新任务筹办反馈接收状态 : std::uint8_t {
     尚未启动, 已停止接收, 入口拒绝, 资源失败, 内部错误
 };
 
+enum class 新任务结果状态接收状态 : std::uint8_t {
+    已接收并触发结果获取 = 1,
+    已接收等待更多材料,
+    当前无等待执行,
+    与等待执行无关,
+    已停止接收,
+    资源失败,
+    内部错误
+};
+
 enum class 新自我筹办裁决状态 : std::uint8_t {
     可进入执行前判断 = 1,
     等待材料,
@@ -140,8 +151,67 @@ struct 新自我执行前判断 final {
     稳定编码 配对节点;
     稳定编码 结果节点;
     新自我执行前判断状态 状态 = 新自我执行前判断状态::需核查;
+    // 只在“允许执行”时填写；manager按原样形成W3工作，worker重新核验。
+    std::optional<新世界任务本能执行请求> 本能执行请求;
     friend bool operator==(const 新自我执行前判断&,
         const 新自我执行前判断&) = default;
+};
+
+enum class 新任务执行处理状态 : std::uint8_t {
+    已完成影响评估 = 1,
+    动作已发出等待结果,
+    执行依赖未就绪,
+    动作未进入,
+    任务状态已变化,
+    工作未完成,
+    独立读回失败,
+    停止取消,
+    内部错误
+};
+
+struct 新任务执行处理结果 final {
+    新任务工作请求 原工作;
+    新任务执行处理状态 状态 = 新任务执行处理状态::内部错误;
+    std::optional<新任务工作处理结果> 工作结果;
+    std::optional<新世界任务执行读回结果> 独立读回;
+};
+
+struct 新任务结果反馈定位 final {
+    稳定编码 任务节点;
+    新任务工作请求 原工作;
+    稳定编码 执行实例节点;
+    稳定编码 影响评估节点;
+    bool 完整() const noexcept;
+    friend bool operator==(const 新任务结果反馈定位&,
+        const 新任务结果反馈定位&) = default;
+};
+
+enum class 新任务结果反馈接收状态 : std::uint8_t {
+    已接收 = 1, 精确重复, 身份冲突, 邮箱已满, 尚未配置,
+    尚未启动, 已停止接收, 入口拒绝, 资源失败, 内部错误
+};
+
+enum class 新自我任务后继接收状态 : std::uint8_t {
+    已发布并读回 = 1,
+    精确重复,
+    定位已变化,
+    任务状态已变化,
+    状态发布失败,
+    已停止接收,
+    入口拒绝,
+    资源失败,
+    内部错误
+};
+
+enum class 新任务完成结算确认状态 : std::uint8_t {
+    已确认 = 1,
+    精确重复,
+    尚未结算,
+    定位已变化,
+    已停止接收,
+    入口拒绝,
+    资源失败,
+    内部错误
 };
 
 struct 新自我筹办裁决 final {
@@ -165,7 +235,7 @@ enum class 新自我筹办裁决接收状态 : std::uint8_t {
 };
 
 // 当前完成M1承接、W1/W2筹办、self执行前裁决回收，并在self允许后
-// fresh确认任务进入待执行；不自行批准或调用方法。
+// 派发W3本能执行；manager本身不直接调用方法，worker结果必须独立读回。
 class 新_任务管理线程类 final {
 public:
     // 世界树必须比本对象存活更久；绑定本对象的self必须先回收。
@@ -186,17 +256,33 @@ public:
         稳定编码 任务节点) const noexcept;
     std::optional<新自我筹办裁决> 读取最近自我筹办裁决(
         稳定编码 任务节点) const noexcept;
+    std::optional<新任务执行处理结果> 读取最近执行结果(
+        稳定编码 任务节点) const noexcept;
 
 private:
     friend class 新_自我线程类;
     using 筹办反馈接收函数 = std::function<新任务筹办反馈接收状态(
         const 新任务筹办反馈定位&)>;
+    using 结果反馈接收函数 = std::function<新任务结果反馈接收状态(
+        const 新任务结果反馈定位&)>;
     bool 使用世界树(const 新_世界树类& 世界树) const noexcept;
     新任务管理操作状态 绑定自我筹办反馈(
-        const void* 所有者, 筹办反馈接收函数 接收) noexcept;
+        const void* 所有者,
+        筹办反馈接收函数 筹办接收,
+        结果反馈接收函数 结果接收) noexcept;
     void 解除自我筹办反馈(const void* 所有者) noexcept;
     新自我筹办裁决接收状态 提交自我筹办裁决(
         const 新自我筹办裁决& 裁决) noexcept;
+    新任务结果状态接收状态 提交结果状态通知(
+        稳定编码 状态节点) noexcept;
+    新自我任务后继接收状态 提交自我任务后继决议(
+        const 新任务结果反馈定位& 定位,
+        const 新自我任务后继决议& 决议) noexcept;
+    // self完成正式任务结算后确认工程交接已经收束。manager只在fresh
+    // 读回同一结算后释放结果定位；本入口不建立或修改结算事实。
+    新任务完成结算确认状态 确认任务完成结算(
+        const 新任务结果反馈定位& 定位,
+        稳定编码 结算节点) noexcept;
     struct 实现;
     std::unique_ptr<实现> 实现_;
 };
