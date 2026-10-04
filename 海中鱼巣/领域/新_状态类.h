@@ -11,6 +11,7 @@ namespace 海中鱼巣 {
 class 新_存在类;
 class 新_场景类;
 class 新_动态类;
+class 新_任务类;
 
 enum class 新状态时间语义 : std::int64_t {
     实例绝对UTC = 1,
@@ -90,6 +91,7 @@ private:
     friend class 新_存在类;
     friend class 新_场景类;
     friend class 新_动态类;
+    friend class 新_任务类;
 
     // 状态只能由存在的实例特征当前值建立；类型和值从特征节点完整读回。
     新状态建立结果 建立状态(
