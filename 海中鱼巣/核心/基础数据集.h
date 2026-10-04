@@ -8,9 +8,17 @@
 #include <variant>
 #include <vector>
 
-#include "L1公共事实.数据.h"
-
 namespace 海中鱼巣 {
+
+struct 稳定编码 final {
+    std::uint64_t 值 = 0;
+    friend bool operator==(const 稳定编码&, const 稳定编码&) = default;
+    friend bool operator<(const 稳定编码& 左, const 稳定编码& 右) noexcept {
+        return 左.值 < 右.值;
+    }
+};
+
+inline bool 有效(稳定编码 编码) noexcept { return 编码.值 != 0; }
 
 // 直接值只是字段末端的原始材料，不取得独立稳定编码或业务语义。
 using 基础原始值 = std::variant<std::int64_t,
