@@ -36,6 +36,12 @@
     <ClCompile Include="海中鱼巣\启动.应用程序.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\界面\宿主.网页对话.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\界面\宿主.网页对话.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClCompile Include="海中鱼巣\启动.程序运行宿主.cpp">
       <Filter>源文件</Filter>
     </ClCompile>

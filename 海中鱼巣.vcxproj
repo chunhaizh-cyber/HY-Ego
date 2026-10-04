@@ -88,7 +88,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>bcrypt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>bcrypt.lib;ws2_32.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -105,7 +105,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>bcrypt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>bcrypt.lib;ws2_32.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -121,7 +121,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>bcrypt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>bcrypt.lib;ws2_32.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories Condition="'$(EnableD455RealSense)'=='true'">$(D455VcpkgRoot)\installed\x64-windows\debug\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies Condition="'$(EnableD455RealSense)'=='true'">realsense2d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -141,7 +141,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>bcrypt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>bcrypt.lib;ws2_32.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories Condition="'$(EnableD455RealSense)'=='true'">$(D455VcpkgRoot)\installed\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies Condition="'$(EnableD455RealSense)'=='true'">realsense2.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -152,6 +152,7 @@
     <ClInclude Include="海中鱼巣\启动.程序运行宿主.h" />
     <ClInclude Include="海中鱼巣\启动.应用程序.h" />
     <ClCompile Include="海中鱼巣\启动.应用程序.cpp" />
+    <ClCompile Include="海中鱼巣\界面\宿主.网页对话.cpp" />
     <ClInclude Include="海中鱼巣\装配.普通应用.h" />
     <ClCompile Include="海中鱼巣\装配.普通应用.cpp" />
     <ClCompile Include="海中鱼巣\核心\仓库.L1事实基座.cpp" />
@@ -258,6 +259,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="海中鱼巣\启动选项.数据.h" />
+    <ClInclude Include="海中鱼巣\界面\宿主.网页对话.h" />
     <ClInclude Include="海中鱼巣\适配\协议.D455采样材料.h" />
     <ClCompile Include="海中鱼巣\适配\协议.D455采样材料.cpp" />
     <ClInclude Include="海中鱼巣\适配\采集器.D455相机.h" />
