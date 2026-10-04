@@ -88,6 +88,35 @@ struct 新世界本能双根初始化结果 final {
     bool 成功() const noexcept;
 };
 
+enum class 新世界自我治理基础状态 : std::uint8_t {
+    已建立 = 1,
+    已复用 = 2,
+    世界树未初始化 = 3,
+    特征类型建立失败 = 4,
+    目标值域建立失败 = 5,
+    比较关系建立失败 = 6,
+    结构不一致 = 7,
+    资源失败 = 8
+};
+
+// 冷启动 self 所需的两类根特征、I64_MAX 目标和值域命中比较关系。
+// 这些节点都属于同一个全局基础数据集；本结果只交付稳定身份，不保存
+// 第二份值域或比较定义。
+struct 新世界自我治理基础结果 final {
+    新世界自我治理基础状态 状态 =
+        新世界自我治理基础状态::世界树未初始化;
+    std::optional<稳定编码> 安全值特征类型根;
+    std::optional<稳定编码> 服务值特征类型根;
+    std::optional<稳定编码> 安全值目标概念;
+    std::optional<稳定编码> 服务值目标概念;
+    std::optional<稳定编码> 安全值比较类型根;
+    std::optional<稳定编码> 服务值比较类型根;
+    std::optional<稳定编码> 安全值目标比较关系;
+    std::optional<稳定编码> 服务值目标比较关系;
+
+    bool 成功() const noexcept;
+};
+
 enum class 新世界动态发布状态 : std::uint8_t {
     已完成并保留实例概念 = 1,
     已完成并采用已有概念 = 2,
@@ -348,6 +377,10 @@ public:
     bool 已初始化() const noexcept;
     std::optional<稳定编码> 获取世界树根场景() const noexcept;
 
+    // 在世界树和先天结构就绪后建立或读回 self 冷启动所需材料。
+    // 本函数不建立 self、需求、任务、状态或线程。
+    新世界自我治理基础结果 建立或取得自我治理基础() noexcept;
+
     std::optional<先天特征概念集合> 获取先天特征概念() const noexcept;
     稳定编码 建立特征概念(
         const 特征概念定义& 定义,
@@ -502,6 +535,7 @@ private:
     新_方法类 方法服务_;
     新_任务类 任务服务_;
     bool 任务集合已初始化_ = false;
+    新世界自我治理基础结果 自我治理基础_;
 };
 
 } // namespace 海中鱼巣
