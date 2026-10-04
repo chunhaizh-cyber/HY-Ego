@@ -500,6 +500,12 @@
     <ClCompile Include="海中鱼巣\领域\新_方法类.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClInclude Include="海中鱼巣\领域\新_本能函数集.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\领域\新_本能函数集.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClInclude Include="海中鱼巣\领域\新_因果公共类型.h">
       <Filter>头文件</Filter>
     </ClInclude>
