@@ -10,6 +10,8 @@
 
 namespace 海中鱼巣 {
 
+class 新_世界树类;
+
 struct 新任务管理运行配置 final {
     std::uint64_t 邮箱容量 = 0;
     std::uint64_t 资源重试间隔毫秒 = 0;
@@ -79,6 +81,23 @@ struct 新任务管理快照 final {
     std::uint64_t 执行结果数 = 0;
     bool 停止已请求 = false;
     bool 线程已完成 = false;
+    std::optional<稳定编码> 服务值结算需求;
+    std::optional<稳定编码> 服务值结算任务;
+    bool 服务值结算方法已配置 = false;
+};
+
+// self初始化后、manager启动前锁定。它只描述长期内部治理任务使用的
+// 正式世界身份，不建立第二份服务值或任务事实。
+struct 新长期服务值结算配置 final {
+    新_世界树类* 世界树服务 = nullptr;
+    稳定编码 自我所在场景;
+    稳定编码 自我存在;
+    稳定编码 服务值特征;
+    稳定编码 完成服务需求;
+
+    bool 完整() const noexcept;
+    friend bool operator==(const 新长期服务值结算配置&,
+        const 新长期服务值结算配置&) = default;
 };
 
 enum class 新任务筹办处理状态 : std::uint8_t {
@@ -235,7 +254,8 @@ enum class 新自我筹办裁决接收状态 : std::uint8_t {
 };
 
 // 当前完成M1承接、W1/W2筹办、self执行前裁决回收，并在self允许后
-// 派发W3本能执行；manager本身不直接调用方法，worker结果必须独立读回。
+// 派发W3本能执行；初始化时还建立并阻塞长期服务值结算任务。普通方法
+// 仍由worker执行，服务值结算使用独立的内部治理函数指针。
 class 新_任务管理线程类 final {
 public:
     // 任务服务必须比本对象存活更久；绑定本对象的self必须先回收。
@@ -269,7 +289,8 @@ private:
     新任务管理操作状态 绑定自我筹办反馈(
         const void* 所有者,
         筹办反馈接收函数 筹办接收,
-        结果反馈接收函数 结果接收) noexcept;
+        结果反馈接收函数 结果接收,
+        const 新长期服务值结算配置& 服务结算配置) noexcept;
     void 解除自我筹办反馈(const void* 所有者) noexcept;
     新自我筹办裁决接收状态 提交自我筹办裁决(
         const 新自我筹办裁决& 裁决) noexcept;

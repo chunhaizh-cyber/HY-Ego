@@ -1,12 +1,17 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <string_view>
 #include <vector>
 
 #include "新_方法参数场景.h"
+#include "新_状态类.h"
 
 namespace 海中鱼巣 {
+
+class 新_世界树类;
+class 新_任务类;
 
 // 这是稳定的程序内登记名，不是自然语言方法名称，也不作为能力判断依据。
 inline constexpr std::string_view 新本能函数登记名_读取网页对话消息 =
@@ -113,6 +118,47 @@ struct 新本能函数解析结果 final {
     新本能函数 函数 = nullptr;
 };
 
+enum class 新服务值结算状态 : std::uint8_t {
+    已结算 = 1,
+    已达最大值,
+    精确重复,
+    已更新但动态未完成,
+    入口拒绝,
+    世界事实不一致,
+    来源结算不存在,
+    服务值不是非负I64,
+    时间不可用,
+    特征更新失败,
+    资源失败,
+    内部错误
+};
+
+// 这是内部治理专用请求，不进入普通“登记名 -> 函数入口”注册表。
+// 来源任务完成结算节点是一次服务兑现的进程内幂等身份；长期结算任务
+// 及其调用时机由任务管理线程持有，普通任务和方法查询均不能取得本入口。
+struct 新服务值结算请求 final {
+    新_世界树类* 世界树服务 = nullptr;
+    新_任务类* 任务服务 = nullptr;
+    稳定编码 自我所在场景;
+    稳定编码 自我存在;
+    稳定编码 服务值特征;
+    稳定编码 来源任务完成结算;
+    新状态强时间 强时间;
+
+    bool 完整() const noexcept;
+};
+
+struct 新服务值结算结果 final {
+    新服务值结算状态 状态 = 新服务值结算状态::入口拒绝;
+    std::optional<std::int64_t> 结算前值;
+    std::optional<std::int64_t> 结算后值;
+    std::optional<稳定编码> 状态节点;
+    std::optional<稳定编码> 动态节点;
+};
+
+using 新服务值结算函数 = 新服务值结算结果 (*)(
+    const 新服务值结算请求&) noexcept;
+
 // 只维护“稳定登记名 -> C++函数入口”的进程内注册表。
 // 方法节点继续只保存登记名；函数地址不写入基础数据集。
 class 新_本能函数集 final {
@@ -142,6 +188,11 @@ public:
     static 新本能函数执行结果 执行(
         std::string_view 登记名,
         const 方法参数场景& 参数场景) noexcept;
+
+    // 每次成功兑现固定增加1，到INT64_MAX时饱和。该入口不登记普通名称，
+    // 因而不能被普通任务的方法召回、解析或执行路径取得。
+    static 新服务值结算结果 执行服务值结算(
+        const 新服务值结算请求& 请求) noexcept;
 };
 
 } // namespace 海中鱼巣
