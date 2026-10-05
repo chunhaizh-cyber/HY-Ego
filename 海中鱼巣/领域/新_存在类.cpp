@@ -316,6 +316,83 @@ bool 新_存在类::是存在节点(稳定编码 节点) const noexcept {
     }
 }
 
+bool 新_存在类::是存在概念节点(稳定编码 概念节点) const noexcept {
+    return 存在概念服务_.是存在概念节点(概念节点);
+}
+
+bool 新_存在类::存在概念包含(
+    稳定编码 上位概念, 稳定编码 下位概念) const noexcept {
+    try {
+        std::lock_guard 锁(新存在互斥);
+        if (!存在概念服务_.是存在概念节点(上位概念)
+            || !存在概念服务_.是存在概念节点(下位概念)) {
+            return false;
+        }
+        std::vector<稳定编码> 待访问{下位概念};
+        std::set<std::uint64_t> 已访问;
+        while (!待访问.empty()) {
+            const auto 当前 = 待访问.back();
+            待访问.pop_back();
+            if (当前 == 上位概念) return true;
+            if (!已访问.insert(当前.值).second) continue;
+            const auto 上位组 = 存在概念服务_.查询上位存在概念(当前);
+            待访问.insert(待访问.end(), 上位组.begin(), 上位组.end());
+        }
+        return false;
+    } catch (...) {
+        return false;
+    }
+}
+
+bool 新_存在类::存在节点属于概念(
+    稳定编码 存在节点, 稳定编码 概念节点) const noexcept {
+    try {
+        std::lock_guard 锁(新存在互斥);
+        if (!是存在节点(存在节点)
+            || !存在概念服务_.是存在概念节点(概念节点)) {
+            return false;
+        }
+        const auto 专属概念 = 查询专属存在概念(存在节点);
+        return 专属概念 && 存在概念包含(概念节点, *专属概念);
+    } catch (...) {
+        return false;
+    }
+}
+
+bool 新_存在类::存在概念相交(
+    稳定编码 左概念, 稳定编码 右概念) const noexcept {
+    try {
+        std::lock_guard 锁(新存在互斥);
+        if (!存在概念服务_.是存在概念节点(左概念)
+            || !存在概念服务_.是存在概念节点(右概念)) {
+            return false;
+        }
+        std::set<std::uint64_t> 左域;
+        std::vector<稳定编码> 待访问{左概念};
+        while (!待访问.empty()) {
+            const auto 当前 = 待访问.back();
+            待访问.pop_back();
+            if (!左域.insert(当前.值).second) continue;
+            const auto 下位组 = 存在概念服务_.查询下位存在概念(当前);
+            待访问.insert(待访问.end(), 下位组.begin(), 下位组.end());
+        }
+
+        待访问.push_back(右概念);
+        std::set<std::uint64_t> 右侧已访问;
+        while (!待访问.empty()) {
+            const auto 当前 = 待访问.back();
+            待访问.pop_back();
+            if (左域.contains(当前.值)) return true;
+            if (!右侧已访问.insert(当前.值).second) continue;
+            const auto 下位组 = 存在概念服务_.查询下位存在概念(当前);
+            待访问.insert(待访问.end(), 下位组.begin(), 下位组.end());
+        }
+        return false;
+    } catch (...) {
+        return false;
+    }
+}
+
 新存在特征添加结果 新_存在类::添加特征(
     稳定编码 存在节点,
     稳定编码 特征概念节点,

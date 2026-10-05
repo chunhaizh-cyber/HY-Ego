@@ -74,7 +74,7 @@ struct 新存在特征值更新结果 final {
     std::optional<新状态建立结果> 状态结果;
 };
 
-class 新_存在类 final {
+class 新_存在类 final : public 特征存在引用读取接口 {
 public:
     新_存在类(
         新_特征类& 特征服务,
@@ -87,6 +87,14 @@ public:
         稳定编码 存在节点) const noexcept;
 
     bool 是存在节点(稳定编码 节点) const noexcept;
+
+    bool 是存在概念节点(稳定编码 概念节点) const noexcept override;
+    bool 存在节点属于概念(
+        稳定编码 存在节点, 稳定编码 概念节点) const noexcept override;
+    bool 存在概念包含(
+        稳定编码 上位概念, 稳定编码 下位概念) const noexcept override;
+    bool 存在概念相交(
+        稳定编码 左概念, 稳定编码 右概念) const noexcept override;
 
     // 特征节点由新_特征类建立；持有关系只在这里作为存在内部字段写入。
     新存在特征添加结果 添加特征(

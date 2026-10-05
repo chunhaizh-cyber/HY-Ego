@@ -18,7 +18,9 @@ enum class 特征概念材料物理类型 : std::int64_t {
     I64数组 = 3,
     UTF8字符串 = 4,
     二维二值格 = 5,
-    三维二值格 = 6
+    三维二值格 = 6,
+    // 值由稳定编码直接引用一个存在实例；值域由存在概念限定。
+    存在节点引用 = 7
 };
 
 struct 特征概念I64闭区间 final {
@@ -50,19 +52,27 @@ struct 特征概念结构化I64值域 final {
         const 特征概念结构化I64值域&) = default;
 };
 
+struct 特征概念存在引用值域 final {
+    稳定编码 存在概念节点;
+    friend bool operator==(const 特征概念存在引用值域&,
+        const 特征概念存在引用值域&) = default;
+};
+
 // I64标量使用规范化闭区间；结构化I64材料使用有序分量值域；
 // 其它材料可使用全材料值域或完整特征值节点身份集合。
 using 特征概念值域 = std::variant<
     std::vector<特征概念I64闭区间>,
     特征概念全材料值域,
     std::vector<稳定编码>,
-    特征概念结构化I64值域>;
+    特征概念结构化I64值域,
+    特征概念存在引用值域>;
 
 using 特征概念准确值 = std::variant<std::int64_t, 稳定编码>;
 
 enum class 特征概念比较规则 : std::int64_t {
     I64数值 = 1,
-    完整材料精确 = 2
+    完整材料精确 = 2,
+    存在身份精确 = 3
 };
 
 enum class 特征概念聚合规则 : std::int64_t {
@@ -189,8 +199,25 @@ struct 先天特征概念集合 final {
 // 全局基础数据集中的特征概念树根节点。
 extern 稳定编码 特征概念树;
 
+// 特征层只读使用存在身份与概念归属，不取得存在事实写权。
+class 特征存在引用读取接口 {
+public:
+    virtual ~特征存在引用读取接口() = default;
+    virtual bool 是存在概念节点(稳定编码 概念节点) const noexcept = 0;
+    virtual bool 存在节点属于概念(
+        稳定编码 存在节点, 稳定编码 概念节点) const noexcept = 0;
+    virtual bool 存在概念包含(
+        稳定编码 上位概念, 稳定编码 下位概念) const noexcept = 0;
+    virtual bool 存在概念相交(
+        稳定编码 左概念, 稳定编码 右概念) const noexcept = 0;
+};
+
 class 概念_特征类 final {
 public:
+    // 解析器由上层装配，必须比本对象存活更久；材料特征不依赖该接口。
+    void 装配存在引用读取接口(
+        const 特征存在引用读取接口& 读取接口) noexcept;
+
     bool 初始化(const 新_特征值类& 特征值服务) noexcept;
 
     std::optional<先天特征概念集合> 获取先天特征概念() const noexcept;
@@ -255,6 +282,9 @@ public:
         特征概念聚合规则 规则,
         const std::vector<特征概念准确值>& 历史不同值,
         const 新_特征值类& 特征值服务) const noexcept;
+
+private:
+    const 特征存在引用读取接口* 存在引用读取接口_ = nullptr;
 };
 
 } // namespace 海中鱼巣
