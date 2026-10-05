@@ -5,7 +5,7 @@
 #include <future>
 #include <memory>
 #include <optional>
-#include "../业务/新_世界树类.h"
+#include "../领域/新_任务类.h"
 #include "新_任务工作线程类.h"
 
 namespace 海中鱼巣 {
@@ -56,7 +56,7 @@ enum class 新任务承接处理状态 : std::uint8_t {
 struct 新任务承接处理结果 final {
     新任务承接消息 原消息;
     新任务承接处理状态 状态 = 新任务承接处理状态::内部错误;
-    std::optional<新世界任务承接结果> 承接;
+    std::optional<新任务治理承接结果> 承接;
 };
 
 enum class 新任务承接接收状态 : std::uint8_t {
@@ -97,9 +97,9 @@ struct 新任务筹办处理结果 final {
     新任务工作请求 原工作;
     新任务筹办处理状态 状态 = 新任务筹办处理状态::内部错误;
     std::optional<新任务工作处理结果> 工作结果;
-    std::optional<新世界任务候选消费结果> 独立消费;
-    std::optional<新世界任务条件筹办结果> 条件筹办;
-    std::optional<新世界任务条件筹办结果> 独立条件筹办;
+    std::optional<新任务治理候选消费结果> 独立消费;
+    std::optional<新任务治理条件筹办结果> 条件筹办;
+    std::optional<新任务治理条件筹办结果> 独立条件筹办;
 };
 
 // manager只向self交付当前筹办结果的稳定定位；正式筹办内容必须由
@@ -152,7 +152,7 @@ struct 新自我执行前判断 final {
     稳定编码 结果节点;
     新自我执行前判断状态 状态 = 新自我执行前判断状态::需核查;
     // 只在“允许执行”时填写；manager按原样形成W3工作，worker重新核验。
-    std::optional<新世界任务本能执行请求> 本能执行请求;
+    std::optional<新任务治理本能执行请求> 本能执行请求;
     friend bool operator==(const 新自我执行前判断&,
         const 新自我执行前判断&) = default;
 };
@@ -173,7 +173,7 @@ struct 新任务执行处理结果 final {
     新任务工作请求 原工作;
     新任务执行处理状态 状态 = 新任务执行处理状态::内部错误;
     std::optional<新任务工作处理结果> 工作结果;
-    std::optional<新世界任务执行读回结果> 独立读回;
+    std::optional<新任务治理执行读回结果> 独立读回;
 };
 
 struct 新任务结果反馈定位 final {
@@ -238,8 +238,8 @@ enum class 新自我筹办裁决接收状态 : std::uint8_t {
 // 派发W3本能执行；manager本身不直接调用方法，worker结果必须独立读回。
 class 新_任务管理线程类 final {
 public:
-    // 世界树必须比本对象存活更久；绑定本对象的self必须先回收。
-    explicit 新_任务管理线程类(新_世界树类& 世界树) noexcept;
+    // 任务服务必须比本对象存活更久；绑定本对象的self必须先回收。
+    explicit 新_任务管理线程类(新_任务类& 任务服务) noexcept;
     ~新_任务管理线程类() noexcept;
     新_任务管理线程类(const 新_任务管理线程类&) = delete;
     新_任务管理线程类& operator=(const 新_任务管理线程类&) = delete;
@@ -265,7 +265,7 @@ private:
         const 新任务筹办反馈定位&)>;
     using 结果反馈接收函数 = std::function<新任务结果反馈接收状态(
         const 新任务结果反馈定位&)>;
-    bool 使用世界树(const 新_世界树类& 世界树) const noexcept;
+    bool 使用任务服务(const 新_任务类& 任务服务) const noexcept;
     新任务管理操作状态 绑定自我筹办反馈(
         const void* 所有者,
         筹办反馈接收函数 筹办接收,

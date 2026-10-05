@@ -44,7 +44,7 @@ enum class 普通应用装配状态 : std::uint8_t {
 struct 普通应用装配结果 final {
     普通应用装配状态 状态 = 普通应用装配状态::入口拒绝;
     std::optional<新世界初始化结果> 世界树;
-    std::optional<新世界自我治理基础结果> 自我治理基础;
+    std::optional<新自我治理基础结果> 自我治理基础;
     std::optional<新自我线程初始化结果> 自我;
     std::optional<新自我线程操作结果> 任务管理绑定;
     std::optional<新自我线程操作结果> 消息配置;

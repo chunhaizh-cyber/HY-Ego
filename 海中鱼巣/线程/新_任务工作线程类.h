@@ -6,7 +6,7 @@
 #include <memory>
 #include <optional>
 
-#include "../业务/新_世界树类.h"
+#include "../领域/新_任务类.h"
 
 namespace 海中鱼巣 {
 
@@ -42,8 +42,8 @@ struct 新任务工作请求 final {
     新任务工作种类 种类 = 新任务工作种类::查找方法;
     稳定编码 任务节点;
     // 两个W3工作分别只携带自己的强类型材料；W3-B不得携带动作请求。
-    std::optional<新世界任务本能执行请求> 本能执行请求;
-    std::optional<新世界任务结果获取请求> 本能结果获取请求;
+    std::optional<新任务治理本能执行请求> 本能执行请求;
+    std::optional<新任务治理结果获取请求> 本能结果获取请求;
     friend bool operator==(const 新任务工作请求&,
         const 新任务工作请求&) = default;
 };
@@ -66,10 +66,10 @@ enum class 新任务工作处理状态 : std::uint8_t {
 struct 新任务工作处理结果 final {
     新任务工作请求 原请求;
     新任务工作处理状态 状态 = 新任务工作处理状态::内部错误;
-    std::optional<新世界任务方法召回结果> 方法召回;
-    std::optional<新世界任务条件筹办结果> 条件筹办;
-    std::optional<新世界任务本能执行结果> 本能执行;
-    std::optional<新世界任务结果获取结果> 本能结果获取;
+    std::optional<新任务治理方法召回结果> 方法召回;
+    std::optional<新任务治理条件筹办结果> 条件筹办;
+    std::optional<新任务治理本能执行结果> 本能执行;
+    std::optional<新任务治理结果获取结果> 本能结果获取;
 };
 
 enum class 新任务工作接收状态 : std::uint8_t {
@@ -95,7 +95,7 @@ struct 新任务工作快照 final {
 class 新_任务工作线程类 final {
 public:
     explicit 新_任务工作线程类(
-        新_世界树类& 世界树,
+        新_任务类& 任务服务,
         std::function<void()> 完成通知 = {}) noexcept;
     ~新_任务工作线程类() noexcept;
     新_任务工作线程类(const 新_任务工作线程类&) = delete;
