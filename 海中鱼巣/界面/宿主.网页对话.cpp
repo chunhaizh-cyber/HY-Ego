@@ -16,6 +16,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <mutex>
+#include <new>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -89,9 +92,54 @@ struct HTTP请求 final {
     std::string 正文;
 };
 
-struct 页面消息 final {
-    std::uint64_t 序号 = 0;
-    std::string 文本;
+struct 网页对话共享状态 final {
+    std::mutex 互斥;
+    bool 运行中 = false;
+    std::string 会话标识;
+    std::vector<网页对话已显示消息> 消息组;
+    std::uint64_t 下一上行序号 = 1;
+    std::uint64_t 下一页面序号 = 1;
+    std::optional<std::string> 待提交文本;
+};
+
+网页对话共享状态 共享状态;
+
+class 网页对话会话租约 final {
+public:
+    网页对话会话租约() = default;
+
+    bool 开始(std::string_view 会话标识) noexcept {
+        try {
+            std::lock_guard 锁(共享状态.互斥);
+            if (共享状态.运行中 || 会话标识.empty()) return false;
+            共享状态.会话标识.assign(会话标识);
+            共享状态.消息组.clear();
+            共享状态.下一上行序号 = 1;
+            共享状态.下一页面序号 = 1;
+            共享状态.待提交文本.reset();
+            共享状态.运行中 = true;
+            已开始_ = true;
+            return true;
+        } catch (...) {
+            return false;
+        }
+    }
+
+    ~网页对话会话租约() {
+        if (!已开始_) return;
+        try {
+            std::lock_guard 锁(共享状态.互斥);
+            共享状态.运行中 = false;
+            共享状态.待提交文本.reset();
+        } catch (...) {
+        }
+    }
+
+    网页对话会话租约(const 网页对话会话租约&) = delete;
+    网页对话会话租约& operator=(const 网页对话会话租约&) = delete;
+
+private:
+    bool 已开始_ = false;
 };
 
 enum class 请求读取状态 : std::uint8_t {
@@ -279,15 +327,17 @@ std::string JSON转义(std::string_view 文本) {
     return 结果;
 }
 
-std::string 构造消息JSON(const std::vector<页面消息>& 消息组) {
+std::string 构造消息JSON(const std::vector<网页对话已显示消息>& 消息组) {
     std::string 结果 = "{\"messages\":[";
     bool 首项 = true;
     for (const auto& 消息 : 消息组) {
         if (!首项) 结果.push_back(',');
         首项 = false;
-        结果 += "{\"id\":" + std::to_string(消息.序号)
-            + ",\"role\":\"user\",\"text\":\""
-            + JSON转义(消息.文本) + "\"}";
+        结果 += "{\"id\":" + std::to_string(消息.页面序号)
+            + ",\"role\":\""
+            + (消息.角色 == 网页对话消息角色::交互者
+                ? "user" : "assistant")
+            + "\",\"text\":\"" + JSON转义(消息.UTF8正文) + "\"}";
     }
     结果 += "]}";
     return 结果;
@@ -307,7 +357,7 @@ main{width:min(880px,94vw);height:min(760px,92vh);display:grid;grid-template-row
 header{padding:18px 22px;border-bottom:1px solid #304157;display:flex;justify-content:space-between;align-items:center}
 h1{font-size:20px;margin:0}.status{font-size:13px;color:#8fd3a7}
 #messages{overflow:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
-.empty{margin:auto;color:#91a0b3}.message{align-self:flex-end;max-width:76%;padding:12px 15px;border-radius:15px 15px 4px 15px;background:#2e73c8;white-space:pre-wrap;overflow-wrap:anywhere}
+.empty{margin:auto;color:#91a0b3}.message{align-self:flex-end;max-width:76%;padding:12px 15px;border-radius:15px 15px 4px 15px;background:#2e73c8;white-space:pre-wrap;overflow-wrap:anywhere}.message.assistant{align-self:flex-start;border-radius:15px 15px 15px 4px;background:#34475f}
 form{padding:16px;border-top:1px solid #304157;display:grid;grid-template-columns:1fr auto auto;gap:10px}
 textarea{resize:none;min-height:54px;max-height:160px;padding:12px;border:1px solid #405773;border-radius:12px;background:#0f1823;color:inherit;font:inherit}
 button{border:0;border-radius:11px;padding:0 18px;font:inherit;color:white;background:#2e73c8;cursor:pointer}button.secondary{background:#4a5566}button:disabled{opacity:.55;cursor:wait}
@@ -328,7 +378,7 @@ const messages=document.getElementById('messages');
 const input=document.getElementById('input');
 const form=document.getElementById('form');
 const status=document.getElementById('status');
-function render(items){messages.replaceChildren();if(!items.length){const e=document.createElement('div');e.className='empty';e.textContent='尚无对话消息';messages.append(e);return;}for(const item of items){const e=document.createElement('div');e.className='message';e.textContent=item.text;messages.append(e);}messages.scrollTop=messages.scrollHeight;}
+function render(items){messages.replaceChildren();if(!items.length){const e=document.createElement('div');e.className='empty';e.textContent='尚无对话消息';messages.append(e);return;}for(const item of items){const e=document.createElement('div');e.className='message '+item.role;e.textContent=item.text;messages.append(e);}messages.scrollTop=messages.scrollHeight;}
 async function refresh(){try{const r=await fetch(base+'/api/messages',{cache:'no-store'});if(!r.ok)throw new Error();render((await r.json()).messages);status.textContent='已连接本机服务';}catch{status.textContent='本机服务不可用';}}
 form.addEventListener('submit',async e=>{e.preventDefault();const text=input.value;if(!text)return;const button=form.querySelector('button[type=submit]');button.disabled=true;try{const r=await fetch(base+'/api/messages',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:text});if(!r.ok)throw new Error();input.value='';await refresh();}catch{status.textContent='消息提交失败';}finally{button.disabled=false;input.focus();}});
 input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit();}});
@@ -367,12 +417,51 @@ bool 启动系统浏览器(std::string_view 地址) noexcept {
     }
 }
 
+std::optional<std::uint64_t> 取得下一上行序号(
+    std::string_view 会话标识) noexcept {
+    try {
+        std::lock_guard 锁(共享状态.互斥);
+        if (!共享状态.运行中 || 共享状态.会话标识 != 会话标识
+            || 共享状态.下一上行序号 == 0
+            || 共享状态.下一上行序号
+                > static_cast<std::uint64_t>(
+                    (std::numeric_limits<std::int64_t>::max)())) {
+            return std::nullopt;
+        }
+        return 共享状态.下一上行序号;
+    } catch (...) {
+        return std::nullopt;
+    }
+}
+
+bool 追加交互者消息(
+    std::string_view 会话标识,
+    std::uint64_t 上行序号,
+    std::string UTF8正文) noexcept {
+    try {
+        std::lock_guard 锁(共享状态.互斥);
+        if (!共享状态.运行中 || 共享状态.会话标识 != 会话标识
+            || 共享状态.下一上行序号 != 上行序号
+            || 共享状态.下一页面序号 == 0
+            || 共享状态.下一页面序号
+                > static_cast<std::uint64_t>(
+                    (std::numeric_limits<std::int64_t>::max)())) {
+            return false;
+        }
+        共享状态.消息组.push_back({共享状态.下一页面序号,
+            网页对话消息角色::交互者, std::move(UTF8正文)});
+        ++共享状态.下一页面序号;
+        ++共享状态.下一上行序号;
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
 bool 处理请求(SOCKET 客户端,
     std::string_view 基础路径,
     std::string_view 会话标识,
     const std::string& 页面,
-    std::vector<页面消息>& 消息组,
-    std::uint64_t& 下一序号,
     bool& 请求结束,
     网页对话消息接收函数 消息接收) {
     HTTP请求 请求;
@@ -393,8 +482,16 @@ bool 处理请求(SOCKET 客户端,
         return true;
     }
     if (请求.方法 == "GET" && 请求.目标 == 消息路径) {
+        const auto 读取 = 读取网页对话已显示消息(0);
+        if (读取.状态 != 网页对话外设状态::已完成
+            && 读取.状态 != 网页对话外设状态::无变化) {
+            发送响应(客户端, "503 Service Unavailable",
+                "application/json;charset=utf-8",
+                "{\"available\":false}");
+            return true;
+        }
         发送响应(客户端, "200 OK", "application/json;charset=utf-8",
-            构造消息JSON(消息组));
+            构造消息JSON(读取.消息组));
         return true;
     }
     if (请求.方法 == "POST" && 请求.目标 == 消息路径) {
@@ -403,14 +500,22 @@ bool 处理请求(SOCKET 客户端,
                 "消息必须是非空UTF-8文本");
             return true;
         }
-        if (消息接收 && !消息接收(会话标识, 下一序号, 请求.正文)) {
+        const auto 上行序号 = 取得下一上行序号(会话标识);
+        if (!上行序号
+            || (消息接收
+                && !消息接收(会话标识, *上行序号, 请求.正文))) {
             发送响应(客户端, "503 Service Unavailable",
                 "application/json;charset=utf-8",
                 "{\"accepted\":false,\"retryable\":true}");
             return true;
         }
-        消息组.push_back({下一序号, std::move(请求.正文)});
-        ++下一序号;
+        if (!追加交互者消息(
+                会话标识, *上行序号, std::move(请求.正文))) {
+            发送响应(客户端, "503 Service Unavailable",
+                "application/json;charset=utf-8",
+                "{\"accepted\":false,\"retryable\":true}");
+            return true;
+        }
         发送响应(客户端, "202 Accepted", "application/json;charset=utf-8",
             "{\"accepted\":true}");
         return true;
@@ -430,6 +535,90 @@ bool 处理请求(SOCKET 客户端,
 bool 网页对话宿主结果::成功() const noexcept {
     return 状态 == 网页对话宿主状态::用户结束
         || 状态 == 网页对话宿主状态::停止信号结束;
+}
+
+网页对话消息读取结果 读取网页对话已显示消息(
+    std::uint64_t 已读页面序号) noexcept {
+    网页对话消息读取结果 结果;
+    try {
+        std::lock_guard 锁(共享状态.互斥);
+        if (!共享状态.运行中) {
+            结果.状态 = 网页对话外设状态::宿主未运行;
+            return 结果;
+        }
+        结果.最新页面序号 = 共享状态.下一页面序号 - 1;
+        if (已读页面序号 > 结果.最新页面序号) {
+            结果.状态 = 网页对话外设状态::入口拒绝;
+            return 结果;
+        }
+        for (const auto& 消息 : 共享状态.消息组) {
+            if (消息.页面序号 > 已读页面序号) 结果.消息组.push_back(消息);
+        }
+        结果.状态 = 结果.消息组.empty()
+            ? 网页对话外设状态::无变化
+            : 网页对话外设状态::已完成;
+        return 结果;
+    } catch (const std::bad_alloc&) {
+        结果.消息组.clear();
+        结果.状态 = 网页对话外设状态::资源失败;
+    } catch (...) {
+        结果.消息组.clear();
+        结果.状态 = 网页对话外设状态::内部错误;
+    }
+    return 结果;
+}
+
+网页对话外设操作结果 设置网页对话待提交文本(
+    std::string_view UTF8正文) noexcept {
+    if (UTF8正文.empty() || UTF8正文.size() > 最大消息字节数
+        || !是有效UTF8(UTF8正文)) {
+        return {网页对话外设状态::入口拒绝, std::nullopt};
+    }
+    try {
+        std::lock_guard 锁(共享状态.互斥);
+        if (!共享状态.运行中) {
+            return {网页对话外设状态::宿主未运行, std::nullopt};
+        }
+        if (共享状态.待提交文本
+            && *共享状态.待提交文本 == UTF8正文) {
+            return {网页对话外设状态::无变化, std::nullopt};
+        }
+        共享状态.待提交文本 = std::string(UTF8正文);
+        return {网页对话外设状态::已完成, std::nullopt};
+    } catch (const std::bad_alloc&) {
+        return {网页对话外设状态::资源失败, std::nullopt};
+    } catch (...) {
+        return {网页对话外设状态::内部错误, std::nullopt};
+    }
+}
+
+网页对话外设操作结果 提交网页对话待提交文本() noexcept {
+    try {
+        std::lock_guard 锁(共享状态.互斥);
+        if (!共享状态.运行中) {
+            return {网页对话外设状态::宿主未运行, std::nullopt};
+        }
+        if (!共享状态.待提交文本 || 共享状态.待提交文本->empty()) {
+            return {网页对话外设状态::入口拒绝, std::nullopt};
+        }
+        if (共享状态.下一页面序号 == 0
+            || 共享状态.下一页面序号
+                > static_cast<std::uint64_t>(
+                    (std::numeric_limits<std::int64_t>::max)())) {
+            return {网页对话外设状态::内部错误, std::nullopt};
+        }
+        const auto 页面序号 = 共享状态.下一页面序号;
+        共享状态.消息组.push_back({页面序号,
+            网页对话消息角色::自我,
+            std::move(*共享状态.待提交文本)});
+        共享状态.待提交文本.reset();
+        ++共享状态.下一页面序号;
+        return {网页对话外设状态::已完成, 页面序号};
+    } catch (const std::bad_alloc&) {
+        return {网页对话外设状态::资源失败, std::nullopt};
+    } catch (...) {
+        return {网页对话外设状态::内部错误, std::nullopt};
+    }
 }
 
 网页对话宿主结果 运行本地网页对话宿主(
@@ -466,12 +655,12 @@ bool 网页对话宿主结果::成功() const noexcept {
         const std::string 页面 = 构造页面(基础路径);
         const std::string 浏览器地址 = "http://127.0.0.1:"
             + std::to_string(ntohs(地址.sin_port)) + 基础路径;
+        网页对话会话租约 会话;
+        if (!会话.开始(令牌)) return {网页对话宿主状态::运行失败};
         if (!启动系统浏览器(浏览器地址)) {
             return {网页对话宿主状态::浏览器启动失败};
         }
 
-        std::vector<页面消息> 消息组;
-        std::uint64_t 下一序号 = 1;
         bool 请求结束 = false;
         while (停止请求 == 0 && !请求结束) {
             fd_set 可读{};
@@ -494,8 +683,8 @@ bool 网页对话宿主结果::成功() const noexcept {
                 reinterpret_cast<const char*>(&超时毫秒), sizeof(超时毫秒));
             (void)setsockopt(客户端.取得(), SOL_SOCKET, SO_SNDTIMEO,
                 reinterpret_cast<const char*>(&超时毫秒), sizeof(超时毫秒));
-            (void)处理请求(客户端.取得(), 基础路径, 令牌, 页面, 消息组,
-                下一序号, 请求结束, 消息接收);
+            (void)处理请求(客户端.取得(), 基础路径, 令牌, 页面,
+                请求结束, 消息接收);
         }
         return {请求结束
             ? 网页对话宿主状态::用户结束

@@ -36,6 +36,8 @@ enum class 普通应用装配状态 : std::uint8_t {
     自我治理基础初始化失败,
     自我初始化失败,
     本能函数登记失败,
+    交互窗口初始化失败,
+    本能函数端口装配失败,
     线程绑定失败,
     消息配置失败,
     资源失败,
@@ -49,6 +51,12 @@ struct 普通应用装配结果 final {
     std::optional<新自我线程初始化结果> 自我;
     std::optional<新自我线程操作结果> 任务管理绑定;
     std::optional<新自我线程操作结果> 消息配置;
+    std::optional<稳定编码> 交互窗口节点;
+    std::optional<稳定编码> 交互窗口消息数量特征节点;
+    std::optional<稳定编码> 交互窗口最新消息特征节点;
+    std::optional<稳定编码> 是否收到消息二次特征类型根;
+    std::optional<稳定编码> 未收到消息结果概念;
+    std::optional<稳定编码> 已收到消息结果概念;
 
     bool 成功() const noexcept;
 };
@@ -97,6 +105,8 @@ struct 普通应用网页消息处理结果 final {
     std::optional<稳定编码> 交互者存在节点;
     std::optional<稳定编码> 当前交互者特征节点;
     std::optional<稳定编码> 连接需求节点;
+    std::optional<稳定编码> 交互窗口消息数量特征节点;
+    std::optional<稳定编码> 是否收到消息结果概念;
 
     bool 成功() const noexcept;
 };
