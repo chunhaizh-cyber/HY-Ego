@@ -369,10 +369,12 @@ bool 启动系统浏览器(std::string_view 地址) noexcept {
 
 bool 处理请求(SOCKET 客户端,
     std::string_view 基础路径,
+    std::string_view 会话标识,
     const std::string& 页面,
     std::vector<页面消息>& 消息组,
     std::uint64_t& 下一序号,
-    bool& 请求结束) {
+    bool& 请求结束,
+    网页对话消息接收函数 消息接收) {
     HTTP请求 请求;
     const auto 读取状态 = 读取请求(客户端, 请求);
     if (读取状态 == 请求读取状态::请求过大) {
@@ -401,7 +403,14 @@ bool 处理请求(SOCKET 客户端,
                 "消息必须是非空UTF-8文本");
             return true;
         }
-        消息组.push_back({下一序号++, std::move(请求.正文)});
+        if (消息接收 && !消息接收(会话标识, 下一序号, 请求.正文)) {
+            发送响应(客户端, "503 Service Unavailable",
+                "application/json;charset=utf-8",
+                "{\"accepted\":false,\"retryable\":true}");
+            return true;
+        }
+        消息组.push_back({下一序号, std::move(请求.正文)});
+        ++下一序号;
         发送响应(客户端, "202 Accepted", "application/json;charset=utf-8",
             "{\"accepted\":true}");
         return true;
@@ -424,7 +433,8 @@ bool 网页对话宿主结果::成功() const noexcept {
 }
 
 网页对话宿主结果 运行本地网页对话宿主(
-    const volatile std::sig_atomic_t& 停止请求) noexcept {
+    const volatile std::sig_atomic_t& 停止请求,
+    网页对话消息接收函数 消息接收) noexcept {
     try {
         网络运行租约 网络;
         if (!网络.初始化()) return {网页对话宿主状态::网络初始化失败};
@@ -484,8 +494,8 @@ bool 网页对话宿主结果::成功() const noexcept {
                 reinterpret_cast<const char*>(&超时毫秒), sizeof(超时毫秒));
             (void)setsockopt(客户端.取得(), SOL_SOCKET, SO_SNDTIMEO,
                 reinterpret_cast<const char*>(&超时毫秒), sizeof(超时毫秒));
-            (void)处理请求(客户端.取得(), 基础路径, 页面, 消息组,
-                下一序号, 请求结束);
+            (void)处理请求(客户端.取得(), 基础路径, 令牌, 页面, 消息组,
+                下一序号, 请求结束, 消息接收);
         }
         return {请求结束
             ? 网页对话宿主状态::用户结束
