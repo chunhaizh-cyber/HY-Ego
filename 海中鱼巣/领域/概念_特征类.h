@@ -11,6 +11,8 @@
 
 namespace 海中鱼巣 {
 
+class 概念_名称关系类;
+
 // I64标量直接保存在特征节点中，其余材料由新_特征值类保存。
 enum class 特征概念材料物理类型 : std::int64_t {
     I64标量 = 1,
@@ -284,6 +286,13 @@ public:
         const 新_特征值类& 特征值服务) const noexcept;
 
 private:
+    friend class 概念_名称关系类;
+
+    bool 绑定名称关系(
+        稳定编码 概念节点, 稳定编码 名称关系节点) noexcept;
+    bool 解除名称关系(
+        稳定编码 概念节点, 稳定编码 名称关系节点) noexcept;
+
     const 特征存在引用读取接口* 存在引用读取接口_ = nullptr;
 };
 

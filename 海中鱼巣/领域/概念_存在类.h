@@ -9,6 +9,8 @@
 
 namespace 海中鱼巣 {
 
+class 概念_名称关系类;
+
 enum class 存在概念种类 : std::uint8_t {
     专属 = 1,
     抽象 = 2
@@ -26,6 +28,7 @@ struct 存在概念信息 final {
     存在概念种类 种类 = 存在概念种类::专属;
     std::optional<稳定编码> 对应存在节点;
     std::vector<存在概念特征项> 特征组;
+    std::vector<稳定编码> 名称关系;
     std::vector<稳定编码> 上位概念组;
     std::vector<稳定编码> 下位概念组;
     friend bool operator==(const 存在概念信息&,
@@ -104,6 +107,13 @@ public:
         稳定编码 概念节点) const noexcept;
 
 private:
+    friend class 概念_名称关系类;
+
+    bool 绑定名称关系(
+        稳定编码 概念节点, 稳定编码 名称关系节点) noexcept;
+    bool 解除名称关系(
+        稳定编码 概念节点, 稳定编码 名称关系节点) noexcept;
+
     概念_特征类& 特征概念服务_;
 };
 

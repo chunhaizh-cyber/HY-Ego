@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <string_view>
 
 namespace 海中鱼巣 {
@@ -25,6 +26,8 @@ struct 普通应用配置 final {
     // 双根权重来自具名运行配置；普通应用默认让两根等权。
     std::int64_t 安全根初始权重 = 1;
     std::int64_t 服务根初始权重 = 1;
+    std::string 第一权限人登录名 = "zch2005";
+    std::string 第一权限人姓名 = "周春海";
 
     friend bool operator==(const 普通应用配置&, const 普通应用配置&) = default;
 };
@@ -33,6 +36,7 @@ enum class 普通应用装配状态 : std::uint8_t {
     已装配 = 1,
     入口拒绝,
     世界树初始化失败,
+    第一权限人初始化失败,
     自我治理基础初始化失败,
     自我初始化失败,
     本能函数登记失败,
@@ -47,6 +51,11 @@ enum class 普通应用装配状态 : std::uint8_t {
 struct 普通应用装配结果 final {
     普通应用装配状态 状态 = 普通应用装配状态::入口拒绝;
     std::optional<新世界初始化结果> 世界树;
+    std::optional<稳定编码> 第一权限人存在节点;
+    std::optional<稳定编码> 第一权限人专属存在概念节点;
+    std::optional<稳定编码> 登录名特征概念节点;
+    std::optional<稳定编码> 姓名特征概念节点;
+    std::optional<稳定编码> 权限角色特征概念节点;
     std::optional<新自我治理基础结果> 自我治理基础;
     std::optional<新自我线程初始化结果> 自我;
     std::optional<新自我线程操作结果> 任务管理绑定;

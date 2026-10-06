@@ -547,6 +547,13 @@ enum class 零引用概念清理结果 : std::uint8_t {
         概念节点, 基础外部关系类型::父子);
     if (!子关系.empty()) return 零引用概念清理结果::无须删除;
 
+    // 名称关系节点会反向引用本概念。只要名称仍存在，概念就仍是
+    // 自然语言可召回的正式概念，不能在实例引用归零时物理删除。
+    if (!全局基础数据集.查询字段(
+        概念节点, 名称关系字段).empty()) {
+        return 零引用概念清理结果::无须删除;
+    }
+
     const auto 父关系 = 全局基础数据集.查询目标关系(
         概念节点, 基础外部关系类型::父子);
     if (父关系.size() != 1) return 零引用概念清理结果::失败;
@@ -1499,6 +1506,63 @@ bool 概念_特征类::减少当前实例引用(
         (void)全局基础数据集.修改字段值(
             字段组.front().编码, 基础值{基础原始值{*当前数量}});
         return false;
+    } catch (...) {
+        return false;
+    }
+}
+
+bool 概念_特征类::绑定名称关系(
+    稳定编码 概念节点, 稳定编码 名称关系节点) noexcept {
+    try {
+        std::lock_guard 锁(特征概念树互斥);
+        if (!结构仍存在() || !是特征概念节点(概念节点)
+            || !节点仍存在(名称关系节点)) {
+            return false;
+        }
+        const auto 字段组 = 全局基础数据集.查询字段(
+            概念节点, 名称关系字段);
+        std::size_t 命中数 = 0;
+        for (const auto& 字段 : 字段组) {
+            const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
+            if (!目标) return false;
+            if (*目标 == 名称关系节点) ++命中数;
+        }
+        if (命中数 == 1) return true;
+        if (命中数 != 0) return false;
+        const auto 新字段 = 全局基础数据集.添加字段节点(
+            概念节点, 名称关系字段, 名称关系节点);
+        if (!有效(新字段)) return false;
+        const auto 读回 = 全局基础数据集.查询字段(
+            概念节点, 名称关系字段);
+        const auto 读回命中 = std::count_if(
+            读回.begin(), 读回.end(), [&](const auto& 字段) {
+                const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
+                return 目标 && *目标 == 名称关系节点;
+            });
+        if (读回命中 == 1) return true;
+        (void)全局基础数据集.删除字段(新字段);
+        return false;
+    } catch (...) {
+        return false;
+    }
+}
+
+bool 概念_特征类::解除名称关系(
+    稳定编码 概念节点, 稳定编码 名称关系节点) noexcept {
+    try {
+        std::lock_guard 锁(特征概念树互斥);
+        if (!结构仍存在() || !是特征概念节点(概念节点)) return false;
+        const auto 字段组 = 全局基础数据集.查询字段(
+            概念节点, 名称关系字段);
+        std::optional<稳定编码> 待删字段;
+        for (const auto& 字段 : 字段组) {
+            const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
+            if (!目标) return false;
+            if (*目标 != 名称关系节点) continue;
+            if (待删字段) return false;
+            待删字段 = 字段.编码;
+        }
+        return 待删字段 && 全局基础数据集.删除字段(*待删字段);
     } catch (...) {
         return false;
     }

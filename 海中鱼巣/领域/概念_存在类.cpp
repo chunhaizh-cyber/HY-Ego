@@ -20,6 +20,7 @@ std::recursive_mutex 存在概念图互斥;
 稳定编码 特征项节点类型{};
 稳定编码 特征类型概念字段{};
 稳定编码 具体特征概念字段{};
+稳定编码 名称关系字段{};
 
 constexpr std::int64_t 组织归属关系角色 = 1;
 constexpr std::int64_t 概念上下位关系角色 = 2;
@@ -37,7 +38,8 @@ bool 结构已初始化() noexcept {
         && 有效(特征项字段)
         && 有效(特征项节点类型)
         && 有效(特征类型概念字段)
-        && 有效(具体特征概念字段);
+        && 有效(具体特征概念字段)
+        && 有效(名称关系字段);
 }
 
 bool 结构仍存在() noexcept {
@@ -50,7 +52,8 @@ bool 结构仍存在() noexcept {
         && 节点仍存在(特征项字段)
         && 节点仍存在(特征项节点类型)
         && 节点仍存在(特征类型概念字段)
-        && 节点仍存在(具体特征概念字段);
+        && 节点仍存在(具体特征概念字段)
+        && 节点仍存在(名称关系字段);
 }
 
 std::optional<稳定编码> 读取唯一节点字段(
@@ -323,7 +326,8 @@ bool 概念_存在类::初始化() noexcept {
             && 建立(特征项字段)
             && 建立(特征项节点类型)
             && 建立(特征类型概念字段)
-            && 建立(具体特征概念字段);
+            && 建立(具体特征概念字段)
+            && 建立(名称关系字段);
     } catch (...) {
         return false;
     }
@@ -465,7 +469,9 @@ bool 概念_存在类::撤销未绑定专属存在概念(
         std::lock_guard 锁(存在概念图互斥);
         if (!是专属存在概念节点(专属概念节点)
             || !查询概念关系(专属概念节点, true).empty()
-            || !查询概念关系(专属概念节点, false).empty()) {
+            || !查询概念关系(专属概念节点, false).empty()
+            || !全局基础数据集.查询字段(
+                专属概念节点, 名称关系字段).empty()) {
             return false;
         }
         const auto 对应存在 = 读取唯一节点字段(
@@ -656,11 +662,79 @@ std::optional<存在概念信息> 概念_存在类::获取存在概念(
             return std::nullopt;
         }
         结果.特征组 = *特征组;
+        for (const auto& 字段 : 全局基础数据集.查询字段(
+            概念节点, 名称关系字段)) {
+            const auto* 关系节点 = std::get_if<稳定编码>(&字段.内容);
+            if (!关系节点 || !节点仍存在(*关系节点)) return std::nullopt;
+            结果.名称关系.push_back(*关系节点);
+        }
+        排序去重(结果.名称关系);
+        if (结果.名称关系.size() != 全局基础数据集.查询字段(
+            概念节点, 名称关系字段).size()) {
+            return std::nullopt;
+        }
         结果.上位概念组 = 查询上位存在概念(概念节点);
         结果.下位概念组 = 查询下位存在概念(概念节点);
         return 结果;
     } catch (...) {
         return std::nullopt;
+    }
+}
+
+bool 概念_存在类::绑定名称关系(
+    稳定编码 概念节点, 稳定编码 名称关系节点) noexcept {
+    try {
+        std::lock_guard 锁(存在概念图互斥);
+        if (!结构仍存在() || !是存在概念节点(概念节点)
+            || !节点仍存在(名称关系节点)) {
+            return false;
+        }
+        const auto 字段组 = 全局基础数据集.查询字段(
+            概念节点, 名称关系字段);
+        std::size_t 命中数 = 0;
+        for (const auto& 字段 : 字段组) {
+            const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
+            if (!目标) return false;
+            if (*目标 == 名称关系节点) ++命中数;
+        }
+        if (命中数 == 1) return true;
+        if (命中数 != 0) return false;
+        const auto 新字段 = 全局基础数据集.添加字段节点(
+            概念节点, 名称关系字段, 名称关系节点);
+        if (!有效(新字段)) return false;
+        const auto 读回 = 全局基础数据集.查询字段(
+            概念节点, 名称关系字段);
+        const auto 读回命中 = std::count_if(
+            读回.begin(), 读回.end(), [&](const auto& 字段) {
+                const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
+                return 目标 && *目标 == 名称关系节点;
+            });
+        if (读回命中 == 1) return true;
+        (void)全局基础数据集.删除字段(新字段);
+        return false;
+    } catch (...) {
+        return false;
+    }
+}
+
+bool 概念_存在类::解除名称关系(
+    稳定编码 概念节点, 稳定编码 名称关系节点) noexcept {
+    try {
+        std::lock_guard 锁(存在概念图互斥);
+        if (!结构仍存在() || !是存在概念节点(概念节点)) return false;
+        const auto 字段组 = 全局基础数据集.查询字段(
+            概念节点, 名称关系字段);
+        std::optional<稳定编码> 待删字段;
+        for (const auto& 字段 : 字段组) {
+            const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
+            if (!目标) return false;
+            if (*目标 != 名称关系节点) continue;
+            if (待删字段) return false;
+            待删字段 = 字段.编码;
+        }
+        return 待删字段 && 全局基础数据集.删除字段(*待删字段);
+    } catch (...) {
+        return false;
     }
 }
 
