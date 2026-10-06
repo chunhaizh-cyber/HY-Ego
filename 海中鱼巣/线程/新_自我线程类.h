@@ -121,6 +121,10 @@ struct 新自我线程初始化请求 final {
     新存在建立请求 自我建立请求;
     新状态强时间 初始状态时间;
     新自我本能双根定义 本能双根;
+    // “服务对象”是自我的存在引用特征；其目标值域为“人类”概念，
+    // 冷启动默认值为已经建立的第一权限人存在。
+    稳定编码 人类存在概念节点;
+    稳定编码 默认服务对象存在节点;
 
     bool 完整() const noexcept;
     friend bool operator==(
@@ -161,7 +165,8 @@ enum class 新自我线程操作状态 : std::uint8_t {
     需求树初始化失败 = 18,
     方法根初始化失败 = 19,
     消息配置不合法 = 20,
-    服务一级需求初始化失败 = 21
+    服务一级需求初始化失败 = 21,
+    服务对象需求初始化失败 = 22
 };
 
 struct 新自我消息运行配置 final {
@@ -246,12 +251,18 @@ struct 新自我线程初始化结果 final {
     std::optional<新场景成员建立结果> 自我建立结果;
     std::optional<新自我本能双根初始化结果> 本能双根结果;
     std::optional<新需求建立结果> 完成服务需求建立结果;
+    std::optional<新需求建立结果> 需要服务对象需求建立结果;
     std::optional<稳定编码> 自我所在场景;
     std::optional<稳定编码> 自我存在;
     std::optional<稳定编码> 需求树根;
     std::optional<稳定编码> 安全根需求;
     std::optional<稳定编码> 服务根需求;
     std::optional<稳定编码> 完成服务需求;
+    std::optional<稳定编码> 服务对象特征类型根;
+    std::optional<稳定编码> 服务对象特征节点;
+    std::optional<稳定编码> 服务对象比较类型根;
+    std::optional<稳定编码> 服务对象目标比较关系;
+    std::optional<稳定编码> 需要服务对象需求;
     std::optional<稳定编码> 方法组织根;
 
     bool 成功() const noexcept;
@@ -271,6 +282,8 @@ struct 新自我线程快照 final {
     std::optional<稳定编码> 安全根需求;
     std::optional<稳定编码> 服务根需求;
     std::optional<稳定编码> 完成服务需求;
+    std::optional<稳定编码> 服务对象特征节点;
+    std::optional<稳定编码> 需要服务对象需求;
     std::optional<稳定编码> 方法组织根;
     bool 线程已进入 = false;
     bool 停止已请求 = false;
@@ -297,7 +310,8 @@ public:
     新_自我线程类& operator=(新_自我线程类&&) = delete;
 
     // 本函数在调用线程中依次完成世界树、自我所在场景、唯一自我存在、
-    // 需求双根、服务一级需求“完成服务需求”和方法根的建立及读回；
+    // 需求双根、服务一级需求“完成服务需求”、其子需求“自我需要服务对象”
+    // 和方法根的建立及读回；
     // 不会在内部创建 OS 线程。
     新自我线程初始化结果 初始化(
         const 新自我线程初始化请求& 请求) noexcept;

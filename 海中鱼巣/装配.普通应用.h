@@ -45,7 +45,8 @@ enum class 普通应用装配状态 : std::uint8_t {
     线程绑定失败,
     消息配置失败,
     资源失败,
-    内部不一致
+    内部不一致,
+    人类概念初始化失败
 };
 
 struct 普通应用装配结果 final {
@@ -53,6 +54,7 @@ struct 普通应用装配结果 final {
     std::optional<新世界初始化结果> 世界树;
     std::optional<稳定编码> 第一权限人存在节点;
     std::optional<稳定编码> 第一权限人专属存在概念节点;
+    std::optional<稳定编码> 人类存在概念节点;
     std::optional<稳定编码> 登录名特征概念节点;
     std::optional<稳定编码> 姓名特征概念节点;
     std::optional<稳定编码> 权限角色特征概念节点;
