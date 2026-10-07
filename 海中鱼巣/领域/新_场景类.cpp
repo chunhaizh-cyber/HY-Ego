@@ -9,8 +9,6 @@
 
 namespace 海中鱼巣 {
 
-稳定编码 场景树根节点{};
-
 namespace {
 
 std::recursive_mutex 新场景互斥;
@@ -475,10 +473,12 @@ struct 相对坐标项形成结果 final {
 } // namespace
 
 新_场景类::新_场景类(
+    稳定编码& 场景树根节点,
     新_存在类& 存在服务,
     新_状态类& 状态服务,
     新_动态类& 动态服务) noexcept
-    : 存在服务_(存在服务),
+    : 场景树根节点_(场景树根节点),
+      存在服务_(存在服务),
       状态服务_(状态服务),
       动态服务_(动态服务) {}
 
@@ -504,13 +504,24 @@ bool 新_场景类::初始化() noexcept {
     }
 }
 
+std::optional<稳定编码> 新_场景类::获取根场景() const noexcept {
+    try {
+        std::lock_guard 锁(新场景互斥);
+        return 有效(场景树根节点_) && 是场景节点(场景树根节点_)
+            ? std::optional<稳定编码>{场景树根节点_}
+            : std::nullopt;
+    } catch (...) {
+        return std::nullopt;
+    }
+}
+
 新场景建立结果 新_场景类::建立根场景() noexcept {
     新场景建立结果 结果;
     try {
         std::lock_guard 锁(新场景互斥);
         if (!结构仍存在()) return 结果;
-        if (有效(场景树根节点)) {
-            const auto 信息 = 获取场景(场景树根节点);
+        if (有效(场景树根节点_)) {
+            const auto 信息 = 获取场景(场景树根节点_);
             if (!信息 || 信息->父场景节点) {
                 结果.状态 = 新场景操作状态::结构不一致;
                 return 结果;
@@ -542,7 +553,7 @@ bool 新_场景类::初始化() noexcept {
             结果.状态 = 映射存在失败(存在结果.状态);
             return 结果;
         }
-        场景树根节点 = 节点;
+        场景树根节点_ = 节点;
         结果.状态 = 新场景操作状态::已完成;
         结果.场景节点 = 节点;
         结果.专属存在概念节点 = 存在结果.专属存在概念节点;
@@ -611,7 +622,7 @@ bool 新_场景类::初始化() noexcept {
         if (!是场景节点(新父场景节点)) {
             return 新场景操作状态::父场景不合法;
         }
-        if (场景节点 == 场景树根节点) {
+        if (场景节点 == 场景树根节点_) {
             return 新场景操作状态::根场景不可操作;
         }
         if (场景节点 == 新父场景节点
@@ -646,7 +657,7 @@ bool 新_场景类::初始化() noexcept {
         if (!是场景节点(场景节点)) {
             return 新场景操作状态::场景不存在;
         }
-        if (场景节点 == 场景树根节点) {
+        if (场景节点 == 场景树根节点_) {
             return 新场景操作状态::根场景不可操作;
         }
         const auto 子场景关系组 = 查询子场景关系(场景节点);
@@ -704,8 +715,8 @@ std::optional<新场景信息> 新_场景类::获取场景(
         const auto 存在信息 = 存在服务_.获取存在(场景节点);
         if (!存在信息) return std::nullopt;
         const auto 父关系 = 查询父场景关系(场景节点);
-        if ((场景节点 == 场景树根节点 && !父关系.empty())
-            || (场景节点 != 场景树根节点 && 父关系.size() != 1)) {
+        if ((场景节点 == 场景树根节点_ && !父关系.empty())
+            || (场景节点 != 场景树根节点_ && 父关系.size() != 1)) {
             return std::nullopt;
         }
         新场景信息 结果;
@@ -727,10 +738,28 @@ std::optional<新场景信息> 新_场景类::获取场景(
 bool 新_场景类::是场景节点(稳定编码 节点) const noexcept {
     try {
         std::lock_guard 锁(新场景互斥);
-        if (!结构仍存在() || !节点仍存在(节点)
-            || !存在服务_.是存在节点(节点)) return false;
-        const auto 类型 = 读取唯一节点字段(节点, 场景身份字段);
-        return 类型 && *类型 == 场景节点类型;
+        const auto 是场景结构节点 = [&](稳定编码 候选) {
+            if (!结构仍存在() || !节点仍存在(候选)
+                || !存在服务_.是存在节点(候选)) return false;
+            const auto 类型 = 读取唯一节点字段(候选, 场景身份字段);
+            return 类型 && *类型 == 场景节点类型;
+        };
+        if (!有效(场景树根节点_)
+            || !是场景结构节点(场景树根节点_)
+            || !是场景结构节点(节点)) return false;
+
+        std::set<std::uint64_t> 已访问;
+        auto 当前 = 节点;
+        while (当前 != 场景树根节点_) {
+            if (!已访问.insert(当前.值).second) return false;
+            const auto 父关系 = 查询父场景关系(当前);
+            if (父关系.size() != 1
+                || !是场景结构节点(父关系.front().源节点)) {
+                return false;
+            }
+            当前 = 父关系.front().源节点;
+        }
+        return 查询父场景关系(场景树根节点_).empty();
     } catch (...) {
         return false;
     }
@@ -903,7 +932,7 @@ std::optional<稳定编码> 新_场景类::查询父场景(
         std::lock_guard 锁(新场景互斥);
         if (!是场景节点(场景节点)) return std::nullopt;
         const auto 关系组 = 查询父场景关系(场景节点);
-        if (关系组.empty() && 场景节点 == 场景树根节点) return std::nullopt;
+        if (关系组.empty() && 场景节点 == 场景树根节点_) return std::nullopt;
         return 关系组.size() == 1 && 是场景节点(关系组.front().源节点)
             ? std::optional<稳定编码>{关系组.front().源节点}
             : std::nullopt;
