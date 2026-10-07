@@ -74,6 +74,9 @@ struct 普通应用装配结果 final {
     std::optional<稳定编码> 未收到消息结果概念;
     std::optional<稳定编码> 已收到消息结果概念;
     std::optional<稳定编码> 语言语义差异二次特征类型根;
+    std::optional<稳定编码> 无法确认结果概念;
+    std::optional<稳定编码> 无法确认词条;
+    std::optional<稳定编码> 无法确认名称关系;
     std::optional<稳定编码> 确认结果概念;
     std::optional<稳定编码> 确认词条;
     std::optional<稳定编码> 确认名称关系;

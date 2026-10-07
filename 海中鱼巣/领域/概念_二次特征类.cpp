@@ -197,7 +197,8 @@ bool I64值域位于相似度范围(const 特征概念值域& 值域) {
             && !输入定义组[1].特征类型概念节点
             && !定义.输出特征定义.单位
             && 值域 && 值域->size() == 1
-            && 值域->front().下界 == 0
+            && 值域->front().下界
+                == (std::numeric_limits<std::int64_t>::min)()
             && 值域->front().上界
                 == (std::numeric_limits<std::int64_t>::max)()
             ? 二次特征概念操作状态::已找到
@@ -708,7 +709,8 @@ std::optional<稳定编码> 概念_二次特征类::获取纳秒单位节点() c
             输出.值域 = I64区间组{{0, 10000}};
         } else if (算法 == 二次特征算法::语言语义结构差异) {
             输出.值域 = I64区间组{{
-                0, (std::numeric_limits<std::int64_t>::max)()}};
+                (std::numeric_limits<std::int64_t>::min)(),
+                (std::numeric_limits<std::int64_t>::max)()}};
         } else {
             输出.值域 = I64区间组{{
                 (std::numeric_limits<std::int64_t>::min)(),
