@@ -4,7 +4,10 @@
 #include "概念_特征类.h"
 
 #include <algorithm>
+#include <functional>
+#include <limits>
 #include <mutex>
+#include <unordered_set>
 
 namespace 海中鱼巣 {
 
@@ -105,6 +108,109 @@ std::optional<新自然语言概念实例信息> 读取概念实例(
         结构->概念节点,
         是存在概念 ? 新自然语言概念实例种类::存在概念
                      : 新自然语言概念实例种类::特征概念};
+}
+
+std::optional<std::vector<新自然语言概念实例信息>> 读取场景全部概念实例(
+    稳定编码 场景节点,
+    const 概念_特征类& 特征概念服务,
+    const 概念_存在类& 存在概念服务) {
+    if (!读取场景(场景节点)) return std::nullopt;
+    std::vector<新自然语言概念实例信息> 结果;
+    for (const auto& 关系 : 全局基础数据集.查询源关系(
+        场景节点, 基础外部关系类型::父子)) {
+        if (关系.角色或顺序 != 0) return std::nullopt;
+        const auto 实例 = 读取概念实例(
+            关系.目标节点, 特征概念服务, 存在概念服务);
+        if (!实例 || 实例->所属场景节点 != 场景节点) {
+            return std::nullopt;
+        }
+        结果.push_back(*实例);
+    }
+    return 结果;
+}
+
+enum class 概念配对检查状态 : std::uint8_t {
+    可配对 = 1,
+    不可配对 = 2,
+    结构不一致 = 3,
+    资源失败 = 4
+};
+
+std::optional<bool> 是上位存在概念(
+    稳定编码 上位概念,
+    稳定编码 下位概念,
+    const 概念_存在类& 存在概念服务) {
+    std::vector<稳定编码> 待查{下位概念};
+    std::unordered_set<std::uint64_t> 已查;
+    while (!待查.empty()) {
+        const auto 当前 = 待查.back();
+        待查.pop_back();
+        if (!已查.insert(当前.值).second) continue;
+        const auto 信息 = 存在概念服务.获取存在概念(当前);
+        if (!信息) return std::nullopt;
+        for (const auto 父概念 : 信息->上位概念组) {
+            if (父概念 == 上位概念) return true;
+            待查.push_back(父概念);
+        }
+    }
+    return false;
+}
+
+概念配对检查状态 检查概念可配对(
+    const 新自然语言概念实例信息& 左,
+    const 新自然语言概念实例信息& 右,
+    const 概念_特征类& 特征概念服务,
+    const 概念_存在类& 存在概念服务) {
+    if (左.种类 != 右.种类) return 概念配对检查状态::不可配对;
+    if (左.概念节点 == 右.概念节点) return 概念配对检查状态::可配对;
+    if (左.种类 == 新自然语言概念实例种类::特征概念) {
+        const auto 关系 = 特征概念服务.比较单特征概念(
+            左.概念节点, 右.概念节点);
+        if (关系.状态 == 特征概念规则状态::资源失败) {
+            return 概念配对检查状态::资源失败;
+        }
+        if (关系.状态 != 特征概念规则状态::已完成 || !关系.关系) {
+            return 概念配对检查状态::结构不一致;
+        }
+        return *关系.关系 == 单特征概念关系::左为上位
+                || *关系.关系 == 单特征概念关系::右为上位
+            ? 概念配对检查状态::可配对
+            : 概念配对检查状态::不可配对;
+    }
+
+    if (!存在概念服务.是存在概念节点(左.概念节点)
+        || !存在概念服务.是存在概念节点(右.概念节点)) {
+        return 概念配对检查状态::结构不一致;
+    }
+    const auto 左包含右 = 是上位存在概念(
+        左.概念节点, 右.概念节点, 存在概念服务);
+    const auto 右包含左 = 是上位存在概念(
+        右.概念节点, 左.概念节点, 存在概念服务);
+    if (!左包含右 || !右包含左) {
+        return 概念配对检查状态::结构不一致;
+    }
+    return *左包含右 || *右包含左
+        ? 概念配对检查状态::可配对
+        : 概念配对检查状态::不可配对;
+}
+
+std::int64_t 饱和场景差异(
+    std::size_t 左数量,
+    std::size_t 右数量,
+    std::size_t 相同配对数量,
+    std::size_t 上下位配对数量) noexcept {
+    const auto 最大 = static_cast<std::uint64_t>(
+        (std::numeric_limits<std::int64_t>::max)());
+    const auto 左未配对 = 左数量 - 相同配对数量 - 上下位配对数量;
+    const auto 右未配对 = 右数量 - 相同配对数量 - 上下位配对数量;
+    std::uint64_t 差异 = static_cast<std::uint64_t>(上下位配对数量);
+    const auto 增加 = [&差异, 最大](std::size_t 数量) noexcept {
+        const auto 值 = static_cast<std::uint64_t>(数量);
+        差异 = 值 > 最大 - 差异 ? 最大 : 差异 + 值;
+    };
+    增加(左未配对);
+    增加(右未配对);
+    return static_cast<std::int64_t>(差异);
 }
 
 bool 结构仍存在() {
@@ -497,6 +603,113 @@ bool 新_自然语言世界树类::是自然语言概念实例节点(
                 节点, 特征概念服务_, 存在概念服务_).has_value();
     } catch (...) {
         return false;
+    }
+}
+
+新自然语言场景结构比较结果 新_自然语言世界树类::比较场景结构(
+    稳定编码 左场景节点,
+    稳定编码 右场景节点) const noexcept {
+    新自然语言场景结构比较结果 结果;
+    try {
+        std::lock_guard 锁(自然语言世界树互斥);
+        if (!结构句柄完整() || !节点仍存在(自然语言世界树根节点)) {
+            结果.状态 = 新自然语言场景结构比较状态::未初始化;
+            return 结果;
+        }
+        if (!结构仍存在()) {
+            结果.状态 = 新自然语言场景结构比较状态::结构不一致;
+            return 结果;
+        }
+        if (!读取场景(左场景节点) || !读取场景(右场景节点)) {
+            结果.状态 = 新自然语言场景结构比较状态::场景不存在;
+            return 结果;
+        }
+        const auto 左实例组 = 读取场景全部概念实例(
+            左场景节点, 特征概念服务_, 存在概念服务_);
+        const auto 右实例组 = 读取场景全部概念实例(
+            右场景节点, 特征概念服务_, 存在概念服务_);
+        if (!左实例组 || !右实例组) {
+            结果.状态 = 新自然语言场景结构比较状态::结构不一致;
+            return 结果;
+        }
+
+        std::vector<bool> 左已配对(左实例组->size(), false);
+        std::vector<bool> 右已配对(右实例组->size(), false);
+        std::size_t 相同配对数量 = 0;
+        for (std::size_t 左序号 = 0; 左序号 < 左实例组->size(); ++左序号) {
+            for (std::size_t 右序号 = 0; 右序号 < 右实例组->size(); ++右序号) {
+                if (右已配对[右序号]
+                    || (*左实例组)[左序号].种类 != (*右实例组)[右序号].种类
+                    || (*左实例组)[左序号].概念节点
+                        != (*右实例组)[右序号].概念节点) {
+                    continue;
+                }
+                左已配对[左序号] = true;
+                右已配对[右序号] = true;
+                ++相同配对数量;
+                break;
+            }
+        }
+
+        std::vector<std::size_t> 左剩余;
+        std::vector<std::size_t> 右剩余;
+        for (std::size_t 序号 = 0; 序号 < 左已配对.size(); ++序号) {
+            if (!左已配对[序号]) 左剩余.push_back(序号);
+        }
+        for (std::size_t 序号 = 0; 序号 < 右已配对.size(); ++序号) {
+            if (!右已配对[序号]) 右剩余.push_back(序号);
+        }
+
+        std::vector<std::vector<std::size_t>> 可配对右序号组(左剩余.size());
+        for (std::size_t 左序号 = 0; 左序号 < 左剩余.size(); ++左序号) {
+            for (std::size_t 右序号 = 0; 右序号 < 右剩余.size(); ++右序号) {
+                const auto 检查 = 检查概念可配对(
+                    (*左实例组)[左剩余[左序号]],
+                    (*右实例组)[右剩余[右序号]],
+                    特征概念服务_, 存在概念服务_);
+                if (检查 == 概念配对检查状态::资源失败) {
+                    结果.状态 = 新自然语言场景结构比较状态::资源失败;
+                    return 结果;
+                }
+                if (检查 == 概念配对检查状态::结构不一致) {
+                    结果.状态 = 新自然语言场景结构比较状态::结构不一致;
+                    return 结果;
+                }
+                if (检查 == 概念配对检查状态::可配对) {
+                    可配对右序号组[左序号].push_back(右序号);
+                }
+            }
+        }
+
+        std::vector<std::optional<std::size_t>> 右匹配左(右剩余.size());
+        std::function<bool(std::size_t, std::vector<bool>&)> 尝试匹配 =
+            [&](std::size_t 左序号, std::vector<bool>& 本轮已查右) {
+                for (const auto 右序号 : 可配对右序号组[左序号]) {
+                    if (本轮已查右[右序号]) continue;
+                    本轮已查右[右序号] = true;
+                    if (!右匹配左[右序号]
+                        || 尝试匹配(*右匹配左[右序号], 本轮已查右)) {
+                        右匹配左[右序号] = 左序号;
+                        return true;
+                    }
+                }
+                return false;
+            };
+        std::size_t 上下位配对数量 = 0;
+        for (std::size_t 左序号 = 0; 左序号 < 左剩余.size(); ++左序号) {
+            std::vector<bool> 本轮已查右(右剩余.size(), false);
+            if (尝试匹配(左序号, 本轮已查右)) ++上下位配对数量;
+        }
+
+        结果.状态 = 新自然语言场景结构比较状态::已完成;
+        结果.差异 = 饱和场景差异(
+            左实例组->size(), 右实例组->size(),
+            相同配对数量, 上下位配对数量);
+        return 结果;
+    } catch (...) {
+        结果.状态 = 新自然语言场景结构比较状态::资源失败;
+        结果.差异.reset();
+        return 结果;
     }
 }
 
