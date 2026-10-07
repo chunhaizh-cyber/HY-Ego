@@ -1,5 +1,6 @@
 #pragma once
 
+#include "领域/新_自然语言世界树类.h"
 #include "业务/新_世界树类.h"
 #include "线程/新_自我线程类.h"
 #include "线程/新_任务管理线程类.h"
@@ -46,12 +47,16 @@ enum class 普通应用装配状态 : std::uint8_t {
     消息配置失败,
     资源失败,
     内部不一致,
-    人类概念初始化失败
+    人类概念初始化失败,
+    自然语言世界初始化失败,
+    确认概念初始化失败
 };
 
 struct 普通应用装配结果 final {
     普通应用装配状态 状态 = 普通应用装配状态::入口拒绝;
     std::optional<新世界初始化结果> 世界树;
+    std::optional<新自然语言世界初始化结果> 自然语言世界树;
+    std::optional<稳定编码> 自然语言世界树根节点;
     std::optional<稳定编码> 第一权限人存在节点;
     std::optional<稳定编码> 第一权限人专属存在概念节点;
     std::optional<稳定编码> 人类存在概念节点;
@@ -68,6 +73,10 @@ struct 普通应用装配结果 final {
     std::optional<稳定编码> 是否收到消息二次特征类型根;
     std::optional<稳定编码> 未收到消息结果概念;
     std::optional<稳定编码> 已收到消息结果概念;
+    std::optional<稳定编码> 语言语义差异二次特征类型根;
+    std::optional<稳定编码> 确认结果概念;
+    std::optional<稳定编码> 确认词条;
+    std::optional<稳定编码> 确认名称关系;
 
     bool 成功() const noexcept;
 };
