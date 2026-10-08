@@ -4,7 +4,7 @@
 #include "新_存在类.h"
 #include "概念_二次特征类.h"
 #include "概念_存在类.h"
-#include "新_本能函数集.h"
+#include "新_本能函数管理类.h"
 
 #include <algorithm>
 #include <chrono>
@@ -5292,7 +5292,7 @@ std::optional<std::vector<新任务治理执行读回结果>>
                 结果.状态 = 新任务治理本能执行状态::定位已变化;
                 return 结果;
             }
-            const auto 可用 = 新_本能函数集::检查可用(
+            const auto 可用 = 新_本能函数管理类::检查可用(
                 *方法->本能函数登记名);
             if (可用 != 新本能函数可用状态::可调用) {
                 结果.状态 = 可用 == 新本能函数可用状态::依赖未装配

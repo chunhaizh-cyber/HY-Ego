@@ -182,6 +182,7 @@
     <ClCompile Include="海中鱼巣\领域\新_方法参数场景.cpp" />
     <ClCompile Include="海中鱼巣\领域\新_方法类.cpp" />
     <ClCompile Include="海中鱼巣\领域\新_本能函数集.cpp" />
+    <ClCompile Include="海中鱼巣\领域\新_本能函数管理类.cpp" />
     <ClCompile Include="海中鱼巣\领域\新_因果类.cpp" />
     <ClCompile Include="海中鱼巣\适配\适配器.单调时钟.cpp" />
     <ClCompile Include="海中鱼巣\适配\适配器.UTC时钟.cpp" />
@@ -240,6 +241,7 @@
     <ClInclude Include="海中鱼巣\领域\新_方法参数场景.h" />
     <ClInclude Include="海中鱼巣\领域\新_方法类.h" />
     <ClInclude Include="海中鱼巣\领域\新_本能函数集.h" />
+    <ClInclude Include="海中鱼巣\领域\新_本能函数管理类.h" />
     <ClInclude Include="海中鱼巣\领域\新_因果公共类型.h" />
     <ClInclude Include="海中鱼巣\领域\新_因果类.h" />
     <ClInclude Include="海中鱼巣\核心\日志系统.h" />
