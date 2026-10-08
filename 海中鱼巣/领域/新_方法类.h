@@ -38,7 +38,7 @@ enum class 新方法本能调用状态 : std::uint8_t {
 
 struct 新方法本能调用结果 final {
     新方法本能调用状态 状态 = 新方法本能调用状态::入口拒绝;
-    std::optional<新本能函数执行结果> 函数结果;
+    std::optional<新本能函数本次条件结果对> 本次条件结果对;
 };
 
 class 新_方法类 final {

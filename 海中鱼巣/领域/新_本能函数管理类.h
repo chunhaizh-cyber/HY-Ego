@@ -87,7 +87,7 @@ public:
         std::string_view 登记名) noexcept;
 
     // 每次只调用一次已解析入口；不自动重试现实动作。
-    static 新本能函数执行结果 执行(
+    static 新本能函数本次条件结果对 执行(
         std::string_view 登记名,
         const 方法参数场景& 参数场景) noexcept;
 
@@ -99,7 +99,7 @@ private:
     };
 
     friend class 新_本能函数集;
-    static 新本能函数执行结果 调用网页对话入口(
+    static 新本能函数本次条件结果对 调用网页对话入口(
         网页对话入口 入口,
         const 方法参数场景& 参数场景) noexcept;
 };
