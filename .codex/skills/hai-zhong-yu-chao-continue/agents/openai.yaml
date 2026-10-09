@@ -1,4 +1,0 @@
-interface:
-  display_name: "海中鱼巣继续路由"
-  short_description: "Route continuation across four Sea Nest agent types"
-  default_prompt: "Use $hai-zhong-yu-chao-continue to continue only the current interaction, plan, execution, or plan-support agent slice."

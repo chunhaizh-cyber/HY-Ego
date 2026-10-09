@@ -1,4 +1,0 @@
-interface:
-  display_name: "海中鱼巣理论草稿"
-  short_description: "Turn Sea Nest theory into governed design inputs"
-  default_prompt: "Use $hai-zhong-yu-chao-theory to analyze Sea Nest theory into governed design inputs, writing files only when the current plan or plan-support agent owns that design package."
