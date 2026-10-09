@@ -180,6 +180,7 @@
     <ClCompile Include="海中鱼巣\领域\新_动态类.cpp" />
     <ClCompile Include="海中鱼巣\领域\新_需求类.cpp" />
     <ClCompile Include="海中鱼巣\领域\新_任务类.cpp" />
+    <ClCompile Include="海中鱼巣\领域\任务时序可达性.领域服务.cpp" />
     <ClCompile Include="海中鱼巣\领域\新_方法参数场景.cpp" />
     <ClCompile Include="海中鱼巣\领域\新_方法类.cpp" />
     <ClCompile Include="海中鱼巣\领域\新_本能函数集.cpp" />
@@ -239,6 +240,7 @@
     <ClInclude Include="海中鱼巣\领域\新_动态类.h" />
     <ClInclude Include="海中鱼巣\领域\新_需求类.h" />
     <ClInclude Include="海中鱼巣\领域\新_任务类.h" />
+    <ClInclude Include="海中鱼巣\领域\任务时序可达性.领域服务.h" />
     <ClInclude Include="海中鱼巣\领域\新_方法公共类型.h" />
     <ClInclude Include="海中鱼巣\领域\新_方法参数场景.h" />
     <ClInclude Include="海中鱼巣\领域\新_方法类.h" />
