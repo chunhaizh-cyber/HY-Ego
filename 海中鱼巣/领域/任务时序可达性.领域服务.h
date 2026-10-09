@@ -33,7 +33,10 @@ enum class 时序路线状态 : std::uint8_t {
     前置材料不足,
     安全硬门否决,
     方法保护约束不兼容,
-    计算不可表示
+    计算不可表示,
+    未能保证同时满足,
+    资源失败,
+    结构不一致
 };
 
 enum class 需求时序裁决状态 : std::uint8_t {
@@ -45,7 +48,10 @@ enum class 需求时序裁决状态 : std::uint8_t {
     两个需求均不可保证,
     材料不足,
     输入不合法,
-    计算不可表示
+    计算不可表示,
+    可达性未确定,
+    资源失败,
+    结构不一致
 };
 
 struct 需求时序约束投影 final {
@@ -89,6 +95,19 @@ struct 时序转换选择 final {
     std::int64_t 采用耗时纳秒 = 0;
 };
 
+enum class 时序耗时依据 : std::uint8_t { 最短 = 1, 预计, 保证最大 };
+
+struct 时序时间比较材料 final {
+    时序耗时依据 依据 = 时序耗时依据::保证最大;
+    std::vector<时序转换选择> 路线;
+    bool 可表示 = false;
+    std::optional<std::int64_t> 第一需求满足时刻;
+    std::optional<std::int64_t> 第二需求满足时刻;
+    std::optional<std::int64_t> 第一需求窗口余量纳秒;
+    std::optional<std::int64_t> 第二需求窗口余量纳秒;
+    std::optional<std::int64_t> 最小窗口余量纳秒;
+};
+
 struct 时序路线评估 final {
     需求时序顺序 顺序 = 需求时序顺序::第一后第二;
     时序路线状态 状态 = 时序路线状态::不可同时满足;
@@ -97,6 +116,9 @@ struct 时序路线评估 final {
     std::optional<std::int64_t> 第一需求满足时刻;
     std::optional<std::int64_t> 第二需求满足时刻;
     std::optional<std::int64_t> 最小窗口余量纳秒;
+    时序时间比较材料 最短比较;
+    时序时间比较材料 预计比较;
+    时序时间比较材料 保证比较;
 };
 
 struct 需求时序可达性裁决结果 final {

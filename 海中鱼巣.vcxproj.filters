@@ -329,5 +329,11 @@
     <ClInclude Include="海中鱼巣\核心\容错检查.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\业务\治理二次特征.应用服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\治理二次特征.应用服务.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
