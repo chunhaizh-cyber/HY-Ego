@@ -145,6 +145,13 @@ struct 新需求精确查询结果 final {
     std::vector<稳定编码> 需求节点组;
 };
 
+// 需求owner对独立需求树的完整、可判错读取。调用方不得用空vector
+// 区分“当前没有普通子需求”和“结构或资源读取失败”。
+struct 新需求全集结果 final {
+    新需求操作状态 状态 = 新需求操作状态::入口拒绝;
+    std::vector<稳定编码> 需求节点组;
+};
+
 enum class 新需求当前满足状态 : std::uint8_t {
     已满足 = 1,
     需增加 = 2,
@@ -198,6 +205,7 @@ public:
         稳定编码 列表项节点) const noexcept;
     std::optional<稳定编码> 查询根需求(
         新需求根角色 角色) const noexcept;
+    新需求全集结果 查询全部需求() const noexcept;
 
     std::vector<稳定编码> 查询直接子需求(
         稳定编码 需求节点) const noexcept;

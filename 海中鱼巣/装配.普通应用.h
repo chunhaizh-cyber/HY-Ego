@@ -143,7 +143,7 @@ struct 普通应用网页消息处理结果 final {
 普通应用装配结果 构造普通应用上下文() noexcept;
 
 // 先启动manager（其内部启动worker），再启动self；self启动后立即执行首次
-// 双根复核和合法任务交接。
+// 双根复核、需求树全局扫描和缺失任务关联交接。
 普通应用治理操作结果 启动普通应用治理线程() noexcept;
 
 // 先停止并join self，再停止并join manager及其内部worker。

@@ -212,6 +212,9 @@
     <ClInclude Include="海中鱼巣\线程\新_自我线程类.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\线程\新_自我工作线程类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="海中鱼巣\线程\新_任务管理线程类.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -225,6 +228,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="海中鱼巣\线程\新_自我线程类.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\线程\新_自我工作线程类.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClInclude Include="海中鱼巣\领域\概念_存在类.h">
