@@ -241,6 +241,7 @@
     <ClInclude Include="海中鱼巣\领域\新_动态类.h" />
     <ClInclude Include="海中鱼巣\领域\新_需求类.h" />
     <ClInclude Include="海中鱼巣\领域\新_任务类.h" />
+    <ClInclude Include="海中鱼巣\领域\新_内部治理对象引用.h" />
     <ClInclude Include="海中鱼巣\领域\任务时序可达性.领域服务.h" />
     <ClInclude Include="海中鱼巣\业务\治理二次特征.应用服务.h" />
     <ClInclude Include="海中鱼巣\领域\新_方法公共类型.h" />
