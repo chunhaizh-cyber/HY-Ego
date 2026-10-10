@@ -208,7 +208,26 @@ struct 新方法信息 final {
     std::vector<新方法组合步骤信息> 组合步骤组;
     std::optional<稳定编码> 组合入口步骤节点;
     std::vector<新方法结果转移信息> 结果转移组;
+    // 抽象方法均为空；副本保留其来源，整份复制图共用一个实例根。
+    std::optional<稳定编码> 来源方法节点;
+    std::optional<稳定编码> 实例根节点;
     friend bool operator==(const 新方法信息&, const 新方法信息&) = default;
+};
+
+enum class 新方法复制状态 : std::uint8_t {
+    已复制 = 1, 入口拒绝, 尚未初始化, 方法不存在,
+    来源不是抽象方法, 结构不一致, 资源失败
+};
+
+struct 新方法节点映射 final {
+    稳定编码 源节点;
+    稳定编码 实例节点;
+};
+
+struct 新方法复制结果 final {
+    新方法复制状态 状态 = 新方法复制状态::入口拒绝;
+    std::optional<稳定编码> 方法实例节点;
+    std::vector<新方法节点映射> 节点映射组;
 };
 
 struct 新方法建立结果 final {

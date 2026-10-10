@@ -65,6 +65,8 @@ public:
         const std::string& 本能函数登记名) noexcept;
     std::optional<新方法信息> 获取方法(
         稳定编码 方法节点) const noexcept;
+    // 完整复制内部结构及被调用方法闭包；不裁剪路径、不复制外部概念。
+    新方法复制结果 复制方法(稳定编码 来源方法节点) noexcept;
     bool 是方法节点(稳定编码 节点) const noexcept;
     新方法候选结果 查询候选方法(
         const 新方法候选查询& 查询) const noexcept;
