@@ -2,8 +2,10 @@
 
 #include <algorithm>
 #include <limits>
+#include <map>
 #include <mutex>
 #include <set>
+#include <tuple>
 #include <utility>
 
 namespace 海中鱼巣 {
@@ -42,7 +44,7 @@ bool 节点仍存在(稳定编码 节点) noexcept {
     return 有效(节点) && 全局基础数据集.查询节点(节点).has_value();
 }
 
-bool 结构已初始化() noexcept {
+bool 结构已初始化() {
     const std::vector<稳定编码> 节点组{
         需求树根节点, 节点类型字段, 需求树根节点类型, 需求节点类型,
         需求列表项节点类型, 目标存在字段, 目标特征类型字段,
@@ -56,7 +58,7 @@ bool 结构已初始化() noexcept {
     });
 }
 
-bool 结构仍存在() noexcept {
+bool 结构仍存在() {
     if (!结构已初始化()) return false;
     const std::vector<稳定编码> 节点组{
         需求树根节点, 节点类型字段, 需求树根节点类型, 需求节点类型,
@@ -225,6 +227,23 @@ std::optional<新需求目标定义> 读取目标定义(稳定编码 节点) {
     }
     return 目标形状合法(目标)
         ? std::optional<新需求目标定义>{目标} : std::nullopt;
+}
+
+// 完整列表读回不能把禁止字段的错类型载荷解释成“未设置”。
+bool 原始目标字段一致(稳定编码 节点, const 新需求目标定义& 目标) {
+    const auto 节点字段一致 = [&](稳定编码 字段, std::optional<稳定编码> 期望) {
+        const auto 字段组 = 全局基础数据集.查询字段(节点, 字段);
+        if (!期望) return 字段组.empty();
+        if (字段组.size() != 1) return false;
+        const auto* 内容 = std::get_if<稳定编码>(&字段组.front().内容);
+        return 内容 && *内容 == *期望;
+    };
+    if (!节点字段一致(目标值域字段, 目标.目标值域概念节点)
+        || !节点字段一致(目标比较关系字段, 目标.目标比较关系概念节点)) return false;
+    const auto 方向组 = 全局基础数据集.查询字段(节点, 目标变化方向字段);
+    if (!目标.目标变化方向) return 方向组.empty();
+    return 方向组.size() == 1 && 读取唯一I64字段(节点, 目标变化方向字段)
+        == static_cast<std::int64_t>(*目标.目标变化方向);
 }
 
 std::optional<新需求信息> 读取需求信息(稳定编码 节点) {
@@ -1386,6 +1405,87 @@ std::optional<稳定编码> 新_需求类::查询根需求(
     } catch (...) {
         结果.状态 = 新需求操作状态::资源失败;
         结果.需求节点组.clear();
+        return 结果;
+    }
+}
+
+新需求列表全集结果 新_需求类::查询全部需求列表() const noexcept {
+    新需求列表全集结果 结果;
+    结果.状态 = 新需求操作状态::结构不一致;
+    try {
+        std::lock_guard 锁(新需求互斥);
+        const auto 全集 = 查询全部需求();
+        if (全集.状态 != 新需求操作状态::已找到) {
+            结果.状态 = 全集.状态;
+            return 结果;
+        }
+        std::map<稳定编码, 新需求信息> 需求映射;
+        for (const auto 节点 : 全集.需求节点组) {
+            const auto 信息 = 读取需求信息(节点);
+            if (!信息 || !原始目标字段一致(节点, 信息->目标)
+                || !需求映射.emplace(节点, *信息).second) return 结果;
+        }
+
+        std::set<稳定编码> 登记列表;
+        for (const auto& 字段 : 全局基础数据集.查询字段(
+                需求树根节点, 需求列表项字段)) {
+            const auto* 节点 = std::get_if<稳定编码>(&字段.内容);
+            if (!节点 || !是列表项类型节点(*节点)
+                || !登记列表.insert(*节点).second) return 结果;
+        }
+        std::set<稳定编码> 类型列表;
+        for (const auto& 字段 : 全局基础数据集.查询目标字段(
+                需求列表项节点类型, 节点类型字段)) {
+            if (!是列表项类型节点(字段.所属节点)
+                || !类型列表.insert(字段.所属节点).second) return 结果;
+        }
+        if (登记列表 != 类型列表) return 结果;
+
+        // 根列表与普通列表分账；普通需求可合法具有与根相同的目标。
+        using 列表键 = std::tuple<std::optional<新需求根角色>, 稳定编码,
+            稳定编码, 新需求目标形式, std::optional<稳定编码>,
+            std::optional<稳定编码>, std::optional<新需求变化方向>>;
+        std::set<列表键> 目标键组;
+        std::set<稳定编码> 已覆盖需求;
+        std::vector<新需求列表项信息> 列表候选;
+        for (const auto 节点 : 登记列表) {
+            auto 信息 = 读取列表项信息(节点);
+            if (!信息 || !原始目标字段一致(节点, 信息->目标)) return 结果;
+            const auto& 目标 = 信息->目标;
+            if (!目标键组.emplace(信息->根角色, 信息->目标存在节点,
+                    目标.目标特征类型概念节点, 目标.目标形式,
+                    目标.目标值域概念节点, 目标.目标比较关系概念节点,
+                    目标.目标变化方向).second) return 结果;
+            std::set<稳定编码> 成员;
+            for (const auto& 字段 : 全局基础数据集.查询字段(节点, 列表成员字段)) {
+                const auto* 需求节点 = std::get_if<稳定编码>(&字段.内容);
+                if (!需求节点 || !成员.insert(*需求节点).second
+                    || !已覆盖需求.insert(*需求节点).second) return 结果;
+                const auto 需求 = 需求映射.find(*需求节点);
+                if (需求 == 需求映射.end()
+                    || 需求->second.目标存在节点 != 信息->目标存在节点
+                    || 需求->second.目标 != 目标
+                    || 需求->second.根角色 != 信息->根角色) return 结果;
+            }
+            if (成员.empty() || (信息->根角色 && 成员.size() != 1)) return 结果;
+            信息->需求节点组.assign(成员.begin(), 成员.end());
+            列表候选.push_back(std::move(*信息));
+        }
+        if (已覆盖需求.size() != 需求映射.size()) return 结果;
+        std::vector<新需求信息> 需求候选;
+        需求候选.reserve(需求映射.size());
+        for (auto& [节点, 信息] : 需求映射) {
+            (void)节点;
+            需求候选.push_back(std::move(信息));
+        }
+        结果.列表项组 = std::move(列表候选);
+        结果.需求组 = std::move(需求候选);
+        结果.状态 = 新需求操作状态::已找到;
+        return 结果;
+    } catch (...) {
+        结果.状态 = 新需求操作状态::资源失败;
+        结果.列表项组.clear();
+        结果.需求组.clear();
         return 结果;
     }
 }

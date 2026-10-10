@@ -154,6 +154,12 @@ struct 新需求全集结果 final {
     std::vector<稳定编码> 需求节点组;
 };
 
+struct 新需求列表全集结果 final {
+    新需求操作状态 状态 = 新需求操作状态::入口拒绝;
+    std::vector<新需求列表项信息> 列表项组;
+    std::vector<新需求信息> 需求组;
+};
+
 enum class 新需求当前满足状态 : std::uint8_t {
     已满足 = 1,
     需增加 = 2,
@@ -208,6 +214,8 @@ public:
     std::optional<稳定编码> 查询根需求(
         新需求根角色 角色) const noexcept;
     新需求全集结果 查询全部需求() const noexcept;
+    // 完整核验列表登记、原始成员及需求树覆盖；非成功不返回部分材料。
+    新需求列表全集结果 查询全部需求列表() const noexcept;
 
     std::vector<稳定编码> 查询直接子需求(
         稳定编码 需求节点) const noexcept;

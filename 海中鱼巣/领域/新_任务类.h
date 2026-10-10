@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <vector>
 
@@ -79,8 +80,12 @@ enum class 新任务操作状态 : std::uint8_t {
     候选材料不存在 = 27,
     方法实例不合法 = 28,
     任务已有方法实例 = 29,
-    方法实例已被占用 = 30
+    方法实例已被占用 = 30,
+    服务任务集合同步失败 = 31
 };
+
+using 新服务任务集合同步函数 =
+    std::function<bool(const std::vector<稳定编码>&)>;
 
 struct 新任务预计特征变化 final {
     // 这里保存本次执行已经绑定的实际作用对象，不保存抽象角色。
@@ -351,6 +356,17 @@ struct 新任务完成结算结果 final {
 struct 新任务列表结果 final {
     新任务操作状态 状态 = 新任务操作状态::入口拒绝;
     std::vector<稳定编码> 任务节点组;
+};
+
+struct 新需求任务对应项 final {
+    稳定编码 需求列表项节点;
+    新需求信息 需求;
+    std::optional<新任务信息> 任务;
+};
+
+struct 新需求任务对应结果 final {
+    新任务操作状态 状态 = 新任务操作状态::入口拒绝;
+    std::vector<新需求任务对应项> 对应项组;
 };
 
 enum class 新任务治理承接状态 : std::uint8_t {
@@ -979,6 +995,15 @@ public:
     std::optional<稳定编码> 查询需求任务(
         稳定编码 需求节点) const noexcept;
     新任务列表结果 查询全部任务() const noexcept;
+    // 不筛选业务资格或终结状态；成功项的空任务只表示确实尚未建立T。
+    // 返回的是本次完整读回副本，不是后续写入或服务结算许可。
+    新需求任务对应结果 读取需求列表任务对应() const noexcept;
+    // 仅按需求父链的正式根分类；排除结算需求自身，不排除其后代。
+    新任务列表结果 查询服务任务(稳定编码 排除需求) const noexcept;
+    新任务操作状态 绑定服务任务集合同步(
+        const void* 所有者, 稳定编码 排除需求,
+        新服务任务集合同步函数 同步) noexcept;
+    新任务操作状态 解除服务任务集合同步(const void* 所有者) noexcept;
     新任务列表结果 查询活动任务() const noexcept;
     新任务列表结果 查询指定状态任务(
         新任务状态 状态) const noexcept;
@@ -1034,6 +1059,11 @@ public:
         稳定编码 任务节点) const noexcept;
 
 private:
+    bool 同步服务任务集合已加锁() noexcept;
+    const void* 服务任务同步所有者_ = nullptr;
+    稳定编码 服务任务排除需求_{};
+    新服务任务集合同步函数 服务任务同步_;
+
     friend class 新_任务管理线程类;
     // 仅消费self已确认且manager已读回的子D；不创建需求、不重启终结T。
     新任务治理承接结果 承接已确认条件子需求(

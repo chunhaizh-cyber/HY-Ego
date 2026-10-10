@@ -97,6 +97,37 @@ std::optional<候选距离> 计算候选距离(
 
         const auto 当前值 = *当前项.准确结果;
         const auto [候选下界, 候选上界] = *候选边界;
+        if (类型->算法 == 二次特征算法::服务任务集合判等) {
+            if (当前值 != 0 && 当前值 != 10000) return std::nullopt;
+            bool 候选不同 = false;
+            bool 候选相同 = false;
+            const auto 收集类别 = [&](std::int64_t 值) {
+                if (值 == 0) 候选不同 = true;
+                else if (值 == 10000) 候选相同 = true;
+                else return false;
+                return true;
+            };
+            if (候选项.准确结果) {
+                if (!收集类别(*候选项.准确结果)) return std::nullopt;
+            } else {
+                const auto 域 = 二次特征概念服务.获取二次特征概念(候选项.结果值域概念节点);
+                if (!域 || 域->二次特征类型根节点 != 当前项.二次特征类型概念节点)
+                    return std::nullopt;
+                const auto* 区间组 = std::get_if<std::vector<特征概念I64闭区间>>(
+                    &域->输出特征概念.值域);
+                if (!区间组 || 区间组->empty()) return std::nullopt;
+                for (const auto& 区间 : *区间组) {
+                    if (区间.下界 != 区间.上界 || !收集类别(区间.下界)) return std::nullopt;
+                }
+            }
+            const bool 命中 = 当前值 == 10000 ? 候选相同 : 候选不同;
+            if (!命中) {
+                变化差异 = 饱和相加(变化差异, 1);
+                幅度距离 = 饱和相加(幅度距离, 10000);
+            }
+            // 判等是类别：不按整数正负推导变化方向。
+            continue;
+        }
         const bool 当前不变 = 类型->算法 == 二次特征算法::特征材料相似度
             ? 当前值 == 10000 : 当前值 == 0;
         const bool 候选可不变 = 类型->算法 == 二次特征算法::特征材料相似度

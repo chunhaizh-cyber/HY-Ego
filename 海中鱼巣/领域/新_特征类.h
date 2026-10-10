@@ -82,7 +82,8 @@ enum class 新特征比较材料 : std::uint8_t {
 
 enum class 新特征比较数值类型 : std::uint8_t {
     有向差值 = 1,
-    相似度 = 2
+    相似度 = 2,
+    精确判等 = 3
 };
 
 struct 新特征比较结果 final {
@@ -90,6 +91,7 @@ struct 新特征比较结果 final {
     std::optional<新特征比较材料> 材料;
     std::optional<新特征比较数值类型> 数值类型;
     // 有向差值采用饱和I64；相似度为0～10000，-1表示没有适用算法。
+    // 精确判等仅为10000（相同）或0（不同），不表示大小或接近程度。
     std::optional<std::int64_t> 比较值;
     // 仅用于“一个准确值与另一方历史聚合值域”的比较。
     std::optional<bool> 准确值命中值域;

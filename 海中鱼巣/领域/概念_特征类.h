@@ -74,7 +74,8 @@ using 特征概念准确值 = std::variant<std::int64_t, 稳定编码>;
 enum class 特征概念比较规则 : std::int64_t {
     I64数值 = 1,
     完整材料精确 = 2,
-    存在身份精确 = 3
+    存在身份精确 = 3,
+    服务任务集合身份判等 = 4
 };
 
 enum class 特征概念聚合规则 : std::int64_t {
@@ -193,6 +194,7 @@ struct 先天特征概念集合 final {
     稳定编码 RGB颜色;
     稳定编码 二维轮廓;
     稳定编码 三维体素;
+    稳定编码 服务任务集合;
     bool 完整() const noexcept;
     friend bool operator==(const 先天特征概念集合&,
         const 先天特征概念集合&) = default;

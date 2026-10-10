@@ -585,6 +585,46 @@ std::optional<std::vector<动态概念特征项>> 聚合动态特征组(
         const auto 状态间位置 = 来源特征组.front()[位置].状态间位置;
         const auto 类型根 =
             来源特征组.front()[位置].二次特征类型概念节点;
+        const auto 类型 = 二次特征概念服务.获取二次特征概念(类型根);
+        if (!类型 || 类型->二次特征类型根节点 != 类型根) return std::nullopt;
+        if (类型->算法 == 二次特征算法::服务任务集合判等) {
+            bool 有不同 = false;
+            bool 有相同 = false;
+            const auto 收集值 = [&](std::int64_t 值) {
+                if (值 == 0) 有不同 = true;
+                else if (值 == 10000) 有相同 = true;
+                else return false;
+                return true;
+            };
+            for (const auto& 特征组 : 来源特征组) {
+                const auto& 项 = 特征组[位置];
+                if (项.状态间位置 != 状态间位置
+                    || 项.二次特征类型概念节点 != 类型根) return std::nullopt;
+                if (项.准确结果) {
+                    if (!收集值(*项.准确结果)) return std::nullopt;
+                    continue;
+                }
+                const auto 域 = 二次特征概念服务.获取二次特征概念(项.结果值域概念节点);
+                if (!域 || 域->二次特征类型根节点 != 类型根) return std::nullopt;
+                const auto* 区间组 = std::get_if<std::vector<特征概念I64闭区间>>(
+                    &域->输出特征概念.值域);
+                if (!区间组 || 区间组->empty()) return std::nullopt;
+                for (const auto& 区间 : *区间组) {
+                    if (区间.下界 != 区间.上界 || !收集值(区间.下界)) return std::nullopt;
+                }
+            }
+            std::vector<特征概念I64闭区间> 离散域;
+            if (有不同) 离散域.push_back({0, 0});
+            if (有相同) 离散域.push_back({10000, 10000});
+            const auto 已确保 = 二次特征概念服务.建立或取得结果值域概念(
+                类型根, 特征概念值域{离散域});
+            if ((已确保.状态 != 二次特征概念操作状态::已建立
+                    && 已确保.状态 != 二次特征概念操作状态::已复用)
+                || !已确保.概念节点) return std::nullopt;
+            结果.push_back({状态间位置, 类型根, std::nullopt,
+                *已确保.概念节点, std::nullopt, std::nullopt});
+            continue;
+        }
         std::optional<std::int64_t> 最小值;
         std::optional<std::int64_t> 最大值;
         for (const auto& 特征组 : 来源特征组) {

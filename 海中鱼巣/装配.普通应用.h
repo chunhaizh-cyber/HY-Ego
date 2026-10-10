@@ -83,6 +83,8 @@ struct 普通应用装配结果 final {
     std::optional<稳定编码> 确认词条;
     std::optional<稳定编码> 确认名称关系;
     std::optional<治理时间概念集合> 治理时间概念;
+    std::optional<稳定编码> 服务任务特征概念节点;
+    std::optional<稳定编码> 服务任务特征节点;
 
     bool 成功() const noexcept;
 };
