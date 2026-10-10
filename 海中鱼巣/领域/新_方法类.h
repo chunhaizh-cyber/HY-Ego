@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -15,6 +16,7 @@ class 新_场景类;
 class 新_特征类;
 class 概念_存在类;
 class 概念_特征类;
+class 新_任务类;
 
 // 方法拥有自己的独立根；该根不挂入世界树、需求树或任务集合根。
 extern 稳定编码 新方法组织根节点;
@@ -67,6 +69,13 @@ public:
         稳定编码 方法节点) const noexcept;
     // 完整复制内部结构及被调用方法闭包；不裁剪路径、不复制外部概念。
     新方法复制结果 复制方法(稳定编码 来源方法节点) noexcept;
+    新方法混合实例结果 建立混合方法实例(
+        const std::vector<稳定编码>& 来源方法节点组) noexcept;
+    // 旧单方法副本根投影为一个候选；混合根本身不是可调用方法。
+    std::optional<新方法混合实例信息> 获取混合方法实例(
+        稳定编码 实例根节点) const noexcept;
+    新方法实例配对结果 查询实例条件结果(
+        稳定编码 实例根节点) const noexcept;
     bool 是方法节点(稳定编码 节点) const noexcept;
     新方法候选结果 查询候选方法(
         const 新方法候选查询& 查询) const noexcept;
@@ -95,6 +104,17 @@ public:
         const 方法参数场景& 参数场景) const noexcept;
 
 private:
+    friend class 新_任务类;
+    enum class 新方法实例交付状态 : std::uint8_t {
+        已采用 = 1, 未采用, 采用状态不明
+    };
+    新方法混合实例结果 建立并交付混合方法实例(
+        const std::vector<稳定编码>& 来源方法节点组,
+        const std::function<新方法实例交付状态(稳定编码)>& 采用) noexcept;
+    新方法复制结果 复制方法闭包(
+        const std::vector<稳定编码>& 来源方法节点组, bool 混合,
+        const std::function<新方法实例交付状态(稳定编码)>& 采用 = {}) noexcept;
+
     新_存在类& 存在服务_;
     新_场景类& 场景服务_;
     新_特征值类& 特征值服务_;
