@@ -5,6 +5,7 @@
 #include <future>
 #include <memory>
 #include <optional>
+#include <vector>
 #include "../领域/新_任务类.h"
 #include "新_任务工作线程类.h"
 
@@ -37,7 +38,8 @@ enum class 新任务承接依据 : std::uint8_t {
     显式请求 = 1,
     自我首次复核 = 2,
     自我状态变化复核 = 3,
-    自我全树扫描 = 4
+    自我全树扫描 = 4,
+    自我条件子需求 = 5
 };
 
 // 唯一业务用途是承接需求；由自我决议的调用链提供具体需求。
@@ -120,6 +122,7 @@ struct 新任务筹办处理结果 final {
     std::optional<新任务治理候选消费结果> 独立消费;
     std::optional<新任务治理条件筹办结果> 条件筹办;
     std::optional<新任务治理条件筹办结果> 独立条件筹办;
+    std::optional<新任务条件子需求提议> 独立子需求提议;
 };
 
 // manager只向self交付当前筹办结果的稳定定位；正式筹办内容必须由
@@ -153,7 +156,8 @@ enum class 新自我筹办裁决状态 : std::uint8_t {
     当前无可用方法,
     结构缺口,
     任务状态变化,
-    需核查
+    需核查,
+    已处理条件子需求
 };
 
 enum class 新自我执行前判断状态 : std::uint8_t {
@@ -234,6 +238,27 @@ enum class 新任务完成结算确认状态 : std::uint8_t {
     内部错误
 };
 
+enum class 新子需求采用状态 : std::uint8_t {
+    已建立 = 1, 已复用, 已无需要, 来源过期, 拒绝,
+    结构错误, 资源失败, 未处理
+};
+
+struct 新子需求采用项 final {
+    新任务条件子需求项 原提议;
+    新子需求采用状态 状态 = 新子需求采用状态::未处理;
+    std::optional<稳定编码> 需求节点;
+    friend bool operator==(const 新子需求采用项&,
+        const 新子需求采用项&) = default;
+};
+
+struct 新子需求采用回执 final {
+    新任务条件子需求提议 原提议;
+    std::vector<新子需求采用项> 项组;
+    bool 已完成处理 = false;
+    friend bool operator==(const 新子需求采用回执&,
+        const 新子需求采用回执&) = default;
+};
+
 struct 新自我筹办裁决 final {
     新任务筹办反馈定位 定位;
     新自我筹办裁决状态 状态 = 新自我筹办裁决状态::需核查;
@@ -245,6 +270,7 @@ struct 新自我筹办裁决 final {
     // 只有完成fresh执行方向核验后才填写；允许只表示self治理判断通过，
     // 不表示本能函数已经注册、调用或产生现实结果。
     std::optional<新自我执行前判断> 执行前判断;
+    std::optional<新子需求采用回执> 子需求回执;
     friend bool operator==(const 新自我筹办裁决&,
         const 新自我筹办裁决&) = default;
 };
@@ -295,6 +321,9 @@ private:
     void 解除自我筹办反馈(const void* 所有者) noexcept;
     新自我筹办裁决接收状态 提交自我筹办裁决(
         const 新自我筹办裁决& 裁决) noexcept;
+    新任务承接接收结果 提交已确认条件子需求(
+        const 新任务筹办反馈定位& 父筹办定位,
+        const 新任务承接消息& 消息) noexcept;
     新任务结果状态接收状态 提交结果状态通知(
         稳定编码 状态节点) noexcept;
     新自我任务后继接收状态 提交自我任务后继决议(
