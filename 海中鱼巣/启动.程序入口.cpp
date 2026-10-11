@@ -30,6 +30,8 @@ namespace 海中鱼巣 {
             当前模式 = 启动模式::无窗口常驻;
         } else if (参数 == "--runtime-context") {
             当前模式 = 启动模式::生产运行期;
+        } else if (参数 == "--self-test-simulation") {
+            当前模式 = 启动模式::数值模拟自检;
         } else {
             return {启动选项解析状态::未知参数, {}, static_cast<std::size_t>(参数索引)};
         }

@@ -30,6 +30,12 @@
     <ClInclude Include="海中鱼巣\业务\模拟学习.算法.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\自检.模拟学习.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\自检.模拟学习.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="海中鱼巣\装配.普通应用.h">
       <Filter>头文件</Filter>
     </ClInclude>

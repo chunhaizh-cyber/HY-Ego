@@ -9,7 +9,8 @@ namespace 海中鱼巣 {
 enum class 启动模式 : std::uint8_t {
     普通控制面板 = 0,
     无窗口常驻 = 1,
-    生产运行期 = 2
+    生产运行期 = 2,
+    数值模拟自检 = 3
 };
 
 enum class 启动选项解析状态 : std::uint8_t {
