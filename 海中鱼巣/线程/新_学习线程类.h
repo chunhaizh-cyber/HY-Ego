@@ -16,7 +16,7 @@ enum class 新学习操作状态 : std::uint8_t {
 };
 struct 新学习接收结果 final {
     新学习操作状态 状态=新学习操作状态::入口拒绝;
-    std::shared_future<新模拟学习结果> 处理结果;
+    std::shared_future<新学习结束通知> 处理结果;
 };
 struct 新学习线程快照 final {
     新学习线程状态 状态=新学习线程状态::未启动;

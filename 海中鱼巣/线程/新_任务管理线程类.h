@@ -89,7 +89,8 @@ struct 新任务管理快照 final {
     std::optional<稳定编码> 服务值结算需求;
     std::optional<稳定编码> 服务值结算任务;
     bool 服务值结算方法已配置 = false;
-    std::optional<新模拟学习结果> 最近方法学习结果;
+    std::optional<新学习结束通知> 最近方法学习结束;
+    std::optional<新学习运行异常记录> 最近学习运行异常;
     bool 等待方法实例消费 = false;
 };
 
@@ -296,8 +297,8 @@ enum class 新自我筹办裁决接收状态 : std::uint8_t {
 class 新_任务管理线程类 final {
 public:
     bool 绑定方法学习读取(const 新_方法类&) noexcept;
-    // 仅交接知识变化；不修改任务、冻结实例或解除执行保护。
-    bool 提交方法学习结果(const 新模拟学习结果&) noexcept;
+    // 仅通知学习结束；知识fresh读方法树，不修改任务、冻结实例或解除执行保护。
+    bool 提交方法学习结束(const 新学习结束通知&) noexcept;
     // 任务服务必须比本对象存活更久；绑定本对象的self必须先回收。
     explicit 新_任务管理线程类(新_任务类& 任务服务) noexcept;
     ~新_任务管理线程类() noexcept;

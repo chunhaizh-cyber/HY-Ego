@@ -28,13 +28,21 @@ std::mutex 唯一自我互斥;
 std::optional<新自我线程初始化请求> 唯一自我初始化请求;
 std::atomic_uint64_t 下一自动决议消息编号{1};
 
-void 记录自我学习回流(const 新模拟学习结果& 结果, bool 已交接) noexcept {
+void 记录自我学习回流(const 新学习结束通知& 结果, bool 已交接) noexcept {
     try {
         std::wostringstream 文本;
-        文本 << L"方法=" << 结果.方法节点.值 << L"；状态=" << static_cast<int>(结果.状态)
-            << L"；已交接管理=" << 已交接;
-        if (结果.配对节点) 文本 << L"；配对=" << 结果.配对节点->值;
-        (void)记录运行日志(L"自我线程",L"模拟学习结果接收",文本.str());
+        文本 << L"方法=" << 结果.方法节点.值 << L"；已交接管理=" << 已交接;
+        (void)记录运行日志(L"自我线程",L"模拟学习结束接收",文本.str());
+    } catch (...) {}
+}
+
+void 记录自我学习运行异常(const 新学习运行异常记录& 异常) noexcept {
+    try {
+        std::wostringstream 文本;
+        文本 << L"方法=" << 异常.方法节点.值 << L"；运行原因=" << static_cast<int>(异常.原因);
+        if (异常.原因==新学习运行异常原因::停止取消)
+            (void)记录运行日志(L"自我线程",L"学习停止取消",文本.str());
+        else (void)记录逻辑错误日志(L"自我线程",L"学习运行异常",文本.str());
     } catch (...) {}
 }
 
@@ -531,10 +539,15 @@ struct 新_自我线程类::实现 final {
     std::unique_ptr<新_自我工作线程类> 自我工作线程;
     模拟学习服务* 学习服务 = nullptr;
     std::unique_ptr<新_学习线程类> 学习线程;
-    std::map<稳定编码, std::shared_future<新模拟学习结果>> 在途学习;
+    struct 学习占用 final {
+        std::shared_future<新学习结束通知> 处理结果;
+        bool 已消费=false;
+    };
+    std::map<稳定编码, 学习占用> 在途学习;
     std::set<稳定编码> 已处理学习方法;
-    std::optional<新模拟学习结果> 最近学习结果;
-    bool 学习结果已交接管理 = false;
+    std::optional<新学习结束通知> 最近学习结束;
+    bool 学习结束已交接管理 = false;
+    std::optional<新学习运行异常记录> 最近学习运行异常;
     新自我需求扫描阶段 需求扫描阶段 = 新自我需求扫描阶段::未启动;
     std::shared_future<新自我需求树扫描结果> 扫描工作结果;
     std::optional<新自我需求树扫描请求> 当前扫描请求;
@@ -600,37 +613,41 @@ struct 新_自我线程类::实现 final {
             // 先留接收槽再提交，避免工作已经开始而self分配槽失败丢结果。
             auto [位置,插入]=在途学习.try_emplace(方法节点);
             if (!插入) return;
+            已处理学习方法.insert(方法节点);
             锁.unlock();
             const auto 接收=学习线程->提交学习(方法节点);
             锁.lock();
             if ((接收.状态==新学习操作状态::已完成
                     || 接收.状态==新学习操作状态::精确重复) && 接收.处理结果.valid()) {
-                位置->second=接收.处理结果;
+                位置->second.处理结果=接收.处理结果;
             } else {
                 在途学习.erase(位置);
-                已处理学习方法.insert(方法节点);
-                新模拟学习结果 失败;
-                失败.方法节点=方法节点; 失败.状态=新模拟学习状态::资源失败;
-                最近学习结果=失败; 学习结果已交接管理=false;
+                const 新学习运行异常记录 异常{方法节点,
+                    接收.状态==新学习操作状态::资源失败 ? 新学习运行异常原因::资源不足
+                    : 接收.状态==新学习操作状态::入口拒绝 ? 新学习运行异常原因::输入不合法
+                    : 新学习运行异常原因::内部错误};
+                最近学习运行异常=异常;
                 锁.unlock();
-                记录自我学习回流(失败,false);
+                记录自我学习运行异常(异常);
             }
         } catch (...) {
-            新模拟学习结果 失败;
-            失败.方法节点=方法节点; 失败.状态=新模拟学习状态::资源失败;
+            新学习运行异常记录 异常{方法节点,新学习运行异常原因::内部错误};
+            try { throw; }
+            catch (const std::bad_alloc&) { 异常.原因=新学习运行异常原因::资源不足; }
+            catch (...) {}
             try {
                 std::lock_guard 锁(状态互斥);
                 在途学习.erase(方法节点);
-                最近学习结果=失败; 学习结果已交接管理=false;
-                已处理学习方法.insert(方法节点);
+                最近学习运行异常=异常;
             } catch (...) {}
-            记录自我学习回流(失败,false);
+            记录自我学习运行异常(异常);
         }
     }
 
     bool 有学习结果已就绪() const noexcept {
         return std::any_of(在途学习.begin(),在途学习.end(),[](const auto& 项) {
-            return 项.second.valid() && 项.second.wait_for(std::chrono::milliseconds(0))
+            return !项.second.已消费 && 项.second.处理结果.valid()
+                && 项.second.处理结果.wait_for(std::chrono::milliseconds(0))
                 ==std::future_status::ready;
         });
     }
@@ -1756,27 +1773,45 @@ struct 新_自我线程类::实现 final {
             }
             while (!停止已请求) {
                 const auto 学习位置=std::find_if(在途学习.begin(),在途学习.end(),[](const auto& 项) {
-                    return 项.second.valid() && 项.second.wait_for(std::chrono::milliseconds(0))
+                    return !项.second.已消费 && 项.second.处理结果.valid()
+                        && 项.second.处理结果.wait_for(std::chrono::milliseconds(0))
                         ==std::future_status::ready;
                 });
                 if (学习位置!=在途学习.end()) {
                     const auto 方法节点=学习位置->first;
-                    const auto 学习结果=学习位置->second.get();
-                    已处理学习方法.insert(方法节点);
-                    最近学习结果=学习结果;
-                    学习结果已交接管理=false;
-                    在途学习.erase(学习位置);
+                    const auto future=学习位置->second.处理结果;
+                    学习位置->second.已消费=true;
                     锁.unlock();
+                    std::optional<新学习结束通知> 结束;
+                    std::optional<新学习运行异常记录> 异常;
+                    try {
+                        const auto 通知=future.get();
+                        if (通知.方法节点!=方法节点)
+                            异常=新学习运行异常记录{方法节点,新学习运行异常原因::结构不一致};
+                        else 结束=通知;
+                    } catch (const 新学习运行异常& e) {
+                        异常=e.记录();
+                        if (异常->方法节点!=方法节点)
+                            异常=新学习运行异常记录{方法节点,新学习运行异常原因::结构不一致};
+                    } catch (const std::bad_alloc&) {
+                        异常=新学习运行异常记录{方法节点,新学习运行异常原因::资源不足};
+                    } catch (...) {
+                        异常=新学习运行异常记录{方法节点,新学习运行异常原因::内部错误};
+                    }
                     bool 已交接=false;
-                    if (任务管理 && 学习结果.方法节点==方法节点
-                        && (学习结果.状态==新模拟学习状态::已形成知识
-                            || 学习结果.状态==新模拟学习状态::精确重复))
-                        已交接=任务管理->提交方法学习结果(学习结果);
-                    (void)学习线程->确认结果已接收(方法节点);
+                    if (任务管理 && 结束) 已交接=任务管理->提交方法学习结束(*结束);
+                    const auto 确认=学习线程->确认结果已接收(方法节点);
+                    const bool 已回收=确认==新学习操作状态::已完成 || 确认==新学习操作状态::无变化;
+                    const 新学习运行异常记录 回收异常{方法节点,新学习运行异常原因::内部错误};
                     锁.lock();
-                    学习结果已交接管理=已交接;
+                    if (结束) { 最近学习结束=结束; 学习结束已交接管理=已交接; }
+                    if (异常) 最近学习运行异常=异常;
+                    if (已回收) 在途学习.erase(学习位置);
+                    else 最近学习运行异常=回收异常;
                     锁.unlock();
-                    记录自我学习回流(学习结果,已交接);
+                    if (结束) 记录自我学习回流(*结束,已交接);
+                    if (异常) 记录自我学习运行异常(*异常);
+                    if (!已回收) 记录自我学习运行异常(回收异常);
                     锁.lock();
                     continue;
                 }
@@ -3041,9 +3076,11 @@ bool 新_自我线程类::绑定模拟学习(模拟学习服务& 服务) noexcep
         快照.最近需求数量 = 实现_->最近需求数量;
         快照.最近任务数量 = 实现_->最近任务数量;
         快照.待承接需求数 = static_cast<std::uint64_t>(实现_->扫描承接.size());
-        快照.待学习方法数=实现_->在途学习.size();
-        快照.最近学习结果=实现_->最近学习结果;
-        快照.学习结果已交接管理=实现_->学习结果已交接管理;
+        快照.待学习方法数=static_cast<std::uint64_t>(std::count_if(
+            实现_->在途学习.begin(),实现_->在途学习.end(),[](const auto& 项) { return !项.second.已消费; }));
+        快照.最近学习结束=实现_->最近学习结束;
+        快照.学习结束已交接管理=实现_->学习结束已交接管理;
+        快照.最近学习运行异常=实现_->最近学习运行异常;
         return 快照;
     } catch (...) {
         快照.生命周期 = 新自我线程生命周期::内部错误;

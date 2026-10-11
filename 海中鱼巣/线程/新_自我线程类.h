@@ -309,8 +309,9 @@ struct 新自我线程快照 final {
     std::optional<std::uint64_t> 最近任务数量;
     std::uint64_t 待承接需求数 = 0;
     std::uint64_t 待学习方法数 = 0;
-    std::optional<新模拟学习结果> 最近学习结果;
-    bool 学习结果已交接管理 = false;
+    std::optional<新学习结束通知> 最近学习结束;
+    bool 学习结束已交接管理 = false;
+    std::optional<新学习运行异常记录> 最近学习运行异常;
 };
 
 // 当前复核本能需求、异步交接安全根任务，裁决W1/W2筹办与执行前判断，

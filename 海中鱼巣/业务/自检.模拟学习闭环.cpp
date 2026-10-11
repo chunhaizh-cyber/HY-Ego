@@ -16,6 +16,7 @@
 #include <iostream>
 #include <limits>
 #include <mutex>
+#include <new>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -28,6 +29,27 @@ using namespace std::chrono_literals;
 
 void 要求(bool 成立, const char* 说明) {
     if (!成立) throw std::runtime_error(说明);
+}
+
+template<class 函数>
+void 要求运行异常(函数&& 操作, 稳定编码 方法, 新学习运行异常原因 原因) {
+    try { 操作(); }
+    catch (const 新学习运行异常& e) {
+        要求(e.记录().方法节点 == 方法 && e.记录().原因 == 原因, "wrong typed runtime exception");
+        return;
+    }
+    throw std::runtime_error("expected typed runtime exception was not thrown");
+}
+
+std::vector<基础外部关系> 模拟根关系() {
+    return 全局基础数据集.查询源关系(模拟世界树根节点, 基础外部关系类型::父子);
+}
+
+void 要求新样例(const std::vector<基础外部关系>& 前) {
+    const auto 后 = 模拟根关系();
+    要求(后.size() == 前.size() + 1, "learning did not append one independent sample");
+    for (const auto& 关系 : 前)
+        要求(std::find(后.begin(), 后.end(), 关系) != 后.end(), "learning changed existing sample roots");
 }
 
 新方法条件结果定义 承载测试配对(const 新服务值结算登记材料& m, 整数 输入, 整数 输出) {
@@ -227,7 +249,7 @@ int 运行模拟学习闭环自检() noexcept {
         模拟学习服务 学习{s.方法, s.特征概念, s.端口};
         std::optional<新方法条件结果信息> 原有承载配对;
         std::optional<新方法信息> 学习前副本;
-        std::optional<稳定编码> 首次学习场景;
+        std::optional<稳定编码> 无适配方法;
         const auto 普通特征前 = s.特征.获取特征(s.端口.材料.服务值特征);
         const auto 普通存在前 = s.存在.获取存在(s.端口.材料.自我存在);
         const auto 普通场景前 = s.场景.获取场景(s.场景根);
@@ -254,16 +276,38 @@ int 运行模拟学习闭环自检() noexcept {
                 "MAX accepted");
         });
         检查("learning rejects unsupported input and supports cancellation", [&] {
-            要求(学习.学习({}).状态 == 新模拟学习状态::方法不可读, "invalid method accepted");
-            要求(学习.学习(s.方法节点, [] { return true; }).状态 == 新模拟学习状态::已取消,
-                "pre-start cancellation ignored");
-            要求(学习.学习(s.方法节点, []() -> bool { throw std::runtime_error("cancel"); }).状态
-                == 新模拟学习状态::已取消, "throwing cancellation ignored");
+            要求运行异常([&] { (void)学习.学习({}); }, {}, 新学习运行异常原因::输入不合法);
+            要求运行异常([&] { (void)学习.学习(s.端口.材料.服务根需求); },
+                s.端口.材料.服务根需求, 新学习运行异常原因::结构不一致);
+            要求运行异常([&] { (void)学习.学习(s.方法节点, [] { return true; }); },
+                s.方法节点, 新学习运行异常原因::停止取消);
+            要求运行异常([&] { (void)学习.学习(s.方法节点, []() -> bool { throw std::runtime_error("cancel"); }); },
+                s.方法节点, 新学习运行异常原因::内部错误);
+            要求运行异常([&] { (void)学习.学习(s.方法节点, []() -> bool { throw std::bad_alloc(); }); },
+                s.方法节点, 新学习运行异常原因::资源不足);
             只读登记材料端口 bad; bad.材料 = s.端口.材料;
             bad.材料.冻结前值 = (std::numeric_limits<整数>::max)();
             模拟学习服务 invalid{s.方法, s.特征概念, bad};
-            要求(invalid.学习(s.方法节点).状态 == 新模拟学习状态::输入不支持, "invalid material accepted");
+            要求运行异常([&] { (void)invalid.学习(s.方法节点); }, s.方法节点, 新学习运行异常原因::输入不合法);
+            bad.材料 = s.端口.材料;
+            bad.读取前 = [] { throw std::runtime_error("provider returned no material"); };
+            要求运行异常([&] { (void)invalid.学习(s.方法节点); }, s.方法节点, 新学习运行异常原因::结构不一致);
             要求(s.方法.获取方法(s.方法节点)->条件结果组.empty(), "rejected learning published CR");
+        });
+        检查("valid unadapted head-only method returns end notice without external calls", [&] {
+            新方法知识建立请求 声明;
+            声明.方法头.涉及特征类型概念组 = {s.端口.材料.服务值类型根};
+            声明.方法头.可能结果概念组 = {s.端口.材料.目标值域};
+            // 只核验登记方法的暂无适配分支，不声称这些是网页函数的运行参数规格。
+            const auto 新建 = s.方法.确保本能方法登记(std::string(新本能函数登记名_读取网页对话消息), 声明);
+            要求(新建.方法节点.has_value(), "unadapted formal method registration");
+            无适配方法 = 新建.方法节点;
+            const auto before = s.方法.获取方法(*无适配方法);
+            const auto reads = s.端口.读取次数.load();
+            const auto notice = 学习.学习(*无适配方法);
+            要求(notice.方法节点 == *无适配方法 && before && before->条件结果组.empty()
+                && s.方法.获取方法(*无适配方法) == before && s.端口.读取次数 == reads
+                && s.端口.越界次数 == 0, "unadapted learning produced knowledge or called real port");
         });
         检查("fake binding and missing simulated port reject without real fallback", [&] {
             const auto sample = s.新样例();
@@ -322,6 +366,22 @@ int 运行模拟学习闭环自检() noexcept {
                     "web simulation reached real dispatch");
             }
         });
+        检查("exceptions inside evaluator retain typed reason through numerical algorithm", [&] {
+            const auto methodBefore = s.方法.获取方法(s.方法节点);
+            for (const auto reason : {新学习运行异常原因::停止取消,
+                    新学习运行异常原因::资源不足, 新学习运行异常原因::内部错误}) {
+                const auto roots = 模拟根关系();
+                const auto callback = [&]() -> bool {
+                    if (模拟根关系().size() <= roots.size()) return false;
+                    if (reason == 新学习运行异常原因::资源不足) throw std::bad_alloc();
+                    if (reason == 新学习运行异常原因::内部错误) throw std::runtime_error("evaluator stop callback");
+                    return true;
+                };
+                要求运行异常([&] { (void)学习.学习(s.方法节点, callback); }, s.方法节点, reason);
+                要求新样例(roots);
+                要求(s.方法.获取方法(s.方法节点) == methodBefore, "evaluator exception published knowledge");
+            }
+        });
         检查("worker duplicate, pending acknowledgement and stop cancellation", [&] {
             auto gate = std::make_shared<读取闸门>();
             s.端口.读取前 = [gate] { gate->等待(); };
@@ -341,13 +401,36 @@ int 运行模拟学习闭环自检() noexcept {
             要求(first.处理结果.wait_for(0s) == std::future_status::ready
                 && duplicate.处理结果.wait_for(0s) == std::future_status::ready
                 && queued.处理结果.wait_for(0s) == std::future_status::ready, "accepted future lost");
-            要求(first.处理结果.get().状态 == 新模拟学习状态::已取消
-                && duplicate.处理结果.get().状态 == 新模拟学习状态::已取消
-                && queued.处理结果.get().状态 == 新模拟学习状态::已取消, "stop reported false success");
+            要求运行异常([&] { (void)first.处理结果.get(); }, s.方法节点, 新学习运行异常原因::停止取消);
+            要求运行异常([&] { (void)duplicate.处理结果.get(); }, s.方法节点, 新学习运行异常原因::停止取消);
+            要求运行异常([&] { (void)queued.处理结果.get(); }, s.端口.材料.服务根需求, 新学习运行异常原因::停止取消);
             要求(worker.提交学习(s.方法节点).状态 == 新学习操作状态::已停止接收, "stopped worker accepted work");
             要求(s.方法.获取方法(s.方法节点)->条件结果组.empty(), "cancelled work published CR");
         });
         s.端口.读取前 = {};
+        检查("worker exception future remains confirmable and later work still ends normally", [&] {
+            std::atomic<unsigned> 通知{0};
+            新_学习线程类 worker{学习, [&] { ++通知; throw std::runtime_error("notification"); }};
+            要求(worker.启动(3000) == 新学习操作状态::已完成, "exception worker start");
+            const auto bad = worker.提交学习(s.端口.材料.服务根需求);
+            要求(bad.处理结果.valid() && bad.处理结果.wait_for(5s) == std::future_status::ready, "runtime exception lost");
+            要求运行异常([&] { (void)bad.处理结果.get(); },
+                s.端口.材料.服务根需求, 新学习运行异常原因::结构不一致);
+            const auto duplicate = worker.提交学习(s.端口.材料.服务根需求);
+            要求(duplicate.状态 == 新学习操作状态::精确重复, "exception work lost deduplication");
+            要求运行异常([&] { (void)duplicate.处理结果.get(); },
+                s.端口.材料.服务根需求, 新学习运行异常原因::结构不一致);
+            要求(worker.确认结果已接收(s.端口.材料.服务根需求) == 新学习操作状态::已完成, "exception acknowledgement");
+            要求(无适配方法.has_value(), "missing unadapted method");
+            const auto good = worker.提交学习(*无适配方法);
+            要求(good.处理结果.valid() && good.处理结果.wait_for(5s) == std::future_status::ready
+                && good.处理结果.get().方法节点 == *无适配方法, "runtime exception stopped subsequent work");
+            要求(worker.确认结果已接收(*无适配方法) == 新学习操作状态::已完成, "normal end acknowledgement");
+            (void)worker.请求停止();
+            要求(worker.等待停止(5000) == 新学习操作状态::已完成 && 通知 >= 2,
+                "callback exception damaged future/join");
+            要求(s.方法.获取方法(s.方法节点)->条件结果组.empty(), "failed work published knowledge");
+        });
         检查("owner seeds one unrelated CR and copies it before learning (not simulation evidence)", [&] {
             const auto seed = s.方法.追加模拟条件结果(s.方法节点, {承载测试配对(s.端口.材料, 3, 4)});
             const auto m = s.方法.获取方法(s.方法节点);
@@ -371,26 +454,30 @@ int 运行模拟学习闭环自检() noexcept {
             }};
             worker地址 = &worker;
             要求(worker.启动(3000) == 新学习操作状态::已完成, "worker start");
+            const auto 首轮根关系 = 模拟根关系();
             const auto accepted = worker.提交学习(s.方法节点);
             要求(accepted.处理结果.valid() && accepted.处理结果.wait_for(5s) == std::future_status::ready,
                 "learning result timeout");
             const auto r = accepted.处理结果.get();
-            要求(r.状态 == 新模拟学习状态::已形成知识 && r.配对节点 && r.模拟场景节点, "learning did not publish");
-            首次学习场景 = r.模拟场景节点;
+            要求(r.方法节点 == s.方法节点, "end notice method mismatch");
+            要求新样例(首轮根关系);
+            const auto 重复前读取次数 = s.端口.读取次数.load();
             const auto duplicate = worker.提交学习(s.方法节点);
             要求(duplicate.状态 == 新学习操作状态::精确重复
-                && duplicate.处理结果.get().配对节点 == r.配对节点, "completed result not retained");
+                && duplicate.处理结果.get().方法节点 == r.方法节点
+                && s.端口.读取次数 == 重复前读取次数, "completed end notice not retained");
             要求(worker.确认结果已接收(s.方法节点) == 新学习操作状态::已完成, "result acknowledgement");
             const auto 读取前 = s.端口.读取次数.load();
             const auto 方法前 = s.方法.获取方法(s.方法节点);
+            const auto 再次根关系 = 模拟根关系();
             const auto again = worker.提交学习(s.方法节点);
             要求(again.状态 == 新学习操作状态::已完成 && again.处理结果.valid()
                 && again.处理结果.wait_for(5s) == std::future_status::ready, "acknowledged worker did not rerun");
             const auto rerun = again.处理结果.get();
-            要求(rerun.状态 == 新模拟学习状态::精确重复 && rerun.配对节点 == r.配对节点
-                && rerun.模拟场景节点 && rerun.模拟场景节点 != r.模拟场景节点
+            要求(rerun.方法节点 == s.方法节点
                 && s.端口.读取次数 > 读取前 && s.方法.获取方法(s.方法节点) == 方法前,
                 "worker reused completed knowledge instead of executing new sample");
+            要求新样例(再次根关系);
             要求(worker.确认结果已接收(s.方法节点) == 新学习操作状态::已完成, "rerun acknowledgement");
             (void)worker.请求停止();
             要求(worker.等待停止(5000) == 新学习操作状态::已完成 && 通知 > 0, "completion wake/join");
@@ -400,7 +487,7 @@ int 运行模拟学习闭环自检() noexcept {
             要求(m && m->条件结果组.size() == 2 && 原有承载配对
                 && m->条件结果组.front() == *原有承载配对, "old pair was replaced/changed");
             const auto& pair = m->条件结果组.back();
-            要求(pair.命中次数 == 0 && pair.配对节点 == *r.配对节点
+            要求(pair.命中次数 == 0
                 && pair.条件.条件项组.size() == 2 && pair.结果.结果项组.size() == 1, "pair shape/hit count");
             要求(pair.条件.条件项组[0].精确数值域 == 区间{4,4}
                 && pair.条件.条件项组[1].精确数值域 == 区间{9,9}
@@ -410,15 +497,13 @@ int 运行模拟学习闭环自检() noexcept {
         });
         检查("repeat learning and method copy preserve knowledge/hit zero", [&] {
             const auto before = s.方法.获取方法(s.方法节点);
-            要求(before && before->条件结果组.size() == 2 && 首次学习场景, "missing learned method");
+            要求(before && before->条件结果组.size() == 2, "missing learned method");
             const auto reads = s.端口.读取次数.load();
+            const auto roots = 模拟根关系();
             const auto r = 学习.学习(s.方法节点);
-            要求(r.状态 == 新模拟学习状态::精确重复 && r.模拟场景节点
-                && r.模拟场景节点 != 首次学习场景 && s.端口.读取次数 > reads
-                && 全局基础数据集.查询节点(*r.模拟场景节点)
-                && r.配对节点 == before->条件结果组.back().配对节点
-                && r.配对节点 != before->条件结果组.front().配对节点
+            要求(r.方法节点 == s.方法节点 && s.端口.读取次数 > reads
                 && s.方法.获取方法(s.方法节点) == before, "repeat skipped simulation or matched wrong pair");
+            要求新样例(roots);
             要求(学习前副本 && s.方法.获取方法(学习前副本->节点) == 学习前副本,
                 "old method instance refreshed itself");
             const auto copy = s.方法.复制方法(s.方法节点);
@@ -430,7 +515,8 @@ int 运行模拟学习闭环自检() noexcept {
                     && m->条件结果组[i].配对节点 != before->条件结果组[i].配对节点
                     && m->条件结果组[i].条件 == before->条件结果组[i].条件
                     && m->条件结果组[i].结果 == before->条件结果组[i].结果, "copy lost learned private domains");
-            要求(学习.学习(*copy.方法实例节点).状态 == 新模拟学习状态::输入不支持, "copy accepted as abstract learning target");
+            要求运行异常([&] { (void)学习.学习(*copy.方法实例节点); },
+                *copy.方法实例节点, 新学习运行异常原因::输入不合法);
             const 新方法条件结果定义 pair{before->条件结果组.back().条件, before->条件结果组.back().结果};
             const auto duplicate = s.方法.追加模拟条件结果(s.方法节点, {pair});
             要求(duplicate.状态 == 新方法学习发布状态::精确重复 && duplicate.新配对节点组.empty()
@@ -478,11 +564,11 @@ int 运行模拟学习闭环自检() noexcept {
             bad.材料 = s.端口.材料;
             bad.材料.冻结前值 = (std::numeric_limits<整数>::max)();
             模拟学习服务 invalid{s.方法, s.特征概念, bad};
-            const auto r = invalid.学习(s.方法节点);
-            要求(r.状态 == 新模拟学习状态::输入不支持 && !r.配对节点 && !r.模拟场景节点
-                && bad.读取次数 == 1, "nonempty method bypassed material validation");
-            要求(学习.学习(s.方法节点, [] { return true; }).状态 == 新模拟学习状态::已取消
-                && s.方法.获取方法(s.方法节点) == before, "nonempty cancellation changed knowledge");
+            要求运行异常([&] { (void)invalid.学习(s.方法节点); }, s.方法节点, 新学习运行异常原因::输入不合法);
+            要求(bad.读取次数 == 1, "nonempty method bypassed material validation");
+            要求运行异常([&] { (void)学习.学习(s.方法节点, [] { return true; }); },
+                s.方法节点, 新学习运行异常原因::停止取消);
+            要求(s.方法.获取方法(s.方法节点) == before, "nonempty cancellation changed knowledge");
         });
         检查("OR condition permutations merge but ordered conditions and multiplicities stay distinct", [&] {
             const auto 追加并保持旧对 = [&](const 新方法条件结果定义& definition) {
@@ -537,31 +623,42 @@ int 运行模拟学习闭环自检() noexcept {
             const auto reads = s.端口.读取次数.load();
             const auto beforeLearning = s.方法.获取方法(s.方法节点);
             const auto learned = 学习.学习(s.方法节点);
-            要求(learned.状态 == 新模拟学习状态::精确重复 && learned.模拟场景节点
-                && learned.模拟场景节点 != 首次学习场景 && s.端口.读取次数 > reads
+            要求(learned.方法节点 == s.方法节点 && s.端口.读取次数 > reads
                 && beforeLearning && beforeLearning->条件结果组.size() >= 2
-                && learned.配对节点 == beforeLearning->条件结果组[1].配对节点
                 && s.方法.获取方法(s.方法节点) == beforeLearning, "manager material skipped real repeated simulation");
-            要求(!manager.提交方法学习结果(learned), "unbound/stopped manager accepted learning");
+            要求(!manager.提交方法学习结束(learned), "unbound/stopped manager accepted learning");
             要求(manager.绑定方法学习读取(s.方法) && manager.绑定方法学习读取(s.方法),
                 "same learning reader not idempotent");
             新_方法类 other方法{s.存在, s.场景, s.特征值, s.特征, s.存在概念, s.特征概念};
             要求(!manager.绑定方法学习读取(other方法), "manager replaced bound owner");
-            要求(!manager.提交方法学习结果(learned), "not-started manager accepted learning");
+            要求(!manager.提交方法学习结束(learned), "not-started manager accepted learning");
             要求(manager.启动({8, 10}, 3000).状态 == 新任务管理操作状态::已完成, "manager start");
             const auto before = 任务.查询全部任务();
             要求(before.状态 == 新任务操作状态::已找到 && before.任务节点组.empty(), "unexpected baseline tasks");
-            要求(!manager.提交方法学习结果({}), "manager accepted invalid learning result");
-            要求(manager.提交方法学习结果(learned), "manager rejected learned knowledge");
+            要求(!manager.提交方法学习结束({}), "manager accepted invalid end notice");
+            要求(无适配方法.has_value(), "missing zero-knowledge method");
+            const auto empty = 学习.学习(*无适配方法);
+            要求(manager.提交方法学习结束(empty), "manager rejected zero-knowledge end notice");
             新任务管理快照 snapshot;
-            const auto deadline = std::chrono::steady_clock::now() + 5s;
+            auto deadline = std::chrono::steady_clock::now() + 5s;
             do {
                 snapshot = manager.读取快照();
-                if (snapshot.最近方法学习结果) break;
+                if (snapshot.最近方法学习结束 && snapshot.最近方法学习结束->方法节点 == *无适配方法) break;
                 std::this_thread::sleep_for(1ms);
             } while (std::chrono::steady_clock::now() < deadline);
-            要求(snapshot.最近方法学习结果
-                && snapshot.最近方法学习结果->方法节点 == s.方法节点
+            const auto emptyMethod = s.方法.获取方法(*无适配方法);
+            要求(snapshot.最近方法学习结束 && snapshot.最近方法学习结束->方法节点 == *无适配方法
+                && !snapshot.等待方法实例消费 && !snapshot.最近学习运行异常 && snapshot.活动工作数 == 0
+                && emptyMethod && emptyMethod->条件结果组.empty(), "zero-knowledge end notice was discarded");
+            要求(manager.提交方法学习结束(learned), "manager rejected end notice with tree knowledge");
+            deadline = std::chrono::steady_clock::now() + 5s;
+            do {
+                snapshot = manager.读取快照();
+                if (snapshot.最近方法学习结束 && snapshot.最近方法学习结束->方法节点 == s.方法节点) break;
+                std::this_thread::sleep_for(1ms);
+            } while (std::chrono::steady_clock::now() < deadline);
+            要求(snapshot.最近方法学习结束
+                && snapshot.最近方法学习结束->方法节点 == s.方法节点
                 && snapshot.等待方法实例消费 && snapshot.活动工作数 == 0,
                 "manager did not expose waiting-for-instance-consumption state");
             const auto after = 任务.查询全部任务();
@@ -569,7 +666,7 @@ int 运行模拟学习闭环自检() noexcept {
                 "knowledge notification created/advanced tasks");
             要求(manager.请求停止().状态 == 新任务管理操作状态::已完成
                 && manager.等待停止(5000).状态 == 新任务管理操作状态::已完成, "manager stop/join");
-            要求(!manager.提交方法学习结果(learned), "stopped manager accepted knowledge");
+            要求(!manager.提交方法学习结束(learned), "stopped manager accepted end notice");
         });
     } catch (const std::exception& e) { ++失败; std::cout << "FAIL initialization/driver: " << e.what() << '\n'; }
     catch (...) { ++失败; std::cout << "FAIL initialization/driver: unknown exception\n"; }
@@ -577,6 +674,8 @@ int 运行模拟学习闭环自检() noexcept {
         << "NOT_RUN physical corruption/allocation failure/post-publication unknown injection (no public injection contract)\n"
         << "NOT_RUN invalid/MAX physical pair order or duplicate same-condition storage injection (no public injection contract)\n"
         << "NOT_RUN whole-dataset zero-write counter (no public counter; rejected calls compare complete method snapshots)\n"
+        << "NOT_RUN service conflict end branch: unique settlement registration and immutable existing CR prevent a second legal conflicting fixture; owner conflict is tested\n"
+        << "NOT_RUN real self exception injection/log facility failure/nonzero hit manager fixture (no public injection contract)\n"
         << "NOT_RUN full concept inventory equality/Release/Win32/recovery\n"
         << "SUMMARY " << 通过 << " PASS / " << 失败 << " FAIL\n";
     return 失败 == 0 ? 0 : 1;
