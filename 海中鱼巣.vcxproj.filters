@@ -36,6 +36,36 @@
     <ClInclude Include="海中鱼巣\业务\自检.模拟学习.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\自检.方法精确值域.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\自检.方法精确值域.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\自检.模拟学习闭环.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\自检.模拟学习闭环.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\模拟学习.服务.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\模拟学习.服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\领域\新_模拟世界类.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\领域\新_模拟世界类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\线程\新_学习线程类.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\线程\新_学习线程类.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="海中鱼巣\装配.普通应用.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -321,6 +351,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClCompile Include="海中鱼巣\领域\新_本能函数集.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\领域\服务值结算.本能合同.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\业务\服务值结算.本能运行服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\服务值结算.本能运行服务.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClInclude Include="海中鱼巣\领域\新_本能函数管理类.h">

@@ -236,6 +236,22 @@ struct 新任务候选方法发布结果 final {
     std::optional<稳定编码> 材料节点;
 };
 
+struct 新任务服务结算来源绑定 final {
+    新任务虚拟存在引用 来源任务;
+    std::int64_t 冻结前值 = 0;
+    稳定编码 目标值域概念节点;
+    friend bool operator==(const 新任务服务结算来源绑定&,
+        const 新任务服务结算来源绑定&) = default;
+};
+
+struct 新任务服务结算配置 final {
+    稳定编码 结算任务节点, 登记方法校验节点, 服务根需求, 结算需求;
+    std::int64_t 冻结前值 = 0;
+    稳定编码 目标值域概念节点;
+    friend bool operator==(const 新任务服务结算配置&,
+        const 新任务服务结算配置&) = default;
+};
+
 struct 新任务执行信息 final {
     稳定编码 节点;
     稳定编码 任务节点;
@@ -250,6 +266,8 @@ struct 新任务执行信息 final {
     std::vector<稳定编码> 动作输出状态节点组;
     std::vector<稳定编码> 实际状态节点组;
     std::optional<稳定编码> 影响评估节点;
+    std::optional<新任务服务结算来源绑定> 服务结算来源;
+    std::optional<稳定编码> 普通动作节点;
     friend bool operator==(const 新任务执行信息&,
         const 新任务执行信息&) = default;
 };
@@ -266,6 +284,7 @@ struct 新任务信息 final {
     std::optional<稳定编码> 完成结算节点;
     // 正式采用的完整方法副本根，不是最近执行记录或来源抽象方法。
     std::optional<稳定编码> 方法实例节点;
+    std::optional<新任务服务结算来源绑定> 服务结算来源;
     friend bool operator==(const 新任务信息&, const 新任务信息&) = default;
 };
 
@@ -725,7 +744,8 @@ enum class 新任务治理本能执行状态 : std::uint8_t {
     执行结束失败,
     影响评估失败,
     结构不一致,
-    资源失败
+    资源失败,
+    工程停止
 };
 
 // 只描述一次W3工作实际到达的位置。即使已经完成影响评估，也不证明
@@ -872,6 +892,17 @@ struct 新任务已结算结果 final {
 
 class 新_任务类 final : public 新内部治理对象读取接口 {
 public:
+    新任务操作状态 配置服务结算任务(const 新任务服务结算配置&) noexcept;
+    新任务操作状态 接纳服务结算来源(
+        稳定编码 结算任务节点, const 新任务服务结算来源绑定& 绑定) noexcept;
+    std::optional<新任务服务结算来源绑定> 读取服务结算来源(
+        稳定编码 结算任务节点) const noexcept;
+    新任务操作状态 准备服务结算筹办(稳定编码 结算任务节点) noexcept;
+    bool 装配本能动作读取(新_动态类& 动态服务) noexcept;
+    std::optional<稳定编码> 获取任务已结算动作定义() const noexcept;
+    新任务操作状态 记录本能动作身份(
+        稳定编码 任务节点, 稳定编码 执行实例节点,
+        稳定编码 动作动态节点, 新_动态类& 动态服务) noexcept;
     std::optional<新任务虚拟存在读回> 读取任务虚拟存在引用(
         const 新任务虚拟存在引用&) const noexcept override;
     std::optional<稳定编码> 获取任务状态特征类型() const noexcept;
@@ -1088,6 +1119,8 @@ private:
     概念_二次特征类& 二次特征概念服务_;
     概念_存在类& 存在概念服务_;
     bool 治理已初始化_ = false;
+    std::optional<新任务服务结算配置> 服务结算配置_;
+    新_动态类* 本能动作读取_ = nullptr;
 };
 
 } // namespace 海中鱼巣

@@ -132,6 +132,11 @@ enum class 新动态操作状态 : std::uint8_t {
     动作关系冲突 = 32
 };
 
+struct 新动态动作来源查询结果 final {
+    新动态操作状态 状态 = 新动态操作状态::入口拒绝;
+    std::optional<新动态信息> 动作;
+};
+
 struct 新动态建立结果 final {
     新动态操作状态 状态 = 新动态操作状态::入口拒绝;
     std::optional<稳定编码> 动态节点;
@@ -190,6 +195,8 @@ public:
 
     std::optional<新动态信息> 获取动态(
         稳定编码 动态节点) const noexcept;
+    新动态动作来源查询结果 按来源查询动作(
+        稳定编码 来源节点) const noexcept;
     bool 是动态节点(稳定编码 节点) const noexcept;
 
     std::vector<稳定编码> 按主题查询动态(

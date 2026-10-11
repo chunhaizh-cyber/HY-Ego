@@ -8,6 +8,8 @@
 #include <vector>
 #include "../领域/新_任务类.h"
 #include "新_任务工作线程类.h"
+#include "../领域/服务值结算.本能合同.h"
+#include "../业务/模拟学习.服务.h"
 
 namespace 海中鱼巣 {
 
@@ -87,6 +89,8 @@ struct 新任务管理快照 final {
     std::optional<稳定编码> 服务值结算需求;
     std::optional<稳定编码> 服务值结算任务;
     bool 服务值结算方法已配置 = false;
+    std::optional<新模拟学习结果> 最近方法学习结果;
+    bool 等待方法实例消费 = false;
 };
 
 // self初始化后、manager启动前锁定。它只描述长期内部治理任务使用的
@@ -97,6 +101,11 @@ struct 新长期服务值结算配置 final {
     稳定编码 自我存在;
     稳定编码 服务值特征;
     稳定编码 完成服务需求;
+    稳定编码 服务根需求;
+    稳定编码 登记方法校验节点;
+    std::int64_t 冻结前值 = 0;
+    稳定编码 目标值域概念节点;
+    新服务值结算确认接口* 工程诊断端口 = nullptr;
 
     bool 完整() const noexcept;
     friend bool operator==(const 新长期服务值结算配置&,
@@ -190,7 +199,8 @@ enum class 新任务执行处理状态 : std::uint8_t {
     工作未完成,
     独立读回失败,
     停止取消,
-    内部错误
+    内部错误,
+    工程停止
 };
 
 struct 新任务执行处理结果 final {
@@ -281,10 +291,13 @@ enum class 新自我筹办裁决接收状态 : std::uint8_t {
 };
 
 // 当前完成M1承接、W1/W2筹办、self执行前裁决回收，并在self允许后
-// 派发W3本能执行；初始化时还建立并阻塞长期服务值结算任务。普通方法
-// 仍由worker执行，服务值结算使用独立的内部治理函数指针。
+// 派发W3本能执行；结算任务无明确来源时等待条件，具备来源后同样
+// 经W1召回、W2核验和self选择进入worker，初始化不预绑函数指针。
 class 新_任务管理线程类 final {
 public:
+    bool 绑定方法学习读取(const 新_方法类&) noexcept;
+    // 仅交接知识变化；不修改任务、冻结实例或解除执行保护。
+    bool 提交方法学习结果(const 新模拟学习结果&) noexcept;
     // 任务服务必须比本对象存活更久；绑定本对象的self必须先回收。
     explicit 新_任务管理线程类(新_任务类& 任务服务) noexcept;
     ~新_任务管理线程类() noexcept;
@@ -313,6 +326,7 @@ private:
     using 结果反馈接收函数 = std::function<新任务结果反馈接收状态(
         const 新任务结果反馈定位&)>;
     bool 使用任务服务(const 新_任务类& 任务服务) const noexcept;
+    新服务值结算协作状态 接纳服务值结算来源(稳定编码 已完成任务节点) noexcept;
     新任务管理操作状态 绑定自我筹办反馈(
         const void* 所有者,
         筹办反馈接收函数 筹办接收,

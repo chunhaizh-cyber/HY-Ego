@@ -152,6 +152,16 @@
     <ClInclude Include="海中鱼巣\业务\模拟学习.算法.h" />
     <ClCompile Include="海中鱼巣\业务\自检.模拟学习.cpp" />
     <ClInclude Include="海中鱼巣\业务\自检.模拟学习.h" />
+    <ClCompile Include="海中鱼巣\业务\自检.方法精确值域.cpp" />
+    <ClInclude Include="海中鱼巣\业务\自检.方法精确值域.h" />
+    <ClCompile Include="海中鱼巣\业务\自检.模拟学习闭环.cpp" />
+    <ClInclude Include="海中鱼巣\业务\自检.模拟学习闭环.h" />
+    <ClCompile Include="海中鱼巣\业务\模拟学习.服务.cpp" />
+    <ClInclude Include="海中鱼巣\业务\模拟学习.服务.h" />
+    <ClCompile Include="海中鱼巣\领域\新_模拟世界类.cpp" />
+    <ClInclude Include="海中鱼巣\领域\新_模拟世界类.h" />
+    <ClCompile Include="海中鱼巣\线程\新_学习线程类.cpp" />
+    <ClInclude Include="海中鱼巣\线程\新_学习线程类.h" />
     <ClCompile Include="海中鱼巣\启动.程序运行宿主.cpp" />
     <ClInclude Include="海中鱼巣\启动.程序运行宿主.h" />
     <ClInclude Include="海中鱼巣\启动.应用程序.h" />
@@ -189,6 +199,7 @@
     <ClCompile Include="海中鱼巣\领域\新_方法参数场景.cpp" />
     <ClCompile Include="海中鱼巣\领域\新_方法类.cpp" />
     <ClCompile Include="海中鱼巣\领域\新_本能函数集.cpp" />
+    <ClCompile Include="海中鱼巣\业务\服务值结算.本能运行服务.cpp" />
     <ClCompile Include="海中鱼巣\领域\新_本能函数管理类.cpp" />
     <ClCompile Include="海中鱼巣\领域\新_因果类.cpp" />
     <ClCompile Include="海中鱼巣\适配\适配器.单调时钟.cpp" />
@@ -252,6 +263,8 @@
     <ClInclude Include="海中鱼巣\领域\新_方法参数场景.h" />
     <ClInclude Include="海中鱼巣\领域\新_方法类.h" />
     <ClInclude Include="海中鱼巣\领域\新_本能函数集.h" />
+    <ClInclude Include="海中鱼巣\领域\服务值结算.本能合同.h" />
+    <ClInclude Include="海中鱼巣\业务\服务值结算.本能运行服务.h" />
     <ClInclude Include="海中鱼巣\领域\新_本能函数管理类.h" />
     <ClInclude Include="海中鱼巣\领域\新_因果公共类型.h" />
     <ClInclude Include="海中鱼巣\领域\新_因果类.h" />

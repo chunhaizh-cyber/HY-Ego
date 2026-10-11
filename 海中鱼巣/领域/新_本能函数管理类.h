@@ -4,8 +4,10 @@
 #include <string_view>
 
 #include "新_本能函数集.h"
+#include "服务值结算.本能合同.h"
 
 namespace 海中鱼巣 {
+inline constexpr std::string_view 新本能函数登记名_服务值结算 = "服务值结算";
 
 // 稳定程序内登记名不是自然语言方法名称，也不作为能力判断依据。
 inline constexpr std::string_view 新本能函数登记名_读取网页对话消息 =
@@ -30,7 +32,10 @@ enum class 新本能函数端口装配状态 : std::uint8_t {
     精确重复,
     入口拒绝,
     所有者冲突,
-    内部错误
+    内部错误,
+    已关闭,
+    已卸载,
+    存在活动调用
 };
 
 enum class 新本能函数登记状态 : std::uint8_t {
@@ -73,6 +78,9 @@ public:
     // 进程内只允许一个真实网页对话端口；同一端口可重复装配，不允许替换。
     static 新本能函数端口装配状态 装配网页对话端口(
         const 新本能网页对话函数端口& 端口) noexcept;
+    static 新本能函数端口装配状态 装配服务值结算端口(新服务值结算本能端口&) noexcept;
+    static 新本能函数端口装配状态 关闭服务值结算端口(新服务值结算本能端口&) noexcept;
+    static 新本能函数端口装配状态 卸载服务值结算端口(新服务值结算本能端口&) noexcept;
 
     // 同名同入口返回精确重复；同名不同入口拒绝，已登记入口不允许替换。
     static 新本能函数登记状态 登记(
@@ -92,6 +100,18 @@ public:
         const 方法参数场景& 参数场景) noexcept;
 
 private:
+    class 服务值结算调用守卫 final {
+    public:
+        服务值结算调用守卫() noexcept;
+        ~服务值结算调用守卫();
+        服务值结算调用守卫(const 服务值结算调用守卫&) = delete;
+        服务值结算调用守卫& operator=(const 服务值结算调用守卫&) = delete;
+        新服务值结算本能端口* operator->() const noexcept { return 端口_; }
+        explicit operator bool() const noexcept { return 端口_ != nullptr; }
+    private:
+        新服务值结算本能端口* 端口_ = nullptr;
+    };
+    static 服务值结算调用守卫 租用服务值结算端口() noexcept;
     enum class 网页对话入口 : std::uint8_t {
         读取已显示消息 = 1,
         设置输入框文本,

@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "../核心/基础数据集.h"
+#include "概念_特征类.h"
 
 namespace 海中鱼巣 {
 
@@ -74,11 +75,17 @@ struct 新方法参数特征规格 final {
         const 新方法参数特征规格&) = default;
 };
 
+enum class 新方法参数对象种类 : std::int64_t {
+    普通世界 = 1,
+    任务虚拟存在 = 2
+};
+
 struct 新方法参数规格 final {
     稳定编码 参数角色节点;
     std::optional<稳定编码> 存在概念节点;
     bool 要求场景 = false;
     std::vector<新方法参数特征规格> 特征规格组;
+    新方法参数对象种类 对象种类 = 新方法参数对象种类::普通世界;
     friend bool operator==(const 新方法参数规格&,
         const 新方法参数规格&) = default;
 };
@@ -90,6 +97,8 @@ struct 新方法条件项定义 final {
     std::optional<稳定编码> 特征值域概念节点;
     std::optional<稳定编码> 二次特征概念节点;
     std::optional<稳定编码> 状态或动态概念节点;
+    // 本项自身的有限I64区间，与特征值域概念节点互斥；单位沿特征类型定义。
+    std::optional<特征概念I64闭区间> 精确数值域;
     friend bool operator==(const 新方法条件项定义&,
         const 新方法条件项定义&) = default;
 };
@@ -101,6 +110,8 @@ struct 新方法结果项定义 final {
     std::optional<稳定编码> 变化方向概念节点;
     std::optional<稳定编码> 状态或动态概念节点;
     bool 主要结果 = false;
+    // 禁止结果项复用本结构，同样不得同时保存概念域和私有精确域。
+    std::optional<特征概念I64闭区间> 精确数值域;
     friend bool operator==(const 新方法结果项定义&,
         const 新方法结果项定义&) = default;
 };
@@ -172,8 +183,19 @@ struct 新方法条件结果信息 final {
     稳定编码 结果节点;
     新方法条件定义 条件;
     新方法结果定义 结果;
+    std::int64_t 命中次数 = 0;
     friend bool operator==(const 新方法条件结果信息&,
         const 新方法条件结果信息&) = default;
+};
+
+enum class 新方法学习发布状态 : std::uint8_t {
+    已发布 = 1, 已具备条件结果, 入口拒绝, 方法不可用,
+    条件结果不合法, 结构不一致, 资源失败, 发布结果未知
+};
+
+struct 新方法学习发布结果 final {
+    新方法学习发布状态 状态 = 新方法学习发布状态::入口拒绝;
+    std::vector<稳定编码> 新配对节点组;
 };
 
 struct 新方法组合步骤信息 final {
