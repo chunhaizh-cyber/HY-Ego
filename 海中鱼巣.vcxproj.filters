@@ -24,6 +24,12 @@
     <ClCompile Include="海中鱼巣\启动.程序入口.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\业务\模拟学习.算法.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\模拟学习.算法.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="海中鱼巣\装配.普通应用.h">
       <Filter>头文件</Filter>
     </ClInclude>
