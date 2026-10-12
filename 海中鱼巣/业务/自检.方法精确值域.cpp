@@ -4,6 +4,7 @@
 #include "../启动选项.数据.h"
 #include "../领域/新_方法类.h"
 #include "../领域/新_场景类.h"
+#include "../领域/新_任务类.h"
 #include "../领域/概念_二次特征类.h"
 
 #include <iostream>
@@ -149,6 +150,176 @@ struct 自检服务 final {
         const auto 后 = 方法.查询候选方法({});
         要求(后.状态 == 前.状态 && 后.方法节点组 == 前.方法节点组,
             "invalid request must not publish a method");
+    }
+};
+
+// 直接消费真实领域公开入口；不用身份锚代替正式需求，也不启动外设或self。
+struct 任务值域自检服务 final {
+    自检服务& 基础;
+    新_需求类 需求;
+    新_任务类 任务;
+    稳定编码 服务根;
+    稳定编码 安全根;
+    稳定编码 自我;
+    稳定编码 安全类型;
+
+    explicit 任务值域自检服务(自检服务& 服务)
+        : 基础(服务), 需求(服务.特征值, 服务.存在, 服务.特征,
+              服务.特征概念, 服务.二次概念),
+          任务(需求, 服务.方法, 服务.特征值, 服务.特征,
+              服务.特征概念, 服务.状态, 服务.场景, 服务.存在,
+              服务.二次概念, 服务.存在概念) {
+        要求(基础.场景.初始化() && 基础.二次概念.初始化()
+            && 需求.初始化() && 任务.初始化治理(), "task owners initialization");
+        const auto 根 = 基础.场景.建立根场景();
+        要求(根.场景节点.has_value(), "task scene root");
+        安全类型 = 新类型();
+        const auto 服务类型 = 新类型();
+        新存在建立请求 存在请求;
+        存在请求.初始特征组 = {{安全类型, 新特征准确值{整数{0}}},
+            {服务类型, 新特征准确值{整数{0}}}};
+        const auto 存在 = 基础.场景.建立成员存在(*根.场景节点, 存在请求,
+            {新状态时间语义::实例绝对UTC, 1});
+        要求(存在.存在节点.has_value(), "task self existence");
+        自我 = *存在.存在节点;
+        const auto 安全域 = 建域(安全类型, {100, 100});
+        新需求双根初始化请求 请求;
+        请求.安全根 = {自我, 目标(安全类型, 安全域), 100};
+        新需求目标定义 增加;
+        增加.目标特征类型概念节点 = 服务类型;
+        增加.目标形式 = 新需求目标形式::变化方向;
+        增加.目标变化方向 = 新需求变化方向::增加;
+        请求.服务根 = {自我, 增加, 100};
+        const auto 双根 = 需求.建立或取得本能双根(请求);
+        要求(双根.安全根 && 双根.服务根, "formal demand roots");
+        安全根 = *双根.安全根;
+        服务根 = *双根.服务根;
+    }
+
+    稳定编码 新类型() {
+        特征概念定义 定义;
+        定义.单位 = 全局基础数据集.新建节点();
+        要求(定义.单位 && 有效(*定义.单位), "isolated type unit");
+        定义.值域 = std::vector<区间>{{0, 100}};
+        const auto 类型 = 基础.特征概念.建立或取得特征概念(定义, 基础.特征值);
+        要求(有效(类型), "isolated task feature type");
+        return 类型;
+    }
+
+    稳定编码 建域(稳定编码 类型, 区间 域) {
+        const auto 根 = 基础.特征概念.获取特征概念(类型);
+        要求(根.has_value(), "task domain type");
+        特征概念定义 定义;
+        定义.单位 = 根->单位;
+        定义.值域 = std::vector<区间>{域};
+        const auto 概念 = 基础.特征概念.建立或取得特征概念(定义, 基础.特征值, 类型);
+        要求(有效(概念), "task domain concept");
+        return 概念;
+    }
+
+    新需求目标定义 目标(稳定编码 类型, 稳定编码 域,
+        二次特征结果域种类 关系 = 二次特征结果域种类::包含于参照值域) {
+        const std::vector<二次特征概念输入定义> 输入{
+            {0, 二次特征输入角色::左输入, 二次特征输入来源种类::特征准确值, 类型},
+            {1, 二次特征输入角色::右输入, 二次特征输入来源种类::特征准确值, 类型}};
+        const auto 根 = 基础.二次概念.建立或取得默认二次特征概念(
+            二次特征算法::有向特征差值, 输入, 域);
+        要求(根.概念节点.has_value(), "target comparison root");
+        const auto 子 = 基础.二次概念.建立或取得参照结果域概念(*根.概念节点, 关系);
+        要求(子.概念节点.has_value(), "target comparison relation");
+        新需求目标定义 定义;
+        定义.目标特征类型概念节点 = 类型;
+        定义.目标值域概念节点 = 域;
+        定义.目标比较关系概念节点 = *子.概念节点;
+        return 定义;
+    }
+
+    struct 样例 final {
+        稳定编码 任务节点;
+        稳定编码 场景节点;
+        稳定编码 类型;
+        稳定编码 方法节点;
+    };
+
+    样例 建样例(区间 条件域, 区间 结果域, bool 直接,
+        std::optional<整数> 当前值 = 整数{0},
+        二次特征结果域种类 目标关系 = 二次特征结果域种类::包含于参照值域,
+        bool 禁止直接域 = false) {
+        样例 材料;
+        材料.类型 = 新类型();
+        const auto 场景 = 基础.场景.建立场景(基础.场景根);
+        要求(场景.场景节点.has_value(), "task child scene");
+        材料.场景节点 = *场景.场景节点;
+        新存在建立请求 对象请求;
+        // 空当前值样例仍以另一真实特征合法建立存在，再添加区间值特征。
+        对象请求.初始特征组 = 当前值
+            ? std::vector<新存在初始特征>{{材料.类型, 新特征准确值{*当前值}}}
+            : std::vector<新存在初始特征>{{安全类型, 新特征准确值{整数{0}}}};
+        const auto 对象 = 基础.场景.建立成员存在(材料.场景节点, 对象请求,
+            {新状态时间语义::实例绝对UTC, 2});
+        要求(对象.存在节点.has_value(), "task target existence");
+        if (!当前值) {
+            (void)基础.场景.添加场景内存在特征区间值(材料.场景节点,
+                *对象.存在节点, 材料.类型, 特征概念值域{std::vector<区间>{{0, 100}}});
+            const auto 信息 = 基础.存在.获取存在(*对象.存在节点);
+            要求(信息 && 信息->特征节点组.size() == 2, "range-only target feature");
+        }
+        新普通需求建立请求 请求;
+        请求.父需求节点 = 服务根;
+        请求.目标存在节点 = *对象.存在节点;
+        const auto 目标域 = 目标关系 == 二次特征结果域种类::等于
+            ? 区间{50, 50} : 区间{50, 60};
+        请求.目标 = 目标(材料.类型, 建域(材料.类型, 目标域), 目标关系);
+        请求.来源类型 = 新需求来源类型::本能定义;
+        const auto 需求结果 = 需求.建立或取得普通需求(请求);
+        要求(需求结果.需求节点.has_value(), "formal value demand");
+        const auto 任务结果 = 任务.建立或取得任务(*需求结果.需求节点);
+        要求(任务结果.任务节点.has_value(), "formal task creation");
+        材料.任务节点 = *任务结果.任务节点;
+        新方法知识建立请求 方法请求;
+        方法请求.方法头.涉及特征类型概念组 = {材料.类型};
+        方法请求.方法头.可能结果概念组 = {材料.类型};
+        新方法参数规格 规格;
+        规格.参数角色节点 = 材料.类型;
+        规格.特征规格组 = {{材料.类型, std::nullopt, {}}};
+        方法请求.参数规格组 = {规格};
+        新方法条件结果定义 配对;
+        新方法条件项定义 条件;
+        条件.参数角色节点 = 材料.类型;
+        条件.特征类型概念节点 = 材料.类型;
+        新方法结果项定义 结果;
+        结果.参数角色节点 = 材料.类型;
+        结果.特征类型概念节点 = 材料.类型;
+        结果.主要结果 = true;
+        if (直接) {
+            条件.精确数值域 = 条件域;
+            结果.精确数值域 = 结果域;
+        } else {
+            条件.特征值域概念节点 = 建域(材料.类型, 条件域);
+            结果.特征值域概念节点 = 建域(材料.类型, 结果域);
+        }
+        配对.条件.条件项组 = {条件};
+        配对.结果.结果项组 = {结果};
+        if (禁止直接域) {
+            auto 禁止 = 结果;
+            禁止.主要结果 = false;
+            禁止.特征值域概念节点.reset();
+            禁止.精确数值域 = 区间{90, 95};
+            配对.结果.确认要求.禁止结果项组 = {禁止};
+        }
+        方法请求.条件结果组 = {配对};
+        const auto 方法结果 = 基础.方法.建立方法知识(方法请求);
+        要求(方法结果.方法节点.has_value(), "task method knowledge");
+        材料.方法节点 = *方法结果.方法节点;
+        要求(任务.准备任务查找方法(材料.任务节点) == 新任务操作状态::已修改,
+            "task prepare recall");
+        const auto 候选 = 任务.查询任务方法候选并发布(材料.任务节点);
+        要求(候选.候选材料节点.has_value(), "task candidate publication");
+        const auto 消费 = 任务.消费任务方法候选(材料.任务节点, *候选.候选材料节点);
+        要求(消费.状态 == 新任务治理候选消费状态::已进入条件检查, "task candidate consumption");
+        要求(任务.实例化候选方法(材料.任务节点) == 新任务操作状态::已修改,
+            "task method instance");
+        return 材料;
     }
 };
 } // namespace
@@ -539,6 +710,170 @@ int 运行方法精确值域自检() noexcept {
             直接.材料 = 新特征直接I64值域比较材料{{0, 10}};
             要求拒绝(直接, 概念输入(根->节点, 子), 新特征比较状态::材料类型不相容);
         });
+        任务值域自检服务 任务服务{服务};
+        const auto 检查条件 = [&](const 任务值域自检服务::样例& 材料,
+            新任务方法条件项核验状态 预期) {
+            const auto 前 = 任务服务.任务.获取任务(材料.任务节点);
+            const auto 方法前 = 服务.方法.获取方法(材料.方法节点);
+            const auto 结果 = 任务服务.任务.筹办任务条件和参数(材料.任务节点);
+            要求(结果.状态 == 新任务治理条件筹办状态::已完成
+                && 结果.候选已完整核验 && 结果.方法筹办组.size() == 1
+                && 结果.方法筹办组.front().条件结果组.size() == 1
+                && 结果.方法筹办组.front().条件结果组.front().状态 == 预期,
+                "task current value/domain membership");
+            要求(任务服务.任务.获取任务(材料.任务节点) == 前
+                && 服务.方法.获取方法(材料.方法节点) == 方法前,
+                "read-only preparation changed knowledge or task");
+        };
+        for (const auto 值 : {整数{0}, 整数{5}, 整数{10}, 整数{11}}) {
+            检查("task direct/concept condition membership " + std::to_string(值), [&] {
+                for (const bool 直接 : {false, true}) {
+                    const auto 材料 = 任务服务.建样例({0, 10}, {50, 60}, 直接, 值);
+                    检查条件(材料, 值 <= 10 ? 新任务方法条件项核验状态::具备
+                        : 新任务方法条件项核验状态::不具备);
+                    const auto 选择 = 任务服务.任务.选择任务方法结果(材料.任务节点);
+                    要求(选择.保证满足目标 && 选择.状态 == (值 <= 10
+                            ? 新任务方法选择状态::已选定 : 新任务方法选择状态::等待条件),
+                        "domain representation changed selection/condition wait");
+                }
+            });
+        }
+        struct 结果用例 final {
+            const char* 名称;
+            区间 域;
+            新任务方法选择状态 状态;
+            bool 保证;
+        };
+        const 结果用例 用例组[]{
+            {"equal", {50, 60}, 新任务方法选择状态::已选定, true},
+            {"contained", {52, 55}, 新任务方法选择状态::已选定, true},
+            {"superset", {40, 70}, 新任务方法选择状态::结果定义暂不支持, false},
+            {"overlap", {55, 65}, 新任务方法选择状态::结果定义暂不支持, false},
+            {"disjoint increasing", {20, 30}, 新任务方法选择状态::已选定, false},
+            {"disjoint decreasing", {-20, -10}, 新任务方法选择状态::无适用结果, false}
+        };
+        for (const auto& 用例 : 用例组) {
+            检查(std::string("task result relation ") + 用例.名称, [&] {
+                for (const bool 直接 : {false, true}) {
+                    // 超类型根的直接域单独检查；不能为了对照而改写类型概念。
+                    if (!直接 && 用例.域.下界 < 0) continue;
+                    const auto 材料 = 任务服务.建样例({0, 10}, 用例.域, 直接);
+                    const auto 前 = 任务服务.任务.获取任务(材料.任务节点);
+                    const auto 选择 = 任务服务.任务.选择任务方法结果(材料.任务节点);
+                    要求(选择.状态 == 用例.状态 && 选择.保证满足目标 == 用例.保证,
+                        "task result relationship policy");
+                    if (用例.状态 == 新任务方法选择状态::已选定 && !用例.保证)
+                        要求(选择.有利结果端点 == 用例.域.上界, "same-direction progress endpoint");
+                    要求(任务服务.任务.获取任务(材料.任务节点) == 前,
+                        "read-only result selection changed task");
+                }
+            });
+        }
+        检查("task direct domain outside type root remains an explicit domain", [&] {
+            const auto 材料 = 任务服务.建样例({-10, 10}, {120, 130}, true);
+            检查条件(材料, 新任务方法条件项核验状态::具备);
+            const auto 选择 = 任务服务.任务.选择任务方法结果(材料.任务节点);
+            要求(选择.状态 == 新任务方法选择状态::已选定
+                && !选择.保证满足目标 && 选择.有利结果端点 == 130,
+                "direct result was clamped/admitted against type root");
+        });
+        检查("task missing current value is material-not-arrived", [&] {
+            for (const bool 直接 : {false, true}) {
+                const auto 材料 = 任务服务.建样例({0, 10}, {50, 60}, 直接, std::nullopt);
+                检查条件(材料, 新任务方法条件项核验状态::材料未到);
+                要求(任务服务.任务.选择任务方法结果(材料.任务节点).状态
+                    == 新任务方法选择状态::等待条件, "missing current value became zero/unlimited");
+            }
+        });
+        检查("task direct domain explicitly rejects non-containment target", [&] {
+            const auto 材料 = 任务服务.建样例({0, 10}, {70, 80}, true, 整数{0},
+                二次特征结果域种类::高于参照值域);
+            要求(任务服务.任务.选择任务方法结果(材料.任务节点).状态
+                == 新任务方法选择状态::结果定义暂不支持, "unsupported target became progress candidate");
+        });
+        检查("task equality target uses direct result domain", [&] {
+            // 等于参照域与包含域都通过正式需求语义，不以比较关系编码大小排序。
+            const auto 材料 = 任务服务.建样例({0, 10}, {50, 50}, true, 整数{0},
+                二次特征结果域种类::等于);
+            const auto 选择 = 任务服务.任务.选择任务方法结果(材料.任务节点);
+            要求(选择.状态 == 新任务方法选择状态::已选定 && 选择.保证满足目标,
+                "equality result domain not accepted");
+        });
+        检查("task actual current value inside target interval is already satisfied", [&] {
+            for (const auto 当前 : {整数{50}, 整数{55}, 整数{60}, 整数{61}}) {
+                const auto 材料 = 任务服务.建样例({0, 100}, {50, 60}, true, 当前);
+                const auto 前 = 任务服务.任务.获取任务(材料.任务节点);
+                const auto 满足 = 任务服务.任务.复核任务需求(材料.任务节点);
+                const auto 选择 = 任务服务.任务.选择任务方法结果(材料.任务节点);
+                if (当前 <= 60) {
+                    要求(满足.状态 == 新需求当前满足状态::已满足
+                        && 选择.状态 == 新任务方法选择状态::目标已满足,
+                        "actual value inside target was treated as unmet");
+                } else {
+                    要求(满足.状态 == 新需求当前满足状态::需减少
+                        && 选择.状态 == 新任务方法选择状态::已选定 && 选择.保证满足目标,
+                        "actual value above target was treated as satisfied");
+                }
+                要求(任务服务.任务.获取任务(材料.任务节点) == 前,
+                    "current-value satisfaction changed task");
+            }
+        });
+        检查("task downstream private-domain gates remain zero-write", [&] {
+            const auto 材料 = 任务服务.建样例({0, 10}, {50, 60}, true);
+            const auto 选择 = 任务服务.任务.选择任务方法结果(材料.任务节点);
+            要求(选择.状态 == 新任务方法选择状态::已选定 && 选择.方法节点
+                && 选择.配对节点 && 选择.结果节点, "safety gate selected input");
+            const auto 任务前 = 任务服务.任务.获取任务(材料.任务节点);
+            const auto 需求前 = 任务服务.需求.查询全部需求();
+            const auto 场景前 = 服务.场景.获取场景(材料.场景节点);
+            const auto 提议 = 任务服务.任务.提议任务条件子需求(材料.任务节点);
+            要求(提议.状态 == 新任务条件子需求提议状态::暂不支持
+                && 提议.子需求项组.empty(), "private domain bypassed child-demand gate");
+            const auto 核验 = 任务服务.任务.核验任务执行方向(材料.任务节点,
+                *选择.方法节点, *选择.配对节点, *选择.结果节点,
+                任务服务.自我, 任务服务.安全根, 任务服务.服务根);
+            要求(核验.状态 == 新任务治理执行方向核验状态::结果定义暂不支持
+                && 核验.预计变化阶段组.empty(), "private domain bypassed prediction gate");
+            const auto 需求后 = 任务服务.需求.查询全部需求();
+            要求(任务服务.任务.获取任务(材料.任务节点) == 任务前
+                && 服务.场景.获取场景(材料.场景节点) == 场景前
+                && 需求后.状态 == 需求前.状态 && 需求后.需求节点组 == 需求前.需求节点组,
+                "rejected downstream read changed task/demand/scene");
+            const auto 确认 = 任务服务.任务.确认任务进入待执行(材料.任务节点,
+                *选择.方法节点, *选择.配对节点, *选择.结果节点);
+            要求(确认 == 新任务治理待执行确认状态::结构不一致
+                && 任务服务.任务.获取任务(材料.任务节点) == 任务前,
+                "private domain bypassed public ready-to-execute gate");
+            新任务执行开始请求 开始;
+            开始.任务节点 = 材料.任务节点;
+            开始.方法节点 = *选择.方法节点;
+            开始.开始时间 = {新状态时间语义::实例绝对UTC, 3};
+            const auto 执行 = 任务服务.任务.开始方法执行(开始);
+            要求(执行.状态 == 新任务操作状态::任务状态不允许 && !执行.执行实例节点
+                && 任务服务.任务.获取任务(材料.任务节点) == 任务前
+                && 服务.场景.获取场景(材料.场景节点) == 场景前,
+                "private domain execution gate produced execution/action/state");
+        });
+        检查("task forbidden private domain still blocks downstream", [&] {
+            const auto 材料 = 任务服务.建样例({0, 10}, {50, 60}, false, 整数{0},
+                二次特征结果域种类::包含于参照值域, true);
+            const auto 选择 = 任务服务.任务.选择任务方法结果(材料.任务节点);
+            要求(选择.状态 == 新任务方法选择状态::已选定 && 选择.方法节点
+                && 选择.配对节点 && 选择.结果节点, "forbidden-domain readonly selection");
+            const auto 前 = 任务服务.任务.获取任务(材料.任务节点);
+            const auto 核验 = 任务服务.任务.核验任务执行方向(材料.任务节点,
+                *选择.方法节点, *选择.配对节点, *选择.结果节点,
+                任务服务.自我, 任务服务.安全根, 任务服务.服务根);
+            要求(核验.状态 == 新任务治理执行方向核验状态::结果定义暂不支持
+                && 核验.预计变化阶段组.empty()
+                && 任务服务.任务.获取任务(材料.任务节点) == 前,
+                "forbidden private domain lost downstream protection");
+            const auto 确认 = 任务服务.任务.确认任务进入待执行(材料.任务节点,
+                *选择.方法节点, *选择.配对节点, *选择.结果节点);
+            要求(确认 == 新任务治理待执行确认状态::结构不一致
+                && 任务服务.任务.获取任务(材料.任务节点) == 前,
+                "forbidden private domain bypassed ready-to-execute gate");
+        });
     } catch (const std::exception& 异常) {
         ++失败;
         std::cout << "FAIL initialization/driver: " << 异常.what() << '\n';
@@ -546,6 +881,8 @@ int 运行方法精确值域自检() noexcept {
         ++失败;
         std::cout << "FAIL initialization/driver: unknown exception\n";
     }
+    std::cout << "NOT_RUN task-level malformed type/unit injection (no public construction path; feature provider rejection tests retained)\n"
+        << "NOT_RUN self child-demand publication/actual method execution/effect assessment (downstream private-domain gates intentionally retained)\n";
     std::cout << "SUMMARY " << 通过 << " PASS / " << 失败 << " FAIL\n";
     return 失败 == 0 ? 0 : 1;
 }
