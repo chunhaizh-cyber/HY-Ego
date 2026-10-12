@@ -5,10 +5,10 @@
 - 目标编号：`GOAL-INSTINCT-RUNTIME`
 - 名称：构建本能系统基于世界事实、实例特征和现实锚点持续运行的基础架构
 - 类型：集成能力目标
-- 记录版本：v0.23
+- 记录版本：v0.24
 - 创建时间：2026-09-21
-- 更新时间：2026-09-25
-- 当前状态：候选；当前直接推进位置为`GOAL-SELF-GOVERNANCE-CLOSURE`的self消费G4-A结果与根治理意图sink设计
+- 更新时间：2026-10-12
+- 当前状态：候选；经`GOAL-SELF-GOVERNANCE-CLOSURE`推进`GOAL-TASK-LEARNED-METHOD-CONSUMPTION`，本上位集成目标未完成
 - 直接上位目标：无
 - 直接下位目标：`GOAL-IF-R-FOUNDATION`（已完成）、`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`（已完成）、`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-IFR-ACTUAL-F-PROVIDER-DESIGN`（完成）、`GOAL-SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-SELF-GOVERNANCE-CLOSURE`（候选，当前路线）
 - 目标账所有者：交互智能体
@@ -33,7 +33,7 @@
 
 最低证据为每个下位目标的正式设计、代码、构建 / 运行 / 恢复记录及最终具名集成验收；任何较低层证据只证明其自身范围。
 
-## 4. 当前路线与设计承载
+## 4. 历史路线与设计承载（2026-09-25）
 
 - 已完成前置：`GOAL-IF-R-FOUNDATION` 已以代码实施目标完成，详见`目标/已完成/GOAL-IF-R-FOUNDATION.md`；其不证明构建、运行、恢复或本目标能力。
 - 已完成设计：`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`已冻结根目标合同、独立根 D、根列表 L 与成员关系的 ARCH-L4 物理合同，并登记`ARCH-L4-INSTINCT-ROOT-DEMAND-PROVIDER`为可执行计划。
@@ -41,14 +41,14 @@
 - 后续方向：用户已确认以完整自我线程治理闭环反推数据服务需求，并采用先写上层、在真实调用点补最小下层能力的策略；阶段21组合provider、生产消费、G2-A正式上下文纯读provider、双根RC初始化、4242求值器和G4-A双根只读复核provider均已发布。四项根任务承接语义已经冻结，当前先实施安全根/服务根专用的最早task owner provider；普通D/列表/多D不提前实现，随后回到self消费和manager异步交接；G2-B开门继续后置。
 - 设计承载方式：机器语义、DTO、所有权、事务、恢复和验收边界由现行规范、具名详细设计和后续计划组合承载；本目标记录不替代这些材料。
 
-## 5. 依赖、风险与下一动作
+## 5. 历史依赖、风险与下一动作（2026-09-25）
 
 - 依赖：4115 IF/R、8120 启动顺序、8121 阶段21物理合同、8100 / 8200 运行边界、8300 验收，以及已发布的 ARCH-L4 根材料与特征组合provider。
 - 当前阻断：task owner provider已经形成可执行计划，无机器语义阻断；self实际消费、首次治理意图身份、manager边界和消费失败/恢复合同尚未闭合，但属于provider发布后的后继。
 - 当前风险：把provider构造成功误当成self已消费；用空sink、消息或日志冒充正式任务承接；在sink和owner读回未完成前开放治理门。
 - 下一动作：实施`TASK-OWNER-CORE-PROVIDER` v0.1；发布后再形成self消费与根治理意图异步交接的最小设计/计划；G2-B开门另行设计。
 
-## 6. 状态证据上下文
+## 6. 历史状态证据上下文（2026-09-25）
 
 - 状态事实截止：`42556450a1554f84ead96bcdc03c512ddc338c1a`
 - 关联计划身份：`TASK-OWNER-CORE-PROVIDER` v0.1；精确blob与状态读取计划索引
@@ -56,3 +56,13 @@
 - 阻断证据来源：`SELF-ROOT-GOVERNANCE-INTENT-SINK` v0.3记录原四项阻断已解除；`TASK-OWNER-CORE-PROVIDER`详细设计v0.1承担当前施工合同
 - 阻断解除条件：当前provider无阻断；后继self/manager接线须等待provider真实发布并重新按届时代码形成精确合同。
 - 自动复核触发：上述合同、任务管理/工作线程入口、关联规范、计划索引、生产代码或验收变化；用户改变目标
+
+## 7. 当前路线刷新（2026-10-12）
+
+- 状态事实截止：`f3363e94c29f7b6573923c04cacba5f789abbe09`；事务`TARGET-20261012-01`。
+- 当前直接子路线仍为[自我内部治理闭环](GOAL-SELF-GOVERNANCE-CLOSURE.md)，其当前主推进叶为[任务消费模拟学习完善的方法](GOAL-TASK-LEARNED-METHOD-CONSUMPTION.md)。目标含义及第3节完成门槛不变。
+- 第4—6节仅保留历史证据；其中“当前可执行”“尚未消费”等旧时态不得作为现行状态或恢复旧计划的依据。
+- 关联计划身份/观察版本/blob：无当前有效执行计划；最新比较提供者计划已退出。下一动作由当前叶先完成消费者设计，不直接删任务保护门。
+- 最新已验证前置：特征统一比较代码`e5a493bb`及实际项目60/21/18 PASS；证据见[验证记录](../../验证记录/20261012_FEATURE-DOMAIN-COMPARE-PROVIDER_特征统一值域比较验证记录_v0.1.md)。任务消费、真实服务增长、连续运行和最终集成验收不在其证明范围。
+- 当前依赖/缺口：消费者合同尚待闭合，不能以学习知识已写入方法树替代任务执行。设计承载、下一动作及阶段完成条件以当前叶为准。
+- 自动复核触发：当前叶/上位闭环证据更新或用户改变路线；上位目标只在第3节证据满足后终态处置。
