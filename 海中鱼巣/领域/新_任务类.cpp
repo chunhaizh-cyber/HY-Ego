@@ -8,6 +8,7 @@
 #include "新_动态类.h"
 
 #include <algorithm>
+#include <bit>
 #include <chrono>
 #include <limits>
 #include <map>
@@ -26,6 +27,47 @@ namespace 海中鱼巣 {
 namespace {
 
 std::recursive_mutex 新任务互斥;
+
+bool 任务线性区间含无穷(const 特征概念I64闭区间& 区间) noexcept {
+    constexpr auto 最小 = (std::numeric_limits<std::int64_t>::min)();
+    constexpr auto 最大 = (std::numeric_limits<std::int64_t>::max)();
+    return 区间.下界 == 最小 || 区间.下界 == 最大
+        || 区间.上界 == 最小 || 区间.上界 == 最大;
+}
+
+std::uint64_t 任务线性有序坐标(std::int64_t 值) noexcept {
+    return std::bit_cast<std::uint64_t>(值) ^ (std::uint64_t{1} << 63);
+}
+
+std::int64_t 任务线性坐标值(std::uint64_t 坐标) noexcept {
+    return std::bit_cast<std::int64_t>(坐标 ^ (std::uint64_t{1} << 63));
+}
+
+// 前置：分子<=分母且分母>0。商不超过乘数，不需要构造溢出的乘积。
+// 每步保持 已处理乘数前缀*分子=商*分母+余数，且余数<分母。
+std::pair<std::uint64_t, std::uint64_t> 任务线性乘除商余(
+    std::uint64_t 分子, std::uint64_t 乘数, std::uint64_t 分母) noexcept {
+    std::uint64_t 商 = 0, 余数 = 0;
+    for (unsigned 位数 = 64; 位数 != 0;) {
+        --位数;
+        商 *= 2;
+        if (余数 >= 分母 - 余数) {
+            余数 -= 分母 - 余数;
+            ++商;
+        } else {
+            余数 += 余数;
+        }
+        if (((乘数 >> 位数) & 1U) != 0) {
+            if (余数 >= 分母 - 分子) {
+                余数 -= 分母 - 分子;
+                ++商;
+            } else {
+                余数 += 分子;
+            }
+        }
+    }
+    return {商, 余数};
+}
 
 bool 含私有数值域(const 新方法条件结果信息& 配对) noexcept {
     for (const auto& 项 : 配对.条件.条件项组) {
@@ -2029,6 +2071,104 @@ bool 建立结果获取结构(
 }
 
 } // namespace
+
+新任务线性条件输入结果 新_任务类::按线性关系计算任务条件输入(
+    const 新任务线性条件输入请求& 请求) noexcept {
+    using 状态 = 新任务线性条件输入状态;
+    try {
+        if (请求.条件域组.empty() || 请求.结果约束组.empty() || 请求.关系组.empty())
+            return {状态::输入不合法, {}};
+
+        bool 含无穷 = false;
+        for (const auto& 域 : 请求.条件域组) {
+            if (域.下界 > 域.上界) return {状态::输入不合法, {}};
+            含无穷 = 含无穷 || 任务线性区间含无穷(域);
+        }
+        // 仅是调用期位置索引，不保存节点或第二份方法知识。
+        std::map<std::size_t, const 新任务线性结果约束*> 结果索引;
+        for (const auto& 项 : 请求.结果约束组) {
+            if (项.方法结果域.下界 > 项.方法结果域.上界
+                || 项.任务目标域.下界 > 项.任务目标域.上界
+                || !结果索引.emplace(项.结果序号, &项).second)
+                return {状态::输入不合法, {}};
+            含无穷 = 含无穷 || 任务线性区间含无穷(项.方法结果域)
+                || 任务线性区间含无穷(项.任务目标域);
+        }
+        std::vector<bool> 条件覆盖(请求.条件域组.size(), false);
+        std::set<std::size_t> 结果覆盖;
+        std::set<std::pair<std::size_t, std::size_t>> 已见关系;
+        for (const auto& 关系 : 请求.关系组) {
+            const auto 定位 = 结果索引.find(关系.结果序号);
+            if (关系.条件序号 >= 请求.条件域组.size() || 定位 == 结果索引.end()
+                || !已见关系.emplace(关系.条件序号, 关系.结果序号).second)
+                return {状态::输入不合法, {}};
+            const auto& 条件域 = 请求.条件域组[关系.条件序号];
+            const auto& 结果域 = 定位->second->方法结果域;
+            switch (关系.方向) {
+            case 新任务条件结果线性方向::不变:
+                if (结果域.下界 != 结果域.上界) return {状态::输入不合法, {}};
+                break;
+            case 新任务条件结果线性方向::同向:
+            case 新任务条件结果线性方向::反向:
+                if (条件域.下界 == 条件域.上界 || 结果域.下界 == 结果域.上界)
+                    return {状态::输入不合法, {}};
+                break;
+            default:
+                return {状态::输入不合法, {}};
+            }
+            条件覆盖[关系.条件序号] = true;
+            结果覆盖.insert(关系.结果序号);
+        }
+        // 先完成全体结构校验，再按无穷、缺关系、空逆像的优先级返回。
+        if (含无穷) return {状态::不支持无穷域, {}};
+        if (std::find(条件覆盖.begin(), 条件覆盖.end(), false) != 条件覆盖.end()
+            || 结果覆盖.size() != 结果索引.size())
+            return {状态::关系材料不足, {}};
+
+        auto 所需域组 = 请求.条件域组;
+        for (const auto& 关系 : 请求.关系组) {
+            const auto& 约束 = *结果索引.find(关系.结果序号)->second;
+            const auto 下 = (std::max)(约束.方法结果域.下界, 约束.任务目标域.下界);
+            const auto 上 = (std::min)(约束.方法结果域.上界, 约束.任务目标域.上界);
+            if (下 > 上) return {状态::目标无交集, {}};
+            if (关系.方向 == 新任务条件结果线性方向::不变) continue;
+
+            const auto& 原条件域 = 请求.条件域组[关系.条件序号];
+            const auto 条件起点 = 任务线性有序坐标(原条件域.下界);
+            const auto 条件跨度 = 任务线性有序坐标(原条件域.上界) - 条件起点;
+            const auto 结果起点 = 任务线性有序坐标(约束.方法结果域.下界);
+            const auto 结果终点 = 任务线性有序坐标(约束.方法结果域.上界);
+            const auto 结果跨度 = 结果终点 - 结果起点;
+            const bool 同向 = 关系.方向 == 新任务条件结果线性方向::同向;
+            const auto 下分子 = 同向 ? 任务线性有序坐标(下) - 结果起点
+                                     : 结果终点 - 任务线性有序坐标(上);
+            const auto 上分子 = 同向 ? 任务线性有序坐标(上) - 结果起点
+                                     : 结果终点 - 任务线性有序坐标(下);
+            const auto 下商余 = 任务线性乘除商余(下分子, 条件跨度, 结果跨度);
+            const auto 上商余 = 任务线性乘除商余(上分子, 条件跨度, 结果跨度);
+            const auto 下偏移 = 下商余.first + (下商余.second != 0 ? 1U : 0U);
+            const auto 上偏移 = 上商余.first;
+            if (下偏移 > 上偏移) return {状态::目标无交集, {}};
+            auto& 所需域 = 所需域组[关系.条件序号];
+            所需域.下界 = (std::max)(所需域.下界, 任务线性坐标值(条件起点 + 下偏移));
+            所需域.上界 = (std::min)(所需域.上界, 任务线性坐标值(条件起点 + 上偏移));
+            if (所需域.下界 > 所需域.上界) return {状态::目标无交集, {}};
+        }
+
+        新任务线性条件输入结果 结果;
+        结果.条件输入组.reserve(所需域组.size());
+        for (std::size_t 序号 = 0; 序号 < 所需域组.size(); ++序号) {
+            const auto& 域 = 所需域组[序号];
+            结果.条件输入组.push_back({序号, 域,
+                域.下界 == 域.上界 ? std::optional<std::int64_t>{域.下界} : std::nullopt});
+        }
+        结果.状态 = 状态::已算出;
+        return 结果;
+    } catch (...) {
+        // 本函数只有调用期容器分配，无外部调用；失败不交付部分条件。
+        return {状态::资源失败, {}};
+    }
+}
 
 bool 新任务结果获取方案::完整() const noexcept {
     if (!是多渠道关系值(static_cast<std::int64_t>(多渠道关系))
