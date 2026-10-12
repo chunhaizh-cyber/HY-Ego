@@ -18,6 +18,7 @@ class 新_世界树类;
 struct 新任务管理运行配置 final {
     std::uint64_t 邮箱容量 = 0;
     std::uint64_t 资源重试间隔毫秒 = 0;
+    std::uint64_t 调度复核间隔毫秒 = 1000;
     friend bool operator==(const 新任务管理运行配置&,
         const 新任务管理运行配置&) = default;
 };
@@ -92,6 +93,9 @@ struct 新任务管理快照 final {
     std::optional<新学习结束通知> 最近方法学习结束;
     std::optional<新学习运行异常记录> 最近学习运行异常;
     bool 等待方法实例消费 = false;
+    std::uint64_t 等待复核任务数 = 0;
+    bool 调度扫描在途 = false;
+    std::uint64_t 就绪工作数 = 0;
 };
 
 // self初始化后、manager启动前锁定。它只描述长期内部治理任务使用的
@@ -190,6 +194,34 @@ enum class 新任务学习复核反馈接收状态 : std::uint8_t {
 enum class 新任务筹办反馈接收状态 : std::uint8_t {
     已接收 = 1, 精确重复, 身份冲突, 邮箱已满, 尚未配置,
     尚未启动, 已停止接收, 入口拒绝, 资源失败, 内部错误
+};
+
+struct 新任务等待复核定位 final {
+    std::uint64_t 复核编号 = 0;
+    新任务调度定位 定位;
+    新任务等待原因 原因 = 新任务等待原因::需核查;
+    bool 完整() const noexcept;
+    friend bool operator==(const 新任务等待复核定位&,
+        const 新任务等待复核定位&) = default;
+};
+enum class 新自我等待复核状态 : std::uint8_t {
+    允许重新筹办 = 1, 当前已满足, 需求非活动, 等待材料,
+    等待同次执行比较, 定位已变化, 需核查
+};
+struct 新自我等待复核决议 final {
+    新任务等待复核定位 定位;
+    新自我等待复核状态 状态 = 新自我等待复核状态::需核查;
+    std::optional<新需求当前满足状态> 当前满足状态;
+    friend bool operator==(const 新自我等待复核决议&,
+        const 新自我等待复核决议&) = default;
+};
+enum class 新任务等待复核反馈接收状态 : std::uint8_t {
+    已接收 = 1, 精确重复, 身份冲突, 邮箱已满, 尚未配置,
+    尚未启动, 已停止接收, 入口拒绝, 资源失败, 内部错误
+};
+enum class 新自我等待复核接收状态 : std::uint8_t {
+    已接收 = 1, 精确重复, 定位已变化, 身份冲突,
+    已停止接收, 入口拒绝, 资源失败, 内部错误
 };
 
 enum class 新任务结果状态接收状态 : std::uint8_t {
@@ -371,6 +403,12 @@ private:
         const 新任务结果反馈定位&)>;
     using 学习复核接收函数 = std::function<新任务学习复核反馈接收状态(
         const 新任务学习复核定位&)>;
+    using 等待复核接收函数 = std::function<新任务等待复核反馈接收状态(
+        const 新任务等待复核定位&)>;
+    std::optional<新任务等待复核定位> 读取等待复核定位(
+        std::uint64_t 复核编号) const noexcept;
+    新自我等待复核接收状态 提交等待复核决议(
+        const 新自我等待复核决议&) noexcept;
     std::optional<新任务学习复核定位> 读取学习复核定位(
         std::uint64_t 复核编号) const noexcept;
     新自我学习复核接收状态 提交学习复核决议(
@@ -382,6 +420,7 @@ private:
         筹办反馈接收函数 筹办接收,
         结果反馈接收函数 结果接收,
         学习复核接收函数 学习接收,
+        等待复核接收函数 等待接收,
         const 新长期服务值结算配置& 服务结算配置) noexcept;
     void 解除自我筹办反馈(const void* 所有者) noexcept;
     新自我筹办裁决接收状态 提交自我筹办裁决(

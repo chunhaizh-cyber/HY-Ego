@@ -956,6 +956,50 @@ struct 新任务问题归档交付结果 final {
     std::optional<新方法问题归档状态> 归档状态;
 };
 
+// 调度只读材料都是本次current-only值式副本，不是执行许可或持久等待账。
+struct 新任务调度定位 final {
+    稳定编码 任务节点, 需求节点;
+    新任务状态 任务状态 = 新任务状态::已建立;
+    std::optional<稳定编码> 候选材料节点, 方法实例节点;
+    std::optional<稳定编码> 最近执行实例节点, 影响评估节点;
+    bool 完整() const noexcept;
+    friend bool operator==(const 新任务调度定位&,
+        const 新任务调度定位&) = default;
+};
+
+enum class 新任务调度项状态 : std::uint8_t {
+    普通可筹办 = 1, 业务等待, 旧执行待结果, 后继待决议,
+    完成待结算, 终结, 结构不一致
+};
+
+enum class 新任务等待原因 : std::uint8_t {
+    无 = 0, 首次关联待许可, 尚无方法, 候选条件未齐,
+    需求材料未到, 执行后等待, 同次执行比较材料不足,
+    未分类, 需核查
+};
+
+struct 新任务调度材料项 final {
+    新任务调度定位 定位;
+    新任务调度项状态 状态 = 新任务调度项状态::结构不一致;
+    新任务等待原因 等待原因 = 新任务等待原因::需核查;
+    std::optional<新任务信息> 任务;
+    std::optional<新需求信息> 需求;
+    std::optional<新任务候选方法材料> 候选材料;
+    std::vector<新方法信息> 当前候选方法闭包;
+    std::optional<新任务治理条件筹办结果> 条件核验;
+    std::optional<新任务执行信息> 执行;
+    std::optional<新任务影响评估信息> 影响评估;
+};
+
+enum class 新任务调度读取状态 : std::uint8_t {
+    已读取 = 1, 尚未初始化, 任务不存在, 结构不一致, 资源失败
+};
+
+struct 新任务调度材料读取结果 final {
+    新任务调度读取状态 状态 = 新任务调度读取状态::结构不一致;
+    std::vector<新任务调度材料项> 项组;
+};
+
 class 新_任务类 final : public 新内部治理对象读取接口 {
 public:
     bool 装配方法问题反馈(执行场景采集服务&, 新方法问题归档接口&) noexcept;
@@ -1110,6 +1154,12 @@ public:
     std::optional<稳定编码> 查询需求任务(
         稳定编码 需求节点) const noexcept;
     新任务列表结果 查询全部任务() const noexcept;
+    新任务调度材料读取结果 读取任务调度材料() const noexcept;
+    新任务调度材料读取结果 读取任务调度材料(稳定编码 任务节点) const noexcept;
+    // 仅消费manager独占等待复核中经self fresh确认的筹办许可。
+    // 不执行方法，不补写或重评估旧X/A，不解除未知采用及结算保护。
+    新任务操作状态 准备等待任务重新筹办(
+        const 新任务调度定位& 预期定位) noexcept;
     新任务列表结果 查询受方法学习影响任务(稳定编码 方法节点) const noexcept;
     新任务操作状态 准备学习后重新筹办(
         稳定编码 任务节点, 稳定编码 方法节点) noexcept;
@@ -1177,6 +1227,8 @@ public:
         稳定编码 任务节点) const noexcept;
 
 private:
+    新任务调度材料项 读取任务调度项已加锁(
+        稳定编码 任务节点, bool& 资源失败) const;
     新_方法类::新方法实例交付状态 切换学习方法实例(
         稳定编码 任务节点, 稳定编码 旧根, 稳定编码 新根) noexcept;
     std::map<稳定编码, 稳定编码> 方法实例采用待核查_;

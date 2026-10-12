@@ -10,6 +10,8 @@
 
 namespace 海中鱼巣 {
 
+inline constexpr std::uint64_t 新任务工作并发上限 = 10;
+
 struct 新任务工作运行配置 final {
     std::uint64_t 邮箱容量 = 0;
     friend bool operator==(const 新任务工作运行配置&,
@@ -34,7 +36,8 @@ enum class 新任务工作种类 : std::uint8_t {
     查找方法 = 1,
     检查条件 = 2,
     执行本能动作 = 3,
-    获取本能结果 = 4
+    获取本能结果 = 4,
+    读取任务调度材料 = 5
 };
 
 struct 新任务工作请求 final {
@@ -60,7 +63,8 @@ enum class 新任务工作处理状态 : std::uint8_t {
     本能结果获取已返回,
     需核查,
     停止取消,
-    内部错误
+    内部错误,
+    调度材料已返回
 };
 
 struct 新任务工作处理结果 final {
@@ -71,6 +75,7 @@ struct 新任务工作处理结果 final {
     std::optional<新任务条件子需求提议> 条件子需求提议;
     std::optional<新任务治理本能执行结果> 本能执行;
     std::optional<新任务治理结果获取结果> 本能结果获取;
+    std::optional<新任务调度材料读取结果> 调度材料;
 };
 
 enum class 新任务工作接收状态 : std::uint8_t {
@@ -88,9 +93,13 @@ struct 新任务工作快照 final {
     std::uint64_t 活动工作数 = 0;
     bool 停止已请求 = false;
     bool 线程已完成 = false;
+    std::uint64_t 物理线程数 = 0;
+    std::uint64_t 执行中工作数 = 0;
+    std::uint64_t 待处理工作数 = 0;
+    std::uint64_t 待确认工作数 = 0;
 };
 
-// 当前承载查找方法、条件/参数核验、W3-A动作和W3-B结果获取工作。
+// 单owner固定10线程池，承载W0调度读取、查找方法、条件核验及W3工作。
 // 注入的任务服务必须比本对象存活更久；
 // 完成通知只用于唤醒manager读取共享结果，不携带业务事实。
 class 新_任务工作线程类 final {
