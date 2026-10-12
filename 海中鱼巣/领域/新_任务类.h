@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <map>
+#include <memory>
 #include <optional>
 #include <vector>
 
@@ -11,6 +13,7 @@
 #include "新_方法公共类型.h"
 #include "新_状态类.h"
 #include "新_内部治理对象引用.h"
+#include "方法问题反馈.数据.h"
 
 namespace 海中鱼巣 {
 
@@ -20,6 +23,7 @@ class 概念_二次特征类;
 class 概念_存在类;
 class 新_动态类;
 class 新_任务管理线程类;
+class 执行场景采集服务;
 
 // 任务集合根只登记全部任务，不表达任务之间的父子关系。
 extern 稳定编码 任务集合根节点;
@@ -939,8 +943,24 @@ struct 新任务已结算结果 final {
     std::optional<新任务虚拟存在读回> 任务读回;
 };
 
+enum class 新任务问题归档交付状态 : std::uint8_t {
+    无问题 = 1, 尚未评估, 已归档, 待重试, 材料缺失,
+    任务或执行不存在, 身份冲突, 结构不一致, 资源失败
+};
+struct 新任务问题归档交付结果 final {
+    新任务问题归档交付状态 状态 = 新任务问题归档交付状态::材料缺失;
+    std::optional<新方法问题学习消息> 消息;
+    std::optional<新方法问题归档状态> 归档状态;
+};
+
 class 新_任务类 final : public 新内部治理对象读取接口 {
 public:
+    bool 装配方法问题反馈(执行场景采集服务&, 新方法问题归档接口&) noexcept;
+    // 只读轻量回执，不在self读取或复制大场景材料。
+    新任务问题归档交付结果 读取执行问题归档回执(
+        稳定编码 任务节点, 稳定编码 执行实例节点) const noexcept;
+    新任务问题归档交付结果 重试执行问题归档(
+        稳定编码 任务节点, 稳定编码 执行实例节点) noexcept;
     // 零事实读写，按明确端点仿射模型逐条件反求，整数精度1。
     // 只支持有限I64闭区间（排除MIN/MAX哨兵）；单点才填写具体值。
     // 非成功空载荷；所得各域不证明任意输入组合都满足联合约束，亦非执行许可。
@@ -1147,6 +1167,16 @@ public:
         稳定编码 任务节点) const noexcept;
 
 private:
+    struct 方法问题暂存;
+    std::map<std::uint64_t, std::shared_ptr<方法问题暂存>> 方法问题暂存组_;
+    执行场景采集服务* 执行场景采集_ = nullptr;
+    新方法问题归档接口* 方法问题归档_ = nullptr;
+    bool 已开始过执行_ = false;
+    void 准备执行问题材料(const 新任务治理本能执行请求&, 稳定编码 执行实例节点) noexcept;
+    void 保存执行问题运行对(稳定编码 任务节点, 稳定编码 执行实例节点,
+        const 新本能函数本次条件结果对&) noexcept;
+    void 完成执行问题采集(稳定编码 任务节点, 稳定编码 执行实例节点,
+        const 新任务影响评估信息&) noexcept;
     // 纯读核验，供公开筹办与选择复用，避免互相递归。
     新任务治理条件筹办结果 核验任务条件和参数(稳定编码 任务节点) const noexcept;
     bool 同步服务任务集合已加锁() noexcept;

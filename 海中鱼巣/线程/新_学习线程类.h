@@ -5,6 +5,7 @@
 #include <memory>
 #include <optional>
 #include "../业务/模拟学习.服务.h"
+#include "../业务/方法问题学习.服务.h"
 
 namespace 海中鱼巣 {
 enum class 新学习线程状态 : std::uint8_t {
@@ -29,11 +30,17 @@ struct 新学习线程快照 final {
 class 新_学习线程类 final {
 public:
     新_学习线程类(模拟学习服务&, std::function<void()> 完成通知={}) noexcept;
+    新_学习线程类(模拟学习服务&, 方法问题学习服务&,
+        std::function<void()> 完成通知={}) noexcept;
     ~新_学习线程类() noexcept;
     新_学习线程类(const 新_学习线程类&)=delete;
     新_学习线程类& operator=(const 新_学习线程类&)=delete;
     新学习操作状态 启动(std::uint64_t 等待毫秒) noexcept;
     新学习接收结果 提交学习(稳定编码 方法节点) noexcept;
+    新学习接收结果 提交方法问题学习(const 新方法问题学习消息&) noexcept;
+    新学习操作状态 确认方法问题结果已接收(稳定编码 归档节点) noexcept;
+    std::optional<新方法问题学习收集结果> 读取方法问题收集结果(
+        稳定编码 归档节点) const noexcept;
     新学习操作状态 确认结果已接收(稳定编码 方法节点) noexcept;
     新学习操作状态 请求停止() noexcept;
     新学习操作状态 等待停止(std::uint64_t 等待毫秒) noexcept;

@@ -54,6 +54,27 @@
     <ClInclude Include="海中鱼巣\业务\模拟学习.服务.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\方法问题反馈.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\方法问题归档.模拟世界.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\领域\方法问题归档.模拟世界.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\执行场景采集.服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\执行场景采集.服务.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\方法问题学习.服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\方法问题学习.服务.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\新_模拟世界类.cpp">
       <Filter>源文件</Filter>
     </ClCompile>

@@ -46,6 +46,27 @@ void 记录自我学习运行异常(const 新学习运行异常记录& 异常) n
     } catch (...) {}
 }
 
+void 记录方法问题接收结束(const 新方法问题学习消息& 消息) noexcept {
+    try {
+        std::wostringstream 文本;
+        文本<<L"方法="<<消息.方法节点.值<<L" 任务="<<消息.任务节点.值
+            <<L" 执行="<<消息.执行实例节点.值<<L" 归档="<<消息.归档节点.值;
+        (void)记录运行日志(L"自我线程",L"方法问题材料接收结束",文本.str());
+    } catch (...) {}
+}
+
+void 记录方法问题归档边界(稳定编码 任务,稳定编码 执行,
+    新任务问题归档交付状态 状态) noexcept {
+    try {
+        std::wostringstream 文本;
+        文本<<L"任务="<<任务.值<<L" 执行="<<执行.值<<L" 归档交付状态="<<static_cast<int>(状态)
+            <<L"；不改变任务结论，未投递学习";
+        if (状态==新任务问题归档交付状态::身份冲突 || 状态==新任务问题归档交付状态::结构不一致)
+            (void)记录逻辑错误日志(L"自我线程",L"方法问题归档身份结构异常",文本.str());
+        else (void)记录运行日志(L"自我线程",L"方法问题归档尚不可交付",文本.str());
+    } catch (...) {}
+}
+
 struct 未完成自我建立前缀 final {
     新自我线程初始化请求 请求;
     稳定编码 场景节点;
@@ -538,6 +559,7 @@ struct 新_自我线程类::实现 final {
     新_任务管理线程类* 任务管理 = nullptr;
     std::unique_ptr<新_自我工作线程类> 自我工作线程;
     模拟学习服务* 学习服务 = nullptr;
+    方法问题学习服务* 问题学习服务 = nullptr;
     std::unique_ptr<新_学习线程类> 学习线程;
     struct 学习占用 final {
         std::shared_future<新学习结束通知> 处理结果;
@@ -548,6 +570,15 @@ struct 新_自我线程类::实现 final {
     std::optional<新学习结束通知> 最近学习结束;
     bool 学习结束已交接管理 = false;
     std::optional<新学习运行异常记录> 最近学习运行异常;
+    struct 问题学习占用 final {
+        新方法问题学习消息 消息;
+        std::shared_future<新学习结束通知> 处理结果;
+        std::chrono::steady_clock::time_point 可投递时点;
+        bool 已消费=false;
+    };
+    // 仅轻量交付身份/future；不可变大材料在模拟世界及学习服务，不在self。
+    std::map<稳定编码,问题学习占用> 问题学习组;
+    std::set<std::pair<稳定编码,稳定编码>> 已报告问题归档边界;
     新自我需求扫描阶段 需求扫描阶段 = 新自我需求扫描阶段::未启动;
     std::shared_future<新自我需求树扫描结果> 扫描工作结果;
     std::optional<新自我需求树扫描请求> 当前扫描请求;
@@ -649,7 +680,62 @@ struct 新_自我线程类::实现 final {
             return !项.second.已消费 && 项.second.处理结果.valid()
                 && 项.second.处理结果.wait_for(std::chrono::milliseconds(0))
                 ==std::future_status::ready;
+        }) || std::any_of(问题学习组.begin(),问题学习组.end(),[](const auto& 项) {
+            return !项.second.已消费 && 项.second.处理结果.valid()
+                && 项.second.处理结果.wait_for(std::chrono::milliseconds(0))==std::future_status::ready;
         });
+    }
+
+    void 发现方法问题学习(稳定编码 任务,稳定编码 执行) noexcept {
+        if (!问题学习服务 || !学习线程) return;
+        try {
+            const auto 回执=任务服务->读取执行问题归档回执(任务,执行);
+            if (回执.状态!=新任务问题归档交付状态::已归档 || !回执.消息) {
+                if (回执.状态==新任务问题归档交付状态::无问题
+                    || 回执.状态==新任务问题归档交付状态::尚未评估) return;
+                bool 首次=false;
+                {
+                    std::lock_guard 锁(状态互斥);
+                    首次=已报告问题归档边界.emplace(任务,执行).second;
+                }
+                if (首次) 记录方法问题归档边界(任务,执行,
+                    回执.状态==新任务问题归档交付状态::已归档
+                        ? 新任务问题归档交付状态::结构不一致 : 回执.状态);
+                return;
+            }
+            const auto& 消息=*回执.消息;
+            if (消息.任务节点!=任务 || 消息.执行实例节点!=执行
+                || !有效(消息.方法节点) || !有效(消息.归档节点)) {
+                记录自我学习运行异常({消息.方法节点,新学习运行异常原因::结构不一致});
+                return;
+            }
+            std::lock_guard 锁(状态互斥);
+            if (停止已请求) return;
+            const auto [位置,插入]=问题学习组.try_emplace(消息.归档节点,
+                问题学习占用{消息,{},std::chrono::steady_clock::now(),false});
+            if (!插入 && 位置->second.消息!=消息)
+                记录自我学习运行异常({消息.方法节点,新学习运行异常原因::结构不一致});
+            状态变化.notify_all();
+        } catch (...) {
+            // 旁路收集设施异常不能改变普通任务的满足、完成或结算。
+            (void)记录逻辑错误日志(L"自我线程",L"方法问题消息暂存失败",L"原始归档仍由模拟世界保留");
+        }
+    }
+
+    std::optional<std::chrono::steady_clock::time_point> 最近问题投递时点() const noexcept {
+        std::optional<std::chrono::steady_clock::time_point> 时点;
+        for (const auto& [归档,项]:问题学习组) {
+            (void)归档;
+            if (项.已消费 || 项.处理结果.valid()) continue;
+            if (!时点 || 项.可投递时点<*时点) 时点=项.可投递时点;
+        }
+        return 时点;
+    }
+
+    std::chrono::steady_clock::time_point 合并问题投递时点(
+        std::chrono::steady_clock::time_point 时点) const noexcept {
+        const auto 待投=最近问题投递时点();
+        return 待投 ? (std::min)(时点,*待投) : 时点;
     }
 
     static std::uint64_t 取得自动消息编号() noexcept {
@@ -1584,6 +1670,7 @@ struct 新_自我线程类::实现 final {
             结果.状态 = 新自我消息处理状态::任务结果定位已变化;
             return 结果;
         }
+        发现方法问题学习(定位.任务节点,定位.执行实例节点);
         结果.任务需求当前复核 = 任务服务->复核任务当前需求(
             定位.任务节点);
         if (结果.任务需求当前复核->状态
@@ -1811,6 +1898,56 @@ struct 新_自我线程类::实现 final {
                     锁.lock();
                     continue;
                 }
+                const auto 问题位置=std::find_if(问题学习组.begin(),问题学习组.end(),[](const auto& 项) {
+                    if (项.second.已消费) return false;
+                    return 项.second.处理结果.valid()
+                        ? 项.second.处理结果.wait_for(std::chrono::milliseconds(0))==std::future_status::ready
+                        : 项.second.可投递时点<=std::chrono::steady_clock::now();
+                });
+                if (问题位置!=问题学习组.end()) {
+                    auto& 项=问题位置->second;
+                    const auto 消息=项.消息;
+                    if (!项.处理结果.valid()) {
+                        锁.unlock();
+                        const auto 接收=学习线程->提交方法问题学习(消息);
+                        锁.lock();
+                        if ((接收.状态==新学习操作状态::已完成 || 接收.状态==新学习操作状态::精确重复)
+                            && 接收.处理结果.valid()) 项.处理结果=接收.处理结果;
+                        else if (接收.状态==新学习操作状态::资源失败)
+                            项.可投递时点=std::chrono::steady_clock::now()+有界等待时长(消息配置->资源重试间隔毫秒);
+                        else {
+                            项.已消费=true;
+                            const 新学习运行异常记录 异常{消息.方法节点,新学习运行异常原因::内部错误};
+                            最近学习运行异常=异常;
+                            锁.unlock(); 记录自我学习运行异常(异常); 锁.lock();
+                        }
+                    } else {
+                        const auto future=项.处理结果;
+                        项.已消费=true;
+                        锁.unlock();
+                        std::optional<新学习运行异常记录> 异常;
+                        try {
+                            if (future.get().方法节点!=消息.方法节点)
+                                异常=新学习运行异常记录{消息.方法节点,新学习运行异常原因::结构不一致};
+                        } catch (const 新学习运行异常& e) {
+                            异常=e.记录();
+                            if (异常->方法节点!=消息.方法节点)
+                                异常=新学习运行异常记录{消息.方法节点,新学习运行异常原因::结构不一致};
+                        }
+                        catch (const std::bad_alloc&) { 异常=新学习运行异常记录{消息.方法节点,新学习运行异常原因::资源不足}; }
+                        catch (...) { 异常=新学习运行异常记录{消息.方法节点,新学习运行异常原因::内部错误}; }
+                        const auto 确认=学习线程->确认方法问题结果已接收(消息.归档节点);
+                        if (确认!=新学习操作状态::已完成 && 确认!=新学习操作状态::无变化)
+                            异常=新学习运行异常记录{消息.方法节点,新学习运行异常原因::内部错误};
+                        if (异常) 记录自我学习运行异常(*异常);
+                        else 记录方法问题接收结束(消息);
+                        // 原始问题收集不是方法知识更新，不通知manager重筹办。
+                        锁.lock();
+                        if (异常) 最近学习运行异常=异常;
+                        项.处理结果={};
+                    }
+                    continue;
+                }
                 if (需求扫描阶段 == 新自我需求扫描阶段::等待扫描结果
                     && 扫描工作结果.valid()
                     && 扫描工作结果.wait_for(std::chrono::milliseconds(0))
@@ -1917,8 +2054,9 @@ struct 新_自我线程类::实现 final {
                     || 需求扫描阶段 == 新自我需求扫描阶段::等待任务承接;
                 if (活动消息.empty() && !有自动承接 && !有扫描工作) {
                     生命周期 = 新自我线程生命周期::等待治理消息;
-                    if (首次重试) {
-                        状态变化.wait_until(锁, *首次重试);
+                    const auto 问题时点=最近问题投递时点();
+                    if (首次重试 || 问题时点) {
+                        状态变化.wait_until(锁, 首次重试 ? 合并问题投递时点(*首次重试) : *问题时点);
                     } else {
                         状态变化.wait(锁, [this] {
                             return 停止已请求 || !活动消息.empty()
@@ -1936,7 +2074,9 @@ struct 新_自我线程类::实现 final {
                     生命周期 = 新自我线程生命周期::等待治理消息;
                     if (需求扫描阶段 == 新自我需求扫描阶段::等待任务承接
                         && !扫描承接.empty()) {
-                        状态变化.wait_until(锁, 扫描承接.front().可处理时点);
+                        状态变化.wait_until(锁, 合并问题投递时点(扫描承接.front().可处理时点));
+                    } else if (const auto 问题时点=最近问题投递时点()) {
+                        状态变化.wait_until(锁,*问题时点);
                     } else {
                         状态变化.wait(锁);
                     }
@@ -1966,7 +2106,7 @@ struct 新_自我线程类::实现 final {
                     }
                     if (活动消息.empty()) {
                         生命周期 = 新自我线程生命周期::等待治理消息;
-                        状态变化.wait_until(锁, 自动项.可处理时点);
+                        状态变化.wait_until(锁, 合并问题投递时点(自动项.可处理时点));
                         continue;
                     }
                 }
@@ -1984,7 +2124,7 @@ struct 新_自我线程类::实现 final {
                     if (自动位置 != 自动承接.end() && *自动位置) {
                         唤醒时点 = (std::min)(唤醒时点, (*自动位置)->可处理时点);
                     }
-                    状态变化.wait_until(锁, 唤醒时点);
+                    状态变化.wait_until(锁, 合并问题投递时点(唤醒时点));
                     continue;
                 }
                 生命周期 = 新自我线程生命周期::正在处理消息;
@@ -2654,6 +2794,17 @@ struct 新_自我线程类::实现 final {
     }
 }
 
+bool 新_自我线程类::绑定方法问题学习(方法问题学习服务& 服务) noexcept {
+    if (!实现_) return false;
+    try {
+        std::lock_guard 加入锁(实现_->加入互斥);
+        std::lock_guard 锁(实现_->状态互斥);
+        if (实现_->问题学习服务==&服务) return true;
+        if (实现_->问题学习服务 || 实现_->工作线程.joinable() || 实现_->线程已完成) return false;
+        实现_->问题学习服务=&服务;
+        return true;
+    } catch (...) { return false; }
+}
 bool 新_自我线程类::绑定模拟学习(模拟学习服务& 服务) noexcept {
     if (!实现_) return false;
     try {
@@ -2706,7 +2857,7 @@ bool 新_自我线程类::绑定模拟学习(模拟学习服务& 服务) noexcep
         实现_->生命周期 = 新自我线程生命周期::启动中;
         if (实现_->学习服务 && !实现_->学习线程) {
             std::weak_ptr<实现::筹办反馈桥> 弱桥=实现_->反馈桥;
-            实现_->学习线程=std::make_unique<新_学习线程类>(*实现_->学习服务,[弱桥] {
+            auto 完成通知=[弱桥] {
                 if (const auto 桥=弱桥.lock()) {
                     std::lock_guard 桥锁(桥->互斥);
                     if (桥->目标) {
@@ -2714,7 +2865,11 @@ bool 新_自我线程类::绑定模拟学习(模拟学习服务& 服务) noexcep
                         桥->目标->状态变化.notify_all();
                     }
                 }
-            });
+            };
+            if (实现_->问题学习服务)
+                实现_->学习线程=std::make_unique<新_学习线程类>(
+                    *实现_->学习服务,*实现_->问题学习服务,完成通知);
+            else 实现_->学习线程=std::make_unique<新_学习线程类>(*实现_->学习服务,完成通知);
         }
         状态锁.unlock();
         const auto 工作启动 = 实现_->自我工作线程->启动(等待毫秒);
