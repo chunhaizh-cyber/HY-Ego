@@ -231,7 +231,7 @@ manager提交worker前必须先准备好持有future的记录及vector容量。w
 
 专属记录：`验证记录/20261012_TASK-SCHEDULING-WAIT-RESUME_统一调度与等待复核验证记录_v0.1.md`。记录实际HEAD、全组参与文件、配置、构建资源、编译结果、未验证项及知识变更清单。
 
-默认仅实际项目Debug/x64编译和链接；复用现有 `海中鱼巣.sln`/主vcxproj，不复制工程。构建输出独占目录：`D:/TEMP/海中鱼巣/TASK-SCHEDULING-WAIT-RESUME/20261012-A/Debug/`，root选择当前已验证MSBuild路径。`OutDir`设bin、`IntDir`设obj、`BuildProjectReferences=false`，日志同隔离目录。编译成功不等于线程运行或治理闭环完成。
+默认仅实际项目Debug/x64编译和链接；复用根目录现有 `海中鱼巣.vcxproj`，不复制工程。构建输出独占目录：`D:/TEMP/海中鱼巣/TASK-SCHEDULING-WAIT-RESUME/20261012-A/Debug/`，root选择当前已验证MSBuild路径。`OutDir`设bin、`IntDir`设obj、`BuildProjectReferences=false`，日志同隔离目录。编译成功不等于线程运行或治理闭环完成。
 
 静态必核：精确白名单、W0唯一/空T例外、其余工作非零T、两层10上限、单T排他、容量满仍收消息结果、预留后投递、源请求重试、线程部分启动失败回收、单项promise所有权、全部join、steady等待可停止、完整语义比较、不写优先级事实、fresh许可和旧定位失效、未评估X与同次方向证据保护、结算/工程阻塞不被清空。执行 `git diff --check`。
 
