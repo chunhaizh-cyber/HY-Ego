@@ -38,6 +38,14 @@ namespace {
 
 std::recursive_mutex 新任务互斥;
 
+// 持有原回调引用，不复制function。必须在owner锁之后构造，先通知后释放锁。
+struct 关联检查离域通知 final {
+    const std::function<void()>& 通知;
+    ~关联检查离域通知() noexcept {
+        try { if (通知) 通知(); } catch (...) {}
+    }
+};
+
 bool 任务线性区间含无穷(const 特征概念I64闭区间& 区间) noexcept {
     constexpr auto 最小 = (std::numeric_limits<std::int64_t>::min)();
     constexpr auto 最大 = (std::numeric_limits<std::int64_t>::max)();
@@ -2633,6 +2641,27 @@ bool 新_任务类::撤销增加状态引用组(
     return 完整;
 }
 
+bool 新_任务类::绑定关联检查通知(
+    const void* 所有者, std::function<void()> 通知) noexcept {
+    try {
+        std::lock_guard 锁(新任务互斥);
+        if (!所有者 || !通知) return false;
+        if (关联检查通知所有者_) return 关联检查通知所有者_ == 所有者;
+        关联检查通知_ = std::move(通知);
+        关联检查通知所有者_ = 所有者;
+        return true;
+    } catch (...) { return false; }
+}
+
+void 新_任务类::解除关联检查通知(const void* 所有者) noexcept {
+    try {
+        std::lock_guard 锁(新任务互斥);
+        if (!所有者 || 关联检查通知所有者_ != 所有者) return;
+        关联检查通知_ = {};
+        关联检查通知所有者_ = nullptr;
+    } catch (...) {}
+}
+
 bool 新_任务类::初始化() noexcept {
     try {
         std::lock_guard 锁(新任务互斥);
@@ -2870,6 +2899,7 @@ bool 新_任务类::初始化() noexcept {
             return 结果;
         }
 
+        const 关联检查离域通知 变更通知{关联检查通知_};
         const auto 状态特征 = 特征服务_.建立特征(任务状态特征概念);
         if (!有效(状态特征)) {
             结果.状态 = 新任务操作状态::资源失败;
@@ -3245,6 +3275,25 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
         std::sort(结果.任务节点组.begin(), 结果.任务节点组.end());
         if (std::adjacent_find(结果.任务节点组.begin(),
             结果.任务节点组.end()) != 结果.任务节点组.end()) {
+            结果.状态 = 新任务操作状态::结构不一致;
+            结果.任务节点组.clear();
+            return 结果;
+        }
+        // 根登记不能代替类型全集。漏登记及重复类型声明都必须拒绝，
+        // 不能静默去重后将部分任务当成完整范围交给双向检查。
+        std::vector<稳定编码> 类型任务;
+        for (const auto& 字段 : 全局基础数据集.查询目标字段(
+                任务节点类型, 节点类型字段)) {
+            if (!节点类型为(字段.所属节点, 任务节点类型)) {
+                结果.状态 = 新任务操作状态::结构不一致;
+                结果.任务节点组.clear();
+                return 结果;
+            }
+            类型任务.push_back(字段.所属节点);
+        }
+        std::sort(类型任务.begin(), 类型任务.end());
+        if (std::adjacent_find(类型任务.begin(), 类型任务.end()) != 类型任务.end()
+            || 类型任务 != 结果.任务节点组) {
             结果.状态 = 新任务操作状态::结构不一致;
             结果.任务节点组.clear();
             return 结果;

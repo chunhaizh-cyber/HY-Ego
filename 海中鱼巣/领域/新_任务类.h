@@ -1000,6 +1000,10 @@ public:
     // 建立扁平任务集合根、类型/字段节点及任务状态特征概念。
     bool 初始化() noexcept;
 
+    // 通知只表示关联结构可能变化；在owner锁内调用，不得反入owner或读写领域。
+    bool 绑定关联检查通知(const void* 所有者, std::function<void()> 通知) noexcept;
+    void 解除关联检查通知(const void* 所有者) noexcept;
+
     // 任务治理组合入口由任务域唯一拥有；世界树不再持有、转发或友元开放。
     bool 初始化治理() noexcept;
     新任务列表结果 查询可查找方法任务() const noexcept;
@@ -1180,6 +1184,8 @@ private:
     // 纯读核验，供公开筹办与选择复用，避免互相递归。
     新任务治理条件筹办结果 核验任务条件和参数(稳定编码 任务节点) const noexcept;
     bool 同步服务任务集合已加锁() noexcept;
+    const void* 关联检查通知所有者_ = nullptr;
+    std::function<void()> 关联检查通知_;
     const void* 服务任务同步所有者_ = nullptr;
     稳定编码 服务任务排除需求_{};
     新服务任务集合同步函数 服务任务同步_;

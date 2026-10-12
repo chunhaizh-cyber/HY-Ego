@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <vector>
 
@@ -199,6 +200,10 @@ public:
     // 只建立需求树自身的根、类型节点和字段节点。
     bool 初始化() noexcept;
 
+    // 通知只表示关联结构可能变化；在owner锁内调用，不得反入owner或读写领域。
+    bool 绑定关联检查通知(const void* 所有者, std::function<void()> 通知) noexcept;
+    void 解除关联检查通知(const void* 所有者) noexcept;
+
     新需求双根初始化结果 建立或取得本能双根(
         const 新需求双根初始化请求& 请求) noexcept;
 
@@ -250,6 +255,8 @@ private:
     新_特征类& 特征服务_;
     概念_特征类& 特征概念服务_;
     概念_二次特征类& 二次特征概念服务_;
+    const void* 关联检查通知所有者_ = nullptr;
+    std::function<void()> 关联检查通知_;
 };
 
 } // namespace 海中鱼巣

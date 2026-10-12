@@ -18,6 +18,14 @@ namespace {
 
 std::recursive_mutex 新需求互斥;
 
+// 持有原回调引用，不复制function。必须在owner锁之后构造，先通知后释放锁。
+struct 关联检查离域通知 final {
+    const std::function<void()>& 通知;
+    ~关联检查离域通知() noexcept {
+        try { if (通知) 通知(); } catch (...) {}
+    }
+};
+
 稳定编码 节点类型字段{};
 稳定编码 需求树根节点类型{};
 稳定编码 需求节点类型{};
@@ -781,6 +789,27 @@ bool 构建子树权重修改(
       特征概念服务_(特征概念服务),
       二次特征概念服务_(二次特征概念服务) {}
 
+bool 新_需求类::绑定关联检查通知(
+    const void* 所有者, std::function<void()> 通知) noexcept {
+    try {
+        std::lock_guard 锁(新需求互斥);
+        if (!所有者 || !通知) return false;
+        if (关联检查通知所有者_) return 关联检查通知所有者_ == 所有者;
+        关联检查通知_ = std::move(通知);
+        关联检查通知所有者_ = 所有者;
+        return true;
+    } catch (...) { return false; }
+}
+
+void 新_需求类::解除关联检查通知(const void* 所有者) noexcept {
+    try {
+        std::lock_guard 锁(新需求互斥);
+        if (!所有者 || 关联检查通知所有者_ != 所有者) return;
+        关联检查通知_ = {};
+        关联检查通知所有者_ = nullptr;
+    } catch (...) {}
+}
+
 bool 新_需求类::初始化() noexcept {
     try {
         std::lock_guard 锁(新需求互斥);
@@ -952,6 +981,7 @@ bool 新_需求类::初始化() noexcept {
             return 结果;
         }
 
+        const 关联检查离域通知 变更通知{关联检查通知_};
         auto 安全材料 = 建立根材料(
             新需求根角色::安全, 请求.安全根);
         if (!安全材料) {
@@ -1109,6 +1139,7 @@ bool 新_需求类::初始化() noexcept {
             }
         }
 
+        const 关联检查离域通知 变更通知{关联检查通知_};
         const auto 需求节点 = 全局基础数据集.新建节点();
         if (!有效(需求节点)) {
             结果.状态 = 新需求操作状态::资源失败;
