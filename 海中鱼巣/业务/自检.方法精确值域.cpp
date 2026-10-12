@@ -26,6 +26,23 @@ void 要求(bool 成立, const char* 说明) {
     if (!成立) throw std::runtime_error(说明);
 }
 
+bool 评估材料相同(const 新任务影响评估信息& 左,
+    const 新任务影响评估信息& 右) {
+    return 左.节点 == 右.节点 && 左.任务节点 == 右.任务节点
+        && 左.需求节点 == 右.需求节点 && 左.执行实例节点 == 右.执行实例节点
+        && 左.方法节点 == 右.方法节点
+        && 左.目标需求结果.状态 == 右.目标需求结果.状态
+        && 左.目标需求结果.实际特征节点 == 右.目标需求结果.实际特征节点
+        && 左.目标需求结果.准确差异 == 右.目标需求结果.准确差异
+        && 左.符合预测状态组 == 右.符合预测状态组
+        && 左.预计但未发生项组 == 右.预计但未发生项组
+        && 左.计划外状态组 == 右.计划外状态组
+        && 左.方向验证 == 右.方向验证 && 左.幅度验证 == 右.幅度验证
+        && 左.值域验证 == 右.值域验证 && 左.多渠道验证 == 右.多渠道验证
+        && 左.禁止结果验证 == 右.禁止结果验证
+        && 左.副作用验证 == 右.副作用验证 && 左.归因验证 == 右.归因验证;
+}
+
 // 真实服务依赖，仅在独立自检进程中构造；不初始化世界、线程或外设。
 struct 自检服务 final {
     新_特征值类 特征值{全局基础数据集};
@@ -244,7 +261,8 @@ struct 任务值域自检服务 final {
     样例 建样例(区间 条件域, 区间 结果域, bool 直接,
         std::optional<整数> 当前值 = 整数{0},
         二次特征结果域种类 目标关系 = 二次特征结果域种类::包含于参照值域,
-        bool 禁止直接域 = false) {
+        bool 禁止直接域 = false,
+        std::optional<新需求变化方向> 需求方向 = std::nullopt) {
         样例 材料;
         材料.类型 = 新类型();
         const auto 场景 = 基础.场景.建立场景(基础.场景根);
@@ -270,6 +288,12 @@ struct 任务值域自检服务 final {
         const auto 目标域 = 目标关系 == 二次特征结果域种类::等于
             ? 区间{50, 50} : 区间{50, 60};
         请求.目标 = 目标(材料.类型, 建域(材料.类型, 目标域), 目标关系);
+        if (需求方向) {
+            请求.目标.目标形式 = 新需求目标形式::变化方向;
+            请求.目标.目标变化方向 = 需求方向;
+            请求.目标.目标值域概念节点.reset();
+            请求.目标.目标比较关系概念节点.reset();
+        }
         请求.来源类型 = 新需求来源类型::本能定义;
         const auto 需求结果 = 需求.建立或取得普通需求(请求);
         要求(需求结果.需求节点.has_value(), "formal value demand");
@@ -320,6 +344,87 @@ struct 任务值域自检服务 final {
         要求(任务.实例化候选方法(材料.任务节点) == 新任务操作状态::已修改,
             "task method instance");
         return 材料;
+    }
+    // 领域服务级观察样例：公开X入口冻结预测、场景owner生成正式状态、
+    // 任务owner生成正式A。不调用本能函数，不伪造动作输出归因或完成事实。
+    新任务影响评估结果 形成观察评估结果(const 样例& 材料,
+        const std::vector<std::pair<整数, 整数>>& 观察值时间组,
+        bool 预测减少 = false) {
+        const auto 任务信息 = 任务.获取任务(材料.任务节点);
+        要求(任务信息 && 任务信息->方法实例节点, "assessment task instance");
+        const auto 需求信息 = 需求.获取需求(任务信息->需求节点);
+        要求(需求信息.has_value(), "assessment demand");
+        const auto 对象 = 基础.存在.获取存在(需求信息->目标存在节点);
+        要求(对象 && 对象->特征节点组.size() == 1, "assessment target feature");
+        const auto 特征节点 = 对象->特征节点组.front();
+        const auto 特征 = 基础.特征.获取特征(特征节点);
+        要求(特征 && 特征->当前值, "assessment before value");
+        const auto 配对 = 基础.方法.查询实例条件结果(*任务信息->方法实例节点);
+        要求(配对.状态 == 新方法操作状态::已找到 && 配对.配对组.size() == 1,
+            "assessment copied pair");
+        const auto& 实例 = 配对.配对组.front();
+        新任务预计特征变化 变化;
+        变化.作用对象节点 = 对象->节点;
+        变化.特征类型概念节点 = 材料.类型;
+        变化.预期值域概念节点 = 实例.配对.结果.结果项组.front().特征值域概念节点;
+        if (预测减少) {
+            const std::vector<二次特征概念输入定义> 输入{
+                {0, 二次特征输入角色::左输入, 二次特征输入来源种类::特征准确值, 材料.类型},
+                {1, 二次特征输入角色::右输入, 二次特征输入来源种类::特征准确值, 材料.类型}};
+            const auto 根 = 基础.二次概念.建立或取得默认二次特征概念(
+                二次特征算法::有向特征差值, 输入);
+            要求(根.概念节点.has_value(), "prediction direction root");
+            const auto 减少 = 基础.二次概念.建立或取得参照结果域概念(
+                *根.概念节点, 二次特征结果域种类::小于);
+            要求(减少.概念节点.has_value(), "prediction decrease concept");
+            变化.预期变化关系节点 = *减少.概念节点;
+            变化.预期方向 = 新任务预期变化方向::减少;
+        }
+        新任务执行开始请求 开始;
+        开始.任务节点 = 材料.任务节点;
+        开始.方法节点 = 实例.方法节点;
+        开始.开始时间 = {新状态时间语义::实例绝对UTC, 10};
+        开始.预计变化阶段组 = {{0, {变化}}};
+        开始.结果获取方案.渠道方案组 = {新任务结果获取渠道方案{}};
+        开始.结果获取方案.目标组 = {{对象->节点, 特征节点, 材料.类型,
+            *特征->当前值, true}};
+        要求(开始.结果获取方案.完整(), "assessment observation plan");
+        要求(任务.修改任务状态(材料.任务节点, 新任务状态::待执行)
+            == 新任务操作状态::已修改, "assessment owner state transition");
+        const auto 执行 = 任务.开始方法执行(开始);
+        要求(执行.执行实例节点.has_value(), "assessment owner begin execution");
+        std::vector<稳定编码> 状态组;
+        整数 结束时刻 = 12;
+        for (const auto& [观察值, 时刻] : 观察值时间组) {
+            const auto 变化结果 = 基础.场景.更新场景内存在特征值(材料.场景节点,
+                对象->节点, 特征节点, 新特征准确值{观察值},
+                {新状态时间语义::实例绝对UTC, 时刻});
+            要求(变化结果.状态节点.has_value(), "assessment real observed state");
+            状态组.push_back(*变化结果.状态节点);
+            if (时刻 >= 结束时刻) 结束时刻 = 时刻 + 1;
+        }
+        const auto 结束 = 任务.结束方法执行({材料.任务节点, *执行.执行实例节点,
+            {新状态时间语义::实例绝对UTC, 结束时刻}, 状态组});
+        要求(结束 == 新任务操作状态::已结束执行, "assessment owner end execution");
+        const auto 评估 = 任务.评估方法执行影响(材料.任务节点, *执行.执行实例节点);
+        if (评估.评估) {
+            const auto 读回 = 任务.获取影响评估(评估.评估->节点);
+            要求(读回 && 评估材料相同(*读回, *评估.评估),
+                "assessment official readback");
+        } else {
+            const auto 读回 = 任务.获取执行实例(*执行.执行实例节点);
+            要求(读回 && !读回->影响评估节点
+                && 读回->状态 == 新任务执行状态::已结束待评估,
+                "rejected assessment left a partial published evaluation");
+        }
+        return 评估;
+    }
+
+    新任务影响评估信息 形成观察评估(const 样例& 材料, 整数 观察后值,
+        bool 预测减少 = false) {
+        const auto 评估 = 形成观察评估结果(材料, {{观察后值, 11}}, 预测减少);
+        要求(评估.评估.has_value(), "assessment owner published evaluation");
+        return *评估.评估;
     }
 };
 } // namespace
@@ -874,6 +979,138 @@ int 运行方法精确值域自检() noexcept {
                 && 任务服务.任务.获取任务(材料.任务节点) == 前,
                 "forbidden private domain bypassed ready-to-execute gate");
         });
+        // 仅测试公开纯值predicate；这些DTO从不写入基础数据集，不是正式A。
+        const auto 完成材料 = [] {
+            新任务影响评估信息 材料;
+            材料.目标需求结果.状态 = 新需求当前满足状态::已满足;
+            材料.多渠道验证 = 新任务影响验证状态::已验证通过;
+            材料.禁止结果验证 = 新任务影响验证状态::已验证通过;
+            材料.副作用验证 = 新任务影响验证状态::已验证通过;
+            材料.归因验证 = 新任务影响验证状态::已验证通过;
+            return 材料;
+        };
+        const 新任务影响验证状态 验证状态组[]{新任务影响验证状态::未验证,
+            新任务影响验证状态::已验证通过, 新任务影响验证状态::已验证不通过,
+            新任务影响验证状态::不适用, 新任务影响验证状态::冲突};
+        检查("completion predicate ignores prediction direction magnitude domain matrix", [&] {
+            for (const auto 方向 : 验证状态组)
+                for (const auto 幅度 : 验证状态组)
+                    for (const auto 值域 : 验证状态组) {
+                        auto 材料 = 完成材料();
+                        材料.方向验证 = 方向;
+                        材料.幅度验证 = 幅度;
+                        材料.值域验证 = 值域;
+                        const auto 前 = 材料;
+                        要求(材料.允许形成完成决议() && 评估材料相同(材料, 前),
+                            "prediction score directly blocked satisfied demand");
+                    }
+        });
+        检查("completion predicate still rejects unmet or unknown demand", [&] {
+            for (const auto 状态 : {新需求当前满足状态::需增加, 新需求当前满足状态::需减少,
+                    新需求当前满足状态::未满足但无有向差值, 新需求当前满足状态::目标特征尚未形成,
+                    新需求当前满足状态::当前值不存在, 新需求当前满足状态::比较关系不适用,
+                    新需求当前满足状态::双根负差非法, 新需求当前满足状态::入口拒绝,
+                    新需求当前满足状态::需求不存在, 新需求当前满足状态::结构不一致,
+                    新需求当前满足状态::资源失败, 新需求当前满足状态::需要执行前后比较}) {
+                auto 材料 = 完成材料();
+                材料.目标需求结果.状态 = 状态;
+                要求(!材料.允许形成完成决议(), "unsatisfied/unknown demand completed");
+            }
+        });
+        检查("completion predicate preserves observation prohibition attribution and side-effect gates", [&] {
+            const auto 字段组 = {&新任务影响评估信息::多渠道验证,
+                &新任务影响评估信息::禁止结果验证,
+                &新任务影响评估信息::副作用验证,
+                &新任务影响评估信息::归因验证};
+            for (const auto 字段 : 字段组) {
+                for (const auto 状态 : 验证状态组) {
+                    auto 材料 = 完成材料();
+                    材料.*字段 = 状态;
+                    const bool 可以不适用 = 字段 == &新任务影响评估信息::多渠道验证
+                        || 字段 == &新任务影响评估信息::禁止结果验证;
+                    const bool 允许 = 状态 == 新任务影响验证状态::已验证通过
+                        || (可以不适用 && 状态 == 新任务影响验证状态::不适用);
+                    要求(材料.允许形成完成决议() == 允许,
+                        "non-prediction safety gate was removed");
+                }
+            }
+            auto 缺项 = 完成材料();
+            缺项.预计但未发生项组 = {服务.数值类型};
+            要求(!缺项.允许形成完成决议(), "missing expected item gate removed");
+            auto 计划外 = 完成材料();
+            计划外.计划外状态组 = {服务.数值类型};
+            要求(!计划外.允许形成完成决议(), "unplanned state gate removed");
+        });
+        检查("owner evaluation keeps satisfied value demand despite wrong predicted domain", [&] {
+            const auto 材料 = 任务服务.建样例({0, 10}, {70, 80}, false);
+            const auto 评估 = 任务服务.形成观察评估(材料, 55);
+            要求(评估.目标需求结果.状态 == 新需求当前满足状态::已满足
+                && 评估.值域验证 == 新任务影响验证状态::已验证不通过
+                && 评估.幅度验证 == 新任务影响验证状态::已验证不通过,
+                "observed demand was replaced by predicted-domain conformance");
+            要求(评估.归因验证 == 新任务影响验证状态::未验证
+                && !评估.允许形成完成决议(), "unattributed observed change completed task");
+        });
+        检查("owner evaluation compares demand direction independently from predicted direction", [&] {
+            const auto 材料 = 任务服务.建样例({0, 10}, {50, 60}, false, 整数{0},
+                二次特征结果域种类::包含于参照值域, false, 新需求变化方向::增加);
+            const auto 评估 = 任务服务.形成观察评估(材料, 55, true);
+            要求(评估.目标需求结果.状态 == 新需求当前满足状态::已满足
+                && 评估.方向验证 == 新任务影响验证状态::已验证不通过,
+                "demand increase incorrectly used predicted decrease verdict");
+            要求(评估.归因验证 == 新任务影响验证状态::未验证
+                && !评估.允许形成完成决议(), "unattributed direction change completed task");
+        });
+        检查("owner direction demand signed observation matrix", [&] {
+            for (const auto 方向 : {新需求变化方向::增加, 新需求变化方向::减少}) {
+                for (const auto 后值 : {整数{40}, 整数{60}}) {
+                    const auto 材料 = 任务服务.建样例({0, 90}, {70, 80}, false, 整数{50},
+                        二次特征结果域种类::包含于参照值域, false, 方向);
+                    const auto 评估 = 任务服务.形成观察评估(材料, 后值);
+                    const bool 符合 = (方向 == 新需求变化方向::增加) == (后值 > 50);
+                    const auto 预期 = 符合 ? 新需求当前满足状态::已满足
+                        : (方向 == 新需求变化方向::增加
+                            ? 新需求当前满足状态::需增加 : 新需求当前满足状态::需减少);
+                    要求(评估.目标需求结果.状态 == 预期,
+                        "signed actual observation disagrees with demand direction");
+                }
+            }
+        });
+        检查("owner direction demand zero net difference is not satisfied", [&] {
+            for (const auto 方向 : {新需求变化方向::增加, 新需求变化方向::减少}) {
+                const auto 材料 = 任务服务.建样例({0, 90}, {70, 80}, false, 整数{50},
+                    二次特征结果域种类::包含于参照值域, false, 方向);
+                // 同值写入不造状态；经两次真实变化回到前值，最新观察净差为0。
+                const auto 结果 = 任务服务.形成观察评估结果(材料, {{55, 11}, {50, 12}});
+                要求(结果.评估 && 结果.评估->目标需求结果.状态
+                    == (方向 == 新需求变化方向::增加
+                        ? 新需求当前满足状态::需增加 : 新需求当前满足状态::需减少),
+                    "zero net change fulfilled a strict direction demand");
+            }
+        });
+        检查("owner direction demand without observation remains undecided", [&] {
+            const auto 材料 = 任务服务.建样例({0, 90}, {70, 80}, false, 整数{50},
+                二次特征结果域种类::包含于参照值域, false, 新需求变化方向::增加);
+            const auto 结果 = 任务服务.形成观察评估结果(材料, {});
+            要求(结果.评估 && 结果.评估->目标需求结果.状态
+                    == 新需求当前满足状态::需要执行前后比较
+                && !结果.评估->允许形成完成决议(),
+                "missing observation was converted to successful direction");
+        });
+        检查("owner direction demand uses latest observation instead of first prediction match", [&] {
+            const auto 材料 = 任务服务.建样例({0, 90}, {70, 80}, false, 整数{50},
+                二次特征结果域种类::包含于参照值域, false, 新需求变化方向::增加);
+            const auto 结果 = 任务服务.形成观察评估结果(材料, {{55, 11}, {45, 12}});
+            要求(结果.评估 && 结果.评估->目标需求结果.状态 == 新需求当前满足状态::需增加,
+                "first increasing state masked latest decreasing observation");
+        });
+        检查("owner direction demand rejects conflicting latest-time observations", [&] {
+            const auto 材料 = 任务服务.建样例({0, 90}, {70, 80}, false, 整数{50},
+                二次特征结果域种类::包含于参照值域, false, 新需求变化方向::增加);
+            const auto 结果 = 任务服务.形成观察评估结果(材料, {{55, 11}, {45, 11}});
+            要求(结果.状态 == 新任务操作状态::结构不一致 && !结果.评估,
+                "conflicting latest observations selected an arbitrary demand verdict");
+        });
     } catch (const std::exception& 异常) {
         ++失败;
         std::cout << "FAIL initialization/driver: " << 异常.what() << '\n';
@@ -882,7 +1119,8 @@ int 运行方法精确值域自检() noexcept {
         std::cout << "FAIL initialization/driver: unknown exception\n";
     }
     std::cout << "NOT_RUN task-level malformed type/unit injection (no public construction path; feature provider rejection tests retained)\n"
-        << "NOT_RUN self child-demand publication/actual method execution/effect assessment (downstream private-domain gates intentionally retained)\n";
+        << "NOT_RUN self child-demand publication/actual instinct invocation/private-domain effect assessment (downstream private-domain gates intentionally retained)\n"
+        << "NOT_RUN self message decisions/full attributed business completion (predicate and concept-domain owner evaluation only)\n";
     std::cout << "SUMMARY " << 通过 << " PASS / " << 失败 << " FAIL\n";
     return 失败 == 0 ? 0 : 1;
 }
