@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -162,9 +163,25 @@ struct 新方法结果定义 final {
         const 新方法结果定义&) = default;
 };
 
+// 输入上升时输出的方向，区别于一次动作前后的结果变化方向。
+enum class 新方法条件结果线性方向 : std::int8_t {
+    反向 = -1, 不变 = 0, 同向 = 1
+};
+
+struct 新方法条件结果线性关系 final {
+    std::size_t 条件序号 = 0;
+    std::size_t 结果序号 = 0;
+    新方法条件结果线性方向 方向 = 新方法条件结果线性方向::不变;
+    特征概念I64闭区间 原条件域;
+    特征概念I64闭区间 原结果域;
+    friend bool operator==(const 新方法条件结果线性关系&,
+        const 新方法条件结果线性关系&) = default;
+};
+
 struct 新方法条件结果定义 final {
     新方法条件定义 条件;
     新方法结果定义 结果;
+    std::vector<新方法条件结果线性关系> 线性关系组;
     friend bool operator==(const 新方法条件结果定义&,
         const 新方法条件结果定义&) = default;
 };
@@ -184,6 +201,8 @@ struct 新方法条件结果信息 final {
     新方法条件定义 条件;
     新方法结果定义 结果;
     std::int64_t 命中次数 = 0;
+    // 原始模型随实例复制；收窄当前条件不能重释这些端点。
+    std::vector<新方法条件结果线性关系> 线性关系组;
     friend bool operator==(const 新方法条件结果信息&,
         const 新方法条件结果信息&) = default;
 };
