@@ -626,19 +626,23 @@ int 运行模拟学习闭环自检() noexcept {
             要求(learned.方法节点 == s.方法节点 && s.端口.读取次数 > reads
                 && beforeLearning && beforeLearning->条件结果组.size() >= 2
                 && s.方法.获取方法(s.方法节点) == beforeLearning, "manager material skipped real repeated simulation");
-            要求(!manager.提交方法学习结束(learned), "unbound/stopped manager accepted learning");
+            要求(manager.提交方法学习结束(learned, 1) == 新方法学习接收状态::入口拒绝,
+                "unbound/stopped manager accepted learning");
             要求(manager.绑定方法学习读取(s.方法) && manager.绑定方法学习读取(s.方法),
                 "same learning reader not idempotent");
             新_方法类 other方法{s.存在, s.场景, s.特征值, s.特征, s.存在概念, s.特征概念};
             要求(!manager.绑定方法学习读取(other方法), "manager replaced bound owner");
-            要求(!manager.提交方法学习结束(learned), "not-started manager accepted learning");
+            要求(manager.提交方法学习结束(learned, 1) == 新方法学习接收状态::尚未启动,
+                "not-started manager accepted learning");
             要求(manager.启动({8, 10}, 3000).状态 == 新任务管理操作状态::已完成, "manager start");
             const auto before = 任务.查询全部任务();
             要求(before.状态 == 新任务操作状态::已找到 && before.任务节点组.empty(), "unexpected baseline tasks");
-            要求(!manager.提交方法学习结束({}), "manager accepted invalid end notice");
+            要求(manager.提交方法学习结束({}, 1) == 新方法学习接收状态::入口拒绝,
+                "manager accepted invalid end notice");
             要求(无适配方法.has_value(), "missing zero-knowledge method");
             const auto empty = 学习.学习(*无适配方法);
-            要求(manager.提交方法学习结束(empty), "manager rejected zero-knowledge end notice");
+            要求(manager.提交方法学习结束(empty, 1) == 新方法学习接收状态::已接收,
+                "manager rejected zero-knowledge end notice");
             新任务管理快照 snapshot;
             auto deadline = std::chrono::steady_clock::now() + 5s;
             do {
@@ -650,7 +654,8 @@ int 运行模拟学习闭环自检() noexcept {
             要求(snapshot.最近方法学习结束 && snapshot.最近方法学习结束->方法节点 == *无适配方法
                 && !snapshot.等待方法实例消费 && !snapshot.最近学习运行异常 && snapshot.活动工作数 == 0
                 && emptyMethod && emptyMethod->条件结果组.empty(), "zero-knowledge end notice was discarded");
-            要求(manager.提交方法学习结束(learned), "manager rejected end notice with tree knowledge");
+            要求(manager.提交方法学习结束(learned, 2) == 新方法学习接收状态::已接收,
+                "manager rejected end notice with tree knowledge");
             deadline = std::chrono::steady_clock::now() + 5s;
             do {
                 snapshot = manager.读取快照();
@@ -659,14 +664,15 @@ int 运行模拟学习闭环自检() noexcept {
             } while (std::chrono::steady_clock::now() < deadline);
             要求(snapshot.最近方法学习结束
                 && snapshot.最近方法学习结束->方法节点 == s.方法节点
-                && snapshot.等待方法实例消费 && snapshot.活动工作数 == 0,
-                "manager did not expose waiting-for-instance-consumption state");
+                && !snapshot.等待方法实例消费 && snapshot.活动工作数 == 0,
+                "manager retained pending consumption with no affected tasks");
             const auto after = 任务.查询全部任务();
             要求(after.状态 == before.状态 && after.任务节点组 == before.任务节点组,
                 "knowledge notification created/advanced tasks");
             要求(manager.请求停止().状态 == 新任务管理操作状态::已完成
                 && manager.等待停止(5000).状态 == 新任务管理操作状态::已完成, "manager stop/join");
-            要求(!manager.提交方法学习结束(learned), "stopped manager accepted end notice");
+            要求(manager.提交方法学习结束(learned, 3) == 新方法学习接收状态::已停止接收,
+                "stopped manager accepted end notice");
         });
     } catch (const std::exception& e) { ++失败; std::cout << "FAIL initialization/driver: " << e.what() << '\n'; }
     catch (...) { ++失败; std::cout << "FAIL initialization/driver: unknown exception\n"; }

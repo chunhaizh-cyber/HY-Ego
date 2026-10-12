@@ -51,6 +51,7 @@ template<class T> auto 成员(T& x) {
     else if constexpr (std::is_same_v<U, 新方法结果定义>) return std::tie(x.关系规则,x.结果项组,x.确认要求);
     else if constexpr (std::is_same_v<U, 新方法条件结果线性关系>) return std::tie(x.条件序号,x.结果序号,
         x.方向,x.原条件域,x.原结果域);
+    // 格式1的嵌套布局保持七字段，配对来源仅在问题头末尾作带标签扩展。
     else if constexpr (std::is_same_v<U, 新方法条件结果信息>) return std::tie(x.配对节点,x.条件节点,
         x.结果节点,x.条件,x.结果,x.命中次数,x.线性关系组);
     else if constexpr (std::is_same_v<U, 新本能函数条件特征材料>) return std::tie(x.特征节点,x.动作前准确值);
@@ -165,9 +166,27 @@ template<class T> void 解项(const 编码记录& r,std::vector<T>& group) {
     group.push_back(std::move(x));
 }
 } // namespace
-std::vector<std::uint64_t> 编码问题头(const 新方法问题反馈材料& x) { return 编成字(问题头(x)); }
+std::vector<std::uint64_t> 编码问题头(const 新方法问题反馈材料& x) {
+    auto out = 编成字(问题头(x));
+    if (x.采用配对.来源配对节点) {
+        if (!有效(*x.采用配对.来源配对节点)) throw std::runtime_error("配对来源编码无效");
+        out.push_back(0x4D50534F55524345ULL);
+        out.push_back(1);
+        out.push_back(x.采用配对.来源配对节点->值);
+    }
+    return out;
+}
 新方法问题反馈材料 解码问题头(const std::vector<std::uint64_t>& data) {
-    新方法问题反馈材料 x; auto fields=问题头(x); 从字解出(data,fields); return x;
+    新方法问题反馈材料 x; auto fields=问题头(x);
+    解码器 in{data}; 解码(in,fields);
+    if (in.位置 != data.size()) {
+        if (data.size() - in.位置 != 3 || in.字() != 0x4D50534F55524345ULL
+            || in.字() != 1) throw std::runtime_error("问题头来源扩展非法");
+        const 稳定编码 来源{in.字()};
+        if (!有效(来源)) throw std::runtime_error("问题头来源编码无效");
+        x.采用配对.来源配对节点 = 来源;
+    }
+    return x;
 }
 std::vector<编码记录> 编码场景快照(const 新执行场景快照& x) {
     std::vector<编码记录> out; out.push_back({0,编成字(快照头(x))});

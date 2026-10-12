@@ -203,6 +203,8 @@ struct 新方法条件结果信息 final {
     std::int64_t 命中次数 = 0;
     // 原始模型随实例复制；收窄当前条件不能重释这些端点。
     std::vector<新方法条件结果线性关系> 线性关系组;
+    // 实例配对指向最初的抽象配对；抽象配对为空，旧实例允许缺省。
+    std::optional<稳定编码> 来源配对节点;
     friend bool operator==(const 新方法条件结果信息&,
         const 新方法条件结果信息&) = default;
 };

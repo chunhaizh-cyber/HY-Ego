@@ -142,10 +142,11 @@ struct 新任务预计特征变化 final {
     稳定编码 作用对象节点;
     稳定编码 特征类型概念节点;
     std::optional<稳定编码> 预期变化关系节点;
-    // 由上层在冻结方法结果时从变化关系概念解析；任务owner不猜关系名称。
+    // 由变化关系概念解析，或由同类型I64结果域与当前准确值推导；不猜词名。
     std::optional<新任务预期变化方向> 预期方向;
     std::optional<稳定编码> 预期值域概念节点;
     bool 必须出现 = true;
+    std::optional<特征概念I64闭区间> 预期精确数值域;
     friend bool operator==(const 新任务预计特征变化&,
         const 新任务预计特征变化&) = default;
 };
@@ -201,6 +202,7 @@ struct 新任务禁止结果目标 final {
     std::optional<新任务预期变化方向> 禁止方向;
     std::optional<稳定编码> 禁止值域概念节点;
     std::optional<稳定编码> 禁止状态或动态概念节点;
+    std::optional<特征概念I64闭区间> 禁止精确数值域;
     friend bool operator==(const 新任务禁止结果目标&,
         const 新任务禁止结果目标&) = default;
 };
@@ -716,6 +718,7 @@ struct 新冲突需求项 final {
     新任务预期变化方向 预计方向 = 新任务预期变化方向::不变;
     std::optional<稳定编码> 预期值域概念节点;
     bool 必须出现 = true;
+    std::optional<特征概念I64闭区间> 预期精确数值域;
     friend bool operator==(const 新冲突需求项&,
         const 新冲突需求项&) = default;
 };
@@ -1107,6 +1110,9 @@ public:
     std::optional<稳定编码> 查询需求任务(
         稳定编码 需求节点) const noexcept;
     新任务列表结果 查询全部任务() const noexcept;
+    新任务列表结果 查询受方法学习影响任务(稳定编码 方法节点) const noexcept;
+    新任务操作状态 准备学习后重新筹办(
+        稳定编码 任务节点, 稳定编码 方法节点) noexcept;
     // 不筛选业务资格或终结状态；成功项的空任务只表示确实尚未建立T。
     // 返回的是本次完整读回副本，不是后续写入或服务结算许可。
     新需求任务对应结果 读取需求列表任务对应() const noexcept;
@@ -1171,6 +1177,9 @@ public:
         稳定编码 任务节点) const noexcept;
 
 private:
+    新_方法类::新方法实例交付状态 切换学习方法实例(
+        稳定编码 任务节点, 稳定编码 旧根, 稳定编码 新根) noexcept;
+    std::map<稳定编码, 稳定编码> 方法实例采用待核查_;
     struct 方法问题暂存;
     std::map<std::uint64_t, std::shared_ptr<方法问题暂存>> 方法问题暂存组_;
     执行场景采集服务* 执行场景采集_ = nullptr;
