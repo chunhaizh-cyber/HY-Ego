@@ -42,6 +42,12 @@
     <ClInclude Include="海中鱼巣\业务\自检.方法精确值域.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\自检.语言词条匹配.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\自检.语言词条匹配.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClCompile Include="海中鱼巣\业务\自检.模拟学习闭环.cpp">
       <Filter>源文件</Filter>
     </ClCompile>

@@ -154,6 +154,8 @@
     <ClInclude Include="海中鱼巣\业务\自检.模拟学习.h" />
     <ClCompile Include="海中鱼巣\业务\自检.方法精确值域.cpp" />
     <ClInclude Include="海中鱼巣\业务\自检.方法精确值域.h" />
+    <ClCompile Include="海中鱼巣\业务\自检.语言词条匹配.cpp" />
+    <ClInclude Include="海中鱼巣\业务\自检.语言词条匹配.h" />
     <ClCompile Include="海中鱼巣\业务\自检.模拟学习闭环.cpp" />
     <ClInclude Include="海中鱼巣\业务\自检.模拟学习闭环.h" />
     <ClCompile Include="海中鱼巣\业务\模拟学习.服务.cpp" />

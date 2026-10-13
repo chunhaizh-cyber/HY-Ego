@@ -1,8 +1,10 @@
 #include "新_语言类.h"
+#include "新_词类.h"
 
 #include <algorithm>
 #include <map>
 #include <mutex>
+#include <set>
 #include <vector>
 
 namespace 海中鱼巣 {
@@ -11,6 +13,24 @@ namespace 海中鱼巣 {
 稳定编码 语言组织根节点{};
 
 namespace {
+
+// 仅接收已经通过严格UTF8校验的非空剩余字节；推进一个完整码点。
+std::uint32_t 读取已校验码点(const std::string& 文本,
+    std::size_t& 字节位置) noexcept {
+    const auto 首字节 = static_cast<unsigned char>(文本[字节位置++]);
+    if (首字节 <= 0x7F) return 首字节;
+    const std::size_t 后续数量 = 首字节 <= 0xDF ? 1 : (首字节 <= 0xEF ? 2 : 3);
+    std::uint32_t 码点 = 首字节 & (后续数量 == 1 ? 0x1F : (后续数量 == 2 ? 0x0F : 0x07));
+    for (std::size_t i = 0; i < 后续数量; ++i) {
+        码点 = (码点 << 6) | (static_cast<unsigned char>(文本[字节位置++]) & 0x3F);
+    }
+    return 码点;
+}
+
+struct 本次词面匹配节点 final {
+    std::map<std::uint32_t, std::size_t> 后继;
+    std::optional<稳定编码> 词条节点;
+};
 
 std::mutex 新语言互斥;
 std::map<std::string, 稳定编码> 语言索引;
@@ -372,6 +392,108 @@ bool 新_语言类::初始化() noexcept {
 bool 新_语言类::是语言节点(稳定编码 节点) const noexcept {
     const auto 结果 = 获取语言(节点);
     return 结果.状态 == 新语言查询状态::已找到;
+}
+
+新语言词条匹配结果 新_语言类::按已登记词条最长匹配(
+    稳定编码 语言节点, const std::string& 文本,
+    const 新_词类& 词服务) const noexcept {
+    try {
+        if (!有效(语言节点) || (!文本.empty() && !严格UTF8字节串有效(文本))) {
+            return {};
+        }
+        // 各领域读取各自持锁并返回副本；此处不能持新语言互斥再调词服务。
+        const auto 语言 = 获取语言(语言节点);
+        if (语言.状态 != 新语言查询状态::已找到) return {语言.状态, {}};
+        if (!语言.信息 || 语言.信息->节点 != 语言节点) {
+            return {新语言查询状态::结构不一致, {}};
+        }
+        if (文本.empty()) return {新语言查询状态::已找到, {}};
+
+        const auto 词组 = 词服务.查询语言词条(语言节点);
+        switch (词组.状态) {
+        case 新词条查询状态::已找到:
+            if (词组.词条节点组.empty()) return {新语言查询状态::结构不一致, {}};
+            break;
+        case 新词条查询状态::未找到:
+            if (!词组.词条节点组.empty()) return {新语言查询状态::结构不一致, {}};
+            break;
+        case 新词条查询状态::输入不合法:
+            return {新语言查询状态::输入不合法, {}};
+        case 新词条查询状态::资源失败:
+            return {新语言查询状态::资源失败, {}};
+        default:
+            return {新语言查询状态::结构不一致, {}};
+        }
+
+        std::vector<本次词面匹配节点> 匹配树(1);
+        std::set<稳定编码> 已读词条;
+        for (const auto 词条 : 词组.词条节点组) {
+            if (!有效(词条) || !已读词条.insert(词条).second) {
+                return {新语言查询状态::结构不一致, {}};
+            }
+            const auto 词 = 词服务.获取词条(词条);
+            if (词.状态 == 新词条查询状态::资源失败) return {新语言查询状态::资源失败, {}};
+            if (词.状态 != 新词条查询状态::已找到 || !词.信息
+                || 词.信息->节点 != 词条 || 词.信息->语言节点 != 语言节点
+                || !严格UTF8字节串有效(词.信息->规范化词面)) {
+                return {新语言查询状态::结构不一致, {}};
+            }
+            std::size_t 树位置 = 0;
+            std::size_t 字节位置 = 0;
+            while (字节位置 < 词.信息->规范化词面.size()) {
+                const auto 码点 = 读取已校验码点(词.信息->规范化词面, 字节位置);
+                const auto 已有 = 匹配树[树位置].后继.find(码点);
+                if (已有 != 匹配树[树位置].后继.end()) {
+                    树位置 = 已有->second;
+                } else {
+                    const auto 新位置 = 匹配树.size();
+                    匹配树[树位置].后继.emplace(码点, 新位置);
+                    匹配树.emplace_back(); // 扩容后不使用旧引用或迭代器。
+                    树位置 = 新位置;
+                }
+            }
+            if (匹配树[树位置].词条节点) return {新语言查询状态::结构不一致, {}};
+            匹配树[树位置].词条节点 = 词条;
+        }
+
+        std::vector<std::uint32_t> 码点组;
+        std::vector<std::size_t> 字节边界{0};
+        std::size_t 字节位置 = 0;
+        while (字节位置 < 文本.size()) {
+            码点组.push_back(读取已校验码点(文本, 字节位置));
+            字节边界.push_back(字节位置);
+        }
+        新语言词条匹配结果 结果{新语言查询状态::已找到, {}};
+        std::size_t 起点 = 0;
+        while (起点 < 码点组.size()) {
+            std::size_t 树位置 = 0;
+            std::size_t 终点 = 起点 + 1;
+            std::optional<稳定编码> 命中;
+            for (auto i = 起点; i < 码点组.size(); ++i) {
+                const auto 后继 = 匹配树[树位置].后继.find(码点组[i]);
+                if (后继 == 匹配树[树位置].后继.end()) break;
+                树位置 = 后继->second;
+                if (匹配树[树位置].词条节点) {
+                    命中 = 匹配树[树位置].词条节点;
+                    终点 = i + 1;
+                }
+            }
+            if (!命中 && !结果.片段组.empty() && !结果.片段组.back().词条节点) {
+                auto& 末段 = 结果.片段组.back();
+                末段.原文.append(文本, 字节边界[起点], 字节边界[终点] - 字节边界[起点]);
+                末段.原文字节长度 += 字节边界[终点] - 字节边界[起点];
+                ++末段.原文码点数量;
+            } else {
+                const auto 字节长度 = 字节边界[终点] - 字节边界[起点];
+                结果.片段组.push_back({命中, 字节边界[起点], 字节长度,
+                    起点, 终点 - 起点, 文本.substr(字节边界[起点], 字节长度)});
+            }
+            起点 = 终点;
+        }
+        return 结果;
+    } catch (...) {
+        return {新语言查询状态::资源失败, {}};
+    }
 }
 
 } // namespace 海中鱼巣
