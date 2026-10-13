@@ -90,6 +90,7 @@ struct HTTP请求 final {
     std::string 方法;
     std::string 目标;
     std::string 正文;
+    std::string 内容类型;
 };
 
 struct 网页对话共享状态 final {
@@ -131,6 +132,7 @@ public:
             std::lock_guard 锁(共享状态.互斥);
             共享状态.运行中 = false;
             共享状态.待提交文本.reset();
+            共享状态.会话标识.clear();
         } catch (...) {
         }
     }
@@ -139,6 +141,34 @@ public:
     网页对话会话租约& operator=(const 网页对话会话租约&) = delete;
 
 private:
+    bool 已开始_ = false;
+};
+
+// 标识的存储由外层宿主持有，先于本租约建立、晚于本租约析构。
+class 网页服务会话租约 final {
+public:
+    网页服务会话租约(std::string_view 公开标识,
+        const 网页服务输入回调组& 回调) noexcept
+        : 公开标识_(公开标识), 回调_(回调) {}
+
+    bool 开始() noexcept {
+        if (!回调_.会话开始) return true;
+        const auto 状态 = 回调_.会话开始(公开标识_);
+        已开始_ = 状态 == 网页服务输入状态::已完成
+            || 状态 == 网页服务输入状态::匿名会话;
+        return 已开始_;
+    }
+
+    ~网页服务会话租约() {
+        if (已开始_) 回调_.会话结束(公开标识_);
+    }
+
+    网页服务会话租约(const 网页服务会话租约&) = delete;
+    网页服务会话租约& operator=(const 网页服务会话租约&) = delete;
+
+private:
+    std::string_view 公开标识_;
+    const 网页服务输入回调组& 回调_;
     bool 已开始_ = false;
 };
 
@@ -226,6 +256,8 @@ bool 是有效UTF8(std::string_view 文本) noexcept {
     }
 
     std::size_t 正文长度 = 0;
+    bool 已有正文长度 = false;
+    bool 已有内容类型 = false;
     std::size_t 当前行 = 首行结束 + 2;
     while (当前行 < 头结束) {
         const auto 行结束 = 缓冲.find("\r\n", 当前行);
@@ -240,12 +272,18 @@ bool 是有效UTF8(std::string_view 文本) noexcept {
         while (!值.empty() && (值.front() == ' ' || 值.front() == '\t')) 值.remove_prefix(1);
         while (!值.empty() && (值.back() == ' ' || 值.back() == '\t')) 值.remove_suffix(1);
         if (名称 == "content-length") {
+            if (已有正文长度) return 请求读取状态::请求无效;
+            已有正文长度 = true;
             std::size_t 解析值 = 0;
             const auto 转换 = std::from_chars(值.data(), 值.data() + 值.size(), 解析值);
             if (转换.ec != std::errc{} || 转换.ptr != 值.data() + 值.size()) {
                 return 请求读取状态::请求无效;
             }
             正文长度 = 解析值;
+        } else if (名称 == "content-type") {
+            if (已有内容类型) return 请求读取状态::请求无效;
+            已有内容类型 = true;
+            请求.内容类型 = 转小写ASCII(值);
         } else if (名称 == "transfer-encoding") {
             return 请求读取状态::请求无效;
         }
@@ -333,14 +371,275 @@ std::string 构造消息JSON(const std::vector<网页对话已显示消息>& 消
     for (const auto& 消息 : 消息组) {
         if (!首项) 结果.push_back(',');
         首项 = false;
-        结果 += "{\"id\":" + std::to_string(消息.页面序号)
-            + ",\"role\":\""
+        结果 += "{\"id\":\"" + std::to_string(消息.页面序号)
+            + "\",\"role\":\""
             + (消息.角色 == 网页对话消息角色::交互者
                 ? "user" : "assistant")
             + "\",\"text\":\"" + JSON转义(消息.UTF8正文) + "\"}";
     }
     结果 += "]}";
     return 结果;
+}
+
+bool 服务输入已完成(网页服务输入状态 状态) noexcept {
+    return 状态 == 网页服务输入状态::已完成
+        || 状态 == 网页服务输入状态::已复用;
+}
+
+std::string_view 服务输入状态名称(网页服务输入状态 状态) noexcept {
+    switch (状态) {
+    case 网页服务输入状态::已完成: return "已完成";
+    case 网页服务输入状态::匿名会话: return "匿名会话";
+    case 网页服务输入状态::已复用: return "已复用";
+    case 网页服务输入状态::未绑定: return "未绑定";
+    case 网页服务输入状态::会话失效: return "会话失效";
+    case 网页服务输入状态::输入不完整: return "输入不完整";
+    case 网页服务输入状态::输入不合法: return "输入不合法";
+    case 网页服务输入状态::对象不匹配: return "对象不匹配";
+    case 网页服务输入状态::理解不存在: return "理解不存在";
+    case 网页服务输入状态::结构不一致: return "结构不一致";
+    case 网页服务输入状态::资源失败: return "资源失败";
+    case 网页服务输入状态::需重新确认: return "需重新确认";
+    case 网页服务输入状态::语义快照暂不支持: return "语义快照暂不支持";
+    }
+    return "结构不一致";
+}
+
+std::string_view 服务输入HTTP状态(网页服务输入状态 状态) noexcept {
+    switch (状态) {
+    case 网页服务输入状态::已完成:
+    case 网页服务输入状态::已复用: return "200 OK";
+    case 网页服务输入状态::匿名会话:
+    case 网页服务输入状态::未绑定:
+    case 网页服务输入状态::会话失效: return "403 Forbidden";
+    case 网页服务输入状态::输入不完整:
+    case 网页服务输入状态::输入不合法: return "400 Bad Request";
+    case 网页服务输入状态::对象不匹配:
+    case 网页服务输入状态::需重新确认: return "409 Conflict";
+    case 网页服务输入状态::理解不存在: return "404 Not Found";
+    case 网页服务输入状态::语义快照暂不支持: return "422 Unprocessable Content";
+    default: return "503 Service Unavailable";
+    }
+}
+
+void 发送服务输入失败(SOCKET 客户端, 网页服务输入状态 状态) noexcept {
+    try {
+        发送响应(客户端, 服务输入HTTP状态(状态),
+            "application/json;charset=utf-8",
+            "{\"status\":\"" + std::string(服务输入状态名称(状态))
+                + "\",\"info\":null}");
+    } catch (...) {
+        发送响应(客户端, "503 Service Unavailable", "application/json;charset=utf-8",
+            "{\"status\":\"资源失败\",\"info\":null}");
+    }
+}
+
+using 表单字段组 = std::vector<std::pair<std::string, std::string>>;
+
+bool 解码表单分量(std::string_view 输入, std::string& 输出) {
+    输出.clear();
+    输出.reserve(输入.size());
+    const auto 十六进制值 = [](char 字符) noexcept -> int {
+        if (字符 >= '0' && 字符 <= '9') return 字符 - '0';
+        if (字符 >= 'a' && 字符 <= 'f') return 字符 - 'a' + 10;
+        if (字符 >= 'A' && 字符 <= 'F') return 字符 - 'A' + 10;
+        return -1;
+    };
+    for (std::size_t i = 0; i < 输入.size(); ++i) {
+        if (输入[i] == '+') 输出.push_back(' ');
+        else if (输入[i] == '%') {
+            if (i + 2 >= 输入.size()) return false;
+            const int 高位 = 十六进制值(输入[i + 1]);
+            const int 低位 = 十六进制值(输入[i + 2]);
+            if (高位 < 0 || 低位 < 0) return false;
+            输出.push_back(static_cast<char>(高位 * 16 + 低位));
+            i += 2;
+        } else 输出.push_back(输入[i]);
+    }
+    return 是有效UTF8(输出);
+}
+
+bool 解析表单(std::string_view 正文,
+    const std::vector<std::string_view>& 允许名称, 表单字段组& 字段组) {
+    字段组.clear();
+    if (正文.empty()) return true;
+    while (true) {
+        const auto 分隔 = 正文.find('&');
+        const auto 项 = 正文.substr(0, 分隔);
+        const auto 等号 = 项.find('=');
+        if (项.empty() || 等号 == std::string_view::npos) return false;
+        std::string 名称, 值;
+        if (!解码表单分量(项.substr(0, 等号), 名称)
+            || !解码表单分量(项.substr(等号 + 1), 值)
+            || std::find(允许名称.begin(), 允许名称.end(), 名称) == 允许名称.end()
+            || std::any_of(字段组.begin(), 字段组.end(),
+                [&](const auto& 已有) { return 已有.first == 名称; })) return false;
+        字段组.emplace_back(std::move(名称), std::move(值));
+        if (分隔 == std::string_view::npos) return true;
+        正文.remove_prefix(分隔 + 1);
+    }
+}
+
+const std::string* 取得表单字段(const 表单字段组& 字段组,
+    std::string_view 名称) noexcept {
+    for (const auto& 字段 : 字段组) {
+        if (字段.first == 名称) return &字段.second;
+    }
+    return nullptr;
+}
+
+template<class 整数>
+网页服务输入状态 解析正整数(const std::string* 文本, 整数& 值) noexcept {
+    if (!文本 || 文本->empty()) return 网页服务输入状态::输入不完整;
+    const auto 转换 = std::from_chars(文本->data(), 文本->data() + 文本->size(), 值);
+    if (转换.ec != std::errc{} || 转换.ptr != 文本->data() + 文本->size()
+        || 值 <= 0) return 网页服务输入状态::输入不合法;
+    return 网页服务输入状态::已完成;
+}
+
+网页服务输入状态 解析服务目标(const 表单字段组& 字段组,
+    网页服务目标提交& 目标) noexcept {
+    auto 状态 = 解析正整数(取得表单字段(字段组, "ft"), 目标.特征类型编码);
+    if (!服务输入已完成(状态)) return 状态;
+    状态 = 解析正整数(取得表单字段(字段组, "form"), 目标.目标形式);
+    if (!服务输入已完成(状态)) return 状态;
+    if (目标.目标形式 == 1) {
+        if (取得表单字段(字段组, "direction")) return 网页服务输入状态::输入不合法;
+        std::uint64_t 域 = 0, 比较 = 0;
+        状态 = 解析正整数(取得表单字段(字段组, "domain"), 域);
+        if (!服务输入已完成(状态)) return 状态;
+        状态 = 解析正整数(取得表单字段(字段组, "comparison"), 比较);
+        if (!服务输入已完成(状态)) return 状态;
+        目标.目标域编码 = 域;
+        目标.比较概念编码 = 比较;
+    } else if (目标.目标形式 == 2) {
+        if (取得表单字段(字段组, "domain") || 取得表单字段(字段组, "comparison"))
+            return 网页服务输入状态::输入不合法;
+        std::int64_t 方向 = 0;
+        状态 = 解析正整数(取得表单字段(字段组, "direction"), 方向);
+        if (!服务输入已完成(状态)) return 状态;
+        if (方向 != 1 && 方向 != 2) return 网页服务输入状态::输入不合法;
+        目标.变化方向 = 方向;
+    } else return 网页服务输入状态::输入不合法;
+    return 网页服务输入状态::已完成;
+}
+
+bool 服务目标形状完整(const 网页服务目标提交& 目标) noexcept {
+    if (目标.特征类型编码 == 0) return false;
+    if (目标.目标形式 == 1) return 目标.目标域编码 && *目标.目标域编码 != 0
+        && 目标.比较概念编码 && *目标.比较概念编码 != 0 && !目标.变化方向;
+    return 目标.目标形式 == 2 && !目标.目标域编码 && !目标.比较概念编码
+        && 目标.变化方向 && (*目标.变化方向 == 1 || *目标.变化方向 == 2);
+}
+
+void 发送服务要求结果(SOCKET 客户端, const 网页服务要求结果& 结果,
+    bool 要求已确认) {
+    if (!服务输入已完成(结果.状态)) {
+        发送服务输入失败(客户端, 结果.状态);
+        return;
+    }
+    if (!结果.信息 || !结果.信息->理解编码 || !结果.信息->服务对象编码
+        || !服务目标形状完整(结果.信息->目标) || 结果.信息->UTF8重述.empty()
+        || !是有效UTF8(结果.信息->UTF8重述)
+        || (结果.信息->确认编码 && *结果.信息->确认编码 == 0)
+        || (要求已确认 && !结果.信息->确认编码)) {
+        发送服务输入失败(客户端, 网页服务输入状态::结构不一致);
+        return;
+    }
+    const auto& 信息 = *结果.信息;
+    const auto& 目标 = 信息.目标;
+    std::string 正文 = "{\"status\":\"" + std::string(服务输入状态名称(结果.状态))
+        + "\",\"info\":{\"preview\":\"" + std::to_string(信息.理解编码)
+        + "\",\"object\":\"" + std::to_string(信息.服务对象编码)
+        + "\",\"ft\":\"" + std::to_string(目标.特征类型编码)
+        + "\",\"form\":\"" + std::to_string(目标.目标形式) + "\"";
+    if (目标.目标域编码) 正文 += ",\"domain\":\"" + std::to_string(*目标.目标域编码) + "\"";
+    if (目标.比较概念编码) 正文 += ",\"comparison\":\"" + std::to_string(*目标.比较概念编码) + "\"";
+    if (目标.变化方向) 正文 += ",\"direction\":\"" + std::to_string(*目标.变化方向) + "\"";
+    正文 += ",\"confirmation\":";
+    正文 += 信息.确认编码 ? "\"" + std::to_string(*信息.确认编码) + "\"" : "null";
+    正文 += ",\"text\":\"" + JSON转义(信息.UTF8重述) + "\"}}";
+    发送响应(客户端, 服务输入HTTP状态(结果.状态), "application/json;charset=utf-8", 正文);
+}
+
+void 发送服务目标选项(SOCKET 客户端, const 网页服务目标选项结果& 结果) {
+    if (!服务输入已完成(结果.状态)) {
+        发送服务输入失败(客户端, 结果.状态);
+        return;
+    }
+    if (!结果.服务对象编码 || *结果.服务对象编码 == 0
+        || std::any_of(结果.当前特征提示组.begin(), 结果.当前特征提示组.end(),
+            [](const auto& 项) { return !项.特征类型编码 || !项.当前采用概念编码; })) {
+        发送服务输入失败(客户端, 网页服务输入状态::结构不一致);
+        return;
+    }
+    std::string 正文 = "{\"status\":\"" + std::string(服务输入状态名称(结果.状态))
+        + "\",\"object\":\"" + std::to_string(*结果.服务对象编码) + "\",\"hints\":[";
+    bool 首项 = true;
+    for (const auto& 项 : 结果.当前特征提示组) {
+        if (!首项) 正文 += ',';
+        首项 = false;
+        正文 += "{\"ft\":\"" + std::to_string(项.特征类型编码)
+            + "\",\"concept\":\"" + std::to_string(项.当前采用概念编码) + "\"}";
+    }
+    正文 += "]}";
+    发送响应(客户端, 服务输入HTTP状态(结果.状态), "application/json;charset=utf-8", 正文);
+}
+
+bool 处理服务输入请求(SOCKET 客户端, const HTTP请求& 请求,
+    std::string_view 基础路径, std::string_view 公开会话标识,
+    const 网页服务输入回调组& 回调) noexcept {
+    try {
+        const std::string 服务路径 = std::string(基础路径) + "/api/service/";
+        if (!请求.目标.starts_with(服务路径)) return false;
+        if (!回调.会话开始) {
+            发送服务输入失败(客户端, 网页服务输入状态::未绑定);
+            return true;
+        }
+        const std::string_view 路由 = std::string_view(请求.目标).substr(服务路径.size());
+        if (请求.方法 == "GET" && 路由 == "options" && 请求.正文.empty()) {
+            发送服务目标选项(客户端, 回调.查询目标提示(公开会话标识));
+            return true;
+        }
+        表单字段组 字段组;
+        if (请求.方法 == "GET" && 路由.starts_with("preview?") && 请求.正文.empty()) {
+            std::uint64_t 编码 = 0;
+            const auto 状态 = 解析表单(路由.substr(8), {"id"}, 字段组)
+                ? 解析正整数(取得表单字段(字段组, "id"), 编码)
+                : 网页服务输入状态::输入不合法;
+            if (!服务输入已完成(状态)) 发送服务输入失败(客户端, 状态);
+            else 发送服务要求结果(客户端, 回调.读取预览(公开会话标识, 编码), false);
+            return true;
+        }
+        if (请求.方法 == "POST" && (路由 == "preview" || 路由 == "confirm")) {
+            if (请求.内容类型 != "application/x-www-form-urlencoded") {
+                发送服务输入失败(客户端, 网页服务输入状态::输入不合法);
+                return true;
+            }
+            if (路由 == "preview") {
+                网页服务目标提交 目标;
+                const auto 状态 = 解析表单(请求.正文,
+                    {"ft", "form", "domain", "comparison", "direction"}, 字段组)
+                    ? 解析服务目标(字段组, 目标) : 网页服务输入状态::输入不合法;
+                if (!服务输入已完成(状态)) 发送服务输入失败(客户端, 状态);
+                else 发送服务要求结果(客户端, 回调.预览(公开会话标识, 目标), false);
+            } else {
+                std::uint64_t 编码 = 0;
+                const auto 状态 = 解析表单(请求.正文, {"preview"}, 字段组)
+                    ? 解析正整数(取得表单字段(字段组, "preview"), 编码)
+                    : 网页服务输入状态::输入不合法;
+                if (!服务输入已完成(状态)) 发送服务输入失败(客户端, 状态);
+                else 发送服务要求结果(客户端, 回调.确认(公开会话标识, 编码), true);
+            }
+            return true;
+        }
+        发送服务输入失败(客户端, 网页服务输入状态::输入不合法);
+    } catch (const std::bad_alloc&) {
+        发送服务输入失败(客户端, 网页服务输入状态::资源失败);
+    } catch (...) {
+        发送服务输入失败(客户端, 网页服务输入状态::结构不一致);
+    }
+    return true;
 }
 
 std::string 构造页面(std::string_view 基础路径) {
@@ -353,15 +652,20 @@ std::string 构造页面(std::string_view 基础路径) {
 <style>
 :root{color-scheme:dark;font-family:"Microsoft YaHei UI",sans-serif;background:#10151d;color:#edf3fa}
 body{margin:0;display:grid;place-items:center;min-height:100vh;background:radial-gradient(circle at top,#23334a,#10151d 55%)}
-main{width:min(880px,94vw);height:min(760px,92vh);display:grid;grid-template-rows:auto 1fr auto;overflow:hidden;border:1px solid #3c516d;border-radius:18px;background:#182230;box-shadow:0 24px 80px #0008}
+main{width:min(1040px,94vw);min-height:90vh;display:grid;grid-template-rows:auto minmax(160px,1fr) auto auto;border:1px solid #3c516d;border-radius:18px;background:#182230;box-shadow:0 24px 80px #0008}
 header{padding:18px 22px;border-bottom:1px solid #304157;display:flex;justify-content:space-between;align-items:center}
 h1{font-size:20px;margin:0}.status{font-size:13px;color:#8fd3a7}
-#messages{overflow:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
+#messages{overflow:auto;max-height:40vh;padding:20px;display:flex;flex-direction:column;gap:12px}
 .empty{margin:auto;color:#91a0b3}.message{align-self:flex-end;max-width:76%;padding:12px 15px;border-radius:15px 15px 4px 15px;background:#2e73c8;white-space:pre-wrap;overflow-wrap:anywhere}.message.assistant{align-self:flex-start;border-radius:15px 15px 15px 4px;background:#34475f}
 form{padding:16px;border-top:1px solid #304157;display:grid;grid-template-columns:1fr auto auto;gap:10px}
 textarea{resize:none;min-height:54px;max-height:160px;padding:12px;border:1px solid #405773;border-radius:12px;background:#0f1823;color:inherit;font:inherit}
 button{border:0;border-radius:11px;padding:0 18px;font:inherit;color:white;background:#2e73c8;cursor:pointer}button.secondary{background:#4a5566}button:disabled{opacity:.55;cursor:wait}
 footer{grid-column:1/-1;font-size:12px;color:#8d9aac}
+#service{padding:18px;border-top:1px solid #304157}#service h2{font-size:18px;margin:0 0 10px}
+#service-form{padding:0;border:0;display:block}#service-fields{border:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+label{display:grid;gap:6px;font-size:14px}[hidden]{display:none!important}input,select{min-width:0;padding:9px;border:1px solid #405773;border-radius:8px;background:#0f1823;color:inherit;font:inherit}input[readonly]{color:#a5b6c9}
+#service p{font-size:13px;color:#a5b6c9;overflow-wrap:anywhere}.service-actions{display:flex;gap:10px;margin-top:12px}.service-actions button{min-height:40px}
+#service-preview{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;font-size:14px;max-height:45vh;overflow:auto}#service-status{white-space:pre-wrap}
 </style>
 </head>
 <body>
@@ -369,6 +673,23 @@ footer{grid-column:1/-1;font-size:12px;color:#8d9aac}
 <header><h1>海中鱼巣 · 网页交互窗口</h1><span class="status" id="status">已连接本机服务</span></header>
 <section id="messages"><div class="empty">尚无对话消息</div></section>
 <form id="form"><textarea id="input" maxlength="1048576" placeholder="输入消息；Enter发送，Shift+Enter换行"></textarea><button type="submit">发送</button><button type="button" class="secondary" id="close">结束</button><footer>网页接收成功只表示消息进入当前交互宿主，不表示任务完成或需求满足。</footer></form>
+<section id="service">
+<h2>结构化服务要求</h2>
+<p>目标人由本次本机启动配置指定。填写已有正式概念编码；当前特征提示不限制可输入的编码。先查看完整重述，再明确确认。</p>
+<p id="service-hints"></p>
+<form id="service-form">
+<fieldset id="service-fields" disabled>
+<label>目标人编码（只读）<input id="service-object" readonly></label>
+<label>目标特征类型编码<input name="ft" inputmode="numeric" required autocomplete="off"></label>
+<label>目标形式<select name="form" id="service-mode" required><option value="">请选择</option><option value="1">值目标</option><option value="2">方向目标</option></select></label>
+<label id="domain-label">目标域概念编码<input name="domain" inputmode="numeric" autocomplete="off" disabled></label>
+<label id="comparison-label">比较概念编码<input name="comparison" inputmode="numeric" autocomplete="off" disabled></label>
+<label id="direction-label">变化方向<select name="direction" disabled><option value="">请选择</option><option value="1">增加</option><option value="2">减少</option></select></label>
+</fieldset>
+<div class="service-actions"><button type="submit" id="service-submit" disabled>生成预览</button><button type="button" id="service-confirm" disabled>确认当前预览</button></div>
+</form>
+<p id="service-status">正在核对本次会话绑定</p><pre id="service-preview"></pre>
+</section>
 </main>
 <script>
 const base=')HTML";
@@ -383,6 +704,24 @@ async function refresh(){try{const r=await fetch(base+'/api/messages',{cache:'no
 form.addEventListener('submit',async e=>{e.preventDefault();const text=input.value;if(!text)return;const button=form.querySelector('button[type=submit]');button.disabled=true;try{const r=await fetch(base+'/api/messages',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:text});if(!r.ok)throw new Error();input.value='';await refresh();}catch{status.textContent='消息提交失败';}finally{button.disabled=false;input.focus();}});
 input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit();}});
 document.getElementById('close').addEventListener('click',async()=>{try{await fetch(base+'/api/close',{method:'POST'});}finally{document.body.innerHTML='<main style="height:auto;padding:28px"><h1>交互宿主已结束</h1><p>现在可以关闭此页面。</p></main>';}});
+const serviceForm=document.getElementById('service-form');
+const serviceFields=document.getElementById('service-fields');
+const serviceMode=document.getElementById('service-mode');
+const serviceSubmit=document.getElementById('service-submit');
+const serviceConfirm=document.getElementById('service-confirm');
+const serviceStatus=document.getElementById('service-status');
+const servicePreview=document.getElementById('service-preview');
+let previewId=null,formRevision=0,serviceBusy=false;
+function invalidatePreview(){formRevision++;previewId=null;serviceConfirm.disabled=true;servicePreview.textContent='';serviceStatus.textContent='输入已变化，尚未完整预览或确认';}
+function selectServiceMode(){for(const name of ['domain','comparison','direction']){const field=serviceForm.elements.namedItem(name);const enabled=name==='direction'?serviceMode.value==='2':serviceMode.value==='1';field.disabled=!enabled;field.required=enabled;document.getElementById(name+'-label').hidden=!enabled;}}
+serviceForm.addEventListener('input',()=>{invalidatePreview();selectServiceMode();});
+serviceForm.addEventListener('change',()=>{invalidatePreview();selectServiceMode();});
+async function serviceRequest(path,body){const options={cache:'no-store'};if(body!==undefined){options.method='POST';options.headers={'Content-Type':'application/x-www-form-urlencoded'};options.body=body.toString();}const response=await fetch(base+'/api/service/'+path,options);const data=await response.json();if(!response.ok)throw new Error(data.status==='需重新确认'?'语义已变化，请重新生成预览并确认':data.status||'服务要求处理失败');return data;}
+function displayServiceInfo(info){if(!info||typeof info.preview!=='string'||typeof info.object!=='string'||typeof info.text!=='string')throw new Error('服务回执结构不一致');servicePreview.textContent='目标人编码：'+info.object+'\n理解编码：'+info.preview+'\n'+info.text;}
+async function loadServiceOptions(){try{const data=await serviceRequest('options');document.getElementById('service-object').value=data.object;document.getElementById('service-hints').textContent='当前特征提示：'+(data.hints.length?data.hints.map(h=>'FT '+h.ft+' / 当前概念 '+h.concept).join('；'):'无现有特征提示');serviceFields.disabled=false;serviceSubmit.disabled=false;serviceStatus.textContent='尚未确认。填写目标后生成预览。';selectServiceMode();}catch(error){serviceStatus.textContent=error.message+'；结构化输入不可用，文本对话仍可使用。';}}
+serviceForm.addEventListener('submit',async event=>{event.preventDefault();if(serviceBusy)return;const revision=formRevision;const body=new URLSearchParams(new FormData(serviceForm));previewId=null;serviceConfirm.disabled=true;serviceBusy=true;serviceSubmit.disabled=true;serviceStatus.textContent='正在生成预览';try{const data=await serviceRequest('preview',body);if(revision!==formRevision)return;displayServiceInfo(data.info);if(data.info.confirmation){serviceStatus.textContent='该份内容已确认，确认编码：'+data.info.confirmation;}else{previewId=data.info.preview;serviceConfirm.disabled=false;serviceStatus.textContent='尚未确认。请核对下面固定语义的完整重述，再点击确认。';}}catch(error){if(revision===formRevision)serviceStatus.textContent=error.message;}finally{serviceBusy=false;serviceSubmit.disabled=false;}});
+serviceConfirm.addEventListener('click',async()=>{if(!previewId||serviceBusy)return;const confirming=previewId;previewId=null;serviceBusy=true;serviceConfirm.disabled=true;serviceSubmit.disabled=true;serviceFields.disabled=true;serviceStatus.textContent='正在确认当前预览';try{const data=await serviceRequest('confirm',new URLSearchParams({preview:confirming}));displayServiceInfo(data.info);serviceStatus.textContent='已确认以上内容，确认编码：'+data.info.confirmation+'。这不表示任务已建立或目标已满足。';}catch(error){serviceStatus.textContent=error.message+'；可重新预览同一内容后重试。';}finally{serviceBusy=false;serviceSubmit.disabled=false;serviceFields.disabled=false;selectServiceMode();}});
+loadServiceOptions();
 refresh();setInterval(refresh,750);
 </script>
 </body>
@@ -463,7 +802,8 @@ bool 处理请求(SOCKET 客户端,
     std::string_view 会话标识,
     const std::string& 页面,
     bool& 请求结束,
-    网页对话消息接收函数 消息接收) {
+    网页对话消息接收函数 消息接收,
+    const 网页服务输入回调组& 服务输入) {
     HTTP请求 请求;
     const auto 读取状态 = 读取请求(客户端, 请求);
     if (读取状态 == 请求读取状态::请求过大) {
@@ -477,6 +817,7 @@ bool 处理请求(SOCKET 客户端,
 
     const std::string 消息路径 = std::string(基础路径) + "/api/messages";
     const std::string 结束路径 = std::string(基础路径) + "/api/close";
+    if (处理服务输入请求(客户端, 请求, 基础路径, 会话标识, 服务输入)) return true;
     if (请求.方法 == "GET" && 请求.目标 == 基础路径) {
         发送响应(客户端, "200 OK", "text/html;charset=utf-8", 页面);
         return true;
@@ -624,12 +965,29 @@ bool 网页对话宿主结果::成功() const noexcept {
 网页对话宿主结果 运行本地网页对话宿主(
     const volatile std::sig_atomic_t& 停止请求,
     网页对话消息接收函数 消息接收) noexcept {
+    return 运行本地网页对话宿主(停止请求, 消息接收, {});
+}
+
+网页对话宿主结果 运行本地网页对话宿主(
+    const volatile std::sig_atomic_t& 停止请求,
+    网页对话消息接收函数 消息接收,
+    const 网页服务输入回调组& 服务输入) noexcept {
     try {
+        const bool 有服务输入 = 服务输入.会话开始 || 服务输入.会话结束
+            || 服务输入.查询目标提示 || 服务输入.预览 || 服务输入.读取预览 || 服务输入.确认;
+        if (有服务输入 && (!服务输入.会话开始 || !服务输入.会话结束
+            || !服务输入.查询目标提示 || !服务输入.预览 || !服务输入.读取预览 || !服务输入.确认)) {
+            return {网页对话宿主状态::会话绑定失败};
+        }
         网络运行租约 网络;
         if (!网络.初始化()) return {网页对话宿主状态::网络初始化失败};
 
         std::string 令牌;
         if (!生成会话令牌(令牌)) return {网页对话宿主状态::令牌生成失败};
+        std::string 公开会话标识;
+        if (!生成会话令牌(公开会话标识) || 公开会话标识 == 令牌) {
+            return {网页对话宿主状态::令牌生成失败};
+        }
 
         套接字租约 监听(socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
         if (!监听.有效()) return {网页对话宿主状态::套接字创建失败};
@@ -656,7 +1014,9 @@ bool 网页对话宿主结果::成功() const noexcept {
         const std::string 浏览器地址 = "http://127.0.0.1:"
             + std::to_string(ntohs(地址.sin_port)) + 基础路径;
         网页对话会话租约 会话;
-        if (!会话.开始(令牌)) return {网页对话宿主状态::运行失败};
+        if (!会话.开始(公开会话标识)) return {网页对话宿主状态::运行失败};
+        网页服务会话租约 服务会话(公开会话标识, 服务输入);
+        if (!服务会话.开始()) return {网页对话宿主状态::会话绑定失败};
         if (!启动系统浏览器(浏览器地址)) {
             return {网页对话宿主状态::浏览器启动失败};
         }
@@ -683,8 +1043,8 @@ bool 网页对话宿主结果::成功() const noexcept {
                 reinterpret_cast<const char*>(&超时毫秒), sizeof(超时毫秒));
             (void)setsockopt(客户端.取得(), SOL_SOCKET, SO_SNDTIMEO,
                 reinterpret_cast<const char*>(&超时毫秒), sizeof(超时毫秒));
-            (void)处理请求(客户端.取得(), 基础路径, 令牌, 页面,
-                请求结束, 消息接收);
+            (void)处理请求(客户端.取得(), 基础路径, 公开会话标识, 页面,
+                请求结束, 消息接收, 服务输入);
         }
         return {请求结束
             ? 网页对话宿主状态::用户结束

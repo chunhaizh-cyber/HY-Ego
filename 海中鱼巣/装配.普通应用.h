@@ -5,6 +5,7 @@
 #include "业务/治理二次特征.应用服务.h"
 #include "线程/新_自我线程类.h"
 #include "线程/新_任务管理线程类.h"
+#include "界面/宿主.网页对话.h"
 
 #include <cstdint>
 #include <optional>
@@ -30,6 +31,8 @@ struct 普通应用配置 final {
     std::int64_t 服务根初始权重 = 1;
     std::string 第一权限人登录名 = "zch2005";
     std::string 第一权限人姓名 = "周春海";
+    // 仅可信本机启动者设置；空字符串保留匿名文本会话。
+    std::string 本次网页会话服务对象登录名;
 
     friend bool operator==(const 普通应用配置&, const 普通应用配置&) = default;
 };
@@ -51,7 +54,9 @@ enum class 普通应用装配状态 : std::uint8_t {
     人类概念初始化失败,
     自然语言世界初始化失败,
     确认概念初始化失败,
-    治理二次特征初始化失败
+    治理二次特征初始化失败,
+    服务要求初始化失败,
+    服务对象绑定失败
 };
 
 struct 普通应用装配结果 final {
@@ -165,5 +170,15 @@ struct 普通应用网页消息处理结果 final {
     std::string_view 会话标识,
     std::uint64_t 消息序号,
     std::string_view UTF8正文) noexcept;
+
+网页服务输入状态 开始普通应用网页会话(std::string_view 公开会话标识) noexcept;
+void 结束普通应用网页会话(std::string_view 公开会话标识) noexcept;
+网页服务目标选项结果 查询普通应用服务目标选项(std::string_view 公开会话标识) noexcept;
+网页服务要求结果 预览普通应用服务要求(std::string_view 公开会话标识,
+    const 网页服务目标提交& 目标) noexcept;
+网页服务要求结果 读取普通应用服务要求预览(std::string_view 公开会话标识,
+    std::uint64_t 理解编码) noexcept;
+网页服务要求结果 确认普通应用服务要求(std::string_view 公开会话标识,
+    std::uint64_t 理解编码) noexcept;
 
 } // namespace 海中鱼巣

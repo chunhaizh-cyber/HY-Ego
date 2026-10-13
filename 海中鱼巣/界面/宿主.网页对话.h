@@ -19,7 +19,8 @@ enum class 网页对话宿主状态 : std::uint8_t {
     监听失败,
     浏览器启动失败,
     运行失败,
-    内部错误
+    内部错误,
+    会话绑定失败
 };
 
 struct 网页对话宿主结果 final {
@@ -61,12 +62,63 @@ struct 网页对话外设操作结果 final {
     std::optional<std::uint64_t> 页面序号;
 };
 
+// 会话标识只使用公开来源标识，不传递URL中的私有令牌。
 // 返回true表示本条消息已经被上层按同一会话、序号和正文接纳；false
 // 表示暂未接纳，宿主不递增序号，浏览器可以重试同一条消息。
 using 网页对话消息接收函数 = bool (*)(
     std::string_view 会话标识,
     std::uint64_t 消息序号,
     std::string_view UTF8正文) noexcept;
+
+enum class 网页服务输入状态 : std::uint8_t {
+    已完成 = 1, 匿名会话, 已复用, 未绑定, 会话失效, 输入不完整,
+    输入不合法, 对象不匹配, 理解不存在, 结构不一致, 资源失败,
+    需重新确认, 语义快照暂不支持
+};
+
+struct 网页服务目标提交 {
+    std::uint64_t 特征类型编码 = 0;
+    std::int64_t 目标形式 = 0;
+    std::optional<std::uint64_t> 目标域编码;
+    std::optional<std::uint64_t> 比较概念编码;
+    std::optional<std::int64_t> 变化方向;
+};
+
+struct 网页服务目标提示 {
+    std::uint64_t 特征类型编码 = 0;
+    std::uint64_t 当前采用概念编码 = 0;
+};
+
+struct 网页服务目标选项结果 {
+    网页服务输入状态 状态 = 网页服务输入状态::未绑定;
+    std::optional<std::uint64_t> 服务对象编码;
+    std::vector<网页服务目标提示> 当前特征提示组;
+};
+
+struct 网页服务要求显示信息 {
+    std::uint64_t 理解编码 = 0;
+    std::uint64_t 服务对象编码 = 0;
+    网页服务目标提交 目标;
+    std::optional<std::uint64_t> 确认编码;
+    std::string UTF8重述;
+};
+
+struct 网页服务要求结果 {
+    网页服务输入状态 状态 = 网页服务输入状态::输入不合法;
+    std::optional<网页服务要求显示信息> 信息;
+};
+
+struct 网页服务输入回调组 {
+    网页服务输入状态 (*会话开始)(std::string_view 公开会话标识) noexcept = nullptr;
+    void (*会话结束)(std::string_view 公开会话标识) noexcept = nullptr;
+    网页服务目标选项结果 (*查询目标提示)(std::string_view 公开会话标识) noexcept = nullptr;
+    网页服务要求结果 (*预览)(std::string_view 公开会话标识,
+        const 网页服务目标提交&) noexcept = nullptr;
+    网页服务要求结果 (*读取预览)(std::string_view 公开会话标识,
+        std::uint64_t 理解编码) noexcept = nullptr;
+    网页服务要求结果 (*确认)(std::string_view 公开会话标识,
+        std::uint64_t 理解编码) noexcept = nullptr;
+};
 
 // 本能函数适配层只通过以下三个入口接触网页宿主。读取返回服务器已经
 // 提供给页面的数据；设置只形成待提交内容，提交才增加一条自我消息。
@@ -81,5 +133,10 @@ using 网页对话消息接收函数 = bool (*)(
 网页对话宿主结果 运行本地网页对话宿主(
     const volatile std::sig_atomic_t& 停止请求,
     网页对话消息接收函数 消息接收 = nullptr) noexcept;
+
+网页对话宿主结果 运行本地网页对话宿主(
+    const volatile std::sig_atomic_t& 停止请求,
+    网页对话消息接收函数 消息接收,
+    const 网页服务输入回调组& 服务输入) noexcept;
 
 } // namespace 海中鱼巣

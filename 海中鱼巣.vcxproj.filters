@@ -380,6 +380,12 @@
     <ClInclude Include="海中鱼巣\业务\服务值结算.本能运行服务.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\业务\服务要求.结构化.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\服务要求.结构化.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\业务\服务值结算.本能运行服务.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
