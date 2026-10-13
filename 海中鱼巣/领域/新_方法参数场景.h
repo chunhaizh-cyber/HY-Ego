@@ -8,6 +8,7 @@
 #include "新_内部治理对象引用.h"
 #include "新_特征类.h"
 #include "新_特征值类.h"
+#include "服务要求.材料合同.h"
 
 namespace 海中鱼巣 {
 
@@ -32,6 +33,8 @@ struct 新方法参数角色绑定 final {
     std::optional<稳定编码> 实际存在节点;
     std::vector<新方法实际特征绑定> 实际特征组;
     std::optional<新任务虚拟存在引用> 任务虚拟存在引用;
+    std::optional<新服务要求分项引用> 服务要求分项引用;
+    std::optional<新服务要求确认引用> 服务要求确认引用;
     friend bool operator==(const 新方法参数角色绑定&,
         const 新方法参数角色绑定&) = default;
 };
@@ -57,6 +60,15 @@ public:
         稳定编码 参数角色节点) const noexcept;
     std::optional<新任务虚拟存在读回> 读取绑定任务虚拟存在(
         稳定编码 参数角色节点) const noexcept;
+    新服务要求分项读取结果 读取绑定服务要求分项(
+        稳定编码 参数角色节点) const noexcept;
+    新服务要求确认读取结果 读取绑定服务要求确认身份(
+        稳定编码 参数角色节点) const noexcept;
+    新服务要求确认读取结果 复核绑定服务要求确认语义(
+        稳定编码 参数角色节点) const noexcept;
+    // 运行服务仅接受由其同一材料owner建立的现实执行视图。
+    bool 使用服务要求读取接口(
+        const 新服务要求材料读取接口&) const noexcept;
     // 只允许读取本参数场景已经绑定的特征；每次调用都从特征owner
     // 取得当前信息，不保存调用前值的副本。
     std::optional<新特征信息> 读取绑定特征(
@@ -74,7 +86,8 @@ private:
         const 新_特征值类& 特征值服务,
         新方法参数场景用途 用途,
         const 新内部治理对象读取接口* 治理对象读取,
-        std::shared_ptr<新方法模拟运行接口> 模拟运行 = {}) noexcept;
+        std::shared_ptr<新方法模拟运行接口> 模拟运行 = {},
+        const 新服务要求材料读取接口* 服务要求读取 = nullptr) noexcept;
 
     稳定编码 方法节点_;
     std::vector<新方法参数角色绑定> 角色绑定组_;
@@ -84,6 +97,8 @@ private:
     // 非拥有引用；调用方保证读取owner覆盖整个参数场景寿命。
     const 新内部治理对象读取接口* 治理对象读取_;
     std::shared_ptr<新方法模拟运行接口> 模拟运行_;
+    // 非拥有只读owner，必须覆盖整个参数场景寿命；模拟不得借此访问现实材料。
+    const 新服务要求材料读取接口* 服务要求读取_;
 };
 
 } // namespace 海中鱼巣

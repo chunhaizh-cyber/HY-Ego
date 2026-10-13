@@ -6,6 +6,7 @@
 
 #include "新_方法参数场景.h"
 #include "新_状态类.h"
+#include "服务要求.材料合同.h"
 
 namespace 海中鱼巣 {
 
@@ -63,6 +64,10 @@ struct 新本能函数条件角色材料 final {
     std::optional<稳定编码> 实际存在节点;
     std::vector<新本能函数条件特征材料> 实际特征组;
     std::optional<新任务虚拟存在引用> 任务虚拟存在引用;
+    std::optional<新服务要求分项引用> 服务要求分项引用;
+    std::optional<新服务要求确认引用> 服务要求确认引用;
+    std::optional<新服务要求分项材料> 服务要求分项快照;
+    std::optional<新服务要求确认目标> 服务要求确认快照;
 
     friend bool operator==(const 新本能函数条件角色材料&,
         const 新本能函数条件角色材料&) = default;
@@ -95,6 +100,7 @@ struct 新本能函数本次结果 final {
     std::vector<稳定编码> 已形成动态节点组;
     std::vector<新本能二次特征观察结果> 已形成二次特征结果组;
     std::vector<稳定编码> 建议观察特征节点组;
+    std::optional<新服务需求信息包> 服务需求信息包;
 
     friend bool operator==(const 新本能函数本次结果&,
         const 新本能函数本次结果&) = default;
@@ -128,6 +134,13 @@ public:
     // 登记阶段形成初始方法知识；真实动作只能经任务统一参数场景进入。
     static 新本能函数本次条件结果对 执行服务值结算(
         const 方法参数场景& 参数场景) noexcept;
+    static 新本能函数本次条件结果对 主动获取服务需求(
+        const 方法参数场景&) noexcept;
+    static 新本能函数本次条件结果对 被动获取服务需求(
+        const 方法参数场景&) noexcept;
+private:
+    static 新本能函数本次条件结果对 获取服务需求(
+        const 方法参数场景&, 新服务需求获取方式) noexcept;
 };
 
 } // namespace 海中鱼巣

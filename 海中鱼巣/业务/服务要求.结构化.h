@@ -2,6 +2,7 @@
 
 #include "../领域/新_需求类.h"
 #include "../领域/新_自然语言世界树类.h"
+#include "../领域/服务要求.材料合同.h"
 #include <memory>
 #include <mutex>
 #include <string>
@@ -77,7 +78,7 @@ struct 服务要求确认查询结果 {
 
 // 语言材料的唯一业务owner；不创建自我需求、任务或现实结果。
 // 注入服务的寿命须覆盖本对象；活跃会话权限由装配在调用写入口前核验。
-class 结构化服务要求服务 final : public 新服务要求确认读取接口 {
+class 结构化服务要求服务 final : public 新服务要求材料读取接口 {
 public:
     结构化服务要求服务(新_自然语言世界树类&, 新_存在类&, 新_特征值类&,
         概念_存在类&, 概念_特征类&, 概念_二次特征类&) noexcept;
@@ -85,6 +86,8 @@ public:
     结构化服务要求状态 初始化(稳定编码 人类概念节点) noexcept;
     服务要求理解结果 建立或取得理解(const 服务要求理解请求&) noexcept;
     服务要求理解结果 读取理解(稳定编码 理解节点) const noexcept;
+    新服务要求分项读取结果 读取服务要求分项(
+        const 新服务要求分项引用&) const noexcept override;
     服务要求确认结果 确认理解(std::string_view 公开会话标识,
         稳定编码 来源人类节点, 稳定编码 理解节点) noexcept;
     服务要求确认查询结果 查询已确认要求(稳定编码 来源人类节点) const noexcept;

@@ -107,9 +107,12 @@ public:
     新方法参数场景结果 建立参数场景(
         稳定编码 方法节点,
         std::vector<新方法参数角色绑定> 角色绑定组,
-        const 新内部治理对象读取接口* 治理对象读取 = nullptr) const noexcept;
+        const 新内部治理对象读取接口* 治理对象读取 = nullptr,
+        const 新服务要求材料读取接口* 服务要求读取 = nullptr) const noexcept;
     新方法参数场景结果 建立本能登记参数场景(
         std::vector<新方法参数角色绑定> 角色绑定组) const noexcept;
+    // 服务需求两入口的登记专用空容器，不放入任何运行实参。
+    新方法参数场景结果 建立服务需求登记参数场景() const noexcept;
     新方法参数场景结果 建立模拟参数场景(
         稳定编码 方法节点,
         std::vector<新方法参数角色绑定> 绑定,
