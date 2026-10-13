@@ -4,6 +4,7 @@
 #include <limits>
 #include <map>
 #include <mutex>
+#include <new>
 #include <set>
 #include <tuple>
 #include <utility>
@@ -1683,6 +1684,40 @@ std::vector<稳定编码> 新_需求类::查询目标存在需求(
             return 结果;
         }
 
+        if (const auto* 集合目标 = std::get_if<特征概念任务集合值域>(&目标概念->值域)) {
+            if (目标概念->单位 || 特征->实例单位) {
+                结果.状态 = 新需求当前满足状态::结构不一致;
+                return 结果;
+            }
+            // 1/0只为本次包含判定，不是材料相似度的10000/0载荷，更不导出增减方向。
+            if (比较概念->算法 != 二次特征算法::特征材料相似度
+                || 比较概念->结果域种类组.empty()
+                || !std::all_of(比较概念->结果域种类组.begin(), 比较概念->结果域种类组.end(),
+                    [](auto 关系) { return 关系 == 二次特征结果域种类::包含于参照值域; })) {
+                结果.状态 = 新需求当前满足状态::比较关系不适用;
+                return 结果;
+            }
+            const auto 比较 = 特征服务_.比较任务集合条件(*目标根, *特征->当前值, *集合目标);
+            if (比较.状态 != 特征概念规则状态::已完成) {
+                switch (比较.状态) {
+                case 特征概念规则状态::资源失败:
+                    结果.状态 = 新需求当前满足状态::资源失败; break;
+                case 特征概念规则状态::读取接口未装配:
+                    结果.状态 = 新需求当前满足状态::读取接口未装配; break;
+                default:
+                    结果.状态 = 新需求当前满足状态::结构不一致; break;
+                }
+                return 结果;
+            }
+            if (比较.比较值 != 0 && 比较.比较值 != 1) {
+                结果.状态 = 新需求当前满足状态::结构不一致;
+                return 结果;
+            }
+            结果.状态 = *比较.比较值 == 1 ? 新需求当前满足状态::已满足
+                : 新需求当前满足状态::未满足但无有向差值;
+            return 结果;
+        }
+
         const auto 定位 = 定位准确值(
             *特征->当前值, *目标概念, 特征值服务_, 存在服务_);
         if (!定位.结构有效) {
@@ -1820,6 +1855,80 @@ std::optional<std::int64_t> 新_需求类::查询需求权重(
     } catch (...) {
         return 新需求操作状态::资源失败;
     }
+}
+
+特征概念规则状态 新_需求类::校验集合成员需求身份(稳定编码 需求节点) const noexcept {
+    try {
+        // 不调用结构仍存在/读取需求信息：它们会多次读取或进入领域复核。
+        if (!结构已初始化()) return 特征概念规则状态::读取接口未装配;
+        if (!有效(需求节点)) return 特征概念规则状态::入口拒绝;
+        const auto 读取 = 全局基础数据集.查询完整节点结构(需求节点);
+        if (读取.状态 == 基础结构操作状态::节点不存在) return 特征概念规则状态::值不存在;
+        if (读取.状态 == 基础结构操作状态::资源失败) return 特征概念规则状态::资源失败;
+        if (读取.状态 != 基础结构操作状态::已完成 || !读取.结构
+            || 读取.结构->节点.编码 != 需求节点) return 特征概念规则状态::内部不一致;
+        const auto& 字段组 = 读取.结构->字段组;
+        bool 形状正确 = true;
+        const auto 数量 = [&](稳定编码 字段) {
+            return std::count_if(字段组.begin(), 字段组.end(), [&](const auto& 项) { return 项.字段节点 == 字段; });
+        };
+        const auto 唯一内容 = [&](稳定编码 字段) -> const 基础字段内容* {
+            const 基础字段内容* 内容 = nullptr;
+            for (const auto& 项 : 字段组) {
+                if (项.所属节点 != 需求节点) { 形状正确 = false; return nullptr; }
+                if (项.字段节点 != 字段) continue;
+                if (内容) { 形状正确 = false; return nullptr; }
+                内容 = &项.内容;
+            }
+            if (!内容) 形状正确 = false;
+            return 内容;
+        };
+        const auto 节点字段 = [&](稳定编码 字段) -> std::optional<稳定编码> {
+            const auto* 内容 = 唯一内容(字段);
+            const auto* 值 = 内容 ? std::get_if<稳定编码>(内容) : nullptr;
+            if (!值 || !有效(*值)) { 形状正确 = false; return std::nullopt; }
+            return *值;
+        };
+        const auto 数值字段 = [&](稳定编码 字段) -> std::optional<std::int64_t> {
+            const auto* 内容 = 唯一内容(字段);
+            const auto* 值 = 内容 ? std::get_if<基础值>(内容) : nullptr;
+            const auto* 数值 = 值 ? std::get_if<std::int64_t>(&值->材料) : nullptr;
+            if (!数值) { 形状正确 = false; return std::nullopt; }
+            return *数值;
+        };
+        const auto 类型 = 节点字段(节点类型字段);
+        if (!形状正确) return 特征概念规则状态::内部不一致;
+        if (类型 != 需求节点类型) return 特征概念规则状态::值不存在;
+        (void)节点字段(目标存在字段);
+        (void)节点字段(目标特征类型字段);
+        const auto 形式 = 数值字段(目标形式字段);
+        const auto 活动 = 数值字段(活动状态字段);
+        const auto 权重 = 数值字段(需求权重字段);
+        if (!形状正确 || !活动 || !是活动状态值(*活动) || !权重 || *权重 < 0)
+            return 特征概念规则状态::内部不一致;
+        if (形式 == static_cast<std::int64_t>(新需求目标形式::值)) {
+            (void)节点字段(目标值域字段);
+            (void)节点字段(目标比较关系字段);
+            if (数量(目标变化方向字段) != 0) 形状正确 = false;
+        } else if (形式 == static_cast<std::int64_t>(新需求目标形式::变化方向)) {
+            const auto 方向 = 数值字段(目标变化方向字段);
+            if (!方向 || !转换目标变化方向(*方向) || 数量(目标值域字段) != 0
+                || 数量(目标比较关系字段) != 0) 形状正确 = false;
+        } else 形状正确 = false;
+        if (数量(根角色字段) != 0) {
+            const auto 角色 = 数值字段(根角色字段);
+            if (!角色 || !转换根角色(*角色) || 数量(来源类型字段) != 0
+                || 数量(来源承接字段) != 0) 形状正确 = false;
+        } else {
+            const auto 来源 = 数值字段(来源类型字段);
+            if (来源 == static_cast<std::int64_t>(新需求来源类型::任务子目标)) {
+                (void)节点字段(来源承接字段);
+            } else if (来源 != static_cast<std::int64_t>(新需求来源类型::本能定义)
+                || 数量(来源承接字段) != 0) 形状正确 = false;
+        }
+        return 形状正确 ? 特征概念规则状态::已完成 : 特征概念规则状态::内部不一致;
+    } catch (const std::bad_alloc&) { return 特征概念规则状态::资源失败; }
+    catch (...) { return 特征概念规则状态::内部不一致; }
 }
 
 bool 新_需求类::是需求节点(稳定编码 节点) const noexcept {

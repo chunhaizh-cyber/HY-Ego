@@ -176,7 +176,8 @@ enum class 新需求当前满足状态 : std::uint8_t {
     资源失败 = 12,
     // 方向目标不能由一个current-only当前值判定；任务执行实例必须比较
     // 动作前值A与结果观察值B。
-    需要执行前后比较 = 13
+    需要执行前后比较 = 13,
+    读取接口未装配 = 14
 };
 
 struct 新需求当前满足结果 final {
@@ -242,6 +243,8 @@ public:
         稳定编码 需求节点,
         新需求活动状态 新状态) noexcept;
     bool 是需求节点(稳定编码 节点) const noexcept;
+    // 初始化后schema冻结；仅用一次L1结构快照核验身份和字段形状，不取得需求锁。
+    特征概念规则状态 校验集合成员需求身份(稳定编码 需求节点) const noexcept;
 
 private:
     friend class 新_自我线程类;

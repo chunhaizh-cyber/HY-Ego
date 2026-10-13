@@ -90,7 +90,9 @@ struct 解码器 final {
     }
 };
 template<class T> void 编码(std::vector<std::uint64_t>& out, const T& x) {
-    if constexpr (std::is_enum_v<T>) 编码(out,static_cast<std::underlying_type_t<T>>(x));
+    if constexpr (std::is_same_v<T, 特征概念任务集合值域>) {
+        throw std::runtime_error("当前归档格式不支持任务集合约束域");
+    } else if constexpr (std::is_enum_v<T>) 编码(out,static_cast<std::underlying_type_t<T>>(x));
     else if constexpr (std::is_integral_v<T>) {
         if constexpr (std::is_signed_v<T>) out.push_back(std::bit_cast<std::uint64_t>(static_cast<std::int64_t>(x)));
         else out.push_back(static_cast<std::uint64_t>(x));
@@ -115,7 +117,9 @@ template<std::size_t I=0,class T> void 解码变体(解码器& in,T& x,std::uint
     } else throw std::runtime_error("归档变体判别非法");
 }
 template<class T> void 解码(解码器& in,T& x) {
-    if constexpr (std::is_enum_v<T>) {
+    if constexpr (std::is_same_v<T, 特征概念任务集合值域>) {
+        throw std::runtime_error("当前归档格式不支持任务集合约束域");
+    } else if constexpr (std::is_enum_v<T>) {
         std::underlying_type_t<T> v{}; 解码(in,v); x=static_cast<T>(v);
     } else if constexpr (std::is_integral_v<T>) {
         const auto bits=in.字();

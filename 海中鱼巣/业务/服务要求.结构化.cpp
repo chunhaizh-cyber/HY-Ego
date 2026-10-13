@@ -118,7 +118,8 @@ struct 结构化服务要求服务::实现 {
     void 检查域(const 服务要求值域语义快照& 信息) const {
         const auto 材料型 = 信息.特征语义.材料类型;
         必须(材料型 != 特征概念材料物理类型::存在节点引用
-            && !std::holds_alternative<特征概念存在引用值域>(信息.值域), 状态::语义快照暂不支持);
+            && !std::holds_alternative<特征概念存在引用值域>(信息.值域)
+            && !std::holds_alternative<特征概念任务集合值域>(信息.值域), 状态::语义快照暂不支持);
         if (const auto* 区间 = std::get_if<std::vector<特征概念I64闭区间>>(&信息.值域)) {
             必须(材料型 == 特征概念材料物理类型::I64标量); 检查区间(*区间);
         } else if (const auto* 材料 = std::get_if<std::vector<稳定编码>>(&信息.值域)) {

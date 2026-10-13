@@ -60,6 +60,15 @@ struct 特征概念存在引用值域 final {
         const 特征概念存在引用值域&) = default;
 };
 
+// 无序任务集合的正向成员约束；不是完整特征值材料节点的有限枚举。
+struct 特征概念任务集合值域 final {
+    std::vector<稳定编码> 必含任务节点组;
+    bool 至少一个任务 = false;
+    std::vector<稳定编码> 必含需求任务组;
+    friend bool operator==(const 特征概念任务集合值域&,
+        const 特征概念任务集合值域&) = default;
+};
+
 // I64标量使用规范化闭区间；结构化I64材料使用有序分量值域；
 // 其它材料可使用全材料值域或完整特征值节点身份集合。
 using 特征概念值域 = std::variant<
@@ -67,7 +76,8 @@ using 特征概念值域 = std::variant<
     特征概念全材料值域,
     std::vector<稳定编码>,
     特征概念结构化I64值域,
-    特征概念存在引用值域>;
+    特征概念存在引用值域,
+    特征概念任务集合值域>;
 
 using 特征概念准确值 = std::variant<std::int64_t, 稳定编码>;
 
@@ -119,7 +129,33 @@ enum class 特征概念规则状态 : std::uint8_t {
     值不存在 = 5,
     规则不支持 = 6,
     资源失败 = 7,
-    内部不一致 = 8
+    内部不一致 = 8,
+    读取接口未装配 = 9
+};
+
+enum class 特征任务成员读取状态 : std::uint8_t {
+    已读取 = 1, 未装配, 节点不存在, 结构不一致, 资源失败
+};
+
+struct 特征任务成员读取结果 final {
+    特征任务成员读取状态 状态 = 特征任务成员读取状态::未装配;
+    std::optional<稳定编码> 需求节点;
+};
+
+class 特征任务成员读取接口 {
+public:
+    virtual ~特征任务成员读取接口() = default;
+    virtual 特征任务成员读取结果 读取任务所属需求(稳定编码) const noexcept = 0;
+    virtual 特征概念规则状态 验证正式需求(稳定编码) const noexcept = 0;
+};
+
+struct 特征任务集合条件比较结果 final {
+    特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
+    std::optional<std::int64_t> 比较值;
+    std::vector<稳定编码> 命中任务节点组;
+    std::vector<稳定编码> 缺少任务节点组;
+    std::vector<稳定编码> 缺少需求节点组;
+    bool 缺少任意任务 = false;
 };
 
 enum class 特征概念比较次序 : std::int8_t {
@@ -222,6 +258,15 @@ public:
     void 装配存在引用读取接口(
         const 特征存在引用读取接口& 读取接口) noexcept;
 
+    // 借用正式任务owner；其读取不得取得任务锁或进入需求/特征服务锁。
+    // 上层在线程全部停止后解除，且接口提供者必须存活至解除完成。
+    void 装配任务成员读取接口(const 特征任务成员读取接口*) noexcept;
+
+    特征任务集合条件比较结果 比较任务集合值域(
+        const 特征概念准确值& 当前值,
+        const 特征概念任务集合值域& 目标,
+        const 新_特征值类& 特征值服务) const noexcept;
+
     bool 初始化(const 新_特征值类& 特征值服务) noexcept;
 
     std::optional<先天特征概念集合> 获取先天特征概念() const noexcept;
@@ -296,6 +341,10 @@ private:
         稳定编码 概念节点, 稳定编码 名称关系节点) noexcept;
 
     const 特征存在引用读取接口* 存在引用读取接口_ = nullptr;
+    const 特征任务成员读取接口* 任务成员读取接口_ = nullptr;
+    // 初始化时借用，不拥有；服务须覆盖本对象的初始化后使用期。
+    // 仅供无材料参数的值域比较入口读取有限材料，不另建材料owner。
+    const 新_特征值类* 特征值读取服务_ = nullptr;
 };
 
 } // namespace 海中鱼巣
