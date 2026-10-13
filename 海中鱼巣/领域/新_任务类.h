@@ -1048,6 +1048,8 @@ class 新_任务类 final : public 新内部治理对象读取接口,
 public:
     特征任务成员读取结果 读取任务所属需求(稳定编码 任务节点) const noexcept override;
     特征概念规则状态 验证正式需求(稳定编码 需求节点) const noexcept override;
+    特征概念规则状态 验证正式服务要求(稳定编码 确认节点) const noexcept override;
+    特征任务成员读取结果 读取服务要求对应需求(稳定编码 确认节点) const noexcept override;
     bool 装配方法问题反馈(执行场景采集服务&, 新方法问题归档接口&) noexcept;
     // 只读轻量回执，不在self读取或复制大场景材料。
     新任务问题归档交付结果 读取执行问题归档回执(

@@ -65,6 +65,8 @@ struct 特征概念任务集合值域 final {
     std::vector<稳定编码> 必含任务节点组;
     bool 至少一个任务 = false;
     std::vector<稳定编码> 必含需求任务组;
+    // 正式确认身份；不以任意治理任务非空代替该来源要求。
+    std::vector<稳定编码> 必含服务要求任务组;
     friend bool operator==(const 特征概念任务集合值域&,
         const 特征概念任务集合值域&) = default;
 };
@@ -147,6 +149,9 @@ public:
     virtual ~特征任务成员读取接口() = default;
     virtual 特征任务成员读取结果 读取任务所属需求(稳定编码) const noexcept = 0;
     virtual 特征概念规则状态 验证正式需求(稳定编码) const noexcept = 0;
+    virtual 特征概念规则状态 验证正式服务要求(稳定编码) const noexcept = 0;
+    // 已读取+空需求表示确认合法但尚未采用；与读取失败分账。
+    virtual 特征任务成员读取结果 读取服务要求对应需求(稳定编码) const noexcept = 0;
 };
 
 struct 特征任务集合条件比较结果 final {
@@ -156,6 +161,7 @@ struct 特征任务集合条件比较结果 final {
     std::vector<稳定编码> 缺少任务节点组;
     std::vector<稳定编码> 缺少需求节点组;
     bool 缺少任意任务 = false;
+    std::vector<稳定编码> 缺少服务要求节点组;
 };
 
 enum class 特征概念比较次序 : std::int8_t {
