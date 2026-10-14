@@ -61,7 +61,8 @@ struct 基础字段关系 final {
 };
 
 enum class 基础结构操作状态 : std::uint8_t {
-    已完成 = 1, 入口拒绝, 节点不存在, 引用不存在, 资源失败, 内部不一致
+    已完成 = 1, 入口拒绝, 节点不存在, 引用不存在, 资源失败, 内部不一致,
+    引用仍存在
 };
 
 struct 基础节点初始字段 final {
@@ -126,6 +127,13 @@ public:
     稳定编码 新建节点() noexcept;
     稳定编码 新建节点(稳定编码 上级节点) noexcept;
     bool 删除节点(稳定编码 节点) noexcept;
+    bool 有入向字段引用(稳定编码 节点) const noexcept;
+    bool 有入向字段引用(稳定编码 节点, 稳定编码 忽略所属节点) const noexcept;
+    // 显式完整删除集一次校验、一次移除；集合外引用阻止全部拆除。
+    基础结构操作状态 原子删除节点结构(
+        const std::vector<稳定编码>& 节点组,
+        const std::vector<稳定编码>& 字段关系组,
+        const std::vector<稳定编码>& 外部关系组) noexcept;
     std::optional<基础节点> 查询节点(稳定编码 节点) const noexcept;
 
     // 新节点及初始结构一次发布；失败无公开半结构，已分配编码不回退。

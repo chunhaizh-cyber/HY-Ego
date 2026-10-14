@@ -163,6 +163,12 @@ public:
         稳定编码 概念节点) const noexcept;
 
 private:
+    friend class 新_动态类;
+    基础结构操作状态 删除实例概念及动态结构(
+        稳定编码 实例概念节点, 稳定编码 实际动态节点,
+        const std::vector<稳定编码>& 动态私有节点组,
+        const std::vector<稳定编码>& 动态字段关系组,
+        const std::vector<稳定编码>& 动态外部关系组) noexcept;
     概念_特征类& 特征概念服务_;
     const 新_特征值类& 特征值服务_;
     const 概念_存在类* 动作存在概念读取_ = nullptr;

@@ -1,16 +1,23 @@
 #include "新_因果类.h"
+#include "../核心/容错检查.h"
+#include "新_场景类.h"
 
 #include <algorithm>
 #include <limits>
+#include <map>
 #include <mutex>
+#include <set>
+#include <stdexcept>
 #include <tuple>
 #include <utility>
 
-namespace 海中鱼巣 {
+namespace 海中鱼巣
+{
 
 稳定编码 新因果信息图根节点{};
 
-namespace {
+namespace
+{
 
 inline constexpr std::int64_t 新因果根成员关系角色 = 0x43415553;
 
@@ -47,370 +54,419 @@ std::recursive_mutex 新因果互斥;
 稳定编码 动作作用部位字段{};
 稳定编码 动作作用对象字段{};
 稳定编码 动作本能方法字段{};
+稳定编码 发生场景字段{}, 概念因果节点类型{}, 概念场景字段{}, 概念动作字段{}, 概念形状字段{},
+    概念引用字段{};
 
-struct 待形成发生 final {
+struct 待形成发生 final
+{
     新因果状态模式 结果状态;
     std::vector<新因果状态模式> 条件状态组;
     std::vector<新因果动态模式> 条件动态组;
     std::optional<新因果动作定义> 动作;
     稳定编码 发生身份;
     新因果形成来源 来源 = 新因果形成来源::结果状态筛选;
+    稳定编码 场景节点;
 };
 
 std::vector<待形成发生> 待形成发生组;
 
-std::vector<稳定编码*> 架构编码组() {
-    return {
-        &新因果信息图根节点, &节点类型字段, &因果图根类型,
-        &因果节点类型, &状态模式节点类型, &动态模式节点类型,
-        &动作定义节点类型, &因果类型字段, &因果条件状态字段,
-        &因果条件动态字段, &因果动作字段, &因果结果状态字段,
-        &因果形成来源字段, &因果符合次数字段, &因果不符合次数字段,
-        &因果自我尝试次数字段, &因果自我尝试符合次数字段,
-        &因果已计数发生字段, &状态模式存在字段,
-        &状态模式特征类型字段, &状态模式准确值字段,
-        &动态模式主题字段, &动态模式概念字段, &动作概念字段,
-        &动作执行主体字段, &动作作用部位字段, &动作作用对象字段,
-        &动作本能方法字段};
+std::vector<稳定编码 *> 架构编码组()
+{
+    return {&新因果信息图根节点,
+            &节点类型字段,
+            &因果图根类型,
+            &因果节点类型,
+            &状态模式节点类型,
+            &动态模式节点类型,
+            &动作定义节点类型,
+            &因果类型字段,
+            &因果条件状态字段,
+            &因果条件动态字段,
+            &因果动作字段,
+            &因果结果状态字段,
+            &因果形成来源字段,
+            &因果符合次数字段,
+            &因果不符合次数字段,
+            &因果自我尝试次数字段,
+            &因果自我尝试符合次数字段,
+            &因果已计数发生字段,
+            &状态模式存在字段,
+            &状态模式特征类型字段,
+            &状态模式准确值字段,
+            &动态模式主题字段,
+            &动态模式概念字段,
+            &动作概念字段,
+            &动作执行主体字段,
+            &动作作用部位字段,
+            &动作作用对象字段,
+            &动作本能方法字段,
+            &发生场景字段,
+            &概念因果节点类型,
+            &概念场景字段,
+            &概念动作字段,
+            &概念形状字段,
+            &概念引用字段};
 }
 
-bool 节点仍存在(稳定编码 节点) noexcept {
+bool 节点仍存在(稳定编码 节点) noexcept
+{
     return 有效(节点) && 全局基础数据集.查询节点(节点).has_value();
 }
 
-bool 结构已分配() noexcept {
+bool 结构已分配() noexcept
+{
     const auto 组 = 架构编码组();
-    return std::any_of(组.begin(), 组.end(), [](const auto* 编码) {
-        return 有效(*编码);
-    });
+    return std::any_of(组.begin(), 组.end(), [](const auto *编码) { return 有效(*编码); });
 }
 
-bool 结构仍存在() noexcept {
+bool 结构仍存在() noexcept
+{
     const auto 组 = 架构编码组();
-    return std::all_of(组.begin(), 组.end(), [](const auto* 编码) {
-        return 节点仍存在(*编码);
-    });
+    return std::all_of(组.begin(), 组.end(), [](const auto *编码) { return 节点仍存在(*编码); });
 }
 
-bool 是因果类型值(std::int64_t 值) noexcept {
-    return 值 == static_cast<std::int64_t>(新因果类型::未知动作)
-        || 值 == static_cast<std::int64_t>(新因果类型::已知动作);
+bool 是因果类型值(std::int64_t 值) noexcept
+{
+    return 值 == static_cast<std::int64_t>(新因果类型::未知动作) ||
+           值 == static_cast<std::int64_t>(新因果类型::已知动作);
 }
 
-bool 是形成来源值(std::int64_t 值) noexcept {
-    return 值 >= static_cast<std::int64_t>(新因果形成来源::结果状态筛选)
-        && 值 <= static_cast<std::int64_t>(新因果形成来源::外部动作动态反向);
+bool 是形成来源值(std::int64_t 值) noexcept
+{
+    return 值 >= static_cast<std::int64_t>(新因果形成来源::结果状态筛选) &&
+           值 <= static_cast<std::int64_t>(新因果形成来源::外部动作动态反向);
 }
 
-struct 唯一I64字段记录 final {
+struct 唯一I64字段记录 final
+{
     稳定编码 关系;
     std::int64_t 值 = 0;
 };
 
-std::optional<稳定编码> 读取唯一节点字段(
-    稳定编码 节点, 稳定编码 字段) {
+std::optional<稳定编码> 读取唯一节点字段(稳定编码 节点, 稳定编码 字段)
+{
     const auto 组 = 全局基础数据集.查询字段(节点, 字段);
-    if (组.size() != 1) return std::nullopt;
-    const auto* 目标 = std::get_if<稳定编码>(&组.front().内容);
-    return 目标 && 节点仍存在(*目标)
-        ? std::optional<稳定编码>{*目标} : std::nullopt;
+    if (组.size() != 1)
+        return std::nullopt;
+    const auto *目标 = std::get_if<稳定编码>(&组.front().内容);
+    return 目标 && 节点仍存在(*目标) ? std::optional<稳定编码>{*目标} : std::nullopt;
 }
 
-std::optional<稳定编码> 读取可选节点字段(
-    稳定编码 节点, 稳定编码 字段) {
+std::optional<稳定编码> 读取可选节点字段(稳定编码 节点, 稳定编码 字段)
+{
     const auto 组 = 全局基础数据集.查询字段(节点, 字段);
-    if (组.empty()) return 稳定编码{};
-    if (组.size() != 1) return std::nullopt;
-    const auto* 目标 = std::get_if<稳定编码>(&组.front().内容);
-    return 目标 && 节点仍存在(*目标)
-        ? std::optional<稳定编码>{*目标} : std::nullopt;
+    if (组.empty())
+        return 稳定编码{};
+    if (组.size() != 1)
+        return std::nullopt;
+    const auto *目标 = std::get_if<稳定编码>(&组.front().内容);
+    return 目标 && 节点仍存在(*目标) ? std::optional<稳定编码>{*目标} : std::nullopt;
 }
 
-std::optional<唯一I64字段记录> 读取唯一I64字段记录(
-    稳定编码 节点, 稳定编码 字段) {
+std::optional<唯一I64字段记录> 读取唯一I64字段记录(稳定编码 节点, 稳定编码 字段)
+{
     const auto 组 = 全局基础数据集.查询字段(节点, 字段);
-    if (组.size() != 1) return std::nullopt;
-    const auto* 值 = std::get_if<基础值>(&组.front().内容);
-    const auto* I64 = 值 ? std::get_if<std::int64_t>(&值->材料) : nullptr;
-    return I64 ? std::optional<唯一I64字段记录>{
-        {组.front().编码, *I64}} : std::nullopt;
+    if (组.size() != 1)
+        return std::nullopt;
+    const auto *值 = std::get_if<基础值>(&组.front().内容);
+    const auto *I64 = 值 ? std::get_if<std::int64_t>(&值->材料) : nullptr;
+    return I64 ? std::optional<唯一I64字段记录>{{组.front().编码, *I64}} : std::nullopt;
 }
 
-std::optional<新特征准确值> 读取唯一准确值字段(
-    稳定编码 节点, 稳定编码 字段) {
+std::optional<新特征准确值> 读取唯一准确值字段(稳定编码 节点, 稳定编码 字段)
+{
     const auto 组 = 全局基础数据集.查询字段(节点, 字段);
-    if (组.size() != 1) return std::nullopt;
-    if (const auto* 目标 = std::get_if<稳定编码>(&组.front().内容)) {
-        return 节点仍存在(*目标)
-            ? std::optional<新特征准确值>{新特征准确值{*目标}}
-            : std::nullopt;
+    if (组.size() != 1)
+        return std::nullopt;
+    if (const auto *目标 = std::get_if<稳定编码>(&组.front().内容))
+    {
+        return 节点仍存在(*目标) ? std::optional<新特征准确值>{新特征准确值{*目标}} : std::nullopt;
     }
-    const auto* 值 = std::get_if<基础值>(&组.front().内容);
-    const auto* I64 = 值 ? std::get_if<std::int64_t>(&值->材料) : nullptr;
-    return I64 ? std::optional<新特征准确值>{新特征准确值{*I64}}
-        : std::nullopt;
+    const auto *值 = std::get_if<基础值>(&组.front().内容);
+    const auto *I64 = 值 ? std::get_if<std::int64_t>(&值->材料) : nullptr;
+    return I64 ? std::optional<新特征准确值>{新特征准确值{*I64}} : std::nullopt;
 }
 
-std::vector<稳定编码> 读取多节点字段(
-    稳定编码 节点, 稳定编码 字段, bool& 完整) {
+std::vector<稳定编码> 读取多节点字段(稳定编码 节点, 稳定编码 字段, bool &完整)
+{
     std::vector<稳定编码> 结果;
     完整 = true;
-    for (const auto& 关系 : 全局基础数据集.查询字段(节点, 字段)) {
-        const auto* 目标 = std::get_if<稳定编码>(&关系.内容);
-        if (!目标 || !节点仍存在(*目标)) {
+    for (const auto &关系 : 全局基础数据集.查询字段(节点, 字段))
+    {
+        const auto *目标 = std::get_if<稳定编码>(&关系.内容);
+        if (!目标 || !节点仍存在(*目标))
+        {
             完整 = false;
             return {};
         }
         结果.push_back(*目标);
     }
     std::sort(结果.begin(), 结果.end());
-    if (std::adjacent_find(结果.begin(), 结果.end()) != 结果.end()) {
+    if (std::adjacent_find(结果.begin(), 结果.end()) != 结果.end())
+    {
         完整 = false;
         return {};
     }
     return 结果;
 }
 
-bool 节点类型为(稳定编码 节点, 稳定编码 类型) {
+bool 节点类型为(稳定编码 节点, 稳定编码 类型)
+{
     const auto 实际 = 读取唯一节点字段(节点, 节点类型字段);
     return 实际 && *实际 == 类型;
 }
 
-auto 准确值排序键(const 新特征准确值& 值) {
-    if (const auto* I64 = std::get_if<std::int64_t>(&值)) {
-        return std::tuple<std::size_t, std::uint64_t>{
-            0, static_cast<std::uint64_t>(*I64) ^ (std::uint64_t{1} << 63)};
+auto 准确值排序键(const 新特征准确值 &值)
+{
+    if (const auto *I64 = std::get_if<std::int64_t>(&值))
+    {
+        return std::tuple<std::size_t, std::uint64_t>{0, static_cast<std::uint64_t>(*I64) ^
+                                                             (std::uint64_t{1} << 63)};
     }
-    return std::tuple<std::size_t, std::uint64_t>{
-        1, std::get<稳定编码>(值).值};
+    return std::tuple<std::size_t, std::uint64_t>{1, std::get<稳定编码>(值).值};
 }
 
-bool 状态模式小于(const 新因果状态模式& 左,
-    const 新因果状态模式& 右) {
-    return std::tuple{左.被描述存在节点.值, 左.特征类型概念节点.值,
-            准确值排序键(左.准确值)}
-        < std::tuple{右.被描述存在节点.值, 右.特征类型概念节点.值,
-            准确值排序键(右.准确值)};
+bool 状态模式小于(const 新因果状态模式 &左, const 新因果状态模式 &右)
+{
+    return std::tuple{左.被描述存在节点.值, 左.特征类型概念节点.值, 准确值排序键(左.准确值)} <
+           std::tuple{右.被描述存在节点.值, 右.特征类型概念节点.值, 准确值排序键(右.准确值)};
 }
 
-bool 动态模式小于(const 新因果动态模式& 左,
-    const 新因果动态模式& 右) noexcept {
-    return std::tuple{左.主题存在节点.值, 左.动态概念节点.值}
-        < std::tuple{右.主题存在节点.值, 右.动态概念节点.值};
+bool 动态模式小于(const 新因果动态模式 &左, const 新因果动态模式 &右) noexcept
+{
+    return std::tuple{左.主题存在节点.值, 左.动态概念节点.值} <
+           std::tuple{右.主题存在节点.值, 右.动态概念节点.值};
 }
 
-template<class T, class 小于>
-void 排序去重(std::vector<T>& 组, 小于&& 比较) {
+template <class T, class 小于> void 排序去重(std::vector<T> &组, 小于 &&比较)
+{
     std::sort(组.begin(), 组.end(), 比较);
     组.erase(std::unique(组.begin(), 组.end()), 组.end());
 }
 
-bool 状态模式有效(const 新因果状态模式& 模式) noexcept {
-    if (!节点仍存在(模式.被描述存在节点)
-        || !节点仍存在(模式.特征类型概念节点)) return false;
-    if (const auto* 值节点 = std::get_if<稳定编码>(&模式.准确值)) {
+bool 状态模式有效(const 新因果状态模式 &模式) noexcept
+{
+    if (!节点仍存在(模式.被描述存在节点) || !节点仍存在(模式.特征类型概念节点))
+        return false;
+    if (const auto *值节点 = std::get_if<稳定编码>(&模式.准确值))
+    {
         return 节点仍存在(*值节点);
     }
     return true;
 }
 
-bool 动态模式有效(const 新因果动态模式& 模式) noexcept {
-    return 节点仍存在(模式.主题存在节点)
-        && 节点仍存在(模式.动态概念节点);
+bool 动态模式有效(const 新因果动态模式 &模式) noexcept
+{
+    return 节点仍存在(模式.主题存在节点) && 节点仍存在(模式.动态概念节点);
 }
 
-bool 动作定义有效(const 新因果动作定义& 动作) noexcept {
-    if (!节点仍存在(动作.动作概念节点)
-        || !节点仍存在(动作.执行主体存在节点)) return false;
-    const auto 可选有效 = [](const std::optional<稳定编码>& 节点) {
+bool 动作定义有效(const 新因果动作定义 &动作) noexcept
+{
+    if (!节点仍存在(动作.动作概念节点) || !节点仍存在(动作.执行主体存在节点))
+        return false;
+    const auto 可选有效 = [](const std::optional<稳定编码> &节点) {
         return !节点 || 节点仍存在(*节点);
     };
-    return 可选有效(动作.作用部位存在节点)
-        && 可选有效(动作.作用对象存在节点)
-        && 可选有效(动作.本能方法节点);
+    return 可选有效(动作.作用部位存在节点) && 可选有效(动作.作用对象存在节点) &&
+           可选有效(动作.本能方法节点);
 }
 
-std::optional<新因果状态模式> 从状态形成模式(
-    新_状态类& 状态服务, 稳定编码 状态节点) {
+std::optional<新因果状态模式> 从状态形成模式(新_状态类 &状态服务, 稳定编码 状态节点)
+{
     const auto 状态 = 状态服务.获取状态(状态节点);
-    if (!状态) return std::nullopt;
-    return 新因果状态模式{
-        状态->被描述存在节点,
-        状态->特征类型概念节点,
-        状态->固定准确值};
+    if (!状态)
+        return std::nullopt;
+    return 新因果状态模式{状态->被描述存在节点, 状态->特征类型概念节点, 状态->固定准确值};
 }
 
-std::optional<新因果动态模式> 从动态形成模式(
-    新_动态类& 动态服务, 稳定编码 动态节点) {
+std::optional<新因果动态模式> 从动态形成模式(新_动态类 &动态服务, 稳定编码 动态节点)
+{
     const auto 动态 = 动态服务.获取动态(动态节点);
-    if (!动态 || !动态->动态概念节点) return std::nullopt;
+    if (!动态 || !动态->动态概念节点)
+        return std::nullopt;
     return 新因果动态模式{动态->主题存在节点, *动态->动态概念节点};
 }
 
-bool 包含全部(const std::vector<新因果状态模式>& 全集,
-    const std::vector<新因果状态模式>& 子集) {
-    return std::all_of(子集.begin(), 子集.end(), [&](const auto& 项) {
+bool 包含全部(const std::vector<新因果状态模式> &全集, const std::vector<新因果状态模式> &子集)
+{
+    return std::all_of(子集.begin(), 子集.end(), [&](const auto &项) {
         return std::find(全集.begin(), 全集.end(), 项) != 全集.end();
     });
 }
 
-bool 包含全部(const std::vector<新因果动态模式>& 全集,
-    const std::vector<新因果动态模式>& 子集) {
-    return std::all_of(子集.begin(), 子集.end(), [&](const auto& 项) {
+bool 包含全部(const std::vector<新因果动态模式> &全集, const std::vector<新因果动态模式> &子集)
+{
+    return std::all_of(子集.begin(), 子集.end(), [&](const auto &项) {
         return std::find(全集.begin(), 全集.end(), 项) != 全集.end();
     });
 }
 
-template<class T>
-std::vector<T> 求交集(const std::vector<T>& 左,
-    const std::vector<T>& 右) {
+template <class T> std::vector<T> 求交集(const std::vector<T> &左, const std::vector<T> &右)
+{
     std::vector<T> 结果;
-    for (const auto& 项 : 左) {
-        if (std::find(右.begin(), 右.end(), 项) != 右.end()) 结果.push_back(项);
+    for (const auto &项 : 左)
+    {
+        if (std::find(右.begin(), 右.end(), 项) != 右.end())
+            结果.push_back(项);
     }
     return 结果;
 }
 
-bool 同一形成分组(const 待形成发生& 左, const 待形成发生& 右) {
-    return 左.结果状态 == 右.结果状态 && 左.动作 == 右.动作;
+bool 同一形成分组(const 待形成发生 &左, const 待形成发生 &右)
+{
+    return 左.场景节点 == 右.场景节点 && 左.结果状态 == 右.结果状态 && 左.动作 == 右.动作;
 }
 
-struct 构建记录 final {
+struct 构建记录 final
+{
     std::vector<稳定编码> 节点组;
     std::vector<稳定编码> 字段组;
     std::vector<稳定编码> 关系组;
 };
 
-void 回滚构建(构建记录& 记录) noexcept {
-    for (auto it = 记录.关系组.rbegin(); it != 记录.关系组.rend(); ++it) {
-        (void)全局基础数据集.删除关系(*it);
+void 回滚构建(构建记录 &记录) noexcept
+{
+    for (auto 位置 = 记录.关系组.rbegin(); 位置 != 记录.关系组.rend(); ++位置)
+    {
+        (void)全局基础数据集.删除关系(*位置);
     }
-    for (auto it = 记录.字段组.rbegin(); it != 记录.字段组.rend(); ++it) {
-        (void)全局基础数据集.删除字段(*it);
+    for (auto 位置 = 记录.字段组.rbegin(); 位置 != 记录.字段组.rend(); ++位置)
+    {
+        (void)全局基础数据集.删除字段(*位置);
     }
-    for (auto it = 记录.节点组.rbegin(); it != 记录.节点组.rend(); ++it) {
-        (void)全局基础数据集.删除节点(*it);
+    for (auto 位置 = 记录.节点组.rbegin(); 位置 != 记录.节点组.rend(); ++位置)
+    {
+        (void)全局基础数据集.删除节点(*位置);
     }
 }
 
-bool 记节点字段(构建记录& 记录, 稳定编码 节点,
-    稳定编码 字段, 稳定编码 目标) {
+bool 记节点字段(构建记录 &记录, 稳定编码 节点, 稳定编码 字段, 稳定编码 目标)
+{
     const auto 关系 = 全局基础数据集.添加字段节点(节点, 字段, 目标);
-    if (!有效(关系)) return false;
+    if (!有效(关系))
+        return false;
     记录.字段组.push_back(关系);
     return true;
 }
 
-bool 记I64字段(构建记录& 记录, 稳定编码 节点,
-    稳定编码 字段, std::int64_t 值) {
-    const auto 关系 = 全局基础数据集.添加字段值(
-        节点, 字段, 基础值{值});
-    if (!有效(关系)) return false;
+bool 记I64字段(构建记录 &记录, 稳定编码 节点, 稳定编码 字段, std::int64_t 值)
+{
+    const auto 关系 = 全局基础数据集.添加字段值(节点, 字段, 基础值{值});
+    if (!有效(关系))
+        return false;
     记录.字段组.push_back(关系);
     return true;
 }
 
-bool 记准确值字段(构建记录& 记录, 稳定编码 节点,
-    稳定编码 字段, const 新特征准确值& 值) {
+bool 记准确值字段(构建记录 &记录, 稳定编码 节点, 稳定编码 字段, const 新特征准确值 &值)
+{
     稳定编码 关系{};
-    if (const auto* I64 = std::get_if<std::int64_t>(&值)) {
+    if (const auto *I64 = std::get_if<std::int64_t>(&值))
+    {
         关系 = 全局基础数据集.添加字段值(节点, 字段, 基础值{*I64});
-    } else {
-        关系 = 全局基础数据集.添加字段节点(
-            节点, 字段, std::get<稳定编码>(值));
     }
-    if (!有效(关系)) return false;
+    else
+    {
+        关系 = 全局基础数据集.添加字段节点(节点, 字段, std::get<稳定编码>(值));
+    }
+    if (!有效(关系))
+        return false;
     记录.字段组.push_back(关系);
     return true;
 }
 
-std::optional<稳定编码> 写状态模式(
-    构建记录& 记录, const 新因果状态模式& 模式) {
+std::optional<稳定编码> 写状态模式(构建记录 &记录, const 新因果状态模式 &模式)
+{
     const auto 节点 = 全局基础数据集.新建节点();
-    if (!有效(节点)) return std::nullopt;
+    if (!有效(节点))
+        return std::nullopt;
     记录.节点组.push_back(节点);
-    if (!记节点字段(记录, 节点, 节点类型字段, 状态模式节点类型)
-        || !记节点字段(记录, 节点, 状态模式存在字段,
-            模式.被描述存在节点)
-        || !记节点字段(记录, 节点, 状态模式特征类型字段,
-            模式.特征类型概念节点)
-        || !记准确值字段(记录, 节点, 状态模式准确值字段,
-            模式.准确值)) return std::nullopt;
+    if (!记节点字段(记录, 节点, 节点类型字段, 状态模式节点类型) ||
+        !记节点字段(记录, 节点, 状态模式存在字段, 模式.被描述存在节点) ||
+        !记节点字段(记录, 节点, 状态模式特征类型字段, 模式.特征类型概念节点) ||
+        !记准确值字段(记录, 节点, 状态模式准确值字段, 模式.准确值))
+        return std::nullopt;
     return 节点;
 }
 
-std::optional<稳定编码> 写动态模式(
-    构建记录& 记录, const 新因果动态模式& 模式) {
+std::optional<稳定编码> 写动态模式(构建记录 &记录, const 新因果动态模式 &模式)
+{
     const auto 节点 = 全局基础数据集.新建节点();
-    if (!有效(节点)) return std::nullopt;
+    if (!有效(节点))
+        return std::nullopt;
     记录.节点组.push_back(节点);
-    if (!记节点字段(记录, 节点, 节点类型字段, 动态模式节点类型)
-        || !记节点字段(记录, 节点, 动态模式主题字段,
-            模式.主题存在节点)
-        || !记节点字段(记录, 节点, 动态模式概念字段,
-            模式.动态概念节点)) return std::nullopt;
+    if (!记节点字段(记录, 节点, 节点类型字段, 动态模式节点类型) ||
+        !记节点字段(记录, 节点, 动态模式主题字段, 模式.主题存在节点) ||
+        !记节点字段(记录, 节点, 动态模式概念字段, 模式.动态概念节点))
+        return std::nullopt;
     return 节点;
 }
 
-std::optional<稳定编码> 写动作定义(
-    构建记录& 记录, const 新因果动作定义& 动作) {
+std::optional<稳定编码> 写动作定义(构建记录 &记录, const 新因果动作定义 &动作)
+{
     const auto 节点 = 全局基础数据集.新建节点();
-    if (!有效(节点)) return std::nullopt;
+    if (!有效(节点))
+        return std::nullopt;
     记录.节点组.push_back(节点);
-    if (!记节点字段(记录, 节点, 节点类型字段, 动作定义节点类型)
-        || !记节点字段(记录, 节点, 动作概念字段, 动作.动作概念节点)
-        || !记节点字段(记录, 节点, 动作执行主体字段,
-            动作.执行主体存在节点)) return std::nullopt;
-    if (动作.作用部位存在节点
-        && !记节点字段(记录, 节点, 动作作用部位字段,
-            *动作.作用部位存在节点)) return std::nullopt;
-    if (动作.作用对象存在节点
-        && !记节点字段(记录, 节点, 动作作用对象字段,
-            *动作.作用对象存在节点)) return std::nullopt;
-    if (动作.本能方法节点
-        && !记节点字段(记录, 节点, 动作本能方法字段,
-            *动作.本能方法节点)) return std::nullopt;
+    if (!记节点字段(记录, 节点, 节点类型字段, 动作定义节点类型) ||
+        !记节点字段(记录, 节点, 动作概念字段, 动作.动作概念节点) ||
+        !记节点字段(记录, 节点, 动作执行主体字段, 动作.执行主体存在节点))
+        return std::nullopt;
+    if (动作.作用部位存在节点 && !记节点字段(记录, 节点, 动作作用部位字段, *动作.作用部位存在节点))
+        return std::nullopt;
+    if (动作.作用对象存在节点 && !记节点字段(记录, 节点, 动作作用对象字段, *动作.作用对象存在节点))
+        return std::nullopt;
+    if (动作.本能方法节点 && !记节点字段(记录, 节点, 动作本能方法字段, *动作.本能方法节点))
+        return std::nullopt;
     return 节点;
 }
 
-std::optional<新因果状态模式> 读状态模式(稳定编码 节点) {
-    if (!节点类型为(节点, 状态模式节点类型)) return std::nullopt;
+std::optional<新因果状态模式> 读状态模式(稳定编码 节点)
+{
+    if (!节点类型为(节点, 状态模式节点类型))
+        return std::nullopt;
     const auto 存在 = 读取唯一节点字段(节点, 状态模式存在字段);
     const auto 类型 = 读取唯一节点字段(节点, 状态模式特征类型字段);
     const auto 值 = 读取唯一准确值字段(节点, 状态模式准确值字段);
-    if (!存在 || !类型 || !值) return std::nullopt;
+    if (!存在 || !类型 || !值)
+        return std::nullopt;
     return 新因果状态模式{*存在, *类型, *值};
 }
 
-std::optional<新因果动态模式> 读动态模式(稳定编码 节点) {
-    if (!节点类型为(节点, 动态模式节点类型)) return std::nullopt;
+std::optional<新因果动态模式> 读动态模式(稳定编码 节点)
+{
+    if (!节点类型为(节点, 动态模式节点类型))
+        return std::nullopt;
     const auto 主题 = 读取唯一节点字段(节点, 动态模式主题字段);
     const auto 概念 = 读取唯一节点字段(节点, 动态模式概念字段);
-    if (!主题 || !概念) return std::nullopt;
+    if (!主题 || !概念)
+        return std::nullopt;
     return 新因果动态模式{*主题, *概念};
 }
 
-std::optional<新因果动作定义> 读动作定义(稳定编码 节点) {
-    if (!节点类型为(节点, 动作定义节点类型)) return std::nullopt;
+std::optional<新因果动作定义> 读动作定义(稳定编码 节点)
+{
+    if (!节点类型为(节点, 动作定义节点类型))
+        return std::nullopt;
     const auto 概念 = 读取唯一节点字段(节点, 动作概念字段);
     const auto 主体 = 读取唯一节点字段(节点, 动作执行主体字段);
     const auto 部位 = 读取可选节点字段(节点, 动作作用部位字段);
     const auto 对象 = 读取可选节点字段(节点, 动作作用对象字段);
     const auto 方法 = 读取可选节点字段(节点, 动作本能方法字段);
-    if (!概念 || !主体 || !部位 || !对象 || !方法) return std::nullopt;
-    return 新因果动作定义{
-        *概念, *主体,
-        有效(*部位) ? std::optional<稳定编码>{*部位} : std::nullopt,
-        有效(*对象) ? std::optional<稳定编码>{*对象} : std::nullopt,
-        有效(*方法) ? std::optional<稳定编码>{*方法} : std::nullopt};
+    if (!概念 || !主体 || !部位 || !对象 || !方法)
+        return std::nullopt;
+    return 新因果动作定义{*概念, *主体, 有效(*部位) ? std::optional<稳定编码>{*部位} : std::nullopt,
+                          有效(*对象) ? std::optional<稳定编码>{*对象} : std::nullopt,
+                          有效(*方法) ? std::optional<稳定编码>{*方法} : std::nullopt};
 }
 
-std::vector<稳定编码> 查询全部因果节点() {
+std::vector<稳定编码> 查询全部因果节点()
+{
     std::vector<稳定编码> 结果;
-    for (const auto& 关系 : 全局基础数据集.查询源关系(
-        新因果信息图根节点, 基础外部关系类型::父子)) {
-        if (关系.角色或顺序 == 新因果根成员关系角色
-            && 节点仍存在(关系.目标节点)) {
+    for (const auto &关系 : 全局基础数据集.查询源关系(新因果信息图根节点, 基础外部关系类型::父子))
+    {
+        if (关系.角色或顺序 == 新因果根成员关系角色 && 节点仍存在(关系.目标节点))
+        {
             结果.push_back(关系.目标节点);
         }
     }
@@ -419,93 +475,110 @@ std::vector<稳定编码> 查询全部因果节点() {
     return 结果;
 }
 
-bool 在因果根下(稳定编码 节点) {
-    const auto 组 = 全局基础数据集.查询目标关系(
-        节点, 基础外部关系类型::父子);
-    return std::count_if(组.begin(), 组.end(), [&](const auto& 关系) {
-        return 关系.源节点 == 新因果信息图根节点
-            && 关系.角色或顺序 == 新因果根成员关系角色;
-    }) == 1;
+bool 在因果根下(稳定编码 节点)
+{
+    const auto 组 = 全局基础数据集.查询目标关系(节点, 基础外部关系类型::父子);
+    return std::count_if(组.begin(), 组.end(), [&](const auto &关系) {
+               return 关系.源节点 == 新因果信息图根节点 && 关系.角色或顺序 == 新因果根成员关系角色;
+           }) == 1;
 }
 
-std::optional<新因果信息> 读取因果信息(稳定编码 因果节点) {
-    if (!节点类型为(因果节点, 因果节点类型) || !在因果根下(因果节点)) {
+std::optional<新因果信息> 读取因果信息(稳定编码 因果节点)
+{
+    if (!节点类型为(因果节点, 因果节点类型) || !在因果根下(因果节点))
+    {
         return std::nullopt;
     }
     const auto 类型记录 = 读取唯一I64字段记录(因果节点, 因果类型字段);
     const auto 符合 = 读取唯一I64字段记录(因果节点, 因果符合次数字段);
     const auto 不符合 = 读取唯一I64字段记录(因果节点, 因果不符合次数字段);
     const auto 尝试 = 读取唯一I64字段记录(因果节点, 因果自我尝试次数字段);
-    const auto 尝试符合 = 读取唯一I64字段记录(
-        因果节点, 因果自我尝试符合次数字段);
-    if (!类型记录 || !是因果类型值(类型记录->值)
-        || !符合 || !不符合 || !尝试 || !尝试符合
-        || 符合->值 < 2 || 不符合->值 < 0 || 尝试->值 < 0
-        || 尝试符合->值 < 0 || 尝试符合->值 > 尝试->值) {
+    const auto 尝试符合 = 读取唯一I64字段记录(因果节点, 因果自我尝试符合次数字段);
+    if (!类型记录 || !是因果类型值(类型记录->值) || !符合 || !不符合 || !尝试 || !尝试符合 ||
+        符合->值 < 2 || 不符合->值 < 0 || 尝试->值 < 0 || 尝试符合->值 < 0 ||
+        尝试符合->值 > 尝试->值)
+    {
         return std::nullopt;
     }
 
     bool 完整 = false;
-    const auto 条件状态节点组 = 读取多节点字段(
-        因果节点, 因果条件状态字段, 完整);
-    if (!完整) return std::nullopt;
-    const auto 条件动态节点组 = 读取多节点字段(
-        因果节点, 因果条件动态字段, 完整);
-    if (!完整 || (条件状态节点组.empty() && 条件动态节点组.empty())) {
+    const auto 条件状态节点组 = 读取多节点字段(因果节点, 因果条件状态字段, 完整);
+    if (!完整)
+        return std::nullopt;
+    const auto 条件动态节点组 = 读取多节点字段(因果节点, 因果条件动态字段, 完整);
+    if (!完整 || (条件状态节点组.empty() && 条件动态节点组.empty()))
+    {
         return std::nullopt;
     }
-    const auto 结果节点组 = 读取多节点字段(
-        因果节点, 因果结果状态字段, 完整);
-    if (!完整 || 结果节点组.size() != 1) return std::nullopt;
+    const auto 结果节点组 = 读取多节点字段(因果节点, 因果结果状态字段, 完整);
+    if (!完整 || 结果节点组.size() != 1)
+        return std::nullopt;
     const auto 动作节点组 = 读取多节点字段(因果节点, 因果动作字段, 完整);
-    if (!完整 || 动作节点组.size() > 1) return std::nullopt;
+    if (!完整 || 动作节点组.size() > 1)
+        return std::nullopt;
 
     新因果信息 信息;
     信息.节点 = 因果节点;
+    const auto 场景字段组 = 全局基础数据集.查询字段(因果节点, 发生场景字段);
+    if (!场景字段组.empty())
+    {
+        信息.发生场景节点 = 读取唯一节点字段(因果节点, 发生场景字段);
+        if (!信息.发生场景节点)
+            return std::nullopt;
+    }
     信息.定义.类型 = static_cast<新因果类型>(类型记录->值);
-    for (const auto 节点 : 条件状态节点组) {
+    for (const auto 节点 : 条件状态节点组)
+    {
         const auto 项 = 读状态模式(节点);
-        if (!项) return std::nullopt;
+        if (!项)
+            return std::nullopt;
         信息.定义.条件状态组.push_back(*项);
     }
-    for (const auto 节点 : 条件动态节点组) {
+    for (const auto 节点 : 条件动态节点组)
+    {
         const auto 项 = 读动态模式(节点);
-        if (!项) return std::nullopt;
+        if (!项)
+            return std::nullopt;
         信息.定义.条件动态组.push_back(*项);
     }
     const auto 结果 = 读状态模式(结果节点组.front());
-    if (!结果) return std::nullopt;
+    if (!结果)
+        return std::nullopt;
     信息.定义.结果状态 = *结果;
-    if (!动作节点组.empty()) {
+    if (!动作节点组.empty())
+    {
         const auto 动作 = 读动作定义(动作节点组.front());
-        if (!动作) return std::nullopt;
+        if (!动作)
+            return std::nullopt;
         信息.定义.动作 = *动作;
     }
-    if ((信息.定义.类型 == 新因果类型::已知动作) != 信息.定义.动作.has_value()) {
+    if ((信息.定义.类型 == 新因果类型::已知动作) != 信息.定义.动作.has_value())
+    {
         return std::nullopt;
     }
 
-    for (const auto& 字段 : 全局基础数据集.查询字段(
-        因果节点, 因果形成来源字段)) {
-        const auto* 值 = std::get_if<基础值>(&字段.内容);
-        const auto* I64 = 值 ? std::get_if<std::int64_t>(&值->材料) : nullptr;
-        if (!I64 || !是形成来源值(*I64)) return std::nullopt;
+    for (const auto &字段 : 全局基础数据集.查询字段(因果节点, 因果形成来源字段))
+    {
+        const auto *值 = std::get_if<基础值>(&字段.内容);
+        const auto *I64 = 值 ? std::get_if<std::int64_t>(&值->材料) : nullptr;
+        if (!I64 || !是形成来源值(*I64))
+            return std::nullopt;
         信息.形成来源组.push_back(static_cast<新因果形成来源>(*I64));
     }
     std::sort(信息.形成来源组.begin(), 信息.形成来源组.end());
-    if (信息.形成来源组.empty()
-        || std::adjacent_find(信息.形成来源组.begin(),
-            信息.形成来源组.end()) != 信息.形成来源组.end()) {
+    if (信息.形成来源组.empty() ||
+        std::adjacent_find(信息.形成来源组.begin(), 信息.形成来源组.end()) != 信息.形成来源组.end())
+    {
         return std::nullopt;
     }
 
     const auto 最大计数 = (std::numeric_limits<std::int64_t>::max)();
-    if (符合->值 > 最大计数 - 不符合->值) return std::nullopt;
+    if (符合->值 > 最大计数 - 不符合->值)
+        return std::nullopt;
     信息.统计 = {符合->值, 不符合->值, 尝试->值, 尝试符合->值};
-    信息.已计数发生身份组 = 读取多节点字段(
-        因果节点, 因果已计数发生字段, 完整);
-    if (!完整 || 信息.已计数发生身份组.size()
-        != static_cast<std::size_t>(符合->值 + 不符合->值)) {
+    信息.已计数发生身份组 = 读取多节点字段(因果节点, 因果已计数发生字段, 完整);
+    if (!完整 || 信息.已计数发生身份组.size() != static_cast<std::size_t>(符合->值 + 不符合->值))
+    {
         return std::nullopt;
     }
     排序去重(信息.定义.条件状态组, 状态模式小于);
@@ -513,113 +586,132 @@ std::optional<新因果信息> 读取因果信息(稳定编码 因果节点) {
     return 信息;
 }
 
-std::optional<新因果信息> 发布因果(
-    const 新因果定义& 定义,
-    std::vector<新因果形成来源> 来源组,
-    std::vector<稳定编码> 发生身份组) {
+std::optional<新因果信息> 发布因果(const 新因果定义 &定义, std::vector<新因果形成来源> 来源组,
+                                   std::vector<稳定编码> 发生身份组, 稳定编码 场景)
+{
     构建记录 记录;
     const auto 因果节点 = 全局基础数据集.新建节点();
-    if (!有效(因果节点)) return std::nullopt;
+    if (!有效(因果节点))
+        return std::nullopt;
     记录.节点组.push_back(因果节点);
-    if (!记节点字段(记录, 因果节点, 节点类型字段, 因果节点类型)
-        || !记I64字段(记录, 因果节点, 因果类型字段,
-            static_cast<std::int64_t>(定义.类型))) {
+    if (有效(场景) && !记节点字段(记录, 因果节点, 发生场景字段, 场景))
+    {
         回滚构建(记录);
         return std::nullopt;
     }
-    for (const auto& 模式 : 定义.条件状态组) {
+    if (!记节点字段(记录, 因果节点, 节点类型字段, 因果节点类型) ||
+        !记I64字段(记录, 因果节点, 因果类型字段, static_cast<std::int64_t>(定义.类型)))
+    {
+        回滚构建(记录);
+        return std::nullopt;
+    }
+    for (const auto &模式 : 定义.条件状态组)
+    {
         const auto 项 = 写状态模式(记录, 模式);
-        if (!项 || !记节点字段(记录, 因果节点, 因果条件状态字段, *项)) {
+        if (!项 || !记节点字段(记录, 因果节点, 因果条件状态字段, *项))
+        {
             回滚构建(记录);
             return std::nullopt;
         }
     }
-    for (const auto& 模式 : 定义.条件动态组) {
+    for (const auto &模式 : 定义.条件动态组)
+    {
         const auto 项 = 写动态模式(记录, 模式);
-        if (!项 || !记节点字段(记录, 因果节点, 因果条件动态字段, *项)) {
+        if (!项 || !记节点字段(记录, 因果节点, 因果条件动态字段, *项))
+        {
             回滚构建(记录);
             return std::nullopt;
         }
     }
-    if (定义.动作) {
+    if (定义.动作)
+    {
         const auto 动作 = 写动作定义(记录, *定义.动作);
-        if (!动作 || !记节点字段(记录, 因果节点, 因果动作字段, *动作)) {
+        if (!动作 || !记节点字段(记录, 因果节点, 因果动作字段, *动作))
+        {
             回滚构建(记录);
             return std::nullopt;
         }
     }
     const auto 结果 = 写状态模式(记录, 定义.结果状态);
-    if (!结果 || !记节点字段(
-        记录, 因果节点, 因果结果状态字段, *结果)) {
+    if (!结果 || !记节点字段(记录, 因果节点, 因果结果状态字段, *结果))
+    {
         回滚构建(记录);
         return std::nullopt;
     }
 
     std::sort(来源组.begin(), 来源组.end());
     来源组.erase(std::unique(来源组.begin(), 来源组.end()), 来源组.end());
-    for (const auto 来源 : 来源组) {
-        if (!记I64字段(记录, 因果节点, 因果形成来源字段,
-            static_cast<std::int64_t>(来源))) {
+    for (const auto 来源 : 来源组)
+    {
+        if (!记I64字段(记录, 因果节点, 因果形成来源字段, static_cast<std::int64_t>(来源)))
+        {
             回滚构建(记录);
             return std::nullopt;
         }
     }
     std::sort(发生身份组.begin(), 发生身份组.end());
-    发生身份组.erase(std::unique(发生身份组.begin(), 发生身份组.end()),
-        发生身份组.end());
-    if (发生身份组.size() != 2) {
+    发生身份组.erase(std::unique(发生身份组.begin(), 发生身份组.end()), 发生身份组.end());
+    if (发生身份组.size() != 2)
+    {
         回滚构建(记录);
         return std::nullopt;
     }
-    for (const auto 身份 : 发生身份组) {
-        if (!记节点字段(记录, 因果节点, 因果已计数发生字段, 身份)) {
+    for (const auto 身份 : 发生身份组)
+    {
+        if (!记节点字段(记录, 因果节点, 因果已计数发生字段, 身份))
+        {
             回滚构建(记录);
             return std::nullopt;
         }
     }
-    if (!记I64字段(记录, 因果节点, 因果符合次数字段, 2)
-        || !记I64字段(记录, 因果节点, 因果不符合次数字段, 0)
-        || !记I64字段(记录, 因果节点, 因果自我尝试次数字段, 0)
-        || !记I64字段(记录, 因果节点,
-            因果自我尝试符合次数字段, 0)) {
+    if (!记I64字段(记录, 因果节点, 因果符合次数字段, 2) ||
+        !记I64字段(记录, 因果节点, 因果不符合次数字段, 0) ||
+        !记I64字段(记录, 因果节点, 因果自我尝试次数字段, 0) ||
+        !记I64字段(记录, 因果节点, 因果自我尝试符合次数字段, 0))
+    {
         回滚构建(记录);
         return std::nullopt;
     }
-    const auto 根关系 = 全局基础数据集.添加关系(
-        新因果信息图根节点, 因果节点, 基础外部关系类型::父子,
-        新因果根成员关系角色);
-    if (!有效(根关系)) {
+    const auto 根关系 = 全局基础数据集.添加关系(新因果信息图根节点, 因果节点,
+                                                基础外部关系类型::父子, 新因果根成员关系角色);
+    if (!有效(根关系))
+    {
         回滚构建(记录);
         return std::nullopt;
     }
     记录.关系组.push_back(根关系);
     const auto 读回 = 读取因果信息(因果节点);
-    if (!读回) {
+    if (!读回)
+    {
         回滚构建(记录);
         return std::nullopt;
     }
     return 读回;
 }
 
-bool 定义匹配发生(const 新因果定义& 定义,
-    const 待形成发生& 发生) {
-    if (定义.结果状态 != 发生.结果状态 || 定义.动作 != 发生.动作) {
+bool 定义匹配发生(const 新因果定义 &定义, const 待形成发生 &发生)
+{
+    if (定义.结果状态 != 发生.结果状态 || 定义.动作 != 发生.动作)
+    {
         return false;
     }
-    return 包含全部(发生.条件状态组, 定义.条件状态组)
-        && 包含全部(发生.条件动态组, 定义.条件动态组);
+    return 包含全部(发生.条件状态组, 定义.条件状态组) && 包含全部(发生.条件动态组, 定义.条件动态组);
 }
 
-std::optional<新因果信息> 查找最具体匹配因果(const 待形成发生& 发生) {
+std::optional<新因果信息> 查找最具体匹配因果(const 待形成发生 &发生, bool 要求场景)
+{
     std::optional<新因果信息> 最佳;
     std::size_t 最佳条件数 = 0;
-    for (const auto 节点 : 查询全部因果节点()) {
+    for (const auto 节点 : 查询全部因果节点())
+    {
         const auto 信息 = 读取因果信息(节点);
-        if (!信息 || !定义匹配发生(信息->定义, 发生)) continue;
-        const auto 条件数 = 信息->定义.条件状态组.size()
-            + 信息->定义.条件动态组.size();
-        if (!最佳 || 条件数 > 最佳条件数
-            || (条件数 == 最佳条件数 && 信息->节点 < 最佳->节点)) {
+        if (!信息)
+            throw std::runtime_error("具体因果结构不可读取");
+        if ((要求场景 && 信息->发生场景节点 != 发生.场景节点) || !定义匹配发生(信息->定义, 发生))
+            continue;
+        const auto 条件数 = 信息->定义.条件状态组.size() + 信息->定义.条件动态组.size();
+        if (!最佳 || 条件数 > 最佳条件数 || (条件数 == 最佳条件数 && 信息->节点 < 最佳->节点))
+        {
             最佳 = 信息;
             最佳条件数 = 条件数;
         }
@@ -627,81 +719,86 @@ std::optional<新因果信息> 查找最具体匹配因果(const 待形成发生
     return 最佳;
 }
 
-新因果操作状态 更新普通统计(
-    稳定编码 因果节点, 稳定编码 发生身份, bool 符合,
-    std::optional<新因果形成来源> 新来源 = std::nullopt) {
+新因果操作状态 更新普通统计(稳定编码 因果节点, 稳定编码 发生身份, bool 符合,
+                            std::optional<新因果形成来源> 新来源 = std::nullopt)
+{
     const auto 信息 = 读取因果信息(因果节点);
-    if (!信息) return 新因果操作状态::因果不存在;
-    if (!节点仍存在(发生身份)) return 新因果操作状态::入口拒绝;
-    if (std::find(信息->已计数发生身份组.begin(),
-        信息->已计数发生身份组.end(), 发生身份)
-        != 信息->已计数发生身份组.end()) {
+    if (!信息)
+        return 新因果操作状态::因果不存在;
+    if (!节点仍存在(发生身份))
+        return 新因果操作状态::入口拒绝;
+    if (std::find(信息->已计数发生身份组.begin(), 信息->已计数发生身份组.end(), 发生身份) !=
+        信息->已计数发生身份组.end())
+    {
         return 新因果操作状态::重复发生;
     }
-    const auto& 当前字段 = 符合 ? 因果符合次数字段 : 因果不符合次数字段;
+    const auto &当前字段 = 符合 ? 因果符合次数字段 : 因果不符合次数字段;
     const auto 当前 = 读取唯一I64字段记录(因果节点, 当前字段);
-    if (!当前 || 当前->值 == (std::numeric_limits<std::int64_t>::max)()) {
-        return 当前 ? 新因果操作状态::计数溢出
-            : 新因果操作状态::结构不一致;
+    if (!当前 || 当前->值 == (std::numeric_limits<std::int64_t>::max)())
+    {
+        return 当前 ? 新因果操作状态::计数溢出 : 新因果操作状态::结构不一致;
     }
     std::vector<稳定编码> 已加字段;
-    const auto 发生字段 = 全局基础数据集.添加字段节点(
-        因果节点, 因果已计数发生字段, 发生身份);
-    if (!有效(发生字段)) return 新因果操作状态::资源失败;
+    const auto 发生字段 = 全局基础数据集.添加字段节点(因果节点, 因果已计数发生字段, 发生身份);
+    if (!有效(发生字段))
+        return 新因果操作状态::资源失败;
     已加字段.push_back(发生字段);
-    if (新来源 && std::find(信息->形成来源组.begin(),
-        信息->形成来源组.end(), *新来源) == 信息->形成来源组.end()) {
-        const auto 来源字段 = 全局基础数据集.添加字段值(
-            因果节点, 因果形成来源字段,
-            基础值{static_cast<std::int64_t>(*新来源)});
-        if (!有效(来源字段)) {
+    if (新来源 && std::find(信息->形成来源组.begin(), 信息->形成来源组.end(), *新来源) ==
+                      信息->形成来源组.end())
+    {
+        const auto 来源字段 = 全局基础数据集.添加字段值(因果节点, 因果形成来源字段,
+                                                        基础值{static_cast<std::int64_t>(*新来源)});
+        if (!有效(来源字段))
+        {
             (void)全局基础数据集.删除字段(发生字段);
             return 新因果操作状态::资源失败;
         }
         已加字段.push_back(来源字段);
     }
-    if (!全局基础数据集.修改字段值(
-        当前->关系, 基础值{当前->值 + 1})) {
-        for (auto it = 已加字段.rbegin(); it != 已加字段.rend(); ++it) {
-            (void)全局基础数据集.删除字段(*it);
+    if (!全局基础数据集.修改字段值(当前->关系, 基础值{当前->值 + 1}))
+    {
+        for (auto 位置 = 已加字段.rbegin(); 位置 != 已加字段.rend(); ++位置)
+        {
+            (void)全局基础数据集.删除字段(*位置);
         }
         return 新因果操作状态::资源失败;
     }
-    return 读取因果信息(因果节点)
-        ? 新因果操作状态::已更新 : 新因果操作状态::结构不一致;
+    return 读取因果信息(因果节点) ? 新因果操作状态::已更新 : 新因果操作状态::结构不一致;
 }
 
-std::optional<待形成发生> 规范化发生(
-    新_状态类& 状态服务,
-    新_动态类& 动态服务,
-    const 新因果发生记录& 输入,
-    新因果形成来源 来源,
-    const std::optional<新因果动作定义>& 动作,
-    新因果操作状态& 失败状态) {
+std::optional<待形成发生> 规范化发生(新_状态类 &状态服务, 新_动态类 &动态服务,
+                                     const 新因果发生记录 &输入, 新因果形成来源 来源,
+                                     const std::optional<新因果动作定义> &动作,
+                                     新因果操作状态 &失败状态)
+{
     失败状态 = 新因果操作状态::入口拒绝;
-    if (!节点仍存在(输入.发生身份) || !节点仍存在(输入.场景节点)) {
+    if (!节点仍存在(输入.发生身份) || !节点仍存在(输入.场景节点))
+    {
         return std::nullopt;
     }
     const auto 结果状态 = 从状态形成模式(状态服务, 输入.结果状态节点);
-    if (!结果状态) {
+    if (!结果状态)
+    {
         失败状态 = 新因果操作状态::状态不存在;
         return std::nullopt;
     }
-    if (来源 == 新因果形成来源::结果动态反向) {
-        if (!输入.结果动态节点) {
+    if (来源 == 新因果形成来源::结果动态反向)
+    {
+        if (!输入.结果动态节点)
+        {
             失败状态 = 新因果操作状态::动态不存在;
             return std::nullopt;
         }
         const auto 结果动态 = 动态服务.获取动态(*输入.结果动态节点);
-        if (!结果动态
-            || std::find(结果动态->状态节点组.begin(),
-                结果动态->状态节点组.end(), 输入.结果状态节点)
-                == 结果动态->状态节点组.end()) {
+        if (!结果动态 || std::find(结果动态->状态节点组.begin(), 结果动态->状态节点组.end(),
+                                   输入.结果状态节点) == 结果动态->状态节点组.end())
+        {
             失败状态 = 新因果操作状态::动态不存在;
             return std::nullopt;
         }
     }
-    if (动作 && !动作定义有效(*动作)) {
+    if (动作 && !动作定义有效(*动作))
+    {
         失败状态 = 新因果操作状态::动作证据不存在;
         return std::nullopt;
     }
@@ -711,19 +808,26 @@ std::optional<待形成发生> 规范化发生(
     发生.动作 = 动作;
     发生.发生身份 = 输入.发生身份;
     发生.来源 = 来源;
-    for (const auto 节点 : 输入.前置状态节点组) {
-        if (节点 == 输入.结果状态节点) continue;
+    发生.场景节点 = 输入.场景节点;
+    for (const auto 节点 : 输入.前置状态节点组)
+    {
+        if (节点 == 输入.结果状态节点)
+            continue;
         const auto 模式 = 从状态形成模式(状态服务, 节点);
-        if (!模式) {
+        if (!模式)
+        {
             失败状态 = 新因果操作状态::状态不存在;
             return std::nullopt;
         }
         发生.条件状态组.push_back(*模式);
     }
-    for (const auto 节点 : 输入.前置动态节点组) {
-        if (输入.结果动态节点 && 节点 == *输入.结果动态节点) continue;
+    for (const auto 节点 : 输入.前置动态节点组)
+    {
+        if (输入.结果动态节点 && 节点 == *输入.结果动态节点)
+            continue;
         const auto 模式 = 从动态形成模式(动态服务, 节点);
-        if (!模式) {
+        if (!模式)
+        {
             失败状态 = 新因果操作状态::动态不存在;
             return std::nullopt;
         }
@@ -731,88 +835,876 @@ std::optional<待形成发生> 规范化发生(
     }
     排序去重(发生.条件状态组, 状态模式小于);
     排序去重(发生.条件动态组, 动态模式小于);
-    if (发生.条件状态组.empty() && 发生.条件动态组.empty()) {
+    if (发生.条件状态组.empty() && 发生.条件动态组.empty())
+    {
         失败状态 = 新因果操作状态::无共同条件;
         return std::nullopt;
     }
     return 发生;
 }
 
+[[noreturn]] void 抽象错误(const char *文本)
+{
+    throw std::runtime_error(文本);
+}
+稳定编码 解析FT(概念_特征类 &特征概念, 稳定编码 场景依赖)
+{
+    const auto 角色序号 = 特征概念.比较单特征概念(场景依赖, 场景依赖);
+    if (角色序号.状态 != 特征概念规则状态::已完成 || !角色序号.特征类型根)
+        抽象错误("因果特征根不可读");
+    return *角色序号.特征类型根;
+}
+struct 角色布局
+{
+    新因果信息 源;
+    std::vector<稳定编码> 参与存在组;
+    std::vector<std::pair<std::int64_t, 稳定编码>> 状态键, 动态键;
+    稳定编码 结果FT;
+    std::optional<新因果概念动作项> 动作;
+};
+using 参与签名 = std::pair<std::vector<稳定编码>, std::vector<稳定编码>>;
+std::optional<角色布局> 对齐来源(const 新因果信息 &因果编码, 概念_特征类 &特征概念,
+                                 概念_动态类 &动态概念, 新因果共同抽象状态 &状态)
+{
+    角色布局 布局材料;
+    布局材料.源 = 因果编码;
+    const auto 加角色 = [&](稳定编码 参与存在组) {
+        auto 位置 = std::find(布局材料.参与存在组.begin(), 布局材料.参与存在组.end(), 参与存在组);
+        if (位置 == 布局材料.参与存在组.end())
+        {
+            布局材料.参与存在组.push_back(参与存在组);
+            return static_cast<std::int64_t>(布局材料.参与存在组.size());
+        }
+        return static_cast<std::int64_t>(位置 - 布局材料.参与存在组.begin() + 1);
+    };
+    加角色(因果编码.定义.结果状态.被描述存在节点);
+    if (因果编码.定义.动作)
+    {
+        const auto &左项 = *因果编码.定义.动作;
+        if (!动态概念.是动作概念节点(左项.动作概念节点))
+        {
+            状态 = 新因果共同抽象状态::无结构共性;
+            return {};
+        }
+        新因果概念动作项 项材料{左项.动作概念节点, 加角色(左项.执行主体存在节点), {}, {}};
+        if (左项.作用部位存在节点)
+            项材料.作用部位角色 = 加角色(*左项.作用部位存在节点);
+        if (左项.作用对象存在节点)
+            项材料.作用对象角色 = 加角色(*左项.作用对象存在节点);
+        布局材料.动作 = 项材料;
+    }
+    std::map<稳定编码, 参与签名> 签名;
+    for (const auto &状态材料 : 因果编码.定义.条件状态组)
+        签名[状态材料.被描述存在节点].first.push_back(
+            解析FT(特征概念, 状态材料.特征类型概念节点));
+    for (const auto &定义材料 : 因果编码.定义.条件动态组)
+    {
+        if (!动态概念.获取动态概念(定义材料.动态概念节点))
+            抽象错误("条件动态概念不可读");
+        签名[定义材料.主题存在节点].second.push_back(定义材料.动态概念节点);
+    }
+    std::vector<std::pair<参与签名, 稳定编码>> 余下;
+    for (auto &[参与存在组, 签名材料] : 签名)
+    {
+        std::sort(签名材料.first.begin(), 签名材料.first.end());
+        std::sort(签名材料.second.begin(), 签名材料.second.end());
+        if (std::find(布局材料.参与存在组.begin(), 布局材料.参与存在组.end(), 参与存在组) ==
+            布局材料.参与存在组.end())
+            余下.emplace_back(签名材料, 参与存在组);
+    }
+    std::sort(余下.begin(), 余下.end(), [](const auto &左项, const auto &分支材料) {
+        return 左项.first < 分支材料.first;
+    });
+    for (std::size_t 序号 = 1; 序号 < 余下.size(); ++序号)
+        if (余下[序号 - 1].first == 余下[序号].first)
+        {
+            状态 = 新因果共同抽象状态::角色对齐不唯一;
+            return {};
+        }
+    for (const auto &[签名材料, 参与存在组] : 余下)
+    {
+        (void)签名材料;
+        加角色(参与存在组);
+    }
+    for (const auto &状态材料 : 因果编码.定义.条件状态组)
+        布局材料.状态键.emplace_back(加角色(状态材料.被描述存在节点),
+                                     解析FT(特征概念, 状态材料.特征类型概念节点));
+    std::sort(布局材料.状态键.begin(), 布局材料.状态键.end());
+    if (std::adjacent_find(布局材料.状态键.begin(), 布局材料.状态键.end()) != 布局材料.状态键.end())
+    {
+        状态 = 新因果共同抽象状态::无结构共性;
+        return {};
+    }
+    for (const auto &定义材料 : 因果编码.定义.条件动态组)
+        布局材料.动态键.emplace_back(加角色(定义材料.主题存在节点), 定义材料.动态概念节点);
+    std::sort(布局材料.动态键.begin(), 布局材料.动态键.end());
+    布局材料.结果FT = 解析FT(特征概念, 因果编码.定义.结果状态.特征类型概念节点);
+    return 布局材料;
+}
+bool 同布局(const 角色布局 &左项, const 角色布局 &分支材料)
+{
+    return 左项.源.定义.类型 == 分支材料.源.定义.类型 &&
+           左项.源.发生场景节点 == 分支材料.源.发生场景节点 &&
+           左项.参与存在组.size() == 分支材料.参与存在组.size() && 左项.结果FT == 分支材料.结果FT &&
+           左项.状态键 == 分支材料.状态键 && 左项.动态键 == 分支材料.动态键 &&
+           左项.动作 == 分支材料.动作;
+}
+稳定编码 参与C(稳定编码 参与存在组, 新_存在类 &存在, 新_场景类 &场景, 概念_存在类 &场景依赖)
+{
+    稳定编码 概念编码;
+    if (场景.是场景节点(参与存在组))
+    {
+        const auto 状态材料 = 场景.获取场景(参与存在组);
+        if (!状态材料)
+            抽象错误("参与场景不可读");
+        概念编码 = 状态材料->专属存在概念节点;
+    }
+    else
+    {
+        const auto 参与存在 = 存在.获取存在(参与存在组);
+        if (!参与存在)
+            抽象错误("参与存在不可读");
+        概念编码 = 参与存在->专属存在概念节点;
+    }
+    if (!场景依赖.获取存在概念(概念编码))
+        抽象错误("参与者概念不可读");
+    return 概念编码;
+}
+std::optional<稳定编码> 精确FC(const 新因果状态模式 &状态材料, 概念_特征类 &特征概念,
+                               const 新_特征值类 &特征值依赖, 新因果共同抽象状态 &状态)
+{
+    const auto 类型根 = 解析FT(特征概念, 状态材料.特征类型概念节点);
+    const auto 根概念 = 特征概念.获取特征概念(类型根);
+    if (!根概念)
+        抽象错误("精确特征根不可读");
+    const auto 准确值 = std::get_if<std::int64_t>(&状态材料.准确值);
+    if (!准确值 || 根概念->材料类型 != 特征概念材料物理类型::I64标量)
+    {
+        状态 = 新因果共同抽象状态::精确值域尚不可表达;
+        return {};
+    }
+    const 特征概念值域 单点 = std::vector<特征概念I64闭区间>{{*准确值, *准确值}};
+    const auto 比较结果 = 特征概念.比较值域(根概念->材料类型, 根概念->值域, 单点);
+    if (比较结果.状态 != 特征概念规则状态::已完成 || !比较结果.关系)
+        抽象错误("精确值域比较故障");
+    if (*比较结果.关系 == 特征概念值域关系::相等)
+        return 类型根;
+    if (*比较结果.关系 != 特征概念值域关系::左包含右)
+    {
+        状态 = 新因果共同抽象状态::值不在合法类型域内;
+        return {};
+    }
+    特征概念定义 概念定义{根概念->材料类型, 单点, 根概念->单位, 根概念->比较规则,
+                          根概念->聚合规则, {}};
+    const auto 概念编码 = 特征概念.建立或取得特征概念(概念定义, 特征值依赖, 类型根);
+    if (!有效(概念编码))
+        抽象错误("精确子概念建立失败");
+    return 概念编码;
+}
+std::vector<稳定编码> 查询概念节点()
+{
+    std::vector<稳定编码> 处理结果;
+    for (const auto &角色序号 :
+         全局基础数据集.查询源关系(新因果信息图根节点, 基础外部关系类型::父子))
+        if (角色序号.角色或顺序 == 0)
+        {
+            if (!节点类型为(角色序号.目标节点, 概念因果节点类型))
+                抽象错误("概念因果成员类型错误");
+            处理结果.push_back(角色序号.目标节点);
+        }
+    std::sort(处理结果.begin(), 处理结果.end());
+    return 处理结果;
+}
+新概念因果定义 解码概念(稳定编码 因果编码)
+{
+    if (!节点类型为(因果编码, 概念因果节点类型))
+        抽象错误("不是概念因果节点");
+    const auto 概念节点组 = 查询概念节点();
+    if (std::find(概念节点组.begin(), 概念节点组.end(), 因果编码) == 概念节点组.end())
+        抽象错误("概念因果缺组织归属");
+    const auto type = 读取唯一I64字段记录(因果编码, 因果类型字段);
+    const auto 场景信息 = 读取唯一节点字段(因果编码, 概念场景字段);
+    if (!type || !是因果类型值(type->值) || !场景信息)
+        抽象错误("概念因果头不完整");
+    auto 形状字段组 = 全局基础数据集.查询字段(因果编码, 概念形状字段);
+    if (形状字段组.size() != 1)
+        抽象错误("概念因果形状字段不唯一");
+    const auto 直接值 = std::get_if<基础值>(&形状字段组.front().内容);
+    const auto 形状组 = 直接值 ? std::get_if<std::vector<std::int64_t>>(&直接值->材料) : nullptr;
+    if (!形状组 || 形状组->size() < 6)
+        抽象错误("概念因果形状错误");
+    auto 引用字段组 = 全局基础数据集.查询字段(因果编码, 概念引用字段);
+    std::sort(引用字段组.begin(), 引用字段组.end(),
+              [](const auto &左项, const auto &分支材料) { return 左项.编码 < 分支材料.编码; });
+    std::size_t 形状位置 = 0, 引用位置 = 0;
+    const auto 读取数量 = [&]() {
+        if (形状位置 >= 形状组->size() || (*形状组)[形状位置] < 0)
+            抽象错误("概念因果形状越界");
+        return (*形状组)[形状位置++];
+    };
+    const auto 读取引用 = [&]() {
+        if (引用位置 >= 引用字段组.size())
+            抽象错误("概念因果引用不足");
+        const auto 节点引用 = std::get_if<稳定编码>(&引用字段组[引用位置++].内容);
+        if (!节点引用 || !节点仍存在(*节点引用))
+            抽象错误("概念因果引用失效");
+        return *节点引用;
+    };
+    const auto 角色数 = 读取数量(), 有动作 = 读取数量(), 执行角色 = 读取数量(),
+               部位角色 = 读取数量(), 对象角色 = 读取数量(), 分支数 = 读取数量();
+    if (角色数 < 1 || 分支数 < 2 || 有动作 > 1 ||
+        static_cast<std::uint64_t>(角色数) > 引用字段组.size() ||
+        static_cast<std::uint64_t>(分支数) > 引用字段组.size())
+        抽象错误("概念因果数量非法");
+    const auto 定位角色 = [&](std::int64_t 角色序号) {
+        if (角色序号 < 1 || 角色序号 > 角色数)
+            抽象错误("概念因果角色非法");
+        return 角色序号;
+    };
+    新概念因果定义 定义材料;
+    定义材料.类型 = static_cast<新因果类型>(type->值);
+    定义材料.场景概念节点 = *场景信息;
+    for (std::int64_t 序号 = 1; 序号 <= 角色数; ++序号)
+        定义材料.角色组.push_back({序号, 读取引用()});
+    const auto 动作字段组 = 全局基础数据集.查询字段(因果编码, 概念动作字段);
+    if (有动作)
+    {
+        if (动作字段组.size() != 1 || 定义材料.类型 != 新因果类型::已知动作)
+            抽象错误("概念动作结构错误");
+        const auto 左项 = 读取唯一节点字段(因果编码, 概念动作字段);
+        if (!左项)
+            抽象错误("概念动作引用错误");
+        定义材料.动作 = 新因果概念动作项{*左项, 定位角色(执行角色), {}, {}};
+        if (部位角色)
+            定义材料.动作->作用部位角色 = 定位角色(部位角色);
+        if (对象角色)
+            定义材料.动作->作用对象角色 = 定位角色(对象角色);
+    }
+    else if (!动作字段组.empty() || 执行角色 || 部位角色 || 对象角色 ||
+             定义材料.类型 != 新因果类型::未知动作)
+        抽象错误("未知动作分账错误");
+    for (std::int64_t 序号 = 0; 序号 < 分支数; ++序号)
+    {
+        const auto 状态数 = 读取数量(), 动态数 = 读取数量(), 结果角色 = 定位角色(读取数量());
+        if (static_cast<std::uint64_t>(状态数) > 引用字段组.size() ||
+            static_cast<std::uint64_t>(动态数) > 引用字段组.size())
+            抽象错误("分支容量错误");
+        新因果概念分支 分支材料;
+        分支材料.来源具体因果节点 = 读取引用();
+        for (std::int64_t 项序号 = 0; 项序号 < 状态数; ++项序号)
+            分支材料.条件状态组.push_back({定位角色(读取数量()), 读取引用(), 读取引用()});
+        for (std::int64_t 项序号 = 0; 项序号 < 动态数; ++项序号)
+            分支材料.条件动态组.push_back({定位角色(读取数量()), 读取引用()});
+        分支材料.结果状态 = {结果角色, 读取引用(), 读取引用()};
+        定义材料.分支组.push_back(std::move(分支材料));
+    }
+    if (形状位置 != 形状组->size() || 引用位置 != 引用字段组.size())
+        抽象错误("概念因果结构有剩余槽位");
+    return 定义材料;
+}
+稳定编码 发布概念(const 新概念因果定义 &定义材料)
+{
+    基础节点建立请求 建立请求;
+    建立请求.上级节点 = 新因果信息图根节点;
+    const auto 添加引用 = [&](稳定编码 特征项, 稳定编码 概念编码) {
+        建立请求.字段组.push_back({特征项, 概念编码});
+    };
+    添加引用(节点类型字段, 概念因果节点类型);
+    添加引用(概念场景字段, 定义材料.场景概念节点);
+    建立请求.字段组.push_back({因果类型字段, 基础值{static_cast<std::int64_t>(定义材料.类型)}});
+    std::vector<std::int64_t> 形状组{static_cast<std::int64_t>(定义材料.角色组.size()),
+                                     定义材料.动作 ? 1 : 0,
+                                     定义材料.动作 ? 定义材料.动作->执行主体角色 : 0,
+                                     定义材料.动作 ? 定义材料.动作->作用部位角色.value_or(0) : 0,
+                                     定义材料.动作 ? 定义材料.动作->作用对象角色.value_or(0) : 0,
+                                     static_cast<std::int64_t>(定义材料.分支组.size())};
+    if (定义材料.动作)
+        添加引用(概念动作字段, 定义材料.动作->动作概念节点);
+    for (const auto &角色序号 : 定义材料.角色组)
+        添加引用(概念引用字段, 角色序号.存在概念节点);
+    for (const auto &分支材料 : 定义材料.分支组)
+    {
+        形状组.insert(形状组.end(), {static_cast<std::int64_t>(分支材料.条件状态组.size()),
+                                     static_cast<std::int64_t>(分支材料.条件动态组.size()),
+                                     分支材料.结果状态.角色});
+        添加引用(概念引用字段, 分支材料.来源具体因果节点);
+        for (const auto &状态材料 : 分支材料.条件状态组)
+        {
+            形状组.push_back(状态材料.角色);
+            添加引用(概念引用字段, 状态材料.特征类型概念节点);
+            添加引用(概念引用字段, 状态材料.值域概念节点);
+        }
+        for (const auto &项材料 : 分支材料.条件动态组)
+        {
+            形状组.push_back(项材料.角色);
+            添加引用(概念引用字段, 项材料.动态概念节点);
+        }
+        添加引用(概念引用字段, 分支材料.结果状态.特征类型概念节点);
+        添加引用(概念引用字段, 分支材料.结果状态.值域概念节点);
+    }
+    建立请求.字段组.push_back({概念形状字段, 基础值{形状组}});
+    const auto 处理结果 = 全局基础数据集.原子建立节点(建立请求);
+    if (处理结果.状态 != 基础结构操作状态::已完成 || !处理结果.节点)
+        抽象错误("概念因果原子发布失败");
+    if (解码概念(*处理结果.节点) != 定义材料)
+        抽象错误("概念因果原子发布读回不一致");
+    return *处理结果.节点;
+}
 } // namespace
 
-新_因果类::新_因果类(
-    新_状态类& 状态服务,
-    新_动态类& 动态服务) noexcept
-    : 状态服务_(状态服务), 动态服务_(动态服务) {}
+新_因果类::新_因果类(新_状态类 &状态服务, 新_动态类 &动态服务) noexcept
+    : 状态服务_(状态服务), 动态服务_(动态服务)
+{
+}
 
-新_因果类::新_因果类(
-    新_状态类& 状态服务,
-    新_动态类& 动态服务,
-    const 新因果动作证据提供者& 动作证据提供者) noexcept
-    : 状态服务_(状态服务), 动态服务_(动态服务),
-      动作证据提供者_(&动作证据提供者) {}
+新_因果类::新_因果类(新_状态类 &状态服务, 新_动态类 &动态服务,
+                     const 新因果动作证据提供者 &动作证据提供者) noexcept
+    : 状态服务_(状态服务), 动态服务_(动态服务), 动作证据提供者_(&动作证据提供者)
+{
+}
 
-bool 新_因果类::初始化() noexcept {
-    try {
+新_因果类::新_因果类(新_状态类 &状态依赖, 新_动态类 &动态依赖, 新_存在类 &存在依赖,
+                     概念_存在类 &存在概念依赖, 概念_特征类 &特征概念依赖,
+                     概念_动态类 &动态概念依赖, const 新_特征值类 &特征值依赖,
+                     新_场景类 &场景依赖) noexcept
+    : 状态服务_(状态依赖), 动态服务_(动态依赖), 存在服务_(&存在依赖),
+      存在概念服务_(&存在概念依赖), 特征概念服务_(&特征概念依赖), 动态概念服务_(&动态概念依赖),
+      特征值服务_(&特征值依赖), 场景服务_(&场景依赖)
+{
+}
+
+新因果共同抽象结果 新_因果类::抽象共同因果(const std::vector<稳定编码> &输入) noexcept
+{
+    try
+    {
         std::lock_guard 锁(新因果互斥);
-        if (!状态服务_.初始化() || !动态服务_.初始化()) return false;
-        if (结构已分配()) return 结构仍存在();
-        for (auto* 编码 : 架构编码组()) {
-            *编码 = 全局基础数据集.新建节点();
-            if (!有效(*编码)) return false;
+        新因果共同抽象结果 处理结果;
+        if (!存在服务_ || !存在概念服务_ || !特征概念服务_ || !动态概念服务_ || !特征值服务_ ||
+            !场景服务_)
+            return 处理结果;
+        auto 来源编码组 = 输入;
+        std::sort(来源编码组.begin(), 来源编码组.end());
+        来源编码组.erase(std::unique(来源编码组.begin(), 来源编码组.end()), 来源编码组.end());
+        if (来源编码组.size() < 2)
+            return 处理结果;
+        // 同一规范化来源集合优先读回，不随共享概念更新而重释旧定义。
+        for (const auto 具体信息 : 查询概念节点())
+        {
+            const auto 定义材料 = 解码概念(具体信息);
+            std::vector<稳定编码> 既有来源组;
+            for (const auto &分支材料 : 定义材料.分支组)
+                既有来源组.push_back(分支材料.来源具体因果节点);
+            if (既有来源组 == 来源编码组)
+            {
+                处理结果 = 获取概念因果(具体信息);
+                if (处理结果.状态 == 新因果共同抽象状态::已读取)
+                    处理结果.状态 = 新因果共同抽象状态::已复用;
+                return 处理结果;
+            }
         }
-        return 有效(全局基础数据集.添加字段节点(
-            新因果信息图根节点, 节点类型字段, 因果图根类型));
-    } catch (...) {
-        return false;
+        std::vector<角色布局> 来源布局组;
+        for (const auto 来源编码 : 来源编码组)
+        {
+            const auto 具体信息 = 读取因果信息(来源编码);
+            if (!具体信息)
+                抽象错误("抽象来源不是完整具体规律");
+            if (!具体信息->发生场景节点)
+            {
+                处理结果.状态 = 新因果共同抽象状态::场景来源不足;
+                return 处理结果;
+            }
+            auto 来源布局 = 对齐来源(*具体信息, *特征概念服务_, *动态概念服务_, 处理结果.状态);
+            if (!来源布局)
+                return 处理结果;
+            if (!来源布局组.empty() && !同布局(来源布局组.front(), *来源布局))
+            {
+                处理结果.状态 = 新因果共同抽象状态::无结构共性;
+                return 处理结果;
+            }
+            来源布局组.push_back(std::move(*来源布局));
+        }
+        const auto 场景信息 = 场景服务_->获取场景(*来源布局组.front().源.发生场景节点);
+        if (!场景信息)
+            抽象错误("具体规律保存场景失效");
+        if (!存在概念服务_->获取存在概念(场景信息->专属存在概念节点))
+            抽象错误("场景专属概念失效");
+        新概念因果定义 定义材料;
+        定义材料.类型 = 来源布局组.front().源.定义.类型;
+        定义材料.场景概念节点 = 场景信息->专属存在概念节点;
+        定义材料.动作 = 来源布局组.front().动作;
+        for (std::size_t 角色序号 = 0; 角色序号 < 来源布局组.front().参与存在组.size(); ++角色序号)
+        {
+            std::vector<稳定编码> 角色概念组;
+            for (const auto &来源布局 : 来源布局组)
+                角色概念组.push_back(
+                    参与C(来源布局.参与存在组[角色序号], *存在服务_, *场景服务_, *存在概念服务_));
+            std::sort(角色概念组.begin(), 角色概念组.end());
+            角色概念组.erase(std::unique(角色概念组.begin(), 角色概念组.end()), 角色概念组.end());
+            auto 概念编码 = 角色概念组.front();
+            if (角色概念组.size() > 1)
+            {
+                const auto 左项 = 存在概念服务_->抽象共同存在概念(角色概念组);
+                if (左项.状态 == 存在概念操作状态::无共同点)
+                {
+                    处理结果.状态 = 新因果共同抽象状态::无共同存在概念;
+                    return 处理结果;
+                }
+                if (!左项.抽象概念节点 || (左项.状态 != 存在概念操作状态::已建立 &&
+                                           左项.状态 != 存在概念操作状态::已复用))
+                    抽象错误("存在共性抽象工程失败");
+                概念编码 = *左项.抽象概念节点;
+            }
+            定义材料.角色组.push_back({static_cast<std::int64_t>(角色序号 + 1), 概念编码});
+        }
+        for (const auto &来源布局 : 来源布局组)
+        {
+            const auto 定位角色 = [&](稳定编码 参与存在) {
+                const auto 位置 =
+                    std::find(来源布局.参与存在组.begin(), 来源布局.参与存在组.end(), 参与存在);
+                if (位置 == 来源布局.参与存在组.end())
+                    抽象错误("角色映射失效");
+                return static_cast<std::int64_t>(位置 - 来源布局.参与存在组.begin() + 1);
+            };
+            新因果概念分支 分支材料;
+            分支材料.来源具体因果节点 = 来源布局.源.节点;
+            for (const auto &状态材料 : 来源布局.源.定义.条件状态组)
+            {
+                const auto fc = 精确FC(状态材料, *特征概念服务_, *特征值服务_, 处理结果.状态);
+                if (!fc)
+                    return 处理结果;
+                分支材料.条件状态组.push_back({定位角色(状态材料.被描述存在节点),
+                                               解析FT(*特征概念服务_, 状态材料.特征类型概念节点),
+                                               *fc});
+            }
+            std::sort(分支材料.条件状态组.begin(), 分支材料.条件状态组.end(),
+                      [](const auto &左项, const auto &右项) {
+                          return std::tie(左项.角色, 左项.特征类型概念节点) <
+                                 std::tie(右项.角色, 右项.特征类型概念节点);
+                      });
+            for (const auto &项材料 : 来源布局.源.定义.条件动态组)
+                分支材料.条件动态组.push_back({定位角色(项材料.主题存在节点), 项材料.动态概念节点});
+            std::sort(分支材料.条件动态组.begin(), 分支材料.条件动态组.end(),
+                      [](const auto &左项, const auto &右项) {
+                          return std::tie(左项.角色, 左项.动态概念节点) <
+                                 std::tie(右项.角色, 右项.动态概念节点);
+                      });
+            const auto fc =
+                精确FC(来源布局.源.定义.结果状态, *特征概念服务_, *特征值服务_, 处理结果.状态);
+            if (!fc)
+                return 处理结果;
+            分支材料.结果状态 = {1, 来源布局.结果FT, *fc};
+            定义材料.分支组.push_back(std::move(分支材料));
+        }
+        const auto 具体信息 = 发布概念(定义材料);
+        处理结果 = 获取概念因果(具体信息);
+        if (处理结果.状态 != 新因果共同抽象状态::已读取)
+            抽象错误("新概念因果完整相容读回失败");
+        处理结果.状态 = 新因果共同抽象状态::已建立;
+        return 处理结果;
+    }
+    catch (const std::exception &参与存在)
+    {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"因果共同抽象",
+                     L"共同抽象工程故障", 参与存在.what());
+    }
+    catch (...)
+    {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"因果共同抽象",
+                     L"未知工程故障");
     }
 }
 
-新因果处理结果 新_因果类::处理发生(
-    const 新因果发生记录& 输入,
-    新因果形成来源 来源,
-    const std::optional<新因果动作定义>& 动作) noexcept {
-    新因果处理结果 结果;
-    try {
+新因果共同抽象结果 新_因果类::获取概念因果(稳定编码 因果编码) const noexcept
+{
+    try
+    {
         std::lock_guard 锁(新因果互斥);
-        if (!结构仍存在()) {
+        新因果共同抽象结果 处理结果;
+        if (!存在服务_ || !存在概念服务_ || !特征概念服务_ || !动态概念服务_ || !场景服务_)
+        {
+            处理结果.状态 = 新因果共同抽象状态::概念已不相容;
+            return 处理结果;
+        }
+        auto 定义材料 = 解码概念(因果编码);
+        bool 相容 = true;
+        if (!存在概念服务_->获取存在概念(定义材料.场景概念节点))
+            抽象错误("概念场景引用不可读");
+        if (定义材料.动作 && !动态概念服务_->是动作概念节点(定义材料.动作->动作概念节点))
+            抽象错误("概念动作类别失效");
+        std::set<稳定编码> 发生身份集合, 来源集合;
+        std::optional<角色布局> 首个布局;
+        std::optional<稳定编码> 前一来源;
+        for (const auto &分支材料 : 定义材料.分支组)
+        {
+            if (前一来源 && !(*前一来源 < 分支材料.来源具体因果节点))
+                抽象错误("概念来源次序不规范");
+            前一来源 = 分支材料.来源具体因果节点;
+            if (!来源集合.insert(分支材料.来源具体因果节点).second)
+                抽象错误("概念分支重复来源");
+            const auto 具体信息 = 读取因果信息(分支材料.来源具体因果节点);
+            if (!具体信息 || !具体信息->发生场景节点)
+                抽象错误("概念来源证明失效");
+            新因果共同抽象状态 抽象状态{};
+            const auto 来源布局 = 对齐来源(*具体信息, *特征概念服务_, *动态概念服务_, 抽象状态);
+            if (!来源布局)
+            {
+                相容 = false;
+                continue;
+            }
+            if (首个布局 && !同布局(*首个布局, *来源布局))
+                抽象错误("已发布概念来源布局矛盾");
+            首个布局 = 来源布局;
+            const auto 场景信息 = 场景服务_->获取场景(*具体信息->发生场景节点);
+            if (!场景信息)
+                抽象错误("概念来源场景失效");
+            if (场景信息->专属存在概念节点 != 定义材料.场景概念节点)
+                相容 = false;
+            if (来源布局->参与存在组.size() != 定义材料.角色组.size() ||
+                来源布局->动作 != 定义材料.动作 || 具体信息->定义.类型 != 定义材料.类型)
+                相容 = false;
+            for (std::size_t 角色序号 = 0;
+                 角色序号 < 定义材料.角色组.size() && 角色序号 < 来源布局->参与存在组.size();
+                 ++角色序号)
+            {
+                if (定义材料.角色组[角色序号].角色 != static_cast<std::int64_t>(角色序号 + 1))
+                    抽象错误("概念角色不连续");
+                const auto 公共概念 =
+                    存在概念服务_->获取存在概念(定义材料.角色组[角色序号].存在概念节点);
+                const auto 来源概念 = 存在概念服务_->获取存在概念(
+                    参与C(来源布局->参与存在组[角色序号], *存在服务_, *场景服务_, *存在概念服务_));
+                if (!公共概念 || !来源概念)
+                    抽象错误("概念角色分类不可读");
+                for (const auto &特征项 : 公共概念->特征组)
+                {
+                    const auto 位置 = std::find_if(
+                        来源概念->特征组.begin(), 来源概念->特征组.end(), [&](const auto &项材料) {
+                            return 项材料.特征类型概念 == 特征项.特征类型概念;
+                        });
+                    if (位置 == 来源概念->特征组.end())
+                    {
+                        相容 = false;
+                        continue;
+                    }
+                    const auto 左项 = 特征概念服务_->获取特征概念(特征项.具体特征概念),
+                               右项 = 特征概念服务_->获取特征概念(位置->具体特征概念);
+                    if (!左项 || !右项)
+                        抽象错误("存在分类特征不可读");
+                    const auto 比较结果 =
+                        特征概念服务_->比较值域(左项->材料类型, 左项->值域, 右项->值域);
+                    if (比较结果.状态 != 特征概念规则状态::已完成 || !比较结果.关系)
+                        抽象错误("存在分类比较失败");
+                    if (左项->材料类型 != 右项->材料类型 ||
+                        (*比较结果.关系 != 特征概念值域关系::相等 &&
+                         *比较结果.关系 != 特征概念值域关系::左包含右))
+                        相容 = false;
+                }
+            }
+            const auto 核验状态 = [&](const 新因果概念状态项 &项材料,
+                                      const 新因果状态模式 &状态材料) {
+                const auto 准确值 = std::get_if<std::int64_t>(&状态材料.准确值);
+                if (!准确值)
+                    抽象错误("已发布精确因果来源不是I64");
+                const auto 类型根 = 解析FT(*特征概念服务_, 状态材料.特征类型概念节点);
+                const auto 概念编码 = 特征概念服务_->获取特征概念(项材料.值域概念节点);
+                if (!概念编码)
+                    抽象错误("精确FC引用失效");
+                const auto 根概念 = 特征概念服务_->获取特征概念(类型根);
+                if (!根概念)
+                    抽象错误("精确FC类型根失效");
+                const auto 合法域比较 = 特征概念服务_->比较值域(
+                    根概念->材料类型, 根概念->值域,
+                    特征概念值域{std::vector<特征概念I64闭区间>{{*准确值, *准确值}}});
+                if (合法域比较.状态 != 特征概念规则状态::已完成 || !合法域比较.关系)
+                    抽象错误("精确FC根域复核故障");
+                if (*合法域比较.关系 != 特征概念值域关系::相等 &&
+                    *合法域比较.关系 != 特征概念值域关系::左包含右)
+                    相容 = false;
+                const auto 精确域 = std::get_if<std::vector<特征概念I64闭区间>>(&概念编码->值域);
+                const auto 位置 = std::find(来源布局->参与存在组.begin(),
+                                            来源布局->参与存在组.end(), 状态材料.被描述存在节点);
+                if (位置 == 来源布局->参与存在组.end())
+                    抽象错误("来源状态角色无法定位");
+                if (项材料.角色 !=
+                        static_cast<std::int64_t>(位置 - 来源布局->参与存在组.begin() + 1) ||
+                    项材料.特征类型概念节点 != 类型根 ||
+                    解析FT(*特征概念服务_, 项材料.值域概念节点) != 类型根 ||
+                    概念编码->材料类型 != 特征概念材料物理类型::I64标量 || !精确域 ||
+                    精确域->size() != 1 || 精确域->front().下界 != *准确值 ||
+                    精确域->front().上界 != *准确值)
+                    相容 = false;
+            };
+            if (分支材料.条件状态组.size() != 具体信息->定义.条件状态组.size() ||
+                分支材料.条件动态组.size() != 具体信息->定义.条件动态组.size())
+                抽象错误("概念分支删减来源条件");
+            std::vector<std::pair<std::int64_t, 稳定编码>> 状态布局键, 动态布局键;
+            for (const auto &项材料 : 分支材料.条件状态组)
+                状态布局键.emplace_back(项材料.角色, 项材料.特征类型概念节点);
+            for (const auto &项材料 : 分支材料.条件动态组)
+                动态布局键.emplace_back(项材料.角色, 项材料.动态概念节点);
+            if (状态布局键 != 来源布局->状态键 || 动态布局键 != 来源布局->动态键)
+                抽象错误("概念分支布局不完整或次序错误");
+            for (const auto &项材料 : 分支材料.条件状态组)
+            {
+                const auto 位置 = std::find_if(
+                    具体信息->定义.条件状态组.begin(), 具体信息->定义.条件状态组.end(),
+                    [&](const auto &状态材料) {
+                        return 项材料.角色 > 0 &&
+                               static_cast<std::uint64_t>(项材料.角色) <=
+                                   来源布局->参与存在组.size() &&
+                               状态材料.被描述存在节点 ==
+                                   来源布局
+                                       ->参与存在组[static_cast<std::size_t>(项材料.角色 - 1)] &&
+                               解析FT(*特征概念服务_, 状态材料.特征类型概念节点) ==
+                                   项材料.特征类型概念节点;
+                    });
+                if (位置 == 具体信息->定义.条件状态组.end())
+                    抽象错误("概念条件不对应来源");
+                核验状态(项材料, *位置);
+            }
+            for (const auto &项材料 : 分支材料.条件动态组)
+            {
+                if (!动态概念服务_->获取动态概念(项材料.动态概念节点))
+                    抽象错误("概念分支DC失效");
+                if (项材料.角色 < 1 ||
+                    static_cast<std::uint64_t>(项材料.角色) > 来源布局->参与存在组.size() ||
+                    std::find(具体信息->定义.条件动态组.begin(), 具体信息->定义.条件动态组.end(),
+                              新因果动态模式{
+                                  来源布局->参与存在组[static_cast<std::size_t>(项材料.角色 - 1)],
+                                  项材料.动态概念节点}) == 具体信息->定义.条件动态组.end())
+                    抽象错误("动态分支不对应来源");
+            }
+            核验状态(分支材料.结果状态, 具体信息->定义.结果状态);
+            发生身份集合.insert(具体信息->已计数发生身份组.begin(),
+                                具体信息->已计数发生身份组.end());
+        }
+        if (!相容)
+        {
+            处理结果.状态 = 新因果共同抽象状态::概念已不相容;
+            return 处理结果;
+        }
+        if (发生身份集合.size() >
+            static_cast<std::size_t>((std::numeric_limits<std::int64_t>::max)()))
+            抽象错误("覆盖次数溢出");
+        处理结果.信息 = 新概念因果信息{因果编码,
+                                       std::move(定义材料),
+                                       {发生身份集合.begin(), 发生身份集合.end()},
+                                       static_cast<std::int64_t>(发生身份集合.size())};
+        处理结果.状态 = 新因果共同抽象状态::已读取;
+        return 处理结果;
+    }
+    catch (const std::exception &参与存在)
+    {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取概念因果",
+                     L"概念结构工程故障", 参与存在.what());
+    }
+    catch (...)
+    {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取概念因果",
+                     L"未知工程故障");
+    }
+}
+std::vector<稳定编码> 新_因果类::查询概念因果() const noexcept
+{
+    try
+    {
+        std::lock_guard 锁(新因果互斥);
+        auto 来源编码组 = 查询概念节点();
+        for (const auto 来源编码 : 来源编码组)
+            (void)获取概念因果(来源编码);
+        return 来源编码组;
+    }
+    catch (...)
+    {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"查询概念因果",
+                     L"概念枚举工程故障");
+    }
+}
+void 新_因果类::尝试共同抽象(稳定编码 因果编码) noexcept
+{
+    if (!存在服务_ || !存在概念服务_ || !特征概念服务_ || !动态概念服务_ || !特征值服务_ ||
+        !场景服务_)
+        return;
+    try
+    {
+        const auto 来源信息 = 读取因果信息(因果编码);
+        if (!来源信息)
+            抽象错误("自动抽象来源不可读");
+        if (!来源信息->发生场景节点)
+            return;
+        新因果共同抽象状态 抽象状态{};
+        const auto 基准布局 = 对齐来源(*来源信息, *特征概念服务_, *动态概念服务_, 抽象状态);
+        if (!基准布局)
+            return;
+        std::vector<稳定编码> 来源组;
+        for (const auto 来源编码 : 查询全部因果节点())
+        {
+            const auto 具体信息 = 读取因果信息(来源编码);
+            if (!具体信息)
+                抽象错误("自动抽象具体全集破损");
+            if (!具体信息->发生场景节点 || 具体信息->发生场景节点 != 来源信息->发生场景节点)
+                continue;
+            const auto 来源布局 = 对齐来源(*具体信息, *特征概念服务_, *动态概念服务_, 抽象状态);
+            if (来源布局 && 同布局(*基准布局, *来源布局))
+                来源组.push_back(来源编码);
+        }
+        if (来源组.size() >= 2)
+            (void)抽象共同因果(来源组);
+    }
+    catch (...)
+    {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"自动因果抽象",
+                     L"自动抽象工程故障");
+    }
+}
+
+bool 新_因果类::初始化() noexcept
+{
+    try
+    {
+        std::lock_guard 锁(新因果互斥);
+        if (!状态服务_.初始化() || !动态服务_.初始化())
+            抽象错误("因果依赖初始化失败");
+        if (结构已分配())
+        {
+            if (!结构仍存在())
+                抽象错误("因果初始化结构破损");
+            return true;
+        }
+        for (auto *编码 : 架构编码组())
+        {
+            *编码 = 全局基础数据集.新建节点();
+            if (!有效(*编码))
+                抽象错误("因果架构节点分配失败");
+        }
+        if (!有效(全局基础数据集.添加字段节点(新因果信息图根节点, 节点类型字段, 因果图根类型)))
+            抽象错误("因果根类型发布失败");
+        return true;
+    }
+    catch (...)
+    {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"初始化因果",
+                     L"因果初始化工程故障");
+    }
+}
+
+新因果处理结果 新_因果类::处理发生(const 新因果发生记录 &输入, 新因果形成来源 来源,
+                                   const std::optional<新因果动作定义> &动作) noexcept
+{
+    新因果处理结果 结果;
+    try
+    {
+        std::lock_guard 锁(新因果互斥);
+        if (!结构仍存在())
+        {
             结果.状态 = 新因果操作状态::尚未初始化;
             return 结果;
         }
         新因果操作状态 失败状态{};
-        const auto 发生 = 规范化发生(
-            状态服务_, 动态服务_, 输入, 来源, 动作, 失败状态);
-        if (!发生) {
+        const auto 发生 = 规范化发生(状态服务_, 动态服务_, 输入, 来源, 动作, 失败状态);
+        if (!发生)
+        {
             结果.状态 = 失败状态;
             return 结果;
         }
 
-        待形成发生组.erase(std::remove_if(
-            待形成发生组.begin(), 待形成发生组.end(),
-            [](const auto& 项) { return !节点仍存在(项.发生身份); }),
-            待形成发生组.end());
+        待形成发生组.erase(std::remove_if(待形成发生组.begin(), 待形成发生组.end(),
+                                          [](const auto &项) { return !节点仍存在(项.发生身份); }),
+                           待形成发生组.end());
 
-        if (const auto 已有 = 查找最具体匹配因果(*发生)) {
-            const auto 更新 = 更新普通统计(
-                已有->节点, 发生->发生身份, true, 来源);
+        if (场景服务_)
+        {
+            if (!场景服务_->获取场景(输入.场景节点))
+                throw std::runtime_error("因果发生场景无法读取");
+            std::set<稳定编码> 场景状态集合, 场景动态集合, 场景集合;
+            std::vector<稳定编码> 待核验场景组{输入.场景节点};
+            for (std::size_t 序号 = 0; 序号 < 待核验场景组.size(); ++序号)
+            {
+                if (!场景集合.insert(待核验场景组[序号]).second)
+                    抽象错误("因果场景范围存在环或重复归属");
+                const auto 概念编码 = 场景服务_->获取场景(待核验场景组[序号]);
+                if (!概念编码)
+                    抽象错误("因果子场景不可读");
+                场景状态集合.insert(概念编码->状态节点组.begin(), 概念编码->状态节点组.end());
+                场景动态集合.insert(概念编码->动态节点组.begin(), 概念编码->动态节点组.end());
+                待核验场景组.insert(待核验场景组.end(), 概念编码->直接子场景组.begin(),
+                                    概念编码->直接子场景组.end());
+            }
+            if (!场景状态集合.contains(输入.结果状态节点) ||
+                (输入.结果动态节点 && !场景动态集合.contains(*输入.结果动态节点)) ||
+                (输入.动作证据节点 && !场景动态集合.contains(*输入.动作证据节点)))
+            {
+                结果.状态 = 新因果操作状态::入口拒绝;
+                return 结果;
+            }
+            for (const auto 读取数量 : 输入.前置状态节点组)
+                if (!场景状态集合.contains(读取数量))
+                {
+                    结果.状态 = 新因果操作状态::入口拒绝;
+                    return 结果;
+                }
+            for (const auto 读取数量 : 输入.前置动态节点组)
+                if (!场景动态集合.contains(读取数量))
+                {
+                    结果.状态 = 新因果操作状态::入口拒绝;
+                    return 结果;
+                }
+            const auto 核验E = [&](稳定编码 参与存在组) {
+                return 场景服务_->存在属于场景范围(输入.场景节点, 参与存在组);
+            };
+            if (!核验E(发生->结果状态.被描述存在节点))
+            {
+                结果.状态 = 新因果操作状态::入口拒绝;
+                return 结果;
+            }
+            for (const auto &状态材料 : 发生->条件状态组)
+                if (!核验E(状态材料.被描述存在节点))
+                {
+                    结果.状态 = 新因果操作状态::入口拒绝;
+                    return 结果;
+                }
+            for (const auto &定义材料 : 发生->条件动态组)
+                if (!核验E(定义材料.主题存在节点))
+                {
+                    结果.状态 = 新因果操作状态::入口拒绝;
+                    return 结果;
+                }
+            if (动作 && (!核验E(动作->执行主体存在节点) ||
+                         (动作->作用部位存在节点 && !核验E(*动作->作用部位存在节点)) ||
+                         (动作->作用对象存在节点 && !核验E(*动作->作用对象存在节点))))
+            {
+                结果.状态 = 新因果操作状态::入口拒绝;
+                return 结果;
+            }
+        }
+        if (const auto 已有 = 查找最具体匹配因果(*发生, 场景服务_ != nullptr))
+        {
+            const auto 更新 = 更新普通统计(已有->节点, 发生->发生身份, true, 来源);
             结果.状态 = 更新;
             结果.因果节点 = 已有->节点;
             结果.因果信息 = 读取因果信息(已有->节点);
+            if (!结果.因果信息 || 更新 == 新因果操作状态::资源失败 ||
+                更新 == 新因果操作状态::结构不一致 || 更新 == 新因果操作状态::计数溢出)
+                throw std::runtime_error("因果统计更新失败");
+            尝试共同抽象(已有->节点);
             return 结果;
         }
 
         if (std::any_of(待形成发生组.begin(), 待形成发生组.end(),
-            [&](const auto& 项) { return 项.发生身份 == 发生->发生身份; })) {
+                        [&](const auto &项) { return 项.发生身份 == 发生->发生身份; }))
+        {
             结果.状态 = 新因果操作状态::重复发生;
             return 结果;
         }
 
         bool 找到同组但无共同条件 = false;
-        for (auto it = 待形成发生组.begin(); it != 待形成发生组.end(); ++it) {
-            if (!同一形成分组(*it, *发生)) continue;
-            auto 共同状态 = 求交集(it->条件状态组, 发生->条件状态组);
-            auto 共同动态 = 求交集(it->条件动态组, 发生->条件动态组);
-            if (共同状态.empty() && 共同动态.empty()) {
+        for (auto 位置 = 待形成发生组.begin(); 位置 != 待形成发生组.end(); ++位置)
+        {
+            if (!同一形成分组(*位置, *发生))
+                continue;
+            auto 共同状态 = 求交集(位置->条件状态组, 发生->条件状态组);
+            auto 共同动态 = 求交集(位置->条件动态组, 发生->条件动态组);
+            if (共同状态.empty() && 共同动态.empty())
+            {
                 找到同组但无共同条件 = true;
                 continue;
             }
@@ -822,174 +1714,205 @@ bool 新_因果类::初始化() noexcept {
             定义.条件动态组 = std::move(共同动态);
             定义.动作 = 动作;
             定义.结果状态 = 发生->结果状态;
-            const auto 已建立 = 发布因果(
-                定义, {it->来源, 来源}, {it->发生身份, 发生->发生身份});
-            if (!已建立) {
-                结果.状态 = 新因果操作状态::资源失败;
-                return 结果;
+            const auto 已建立 = 发布因果(定义, {位置->来源, 来源}, {位置->发生身份, 发生->发生身份},
+                                         场景服务_ ? 发生->场景节点 : 稳定编码{});
+            if (!已建立)
+            {
+                throw std::runtime_error("具体因果发布失败");
             }
-            const auto 旧身份 = it->发生身份;
-            待形成发生组.erase(std::remove_if(
-                待形成发生组.begin(), 待形成发生组.end(),
-                [&](const auto& 项) {
-                    return 项.发生身份 == 旧身份
-                        || 项.发生身份 == 发生->发生身份;
-                }), 待形成发生组.end());
+            const auto 旧身份 = 位置->发生身份;
+            待形成发生组.erase(std::remove_if(待形成发生组.begin(), 待形成发生组.end(),
+                                              [&](const auto &项) {
+                                                  return 项.发生身份 == 旧身份 ||
+                                                         项.发生身份 == 发生->发生身份;
+                                              }),
+                               待形成发生组.end());
             结果.状态 = 新因果操作状态::已建立;
             结果.因果节点 = 已建立->节点;
             结果.因果信息 = *已建立;
+            尝试共同抽象(已建立->节点);
             return 结果;
         }
         待形成发生组.push_back(*发生);
-        结果.状态 = 找到同组但无共同条件
-            ? 新因果操作状态::无共同条件
-            : 新因果操作状态::已记录首例;
+        结果.状态 = 找到同组但无共同条件 ? 新因果操作状态::无共同条件 : 新因果操作状态::已记录首例;
         return 结果;
-    } catch (...) {
-        结果.状态 = 新因果操作状态::资源失败;
-        return 结果;
+    }
+    catch (...)
+    {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"具体因果形成",
+                     L"因果读取或发布工程异常");
     }
 }
 
-新因果处理结果 新_因果类::处理结果状态(
-    const 新因果发生记录& 发生) noexcept {
+新因果处理结果 新_因果类::处理结果状态(const 新因果发生记录 &发生) noexcept
+{
     return 处理发生(发生, 新因果形成来源::结果状态筛选, std::nullopt);
 }
 
-新因果处理结果 新_因果类::处理结果动态(
-    const 新因果发生记录& 发生) noexcept {
+新因果处理结果 新_因果类::处理结果动态(const 新因果发生记录 &发生) noexcept
+{
     return 处理发生(发生, 新因果形成来源::结果动态反向, std::nullopt);
 }
 
-新因果处理结果 新_因果类::处理动作事实(
-    const 新因果发生记录& 发生) noexcept {
-    if (!动作证据提供者_) {
+新因果处理结果 新_因果类::处理动作事实(const 新因果发生记录 &发生) noexcept
+{
+    if (!动作证据提供者_)
+    {
         return 新因果处理结果{新因果操作状态::依赖未配置};
     }
-    if (!发生.动作证据节点 || !节点仍存在(*发生.动作证据节点)) {
+    if (!发生.动作证据节点 || !节点仍存在(*发生.动作证据节点))
+    {
         return 新因果处理结果{新因果操作状态::动作证据不存在};
     }
     const auto 动作 = 动作证据提供者_->读取自我动作事实(*发生.动作证据节点);
-    if (!动作) return 新因果处理结果{新因果操作状态::动作证据不存在};
+    if (!动作)
+        return 新因果处理结果{新因果操作状态::动作证据不存在};
     return 处理发生(发生, 新因果形成来源::动作事实反向, 动作);
 }
 
-新因果处理结果 新_因果类::处理外部动作动态(
-    const 新因果发生记录& 发生) noexcept {
-    if (!动作证据提供者_) {
+新因果处理结果 新_因果类::处理外部动作动态(const 新因果发生记录 &发生) noexcept
+{
+    if (!动作证据提供者_)
+    {
         return 新因果处理结果{新因果操作状态::依赖未配置};
     }
-    if (!发生.动作证据节点 || !节点仍存在(*发生.动作证据节点)) {
+    if (!发生.动作证据节点 || !节点仍存在(*发生.动作证据节点))
+    {
         return 新因果处理结果{新因果操作状态::动作证据不存在};
     }
     const auto 动作 = 动作证据提供者_->推断外部动作(*发生.动作证据节点);
-    if (!动作) return 新因果处理结果{新因果操作状态::动作证据不存在};
+    if (!动作)
+        return 新因果处理结果{新因果操作状态::动作证据不存在};
     return 处理发生(发生, 新因果形成来源::外部动作动态反向, 动作);
 }
 
-std::optional<新因果信息> 新_因果类::获取因果(
-    稳定编码 因果节点) const noexcept {
-    try {
+std::optional<新因果信息> 新_因果类::获取因果(稳定编码 因果节点) const noexcept
+{
+    try
+    {
         std::lock_guard 锁(新因果互斥);
-        if (!结构仍存在()) return std::nullopt;
+        if (!结构仍存在())
+            return std::nullopt;
         return 读取因果信息(因果节点);
-    } catch (...) {
+    }
+    catch (...)
+    {
         return std::nullopt;
     }
 }
 
-bool 新_因果类::是因果节点(稳定编码 节点) const noexcept {
+bool 新_因果类::是因果节点(稳定编码 节点) const noexcept
+{
     return 获取因果(节点).has_value();
 }
 
-新因果查询结果 新_因果类::根据结果状态查询(
-    const 新因果状态模式& 结果状态) const noexcept {
+新因果查询结果 新_因果类::根据结果状态查询(const 新因果状态模式 &结果状态) const noexcept
+{
     新因果查询结果 结果;
-    try {
+    try
+    {
         std::lock_guard 锁(新因果互斥);
-        if (!结构仍存在()) {
+        if (!结构仍存在())
+        {
             结果.状态 = 新因果操作状态::尚未初始化;
             return 结果;
         }
-        if (!状态模式有效(结果状态)) return 结果;
-        for (const auto 节点 : 查询全部因果节点()) {
+        if (!状态模式有效(结果状态))
+            return 结果;
+        for (const auto 节点 : 查询全部因果节点())
+        {
             const auto 信息 = 读取因果信息(节点);
-            if (!信息) {
+            if (!信息)
+            {
                 结果.状态 = 新因果操作状态::结构不一致;
                 结果.因果节点组.clear();
                 return 结果;
             }
-            if (信息->定义.结果状态 == 结果状态) 结果.因果节点组.push_back(节点);
+            if (信息->定义.结果状态 == 结果状态)
+                结果.因果节点组.push_back(节点);
         }
-        结果.状态 = 结果.因果节点组.empty()
-            ? 新因果操作状态::无匹配 : 新因果操作状态::已找到;
+        结果.状态 = 结果.因果节点组.empty() ? 新因果操作状态::无匹配 : 新因果操作状态::已找到;
         return 结果;
-    } catch (...) {
+    }
+    catch (...)
+    {
         结果.状态 = 新因果操作状态::资源失败;
         结果.因果节点组.clear();
         return 结果;
     }
 }
 
-新因果查询结果 新_因果类::根据条件状态查询(
-    const 新因果状态模式& 条件状态) const noexcept {
+新因果查询结果 新_因果类::根据条件状态查询(const 新因果状态模式 &条件状态) const noexcept
+{
     新因果查询结果 结果;
-    try {
+    try
+    {
         std::lock_guard 锁(新因果互斥);
-        if (!结构仍存在()) {
+        if (!结构仍存在())
+        {
             结果.状态 = 新因果操作状态::尚未初始化;
             return 结果;
         }
-        if (!状态模式有效(条件状态)) return 结果;
-        for (const auto 节点 : 查询全部因果节点()) {
+        if (!状态模式有效(条件状态))
+            return 结果;
+        for (const auto 节点 : 查询全部因果节点())
+        {
             const auto 信息 = 读取因果信息(节点);
-            if (!信息) {
+            if (!信息)
+            {
                 结果.状态 = 新因果操作状态::结构不一致;
                 结果.因果节点组.clear();
                 return 结果;
             }
-            if (std::find(信息->定义.条件状态组.begin(),
-                信息->定义.条件状态组.end(), 条件状态)
-                != 信息->定义.条件状态组.end()) {
+            if (std::find(信息->定义.条件状态组.begin(), 信息->定义.条件状态组.end(), 条件状态) !=
+                信息->定义.条件状态组.end())
+            {
                 结果.因果节点组.push_back(节点);
             }
         }
-        结果.状态 = 结果.因果节点组.empty()
-            ? 新因果操作状态::无匹配 : 新因果操作状态::已找到;
+        结果.状态 = 结果.因果节点组.empty() ? 新因果操作状态::无匹配 : 新因果操作状态::已找到;
         return 结果;
-    } catch (...) {
+    }
+    catch (...)
+    {
         结果.状态 = 新因果操作状态::资源失败;
         结果.因果节点组.clear();
         return 结果;
     }
 }
 
-新因果查询结果 新_因果类::根据动作概念查询(
-    稳定编码 动作概念节点) const noexcept {
+新因果查询结果 新_因果类::根据动作概念查询(稳定编码 动作概念节点) const noexcept
+{
     新因果查询结果 结果;
-    try {
+    try
+    {
         std::lock_guard 锁(新因果互斥);
-        if (!结构仍存在()) {
+        if (!结构仍存在())
+        {
             结果.状态 = 新因果操作状态::尚未初始化;
             return 结果;
         }
-        if (!节点仍存在(动作概念节点)) return 结果;
-        for (const auto 节点 : 查询全部因果节点()) {
+        if (!节点仍存在(动作概念节点))
+            return 结果;
+        for (const auto 节点 : 查询全部因果节点())
+        {
             const auto 信息 = 读取因果信息(节点);
-            if (!信息) {
+            if (!信息)
+            {
                 结果.状态 = 新因果操作状态::结构不一致;
                 结果.因果节点组.clear();
                 return 结果;
             }
-            if (信息->定义.动作
-                && 信息->定义.动作->动作概念节点 == 动作概念节点) {
+            if (信息->定义.动作 && 信息->定义.动作->动作概念节点 == 动作概念节点)
+            {
                 结果.因果节点组.push_back(节点);
             }
         }
-        结果.状态 = 结果.因果节点组.empty()
-            ? 新因果操作状态::无匹配 : 新因果操作状态::已找到;
+        结果.状态 = 结果.因果节点组.empty() ? 新因果操作状态::无匹配 : 新因果操作状态::已找到;
         return 结果;
-    } catch (...) {
+    }
+    catch (...)
+    {
         结果.状态 = 新因果操作状态::资源失败;
         结果.因果节点组.clear();
         return 结果;
@@ -997,106 +1920,125 @@ bool 新_因果类::是因果节点(稳定编码 节点) const noexcept {
 }
 
 std::vector<新因果方法参考> 新_因果类::为目标状态查询方法参考(
-    const 新因果状态模式& 目标状态) const noexcept {
-    try {
+    const 新因果状态模式 &目标状态) const noexcept
+{
+    try
+    {
         std::lock_guard 锁(新因果互斥);
         std::vector<新因果方法参考> 结果;
-        if (!结构仍存在() || !状态模式有效(目标状态)) return 结果;
-        for (const auto 节点 : 查询全部因果节点()) {
+        if (!结构仍存在() || !状态模式有效(目标状态))
+            return 结果;
+        for (const auto 节点 : 查询全部因果节点())
+        {
             const auto 信息 = 读取因果信息(节点);
-            if (!信息 || 信息->定义.结果状态 != 目标状态
-                || !信息->定义.动作 || !信息->定义.动作->本能方法节点) {
+            if (!信息 || 信息->定义.结果状态 != 目标状态 || !信息->定义.动作 ||
+                !信息->定义.动作->本能方法节点)
+            {
                 continue;
             }
-            结果.push_back({节点, *信息->定义.动作->本能方法节点,
-                *信息->定义.动作, 信息->统计});
+            结果.push_back({节点, *信息->定义.动作->本能方法节点, *信息->定义.动作, 信息->统计});
         }
-        std::sort(结果.begin(), 结果.end(), [](const auto& 左, const auto& 右) {
+        std::sort(结果.begin(), 结果.end(), [](const auto &左, const auto &右) {
             const auto 左净符合 = 左.统计.符合出现次数 - 左.统计.不符合出现次数;
             const auto 右净符合 = 右.统计.符合出现次数 - 右.统计.不符合出现次数;
-            if (左净符合 != 右净符合) return 左净符合 > 右净符合;
+            if (左净符合 != 右净符合)
+                return 左净符合 > 右净符合;
             return 左.因果节点 < 右.因果节点;
         });
         return 结果;
-    } catch (...) {
+    }
+    catch (...)
+    {
         return {};
     }
 }
 
-新因果操作状态 新_因果类::登记因果发生结果(
-    稳定编码 因果节点,
-    稳定编码 发生身份,
-    bool 符合) noexcept {
-    try {
+新因果操作状态 新_因果类::登记因果发生结果(稳定编码 因果节点, 稳定编码 发生身份, bool 符合) noexcept
+{
+    try
+    {
         std::lock_guard 锁(新因果互斥);
-        if (!结构仍存在()) return 新因果操作状态::尚未初始化;
-        return 更新普通统计(因果节点, 发生身份, 符合);
-    } catch (...) {
-        return 新因果操作状态::资源失败;
+        if (!结构仍存在())
+            return 新因果操作状态::尚未初始化;
+        const auto 角色序号 = 更新普通统计(因果节点, 发生身份, 符合);
+        if (角色序号 == 新因果操作状态::资源失败 || 角色序号 == 新因果操作状态::结构不一致 ||
+            角色序号 == 新因果操作状态::计数溢出)
+            抽象错误("因果发生统计工程失败");
+        if (角色序号 == 新因果操作状态::已更新)
+            尝试共同抽象(因果节点);
+        return 角色序号;
+    }
+    catch (...)
+    {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"登记因果发生",
+                     L"统计工程故障");
     }
 }
 
-新因果操作状态 新_因果类::登记方法执行结果(
-    稳定编码 因果节点,
-    稳定编码 发生身份,
-    bool 符合) noexcept {
-    try {
+新因果操作状态 新_因果类::登记方法执行结果(稳定编码 因果节点, 稳定编码 发生身份, bool 符合) noexcept
+{
+    try
+    {
         std::lock_guard 锁(新因果互斥);
-        if (!结构仍存在()) return 新因果操作状态::尚未初始化;
+        if (!结构仍存在())
+            return 新因果操作状态::尚未初始化;
         const auto 信息 = 读取因果信息(因果节点);
-        if (!信息) return 新因果操作状态::因果不存在;
-        if (!信息->定义.动作 || !信息->定义.动作->本能方法节点) {
+        if (!信息)
+            return 新因果操作状态::因果不存在;
+        if (!信息->定义.动作 || !信息->定义.动作->本能方法节点)
+        {
             return 新因果操作状态::依赖未配置;
         }
-        if (!节点仍存在(发生身份)) return 新因果操作状态::入口拒绝;
-        if (std::find(信息->已计数发生身份组.begin(),
-            信息->已计数发生身份组.end(), 发生身份)
-            != 信息->已计数发生身份组.end()) {
+        if (!节点仍存在(发生身份))
+            return 新因果操作状态::入口拒绝;
+        if (std::find(信息->已计数发生身份组.begin(), 信息->已计数发生身份组.end(), 发生身份) !=
+            信息->已计数发生身份组.end())
+        {
             return 新因果操作状态::重复发生;
         }
-        const auto 尝试 = 读取唯一I64字段记录(
-            因果节点, 因果自我尝试次数字段);
-        const auto 尝试符合 = 读取唯一I64字段记录(
-            因果节点, 因果自我尝试符合次数字段);
-        const auto 普通计数 = 读取唯一I64字段记录(
-            因果节点, 符合 ? 因果符合次数字段 : 因果不符合次数字段);
+        const auto 尝试 = 读取唯一I64字段记录(因果节点, 因果自我尝试次数字段);
+        const auto 尝试符合 = 读取唯一I64字段记录(因果节点, 因果自我尝试符合次数字段);
+        const auto 普通计数 =
+            读取唯一I64字段记录(因果节点, 符合 ? 因果符合次数字段 : 因果不符合次数字段);
         const auto 最大 = (std::numeric_limits<std::int64_t>::max)();
-        if (!尝试 || !尝试符合 || !普通计数) {
-            return 新因果操作状态::结构不一致;
-        }
-        if (尝试->值 == 最大 || 普通计数->值 == 最大
-            || (符合 && 尝试符合->值 == 最大)) {
-            return 新因果操作状态::计数溢出;
+        if (!尝试 || !尝试符合 || !普通计数)
+            抽象错误("方法因果统计结构缺失");
+        if (尝试->值 == 最大 || 普通计数->值 == 最大 || (符合 && 尝试符合->值 == 最大))
+        {
+            抽象错误("方法因果统计溢出");
         }
 
-        const auto 发生字段 = 全局基础数据集.添加字段节点(
-            因果节点, 因果已计数发生字段, 发生身份);
-        if (!有效(发生字段)) return 新因果操作状态::资源失败;
-        if (!全局基础数据集.修改字段值(
-            尝试->关系, 基础值{尝试->值 + 1})) {
+        const auto 发生字段 = 全局基础数据集.添加字段节点(因果节点, 因果已计数发生字段, 发生身份);
+        if (!有效(发生字段))
+            抽象错误("方法发生引用写入失败");
+        if (!全局基础数据集.修改字段值(尝试->关系, 基础值{尝试->值 + 1}))
+        {
             (void)全局基础数据集.删除字段(发生字段);
-            return 新因果操作状态::资源失败;
+            抽象错误("方法尝试统计写入失败");
         }
-        if (符合 && !全局基础数据集.修改字段值(
-            尝试符合->关系, 基础值{尝试符合->值 + 1})) {
-            (void)全局基础数据集.修改字段值(
-                尝试->关系, 基础值{尝试->值});
+        if (符合 && !全局基础数据集.修改字段值(尝试符合->关系, 基础值{尝试符合->值 + 1}))
+        {
+            (void)全局基础数据集.修改字段值(尝试->关系, 基础值{尝试->值});
             (void)全局基础数据集.删除字段(发生字段);
-            return 新因果操作状态::资源失败;
+            抽象错误("方法尝试符合统计写入失败");
         }
-        if (!全局基础数据集.修改字段值(
-            普通计数->关系, 基础值{普通计数->值 + 1})) {
-            if (符合) (void)全局基础数据集.修改字段值(
-                尝试符合->关系, 基础值{尝试符合->值});
-            (void)全局基础数据集.修改字段值(
-                尝试->关系, 基础值{尝试->值});
+        if (!全局基础数据集.修改字段值(普通计数->关系, 基础值{普通计数->值 + 1}))
+        {
+            if (符合)
+                (void)全局基础数据集.修改字段值(尝试符合->关系, 基础值{尝试符合->值});
+            (void)全局基础数据集.修改字段值(尝试->关系, 基础值{尝试->值});
             (void)全局基础数据集.删除字段(发生字段);
-            return 新因果操作状态::资源失败;
+            抽象错误("方法因果普通统计写入失败");
         }
-        return 读取因果信息(因果节点)
-            ? 新因果操作状态::已更新 : 新因果操作状态::结构不一致;
-    } catch (...) {
-        return 新因果操作状态::资源失败;
+        if (!读取因果信息(因果节点))
+            抽象错误("方法因果统计完整读回失败");
+        尝试共同抽象(因果节点);
+        return 新因果操作状态::已更新;
+    }
+    catch (...)
+    {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"登记方法因果",
+                     L"统计工程故障");
     }
 }
 

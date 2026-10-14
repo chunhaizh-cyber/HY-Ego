@@ -3,6 +3,7 @@
 
 #include <limits>
 #include <mutex>
+#include <set>
 #include <new>
 #include <stdexcept>
 #include <utility>
@@ -42,6 +43,81 @@ bool 基础数据集::节点被引用(稳定编码 节点) const noexcept {
             目标 && *目标 == 节点) return true;
     }
     return false;
+}
+
+bool 基础数据集::有入向字段引用(稳定编码 节点) const noexcept {
+    return 有入向字段引用(节点, {});
+}
+
+bool 基础数据集::有入向字段引用(稳定编码 节点, 稳定编码 忽略所属节点) const noexcept {
+    try {
+        std::shared_lock 锁(互斥_);
+        if (!节点存在(节点)) throw std::logic_error("reference target missing");
+        for (const auto& [编码, 字段] : 字段关系_) {
+            const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
+            if (字段.所属节点 != 节点 && 字段.所属节点 != 忽略所属节点
+                && 目标 && *目标 == 节点) return true;
+        }
+        return false;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取入向字段引用",
+            L"引用检查失败，禁止解释为无引用。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取入向字段引用", L"未知工程异常。");
+    }
+}
+
+基础结构操作状态 基础数据集::原子删除节点结构(
+    const std::vector<稳定编码>& 节点组,
+    const std::vector<稳定编码>& 字段关系组,
+    const std::vector<稳定编码>& 外部关系组) noexcept {
+    using 状态 = 基础结构操作状态;
+    try {
+        std::unique_lock 锁(互斥_);
+        if (节点组.empty()) return 状态::入口拒绝;
+        const auto 合法集合 = [](const auto& 组, auto& 集合) {
+            for (const auto 编码 : 组)
+                if (!有效(编码) || !集合.insert(编码.值).second) return false;
+            return true;
+        };
+        std::set<std::uint64_t> 节点集, 字段集, 关系集;
+        if (!合法集合(节点组, 节点集) || !合法集合(字段关系组, 字段集)
+            || !合法集合(外部关系组, 关系集)) return 状态::入口拒绝;
+        for (const auto 编码 : 节点集)
+            if (!节点_.contains(编码)) return 状态::节点不存在;
+        for (const auto 编码 : 字段集) {
+            const auto 位置 = 字段关系_.find(编码);
+            if (位置 == 字段关系_.end()) return 状态::引用不存在;
+            if (!节点集.contains(位置->second.所属节点.值)) return 状态::入口拒绝;
+        }
+        for (const auto 编码 : 关系集) {
+            const auto 位置 = 外部关系_.find(编码);
+            if (位置 == 外部关系_.end()) return 状态::引用不存在;
+            if (!节点集.contains(位置->second.源节点.值)
+                && !节点集.contains(位置->second.目标节点.值)) return 状态::入口拒绝;
+        }
+        for (const auto& [编码, 字段] : 字段关系_) {
+            if (字段集.contains(编码)) continue;
+            // 私有字段遗漏也是未闭合结构，不能只删除节点。
+            if (节点集.contains(字段.所属节点.值)) return 状态::内部不一致;
+            if (节点集.contains(字段.字段节点.值)) return 状态::引用仍存在;
+            const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
+            if (目标 && 节点集.contains(目标->值)) return 状态::引用仍存在;
+        }
+        for (const auto& [编码, 关系] : 外部关系_) {
+            if (!关系集.contains(编码) && 节点集.contains(关系.源节点.值)
+                && 节点集.contains(关系.目标节点.值)) return 状态::内部不一致;
+            if (!关系集.contains(编码) && (节点集.contains(关系.源节点.值)
+                || 节点集.contains(关系.目标节点.值))) return 状态::引用仍存在;
+        }
+        // 此后只有标准map的iterator erase，不再分配；持锁期间无外部调用。
+        for (const auto 编码 : 字段集) 字段关系_.erase(字段关系_.find(编码));
+        for (const auto 编码 : 关系集) 外部关系_.erase(外部关系_.find(编码));
+        for (const auto 编码 : 节点集) 节点_.erase(节点_.find(编码));
+        return 状态::已完成;
+    } catch (...) {
+        return 状态::资源失败;
+    }
 }
 
 稳定编码 基础数据集::新建节点() noexcept {
