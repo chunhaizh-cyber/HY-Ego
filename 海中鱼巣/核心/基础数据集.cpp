@@ -1,11 +1,13 @@
 #include "基础数据集.h"
 #include "容错检查.h"
 
+#include <algorithm>
 #include <limits>
 #include <mutex>
 #include <set>
 #include <new>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 
 namespace 海中鱼巣 {
@@ -31,6 +33,53 @@ bool 有效(基础外部关系类型 类型) noexcept {
 
 bool 基础数据集::节点存在(稳定编码 节点) const noexcept {
     return 有效(节点) && 节点_.contains(节点.值);
+}
+
+void 基础数据集::插入字段已加锁(基础字段关系 字段) {
+    const auto 编码 = 字段.编码.值;
+    const 字段索引键 所属键{字段.所属节点.值, 字段.字段节点.值, 编码};
+    const auto* 引用 = std::get_if<稳定编码>(&字段.内容);
+    const std::optional<字段索引键> 目标键 = 引用
+        ? std::optional<字段索引键>{{字段.字段节点.值, 引用->值, 编码}} : std::nullopt;
+    const auto [位置, 已插入] = 字段关系_.emplace(编码, std::move(字段));
+    if (!已插入) throw std::logic_error("field identity collision");
+    bool 所属已插入 = false;
+    try {
+        所属已插入 = 所属字段索引_.insert(所属键).second;
+        if (!所属已插入) throw std::logic_error("forward field index collision");
+        if (目标键 && !目标字段索引_.insert(*目标键).second)
+            throw std::logic_error("reverse field index collision");
+    } catch (...) {
+        if (所属已插入) 所属字段索引_.erase(所属键);
+        字段关系_.erase(位置);
+        throw;
+    }
+}
+
+void 基础数据集::核验字段索引已加锁(const 基础字段关系& 字段) const {
+    if (!所属字段索引_.contains({字段.所属节点.值, 字段.字段节点.值, 字段.编码.值}))
+        throw std::logic_error("forward field index missing");
+    if (const auto* 引用 = std::get_if<稳定编码>(&字段.内容);
+        引用 && !目标字段索引_.contains({字段.字段节点.值, 引用->值, 字段.编码.值}))
+        throw std::logic_error("reverse field index missing");
+}
+
+void 基础数据集::删除字段已加锁(const 基础字段关系& 字段) noexcept {
+    所属字段索引_.erase({字段.所属节点.值, 字段.字段节点.值, 字段.编码.值});
+    if (const auto* 引用 = std::get_if<稳定编码>(&字段.内容))
+        目标字段索引_.erase({字段.字段节点.值, 引用->值, 字段.编码.值});
+    字段关系_.erase(字段.编码.值);
+}
+
+void 基础数据集::读取节点字段已加锁(
+    稳定编码 节点, std::vector<基础字段关系>& 结果) const {
+    for (auto 位置 = 所属字段索引_.lower_bound({节点.值, 0, 0});
+        位置 != 所属字段索引_.end() && std::get<0>(*位置) == 节点.值; ++位置)
+        结果.push_back(字段关系_.at(std::get<2>(*位置)));
+    // 跨字段类型的索引顺序不是旧表的编码顺序；对外仍保持原顺序。
+    std::sort(结果.begin(), 结果.end(), [](const auto& 左, const auto& 右) {
+        return 左.编码.值 < 右.编码.值;
+    });
 }
 
 bool 基础数据集::节点被引用(稳定编码 节点) const noexcept {
@@ -89,6 +138,7 @@ bool 基础数据集::有入向字段引用(稳定编码 节点, 稳定编码 �
             const auto 位置 = 字段关系_.find(编码);
             if (位置 == 字段关系_.end()) return 状态::引用不存在;
             if (!节点集.contains(位置->second.所属节点.值)) return 状态::入口拒绝;
+            核验字段索引已加锁(位置->second);
         }
         for (const auto 编码 : 关系集) {
             const auto 位置 = 外部关系_.find(编码);
@@ -110,13 +160,16 @@ bool 基础数据集::有入向字段引用(稳定编码 节点, 稳定编码 �
             if (!关系集.contains(编码) && (节点集.contains(关系.源节点.值)
                 || 节点集.contains(关系.目标节点.值))) return 状态::引用仍存在;
         }
-        // 此后只有标准map的iterator erase，不再分配；持锁期间无外部调用。
-        for (const auto 编码 : 字段集) 字段关系_.erase(字段关系_.find(编码));
+        // 此后只在已核验的标准map/set中删除，不再分配；无外部调用。
+        for (const auto 编码 : 字段集) 删除字段已加锁(字段关系_.at(编码));
         for (const auto 编码 : 关系集) 外部关系_.erase(外部关系_.find(编码));
         for (const auto 编码 : 节点集) 节点_.erase(节点_.find(编码));
         return 状态::已完成;
+    } catch (const std::bad_alloc&) { return 状态::资源失败;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子删除节点结构", L"字段结构与索引删除异常。", 异常.what());
     } catch (...) {
-        return 状态::资源失败;
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子删除节点结构", L"字段结构与索引删除未知异常。");
     }
 }
 
@@ -207,7 +260,11 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
         return {状态::已完成, 结果.节点组.front()};
     } catch (const std::bad_alloc&) { return {状态::资源失败, {}};
     } catch (const std::length_error&) { return {状态::资源失败, {}};
-    } catch (...) { return {状态::内部不一致, {}}; }
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子建立节点", L"字段与索引候选建立异常。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子建立节点", L"字段与索引候选建立未知异常。");
+    }
 }
 
 基础节点组建立结果 基础数据集::原子建立节点组(
@@ -218,7 +275,11 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
         return 原子建立节点组已加锁(请求, std::nullopt);
     } catch (const std::bad_alloc&) { return {状态::资源失败, {}};
     } catch (const std::length_error&) { return {状态::资源失败, {}};
-    } catch (...) { return {状态::内部不一致, {}}; }
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子建立节点组", L"字段与索引候选建立异常。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子建立节点组", L"字段与索引候选建立未知异常。");
+    }
 }
 
 基础节点组建立结果 基础数据集::原子建立节点组已加锁(
@@ -250,6 +311,8 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
     auto 候选节点 = 节点_;
     auto 候选字段 = 字段关系_;
     auto 候选关系 = 外部关系_;
+    auto 候选所属索引 = 所属字段索引_;
+    auto 候选目标索引 = 目标字段索引_;
     基础节点组建立结果 结果{状态::已完成, {}};
     结果.节点组.reserve(请求.size());
     const auto 编码已占用 = [&](稳定编码 编码) {
@@ -274,6 +337,12 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             if (编码已占用(编码)) return {状态::内部不一致, {}};
             候选字段.emplace(编码.值, 基础字段关系{
                 编码, 结果.节点组[索引], 字段.字段节点, std::move(内容)});
+            const auto& 新字段 = 候选字段.at(编码.值);
+            if (!候选所属索引.emplace(新字段.所属节点.值, 新字段.字段节点.值, 编码.值).second)
+                throw std::logic_error("atomic forward field index collision");
+            if (const auto* 引用 = std::get_if<稳定编码>(&新字段.内容);
+                引用 && !候选目标索引.emplace(新字段.字段节点.值, 引用->值, 编码.值).second)
+                throw std::logic_error("atomic reverse field index collision");
         }
     }
     if (上级节点) {
@@ -288,6 +357,8 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
     节点_.swap(候选节点);
     字段关系_.swap(候选字段);
     外部关系_.swap(候选关系);
+    所属字段索引_.swap(候选所属索引);
+    目标字段索引_.swap(候选目标索引);
     return 结果;
 }
 
@@ -298,13 +369,15 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
         const auto 位置 = 节点_.find(节点.值);
         if (位置 == 节点_.end()) return {状态::节点不存在, {}};
         基础节点结构 结构{位置->second, {}};
-        for (const auto& [编码, 字段] : 字段关系_) {
-            if (字段.所属节点 == 节点) 结构.字段组.push_back(字段);
-        }
+        读取节点字段已加锁(节点, 结构.字段组);
         return {状态::已完成, std::move(结构)};
     } catch (const std::bad_alloc&) { return {状态::资源失败, {}};
     } catch (const std::length_error&) { return {状态::资源失败, {}};
-    } catch (...) { return {状态::内部不一致, {}}; }
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"查询完整节点结构", L"字段索引读取异常。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"查询完整节点结构", L"字段索引读取未知异常。");
+    }
 }
 
 基础引用节点结构结果 基础数据集::查询字段引用节点结构(
@@ -316,25 +389,28 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             return {状态::节点不存在, {}, {}};
         基础引用节点结构结果 结果{状态::已完成, {}, {}};
         std::map<std::uint64_t, 基础节点结构> 来源组;
-        for (const auto& [编码, 字段] : 字段关系_) {
-            if (字段.字段节点 != 字段节点) continue;
-            const auto* 引用 = std::get_if<稳定编码>(&字段.内容);
-            if (!引用 || *引用 != 目标节点) continue;
+        for (auto 位置 = 目标字段索引_.lower_bound({字段节点.值, 目标节点.值, 0});
+            位置 != 目标字段索引_.end() && std::get<0>(*位置) == 字段节点.值
+                && std::get<1>(*位置) == 目标节点.值; ++位置) {
+            const auto& 字段 = 字段关系_.at(std::get<2>(*位置));
             const auto 来源 = 节点_.find(字段.所属节点.值);
             if (来源 == 节点_.end()) return {状态::内部不一致, {}, {}};
             结果.引用字段组.push_back(字段);
             来源组.try_emplace(来源->first, 基础节点结构{来源->second, {}});
         }
-        for (const auto& [编码, 字段] : 字段关系_) {
-            const auto 来源 = 来源组.find(字段.所属节点.值);
-            if (来源 != 来源组.end()) 来源->second.字段组.push_back(字段);
-        }
         结果.来源节点组.reserve(来源组.size());
-        for (auto& [编码, 来源] : 来源组) 结果.来源节点组.push_back(std::move(来源));
+        for (auto& [编码, 来源] : 来源组) {
+            读取节点字段已加锁(来源.节点.编码, 来源.字段组);
+            结果.来源节点组.push_back(std::move(来源));
+        }
         return 结果;
     } catch (const std::bad_alloc&) { return {状态::资源失败, {}, {}};
     } catch (const std::length_error&) { return {状态::资源失败, {}, {}};
-    } catch (...) { return {状态::内部不一致, {}, {}}; }
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"查询字段引用节点结构", L"反向字段索引读取异常。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"查询字段引用节点结构", L"反向字段索引读取未知异常。");
+    }
 }
 
 稳定编码 基础数据集::添加关系(稳定编码 源节点, 稳定编码 目标节点,
@@ -416,11 +492,12 @@ std::vector<基础外部关系> 基础数据集::查询目标关系(
         if (!节点存在(节点) || !节点存在(字段节点)) return {};
         const auto 编码 = 分配编码();
         if (!有效(编码)) return {};
-        字段关系_.emplace(编码.值,
-            基础字段关系{编码, 节点, 字段节点, std::move(值)});
+        插入字段已加锁(基础字段关系{编码, 节点, 字段节点, std::move(值)});
         return 编码;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"添加字段值", L"字段及索引插入异常，已撤销本次插项。", 异常.what());
     } catch (...) {
-        return {};
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"添加字段值", L"字段及索引插入未知异常。");
     }
 }
 
@@ -431,11 +508,12 @@ std::vector<基础外部关系> 基础数据集::查询目标关系(
         if (!节点存在(节点) || !节点存在(字段节点) || !节点存在(目标节点)) return {};
         const auto 编码 = 分配编码();
         if (!有效(编码)) return {};
-        字段关系_.emplace(编码.值,
-            基础字段关系{编码, 节点, 字段节点, 目标节点});
+        插入字段已加锁(基础字段关系{编码, 节点, 字段节点, 目标节点});
         return 编码;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"添加字段节点", L"引用字段及索引插入异常，已撤销本次插项。", 异常.what());
     } catch (...) {
-        return {};
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"添加字段节点", L"引用字段及索引插入未知异常。");
     }
 }
 
@@ -444,10 +522,17 @@ bool 基础数据集::修改字段值(稳定编码 字段关系, 基础值 值) 
         std::unique_lock 锁(互斥_);
         const auto 位置 = 字段关系_.find(字段关系.值);
         if (位置 == 字段关系_.end()) return false;
-        位置->second.内容 = std::move(值);
+        核验字段索引已加锁(位置->second);
+        static_assert(std::is_nothrow_swappable_v<基础字段内容>);
+        基础字段内容 候选{std::move(值)};
+        位置->second.内容.swap(候选);
+        if (const auto* 旧引用 = std::get_if<稳定编码>(&候选))
+            目标字段索引_.erase({位置->second.字段节点.值, 旧引用->值, 字段关系.值});
         return true;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"修改字段值", L"字段内容及索引更新异常。", 异常.what());
     } catch (...) {
-        return false;
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"修改字段值", L"字段内容及索引更新未知异常。");
     }
 }
 
@@ -458,19 +543,39 @@ bool 基础数据集::修改字段节点(
         if (!节点存在(目标节点)) return false;
         const auto 位置 = 字段关系_.find(字段关系.值);
         if (位置 == 字段关系_.end()) return false;
-        位置->second.内容 = 目标节点;
+        核验字段索引已加锁(位置->second);
+        const auto& 字段 = 位置->second;
+        const auto* 旧引用 = std::get_if<稳定编码>(&字段.内容);
+        if (旧引用 && *旧引用 == 目标节点) return true;
+        const std::optional<字段索引键> 旧键 = 旧引用
+            ? std::optional<字段索引键>{{字段.字段节点.值, 旧引用->值, 字段关系.值}} : std::nullopt;
+        基础字段内容 候选{目标节点};
+        if (!目标字段索引_.emplace(字段.字段节点.值, 目标节点.值, 字段关系.值).second)
+            throw std::logic_error("modified reverse field index collision");
+        static_assert(std::is_nothrow_swappable_v<基础字段内容>);
+        位置->second.内容.swap(候选);
+        if (旧键) 目标字段索引_.erase(*旧键);
         return true;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"修改字段节点", L"引用目标及索引更新异常。", 异常.what());
     } catch (...) {
-        return false;
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"修改字段节点", L"引用目标及索引更新未知异常。");
     }
 }
 
 bool 基础数据集::删除字段(稳定编码 字段关系) noexcept {
     try {
         std::unique_lock 锁(互斥_);
-        return 有效(字段关系) && 字段关系_.erase(字段关系.值) == 1;
+        if (!有效(字段关系)) return false;
+        const auto 位置 = 字段关系_.find(字段关系.值);
+        if (位置 == 字段关系_.end()) return false;
+        核验字段索引已加锁(位置->second);
+        删除字段已加锁(位置->second);
+        return true;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"删除字段", L"字段及索引删除异常。", 异常.what());
     } catch (...) {
-        return false;
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"删除字段", L"字段及索引删除未知异常。");
     }
 }
 
@@ -491,9 +596,10 @@ std::vector<基础字段关系> 基础数据集::查询字段(
     std::shared_lock 锁(互斥_);
     std::vector<基础字段关系> 结果;
     if (!节点存在(节点) || !节点存在(字段节点)) return 结果;
-    for (const auto& [_, 字段] : 字段关系_) {
-        if (字段.所属节点 == 节点 && 字段.字段节点 == 字段节点) 结果.push_back(字段);
-    }
+    for (auto 位置 = 所属字段索引_.lower_bound({节点.值, 字段节点.值, 0});
+        位置 != 所属字段索引_.end() && std::get<0>(*位置) == 节点.值
+            && std::get<1>(*位置) == 字段节点.值; ++位置)
+        结果.push_back(字段关系_.at(std::get<2>(*位置)));
     return 结果;
 }
 
@@ -502,11 +608,10 @@ std::vector<基础字段关系> 基础数据集::查询目标字段(
     std::shared_lock 锁(互斥_);
     std::vector<基础字段关系> 结果;
     if (!节点存在(目标节点) || !节点存在(字段节点)) return 结果;
-    for (const auto& [_, 字段] : 字段关系_) {
-        if (字段.字段节点 != 字段节点) continue;
-        const auto* 内容节点 = std::get_if<稳定编码>(&字段.内容);
-        if (内容节点 && *内容节点 == 目标节点) 结果.push_back(字段);
-    }
+    for (auto 位置 = 目标字段索引_.lower_bound({字段节点.值, 目标节点.值, 0});
+        位置 != 目标字段索引_.end() && std::get<0>(*位置) == 字段节点.值
+            && std::get<1>(*位置) == 目标节点.值; ++位置)
+        结果.push_back(字段关系_.at(std::get<2>(*位置)));
     return 结果;
 }
 

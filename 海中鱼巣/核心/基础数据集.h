@@ -4,8 +4,10 @@
 #include <cstdint>
 #include <map>
 #include <optional>
+#include <set>
 #include <shared_mutex>
 #include <string>
+#include <tuple>
 #include <variant>
 #include <vector>
 
@@ -179,12 +181,20 @@ private:
     稳定编码 分配编码() noexcept;
     bool 节点存在(稳定编码 节点) const noexcept;
     bool 节点被引用(稳定编码 节点) const noexcept;
+    // 只在本对象锁内使用；索引存编码而不是字段副本或跨发布迭代器。
+    using 字段索引键 = std::tuple<std::uint64_t, std::uint64_t, std::uint64_t>;
+    void 插入字段已加锁(基础字段关系 字段);
+    void 核验字段索引已加锁(const 基础字段关系& 字段) const;
+    void 删除字段已加锁(const 基础字段关系& 字段) noexcept;
+    void 读取节点字段已加锁(稳定编码 节点, std::vector<基础字段关系>& 结果) const;
 
     mutable std::shared_mutex 互斥_;
     std::uint64_t 下一个编码_ = 1;
     std::map<std::uint64_t, 基础节点> 节点_;
     std::map<std::uint64_t, 基础外部关系> 外部关系_;
     std::map<std::uint64_t, 基础字段关系> 字段关系_;
+    std::set<字段索引键> 所属字段索引_; // 所属节点、字段节点、字段关系编码
+    std::set<字段索引键> 目标字段索引_; // 字段节点、引用目标、字段关系编码
 };
 
 // 新数据架构共用唯一基础数据集；各类数据树以其中的根节点区分。

@@ -458,6 +458,58 @@ int 运行方法精确值域自检() noexcept {
             要求(解析并验证启动选项(3, 参数).状态 == 启动选项解析状态::模式组合冲突,
                 "mixed mode rejected");
         });
+        检查("field indexes preserve updates ordering and atomic publication", [] {
+            基础数据集 数据;
+            const auto 所属 = 数据.新建节点(), 甲 = 数据.新建节点(), 乙 = 数据.新建节点();
+            const auto 目标甲 = 数据.新建节点(), 目标乙 = 数据.新建节点();
+            要求(有效(所属) && 有效(甲) && 有效(乙) && 有效(目标甲) && 有效(目标乙), "index test nodes");
+            const auto 先 = 数据.添加字段值(所属, 乙, 基础值{整数{1}});
+            const auto 中 = 数据.添加字段节点(所属, 甲, 目标甲);
+            const auto 后 = 数据.添加字段节点(所属, 乙, 目标甲);
+            要求(有效(先) && 有效(中) && 有效(后), "index test fields");
+            const auto 正向 = 数据.查询字段(所属, 乙);
+            要求(正向.size() == 2 && 正向[0].编码 == 先 && 正向[1].编码 == 后, "multi-field order");
+            const auto 完整 = 数据.查询完整节点结构(所属);
+            要求(完整.结构 && 完整.结构->字段组.size() == 3
+                && 完整.结构->字段组[0].编码 == 先 && 完整.结构->字段组[1].编码 == 中
+                && 完整.结构->字段组[2].编码 == 后, "cross-type identity order");
+            要求(数据.查询目标字段(目标甲, 甲).size() == 1, "reverse insertion");
+            要求(数据.修改字段值(中, 基础值{static_cast<整数>(目标甲.值)})
+                && 数据.查询目标字段(目标甲, 甲).empty(), "integer is not a node reference");
+            要求(数据.修改字段节点(中, 目标乙) && 数据.修改字段节点(中, 目标乙)
+                && 数据.查询目标字段(目标乙, 甲).size() == 1, "value to reference and repeated update");
+            要求(数据.修改字段节点(中, 目标甲) && 数据.查询目标字段(目标乙, 甲).empty()
+                && 数据.查询目标字段(目标甲, 甲).size() == 1, "reference target replacement");
+            要求(数据.删除字段(后) && 数据.查询目标字段(目标甲, 乙).empty()
+                && 数据.查询字段(所属, 乙).size() == 1, "ordinary deletion removes both indexes");
+            const auto 原字段 = 数据.查询完整节点结构(所属).结构->字段组;
+            std::vector<基础组内新节点> 组(2);
+            组[0].字段组.push_back({乙, 基础组内节点引用{1}});
+            组[0].字段组.push_back({甲, 基础值{整数{9}}});
+            组[0].字段组.push_back({甲, 目标甲});
+            const auto 发布 = 数据.原子建立节点组(组);
+            要求(发布.状态 == 基础结构操作状态::已完成 && 发布.节点组.size() == 2, "atomic index publication");
+            const auto 引用 = 数据.查询字段引用节点结构(发布.节点组[1], 乙);
+            要求(引用.状态 == 基础结构操作状态::已完成 && 引用.引用字段组.size() == 1
+                && 引用.来源节点组.size() == 1 && 引用.来源节点组[0].字段组.size() == 3
+                && 引用.来源节点组[0].字段组[0].编码.值 < 引用.来源节点组[0].字段组[1].编码.值
+                && 引用.来源节点组[0].字段组[1].编码.值 < 引用.来源节点组[0].字段组[2].编码.值,
+                "atomic reverse and complete source read");
+            要求(数据.查询目标字段(目标甲, 甲).size() == 2, "atomic external target indexed");
+            要求(数据.查询完整节点结构(所属).结构->字段组 == 原字段, "atomic publication preserves old fields");
+            const auto 拒绝 = 数据.原子删除节点结构(发布.节点组, {}, {});
+            要求(拒绝 == 基础结构操作状态::内部不一致
+                && 数据.查询目标字段(发布.节点组[1], 乙).size() == 1, "rejected deletion changes no index");
+            std::vector<稳定编码> 删字段;
+            for (const auto& 字段 : 引用.来源节点组[0].字段组) 删字段.push_back(字段.编码);
+            要求(数据.原子删除节点结构(发布.节点组, 删字段, {}) == 基础结构操作状态::已完成
+                && !数据.查询节点(发布.节点组[0]) && !数据.查询节点(发布.节点组[1])
+                && 数据.查询完整节点结构(所属).结构->字段组 == 原字段
+                && 数据.查询目标字段(目标甲, 甲).size() == 1
+                && 数据.查询目标字段(目标甲, 甲)[0].编码 == 中, "atomic delete and unrelated preservation");
+            要求(数据.删除字段(中) && 数据.查询目标字段(目标甲, 甲).empty(), "last reverse item removed");
+            要求(!数据.修改字段节点(稳定编码{}, 目标甲) && !数据.删除字段(稳定编码{}), "legal missing field rejection");
+        });
         自检服务 服务;
         const auto 概念前 = 服务.特征概念.获取特征概念(服务.数值类型);
         const auto 子概念前 = 服务.特征概念.获取特征概念(服务.数值子概念);
