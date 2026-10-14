@@ -1,4 +1,5 @@
 #include "新_世界树类.h"
+#include "../核心/容错检查.h"
 
 #include <algorithm>
 #include <mutex>
@@ -628,32 +629,36 @@ std::optional<新存在信息> 新_世界树类::查询存在(
     稳定编码 存在节点) const noexcept {
     try {
         std::lock_guard 锁(新世界树互斥);
-        return 已初始化_ ? 存在服务_.获取存在(存在节点) : std::nullopt;
-    } catch (...) { return std::nullopt; }
+        return 已初始化_ && !场景服务_.属于内部治理组织(存在节点)
+            ? 存在服务_.获取存在(存在节点) : std::nullopt;
+    } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"世界查询存在", L"实例世界归属读取异常。"); }
 }
 
 std::optional<新特征信息> 新_世界树类::查询特征(
     稳定编码 特征节点) const noexcept {
     try {
         std::lock_guard 锁(新世界树互斥);
-        return 已初始化_ ? 特征服务_.获取特征(特征节点) : std::nullopt;
-    } catch (...) { return std::nullopt; }
+        return 已初始化_ && !场景服务_.属于内部治理组织(特征节点)
+            ? 特征服务_.获取特征(特征节点) : std::nullopt;
+    } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"世界查询特征", L"实例世界归属读取异常。"); }
 }
 
 std::optional<新状态信息> 新_世界树类::查询状态(
     稳定编码 状态节点) const noexcept {
     try {
         std::lock_guard 锁(新世界树互斥);
-        return 已初始化_ ? 状态服务_.获取状态(状态节点) : std::nullopt;
-    } catch (...) { return std::nullopt; }
+        return 已初始化_ && !场景服务_.属于内部治理组织(状态节点)
+            ? 状态服务_.获取状态(状态节点) : std::nullopt;
+    } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"世界查询状态", L"实例世界归属读取异常。"); }
 }
 
 std::optional<新动态信息> 新_世界树类::查询动态(
     稳定编码 动态节点) const noexcept {
     try {
         std::lock_guard 锁(新世界树互斥);
-        return 已初始化_ ? 动态服务_.获取动态(动态节点) : std::nullopt;
-    } catch (...) { return std::nullopt; }
+        return 已初始化_ && !场景服务_.属于内部治理组织(动态节点)
+            ? 动态服务_.获取动态(动态节点) : std::nullopt;
+    } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"世界查询动态", L"实例世界归属读取异常。"); }
 }
 
 std::optional<动态概念信息> 新_世界树类::查询动态概念(

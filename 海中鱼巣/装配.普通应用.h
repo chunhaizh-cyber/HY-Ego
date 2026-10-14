@@ -70,6 +70,7 @@ struct 普通应用装配结果 final {
     std::optional<初始化结构化子概念结果> 结构化子概念;
     std::optional<初始化语言知识结果> 语言知识;
     std::optional<稳定编码> 自然语言世界树根节点;
+    std::optional<稳定编码> 内部治理世界树根节点;
     std::optional<稳定编码> 第一权限人存在节点;
     std::optional<稳定编码> 第一权限人专属存在概念节点;
     std::optional<稳定编码> 人类存在概念节点;

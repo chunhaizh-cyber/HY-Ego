@@ -971,7 +971,7 @@ enum class 新任务治理待执行确认状态 : std::uint8_t {
 struct 新任务已结算请求 final {
     稳定编码 来源任务节点;
     稳定编码 执行主体节点;
-    稳定编码 发生场景节点;
+    稳定编码 现实来源场景节点;
     稳定编码 内部动作定义节点;
     稳定编码 已确认普通动作节点;
     新状态强时间 内部动作时间;
@@ -987,6 +987,7 @@ struct 新任务已结算结果 final {
     新任务已结算状态 状态 = 新任务已结算状态::入口拒绝;
     std::optional<稳定编码> 内部动作节点;
     std::optional<新任务虚拟存在读回> 任务读回;
+    std::optional<新治理任务变化结果> 治理变化;
 };
 
 enum class 新任务问题归档交付状态 : std::uint8_t {
@@ -1069,12 +1070,15 @@ public:
         稳定编码 结算任务节点) const noexcept;
     新任务操作状态 准备服务结算筹办(稳定编码 结算任务节点) noexcept;
     bool 装配本能动作读取(新_动态类& 动态服务) noexcept;
-    std::optional<稳定编码> 获取任务已结算动作定义() const noexcept;
+    std::optional<稳定编码> 获取任务已结算动作定义() const noexcept override;
     新任务操作状态 记录本能动作身份(
         稳定编码 任务节点, 稳定编码 执行实例节点,
         稳定编码 动作动态节点, 新_动态类& 动态服务) noexcept;
     std::optional<新任务虚拟存在读回> 读取任务虚拟存在引用(
         const 新任务虚拟存在引用&) const noexcept override;
+    std::optional<新任务虚拟存在语义读回> 读取任务虚拟存在语义(
+        const 新任务虚拟存在引用&) const noexcept override;
+    bool 装配内部治理世界(新任务治理世界协作接口&) noexcept;
     std::optional<稳定编码> 获取任务状态特征类型() const noexcept;
     // 调用方须先独立确认普通动作效果；本入口只负责Vt内部收尾。
     新任务已结算结果 标记任务已结算(
@@ -1282,6 +1286,8 @@ public:
         稳定编码 任务节点) const noexcept;
 
 private:
+    void 确保任务虚拟存在语义(稳定编码 任务节点) noexcept;
+    新任务治理世界协作接口* 内部治理世界_ = nullptr;
     新任务调度材料项 读取任务调度项已加锁(
         稳定编码 任务节点, bool& 资源失败) const;
     新_方法类::新方法实例交付状态 切换学习方法实例(

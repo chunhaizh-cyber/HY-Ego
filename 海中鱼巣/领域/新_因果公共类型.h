@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "新_状态类.h"
+#include "新_内部治理对象引用.h"
 
 namespace 海中鱼巣
 {
@@ -69,6 +70,7 @@ struct 新因果动作定义 final
     std::optional<稳定编码> 作用部位存在节点;
     std::optional<稳定编码> 作用对象存在节点;
     std::optional<稳定编码> 本能方法节点;
+    std::optional<新任务虚拟存在引用> 作用对象任务虚拟存在;
     friend bool operator==(const 新因果动作定义 &, const 新因果动作定义 &) = default;
 };
 
@@ -119,6 +121,7 @@ struct 新因果概念角色
 {
     std::int64_t 角色 = 0;
     稳定编码 存在概念节点;
+    std::optional<新治理参与者种类> 治理类别;
     friend bool operator==(const 新因果概念角色 &, const 新因果概念角色 &) = default;
 };
 struct 新因果概念状态项
@@ -198,6 +201,13 @@ struct 新因果查询结果 final
 {
     新因果操作状态 状态 = 新因果操作状态::入口拒绝;
     std::vector<稳定编码> 因果节点组;
+};
+
+struct 新因果世界范围 final
+{
+    稳定编码 世界根节点;
+    std::vector<稳定编码> 具体因果节点组, 概念因果节点组;
+    friend bool operator==(const 新因果世界范围 &, const 新因果世界范围 &) = default;
 };
 
 struct 新因果方法参考 final

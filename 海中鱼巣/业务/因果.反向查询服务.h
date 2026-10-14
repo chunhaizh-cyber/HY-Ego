@@ -20,6 +20,7 @@ struct 反向因果参与者
 {
     std::int64_t 标识 = 0;
     std::optional<稳定编码> 实际存在节点, 存在概念节点;
+    std::optional<新任务虚拟存在引用> 任务虚拟存在引用;
     friend bool operator==(const 反向因果参与者 &, const 反向因果参与者 &) = default;
 };
 struct 反向因果准确约束
@@ -101,7 +102,8 @@ enum class 反向因果参与者键类 : std::uint8_t
 {
     输入符号 = 1,
     实际存在,
-    规则局部符号
+    规则局部符号,
+    任务虚拟存在 = 4
 };
 struct 反向因果参与者键
 {
@@ -109,6 +111,7 @@ struct 反向因果参与者键
     std::int64_t 输入标识 = 0;
     稳定编码 实际存在节点, 规则因果节点;
     std::int64_t 规则分支 = 0, 局部角色 = 0;
+    std::optional<新任务虚拟存在引用> 任务虚拟存在引用;
     friend bool operator==(const 反向因果参与者键 &, const 反向因果参与者键 &) = default;
 };
 struct 反向因果图角色绑定
@@ -127,6 +130,7 @@ struct 反向因果图节点
     std::optional<稳定编码> 待绑定实际存在节点;
     bool 起点已覆盖 = false, 完整覆盖 = false, 角色尚未实际绑定 = false;
     std::optional<反向因果未解释原因> 未解释原因;
+    std::optional<新任务虚拟存在引用> 待绑定任务虚拟存在;
     friend bool operator==(const 反向因果图节点 &, const 反向因果图节点 &) = default;
 };
 struct 反向因果图分支
@@ -172,7 +176,7 @@ class 因果反向查询服务 final
   public:
     因果反向查询服务(const 新_因果类 &, const 新_特征类 &, const 概念_特征类 &, const 概念_存在类 &,
                      const 概念_动态类 &, const 新_动态类 &, const 新_存在类 &,
-                     const 新_场景类 &) noexcept;
+                     const 新_场景类 &, const 新治理参与者读取接口 * = nullptr) noexcept;
     反向因果查询结果 查询(const 反向因果查询请求 &) const noexcept;
 
   private:
@@ -184,5 +188,6 @@ class 因果反向查询服务 final
     const 新_动态类 &动态服务_;
     const 新_存在类 &存在服务_;
     const 新_场景类 &场景服务_;
+    const 新治理参与者读取接口 *治理参与者_ = nullptr;
 };
 } // namespace 海中鱼巣
