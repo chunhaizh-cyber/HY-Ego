@@ -4,6 +4,7 @@
 #include "业务/新_世界树类.h"
 #include "业务/治理二次特征.应用服务.h"
 #include "业务/初始化.概念名称.h"
+#include "业务/初始化.结构化子概念.h"
 #include "线程/新_自我线程类.h"
 #include "线程/新_任务管理线程类.h"
 #include "界面/宿主.网页对话.h"
@@ -65,6 +66,7 @@ struct 普通应用装配结果 final {
     std::optional<新世界初始化结果> 世界树;
     std::optional<新自然语言世界初始化结果> 自然语言世界树;
     std::optional<初始化概念名称结果> 初始概念名称;
+    std::optional<初始化结构化子概念结果> 结构化子概念;
     std::optional<稳定编码> 自然语言世界树根节点;
     std::optional<稳定编码> 第一权限人存在节点;
     std::optional<稳定编码> 第一权限人专属存在概念节点;
