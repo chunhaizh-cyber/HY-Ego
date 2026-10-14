@@ -27,7 +27,7 @@ struct 模板结构项 final {
 struct 最小模板定义 final {
     初始化最小模板 模板;
     std::size_t 词数;
-    std::array<模板结构项, 6> 结构;
+    std::array<模板结构项, 8> 结构;
 };
 
 constexpr 模板结构项 固定词(std::string_view 词面) noexcept {
@@ -36,7 +36,7 @@ constexpr 模板结构项 固定词(std::string_view 词面) noexcept {
 constexpr 模板结构项 角色项(初始化源角色 角色) noexcept {
     return {{}, 角色};
 }
-constexpr std::array<最小模板定义, 5> 最小结构表{{
+constexpr std::array<最小模板定义, 6> 最小结构表{{
     {初始化最小模板::概念归类, 4, {
         角色项(初始化源角色::下位概念), 固定词("是"), 固定词("一种"),
         角色项(初始化源角色::上位概念)}},
@@ -53,8 +53,17 @@ constexpr std::array<最小模板定义, 5> 最小结构表{{
         角色项(初始化源角色::整体概念), 固定词("的"), 固定词("一部分")}},
     {初始化最小模板::显式别名, 3, {
         角色项(初始化源角色::主体概念), 固定词("又称"),
-        角色项(初始化源角色::别名词面)}}
+        角色项(初始化源角色::别名词面)}},
+    {初始化最小模板::结构化分量区间, 8, {
+        角色项(初始化源角色::主体概念), 固定词("的"), 固定词("分量"),
+        角色项(初始化源角色::分量序号), 固定词("是"), 固定词("整数区间"),
+        角色项(初始化源角色::区间下界), 角色项(初始化源角色::区间上界)}}
 }};
+
+bool 是整数源角色(初始化源角色 角色) noexcept {
+    return 角色 == 初始化源角色::整数值 || 角色 == 初始化源角色::分量序号
+        || 角色 == 初始化源角色::区间下界 || 角色 == 初始化源角色::区间上界;
+}
 
 // 仅用于公开严格校验已经拒绝的文本，定位首个失败序列；不规范化或分词。
 std::size_t 定位UTF8失败字节(const std::string& 原文) noexcept {
@@ -234,6 +243,19 @@ void 核验完整材料(const 初始化定义材料& 材料, std::size_t 标量�
             if (值.别名词面.empty()) throw std::logic_error("initialization alias invariant");
             break;
         }
+        case 初始化最小模板::结构化分量区间: {
+            const auto& 值 = std::get<初始化结构化分量区间材料>(项.载荷);
+            核验引用(值.主体概念, 初始化符号角色类型::概念引用);
+            const std::array<std::int64_t, 3> 整数值{值.分量序号, 值.下界, 值.上界};
+            for (std::size_t j = 0; j < 整数值.size(); ++j) {
+                const auto& 来源 = 项.角色来源组[j + 1].来源;
+                const auto 解析 = 解析标准I64(std::string_view(材料.原文).substr(
+                    来源.字节起点, 来源.字节终点 - 来源.字节起点));
+                if (!解析.值 || *解析.值 != 整数值[j])
+                    throw std::logic_error("initialization component integer/source invariant");
+            }
+            break;
+        }
         default: throw std::logic_error("initialization template invariant");
         }
     }
@@ -376,12 +398,21 @@ void 核验完整材料(const 初始化定义材料& 材料, std::size_t 标量�
                 初始化诊断原因::无完整模板, 行.来源);
 
         std::optional<std::int64_t> 整数;
-        if (命中->模板 == 初始化最小模板::特征整数) {
-            const auto 解析 = 解析标准I64(行.词组[5].词面);
+        std::array<std::int64_t, 3> 分量整数{};
+        for (std::size_t i = 0; i < 命中->词数; ++i) {
+            const auto& 角色 = 命中->结构[i].角色;
+            if (!角色 || !是整数源角色(*角色)) continue;
+            const auto 解析 = 解析标准I64(行.词组[i].词面);
             if (!解析.值)
                 return 文本拒绝(初始化解释状态::定义不合法,
-                    解析.拒绝原因.value(), 行.词组[5].来源);
-            整数 = *解析.值;
+                    解析.拒绝原因.value(), 行.词组[i].来源);
+            switch (*角色) {
+            case 初始化源角色::整数值: 整数 = *解析.值; break;
+            case 初始化源角色::分量序号: 分量整数[0] = *解析.值; break;
+            case 初始化源角色::区间下界: 分量整数[1] = *解析.值; break;
+            case 初始化源角色::区间上界: 分量整数[2] = *解析.值; break;
+            default: throw std::logic_error("initialization integer role invariant");
+            }
         }
         初始化定义项 项;
         项.局部编号 = 候选.定义组.size();
@@ -394,7 +425,7 @@ void 核验完整材料(const 初始化定义材料& 材料, std::size_t 标量�
             if (!角色) continue;
             const auto& 词 = 行.词组[i];
             项.角色来源组.push_back({*角色, i, 词.来源});
-            if (*角色 == 初始化源角色::整数值 || *角色 == 初始化源角色::别名词面)
+            if (是整数源角色(*角色) || *角色 == 初始化源角色::别名词面)
                 continue;
             if (候选.符号组.size() == 额度.最大角色符号数)
                 return 资源拒绝(初始化额度种类::角色符号,
@@ -427,6 +458,11 @@ void 核验完整材料(const 初始化定义材料& 材料, std::size_t 标量�
         case 初始化最小模板::显式别名:
             if (引用数量 != 1) throw std::logic_error("initialization alias arity");
             项.载荷 = 初始化名称提议材料{引用[0], std::string(行.词组[2].词面)};
+            break;
+        case 初始化最小模板::结构化分量区间:
+            if (引用数量 != 1) throw std::logic_error("initialization component domain arity");
+            项.载荷 = 初始化结构化分量区间材料{
+                引用[0], 分量整数[0], 分量整数[1], 分量整数[2]};
             break;
         default: throw std::logic_error("initialization template dispatch invariant");
         }
