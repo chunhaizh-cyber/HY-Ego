@@ -1,6 +1,6 @@
 ---
 name: hai-zhong-yu-chao-execute
-description: Execute or resume a design-ready plan or a user-authorized direct local code slice in the single shared 海中鱼巣 main workspace. Perform S0, implement only the allowed slice, validate, publish, and route genuine design drift correctly.
+description: Execute or resume a design-ready plan or a user-authorized direct local code slice in the 海中鱼巣 main workspace or a named task worktree. Perform S0, implement only the allowed slice, validate, publish through the repository integration rules, and route genuine design drift correctly.
 ---
 
 # 海中鱼巣执行
@@ -15,6 +15,8 @@ description: Execute or resume a design-ready plan or a user-authorized direct l
 
 ```powershell
 git rev-parse --show-toplevel
+git rev-parse --git-common-dir
+git worktree list --porcelain
 git branch --show-current
 git status --short --branch
 git rev-parse HEAD
@@ -32,7 +34,7 @@ git rev-list --left-right --count HEAD...origin/main
 2. 读取关联规范、详细设计、允许 / 禁止范围和验证合同；
 3. 对照当前代码核对函数、DTO、接口行为、所有权和物理位置；
 4. 核对相关用途条目的代码基线，并用当前源码、生产调用点、能力证据目录和调用图完成既有能力复用互证；
-5. 核对 `main`、HEAD、远端、index、dirty 所有者、活动代码段和验证资源；
+5. 核对当前工作区路径、具名分支、HEAD、main/origin/main集成基线、远端、当前index、跨工作树dirty所有者、活动代码段和验证资源；工作树模式再读 `.codex/rules/多工作树并发与集成规则.md`；
 6. 固定本段起点、计划身份或直接切片身份，以及允许范围。
 
 S0 通过后直接实施，不等待聊天接受。S0 只需证明当前复杂计划或直接切片可在当前事实下安全施工，不重复重做已经稳定且与本切片无关的全仓审计。
@@ -68,7 +70,7 @@ S0 通过后直接实施，不等待聊天接受。S0 只需证明当前复杂�
 
 施工 / 验证记录只写已发生的计划身份或直接切片授权范围、S0、变更、命令、结果、提交、风险和完成边界，不定义机器语义或计划状态。施工记录必须包含函数级“代码知识变更清单”，列出新增、修改、退出函数及其用途、合同、调用边和待更新用途卡；没有函数变化时明确写“无”及依据。
 
-测试载体与输出分别按 CODE-FILE-01 第 5.1.1—5.1.2 节执行：只能运行实际项目，不能另建临时项目、源码副本或手工链接专项程序；实际项目产物、日志和运行数据可以隔离输出。遇到其它切片WIP先按单工作区规则协调，不复制项目绕过；旧计划的冲突验证步骤不得继续执行。清理残留必须如实记录，未经核对不得删除历史证据或其它所有者材料。
+测试载体与输出分别按 CODE-FILE-01 第 5.1.1—5.1.2 节执行：使用主工作区或具名Git工作树内的实际项目，不能另建临时项目、导出源码副本或手工链接专项程序；实际项目产物、日志和运行数据可以隔离输出。记录工作树路径、分支、精确HEAD及WIP，遇到其它切片WIP先按通用工作区规则协调，不复制项目绕过；旧计划的冲突验证步骤不得继续执行。清理残留必须如实记录，未经核对不得删除历史证据或其它所有者材料。
 
 至少运行：
 
@@ -77,7 +79,7 @@ git diff --check
 git diff --cached --check
 ```
 
-构建频率、测试触发及未测试声明统一读取 `AGENTS.md` 第7.1节；本技能与计划中的验证要求不独立授权运行自检、性能或运行测试。只暂存当前切片文件，不带入其它所有者 WIP；禁止 force 及未经授权的 merge、rebase、cherry-pick、reset、clean 或 stash。
+构建频率、测试触发及未测试声明统一读取 `AGENTS.md` 第7.1节；本技能与计划中的验证要求不独立授权运行自检、性能或运行测试。只暂存当前切片文件，不带入其它所有者 WIP；禁止 force 及未经授权的 rebase、cherry-pick、reset、clean 或 stash。工作树可由获准所有者独立提交，向main交付精确提交和验证材料；普通merge集成及远端发布按工作树规则由唯一发布者执行，本地提交不等于已集成或已推送。
 
 ## 6. 连续执行与完成声明
 

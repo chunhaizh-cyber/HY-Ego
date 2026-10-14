@@ -1,6 +1,6 @@
 ---
 name: hai-zhong-yu-chao-plan
-description: Create, validate and register a new 海中鱼巣 design-ready plan, or let plan support resolve and revise a plan problem returned by execution. Use outcome-based design gates, current code evidence, precise ownership, and the shared main-workspace publication rules.
+description: Create, validate and register a new 海中鱼巣 design-ready plan, or let plan support resolve and revise a plan problem returned by execution. Use outcome-based design gates, current code evidence, precise ownership, and the main-workspace or task-worktree integration rules.
 ---
 
 # 海中鱼巣制定与支撑计划
@@ -12,7 +12,7 @@ description: Create, validate and register a new 海中鱼巣 design-ready plan,
 - 计划智能体处理尚未进入既有计划范围的新目标，建立、验证并登记新设计包；可以写新计划对应的计划索引项，不写代码。
 - 计划支撑智能体只处理执行智能体具名退回且无法裁决的计划 / 设计问题，在原目标内给出裁决并修订受影响材料和索引项；不预审新计划、不写代码。
 
-不要硬编码仓库路径。开始前读取 Git 顶层、`main`、HEAD、`origin/main`、dirty、目标正式规范、当前代码 / 接口、现有设计和计划索引。无关且所有者明确的 dirty 不阻断，重叠文件、语义或发布租约才阻断。
+不要硬编码仓库路径。开始前读取 Git 顶层、共同Git目录、工作树清单、当前分支/HEAD、main/origin/main集成基线、当前index/dirty、目标正式规范、当前代码 / 接口、现有设计和计划索引。可在主工作区或具名任务工作树编制材料；工作树模式再读 `.codex/rules/多工作树并发与集成规则.md`，计划及索引须经main集成发布后才作为正式执行入口。无关且所有者明确的 dirty 不阻断，跨树重叠文件、语义或发布租约才阻断。
 
 ## 2. 计划智能体：创建新包
 
