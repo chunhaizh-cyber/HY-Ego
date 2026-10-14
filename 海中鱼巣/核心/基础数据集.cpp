@@ -21,6 +21,15 @@ bool 有效(基础外部关系类型 类型) noexcept {
         || 类型 == 基础外部关系类型::兄弟;
 }
 
+bool 联合快照相等(const 基础联合节点快照& 左,
+    const 基础联合节点快照& 右) {
+    return 左.结构.节点 == 右.结构.节点
+        && 左.结构.字段组 == 右.结构.字段组
+        && 左.入向外部关系组 == 右.入向外部关系组
+        && 左.出向外部关系组 == 右.出向外部关系组
+        && 左.入向字段组 == 右.入向字段组;
+}
+
 } // namespace
 
 稳定编码 基础数据集::分配编码() noexcept {
@@ -80,6 +89,64 @@ void 基础数据集::读取节点字段已加锁(
     std::sort(结果.begin(), 结果.end(), [](const auto& 左, const auto& 右) {
         return 左.编码.值 < 右.编码.值;
     });
+}
+
+基础联合节点快照 基础数据集::读取联合快照已加锁(稳定编码 节点) const {
+    基础联合节点快照 结果;
+    结果.结构.节点 = 节点_.at(节点.值);
+    for (const auto& [_, 字段] : 字段关系_) {
+        if (字段.所属节点 == 节点) {
+            核验字段索引已加锁(字段);
+            结果.结构.字段组.push_back(字段);
+        }
+    }
+    for (auto 位置 = 所属字段索引_.lower_bound({节点.值, 0, 0});
+        位置 != 所属字段索引_.end() && std::get<0>(*位置) == 节点.值; ++位置) {
+        const auto 字段位置 = 字段关系_.find(std::get<2>(*位置));
+        if (字段位置 == 字段关系_.end() || 字段位置->second.所属节点 != 节点
+            || 字段位置->second.字段节点.值 != std::get<1>(*位置))
+            throw std::logic_error("union forward field index inconsistent");
+    }
+    for (const auto& [_, 关系] : 外部关系_) {
+        if (关系.目标节点 == 节点) 结果.入向外部关系组.push_back(关系);
+        if (关系.源节点 == 节点) 结果.出向外部关系组.push_back(关系);
+    }
+    for (const auto& [_, 字段] : 字段关系_) {
+        const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
+        if (目标 && *目标 == 节点) {
+            核验字段索引已加锁(字段);
+            结果.入向字段组.push_back(字段);
+        }
+    }
+    for (const auto& [键, 目标, 编码] : 目标字段索引_) {
+        if (目标 != 节点.值) continue;
+        const auto 位置 = 字段关系_.find(编码);
+        if (位置 == 字段关系_.end() || 位置->second.字段节点.值 != 键
+            || !std::holds_alternative<稳定编码>(位置->second.内容)
+            || std::get<稳定编码>(位置->second.内容) != 节点)
+            throw std::logic_error("union reverse field index inconsistent");
+    }
+    return 结果;
+}
+
+基础互引节点操作状态 基础数据集::复核联合预期已加锁(
+    const std::vector<基础联合节点快照>& 预期,
+    const std::set<std::uint64_t>& 必需) const {
+    using 状态 = 基础互引节点操作状态;
+    std::set<std::uint64_t> 已提供;
+    for (const auto& 项 : 预期) {
+        const auto 编码 = 项.结构.节点.编码;
+        if (!有效(编码) || !已提供.insert(编码.值).second) return 状态::入口拒绝;
+    }
+    if (!std::includes(已提供.begin(), 已提供.end(), 必需.begin(), 必需.end()))
+        return 状态::入口拒绝;
+    for (const auto& 项 : 预期) {
+        const auto 编码 = 项.结构.节点.编码;
+        if (!节点存在(编码)) return 状态::节点不存在;
+        if (!联合快照相等(读取联合快照已加锁(编码), 项))
+            return 状态::预期不符;
+    }
+    return 状态::已完成;
 }
 
 bool 基础数据集::节点被引用(稳定编码 节点) const noexcept {
@@ -410,6 +477,215 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"查询字段引用节点结构", L"反向字段索引读取异常。", 异常.what());
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"查询字段引用节点结构", L"反向字段索引读取未知异常。");
+    }
+}
+
+基础联合节点查询结果 基础数据集::查询节点组完整结构(
+    const std::vector<稳定编码>& 节点组) const noexcept {
+    using 状态 = 基础结构操作状态;
+    try {
+        std::shared_lock 锁(互斥_);
+        if (节点组.empty()) return {状态::入口拒绝, {}};
+        std::set<std::uint64_t> 身份;
+        for (const auto 编码 : 节点组)
+            if (!有效(编码) || !身份.insert(编码.值).second)
+                return {状态::入口拒绝, {}};
+        基础联合节点查询结果 结果{状态::已完成, {}};
+        结果.节点组.reserve(身份.size());
+        for (const auto 编码 : 身份) {
+            const 稳定编码 节点{编码};
+            if (节点存在(节点)) {
+                结果.节点组.push_back({节点, 读取联合快照已加锁(节点)});
+                continue;
+            }
+            for (const auto& [_, 字段] : 字段关系_) {
+                const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
+                if (字段.所属节点 == 节点 || 字段.字段节点 == 节点
+                    || (目标 && *目标 == 节点)) return {状态::内部不一致, {}};
+            }
+            for (const auto& [_, 关系] : 外部关系_)
+                if (关系.源节点 == 节点 || 关系.目标节点 == 节点)
+                    return {状态::内部不一致, {}};
+            结果.节点组.push_back({节点, std::nullopt});
+        }
+        return 结果;
+    } catch (const std::bad_alloc&) { return {状态::资源失败, {}};
+    } catch (const std::length_error&) { return {状态::资源失败, {}};
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"查询节点组完整结构",
+            L"联合结构读取异常。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"查询节点组完整结构",
+            L"联合结构读取未知异常。");
+    }
+}
+
+基础互引节点建立结果 基础数据集::原子建立互引节点(
+    const 基础互引节点建立请求& 请求) noexcept {
+    using 状态 = 基础互引节点操作状态;
+    try {
+        std::unique_lock 锁(互斥_);
+        if (!请求.新节点.上级节点 || !有效(*请求.新节点.上级节点)
+            || !有效(请求.反向引用所属节点)
+            || !有效(请求.反向引用字段节点)) return {状态::入口拒绝, {}, {}, {}};
+        std::set<std::uint64_t> 必需{
+            请求.新节点.上级节点->值, 请求.反向引用所属节点.值,
+            请求.反向引用字段节点.值};
+        for (const auto& 字段 : 请求.新节点.字段组) {
+            if (!有效(字段.字段节点) || 字段.内容.valueless_by_exception())
+                return {状态::入口拒绝, {}, {}, {}};
+            必需.insert(字段.字段节点.值);
+            if (const auto* 引用 = std::get_if<稳定编码>(&字段.内容)) {
+                if (!有效(*引用)) return {状态::入口拒绝, {}, {}, {}};
+                必需.insert(引用->值);
+            } else if (std::get<基础值>(字段.内容).材料.valueless_by_exception())
+                return {状态::入口拒绝, {}, {}, {}};
+        }
+        const auto 预期状态 = 复核联合预期已加锁(请求.预期节点组, 必需);
+        if (预期状态 != 状态::已完成) return {预期状态, {}, {}, {}};
+        auto 候选节点 = 节点_;
+        auto 候选字段 = 字段关系_;
+        auto 候选关系 = 外部关系_;
+        auto 候选所属索引 = 所属字段索引_;
+        auto 候选目标索引 = 目标字段索引_;
+        const auto 编码已占用 = [&](稳定编码 编码) {
+            return 候选节点.contains(编码.值) || 候选字段.contains(编码.值)
+                || 候选关系.contains(编码.值);
+        };
+        const auto 节点 = 分配编码();
+        if (!有效(节点)) return {状态::资源失败, {}, {}, {}};
+        if (编码已占用(节点)) return {状态::内部不一致, {}, {}, {}};
+        候选节点.emplace(节点.值, 基础节点{节点});
+        const auto 加字段 = [&](稳定编码 所属, 稳定编码 键, 基础字段内容 内容)
+            -> std::optional<稳定编码> {
+            const auto 编码 = 分配编码();
+            if (!有效(编码)) return std::nullopt;
+            if (编码已占用(编码)) throw std::logic_error("mutual field identity collision");
+            候选字段.emplace(编码.值, 基础字段关系{编码, 所属, 键, std::move(内容)});
+            const auto& 字段 = 候选字段.at(编码.值);
+            if (!候选所属索引.emplace(所属.值, 键.值, 编码.值).second)
+                throw std::logic_error("mutual forward index collision");
+            if (const auto* 引用 = std::get_if<稳定编码>(&字段.内容);
+                引用 && !候选目标索引.emplace(键.值, 引用->值, 编码.值).second)
+                throw std::logic_error("mutual reverse index collision");
+            return 编码;
+        };
+        for (const auto& 字段 : 请求.新节点.字段组)
+            if (!加字段(节点, 字段.字段节点, 字段.内容))
+                return {状态::资源失败, {}, {}, {}};
+        const auto 反向 = 加字段(请求.反向引用所属节点,
+            请求.反向引用字段节点, 节点);
+        if (!反向) return {状态::资源失败, {}, {}, {}};
+        const auto 关系 = 分配编码();
+        if (!有效(关系)) return {状态::资源失败, {}, {}, {}};
+        if (编码已占用(关系)) return {状态::内部不一致, {}, {}, {}};
+        候选关系.emplace(关系.值, 基础外部关系{关系,
+            *请求.新节点.上级节点, 节点, 基础外部关系类型::父子, 0});
+        基础互引节点建立结果 结果{状态::已完成, 节点, *反向, 关系};
+        节点_.swap(候选节点);
+        字段关系_.swap(候选字段);
+        外部关系_.swap(候选关系);
+        所属字段索引_.swap(候选所属索引);
+        目标字段索引_.swap(候选目标索引);
+        return 结果;
+    } catch (const std::bad_alloc&) { return {状态::资源失败, {}, {}, {}};
+    } catch (const std::length_error&) { return {状态::资源失败, {}, {}, {}};
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子建立互引节点",
+            L"联合建立候选与索引异常。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子建立互引节点",
+            L"联合建立未知异常。");
+    }
+}
+
+基础互引节点操作状态 基础数据集::原子删除互引节点(
+    const 基础互引节点删除请求& 请求) noexcept {
+    using 状态 = 基础互引节点操作状态;
+    try {
+        std::unique_lock 锁(互斥_);
+        if (!有效(请求.节点) || !有效(请求.上级节点)
+            || !有效(请求.反向字段关系)) return 状态::入口拒绝;
+        if (请求.节点 == 请求.上级节点) return 状态::入口拒绝;
+        if (!节点存在(请求.节点)) return 状态::节点不存在;
+        const auto 反向位置 = 字段关系_.find(请求.反向字段关系.值);
+        if (反向位置 == 字段关系_.end()) return 状态::引用不存在;
+        const auto& 反向 = 反向位置->second;
+        const auto* 目标 = std::get_if<稳定编码>(&反向.内容);
+        if (!目标 || *目标 != 请求.节点 || 反向.所属节点 == 请求.节点)
+            return 状态::入口拒绝;
+        核验字段索引已加锁(反向);
+        std::set<std::uint64_t> 必需{
+            请求.节点.值, 请求.上级节点.值,
+            反向.所属节点.值, 反向.字段节点.值};
+        std::vector<std::uint64_t> 待删字段;
+        for (const auto& [编码, 字段] : 字段关系_) {
+            if (字段.字段节点 == 请求.节点) return 状态::引用仍存在;
+            if (字段.所属节点 == 请求.节点) {
+                核验字段索引已加锁(字段);
+                if (const auto* 引用 = std::get_if<稳定编码>(&字段.内容);
+                    引用 && *引用 == 请求.节点)
+                    return 状态::引用仍存在;
+                待删字段.push_back(编码);
+                必需.insert(字段.字段节点.值);
+                if (const auto* 引用 = std::get_if<稳定编码>(&字段.内容))
+                    必需.insert(引用->值);
+                continue;
+            }
+            if (编码 == 请求.反向字段关系.值) continue;
+            if (const auto* 引用 = std::get_if<稳定编码>(&字段.内容);
+                引用 && *引用 == 请求.节点) return 状态::引用仍存在;
+        }
+        std::optional<std::uint64_t> 父边;
+        for (const auto& [编码, 关系] : 外部关系_) {
+            if (关系.目标节点 == 请求.节点
+                && 关系.源节点 == 请求.上级节点
+                && 关系.类型 == 基础外部关系类型::父子
+                && 关系.角色或顺序 == 0) {
+                if (父边) return 状态::内部不一致;
+                父边 = 编码;
+            } else if (关系.源节点 == 请求.节点 || 关系.目标节点 == 请求.节点) {
+                return 状态::引用仍存在;
+            }
+        }
+        if (!父边) return 状态::引用不存在;
+        const auto 预期状态 = 复核联合预期已加锁(请求.预期节点组, 必需);
+        if (预期状态 != 状态::已完成) return 预期状态;
+        auto 候选节点 = 节点_;
+        auto 候选字段 = 字段关系_;
+        auto 候选关系 = 外部关系_;
+        auto 候选所属索引 = 所属字段索引_;
+        auto 候选目标索引 = 目标字段索引_;
+        const auto 删字段 = [&](const 基础字段关系& 字段) {
+            if (候选所属索引.erase({字段.所属节点.值,
+                字段.字段节点.值, 字段.编码.值}) != 1)
+                throw std::logic_error("union delete forward index missing");
+            if (const auto* 引用 = std::get_if<稳定编码>(&字段.内容);
+                引用 && 候选目标索引.erase({字段.字段节点.值,
+                    引用->值, 字段.编码.值}) != 1)
+                throw std::logic_error("union delete reverse index missing");
+            if (候选字段.erase(字段.编码.值) != 1)
+                throw std::logic_error("union delete field missing");
+        };
+        for (const auto 编码 : 待删字段) 删字段(字段关系_.at(编码));
+        删字段(反向);
+        if (候选关系.erase(*父边) != 1
+            || 候选节点.erase(请求.节点.值) != 1)
+            throw std::logic_error("union delete node or edge missing");
+        节点_.swap(候选节点);
+        字段关系_.swap(候选字段);
+        外部关系_.swap(候选关系);
+        所属字段索引_.swap(候选所属索引);
+        目标字段索引_.swap(候选目标索引);
+        return 状态::已完成;
+    } catch (const std::bad_alloc&) { return 状态::资源失败;
+    } catch (const std::length_error&) { return 状态::资源失败;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子删除互引节点",
+            L"联合删除候选与索引异常。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子删除互引节点",
+            L"联合删除未知异常。");
     }
 }
 
