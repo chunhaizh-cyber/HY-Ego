@@ -148,6 +148,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="海中鱼巣\启动.程序入口.cpp" />
+    <ClCompile Include="海中鱼巣\业务\解释.初始化最小结构.cpp" />
+    <ClInclude Include="海中鱼巣\业务\解释.初始化最小结构.h" />
     <ClCompile Include="海中鱼巣\业务\模拟学习.算法.cpp" />
     <ClInclude Include="海中鱼巣\业务\模拟学习.算法.h" />
     <ClCompile Include="海中鱼巣\业务\自检.模拟学习.cpp" />

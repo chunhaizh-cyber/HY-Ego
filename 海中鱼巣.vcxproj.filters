@@ -19,11 +19,20 @@
     <Filter Include="领域\合同">
       <UniqueIdentifier>{29CE4862-8424-4D66-B8A3-286328664540}</UniqueIdentifier>
     </Filter>
+    <Filter Include="业务">
+      <UniqueIdentifier>{E18E861A-C031-4A22-A891-BDA3DAA9D47F}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="海中鱼巣\启动.程序入口.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\业务\解释.初始化最小结构.cpp">
+      <Filter>业务</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\解释.初始化最小结构.h">
+      <Filter>业务</Filter>
+    </ClInclude>
     <ClCompile Include="海中鱼巣\业务\模拟学习.算法.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
