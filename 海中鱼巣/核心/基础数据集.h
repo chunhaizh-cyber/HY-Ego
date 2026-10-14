@@ -119,6 +119,37 @@ struct 基础引用节点结构结果 final {
     std::vector<基础节点结构> 来源节点组;
 };
 
+struct 基础联合节点快照 final {
+    基础节点结构 结构;
+    std::vector<基础外部关系> 入向外部关系组, 出向外部关系组;
+    std::vector<基础字段关系> 入向字段组;
+};
+struct 基础联合节点读取项 final {
+    稳定编码 查询节点;
+    std::optional<基础联合节点快照> 快照;
+};
+struct 基础联合节点查询结果 final {
+    基础结构操作状态 状态 = 基础结构操作状态::入口拒绝;
+    std::vector<基础联合节点读取项> 节点组;
+};
+enum class 基础互引节点操作状态 : std::uint8_t {
+    已完成 = 1, 入口拒绝, 节点不存在, 引用不存在,
+    资源失败, 内部不一致, 引用仍存在, 预期不符
+};
+struct 基础互引节点建立请求 final {
+    基础节点建立请求 新节点;
+    稳定编码 反向引用所属节点, 反向引用字段节点;
+    std::vector<基础联合节点快照> 预期节点组;
+};
+struct 基础互引节点建立结果 final {
+    基础互引节点操作状态 状态 = 基础互引节点操作状态::入口拒绝;
+    std::optional<稳定编码> 节点, 反向字段关系, 组织关系;
+};
+struct 基础互引节点删除请求 final {
+    稳定编码 节点, 上级节点, 反向字段关系;
+    std::vector<基础联合节点快照> 预期节点组;
+};
+
 class 基础数据集 final {
 public:
     基础数据集() = default;
@@ -145,6 +176,12 @@ public:
     基础节点结构结果 查询完整节点结构(稳定编码 节点) const noexcept;
     基础引用节点结构结果 查询字段引用节点结构(
         稳定编码 目标节点, 稳定编码 字段节点) const noexcept;
+    基础联合节点查询结果 查询节点组完整结构(
+        const std::vector<稳定编码>& 节点组) const noexcept;
+    基础互引节点建立结果 原子建立互引节点(
+        const 基础互引节点建立请求& 请求) noexcept;
+    基础互引节点操作状态 原子删除互引节点(
+        const 基础互引节点删除请求& 请求) noexcept;
 
     // 诊断责任：向上送出。空编码或 false 表示参数无效、引用不存在或资源失败。
     稳定编码 添加关系(稳定编码 源节点, 稳定编码 目标节点,
@@ -187,6 +224,10 @@ private:
     void 核验字段索引已加锁(const 基础字段关系& 字段) const;
     void 删除字段已加锁(const 基础字段关系& 字段) noexcept;
     void 读取节点字段已加锁(稳定编码 节点, std::vector<基础字段关系>& 结果) const;
+    基础联合节点快照 读取联合快照已加锁(稳定编码 节点) const;
+    基础互引节点操作状态 复核联合预期已加锁(
+        const std::vector<基础联合节点快照>& 预期,
+        const std::set<std::uint64_t>& 必需) const;
 
     mutable std::shared_mutex 互斥_;
     std::uint64_t 下一个编码_ = 1;

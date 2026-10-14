@@ -177,6 +177,10 @@ void 回滚词条节点(稳定编码 节点,
 新_词类::新_词类(新_语言类& 语言服务) noexcept
     : 语言服务_(语言服务) {}
 
+const 新_语言类& 新_词类::取得语言服务() const noexcept {
+    return 语言服务_;
+}
+
 bool 新_词类::初始化() noexcept {
     try {
         if (!语言服务_.初始化()) return false;

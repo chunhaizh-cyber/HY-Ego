@@ -78,6 +78,7 @@ public:
     新词条列表查询结果 查询语言词条(
         稳定编码 语言节点) const noexcept;
     bool 是词条节点(稳定编码 节点) const noexcept;
+    const 新_语言类& 取得语言服务() const noexcept;
 
 private:
     新_语言类& 语言服务_;
