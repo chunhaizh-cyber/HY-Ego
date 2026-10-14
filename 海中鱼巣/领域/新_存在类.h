@@ -77,6 +77,28 @@ struct 新存在概念匹配结果 final {
     新存在概念匹配状态 状态 = 新存在概念匹配状态::材料不足;
     std::vector<稳定编码> 缺少特征类型组;
     std::vector<稳定编码> 不符合特征类型组;
+    friend bool operator==(const 新存在概念匹配结果&, const 新存在概念匹配结果&) = default;
+};
+
+struct 新存在概念必需特征快照 final {
+    存在概念特征项 来源;
+    新特征匹配定义快照 定义;
+    friend bool operator==(const 新存在概念必需特征快照&, const 新存在概念必需特征快照&) = default;
+};
+
+struct 新存在概念匹配材料 final {
+    稳定编码 存在节点, 专属存在概念节点, 目标存在概念节点;
+    std::vector<新存在概念必需特征快照> 必需特征组;
+    std::vector<新特征匹配实例快照> 实际特征组;
+    friend bool operator==(const 新存在概念匹配材料&, const 新存在概念匹配材料&) = default;
+};
+
+struct 新存在概念匹配采集结果 final {
+    新存在概念匹配结果 匹配;
+    std::optional<新存在概念匹配材料> 材料;
+    std::vector<稳定编码> 尚缺固定比较依据特征组;
+    bool 采集期间材料变化 = false;
+    friend bool operator==(const 新存在概念匹配采集结果&, const 新存在概念匹配采集结果&) = default;
 };
 
 class 新_存在类 final : public 特征存在引用读取接口 {
@@ -94,6 +116,12 @@ public:
     bool 是存在节点(稳定编码 节点) const noexcept;
     // 全特征合取；空定义无约束。与旧结构上位归属查询分开，不写归属标签。
     新存在概念匹配结果 匹配存在概念(稳定编码 存在节点, 稳定编码 概念节点) const noexcept;
+    // 同组参与材料计算，并前后复核；不是跨owner原子快照，也不保证检测ABA。
+    新存在概念匹配采集结果 采集存在概念匹配材料(
+        稳定编码 存在节点, 稳定编码 概念节点) const noexcept;
+    // 不重读E/F/EC/FC；只消费捕获内容及其引用的不可变值材料。
+    新存在概念匹配结果 比较存在概念匹配材料(
+        const 新存在概念匹配材料& 材料) const noexcept;
 
     bool 是存在概念节点(稳定编码 概念节点) const noexcept override;
     bool 存在节点属于概念(

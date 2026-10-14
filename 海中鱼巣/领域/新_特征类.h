@@ -37,6 +37,31 @@ struct 新特征信息 final {
     friend bool operator==(const 新特征信息&, const 新特征信息&) = default;
 };
 
+// 本次匹配采用的值式定义，不携带名称、统计或可变概念树引用视图。
+struct 新特征匹配定义快照 final {
+    稳定编码 概念节点;
+    稳定编码 特征类型根;
+    特征概念材料物理类型 材料类型 = 特征概念材料物理类型::I64标量;
+    std::optional<稳定编码> 单位;
+    特征概念比较规则 比较规则 = 特征概念比较规则::I64数值;
+    特征概念值域 值域;
+    friend bool operator==(const 新特征匹配定义快照&,
+        const 新特征匹配定义快照&) = default;
+};
+
+struct 新特征匹配实例快照 final {
+    稳定编码 特征节点;
+    std::optional<稳定编码> 上级特征节点;
+    新特征匹配定义快照 定义;
+    std::optional<稳定编码> 实例单位;
+    std::optional<新特征准确值> 当前值;
+    // 非存在引用的编码准确值携带不可变完整材料；I64和存在引用不携带。
+    std::optional<新特征值信息> 当前完整材料;
+    std::optional<特征概念值域> 实例区间值;
+    friend bool operator==(const 新特征匹配实例快照&,
+        const 新特征匹配实例快照&) = default;
+};
+
 enum class 新特征写入状态 : std::uint8_t {
     已完成 = 1,
     无变化 = 2,
@@ -175,6 +200,17 @@ public:
 
     std::optional<新特征信息> 获取特征(
         稳定编码 特征节点) const noexcept;
+
+    // 捕获只读物理投影，不调用普通getter的当前/历史归属验证。
+    // 顶层请求不存在返回空；已声明引用或物理结构损坏走工程终止。
+    std::optional<新特征匹配定义快照> 捕获特征匹配定义(
+        稳定编码 特征概念节点) const noexcept;
+    std::optional<新特征匹配实例快照> 捕获特征匹配实例(
+        稳定编码 特征节点) const noexcept;
+    // 只用传入快照，不读取当前E/F/EC/FC或调用业务归属/集合提供者。
+    新特征值域关系比较结果 比较捕获特征值域(
+        const 新特征匹配实例快照& 实例,
+        const 新特征匹配定义快照& 目标) const noexcept;
 
     bool 是特征节点(稳定编码 节点) const noexcept;
 

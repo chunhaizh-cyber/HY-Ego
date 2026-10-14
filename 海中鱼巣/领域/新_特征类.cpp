@@ -7,6 +7,7 @@
 #include <limits>
 #include <mutex>
 #include <new>
+#include <stdexcept>
 
 namespace 海中鱼巣 {
 
@@ -2152,6 +2153,250 @@ bool 新_特征类::初始化() noexcept {
         return {};
     } catch (...) {
         return {};
+    }
+}
+
+std::optional<新特征匹配定义快照> 新_特征类::捕获特征匹配定义(
+    稳定编码 特征概念节点) const noexcept {
+    try {
+        if (!节点仍存在(特征概念节点)) return std::nullopt;
+        if (!特征概念服务_.是特征概念节点(特征概念节点))
+            throw std::runtime_error("feature concept capture identity mismatch");
+        const auto 定义 = 特征概念服务_.获取特征概念(特征概念节点);
+        const auto 定位 = 特征概念服务_.比较单特征概念(特征概念节点, 特征概念节点);
+        if (!定义 || 定位.状态 != 特征概念规则状态::已完成
+            || !定位.特征类型根 || 定位.关系 != 单特征概念关系::同一)
+            throw std::runtime_error("feature concept capture definition unavailable");
+        const auto 根 = 特征概念服务_.获取特征概念(*定位.特征类型根);
+        if (!根 || 根->材料类型 != 定义->材料类型 || 根->单位 != 定义->单位
+            || 根->比较规则 != 定义->比较规则)
+            throw std::runtime_error("feature concept capture root semantics inconsistent");
+        return 新特征匹配定义快照{特征概念节点, *定位.特征类型根,
+            定义->材料类型, 定义->单位, 定义->比较规则, 定义->值域};
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"捕获特征匹配定义",
+            L"特征定义捕获损坏，未形成业务判定。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"捕获特征匹配定义",
+            L"特征定义捕获未知异常，未形成业务判定。");
+    }
+}
+
+std::optional<新特征匹配实例快照> 新_特征类::捕获特征匹配实例(
+    稳定编码 特征节点) const noexcept {
+    try {
+        新特征匹配实例快照 结果;
+        {
+            std::lock_guard 锁(新特征互斥);
+            if (!节点仍存在(特征节点)) return std::nullopt;
+            if (!结构仍存在())
+                throw std::runtime_error("feature capture schema unavailable");
+            const auto 类型 = 读取唯一节点字段(特征节点, 节点类型字段);
+            const auto 概念 = 读取唯一节点字段(特征节点, 特征概念字段);
+            if (!类型 || *类型 != 特征节点类型 || !概念 || !节点仍存在(*概念))
+                throw std::runtime_error("feature capture identity or concept invalid");
+            const auto 定义 = 捕获特征匹配定义(*概念);
+            if (!定义) throw std::runtime_error("feature capture referenced definition missing");
+            结果.特征节点 = 特征节点;
+            结果.定义 = *定义;
+            const auto 父组 = 全局基础数据集.查询目标关系(特征节点, 基础外部关系类型::父子);
+            if (父组.size() > 1) throw std::runtime_error("feature capture multiple parents");
+            if (!父组.empty()) {
+                const auto 父 = 父组.front().源节点;
+                const auto 父类型 = 读取唯一节点字段(父, 节点类型字段);
+                if (父 == 特征节点 || !节点仍存在(父) || !父类型 || *父类型 != 特征节点类型)
+                    throw std::runtime_error("feature capture parent invalid");
+                结果.上级特征节点 = 父;
+            }
+            const auto 区间组 = 全局基础数据集.查询字段(特征节点, 实例区间值字段);
+            if (区间组.size() > 1) throw std::runtime_error("feature capture multiple intervals");
+            if (!区间组.empty()) {
+                const auto* 引用 = std::get_if<稳定编码>(&区间组.front().内容);
+                if (!引用) throw std::runtime_error("feature capture interval reference invalid");
+                结果.实例区间值 = 读取值域节点(*引用, 定义->材料类型);
+                if (!结果.实例区间值) throw std::runtime_error("feature capture interval invalid");
+            }
+            const auto 单位组 = 全局基础数据集.查询字段(特征节点, 实例单位字段);
+            if (单位组.size() > 1) throw std::runtime_error("feature capture multiple units");
+            if (!单位组.empty()) {
+                const auto* 单位 = std::get_if<稳定编码>(&单位组.front().内容);
+                if (!单位 || !节点仍存在(*单位))
+                    throw std::runtime_error("feature capture unit invalid");
+                结果.实例单位 = *单位;
+            }
+            const auto 当前组 = 全局基础数据集.查询字段(特征节点, 当前值字段);
+            if (当前组.size() > 1) throw std::runtime_error("feature capture multiple current values");
+            if (!当前组.empty()) {
+                结果.当前值 = 解码准确值(当前组.front());
+                if (!结果.当前值) throw std::runtime_error("feature capture current value invalid");
+            }
+        }
+        // 不读取历史/聚合，不按当前概念值域拒绝准确值，更不查询存在归属。
+        if (结果.当前值) {
+            if (结果.定义.材料类型 == 特征概念材料物理类型::I64标量) {
+                if (!std::holds_alternative<std::int64_t>(*结果.当前值))
+                    throw std::runtime_error("feature capture I64 representation invalid");
+            } else {
+                const auto* 编码 = std::get_if<稳定编码>(&*结果.当前值);
+                if (!编码 || !节点仍存在(*编码))
+                    throw std::runtime_error("feature capture referenced value missing");
+                if (结果.定义.材料类型 != 特征概念材料物理类型::存在节点引用) {
+                    结果.当前完整材料 = 特征值服务_.获取特征值(*编码);
+                    const auto 类型 = 转换特征值材料类型(结果.定义.材料类型);
+                    if (!类型 || !结果.当前完整材料
+                        || 结果.当前完整材料->节点 != *编码
+                        || 结果.当前完整材料->物理类型 != *类型)
+                        throw std::runtime_error("feature capture complete value invalid");
+                }
+            }
+        }
+        return 结果;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"捕获特征匹配实例",
+            L"特征参与字段捕获损坏，未形成业务判定。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"捕获特征匹配实例",
+            L"特征参与字段捕获未知异常，未形成业务判定。");
+    }
+}
+
+新特征值域关系比较结果 新_特征类::比较捕获特征值域(
+    const 新特征匹配实例快照& 实例,
+    const 新特征匹配定义快照& 目标) const noexcept {
+    try {
+        const auto 核对定义身份 = [](const 新特征匹配定义快照& 定义) {
+            if (!有效(定义.概念节点) || !有效(定义.特征类型根)
+                || (定义.单位 && !有效(*定义.单位)))
+                throw std::runtime_error("captured definition identity invalid");
+            if (定义.材料类型 != 特征概念材料物理类型::I64标量
+                && 定义.材料类型 != 特征概念材料物理类型::存在节点引用
+                && !转换特征值材料类型(定义.材料类型))
+                throw std::runtime_error("captured definition material type invalid");
+            switch (定义.比较规则) {
+            case 特征概念比较规则::I64数值:
+            case 特征概念比较规则::完整材料精确:
+            case 特征概念比较规则::存在身份精确:
+            case 特征概念比较规则::服务任务集合身份判等: break;
+            default: throw std::runtime_error("captured definition comparison rule invalid");
+            }
+        };
+        核对定义身份(实例.定义);
+        核对定义身份(目标);
+        if (!有效(实例.特征节点)
+            || (实例.上级特征节点 && (!有效(*实例.上级特征节点)
+                || *实例.上级特征节点 == 实例.特征节点))
+            || (实例.实例单位 && !有效(*实例.实例单位)))
+            throw std::runtime_error("captured feature identity invalid");
+        // 先核对值式载荷的物理自洽；不因单位不同或动态依赖而吞掉坏载荷。
+        if (!实例.当前值) {
+            if (实例.当前完整材料)
+                throw std::runtime_error("captured complete material without current value");
+        } else if (实例.定义.材料类型 == 特征概念材料物理类型::I64标量) {
+            if (!std::holds_alternative<std::int64_t>(*实例.当前值) || 实例.当前完整材料)
+                throw std::runtime_error("captured I64 material inconsistent");
+        } else {
+            const auto* 编码 = std::get_if<稳定编码>(&*实例.当前值);
+            if (!编码 || !有效(*编码))
+                throw std::runtime_error("captured reference material invalid");
+            if (实例.定义.材料类型 == 特征概念材料物理类型::存在节点引用) {
+                if (实例.当前完整材料)
+                    throw std::runtime_error("captured existence reference has value payload");
+            } else {
+                const auto 类型 = 转换特征值材料类型(实例.定义.材料类型);
+                if (!类型 || !实例.当前完整材料 || 实例.当前完整材料->节点 != *编码
+                    || 实例.当前完整材料->物理类型 != *类型)
+                    throw std::runtime_error("captured complete material inconsistent");
+                const auto& 材料 = 实例.当前完整材料->材料;
+                const bool 形状正确 = *类型 == 材料物理类型::I64数组
+                    ? std::holds_alternative<std::vector<std::int64_t>>(材料)
+                    : *类型 == 材料物理类型::UTF8字符串
+                    ? std::holds_alternative<std::string>(材料)
+                    : std::holds_alternative<std::vector<std::uint64_t>>(材料);
+                if (!形状正确) throw std::runtime_error("captured complete material shape invalid");
+            }
+        }
+        const auto 依赖当前业务 = [](const 新特征匹配定义快照& 定义) {
+            return 定义.材料类型 == 特征概念材料物理类型::存在节点引用
+                || 定义.比较规则 == 特征概念比较规则::存在身份精确
+                || 定义.比较规则 == 特征概念比较规则::服务任务集合身份判等;
+        };
+        const auto 动态域 = [](const 特征概念值域& 域) {
+            return std::holds_alternative<特征概念任务集合值域>(域)
+                || std::holds_alternative<特征概念存在引用值域>(域);
+        };
+        // 此门必须早于相等/全域等任何比较快捷返回，绝不进入live提供者。
+        if (依赖当前业务(实例.定义) || 依赖当前业务(目标)
+            || 动态域(实例.定义.值域) || 动态域(目标.值域)
+            || (实例.实例区间值 && 动态域(*实例.实例区间值)))
+            return {新特征比较状态::规则不支持, {}};
+        const auto 核对纯定义 = [&](const 新特征匹配定义快照& 定义) {
+            const bool I64 = 定义.材料类型 == 特征概念材料物理类型::I64标量;
+            if ((I64 && 定义.比较规则 != 特征概念比较规则::I64数值)
+                || (!I64 && (!转换特征值材料类型(定义.材料类型)
+                    || 定义.比较规则 != 特征概念比较规则::完整材料精确)))
+                throw std::runtime_error("captured definition physical rule invalid");
+            const auto 自比 = 特征概念服务_.比较值域(定义.材料类型, 定义.值域, 定义.值域);
+            if (自比.状态 != 特征概念规则状态::已完成
+                || 自比.关系 != 特征概念值域关系::相等)
+                throw std::runtime_error("captured definition domain invalid");
+        };
+        核对纯定义(实例.定义);
+        核对纯定义(目标);
+        // 准确值优先不表示可以忽略快照中同时携带的损坏区间。
+        if (实例.实例区间值) {
+            const auto 区间自比 = 特征概念服务_.比较值域(
+                实例.定义.材料类型, *实例.实例区间值, *实例.实例区间值);
+            if (区间自比.状态 != 特征概念规则状态::已完成
+                || 区间自比.关系 != 特征概念值域关系::相等)
+                throw std::runtime_error("captured explicit interval invalid");
+        }
+        if (实例.定义.特征类型根 != 目标.特征类型根)
+            return {新特征比较状态::概念不相容, {}};
+        if (实例.定义.材料类型 != 目标.材料类型)
+            return {新特征比较状态::材料类型不相容, {}};
+        if (实例.定义.比较规则 != 目标.比较规则)
+            return {新特征比较状态::规则不支持, {}};
+        if (实例.定义.单位 != 目标.单位 || 实例.实例单位 != 目标.单位)
+            return {新特征比较状态::单位不相容, {}};
+
+        特征概念值域 左值域;
+        if (实例.当前值) {
+            if (const auto* I64 = std::get_if<std::int64_t>(&*实例.当前值)) {
+                左值域 = std::vector<特征概念I64闭区间>{{*I64, *I64}};
+            } else {
+                const auto 编码 = std::get<稳定编码>(*实例.当前值);
+                const auto& 材料 = 实例.当前完整材料->材料;
+                if (const auto* 结构 = std::get_if<特征概念结构化I64值域>(&目标.值域)) {
+                    const auto* 数组 = std::get_if<std::vector<std::int64_t>>(&材料);
+                    if (!数组 || 数组->size() != 结构->分量.size())
+                        return {新特征比较状态::材料类型不相容, {}};
+                    auto 单点 = *结构;
+                    for (std::size_t i = 0; i < 数组->size(); ++i)
+                        单点.分量[i].值域 = {{(*数组)[i], (*数组)[i]}};
+                    左值域 = std::move(单点);
+                } else 左值域 = std::vector<稳定编码>{编码};
+            }
+        } else {
+            if (!实例.实例区间值) return {新特征比较状态::值不存在, {}};
+            左值域 = *实例.实例区间值;
+        }
+        const auto 左自比 = 特征概念服务_.比较值域(目标.材料类型, 左值域, 左值域);
+        if (左自比.状态 != 特征概念规则状态::已完成
+            || 左自比.关系 != 特征概念值域关系::相等)
+            throw std::runtime_error("captured input domain invalid");
+        const auto 比较 = 特征概念服务_.比较值域(目标.材料类型, 左值域, 目标.值域);
+        // 合法纯域混合形状可能尚无算法；这不是损坏，也不调用业务提供者兜底。
+        if (比较.状态 == 特征概念规则状态::规则不支持)
+            return {新特征比较状态::规则不支持, {}};
+        if (比较.状态 != 特征概念规则状态::已完成 || !比较.关系)
+            throw std::runtime_error("captured domain comparison failed");
+        return {新特征比较状态::已完成, static_cast<std::int64_t>(*比较.关系)};
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"比较捕获特征值域",
+            L"捕获材料结构或纯值域比较异常，未形成业务判定。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"比较捕获特征值域",
+            L"捕获材料比较未知异常，未形成业务判定。");
     }
 }
 
