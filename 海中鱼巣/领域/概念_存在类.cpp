@@ -761,8 +761,10 @@ std::optional<存在概念信息> 概念_存在类::获取存在概念(
         结果.上位概念组 = 上位概念组;
         结果.下位概念组 = 下位概念组;
         return 结果;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"获取存在概念", L"概念读取异常。", 异常.what());
     } catch (...) {
-        return std::nullopt;
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"获取存在概念", L"概念读取未知异常。");
     }
 }
 

@@ -7,6 +7,7 @@
 #include "新_方法参数场景.h"
 #include "新_状态类.h"
 #include "服务要求.材料合同.h"
+#include "服务对象.材料合同.h"
 
 namespace 海中鱼巣 {
 
@@ -101,6 +102,7 @@ struct 新本能函数本次结果 final {
     std::vector<新本能二次特征观察结果> 已形成二次特征结果组;
     std::vector<稳定编码> 建议观察特征节点组;
     std::optional<新服务需求信息包> 服务需求信息包;
+    std::optional<新服务对象材料> 服务对象观察材料;
 
     friend bool operator==(const 新本能函数本次结果&,
         const 新本能函数本次结果&) = default;
@@ -137,6 +139,8 @@ public:
     static 新本能函数本次条件结果对 主动获取服务需求(
         const 方法参数场景&) noexcept;
     static 新本能函数本次条件结果对 被动获取服务需求(
+        const 方法参数场景&) noexcept;
+    static 新本能函数本次条件结果对 获取服务对象(
         const 方法参数场景&) noexcept;
 private:
     static 新本能函数本次条件结果对 获取服务需求(

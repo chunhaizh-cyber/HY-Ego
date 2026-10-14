@@ -1,4 +1,5 @@
 #include "新_特征值类.h"
+#include "../核心/容错检查.h"
 
 #include <algorithm>
 #include <limits>
@@ -369,8 +370,10 @@ public:
         try {
             std::scoped_lock 锁(互斥_);
             return 获取特征值已加锁(节点);
+        } catch (const std::exception& 异常) {
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"获取特征值", L"材料读取异常。", 异常.what());
         } catch (...) {
-            return std::nullopt;
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"获取特征值", L"材料读取未知异常。");
         }
     }
 

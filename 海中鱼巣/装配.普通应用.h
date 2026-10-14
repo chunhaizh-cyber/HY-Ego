@@ -90,6 +90,7 @@ struct 普通应用装配结果 final {
     std::optional<治理时间概念集合> 治理时间概念;
     std::optional<稳定编码> 服务任务特征概念节点;
     std::optional<稳定编码> 服务任务特征节点;
+    std::optional<稳定编码> 获取服务对象方法节点;
 
     bool 成功() const noexcept;
 };

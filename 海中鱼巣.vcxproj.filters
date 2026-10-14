@@ -386,6 +386,15 @@
     <ClInclude Include="海中鱼巣\领域\服务要求.材料合同.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\服务对象.材料合同.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\业务\服务对象.本能运行服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\服务对象.本能运行服务.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClInclude Include="海中鱼巣\业务\服务需求.本能运行服务.h">
       <Filter>头文件</Filter>
     </ClInclude>

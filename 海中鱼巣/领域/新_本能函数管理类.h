@@ -9,6 +9,8 @@
 
 namespace 海中鱼巣 {
 inline constexpr std::string_view 新本能函数登记名_服务值结算 = "服务值结算";
+inline constexpr std::string_view 新本能函数登记名_获取服务对象 =
+    "builtin.service_object.acquire.v1";
 inline constexpr std::string_view 新本能函数登记名_主动获取服务需求 =
     "builtin.service_requirement.acquire_active.v1";
 inline constexpr std::string_view 新本能函数登记名_被动获取服务需求 =
@@ -90,6 +92,22 @@ public:
         std::shared_ptr<新服务需求获取本能端口>) noexcept;
     static 新本能函数端口装配状态 关闭服务需求获取端口(
         新服务需求获取本能端口&) noexcept;
+    static 新本能函数端口装配状态 装配服务对象获取端口(
+        std::shared_ptr<新服务对象获取本能端口>) noexcept;
+    static 新本能函数端口装配状态 关闭服务对象获取端口(
+        新服务对象获取本能端口&) noexcept;
+
+    // X属于外层执行器；调用期绑定精确容器地址，不成为函数参数或世界事实。
+    class 本能执行守卫 final {
+    public:
+        本能执行守卫(const 方法参数场景&, 稳定编码 执行实例节点) noexcept;
+        ~本能执行守卫();
+        本能执行守卫(const 本能执行守卫&) = delete;
+        本能执行守卫& operator=(const 本能执行守卫&) = delete;
+    private:
+        const 方法参数场景* 场景_;
+    };
+    static std::optional<稳定编码> 读取本次执行实例(const 方法参数场景&) noexcept;
 
     // 同名同入口返回精确重复；同名不同入口拒绝，已登记入口不允许替换。
     static 新本能函数登记状态 登记(
@@ -109,6 +127,7 @@ public:
         const 方法参数场景& 参数场景) noexcept;
 
 private:
+    static std::shared_ptr<新服务对象获取本能端口> 租用服务对象获取端口() noexcept;
     static std::shared_ptr<新服务需求获取本能端口> 租用服务需求获取端口() noexcept;
     class 服务值结算调用守卫 final {
     public:
