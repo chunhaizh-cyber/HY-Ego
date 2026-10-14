@@ -60,6 +60,70 @@ constexpr std::array<最小模板定义, 6> 最小结构表{{
         角色项(初始化源角色::区间下界), 角色项(初始化源角色::区间上界)}}
 }};
 
+std::optional<指代声明规则> 解析指代规则词元(std::string_view 词) noexcept {
+    if (词 == "作用域说话者") return 指代声明规则::作用域说话者;
+    if (词 == "作用域受话者") return 指代声明规则::作用域受话者;
+    if (词 == "作用域第三方") return 指代声明规则::作用域第三方;
+    if (词 == "相对近指") return 指代声明规则::相对近指;
+    if (词 == "相对远指") return 指代声明规则::相对远指;
+    if (词 == "受限身份变量") return 指代声明规则::受限身份变量;
+    return std::nullopt;
+}
+std::optional<指代目标范围> 解析指代目标范围词元(std::string_view 词) noexcept {
+    if (词 == "单个已登记强类型信息节点")
+        return 指代目标范围::单个已登记强类型信息节点;
+    return std::nullopt;
+}
+std::optional<指代参数角色> 解析指代参数角色词元(std::string_view 词) noexcept {
+    if (词 == "目标") return 指代参数角色::目标;
+    if (词 == "作用域") return 指代参数角色::作用域;
+    if (词 == "参照中心") return 指代参数角色::参照中心;
+    if (词 == "参照维度规则") return 指代参数角色::参照维度规则;
+    if (词 == "主体类型限制") return 指代参数角色::主体类型限制;
+    return std::nullopt;
+}
+std::optional<指代参数类型> 解析指代参数类型词元(std::string_view 词) noexcept {
+    if (词 == "强类型信息节点") return 指代参数类型::强类型信息节点;
+    if (词 == "身份变量") return 指代参数类型::身份变量;
+    if (词 == "交互作用域") return 指代参数类型::交互作用域;
+    if (词 == "参照信息节点") return 指代参数类型::参照信息节点;
+    if (词 == "正式参照规则") return 指代参数类型::正式参照规则;
+    if (词 == "正式主体类型限制") return 指代参数类型::正式主体类型限制;
+    return std::nullopt;
+}
+bool 指代声明参数相容(const 指代概念定义& 定义) noexcept {
+    if (定义.目标范围 != 指代目标范围::单个已登记强类型信息节点
+        || !定义.特征约束组.empty()) return false;
+    const auto& p = 定义.参数组;
+    if (p.size() < 2 || p.size() > 4
+        || p[0] != 指代参数定义{指代参数角色::目标,
+            定义.规则 == 指代声明规则::受限身份变量
+                ? 指代参数类型::身份变量 : 指代参数类型::强类型信息节点}
+        || p[1] != 指代参数定义{指代参数角色::作用域, 指代参数类型::交互作用域}) return false;
+    switch (定义.规则) {
+    case 指代声明规则::作用域说话者:
+    case 指代声明规则::作用域受话者:
+    case 指代声明规则::作用域第三方: return p.size() == 2;
+    case 指代声明规则::相对近指:
+    case 指代声明规则::相对远指:
+        return p.size() == 4
+            && p[2] == 指代参数定义{指代参数角色::参照中心, 指代参数类型::参照信息节点}
+            && p[3] == 指代参数定义{指代参数角色::参照维度规则, 指代参数类型::正式参照规则};
+    case 指代声明规则::受限身份变量:
+        return p.size() == 3
+            && p[2] == 指代参数定义{指代参数角色::主体类型限制,
+                指代参数类型::正式主体类型限制};
+    default: return false;
+    }
+}
+bool 指代行结构匹配(const 行视图& 行) noexcept {
+    const auto& w = 行.词组;
+    if (w.size() != 14 && w.size() != 16 && w.size() != 18) return false;
+    return w[1].词面 == "是" && w[2].词面 == "指代" && w[3].词面 == "规则"
+        && w[5].词面 == "目标范围" && w[7].词面 == "参数"
+        && w[w.size() - 2].词面 == "特征约束";
+}
+
 bool 是整数源角色(初始化源角色 角色) noexcept {
     return 角色 == 初始化源角色::整数值 || 角色 == 初始化源角色::分量序号
         || 角色 == 初始化源角色::区间下界 || 角色 == 初始化源角色::区间上界;
@@ -191,6 +255,77 @@ void 核验完整材料(const 初始化定义材料& 材料, std::size_t 标量�
         if (项.局部编号 != i || !范围有效(项.来源)
             || 项.作用域 != 初始化定义作用域::概念定义声明)
             throw std::logic_error("initialization definition/source invariant");
+        if (项.模板 == 初始化最小模板::指代定义声明) {
+            const auto& 值 = std::get<初始化指代声明材料>(项.载荷);
+            核验引用(值.指代概念, 初始化符号角色类型::指代概念引用);
+            const auto& 符号 = 材料.符号组[值.指代概念.局部编号];
+            const std::size_t 词数 = 10 + 2 * 值.定义.参数组.size();
+            if (词数 != 14 && 词数 != 16 && 词数 != 18)
+                throw std::logic_error("pronoun template arity invariant");
+            std::array<std::size_t, 18> 位置{};
+            std::array<初始化源角色, 18> 类型{};
+            std::size_t 数量 = 0;
+            const auto 加 = [&](std::size_t n, 初始化源角色 t) {
+                位置[数量] = n; 类型[数量++] = t;
+            };
+            加(0, 初始化源角色::指代概念);
+            加(4, 初始化源角色::指代声明规则);
+            加(6, 初始化源角色::指代目标范围);
+            for (std::size_t j = 0; j < 值.定义.参数组.size(); ++j) {
+                加(8 + 2 * j, 初始化源角色::指代参数角色);
+                加(9 + 2 * j, 初始化源角色::指代参数类型);
+            }
+            加(词数 - 1, 初始化源角色::指代特征约束);
+            if (项.角色来源组.size() != 数量 || !指代声明参数相容(值.定义))
+                throw std::logic_error("pronoun payload invariant");
+            const auto 词面 = [&](std::size_t j) {
+                const auto& r = 项.角色来源组[j].来源;
+                return std::string_view(材料.原文).substr(r.字节起点, r.字节终点 - r.字节起点);
+            };
+            for (std::size_t j = 0; j < 数量; ++j) {
+                const auto& r = 项.角色来源组[j];
+                if (r.角色 != 类型[j] || r.行内词序 != 位置[j] || !范围有效(r.来源)
+                    || r.来源.行号 != 项.来源.行号
+                    || r.来源.字节起点 < 项.来源.字节起点
+                    || r.来源.字节终点 > 项.来源.字节终点)
+                    throw std::logic_error("pronoun source invariant");
+            }
+            const auto& first = 项.角色来源组.front().来源;
+            const auto& last = 项.角色来源组.back().来源;
+            if (first.字节起点 != 项.来源.字节起点
+                || last.字节终点 != 项.来源.字节终点
+                || first.字节起点 != 符号.来源.字节起点
+                || first.字节终点 != 符号.来源.字节终点
+                || first.标量起点 != 符号.来源.标量起点
+                || first.标量终点 != 符号.来源.标量终点)
+                throw std::logic_error("pronoun symbol/line source invariant");
+            const auto 间隔 = [&](std::size_t a, std::size_t b) {
+                const auto& 左 = 项.角色来源组[a].来源;
+                const auto& 右 = 项.角色来源组[b].来源;
+                if (右.字节起点 < 左.字节终点)
+                    throw std::logic_error("pronoun overlapping source invariant");
+                return std::string_view(材料.原文).substr(左.字节终点,
+                    右.字节起点 - 左.字节终点);
+            };
+            if (间隔(0, 1) != " 是 指代 规则 "
+                || 间隔(1, 2) != " 目标范围 "
+                || 间隔(2, 3) != " 参数 "
+                || 间隔(数量 - 2, 数量 - 1) != " 特征约束 ")
+                throw std::logic_error("pronoun fixed marker invariant");
+            for (std::size_t j = 3; j + 1 < 数量 - 1; ++j)
+                if (间隔(j, j + 1) != " ")
+                    throw std::logic_error("pronoun parameter separator invariant");
+            if (词面(0) != 符号.词面
+                || 解析指代规则词元(词面(1)) != 值.定义.规则
+                || 解析指代目标范围词元(词面(2)) != 值.定义.目标范围
+                || 词面(数量 - 1) != "空")
+                throw std::logic_error("pronoun source/payload invariant");
+            for (std::size_t j = 0; j < 值.定义.参数组.size(); ++j)
+                if (解析指代参数角色词元(词面(3 + 2 * j)) != 值.定义.参数组[j].角色
+                    || 解析指代参数类型词元(词面(4 + 2 * j)) != 值.定义.参数组[j].类型)
+                    throw std::logic_error("pronoun parameter/source invariant");
+            continue;
+        }
         const 最小模板定义* 模板 = nullptr;
         for (const auto& 定义 : 最小结构表)
             if (定义.模板 == 项.模板) 模板 = &定义;
@@ -387,6 +522,87 @@ void 核验完整材料(const 初始化定义材料& 材料, std::size_t 标量�
 
     初始化定义材料 候选;
     for (const auto& 行 : 行组) {
+        if (指代行结构匹配(行)) {
+            const auto& w = 行.词组;
+            const auto 规则 = 解析指代规则词元(w[4].词面);
+            if (!规则) return 文本拒绝(初始化解释状态::定义不合法,
+                初始化诊断原因::指代枚举词不合法, w[4].来源);
+            const auto 目标范围 = 解析指代目标范围词元(w[6].词面);
+            if (!目标范围) return 文本拒绝(初始化解释状态::定义不合法,
+                初始化诊断原因::指代枚举词不合法, w[6].来源);
+            指代概念定义 定义;
+            定义.规则 = *规则;
+            定义.目标范围 = *目标范围;
+            for (std::size_t j = 8; j < w.size() - 2; j += 2) {
+                const auto 角色 = 解析指代参数角色词元(w[j].词面);
+                if (!角色) return 文本拒绝(初始化解释状态::定义不合法,
+                    初始化诊断原因::指代枚举词不合法, w[j].来源);
+                const auto 类型 = 解析指代参数类型词元(w[j + 1].词面);
+                if (!类型) return 文本拒绝(初始化解释状态::定义不合法,
+                    初始化诊断原因::指代枚举词不合法, w[j + 1].来源);
+                if (!定义.参数组.empty() && static_cast<int>(*角色)
+                    <= static_cast<int>(定义.参数组.back().角色))
+                    return 文本拒绝(初始化解释状态::定义不合法,
+                        初始化诊断原因::指代参数不合法, w[j].来源);
+                定义.参数组.push_back({*角色, *类型});
+            }
+            if (w.back().词面 != "空") return 文本拒绝(初始化解释状态::定义不合法,
+                初始化诊断原因::指代约束未支持, w.back().来源);
+            if (!指代声明参数相容(定义)) {
+                std::array<指代参数定义, 4> 预期{{
+                    {指代参数角色::目标, 指代参数类型::强类型信息节点},
+                    {指代参数角色::作用域, 指代参数类型::交互作用域},
+                    {指代参数角色::参照中心, 指代参数类型::参照信息节点},
+                    {指代参数角色::参照维度规则, 指代参数类型::正式参照规则}}};
+                std::size_t 必需数 = 2;
+                if (*规则 == 指代声明规则::相对近指
+                    || *规则 == 指代声明规则::相对远指) 必需数 = 4;
+                else if (*规则 == 指代声明规则::受限身份变量) {
+                    必需数 = 3;
+                    预期[0].类型 = 指代参数类型::身份变量;
+                    预期[2] = {指代参数角色::主体类型限制,
+                        指代参数类型::正式主体类型限制};
+                }
+                auto 失败范围 = 行.来源;
+                bool 已定位 = false;
+                for (std::size_t j = 0; j < std::min(必需数, 定义.参数组.size()); ++j) {
+                    if (定义.参数组[j].角色 != 预期[j].角色) {
+                        失败范围 = w[8 + 2 * j].来源; 已定位 = true; break;
+                    }
+                    if (定义.参数组[j].类型 != 预期[j].类型) {
+                        失败范围 = w[9 + 2 * j].来源; 已定位 = true; break;
+                    }
+                }
+                if (!已定位 && 定义.参数组.size() > 必需数)
+                    失败范围 = w[8 + 2 * 必需数].来源;
+                return 文本拒绝(初始化解释状态::定义不合法,
+                    初始化诊断原因::指代规则参数不符, 失败范围);
+            }
+            if (候选.符号组.size() == 额度.最大角色符号数)
+                return 资源拒绝(初始化额度种类::角色符号,
+                    范围诊断(初始化诊断原因::额度到限, w[0].来源));
+            初始化定义项 项;
+            项.局部编号 = 候选.定义组.size();
+            项.模板 = 初始化最小模板::指代定义声明;
+            项.来源 = 行.来源;
+            const 初始化符号引用 引用{候选.符号组.size()};
+            候选.符号组.push_back({引用, 初始化符号角色类型::指代概念引用,
+                std::string(w[0].词面), w[0].来源});
+            const auto 来源 = [&](std::size_t j, 初始化源角色 角色) {
+                项.角色来源组.push_back({角色, j, w[j].来源});
+            };
+            来源(0, 初始化源角色::指代概念);
+            来源(4, 初始化源角色::指代声明规则);
+            来源(6, 初始化源角色::指代目标范围);
+            for (std::size_t j = 8; j < w.size() - 2; j += 2) {
+                来源(j, 初始化源角色::指代参数角色);
+                来源(j + 1, 初始化源角色::指代参数类型);
+            }
+            来源(w.size() - 1, 初始化源角色::指代特征约束);
+            项.载荷 = 初始化指代声明材料{引用, std::move(定义)};
+            候选.定义组.push_back(std::move(项));
+            continue;
+        }
         const 最小模板定义* 命中 = nullptr;
         for (const auto& 模板 : 最小结构表)
             if (模板完整匹配(模板, 行)) {
@@ -464,6 +680,8 @@ void 核验完整材料(const 初始化定义材料& 材料, std::size_t 标量�
             项.载荷 = 初始化结构化分量区间材料{
                 引用[0], 分量整数[0], 分量整数[1], 分量整数[2]};
             break;
+        case 初始化最小模板::指代定义声明:
+            throw std::logic_error("pronoun template dispatch invariant");
         default: throw std::logic_error("initialization template dispatch invariant");
         }
         候选.定义组.push_back(std::move(项));

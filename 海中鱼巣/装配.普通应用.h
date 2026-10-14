@@ -6,6 +6,7 @@
 #include "业务/初始化.概念名称.h"
 #include "业务/初始化.结构化子概念.h"
 #include "业务/初始化.语言知识.h"
+#include "业务/初始化.指代种子.h"
 #include "线程/新_自我线程类.h"
 #include "线程/新_任务管理线程类.h"
 #include "界面/宿主.网页对话.h"
@@ -69,6 +70,7 @@ struct 普通应用装配结果 final {
     std::optional<初始化概念名称结果> 初始概念名称;
     std::optional<初始化结构化子概念结果> 结构化子概念;
     std::optional<初始化语言知识结果> 语言知识;
+    std::optional<初始化指代种子结果> 指代种子;
     std::optional<稳定编码> 自然语言世界树根节点;
     std::optional<稳定编码> 内部治理世界树根节点;
     std::optional<稳定编码> 第一权限人存在节点;

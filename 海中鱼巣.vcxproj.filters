@@ -60,6 +60,12 @@
     <ClInclude Include="海中鱼巣\业务\初始化.语言知识.h">
       <Filter>业务</Filter>
     </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\初始化.指代种子.cpp">
+      <Filter>业务</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\初始化.指代种子.h">
+      <Filter>业务</Filter>
+    </ClInclude>
     <ClCompile Include="海中鱼巣\业务\模拟学习.算法.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -497,6 +503,9 @@
       <Filter>资源文件</Filter>
     </None>
     <None Include="初始化材料\最小语言知识种子.txt">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="初始化材料\指代定义种子.txt">
       <Filter>资源文件</Filter>
     </None>
     <None Include="初始化材料\README.md">
