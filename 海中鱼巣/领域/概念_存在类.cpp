@@ -1,4 +1,5 @@
 #include "概念_存在类.h"
+#include "../核心/容错检查.h"
 
 #include <algorithm>
 #include <mutex>
@@ -827,8 +828,12 @@ bool 概念_存在类::是存在概念节点(稳定编码 节点) const noexcept
         std::lock_guard 锁(存在概念图互斥);
         return 结构仍存在() && 节点仍存在(节点)
             && 读取概念种类(节点).has_value();
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"概念_存在类::是存在概念节点",
+            L"概念身份读取发生C++异常，未形成业务结果。", 异常.what());
     } catch (...) {
-        return false;
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"概念_存在类::是存在概念节点",
+            L"概念身份读取发生未知C++异常，未形成业务结果。");
     }
 }
 
@@ -837,8 +842,12 @@ bool 概念_存在类::是专属存在概念节点(稳定编码 节点) const no
         std::lock_guard 锁(存在概念图互斥);
         const auto 种类 = 结构仍存在() ? 读取概念种类(节点) : std::nullopt;
         return 种类 && *种类 == 存在概念种类::专属;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"概念_存在类::是专属存在概念节点",
+            L"专属概念身份读取发生C++异常，未形成业务结果。", 异常.what());
     } catch (...) {
-        return false;
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"概念_存在类::是专属存在概念节点",
+            L"专属概念身份读取发生未知C++异常，未形成业务结果。");
     }
 }
 
@@ -847,8 +856,12 @@ bool 概念_存在类::是抽象存在概念节点(稳定编码 节点) const no
         std::lock_guard 锁(存在概念图互斥);
         const auto 种类 = 结构仍存在() ? 读取概念种类(节点) : std::nullopt;
         return 种类 && *种类 == 存在概念种类::抽象;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"概念_存在类::是抽象存在概念节点",
+            L"抽象概念身份读取发生C++异常，未形成业务结果。", 异常.what());
     } catch (...) {
-        return false;
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"概念_存在类::是抽象存在概念节点",
+            L"抽象概念身份读取发生未知C++异常，未形成业务结果。");
     }
 }
 
@@ -863,8 +876,12 @@ std::vector<稳定编码> 概念_存在类::查询上位存在概念(
         }
         排序去重(结果);
         return 结果;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"概念_存在类::查询上位存在概念",
+            L"上位概念读取发生C++异常，未形成业务结果。", 异常.what());
     } catch (...) {
-        return {};
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"概念_存在类::查询上位存在概念",
+            L"上位概念读取发生未知C++异常，未形成业务结果。");
     }
 }
 

@@ -1,4 +1,5 @@
 #include "新_存在类.h"
+#include "../核心/容错检查.h"
 
 #include <algorithm>
 #include <mutex>
@@ -311,8 +312,12 @@ bool 新_存在类::是存在节点(稳定编码 节点) const noexcept {
         if (!结构仍存在() || !节点仍存在(节点)) return false;
         const auto 类型 = 读取唯一节点字段(节点, 节点类型字段);
         return 类型 && *类型 == 存在节点类型;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"新_存在类::是存在节点",
+            L"存在身份读取发生C++异常，未形成业务结果。", 异常.what());
     } catch (...) {
-        return false;
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"新_存在类::是存在节点",
+            L"存在身份读取发生未知C++异常，未形成业务结果。");
     }
 }
 
@@ -339,8 +344,12 @@ bool 新_存在类::存在概念包含(
             待访问.insert(待访问.end(), 上位组.begin(), 上位组.end());
         }
         return false;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"新_存在类::存在概念包含",
+            L"概念包含读取发生C++异常，未形成业务结果。", 异常.what());
     } catch (...) {
-        return false;
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"新_存在类::存在概念包含",
+            L"概念包含读取发生未知C++异常，未形成业务结果。");
     }
 }
 
@@ -354,8 +363,12 @@ bool 新_存在类::存在节点属于概念(
         }
         const auto 专属概念 = 查询专属存在概念(存在节点);
         return 专属概念 && 存在概念包含(概念节点, *专属概念);
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"新_存在类::存在节点属于概念",
+            L"存在归属读取发生C++异常，未形成业务结果。", 异常.what());
     } catch (...) {
-        return false;
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"新_存在类::存在节点属于概念",
+            L"存在归属读取发生未知C++异常，未形成业务结果。");
     }
 }
 
@@ -706,8 +719,12 @@ std::optional<稳定编码> 新_存在类::查询专属存在概念(
         const auto 概念 = 读取唯一节点字段(存在节点, 专属存在概念字段);
         return 概念 && 存在概念服务_.是专属存在概念节点(*概念)
             ? 概念 : std::nullopt;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"新_存在类::查询专属存在概念",
+            L"专属概念读取发生C++异常，未形成业务结果。", 异常.what());
     } catch (...) {
-        return std::nullopt;
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"新_存在类::查询专属存在概念",
+            L"专属概念读取发生未知C++异常，未形成业务结果。");
     }
 }
 

@@ -1,4 +1,5 @@
 #include "基础数据集.h"
+#include "容错检查.h"
 
 #include <limits>
 #include <mutex>
@@ -101,8 +102,12 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
         const auto 位置 = 节点_.find(节点.值);
         return 位置 == 节点_.end()
             ? std::nullopt : std::optional<基础节点>{位置->second};
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"基础数据集::查询节点",
+            L"节点读取发生C++异常，未形成业务结果。", 异常.what());
     } catch (...) {
-        return std::nullopt;
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"基础数据集::查询节点",
+            L"节点读取发生未知C++异常，未形成业务结果。");
     }
 }
 
