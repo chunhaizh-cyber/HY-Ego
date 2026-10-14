@@ -215,6 +215,7 @@
     <ClCompile Include="海中鱼巣\业务\服务值结算.本能运行服务.cpp" />
     <ClCompile Include="海中鱼巣\业务\服务需求.本能运行服务.cpp" />
     <ClCompile Include="海中鱼巣\业务\服务对象.本能运行服务.cpp" />
+    <ClCompile Include="海中鱼巣\业务\动作概念.方法投影服务.cpp" />
     <ClCompile Include="海中鱼巣\业务\服务要求.结构化.cpp" />
     <ClCompile Include="海中鱼巣\领域\新_本能函数管理类.cpp" />
     <ClCompile Include="海中鱼巣\领域\新_因果类.cpp" />
@@ -289,6 +290,8 @@
     <ClInclude Include="海中鱼巣\领域\新_本能函数管理类.h" />
     <ClInclude Include="海中鱼巣\领域\新_因果公共类型.h" />
     <ClInclude Include="海中鱼巣\领域\新_因果类.h" />
+    <ClInclude Include="海中鱼巣\领域\动作概念.只读投影合同.h" />
+    <ClInclude Include="海中鱼巣\业务\动作概念.方法投影服务.h" />
     <ClInclude Include="海中鱼巣\核心\日志系统.h" />
     <ClInclude Include="海中鱼巣\核心\容错检查.h" />
     <ClInclude Include="海中鱼巣\线程\线程生命周期.数据.h" />

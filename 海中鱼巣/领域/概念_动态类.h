@@ -8,13 +8,19 @@
 #include "新_特征值类.h"
 #include "概念_特征类.h"
 #include "概念_二次特征类.h"
+#include "动作概念.只读投影合同.h"
 
 namespace 海中鱼巣 {
+
+class 概念_存在类;
 
 enum class 动态概念种类 : std::uint8_t {
     实例 = 1,
     聚合 = 2
 };
+
+// 定义类别与实例/共享抽象程度是不同维度。
+enum class 动态概念定义类别 : std::int64_t { 变化 = 1, 动作 = 2 };
 
 // 前、后值域由特征概念节点承载，避免在动态概念中复制第二份值域事实。
 struct 动态概念状态项 final {
@@ -49,6 +55,8 @@ struct 动态概念信息 final {
     std::vector<动态概念特征项> 动态特征组;
     std::vector<稳定编码> 上位概念组;
     std::vector<稳定编码> 下位概念组;
+    动态概念定义类别 定义类别 = 动态概念定义类别::变化;
+    std::optional<动作概念定义> 动作定义;
     friend bool operator==(const 动态概念信息&,
         const 动态概念信息&) = default;
 };
@@ -99,9 +107,14 @@ public:
     概念_动态类(
         概念_特征类& 特征概念服务,
         const 新_特征值类& 特征值服务,
-        概念_二次特征类& 二次特征概念服务) noexcept;
+        概念_二次特征类& 二次特征概念服务,
+        const 概念_存在类* 动作存在概念读取 = nullptr) noexcept;
 
     bool 初始化() noexcept;
+
+    // 仅由真实动作入口提交已核验的方法声明投影；不推断动作效果。
+    动态概念建立结果 建立或取得动作概念(const 动作概念定义&) noexcept;
+    bool 是动作概念节点(稳定编码 节点) const noexcept;
 
     // 每个双状态原子动态先建立一个新的实例概念，不按内容相同复用。
     动态概念建立结果 建立实例动态概念(
@@ -152,6 +165,7 @@ public:
 private:
     概念_特征类& 特征概念服务_;
     const 新_特征值类& 特征值服务_;
+    const 概念_存在类* 动作存在概念读取_ = nullptr;
     概念_二次特征类& 二次特征概念服务_;
 };
 

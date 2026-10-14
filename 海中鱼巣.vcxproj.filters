@@ -24,6 +24,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="海中鱼巣\业务\动作概念.方法投影服务.cpp">
+      <Filter>业务</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\领域\动作概念.只读投影合同.h">
+      <Filter>领域\合同</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\业务\动作概念.方法投影服务.h">
+      <Filter>业务</Filter>
+    </ClInclude>
     <ClCompile Include="海中鱼巣\启动.程序入口.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
