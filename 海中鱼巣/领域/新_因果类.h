@@ -25,6 +25,8 @@ class 新_因果类 final
               const 新_特征值类 &, 新_场景类 &) noexcept;
     新因果共同抽象结果 抽象共同因果(const std::vector<稳定编码> &) noexcept;
     新因果共同抽象结果 获取概念因果(稳定编码) const noexcept;
+    // 完整具体规律全集；不包含概念因果，不形成规律或更新统计。
+    std::vector<稳定编码> 查询具体因果() const noexcept;
     std::vector<稳定编码> 查询概念因果() const noexcept;
 
     新因果处理结果 处理结果状态(const 新因果发生记录 &发生) noexcept;

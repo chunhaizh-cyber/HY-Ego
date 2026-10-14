@@ -197,6 +197,7 @@
     <ClCompile Include="海中鱼巣\业务\新_动态特征抽取类.cpp" />
     <ClCompile Include="海中鱼巣\业务\新_动态概念抽象类.cpp" />
     <ClCompile Include="海中鱼巣\业务\新_世界树类.cpp" />
+    <ClCompile Include="海中鱼巣\业务\因果.反向查询服务.cpp" />
     <ClCompile Include="海中鱼巣\线程\新_自我线程类.cpp" />
     <ClCompile Include="海中鱼巣\线程\新_自我工作线程类.cpp" />
     <ClCompile Include="海中鱼巣\线程\新_任务管理线程类.cpp" />
@@ -267,6 +268,7 @@
     <ClInclude Include="海中鱼巣\业务\新_动态特征抽取类.h" />
     <ClInclude Include="海中鱼巣\业务\新_动态概念抽象类.h" />
     <ClInclude Include="海中鱼巣\业务\新_世界树类.h" />
+    <ClInclude Include="海中鱼巣\业务\因果.反向查询服务.h" />
     <ClInclude Include="海中鱼巣\领域\概念_存在类.h" />
     <ClInclude Include="海中鱼巣\领域\新_存在类.h" />
     <ClInclude Include="海中鱼巣\领域\新_场景类.h" />

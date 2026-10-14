@@ -308,6 +308,12 @@
     <ClCompile Include="海中鱼巣\业务\新_世界树类.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\因果.反向查询服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\因果.反向查询服务.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClInclude Include="海中鱼巣\线程\新_自我线程类.h">
       <Filter>头文件</Filter>
     </ClInclude>
