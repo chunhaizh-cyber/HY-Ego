@@ -150,6 +150,8 @@
     <ClCompile Include="海中鱼巣\启动.程序入口.cpp" />
     <ClCompile Include="海中鱼巣\业务\解释.初始化最小结构.cpp" />
     <ClInclude Include="海中鱼巣\业务\解释.初始化最小结构.h" />
+    <ClCompile Include="海中鱼巣\业务\初始化.概念名称.cpp" />
+    <ClInclude Include="海中鱼巣\业务\初始化.概念名称.h" />
     <ClCompile Include="海中鱼巣\业务\模拟学习.算法.cpp" />
     <ClInclude Include="海中鱼巣\业务\模拟学习.算法.h" />
     <ClCompile Include="海中鱼巣\业务\自检.模拟学习.cpp" />
@@ -302,6 +304,14 @@
   <Target Name="复制D455RealSense运行库" AfterTargets="Build" Condition="'$(EnableD455RealSense)'=='true' and '$(Platform)'=='x64'">
     <Copy Condition="'$(Configuration)'=='Debug'" SourceFiles="$(D455VcpkgRoot)\installed\x64-windows\debug\bin\realsense2d.dll;$(D455VcpkgRoot)\installed\x64-windows\debug\bin\lz4d.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
     <Copy Condition="'$(Configuration)'=='Release'" SourceFiles="$(D455VcpkgRoot)\installed\x64-windows\bin\realsense2.dll;$(D455VcpkgRoot)\installed\x64-windows\bin\lz4.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+  <ItemGroup>
+    <None Include="初始化材料\最小结构定义种子.txt" />
+    <None Include="初始化材料\README.md" />
+  </ItemGroup>
+  <Target Name="复制初始化概念名称材料" AfterTargets="Build">
+    <MakeDir Directories="$(OutDir)初始化材料" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\初始化材料\最小结构定义种子.txt" DestinationFiles="$(OutDir)初始化材料\最小结构定义种子.txt" SkipUnchangedFiles="true" />
   </Target>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

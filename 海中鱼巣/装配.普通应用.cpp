@@ -16,12 +16,16 @@
 
 #include <chrono>
 #include <algorithm>
+#include <array>
+#include <filesystem>
+#include <fstream>
 #include <limits>
 #include <memory>
 #include <mutex>
 #include <new>
 #include <set>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <utility>
@@ -171,6 +175,7 @@ struct 普通应用上下文 final {
     方法问题学习服务 问题学习;
     std::optional<新自我线程初始化请求> 自我初始化请求;
     std::optional<普通应用装配结果> 装配结果;
+    std::optional<初始化概念名称结果> 初始概念名称;
     bool 治理线程已启动 = false;
     std::optional<稳定编码> 服务任务自我存在节点;
     std::optional<稳定编码> 服务任务特征概念节点;
@@ -1650,7 +1655,74 @@ std::optional<新自我线程初始化请求> 形成自我初始化请求(
         : std::nullopt;
 }
 
-普通应用装配结果 完成装配(普通应用上下文& 当前) noexcept {
+std::string 读取初始化概念名称文本() {
+    std::vector<wchar_t> 路径缓冲(260);
+    std::filesystem::path 模块路径;
+    for (;;) {
+        const auto 长度 = GetModuleFileNameW(nullptr, 路径缓冲.data(),
+            static_cast<DWORD>(路径缓冲.size()));
+        if (!长度) throw std::runtime_error("无法读取当前程序模块绝对路径");
+        if (长度 < 路径缓冲.size()) {
+            模块路径 = std::wstring{路径缓冲.data(), 长度};
+            break;
+        }
+        if (路径缓冲.size() > (std::numeric_limits<DWORD>::max)() / 2)
+            throw std::runtime_error("当前程序模块路径无法完整读取");
+        路径缓冲.resize(路径缓冲.size() * 2);
+    }
+    const auto 路径 = 模块路径.parent_path() / L"初始化材料" / L"最小结构定义种子.txt";
+    std::ifstream 文件(路径, std::ios::binary);
+    if (!文件.is_open()) throw std::runtime_error("无法打开初始化材料/最小结构定义种子.txt");
+    std::string 原文;
+    std::array<char, 8192> 字节缓冲{};
+    while (文件) {
+        文件.read(字节缓冲.data(), static_cast<std::streamsize>(字节缓冲.size()));
+        const auto 数量 = 文件.gcount();
+        if (数量 > 0) 原文.append(字节缓冲.data(), static_cast<std::size_t>(数量));
+    }
+    if (文件.bad() || !文件.eof()) throw std::runtime_error("初始化概念名称文本未完整读取到EOF");
+    return 原文;
+}
+
+void 初始化普通应用概念名称(普通应用上下文& 当前, 普通应用装配结果& 结果,
+    const std::string& 标准文本, bool 只读复核) noexcept {
+    try {
+        if (!当前.中文语言节点)
+            throw std::logic_error("概念名称初始化缺少正式中文身份");
+        初始化概念名称请求 请求{
+            标准文本, *当前.中文语言节点, 严格UTF8字节精确规范化合同节点,
+            读取先天概念名称环境(当前.世界事实.特征概念服务), {}};
+        auto 材料 = 只读复核
+            ? 读取已有概念名称(请求, 当前.世界事实.语言服务, 当前.世界事实.词服务,
+                当前.世界事实.名称关系服务, 当前.世界事实.特征概念服务)
+            : 初始化已有概念名称(请求, 当前.世界事实.语言服务, 当前.世界事实.词服务,
+                当前.世界事实.名称关系服务, 当前.世界事实.特征概念服务);
+        当前.初始概念名称 = std::move(材料);
+        结果.初始概念名称 = 当前.初始概念名称;
+        if (当前.初始概念名称->状态 != 初始化概念名称状态::已完成) {
+            const auto& 未完成材料 = *当前.初始概念名称;
+            std::ostringstream 原因;
+            原因 << "状态=" << static_cast<int>(未完成材料.状态)
+                << "，阶段=" << static_cast<int>(未完成材料.阶段);
+            if (未完成材料.当前名称项) {
+                const auto& 项 = 未完成材料.名称项组[*未完成材料.当前名称项];
+                原因 << "，名称=" << 项.词面 << "，概念=" << 项.概念节点.值;
+            }
+            原因 << "，原因=" << 未完成材料.诊断说明;
+            const auto 说明 = 原因.str();
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"初始化普通应用概念名称",
+                L"固定初始化名称材料未闭合；已发生步骤保留。", 说明.c_str());
+        }
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"初始化普通应用概念名称",
+            L"概念名称解释、发布或结果保存发生工程异常。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"初始化普通应用概念名称",
+            L"概念名称解释、发布或结果保存发生未知工程异常。");
+    }
+}
+
+普通应用装配结果 完成装配(普通应用上下文& 当前, const std::string& 标准文本) noexcept {
     普通应用装配结果 结果;
     try {
         结果.世界树 = 当前.世界树.初始化();
@@ -1675,6 +1747,7 @@ std::optional<新自我线程初始化请求> 形成自我初始化请求(
         结果.第一权限人存在节点 = 当前.第一权限人存在节点;
         结果.第一权限人专属存在概念节点 =
             当前.第一权限人专属存在概念节点;
+        初始化普通应用概念名称(当前, 结果, 标准文本, false);
         if (!建立人类描述特征(当前))
             工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"人类描述初始化", L"名字或性别描述结构无法完整建立。");
         if (!建立人类存在概念(当前)) {
@@ -1872,6 +1945,7 @@ bool 普通应用装配结果::成功() const noexcept {
         for (std::size_t j = 0; j < i; ++j) if (治理节点[i] == 治理节点[j]) return false;
     }
     return 状态 == 普通应用装配状态::已装配
+        && 初始概念名称 && 初始概念名称->状态 == 初始化概念名称状态::已完成
         && 获取服务对象方法节点 && 有效(*获取服务对象方法节点)
         && 世界树 && 普通应用装配内部::世界初始化成功(世界树->状态)
         && 自然语言世界树 && 自然语言世界树->成功()
@@ -1921,8 +1995,31 @@ bool 普通应用网页消息处理结果::成功() const noexcept {
 普通应用装配结果 构造普通应用上下文(
     const 普通应用配置& 配置) noexcept {
     using namespace 普通应用装配内部;
-    std::unique_lock 锁(上下文锁);
     if (!配置有效(配置)) return {};
+    std::string 标准文本;
+    try {
+        标准文本 = 读取初始化概念名称文本();
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取初始化概念名称文本",
+            L"程序旁初始化资源无法完整读取。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取初始化概念名称文本",
+            L"程序旁初始化资源读取发生未知工程异常。");
+    }
+    std::unique_lock 锁(上下文锁);
+    const auto 固定装配结果 = [&]() noexcept -> 普通应用装配结果 {
+        try {
+            return *上下文->装配结果;
+        } catch (const std::exception& 异常) {
+            锁.unlock();
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"固定普通应用装配结果",
+                L"装配结果及初始名称材料无法完整复制。", 异常.what());
+        } catch (...) {
+            锁.unlock();
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"固定普通应用装配结果",
+                L"装配结果及初始名称材料复制发生未知工程异常。");
+        }
+    };
     try {
         if (!上下文) {
             上下文 = std::make_unique<普通应用上下文>(配置);
@@ -1930,8 +2027,9 @@ bool 普通应用网页消息处理结果::成功() const noexcept {
             return {};
         }
         if (上下文->装配结果 && 上下文->装配结果->成功()) {
-            auto 结果 = *上下文->装配结果;
+            auto 结果 = 固定装配结果();
             auto* const 当前 = 上下文.get();
+            初始化普通应用概念名称(*当前, 结果, 标准文本, true);
             const auto 同步绑定 = 当前->任务服务.绑定服务任务集合同步(
                 当前, *结果.自我->完成服务需求,
                 [当前](const std::vector<稳定编码>& 成员) {
@@ -1945,8 +2043,8 @@ bool 普通应用网页消息处理结果::成功() const noexcept {
             if (结果.状态 != 普通应用装配状态::已装配) 记录普通装配观察(结果);
             return 结果;
         }
-        上下文->装配结果 = 完成装配(*上下文);
-        const auto 结果 = *上下文->装配结果;
+        上下文->装配结果 = 完成装配(*上下文, 标准文本);
+        auto 结果 = 固定装配结果();
         auto* const 报告者 = &上下文->服务结算运行;
         锁.unlock();
         报告者->报告待处理工程异常();
