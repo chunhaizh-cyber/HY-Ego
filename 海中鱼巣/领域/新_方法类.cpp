@@ -16,6 +16,7 @@
 #include "新_本能函数管理类.h"
 #include "概念_存在类.h"
 #include "概念_特征类.h"
+#include "../核心/容错检查.h"
 
 namespace 海中鱼巣 {
 
@@ -1871,6 +1872,59 @@ std::optional<新方法信息> 新_方法类::获取方法(
         return 读取方法信息(方法节点, 特征概念服务_);
     } catch (...) {
         return std::nullopt;
+    }
+}
+
+新_方法类::执行结构读取结果 新_方法类::读取方法执行结构闭包(
+    const std::vector<稳定编码>& 根方法节点组) const noexcept {
+    using 状态 = 执行结构读取状态;
+    try {
+        if (根方法节点组.empty() || std::any_of(根方法节点组.begin(),
+            根方法节点组.end(), [](auto 编码) { return !有效(编码); }))
+            return {状态::入口拒绝, {}, {}};
+        std::lock_guard 锁(新方法互斥);
+        if (!结构已分配()) return {状态::尚未初始化, {}, {}};
+        if (!结构仍存在()) 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
+            L"读取方法执行结构闭包", L"方法结构元数据损坏");
+        std::set<稳定编码> 根组(根方法节点组.begin(), 根方法节点组.end());
+        for (const auto 根 : 根组) {
+            const auto 读取 = 全局基础数据集.查询完整节点结构(根);
+            if (读取.状态 == 基础结构操作状态::节点不存在)
+                return {状态::方法不存在, {}, {}};
+            if (读取.状态 != 基础结构操作状态::已完成 || !读取.结构)
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
+                    L"读取方法执行结构闭包", L"方法入口读取失败");
+            if (!节点类型为(根, 方法节点类型)) return {状态::方法不存在, {}, {}};
+        }
+        std::set<稳定编码> 待读 = 根组, 已读;
+        执行结构读取结果 结果{状态::已读取, {根组.begin(), 根组.end()}, {}};
+        while (!待读.empty()) {
+            const auto 节点 = *待读.begin();
+            待读.erase(待读.begin());
+            if (!已读.insert(节点).second) continue;
+            auto 方法 = 读取方法信息(节点, 特征概念服务_);
+            if (!方法) 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
+                L"读取方法执行结构闭包", L"正式方法闭包断链或定义损坏");
+            if (方法->来源方法节点 || 方法->实例根节点)
+                return {状态::来源不是抽象方法, {}, {}};
+            if (方法->实现方式 == 新方法实现方式::本能
+                && (!方法->组合步骤组.empty() || 方法->组合入口步骤节点
+                    || !方法->结果转移组.empty()))
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
+                    L"读取方法执行结构闭包", L"本能方法含组合执行结构");
+            for (const auto& 步骤 : 方法->组合步骤组)
+                if (!已读.contains(步骤.调用方法节点)) 待读.insert(步骤.调用方法节点);
+            结果.方法组.push_back(std::move(*方法));
+        }
+        std::sort(结果.方法组.begin(), 结果.方法组.end(),
+            [](const auto& 左, const auto& 右) { return 左.节点 < 右.节点; });
+        return 结果;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
+            L"读取方法执行结构闭包", L"工程读取异常", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
+            L"读取方法执行结构闭包", L"未知工程读取异常");
     }
 }
 

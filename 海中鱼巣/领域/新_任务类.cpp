@@ -445,6 +445,648 @@ std::optional<bool> 结果域保证满足需求(
 
 
 稳定编码 节点类型字段{};
+// 以下结构只由任务 owner 发布。字段引用保留身份，直接值只保存枚举和数值。
+namespace 任务执行组织存储 {
+enum class 类型 : std::size_t {
+    根, 作用域, 参数, 参数特征, 集合约束, 配对, 条件项, 结果项,
+    禁止项, 确认, 线性, 步骤, 分支, 数量
+};
+enum class 字段 : std::size_t {
+    组织根, 所属任务, 治理宿主, 根作用域, 作用域成员,
+    来源方法, 来源虚拟存在, 作用域值, 实现方式, 参数成员, 配对成员,
+    步骤成员, 入口步骤, 分支成员, 所属作用域, 顺序, 角色,
+    存在概念, 要求场景, 对象种类, 特征规格, 集合约束,
+    所属参数, 特征类型, 值域概念, 二次特征, 集合角色, 集合特征,
+    来源配对, 来源条件, 来源结果, 条件关系, 条件成员, 结果关系,
+    结果成员, 确认要求, 线性成员, 所属配对, 状态动态概念, 下界, 上界,
+    方向概念, 主要结果, 所属确认, 证据质量, 等待纳秒, 等待条件,
+    多证据关系, 禁止关系, 禁止成员, 条件序号, 结果序号, 线性方向,
+    原条件下界, 原条件上界, 原结果下界, 原结果上界,
+    来源步骤, 调用作用域, 来源转移, 当前步骤, 当前结果要求,
+    匹配概念, 下一步骤, 数量
+};
+稳定编码 类型节点[static_cast<std::size_t>(类型::数量)]{};
+稳定编码 字段节点[static_cast<std::size_t>(字段::数量)]{};
+稳定编码 取(类型 值) { return 类型节点[static_cast<std::size_t>(值)]; }
+稳定编码 取(字段 值) { return 字段节点[static_cast<std::size_t>(值)]; }
+void 要求(bool 成立, const char* 原因) {
+    if (!成立) throw std::logic_error(原因);
+}
+bool 已分配() {
+    return std::all_of(std::begin(类型节点), std::end(类型节点), 有效)
+        && std::all_of(std::begin(字段节点), std::end(字段节点), 有效);
+}
+bool 仍存在() noexcept {
+    if (!已分配()) return false;
+    // 此入口也被旧 optional getters 使用，不能把已分配架构损坏返回为空任务。
+    try {
+        const auto 存在 = [](稳定编码 节点) {
+            const auto 回执 = 全局基础数据集.查询完整节点结构(节点);
+            要求(回执.状态 == 基础结构操作状态::已完成 && 回执.结构,
+                "allocated task organization schema missing or unreadable");
+        };
+        for (const auto 节点 : 类型节点) 存在(节点);
+        for (const auto 节点 : 字段节点) 存在(节点);
+        return true;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"任务执行组织架构核验", L"正式元数据损坏", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"任务执行组织架构核验", L"未知元数据故障");
+    }
+}
+template<class 建立器> bool 初始化(建立器&& 建立) {
+    for (auto& 节点 : 类型节点) if (!建立(节点)) return false;
+    for (auto& 节点 : 字段节点) if (!建立(节点)) return false;
+    return true;
+}
+std::int64_t 序号(std::size_t 值) {
+    要求(值 <= static_cast<std::size_t>((std::numeric_limits<std::int64_t>::max)()),
+        "task organization index overflow");
+    return static_cast<std::int64_t>(值);
+}
+void 规范集合(std::vector<稳定编码>& 组) {
+    std::sort(组.begin(), 组.end());
+    组.erase(std::unique(组.begin(), 组.end()), 组.end());
+}
+
+// 将任务内部身份投影回各自来源身份，仅用于同义比较；从不写入基座。
+新任务方法执行组织 同义定义(新任务方法执行组织 组织) {
+    std::map<稳定编码, 稳定编码> 映射;
+    for (const auto& 域 : 组织.方法作用域组) {
+        要求(映射.emplace(域.节点, 域.来源方法节点).second, "duplicate scope identity");
+        for (const auto& 对 : 域.配对要求组)
+            要求(映射.emplace(对.节点, 对.来源配对节点).second, "duplicate pair identity");
+        for (const auto& 步 : 域.步骤组)
+            要求(映射.emplace(步.节点, 步.来源步骤节点).second, "duplicate step identity");
+    }
+    组织.节点 = {};
+    for (auto& 根 : 组织.根方法作用域节点组) 根 = 映射.at(根);
+    规范集合(组织.根方法作用域节点组);
+    for (auto& 域 : 组织.方法作用域组) {
+        域.节点 = 域.来源方法节点;
+        for (auto& 参数 : 域.参数要求组) {
+            参数.节点 = {};
+            for (auto& 规格 : 参数.规格.特征规格组) 规范集合(规格.二次特征概念组);
+        }
+        for (auto& 对 : 域.配对要求组) 对.节点 = 对.来源配对节点;
+        std::sort(域.配对要求组.begin(), 域.配对要求组.end(),
+            [](const auto& 左, const auto& 右) { return 左.来源配对节点 < 右.来源配对节点; });
+        for (auto& 步 : 域.步骤组) {
+            步.节点 = 步.来源步骤节点;
+            步.调用作用域节点 = 映射.at(步.调用作用域节点);
+        }
+        std::sort(域.步骤组.begin(), 域.步骤组.end(),
+            [](const auto& 左, const auto& 右) { return 左.顺序 < 右.顺序; });
+        if (域.入口步骤节点) 域.入口步骤节点 = 映射.at(*域.入口步骤节点);
+        for (auto& 分支 : 域.分支组) {
+            分支.节点 = {};
+            分支.当前步骤节点 = 映射.at(分支.当前步骤节点);
+            分支.下一步骤节点 = 映射.at(分支.下一步骤节点);
+            分支.当前结果要求节点 = 映射.at(分支.当前结果要求节点);
+        }
+        std::sort(域.分支组.begin(), 域.分支组.end(),
+            [](const auto& 左, const auto& 右) { return 左.来源转移节点 < 右.来源转移节点; });
+    }
+    std::sort(组织.方法作用域组.begin(), 组织.方法作用域组.end(),
+        [](const auto& 左, const auto& 右) { return 左.来源方法节点 < 右.来源方法节点; });
+    return 组织;
+}
+
+新任务方法执行组织 转换定义(稳定编码 任务, 稳定编码 虚拟存在,
+    const 新_方法类::执行结构读取结果& 闭包) {
+    新任务方法执行组织 组织{{}, 任务, 虚拟存在, 闭包.根方法节点组, {}};
+    // 临时值式图使用已存在的来源身份作为映射键；发布器统一转为组内引用。
+    std::map<稳定编码, 稳定编码> 结果到配对;
+    for (const auto& 方法 : 闭包.方法组)
+        for (const auto& 对 : 方法.条件结果组)
+            要求(结果到配对.emplace(对.结果节点, 对.配对节点).second,
+                "method result has multiple pair owners");
+    for (const auto& 方法 : 闭包.方法组) {
+        新任务执行方法作用域 域;
+        域.节点 = 域.来源方法节点 = 方法.节点;
+        域.来源方法虚拟存在节点 = 方法.方法虚拟存在节点;
+        域.作用域 = 方法.作用域; 域.实现方式 = 方法.实现方式;
+        for (const auto& 参数 : 方法.参数规格组) 域.参数要求组.push_back({{}, 参数});
+        for (const auto& 对 : 方法.条件结果组)
+            域.配对要求组.push_back({对.配对节点, 对.配对节点, 对.条件节点,
+                对.结果节点, 对.条件, 对.结果, 对.线性关系组});
+        for (const auto& 步 : 方法.组合步骤组)
+            域.步骤组.push_back({步.步骤节点, 步.步骤节点, 步.调用方法节点, 步.顺序});
+        域.入口步骤节点 = 方法.组合入口步骤节点;
+        for (const auto& 转移 : 方法.结果转移组)
+            域.分支组.push_back({{}, 转移.转移节点, 转移.当前步骤节点,
+                结果到配对.at(转移.当前结果节点), 转移.匹配结果概念节点, 转移.下一步骤节点});
+        组织.方法作用域组.push_back(std::move(域));
+    }
+    return 同义定义(std::move(组织));
+}
+
+struct 写器 final {
+    std::vector<基础组内新节点> 节点组;
+    std::map<稳定编码, std::size_t> 身份映射;
+    void 引用(std::size_t 节点, 字段 项, 稳定编码 值) {
+        要求(有效(值), "empty external task definition reference");
+        节点组.at(节点).字段组.push_back({取(项), 值});
+    }
+    void 引用(std::size_t 节点, 字段 项, const std::optional<稳定编码>& 值) {
+        if (值) 引用(节点, 项, *值);
+    }
+    void 内链(std::size_t 节点, 字段 项, std::size_t 目标) {
+        节点组.at(节点).字段组.push_back({取(项), 基础组内节点引用{目标}});
+    }
+    void 数(std::size_t 节点, 字段 项, std::int64_t 值) {
+        节点组.at(节点).字段组.push_back({取(项), 基础值{值}});
+    }
+    std::size_t 新节点(类型 种类) {
+        const auto 位置 = 节点组.size();
+        节点组.push_back({{{节点类型字段, 取(种类)}}});
+        if (种类 != 类型::根) 内链(位置, 字段::组织根, 0);
+        return 位置;
+    }
+    std::size_t 子节点(类型 种类, std::size_t 父, 字段 成员, 字段 所属,
+        std::optional<std::int64_t> 顺序 = {}) {
+        const auto 节点 = 新节点(种类);
+        内链(父, 成员, 节点); 内链(节点, 所属, 父);
+        if (顺序) 数(节点, 字段::顺序, *顺序);
+        return 节点;
+    }
+    void 值域(std::size_t 节点, const std::optional<特征概念I64闭区间>& 域) {
+        if (域) { 数(节点, 字段::下界, 域->下界); 数(节点, 字段::上界, 域->上界); }
+    }
+    void 写结果(std::size_t 父, const std::vector<新方法结果项定义>& 组, bool 禁止) {
+        for (std::size_t i = 0; i < 组.size(); ++i) {
+            const auto& 项 = 组[i];
+            const auto 节点 = 子节点(禁止 ? 类型::禁止项 : 类型::结果项, 父,
+                禁止 ? 字段::禁止成员 : 字段::结果成员,
+                禁止 ? 字段::所属确认 : 字段::所属配对, 序号(i));
+            引用(节点, 字段::角色, 项.参数角色节点);
+            引用(节点, 字段::特征类型, 项.特征类型概念节点);
+            引用(节点, 字段::值域概念, 项.特征值域概念节点);
+            引用(节点, 字段::方向概念, 项.变化方向概念节点);
+            引用(节点, 字段::状态动态概念, 项.状态或动态概念节点);
+            数(节点, 字段::主要结果, 项.主要结果 ? 1 : 0); 值域(节点, 项.精确数值域);
+        }
+    }
+    void 写配对(std::size_t 节点, const 新任务执行配对要求& 对) {
+        引用(节点, 字段::来源配对, 对.来源配对节点);
+        引用(节点, 字段::来源条件, 对.来源条件节点);
+        引用(节点, 字段::来源结果, 对.来源结果节点);
+        数(节点, 字段::条件关系, static_cast<std::int64_t>(对.条件.关系规则));
+        数(节点, 字段::结果关系, static_cast<std::int64_t>(对.结果.关系规则));
+        for (std::size_t i = 0; i < 对.条件.条件项组.size(); ++i) {
+            const auto& 项 = 对.条件.条件项组[i];
+            const auto 子 = 子节点(类型::条件项, 节点, 字段::条件成员, 字段::所属配对, 序号(i));
+            引用(子, 字段::角色, 项.参数角色节点); 引用(子, 字段::存在概念, 项.存在概念节点);
+            引用(子, 字段::特征类型, 项.特征类型概念节点);
+            引用(子, 字段::值域概念, 项.特征值域概念节点);
+            引用(子, 字段::二次特征, 项.二次特征概念节点);
+            引用(子, 字段::状态动态概念, 项.状态或动态概念节点); 值域(子, 项.精确数值域);
+        }
+        写结果(节点, 对.结果.结果项组, false);
+        const auto 确认 = 子节点(类型::确认, 节点, 字段::确认要求, 字段::所属配对);
+        const auto& 要求值 = 对.结果.确认要求;
+        数(确认, 字段::证据质量, static_cast<std::int64_t>(要求值.必要证据质量));
+        if (要求值.最大等待纳秒) 数(确认, 字段::等待纳秒, *要求值.最大等待纳秒);
+        引用(确认, 字段::等待条件, 要求值.等待条件概念节点);
+        数(确认, 字段::多证据关系, static_cast<std::int64_t>(要求值.多证据关系));
+        数(确认, 字段::禁止关系, static_cast<std::int64_t>(要求值.禁止结果关系规则));
+        写结果(确认, 要求值.禁止结果项组, true);
+        for (std::size_t i = 0; i < 对.线性关系组.size(); ++i) {
+            const auto& 项 = 对.线性关系组[i];
+            const auto 子 = 子节点(类型::线性, 节点, 字段::线性成员, 字段::所属配对, 序号(i));
+            数(子, 字段::条件序号, 序号(项.条件序号)); 数(子, 字段::结果序号, 序号(项.结果序号));
+            数(子, 字段::线性方向, static_cast<std::int64_t>(项.方向));
+            数(子, 字段::原条件下界, 项.原条件域.下界); 数(子, 字段::原条件上界, 项.原条件域.上界);
+            数(子, 字段::原结果下界, 项.原结果域.下界); 数(子, 字段::原结果上界, 项.原结果域.上界);
+        }
+    }
+    explicit 写器(const 新任务方法执行组织& 组织) {
+        const auto 根 = 新节点(类型::根);
+        引用(根, 字段::所属任务, 组织.任务节点); 引用(根, 字段::治理宿主, 组织.任务虚拟存在节点);
+        // 先为所有调用目标和结果要求预分配组内索引，支持向前引用与递归图。
+        for (const auto& 域 : 组织.方法作用域组) {
+            const auto 节点 = 新节点(类型::作用域);
+            要求(身份映射.emplace(域.节点, 节点).second, "duplicate scope");
+            内链(根, 字段::作用域成员, 节点);
+            for (const auto& 对 : 域.配对要求组) {
+                const auto 子 = 子节点(类型::配对, 节点, 字段::配对成员, 字段::所属作用域);
+                要求(身份映射.emplace(对.节点, 子).second, "duplicate pair");
+            }
+            for (const auto& 步 : 域.步骤组) {
+                const auto 子 = 子节点(类型::步骤, 节点, 字段::步骤成员, 字段::所属作用域, 步.顺序);
+                要求(身份映射.emplace(步.节点, 子).second, "duplicate step");
+            }
+        }
+        for (const auto 根域 : 组织.根方法作用域节点组) 内链(根, 字段::根作用域, 身份映射.at(根域));
+        for (const auto& 域 : 组织.方法作用域组) {
+            const auto 节点 = 身份映射.at(域.节点);
+            引用(节点, 字段::来源方法, 域.来源方法节点);
+            引用(节点, 字段::来源虚拟存在, 域.来源方法虚拟存在节点);
+            数(节点, 字段::作用域值, static_cast<std::int64_t>(域.作用域));
+            数(节点, 字段::实现方式, static_cast<std::int64_t>(域.实现方式));
+            for (std::size_t i = 0; i < 域.参数要求组.size(); ++i) {
+                const auto& 规格 = 域.参数要求组[i].规格;
+                const auto 子 = 子节点(类型::参数, 节点, 字段::参数成员, 字段::所属作用域, 序号(i));
+                引用(子, 字段::角色, 规格.参数角色节点); 引用(子, 字段::存在概念, 规格.存在概念节点);
+                数(子, 字段::要求场景, 规格.要求场景 ? 1 : 0);
+                数(子, 字段::对象种类, static_cast<std::int64_t>(规格.对象种类));
+                for (std::size_t j = 0; j < 规格.特征规格组.size(); ++j) {
+                    const auto& 特征 = 规格.特征规格组[j];
+                    const auto 特 = 子节点(类型::参数特征, 子, 字段::特征规格, 字段::所属参数, 序号(j));
+                    引用(特, 字段::特征类型, 特征.特征类型概念节点); 引用(特, 字段::值域概念, 特征.值域概念节点);
+                    for (const auto 二次 : 特征.二次特征概念组) 引用(特, 字段::二次特征, 二次);
+                }
+                if (规格.集合成员约束) {
+                    const auto 约束 = 子节点(类型::集合约束, 子, 字段::集合约束, 字段::所属参数);
+                    引用(约束, 字段::集合角色, 规格.集合成员约束->集合参数角色节点);
+                    引用(约束, 字段::集合特征, 规格.集合成员约束->集合特征类型概念节点);
+                }
+            }
+            for (const auto& 对 : 域.配对要求组) 写配对(身份映射.at(对.节点), 对);
+            for (const auto& 步 : 域.步骤组) {
+                const auto 子 = 身份映射.at(步.节点);
+                引用(子, 字段::来源步骤, 步.来源步骤节点);
+                内链(子, 字段::调用作用域, 身份映射.at(步.调用作用域节点));
+            }
+            if (域.入口步骤节点) 内链(节点, 字段::入口步骤, 身份映射.at(*域.入口步骤节点));
+            for (const auto& 分支 : 域.分支组) {
+                const auto 子 = 子节点(类型::分支, 节点, 字段::分支成员, 字段::所属作用域);
+                引用(子, 字段::来源转移, 分支.来源转移节点);
+                内链(子, 字段::当前步骤, 身份映射.at(分支.当前步骤节点));
+                内链(子, 字段::当前结果要求, 身份映射.at(分支.当前结果要求节点));
+                引用(子, 字段::匹配概念, 分支.匹配结果概念节点);
+                内链(子, 字段::下一步骤, 身份映射.at(分支.下一步骤节点));
+            }
+        }
+    }
+};
+struct 读器 final {
+    稳定编码 根;
+    std::map<稳定编码, 基础节点结构> 节点组;
+    std::set<稳定编码> 已访问, 已用字段, 引用目标;
+    explicit 读器(稳定编码 根节点) : 根(根节点) {
+        // 反向枚举全部组织成员，不能只相信根列出的成员而漏掉孤儿节点。
+        const auto 反查 = 全局基础数据集.查询字段引用节点结构(根, 取(字段::组织根));
+        要求(反查.状态 == 基础结构操作状态::已完成, "organization members reverse read failed");
+        std::set<稳定编码> 编码组{根};
+        for (const auto& 引用 : 反查.引用字段组) {
+            要求(引用.字段节点 == 取(字段::组织根)
+                && std::get_if<稳定编码>(&引用.内容) && std::get<稳定编码>(引用.内容) == 根
+                && 编码组.insert(引用.所属节点).second, "duplicate organization ownership");
+        }
+        const auto 批读 = 全局基础数据集.查询节点组完整结构({编码组.begin(), 编码组.end()});
+        要求(批读.状态 == 基础结构操作状态::已完成 && 批读.节点组.size() == 编码组.size(),
+            "organization batch read failed");
+        for (const auto& 项 : 批读.节点组) {
+            要求(项.快照 && 项.快照->结构.节点.编码 == 项.查询节点
+                && 项.快照->入向外部关系组.empty() && 项.快照->出向外部关系组.empty(),
+                "organization node missing or has external containment");
+            要求(节点组.emplace(项.查询节点, 项.快照->结构).second, "duplicate batch node");
+        }
+    }
+    std::vector<const 基础字段关系*> 取字段(稳定编码 节点, 稳定编码 字段码) {
+        std::vector<const 基础字段关系*> 结果;
+        for (const auto& 项 : 节点组.at(节点).字段组) if (项.字段节点 == 字段码) {
+            要求(项.所属节点 == 节点 && 已用字段.insert(项.编码).second,
+                "organization field consumed twice");
+            结果.push_back(&项);
+        }
+        return 结果;
+    }
+    std::vector<稳定编码> 引用组(稳定编码 节点, 字段 项) {
+        std::vector<稳定编码> 结果;
+        std::set<稳定编码> 唯一;
+        for (const auto* 字 : 取字段(节点, 取(项))) {
+            const auto* 值 = std::get_if<稳定编码>(&字->内容);
+            要求(值 && 有效(*值) && 唯一.insert(*值).second, "invalid/duplicate node reference");
+            结果.push_back(*值); 引用目标.insert(*值);
+        }
+        return 结果;
+    }
+    std::optional<稳定编码> 可选引用(稳定编码 节点, 字段 项) {
+        const auto 组 = 引用组(节点, 项);
+        要求(组.size() <= 1, "optional reference cardinality");
+        return 组.empty() ? std::nullopt : std::optional<稳定编码>{组.front()};
+    }
+    稳定编码 引用(稳定编码 节点, 字段 项) {
+        const auto 值 = 可选引用(节点, 项);
+        要求(值.has_value(), "required reference missing"); return *值;
+    }
+    std::optional<std::int64_t> 可选数(稳定编码 节点, 字段 项) {
+        const auto 组 = 取字段(节点, 取(项));
+        要求(组.size() <= 1, "optional integer cardinality");
+        if (组.empty()) return {};
+        const auto* 值 = std::get_if<基础值>(&组.front()->内容);
+        const auto* 数值 = 值 ? std::get_if<std::int64_t>(&值->材料) : nullptr;
+        要求(数值 != nullptr, "integer field type mismatch"); return *数值;
+    }
+    std::int64_t 数(稳定编码 节点, 字段 项) {
+        const auto 值 = 可选数(节点, 项);
+        要求(值.has_value(), "required integer missing"); return *值;
+    }
+    template<class 枚举> 枚举 枚举值(稳定编码 节点, 字段 项, std::int64_t 小, std::int64_t 大) {
+        const auto 值 = 数(节点, 项); 要求(值 >= 小 && 值 <= 大, "invalid enum value");
+        return static_cast<枚举>(值);
+    }
+    bool 布尔(稳定编码 节点, 字段 项) {
+        const auto 值 = 数(节点, 项); 要求(值 == 0 || 值 == 1, "invalid boolean"); return 值 == 1;
+    }
+    void 开节点(稳定编码 节点, 类型 种类,
+        std::optional<std::pair<字段, 稳定编码>> 父 = {}) {
+        要求(已访问.insert(节点).second, "duplicate containment or cycle");
+        const auto 组 = 取字段(节点, 节点类型字段);
+        要求(组.size() == 1 && std::get_if<稳定编码>(&组.front()->内容)
+            && std::get<稳定编码>(组.front()->内容) == 取(种类), "wrong organization node type");
+        if (种类 != 类型::根) 要求(引用(节点, 字段::组织根) == 根, "cross-root node");
+        if (父) 要求(引用(节点, 父->first) == 父->second, "containment reverse mismatch");
+    }
+    std::vector<稳定编码> 子组(稳定编码 父, 字段 成员, 类型 种类, 字段 所属, bool 有序) {
+        auto 组 = 引用组(父, 成员);
+        std::map<std::int64_t, 稳定编码> 顺序组;
+        for (const auto 子 : 组) {
+            开节点(子, 种类, std::pair{所属, 父});
+            if (有序) 要求(顺序组.emplace(数(子, 字段::顺序), 子).second, "duplicate child sequence");
+        }
+        if (有序) {
+            组.clear();
+            for (const auto& [序, 子] : 顺序组) {
+                要求(序 == 序号(组.size()), "non-contiguous child sequence"); 组.push_back(子);
+            }
+        }
+        return 组;
+    }
+    std::optional<特征概念I64闭区间> 值域(稳定编码 节点) {
+        const auto 小 = 可选数(节点, 字段::下界), 大 = 可选数(节点, 字段::上界);
+        要求(小.has_value() == 大.has_value(), "half interval");
+        if (!小) return {};
+        要求(*小 <= *大, "reversed interval"); return 特征概念I64闭区间{*小, *大};
+    }
+    std::vector<新方法结果项定义> 读结果(稳定编码 父, bool 禁止) {
+        std::vector<新方法结果项定义> 结果;
+        for (const auto 节点 : 子组(父, 禁止 ? 字段::禁止成员 : 字段::结果成员,
+                禁止 ? 类型::禁止项 : 类型::结果项,
+                禁止 ? 字段::所属确认 : 字段::所属配对, true)) {
+            新方法结果项定义 项;
+            项.参数角色节点 = 引用(节点, 字段::角色);
+            项.特征类型概念节点 = 可选引用(节点, 字段::特征类型);
+            项.特征值域概念节点 = 可选引用(节点, 字段::值域概念);
+            项.变化方向概念节点 = 可选引用(节点, 字段::方向概念);
+            项.状态或动态概念节点 = 可选引用(节点, 字段::状态动态概念);
+            项.主要结果 = 布尔(节点, 字段::主要结果); 项.精确数值域 = 值域(节点);
+            要求(!(项.精确数值域 && 项.特征值域概念节点), "conflicting result domains");
+            结果.push_back(std::move(项));
+        }
+        return 结果;
+    }
+    新任务执行配对要求 读配对(稳定编码 节点) {
+        新任务执行配对要求 对;
+        对.节点 = 节点; 对.来源配对节点 = 引用(节点, 字段::来源配对);
+        对.来源条件节点 = 引用(节点, 字段::来源条件); 对.来源结果节点 = 引用(节点, 字段::来源结果);
+        对.条件.关系规则 = 枚举值<新方法项关系规则>(节点, 字段::条件关系, 1, 6);
+        对.结果.关系规则 = 枚举值<新方法项关系规则>(节点, 字段::结果关系, 1, 6);
+        for (const auto 子 : 子组(节点, 字段::条件成员, 类型::条件项, 字段::所属配对, true)) {
+            新方法条件项定义 项;
+            项.参数角色节点 = 引用(子, 字段::角色); 项.存在概念节点 = 可选引用(子, 字段::存在概念);
+            项.特征类型概念节点 = 可选引用(子, 字段::特征类型);
+            项.特征值域概念节点 = 可选引用(子, 字段::值域概念);
+            项.二次特征概念节点 = 可选引用(子, 字段::二次特征);
+            项.状态或动态概念节点 = 可选引用(子, 字段::状态动态概念); 项.精确数值域 = 值域(子);
+            要求(!(项.精确数值域 && 项.特征值域概念节点), "conflicting condition domains");
+            对.条件.条件项组.push_back(std::move(项));
+        }
+        对.结果.结果项组 = 读结果(节点, false);
+        const auto 确认组 = 子组(节点, 字段::确认要求, 类型::确认, 字段::所属配对, false);
+        要求(确认组.size() == 1, "confirmation requirement cardinality");
+        const auto 确认 = 确认组.front(); auto& 确 = 对.结果.确认要求;
+        确.必要证据质量 = 枚举值<新方法必要证据质量>(确认, 字段::证据质量, 1, 2);
+        确.最大等待纳秒 = 可选数(确认, 字段::等待纳秒);
+        要求(!确.最大等待纳秒 || *确.最大等待纳秒 >= 0, "negative wait interval");
+        确.等待条件概念节点 = 可选引用(确认, 字段::等待条件);
+        确.多证据关系 = 枚举值<新方法多证据关系>(确认, 字段::多证据关系, 1, 3);
+        确.禁止结果关系规则 = 枚举值<新方法项关系规则>(确认, 字段::禁止关系, 1, 6);
+        确.禁止结果项组 = 读结果(确认, true);
+        for (const auto 子 : 子组(节点, 字段::线性成员, 类型::线性, 字段::所属配对, true)) {
+            新方法条件结果线性关系 项;
+            const auto 条 = 数(子, 字段::条件序号), 果 = 数(子, 字段::结果序号);
+            要求(条 >= 0 && 果 >= 0 && static_cast<std::uint64_t>(条) < 对.条件.条件项组.size()
+                && static_cast<std::uint64_t>(果) < 对.结果.结果项组.size(), "linear index out of range");
+            项.条件序号 = static_cast<std::size_t>(条); 项.结果序号 = static_cast<std::size_t>(果);
+            项.方向 = 枚举值<新方法条件结果线性方向>(子, 字段::线性方向, -1, 1);
+            项.原条件域 = {数(子, 字段::原条件下界), 数(子, 字段::原条件上界)};
+            项.原结果域 = {数(子, 字段::原结果下界), 数(子, 字段::原结果上界)};
+            要求(项.原条件域.下界 <= 项.原条件域.上界 && 项.原结果域.下界 <= 项.原结果域.上界,
+                "invalid original linear domains");
+            对.线性关系组.push_back(项);
+        }
+        return 对;
+    }
+    新任务方法执行组织 读取() {
+        开节点(根, 类型::根);
+        新任务方法执行组织 组织{根, 引用(根, 字段::所属任务), 引用(根, 字段::治理宿主),
+            引用组(根, 字段::根作用域), {}};
+        for (const auto 节点 : 引用组(根, 字段::作用域成员)) {
+            开节点(节点, 类型::作用域);
+            新任务执行方法作用域 域;
+            域.节点 = 节点; 域.来源方法节点 = 引用(节点, 字段::来源方法);
+            域.来源方法虚拟存在节点 = 引用(节点, 字段::来源虚拟存在);
+            域.作用域 = 枚举值<新方法作用域>(节点, 字段::作用域值, 1, 2);
+            域.实现方式 = 枚举值<新方法实现方式>(节点, 字段::实现方式, 1, 2);
+            for (const auto 子 : 子组(节点, 字段::参数成员, 类型::参数, 字段::所属作用域, true)) {
+                新任务执行参数要求 参数{子, {}}; auto& 规格 = 参数.规格;
+                规格.参数角色节点 = 引用(子, 字段::角色); 规格.存在概念节点 = 可选引用(子, 字段::存在概念);
+                规格.要求场景 = 布尔(子, 字段::要求场景);
+                规格.对象种类 = 枚举值<新方法参数对象种类>(子, 字段::对象种类, 1, 7);
+                for (const auto 特 : 子组(子, 字段::特征规格, 类型::参数特征, 字段::所属参数, true)) {
+                    新方法参数特征规格 特征{引用(特, 字段::特征类型), 可选引用(特, 字段::值域概念),
+                        引用组(特, 字段::二次特征)};
+                    规范集合(特征.二次特征概念组); 规格.特征规格组.push_back(std::move(特征));
+                }
+                const auto 约束组 = 子组(子, 字段::集合约束, 类型::集合约束, 字段::所属参数, false);
+                要求(约束组.size() <= 1, "collection constraint cardinality");
+                if (!约束组.empty()) 规格.集合成员约束 = 新方法参数集合成员约束{
+                    引用(约束组.front(), 字段::集合角色), 引用(约束组.front(), 字段::集合特征)};
+                域.参数要求组.push_back(std::move(参数));
+            }
+            for (const auto 子 : 子组(节点, 字段::配对成员, 类型::配对, 字段::所属作用域, false))
+                域.配对要求组.push_back(读配对(子));
+            for (const auto 子 : 子组(节点, 字段::步骤成员, 类型::步骤, 字段::所属作用域, false))
+                域.步骤组.push_back({子, 引用(子, 字段::来源步骤), 引用(子, 字段::调用作用域), 数(子, 字段::顺序)});
+            域.入口步骤节点 = 可选引用(节点, 字段::入口步骤);
+            for (const auto 子 : 子组(节点, 字段::分支成员, 类型::分支, 字段::所属作用域, false))
+                域.分支组.push_back({子, 引用(子, 字段::来源转移), 引用(子, 字段::当前步骤),
+                    引用(子, 字段::当前结果要求), 可选引用(子, 字段::匹配概念), 引用(子, 字段::下一步骤)});
+            std::sort(域.配对要求组.begin(), 域.配对要求组.end(),
+                [](const auto& 左, const auto& 右) { return 左.来源配对节点 < 右.来源配对节点; });
+            std::sort(域.步骤组.begin(), 域.步骤组.end(),
+                [](const auto& 左, const auto& 右) { return 左.顺序 < 右.顺序; });
+            std::sort(域.分支组.begin(), 域.分支组.end(),
+                [](const auto& 左, const auto& 右) { return 左.来源转移节点 < 右.来源转移节点; });
+            组织.方法作用域组.push_back(std::move(域));
+        }
+        要求(已访问.size() == 节点组.size(), "unlisted orphan organization member");
+        for (const auto& [编码, 节点] : 节点组) {
+            (void)编码;
+            for (const auto& 项 : 节点.字段组)
+                要求(已用字段.contains(项.编码), "unknown organization field");
+        }
+        const auto 引用读回 = 全局基础数据集.查询节点组完整结构({引用目标.begin(), 引用目标.end()});
+        要求(引用读回.状态 == 基础结构操作状态::已完成
+            && 引用读回.节点组.size() == 引用目标.size(), "reference batch read failed");
+        for (const auto& 项 : 引用读回.节点组) 要求(项.快照.has_value(), "dangling definition reference");
+        std::sort(组织.方法作用域组.begin(), 组织.方法作用域组.end(),
+            [](const auto& 左, const auto& 右) { return 左.来源方法节点 < 右.来源方法节点; });
+        std::map<稳定编码, 稳定编码> 来源;
+        for (const auto& 域 : 组织.方法作用域组) 来源.emplace(域.节点, 域.来源方法节点);
+        std::sort(组织.根方法作用域节点组.begin(), 组织.根方法作用域节点组.end(),
+            [&](auto 左, auto 右) { return 来源.at(左) < 来源.at(右); });
+        return 组织;
+    }
+};
+
+void 核验图(const 新任务方法执行组织& 组织) {
+    要求(!组织.根方法作用域节点组.empty() && !组织.方法作用域组.empty(), "empty organization roots");
+    std::map<稳定编码, const 新任务执行方法作用域*> 域表;
+    std::map<稳定编码, 稳定编码> 配对所属;
+    std::set<稳定编码> 方法源, 配对源, 条件源, 结果源, 步骤源, 分支源, 虚拟源;
+    for (const auto& 域 : 组织.方法作用域组) {
+        要求(域表.emplace(域.节点, &域).second && 方法源.insert(域.来源方法节点).second
+            && 虚拟源.insert(域.来源方法虚拟存在节点).second, "duplicate method scope source");
+        要求(域.作用域 == 新方法作用域::普通世界 || 域.作用域 == 新方法作用域::内部治理,
+            "invalid method scope");
+        要求(域.实现方式 == 新方法实现方式::本能 || 域.实现方式 == 新方法实现方式::组合,
+            "invalid method implementation");
+        if (域.实现方式 == 新方法实现方式::本能)
+            要求(域.步骤组.empty() && 域.分支组.empty() && !域.入口步骤节点, "innate contains combination graph");
+        std::map<稳定编码, const 新方法参数规格*> 角色;
+        for (const auto& 参数 : 域.参数要求组)
+            要求(角色.emplace(参数.规格.参数角色节点, &参数.规格).second, "duplicate parameter role");
+        for (const auto& 参数 : 域.参数要求组) if (参数.规格.集合成员约束) {
+            const auto& 约束 = *参数.规格.集合成员约束;
+            要求(角色.contains(约束.集合参数角色节点)
+                && 约束.集合参数角色节点 != 参数.规格.参数角色节点, "collection role unresolved");
+            const auto& 集合角色 = *角色.at(约束.集合参数角色节点);
+            要求(std::count_if(集合角色.特征规格组.begin(), 集合角色.特征规格组.end(),
+                [&](const auto& 项) { return 项.特征类型概念节点 == 约束.集合特征类型概念节点; }) == 1,
+                "collection feature unresolved");
+        }
+        for (const auto& 对 : 域.配对要求组) {
+            要求(配对所属.emplace(对.节点, 域.节点).second && 配对源.insert(对.来源配对节点).second
+                && 条件源.insert(对.来源条件节点).second && 结果源.insert(对.来源结果节点).second,
+                "duplicate pair source");
+            for (const auto& 项 : 对.条件.条件项组) 要求(角色.contains(项.参数角色节点), "unbound condition role");
+            for (const auto& 项 : 对.结果.结果项组) 要求(角色.contains(项.参数角色节点), "unbound result role");
+            for (const auto& 项 : 对.结果.确认要求.禁止结果项组)
+                要求(角色.contains(项.参数角色节点), "unbound forbidden-result role");
+            std::set<std::pair<std::size_t, std::size_t>> 线性索引;
+            for (const auto& 项 : 对.线性关系组)
+                要求(项.条件序号 < 对.条件.条件项组.size() && 项.结果序号 < 对.结果.结果项组.size()
+                    && 线性索引.emplace(项.条件序号, 项.结果序号).second, "invalid linear pair index");
+        }
+    }
+    std::set<稳定编码> 根组;
+    for (const auto 根域 : 组织.根方法作用域节点组)
+        要求(域表.contains(根域) && 根组.insert(根域).second, "invalid root scope");
+    for (const auto& 域 : 组织.方法作用域组) {
+        std::map<稳定编码, 稳定编码> 步骤表;
+        std::set<std::int64_t> 顺序;
+        for (const auto& 步 : 域.步骤组)
+            要求(步骤表.emplace(步.节点, 步.调用作用域节点).second
+                && 步骤源.insert(步.来源步骤节点).second && 域表.contains(步.调用作用域节点)
+                && 步.顺序 >= 0 && 顺序.insert(步.顺序).second, "invalid call step");
+        要求(!域.入口步骤节点 || 步骤表.contains(*域.入口步骤节点), "entry step outside scope");
+        std::map<std::tuple<稳定编码, 稳定编码, std::optional<稳定编码>>, 稳定编码> 转移;
+        for (const auto& 分支 : 域.分支组) {
+            要求(分支源.insert(分支.来源转移节点).second && 步骤表.contains(分支.当前步骤节点)
+                && 步骤表.contains(分支.下一步骤节点) && 配对所属.contains(分支.当前结果要求节点)
+                && 配对所属.at(分支.当前结果要求节点) == 步骤表.at(分支.当前步骤节点),
+                "branch result not in current call scope");
+            const auto [位置, 新增] = 转移.emplace(std::tuple{分支.当前步骤节点,
+                分支.当前结果要求节点, 分支.匹配结果概念节点}, 分支.下一步骤节点);
+            要求(新增 || 位置->second == 分支.下一步骤节点, "ambiguous identical branch key");
+        }
+    }
+    // 闭包只包含从根可达的方法定义；调用边可成环，包含关系不可成环。
+    std::set<稳定编码> 到达;
+    std::vector<稳定编码> 待查 = 组织.根方法作用域节点组;
+    while (!待查.empty()) {
+        const auto 当前 = 待查.back(); 待查.pop_back();
+        if (!到达.insert(当前).second) continue;
+        for (const auto& 步 : 域表.at(当前)->步骤组) 待查.push_back(步.调用作用域节点);
+    }
+    要求(到达.size() == 域表.size(), "unreachable method scope");
+}
+
+std::optional<新任务方法执行组织> 读取已加锁(稳定编码 任务, 稳定编码 虚拟存在) {
+    const auto 反查 = 全局基础数据集.查询字段引用节点结构(任务, 取(字段::所属任务));
+    要求(反查.状态 == 基础结构操作状态::已完成, "task organization reverse read failed");
+    要求(反查.引用字段组.size() <= 1, "task has multiple organizations");
+    if (反查.引用字段组.empty()) return {};
+    auto 组织 = 读器(反查.引用字段组.front().所属节点).读取();
+    要求(组织.任务节点 == 任务 && 组织.任务虚拟存在节点 == 虚拟存在, "organization host mismatch");
+    核验图(组织);
+    return 组织;
+}
+
+void 核验概念引用(const 新任务方法执行组织& 组织,
+    const 概念_特征类& 特征, const 概念_存在类& 存在, const 概念_二次特征类& 二次) {
+    const auto 存在概念 = [&](const std::optional<稳定编码>& 节点) {
+        要求(!节点 || 存在.是存在概念节点(*节点), "invalid existence concept reference");
+    };
+    const auto 特征概念 = [&](const std::optional<稳定编码>& 节点) {
+        // 存在概念可作为复合特征类型/值域；不能排除这条已确定的语义。
+        要求(!节点 || 特征.是特征概念节点(*节点) || 存在.是存在概念节点(*节点),
+            "invalid feature/domain concept reference");
+    };
+    const auto 二次概念 = [&](const std::optional<稳定编码>& 节点) {
+        要求(!节点 || 二次.是二次特征概念(*节点), "invalid secondary concept reference");
+    };
+    const auto 精确域 = [&](const auto& 项) {
+        if (!项.精确数值域) return;
+        要求(项.特征类型概念节点 && !项.特征值域概念节点
+            && 项.精确数值域->下界 <= 项.精确数值域->上界, "invalid exact domain");
+        const auto 定义 = 特征.获取特征概念(*项.特征类型概念节点);
+        要求(定义 && 定义->材料类型 == 特征概念材料物理类型::I64标量,
+            "exact domain requires I64 feature type");
+    };
+    const auto 结果组 = [&](const auto& 组) {
+        for (const auto& 项 : 组) {
+            特征概念(项.特征类型概念节点); 特征概念(项.特征值域概念节点);
+            二次概念(项.变化方向概念节点); 精确域(项);
+        }
+    };
+    for (const auto& 域 : 组织.方法作用域组) {
+        for (const auto& 参数 : 域.参数要求组) {
+            存在概念(参数.规格.存在概念节点);
+            for (const auto& 项 : 参数.规格.特征规格组) {
+                特征概念(项.特征类型概念节点); 特征概念(项.值域概念节点);
+                for (const auto 节点 : 项.二次特征概念组) 二次概念(节点);
+            }
+            if (参数.规格.集合成员约束) 特征概念(参数.规格.集合成员约束->集合特征类型概念节点);
+        }
+        for (const auto& 对 : 域.配对要求组) {
+            for (const auto& 项 : 对.条件.条件项组) {
+                存在概念(项.存在概念节点); 特征概念(项.特征类型概念节点);
+                特征概念(项.特征值域概念节点); 二次概念(项.二次特征概念节点); 精确域(项);
+            }
+            结果组(对.结果.结果项组); 结果组(对.结果.确认要求.禁止结果项组);
+        }
+    }
+    // 状态/动态、等待、匹配概念尚无完整类型提供者；保留方法闭包具名引用，
+    // 完整读回检查引用存在，但不伪称已完成其语义求值或授予执行许可。
+}
+
+// 旧任务 getters 会 catch-all；本边界必须先诊断终止，不让损坏降格为空组织。
+std::optional<稳定编码> 读取定位投影(稳定编码 任务, 稳定编码 虚拟存在) noexcept {
+    try {
+        const auto 组织 = 读取已加锁(任务, 虚拟存在);
+        return 组织 ? std::optional<稳定编码>{组织->节点} : std::nullopt;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"任务执行组织定位投影", L"组织读取故障", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"任务执行组织定位投影", L"未知组织读取故障");
+    }
+}
+} // namespace 任务执行组织存储
 稳定编码 任务集合根类型{};
 稳定编码 任务节点类型{};
 稳定编码 任务虚拟存在节点类型{};
@@ -693,6 +1335,7 @@ bool 强时间有效(const 新状态强时间& 时间) noexcept {
 }
 
 bool 结构已初始化() {
+    if (!任务执行组织存储::已分配()) return false;
     const std::vector<稳定编码> 节点组{
         任务已结算动作定义类型, 任务内部动作定义字段, 内部动作操作码字段,
         结算来源任务字段, 结算来源虚拟存在字段, 结算来源状态特征字段,
@@ -1086,6 +1729,7 @@ bool 收口待回收候选材料(稳定编码 任务节点) noexcept {
 
 bool 结构仍存在() {
     if (!结构已初始化()) return false;
+    if (!任务执行组织存储::仍存在()) return false;
     const std::vector<稳定编码> 节点组{
         任务已结算动作定义类型, 任务内部动作定义字段, 内部动作操作码字段,
         结算来源任务字段, 结算来源虚拟存在字段, 结算来源状态特征字段,
@@ -1167,7 +1811,8 @@ std::optional<新任务虚拟存在信息> 读取任务虚拟存在信息(
     const auto 状态 = 读取任务状态(*状态特征, 特征服务);
     if (!状态) return std::nullopt;
     return 新任务虚拟存在信息{
-        *虚拟存在, 任务节点, *状态特征, *状态};
+        *虚拟存在, 任务节点, *状态特征, *状态,
+        任务执行组织存储::读取定位投影(任务节点, *虚拟存在)};
 }
 
 bool 读取服务结算来源字段(
@@ -1209,6 +1854,7 @@ std::optional<新任务信息> 读取任务信息(
     结果.节点 = 任务节点;
     结果.需求节点 = *需求;
     结果.任务虚拟存在节点 = 虚拟存在->节点;
+    结果.方法执行组织节点 = 虚拟存在->方法执行组织节点;
     结果.当前状态 = 虚拟存在->当前状态;
     if (!读取服务结算来源字段(任务节点, 结果.服务结算来源)) return std::nullopt;
     const auto 候选材料组 = 全局基础数据集.查询字段(
@@ -2985,6 +3631,7 @@ bool 新_任务类::初始化() noexcept {
             节点 = 全局基础数据集.新建节点();
             return 有效(节点);
         };
+        if (!任务执行组织存储::初始化(建立)) return false;
         const bool 基础完成 = 建立(任务集合根节点)
             && 建立(任务已结算动作定义类型)
             && 建立(任务内部动作定义字段)
@@ -3136,6 +3783,82 @@ bool 新_任务类::初始化() noexcept {
         return 结构仍存在() && 核对任务状态域() && 确保内部动作定义();
     } catch (...) {
         return false;
+    }
+}
+
+新任务执行组织结果 新_任务类::建立或取得任务方法执行组织(
+    稳定编码 任务节点, const std::vector<稳定编码>& 来源方法节点组) noexcept {
+    using 状态 = 新任务执行组织状态;
+    using 方法状态 = 新_方法类::执行结构读取状态;
+    using namespace 任务执行组织存储;
+    try {
+        if (!有效(任务节点)) return {状态::入口拒绝, {}};
+        // 方法快照先结束；禁止持有任务锁再进入方法闭包锁。
+        const auto 闭包 = 方法服务_.读取方法执行结构闭包(来源方法节点组);
+        switch (闭包.状态) {
+        case 方法状态::入口拒绝: return {状态::入口拒绝, {}};
+        case 方法状态::尚未初始化: return {状态::尚未初始化, {}};
+        case 方法状态::方法不存在: return {状态::来源方法不存在, {}};
+        case 方法状态::来源不是抽象方法: return {状态::来源不是抽象方法, {}};
+        case 方法状态::已读取: break;
+        default: 要求(false, "unknown method closure status");
+        }
+        std::lock_guard 锁(新任务互斥);
+        if (!结构已初始化()) return {状态::尚未初始化, {}};
+        要求(结构仍存在(), "task schema missing");
+        const auto 节点 = 全局基础数据集.查询完整节点结构(任务节点);
+        if (节点.状态 == 基础结构操作状态::节点不存在) return {状态::任务不存在, {}};
+        要求(节点.状态 == 基础结构操作状态::已完成 && 节点.结构, "task read failed");
+        if (!节点类型为(任务节点, 任务节点类型)) return {状态::任务不存在, {}};
+        const auto 任务 = 读取任务信息(任务节点, 特征服务_);
+        要求(任务.has_value() && 需求服务_.获取需求(任务->需求节点).has_value(), "formal task closure invalid");
+        auto 定义 = 转换定义(任务节点, 任务->任务虚拟存在节点, 闭包);
+        核验图(定义); 核验概念引用(定义, 特征概念服务_, 存在概念服务_, 二次特征概念服务_);
+        auto 已有 = 读取已加锁(任务节点, 任务->任务虚拟存在节点);
+        if (已有) {
+            if (同义定义(*已有) != 定义) return {状态::已有组织不同, {}};
+            return {状态::精确重复, std::move(已有)};
+        }
+        if (任务->当前状态 != 新任务状态::已建立 && 任务->当前状态 != 新任务状态::待查找方法
+            && 任务->当前状态 != 新任务状态::待检查条件 && 任务->当前状态 != 新任务状态::等待条件)
+            return {状态::任务状态不允许, {}};
+        const 写器 待发布(定义);
+        const auto 发布 = 全局基础数据集.原子建立节点组(待发布.节点组);
+        要求(发布.状态 == 基础结构操作状态::已完成 && 发布.节点组.size() == 待发布.节点组.size(),
+            "atomic task organization publication failed");
+        auto 读回 = 读取已加锁(任务节点, 任务->任务虚拟存在节点);
+        要求(读回 && 读回->节点 == 发布.节点组.front() && 同义定义(*读回) == 定义,
+            "published task organization differs from adopted definition");
+        return {状态::已建立, std::move(读回)};
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"建立任务方法执行组织", L"组织转换或发布故障", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"建立任务方法执行组织", L"未知组织转换或发布故障");
+    }
+}
+
+新任务执行组织结果 新_任务类::读取任务方法执行组织(稳定编码 任务节点) const noexcept {
+    using 状态 = 新任务执行组织状态;
+    using namespace 任务执行组织存储;
+    try {
+        if (!有效(任务节点)) return {状态::入口拒绝, {}};
+        std::lock_guard 锁(新任务互斥);
+        if (!结构已初始化()) return {状态::尚未初始化, {}};
+        要求(结构仍存在(), "task schema missing");
+        const auto 节点 = 全局基础数据集.查询完整节点结构(任务节点);
+        if (节点.状态 == 基础结构操作状态::节点不存在) return {状态::任务不存在, {}};
+        要求(节点.状态 == 基础结构操作状态::已完成 && 节点.结构, "task read failed");
+        if (!节点类型为(任务节点, 任务节点类型)) return {状态::任务不存在, {}};
+        const auto 任务 = 读取任务信息(任务节点, 特征服务_);
+        要求(任务.has_value() && 需求服务_.获取需求(任务->需求节点).has_value(), "formal task closure invalid");
+        auto 组织 = 读取已加锁(任务节点, 任务->任务虚拟存在节点);
+        if (!组织) return {状态::尚未建立, {}};
+        核验概念引用(*组织, 特征概念服务_, 存在概念服务_, 二次特征概念服务_);
+        return {状态::已读取, std::move(组织)};
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取任务方法执行组织", L"组织读取故障", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取任务方法执行组织", L"未知组织读取故障");
     }
 }
 
