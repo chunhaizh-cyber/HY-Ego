@@ -60,6 +60,12 @@
     <ClInclude Include="海中鱼巣\业务\初始化.语言知识.h">
       <Filter>业务</Filter>
     </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\表达.基础语言.cpp">
+      <Filter>业务</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\表达.基础语言.h">
+      <Filter>业务</Filter>
+    </ClInclude>
     <ClCompile Include="海中鱼巣\业务\初始化.指代种子.cpp">
       <Filter>业务</Filter>
     </ClCompile>

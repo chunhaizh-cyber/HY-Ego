@@ -156,6 +156,8 @@
     <ClInclude Include="海中鱼巣\业务\初始化.结构化子概念.h" />
     <ClCompile Include="海中鱼巣\业务\初始化.语言知识.cpp" />
     <ClInclude Include="海中鱼巣\业务\初始化.语言知识.h" />
+    <ClCompile Include="海中鱼巣\业务\表达.基础语言.cpp" />
+    <ClInclude Include="海中鱼巣\业务\表达.基础语言.h" />
     <ClCompile Include="海中鱼巣\业务\初始化.指代种子.cpp" />
     <ClInclude Include="海中鱼巣\业务\初始化.指代种子.h" />
     <ClCompile Include="海中鱼巣\业务\模拟学习.算法.cpp" />
