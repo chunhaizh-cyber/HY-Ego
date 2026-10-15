@@ -2,6 +2,7 @@
 #include "新_方法类.h"
 #include "新_本能函数管理类.h"
 #include "方法问题归档.模拟世界.h"
+#include "../核心/容错检查.h"
 #include <algorithm>
 #include <array>
 #include <limits>
@@ -132,7 +133,21 @@ struct 新_模拟世界类::实现 final {
 新_模拟世界类::~新_模拟世界类() = default;
 
 namespace {
-constexpr const char* 问题格式 = "方法问题场景归档/1";
+using 问题编码格式 = 方法问题归档内部::格式;
+constexpr const char* 旧问题格式 = "方法问题场景归档/1";
+constexpr const char* 组织问题格式 = "方法问题场景归档/2";
+问题编码格式 解析问题格式(const std::string& name) {
+    if (name==旧问题格式) return 问题编码格式::旧方法副本;
+    if (name==组织问题格式) return 问题编码格式::任务执行组织;
+    throw std::runtime_error("不支持的归档格式");
+}
+问题编码格式 材料格式(const 新方法问题反馈材料& x) {
+    switch (x.采用来源) {
+    case 新方法问题采用来源::旧方法副本: return 问题编码格式::旧方法副本;
+    case 新方法问题采用来源::任务执行组织: return 问题编码格式::任务执行组织;
+    }
+    throw std::runtime_error("不支持的问题采用来源");
+}
 template<class T> T 读归档值(稳定编码 n,字段 f) {
     const auto field=唯一字段(n,f);
     if (!field) throw std::runtime_error("归档字段缺失或重复");
@@ -142,11 +157,18 @@ template<class T> T 读归档值(稳定编码 n,字段 f) {
     return *v;
 }
 std::vector<std::uint64_t> 问题身份(const 新方法问题反馈材料& x) {
+    if (x.采用来源==新方法问题采用来源::任务执行组织) {
+        if (!x.任务采用) throw std::runtime_error("问题任务采用缺失");
+        const auto& p=x.任务采用->定位;
+        return {x.任务节点.值,x.执行实例节点.值,x.来源抽象方法节点.值,
+            p.组织节点.值,p.方法作用域节点.值,p.配对要求节点.值};
+    }
+    if (x.采用来源!=新方法问题采用来源::旧方法副本) throw std::runtime_error("问题采用来源非法");
     return {x.任务节点.值,x.执行实例节点.值,x.来源抽象方法节点.值,x.实例方法节点.值};
 }
 bool 问题入口有效(const 新方法问题反馈材料& x) {
     if (!有效(x.任务节点) || !有效(x.执行实例节点) || !有效(x.来源抽象方法节点)
-        || !有效(x.实例方法节点) || !有效(x.影响评估节点) || !有效(x.采用配对.配对节点)
+        || !方法问题归档内部::采用身份有效(x) || !有效(x.影响评估节点)
         || x.问题组.empty() || x.动作前场景.阶段!=新场景快照阶段::动作前
         || x.结果场景.阶段!=新场景快照阶段::结果取得时) return false;
     std::vector<新方法问题种类> expected;
@@ -162,8 +184,8 @@ std::int64_t 归档顺序(std::size_t n) {
         throw std::length_error("归档节点顺序溢出");
     return static_cast<std::int64_t>(n);
 }
-void 写归档快照(创建批& batch,稳定编码 sample,const 新执行场景快照& value,std::int64_t order) {
-    auto records=方法问题归档内部::编码场景快照(value);
+void 写归档快照(创建批& batch,稳定编码 sample,const 新执行场景快照& value,std::int64_t order,问题编码格式 format) {
+    auto records=方法问题归档内部::编码场景快照(value,format);
     const auto stage=建样例节点(batch,归档快照种类,sample);
     batch.值(stage,字段组[步骤],order);
     batch.原值(stage,字段组[归档载荷],基础值{std::move(records.front().载荷)});
@@ -174,7 +196,7 @@ void 写归档快照(创建批& batch,稳定编码 sample,const 新执行场景�
         batch.原值(child,字段组[归档载荷],基础值{std::move(records[i].载荷)});
     }
 }
-新执行场景快照 读归档快照(稳定编码 stage,稳定编码 sample,std::int64_t order) {
+新执行场景快照 读归档快照(稳定编码 stage,稳定编码 sample,std::int64_t order,问题编码格式 format) {
     if (!属于样例(stage,归档快照种类,sample) || 读值(stage,步骤)!=order)
         throw std::runtime_error("归档快照归属非法");
     auto children=全局基础数据集.查询源关系(stage,基础外部关系类型::父子);
@@ -196,7 +218,7 @@ void 写归档快照(创建批& batch,稳定编码 sample,const 新执行场景�
         if (ordered[i].first!=归档顺序(i+1)) throw std::runtime_error("归档内容顺序不连续");
         records.push_back(std::move(ordered[i].second));
     }
-    return 方法问题归档内部::解码场景快照(records);
+    return 方法问题归档内部::解码场景快照(records,format);
 }
 新方法问题反馈材料 读归档材料(稳定编码 sample,bool published) {
     if (!根有效() || !全局基础数据集.查询节点(sample) || 读值(sample,类型)!=问题归档种类
@@ -206,9 +228,8 @@ void 写归档快照(创建批& batch,稳定编码 sample,const 新执行场景�
     if (published ? (parents.size()!=1 || parents.front().源节点!=模拟世界树根节点
             || parents.front().角色或顺序!=0) : !parents.empty())
         throw std::runtime_error("归档发布归属非法");
-    if (读归档值<std::string>(sample,归档格式)!=问题格式)
-        throw std::runtime_error("不支持的归档格式");
-    auto result=方法问题归档内部::解码问题头(读归档值<std::vector<std::uint64_t>>(sample,归档载荷));
+    const auto format=解析问题格式(读归档值<std::string>(sample,归档格式));
+    auto result=方法问题归档内部::解码问题头(读归档值<std::vector<std::uint64_t>>(sample,归档载荷),format);
     if (读归档值<std::vector<std::uint64_t>>(sample,归档身份)!=问题身份(result))
         throw std::runtime_error("归档身份与载荷不一致");
     const auto children=全局基础数据集.查询源关系(sample,基础外部关系类型::父子);
@@ -222,8 +243,8 @@ void 写归档快照(创建批& batch,稳定编码 sample,const 新执行场景�
         else throw std::runtime_error("归档首后场景重复或缺失");
     }
     if (!before || !after) throw std::runtime_error("归档首后场景缺失");
-    result.动作前场景=读归档快照(*before,sample,1);
-    result.结果场景=读归档快照(*after,sample,2);
+    result.动作前场景=读归档快照(*before,sample,1,format);
+    result.结果场景=读归档快照(*after,sample,2,format);
     if (!问题入口有效(result)) throw std::runtime_error("归档问题材料非法");
     return result;
 }
@@ -232,7 +253,10 @@ std::optional<稳定编码> 查归档身份(稳定编码 task,稳定编码 execu
     for (const auto& edge:全局基础数据集.查询源关系(模拟世界树根节点,基础外部关系类型::父子)) {
         if (读值(edge.目标节点,类型)!=问题归档种类) continue;
         const auto identity=读归档值<std::vector<std::uint64_t>>(edge.目标节点,归档身份);
-        if (identity.size()!=4) throw std::runtime_error("归档来源身份非法");
+        const auto format=解析问题格式(读归档值<std::string>(edge.目标节点,归档格式));
+        const std::size_t count=format==问题编码格式::旧方法副本 ? 4U : 6U;
+        if (identity.size()!=count || std::any_of(identity.begin(),identity.end(),
+            [](std::uint64_t n) { return n==0; })) throw std::runtime_error("归档来源身份非法");
         if (identity[0]!=task.值 || identity[1]!=execution.值) continue;
         if (result) throw std::runtime_error("同次执行存在重复归档");
         result=edge.目标节点;
@@ -243,12 +267,11 @@ std::optional<稳定编码> 查归档身份(稳定编码 task,稳定编码 execu
 
 新方法问题归档结果 新_模拟世界类::保存方法问题(const 新方法问题反馈材料& value) noexcept {
     新方法问题归档结果 result;
-    bool published=false;
     try {
-        if (!实现_) { result.状态=新方法问题归档状态::资源失败; return result; }
+        if (!实现_) throw std::runtime_error("模拟世界实现未建立");
         if (!问题入口有效(value)) return result;
         std::lock_guard lock(问题归档互斥);
-        if (!确保根()) { result.状态=新方法问题归档状态::结构不一致; return result; }
+        if (!确保根()) throw std::runtime_error("模拟世界根不一致");
         if (const auto existing=查归档身份(value.任务节点,value.执行实例节点)) {
             result.归档节点=*existing;
             result.状态=读归档材料(*existing,true)==value ? 新方法问题归档状态::精确重复
@@ -259,21 +282,23 @@ std::optional<稳定编码> 查归档身份(稳定编码 task,稳定编码 execu
         const auto sample=batch.建节点();
         batch.值(sample,字段组[类型],问题归档种类);
         batch.引用(sample,字段组[根],模拟世界树根节点);
-        batch.原值(sample,字段组[归档格式],基础值{std::string{问题格式}});
+        const auto format=材料格式(value);
+        batch.原值(sample,字段组[归档格式],基础值{std::string{
+            format==问题编码格式::旧方法副本 ? 旧问题格式 : 组织问题格式}});
         batch.原值(sample,字段组[归档身份],基础值{问题身份(value)});
-        batch.原值(sample,字段组[归档载荷],基础值{方法问题归档内部::编码问题头(value)});
-        写归档快照(batch,sample,value.动作前场景,1);
-        写归档快照(batch,sample,value.结果场景,2);
+        batch.原值(sample,字段组[归档载荷],基础值{方法问题归档内部::编码问题头(value,format)});
+        写归档快照(batch,sample,value.动作前场景,1,format);
+        写归档快照(batch,sample,value.结果场景,2,format);
         if (读归档材料(sample,false)!=value) throw std::runtime_error("归档发布前独立读回不相等");
-        // 唯一公开可见点。随后任何失败只报发布未知，不能删除或重做真实动作。
+        // 唯一公开可见点。随后工程失败保留已发布归档并终止，不能删除或重做真实动作。
         batch.挂接(模拟世界树根节点,sample);
-        batch.保留=true; published=true; result.归档节点=sample;
+        batch.保留=true; result.归档节点=sample;
         if (读归档材料(sample,true)!=value) throw std::runtime_error("归档发布后读回不相等");
         result.状态=新方法问题归档状态::已保存;
-    } catch (const std::bad_alloc&) {
-        result.状态=published ? 新方法问题归档状态::发布结果未知 : 新方法问题归档状态::资源失败;
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"保存方法问题归档", L"归档编码、发布或完整读回失败", e.what());
     } catch (...) {
-        result.状态=published ? 新方法问题归档状态::发布结果未知 : 新方法问题归档状态::结构不一致;
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"保存方法问题归档", L"未知归档工程故障");
     }
     return result;
 }
@@ -288,8 +313,11 @@ std::optional<稳定编码> 查归档身份(稳定编码 task,稳定编码 execu
         }
         auto data=std::make_shared<const 新方法问题反馈材料>(读归档材料(sample,true));
         result.归档节点=sample; result.材料=std::move(data); result.状态=新方法问题归档状态::已保存;
-    } catch (const std::bad_alloc&) { result.状态=新方法问题归档状态::资源失败; }
-    catch (...) { result.状态=新方法问题归档状态::结构不一致; }
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取方法问题归档", L"归档解码或完整读回失败", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取方法问题归档", L"未知归档工程故障");
+    }
     return result;
 }
 新方法问题归档读回结果 新_模拟世界类::查询方法问题归档(稳定编码 task,稳定编码 execution) const noexcept {
@@ -299,15 +327,18 @@ std::optional<稳定编码> 查归档身份(稳定编码 task,稳定编码 execu
         std::lock_guard lock(问题归档互斥);
         std::lock_guard rootLock(根互斥);
         if (!有效(模拟世界树根节点)) { result.状态=新方法问题归档状态::未找到; return result; }
-        if (!根有效()) { result.状态=新方法问题归档状态::结构不一致; return result; }
+        if (!根有效()) throw std::runtime_error("模拟世界根不一致");
         const auto sample=查归档身份(task,execution);
         if (!sample) { result.状态=新方法问题归档状态::未找到; return result; }
         auto data=std::make_shared<const 新方法问题反馈材料>(读归档材料(*sample,true));
         if (data->任务节点!=task || data->执行实例节点!=execution)
             throw std::runtime_error("归档查询来源不一致");
         result.归档节点=sample; result.材料=std::move(data); result.状态=新方法问题归档状态::已保存;
-    } catch (const std::bad_alloc&) { result.状态=新方法问题归档状态::资源失败; }
-    catch (...) { result.状态=新方法问题归档状态::结构不一致; }
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"查询方法问题归档", L"归档身份查询或完整读回失败", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"查询方法问题归档", L"未知归档工程故障");
+    }
     return result;
 }
 

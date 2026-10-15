@@ -404,6 +404,9 @@
     <ClInclude Include="海中鱼巣\领域\新_任务类.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\任务执行采用.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="海中鱼巣\领域\任务时序可达性.领域服务.h">
       <Filter>头文件</Filter>
     </ClInclude>

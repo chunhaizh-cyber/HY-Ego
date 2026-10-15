@@ -126,7 +126,8 @@ enum class 新任务筹办处理状态 : std::uint8_t {
     独立读回失败,
     状态推进失败,
     停止取消,
-    内部错误
+    内部错误,
+    组织能力暂不支持
 };
 
 struct 新任务筹办处理结果 final {
@@ -163,6 +164,7 @@ struct 新任务学习复核定位 final {
     新任务状态 任务状态 = 新任务状态::已建立;
     std::optional<稳定编码> 候选材料节点;
     std::optional<稳定编码> 方法实例节点;
+    std::optional<稳定编码> 方法执行组织节点;
     bool 完整() const noexcept;
     friend bool operator==(const 新任务学习复核定位&,
         const 新任务学习复核定位&) = default;
@@ -356,6 +358,7 @@ struct 新自我筹办裁决 final {
     // 不表示本能函数已经注册、调用或产生现实结果。
     std::optional<新自我执行前判断> 执行前判断;
     std::optional<新子需求采用回执> 子需求回执;
+    std::optional<新任务本能采用材料> 本能采用;
     friend bool operator==(const 新自我筹办裁决&,
         const 新自我筹办裁决&) = default;
 };

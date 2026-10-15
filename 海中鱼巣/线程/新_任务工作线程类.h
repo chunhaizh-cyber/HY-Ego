@@ -64,7 +64,8 @@ enum class 新任务工作处理状态 : std::uint8_t {
     需核查,
     停止取消,
     内部错误,
-    调度材料已返回
+    调度材料已返回,
+    组织能力暂不支持
 };
 
 struct 新任务工作处理结果 final {
@@ -76,6 +77,7 @@ struct 新任务工作处理结果 final {
     std::optional<新任务治理本能执行结果> 本能执行;
     std::optional<新任务治理结果获取结果> 本能结果获取;
     std::optional<新任务调度材料读取结果> 调度材料;
+    std::optional<新任务执行组织结果> 执行组织交付;
 };
 
 enum class 新任务工作接收状态 : std::uint8_t {
