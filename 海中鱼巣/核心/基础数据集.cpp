@@ -625,6 +625,165 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
     }
 }
 
+基础字段组合变化结果 基础数据集::原子比较变更字段组(
+    const 基础字段组合变化请求& 请求) noexcept {
+    using 状态 = 基础字段组合变化状态;
+    try {
+        std::unique_lock 锁(互斥_);
+        if (请求.预期节点组.empty()
+            || (请求.删除字段关系组.empty() && 请求.替换字段组.empty()
+                && 请求.追加字段组.empty())) return {状态::入口拒绝, {}};
+
+        const auto 内容合法 = [](const 基础字段内容& 内容) noexcept {
+            if (内容.valueless_by_exception()) return false;
+            if (const auto* 引用 = std::get_if<稳定编码>(&内容)) return 有效(*引用);
+            return !std::get<基础值>(内容).材料.valueless_by_exception();
+        };
+        const auto 引用目标 = [](const 基础字段内容& 内容) noexcept {
+            return std::get_if<稳定编码>(&内容);
+        };
+        std::set<std::uint64_t> 预期节点;
+        std::map<std::uint64_t, const 基础字段关系*> 预期字段;
+        for (const auto& 快照 : 请求.预期节点组) {
+            const auto 节点 = 快照.结构.节点.编码;
+            if (!有效(节点) || !预期节点.insert(节点.值).second)
+                return {状态::入口拒绝, {}};
+            for (const auto& 字段 : 快照.结构.字段组) {
+                if (!有效(字段.编码) || !有效(字段.字段节点)
+                    || 字段.所属节点 != 节点 || !内容合法(字段.内容)
+                    || !预期字段.emplace(字段.编码.值, &字段).second)
+                    return {状态::入口拒绝, {}};
+            }
+        }
+        std::set<std::uint64_t> 已触碰字段;
+        for (const auto 编码 : 请求.删除字段关系组) {
+            if (!有效(编码) || !已触碰字段.insert(编码.值).second)
+                return {状态::入口拒绝, {}};
+            const auto 位置 = 预期字段.find(编码.值);
+            if (位置 == 预期字段.end()) return {状态::入口拒绝, {}};
+            if (const auto* 目标 = 引用目标(位置->second->内容);
+                目标 && !预期节点.contains(目标->值))
+                return {状态::入口拒绝, {}};
+        }
+        for (const auto& 替换 : 请求.替换字段组) {
+            if (!有效(替换.字段关系) || !内容合法(替换.新内容)
+                || !已触碰字段.insert(替换.字段关系.值).second)
+                return {状态::入口拒绝, {}};
+            const auto 位置 = 预期字段.find(替换.字段关系.值);
+            if (位置 == 预期字段.end()) return {状态::入口拒绝, {}};
+            if (const auto* 目标 = 引用目标(位置->second->内容);
+                目标 && !预期节点.contains(目标->值))
+                return {状态::入口拒绝, {}};
+            if (const auto* 目标 = 引用目标(替换.新内容);
+                目标 && !预期节点.contains(目标->值))
+                return {状态::入口拒绝, {}};
+        }
+        for (const auto& 追加 : 请求.追加字段组) {
+            if (!有效(追加.所属节点) || !预期节点.contains(追加.所属节点.值)
+                || !有效(追加.字段节点) || !内容合法(追加.内容))
+                return {状态::入口拒绝, {}};
+            if (const auto* 目标 = 引用目标(追加.内容);
+                目标 && !预期节点.contains(目标->值))
+                return {状态::入口拒绝, {}};
+        }
+        for (const auto& 快照 : 请求.预期节点组)
+            if (!节点存在(快照.结构.节点.编码)) return {状态::节点不存在, {}};
+        for (const auto& 快照 : 请求.预期节点组) {
+            if (!联合快照相等(
+                    读取联合快照已加锁(快照.结构.节点.编码), 快照))
+                return {状态::预期不符, {}};
+            // 已证明是当前字段，端点失效才属于底座不变量破损。
+            for (const auto& 字段 : 快照.结构.字段组) {
+                if (!节点存在(字段.字段节点))
+                    throw std::logic_error("current field key node missing");
+                if (const auto* 目标 = 引用目标(字段.内容);
+                    目标 && !节点存在(*目标))
+                    throw std::logic_error("current field target node missing");
+            }
+        }
+        for (const auto& 追加 : 请求.追加字段组)
+            if (!节点存在(追加.字段节点)) return {状态::引用不存在, {}};
+        for (const auto 编码 : 已触碰字段) {
+            const auto 位置 = 字段关系_.find(编码);
+            if (位置 == 字段关系_.end()
+                || 位置->second != *预期字段.at(编码))
+                throw std::logic_error("current touched field disagrees with complete snapshot");
+            核验字段索引已加锁(位置->second);
+        }
+
+        auto 候选字段 = 字段关系_;
+        auto 候选所属索引 = 所属字段索引_;
+        auto 候选目标索引 = 目标字段索引_;
+        基础字段组合变化结果 结果{状态::已完成, {}};
+        结果.追加字段关系组.reserve(请求.追加字段组.size());
+        const auto 移除候选字段 = [&](稳定编码 编码) {
+            const auto 位置 = 候选字段.find(编码.值);
+            if (位置 == 候选字段.end())
+                throw std::logic_error("candidate field to remove missing");
+            const auto& 字段 = 位置->second;
+            if (候选所属索引.erase({字段.所属节点.值,
+                    字段.字段节点.值, 编码.值}) != 1)
+                throw std::logic_error("candidate forward field index missing");
+            if (const auto* 目标 = 引用目标(字段.内容);
+                目标 && 候选目标索引.erase({字段.字段节点.值,
+                    目标->值, 编码.值}) != 1)
+                throw std::logic_error("candidate reverse field index missing");
+            候选字段.erase(位置);
+        };
+        for (const auto 编码 : 请求.删除字段关系组) 移除候选字段(编码);
+        for (const auto& 替换 : 请求.替换字段组) {
+            const auto 位置 = 候选字段.find(替换.字段关系.值);
+            if (位置 == 候选字段.end())
+                throw std::logic_error("candidate field to replace missing");
+            const auto& 字段 = 位置->second;
+            if (const auto* 旧目标 = 引用目标(字段.内容);
+                旧目标 && 候选目标索引.erase({字段.字段节点.值,
+                    旧目标->值, 替换.字段关系.值}) != 1)
+                throw std::logic_error("candidate old reverse index missing");
+            位置->second.内容 = 替换.新内容;
+            if (const auto* 新目标 = 引用目标(位置->second.内容);
+                新目标 && !候选目标索引.emplace(字段.字段节点.值,
+                    新目标->值, 替换.字段关系.值).second)
+                throw std::logic_error("candidate new reverse index collision");
+        }
+        for (const auto& 追加 : 请求.追加字段组) {
+            const auto 编码 = 分配编码();
+            if (!有效(编码)) return {状态::编码耗尽, {}};
+            if (节点_.contains(编码.值) || 外部关系_.contains(编码.值)
+                || 候选字段.contains(编码.值))
+                throw std::logic_error("allocated field identity collision");
+            const auto [位置, 已插入] = 候选字段.emplace(编码.值,
+                基础字段关系{编码, 追加.所属节点, 追加.字段节点, 追加.内容});
+            if (!已插入) throw std::logic_error("candidate field identity collision");
+            if (!候选所属索引.emplace(追加.所属节点.值,
+                    追加.字段节点.值, 编码.值).second)
+                throw std::logic_error("candidate forward index collision");
+            if (const auto* 目标 = 引用目标(位置->second.内容);
+                目标 && !候选目标索引.emplace(追加.字段节点.值,
+                    目标->值, 编码.值).second)
+                throw std::logic_error("candidate reverse index collision");
+            结果.追加字段关系组.push_back(编码);
+        }
+
+        static_assert(std::is_nothrow_swappable_v<decltype(字段关系_)>);
+        static_assert(std::is_nothrow_swappable_v<decltype(所属字段索引_)>);
+        static_assert(std::is_nothrow_swappable_v<decltype(目标字段索引_)>);
+        static_assert(std::is_nothrow_move_constructible_v<基础字段组合变化结果>);
+        字段关系_.swap(候选字段);
+        所属字段索引_.swap(候选所属索引);
+        目标字段索引_.swap(候选目标索引);
+        return 结果;
+    } catch (const std::bad_alloc&) { return {状态::资源失败, {}};
+    } catch (const std::length_error&) { return {状态::资源失败, {}};
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子比较变更字段组",
+            L"完整预期字段组合变化发生工程异常，未形成业务否定。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子比较变更字段组",
+            L"完整预期字段组合变化发生未知工程异常，未形成业务否定。");
+    }
+}
+
 基础互引节点建立结果 基础数据集::原子建立互引节点(
     const 基础互引节点建立请求& 请求) noexcept {
     using 状态 = 基础互引节点操作状态;
