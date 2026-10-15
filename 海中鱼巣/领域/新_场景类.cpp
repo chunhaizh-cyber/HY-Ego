@@ -6,8 +6,10 @@
 #include <limits>
 #include <map>
 #include <mutex>
+#include <new>
 #include <set>
 #include <stdexcept>
+#include <utility>
 
 namespace 海中鱼巣 {
 
@@ -84,6 +86,48 @@ std::optional<稳定编码> 读取唯一节点字段(
 void 排序去重(std::vector<稳定编码>& 节点组) {
     std::sort(节点组.begin(), 节点组.end());
     节点组.erase(std::unique(节点组.begin(), 节点组.end()), 节点组.end());
+}
+
+[[noreturn]] void 报告场景范围成员读取工程异常() noexcept {
+    try { throw; }
+    catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取本树范围成员完整",
+            L"场景范围完整读取发生工程异常；未形成完整候选。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取本树范围成员完整",
+            L"场景范围完整读取发生未知工程异常；未形成完整候选。");
+    }
+}
+
+基础联合节点查询结果 读取场景范围单节点(稳定编码 节点) {
+    auto 读回 = 全局基础数据集.查询节点组完整结构({节点});
+    if (读回.状态 == 基础结构操作状态::已完成
+        && (读回.节点组.size() != 1 || 读回.节点组.front().查询节点 != 节点)) {
+        throw std::logic_error("scene range L1 singleton result shape mismatch");
+    }
+    return 读回;
+}
+
+std::vector<基础外部关系> 场景层级关系组(
+    const std::vector<基础外部关系>& 关系组) {
+    std::vector<基础外部关系> 结果;
+    for (const auto& 关系 : 关系组) {
+        if (关系.类型 == 基础外部关系类型::父子
+            && 关系.角色或顺序 == 场景组成子场景关系角色) {
+            结果.push_back(关系);
+        }
+    }
+    return 结果;
+}
+
+bool 场景范围快照一致(const 基础联合节点快照& 初读,
+    const 基础联合节点快照& 末读) {
+    return 初读.结构.节点 == 末读.结构.节点
+        && 初读.结构.字段组 == 末读.结构.字段组
+        && 场景层级关系组(初读.入向外部关系组)
+            == 场景层级关系组(末读.入向外部关系组)
+        && 场景层级关系组(初读.出向外部关系组)
+            == 场景层级关系组(末读.出向外部关系组);
 }
 
 std::optional<long double> 面到参考点平方距离(
@@ -1377,6 +1421,269 @@ std::vector<稳定编码> 新_场景类::查询直接成员存在(
         return 结果;
     } catch (...) {
         return {};
+    }
+}
+
+新场景范围成员读取结果 新_场景类::读取本树范围成员完整() const noexcept {
+    using 状态 = 新场景范围成员读取状态;
+    新场景范围成员读取结果 结果;
+    try {
+        std::lock_guard 锁(新场景互斥);
+        const auto 根 = 场景树根节点_;
+        if (!有效(根) || !有效(场景身份字段) || !有效(场景节点类型)
+            || !有效(成员存在字段) || !有效(根用途字段)
+            || !节点仍存在(场景身份字段) || !节点仍存在(场景节点类型)
+            || !节点仍存在(成员存在字段) || !节点仍存在(根用途字段)) {
+            return 结果;
+        }
+        if (用途_ != 新场景树用途::普通 && 用途_ != 新场景树用途::内部治理) {
+            结果.状态 = 状态::结构不一致;
+            return 结果;
+        }
+
+        struct 待访问场景 final {
+            稳定编码 节点;
+            std::optional<基础外部关系> 预期父关系;
+        };
+        struct 场景发现项 final {
+            基础联合节点快照 首读;
+            std::vector<稳定编码> 直接成员;
+        };
+        struct 成员发现项 final {
+            稳定编码 所属场景, 成员字段关系;
+            基础联合节点快照 首读;
+        };
+        const auto 否定复核状态 = [&](稳定编码 节点,
+            const 基础联合节点快照& 首读, bool 是场景) {
+            const auto 复核 = 读取场景范围单节点(节点);
+            if (复核.状态 == 基础结构操作状态::资源失败) return 状态::资源失败;
+            if (复核.状态 == 基础结构操作状态::内部不一致)
+                return 状态::结构不一致;
+            if (复核.状态 != 基础结构操作状态::已完成)
+                throw std::logic_error("scene range L1 recheck rejected valid node");
+            if (!复核.节点组.front().快照) return 状态::读取已变化;
+            const auto& 末读 = *复核.节点组.front().快照;
+            if (是场景 ? !场景范围快照一致(首读, 末读)
+                : 首读.结构.字段组 != 末读.结构.字段组) {
+                return 状态::读取已变化;
+            }
+            return 状态::结构不一致;
+        };
+
+        std::map<稳定编码, 场景发现项> 场景组;
+        std::map<稳定编码, 成员发现项> 成员组;
+        std::set<稳定编码> 已发现场景{根};
+        std::vector<待访问场景> 待访问{{根, std::nullopt}};
+        while (!待访问.empty()) {
+            const auto 当前 = std::move(待访问.back());
+            待访问.pop_back();
+            auto 场景读回 = 读取场景范围单节点(当前.节点);
+            if (场景读回.状态 == 基础结构操作状态::资源失败) {
+                结果.状态 = 状态::资源失败;
+                return 结果;
+            }
+            if (场景读回.状态 == 基础结构操作状态::内部不一致) {
+                结果.状态 = 状态::结构不一致;
+                return 结果;
+            }
+            if (场景读回.状态 != 基础结构操作状态::已完成)
+                throw std::logic_error("scene range L1 rejected valid scene request");
+            if (!场景读回.节点组.front().快照) {
+                结果.状态 = 当前.预期父关系 ? 状态::结构不一致 : 状态::根不可读;
+                return 结果;
+            }
+            auto 场景快照 = std::move(*场景读回.节点组.front().快照);
+            if (场景快照.结构.节点.编码 != 当前.节点) {
+                结果.状态 = 状态::结构不一致;
+                return 结果;
+            }
+            const auto 入向父关系 = 场景层级关系组(场景快照.入向外部关系组);
+            if (当前.预期父关系
+                ? 入向父关系.size() != 1 || 入向父关系.front() != *当前.预期父关系
+                : !入向父关系.empty()) {
+                结果.状态 = 状态::结构不一致;
+                return 结果;
+            }
+
+            std::size_t 身份数 = 0, 用途数 = 0;
+            for (const auto& 字段 : 场景快照.结构.字段组) {
+                if (!有效(字段.编码) || !有效(字段.字段节点)
+                    || 字段.所属节点 != 当前.节点) {
+                    结果.状态 = 状态::结构不一致;
+                    return 结果;
+                }
+                if (字段.字段节点 == 场景身份字段) {
+                    ++身份数;
+                    const auto* 类型 = std::get_if<稳定编码>(&字段.内容);
+                    if (!类型 || *类型 != 场景节点类型) {
+                        结果.状态 = 状态::结构不一致;
+                        return 结果;
+                    }
+                }
+                if (字段.字段节点 == 根用途字段) {
+                    ++用途数;
+                    const auto* 值 = std::get_if<基础值>(&字段.内容);
+                    const auto* 数值 = 值 ? std::get_if<std::int64_t>(&值->材料) : nullptr;
+                    if (!数值 || (*数值 != 1 && *数值 != 2)
+                        || (当前.节点 == 根
+                            && *数值 != static_cast<std::int64_t>(用途_))) {
+                        结果.状态 = 状态::结构不一致;
+                        return 结果;
+                    }
+                }
+            }
+            if (身份数 != 1 || (当前.节点 == 根
+                    ? 用途数 > 1 || (用途数 == 0 && 用途_ != 新场景树用途::普通)
+                    : 用途数 != 0)) {
+                结果.状态 = 状态::结构不一致;
+                return 结果;
+            }
+            if (!存在服务_.是存在节点(当前.节点)) {
+                结果.状态 = 否定复核状态(当前.节点, 场景快照, true);
+                return 结果;
+            }
+
+            std::vector<稳定编码> 直接成员;
+            for (const auto& 字段 : 场景快照.结构.字段组) {
+                if (字段.字段节点 != 成员存在字段) continue;
+                const auto* 成员 = std::get_if<稳定编码>(&字段.内容);
+                if (!成员 || !有效(*成员) || 成员组.contains(*成员)) {
+                    结果.状态 = 状态::结构不一致;
+                    return 结果;
+                }
+                auto 成员读回 = 读取场景范围单节点(*成员);
+                if (成员读回.状态 == 基础结构操作状态::资源失败) {
+                    结果.状态 = 状态::资源失败;
+                    return 结果;
+                }
+                if (成员读回.状态 == 基础结构操作状态::内部不一致) {
+                    结果.状态 = 状态::结构不一致;
+                    return 结果;
+                }
+                if (成员读回.状态 != 基础结构操作状态::已完成)
+                    throw std::logic_error("scene range L1 rejected valid member request");
+                if (!成员读回.节点组.front().快照) {
+                    结果.状态 = 状态::结构不一致;
+                    return 结果;
+                }
+                auto 成员快照 = std::move(*成员读回.节点组.front().快照);
+                if (成员快照.结构.节点.编码 != *成员
+                    || std::any_of(成员快照.结构.字段组.begin(),
+                        成员快照.结构.字段组.end(), [&](const auto& 当前字段) {
+                            return 当前字段.字段节点 == 场景身份字段;
+                        })) {
+                    结果.状态 = 状态::结构不一致;
+                    return 结果;
+                }
+                if (!存在服务_.是存在节点(*成员)) {
+                    结果.状态 = 否定复核状态(*成员, 成员快照, false);
+                    return 结果;
+                }
+                成员组.emplace(*成员, 成员发现项{
+                    当前.节点, 字段.编码, std::move(成员快照)});
+                直接成员.push_back(*成员);
+            }
+            std::sort(直接成员.begin(), 直接成员.end());
+            const auto 出向子关系 = 场景层级关系组(场景快照.出向外部关系组);
+            for (const auto& 关系 : 出向子关系) {
+                if (!有效(关系.编码) || 关系.源节点 != 当前.节点
+                    || !有效(关系.目标节点)
+                    || !已发现场景.insert(关系.目标节点).second) {
+                    结果.状态 = 状态::结构不一致;
+                    return 结果;
+                }
+                待访问.push_back({关系.目标节点, 关系});
+            }
+            场景组.emplace(当前.节点,
+                场景发现项{std::move(场景快照), std::move(直接成员)});
+        }
+
+        std::vector<稳定编码> 联合节点;
+        联合节点.reserve(场景组.size() + 成员组.size());
+        for (const auto& [节点, _] : 场景组) 联合节点.push_back(节点);
+        for (const auto& [节点, _] : 成员组) 联合节点.push_back(节点);
+        std::sort(联合节点.begin(), 联合节点.end());
+        if (std::adjacent_find(联合节点.begin(), 联合节点.end()) != 联合节点.end()) {
+            结果.状态 = 状态::结构不一致;
+            return 结果;
+        }
+        const auto 联合读回 = 全局基础数据集.查询节点组完整结构(联合节点);
+        if (联合读回.状态 == 基础结构操作状态::资源失败) {
+            结果.状态 = 状态::资源失败;
+            return 结果;
+        }
+        if (联合读回.状态 == 基础结构操作状态::内部不一致) {
+            结果.状态 = 状态::结构不一致;
+            return 结果;
+        }
+        if (联合读回.状态 != 基础结构操作状态::已完成
+            || 联合读回.节点组.size() != 联合节点.size()) {
+            throw std::logic_error("scene range L1 rejected valid union request");
+        }
+        for (std::size_t i = 0; i < 联合节点.size(); ++i) {
+            const auto& 项 = 联合读回.节点组[i];
+            if (项.查询节点 != 联合节点[i])
+                throw std::logic_error("scene range L1 union order mismatch");
+            if (!项.快照) {
+                结果.状态 = 状态::读取已变化;
+                return 结果;
+            }
+            const auto 场景 = 场景组.find(项.查询节点);
+            if (场景 != 场景组.end()) {
+                if (!场景范围快照一致(场景->second.首读, *项.快照)) {
+                    结果.状态 = 状态::读取已变化;
+                    return 结果;
+                }
+                continue;
+            }
+            const auto 成员 = 成员组.find(项.查询节点);
+            if (成员 == 成员组.end())
+                throw std::logic_error("scene range union contains unknown node");
+            if (std::any_of(项.快照->结构.字段组.begin(),
+                    项.快照->结构.字段组.end(), [&](const auto& 字段) {
+                        return 字段.字段节点 == 场景身份字段;
+                    })) {
+                结果.状态 = 状态::读取已变化;
+                return 结果;
+            }
+            std::size_t 归属字段数 = 0;
+            bool 归属互证 = false;
+            for (const auto& 字段 : 项.快照->入向字段组) {
+                if (字段.字段节点 != 成员存在字段) continue;
+                ++归属字段数;
+                const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
+                if (有效(字段.编码) && 字段.编码 == 成员->second.成员字段关系
+                    && 字段.所属节点 == 成员->second.所属场景
+                    && 目标 && *目标 == 项.查询节点) 归属互证 = true;
+            }
+            if (归属字段数 != 1 || !归属互证) {
+                结果.状态 = 状态::结构不一致;
+                return 结果;
+            }
+            if (!存在服务_.是存在节点(项.查询节点)) {
+                结果.状态 = 否定复核状态(项.查询节点, *项.快照, false);
+                return 结果;
+            }
+        }
+
+        新场景范围成员读取结果 完成;
+        完成.状态 = 状态::已完成;
+        完成.根场景节点 = 根;
+        完成.场景成员组.reserve(场景组.size());
+        for (const auto& [节点, 场景] : 场景组)
+            完成.场景成员组.push_back({节点, 场景.直接成员});
+        完成.范围成员存在组.reserve(成员组.size());
+        for (const auto& [节点, _] : 成员组)
+            完成.范围成员存在组.push_back(节点);
+        return 完成;
+    } catch (const std::bad_alloc&) {
+        结果.状态 = 状态::资源失败;
+        return 结果;
+    } catch (const std::length_error&) {
+        结果.状态 = 状态::资源失败;
+        return 结果;
+    } catch (...) {
+        报告场景范围成员读取工程异常();
     }
 }
 

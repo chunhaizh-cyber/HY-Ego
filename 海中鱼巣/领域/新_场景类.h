@@ -27,6 +27,20 @@ struct 新场景信息 final {
     friend bool operator==(const 新场景信息&, const 新场景信息&) = default;
 };
 
+enum class 新场景范围成员读取状态 : std::uint8_t {
+    已完成 = 1, 根不可读, 读取已变化, 结构不一致, 资源失败
+};
+struct 新场景范围成员项 final {
+    稳定编码 场景节点;
+    std::vector<稳定编码> 直接成员存在组;
+};
+struct 新场景范围成员读取结果 final {
+    新场景范围成员读取状态 状态 = 新场景范围成员读取状态::根不可读;
+    std::optional<稳定编码> 根场景节点;
+    std::vector<新场景范围成员项> 场景成员组;
+    std::vector<稳定编码> 范围成员存在组;
+};
+
 enum class 新场景操作状态 : std::uint8_t {
     已完成 = 1,
     无变化 = 2,
@@ -334,6 +348,8 @@ public:
         稳定编码 场景节点) const noexcept;
     std::vector<稳定编码> 查询直接成员存在(
         稳定编码 场景节点) const noexcept;
+    // 当前服务根及其全部子场景的普通成员；非成功不交付部分候选。
+    新场景范围成员读取结果 读取本树范围成员完整() const noexcept;
     // 返回当前场景及全部下级场景直接成员的并集，不包含场景节点本身。
     std::vector<稳定编码> 查询场景范围存在(
         稳定编码 场景节点) const noexcept;
