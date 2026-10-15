@@ -1,4 +1,5 @@
 #include "宿主.网页对话.h"
+#include "../核心/容错检查.h"
 
 #ifndef _WIN32
 #error 本地网页对话宿主当前只实现Windows系统浏览器边界。
@@ -15,10 +16,12 @@
 #include <charconv>
 #include <cstddef>
 #include <cstdint>
+#include <exception>
 #include <limits>
 #include <mutex>
 #include <new>
 #include <optional>
+#include <stdexcept>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -897,6 +900,81 @@ bool 网页对话宿主结果::成功() const noexcept {
         return {网页对话会话核验状态::资源失败, std::nullopt};
     } catch (...) {
         return {网页对话会话核验状态::内部错误, std::nullopt};
+    }
+}
+
+网页对话页面消息快照结果 读取网页对话会话页面消息快照(
+    std::string_view 公开会话标识,
+    std::uint64_t 已读页面序号,
+    std::size_t 最大消息条数,
+    std::size_t 最大正文总字节数) noexcept {
+    if (公开会话标识.empty() || !是有效UTF8(公开会话标识)
+        || 最大消息条数 == 0 || 最大消息条数 > 1024
+        || 最大正文总字节数 == 0
+        || 最大正文总字节数 > 8U * 1024U * 1024U) {
+        return {};
+    }
+
+    try {
+        std::lock_guard 锁(共享状态.互斥);
+        if (!共享状态.运行中)
+            return {网页对话页面消息快照状态::宿主未运行};
+        if (共享状态.会话标识 != 公开会话标识)
+            return {网页对话页面消息快照状态::会话不匹配};
+        if (共享状态.下一页面序号 == 0) {
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
+                L"读取网页对话会话页面消息快照", L"页面序号结构损坏。");
+        }
+
+        const auto 截止 = 共享状态.下一页面序号 - 1;
+        if (已读页面序号 > 截止)
+            return {网页对话页面消息快照状态::输入拒绝};
+        if (截止 > (std::numeric_limits<std::size_t>::max)()
+            || 共享状态.消息组.size() != static_cast<std::size_t>(截止)) {
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
+                L"读取网页对话会话页面消息快照", L"页面消息组长度与截止序号不一致。");
+        }
+        for (std::size_t i = 0; i < 共享状态.消息组.size(); ++i) {
+            const auto& 消息 = 共享状态.消息组[i];
+            if (消息.页面序号 != static_cast<std::uint64_t>(i) + 1
+                || (消息.角色 != 网页对话消息角色::交互者
+                    && 消息.角色 != 网页对话消息角色::自我)) {
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
+                    L"读取网页对话会话页面消息快照", L"页面消息顺序或角色结构损坏。");
+            }
+        }
+
+        网页对话页面消息快照结果 结果;
+        结果.公开会话标识.assign(公开会话标识);
+        结果.请求已读页面序号 = 已读页面序号;
+        结果.截止页面序号 = 截止;
+        结果.已覆盖页面序号 = 已读页面序号;
+        std::size_t 已用正文总字节数 = 0;
+        for (std::size_t i = static_cast<std::size_t>(已读页面序号);
+            i < 共享状态.消息组.size(); ++i) {
+            const auto& 消息 = 共享状态.消息组[i];
+            if (结果.消息组.size() == 最大消息条数
+                || 消息.UTF8正文.size() > 最大正文总字节数 - 已用正文总字节数) {
+                结果.状态 = 网页对话页面消息快照状态::额度不足;
+                return 结果;
+            }
+            结果.消息组.push_back(消息);
+            已用正文总字节数 += 消息.UTF8正文.size();
+            结果.已覆盖页面序号 = 消息.页面序号;
+        }
+        结果.状态 = 网页对话页面消息快照状态::已完成;
+        结果.覆盖完整 = true;
+        return 结果;
+    } catch (const std::bad_alloc&) {
+        return {网页对话页面消息快照状态::资源失败};
+    } catch (const std::length_error&) {
+        return {网页对话页面消息快照状态::资源失败};
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
+            L"读取网页对话会话页面消息快照", L"宿主页面快照发生工程异常。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
+            L"读取网页对话会话页面消息快照", L"宿主页面快照发生未知工程异常。");
     }
 }
 
