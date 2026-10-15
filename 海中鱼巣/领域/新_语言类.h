@@ -72,8 +72,8 @@ struct 新语言词条匹配结果 final {
     std::vector<新语言词条匹配片段> 片段组;
 };
 
-enum class 新语言知识表达目的 : std::uint8_t { 陈述 = 1 };
-enum class 新语言知识作用域 : std::uint8_t { 普通陈述 = 1 };
+enum class 新语言知识表达目的 : std::uint8_t { 陈述 = 1, 提问 = 2 };
+enum class 新语言知识作用域 : std::uint8_t { 普通陈述 = 1, 提问范围 = 2 };
 enum class 新语言知识角色种类 : std::uint8_t {
     领域对象引用 = 1, 概念引用, 特征类型引用, 准确值
 };
@@ -98,8 +98,9 @@ struct 新语言知识角色定义 final {
         const 新语言知识角色定义&) = default;
 };
 enum class 新语言知识含义操作 : std::uint8_t {
-    概念归类 = 1, 特征描述, 组成描述
+    概念归类 = 1, 特征描述, 组成描述, 信息请求
 };
+enum class 新语言知识确认范围 : std::uint8_t { 主张成立与否 = 1 };
 enum class 新语言知识参数角色 : std::uint8_t {
     主体 = 1, 归类概念, 特征类型, 特征值, 整体, 部分
 };
@@ -110,12 +111,22 @@ struct 新语言知识角色参数 final {
     friend bool operator==(const 新语言知识角色参数&,
         const 新语言知识角色参数&) = default;
 };
+struct 新语言知识被询含义 final {
+    std::int64_t 局部编号 = 1;
+    新语言知识含义操作 操作 = 新语言知识含义操作::概念归类;
+    新语言知识作用域 作用域 = 新语言知识作用域::提问范围;
+    std::vector<新语言知识角色参数> 参数组;
+    friend bool operator==(const 新语言知识被询含义&,
+        const 新语言知识被询含义&) = default;
+};
 struct 新语言知识含义项 final {
     std::int64_t 局部编号 = 0;
     新语言知识含义操作 操作;
     新语言知识作用域 作用域 = 新语言知识作用域::普通陈述;
     std::vector<新语言知识角色参数> 参数组;
     std::optional<新语言知识特征值分支> 特征值分支;
+    std::optional<新语言知识被询含义> 被询含义;
+    std::optional<新语言知识确认范围> 确认范围;
     friend bool operator==(const 新语言知识含义项&,
         const 新语言知识含义项&) = default;
 };
@@ -141,8 +152,20 @@ struct 新语言知识角色表达项 final {
     friend bool operator==(const 新语言知识角色表达项&,
         const 新语言知识角色表达项&) = default;
 };
+struct 新语言知识子规则映射 final {
+    std::int64_t 外层角色编号 = 0;
+    std::int64_t 子规则角色编号 = 0;
+    friend bool operator==(const 新语言知识子规则映射&,
+        const 新语言知识子规则映射&) = default;
+};
+struct 新语言知识子规则项 final {
+    稳定编码 子知识节点;
+    std::vector<新语言知识子规则映射> 映射组;
+    friend bool operator==(const 新语言知识子规则项&,
+        const 新语言知识子规则项&) = default;
+};
 using 新语言知识结构项载荷 = std::variant<新语言知识固定词项,
-    新语言知识角色表达项>;
+    新语言知识角色表达项, 新语言知识子规则项>;
 struct 新语言知识结构项 final {
     std::int64_t 局部编号 = 0;
     新语言知识结构项载荷 载荷;
