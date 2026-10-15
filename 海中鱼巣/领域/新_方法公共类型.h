@@ -86,12 +86,21 @@ enum class 新方法参数对象种类 : std::int64_t {
     服务要求确认 = 7
 };
 
+// 任务角色绑定的同一个 T 必须属于另一角色的指定集合特征当前值。
+struct 新方法参数集合成员约束 final {
+    稳定编码 集合参数角色节点;
+    稳定编码 集合特征类型概念节点;
+    friend bool operator==(const 新方法参数集合成员约束&,
+        const 新方法参数集合成员约束&) = default;
+};
+
 struct 新方法参数规格 final {
     稳定编码 参数角色节点;
     std::optional<稳定编码> 存在概念节点;
     bool 要求场景 = false;
     std::vector<新方法参数特征规格> 特征规格组;
     新方法参数对象种类 对象种类 = 新方法参数对象种类::普通世界;
+    std::optional<新方法参数集合成员约束> 集合成员约束;
     friend bool operator==(const 新方法参数规格&,
         const 新方法参数规格&) = default;
 };
