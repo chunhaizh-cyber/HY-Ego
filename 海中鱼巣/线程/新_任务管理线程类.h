@@ -5,6 +5,7 @@
 #include <future>
 #include <memory>
 #include <optional>
+#include <stop_token>
 #include <vector>
 #include "../领域/新_任务类.h"
 #include "新_任务工作线程类.h"
@@ -399,6 +400,7 @@ public:
         const 新任务管理运行配置& 配置, std::uint64_t 等待毫秒) noexcept;
     新任务承接接收结果 提交消息(const 新任务承接消息& 消息) noexcept;
     新任务管理操作结果 请求停止() noexcept;
+    std::stop_token 读取停止令牌() const noexcept;
     新任务管理操作结果 等待停止(std::uint64_t 等待毫秒) noexcept;
     新任务管理快照 读取快照() const noexcept;
     std::optional<新任务筹办处理结果> 读取最近筹办结果(
@@ -414,8 +416,6 @@ private:
         const 新任务筹办反馈定位&)>;
     using 结果反馈接收函数 = std::function<新任务结果反馈接收状态(
         const 新任务结果反馈定位&)>;
-    using 服务需求取得反馈接收函数 = std::function<新任务结果反馈接收状态(
-        const 新服务需求取得反馈定位&)>;
     using 学习复核接收函数 = std::function<新任务学习复核反馈接收状态(
         const 新任务学习复核定位&)>;
     using 等待复核接收函数 = std::function<新任务等待复核反馈接收状态(
@@ -438,8 +438,8 @@ private:
         结果反馈接收函数 结果接收,
         学习复核接收函数 学习接收,
         等待复核接收函数 等待接收,
-        服务需求取得反馈接收函数 服务需求接收,
         const 新长期服务值结算配置& 服务结算配置) noexcept;
+    新任务承接接收结果 提交服务需求执行承接(const 新任务承接消息&) noexcept;
     void 解除自我筹办反馈(const void* 所有者) noexcept;
     新自我筹办裁决接收状态 提交自我筹办裁决(
         const 新自我筹办裁决& 裁决) noexcept;

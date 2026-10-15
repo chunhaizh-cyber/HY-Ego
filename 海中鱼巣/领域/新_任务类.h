@@ -24,7 +24,7 @@ class 概念_二次特征类;
 class 概念_存在类;
 class 新_动态类;
 class 新_任务管理线程类;
-struct 新服务需求信息包;
+class 服务需求本能运行服务;
 enum class 新任务本能输入复核状态 : std::uint8_t {
     仍具备 = 1, 条件已变化, 场景不一致, 执行不在当前位
 };
@@ -382,6 +382,7 @@ struct 新任务执行信息 final {
     std::optional<新任务服务结算来源绑定> 服务结算来源;
     std::optional<稳定编码> 普通动作节点;
     std::optional<新任务本能采用材料> 本能采用;
+    // 本次执行实际采用的正式确认；保留字段名兼容旧身份，不再表示返回包。
     std::optional<稳定编码> 服务需求返回确认;
     friend bool operator==(const 新任务执行信息&,
         const 新任务执行信息&) = default;
@@ -1458,8 +1459,9 @@ public:
 private:
     std::optional<新任务服务需求取得合同> 服务需求取得合同_;
     bool 是服务需求取得目标(const 新需求信息& 需求) const;
-    void 记录服务需求返回证据(稳定编码 任务节点, 稳定编码 执行实例节点,
-        const 新服务需求信息包& 信息包, 稳定编码 动作节点);
+    friend class 服务需求本能运行服务;
+    void 记录服务需求执行依据(稳定编码 任务节点, 稳定编码 执行实例节点,
+        const 方法参数场景&, 稳定编码 动作节点);
     新任务条件分解结果 选择任务结果分支内部(
         稳定编码 任务节点, bool 允许部分条件绑定) const noexcept;
     新任务执行组织结果 实施任务方法执行组织(

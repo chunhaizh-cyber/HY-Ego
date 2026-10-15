@@ -4,6 +4,7 @@
 #include <future>
 #include <memory>
 #include <optional>
+#include <stop_token>
 
 #include "../业务/新_世界树类.h"
 #include "新_自我工作线程类.h"
@@ -370,10 +371,16 @@ public:
     新自我消息接收结果 提交消息(
         const 新自我治理消息& 消息) noexcept;
     新自我线程操作结果 请求停止() noexcept;
+    std::stop_token 读取停止令牌() const noexcept;
     新自我线程操作结果 等待停止(std::uint64_t 等待毫秒) noexcept;
     新自我线程快照 读取快照() const noexcept;
 
 private:
+    friend class 服务需求本能运行服务;
+    新自我消息接收结果 提交服务需求执行(
+        const 新服务需求取得反馈定位&) noexcept;
+    bool 使用服务需求执行依赖(const 新_任务类&,
+        const 新_任务管理线程类&) const noexcept;
     struct 实现;
     std::unique_ptr<实现> 实现_;
 };

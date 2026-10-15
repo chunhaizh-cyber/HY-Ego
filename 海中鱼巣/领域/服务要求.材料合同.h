@@ -5,6 +5,7 @@
 #include <optional>
 #include <string_view>
 #include <variant>
+#include <vector>
 #include "新_需求类.h"
 
 namespace 海中鱼巣 {
@@ -48,7 +49,7 @@ public:
         const 新服务要求分项引用&) const noexcept = 0;
 };
 
-// 调用期值式交付，不是正式需求节点，也不是持久化的第二材料仓库。
+// 仅保留格式2历史归档的编解码形状。新本能执行不得构造或返回此包。
 struct 新服务需求信息包 final {
     稳定编码 来源人类节点, 目标存在节点;
     新需求目标定义 目标;
@@ -59,14 +60,23 @@ struct 新服务需求信息包 final {
 
 enum class 新服务需求获取方式 : std::uint8_t { 主动 = 1, 被动 = 2 };
 struct 新服务需求获取配置 final {
-    稳定编码 自我存在节点, 所在场景节点, 信息包存在概念节点;
-    // 顺序：来源人类、目标存在、目标特征类型、目标定义、确认。
-    std::array<稳定编码, 5> 参数角色概念组;
+    稳定编码 自我存在节点, 自我存在概念节点, 所在场景节点;
+    稳定编码 服务任务集合特征节点, 服务任务集合类型;
+    稳定编码 服务任务集合全域, 数量变化量类型, 已新增值域;
+    // 顺序：来源人类、目标存在、目标特征类型、目标定义、确认、作用自我。
+    std::array<稳定编码, 6> 参数角色概念组;
     friend bool operator==(const 新服务需求获取配置&, const 新服务需求获取配置&) = default;
 };
 struct 新服务需求获取动作回执 final {
     bool 已新建 = false;
     std::optional<稳定编码> 动作节点;
+};
+enum class 新服务需求执行控制 : std::uint8_t {
+    已收束 = 1, 条件已变化, 停止中断
+};
+struct 新服务需求执行回执 final {
+    新服务需求执行控制 控制 = 新服务需求执行控制::停止中断;
+    std::vector<稳定编码> 结果状态节点组;
 };
 class 方法参数场景;
 struct 新方法知识建立请求;
@@ -82,6 +92,8 @@ public:
     virtual bool 核验执行(新服务需求获取方式, const 方法参数场景&) const noexcept = 0;
     virtual 新服务需求获取动作回执 建立动作(新服务需求获取方式,
         const 方法参数场景&, 稳定编码 来源人类节点) noexcept = 0;
+    virtual 新服务需求执行回执 执行服务需求采用(新服务需求获取方式,
+        const 方法参数场景&, 稳定编码 动作节点) noexcept = 0;
     virtual void 报告工程故障(std::string_view) noexcept = 0;
 };
 using 新服务需求工程报告函数 = void (*)(std::string_view) noexcept;

@@ -7,14 +7,18 @@ namespace 海中鱼巣 {
 class 新_世界树类;
 class 新_任务类;
 class 新_动态类;
+class 新_自我线程类;
+class 新_任务管理线程类;
 
 // owner及材料读取接口必须覆盖本服务、参数场景和所有在途调用的生命期。
-// 初始化调用者须提供语义已定义的信息包复合概念及五个角色概念。
+// 宿主须在依赖销毁前显式关闭端口并停止、join工作线程；析构只收束自身，不注销注册表。
+// 初始化调用者须提供正式的集合/数量概念和六个角色概念。
 class 服务需求本能运行服务 final : public 新服务需求获取本能端口,
     public std::enable_shared_from_this<服务需求本能运行服务> {
 public:
     服务需求本能运行服务(新_世界树类&, 新_方法类&, 新_任务类&, 新_动态类&,
         概念_存在类&, 概念_特征类&, const 新服务要求材料读取接口&,
+        新_自我线程类&, 新_任务管理线程类&,
         新服务需求工程报告函数) noexcept;
     ~服务需求本能运行服务();
     服务需求本能运行服务(const 服务需求本能运行服务&) = delete;
@@ -31,6 +35,8 @@ public:
     bool 核验执行(新服务需求获取方式, const 方法参数场景&) const noexcept override;
     新服务需求获取动作回执 建立动作(新服务需求获取方式,
         const 方法参数场景&, 稳定编码 来源人类节点) noexcept override;
+    新服务需求执行回执 执行服务需求采用(新服务需求获取方式,
+        const 方法参数场景&, 稳定编码 动作节点) noexcept override;
     void 报告工程故障(std::string_view) noexcept override;
 private:
     struct 实现;
