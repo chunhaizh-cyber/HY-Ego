@@ -28,6 +28,58 @@ class 执行场景采集服务;
 // 任务集合根只登记全部任务，不表达任务之间的父子关系。
 extern 稳定编码 任务集合根节点;
 
+// 属于一个任务的执行定义，不是方法副本，也不产生新的任务/需求身份。
+struct 新任务执行参数要求 final {
+    稳定编码 节点;
+    新方法参数规格 规格;
+    friend bool operator==(const 新任务执行参数要求&, const 新任务执行参数要求&) = default;
+};
+struct 新任务执行配对要求 final {
+    稳定编码 节点, 来源配对节点, 来源条件节点, 来源结果节点;
+    新方法条件定义 条件;
+    新方法结果定义 结果;
+    std::vector<新方法条件结果线性关系> 线性关系组;
+    friend bool operator==(const 新任务执行配对要求&, const 新任务执行配对要求&) = default;
+};
+struct 新任务执行调用步骤 final {
+    稳定编码 节点, 来源步骤节点, 调用作用域节点;
+    std::int64_t 顺序 = 0;
+    friend bool operator==(const 新任务执行调用步骤&, const 新任务执行调用步骤&) = default;
+};
+struct 新任务执行分支 final {
+    稳定编码 节点, 来源转移节点, 当前步骤节点, 当前结果要求节点;
+    std::optional<稳定编码> 匹配结果概念节点;
+    稳定编码 下一步骤节点;
+    friend bool operator==(const 新任务执行分支&, const 新任务执行分支&) = default;
+};
+struct 新任务执行方法作用域 final {
+    稳定编码 节点, 来源方法节点, 来源方法虚拟存在节点;
+    新方法作用域 作用域 = 新方法作用域::普通世界;
+    新方法实现方式 实现方式 = 新方法实现方式::本能;
+    std::vector<新任务执行参数要求> 参数要求组;
+    std::vector<新任务执行配对要求> 配对要求组;
+    std::vector<新任务执行调用步骤> 步骤组;
+    std::optional<稳定编码> 入口步骤节点;
+    std::vector<新任务执行分支> 分支组;
+    friend bool operator==(const 新任务执行方法作用域&, const 新任务执行方法作用域&) = default;
+};
+struct 新任务方法执行组织 final {
+    稳定编码 节点, 任务节点, 任务虚拟存在节点;
+    std::vector<稳定编码> 根方法作用域节点组;
+    std::vector<新任务执行方法作用域> 方法作用域组;
+    friend bool operator==(const 新任务方法执行组织&, const 新任务方法执行组织&) = default;
+};
+enum class 新任务执行组织状态 : std::uint8_t {
+    已建立 = 1, 已读取, 精确重复, 尚未建立, 入口拒绝,
+    尚未初始化, 任务不存在, 任务状态不允许,
+    来源方法不存在, 来源不是抽象方法, 已有组织不同
+};
+struct 新任务执行组织结果 final {
+    新任务执行组织状态 状态 = 新任务执行组织状态::入口拒绝;
+    std::optional<新任务方法执行组织> 组织;
+    friend bool operator==(const 新任务执行组织结果&, const 新任务执行组织结果&) = default;
+};
+
 // 描述条件值上升时结果的线性趋势，不是动作前后的变化方向。
 enum class 新任务条件结果线性方向 : std::int8_t {
     反向 = -1, 不变 = 0, 同向 = 1
@@ -241,6 +293,7 @@ struct 新任务虚拟存在信息 final {
     稳定编码 任务节点;
     稳定编码 任务状态特征节点;
     新任务状态 当前状态 = 新任务状态::已建立;
+    std::optional<稳定编码> 方法执行组织节点;
     friend bool operator==(const 新任务虚拟存在信息&,
         const 新任务虚拟存在信息&) = default;
 };
@@ -337,6 +390,8 @@ struct 新任务信息 final {
     // 正式采用的完整方法副本根，不是最近执行记录或来源抽象方法。
     std::optional<稳定编码> 方法实例节点;
     std::optional<新任务服务结算来源绑定> 服务结算来源;
+    // 从执行组织根的所属任务反查，不另持久化第二条真源关联。
+    std::optional<稳定编码> 方法执行组织节点;
     friend bool operator==(const 新任务信息&, const 新任务信息&) = default;
 };
 
@@ -1062,6 +1117,9 @@ struct 新任务调度材料读取结果 final {
 class 新_任务类 final : public 新内部治理对象读取接口,
     public 特征任务成员读取接口 {
 public:
+    新任务执行组织结果 建立或取得任务方法执行组织(
+        稳定编码 任务节点, const std::vector<稳定编码>& 来源方法节点组) noexcept;
+    新任务执行组织结果 读取任务方法执行组织(稳定编码 任务节点) const noexcept;
     特征任务成员读取结果 读取任务所属需求(稳定编码 任务节点) const noexcept override;
     特征概念规则状态 验证正式需求(稳定编码 需求节点) const noexcept override;
     特征概念规则状态 验证正式服务要求(稳定编码 确认节点) const noexcept override;
