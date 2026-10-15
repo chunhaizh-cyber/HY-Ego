@@ -8,6 +8,7 @@
 #include "新_场景类.h"
 #include "新_本能函数集.h"
 #include "新_方法公共类型.h"
+#include "任务执行采用.数据.h"
 
 namespace 海中鱼巣 {
 
@@ -53,7 +54,10 @@ struct 新执行场景快照 final {
     friend bool operator==(const 新执行场景快照&, const 新执行场景快照&) = default;
 };
 
+enum class 新方法问题采用来源 : std::uint8_t { 旧方法副本 = 1, 任务执行组织 = 2 };
+
 struct 新方法问题反馈材料 final {
+    // 实例方法节点、采用配对仅用于旧方法副本；新材料明确保存任务采用。
     稳定编码 任务节点, 执行实例节点, 来源抽象方法节点, 实例方法节点;
     新方法条件结果信息 采用配对;
     std::optional<新本能函数本次条件结果对> 本次运行对;
@@ -63,6 +67,8 @@ struct 新方法问题反馈材料 final {
     std::vector<新方法问题种类> 问题组;
     std::vector<稳定编码> 符合预测状态组, 预计但未发生项组, 计划外状态组;
     std::vector<新状态信息> 实际状态组;
+    新方法问题采用来源 采用来源 = 新方法问题采用来源::旧方法副本;
+    std::optional<新任务本能采用材料> 任务采用;
     friend bool operator==(const 新方法问题反馈材料&, const 新方法问题反馈材料&) = default;
 };
 struct 新方法问题学习消息 final {

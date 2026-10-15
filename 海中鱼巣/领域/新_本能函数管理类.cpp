@@ -4,6 +4,7 @@
 #include <map>
 #include <mutex>
 #include <new>
+#include <set>
 #include <string>
 
 namespace 海中鱼巣 {
@@ -21,6 +22,9 @@ std::shared_ptr<新服务对象获取本能端口> 服务对象获取端口;
 std::weak_ptr<新服务对象获取本能端口> 退役服务对象获取端口;
 thread_local const 方法参数场景* 本次调用场景 = nullptr;
 thread_local 稳定编码 本次调用执行实例{};
+thread_local bool 本次动作入口已消费 = false;
+std::mutex 本能执行租约互斥;
+std::set<稳定编码> 活动本能执行组;
 
 } // namespace
 
@@ -316,14 +320,35 @@ std::shared_ptr<新服务对象获取本能端口> 新_本能函数管理类::�
     const 方法参数场景& 场景, 稳定编码 执行实例节点) noexcept : 场景_(&场景) {
     if (本次调用场景 || 场景.用途() != 新方法参数场景用途::执行 || 执行实例节点.值 == 0)
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"本能执行守卫", L"本能执行身份非法或重复进入。");
-    本次调用场景 = 场景_; 本次调用执行实例 = 执行实例节点;
+    try {
+        std::lock_guard 锁(本能执行租约互斥);
+        if (!活动本能执行组.insert(执行实例节点).second)
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"本能执行守卫", L"同一执行实例已被其它调用占用。");
+        本次调用场景 = 场景_; 本次调用执行实例 = 执行实例节点;
+        本次动作入口已消费 = false;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"本能执行守卫", L"执行租约建立失败。");
+    }
 }
 新_本能函数管理类::本能执行守卫::~本能执行守卫() {
     if (本次调用场景 != 场景_)
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"本能执行守卫析构", L"本能执行身份被错误替换。");
-    本次调用场景 = nullptr; 本次调用执行实例 = {};
+    try {
+        std::lock_guard 锁(本能执行租约互斥);
+        if (活动本能执行组.erase(本次调用执行实例) != 1)
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"本能执行守卫析构", L"执行租约缺失。");
+        本次调用场景 = nullptr; 本次调用执行实例 = {};
+        本次动作入口已消费 = false;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"本能执行守卫析构", L"执行租约释放失败。");
+    }
 }
 std::optional<稳定编码> 新_本能函数管理类::读取本次执行实例(const 方法参数场景& 场景) noexcept {
     return 本次调用场景 == &场景 ? std::optional<稳定编码>{本次调用执行实例} : std::nullopt;
+}
+void 新_本能函数管理类::标记本次动作入口(const 方法参数场景& 场景) noexcept {
+    if (本次调用场景 != &场景 || 本次调用执行实例.值 == 0 || 本次动作入口已消费)
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"本能动作入口", L"缺少同次执行守卫或重复进入动作。");
+    本次动作入口已消费 = true;
 }
 } // namespace 海中鱼巣

@@ -108,6 +108,8 @@ public:
         const 方法参数场景* 场景_;
     };
     static std::optional<稳定编码> 读取本次执行实例(const 方法参数场景&) noexcept;
+    // 仅为本次调用的一次入口工程守卫，不构成业务授权或动作完成事实。
+    static void 标记本次动作入口(const 方法参数场景&) noexcept;
 
     // 同名同入口返回精确重复；同名不同入口拒绝，已登记入口不允许替换。
     static 新本能函数登记状态 登记(

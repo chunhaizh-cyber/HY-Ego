@@ -14,6 +14,7 @@
 #include "新_状态类.h"
 #include "新_内部治理对象引用.h"
 #include "方法问题反馈.数据.h"
+#include "任务执行采用.数据.h"
 
 namespace 海中鱼巣 {
 
@@ -23,6 +24,9 @@ class 概念_二次特征类;
 class 概念_存在类;
 class 新_动态类;
 class 新_任务管理线程类;
+enum class 新任务本能输入复核状态 : std::uint8_t {
+    仍具备 = 1, 条件已变化, 场景不一致, 执行不在当前位
+};
 class 执行场景采集服务;
 
 // 任务集合根只登记全部任务，不表达任务之间的父子关系。
@@ -279,6 +283,7 @@ struct 新任务执行开始请求 final {
     新状态强时间 开始时间;
     std::vector<新任务预计变化阶段> 预计变化阶段组;
     新任务结果获取方案 结果获取方案;
+    std::optional<新任务本能采用材料> 本能采用;
 };
 
 struct 新任务执行结束请求 final {
@@ -374,6 +379,7 @@ struct 新任务执行信息 final {
     std::optional<稳定编码> 影响评估节点;
     std::optional<新任务服务结算来源绑定> 服务结算来源;
     std::optional<稳定编码> 普通动作节点;
+    std::optional<新任务本能采用材料> 本能采用;
     friend bool operator==(const 新任务执行信息&,
         const 新任务执行信息&) = default;
 };
@@ -627,6 +633,7 @@ struct 新任务方法条件结果核验 final {
     稳定编码 结果节点;
     新任务方法条件项核验状态 状态 =
         新任务方法条件项核验状态::结构缺口;
+    std::optional<新任务本能采用定位> 执行要求定位;
     friend bool operator==(const 新任务方法条件结果核验&,
         const 新任务方法条件结果核验&) = default;
 };
@@ -661,6 +668,7 @@ struct 新任务候选方法筹办项 final {
     std::vector<新方法参数角色绑定> 参数绑定组;
     std::vector<新任务方法条件结果核验> 条件结果组;
     std::vector<新任务方法条件缺口> 条件缺口组;
+    std::optional<稳定编码> 方法作用域节点;
     friend bool operator==(const 新任务候选方法筹办项&,
         const 新任务候选方法筹办项&) = default;
 };
@@ -710,6 +718,7 @@ struct 新任务方法选择结果 final {
     std::optional<std::int64_t> 有利结果端点;
     std::vector<新方法参数角色绑定> 参数绑定组;
     std::vector<新任务方法条件结果核验> 条件核验组;
+    std::optional<新任务本能采用材料> 本能采用;
 };
 
 enum class 新任务条件子需求提议状态 : std::uint8_t {
@@ -745,6 +754,7 @@ struct 新任务条件子需求提议 final {
     std::vector<新方法参数角色绑定> 参数绑定组;
     std::vector<新任务条件子需求项> 全部条件项组;
     std::vector<新任务条件子需求项> 子需求项组;
+    std::optional<新任务本能采用材料> 本能采用;
     friend bool operator==(const 新任务条件子需求提议&,
         const 新任务条件子需求提议&) = default;
 };
@@ -880,6 +890,7 @@ struct 新任务治理执行方向核验结果 final {
     std::vector<新任务预计变化阶段> 预计变化阶段组;
     std::optional<新任务结果获取方案> 结果获取方案;
     std::optional<新冲突需求查找结果> 冲突需求查找;
+    std::optional<新任务本能采用材料> 本能采用;
 };
 
 // self完成执行前判断后交给manager/worker的不可变调用材料。worker仍须在
@@ -895,6 +906,7 @@ struct 新任务治理本能执行请求 final {
     std::vector<新方法参数角色绑定> 参数绑定组;
     std::vector<新任务预计变化阶段> 预计变化阶段组;
     新任务结果获取方案 结果获取方案;
+    std::optional<新任务本能采用材料> 本能采用;
 
     bool 完整() const noexcept;
     friend bool operator==(const 新任务治理本能执行请求&,
@@ -1077,6 +1089,7 @@ struct 新任务调度定位 final {
     新任务状态 任务状态 = 新任务状态::已建立;
     std::optional<稳定编码> 候选材料节点, 方法实例节点;
     std::optional<稳定编码> 最近执行实例节点, 影响评估节点;
+    std::optional<稳定编码> 方法执行组织节点;
     bool 完整() const noexcept;
     friend bool operator==(const 新任务调度定位&,
         const 新任务调度定位&) = default;
@@ -1200,11 +1213,12 @@ public:
         稳定编码 任务节点, 稳定编码 材料节点) const noexcept;
     新任务治理候选消费结果 消费任务方法候选(
         稳定编码 任务节点, 稳定编码 材料节点) noexcept;
-    // 可经方法owner收窄独占实例条件、建立/复用所需值域概念；不写真实值或任务状态。
+    // 按任务执行组织筹办，将所需条件保留在采用材料；不改源方法、真实值或任务状态。
     新任务治理条件筹办结果 筹办任务条件和参数(
         稳定编码 任务节点) const noexcept;
     新任务操作状态 实例化候选方法(稳定编码 任务节点) noexcept;
-    // 唯一选中后覆盖实例条件并重新核验。const不表示跨owner零写。
+    新任务执行组织结果 交付候选方法执行组织(稳定编码 任务节点) noexcept;
+    // 唯一选中后将所需条件写入任务采用材料并重新核验，不覆盖抽象方法或组织原始定义。
     新任务方法选择结果 选择任务方法结果(稳定编码 任务节点) const noexcept;
     新任务条件子需求提议 提议任务条件子需求(
         稳定编码 任务节点) const noexcept;
@@ -1221,17 +1235,21 @@ public:
         const std::vector<新任务预计变化阶段>& 预计变化阶段组) const noexcept;
     新任务治理执行方向核验结果 核验任务执行方向(
         稳定编码 任务节点,
-        稳定编码 方法节点,
-        稳定编码 配对节点,
-        稳定编码 结果节点,
+        const 新任务本能采用材料& 本能采用,
         稳定编码 自我存在节点,
         稳定编码 安全需求节点,
         稳定编码 服务需求节点) const noexcept;
     新任务治理待执行确认状态 确认任务进入待执行(
         稳定编码 任务节点,
-        稳定编码 方法节点,
-        稳定编码 配对节点,
-        稳定编码 结果节点) noexcept;
+        const 新任务本能采用材料& 本能采用) noexcept;
+    // legacy-only：保留旧自检的源级可编译形状，不重选、不补造采用。
+    新任务治理执行方向核验结果 核验任务执行方向(稳定编码,稳定编码,稳定编码,
+        稳定编码,稳定编码,稳定编码,稳定编码) const noexcept {
+        新任务治理执行方向核验结果 结果;结果.状态=新任务治理执行方向核验状态::定位已变化;return 结果;
+    }
+    新任务治理待执行确认状态 确认任务进入待执行(稳定编码,稳定编码,稳定编码,稳定编码) noexcept {
+        return 新任务治理待执行确认状态::定位已变化;
+    }
     新任务治理本能执行结果 执行任务本能方法(
         const 新任务治理本能执行请求& 请求) noexcept;
     新任务治理结果获取结果 获取任务本能结果(
@@ -1278,6 +1296,9 @@ public:
         稳定编码 任务节点) const noexcept;
     std::optional<新任务执行信息> 获取执行实例(
         稳定编码 执行实例节点) const noexcept;
+    std::optional<新任务本能采用材料> 读取执行本能采用(稳定编码 执行实例节点) const noexcept;
+    新任务本能输入复核状态 复核执行本能输入(稳定编码 执行实例节点,
+        const 方法参数场景&) const noexcept;
     std::optional<新任务影响评估信息> 获取影响评估(
         稳定编码 评估节点) const noexcept;
     std::optional<新任务完成结算信息> 获取完成结算(
@@ -1384,6 +1405,8 @@ private:
         const 新任务影响评估信息&) noexcept;
     // 纯读核验，供公开筹办与选择复用，避免互相递归。
     新任务治理条件筹办结果 核验任务条件和参数(稳定编码 任务节点) const noexcept;
+    新任务治理条件筹办结果 核验任务条件和参数内部(稳定编码 任务节点,
+        const 新任务本能采用材料* 固定采用, bool 允许当前执行中) const noexcept;
     // 受新任务互斥保护；销毁即释放，不是需求、方法或执行事实的第二账。
     std::map<稳定编码, std::shared_ptr<const 新任务前置方法材料>> 前置方法筹办材料组_;
     bool 同步服务任务集合已加锁() noexcept;

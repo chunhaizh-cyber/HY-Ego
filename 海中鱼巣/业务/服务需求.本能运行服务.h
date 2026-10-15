@@ -22,6 +22,7 @@ public:
     bool 初始化(const 新服务需求获取配置&) noexcept;
     // 关闭拒绝新调用，在途调用由共享租约保活；关闭后的owner不能重新初始化。
     bool 关闭() noexcept;
+    // 独立调用包装；通用W3已持有守卫时直接调用方法owner，不嵌套本入口。
     新方法本能调用结果 执行(稳定编码 方法节点,
         const 方法参数场景&, 稳定编码 执行实例) noexcept;
     std::optional<新服务需求获取配置> 读取登记材料() const noexcept override;
