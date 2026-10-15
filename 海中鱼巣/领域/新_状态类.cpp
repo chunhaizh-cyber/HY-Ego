@@ -1,4 +1,5 @@
 #include "新_状态类.h"
+#include "../核心/容错检查.h"
 
 #include <algorithm>
 #include <array>
@@ -299,7 +300,22 @@ std::optional<新状态信息> 新_状态类::获取状态(
     稳定编码 状态节点) const noexcept {
     try {
         std::lock_guard 锁(新状态互斥);
-        if (!是状态节点(状态节点)) return std::nullopt;
+        const std::array 结构节点组{状态节点类型字段, 状态节点类型,
+            状态被描述存在字段, 状态来源实例特征字段, 状态特征类型字段,
+            状态固定准确值字段, 状态强时间字段, 状态被引用次数字段};
+        if (std::none_of(结构节点组.begin(), 结构节点组.end(),
+                [](稳定编码 节点) { return 有效(节点); })) return std::nullopt;
+        if (std::any_of(结构节点组.begin(), 结构节点组.end(),
+                [](稳定编码 节点) { return !有效(节点) || !全局基础数据集.查询节点(节点); }))
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"获取状态", L"状态owner元结构不完整");
+        if (!有效(状态节点) || !全局基础数据集.查询节点(状态节点)) return std::nullopt;
+        const auto 类型组 = 全局基础数据集.查询字段(状态节点, 状态节点类型字段);
+        if (类型组.empty()) return std::nullopt;
+        const auto* 类型 = 类型组.size() == 1
+            ? std::get_if<稳定编码>(&类型组.front().内容) : nullptr;
+        if (!类型 || !有效(*类型) || !全局基础数据集.查询节点(*类型))
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"获取状态", L"状态类型字段损坏");
+        if (*类型 != 状态节点类型) return std::nullopt;
         const auto 存在 = 读取唯一节点字段(
             状态节点, 状态被描述存在字段);
         const auto 来源实例特征 = 读取唯一节点字段(
@@ -316,7 +332,7 @@ std::optional<新状态信息> 新_状态类::获取状态(
             状态节点, *存在, *来源实例特征, *特征类型, *准确值, *时间,
             引用次数->second};
     } catch (...) {
-        return std::nullopt;
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"获取状态", L"状态读取抛出工程异常");
     }
 }
 
@@ -352,14 +368,23 @@ std::vector<稳定编码> 新_状态类::按实例特征查询状态(
     稳定编码 来源实例特征节点) const noexcept {
     try {
         std::lock_guard 锁(新状态互斥);
-        if (!节点仍存在(来源实例特征节点)) return {};
+        const std::array 结构节点组{状态节点类型字段, 状态节点类型,
+            状态被描述存在字段, 状态来源实例特征字段, 状态特征类型字段,
+            状态固定准确值字段, 状态强时间字段, 状态被引用次数字段};
+        if (std::none_of(结构节点组.begin(), 结构节点组.end(),
+                [](稳定编码 节点) { return 有效(节点); })) return {};
+        if (std::any_of(结构节点组.begin(), 结构节点组.end(),
+                [](稳定编码 节点) { return !有效(节点) || !全局基础数据集.查询节点(节点); }))
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"按实例特征查询状态", L"状态owner元结构不完整");
+        if (!有效(来源实例特征节点) || !全局基础数据集.查询节点(来源实例特征节点)) return {};
         return 筛选状态([&](稳定编码 节点) {
             const auto 信息 = 获取状态(节点);
-            return 信息
-                && 信息->来源实例特征节点 == 来源实例特征节点;
+            if (!信息)
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"按实例特征查询状态", L"登记状态节点不可读");
+            return 信息->来源实例特征节点 == 来源实例特征节点;
         });
     } catch (...) {
-        return {};
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"按实例特征查询状态", L"状态查询抛出工程异常");
     }
 }
 
