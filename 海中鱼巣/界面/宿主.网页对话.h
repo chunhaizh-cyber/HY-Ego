@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <csignal>
 #include <cstdint>
 #include <optional>
@@ -71,6 +72,27 @@ struct 网页对话会话核验结果 final {
 };
 网页对话会话核验结果 核验网页对话当前会话(
     std::string_view 公开会话标识) noexcept;
+
+enum class 网页对话页面消息快照状态 : std::uint8_t {
+    已完成 = 1, 额度不足, 宿主未运行, 会话不匹配,
+    输入拒绝, 资源失败
+};
+struct 网页对话页面消息快照结果 final {
+    网页对话页面消息快照状态 状态 = 网页对话页面消息快照状态::输入拒绝;
+    std::string 公开会话标识;
+    std::uint64_t 请求已读页面序号 = 0;
+    std::uint64_t 截止页面序号 = 0;
+    std::uint64_t 已覆盖页面序号 = 0;
+    bool 覆盖完整 = false;
+    std::vector<网页对话已显示消息> 消息组;
+};
+
+// 仅快照宿主已追加的页面消息；部分覆盖时由状态和覆盖序号标明进度。
+网页对话页面消息快照结果 读取网页对话会话页面消息快照(
+    std::string_view 公开会话标识,
+    std::uint64_t 已读页面序号,
+    std::size_t 最大消息条数,
+    std::size_t 最大正文总字节数) noexcept;
 
 // 会话标识只使用公开来源标识，不传递URL中的私有令牌。
 // 返回true表示本条消息已经被上层按同一会话、序号和正文接纳；false
