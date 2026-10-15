@@ -24,6 +24,7 @@ class 概念_二次特征类;
 class 概念_存在类;
 class 新_动态类;
 class 新_任务管理线程类;
+struct 新服务需求信息包;
 enum class 新任务本能输入复核状态 : std::uint8_t {
     仍具备 = 1, 条件已变化, 场景不一致, 执行不在当前位
 };
@@ -270,6 +271,7 @@ struct 新任务结果获取方案 final {
     std::vector<新任务结果获取目标> 目标组;
     新方法项关系规则 禁止结果关系规则 = 新方法项关系规则::任一成立;
     std::vector<新任务禁止结果目标> 禁止结果组;
+    std::optional<稳定编码> 服务需求取得数量类型;
 
     bool 完整() const noexcept;
     friend bool operator==(const 新任务结果获取方案&,
@@ -380,6 +382,7 @@ struct 新任务执行信息 final {
     std::optional<新任务服务结算来源绑定> 服务结算来源;
     std::optional<稳定编码> 普通动作节点;
     std::optional<新任务本能采用材料> 本能采用;
+    std::optional<稳定编码> 服务需求返回确认;
     friend bool operator==(const 新任务执行信息&,
         const 新任务执行信息&) = default;
 };
@@ -460,6 +463,27 @@ struct 新任务建立结果 final {
     新任务操作状态 状态 = 新任务操作状态::入口拒绝;
     std::optional<稳定编码> 任务节点;
     std::optional<稳定编码> 任务虚拟存在节点;
+};
+
+struct 新任务服务需求取得合同 final {
+    稳定编码 自我存在节点, 服务任务集合特征节点;
+    稳定编码 服务任务集合类型, 数量变化量类型, 已新增值域;
+    friend bool operator==(const 新任务服务需求取得合同&,
+        const 新任务服务需求取得合同&) = default;
+};
+struct 新任务服务需求取得读回结果 final {
+    新任务操作状态 状态 = 新任务操作状态::结构不一致;
+    std::optional<稳定编码> 确认节点, 采用需求节点, 采用任务节点;
+    std::optional<std::int64_t> 来源新增数;
+    std::vector<稳定编码> 结果状态节点组;
+};
+enum class 新直接服务结算来源状态 : std::uint8_t {
+    允许结算 = 1, 非直接服务, 尚未完成, 需重新确认,
+    尚未配置, 结构不一致, 资源失败
+};
+struct 新直接服务结算来源结果 final {
+    新直接服务结算来源状态 状态 = 新直接服务结算来源状态::尚未配置;
+    std::optional<稳定编码> 需求节点;
 };
 
 struct 新任务执行结果 final {
@@ -1173,6 +1197,10 @@ struct 新任务调度材料读取结果 final {
 class 新_任务类 final : public 新内部治理对象读取接口,
     public 特征任务成员读取接口 {
 public:
+    新任务操作状态 配置服务需求取得合同(const 新任务服务需求取得合同&) noexcept;
+    新任务服务需求取得读回结果 读回服务需求取得结果(
+        稳定编码 任务节点, 稳定编码 执行实例节点) const noexcept;
+    新直接服务结算来源结果 核验直接服务结算来源(稳定编码 来源任务节点) const noexcept;
     新任务执行组织结果 建立或取得任务方法执行组织(
         稳定编码 任务节点, const std::vector<稳定编码>& 来源方法节点组) noexcept;
     // 输入是本次加入/刷新知识的根方法，不替换旧候选；旧执行定义不变。
@@ -1428,6 +1456,10 @@ public:
         稳定编码 任务节点) const noexcept;
 
 private:
+    std::optional<新任务服务需求取得合同> 服务需求取得合同_;
+    bool 是服务需求取得目标(const 新需求信息& 需求) const;
+    void 记录服务需求返回证据(稳定编码 任务节点, 稳定编码 执行实例节点,
+        const 新服务需求信息包& 信息包, 稳定编码 动作节点);
     新任务条件分解结果 选择任务结果分支内部(
         稳定编码 任务节点, bool 允许部分条件绑定) const noexcept;
     新任务执行组织结果 实施任务方法执行组织(

@@ -196,7 +196,8 @@ enum class 新自我消息类型 : std::uint8_t {
     任务筹办反馈 = 3,
     任务结果反馈 = 4,
     学习后需求复核 = 5,
-    等待任务复核 = 6
+    等待任务复核 = 6,
+    服务需求取得反馈 = 7
 };
 
 struct 新自我治理消息 final {
@@ -213,6 +214,7 @@ struct 新自我治理消息 final {
     std::optional<新任务结果反馈定位> 结果反馈;
     std::optional<新任务学习复核定位> 学习复核;
     std::optional<新任务等待复核定位> 等待复核;
+    std::optional<新服务需求取得反馈定位> 服务需求取得反馈;
     friend bool operator==(const 新自我治理消息&,
         const 新自我治理消息&) = default;
 };

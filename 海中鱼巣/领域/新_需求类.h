@@ -119,6 +119,8 @@ struct 新需求信息 final {
     std::int64_t 权重 = 0;
     新需求活动状态 活动状态 = 新需求活动状态::活动;
     std::vector<稳定编码> 服务要求确认组;
+    // 仅新服务要求D出生时记录，不给既有/同义复用D补写取得来源。
+    std::optional<稳定编码> 服务需求取得执行节点;
     friend bool operator==(const 新需求信息&, const 新需求信息&) = default;
 };
 
@@ -290,6 +292,9 @@ public:
     void 装配服务要求确认读取接口(const 新服务要求确认读取接口*) noexcept;
     // 概念比较回调可调用：只读L1和冻结schema，不取得需求/业务锁。
     新服务要求采用关系结果 查询服务要求采用关系(稳定编码 确认节点) const noexcept;
+    新服务要求采用关系结果 查询服务需求取得来源(稳定编码 取得执行节点) const noexcept;
+    新服务要求确认读取结果 读取服务要求确认身份(稳定编码 确认节点) const noexcept;
+    新服务要求确认读取结果 复核服务要求确认语义(稳定编码 确认节点) const noexcept;
     新服务要求执行守卫结果 复核需求服务要求语义(稳定编码 需求节点) const noexcept;
     std::optional<std::int64_t> 查询需求权重(
         稳定编码 需求节点) const noexcept;
@@ -315,9 +320,15 @@ private:
         const 特征任务成员读取接口&) noexcept;
     新服务要求需求建立结果 建立或取得服务要求需求已核验(
         稳定编码 确认节点) noexcept;
+    // self已独立核验X真实返回、动作和目标；需求owner不反向引用任务类。
+    新服务要求需求建立结果 建立或取得服务要求需求已核验(
+        稳定编码 确认节点, 稳定编码 取得执行节点) noexcept;
+    新服务要求需求建立结果 建立或取得服务要求需求内部(
+        稳定编码 确认节点, std::optional<稳定编码> 取得执行节点) noexcept;
     新需求建立结果 建立或取得普通需求内部(
         const 新普通需求建立请求&, bool 允许任务子目标,
-        std::optional<稳定编码> 初始服务要求确认) noexcept;
+        std::optional<稳定编码> 初始服务要求确认,
+        std::optional<稳定编码> 初始服务需求取得执行节点 = std::nullopt) noexcept;
 
     新_特征值类& 特征值服务_;
     新_存在类& 存在服务_;
