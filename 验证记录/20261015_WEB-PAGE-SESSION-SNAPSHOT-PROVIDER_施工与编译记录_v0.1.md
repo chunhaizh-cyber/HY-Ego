@@ -21,6 +21,7 @@
 - 实际项目：本工作树的`海中鱼巣.slnx`，Debug|x64，Visual Studio 18 Professional MSBuild，v145。编译时输入为起点 HEAD 加本切片宿主头源 WIP；随后以相同代码提交为上述代码提交。
 - 命令：`MSBuild.exe 海中鱼巣.slnx /t:Build /p:Configuration=Debug /p:Platform=x64 /p:OutDir=D:\TEMP\海中鱼巣\WEB-PAGE-SESSION-SNAPSHOT-PROVIDER\20261015-223500\bin\ /p:IntDir=D:\TEMP\海中鱼巣\WEB-PAGE-SESSION-SNAPSHOT-PROVIDER\20261015-223500\obj\ /m:4 /nologo /v:minimal`（另以`/flp`写入该轮目录的构建日志）。结果：退出码 0，实际项目编译链接成功，0 个警告、0 个错误。
 - `git diff --check`与`git diff --cached --check`通过；精确暂存只含宿主头源。用户本轮未发测试指令，未启动程序、未运行测试或集成验收。
+- 构建结束后拟清理本轮独占的仓库外产物目录；递归`Remove-Item`被自动执行策略拒绝，未采用替代删除手段。残留目录为`D:\TEMP\海中鱼巣\WEB-PAGE-SESSION-SNAPSHOT-PROVIDER\20261015-223500`，只含本轮实际项目构建中间件、可执行文件、PDB、复制种子与日志，共87个文件、558432963字节；清理所有者为本切片代码所有者。该目录不是源码工作树或生产数据，未见运行中的本轮构建进程；集成时不得误当作新main编译证据。
 
 ## 函数级代码知识变更清单
 
