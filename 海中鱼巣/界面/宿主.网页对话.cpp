@@ -878,6 +878,28 @@ bool 网页对话宿主结果::成功() const noexcept {
         || 状态 == 网页对话宿主状态::停止信号结束;
 }
 
+网页对话会话核验结果 核验网页对话当前会话(
+    std::string_view 公开会话标识) noexcept {
+    if (公开会话标识.empty() || !是有效UTF8(公开会话标识)) return {};
+    try {
+        std::lock_guard 锁(共享状态.互斥);
+        if (!共享状态.运行中)
+            return {网页对话会话核验状态::宿主未运行, std::nullopt};
+        if (共享状态.会话标识 != 公开会话标识)
+            return {网页对话会话核验状态::会话不匹配, std::nullopt};
+        if (共享状态.下一页面序号 == 0)
+            return {网页对话会话核验状态::内部错误, std::nullopt};
+        return {网页对话会话核验状态::已匹配,
+            共享状态.下一页面序号 - 1};
+    } catch (const std::bad_alloc&) {
+        return {网页对话会话核验状态::资源失败, std::nullopt};
+    } catch (const std::length_error&) {
+        return {网页对话会话核验状态::资源失败, std::nullopt};
+    } catch (...) {
+        return {网页对话会话核验状态::内部错误, std::nullopt};
+    }
+}
+
 网页对话消息读取结果 读取网页对话已显示消息(
     std::uint64_t 已读页面序号) noexcept {
     网页对话消息读取结果 结果;
