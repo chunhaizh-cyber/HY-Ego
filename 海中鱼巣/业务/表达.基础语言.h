@@ -14,6 +14,7 @@ namespace 海中鱼巣 {
 class 新_词类;
 class 概念_名称关系类;
 class 概念_存在类;
+class 概念_特征类;
 
 enum class 基础表达参数种类 : std::uint8_t { 概念 = 1, 领域对象, 特征类型, 准确值 };
 struct 基础表达参数 final {
@@ -56,6 +57,7 @@ struct 基础表达结果 final {
     const 基础表达请求& 请求,
     const 新_语言类& 语言服务, const 新_词类& 词服务,
     const 概念_名称关系类& 名称服务,
-    const 概念_存在类& 存在概念服务);
+    const 概念_存在类& 存在概念服务,
+    const 概念_特征类& 特征概念服务);
 
 } // namespace 海中鱼巣
