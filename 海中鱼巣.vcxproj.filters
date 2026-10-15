@@ -42,6 +42,12 @@
     <ClInclude Include="海中鱼巣\业务\解释.初始化最小结构.h">
       <Filter>业务</Filter>
     </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\解释.基础语言.cpp">
+      <Filter>业务</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\解释.基础语言.h">
+      <Filter>业务</Filter>
+    </ClInclude>
     <ClCompile Include="海中鱼巣\业务\初始化.概念名称.cpp">
       <Filter>业务</Filter>
     </ClCompile>
