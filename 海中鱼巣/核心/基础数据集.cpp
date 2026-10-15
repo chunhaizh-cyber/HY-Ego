@@ -429,6 +429,111 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
     return 结果;
 }
 
+基础节点组追加结果 基础数据集::原子追加节点组(
+    const 基础节点组追加请求& 请求) noexcept {
+    using 状态 = 基础节点组追加状态;
+    try {
+        std::unique_lock 锁(互斥_);
+        if (请求.新节点组.empty() && 请求.追加字段组.empty()) return {状态::入口拒绝, {}, {}};
+        const auto 检查字段 = [&](稳定编码 键, const 基础组内字段内容& 内容) {
+            if (!有效(键) || 内容.valueless_by_exception()) return 状态::入口拒绝;
+            if (!节点存在(键)) return 状态::引用不存在;
+            if (const auto* 引用 = std::get_if<稳定编码>(&内容)) {
+                if (!有效(*引用)) return 状态::入口拒绝;
+                if (!节点存在(*引用)) return 状态::引用不存在;
+            } else if (const auto* 内部 = std::get_if<基础组内节点引用>(&内容)) {
+                if (内部->索引 >= 请求.新节点组.size()) return 状态::入口拒绝;
+            } else if (std::get<基础值>(内容).材料.valueless_by_exception()) return 状态::入口拒绝;
+            return 状态::已完成;
+        };
+        std::set<稳定编码> 宿主组;
+        for (const auto& 结构 : 请求.预期既有节点组) {
+            const auto 宿主 = 结构.节点.编码;
+            if (!有效(宿主) || !宿主组.insert(宿主).second) return {状态::入口拒绝, {}, {}};
+            if (!节点存在(宿主)) return {状态::节点不存在, {}, {}};
+            auto 预期字段 = 结构.字段组;
+            std::sort(预期字段.begin(), 预期字段.end(), [](const auto& 左, const auto& 右) {
+                return 左.编码 < 右.编码;
+            });
+            稳定编码 上项;
+            for (const auto& 项 : 预期字段) {
+                if (!有效(项.编码) || 项.编码 == 上项 || 项.所属节点 != 宿主
+                    || 项.内容.valueless_by_exception()) return {状态::入口拒绝, {}, {}};
+                上项 = 项.编码;
+                const auto 内容 = std::visit([](const auto& 值) -> 基础组内字段内容 { return 值; }, 项.内容);
+                const auto 检查 = 检查字段(项.字段节点, 内容);
+                if (检查 != 状态::已完成) return {检查, {}, {}};
+            }
+            std::vector<基础字段关系> 当前字段;
+            读取节点字段已加锁(宿主, 当前字段);
+            std::sort(当前字段.begin(), 当前字段.end(), [](const auto& 左, const auto& 右) {
+                return 左.编码 < 右.编码;
+            });
+            if (当前字段 != 预期字段) return {状态::预期不符, {}, {}};
+        }
+        for (const auto& 节点 : 请求.新节点组) for (const auto& 项 : 节点.字段组) {
+            const auto 检查 = 检查字段(项.字段节点, 项.内容);
+            if (检查 != 状态::已完成) return {检查, {}, {}};
+        }
+        for (const auto& 项 : 请求.追加字段组) {
+            if (!有效(项.所属节点) || !宿主组.contains(项.所属节点)) return {状态::入口拒绝, {}, {}};
+            const auto 检查 = 检查字段(项.字段节点, 项.内容);
+            if (检查 != 状态::已完成) return {检查, {}, {}};
+        }
+        auto 候选节点 = 节点_;
+        auto 候选字段 = 字段关系_;
+        auto 候选所属索引 = 所属字段索引_;
+        auto 候选目标索引 = 目标字段索引_;
+        基础节点组追加结果 结果{状态::已完成, {}, {}};
+        结果.新节点组.reserve(请求.新节点组.size());
+        结果.追加字段关系组.reserve(请求.追加字段组.size());
+        const auto 已占用 = [&](稳定编码 编码) {
+            return 候选节点.contains(编码.值) || 候选字段.contains(编码.值) || 外部关系_.contains(编码.值);
+        };
+        for (std::size_t i = 0; i < 请求.新节点组.size(); ++i) {
+            const auto 编码 = 分配编码();
+            if (!有效(编码)) return {状态::资源失败, {}, {}};
+            if (已占用(编码)) throw std::logic_error("append node identity collision");
+            候选节点.emplace(编码.值, 基础节点{编码});
+            结果.新节点组.push_back(编码);
+        }
+        const auto 加字段 = [&](稳定编码 宿主, 稳定编码 键, const 基础组内字段内容& 源) {
+            基础字段内容 内容;
+            if (const auto* 值 = std::get_if<基础值>(&源)) 内容 = *值;
+            else if (const auto* 引用 = std::get_if<稳定编码>(&源)) 内容 = *引用;
+            else 内容 = 结果.新节点组.at(std::get<基础组内节点引用>(源).索引);
+            const auto 编码 = 分配编码();
+            if (!有效(编码)) return 编码;
+            if (已占用(编码)) throw std::logic_error("append field identity collision");
+            候选字段.emplace(编码.值, 基础字段关系{编码, 宿主, 键, std::move(内容)});
+            if (!候选所属索引.emplace(宿主.值, 键.值, 编码.值).second)
+                throw std::logic_error("append forward index collision");
+            if (const auto* 引用 = std::get_if<稳定编码>(&候选字段.at(编码.值).内容);
+                引用 && !候选目标索引.emplace(键.值, 引用->值, 编码.值).second)
+                throw std::logic_error("append reverse index collision");
+            return 编码;
+        };
+        for (std::size_t i = 0; i < 请求.新节点组.size(); ++i)
+            for (const auto& 项 : 请求.新节点组[i].字段组)
+                if (!有效(加字段(结果.新节点组[i], 项.字段节点, 项.内容))) return {状态::资源失败, {}, {}};
+        for (const auto& 项 : 请求.追加字段组) {
+            const auto 字段码 = 加字段(项.所属节点, 项.字段节点, 项.内容);
+            if (!有效(字段码)) return {状态::资源失败, {}, {}};
+            结果.追加字段关系组.push_back(字段码);
+        }
+        // 所有可能分配均已完成；外部关系没有变化，不另行复制。
+        节点_.swap(候选节点); 字段关系_.swap(候选字段);
+        所属字段索引_.swap(候选所属索引); 目标字段索引_.swap(候选目标索引);
+        return 结果;
+    } catch (const std::bad_alloc&) { return {状态::资源失败, {}, {}};
+    } catch (const std::length_error&) { return {状态::资源失败, {}, {}};
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子追加节点组", L"追加结构或索引异常", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子追加节点组", L"未知追加异常");
+    }
+}
+
 基础节点结构结果 基础数据集::查询完整节点结构(稳定编码 节点) const noexcept {
     using 状态 = 基础结构操作状态;
     try {
