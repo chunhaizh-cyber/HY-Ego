@@ -167,6 +167,9 @@ std::optional<新服务值结算登记材料> 服务值结算本能运行服务:
         if (全集.状态 != 新需求操作状态::已找到) return 失败("服务值结算：需求全集无法完整读取");
         std::optional<新需求信息> 已有首子;
         for (const auto 节点 : 全集.需求节点组) {
+            const auto 治理 = s.需求.读取需求治理信息(节点);
+            if (!治理) return 失败("服务值结算：需求全集含破损节点");
+            if (!治理->完整目标) continue;
             const auto 信息 = s.需求.获取需求(节点);
             if (!信息) return 失败("服务值结算：需求全集含破损节点");
             if (信息->父需求节点 != 服务根) continue;
@@ -317,6 +320,9 @@ std::optional<新服务值结算登记材料> 服务值结算本能运行服务:
         if (全集.状态 != 新需求操作状态::已找到) return {};
         std::optional<新需求信息> 已有;
         for (const auto 节点 : 全集.需求节点组) {
+            const auto 治理 = 实现_->需求.读取需求治理信息(节点);
+            if (!治理) return {};
+            if (!治理->完整目标) continue;
             const auto 信息 = 实现_->需求.获取需求(节点);
             if (!信息) return {};
             if (信息->父需求节点 != m->服务根需求) continue;

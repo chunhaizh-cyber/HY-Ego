@@ -699,6 +699,7 @@ struct 新_自我线程类::实现 final {
         std::chrono::steady_clock::time_point 可处理时点{};
         std::shared_future<新任务承接处理结果> 管理结果;
         std::optional<新任务承接消息> 服务需求承接消息;
+        std::optional<新任务承接消息> 外部服务承接消息;
         std::optional<新子需求采用回执> 条件子需求回执;
         bool 条件子需求回执已接收 = false;
         std::vector<新任务承接消息> 条件子需求承接消息组;
@@ -1267,7 +1268,10 @@ struct 新_自我线程类::实现 final {
                     决议.状态 = 新自我学习复核状态::定位已变化;
                 else {
                     const auto 需求 = 需求服务->获取需求(定位.需求节点);
-                    if (!需求 || 需求->节点 != 定位.需求节点)
+                    const auto 治理 = 需求服务->读取需求治理信息(定位.需求节点);
+                    if (治理 && !治理->完整目标)
+                        决议.状态 = 新自我学习复核状态::等待材料;
+                    else if (!需求 || 需求->节点 != 定位.需求节点)
                         决议.状态 = 新自我学习复核状态::需核查;
                     else if (需求->活动状态 != 新需求活动状态::活动)
                         决议.状态 = 新自我学习复核状态::需求非活动;
@@ -1359,6 +1363,10 @@ struct 新_自我线程类::实现 final {
         const auto& 当前项 = 材料.项组.front();
         if (当前项.定位 != 定位.定位) {
             决议.状态 = 新自我等待复核状态::定位已变化;
+            return 决议;
+        }
+        if (当前项.需求治理 && !当前项.需求治理->完整目标) {
+            决议.状态 = 新自我等待复核状态::等待材料;
             return 决议;
         }
         if (当前项.状态 == 新任务调度项状态::结构不一致 || !当前项.任务
@@ -1609,6 +1617,77 @@ struct 新_自我线程类::实现 final {
         } catch (const std::bad_alloc&) { 结果.状态 = 新自我消息接收状态::资源失败; return 结果; }
         catch (...) {
             工程异常终止(L"新_自我线程类.cpp", __LINE__, L"接收服务需求执行", L"执行身份或保留控制容量不一致");
+        }
+    }
+
+    std::optional<新自我消息处理结果> 处理外部服务要求变化(消息项& 项) noexcept {
+        try {
+            if (!任务管理 || !任务服务 || !需求服务 || !项.消息.外部要求节点)
+                throw std::logic_error("partial service request dependencies missing");
+            新自我消息处理结果 结果;
+            结果.原消息 = 项.消息;
+            const auto 采用 = 需求服务->建立或更新被动服务需求已核验(*项.消息.外部要求节点);
+            结果.部分服务需求处理 = 采用;
+            if (采用.状态 == 新部分服务需求处理状态::来源不符
+                || 采用.状态 == 新部分服务需求处理状态::要求不存在) {
+                结果.状态 = 新自我消息处理状态::入口拒绝; return 结果;
+            }
+            if (采用.状态 == 新部分服务需求处理状态::工程故障 || !采用.需求节点)
+                throw std::logic_error("partial service demand adoption failed");
+            if (项.管理结果.valid()) {
+                if (项.管理结果.wait_for(std::chrono::milliseconds(0)) != std::future_status::ready)
+                    return std::nullopt;
+                const auto 承接 = 项.管理结果.get();
+                if (!项.外部服务承接消息 || 承接.原消息 != *项.外部服务承接消息)
+                    throw std::logic_error("partial service acceptance receipt mismatch");
+                结果.任务承接 = 承接;
+                if (承接.状态 == 新任务承接处理状态::停止取消) {
+                    结果.状态 = 新自我消息处理状态::停止取消; return 结果;
+                }
+                if (承接.状态 != 新任务承接处理状态::已承接
+                    && 承接.状态 != 新任务承接处理状态::已重新启用
+                    && 承接.状态 != 新任务承接处理状态::既有终结
+                    && 承接.状态 != 新任务承接处理状态::需求当前已满足)
+                    throw std::logic_error("partial service task acceptance failed");
+                const auto 治理 = 需求服务->读取需求治理信息(*采用.需求节点);
+                if (!治理 || 治理->外部要求节点 != 项.消息.外部要求节点
+                    || !承接.承接 || !承接.承接->任务)
+                    throw std::logic_error("partial service demand task receipt unreadable");
+                const auto 当前任务 = 任务服务->获取任务(承接.承接->任务->节点);
+                if (!当前任务 || 当前任务->需求节点 != 治理->节点)
+                    throw std::logic_error("partial service demand task identity changed");
+                结果.状态 = 新自我消息处理状态::任务已承接;
+                return 结果;
+            }
+            if (!项.外部服务承接消息) {
+                新任务承接消息 消息;
+                消息.消息编号 = 项.消息.消息编号;
+                消息.依据 = 新任务承接依据::外部服务要求;
+                消息.需求节点 = *采用.需求节点;
+                消息.外部要求节点 = 项.消息.外部要求节点;
+                项.外部服务承接消息 = 消息;
+            } else if (项.外部服务承接消息->需求节点 != 采用.需求节点) {
+                throw std::logic_error("same external request adopted another demand");
+            }
+            const auto 接收 = 任务管理->提交外部服务需求承接(*项.外部服务承接消息);
+            结果.管理接收状态 = 接收.状态;
+            switch (接收.状态) {
+            case 新任务承接接收状态::已接收:
+            case 新任务承接接收状态::精确重复:
+                if (!接收.处理结果.valid()) throw std::logic_error("external acceptance future missing");
+                项.管理结果 = 接收.处理结果;
+                return std::nullopt;
+            case 新任务承接接收状态::邮箱已满:
+            case 新任务承接接收状态::资源失败:
+            case 新任务承接接收状态::尚未启动:
+                return std::nullopt;
+            case 新任务承接接收状态::已停止接收:
+                结果.状态 = 新自我消息处理状态::任务管理未就绪; return 结果;
+            default: throw std::logic_error("external service acceptance rejected formal demand");
+            }
+        } catch (const std::bad_alloc&) { return std::nullopt;
+        } catch (...) {
+            工程异常终止(L"新_自我线程类.cpp", __LINE__, L"处理外部服务要求变化", L"部分需求交接不变量异常");
         }
     }
 
@@ -2373,6 +2452,7 @@ struct 新_自我线程类::实现 final {
                 判断.状态 = 新自我执行前判断状态::允许执行;
                 break;
             case 新任务治理执行方向核验状态::等待材料:
+            case 新任务治理执行方向核验状态::需求信息待完善:
                 判断.状态 = 新自我执行前判断状态::暂缓执行;
                 break;
             case 新任务治理执行方向核验状态::任务目标方向不一致:
@@ -2595,6 +2675,7 @@ struct 新_自我线程类::实现 final {
             break;
         case 新需求当前满足状态::目标特征尚未形成:
         case 新需求当前满足状态::当前值不存在:
+        case 新需求当前满足状态::需求信息待完善:
             决议.类型 = 新自我任务后继类型::等待;
             break;
         case 新需求当前满足状态::未满足但无有向差值:
@@ -2979,6 +3060,8 @@ struct 新_自我线程类::实现 final {
                     单次结果 = 处理任务结果反馈(*项);
                 else if (项->消息.类型 == 新自我消息类型::服务需求取得反馈)
                     单次结果 = 处理服务需求取得反馈(*项);
+                else if (项->消息.类型 == 新自我消息类型::外部服务要求变化)
+                    单次结果 = 处理外部服务要求变化(*项);
                 else if (项->消息.类型 == 新自我消息类型::学习后需求复核)
                     单次结果 = 处理学习复核(*项);
                 else if (项->消息.类型 == 新自我消息类型::等待任务复核)
@@ -4022,7 +4105,7 @@ bool 新_自我线程类::绑定模拟学习(模拟学习服务& 服务) noexcep
         结果.状态 = 新自我消息接收状态::资源失败;
         return 结果;
     }
-    if (!消息.消息编号 || 消息.服务需求取得反馈) return 结果;
+    if (!消息.消息编号 || 消息.服务需求取得反馈 || 消息.外部要求节点) return 结果;
     if (消息.类型 == 新自我消息类型::事实变化) {
         if (!有效(消息.来源状态节点) || 有效(消息.需求节点)
             || 消息.筹办反馈 || 消息.结果反馈 || 消息.学习复核
@@ -4081,6 +4164,33 @@ bool 新_自我线程类::绑定模拟学习(模拟学习服务& 服务) noexcep
     } catch (...) {
         结果.状态 = 新自我消息接收状态::内部错误;
         return 结果;
+    }
+}
+
+新自我消息接收结果 新_自我线程类::提交外部服务要求变化(稳定编码 要求节点) noexcept {
+    if (!有效(要求节点)) return {};
+    if (!实现_) return {新自我消息接收状态::资源失败, {}};
+    try {
+        std::lock_guard 锁(实现_->状态互斥);
+        if (实现_->停止已请求 || 实现_->线程已完成)
+            return {新自我消息接收状态::已停止接收, {}};
+        if (!实现_->线程已进入) return {新自我消息接收状态::尚未启动, {}};
+        if (!实现_->消息配置) return {新自我消息接收状态::尚未配置, {}};
+        if (实现_->普通消息数量已加锁() >= 实现_->消息配置->邮箱容量)
+            return {新自我消息接收状态::邮箱已满, {}};
+        const auto 项 = std::make_shared<实现::消息项>();
+        项->消息.消息编号 = 实现::取得自动消息编号();
+        if (!项->消息.消息编号) throw std::logic_error("external service message identity exhausted");
+        项->消息.类型 = 新自我消息类型::外部服务要求变化;
+        项->消息.外部要求节点 = 要求节点;
+        项->可处理时点 = std::chrono::steady_clock::now();
+        // 不合并已在途的R：处理线程可能已经读过旧材料，后来的补充必须再唤醒。
+        实现_->活动消息.push_back(项);
+        实现_->状态变化.notify_all();
+        return {新自我消息接收状态::已接收, 项->结果};
+    } catch (const std::bad_alloc&) { return {新自我消息接收状态::资源失败, {}};
+    } catch (...) {
+        工程异常终止(L"新_自我线程类.cpp", __LINE__, L"提交外部服务要求变化", L"正式要求消息接收异常");
     }
 }
 

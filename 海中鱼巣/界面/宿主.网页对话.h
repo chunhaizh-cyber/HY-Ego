@@ -105,7 +105,7 @@ using 网页对话消息接收函数 = bool (*)(
 enum class 网页服务输入状态 : std::uint8_t {
     已完成 = 1, 匿名会话, 已复用, 未绑定, 会话失效, 输入不完整,
     输入不合法, 对象不匹配, 理解不存在, 结构不一致, 资源失败,
-    需重新确认, 语义快照暂不支持
+    需重新确认, 语义快照暂不支持, 已知值冲突, 要求不存在
 };
 
 struct 网页服务目标提交 {
@@ -140,6 +140,23 @@ struct 网页服务要求结果 {
     std::optional<网页服务要求显示信息> 信息;
 };
 
+struct 网页部分服务要求提交 {
+    std::optional<std::uint64_t> 要求编码;
+    std::string 来源要求标识;
+    std::optional<std::uint64_t> 特征类型编码, 目标域编码, 比较概念编码;
+    std::optional<std::int64_t> 目标形式, 变化方向;
+};
+struct 网页部分服务要求结果 {
+    网页服务输入状态 状态 = 网页服务输入状态::输入不合法;
+    std::optional<std::uint64_t> 要求编码;
+    std::string 来源要求标识;
+    std::optional<std::uint64_t> 服务对象编码, 需求编码, 任务编码;
+    网页部分服务要求提交 已知目标;
+    std::vector<std::string> 缺项, 冲突项;
+    std::optional<网页服务要求显示信息> 完整预览;
+    bool 消息已接纳 = false;
+};
+
 struct 网页服务输入回调组 {
     网页服务输入状态 (*会话开始)(std::string_view 公开会话标识) noexcept = nullptr;
     void (*会话结束)(std::string_view 公开会话标识) noexcept = nullptr;
@@ -150,6 +167,10 @@ struct 网页服务输入回调组 {
         std::uint64_t 理解编码) noexcept = nullptr;
     网页服务要求结果 (*确认)(std::string_view 公开会话标识,
         std::uint64_t 理解编码) noexcept = nullptr;
+    网页部分服务要求结果 (*提交部分要求)(std::string_view,
+        const 网页部分服务要求提交&) noexcept = nullptr;
+    网页部分服务要求结果 (*查询部分要求)(std::string_view,
+        std::uint64_t 要求编码) noexcept = nullptr;
 };
 
 // 本能函数适配层只通过以下三个入口接触网页宿主。读取返回服务器已经

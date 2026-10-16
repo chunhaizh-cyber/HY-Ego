@@ -198,7 +198,8 @@ enum class 新自我消息类型 : std::uint8_t {
     任务结果反馈 = 4,
     学习后需求复核 = 5,
     等待任务复核 = 6,
-    服务需求取得反馈 = 7
+    服务需求取得反馈 = 7,
+    外部服务要求变化 = 8
 };
 
 struct 新自我治理消息 final {
@@ -216,6 +217,7 @@ struct 新自我治理消息 final {
     std::optional<新任务学习复核定位> 学习复核;
     std::optional<新任务等待复核定位> 等待复核;
     std::optional<新服务需求取得反馈定位> 服务需求取得反馈;
+    std::optional<稳定编码> 外部要求节点;
     friend bool operator==(const 新自我治理消息&,
         const 新自我治理消息&) = default;
 };
@@ -256,6 +258,7 @@ struct 新自我消息处理结果 final {
     std::optional<新自我学习复核接收状态> 学习复核接收状态;
     std::optional<新自我等待复核决议> 等待复核决议;
     std::optional<新自我等待复核接收状态> 等待复核接收状态;
+    std::optional<新部分服务需求处理结果> 部分服务需求处理;
 };
 
 enum class 新自我消息接收状态 : std::uint8_t {
@@ -370,6 +373,8 @@ public:
         新服务值结算确认接口& 端口) noexcept;
     新自我消息接收结果 提交消息(
         const 新自我治理消息& 消息) noexcept;
+    // 保存部分要求后只提交正式定位；处理时读取最新材料，不同步等待建任务。
+    新自我消息接收结果 提交外部服务要求变化(稳定编码 要求节点) noexcept;
     新自我线程操作结果 请求停止() noexcept;
     std::stop_token 读取停止令牌() const noexcept;
     新自我线程操作结果 等待停止(std::uint64_t 等待毫秒) noexcept;

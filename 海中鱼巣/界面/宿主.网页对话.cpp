@@ -404,6 +404,8 @@ std::string_view 服务输入状态名称(网页服务输入状态 状态) noexc
     case 网页服务输入状态::资源失败: return "资源失败";
     case 网页服务输入状态::需重新确认: return "需重新确认";
     case 网页服务输入状态::语义快照暂不支持: return "语义快照暂不支持";
+    case 网页服务输入状态::已知值冲突: return "已知值冲突";
+    case 网页服务输入状态::要求不存在: return "要求不存在";
     }
     return "结构不一致";
 }
@@ -418,7 +420,9 @@ std::string_view 服务输入HTTP状态(网页服务输入状态 状态) noexcep
     case 网页服务输入状态::输入不完整:
     case 网页服务输入状态::输入不合法: return "400 Bad Request";
     case 网页服务输入状态::对象不匹配:
+    case 网页服务输入状态::已知值冲突:
     case 网页服务输入状态::需重新确认: return "409 Conflict";
+    case 网页服务输入状态::要求不存在:
     case 网页服务输入状态::理解不存在: return "404 Not Found";
     case 网页服务输入状态::语义快照暂不支持: return "422 Unprocessable Content";
     default: return "503 Service Unavailable";
@@ -535,6 +539,60 @@ bool 服务目标形状完整(const 网页服务目标提交& 目标) noexcept {
         && 目标.变化方向 && (*目标.变化方向 == 1 || *目标.变化方向 == 2);
 }
 
+网页服务输入状态 解析部分服务目标(const 表单字段组& 字段组,
+    网页部分服务要求提交& 目标) {
+    const auto* 来源 = 取得表单字段(字段组, "source");
+    if (!来源 || 来源->empty() || !是有效UTF8(*来源)) return 网页服务输入状态::输入不合法;
+    目标.来源要求标识 = *来源;
+    const auto 可选整数 = [&]<class T>(std::string_view 名称, std::optional<T>& 输出) {
+        const auto* 文本 = 取得表单字段(字段组, 名称);
+        if (!文本 || 文本->empty()) return true;
+        T 值{};
+        if (解析正整数(文本, 值) != 网页服务输入状态::已完成) return false;
+        输出 = 值; return true;
+    };
+    if (!可选整数("request",目标.要求编码) || !可选整数("ft",目标.特征类型编码)
+        || !可选整数("form",目标.目标形式) || !可选整数("domain",目标.目标域编码)
+        || !可选整数("comparison",目标.比较概念编码) || !可选整数("direction",目标.变化方向))
+        return 网页服务输入状态::输入不合法;
+    if ((目标.目标形式 && *目标.目标形式 != 1 && *目标.目标形式 != 2)
+        || (目标.变化方向 && *目标.变化方向 != 1 && *目标.变化方向 != 2))
+        return 网页服务输入状态::输入不合法;
+    return 网页服务输入状态::已完成;
+}
+
+void 发送部分服务要求结果(SOCKET 客户端, const 网页部分服务要求结果& r) {
+    std::string 正文 = "{\"status\":\"" + std::string(服务输入状态名称(r.状态)) + "\"";
+    const auto 文本 = [&](std::string_view 名称, std::string_view 值) {
+        正文 += ",\""; 正文 += 名称; 正文 += "\":\""; 正文 += JSON转义(值); 正文 += '"';
+    };
+    const auto 数 = [&](std::string_view 名称, const auto& 值) {
+        if (值) 文本(名称, std::to_string(*值));
+    };
+    数("request",r.要求编码); 数("object",r.服务对象编码);
+    文本("source",r.来源要求标识);
+    数("ft",r.已知目标.特征类型编码); 数("form",r.已知目标.目标形式);
+    数("domain",r.已知目标.目标域编码); 数("comparison",r.已知目标.比较概念编码);
+    数("direction",r.已知目标.变化方向);
+    正文 += std::string(",\"accepted\":") + (r.消息已接纳 ? "true" : "false");
+    const auto 列表 = [&](std::string_view 名称, const std::vector<std::string>& 值) {
+        正文 += ",\""; 正文 += 名称; 正文 += "\":[";
+        bool first=true; for (const auto& x : 值) {
+            if (!first) 正文 += ','; first=false;
+            正文 += '"'; 正文 += JSON转义(x); 正文 += '"';
+        }
+        正文 += ']';
+    };
+    列表("missing",r.缺项); 列表("conflicts",r.冲突项);
+    if (r.完整预览) {
+        文本("preview",std::to_string(r.完整预览->理解编码));
+        文本("text",r.完整预览->UTF8重述);
+        数("confirmation",r.完整预览->确认编码);
+    }
+    正文 += '}';
+    发送响应(客户端,服务输入HTTP状态(r.状态),"application/json;charset=utf-8",正文);
+}
+
 void 发送服务要求结果(SOCKET 客户端, const 网页服务要求结果& 结果,
     bool 要求已确认) {
     if (!服务输入已完成(结果.状态)) {
@@ -605,6 +663,25 @@ bool 处理服务输入请求(SOCKET 客户端, const HTTP请求& 请求,
             return true;
         }
         表单字段组 字段组;
+        if (请求.方法 == "GET" && 路由.starts_with("request?") && 请求.正文.empty()) {
+            std::uint64_t 编码 = 0;
+            const auto 状态 = 解析表单(路由.substr(8), {"id"}, 字段组)
+                ? 解析正整数(取得表单字段(字段组,"id"),编码) : 网页服务输入状态::输入不合法;
+            if (!服务输入已完成(状态)) 发送服务输入失败(客户端,状态);
+            else if (!回调.查询部分要求) 发送服务输入失败(客户端,网页服务输入状态::未绑定);
+            else 发送部分服务要求结果(客户端,回调.查询部分要求(公开会话标识,编码));
+            return true;
+        }
+        if (请求.方法 == "POST" && 路由 == "request") {
+            网页部分服务要求提交 输入;
+            const auto 状态 = 请求.内容类型 == "application/x-www-form-urlencoded"
+                && 解析表单(请求.正文,{"request","source","ft","form","domain","comparison","direction"},字段组)
+                ? 解析部分服务目标(字段组,输入) : 网页服务输入状态::输入不合法;
+            if (!服务输入已完成(状态)) 发送服务输入失败(客户端,状态);
+            else if (!回调.提交部分要求) 发送服务输入失败(客户端,网页服务输入状态::未绑定);
+            else 发送部分服务要求结果(客户端,回调.提交部分要求(公开会话标识,输入));
+            return true;
+        }
         if (请求.方法 == "GET" && 路由.starts_with("preview?") && 请求.正文.empty()) {
             std::uint64_t 编码 = 0;
             const auto 状态 = 解析表单(路由.substr(8), {"id"}, 字段组)
@@ -678,18 +755,18 @@ label{display:grid;gap:6px;font-size:14px}[hidden]{display:none!important}input,
 <form id="form"><textarea id="input" maxlength="1048576" placeholder="输入消息；Enter发送，Shift+Enter换行"></textarea><button type="submit">发送</button><button type="button" class="secondary" id="close">结束</button><footer>网页接收成功只表示消息进入当前交互宿主，不表示任务完成或需求满足。</footer></form>
 <section id="service">
 <h2>结构化服务要求</h2>
-<p>目标人由本次本机启动配置指定。填写已有正式概念编码；当前特征提示不限制可输入的编码。先查看完整重述，再明确确认。</p>
+<p>目标人由本次本机启动配置指定。可先提交已知部分，随后补齐同一要求；已保存字段不能换义，新诉求请点“新要求”。完整重述后再明确确认。</p>
 <p id="service-hints"></p>
 <form id="service-form">
 <fieldset id="service-fields" disabled>
 <label>目标人编码（只读）<input id="service-object" readonly></label>
-<label>目标特征类型编码<input name="ft" inputmode="numeric" required autocomplete="off"></label>
-<label>目标形式<select name="form" id="service-mode" required><option value="">请选择</option><option value="1">值目标</option><option value="2">方向目标</option></select></label>
+<label>目标特征类型编码<input name="ft" inputmode="numeric" autocomplete="off"></label>
+<label>目标形式<select name="form" id="service-mode"><option value="">暂不明确</option><option value="1">值目标</option><option value="2">方向目标</option></select></label>
 <label id="domain-label">目标域概念编码<input name="domain" inputmode="numeric" autocomplete="off" disabled></label>
 <label id="comparison-label">比较概念编码<input name="comparison" inputmode="numeric" autocomplete="off" disabled></label>
 <label id="direction-label">变化方向<select name="direction" disabled><option value="">请选择</option><option value="1">增加</option><option value="2">减少</option></select></label>
 </fieldset>
-<div class="service-actions"><button type="submit" id="service-submit" disabled>生成预览</button><button type="button" id="service-confirm" disabled>确认当前预览</button></div>
+<div class="service-actions"><button type="submit" id="service-submit" disabled>保存并补充要求</button><button type="button" id="service-confirm" disabled>确认当前预览</button><button type="button" id="service-refresh" disabled>刷新状态</button><button type="button" id="service-new">新要求</button></div>
 </form>
 <p id="service-status">正在核对本次会话绑定</p><pre id="service-preview"></pre>
 </section>
@@ -714,16 +791,21 @@ const serviceSubmit=document.getElementById('service-submit');
 const serviceConfirm=document.getElementById('service-confirm');
 const serviceStatus=document.getElementById('service-status');
 const servicePreview=document.getElementById('service-preview');
-let previewId=null,formRevision=0,serviceBusy=false;
-function invalidatePreview(){formRevision++;previewId=null;serviceConfirm.disabled=true;servicePreview.textContent='';serviceStatus.textContent='输入已变化，尚未完整预览或确认';}
-function selectServiceMode(){for(const name of ['domain','comparison','direction']){const field=serviceForm.elements.namedItem(name);const enabled=name==='direction'?serviceMode.value==='2':serviceMode.value==='1';field.disabled=!enabled;field.required=enabled;document.getElementById(name+'-label').hidden=!enabled;}}
+let previewId=null,requestId=null,sourceId=crypto.randomUUID(),formRevision=0,serviceBusy=false;
+const serviceRefresh=document.getElementById('service-refresh');
+function invalidatePreview(){formRevision++;previewId=null;serviceConfirm.disabled=true;servicePreview.textContent='';serviceStatus.textContent='输入尚未保存；补充将继续使用原要求身份，不会清空已知字段。';}
+function selectServiceMode(){for(const name of ['domain','comparison','direction']){const field=serviceForm.elements.namedItem(name);const enabled=name==='direction'?serviceMode.value==='2':serviceMode.value==='1';field.disabled=!enabled;field.required=false;document.getElementById(name+'-label').hidden=!enabled;}}
 serviceForm.addEventListener('input',()=>{invalidatePreview();selectServiceMode();});
 serviceForm.addEventListener('change',()=>{invalidatePreview();selectServiceMode();});
 async function serviceRequest(path,body){const options={cache:'no-store'};if(body!==undefined){options.method='POST';options.headers={'Content-Type':'application/x-www-form-urlencoded'};options.body=body.toString();}const response=await fetch(base+'/api/service/'+path,options);const data=await response.json();if(!response.ok)throw new Error(data.status==='需重新确认'?'语义已变化，请重新生成预览并确认':data.status||'服务要求处理失败');return data;}
 function displayServiceInfo(info){if(!info||typeof info.preview!=='string'||typeof info.object!=='string'||typeof info.text!=='string')throw new Error('服务回执结构不一致');servicePreview.textContent='目标人编码：'+info.object+'\n理解编码：'+info.preview+'\n'+info.text;}
-async function loadServiceOptions(){try{const data=await serviceRequest('options');document.getElementById('service-object').value=data.object;document.getElementById('service-hints').textContent='当前特征提示：'+(data.hints.length?data.hints.map(h=>'FT '+h.ft+' / 当前概念 '+h.concept).join('；'):'无现有特征提示');serviceFields.disabled=false;serviceSubmit.disabled=false;serviceStatus.textContent='尚未确认。填写目标后生成预览。';selectServiceMode();}catch(error){serviceStatus.textContent=error.message+'；结构化输入不可用，文本对话仍可使用。';}}
-serviceForm.addEventListener('submit',async event=>{event.preventDefault();if(serviceBusy)return;const revision=formRevision;const body=new URLSearchParams(new FormData(serviceForm));previewId=null;serviceConfirm.disabled=true;serviceBusy=true;serviceSubmit.disabled=true;serviceStatus.textContent='正在生成预览';try{const data=await serviceRequest('preview',body);if(revision!==formRevision)return;displayServiceInfo(data.info);if(data.info.confirmation){serviceStatus.textContent='该份内容已确认，确认编码：'+data.info.confirmation;}else{previewId=data.info.preview;serviceConfirm.disabled=false;serviceStatus.textContent='尚未确认。请核对下面固定语义的完整重述，再点击确认。';}}catch(error){if(revision===formRevision)serviceStatus.textContent=error.message;}finally{serviceBusy=false;serviceSubmit.disabled=false;}});
-serviceConfirm.addEventListener('click',async()=>{if(!previewId||serviceBusy)return;const confirming=previewId;previewId=null;serviceBusy=true;serviceConfirm.disabled=true;serviceSubmit.disabled=true;serviceFields.disabled=true;serviceStatus.textContent='正在确认当前预览';try{const data=await serviceRequest('confirm',new URLSearchParams({preview:confirming}));displayServiceInfo(data.info);serviceStatus.textContent='已确认以上内容，确认编码：'+data.info.confirmation+'。这不表示任务已建立或目标已满足。';}catch(error){serviceStatus.textContent=error.message+'；可重新预览同一内容后重试。';}finally{serviceBusy=false;serviceSubmit.disabled=false;serviceFields.disabled=false;selectServiceMode();}});
+async function loadServiceOptions(){try{const data=await serviceRequest('options');document.getElementById('service-object').value=data.object;document.getElementById('service-hints').textContent='当前特征提示：'+(data.hints.length?data.hints.map(h=>'FT '+h.ft+' / 当前概念 '+h.concept).join('；'):'无现有特征提示');serviceFields.disabled=false;serviceSubmit.disabled=false;serviceStatus.textContent='可先保存部分信息。缺项由你补充，不会自动推测。';selectServiceMode();}catch(error){serviceStatus.textContent=error.message+'；结构化输入不可用，文本对话仍可使用。';}}
+function displayPartial(data){if(data.request){requestId=data.request;serviceRefresh.disabled=false;}previewId=null;serviceConfirm.disabled=true;const lines=['要求编码：'+(data.request||'尚未建立'),'处理：'+data.status,'缺项：'+((data.missing||[]).join('、')||'无'),'冲突：'+((data.conflicts||[]).join('、')||'无')];if(data.text)lines.push(data.text);if(data.confirmation)lines.push('确认编码：'+data.confirmation);servicePreview.textContent=lines.join('\n');if(data.preview&&!data.confirmation&&data.status!=='需重新确认'){previewId=data.preview;serviceConfirm.disabled=false;}serviceStatus.textContent=data.status==='需重新确认'?'概念含义已变化，原要求保留且暂停执行；本轮不自动改写或刷新确认。':data.accepted?'信息已保存，变化消息已接纳；不表示任务已建立或服务完成。':'信息或交接尚待处理，可刷新状态重试；不表示任务已建立。';}
+async function partialRequest(body){const options={cache:'no-store'};let path='request?id='+encodeURIComponent(requestId);if(body){path='request';options.method='POST';options.headers={'Content-Type':'application/x-www-form-urlencoded'};options.body=body.toString();}const response=await fetch(base+'/api/service/'+path,options);const data=await response.json();if(!response.ok&&!data.request)throw new Error(data.status||'要求处理失败');return data;}
+serviceForm.addEventListener('submit',async event=>{event.preventDefault();if(serviceBusy)return;const body=new URLSearchParams(new FormData(serviceForm));body.set('source',sourceId);if(requestId)body.set('request',requestId);serviceBusy=true;serviceSubmit.disabled=true;serviceFields.disabled=true;serviceConfirm.disabled=true;try{displayPartial(await partialRequest(body));}catch(error){serviceStatus.textContent=error.message+'；保留来源标识，可用相同输入重试。';}finally{serviceBusy=false;serviceSubmit.disabled=false;serviceFields.disabled=false;selectServiceMode();}});
+serviceRefresh.addEventListener('click',async()=>{if(!requestId||serviceBusy)return;serviceBusy=true;try{displayPartial(await partialRequest());}catch(error){serviceStatus.textContent=error.message;}finally{serviceBusy=false;}});
+document.getElementById('service-new').addEventListener('click',()=>{if(serviceBusy)return;serviceForm.reset();requestId=null;sourceId=crypto.randomUUID();serviceRefresh.disabled=true;invalidatePreview();selectServiceMode();});
+serviceConfirm.addEventListener('click',async()=>{if(!previewId||serviceBusy)return;const confirming=previewId;previewId=null;serviceBusy=true;serviceConfirm.disabled=true;serviceSubmit.disabled=true;serviceFields.disabled=true;try{const data=await serviceRequest('confirm',new URLSearchParams({preview:confirming}));displayServiceInfo(data.info);if(requestId)displayPartial(await partialRequest());else serviceStatus.textContent='已确认，不表示服务完成。';}catch(error){serviceStatus.textContent=error.message+'；原要求保留，可刷新状态。';}finally{serviceBusy=false;serviceSubmit.disabled=false;serviceFields.disabled=false;selectServiceMode();}});
 loadServiceOptions();
 refresh();setInterval(refresh,750);
 </script>

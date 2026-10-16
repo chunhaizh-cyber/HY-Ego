@@ -434,7 +434,9 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
     using 状态 = 基础节点组追加状态;
     try {
         std::unique_lock 锁(互斥_);
-        if (请求.新节点组.empty() && 请求.追加字段组.empty()) return {状态::入口拒绝, {}, {}};
+        if (请求.新节点组.empty() && 请求.追加字段组.empty()
+            && 请求.替换字段组.empty() && 请求.追加外部关系组.empty())
+            return {状态::入口拒绝, {}, {}};
         const auto 检查字段 = [&](稳定编码 键, const 基础组内字段内容& 内容) {
             if (!有效(键) || 内容.valueless_by_exception()) return 状态::入口拒绝;
             if (!节点存在(键)) return 状态::引用不存在;
@@ -471,12 +473,55 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             });
             if (当前字段 != 预期字段) return {状态::预期不符, {}, {}};
         }
+        std::set<稳定编码> 联合宿主组;
+        for (const auto& 快照 : 请求.预期联合节点组) {
+            const auto 宿主 = 快照.结构.节点.编码;
+            if (!有效(宿主) || !联合宿主组.insert(宿主).second)
+                return {状态::入口拒绝, {}, {}};
+            if (!节点存在(宿主)) return {状态::节点不存在, {}, {}};
+            if (!联合快照相等(读取联合快照已加锁(宿主), 快照))
+                return {状态::预期不符, {}, {}};
+            宿主组.insert(宿主);
+        }
+        std::set<稳定编码> 替换字段码;
+        for (const auto& 项 : 请求.替换字段组) {
+            if (!有效(项.字段关系) || !替换字段码.insert(项.字段关系).second
+                || 项.新内容.valueless_by_exception()) return {状态::入口拒绝, {}, {}};
+            const auto 位置 = 字段关系_.find(项.字段关系.值);
+            if (位置 == 字段关系_.end() || !联合宿主组.contains(位置->second.所属节点))
+                return {状态::入口拒绝, {}, {}};
+            const auto 内容 = std::visit([](const auto& 值) -> 基础组内字段内容 { return 值; }, 项.新内容);
+            const auto 检查 = 检查字段(位置->second.字段节点, 内容);
+            if (检查 != 状态::已完成) return {检查, {}, {}};
+            const auto& 旧内容 = std::as_const(位置->second.内容);
+            for (const auto* 引用 : {std::get_if<稳定编码>(&旧内容),
+                    std::get_if<稳定编码>(&项.新内容)})
+                if (引用 && !联合宿主组.contains(*引用)) return {状态::入口拒绝, {}, {}};
+            核验字段索引已加锁(位置->second);
+        }
+        const auto 检查端点 = [&](const std::variant<稳定编码, 基础组内节点引用>& 端点) {
+            if (端点.valueless_by_exception()) return 状态::入口拒绝;
+            if (const auto* 编码 = std::get_if<稳定编码>(&端点)) {
+                if (!有效(*编码) || !联合宿主组.contains(*编码)) return 状态::入口拒绝;
+                return 节点存在(*编码) ? 状态::已完成 : 状态::引用不存在;
+            }
+            return std::get<基础组内节点引用>(端点).索引 < 请求.新节点组.size()
+                ? 状态::已完成 : 状态::入口拒绝;
+        };
+        for (const auto& 项 : 请求.追加外部关系组) {
+            if (!有效(项.类型)) return {状态::入口拒绝, {}, {}};
+            const auto 源检查 = 检查端点(项.源节点), 目标检查 = 检查端点(项.目标节点);
+            if (源检查 != 状态::已完成) return {源检查, {}, {}};
+            if (目标检查 != 状态::已完成) return {目标检查, {}, {}};
+        }
         for (const auto& 节点 : 请求.新节点组) for (const auto& 项 : 节点.字段组) {
             const auto 检查 = 检查字段(项.字段节点, 项.内容);
             if (检查 != 状态::已完成) return {检查, {}, {}};
         }
         for (const auto& 项 : 请求.追加字段组) {
             if (!有效(项.所属节点) || !宿主组.contains(项.所属节点)) return {状态::入口拒绝, {}, {}};
+            if ((!请求.替换字段组.empty() || !请求.追加外部关系组.empty())
+                && !联合宿主组.contains(项.所属节点)) return {状态::入口拒绝, {}, {}};
             const auto 检查 = 检查字段(项.字段节点, 项.内容);
             if (检查 != 状态::已完成) return {检查, {}, {}};
         }
@@ -484,11 +529,16 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
         auto 候选字段 = 字段关系_;
         auto 候选所属索引 = 所属字段索引_;
         auto 候选目标索引 = 目标字段索引_;
+        // 纯追加字段仍保持旧成本；只有新增外部边时复制关系表。
+        std::optional<decltype(外部关系_)> 候选关系;
+        if (!请求.追加外部关系组.empty()) 候选关系 = 外部关系_;
         基础节点组追加结果 结果{状态::已完成, {}, {}};
         结果.新节点组.reserve(请求.新节点组.size());
         结果.追加字段关系组.reserve(请求.追加字段组.size());
+        结果.追加外部关系组.reserve(请求.追加外部关系组.size());
         const auto 已占用 = [&](稳定编码 编码) {
-            return 候选节点.contains(编码.值) || 候选字段.contains(编码.值) || 外部关系_.contains(编码.值);
+            return 候选节点.contains(编码.值) || 候选字段.contains(编码.值)
+                || (候选关系 ? 候选关系->contains(编码.值) : 外部关系_.contains(编码.值));
         };
         for (std::size_t i = 0; i < 请求.新节点组.size(); ++i) {
             const auto 编码 = 分配编码();
@@ -496,6 +546,16 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             if (已占用(编码)) throw std::logic_error("append node identity collision");
             候选节点.emplace(编码.值, 基础节点{编码});
             结果.新节点组.push_back(编码);
+        }
+        for (const auto& 项 : 请求.替换字段组) {
+            auto& 字段 = 候选字段.at(项.字段关系.值);
+            if (const auto* 旧 = std::get_if<稳定编码>(&字段.内容);
+                旧 && 候选目标索引.erase({字段.字段节点.值, 旧->值, 字段.编码.值}) != 1)
+                throw std::logic_error("append replacement reverse index missing");
+            字段.内容 = 项.新内容;
+            if (const auto* 新 = std::get_if<稳定编码>(&字段.内容);
+                新 && !候选目标索引.emplace(字段.字段节点.值, 新->值, 字段.编码.值).second)
+                throw std::logic_error("append replacement reverse index collision");
         }
         const auto 加字段 = [&](稳定编码 宿主, 稳定编码 键, const 基础组内字段内容& 源) {
             基础字段内容 内容;
@@ -521,9 +581,22 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             if (!有效(字段码)) return {状态::资源失败, {}, {}};
             结果.追加字段关系组.push_back(字段码);
         }
-        // 所有可能分配均已完成；外部关系没有变化，不另行复制。
+        const auto 解析端点 = [&](const std::variant<稳定编码, 基础组内节点引用>& 端点) {
+            if (const auto* 编码 = std::get_if<稳定编码>(&端点)) return *编码;
+            return 结果.新节点组.at(std::get<基础组内节点引用>(端点).索引);
+        };
+        for (const auto& 项 : 请求.追加外部关系组) {
+            const auto 编码 = 分配编码();
+            if (!有效(编码)) return {状态::资源失败, {}, {}};
+            if (已占用(编码)) throw std::logic_error("append relation identity collision");
+            候选关系->emplace(编码.值, 基础外部关系{编码,
+                解析端点(项.源节点), 解析端点(项.目标节点), 项.类型, 项.角色或顺序});
+            结果.追加外部关系组.push_back(编码);
+        }
+        // 全部候选与索引已闭合；以下交换不再分配。
         节点_.swap(候选节点); 字段关系_.swap(候选字段);
         所属字段索引_.swap(候选所属索引); 目标字段索引_.swap(候选目标索引);
+        if (候选关系) 外部关系_.swap(*候选关系);
         return 结果;
     } catch (const std::bad_alloc&) { return {状态::资源失败, {}, {}};
     } catch (const std::length_error&) { return {状态::资源失败, {}, {}};

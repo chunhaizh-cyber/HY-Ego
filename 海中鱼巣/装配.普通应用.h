@@ -214,5 +214,9 @@ void 结束普通应用网页会话(std::string_view 公开会话标识) noexcep
     std::uint64_t 理解编码) noexcept;
 网页服务要求结果 确认普通应用服务要求(std::string_view 公开会话标识,
     std::uint64_t 理解编码) noexcept;
+网页部分服务要求结果 提交普通应用部分服务要求(std::string_view 公开会话标识,
+    const 网页部分服务要求提交&) noexcept;
+网页部分服务要求结果 读取普通应用部分服务要求(std::string_view 公开会话标识,
+    std::uint64_t 要求编码) noexcept;
 
 } // namespace 海中鱼巣

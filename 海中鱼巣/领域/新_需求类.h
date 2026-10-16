@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <functional>
 #include <optional>
+#include <string>
 #include <vector>
 
 #include "新_存在类.h"
@@ -33,7 +34,8 @@ enum class 新需求活动状态 : std::int64_t {
 
 enum class 新需求来源类型 : std::int64_t {
     本能定义 = 1,
-    任务子目标 = 2
+    任务子目标 = 2,
+    外部服务要求 = 3
 };
 
 enum class 新需求目标形式 : std::int64_t {
@@ -63,9 +65,42 @@ enum class 新服务要求确认状态 : std::uint8_t {
 struct 新服务要求确认目标 final {
     稳定编码 确认节点, 理解节点, 来源人类节点, 目标存在节点;
     新需求目标定义 目标;
+    std::optional<稳定编码> 来源要求节点;
     friend bool operator==(const 新服务要求确认目标&,
         const 新服务要求确认目标&) = default;
 };
+
+struct 新部分服务要求目标 final {
+    std::optional<稳定编码> 目标存在节点, 目标特征类型概念节点;
+    std::optional<新需求目标形式> 目标形式;
+    std::optional<稳定编码> 目标值域概念节点, 目标比较关系概念节点;
+    std::optional<新需求变化方向> 目标变化方向;
+    friend bool operator==(const 新部分服务要求目标&, const 新部分服务要求目标&) = default;
+};
+enum class 新服务要求缺项 : std::uint8_t {
+    目标存在=1, 目标特征类型, 目标形式, 目标值域, 目标比较关系, 目标变化方向, 明确确认
+};
+struct 新部分服务要求材料 final {
+    稳定编码 要求节点, 来源人类节点;
+    std::string 公开会话标识, 来源要求标识;
+    新部分服务要求目标 已知目标;
+    std::optional<稳定编码> 理解节点, 确认节点;
+    friend bool operator==(const 新部分服务要求材料&, const 新部分服务要求材料&) = default;
+};
+enum class 新部分服务要求读取状态 : std::uint8_t { 已读取=1, 材料不存在, 工程故障 };
+struct 新部分服务要求读取结果 final {
+    新部分服务要求读取状态 状态 = 新部分服务要求读取状态::工程故障;
+    std::optional<新部分服务要求材料> 材料;
+    std::vector<基础联合节点快照> 发布预期节点组;
+};
+class 新部分服务要求读取接口 {
+public:
+    virtual ~新部分服务要求读取接口() = default;
+    virtual 新部分服务要求读取结果 读取部分服务要求(稳定编码 要求节点) const noexcept = 0;
+};
+
+// 仅计算本次材料缺项，不产生完整度特征或业务事实。
+std::vector<新服务要求缺项> 查询服务要求缺项(const 新部分服务要求材料&);
 struct 新服务要求确认读取结果 final {
     新服务要求确认状态 状态 = 新服务要求确认状态::未装配;
     std::optional<新服务要求确认目标> 确认;
@@ -124,6 +159,35 @@ struct 新需求信息 final {
     friend bool operator==(const 新需求信息&, const 新需求信息&) = default;
 };
 
+struct 新需求完整目标 final {
+    稳定编码 目标存在节点;
+    新需求目标定义 目标;
+    friend bool operator==(const 新需求完整目标&, const 新需求完整目标&) = default;
+};
+struct 新需求治理信息 final {
+    稳定编码 节点;
+    std::optional<新需求根角色> 根角色;
+    std::optional<稳定编码> 父需求节点;
+    std::optional<新需求来源类型> 来源类型;
+    std::optional<稳定编码> 来源承接节点;
+    std::int64_t 权重 = 0;
+    新需求活动状态 活动状态 = 新需求活动状态::活动;
+    std::vector<稳定编码> 服务要求确认组;
+    std::optional<稳定编码> 服务需求取得执行节点;
+    std::optional<新需求完整目标> 完整目标;
+    std::optional<稳定编码> 外部要求节点;
+    std::optional<新部分服务要求材料> 外部要求材料;
+    friend bool operator==(const 新需求治理信息&, const 新需求治理信息&) = default;
+};
+enum class 新部分服务需求处理状态 : std::uint8_t {
+    已建立=1, 已复用, 已明确, 来源不符, 要求不存在, 工程故障
+};
+struct 新部分服务需求处理结果 final {
+    新部分服务需求处理状态 状态 = 新部分服务需求处理状态::工程故障;
+    std::optional<稳定编码> 需求节点, 需求列表项节点;
+    std::vector<新服务要求缺项> 缺项;
+};
+
 struct 新需求列表项信息 final {
     稳定编码 节点;
     std::optional<新需求根角色> 根角色;
@@ -173,7 +237,7 @@ struct 新服务要求采用关系结果 final {
 };
 enum class 新服务要求执行守卫状态 : std::uint8_t {
     不涉及 = 1, 当前有效, 需重新确认, 未装配,
-    需求不存在, 结构不一致, 资源失败
+    需求不存在, 结构不一致, 资源失败, 需求信息待完善
 };
 struct 新服务要求执行守卫结果 final {
     新服务要求执行守卫状态 状态 = 新服务要求执行守卫状态::未装配;
@@ -213,7 +277,7 @@ struct 新需求全集结果 final {
 struct 新需求列表全集结果 final {
     新需求操作状态 状态 = 新需求操作状态::入口拒绝;
     std::vector<新需求列表项信息> 列表项组;
-    std::vector<新需求信息> 需求组;
+    std::vector<新需求治理信息> 需求组;
 };
 
 enum class 新需求当前满足状态 : std::uint8_t {
@@ -232,7 +296,8 @@ enum class 新需求当前满足状态 : std::uint8_t {
     // 方向目标不能由一个current-only当前值判定；任务执行实例必须比较
     // 动作前值A与结果观察值B。
     需要执行前后比较 = 13,
-    读取接口未装配 = 14
+    读取接口未装配 = 14,
+    需求信息待完善 = 15
 };
 
 struct 新需求当前满足结果 final {
@@ -270,6 +335,8 @@ public:
 
     std::optional<新需求信息> 获取需求(
         稳定编码 需求节点) const noexcept;
+    std::optional<新需求治理信息> 读取需求治理信息(稳定编码) const noexcept;
+    void 装配部分服务要求读取接口(const 新部分服务要求读取接口*) noexcept;
     std::optional<新需求列表项信息> 获取需求列表项(
         稳定编码 列表项节点) const noexcept;
     std::optional<稳定编码> 查询根需求(
@@ -311,6 +378,7 @@ public:
 
 private:
     friend class 新_自我线程类;
+    新部分服务需求处理结果 建立或更新被动服务需求已核验(稳定编码 要求节点) noexcept;
     // 只供self在核验父需求与来源任务一一对应后采用任务条件子目标。
     新需求建立结果 建立或取得普通需求已核验(
         const 新普通需求建立请求& 请求,
@@ -338,6 +406,7 @@ private:
     const void* 关联检查通知所有者_ = nullptr;
     std::function<void()> 关联检查通知_;
     const 新服务要求确认读取接口* 服务要求确认读取接口_ = nullptr;
+    const 新部分服务要求读取接口* 部分服务要求读取接口_ = nullptr;
     const 特征任务成员读取接口* 服务要求任务读取接口_ = nullptr;
     稳定编码 服务要求结算需求_;
     稳定编码 服务要求结算任务_;
