@@ -87,6 +87,12 @@ struct 新部分服务要求材料 final {
     std::optional<稳定编码> 理解节点, 确认节点;
     friend bool operator==(const 新部分服务要求材料&, const 新部分服务要求材料&) = default;
 };
+// 仅定位已发布材料；接收方必须重新读取，消息本身不构成需求确认。
+struct 新完整服务需求材料包 final {
+    稳定编码 要求节点, 理解节点, 确认节点;
+    friend bool operator==(const 新完整服务需求材料包&,
+        const 新完整服务需求材料包&) = default;
+};
 enum class 新部分服务要求读取状态 : std::uint8_t { 已读取=1, 材料不存在, 工程故障 };
 struct 新部分服务要求读取结果 final {
     新部分服务要求读取状态 状态 = 新部分服务要求读取状态::工程故障;
@@ -179,13 +185,12 @@ struct 新需求治理信息 final {
     std::optional<新部分服务要求材料> 外部要求材料;
     friend bool operator==(const 新需求治理信息&, const 新需求治理信息&) = default;
 };
-enum class 新部分服务需求处理状态 : std::uint8_t {
-    已建立=1, 已复用, 已明确, 来源不符, 要求不存在, 工程故障
+enum class 新外部服务需求采用状态 : std::uint8_t {
+    已建立=1, 已复用, 材料待完善, 需重新确认, 来源不符, 要求不存在, 工程故障
 };
-struct 新部分服务需求处理结果 final {
-    新部分服务需求处理状态 状态 = 新部分服务需求处理状态::工程故障;
+struct 新外部服务需求采用结果 final {
+    新外部服务需求采用状态 状态 = 新外部服务需求采用状态::工程故障;
     std::optional<稳定编码> 需求节点, 需求列表项节点;
-    std::vector<新服务要求缺项> 缺项;
 };
 
 struct 新需求列表项信息 final {
@@ -378,7 +383,8 @@ public:
 
 private:
     friend class 新_自我线程类;
-    新部分服务需求处理结果 建立或更新被动服务需求已核验(稳定编码 要求节点) noexcept;
+    新外部服务需求采用结果 建立或取得外部服务需求已核验(
+        const 新完整服务需求材料包&) noexcept;
     // 只供self在核验父需求与来源任务一一对应后采用任务条件子目标。
     新需求建立结果 建立或取得普通需求已核验(
         const 新普通需求建立请求& 请求,
