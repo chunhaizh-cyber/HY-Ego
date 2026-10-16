@@ -7,6 +7,7 @@
 #include "../领域/新_任务类.h"
 #include "../领域/概念_二次特征类.h"
 
+#include <algorithm>
 #include <iostream>
 #include <iterator>
 #include <limits>
@@ -329,6 +330,7 @@ struct 任务值域自检服务 final {
             禁止.主要结果 = false;
             禁止.特征值域概念节点.reset();
             禁止.精确数值域 = 区间{90, 95};
+            配对.结果.确认要求.禁止结果关系规则 = 新方法项关系规则::单项;
             配对.结果.确认要求.禁止结果项组 = {禁止};
         }
         方法请求.条件结果组 = {配对};
@@ -341,8 +343,20 @@ struct 任务值域自检服务 final {
         要求(候选.候选材料节点.has_value(), "task candidate publication");
         const auto 消费 = 任务.消费任务方法候选(材料.任务节点, *候选.候选材料节点);
         要求(消费.状态 == 新任务治理候选消费状态::已进入条件检查, "task candidate consumption");
-        要求(任务.实例化候选方法(材料.任务节点) == 新任务操作状态::已修改,
-            "task method instance");
+        const auto 首次任务 = 任务.获取任务(材料.任务节点);
+        const auto 调度 = 任务.读取任务调度材料(材料.任务节点);
+        要求(调度.状态 == 新任务调度读取状态::已读取 && 调度.项组.size() == 1
+            && 调度.项组.front().状态 == 新任务调度项状态::普通可筹办
+            && !调度.项组.front().定位.方法执行组织节点
+            && !调度.项组.front().条件核验
+            && 任务.获取任务(材料.任务节点) == 首次任务,
+            "first candidate must be schedulable before execution organization delivery");
+        const auto 交付 = 任务.交付候选方法执行组织(材料.任务节点);
+        要求(交付.状态 == 新任务执行组织状态::已建立 && 交付.组织,
+            "task execution organization delivery");
+        const auto 读回 = 任务.获取任务(材料.任务节点);
+        要求(读回 && 读回->方法执行组织节点 == 交付.组织->节点
+            && !读回->方法实例节点, "task owns execution organization, not a copied method");
         return 材料;
     }
     // 领域服务级观察样例：公开X入口冻结预测、场景owner生成正式状态、
@@ -351,7 +365,7 @@ struct 任务值域自检服务 final {
         const std::vector<std::pair<整数, 整数>>& 观察值时间组,
         bool 预测减少 = false) {
         const auto 任务信息 = 任务.获取任务(材料.任务节点);
-        要求(任务信息 && 任务信息->方法实例节点, "assessment task instance");
+        要求(任务信息 && 任务信息->方法执行组织节点, "assessment task organization");
         const auto 需求信息 = 需求.获取需求(任务信息->需求节点);
         要求(需求信息.has_value(), "assessment demand");
         const auto 对象 = 基础.存在.获取存在(需求信息->目标存在节点);
@@ -359,14 +373,15 @@ struct 任务值域自检服务 final {
         const auto 特征节点 = 对象->特征节点组.front();
         const auto 特征 = 基础.特征.获取特征(特征节点);
         要求(特征 && 特征->当前值, "assessment before value");
-        const auto 配对 = 基础.方法.查询实例条件结果(*任务信息->方法实例节点);
-        要求(配对.状态 == 新方法操作状态::已找到 && 配对.配对组.size() == 1,
-            "assessment copied pair");
-        const auto& 实例 = 配对.配对组.front();
+        const auto 选择 = 任务.选择任务方法结果(材料.任务节点);
+        要求(选择.状态 == 新任务方法选择状态::已选定 && 选择.本能采用,
+            "assessment selected source adoption");
+        const auto& 采用 = *选择.本能采用;
         新任务预计特征变化 变化;
         变化.作用对象节点 = 对象->节点;
         变化.特征类型概念节点 = 材料.类型;
-        变化.预期值域概念节点 = 实例.配对.结果.结果项组.front().特征值域概念节点;
+        变化.预期值域概念节点 = 采用.结果.结果项组.front().特征值域概念节点;
+        变化.预期精确数值域 = 采用.结果.结果项组.front().精确数值域;
         if (预测减少) {
             const std::vector<二次特征概念输入定义> 输入{
                 {0, 二次特征输入角色::左输入, 二次特征输入来源种类::特征准确值, 材料.类型},
@@ -382,15 +397,16 @@ struct 任务值域自检服务 final {
         }
         新任务执行开始请求 开始;
         开始.任务节点 = 材料.任务节点;
-        开始.方法节点 = 实例.方法节点;
+        开始.方法节点 = 采用.来源方法节点;
+        开始.本能采用 = 采用;
         开始.开始时间 = {新状态时间语义::实例绝对UTC, 10};
         开始.预计变化阶段组 = {{0, {变化}}};
         开始.结果获取方案.渠道方案组 = {新任务结果获取渠道方案{}};
         开始.结果获取方案.目标组 = {{对象->节点, 特征节点, 材料.类型,
             *特征->当前值, true}};
         要求(开始.结果获取方案.完整(), "assessment observation plan");
-        要求(任务.修改任务状态(材料.任务节点, 新任务状态::待执行)
-            == 新任务操作状态::已修改, "assessment owner state transition");
+        要求(任务.确认任务进入待执行(材料.任务节点, 采用)
+            == 新任务治理待执行确认状态::已确认, "assessment adoption readiness");
         const auto 执行 = 任务.开始方法执行(开始);
         要求(执行.执行实例节点.has_value(), "assessment owner begin execution");
         std::vector<稳定编码> 状态组;
@@ -874,10 +890,29 @@ int 运行方法精确值域自检() noexcept {
             const auto 方法前 = 服务.方法.获取方法(材料.方法节点);
             const auto 结果 = 任务服务.任务.筹办任务条件和参数(材料.任务节点);
             要求(结果.状态 == 新任务治理条件筹办状态::已完成
-                && 结果.候选已完整核验 && 结果.方法筹办组.size() == 1
-                && 结果.方法筹办组.front().条件结果组.size() == 1
-                && 结果.方法筹办组.front().条件结果组.front().状态 == 预期,
-                "task current value/domain membership");
+                && 结果.方法筹办组.size() == 1, "task condition preparation shape");
+            const auto& 方法项 = 结果.方法筹办组.front();
+            if (预期 == 新任务方法条件项核验状态::材料未到) {
+                // 只读核验已形成配对级缺值；筹办包装入口因缺少目标当前值
+                // 尚未选定执行配对，将候选已完整核验置false，不能等同具备。
+                要求(!结果.候选已完整核验
+                    && 结果.方法选择状态 == 新任务方法选择状态::等待条件
+                    && 方法项.状态 == 新任务候选方法筹办状态::材料未到
+                    && 方法项.条件结果组.size() == 1
+                    && 方法项.条件结果组.front().状态 == 预期
+                    && std::any_of(方法项.条件缺口组.begin(), 方法项.条件缺口组.end(),
+                        [](const auto& 缺口) {
+                            return 缺口.种类 == 新任务方法条件缺口种类::参数特征值未取得;
+                        }), ("missing current value must retain an unresolved parameter gap; method_state="
+                            + std::to_string(static_cast<int>(方法项.状态))
+                            + "; complete=" + std::to_string(结果.候选已完整核验)
+                            + "; pairs=" + std::to_string(方法项.条件结果组.size())
+                            + "; gaps=" + std::to_string(方法项.条件缺口组.size())).c_str());
+            } else {
+                要求(结果.候选已完整核验 && 方法项.条件结果组.size() == 1
+                    && 方法项.条件结果组.front().状态 == 预期,
+                    "task current value/domain membership");
+            }
             要求(任务服务.任务.获取任务(材料.任务节点) == 前
                 && 服务.方法.获取方法(材料.方法节点) == 方法前,
                 "read-only preparation changed knowledge or task");
@@ -975,61 +1010,70 @@ int 运行方法精确值域自检() noexcept {
                     "current-value satisfaction changed task");
             }
         });
-        检查("task downstream private-domain gates remain zero-write", [&] {
+        检查("task exact-domain adoption predicts and enters ready without executing", [&] {
             const auto 材料 = 任务服务.建样例({0, 10}, {50, 60}, true);
             const auto 选择 = 任务服务.任务.选择任务方法结果(材料.任务节点);
             要求(选择.状态 == 新任务方法选择状态::已选定 && 选择.方法节点
-                && 选择.配对节点 && 选择.结果节点, "safety gate selected input");
+                && 选择.配对节点 && 选择.结果节点 && 选择.本能采用, "safety gate selected input");
             const auto 任务前 = 任务服务.任务.获取任务(材料.任务节点);
             const auto 需求前 = 任务服务.需求.查询全部需求();
             const auto 场景前 = 服务.场景.获取场景(材料.场景节点);
             const auto 提议 = 任务服务.任务.提议任务条件子需求(材料.任务节点);
-            要求(提议.状态 == 新任务条件子需求提议状态::暂不支持
-                && 提议.子需求项组.empty(), "private domain bypassed child-demand gate");
+            要求(提议.状态 == 新任务条件子需求提议状态::无需子需求
+                && 提议.子需求项组.empty(), "satisfied exact-domain condition created a child demand");
             const auto 核验 = 任务服务.任务.核验任务执行方向(材料.任务节点,
-                *选择.方法节点, *选择.配对节点, *选择.结果节点,
+                *选择.本能采用,
                 任务服务.自我, 任务服务.安全根, 任务服务.服务根);
-            要求(核验.状态 == 新任务治理执行方向核验状态::结果定义暂不支持
-                && 核验.预计变化阶段组.empty(), "private domain bypassed prediction gate");
+            要求(核验.状态 == 新任务治理执行方向核验状态::已核验可执行
+                && 核验.预计变化阶段组.size() == 1
+                && 核验.预计变化阶段组.front().变化组.size() == 1
+                && 核验.预计变化阶段组.front().变化组.front().预期精确数值域
+                    == std::optional<区间>{{50, 60}}, "exact result domain lost in prediction");
             const auto 需求后 = 任务服务.需求.查询全部需求();
             要求(任务服务.任务.获取任务(材料.任务节点) == 任务前
                 && 服务.场景.获取场景(材料.场景节点) == 场景前
                 && 需求后.状态 == 需求前.状态 && 需求后.需求节点组 == 需求前.需求节点组,
-                "rejected downstream read changed task/demand/scene");
-            const auto 确认 = 任务服务.任务.确认任务进入待执行(材料.任务节点,
-                *选择.方法节点, *选择.配对节点, *选择.结果节点);
-            要求(确认 == 新任务治理待执行确认状态::结构不一致
-                && 任务服务.任务.获取任务(材料.任务节点) == 任务前,
-                "private domain bypassed public ready-to-execute gate");
+                "downstream read changed task/demand/scene");
+            // 缺少就绪状态时仍零执行，不把支持精确域等同自动执行。
             新任务执行开始请求 开始;
             开始.任务节点 = 材料.任务节点;
             开始.方法节点 = *选择.方法节点;
+            开始.本能采用 = 选择.本能采用;
             开始.开始时间 = {新状态时间语义::实例绝对UTC, 3};
             const auto 执行 = 任务服务.任务.开始方法执行(开始);
             要求(执行.状态 == 新任务操作状态::任务状态不允许 && !执行.执行实例节点
-                && 任务服务.任务.获取任务(材料.任务节点) == 任务前
+                && 任务服务.任务.获取任务(材料.任务节点) == 任务前,
+                "not-ready exact-domain task produced execution");
+            const auto 确认 = 任务服务.任务.确认任务进入待执行(材料.任务节点,
+                *选择.本能采用);
+            const auto 就绪 = 任务服务.任务.获取任务(材料.任务节点);
+            要求(确认 == 新任务治理待执行确认状态::已确认 && 就绪
+                && 就绪->当前状态 == 新任务状态::待执行 && !就绪->最近执行实例节点
                 && 服务.场景.获取场景(材料.场景节点) == 场景前,
-                "private domain execution gate produced execution/action/state");
+                "adoption readiness executed an action or changed the scene");
         });
-        检查("task forbidden private domain still blocks downstream", [&] {
+        检查("task forbidden exact domain survives prediction and readiness", [&] {
             const auto 材料 = 任务服务.建样例({0, 10}, {50, 60}, false, 整数{0},
                 二次特征结果域种类::包含于参照值域, true);
             const auto 选择 = 任务服务.任务.选择任务方法结果(材料.任务节点);
             要求(选择.状态 == 新任务方法选择状态::已选定 && 选择.方法节点
-                && 选择.配对节点 && 选择.结果节点, "forbidden-domain readonly selection");
+                && 选择.配对节点 && 选择.结果节点 && 选择.本能采用, "forbidden-domain readonly selection");
             const auto 前 = 任务服务.任务.获取任务(材料.任务节点);
             const auto 核验 = 任务服务.任务.核验任务执行方向(材料.任务节点,
-                *选择.方法节点, *选择.配对节点, *选择.结果节点,
+                *选择.本能采用,
                 任务服务.自我, 任务服务.安全根, 任务服务.服务根);
-            要求(核验.状态 == 新任务治理执行方向核验状态::结果定义暂不支持
-                && 核验.预计变化阶段组.empty()
+            要求(核验.状态 == 新任务治理执行方向核验状态::已核验可执行
+                && 核验.结果获取方案 && 核验.结果获取方案->禁止结果组.size() == 1
+                && 核验.结果获取方案->禁止结果组.front().禁止精确数值域
+                    == std::optional<区间>{{90, 95}}
                 && 任务服务.任务.获取任务(材料.任务节点) == 前,
-                "forbidden private domain lost downstream protection");
+                "forbidden exact domain lost downstream protection");
             const auto 确认 = 任务服务.任务.确认任务进入待执行(材料.任务节点,
-                *选择.方法节点, *选择.配对节点, *选择.结果节点);
-            要求(确认 == 新任务治理待执行确认状态::结构不一致
-                && 任务服务.任务.获取任务(材料.任务节点) == 前,
-                "forbidden private domain bypassed ready-to-execute gate");
+                *选择.本能采用);
+            const auto 后 = 任务服务.任务.获取任务(材料.任务节点);
+            要求(确认 == 新任务治理待执行确认状态::已确认 && 后
+                && 后->当前状态 == 新任务状态::待执行 && !后->最近执行实例节点,
+                "ready confirmation executed forbidden-domain method");
         });
         // 仅测试公开纯值predicate；这些DTO从不写入基础数据集，不是正式A。
         const auto 完成材料 = [] {
@@ -1116,7 +1160,8 @@ int 运行方法精确值域自检() noexcept {
         检查("owner direction demand signed observation matrix", [&] {
             for (const auto 方向 : {新需求变化方向::增加, 新需求变化方向::减少}) {
                 for (const auto 后值 : {整数{40}, 整数{60}}) {
-                    const auto 材料 = 任务服务.建样例({0, 90}, {70, 80}, false, 整数{50},
+                    const auto 材料 = 任务服务.建样例({0, 90},
+                        方向 == 新需求变化方向::增加 ? 区间{70, 80} : 区间{20, 30}, false, 整数{50},
                         二次特征结果域种类::包含于参照值域, false, 方向);
                     const auto 评估 = 任务服务.形成观察评估(材料, 后值);
                     const bool 符合 = (方向 == 新需求变化方向::增加) == (后值 > 50);
@@ -1130,7 +1175,8 @@ int 运行方法精确值域自检() noexcept {
         });
         检查("owner direction demand zero net difference is not satisfied", [&] {
             for (const auto 方向 : {新需求变化方向::增加, 新需求变化方向::减少}) {
-                const auto 材料 = 任务服务.建样例({0, 90}, {70, 80}, false, 整数{50},
+                const auto 材料 = 任务服务.建样例({0, 90},
+                    方向 == 新需求变化方向::增加 ? 区间{70, 80} : 区间{20, 30}, false, 整数{50},
                     二次特征结果域种类::包含于参照值域, false, 方向);
                 // 同值写入不造状态；经两次真实变化回到前值，最新观察净差为0。
                 const auto 结果 = 任务服务.形成观察评估结果(材料, {{55, 11}, {50, 12}});
@@ -1171,7 +1217,7 @@ int 运行方法精确值域自检() noexcept {
         std::cout << "FAIL initialization/driver: unknown exception\n";
     }
     std::cout << "NOT_RUN task-level malformed type/unit injection (no public construction path; feature provider rejection tests retained)\n"
-        << "NOT_RUN self child-demand publication/actual instinct invocation/private-domain effect assessment (downstream private-domain gates intentionally retained)\n"
+        << "NOT_RUN self child-demand publication/actual instinct invocation (owner adoption and observation evaluation are not real actions)\n"
         << "NOT_RUN self message decisions/full attributed business completion (predicate and concept-domain owner evaluation only)\n";
     std::cout << "SUMMARY " << 通过 << " PASS / " << 失败 << " FAIL\n";
     return 失败 == 0 ? 0 : 1;

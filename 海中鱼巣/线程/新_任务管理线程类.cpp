@@ -889,6 +889,34 @@ struct 新_任务管理线程类::实现 final {
                 } catch (...) {} // 诊断不能改变已ack工作或调度资格。
             }
             变化.notify_all();
+#ifdef HY_EGO_DEBUG_LOG_TASK_SCHEDULING
+            // 只投影已返回材料；不持邮箱/业务锁写日志，不追加领域查询。
+            锁.unlock();
+            if (返回.调度材料) {
+                try {
+                    static thread_local std::wstring 上次调度诊断;
+                    std::wostringstream 文本;
+                    for (const auto& 项 : 返回.调度材料->项组) {
+                        文本 << L"任务=" << 项.定位.任务节点.值
+                            << L" 需求=" << 项.定位.需求节点.值
+                            << L" 任务状态=" << static_cast<int>(项.定位.任务状态)
+                            << L" 调度状态=" << static_cast<int>(项.状态)
+                            << L" 候选材料=" << (项.定位.候选材料节点 ? 项.定位.候选材料节点->值 : 0)
+                            << L" 候选数量=" << (项.候选材料 ? 项.候选材料->候选方法节点组.size() : 0)
+                            << L" 执行组织=" << (项.定位.方法执行组织节点 ? 项.定位.方法执行组织节点->值 : 0)
+                            << L" 条件核验=" << (项.条件核验 ? static_cast<int>(项.条件核验->状态) : 0)
+                            << L" 完整核验=" << (项.条件核验 && 项.条件核验->候选已完整核验)
+                            << L"\n";
+                    }
+                    const auto 本次诊断 = 文本.str();
+                    if (本次诊断 != 上次调度诊断) {
+                        (void)记录调试日志(L"TASK_SCHEDULING", L"任务管理线程",
+                            L"处理调度扫描结果", 本次诊断);
+                        上次调度诊断 = 本次诊断;
+                    }
+                } catch (...) {} // 独立人读诊断，不改变已确认的工作结果。
+            }
+#endif
         } catch (const std::bad_alloc&) {
             std::lock_guard 锁(互斥);
             下一工作消费时点 = std::chrono::steady_clock::now() + 等待时长(配置.资源重试间隔毫秒);
