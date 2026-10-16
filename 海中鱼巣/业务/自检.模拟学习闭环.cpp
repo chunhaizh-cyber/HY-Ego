@@ -17,6 +17,7 @@
 #include <limits>
 #include <mutex>
 #include <new>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -45,11 +46,23 @@ std::vector<基础外部关系> 模拟根关系() {
     return 全局基础数据集.查询源关系(模拟世界树根节点, 基础外部关系类型::父子);
 }
 
-void 要求新样例(const std::vector<基础外部关系>& 前) {
+void 要求新样例(const std::vector<基础外部关系>& 前, std::size_t 新增数 = 2) {
     const auto 后 = 模拟根关系();
-    要求(后.size() == 前.size() + 1, "learning did not append one independent sample");
+    要求(后.size() == 前.size() + 新增数, "learning did not append independent normal/tail samples");
     for (const auto& 关系 : 前)
         要求(std::find(后.begin(), 后.end(), 关系) != 后.end(), "learning changed existing sample roots");
+    std::set<稳定编码> 场景组, 实例组;
+    for (const auto& 关系 : 后) {
+        if (std::find(前.begin(), 前.end(), 关系) != 前.end()) continue;
+        要求(场景组.insert(关系.目标节点).second && 全局基础数据集.查询节点(关系.目标节点),
+            "new physical sample scene missing/duplicated");
+        const auto 子组 = 全局基础数据集.查询源关系(关系.目标节点, 基础外部关系类型::父子);
+        要求(!子组.empty(), "sample scene has no isolated instances");
+        for (const auto& 子 : 子组)
+            要求(实例组.insert(子.目标节点).second && 全局基础数据集.查询节点(子.目标节点),
+                "normal/tail sample reused or deleted mutable instances");
+    }
+    要求(场景组.size() == 新增数, "normal/tail scene count");
 }
 
 新方法条件结果定义 承载测试配对(const 新服务值结算登记材料& m, 整数 输入, 整数 输出) {
@@ -313,6 +326,14 @@ int 运行模拟学习闭环自检() noexcept {
         const auto 普通存在前 = s.存在.获取存在(s.端口.材料.自我存在);
         const auto 普通场景前 = s.场景.获取场景(s.场景根);
         要求(普通特征前 && 普通存在前 && 普通场景前, "ordinary world snapshots");
+        const auto 真实任务全集前 = s.任务.查询全部任务();
+        要求(真实任务全集前.状态 == 新任务操作状态::已找到, "real task inventory before simulation");
+        std::vector<新任务信息> 真实任务前;
+        for (const auto T : 真实任务全集前.任务节点组) {
+            const auto 信息 = s.任务.获取任务(T);
+            要求(信息.has_value(), "real task before simulation");
+            真实任务前.push_back(*信息);
+        }
         std::vector<特征概念信息> 概念前;
         for (const auto n : s.概念组) {
             const auto c = s.特征概念.获取特征概念(n);
@@ -445,7 +466,7 @@ int 运行模拟学习闭环自检() noexcept {
                     return true;
                 };
                 要求运行异常([&] { (void)学习.学习(s.方法节点, callback); }, s.方法节点, reason);
-                要求新样例(roots);
+                要求新样例(roots, 1); // 首次样例建立后取消，不能伪装完成两次求值。
                 要求(s.方法.获取方法(s.方法节点) == methodBefore, "evaluator exception published knowledge");
             }
         });
@@ -683,6 +704,12 @@ int 运行模拟学习闭环自检() noexcept {
             for (std::size_t i=0; i<s.概念组.size(); ++i)
                 要求(s.特征概念.获取特征概念(s.概念组[i]) == 概念前[i], "simulation changed shared concept");
             要求(s.端口.越界次数 == 0, "simulation called real write/registration/stop port");
+            const auto 真实任务全集后 = s.任务.查询全部任务();
+            要求(真实任务全集后.状态 == 真实任务全集前.状态
+                && 真实任务全集后.任务节点组 == 真实任务全集前.任务节点组,
+                "normal/tail simulation changed real task inventory");
+            for (const auto& 前 : 真实任务前)
+                要求(s.任务.获取任务(前.节点) == 前, "normal/tail simulation changed real task state");
         });
         检查("manager reads learned knowledge and waits without creating or advancing tasks", [&] {
             auto& 任务 = s.任务;

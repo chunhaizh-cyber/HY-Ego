@@ -12,15 +12,21 @@ namespace 海中鱼巣 {
 struct 数值模拟输入区间 final {
     std::int64_t 下界 = 0;
     std::int64_t 上界 = 0;
+    friend bool operator==(const 数值模拟输入区间&, const 数值模拟输入区间&) = default;
+};
+
+struct 数值模拟起始区域 final {
+    std::vector<数值模拟输入区间> 输入区间组;
 };
 
 struct 数值模拟细分请求 final {
     std::vector<数值模拟输入区间> 输入区间组;
     std::size_t 输出维数 = 0;
+    std::vector<数值模拟起始区域> 已有区域组;
 };
 
 enum class 数值模拟样例状态 : std::uint8_t {
-    已求值 = 1, 输入不可求值, 结果未知, 求值失败
+    已求值 = 1, 输入不可求值, 结果未知, 求值失败, 输入组合不合法
 };
 
 struct 数值模拟样例结果 final {
@@ -42,6 +48,20 @@ struct 数值模拟完成区域 final {
     std::vector<数值模拟输入区间> 输入区间组;
 };
 
+struct 数值模拟未知输入 final {
+    std::vector<std::int64_t> 输入值组;
+    数值模拟样例状态 原因 = 数值模拟样例状态::结果未知;
+};
+struct 数值模拟同输入差异 final {
+    std::vector<std::int64_t> 输入值组;
+    std::vector<std::vector<std::int64_t>> 不同输出组;
+};
+struct 数值模拟求值材料 final {
+    std::vector<std::int64_t> 输入值组;
+    数值模拟样例结果 结果;
+    bool 收尾复测 = false;
+};
+
 enum class 数值模拟操作状态 : std::uint8_t {
     尚未初始化 = 0, 就绪, 推进中, 已完成,
     输入不合法, 样例求值失败, 输出维数不符,
@@ -53,18 +73,26 @@ struct 数值模拟推进结果 final {
     std::optional<数值模拟样例> 本次新样例;
     std::optional<数值模拟完成区域> 本次完成区域;
     std::optional<数值模拟样例状态> 求值失败状态;
+    std::optional<数值模拟求值材料> 本次求值;
 };
 
 struct 数值模拟进度 final {
     数值模拟操作状态 状态 = 数值模拟操作状态::尚未初始化;
     std::size_t 已求值样例数 = 0;
     std::size_t 已完成区域数 = 0;
+    std::size_t 实际求值次数 = 0;
+    std::size_t 未完善区域数 = 0;
 };
 
 struct 数值模拟材料读取结果 final {
     数值模拟操作状态 状态 = 数值模拟操作状态::尚未初始化;
     std::vector<数值模拟样例> 样例组;
     std::vector<数值模拟完成区域> 完成区域组;
+    std::vector<数值模拟完成区域> 未完善区域组;
+    std::vector<数值模拟未知输入> 未知输入组;
+    std::vector<std::vector<std::int64_t>> 不合法输入组;
+    std::vector<数值模拟同输入差异> 同输入差异组;
+    std::vector<数值模拟求值材料> 实际求值组;
 };
 
 // 串行使用。每次推进最多求值一次；停止调用即暂停，不改变完成状态。
