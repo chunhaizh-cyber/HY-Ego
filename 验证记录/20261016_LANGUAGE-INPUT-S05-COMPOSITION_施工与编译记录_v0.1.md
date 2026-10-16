@@ -16,7 +16,7 @@
 
 ## 验证与边界
 
-`git diff --check` 与精确暂存后的 `git diff --cached --check` 均通过。使用本工作树实际 `海中鱼巣.slnx`，Visual Studio 18 Professional MSBuild，执行 `MSBuild.exe 海中鱼巣.slnx /t:Build /p:Configuration=Debug /p:Platform=x64 /m:4 /v:minimal`；退出码 0，实际编译并链接生成 `x64/Debug/海中鱼巣.exe`。已编译，未运行测试、自检、启动程序或验收；用户本切片没有测试指令。结果提交待填，工作树分支未集成 main、未推送。
+`git diff --check` 与精确暂存后的 `git diff --cached --check` 均通过。使用本工作树实际 `海中鱼巣.slnx`，Visual Studio 18 Professional MSBuild，执行 `MSBuild.exe 海中鱼巣.slnx /t:Build /p:Configuration=Debug /p:Platform=x64 /m:4 /v:minimal`；退出码 0，实际编译并链接生成 `x64/Debug/海中鱼巣.exe`。已编译，未运行测试、自检、启动程序或验收；用户本切片没有测试指令。代码结果提交为 `b1501de93005d53bc0b334bec34862dc86b8fa47`，本记录自身提交另见 Git；工作树分支未集成 main、未推送。
 
 此证据只证明计划白名单内 S05 输入子解释器及总分派接线可以编译链接，不证明自然句短语定位、对象指代、临时专名、S05 输出可逆、生产交互调用、主张保存/采信、现实组成变化、运行正确性、恢复、集成验收或全部句型双向转换。
 
