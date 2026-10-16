@@ -72,7 +72,7 @@ struct 推进保护 final {
     ~推进保护() { 标志 = false; }
 };
 
-enum class 区域阶段 { 三点采样, 三点检查, 五点采样, 五点检查, 收束 };
+enum class 区域阶段 { 三点采样, 三点检查, 收束 };
 
 struct 工作区域 final {
     std::vector<数值模拟输入区间> 区间组;
@@ -81,25 +81,25 @@ struct 工作区域 final {
     std::vector<bool> 偏差轴;
     区域阶段 阶段 = 区域阶段::三点采样;
     std::size_t 检查轴 = 0;
-    std::size_t 检查段 = 0;
+    bool 收尾 = false;
+    std::size_t 叶序号 = 0;
+    bool 未完善 = false;
+    bool 有已知输入 = false;
+    // 仅本区域本波次材料；旧已知值不能覆盖此次未知/非法结果。
+    std::map<std::vector<整数>, 数值模拟样例结果> 点结果;
 
-    void 准备网格(bool 补测) {
+    void 准备网格() {
         网格.clear();
         网格.reserve(区间组.size());
         for (const auto& 区间 : 区间组) {
             const auto 中 = 区间中点(区间.下界, 区间.上界);
             std::vector<整数> 点{区间.下界, 中, 区间.上界};
-            if (补测) {
-                点.push_back(区间中点(区间.下界, 中));
-                点.push_back(区间中点(中, 区间.上界));
-            }
             std::sort(点.begin(), 点.end());
             点.erase(std::unique(点.begin(), 点.end()), 点.end());
             网格.push_back(std::move(点));
         }
         游标.assign(区间组.size(), 0);
         检查轴 = 0;
-        检查段 = 0;
     }
 
     std::vector<整数> 当前输入() const {
@@ -131,15 +131,42 @@ struct 数值模拟细分器::实现 final {
     操作状态 状态 = 操作状态::就绪;
     std::optional<数值模拟样例状态> 求值失败状态;
     std::map<std::vector<整数>, std::vector<整数>> 样例;
-    std::vector<数值模拟完成区域> 完成区域;
+    std::map<std::vector<整数>, std::vector<std::vector<整数>>> 已知输出;
+    std::map<std::vector<整数>, 数值模拟样例状态> 最近未知或非法;
+    std::vector<数值模拟求值材料> 实际求值;
+    std::size_t 实际求值次数 = 0;
+    struct 叶区域 final {
+        std::vector<数值模拟输入区间> 区间组;
+        bool 完善 = false;
+        bool 已收尾 = false;
+    };
+    std::vector<叶区域> 叶集合;
     std::vector<std::vector<数值模拟输入区间>> 待处理;
     std::optional<工作区域> 当前;
+    bool 收尾中 = false;
+    std::size_t 收尾游标 = 0;
+
+    void 差异结束(const std::vector<整数>& 输入) {
+        样例.erase(输入);
+        for (auto& 叶 : 叶集合) {
+            bool 包含 = true;
+            for (std::size_t i = 0; i < 输入.size(); ++i)
+                包含 = 包含 && 叶.区间组[i].下界 <= 输入[i] && 输入[i] <= 叶.区间组[i].上界;
+            if (包含) { 叶.完善 = false; 叶.已收尾 = false; }
+        }
+        当前->未完善 = true;
+        状态 = 操作状态::已完成;
+    }
 
     void 采一个点(数值模拟推进结果& 返回) {
         auto& 区域 = *当前;
         auto 输入 = 区域.当前输入();
-        if (样例.find(输入) == 样例.end()) {
-            数值模拟样例结果 结果;
+        数值模拟样例结果 结果;
+        const auto 既有 = 样例.find(输入);
+        if (!区域.收尾 && 既有 != 样例.end() && !最近未知或非法.contains(输入)) {
+            结果 = {数值模拟样例状态::已求值, 既有->second};
+        } else {
+            ++实际求值次数;
             try {
                 结果 = 求值(输入);
             } catch (const std::bad_alloc&) {
@@ -149,12 +176,17 @@ struct 数值模拟细分器::实现 final {
                 状态 = 操作状态::求值抛异常;
                 return;
             }
-            if (结果.状态 != 数值模拟样例状态::已求值) {
+            const bool 已知 = 结果.状态 == 数值模拟样例状态::已求值;
+            const bool 未知 = 结果.状态 == 数值模拟样例状态::输入不可求值
+                || 结果.状态 == 数值模拟样例状态::结果未知;
+            const bool 非法 = 结果.状态 == 数值模拟样例状态::输入组合不合法;
+            if (!已知 && !未知 && !非法) {
                 状态 = 操作状态::样例求值失败;
                 求值失败状态 = 结果.状态;
                 return;
             }
-            if (结果.输出值组.size() != 输出维数) {
+            if ((已知 && 结果.输出值组.size() != 输出维数)
+                || (!已知 && !结果.输出值组.empty())) {
                 状态 = 操作状态::输出维数不符;
                 return;
             }
@@ -162,62 +194,79 @@ struct 数值模拟细分器::实现 final {
                 状态 = 操作状态::输出包含无穷哨兵;
                 return;
             }
-            样例.emplace(输入, 结果.输出值组);
-            返回.本次新样例 = 数值模拟样例{std::move(输入), std::move(结果.输出值组)};
+            实际求值.push_back({输入, 结果, 区域.收尾});
+            返回.本次求值 = 实际求值.back();
+            if (已知) {
+                最近未知或非法.erase(输入);
+                auto& 输出组 = 已知输出[输入];
+                const bool 首次已知 = 输出组.empty();
+                if (std::find(输出组.begin(), 输出组.end(), 结果.输出值组) == 输出组.end())
+                    输出组.push_back(结果.输出值组);
+                if (输出组.size() > 1) { 差异结束(输入); return; }
+                样例.insert_or_assign(输入, 结果.输出值组);
+                if (首次已知) 返回.本次新样例 = 数值模拟样例{输入, 结果.输出值组};
+            } else 最近未知或非法.insert_or_assign(输入, 结果.状态);
         }
+        区域.有已知输入 = 区域.有已知输入 || 结果.状态 == 数值模拟样例状态::已求值;
+        区域.未完善 = 区域.未完善 || 结果.状态 == 数值模拟样例状态::输入不可求值
+            || 结果.状态 == 数值模拟样例状态::结果未知;
+        区域.点结果.insert_or_assign(输入, std::move(结果));
         if (!区域.下个坐标(区域.游标.size())) {
-            区域.阶段 = 区域.阶段 == 区域阶段::三点采样
-                ? 区域阶段::三点检查 : 区域阶段::五点检查;
+            区域.阶段 = 区域阶段::三点检查;
         }
     }
 
     void 查一条线() {
         auto& 区域 = *当前;
-        const bool 补测 = 区域.阶段 == 区域阶段::五点检查;
         if (区域.检查轴 == 区域.区间组.size()) {
-            if (!补测) {
-                区域.准备网格(true);
-                区域.阶段 = 区域阶段::五点采样;
-            } else {
-                区域.阶段 = 区域阶段::收束;
-            }
+            区域.阶段 = 区域阶段::收束;
             return;
         }
         const auto 轴 = 区域.检查轴;
         const auto& 区间 = 区域.区间组[轴];
-        整数 左 = 区间.下界;
-        整数 右 = 区间.上界;
-        const auto 原中点 = 区间中点(左, 右);
-        if (区域.检查段 == 1) 右 = 原中点;
-        if (区域.检查段 == 2) 左 = 原中点;
+        const 整数 左 = 区间.下界;
+        const 整数 右 = 区间.上界;
         const auto 中 = 区间中点(左, 右);
         if (左 < 中 && 中 < 右) {
             auto 输入 = 区域.当前输入();
             输入[轴] = 左;
-            const auto& 左值 = 样例.at(输入);
+            const auto 左项 = 区域.点结果.find(输入);
             输入[轴] = 中;
-            const auto& 中值 = 样例.at(输入);
+            const auto 中项 = 区域.点结果.find(输入);
             输入[轴] = 右;
-            const auto& 右值 = 样例.at(输入);
-            for (std::size_t 分量 = 0; 分量 < 输出维数; ++分量) {
-                if (!精确共线(左, 中, 右, 左值[分量], 中值[分量], 右值[分量])) {
-                    区域.偏差轴[轴] = true;
-                    break;
+            const auto 右项 = 区域.点结果.find(输入);
+            if (左项 == 区域.点结果.end() || 中项 == 区域.点结果.end() || 右项 == 区域.点结果.end()
+                || 左项->second.状态 != 数值模拟样例状态::已求值
+                || 中项->second.状态 != 数值模拟样例状态::已求值
+                || 右项->second.状态 != 数值模拟样例状态::已求值) {
+                区域.未完善 = true;
+            } else {
+                for (std::size_t 分量 = 0; 分量 < 输出维数; ++分量) {
+                    if (!精确共线(左, 中, 右, 左项->second.输出值组[分量],
+                        中项->second.输出值组[分量], 右项->second.输出值组[分量])) {
+                        区域.偏差轴[轴] = true;
+                        break;
+                    }
                 }
             }
         }
-        if (++区域.检查段 == (补测 ? 3U : 1U)) {
-            区域.检查段 = 0;
-            if (!区域.下个坐标(轴)) ++区域.检查轴;
-        }
+        if (!区域.下个坐标(轴)) ++区域.检查轴;
     }
 
     void 收束区域(数值模拟推进结果& 返回) {
         const auto& 区域 = *当前;
         const auto 偏差 = std::find(区域.偏差轴.begin(), 区域.偏差轴.end(), true);
         if (偏差 == 区域.偏差轴.end()) {
-            完成区域.push_back({区域.区间组});
-            返回.本次完成区域 = 完成区域.back();
+            const bool 完善 = !区域.未完善 && 区域.有已知输入;
+            if (区域.收尾) {
+                auto& 叶 = 叶集合[区域.叶序号];
+                叶.完善 = 完善; 叶.已收尾 = true;
+                if (完善) 返回.本次完成区域 = 数值模拟完成区域{区域.区间组};
+            } else {
+                const auto 已有 = std::find_if(叶集合.begin(), 叶集合.end(),
+                    [&](const auto& 叶) { return 叶.区间组 == 区域.区间组; });
+                if (已有 == 叶集合.end()) 叶集合.push_back({区域.区间组, 完善, false});
+            }
         } else {
             const auto 轴 = static_cast<std::size_t>(偏差 - 区域.偏差轴.begin());
             auto 左 = 区域.区间组;
@@ -227,29 +276,41 @@ struct 数值模拟细分器::实现 final {
             右[轴].下界 = 中;
             待处理.push_back(std::move(右));
             待处理.push_back(std::move(左));
+            if (区域.收尾) {
+                叶集合.erase(叶集合.begin() + static_cast<std::ptrdiff_t>(区域.叶序号));
+                收尾中 = false;
+                for (auto& 叶 : 叶集合) 叶.已收尾 = false;
+            }
         }
         当前.reset();
-        if (待处理.empty()) 状态 = 操作状态::已完成;
     }
 
     void 前进一步(数值模拟推进结果& 返回) {
         状态 = 操作状态::推进中;
         if (!当前) {
             工作区域 新区域;
-            新区域.区间组 = std::move(待处理.back());
-            待处理.pop_back();
+            if (!待处理.empty()) {
+                新区域.区间组 = std::move(待处理.back());
+                待处理.pop_back();
+            } else {
+                if (!收尾中) {
+                    收尾中 = true; 收尾游标 = 0;
+                    for (auto& 叶 : 叶集合) 叶.已收尾 = false;
+                }
+                if (收尾游标 == 叶集合.size()) { 状态 = 操作状态::已完成; return; }
+                新区域.收尾 = true; 新区域.叶序号 = 收尾游标++;
+                新区域.区间组 = 叶集合[新区域.叶序号].区间组;
+            }
             新区域.偏差轴.assign(新区域.区间组.size(), false);
-            新区域.准备网格(false);
+            新区域.准备网格();
             当前 = std::move(新区域);
             return;
         }
         switch (当前->阶段) {
         case 区域阶段::三点采样:
-        case 区域阶段::五点采样:
             采一个点(返回);
             break;
         case 区域阶段::三点检查:
-        case 区域阶段::五点检查:
             查一条线();
             break;
         case 区域阶段::收束:
@@ -273,10 +334,22 @@ struct 数值模拟细分器::实现 final {
         }
     }
     try {
+        std::vector<std::vector<数值模拟输入区间>> 起始域;
+        if (请求.已有区域组.empty()) 起始域.push_back(请求.输入区间组);
+        else for (const auto& 区域 : 请求.已有区域组) {
+            if (区域.输入区间组.size() != 请求.输入区间组.size()) return 操作状态::输入不合法;
+            for (std::size_t i = 0; i < 区域.输入区间组.size(); ++i) {
+                const auto& 域 = 区域.输入区间组[i];
+                if (域.下界 > 域.上界 || 域.下界 < 请求.输入区间组[i].下界
+                    || 域.上界 > 请求.输入区间组[i].上界) return 操作状态::输入不合法;
+            }
+            if (std::find(起始域.begin(), 起始域.end(), 区域.输入区间组) == 起始域.end())
+                起始域.push_back(区域.输入区间组);
+        }
         auto 新实现 = std::make_unique<实现>();
         新实现->输出维数 = 请求.输出维数;
         新实现->求值 = 求值;
-        新实现->待处理.push_back(请求.输入区间组);
+        新实现->待处理.assign(起始域.rbegin(), 起始域.rend());
         实现_.swap(新实现);
         return 操作状态::就绪;
     } catch (...) {
@@ -306,7 +379,11 @@ struct 数值模拟细分器::实现 final {
 
 数值模拟进度 数值模拟细分器::读取进度() const noexcept {
     if (!实现_) return {};
-    return {实现_->状态, 实现_->样例.size(), 实现_->完成区域.size()};
+    const auto 完成数 = static_cast<std::size_t>(std::count_if(实现_->叶集合.begin(), 实现_->叶集合.end(),
+        [](const auto& 叶) { return 叶.已收尾 && 叶.完善; }));
+    const auto 未完善数 = 实现_->叶集合.size() - 完成数 + 实现_->待处理.size()
+        + (实现_->当前 && !实现_->当前->收尾 ? 1U : 0U);
+    return {实现_->状态, 实现_->样例.size(), 完成数, 实现_->实际求值次数, 未完善数};
 }
 
 数值模拟材料读取结果 数值模拟细分器::读取材料() const noexcept {
@@ -318,7 +395,30 @@ struct 数值模拟细分器::实现 final {
         for (const auto& [输入, 输出] : 实现_->样例) {
             返回.样例组.push_back({输入, 输出});
         }
-        返回.完成区域组 = 实现_->完成区域;
+        for (const auto& 叶 : 实现_->叶集合) {
+            if (叶.已收尾 && 叶.完善) 返回.完成区域组.push_back({叶.区间组});
+            else 返回.未完善区域组.push_back({叶.区间组});
+        }
+        if (实现_->当前 && !实现_->当前->收尾) 返回.未完善区域组.push_back({实现_->当前->区间组});
+        for (const auto& 域 : 实现_->待处理) 返回.未完善区域组.push_back({域});
+        const auto 区域有序 = [](const auto& 左, const auto& 右) {
+            return std::lexicographical_compare(左.输入区间组.begin(), 左.输入区间组.end(),
+                右.输入区间组.begin(), 右.输入区间组.end(), [](const auto& a, const auto& b) {
+                    return a.下界 < b.下界 || (a.下界 == b.下界 && a.上界 < b.上界);
+                });
+        };
+        std::sort(返回.完成区域组.begin(), 返回.完成区域组.end(), 区域有序);
+        std::sort(返回.未完善区域组.begin(), 返回.未完善区域组.end(), 区域有序);
+        for (const auto& [输入, 原因] : 实现_->最近未知或非法) {
+            if (原因 == 数值模拟样例状态::输入组合不合法) 返回.不合法输入组.push_back(输入);
+            else 返回.未知输入组.push_back({输入, 原因});
+        }
+        for (const auto& [输入, 输出组] : 实现_->已知输出) if (输出组.size() > 1) {
+            auto 有序输出 = 输出组;
+            std::sort(有序输出.begin(), 有序输出.end());
+            返回.同输入差异组.push_back({输入, std::move(有序输出)});
+        }
+        返回.实际求值组 = 实现_->实际求值;
         return 返回;
     } catch (...) {
         return {操作状态::资源失败};
