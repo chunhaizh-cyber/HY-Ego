@@ -48,6 +48,18 @@
     <ClInclude Include="海中鱼巣\业务\解释.基础语言.h">
       <Filter>业务</Filter>
     </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\转换.语言场景基础.cpp">
+      <Filter>业务</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\转换.语言场景基础.h">
+      <Filter>业务</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\转换.语言场景共同.cpp">
+      <Filter>业务</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\转换.语言场景共同.h">
+      <Filter>业务</Filter>
+    </ClInclude>
     <ClCompile Include="海中鱼巣\业务\转换.语言场景归类.cpp">
       <Filter>业务</Filter>
     </ClCompile>
