@@ -8,6 +8,7 @@
 #include <array>
 #include <limits>
 #include <map>
+#include <new>
 #include <set>
 #include <stdexcept>
 #include <tuple>
@@ -914,7 +915,52 @@ struct S02读取快照 final {
     std::vector<新词条信息> 规则固定词组;
     std::array<std::optional<S02词槽>, 2> 内容槽;
     std::vector<单特征概念关系结果> 同根比较组;
+    std::map<稳定编码, 存在概念信息> 存在图节点组;
 };
+
+S02状态 读取S02存在严格上位闭包(稳定编码 起点,
+    const 概念_存在类& 存在概念服务,
+    std::map<稳定编码, 存在概念信息>& 已读图节点,
+    std::set<稳定编码>& 严格上位) {
+    if (!有效(起点)) return S02状态::内部不一致;
+    struct 遍历帧 final { 稳定编码 节点; std::size_t 下一上位 = 0; };
+    std::map<稳定编码, std::uint8_t> 访问状态;
+    std::vector<遍历帧> 栈;
+    const auto 读取 = [&](稳定编码 节点) -> const 存在概念信息* {
+        if (!有效(节点)) return nullptr;
+        const auto 已读 = 已读图节点.find(节点);
+        if (已读 != 已读图节点.end()) return &已读->second;
+        const auto 信息 = 存在概念服务.获取存在概念(节点);
+        if (!信息 || 信息->节点 != 节点) return nullptr;
+        return &已读图节点.emplace(节点, *信息).first->second;
+    };
+    if (!读取(起点)) return S02状态::引用不可读;
+    访问状态.emplace(起点, 1);
+    栈.push_back({起点});
+    while (!栈.empty()) {
+        auto& 帧 = 栈.back();
+        const auto& 当前 = 已读图节点.at(帧.节点);
+        if (帧.下一上位 == 当前.上位概念组.size()) {
+            访问状态[帧.节点] = 2;
+            栈.pop_back();
+            continue;
+        }
+        const auto 上位节点 = 当前.上位概念组[帧.下一上位++];
+        if (!有效(上位节点)) return S02状态::内部不一致;
+        const auto* 上位 = 读取(上位节点);
+        if (!上位) return S02状态::引用不可读;
+        if (上位->种类 != 存在概念种类::抽象
+            || std::find(上位->下位概念组.begin(),
+                上位->下位概念组.end(), 帧.节点) == 上位->下位概念组.end())
+            return S02状态::内部不一致;
+        if (访问状态[上位节点] == 1) return S02状态::内部不一致;
+        严格上位.insert(上位节点);
+        if (访问状态[上位节点] == 2) continue;
+        访问状态[上位节点] = 1;
+        栈.push_back({上位节点});
+    }
+    return S02状态::已形成唯一含义;
+}
 
 bool S02候选顺序(const 基础概念上下位候选& 左,
     const 基础概念上下位候选& 右) {
@@ -983,7 +1029,7 @@ S02读取快照 读取S02一次(const 基础概念上下位输入请求& 请求,
     const 概念_存在类& 存在概念服务,
     const 概念_特征类& 特征概念服务) {
     S02读取快照 快照{{S02状态::输入拒绝, 请求.固定原文,
-        请求.未核验来源语言记录节点, {}, {}}, {}, {}, {}, {}, {}};
+        请求.未核验来源语言记录节点, {}, {}}, {}, {}, {}, {}, {}, {}};
     auto& 结果 = 快照.结果;
     if (!有效(请求.语言节点) || 请求.固定原文.empty()
         || !请求.最大原文标量数 || !请求.最大知识条目数
@@ -1118,6 +1164,7 @@ S02读取快照 读取S02一次(const 基础概念上下位输入请求& 请求,
         || 匹配规则.size() > 限额 / (普通组[0].size() * 普通组[1].size())) {
         结果.状态 = S02状态::额度不足; return 快照;
     }
+    std::set<std::tuple<新语言知识角色类别, 稳定编码, 稳定编码>> 图支持键组;
     for (const auto& 规则 : 匹配规则)
         for (const auto& 左 : 普通组[0])
             for (const auto& 右 : 普通组[1]) {
@@ -1136,6 +1183,20 @@ S02读取快照 读取S02一次(const 基础概念上下位输入请求& 请求,
                         结果.候选组.clear();
                         return 快照;
                     }
+                    if (比较.关系 == 单特征概念关系::右为上位) {
+                        try {
+                            图支持键组.emplace(类别, 左.名称关系.概念节点,
+                                右.名称关系.概念节点);
+                        } catch (const std::bad_alloc&) {
+                            结果.状态 = S02状态::工程未完成;
+                            结果.候选组.clear();
+                            return 快照;
+                        } catch (const std::length_error&) {
+                            结果.状态 = S02状态::工程未完成;
+                            结果.候选组.clear();
+                            return 快照;
+                        }
+                    }
                 }
                 结果.候选组.push_back({类别, 左.名称关系.概念节点,
                     右.名称关系.概念节点, 左.名称关系.节点,
@@ -1150,6 +1211,44 @@ S02读取快照 读取S02一次(const 基础概念上下位输入请求& 请求,
     std::set<std::tuple<新语言知识角色类别, 稳定编码, 稳定编码>> 语义组;
     for (const auto& 候选 : 结果.候选组)
         语义组.emplace(候选.类别, 候选.主体概念节点, 候选.归类概念节点);
+    if (语义组.size() > 1) {
+        try {
+            std::map<稳定编码, std::set<稳定编码>> 上位闭包组;
+            for (const auto& [类别, 主体, 归类] : 语义组) {
+                if (类别 != 新语言知识角色类别::存在概念) continue;
+                auto [它, 新增] = 上位闭包组.try_emplace(主体);
+                if (新增) {
+                    const auto 状态 = 读取S02存在严格上位闭包(主体,
+                        存在概念服务, 快照.存在图节点组, 它->second);
+                    if (状态 != S02状态::已形成唯一含义) {
+                        结果.状态 = 状态;
+                        结果.候选组.clear();
+                        return 快照;
+                    }
+                }
+                if (它->second.contains(归类))
+                    图支持键组.emplace(类别, 主体, 归类);
+            }
+            if (!图支持键组.empty()) {
+                std::erase_if(结果.候选组, [&](const auto& 候选) {
+                    return !图支持键组.contains(std::tuple{候选.类别,
+                        候选.主体概念节点, 候选.归类概念节点});
+                });
+                语义组.clear();
+                for (const auto& 候选 : 结果.候选组)
+                    语义组.emplace(候选.类别, 候选.主体概念节点,
+                        候选.归类概念节点);
+            }
+        } catch (const std::bad_alloc&) {
+            结果.状态 = S02状态::工程未完成;
+            结果.候选组.clear();
+            return 快照;
+        } catch (const std::length_error&) {
+            结果.状态 = S02状态::工程未完成;
+            结果.候选组.clear();
+            return 快照;
+        }
+    }
     结果.状态 = 匹配规则.size() > 1 ? S02状态::多规则待解
         : 语义组.size() > 1 ? S02状态::概念多义待解
         : S02状态::已形成唯一含义;
@@ -1165,6 +1264,7 @@ bool S02快照相同(const S02读取快照& 左, const S02读取快照& 右) {
             右.知识全集.begin(), 知识相同)
         || 左.规则固定词组 != 右.规则固定词组
         || 左.同根比较组.size() != 右.同根比较组.size()
+        || 左.存在图节点组 != 右.存在图节点组
         || 左.结果.候选组.size() != 右.结果.候选组.size()) return false;
     for (std::size_t i = 0; i != 左.同根比较组.size(); ++i) {
         const auto& a = 左.同根比较组[i];
