@@ -126,6 +126,9 @@ struct 自检服务 final {
     稳定编码 场景根;
     新_场景类 场景{场景根, 存在, 状态, 动态};
     新_方法类 方法{存在, 场景, 特征值, 特征, 存在概念, 特征概念};
+    新_需求类 需求{特征值, 存在, 特征, 特征概念, 二次概念};
+    新_任务类 任务{需求, 方法, 特征值, 特征, 特征概念,
+        状态, 场景, 存在, 二次概念, 存在概念};
     只读登记材料端口 端口;
     稳定编码 方法节点;
     std::vector<稳定编码> 概念组;
@@ -141,14 +144,18 @@ struct 自检服务 final {
 
     自检服务() {
         要求(特征值.初始化() && 特征概念.初始化(特征值)
-            && 场景.初始化() && 二次概念.初始化() && 方法.初始化(), "real owners initialization");
+            && 场景.初始化() && 二次概念.初始化() && 方法.初始化()
+            && 需求.初始化() && 任务.初始化治理(), "real owners initialization");
+        特征概念.装配任务成员读取接口(&任务);
         const auto 注册 = 新_本能函数管理类::初始化();
         要求(注册 == 新本能函数登记状态::已登记 || 注册 == 新本能函数登记状态::精确重复,
             "original builtins registration");
         auto& m = 端口.材料;
         m.冻结前值 = 4;
         m.服务值类型根 = 建域(0, 100);
-        m.任务状态类型根 = 建域(0, 12);
+        const auto 任务类型 = 任务.获取任务状态特征类型();
+        要求(任务类型.has_value(), "formal task status type");
+        m.任务状态类型根 = *任务类型;
         m.服务值合法值域 = m.服务值类型根;
         m.动作前单值域 = 建域(4, 4, m.服务值类型根);
         m.目标值域 = 建域(5, 5, m.服务值类型根);
@@ -178,20 +185,51 @@ struct 自检服务 final {
         要求(增.概念节点 && 等.概念节点, "direction domains");
         m.增加方向概念 = *增.概念节点;
         m.不变方向概念 = m.准确相等概念 = *等.概念节点;
+        const auto 安全类型 = 建域(0, 100);
         const auto 根 = 场景.建立根场景();
         要求(根.场景节点.has_value(), "ordinary root");
         m.自我所在场景 = *根.场景节点;
         新存在建立请求 请求;
-        请求.初始特征组 = {{m.动作前单值域, 新特征准确值{整数{4}}}};
+        请求.初始特征组 = {{m.动作前单值域, 新特征准确值{整数{4}}},
+            {安全类型, 新特征准确值{整数{0}}}};
         const auto 自我 = 场景.建立成员存在(*根.场景节点, 请求, {新状态时间语义::实例绝对UTC, 1});
         要求(自我.存在节点.has_value(), "ordinary existence");
         m.自我存在 = *自我.存在节点;
         const auto 存在信息 = 存在.获取存在(m.自我存在);
-        要求(存在信息 && 存在信息->特征节点组.size() == 1, "ordinary feature");
-        m.服务值特征 = 存在信息->特征节点组.front();
-        // 仅登记材料中的只读身份锚；本自检不宣称建立了生产服务需求树。
-        m.服务根需求 = 全局基础数据集.新建节点();
-        要求(有效(m.服务根需求), "read-only requirement identity anchor");
+        要求(存在信息 && 存在信息->特征节点组.size() == 2, "ordinary features");
+        for (const auto F : 存在信息->特征节点组) {
+            const auto 特征信息 = 特征.获取特征(F);
+            要求(特征信息.has_value(), "ordinary feature readback");
+            if (特征信息->特征概念节点 == m.动作前单值域) m.服务值特征 = F;
+        }
+        要求(有效(m.服务值特征), "ordinary service feature");
+        // 登记材料引用真实需求owner，不再用裸节点冒充服务根。
+        const auto 安全域 = 建域(100, 100, 安全类型);
+        const std::vector<二次特征概念输入定义> 安全输入{
+            {0, 二次特征输入角色::左输入, 二次特征输入来源种类::特征准确值, 安全类型},
+            {1, 二次特征输入角色::右输入, 二次特征输入来源种类::特征准确值, 安全类型}};
+        const auto 安全比较 = 二次概念.建立或取得默认二次特征概念(
+            二次特征算法::有向特征差值, 安全输入, 安全域);
+        要求(安全比较.概念节点.has_value(), "safety comparison root");
+        const auto 安全关系 = 二次概念.建立或取得参照结果域概念(
+            *安全比较.概念节点, 二次特征结果域种类::包含于参照值域);
+        要求(安全关系.概念节点.has_value(), "safety comparison relation");
+        新需求目标定义 安全目标;
+        安全目标.目标特征类型概念节点 = 安全类型;
+        安全目标.目标值域概念节点 = 安全域;
+        安全目标.目标比较关系概念节点 = *安全关系.概念节点;
+        新需求目标定义 服务目标;
+        服务目标.目标特征类型概念节点 = m.服务值类型根;
+        服务目标.目标形式 = 新需求目标形式::变化方向;
+        服务目标.目标变化方向 = 新需求变化方向::增加;
+        新需求双根初始化请求 双根请求;
+        双根请求.安全根 = {m.自我存在, 安全目标, 100};
+        双根请求.服务根 = {m.自我存在, 服务目标, 100};
+        const auto 双根 = 需求.建立或取得本能双根(双根请求);
+        要求(双根.安全根 && 双根.服务根, "formal demand roots");
+        m.服务根需求 = *双根.服务根;
+        const auto 根任务 = 任务.建立需求任务关联(m.服务根需求);
+        要求(根任务.任务.has_value(), "formal service root task");
         新方法知识建立请求 声明;
         声明.方法头.涉及特征类型概念组 = {m.服务值类型根};
         声明.方法头.可能结果概念组 = {m.目标值域};
@@ -647,10 +685,22 @@ int 运行模拟学习闭环自检() noexcept {
             要求(s.端口.越界次数 == 0, "simulation called real write/registration/stop port");
         });
         检查("manager reads learned knowledge and waits without creating or advancing tasks", [&] {
-            新_需求类 需求{s.特征值, s.存在, s.特征, s.特征概念, s.二次概念};
-            要求(需求.初始化(), "actual demand owner initialization");
-            新_任务类 任务{需求, s.方法, s.特征值, s.特征, s.特征概念,
-                s.状态, s.场景, s.存在, s.二次概念, s.存在概念};
+            auto& 任务 = s.任务;
+            // 本用例检验无受影响任务的通知消费，不模拟self的重新筹办决议。
+            // 正式根T仍存在；通过需求owner使其来源D失活，明确建立无影响前提。
+            要求(s.需求.修改活动状态(s.端口.材料.服务根需求, 新需求活动状态::失活)
+                == 新需求操作状态::已修改, "deactivate isolated demand through owner");
+            const auto 无影响 = 任务.查询受方法学习影响任务(s.方法节点);
+            要求(无影响.状态 == 新任务操作状态::已找到 && 无影响.任务节点组.empty(),
+                "manager no-affected-task premise");
+            const auto 需求前全集 = s.需求.查询全部需求();
+            要求(需求前全集.状态 == 新需求操作状态::已找到, "baseline formal demands");
+            std::vector<新需求治理信息> 需求前;
+            for (const auto D : 需求前全集.需求节点组) {
+                const auto 信息 = s.需求.读取需求治理信息(D);
+                要求(信息.has_value(), "baseline demand readback");
+                需求前.push_back(*信息);
+            }
             新_任务管理线程类 manager{任务};
             const auto reads = s.端口.读取次数.load();
             const auto beforeLearning = s.方法.获取方法(s.方法节点);
@@ -668,7 +718,13 @@ int 运行模拟学习闭环自检() noexcept {
                 "not-started manager accepted learning");
             要求(manager.启动({8, 10}, 3000).状态 == 新任务管理操作状态::已完成, "manager start");
             const auto before = 任务.查询全部任务();
-            要求(before.状态 == 新任务操作状态::已找到 && before.任务节点组.empty(), "unexpected baseline tasks");
+            要求(before.状态 == 新任务操作状态::已找到, "formal baseline tasks");
+            std::vector<新任务信息> 任务前;
+            for (const auto T : before.任务节点组) {
+                const auto 信息 = 任务.获取任务(T);
+                要求(信息.has_value(), "baseline task readback");
+                任务前.push_back(*信息);
+            }
             要求(manager.提交方法学习结束({}, 1) == 新方法学习接收状态::入口拒绝,
                 "manager accepted invalid end notice");
             要求(无适配方法.has_value(), "missing zero-knowledge method");
@@ -683,9 +739,13 @@ int 运行模拟学习闭环自检() noexcept {
                 std::this_thread::sleep_for(1ms);
             } while (std::chrono::steady_clock::now() < deadline);
             const auto emptyMethod = s.方法.获取方法(*无适配方法);
-            要求(snapshot.最近方法学习结束 && snapshot.最近方法学习结束->方法节点 == *无适配方法
-                && !snapshot.等待方法实例消费 && !snapshot.最近学习运行异常 && snapshot.活动工作数 == 0
-                && emptyMethod && emptyMethod->条件结果组.empty(), "zero-knowledge end notice was discarded");
+            要求(snapshot.最近方法学习结束 && snapshot.最近方法学习结束->方法节点 == *无适配方法,
+                "zero-knowledge end notice was not received");
+            要求(!snapshot.等待方法实例消费, "zero-knowledge notice retained learning consumption");
+            要求(!snapshot.最近学习运行异常, "zero-knowledge notice reported learning exception");
+            要求(emptyMethod && emptyMethod->条件结果组.empty(), "zero-knowledge method was modified");
+            // 活动工作数包含manager周期性只读调度扫描，并非学习生成/推进任务。
+            // 学习无副作用由下方正式任务全集及逐任务完整读回保证。
             要求(manager.提交方法学习结束(learned, 2) == 新方法学习接收状态::已接收,
                 "manager rejected end notice with tree knowledge");
             deadline = std::chrono::steady_clock::now() + 5s;
@@ -695,12 +755,23 @@ int 运行模拟学习闭环自检() noexcept {
                 std::this_thread::sleep_for(1ms);
             } while (std::chrono::steady_clock::now() < deadline);
             要求(snapshot.最近方法学习结束
-                && snapshot.最近方法学习结束->方法节点 == s.方法节点
-                && !snapshot.等待方法实例消费 && snapshot.活动工作数 == 0,
+                && snapshot.最近方法学习结束->方法节点 == s.方法节点,
+                "manager did not receive learned-method end notice");
+            要求(!snapshot.等待方法实例消费,
                 "manager retained pending consumption with no affected tasks");
+            要求(!snapshot.最近学习运行异常, "learned-method notice reported learning exception");
             const auto after = 任务.查询全部任务();
             要求(after.状态 == before.状态 && after.任务节点组 == before.任务节点组,
                 "knowledge notification created/advanced tasks");
+            for (const auto& 前 : 任务前)
+                要求(任务.获取任务(前.节点) == 前, "knowledge notification changed task content");
+            const auto 需求后全集 = s.需求.查询全部需求();
+            要求(需求后全集.状态 == 需求前全集.状态
+                && 需求后全集.需求节点组 == 需求前全集.需求节点组,
+                "knowledge notification changed demand inventory");
+            for (const auto& 前 : 需求前)
+                要求(s.需求.读取需求治理信息(前.节点) == 前,
+                    "knowledge notification changed demand content");
             要求(manager.请求停止().状态 == 新任务管理操作状态::已完成
                 && manager.等待停止(5000).状态 == 新任务管理操作状态::已完成, "manager stop/join");
             要求(manager.提交方法学习结束(learned, 3) == 新方法学习接收状态::已停止接收,
