@@ -6,7 +6,7 @@
 
 - 工作树：`D:/worktree/task-causal-preparation/海中鱼巣`，分支 `codex/task-causal-preparation`。
 - 开工 HEAD：`92f05d8c97526bc4d6772922a0187379623878e6`；过程中接纳根智能体串行发布的只读交接投影修订 `62ac15ee37b9083ac4fbc10c4a7062c08d89559b` 及合法重启竞态修订 `8ff9bd3a7f5d4cc5d8f321271990159288a5c89b`。
-- 依据：[代码计划](../计划/20261017_TASK-DIRECT-CONTRIBUTION_任务直接子结算贡献代码计划_v0.1.md)、[详细设计](../规范/详细设计/20261017_TASK-DIRECT-CONTRIBUTION_任务直接子结算贡献详细设计_v0.1.md)。现行计划 blob `5aaf7542fbb3082944d8864facad7e5f129112f5`，设计 blob `389f179ef38fc40f7ada6cd1a981c3e977f5bb7a`。
+- 依据：[详细设计](../规范/详细设计/20261017_TASK-DIRECT-CONTRIBUTION_任务直接子结算贡献详细设计_v0.1.md)及已退出代码计划。计划只从Git历史读取：`64df49eebf5bff60028a7aeae2c3c0305e7f3798:计划/20261017_TASK-DIRECT-CONTRIBUTION_任务直接子结算贡献代码计划_v0.1.md`，计划 blob `5aaf7542fbb3082944d8864facad7e5f129112f5`；设计 blob `389f179ef38fc40f7ada6cd1a981c3e977f5bb7a`。退出后不再以已删除路径作为现行执行入口。
 - 分工：`causal_preparation_code` 独占 task/self 四文件及本记录；根智能体接管 manager 两文件及统一构建、发布；`causal_planning_provider_audit` 独立完成服务值本能合同/运行服务两文件。只读核验不扩展文件写权。
 - 复用 task 完整需求列表任务对应、正式任务虚拟存在和状态特征读回、场景完整范围成员、L1 原子追加节点组、状态引用预留/撤销能力。不新增数据 owner、线程或测试项目。
 
@@ -42,7 +42,7 @@
 & 'C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/MSBuild.exe' '海中鱼巣.vcxproj' /t:Build /p:Configuration=Debug /p:Platform=x64 '/p:OutDir=D:/TEMP/海中鱼巣/TASK-DIRECT-CONTRIBUTION/20261017-code/Debug/bin/' '/p:IntDir=D:/TEMP/海中鱼巣/TASK-DIRECT-CONTRIBUTION/20261017-code/Debug/obj/' /m:2 /nologo /verbosity:minimal /fl '/flp:logfile=D:/TEMP/海中鱼巣/TASK-DIRECT-CONTRIBUTION/20261017-code/Debug/build-retry.log;verbosity=normal;Encoding=UTF-8'
 ```
 
-会话 `89860` 退出 0，日志末尾为成功生成、0 警告、0 错误，用时 33.42 秒，已链接正式 exe。未启动程序、未运行测试。日志和产物保留在上述独占输出路径。发布提交与普通推送事实由 Git 及最终交付记录追溯；本记录随代码精确提交，不包含后继设计输入。
+会话 `89860` 退出 0，日志末尾为成功生成、0 警告、0 错误，用时 33.42 秒，已链接正式 exe。未启动程序、未运行测试。日志和产物保留在上述独占输出路径。代码及本记录已由`64df49eebf5bff60028a7aeae2c3c0305e7f3798`快进集成main并普通推送；本叶退出时删除现行计划及索引执行项，详细设计和本记录保留。该提交不包含后继设计输入，后继未执行、未登记。
 
 完成边界：本叶生产接线与编译完成；未证明真实贡献数值、并发/重启恢复、最终服务值加账、来源已结算收尾或预置被动因果闭环。新 Q 来源只登记最终待消费，禁止落入旧固定加一链。
 
