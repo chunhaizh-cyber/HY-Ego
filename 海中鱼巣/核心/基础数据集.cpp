@@ -14,6 +14,42 @@ namespace 海中鱼巣 {
 
 基础数据集 全局基础数据集;
 
+struct 基础封存追加片段::内容 final {
+    std::shared_ptr<const int> 数据集身份;
+    基础节点组追加请求 请求;
+};
+
+struct 基础片段发布回执::内容 final {
+    基础封存追加片段 来源;
+    std::vector<稳定编码> 新节点, 追加字段, 追加外部关系;
+    内容(const 基础封存追加片段& 片段, std::size_t 节点数,
+        std::size_t 字段数, std::size_t 关系数)
+        : 来源(片段), 新节点(节点数), 追加字段(字段数), 追加外部关系(关系数) {}
+};
+
+基础封存追加片段::基础封存追加片段(std::shared_ptr<const 内容> 值) noexcept
+    : 内容_(std::move(值)) {}
+
+基础片段发布回执::基础片段发布回执(std::shared_ptr<const 内容> 值) noexcept
+    : 内容_(std::move(值)) {}
+
+bool 基础片段发布回执::对应片段(const 基础封存追加片段& 片段) const noexcept {
+    return 内容_ && 片段.内容_ && 内容_->来源.内容_ == 片段.内容_;
+}
+
+const std::vector<稳定编码>& 基础片段发布回执::新节点组() const noexcept {
+    static const std::vector<稳定编码> 空;
+    return 内容_ ? 内容_->新节点 : 空;
+}
+const std::vector<稳定编码>& 基础片段发布回执::追加字段关系组() const noexcept {
+    static const std::vector<稳定编码> 空;
+    return 内容_ ? 内容_->追加字段 : 空;
+}
+const std::vector<稳定编码>& 基础片段发布回执::追加外部关系组() const noexcept {
+    static const std::vector<稳定编码> 空;
+    return 内容_ ? 内容_->追加外部关系 : 空;
+}
+
 namespace {
 
 bool 有效(基础外部关系类型 类型) noexcept {
@@ -28,6 +64,111 @@ bool 联合快照相等(const 基础联合节点快照& 左,
         && 左.入向外部关系组 == 右.入向外部关系组
         && 左.出向外部关系组 == 右.出向外部关系组
         && 左.入向字段组 == 右.入向字段组;
+}
+
+bool 封存字段内容合法(const 基础字段内容& 内容) noexcept {
+    if (内容.valueless_by_exception()) return false;
+    if (const auto* 引用 = std::get_if<稳定编码>(&内容)) return 有效(*引用);
+    return !std::get<基础值>(内容).材料.valueless_by_exception();
+}
+
+template<class 项>
+bool 按编码规范排序(std::vector<项>& 组) {
+    std::sort(组.begin(), 组.end(), [](const auto& 左, const auto& 右) {
+        return 左.编码 < 右.编码;
+    });
+    稳定编码 前{};
+    for (const auto& 值 : 组) {
+        if (!有效(值.编码) || 值.编码 == 前) return false;
+        前 = 值.编码;
+    }
+    return true;
+}
+
+// 仅核验值式结构，不访问或修改数据集；fresh相等仍由唯一原子提交点核验。
+基础节点组追加状态 规范化封存请求(基础节点组追加请求& 请求) {
+    using 状态 = 基础节点组追加状态;
+    if (!请求.预期既有节点组.empty()
+        || (请求.新节点组.empty() && 请求.追加字段组.empty()
+            && 请求.替换字段组.empty() && 请求.追加外部关系组.empty()
+            && 请求.删除字段关系组.empty())) return 状态::入口拒绝;
+    for (auto& 快照 : 请求.预期联合节点组) {
+        const auto 宿主 = 快照.结构.节点.编码;
+        if (!有效(宿主) || !按编码规范排序(快照.结构.字段组)
+            || !按编码规范排序(快照.入向字段组)
+            || !按编码规范排序(快照.入向外部关系组)
+            || !按编码规范排序(快照.出向外部关系组)) return 状态::入口拒绝;
+        for (const auto& 字段 : 快照.结构.字段组)
+            if (字段.所属节点 != 宿主 || !有效(字段.字段节点)
+                || !封存字段内容合法(字段.内容)) return 状态::入口拒绝;
+        for (const auto& 字段 : 快照.入向字段组) {
+            const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
+            if (!有效(字段.所属节点) || !有效(字段.字段节点)
+                || !目标 || *目标 != 宿主) return 状态::入口拒绝;
+        }
+        for (const auto& 关系 : 快照.入向外部关系组)
+            if (!有效(关系.类型) || !有效(关系.源节点)
+                || 关系.目标节点 != 宿主) return 状态::入口拒绝;
+        for (const auto& 关系 : 快照.出向外部关系组)
+            if (!有效(关系.类型) || !有效(关系.目标节点)
+                || 关系.源节点 != 宿主) return 状态::入口拒绝;
+    }
+    std::sort(请求.预期联合节点组.begin(), 请求.预期联合节点组.end(),
+        [](const auto& 左, const auto& 右) { return 左.结构.节点.编码 < 右.结构.节点.编码; });
+    for (std::size_t i = 1; i < 请求.预期联合节点组.size(); ++i)
+        if (请求.预期联合节点组[i - 1].结构.节点.编码 == 请求.预期联合节点组[i].结构.节点.编码
+            && !联合快照相等(请求.预期联合节点组[i - 1], 请求.预期联合节点组[i]))
+            return 状态::预期不符;
+    请求.预期联合节点组.erase(std::unique(请求.预期联合节点组.begin(), 请求.预期联合节点组.end(),
+        [](const auto& 左, const auto& 右) { return 左.结构.节点.编码 == 右.结构.节点.编码; }),
+        请求.预期联合节点组.end());
+    std::set<稳定编码> 宿主组;
+    std::map<稳定编码, const 基础字段关系*> 字段映射;
+    for (const auto& 快照 : 请求.预期联合节点组) {
+        宿主组.insert(快照.结构.节点.编码);
+        for (const auto& 字段 : 快照.结构.字段组)
+            if (!字段映射.emplace(字段.编码, &字段).second) return 状态::入口拒绝;
+    }
+    const auto 检查内容 = [&](const 基础组内字段内容& 内容) {
+        if (内容.valueless_by_exception()) return false;
+        if (const auto* 引用 = std::get_if<稳定编码>(&内容))
+            return 有效(*引用) && 宿主组.contains(*引用);
+        if (const auto* 内部 = std::get_if<基础组内节点引用>(&内容))
+            return 内部->索引 < 请求.新节点组.size();
+        return !std::get<基础值>(内容).材料.valueless_by_exception();
+    };
+    for (const auto& 节点 : 请求.新节点组)
+        for (const auto& 字段 : 节点.字段组)
+            if (!有效(字段.字段节点) || !检查内容(字段.内容)) return 状态::入口拒绝;
+    for (const auto& 字段 : 请求.追加字段组)
+        if (!宿主组.contains(字段.所属节点) || !有效(字段.字段节点)
+            || !检查内容(字段.内容)) return 状态::入口拒绝;
+    std::set<稳定编码> 已写字段;
+    const auto 检查旧字段 = [&](稳定编码 编码) {
+        const auto 位置 = 字段映射.find(编码);
+        if (!有效(编码) || 位置 == 字段映射.end() || !已写字段.insert(编码).second)
+            return false;
+        const auto* 引用 = std::get_if<稳定编码>(&位置->second->内容);
+        return !引用 || 宿主组.contains(*引用);
+    };
+    for (const auto 编码 : 请求.删除字段关系组)
+        if (!检查旧字段(编码)) return 状态::入口拒绝;
+    for (const auto& 替换 : 请求.替换字段组) {
+        if (!检查旧字段(替换.字段关系) || !封存字段内容合法(替换.新内容))
+            return 状态::入口拒绝;
+        if (const auto* 引用 = std::get_if<稳定编码>(&替换.新内容);
+            引用 && !宿主组.contains(*引用)) return 状态::入口拒绝;
+    }
+    const auto 检查端点 = [&](const std::variant<稳定编码, 基础组内节点引用>& 端点) {
+        if (端点.valueless_by_exception()) return false;
+        if (const auto* 引用 = std::get_if<稳定编码>(&端点))
+            return 有效(*引用) && 宿主组.contains(*引用);
+        return std::get<基础组内节点引用>(端点).索引 < 请求.新节点组.size();
+    };
+    for (const auto& 关系 : 请求.追加外部关系组)
+        if (!有效(关系.类型) || !检查端点(关系.源节点) || !检查端点(关系.目标节点))
+            return 状态::入口拒绝;
+    return 状态::已完成;
 }
 
 } // namespace
@@ -640,6 +781,161 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子追加节点组", L"追加结构或索引异常", 异常.what());
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子追加节点组", L"未知追加异常");
+    }
+}
+
+基础片段封存结果 基础数据集::封存原子追加片段(
+    const 基础节点组追加请求& 请求) noexcept {
+    using 状态 = 基础节点组追加状态;
+    try {
+        auto 材料 = std::make_shared<基础封存追加片段::内容>();
+        材料->请求 = 请求;
+        const auto 检查 = 规范化封存请求(材料->请求);
+        if (检查 != 状态::已完成) return {检查, {}};
+        {
+            std::unique_lock 锁(互斥_);
+            if (!封存实例身份_) 封存实例身份_ = std::make_shared<const int>(0);
+            材料->数据集身份 = 封存实例身份_;
+        }
+        return {状态::已完成, 基础封存追加片段{std::move(材料)}};
+    } catch (const std::bad_alloc&) { return {状态::资源失败, {}};
+    } catch (const std::length_error&) { return {状态::资源失败, {}};
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"封存原子追加片段", L"封存结构异常", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"封存原子追加片段", L"未知封存异常");
+    }
+}
+
+基础片段组合结果 基础数据集::原子追加封存片段组(
+    const std::vector<基础封存追加片段>& 片段组) noexcept {
+    using 状态 = 基础节点组追加状态;
+    bool 已发布 = false;
+    try {
+        if (片段组.empty()) return {状态::入口拒绝, {}};
+        std::shared_ptr<const int> 本数据集;
+        {
+            std::shared_lock 锁(互斥_);
+            本数据集 = 封存实例身份_;
+        }
+        基础节点组追加请求 联合;
+        std::set<const 基础封存追加片段::内容*> 已用片段;
+        std::map<稳定编码, const 基础联合节点快照*> 联合预期;
+        std::map<稳定编码, const 基础字段关系*> 旧字段;
+        std::map<稳定编码, std::size_t> 字段写者;
+        std::map<std::pair<稳定编码, 稳定编码>, std::size_t> 字段键写者;
+        // 布尔标记区别既有正式编码和本次组内索引，避免两个命名空间碰撞。
+        using 端点键 = std::pair<bool, std::uint64_t>;
+        using 边键 = std::tuple<端点键, 端点键, 基础外部关系类型, std::int64_t>;
+        std::map<边键, std::size_t> 边写者;
+        std::vector<std::shared_ptr<基础片段发布回执::内容>> 回执内容;
+        基础片段组合结果 结果{状态::已完成, {}};
+        回执内容.reserve(片段组.size());
+        结果.片段回执组.reserve(片段组.size());
+        const auto 检查容量 = [](std::size_t 当前, std::size_t 增量) {
+            if (增量 > (std::numeric_limits<std::size_t>::max)() - 当前)
+                throw std::length_error("sealed composition size overflow");
+        };
+        for (std::size_t i = 0; i < 片段组.size(); ++i) {
+            const auto& 片段 = 片段组[i];
+            if (!片段.内容_ || !本数据集 || 片段.内容_->数据集身份 != 本数据集
+                || !已用片段.insert(片段.内容_.get()).second)
+                return {状态::入口拒绝, {}};
+            const auto& 请求 = 片段.内容_->请求;
+            for (const auto& 快照 : 请求.预期联合节点组) {
+                const auto [位置, 新增] = 联合预期.emplace(快照.结构.节点.编码, &快照);
+                if (!新增 && !联合快照相等(*位置->second, 快照))
+                    return {状态::预期不符, {}};
+                if (新增) {
+                    联合.预期联合节点组.push_back(快照);
+                    for (const auto& 字段 : 快照.结构.字段组) {
+                        const auto [字段位置, 新字段] = 旧字段.emplace(字段.编码, &字段);
+                        if (!新字段 && *字段位置->second != 字段)
+                            return {状态::预期不符, {}};
+                    }
+                }
+            }
+            const auto 登记键 = [&](稳定编码 宿主, 稳定编码 键) {
+                const auto [位置, 新增] = 字段键写者.emplace(std::make_pair(宿主, 键), i);
+                return 新增 || 位置->second == i;
+            };
+            const auto 登记旧字段 = [&](稳定编码 编码) {
+                const auto 位置 = 旧字段.find(编码);
+                if (位置 == 旧字段.end()) throw std::logic_error("sealed field snapshot absent");
+                return 字段写者.emplace(编码, i).second
+                    && 登记键(位置->second->所属节点, 位置->second->字段节点);
+            };
+            for (const auto 编码 : 请求.删除字段关系组)
+                if (!登记旧字段(编码)) return {状态::入口拒绝, {}};
+            for (const auto& 替换 : 请求.替换字段组)
+                if (!登记旧字段(替换.字段关系)) return {状态::入口拒绝, {}};
+            for (const auto& 字段 : 请求.追加字段组)
+                if (!登记键(字段.所属节点, 字段.字段节点)) return {状态::入口拒绝, {}};
+
+            const auto 节点偏移 = 联合.新节点组.size();
+            检查容量(节点偏移, 请求.新节点组.size());
+            检查容量(联合.追加字段组.size(), 请求.追加字段组.size());
+            检查容量(联合.追加外部关系组.size(), 请求.追加外部关系组.size());
+            检查容量(联合.替换字段组.size(), 请求.替换字段组.size());
+            检查容量(联合.删除字段关系组.size(), 请求.删除字段关系组.size());
+            const auto 重定位 = [&](auto& 引用) {
+                if (auto* 局部 = std::get_if<基础组内节点引用>(&引用))
+                    局部->索引 += 节点偏移; // 封存已限定本片段范围，前缀加法已检查。
+            };
+            for (const auto& 节点 : 请求.新节点组) {
+                auto 副本 = 节点;
+                for (auto& 字段 : 副本.字段组) 重定位(字段.内容);
+                联合.新节点组.push_back(std::move(副本));
+            }
+            for (const auto& 字段 : 请求.追加字段组) {
+                auto 副本 = 字段;
+                重定位(副本.内容);
+                联合.追加字段组.push_back(std::move(副本));
+            }
+            const auto 取端点键 = [](const auto& 端点) -> 端点键 {
+                if (const auto* 编码 = std::get_if<稳定编码>(&端点)) return {false, 编码->值};
+                return {true, std::get<基础组内节点引用>(端点).索引};
+            };
+            for (const auto& 关系 : 请求.追加外部关系组) {
+                auto 副本 = 关系;
+                重定位(副本.源节点); 重定位(副本.目标节点);
+                const 边键 键{取端点键(副本.源节点), 取端点键(副本.目标节点), 副本.类型, 副本.角色或顺序};
+                const auto [位置, 新增] = 边写者.emplace(键, i);
+                if (!新增 && 位置->second != i) return {状态::入口拒绝, {}};
+                联合.追加外部关系组.push_back(std::move(副本));
+            }
+            联合.替换字段组.insert(联合.替换字段组.end(), 请求.替换字段组.begin(), 请求.替换字段组.end());
+            联合.删除字段关系组.insert(联合.删除字段关系组.end(), 请求.删除字段关系组.begin(), 请求.删除字段关系组.end());
+            auto 回执 = std::make_shared<基础片段发布回执::内容>(片段,
+                请求.新节点组.size(), 请求.追加字段组.size(), 请求.追加外部关系组.size());
+            结果.片段回执组.push_back(基础片段发布回执{回执});
+            回执内容.push_back(std::move(回执));
+        }
+        // 不持有外层数据集锁；所有回执和映射已分配，仅此处调用一次原事务。
+        const auto 发布 = 原子追加节点组(联合);
+        if (发布.状态 != 状态::已完成) return {发布.状态, {}};
+        已发布 = true;
+        if (发布.新节点组.size() != 联合.新节点组.size()
+            || 发布.追加字段关系组.size() != 联合.追加字段组.size()
+            || 发布.追加外部关系组.size() != 联合.追加外部关系组.size())
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子追加封存片段组", L"发布结果尺寸与封存请求不一致");
+        std::size_t 节点位置 = 0, 字段位置 = 0, 关系位置 = 0;
+        for (auto& 回执 : 回执内容) {
+            for (auto& 编码 : 回执->新节点) 编码 = 发布.新节点组[节点位置++];
+            for (auto& 编码 : 回执->追加字段) 编码 = 发布.追加字段关系组[字段位置++];
+            for (auto& 编码 : 回执->追加外部关系) 编码 = 发布.追加外部关系组[关系位置++];
+        }
+        return 结果;
+    } catch (const std::bad_alloc&) {
+        if (已发布) 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子追加封存片段组", L"发布后发生资源异常");
+        return {状态::资源失败, {}};
+    } catch (const std::length_error&) {
+        if (已发布) 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子追加封存片段组", L"发布后发生容量异常");
+        return {状态::资源失败, {}};
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子追加封存片段组", L"组合结构或回执异常", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子追加封存片段组", L"未知组合异常");
     }
 }
 

@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <optional>
 #include <set>
 #include <shared_mutex>
@@ -148,6 +149,49 @@ struct 基础节点组追加结果 final {
     std::vector<稳定编码> 追加外部关系组;
 };
 
+// 同一数据集内的不可变技术材料；不开放owner的原始写集。
+class 基础封存追加片段 final {
+public:
+    基础封存追加片段(const 基础封存追加片段&) noexcept = default;
+    基础封存追加片段(基础封存追加片段&&) noexcept = default;
+    基础封存追加片段& operator=(const 基础封存追加片段&) noexcept = default;
+    基础封存追加片段& operator=(基础封存追加片段&&) noexcept = default;
+private:
+    struct 内容;
+    explicit 基础封存追加片段(std::shared_ptr<const 内容>) noexcept;
+    std::shared_ptr<const 内容> 内容_;
+    friend class 基础数据集;
+    friend class 基础片段发布回执;
+};
+
+struct 基础片段封存结果 final {
+    基础节点组追加状态 状态 = 基础节点组追加状态::入口拒绝;
+    std::optional<基础封存追加片段> 片段;
+};
+
+// 回执与封存内容身份绑定；复制只共享已发布的只读结果，不复制编码数组。
+class 基础片段发布回执 final {
+public:
+    基础片段发布回执(const 基础片段发布回执&) noexcept = default;
+    基础片段发布回执(基础片段发布回执&&) noexcept = default;
+    基础片段发布回执& operator=(const 基础片段发布回执&) noexcept = default;
+    基础片段发布回执& operator=(基础片段发布回执&&) noexcept = default;
+    bool 对应片段(const 基础封存追加片段&) const noexcept;
+    const std::vector<稳定编码>& 新节点组() const noexcept;
+    const std::vector<稳定编码>& 追加字段关系组() const noexcept;
+    const std::vector<稳定编码>& 追加外部关系组() const noexcept;
+private:
+    struct 内容;
+    explicit 基础片段发布回执(std::shared_ptr<const 内容>) noexcept;
+    std::shared_ptr<const 内容> 内容_;
+    friend class 基础数据集;
+};
+
+struct 基础片段组合结果 final {
+    基础节点组追加状态 状态 = 基础节点组追加状态::入口拒绝;
+    std::vector<基础片段发布回执> 片段回执组;
+};
+
 struct 基础节点结构结果 final {
     基础结构操作状态 状态 = 基础结构操作状态::入口拒绝;
     std::optional<基础节点结构> 结构;
@@ -229,6 +273,11 @@ public:
     // 诊断责任：结构/资源状态向上送出；内部不变量异常进入工程终止链。
     基础节点组追加结果 原子追加节点组(
         const 基础节点组追加请求& 请求) noexcept;
+    // 封存零事实写入；组合只调用一次既有原子追加，回执在发布前预分配。
+    基础片段封存结果 封存原子追加片段(
+        const 基础节点组追加请求& 请求) noexcept;
+    基础片段组合结果 原子追加封存片段组(
+        const std::vector<基础封存追加片段>& 片段组) noexcept;
     基础节点结构结果 查询完整节点结构(稳定编码 节点) const noexcept;
     基础引用节点结构结果 查询字段引用节点结构(
         稳定编码 目标节点, 稳定编码 字段节点) const noexcept;
@@ -288,6 +337,8 @@ private:
         const std::set<std::uint64_t>& 必需) const;
 
     mutable std::shared_mutex 互斥_;
+    // 首次封存时在锁内生成，之后不变；旧句柄不能用于地址复用后的新数据集。
+    std::shared_ptr<const int> 封存实例身份_;
     std::uint64_t 下一个编码_ = 1;
     std::map<std::uint64_t, 基础节点> 节点_;
     std::map<std::uint64_t, 基础外部关系> 外部关系_;

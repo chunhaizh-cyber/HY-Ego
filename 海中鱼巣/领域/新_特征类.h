@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <variant>
 #include <vector>
@@ -71,7 +72,8 @@ enum class 新特征写入状态 : std::uint8_t {
     材料类型不相容 = 6,
     结构不一致 = 7,
     值已更新但聚合未完成 = 8,
-    资源失败 = 9
+    资源失败 = 9,
+    联合更新占用 = 10
 };
 
 struct 新特征值添加结果 final {
@@ -82,6 +84,40 @@ struct 新特征值添加结果 final {
     bool 标准值已改变 = false;
     std::optional<稳定编码> 接收子特征节点;
     std::optional<特征概念聚合结果> 聚合结果;
+};
+
+enum class 新特征I64准备状态 : std::uint8_t {
+    已准备 = 1, 入口拒绝, 特征不存在, 概念不存在,
+    材料类型不相容, 预期已变化, 联合更新占用, 资源失败
+};
+
+// 同线程、同owner的一次更新凭据；不暴露锁或可独立提交的自有片段。
+class 新特征I64更新准备 final {
+public:
+    新特征I64更新准备(新特征I64更新准备&&) noexcept;
+    新特征I64更新准备& operator=(新特征I64更新准备&&) noexcept;
+    ~新特征I64更新准备() noexcept;
+    新特征I64更新准备(const 新特征I64更新准备&) = delete;
+    新特征I64更新准备& operator=(const 新特征I64更新准备&) = delete;
+    稳定编码 特征节点() const noexcept;
+    std::optional<std::int64_t> 原当前值() const noexcept;
+    std::int64_t 新当前值() const noexcept;
+    bool 核心有变化() const noexcept;
+private:
+    struct 实现;
+    explicit 新特征I64更新准备(std::unique_ptr<实现>) noexcept;
+    std::unique_ptr<实现> 实现_;
+    friend class 新_特征类;
+};
+
+struct 新特征I64准备结果 final {
+    新特征I64准备状态 状态 = 新特征I64准备状态::入口拒绝;
+    std::optional<新特征I64更新准备> 准备;
+};
+
+struct 新特征I64提交结果 final {
+    基础节点组追加状态 状态 = 基础节点组追加状态::入口拒绝;
+    std::vector<基础片段发布回执> 附加片段回执组;
 };
 
 enum class 新特征比较状态 : std::uint8_t {
@@ -226,6 +262,15 @@ public:
         稳定编码 特征节点,
         const 新特征准确值& 新值) noexcept;
 
+    新特征I64准备结果 准备顶层I64更新(
+        稳定编码 特征节点, std::int64_t 新值) noexcept;
+    新特征I64提交结果 提交顶层I64更新(
+        新特征I64更新准备& 准备,
+        const std::vector<基础封存追加片段>& 附加片段组) noexcept;
+    新特征值添加结果 完成顶层I64更新(新特征I64更新准备& 准备) noexcept;
+    void 结束顶层I64更新(新特征I64更新准备& 准备) noexcept;
+    void 取消顶层I64更新(新特征I64更新准备& 准备) noexcept;
+
     // 使用给定特征节点的材料类型、单位和比较规则比较两个准确值。
     新特征比较结果 比较特征值(
         稳定编码 特征节点,
@@ -275,6 +320,10 @@ public:
         稳定编码 右概念节点) const noexcept;
 
 private:
+    新特征值添加结果 完成添加值归组(
+        const 新特征信息& 原特征, const 新特征准确值& 新值,
+        稳定编码 活动记录节点, 新特征值添加结果 结果,
+        const void* 联合凭据 = nullptr) noexcept;
     // 只完成已经确定的“子值域概念 -> 子实例特征”建立链。
     // 何时判定需要形成子值域、哪些历史值进入子特征，由后续策略决定。
     稳定编码 建立或取得子特征节点(
