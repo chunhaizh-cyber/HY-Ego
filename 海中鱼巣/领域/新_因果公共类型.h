@@ -16,6 +16,13 @@ enum class 新因果类型 : std::int64_t
     已知动作 = 2
 };
 
+enum class 新因果动作触发方式 : std::int64_t
+{
+    尚未确定 = 0,
+    主动调用 = 1,
+    被动触发 = 2
+};
+
 enum class 新因果形成来源 : std::int64_t
 {
     结果状态筛选 = 1,
@@ -71,6 +78,7 @@ struct 新因果动作定义 final
     std::optional<稳定编码> 作用对象存在节点;
     std::optional<稳定编码> 本能方法节点;
     std::optional<新任务虚拟存在引用> 作用对象任务虚拟存在;
+    新因果动作触发方式 触发方式 = 新因果动作触发方式::尚未确定;
     friend bool operator==(const 新因果动作定义 &, const 新因果动作定义 &) = default;
 };
 
@@ -142,6 +150,7 @@ struct 新因果概念动作项
     稳定编码 动作概念节点;
     std::int64_t 执行主体角色 = 0;
     std::optional<std::int64_t> 作用部位角色, 作用对象角色;
+    新因果动作触发方式 触发方式 = 新因果动作触发方式::尚未确定;
     friend bool operator==(const 新因果概念动作项 &, const 新因果概念动作项 &) = default;
 };
 struct 新因果概念分支

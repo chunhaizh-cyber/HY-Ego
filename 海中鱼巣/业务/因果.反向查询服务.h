@@ -133,6 +133,13 @@ struct 反向因果图节点
     std::optional<新任务虚拟存在引用> 待绑定任务虚拟存在;
     friend bool operator==(const 反向因果图节点 &, const 反向因果图节点 &) = default;
 };
+enum class 反向因果筹办去向 : std::uint8_t
+{
+    动作未知 = 1,
+    动作触发方式尚未确定,
+    追溯方法及条件,
+    追溯被动触发条件
+};
 struct 反向因果图分支
 {
     std::size_t 编号 = 0, 结果节点 = 0;
@@ -142,6 +149,9 @@ struct 反向因果图分支
     std::vector<反向因果图角色绑定> 角色映射;
     std::vector<std::size_t> 全部前提节点;
     bool 完整覆盖 = false;
+    新因果类型 因果类型 = 新因果类型::未知动作;
+    std::optional<新因果动作触发方式> 动作触发方式;
+    反向因果筹办去向 筹办去向 = 反向因果筹办去向::动作未知;
     friend bool operator==(const 反向因果图分支 &, const 反向因果图分支 &) = default;
 };
 struct 反向因果环边

@@ -209,6 +209,25 @@ std::optional<新因果动作定义> 新_内部治理世界类::读取自我动�
         结果.动作概念节点 = *动作->动态概念节点;
         结果.执行主体存在节点 = 动作->主题存在节点;
         结果.作用对象任务虚拟存在 = 动作->动作目标任务虚拟存在;
+        const auto 已结算定义 = 任务读取_ ? 任务读取_->获取任务已结算动作定义() : std::nullopt;
+        if (已结算定义 && 动作->动作定义节点 == 已结算定义) {
+            if (!动作->动作来源节点 || !动作->动作时间)
+                throw std::runtime_error("settlement governance action source/time missing");
+            const auto 来源 = 动态服务_.获取动态(*动作->动作来源节点);
+            if (!来源 || 来源->种类 != 新动态种类::动作
+                || 来源->动作目标种类 != 新动作目标种类::普通存在
+                || 来源->动作来源节点 != 动作->动作目标任务虚拟存在->任务节点
+                || 来源->主题存在节点 != 动作->主题存在节点 || !来源->动作时间
+                || 来源->动作时间->语义 != 新状态时间语义::实例绝对UTC
+                || 动作->动作时间->语义 != 新状态时间语义::实例绝对UTC
+                || 来源->动作时间->纳秒 >= 动作->动作时间->纳秒)
+                throw std::runtime_error("settlement governance source identity/time mismatch");
+            const auto 完整 = 读取任务状态变化(*动作->动作目标任务虚拟存在, *动作->动作来源节点);
+            if (!完整 || 完整->动作节点 != 节点)
+                throw std::runtime_error("settlement governance causal action is not complete");
+            // 只确认既有owner收尾路径的触发方式，不把结果反作触发前提。
+            结果.触发方式 = 新因果动作触发方式::被动触发;
+        }
         return 结果;
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取治理动作事实", L"治理动作概念或参与者投影异常。");
