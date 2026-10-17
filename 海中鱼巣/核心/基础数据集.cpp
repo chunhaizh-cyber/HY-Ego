@@ -435,7 +435,8 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
     try {
         std::unique_lock 锁(互斥_);
         if (请求.新节点组.empty() && 请求.追加字段组.empty()
-            && 请求.替换字段组.empty() && 请求.追加外部关系组.empty())
+            && 请求.替换字段组.empty() && 请求.追加外部关系组.empty()
+            && 请求.删除字段关系组.empty())
             return {状态::入口拒绝, {}, {}};
         const auto 检查字段 = [&](稳定编码 键, const 基础组内字段内容& 内容) {
             if (!有效(键) || 内容.valueless_by_exception()) return 状态::入口拒绝;
@@ -483,9 +484,31 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
                 return {状态::预期不符, {}, {}};
             宿主组.insert(宿主);
         }
+        std::set<稳定编码> 删除字段码;
+        for (const auto 编码 : 请求.删除字段关系组) {
+            if (!有效(编码) || !删除字段码.insert(编码).second)
+                return {状态::入口拒绝, {}, {}};
+            const auto 位置 = 字段关系_.find(编码.值);
+            if (位置 == 字段关系_.end()
+                || !联合宿主组.contains(位置->second.所属节点))
+                return {状态::入口拒绝, {}, {}};
+            // 所属完整快照已相等；节点引用删除还须保护旧目标的完整结构。
+            const auto& 字段 = 位置->second;
+            if (字段.内容.valueless_by_exception() || !节点存在(字段.字段节点))
+                throw std::logic_error("追加删除字段的当前内容或字段节点损坏");
+            if (const auto* 目标 = std::get_if<稳定编码>(&字段.内容)) {
+                if (!节点存在(*目标))
+                    throw std::logic_error("追加删除字段的当前引用目标缺失");
+                if (!联合宿主组.contains(*目标)) return {状态::入口拒绝, {}, {}};
+            } else if (std::get<基础值>(字段.内容).材料.valueless_by_exception()) {
+                throw std::logic_error("追加删除字段的当前直接值损坏");
+            }
+            核验字段索引已加锁(字段);
+        }
         std::set<稳定编码> 替换字段码;
         for (const auto& 项 : 请求.替换字段组) {
             if (!有效(项.字段关系) || !替换字段码.insert(项.字段关系).second
+                || 删除字段码.contains(项.字段关系)
                 || 项.新内容.valueless_by_exception()) return {状态::入口拒绝, {}, {}};
             const auto 位置 = 字段关系_.find(项.字段关系.值);
             if (位置 == 字段关系_.end() || !联合宿主组.contains(位置->second.所属节点))
@@ -520,7 +543,8 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
         }
         for (const auto& 项 : 请求.追加字段组) {
             if (!有效(项.所属节点) || !宿主组.contains(项.所属节点)) return {状态::入口拒绝, {}, {}};
-            if ((!请求.替换字段组.empty() || !请求.追加外部关系组.empty())
+            if ((!请求.替换字段组.empty() || !请求.追加外部关系组.empty()
+                    || !请求.删除字段关系组.empty())
                 && !联合宿主组.contains(项.所属节点)) return {状态::入口拒绝, {}, {}};
             const auto 检查 = 检查字段(项.字段节点, 项.内容);
             if (检查 != 状态::已完成) return {检查, {}, {}};
@@ -546,6 +570,18 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             if (已占用(编码)) throw std::logic_error("append node identity collision");
             候选节点.emplace(编码.值, 基础节点{编码});
             结果.新节点组.push_back(编码);
+        }
+        for (const auto 编码 : 请求.删除字段关系组) {
+            const auto 位置 = 候选字段.find(编码.值);
+            if (位置 == 候选字段.end())
+                throw std::logic_error("追加删除字段的候选记录缺失");
+            const auto& 字段 = 位置->second;
+            if (候选所属索引.erase({字段.所属节点.值, 字段.字段节点.值, 编码.值}) != 1)
+                throw std::logic_error("追加删除字段的候选所属索引缺失");
+            if (const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
+                目标 && 候选目标索引.erase({字段.字段节点.值, 目标->值, 编码.值}) != 1)
+                throw std::logic_error("追加删除字段的候选目标索引缺失");
+            候选字段.erase(位置);
         }
         for (const auto& 项 : 请求.替换字段组) {
             auto& 字段 = 候选字段.at(项.字段关系.值);
