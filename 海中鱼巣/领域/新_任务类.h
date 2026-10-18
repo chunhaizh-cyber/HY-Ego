@@ -1300,6 +1300,8 @@ public:
     新任务操作状态 准备服务结算筹办(稳定编码 结算任务节点) noexcept;
     bool 装配本能动作读取(新_动态类& 动态服务) noexcept;
     std::optional<稳定编码> 获取任务已结算动作定义() const noexcept override;
+    std::optional<新任务贡献动作定义> 读取任务贡献动作定义(稳定编码) const noexcept override;
+    std::optional<新任务贡献动作阶段> 读取任务贡献动作阶段(稳定编码) const noexcept override;
     新任务操作状态 记录本能动作身份(
         稳定编码 任务节点, 稳定编码 执行实例节点,
         稳定编码 动作动态节点, 新_动态类& 动态服务) noexcept;
@@ -1512,7 +1514,7 @@ public:
         稳定编码 执行实例节点) noexcept;
 
     // 只有正式完成任务可结算；同一任务同一完整定位精确重复复用，
-    // 异义定位拒绝。结算不修改需求、安全值、服务值或方法知识。
+    // 异义定位拒绝。计值写入任务Vt服务值并冻结K，不修改需求、现实自我服务值或方法知识。
     新任务完成结算结果 结算已完成任务(
         稳定编码 任务节点,
         稳定编码 执行实例节点,
@@ -1522,6 +1524,11 @@ public:
         稳定编码 任务节点) const noexcept;
 
 private:
+    void 初始化任务贡献特征权威() noexcept;
+    稳定编码 建立任务贡献动作阶段(const 新任务贡献动作阶段&) noexcept;
+    void 提交任务贡献特征变化(const 新任务贡献动作阶段&,
+        const 基础封存追加片段&) noexcept;
+    void 核验任务贡献特征权威(稳定编码) const noexcept;
     std::optional<新任务贡献计值类型> 判定完成贡献叶子类别(const 新需求信息&) const;
     std::optional<新任务服务需求取得合同> 服务需求取得合同_;
     bool 是服务需求取得目标(const 新需求信息& 需求) const;

@@ -40,6 +40,37 @@ const 新任务虚拟存在特征读回& 核验治理特征状态对(
     }
     return *特征;
 }
+void 核验贡献阶段前状态(const 新任务贡献动作阶段& 阶段,
+    const 新任务贡献动作定义& 定义, const 新任务虚拟存在特征组& 特征组,
+    const 新状态信息& 前, const 概念_特征类& 概念服务) {
+    if (定义.节点 != 阶段.动作定义节点 || 定义.种类 != 阶段.种类
+        || 特征组.引用 != 阶段.目标.任务引用 || !特征组.服务值
+        || 特征组.服务值->特征节点 != 阶段.目标.特征节点
+        || 特征组.服务值->特征类型概念节点 != 定义.服务值特征类型概念节点
+        || 阶段.原值 < 0 || 阶段.新值 < 0 || 阶段.原值 == 阶段.新值
+        || 前.节点 != 阶段.前状态节点
+        || 前.被描述存在节点 != 阶段.目标.任务引用.虚拟存在节点
+        || 前.来源实例特征节点 != 阶段.目标.特征节点
+        || 前.固定准确值 != 新特征准确值{阶段.原值}
+        || 前.强时间.语义 != 新状态时间语义::实例绝对UTC
+        || 阶段.动作时间.语义 != 新状态时间语义::实例绝对UTC
+        || 前.强时间.纳秒 <= 0 || 前.强时间.纳秒 > 阶段.动作时间.纳秒)
+        throw std::runtime_error("contribution phase feature/before state mismatch");
+    const auto 关系 = 概念服务.比较单特征概念(前.特征类型概念节点, 前.特征类型概念节点);
+    if (关系.状态 != 特征概念规则状态::已完成 || 关系.关系 != 单特征概念关系::同一
+        || 关系.特征类型根 != 定义.服务值特征类型概念节点)
+        throw std::runtime_error("contribution before state has a different feature type");
+}
+void 核验贡献阶段动作(const 新任务贡献动作阶段& 阶段, const 新动态信息& 动作) {
+    if (动作.种类 != 新动态种类::动作 || !动作.动态概念节点
+        || 动作.动作目标种类 != 新动作目标种类::任务虚拟存在
+        || 动作.动作目标任务虚拟存在 != 阶段.目标.任务引用
+        || 动作.动作目标特征节点 != 阶段.目标.特征节点
+        || 动作.动作目标存在节点 || 动作.动作来源节点 != 阶段.节点
+        || 动作.动作定义节点 != 阶段.动作定义节点
+        || 动作.主题存在节点 != 阶段.执行主体节点 || 动作.动作时间 != 阶段.动作时间)
+        throw std::runtime_error("contribution action differs from its formal phase");
+}
 }
 
 新_内部治理世界类::新_内部治理世界类(新_特征值类& 值, 概念_特征类& 特征概念,
@@ -133,6 +164,211 @@ std::optional<新治理场景参与者> 新_内部治理世界类::读取治理�
     return 治理场景_.读取治理参与者(场景, 节点, *任务读取_);
 }
 
+新治理动作登记结果 新_内部治理世界类::建立任务特征动作(稳定编码 阶段节点) noexcept {
+    try {
+        if (!任务读取_) throw std::runtime_error("contribution task reader is not assembled");
+        const auto 阶段 = 任务读取_->读取任务贡献动作阶段(阶段节点);
+        if (!阶段 || 阶段->节点 != 阶段节点) throw std::runtime_error("formal contribution phase missing");
+        const auto 定义 = 任务读取_->读取任务贡献动作定义(阶段->动作定义节点);
+        const auto 特征组 = 任务读取_->读取任务虚拟存在特征组(阶段->目标.任务引用);
+        const auto 前 = 状态服务_.获取状态(阶段->前状态节点);
+        const auto 治理 = 读取任务治理场景(阶段->目标.任务引用);
+        if (!定义 || !特征组 || !前 || !治理) throw std::runtime_error("contribution action material missing");
+        核验贡献阶段前状态(*阶段, *定义, *特征组, *前, 特征概念服务_);
+        if (!现实场景_.存在属于场景范围(阶段->现实来源场景节点, 阶段->执行主体节点))
+            throw std::runtime_error("contribution actor has no real scene source");
+        const auto 已有 = 动态服务_.按来源查询动作(阶段节点);
+        if (已有.状态 != 新动态操作状态::已完成) throw std::runtime_error("contribution action lookup failed");
+        if (已有.动作) {
+            核验贡献阶段动作(*阶段, *已有.动作);
+            const auto 完整 = 读取任务特征动作(阶段节点);
+            if (!完整 || 完整->动作节点 != 已有.动作->节点)
+                throw std::runtime_error("partial contribution action cannot be replayed");
+            return {新治理动作登记状态::精确重复, 已有.动作->节点};
+        }
+        if (阶段->发表结果节点 || 特征组->服务值->当前值 != 阶段->原值)
+            throw std::runtime_error("contribution action is already published or stale");
+        const auto 场景 = 治理场景_.获取场景(治理->场景节点);
+        if (!场景 || 含节点(场景->状态节点组, 阶段->前状态节点))
+            throw std::runtime_error("contribution phase is partly attached without its action");
+        核验挂接(治理场景_.添加治理任务引用(治理->场景节点, 阶段->目标.任务引用, *任务读取_));
+        核验挂接(治理场景_.添加治理执行主体引用(治理->场景节点,
+            阶段->执行主体节点, 阶段->现实来源场景节点, 现实场景_));
+        核验挂接(治理场景_.添加治理状态(治理->场景节点, 阶段->前状态节点, *任务读取_));
+        const auto 动作 = 动态服务_.建立内部治理特征动作动态({阶段->执行主体节点,
+            阶段->动作定义节点, 阶段节点, 阶段->目标, 阶段->动作时间}, *任务读取_);
+        if (动作.状态 != 新动态操作状态::已完成 || !动作.动态节点)
+            throw std::runtime_error("contribution action publication failed");
+        核验挂接(治理场景_.添加治理动态(治理->场景节点, *动作.动态节点, *任务读取_));
+        const auto 读回 = 动态服务_.按来源查询动作(阶段节点);
+        if (读回.状态 != 新动态操作状态::已完成 || !读回.动作
+            || 读回.动作->节点 != *动作.动态节点 || !读回.动作->动作结果组.empty())
+            throw std::runtime_error("new contribution action readback failed");
+        核验贡献阶段动作(*阶段, *读回.动作);
+        return {新治理动作登记状态::已建立, 动作.动态节点};
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"建立任务特征动作",
+            L"贡献阶段或治理动作不完整；保留已发布事实，不重放。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"建立任务特征动作", L"未知工程异常；保留事实。");
+    }
+}
+
+std::optional<新治理任务特征动作变化结果> 新_内部治理世界类::读取任务特征动作(
+    稳定编码 阶段节点) const noexcept {
+    try {
+        if (!任务读取_) throw std::runtime_error("contribution task reader is not assembled");
+        const auto 阶段 = 任务读取_->读取任务贡献动作阶段(阶段节点);
+        if (!阶段) return std::nullopt;
+        const auto 定义 = 任务读取_->读取任务贡献动作定义(阶段->动作定义节点);
+        const auto 特征组 = 任务读取_->读取任务虚拟存在特征组(阶段->目标.任务引用);
+        const auto 前 = 状态服务_.获取状态(阶段->前状态节点);
+        const auto 治理 = 读取任务治理场景(阶段->目标.任务引用);
+        if (阶段->节点 != 阶段节点 || !阶段->发表结果节点 || !定义 || !特征组 || !前 || !治理)
+            throw std::runtime_error("contribution phase is incomplete");
+        核验贡献阶段前状态(*阶段, *定义, *特征组, *前, 特征概念服务_);
+        const auto 来源 = 动态服务_.按来源查询动作(阶段节点);
+        if (来源.状态 != 新动态操作状态::已完成 || !来源.动作)
+            throw std::runtime_error("published contribution phase has no unique action");
+        const auto& 动作 = *来源.动作;
+        核验贡献阶段动作(*阶段, 动作);
+        const auto 场景 = 治理场景_.获取场景(治理->场景节点);
+        const auto 主体 = 读取治理参与者(治理->场景节点, 阶段->执行主体节点);
+        const auto 客体 = 读取治理参与者(治理->场景节点, 阶段->目标.任务引用.虚拟存在节点);
+        if (!场景 || !含节点(场景->动态节点组, 动作.节点) || !主体
+            || 主体->种类 != 新治理参与者种类::现实执行主体引用
+            || 主体->现实来源场景节点 != 阶段->现实来源场景节点
+            || !现实场景_.存在属于场景范围(阶段->现实来源场景节点, 阶段->执行主体节点)
+            || !客体 || 客体->任务引用 != 阶段->目标.任务引用
+            || 动作.动作结果组.size() != 1
+            || 动作.动作结果组.front().类型 != 新动作结果关系类型::导致变化)
+            throw std::runtime_error("contribution action scene/result ownership mismatch");
+        const auto 变化 = 动态服务_.获取动态(动作.动作结果组.front().结果动态节点);
+        if (!变化 || 变化->种类 != 新动态种类::原子 || !变化->动态概念节点
+            || 变化->主题存在节点 != 阶段->目标.任务引用.虚拟存在节点
+            || 变化->状态节点组.size() != 2 || 变化->状态节点组.front() != 前->节点
+            || !含节点(场景->动态节点组, 变化->节点))
+            throw std::runtime_error("contribution result dynamic is incomplete");
+        const auto 后 = 状态服务_.获取状态(变化->状态节点组.back());
+        if (!后 || !含节点(场景->状态节点组, 前->节点) || !含节点(场景->状态节点组, 后->节点))
+            throw std::runtime_error("contribution frozen states are not in the task scene");
+        (void)核验治理特征状态对(*特征组, 阶段->目标.特征节点, *前, *后, 特征概念服务_);
+        if (后->固定准确值 != 新特征准确值{阶段->新值} || 后->强时间.纳秒 <= 阶段->动作时间.纳秒)
+            throw std::runtime_error("contribution result does not match the frozen phase");
+        // 历史动作按冻结S读取，不能要求历史新值仍等于当前F。
+        for (const auto d : 场景->动态节点组) {
+            const auto 候选 = 动态服务_.获取动态(d);
+            if (!候选) throw std::runtime_error("contribution scene dynamic unreadable");
+            if (d != 变化->节点 && 候选->种类 == 新动态种类::原子
+                && 候选->状态节点组 == 变化->状态节点组)
+                throw std::runtime_error("duplicate contribution state-pair dynamic");
+            if (d != 动作.节点 && 候选->种类 == 新动态种类::动作)
+                for (const auto& 关系 : 候选->动作结果组)
+                    if (关系.结果动态节点 == 变化->节点)
+                        throw std::runtime_error("contribution result belongs to more than one action");
+        }
+        // 场景列表本身不足以发现未挂接重复D或异场景引用；沿正式完整入边
+        // 识别D及其状态项，仍由dynamic owner解释内容，不解析其私有字段。
+        const std::vector<稳定编码> 端点{前->节点, 后->节点, 动作.节点, 变化->节点};
+        const auto 结构 = 全局基础数据集.查询节点组完整结构(端点);
+        if (结构.状态 != 基础结构操作状态::已完成 || 结构.节点组.size() != 端点.size())
+            throw std::runtime_error("contribution package references unreadable");
+        const auto 核验引用动态 = [&](稳定编码 n) {
+            if (!动态服务_.是动态节点(n)) return false;
+            const auto d = 动态服务_.获取动态(n);
+            if (!d || !含节点(场景->动态节点组, n))
+                throw std::runtime_error("contribution state has an unattached or foreign dynamic consumer");
+            if (d->种类 == 新动态种类::原子 && d->状态节点组 == 变化->状态节点组
+                && d->节点 != 变化->节点)
+                throw std::runtime_error("contribution package has an unattached duplicate dynamic");
+            if (d->种类 == 新动态种类::动作 && d->节点 != 动作.节点)
+                for (const auto& r : d->动作结果组)
+                    if (r.结果动态节点 == 变化->节点)
+                        throw std::runtime_error("contribution result has another action consumer");
+            return true;
+        };
+        std::set<稳定编码> 已读, 已检查引用;
+        for (const auto& 项 : 结构.节点组) {
+            if (!含节点(端点, 项.查询节点) || !项.快照 || !已读.insert(项.查询节点).second)
+                throw std::runtime_error("contribution reference identity mismatch");
+            for (const auto& r : 项.快照->入向外部关系组) (void)核验引用动态(r.源节点);
+            for (const auto& f : 项.快照->入向字段组) {
+                const auto n = f.所属节点;
+                if (n == 场景->节点 || !已检查引用.insert(n).second) continue;
+                if (治理场景_.是场景节点(n) || 现实场景_.是场景节点(n))
+                    throw std::runtime_error("contribution fact is attached to another scene");
+                if (核验引用动态(n)) continue;
+                const auto 引用 = 全局基础数据集.查询节点组完整结构({n});
+                if (引用.状态 != 基础结构操作状态::已完成 || 引用.节点组.size() != 1
+                    || 引用.节点组.front().查询节点 != n || !引用.节点组.front().快照)
+                    throw std::runtime_error("contribution state reference item unreadable");
+                for (const auto& f2 : 引用.节点组.front().快照->入向字段组)
+                    (void)核验引用动态(f2.所属节点);
+            }
+        }
+        return 新治理任务特征动作变化结果{阶段->目标, 阶段节点, 场景->节点,
+            动作.节点, 前->节点, 后->节点, 变化->节点};
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取任务特征动作",
+            L"贡献动作阶段或状态动态闭包不完整；保留现场。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取任务特征动作", L"未知工程读取异常。");
+    }
+}
+
+新治理任务特征动作变化结果 新_内部治理世界类::完成任务特征动作(
+    稳定编码 阶段节点, 稳定编码 后节点) noexcept {
+    try {
+        if (!任务读取_) throw std::runtime_error("contribution task reader is not assembled");
+        const auto 阶段 = 任务读取_->读取任务贡献动作阶段(阶段节点);
+        if (!阶段 || 阶段->节点 != 阶段节点 || !阶段->发表结果节点)
+            throw std::runtime_error("contribution core has not been published");
+        const auto 定义 = 任务读取_->读取任务贡献动作定义(阶段->动作定义节点);
+        const auto 特征组 = 任务读取_->读取任务虚拟存在特征组(阶段->目标.任务引用);
+        const auto 前 = 状态服务_.获取状态(阶段->前状态节点), 后 = 状态服务_.获取状态(后节点);
+        const auto 治理 = 读取任务治理场景(阶段->目标.任务引用);
+        const auto 来源 = 动态服务_.按来源查询动作(阶段节点);
+        if (!定义 || !特征组 || !前 || !后 || !治理
+            || 来源.状态 != 新动态操作状态::已完成 || !来源.动作)
+            throw std::runtime_error("contribution completion material missing");
+        核验贡献阶段前状态(*阶段, *定义, *特征组, *前, 特征概念服务_);
+        核验贡献阶段动作(*阶段, *来源.动作);
+        (void)核验治理特征状态对(*特征组, 阶段->目标.特征节点, *前, *后, 特征概念服务_);
+        if (后->固定准确值 != 新特征准确值{阶段->新值} || 后->强时间.纳秒 <= 阶段->动作时间.纳秒)
+            throw std::runtime_error("contribution after state differs from core result");
+        if (!来源.动作->动作结果组.empty()) {
+            const auto 完整 = 读取任务特征动作(阶段节点);
+            if (!完整 || 完整->后状态节点 != 后节点)
+                throw std::runtime_error("contribution completion replay conflicts");
+            return *完整;
+        }
+        if (特征组->服务值->当前值 != 阶段->新值 || 后->被引用次数 != 0)
+            throw std::runtime_error("new contribution result is stale or partly consumed");
+        const auto 场景 = 治理场景_.获取场景(治理->场景节点);
+        if (!场景 || !含节点(场景->动态节点组, 来源.动作->节点)
+            || !含节点(场景->状态节点组, 前->节点) || 含节点(场景->状态节点组, 后节点))
+            throw std::runtime_error("contribution action was not completely attached before core publication");
+        核验挂接(治理场景_.添加治理状态(治理->场景节点, 后节点, *任务读取_));
+        const auto 变化 = 动态服务_.建立原子动态(阶段->目标.任务引用.虚拟存在节点, 前->节点, 后节点);
+        if (变化.状态 != 新动态操作状态::已完成 || !变化.动态节点)
+            throw std::runtime_error("contribution result dynamic publication failed");
+        核验挂接(治理场景_.添加治理动态(治理->场景节点, *变化.动态节点, *任务读取_));
+        if (动态服务_.关联动作结果(来源.动作->节点, *变化.动态节点,
+            新动作结果关系类型::导致变化) != 新动态操作状态::已完成)
+            throw std::runtime_error("contribution action result association failed");
+        const auto 完整 = 读取任务特征动作(阶段节点);
+        if (!完整 || 完整->后状态节点 != 后节点 || 完整->变化动态节点 != *变化.动态节点)
+            throw std::runtime_error("contribution completion readback failed");
+        // Q/K/R/H缺少共同治理场景的完整原因窗口，不投递旧9→12因果窗口。
+        return *完整;
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"完成任务特征动作",
+            L"贡献核心已发表后的组织异常；保留动作及全部事实。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"完成任务特征动作", L"未知工程异常；保留事实。");
+    }
+}
+
 std::optional<新治理任务特征变化结果> 新_内部治理世界类::读取任务特征变化(
     const 新任务虚拟存在特征引用& 目标, 稳定编码 前节点, 稳定编码 后节点) const noexcept {
     try {
@@ -152,9 +388,18 @@ std::optional<新治理任务特征变化结果> 新_内部治理世界类::读�
             const auto 动态 = 动态服务_.获取动态(d);
             if (!动态 || !动态->动态概念节点) throw std::runtime_error("task scene dynamic unreadable");
             if (动态->种类 == 新动态种类::动作) {
-                if (动态->动作目标任务虚拟存在 != 目标.任务引用 || !动态->动作来源节点
-                    || 动态->动作定义节点 != 任务读取_->获取任务已结算动作定义())
+                if (动态->动作目标任务虚拟存在 != 目标.任务引用
+                    || !动态->动作来源节点 || !动态->动作定义节点)
                     throw std::runtime_error("unsupported task scene action");
+                if (任务读取_->读取任务贡献动作定义(*动态->动作定义节点)) {
+                    const auto 包 = 读取任务特征动作(*动态->动作来源节点);
+                    if (!包 || 包->动作节点 != d || 包->治理场景节点 != 场景->节点
+                        || !动作结果.insert(包->变化动态节点).second)
+                        throw std::runtime_error("task scene contribution package mismatch");
+                    continue;
+                }
+                if (动态->动作定义节点 != 任务读取_->获取任务已结算动作定义())
+                    throw std::runtime_error("task scene action has no formal governance definition");
                 const auto 包 = 读取场景内任务状态变化(目标.任务引用, *动态->动作来源节点, 场景->节点);
                 if (!包 || 包->动作节点 != d || !动作结果.insert(包->变化动态节点).second)
                     throw std::runtime_error("task scene action package mismatch");
@@ -333,10 +578,29 @@ void 新_内部治理世界类::迁移已有任务治理场景(
                 const auto& 动作 = 动态快照.at(d);
                 if (动作.种类 != 新动态种类::动作) continue;
                 if (!动作.动作目标任务虚拟存在 || !动作.动作来源节点 || !动作.动态概念节点
-                    || !正式动作定义 || 动作.动作定义节点 != 正式动作定义
+                    || !动作.动作定义节点
                     || !任务快照.contains(动作.动作目标任务虚拟存在->任务节点)
                     || 任务快照.at(动作.动作目标任务虚拟存在->任务节点).状态.引用 != *动作.动作目标任务虚拟存在)
                     throw std::runtime_error("legacy action has no reconstructible task/definition/concept");
+                if (任务读取_->读取任务贡献动作定义(*动作.动作定义节点)) {
+                    // 新贡献包只在独占C(T)中成立，不扩张旧Cg迁移白名单。
+                    if (c == 根场景节点_) throw std::runtime_error("contribution action cannot be migrated from governance root");
+                    const auto 变化 = 读取任务特征动作(*动作.动作来源节点);
+                    if (!变化 || 变化->动作节点 != d || 变化->治理场景节点 != c
+                        || 变化->目标.任务引用 != *动作.动作目标任务虚拟存在
+                        || !动态快照.contains(变化->变化动态节点)
+                        || !动态快照.at(变化->变化动态节点).动态概念节点)
+                        throw std::runtime_error("contribution action package is incomplete");
+                    包状态.insert(变化->前状态节点);
+                    包状态.insert(变化->后状态节点);
+                    for (const auto n : {变化->动作节点, 变化->变化动态节点})
+                        if (!包动态.insert(n).second)
+                            throw std::runtime_error("contribution dynamic belongs to multiple packages");
+                    // 不加入旧动作包和旧因果发生身份；它有自己的阶段来源。
+                    continue;
+                }
+                if (!正式动作定义 || 动作.动作定义节点 != 正式动作定义)
+                    throw std::runtime_error("unrecognized governance action definition");
                 const auto 变化 = 读取场景内任务状态变化(*动作.动作目标任务虚拟存在, *动作.动作来源节点, c);
                 const auto 主体 = 读取治理参与者(c, 动作.主题存在节点);
                 const auto 来源 = 动态服务_.获取动态(*动作.动作来源节点);
@@ -697,6 +961,15 @@ std::optional<新因果动作定义> 新_内部治理世界类::读取自我动�
                 throw std::runtime_error("settlement governance causal action is not complete");
             // 只确认既有owner收尾路径的触发方式，不把结果反作触发前提。
             结果.触发方式 = 新因果动作触发方式::被动触发;
+        } else if (动作->动作定义节点
+            && 任务读取_->读取任务贡献动作定义(*动作->动作定义节点)) {
+            if (!动作->动作来源节点) throw std::runtime_error("contribution action phase missing");
+            const auto 完整 = 读取任务特征动作(*动作->动作来源节点);
+            if (!完整 || 完整->动作节点 != 节点 || 完整->治理场景节点 != 场景->节点)
+                throw std::runtime_error("contribution causal projection is not complete");
+            结果.触发方式 = 新因果动作触发方式::被动触发;
+        } else {
+            throw std::runtime_error("governance causal action has no recognized formal definition");
         }
         return 结果;
     } catch (...) {

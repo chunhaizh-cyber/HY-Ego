@@ -5,6 +5,7 @@
 #include <array>
 #include <limits>
 #include <mutex>
+#include <stdexcept>
 #include <utility>
 
 namespace 海中鱼巣 {
@@ -354,13 +355,46 @@ std::vector<稳定编码> 新_状态类::按存在查询状态(
     稳定编码 被描述存在节点) const noexcept {
     try {
         std::lock_guard 锁(新状态互斥);
-        if (!节点仍存在(被描述存在节点)) return {};
-        return 筛选状态([&](稳定编码 节点) {
+        const std::array 结构节点组{状态节点类型字段, 状态节点类型,
+            状态被描述存在字段, 状态来源实例特征字段, 状态特征类型字段,
+            状态固定准确值字段, 状态强时间字段, 状态被引用次数字段};
+        if (std::none_of(结构节点组.begin(), 结构节点组.end(),
+                [](稳定编码 节点) { return 有效(节点); })) return {};
+        if (std::any_of(结构节点组.begin(), 结构节点组.end(),
+                [](稳定编码 节点) { return !有效(节点) || !全局基础数据集.查询节点(节点); }))
+            throw std::runtime_error("state existence query schema is incomplete");
+        if (!有效(被描述存在节点) || !全局基础数据集.查询节点(被描述存在节点)) return {};
+
+        // 迁移/删除依赖完整状态证据，不得经容错枚举跳过坏登记。
+        std::vector<稳定编码> 登记节点组;
+        for (const auto& 登记 : 全局基础数据集.查询目标字段(
+            状态节点类型, 状态节点类型字段)) {
+            const auto 节点 = 登记.所属节点;
+            if (!有效(节点) || !全局基础数据集.查询节点(节点))
+                throw std::runtime_error("registered state node is missing");
+            登记节点组.push_back(节点);
+        }
+        std::sort(登记节点组.begin(), 登记节点组.end());
+        登记节点组.erase(std::unique(登记节点组.begin(), 登记节点组.end()), 登记节点组.end());
+        std::vector<稳定编码> 结果;
+        for (const auto 节点 : 登记节点组) {
+            const auto 类型组 = 全局基础数据集.查询字段(节点, 状态节点类型字段);
+            const auto* 类型 = 类型组.size() == 1
+                ? std::get_if<稳定编码>(&类型组.front().内容) : nullptr;
+            if (!类型 || *类型 != 状态节点类型)
+                throw std::runtime_error("registered state type field is invalid or duplicated");
             const auto 信息 = 获取状态(节点);
-            return 信息 && 信息->被描述存在节点 == 被描述存在节点;
-        });
+            if (!信息)
+                throw std::runtime_error("registered state cannot be read by existence query");
+            if (信息->被描述存在节点 == 被描述存在节点) 结果.push_back(节点);
+        }
+        return 结果;
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"按存在查询状态",
+            L"正式状态读取异常，不能将故障解释为无历史状态证据。", e.what());
     } catch (...) {
-        return {};
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"按存在查询状态",
+            L"未知工程读取异常，不能返回无证据结果。");
     }
 }
 

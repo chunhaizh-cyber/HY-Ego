@@ -41,6 +41,32 @@ struct 新治理任务特征变化结果 final {
     稳定编码 治理场景节点, 前状态节点, 后状态节点, 变化动态节点;
 };
 
+enum class 新任务贡献动作种类 : std::int64_t {
+    来源计值 = 1, 直接接收 = 2, 权威迁移 = 3
+};
+struct 新任务贡献动作定义 final {
+    稳定编码 节点, 服务值特征类型概念节点, 任务参数角色节点;
+    新任务贡献动作种类 种类;
+};
+struct 新任务贡献动作阶段 final {
+    稳定编码 节点;
+    新任务贡献动作种类 种类;
+    新任务虚拟存在特征引用 目标;
+    稳定编码 动作定义节点, 执行主体节点, 现实来源场景节点;
+    稳定编码 前状态节点, 来源任务节点;
+    新状态强时间 动作时间;
+    std::int64_t 原值 = 0, 新值 = 0;
+    std::optional<稳定编码> 来源执行节点, 来源评估节点, 来源结算节点;
+    std::vector<稳定编码> 直接子接收证据组;
+    std::optional<std::int64_t> 原旧小计;
+    std::optional<稳定编码> 发表结果节点;
+};
+struct 新治理任务特征动作变化结果 final {
+    新任务虚拟存在特征引用 目标;
+    稳定编码 阶段节点, 治理场景节点, 动作节点;
+    稳定编码 前状态节点, 后状态节点, 变化动态节点;
+};
+
 struct 新任务治理场景信息 final {
     稳定编码 根场景节点, 场景节点;
     新任务虚拟存在引用 任务引用;
@@ -109,6 +135,11 @@ public:
         const 新任务虚拟存在特征引用&, 稳定编码 前状态, 稳定编码 后状态) noexcept = 0;
     virtual std::optional<新治理任务特征变化结果> 读取任务特征变化(
         const 新任务虚拟存在特征引用&, 稳定编码 前状态, 稳定编码 后状态) const noexcept = 0;
+    virtual 新治理动作登记结果 建立任务特征动作(稳定编码 阶段节点) noexcept = 0;
+    virtual 新治理任务特征动作变化结果 完成任务特征动作(
+        稳定编码 阶段节点, 稳定编码 后状态节点) noexcept = 0;
+    virtual std::optional<新治理任务特征动作变化结果> 读取任务特征动作(
+        稳定编码 阶段节点) const noexcept = 0;
 };
 
 // 中立只读合同：目标结构由其唯一owner核验，动态/场景不依赖任务实现。
@@ -124,6 +155,10 @@ public:
     virtual std::optional<新任务虚拟存在特征组> 读取任务虚拟存在特征组(
         const 新任务虚拟存在引用&) const noexcept { return std::nullopt; }
     virtual std::optional<稳定编码> 获取任务已结算动作定义() const noexcept { return std::nullopt; }
+    virtual std::optional<新任务贡献动作定义> 读取任务贡献动作定义(
+        稳定编码) const noexcept { return std::nullopt; }
+    virtual std::optional<新任务贡献动作阶段> 读取任务贡献动作阶段(
+        稳定编码) const noexcept { return std::nullopt; }
 };
 
 } // namespace 海中鱼巣
