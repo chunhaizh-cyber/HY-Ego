@@ -42,10 +42,15 @@ struct 新治理任务特征变化结果 final {
 };
 
 enum class 新任务贡献动作种类 : std::int64_t {
-    来源计值 = 1, 直接接收 = 2, 权威迁移 = 3
+    来源计值 = 1, 直接接收 = 2, 权威迁移 = 3, 直属结算收尾 = 4
+};
+struct 新任务结算边界证据 final {
+    稳定编码 结算任务节点, 结算需求节点, 服务根需求节点, 登记方法节点;
+    friend bool operator==(const 新任务结算边界证据&,
+        const 新任务结算边界证据&) = default;
 };
 struct 新任务贡献动作定义 final {
-    稳定编码 节点, 服务值特征类型概念节点, 任务参数角色节点;
+    稳定编码 节点, 目标特征类型概念节点, 任务参数角色节点;
     新任务贡献动作种类 种类;
 };
 struct 新任务贡献动作阶段 final {
@@ -60,6 +65,8 @@ struct 新任务贡献动作阶段 final {
     std::vector<稳定编码> 直接子接收证据组;
     std::optional<std::int64_t> 原旧小计;
     std::optional<稳定编码> 发表结果节点;
+    std::optional<稳定编码> 来源直接接收节点;
+    std::optional<新任务结算边界证据> 结算边界;
 };
 struct 新治理任务特征动作变化结果 final {
     新任务虚拟存在特征引用 目标;

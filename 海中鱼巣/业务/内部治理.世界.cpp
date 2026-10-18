@@ -40,13 +40,37 @@ const 新任务虚拟存在特征读回& 核验治理特征状态对(
     }
     return *特征;
 }
-void 核验贡献阶段前状态(const 新任务贡献动作阶段& 阶段,
+const 新任务虚拟存在特征读回& 核验贡献阶段前状态(const 新任务贡献动作阶段& 阶段,
     const 新任务贡献动作定义& 定义, const 新任务虚拟存在特征组& 特征组,
     const 新状态信息& 前, const 概念_特征类& 概念服务) {
+    const 新任务虚拟存在特征读回* 特征 = nullptr;
+    const auto 匹配 = [&](const 新任务虚拟存在特征读回& 候选) {
+        if (候选.特征节点 != 阶段.目标.特征节点
+            && 候选.特征类型概念节点 != 定义.目标特征类型概念节点) return;
+        if (特征 || 候选.特征节点 != 阶段.目标.特征节点
+            || 候选.特征类型概念节点 != 定义.目标特征类型概念节点)
+            throw std::runtime_error("contribution target feature identity/type is ambiguous");
+        特征 = &候选;
+    };
+    匹配(特征组.状态);
+    if (特征组.服务值) 匹配(*特征组.服务值);
+    const 新任务虚拟存在特征读回* 应有特征 = nullptr;
+    switch (阶段.种类) {
+    case 新任务贡献动作种类::来源计值:
+    case 新任务贡献动作种类::直接接收:
+    case 新任务贡献动作种类::权威迁移:
+        if (特征组.服务值) 应有特征 = &*特征组.服务值;
+        break;
+    case 新任务贡献动作种类::直属结算收尾:
+        应有特征 = &特征组.状态;
+        break;
+    default:
+        throw std::runtime_error("unknown contribution action kind");
+    }
     if (定义.节点 != 阶段.动作定义节点 || 定义.种类 != 阶段.种类
-        || 特征组.引用 != 阶段.目标.任务引用 || !特征组.服务值
-        || 特征组.服务值->特征节点 != 阶段.目标.特征节点
-        || 特征组.服务值->特征类型概念节点 != 定义.服务值特征类型概念节点
+        || 特征组.引用 != 阶段.目标.任务引用
+        || 特征组.状态.特征节点 != 阶段.目标.任务引用.状态特征节点
+        || !特征 || 特征 != 应有特征
         || 阶段.原值 < 0 || 阶段.新值 < 0 || 阶段.原值 == 阶段.新值
         || 前.节点 != 阶段.前状态节点
         || 前.被描述存在节点 != 阶段.目标.任务引用.虚拟存在节点
@@ -58,8 +82,9 @@ void 核验贡献阶段前状态(const 新任务贡献动作阶段& 阶段,
         throw std::runtime_error("contribution phase feature/before state mismatch");
     const auto 关系 = 概念服务.比较单特征概念(前.特征类型概念节点, 前.特征类型概念节点);
     if (关系.状态 != 特征概念规则状态::已完成 || 关系.关系 != 单特征概念关系::同一
-        || 关系.特征类型根 != 定义.服务值特征类型概念节点)
+        || 关系.特征类型根 != 定义.目标特征类型概念节点)
         throw std::runtime_error("contribution before state has a different feature type");
+    return *特征;
 }
 void 核验贡献阶段动作(const 新任务贡献动作阶段& 阶段, const 新动态信息& 动作) {
     if (动作.种类 != 新动态种类::动作 || !动作.动态概念节点
@@ -174,7 +199,7 @@ std::optional<新治理场景参与者> 新_内部治理世界类::读取治理�
         const auto 前 = 状态服务_.获取状态(阶段->前状态节点);
         const auto 治理 = 读取任务治理场景(阶段->目标.任务引用);
         if (!定义 || !特征组 || !前 || !治理) throw std::runtime_error("contribution action material missing");
-        核验贡献阶段前状态(*阶段, *定义, *特征组, *前, 特征概念服务_);
+        const auto& 目标特征 = 核验贡献阶段前状态(*阶段, *定义, *特征组, *前, 特征概念服务_);
         if (!现实场景_.存在属于场景范围(阶段->现实来源场景节点, 阶段->执行主体节点))
             throw std::runtime_error("contribution actor has no real scene source");
         const auto 已有 = 动态服务_.按来源查询动作(阶段节点);
@@ -186,7 +211,7 @@ std::optional<新治理场景参与者> 新_内部治理世界类::读取治理�
                 throw std::runtime_error("partial contribution action cannot be replayed");
             return {新治理动作登记状态::精确重复, 已有.动作->节点};
         }
-        if (阶段->发表结果节点 || 特征组->服务值->当前值 != 阶段->原值)
+        if (阶段->发表结果节点 || 目标特征.当前值 != 阶段->原值)
             throw std::runtime_error("contribution action is already published or stale");
         const auto 场景 = 治理场景_.获取场景(治理->场景节点);
         if (!场景 || 含节点(场景->状态节点组, 阶段->前状态节点))
@@ -226,7 +251,7 @@ std::optional<新治理任务特征动作变化结果> 新_内部治理世界类
         const auto 治理 = 读取任务治理场景(阶段->目标.任务引用);
         if (阶段->节点 != 阶段节点 || !阶段->发表结果节点 || !定义 || !特征组 || !前 || !治理)
             throw std::runtime_error("contribution phase is incomplete");
-        核验贡献阶段前状态(*阶段, *定义, *特征组, *前, 特征概念服务_);
+        (void)核验贡献阶段前状态(*阶段, *定义, *特征组, *前, 特征概念服务_);
         const auto 来源 = 动态服务_.按来源查询动作(阶段节点);
         if (来源.状态 != 新动态操作状态::已完成 || !来源.动作)
             throw std::runtime_error("published contribution phase has no unique action");
@@ -331,7 +356,7 @@ std::optional<新治理任务特征动作变化结果> 新_内部治理世界类
         if (!定义 || !特征组 || !前 || !后 || !治理
             || 来源.状态 != 新动态操作状态::已完成 || !来源.动作)
             throw std::runtime_error("contribution completion material missing");
-        核验贡献阶段前状态(*阶段, *定义, *特征组, *前, 特征概念服务_);
+        const auto& 目标特征 = 核验贡献阶段前状态(*阶段, *定义, *特征组, *前, 特征概念服务_);
         核验贡献阶段动作(*阶段, *来源.动作);
         (void)核验治理特征状态对(*特征组, 阶段->目标.特征节点, *前, *后, 特征概念服务_);
         if (后->固定准确值 != 新特征准确值{阶段->新值} || 后->强时间.纳秒 <= 阶段->动作时间.纳秒)
@@ -342,7 +367,7 @@ std::optional<新治理任务特征动作变化结果> 新_内部治理世界类
                 throw std::runtime_error("contribution completion replay conflicts");
             return *完整;
         }
-        if (特征组->服务值->当前值 != 阶段->新值 || 后->被引用次数 != 0)
+        if (目标特征.当前值 != 阶段->新值 || 后->被引用次数 != 0)
             throw std::runtime_error("new contribution result is stale or partly consumed");
         const auto 场景 = 治理场景_.获取场景(治理->场景节点);
         if (!场景 || !含节点(场景->动态节点组, 来源.动作->节点)
@@ -883,26 +908,46 @@ std::optional<新治理任务变化结果> 新_内部治理世界类::读取任�
 std::optional<新治理任务变化结果> 新_内部治理世界类::读取场景内任务状态变化(
     const 新任务虚拟存在引用& 目标, 稳定编码 来源普通动作, 稳定编码 本场景) const {
     try {
-        if (!任务读取_ || !获取根场景()) return std::nullopt;
+        if (!任务读取_ || !获取根场景()) throw std::runtime_error("governance state reader is not initialized");
         const auto 来源 = 动态服务_.按来源查询动作(来源普通动作);
         if (来源.状态 != 新动态操作状态::已完成) throw std::runtime_error("governance source read failed");
         if (!来源.动作) return std::nullopt;
         const auto& 动作 = *来源.动作;
         const auto 当前 = 任务读取_->读取任务虚拟存在引用(目标);
         const auto 场景 = 治理场景_.获取场景(本场景);
-        if (!当前 || 当前->当前状态 != static_cast<std::int64_t>(新任务状态::已结算)
-            || !场景 || 动作.动作目标种类 != 新动作目标种类::任务虚拟存在
+        const auto 正式定义 = 任务读取_->获取任务已结算动作定义();
+        if (!当前 || 当前->引用 != 目标 || 当前->当前状态 != static_cast<std::int64_t>(新任务状态::已结算)
+            || !场景 || 动作.种类 != 新动态种类::动作 || !动作.动态概念节点
+            || 动作.动作目标种类 != 新动作目标种类::任务虚拟存在
             || 动作.动作目标任务虚拟存在 != 目标 || !动作.动作时间
-            || !动作.动作定义节点 || 动作.动作来源节点 != 来源普通动作
+            || 动作.动作目标存在节点 || 动作.动作目标特征节点 != 目标.状态特征节点
+            || !正式定义 || 动作.动作定义节点 != 正式定义 || 动作.动作来源节点 != 来源普通动作
+            || 动作.动作时间->语义 != 新状态时间语义::实例绝对UTC
             || !含节点(场景->动态节点组, 动作.节点) || 动作.动作结果组.size() != 1
             || 动作.动作结果组.front().类型 != 新动作结果关系类型::导致变化)
             throw std::runtime_error("governance action readback mismatch");
         const auto 主体 = 读取治理参与者(本场景, 动作.主题存在节点);
         const auto 客体 = 读取治理参与者(本场景, 目标.虚拟存在节点);
         if (!主体 || 主体->种类 != 新治理参与者种类::现实执行主体引用
-            || !客体 || 客体->任务引用 != 目标) throw std::runtime_error("governance actor/target mismatch");
+            || !主体->现实来源场景节点
+            || !现实场景_.存在属于场景范围(*主体->现实来源场景节点, 动作.主题存在节点)
+            || !客体 || 客体->种类 != 新治理参与者种类::任务虚拟存在 || 客体->任务引用 != 目标)
+            throw std::runtime_error("governance actor/target mismatch");
+        const auto 普通来源 = 动态服务_.按来源查询动作(目标.任务节点);
+        const auto& 普通动作 = 普通来源.动作;
+        const auto 现实 = 现实场景_.获取场景(*主体->现实来源场景节点);
+        if (普通来源.状态 != 新动态操作状态::已完成 || !普通动作 || 普通动作->节点 != 来源普通动作
+            || !现实 || !含节点(现实->动态节点组, 来源普通动作)
+            || 普通动作->种类 != 新动态种类::动作 || !普通动作->动态概念节点
+            || !普通动作->动作定义节点 || 普通动作->动作目标种类 != 新动作目标种类::普通存在
+            || 普通动作->动作来源节点 != 目标.任务节点
+            || 普通动作->主题存在节点 != 动作.主题存在节点 || !普通动作->动作时间
+            || 普通动作->动作时间->语义 != 新状态时间语义::实例绝对UTC
+            || 普通动作->动作时间->纳秒 >= 动作.动作时间->纳秒)
+            throw std::runtime_error("legacy governance real action source/time/concept mismatch");
         const auto 变化 = 动态服务_.获取动态(动作.动作结果组.front().结果动态节点);
-        if (!变化 || 变化->种类 != 新动态种类::原子 || 变化->主题存在节点 != 目标.虚拟存在节点
+        if (!变化 || 变化->种类 != 新动态种类::原子 || !变化->动态概念节点
+            || 变化->主题存在节点 != 目标.虚拟存在节点
             || 变化->状态节点组.size() != 2 || !含节点(场景->动态节点组, 变化->节点))
             throw std::runtime_error("governance result dynamic mismatch");
         const auto 前 = 状态服务_.获取状态(变化->状态节点组[0]);
@@ -917,6 +962,25 @@ std::optional<新治理任务变化结果> 新_内部治理世界类::读取场�
             || 后->强时间.纳秒 <= 动作.动作时间->纳秒
             || !含节点(场景->状态节点组, 前->节点) || !含节点(场景->状态节点组, 后->节点))
             throw std::runtime_error("governance before/after states mismatch");
+        for (const auto 概念 : {前->特征类型概念节点, 后->特征类型概念节点}) {
+            const auto 关系 = 特征概念服务_.比较单特征概念(概念, 概念);
+            if (关系.状态 != 特征概念规则状态::已完成 || 关系.关系 != 单特征概念关系::同一
+                || 关系.特征类型根 != 当前->状态特征类型概念节点)
+                throw std::runtime_error("legacy governance state concept has a different type root");
+        }
+        for (const auto d : 场景->动态节点组) {
+            if (d == 动作.节点 || d == 变化->节点) continue;
+            const auto 候选 = 动态服务_.获取动态(d);
+            if (!候选) throw std::runtime_error("legacy governance scene dynamic unreadable");
+            if (候选->种类 == 新动态种类::原子 && 候选->状态节点组 == 变化->状态节点组)
+                throw std::runtime_error("duplicate legacy governance state-pair dynamic");
+            if (候选->种类 != 新动态种类::动作) continue;
+            if (候选->动作目标任务虚拟存在 == 目标 && 候选->动作定义节点 == 正式定义)
+                throw std::runtime_error("task has more than one legacy settlement action");
+            for (const auto& 关系 : 候选->动作结果组)
+                if (关系.结果动态节点 == 变化->节点)
+                    throw std::runtime_error("legacy governance result belongs to more than one action");
+        }
         return 新治理任务变化结果{本场景, 动作.节点, 前->节点, 后->节点, 变化->节点};
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取任务状态变化", L"治理变化已有动作但证据不完整或不一致。");

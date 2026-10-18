@@ -686,16 +686,40 @@ void 新_动态类::设置动作方法定义提供者(const 动作方法定义�
         const auto 阶段 = 目标读取服务.读取任务贡献动作阶段(请求.动作来源节点);
         const auto 定义 = 目标读取服务.读取任务贡献动作定义(请求.动作定义节点);
         const auto 特征组 = 目标读取服务.读取任务虚拟存在特征组(请求.目标.任务引用);
-        if (!阶段 || !定义 || !特征组 || !特征组->服务值
+        if (!阶段 || !定义 || !特征组
             || 阶段->节点 != 请求.动作来源节点 || 阶段->目标 != 请求.目标
             || 阶段->动作定义节点 != 请求.动作定义节点
             || 阶段->执行主体节点 != 请求.执行主体节点 || 阶段->动作时间 != 请求.动作时间
             || 定义->节点 != 请求.动作定义节点 || 定义->种类 != 阶段->种类
             || 特征组->引用 != 请求.目标.任务引用
-            || 特征组->状态.特征节点 != 请求.目标.任务引用.状态特征节点
-            || 特征组->服务值->特征节点 != 请求.目标.特征节点
-            || 特征组->服务值->特征类型概念节点 != 定义->服务值特征类型概念节点)
+            || 特征组->状态.特征节点 != 请求.目标.任务引用.状态特征节点)
             throw std::runtime_error("contribution action does not match formal stage and target feature");
+        const 新任务虚拟存在特征读回* 目标特征 = nullptr;
+        const auto 匹配 = [&](const 新任务虚拟存在特征读回& 候选) {
+            if (候选.特征节点 != 请求.目标.特征节点
+                && 候选.特征类型概念节点 != 定义->目标特征类型概念节点) return;
+            if (目标特征 || 候选.特征节点 != 请求.目标.特征节点
+                || 候选.特征类型概念节点 != 定义->目标特征类型概念节点)
+                throw std::runtime_error("contribution action target feature identity/type is ambiguous");
+            目标特征 = &候选;
+        };
+        匹配(特征组->状态);
+        if (特征组->服务值) 匹配(*特征组->服务值);
+        const 新任务虚拟存在特征读回* 应有特征 = nullptr;
+        switch (阶段->种类) {
+        case 新任务贡献动作种类::来源计值:
+        case 新任务贡献动作种类::直接接收:
+        case 新任务贡献动作种类::权威迁移:
+            if (特征组->服务值) 应有特征 = &*特征组->服务值;
+            break;
+        case 新任务贡献动作种类::直属结算收尾:
+            应有特征 = &特征组->状态;
+            break;
+        default:
+            throw std::runtime_error("unknown contribution action kind");
+        }
+        if (!目标特征 || 目标特征 != 应有特征)
+            throw std::runtime_error("contribution action target feature does not match its kind");
         return 建立已核验动作动态({请求.执行主体节点, 请求.动作定义节点,
             请求.动作来源节点, {}, 请求.目标.特征节点, 请求.动作时间}, 请求.目标.任务引用);
     } catch (const std::exception& e) {

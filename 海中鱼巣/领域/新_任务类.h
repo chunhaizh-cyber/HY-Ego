@@ -430,7 +430,7 @@ struct 新任务直接子结算接收信息 final {
 enum class 新任务贡献推进状态 : std::uint8_t {
     已完成 = 1, 精确重复, 等待直接子结算, 等待直接父任务,
     等待目标分类, 历史结算缺贡献, 无直接父任务,
-    父完成结算已封口, 预期已变化, 工程故障
+    父完成结算已封口, 预期已变化, 工程故障, 等待结算配置
 };
 struct 新任务贡献推进结果 final {
     新任务贡献推进状态 状态 = 新任务贡献推进状态::工程故障;
@@ -440,6 +440,16 @@ struct 新任务贡献推进结果 final {
 enum class 新任务贡献交接读取状态 : std::uint8_t {
     已读取 = 1, 任务不存在, 预期已变化, 工程故障
 };
+enum class 新任务直属收尾分类 : std::uint8_t {
+    不适用 = 1, 等待结算配置, 普通待收尾, 普通已收尾,
+    历史已收尾, 最终消费保留, 结算任务排除, 来源已变化
+};
+struct 新任务直属收尾读回 final {
+    新任务直属收尾分类 分类 = 新任务直属收尾分类::不适用;
+    std::optional<稳定编码> 阶段节点;
+    friend bool operator==(const 新任务直属收尾读回&,
+        const 新任务直属收尾读回&) = default;
+};
 struct 新任务贡献交接投影 final {
     稳定编码 任务节点, 需求节点;
     std::optional<稳定编码> 完成结算节点;
@@ -447,6 +457,7 @@ struct 新任务贡献交接投影 final {
     std::optional<稳定编码> 直接父需求节点, 直接父任务节点;
     std::optional<稳定编码> 直接父完成结算节点;
     std::optional<稳定编码> 接收节点;
+    新任务直属收尾读回 直属收尾;
     friend bool operator==(const 新任务贡献交接投影&, const 新任务贡献交接投影&) = default;
 };
 struct 新任务贡献交接读取结果 final {
@@ -1524,6 +1535,9 @@ public:
         稳定编码 任务节点) const noexcept;
 
 private:
+    新任务直属收尾读回 读取任务直属收尾(稳定编码 任务节点) const noexcept;
+    新任务直属收尾读回 完成任务直属收尾(
+        稳定编码 任务节点, 稳定编码 完成结算节点, 稳定编码 接收节点) noexcept;
     void 初始化任务贡献特征权威() noexcept;
     稳定编码 建立任务贡献动作阶段(const 新任务贡献动作阶段&) noexcept;
     void 提交任务贡献特征变化(const 新任务贡献动作阶段&,
