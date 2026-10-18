@@ -505,16 +505,6 @@ struct 新任务直接子结算接收信息 final {
     std::int64_t 贡献值 = 0;
     friend bool operator==(const 新任务直接子结算接收信息&, const 新任务直接子结算接收信息&) = default;
 };
-enum class 新任务贡献推进状态 : std::uint8_t {
-    已完成 = 1, 精确重复, 等待直接子结算, 等待直接父任务,
-    等待目标分类, 历史结算缺贡献, 无直接父任务,
-    父完成结算已封口, 预期已变化, 工程故障, 等待结算配置
-};
-struct 新任务贡献推进结果 final {
-    新任务贡献推进状态 状态 = 新任务贡献推进状态::工程故障;
-    std::optional<稳定编码> 完成结算节点, 接收节点, 直接父任务节点;
-    std::vector<稳定编码> 待归集直接子需求节点组;
-};
 enum class 新任务贡献交接读取状态 : std::uint8_t {
     已读取 = 1, 任务不存在, 预期已变化, 工程故障
 };
@@ -1500,7 +1490,9 @@ public:
         稳定编码 任务节点,
         稳定编码 执行实例节点,
         稳定编码 影响评估节点) noexcept;
-    新任务贡献推进结果 推进任务完成贡献(稳定编码 任务节点) noexcept;
+    新任务贡献治理参数读取结果 读取任务贡献治理参数(const 新任务贡献反馈定位&) const noexcept;
+    新任务贡献治理执行材料 执行任务贡献治理(const 新任务贡献治理参数&) noexcept;
+    void 核验任务贡献治理返回材料(const 新任务贡献治理返回材料&) const noexcept;
     新任务贡献交接读取结果 读取任务完成贡献交接(稳定编码 任务节点) const noexcept;
     std::optional<新任务完成结算信息> 读取任务完成结算(
         稳定编码 任务节点) const noexcept;
@@ -1625,6 +1617,7 @@ public:
 
 private:
     新服务值最终消费结果 完成任务最终收尾(新任务最终消费准备&) noexcept;
+    新任务贡献推进结果 推进任务完成贡献(稳定编码 任务节点) noexcept;
     void 初始化任务最终消费结构() noexcept;
     struct 最终消费占用;
     std::map<稳定编码, std::weak_ptr<最终消费占用>> 最终消费占用组_;

@@ -8,6 +8,7 @@
 #include "新_状态类.h"
 #include "服务要求.材料合同.h"
 #include "服务对象.材料合同.h"
+#include "服务值结算.本能合同.h"
 
 namespace 海中鱼巣 {
 
@@ -76,6 +77,8 @@ struct 新本能函数条件角色材料 final {
 
 struct 新本能函数本次条件 final {
     std::vector<新本能函数条件角色材料> 参数角色组;
+    std::optional<新任务贡献治理参数> 任务贡献治理参数;
+    std::vector<新任务虚拟存在特征组> 治理动作前特征组;
 
     friend bool operator==(const 新本能函数本次条件&,
         const 新本能函数本次条件&) = default;
@@ -105,6 +108,8 @@ struct 新本能函数本次结果 final {
     std::optional<新服务需求信息包> 服务需求信息包;
     std::optional<新服务对象材料> 服务对象观察材料;
     std::optional<稳定编码> 服务值消费节点;
+    // 纯治理发生与普通方法经验、动作和服务值消费分账。
+    std::optional<新任务贡献治理返回材料> 任务贡献治理;
 
     friend bool operator==(const 新本能函数本次结果&,
         const 新本能函数本次结果&) = default;

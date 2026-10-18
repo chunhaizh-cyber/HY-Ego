@@ -1,6 +1,8 @@
 #pragma once
+#include <cstdint>
 #include <optional>
 #include <string_view>
+#include <vector>
 #include "新_方法公共类型.h"
 #include "新_内部治理对象引用.h"
 #include "新_状态类.h"
@@ -9,6 +11,71 @@
 namespace 海中鱼巣 {
 class 方法参数场景;
 struct 新本能函数本次条件结果对;
+// 完成来源是已有的正式T/X/A，不为内部治理工作建立新的执行实例。
+struct 新任务贡献反馈定位 final {
+    稳定编码 任务节点, 执行实例节点, 影响评估节点;
+    friend bool operator==(const 新任务贡献反馈定位&,
+        const 新任务贡献反馈定位&) = default;
+};
+enum class 新任务贡献推进状态 : std::uint8_t {
+    已完成 = 1, 精确重复, 等待直接子结算, 等待直接父任务,
+    等待目标分类, 历史结算缺贡献, 无直接父任务,
+    父完成结算已封口, 预期已变化, 工程故障, 等待结算配置
+};
+struct 新任务贡献推进结果 final {
+    新任务贡献推进状态 状态 = 新任务贡献推进状态::工程故障;
+    std::optional<稳定编码> 完成结算节点, 接收节点, 直接父任务节点;
+    std::vector<稳定编码> 待归集直接子需求节点组;
+    friend bool operator==(const 新任务贡献推进结果&,
+        const 新任务贡献推进结果&) = default;
+};
+struct 新任务贡献治理对象引用 final {
+    稳定编码 需求节点;
+    std::optional<新任务虚拟存在引用> 任务引用;
+    std::optional<稳定编码> 服务值特征节点, 治理场景节点;
+    std::optional<稳定编码> 执行实例节点, 影响评估节点;
+    std::optional<稳定编码> 完成结算节点, 接收节点;
+    friend bool operator==(const 新任务贡献治理对象引用&,
+        const 新任务贡献治理对象引用&) = default;
+};
+struct 新任务贡献治理参数 final {
+    新任务贡献反馈定位 完成来源;
+    新任务贡献治理对象引用 来源;
+    std::optional<新任务贡献治理对象引用> 直接父;
+    std::vector<新任务贡献治理对象引用> 直接子;
+    friend bool operator==(const 新任务贡献治理参数&,
+        const 新任务贡献治理参数&) = default;
+};
+enum class 新任务贡献治理参数读取状态 : std::uint8_t {
+    已读取 = 1, 来源已变化
+};
+struct 新任务贡献治理参数读取结果 final {
+    新任务贡献治理参数读取状态 状态 = 新任务贡献治理参数读取状态::来源已变化;
+    std::optional<新任务贡献治理参数> 参数;
+    friend bool operator==(const 新任务贡献治理参数读取结果&,
+        const 新任务贡献治理参数读取结果&) = default;
+};
+struct 新任务贡献治理动作材料 final {
+    新任务虚拟存在特征引用 目标;
+    稳定编码 阶段节点, 治理场景节点, 动作节点;
+    稳定编码 前状态节点, 后状态节点, 变化动态节点;
+    friend bool operator==(const 新任务贡献治理动作材料&,
+        const 新任务贡献治理动作材料&) = default;
+};
+struct 新任务贡献治理返回材料 final {
+    新任务贡献反馈定位 来源;
+    新任务贡献推进结果 推进;
+    std::vector<新任务贡献治理动作材料> 本次动作组;
+    friend bool operator==(const 新任务贡献治理返回材料&,
+        const 新任务贡献治理返回材料&) = default;
+};
+struct 新任务贡献治理执行材料 final {
+    std::optional<新任务贡献治理参数> 实际参数;
+    std::vector<新任务虚拟存在特征组> 动作前特征组;
+    新任务贡献治理返回材料 返回;
+    friend bool operator==(const 新任务贡献治理执行材料&,
+        const 新任务贡献治理执行材料&) = default;
+};
 struct 新服务值最终来源定位 final {
     稳定编码 来源任务节点, 完成结算节点, 直接接收节点;
     friend bool operator==(const 新服务值最终来源定位&,
@@ -69,6 +136,8 @@ public:
     virtual 新需求建立结果 确保首子需求(稳定编码 方法节点) noexcept = 0;
     virtual 新本能函数本次条件结果对 消费最终来源(
         const 方法参数场景&) noexcept = 0;
+    virtual 新本能函数本次条件结果对 执行贡献治理场景(
+        const 方法参数场景&) noexcept = 0;
     virtual 新服务值结算动作回执 建立普通动作(稳定编码 方法节点,
         const 新任务虚拟存在引用& 来源, 稳定编码 场景节点, 稳定编码 自我节点,
         稳定编码 服务值特征节点, std::int64_t 动作前值) noexcept = 0;
@@ -87,6 +156,8 @@ public:
         稳定编码 执行实例节点, 稳定编码 影响评估节点) noexcept = 0;
     virtual 新服务值最终消费结果 执行最终来源工作(
         const 新服务值最终来源定位&) noexcept = 0;
+    virtual 新本能函数本次条件结果对 执行贡献治理工作(
+        const 新任务贡献反馈定位&) noexcept = 0;
     virtual 新服务值最终消费结果 读取最终来源结果(
         const 新服务值最终来源定位&) const noexcept = 0;
     virtual void 报告待处理工程异常() noexcept = 0;

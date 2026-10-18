@@ -29,6 +29,10 @@ public:
     新服务值结算确认结果 确认并收尾(稳定编码, 稳定编码, 稳定编码) noexcept override;
     新服务值最终消费结果 执行最终来源工作(
         const 新服务值最终来源定位&) noexcept override;
+    新本能函数本次条件结果对 执行贡献治理工作(
+        const 新任务贡献反馈定位&) noexcept override;
+    新本能函数本次条件结果对 执行贡献治理场景(
+        const 方法参数场景&) noexcept override;
     新服务值最终消费结果 读取最终来源结果(
         const 新服务值最终来源定位&) const noexcept override;
     新本能函数本次条件结果对 消费最终来源(

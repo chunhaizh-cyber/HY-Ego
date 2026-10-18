@@ -310,13 +310,6 @@ struct 新任务结果反馈定位 final {
         const 新任务结果反馈定位&) = default;
 };
 
-// 恢复与贡献归集只传正式身份，不伪造原工作或传递贡献权威值。
-struct 新任务贡献反馈定位 final {
-    稳定编码 任务节点, 执行实例节点, 影响评估节点;
-    friend bool operator==(const 新任务贡献反馈定位&,
-        const 新任务贡献反馈定位&) = default;
-};
-
 enum class 新任务结果反馈接收状态 : std::uint8_t {
     已接收 = 1, 精确重复, 身份冲突, 邮箱已满, 尚未配置,
     尚未启动, 已停止接收, 入口拒绝, 资源失败, 内部错误
@@ -397,8 +390,19 @@ struct 新最终服务工作接收结果 final {
     std::shared_future<新任务工作处理结果> 处理结果;
 };
 
+struct 新贡献治理工作接收结果 final {
+    新任务工作接收状态 状态 = 新任务工作接收状态::入口拒绝;
+    std::optional<新任务工作请求> 工作;
+    std::shared_future<新任务工作处理结果> 处理结果;
+};
+
 class 新_任务管理线程类 final {
 public:
+    新贡献治理工作接收结果 提交任务贡献治理工作(
+        const void* 自我所有者, const 新任务贡献反馈定位&) noexcept;
+    新任务完成结算确认状态 确认任务贡献治理工作(
+        const void* 自我所有者, std::uint64_t 工作编号,
+        const 新任务贡献反馈定位&) noexcept;
     bool 绑定方法学习读取(const 新_方法类&) noexcept;
     // 交接编号仅作进程内去重；相关任务经self fresh复核后才能重新筹办。
     新方法学习接收状态 提交方法学习结束(

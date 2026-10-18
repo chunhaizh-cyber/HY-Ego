@@ -9,6 +9,7 @@
 #include "新_特征类.h"
 #include "新_特征值类.h"
 #include "服务要求.材料合同.h"
+#include "服务值结算.本能合同.h"
 
 namespace 海中鱼巣 {
 
@@ -18,7 +19,8 @@ class 新服务值结算本能端口;
 enum class 新方法参数场景用途 : std::uint8_t {
     登记 = 1,
     执行 = 2,
-    模拟 = 3
+    模拟 = 3,
+    任务贡献治理 = 4
 };
 
 struct 新方法实际特征绑定 final {
@@ -54,6 +56,8 @@ class 方法参数场景 final {
 public:
     稳定编码 方法节点() const noexcept;
     新方法参数场景用途 用途() const noexcept;
+    const std::optional<新任务贡献治理参数>& 读取任务贡献治理参数() const noexcept;
+    bool 使用治理对象读取接口(const 新内部治理对象读取接口&) const noexcept;
     新服务值结算本能端口* 获取服务值结算模拟端口() const noexcept;
     const std::vector<新方法参数角色绑定>& 全部角色绑定() const noexcept;
     const 新方法参数角色绑定* 查询角色(
@@ -89,7 +93,8 @@ private:
         新方法参数场景用途 用途,
         const 新内部治理对象读取接口* 治理对象读取,
         std::shared_ptr<新方法模拟运行接口> 模拟运行 = {},
-        const 新服务要求材料读取接口* 服务要求读取 = nullptr) noexcept;
+        const 新服务要求材料读取接口* 服务要求读取 = nullptr,
+        std::optional<新任务贡献治理参数> 任务贡献治理参数 = {}) noexcept;
 
     稳定编码 方法节点_;
     std::vector<新方法参数角色绑定> 角色绑定组_;
@@ -101,6 +106,7 @@ private:
     std::shared_ptr<新方法模拟运行接口> 模拟运行_;
     // 非拥有只读owner，必须覆盖整个参数场景寿命；模拟不得借此访问现实材料。
     const 新服务要求材料读取接口* 服务要求读取_;
+    std::optional<新任务贡献治理参数> 任务贡献治理参数_;
 };
 
 } // namespace 海中鱼巣
