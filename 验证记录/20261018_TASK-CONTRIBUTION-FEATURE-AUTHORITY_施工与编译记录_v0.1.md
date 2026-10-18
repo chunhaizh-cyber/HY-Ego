@@ -1,11 +1,11 @@
 # 任务贡献特征权威施工与编译记录
 
 - 日期：2026-10-18；身份：`TASK-CONTRIBUTION-FEATURE-AUTHORITY`。
-- 来源：[计划 v0.1 修订1](../计划/20261018_TASK-CONTRIBUTION-FEATURE-AUTHORITY_任务贡献特征权威计划_v0.1.md)，已发布 blob `572f81eab826019f5fce48546a3901f44bafafa8`；原版 blob `e9eb77fc8653f0febf51b8bf3e98a939f120c5e3`仅作前段追溯。
+- 来源：计划 v0.1 修订1已退出当前队列并删除现行文件，可由 `64b6793e762fb2121b9a24e181f8e62bc3da3b56:计划/20261018_TASK-CONTRIBUTION-FEATURE-AUTHORITY_任务贡献特征权威计划_v0.1.md` 追溯，精确 blob `572f81eab826019f5fce48546a3901f44bafafa8`；原版 blob `e9eb77fc8653f0febf51b8bf3e98a939f120c5e3`仅作前段追溯，不是执行入口。
 - 冻结合同：[详细设计 v0.1 修订1](../规范/详细设计/20261018_TASK-CONTRIBUTION-FEATURE-AUTHORITY_任务贡献特征权威详细设计_v0.1.md)。
 - 施工工作树：`D:/worktree/task-causal-preparation/海中鱼巣`；分支：`codex/task-causal-preparation`。
 - 开工 HEAD、main、origin/main：`10e249d60d6eb9afe35b7a0377b466bc7a801d2b`。
-- 结果代码提交：待发布后由退出记录补入。本记录随代码一并提交，不以自引用哈希替代发布事实。
+- 结果代码提交：`64b6793e762fb2121b9a24e181f8e62bc3da3b56`；已快进集成main并普通推送。本次退出说明在后续文档提交补入，不把该后续提交哈希写作自引用。
 
 ## 1. 范围与S0
 
@@ -61,7 +61,7 @@
 - `git diff --check`、`git diff --cached --check`：通过；暂存集核对为13生产文件及本记录，未带入其它文件。
 - 运行测试、实际贡献归集、旧数据迁接、重复并发、故障注入、跨进程恢复：全部`NOT_RUN`。
 
-本轮证明实际工作树HEAD加具名WIP的编译链接；main集成等价性须按发布后的精确树比较，不自动升级为集成验收。
+编译时输入为上述HEAD加具名WIP；结果提交后核对本工作树HEAD、main及origin/main均为 `64b6793e762fb2121b9a24e181f8e62bc3da3b56`，三者精确tree均为 `0d9cb49ea295b217aff3d2cbb5ef4a3f0e48ce4d`，退出文档修改前工作树干净。此等价性证明同一已发布代码树，不是另一次main构建或集成验收。
 
 ## 5. 函数级代码知识变更清单
 
@@ -90,6 +90,6 @@
 
 ## 6. 发布与完成边界
 
-本切片结果待串行精确提交、main集成和普通推送；退出证据补入精确提交。产物范围为13生产文件及本记录，异主WIP保留。
+本切片13生产文件及本记录由 `64b6793e762fb2121b9a24e181f8e62bc3da3b56` 精确提交、快进集成main并普通推送；异主WIP未带入。当前计划文件及索引条目按退出规则移除，详细设计和本记录保留；计划可从顶部具名commit:path及blob恢复追溯，但不能恢复为当前执行入口。退出文档发布另由root串行完成，不制造未知提交身份。
 
 本叶不完成：普通子任务R后已结算状态门、最终按Q增加现实自我服务值及U防重、self与需求执行两入口统一、贡献共同场景因果窗口、方法独立治理场景。旧+1保护未撤，不把本次编译称为整体服务根闭环或旧数据运行迁移成功。
