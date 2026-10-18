@@ -18,6 +18,11 @@ public:
     bool 装配任务读取(const 新内部治理对象读取接口&) noexcept;
     bool 初始化() noexcept;
     std::optional<稳定编码> 获取根场景() const noexcept;
+    新任务治理场景发布结果 发布新任务治理场景(
+        const 新任务虚拟存在引用&, const 基础封存追加片段&) noexcept override;
+    void 迁移已有任务治理场景(const std::vector<新任务虚拟存在引用>&) noexcept override;
+    std::optional<新任务治理场景信息> 读取任务治理场景(
+        const 新任务虚拟存在引用&) const noexcept override;
     新治理动作登记结果 建立任务状态动作(const 新治理任务动作请求&) noexcept override;
     新治理任务变化结果 完成任务状态变化(稳定编码, 稳定编码, 稳定编码) noexcept override;
     std::optional<新治理任务变化结果> 读取任务状态变化(
@@ -28,6 +33,9 @@ public:
     std::optional<新因果动作定义> 推断外部动作(稳定编码) const noexcept override;
     反向因果查询结果 查询因果链(const 反向因果查询请求&) const noexcept;
 private:
+    std::optional<新治理任务变化结果> 读取场景内任务状态变化(
+        const 新任务虚拟存在引用&, 稳定编码 来源普通动作, 稳定编码 场景) const;
+    std::optional<新治理场景参与者> 读取范围治理参与者(稳定编码, 稳定编码) const;
     void 交付实际发生(const 新治理任务变化结果&) noexcept;
     稳定编码 根场景节点_{};
     新_状态类& 状态服务_;

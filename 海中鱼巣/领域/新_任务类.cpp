@@ -4640,6 +4640,8 @@ bool 新_任务类::初始化() noexcept {
             结果.状态 = 新任务操作状态::需求不存在;
             return 结果;
         }
+        if (!任务治理场景组织已就绪_ || !内部治理世界_)
+            throw std::runtime_error("task governance scenes are not initialized");
         std::vector<稳定编码> 已有任务;
         for (const auto& 字段 : 全局基础数据集.查询目标字段(
             需求节点, 任务需求字段)) {
@@ -4662,6 +4664,10 @@ bool 新_任务类::初始化() noexcept {
                 结果.状态 = 新任务操作状态::结构不一致;
                 return 结果;
             }
+            const auto 虚拟 = 读取任务虚拟存在信息(现有->节点, 特征服务_);
+            if (!虚拟 || !内部治理世界_->读取任务治理场景(
+                {现有->节点, 虚拟->节点, 虚拟->任务状态特征节点}))
+                throw std::runtime_error("existing task lost its governance scene");
             结果.状态 = 新任务操作状态::已复用;
             结果.任务节点 = 现有->节点;
             结果.任务虚拟存在节点 = 现有->任务虚拟存在节点;
@@ -4672,88 +4678,79 @@ bool 新_任务类::初始化() noexcept {
         }
 
         const 关联检查离域通知 变更通知{关联检查通知_};
-        const auto 状态特征 = 特征服务_.建立特征(任务状态特征概念);
-        if (!有效(状态特征)) {
-            结果.状态 = 新任务操作状态::资源失败;
-            return 结果;
-        }
-        const auto 初始写入 = 特征服务_.添加特征值(
-            状态特征, 新特征准确值{
-                static_cast<std::int64_t>(新任务状态::已建立)});
-        if (初始写入.状态 != 新特征写入状态::已完成
-            && 初始写入.状态 != 新特征写入状态::无变化) {
-            (void)特征服务_.删除特征(状态特征);
-            结果.状态 = 新任务操作状态::资源失败;
-            return 结果;
-        }
-
-        // 每个新任务持有独立F；复用分支不得把后续已有的服务值重置为零。
-        const auto 服务值特征 = 特征服务_.建立特征(任务服务值特征概念);
-        if (!有效(服务值特征)) {
-            (void)特征服务_.删除特征(状态特征);
-            throw std::runtime_error("task service value feature creation failed");
-        }
-        const auto 服务值初始写入 = 特征服务_.添加特征值(
-            服务值特征, 新特征准确值{std::int64_t{0}});
-        if (服务值初始写入.状态 != 新特征写入状态::已完成
-            && 服务值初始写入.状态 != 新特征写入状态::无变化) {
-            (void)特征服务_.删除特征(服务值特征);
-            (void)特征服务_.删除特征(状态特征);
-            throw std::runtime_error("task service value initialization failed");
-        }
-
-        const auto 任务节点 = 全局基础数据集.新建节点();
-        const auto 虚拟存在 = 全局基础数据集.新建节点();
-        if (!有效(任务节点) || !有效(虚拟存在)) {
-            if (有效(任务节点)) (void)全局基础数据集.删除节点(任务节点);
-            if (有效(虚拟存在)) (void)全局基础数据集.删除节点(虚拟存在);
-            (void)特征服务_.删除特征(服务值特征);
-            (void)特征服务_.删除特征(状态特征);
-            结果.状态 = 新任务操作状态::资源失败;
-            return 结果;
-        }
-
-        std::vector<稳定编码> 已写字段;
-        const bool 完成 =
-            写入节点字段(任务节点, 节点类型字段,
-                任务节点类型, 已写字段)
-            && 写入节点字段(任务节点, 任务需求字段,
-                需求节点, 已写字段)
-            && 写入节点字段(任务节点, 任务虚拟存在字段,
-                虚拟存在, 已写字段)
-            && 写入节点字段(虚拟存在, 节点类型字段,
-                任务虚拟存在节点类型, 已写字段)
-            && 写入节点字段(虚拟存在, 虚拟存在所属任务字段,
-                任务节点, 已写字段)
-            && 写入节点字段(虚拟存在, 虚拟存在状态特征字段,
-                状态特征, 已写字段)
-            && 写入节点字段(虚拟存在, 虚拟存在服务值特征字段,
-                服务值特征, 已写字段)
-            && 写入节点字段(任务集合根节点, 任务成员字段,
-                任务节点, 已写字段);
-        if (!完成) {
-            回滚字段(已写字段);
-            (void)全局基础数据集.删除节点(虚拟存在);
-            (void)全局基础数据集.删除节点(任务节点);
-            (void)特征服务_.删除特征(服务值特征);
-            (void)特征服务_.删除特征(状态特征);
-            结果.状态 = 新任务操作状态::资源失败;
-            return 结果;
-        }
-        const auto 读回 = 读取任务信息(任务节点, 特征服务_);
-        const auto 服务值读回 = 读取任务服务值特征(虚拟存在, 特征服务_, 特征概念服务_);
-        if (!读回 || 读回->需求节点 != 需求节点
-            || 读回->任务虚拟存在节点 != 虚拟存在
-            || 读回->当前状态 != 新任务状态::已建立
-            || !服务值读回 || 服务值读回->节点 != 服务值特征
-            || 服务值读回->当前值 != std::optional<新特征准确值>{新特征准确值{std::int64_t{0}}}) {
-            回滚字段(已写字段);
-            (void)全局基础数据集.删除节点(虚拟存在);
-            (void)全局基础数据集.删除节点(任务节点);
-            (void)特征服务_.删除特征(服务值特征);
-            (void)特征服务_.删除特征(状态特征);
-            结果.状态 = 新任务操作状态::结构不一致;
-            return 结果;
+        稳定编码 状态特征, 服务值特征, 任务节点, 虚拟存在, 专属概念;
+        bool 已发布 = false;
+        try {
+            状态特征 = 特征服务_.建立特征(任务状态特征概念);
+            服务值特征 = 特征服务_.建立特征(任务服务值特征概念);
+            if (!有效(状态特征) || !有效(服务值特征)) throw std::runtime_error("task features preparation failed");
+            const auto 状态写入 = 特征服务_.添加特征值(状态特征,
+                新特征准确值{static_cast<std::int64_t>(新任务状态::已建立)});
+            const auto 值写入 = 特征服务_.添加特征值(服务值特征, 新特征准确值{std::int64_t{0}});
+            const auto 写入完成 = [](新特征写入状态 状态) {
+                return 状态 == 新特征写入状态::已完成 || 状态 == 新特征写入状态::无变化;
+            };
+            if (!写入完成(状态写入.状态) || !写入完成(值写入.状态)) throw std::runtime_error("task features initialization failed");
+            任务节点 = 全局基础数据集.新建节点();
+            虚拟存在 = 全局基础数据集.新建节点();
+            if (!有效(任务节点) || !有效(虚拟存在)) throw std::runtime_error("task candidate allocation failed");
+            const auto 状态材料 = 特征服务_.获取特征(状态特征);
+            const auto 值材料 = 特征服务_.获取特征(服务值特征);
+            if (!状态材料 || !值材料) throw std::runtime_error("task prepared feature readback failed");
+            const auto 概念 = 存在概念服务_.建立专属存在概念(虚拟存在,
+                {状态材料->特征概念节点, 值材料->特征概念节点});
+            if (概念.状态 != 存在概念操作状态::已建立 || !概念.概念节点)
+                throw std::runtime_error("task candidate concept preparation failed");
+            专属概念 = *概念.概念节点;
+            基础节点组追加请求 请求;
+            请求.追加字段组 = {{任务节点, 节点类型字段, 任务节点类型},
+                {任务节点, 任务需求字段, 需求节点}, {任务节点, 任务虚拟存在字段, 虚拟存在},
+                {虚拟存在, 节点类型字段, 任务虚拟存在节点类型},
+                {虚拟存在, 虚拟存在所属任务字段, 任务节点},
+                {虚拟存在, 虚拟存在状态特征字段, 状态特征},
+                {虚拟存在, 虚拟存在服务值特征字段, 服务值特征},
+                {虚拟存在, 虚拟存在专属概念字段, 专属概念},
+                {任务集合根节点, 任务成员字段, 任务节点}};
+            std::vector<稳定编码> 端点{任务节点, 虚拟存在, 需求节点, 任务集合根节点,
+                任务节点类型, 任务虚拟存在节点类型, 状态特征, 服务值特征, 专属概念};
+            std::sort(端点.begin(), 端点.end());
+            端点.erase(std::unique(端点.begin(), 端点.end()), 端点.end());
+            const auto 快照 = 全局基础数据集.查询节点组完整结构(端点);
+            if (快照.状态 != 基础结构操作状态::已完成 || 快照.节点组.size() != 端点.size())
+                throw std::runtime_error("task candidate joint snapshot failed");
+            for (const auto& 项 : 快照.节点组) {
+                if (!项.快照) throw std::runtime_error("task candidate endpoint missing");
+                请求.预期联合节点组.push_back(*项.快照);
+            }
+            const auto 封存 = 全局基础数据集.封存原子追加片段(请求);
+            if (封存.状态 != 基础节点组追加状态::已完成 || !封存.片段)
+                throw std::runtime_error("task candidate seal failed");
+            const auto 发布 = 内部治理世界_->发布新任务治理场景({任务节点, 虚拟存在, 状态特征}, *封存.片段);
+            if (发布.状态 != 新任务治理场景发布工程状态::已发布) {
+                if (发布.场景) 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"建立或取得任务", L"未发表结果携带场景，禁止清理不确定事实。");
+                throw std::runtime_error("task/scene composition was not published");
+            }
+            已发布 = true;
+            const auto 读回 = 读取任务信息(任务节点, 特征服务_);
+            const auto 值读回 = 读取任务服务值特征(虚拟存在, 特征服务_, 特征概念服务_);
+            const auto 语义 = 读取任务虚拟存在语义({任务节点, 虚拟存在, 状态特征});
+            if (!发布.场景 || !读回 || 读回->需求节点 != 需求节点 || 读回->任务虚拟存在节点 != 虚拟存在
+                || 读回->当前状态 != 新任务状态::已建立 || !语义 || 语义->专属存在概念节点 != 专属概念
+                || !值读回 || 值读回->节点 != 服务值特征
+                || 值读回->当前值 != std::optional<新特征准确值>{新特征准确值{std::int64_t{0}}})
+                throw std::runtime_error("published task/scene readback inconsistent");
+        } catch (...) {
+            if (!已发布) {
+                if (有效(专属概念) && !存在概念服务_.撤销未绑定专属存在概念(专属概念, 虚拟存在))
+                    工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"任务候选清理", L"未绑定概念无法撤销。");
+                for (const auto 节点 : {虚拟存在, 任务节点})
+                    if (有效(节点) && !全局基础数据集.删除节点(节点))
+                        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"任务候选清理", L"未发表节点无法撤销。");
+                for (const auto 特征 : {服务值特征, 状态特征})
+                    if (有效(特征) && !特征服务_.删除特征(特征))
+                        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"任务候选清理", L"未发表特征无法撤销。");
+            }
+            throw;
         }
         结果.状态 = 新任务操作状态::已建立;
         结果.任务节点 = 任务节点;
@@ -5873,6 +5870,39 @@ bool 新_任务类::装配内部治理世界(新任务治理世界协作接口& 
     }
 }
 
+void 新_任务类::初始化任务治理场景组织() noexcept {
+    try {
+        std::lock_guard 锁(新任务互斥);
+        if (!结构仍存在() || !内部治理世界_) throw std::runtime_error("task scene initialization dependencies missing");
+        const auto 对应 = 读取需求列表任务对应();
+        if (对应.状态 != 新任务操作状态::已找到) throw std::runtime_error("task/demand full correspondence is inconsistent");
+        std::vector<新任务虚拟存在引用> 引用组;
+        std::vector<稳定编码> 缺概念任务;
+        for (const auto& 项 : 对应.对应项组) {
+            if (!项.任务) continue;
+            const auto 虚拟 = 读取任务虚拟存在信息(项.任务->节点, 特征服务_);
+            if (!虚拟 || 虚拟->节点 != 项.任务->任务虚拟存在节点)
+                throw std::runtime_error("legacy task virtual existence inconsistent");
+            新任务虚拟存在引用 引用{项.任务->节点, 虚拟->节点, 虚拟->任务状态特征节点};
+            if (全局基础数据集.查询字段(虚拟->节点, 虚拟存在专属概念字段).empty())
+                缺概念任务.push_back(项.任务->节点);
+            else if (!读取任务虚拟存在语义(引用))
+                throw std::runtime_error("legacy task declared concept is inconsistent");
+            if (任务治理场景组织已就绪_ && !内部治理世界_->读取任务治理场景(引用))
+                throw std::runtime_error("ready task has lost its scene; not a legacy migration");
+            引用组.push_back(引用);
+        }
+        for (const auto 任务 : 缺概念任务) 确保任务虚拟存在语义(任务);
+        内部治理世界_->迁移已有任务治理场景(引用组);
+        for (const auto& 引用 : 引用组)
+            if (!内部治理世界_->读取任务治理场景(引用)) throw std::runtime_error("task scene initialization readback failed");
+        任务治理场景组织已就绪_ = true;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"初始化任务治理场景组织",
+            L"旧任务或治理材料不能完整还原，保留原事实并阻止启动。");
+    }
+}
+
 void 新_任务类::确保任务虚拟存在语义(稳定编码 任务节点) noexcept {
     try {
         std::lock_guard 锁(新任务互斥);
@@ -5960,6 +5990,8 @@ std::optional<新任务虚拟存在语义读回> 新_任务类::读取任务虚�
         const auto 虚拟 = 读取任务虚拟存在信息(请求.来源任务节点, 特征服务_);
         if (!结构仍存在() || !虚拟) throw std::runtime_error("settlement task structure missing");
         const 新任务虚拟存在引用 目标{请求.来源任务节点, 虚拟->节点, 虚拟->任务状态特征节点};
+        if (!任务治理场景组织已就绪_ || !内部治理世界_->读取任务治理场景(目标))
+            throw std::runtime_error("settlement target has no initialized task governance scene");
         结果.任务读回 = 读取任务虚拟存在引用(目标);
         if (!结果.任务读回) throw std::runtime_error("settlement target readback failed");
         const auto 既有 = 动态服务.按来源查询动作(请求.已确认普通动作节点);

@@ -1308,6 +1308,7 @@ public:
     std::optional<新任务虚拟存在语义读回> 读取任务虚拟存在语义(
         const 新任务虚拟存在引用&) const noexcept override;
     bool 装配内部治理世界(新任务治理世界协作接口&) noexcept;
+    void 初始化任务治理场景组织() noexcept;
     std::optional<稳定编码> 获取任务状态特征类型() const noexcept;
     // 调用方须先独立确认普通动作效果；本入口只负责Vt内部收尾。
     新任务已结算结果 标记任务已结算(
@@ -1531,6 +1532,7 @@ private:
         稳定编码 任务节点, const std::vector<稳定编码>& 来源方法节点组, bool 允许增补) noexcept;
     void 确保任务虚拟存在语义(稳定编码 任务节点) noexcept;
     新任务治理世界协作接口* 内部治理世界_ = nullptr;
+    bool 任务治理场景组织已就绪_ = false;
     新任务调度材料项 读取任务调度项已加锁(
         稳定编码 任务节点, bool& 资源失败) const;
     新_方法类::新方法实例交付状态 切换学习方法实例(

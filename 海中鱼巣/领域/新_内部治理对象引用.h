@@ -21,6 +21,20 @@ struct 新任务虚拟存在读回 final {
     std::int64_t 当前状态 = 0;
 };
 
+struct 新任务治理场景信息 final {
+    稳定编码 根场景节点, 场景节点;
+    新任务虚拟存在引用 任务引用;
+    friend bool operator==(const 新任务治理场景信息&,
+        const 新任务治理场景信息&) = default;
+};
+enum class 新任务治理场景发布工程状态 : std::uint8_t {
+    已发布 = 1, 未发布已清理场景
+};
+struct 新任务治理场景发布结果 final {
+    新任务治理场景发布工程状态 状态 = 新任务治理场景发布工程状态::未发布已清理场景;
+    std::optional<新任务治理场景信息> 场景;
+};
+
 struct 新任务虚拟存在语义读回 final {
     新任务虚拟存在读回 状态;
     稳定编码 专属存在概念节点;
@@ -60,6 +74,12 @@ struct 新治理动作登记结果 final {
 class 新任务治理世界协作接口 {
 public:
     virtual ~新任务治理世界协作接口() = default;
+    virtual 新任务治理场景发布结果 发布新任务治理场景(
+        const 新任务虚拟存在引用&, const 基础封存追加片段&) noexcept = 0;
+    virtual void 迁移已有任务治理场景(
+        const std::vector<新任务虚拟存在引用>&) noexcept = 0;
+    virtual std::optional<新任务治理场景信息> 读取任务治理场景(
+        const 新任务虚拟存在引用&) const noexcept = 0;
     virtual 新治理动作登记结果 建立任务状态动作(const 新治理任务动作请求&) noexcept = 0;
     virtual 新治理任务变化结果 完成任务状态变化(
         稳定编码 动作, 稳定编码 前状态, 稳定编码 后状态) noexcept = 0;
