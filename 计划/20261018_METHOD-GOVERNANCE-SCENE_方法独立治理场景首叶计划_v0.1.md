@@ -1,9 +1,9 @@
 # METHOD-GOVERNANCE-SCENE 方法独立治理场景首叶计划
 
-标识：METHOD-GOVERNANCE-SCENE  
-版本：v0.1  
-日期：2026-10-18  
-代码起点：`51d96045f4dc01d29431ec15f6f3ce2e10b3cd13`。  
+标识：METHOD-GOVERNANCE-SCENE
+版本：v0.1
+日期：2026-10-18
+代码起点：`51d96045f4dc01d29431ec15f6f3ce2e10b3cd13`。
 计划状态、精确发布blob及执行资格只读取[计划索引](计划索引.md)，本文不自授开工资格。
 
 ## 1. 来源、目标与完成条件
