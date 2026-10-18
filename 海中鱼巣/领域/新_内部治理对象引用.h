@@ -96,14 +96,70 @@ struct 新任务虚拟存在语义读回 final {
     稳定编码 专属存在概念节点;
 };
 
+struct 新方法虚拟存在引用 final {
+    稳定编码 方法节点, 虚拟存在节点, 启用特征节点;
+    friend bool operator==(const 新方法虚拟存在引用&,
+        const 新方法虚拟存在引用&) = default;
+};
+struct 新方法虚拟存在读回 final {
+    新方法虚拟存在引用 引用;
+    稳定编码 专属存在概念节点;
+    稳定编码 启用特征类型概念节点, 当前特征概念节点;
+    std::int64_t 当前启用 = 0;
+};
+struct 新方法治理场景信息 final {
+    稳定编码 根场景节点, 场景节点;
+    新方法虚拟存在引用 方法引用;
+    // 已有C(M)所属启用F字段关系的只读投影，不增加事实。
+    稳定编码 启用特征归属字段关系;
+    friend bool operator==(const 新方法治理场景信息&,
+        const 新方法治理场景信息&) = default;
+};
+struct 新治理方法特征变化结果 final {
+    新方法虚拟存在引用 目标;
+    稳定编码 治理场景节点, 前状态节点, 后状态节点, 变化动态节点;
+};
+enum class 新方法治理场景发布工程状态 : std::uint8_t {
+    已发布 = 1, 未发布已清理场景
+};
+struct 新方法治理场景发布结果 final {
+    新方法治理场景发布工程状态 状态 = 新方法治理场景发布工程状态::未发布已清理场景;
+    std::vector<新方法治理场景信息> 场景组;
+};
+class 新方法治理对象读取接口 {
+public:
+    virtual ~新方法治理对象读取接口() = default;
+    virtual std::optional<新方法虚拟存在读回> 读取方法虚拟存在引用(
+        const 新方法虚拟存在引用&) const noexcept = 0;
+};
+class 新特征I64更新准备;
+class 新方法治理世界协作接口 {
+public:
+    virtual ~新方法治理世界协作接口() = default;
+    virtual 新方法治理场景发布结果 发布新方法治理场景组(
+        const std::vector<新方法虚拟存在引用>&, const 基础封存追加片段&,
+        新特征I64更新准备* 联动特征准备 = nullptr) noexcept = 0;
+    virtual void 迁移已有方法治理场景(
+        const std::vector<新方法虚拟存在引用>&) noexcept = 0;
+    virtual std::optional<新方法治理场景信息> 读取方法治理场景(
+        const 新方法虚拟存在引用&) const noexcept = 0;
+    virtual 新治理方法特征变化结果 完成方法特征变化(
+        const 新方法虚拟存在引用&, 稳定编码 前状态, 稳定编码 后状态) noexcept = 0;
+    virtual std::optional<新治理方法特征变化结果> 读取方法特征变化(
+        const 新方法虚拟存在引用&, 稳定编码 前状态, 稳定编码 后状态) const noexcept = 0;
+    virtual void 回收未消费方法治理场景组(
+        const std::vector<新方法虚拟存在引用>&) noexcept = 0;
+};
+
 enum class 新治理参与者种类 : std::uint8_t {
-    任务虚拟存在 = 1, 现实执行主体引用 = 2
+    任务虚拟存在 = 1, 现实执行主体引用 = 2, 方法虚拟存在 = 3
 };
 struct 新治理场景参与者 final {
     稳定编码 场景节点, 参与节点, 专属存在概念节点;
     新治理参与者种类 种类 = 新治理参与者种类::任务虚拟存在;
     std::optional<新任务虚拟存在引用> 任务引用;
     std::optional<稳定编码> 现实来源场景节点;
+    std::optional<新方法虚拟存在引用> 方法引用;
     friend bool operator==(const 新治理场景参与者&, const 新治理场景参与者&) = default;
 };
 class 新治理参与者读取接口 {

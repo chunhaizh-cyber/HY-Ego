@@ -264,6 +264,13 @@ public:
         const std::vector<稳定编码>& 节点组,
         const std::vector<稳定编码>& 字段关系组,
         const std::vector<稳定编码>& 外部关系组) noexcept;
+    // 零写入；允许组只豁免精确内容入边，不豁免任何字段键消费。
+    // 已完成不是删除许可，也不持有跨调用保留锁。
+    基础结构操作状态 检查节点结构引用闭包(
+        const std::vector<稳定编码>& 节点组,
+        const std::vector<稳定编码>& 自有字段关系组,
+        const std::vector<稳定编码>& 结构外部关系组,
+        const std::vector<稳定编码>& 允许外部入向字段关系组) const noexcept;
     std::optional<基础节点> 查询节点(稳定编码 节点) const noexcept;
 
     // 新节点及初始结构一次发布；失败无公开半结构，已分配编码不回退。
@@ -318,6 +325,12 @@ public:
         稳定编码 目标节点, 稳定编码 字段节点) const;
 
 private:
+    基础结构操作状态 检查节点结构引用闭包已加锁(
+        const std::vector<稳定编码>& 节点组,
+        const std::vector<稳定编码>& 自有字段关系组,
+        const std::vector<稳定编码>& 结构外部关系组,
+        const std::vector<稳定编码>& 允许外部入向字段关系组,
+        bool 拒绝全部字段键消费) const;
     // 仅由持有本对象独占锁的原子建立入口调用，不重入公开函数。
     基础节点组建立结果 原子建立节点组已加锁(
         const std::vector<基础组内新节点>& 请求,

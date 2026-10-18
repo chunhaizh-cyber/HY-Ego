@@ -324,6 +324,86 @@ bool 基础数据集::有入向字段引用(稳定编码 节点, 稳定编码 �
     }
 }
 
+基础结构操作状态 基础数据集::检查节点结构引用闭包已加锁(
+    const std::vector<稳定编码>& 节点组,
+    const std::vector<稳定编码>& 自有字段关系组,
+    const std::vector<稳定编码>& 结构外部关系组,
+    const std::vector<稳定编码>& 允许外部入向字段关系组,
+    bool 拒绝全部字段键消费) const {
+    using 状态 = 基础结构操作状态;
+    if (节点组.empty()) return 状态::入口拒绝;
+    const auto 合法集合 = [](const auto& 组, auto& 集合) {
+        for (const auto 编码 : 组)
+            if (!有效(编码) || !集合.insert(编码.值).second) return false;
+        return true;
+    };
+    std::set<std::uint64_t> 节点集, 字段集, 关系集, 允许字段集;
+    if (!合法集合(节点组, 节点集) || !合法集合(自有字段关系组, 字段集)
+        || !合法集合(结构外部关系组, 关系集)
+        || !合法集合(允许外部入向字段关系组, 允许字段集)) return 状态::入口拒绝;
+    for (const auto 编码 : 节点集)
+        if (!节点_.contains(编码)) return 状态::节点不存在;
+    for (const auto 编码 : 字段集) {
+        const auto 位置 = 字段关系_.find(编码);
+        if (位置 == 字段关系_.end()) return 状态::引用不存在;
+        if (!节点集.contains(位置->second.所属节点.值)) return 状态::入口拒绝;
+        核验字段索引已加锁(位置->second);
+    }
+    for (const auto 编码 : 关系集) {
+        const auto 位置 = 外部关系_.find(编码);
+        if (位置 == 外部关系_.end()) return 状态::引用不存在;
+        if (!节点集.contains(位置->second.源节点.值)
+            && !节点集.contains(位置->second.目标节点.值)) return 状态::入口拒绝;
+    }
+    for (const auto 编码 : 允许字段集) {
+        if (字段集.contains(编码)) return 状态::入口拒绝;
+        const auto 位置 = 字段关系_.find(编码);
+        if (位置 == 字段关系_.end()) return 状态::引用不存在;
+        const auto& 字段 = 位置->second;
+        const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
+        if (节点集.contains(字段.所属节点.值) || !目标
+            || !节点集.contains(目标->值)) return 状态::入口拒绝;
+        核验字段索引已加锁(字段);
+    }
+    for (const auto& [编码, 字段] : 字段关系_) {
+        // 新只读入口连自有字段的字段键消费也拒绝；旧删除保留完整集内随同删除语义。
+        if (拒绝全部字段键消费 && 节点集.contains(字段.字段节点.值))
+            return 状态::引用仍存在;
+        if (字段集.contains(编码)) continue;
+        if (节点集.contains(字段.所属节点.值)) return 状态::内部不一致;
+        if (节点集.contains(字段.字段节点.值)) return 状态::引用仍存在;
+        const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
+        if (目标 && 节点集.contains(目标->值) && !允许字段集.contains(编码))
+            return 状态::引用仍存在;
+    }
+    for (const auto& [编码, 关系] : 外部关系_) {
+        if (!关系集.contains(编码) && 节点集.contains(关系.源节点.值)
+            && 节点集.contains(关系.目标节点.值)) return 状态::内部不一致;
+        if (!关系集.contains(编码) && (节点集.contains(关系.源节点.值)
+            || 节点集.contains(关系.目标节点.值))) return 状态::引用仍存在;
+    }
+    return 状态::已完成;
+}
+
+基础结构操作状态 基础数据集::检查节点结构引用闭包(
+    const std::vector<稳定编码>& 节点组,
+    const std::vector<稳定编码>& 自有字段关系组,
+    const std::vector<稳定编码>& 结构外部关系组,
+    const std::vector<稳定编码>& 允许外部入向字段关系组) const noexcept {
+    try {
+        std::shared_lock 锁(互斥_);
+        return 检查节点结构引用闭包已加锁(节点组, 自有字段关系组,
+            结构外部关系组, 允许外部入向字段关系组, true);
+    } catch (const std::bad_alloc&) { return 基础结构操作状态::资源失败;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"检查节点结构引用闭包",
+            L"只读引用闭包或字段索引核验异常，未形成业务结果。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"检查节点结构引用闭包",
+            L"只读引用闭包核验发生未知工程异常。");
+    }
+}
+
 基础结构操作状态 基础数据集::原子删除节点结构(
     const std::vector<稳定编码>& 节点组,
     const std::vector<稳定编码>& 字段关系组,
@@ -331,47 +411,13 @@ bool 基础数据集::有入向字段引用(稳定编码 节点, 稳定编码 �
     using 状态 = 基础结构操作状态;
     try {
         std::unique_lock 锁(互斥_);
-        if (节点组.empty()) return 状态::入口拒绝;
-        const auto 合法集合 = [](const auto& 组, auto& 集合) {
-            for (const auto 编码 : 组)
-                if (!有效(编码) || !集合.insert(编码.值).second) return false;
-            return true;
-        };
-        std::set<std::uint64_t> 节点集, 字段集, 关系集;
-        if (!合法集合(节点组, 节点集) || !合法集合(字段关系组, 字段集)
-            || !合法集合(外部关系组, 关系集)) return 状态::入口拒绝;
-        for (const auto 编码 : 节点集)
-            if (!节点_.contains(编码)) return 状态::节点不存在;
-        for (const auto 编码 : 字段集) {
-            const auto 位置 = 字段关系_.find(编码);
-            if (位置 == 字段关系_.end()) return 状态::引用不存在;
-            if (!节点集.contains(位置->second.所属节点.值)) return 状态::入口拒绝;
-            核验字段索引已加锁(位置->second);
-        }
-        for (const auto 编码 : 关系集) {
-            const auto 位置 = 外部关系_.find(编码);
-            if (位置 == 外部关系_.end()) return 状态::引用不存在;
-            if (!节点集.contains(位置->second.源节点.值)
-                && !节点集.contains(位置->second.目标节点.值)) return 状态::入口拒绝;
-        }
-        for (const auto& [编码, 字段] : 字段关系_) {
-            if (字段集.contains(编码)) continue;
-            // 私有字段遗漏也是未闭合结构，不能只删除节点。
-            if (节点集.contains(字段.所属节点.值)) return 状态::内部不一致;
-            if (节点集.contains(字段.字段节点.值)) return 状态::引用仍存在;
-            const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
-            if (目标 && 节点集.contains(目标->值)) return 状态::引用仍存在;
-        }
-        for (const auto& [编码, 关系] : 外部关系_) {
-            if (!关系集.contains(编码) && 节点集.contains(关系.源节点.值)
-                && 节点集.contains(关系.目标节点.值)) return 状态::内部不一致;
-            if (!关系集.contains(编码) && (节点集.contains(关系.源节点.值)
-                || 节点集.contains(关系.目标节点.值))) return 状态::引用仍存在;
-        }
+        const auto 核验 = 检查节点结构引用闭包已加锁(
+            节点组, 字段关系组, 外部关系组, {}, false);
+        if (核验 != 状态::已完成) return 核验;
         // 此后只在已核验的标准map/set中删除，不再分配；无外部调用。
-        for (const auto 编码 : 字段集) 删除字段已加锁(字段关系_.at(编码));
-        for (const auto 编码 : 关系集) 外部关系_.erase(外部关系_.find(编码));
-        for (const auto 编码 : 节点集) 节点_.erase(节点_.find(编码));
+        for (const auto 编码 : 字段关系组) 删除字段已加锁(字段关系_.at(编码.值));
+        for (const auto 编码 : 外部关系组) 外部关系_.erase(外部关系_.find(编码.值));
+        for (const auto 编码 : 节点组) 节点_.erase(节点_.find(编码.值));
         return 状态::已完成;
     } catch (const std::bad_alloc&) { return 状态::资源失败;
     } catch (const std::exception& 异常) {

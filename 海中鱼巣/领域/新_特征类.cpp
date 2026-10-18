@@ -2747,6 +2747,99 @@ std::optional<新特征信息> 新_特征类::获取特征(
     }
 }
 
+void 新_特征类::核验初建I64特征可回收(
+    稳定编码 特征节点, 稳定编码 预期特征概念节点,
+    std::int64_t 初始值,
+    const std::vector<稳定编码>& 允许外部入向字段关系组) const noexcept {
+    try {
+        std::lock_guard 锁(新特征互斥);
+        if (!结构仍存在() || !有效(特征节点) || !有效(预期特征概念节点)
+            || 联合更新占用表.contains(特征节点))
+            throw std::runtime_error("initial feature reclaim identity or occupancy invalid");
+        const auto 特征 = 获取特征(特征节点);
+        const auto 概念 = 特征概念服务_.获取特征概念(预期特征概念节点);
+        const 特征概念值域 初始域{std::vector<特征概念I64闭区间>{{初始值, 初始值}}};
+        const 新特征准确值 初始准确值{初始值};
+        if (!特征 || !概念 || 概念->材料类型 != 特征概念材料物理类型::I64标量
+            || 概念->单位 || 特征->特征概念节点 != 预期特征概念节点
+            || 特征->上级特征节点 || 特征->实例单位 || 特征->实例区间值
+            || 特征->当前值 != 初始准确值 || 特征->标准值 != 初始准确值
+            || 特征->历史不同值 != std::vector<新特征准确值>{初始准确值}
+            || 特征->历史值命中信息 != std::vector<新特征值命中信息>{{初始准确值, 1}}
+            || 特征->实例历史聚合值域 != 初始域)
+            throw std::runtime_error("feature is not an unchanged initial I64 instance");
+
+        const auto 记录组 = 读取历史值命中记录(特征节点);
+        const auto 聚合域 = 读取唯一节点字段(特征节点, 实例历史聚合值域字段);
+        if (!记录组 || 记录组->size() != 1 || !聚合域
+            || 记录组->front().所属特征 != 特征节点
+            || 记录组->front().值 != 初始准确值 || 记录组->front().命中次数 != 1
+            || 读取值域节点(*聚合域, 特征概念材料物理类型::I64标量) != 初始域)
+            throw std::runtime_error("initial feature private history/domain invalid");
+        const auto 记录 = 记录组->front().记录节点;
+        const std::vector<稳定编码> 节点组{特征节点, 记录, *聚合域};
+        if (std::set<稳定编码>(节点组.begin(), 节点组.end()).size() != 节点组.size())
+            throw std::runtime_error("initial feature private identities alias");
+        const auto 完整组 = 全局基础数据集.查询节点组完整结构(节点组);
+        if (完整组.状态 != 基础结构操作状态::已完成
+            || 完整组.节点组.size() != 节点组.size())
+            throw std::runtime_error("initial feature complete structure unavailable");
+        std::vector<稳定编码> 自有字段;
+        const auto 核对字段 = [&](const 基础联合节点快照& 快照,
+            const std::vector<基础节点初始字段>& 预期) {
+            if (!快照.入向外部关系组.empty() || !快照.出向外部关系组.empty()
+                || 快照.结构.字段组.size() != 预期.size())
+                throw std::runtime_error("initial feature has extra fields or relations");
+            for (const auto& 项 : 预期) {
+                const 基础字段关系* 命中 = nullptr;
+                for (const auto& 字段 : 快照.结构.字段组) {
+                    if (字段.字段节点 != 项.字段节点) continue;
+                    if (命中 || 字段.所属节点 != 快照.结构.节点.编码 || 字段.内容 != 项.内容)
+                        throw std::runtime_error("initial feature field content/cardinality changed");
+                    命中 = &字段;
+                }
+                if (!命中) throw std::runtime_error("initial feature required field missing");
+                自有字段.push_back(命中->编码);
+            }
+        };
+        const 基础值 初始直接值{基础原始值{初始值}};
+        for (const auto& 项 : 完整组.节点组) {
+            if (!项.快照) throw std::runtime_error("initial feature private node missing");
+            const auto 节点 = 项.快照->结构.节点.编码;
+            if (节点 == 特征节点) {
+                核对字段(*项.快照, {{节点类型字段, 特征节点类型},
+                    {特征概念字段, 预期特征概念节点}, {当前值字段, 初始直接值},
+                    {标准值字段, 初始直接值}, {历史值命中记录字段, 记录},
+                    {实例历史聚合值域字段, *聚合域}});
+            } else if (节点 == 记录) {
+                核对字段(*项.快照, {{节点类型字段, 历史值命中记录节点类型},
+                    {历史值记录准确值字段, 初始直接值}, {历史值记录所属特征字段, 特征节点},
+                    {历史值记录命中次数字段, 基础值{基础原始值{std::int64_t{1}}}}});
+            } else if (节点 == *聚合域) {
+                核对字段(*项.快照, {{节点类型字段, 值域节点类型},
+                    {I64值域字段, 基础值{基础原始值{std::vector<std::int64_t>{初始值, 初始值}}}}});
+            } else throw std::runtime_error("initial feature query returned unexpected identity");
+        }
+        // 上层只能豁免指向F本身的精确持有字段，不能放行私有子材料消费。
+        for (const auto 编码 : 允许外部入向字段关系组) {
+            const auto 字段 = 全局基础数据集.查询字段关系(编码);
+            const auto* 目标 = 字段 ? std::get_if<稳定编码>(&字段->内容) : nullptr;
+            if (!目标 || *目标 != 特征节点)
+                throw std::runtime_error("initial feature allowed reference targets private material");
+        }
+        if (全局基础数据集.检查节点结构引用闭包(
+                节点组, 自有字段, {}, 允许外部入向字段关系组)
+            != 基础结构操作状态::已完成)
+            throw std::runtime_error("initial feature private closure is consumed or changed");
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验初建I64特征可回收",
+            L"初建特征或其私有材料不能完整证明未消费；未执行删除。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验初建I64特征可回收",
+            L"完整回收预检发生未知工程异常；未执行删除。");
+    }
+}
+
 bool 新_特征类::删除特征(稳定编码 特征节点) noexcept {
     try {
         std::lock_guard 锁(新特征互斥);

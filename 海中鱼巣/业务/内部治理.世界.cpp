@@ -16,6 +16,28 @@ void 核验挂接(新场景操作状态 状态) {
     if (状态 != 新场景操作状态::已完成 && 状态 != 新场景操作状态::无变化)
         throw std::runtime_error("governance scene attachment failed");
 }
+void 核验方法特征状态对(const 新方法虚拟存在读回& 方法,
+    const 新状态信息& 前, const 新状态信息& 后, const 概念_特征类& 概念服务) {
+    if (前.节点 == 后.节点 || 前.被描述存在节点 != 方法.引用.虚拟存在节点
+        || 后.被描述存在节点 != 前.被描述存在节点
+        || 前.来源实例特征节点 != 方法.引用.启用特征节点
+        || 后.来源实例特征节点 != 前.来源实例特征节点
+        || !std::holds_alternative<std::int64_t>(前.固定准确值)
+        || !std::holds_alternative<std::int64_t>(后.固定准确值)
+        || 前.固定准确值 == 后.固定准确值
+        || 前.强时间.语义 != 新状态时间语义::实例绝对UTC
+        || 后.强时间.语义 != 新状态时间语义::实例绝对UTC
+        || 前.强时间.纳秒 <= 0 || 后.强时间.纳秒 <= 前.强时间.纳秒)
+        throw std::runtime_error("method feature state pair identity/value/time mismatch");
+    for (const auto* 状态 : {&前, &后}) {
+        const auto 值 = std::get<std::int64_t>(状态->固定准确值);
+        const auto 关系 = 概念服务.比较单特征概念(状态->特征类型概念节点, 状态->特征类型概念节点);
+        if ((值 != 0 && 值 != 1) || 关系.状态 != 特征概念规则状态::已完成
+            || 关系.关系 != 单特征概念关系::同一
+            || 关系.特征类型根 != 方法.启用特征类型概念节点)
+            throw std::runtime_error("method enable state value/type is invalid");
+    }
+}
 const 新任务虚拟存在特征读回& 核验治理特征状态对(
     const 新任务虚拟存在特征组& 特征组, 稳定编码 F,
     const 新状态信息& 前, const 新状态信息& 后, const 概念_特征类& 概念服务) {
@@ -102,7 +124,7 @@ void 核验贡献阶段动作(const 新任务贡献动作阶段& 阶段, const �
 新_内部治理世界类::新_内部治理世界类(新_特征值类& 值, 概念_特征类& 特征概念,
     新_特征类& 特征, 概念_存在类& 存在概念, const 概念_动态类& 动态概念,
     新_状态类& 状态, 新_存在类& 存在, 新_动态类& 动态, const 新_场景类& 现实) noexcept
-    : 特征概念服务_(特征概念), 状态服务_(状态), 动态服务_(动态), 现实场景_(现实),
+    : 特征概念服务_(特征概念), 特征服务_(特征), 状态服务_(状态), 动态服务_(动态), 现实场景_(现实),
       治理场景_(根场景节点_, 存在, 状态, 动态, 新场景树用途::内部治理),
       因果服务_(状态, 动态, 存在, 存在概念, 特征概念, 动态概念, 值, 治理场景_, this, this),
       反查服务_(因果服务_, 特征, 特征概念, 存在概念, 动态概念, 动态, 存在, 治理场景_, this) {}
@@ -114,9 +136,16 @@ bool 新_内部治理世界类::装配任务读取(const 新内部治理对象�
     return true;
 }
 
+bool 新_内部治理世界类::装配方法读取(const 新方法治理对象读取接口& 读取) noexcept {
+    if (方法读取_) return 方法读取_ == &读取;
+    if (有效(根场景节点_)) return false;
+    方法读取_ = &读取;
+    return true;
+}
+
 bool 新_内部治理世界类::初始化() noexcept {
     try {
-        if (!任务读取_) return false;
+        if (!任务读取_ || !方法读取_) return false;
         if (!治理场景_.初始化() || !因果服务_.初始化())
             throw std::runtime_error("governance dependencies initialization failed");
         const auto 根 = 治理场景_.建立根场景();
@@ -132,6 +161,90 @@ bool 新_内部治理世界类::初始化() noexcept {
 
 std::optional<稳定编码> 新_内部治理世界类::获取根场景() const noexcept {
     return 治理场景_.获取根场景();
+}
+
+std::optional<新方法治理场景信息> 新_内部治理世界类::读取方法治理场景(
+    const 新方法虚拟存在引用& 引用) const noexcept {
+    try {
+        if (!方法读取_ || !获取根场景()) throw std::runtime_error("method scene dependencies missing");
+        const auto 场景 = 治理场景_.读取方法治理场景(引用.方法节点);
+        if (!场景) return std::nullopt;
+        // 读取器不反查C(M)，且scene不持锁跨入method。合法未采用回收
+        // 可以发生在两次读取之间，必须复核场景，不能把旧投影当损坏。
+        const auto 方法 = 方法读取_->读取方法虚拟存在引用(引用);
+        const auto 复核 = 治理场景_.读取方法治理场景(引用.方法节点);
+        if (!复核) return std::nullopt;
+        if (!方法 || 方法->引用 != 引用 || 场景->方法引用 != 引用
+            || 场景->根场景节点 != 根场景节点_ || *复核 != *场景)
+            throw std::runtime_error("method scene ownership readback mismatch");
+        return 场景;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取方法治理场景", L"方法场景强归属读取异常。");
+    }
+}
+
+新方法治理场景发布结果 新_内部治理世界类::发布新方法治理场景组(
+    const std::vector<新方法虚拟存在引用>& 引用组, const 基础封存追加片段& 方法片段,
+    新特征I64更新准备* 联动特征准备) noexcept {
+    std::vector<新方法治理场景发布准备> 准备组;
+    bool 发布结果须保留 = false;
+    try {
+        if (!方法读取_ || !获取根场景() || 引用组.empty())
+            throw std::runtime_error("method scene publisher is not initialized or batch is empty");
+        准备组.reserve(引用组.size());
+        新方法治理场景发布结果 结果;
+        结果.场景组.reserve(引用组.size());
+        std::set<稳定编码> 方法组, 虚拟存在组, 特征组;
+        for (const auto& 引用 : 引用组) {
+            if (!方法组.insert(引用.方法节点).second || !虚拟存在组.insert(引用.虚拟存在节点).second
+                || !特征组.insert(引用.启用特征节点).second)
+                throw std::runtime_error("method scene batch has duplicate owners");
+            auto 准备 = 治理场景_.准备方法治理场景(根场景节点_, 引用);
+            if (!准备) throw std::runtime_error("method scene preparation failed");
+            准备组.push_back(std::move(*准备));
+        }
+        std::vector<基础封存追加片段> 片段组{方法片段};
+        for (const auto& 准备 : 准备组) 片段组.push_back(准备.场景片段());
+        基础节点组追加状态 状态;
+        std::vector<基础片段发布回执> 回执组;
+        发布结果须保留 = true;
+        if (联动特征准备) {
+            const auto 发布 = 特征服务_.提交顶层I64更新(*联动特征准备, 片段组);
+            状态 = 发布.状态;
+            回执组 = 发布.附加片段回执组;
+        } else {
+            const auto 发布 = 全局基础数据集.原子追加封存片段组(片段组);
+            状态 = 发布.状态;
+            回执组 = 发布.片段回执组;
+        }
+        if (状态 != 基础节点组追加状态::已完成) {
+            if (!回执组.empty()) throw std::runtime_error("zero publication carries method receipts");
+            发布结果须保留 = false;
+            for (const auto& 准备 : 准备组) 治理场景_.撤销未发布方法治理场景(准备);
+            return {};
+        }
+        if (回执组.size() != 片段组.size()) throw std::runtime_error("method publication receipt count mismatch");
+        for (const auto& 片段 : 片段组)
+            if (std::count_if(回执组.begin(), 回执组.end(), [&](const auto& r) { return r.对应片段(片段); }) != 1)
+                throw std::runtime_error("method publication receipt identity mismatch");
+        for (std::size_t i = 0; i < 引用组.size(); ++i) {
+            const auto 场景 = 读取方法治理场景(引用组[i]);
+            const auto 参与者 = 场景 ? 治理场景_.读取治理参与者(
+                场景->场景节点, 引用组[i].虚拟存在节点, *方法读取_) : std::nullopt;
+            if (!场景 || 场景->场景节点 != 准备组[i].候选场景节点()
+                || !参与者 || 参与者->方法引用 != 引用组[i])
+                throw std::runtime_error("published method/scene readback failed");
+            结果.场景组.push_back(*场景);
+        }
+        // 联动旧F仍由方法owner收尾；这里不读取旧方法的派生概念。
+        结果.状态 = 新方法治理场景发布工程状态::已发布;
+        return 结果;
+    } catch (...) {
+        if (发布结果须保留)
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"发布方法治理场景", L"发表结果未知或发表后读回异常，保留方法、特征及场景。");
+        for (const auto& 准备 : 准备组) 治理场景_.撤销未发布方法治理场景(准备);
+        return {}; // 明确零发表，方法owner清理候选并报告工程失败。
+    }
 }
 
 std::optional<新任务治理场景信息> 新_内部治理世界类::读取任务治理场景(
@@ -186,7 +299,8 @@ std::optional<新任务治理场景信息> 新_内部治理世界类::读取任�
 
 std::optional<新治理场景参与者> 新_内部治理世界类::读取治理参与者(
     稳定编码 场景, 稳定编码 节点) const noexcept {
-    if (!任务读取_) return std::nullopt;
+    if (!任务读取_ || !方法读取_) return std::nullopt;
+    if (auto 方法 = 治理场景_.读取治理参与者(场景, 节点, *方法读取_)) return 方法;
     return 治理场景_.读取治理参与者(场景, 节点, *任务读取_);
 }
 
@@ -528,6 +642,243 @@ std::optional<新治理任务特征变化结果> 新_内部治理世界类::读�
     }
 }
 
+std::optional<新治理方法特征变化结果> 新_内部治理世界类::读取方法特征变化(
+    const 新方法虚拟存在引用& 目标, 稳定编码 前节点, 稳定编码 后节点) const noexcept {
+    try {
+        if (!方法读取_) throw std::runtime_error("method feature reader is not assembled");
+        const auto 治理 = 读取方法治理场景(目标);
+        const auto 方法 = 方法读取_->读取方法虚拟存在引用(目标);
+        const auto 前 = 状态服务_.获取状态(前节点), 后 = 状态服务_.获取状态(后节点);
+        if (!治理 || !方法 || 方法->引用 != 目标 || !前 || !后)
+            throw std::runtime_error("method feature change material missing");
+        核验方法特征状态对(*方法, *前, *后, 特征概念服务_);
+        const auto 场景 = 治理场景_.获取场景(治理->场景节点);
+        if (!场景 || !场景->直接子场景组.empty() || !场景->直接成员存在组.empty()
+            || !场景->边界存在组.empty() || !场景->特征节点组.empty())
+            throw std::runtime_error("method scene unreadable or mixed with ordinary instances");
+        std::set<稳定编码> 已覆盖状态;
+        std::set<std::pair<稳定编码, 稳定编码>> 已见配对;
+        std::optional<新治理方法特征变化结果> 结果;
+        for (const auto d : 场景->动态节点组) {
+            const auto 动态 = 动态服务_.获取动态(d);
+            if (!动态 || !动态->动态概念节点 || 动态->种类 != 新动态种类::原子
+                || 动态->状态节点组.size() != 2 || 动态->主题存在节点 != 目标.虚拟存在节点)
+                throw std::runtime_error("method scene contains unsupported dynamic");
+            const auto a = 状态服务_.获取状态(动态->状态节点组[0]);
+            const auto b = 状态服务_.获取状态(动态->状态节点组[1]);
+            if (!a || !b || !含节点(场景->状态节点组, a->节点) || !含节点(场景->状态节点组, b->节点)
+                || !已见配对.emplace(a->节点, b->节点).second)
+                throw std::runtime_error("method scene has partial or duplicate state pairs");
+            核验方法特征状态对(*方法, *a, *b, 特征概念服务_);
+            已覆盖状态.insert(a->节点);
+            已覆盖状态.insert(b->节点);
+            if (a->节点 == 前节点 && b->节点 == 后节点)
+                结果 = 新治理方法特征变化结果{目标, 场景->节点, 前节点, 后节点, d};
+        }
+        if (已覆盖状态 != std::set<稳定编码>(场景->状态节点组.begin(), 场景->状态节点组.end()))
+            throw std::runtime_error("method scene contains orphan state facts");
+        const auto 结构 = 全局基础数据集.查询节点组完整结构({前节点, 后节点});
+        if (结构.状态 != 基础结构操作状态::已完成 || 结构.节点组.size() != 2)
+            throw std::runtime_error("method state incoming references unreadable");
+        const auto 核验引用动态 = [&](稳定编码 节点) {
+            if (!动态服务_.是动态节点(节点)) return false;
+            const auto 动态 = 动态服务_.获取动态(节点);
+            if (!动态 || !含节点(场景->动态节点组, 节点))
+                throw std::runtime_error("method state consumed by unattached dynamic");
+            if (动态->种类 == 新动态种类::原子
+                && 动态->状态节点组 == std::vector<稳定编码>{前节点, 后节点}
+                && (!结果 || 动态->节点 != 结果->变化动态节点))
+                throw std::runtime_error("duplicate exact method change");
+            return true;
+        };
+        std::set<稳定编码> 已核验引用项, 已读端点;
+        for (const auto& 项 : 结构.节点组) {
+            if (!项.快照 || (项.查询节点 != 前节点 && 项.查询节点 != 后节点)
+                || !已读端点.insert(项.查询节点).second)
+                throw std::runtime_error("method state reference readback identity mismatch");
+            const bool 已在本场景 = 含节点(场景->状态节点组, 项.查询节点);
+            if (!已在本场景 && (!项.快照->入向字段组.empty() || !项.快照->入向外部关系组.empty()))
+                throw std::runtime_error("unattached method state is already consumed");
+            for (const auto& 入边 : 项.快照->入向字段组) {
+                const auto 引用者 = 入边.所属节点;
+                if (引用者 == 场景->节点 || !已核验引用项.insert(引用者).second
+                    || 核验引用动态(引用者)) continue;
+                if (现实场景_.是场景节点(引用者) || 治理场景_.是场景节点(引用者))
+                    throw std::runtime_error("method state belongs to another scene");
+                // D经状态项R引用S；不解释R的私有布局，只沿完整入边找正式D。
+                const auto 引用结构 = 全局基础数据集.查询节点组完整结构({引用者});
+                if (引用结构.状态 != 基础结构操作状态::已完成 || 引用结构.节点组.size() != 1
+                    || 引用结构.节点组.front().查询节点 != 引用者 || !引用结构.节点组.front().快照)
+                    throw std::runtime_error("method state reference item unreadable");
+                for (const auto& 持有 : 引用结构.节点组.front().快照->入向字段组)
+                    (void)核验引用动态(持有.所属节点);
+            }
+        }
+        return 结果;
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取方法特征变化",
+            L"方法状态动态不完整或归属、值、时间不一致。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取方法特征变化", L"未知工程读取异常。");
+    }
+}
+
+新治理方法特征变化结果 新_内部治理世界类::完成方法特征变化(
+    const 新方法虚拟存在引用& 目标, 稳定编码 前节点, 稳定编码 后节点) noexcept {
+    try {
+        if (const auto 既有 = 读取方法特征变化(目标, 前节点, 后节点)) return *既有;
+        const auto 方法 = 方法读取_->读取方法虚拟存在引用(目标);
+        const auto 治理 = 读取方法治理场景(目标);
+        const auto 前 = 状态服务_.获取状态(前节点), 后 = 状态服务_.获取状态(后节点);
+        if (!方法 || !治理 || !前 || !后) throw std::runtime_error("method change material missing");
+        核验方法特征状态对(*方法, *前, *后, 特征概念服务_);
+        if (后->固定准确值 != 新特征准确值{方法->当前启用}
+            || 前->被引用次数 != 0 || 后->被引用次数 != 0)
+            throw std::runtime_error("new method change is stale or partly consumed");
+        核验挂接(治理场景_.添加治理状态(治理->场景节点, 前节点, *方法读取_, 特征概念服务_));
+        核验挂接(治理场景_.添加治理状态(治理->场景节点, 后节点, *方法读取_, 特征概念服务_));
+        const auto 变化 = 动态服务_.建立原子动态(目标.虚拟存在节点, 前节点, 后节点);
+        if (变化.状态 != 新动态操作状态::已完成 || !变化.动态节点)
+            throw std::runtime_error("method atomic dynamic publication failed");
+        核验挂接(治理场景_.添加治理动态(治理->场景节点, *变化.动态节点, *方法读取_, 特征概念服务_));
+        const auto 读回 = 读取方法特征变化(目标, 前节点, 后节点);
+        if (!读回 || 读回->变化动态节点 != *变化.动态节点)
+            throw std::runtime_error("method change completion readback failed");
+        return *读回; // 无正式动作来源时不补造动作或因果。
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"完成方法特征变化",
+            L"已发生方法特征变化无法完整组织；保留事实，禁止重放。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"完成方法特征变化", L"未知工程异常；保留事实。");
+    }
+}
+
+void 新_内部治理世界类::回收未消费方法治理场景组(
+    const std::vector<新方法虚拟存在引用>& 引用组) noexcept {
+    try {
+        if (!方法读取_) throw std::runtime_error("method cleanup reader missing");
+        std::set<稳定编码> 已查;
+        // 全批只读预检；方法owner仍持方法锁，并已证明无任务/学习采用。
+        for (const auto& 引用 : 引用组) {
+            const auto 治理 = 读取方法治理场景(引用);
+            const auto 场景 = 治理 ? 治理场景_.获取场景(治理->场景节点) : std::nullopt;
+            if (!治理 || !场景 || !已查.insert(场景->节点).second
+                || !场景->状态节点组.empty() || !场景->动态节点组.empty()
+                || !场景->直接子场景组.empty()
+                || !场景->直接成员存在组.empty() || !场景->边界存在组.empty() || !场景->特征节点组.empty()
+                || 治理场景_.查询治理参与节点(场景->节点) != std::vector<稳定编码>{引用.虚拟存在节点})
+                throw std::runtime_error("unadopted method scene has been consumed");
+        }
+        for (const auto& 引用 : 引用组) 治理场景_.回收未消费方法治理场景(引用, *方法读取_);
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"回收未消费方法治理场景",
+            L"未采用闭包不能证明未被消费或场景回收失败；保留剩余事实。");
+    }
+}
+
+void 新_内部治理世界类::迁移已有方法治理场景(
+    const std::vector<新方法虚拟存在引用>& 引用组) noexcept {
+    try {
+        if (!方法读取_ || !任务读取_ || !获取根场景())
+            throw std::runtime_error("method migration dependencies missing");
+        std::map<稳定编码, 新方法虚拟存在引用> 方法场景;
+        std::set<稳定编码> 方法组, 虚拟存在组, 特征组;
+        for (const auto& 引用 : 引用组) {
+            const auto 方法 = 方法读取_->读取方法虚拟存在引用(引用);
+            const auto 治理 = 读取方法治理场景(引用);
+            if (!方法 || 方法->引用 != 引用 || !治理
+                || !方法组.insert(引用.方法节点).second || !虚拟存在组.insert(引用.虚拟存在节点).second
+                || !特征组.insert(引用.启用特征节点).second
+                || !方法场景.emplace(治理->场景节点, 引用).second)
+                throw std::runtime_error("method migration set has incomplete or duplicate ownership");
+        }
+        const auto 根 = 治理场景_.获取场景(根场景节点_);
+        if (!根) throw std::runtime_error("method migration root unreadable");
+        std::set<稳定编码> 已查场景;
+        for (const auto c : 根->直接子场景组) {
+            if (!已查场景.insert(c).second) throw std::runtime_error("duplicate governance child scene");
+            const auto 场景 = 治理场景_.获取场景(c);
+            if (!场景 || 场景->父场景节点 != 根场景节点_ || !场景->直接子场景组.empty())
+                throw std::runtime_error("governance child scene structure invalid");
+            bool 已证所属 = false;
+            for (const auto e : 治理场景_.查询治理参与节点(c)) {
+                const auto 参与者 = 读取治理参与者(c, e);
+                if (!参与者) throw std::runtime_error("governance participant missing during method migration");
+                if (参与者->种类 == 新治理参与者种类::方法虚拟存在) {
+                    if (!参与者->方法引用 || !方法组.contains(参与者->方法引用->方法节点))
+                        throw std::runtime_error("method participant is outside complete method set");
+                    const auto 所属 = 读取方法治理场景(*参与者->方法引用);
+                    if (!所属) throw std::runtime_error("method participant has no owned scene");
+                    if (所属->场景节点 == c) {
+                        if (已证所属 || !方法场景.contains(c) || 方法场景.at(c) != *参与者->方法引用)
+                            throw std::runtime_error("ambiguous method scene owner");
+                        已证所属 = true;
+                    }
+                } else if (参与者->种类 == 新治理参与者种类::任务虚拟存在) {
+                    if (!参与者->任务引用) throw std::runtime_error("task participant reference missing");
+                    const auto 所属 = 读取任务治理场景(*参与者->任务引用);
+                    if (!所属) throw std::runtime_error("task participant has no owned scene");
+                    if (所属->场景节点 == c) {
+                        if (已证所属 || 方法场景.contains(c)) throw std::runtime_error("mixed governance ownership");
+                        已证所属 = true;
+                    }
+                } else if (参与者->种类 != 新治理参与者种类::现实执行主体引用)
+                    throw std::runtime_error("unknown governance participant kind");
+            }
+            if (!已证所属) throw std::runtime_error("unowned governance child scene");
+            if (!方法场景.contains(c)) continue; // 合法C(T)由任务owner完整迁接，不移动其事实。
+            if (!场景->直接成员存在组.empty() || !场景->边界存在组.empty() || !场景->特征节点组.empty())
+                throw std::runtime_error("method scene contains ordinary instances");
+            const auto& 引用 = 方法场景.at(c);
+            std::set<稳定编码> 已覆盖状态;
+            for (const auto d : 场景->动态节点组) {
+                const auto 动态 = 动态服务_.获取动态(d);
+                if (!动态 || 动态->种类 != 新动态种类::原子 || 动态->状态节点组.size() != 2)
+                    throw std::runtime_error("unsupported method migration dynamic");
+                const auto 包 = 读取方法特征变化(引用, 动态->状态节点组[0], 动态->状态节点组[1]);
+                if (!包 || 包->变化动态节点 != d || 包->治理场景节点 != c)
+                    throw std::runtime_error("method migration change package mismatch");
+                已覆盖状态.insert(包->前状态节点);
+                已覆盖状态.insert(包->后状态节点);
+            }
+            if (已覆盖状态 != std::set<稳定编码>(场景->状态节点组.begin(), 场景->状态节点组.end()))
+                throw std::runtime_error("method migration contains orphan states");
+            // 完整入边发现动作中断后未挂接的S，不用容错空查询掩盖部分事实。
+            const auto 结构 = 全局基础数据集.查询节点组完整结构({引用.启用特征节点});
+            if (结构.状态 != 基础结构操作状态::已完成 || 结构.节点组.size() != 1
+                || 结构.节点组.front().查询节点 != 引用.启用特征节点 || !结构.节点组.front().快照)
+                throw std::runtime_error("method feature incoming references unreadable");
+            for (const auto& 边 : 结构.节点组.front().快照->入向字段组) {
+                if (!状态服务_.是状态节点(边.所属节点)) continue;
+                const auto 状态 = 状态服务_.获取状态(边.所属节点);
+                if (!状态 || 状态->被描述存在节点 != 引用.虚拟存在节点
+                    || 状态->来源实例特征节点 != 引用.启用特征节点 || !已覆盖状态.contains(状态->节点))
+                    throw std::runtime_error("method feature has an unorganized state; preserve and stop");
+            }
+        }
+        for (const auto& [c, 引用] : 方法场景) {
+            (void)引用;
+            if (!已查场景.contains(c)) throw std::runtime_error("method scene missing from root");
+        }
+        for (const auto s : 根->状态节点组) {
+            const auto 状态 = 状态服务_.获取状态(s);
+            if (!状态 || 虚拟存在组.contains(状态->被描述存在节点)
+                || 特征组.contains(状态->来源实例特征节点))
+                throw std::runtime_error("legacy root has untraceable method state");
+        }
+        for (const auto d : 根->动态节点组) {
+            const auto 动态 = 动态服务_.获取动态(d);
+            if (!动态 || 虚拟存在组.contains(动态->主题存在节点))
+                throw std::runtime_error("legacy root has untraceable method dynamic");
+        }
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"迁移方法治理场景",
+            L"方法治理归属或旧事实无法完整证明；保留材料并停止启动。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"迁移方法治理场景", L"未知迁接工程异常。");
+    }
+}
+
 void 新_内部治理世界类::迁移已有任务治理场景(
     const std::vector<新任务虚拟存在引用>& 引用组) noexcept {
     try {
@@ -551,8 +902,27 @@ void 新_内部治理世界类::迁移已有任务治理场景(
             }
         }
         const auto 根 = 治理场景_.获取场景(根场景节点_);
-        if (!根 || std::set<稳定编码>(根->直接子场景组.begin(), 根->直接子场景组.end()) != 已有场景
-            || 根->直接子场景组.size() != 已有场景.size())
+        if (!根) throw std::runtime_error("governance root unavailable");
+        auto 全部已知场景 = 已有场景;
+        for (const auto c : 根->直接子场景组) {
+            if (已有场景.contains(c)) continue;
+            bool 已证方法场景 = false;
+            for (const auto e : 治理场景_.查询治理参与节点(c)) {
+                const auto 参与者 = 读取治理参与者(c, e);
+                if (!参与者) throw std::runtime_error("foreign governance participant unreadable");
+                if (参与者->种类 != 新治理参与者种类::方法虚拟存在) continue;
+                if (!参与者->方法引用) throw std::runtime_error("method participant reference missing");
+                const auto 所属 = 读取方法治理场景(*参与者->方法引用);
+                if (所属 && 所属->场景节点 == c) {
+                    if (已证方法场景) throw std::runtime_error("method scene has duplicate ownership");
+                    已证方法场景 = true;
+                }
+            }
+            if (!已证方法场景 || !全部已知场景.insert(c).second)
+                throw std::runtime_error("governance root contains unknown or duplicate scene");
+        }
+        if (std::set<稳定编码>(根->直接子场景组.begin(), 根->直接子场景组.end()) != 全部已知场景
+            || 根->直接子场景组.size() != 全部已知场景.size())
             throw std::runtime_error("governance root contains orphan or unregistered task scenes");
 
         std::map<稳定编码, 新场景信息> 场景快照;
@@ -584,6 +954,10 @@ void 新_内部治理世界类::迁移已有任务治理场景(
                         || 任务快照.at(参与者->任务引用->任务节点).状态.引用 != *参与者->任务引用
                         || (c != 根场景节点_ && 任务场景.at(参与者->任务引用->任务节点).场景节点 != c))
                         throw std::runtime_error("migration participant task is not in complete task set");
+                } else if (参与者->种类 == 新治理参与者种类::方法虚拟存在) {
+                    if (!参与者->方法引用 || !读取方法治理场景(*参与者->方法引用))
+                        throw std::runtime_error("migration method participant has no complete owned scene");
+                    // C(T)/根仅引用共享Vm；不混入任务目标或任务状态动态迁接。
                 } else if (参与者->种类 != 新治理参与者种类::现实执行主体引用
                     || !参与者->现实来源场景节点
                     || !现实场景_.存在属于场景范围(*参与者->现实来源场景节点, e))
@@ -785,21 +1159,26 @@ void 新_内部治理世界类::迁移已有任务治理场景(
 
 std::optional<新治理场景参与者> 新_内部治理世界类::读取范围治理参与者(
     稳定编码 范围, 稳定编码 节点) const {
-    std::vector<稳定编码> 待查{范围};
+    std::vector<std::pair<稳定编码, std::optional<稳定编码>>> 待查{{范围, std::nullopt}};
     std::set<稳定编码> 已查;
     std::optional<新治理场景参与者> 结果;
     while (!待查.empty()) {
-        const auto c = 待查.back();
+        const auto [c, 父] = 待查.back();
         待查.pop_back();
         if (!已查.insert(c).second) throw std::runtime_error("governance scene range contains a cycle or duplicate");
         const auto 场景 = 治理场景_.获取场景(c);
-        if (!场景) throw std::runtime_error("governance scene range unreadable");
+        if (!场景) {
+            if (!父) return std::nullopt;
+            const auto 父当前 = 治理场景_.获取场景(*父);
+            if (父当前 && !含节点(父当前->直接子场景组, c)) continue;
+            throw std::runtime_error("governance scene range has a dangling child");
+        }
         if (auto 当前 = 读取治理参与者(c, 节点)) {
             当前->场景节点 = 范围; // 仅合并值式投影，公共本级读取的场景身份不变。
             if (结果 && *结果 != *当前) throw std::runtime_error("governance participant projections conflict across scenes");
             结果 = *当前;
         }
-        待查.insert(待查.end(), 场景->直接子场景组.begin(), 场景->直接子场景组.end());
+        for (const auto 子 : 场景->直接子场景组) 待查.emplace_back(子, c);
     }
     return 结果;
 }

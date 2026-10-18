@@ -96,6 +96,7 @@ private:
     friend class 新_存在类;
     friend class 新_动态类;
     friend class 新_任务类;
+    friend class 新_方法类;
 
     // 状态只能由存在的实例特征当前值建立；类型和值从特征节点完整读回。
     新状态建立结果 建立状态(

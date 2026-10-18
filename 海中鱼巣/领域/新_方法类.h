@@ -8,6 +8,7 @@
 #include "新_方法公共类型.h"
 #include "新_方法参数场景.h"
 #include "新_本能函数集.h"
+#include "新_内部治理对象引用.h"
 
 namespace 海中鱼巣 {
 
@@ -17,6 +18,7 @@ class 新_特征类;
 class 概念_存在类;
 class 概念_特征类;
 class 新_任务类;
+class 新_状态类;
 
 // 方法拥有自己的独立根；该根不挂入世界树、需求树或任务集合根。
 extern 稳定编码 新方法组织根节点;
@@ -43,7 +45,7 @@ struct 新方法本能调用结果 final {
     std::optional<新本能函数本次条件结果对> 本次条件结果对;
 };
 
-class 新_方法类 final {
+class 新_方法类 final : public 新方法治理对象读取接口 {
 public:
     新_方法类(
         新_存在类& 存在服务,
@@ -51,10 +53,15 @@ public:
         新_特征值类& 特征值服务,
         新_特征类& 特征服务,
         概念_存在类& 存在概念服务,
-        概念_特征类& 特征概念服务) noexcept;
+        概念_特征类& 特征概念服务,
+        新_状态类& 状态服务) noexcept;
 
     // 只建立独立方法组织根以及本类使用的类型、字段节点。
     bool 初始化() noexcept;
+    bool 装配内部治理世界(新方法治理世界协作接口&) noexcept;
+    void 初始化治理场景组织() noexcept;
+    std::optional<新方法虚拟存在读回> 读取方法虚拟存在引用(
+        const 新方法虚拟存在引用&) const noexcept override;
 
     // 建立方法知识，不登记或调用本能函数。
     新方法建立结果 建立方法知识(
@@ -144,6 +151,24 @@ public:
 
 private:
     friend class 新_任务类;
+    // 仅标记本次私有准备是否已经完整交付，不作为长期业务状态。
+    struct 方法虚拟存在准备 final {
+        新方法虚拟存在读回 信息;
+        bool 完整准备 = false;
+    };
+    void 核验治理组织就绪() const;
+    方法虚拟存在准备 准备方法虚拟存在(
+        稳定编码 方法, 稳定编码 虚拟存在, std::int64_t 启用);
+    void 核验方法私有材料未消费(const 方法虚拟存在准备&,
+        std::optional<新方法治理场景信息> 本批场景 = std::nullopt) const;
+    void 清理未绑定方法特征(const 方法虚拟存在准备&) noexcept;
+    void 同步方法专属概念(const 新方法虚拟存在引用&) noexcept;
+    新方法建立结果 发布方法结构(const 新方法知识建立请求&,
+        const std::string* 登记名, const 新方法信息* 替代父代 = nullptr) noexcept;
+    void 回收本批方法图(const std::vector<稳定编码>& 节点,
+        const std::vector<稳定编码>& 字段,
+        const std::vector<方法虚拟存在准备>& 虚拟组,
+        bool 已发布) noexcept;
     enum class 新方法实例条件覆盖状态 : std::uint8_t {
         已覆盖 = 1, 无变化, 入口拒绝, 来源已变化,
         值域不支持, 资源失败, 已生效但结构不一致, 结构不一致
@@ -187,6 +212,9 @@ private:
     新_特征类& 特征服务_;
     概念_存在类& 存在概念服务_;
     概念_特征类& 特征概念服务_;
+    新_状态类& 状态服务_;
+    新方法治理世界协作接口* 内部治理世界_ = nullptr;
+    bool 治理组织已就绪_ = false;
 };
 
 } // namespace 海中鱼巣

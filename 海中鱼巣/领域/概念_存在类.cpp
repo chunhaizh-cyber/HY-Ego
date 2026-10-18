@@ -6,6 +6,7 @@
 #include <limits>
 #include <mutex>
 #include <set>
+#include <stdexcept>
 
 namespace 海中鱼巣 {
 
@@ -462,6 +463,90 @@ bool 概念_存在类::初始化() noexcept {
         return 存在概念操作状态::已更新;
     } catch (...) {
         return 存在概念操作状态::资源失败;
+    }
+}
+
+void 概念_存在类::核验初建单特征专属概念可回收(
+    稳定编码 专属概念节点, 稳定编码 对应存在节点,
+    const 存在概念特征项& 预期特征项,
+    const std::vector<稳定编码>& 允许外部入向字段关系组) const noexcept {
+    try {
+        std::lock_guard 锁(存在概念图互斥);
+        if (!结构仍存在() || !节点仍存在(对应存在节点))
+            throw std::runtime_error("initial private existence concept identity invalid");
+        const auto 概念 = 获取存在概念(专属概念节点);
+        if (!概念 || 概念->种类 != 存在概念种类::专属
+            || 概念->对应存在节点 != 对应存在节点
+            || 概念->特征组 != std::vector<存在概念特征项>{预期特征项}
+            || !概念->名称关系.empty() || !概念->上位概念组.empty()
+            || !概念->下位概念组.empty())
+            throw std::runtime_error("private existence concept is not an unchanged single-item projection");
+        const auto 特征项 = 读取唯一节点字段(专属概念节点, 特征项字段);
+        if (!特征项 || *特征项 == 专属概念节点)
+            throw std::runtime_error("private existence concept item identity invalid");
+        const std::vector<稳定编码> 节点组{专属概念节点, *特征项};
+        const auto 完整组 = 全局基础数据集.查询节点组完整结构(节点组);
+        if (完整组.状态 != 基础结构操作状态::已完成
+            || 完整组.节点组.size() != 节点组.size())
+            throw std::runtime_error("private existence concept complete structure unavailable");
+        std::vector<稳定编码> 自有字段;
+        std::vector<稳定编码> 结构关系;
+        const auto 核对字段 = [&](const 基础联合节点快照& 快照,
+            const std::vector<基础节点初始字段>& 预期) {
+            if (快照.结构.字段组.size() != 预期.size())
+                throw std::runtime_error("private existence concept has extra fields");
+            for (const auto& 项 : 预期) {
+                const 基础字段关系* 命中 = nullptr;
+                for (const auto& 字段 : 快照.结构.字段组) {
+                    if (字段.字段节点 != 项.字段节点) continue;
+                    if (命中 || 字段.所属节点 != 快照.结构.节点.编码 || 字段.内容 != 项.内容)
+                        throw std::runtime_error("private existence concept field content/cardinality changed");
+                    命中 = &字段;
+                }
+                if (!命中) throw std::runtime_error("private existence concept required field missing");
+                自有字段.push_back(命中->编码);
+            }
+        };
+        for (const auto& 项 : 完整组.节点组) {
+            if (!项.快照) throw std::runtime_error("private existence concept private node missing");
+            const auto& 快照 = *项.快照;
+            const auto 节点 = 快照.结构.节点.编码;
+            if (节点 == 专属概念节点) {
+                核对字段(快照, {{节点类型字段, 专属存在概念节点类型},
+                    {对应存在字段, 对应存在节点}, {特征项字段, *特征项}});
+                if (快照.入向外部关系组.size() != 1 || !快照.出向外部关系组.empty())
+                    throw std::runtime_error("private existence concept organization is not exclusive");
+                const auto& 关系 = 快照.入向外部关系组.front();
+                if (关系.源节点 != 存在概念图根节点 || 关系.目标节点 != 专属概念节点
+                    || 关系.类型 != 基础外部关系类型::父子
+                    || 关系.角色或顺序 != 组织归属关系角色)
+                    throw std::runtime_error("private existence concept organization edge invalid");
+                结构关系.push_back(关系.编码);
+            } else if (节点 == *特征项) {
+                核对字段(快照, {{节点类型字段, 特征项节点类型},
+                    {特征类型概念字段, 预期特征项.特征类型概念},
+                    {具体特征概念字段, 预期特征项.具体特征概念}});
+                if (!快照.入向外部关系组.empty() || !快照.出向外部关系组.empty())
+                    throw std::runtime_error("private existence concept item has external relation");
+            } else throw std::runtime_error("private existence concept query returned unexpected identity");
+        }
+        // 允许组仅指向EC根，不能豁免其私有特征项的任何外部消费。
+        for (const auto 编码 : 允许外部入向字段关系组) {
+            const auto 字段 = 全局基础数据集.查询字段关系(编码);
+            const auto* 目标 = 字段 ? std::get_if<稳定编码>(&字段->内容) : nullptr;
+            if (!目标 || *目标 != 专属概念节点)
+                throw std::runtime_error("private existence concept allowed reference targets private item");
+        }
+        if (全局基础数据集.检查节点结构引用闭包(
+                节点组, 自有字段, 结构关系, 允许外部入向字段关系组)
+            != 基础结构操作状态::已完成)
+            throw std::runtime_error("private existence concept closure is consumed or changed");
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验初建单特征专属概念可回收",
+            L"初建专属概念及私有特征项不能完整证明未消费；未执行删除。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验初建单特征专属概念可回收",
+            L"完整回收预检发生未知工程异常；未执行删除。");
     }
 }
 

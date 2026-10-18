@@ -293,6 +293,19 @@ private:
     friend class 新_场景类;
 };
 
+class 新方法治理场景发布准备 final {
+public:
+    新方法治理场景发布准备(const 新方法治理场景发布准备&) noexcept = default;
+    新方法治理场景发布准备& operator=(const 新方法治理场景发布准备&) noexcept = default;
+    稳定编码 候选场景节点() const noexcept;
+    const 基础封存追加片段& 场景片段() const noexcept;
+private:
+    struct 内容;
+    explicit 新方法治理场景发布准备(std::shared_ptr<const 内容>) noexcept;
+    std::shared_ptr<const 内容> 内容_;
+    friend class 新_场景类;
+};
+
 class 新_场景类 final {
 public:
     新_场景类(
@@ -326,6 +339,21 @@ public:
         稳定编码 父场景节点, const 新任务虚拟存在引用&) noexcept;
     void 撤销未发布任务治理场景(const 新任务治理场景发布准备&) noexcept;
     std::optional<新任务治理场景信息> 读取任务治理场景(稳定编码 任务节点) const noexcept;
+    std::optional<新方法治理场景发布准备> 准备方法治理场景(
+        稳定编码 父场景节点, const 新方法虚拟存在引用&) noexcept;
+    void 撤销未发布方法治理场景(const 新方法治理场景发布准备&) noexcept;
+    // 同时读回本场景C到启用F的精确归属字段关系，供未采用回收核验。
+    std::optional<新方法治理场景信息> 读取方法治理场景(稳定编码 方法节点) const noexcept;
+    新场景操作状态 添加治理方法引用(稳定编码 场景节点,
+        const 新方法虚拟存在引用&, const 新方法治理对象读取接口&) noexcept;
+    std::optional<新治理场景参与者> 读取治理参与者(稳定编码 场景节点,
+        稳定编码 参与节点, const 新方法治理对象读取接口&) const noexcept;
+    新场景操作状态 添加治理状态(稳定编码 场景节点, 稳定编码 状态节点,
+        const 新方法治理对象读取接口&, const 概念_特征类&) noexcept;
+    新场景操作状态 添加治理动态(稳定编码 场景节点, 稳定编码 动态节点,
+        const 新方法治理对象读取接口&, const 概念_特征类&) noexcept;
+    void 回收未消费方法治理场景(const 新方法虚拟存在引用&,
+        const 新方法治理对象读取接口&) noexcept;
     std::vector<稳定编码> 查询治理参与节点(稳定编码 场景节点) const noexcept;
     新场景操作状态 原子迁移治理状态动态(稳定编码 原场景节点, 稳定编码 目标场景节点,
         const std::vector<稳定编码>& 状态节点组, const std::vector<稳定编码>& 动态节点组,
@@ -476,9 +504,11 @@ public:
 
 private:
     新场景操作状态 添加已核验状态(稳定编码, 稳定编码, bool 治理,
-        std::optional<新任务虚拟存在特征引用> 治理特征 = std::nullopt) noexcept;
+        std::optional<新任务虚拟存在特征引用> 治理特征 = std::nullopt,
+        std::optional<新方法虚拟存在引用> 治理方法 = std::nullopt) noexcept;
     新场景操作状态 添加已核验动态(稳定编码, 稳定编码, bool 治理,
-        std::optional<新任务虚拟存在特征引用> 治理特征 = std::nullopt) noexcept;
+        std::optional<新任务虚拟存在特征引用> 治理特征 = std::nullopt,
+        std::optional<新方法虚拟存在引用> 治理方法 = std::nullopt) noexcept;
     // 根身份由上层世界对象持有；场景类只在该根链内组织场景事实。
     稳定编码& 场景树根节点_;
     新场景树用途 用途_;

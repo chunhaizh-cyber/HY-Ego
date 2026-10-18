@@ -271,6 +271,7 @@ struct 新方法信息 final {
     std::optional<稳定编码> 实例根节点;
     // 仅服务结算固定+1到Q的正式代际；与任务副本来源严格分账。
     std::optional<稳定编码> 父代方法节点;
+    稳定编码 启用特征节点, 专属存在概念节点;
     friend bool operator==(const 新方法信息&, const 新方法信息&) = default;
 };
 
