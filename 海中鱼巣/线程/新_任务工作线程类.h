@@ -7,6 +7,7 @@
 #include <optional>
 
 #include "../领域/新_任务类.h"
+#include "../领域/服务值结算.本能合同.h"
 
 namespace 海中鱼巣 {
 
@@ -38,7 +39,8 @@ enum class 新任务工作种类 : std::uint8_t {
     执行本能动作 = 3,
     获取本能结果 = 4,
     读取任务调度材料 = 5,
-    检测本能结果 = 6
+    检测本能结果 = 6,
+    执行最终服务消费 = 7
 };
 
 struct 新任务结果检测请求 final {
@@ -71,6 +73,7 @@ struct 新任务工作请求 final {
     std::optional<新任务治理本能执行请求> 本能执行请求;
     std::optional<新任务治理结果获取请求> 本能结果获取请求;
     std::optional<新任务结果检测请求> 本能结果检测请求;
+    std::optional<新服务值最终来源定位> 最终来源;
     friend bool operator==(const 新任务工作请求&,
         const 新任务工作请求&) = default;
 };
@@ -90,7 +93,8 @@ enum class 新任务工作处理状态 : std::uint8_t {
     内部错误,
     调度材料已返回,
     组织能力暂不支持,
-    本能结果检测已返回
+    本能结果检测已返回,
+    最终服务消费已返回
 };
 
 struct 新任务工作处理结果 final {
@@ -104,6 +108,7 @@ struct 新任务工作处理结果 final {
     std::optional<新任务调度材料读取结果> 调度材料;
     std::optional<新任务执行组织结果> 执行组织交付;
     std::optional<新任务结果检测结果> 本能结果检测;
+    std::optional<新服务值最终消费结果> 最终消费;
 };
 
 enum class 新任务工作接收状态 : std::uint8_t {
@@ -143,6 +148,8 @@ public:
 
     新任务工作操作结果 启动(
         const 新任务工作运行配置& 配置, std::uint64_t 等待毫秒) noexcept;
+    新任务工作操作状态 绑定最终服务消费端口(
+        新服务值结算确认接口& 端口) noexcept;
     新任务工作接收结果 提交工作(const 新任务工作请求& 请求) noexcept;
     // 结束即释放激活槽；manager独立读回并确认后才释放邮箱及同T占用。
     新任务工作操作状态 确认结果已接收(

@@ -7,6 +7,22 @@
 #include "新_需求类.h"
 
 namespace 海中鱼巣 {
+class 方法参数场景;
+struct 新本能函数本次条件结果对;
+struct 新服务值最终来源定位 final {
+    稳定编码 来源任务节点, 完成结算节点, 直接接收节点;
+    friend bool operator==(const 新服务值最终来源定位&,
+        const 新服务值最终来源定位&) = default;
+};
+enum class 新服务值最终消费状态 : std::uint8_t {
+    已完成 = 1, 精确重复, 来源条件不具备, 来源已变化, 等待配置,
+    等待同源工作, 尚未消费, 已入账待收尾
+};
+struct 新服务值最终消费结果 final {
+    新服务值最终消费状态 状态 = 新服务值最终消费状态::尚未消费;
+    新服务值最终来源定位 来源;
+    std::optional<稳定编码> 消费节点, 普通动作节点, 收尾阶段节点;
+};
 enum class 新服务值结算协作状态 : std::uint8_t {
     已完成 = 1, 精确重复 = 2, 非本方法 = 3, 来源不具备 = 4,
     已有其他来源 = 5, 尚无来源 = 6, 入口拒绝 = 7, 工程停止 = 8, 目标已满足 = 9,
@@ -23,6 +39,7 @@ struct 新服务值结算登记材料 final {
     稳定编码 增加方向概念, 不变方向概念, 准确相等概念, 目标值域;
     std::int64_t 冻结前值 = 0;
     稳定编码 服务任务集合类型根, 服务任务非空值域;
+    稳定编码 自我概念, 任务服务值类型根, 任务服务值合法值域;
 };
 struct 新服务值结算登记结果 final {
     新服务值结算协作状态 状态 = 新服务值结算协作状态::入口拒绝;
@@ -50,6 +67,8 @@ public:
     virtual std::optional<新服务值结算登记材料> 读取登记材料() const noexcept = 0;
     virtual 新方法建立结果 确保方法登记(const 新方法知识建立请求&) noexcept = 0;
     virtual 新需求建立结果 确保首子需求(稳定编码 方法节点) noexcept = 0;
+    virtual 新本能函数本次条件结果对 消费最终来源(
+        const 方法参数场景&) noexcept = 0;
     virtual 新服务值结算动作回执 建立普通动作(稳定编码 方法节点,
         const 新任务虚拟存在引用& 来源, 稳定编码 场景节点, 稳定编码 自我节点,
         稳定编码 服务值特征节点, std::int64_t 动作前值) noexcept = 0;
@@ -66,6 +85,10 @@ public:
         稳定编码 服务特征, 稳定编码 服务根) noexcept = 0;
     virtual 新服务值结算确认结果 确认并收尾(稳定编码 结算任务节点,
         稳定编码 执行实例节点, 稳定编码 影响评估节点) noexcept = 0;
+    virtual 新服务值最终消费结果 执行最终来源工作(
+        const 新服务值最终来源定位&) noexcept = 0;
+    virtual 新服务值最终消费结果 读取最终来源结果(
+        const 新服务值最终来源定位&) const noexcept = 0;
     virtual void 报告待处理工程异常() noexcept = 0;
 };
 using 新服务值结算工程报告函数 = void (*)(std::string_view) noexcept;

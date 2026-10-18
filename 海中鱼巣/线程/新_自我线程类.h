@@ -257,6 +257,8 @@ struct 新自我消息处理结果 final {
     std::optional<新任务完成结算确认状态> 任务完成结算确认状态;
     // self停止并不取消manager已接纳的请求；本句柄仍可取得最终结果。
     std::shared_future<新任务承接处理结果> 未收回任务结果;
+    std::optional<新任务工作请求> 未收回最终消费工作;
+    std::shared_future<新任务工作处理结果> 未收回最终消费结果;
     std::optional<新自我学习复核决议> 学习复核决议;
     std::optional<新自我学习复核接收状态> 学习复核接收状态;
     std::optional<新自我等待复核决议> 等待复核决议;

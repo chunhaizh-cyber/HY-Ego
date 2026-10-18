@@ -27,9 +27,17 @@ public:
     新服务值结算变化回执 更新普通结果(稳定编码, 稳定编码, 稳定编码,
         稳定编码, std::int64_t) noexcept override;
     新服务值结算确认结果 确认并收尾(稳定编码, 稳定编码, 稳定编码) noexcept override;
+    新服务值最终消费结果 执行最终来源工作(
+        const 新服务值最终来源定位&) noexcept override;
+    新服务值最终消费结果 读取最终来源结果(
+        const 新服务值最终来源定位&) const noexcept override;
+    新本能函数本次条件结果对 消费最终来源(
+        const 方法参数场景&) noexcept override;
     void 报告并停止(std::string_view) noexcept override;
     void 报告待处理工程异常() noexcept override;
 private:
+    std::optional<新服务值最终消费结果> 读取或收尾既有最终消费(
+        const 新服务值最终来源定位&) noexcept;
     struct 实现;
     std::unique_ptr<实现> 实现_;
 };

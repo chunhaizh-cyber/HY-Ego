@@ -15,6 +15,7 @@
 #include "新_内部治理对象引用.h"
 #include "方法问题反馈.数据.h"
 #include "任务执行采用.数据.h"
+#include "服务值结算.本能合同.h"
 
 namespace 海中鱼巣 {
 
@@ -25,6 +26,83 @@ class 概念_存在类;
 class 新_动态类;
 class 新_任务管理线程类;
 class 服务需求本能运行服务;
+struct 新世界I64组合结果;
+struct 新任务最终消费边界 final {
+    稳定编码 结算任务节点, 结算需求节点, 服务根需求节点, 方法节点;
+    friend bool operator==(const 新任务最终消费边界&, const 新任务最终消费边界&) = default;
+};
+struct 新任务最终人类服务锚点 final {
+    稳定编码 任务节点, 需求节点, 完成结算节点;
+    std::vector<稳定编码> 服务确认节点组;
+    friend bool operator==(const 新任务最终人类服务锚点&, const 新任务最终人类服务锚点&) = default;
+};
+struct 新任务最终贡献证明 final {
+    稳定编码 任务节点, 完成结算节点;
+    std::optional<稳定编码> 人类服务锚点任务节点;
+    std::vector<稳定编码> 直接子接收节点组;
+    friend bool operator==(const 新任务最终贡献证明&, const 新任务最终贡献证明&) = default;
+};
+struct 新任务最终来源信息 final {
+    新服务值最终来源定位 来源;
+    新任务虚拟存在特征组 任务特征;
+    新任务最终消费边界 边界;
+    稳定编码 需求节点, 执行实例节点, 影响评估节点;
+    稳定编码 自我场景节点, 自我存在节点, 自我特征节点;
+    std::int64_t 贡献值 = 0;
+    std::vector<新任务最终贡献证明> 贡献证明组;
+    std::vector<新任务最终人类服务锚点> 人类服务锚点组;
+    friend bool operator==(const 新任务最终来源信息&, const 新任务最终来源信息&) = default;
+};
+struct 新任务最终消费信息 final {
+    新任务最终来源信息 来源;
+    稳定编码 准备节点, 消费节点;
+    std::int64_t 前值 = 0, 后值 = 0;
+    新状态强时间 核心时间;
+    bool 零额 = false;
+    std::optional<稳定编码> 普通动作节点, 前状态节点;
+    std::optional<稳定编码> 后状态节点, 变化动态节点, 收尾阶段节点;
+    bool 零额结果已确认 = false;
+};
+enum class 新任务最终来源读取状态 : std::uint8_t {
+    可新消费 = 1, 已完成, 已入账待收尾, 来源条件不具备, 来源已变化, 等待配置, 等待同源工作
+};
+struct 新任务最终来源读取结果 final {
+    新任务最终来源读取状态 状态;
+    std::optional<新任务最终来源信息> 来源;
+    std::optional<新任务最终消费信息> 既有消费;
+};
+enum class 新任务最终消费准备状态 : std::uint8_t {
+    已准备 = 1, 已完成, 已入账待收尾, 来源条件不具备, 来源已变化, 等待配置, 等待同源工作
+};
+class 新任务最终消费准备 final {
+public:
+    ~新任务最终消费准备() noexcept;
+    新任务最终消费准备(新任务最终消费准备&&) noexcept;
+    新任务最终消费准备& operator=(新任务最终消费准备&&) noexcept;
+    新任务最终消费准备(const 新任务最终消费准备&) = delete;
+    新任务最终消费准备& operator=(const 新任务最终消费准备&) = delete;
+private:
+    struct 实现;
+    std::unique_ptr<实现> 实现_;
+    explicit 新任务最终消费准备(std::unique_ptr<实现>) noexcept;
+    friend class 新_任务类;
+};
+struct 新任务最终消费准备结果 final {
+    新任务最终消费准备状态 状态;
+    std::optional<新任务最终消费准备> 准备;
+    std::optional<新任务最终消费信息> 既有消费;
+};
+struct 新任务最终消费准备材料 final {
+    新任务最终来源信息 来源;
+    稳定编码 准备节点;
+};
+struct 新任务最终入账见证 final {
+    稳定编码 场景节点, 存在节点, 特征节点;
+    std::int64_t 前值 = 0, 后值 = 0;
+    新状态强时间 核心时间;
+    std::optional<稳定编码> 普通动作节点, 前状态节点;
+    基础联合节点快照 特征保护;
+};
 enum class 新任务本能输入复核状态 : std::uint8_t {
     仍具备 = 1, 条件已变化, 场景不一致, 执行不在当前位, 最终贡献消费尚未装配
 };
@@ -442,7 +520,7 @@ enum class 新任务贡献交接读取状态 : std::uint8_t {
 };
 enum class 新任务直属收尾分类 : std::uint8_t {
     不适用 = 1, 等待结算配置, 普通待收尾, 普通已收尾,
-    历史已收尾, 最终消费保留, 结算任务排除, 来源已变化
+    历史已收尾, 最终消费保留, 结算任务排除, 来源已变化, 最终已收尾
 };
 struct 新任务直属收尾读回 final {
     新任务直属收尾分类 分类 = 新任务直属收尾分类::不适用;
@@ -1325,6 +1403,7 @@ public:
     bool 装配内部治理世界(新任务治理世界协作接口&) noexcept;
     void 初始化任务治理场景组织() noexcept;
     std::optional<稳定编码> 获取任务状态特征类型() const noexcept;
+    std::optional<稳定编码> 获取任务服务值特征类型() const noexcept;
     // 调用方须先独立确认普通动作效果；本入口只负责Vt内部收尾。
     新任务已结算结果 标记任务已结算(
         const 新任务已结算请求& 请求,
@@ -1534,7 +1613,22 @@ public:
     新需求当前满足结果 复核任务需求(
         稳定编码 任务节点) const noexcept;
 
+    新任务最终来源读取结果 读取任务最终消费来源(const 新服务值最终来源定位&) const noexcept;
+    新任务最终消费准备结果 准备任务最终消费(const 新服务值最终来源定位&, 稳定编码 当前方法节点) noexcept;
+    新任务最终消费准备材料 读取任务最终消费准备(const 新任务最终消费准备&) const noexcept;
+    基础封存追加片段 封存任务最终消费(新任务最终消费准备&, const 新任务最终入账见证&) noexcept;
+    新任务最终消费信息 接收任务最终消费核心(新任务最终消费准备&, const 基础片段发布回执&) noexcept;
+    新服务值最终消费结果 完成任务最终消费(新任务最终消费准备&, const 新世界I64组合结果&) noexcept;
+    新服务值最终消费结果 完成已入账任务最终收尾(新任务最终消费准备&) noexcept;
+    std::optional<新任务最终消费信息> 读取任务最终消费(稳定编码 完成结算节点) const noexcept;
+    std::optional<稳定编码> 读取任务已结算动作方法() const noexcept;
+
 private:
+    新服务值最终消费结果 完成任务最终收尾(新任务最终消费准备&) noexcept;
+    void 初始化任务最终消费结构() noexcept;
+    struct 最终消费占用;
+    std::map<稳定编码, std::weak_ptr<最终消费占用>> 最终消费占用组_;
+    friend class 新任务最终消费准备;
     新任务直属收尾读回 读取任务直属收尾(稳定编码 任务节点) const noexcept;
     新任务直属收尾读回 完成任务直属收尾(
         稳定编码 任务节点, 稳定编码 完成结算节点, 稳定编码 接收节点) noexcept;

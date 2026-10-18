@@ -269,6 +269,8 @@ struct 新方法信息 final {
     // 抽象方法均为空；副本保留其来源，整份复制图共用一个实例根。
     std::optional<稳定编码> 来源方法节点;
     std::optional<稳定编码> 实例根节点;
+    // 仅服务结算固定+1到Q的正式代际；与任务副本来源严格分账。
+    std::optional<稳定编码> 父代方法节点;
     friend bool operator==(const 新方法信息&, const 新方法信息&) = default;
 };
 

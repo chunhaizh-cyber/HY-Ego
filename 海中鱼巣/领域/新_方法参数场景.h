@@ -60,6 +60,8 @@ public:
         稳定编码 参数角色节点) const noexcept;
     std::optional<新任务虚拟存在读回> 读取绑定任务虚拟存在(
         稳定编码 参数角色节点) const noexcept;
+    std::optional<新任务虚拟存在特征组> 读取绑定任务特征组(
+        稳定编码 参数角色节点) const noexcept;
     新服务要求分项读取结果 读取绑定服务要求分项(
         稳定编码 参数角色节点) const noexcept;
     新服务要求确认读取结果 读取绑定服务要求确认身份(

@@ -817,7 +817,8 @@ bool 动作对象类别合法(动作参数对象类别 类别) noexcept {
             || !可选存在(规格.存在概念节点) || !动作对象类别合法(规格.对象类别))
             throw std::runtime_error("invalid action parameter role");
         if (规格.对象类别 == 动作参数对象类别::任务虚拟存在
-            && (规格.存在概念节点 || 规格.要求场景 || 规格.特征规格组.size() != 1))
+            && (规格.存在概念节点 || 规格.要求场景 || 规格.特征规格组.empty()
+                || 规格.特征规格组.size() > 2))
             throw std::runtime_error("invalid virtual action parameter");
         if (规格.对象类别 != 动作参数对象类别::普通世界
             && 规格.对象类别 != 动作参数对象类别::任务虚拟存在

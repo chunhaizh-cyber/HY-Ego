@@ -70,6 +70,10 @@ public:
         const 新方法知识建立请求& 请求) noexcept;
     新方法建立结果 查询本能登记(
         const std::string& 登记名) const noexcept;
+    新方法建立结果 确保服务结算Q方法登记(
+        const 新方法知识建立请求& 新请求) noexcept;
+    std::optional<稳定编码> 读取服务结算固定加一父代(
+        稳定编码 当前Q方法) const noexcept;
 
     // 只建立“方法节点 -> 稳定登记名 -> C++函数入口”的调用绑定。
     // 不读取或写入参数规格、条件结果和方法虚拟存在内容，也不调用函数。

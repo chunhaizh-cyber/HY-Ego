@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <vector>
 
@@ -109,6 +110,41 @@ struct 新世界特征变化结果 final {
     std::optional<新动态操作状态> 动作关联结果;
 };
 
+struct 新世界I64组合请求 final {
+    稳定编码 场景节点, 存在节点, 特征节点;
+    std::int64_t 增量;
+    稳定编码 动作定义节点, 动作来源节点, 执行主体节点;
+};
+
+struct 新世界I64组合准备材料 final {
+    稳定编码 场景节点, 存在节点, 特征节点;
+    std::int64_t 前值, 后值;
+    新状态强时间 核心时间;
+    std::optional<稳定编码> 普通动作节点, 前状态节点;
+    基础联合节点快照 特征保护;
+};
+
+// 同线程、同world owner的单次准备；不跨入口持锁，也不保存上层回调。
+class 新世界I64组合准备 final {
+public:
+    ~新世界I64组合准备() noexcept;
+    新世界I64组合准备(新世界I64组合准备&&) noexcept;
+    新世界I64组合准备& operator=(新世界I64组合准备&&) noexcept;
+    新世界I64组合准备(const 新世界I64组合准备&) = delete;
+    新世界I64组合准备& operator=(const 新世界I64组合准备&) = delete;
+private:
+    struct 实现;
+    std::unique_ptr<实现> 实现_;
+    explicit 新世界I64组合准备(std::unique_ptr<实现>) noexcept;
+    friend class 新_世界树类;
+};
+
+struct 新世界I64组合结果 final {
+    bool 零增量;
+    std::optional<新世界特征变化结果> 变化;
+    基础片段发布回执 附加片段回执;
+};
+
 // 只用于普通应用组合根装配独立领域服务；不提供任务、方法或治理入口。
 struct 新世界事实服务引用 final {
     新_特征值类& 特征值服务;
@@ -190,6 +226,16 @@ public:
         const 新特征准确值& 新值,
         const 新状态强时间& 强时间,
         std::optional<稳定编码> 动作动态节点 = std::nullopt) noexcept;
+
+    // 准备不写F；附加片段由调用方在两次入口之间封存。提交合并一次F核心，
+    // 完成EC/S/D后才结束特征逻辑占用。零增量仅发布非空附加片段。
+    // 工程故障本地记录并终止，保留所有已发表事实，不返回业务失败。
+    新世界I64组合准备 准备存在I64增量(
+        const 新世界I64组合请求&) noexcept;
+    新世界I64组合准备材料 读取存在I64组合准备(
+        const 新世界I64组合准备&) const noexcept;
+    新世界I64组合结果 提交存在I64增量并形成动态(
+        新世界I64组合准备&, const 基础封存追加片段&) noexcept;
 
     // 动作先于真实改变或观察建立并挂入场景。结果动态只能由调用方
     // 显式传入该动作节点后关联；本入口不扫描动态列表猜测来源。

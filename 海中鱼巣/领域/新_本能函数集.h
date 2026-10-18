@@ -104,6 +104,7 @@ struct 新本能函数本次结果 final {
     // 仅供格式2历史归档保真；生产返回非空值属于旧合同违规。
     std::optional<新服务需求信息包> 服务需求信息包;
     std::optional<新服务对象材料> 服务对象观察材料;
+    std::optional<稳定编码> 服务值消费节点;
 
     friend bool operator==(const 新本能函数本次结果&,
         const 新本能函数本次结果&) = default;

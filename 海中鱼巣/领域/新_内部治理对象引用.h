@@ -24,11 +24,13 @@ struct 新任务虚拟存在读回 final {
 struct 新任务虚拟存在特征读回 final {
     稳定编码 特征节点, 特征类型概念节点, 当前特征概念节点;
     std::int64_t 当前值 = 0;
+    friend bool operator==(const 新任务虚拟存在特征读回&, const 新任务虚拟存在特征读回&) = default;
 };
 struct 新任务虚拟存在特征组 final {
     新任务虚拟存在引用 引用;
     新任务虚拟存在特征读回 状态;
     std::optional<新任务虚拟存在特征读回> 服务值;
+    friend bool operator==(const 新任务虚拟存在特征组&, const 新任务虚拟存在特征组&) = default;
 };
 struct 新任务虚拟存在特征引用 final {
     新任务虚拟存在引用 任务引用;
@@ -42,7 +44,7 @@ struct 新治理任务特征变化结果 final {
 };
 
 enum class 新任务贡献动作种类 : std::int64_t {
-    来源计值 = 1, 直接接收 = 2, 权威迁移 = 3, 直属结算收尾 = 4
+    来源计值 = 1, 直接接收 = 2, 权威迁移 = 3, 直属结算收尾 = 4, 最终结算收尾 = 5
 };
 struct 新任务结算边界证据 final {
     稳定编码 结算任务节点, 结算需求节点, 服务根需求节点, 登记方法节点;
@@ -67,6 +69,7 @@ struct 新任务贡献动作阶段 final {
     std::optional<稳定编码> 发表结果节点;
     std::optional<稳定编码> 来源直接接收节点;
     std::optional<新任务结算边界证据> 结算边界;
+    std::optional<稳定编码> 来源最终消费节点;
 };
 struct 新治理任务特征动作变化结果 final {
     新任务虚拟存在特征引用 目标;
