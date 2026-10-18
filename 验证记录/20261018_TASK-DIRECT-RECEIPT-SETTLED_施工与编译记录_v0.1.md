@@ -1,10 +1,11 @@
 # 直属接收后任务已结算施工与编译记录
 
 - 日期：2026-10-18；身份：`TASK-DIRECT-RECEIPT-SETTLED`。
-- 计划：[v0.1](../计划/20261018_TASK-DIRECT-RECEIPT-SETTLED_直属接收后任务已结算计划_v0.1.md)，精确blob `ed939c1792bf497db95711bda1dc26c25cb2d1b9`；设计/计划发布提交 `617ca0f3bc0bc6e2580cf21cab5e276c19aa84ee`。
+- 来源计划v0.1已退出当前队列并删除现行文件，可由 `22ebb00cd36e233e4ed3a279bcc37b25eb435fa4:计划/20261018_TASK-DIRECT-RECEIPT-SETTLED_直属接收后任务已结算计划_v0.1.md` 追溯，精确blob `ed939c1792bf497db95711bda1dc26c25cb2d1b9`；设计/计划发布提交 `617ca0f3bc0bc6e2580cf21cab5e276c19aa84ee`，索引激活提交 `6c7c73dac05218032124504682bfcb42b899599f`。
 - 合同：[详细设计 v0.1](../规范/详细设计/20261018_TASK-DIRECT-RECEIPT-SETTLED_直属接收后任务已结算详细设计_v0.1.md)。
 - 工作树：`D:/worktree/task-causal-preparation/海中鱼巣`；分支：`codex/task-causal-preparation`。
 - 开工与本轮恢复核对HEAD/main/origin/main：`6c7c73dac05218032124504682bfcb42b899599f`。
+- 结果代码提交：`22ebb00cd36e233e4ed3a279bcc37b25eb435fa4`，已快进集成main并普通推送；退出说明随后文档回写，不使用未知后续提交作自引用。
 - 本记录不定义机器语义、计划状态或运行结论。
 
 ## 1. S0、所有权与范围
@@ -46,6 +47,8 @@ root持有task、中立DTO、manager、施工记录、Git/index与构建资源�
 - 差异格式静态检查：`git diff --check`、`git diff --cached --check`已执行通过；发布前再次核对。
 - 本轮没有明确测试指令，未启动程序、运行自检/回归或制造测试任务。普通Q1/Q0、旧R补收尾、最终门、并发、故障中断及旧数据恢复均`NOT_RUN`。
 
+代码发布后、退出文档修改前，核对本工作树HEAD、main、origin/main均为 `22ebb00cd36e233e4ed3a279bcc37b25eb435fa4`，精确tree均为 `b4bdacd056dde318c42d946f09f86b0f6bb3c735`，工作树干净。这只说明已发布代码输入等价，不是另一次main编译、运行或集成验收。
+
 ## 5. 函数级代码知识变更清单
 
 | 位置/函数 | 用途、合同与调用边变化 |
@@ -68,6 +71,8 @@ root持有task、中立DTO、manager、施工记录、Git/index与构建资源�
 
 ## 6. 发布与剩余范围
 
-本次拟精确发布7生产文件及本记录；提交、main集成和普通推送的实际身份由退出回写补入，未完成前不声明已发布。当前仍缺最终U及现实自我服务值按Q入账、两入口统一本能编排、共同场景因果窗口和方法独立治理场景。本叶已编译，未运行测试，不能称为已运行、已迁移恢复或完整服务根闭环。
+本次7生产文件及本记录已由 `22ebb00cd36e233e4ed3a279bcc37b25eb435fa4` 精确提交、快进集成main并普通推送。当前计划文件及唯一索引项按退出规则移除，设计和本记录保留；计划可由顶部commit:path及blob追溯，不可据此恢复为当前执行入口。退出仅维护计划、索引及本记录三个文件，不带入异主WIP，不登记下游库存；文档发布由root串行完成。
+
+当前仍缺最终U及现实自我服务值按Q入账、两入口统一本能编排、共同场景因果窗口和方法独立治理场景。本叶已编译，未运行测试，不能称为已运行、已迁移恢复或完整服务根闭环。
 
 发布前普通fetch触发的Git自动维护报告既有`refs/codex/snapshots/2348d3463907222de86e8cffef0d1af7386cedef`无效对象、旧stash reflog已剪除对象及repack失败。本轮未删除、修复或改写任何这些历史引用。随后仅对命令关闭自动维护，`git -c gc.auto=0 fetch --no-auto-maintenance origin`退出0；当前HEAD及origin/main的tree读取通过，远端main与本地基线相同。此检查不宣称全仓历史对象完整。
