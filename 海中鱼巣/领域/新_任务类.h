@@ -1307,6 +1307,8 @@ public:
         const 新任务虚拟存在引用&) const noexcept override;
     std::optional<新任务虚拟存在语义读回> 读取任务虚拟存在语义(
         const 新任务虚拟存在引用&) const noexcept override;
+    std::optional<新任务虚拟存在特征组> 读取任务虚拟存在特征组(
+        const 新任务虚拟存在引用&) const noexcept override;
     bool 装配内部治理世界(新任务治理世界协作接口&) noexcept;
     void 初始化任务治理场景组织() noexcept;
     std::optional<稳定编码> 获取任务状态特征类型() const noexcept;
@@ -1531,6 +1533,12 @@ private:
     新任务执行组织结果 实施任务方法执行组织(
         稳定编码 任务节点, const std::vector<稳定编码>& 来源方法节点组, bool 允许增补) noexcept;
     void 确保任务虚拟存在语义(稳定编码 任务节点) noexcept;
+    新任务操作状态 写入任务状态(
+        const 新任务虚拟存在信息&, 新任务状态) noexcept;
+    新任务操作状态 写入已核验任务状态值(
+        const 新任务虚拟存在信息&, 新任务状态) noexcept;
+    void 提交已核验任务状态特征值(const 新任务虚拟存在信息&, 新任务状态,
+        std::optional<稳定编码> 可撤销前状态) noexcept;
     新任务治理世界协作接口* 内部治理世界_ = nullptr;
     bool 任务治理场景组织已就绪_ = false;
     新任务调度材料项 读取任务调度项已加锁(

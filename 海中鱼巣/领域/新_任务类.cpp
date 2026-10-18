@@ -2479,45 +2479,6 @@ bool 写入准确值字段(
         && 写入节点字段(节点, 字段, *值节点, 已写字段);
 }
 
-新任务操作状态 写入已核验任务状态值(
-    const 新任务虚拟存在信息& 虚拟存在,
-    新任务状态 新状态,
-    新_特征类& 特征服务) {
-    if (虚拟存在.当前状态 == 新状态) return 新任务操作状态::无变化;
-    const auto 写入 = 特征服务.添加特征值(
-        虚拟存在.任务状态特征节点,
-        新特征准确值{static_cast<std::int64_t>(新状态)});
-    if (写入.状态 == 新特征写入状态::已完成) {
-        return 新任务操作状态::已修改;
-    }
-    if (写入.状态 == 新特征写入状态::无变化) {
-        return 新任务操作状态::无变化;
-    }
-    if (写入.状态 == 新特征写入状态::结构不一致
-        || 写入.状态 == 新特征写入状态::值已更新但聚合未完成) {
-        // 特征写入会先更新当前值，再维护历史聚合材料。若后半段失败，
-        // 不能把已经生效的任务状态当作未发生并回滚其它任务结构。
-        // 当前值是任务状态的正式事实；精确读回后据此收敛结果。
-        const auto 已写状态 = 读取任务状态(
-            虚拟存在.任务状态特征节点, 特征服务);
-        if (已写状态 && *已写状态 == 新状态) {
-            return 新任务操作状态::已修改;
-        }
-        return 新任务操作状态::结构不一致;
-    }
-    return 新任务操作状态::资源失败;
-}
-
-新任务操作状态 写入任务状态(
-    const 新任务虚拟存在信息& 虚拟存在,
-    新任务状态 新状态,
-    新_特征类& 特征服务) {
-    if (!是合法状态迁移(虚拟存在.当前状态, 新状态)) {
-        return 新任务操作状态::任务状态不允许;
-    }
-    return 写入已核验任务状态值(虚拟存在, 新状态, 特征服务);
-}
-
 bool 预计变化定义有效(const std::vector<新任务预计变化阶段>& 阶段组) {
     if (阶段组.empty()) return false;
     std::vector<新任务预计变化阶段> 排序 = 阶段组;
@@ -5562,6 +5523,116 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
     }
 }
 
+void 新_任务类::提交已核验任务状态特征值(
+    const 新任务虚拟存在信息& 虚拟, 新任务状态 新状态,
+    std::optional<稳定编码> 可撤销前状态) noexcept {
+    新特征I64准备结果 准备;
+    bool 已证零发表 = true;
+    try {
+        std::lock_guard 锁(新任务互斥);
+        const 新任务虚拟存在引用 引用{虚拟.任务节点, 虚拟.节点, 虚拟.任务状态特征节点};
+        const auto 当前 = 读取任务虚拟存在特征组(引用);
+        const auto 旧值 = static_cast<std::int64_t>(虚拟.当前状态);
+        const auto 新值 = static_cast<std::int64_t>(新状态);
+        if (!当前 || 当前->状态.当前值 != 旧值 || 旧值 == 新值 || !是任务状态值(新值))
+            throw std::runtime_error("task state update identity/value changed");
+        // 前S必须先建立；S引用F会改变F封存更新的完整入边预期。
+        准备 = 特征服务_.准备顶层I64更新(引用.状态特征节点, 新值);
+        if (准备.状态 != 新特征I64准备状态::已准备 || !准备.准备
+            || 准备.准备->特征节点() != 引用.状态特征节点
+            || 准备.准备->原当前值() != 旧值 || 准备.准备->新当前值() != 新值
+            || !准备.准备->核心有变化())
+            throw std::runtime_error("task state feature preparation failed");
+        已证零发表 = false;
+        const auto 提交 = 特征服务_.提交顶层I64更新(*准备.准备, {});
+        if (提交.状态 != 基础节点组追加状态::已完成) {
+            if (!提交.附加片段回执组.empty()) throw std::runtime_error("failed update carries publication receipts");
+            已证零发表 = true;
+            throw std::runtime_error("task state feature zero publication");
+        }
+        if (!提交.附加片段回执组.empty()) throw std::runtime_error("unexpected task feature extra receipts");
+        const auto 收尾 = 特征服务_.完成顶层I64更新(*准备.准备);
+        if (收尾.状态 != 新特征写入状态::已完成 || !收尾.当前值已改变)
+            throw std::runtime_error("task state feature aggregation incomplete");
+        特征服务_.结束顶层I64更新(*准备.准备);
+        确保任务虚拟存在语义(虚拟.任务节点);
+        const auto 读回 = 读取任务虚拟存在特征组(引用);
+        const auto 语义 = 读取任务虚拟存在语义(引用);
+        if (!读回 || 读回->状态.当前值 != 新值 || !语义
+            || 语义->状态.当前状态 != 新值)
+            throw std::runtime_error("task state feature/concept readback mismatch");
+    } catch (...) {
+        if (已证零发表) {
+            if (准备.准备) 特征服务_.取消顶层I64更新(*准备.准备);
+            if (可撤销前状态) {
+                const auto 前 = 状态服务_.获取状态(*可撤销前状态);
+                if (!前 || 前->被引用次数 != 0
+                    || 前->被描述存在节点 != 虚拟.节点
+                    || 前->来源实例特征节点 != 虚拟.任务状态特征节点
+                    || 状态服务_.删除状态(*可撤销前状态) != 新状态操作状态::已完成
+                    || 状态服务_.获取状态(*可撤销前状态))
+                    工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"提交任务状态特征",
+                        L"零发表后的未消费前状态清理失败，保留现场。");
+            }
+        }
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"提交任务状态特征",
+            L"特征提交或收尾异常；未知或已发表的事实不回滚，不作为业务结果继续。");
+    }
+}
+
+新任务操作状态 新_任务类::写入已核验任务状态值(
+    const 新任务虚拟存在信息& 虚拟, 新任务状态 新状态) noexcept {
+    try {
+        std::lock_guard 锁(新任务互斥);
+        const 新任务虚拟存在引用 引用{虚拟.任务节点, 虚拟.节点, 虚拟.任务状态特征节点};
+        const auto 当前 = 读取任务虚拟存在特征组(引用);
+        if (!当前 || 当前->状态.当前值 != static_cast<std::int64_t>(虚拟.当前状态)
+            || !是任务状态值(static_cast<std::int64_t>(新状态))
+            || !任务治理场景组织已就绪_ || !内部治理世界_)
+            throw std::runtime_error("task state change is not ready or stale");
+        const auto 场景 = 内部治理世界_->读取任务治理场景(引用);
+        if (!场景) throw std::runtime_error("task state change has no governance scene");
+        if (虚拟.当前状态 == 新状态) return 新任务操作状态::无变化;
+        确保任务虚拟存在语义(虚拟.任务节点);
+        const auto 前时间 = 当前实例UTC强时间();
+        if (!前时间) throw std::runtime_error("task before-state UTC unavailable");
+        const auto 前 = 状态服务_.建立状态(引用.虚拟存在节点, 引用.状态特征节点, *前时间);
+        if (前.状态 != 新状态操作状态::已完成 || !前.状态节点)
+            throw std::runtime_error("task before-state publication failed");
+        提交已核验任务状态特征值(虚拟, 新状态, 前.状态节点);
+        const auto 后时间 = 当前实例UTC强时间();
+        if (!后时间 || 后时间->纳秒 <= 前时间->纳秒)
+            throw std::runtime_error("task state observation clock did not advance");
+        const auto 后 = 状态服务_.建立状态(引用.虚拟存在节点, 引用.状态特征节点, *后时间);
+        if (后.状态 != 新状态操作状态::已完成 || !后.状态节点)
+            throw std::runtime_error("task after-state publication failed");
+        const 新任务虚拟存在特征引用 目标{引用, 引用.状态特征节点};
+        const auto 变化 = 内部治理世界_->完成任务特征变化(目标, *前.状态节点, *后.状态节点);
+        const auto 读回 = 内部治理世界_->读取任务特征变化(目标, *前.状态节点, *后.状态节点);
+        if (变化.目标 != 目标 || 变化.治理场景节点 != 场景->场景节点
+            || 变化.前状态节点 != *前.状态节点 || 变化.后状态节点 != *后.状态节点
+            || !有效(变化.变化动态节点) || !读回 || 读回->目标 != 目标
+            || 读回->治理场景节点 != 变化.治理场景节点
+            || 读回->变化动态节点 != 变化.变化动态节点)
+            throw std::runtime_error("task state change readback mismatch");
+        return 新任务操作状态::已修改;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"写入任务状态",
+            L"任务状态变化组织异常；保留实际特征及状态动态，不返回部分成功。");
+    }
+}
+
+新任务操作状态 新_任务类::写入任务状态(
+    const 新任务虚拟存在信息& 虚拟, 新任务状态 新状态) noexcept {
+    try {
+        std::lock_guard 锁(新任务互斥);
+        if (!是合法状态迁移(虚拟.当前状态, 新状态)) return 新任务操作状态::任务状态不允许;
+        return 写入已核验任务状态值(虚拟, 新状态);
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"任务状态迁移", L"任务状态迁移工程异常。");
+    }
+}
+
 新任务操作状态 新_任务类::修改任务状态(
     稳定编码 任务节点,
     新任务状态 新状态) noexcept {
@@ -5573,7 +5644,7 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
         }
         const auto 虚拟存在 = 读取任务虚拟存在信息(任务节点, 特征服务_);
         if (!虚拟存在) return 新任务操作状态::任务不存在;
-        return 写入任务状态(*虚拟存在, 新状态, 特征服务_);
+        return 写入任务状态(*虚拟存在, 新状态);
     } catch (...) {
         return 新任务操作状态::资源失败;
     }
@@ -5858,6 +5929,58 @@ std::optional<新任务虚拟存在读回> 新_任务类::读取任务虚拟存�
     }
 }
 
+std::optional<新任务虚拟存在特征组> 新_任务类::读取任务虚拟存在特征组(
+    const 新任务虚拟存在引用& 引用) const noexcept {
+    try {
+        std::lock_guard 锁(新任务互斥);
+        if (!有效(引用.任务节点)) return std::nullopt;
+        const auto 登记 = 全局基础数据集.查询目标字段(引用.任务节点, 任务成员字段);
+        if (登记.empty() && !节点类型为(引用.任务节点, 任务节点类型)) return std::nullopt;
+        if (!结构仍存在() || 登记.size() != 1 || 登记.front().所属节点 != 任务集合根节点
+            || !节点类型为(引用.任务节点, 任务节点类型))
+            throw std::runtime_error("task feature reader found invalid registered task");
+        const auto Vt = 读取唯一节点字段(引用.任务节点, 任务虚拟存在字段);
+        if (!Vt || !节点类型为(*Vt, 任务虚拟存在节点类型)
+            || 读取唯一节点字段(*Vt, 虚拟存在所属任务字段) != 引用.任务节点)
+            throw std::runtime_error("task feature reader found broken T/Vt ownership");
+        const auto 持有Vt = 全局基础数据集.查询目标字段(*Vt, 任务虚拟存在字段);
+        const auto 反指T = 全局基础数据集.查询目标字段(引用.任务节点, 虚拟存在所属任务字段);
+        if (持有Vt.size() != 1 || 持有Vt.front().所属节点 != 引用.任务节点
+            || 反指T.size() != 1 || 反指T.front().所属节点 != *Vt)
+            throw std::runtime_error("task feature reader found shared virtual existence");
+        const auto F = 读取唯一节点字段(*Vt, 虚拟存在状态特征字段);
+        if (!F) throw std::runtime_error("task has no unique state feature");
+        const auto 核验特征 = [&](const 新特征信息& 信息, 稳定编码 字段,
+                稳定编码 其它字段, 稳定编码 类型) -> 新任务虚拟存在特征读回 {
+            const auto 持有 = 全局基础数据集.查询目标字段(信息.节点, 字段);
+            if (信息.上级特征节点 || !信息.当前值
+                || !std::holds_alternative<std::int64_t>(*信息.当前值)
+                || 持有.size() != 1 || 持有.front().所属节点 != *Vt
+                || !全局基础数据集.查询目标字段(信息.节点, 其它字段).empty()
+                || 取得特征概念类型根(特征概念服务_, 信息.特征概念节点) != 类型)
+                throw std::runtime_error("task feature ownership/type/value is inconsistent");
+            return {信息.节点, 类型, 信息.特征概念节点, std::get<std::int64_t>(*信息.当前值)};
+        };
+        const auto 状态 = 特征服务_.获取特征(*F);
+        if (!状态) throw std::runtime_error("task state feature is unreadable");
+        新任务虚拟存在特征组 结果;
+        结果.引用 = {引用.任务节点, *Vt, *F};
+        结果.状态 = 核验特征(*状态, 虚拟存在状态特征字段, 虚拟存在服务值特征字段, 任务状态特征概念);
+        if (!是任务状态值(结果.状态.当前值)) throw std::runtime_error("invalid task state value");
+        if (const auto 服务值 = 读取任务服务值特征(*Vt, 特征服务_, 特征概念服务_)) {
+            结果.服务值 = 核验特征(*服务值, 虚拟存在服务值特征字段, 虚拟存在状态特征字段, 任务服务值特征概念);
+            if (结果.服务值->当前值 < 0) throw std::runtime_error("negative task service value");
+        }
+        if (结果.引用 != 引用) return std::nullopt;
+        return 结果;
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取任务虚拟存在特征组",
+            L"正式任务、虚拟存在或特征归属读取异常。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取任务虚拟存在特征组", L"未知工程读取异常。");
+    }
+}
+
 bool 新_任务类::装配内部治理世界(新任务治理世界协作接口& 世界) noexcept {
     try {
         std::lock_guard 锁(新任务互斥);
@@ -6022,7 +6145,7 @@ std::optional<新任务虚拟存在语义读回> 新_任务类::读取任务虚�
         if (动作.状态 != 新治理动作登记状态::已建立 || !动作.动作节点)
             throw std::runtime_error("governance action publication failed");
         结果.内部动作节点 = 动作.动作节点;
-        (void)写入已核验任务状态值(*虚拟, 新任务状态::已结算, 特征服务_);
+        提交已核验任务状态特征值(*虚拟, 新任务状态::已结算, std::nullopt);
         结果.任务读回 = 读取任务虚拟存在引用(目标);
         if (!结果.任务读回 || 结果.任务读回->当前状态 != static_cast<std::int64_t>(新任务状态::已结算))
             throw std::runtime_error("settled task state write/readback failed");
@@ -6032,7 +6155,6 @@ std::optional<新任务虚拟存在语义读回> 新_任务类::读取任务虚�
         const auto 后 = 状态服务_.建立状态(目标.虚拟存在节点, 目标.状态特征节点, *后时间);
         if (后.状态 != 新状态操作状态::已完成 || !后.状态节点)
             throw std::runtime_error("governance after-state publication failed");
-        确保任务虚拟存在语义(请求.来源任务节点);
         结果.治理变化 = 内部治理世界_->完成任务状态变化(*动作.动作节点, *前.状态节点, *后.状态节点);
         结果.状态 = 新任务已结算状态::已标记;
         return 结果;
@@ -6059,24 +6181,7 @@ std::optional<新任务虚拟存在语义读回> 新_任务类::读取任务虚�
             && 清除候选 != 新任务操作状态::无变化) return 清除候选;
 
         // 重新启用是终结任务的专用入口，不能经通用迁移谓词放宽。
-        const auto 写入 = 特征服务_.添加特征值(
-            虚拟存在->任务状态特征节点,
-            新特征准确值{static_cast<std::int64_t>(新任务状态::待查找方法)});
-        if (写入.状态 == 新特征写入状态::已完成) {
-            return 新任务操作状态::已修改;
-        }
-        if (写入.状态 == 新特征写入状态::无变化) {
-            return 新任务操作状态::无变化;
-        }
-        if (写入.状态 == 新特征写入状态::结构不一致
-            || 写入.状态 == 新特征写入状态::值已更新但聚合未完成) {
-            const auto 已写状态 = 读取任务状态(
-                虚拟存在->任务状态特征节点, 特征服务_);
-            return 已写状态 && *已写状态 == 新任务状态::待查找方法
-                ? 新任务操作状态::已修改
-                : 新任务操作状态::结构不一致;
-        }
-        return 新任务操作状态::资源失败;
+        return 写入已核验任务状态值(*虚拟存在, 新任务状态::待查找方法);
     } catch (...) {
         return 新任务操作状态::资源失败;
     }
@@ -6624,7 +6729,7 @@ std::optional<新任务虚拟存在语义读回> 新_任务类::读取任务虚�
             return 结果;
         }
         const auto 状态结果 = 写入任务状态(
-            *虚拟存在, 新任务状态::执行中, 特征服务_);
+            *虚拟存在, 新任务状态::执行中);
         if (状态结果 != 新任务操作状态::已修改) {
             const auto 当前虚拟存在 = 读取任务虚拟存在信息(请求.任务节点, 特征服务_);
             if (!当前虚拟存在 || 当前虚拟存在->当前状态 == 新任务状态::执行中) {
@@ -7203,7 +7308,7 @@ void 新_任务类::记录服务需求执行依据(稳定编码 任务节点, �
         }
 
         const auto 状态回退 = 写入已核验任务状态值(
-            *虚拟存在, 新任务状态::待查找方法, 特征服务_);
+            *虚拟存在, 新任务状态::待查找方法);
         if (状态回退 != 新任务操作状态::已修改
             && 状态回退 != 新任务操作状态::无变化) {
             工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"撤销未进入动作执行", L"恢复筹办状态失败");
@@ -7364,7 +7469,7 @@ void 新_任务类::记录服务需求执行依据(稳定编码 任务节点, �
                 : 新任务操作状态::结构不一致;
         }
         const auto 状态结果 = 写入任务状态(
-            *虚拟存在, 新任务状态::待影响评估, 特征服务_);
+            *虚拟存在, 新任务状态::待影响评估);
         if (状态结果 != 新任务操作状态::已修改) {
             (void)全局基础数据集.修改字段值(
                 执行状态->关系,
@@ -8109,7 +8214,7 @@ void 新_任务类::记录服务需求执行依据(稳定编码 任务节点, �
             return 结果;
         }
         const auto 状态结果 = 写入任务状态(
-            *虚拟存在, 新任务状态::等待自我决议, 特征服务_);
+            *虚拟存在, 新任务状态::等待自我决议);
         if (状态结果 != 新任务操作状态::已修改) {
             (void)全局基础数据集.修改字段值(
                 执行状态->关系,

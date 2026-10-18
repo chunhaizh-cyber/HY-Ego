@@ -21,6 +21,26 @@ struct 新任务虚拟存在读回 final {
     std::int64_t 当前状态 = 0;
 };
 
+struct 新任务虚拟存在特征读回 final {
+    稳定编码 特征节点, 特征类型概念节点, 当前特征概念节点;
+    std::int64_t 当前值 = 0;
+};
+struct 新任务虚拟存在特征组 final {
+    新任务虚拟存在引用 引用;
+    新任务虚拟存在特征读回 状态;
+    std::optional<新任务虚拟存在特征读回> 服务值;
+};
+struct 新任务虚拟存在特征引用 final {
+    新任务虚拟存在引用 任务引用;
+    稳定编码 特征节点;
+    friend bool operator==(const 新任务虚拟存在特征引用&,
+        const 新任务虚拟存在特征引用&) = default;
+};
+struct 新治理任务特征变化结果 final {
+    新任务虚拟存在特征引用 目标;
+    稳定编码 治理场景节点, 前状态节点, 后状态节点, 变化动态节点;
+};
+
 struct 新任务治理场景信息 final {
     稳定编码 根场景节点, 场景节点;
     新任务虚拟存在引用 任务引用;
@@ -85,6 +105,10 @@ public:
         稳定编码 动作, 稳定编码 前状态, 稳定编码 后状态) noexcept = 0;
     virtual std::optional<新治理任务变化结果> 读取任务状态变化(
         const 新任务虚拟存在引用&, 稳定编码 来源普通动作) const noexcept = 0;
+    virtual 新治理任务特征变化结果 完成任务特征变化(
+        const 新任务虚拟存在特征引用&, 稳定编码 前状态, 稳定编码 后状态) noexcept = 0;
+    virtual std::optional<新治理任务特征变化结果> 读取任务特征变化(
+        const 新任务虚拟存在特征引用&, 稳定编码 前状态, 稳定编码 后状态) const noexcept = 0;
 };
 
 // 中立只读合同：目标结构由其唯一owner核验，动态/场景不依赖任务实现。
@@ -95,6 +119,9 @@ public:
         const 新任务虚拟存在引用&) const noexcept = 0;
     // 未提供语义投影的模拟读取器不能因此转而查询现实任务。
     virtual std::optional<新任务虚拟存在语义读回> 读取任务虚拟存在语义(
+        const 新任务虚拟存在引用&) const noexcept { return std::nullopt; }
+    // 模拟读取器未实现时仅返回无能力，不得回退到现实任务。
+    virtual std::optional<新任务虚拟存在特征组> 读取任务虚拟存在特征组(
         const 新任务虚拟存在引用&) const noexcept { return std::nullopt; }
     virtual std::optional<稳定编码> 获取任务已结算动作定义() const noexcept { return std::nullopt; }
 };

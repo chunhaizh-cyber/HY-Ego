@@ -16,12 +16,36 @@ void 核验挂接(新场景操作状态 状态) {
     if (状态 != 新场景操作状态::已完成 && 状态 != 新场景操作状态::无变化)
         throw std::runtime_error("governance scene attachment failed");
 }
+const 新任务虚拟存在特征读回& 核验治理特征状态对(
+    const 新任务虚拟存在特征组& 特征组, 稳定编码 F,
+    const 新状态信息& 前, const 新状态信息& 后, const 概念_特征类& 概念服务) {
+    const auto* 特征 = F == 特征组.状态.特征节点 ? &特征组.状态
+        : 特征组.服务值 && F == 特征组.服务值->特征节点 ? &*特征组.服务值 : nullptr;
+    if (!特征 || 前.节点 == 后.节点
+        || 前.被描述存在节点 != 特征组.引用.虚拟存在节点
+        || 后.被描述存在节点 != 前.被描述存在节点
+        || 前.来源实例特征节点 != F || 后.来源实例特征节点 != F
+        || !std::holds_alternative<std::int64_t>(前.固定准确值)
+        || !std::holds_alternative<std::int64_t>(后.固定准确值)
+        || 前.固定准确值 == 后.固定准确值
+        || 前.强时间.语义 != 新状态时间语义::实例绝对UTC
+        || 后.强时间.语义 != 新状态时间语义::实例绝对UTC
+        || 前.强时间.纳秒 <= 0 || 后.强时间.纳秒 <= 前.强时间.纳秒)
+        throw std::runtime_error("governance feature state pair identity/value/time mismatch");
+    for (const auto 概念 : {前.特征类型概念节点, 后.特征类型概念节点}) {
+        const auto 关系 = 概念服务.比较单特征概念(概念, 概念);
+        if (关系.状态 != 特征概念规则状态::已完成 || 关系.关系 != 单特征概念关系::同一
+            || 关系.特征类型根 != 特征->特征类型概念节点)
+            throw std::runtime_error("historical governance feature concept has a different type root");
+    }
+    return *特征;
+}
 }
 
 新_内部治理世界类::新_内部治理世界类(新_特征值类& 值, 概念_特征类& 特征概念,
     新_特征类& 特征, 概念_存在类& 存在概念, const 概念_动态类& 动态概念,
     新_状态类& 状态, 新_存在类& 存在, 新_动态类& 动态, const 新_场景类& 现实) noexcept
-    : 状态服务_(状态), 动态服务_(动态), 现实场景_(现实),
+    : 特征概念服务_(特征概念), 状态服务_(状态), 动态服务_(动态), 现实场景_(现实),
       治理场景_(根场景节点_, 存在, 状态, 动态, 新场景树用途::内部治理),
       因果服务_(状态, 动态, 存在, 存在概念, 特征概念, 动态概念, 值, 治理场景_, this, this),
       反查服务_(因果服务_, 特征, 特征概念, 存在概念, 动态概念, 动态, 存在, 治理场景_, this) {}
@@ -109,17 +133,146 @@ std::optional<新治理场景参与者> 新_内部治理世界类::读取治理�
     return 治理场景_.读取治理参与者(场景, 节点, *任务读取_);
 }
 
+std::optional<新治理任务特征变化结果> 新_内部治理世界类::读取任务特征变化(
+    const 新任务虚拟存在特征引用& 目标, 稳定编码 前节点, 稳定编码 后节点) const noexcept {
+    try {
+        if (!任务读取_) throw std::runtime_error("task feature reader is not assembled");
+        const auto 治理 = 读取任务治理场景(目标.任务引用);
+        const auto 特征组 = 任务读取_->读取任务虚拟存在特征组(目标.任务引用);
+        const auto 前 = 状态服务_.获取状态(前节点), 后 = 状态服务_.获取状态(后节点);
+        if (!治理 || !特征组 || 特征组->引用 != 目标.任务引用 || !前 || !后)
+            throw std::runtime_error("task feature change material missing");
+        (void)核验治理特征状态对(*特征组, 目标.特征节点, *前, *后, 特征概念服务_);
+        const auto 场景 = 治理场景_.获取场景(治理->场景节点);
+        if (!场景) throw std::runtime_error("task feature change scene unreadable");
+        std::set<稳定编码> 已覆盖状态, 动作结果;
+        std::set<std::pair<稳定编码, 稳定编码>> 已见配对;
+        std::optional<新治理任务特征变化结果> 结果;
+        for (const auto d : 场景->动态节点组) {
+            const auto 动态 = 动态服务_.获取动态(d);
+            if (!动态 || !动态->动态概念节点) throw std::runtime_error("task scene dynamic unreadable");
+            if (动态->种类 == 新动态种类::动作) {
+                if (动态->动作目标任务虚拟存在 != 目标.任务引用 || !动态->动作来源节点
+                    || 动态->动作定义节点 != 任务读取_->获取任务已结算动作定义())
+                    throw std::runtime_error("unsupported task scene action");
+                const auto 包 = 读取场景内任务状态变化(目标.任务引用, *动态->动作来源节点, 场景->节点);
+                if (!包 || 包->动作节点 != d || !动作结果.insert(包->变化动态节点).second)
+                    throw std::runtime_error("task scene action package mismatch");
+                continue;
+            }
+            if (动态->种类 != 新动态种类::原子 || 动态->状态节点组.size() != 2
+                || 动态->主题存在节点 != 目标.任务引用.虚拟存在节点)
+                throw std::runtime_error("unsupported task scene change");
+            const auto a = 状态服务_.获取状态(动态->状态节点组[0]);
+            const auto b = 状态服务_.获取状态(动态->状态节点组[1]);
+            if (!a || !b || !含节点(场景->状态节点组, a->节点) || !含节点(场景->状态节点组, b->节点)
+                || !已见配对.emplace(a->节点, b->节点).second)
+                throw std::runtime_error("task scene has partial or duplicate state pairs");
+            (void)核验治理特征状态对(*特征组, a->来源实例特征节点, *a, *b, 特征概念服务_);
+            已覆盖状态.insert(a->节点);
+            已覆盖状态.insert(b->节点);
+            if (a->节点 == 前节点 && b->节点 == 后节点)
+                结果 = 新治理任务特征变化结果{目标, 场景->节点, 前节点, 后节点, d};
+        }
+        if (已覆盖状态 != std::set<稳定编码>(场景->状态节点组.begin(), 场景->状态节点组.end()))
+            throw std::runtime_error("task scene contains orphan state facts");
+
+        // 检查完整入边，既能发现异场景挂接，也能发现尚未挂接的重复D。
+        // 不用按状态查询动态的容错空列表推定“没有”。
+        const auto 结构 = 全局基础数据集.查询节点组完整结构({前节点, 后节点});
+        if (结构.状态 != 基础结构操作状态::已完成 || 结构.节点组.size() != 2)
+            throw std::runtime_error("task state incoming references unreadable");
+        const auto 核验引用动态 = [&](稳定编码 节点) {
+            if (!动态服务_.是动态节点(节点)) return false;
+            const auto 动态 = 动态服务_.获取动态(节点);
+            if (!动态 || !含节点(场景->动态节点组, 节点))
+                throw std::runtime_error("task state is consumed by an unreadable or unattached dynamic");
+            if (动态->种类 == 新动态种类::原子
+                && 动态->状态节点组 == std::vector<稳定编码>{前节点, 后节点}
+                && (!结果 || 动态->节点 != 结果->变化动态节点))
+                throw std::runtime_error("duplicate exact task change");
+            return true;
+        };
+        std::set<稳定编码> 已核验引用项, 已读端点;
+        for (const auto& 项 : 结构.节点组) {
+            if (!项.快照 || (项.查询节点 != 前节点 && 项.查询节点 != 后节点)
+                || !已读端点.insert(项.查询节点).second)
+                throw std::runtime_error("task state reference readback identity mismatch");
+            const bool 已在本场景 = 含节点(场景->状态节点组, 项.查询节点);
+            if (!已在本场景 && (!项.快照->入向字段组.empty() || !项.快照->入向外部关系组.empty()))
+                throw std::runtime_error("unattached task state is already consumed or attached elsewhere");
+            for (const auto& 入边 : 项.快照->入向字段组) {
+                const auto 引用者 = 入边.所属节点;
+                if (引用者 == 场景->节点 || !已核验引用项.insert(引用者).second
+                    || 核验引用动态(引用者)) continue;
+                // 动态正式布局经状态项引用S：D→R→S。这里只沿完整入边
+                // 发现持有者，再由动态owner解释D，不猜测R的私有字段编码。
+                const auto 引用结构 = 全局基础数据集.查询节点组完整结构({引用者});
+                if (引用结构.状态 != 基础结构操作状态::已完成 || 引用结构.节点组.size() != 1
+                    || 引用结构.节点组.front().查询节点 != 引用者 || !引用结构.节点组.front().快照)
+                    throw std::runtime_error("task state reference item unreadable");
+                for (const auto& 持有 : 引用结构.节点组.front().快照->入向字段组)
+                    (void)核验引用动态(持有.所属节点);
+                // S也可被任务执行/结果材料合法引用；没有动态owner不能
+                // 被解释为坏R。只有正式识别到D后才按动态合同严格读回。
+            }
+        }
+        return 结果;
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取任务特征变化",
+            L"任务特征状态动态不完整或归属、值、时间不一致。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取任务特征变化", L"未知工程读取异常。");
+    }
+}
+
+新治理任务特征变化结果 新_内部治理世界类::完成任务特征变化(
+    const 新任务虚拟存在特征引用& 目标, 稳定编码 前节点, 稳定编码 后节点) noexcept {
+    try {
+        if (const auto 既有 = 读取任务特征变化(目标, 前节点, 后节点)) return *既有;
+        const auto 特征组 = 任务读取_->读取任务虚拟存在特征组(目标.任务引用);
+        const auto 治理 = 读取任务治理场景(目标.任务引用);
+        const auto 前 = 状态服务_.获取状态(前节点), 后 = 状态服务_.获取状态(后节点);
+        if (!特征组 || !治理 || !前 || !后) throw std::runtime_error("task feature completion material missing");
+        const auto& 特征 = 核验治理特征状态对(*特征组, 目标.特征节点, *前, *后, 特征概念服务_);
+        if (后->固定准确值 != 新特征准确值{特征.当前值}
+            || 前->被引用次数 != 0 || 后->被引用次数 != 0)
+            throw std::runtime_error("new task change is stale or partly consumed; do not replay");
+        核验挂接(治理场景_.添加治理状态(治理->场景节点, 前节点, *任务读取_));
+        核验挂接(治理场景_.添加治理状态(治理->场景节点, 后节点, *任务读取_));
+        const auto 变化 = 动态服务_.建立原子动态(目标.任务引用.虚拟存在节点, 前节点, 后节点);
+        if (变化.状态 != 新动态操作状态::已完成 || !变化.动态节点)
+            throw std::runtime_error("task feature atomic dynamic publication failed");
+        核验挂接(治理场景_.添加治理动态(治理->场景节点, *变化.动态节点, *任务读取_));
+        const auto 读回 = 读取任务特征变化(目标, 前节点, 后节点);
+        if (!读回 || 读回->变化动态节点 != *变化.动态节点)
+            throw std::runtime_error("task feature completion readback failed");
+        // 已知自动代码的变化不能伪装成未知动作因果；本叶只交付真实S/D。
+        return *读回;
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"完成任务特征变化",
+            L"已发生治理特征变化无法完整组织；保留事实，禁止自动重放。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"完成任务特征变化", L"未知工程异常；保留事实。");
+    }
+}
+
 void 新_内部治理世界类::迁移已有任务治理场景(
     const std::vector<新任务虚拟存在引用>& 引用组) noexcept {
     try {
         if (!任务读取_ || !获取根场景()) throw std::runtime_error("migration dependencies missing");
         std::map<稳定编码, 新任务虚拟存在语义读回> 任务快照;
+        std::map<稳定编码, 新任务虚拟存在特征组> 特征快照;
         std::map<稳定编码, 新任务治理场景信息> 任务场景;
         std::set<稳定编码> 已有场景;
         for (const auto& 引用 : 引用组) {
             const auto 语义 = 任务读取_->读取任务虚拟存在语义(引用);
             if (!语义 || 语义->状态.引用 != 引用 || !任务快照.emplace(引用.任务节点, *语义).second)
                 throw std::runtime_error("migration task set is incomplete or duplicated");
+            const auto 特征组 = 任务读取_->读取任务虚拟存在特征组(引用);
+            if (!特征组 || 特征组->引用 != 引用)
+                throw std::runtime_error("migration task features are not formally owned");
+            特征快照.emplace(引用.任务节点, *特征组);
             if (const auto 场景 = 读取任务治理场景(引用)) {
                 if (!已有场景.insert(场景->场景节点).second)
                     throw std::runtime_error("migration scene has multiple task owners");
@@ -200,11 +353,37 @@ void 新_内部治理世界类::迁移已有任务治理场景(
                     || !动态快照.at(变化->变化动态节点).动态概念节点)
                     throw std::runtime_error("legacy settlement action source/time/concept cannot be reconstructed");
                 for (const auto s : {变化->前状态节点, 变化->后状态节点})
-                    if (!包状态.insert(s).second) throw std::runtime_error("legacy state belongs to multiple action packages");
+                    if (!包状态.insert(s).second && c == 根场景节点_)
+                        throw std::runtime_error("legacy state belongs to multiple action packages");
                 for (const auto n : {变化->动作节点, 变化->变化动态节点})
                     if (!包动态.insert(n).second) throw std::runtime_error("legacy dynamic belongs to multiple action packages");
                 动作所属场景.emplace(d, c);
                 包组.push_back({*动作.动作目标任务虚拟存在, *变化, *主体, *动作.动作来源节点});
+            }
+            if (c != 根场景节点_) {
+                const auto owner = std::find_if(任务场景.begin(), 任务场景.end(),
+                    [&](const auto& 项) { return 项.second.场景节点 == c; });
+                if (owner == 任务场景.end()) throw std::runtime_error("task scene has no registered owner");
+                const auto& 特征组 = 特征快照.at(owner->first);
+                std::set<std::pair<稳定编码, 稳定编码>> 已见配对;
+                for (const auto d : 场景->动态节点组) {
+                    const auto& 动态 = 动态快照.at(d);
+                    if (动态.种类 == 新动态种类::动作) continue;
+                    if (动态.种类 != 新动态种类::原子 || 动态.状态节点组.size() != 2
+                        || 动态.主题存在节点 != 特征组.引用.虚拟存在节点 || !动态.动态概念节点
+                        || !状态快照.contains(动态.状态节点组[0])
+                        || !状态快照.contains(动态.状态节点组[1])
+                        || !含节点(场景->状态节点组, 动态.状态节点组[0])
+                        || !含节点(场景->状态节点组, 动态.状态节点组[1])
+                        || !已见配对.emplace(动态.状态节点组[0], 动态.状态节点组[1]).second)
+                        throw std::runtime_error("task scene has incomplete or duplicate atomic change");
+                    const auto& 前 = 状态快照.at(动态.状态节点组[0]);
+                    const auto& 后 = 状态快照.at(动态.状态节点组[1]);
+                    (void)核验治理特征状态对(特征组, 前.来源实例特征节点, 前, 后, 特征概念服务_);
+                    包状态.insert(前.节点);
+                    包状态.insert(后.节点); // 合法历史D可以共享端点。
+                    包动态.insert(d); // 9→12的D已覆盖，不再生成或交付因果。
+                }
             }
             if (包状态 != std::set<稳定编码>(场景->状态节点组.begin(), 场景->状态节点组.end())
                 || 包动态 != std::set<稳定编码>(场景->动态节点组.begin(), 场景->动态节点组.end()))

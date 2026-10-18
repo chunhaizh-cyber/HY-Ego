@@ -27,6 +27,10 @@ public:
     新治理任务变化结果 完成任务状态变化(稳定编码, 稳定编码, 稳定编码) noexcept override;
     std::optional<新治理任务变化结果> 读取任务状态变化(
         const 新任务虚拟存在引用&, 稳定编码) const noexcept override;
+    新治理任务特征变化结果 完成任务特征变化(
+        const 新任务虚拟存在特征引用&, 稳定编码, 稳定编码) noexcept override;
+    std::optional<新治理任务特征变化结果> 读取任务特征变化(
+        const 新任务虚拟存在特征引用&, 稳定编码, 稳定编码) const noexcept override;
     std::optional<新治理场景参与者> 读取治理参与者(
         稳定编码, 稳定编码) const noexcept override;
     std::optional<新因果动作定义> 读取自我动作事实(稳定编码) const noexcept override;
@@ -38,6 +42,7 @@ private:
     std::optional<新治理场景参与者> 读取范围治理参与者(稳定编码, 稳定编码) const;
     void 交付实际发生(const 新治理任务变化结果&) noexcept;
     稳定编码 根场景节点_{};
+    概念_特征类& 特征概念服务_;
     新_状态类& 状态服务_;
     新_动态类& 动态服务_;
     const 新_场景类& 现实场景_;
