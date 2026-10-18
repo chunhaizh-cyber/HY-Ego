@@ -36,7 +36,7 @@
 & 'C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/MSBuild.exe' '海中鱼巣.vcxproj' /t:Build /p:Configuration=Debug /p:Platform=x64 '/p:OutDir=D:/TEMP/海中鱼巣/TASK-VT-FEATURE-CHANGE/20261018-code/Debug/bin/' '/p:IntDir=D:/TEMP/海中鱼巣/TASK-VT-FEATURE-CHANGE/20261018-code/Debug/obj/' /m:2 /nologo /verbosity:minimal /fl '/flp:logfile=D:/TEMP/海中鱼巣/TASK-VT-FEATURE-CHANGE/20261018-code/Debug/build.log;verbosity=normal;Encoding=UTF-8'
 ```
 
-首次完整编译、链接退出 0，0 警告、0 错误，用时 2分31.72秒。修复独立审查问题后，以同一实际项目、配置和输出目录进行最终增量编译（仅日志文件名换为 `build-final.log`），退出 0，0 警告、0 错误，用时3.75秒。两次构建均未消费异主 WIP。工作区差异格式检查通过；暂存检查及发布结果待记录。
+首次完整编译、链接退出 0，0 警告、0 错误，用时 2分31.72秒。修复独立审查问题后，以同一实际项目、配置和输出目录进行最终增量编译（仅日志文件名换为 `build-final.log`），退出 0，0 警告、0 错误，用时3.75秒。两次构建均未消费异主 WIP。工作区与暂存差异格式检查通过。
 
 本轮没有测试指令，未启动程序、自检或实测迁移/并发/业务闭环。编译不证明运行正确。
 
@@ -66,6 +66,8 @@ DTO 新增：任务虚拟存在特征读回/特征组/特征引用、治理任�
 
 ## 5. 发布与完成边界
 
-生产代码尚未提交。本记录随精确七文件切片发布，后续补记提交、集成、推送和剩余现场。
+七个生产文件及本记录首次提交为 `859f8fdf7d1e8a1998686bfd149ee4b3d13ae5f6`，已由主工作区 main 快进集成并普通推送 origin/main；读回差异计数 0/0。发布前跨全部工作树定向检查，七文件只有本切片 WIP；未带入09fc或语言验证工作树的异主现场。主工作区及本切片 index 干净。
+
+计划所有者按已发布施工证据退出当前计划，保留详细设计及本记录。计划正文可从已发布 blob `e1762d2709d421381338004c31dc32b297bd257c` 或设计包提交 `96d8d6c26f55dce818f45cd4aef3e6f301cfb14d` 恢复，仅供追溯，不作为现行执行入口。函数知识用途卡仍待维护者回写。
 
 本叶不完成服务值 Q 余额迁移与计值、普通子任务结算、结算双入口统一、方法虚拟存在/独立方法场景、普通无动作变化的被动因果及持久化恢复。它只补齐任务状态这一现有写入链，不宣称全部 Vt 特征变化已经普适化或总设计完成。
