@@ -2415,13 +2415,9 @@ struct 新_自我线程类::实现 final {
             return 裁决;
         }
         if (!筹办.独立条件筹办->候选已完整核验) {
-            // 完整缺口不等于完整执行条件。未知对象不得伪造为正式需求目标。
-            const bool 有缺口 = std::any_of(
-                筹办.独立条件筹办->方法筹办组.begin(),
-                筹办.独立条件筹办->方法筹办组.end(),
-                [](const auto& 方法) { return !方法.条件缺口组.empty(); });
-            裁决.状态 = 有缺口 ? 新自我筹办裁决状态::等待材料
-                : 新自我筹办裁决状态::当前无可用方法;
+            // 未核验完不能证明能力缺失；已有登记头待学习也走材料等待。
+            // 缺口组为空不等于所有候选已经被证明不适用。
+            裁决.状态 = 新自我筹办裁决状态::等待材料;
             return 裁决;
         }
         const auto 选择 = 任务服务->选择任务方法结果(定位.任务节点);
@@ -2448,6 +2444,82 @@ struct 新_自我线程类::实现 final {
             裁决.状态 = 新自我筹办裁决状态::需核查;
         }
         return 裁决;
+    }
+
+    bool 登记当前缺失方法(const 新任务筹办反馈定位& 定位,
+        const std::optional<新任务候选方法材料>& 分类候选) noexcept {
+        try {
+            const auto 原筹办 = 任务管理->读取最近筹办结果(定位.任务节点);
+            if (!原筹办 || 原筹办->原工作 != 定位.原工作) return false;
+            const auto t = 任务服务->获取任务(定位.任务节点);
+            if (!t) throw std::logic_error("missing-method source task unreadable");
+            const auto d = 需求服务->获取需求(t->需求节点);
+            const auto c = 任务服务->获取当前候选方法材料(t->节点);
+            if (!d || 任务服务->查询需求任务(d->节点) != t->节点)
+                throw std::logic_error("missing-method source T-D mismatch");
+            if (!c || c != 分类候选 || !c->查询完整 || c->需求节点 != d->节点 || c->需求目标 != d->目标
+                || (t->当前状态 != 新任务状态::等待条件 && t->当前状态 != 新任务状态::待检查条件))
+                return false; // 学习/重新筹办已经替换来源，不登记陈旧结论。
+            if (原筹办->状态 == 新任务筹办处理状态::完整无候选并进入等待) {
+                if (!原筹办->独立消费 || 原筹办->独立消费->读回.材料 != c
+                    || !c->候选方法节点组.empty()) return false;
+            } else if (原筹办->状态 != 新任务筹办处理状态::条件筹办已完成
+                || !原筹办->独立条件筹办 || !原筹办->独立条件筹办->候选已完整核验
+                || 原筹办->独立条件筹办->候选材料节点 != c->节点) return false;
+            const auto f = 世界树服务->获取事实服务引用();
+            std::optional<稳定编码> ec;
+            if (const auto e = f.存在服务.获取存在(d->目标存在节点)) ec = e->专属存在概念节点;
+            else {
+                // Vt不属于现实世界存在，必须经任务owner取得正式语义。
+                const auto 全部 = 任务服务->查询全部任务();
+                if (全部.状态 != 新任务操作状态::已找到)
+                    throw std::logic_error("missing-method virtual target lookup failed");
+                for (auto n : 全部.任务节点组) {
+                    const auto v = 任务服务->获取任务虚拟存在(n);
+                    if (!v) throw std::logic_error("missing-method virtual target unreadable");
+                    if (v->节点 != d->目标存在节点) continue;
+                    const auto s = 任务服务->读取任务虚拟存在语义({n, v->节点, v->任务状态特征节点});
+                    if (!s || ec) throw std::logic_error("missing-method virtual target ambiguous");
+                    ec = s->专属存在概念节点;
+                }
+            }
+            if (!ec) throw std::logic_error("missing-method demand target lacks formal existence concept");
+            新缺失方法登记请求 请求;
+            请求.来源需求节点 = d->节点;
+            请求.来源任务节点 = t->节点;
+            请求.方法头.作用存在概念组 = {*ec};
+            请求.方法头.涉及特征类型概念组 = {d->目标.目标特征类型概念节点};
+            if (d->目标.目标形式 == 新需求目标形式::值) {
+                if (!d->目标.目标值域概念节点 || !d->目标.目标比较关系概念节点)
+                    throw std::logic_error("missing-method value target incomplete");
+                请求.目标值域概念节点 = d->目标.目标值域概念节点;
+                请求.目标比较关系概念节点 = d->目标.目标比较关系概念节点;
+                请求.方法头.可能结果概念组 = {*请求.目标值域概念节点, *请求.目标比较关系概念节点};
+            } else {
+                if (d->目标.目标形式 != 新需求目标形式::变化方向 || !d->目标.目标变化方向)
+                    throw std::logic_error("missing-method direction target incomplete");
+                const auto ft = d->目标.目标特征类型概念节点;
+                const auto 根 = f.二次特征概念服务.建立或取得默认二次特征概念(二次特征算法::有向特征差值,
+                    {{0, 二次特征输入角色::左输入, 二次特征输入来源种类::特征准确值, ft},
+                     {1, 二次特征输入角色::右输入, 二次特征输入来源种类::特征准确值, ft}});
+                if (!根.概念节点) throw std::logic_error("missing-method direction definition unavailable");
+                const auto 方向 = f.二次特征概念服务.建立或取得参照结果域概念(*根.概念节点,
+                    *d->目标.目标变化方向 == 新需求变化方向::增加 ? 二次特征结果域种类::大于 : 二次特征结果域种类::小于);
+                if (!方向.概念节点) throw std::logic_error("missing-method direction domain unavailable");
+                请求.目标变化方向概念节点 = 方向.概念节点;
+                请求.方法头.可能结果概念组 = {*方向.概念节点};
+            }
+            if (任务服务->获取任务(t->节点) != t || 需求服务->获取需求(d->节点) != d
+                || 任务服务->获取当前候选方法材料(t->节点) != c) return false;
+            const auto 当前筹办 = 任务管理->读取最近筹办结果(定位.任务节点);
+            if (!当前筹办 || 当前筹办->原工作 != 定位.原工作) return false;
+            const auto r = 方法服务->登记缺失方法(请求);
+            if ((r.状态 != 新方法操作状态::已建立 && r.状态 != 新方法操作状态::已找到) || !r.信息)
+                throw std::logic_error("confirmed missing-method registration rejected");
+            return true;
+        } catch (...) {
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"自我登记缺失方法", L"已确认缺口的来源或登记结构不完整，不能当作能力不足继续等待。");
+        }
     }
 
     // 空结果只表示manager暂时不能接纳裁决；保留原反馈定位后重试。
@@ -2486,8 +2558,14 @@ struct 新_自我线程类::实现 final {
                 return std::nullopt;
             return 采用;
         }
+        const auto 分类候选 = 任务服务->获取当前候选方法材料(定位.任务节点);
         结果.筹办裁决 = 分类筹办结果(
             定位, *结果.筹办独立读回);
+        if (结果.筹办裁决->状态 == 新自我筹办裁决状态::当前无可用方法
+            && !登记当前缺失方法(定位, 分类候选)) {
+            // 仍将失效决定交回manager收口旧反馈；不遗留永远待接收的定位。
+            结果.筹办裁决->状态 = 新自我筹办裁决状态::任务状态变化;
+        }
         if (结果.筹办裁决->状态
                 == 新自我筹办裁决状态::可进入执行前判断
             && 结果.筹办裁决->唯一具备方法节点
