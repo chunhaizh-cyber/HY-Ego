@@ -71,6 +71,31 @@ struct 新方法头定义 final {
     friend bool operator==(const 新方法头定义&, const 新方法头定义&) = default;
 };
 
+// 待形成能力的目标，不是已掌握的方法知识。来源T→D由自我/任务owner确认，
+// 方法owner仅保存引用，不代行任务归属裁决。单目标FT；域+比较关系或方向二选一。
+// 可能结果概念组恰为方向概念，或目标域及比较概念。读取返回引用材料；
+// 不冻结被引用概念的未来定义，后续消费者必须fresh复核，不能据此直接生成方法。
+struct 新缺失方法登记请求 final {
+    新方法头定义 方法头;
+    std::optional<稳定编码> 目标值域概念节点;
+    std::optional<稳定编码> 目标比较关系概念节点;
+    std::optional<稳定编码> 目标变化方向概念节点;
+    稳定编码 来源需求节点;
+    稳定编码 来源任务节点;
+    friend bool operator==(const 新缺失方法登记请求&, const 新缺失方法登记请求&) = default;
+};
+
+struct 新缺失方法信息 final {
+    稳定编码 方法头节点;
+    新缺失方法登记请求 定义;
+    friend bool operator==(const 新缺失方法信息&, const 新缺失方法信息&) = default;
+};
+
+struct 新缺失方法登记结果 final {
+    新方法操作状态 状态 = 新方法操作状态::入口拒绝;
+    std::optional<新缺失方法信息> 信息;
+};
+
 struct 新方法参数特征规格 final {
     稳定编码 特征类型概念节点;
     std::optional<稳定编码> 值域概念节点;

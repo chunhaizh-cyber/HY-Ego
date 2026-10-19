@@ -19,6 +19,7 @@
 #include "新_本能函数管理类.h"
 #include "概念_存在类.h"
 #include "概念_特征类.h"
+#include "概念_二次特征类.h"
 #include "../核心/容错检查.h"
 
 namespace 海中鱼巣 {
@@ -80,6 +81,36 @@ bool 同一学习条件(const 新方法条件定义& 左, const 新方法条件�
 稳定编码 方法头作用存在概念字段{};
 稳定编码 方法头特征类型概念字段{};
 稳定编码 方法头结果概念字段{};
+
+// 独立扩展，不加入既有方法架构必需编码组，也不挂方法组织根。
+稳定编码 缺失方法列表节点{}, 缺失方法列表类型{}, 缺失方法成员字段{};
+稳定编码 缺失方法值域字段{}, 缺失方法比较字段{}, 缺失方法方向字段{};
+稳定编码 缺失方法需求字段{}, 缺失方法任务字段{};
+
+void 确保缺失方法列表() {
+    std::vector<稳定编码*> 键{&缺失方法列表类型, &缺失方法成员字段,
+        &缺失方法值域字段, &缺失方法比较字段, &缺失方法方向字段,
+        &缺失方法需求字段, &缺失方法任务字段};
+    if (!有效(缺失方法列表节点)) {
+        if (std::any_of(键.begin(), 键.end(), [](auto p) { return 有效(*p); }))
+            throw std::runtime_error("partial missing-method schema");
+        // 类型键与根一起出生；组内引用只在这次原子调用内存在。
+        std::vector<基础组内新节点> 组(键.size() + 1);
+        组.back().字段组.push_back({节点类型字段, 基础组内节点引用{0}});
+        const auto r = 全局基础数据集.原子建立节点组(组);
+        if (r.状态 != 基础结构操作状态::已完成 || r.节点组.size() != 组.size())
+            throw std::runtime_error("missing-method schema publication failed");
+        for (std::size_t i = 0; i < 键.size(); ++i) *键[i] = r.节点组[i];
+        缺失方法列表节点 = r.节点组.back();
+    }
+    for (auto p : 键)
+        if (!全局基础数据集.查询节点(*p)) throw std::runtime_error("missing-method schema damaged");
+    const auto 类型 = 全局基础数据集.查询字段(缺失方法列表节点, 节点类型字段);
+    if (类型.size() != 1 || 类型.front().内容 != 基础字段内容{缺失方法列表类型}
+        || 缺失方法列表节点 == 新方法组织根节点
+        || !全局基础数据集.查询目标关系(缺失方法列表节点, 基础外部关系类型::父子).empty())
+        throw std::runtime_error("missing-method list ownership damaged");
+}
 
 稳定编码 虚拟存在所属方法字段{};
 稳定编码 虚拟存在参数规格字段{};
@@ -1821,6 +1852,10 @@ bool 新_方法类::初始化() noexcept {
                 || 类型->单位 || 类型->比较规则 != 特征概念比较规则::I64数值
                 || 类型->聚合规则 != 特征概念聚合规则::不自动聚合)
                 throw std::runtime_error("method enabled feature type invalid");
+            try { 确保缺失方法列表(); }
+            catch (...) {
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"初始化缺失方法列表", L"独立列表架构不完整，保留现场。");
+            }
             return true;
         };
         if (结构已分配()) return 结构仍存在() && 确保父代字段();
@@ -1846,6 +1881,180 @@ bool 新_方法类::初始化() noexcept {
         return 结构仍存在() && 确保父代字段();
     } catch (...) {
         return false;
+    }
+}
+
+std::vector<新缺失方法信息> 新_方法类::查询缺失方法列表() const noexcept {
+    try {
+        std::lock_guard 锁(新方法互斥);
+        if (!结构仍存在() || !有效(缺失方法列表节点))
+            throw std::runtime_error("missing-method list not initialized");
+        确保缺失方法列表(); // 已初始化分支只核验，不补造丢失材料。
+        const auto 成员 = 读取多节点字段(缺失方法列表节点, 缺失方法成员字段, 特征概念服务_);
+        if (!成员) throw std::runtime_error("missing-method membership damaged");
+        auto 节点组 = *成员;
+        节点组.push_back(缺失方法列表节点);
+        const auto 全部 = 全局基础数据集.查询节点组完整结构(节点组);
+        if (全部.状态 != 基础结构操作状态::已完成 || 全部.节点组.size() != 节点组.size())
+            throw std::runtime_error("missing-method graph unavailable");
+        std::vector<新缺失方法信息> 结果;
+        for (const auto& 项 : 全部.节点组) {
+            if (!项.快照) throw std::runtime_error("missing-method snapshot absent");
+            const auto& s = *项.快照;
+            const auto n = s.结构.节点.编码;
+            if (n == 缺失方法列表节点) {
+                std::vector<稳定编码> 当前;
+                for (const auto& f : s.结构.字段组) {
+                    if (f.字段节点 != 缺失方法成员字段) continue;
+                    const auto* p = std::get_if<稳定编码>(&f.内容);
+                    if (!p) throw std::runtime_error("missing-method member is not reference");
+                    当前.push_back(*p);
+                }
+                std::sort(当前.begin(), 当前.end());
+                if (当前 != *成员) throw std::runtime_error("missing-method list changed during read");
+                continue;
+            }
+            if (!s.入向外部关系组.empty() || !s.出向外部关系组.empty())
+                throw std::runtime_error("missing-method head attached to a tree");
+            const auto 归属 = std::count_if(s.入向字段组.begin(), s.入向字段组.end(), [](const auto& f) {
+                return f.所属节点 == 缺失方法列表节点 && f.字段节点 == 缺失方法成员字段;
+            });
+            if (归属 != 1 || std::any_of(s.入向字段组.begin(), s.入向字段组.end(), [](const auto& f) {
+                return f.字段节点 == 方法头字段 || f.字段节点 == 方法成员字段;
+            })) throw std::runtime_error("missing-method head has executable ownership");
+            新缺失方法信息 信息{n, {}};
+            auto& d = 信息.定义;
+            std::set<稳定编码> 单字段;
+            for (const auto& f : s.结构.字段组) {
+                const auto* p = std::get_if<稳定编码>(&f.内容);
+                if (!p || !节点仍存在(*p)) throw std::runtime_error("missing-method reference damaged");
+                if (f.字段节点 == 方法头作用存在概念字段) d.方法头.作用存在概念组.push_back(*p);
+                else if (f.字段节点 == 方法头特征类型概念字段) d.方法头.涉及特征类型概念组.push_back(*p);
+                else if (f.字段节点 == 方法头结果概念字段) d.方法头.可能结果概念组.push_back(*p);
+                else {
+                    if (!单字段.insert(f.字段节点).second) throw std::runtime_error("duplicate missing-method scalar field");
+                    if (f.字段节点 == 节点类型字段) {
+                        if (*p != 方法头节点类型) throw std::runtime_error("missing-method head type invalid");
+                    } else if (f.字段节点 == 缺失方法值域字段) d.目标值域概念节点 = *p;
+                    else if (f.字段节点 == 缺失方法比较字段) d.目标比较关系概念节点 = *p;
+                    else if (f.字段节点 == 缺失方法方向字段) d.目标变化方向概念节点 = *p;
+                    else if (f.字段节点 == 缺失方法需求字段) d.来源需求节点 = *p;
+                    else if (f.字段节点 == 缺失方法任务字段) d.来源任务节点 = *p;
+                    else throw std::runtime_error("unknown missing-method field");
+                }
+            }
+            for (auto* g : {&d.方法头.作用存在概念组, &d.方法头.涉及特征类型概念组, &d.方法头.可能结果概念组}) {
+                std::sort(g->begin(), g->end());
+                if (std::adjacent_find(g->begin(), g->end()) != g->end())
+                    throw std::runtime_error("duplicate missing-method concept");
+            }
+            if (!单字段.contains(节点类型字段) || !有效(d.来源需求节点) || !有效(d.来源任务节点)
+                || d.方法头.作用存在概念组.empty() || d.方法头.涉及特征类型概念组.size() != 1
+                || d.方法头.可能结果概念组.empty()
+                || (d.目标变化方向概念节点 ? (d.目标值域概念节点 || d.目标比较关系概念节点)
+                    : (!d.目标值域概念节点 || !d.目标比较关系概念节点)))
+                throw std::runtime_error("incomplete missing-method definition");
+            结果.push_back(std::move(信息));
+        }
+        std::sort(结果.begin(), 结果.end(), [](const auto& a, const auto& b) { return a.方法头节点 < b.方法头节点; });
+        return 结果;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取缺失方法列表", L"列表或方法头结构损坏，不得作为空列表继续筹办。");
+    }
+}
+
+std::optional<新缺失方法信息> 新_方法类::读取缺失方法(稳定编码 方法头节点) const noexcept {
+    try {
+        for (const auto& 项 : 查询缺失方法列表())
+            if (项.方法头节点 == 方法头节点) return 项;
+        return std::nullopt;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取缺失方法", L"方法头读回失败，不得作为合法不存在返回。");
+    }
+}
+
+新缺失方法登记结果 新_方法类::登记缺失方法(const 新缺失方法登记请求& 请求) noexcept {
+    try {
+        std::lock_guard 锁(新方法互斥);
+        if (!结构仍存在() || !有效(缺失方法列表节点))
+            return {新方法操作状态::尚未初始化, {}};
+        auto d = 请求;
+        for (auto* g : {&d.方法头.作用存在概念组, &d.方法头.涉及特征类型概念组, &d.方法头.可能结果概念组}) {
+            std::sort(g->begin(), g->end());
+            g->erase(std::unique(g->begin(), g->end()), g->end());
+        }
+        if (!节点仍存在(d.来源需求节点) || !节点仍存在(d.来源任务节点)
+            || d.来源需求节点 == d.来源任务节点 || !方法头有效(d.方法头)
+            || d.方法头.作用存在概念组.empty() || d.方法头.涉及特征类型概念组.size() != 1
+            || (d.目标变化方向概念节点 ? (d.目标值域概念节点 || d.目标比较关系概念节点)
+                : (!d.目标值域概念节点 || !d.目标比较关系概念节点)))
+            return {新方法操作状态::入口拒绝, {}};
+        for (auto ec : d.方法头.作用存在概念组)
+            if (!存在概念服务_.获取存在概念(ec)) return {新方法操作状态::方法头不合法, {}};
+        const auto ft = d.方法头.涉及特征类型概念组.front();
+        if (读取线性特征类型根(ft, 特征概念服务_) != ft)
+            return {新方法操作状态::方法头不合法, {}};
+        概念_二次特征类 二次(特征概念服务_, 特征值服务_);
+        const auto rc = 二次.获取二次特征概念(d.目标变化方向概念节点
+            ? *d.目标变化方向概念节点 : *d.目标比较关系概念节点);
+        if (!rc) return {新方法操作状态::方法头不合法, {}};
+        bool 有特征输入 = false;
+        for (const auto& i : rc->输入定义组) {
+            if (i.来源种类 != 二次特征输入来源种类::特征准确值) continue;
+            if (!i.特征类型概念节点 || 读取线性特征类型根(*i.特征类型概念节点, 特征概念服务_) != ft)
+                return {新方法操作状态::方法头不合法, {}};
+            有特征输入 = true;
+        }
+        if (!有特征输入) return {新方法操作状态::方法头不合法, {}};
+        if (d.目标变化方向概念节点) {
+            const auto* 域 = std::get_if<std::vector<特征概念I64闭区间>>(&rc->输出特征概念.值域);
+            if (rc->算法 != 二次特征算法::有向特征差值 || rc->参照特征概念节点 || !域 || 域->empty()
+                || rc->输入定义组.size() != 2
+                || !std::all_of(rc->输入定义组.begin(), rc->输入定义组.end(), [](const auto& i) {
+                    return i.来源种类 == 二次特征输入来源种类::特征准确值;
+                })
+                || !(std::all_of(域->begin(), 域->end(), [](const auto& x) { return x.下界 > 0; })
+                    || std::all_of(域->begin(), 域->end(), [](const auto& x) { return x.上界 < 0; })))
+                return {新方法操作状态::方法头不合法, {}};
+        } else if (读取线性特征类型根(*d.目标值域概念节点, 特征概念服务_) != ft
+            || rc->参照特征概念节点 != d.目标值域概念节点)
+            return {新方法操作状态::方法头不合法, {}};
+        // 头仅记录本次缺口所需的结果概念，不允许夹带其它结果能力声明。
+        std::vector<稳定编码> 目标结果{rc->节点};
+        if (d.目标值域概念节点) 目标结果.push_back(*d.目标值域概念节点);
+        std::sort(目标结果.begin(), 目标结果.end());
+        目标结果.erase(std::unique(目标结果.begin(), 目标结果.end()), 目标结果.end());
+        if (d.方法头.可能结果概念组 != 目标结果) return {新方法操作状态::方法头不合法, {}};
+        for (const auto& 项 : 查询缺失方法列表())
+            if (项.定义 == d) return {新方法操作状态::已找到, 项};
+        基础节点组追加请求 原子;
+        基础组内新节点 头;
+        头.字段组.push_back({节点类型字段, 方法头节点类型});
+        const auto 组 = [&](稳定编码 键, const std::vector<稳定编码>& 值) {
+            for (auto n : 值) 头.字段组.push_back({键, n});
+        };
+        组(方法头作用存在概念字段, d.方法头.作用存在概念组);
+        组(方法头特征类型概念字段, d.方法头.涉及特征类型概念组);
+        组(方法头结果概念字段, d.方法头.可能结果概念组);
+        if (d.目标值域概念节点) 头.字段组.push_back({缺失方法值域字段, *d.目标值域概念节点});
+        if (d.目标比较关系概念节点) 头.字段组.push_back({缺失方法比较字段, *d.目标比较关系概念节点});
+        if (d.目标变化方向概念节点) 头.字段组.push_back({缺失方法方向字段, *d.目标变化方向概念节点});
+        头.字段组.push_back({缺失方法需求字段, d.来源需求节点});
+        头.字段组.push_back({缺失方法任务字段, d.来源任务节点});
+        原子.新节点组.push_back(std::move(头));
+        原子.追加字段组.push_back({缺失方法列表节点, 缺失方法成员字段, 基础组内节点引用{0}});
+        const auto 根快照 = 全局基础数据集.查询节点组完整结构({缺失方法列表节点});
+        if (根快照.状态 != 基础结构操作状态::已完成 || 根快照.节点组.size() != 1 || !根快照.节点组.front().快照)
+            throw std::runtime_error("missing-method list snapshot unavailable");
+        原子.预期联合节点组.push_back(*根快照.节点组.front().快照);
+        const auto r = 全局基础数据集.原子追加节点组(原子);
+        if (r.状态 != 基础节点组追加状态::已完成 || r.新节点组.size() != 1)
+            throw std::runtime_error("missing-method atomic publication failed");
+        const auto 已有 = 读取缺失方法(r.新节点组.front());
+        if (!已有 || 已有->定义 != d) throw std::runtime_error("missing-method publication readback mismatch");
+        return {新方法操作状态::已建立, 已有};
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"登记缺失方法", L"缺失方法发布或读回错误，保留现场，不转为业务缺口。");
     }
 }
 
