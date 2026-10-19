@@ -21,6 +21,8 @@ enum class 新方法实现方式 : std::int64_t {
     组合 = 2
 };
 
+enum class 新方法行为 : std::int64_t { 读取 = 1, 改变 = 2 };
+
 // 条件与结果必须显式声明关系；方法头中的概念集合不使用本枚举。
 enum class 新方法项关系规则 : std::int64_t {
     单项 = 1,
@@ -207,6 +209,7 @@ struct 新方法知识建立请求 final {
     新方法头定义 方法头;
     std::vector<新方法参数规格> 参数规格组;
     std::vector<新方法条件结果定义> 条件结果组;
+    std::optional<新方法行为> 行为;
 };
 
 struct 新方法条件结果信息 final {
@@ -273,6 +276,7 @@ struct 新方法信息 final {
     // 仅服务结算固定+1到Q的正式代际；与任务副本来源严格分账。
     std::optional<稳定编码> 父代方法节点;
     稳定编码 启用特征节点, 专属存在概念节点;
+    std::optional<新方法行为> 行为;
     friend bool operator==(const 新方法信息&, const 新方法信息&) = default;
 };
 

@@ -72,6 +72,7 @@ bool 同一学习条件(const 新方法条件定义& 左, const 新方法条件�
 稳定编码 方法实例根字段{};
 // 单独扩展，不能因存量架构没有该键而重建整个方法根。
 稳定编码 方法父代字段{};
+稳定编码 方法行为字段{};
 稳定编码 虚拟存在启用特征字段{};
 稳定编码 虚拟存在专属概念字段{};
 稳定编码 方法启用特征类型{};
@@ -175,6 +176,22 @@ bool 是作用域(std::int64_t 值) noexcept {
 bool 是实现方式(std::int64_t 值) noexcept {
     return 值 == static_cast<std::int64_t>(新方法实现方式::本能)
         || 值 == static_cast<std::int64_t>(新方法实现方式::组合);
+}
+
+bool 是方法行为(std::int64_t 值) noexcept {
+    return 值 == static_cast<std::int64_t>(新方法行为::读取)
+        || 值 == static_cast<std::int64_t>(新方法行为::改变);
+}
+
+bool 行为结果相容(const std::optional<新方法行为>& 行为, const 新方法结果定义& 结果) {
+    return 行为 != 新方法行为::读取 || std::none_of(结果.结果项组.begin(),
+        结果.结果项组.end(), [](const auto& 项) { return 项.变化方向概念节点.has_value(); });
+}
+
+bool 行为声明有效(const 新方法知识建立请求& 请求) {
+    return (!请求.行为 || 是方法行为(static_cast<std::int64_t>(*请求.行为)))
+        && std::all_of(请求.条件结果组.begin(), 请求.条件结果组.end(),
+            [&](const auto& 配对) { return 行为结果相容(请求.行为, 配对.结果); });
 }
 
 bool 是关系规则(std::int64_t 值) noexcept {
@@ -947,7 +964,7 @@ std::vector<复制字段规格> 方法复制字段规格(稳定编码 类型) {
         组.push_back({字段, 类别::独占子节点, 子类型});
     };
     if (类型 == 方法节点类型) {
-        值({方法作用域字段, 方法实现方式字段,
+        值({方法作用域字段, 方法实现方式字段, 方法行为字段,
             方法本能函数登记名字段});
         子(方法头字段, 方法头节点类型);
         子(方法虚拟存在字段, 方法虚拟存在节点类型);
@@ -1046,6 +1063,16 @@ std::optional<新方法信息> 读取方法信息(稳定编码 方法节点, con
 
     新方法信息 信息;
     信息.节点 = 方法节点;
+    if (有效(方法行为字段)) {
+        const auto 字段组 = 全局基础数据集.查询字段(方法节点, 方法行为字段);
+        if (字段组.size() > 1) return std::nullopt;
+        if (!字段组.empty()) {
+            const auto* 基础 = std::get_if<基础值>(&字段组.front().内容);
+            const auto* 值 = 基础 ? std::get_if<std::int64_t>(&基础->材料) : nullptr;
+            if (!值 || !是方法行为(*值)) return std::nullopt;
+            信息.行为 = static_cast<新方法行为>(*值);
+        }
+    }
     if (有效(方法父代字段)) {
         const auto 父代 = 读取可选节点字段(方法节点, 方法父代字段);
         if (!父代) return std::nullopt;
@@ -1207,7 +1234,46 @@ std::optional<新方法信息> 读取方法信息(稳定编码 方法节点, con
     if (信息.实现方式 == 新方法实现方式::本能
         && (!信息.组合步骤组.empty() || 信息.组合入口步骤节点
             || !信息.结果转移组.empty())) return std::nullopt;
+    if (std::any_of(信息.条件结果组.begin(), 信息.条件结果组.end(),
+            [&](const auto& 配对) { return !行为结果相容(信息.行为, 配对.结果); }))
+        return std::nullopt;
     return 信息;
+}
+
+// 调用者已核验原登记声明并持有方法owner锁。未知不推断，唯一追加为发布点。
+新方法建立结果 补登记方法行为(const 新方法信息& 原,
+    const std::optional<新方法行为>& 声明, const 概念_特征类& 概念,
+    const 新方法治理对象读取接口& 治理) {
+    if (!声明 || 原.行为 == 声明) return {新方法操作状态::已找到, 原.节点};
+    if (原.行为 || !是方法行为(static_cast<std::int64_t>(*声明))
+        || std::any_of(原.条件结果组.begin(), 原.条件结果组.end(),
+            [&](const auto& 配对) { return !行为结果相容(声明, 配对.结果); }))
+        return {新方法操作状态::函数登记冲突, std::nullopt};
+    const auto 快照 = 全局基础数据集.查询节点组完整结构({原.节点, 方法行为字段});
+    if (快照.状态 != 基础结构操作状态::已完成 || 快照.节点组.size() != 2)
+        throw std::runtime_error("method behavior snapshot unavailable");
+    基础节点组追加请求 请求;
+    for (const auto& 节点 : 快照.节点组) {
+        if (!节点.快照) throw std::runtime_error("method behavior snapshot incomplete");
+        请求.预期联合节点组.push_back(*节点.快照);
+    }
+    const auto 当前 = 读取方法信息(原.节点, 概念, 治理);
+    if (!当前 || *当前 != 原) throw std::runtime_error("method behavior declaration changed");
+    auto 预期 = 原;
+    预期.行为 = 声明;
+    请求.追加字段组.push_back({原.节点, 方法行为字段, 基础值{static_cast<std::int64_t>(*声明)}});
+    const auto 发布 = 全局基础数据集.原子追加节点组(请求);
+    if (发布.状态 == 基础节点组追加状态::资源失败)
+        return {新方法操作状态::资源失败, std::nullopt};
+    if (发布.状态 != 基础节点组追加状态::已完成)
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"补登记方法行为", L"方法行为原子追加失败，保留现场。");
+    try {
+        const auto 读回 = 读取方法信息(原.节点, 概念, 治理);
+        if (!读回 || *读回 != 预期) throw std::runtime_error("method behavior readback mismatch");
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"补登记方法行为", L"已发布分类读回不一致，保留已发表事实。");
+    }
+    return {新方法操作状态::已找到, 原.节点};
 }
 
 bool 写入有序引用组(
@@ -1642,6 +1708,9 @@ void 追加方法虚拟归属(基础节点组追加请求& 请求, const 新方�
             完整 = 写入字符串字段(方法节点, 方法本能函数登记名字段,
                 *登记名, 已写字段);
         }
+        if (完整 && 请求.行为)
+            完整 = 写入I64字段(方法节点, 方法行为字段,
+                static_cast<std::int64_t>(*请求.行为), 已写字段);
         if (完整 && 替代父代)
             完整 = 写入节点字段(方法节点, 方法父代字段, 替代父代->节点, 已写字段);
         if (!完整) throw std::runtime_error("method private graph incomplete");
@@ -1687,7 +1756,8 @@ void 追加方法虚拟归属(基础节点组追加请求& 请求, const 新方�
             内部治理世界_->完成方法特征变化(引用, *前状态, *s.状态节点);
         }
         const auto 读回 = 读取方法信息(方法节点, 特征概念服务_, *this);
-        if (!读回 || (登记名 && 读回->本能函数登记名 != *登记名)) {
+        if (!读回 || 读回->行为 != 请求.行为
+            || (登记名 && 读回->本能函数登记名 != *登记名)) {
             throw std::runtime_error("published method readback failed");
         }
         return {新方法操作状态::已建立, 方法节点};
@@ -1729,14 +1799,16 @@ bool 新_方法类::初始化() noexcept {
             for (const auto* 编码 : 架构编码组())
                 if (*编码 == 方法父代字段)
                     工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"初始化方法代际字段", L"父代字段身份冲突。");
-            for (auto* 键 : {&虚拟存在启用特征字段, &虚拟存在专属概念字段}) {
+            for (auto* 键 : {&虚拟存在启用特征字段, &虚拟存在专属概念字段, &方法行为字段}) {
                 if (!有效(*键)) *键 = 全局基础数据集.新建节点();
                 if (!节点仍存在(*键)) throw std::runtime_error("method governance key unavailable");
                 for (const auto* 编码 : 架构编码组())
                     if (*编码 == *键) throw std::runtime_error("method governance key collision");
             }
             if (虚拟存在启用特征字段 == 虚拟存在专属概念字段
-                || 虚拟存在启用特征字段 == 方法父代字段 || 虚拟存在专属概念字段 == 方法父代字段)
+                || 虚拟存在启用特征字段 == 方法父代字段 || 虚拟存在专属概念字段 == 方法父代字段
+                || 方法行为字段 == 方法父代字段 || 方法行为字段 == 虚拟存在启用特征字段
+                || 方法行为字段 == 虚拟存在专属概念字段)
                 throw std::runtime_error("method extension keys collide");
             if (!有效(方法启用特征类型)) {
                 特征概念定义 定义;
@@ -2073,7 +2145,7 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
             return 结果;
         }
         核验治理组织就绪();
-        if (!是作用域(static_cast<std::int64_t>(请求.作用域))
+        if (!行为声明有效(请求) || !是作用域(static_cast<std::int64_t>(请求.作用域))
             || !是实现方式(static_cast<std::int64_t>(请求.实现方式))) {
             return 结果;
         }
@@ -2110,6 +2182,7 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
                 已有配对.push_back({项.条件, 项.结果, 项.线性关系组});
             }
             if (已有->作用域 == 请求.作用域
+                && 已有->行为 == 请求.行为
                 && 已有->实现方式 == 请求.实现方式
                 && 已有->方法头 == 请求.方法头
                 && 已有->参数规格组 == 请求.参数规格组
@@ -2170,7 +2243,8 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
                         return 特征.特征类型概念节点 == *项.特征类型概念节点;
                     }));
         };
-        if (!方法头有效(方法->方法头) || !参数规格有效(方法->参数规格组, 特征概念服务_)
+        if (!行为结果相容(方法->行为, 定义.结果)
+            || !方法头有效(方法->方法头) || !参数规格有效(方法->参数规格组, 特征概念服务_)
             || !条件结果有效(定义, 特征概念服务_)
             || !条件结果角色已声明(方法->参数规格组, 定义)
             || !std::all_of(定义.条件.条件项组.begin(), 定义.条件.条件项组.end(), 类型已声明)
@@ -2238,7 +2312,8 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
         }
         已发布 = true;
         const auto 读回 = 读取方法信息(方法节点, 特征概念服务_, *this);
-        if (!读回 || 读回->条件结果组.size() != 方法->条件结果组.size() + 1) {
+        if (!读回 || 读回->行为 != 方法->行为
+            || 读回->条件结果组.size() != 方法->条件结果组.size() + 1) {
             结果.状态 = 新方法学习发布状态::发布结果未知;
             return 结果;
         }
@@ -2284,7 +2359,7 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
             return {新方法操作状态::尚未初始化, std::nullopt};
         }
         核验治理组织就绪();
-        if (请求.实现方式 != 新方法实现方式::本能
+        if (!行为声明有效(请求) || 请求.实现方式 != 新方法实现方式::本能
             || !是作用域(static_cast<std::int64_t>(请求.作用域))) {
             return {新方法操作状态::方法类型不符, std::nullopt};
         }
@@ -2316,10 +2391,13 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
                     方法->方法头.涉及特征类型概念组.end(),
                     请求.方法头.涉及特征类型概念组.begin(),
                     请求.方法头.涉及特征类型概念组.end())
+                || !std::is_permutation(方法->方法头.可能结果概念组.begin(),
+                    方法->方法头.可能结果概念组.end(),
+                    请求.方法头.可能结果概念组.begin(), 请求.方法头.可能结果概念组.end())
                 || 方法->启用状态 != 新方法启用状态::启用) {
                 return {新方法操作状态::函数登记冲突, std::nullopt};
             }
-            return 已有;
+            return 补登记方法行为(*方法, 请求.行为, 特征概念服务_, *this);
         }
         if (已有.状态 != 新方法操作状态::方法不存在) return 已有;
         // 本能登记允许尚无运行知识的头；非空配对仍必须完整合法。
@@ -2354,7 +2432,7 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
         if (!结构仍存在() || !节点仍存在(方法父代字段))
             throw std::runtime_error("method schema unavailable");
         核验治理组织就绪();
-        if (请求.作用域 != 新方法作用域::普通世界 || 请求.实现方式 != 新方法实现方式::本能
+        if (!行为声明有效(请求) || 请求.作用域 != 新方法作用域::普通世界 || 请求.实现方式 != 新方法实现方式::本能
             || !请求.条件结果组.empty() || !方法头有效(请求.方法头)
             || !参数规格有效(请求.参数规格组, 特征概念服务_)
             || 读取服务结算声明种类(请求.方法头, 请求.参数规格组, 特征概念服务_)
@@ -2367,12 +2445,14 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
         if (已有.状态 == 新方法操作状态::已找到 && 已有.方法节点) {
             旧 = 读取方法信息(*已有.方法节点, 特征概念服务_, *this);
             if (!旧) throw std::runtime_error("registered method unreadable");
+            if (旧->行为 && 请求.行为 && 旧->行为 != 请求.行为)
+                return {新方法操作状态::函数登记冲突, std::nullopt};
             if (!内部治理世界_->读取方法治理场景({旧->节点, 旧->方法虚拟存在节点, 旧->启用特征节点}))
                 throw std::runtime_error("registered settlement method has no complete scene");
             if (读取服务结算声明种类(*旧, 特征概念服务_) == 服务结算声明种类::按贡献Q) {
                 if (旧->方法头 != 请求.方法头 || 旧->参数规格组 != 请求.参数规格组)
                     throw std::runtime_error("Q registration changed meaning");
-                return 已有;
+                return 补登记方法行为(*旧, 请求.行为, 特征概念服务_, *this);
             }
             if (旧->父代方法节点 || 旧->启用状态 != 新方法启用状态::启用
                 || 读取服务结算声明种类(*旧, 特征概念服务_) != 服务结算声明种类::固定加一)
@@ -2389,7 +2469,9 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
                 throw std::runtime_error("legacy and Q roles differ");
         } else if (已有.状态 != 新方法操作状态::方法不存在)
             throw std::runtime_error("method lookup failed");
-        const auto 发表 = 发布方法结构(请求, &名称, 旧 ? &*旧 : nullptr);
+        auto 发布请求 = 请求;
+        if (旧 && !发布请求.行为) 发布请求.行为 = 旧->行为;
+        const auto 发表 = 发布方法结构(发布请求, &名称, 旧 ? &*旧 : nullptr);
         if (发表.状态 != 新方法操作状态::已建立 || !发表.方法节点)
             throw std::runtime_error("Q method publication incomplete");
         const auto 读回 = 查询本能登记结构(名称, 特征概念服务_, *this);

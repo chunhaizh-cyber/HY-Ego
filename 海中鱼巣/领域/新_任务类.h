@@ -326,8 +326,8 @@ struct 新任务结果获取目标 final {
     稳定编码 作用对象节点;
     稳定编码 实际特征节点;
     稳定编码 特征类型根概念节点;
-    // W3-A以前fresh读回并冻结，用于在current-only模型下比较动作前后变化。
-    新特征准确值 动作前准确值;
+    // 改变行为冻结前值；显式读取静态事实可以没有前值，不能以零补齐。
+    std::optional<新特征准确值> 动作前准确值;
     bool 必须出现 = true;
     friend bool operator==(const 新任务结果获取目标&,
         const 新任务结果获取目标&) = default;
