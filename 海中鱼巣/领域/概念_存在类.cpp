@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <limits>
+#include <map>
 #include <mutex>
 #include <set>
 #include <stdexcept>
@@ -971,6 +972,126 @@ std::vector<稳定编码> 概念_存在类::查询上位存在概念(
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"概念_存在类::查询上位存在概念",
             L"上位概念读取发生未知C++异常，未形成业务结果。");
+    }
+}
+
+存在概念实例候选读取结果 概念_存在类::读取下位专属实例候选完整(
+    稳定编码 概念节点) const noexcept {
+    using 状态 = 存在概念实例候选读取状态;
+    存在概念实例候选读取结果 结果;
+    try {
+        std::lock_guard 锁(存在概念图互斥);
+        if (!有效(概念节点)) return 结果;
+        if (!结构仍存在()) { 结果.状态 = 状态::概念不可读; return 结果; }
+        const auto 是下位关系 = [](const 基础外部关系& 关系) {
+            return 关系.类型 == 基础外部关系类型::父子
+                && 关系.角色或顺序 == 概念上下位关系角色;
+        };
+        const auto 快照相同 = [](const 基础联合节点快照& 左, const 基础联合节点快照& 右) {
+            return 左.结构.节点 == 右.结构.节点 && 左.结构.字段组 == 右.结构.字段组
+                && 左.入向字段组 == 右.入向字段组
+                && 左.入向外部关系组 == 右.入向外部关系组
+                && 左.出向外部关系组 == 右.出向外部关系组;
+        };
+        std::map<稳定编码, 基础联合节点快照> 首读组;
+        const auto 读取 = [&](稳定编码 节点) -> const 基础联合节点快照* {
+            const auto 已有 = 首读组.find(节点);
+            if (已有 != 首读组.end()) return &已有->second;
+            const auto 单读 = 全局基础数据集.查询节点组完整结构({节点});
+            if (单读.状态 == 基础结构操作状态::资源失败) { 结果.状态 = 状态::资源失败; return nullptr; }
+            if (单读.状态 == 基础结构操作状态::内部不一致) { 结果.状态 = 状态::结构不一致; return nullptr; }
+            if (单读.状态 != 基础结构操作状态::已完成 || 单读.节点组.size() != 1
+                || 单读.节点组.front().查询节点 != 节点)
+                throw std::logic_error("concept candidate singleton read mismatch");
+            if (!单读.节点组.front().快照) { 结果.状态 = 状态::概念不可读; return nullptr; }
+            return &首读组.emplace(节点, *单读.节点组.front().快照).first->second;
+        };
+        const auto* 图根 = 读取(存在概念图根节点);
+        if (!图根) return 结果;
+        struct 遍历项 { 稳定编码 节点; bool 退出; };
+        std::vector<遍历项> 待查{{概念节点, false}};
+        std::set<稳定编码> 活动, 完成;
+        std::vector<存在概念专属实例候选> 候选;
+        while (!待查.empty()) {
+            const auto 当前 = 待查.back(); 待查.pop_back();
+            if (当前.退出) { 活动.erase(当前.节点); 完成.insert(当前.节点); continue; }
+            if (完成.contains(当前.节点)) continue; // DAG汇合不是环。
+            if (!活动.insert(当前.节点).second) { 结果.状态 = 状态::结构不一致; return 结果; }
+            const auto* 快照 = 读取(当前.节点);
+            if (!快照) return 结果;
+            std::optional<稳定编码> 类型, 对应存在;
+            for (const auto& 字段 : 快照->结构.字段组) {
+                if (!有效(字段.编码) || 字段.所属节点 != 当前.节点 || !有效(字段.字段节点)) {
+                    结果.状态 = 状态::结构不一致; return 结果;
+                }
+                if (字段.字段节点 != 节点类型字段 && 字段.字段节点 != 对应存在字段) continue;
+                const auto* 引用 = std::get_if<稳定编码>(&字段.内容);
+                auto& 槽 = 字段.字段节点 == 节点类型字段 ? 类型 : 对应存在;
+                if (!引用 || !有效(*引用) || 槽) { 结果.状态 = 状态::结构不一致; return 结果; }
+                槽 = *引用;
+            }
+            if (!类型 || (*类型 != 专属存在概念节点类型 && *类型 != 抽象存在概念节点类型)) {
+                结果.状态 = 当前.节点 == 概念节点 ? 状态::概念不可读 : 状态::结构不一致; return 结果;
+            }
+            std::size_t 组织归属数 = 0;
+            for (const auto& 关系 : 快照->入向外部关系组) {
+                if (关系.类型 != 基础外部关系类型::父子 || 关系.角色或顺序 != 组织归属关系角色) continue;
+                ++组织归属数;
+                if (!有效(关系.编码) || 关系.源节点 != 存在概念图根节点 || 关系.目标节点 != 当前.节点
+                    || std::count(图根->出向外部关系组.begin(), 图根->出向外部关系组.end(), 关系) != 1) {
+                    结果.状态 = 状态::结构不一致; return 结果;
+                }
+            }
+            if (组织归属数 != 1 || ((*类型 == 专属存在概念节点类型) != 对应存在.has_value())) {
+                结果.状态 = 状态::结构不一致; return 结果;
+            }
+            if (对应存在) {
+                if (!读取(*对应存在)) return 结果;
+                候选.push_back({当前.节点, *对应存在});
+            }
+            待查.push_back({当前.节点, true});
+            std::set<稳定编码> 直接下位;
+            for (const auto& 关系 : 快照->出向外部关系组) {
+                if (!是下位关系(关系)) continue;
+                if (!有效(关系.编码) || 关系.源节点 != 当前.节点 || !有效(关系.目标节点)
+                    || *类型 != 抽象存在概念节点类型 || !直接下位.insert(关系.目标节点).second) {
+                    结果.状态 = 状态::结构不一致; return 结果;
+                }
+                const auto* 下位 = 读取(关系.目标节点);
+                if (!下位) return 结果;
+                if (std::count(下位->入向外部关系组.begin(), 下位->入向外部关系组.end(), 关系) != 1) {
+                    结果.状态 = 状态::结构不一致; return 结果;
+                }
+                待查.push_back({关系.目标节点, false});
+            }
+        }
+        std::vector<稳定编码> 节点组;
+        for (const auto& [节点, _] : 首读组) 节点组.push_back(节点);
+        const auto 终读 = 全局基础数据集.查询节点组完整结构(节点组);
+        if (终读.状态 == 基础结构操作状态::资源失败) { 结果.状态 = 状态::资源失败; return 结果; }
+        if (终读.状态 == 基础结构操作状态::内部不一致) { 结果.状态 = 状态::结构不一致; return 结果; }
+        if (终读.状态 != 基础结构操作状态::已完成 || 终读.节点组.size() != 节点组.size())
+            throw std::logic_error("concept candidate union read mismatch");
+        for (std::size_t i = 0; i < 节点组.size(); ++i) {
+            const auto& 项 = 终读.节点组[i];
+            if (项.查询节点 != 节点组[i]) throw std::logic_error("concept candidate union order mismatch");
+            if (!项.快照 || !快照相同(首读组.at(项.查询节点), *项.快照)) {
+                结果.状态 = 状态::读取已变化; return 结果;
+            }
+        }
+        std::sort(候选.begin(), 候选.end(), [](const auto& 左, const auto& 右) {
+            return 左.专属概念节点 < 右.专属概念节点;
+        });
+        结果.状态 = 状态::已完成;
+        结果.起始概念节点 = 概念节点;
+        结果.候选组 = std::move(候选);
+        return 结果;
+    } catch (const std::bad_alloc&) { 结果.状态 = 状态::资源失败; return 结果;
+    } catch (const std::length_error&) { 结果.状态 = 状态::资源失败; return 结果;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取下位专属实例候选完整", L"概念候选读取异常。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取下位专属实例候选完整", L"概念候选读取未知异常。");
     }
 }
 

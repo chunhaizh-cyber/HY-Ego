@@ -63,6 +63,18 @@ struct 存在概念抽象结果 final {
     std::vector<存在概念特征项> 共同特征组;
 };
 
+enum class 存在概念实例候选读取状态 : std::uint8_t {
+    已完成 = 1, 输入拒绝, 概念不可读, 读取已变化, 结构不一致, 资源失败
+};
+struct 存在概念专属实例候选 final {
+    稳定编码 专属概念节点, 对应存在节点;
+};
+struct 存在概念实例候选读取结果 final {
+    存在概念实例候选读取状态 状态 = 存在概念实例候选读取状态::输入拒绝;
+    std::optional<稳定编码> 起始概念节点;
+    std::vector<存在概念专属实例候选> 候选组;
+};
+
 enum class 指代目标范围 : std::uint8_t { 单个已登记强类型信息节点 = 1 };
 enum class 指代参数角色 : std::uint8_t {
     目标 = 1, 作用域 = 2, 参照中心 = 3, 参照维度规则 = 4, 主体类型限制 = 5
@@ -224,6 +236,8 @@ public:
         稳定编码 概念节点) const noexcept;
     std::vector<稳定编码> 查询下位存在概念(
         稳定编码 概念节点) const noexcept;
+    // 正式下位链接的完整候选，不替代场景/存在owner对实例资格的复核。
+    存在概念实例候选读取结果 读取下位专属实例候选完整(稳定编码 概念节点) const noexcept;
 
 private:
     friend class 概念_名称关系类;
