@@ -501,7 +501,6 @@ std::optional<新服务值结算登记材料> 新_模拟世界类::读取登记�
         || m->参数规格组 != q.参数规格组 || m->方法头 != q.方法头) return {};
     return {新方法操作状态::已找到, m->节点};
 }
-新需求建立结果 新_模拟世界类::确保首子需求(稳定编码) noexcept { return {}; }
 void 新_模拟世界类::报告并停止(std::string_view) noexcept {
     if (!实现_) return;
     try { std::lock_guard 锁(实现_->互斥); 实现_->停止 = true; } catch (...) {}

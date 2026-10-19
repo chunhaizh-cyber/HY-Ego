@@ -28,7 +28,9 @@ class 新_任务管理线程类;
 class 服务需求本能运行服务;
 struct 新世界I64组合结果;
 struct 新任务最终消费边界 final {
-    稳定编码 结算任务节点, 结算需求节点, 服务根需求节点, 方法节点;
+    std::optional<稳定编码> 结算任务节点, 结算需求节点;
+    稳定编码 服务根需求节点, 方法节点;
+    新任务结算边界种类 种类 = 新任务结算边界种类::历史结算任务;
     friend bool operator==(const 新任务最终消费边界&, const 新任务最终消费边界&) = default;
 };
 struct 新任务最终人类服务锚点 final {
@@ -444,6 +446,12 @@ struct 新任务服务结算配置 final {
     稳定编码 目标值域概念节点;
     friend bool operator==(const 新任务服务结算配置&,
         const 新任务服务结算配置&) = default;
+};
+
+struct 新任务被动服务结算配置 final {
+    稳定编码 服务根需求节点, 登记方法节点;
+    friend bool operator==(const 新任务被动服务结算配置&,
+        const 新任务被动服务结算配置&) = default;
 };
 
 struct 新任务执行信息 final {
@@ -987,7 +995,7 @@ enum class 新需求方向一致性状态 : std::uint8_t {
 };
 
 enum class 新需求方向判定依据 : std::uint8_t {
-    方法条件结果 = 1, 服务结算定义 = 2, 外部服务完成结算定义 = 3
+    方法条件结果 = 1, 服务结算定义 = 2, 外部服务完成结算定义 = 3, 服务任务取得定义 = 4
 };
 
 // 只读的执行前方向证明。它只证明候选方法的预计结果能够满足或推动
@@ -1375,6 +1383,8 @@ public:
         const 新任务线性条件输入请求& 请求) noexcept;
 
     新任务操作状态 配置服务结算任务(const 新任务服务结算配置&) noexcept;
+    新任务操作状态 配置被动服务结算(稳定编码 服务根需求节点,
+        稳定编码 登记方法节点) noexcept;
     新任务操作状态 接纳服务结算来源(
         稳定编码 结算任务节点, const 新任务服务结算来源绑定& 绑定) noexcept;
     std::optional<新任务服务结算来源绑定> 读取服务结算来源(
@@ -1635,6 +1645,7 @@ private:
     void 核验任务贡献特征权威(稳定编码) const noexcept;
     std::optional<新任务贡献计值类型> 判定完成贡献叶子类别(const 新需求信息&) const;
     std::optional<新任务服务需求取得合同> 服务需求取得合同_;
+    std::optional<新任务被动服务结算配置> 被动服务结算配置_;
     bool 是服务需求取得目标(const 新需求信息& 需求) const;
     friend class 服务需求本能运行服务;
     void 记录服务需求执行依据(稳定编码 任务节点, 稳定编码 执行实例节点,

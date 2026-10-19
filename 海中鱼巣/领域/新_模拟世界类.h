@@ -46,7 +46,6 @@ public:
     新本能函数本次条件结果对 消费最终来源(const 方法参数场景&) noexcept override;
     新本能函数本次条件结果对 执行贡献治理场景(const 方法参数场景&) noexcept override;
     新方法建立结果 确保方法登记(const 新方法知识建立请求&) noexcept override;
-    新需求建立结果 确保首子需求(稳定编码) noexcept override;
     新服务值结算动作回执 建立普通动作(稳定编码, const 新任务虚拟存在引用&,
         稳定编码, 稳定编码, 稳定编码, std::int64_t) noexcept override;
     新服务值结算变化回执 更新普通结果(稳定编码, 稳定编码, 稳定编码,

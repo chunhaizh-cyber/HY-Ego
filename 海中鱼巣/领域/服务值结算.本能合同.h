@@ -77,7 +77,8 @@ struct 新任务贡献治理执行材料 final {
         const 新任务贡献治理执行材料&) = default;
 };
 struct 新服务值最终来源定位 final {
-    稳定编码 来源任务节点, 完成结算节点, 直接接收节点;
+    稳定编码 来源任务节点, 完成结算节点;
+    std::optional<稳定编码> 直接接收节点;
     friend bool operator==(const 新服务值最终来源定位&,
         const 新服务值最终来源定位&) = default;
 };
@@ -110,7 +111,7 @@ struct 新服务值结算登记材料 final {
 };
 struct 新服务值结算登记结果 final {
     新服务值结算协作状态 状态 = 新服务值结算协作状态::入口拒绝;
-    std::optional<稳定编码> 方法节点, 结算需求节点;
+    std::optional<稳定编码> 方法节点;
     std::optional<新服务值结算登记材料> 材料;
 };
 struct 新服务值结算动作回执 final {
@@ -133,7 +134,6 @@ public:
     virtual ~新服务值结算本能端口() = default;
     virtual std::optional<新服务值结算登记材料> 读取登记材料() const noexcept = 0;
     virtual 新方法建立结果 确保方法登记(const 新方法知识建立请求&) noexcept = 0;
-    virtual 新需求建立结果 确保首子需求(稳定编码 方法节点) noexcept = 0;
     virtual 新本能函数本次条件结果对 消费最终来源(
         const 方法参数场景&) noexcept = 0;
     virtual 新本能函数本次条件结果对 执行贡献治理场景(
