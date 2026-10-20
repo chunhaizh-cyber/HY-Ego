@@ -238,6 +238,8 @@ public:
     bool 已初始化() const noexcept;
     std::optional<稳定编码> 获取世界树根场景() const noexcept;
     新世界事实服务引用 获取事实服务引用() noexcept;
+    新动态概念自动抽象结果 处理已登记动态概念(
+        const 新_场景类& 场景视图, 稳定编码 场景节点, 稳定编码 动态节点) noexcept;
 
     std::optional<先天特征概念集合> 获取先天特征概念() const noexcept;
     稳定编码 建立特征概念(

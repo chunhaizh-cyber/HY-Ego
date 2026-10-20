@@ -20,10 +20,11 @@ namespace {
 
 bool 转交普通应用网页消息(
     std::string_view 会话标识,
+    std::string_view 对话框标识,
     std::uint64_t 消息序号,
     std::string_view UTF8正文) noexcept {
     return 接收普通应用网页消息(
-        会话标识, 消息序号, UTF8正文).成功();
+        会话标识, 对话框标识, 消息序号, UTF8正文).成功();
 }
 
 程序运行结果 运行新版普通程序(const 启动选项& 选项) {

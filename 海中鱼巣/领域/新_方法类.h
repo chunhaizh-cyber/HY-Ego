@@ -81,6 +81,8 @@ public:
     新方法建立结果 确保本能方法登记(
         const std::string& 登记名,
         const 新方法知识建立请求& 请求) noexcept;
+    // 仅退役已完整识别的旧网页方法族；历史方法知识保持不变。
+    新方法建立结果 退役旧网页本能登记(const std::string& 登记名) noexcept;
     新方法建立结果 查询本能登记(
         const std::string& 登记名) const noexcept;
     新方法建立结果 确保服务结算Q方法登记(

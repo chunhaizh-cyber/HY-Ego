@@ -95,10 +95,11 @@ struct 网页对话页面消息快照结果 final {
     std::size_t 最大正文总字节数) noexcept;
 
 // 会话标识只使用公开来源标识，不传递URL中的私有令牌。
-// 返回true表示本条消息已经被上层按同一会话、序号和正文接纳；false
-// 表示暂未接纳，宿主不递增序号，浏览器可以重试同一条消息。
+// 对话框标识仅定位本次页面，不是认证身份。正式事实接收后的工程错误
+// 必须终止，不能返回false诱使客户端把已经收到的内容当作未接收。
 using 网页对话消息接收函数 = bool (*)(
     std::string_view 会话标识,
+    std::string_view 对话框标识,
     std::uint64_t 消息序号,
     std::string_view UTF8正文) noexcept;
 

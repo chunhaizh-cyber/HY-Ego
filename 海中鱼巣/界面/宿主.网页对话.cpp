@@ -94,6 +94,7 @@ struct HTTP请求 final {
     std::string 目标;
     std::string 正文;
     std::string 内容类型;
+    std::optional<std::string> 对话框标识;
 };
 
 struct 网页对话共享状态 final {
@@ -234,6 +235,17 @@ bool 是有效UTF8(std::string_view 文本) noexcept {
     return true;
 }
 
+bool 是合法对话框标识(std::string_view 值) noexcept {
+    if (值.size() != 36 || 值[14] != '4'
+        || (值[19] != '8' && 值[19] != '9' && 值[19] != 'a' && 值[19] != 'b')) return false;
+    for (std::size_t i = 0; i < 值.size(); ++i) {
+        if (i == 8 || i == 13 || i == 18 || i == 23) {
+            if (值[i] != '-') return false;
+        } else if (!((值[i] >= '0' && 值[i] <= '9') || (值[i] >= 'a' && 值[i] <= 'f'))) return false;
+    }
+    return true;
+}
+
 请求读取状态 读取请求(SOCKET 客户端, HTTP请求& 请求) {
     std::string 缓冲;
     缓冲.reserve(4096);
@@ -272,6 +284,10 @@ bool 是有效UTF8(std::string_view 文本) noexcept {
         if (冒号 == std::string_view::npos) return 请求读取状态::请求无效;
         const auto 名称 = 转小写ASCII(行.substr(0, 冒号));
         std::string_view 值 = 行.substr(冒号 + 1);
+        const bool 标识含控制字符 = 名称 == "x-hy-dialogue-id"
+            && std::any_of(值.begin(), 值.end(), [](unsigned char 字符) {
+                return 字符 < 0x20U || 字符 == 0x7fU;
+            });
         while (!值.empty() && (值.front() == ' ' || 值.front() == '\t')) 值.remove_prefix(1);
         while (!值.empty() && (值.back() == ' ' || 值.back() == '\t')) 值.remove_suffix(1);
         if (名称 == "content-length") {
@@ -287,6 +303,10 @@ bool 是有效UTF8(std::string_view 文本) noexcept {
             if (已有内容类型) return 请求读取状态::请求无效;
             已有内容类型 = true;
             请求.内容类型 = 转小写ASCII(值);
+        } else if (名称 == "x-hy-dialogue-id") {
+            if (请求.对话框标识 || 标识含控制字符 || !是合法对话框标识(值))
+                return 请求读取状态::请求无效;
+            请求.对话框标识 = std::string(值);
         } else if (名称 == "transfer-encoding") {
             return 请求读取状态::请求无效;
         }
@@ -779,9 +799,10 @@ const messages=document.getElementById('messages');
 const input=document.getElementById('input');
 const form=document.getElementById('form');
 const status=document.getElementById('status');
+const dialogueId=globalThis.crypto?.randomUUID?.();
 function render(items){messages.replaceChildren();if(!items.length){const e=document.createElement('div');e.className='empty';e.textContent='尚无对话消息';messages.append(e);return;}for(const item of items){const e=document.createElement('div');e.className='message '+item.role;e.textContent=item.text;messages.append(e);}messages.scrollTop=messages.scrollHeight;}
 async function refresh(){try{const r=await fetch(base+'/api/messages',{cache:'no-store'});if(!r.ok)throw new Error();render((await r.json()).messages);status.textContent='已连接本机服务';}catch{status.textContent='本机服务不可用';}}
-form.addEventListener('submit',async e=>{e.preventDefault();const text=input.value;if(!text)return;const button=form.querySelector('button[type=submit]');button.disabled=true;try{const r=await fetch(base+'/api/messages',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:text});if(!r.ok)throw new Error();input.value='';await refresh();}catch{status.textContent='消息提交失败';}finally{button.disabled=false;input.focus();}});
+form.addEventListener('submit',async e=>{e.preventDefault();const text=input.value;if(!text)return;if(!dialogueId){status.textContent='浏览器不支持安全对话框标识，不能提交';return;}const button=form.querySelector('button[type=submit]');button.disabled=true;try{const r=await fetch(base+'/api/messages',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8','X-HY-Dialogue-Id':dialogueId},body:text});if(!r.ok)throw new Error();input.value='';await refresh();}catch{status.textContent='消息提交失败';}finally{button.disabled=false;input.focus();}});
 input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit();}});
 document.getElementById('close').addEventListener('click',async()=>{try{await fetch(base+'/api/close',{method:'POST'});}finally{document.body.innerHTML='<main style="height:auto;padding:28px"><h1>交互宿主已结束</h1><p>现在可以关闭此页面。</p></main>';}});
 const serviceForm=document.getElementById('service-form');
@@ -921,6 +942,10 @@ bool 处理请求(SOCKET 客户端,
         return true;
     }
     if (请求.方法 == "POST" && 请求.目标 == 消息路径) {
+        if (!请求.对话框标识) {
+            发送响应(客户端, "400 Bad Request", "text/plain;charset=utf-8", "缺少对话框标识");
+            return true;
+        }
         if (请求.正文.empty() || !是有效UTF8(请求.正文)) {
             发送响应(客户端, "422 Unprocessable Content", "text/plain;charset=utf-8",
                 "消息必须是非空UTF-8文本");
@@ -929,7 +954,7 @@ bool 处理请求(SOCKET 客户端,
         const auto 上行序号 = 取得下一上行序号(会话标识);
         if (!上行序号
             || (消息接收
-                && !消息接收(会话标识, *上行序号, 请求.正文))) {
+                && !消息接收(会话标识, *请求.对话框标识, *上行序号, 请求.正文))) {
             发送响应(客户端, "503 Service Unavailable",
                 "application/json;charset=utf-8",
                 "{\"accepted\":false,\"retryable\":true}");
@@ -937,10 +962,8 @@ bool 处理请求(SOCKET 客户端,
         }
         if (!追加交互者消息(
                 会话标识, *上行序号, std::move(请求.正文))) {
-            发送响应(客户端, "503 Service Unavailable",
-                "application/json;charset=utf-8",
-                "{\"accepted\":false,\"retryable\":true}");
-            return true;
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"发布网页接收投影",
+                L"外设已接收真实消息，但宿主显示列表追加失败，保留正式事实。");
         }
         发送响应(客户端, "202 Accepted", "application/json;charset=utf-8",
             "{\"accepted\":true}");
@@ -1155,6 +1178,7 @@ bool 网页对话宿主结果::成功() const noexcept {
     网页对话消息接收函数 消息接收,
     const 网页服务输入回调组& 服务输入) noexcept {
     try {
+        if (!消息接收) return {网页对话宿主状态::会话绑定失败};
         const bool 有服务输入 = 服务输入.会话开始 || 服务输入.会话结束
             || 服务输入.查询目标提示 || 服务输入.预览 || 服务输入.读取预览 || 服务输入.确认;
         if (有服务输入 && (!服务输入.会话开始 || !服务输入.会话结束

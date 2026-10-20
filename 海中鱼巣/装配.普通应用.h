@@ -1,6 +1,7 @@
 #pragma once
 
 #include "领域/新_自然语言世界树类.h"
+#include "领域/新_方法公共类型.h"
 #include "业务/新_世界树类.h"
 #include "业务/治理二次特征.应用服务.h"
 #include "业务/初始化.概念名称.h"
@@ -67,6 +68,9 @@ enum class 普通应用装配状态 : std::uint8_t {
 struct 普通应用装配结果 final {
     普通应用装配状态 状态 = 普通应用装配状态::入口拒绝;
     std::optional<新世界初始化结果> 世界树;
+    std::optional<新世界初始化结果> 外设世界树;
+    std::optional<新方法建立结果> 旧网页读取退役;
+    std::optional<新方法建立结果> 旧服务对象退役;
     std::optional<新自然语言世界初始化结果> 自然语言世界树;
     std::optional<初始化概念名称结果> 初始概念名称;
     std::optional<初始化结构化子概念结果> 结构化子概念;
@@ -197,11 +201,11 @@ struct 普通应用网页自我归类表达结果 final {
 // 先停止并join self，再停止并join manager及其内部worker。
 普通应用治理操作结果 停止并回收普通应用治理线程() noexcept;
 
-// 接纳网页宿主已验证的UTF-8消息。首条消息建立本会话交互者，并把自我的
-// “当前交互者”特征指向该存在；每条新消息递增交互窗口累计消息数量。
+// 接纳宿主已验证的真实消息，只更新该外设对话框事实，不推断现实身份。
 // 消息只提供连接观察材料，不建立服务根需求，也不解释正文或裁决连接状态。
 普通应用网页消息处理结果 接收普通应用网页消息(
     std::string_view 会话标识,
+    std::string_view 对话框标识,
     std::uint64_t 消息序号,
     std::string_view UTF8正文) noexcept;
 

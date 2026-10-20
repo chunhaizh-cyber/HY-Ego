@@ -73,6 +73,7 @@ bool 同一学习条件(const 新方法条件定义& 左, const 新方法条件�
 稳定编码 方法实例根字段{};
 // 单独扩展，不能因存量架构没有该键而重建整个方法根。
 稳定编码 方法父代字段{};
+稳定编码 方法旧网页退役成员字段{};
 稳定编码 方法行为字段{};
 稳定编码 虚拟存在启用特征字段{};
 稳定编码 虚拟存在专属概念字段{};
@@ -1686,6 +1687,45 @@ bool 是服务对象空头前代(const 新方法信息& 旧, const std::vector<�
     return 旧.参数规格组.front() == 预期;
 }
 
+std::vector<稳定编码> 读取旧网页退役成员(const 概念_特征类& 概念服务) {
+    if (!节点仍存在(方法旧网页退役成员字段))
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验旧网页方法退役结构", L"退役引用或服务对象方法族拓扑不完整，保留历史材料。");
+    const auto 组 = 读取多节点字段(新方法组织根节点, 方法旧网页退役成员字段, 概念服务);
+    if (!组 || std::set<稳定编码>(组->begin(), 组->end()).size() != 组->size())
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验旧网页方法退役结构", L"退役引用或服务对象方法族拓扑不完整，保留历史材料。");
+    return *组;
+}
+
+const 新方法信息& 核验服务对象方法族(const std::vector<新方法信息>& 组) {
+    if (组.empty() || 组.size() > 2) 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验旧网页方法退役结构", L"退役引用或服务对象方法族拓扑不完整，保留历史材料。");
+    for (const auto& 项 : 组)
+        if (项.来源方法节点 || 项.实例根节点 || 项.实现方式 != 新方法实现方式::本能
+            || 项.作用域 != 新方法作用域::普通世界
+            || 项.本能函数登记名 != 新本能函数登记名_获取服务对象)
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验旧网页方法退役结构", L"退役引用或服务对象方法族拓扑不完整，保留历史材料。");
+    if (组.size() == 1) {
+        if (组[0].父代方法节点) 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验旧网页方法退役结构", L"退役引用或服务对象方法族拓扑不完整，保留历史材料。");
+        return 组[0];
+    }
+    const 新方法信息* 末代 = nullptr;
+    const 新方法信息* 前代 = nullptr;
+    for (const auto& 项 : 组) {
+        if (项.父代方法节点) {
+            if (末代) 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验旧网页方法退役结构", L"退役引用或服务对象方法族拓扑不完整，保留历史材料。");
+            末代 = &项;
+        } else {
+            if (前代) 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验旧网页方法退役结构", L"退役引用或服务对象方法族拓扑不完整，保留历史材料。");
+            前代 = &项;
+        }
+    }
+    if (!末代 || !前代 || 末代->父代方法节点 != 前代->节点
+        || 前代->启用状态 != 新方法启用状态::停用
+        || !是服务对象空头前代(*前代, 末代->参数规格组)
+        || 末代->方法头 != 前代->方法头)
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验旧网页方法退役结构", L"退役引用或服务对象方法族拓扑不完整，保留历史材料。");
+    return *末代;
+}
+
 新方法建立结果 查询本能登记结构(const std::string& 登记名, const 概念_特征类& 概念服务,
     const 新方法治理对象读取接口& 治理读取) {
     新方法建立结果 结果;
@@ -1716,21 +1756,18 @@ bool 是服务对象空头前代(const 新方法信息& 旧, const std::vector<�
     if (登记名 == 新本能函数登记名_获取服务对象 && !同名.empty()) {
         const auto 停止 = []() { 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
             L"查询获取服务对象登记", L"获取服务对象方法代际或启用身份不完整，保留历史材料。"); };
-        if (同名.size() > 2) 停止();
-        const 新方法信息* 当前 = nullptr; const 新方法信息* 旧 = nullptr;
-        for (const auto& m : 同名) {
-            if (m.来源方法节点 || m.实例根节点) 停止();
-            if (m.启用状态 == 新方法启用状态::启用) {
-                if (当前) 停止(); 当前 = &m;
-            } else { if (旧) 停止(); 旧 = &m; }
+        const auto& 当前 = 核验服务对象方法族(同名);
+        const auto 退役 = 读取旧网页退役成员(概念服务);
+        const auto 已退役 = [&](稳定编码 n) { return std::find(退役.begin(), 退役.end(), n) != 退役.end(); };
+        const bool 全族退役 = std::all_of(同名.begin(), 同名.end(), [&](const auto& m) {
+            return 已退役(m.节点) && m.启用状态 == 新方法启用状态::停用;
+        });
+        if (当前.启用状态 == 新方法启用状态::停用) {
+            if (!全族退役) 停止();
+            return {新方法操作状态::登记已退役, 当前.节点};
         }
-        if (!当前) 停止();
-        if (旧) {
-            if (当前->父代方法节点 != 旧->节点
-                || !是服务对象空头前代(*旧, 当前->参数规格组)
-                || 当前->方法头 != 旧->方法头) 停止();
-        } else if (当前->父代方法节点) 停止();
-        结果.方法节点 = 当前->节点;
+        if (std::any_of(同名.begin(), 同名.end(), [&](const auto& m) { return 已退役(m.节点); })) 停止();
+        结果.方法节点 = 当前.节点;
     }
     if (登记名 == 新本能函数登记名_服务值结算 && !同名.empty()) {
         const auto 停止 = []() { 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
@@ -1945,15 +1982,15 @@ bool 新_方法类::初始化() noexcept {
                 if (*编码 == 方法父代字段)
                     工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"初始化方法代际字段", L"父代字段身份冲突。");
             for (auto* 键 : {&虚拟存在启用特征字段, &虚拟存在专属概念字段, &方法行为字段,
-                    &有序参数序号字段, &有序参数类型字段, &有序参数范围字段}) {
+                    &有序参数序号字段, &有序参数类型字段, &有序参数范围字段, &方法旧网页退役成员字段}) {
                 if (!有效(*键)) *键 = 全局基础数据集.新建节点();
                 if (!节点仍存在(*键)) throw std::runtime_error("method governance key unavailable");
                 for (const auto* 编码 : 架构编码组())
                     if (*编码 == *键) throw std::runtime_error("method governance key collision");
             }
             const std::set<稳定编码> 扩展键{方法父代字段, 虚拟存在启用特征字段,
-                虚拟存在专属概念字段, 方法行为字段, 有序参数序号字段, 有序参数类型字段, 有序参数范围字段};
-            if (扩展键.size() != 7) throw std::runtime_error("method extension keys collide");
+                虚拟存在专属概念字段, 方法行为字段, 有序参数序号字段, 有序参数类型字段, 有序参数范围字段, 方法旧网页退役成员字段};
+            if (扩展键.size() != 8) throw std::runtime_error("method extension keys collide");
             if (虚拟存在启用特征字段 == 虚拟存在专属概念字段
                 || 虚拟存在启用特征字段 == 方法父代字段 || 虚拟存在专属概念字段 == 方法父代字段
                 || 方法行为字段 == 方法父代字段 || 方法行为字段 == 虚拟存在启用特征字段
@@ -2365,6 +2402,19 @@ void 新_方法类::初始化治理场景组织() noexcept {
             } catch (...) { if (!已发布) 清理未绑定方法特征(准备); throw; }
         }
         内部治理世界_->迁移已有方法治理场景(全部);
+        const auto 退役组 = 读取旧网页退役成员(特征概念服务_);
+        for (const auto n : 退役组) {
+            const auto m = 读取方法信息(n, 特征概念服务_, *this);
+            if (!m || m->来源方法节点 || m->实例根节点
+                || m->本能函数登记名 != 新本能函数登记名_获取服务对象
+                || m->启用状态 != 新方法启用状态::停用
+                || std::find(成员->begin(), 成员->end(), n) == 成员->end())
+                throw std::runtime_error("retired method recovery identity invalid");
+        }
+        if (!退役组.empty()
+            && 查询本能登记结构(std::string(新本能函数登记名_获取服务对象), 特征概念服务_, *this).状态
+                != 新方法操作状态::登记已退役)
+            throw std::runtime_error("retired method family recovery incomplete");
         治理组织已就绪_ = true;
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"初始化方法治理场景", L"旧方法来源或新治理组织未完整确认，保留现场并停止启动。");
@@ -2406,6 +2456,8 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
         }
         std::vector<稳定编码> 自有字段;
         for (const auto n : 节点) {
+            if (!全局基础数据集.查询目标字段(n, 方法旧网页退役成员字段).empty())
+                throw std::runtime_error("retired method knowledge is protected from reclamation");
             if (已发布 && 节点类型为(n, 方法节点类型))
                 增加归属(新方法组织根节点, n, 方法成员字段, false, true);
             else if (已发布 && 节点类型为(n, 混合方法实例根类型))
@@ -2768,6 +2820,95 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
         return 发布方法结构(请求, &登记名);
     } catch (...) {
         return {新方法操作状态::资源失败, std::nullopt};
+    }
+}
+
+新方法建立结果 新_方法类::退役旧网页本能登记(const std::string& 登记名) noexcept {
+    if (登记名 != 新本能函数登记名_读取网页对话消息
+        && 登记名 != 新本能函数登记名_获取服务对象)
+        return {新方法操作状态::函数登记不合法, std::nullopt};
+    新特征I64准备结果 准备;
+    std::optional<稳定编码> 前状态;
+    bool 零发表 = true;
+    try {
+        std::lock_guard 锁(新方法互斥);
+        if (!结构仍存在()) return {新方法操作状态::尚未初始化, std::nullopt};
+        核验治理组织就绪();
+        const auto 已有 = 查询本能登记结构(登记名, 特征概念服务_, *this);
+        if (已有.状态 == 新方法操作状态::方法不存在) return 已有;
+        if (登记名 == 新本能函数登记名_读取网页对话消息)
+            throw std::runtime_error("legacy web reader has no recognized method-head contract");
+        if (已有.状态 == 新方法操作状态::登记已退役) return 已有;
+        if (已有.状态 != 新方法操作状态::已找到 || !已有.方法节点)
+            throw std::runtime_error("legacy method registration unreadable");
+        const auto 成员 = 读取多节点字段(新方法组织根节点, 方法成员字段, 特征概念服务_);
+        if (!成员) throw std::runtime_error("legacy method root unreadable");
+        std::vector<新方法信息> 家族;
+        for (const auto n : *成员) {
+            const auto m = 读取方法信息(n, 特征概念服务_, *this);
+            if (!m) throw std::runtime_error("legacy method member unreadable");
+            if (!m->来源方法节点 && m->本能函数登记名 == 登记名) 家族.push_back(*m);
+        }
+        const auto& 末代 = 核验服务对象方法族(家族);
+        if (末代.节点 != *已有.方法节点 || 末代.启用状态 != 新方法启用状态::启用)
+            throw std::runtime_error("legacy method terminal changed");
+        const 新方法虚拟存在引用 引用{末代.节点, 末代.方法虚拟存在节点, 末代.启用特征节点};
+        if (!内部治理世界_->读取方法治理场景(引用))
+            throw std::runtime_error("legacy method governance scene missing");
+        const auto 前时间 = 方法当前UTC纳秒();
+        const auto s0 = 状态服务_.建立状态(引用.虚拟存在节点, 引用.启用特征节点,
+            {新状态时间语义::实例绝对UTC, 前时间});
+        if (s0.状态 != 新状态操作状态::已完成 || !s0.状态节点)
+            throw std::runtime_error("legacy retirement before state unavailable");
+        前状态 = s0.状态节点;
+        准备 = 特征服务_.准备顶层I64更新(引用.启用特征节点, 0);
+        if (准备.状态 != 新特征I64准备状态::已准备 || !准备.准备
+            || 准备.准备->原当前值() != 1 || !准备.准备->核心有变化())
+            throw std::runtime_error("legacy retirement preparation failed");
+        基础节点组追加请求 请求;
+        std::vector<稳定编码> 保护组;
+        for (const auto& m : 家族) {
+            请求.追加字段组.push_back({新方法组织根节点, 方法旧网页退役成员字段, m.节点});
+            保护组.push_back(m.节点);
+        }
+        const auto 片段 = 封存方法片段(std::move(请求), 保护组);
+        零发表 = false;
+        const auto 发布 = 特征服务_.提交顶层I64更新(*准备.准备, {片段});
+        if (发布.状态 != 基础节点组追加状态::已完成) {
+            if (!发布.附加片段回执组.empty()) throw std::runtime_error("retirement publication ambiguous");
+            零发表 = true;
+            throw std::runtime_error("retirement zero publication");
+        }
+        if (发布.附加片段回执组.size() != 1 || !发布.附加片段回执组[0].对应片段(片段)
+            || 发布.附加片段回执组[0].追加字段关系组().size() != 家族.size()
+            || !发布.附加片段回执组[0].新节点组().empty()
+            || !发布.附加片段回执组[0].追加外部关系组().empty())
+            throw std::runtime_error("retirement receipts incomplete");
+        const auto 完成 = 特征服务_.完成顶层I64更新(*准备.准备);
+        if (完成.状态 != 新特征写入状态::已完成 || !完成.当前值已改变)
+            throw std::runtime_error("retirement finalization failed");
+        特征服务_.结束顶层I64更新(*准备.准备);
+        同步方法专属概念(引用);
+        const auto 后时间 = 方法当前UTC纳秒();
+        if (后时间 <= 前时间) throw std::runtime_error("retirement time not increasing");
+        const auto s1 = 状态服务_.建立状态(引用.虚拟存在节点, 引用.启用特征节点,
+            {新状态时间语义::实例绝对UTC, 后时间});
+        if (s1.状态 != 新状态操作状态::已完成 || !s1.状态节点)
+            throw std::runtime_error("retirement after state unavailable");
+        内部治理世界_->完成方法特征变化(引用, *前状态, *s1.状态节点);
+        const auto 读回 = 查询本能登记结构(登记名, 特征概念服务_, *this);
+        if (读回.状态 != 新方法操作状态::登记已退役 || 读回.方法节点 != 末代.节点
+            || !内部治理世界_->读取方法特征变化(引用, *前状态, *s1.状态节点))
+            throw std::runtime_error("retirement final readback failed");
+        return 读回;
+    } catch (...) {
+        if (零发表) {
+            if (准备.准备) 特征服务_.取消顶层I64更新(*准备.准备);
+            if (前状态 && 状态服务_.删除状态(*前状态) != 新状态操作状态::已完成)
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"退役旧网页本能", L"零发表状态清理失败。");
+        }
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"退役旧网页本能",
+            L"旧方法族、退役依据或治理变化不完整，保留现场。");
     }
 }
 
@@ -3819,6 +3960,10 @@ bool 新_方法类::是方法节点(稳定编码 节点) const noexcept {
             return 新方法操作状态::入口拒绝;
         }
         if (方法->启用状态 == 新状态) return 新方法操作状态::无变化;
+        const auto 退役组 = 读取旧网页退役成员(特征概念服务_);
+        if (新状态 == 新方法启用状态::启用
+            && std::find(退役组.begin(), 退役组.end(), 方法节点) != 退役组.end())
+            return 新方法操作状态::入口拒绝;
         if (方法->本能函数登记名 == 新本能函数登记名_获取服务对象
             && (方法->父代方法节点 || !全局基础数据集.查询目标字段(方法节点, 方法父代字段).empty()
                 || 是有序服务对象规格(方法->参数规格组)))
