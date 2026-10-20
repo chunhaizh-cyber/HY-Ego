@@ -3,6 +3,7 @@
 #include <optional>
 #include <vector>
 #include "../核心/基础数据集.h"
+#include "新_方法公共类型.h"
 
 namespace 海中鱼巣 {
 enum class 动作能力定义类别 : std::int64_t { 方法能力=1, 内部治理能力=2 };
@@ -23,6 +24,8 @@ struct 动作参数规格 {
     bool 要求场景=false;
     std::vector<动作参数特征规格> 特征规格组;
     动作参数对象类别 对象类别=动作参数对象类别::普通世界;
+    // 有序规格与旧角色/嵌套规格互斥；参数位置不是稳定节点编码。
+    std::optional<新方法有序参数规格> 有序规格;
     friend bool operator==(const 动作参数规格&, const 动作参数规格&)=default;
 };
 struct 动作概念角色 {

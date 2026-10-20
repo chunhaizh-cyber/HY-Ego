@@ -96,6 +96,29 @@ struct 新缺失方法登记结果 final {
     std::optional<新缺失方法信息> 信息;
 };
 
+// 旧角色格式继续用于尚未迁移的方法和已发生的执行材料。新格式的
+// 序号是位置，不是节点编码；不能写入旧角色字段或据此创建角色概念。
+enum class 新方法参数信息类型 : std::int64_t {
+    存在 = 1,
+    特征 = 2
+};
+
+struct 新方法有序参数规格 final {
+    std::uint32_t 序号 = 0;
+    新方法参数信息类型 信息类型 = 新方法参数信息类型::存在;
+    稳定编码 范围概念节点;
+    friend bool operator==(const 新方法有序参数规格&,
+        const 新方法有序参数规格&) = default;
+};
+
+struct 新方法有序参数引用 final {
+    std::uint32_t 序号 = 0;
+    新方法参数信息类型 信息类型 = 新方法参数信息类型::存在;
+    稳定编码 信息节点;
+    friend bool operator==(const 新方法有序参数引用&,
+        const 新方法有序参数引用&) = default;
+};
+
 struct 新方法参数特征规格 final {
     稳定编码 特征类型概念节点;
     std::optional<稳定编码> 值域概念节点;
@@ -129,6 +152,9 @@ struct 新方法参数规格 final {
     std::vector<新方法参数特征规格> 特征规格组;
     新方法参数对象种类 对象种类 = 新方法参数对象种类::普通世界;
     std::optional<新方法参数集合成员约束> 集合成员约束;
+    // 有值时旧角色/存在/特征规格/集合约束必须全部为空。两种物理
+    // 格式互斥，不能因新字段缺失而猜测旧角色编码就是参数序号。
+    std::optional<新方法有序参数规格> 有序规格;
     friend bool operator==(const 新方法参数规格&,
         const 新方法参数规格&) = default;
 };
@@ -142,6 +168,8 @@ struct 新方法条件项定义 final {
     std::optional<稳定编码> 状态或动态概念节点;
     // 本项自身的有限I64区间，与特征值域概念节点互斥；单位沿特征类型定义。
     std::optional<特征概念I64闭区间> 精确数值域;
+    // 0仅指旧角色格式；非零时参数角色节点必须为空。
+    std::uint32_t 参数序号 = 0;
     friend bool operator==(const 新方法条件项定义&,
         const 新方法条件项定义&) = default;
 };
@@ -155,6 +183,7 @@ struct 新方法结果项定义 final {
     bool 主要结果 = false;
     // 禁止结果项复用本结构，同样不得同时保存概念域和私有精确域。
     std::optional<特征概念I64闭区间> 精确数值域;
+    std::uint32_t 参数序号 = 0;
     friend bool operator==(const 新方法结果项定义&,
         const 新方法结果项定义&) = default;
 };
@@ -298,7 +327,7 @@ struct 新方法信息 final {
     // 抽象方法均为空；副本保留其来源，整份复制图共用一个实例根。
     std::optional<稳定编码> 来源方法节点;
     std::optional<稳定编码> 实例根节点;
-    // 仅服务结算固定+1到Q的正式代际；与任务副本来源严格分账。
+    // 受控声明迁移的正式代际（结算Q、获取服务对象有序参数）；与任务副本来源严格分账。
     std::optional<稳定编码> 父代方法节点;
     稳定编码 启用特征节点, 专属存在概念节点;
     std::optional<新方法行为> 行为;
