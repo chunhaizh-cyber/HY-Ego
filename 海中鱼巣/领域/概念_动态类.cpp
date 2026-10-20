@@ -811,7 +811,31 @@ bool 动作对象类别合法(动作参数对象类别 类别) noexcept {
     if (定义.目标特征类型概念节点 && 特征根(*定义.目标特征类型概念节点) != *定义.目标特征类型概念节点)
         throw std::runtime_error("invalid action target feature concept");
     std::set<稳定编码> 角色;
+    const bool 有序参数 = !定义.参数规格组.empty() && 定义.参数规格组.front().有序规格.has_value();
+    std::size_t 参数位置 = 0;
     for (auto& 规格 : 定义.参数规格组) {
+        ++参数位置;
+        if (规格.有序规格.has_value() != 有序参数)
+            throw std::runtime_error("mixed action parameter formats");
+        if (规格.有序规格) {
+            const auto& 有序 = *规格.有序规格;
+            if (有序.序号 != 参数位置 || 有效(规格.参数角色节点) || 规格.存在概念节点
+                || 规格.要求场景 || !规格.特征规格组.empty()
+                || 规格.对象类别 != 动作参数对象类别::普通世界)
+                throw std::runtime_error("invalid ordered action parameter");
+            switch (有序.信息类型) {
+            case 新方法参数信息类型::存在:
+                if (!存在->获取存在概念(有序.范围概念节点))
+                    throw std::runtime_error("invalid ordered existence concept");
+                break;
+            case 新方法参数信息类型::特征:
+                if (!特征.获取特征概念(有序.范围概念节点))
+                    throw std::runtime_error("invalid ordered feature concept");
+                break;
+            default: throw std::runtime_error("invalid ordered action information type");
+            }
+            continue;
+        }
         校验存在C(规格.存在概念节点);
         if (!节点仍存在(规格.参数角色节点) || !角色.insert(规格.参数角色节点).second
             || !可选存在(规格.存在概念节点) || !动作对象类别合法(规格.对象类别))
@@ -879,8 +903,18 @@ std::vector<基础节点初始字段> 编码动作定义(const 动作概念定�
         定义.执行主体.参数角色节点.has_value(), 定义.作用目标.存在概念节点.has_value(),
         定义.作用目标.参数角色节点.has_value(), 定义.目标特征类型概念节点.has_value(),
         形状数量(定义.参数规格组.size())};
+    const bool 有序参数 = !定义.参数规格组.empty() && 定义.参数规格组.front().有序规格.has_value();
+    // 旧形状首项为正的对象类别；负标记与版本仅用于新布局，旧记录不插字段。
+    if (有序参数) 形状.insert(形状.begin(), {-1, 2});
     const auto 引用 = [&](稳定编码 值) { 字段.push_back({动作规格引用字段, 值}); };
     for (const auto& 规格 : 定义.参数规格组) {
+        if (有序参数) {
+            const auto& 有序 = *规格.有序规格;
+            形状.insert(形状.end(), {static_cast<std::int64_t>(有序.序号),
+                static_cast<std::int64_t>(有序.信息类型)});
+            引用(有序.范围概念节点);
+            continue;
+        }
         形状.insert(形状.end(), {static_cast<std::int64_t>(规格.对象类别),
             规格.存在概念节点.has_value(), 规格.要求场景, 形状数量(规格.特征规格组.size())});
         引用(规格.参数角色节点);
@@ -917,6 +951,12 @@ std::vector<基础节点初始字段> 编码动作定义(const 动作概念定�
     auto 引用字段 = 全局基础数据集.查询字段(节点, 动作规格引用字段);
     std::sort(引用字段.begin(), 引用字段.end(), [](const auto& a, const auto& b) { return a.编码 < b.编码; });
     std::size_t si = 0, ri = 0;
+    const bool 有序参数 = 形状->front() == -1;
+    if (有序参数) {
+        if (形状->size() < 9 || (*形状)[1] != 2)
+            throw std::runtime_error("unsupported ordered action specification version");
+        si = 2;
+    }
     const auto 数字 = [&]() { return 形状->at(si++); };
     const auto 布尔 = [&]() { const auto v = 数字(); if (v != 0 && v != 1) throw std::runtime_error("invalid action shape bool"); return v != 0; };
     const auto 数量 = [&]() { const auto v = 数字(); if (v < 0 || static_cast<std::uint64_t>(v) > 引用字段.size()) throw std::runtime_error("invalid action shape count"); return static_cast<std::size_t>(v); };
@@ -933,8 +973,21 @@ std::vector<基础节点初始字段> 编码动作定义(const 动作概念定�
         throw std::runtime_error("action concept shape/reference mismatch");
     定义.目标特征类型概念节点 = *目标类型;
     const auto 规格数 = 数量();
+    if (有序参数 && 规格数 == 0) throw std::runtime_error("empty ordered action specification");
     for (std::size_t i = 0; i < 规格数; ++i) {
         动作参数规格 规格;
+        if (有序参数) {
+            const auto 序号 = 数字();
+            if (序号 <= 0 || static_cast<std::uint64_t>(序号) > (std::numeric_limits<std::uint32_t>::max)()
+                || static_cast<std::uint64_t>(序号) != i + 1)
+                throw std::runtime_error("invalid ordered action parameter position");
+            const auto 类型 = static_cast<新方法参数信息类型>(数字());
+            if (类型 != 新方法参数信息类型::存在 && 类型 != 新方法参数信息类型::特征)
+                throw std::runtime_error("invalid ordered action parameter type");
+            规格.有序规格 = 新方法有序参数规格{static_cast<std::uint32_t>(序号), 类型, 引用()};
+            定义.参数规格组.push_back(std::move(规格));
+            continue;
+        }
         规格.对象类别 = static_cast<动作参数对象类别>(数字());
         const auto 有存在 = 布尔(); 规格.要求场景 = 布尔(); const auto 特征数 = 数量();
         规格.参数角色节点 = 引用(); if (有存在) 规格.存在概念节点 = 引用();
