@@ -32,6 +32,14 @@ enum class 新需求活动状态 : std::int64_t {
     失活 = 4
 };
 
+enum class 新需求执行域 : std::int64_t { 自我执行 = 1, 被认知 = 2 };
+struct 新需求认知来源 final {
+    稳定编码 理解节点;
+    稳定编码 内容确认节点;
+    std::optional<稳定编码> 来源要求节点;
+    friend bool operator==(const 新需求认知来源&, const 新需求认知来源&) = default;
+};
+
 enum class 新需求来源类型 : std::int64_t {
     本能定义 = 1,
     任务子目标 = 2,
@@ -162,6 +170,9 @@ struct 新需求信息 final {
     std::vector<稳定编码> 服务要求确认组;
     // 仅新服务要求D出生时记录，不给既有/同义复用D补写取得来源。
     std::optional<稳定编码> 服务需求取得执行节点;
+    稳定编码 需求主体存在节点;
+    新需求执行域 执行域{};
+    std::optional<新需求认知来源> 认知来源;
     friend bool operator==(const 新需求信息&, const 新需求信息&) = default;
 };
 
@@ -183,6 +194,9 @@ struct 新需求治理信息 final {
     std::optional<新需求完整目标> 完整目标;
     std::optional<稳定编码> 外部要求节点;
     std::optional<新部分服务要求材料> 外部要求材料;
+    稳定编码 需求主体存在节点;
+    新需求执行域 执行域{};
+    std::optional<新需求认知来源> 认知来源;
     friend bool operator==(const 新需求治理信息&, const 新需求治理信息&) = default;
 };
 enum class 新外部服务需求采用状态 : std::uint8_t {
@@ -224,7 +238,19 @@ enum class 新需求操作状态 : std::uint8_t {
     会形成环 = 18,
     结构不一致 = 19,
     资源失败 = 20,
-    权重不合法 = 21
+    权重不合法 = 21,
+    执行域不适用, 认知来源不合法, 同来源目标冲突, 需重新确认
+};
+
+struct 新被认知需求建立请求 final {
+    稳定编码 需求主体存在节点;
+    稳定编码 目标存在节点;
+    新需求目标定义 目标;
+    新需求认知来源 认知来源;
+};
+struct 新需求记录全集结果 final {
+    新需求操作状态 状态 = 新需求操作状态::入口拒绝;
+    std::vector<新需求信息> 需求组;
 };
 
 struct 新需求建立结果 final {
@@ -347,6 +373,11 @@ public:
     std::optional<稳定编码> 查询根需求(
         新需求根角色 角色) const noexcept;
     新需求全集结果 查询全部需求() const noexcept;
+    // 全部需求/列表及目标查询仅覆盖自我执行域；记录查询覆盖两域。
+    新需求建立结果 建立或取得被认知需求(const 新被认知需求建立请求&) noexcept;
+    新需求记录全集结果 查询全部需求记录() const noexcept;
+    新需求记录全集结果 查询主体需求(稳定编码 主体存在, 新需求执行域 域) const noexcept;
+    新需求记录全集结果 查询被认知需求来源(稳定编码 理解节点) const noexcept;
     // 完整核验列表登记、原始成员及需求树覆盖；非成功不返回部分材料。
     新需求列表全集结果 查询全部需求列表() const noexcept;
 
@@ -382,6 +413,7 @@ public:
     特征概念规则状态 校验集合成员需求身份(稳定编码 需求节点) const noexcept;
 
 private:
+    新需求操作状态 迁移既有自我需求归属(稳定编码 唯一自我) noexcept;
     friend class 新_自我线程类;
     新外部服务需求采用结果 建立或取得外部服务需求已核验(
         const 新完整服务需求材料包&) noexcept;
