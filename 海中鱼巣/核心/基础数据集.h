@@ -147,6 +147,7 @@ struct 基础节点组追加结果 final {
     std::vector<稳定编码> 新节点组;
     std::vector<稳定编码> 追加字段关系组;
     std::vector<稳定编码> 追加外部关系组;
+    std::vector<std::vector<稳定编码>> 新节点初始字段关系组;
 };
 
 // 同一数据集内的不可变技术材料；不开放owner的原始写集。
@@ -180,6 +181,7 @@ public:
     const std::vector<稳定编码>& 新节点组() const noexcept;
     const std::vector<稳定编码>& 追加字段关系组() const noexcept;
     const std::vector<稳定编码>& 追加外部关系组() const noexcept;
+    const std::vector<std::vector<稳定编码>>& 新节点初始字段关系组() const noexcept;
 private:
     struct 内容;
     explicit 基础片段发布回执(std::shared_ptr<const 内容>) noexcept;

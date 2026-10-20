@@ -22,9 +22,14 @@ struct 基础封存追加片段::内容 final {
 struct 基础片段发布回执::内容 final {
     基础封存追加片段 来源;
     std::vector<稳定编码> 新节点, 追加字段, 追加外部关系;
-    内容(const 基础封存追加片段& 片段, std::size_t 节点数,
+    std::vector<std::vector<稳定编码>> 新节点初始字段;
+    内容(const 基础封存追加片段& 片段, const std::vector<基础组内新节点>& 节点组,
         std::size_t 字段数, std::size_t 关系数)
-        : 来源(片段), 新节点(节点数), 追加字段(字段数), 追加外部关系(关系数) {}
+        : 来源(片段), 新节点(节点组.size()), 追加字段(字段数), 追加外部关系(关系数),
+          新节点初始字段(节点组.size()) {
+        for (std::size_t i = 0; i < 节点组.size(); ++i)
+            新节点初始字段[i].resize(节点组[i].字段组.size());
+    }
 };
 
 基础封存追加片段::基础封存追加片段(std::shared_ptr<const 内容> 值) noexcept
@@ -48,6 +53,10 @@ const std::vector<稳定编码>& 基础片段发布回执::追加字段关系组
 const std::vector<稳定编码>& 基础片段发布回执::追加外部关系组() const noexcept {
     static const std::vector<稳定编码> 空;
     return 内容_ ? 内容_->追加外部关系 : 空;
+}
+const std::vector<std::vector<稳定编码>>& 基础片段发布回执::新节点初始字段关系组() const noexcept {
+    static const std::vector<std::vector<稳定编码>> 空;
+    return 内容_ ? 内容_->新节点初始字段 : 空;
 }
 
 namespace {
@@ -747,6 +756,9 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
         结果.新节点组.reserve(请求.新节点组.size());
         结果.追加字段关系组.reserve(请求.追加字段组.size());
         结果.追加外部关系组.reserve(请求.追加外部关系组.size());
+        结果.新节点初始字段关系组.resize(请求.新节点组.size());
+        for (std::size_t i = 0; i < 请求.新节点组.size(); ++i)
+            结果.新节点初始字段关系组[i].resize(请求.新节点组[i].字段组.size());
         const auto 已占用 = [&](稳定编码 编码) {
             return 候选节点.contains(编码.值) || 候选字段.contains(编码.值)
                 || (候选关系 ? 候选关系->contains(编码.值) : 外部关系_.contains(编码.值));
@@ -796,9 +808,14 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
                 throw std::logic_error("append reverse index collision");
             return 编码;
         };
-        for (std::size_t i = 0; i < 请求.新节点组.size(); ++i)
-            for (const auto& 项 : 请求.新节点组[i].字段组)
-                if (!有效(加字段(结果.新节点组[i], 项.字段节点, 项.内容))) return {状态::资源失败, {}, {}};
+        for (std::size_t i = 0; i < 请求.新节点组.size(); ++i) {
+            for (std::size_t j = 0; j < 请求.新节点组[i].字段组.size(); ++j) {
+                const auto& 项 = 请求.新节点组[i].字段组[j];
+                const auto 字段码 = 加字段(结果.新节点组[i], 项.字段节点, 项.内容);
+                if (!有效(字段码)) return {状态::资源失败, {}, {}};
+                结果.新节点初始字段关系组[i][j] = 字段码;
+            }
+        }
         for (const auto& 项 : 请求.追加字段组) {
             const auto 字段码 = 加字段(项.所属节点, 项.字段节点, 项.内容);
             if (!有效(字段码)) return {状态::资源失败, {}, {}};
@@ -953,7 +970,7 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             联合.替换字段组.insert(联合.替换字段组.end(), 请求.替换字段组.begin(), 请求.替换字段组.end());
             联合.删除字段关系组.insert(联合.删除字段关系组.end(), 请求.删除字段关系组.begin(), 请求.删除字段关系组.end());
             auto 回执 = std::make_shared<基础片段发布回执::内容>(片段,
-                请求.新节点组.size(), 请求.追加字段组.size(), 请求.追加外部关系组.size());
+                请求.新节点组, 请求.追加字段组.size(), 请求.追加外部关系组.size());
             结果.片段回执组.push_back(基础片段发布回执{回执});
             回执内容.push_back(std::move(回执));
         }
@@ -962,12 +979,20 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
         if (发布.状态 != 状态::已完成) return {发布.状态, {}};
         已发布 = true;
         if (发布.新节点组.size() != 联合.新节点组.size()
+            || 发布.新节点初始字段关系组.size() != 联合.新节点组.size()
             || 发布.追加字段关系组.size() != 联合.追加字段组.size()
             || 发布.追加外部关系组.size() != 联合.追加外部关系组.size())
             工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子追加封存片段组", L"发布结果尺寸与封存请求不一致");
         std::size_t 节点位置 = 0, 字段位置 = 0, 关系位置 = 0;
         for (auto& 回执 : 回执内容) {
-            for (auto& 编码 : 回执->新节点) 编码 = 发布.新节点组[节点位置++];
+            for (std::size_t i = 0; i < 回执->新节点.size(); ++i) {
+                auto& 初始字段 = 回执->新节点初始字段[i];
+                const auto& 已发布字段 = 发布.新节点初始字段关系组[节点位置];
+                if (初始字段.size() != 已发布字段.size())
+                    工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子追加封存片段组", L"新节点初始字段回执尺寸不一致");
+                std::copy(已发布字段.begin(), 已发布字段.end(), 初始字段.begin());
+                回执->新节点[i] = 发布.新节点组[节点位置++];
+            }
             for (auto& 编码 : 回执->追加字段) 编码 = 发布.追加字段关系组[字段位置++];
             for (auto& 编码 : 回执->追加外部关系) 编码 = 发布.追加外部关系组[关系位置++];
         }

@@ -58,7 +58,8 @@ struct 采集器 final {
         输出.值材料组.push_back(*信息);
     }
     void 取值域(const 特征概念值域& 值域, 稳定编码 来源特征概念) {
-        if (std::holds_alternative<特征概念任务集合值域>(值域)) {
+        if (std::holds_alternative<特征概念任务集合值域>(值域)
+            || std::holds_alternative<特征概念存在集合值域>(值域)) {
             // 该约束域尚未纳入快照归档格式；不能略过引用后宣称完整。
             输出.缺口组.push_back({对象种类::特征概念, 来源特征概念, 引用状态::边界未展开});
         } else if (const auto* 集合 = std::get_if<std::vector<稳定编码>>(&值域)) {

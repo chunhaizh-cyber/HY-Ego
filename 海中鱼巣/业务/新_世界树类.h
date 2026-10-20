@@ -98,7 +98,8 @@ enum class 新世界特征变化状态 : std::uint8_t {
     结构不一致 = 13,
     资源失败 = 14,
     动作不匹配 = 15,
-    已改变但动作关联未完成 = 16
+    已改变但动作关联未完成 = 16,
+    前提已变化 = 17
 };
 
 struct 新世界特征变化结果 final {
@@ -222,6 +223,8 @@ public:
         const 新世界引用集合组合准备&) const noexcept;
     新世界引用集合组合结果 提交存在引用集合改变并形成动态(
         新世界引用集合组合准备&, const 基础封存追加片段&) noexcept;
+    新世界引用集合组合结果 提交存在引用集合改变并形成动态(
+        新世界引用集合组合准备&) noexcept;
     新_世界树类() noexcept;
     ~新_世界树类();
 
@@ -238,6 +241,9 @@ public:
 
     std::optional<先天特征概念集合> 获取先天特征概念() const noexcept;
     稳定编码 建立特征概念(
+        const 特征概念定义& 定义,
+        std::optional<稳定编码> 上位概念 = std::nullopt) noexcept;
+    特征概念编码操作结果 建立特征概念强类型(
         const 特征概念定义& 定义,
         std::optional<稳定编码> 上位概念 = std::nullopt) noexcept;
 
@@ -337,6 +343,8 @@ private:
         稳定编码 存在节点,
         稳定编码 当前特征概念节点,
         bool& 结构有效) const noexcept;
+    新世界引用集合组合结果 提交引用集合改变内部(
+        新世界引用集合组合准备&, const 基础封存追加片段*) noexcept;
     新世界动态发布结果 完成动态发布(
         稳定编码 场景节点,
         新动态建立结果 建立结果) noexcept;

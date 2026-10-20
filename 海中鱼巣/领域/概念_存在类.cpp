@@ -311,6 +311,52 @@ std::optional<稳定编码> 共同上位特征概念(
 
 } // namespace
 
+专属存在概念身份保护结果 概念_存在类::读取专属存在概念身份保护(
+    稳定编码 ec, 稳定编码 e, const 基础联合节点快照& 首读) const noexcept {
+    using S = 专属存在概念身份读取状态;
+    try {
+        if (!有效(ec) || !有效(e) || ec == e || 首读.结构.节点.编码 != e) return {};
+        if (!结构已初始化()) return {S::提供者未就绪, {}, {}, {}};
+        // 此窄入口只读初始化后不变的schema及L1，不取得任何业务owner锁。
+        const auto b = 全局基础数据集.查询节点组完整结构({e, ec});
+        if (b.状态 == 基础结构操作状态::资源失败) return {S::资源失败, {}, {}, {}};
+        if (b.状态 == 基础结构操作状态::节点不存在) return {S::节点不存在, {}, {}, {}};
+        if (b.状态 != 基础结构操作状态::已完成 || b.节点组.size() != 2)
+            return {S::结构不一致, {}, {}, {}};
+        const 基础联合节点快照* es = nullptr;
+        const 基础联合节点快照* cs = nullptr;
+        for (const auto& n : b.节点组) {
+            if (!n.快照) return {S::节点不存在, {}, {}, {}};
+            if (n.查询节点 == e && !es) es = &*n.快照;
+            else if (n.查询节点 == ec && !cs) cs = &*n.快照;
+            else return {S::结构不一致, {}, {}, {}};
+        }
+        if (!es || !cs || cs->结构.节点.编码 != ec || es->结构.节点.编码 != e)
+            return {S::结构不一致, {}, {}, {}};
+        if (es->结构.字段组 != 首读.结构.字段组
+            || es->入向字段组 != 首读.入向字段组
+            || es->入向外部关系组 != 首读.入向外部关系组
+            || es->出向外部关系组 != 首读.出向外部关系组)
+            return {S::前提已变化, {}, {}, {}};
+        unsigned 类型数 = 0, 归属数 = 0;
+        for (const auto& f : cs->结构.字段组) {
+            if (f.字段节点 != 节点类型字段 && f.字段节点 != 对应存在字段) continue;
+            const auto* v = std::get_if<稳定编码>(&f.内容);
+            if (!v) return {S::结构不一致, {}, {}, {}};
+            if (f.字段节点 == 节点类型字段) {
+                ++类型数;
+                if (*v != 专属存在概念节点类型) return {S::结构不一致, {}, {}, {}};
+            } else {
+                ++归属数;
+                if (*v != e) return {S::结构不一致, {}, {}, {}};
+            }
+        }
+        if (类型数 != 1 || 归属数 != 1) return {S::结构不一致, {}, {}, {}};
+        return {S::已完成, ec, e, {*es, *cs}};
+    } catch (const std::bad_alloc&) { return {S::资源失败, {}, {}, {}}; }
+    catch (...) { return {S::结构不一致, {}, {}, {}}; }
+}
+
 概念_存在类::概念_存在类(概念_特征类& 特征概念服务) noexcept
     : 特征概念服务_(特征概念服务) {}
 
@@ -556,8 +602,24 @@ bool 概念_存在类::撤销未绑定专属存在概念(
     稳定编码 实际存在节点) noexcept {
     try {
         std::lock_guard 锁(存在概念图互斥);
-        if (!是专属存在概念节点(专属概念节点)
-            || !查询概念关系(专属概念节点, true).empty()
+        if (!有效(专属概念节点) || !有效(实际存在节点)) return false;
+        const auto 入口读 = 全局基础数据集.查询节点组完整结构({专属概念节点});
+        if (入口读.状态 != 基础结构操作状态::已完成 || 入口读.节点组.size()!=1)
+            throw std::logic_error("exclusive concept entry read failed");
+        if (!入口读.节点组[0].快照) return false;
+        std::optional<稳定编码> 入口类型;
+        bool 有所属 = false;
+        for (const auto& f : 入口读.节点组[0].快照->结构.字段组) {
+            if (f.字段节点 == 对应存在字段) 有所属 = true;
+            if (f.字段节点 != 节点类型字段) continue;
+            const auto* n = std::get_if<稳定编码>(&f.内容);
+            if (!n || !有效(*n) || 入口类型) throw std::logic_error("exclusive concept type damaged");
+            入口类型 = *n;
+        }
+        if (有所属 && 入口类型 != 专属存在概念节点类型)
+            throw std::logic_error("exclusive concept owner contradicts type");
+        if (入口类型 != 专属存在概念节点类型) return false;
+        if (!查询概念关系(专属概念节点, true).empty()
             || !查询概念关系(专属概念节点, false).empty()
             || !全局基础数据集.查询字段(
                 专属概念节点, 名称关系字段).empty()) {
@@ -565,7 +627,8 @@ bool 概念_存在类::撤销未绑定专属存在概念(
         }
         const auto 对应存在 = 读取唯一节点字段(
             专属概念节点, 对应存在字段);
-        if (!对应存在 || *对应存在 != 实际存在节点) return false;
+        if (!对应存在) throw std::logic_error("exclusive concept owner field missing or duplicate");
+        if (*对应存在 != 实际存在节点) return false;
 
         const auto 组织关系组 = 全局基础数据集.查询目标关系(
             专属概念节点, 基础外部关系类型::父子);
@@ -573,21 +636,58 @@ bool 概念_存在类::撤销未绑定专属存在概念(
         for (const auto& 关系 : 组织关系组) {
             if (关系.源节点 == 存在概念图根节点
                 && 关系.角色或顺序 == 组织归属关系角色) {
-                if (组织关系) return false;
+                if (组织关系) throw std::logic_error("duplicate exclusive concept organization");
                 组织关系 = 关系.编码;
             }
         }
-        if (!组织关系 || !全局基础数据集.删除关系(*组织关系)) return false;
-        删除既有特征项(专属概念节点);
-        for (const auto 字段 : {节点类型字段, 对应存在字段}) {
-            for (const auto& 关系 : 全局基础数据集.查询字段(
-                专属概念节点, 字段)) {
-                if (!全局基础数据集.删除字段(关系.编码)) return false;
-            }
+        if (!组织关系 || 组织关系组.size() != 1)
+            throw std::logic_error("exclusive concept organization damaged");
+        std::vector<稳定编码> 节点组{专属概念节点}, 字段组;
+        for (const auto& f : 全局基础数据集.查询字段(专属概念节点, 特征项字段)) {
+            const auto* n = std::get_if<稳定编码>(&f.内容);
+            if (!n || !有效(*n) || std::find(节点组.begin(), 节点组.end(), *n) != 节点组.end())
+                throw std::logic_error("exclusive concept item identity damaged");
+            节点组.push_back(*n);
         }
-        return 全局基础数据集.删除节点(专属概念节点);
+        const auto 读 = 全局基础数据集.查询节点组完整结构(节点组);
+        if (读.状态 != 基础结构操作状态::已完成 || 读.节点组.size() != 节点组.size())
+            throw std::logic_error("exclusive concept cleanup snapshot unavailable");
+        for (const auto& x : 读.节点组) {
+            if (!x.快照) throw std::logic_error("exclusive concept cleanup node missing");
+            const bool 主 = x.查询节点 == 专属概念节点;
+            const auto& s = *x.快照;
+            if (!s.出向外部关系组.empty()
+                || (主 ? s.入向外部关系组 != 组织关系组 : !s.入向外部关系组.empty()))
+                throw std::logic_error("exclusive concept cleanup unexpected edges");
+            unsigned 类型数=0, 一数=0, 二数=0;
+            for (const auto& f : s.结构.字段组) {
+                const auto* n = std::get_if<稳定编码>(&f.内容);
+                if (!n || !有效(*n)) throw std::logic_error("exclusive concept cleanup invalid field");
+                if (f.字段节点 == 节点类型字段) {
+                    ++类型数;
+                    if (*n != (主 ? 专属存在概念节点类型 : 特征项节点类型))
+                        throw std::logic_error("exclusive concept cleanup wrong type");
+                } else if (f.字段节点 == (主 ? 对应存在字段 : 特征类型概念字段)) {
+                    ++一数;
+                    if (主 && *n != 实际存在节点) throw std::logic_error("exclusive concept owner changed");
+                } else if (f.字段节点 == (主 ? 特征项字段 : 具体特征概念字段)) {
+                    ++二数;
+                    if (主 && std::find(节点组.begin()+1, 节点组.end(), *n) == 节点组.end())
+                        throw std::logic_error("exclusive concept item changed");
+                } else throw std::logic_error("exclusive concept cleanup unknown field");
+                字段组.push_back(f.编码);
+            }
+            if (类型数 != 1 || 一数 != 1 || (主 ? 二数 != 节点组.size()-1 : 二数 != 1))
+                throw std::logic_error("exclusive concept cleanup field multiplicity");
+        }
+        const auto s = 全局基础数据集.原子删除节点结构(节点组, 字段组, {*组织关系});
+        if (s == 基础结构操作状态::已完成) return true;
+        if (s == 基础结构操作状态::引用仍存在) return false;
+        throw std::logic_error("exclusive concept atomic cleanup failed");
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"撤销未绑定专属存在概念", L"原子撤销结构异常，未将故障作为业务否定。", e.what());
     } catch (...) {
-        return false;
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"撤销未绑定专属存在概念", L"未知工程异常。");
     }
 }
 

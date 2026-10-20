@@ -16,6 +16,7 @@ std::recursive_mutex 新存在互斥;
 稳定编码 存在节点类型{};
 稳定编码 实例特征字段{};
 稳定编码 专属存在概念字段{};
+稳定编码 存在清理中字段{}, 存在清理中标记节点{};
 
 constexpr std::int64_t 存在组成子存在关系角色 = 2;
 
@@ -130,6 +131,8 @@ bool 匹配定义需要外部依据(const 新特征匹配定义快照& 定义) n
     return 定义.材料类型 == 特征概念材料物理类型::存在节点引用
         || 定义.比较规则 == 特征概念比较规则::存在身份精确
         || 定义.比较规则 == 特征概念比较规则::服务任务集合身份判等
+        || 定义.比较规则 == 特征概念比较规则::存在集合身份判等
+        || std::holds_alternative<特征概念存在集合值域>(定义.值域)
         || std::holds_alternative<特征概念任务集合值域>(定义.值域)
         || std::holds_alternative<特征概念存在引用值域>(定义.值域);
 }
@@ -202,12 +205,23 @@ bool 新_存在类::初始化() noexcept {
         std::lock_guard 锁(新存在互斥);
         if (!特征服务_.初始化() || !存在概念服务_.初始化()
             || !状态服务_.初始化()) return false;
-        if (结构已初始化()) return 结构仍存在();
         auto 建立 = [](稳定编码& 节点) {
             if (有效(节点)) return 节点仍存在(节点);
             节点 = 全局基础数据集.新建节点();
             return 有效(节点);
         };
+        if (!建立(存在清理中字段) || !建立(存在清理中标记节点)) return false;
+        const auto 残留 = 全局基础数据集.查询目标字段(存在清理中标记节点, 存在清理中字段);
+        if (!残留.empty()) {
+            // 只投影已经读到的门字段快照；不为日志新增业务读取或修复。
+            std::string 诊断 = "cleanup-gates=" + std::to_string(残留.size());
+            for (std::size_t i = 0; i < (std::min)(残留.size(), std::size_t{8}); ++i)
+                诊断 += " E=" + std::to_string(残留[i].所属节点.值)
+                    + "/field=" + std::to_string(残留[i].编码.值);
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"存在初始化",
+                L"发现残留存在清理门，门字段快照见诊断；保留现场，人工修复后启动。", 诊断.c_str());
+        }
+        if (结构已初始化()) return 结构仍存在();
         return 建立(节点类型字段)
             && 建立(存在节点类型)
             && 建立(实例特征字段)
@@ -215,6 +229,64 @@ bool 新_存在类::初始化() noexcept {
     } catch (...) {
         return false;
     }
+}
+
+bool 新_存在类::装配存在集合成员保护字段(稳定编码 字段) noexcept {
+    if (!有效(字段) || (有效(存在集合保护字段_) && 存在集合保护字段_ != 字段)) return false;
+    存在集合保护字段_ = 字段;
+    return true;
+}
+特征存在成员读取结果 新_存在类::读取存在集合成员身份(稳定编码 n) const noexcept {
+    using S = 特征概念规则状态;
+    try {
+        // 只读冻结schema与L1；禁止取E/F/FC业务锁。
+        if (!结构已初始化() || !有效(存在清理中字段)) return {S::读取接口未装配, {}, {}};
+        if (!有效(n)) return {};
+        const auto b = 全局基础数据集.查询节点组完整结构({n});
+        if (b.状态 == 基础结构操作状态::资源失败) return {S::资源失败, {}, {}};
+        if (b.状态 == 基础结构操作状态::节点不存在) return {S::值不存在, {}, {}};
+        if (b.状态 != 基础结构操作状态::已完成 || b.节点组.size() != 1)
+            return {S::内部不一致, {}, {}};
+        if (!b.节点组[0].快照) return {S::值不存在, {}, {}};
+        const auto& s = *b.节点组[0].快照;
+        unsigned 类型数 = 0, 概念数 = 0;
+        稳定编码 专属概念{};
+        bool 正式 = false;
+        for (const auto& f : s.结构.字段组) {
+            if (f.字段节点 == 存在清理中字段) return {S::内部不一致, {}, {}};
+            if (f.字段节点 == 节点类型字段) {
+                ++类型数;
+                const auto* t = std::get_if<稳定编码>(&f.内容);
+                if (!t || !有效(*t)) return {S::内部不一致, {}, {}};
+                正式 = *t == 存在节点类型;
+            }
+            if (f.字段节点 == 专属存在概念字段) {
+                ++概念数;
+                const auto* c = std::get_if<稳定编码>(&f.内容);
+                if (!c || !有效(*c)) return {S::内部不一致, {}, {}};
+                专属概念 = *c;
+            }
+        }
+        if (!类型数) return {};
+        if (类型数 != 1) return {S::内部不一致, {}, {}};
+        if (!正式) return {};
+        if (概念数 != 1) return {S::内部不一致, {}, {}};
+        auto ec = 存在概念服务_.读取专属存在概念身份保护(专属概念, n, s);
+        using ES = 专属存在概念身份读取状态;
+        switch (ec.状态) {
+        case ES::已完成:
+            if (ec.专属概念节点 != 专属概念 || ec.对应存在节点 != n)
+                return {S::内部不一致, {}, {}};
+            return {S::已完成, n, std::move(ec.身份保护)};
+        case ES::输入拒绝: return {S::入口拒绝, {}, {}};
+        case ES::提供者未就绪: return {S::读取接口未装配, {}, {}};
+        case ES::节点不存在: return {S::值不存在, {}, {}};
+        case ES::前提已变化: return {S::前提已变化, {}, {}};
+        case ES::资源失败: return {S::资源失败, {}, {}};
+        default: return {S::内部不一致, {}, {}};
+        }
+    } catch (const std::bad_alloc&) { return {S::资源失败, {}, {}}; }
+    catch (...) { return {S::内部不一致, {}, {}}; }
 }
 
 新存在建立结果 新_存在类::初始化存在节点(
@@ -239,6 +311,15 @@ bool 新_存在类::初始化() noexcept {
             && (!初始状态时间 || !实例强时间有效(*初始状态时间))) {
             结果.状态 = 新存在操作状态::状态时间不合法;
             return 结果;
+        }
+        for (const auto& 初始 : 请求.初始特征组) {
+            const auto protection = 特征服务_.准备特征初值保护(初始.特征概念节点, 初始.初始值);
+            if (protection != 新特征写入状态::已完成) {
+                结果.状态 = protection == 新特征写入状态::前提已变化
+                    ? 新存在操作状态::前提已变化 : protection == 新特征写入状态::资源失败
+                        ? 新存在操作状态::资源失败 : 新存在操作状态::特征概念不合法;
+                return 结果;
+            }
         }
         std::vector<稳定编码> 已写字段;
         std::vector<稳定编码> 已写关系;
@@ -288,11 +369,13 @@ bool 新_存在类::初始化() noexcept {
 
         std::vector<稳定编码> 具体特征概念组;
         for (const auto& 初始特征 : 请求.初始特征组) {
-            const auto 特征节点 = 特征服务_.建立特征(
+            const auto 创建 = 特征服务_.建立特征强类型(
                 初始特征.特征概念节点, 初始特征.初始值);
+            const auto 特征节点 = 创建.特征节点.value_or(稳定编码{});
             if (!有效(特征节点)) {
                 回滚();
-                结果.状态 = 新存在操作状态::特征概念不合法;
+                结果.状态 = 创建.状态 == 新特征写入状态::前提已变化
+                    ? 新存在操作状态::前提已变化 : 新存在操作状态::特征概念不合法;
                 return 结果;
             }
             const auto 持有字段 = 全局基础数据集.添加字段节点(
@@ -584,9 +667,11 @@ bool 新_存在类::存在概念相交(
             结果.状态 = 新存在操作状态::存在不存在;
             return 结果;
         }
-        const auto 特征节点 = 特征服务_.建立特征(特征概念节点, 初始值);
+        const auto 创建 = 特征服务_.建立特征强类型(特征概念节点, 初始值);
+        const auto 特征节点 = 创建.特征节点.value_or(稳定编码{});
         if (!有效(特征节点)) {
-            结果.状态 = 新存在操作状态::特征概念不合法;
+            结果.状态 = 创建.状态 == 新特征写入状态::前提已变化
+                ? 新存在操作状态::前提已变化 : 新存在操作状态::特征概念不合法;
             return 结果;
         }
         const auto 持有字段 = 全局基础数据集.添加字段节点(
@@ -734,6 +819,10 @@ bool 新_存在类::存在概念相交(
         }
 
         结果.特征结果 = 特征服务_.添加特征值(特征节点, 新值);
+        if (结果.特征结果->状态 == 新特征写入状态::前提已变化) {
+            结果.状态 = 新存在操作状态::前提已变化;
+            return 结果;
+        }
         const bool 特征事实已更新 =
             结果.特征结果->状态 == 新特征写入状态::已完成
             || 结果.特征结果->状态 == 新特征写入状态::无变化
@@ -814,7 +903,7 @@ bool 新_存在类::存在概念相交(
             return 结果;
         const auto 原定义 = 特征服务_.捕获特征匹配定义(原特征->特征概念节点);
         if (!原定义 || 原定义->特征类型根 != 预期特征类型概念节点
-            || (引用集合 ? 原定义->比较规则 != 特征概念比较规则::需求集合身份判等
+            || (引用集合 ? (原定义->比较规则 != 特征概念比较规则::需求集合身份判等 && 原定义->比较规则 != 特征概念比较规则::存在集合身份判等)
                 : 原定义->材料类型 != 特征概念材料物理类型::I64标量)) return 结果;
         const auto 原概念 = 存在概念服务_.获取存在概念(原结构->专属存在概念节点);
         if (!原概念 || 原概念->种类 != 存在概念种类::专属
@@ -890,7 +979,7 @@ bool 新_存在类::存在概念相交(
             if (!定义 || !概念投影.emplace(定义->特征类型根, 信息->特征概念节点).second)
                 return 结果;
             if (F == 特征节点 && (定义->特征类型根 != 预期特征类型概念节点
-                || (引用集合 ? 定义->比较规则 != 特征概念比较规则::需求集合身份判等
+                || (引用集合 ? (定义->比较规则 != 特征概念比较规则::需求集合身份判等 && 定义->比较规则 != 特征概念比较规则::存在集合身份判等)
                     : 定义->材料类型 != 特征概念材料物理类型::I64标量)
                 || 信息->当前值 != std::optional<新特征准确值>{新特征准确值{预期当前值}}))
                 return 结果;
@@ -965,74 +1054,79 @@ std::vector<稳定编码> 新_存在类::查询全部特征(
     }
 }
 
-新存在操作状态 新_存在类::清理存在节点内容(
-    稳定编码 存在节点) noexcept {
+新存在操作状态 新_存在类::清理存在节点内容(稳定编码 存在节点) noexcept {
+    using S = 新存在操作状态;
     try {
         std::lock_guard 锁(新存在互斥);
+        if (!有效(存在集合保护字段_))
+            throw std::logic_error("existence protection schema not wired");
+        if (!全局基础数据集.查询字段(存在节点, 存在清理中字段).empty())
+            throw std::logic_error("reentry with cleanup gate");
         const auto 信息 = 获取存在(存在节点);
-        if (!信息) return 新存在操作状态::存在不存在;
-        if (!状态服务_.按存在查询状态(存在节点).empty()) {
-            return 新存在操作状态::仍被状态引用;
+        if (!信息) return S::存在不存在;
+        if (!状态服务_.按存在查询状态(存在节点).empty()) return S::仍被状态引用;
+        if (!信息->子存在节点组.empty()) return S::仍有子存在;
+        const auto 概念 = 存在概念服务_.获取存在概念(信息->专属存在概念节点);
+        if (!概念 || !概念->上位概念组.empty() || !概念->下位概念组.empty())
+            throw std::logic_error("exclusive concept not releasable");
+        const auto 父 = 查询父存在关系(存在节点);
+        if (父.size() > 1) throw std::logic_error("duplicate parent existence");
+        const auto 特征字段 = 全局基础数据集.查询字段(存在节点, 实例特征字段);
+        const auto 概念字段 = 全局基础数据集.查询字段(存在节点, 专属存在概念字段);
+        const auto 类型字段 = 全局基础数据集.查询字段(存在节点, 节点类型字段);
+        if (概念字段.size() != 1 || 类型字段.size() != 1)
+            throw std::logic_error("invalid existence identity fields");
+        std::vector<稳定编码> 根, 允许;
+        for (const auto& f : 特征字段) {
+            const auto* n = std::get_if<稳定编码>(&f.内容);
+            if (!n) throw std::logic_error("invalid owned feature");
+            根.push_back(*n); 允许.push_back(f.编码);
         }
-        if (!信息->子存在节点组.empty()) {
-            return 新存在操作状态::仍有子存在;
-        }
-        const auto 概念信息 = 存在概念服务_.获取存在概念(
-            信息->专属存在概念节点);
-        if (!概念信息 || !概念信息->上位概念组.empty()
-            || !概念信息->下位概念组.empty()) {
-            return 新存在操作状态::结构不一致;
-        }
-
-        const auto 父关系 = 查询父存在关系(存在节点);
-        if (父关系.size() > 1) return 新存在操作状态::结构不一致;
-        if (!父关系.empty()
-            && !全局基础数据集.删除关系(父关系.front().编码)) {
-            return 新存在操作状态::资源失败;
-        }
-
-        const auto 特征字段组 = 全局基础数据集.查询字段(
-            存在节点, 实例特征字段);
-        for (const auto& 字段 : 特征字段组) {
-            const auto* 特征节点 = std::get_if<稳定编码>(&字段.内容);
-            if (!特征节点 || !特征服务_.是特征节点(*特征节点)) {
-                return 新存在操作状态::结构不一致;
-            }
-        }
-        for (const auto& 字段 : 特征字段组) {
-            const auto 特征节点 = std::get<稳定编码>(字段.内容);
-            if (!全局基础数据集.删除字段(字段.编码)
-                || !特征服务_.删除特征(特征节点)) {
-                return 新存在操作状态::资源失败;
-            }
-        }
-
-        const auto 概念字段组 = 全局基础数据集.查询字段(
-            存在节点, 专属存在概念字段);
-        if (概念字段组.size() != 1) {
-            return 新存在操作状态::结构不一致;
-        }
-        const auto* 概念节点 = std::get_if<稳定编码>(
-            &概念字段组.front().内容);
-        if (!概念节点
-            || !存在概念服务_.是专属存在概念节点(*概念节点)) {
-            return 新存在操作状态::结构不一致;
-        }
-        if (!全局基础数据集.删除字段(概念字段组.front().编码)
-            || !存在概念服务_.撤销未绑定专属存在概念(
-                *概念节点, 存在节点)) {
-            return 新存在操作状态::资源失败;
-        }
-
-        const auto 类型字段组 = 全局基础数据集.查询字段(
-            存在节点, 节点类型字段);
-        if (类型字段组.size() != 1
-            || !全局基础数据集.删除字段(类型字段组.front().编码)) {
-            return 新存在操作状态::结构不一致;
-        }
-        return 新存在操作状态::已完成;
+        auto 准备 = 特征服务_.准备特征组清理(根, 允许);
+        if (准备.状态 == 新特征清理准备状态::联合更新占用) return S::特征联合更新占用;
+        if (准备.状态 == 新特征清理准备状态::仍被外部引用) return S::特征仍被外部引用;
+        if (准备.状态 != 新特征清理准备状态::已准备 || !准备.准备)
+            throw std::logic_error("feature group cleanup preparation failed");
+        // F锁在整个门与F消费期间保留；这里只调用L1，不重入EC或E服务。
+        const auto b = 全局基础数据集.查询节点组完整结构({存在节点});
+        if (b.状态 != 基础结构操作状态::已完成 || b.节点组.size() != 1 || !b.节点组[0].快照)
+            throw std::logic_error("existence cleanup snapshot failed");
+        const auto& snap = *b.节点组[0].快照;
+        for (const auto& f : snap.入向字段组)
+            if (f.字段节点 == 存在集合保护字段_) return S::仍被存在集合引用;
+        基础字段组合变化请求 gate;
+        gate.预期节点组 = {snap};
+        gate.追加字段组.push_back({存在节点, 存在清理中字段, 存在清理中标记节点});
+        const auto g = 全局基础数据集.原子比较变更字段组(gate);
+        if (g.状态 == 基础字段组合变化状态::预期不符) return S::清理前提已变化;
+        if (g.状态 != 基础字段组合变化状态::已完成 || g.追加字段关系组.size() != 1)
+            throw std::logic_error("existence cleanup gate publication failed");
+        for (const auto& f : 特征字段)
+            if (!全局基础数据集.删除字段(f.编码)) throw std::logic_error("owned feature detach failed");
+        特征服务_.执行已准备特征组清理(*准备.准备);
+        // F消费释放锁以后才能进入EC。
+        if (!父.empty() && !全局基础数据集.删除关系(父.front().编码))
+            throw std::logic_error("parent existence detach failed");
+        if (!全局基础数据集.删除字段(概念字段.front().编码)
+            || !存在概念服务_.撤销未绑定专属存在概念(信息->专属存在概念节点, 存在节点))
+            throw std::logic_error("exclusive concept cleanup failed");
+        const auto tail = 全局基础数据集.查询节点组完整结构({存在节点});
+        if (tail.状态 != 基础结构操作状态::已完成 || tail.节点组.size() != 1 || !tail.节点组[0].快照)
+            throw std::logic_error("cleanup tail snapshot failed");
+        基础字段组合变化请求 end;
+        end.预期节点组 = {*tail.节点组[0].快照};
+        end.删除字段关系组 = {类型字段.front().编码, g.追加字段关系组.front()};
+        const auto done = 全局基础数据集.原子比较变更字段组(end);
+        if (done.状态 != 基础字段组合变化状态::已完成
+            || !全局基础数据集.查询字段(存在节点, 节点类型字段).empty()
+            || !全局基础数据集.查询字段(存在节点, 存在清理中字段).empty())
+            throw std::logic_error("existence cleanup final readback failed");
+        return S::已完成;
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"存在内容清理",
+            L"清理工程故障；保留清理门与已发生事实，禁止业务继续。", e.what());
     } catch (...) {
-        return 新存在操作状态::资源失败;
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"存在内容清理", L"清理发生未知工程故障。");
     }
 }
 

@@ -1,6 +1,5 @@
 #include "概念_特征类.h"
 #include "../核心/容错检查.h"
-
 #include <algorithm>
 #include <iterator>
 #include <limits>
@@ -8,6 +7,7 @@
 #include <mutex>
 #include <set>
 #include <stdexcept>
+#include <thread>
 #include <utility>
 
 namespace 海中鱼巣 {
@@ -44,6 +44,8 @@ std::optional<稳定编码> 读取唯一节点字段(
 稳定编码 需求集合值域字段{};
 稳定编码 至少一个需求字段{};
 稳定编码 必含需求字段{};
+稳定编码 存在集合值域字段{}, 至少一个存在字段{}, 必含存在字段{};
+稳定编码 存在集合保护节点类型{}, 存在集合保护来源字段{}, 存在集合成员保护键{};
 稳定编码 结构化分量字段{};
 稳定编码 结构化分量节点类型{};
 稳定编码 分量顺序字段{};
@@ -83,6 +85,8 @@ bool 结构已初始化() noexcept {
         && 有效(必含需求任务字段)
         && 有效(必含服务要求任务字段)
         && 有效(需求集合值域字段)
+        && 有效(存在集合值域字段) && 有效(至少一个存在字段) && 有效(必含存在字段)
+        && 有效(存在集合保护节点类型) && 有效(存在集合保护来源字段) && 有效(存在集合成员保护键)
         && 有效(至少一个需求字段)
         && 有效(必含需求字段)
         && 有效(结构化分量字段)
@@ -119,6 +123,8 @@ bool 结构仍存在() noexcept {
         && 节点仍存在(必含需求任务字段)
         && 节点仍存在(必含服务要求任务字段)
         && 节点仍存在(需求集合值域字段)
+        && 节点仍存在(存在集合值域字段) && 节点仍存在(至少一个存在字段) && 节点仍存在(必含存在字段)
+        && 节点仍存在(存在集合保护节点类型) && 节点仍存在(存在集合保护来源字段) && 节点仍存在(存在集合成员保护键)
         && 节点仍存在(至少一个需求字段)
         && 节点仍存在(必含需求字段)
         && 节点仍存在(结构化分量字段)
@@ -159,7 +165,8 @@ bool 是支持的比较规则(特征概念比较规则 规则) noexcept {
         || 规则 == 特征概念比较规则::完整材料精确
         || 规则 == 特征概念比较规则::存在身份精确
         || 规则 == 特征概念比较规则::服务任务集合身份判等
-        || 规则 == 特征概念比较规则::需求集合身份判等;
+        || 规则 == 特征概念比较规则::需求集合身份判等
+        || 规则 == 特征概念比较规则::存在集合身份判等;
 }
 
 bool 是支持的聚合规则(特征概念聚合规则 规则) noexcept {
@@ -194,6 +201,13 @@ bool 规则与材料相容(const 特征概念定义& 定义) noexcept {
         || !是支持的比较规则(定义.比较规则)
         || !是支持的聚合规则(定义.聚合规则)) {
         return false;
+    }
+    if (定义.比较规则 == 特征概念比较规则::存在集合身份判等) {
+        return 定义.材料类型 == 特征概念材料物理类型::U64数组 && !定义.单位
+            && 定义.聚合规则 == 特征概念聚合规则::完整材料精确集合
+            && (std::holds_alternative<特征概念全材料值域>(定义.值域)
+                || std::holds_alternative<特征概念存在集合值域>(定义.值域)
+                || std::holds_alternative<std::vector<稳定编码>>(定义.值域));
     }
     if (定义.比较规则 == 特征概念比较规则::需求集合身份判等) {
         return 定义.材料类型 == 特征概念材料物理类型::U64数组
@@ -249,6 +263,12 @@ std::optional<特征概念定义> 规范化定义(const 特征概念定义& 输�
         std::sort(节点组->begin(), 节点组->end());
         节点组->erase(
             std::unique(节点组->begin(), 节点组->end()), 节点组->end());
+    } else if (auto* 集合 = std::get_if<特征概念存在集合值域>(&结果.值域)) {
+        auto& 组 = 集合->必含存在节点组;
+        if (std::any_of(组.begin(), 组.end(), [](稳定编码 n) { return !有效(n); })) return {};
+        std::sort(组.begin(), 组.end());
+        组.erase(std::unique(组.begin(), 组.end()), 组.end());
+        if (!组.empty()) 集合->至少一个存在 = false;
     } else if (auto* 需求集合 = std::get_if<特征概念需求集合值域>(&结果.值域)) {
         auto& 组 = 需求集合->必含需求节点组;
         if (std::any_of(组.begin(), 组.end(),
@@ -524,10 +544,376 @@ using 需求快照签名组 = std::map<std::vector<稳定编码>, 稳定编码>;
     r.状态 = 特征概念规则状态::已完成; return r;
 }
 
+struct 存在保护读取 final {
+    std::optional<基础联合节点快照> 快照;
+    std::vector<基础字段关系> 成员字段;
+};
+存在保护读取 读取存在保护(稳定编码 来源) {
+    const auto 引用 = 全局基础数据集.查询目标字段(来源, 存在集合保护来源字段);
+    if (引用.empty()) return {};
+    if (引用.size() != 1) throw std::logic_error("duplicate existence-set protection");
+    const auto b = 全局基础数据集.查询节点组完整结构({引用.front().所属节点});
+    if (b.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+    if (b.状态 != 基础结构操作状态::已完成 || b.节点组.size() != 1 || !b.节点组[0].快照)
+        throw std::logic_error("unreadable existence-set protection");
+    存在保护读取 out{*b.节点组[0].快照, {}};
+    unsigned 类型数 = 0, 来源数 = 0;
+    std::set<稳定编码> 成员;
+    for (const auto& f : out.快照->结构.字段组) {
+        const auto* n = std::get_if<稳定编码>(&f.内容);
+        if (!n || !有效(*n)) throw std::logic_error("invalid protection field");
+        if (f.字段节点 == 节点类型字段 && *n == 存在集合保护节点类型) ++类型数;
+        else if (f.字段节点 == 存在集合保护来源字段 && *n == 来源) ++来源数;
+        else if (f.字段节点 == 存在集合成员保护键 && 成员.insert(*n).second) out.成员字段.push_back(f);
+        else throw std::logic_error("unknown or duplicate protection field");
+    }
+    if (类型数 != 1 || 来源数 != 1 || !out.快照->入向字段组.empty()
+        || !out.快照->入向外部关系组.empty() || !out.快照->出向外部关系组.empty())
+        throw std::logic_error("invalid protection structure");
+    return out;
+}
+
+std::vector<稳定编码> 保护成员组(const 存在保护读取& g) {
+    std::vector<稳定编码> out;
+    for (const auto& f : g.成员字段) out.push_back(std::get<稳定编码>(f.内容));
+    std::sort(out.begin(), out.end());
+    return out;
+}
+std::vector<稳定编码> 存在材料成员(稳定编码 n, const 新_特征值类& v) {
+    const auto m = v.获取特征值(n);
+    const auto* a = m ? std::get_if<std::vector<std::uint64_t>>(&m->材料) : nullptr;
+    if (!a || m->物理类型 != 材料物理类型::U64数组)
+        throw std::logic_error("existence-set source material invalid");
+    std::vector<稳定编码> out;
+    for (const auto x : *a) {
+        if (!有效(稳定编码{x})) throw std::logic_error("zero existence member");
+        out.push_back(稳定编码{x});
+    }
+    std::sort(out.begin(), out.end());
+    out.erase(std::unique(out.begin(), out.end()), out.end());
+    return out;
+}
+std::vector<基础联合节点快照> 查找存在成员保护来源(
+    稳定编码 e, const 新_特征值类* v) {
+    if (!v) return {};
+    for (const auto& f : 全局基础数据集.查询目标字段(e, 存在集合成员保护键)) {
+        const auto 来源 = 读取唯一节点字段(f.所属节点, 存在集合保护来源字段);
+        if (!来源) throw std::logic_error("existence-set proof has no source");
+        const auto g = 读取存在保护(*来源);
+        if (!g.快照 || g.快照->结构.节点.编码 != f.所属节点
+            || std::find(g.成员字段.begin(), g.成员字段.end(), f) == g.成员字段.end())
+            throw std::logic_error("existence-set source proof mismatch");
+        const auto b = 全局基础数据集.查询节点组完整结构({*来源});
+        if (b.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+        if (b.状态 != 基础结构操作状态::已完成 || b.节点组.size()!=1 || !b.节点组[0].快照)
+            throw std::logic_error("existence-set source unreadable");
+        std::vector<稳定编码> 成员;
+        if (v->获取特征值(*来源)) 成员 = 存在材料成员(*来源, *v);
+        else {
+            const auto& fields = b.节点组[0].快照->结构.字段组;
+            const auto 单项 = [&](稳定编码 key) -> const 基础字段关系& {
+                const 基础字段关系* found = nullptr;
+                for (const auto& x : fields) if (x.字段节点 == key) {
+                    if (found) throw std::logic_error("duplicate domain proof field");
+                    found = &x;
+                }
+                if (!found) throw std::logic_error("missing domain proof field");
+                return *found;
+            };
+            const auto 数 = [&](稳定编码 key) {
+                const auto* value = std::get_if<基础值>(&单项(key).内容);
+                const auto* n = value ? std::get_if<std::int64_t>(&value->材料) : nullptr;
+                if (!n) throw std::logic_error("invalid domain proof scalar");
+                return *n;
+            };
+            if (std::get<稳定编码>(单项(节点类型字段).内容) != 特征概念节点类型
+                || 数(材料类型字段) != static_cast<std::int64_t>(特征概念材料物理类型::U64数组)
+                || 数(比较规则字段) != static_cast<std::int64_t>(特征概念比较规则::存在集合身份判等)
+                || 数(存在集合值域字段) != 1)
+                throw std::logic_error("existence-set domain proof invalid");
+            const auto nonempty = 数(至少一个存在字段);
+            if (nonempty != 0 && nonempty != 1) throw std::logic_error("invalid domain nonempty");
+            特征概念定义 definition;
+            definition.材料类型 = 特征概念材料物理类型::U64数组;
+            definition.比较规则 = 特征概念比较规则::存在集合身份判等;
+            definition.聚合规则 = static_cast<特征概念聚合规则>(数(聚合规则字段));
+            if (数(当前引用实例数字段) < 0) throw std::logic_error("invalid domain reference count");
+            for (const auto& x : fields) {
+                if (x.字段节点 == 必含存在字段) {
+                    const auto* member = std::get_if<稳定编码>(&x.内容);
+                    if (!member || !有效(*member)) throw std::logic_error("invalid domain member");
+                    成员.push_back(*member);
+                } else if (x.字段节点 == 名称关系字段) {
+                    const auto* name = std::get_if<稳定编码>(&x.内容);
+                    if (!name || !有效(*name)) throw std::logic_error("invalid domain name");
+                    definition.名称关系.push_back(*name);
+                } else if (x.字段节点 != 节点类型字段 && x.字段节点 != 材料类型字段
+                    && x.字段节点 != 比较规则字段 && x.字段节点 != 聚合规则字段
+                    && x.字段节点 != 存在集合值域字段 && x.字段节点 != 至少一个存在字段
+                    && x.字段节点 != 当前引用实例数字段)
+                    throw std::logic_error("mixed or unknown domain proof field");
+            }
+            std::sort(成员.begin(), 成员.end());
+            if (std::adjacent_find(成员.begin(), 成员.end()) != 成员.end())
+                throw std::logic_error("duplicate domain member");
+            definition.值域 = 特征概念存在集合值域{成员, nonempty != 0};
+            const auto normalized = 规范化定义(definition);
+            if (!normalized || normalized->值域 != definition.值域
+                || normalized->名称关系.size() != definition.名称关系.size())
+                throw std::logic_error("invalid domain proof definition");
+        }
+        if (成员 != 保护成员组(g) || !std::binary_search(成员.begin(), 成员.end(), e))
+            throw std::logic_error("existence-set source membership mismatch");
+        // 来源V不可变；D由本FC锁保护。身份持续性只需冻结G，
+        // 不把V/D无关入向引用变化重新引入成员接纳。
+        return {*g.快照};
+    }
+    return {};
+}
+特征概念规则状态 校验存在成员(
+    const std::vector<稳定编码>& 成员, const 特征存在成员读取接口* 接口,
+    const 新_特征值类* 值服务 = nullptr) {
+    for (const auto 节点 : 成员) {
+        if (!有效(节点)) return 特征概念规则状态::入口拒绝;
+        if (!查找存在成员保护来源(节点, 值服务).empty()) continue;
+        if (!接口) return 特征概念规则状态::读取接口未装配;
+        const auto 读取 = 接口->读取存在集合成员身份(节点);
+        if (读取.状态 != 特征概念规则状态::已完成) return 读取.状态;
+        if (读取.存在节点 != 节点 || 读取.身份保护.size() != 2
+            || 读取.身份保护.front().结构.节点.编码 != 节点
+            || 读取.身份保护.back().结构.节点.编码 == 节点) {
+            return 特征概念规则状态::内部不一致;
+        }
+    }
+    return 特征概念规则状态::已完成;
+}
+
+特征概念规则状态 读取存在集合材料(
+    const 特征概念准确值& 值, const 新_特征值类& 值服务,
+    const 特征存在成员读取接口* 接口, std::vector<稳定编码>& 成员) {
+    const auto* 节点 = std::get_if<稳定编码>(&值);
+    if (!节点 || !有效(*节点)) return 特征概念规则状态::材料类型不相容;
+    const auto 信息 = 值服务.获取特征值(*节点);
+    if (!信息) return 特征概念规则状态::值不存在;
+    const auto* 数组 = std::get_if<std::vector<std::uint64_t>>(&信息->材料);
+    if (!数组 || 信息->物理类型 != 材料物理类型::U64数组)
+        return 特征概念规则状态::材料类型不相容;
+    成员.reserve(数组->size());
+    for (const auto 编码 : *数组) 成员.push_back(稳定编码{编码});
+    std::sort(成员.begin(), 成员.end());
+    成员.erase(std::unique(成员.begin(), 成员.end()), 成员.end());
+    const auto g = 读取存在保护(*节点);
+    if (g.快照) return 保护成员组(g) == 成员
+        ? 特征概念规则状态::已完成 : 特征概念规则状态::内部不一致;
+    return 校验存在成员(成员, 接口, &值服务);
+}
+
+bool 存在约束蕴含(const 特征概念存在集合值域& 强,
+    const 特征概念存在集合值域& 弱) {
+    return (!弱.至少一个存在 || 强.至少一个存在 || !强.必含存在节点组.empty())
+        && std::includes(强.必含存在节点组.begin(), 强.必含存在节点组.end(),
+            弱.必含存在节点组.begin(), 弱.必含存在节点组.end());
+}
+
+
+using 存在快照签名组 = std::map<std::vector<稳定编码>, 稳定编码>;
+特征概念规则状态 规范存在快照(const std::vector<稳定编码>& 材料,
+    const 新_特征值类* 值服务, const 特征存在成员读取接口* 接口, 存在快照签名组& out) {
+    if (!值服务) return 特征概念规则状态::读取接口未装配;
+    for (const auto n : 材料) {
+        std::vector<稳定编码> 签名;
+        const auto s = 读取存在集合材料(n, *值服务, 接口, 签名);
+        if (s != 特征概念规则状态::已完成) return s;
+        const auto [i, 新] = out.emplace(std::move(签名), n);
+        if (!新 && n < i->second) i->second = n;
+    }
+    return 特征概念规则状态::已完成;
+}
+特征概念值域比较结果 存在规则域关系(const 特征概念定义& 定义,
+    const 特征概念值域& 左域, const 特征概念值域& 右域,
+    const 新_特征值类* 值服务, const 特征存在成员读取接口* 接口) {
+    特征概念值域比较结果 r;
+    if (定义.比较规则 != 特征概念比较规则::存在集合身份判等
+        || 定义.材料类型 != 特征概念材料物理类型::U64数组) return r;
+    const auto l = 规范化待比较值域(定义.材料类型, 左域);
+    const auto z = 规范化待比较值域(定义.材料类型, 右域);
+    if (!l || !z) { r.状态 = 特征概念规则状态::材料类型不相容; return r; }
+    const auto* lf = std::get_if<std::vector<稳定编码>>(&*l);
+    const auto* rf = std::get_if<std::vector<稳定编码>>(&*z);
+    const auto* lc = std::get_if<特征概念存在集合值域>(&*l);
+    const auto* rc = std::get_if<特征概念存在集合值域>(&*z);
+    const bool lu = std::holds_alternative<特征概念全材料值域>(*l);
+    const bool ru = std::holds_alternative<特征概念全材料值域>(*z);
+    if ((!lf && !lc && !lu) || (!rf && !rc && !ru)) { r.状态 = 特征概念规则状态::材料类型不相容; return r; }
+    存在快照签名组 a, b;
+    for (const auto& pair : {std::pair{lf, &a}, std::pair{rf, &b}}) if (pair.first) {
+        r.状态 = 规范存在快照(*pair.first, 值服务, 接口, *pair.second);
+        if (r.状态 != 特征概念规则状态::已完成) return r;
+    }
+    for (const auto* c : {lc, rc}) if (c) {
+        r.状态 = 校验存在成员(c->必含存在节点组, 接口, 值服务);
+        if (r.状态 != 特征概念规则状态::已完成) return r;
+    }
+    const auto 满足 = [](const auto& 签名, const 特征概念存在集合值域& c) {
+        return (!c.至少一个存在 || !签名.empty())
+            && std::includes(签名.begin(), 签名.end(), c.必含存在节点组.begin(), c.必含存在节点组.end());
+    };
+    bool 左含右 = false, 右含左 = false, 相交 = true;
+    if (lf && rf) {
+        左含右 = std::all_of(b.begin(), b.end(), [&](const auto& x) { return a.contains(x.first); });
+        右含左 = std::all_of(a.begin(), a.end(), [&](const auto& x) { return b.contains(x.first); });
+        相交 = std::any_of(a.begin(), a.end(), [&](const auto& x) { return b.contains(x.first); });
+    } else if (lf || rf) {
+        const auto& f = lf ? a : b;
+        const auto* c = lf ? rc : lc;
+        const auto 命中 = std::count_if(f.begin(), f.end(), [&](const auto& x) { return !c || 满足(x.first, *c); });
+        相交 = 命中 != 0;
+        if (lf) 右含左 = 命中 == f.size(); else 左含右 = 命中 == f.size();
+    } else {
+        const 特征概念存在集合值域 空约束{};
+        const auto& a域 = lc ? *lc : 空约束;
+        const auto& b域 = rc ? *rc : 空约束;
+        左含右 = 存在约束蕴含(b域, a域);
+        右含左 = 存在约束蕴含(a域, b域);
+    }
+    r.关系 = 左含右 && 右含左 ? 特征概念值域关系::相等
+        : 左含右 ? 特征概念值域关系::左包含右 : 右含左 ? 特征概念值域关系::右包含左
+        : 相交 ? 特征概念值域关系::相交 : 特征概念值域关系::分离;
+    r.状态 = 特征概念规则状态::已完成; return r;
+}
+
+struct 存在保护前提变化 final {};
+struct 特征运算技术拒绝 final { 特征概念规则状态 状态; };
+void 要求运算完成(特征概念规则状态 s) {
+    if (s != 特征概念规则状态::已完成) throw 特征运算技术拒绝{s};
+}
+bool 存在域已经保护(const 特征概念值域& 域, const 新_特征值类& v) {
+    if (const auto* c = std::get_if<特征概念存在集合值域>(&域)) {
+        for (const auto e : c->必含存在节点组)
+            if (查找存在成员保护来源(e, &v).empty()) return false;
+        return true;
+    }
+    if (const auto* a = std::get_if<std::vector<稳定编码>>(&域)) {
+        for (const auto n : *a) {
+            const auto g = 读取存在保护(n);
+            if (!g.快照) return false;
+            if (保护成员组(g) != 存在材料成员(n, v))
+                throw std::logic_error("persistent existence material proof mismatch");
+        }
+        return true;
+    }
+    return std::holds_alternative<特征概念全材料值域>(域);
+}
+void 合并存在保护预期(基础节点组追加请求& 请求, const 基础联合节点快照& s) {
+    for (const auto& old : 请求.预期联合节点组) if (old.结构.节点.编码 == s.结构.节点.编码) {
+        if (old.结构.字段组 != s.结构.字段组 || old.入向字段组 != s.入向字段组
+            || old.入向外部关系组 != s.入向外部关系组 || old.出向外部关系组 != s.出向外部关系组)
+            throw 存在保护前提变化{};
+        return;
+    }
+    请求.预期联合节点组.push_back(s);
+}
+特征概念规则状态 追加存在集合保护写集(
+    基础节点组追加请求& 请求,
+    const std::variant<稳定编码, 基础组内节点引用>& 来源,
+    const std::vector<稳定编码>& 成员,
+    const 特征存在成员读取接口& 接口, const 新_特征值类& 值服务) noexcept {
+    try {
+        for (const auto e : 成员) {
+            const auto 来源保护 = 查找存在成员保护来源(e, &值服务);
+            if (!来源保护.empty()) {
+                for (const auto& s : 来源保护) 合并存在保护预期(请求, s);
+                continue;
+            }
+            const auto r = 接口.读取存在集合成员身份(e);
+            if (r.状态 != 特征概念规则状态::已完成) return r.状态;
+            if (r.存在节点 != e || r.身份保护.size() != 2
+                || r.身份保护[0].结构.节点.编码 != e
+                || r.身份保护[1].结构.节点.编码 == e) return 特征概念规则状态::内部不一致;
+            for (const auto& s : r.身份保护) 合并存在保护预期(请求, s);
+        }
+        存在保护读取 旧;
+        if (const auto* n = std::get_if<稳定编码>(&来源)) {
+            const auto b = 全局基础数据集.查询节点组完整结构({*n});
+            if (b.状态 == 基础结构操作状态::资源失败) return 特征概念规则状态::资源失败;
+            if (b.状态 != 基础结构操作状态::已完成 || b.节点组.size() != 1 || !b.节点组[0].快照)
+                return 特征概念规则状态::内部不一致;
+            合并存在保护预期(请求, *b.节点组[0].快照);
+            旧 = 读取存在保护(*n);
+        }
+        if (旧.快照) {
+            合并存在保护预期(请求, *旧.快照);
+            std::vector<稳定编码> 原;
+            for (const auto& f : 旧.成员字段) 原.push_back(std::get<稳定编码>(f.内容));
+            std::sort(原.begin(), 原.end());
+            if (原 != 成员) {
+                for (const auto& f : 旧.成员字段) 请求.删除字段关系组.push_back(f.编码);
+                for (const auto e : 成员)
+                    请求.追加字段组.push_back({旧.快照->结构.节点.编码, 存在集合成员保护键, e});
+            }
+        } else {
+            基础组内新节点 g;
+            g.字段组.push_back({节点类型字段, 存在集合保护节点类型});
+            std::visit([&](const auto& n) { g.字段组.push_back({存在集合保护来源字段, n}); }, 来源);
+            for (const auto e : 成员) g.字段组.push_back({存在集合成员保护键, e});
+            请求.新节点组.push_back(std::move(g));
+        }
+        return 特征概念规则状态::已完成;
+    } catch (const 存在保护前提变化&) { return 特征概念规则状态::前提已变化; }
+    catch (const std::bad_alloc&) { return 特征概念规则状态::资源失败; }
+    catch (...) { return 特征概念规则状态::内部不一致; }
+}
+
+特征概念规则状态 确保存在材料保护内部(稳定编码 v, const 新_特征值类& 值服务,
+    const 特征存在成员读取接口* 接口) {
+    std::vector<稳定编码> 成员;
+    const auto s = 读取存在集合材料(v, 值服务, 接口, 成员);
+    if (s != 特征概念规则状态::已完成) return s;
+    const auto g = 读取存在保护(v);
+    if (g.快照) {
+        std::vector<稳定编码> 原;
+        for (const auto& f : g.成员字段) 原.push_back(std::get<稳定编码>(f.内容));
+        std::sort(原.begin(), 原.end());
+        return 原 == 成员 ? 特征概念规则状态::已完成 : 特征概念规则状态::内部不一致;
+    }
+    基础节点组追加请求 q;
+    const auto p = 追加存在集合保护写集(q, v, 成员, *接口, 值服务);
+    if (p != 特征概念规则状态::已完成) return p;
+    const auto seal = 全局基础数据集.封存原子追加片段(q);
+    if (seal.状态 != 基础节点组追加状态::已完成 || !seal.片段)
+        return 特征概念规则状态::资源失败;
+    const auto r = 全局基础数据集.原子追加封存片段组({*seal.片段});
+    if (r.状态 == 基础节点组追加状态::预期不符) return 特征概念规则状态::前提已变化;
+    if (r.状态 != 基础节点组追加状态::已完成) return 特征概念规则状态::资源失败;
+    if (!读取存在保护(v).快照) throw std::logic_error("existence material protection readback failed");
+    return 特征概念规则状态::已完成;
+}
+std::vector<基础组内初始字段> 编码存在集合域(const 特征概念值域& 域) {
+    std::vector<基础组内初始字段> out;
+    if (const auto* c = std::get_if<特征概念存在集合值域>(&域)) {
+        out.push_back({存在集合值域字段, 基础值{std::int64_t{1}}});
+        out.push_back({至少一个存在字段, 基础值{std::int64_t{c->至少一个存在 ? 1 : 0}}});
+        for (const auto e : c->必含存在节点组) out.push_back({必含存在字段, e});
+    } else if (std::holds_alternative<特征概念全材料值域>(域))
+        out.push_back({全材料值域字段, 基础值{std::int64_t{1}}});
+    else if (const auto* v = std::get_if<std::vector<稳定编码>>(&域))
+        for (const auto n : *v) out.push_back({非I64值域字段, n});
+    else throw std::logic_error("invalid existence-set domain");
+    return out;
+}
+
 bool 结构定义相同(
     const 特征概念定义& 左,
     const 特征概念定义& 右, const 新_特征值类* 值服务 = nullptr,
-    const 特征需求成员读取接口* 接口 = nullptr) noexcept {
+    const 特征需求成员读取接口* 接口 = nullptr,
+    const 特征存在成员读取接口* 存在接口 = nullptr) {
+    if (左.比较规则 == 特征概念比较规则::存在集合身份判等) {
+        if (左.材料类型 != 右.材料类型 || 左.单位 != 右.单位
+            || 左.比较规则 != 右.比较规则 || 左.聚合规则 != 右.聚合规则) return false;
+        const auto r = 存在规则域关系(左, 左.值域, 右.值域, 值服务, 存在接口);
+        要求运算完成(r.状态);
+        return r.关系 == 特征概念值域关系::相等;
+    }
     if (左.比较规则 == 特征概念比较规则::需求集合身份判等) {
         if (左.材料类型 != 右.材料类型 || 左.单位 != 右.单位
             || 左.比较规则 != 右.比较规则 || 左.聚合规则 != 右.聚合规则) return false;
@@ -566,7 +952,8 @@ bool 有限材料节点受定义包含(
     const 特征概念定义& 父,
     const 特征概念定义& 子,
     const 新_特征值类& 特征值服务) noexcept {
-    if (父.比较规则 == 特征概念比较规则::需求集合身份判等) return false;
+    if (父.比较规则 == 特征概念比较规则::需求集合身份判等
+        || 父.比较规则 == 特征概念比较规则::存在集合身份判等) return false;
     const auto* 子节点组 = std::get_if<std::vector<稳定编码>>(&子.值域);
     if (!子节点组 || 子节点组->empty()
         || 父.材料类型 != 子.材料类型 || 父.单位 != 子.单位) {
@@ -601,9 +988,16 @@ bool 是严格子值域(
     const 特征概念定义& 父,
     const 特征概念定义& 子,
     const 概念_特征类* 概念服务 = nullptr, const 新_特征值类* 值服务 = nullptr,
-    const 特征需求成员读取接口* 接口 = nullptr) noexcept {
+    const 特征需求成员读取接口* 接口 = nullptr,
+    const 特征存在成员读取接口* 存在接口 = nullptr) {
     if (父.材料类型 != 子.材料类型 || 父.单位 != 子.单位) {
         return false;
+    }
+    if (父.比较规则 == 特征概念比较规则::存在集合身份判等) {
+        if (父.比较规则 != 子.比较规则 || 父.聚合规则 != 子.聚合规则) return false;
+        const auto r = 存在规则域关系(父, 父.值域, 子.值域, 值服务, 存在接口);
+        要求运算完成(r.状态);
+        return r.关系 == 特征概念值域关系::左包含右;
     }
     if (父.比较规则 == 特征概念比较规则::需求集合身份判等) {
         if (父.比较规则 != 子.比较规则 || 父.聚合规则 != 子.聚合规则) return false;
@@ -688,6 +1082,9 @@ std::optional<特征概念值域> 规范化待比较值域(
     } else if (材料类型 == 特征概念材料物理类型::存在节点引用) {
         定义.比较规则 = 特征概念比较规则::存在身份精确;
         定义.聚合规则 = 特征概念聚合规则::不自动聚合;
+    } else if (std::holds_alternative<特征概念存在集合值域>(值域)) {
+        定义.比较规则 = 特征概念比较规则::存在集合身份判等;
+        定义.聚合规则 = 特征概念聚合规则::完整材料精确集合;
     } else if (std::holds_alternative<特征概念需求集合值域>(值域)) {
         定义.比较规则 = 特征概念比较规则::需求集合身份判等;
         定义.聚合规则 = 特征概念聚合规则::完整材料精确集合;
@@ -748,7 +1145,22 @@ std::optional<std::uint64_t> 值域匹配尺度(
     const 特征概念准确值& 值,
     const 新_特征值类& 特征值服务,
     const 特征存在引用读取接口* 存在读取接口,
-    const 特征需求成员读取接口* 需求接口 = nullptr) noexcept {
+    const 特征需求成员读取接口* 需求接口 = nullptr,
+    const 特征存在成员读取接口* 存在接口 = nullptr) {
+    if (概念.比较规则 == 特征概念比较规则::存在集合身份判等) {
+        const auto* n = std::get_if<稳定编码>(&值);
+        if (!n) return {};
+        const auto r = 存在规则域关系(转为定义(概念), 概念.值域,
+            std::vector<稳定编码>{*n}, &特征值服务, 存在接口);
+        要求运算完成(r.状态);
+        if (r.关系 != 特征概念值域关系::相等 && r.关系 != 特征概念值域关系::左包含右) return {};
+        if (const auto* f = std::get_if<std::vector<稳定编码>>(&概念.值域)) {
+            存在快照签名组 签名;
+            要求运算完成(规范存在快照(*f, &特征值服务, 存在接口, 签名));
+            return 签名.size();
+        }
+        return (std::numeric_limits<std::uint64_t>::max)();
+    }
     if (概念.比较规则 == 特征概念比较规则::需求集合身份判等) {
         const auto* n = std::get_if<稳定编码>(&值);
         if (!n) return {};
@@ -873,8 +1285,14 @@ enum class 零引用概念清理结果 : std::uint8_t {
     const auto 子关系 = 全局基础数据集.查询源关系(
         概念节点, 基础外部关系类型::父子);
     if (!子关系.empty()) return 零引用概念清理结果::无须删除;
-    if (全局基础数据集.有入向字段引用(概念节点))
-        return 零引用概念清理结果::无须删除;
+    const auto 自有保护 = 读取存在保护(概念节点);
+    const auto 完整 = 全局基础数据集.查询节点组完整结构({概念节点});
+    if (完整.状态 != 基础结构操作状态::已完成 || 完整.节点组.size() != 1 || !完整.节点组[0].快照)
+        return 零引用概念清理结果::失败;
+    for (const auto& f : 完整.节点组[0].快照->入向字段组)
+        if (!自有保护.快照 || f.所属节点 != 自有保护.快照->结构.节点.编码
+            || f.字段节点 != 存在集合保护来源字段)
+            return 零引用概念清理结果::无须删除;
 
     // 名称关系节点会反向引用本概念。只要名称仍存在，概念就仍是
     // 自然语言可召回的正式概念，不能在实例引用归零时物理删除。
@@ -909,6 +1327,7 @@ enum class 零引用概念清理结果 : std::uint8_t {
         需求集合值域字段,
         至少一个需求字段,
         必含需求字段,
+        存在集合值域字段, 至少一个存在字段, 必含存在字段,
         结构化分量字段,
         单位字段,
         比较规则字段,
@@ -962,6 +1381,10 @@ enum class 零引用概念清理结果 : std::uint8_t {
 
     std::vector<稳定编码> 删除节点组{概念节点};
     std::vector<稳定编码> 删除字段组 = 概念字段关系;
+    if (自有保护.快照) {
+        删除节点组.push_back(自有保护.快照->结构.节点.编码);
+        for (const auto& f : 自有保护.快照->结构.字段组) 删除字段组.push_back(f.编码);
+    }
     std::vector<稳定编码> 删除关系组{父关系.front().编码};
     for (const auto& 关系 : 兄弟关系) {
         删除关系组.push_back(关系.编码);
@@ -981,6 +1404,7 @@ enum class 零引用概念清理结果 : std::uint8_t {
     if (先天概念.三维体素 == 概念节点) 先天概念.三维体素 = {};
     if (先天概念.服务任务集合 == 概念节点) 先天概念.服务任务集合 = {};
     if (先天概念.服务对象需求集合 == 概念节点) 先天概念.服务对象需求集合 = {};
+    if (先天概念.交互对象集合 == 概念节点) 先天概念.交互对象集合 = {};
     return 零引用概念清理结果::已删除;
     } catch (const std::exception& 异常) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"删除零引用特征概念", L"收集删除结构失败。", 异常.what());
@@ -1030,6 +1454,27 @@ bool 相邻或重叠(
 
 } // namespace
 
+struct 存在集合保护准备凭据::实现 final {
+    const 概念_特征类* owner = nullptr;
+    const 新_特征值类* 值服务 = nullptr;
+    std::thread::id 线程 = std::this_thread::get_id();
+    稳定编码 类型根, 材料;
+    std::vector<基础联合节点快照> 原依据;
+    基础节点组追加请求 写集;
+    std::optional<基础封存追加片段> 片段;
+    std::optional<基础片段发布回执> 回执;
+    bool 已消费 = false;
+    ~实现() {
+        if (线程 != std::this_thread::get_id())
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"存在集合保护凭据", L"凭据必须在创建线程释放。");
+    }
+};
+存在集合保护准备凭据::存在集合保护准备凭据(std::unique_ptr<实现> p)
+    : 实现_(std::move(p)) {}
+存在集合保护准备凭据::~存在集合保护准备凭据() = default;
+存在集合保护准备凭据::存在集合保护准备凭据(存在集合保护准备凭据&&) noexcept = default;
+存在集合保护准备凭据& 存在集合保护准备凭据::operator=(存在集合保护准备凭据&&) noexcept = default;
+
 bool 特征概念比较结果::成功() const noexcept {
     return 状态 == 特征概念规则状态::已完成 && 相等.has_value();
 }
@@ -1044,7 +1489,7 @@ bool 先天特征概念集合::完整() const noexcept {
     return 有效(毫米单位) && 有效(三维空间坐标)
         && 有效(三维空间尺寸) && 有效(RGB颜色)
         && 有效(二维轮廓) && 有效(三维体素) && 有效(服务任务集合)
-        && 有效(服务对象需求集合);
+        && 有效(服务对象需求集合) && 有效(交互对象集合);
 }
 
 void 概念_特征类::装配存在引用读取接口(
@@ -1063,6 +1508,217 @@ void 概念_特征类::装配需求成员读取接口(
     const 特征需求成员读取接口* 接口) noexcept {
     std::lock_guard 锁(特征概念树互斥);
     需求成员读取接口_ = 接口;
+}
+
+void 概念_特征类::装配存在成员读取接口(const 特征存在成员读取接口* 接口) noexcept {
+    std::lock_guard 锁(特征概念树互斥);
+    if (!接口 || (存在成员读取接口_ && 存在成员读取接口_ != 接口))
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"存在成员接口装配", L"不可替换运行中的存在成员提供者。");
+    存在成员读取接口_ = 接口;
+}
+稳定编码 概念_特征类::存在集合成员保护字段() const noexcept {
+    return 存在集合成员保护键;
+}
+特征概念规则状态 概念_特征类::核验存在集合材料保护(
+    稳定编码 类型根, 稳定编码 材料, const 新_特征值类& 值服务) const noexcept {
+    using S = 特征概念规则状态;
+    try {
+        std::lock_guard 锁(特征概念树互斥);
+        const auto d = 获取特征概念(类型根);
+        const auto path = 读取单概念路径(类型根);
+        if (!d || !path || path->根 != 类型根
+            || d->比较规则 != 特征概念比较规则::存在集合身份判等)
+            return S::入口拒绝;
+        const auto value = 值服务.获取特征值(材料);
+        if (!value) return S::值不存在;
+        if (value->物理类型 != 材料物理类型::U64数组
+            || !std::holds_alternative<std::vector<std::uint64_t>>(value->材料))
+            return S::材料类型不相容;
+        const auto members = 存在材料成员(材料, 值服务);
+        const auto g = 读取存在保护(材料);
+        return g.快照 && 保护成员组(g) == members ? S::已完成 : S::内部不一致;
+    } catch (const std::bad_alloc&) { return S::资源失败; }
+    catch (...) { return S::内部不一致; }
+}
+存在集合保护准备结果 概念_特征类::准备存在集合材料保护(
+    稳定编码 类型根, 稳定编码 材料, const 新_特征值类& 值服务,
+    const std::vector<基础联合节点快照>& 旧依据) noexcept {
+    using S = 特征概念规则状态;
+    try {
+        std::lock_guard 锁(特征概念树互斥);
+        const auto d = 获取特征概念(类型根);
+        const auto path = 读取单概念路径(类型根);
+        if (!d || !path || path->根 != 类型根
+            || d->比较规则 != 特征概念比较规则::存在集合身份判等)
+            return {S::入口拒绝, {}};
+        if (!存在成员读取接口_) return {S::读取接口未装配, {}};
+        auto p = std::make_unique<存在集合保护准备凭据::实现>();
+        p->owner = this; p->值服务 = &值服务; p->类型根 = 类型根; p->材料 = 材料;
+        std::vector<稳定编码> nodes;
+        for (const auto& s : 旧依据) {
+            if (!有效(s.结构.节点.编码)
+                || std::find(nodes.begin(), nodes.end(), s.结构.节点.编码) != nodes.end())
+                return {S::入口拒绝, {}};
+            nodes.push_back(s.结构.节点.编码);
+        }
+        p->原依据 = 旧依据;
+        if (!nodes.empty()) {
+            const auto b = 全局基础数据集.查询节点组完整结构(nodes);
+            if (b.状态 == 基础结构操作状态::资源失败) return {S::资源失败, {}};
+            if (b.状态 != 基础结构操作状态::已完成 || b.节点组.size() != nodes.size())
+                return {S::内部不一致, {}};
+            for (std::size_t i = 0; i < nodes.size(); ++i) {
+                const auto found = std::find_if(b.节点组.begin(), b.节点组.end(),
+                    [&](const auto& item) { return item.查询节点 == nodes[i]; });
+                if (found == b.节点组.end()) return {S::内部不一致, {}};
+                const auto& current = *found;
+                const auto& old = 旧依据[i];
+                if (current.查询节点 != nodes[i]) return {S::内部不一致, {}};
+                if (!current.快照 || current.快照->结构.字段组 != old.结构.字段组
+                    || current.快照->入向字段组 != old.入向字段组
+                    || current.快照->入向外部关系组 != old.入向外部关系组
+                    || current.快照->出向外部关系组 != old.出向外部关系组)
+                    return {S::前提已变化, {}};
+            }
+        }
+        std::vector<稳定编码> members;
+        const auto read = 读取存在集合材料(材料, 值服务, 存在成员读取接口_, members);
+        if (read != S::已完成) return {read, {}};
+        const auto oldG = 读取存在保护(材料);
+        if (oldG.快照) {
+            if (保护成员组(oldG) != members) return {S::内部不一致, {}};
+        } else {
+            p->写集.预期联合节点组 = 旧依据;
+            const auto ready = 追加存在集合保护写集(
+                p->写集, 材料, members, *存在成员读取接口_, 值服务);
+            if (ready != S::已完成) return {ready, {}};
+            // 本凭据仅允许追加；禁止以后将删除/替换混入追加依据推进。
+            if (!p->写集.替换字段组.empty() || !p->写集.删除字段关系组.empty())
+                return {S::内部不一致, {}};
+            const auto seal = 全局基础数据集.封存原子追加片段(p->写集);
+            if (seal.状态 != 基础节点组追加状态::已完成 || !seal.片段)
+                return {seal.状态 == 基础节点组追加状态::资源失败 ? S::资源失败 : S::内部不一致, {}};
+            p->片段 = *seal.片段;
+            const auto result = 全局基础数据集.原子追加封存片段组({*p->片段});
+            if (result.状态 == 基础节点组追加状态::预期不符) return {S::前提已变化, {}};
+            if (result.状态 != 基础节点组追加状态::已完成)
+                return {result.状态 == 基础节点组追加状态::资源失败 ? S::资源失败 : S::内部不一致, {}};
+            if (result.片段回执组.size() != 1 || !result.片段回执组.front().对应片段(*p->片段))
+                throw std::logic_error("existence protection receipt mismatch");
+            p->回执 = result.片段回执组.front();
+        }
+        存在集合保护准备结果 result;
+        result.状态 = S::已完成;
+        result.凭据 = 存在集合保护准备凭据{std::move(p)};
+        return result;
+    } catch (const std::bad_alloc&) { return {S::资源失败, {}}; }
+    catch (...) { return {S::内部不一致, {}}; }
+}
+存在集合依据推进结果 概念_特征类::消费存在集合保护依据(
+    存在集合保护准备凭据&& token) const noexcept {
+    using S = 特征概念规则状态;
+    if (!token.实现_ || token.实现_->owner != this || token.实现_->已消费
+        || token.实现_->线程 != std::this_thread::get_id())
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"消费存在集合保护依据",
+            L"凭据owner、线程或消费阶段错误。");
+    auto& p = *token.实现_;
+    p.已消费 = true;
+    try {
+        std::lock_guard 锁(特征概念树互斥);
+        auto advanced = p.原依据;
+        if (p.片段.has_value() != p.回执.has_value()) throw std::logic_error("missing protection receipt");
+        if (p.回执) {
+            const auto& r = *p.回执;
+            const auto& q = p.写集;
+            if (!r.对应片段(*p.片段) || r.新节点组().size() != q.新节点组.size()
+                || r.新节点初始字段关系组().size() != q.新节点组.size()
+                || r.追加字段关系组().size() != q.追加字段组.size()
+                || r.追加外部关系组().size() != q.追加外部关系组.size()
+                || !q.删除字段关系组.empty() || !q.替换字段组.empty())
+                throw std::logic_error("protection receipt shape invalid");
+            const auto node = [&](const auto& ref) -> 稳定编码 {
+                if (const auto* n = std::get_if<稳定编码>(&ref)) return *n;
+                const auto index = std::get<基础组内节点引用>(ref).索引;
+                if (index >= r.新节点组().size()) throw std::logic_error("protection local reference invalid");
+                return r.新节点组()[index];
+            };
+            const auto value = [&](const 基础组内字段内容& input) -> 基础字段内容 {
+                if (const auto* direct = std::get_if<基础值>(&input)) return *direct;
+                if (const auto* n = std::get_if<稳定编码>(&input)) return *n;
+                const auto index = std::get<基础组内节点引用>(input).索引;
+                if (index >= r.新节点组().size()) throw std::logic_error("protection field reference invalid");
+                return r.新节点组()[index];
+            };
+            const auto addField = [&](const 基础字段关系& field) {
+                if (!有效(field.编码)) throw std::logic_error("protection field code missing");
+                for (auto& old : advanced) {
+                    if (old.结构.节点.编码 == field.所属节点) old.结构.字段组.push_back(field);
+                    const auto* target = std::get_if<稳定编码>(&field.内容);
+                    if (target && *target == old.结构.节点.编码) old.入向字段组.push_back(field);
+                }
+            };
+            for (std::size_t i = 0; i < q.新节点组.size(); ++i) {
+                const auto& fields = q.新节点组[i].字段组;
+                if (r.新节点初始字段关系组()[i].size() != fields.size())
+                    throw std::logic_error("protection initial field receipt mismatch");
+                for (std::size_t j = 0; j < fields.size(); ++j)
+                    addField({r.新节点初始字段关系组()[i][j], r.新节点组()[i],
+                        fields[j].字段节点, value(fields[j].内容)});
+            }
+            for (std::size_t i = 0; i < q.追加字段组.size(); ++i) {
+                const auto& f = q.追加字段组[i];
+                addField({r.追加字段关系组()[i], f.所属节点, f.字段节点, value(f.内容)});
+            }
+            for (std::size_t i = 0; i < q.追加外部关系组.size(); ++i) {
+                const auto& source = q.追加外部关系组[i];
+                const 基础外部关系 edge{r.追加外部关系组()[i], node(source.源节点),
+                    node(source.目标节点), source.类型, source.角色或顺序};
+                for (auto& old : advanced) {
+                    if (old.结构.节点.编码 == edge.源节点) old.出向外部关系组.push_back(edge);
+                    if (old.结构.节点.编码 == edge.目标节点) old.入向外部关系组.push_back(edge);
+                }
+            }
+        }
+        const auto protection = 核验存在集合材料保护(p.类型根, p.材料, *p.值服务);
+        if (protection != S::已完成) return {protection, {}};
+        std::vector<稳定编码> nodes;
+        for (auto& old : advanced) {
+            nodes.push_back(old.结构.节点.编码);
+            const auto less = [](const auto& a, const auto& b) { return a.编码 < b.编码; };
+            std::sort(old.结构.字段组.begin(), old.结构.字段组.end(), less);
+            std::sort(old.入向字段组.begin(), old.入向字段组.end(), less);
+            std::sort(old.入向外部关系组.begin(), old.入向外部关系组.end(), less);
+            std::sort(old.出向外部关系组.begin(), old.出向外部关系组.end(), less);
+        }
+        if (!nodes.empty()) {
+            const auto back = 全局基础数据集.查询节点组完整结构(nodes);
+            if (back.状态 == 基础结构操作状态::资源失败) return {S::资源失败, {}};
+            if (back.状态 != 基础结构操作状态::已完成 || back.节点组.size() != nodes.size())
+                return {S::内部不一致, {}};
+            for (std::size_t i = 0; i < nodes.size(); ++i) {
+                const auto found = std::find_if(back.节点组.begin(), back.节点组.end(),
+                    [&](const auto& item) { return item.查询节点 == nodes[i]; });
+                if (found == back.节点组.end()) return {S::内部不一致, {}};
+                const auto& current = *found;
+                const auto& expected = advanced[i];
+                if (current.查询节点 != nodes[i]) return {S::内部不一致, {}};
+                if (!current.快照 || current.快照->结构.字段组 != expected.结构.字段组
+                    || current.快照->入向字段组 != expected.入向字段组
+                    || current.快照->入向外部关系组 != expected.入向外部关系组
+                    || current.快照->出向外部关系组 != expected.出向外部关系组)
+                    return {S::前提已变化, {}};
+            }
+        }
+        return {S::已完成, std::move(advanced)};
+    } catch (const std::bad_alloc&) { return {S::资源失败, {}}; }
+    catch (...) { return {S::内部不一致, {}}; }
+}
+特征概念规则状态 概念_特征类::确保存在集合材料保护(
+    稳定编码 类型根, 稳定编码 材料, const 新_特征值类& 值服务) noexcept {
+    auto ready = 准备存在集合材料保护(类型根, 材料, 值服务, {});
+    if (ready.状态 != 特征概念规则状态::已完成) return ready.状态;
+    if (!ready.凭据) return 特征概念规则状态::内部不一致;
+    return 消费存在集合保护依据(std::move(*ready.凭据)).状态;
 }
 
 特征需求集合条件比较结果 概念_特征类::比较需求集合值域(
@@ -1091,6 +1747,37 @@ void 概念_特征类::装配需求成员读取接口(
         return 结果;
     } catch (...) {
         特征需求集合条件比较结果 结果;
+        结果.状态 = 特征概念规则状态::资源失败;
+        return 结果;
+    }
+}
+
+特征存在集合条件比较结果 概念_特征类::比较存在集合值域(
+    稳定编码 类型根, const 特征概念准确值& 当前,
+    const 特征概念存在集合值域& 目标,
+    const 新_特征值类& 值服务) const noexcept {
+    try {
+        std::lock_guard 锁(特征概念树互斥);
+        特征存在集合条件比较结果 结果;
+        const auto 类型 = 获取特征概念(类型根);
+        const auto 路径 = 读取单概念路径(类型根);
+        if (!类型 || !路径 || 路径->根 != 类型根
+            || 类型->比较规则 != 特征概念比较规则::存在集合身份判等) return 结果;
+        const auto 规范域 = 规范化待比较值域(特征概念材料物理类型::U64数组, 目标);
+        if (!规范域) return 结果;
+        const auto& 域 = std::get<特征概念存在集合值域>(*规范域);
+        结果.状态 = 校验存在成员(域.必含存在节点组, 存在成员读取接口_, &值服务);
+        if (结果.状态 != 特征概念规则状态::已完成) return 结果;
+        std::vector<稳定编码> 成员;
+        结果.状态 = 读取存在集合材料(当前, 值服务, 存在成员读取接口_, 成员);
+        if (结果.状态 != 特征概念规则状态::已完成) return 结果;
+        std::set_difference(域.必含存在节点组.begin(), 域.必含存在节点组.end(),
+            成员.begin(), 成员.end(), std::back_inserter(结果.缺少存在节点组));
+        结果.缺少任意存在 = 域.至少一个存在 && 成员.empty();
+        结果.满足 = 结果.缺少存在节点组.empty() && !结果.缺少任意存在 ? 1 : 0;
+        return 结果;
+    } catch (...) {
+        特征存在集合条件比较结果 结果;
         结果.状态 = 特征概念规则状态::资源失败;
         return 结果;
     }
@@ -1201,6 +1888,10 @@ bool 概念_特征类::初始化(const 新_特征值类& 特征值服务) noexce
             && 建立(必含任务字段)
             && 建立(必含需求任务字段)
             && 建立(必含服务要求任务字段)
+            && 建立(存在集合值域字段)
+            && 建立(至少一个存在字段) && 建立(必含存在字段)
+            && 建立(存在集合保护节点类型) && 建立(存在集合保护来源字段)
+            && 建立(存在集合成员保护键)
             && 建立(需求集合值域字段)
             && 建立(至少一个需求字段)
             && 建立(必含需求字段)
@@ -1260,7 +1951,7 @@ bool 概念_特征类::初始化(const 新_特征值类& 特征值服务) noexce
                 const auto 信息 = 获取特征概念(节点);
                 const auto 规范定义 = 规范化定义(定义);
                 if (!信息 || !规范定义
-                    || !结构定义相同(转为定义(*信息), *规范定义, &特征值服务, 需求成员读取接口_)) {
+                    || !结构定义相同(转为定义(*信息), *规范定义, &特征值服务, 需求成员读取接口_, 存在成员读取接口_)) {
                     return false;
                 }
                 const auto 上位 = 全局基础数据集.查询目标关系(
@@ -1289,6 +1980,8 @@ bool 概念_特征类::初始化(const 新_特征值类& 特征值服务) noexce
         服务任务定义.聚合规则 = 特征概念聚合规则::不自动聚合;
         auto 需求集合定义 = 全材料定义(特征概念材料物理类型::U64数组);
         需求集合定义.比较规则 = 特征概念比较规则::需求集合身份判等;
+        auto 存在集合定义 = 需求集合定义;
+        存在集合定义.比较规则 = 特征概念比较规则::存在集合身份判等;
         const bool 完成 = 确保根概念(先天概念.三维空间坐标, 三维坐标定义)
             && 确保根概念(先天概念.三维空间尺寸, 三维尺寸定义)
             && 确保根概念(先天概念.RGB颜色, RGB定义)
@@ -1297,7 +1990,8 @@ bool 概念_特征类::初始化(const 新_特征值类& 特征值服务) noexce
             && 确保根概念(先天概念.三维体素,
                 全材料定义(特征概念材料物理类型::三维二值格))
             && 确保根概念(先天概念.服务任务集合, 服务任务定义)
-            && 确保根概念(先天概念.服务对象需求集合, 需求集合定义);
+            && 确保根概念(先天概念.服务对象需求集合, 需求集合定义)
+            && 确保根概念(先天概念.交互对象集合, 存在集合定义);
         if (完成) 特征值读取服务_ = &特征值服务;
         return 完成;
     } catch (...) {
@@ -1316,7 +2010,8 @@ std::optional<先天特征概念集合> 概念_特征类::获取先天特征概�
             || !是特征概念节点(先天概念.二维轮廓)
             || !是特征概念节点(先天概念.三维体素)
             || !是特征概念节点(先天概念.服务任务集合)
-            || !是特征概念节点(先天概念.服务对象需求集合)) {
+            || !是特征概念节点(先天概念.服务对象需求集合)
+            || !是特征概念节点(先天概念.交互对象集合)) {
             return std::nullopt;
         }
         return 先天概念;
@@ -1325,15 +2020,78 @@ std::optional<先天特征概念集合> 概念_特征类::获取先天特征概�
     }
 }
 
+特征概念编码操作结果 概念_特征类::建立或取得特征概念强类型(
+    const 特征概念定义& d, const 新_特征值类& v, std::optional<稳定编码> p) noexcept {
+    try {
+        const auto n = 建立特征概念内部(d, v, p);
+        return 有效(n) ? 特征概念编码操作结果{特征概念规则状态::已完成, n}
+            : 特征概念编码操作结果{};
+    } catch (const 特征运算技术拒绝& e) { return {e.状态, {}}; }
+    catch (const std::bad_alloc&) { return {特征概念规则状态::资源失败, {}}; }
+    catch (...) { return {特征概念规则状态::内部不一致, {}}; }
+}
 稳定编码 概念_特征类::建立或取得特征概念(
+    const 特征概念定义& d, const 新_特征值类& v, std::optional<稳定编码> p) noexcept {
+    try {
+        std::lock_guard 锁(特征概念树互斥);
+        if (d.比较规则 == 特征概念比较规则::存在集合身份判等 && !存在域已经保护(d.值域, v))
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"建立特征概念旧入口", L"未保护存在集合必须使用强类型入口。");
+        const auto r = 建立或取得特征概念强类型(d, v, p);
+        if (r.状态 == 特征概念规则状态::前提已变化)
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"建立特征概念旧入口", L"已保护内部路径出现未隔离的技术竞争。");
+        return r.概念节点.value_or(稳定编码{});
+    } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"建立特征概念旧入口", L"保护结构读取异常。"); }
+}
+特征概念规则状态 概念_特征类::更新特征概念值域强类型(
+    稳定编码 n, const 特征概念值域& d, const 新_特征值类& v) noexcept {
+    try { return 更新特征概念值域内部(n, d, v) ? 特征概念规则状态::已完成 : 特征概念规则状态::入口拒绝; }
+    catch (const 特征运算技术拒绝& e) { return e.状态; }
+    catch (const std::bad_alloc&) { return 特征概念规则状态::资源失败; }
+    catch (...) { return 特征概念规则状态::内部不一致; }
+}
+bool 概念_特征类::更新特征概念值域(
+    稳定编码 n, const 特征概念值域& d, const 新_特征值类& v) noexcept {
+    try {
+        std::lock_guard 锁(特征概念树互斥);
+        const auto c = 获取特征概念(n);
+        if (c && c->比较规则 == 特征概念比较规则::存在集合身份判等 && !存在域已经保护(d, v))
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"更新特征概念旧入口", L"未保护存在集合必须使用强类型入口。");
+        const auto r = 更新特征概念值域强类型(n, d, v);
+        if (r == 特征概念规则状态::前提已变化)
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"更新特征概念旧入口", L"已保护内部路径出现未隔离的技术竞争。");
+        return r == 特征概念规则状态::已完成;
+    } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"更新特征概念旧入口", L"保护结构读取异常。"); }
+}
+特征概念查询操作结果 概念_特征类::查询特征概念强类型(const 特征概念定义& d) const noexcept {
+    try { return {特征概念规则状态::已完成, 查询特征概念内部(d)}; }
+    catch (const 特征运算技术拒绝& e) { return {e.状态, {}}; }
+    catch (const std::bad_alloc&) { return {特征概念规则状态::资源失败, {}}; }
+    catch (...) { return {特征概念规则状态::内部不一致, {}}; }
+}
+std::vector<稳定编码> 概念_特征类::查询特征概念(const 特征概念定义& d) const noexcept {
+    try {
+        std::lock_guard 锁(特征概念树互斥);
+        if (d.比较规则 == 特征概念比较规则::存在集合身份判等
+            && (!特征值读取服务_ || !存在域已经保护(d.值域, *特征值读取服务_)))
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"查询特征概念旧入口", L"未保护输入必须使用强类型查询。");
+        const auto r = 查询特征概念强类型(d);
+        if (r.状态 != 特征概念规则状态::已完成)
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"查询特征概念旧入口", L"未完成查询不能折成无匹配。");
+        return r.概念节点组;
+    } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"查询特征概念旧入口", L"保护结构读取异常。"); }
+}
+
+稳定编码 概念_特征类::建立特征概念内部(
     const 特征概念定义& 定义,
     const 新_特征值类& 特征值服务,
-    std::optional<稳定编码> 上位概念) noexcept {
+    std::optional<稳定编码> 上位概念) {
     try {
         std::lock_guard 锁(特征概念树互斥);
         if (!结构仍存在()) return {};
         const auto 规范定义 = 规范化定义(定义);
         if (!规范定义) return {};
+        if (const auto* 域 = std::get_if<特征概念存在集合值域>(&规范定义->值域))
+            要求运算完成(校验存在成员(域->必含存在节点组, 存在成员读取接口_, &特征值服务));
         if (const auto* 域 = std::get_if<特征概念需求集合值域>(&规范定义->值域)) {
             if (校验需求成员(域->必含需求节点组, 需求成员读取接口_)
                 != 特征概念规则状态::已完成) return {};
@@ -1361,6 +2119,9 @@ std::optional<先天特征概念集合> 概念_特征类::获取先天特征概�
         }
 
         if (const auto* 值节点组 = std::get_if<std::vector<稳定编码>>(&规范定义->值域)) {
+            if (规范定义->比较规则 == 特征概念比较规则::存在集合身份判等)
+                for (const auto v : *值节点组)
+                    要求运算完成(确保存在材料保护内部(v, 特征值服务, 存在成员读取接口_));
             if (规范定义->比较规则 == 特征概念比较规则::需求集合身份判等) {
                 for (const auto 材料 : *值节点组) {
                     std::vector<稳定编码> 成员;
@@ -1389,11 +2150,12 @@ std::optional<先天特征概念集合> 概念_特征类::获取先天特征概�
             const auto 父信息 = 获取特征概念(父节点);
             if (!父信息) return {};
             const auto 父定义 = 规范化定义(转为定义(*父信息));
-            if (父定义 && 规范定义->比较规则 == 特征概念比较规则::需求集合身份判等
-                && 结构定义相同(*父定义, *规范定义, &特征值服务, 需求成员读取接口_))
+            if (父定义 && (规范定义->比较规则 == 特征概念比较规则::需求集合身份判等
+                    || 规范定义->比较规则 == 特征概念比较规则::存在集合身份判等)
+                && 结构定义相同(*父定义, *规范定义, &特征值服务, 需求成员读取接口_, 存在成员读取接口_))
                 return 父节点;
             bool 是合法子域 = 父定义
-                && (是严格子值域(*父定义, *规范定义, this, &特征值服务, 需求成员读取接口_)
+                && (是严格子值域(*父定义, *规范定义, this, &特征值服务, 需求成员读取接口_, 存在成员读取接口_)
                     || 有限材料节点受定义包含(
                         *父定义, *规范定义, 特征值服务));
             if (父定义
@@ -1422,7 +2184,7 @@ std::optional<先天特征概念集合> 概念_特征类::获取先天特征概�
                 const auto 子信息 = 获取特征概念(关系.目标节点);
                 if (!子信息) continue;
                 const auto 子定义 = 规范化定义(转为定义(*子信息));
-                if (子定义 && 结构定义相同(*子定义, *规范定义, &特征值服务, 需求成员读取接口_)) {
+                if (子定义 && 结构定义相同(*子定义, *规范定义, &特征值服务, 需求成员读取接口_, 存在成员读取接口_)) {
                     同定义直接子节点.push_back(关系.目标节点);
                 }
             }
@@ -1457,6 +2219,35 @@ std::optional<先天特征概念集合> 概念_特征类::获取先天特征概�
             }
         }
 
+        if (规范定义->比较规则 == 特征概念比较规则::存在集合身份判等) {
+            基础节点组追加请求 q;
+            基础组内新节点 d{编码存在集合域(规范定义->值域)};
+            d.字段组.push_back({节点类型字段, 特征概念节点类型});
+            d.字段组.push_back({材料类型字段, 基础值{static_cast<std::int64_t>(规范定义->材料类型)}});
+            d.字段组.push_back({比较规则字段, 基础值{static_cast<std::int64_t>(规范定义->比较规则)}});
+            d.字段组.push_back({聚合规则字段, 基础值{static_cast<std::int64_t>(规范定义->聚合规则)}});
+            d.字段组.push_back({当前引用实例数字段, 基础值{std::int64_t{0}}});
+            for (const auto n : 规范定义->名称关系) d.字段组.push_back({名称关系字段, n});
+            q.新节点组.push_back(std::move(d));
+            q.追加外部关系组.push_back({父节点, 基础组内节点引用{0}, 基础外部关系类型::父子, 0});
+            const auto parent = 全局基础数据集.查询节点组完整结构({父节点});
+            if (parent.状态 != 基础结构操作状态::已完成 || parent.节点组.size() != 1 || !parent.节点组[0].快照)
+                return {};
+            q.预期联合节点组.push_back(*parent.节点组[0].快照);
+            if (const auto* c = std::get_if<特征概念存在集合值域>(&规范定义->值域)) {
+                if (!存在成员读取接口_) throw 特征运算技术拒绝{特征概念规则状态::读取接口未装配};
+                要求运算完成(追加存在集合保护写集(q, 基础组内节点引用{0},
+                    c->必含存在节点组, *存在成员读取接口_, 特征值服务));
+            }
+            const auto r = 全局基础数据集.原子追加节点组(q);
+            if (r.状态 == 基础节点组追加状态::预期不符) throw 特征运算技术拒绝{特征概念规则状态::前提已变化};
+            if (r.状态 != 基础节点组追加状态::已完成 || r.新节点组.empty()) return {};
+            const auto n = r.新节点组.front();
+            const auto read = 获取特征概念(n);
+            if (!read || 转为定义(*read) != *规范定义)
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"存在集合概念发布", L"原子发布后完整定义读回不一致。");
+            return n;
+        }
         const auto 节点 = 全局基础数据集.新建节点();
         if (!有效(节点)) return {};
         std::vector<稳定编码> 已写字段;
@@ -1621,8 +2412,10 @@ std::optional<先天特征概念集合> 概念_特征类::获取先天特征概�
             return {};
         }
         return 节点;
-    } catch (...) {
-        return {};
+    } catch (const 特征运算技术拒绝&) { throw; }
+    catch (const 存在保护前提变化&) { throw 特征运算技术拒绝{特征概念规则状态::前提已变化}; }
+    catch (...) {
+        throw;
     }
 }
 
@@ -1661,6 +2454,11 @@ std::optional<特征概念信息> 概念_特征类::获取特征概念(
         const auto 需求集合字段组 = 全局基础数据集.查询字段(特征概念节点, 需求集合值域字段);
         const auto 任意需求字段组 = 全局基础数据集.查询字段(特征概念节点, 至少一个需求字段);
         const auto 指定需求字段组 = 全局基础数据集.查询字段(特征概念节点, 必含需求字段);
+        const auto 存在集合字段组 = 全局基础数据集.查询字段(特征概念节点, 存在集合值域字段);
+        const auto 任意存在字段组 = 全局基础数据集.查询字段(特征概念节点, 至少一个存在字段);
+        const auto 指定存在字段组 = 全局基础数据集.查询字段(特征概念节点, 必含存在字段);
+        if (存在集合字段组.empty() && (!任意存在字段组.empty() || !指定存在字段组.empty()))
+            return std::nullopt;
         if (需求集合字段组.empty() && (!任意需求字段组.empty()
             || !指定需求字段组.empty())) return std::nullopt;
         if (集合字段组.empty() && (!任意任务字段组.empty()
@@ -1672,7 +2470,8 @@ std::optional<特征概念信息> 概念_特征类::获取特征概念(
             + static_cast<int>(!结构化字段组.empty())
             + static_cast<int>(!存在引用字段组.empty())
             + static_cast<int>(!集合字段组.empty())
-            + static_cast<int>(!需求集合字段组.empty());
+            + static_cast<int>(!需求集合字段组.empty())
+            + static_cast<int>(!存在集合字段组.empty());
         if (表示数量 != 1) return std::nullopt;
 
         if (!I64字段组.empty()) {
@@ -1704,6 +2503,13 @@ std::optional<特征概念信息> 概念_特征类::获取特征概念(
                 std::get_if<稳定编码>(&存在引用字段组.front().内容);
             if (!存在概念 || !节点仍存在(*存在概念)) return std::nullopt;
             定义.值域 = 特征概念存在引用值域{*存在概念};
+        } else if (!存在集合字段组.empty()) {
+            const auto 标记 = 读取唯一I64字段(特征概念节点, 存在集合值域字段);
+            const auto 任意 = 读取唯一I64字段(特征概念节点, 至少一个存在字段);
+            if (!标记 || *标记 != 1 || !任意 || (*任意 != 0 && *任意 != 1)) return {};
+            特征概念存在集合值域 域{读取多节点字段(特征概念节点, 必含存在字段), *任意 != 0};
+            if (域.必含存在节点组.size() != 指定存在字段组.size()) return {};
+            定义.值域 = std::move(域);
         } else if (!需求集合字段组.empty()) {
             const auto 标记 = 读取唯一I64字段(特征概念节点, 需求集合值域字段);
             const auto 任意 = 读取唯一I64字段(特征概念节点, 至少一个需求字段);
@@ -1799,6 +2605,23 @@ std::optional<特征概念信息> 概念_特征类::获取特征概念(
 
         const auto 规范定义 = 规范化定义(定义);
         if (!规范定义) return std::nullopt;
+        if (规范定义->比较规则 == 特征概念比较规则::存在集合身份判等) {
+            try {
+            if (const auto* values = std::get_if<std::vector<稳定编码>>(&规范定义->值域)) {
+                if (!特征值读取服务_ || !存在域已经保护(*values, *特征值读取服务_))
+                    工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取存在集合概念",
+                        L"已发布有限域缺少完整材料保护。");
+            } else if (const auto* domain = std::get_if<特征概念存在集合值域>(&规范定义->值域)) {
+                const auto g = 读取存在保护(特征概念节点);
+                if (!g.快照 || 保护成员组(g) != domain->必含存在节点组)
+                    工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取存在集合概念",
+                        L"已发布正向域与保护不一致。");
+            }
+            } catch (...) {
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取存在集合概念",
+                    L"正式域保护读取异常，不能降格为概念不存在。");
+            }
+        }
         return 特征概念信息{
             特征概念节点,
             规范定义->材料类型,
@@ -1813,10 +2636,10 @@ std::optional<特征概念信息> 概念_特征类::获取特征概念(
     }
 }
 
-bool 概念_特征类::更新特征概念值域(
+bool 概念_特征类::更新特征概念值域内部(
     稳定编码 特征概念节点,
     const 特征概念值域& 新值域,
-    const 新_特征值类& 特征值服务) noexcept {
+    const 新_特征值类& 特征值服务) {
     try {
         std::lock_guard 锁(特征概念树互斥);
         const auto 原信息 = 获取特征概念(特征概念节点);
@@ -1827,6 +2650,8 @@ bool 概念_特征类::更新特征概念值域(
         const auto 规范新定义 = 规范化定义(新定义);
         const auto 规范原定义 = 规范化定义(转为定义(*原信息));
         if (!规范新定义 || !规范原定义) return false;
+        if (const auto* c = std::get_if<特征概念存在集合值域>(&规范新定义->值域))
+            要求运算完成(校验存在成员(c->必含存在节点组, 存在成员读取接口_, &特征值服务));
         if (const auto* 域 = std::get_if<特征概念需求集合值域>(&规范新定义->值域)) {
             if (校验需求成员(域->必含需求节点组, 需求成员读取接口_)
                 != 特征概念规则状态::已完成) return false;
@@ -1844,10 +2669,13 @@ bool 概念_特征类::更新特征概念值域(
                 return false;
             }
         }
-        if (结构定义相同(*规范新定义, *规范原定义, &特征值服务, 需求成员读取接口_)) return true;
+        if (结构定义相同(*规范新定义, *规范原定义, &特征值服务, 需求成员读取接口_, 存在成员读取接口_)) return true;
 
         if (const auto* 值节点组 =
             std::get_if<std::vector<稳定编码>>(&规范新定义->值域)) {
+            if (规范新定义->比较规则 == 特征概念比较规则::存在集合身份判等)
+                for (const auto v : *值节点组)
+                    要求运算完成(确保存在材料保护内部(v, 特征值服务, 存在成员读取接口_));
             if (规范新定义->比较规则 == 特征概念比较规则::需求集合身份判等) {
                 for (const auto 材料 : *值节点组) {
                     std::vector<稳定编码> 成员;
@@ -1874,7 +2702,7 @@ bool 概念_特征类::更新特征概念值域(
             const auto 父定义 = 父信息
                 ? 规范化定义(转为定义(*父信息)) : std::nullopt;
             bool 合法 = 父定义
-                && (是严格子值域(*父定义, *规范新定义, this, &特征值服务, 需求成员读取接口_)
+                && (是严格子值域(*父定义, *规范新定义, this, &特征值服务, 需求成员读取接口_, 存在成员读取接口_)
                     || 有限材料节点受定义包含(
                         *父定义, *规范新定义, 特征值服务));
             if (父定义
@@ -1899,7 +2727,7 @@ bool 概念_特征类::更新特征概念值域(
             const auto 子定义 = 子信息
                 ? 规范化定义(转为定义(*子信息)) : std::nullopt;
             bool 合法 = 子定义
-                && (是严格子值域(*规范新定义, *子定义, this, &特征值服务, 需求成员读取接口_)
+                && (是严格子值域(*规范新定义, *子定义, this, &特征值服务, 需求成员读取接口_, 存在成员读取接口_)
                     || 有限材料节点受定义包含(
                         *规范新定义, *子定义, 特征值服务));
             if (子定义
@@ -1919,6 +2747,32 @@ bool 概念_特征类::更新特征概念值域(
             }
         }
 
+        if (规范新定义->比较规则 == 特征概念比较规则::存在集合身份判等) {
+            if (!存在成员读取接口_) return false;
+            基础节点组追加请求 q;
+            const auto before = 全局基础数据集.查询节点组完整结构({特征概念节点});
+            if (before.状态 != 基础结构操作状态::已完成 || before.节点组.size() != 1 || !before.节点组[0].快照)
+                return false;
+            q.预期联合节点组.push_back(*before.节点组[0].快照);
+            for (const auto& f : before.节点组[0].快照->结构.字段组)
+                if (f.字段节点 == 存在集合值域字段 || f.字段节点 == 至少一个存在字段
+                    || f.字段节点 == 必含存在字段 || f.字段节点 == 全材料值域字段 || f.字段节点 == 非I64值域字段)
+                    q.删除字段关系组.push_back(f.编码);
+            for (const auto& f : 编码存在集合域(规范新定义->值域))
+                q.追加字段组.push_back({特征概念节点, f.字段节点, f.内容});
+            const auto* c = std::get_if<特征概念存在集合值域>(&规范新定义->值域);
+            const auto p = 追加存在集合保护写集(q, 特征概念节点,
+                c ? c->必含存在节点组 : std::vector<稳定编码>{}, *存在成员读取接口_, 特征值服务);
+            要求运算完成(p);
+            const auto r = 全局基础数据集.原子追加节点组(q);
+            if (r.状态 == 基础节点组追加状态::预期不符) throw 特征运算技术拒绝{特征概念规则状态::前提已变化};
+            if (r.状态 != 基础节点组追加状态::已完成) return false;
+            const auto back = 获取特征概念(特征概念节点);
+            const auto g = 读取存在保护(特征概念节点);
+            if (!back || 转为定义(*back) != *规范新定义 || !g.快照)
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"存在集合域更新", L"提交后定义或保护读回失败。");
+            return true;
+        }
         if (std::holds_alternative<特征概念需求集合值域>(规范新定义->值域)
             || std::holds_alternative<特征概念需求集合值域>(规范原定义->值域)
             || std::holds_alternative<特征概念任务集合值域>(规范新定义->值域)
@@ -2078,8 +2932,10 @@ bool 概念_特征类::更新特征概念值域(
 
         const auto 读回 = 获取特征概念(特征概念节点);
         return 读回 && 读回->值域 == 规范新定义->值域;
-    } catch (...) {
-        return false;
+    } catch (const 特征运算技术拒绝&) { throw; }
+    catch (const 存在保护前提变化&) { throw 特征运算技术拒绝{特征概念规则状态::前提已变化}; }
+    catch (...) {
+        throw;
     }
 }
 
@@ -2201,6 +3057,7 @@ bool 概念_特征类::解除名称关系(
 
 特征概念直接子查询结果 概念_特征类::查询直接子特征概念(
     稳定编码 直接父概念, const 特征概念定义& 完整定义) const {
+    try {
     std::lock_guard 锁(特征概念树互斥);
     if (!有效(直接父概念)) return {};
     const auto 规范定义 = 规范化定义(完整定义);
@@ -2246,16 +3103,20 @@ bool 概念_特征类::解除名称关系(
         if (!子定义) {
             return {特征概念直接子查询状态::内部不一致, {}};
         }
-        if (结构定义相同(*子定义, *规范定义, 特征值读取服务_, 需求成员读取接口_)) {
+        if (结构定义相同(*子定义, *规范定义, 特征值读取服务_, 需求成员读取接口_, 存在成员读取接口_)) {
             匹配节点组.push_back(关系.目标节点);
         }
     }
     std::sort(匹配节点组.begin(), 匹配节点组.end());
     return {特征概念直接子查询状态::已完成, std::move(匹配节点组)};
+    } catch (const 特征运算技术拒绝& e) {
+        return {e.状态 == 特征概念规则状态::前提已变化
+            ? 特征概念直接子查询状态::前提已变化 : 特征概念直接子查询状态::工程未完成, {}};
+    }
 }
 
-std::vector<稳定编码> 概念_特征类::查询特征概念(
-    const 特征概念定义& 定义) const noexcept {
+std::vector<稳定编码> 概念_特征类::查询特征概念内部(
+    const 特征概念定义& 定义) const {
     try {
         std::lock_guard 锁(特征概念树互斥);
         const auto 规范定义 = 规范化定义(定义);
@@ -2276,7 +3137,7 @@ std::vector<稳定编码> 概念_特征类::查询特征概念(
                 const auto 信息 = 获取特征概念(子节点);
                 if (!信息) continue;
                 const auto 候选 = 规范化定义(转为定义(*信息));
-                if (候选 && 结构定义相同(*候选, *规范定义, 特征值读取服务_, 需求成员读取接口_)) {
+                if (候选 && 结构定义相同(*候选, *规范定义, 特征值读取服务_, 需求成员读取接口_, 存在成员读取接口_)) {
                     结果.push_back(子节点);
                 }
             }
@@ -2284,8 +3145,10 @@ std::vector<稳定编码> 概念_特征类::查询特征概念(
         std::sort(结果.begin(), 结果.end());
         结果.erase(std::unique(结果.begin(), 结果.end()), 结果.end());
         return 结果;
-    } catch (...) {
-        return {};
+    } catch (const 特征运算技术拒绝&) { throw; }
+    catch (const 存在保护前提变化&) { throw 特征运算技术拒绝{特征概念规则状态::前提已变化}; }
+    catch (...) {
+        throw;
     }
 }
 
@@ -2343,12 +3206,16 @@ std::vector<稳定编码> 概念_特征类::查询特征概念(
             }
         }
 
-        if (根信息->比较规则 == 特征概念比较规则::需求集合身份判等) {
+        if (根信息->比较规则 == 特征概念比较规则::需求集合身份判等
+            || 根信息->比较规则 == 特征概念比较规则::存在集合身份判等) {
             std::vector<稳定编码> 成员;
-            const auto 状态 = 读取需求集合材料(特征值, 特征值服务, 需求成员读取接口_, 成员);
+            const auto 状态 = 根信息->比较规则 == 特征概念比较规则::存在集合身份判等
+                ? 读取存在集合材料(特征值, 特征值服务, 存在成员读取接口_, 成员)
+                : 读取需求集合材料(特征值, 特征值服务, 需求成员读取接口_, 成员);
             if (状态 != 特征概念规则状态::已完成) {
                 结果.状态 = 状态 == 特征概念规则状态::资源失败
-                    ? 特征概念查找状态::资源失败 : 特征概念查找状态::结构不一致;
+                    ? 特征概念查找状态::资源失败 : 状态 == 特征概念规则状态::前提已变化
+                        ? 特征概念查找状态::前提已变化 : 特征概念查找状态::结构不一致;
                 return 结果;
             }
         }
@@ -2381,7 +3248,17 @@ std::vector<稳定编码> 概念_特征类::查询特征概念(
                 return 结果;
             }
             std::optional<std::uint64_t> 当前尺度;
-            if (const auto* 需求域 = std::get_if<特征概念需求集合值域>(&当前信息->值域)) {
+            if (const auto* 存在域 = std::get_if<特征概念存在集合值域>(&当前信息->值域)) {
+                const auto 比较 = 比较存在集合值域(特征类型概念, 特征值, *存在域, 特征值服务);
+                if (比较.状态 != 特征概念规则状态::已完成) {
+                    结果.状态 = 比较.状态 == 特征概念规则状态::资源失败
+                        ? 特征概念查找状态::资源失败 : 比较.状态 == 特征概念规则状态::前提已变化
+                            ? 特征概念查找状态::前提已变化 : 特征概念查找状态::结构不一致;
+                    return 结果;
+                }
+                if (比较.满足 == 1)
+                    当前尺度 = (std::numeric_limits<std::uint64_t>::max)() - 1;
+            } else if (const auto* 需求域 = std::get_if<特征概念需求集合值域>(&当前信息->值域)) {
                 const auto 比较 = 比较需求集合值域(特征类型概念, 特征值, *需求域, 特征值服务);
                 if (比较.状态 != 特征概念规则状态::已完成) {
                     结果.状态 = 比较.状态 == 特征概念规则状态::资源失败
@@ -2406,7 +3283,7 @@ std::vector<稳定编码> 概念_特征类::查询特征概念(
                 }
             } else {
                 当前尺度 = 值域匹配尺度(
-                    *当前信息, 特征值, 特征值服务, 存在引用读取接口_, 需求成员读取接口_);
+                    *当前信息, 特征值, 特征值服务, 存在引用读取接口_, 需求成员读取接口_, 存在成员读取接口_);
             }
             if (!当前尺度) continue;
             命中组.push_back({
@@ -2431,7 +3308,7 @@ std::vector<稳定编码> 概念_特征类::查询特征概念(
                 }
                 const auto 子定义 = 规范化定义(转为定义(*子信息));
                 bool 合法子域 = 子定义
-                    && (是严格子值域(*当前定义, *子定义, this, &特征值服务, 需求成员读取接口_)
+                    && (是严格子值域(*当前定义, *子定义, this, &特征值服务, 需求成员读取接口_, 存在成员读取接口_)
                         || 有限材料节点受定义包含(
                             *当前定义, *子定义, 特征值服务));
                 if (子定义
@@ -2498,6 +3375,12 @@ std::vector<稳定编码> 概念_特征类::查询特征概念(
         结果.状态 = 特征概念查找状态::已找到;
         结果.概念节点 = 最具体候选.front()->节点;
         return 结果;
+    } catch (const 特征运算技术拒绝& e) {
+        结果.状态 = e.状态 == 特征概念规则状态::前提已变化
+            ? 特征概念查找状态::前提已变化 : 特征概念查找状态::结构不一致;
+        结果.概念节点.reset();
+        结果.冲突候选.clear();
+        return 结果;
     } catch (...) {
         结果.状态 = 特征概念查找状态::资源失败;
         结果.概念节点.reset();
@@ -2562,15 +3445,20 @@ bool 概念_特征类::是特征概念节点(稳定编码 节点) const noexcept
             return 结果;
         }
 
-        if (规则 == 特征概念比较规则::需求集合身份判等) {
+        if (规则 == 特征概念比较规则::需求集合身份判等
+            || 规则 == 特征概念比较规则::存在集合身份判等) {
             if (材料类型 != 特征概念材料物理类型::U64数组) {
                 结果.状态 = 特征概念规则状态::材料类型不相容;
                 return 结果;
             }
             std::vector<稳定编码> 左成员, 右成员;
-            结果.状态 = 读取需求集合材料(左值, 特征值服务, 需求成员读取接口_, 左成员);
+            结果.状态 = 规则 == 特征概念比较规则::存在集合身份判等
+                ? 读取存在集合材料(左值, 特征值服务, 存在成员读取接口_, 左成员)
+                : 读取需求集合材料(左值, 特征值服务, 需求成员读取接口_, 左成员);
             if (结果.状态 != 特征概念规则状态::已完成) return 结果;
-            结果.状态 = 读取需求集合材料(右值, 特征值服务, 需求成员读取接口_, 右成员);
+            结果.状态 = 规则 == 特征概念比较规则::存在集合身份判等
+                ? 读取存在集合材料(右值, 特征值服务, 存在成员读取接口_, 右成员)
+                : 读取需求集合材料(右值, 特征值服务, 需求成员读取接口_, 右成员);
             if (结果.状态 != 特征概念规则状态::已完成) return 结果;
             结果.相等 = 左成员 == 右成员;
             if (*结果.相等) 结果.次序 = 特征概念比较次序::相等;
@@ -2647,6 +3535,8 @@ bool 概念_特征类::是特征概念节点(稳定编码 节点) const noexcept
         if (!定义 || 父.size() != 1 || 父.front().源节点 != 特征概念树) return {};
         if (定义->比较规则 == 特征概念比较规则::需求集合身份判等)
             return 需求规则域关系(转为定义(*定义), 左, 右, 特征值读取服务_, 需求成员读取接口_);
+        if (定义->比较规则 == 特征概念比较规则::存在集合身份判等)
+            return 存在规则域关系(转为定义(*定义), 左, 右, 特征值读取服务_, 存在成员读取接口_);
         return 比较值域(定义->材料类型, 左, 右);
     } catch (...) { 特征概念值域比较结果 r; r.状态 = 特征概念规则状态::资源失败; return r; }
 }
@@ -2663,6 +3553,13 @@ bool 概念_特征类::是特征概念节点(稳定编码 节点) const noexcept
         if (!左 || !右) {
             结果.状态 = 特征概念规则状态::材料类型不相容;
             return 结果;
+        }
+        if (std::holds_alternative<特征概念存在集合值域>(*左)
+            || std::holds_alternative<特征概念存在集合值域>(*右)) {
+            特征概念定义 d;
+            d.材料类型 = 材料类型;
+            d.比较规则 = 特征概念比较规则::存在集合身份判等;
+            return 存在规则域关系(d, *左, *右, 特征值读取服务_, 存在成员读取接口_);
         }
         const auto* 左需求 = std::get_if<特征概念需求集合值域>(&*左);
         const auto* 右需求 = std::get_if<特征概念需求集合值域>(&*右);
@@ -2930,7 +3827,8 @@ bool 概念_特征类::是特征概念节点(稳定编码 节点) const noexcept
         const auto d = 获取特征概念(根);
         const auto 父 = 全局基础数据集.查询目标关系(根, 基础外部关系类型::父子);
         if (!d || 父.size() != 1 || 父.front().源节点 != 特征概念树) return {};
-        if (d->比较规则 != 特征概念比较规则::需求集合身份判等)
+        if (d->比较规则 != 特征概念比较规则::需求集合身份判等
+            && d->比较规则 != 特征概念比较规则::存在集合身份判等)
             return 执行聚合规则(d->材料类型, d->聚合规则, 历史, 值服务);
         特征概念聚合结果 r;
         if (历史.empty()) return r;
@@ -2941,7 +3839,9 @@ bool 概念_特征类::是特征概念节点(稳定编码 节点) const noexcept
             材料.push_back(*n);
         }
         需求快照签名组 签名;
-        r.状态 = 规范需求快照(材料, &值服务, 需求成员读取接口_, 签名);
+        r.状态 = d->比较规则 == 特征概念比较规则::存在集合身份判等
+            ? 规范存在快照(材料, &值服务, 存在成员读取接口_, 签名)
+            : 规范需求快照(材料, &值服务, 需求成员读取接口_, 签名);
         if (r.状态 != 特征概念规则状态::已完成) return r;
         材料.clear();
         for (const auto& [s, n] : 签名) { (void)s; 材料.push_back(n); }
@@ -3169,7 +4069,7 @@ bool 概念_特征类::是特征概念节点(稳定编码 节点) const noexcept
         d.聚合规则 = static_cast<特征概念聚合规则>(数(节点, 聚合规则字段));
         unsigned 表示 = 0;
         for (const auto key : {I64值域字段, 全材料值域字段, 非I64值域字段,
-            结构化分量字段, 存在引用值域字段, 任务集合值域字段, 需求集合值域字段})
+            结构化分量字段, 存在引用值域字段, 任务集合值域字段, 需求集合值域字段, 存在集合值域字段})
             表示 += !字段组(节点, key).empty();
         if (表示 != 1) throw std::logic_error("multiple domain representations");
         if (!字段组(节点, I64值域字段).empty()) d.值域 = 区间(节点, I64值域字段);
@@ -3179,7 +4079,11 @@ bool 概念_特征类::是特征概念节点(稳定编码 节点) const noexcept
         } else if (!字段组(节点, 非I64值域字段).empty()) d.值域 = 引用组(节点, 非I64值域字段);
         else if (!字段组(节点, 存在引用值域字段).empty())
             d.值域 = 特征概念存在引用值域{std::get<稳定编码>(单项(节点, 存在引用值域字段))};
-        else if (!字段组(节点, 需求集合值域字段).empty()) {
+        else if (!字段组(节点, 存在集合值域字段).empty()) {
+            const auto b = 数(节点, 至少一个存在字段);
+            if (数(节点, 存在集合值域字段) != 1 || (b != 0 && b != 1)) throw std::logic_error("invalid existence domain");
+            d.值域 = 特征概念存在集合值域{引用组(节点, 必含存在字段), b != 0};
+        } else if (!字段组(节点, 需求集合值域字段).empty()) {
             const auto b = 数(节点, 至少一个需求字段);
             if (数(节点, 需求集合值域字段) != 1 || (b != 0 && b != 1)) throw std::logic_error("invalid demand domain");
             d.值域 = 特征概念需求集合值域{引用组(节点, 必含需求字段), b != 0};

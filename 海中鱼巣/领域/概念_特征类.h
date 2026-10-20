@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <memory>
 #include <variant>
 #include <vector>
 
@@ -78,6 +79,13 @@ struct 特征概念需求集合值域 final {
         const 特征概念需求集合值域&) = default;
 };
 
+struct 特征概念存在集合值域 final {
+    std::vector<稳定编码> 必含存在节点组;
+    bool 至少一个存在 = false;
+    friend bool operator==(const 特征概念存在集合值域&,
+        const 特征概念存在集合值域&) = default;
+};
+
 // I64标量使用规范化闭区间；结构化I64材料使用有序分量值域；
 // 其它材料可使用全材料值域或完整特征值节点身份集合。
 using 特征概念值域 = std::variant<
@@ -87,7 +95,8 @@ using 特征概念值域 = std::variant<
     特征概念结构化I64值域,
     特征概念存在引用值域,
     特征概念任务集合值域,
-    特征概念需求集合值域>;
+    特征概念需求集合值域,
+    特征概念存在集合值域>;
 
 using 特征概念准确值 = std::variant<std::int64_t, 稳定编码>;
 
@@ -96,7 +105,8 @@ enum class 特征概念比较规则 : std::int64_t {
     完整材料精确 = 2,
     存在身份精确 = 3,
     服务任务集合身份判等 = 4,
-    需求集合身份判等 = 5
+    需求集合身份判等 = 5,
+    存在集合身份判等 = 6
 };
 
 enum class 特征概念聚合规则 : std::int64_t {
@@ -133,7 +143,7 @@ struct 特征概念信息 final {
 };
 
 enum class 特征概念直接子查询状态 : std::uint8_t {
-    已完成, 输入拒绝, 内部不一致, 工程未完成
+    已完成, 输入拒绝, 内部不一致, 工程未完成, 前提已变化
 };
 
 struct 特征概念直接子查询结果 final {
@@ -150,7 +160,55 @@ enum class 特征概念规则状态 : std::uint8_t {
     规则不支持 = 6,
     资源失败 = 7,
     内部不一致 = 8,
-    读取接口未装配 = 9
+    读取接口未装配 = 9,
+    前提已变化 = 10
+};
+
+struct 特征概念编码操作结果 final {
+    特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
+    std::optional<稳定编码> 概念节点;
+};
+struct 特征概念查询操作结果 final {
+    特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
+    std::vector<稳定编码> 概念节点组;
+};
+class 存在集合保护准备凭据 final {
+public:
+    ~存在集合保护准备凭据();
+    存在集合保护准备凭据(存在集合保护准备凭据&&) noexcept;
+    存在集合保护准备凭据& operator=(存在集合保护准备凭据&&) noexcept;
+    存在集合保护准备凭据(const 存在集合保护准备凭据&) = delete;
+    存在集合保护准备凭据& operator=(const 存在集合保护准备凭据&) = delete;
+private:
+    struct 实现;
+    explicit 存在集合保护准备凭据(std::unique_ptr<实现>);
+    std::unique_ptr<实现> 实现_;
+    friend class 概念_特征类;
+};
+struct 存在集合保护准备结果 final {
+    特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
+    std::optional<存在集合保护准备凭据> 凭据;
+};
+struct 存在集合依据推进结果 final {
+    特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
+    std::vector<基础联合节点快照> 推进后依据;
+};
+
+struct 特征存在成员读取结果 final {
+    特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
+    std::optional<稳定编码> 存在节点;
+    std::vector<基础联合节点快照> 身份保护;
+};
+class 特征存在成员读取接口 {
+public:
+    virtual ~特征存在成员读取接口() = default;
+    virtual 特征存在成员读取结果 读取存在集合成员身份(稳定编码) const noexcept = 0;
+};
+struct 特征存在集合条件比较结果 final {
+    特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
+    std::int64_t 满足 = 0;
+    std::vector<稳定编码> 缺少存在节点组;
+    bool 缺少任意存在 = false;
 };
 
 enum class 特征任务成员读取状态 : std::uint8_t {
@@ -261,7 +319,8 @@ enum class 特征概念查找状态 : std::uint8_t {
     单位不相容 = 5,
     匹配冲突 = 6,
     结构不一致 = 7,
-    资源失败 = 8
+    资源失败 = 8,
+    前提已变化 = 9
 };
 
 struct 特征概念按值查找结果 final {
@@ -279,6 +338,7 @@ struct 先天特征概念集合 final {
     稳定编码 三维体素;
     稳定编码 服务任务集合;
     稳定编码 服务对象需求集合;
+    稳定编码 交互对象集合;
     bool 完整() const noexcept;
     friend bool operator==(const 先天特征概念集合&,
         const 先天特征概念集合&) = default;
@@ -312,6 +372,16 @@ struct 特征概念定义保护结果 final {
 };
 class 概念_特征类 final {
 public:
+    特征概念编码操作结果 建立或取得特征概念强类型(
+        const 特征概念定义&, const 新_特征值类&,
+        std::optional<稳定编码> = std::nullopt) noexcept;
+    特征概念规则状态 更新特征概念值域强类型(
+        稳定编码, const 特征概念值域&, const 新_特征值类&) noexcept;
+    特征概念查询操作结果 查询特征概念强类型(const 特征概念定义&) const noexcept;
+    存在集合保护准备结果 准备存在集合材料保护(
+        稳定编码, 稳定编码, const 新_特征值类&,
+        const std::vector<基础联合节点快照>&) noexcept;
+    存在集合依据推进结果 消费存在集合保护依据(存在集合保护准备凭据&&) const noexcept;
     特征概念定义保护结果 读取特征概念定义保护(稳定编码) const noexcept;
     // 解析器由上层装配，必须比本对象存活更久；材料特征不依赖该接口。
     void 装配存在引用读取接口(
@@ -321,6 +391,15 @@ public:
     // 上层在线程全部停止后解除，且接口提供者必须存活至解除完成。
     void 装配任务成员读取接口(const 特征任务成员读取接口*) noexcept;
     void 装配需求成员读取接口(const 特征需求成员读取接口*) noexcept;
+    void 装配存在成员读取接口(const 特征存在成员读取接口*) noexcept;
+    特征存在集合条件比较结果 比较存在集合值域(
+        稳定编码, const 特征概念准确值&, const 特征概念存在集合值域&,
+        const 新_特征值类&) const noexcept;
+    稳定编码 存在集合成员保护字段() const noexcept;
+    特征概念规则状态 确保存在集合材料保护(
+        稳定编码, 稳定编码, const 新_特征值类&) noexcept;
+    特征概念规则状态 核验存在集合材料保护(
+        稳定编码, 稳定编码, const 新_特征值类&) const noexcept;
 
     特征需求集合条件比较结果 比较需求集合值域(
         稳定编码 类型根, const 特征概念准确值& 当前,
@@ -408,6 +487,10 @@ public:
         const 新_特征值类& 特征值服务) const noexcept;
 
 private:
+    稳定编码 建立特征概念内部(const 特征概念定义&, const 新_特征值类&,
+        std::optional<稳定编码>);
+    bool 更新特征概念值域内部(稳定编码, const 特征概念值域&, const 新_特征值类&);
+    std::vector<稳定编码> 查询特征概念内部(const 特征概念定义&) const;
     friend class 概念_名称关系类;
 
     bool 绑定名称关系(
@@ -418,6 +501,7 @@ private:
     const 特征存在引用读取接口* 存在引用读取接口_ = nullptr;
     const 特征任务成员读取接口* 任务成员读取接口_ = nullptr;
     const 特征需求成员读取接口* 需求成员读取接口_ = nullptr;
+    const 特征存在成员读取接口* 存在成员读取接口_ = nullptr;
     // 初始化时借用，不拥有；服务须覆盖本对象的初始化后使用期。
     // 仅供无材料参数的值域比较入口读取有限材料，不另建材料owner。
     const 新_特征值类* 特征值读取服务_ = nullptr;

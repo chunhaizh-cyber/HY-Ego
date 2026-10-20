@@ -73,7 +73,8 @@ enum class 新特征写入状态 : std::uint8_t {
     结构不一致 = 7,
     值已更新但聚合未完成 = 8,
     资源失败 = 9,
-    联合更新占用 = 10
+    联合更新占用 = 10,
+    前提已变化 = 11
 };
 
 struct 新特征值添加结果 final {
@@ -84,6 +85,10 @@ struct 新特征值添加结果 final {
     bool 标准值已改变 = false;
     std::optional<稳定编码> 接收子特征节点;
     std::optional<特征概念聚合结果> 聚合结果;
+};
+struct 新特征建立结果 final {
+    新特征写入状态 状态 = 新特征写入状态::入口拒绝;
+    std::optional<稳定编码> 特征节点;
 };
 
 enum class 新特征I64准备状态 : std::uint8_t {
@@ -168,7 +173,8 @@ enum class 新特征比较状态 : std::uint8_t {
     值不存在 = 8,
     结构不一致 = 9,
     资源失败 = 10,
-    规则不支持 = 11
+    规则不支持 = 11,
+    前提已变化 = 12
 };
 
 enum class 新特征比较材料 : std::uint8_t {
@@ -244,6 +250,27 @@ struct 新特征概念相似度结果 final {
     std::optional<std::int64_t> 相似度;
 };
 
+enum class 新特征清理准备状态 : std::uint8_t {
+    已准备 = 1, 联合更新占用, 仍被外部引用, 入口拒绝, 结构不一致, 资源失败
+};
+class 新特征清理准备 final {
+public:
+    ~新特征清理准备();
+    新特征清理准备(新特征清理准备&&) noexcept;
+    新特征清理准备& operator=(新特征清理准备&&) noexcept;
+    新特征清理准备(const 新特征清理准备&) = delete;
+    新特征清理准备& operator=(const 新特征清理准备&) = delete;
+private:
+    struct 实现;
+    explicit 新特征清理准备(std::unique_ptr<实现>);
+    std::unique_ptr<实现> 实现_;
+    friend class 新_特征类;
+};
+struct 新特征清理准备结果 final {
+    新特征清理准备状态 状态 = 新特征清理准备状态::入口拒绝;
+    std::optional<新特征清理准备> 准备;
+};
+
 class 新_特征类 final {
 public:
     新特征引用集合保护结果 捕获引用集合更新保护(稳定编码) const noexcept;
@@ -269,6 +296,12 @@ public:
     // 提供实际值时，会在同一特征类型概念图中选择包含该值的最具体概念
     // 作为模板；本函数只建立节点，不写入实际值。
     稳定编码 建立特征(
+        稳定编码 特征概念节点,
+        std::optional<新特征准确值> 实际值 = std::nullopt) noexcept;
+    新特征建立结果 建立特征强类型(
+        稳定编码 特征概念节点,
+        std::optional<新特征准确值> 实际值 = std::nullopt) noexcept;
+    新特征写入状态 准备特征初值保护(
         稳定编码 特征概念节点,
         std::optional<新特征准确值> 实际值 = std::nullopt) noexcept;
 
@@ -304,6 +337,10 @@ public:
     // 调用方必须先解除业务持有者对该特征节点的内部字段引用。
     // 本函数递归删除归组子特征，并同步减少正式特征概念引用。
     bool 删除特征(稳定编码 特征节点) noexcept;
+    新特征清理准备结果 准备特征组清理(
+        const std::vector<稳定编码>& 根特征组,
+        const std::vector<稳定编码>& 允许解除入向字段关系组) noexcept;
+    void 执行已准备特征组清理(新特征清理准备&) noexcept;
 
     // 更新当前值；每次调用给该准确值增加一次命中次数，首次出现时加入历史集合。
     // 标准值首次出现时建立；以后只有候选命中次数严格超过当前标准值时才替换。
