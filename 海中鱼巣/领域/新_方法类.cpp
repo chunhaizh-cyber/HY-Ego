@@ -2825,7 +2825,9 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
 
 新方法建立结果 新_方法类::退役旧网页本能登记(const std::string& 登记名) noexcept {
     if (登记名 != 新本能函数登记名_读取网页对话消息
-        && 登记名 != 新本能函数登记名_获取服务对象)
+        && 登记名 != 新本能函数登记名_获取服务对象
+        && 登记名 != 新本能函数登记名_设置网页对话输入文本
+        && 登记名 != 新本能函数登记名_提交网页对话消息)
         return {新方法操作状态::函数登记不合法, std::nullopt};
     新特征I64准备结果 准备;
     std::optional<稳定编码> 前状态;
@@ -2836,8 +2838,8 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
         核验治理组织就绪();
         const auto 已有 = 查询本能登记结构(登记名, 特征概念服务_, *this);
         if (已有.状态 == 新方法操作状态::方法不存在) return 已有;
-        if (登记名 == 新本能函数登记名_读取网页对话消息)
-            throw std::runtime_error("legacy web reader has no recognized method-head contract");
+        if (登记名 != 新本能函数登记名_获取服务对象)
+            throw std::runtime_error("legacy web transport has no recognized method-head contract");
         if (已有.状态 == 新方法操作状态::登记已退役) return 已有;
         if (已有.状态 != 新方法操作状态::已找到 || !已有.方法节点)
             throw std::runtime_error("legacy method registration unreadable");

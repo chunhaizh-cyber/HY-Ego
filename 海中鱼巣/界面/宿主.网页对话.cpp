@@ -97,36 +97,58 @@ struct HTTP请求 final {
     std::optional<std::string> 对话框标识;
 };
 
+struct 网页待发送项 final {
+    网页定向发送事实 事实;
+    网页定向发送结果 结果;
+};
+struct 网页对话框传输状态 final {
+    网页对话框目标 目标;
+    std::vector<网页对话已显示消息> 消息组;
+    std::vector<网页待发送项> 提交组;
+    std::uint64_t 下一页面序号 = 1;
+};
 struct 网页对话共享状态 final {
     std::mutex 互斥;
     bool 运行中 = false;
+    bool 接纳提交 = false;
+    // 只在运行租约内借用；所有读取、清空都持本锁，不向调用者交付引用。
+    const volatile std::sig_atomic_t* 停止信号 = nullptr;
     std::string 会话标识;
-    std::vector<网页对话已显示消息> 消息组;
+    std::vector<网页对话框传输状态> 页面组;
     std::uint64_t 下一上行序号 = 1;
-    std::uint64_t 下一页面序号 = 1;
-    std::optional<std::string> 待提交文本;
+    std::uint64_t 下一提交序号 = 1;
 };
 
 网页对话共享状态 共享状态;
+
+// 调用者持有宿主锁；不清除会话，正在写出项仍须收口真实事实。
+void 停止接纳提交() noexcept {
+    共享状态.接纳提交 = false;
+    for (auto& 页面 : 共享状态.页面组)
+        for (auto& 项 : 页面.提交组)
+            if (项.结果.状态 == 网页定向发送状态::已排队)
+                项.结果.状态 = 网页定向发送状态::已取消;
+}
 
 class 网页对话会话租约 final {
 public:
     网页对话会话租约() = default;
 
-    bool 开始(std::string_view 会话标识) noexcept {
+    bool 开始(std::string_view 会话标识, const volatile std::sig_atomic_t& 停止请求) noexcept {
         try {
             std::lock_guard 锁(共享状态.互斥);
             if (共享状态.运行中 || 会话标识.empty()) return false;
             共享状态.会话标识.assign(会话标识);
-            共享状态.消息组.clear();
+            共享状态.页面组.clear();
             共享状态.下一上行序号 = 1;
-            共享状态.下一页面序号 = 1;
-            共享状态.待提交文本.reset();
+            共享状态.下一提交序号 = 1;
+            共享状态.停止信号 = &停止请求;
+            共享状态.接纳提交 = 停止请求 == 0;
             共享状态.运行中 = true;
             已开始_ = true;
             return true;
         } catch (...) {
-            return false;
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"开始网页会话", L"传输状态初始化失败。");
         }
     }
 
@@ -134,10 +156,20 @@ public:
         if (!已开始_) return;
         try {
             std::lock_guard 锁(共享状态.互斥);
+            停止接纳提交();
+            共享状态.停止信号 = nullptr;
             共享状态.运行中 = false;
-            共享状态.待提交文本.reset();
+            for (auto& 页面 : 共享状态.页面组) {
+                for (auto& 项 : 页面.提交组) {
+                    if (项.结果.状态 == 网页定向发送状态::已排队)
+                        项.结果.状态 = 网页定向发送状态::已取消;
+                    if (项.结果.状态 == 网页定向发送状态::正在写出)
+                        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"结束网页会话", L"真实写出尚未完成事实收口。");
+                }
+            }
             共享状态.会话标识.clear();
         } catch (...) {
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"结束网页会话", L"传输状态取消失败。");
         }
     }
 
@@ -326,18 +358,31 @@ bool 是合法对话框标识(std::string_view 值) noexcept {
     return 请求读取状态::已读取;
 }
 
-bool 发送全部(SOCKET 客户端, std::string_view 内容) noexcept {
+struct 网页HTTP写出结果 final {
+    bool 完整写出 = false;
+    std::size_t 已写字节数 = 0;
+    int 系统错误 = 0;
+};
+
+网页HTTP写出结果 发送全部(SOCKET 客户端, std::string_view 内容) noexcept {
+    网页HTTP写出结果 结果;
     while (!内容.empty()) {
         const auto 本次 = (std::min)(内容.size(),
             static_cast<std::size_t>((std::numeric_limits<int>::max)()));
         const int 已发 = send(客户端, 内容.data(), static_cast<int>(本次), 0);
-        if (已发 == SOCKET_ERROR || 已发 == 0) return false;
+        if (已发 == SOCKET_ERROR) {
+            结果.系统错误 = WSAGetLastError();
+            return 结果;
+        }
+        if (已发 == 0) return 结果;
+        结果.已写字节数 += static_cast<std::size_t>(已发);
         内容.remove_prefix(static_cast<std::size_t>(已发));
     }
-    return true;
+    结果.完整写出 = true;
+    return 结果;
 }
 
-void 发送响应(SOCKET 客户端,
+网页HTTP写出结果 发送响应(SOCKET 客户端,
     std::string_view 状态,
     std::string_view 类型,
     std::string_view 正文) noexcept {
@@ -357,8 +402,9 @@ void 发送响应(SOCKET 客户端,
         响应 += "style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; ";
         响应 += "frame-ancestors 'none'\r\n\r\n";
         响应.append(正文);
-        (void)发送全部(客户端, 响应);
+        return 发送全部(客户端, 响应);
     } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"构造网页响应", L"完整HTTP载荷构造失败，不解释为网络断开。");
     }
 }
 
@@ -770,7 +816,7 @@ label{display:grid;gap:6px;font-size:14px}[hidden]{display:none!important}input,
 </head>
 <body>
 <main>
-<header><h1>海中鱼巣 · 网页交互窗口</h1><span class="status" id="status">已连接本机服务</span></header>
+<header><h1>海中鱼巣 · 网页交互窗口</h1><span class="status" id="status">正在访问本机服务</span></header>
 <section id="messages"><div class="empty">尚无对话消息</div></section>
 <form id="form"><textarea id="input" maxlength="1048576" placeholder="输入消息；Enter发送，Shift+Enter换行"></textarea><button type="submit">发送</button><button type="button" class="secondary" id="close">结束</button><footer>网页接收成功只表示消息进入当前交互宿主，不表示任务完成或需求满足。</footer></form>
 <section id="service">
@@ -801,7 +847,9 @@ const form=document.getElementById('form');
 const status=document.getElementById('status');
 const dialogueId=globalThis.crypto?.randomUUID?.();
 function render(items){messages.replaceChildren();if(!items.length){const e=document.createElement('div');e.className='empty';e.textContent='尚无对话消息';messages.append(e);return;}for(const item of items){const e=document.createElement('div');e.className='message '+item.role;e.textContent=item.text;messages.append(e);}messages.scrollTop=messages.scrollHeight;}
-async function refresh(){try{const r=await fetch(base+'/api/messages',{cache:'no-store'});if(!r.ok)throw new Error();render((await r.json()).messages);status.textContent='已连接本机服务';}catch{status.textContent='本机服务不可用';}}
+let refreshing=false;
+async function refresh(){if(refreshing)return;refreshing=true;try{if(!dialogueId)throw new Error();const headers={'X-HY-Dialogue-Id':dialogueId};const outbound=await fetch(base+'/api/outbound',{cache:'no-store',headers});if(outbound.status!==204){if(!outbound.ok)throw new Error();await outbound.json();}const r=await fetch(base+'/api/messages',{cache:'no-store',headers});if(!r.ok)throw new Error();render((await r.json()).messages);status.textContent='本机服务可访问';}catch{status.textContent=dialogueId?'本机服务取件异常':'浏览器不支持安全对话框标识';}finally{refreshing=false;}}
+async function poll(){await refresh();setTimeout(poll,750);}
 form.addEventListener('submit',async e=>{e.preventDefault();const text=input.value;if(!text)return;if(!dialogueId){status.textContent='浏览器不支持安全对话框标识，不能提交';return;}const button=form.querySelector('button[type=submit]');button.disabled=true;try{const r=await fetch(base+'/api/messages',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8','X-HY-Dialogue-Id':dialogueId},body:text});if(!r.ok)throw new Error();input.value='';await refresh();}catch{status.textContent='消息提交失败';}finally{button.disabled=false;input.focus();}});
 input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit();}});
 document.getElementById('close').addEventListener('click',async()=>{try{await fetch(base+'/api/close',{method:'POST'});}finally{document.body.innerHTML='<main style="height:auto;padding:28px"><h1>交互宿主已结束</h1><p>现在可以关闭此页面。</p></main>';}});
@@ -828,7 +876,7 @@ serviceRefresh.addEventListener('click',async()=>{if(!requestId||serviceBusy)ret
 document.getElementById('service-new').addEventListener('click',()=>{if(serviceBusy)return;serviceForm.reset();requestId=null;sourceId=crypto.randomUUID();serviceRefresh.disabled=true;invalidatePreview();selectServiceMode();});
 serviceConfirm.addEventListener('click',async()=>{if(!previewId||serviceBusy)return;const confirming=previewId;previewId=null;serviceBusy=true;serviceConfirm.disabled=true;serviceSubmit.disabled=true;serviceFields.disabled=true;try{const data=await serviceRequest('confirm',new URLSearchParams({preview:confirming}));displayServiceInfo(data.info);if(requestId)displayPartial(await partialRequest());else serviceStatus.textContent='已确认，不表示服务完成。';}catch(error){serviceStatus.textContent=error.message+'；原要求保留，可刷新状态。';}finally{serviceBusy=false;serviceSubmit.disabled=false;serviceFields.disabled=false;selectServiceMode();}});
 loadServiceOptions();
-refresh();setInterval(refresh,750);
+poll();
 </script>
 </body>
 </html>)HTML";
@@ -879,27 +927,90 @@ std::optional<std::uint64_t> 取得下一上行序号(
     }
 }
 
-bool 追加交互者消息(
-    std::string_view 会话标识,
-    std::uint64_t 上行序号,
-    std::string UTF8正文) noexcept {
-    try {
+// 以下引用仅在持有宿主互斥期间使用，绝不跨锁或回调保存。
+网页对话框传输状态* 查找传输页面(const 网页对话框目标& 目标) {
+    网页对话框传输状态* 命中 = nullptr;
+    for (auto& 页面 : 共享状态.页面组) {
+        if (页面.目标 != 目标) continue;
+        if (命中) throw std::runtime_error("duplicate dialogue transport identity");
+        命中 = &页面;
+    }
+    return 命中;
+}
+
+void 追加页面消息(网页对话框传输状态& 页面, 网页对话消息角色 角色, std::string 正文) {
+    if (页面.下一页面序号 == 0 || 页面.下一页面序号 == (std::numeric_limits<std::uint64_t>::max)()
+        || 页面.消息组.size() != 页面.下一页面序号 - 1)
+        throw std::runtime_error("dialogue display sequence corrupted");
+    页面.消息组.push_back({页面.下一页面序号, 角色, std::move(正文)});
+    ++页面.下一页面序号;
+}
+
+bool 确认传输页面(const 网页对话框目标& 目标, const 网页对话框事实回调组& 回调) {
+    // 不持宿主锁进入普通应用锁；返回后再核验运行身份。
+    if (!回调.确认页面(目标)) return false;
+    std::lock_guard 锁(共享状态.互斥);
+    if (!共享状态.运行中 || 共享状态.会话标识 != 目标.公开会话标识) return false;
+    if (!查找传输页面(目标)) 共享状态.页面组.push_back({目标});
+    return true;
+}
+
+void 追加交互者消息(const 网页对话框目标& 目标,
+    std::uint64_t 上行序号, std::string UTF8正文) {
+    std::lock_guard 锁(共享状态.互斥);
+    auto* 页面 = 查找传输页面(目标);
+    if (!共享状态.运行中 || 共享状态.会话标识 != 目标.公开会话标识
+        || !页面 || 共享状态.下一上行序号 != 上行序号)
+        throw std::runtime_error("received dialogue projection identity changed");
+    追加页面消息(*页面, 网页对话消息角色::交互者, std::move(UTF8正文));
+    ++共享状态.下一上行序号;
+}
+
+void 处理定向取件(SOCKET 客户端, const 网页对话框目标& 目标,
+    const 网页对话框事实回调组& 回调) {
+    std::optional<网页定向发送事实> 事实;
+    {
         std::lock_guard 锁(共享状态.互斥);
-        if (!共享状态.运行中 || 共享状态.会话标识 != 会话标识
-            || 共享状态.下一上行序号 != 上行序号
-            || 共享状态.下一页面序号 == 0
-            || 共享状态.下一页面序号
-                > static_cast<std::uint64_t>(
-                    (std::numeric_limits<std::int64_t>::max)())) {
-            return false;
+        auto* 页面 = 查找传输页面(目标);
+        if (!共享状态.运行中 || 共享状态.会话标识 != 目标.公开会话标识 || !页面)
+            throw std::runtime_error("outbound dialogue identity invalid");
+        if (!共享状态.停止信号) throw std::runtime_error("outbound stop signal unavailable");
+        if (*共享状态.停止信号 != 0) 停止接纳提交();
+        for (auto& 项 : 页面->提交组) {
+            if (项.结果.状态 != 网页定向发送状态::已排队) continue;
+            if (项.事实.目标 != 目标 || !项.结果.提交序号 || *项.结果.提交序号 != 项.事实.提交序号)
+                throw std::runtime_error("outbound item identity corrupted");
+            事实 = 项.事实;
+            项.结果.状态 = 网页定向发送状态::正在写出;
+            break;
         }
-        共享状态.消息组.push_back({共享状态.下一页面序号,
-            网页对话消息角色::交互者, std::move(UTF8正文)});
-        ++共享状态.下一页面序号;
-        ++共享状态.下一上行序号;
-        return true;
-    } catch (...) {
-        return false;
+    }
+    if (!事实) {
+        (void)发送响应(客户端, "204 No Content", "application/json;charset=utf-8", "");
+        return;
+    }
+    const std::string 正文 = "{\"id\":\"" + std::to_string(事实->提交序号)
+        + "\",\"text\":\"" + JSON转义(事实->UTF8正文) + "\"}";
+    const auto 写出 = 发送响应(客户端, "200 OK", "application/json;charset=utf-8", 正文);
+    if (写出.完整写出) 回调.发送完成(*事实);
+    {
+        std::lock_guard 锁(共享状态.互斥);
+        auto* 页面 = 查找传输页面(目标);
+        if (!共享状态.运行中 || 共享状态.会话标识 != 目标.公开会话标识 || !页面)
+            throw std::runtime_error("outbound result dialogue disappeared");
+        网页待发送项* 命中 = nullptr;
+        for (auto& 项 : 页面->提交组) {
+            if (项.事实.提交序号 != 事实->提交序号) continue;
+            if (命中) throw std::runtime_error("outbound submission duplicated");
+            命中 = &项;
+        }
+        if (!命中 || 命中->结果.状态 != 网页定向发送状态::正在写出
+            || 命中->事实.目标 != 目标 || 命中->事实.UTF8正文 != 事实->UTF8正文)
+            throw std::runtime_error("outbound result payload changed");
+        命中->结果.状态 = 写出.完整写出 ? 网页定向发送状态::已完整写出 : 网页定向发送状态::写出未完成;
+        命中->结果.HTTP已写字节数 = 写出.已写字节数;
+        命中->结果.系统错误 = 写出.系统错误;
+        if (写出.完整写出) 追加页面消息(*页面, 网页对话消息角色::自我, 事实->UTF8正文);
     }
 }
 
@@ -909,7 +1020,8 @@ bool 处理请求(SOCKET 客户端,
     const std::string& 页面,
     bool& 请求结束,
     网页对话消息接收函数 消息接收,
-    const 网页服务输入回调组& 服务输入) {
+    const 网页服务输入回调组& 服务输入,
+    const 网页对话框事实回调组& 对话框事实) {
     HTTP请求 请求;
     const auto 读取状态 = 读取请求(客户端, 请求);
     if (读取状态 == 请求读取状态::请求过大) {
@@ -922,14 +1034,36 @@ bool 处理请求(SOCKET 客户端,
     }
 
     const std::string 消息路径 = std::string(基础路径) + "/api/messages";
+    const std::string 取件路径 = std::string(基础路径) + "/api/outbound";
     const std::string 结束路径 = std::string(基础路径) + "/api/close";
     if (处理服务输入请求(客户端, 请求, 基础路径, 会话标识, 服务输入)) return true;
     if (请求.方法 == "GET" && 请求.目标 == 基础路径) {
         发送响应(客户端, "200 OK", "text/html;charset=utf-8", 页面);
         return true;
     }
+    std::optional<网页对话框目标> 目标;
+    if ((请求.方法 == "GET" && (请求.目标 == 消息路径 || 请求.目标 == 取件路径))
+        || (请求.方法 == "POST" && 请求.目标 == 消息路径)) {
+        if (!请求.对话框标识) {
+            发送响应(客户端, "400 Bad Request", "text/plain;charset=utf-8", "缺少对话框标识");
+            return true;
+        }
+        if (请求.方法 == "POST" && (请求.正文.empty() || !是有效UTF8(请求.正文))) {
+            发送响应(客户端, "422 Unprocessable Content", "text/plain;charset=utf-8", "消息必须是非空UTF-8文本");
+            return true;
+        }
+        目标 = 网页对话框目标{std::string(会话标识), *请求.对话框标识};
+        if (!确认传输页面(*目标, 对话框事实)) {
+            发送响应(客户端, "503 Service Unavailable", "application/json;charset=utf-8", "{\"available\":false}");
+            return true;
+        }
+    }
+    if (请求.方法 == "GET" && 请求.目标 == 取件路径) {
+        处理定向取件(客户端, *目标, 对话框事实);
+        return true;
+    }
     if (请求.方法 == "GET" && 请求.目标 == 消息路径) {
-        const auto 读取 = 读取网页对话已显示消息(0);
+        const auto 读取 = 读取网页对话框显示消息(*目标, 0);
         if (读取.状态 != 网页对话外设状态::已完成
             && 读取.状态 != 网页对话外设状态::无变化) {
             发送响应(客户端, "503 Service Unavailable",
@@ -960,8 +1094,9 @@ bool 处理请求(SOCKET 客户端,
                 "{\"accepted\":false,\"retryable\":true}");
             return true;
         }
-        if (!追加交互者消息(
-                会话标识, *上行序号, std::move(请求.正文))) {
+        try {
+            追加交互者消息(*目标, *上行序号, std::move(请求.正文));
+        } catch (...) {
             工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"发布网页接收投影",
                 L"外设已接收真实消息，但宿主显示列表追加失败，保留正式事实。");
         }
@@ -970,6 +1105,10 @@ bool 处理请求(SOCKET 客户端,
         return true;
     }
     if (请求.方法 == "POST" && 请求.目标 == 结束路径 && 请求.正文.empty()) {
+        {
+            std::lock_guard 锁(共享状态.互斥);
+            停止接纳提交();
+        }
         请求结束 = true;
         发送响应(客户端, "200 OK", "application/json;charset=utf-8",
             "{\"closed\":true}");
@@ -991,194 +1130,121 @@ bool 网页对话宿主结果::成功() const noexcept {
     if (公开会话标识.empty() || !是有效UTF8(公开会话标识)) return {};
     try {
         std::lock_guard 锁(共享状态.互斥);
-        if (!共享状态.运行中)
-            return {网页对话会话核验状态::宿主未运行, std::nullopt};
-        if (共享状态.会话标识 != 公开会话标识)
-            return {网页对话会话核验状态::会话不匹配, std::nullopt};
-        if (共享状态.下一页面序号 == 0)
-            return {网页对话会话核验状态::内部错误, std::nullopt};
-        return {网页对话会话核验状态::已匹配,
-            共享状态.下一页面序号 - 1};
-    } catch (const std::bad_alloc&) {
-        return {网页对话会话核验状态::资源失败, std::nullopt};
-    } catch (const std::length_error&) {
-        return {网页对话会话核验状态::资源失败, std::nullopt};
+        if (!共享状态.运行中) return {网页对话会话核验状态::宿主未运行, std::nullopt};
+        if (共享状态.会话标识 != 公开会话标识) return {网页对话会话核验状态::会话不匹配, std::nullopt};
+        return {网页对话会话核验状态::已匹配, std::nullopt};
     } catch (...) {
-        return {网页对话会话核验状态::内部错误, std::nullopt};
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验网页会话", L"会话状态读取异常。");
     }
 }
 
 网页对话页面消息快照结果 读取网页对话会话页面消息快照(
-    std::string_view 公开会话标识,
-    std::uint64_t 已读页面序号,
-    std::size_t 最大消息条数,
-    std::size_t 最大正文总字节数) noexcept {
-    if (公开会话标识.empty() || !是有效UTF8(公开会话标识)
-        || 最大消息条数 == 0 || 最大消息条数 > 1024
-        || 最大正文总字节数 == 0
-        || 最大正文总字节数 > 8U * 1024U * 1024U) {
-        return {};
-    }
+    std::string_view, std::uint64_t, std::size_t, std::size_t) noexcept { return {}; }
 
+网页对话消息读取结果 读取网页对话已显示消息(std::uint64_t) noexcept { return {}; }
+网页对话外设操作结果 设置网页对话待提交文本(std::string_view) noexcept { return {}; }
+网页对话外设操作结果 提交网页对话待提交文本() noexcept { return {}; }
+
+网页定向发送结果 提交网页对话框消息(const 网页定向发送请求& 请求) noexcept {
+    if (请求.目标.公开会话标识.empty() || !是有效UTF8(请求.目标.公开会话标识)
+        || !是合法对话框标识(请求.目标.对话框标识) || 请求.UTF8正文.empty()
+        || 请求.UTF8正文.size() > 最大消息字节数 || !是有效UTF8(请求.UTF8正文)) return {};
     try {
         std::lock_guard 锁(共享状态.互斥);
-        if (!共享状态.运行中)
-            return {网页对话页面消息快照状态::宿主未运行};
-        if (共享状态.会话标识 != 公开会话标识)
-            return {网页对话页面消息快照状态::会话不匹配};
-        if (共享状态.下一页面序号 == 0) {
-            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
-                L"读取网页对话会话页面消息快照", L"页面序号结构损坏。");
-        }
-
-        const auto 截止 = 共享状态.下一页面序号 - 1;
-        if (已读页面序号 > 截止)
-            return {网页对话页面消息快照状态::输入拒绝};
-        if (截止 > (std::numeric_limits<std::size_t>::max)()
-            || 共享状态.消息组.size() != static_cast<std::size_t>(截止)) {
-            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
-                L"读取网页对话会话页面消息快照", L"页面消息组长度与截止序号不一致。");
-        }
-        for (std::size_t i = 0; i < 共享状态.消息组.size(); ++i) {
-            const auto& 消息 = 共享状态.消息组[i];
-            if (消息.页面序号 != static_cast<std::uint64_t>(i) + 1
-                || (消息.角色 != 网页对话消息角色::交互者
-                    && 消息.角色 != 网页对话消息角色::自我)) {
-                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
-                    L"读取网页对话会话页面消息快照", L"页面消息顺序或角色结构损坏。");
-            }
-        }
-
-        网页对话页面消息快照结果 结果;
-        结果.公开会话标识.assign(公开会话标识);
-        结果.请求已读页面序号 = 已读页面序号;
-        结果.截止页面序号 = 截止;
-        结果.已覆盖页面序号 = 已读页面序号;
-        std::size_t 已用正文总字节数 = 0;
-        for (std::size_t i = static_cast<std::size_t>(已读页面序号);
-            i < 共享状态.消息组.size(); ++i) {
-            const auto& 消息 = 共享状态.消息组[i];
-            if (结果.消息组.size() == 最大消息条数
-                || 消息.UTF8正文.size() > 最大正文总字节数 - 已用正文总字节数) {
-                结果.状态 = 网页对话页面消息快照状态::额度不足;
-                return 结果;
-            }
-            结果.消息组.push_back(消息);
-            已用正文总字节数 += 消息.UTF8正文.size();
-            结果.已覆盖页面序号 = 消息.页面序号;
-        }
-        结果.状态 = 网页对话页面消息快照状态::已完成;
-        结果.覆盖完整 = true;
+        if (!共享状态.运行中) return {网页定向发送状态::宿主未运行};
+        if (共享状态.会话标识 != 请求.目标.公开会话标识) return {网页定向发送状态::会话失效};
+        if (!共享状态.停止信号) throw std::runtime_error("running dialogue lacks stop signal lifetime");
+        if (*共享状态.停止信号 != 0) 停止接纳提交();
+        if (!共享状态.接纳提交) return {网页定向发送状态::宿主未运行};
+        auto* 页面 = 查找传输页面(请求.目标);
+        if (!页面) return {网页定向发送状态::对话框未登记};
+        if (!共享状态.下一提交序号 || 共享状态.下一提交序号 == (std::numeric_limits<std::uint64_t>::max)())
+            throw std::runtime_error("outbound submission sequence exhausted");
+        const auto 序号 = 共享状态.下一提交序号;
+        网页定向发送结果 结果{网页定向发送状态::已排队, 序号};
+        页面->提交组.push_back({{请求.目标, 序号, 请求.UTF8正文}, 结果});
+        ++共享状态.下一提交序号;
         return 结果;
-    } catch (const std::bad_alloc&) {
-        return {网页对话页面消息快照状态::资源失败};
-    } catch (const std::length_error&) {
-        return {网页对话页面消息快照状态::资源失败};
-    } catch (const std::exception& 异常) {
-        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
-            L"读取网页对话会话页面消息快照", L"宿主页面快照发生工程异常。", 异常.what());
     } catch (...) {
-        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
-            L"读取网页对话会话页面消息快照", L"宿主页面快照发生未知工程异常。");
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"提交定向网页消息", L"传输队列或载荷冻结失败。");
     }
 }
 
-网页对话消息读取结果 读取网页对话已显示消息(
+网页定向发送结果 查询网页对话框发送(const 网页对话框目标& 目标, std::uint64_t 提交序号) noexcept {
+    if (!提交序号 || 目标.公开会话标识.empty() || !是有效UTF8(目标.公开会话标识)
+        || !是合法对话框标识(目标.对话框标识)) return {};
+    try {
+        std::lock_guard 锁(共享状态.互斥);
+        if (!共享状态.运行中) return {网页定向发送状态::宿主未运行};
+        if (共享状态.会话标识 != 目标.公开会话标识) return {网页定向发送状态::会话失效};
+        const auto* 页面 = 查找传输页面(目标);
+        if (!页面) return {网页定向发送状态::对话框未登记};
+        const 网页待发送项* 命中 = nullptr;
+        for (const auto& 项 : 页面->提交组) {
+            if (项.事实.目标 != 目标 || !项.结果.提交序号 || *项.结果.提交序号 != 项.事实.提交序号)
+                throw std::runtime_error("outbound query item identity corrupted");
+            if (项.事实.提交序号 != 提交序号) continue;
+            if (命中) throw std::runtime_error("outbound query duplicate submission");
+            命中 = &项;
+        }
+        return 命中 ? 命中->结果 : 网页定向发送结果{网页定向发送状态::提交不存在};
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"查询定向网页消息", L"传输状态结构不一致。");
+    }
+}
+
+网页对话消息读取结果 读取网页对话框显示消息(const 网页对话框目标& 目标,
     std::uint64_t 已读页面序号) noexcept {
-    网页对话消息读取结果 结果;
+    if (目标.公开会话标识.empty() || !是有效UTF8(目标.公开会话标识)
+        || !是合法对话框标识(目标.对话框标识)) return {};
     try {
         std::lock_guard 锁(共享状态.互斥);
-        if (!共享状态.运行中) {
-            结果.状态 = 网页对话外设状态::宿主未运行;
-            return 结果;
+        if (!共享状态.运行中) return {网页对话外设状态::宿主未运行};
+        if (共享状态.会话标识 != 目标.公开会话标识) return {};
+        const auto* 页面 = 查找传输页面(目标);
+        if (!页面) return {};
+        if (!页面->下一页面序号 || 页面->消息组.size() != 页面->下一页面序号 - 1)
+            throw std::runtime_error("dialogue display sequence invalid");
+        网页对话消息读取结果 结果;
+        结果.最新页面序号 = 页面->下一页面序号 - 1;
+        if (已读页面序号 > 结果.最新页面序号) return {};
+        for (std::size_t 序号 = 0; 序号 < 页面->消息组.size(); ++序号) {
+            const auto& 项 = 页面->消息组[序号];
+            if (项.页面序号 != 序号 + 1
+                || (项.角色 != 网页对话消息角色::自我 && 项.角色 != 网页对话消息角色::交互者))
+                throw std::runtime_error("dialogue display item invalid");
+            if (项.页面序号 > 已读页面序号) 结果.消息组.push_back(项);
         }
-        结果.最新页面序号 = 共享状态.下一页面序号 - 1;
-        if (已读页面序号 > 结果.最新页面序号) {
-            结果.状态 = 网页对话外设状态::入口拒绝;
-            return 结果;
-        }
-        for (const auto& 消息 : 共享状态.消息组) {
-            if (消息.页面序号 > 已读页面序号) 结果.消息组.push_back(消息);
-        }
-        结果.状态 = 结果.消息组.empty()
-            ? 网页对话外设状态::无变化
-            : 网页对话外设状态::已完成;
+        结果.状态 = 结果.消息组.empty() ? 网页对话外设状态::无变化 : 网页对话外设状态::已完成;
         return 结果;
-    } catch (const std::bad_alloc&) {
-        结果.消息组.clear();
-        结果.状态 = 网页对话外设状态::资源失败;
     } catch (...) {
-        结果.消息组.clear();
-        结果.状态 = 网页对话外设状态::内部错误;
-    }
-    return 结果;
-}
-
-网页对话外设操作结果 设置网页对话待提交文本(
-    std::string_view UTF8正文) noexcept {
-    if (UTF8正文.empty() || UTF8正文.size() > 最大消息字节数
-        || !是有效UTF8(UTF8正文)) {
-        return {网页对话外设状态::入口拒绝, std::nullopt};
-    }
-    try {
-        std::lock_guard 锁(共享状态.互斥);
-        if (!共享状态.运行中) {
-            return {网页对话外设状态::宿主未运行, std::nullopt};
-        }
-        if (共享状态.待提交文本
-            && *共享状态.待提交文本 == UTF8正文) {
-            return {网页对话外设状态::无变化, std::nullopt};
-        }
-        共享状态.待提交文本 = std::string(UTF8正文);
-        return {网页对话外设状态::已完成, std::nullopt};
-    } catch (const std::bad_alloc&) {
-        return {网页对话外设状态::资源失败, std::nullopt};
-    } catch (...) {
-        return {网页对话外设状态::内部错误, std::nullopt};
-    }
-}
-
-网页对话外设操作结果 提交网页对话待提交文本() noexcept {
-    try {
-        std::lock_guard 锁(共享状态.互斥);
-        if (!共享状态.运行中) {
-            return {网页对话外设状态::宿主未运行, std::nullopt};
-        }
-        if (!共享状态.待提交文本 || 共享状态.待提交文本->empty()) {
-            return {网页对话外设状态::入口拒绝, std::nullopt};
-        }
-        if (共享状态.下一页面序号 == 0
-            || 共享状态.下一页面序号
-                > static_cast<std::uint64_t>(
-                    (std::numeric_limits<std::int64_t>::max)())) {
-            return {网页对话外设状态::内部错误, std::nullopt};
-        }
-        const auto 页面序号 = 共享状态.下一页面序号;
-        共享状态.消息组.push_back({页面序号,
-            网页对话消息角色::自我,
-            std::move(*共享状态.待提交文本)});
-        共享状态.待提交文本.reset();
-        ++共享状态.下一页面序号;
-        return {网页对话外设状态::已完成, 页面序号};
-    } catch (const std::bad_alloc&) {
-        return {网页对话外设状态::资源失败, std::nullopt};
-    } catch (...) {
-        return {网页对话外设状态::内部错误, std::nullopt};
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取对话框显示消息", L"页面投影读取异常。");
     }
 }
 
 网页对话宿主结果 运行本地网页对话宿主(
     const volatile std::sig_atomic_t& 停止请求,
     网页对话消息接收函数 消息接收) noexcept {
-    return 运行本地网页对话宿主(停止请求, 消息接收, {});
+    (void)停止请求; (void)消息接收;
+    return {网页对话宿主状态::会话绑定失败};
 }
 
 网页对话宿主结果 运行本地网页对话宿主(
     const volatile std::sig_atomic_t& 停止请求,
     网页对话消息接收函数 消息接收,
     const 网页服务输入回调组& 服务输入) noexcept {
+    (void)停止请求; (void)消息接收; (void)服务输入;
+    return {网页对话宿主状态::会话绑定失败};
+}
+
+网页对话宿主结果 运行本地网页对话宿主(
+    const volatile std::sig_atomic_t& 停止请求,
+    网页对话消息接收函数 消息接收,
+    const 网页服务输入回调组& 服务输入,
+    const 网页对话框事实回调组& 对话框事实) noexcept {
     try {
-        if (!消息接收) return {网页对话宿主状态::会话绑定失败};
+        if (!消息接收 || !对话框事实.确认页面 || !对话框事实.发送完成)
+            return {网页对话宿主状态::会话绑定失败};
         const bool 有服务输入 = 服务输入.会话开始 || 服务输入.会话结束
             || 服务输入.查询目标提示 || 服务输入.预览 || 服务输入.读取预览 || 服务输入.确认;
         if (有服务输入 && (!服务输入.会话开始 || !服务输入.会话结束
@@ -1219,9 +1285,9 @@ bool 网页对话宿主结果::成功() const noexcept {
         const std::string 页面 = 构造页面(基础路径);
         const std::string 浏览器地址 = "http://127.0.0.1:"
             + std::to_string(ntohs(地址.sin_port)) + 基础路径;
-        网页对话会话租约 会话;
-        if (!会话.开始(公开会话标识)) return {网页对话宿主状态::运行失败};
         网页服务会话租约 服务会话(公开会话标识, 服务输入);
+        网页对话会话租约 会话;
+        if (!会话.开始(公开会话标识, 停止请求)) return {网页对话宿主状态::运行失败};
         if (!服务会话.开始()) return {网页对话宿主状态::会话绑定失败};
         if (!启动系统浏览器(浏览器地址)) {
             return {网页对话宿主状态::浏览器启动失败};
@@ -1250,13 +1316,17 @@ bool 网页对话宿主结果::成功() const noexcept {
             (void)setsockopt(客户端.取得(), SOL_SOCKET, SO_SNDTIMEO,
                 reinterpret_cast<const char*>(&超时毫秒), sizeof(超时毫秒));
             (void)处理请求(客户端.取得(), 基础路径, 公开会话标识, 页面,
-                请求结束, 消息接收, 服务输入);
+                请求结束, 消息接收, 服务输入, 对话框事实);
+        }
+        {
+            std::lock_guard 锁(共享状态.互斥);
+            停止接纳提交();
         }
         return {请求结束
             ? 网页对话宿主状态::用户结束
             : 网页对话宿主状态::停止信号结束};
     } catch (...) {
-        return {网页对话宿主状态::内部错误};
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"网页传输运行", L"载荷或传输结构发生工程异常，保留已发生事实。");
     }
 }
 

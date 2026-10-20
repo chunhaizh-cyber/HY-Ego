@@ -11,7 +11,7 @@
 namespace 海中鱼巣 {
 namespace {
 稳定编码 外设根{};
-std::array<稳定编码, 4> 类型{};
+std::array<稳定编码, 6> 类型{};
 std::mutex 外设互斥;
 
 新状态强时间 当前强时间() {
@@ -80,10 +80,10 @@ bool 更新完成(新外设事实状态 状态) {
         特征概念定义 数量;
         数量.值域 = std::vector<特征概念I64闭区间>{{0, (std::numeric_limits<std::int64_t>::max)()}};
         数量.聚合规则 = 特征概念聚合规则::I64连续值归组;
-        const std::array<const char*, 4> 名称{"外设对话框公开会话", "外设对话框标识",
-            "外设对话框接收数量", "外设对话框接收内容"};
+        const std::array<const char*, 6> 名称{"外设对话框公开会话", "外设对话框标识",
+            "外设对话框接收数量", "外设对话框接收内容", "外设对话框发送数量", "外设对话框发送内容"};
         for (std::size_t 序号 = 0; 序号 < 类型.size(); ++序号) {
-            const auto 节点 = 确保具名类型(服务_, *语言.语言节点, 名称[序号], 序号 == 2 ? 数量 : 文本);
+            const auto 节点 = 确保具名类型(服务_, *语言.语言节点, 名称[序号], 序号 == 2 || 序号 == 4 ? 数量 : 文本);
             if (有效(类型[序号]) && 类型[序号] != 节点) throw std::runtime_error("peripheral type identity changed");
             类型[序号] = 节点;
             for (std::size_t 前序号 = 0; 前序号 < 序号; ++前序号)
@@ -130,10 +130,49 @@ std::string 新_外设世界树类::读取文本特征(稳定编码 特征) cons
     (void)读取文本特征(读取类型特征(场景材料->特征节点组, 类型[0]));
     (void)读取文本特征(读取类型特征(场景材料->特征节点组, 类型[1]));
     const auto 存在材料 = 服务_.存在服务.获取存在(场景材料->直接成员存在组[0]);
-    if (!存在材料 || 存在材料->父存在节点 || 存在材料->特征节点组.size() != 2 || !存在材料->子存在节点组.empty())
+    if (!存在材料 || 存在材料->父存在节点
+        || (存在材料->特征节点组.size() != 2 && 存在材料->特征节点组.size() != 4)
+        || !存在材料->子存在节点组.empty())
         throw std::runtime_error("peripheral window structure incomplete");
-    return {场景节点, 存在材料->节点, 读取类型特征(存在材料->特征节点组, 类型[2]),
+    新外设对话框定位 结果{场景节点, 存在材料->节点, 读取类型特征(存在材料->特征节点组, 类型[2]),
         读取类型特征(存在材料->特征节点组, 类型[3])};
+    if (存在材料->特征节点组.size() == 4) {
+        结果.发送数量特征 = 读取类型特征(存在材料->特征节点组, 类型[4]);
+        结果.发送内容特征 = 读取类型特征(存在材料->特征节点组, 类型[5]);
+    }
+    return 结果;
+}
+
+std::optional<新外设对话框定位> 新_外设世界树类::查找正式窗口(
+    std::string_view 公开宿主会话, std::string_view 对话框标识) const {
+    const auto 根 = 场景_.获取场景(外设根);
+    if (!根) throw std::runtime_error("peripheral root unreadable");
+    std::optional<新外设对话框定位> 命中;
+    for (const auto 节点 : 根->直接子场景组) {
+        const auto 定位 = 读取窗口定位(节点);
+        const auto 场景材料 = 场景_.获取场景(节点);
+        if (!场景材料) throw std::runtime_error("peripheral scene disappeared");
+        if (读取文本特征(读取类型特征(场景材料->特征节点组, 类型[0])) != 公开宿主会话
+            || 读取文本特征(读取类型特征(场景材料->特征节点组, 类型[1])) != 对话框标识) continue;
+        if (命中) throw std::runtime_error("peripheral dialogue identity duplicated");
+        命中 = 定位;
+    }
+    return 命中;
+}
+
+新外设对话框建立结果 新_外设世界树类::查找对话框场景(
+    std::string_view 公开宿主会话, std::string_view 对话框标识) const noexcept {
+    if (公开宿主会话.empty() || 对话框标识.empty()) return {};
+    try {
+        if (!新_语言类::严格UTF8字节串有效(std::string(公开宿主会话))
+            || !新_语言类::严格UTF8字节串有效(std::string(对话框标识))) return {};
+        std::lock_guard 锁(外设互斥);
+        if (!有效(外设根)) return {新外设事实状态::未初始化, {}};
+        const auto 命中 = 查找正式窗口(公开宿主会话, 对话框标识);
+        return {命中 ? 新外设事实状态::已完成 : 新外设事实状态::未找到, 命中};
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"查询外设对话框", L"正式定位或窗口结构不完整，不伪装未找到。");
+    }
 }
 
 新外设对话框建立结果 新_外设世界树类::建立或取得对话框场景(
@@ -142,18 +181,7 @@ std::string 新_外设世界树类::读取文本特征(稳定编码 特征) cons
     try {
         std::lock_guard 锁(外设互斥);
         if (!有效(外设根)) return {新外设事实状态::未初始化, {}};
-        const auto 根 = 场景_.获取场景(外设根);
-        if (!根) throw std::runtime_error("peripheral root unreadable");
-        std::optional<新外设对话框定位> 命中;
-        for (const auto 节点 : 根->直接子场景组) {
-            const auto 定位 = 读取窗口定位(节点);
-            const auto 场景材料 = 场景_.获取场景(节点);
-            if (!场景材料) throw std::runtime_error("peripheral scene disappeared");
-            if (读取文本特征(读取类型特征(场景材料->特征节点组, 类型[0])) != 公开宿主会话
-                || 读取文本特征(读取类型特征(场景材料->特征节点组, 类型[1])) != 对话框标识) continue;
-            if (命中) throw std::runtime_error("peripheral dialogue identity duplicated");
-            命中 = 定位;
-        }
+        const auto 命中 = 查找正式窗口(公开宿主会话, 对话框标识);
         if (命中) return {新外设事实状态::无变化, 命中};
         const auto 场景材料 = 场景_.建立场景(外设根);
         if (场景材料.状态 != 新场景操作状态::已完成 || !场景材料.场景节点)
@@ -167,12 +195,17 @@ std::string 新_外设世界树类::读取文本特征(稳定编码 特征) cons
         }
         新存在建立请求 请求;
         请求.初始特征组.push_back({类型[2], std::int64_t{0}});
+        请求.初始特征组.push_back({类型[4], std::int64_t{0}});
         const auto 存在材料 = 场景_.建立成员存在(*场景材料.场景节点, 请求, 时间);
         if (存在材料.状态 != 新场景操作状态::已完成 || !存在材料.存在节点)
             throw std::runtime_error("peripheral window creation failed");
         const auto 特征材料 = 场景_.添加场景内存在特征区间值(*场景材料.场景节点, *存在材料.存在节点, 类型[3], 特征概念全材料值域{});
         if (特征材料.状态 != 新场景操作状态::已完成)
             throw std::runtime_error("peripheral unknown text feature creation failed");
+        const auto 发送内容 = 场景_.添加场景内存在特征区间值(*场景材料.场景节点,
+            *存在材料.存在节点, 类型[5], 特征概念全材料值域{});
+        if (发送内容.状态 != 新场景操作状态::已完成)
+            throw std::runtime_error("peripheral unknown outbound text feature creation failed");
         return {新外设事实状态::已完成, 读取窗口定位(*场景材料.场景节点)};
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"取得外设对话框", L"定位或场景成员不完整，保留现场。");
@@ -228,7 +261,8 @@ void 新_外设世界树类::核验并处理已发布动态(稳定编码 场景�
     const 新外设对话框定位& 定位, 稳定编码 特征节点,
     const 新特征准确值& 新值, const 新状态强时间& 时间) {
     if (!场景_.是场景节点(定位.场景节点) || 读取窗口定位(定位.场景节点) != 定位
-        || (特征节点 != 定位.接收内容特征 && 特征节点 != 定位.接收数量特征)
+        || (特征节点 != 定位.接收内容特征 && 特征节点 != 定位.接收数量特征
+            && 定位.发送数量特征 != 特征节点 && 定位.发送内容特征 != 特征节点)
         || 时间.语义 != 新状态时间语义::实例绝对UTC || 时间.纳秒 < 0)
         throw std::runtime_error("peripheral feature publication input invalid");
     const auto 特征 = 服务_.特征服务.获取特征(特征节点);
@@ -291,6 +325,34 @@ void 新_外设世界树类::核验并处理已发布动态(稳定编码 场景�
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"记录外设接收",
             L"实际接收后特征发布或读回失败，保留已发生事实，不作为可重发否定。");
+    }
+}
+新外设事实状态 新_外设世界树类::更新发送(const 新外设对话框定位& 定位,
+    std::string_view 实际UTF8正文, const 新状态强时间& 发布时间) noexcept {
+    if (实际UTF8正文.empty()) return 新外设事实状态::入口拒绝;
+    try {
+        if (!新_语言类::严格UTF8字节串有效(std::string(实际UTF8正文)))
+            return 新外设事实状态::入口拒绝;
+        std::lock_guard 锁(外设互斥);
+        if (!有效(外设根)) return 新外设事实状态::未初始化;
+        if (读取窗口定位(定位.场景节点) != 定位 || !定位.发送数量特征 || !定位.发送内容特征)
+            throw std::runtime_error("outbound current page missing formal send features");
+        const auto 特征 = 服务_.特征服务.获取特征(*定位.发送数量特征);
+        const auto* 数量 = 特征 && 特征->当前值 ? std::get_if<std::int64_t>(&*特征->当前值) : nullptr;
+        if (!数量 || *数量 < 0 || *数量 == (std::numeric_limits<std::int64_t>::max)())
+            throw std::runtime_error("outbound send count invalid");
+        const auto 值 = 服务_.特征值服务.保存或取得特征值(材料物理类型::UTF8字符串, std::string(实际UTF8正文));
+        if (!有效(值) || !更新完成(更新窗口特征并形成动态(定位, *定位.发送内容特征, 值, 发布时间))
+            || !更新完成(更新窗口特征并形成动态(定位, *定位.发送数量特征, *数量 + 1, 发布时间)))
+            throw std::runtime_error("outbound formal publication incomplete");
+        const auto 后 = 服务_.特征服务.获取特征(*定位.发送数量特征);
+        if (!后 || !后->当前值 || *后->当前值 != 新特征准确值{*数量 + 1}
+            || 读取文本特征(*定位.发送内容特征) != 实际UTF8正文)
+            throw std::runtime_error("outbound formal publication readback failed");
+        return 新外设事实状态::已完成;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"记录外设发送",
+            L"完整写出已发生，正式发送事实发布失败，保留现场，不重发补记录。");
     }
 }
 } // namespace 海中鱼巣

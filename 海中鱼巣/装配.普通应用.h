@@ -71,6 +71,7 @@ struct 普通应用装配结果 final {
     std::optional<新世界初始化结果> 外设世界树;
     std::optional<新方法建立结果> 旧网页读取退役;
     std::optional<新方法建立结果> 旧服务对象退役;
+    std::optional<新方法建立结果> 旧网页设置核验, 旧网页提交核验;
     std::optional<新自然语言世界初始化结果> 自然语言世界树;
     std::optional<初始化概念名称结果> 初始概念名称;
     std::optional<初始化结构化子概念结果> 结构化子概念;
@@ -208,6 +209,8 @@ struct 普通应用网页自我归类表达结果 final {
     std::string_view 对话框标识,
     std::uint64_t 消息序号,
     std::string_view UTF8正文) noexcept;
+bool 确认普通应用网页对话框(const 网页对话框目标&) noexcept;
+void 接收普通应用网页发送事实(const 网页定向发送事实&) noexcept;
 
 网页服务输入状态 开始普通应用网页会话(std::string_view 公开会话标识) noexcept;
 void 结束普通应用网页会话(std::string_view 公开会话标识) noexcept;

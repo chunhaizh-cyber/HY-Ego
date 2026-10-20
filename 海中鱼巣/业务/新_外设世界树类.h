@@ -8,10 +8,11 @@ namespace 海中鱼巣 {
 struct 新外设对话框定位 final {
     稳定编码 场景节点, 窗口节点;
     稳定编码 接收数量特征, 接收内容特征;
+    std::optional<稳定编码> 发送数量特征, 发送内容特征;
     friend bool operator==(const 新外设对话框定位&, const 新外设对话框定位&) = default;
 };
 enum class 新外设事实状态 : std::uint8_t {
-    已完成, 无变化, 入口拒绝, 未初始化, 结构不一致, 资源失败
+    已完成, 无变化, 入口拒绝, 未初始化, 结构不一致, 资源失败, 未找到
 };
 struct 新外设对话框建立结果 final {
     新外设事实状态 状态 = 新外设事实状态::入口拒绝;
@@ -25,6 +26,11 @@ public:
     新世界初始化结果 初始化() noexcept;
     新外设对话框建立结果 建立或取得对话框场景(
         std::string_view 公开宿主会话, std::string_view 对话框标识) noexcept;
+    新外设对话框建立结果 查找对话框场景(
+        std::string_view 公开宿主会话, std::string_view 对话框标识) const noexcept;
+    新外设事实状态 更新发送(
+        const 新外设对话框定位&, std::string_view 实际UTF8正文,
+        const 新状态强时间& 发布时间) noexcept;
     新外设事实状态 更新接收(
         const 新外设对话框定位&, std::string_view 实际UTF8正文,
         const 新状态强时间& 接收时间) noexcept;
@@ -34,6 +40,8 @@ private:
         const 新特征准确值&, const 新状态强时间&);
     void 核验并处理已发布动态(稳定编码 场景节点, 稳定编码 动态节点);
     新外设对话框定位 读取窗口定位(稳定编码 场景节点) const;
+    std::optional<新外设对话框定位> 查找正式窗口(
+        std::string_view 公开宿主会话, std::string_view 对话框标识) const;
     稳定编码 读取类型特征(const std::vector<稳定编码>& 特征组, 稳定编码 类型根) const;
     std::string 读取文本特征(稳定编码 特征) const;
     新_世界树类& 世界_;

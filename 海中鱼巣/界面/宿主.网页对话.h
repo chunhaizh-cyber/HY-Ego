@@ -68,6 +68,7 @@ enum class 网页对话会话核验状态 : std::uint8_t {
 };
 struct 网页对话会话核验结果 final {
     网页对话会话核验状态 状态 = 网页对话会话核验状态::输入拒绝;
+    // 兼容字段：全局页面游标已退出，始终为nullopt。
     std::optional<std::uint64_t> 当前页面末序号;
 };
 网页对话会话核验结果 核验网页对话当前会话(
@@ -174,8 +175,41 @@ struct 网页服务输入回调组 {
         std::uint64_t 要求编码) noexcept = nullptr;
 };
 
-// 本能函数适配层只通过以下三个入口接触网页宿主。读取返回服务器已经
-// 提供给页面的数据；设置只形成待提交内容，提交才增加一条自我消息。
+struct 网页对话框目标 final {
+    std::string 公开会话标识;
+    std::string 对话框标识;
+    friend bool operator==(const 网页对话框目标&, const 网页对话框目标&) = default;
+};
+enum class 网页定向发送状态 : std::uint8_t {
+    已排队 = 1, 正在写出, 已完整写出, 写出未完成, 已取消,
+    输入拒绝, 宿主未运行, 会话失效, 对话框未登记, 提交不存在
+};
+struct 网页定向发送请求 final {
+    网页对话框目标 目标;
+    std::string UTF8正文;
+};
+struct 网页定向发送结果 final {
+    网页定向发送状态 状态 = 网页定向发送状态::输入拒绝;
+    std::optional<std::uint64_t> 提交序号;
+    std::size_t HTTP已写字节数 = 0;
+    int 系统错误 = 0;
+};
+struct 网页定向发送事实 final {
+    网页对话框目标 目标;
+    std::uint64_t 提交序号 = 0;
+    std::string UTF8正文;
+};
+struct 网页对话框事实回调组 final {
+    bool (*确认页面)(const 网页对话框目标&) noexcept = nullptr;
+    void (*发送完成)(const 网页定向发送事实&) noexcept = nullptr;
+};
+网页定向发送结果 提交网页对话框消息(const 网页定向发送请求&) noexcept;
+网页定向发送结果 查询网页对话框发送(
+    const 网页对话框目标&, std::uint64_t 提交序号) noexcept;
+网页对话消息读取结果 读取网页对话框显示消息(
+    const 网页对话框目标&, std::uint64_t 已读页面序号) noexcept;
+
+// 已退出的无目标入口：仅保留ABI，入口拒绝且零写入，不选择默认页面。
 网页对话消息读取结果 读取网页对话已显示消息(
     std::uint64_t 已读页面序号) noexcept;
 网页对话外设操作结果 设置网页对话待提交文本(
@@ -192,5 +226,10 @@ struct 网页服务输入回调组 {
     const volatile std::sig_atomic_t& 停止请求,
     网页对话消息接收函数 消息接收,
     const 网页服务输入回调组& 服务输入) noexcept;
+网页对话宿主结果 运行本地网页对话宿主(
+    const volatile std::sig_atomic_t& 停止请求,
+    网页对话消息接收函数 消息接收,
+    const 网页服务输入回调组& 服务输入,
+    const 网页对话框事实回调组& 对话框事实) noexcept;
 
 } // namespace 海中鱼巣
