@@ -1,8 +1,8 @@
 # 有序参数主线适配实施计划
 
-计划标识：METHOD-ORDERED-PARAMETERS-MAIN-ADAPT  
-版本：v0.1  
-日期：20261020  
+计划标识：METHOD-ORDERED-PARAMETERS-MAIN-ADAPT
+版本：v0.1
+日期：20261020
 当前状态：仅由计划索引维护；本文件不自行宣告进入执行队列。
 
 ## 1. 目标、依据与完成条件

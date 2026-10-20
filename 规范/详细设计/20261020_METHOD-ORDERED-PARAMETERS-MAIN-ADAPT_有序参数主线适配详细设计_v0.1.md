@@ -1,8 +1,8 @@
 # 有序参数主线适配详细设计
 
-编号：METHOD-ORDERED-PARAMETERS-MAIN-ADAPT  
-版本：v0.1  
-日期：20261020  
+编号：METHOD-ORDERED-PARAMETERS-MAIN-ADAPT
+版本：v0.1
+日期：20261020
 性质：已批准参数语义的主线代码适配设计；不表示代码完成。
 
 ## 1. 目标与边界
