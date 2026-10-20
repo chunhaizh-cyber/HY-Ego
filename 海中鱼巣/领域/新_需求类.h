@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 #include <cstdint>
 #include <functional>
@@ -123,9 +124,32 @@ struct 新服务要求确认同义结果 final {
     新服务要求确认状态 状态 = 新服务要求确认状态::未装配;
     std::optional<bool> 同义;
 };
+enum class 新服务要求确认保护状态 : std::uint8_t {
+    已准备 = 1, 确认不存在, 需重新确认, 前提已变化, 未装配, 结构不一致, 资源失败
+};
+class 新服务要求确认语义保护 final {
+public:
+    新服务要求确认语义保护(新服务要求确认语义保护&&) noexcept;
+    新服务要求确认语义保护& operator=(新服务要求确认语义保护&&) noexcept;
+    ~新服务要求确认语义保护();
+    新服务要求确认语义保护(const 新服务要求确认语义保护&) = delete;
+    新服务要求确认语义保护& operator=(const 新服务要求确认语义保护&) = delete;
+    const 新服务要求确认目标& 确认() const noexcept;
+    const std::vector<基础联合节点快照>& 预期节点组() const noexcept;
+private:
+    struct 实现;
+    explicit 新服务要求确认语义保护(std::unique_ptr<实现>) noexcept;
+    std::unique_ptr<实现> 实现_;
+    friend class 结构化服务要求服务;
+};
+struct 新服务要求确认保护结果 final {
+    新服务要求确认保护状态 状态 = 新服务要求确认保护状态::未装配;
+    std::optional<新服务要求确认语义保护> 保护;
+};
 class 新服务要求确认读取接口 {
 public:
     virtual ~新服务要求确认读取接口() = default;
+    virtual 新服务要求确认保护结果 准备服务要求确认语义保护(稳定编码) const noexcept = 0;
     virtual 新服务要求确认读取结果 读取服务要求确认身份(稳定编码) const noexcept = 0;
     virtual 新服务要求确认读取结果 复核服务要求确认语义(稳定编码) const noexcept = 0;
     virtual 新服务要求确认同义结果 比较服务要求确认固定语义(
@@ -239,7 +263,7 @@ enum class 新需求操作状态 : std::uint8_t {
     结构不一致 = 19,
     资源失败 = 20,
     权重不合法 = 21,
-    执行域不适用, 认知来源不合法, 同来源目标冲突, 需重新确认
+    执行域不适用, 认知来源不合法, 同来源目标冲突, 需重新确认, 前提已变化
 };
 
 struct 新被认知需求建立请求 final {
@@ -257,6 +281,33 @@ struct 新需求建立结果 final {
     新需求操作状态 状态 = 新需求操作状态::入口拒绝;
     std::optional<稳定编码> 需求节点;
     std::optional<稳定编码> 需求列表项节点;
+};
+
+struct 新需求集合发布关联 final {
+    稳定编码 需求节点, 主体存在节点, 场景节点, 动作节点;
+    friend bool operator==(const 新需求集合发布关联&, const 新需求集合发布关联&) = default;
+};
+struct 新需求集合发布关联结果 final {
+    新需求操作状态 状态 = 新需求操作状态::入口拒绝;
+    std::optional<新需求集合发布关联> 关联;
+};
+class 新需求集合发布准备 final {
+public:
+    新需求集合发布准备(新需求集合发布准备&&) noexcept;
+    新需求集合发布准备& operator=(新需求集合发布准备&&) noexcept;
+    ~新需求集合发布准备() noexcept;
+    新需求集合发布准备(const 新需求集合发布准备&) = delete;
+    新需求集合发布准备& operator=(const 新需求集合发布准备&) = delete;
+    const 基础封存追加片段& 片段() const noexcept;
+private:
+    struct 实现;
+    std::unique_ptr<实现> 实现_;
+    explicit 新需求集合发布准备(std::unique_ptr<实现>) noexcept;
+    friend class 新_需求类;
+};
+struct 新需求集合发布准备结果 final {
+    新需求操作状态 状态 = 新需求操作状态::入口拒绝;
+    std::optional<新需求集合发布准备> 准备;
 };
 
 enum class 新服务要求采用关系状态 : std::uint8_t {
@@ -340,7 +391,7 @@ struct 新需求当前满足结果 final {
 
 // ARCH-L4 需求组织服务。它只在同一个基础数据集中建立独立需求树，
 // 世界树、特征概念树和二次特征概念只作为只读引用来源。
-class 新_需求类 final {
+class 新_需求类 final : public 特征需求成员读取接口 {
 public:
     新_需求类(
         新_特征值类& 特征值服务,
@@ -375,6 +426,13 @@ public:
     新需求全集结果 查询全部需求() const noexcept;
     // 全部需求/列表及目标查询仅覆盖自我执行域；记录查询覆盖两域。
     新需求建立结果 建立或取得被认知需求(const 新被认知需求建立请求&) noexcept;
+    特征需求成员读取结果 读取需求集合成员身份(稳定编码) const noexcept override;
+    新需求集合发布准备结果 准备主体需求集合发布(
+        稳定编码 需求节点, 稳定编码 主体存在, 稳定编码 特征节点,
+        稳定编码 场景节点, 稳定编码 动作节点, const 基础联合节点快照& 特征保护) noexcept;
+    新需求集合发布关联结果 读取主体需求集合发布关联(稳定编码 需求节点) const noexcept;
+    void 完成主体需求集合发布(
+        const 新需求集合发布准备&, const 基础片段发布回执&) noexcept;
     新需求记录全集结果 查询全部需求记录() const noexcept;
     新需求记录全集结果 查询主体需求(稳定编码 主体存在, 新需求执行域 域) const noexcept;
     新需求记录全集结果 查询被认知需求来源(稳定编码 理解节点) const noexcept;

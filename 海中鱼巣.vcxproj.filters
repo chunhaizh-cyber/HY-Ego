@@ -452,6 +452,12 @@
     <ClCompile Include="海中鱼巣\业务\服务对象.本能运行服务.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\服务对象需求.发布服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\服务对象需求.发布服务.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClInclude Include="海中鱼巣\业务\服务需求.本能运行服务.h">
       <Filter>头文件</Filter>
     </ClInclude>

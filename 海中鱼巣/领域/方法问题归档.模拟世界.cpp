@@ -57,6 +57,7 @@ template<格式 F, class T> auto 成员(T& x) {
     else if constexpr (std::is_same_v<U, 新特征值命中信息>) return std::tie(x.值,x.命中次数);
     else if constexpr (std::is_same_v<U, 新特征信息>) return std::tie(x.节点,x.上级特征节点,x.特征概念节点,
         x.实例区间值,x.实例历史聚合值域,x.实例单位,x.当前值,x.标准值,x.历史不同值,x.历史值命中信息);
+    else if constexpr (std::is_same_v<U, 特征概念需求集合值域>) return std::tie(x.必含需求节点组, x.至少一个需求);
     else if constexpr (std::is_same_v<U, 特征概念信息>) return std::tie(x.节点,x.材料类型,x.值域,x.单位,
         x.比较规则,x.聚合规则,x.名称关系,x.当前引用实例数量);
     else if constexpr (std::is_same_v<U, 存在概念特征项>) return std::tie(x.特征类型概念,x.具体特征概念);

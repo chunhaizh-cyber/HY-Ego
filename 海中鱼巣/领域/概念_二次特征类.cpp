@@ -3,7 +3,10 @@
 #include <algorithm>
 #include <array>
 #include <limits>
+#include <map>
 #include <mutex>
+#include <set>
+#include <stdexcept>
 
 namespace 海中鱼巣 {
 
@@ -253,6 +256,7 @@ bool I64值域位于相似度范围(const 特征概念值域& 值域) {
     if (定义.算法 != 二次特征算法::有向特征差值
         && 定义.算法 != 二次特征算法::特征材料相似度
         && 定义.算法 != 二次特征算法::服务任务集合判等
+        && 定义.算法 != 二次特征算法::需求集合判等
         && 定义.算法 != 二次特征算法::服务任务来源新增数) {
         return 二次特征概念操作状态::算法不适用;
     }
@@ -284,16 +288,20 @@ bool I64值域位于相似度范围(const 特征概念值域& 值域) {
         return 二次特征概念操作状态::算法不适用;
     }
     if (定义.算法 == 二次特征算法::服务任务集合判等
+        || 定义.算法 == 二次特征算法::需求集合判等
         || 定义.算法 == 二次特征算法::服务任务来源新增数) {
         const auto 先天 = 特征概念服务.获取先天特征概念();
         const auto* 域 = std::get_if<std::vector<特征概念I64闭区间>>(&定义.输出特征定义.值域);
         const auto 预期域 = 定义.算法 == 二次特征算法::服务任务来源新增数
             ? std::vector<特征概念I64闭区间>{{0, (std::numeric_limits<std::int64_t>::max)()}}
             : std::vector<特征概念I64闭区间>{{0, 0}, {10000, 10000}};
-        return 先天 && *输入定义组[0].特征类型概念节点 == 先天->服务任务集合
-            && *输入定义组[1].特征类型概念节点 == 先天->服务任务集合
+        const bool 需求算法 = 定义.算法 == 二次特征算法::需求集合判等;
+        const auto 输入根 = 先天 ? (需求算法 ? 先天->服务对象需求集合 : 先天->服务任务集合) : 稳定编码{};
+        return 先天 && *输入定义组[0].特征类型概念节点 == 输入根
+            && *输入定义组[1].特征类型概念节点 == 输入根
             && 左概念->材料类型 == 特征概念材料物理类型::U64数组
-            && 左概念->比较规则 == 特征概念比较规则::服务任务集合身份判等
+            && 左概念->比较规则 == (需求算法 ? 特征概念比较规则::需求集合身份判等
+                : 特征概念比较规则::服务任务集合身份判等)
             && 右概念->比较规则 == 左概念->比较规则
             && !左概念->单位 && !定义.参照特征概念节点
             && !定义.输出特征定义.单位
@@ -428,6 +436,7 @@ std::optional<派生定义读回> 读取直接派生定义(
         && 算法 != 二次特征算法::语言语义结构差异
         && 算法 != 二次特征算法::治理时间窗口余量
         && 算法 != 二次特征算法::服务任务集合判等
+        && 算法 != 二次特征算法::需求集合判等
         && 算法 != 二次特征算法::服务任务来源新增数) return std::nullopt;
 
     std::optional<稳定编码> 参照特征概念节点;
@@ -745,7 +754,7 @@ std::optional<稳定编码> 概念_二次特征类::获取纳秒单位节点() c
         输出.材料类型 = 特征概念材料物理类型::I64标量;
         输出.比较规则 = 特征概念比较规则::I64数值;
         输出.聚合规则 = 特征概念聚合规则::不自动聚合;
-        if (算法 == 二次特征算法::服务任务集合判等) {
+        if (算法 == 二次特征算法::服务任务集合判等 || 算法 == 二次特征算法::需求集合判等) {
             输出.值域 = I64区间组{{0, 0}, {10000, 10000}};
         } else if (算法 == 二次特征算法::服务任务来源新增数) {
             输出.值域 = I64区间组{{0, (std::numeric_limits<std::int64_t>::max)()}};
@@ -799,7 +808,8 @@ std::optional<稳定编码> 概念_二次特征类::获取纳秒单位节点() c
             结果.状态 = 二次特征概念操作状态::概念不存在;
             return 结果;
         }
-        if (上位->算法 == 二次特征算法::服务任务集合判等 && 结果域种类) {
+        if ((上位->算法 == 二次特征算法::服务任务集合判等
+            || 上位->算法 == 二次特征算法::需求集合判等) && 结果域种类) {
             // 类别域不能从通用入口附加有向关系标签；任意域由专用入口返回根。
             结果.状态 = 二次特征概念操作状态::值域不合法;
             return 结果;
@@ -882,7 +892,7 @@ std::optional<稳定编码> 概念_二次特征类::获取纳秒单位节点() c
             结果.状态 = 二次特征概念操作状态::概念不存在;
             return 结果;
         }
-        if (类型->算法 == 二次特征算法::服务任务集合判等) {
+        if (类型->算法 == 二次特征算法::服务任务集合判等 || 类型->算法 == 二次特征算法::需求集合判等) {
             if (结果域种类 != 二次特征结果域种类::任意) {
                 结果.状态 = 二次特征概念操作状态::值域不合法;
                 return 结果;
@@ -1032,7 +1042,7 @@ std::optional<稳定编码> 概念_二次特征类::获取纳秒单位节点() c
             return 结果;
         }
 
-        if (类型->算法 == 二次特征算法::服务任务集合判等) {
+        if (类型->算法 == 二次特征算法::服务任务集合判等 || 类型->算法 == 二次特征算法::需求集合判等) {
             if (准确结果 != 0 && 准确结果 != 10000) {
                 结果.状态 = 二次特征概念操作状态::未找到;
                 return 结果;
@@ -1162,6 +1172,94 @@ bool 概念_二次特征类::是二次特征概念(稳定编码 概念节点) co
         结果.状态 = 二次特征概念操作状态::资源失败;
         return 结果;
     }
+}
+
+二次特征定义保护结果 概念_二次特征类::读取二次特征定义保护(稳定编码 节点) const noexcept {
+    try {
+        const auto 输出 = 特征概念服务_.读取特征概念定义保护(节点);
+        if (输出.前提已变化) return {基础结构操作状态::已完成, {}, {}, true};
+        if (输出.状态 != 基础结构操作状态::已完成 || !输出.信息)
+            return {输出.状态, {}, {}, false};
+        std::lock_guard 锁(二次特征概念互斥);
+        const auto 根 = 输出.信息->类型根;
+        std::map<稳定编码, 基础联合节点快照> 初值;
+        for (const auto& s : 输出.预期节点组) 初值.emplace(s.结构.节点.编码, s);
+        std::set<稳定编码> 编码组;
+        for (const auto& [n, s] : 初值) { (void)s; 编码组.insert(n); }
+        std::vector<稳定编码> 派生组;
+        for (const auto& f : 初值.at(根).结构.字段组) if (f.字段节点 == 派生定义字段)
+            派生组.push_back(std::get<稳定编码>(f.内容));
+        if (派生组.size() != 1) return {基础结构操作状态::内部不一致, {}, {}, false};
+        const auto 派生 = 派生组.front();
+        const auto d = 全局基础数据集.查询节点组完整结构({派生});
+        if (d.状态 != 基础结构操作状态::已完成 || d.节点组.size() != 1 || !d.节点组.front().快照)
+            return {基础结构操作状态::内部不一致, {}, {}, false};
+        初值.emplace(派生, *d.节点组.front().快照); 编码组.insert(派生);
+        for (const auto& f : d.节点组.front().快照->结构.字段组)
+            if (f.字段节点 == 输入定义项字段) 编码组.insert(std::get<稳定编码>(f.内容));
+        const auto b = 全局基础数据集.查询节点组完整结构({编码组.begin(), 编码组.end()});
+        if (b.状态 != 基础结构操作状态::已完成) return {b.状态, {}, {}, false};
+        二次特征定义保护结果 r;
+        std::map<稳定编码, const 基础节点结构*> 图;
+        for (const auto& x : b.节点组) {
+            if (!x.快照) return {基础结构操作状态::内部不一致, {}, {}, false};
+            图.emplace(x.查询节点, &x.快照->结构); r.预期节点组.push_back(*x.快照);
+            if (const auto it = 初值.find(x.查询节点); it != 初值.end()) {
+                const auto& a = it->second; const auto& z = *x.快照;
+                if (a.结构.节点 != z.结构.节点 || a.结构.字段组 != z.结构.字段组
+                    || a.入向字段组 != z.入向字段组 || a.入向外部关系组 != z.入向外部关系组
+                    || a.出向外部关系组 != z.出向外部关系组)
+                    return {基础结构操作状态::已完成, {}, {}, true};
+            }
+        }
+        const auto 组 = [&](稳定编码 n, 稳定编码 key) {
+            std::vector<基础字段内容> v;
+            for (const auto& f : 图.at(n)->字段组) if (f.字段节点 == key) v.push_back(f.内容);
+            return v;
+        };
+        const auto 单 = [&](稳定编码 n, 稳定编码 key) {
+            const auto v = 组(n, key);
+            if (v.size() != 1) throw std::logic_error("secondary definition cardinality");
+            return v.front();
+        };
+        const auto 数 = [&](稳定编码 n, 稳定编码 key) {
+            return std::get<std::int64_t>(std::get<基础值>(单(n, key)).材料);
+        };
+        if (std::get<稳定编码>(单(派生, 辅助节点类型字段)) != 派生定义节点类型)
+            throw std::logic_error("secondary definition type");
+        const auto 算法值 = 数(派生, 算法字段);
+        if (算法值 < 1 || 算法值 > 10) throw std::logic_error("secondary algorithm");
+        二次特征概念信息 v{节点, 根, 输出.信息->定义, static_cast<二次特征算法>(算法值), {}, {}, {}};
+        const auto 参照 = 组(派生, 参照特征概念字段);
+        if (参照.size() > 1) throw std::logic_error("secondary reference");
+        if (!参照.empty()) v.参照特征概念节点 = std::get<稳定编码>(参照.front());
+        for (const auto& x : 组(派生, 输入定义项字段)) {
+            const auto n = std::get<稳定编码>(x);
+            if (std::get<稳定编码>(单(n, 辅助节点类型字段)) != 输入定义节点类型)
+                throw std::logic_error("secondary input type");
+            二次特征概念输入定义 i{数(n, 顺序字段), static_cast<二次特征输入角色>(数(n, 输入角色字段)),
+                static_cast<二次特征输入来源种类>(数(n, 输入来源种类字段)), {}};
+            const auto f = 组(n, 输入特征概念字段);
+            if (f.size() > 1) throw std::logic_error("secondary input feature");
+            if (!f.empty()) i.特征类型概念节点 = std::get<稳定编码>(f.front());
+            v.输入定义组.push_back(i);
+        }
+        const auto 规范 = 规范化输入定义(v.输入定义组);
+        if (!规范) throw std::logic_error("secondary input sequence");
+        v.输入定义组 = *规范;
+        if (节点 == 根) v.结果域种类组.push_back(二次特征结果域种类::任意);
+        for (const auto& x : 组(节点, 结果域种类字段)) {
+            const auto k = std::get<std::int64_t>(std::get<基础值>(x).材料);
+            if (k < static_cast<std::int64_t>(二次特征结果域种类::任意)
+                || k > static_cast<std::int64_t>(二次特征结果域种类::不包含于参照值域))
+                throw std::logic_error("secondary result kind");
+            v.结果域种类组.push_back(static_cast<二次特征结果域种类>(k));
+        }
+        std::sort(v.结果域种类组.begin(), v.结果域种类组.end());
+        v.结果域种类组.erase(std::unique(v.结果域种类组.begin(), v.结果域种类组.end()), v.结果域种类组.end());
+        r.状态 = 基础结构操作状态::已完成; r.信息 = std::move(v); return r;
+    } catch (const std::bad_alloc&) { return {基础结构操作状态::资源失败, {}, {}, false}; }
+    catch (...) { return {基础结构操作状态::内部不一致, {}, {}, false}; }
 }
 
 } // namespace 海中鱼巣

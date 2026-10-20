@@ -71,6 +71,13 @@ struct 特征概念任务集合值域 final {
         const 特征概念任务集合值域&) = default;
 };
 
+struct 特征概念需求集合值域 final {
+    std::vector<稳定编码> 必含需求节点组;
+    bool 至少一个需求 = false;
+    friend bool operator==(const 特征概念需求集合值域&,
+        const 特征概念需求集合值域&) = default;
+};
+
 // I64标量使用规范化闭区间；结构化I64材料使用有序分量值域；
 // 其它材料可使用全材料值域或完整特征值节点身份集合。
 using 特征概念值域 = std::variant<
@@ -79,7 +86,8 @@ using 特征概念值域 = std::variant<
     std::vector<稳定编码>,
     特征概念结构化I64值域,
     特征概念存在引用值域,
-    特征概念任务集合值域>;
+    特征概念任务集合值域,
+    特征概念需求集合值域>;
 
 using 特征概念准确值 = std::variant<std::int64_t, 稳定编码>;
 
@@ -87,7 +95,8 @@ enum class 特征概念比较规则 : std::int64_t {
     I64数值 = 1,
     完整材料精确 = 2,
     存在身份精确 = 3,
-    服务任务集合身份判等 = 4
+    服务任务集合身份判等 = 4,
+    需求集合身份判等 = 5
 };
 
 enum class 特征概念聚合规则 : std::int64_t {
@@ -146,6 +155,29 @@ enum class 特征概念规则状态 : std::uint8_t {
 
 enum class 特征任务成员读取状态 : std::uint8_t {
     已读取 = 1, 未装配, 节点不存在, 结构不一致, 资源失败
+};
+
+struct 特征需求成员身份 final {
+    稳定编码 需求节点, 主体存在节点;
+    bool 被认知 = false;
+};
+
+struct 特征需求成员读取结果 final {
+    特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
+    std::optional<特征需求成员身份> 身份;
+};
+
+class 特征需求成员读取接口 {
+public:
+    virtual ~特征需求成员读取接口() = default;
+    virtual 特征需求成员读取结果 读取需求集合成员身份(稳定编码) const noexcept = 0;
+};
+
+struct 特征需求集合条件比较结果 final {
+    特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
+    std::int64_t 满足 = 0;
+    std::vector<稳定编码> 缺少需求节点组;
+    bool 缺少任意需求 = false;
 };
 
 struct 特征任务成员读取结果 final {
@@ -246,6 +278,7 @@ struct 先天特征概念集合 final {
     稳定编码 二维轮廓;
     稳定编码 三维体素;
     稳定编码 服务任务集合;
+    稳定编码 服务对象需求集合;
     bool 完整() const noexcept;
     friend bool operator==(const 先天特征概念集合&,
         const 先天特征概念集合&) = default;
@@ -267,8 +300,19 @@ public:
         稳定编码 左概念, 稳定编码 右概念) const noexcept = 0;
 };
 
+struct 特征概念定义保护信息 final {
+    特征概念信息 定义;
+    稳定编码 类型根;
+};
+struct 特征概念定义保护结果 final {
+    基础结构操作状态 状态 = 基础结构操作状态::入口拒绝;
+    std::optional<特征概念定义保护信息> 信息;
+    std::vector<基础联合节点快照> 预期节点组;
+    bool 前提已变化 = false;
+};
 class 概念_特征类 final {
 public:
+    特征概念定义保护结果 读取特征概念定义保护(稳定编码) const noexcept;
     // 解析器由上层装配，必须比本对象存活更久；材料特征不依赖该接口。
     void 装配存在引用读取接口(
         const 特征存在引用读取接口& 读取接口) noexcept;
@@ -276,6 +320,12 @@ public:
     // 借用正式任务owner；其读取不得取得任务锁或进入需求/特征服务锁。
     // 上层在线程全部停止后解除，且接口提供者必须存活至解除完成。
     void 装配任务成员读取接口(const 特征任务成员读取接口*) noexcept;
+    void 装配需求成员读取接口(const 特征需求成员读取接口*) noexcept;
+
+    特征需求集合条件比较结果 比较需求集合值域(
+        稳定编码 类型根, const 特征概念准确值& 当前,
+        const 特征概念需求集合值域& 目标,
+        const 新_特征值类&) const noexcept;
 
     特征任务集合条件比较结果 比较任务集合值域(
         const 特征概念准确值& 当前值,
@@ -336,6 +386,8 @@ public:
 
     // 只比较同一材料类型下的值域，不把值域关系换算为相似度。
     特征概念值域比较结果 比较值域(
+        稳定编码 特征类型根, const 特征概念值域&, const 特征概念值域&) const noexcept;
+    特征概念值域比较结果 比较值域(
         特征概念材料物理类型 材料类型,
         const 特征概念值域& 左值域,
         const 特征概念值域& 右值域) const noexcept;
@@ -346,6 +398,9 @@ public:
         稳定编码 右概念节点) const noexcept;
 
     // 只计算规范化值域，不在本函数中建立新概念节点。
+    特征概念聚合结果 执行聚合规则(
+        稳定编码 特征类型根, const std::vector<特征概念准确值>&,
+        const 新_特征值类&) const noexcept;
     特征概念聚合结果 执行聚合规则(
         特征概念材料物理类型 材料类型,
         特征概念聚合规则 规则,
@@ -362,6 +417,7 @@ private:
 
     const 特征存在引用读取接口* 存在引用读取接口_ = nullptr;
     const 特征任务成员读取接口* 任务成员读取接口_ = nullptr;
+    const 特征需求成员读取接口* 需求成员读取接口_ = nullptr;
     // 初始化时借用，不拥有；服务须覆盖本对象的初始化后使用期。
     // 仅供无材料参数的值域比较入口读取有限材料，不另建材料owner。
     const 新_特征值类* 特征值读取服务_ = nullptr;

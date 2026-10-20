@@ -2107,4 +2107,31 @@ bool 同一联合快照(const 基础联合节点快照& 左,
     return 结果;
 }
 
+存在概念上位保护结果 概念_存在类::读取存在概念上位保护(稳定编码 节点) const noexcept {
+    try {
+        std::lock_guard 锁(存在概念图互斥);
+        const auto 读 = 全局基础数据集.查询节点组完整结构({节点});
+        if (读.状态 != 基础结构操作状态::已完成) return {读.状态, {}, {}, false};
+        if (读.节点组.size() != 1 || !读.节点组.front().快照)
+            return {基础结构操作状态::节点不存在, {}, {}, false};
+        const auto& s = *读.节点组.front().快照;
+        std::optional<稳定编码> 类型;
+        for (const auto& f : s.结构.字段组) if (f.字段节点 == 节点类型字段) {
+            const auto* n = std::get_if<稳定编码>(&f.内容);
+            if (!n || 类型) return {基础结构操作状态::内部不一致, {}, {}, false};
+            类型 = *n;
+        }
+        if (类型 != 专属存在概念节点类型 && 类型 != 抽象存在概念节点类型)
+            return {基础结构操作状态::内部不一致, {}, {}, false};
+        存在概念上位保护信息 v{节点, {}};
+        for (const auto& r : s.入向外部关系组)
+            if (r.类型 == 基础外部关系类型::父子 && r.角色或顺序 == 概念上下位关系角色)
+                v.上位概念组.push_back(r.源节点);
+        std::sort(v.上位概念组.begin(), v.上位概念组.end());
+        if (std::adjacent_find(v.上位概念组.begin(), v.上位概念组.end()) != v.上位概念组.end())
+            return {基础结构操作状态::内部不一致, {}, {}, false};
+        return {基础结构操作状态::已完成, std::move(v), {s}, false};
+    } catch (...) { return {基础结构操作状态::资源失败, {}, {}, false}; }
+}
+
 } // namespace 海中鱼巣

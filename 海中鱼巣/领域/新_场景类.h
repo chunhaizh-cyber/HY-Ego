@@ -430,6 +430,7 @@ public:
     新场景操作状态 添加状态(
         稳定编码 场景节点,
         稳定编码 状态节点) noexcept;
+    新场景操作状态 添加状态(稳定编码, 稳定编码, 新事实追加保护增量&) noexcept;
     新场景操作状态 移除状态(
         稳定编码 场景节点,
         稳定编码 状态节点) noexcept;
@@ -442,6 +443,7 @@ public:
     新场景操作状态 添加动态(
         稳定编码 场景节点,
         稳定编码 动态节点) noexcept;
+    新场景操作状态 添加动态(稳定编码, 稳定编码, 新事实追加保护增量&) noexcept;
     新场景操作状态 移除动态(
         稳定编码 场景节点,
         稳定编码 动态节点) noexcept;
@@ -514,10 +516,12 @@ public:
 private:
     新场景操作状态 添加已核验状态(稳定编码, 稳定编码, bool 治理,
         std::optional<新任务虚拟存在特征引用> 治理特征 = std::nullopt,
-        std::optional<新方法虚拟存在引用> 治理方法 = std::nullopt) noexcept;
+        std::optional<新方法虚拟存在引用> 治理方法 = std::nullopt,
+        新事实追加保护增量* 增量 = nullptr) noexcept;
     新场景操作状态 添加已核验动态(稳定编码, 稳定编码, bool 治理,
         std::optional<新任务虚拟存在特征引用> 治理特征 = std::nullopt,
-        std::optional<新方法虚拟存在引用> 治理方法 = std::nullopt) noexcept;
+        std::optional<新方法虚拟存在引用> 治理方法 = std::nullopt,
+        新事实追加保护增量* 增量 = nullptr) noexcept;
     // 根身份由上层世界对象持有；场景类只在该根链内组织场景事实。
     稳定编码& 场景树根节点_;
     新场景树用途 用途_;

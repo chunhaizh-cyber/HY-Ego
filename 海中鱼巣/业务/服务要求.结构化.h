@@ -119,6 +119,7 @@ public:
     服务要求确认查询结果 查询已确认要求(稳定编码 来源人类节点) const noexcept;
     新服务要求确认读取结果 读取服务要求确认身份(稳定编码) const noexcept override;
     新服务要求确认读取结果 复核服务要求确认语义(稳定编码) const noexcept override;
+    新服务要求确认保护结果 准备服务要求确认语义保护(稳定编码) const noexcept override;
     新服务要求确认同义结果 比较服务要求确认固定语义(
         稳定编码, 稳定编码) const noexcept override;
 private:

@@ -954,6 +954,12 @@ std::vector<基础节点初始字段> 编码动作定义(const 动作概念定�
 } // namespace
 
 动态概念建立结果 概念_动态类::建立或取得动作概念(const 动作概念定义& 输入) noexcept {
+    新事实追加保护增量 忽略;
+    return 建立或取得动作概念(输入, 忽略);
+}
+动态概念建立结果 概念_动态类::建立或取得动作概念(
+    const 动作概念定义& 输入, 新事实追加保护增量& 增量) noexcept {
+    增量 = {};
     try {
         std::lock_guard 锁(动态概念图互斥);
         if (!结构仍存在()) throw std::runtime_error("action concept owner not initialized");
@@ -963,11 +969,38 @@ std::vector<基础节点初始字段> 编码动作定义(const 动作概念定�
             if (已有 && 已有->定义类别 == 动态概念定义类别::动作 && 已有->动作定义 == 定义)
                 return {动态概念操作状态::已复用, 节点};
         }
-        const auto 新建 = 全局基础数据集.原子建立节点({动态概念图根节点, 编码动作定义(定义)});
+        const auto 字段请求 = 编码动作定义(定义);
+        增量.新增字段组.reserve(字段请求.size());
+        增量.新建节点组.reserve(1);
+        增量.新增外部关系组.reserve(1);
+        const auto 新建 = 全局基础数据集.原子建立节点({动态概念图根节点, 字段请求});
         if (新建.状态 != 基础结构操作状态::已完成 || !新建.节点)
             throw std::runtime_error("atomic action concept publication failed");
         const auto 读回 = 获取动态概念(*新建.节点);
         if (!读回 || 读回->动作定义 != 定义) throw std::runtime_error("action concept readback mismatch");
+        const auto 结构 = 全局基础数据集.查询完整节点结构(*新建.节点);
+        if (结构.状态 != 基础结构操作状态::已完成 || !结构.结构
+            || 结构.结构->字段组.size() != 字段请求.size())
+            throw std::runtime_error("action concept receipt structure mismatch");
+        auto 字段组 = 结构.结构->字段组;
+        std::sort(字段组.begin(), 字段组.end(), [](const auto& a, const auto& b) { return a.编码 < b.编码; });
+        for (std::size_t i = 0; i < 字段请求.size(); ++i) {
+            const auto& f = 字段组[i];
+            const auto& 请求 = 字段请求[i];
+            if (f.所属节点 != *新建.节点 || f.字段节点 != 请求.字段节点 || f.内容 != 请求.内容)
+                throw std::runtime_error("action concept receipt field mismatch");
+            增量.新增字段组.push_back(f);
+        }
+        const auto 联合 = 全局基础数据集.查询节点组完整结构({*新建.节点});
+        if (联合.状态 != 基础结构操作状态::已完成 || 联合.节点组.size() != 1 || !联合.节点组[0].快照)
+            throw std::runtime_error("action concept receipt relation missing");
+        const auto& 入向 = 联合.节点组[0].快照->入向外部关系组;
+        if (入向.size() != 1 || 入向[0].源节点 != 动态概念图根节点
+            || 入向[0].目标节点 != *新建.节点 || 入向[0].类型 != 基础外部关系类型::父子
+            || 入向[0].角色或顺序 != 0)
+            throw std::runtime_error("action concept receipt parent mismatch");
+        增量.新增外部关系组.push_back(入向[0]);
+        增量.新建节点组.push_back(*新建.节点);
         return {动态概念操作状态::已建立, 新建.节点};
     } catch (const std::exception& e) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"动作概念发布", L"动作概念定义或原子发布异常。", e.what());

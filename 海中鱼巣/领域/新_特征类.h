@@ -120,6 +120,43 @@ struct 新特征I64提交结果 final {
     std::vector<基础片段发布回执> 附加片段回执组;
 };
 
+class 新特征引用集合更新准备 final {
+public:
+    新特征引用集合更新准备(新特征引用集合更新准备&&) noexcept;
+    新特征引用集合更新准备& operator=(新特征引用集合更新准备&&) noexcept;
+    ~新特征引用集合更新准备() noexcept;
+    新特征引用集合更新准备(const 新特征引用集合更新准备&) = delete;
+    新特征引用集合更新准备& operator=(const 新特征引用集合更新准备&) = delete;
+private:
+    struct 实现;
+    explicit 新特征引用集合更新准备(std::unique_ptr<实现>) noexcept;
+    std::unique_ptr<实现> 实现_;
+    friend class 新_特征类;
+};
+
+enum class 新特征引用集合保护状态 : std::uint8_t {
+    已读取=1, 前提已变化, 目标不合法, 结构不一致, 资源失败
+};
+struct 新特征引用集合保护信息 final {
+    新特征信息 顶层特征;
+    稳定编码 特征类型根, 当前准确材料节点;
+    std::vector<稳定编码> 当前需求节点组;
+    std::vector<基础联合节点快照> 完整保护组;
+};
+struct 新特征引用集合保护结果 final {
+    新特征引用集合保护状态 状态 = 新特征引用集合保护状态::目标不合法;
+    std::optional<新特征引用集合保护信息> 信息;
+};
+struct 新特征引用集合准备结果 final {
+    新特征I64准备状态 状态 = 新特征I64准备状态::入口拒绝;
+    std::optional<新特征引用集合更新准备> 准备;
+};
+
+struct 新特征引用集合提交结果 final {
+    基础节点组追加状态 状态 = 基础节点组追加状态::入口拒绝;
+    std::vector<基础片段发布回执> 附加片段回执组;
+};
+
 enum class 新特征比较状态 : std::uint8_t {
     已完成 = 1,
     入口拒绝 = 2,
@@ -209,6 +246,13 @@ struct 新特征概念相似度结果 final {
 
 class 新_特征类 final {
 public:
+    新特征引用集合保护结果 捕获引用集合更新保护(稳定编码) const noexcept;
+    新特征引用集合准备结果 准备顶层引用集合更新(稳定编码 特征节点, 稳定编码 新准确材料节点) noexcept;
+    新特征引用集合提交结果 提交顶层引用集合更新(新特征引用集合更新准备&,
+        const std::vector<基础封存追加片段>&) noexcept;
+    新特征值添加结果 完成顶层引用集合更新(新特征引用集合更新准备&) noexcept;
+    void 结束顶层引用集合更新(新特征引用集合更新准备&) noexcept;
+    void 取消顶层引用集合更新(新特征引用集合更新准备&) noexcept;
     // 两个依赖服务必须操作全局基础数据集，并且比本对象存活更久。
     新_特征类(
         新_特征值类& 特征值服务,
@@ -327,6 +371,8 @@ public:
         稳定编码 右概念节点) const noexcept;
 
 private:
+    新特征I64准备结果 准备顶层准确值更新(
+        稳定编码 特征节点, const 新特征准确值& 新值, bool 引用集合) noexcept;
     新特征值添加结果 完成添加值归组(
         const 新特征信息& 原特征, const 新特征准确值& 新值,
         稳定编码 活动记录节点, 新特征值添加结果 结果,

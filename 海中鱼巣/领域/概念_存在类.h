@@ -176,8 +176,19 @@ struct 指代名称反向参与结果 final {
 // 全局基础数据集中的物理组织根。它不是存在概念，不参与抽象和匹配。
 extern 稳定编码 存在概念图根节点;
 
+struct 存在概念上位保护信息 final {
+    稳定编码 概念节点;
+    std::vector<稳定编码> 上位概念组;
+};
+struct 存在概念上位保护结果 final {
+    基础结构操作状态 状态 = 基础结构操作状态::入口拒绝;
+    std::optional<存在概念上位保护信息> 信息;
+    std::vector<基础联合节点快照> 预期节点组;
+    bool 前提已变化 = false;
+};
 class 概念_存在类 final {
 public:
+    存在概念上位保护结果 读取存在概念上位保护(稳定编码) const noexcept;
     explicit 概念_存在类(概念_特征类& 特征概念服务) noexcept;
 
     bool 初始化() noexcept;

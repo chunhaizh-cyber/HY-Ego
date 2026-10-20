@@ -987,4 +987,132 @@ namespace {
     catch (...) { return {S::结构不一致, {}}; }
 }
 
+struct 新服务要求确认语义保护::实现 {
+    新服务要求确认目标 确认;
+    std::vector<基础联合节点快照> 预期;
+};
+新服务要求确认语义保护::新服务要求确认语义保护(std::unique_ptr<实现> p) noexcept : 实现_(std::move(p)) {}
+新服务要求确认语义保护::新服务要求确认语义保护(新服务要求确认语义保护&&) noexcept = default;
+新服务要求确认语义保护& 新服务要求确认语义保护::operator=(新服务要求确认语义保护&&) noexcept = default;
+新服务要求确认语义保护::~新服务要求确认语义保护() = default;
+const 新服务要求确认目标& 新服务要求确认语义保护::确认() const noexcept { return 实现_->确认; }
+const std::vector<基础联合节点快照>& 新服务要求确认语义保护::预期节点组() const noexcept { return 实现_->预期; }
+
+新服务要求确认保护结果 结构化服务要求服务::准备服务要求确认语义保护(
+    稳定编码 确认节点) const noexcept {
+    using S = 新服务要求确认保护状态;
+    struct 漂移 {};
+    try {
+        if (!实现_ || !实现_->就绪) return {S::未装配, {}};
+        if (!有效(确认节点) || !全局基础数据集.查询节点(确认节点)) return {S::确认不存在, {}};
+        const auto& s = *实现_;
+        const auto 相同 = [](const auto& a, const auto& b) {
+            return a.结构.节点 == b.结构.节点 && a.结构.字段组 == b.结构.字段组
+                && a.入向字段组 == b.入向字段组 && a.入向外部关系组 == b.入向外部关系组
+                && a.出向外部关系组 == b.出向外部关系组;
+        };
+        std::map<稳定编码, 基础联合节点快照> 保护;
+        const auto 合并 = [&](const auto& 组) {
+            for (const auto& n : 组) {
+                const auto [it, 加入] = 保护.emplace(n.结构.节点.编码, n);
+                if (!加入 && !相同(it->second, n)) throw 漂移{};
+            }
+        };
+        std::set<稳定编码> 拥有键;
+        for (const auto f : {字段::对应理解, 字段::固定语义, 字段::类型快照, 字段::域快照,
+            字段::比较快照, 字段::特征快照, 字段::输出域, 字段::输入, 字段::分量})
+            拥有键.insert(s.字段锚[下标(f)]);
+        std::set<稳定编码> 已枚举;
+        std::vector<稳定编码> 待查{确认节点};
+        for (std::size_t i = 0; i < 待查.size(); ++i) {
+            if (!已枚举.insert(待查[i]).second) continue;
+            const auto 批 = 全局基础数据集.查询节点组完整结构({待查[i]});
+            检查基础(批.状态);
+            必须(批.节点组.size() == 1 && 批.节点组[0].快照.has_value());
+            const auto& n = *批.节点组[0].快照;
+            合并(std::vector<基础联合节点快照>{n});
+            for (const auto& f : n.结构.字段组) if (拥有键.contains(f.字段节点)) {
+                const auto* p = std::get_if<稳定编码>(&f.内容); 必须(p != nullptr);
+                待查.push_back(*p);
+            }
+        }
+        const auto 读回保护 = [&]() {
+            std::vector<稳定编码> 编码;
+            for (const auto& [n, _] : 保护) 编码.push_back(n);
+            const auto 批 = 全局基础数据集.查询节点组完整结构(编码);
+            检查基础(批.状态);
+            if (批.节点组.size() != 编码.size()) throw 漂移{};
+            std::vector<基础联合节点快照> 输出;
+            for (const auto& n : 批.节点组) {
+                if (!n.快照 || !相同(保护.at(n.查询节点), *n.快照)) throw 漂移{};
+                输出.push_back(*n.快照);
+            }
+            return 输出;
+        };
+        auto 自有 = 读回保护();
+        const auto c = 实现::解码器{s, 自有}.确认(确认节点);
+        const auto 接收 = [&](const auto& r) {
+            if (r.前提已变化) throw 漂移{};
+            检查基础(r.状态); 必须(r.信息.has_value());
+            合并(r.预期节点组);
+            return *r.信息;
+        };
+        const auto e = 接收(存在_.读取存在身份保护(c.理解.来源人类节点));
+        std::map<稳定编码, unsigned> 色;
+        struct 帧 { 稳定编码 节点; bool 退出; };
+        std::vector<帧> 栈{{e.专属存在概念节点, false}};
+        bool 人类 = false;
+        while (!栈.empty()) {
+            auto x = 栈.back(); 栈.pop_back();
+            if (x.退出) { 色[x.节点] = 2; continue; }
+            必须(色[x.节点] != 1);
+            if (色[x.节点] == 2) continue;
+            auto ec = 接收(存在概念_.读取存在概念上位保护(x.节点));
+            人类 = 人类 || x.节点 == s.人类;
+            色[x.节点] = 1; 栈.push_back({x.节点, true});
+            for (auto i = ec.上位概念组.rbegin(); i != ec.上位概念组.rend(); ++i) 栈.push_back({*i, false});
+        }
+        必须(人类 && c.理解.来源人类节点 == c.理解.目标存在节点);
+        const auto& t = c.理解.目标;
+        检查形状(t);
+        const auto ft = 接收(特征概念_.读取特征概念定义保护(t.目标特征类型概念节点));
+        必须(ft.类型根 == t.目标特征类型概念节点, 状态::目标不合法);
+        服务要求目标语义快照 当前{s.捕获特征(ft.定义), {}, {}};
+        const auto 域语义 = [&](const 特征概念信息& d) {
+            服务要求值域语义快照 v{s.捕获特征(d), d.值域};
+            s.检查域(v, false); return v;
+        };
+        if (t.目标形式 == 新需求目标形式::值) {
+            const auto d = 接收(特征概念_.读取特征概念定义保护(*t.目标值域概念节点));
+            必须(d.类型根 == ft.类型根, 状态::目标不合法);
+            当前.目标域 = 域语义(d.定义);
+            const auto b = 接收(二次概念_.读取二次特征定义保护(*t.目标比较关系概念节点));
+            必须(b.参照特征概念节点 == t.目标值域概念节点, 状态::目标不合法);
+            bool 准确值 = false;
+            for (const auto& i : b.输入定义组) if (i.特征类型概念节点) {
+                const auto 输入 = 接收(特征概念_.读取特征概念定义保护(*i.特征类型概念节点));
+                if (i.来源种类 == 二次特征输入来源种类::特征准确值) {
+                    必须(输入.类型根 == ft.类型根, 状态::目标不合法); 准确值 = true;
+                }
+            }
+            必须(准确值, 状态::目标不合法);
+            const auto 输出 = 接收(特征概念_.读取特征概念定义保护(b.输出特征概念.节点));
+            当前.比较 = 服务要求比较语义快照{b.节点, b.二次特征类型根节点, b.算法,
+                b.输入定义组, b.参照特征概念节点, 域语义(输出.定义), b.结果域种类组};
+        }
+        if (当前 != c.理解.固定语义) return {S::需重新确认, {}};
+        auto p = std::make_unique<新服务要求确认语义保护::实现>();
+        p->预期 = 读回保护();
+        const auto 最终 = 实现::解码器{s, p->预期}.确认(确认节点);
+        if (确认目标(最终) != 确认目标(c) || 最终.理解.固定语义 != 当前) throw 漂移{};
+        p->确认 = 确认目标(c);
+        return {S::已准备, 新服务要求确认语义保护{std::move(p)}};
+    } catch (const 漂移&) { return {S::前提已变化, {}}; }
+    catch (const 材料失败& e) {
+        if (e.原因 == 状态::目标不合法 || e.原因 == 状态::语义快照暂不支持) return {S::需重新确认, {}};
+        return {e.原因 == 状态::资源失败 ? S::资源失败 : S::结构不一致, {}};
+    } catch (const std::bad_alloc&) { return {S::资源失败, {}}; }
+    catch (...) { return {S::结构不一致, {}}; }
+}
+
 } // namespace 海中鱼巣

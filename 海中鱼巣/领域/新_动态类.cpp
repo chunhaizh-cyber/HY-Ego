@@ -643,6 +643,11 @@ bool 新_动态类::初始化() noexcept {
     const 新动作动态建立请求& 请求) noexcept {
     return 建立已核验动作动态(请求, std::nullopt);
 }
+新动态建立结果 新_动态类::建立动作动态(
+    const 新动作动态建立请求& 请求, 新事实追加保护增量& 增量) noexcept {
+    增量 = {};
+    return 建立已核验动作动态(请求, std::nullopt, &增量);
+}
 
 void 新_动态类::设置动作方法定义提供者(const 动作方法定义只读提供者& 提供者,
     const 新_特征类& 特征读取) noexcept {
@@ -760,7 +765,8 @@ void 新_动态类::设置动作方法定义提供者(const 动作方法定义�
 
 新动态建立结果 新_动态类::建立已核验动作动态(
     const 新动作动态建立请求& 请求,
-    const std::optional<新任务虚拟存在引用>& 内部目标) noexcept {
+    const std::optional<新任务虚拟存在引用>& 内部目标,
+    新事实追加保护增量* 增量) noexcept {
     新动态建立结果 结果;
     try {
         // 先识别同源重放，不能为了重放补造一次概念形成或动作。
@@ -809,7 +815,10 @@ void 新_动态类::设置动作方法定义提供者(const 动作方法定义�
         }
         // 方法/任务读取及概念发布都在动态锁外；其定义局部冻结后再进入发布。
         const auto 投影 = 提供者->读取动作方法投影(投影请求);
-        const auto 动作概念 = 动态概念服务_.建立或取得动作概念(投影);
+        新事实追加保护增量 概念增量;
+        const auto 动作概念 = 增量
+            ? 动态概念服务_.建立或取得动作概念(投影, 概念增量)
+            : 动态概念服务_.建立或取得动作概念(投影);
         if (!动作概念.概念节点) throw std::runtime_error("action concept not published");
         std::lock_guard 锁(新动态互斥);
         if (!结构仍存在() || !存在服务_
@@ -891,6 +900,11 @@ void 新_动态类::设置动作方法定义提供者(const 动作方法定义�
             原子请求.字段组.push_back({动作目标状态特征字段, 内部目标->状态特征节点});
         } else 原子请求.字段组.push_back({动作目标存在字段, 请求.目标存在节点});
         if (请求.目标特征节点) 原子请求.字段组.push_back({动作目标特征字段, *请求.目标特征节点});
+        if (增量) {
+            增量->新建节点组.reserve(1 + 概念增量.新建节点组.size());
+            增量->新增字段组.reserve(原子请求.字段组.size() + 概念增量.新增字段组.size());
+            增量->新增外部关系组.reserve(概念增量.新增外部关系组.size());
+        }
         const auto 新建 = 全局基础数据集.原子建立节点(原子请求);
         if (新建.状态 != 基础结构操作状态::已完成 || !新建.节点)
             throw std::runtime_error("atomic action instance publication failed");
@@ -917,6 +931,28 @@ void 新_动态类::设置动作方法定义提供者(const 动作方法定义�
         结果.状态 = 新动态操作状态::已完成;
         结果.动态节点 = 动态节点;
         结果.动态概念节点 = 动作概念.概念节点;
+        if (增量) {
+            const auto 结构 = 全局基础数据集.查询完整节点结构(动态节点);
+            if (结构.状态 != 基础结构操作状态::已完成 || !结构.结构
+                || 结构.结构->字段组.size() != 原子请求.字段组.size())
+                throw std::runtime_error("action append receipt structure mismatch");
+            for (const auto& 输入 : 原子请求.字段组) {
+                const auto& 组 = 结构.结构->字段组;
+                const auto 相符 = [&](const auto& f) {
+                    return f.所属节点 == 动态节点 && f.字段节点 == 输入.字段节点 && f.内容 == 输入.内容;
+                };
+                if (std::count_if(组.begin(), 组.end(), 相符) != 1)
+                    throw std::runtime_error("action append receipt field mismatch");
+                增量->新增字段组.push_back(*std::find_if(组.begin(), 组.end(), 相符));
+            }
+            增量->新建节点组.push_back(动态节点);
+            增量->新建节点组.insert(增量->新建节点组.end(),
+                概念增量.新建节点组.begin(), 概念增量.新建节点组.end());
+            增量->新增字段组.insert(增量->新增字段组.end(),
+                概念增量.新增字段组.begin(), 概念增量.新增字段组.end());
+            增量->新增外部关系组.insert(增量->新增外部关系组.end(),
+                概念增量.新增外部关系组.begin(), 概念增量.新增外部关系组.end());
+        }
         return 结果;
     } catch (const std::exception& e) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"建立动作动态", L"动作概念投影或动作发布异常。", e.what());
@@ -1783,6 +1819,13 @@ std::vector<稳定编码> 新_动态类::按概念查询动态(
 }
 
 新动态操作状态 新_动态类::增加引用(稳定编码 动态节点) noexcept {
+    新事实追加保护增量 忽略;
+    return 增加引用(动态节点, 忽略);
+}
+
+新动态操作状态 新_动态类::增加引用(
+    稳定编码 动态节点, 新事实追加保护增量& 增量) noexcept {
+    增量 = {};
     try {
         std::lock_guard 锁(新动态互斥);
         const auto 引用 = 读取唯一I64字段(动态节点, 动态被引用次数字段);
@@ -1792,11 +1835,21 @@ std::vector<稳定编码> 新_动态类::按概念查询动态(
             return 新动态操作状态::引用计数溢出;
         }
         const auto 新计数 = 引用->second + 1;
+        const auto 修改前 = 全局基础数据集.查询字段关系(引用->first);
+        if (!修改前) return 新动态操作状态::结构不一致;
+        增量.字段变化组.reserve(1);
         if (!全局基础数据集.修改字段值(引用->first, 基础值{新计数})) {
             return 新动态操作状态::资源失败;
         }
         const auto 读回 = 获取动态(动态节点);
-        if (读回 && 读回->被引用次数 == 新计数) return 新动态操作状态::已完成;
+        if (读回 && 读回->被引用次数 == 新计数) {
+            const auto 修改后 = 全局基础数据集.查询字段关系(引用->first);
+            auto 预期 = *修改前;
+            预期.内容 = 基础值{新计数};
+            if (!修改后 || *修改后 != 预期) return 新动态操作状态::结构不一致;
+            增量.字段变化组.push_back({*修改前, *修改后});
+            return 新动态操作状态::已完成;
+        }
         (void)全局基础数据集.修改字段值(引用->first, 基础值{引用->second});
         return 新动态操作状态::结构不一致;
     } catch (...) {
