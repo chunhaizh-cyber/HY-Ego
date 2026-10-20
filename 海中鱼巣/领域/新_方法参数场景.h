@@ -37,6 +37,8 @@ struct 新方法参数角色绑定 final {
     std::optional<新任务虚拟存在引用> 任务虚拟存在引用;
     std::optional<新服务要求分项引用> 服务要求分项引用;
     std::optional<新服务要求确认引用> 服务要求确认引用;
+    // 新格式只保存此按位引用及可选的世界场景定位；旧业务封套为空。
+    std::optional<新方法有序参数引用> 有序引用;
     friend bool operator==(const 新方法参数角色绑定&,
         const 新方法参数角色绑定&) = default;
 };
@@ -62,6 +64,7 @@ public:
     const std::vector<新方法参数角色绑定>& 全部角色绑定() const noexcept;
     const 新方法参数角色绑定* 查询角色(
         稳定编码 参数角色节点) const noexcept;
+    const 新方法有序参数引用* 查询参数(std::uint32_t 序号) const noexcept;
     std::optional<新任务虚拟存在读回> 读取绑定任务虚拟存在(
         稳定编码 参数角色节点) const noexcept;
     std::optional<新任务虚拟存在特征组> 读取绑定任务特征组(

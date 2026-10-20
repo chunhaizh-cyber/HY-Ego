@@ -1,9 +1,30 @@
 #include "新_方法参数场景.h"
+#include "../核心/容错检查.h"
 
 #include <utility>
 #include <algorithm>
 
 namespace 海中鱼巣 {
+namespace {
+
+void 核验有序参数绑定组(const std::vector<新方法参数角色绑定>& 绑定组) noexcept {
+    const bool 含有序引用 = std::any_of(绑定组.begin(), 绑定组.end(),
+        [](const 新方法参数角色绑定& 绑定) noexcept { return 绑定.有序引用.has_value(); });
+    if (!含有序引用) return;
+    for (std::size_t 位置 = 0; 位置 < 绑定组.size(); ++位置) {
+        const auto& 绑定 = 绑定组[位置];
+        if (!绑定.有序引用 || 绑定.有序引用->序号 != 位置 + 1
+            || !有效(绑定.有序引用->信息节点)
+            || (绑定.有序引用->信息类型 != 新方法参数信息类型::存在
+                && 绑定.有序引用->信息类型 != 新方法参数信息类型::特征)
+            || 绑定.参数角色节点.值 != 0 || 绑定.实际存在节点 || !绑定.实际特征组.empty()
+            || 绑定.任务虚拟存在引用 || 绑定.服务要求分项引用 || 绑定.服务要求确认引用
+            || (绑定.世界场景节点 && !有效(*绑定.世界场景节点)))
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"方法参数场景", L"有序参数绑定次序、类型或新旧格式不一致。");
+    }
+}
+
+} // namespace
 
 方法参数场景::方法参数场景(
     稳定编码 方法节点,
@@ -23,7 +44,9 @@ namespace 海中鱼巣 {
       治理对象读取_(治理对象读取),
       模拟运行_(std::move(模拟运行)),
       服务要求读取_(服务要求读取),
-      任务贡献治理参数_(std::move(任务贡献治理参数)) {}
+      任务贡献治理参数_(std::move(任务贡献治理参数)) {
+    核验有序参数绑定组(角色绑定组_);
+}
 
 稳定编码 方法参数场景::方法节点() const noexcept {
     return 方法节点_;
@@ -55,9 +78,15 @@ const std::vector<新方法参数角色绑定>&
 const 新方法参数角色绑定* 方法参数场景::查询角色(
     稳定编码 参数角色节点) const noexcept {
     for (const auto& 绑定 : 角色绑定组_) {
-        if (绑定.参数角色节点 == 参数角色节点) return &绑定;
+        if (!绑定.有序引用 && 绑定.参数角色节点 == 参数角色节点) return &绑定;
     }
     return nullptr;
+}
+
+const 新方法有序参数引用* 方法参数场景::查询参数(std::uint32_t 序号) const noexcept {
+    if (序号 == 0 || 序号 > 角色绑定组_.size()) return nullptr;
+    const auto& 绑定 = 角色绑定组_[序号 - 1];
+    return 绑定.有序引用 ? &*绑定.有序引用 : nullptr;
 }
 
 std::optional<新任务虚拟存在读回> 方法参数场景::读取绑定任务虚拟存在(
@@ -184,6 +213,13 @@ std::optional<新特征信息> 方法参数场景::读取绑定特征(
             return std::nullopt;
     } else if (!特征服务_) return std::nullopt;
     for (const auto& 角色 : 角色绑定组_) {
+        if (角色.有序引用) {
+            if (角色.有序引用->信息类型 != 新方法参数信息类型::特征
+                || 角色.有序引用->信息节点 != 特征节点) continue;
+            return 用途_ == 新方法参数场景用途::模拟
+                ? 模拟运行_->读取模拟特征(特征节点)
+                : 特征服务_->获取特征(特征节点);
+        }
         for (const auto& 特征 : 角色.实际特征组) {
             if (特征.特征节点 == 特征节点) {
                 if (角色.任务虚拟存在引用
@@ -207,8 +243,12 @@ std::optional<新特征值信息> 方法参数场景::读取绑定特征值材�
             return std::nullopt;
     } else if (!特征值服务_) return std::nullopt;
     for (const auto& 角色 : 角色绑定组_) {
-        for (const auto& 特征绑定 : 角色.实际特征组) {
-            const auto 特征 = 读取绑定特征(特征绑定.特征节点);
+        if (角色.有序引用 && 角色.有序引用->信息类型 != 新方法参数信息类型::特征) continue;
+        const std::size_t 特征数 = 角色.有序引用 ? 1 : 角色.实际特征组.size();
+        for (std::size_t 位置 = 0; 位置 < 特征数; ++位置) {
+            const auto 特征节点 = 角色.有序引用
+                ? 角色.有序引用->信息节点 : 角色.实际特征组[位置].特征节点;
+            const auto 特征 = 读取绑定特征(特征节点);
             if (!特征 || !特征->当前值) continue;
             const auto* 材料节点 = std::get_if<稳定编码>(&*特征->当前值);
             if (材料节点 && *材料节点 == 特征值节点) {

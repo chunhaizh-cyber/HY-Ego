@@ -70,6 +70,8 @@ struct 新本能函数条件角色材料 final {
     std::optional<新服务要求确认引用> 服务要求确认引用;
     std::optional<新服务要求分项材料> 服务要求分项快照;
     std::optional<新服务要求确认目标> 服务要求确认快照;
+    // 有序引用保留本次E/F身份；特征的动作前值仍在实际特征组中。
+    std::optional<新方法有序参数引用> 有序引用;
 
     friend bool operator==(const 新本能函数条件角色材料&,
         const 新本能函数条件角色材料&) = default;

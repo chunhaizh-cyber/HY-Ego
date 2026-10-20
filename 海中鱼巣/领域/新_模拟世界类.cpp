@@ -136,12 +136,19 @@ namespace {
 using 问题编码格式 = 方法问题归档内部::格式;
 constexpr const char* 旧问题格式 = "方法问题场景归档/1";
 constexpr const char* 组织问题格式 = "方法问题场景归档/2";
+constexpr const char* 有序参数问题格式 = "方法问题场景归档/3";
 问题编码格式 解析问题格式(const std::string& name) {
     if (name==旧问题格式) return 问题编码格式::旧方法副本;
     if (name==组织问题格式) return 问题编码格式::任务执行组织;
+    if (name==有序参数问题格式) return 问题编码格式::有序参数任务执行组织;
     throw std::runtime_error("不支持的归档格式");
 }
 问题编码格式 材料格式(const 新方法问题反馈材料& x) {
+    if (方法问题归档内部::含有序参数(x)) {
+        if (x.采用来源 != 新方法问题采用来源::任务执行组织)
+            throw std::runtime_error("旧方法副本不能保存有序参数材料");
+        return 问题编码格式::有序参数任务执行组织;
+    }
     switch (x.采用来源) {
     case 新方法问题采用来源::旧方法副本: return 问题编码格式::旧方法副本;
     case 新方法问题采用来源::任务执行组织: return 问题编码格式::任务执行组织;
@@ -284,7 +291,8 @@ std::optional<稳定编码> 查归档身份(稳定编码 task,稳定编码 execu
         batch.引用(sample,字段组[根],模拟世界树根节点);
         const auto format=材料格式(value);
         batch.原值(sample,字段组[归档格式],基础值{std::string{
-            format==问题编码格式::旧方法副本 ? 旧问题格式 : 组织问题格式}});
+            format==问题编码格式::旧方法副本 ? 旧问题格式 :
+            format==问题编码格式::任务执行组织 ? 组织问题格式 : 有序参数问题格式}});
         batch.原值(sample,字段组[归档身份],基础值{问题身份(value)});
         batch.原值(sample,字段组[归档载荷],基础值{方法问题归档内部::编码问题头(value,format)});
         写归档快照(batch,sample,value.动作前场景,1,format);
