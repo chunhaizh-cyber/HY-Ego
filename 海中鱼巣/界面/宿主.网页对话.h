@@ -107,10 +107,11 @@ using 网页对话消息接收函数 = bool (*)(
 enum class 网页服务输入状态 : std::uint8_t {
     已完成 = 1, 匿名会话, 已复用, 未绑定, 会话失效, 输入不完整,
     输入不合法, 对象不匹配, 理解不存在, 结构不一致, 资源失败,
-    需重新确认, 语义快照暂不支持, 已知值冲突, 要求不存在
+    需重新确认, 语义快照暂不支持, 已知值冲突, 要求不存在, 目标范围已变化
 };
 
 struct 网页服务目标提交 {
+    std::uint64_t 目标存在编码 = 0;
     std::uint64_t 特征类型编码 = 0;
     std::int64_t 目标形式 = 0;
     std::optional<std::uint64_t> 目标域编码;
@@ -137,13 +138,19 @@ struct 网页服务要求显示信息 {
     std::string UTF8重述;
 };
 
+enum class 网页服务材料投递状态 : std::uint8_t {
+    未尝试 = 0, 等待后继消费 = 1, 消息已接纳 = 2, 暂未接纳 = 3
+};
+
 struct 网页服务要求结果 {
     网页服务输入状态 状态 = 网页服务输入状态::输入不合法;
     std::optional<网页服务要求显示信息> 信息;
+    网页服务材料投递状态 材料投递状态 = 网页服务材料投递状态::未尝试;
 };
 
 struct 网页部分服务要求提交 {
     std::optional<std::uint64_t> 要求编码;
+    std::optional<std::uint64_t> 目标存在编码;
     std::string 来源要求标识;
     std::optional<std::uint64_t> 特征类型编码, 目标域编码, 比较概念编码;
     std::optional<std::int64_t> 目标形式, 变化方向;
@@ -157,6 +164,7 @@ struct 网页部分服务要求结果 {
     std::vector<std::string> 缺项, 冲突项;
     std::optional<网页服务要求显示信息> 完整预览;
     bool 消息已接纳 = false;
+    网页服务材料投递状态 材料投递状态 = 网页服务材料投递状态::未尝试;
 };
 
 struct 网页服务输入回调组 {
@@ -182,11 +190,13 @@ struct 网页对话框目标 final {
 };
 enum class 网页定向发送状态 : std::uint8_t {
     已排队 = 1, 正在写出, 已完整写出, 写出未完成, 已取消,
-    输入拒绝, 宿主未运行, 会话失效, 对话框未登记, 提交不存在
+    输入拒绝, 宿主未运行, 会话失效, 对话框未登记, 提交不存在,
+    页面被占用
 };
 struct 网页定向发送请求 final {
     网页对话框目标 目标;
     std::string UTF8正文;
+    std::optional<std::uint64_t> 出站占用身份;
 };
 struct 网页定向发送结果 final {
     网页定向发送状态 状态 = 网页定向发送状态::输入拒绝;
@@ -206,6 +216,11 @@ struct 网页对话框事实回调组 final {
 网页定向发送结果 提交网页对话框消息(const 网页定向发送请求&) noexcept;
 网页定向发送结果 查询网页对话框发送(
     const 网页对话框目标&, std::uint64_t 提交序号) noexcept;
+bool 取得网页对话框出站占用(const 网页对话框目标&, std::uint64_t 调用编码) noexcept;
+bool 核验网页对话框出站占用可用(const 网页对话框目标&, std::uint64_t 调用编码) noexcept;
+bool 释放网页对话框出站占用(const 网页对话框目标&, std::uint64_t 调用编码) noexcept;
+网页定向发送结果 取消网页对话框提交(
+    const 网页对话框目标&, std::uint64_t 提交序号, std::uint64_t 占用身份) noexcept;
 网页对话消息读取结果 读取网页对话框显示消息(
     const 网页对话框目标&, std::uint64_t 已读页面序号) noexcept;
 

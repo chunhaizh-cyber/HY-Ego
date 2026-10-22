@@ -1,4 +1,5 @@
 #pragma once
+#include "模拟学习.数据.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -223,6 +224,7 @@ struct 新方法结果确认要求 final {
 struct 新方法条件定义 final {
     新方法项关系规则 关系规则 = 新方法项关系规则::单项;
     std::vector<新方法条件项定义> 条件项组;
+    std::vector<新方法参数关系> 参数关系组;
     friend bool operator==(const 新方法条件定义&,
         const 新方法条件定义&) = default;
 };
@@ -231,6 +233,7 @@ struct 新方法结果定义 final {
     新方法项关系规则 关系规则 = 新方法项关系规则::单项;
     std::vector<新方法结果项定义> 结果项组;
     新方法结果确认要求 确认要求;
+    std::vector<新方法参数关系> 参数关系组;
     friend bool operator==(const 新方法结果定义&,
         const 新方法结果定义&) = default;
 };
@@ -265,6 +268,8 @@ struct 新方法知识建立请求 final {
     std::vector<新方法参数规格> 参数规格组;
     std::vector<新方法条件结果定义> 条件结果组;
     std::optional<新方法行为> 行为;
+    std::vector<新方法参数关系> 初始模拟关系组;
+    std::vector<std::uint32_t> 初始模拟事件参数组;
 };
 
 struct 新方法条件结果信息 final {
@@ -278,6 +283,7 @@ struct 新方法条件结果信息 final {
     std::vector<新方法条件结果线性关系> 线性关系组;
     // 实例配对指向最初的抽象配对；抽象配对为空，旧实例允许缺省。
     std::optional<稳定编码> 来源配对节点;
+    新方法知识来源种类 知识来源 = 新方法知识来源种类::未注明;
     friend bool operator==(const 新方法条件结果信息&,
         const 新方法条件结果信息&) = default;
 };
@@ -332,6 +338,8 @@ struct 新方法信息 final {
     std::optional<稳定编码> 父代方法节点;
     稳定编码 启用特征节点, 专属存在概念节点;
     std::optional<新方法行为> 行为;
+    std::vector<新方法参数关系> 初始模拟关系组;
+    std::vector<std::uint32_t> 初始模拟事件参数组;
     friend bool operator==(const 新方法信息&, const 新方法信息&) = default;
 };
 

@@ -6,6 +6,9 @@
 #include <map>
 #include <new>
 #include <utility>
+#include <random>
+#include <set>
+#include <stdexcept>
 
 namespace 海中鱼巣 {
 namespace {
@@ -426,3 +429,89 @@ struct 数值模拟细分器::实现 final {
 }
 
 } // namespace 海中鱼巣
+
+namespace 海中鱼巣 {
+
+std::vector<通用模拟候选值> 生成通用模拟整数候选(
+    std::vector<特征概念I64闭区间> 域) {
+    for (const auto& r : 域)
+        if (r.下界 > r.上界) throw std::invalid_argument("invalid simulation integer interval");
+    std::sort(域.begin(), 域.end(), [](const auto& a, const auto& b) {
+        return a.下界 < b.下界 || (a.下界 == b.下界 && a.上界 < b.上界);
+    });
+    std::vector<特征概念I64闭区间> 分量;
+    for (const auto& r : 域) {
+        if (!分量.empty() && (r.下界 <= 分量.back().上界
+            || (分量.back().上界 != (std::numeric_limits<std::int64_t>::max)()
+                && r.下界 == 分量.back().上界 + 1))) {
+            分量.back().上界 = (std::max)(分量.back().上界, r.上界);
+        } else 分量.push_back(r);
+    }
+    std::vector<通用模拟候选值> 候选;
+    for (const auto& r : 分量) {
+        const std::int64_t 点[]{r.下界, 区间中点(r.下界,r.上界), r.上界};
+        for (const auto x : 点)
+            if (候选.empty() || 候选.back() != 通用模拟候选值{x}) 候选.emplace_back(x);
+    }
+    return 候选;
+}
+
+std::vector<通用模拟候选值> 生成通用模拟枚举候选(
+    std::vector<通用模拟候选值> 候选, std::uint64_t 种子) {
+    std::vector<通用模拟候选值> 唯一;
+    for (const auto& x : 候选)
+        if (std::find(唯一.begin(),唯一.end(),x)==唯一.end()) 唯一.push_back(x);
+    // 明确引擎及无偏取样，记录种子和返回顺序可重放；不调用现实随机设备。
+    std::mt19937_64 引擎(种子);
+    for (std::size_t n=唯一.size(); n>1; --n) {
+        const auto 范围=static_cast<std::uint64_t>(n);
+        const auto 拒绝下界=(std::uint64_t{0}-范围)%范围;
+        std::uint64_t 随机;
+        do { 随机=引擎(); } while (随机<拒绝下界);
+        std::swap(唯一[n-1],唯一[static_cast<std::size_t>(随机%范围)]);
+    }
+    return 唯一;
+}
+
+通用模拟组合游标::通用模拟组合游标(std::vector<通用模拟候选轴> 轴)
+    : 轴_(std::move(轴)) {
+    std::set<std::uint32_t> 位置;
+    for (const auto& a : 轴_) {
+        if (!a.参数序号 || !位置.insert(a.参数序号).second)
+            throw std::invalid_argument("duplicate simulation axis");
+        if (a.候选.empty()) 位置_.已结束=true;
+    }
+    位置_.轴位置.resize(轴_.size(),0);
+}
+bool 通用模拟组合游标::已结束() const noexcept { return 位置_.已结束; }
+std::vector<通用模拟候选值> 通用模拟组合游标::读取当前组合() const {
+    if (已结束()) throw std::logic_error("simulation cursor exhausted");
+    std::vector<通用模拟候选值> 结果;
+    结果.reserve(轴_.size());
+    for (std::size_t i=0; i<轴_.size(); ++i)
+        结果.push_back(轴_[i].候选[位置_.轴位置[i]]);
+    return 结果;
+}
+void 通用模拟组合游标::推进() noexcept {
+    if (已结束()) return;
+    for (std::size_t i=轴_.size(); i>0; --i) {
+        auto& j=位置_.轴位置[i-1];
+        if (++j<轴_[i-1].候选.size()) return;
+        j=0;
+    }
+    位置_.已结束=true;
+}
+通用模拟组合位置 通用模拟组合游标::读取位置() const { return 位置_; }
+void 通用模拟组合游标::恢复位置(const 通用模拟组合位置& p) {
+    if (p.轴位置.size()!=轴_.size()) throw std::invalid_argument("simulation cursor rank");
+    bool 空轴=false;
+    for (std::size_t i=0; i<轴_.size(); ++i) {
+        if (轴_[i].候选.empty()) { 空轴=true; if(p.轴位置[i]) throw std::invalid_argument("empty simulation axis"); }
+        else if(p.轴位置[i]>=轴_[i].候选.size()) throw std::invalid_argument("simulation cursor range");
+    }
+    if(空轴&&!p.已结束) throw std::invalid_argument("cannot restore empty simulation product");
+    位置_=p;
+}
+const std::vector<通用模拟候选轴>& 通用模拟组合游标::读取轴() const noexcept { return 轴_; }
+
+}

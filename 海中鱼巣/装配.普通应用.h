@@ -3,6 +3,7 @@
 #include "领域/新_自然语言世界树类.h"
 #include "领域/新_方法公共类型.h"
 #include "业务/新_世界树类.h"
+#include "业务/连接.本能运行服务.h"
 #include "业务/治理二次特征.应用服务.h"
 #include "业务/初始化.概念名称.h"
 #include "业务/初始化.结构化子概念.h"
@@ -62,7 +63,8 @@ enum class 普通应用装配状态 : std::uint8_t {
     确认概念初始化失败,
     治理二次特征初始化失败,
     服务要求初始化失败,
-    服务对象绑定失败
+    服务对象绑定失败,
+    连接本能装配失败
 };
 
 struct 普通应用装配结果 final {
@@ -106,6 +108,7 @@ struct 普通应用装配结果 final {
     std::optional<稳定编码> 服务任务特征概念节点;
     std::optional<稳定编码> 服务任务特征节点;
     std::optional<稳定编码> 获取服务对象方法节点;
+    std::optional<稳定编码> 建立连接方法节点;
 
     bool 成功() const noexcept;
 };
@@ -212,9 +215,15 @@ struct 普通应用网页自我归类表达结果 final {
 bool 确认普通应用网页对话框(const 网页对话框目标&) noexcept;
 void 接收普通应用网页发送事实(const 网页定向发送事实&) noexcept;
 
+// 可信进程内调用；不从网页请求自动推断目标与窗口的对应关系。
+新连接返回 开始普通应用连接(const 新连接请求&) noexcept;
+新连接返回 推进普通应用连接(稳定编码 调用身份) noexcept;
+新连接返回 取消普通应用连接(稳定编码 调用身份) noexcept;
+
 网页服务输入状态 开始普通应用网页会话(std::string_view 公开会话标识) noexcept;
 void 结束普通应用网页会话(std::string_view 公开会话标识) noexcept;
 网页服务目标选项结果 查询普通应用服务目标选项(std::string_view 公开会话标识) noexcept;
+// 来源主体由活跃会话绑定；目标存在必须显式提交并核验现实范围。
 网页服务要求结果 预览普通应用服务要求(std::string_view 公开会话标识,
     const 网页服务目标提交& 目标) noexcept;
 网页服务要求结果 读取普通应用服务要求预览(std::string_view 公开会话标识,
@@ -223,6 +232,7 @@ void 结束普通应用网页会话(std::string_view 公开会话标识) noexcep
     std::uint64_t 理解编码) noexcept;
 网页部分服务要求结果 提交普通应用部分服务要求(std::string_view 公开会话标识,
     const 网页部分服务要求提交&) noexcept;
+// 纯读不投递消息；确认内容和后续材料投递结果分别返回。
 网页部分服务要求结果 读取普通应用部分服务要求(std::string_view 公开会话标识,
     std::uint64_t 要求编码) noexcept;
 

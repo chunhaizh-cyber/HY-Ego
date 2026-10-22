@@ -46,6 +46,15 @@ struct 新方法参数角色绑定 final {
 // 一个调用期所有者同时提供只读投影与隔离写端口，不能拼接不同样例。
 class 新方法模拟运行接口 : public 新内部治理对象读取接口 {
 public:
+
+    // 无此能力的模拟owner返回不适用，绝不回退现实owner。
+    virtual std::optional<std::vector<稳定编码>> 读取模拟存在特征组(稳定编码) const noexcept { return {}; }
+    virtual std::optional<稳定编码> 读取模拟所属场景(稳定编码) const noexcept { return {}; }
+    virtual 稳定编码 建立模拟动作() { return {}; }
+    virtual 新模拟操作状态 模拟递增计数(稳定编码,稳定编码) { return 新模拟操作状态::输入不适用; }
+    virtual 新模拟操作状态 推进模拟输入() { return 新模拟操作状态::输入耗尽; }
+    virtual 新模拟操作状态 模拟集合加入成员(稳定编码,稳定编码,稳定编码) { return 新模拟操作状态::输入不适用; }
+
     virtual 稳定编码 模拟根节点() const noexcept = 0;
     virtual bool 核验模拟参数(稳定编码 方法节点,
         const std::vector<新方法参数角色绑定>&) const noexcept = 0;
@@ -56,6 +65,7 @@ public:
 
 class 方法参数场景 final {
 public:
+    新方法模拟运行接口* 获取模拟运行接口() const noexcept;
     稳定编码 方法节点() const noexcept;
     新方法参数场景用途 用途() const noexcept;
     const std::optional<新任务贡献治理参数>& 读取任务贡献治理参数() const noexcept;

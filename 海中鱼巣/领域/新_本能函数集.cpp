@@ -1,16 +1,138 @@
 #include "新_本能函数集.h"
 #include "新_本能函数管理类.h"
 #include "../核心/容错检查.h"
+#include <array>
 #include <limits>
 #include <algorithm>
 #include <utility>
 
 namespace 海中鱼巣 {
+
+namespace {
+新本能函数本次条件结果对 执行连接隔离场景(const 方法参数场景& 场景) {
+    新本能函数本次条件结果对 r;
+    auto* s=场景.获取模拟运行接口();
+    if(!s||场景.全部角色绑定().size()!=6)
+        throw std::logic_error("connection simulation context missing");
+    std::array<稳定编码,6> p;
+    for(std::uint32_t i=1;i<=6;++i) {
+        const auto* b=场景.查询参数(i);
+        const auto kind=(i==3||i==5||i==6)?新方法参数信息类型::特征:新方法参数信息类型::存在;
+        if(!b||b->信息类型!=kind)throw std::logic_error("connection simulation binding");
+        p[i-1]=b->信息节点;
+        新本能函数条件角色材料 c;c.有序引用=*b;
+        if(kind==新方法参数信息类型::特征) {
+            const auto f=s->读取模拟特征(b->信息节点);
+            if(!f||!f->当前值)throw std::logic_error("connection simulation feature unavailable");
+            c.实际特征组.push_back({b->信息节点,f->当前值});
+        }
+        r.条件.参数角色组.push_back(std::move(c));
+    }
+    const auto self=s->读取模拟存在特征组(p[0]),window=s->读取模拟存在特征组(p[3]);
+    const auto a=s->读取模拟所属场景(p[0]),b=s->读取模拟所属场景(p[1]);
+    if(p[0]==p[1]||!self||!window||!a||a!=b
+        ||std::count(self->begin(),self->end(),p[2])!=1
+        ||std::count(window->begin(),window->end(),p[4])!=1
+        ||std::count(window->begin(),window->end(),p[5])!=1) return r;
+    const auto receive=s->读取模拟特征(p[4]),send=s->读取模拟特征(p[5]);
+    const auto* before=receive&&receive->当前值 ? std::get_if<std::int64_t>(&*receive->当前值):nullptr;
+    const auto* sent=send&&send->当前值 ? std::get_if<std::int64_t>(&*send->当前值):nullptr;
+    if(!before||!sent||*before<0||*sent<0||*sent==(std::numeric_limits<std::int64_t>::max)())return r;
+    const auto action=s->建立模拟动作();
+    if(!有效(action))throw std::logic_error("connection simulation action unavailable");
+    r.结果.动作动态节点=action;r.结果.动作阶段=新本能函数动作阶段::已进入动作;
+    if(s->模拟递增计数(p[5],action)!=新模拟操作状态::已完成)
+        throw std::logic_error("connection simulation send update failed");
+    // 原函数实际读取隔离输入，不能由学习器直接填成功或结果关系。
+    for(;;) {
+        const auto step=s->推进模拟输入();
+        if(step!=新模拟操作状态::已完成) {
+            r.结果.状态=新本能函数执行状态::动作结果未知;
+            r.结果.结果取得状态=新本能函数结果取得状态::待取得;return r;
+        }
+        const auto now=s->读取模拟特征(p[4]);
+        const auto* n=now&&now->当前值 ? std::get_if<std::int64_t>(&*now->当前值):nullptr;
+        if(!n)throw std::logic_error("connection simulation receive update missing");
+        if(*n>*before)break;
+    }
+    if(s->模拟集合加入成员(p[2],p[1],action)!=新模拟操作状态::已完成)
+        throw std::logic_error("connection simulation relation update failed");
+    r.结果.建议观察特征节点组={p[2]};
+    r.结果.状态=新本能函数执行状态::已按合同返回;
+    r.结果.动作阶段=新本能函数动作阶段::已按函数合同返回;
+    r.结果.结果取得状态=新本能函数结果取得状态::已取得;
+    return r;
+}
+}
+
+新本能函数本次条件结果对 新_本能函数集::建立连接(
+    const 方法参数场景& 场景) noexcept {
+    新本能函数本次条件结果对 运行;
+    if (场景.用途() == 新方法参数场景用途::任务贡献治理) {
+        运行.结果.状态 = 新本能函数执行状态::参数不匹配;
+        return 运行;
+    }
+    if(场景.用途()==新方法参数场景用途::模拟) {
+        try { return 执行连接隔离场景(场景); }
+        catch(...) { 工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"连接隔离求值",L"模拟输入或读写内部错误。"); }
+    }
+    const auto 端口 = 新_本能函数管理类::租用连接端口();
+    if (!端口) { 运行.结果.状态 = 新本能函数执行状态::依赖未装配; return 运行; }
+    try {
+        const auto 配置 = 端口->读取登记配置();
+        if (!配置) { 运行.结果.状态 = 新本能函数执行状态::依赖未装配; return 运行; }
+        新方法知识建立请求 声明;
+        声明.作用域 = 新方法作用域::普通世界;
+        声明.实现方式 = 新方法实现方式::本能;
+        声明.行为 = 新方法行为::改变;
+        声明.方法头.作用存在概念组 = {配置->自我概念};
+        声明.方法头.涉及特征类型概念组 = {配置->交互对象类型};
+        声明.方法头.可能结果概念组 = {配置->交互对象类型};
+        const std::array<新方法有序参数规格, 6> 规格{{
+            {1, 新方法参数信息类型::存在, 配置->自我概念},
+            {2, 新方法参数信息类型::存在, 配置->通用存在概念},
+            {3, 新方法参数信息类型::特征, 配置->交互对象类型},
+            {4, 新方法参数信息类型::存在, 配置->通用存在概念},
+            {5, 新方法参数信息类型::特征, 配置->接收数量类型},
+            {6, 新方法参数信息类型::特征, 配置->发送数量类型}}};
+        for (const auto& 项 : 规格) {
+            新方法参数规格 p;
+            p.有序规格 = 项;
+            声明.参数规格组.push_back(std::move(p));
+        }
+        声明.初始模拟关系组 = {
+            {新方法参数关系种类::特征所属存在,3,1},
+            {新方法参数关系种类::特征所属存在,5,4},
+            {新方法参数关系种类::特征所属存在,6,4},
+            {新方法参数关系种类::同属场景,1,2}};
+        声明.初始模拟事件参数组 = {5};
+        const auto 登记 = 端口->确保方法登记(声明);
+        if (!登记.方法节点) return 运行;
+        if (场景.用途() == 新方法参数场景用途::登记) {
+            if (!场景.全部角色绑定().empty())
+                运行.结果.状态 = 新本能函数执行状态::参数不匹配;
+            else 运行.结果.状态 = 新本能函数执行状态::已按合同返回;
+            return 运行;
+        }
+        if (const auto X = 新_本能函数管理类::读取本次执行实例(场景))
+            return 端口->执行任务(场景, *X);
+        const auto 调用 = 新_本能函数管理类::读取本次直接调用(场景);
+        if (!调用 || 场景.方法节点() != *登记.方法节点) {
+            运行.结果.状态 = 新本能函数执行状态::入口拒绝;
+            return 运行;
+        }
+        return 端口->推进本次(场景, *调用);
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"建立连接", L"本能登记或执行异常。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"建立连接", L"本能登记或执行未知异常。");
+    }
+}
+
 新本能函数本次条件结果对 新_本能函数集::获取服务对象(const 方法参数场景& 场景) noexcept {
     新本能函数本次条件结果对 运行;
     // 本叶没有隔离模拟读取实现，不能借模拟场景租用现实来源。
-    if (场景.用途() == 新方法参数场景用途::模拟
-        || 场景.用途() == 新方法参数场景用途::任务贡献治理) {
+    if (场景.用途() == 新方法参数场景用途::任务贡献治理) {
         运行.结果.状态 = 新本能函数执行状态::参数不匹配;
         return 运行;
     }
@@ -272,8 +394,7 @@ namespace 海中鱼巣 {
     const 方法参数场景& 场景, 新服务需求获取方式 方式) noexcept {
     新本能函数本次条件结果对 运行;
     // 没有模拟材料提供者；不得回落到真实端口或产生真实动作。
-    if (场景.用途() == 新方法参数场景用途::模拟
-        || 场景.用途() == 新方法参数场景用途::任务贡献治理) {
+    if (场景.用途() == 新方法参数场景用途::任务贡献治理) {
         运行.结果.状态 = 新本能函数执行状态::参数不匹配;
         return 运行;
     }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "新_世界树类.h"
+#include <string>
 #include <string_view>
 
 namespace 海中鱼巣 {
@@ -10,6 +11,10 @@ struct 新外设对话框定位 final {
     稳定编码 接收数量特征, 接收内容特征;
     std::optional<稳定编码> 发送数量特征, 发送内容特征;
     friend bool operator==(const 新外设对话框定位&, const 新外设对话框定位&) = default;
+};
+struct 新外设对话框来源 final {
+    新外设对话框定位 定位;
+    std::string 公开宿主会话, 对话框标识;
 };
 enum class 新外设事实状态 : std::uint8_t {
     已完成, 无变化, 入口拒绝, 未初始化, 结构不一致, 资源失败, 未找到
@@ -28,6 +33,8 @@ public:
         std::string_view 公开宿主会话, std::string_view 对话框标识) noexcept;
     新外设对话框建立结果 查找对话框场景(
         std::string_view 公开宿主会话, std::string_view 对话框标识) const noexcept;
+    std::optional<新外设对话框来源> 读取对话框来源(稳定编码 窗口节点) const noexcept;
+    const 新_场景类& 获取场景只读视图() const noexcept { return 场景_; }
     新外设事实状态 更新发送(
         const 新外设对话框定位&, std::string_view 实际UTF8正文,
         const 新状态强时间& 发布时间) noexcept;

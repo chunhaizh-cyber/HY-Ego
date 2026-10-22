@@ -160,6 +160,31 @@ std::optional<新外设对话框定位> 新_外设世界树类::查找正式窗�
     return 命中;
 }
 
+std::optional<新外设对话框来源> 新_外设世界树类::读取对话框来源(
+    稳定编码 窗口节点) const noexcept {
+    if (!有效(窗口节点)) return std::nullopt;
+    try {
+        std::lock_guard 锁(外设互斥);
+        if (!有效(外设根)) return std::nullopt;
+        const auto 根 = 场景_.获取场景(外设根);
+        if (!根) throw std::runtime_error("peripheral root unreadable");
+        std::optional<新外设对话框来源> 命中;
+        for (const auto 场景节点 : 根->直接子场景组) {
+            const auto 定位 = 读取窗口定位(场景节点);
+            if (定位.窗口节点 != 窗口节点) continue;
+            const auto 场景材料 = 场景_.获取场景(场景节点);
+            if (!场景材料) throw std::runtime_error("peripheral scene unreadable");
+            if (命中) throw std::runtime_error("peripheral window identity duplicated");
+            命中 = 新外设对话框来源{定位,
+                读取文本特征(读取类型特征(场景材料->特征节点组, 类型[0])),
+                读取文本特征(读取类型特征(场景材料->特征节点组, 类型[1]))};
+        }
+        return 命中;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取外设对话框来源", L"正式窗口定位结构不完整。");
+    }
+}
+
 新外设对话框建立结果 新_外设世界树类::查找对话框场景(
     std::string_view 公开宿主会话, std::string_view 对话框标识) const noexcept {
     if (公开宿主会话.empty() || 对话框标识.empty()) return {};

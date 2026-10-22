@@ -154,6 +154,8 @@ public:
         const 方法参数场景&) noexcept;
     static 新本能函数本次条件结果对 获取服务对象(
         const 方法参数场景&) noexcept;
+    static 新本能函数本次条件结果对 建立连接(
+        const 方法参数场景&) noexcept;
 private:
     static 新本能函数本次条件结果对 获取服务需求(
         const 方法参数场景&, 新服务需求获取方式) noexcept;

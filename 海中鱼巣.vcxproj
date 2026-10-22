@@ -223,6 +223,7 @@
     <ClCompile Include="海中鱼巣\领域\新_方法类.cpp" />
     <ClCompile Include="海中鱼巣\领域\新_本能函数集.cpp" />
     <ClCompile Include="海中鱼巣\业务\服务值结算.本能运行服务.cpp" />
+    <ClCompile Include="海中鱼巣\业务\连接.本能运行服务.cpp" />
     <ClCompile Include="海中鱼巣\业务\内部治理.世界.cpp" />
     <ClCompile Include="海中鱼巣\业务\服务需求.本能运行服务.cpp" />
     <ClCompile Include="海中鱼巣\业务\服务对象.本能运行服务.cpp" />
@@ -292,6 +293,7 @@
     <ClInclude Include="海中鱼巣\领域\任务时序可达性.领域服务.h" />
     <ClInclude Include="海中鱼巣\业务\治理二次特征.应用服务.h" />
     <ClInclude Include="海中鱼巣\领域\新_方法公共类型.h" />
+    <ClInclude Include="海中鱼巣\领域\模拟学习.数据.h" />
     <ClInclude Include="海中鱼巣\领域\新_方法参数场景.h" />
     <ClInclude Include="海中鱼巣\领域\新_方法类.h" />
     <ClInclude Include="海中鱼巣\领域\新_本能函数集.h" />
@@ -302,6 +304,8 @@
     <ClInclude Include="海中鱼巣\业务\服务对象.本能运行服务.h" />
     <ClInclude Include="海中鱼巣\业务\服务对象需求.发布服务.h" />
     <ClInclude Include="海中鱼巣\业务\服务值结算.本能运行服务.h" />
+    <ClInclude Include="海中鱼巣\业务\连接.本能运行服务.h" />
+    <ClInclude Include="海中鱼巣\领域\连接.本能合同.h" />
     <ClInclude Include="海中鱼巣\业务\内部治理.世界.h" />
     <ClInclude Include="海中鱼巣\业务\服务要求.结构化.h" />
     <ClInclude Include="海中鱼巣\领域\新_本能函数管理类.h" />

@@ -106,6 +106,7 @@ struct 网页对话框传输状态 final {
     std::vector<网页对话已显示消息> 消息组;
     std::vector<网页待发送项> 提交组;
     std::uint64_t 下一页面序号 = 1;
+    std::optional<std::uint64_t> 出站占用身份;
 };
 struct 网页对话共享状态 final {
     std::mutex 互斥;
@@ -124,10 +125,12 @@ struct 网页对话共享状态 final {
 // 调用者持有宿主锁；不清除会话，正在写出项仍须收口真实事实。
 void 停止接纳提交() noexcept {
     共享状态.接纳提交 = false;
-    for (auto& 页面 : 共享状态.页面组)
+    for (auto& 页面 : 共享状态.页面组) {
+        页面.出站占用身份.reset();
         for (auto& 项 : 页面.提交组)
             if (项.结果.状态 == 网页定向发送状态::已排队)
                 项.结果.状态 = 网页定向发送状态::已取消;
+    }
 }
 
 class 网页对话会话租约 final {
@@ -472,6 +475,7 @@ std::string_view 服务输入状态名称(网页服务输入状态 状态) noexc
     case 网页服务输入状态::语义快照暂不支持: return "语义快照暂不支持";
     case 网页服务输入状态::已知值冲突: return "已知值冲突";
     case 网页服务输入状态::要求不存在: return "要求不存在";
+    case 网页服务输入状态::目标范围已变化: return "目标范围已变化";
     }
     return "结构不一致";
 }
@@ -487,7 +491,8 @@ std::string_view 服务输入HTTP状态(网页服务输入状态 状态) noexcep
     case 网页服务输入状态::输入不合法: return "400 Bad Request";
     case 网页服务输入状态::对象不匹配:
     case 网页服务输入状态::已知值冲突:
-    case 网页服务输入状态::需重新确认: return "409 Conflict";
+    case 网页服务输入状态::需重新确认:
+    case 网页服务输入状态::目标范围已变化: return "409 Conflict";
     case 网页服务输入状态::要求不存在:
     case 网页服务输入状态::理解不存在: return "404 Not Found";
     case 网页服务输入状态::语义快照暂不支持: return "422 Unprocessable Content";
@@ -572,7 +577,9 @@ template<class 整数>
 
 网页服务输入状态 解析服务目标(const 表单字段组& 字段组,
     网页服务目标提交& 目标) noexcept {
-    auto 状态 = 解析正整数(取得表单字段(字段组, "ft"), 目标.特征类型编码);
+    auto 状态 = 解析正整数(取得表单字段(字段组, "target"), 目标.目标存在编码);
+    if (!服务输入已完成(状态)) return 状态;
+    状态 = 解析正整数(取得表单字段(字段组, "ft"), 目标.特征类型编码);
     if (!服务输入已完成(状态)) return 状态;
     状态 = 解析正整数(取得表单字段(字段组, "form"), 目标.目标形式);
     if (!服务输入已完成(状态)) return 状态;
@@ -598,7 +605,7 @@ template<class 整数>
 }
 
 bool 服务目标形状完整(const 网页服务目标提交& 目标) noexcept {
-    if (目标.特征类型编码 == 0) return false;
+    if (目标.目标存在编码 == 0 || 目标.特征类型编码 == 0) return false;
     if (目标.目标形式 == 1) return 目标.目标域编码 && *目标.目标域编码 != 0
         && 目标.比较概念编码 && *目标.比较概念编码 != 0 && !目标.变化方向;
     return 目标.目标形式 == 2 && !目标.目标域编码 && !目标.比较概念编码
@@ -617,7 +624,8 @@ bool 服务目标形状完整(const 网页服务目标提交& 目标) noexcept {
         if (解析正整数(文本, 值) != 网页服务输入状态::已完成) return false;
         输出 = 值; return true;
     };
-    if (!可选整数("request",目标.要求编码) || !可选整数("ft",目标.特征类型编码)
+    if (!可选整数("request",目标.要求编码) || !可选整数("target",目标.目标存在编码)
+        || !可选整数("ft",目标.特征类型编码)
         || !可选整数("form",目标.目标形式) || !可选整数("domain",目标.目标域编码)
         || !可选整数("comparison",目标.比较概念编码) || !可选整数("direction",目标.变化方向))
         return 网页服务输入状态::输入不合法;
@@ -625,6 +633,16 @@ bool 服务目标形状完整(const 网页服务目标提交& 目标) noexcept {
         || (目标.变化方向 && *目标.变化方向 != 1 && *目标.变化方向 != 2))
         return 网页服务输入状态::输入不合法;
     return 网页服务输入状态::已完成;
+}
+
+std::string_view 服务材料投递状态名称(网页服务材料投递状态 状态) noexcept {
+    switch (状态) {
+    case 网页服务材料投递状态::未尝试: return "未尝试";
+    case 网页服务材料投递状态::等待后继消费: return "等待后继消费";
+    case 网页服务材料投递状态::消息已接纳: return "消息已接纳";
+    case 网页服务材料投递状态::暂未接纳: return "暂未接纳";
+    }
+    return "未尝试";
 }
 
 void 发送部分服务要求结果(SOCKET 客户端, const 网页部分服务要求结果& r) {
@@ -637,6 +655,8 @@ void 发送部分服务要求结果(SOCKET 客户端, const 网页部分服务�
     };
     数("request",r.要求编码); 数("object",r.服务对象编码);
     文本("source",r.来源要求标识);
+    数("target",r.已知目标.目标存在编码);
+    文本("delivery",服务材料投递状态名称(r.材料投递状态));
     数("ft",r.已知目标.特征类型编码); 数("form",r.已知目标.目标形式);
     数("domain",r.已知目标.目标域编码); 数("comparison",r.已知目标.比较概念编码);
     数("direction",r.已知目标.变化方向);
@@ -676,8 +696,10 @@ void 发送服务要求结果(SOCKET 客户端, const 网页服务要求结果& 
     const auto& 信息 = *结果.信息;
     const auto& 目标 = 信息.目标;
     std::string 正文 = "{\"status\":\"" + std::string(服务输入状态名称(结果.状态))
+        + "\",\"delivery\":\"" + std::string(服务材料投递状态名称(结果.材料投递状态))
         + "\",\"info\":{\"preview\":\"" + std::to_string(信息.理解编码)
         + "\",\"object\":\"" + std::to_string(信息.服务对象编码)
+        + "\",\"target\":\"" + std::to_string(目标.目标存在编码)
         + "\",\"ft\":\"" + std::to_string(目标.特征类型编码)
         + "\",\"form\":\"" + std::to_string(目标.目标形式) + "\"";
     if (目标.目标域编码) 正文 += ",\"domain\":\"" + std::to_string(*目标.目标域编码) + "\"";
@@ -741,7 +763,7 @@ bool 处理服务输入请求(SOCKET 客户端, const HTTP请求& 请求,
         if (请求.方法 == "POST" && 路由 == "request") {
             网页部分服务要求提交 输入;
             const auto 状态 = 请求.内容类型 == "application/x-www-form-urlencoded"
-                && 解析表单(请求.正文,{"request","source","ft","form","domain","comparison","direction"},字段组)
+                && 解析表单(请求.正文,{"request","source","target","ft","form","domain","comparison","direction"},字段组)
                 ? 解析部分服务目标(字段组,输入) : 网页服务输入状态::输入不合法;
             if (!服务输入已完成(状态)) 发送服务输入失败(客户端,状态);
             else if (!回调.提交部分要求) 发送服务输入失败(客户端,网页服务输入状态::未绑定);
@@ -765,7 +787,7 @@ bool 处理服务输入请求(SOCKET 客户端, const HTTP请求& 请求,
             if (路由 == "preview") {
                 网页服务目标提交 目标;
                 const auto 状态 = 解析表单(请求.正文,
-                    {"ft", "form", "domain", "comparison", "direction"}, 字段组)
+                    {"target", "ft", "form", "domain", "comparison", "direction"}, 字段组)
                     ? 解析服务目标(字段组, 目标) : 网页服务输入状态::输入不合法;
                 if (!服务输入已完成(状态)) 发送服务输入失败(客户端, 状态);
                 else 发送服务要求结果(客户端, 回调.预览(公开会话标识, 目标), false);
@@ -825,7 +847,8 @@ label{display:grid;gap:6px;font-size:14px}[hidden]{display:none!important}input,
 <p id="service-hints"></p>
 <form id="service-form">
 <fieldset id="service-fields" disabled>
-<label>目标人编码（只读）<input id="service-object" readonly></label>
+<label>需求主体编码（会话绑定）<input id="service-object" readonly></label>
+<label>目标存在编码<input name="target" id="service-target" inputmode="numeric" pattern="[0-9]+" placeholder="可暂不填写，保存为缺项"></label>
 <label>目标特征类型编码<input name="ft" inputmode="numeric" autocomplete="off"></label>
 <label>目标形式<select name="form" id="service-mode"><option value="">暂不明确</option><option value="1">值目标</option><option value="2">方向目标</option></select></label>
 <label id="domain-label">目标域概念编码<input name="domain" inputmode="numeric" autocomplete="off" disabled></label>
@@ -867,14 +890,15 @@ function selectServiceMode(){for(const name of ['domain','comparison','direction
 serviceForm.addEventListener('input',()=>{invalidatePreview();selectServiceMode();});
 serviceForm.addEventListener('change',()=>{invalidatePreview();selectServiceMode();});
 async function serviceRequest(path,body){const options={cache:'no-store'};if(body!==undefined){options.method='POST';options.headers={'Content-Type':'application/x-www-form-urlencoded'};options.body=body.toString();}const response=await fetch(base+'/api/service/'+path,options);const data=await response.json();if(!response.ok)throw new Error(data.status==='需重新确认'?'语义已变化，请重新生成预览并确认':data.status||'服务要求处理失败');return data;}
-function displayServiceInfo(info){if(!info||typeof info.preview!=='string'||typeof info.object!=='string'||typeof info.text!=='string')throw new Error('服务回执结构不一致');servicePreview.textContent='目标人编码：'+info.object+'\n理解编码：'+info.preview+'\n'+info.text;}
-async function loadServiceOptions(){try{const data=await serviceRequest('options');document.getElementById('service-object').value=data.object;document.getElementById('service-hints').textContent='当前特征提示：'+(data.hints.length?data.hints.map(h=>'FT '+h.ft+' / 当前概念 '+h.concept).join('；'):'无现有特征提示');serviceFields.disabled=false;serviceSubmit.disabled=false;serviceStatus.textContent='可先保存部分信息。缺项由你补充，不会自动推测。';selectServiceMode();}catch(error){serviceStatus.textContent=error.message+'；结构化输入不可用，文本对话仍可使用。';}}
-function displayPartial(data){if(data.request){requestId=data.request;serviceRefresh.disabled=false;}previewId=null;serviceConfirm.disabled=true;const lines=['要求编码：'+(data.request||'尚未建立'),'处理：'+data.status,'缺项：'+((data.missing||[]).join('、')||'无'),'冲突：'+((data.conflicts||[]).join('、')||'无')];if(data.text)lines.push(data.text);if(data.confirmation)lines.push('确认编码：'+data.confirmation);servicePreview.textContent=lines.join('\n');if(data.preview&&!data.confirmation&&data.status!=='需重新确认'){previewId=data.preview;serviceConfirm.disabled=false;}serviceStatus.textContent=data.status==='需重新确认'?'概念含义已变化，原要求保留且暂停执行；本轮不自动改写或刷新确认。':data.accepted?'信息已保存，变化消息已接纳；不表示任务已建立或服务完成。':'信息或交接尚待处理，可刷新状态重试；不表示任务已建立。';}
+function displayServiceInfo(info){if(!info||typeof info.preview!=='string'||typeof info.object!=='string'||typeof info.target!=='string'||typeof info.text!=='string')throw new Error('服务回执结构不一致');servicePreview.textContent='需求主体编码：'+info.object+'\n目标存在编码：'+info.target+'\n理解编码：'+info.preview+'\n'+info.text;}
+async function loadServiceOptions(){try{const data=await serviceRequest('options');document.getElementById('service-object').value=data.object;document.getElementById('service-hints').textContent='需求主体 #'+data.object+' 的当前特征提示（非任意目标）：'+(data.hints.length?data.hints.map(h=>'FT '+h.ft+' / 当前概念 '+h.concept).join('；'):'无现有特征提示');serviceFields.disabled=false;serviceSubmit.disabled=false;serviceStatus.textContent='可先保存部分信息。缺项由你补充，不会自动推测。';selectServiceMode();}catch(error){serviceStatus.textContent=error.message+'；结构化输入不可用，文本对话仍可使用。';}}
+function deliveryText(state){switch(state){case '等待后继消费':return '内容已确认，尚待后继消费，未交自我承接。';case '消息已接纳':return '消息已接纳，不代表自我已承接或任务已建立。';case '暂未接纳':return '内容确认保留，本次消息暂未接纳；可重新提交或确认以重试。';case '未尝试':return '本次未投递消息；刷新只读取材料。';default:throw new Error('材料投递回执结构不一致');}}
+function displayPartial(data,delivery=data.delivery){if(data.request){requestId=data.request;serviceRefresh.disabled=false;}previewId=null;serviceConfirm.disabled=true;const lines=['要求编码：'+(data.request||'尚未建立'),'需求主体编码：'+(data.object||'未知'),'目标存在编码：'+(data.target||'尚未明确'),'处理：'+data.status,'缺项：'+((data.missing||[]).join('、')||'无'),'冲突：'+((data.conflicts||[]).join('、')||'无')];if(data.text)lines.push(data.text);if(data.confirmation)lines.push('内容已确认；确认编码：'+data.confirmation);servicePreview.textContent=lines.join('\n');if(data.preview&&!data.confirmation&&data.status!=='需重新确认'){previewId=data.preview;serviceConfirm.disabled=false;}serviceStatus.textContent=data.status==='需重新确认'?'概念含义已变化，原要求保留且暂停执行；本轮不自动改写或刷新确认。':deliveryText(delivery);}
 async function partialRequest(body){const options={cache:'no-store'};let path='request?id='+encodeURIComponent(requestId);if(body){path='request';options.method='POST';options.headers={'Content-Type':'application/x-www-form-urlencoded'};options.body=body.toString();}const response=await fetch(base+'/api/service/'+path,options);const data=await response.json();if(!response.ok&&!data.request)throw new Error(data.status||'要求处理失败');return data;}
 serviceForm.addEventListener('submit',async event=>{event.preventDefault();if(serviceBusy)return;const body=new URLSearchParams(new FormData(serviceForm));body.set('source',sourceId);if(requestId)body.set('request',requestId);serviceBusy=true;serviceSubmit.disabled=true;serviceFields.disabled=true;serviceConfirm.disabled=true;try{displayPartial(await partialRequest(body));}catch(error){serviceStatus.textContent=error.message+'；保留来源标识，可用相同输入重试。';}finally{serviceBusy=false;serviceSubmit.disabled=false;serviceFields.disabled=false;selectServiceMode();}});
 serviceRefresh.addEventListener('click',async()=>{if(!requestId||serviceBusy)return;serviceBusy=true;try{displayPartial(await partialRequest());}catch(error){serviceStatus.textContent=error.message;}finally{serviceBusy=false;}});
 document.getElementById('service-new').addEventListener('click',()=>{if(serviceBusy)return;serviceForm.reset();requestId=null;sourceId=crypto.randomUUID();serviceRefresh.disabled=true;invalidatePreview();selectServiceMode();});
-serviceConfirm.addEventListener('click',async()=>{if(!previewId||serviceBusy)return;const confirming=previewId;previewId=null;serviceBusy=true;serviceConfirm.disabled=true;serviceSubmit.disabled=true;serviceFields.disabled=true;try{const data=await serviceRequest('confirm',new URLSearchParams({preview:confirming}));displayServiceInfo(data.info);if(requestId)displayPartial(await partialRequest());else serviceStatus.textContent='已确认，不表示服务完成。';}catch(error){serviceStatus.textContent=error.message+'；原要求保留，可刷新状态。';}finally{serviceBusy=false;serviceSubmit.disabled=false;serviceFields.disabled=false;selectServiceMode();}});
+serviceConfirm.addEventListener('click',async()=>{if(!previewId||serviceBusy)return;const confirming=previewId;previewId=null;serviceBusy=true;serviceConfirm.disabled=true;serviceSubmit.disabled=true;serviceFields.disabled=true;try{const data=await serviceRequest('confirm',new URLSearchParams({preview:confirming}));displayServiceInfo(data.info);serviceStatus.textContent='内容已确认；'+deliveryText(data.delivery);if(requestId){try{displayPartial(await partialRequest(),data.delivery);}catch(error){serviceStatus.textContent='内容已确认；'+deliveryText(data.delivery)+' 材料刷新失败：'+error.message;}}}catch(error){serviceStatus.textContent=error.message+'；原要求保留，可刷新状态。';}finally{serviceBusy=false;serviceSubmit.disabled=false;serviceFields.disabled=false;selectServiceMode();}});
 loadServiceOptions();
 poll();
 </script>
@@ -1158,6 +1182,8 @@ bool 网页对话宿主结果::成功() const noexcept {
         if (!共享状态.接纳提交) return {网页定向发送状态::宿主未运行};
         auto* 页面 = 查找传输页面(请求.目标);
         if (!页面) return {网页定向发送状态::对话框未登记};
+        if (页面->出站占用身份 != 请求.出站占用身份)
+            return {网页定向发送状态::页面被占用};
         if (!共享状态.下一提交序号 || 共享状态.下一提交序号 == (std::numeric_limits<std::uint64_t>::max)())
             throw std::runtime_error("outbound submission sequence exhausted");
         const auto 序号 = 共享状态.下一提交序号;
@@ -1167,6 +1193,97 @@ bool 网页对话宿主结果::成功() const noexcept {
         return 结果;
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"提交定向网页消息", L"传输队列或载荷冻结失败。");
+    }
+}
+
+bool 取得网页对话框出站占用(const 网页对话框目标& 目标,
+    std::uint64_t 调用编码) noexcept {
+    if (!调用编码 || 目标.公开会话标识.empty()
+        || !是有效UTF8(目标.公开会话标识)
+        || !是合法对话框标识(目标.对话框标识)) return false;
+    try {
+        std::lock_guard 锁(共享状态.互斥);
+        if (!共享状态.运行中 || !共享状态.接纳提交
+            || !共享状态.停止信号 || *共享状态.停止信号 != 0
+            || 共享状态.会话标识 != 目标.公开会话标识) return false;
+        auto* 页面 = 查找传输页面(目标);
+        if (!页面 || 页面->出站占用身份) return false;
+        for (const auto& 项 : 页面->提交组) {
+            if (项.结果.状态 == 网页定向发送状态::已排队
+                || 项.结果.状态 == 网页定向发送状态::正在写出) return false;
+        }
+        页面->出站占用身份 = 调用编码;
+        return true;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"取得网页出站占用", L"页面传输结构读取失败。");
+    }
+}
+
+bool 核验网页对话框出站占用可用(const 网页对话框目标& 目标,
+    std::uint64_t 调用编码) noexcept {
+    if (!调用编码 || 目标.公开会话标识.empty()
+        || !是有效UTF8(目标.公开会话标识)
+        || !是合法对话框标识(目标.对话框标识)) return false;
+    try {
+        std::lock_guard 锁(共享状态.互斥);
+        if (!共享状态.运行中 || !共享状态.接纳提交
+            || !共享状态.停止信号 || *共享状态.停止信号 != 0
+            || 共享状态.会话标识 != 目标.公开会话标识) return false;
+        const auto* 页面 = 查找传输页面(目标);
+        return 页面 && 页面->出站占用身份 == 调用编码;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验网页出站占用",
+            L"页面租约或会话状态读取异常。");
+    }
+}
+
+bool 释放网页对话框出站占用(const 网页对话框目标& 目标,
+    std::uint64_t 调用编码) noexcept {
+    if (!调用编码 || 目标.公开会话标识.empty()
+        || !是有效UTF8(目标.公开会话标识)
+        || !是合法对话框标识(目标.对话框标识)) return false;
+    try {
+        std::lock_guard 锁(共享状态.互斥);
+        // 旧会话已经结束或切换时，本调用旧租约已不在当前宿主中；
+        // 绝不按调用编码单独触碰新会话的页面。
+        if (!共享状态.运行中 || 共享状态.会话标识 != 目标.公开会话标识)
+            return true;
+        auto* 页面 = 查找传输页面(目标);
+        if (!页面 || !页面->出站占用身份) return true;
+        if (页面->出站占用身份 != 调用编码) return false;
+        页面->出站占用身份.reset();
+        return true;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"释放网页出站占用", L"页面传输结构读取失败。");
+    }
+}
+
+网页定向发送结果 取消网页对话框提交(const 网页对话框目标& 目标,
+    std::uint64_t 提交序号, std::uint64_t 占用身份) noexcept {
+    if (!提交序号 || !占用身份 || 目标.公开会话标识.empty()
+        || !是有效UTF8(目标.公开会话标识)
+        || !是合法对话框标识(目标.对话框标识)) return {};
+    try {
+        std::lock_guard 锁(共享状态.互斥);
+        if (!共享状态.运行中) return {网页定向发送状态::宿主未运行};
+        if (共享状态.会话标识 != 目标.公开会话标识)
+            return {网页定向发送状态::会话失效};
+        auto* 页面 = 查找传输页面(目标);
+        if (!页面) return {网页定向发送状态::对话框未登记};
+        if (页面->出站占用身份 != 占用身份)
+            return {网页定向发送状态::页面被占用};
+        for (auto& 项 : 页面->提交组) {
+            if (项.事实.提交序号 != 提交序号) continue;
+            if (项.事实.目标 != 目标 || !项.结果.提交序号
+                || *项.结果.提交序号 != 提交序号)
+                throw std::runtime_error("outbound cancel item identity corrupted");
+            if (项.结果.状态 == 网页定向发送状态::已排队)
+                项.结果.状态 = 网页定向发送状态::已取消;
+            return 项.结果;
+        }
+        return {网页定向发送状态::提交不存在};
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"取消网页提交", L"页面传输结构读取失败。");
     }
 }
 

@@ -47,6 +47,7 @@ struct 服务要求目标语义快照 {
 struct 服务要求理解请求 {
     std::string 公开会话标识;
     稳定编码 来源人类节点;
+    稳定编码 目标存在节点;
     新需求目标定义 目标;
     std::optional<稳定编码> 来源要求节点;
 };
@@ -110,6 +111,9 @@ public:
     部分服务要求结果 提交或补充要求(const 部分服务要求提交&) noexcept;
     部分服务要求结果 查询部分要求(std::string_view 会话,
         稳定编码 人类, 稳定编码 要求) const noexcept;
+    // 同一来源键的只读定位；没有匹配时不建立材料。
+    部分服务要求结果 查询部分要求(std::string_view 会话,
+        稳定编码 人类, std::string_view 来源要求标识) const noexcept;
     // schema启动前冻结；不取得业务mutex，供持有需求锁的读取者调用。
     新部分服务要求读取结果 读取部分服务要求(稳定编码 要求节点) const noexcept override;
     新服务要求分项读取结果 读取服务要求分项(

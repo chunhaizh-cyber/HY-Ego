@@ -99,6 +99,70 @@ std::optional<稳定编码> 读取参数作用对象(const 新方法参数角色
     return 所属对象.size() == 1 ? std::optional<稳定编码>{*所属对象.begin()} : std::nullopt;
 }
 
+// 使用已冻结的按位实参核验关系；材料未到与实际否定分账。
+std::optional<bool> 核验参数位置关系(
+    const std::vector<新方法参数角色绑定>& 绑定组, const 新方法参数关系& 关系,
+    const 新_存在类& 存在服务, const 新_场景类& 场景服务,
+    const 新_特征类& 特征服务, const 新_特征值类& 值服务,
+    const 概念_特征类& 概念服务) {
+    const auto 查 = [&](std::uint32_t 序号) -> const 新方法有序参数引用* {
+        const 新方法有序参数引用* 结果 = nullptr;
+        for (const auto& 绑定 : 绑定组) if (绑定.有序引用 && 绑定.有序引用->序号 == 序号) {
+            if (结果) throw std::logic_error("duplicate relation parameter binding");
+            结果 = &*绑定.有序引用;
+        }
+        return 结果;
+    };
+    const auto* 左 = 查(关系.左参数序号);
+    const auto* 右 = 查(关系.右参数序号);
+    if (!左 || !右) return std::nullopt;
+    switch (关系.种类) {
+    case 新方法参数关系种类::同一:
+    case 新方法参数关系种类::不同:
+        if (左->信息类型 != 右->信息类型) throw std::logic_error("relation parameter type mismatch");
+        return 关系.种类 == 新方法参数关系种类::同一
+            ? 左->信息节点 == 右->信息节点 : 左->信息节点 != 右->信息节点;
+    case 新方法参数关系种类::同属场景: {
+        if (左->信息类型 != 新方法参数信息类型::存在 || 右->信息类型 != 新方法参数信息类型::存在)
+            throw std::logic_error("same-scene relation requires existences");
+        const auto 左场景 = 场景服务.查询所属场景(左->信息节点);
+        const auto 右场景 = 场景服务.查询所属场景(右->信息节点);
+        if (!左场景 || !右场景) return std::nullopt;
+        return *左场景 == *右场景;
+    }
+    case 新方法参数关系种类::特征所属存在: {
+        if (左->信息类型 != 新方法参数信息类型::特征 || 右->信息类型 != 新方法参数信息类型::存在)
+            throw std::logic_error("feature-owner relation type mismatch");
+        if (场景服务.是场景节点(右->信息节点)) {
+            const auto 场景 = 场景服务.获取场景(右->信息节点);
+            if (!场景) return std::nullopt;
+            return std::find(场景->特征节点组.begin(), 场景->特征节点组.end(), 左->信息节点)
+                != 场景->特征节点组.end();
+        }
+        const auto 存在 = 存在服务.获取存在(右->信息节点);
+        if (!存在) return std::nullopt;
+        return std::find(存在->特征节点组.begin(), 存在->特征节点组.end(), 左->信息节点)
+            != 存在->特征节点组.end();
+    }
+    case 新方法参数关系种类::集合包含存在: {
+        if (左->信息类型 != 新方法参数信息类型::特征 || 右->信息类型 != 新方法参数信息类型::存在)
+            throw std::logic_error("collection-member relation type mismatch");
+        const auto 特征 = 特征服务.获取特征(左->信息节点);
+        if (!特征 || !特征->当前值) return std::nullopt;
+        const auto 概念 = 概念服务.获取特征概念(特征->特征概念节点);
+        if (!概念 || 概念->比较规则 != 特征概念比较规则::存在集合身份判等)
+            throw std::logic_error("collection-member relation requires existence collection");
+        const auto* 值节点 = std::get_if<稳定编码>(&*特征->当前值);
+        if (!值节点) throw std::logic_error("collection current value is not material");
+        const auto 值 = 值服务.获取特征值(*值节点);
+        if (!值) return std::nullopt;
+        const auto* 成员 = std::get_if<std::vector<std::uint64_t>>(&值->材料);
+        if (!成员) throw std::logic_error("collection material type mismatch");
+        return std::find(成员->begin(), 成员->end(), 右->信息节点.值) != 成员->end();
+    }
+    }
+    throw std::logic_error("unknown parameter relation");
+}
 // 持有原回调引用，不复制function。必须在owner锁之后构造，先通知后释放锁。
 struct 关联检查离域通知 final {
     const std::function<void()>& 通知;
@@ -215,9 +279,7 @@ enum class 预计变化方向 : std::uint8_t {
 };
 
 bool 精确域有效(const 特征概念I64闭区间& 域) noexcept {
-    return 域.下界 <= 域.上界
-        && 域.下界 != (std::numeric_limits<std::int64_t>::min)()
-        && 域.上界 != (std::numeric_limits<std::int64_t>::max)();
+    return 域.下界 <= 域.上界;
 }
 
 std::optional<新特征值域比较输入> 取得任务值域输入(
@@ -316,9 +378,10 @@ bool 是条件包含目标(
             != std::optional<稳定编码>{目标.目标特征类型概念节点}) return false;
     const auto* 区间组 = std::get_if<std::vector<特征概念I64闭区间>>(&域->值域);
     const auto* 集合 = std::get_if<特征概念任务集合值域>(&域->值域);
-    if (集合) {
+    const auto* 存在集合 = std::get_if<特征概念存在集合值域>(&域->值域);
+    if (集合 || 存在集合) {
         if (域->材料类型 != 特征概念材料物理类型::U64数组 || 域->单位
-            || 域->比较规则 != 特征概念比较规则::服务任务集合身份判等
+            || 域->比较规则 != (存在集合 ? 特征概念比较规则::存在集合身份判等 : 特征概念比较规则::服务任务集合身份判等)
             || 关系->算法 != 二次特征算法::特征材料相似度) return false;
     } else if (!区间组 || !是规范条件I64区间组(*区间组)
         || 域->材料类型 != 特征概念材料物理类型::I64标量
@@ -333,9 +396,9 @@ bool 是条件包含目标(
                 != std::optional<稳定编码>{目标.目标特征类型概念节点}) return false;
     }
     return std::all_of(关系->结果域种类组.begin(), 关系->结果域种类组.end(),
-        [集合](auto 种类) {
+        [集合, 存在集合](auto 种类) {
             return 种类 == 二次特征结果域种类::包含于参照值域
-                || (!集合 && 种类 == 二次特征结果域种类::等于);
+                || (!集合 && !存在集合 && 种类 == 二次特征结果域种类::等于);
         });
 }
 
@@ -528,7 +591,7 @@ enum class 字段 : std::size_t {
     匹配概念, 下一步骤, 执行采用引用, 采用所属执行, 采用根, 采用组织,
     采用作用域, 采用配对, 绑定成员, 绑定所属采用, 世界场景, 实际存在,
     实际特征, 引用任务, 引用虚拟存在, 引用状态特征, 服务理解, 服务分项,
-    服务确认, 参数位置, 参数信息类型, 参数范围概念, 参数信息节点, 数量
+    服务确认, 参数位置, 参数信息类型, 参数范围概念, 参数信息节点, 条件位置关系, 结果位置关系, 数量
 };
 稳定编码 类型节点[static_cast<std::size_t>(类型::数量)]{};
 稳定编码 字段节点[static_cast<std::size_t>(字段::数量)]{};
@@ -720,6 +783,17 @@ struct 写器 final {
     void 数(std::size_t 节点, 字段 项, std::int64_t 值) {
         节点组.at(节点).字段组.push_back({取(项), 基础值{值}});
     }
+    void 位置关系(std::size_t 节点, 字段 项, const std::vector<新方法参数关系>& 关系组) {
+        if (关系组.empty()) return;
+        std::vector<std::int64_t> 材料;
+        材料.reserve(关系组.size() * 3);
+        for (const auto& 关系 : 关系组) {
+            材料.push_back(static_cast<std::int64_t>(关系.种类));
+            材料.push_back(关系.左参数序号);
+            材料.push_back(关系.右参数序号);
+        }
+        节点组.at(节点).字段组.push_back({取(项), 基础值{std::move(材料)}});
+    }
     std::size_t 新节点(类型 种类) {
         const auto 位置 = 节点组.size();
         节点组.push_back({{{节点类型字段, 取(种类)}}});
@@ -762,6 +836,8 @@ struct 写器 final {
         引用(节点, 字段::来源结果, 对.来源结果节点);
         数(节点, 字段::条件关系, static_cast<std::int64_t>(对.条件.关系规则));
         数(节点, 字段::结果关系, static_cast<std::int64_t>(对.结果.关系规则));
+        位置关系(节点, 字段::条件位置关系, 对.条件.参数关系组);
+        位置关系(节点, 字段::结果位置关系, 对.结果.参数关系组);
         for (std::size_t i = 0; i < 对.条件.条件项组.size(); ++i) {
             const auto& 项 = 对.条件.条件项组[i];
             const auto 子 = 子节点(类型::条件项, 节点, 字段::条件成员, 字段::所属配对, 序号(i));
@@ -961,6 +1037,26 @@ struct 读器 final {
         const auto 值 = 可选引用(节点, 项);
         要求(值.has_value(), "required reference missing"); return *值;
     }
+    std::vector<新方法参数关系> 位置关系(稳定编码 节点, 字段 项) {
+        const auto 字段组 = 取字段(节点, 取(项));
+        要求(字段组.size() <= 1, "parameter relation cardinality");
+        if (字段组.empty()) return {};
+        const auto* 值 = std::get_if<基础值>(&字段组.front()->内容);
+        const auto* 材料 = 值 ? std::get_if<std::vector<std::int64_t>>(&值->材料) : nullptr;
+        要求(材料 && 材料->size() % 3 == 0, "invalid parameter relation material");
+        std::vector<新方法参数关系> 结果;
+        for (std::size_t i = 0; i < 材料->size(); i += 3) {
+            const auto 种类 = 材料->at(i), 左 = 材料->at(i + 1), 右 = 材料->at(i + 2);
+            要求(种类 >= 1 && 种类 <= 5 && 左 > 0 && 右 > 0
+                && 左 <= (std::numeric_limits<std::uint32_t>::max)()
+                && 右 <= (std::numeric_limits<std::uint32_t>::max)(), "invalid parameter relation position");
+            const 新方法参数关系 关系{static_cast<新方法参数关系种类>(种类),
+                static_cast<std::uint32_t>(左), static_cast<std::uint32_t>(右)};
+            要求(std::find(结果.begin(), 结果.end(), 关系) == 结果.end(), "duplicate parameter relation");
+            结果.push_back(关系);
+        }
+        return 结果;
+    }
     std::optional<std::int64_t> 可选数(稳定编码 节点, 字段 项) {
         const auto 组 = 取字段(节点, 取(项));
         要求(组.size() <= 1, "optional integer cardinality");
@@ -1042,6 +1138,8 @@ struct 读器 final {
         对.来源条件节点 = 引用(节点, 字段::来源条件); 对.来源结果节点 = 引用(节点, 字段::来源结果);
         对.条件.关系规则 = 枚举值<新方法项关系规则>(节点, 字段::条件关系, 1, 6);
         对.结果.关系规则 = 枚举值<新方法项关系规则>(节点, 字段::结果关系, 1, 6);
+        对.条件.参数关系组 = 位置关系(节点, 字段::条件位置关系);
+        对.结果.参数关系组 = 位置关系(节点, 字段::结果位置关系);
         for (const auto 子 : 子组(节点, 字段::条件成员, 类型::条件项, 字段::所属配对, true)) {
             新方法条件项定义 项;
             std::tie(项.参数角色节点, 项.参数序号) = 参数定位(子); 项.存在概念节点 = 可选引用(子, 字段::存在概念);
@@ -12387,7 +12485,13 @@ namespace {
                     记录缺口(*规格, *项缺口种类组[i], 查找已知角色绑定(角色, 条件项.参数序号), &配对,
                         static_cast<std::uint64_t>(i));
                 }
-                switch (配对.条件.关系规则) {
+                for (const auto& 关系 : 配对.条件.参数关系组) {
+                    const auto 核验 = 核验参数位置关系(方法项.参数绑定组, 关系,
+                        存在服务_, 场景服务_, 特征服务_, 特征值服务_, 特征概念服务_);
+                    项状态组.push_back(!核验 ? 新任务方法条件项核验状态::材料未到
+                        : *核验 ? 新任务方法条件项核验状态::具备
+                            : 新任务方法条件项核验状态::不具备);
+                }                switch (配对.条件.关系规则) {
                 case 新方法项关系规则::单项:
                     if (项状态组.size() == 1) 配对结果.状态 = 项状态组.front();
                     break;
@@ -12677,7 +12781,38 @@ namespace {
                 && 定义.关系规则 != 新方法项关系规则::主要结果及允许副作用) {
                 有未支持 = true; continue;
             }
-            const 新方法结果项定义* 目标项 = nullptr;
+            // 关系型效果通过参数位置绑定到当前需求目标，不持有模拟样例身份。
+            if (!定义.参数关系组.empty()
+                && (定义.关系规则 == 新方法项关系规则::单项 || 定义.关系规则 == 新方法项关系规则::全部成立)
+                && 是条件包含目标(需求->目标, 特征概念服务_, 二次特征概念服务_)) {
+                const auto 域 = 特征概念服务_.获取特征概念(*需求->目标.目标值域概念节点);
+                const auto* 集合目标 = 域 ? std::get_if<特征概念存在集合值域>(&域->值域) : nullptr;
+                if (集合目标) {
+                    std::set<稳定编码> 保证成员;
+                    for (const auto& 关系 : 定义.参数关系组) {
+                        if (关系.种类 != 新方法参数关系种类::集合包含存在) continue;
+                        const auto 左 = std::find_if(方法筹办->参数绑定组.begin(), 方法筹办->参数绑定组.end(),
+                            [&](const auto& 绑定) { return 参数定位相同(绑定, 稳定编码{}, 关系.左参数序号); });
+                        const auto 右 = std::find_if(方法筹办->参数绑定组.begin(), 方法筹办->参数绑定组.end(),
+                            [&](const auto& 绑定) { return 参数定位相同(绑定, 稳定编码{}, 关系.右参数序号); });
+                        if (左 == 方法筹办->参数绑定组.end() || 右 == 方法筹办->参数绑定组.end()
+                            || !左->有序引用 || !右->有序引用
+                            || 左->有序引用->信息类型 != 新方法参数信息类型::特征
+                            || 右->有序引用->信息类型 != 新方法参数信息类型::存在) continue;
+                        if (读取参数作用对象(*左, 存在服务_, 场景服务_) != std::optional<稳定编码>{需求->目标存在节点}) continue;
+                        const auto 特征 = 特征服务_.获取特征(左->有序引用->信息节点);
+                        if (!特征 || 取得特征概念类型根(特征概念服务_, 特征->特征概念节点)
+                            != std::optional<稳定编码>{需求->目标.目标特征类型概念节点}) continue;
+                        保证成员.insert(右->有序引用->信息节点);
+                    }
+                    if ((!集合目标->至少一个存在 || !保证成员.empty())
+                        && std::all_of(集合目标->必含存在节点组.begin(), 集合目标->必含存在节点组.end(),
+                            [&](稳定编码 成员) { return 保证成员.contains(成员); })) {
+                        适用组.push_back({&项, &*方法筹办, true, std::nullopt, {}});
+                        continue;
+                    }
+                }
+            }            const 新方法结果项定义* 目标项 = nullptr;
             for (const auto& 预期 : 定义.结果项组) {
                 if (定义.关系规则 == 新方法项关系规则::主要结果及允许副作用 && !预期.主要结果) continue;
                 if (!预期.特征类型概念节点) { 有未支持 = true; continue; }
@@ -13997,7 +14132,42 @@ namespace {
         std::vector<已绑定预计变化> 已绑定组;
         新任务预计变化阶段 阶段;
         阶段.顺序 = 0;
-        for (const auto& 项 : 配对位置->结果.结果项组) {
+        for (const auto& 原项 : 配对位置->结果.结果项组) {
+            auto 项 = 原项;
+            // 将关系模板按本次固定实参实例化为正式结果域，供既有预计/观察流程消费。
+            if (项.参数序号 && 项.特征类型概念节点 && !项.特征值域概念节点
+                && !项.精确数值域 && !项.变化方向概念节点
+                && (配对位置->结果.关系规则 == 新方法项关系规则::单项
+                    || 配对位置->结果.关系规则 == 新方法项关系规则::全部成立)) {
+                特征概念存在集合值域 成员域;
+                for (const auto& 关系 : 配对位置->结果.参数关系组) {
+                    if (关系.种类 != 新方法参数关系种类::集合包含存在
+                        || 关系.左参数序号 != 项.参数序号) continue;
+                    const auto 绑定 = std::find_if(唯一方法->参数绑定组.begin(), 唯一方法->参数绑定组.end(),
+                        [&](const auto& 值) { return 参数定位相同(值, 稳定编码{}, 关系.右参数序号); });
+                    if (绑定 == 唯一方法->参数绑定组.end() || !绑定->有序引用
+                        || 绑定->有序引用->信息类型 != 新方法参数信息类型::存在) {
+                        结果.状态 = 新任务治理执行方向核验状态::等待材料; return 结果;
+                    }
+                    成员域.必含存在节点组.push_back(绑定->有序引用->信息节点);
+                }
+                if (!成员域.必含存在节点组.empty()) {
+                    std::sort(成员域.必含存在节点组.begin(), 成员域.必含存在节点组.end());
+                    成员域.必含存在节点组.erase(std::unique(成员域.必含存在节点组.begin(),
+                        成员域.必含存在节点组.end()), 成员域.必含存在节点组.end());
+                    const auto 根码 = 取得特征概念类型根(特征概念服务_, *项.特征类型概念节点);
+                    const auto 根 = 根码 ? 特征概念服务_.获取特征概念(*根码) : std::nullopt;
+                    if (!根 || 根->比较规则 != 特征概念比较规则::存在集合身份判等)
+                        throw std::logic_error("relation result requires existence collection type");
+                    特征概念定义 定义;
+                    定义.材料类型 = 根->材料类型; 定义.单位 = 根->单位;
+                    定义.比较规则 = 根->比较规则; 定义.聚合规则 = 根->聚合规则;
+                    定义.值域 = std::move(成员域);
+                    const auto 域 = 特征概念服务_.建立或取得特征概念(定义, 特征值服务_, *根码);
+                    if (!有效(域)) throw std::logic_error("bound relation result domain publication failed");
+                    项.特征值域概念节点 = 域;
+                }
+            }
             if (读取行为 && 项.变化方向概念节点) {
                 结果.状态 = 新任务治理执行方向核验状态::结果定义暂不支持;
                 return 结果;
@@ -15026,7 +15196,25 @@ namespace {
                 return 结果;
             }
         }
-        结果.状态 = 新任务治理结果材料核验状态::材料已足够;
+        if (执行->本能采用) {
+            const auto& 采用 = *执行->本能采用;
+            // 与本次执行相同的冻结绑定；不能换成后来重选的方法材料。
+            if (!采用.结果.参数关系组.empty()) {
+                if (采用.结果.关系规则 != 新方法项关系规则::单项
+                    && 采用.结果.关系规则 != 新方法项关系规则::全部成立) {
+                    结果.状态 = 新任务治理结果材料核验状态::已接受但仍不足;
+                    return 结果;
+                }
+                for (const auto& 关系 : 采用.结果.参数关系组) {
+                    const auto 核验 = 核验参数位置关系(采用.参数绑定组, 关系,
+                        存在服务_, 场景服务_, 特征服务_, 特征值服务_, 特征概念服务_);
+                    if (!核验 || !*核验) {
+                        结果.状态 = 新任务治理结果材料核验状态::已接受但仍不足;
+                        return 结果;
+                    }
+                }
+            }
+        }        结果.状态 = 新任务治理结果材料核验状态::材料已足够;
         return 结果;
     } catch (const std::bad_alloc&) {
         结果.状态 = 新任务治理结果材料核验状态::资源失败;

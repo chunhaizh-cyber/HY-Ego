@@ -3,14 +3,19 @@
 #include <cstdint>
 #include <string_view>
 #include <memory>
+#include <stop_token>
+#include <chrono>
 
 #include "新_本能函数集.h"
 #include "服务值结算.本能合同.h"
+#include "连接.本能合同.h"
 
 namespace 海中鱼巣 {
 inline constexpr std::string_view 新本能函数登记名_服务值结算 = "服务值结算";
 inline constexpr std::string_view 新本能函数登记名_获取服务对象 =
     "builtin.service_object.acquire.v1";
+inline constexpr std::string_view 新本能函数登记名_建立连接 =
+    "builtin.connection.establish.v1";
 inline constexpr std::string_view 新本能函数登记名_主动获取服务需求 =
     "builtin.service_requirement.acquire_active.v1";
 inline constexpr std::string_view 新本能函数登记名_被动获取服务需求 =
@@ -96,6 +101,24 @@ public:
         std::shared_ptr<新服务对象获取本能端口>) noexcept;
     static 新本能函数端口装配状态 关闭服务对象获取端口(
         新服务对象获取本能端口&) noexcept;
+    static 新本能函数端口装配状态 装配连接端口(
+        std::shared_ptr<新连接本能端口>) noexcept;
+    static 新本能函数端口装配状态 关闭连接端口(
+        新连接本能端口&) noexcept;
+
+    // 线程池调用期的工程停止能力；不进入业务参数或条件结果知识。
+    class 本能停止守卫 final {
+    public:
+        explicit 本能停止守卫(std::stop_token) noexcept;
+        ~本能停止守卫();
+        本能停止守卫(const 本能停止守卫&) = delete;
+        本能停止守卫& operator=(const 本能停止守卫&) = delete;
+    private:
+        std::stop_token 原停止_;
+    };
+    static bool 本次停止可用() noexcept;
+    static bool 本次停止已请求() noexcept;
+    static void 等待本次停止(std::chrono::milliseconds);
 
     // X属于外层执行器；调用期绑定精确容器地址，不成为函数参数或世界事实。
     class 本能执行守卫 final {
@@ -108,6 +131,16 @@ public:
         const 方法参数场景* 场景_;
     };
     static std::optional<稳定编码> 读取本次执行实例(const 方法参数场景&) noexcept;
+    class 本能直接调用守卫 final {
+    public:
+        本能直接调用守卫(const 方法参数场景&, 稳定编码 调用身份) noexcept;
+        ~本能直接调用守卫();
+        本能直接调用守卫(const 本能直接调用守卫&) = delete;
+        本能直接调用守卫& operator=(const 本能直接调用守卫&) = delete;
+    private:
+        const 方法参数场景* 场景_ = nullptr;
+    };
+    static std::optional<稳定编码> 读取本次直接调用(const 方法参数场景&) noexcept;
     // 仅为本次调用的一次入口工程守卫，不构成业务授权或动作完成事实。
     static void 标记本次动作入口(const 方法参数场景&) noexcept;
 
@@ -130,6 +163,7 @@ public:
 
 private:
     static std::shared_ptr<新服务对象获取本能端口> 租用服务对象获取端口() noexcept;
+    static std::shared_ptr<新连接本能端口> 租用连接端口() noexcept;
     static std::shared_ptr<新服务需求获取本能端口> 租用服务需求获取端口() noexcept;
     class 服务值结算调用守卫 final {
     public:

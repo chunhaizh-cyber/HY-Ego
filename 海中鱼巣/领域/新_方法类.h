@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "新_方法公共类型.h"
+#include "概念_存在类.h"
 #include "新_方法参数场景.h"
 #include "新_本能函数集.h"
 #include "新_内部治理对象引用.h"
@@ -45,6 +46,14 @@ struct 新方法本能调用结果 final {
     std::optional<新本能函数本次条件结果对> 本次条件结果对;
 };
 
+// 直接本能调用的正式来源，不挂方法召回树，也不承担任务执行实例语义。
+struct 新方法直接调用身份 final {
+    稳定编码 节点, 方法节点, 现实场景, 外设场景;
+    std::vector<新方法有序参数引用> 参数引用组;
+    std::optional<稳定编码> 动作节点;
+    bool 已收束 = false;
+};
+
 class 新_方法类 final : public 新方法治理对象读取接口 {
 public:
     新_方法类(
@@ -68,6 +77,12 @@ public:
     void 初始化治理场景组织() noexcept;
     std::optional<新方法虚拟存在读回> 读取方法虚拟存在引用(
         const 新方法虚拟存在引用&) const noexcept override;
+
+    // 模拟取样只读取正式概念定义；不创建现实实例或修改固定规格。
+    std::optional<存在概念信息> 读取模拟存在范围(稳定编码 C) const noexcept;
+    std::optional<新特征匹配定义快照> 读取模拟特征范围(稳定编码 C) const noexcept;
+    std::optional<新特征值信息> 读取模拟候选材料(稳定编码 V) const noexcept;
+    稳定编码 保存模拟材料值域(稳定编码 C,const 新特征值信息&);
 
     // 建立方法知识，不登记或调用本能函数。
     新方法建立结果 建立方法知识(
@@ -156,6 +171,13 @@ public:
     新方法本能调用结果 调用本能函数(
         稳定编码 方法节点,
         const 方法参数场景& 参数场景) const noexcept;
+
+    新方法直接调用身份 建立直接调用身份(
+        稳定编码 方法节点, const std::vector<新方法参数角色绑定>&,
+        稳定编码 现实场景, 稳定编码 外设场景);
+    std::optional<新方法直接调用身份> 读取直接调用身份(稳定编码) const;
+    void 绑定直接调用动作(稳定编码 调用, 稳定编码 动作);
+    void 收束直接调用身份(稳定编码 调用);
 
 private:
     friend class 新_任务类;

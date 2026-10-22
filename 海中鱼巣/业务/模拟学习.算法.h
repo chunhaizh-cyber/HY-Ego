@@ -6,6 +6,7 @@
 #include <memory>
 #include <optional>
 #include <vector>
+#include "../领域/概念_特征类.h"
 
 namespace 海中鱼巣 {
 
@@ -120,3 +121,41 @@ private:
 };
 
 } // namespace 海中鱼巣
+
+namespace 海中鱼巣 {
+
+// 轴值中的稳定编码只作为有限枚举材料身份，不参与数值运算。
+using 通用模拟候选值 = 特征概念准确值;
+struct 通用模拟候选轴 final {
+    std::uint32_t 参数序号 = 0;
+    std::vector<通用模拟候选值> 候选;
+    friend bool operator==(const 通用模拟候选轴&, const 通用模拟候选轴&) = default;
+};
+struct 通用模拟组合位置 final {
+    std::vector<std::size_t> 轴位置;
+    bool 已结束 = false;
+    friend bool operator==(const 通用模拟组合位置&, const 通用模拟组合位置&) = default;
+};
+
+// 输入必须是合法有限闭区间。规范化合并重叠/相邻分量后逐分量取三点。
+std::vector<通用模拟候选值> 生成通用模拟整数候选(
+    std::vector<特征概念I64闭区间> 域);
+// 全有限枚举随机排列、不放回；不削减合法候选覆盖。
+std::vector<通用模拟候选值> 生成通用模拟枚举候选(
+    std::vector<通用模拟候选值> 候选, std::uint64_t 种子);
+
+class 通用模拟组合游标 final {
+public:
+    explicit 通用模拟组合游标(std::vector<通用模拟候选轴> 轴);
+    bool 已结束() const noexcept;
+    std::vector<通用模拟候选值> 读取当前组合() const;
+    void 推进() noexcept;
+    通用模拟组合位置 读取位置() const;
+    // 调用方同时持有同一不可变候选轴；位置不跨候选集复用。
+    void 恢复位置(const 通用模拟组合位置&);
+    const std::vector<通用模拟候选轴>& 读取轴() const noexcept;
+private:
+    std::vector<通用模拟候选轴> 轴_;
+    通用模拟组合位置 位置_;
+};
+}

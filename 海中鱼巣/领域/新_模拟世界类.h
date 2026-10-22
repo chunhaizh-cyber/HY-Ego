@@ -18,6 +18,21 @@ struct 新模拟服务结算样例读回 final {
     std::optional<稳定编码> 动作节点, 前状态节点, 后状态节点, 结果动态节点;
     稳定编码 集合特征节点, 集合材料节点;
 };
+
+struct 新模拟有序参数输入 final {
+    新方法有序参数规格 规格;
+    std::uint32_t 所属存在参数=0;
+    std::optional<新特征准确值> 值;
+    std::optional<新特征值材料> 材料;
+    std::uint32_t 同一参数=0;
+    std::vector<std::uint32_t> 集合成员参数组;
+    std::uint32_t 引用存在参数=0;
+};
+struct 新模拟输入事件 final {
+    std::uint32_t 目标参数=0;
+    std::int64_t 值=0;
+};
+
 class 新_模拟世界类 final : public 新方法模拟运行接口, public 新服务值结算本能端口,
     public 新方法问题归档接口 {
 public:
@@ -27,6 +42,18 @@ public:
     新_模拟世界类& operator=(const 新_模拟世界类&) = delete;
     新_模拟世界类(新_模拟世界类&&) = delete;
     新_模拟世界类& operator=(新_模拟世界类&&) = delete;
+
+    新模拟世界建立结果 建立有序样例(稳定编码 M,
+        const std::vector<新模拟有序参数输入>&,
+        const std::vector<新模拟输入事件>&);
+    void 释放有序样例();
+    std::optional<std::vector<稳定编码>> 读取模拟存在特征组(稳定编码) const noexcept override;
+    std::optional<稳定编码> 读取模拟所属场景(稳定编码) const noexcept override;
+    稳定编码 建立模拟动作() override;
+    新模拟操作状态 模拟递增计数(稳定编码,稳定编码) override;
+    新模拟操作状态 推进模拟输入() override;
+    新模拟操作状态 模拟集合加入成员(稳定编码,稳定编码,稳定编码) override;
+
     新模拟世界建立结果 建立服务结算样例(稳定编码, const 新服务值结算登记材料&,
         std::int64_t 服务值, std::int64_t 任务状态) noexcept;
     std::optional<std::vector<新方法参数角色绑定>> 读取参数绑定() const noexcept;
