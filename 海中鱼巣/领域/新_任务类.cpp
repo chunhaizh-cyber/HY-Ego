@@ -11040,9 +11040,10 @@ void 新_任务类::配置因果筹办读取(const 新因果筹办读取接口& 
     request.父任务节点 = T; request.父需求节点 = demand->节点;
     request.目标存在节点 = demand->目标存在节点; request.目标 = demand->目标;
     request.当前等待边组 = edges;
-    const auto C = existence ? existence->专属存在概念节点 : sceneTarget->专属存在概念节点;
-    request.通用查询.参与者组.push_back({0, demand->目标存在节点, C, {}});
-    request.通用查询.目标结果 = {0, demand->目标.目标特征类型概念节点,
+    constexpr std::int64_t 目标参与者标识 = 1;
+    // 目标已绑定实际节点；查询侧从该节点读取概念，不另填一种符号身份。
+    request.通用查询.参与者组.push_back({目标参与者标识, demand->目标存在节点, {}, {}});
+    request.通用查询.目标结果 = {目标参与者标识, demand->目标.目标特征类型概念节点,
         反向因果概念域约束{*demand->目标.目标值域概念节点}};
     request.通用查询.共同场景节点 = *sceneId;
     if (rule && 自我服务结算配置_ && 服务需求取得合同_
