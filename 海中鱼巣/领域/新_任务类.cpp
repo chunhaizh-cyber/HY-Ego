@@ -62,8 +62,8 @@ std::recursive_mutex 新任务互斥;
 
 template<class 方法视图>
 bool 是有序服务需求取得方法(const 方法视图& 方法) {
-    return 方法.本能函数登记名 == std::optional<std::string>{"builtin.service_requirement.acquire_active.v2"}
-        || 方法.本能函数登记名 == std::optional<std::string>{"builtin.service_requirement.acquire_passive.v2"};
+    return 方法.本能函数登记名 == std::optional<std::string>{新本能函数登记名_主动获取服务需求}
+        || 方法.本能函数登记名 == std::optional<std::string>{新本能函数登记名_被动获取服务需求};
 }
 template<class 方法视图>
 bool 是服务需求取得方法(const 方法视图& 方法) {
@@ -74,7 +74,7 @@ bool 是服务需求取得方法(const 方法视图& 方法) {
         || 方法.本能函数登记名 == std::optional<std::string>{"builtin.service_requirement.acquire_passive.v1"};
 }
 
-// D不复制进X；以本次固定E4/F5和C重新定位原需求，集合当前成员才有效。
+// D不复制进X；以本次固定E4/F5和C重新定位唯一当前需求，不从历史回退。
 struct 有序服务需求来源 final {
     新需求信息 需求;
     新特征信息 需求特征;
@@ -147,23 +147,16 @@ std::optional<有序服务需求来源> 读取有序服务需求来源(
     const auto F = 特征服务.获取特征(参数[4]);
     const auto 定义 = F ? 概念服务.获取特征概念(F->特征概念节点) : std::nullopt;
     if (!F || !F->当前值 || !定义) return {};
-    if (定义->比较规则 != 特征概念比较规则::需求集合身份判等)
-        throw std::logic_error("取得来源不是需求集合");
+    if (定义->材料类型 != 特征概念材料物理类型::需求节点引用
+        || 定义->比较规则 != 特征概念比较规则::需求身份精确)
+        throw std::logic_error("取得来源不是需求单节点引用");
     const auto* V = std::get_if<稳定编码>(&*F->当前值);
-    const auto 材料 = V ? 值服务.获取特征值(*V) : std::nullopt;
-    const auto* 集合 = 材料 ? std::get_if<std::vector<std::uint64_t>>(&材料->材料) : nullptr;
-    if (!集合 || 材料->物理类型 != 材料物理类型::U64数组)
-        throw std::logic_error("取得来源需求集合材料错误");
-    std::optional<新需求信息> D;
-    for (const auto 编码 : *集合) {
-        const auto 候选 = 需求服务.获取需求(稳定编码{编码});
-        if (!候选) throw std::logic_error("取得来源需求成员不可读");
-        if (指定需求 && 候选->节点 != *指定需求) continue;
-        if (候选->执行域 != 新需求执行域::被认知 || 候选->需求主体存在节点 != 参数[3]
-            || !候选->认知来源 || (指定确认 && 候选->认知来源->内容确认节点 != *指定确认)) continue;
-        if (D) return {}; // 同一C对应多D时不能凭顺序猜测。
-        D = 候选;
-    }
+    if (!V) throw std::logic_error("取得来源当前值不是正式D引用");
+    const auto D = 需求服务.获取需求(*V);
+    if (!D) throw std::logic_error("取得来源当前D不可读");
+    if ((指定需求 && D->节点 != *指定需求) || D->执行域 != 新需求执行域::被认知
+        || D->需求主体存在节点 != 参数[3] || !D->认知来源
+        || (指定确认 && D->认知来源->内容确认节点 != *指定确认)) return {};
     if (!D || !D->认知来源->来源要求节点) return {};
     const auto C = 需求服务.复核服务要求确认语义(D->认知来源->内容确认节点);
     if (C.状态 == 新服务要求确认状态::需重新确认) return {};
@@ -172,7 +165,7 @@ std::optional<有序服务需求来源> 读取有序服务需求来源(
     const auto& 确认 = *C.确认;
     if (确认.理解节点 != D->认知来源->理解节点 || 确认.来源要求节点 != D->认知来源->来源要求节点
         || 确认.来源人类节点 != 参数[3] || 确认.目标存在节点 != D->目标存在节点
-        || 确认.目标 != D->目标 || 确认.目标存在节点 != 参数[3]) return {};
+        || 确认.目标 != D->目标) return {};
     const auto R = 需求服务.读取部分服务要求(*D->认知来源->来源要求节点);
     if (R.状态 == 新部分服务要求读取状态::材料不存在) return {};
     if (R.状态 != 新部分服务要求读取状态::已读取 || !R.材料 || R.发布预期节点组.empty())

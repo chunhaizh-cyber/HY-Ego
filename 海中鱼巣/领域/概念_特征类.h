@@ -359,6 +359,7 @@ struct 先天特征概念集合 final {
     稳定编码 服务任务集合;
     稳定编码 服务对象需求集合;
     稳定编码 交互对象集合;
+    稳定编码 需求;
     bool 完整() const noexcept;
     friend bool operator==(const 先天特征概念集合&,
         const 先天特征概念集合&) = default;

@@ -78,7 +78,463 @@ bool 组合场景挂接成功(新场景操作状态 状态) noexcept {
     return 状态 == 新场景操作状态::已完成 || 状态 == 新场景操作状态::无变化;
 }
 
+bool 应用需求动作增量(基础联合节点快照& s, const 新事实追加保护增量& d) {
+    const auto n = s.结构.节点.编码;
+    const auto 加入 = [](auto& v, const auto& x) {
+        const auto p = std::find_if(v.begin(), v.end(), [&](const auto& a) { return a.编码 == x.编码; });
+        if (p == v.end()) v.push_back(x);
+        else if (*p != x) 世界I64组合故障(L"需求动作追加回执冲突");
+        std::sort(v.begin(), v.end(), [](const auto& a, const auto& b) { return a.编码 < b.编码; });
+    };
+    for (const auto& f : d.新增字段组) {
+        if (f.所属节点 == n) 加入(s.结构.字段组, f);
+        const auto* r = std::get_if<稳定编码>(&f.内容);
+        if (r && *r == n) 加入(s.入向字段组, f);
+    }
+    for (const auto& r : d.新增外部关系组) {
+        if (r.源节点 == n) 加入(s.出向外部关系组, r);
+        if (r.目标节点 == n) 加入(s.入向外部关系组, r);
+    }
+    for (const auto& f : d.字段变化组) {
+        if (f.修改前.所属节点 != n) continue;
+        auto p = std::find(s.结构.字段组.begin(), s.结构.字段组.end(), f.修改前);
+        if (p == s.结构.字段组.end()) return false;
+        *p = f.修改后;
+    }
+    return true;
+}
+
 } // namespace
+
+struct 新世界需求引用组合准备::实现 final {
+    const 新_世界树类* 所有者 = nullptr;
+    新_特征类* 特征服务 = nullptr;
+    std::thread::id 线程 = std::this_thread::get_id();
+    新世界需求引用准备材料 材料;
+    std::optional<新特征需求引用更新准备> 特征准备;
+    std::optional<基础封存追加片段> 保护片段;
+    新状态强时间 动作时间;
+    bool 核心已发表 = false, 已结束 = false;
+    void 核对() const noexcept {
+        if (线程 != std::this_thread::get_id()) 世界I64组合故障(L"需求组合准备不可跨线程使用");
+    }
+    ~实现() noexcept {
+        核对();
+        if (!已结束 && 特征准备) {
+            if (核心已发表) 世界I64组合故障(L"需求核心已发表但派生未完成");
+            特征服务->取消顶层需求引用更新(*特征准备);
+        }
+    }
+};
+新世界需求引用组合准备::新世界需求引用组合准备(std::unique_ptr<实现> p) noexcept : 实现_(std::move(p)) {}
+新世界需求引用组合准备::~新世界需求引用组合准备() noexcept = default;
+新世界需求引用组合准备::新世界需求引用组合准备(新世界需求引用组合准备&& p) noexcept {
+    if (p.实现_) p.实现_->核对();
+    实现_ = std::move(p.实现_);
+}
+新世界需求引用组合准备& 新世界需求引用组合准备::operator=(新世界需求引用组合准备&& p) noexcept {
+    if (实现_) 实现_->核对();
+    if (p.实现_) p.实现_->核对();
+    if (this != &p) 实现_ = std::move(p.实现_);
+    return *this;
+}
+
+新世界需求引用依据读取结果 新_世界树类::读取需求引用更新依据(
+    稳定编码 C, 稳定编码 E, 稳定编码 F) const noexcept {
+    using S = 新世界需求引用组合状态;
+    try {
+        if (!已初始化_ || !有效(C) || !有效(E) || !有效(F)) return {};
+        新世界需求引用更新依据 a;
+        a.场景节点 = C; a.存在节点 = E; a.特征节点 = F;
+        for (const auto n : {C, E})
+            if (std::none_of(a.定位保护组.begin(), a.定位保护组.end(), [&](const auto& s) { return s.结构.节点.编码 == n; }))
+                a.定位保护组.push_back(读取组合完整保护(n));
+        a.特征保护 = 读取组合完整保护(F);
+        if (!场景服务_.是场景节点(C) || !场景服务_.存在属于场景范围(世界树根场景_, C)) return {};
+        if (C != E && 场景服务_.查询所属场景(E) != std::optional<稳定编码>{C}) return {S::前提已变化, {}};
+        const auto e = 存在服务_.获取存在(E);
+        const auto f = 特征服务_.获取特征(F);
+        if (!e || !f || f->上级特征节点 || std::count(e->特征节点组.begin(), e->特征节点组.end(), F) != 1) return {};
+        const auto t = 特征服务_.捕获特征匹配定义(f->特征概念节点);
+        if (!t || t->材料类型 != 特征概念材料物理类型::需求节点引用
+            || t->比较规则 != 特征概念比较规则::需求身份精确 || t->单位 || f->实例单位) return {};
+        a.类型根 = t->特征类型根;
+        for (const auto other : e->特征节点组) {
+            if (other == F) continue;
+            const auto of = 特征服务_.获取特征(other);
+            const auto ot = of ? 特征服务_.捕获特征匹配定义(of->特征概念节点) : std::nullopt;
+            if (!of || !ot) 世界I64组合故障(L"需求更新存在特征不完整");
+            if (ot->特征类型根 == a.类型根) return {};
+        }
+        for (const auto& v : f->历史不同值) {
+            if (!std::holds_alternative<稳定编码>(v)) 世界I64组合故障(L"需求历史值物理类型错误");
+            const auto q = 特征服务_.按概念比较特征值(a.类型根, v, v);
+            if (q.状态 != 新特征比较状态::已完成 || q.比较值 != 10000) 世界I64组合故障(L"需求历史身份不可读");
+        }
+        bool valid = false;
+        const auto s = 查找最近同类型状态(C, E, a.类型根, valid);
+        if (!valid) 世界I64组合故障(L"需求前状态查询失败：状态、概念、时间或结构不合法");
+        if (f->当前值) {
+            const auto* d = std::get_if<稳定编码>(&*f->当前值);
+            if (!d) 世界I64组合故障(L"需求当前值不是节点引用");
+            const auto q = 特征服务_.按概念比较特征值(a.类型根, *f->当前值, *f->当前值);
+            if (q.状态 != 新特征比较状态::已完成 || q.比较值 != 10000) 世界I64组合故障(L"需求当前身份不可读");
+            if (!s || s->来源实例特征节点 != F || s->固定准确值 != *f->当前值) return {S::前提已变化, {}};
+            a.原需求节点 = *d; a.前状态节点 = s->节点;
+            a.定位保护组.push_back(读取组合完整保护(s->节点));
+        } else if (s || !f->历史不同值.empty() || f->标准值) return {S::前提已变化, {}};
+        a.定位保护组.push_back(读取组合完整保护(f->特征概念节点));
+        if (t->特征类型根 != f->特征概念节点) a.定位保护组.push_back(读取组合完整保护(t->特征类型根));
+        for (const auto& x : a.定位保护组)
+            if (!组合快照相同(x, 读取组合完整保护(x.结构.节点.编码))) return {S::前提已变化, {}};
+        if (!组合快照相同(a.特征保护, 读取组合完整保护(F))) return {S::前提已变化, {}};
+        return {S::已读取, std::move(a)};
+    } catch (...) { 世界I64组合故障(L"需求引用依据读取工程异常"); }
+}
+
+新世界需求引用准备结果 新_世界树类::准备需求引用改变(const 新世界需求引用组合请求& r) noexcept {
+    using S = 新世界需求引用组合状态;
+    try {
+        新世界需求引用准备结果 out;
+        auto a = 读取需求引用更新依据(r.预期依据.场景节点, r.预期依据.存在节点, r.预期依据.特征节点);
+        const auto 同依据 = [](const auto& x, const auto& y) {
+            if (x.场景节点 != y.场景节点 || x.存在节点 != y.存在节点 || x.特征节点 != y.特征节点
+                || x.类型根 != y.类型根 || x.原需求节点 != y.原需求节点 || x.前状态节点 != y.前状态节点
+                || !组合快照相同(x.特征保护, y.特征保护) || x.定位保护组.size() != y.定位保护组.size()) return false;
+            for (std::size_t i = 0; i < x.定位保护组.size(); ++i) if (!组合快照相同(x.定位保护组[i], y.定位保护组[i])) return false;
+            return true;
+        };
+        if (a.状态 != S::已读取 || !a.依据 || !同依据(*a.依据, r.预期依据)) return {S::前提已变化, {}, {}};
+        auto basis = *a.依据;
+        const auto v = 特征服务_.按概念比较特征值(basis.类型根, 新特征准确值{r.新需求节点}, 新特征准确值{r.新需求节点});
+        if (v.状态 != 新特征比较状态::已完成 || v.比较值 != 10000) 世界I64组合故障(L"新需求引用身份不合法");
+        if (!有效(r.动作定义节点) || !有效(r.动作来源节点) || !有效(r.执行主体节点)
+            || !场景服务_.存在属于场景范围(basis.场景节点, r.执行主体节点)) return out;
+        std::vector<基础联合节点快照> extra;
+        for (const auto n : {r.动作定义节点, r.动作来源节点, r.执行主体节点}) extra.push_back(读取组合完整保护(n));
+        auto now = 读取组合真实时间();
+        if (basis.前状态节点) {
+            const auto s = 状态服务_.获取状态(*basis.前状态节点);
+            if (!s) 世界I64组合故障(L"需求前状态丢失");
+            if (now.纳秒 <= s->强时间.纳秒) return {S::前提已变化, {}, {}};
+        }
+        std::vector<新事实追加保护增量> deltas;
+        if (r.既有动作节点) out.已发生动作节点 = r.既有动作节点;
+        else {
+            新事实追加保护增量 d, c;
+            const auto act = 动态服务_.建立动作动态({r.执行主体节点, r.动作定义节点, r.动作来源节点,
+                basis.存在节点, basis.特征节点, now}, d);
+            if (act.状态 != 新动态操作状态::已完成 || !act.动态节点) 世界I64组合故障(L"需求发布动作未建立");
+            out.已发生动作节点 = *act.动态节点;
+            if (!组合场景挂接成功(场景服务_.添加动态(basis.场景节点, *act.动态节点, c))) 世界I64组合故障(L"需求发布动作未挂接");
+            deltas.push_back(std::move(d)); deltas.push_back(std::move(c));
+        }
+        const auto act = 动态服务_.获取动态(*out.已发生动作节点);
+        const auto acts = 场景服务_.查询动态列表(basis.场景节点);
+        if (!act || act->种类 != 新动态种类::动作 || act->主题存在节点 != r.执行主体节点
+            || act->动作目标种类 != 新动作目标种类::普通存在 || act->动作目标存在节点 != basis.存在节点
+            || act->动作目标特征节点 != basis.特征节点 || act->动作定义节点 != r.动作定义节点
+            || act->动作来源节点 != r.动作来源节点 || !act->动作时间 || !act->动作结果组.empty()
+            || act->动作时间->语义 != 新状态时间语义::实例绝对UTC || act->动作时间->纳秒 > now.纳秒
+            || std::count(acts.begin(), acts.end(), *out.已发生动作节点) != 1) { out.状态 = S::前提已变化; return out; }
+        if (basis.前状态节点) {
+            const auto pre = 状态服务_.获取状态(*basis.前状态节点);
+            if (!pre || act->动作时间->纳秒 <= pre->强时间.纳秒) { out.状态 = S::前提已变化; return out; }
+        }
+        for (const auto& d : deltas) {
+            if (!应用需求动作增量(basis.特征保护, d)) 世界I64组合故障(L"需求F自有回执失配");
+            for (auto& x : basis.定位保护组) if (!应用需求动作增量(x, d)) 世界I64组合故障(L"需求定位自有回执失配");
+            for (auto& x : extra) if (!应用需求动作增量(x, d)) 世界I64组合故障(L"需求动作来源回执失配");
+        }
+        auto fresh = 读取需求引用更新依据(basis.场景节点, basis.存在节点, basis.特征节点);
+        if (fresh.状态 != S::已读取 || !fresh.依据 || !同依据(*fresh.依据, basis)) { out.状态 = S::前提已变化; return out; }
+        基础节点组追加请求 protect;
+        protect.预期联合节点组 = basis.定位保护组; protect.预期联合节点组.push_back(basis.特征保护);
+        protect.预期联合节点组.insert(protect.预期联合节点组.end(), extra.begin(), extra.end());
+        protect.预期联合节点组.push_back(读取组合完整保护(*out.已发生动作节点));
+        // 去重时必须同一快照，不以最后一次读取覆盖竞争。
+        std::sort(protect.预期联合节点组.begin(), protect.预期联合节点组.end(), [](const auto& x, const auto& y) { return x.结构.节点.编码 < y.结构.节点.编码; });
+        for (std::size_t i = 1; i < protect.预期联合节点组.size(); ++i)
+            if (protect.预期联合节点组[i-1].结构.节点.编码 == protect.预期联合节点组[i].结构.节点.编码
+                && !组合快照相同(protect.预期联合节点组[i-1], protect.预期联合节点组[i])) { out.状态 = S::前提已变化; return out; }
+        protect.预期联合节点组.erase(std::unique(protect.预期联合节点组.begin(), protect.预期联合节点组.end(), [](const auto& x, const auto& y) { return x.结构.节点.编码 == y.结构.节点.编码; }), protect.预期联合节点组.end());
+        const auto seal = 全局基础数据集.封存原子追加片段(protect);
+        if (seal.状态 != 基础节点组追加状态::已完成 || !seal.片段) 世界I64组合故障(L"需求定位保护封存失败");
+        auto f = 特征服务_.准备顶层需求引用更新(basis.特征节点, r.新需求节点);
+        if (f.状态 == 新特征I64准备状态::预期已变化 || f.状态 == 新特征I64准备状态::联合更新占用) { out.状态 = S::前提已变化; return out; }
+        if (f.状态 != 新特征I64准备状态::已准备 || !f.准备) 世界I64组合故障(L"需求特征准备未完成");
+        auto p = std::make_unique<新世界需求引用组合准备::实现>();
+        p->所有者 = this; p->特征服务 = &特征服务_; p->材料 = {basis, r.新需求节点, *out.已发生动作节点, basis.特征保护};
+        p->动作时间 = *act->动作时间; p->保护片段 = *seal.片段; p->特征准备 = std::move(f.准备);
+        out.准备 = 新世界需求引用组合准备{std::move(p)}; out.状态 = S::已准备; return out;
+    } catch (...) { 世界I64组合故障(L"需求引用准备工程异常"); }
+}
+
+新世界需求引用准备材料 新_世界树类::读取需求引用组合准备(const 新世界需求引用组合准备& p) const noexcept {
+    if (!p.实现_ || p.实现_->所有者 != this || p.实现_->已结束) 世界I64组合故障(L"需求组合准备owner不符");
+    p.实现_->核对(); return p.实现_->材料;
+}
+
+新世界需求引用组合结果 新_世界树类::提交需求引用改变并形成状态动态(
+    新世界需求引用组合准备& p, const 基础封存追加片段& source) noexcept {
+    using S = 新世界需求引用组合状态;
+    try {
+        const auto m = 读取需求引用组合准备(p); auto& x = *p.实现_;
+        const auto commit = 特征服务_.提交顶层需求引用更新(*x.特征准备, {*x.保护片段, source});
+        if (commit.状态 == 基础节点组追加状态::预期不符) {
+            特征服务_.取消顶层需求引用更新(*x.特征准备); x.已结束 = true; return {S::前提已变化, {}, {}};
+        }
+        if (commit.状态 != 基础节点组追加状态::已完成) 世界I64组合故障(L"需求及来源联合提交失败");
+        x.核心已发表 = true;
+        std::optional<基础片段发布回执> receipt;
+        for (const auto& r : commit.附加片段回执组) if (r.对应片段(source)) {
+            if (receipt) 世界I64组合故障(L"需求来源片段回执重复"); receipt = r;
+        }
+        if (!receipt) 世界I64组合故障(L"需求来源片段回执缺失");
+        const auto f = 特征服务_.完成顶层需求引用更新(*x.特征准备);
+        if (f.状态 != 新特征写入状态::已完成 || !f.当前值已改变) 世界I64组合故障(L"需求核心完成不符新发布");
+        auto time = 读取组合真实时间();
+        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(1);
+        while (time.纳秒 <= x.动作时间.纳秒) {
+            if (time.纳秒 < x.动作时间.纳秒 || std::chrono::steady_clock::now() >= deadline) 世界I64组合故障(L"需求后状态UTC不推进");
+            std::this_thread::yield(); time = 读取组合真实时间();
+        }
+        const auto e = 存在服务_.完成已提交需求引用特征变化(m.依据.存在节点, m.依据.特征节点, f, m.依据.类型根, m.新需求节点, time);
+        if (e.状态 != 新存在操作状态::已完成 || !e.状态结果 || !e.状态结果->状态节点) 世界I64组合故障(L"需求已发表但EC/S派生失败");
+        const auto s = *e.状态结果->状态节点;
+        if (!组合场景挂接成功(场景服务_.添加状态(m.依据.场景节点, s))) 世界I64组合故障(L"需求后状态挂接失败");
+        新世界特征变化结果 change;
+        change.前状态节点 = m.依据.前状态节点; change.新状态节点 = s;
+        change.特征更新结果 = 新场景特征值更新结果{新场景操作状态::已完成, e, s};
+        if (m.依据.前状态节点) {
+            change.动态发布结果 = 完成动态发布(m.依据.场景节点, 动态服务_.建立原子动态(m.依据.存在节点, *m.依据.前状态节点, s));
+            if (!change.动态发布结果->成功() || !change.动态发布结果->动态建立结果 || !change.动态发布结果->动态建立结果->动态节点) 世界I64组合故障(L"需求变化动态未完成");
+            change.动作关联结果 = 关联动作结果(m.依据.场景节点, m.动作节点, *change.动态发布结果->动态建立结果->动态节点, 新动作结果关系类型::导致变化);
+            if (*change.动作关联结果 != 新动态操作状态::已完成 && *change.动作关联结果 != 新动态操作状态::无变化) 世界I64组合故障(L"需求动作结果未关联");
+        }
+        const auto actual = 状态服务_.获取状态(s);
+        if (!actual || actual->来源实例特征节点 != m.依据.特征节点 || actual->被描述存在节点 != m.依据.存在节点
+            || actual->固定准确值 != 新特征准确值{m.新需求节点} || actual->强时间 != time) 世界I64组合故障(L"需求后S读回不符");
+        change.状态 = m.依据.前状态节点 ? 新世界特征变化状态::已完成 : 新世界特征变化状态::已生成状态但无可连接前状态;
+        特征服务_.结束顶层需求引用更新(*x.特征准备); x.已结束 = true;
+        return {S::已完成, std::move(change), std::move(receipt)};
+    } catch (...) { 世界I64组合故障(L"需求引用联合提交派生工程异常"); }
+}
+
+新需求特征事实核验结果 新_世界树类::核验需求特征发布事实(const 新需求特征事实核验输入& in) const noexcept {
+    using S = 新需求特征事实核验状态;
+    try {
+        if (!已初始化_ || !有效(in.场景节点) || !有效(in.主体存在节点)
+            || !有效(in.新特征节点) || !有效(in.当前需求节点)) return {};
+        const bool first = in.用途 == 新需求特征事实用途::首次状态;
+        const bool migration = in.用途 == 新需求特征事实用途::旧集合迁移;
+        const bool migratedState = in.用途 == 新需求特征事实用途::迁移当前状态;
+        if ((!first && !migration && !migratedState)
+            || (first && (有效(in.原特征节点) || !in.有序来源组.empty() || !in.动作节点 || !in.实际状态节点))
+            || (!first && (!有效(in.原特征节点) || in.有序来源组.empty() || in.动作节点))
+            || (migration && in.实际状态节点) || (migratedState && !in.实际状态节点)) return {};
+        std::vector<基础联合节点快照> protections;
+        const auto capture = [&](稳定编码 n) {
+            const auto p = std::find_if(protections.begin(), protections.end(), [&](const auto& s) { return s.结构.节点.编码 == n; });
+            if (p == protections.end()) protections.push_back(读取组合完整保护(n));
+        };
+        for (const auto n : {in.场景节点, in.主体存在节点, in.新特征节点}) capture(n);
+        if (!场景服务_.是场景节点(in.场景节点) || !场景服务_.存在属于场景范围(世界树根场景_, in.场景节点)) return {};
+        if (in.主体存在节点 != in.场景节点 && 场景服务_.查询所属场景(in.主体存在节点) != in.场景节点) return {S::前提已变化, {}};
+        const auto e = 存在服务_.获取存在(in.主体存在节点);
+        const auto f = 特征服务_.获取特征(in.新特征节点);
+        if (!e || !f || f->上级特征节点 || std::count(e->特征节点组.begin(), e->特征节点组.end(), in.新特征节点) != 1) return {};
+        capture(f->特征概念节点);
+        const auto ft = 特征服务_.捕获特征匹配定义(f->特征概念节点);
+        if (!ft || ft->材料类型 != 特征概念材料物理类型::需求节点引用 || ft->比较规则 != 特征概念比较规则::需求身份精确 || ft->单位 || f->实例单位) return {};
+        capture(ft->特征类型根);
+        const auto scenes = 场景服务_.查询状态列表(in.场景节点);
+        const auto dynamics = 场景服务_.查询动态列表(in.场景节点);
+        const auto state = [&](稳定编码 n, 稳定编码 source) -> std::optional<新状态信息> {
+            capture(n);
+            const auto s = 状态服务_.获取状态(n);
+            if (!s || s->被描述存在节点 != in.主体存在节点 || s->来源实例特征节点 != source
+                || s->强时间.语义 != 新状态时间语义::实例绝对UTC || std::count(scenes.begin(), scenes.end(), n) != 1) return {};
+            return s;
+        };
+        const auto action = [&](稳定编码 n, 稳定编码 source) -> std::optional<新动态信息> {
+            capture(n);
+            const auto a = 动态服务_.获取动态(n);
+            if (!a || a->种类 != 新动态种类::动作 || a->动作目标种类 != 新动作目标种类::普通存在
+                || a->动作目标存在节点 != in.主体存在节点 || a->动作目标特征节点 != source
+                || !a->动作定义节点 || !a->动作来源节点 || !a->动作时间
+                || a->动作时间->语义 != 新状态时间语义::实例绝对UTC || std::count(dynamics.begin(), dynamics.end(), n) != 1) return {};
+            capture(a->主题存在节点); capture(*a->动作定义节点); capture(*a->动作来源节点);
+            if (!场景服务_.存在属于场景范围(in.场景节点, a->主题存在节点)) return {};
+            return a;
+        };
+        if (first) {
+            const auto s = state(*in.实际状态节点, in.新特征节点);
+            const auto a = action(*in.动作节点, in.新特征节点);
+            if (!s || !a || s->固定准确值 != 新特征准确值{in.当前需求节点}
+                || s->强时间.纳秒 <= a->动作时间->纳秒 || !a->动作结果组.empty()) return {};
+            // 首值只允许该F的唯一状态，不能拿后来任意状态补首S。
+            for (const auto n : scenes) {
+                if (n == s->节点) continue;
+                capture(n);
+                const auto other = 状态服务_.获取状态(n);
+                if (!other) 世界I64组合故障(L"首需求状态列表损坏");
+                if (other->被描述存在节点 == in.主体存在节点 && other->来源实例特征节点 == in.新特征节点) return {};
+            }
+            if (f->当前值 != std::optional<新特征准确值>{新特征准确值{in.当前需求节点}}
+                || f->历史不同值 != std::vector<新特征准确值>{新特征准确值{in.当前需求节点}}) return {S::前提已变化, {}};
+        } else {
+            capture(in.原特征节点);
+            const auto old = 特征服务_.获取特征(in.原特征节点);
+            if (!old || old->上级特征节点 || !old->当前值 || std::count(e->特征节点组.begin(), e->特征节点组.end(), in.原特征节点) != 1) return {};
+            capture(old->特征概念节点);
+            const auto ot = 特征服务_.捕获特征匹配定义(old->特征概念节点);
+            if (!ot || ot->比较规则 != 特征概念比较规则::需求集合身份判等) return {};
+            capture(ot->特征类型根);
+            const auto members = [&](const 新特征准确值& v) -> std::optional<std::vector<稳定编码>> {
+                const auto* id = std::get_if<稳定编码>(&v); if (!id) return {};
+                capture(*id);
+                const auto material = 特征值服务_.获取特征值(*id);
+                if (!material || material->物理类型 != 材料物理类型::U64数组) return {};
+                const auto* raw = std::get_if<std::vector<std::uint64_t>>(&material->材料); if (!raw) return {};
+                std::vector<稳定编码> result;
+                for (const auto n : *raw) { if (!n) return {}; result.push_back(稳定编码{n}); }
+                std::sort(result.begin(), result.end());
+                if (std::adjacent_find(result.begin(), result.end()) != result.end()) return {};
+                return result;
+            };
+            std::vector<std::vector<稳定编码>> prefixes{{}};
+            std::vector<稳定编码> current, seenActions, seenStates;
+            std::optional<std::int64_t> lastTime;
+            std::optional<新状态信息> last;
+            for (const auto& item : in.有序来源组) {
+                if (!有效(item.需求节点) || std::find(current.begin(), current.end(), item.需求节点) != current.end()
+                    || std::find(seenActions.begin(), seenActions.end(), item.动作节点) != seenActions.end()) return {};
+                capture(item.需求节点);
+                const auto a = action(item.动作节点, in.原特征节点);
+                const auto pre = state(item.前状态节点, in.原特征节点), post = state(item.后状态节点, in.原特征节点);
+                if (!a || !pre || !post || a->动作结果组.size() != 1
+                    || a->动作结果组.front().类型 != 新动作结果关系类型::导致变化
+                    || pre->强时间.纳秒 >= post->强时间.纳秒
+                    || a->动作时间->纳秒 < pre->强时间.纳秒 || a->动作时间->纳秒 >= post->强时间.纳秒
+                    || (lastTime && (pre->强时间.纳秒 < *lastTime
+                        || (pre->强时间.纳秒 == *lastTime && last && pre->节点 != last->节点)))) return {};
+                const auto before = members(pre->固定准确值), after = members(post->固定准确值);
+                if (!before || !after || *before != current) return {};
+                auto expected = current; expected.push_back(item.需求节点); std::sort(expected.begin(), expected.end());
+                if (*after != expected) return {};
+                const auto d = a->动作结果组.front().结果动态节点; capture(d);
+                const auto dynamic = 动态服务_.获取动态(d);
+                if (!dynamic || dynamic->种类 != 新动态种类::原子 || dynamic->主题存在节点 != in.主体存在节点
+                    || dynamic->状态节点组 != std::vector<稳定编码>{item.前状态节点, item.后状态节点}
+                    || std::count(dynamics.begin(), dynamics.end(), d) != 1) return {};
+                if (pre->特征类型概念节点 != old->特征概念节点 || post->特征类型概念节点 != old->特征概念节点) {
+                    const auto ptype = 特征服务_.捕获特征匹配定义(pre->特征类型概念节点);
+                    const auto qtype = 特征服务_.捕获特征匹配定义(post->特征类型概念节点);
+                    if (!ptype || !qtype || ptype->特征类型根 != ot->特征类型根 || qtype->特征类型根 != ot->特征类型根) return {};
+                    capture(pre->特征类型概念节点); capture(post->特征类型概念节点);
+                }
+                seenActions.push_back(item.动作节点); seenStates.push_back(item.前状态节点); seenStates.push_back(item.后状态节点);
+                current = std::move(expected); prefixes.push_back(current); lastTime = post->强时间.纳秒; last = post;
+            }
+            if (!last || in.有序来源组.back().需求节点 != in.当前需求节点) return {};
+            const auto oldCurrent = members(*old->当前值);
+            if (!oldCurrent || *oldCurrent != current) return {S::前提已变化, {}};
+            std::vector<稳定编码> historicalUnion;
+            std::vector<std::vector<稳定编码>> historicalSets;
+            for (const auto& v : old->历史不同值) {
+                const auto m = members(v);
+                if (!m || std::find(prefixes.begin(), prefixes.end(), *m) == prefixes.end()) return {};
+                const auto legal = 特征服务_.按概念比较特征值(ot->特征类型根, v, v);
+                if (legal.状态 != 新特征比较状态::已完成 || legal.比较值 != 10000) 世界I64组合故障(L"旧需求集合身份不可读");
+                historicalSets.push_back(*m);
+                historicalUnion.insert(historicalUnion.end(), m->begin(), m->end());
+            }
+            for (const auto& prefix : prefixes)
+                if (std::find(historicalSets.begin(), historicalSets.end(), prefix) == historicalSets.end()) return {};
+            std::sort(historicalUnion.begin(), historicalUnion.end()); historicalUnion.erase(std::unique(historicalUnion.begin(), historicalUnion.end()), historicalUnion.end());
+            if (historicalUnion != current) return {};
+            // 不接受未解释的旧F状态或其他首次发布动作。
+            for (const auto n : scenes) {
+                capture(n); const auto s = 状态服务_.获取状态(n);
+                if (!s) 世界I64组合故障(L"迁移场景状态不完整");
+                if (s->被描述存在节点 == in.主体存在节点 && s->来源实例特征节点 == in.原特征节点) {
+                    if (std::find(seenStates.begin(), seenStates.end(), n) == seenStates.end()) return {};
+                    const auto m = members(s->固定准确值);
+                    if (!m || std::find(prefixes.begin(), prefixes.end(), *m) == prefixes.end()) return {};
+                }
+            }
+            for (const auto n : dynamics) {
+                capture(n); const auto a = 动态服务_.获取动态(n);
+                if (!a) 世界I64组合故障(L"迁移场景动作不完整");
+                if (a->种类 == 新动态种类::动作 && a->动作目标存在节点 == in.主体存在节点
+                    && a->动作目标特征节点 == in.原特征节点 && !a->动作结果组.empty()
+                    && std::find(seenActions.begin(), seenActions.end(), n) == seenActions.end()) return {};
+            }
+            if (migratedState) {
+                const auto s = state(*in.实际状态节点, in.新特征节点);
+                if (!s || s->固定准确值 != 新特征准确值{in.当前需求节点} || s->强时间 != last->强时间
+                    || f->当前值 != std::optional<新特征准确值>{新特征准确值{in.当前需求节点}}) return {};
+            }
+        }
+        // 只预期不写：封存快照仍须在签发前以L1验证，消费方再次共同CAS。
+        基础节点组追加请求 req; req.预期联合节点组 = protections;
+        const auto sealed = 全局基础数据集.封存原子追加片段(req);
+        if (sealed.状态 != 基础节点组追加状态::已完成 || !sealed.片段) 世界I64组合故障(L"需求事实保护封存失败");
+        const auto check = 全局基础数据集.原子追加封存片段组({*sealed.片段});
+        if (check.状态 == 基础节点组追加状态::预期不符) return {S::前提已变化, {}};
+        if (check.状态 != 基础节点组追加状态::已完成) 世界I64组合故障(L"需求事实保护验证失败");
+        新需求特征事实依据 basis{in, std::move(protections), *sealed.片段};
+        return {S::已核验, 新需求特征事实凭据{std::move(basis), this}};
+    } catch (...) { 世界I64组合故障(L"需求发布事实核验工程异常"); }
+}
+
+新世界特征变化结果 新_世界树类::完成需求引用迁移派生(
+    const 新需求特征迁移派生凭据& source, 新特征需求引用更新准备& recovery) noexcept {
+    try {
+        新世界特征变化结果 out;
+        const auto& b = source.依据();
+        const auto token = 特征服务_.读取需求引用历史恢复准备(recovery);
+        if (token.状态 != 新特征写入状态::已完成 || token.特征节点 != b.新特征节点
+            || token.当前需求节点 != b.当前需求节点 || !token.核心已提交 || !token.恢复已完成)
+            世界I64组合故障(L"需求迁移派生不持有同owner已完成恢复准备");
+        if (!已初始化_ || !场景服务_.是场景节点(b.场景节点) || !场景服务_.存在属于场景范围(世界树根场景_, b.场景节点)) return out;
+        const auto e = 存在服务_.获取存在(b.主体存在节点);
+        const auto f = 特征服务_.获取特征(b.新特征节点);
+        const auto t = f ? 特征服务_.捕获特征匹配定义(f->特征概念节点) : std::nullopt;
+        if (!e || !f || !t || t->特征类型根 != b.需求类型根 || t->材料类型 != 特征概念材料物理类型::需求节点引用
+            || t->比较规则 != 特征概念比较规则::需求身份精确 || t->单位 || f->实例单位
+            || f->当前值 != std::optional<新特征准确值>{新特征准确值{b.当前需求节点}}
+            || std::count(e->特征节点组.begin(), e->特征节点组.end(), b.新特征节点) != 1
+            || (b.主体存在节点 != b.场景节点 && 场景服务_.查询所属场景(b.主体存在节点) != b.场景节点)) return out;
+        const auto s = 状态服务_.获取状态(b.原末状态节点);
+        const auto ss = 场景服务_.查询状态列表(b.场景节点);
+        if (!s || s->被描述存在节点 != b.主体存在节点 || s->来源实例特征节点 != b.原特征节点
+            || s->强时间.语义 != 新状态时间语义::实例绝对UTC || std::count(ss.begin(), ss.end(), b.原末状态节点) != 1) return out;
+        for (const auto n : ss) {
+            const auto previous = 状态服务_.获取状态(n);
+            if (!previous) 世界I64组合故障(L"需求迁移已有状态不可读");
+            if (previous->被描述存在节点 == b.主体存在节点 && previous->来源实例特征节点 == b.新特征节点)
+                世界I64组合故障(L"需求迁移已有状态无本次直接回执，不能重建或猜测");
+        }
+        if (!组合快照相同(读取组合完整保护(b.新特征节点), b.新特征保护)) { out.状态 = 新世界特征变化状态::前提已变化; return out; }
+        const auto checked = 全局基础数据集.原子追加封存片段组({b.来源保护片段});
+        if (checked.状态 == 基础节点组追加状态::预期不符) { out.状态 = 新世界特征变化状态::前提已变化; return out; }
+        if (checked.状态 != 基础节点组追加状态::已完成) 世界I64组合故障(L"需求迁移来源保护核验失败");
+        // 不接受时间参数：只沿凭据指明的真实旧末状态恢复。
+        const auto result = 存在服务_.完成已恢复需求引用特征变化(b.主体存在节点, b.新特征节点, b.需求类型根, b.当前需求节点, s->强时间);
+        if (result.状态 != 新存在操作状态::已完成 || !result.状态结果 || !result.状态结果->状态节点) 世界I64组合故障(L"需求迁移核心已发表但状态派生失败");
+        const auto n = *result.状态结果->状态节点;
+        if (!组合场景挂接成功(场景服务_.添加状态(b.场景节点, n))) 世界I64组合故障(L"需求迁移状态挂接失败");
+        const auto actual = 状态服务_.获取状态(n);
+        if (!actual || actual->固定准确值 != 新特征准确值{b.当前需求节点} || actual->强时间 != s->强时间
+            || actual->来源实例特征节点 != b.新特征节点 || actual->被描述存在节点 != b.主体存在节点) 世界I64组合故障(L"需求迁移状态读回不符");
+        out.新状态节点 = n; out.特征更新结果 = 新场景特征值更新结果{新场景操作状态::已完成, result, n};
+        out.状态 = 新世界特征变化状态::已生成状态但无可连接前状态;
+        // publisher完成映射、完整读回后才释放recovery；这里不结束F占用。
+        return out;
+    } catch (...) { 世界I64组合故障(L"需求迁移派生工程异常"); }
+}
 
 struct 新世界I64组合准备::实现 final {
     const 新_世界树类* 所有者 = nullptr;

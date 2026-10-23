@@ -21,10 +21,14 @@ inline constexpr std::string_view 新本能函数登记名_建立连接 =
 inline constexpr std::string_view 新本能函数登记名_旧六参数建立连接 =
     "builtin.connection.establish.v1";
 inline constexpr std::string_view 新本能函数登记名_主动获取服务需求 =
+    "builtin.service_requirement.acquire_active.v3";
+inline constexpr std::string_view 新本能函数登记名_旧有序主动获取服务需求 =
     "builtin.service_requirement.acquire_active.v2";
 inline constexpr std::string_view 新本能函数登记名_旧主动获取服务需求 =
     "builtin.service_requirement.acquire_active.v1";
 inline constexpr std::string_view 新本能函数登记名_被动获取服务需求 =
+    "builtin.service_requirement.acquire_passive.v3";
+inline constexpr std::string_view 新本能函数登记名_旧有序被动获取服务需求 =
     "builtin.service_requirement.acquire_passive.v2";
 inline constexpr std::string_view 新本能函数登记名_旧被动获取服务需求 =
     "builtin.service_requirement.acquire_passive.v1";

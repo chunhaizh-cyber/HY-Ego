@@ -14,6 +14,7 @@
 namespace 海中鱼巣 {
 
 class 新_自我线程类;
+class 新_世界树类;
 
 // 三个身份都位于全局基础数据集中。需求树根不属于世界树；安全根和
 // 服务根仍是独立需求节点，但它们的目标存在都是唯一自我。
@@ -287,6 +288,103 @@ struct 新需求集合发布关联 final {
     稳定编码 需求节点, 主体存在节点, 场景节点, 动作节点;
     friend bool operator==(const 新需求集合发布关联&, const 新需求集合发布关联&) = default;
 };
+struct 新需求特征发布关联 final {
+    稳定编码 需求节点, 主体存在节点, 场景节点, 动作节点;
+    std::optional<稳定编码> 首状态节点;
+    friend bool operator==(const 新需求特征发布关联&, const 新需求特征发布关联&) = default;
+};
+struct 新需求特征发布关联结果 final {
+    新需求操作状态 状态 = 新需求操作状态::入口拒绝;
+    std::optional<新需求特征发布关联> 关联;
+};
+struct 新需求特征迁移来源项 final {
+    稳定编码 需求节点, 动作节点, 前状态节点, 后状态节点;
+    friend bool operator==(const 新需求特征迁移来源项&, const 新需求特征迁移来源项&) = default;
+};
+enum class 新需求特征事实用途 : std::uint8_t { 首次状态, 旧集合迁移, 迁移当前状态 };
+struct 新需求特征事实核验输入 final {
+    新需求特征事实用途 用途;
+    稳定编码 场景节点, 主体存在节点, 原特征节点, 新特征节点, 当前需求节点;
+    std::optional<稳定编码> 动作节点, 实际状态节点;
+    std::vector<新需求特征迁移来源项> 有序来源组;
+    friend bool operator==(const 新需求特征事实核验输入&, const 新需求特征事实核验输入&) = default;
+};
+struct 新需求特征事实依据 final {
+    新需求特征事实核验输入 已核验输入;
+    std::vector<基础联合节点快照> 完整保护组;
+    基础封存追加片段 保护片段;
+};
+class 新需求特征事实凭据 final {
+public:
+    新需求特征事实凭据(新需求特征事实凭据&&) noexcept;
+    新需求特征事实凭据& operator=(新需求特征事实凭据&&) noexcept;
+    ~新需求特征事实凭据() noexcept;
+    新需求特征事实凭据(const 新需求特征事实凭据&) = delete;
+    新需求特征事实凭据& operator=(const 新需求特征事实凭据&) = delete;
+    const 新需求特征事实依据& 依据() const noexcept;
+private:
+    struct 实现;
+    explicit 新需求特征事实凭据(新需求特征事实依据, const 新_世界树类*) noexcept;
+    std::unique_ptr<实现> 实现_;
+    friend class 新_世界树类;
+};
+enum class 新需求特征事实核验状态 : std::uint8_t { 已核验, 前提已变化, 目标不合法 };
+struct 新需求特征事实核验结果 final {
+    新需求特征事实核验状态 状态 = 新需求特征事实核验状态::目标不合法;
+    std::optional<新需求特征事实凭据> 凭据;
+};
+struct 新需求特征迁移信息 final {
+    稳定编码 迁移记录节点, 场景节点, 主体存在节点, 原特征节点, 新特征节点, 当前需求节点;
+    std::vector<新需求特征迁移来源项> 有序来源组;
+    std::optional<稳定编码> 迁移当前状态节点;
+};
+struct 新需求特征迁移读取结果 final {
+    新需求操作状态 状态 = 新需求操作状态::入口拒绝;
+    std::optional<新需求特征迁移信息> 信息;
+};
+class 新需求特征迁移准备 final {
+public:
+    新需求特征迁移准备(新需求特征迁移准备&&) noexcept;
+    新需求特征迁移准备& operator=(新需求特征迁移准备&&) noexcept;
+    ~新需求特征迁移准备() noexcept;
+    新需求特征迁移准备(const 新需求特征迁移准备&) = delete;
+    新需求特征迁移准备& operator=(const 新需求特征迁移准备&) = delete;
+    const 基础封存追加片段& 片段() const noexcept;
+private:
+    struct 实现;
+    explicit 新需求特征迁移准备(std::unique_ptr<实现>) noexcept;
+    std::unique_ptr<实现> 实现_;
+    friend class 新_需求类;
+};
+struct 新需求特征迁移准备结果 final {
+    新需求操作状态 状态 = 新需求操作状态::入口拒绝;
+    std::optional<新需求特征迁移准备> 准备;
+};
+struct 新需求特征迁移派生依据 final {
+    稳定编码 场景节点, 主体存在节点, 原特征节点, 新特征节点, 需求类型根;
+    稳定编码 当前需求节点, 原末状态节点;
+    基础联合节点快照 新特征保护;
+    std::vector<基础联合节点快照> 完整来源保护组;
+    基础封存追加片段 来源保护片段;
+};
+class 新需求特征迁移派生凭据 final {
+public:
+    新需求特征迁移派生凭据(新需求特征迁移派生凭据&&) noexcept;
+    新需求特征迁移派生凭据& operator=(新需求特征迁移派生凭据&&) noexcept;
+    ~新需求特征迁移派生凭据() noexcept;
+    新需求特征迁移派生凭据(const 新需求特征迁移派生凭据&) = delete;
+    新需求特征迁移派生凭据& operator=(const 新需求特征迁移派生凭据&) = delete;
+    const 新需求特征迁移派生依据& 依据() const noexcept;
+private:
+    struct 实现;
+    explicit 新需求特征迁移派生凭据(std::unique_ptr<实现>) noexcept;
+    std::unique_ptr<实现> 实现_;
+    friend class 新_需求类;
+};
+struct 新需求特征迁移派生准备结果 final {
+    新需求操作状态 状态 = 新需求操作状态::入口拒绝;
+    std::optional<新需求特征迁移派生凭据> 凭据;
+};
 struct 新需求集合发布关联结果 final {
     新需求操作状态 状态 = 新需求操作状态::入口拒绝;
     std::optional<新需求集合发布关联> 关联;
@@ -428,12 +526,17 @@ public:
     新需求建立结果 建立或取得被认知需求(const 新被认知需求建立请求&) noexcept;
     特征需求成员读取结果 读取需求集合成员身份(稳定编码) const noexcept override;
     特征需求引用读取结果 读取需求节点引用身份(稳定编码) const noexcept override;
-    新需求集合发布准备结果 准备主体需求集合发布(
-        稳定编码 需求节点, 稳定编码 主体存在, 稳定编码 特征节点,
-        稳定编码 场景节点, 稳定编码 动作节点, const 基础联合节点快照& 特征保护) noexcept;
     新需求集合发布关联结果 读取主体需求集合发布关联(稳定编码 需求节点) const noexcept;
-    void 完成主体需求集合发布(
-        const 新需求集合发布准备&, const 基础片段发布回执&) noexcept;
+    新需求集合发布准备结果 准备主体需求特征发布(
+        稳定编码, 稳定编码, 稳定编码, 稳定编码, 稳定编码, const 基础联合节点快照&) noexcept;
+    新需求特征发布关联结果 读取主体需求特征发布关联(稳定编码) const noexcept;
+    void 完成主体需求特征发布(const 新需求集合发布准备&, const 基础片段发布回执&) noexcept;
+    新需求操作状态 完成主体需求首状态关联(稳定编码, const 新需求特征事实凭据&) noexcept;
+    新需求特征迁移准备结果 准备需求特征迁移(const 新需求特征事实凭据&) noexcept;
+    void 完成需求特征迁移核心(const 新需求特征迁移准备&, const 基础片段发布回执&) noexcept;
+    新需求操作状态 完成需求特征迁移状态(稳定编码, const 新需求特征事实凭据&) noexcept;
+    新需求特征迁移读取结果 读取需求特征迁移(稳定编码) const noexcept;
+    新需求特征迁移派生准备结果 准备需求特征迁移派生(稳定编码, const 新需求特征事实凭据&) const noexcept;
     新需求记录全集结果 查询全部需求记录() const noexcept;
     新需求记录全集结果 查询主体需求(稳定编码 主体存在, 新需求执行域 域) const noexcept;
     新需求记录全集结果 查询被认知需求来源(稳定编码 理解节点) const noexcept;
