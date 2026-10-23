@@ -11142,6 +11142,50 @@ std::optional<新任务条件子需求项> 新_任务类::转换因果静态状�
     return goal;
 }
 
+bool 新_任务类::任务因果候选形成循环(稳定编码 T, 稳定编码 candidate,
+    const std::vector<新因果任务等待边>& edges) const {
+    if (candidate == T) return true;
+    std::lock_guard 锁(新任务互斥);
+    const auto task = 获取任务(T); 贡献要求(task.has_value());
+    const auto child = 获取任务(candidate); 贡献要求(child.has_value());
+    auto demand = 需求服务_.获取需求(task->需求节点);
+    std::set<稳定编码> seen;
+    while (demand && demand->父需求节点) {
+        贡献要求(seen.insert(demand->节点).second);
+        if (child->需求节点 == *demand->父需求节点) return true;
+        demand = 需求服务_.获取需求(*demand->父需求节点);
+    }
+    std::vector<稳定编码> pending{candidate}; seen.clear();
+    while (!pending.empty()) {
+        const auto n = pending.back(); pending.pop_back();
+        if (n == T) return true;
+        if (!seen.insert(n).second) continue;
+        for (const auto& edge : edges) if (edge.等待任务节点 == n) pending.push_back(edge.被等待任务节点);
+    }
+    return false;
+}
+
+bool 新_任务类::结算因果需要取得来源(const 新任务因果筹办依据& basis) const {
+    if (!basis.请求.结算上下文 || !basis.请求.结算上下文->成员枚举完整
+        || basis.读回.状态 != 新因果筹办读取状态::已逆推) return false;
+    const auto& rule = basis.请求.结算上下文->所依据先天规则;
+    bool 有可筹办被动分支 = false;
+    for (const auto& branch : basis.读回.分支组) {
+        if (branch.规则节点 != rule.节点 || branch.定义 != rule.定义
+            || branch.触发方式 != 新因果动作触发方式::被动触发
+            || branch.需要服务值区间组.empty()) continue;
+        有可筹办被动分支 = true;
+        if (!branch.候选事实) continue;
+        const auto& candidate = *branch.候选事实;
+        if (candidate.既有消费 || !candidate.当前任务状态) continue;
+        const auto state = static_cast<新任务状态>(*candidate.当前任务状态);
+        if (state == 新任务状态::已失败 || state == 新任务状态::已取消 || state == 新任务状态::已结算) continue;
+        if (!任务因果候选形成循环(basis.请求.父任务节点, candidate.任务节点, basis.请求.当前等待边组))
+            return false; // 有独立可推进来源时先复用，不另造取得任务。
+    }
+    return 有可筹办被动分支;
+}
+
 新任务因果子需求提议 新_任务类::提议任务因果子需求(
     稳定编码 T, const std::vector<新因果任务等待边>& edges) const {
 #ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
@@ -11238,40 +11282,7 @@ std::optional<新任务条件子需求项> 新_任务类::转换因果静态状�
         proposal.状态 = readback.状态 == 新因果筹办读取状态::无已知路径
             ? 新任务因果子需求提议状态::无路径 : 新任务因果子需求提议状态::无需子需求;
         const auto causesCycle = [&](稳定编码 candidate) {
-            if (candidate == T) {
-#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
-                观察([](auto& s) { s << L"循环原因：结算来源候选就是当前筹办任务自身"; });
-#endif
-                return true;
-            }
-            std::lock_guard 锁(新任务互斥);
-            const auto task = 获取任务(T); 贡献要求(task.has_value());
-            const auto child = 获取任务(candidate); 贡献要求(child.has_value());
-            auto demand = 需求服务_.获取需求(task->需求节点);
-            std::set<稳定编码> seen;
-            while (demand && demand->父需求节点) {
-                贡献要求(seen.insert(demand->节点).second);
-                if (child->需求节点 == *demand->父需求节点) {
-#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
-                    观察([](auto& s) { s << L"循环原因：结算来源候选对应当前需求的祖先需求"; });
-#endif
-                    return true;
-                }
-                demand = 需求服务_.获取需求(*demand->父需求节点);
-            }
-            std::vector<稳定编码> pending{candidate}; seen.clear();
-            while (!pending.empty()) {
-                const auto n = pending.back(); pending.pop_back();
-                if (n == T) {
-#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
-                    观察([](auto& s) { s << L"循环原因：候选任务等待链回到当前任务"; });
-#endif
-                    return true;
-                }
-                if (!seen.insert(n).second) continue;
-                for (const auto& edge : edges) if (edge.等待任务节点 == n) pending.push_back(edge.被等待任务节点);
-            }
-            return false;
+            return 任务因果候选形成循环(T, candidate, edges);
         };
         for (const auto& branch : readback.分支组) {
 #ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
@@ -11308,10 +11319,9 @@ std::optional<新任务条件子需求项> 新_任务类::转换因果静态状�
                     proposal.继续推进任务组.push_back(candidate.任务节点);
             }
         }
-        if (request.结算上下文 && request.结算上下文->成员枚举完整
-            && request.结算上下文->正式任务成员组.empty()) {
-            const auto pending = std::find_if(readback.分支组.begin(), readback.分支组.end(), [](const auto& branch) {
-                return branch.状态 == 新因果筹办分支状态::任务角色待绑定
+        if (结算因果需要取得来源(*proposal.依据)) {
+            const auto pending = std::find_if(readback.分支组.begin(), readback.分支组.end(), [&](const auto& branch) {
+                return branch.规则节点 == rule->节点 && branch.定义 == rule->定义
                     && !branch.需要服务值区间组.empty() && branch.触发方式 == 新因果动作触发方式::被动触发;
             });
             if (pending != readback.分支组.end()) {
@@ -11332,7 +11342,7 @@ std::optional<新任务条件子需求项> 新_任务类::转换因果静态状�
         }
         // 通用经验链只采用唯一可解释路径；主动端改写前端A为子目标，
         // 不把改变A的方法直接装到目标C的父任务中。
-        if (proposal.子需求项组.empty() && readback.分支组.empty()) {
+        if (proposal.子需求项组.empty() && proposal.继续推进任务组.empty()) {
             const auto& graph = readback.通用反查图;
             bool ambiguous = false, interpretable = true;
             std::vector<std::size_t> leaves;
@@ -11438,19 +11448,33 @@ std::optional<新因果筹办请求> 新_任务类::构造自身发布后因果�
     std::lock_guard 锁(新任务互斥);
     if (!basis.请求.结算上下文 || !核验因果子需求身份(basis,D)) return {};
     const auto& context = *basis.请求.结算上下文;
-    if (!context.成员枚举完整 || !context.正式任务成员组.empty()) return {};
+    if (!结算因果需要取得来源(basis)) return {};
     const auto child = 需求服务_.获取需求(D);
     const auto createdT = 查询需求任务(D);
     if (!child || !createdT || !是服务需求取得目标(*child)) return {};
     const auto set = 特征服务_.获取特征(context.服务任务集合特征节点);
     const auto before = 特征值服务_.获取特征值(context.集合材料节点);
-    const auto* empty = before ? std::get_if<std::vector<std::uint64_t>>(&before->材料) : nullptr;
-    if (!set || !set->当前值 || !empty || !empty->empty()
+    const auto* previous = before ? std::get_if<std::vector<std::uint64_t>>(&before->材料) : nullptr;
+    std::vector<std::uint64_t> expectedBefore;
+    for (const auto member : context.正式任务成员组) expectedBefore.push_back(member.值);
+    if (!set || !set->当前值 || !previous || *previous != expectedBefore
+        || std::find(context.正式任务成员组.begin(), context.正式任务成员组.end(), *createdT) != context.正式任务成员组.end()
         || (set->当前值 != context.正式集合当前值
             && std::find(set->历史不同值.begin(),set->历史不同值.end(),context.正式集合当前值) == set->历史不同值.end())) return {};
     auto current = 构造因果筹办请求(basis.请求.父任务节点, context.所依据先天规则, basis.请求.当前等待边组);
+    auto expected = context.正式任务成员组;
+    expected.push_back(*createdT); std::sort(expected.begin(), expected.end());
     if (!current.结算上下文 || !current.结算上下文->成员枚举完整
-        || current.结算上下文->正式任务成员组 != std::vector<稳定编码>{*createdT}) return {};
+        || current.结算上下文->正式任务成员组 != expected) return {};
+    // 仅接受本次D/T使集合精确增加一个成员，旧成员事实及其他请求材料均不可顺带改变。
+    auto normalized = current;
+    auto& normalizedContext = *normalized.结算上下文;
+    auto& facts = normalizedContext.候选事实组;
+    facts.erase(std::remove_if(facts.begin(), facts.end(), [&](const auto& item) { return item.任务节点 == *createdT; }), facts.end());
+    normalizedContext.正式任务成员组 = context.正式任务成员组;
+    normalizedContext.集合材料节点 = context.集合材料节点;
+    normalizedContext.正式集合当前值 = context.正式集合当前值;
+    if (normalized != basis.请求) return {};
     return current;
 }
 
@@ -11488,12 +11512,13 @@ std::optional<新_任务类::因果执行许可> 新_任务类::读取因果执�
             const auto actual = reader->逆推(*current);
             if (actual.状态 == 新因果筹办读取状态::材料已变化) return {};
             const auto& rule = current->结算上下文->所依据先天规则;
-            const auto createdT = current->结算上下文->正式任务成员组.front();
+            const auto createdT = 查询需求任务(D);
+            if (!createdT) return {};
             if (std::none_of(actual.分支组.begin(),actual.分支组.end(),[&](const auto& b) {
                 return b.规则节点 == rule.节点 && b.定义 == rule.定义
                     && b.状态 == 新因果筹办分支状态::有实际候选
                     && b.触发方式 == 新因果动作触发方式::被动触发
-                    && !b.需要服务值区间组.empty() && b.候选事实 && b.候选事实->任务节点 == createdT;
+                    && !b.需要服务值区间组.empty() && b.候选事实 && b.候选事实->任务节点 == *createdT;
             })) return {};
             item.执行核验请求 = std::move(current);
         } else item.执行核验请求 = basis.请求;
@@ -11560,15 +11585,7 @@ bool 新_任务类::核验因果子需求身份(
     const 新需求完整目标 target{child->目标存在节点, child->目标};
     if (const auto old = 因果子需求依据_.find(D); old != 因果子需求依据_.end())
         return old->second.依据 == basis && old->second.子目标 == target;
-    if (basis.请求.结算上下文 && basis.请求.结算上下文->成员枚举完整
-        && basis.请求.结算上下文->正式任务成员组.empty() && 是服务需求取得目标(*child)) {
-        return std::any_of(basis.读回.分支组.begin(), basis.读回.分支组.end(), [&](const auto& b) {
-            return b.状态 == 新因果筹办分支状态::任务角色待绑定
-                && b.规则节点 == basis.请求.结算上下文->所依据先天规则.节点
-                && b.定义 == basis.请求.结算上下文->所依据先天规则.定义
-                && b.触发方式 == 新因果动作触发方式::被动触发 && !b.需要服务值区间组.empty();
-        });
-    }
+    if (是服务需求取得目标(*child) && 结算因果需要取得来源(basis)) return true;
     for (const auto& node : basis.读回.通用反查图.节点组) {
         if (!node.状态 || !node.参与者 || node.类型 != 反向因果端类型::状态
             || node.状态->特征类型概念节点 != child->目标.目标特征类型概念节点) continue;
@@ -11600,7 +11617,7 @@ bool 新_任务类::核验因果子需求身份(
         std::lock_guard 锁(新任务互斥); reader = 因果筹办读取_;
     }
     贡献要求(reader != nullptr);
-    // 锁外核正式规则/路径；原空集合材料只保留为已经发布D的来源证据。
+    // 锁外核正式规则/路径；原集合材料只保留为已经发布D的来源证据。
     const auto ruleRead = reader->逆推(basis.请求);
     新任务治理承接结果 refused; refused.需求节点 = D;
     refused.状态 = 新任务治理承接状态::任务操作未完成;
@@ -11622,12 +11639,13 @@ bool 新_任务类::核验因果子需求身份(
         const auto actual = reader->逆推(*checkedOwn);
         if (actual.状态 == 新因果筹办读取状态::材料已变化) return refused;
         const auto& rule = checkedOwn->结算上下文->所依据先天规则;
-        const auto createdT = checkedOwn->结算上下文->正式任务成员组.front();
+        const auto createdT = 查询需求任务(D);
+        if (!createdT) return refused;
         if (std::none_of(actual.分支组.begin(),actual.分支组.end(),[&](const auto& b) {
             return b.规则节点 == rule.节点 && b.定义 == rule.定义
                 && b.状态 == 新因果筹办分支状态::有实际候选
                 && b.触发方式 == 新因果动作触发方式::被动触发
-                && !b.需要服务值区间组.empty() && b.候选事实 && b.候选事实->任务节点 == createdT;
+                && !b.需要服务值区间组.empty() && b.候选事实 && b.候选事实->任务节点 == *createdT;
         })) return refused;
     }
     const auto fresh = 提议任务因果子需求(basis.请求.父任务节点, basis.请求.当前等待边组);
@@ -11658,30 +11676,11 @@ bool 新_任务类::核验因果子需求身份(
                 && goal.目标特征类型概念节点 == child->目标.目标特征类型概念节点
                 && goal.目标值域概念节点 == child->目标.目标值域概念节点;
         });
-    // 通用扫描可能已先为这个D建立唯一T；只接受同一旧空集合到该T的变化。
-    if ((!approved || pathChanged) && basis.请求.结算上下文 && 服务需求取得合同_
-        && basis.请求.结算上下文->成员枚举完整 && basis.请求.结算上下文->正式任务成员组.empty()
-        && 是服务需求取得目标(*child)
-        && std::any_of(basis.读回.分支组.begin(), basis.读回.分支组.end(), [&](const auto& b) {
-            return b.状态 == 新因果筹办分支状态::任务角色待绑定
-                && b.规则节点 == basis.请求.结算上下文->所依据先天规则.节点
-                && b.定义 == basis.请求.结算上下文->所依据先天规则.定义
-                && b.触发方式 == 新因果动作触发方式::被动触发 && !b.需要服务值区间组.empty();
-        })) {
-        const auto& context = *basis.请求.结算上下文;
-        const auto createdT = 查询需求任务(D);
-        const auto set = 特征服务_.获取特征(context.服务任务集合特征节点);
-        const auto before = 特征值服务_.获取特征值(context.集合材料节点);
-        const auto* empty = before ? std::get_if<std::vector<std::uint64_t>>(&before->材料) : nullptr;
-        if (createdT && set && set->当前值 && empty && empty->empty()
-            && (set->当前值 == context.正式集合当前值
-                || std::find(set->历史不同值.begin(), set->历史不同值.end(), context.正式集合当前值) != set->历史不同值.end())) {
-            const auto* currentId = std::get_if<稳定编码>(&*set->当前值);
-            const auto material = currentId ? 特征值服务_.获取特征值(*currentId) : std::nullopt;
-            const auto* members = material ? std::get_if<std::vector<std::uint64_t>>(&material->材料) : nullptr;
-            approved = members && *members == std::vector<std::uint64_t>{createdT->值};
-            ownPublication = approved;
-        }
+    // 通用扫描可能已先为这个D建立唯一T；仅接受原集合精确增加该T。
+    if ((!approved || pathChanged) && 是服务需求取得目标(*child)) {
+        const auto own = 构造自身发布后因果请求(basis, D);
+        approved = own.has_value();
+        ownPublication = approved;
     }
     if (!approved || (pathChanged && !ownPublication)) return refused;
     // 已采用的D不可改绑到另一条因果路径；尤其不能重解释已经发布的X/A/K。
@@ -15411,8 +15410,7 @@ namespace {
                 结果.状态 = 新需求方向一致性状态::定义依据未就绪; return 结果;
             }
             if (是服务需求取得目标(*子需求)) {
-                if (!request.结算上下文 || !request.结算上下文->成员枚举完整
-                    || !request.结算上下文->正式任务成员组.empty()
+                if (!request.结算上下文 || !结算因果需要取得来源(saved.依据)
                     || request.结算上下文->所依据先天规则.定义.唯一结果.结果特征类型
                         != 父需求->目标.目标特征类型概念节点) {
                     结果.状态 = 新需求方向一致性状态::定义依据未就绪; return 结果;

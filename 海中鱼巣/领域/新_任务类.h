@@ -1710,6 +1710,9 @@ private:
     std::optional<因果执行许可> 读取因果执行许可(稳定编码) const;
     std::optional<新因果筹办请求> 构造自身发布后因果请求(
         const 新任务因果筹办依据&, 稳定编码) const;
+    bool 任务因果候选形成循环(稳定编码, 稳定编码,
+        const std::vector<新因果任务等待边>&) const;
+    bool 结算因果需要取得来源(const 新任务因果筹办依据&) const;
     bool 核对因果执行许可(稳定编码, const 因果执行许可&) const;
     新任务执行结果 开始方法执行内部(const 新任务执行开始请求&, const 因果执行许可&) noexcept;
     新任务治理待执行确认状态 确认任务进入待执行内部(
