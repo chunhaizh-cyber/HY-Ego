@@ -37,6 +37,8 @@ std::optional<稳定编码> 读取唯一节点字段(
 
 稳定编码 节点类型字段{};
 稳定编码 特征概念节点类型{};
+稳定编码 信息引用语义字段{}, 信息引用内容概念字段{};
+稳定编码 先天类型槽记录类型{}, 先天类型槽字段{}, 先天类型槽序号字段{}, 先天类型槽根字段{};
 稳定编码 材料类型字段{};
 稳定编码 I64值域字段{};
 稳定编码 全材料值域字段{};
@@ -100,6 +102,8 @@ bool 结构已初始化() noexcept {
     return 有效(特征概念树)
         && 有效(节点类型字段)
         && 有效(特征概念节点类型)
+        && 有效(信息引用语义字段) && 有效(信息引用内容概念字段)
+        && 有效(先天类型槽记录类型) && 有效(先天类型槽字段) && 有效(先天类型槽序号字段) && 有效(先天类型槽根字段)
         && 有效(材料类型字段)
         && 有效(I64值域字段)
         && 有效(全材料值域字段)
@@ -140,6 +144,9 @@ bool 结构仍存在() noexcept {
         && 节点仍存在(特征概念树)
         && 节点仍存在(节点类型字段)
         && 节点仍存在(特征概念节点类型)
+        && 节点仍存在(信息引用语义字段) && 节点仍存在(信息引用内容概念字段)
+        && 节点仍存在(先天类型槽记录类型) && 节点仍存在(先天类型槽字段)
+        && 节点仍存在(先天类型槽序号字段) && 节点仍存在(先天类型槽根字段)
         && 节点仍存在(材料类型字段)
         && 节点仍存在(I64值域字段)
         && 节点仍存在(全材料值域字段)
@@ -186,6 +193,7 @@ bool 是支持的材料类型(特征概念材料物理类型 类型) noexcept {
     case 特征概念材料物理类型::三维二值格:
     case 特征概念材料物理类型::存在节点引用:
     case 特征概念材料物理类型::需求节点引用:
+    case 特征概念材料物理类型::信息节点引用:
         return true;
     }
     return false;
@@ -199,7 +207,8 @@ bool 是支持的比较规则(特征概念比较规则 规则) noexcept {
         || 规则 == 特征概念比较规则::需求集合身份判等
         || 规则 == 特征概念比较规则::存在集合身份判等
         || 规则 == 特征概念比较规则::消息集合身份判等
-        || 规则 == 特征概念比较规则::需求身份精确;
+        || 规则 == 特征概念比较规则::需求身份精确
+        || 规则 == 特征概念比较规则::信息引用身份精确;
 }
 
 bool 是支持的聚合规则(特征概念聚合规则 规则) noexcept {
@@ -234,6 +243,13 @@ bool 规则与材料相容(const 特征概念定义& 定义) noexcept {
         || !是支持的比较规则(定义.比较规则)
         || !是支持的聚合规则(定义.聚合规则)) {
         return false;
+    }
+    if (定义.材料类型 == 特征概念材料物理类型::信息节点引用) {
+        const auto* 域 = std::get_if<特征概念信息引用值域>(&定义.值域);
+        return 域 && 有效(域->内容概念)
+            && (域->语义 == 信息引用语义::信息对象 || 域->语义 == 信息引用语义::概念定义)
+            && 定义.比较规则 == 特征概念比较规则::信息引用身份精确
+            && 定义.聚合规则 == 特征概念聚合规则::不自动聚合 && !定义.单位;
     }
     if (定义.材料类型 == 特征概念材料物理类型::需求节点引用) {
         return 定义.比较规则 == 特征概念比较规则::需求身份精确
@@ -1234,6 +1250,9 @@ std::optional<特征概念值域> 规范化待比较值域(
     } else if (材料类型 == 特征概念材料物理类型::需求节点引用) {
         定义.比较规则 = 特征概念比较规则::需求身份精确;
         定义.聚合规则 = 特征概念聚合规则::不自动聚合;
+    } else if (材料类型 == 特征概念材料物理类型::信息节点引用) {
+        定义.比较规则 = 特征概念比较规则::信息引用身份精确;
+        定义.聚合规则 = 特征概念聚合规则::不自动聚合;
     } else if (std::holds_alternative<特征概念存在集合值域>(值域)) {
         定义.比较规则 = 特征概念比较规则::存在集合身份判等;
         定义.聚合规则 = 特征概念聚合规则::完整材料精确集合;
@@ -1299,6 +1318,7 @@ std::optional<std::uint64_t> 值域匹配尺度(
     const 特征存在引用读取接口* 存在读取接口,
     const 特征需求成员读取接口* 需求接口 = nullptr,
     const 特征存在成员读取接口* 存在接口 = nullptr) {
+    if (概念.材料类型 == 特征概念材料物理类型::信息节点引用) return std::nullopt;
     if (概念.比较规则 == 特征概念比较规则::消息集合身份判等) {
         const auto* n = std::get_if<稳定编码>(&值);
         if (!n) return {};
@@ -1604,6 +1624,7 @@ std::optional<材料物理类型> 转换特征值材料类型(
     case 特征概念材料物理类型::I64标量:
     case 特征概念材料物理类型::存在节点引用:
     case 特征概念材料物理类型::需求节点引用:
+    case 特征概念材料物理类型::信息节点引用:
         return std::nullopt;
     }
     return std::nullopt;
@@ -1625,6 +1646,79 @@ bool 相邻或重叠(
 }
 
 } // namespace
+
+namespace {
+[[noreturn]] void 信息引用定义故障(const wchar_t* why) noexcept {
+    工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"信息引用特征类型", why);
+}
+bool 信息定义快照相同(const 基础联合节点快照& a, const 基础联合节点快照& b) noexcept {
+    return a.结构.节点 == b.结构.节点 && a.结构.字段组 == b.结构.字段组
+        && a.入向字段组 == b.入向字段组 && a.入向外部关系组 == b.入向外部关系组 && a.出向外部关系组 == b.出向外部关系组;
+}
+std::optional<基础联合节点快照> 信息定义快照(稳定编码 n) {
+    const auto q = 全局基础数据集.查询节点组完整结构({n});
+    if (q.状态 == 基础结构操作状态::节点不存在) return {};
+    if (q.状态 != 基础结构操作状态::已完成 || q.节点组.size() != 1 || q.节点组.front().查询节点 != n)
+        信息引用定义故障(L"定义完整快照读取工程故障。");
+    return q.节点组.front().快照;
+}
+std::optional<特征概念信息> 读取信息引用材料定义(稳定编码 n) {
+    const auto s = 信息定义快照(n); if (!s) return {};
+    const auto ref = [&](稳定编码 key) {
+        std::optional<稳定编码> v;
+        for (const auto& f : s->结构.字段组) if (f.字段节点 == key) {
+            const auto* p = std::get_if<稳定编码>(&f.内容);
+            if (!p || !有效(*p) || v) 信息引用定义故障(L"信息引用定义引用字段损坏。"); v = *p;
+        }
+        if (!v) 信息引用定义故障(L"信息引用定义缺少必需引用。"); return *v;
+    };
+    const auto num = [&](稳定编码 key) {
+        std::optional<std::int64_t> v;
+        for (const auto& f : s->结构.字段组) if (f.字段节点 == key) {
+            const auto* p = std::get_if<基础值>(&f.内容);
+            const auto* i = p ? std::get_if<std::int64_t>(&p->材料) : nullptr;
+            if (!i || v) 信息引用定义故障(L"信息引用定义数值字段损坏。"); v = *i;
+        }
+        if (!v) 信息引用定义故障(L"信息引用定义缺少必需数值。"); return *v;
+    };
+    if (ref(节点类型字段) != 特征概念节点类型 || num(材料类型字段) != 9)
+        信息引用定义故障(L"信息引用定义类别不符。");
+    if (num(比较规则字段) != 9 || num(聚合规则字段) != static_cast<std::int64_t>(特征概念聚合规则::不自动聚合))
+        信息引用定义故障(L"信息引用定义规则不合法。");
+    const auto semantics = num(信息引用语义字段);
+    if (semantics != 1 && semantics != 2) 信息引用定义故障(L"信息引用语义非法。");
+    const auto content = ref(信息引用内容概念字段);
+    if (!信息定义快照(content)) 信息引用定义故障(L"信息引用的正式内容概念丢失。");
+    const auto count = num(当前引用实例数字段);
+    if (count < 0) 信息引用定义故障(L"信息引用实例计数非法。");
+    特征概念信息 out{n, 特征概念材料物理类型::信息节点引用,
+        特征概念信息引用值域{static_cast<信息引用语义>(semantics), content}, {},
+        特征概念比较规则::信息引用身份精确, 特征概念聚合规则::不自动聚合, {}, count};
+    for (const auto& f : s->结构.字段组) {
+        if (f.字段节点 == 名称关系字段) {
+            const auto* p = std::get_if<稳定编码>(&f.内容);
+            if (!p || !有效(*p) || !信息定义快照(*p)) 信息引用定义故障(L"信息引用名称端点损坏。");
+            out.名称关系.push_back(*p);
+        } else if (f.字段节点 != 节点类型字段 && f.字段节点 != 材料类型字段
+            && f.字段节点 != 比较规则字段 && f.字段节点 != 聚合规则字段 && f.字段节点 != 当前引用实例数字段
+            && f.字段节点 != 信息引用语义字段 && f.字段节点 != 信息引用内容概念字段)
+            信息引用定义故障(L"信息引用定义存在非法混合字段。");
+    }
+    std::sort(out.名称关系.begin(), out.名称关系.end());
+    if (std::adjacent_find(out.名称关系.begin(), out.名称关系.end()) != out.名称关系.end())
+        信息引用定义故障(L"信息引用定义名称重复。");
+    return out;
+}
+bool 合并正式定义保护(std::vector<基础联合节点快照>& target, const std::vector<基础联合节点快照>& source) {
+    for (const auto& s : source) {
+        const auto p = std::find_if(target.begin(), target.end(), [&](const auto& x) { return x.结构.节点.编码 == s.结构.节点.编码; });
+        if (p == target.end()) target.push_back(s);
+        else if (!信息定义快照相同(*p, s)) return false;
+    }
+    return true;
+}
+}
+
 
 struct 存在集合保护准备凭据::实现 final {
     const 概念_特征类* owner = nullptr;
@@ -2122,6 +2216,10 @@ bool 概念_特征类::初始化(const 新_特征值类& 特征值服务) noexce
             return false;
         }
 
+        if (!(建立(信息引用语义字段) && 建立(信息引用内容概念字段) && 建立(先天类型槽记录类型)
+            && 建立(先天类型槽字段) && 建立(先天类型槽序号字段) && 建立(先天类型槽根字段)))
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"信息引用类型初始化", L"引用域及先天槽schema建立或读取失败。");
+
         if (!(建立(先天概念.毫米单位)
             && 建立(三维坐标X角色)
             && 建立(三维坐标Y角色)
@@ -2307,6 +2405,8 @@ std::vector<稳定编码> 概念_特征类::查询特征概念(const 特征概�
         if (!结构仍存在()) return {};
         const auto 规范定义 = 规范化定义(定义);
         if (!规范定义) return {};
+        if (规范定义->材料类型 == 特征概念材料物理类型::信息节点引用)
+            throw 特征运算技术拒绝{特征概念规则状态::读取接口未装配};
         std::vector<基础联合节点快照> 需求域身份保护;
         if (规范定义->材料类型 == 特征概念材料物理类型::需求节点引用) {
             if (const auto* 域 = std::get_if<std::vector<稳定编码>>(&规范定义->值域))
@@ -2703,6 +2803,8 @@ std::optional<特征概念信息> 概念_特征类::获取特征概念(
         if (!类型 || *类型 != 特征概念节点类型) return std::nullopt;
 
         const auto 材料 = 读取唯一I64字段(特征概念节点, 材料类型字段);
+        if (材料 == static_cast<std::int64_t>(特征概念材料物理类型::信息节点引用))
+            return 读取信息引用材料定义(特征概念节点);
         const auto 比较 = 读取唯一I64字段(特征概念节点, 比较规则字段);
         const auto 聚合 = 读取唯一I64字段(特征概念节点, 聚合规则字段);
         if (!材料 || !比较 || !聚合) return std::nullopt;
@@ -2941,6 +3043,10 @@ bool 概念_特征类::更新特征概念值域内部(
         std::lock_guard 锁(特征概念树互斥);
         const auto 原信息 = 获取特征概念(特征概念节点);
         if (!原信息) return false;
+        if (原信息->材料类型 == 特征概念材料物理类型::信息节点引用) {
+            const auto 规范 = 规范化待比较值域(原信息->材料类型, 新值域);
+            return 规范 && *规范 == 原信息->值域;
+        }
 
         auto 新定义 = 转为定义(*原信息);
         新定义.值域 = 新值域;
@@ -3766,6 +3872,15 @@ bool 概念_特征类::是特征概念节点(稳定编码 节点) const noexcept
     const 新_特征值类& 特征值服务) const noexcept {
     特征概念比较结果 结果;
     try {
+        if (规则 == 特征概念比较规则::信息引用身份精确) {
+            const auto* l = std::get_if<稳定编码>(&左值); const auto* r = std::get_if<稳定编码>(&右值);
+            if (材料类型 != 特征概念材料物理类型::信息节点引用 || !l || !r || !有效(*l) || !有效(*r)) {
+                结果.状态 = 特征概念规则状态::材料类型不相容; return 结果;
+            }
+            结果.状态 = 特征概念规则状态::已完成; 结果.相等 = *l == *r;
+            if (*结果.相等) 结果.次序 = 特征概念比较次序::相等;
+            return 结果;
+        }
         if (规则 == 特征概念比较规则::I64数值) {
             if (!是I64类型(材料类型)) {
                 结果.状态 = 特征概念规则状态::材料类型不相容;
@@ -3937,6 +4052,11 @@ bool 概念_特征类::是特征概念节点(稳定编码 节点) const noexcept
         const auto 右 = 规范化待比较值域(材料类型, 右值域);
         if (!左 || !右) {
             结果.状态 = 特征概念规则状态::材料类型不相容;
+            return 结果;
+        }
+        if (材料类型 == 特征概念材料物理类型::信息节点引用) {
+            结果.状态 = *左 == *右 ? 特征概念规则状态::已完成 : 特征概念规则状态::规则不支持;
+            if (*左 == *右) 结果.关系 = 特征概念值域关系::相等;
             return 结果;
         }
         if (材料类型 == 特征概念材料物理类型::需求节点引用) {
@@ -4435,6 +4555,7 @@ bool 概念_特征类::是特征概念节点(稳定编码 节点) const noexcept
             for (const auto& f : s.结构.字段组)
                 if (f.字段节点 == 结构化分量字段 || f.字段节点 == 非I64值域字段
                     || f.字段节点 == 单位字段 || f.字段节点 == 存在引用值域字段
+                    || f.字段节点 == 信息引用内容概念字段 || f.字段节点 == 名称关系字段
                     || f.字段节点 == 必含需求字段 || f.字段节点 == 必含任务字段
                     || f.字段节点 == 必含需求任务字段 || f.字段节点 == 必含服务要求任务字段) {
                     const auto* n = std::get_if<稳定编码>(&f.内容);
@@ -4495,11 +4616,15 @@ bool 概念_特征类::是特征概念节点(稳定编码 节点) const noexcept
         d.聚合规则 = static_cast<特征概念聚合规则>(数(节点, 聚合规则字段));
         unsigned 表示 = 0;
         for (const auto key : {I64值域字段, 全材料值域字段, 非I64值域字段,
-            结构化分量字段, 存在引用值域字段, 任务集合值域字段, 需求集合值域字段, 存在集合值域字段})
+            结构化分量字段, 存在引用值域字段, 任务集合值域字段, 需求集合值域字段, 存在集合值域字段, 信息引用内容概念字段})
             表示 += !字段组(节点, key).empty();
         const bool 空需求域 = d.材料类型 == 特征概念材料物理类型::需求节点引用 && 表示 == 0;
         if (表示 != 1 && !空需求域) throw std::logic_error("multiple domain representations");
-        if (空需求域) d.值域 = std::vector<稳定编码>{};
+        if (d.材料类型 == 特征概念材料物理类型::信息节点引用) {
+            d.值域 = 特征概念信息引用值域{static_cast<信息引用语义>(数(节点, 信息引用语义字段)),
+                std::get<稳定编码>(单项(节点, 信息引用内容概念字段))};
+        }
+        else if (空需求域) d.值域 = std::vector<稳定编码>{};
         else if (!字段组(节点, I64值域字段).empty()) d.值域 = 区间(节点, I64值域字段);
         else if (!字段组(节点, 全材料值域字段).empty()) {
             if (数(节点, 全材料值域字段) != 1) throw std::logic_error("invalid universe");
@@ -4545,6 +4670,12 @@ bool 概念_特征类::是特征概念节点(稳定编码 节点) const noexcept
         const auto 命中 = 数(节点, 当前引用实例数字段);
         const auto 规范 = 规范化定义(d);
         if (!规范 || 命中 < 0) throw std::logic_error("invalid feature definition");
+        if (d.材料类型 == 特征概念材料物理类型::信息节点引用) {
+            const auto strict = 读取信息引用材料定义(节点);
+            if (!strict) 信息引用定义故障(L"信息引用正式定义读取缺失。");
+            if (转为定义(*strict) != *规范 || strict->当前引用实例数量 != 命中)
+                return {基础结构操作状态::已完成, {}, {}, true};
+        }
         if (d.材料类型 == 特征概念材料物理类型::需求节点引用) {
             const auto* 域 = std::get_if<std::vector<稳定编码>>(&规范->值域);
             if (引用组(节点, 需求域引用保护键) != (域 ? *域 : std::vector<稳定编码>{}))
@@ -4572,6 +4703,208 @@ bool 概念_特征类::是特征概念节点(稳定编码 节点) const noexcept
         return out;
     } catch (const std::bad_alloc&) { return {基础结构操作状态::资源失败, {}, {}, false}; }
     catch (...) { return {基础结构操作状态::内部不一致, {}, {}, false}; }
+}
+
+namespace {
+bool 是固定先天槽(std::uint32_t n) noexcept {
+    return (n >= 1001 && n <= 1015) || (n >= 1101 && n <= 1107)
+        || (n >= 1201 && n <= 1213) || (n >= 1301 && n <= 1304)
+        || (n >= 1311 && n <= 1313) || (n >= 1401 && n <= 1405);
+}
+bool 固定槽定义相容(std::uint32_t n, const 特征概念定义& d) {
+    using namespace 先天特征类型槽;
+    std::optional<特征概念I64闭区间> expected;
+    switch (n) {
+    case 需求执行域: case 需求目标形式: case 目标方向: case 需求根角色:
+    case 方法作用域: case 方法实现方式: case 方法行为: expected = 特征概念I64闭区间{1, 2}; break;
+    case 需求活动: expected = 特征概念I64闭区间{1, 4}; break;
+    case 需求权重: case 方法运行次数: case 方法成功次数: expected = 特征概念I64闭区间{0, (std::numeric_limits<std::int64_t>::max)()}; break;
+    case 方法可靠度: expected = 特征概念I64闭区间{0, 10000}; break;
+    case 参数序号: expected = 特征概念I64闭区间{1, static_cast<std::int64_t>(UINT32_MAX)}; break;
+    }
+    if (expected) {
+        const auto* intervals = std::get_if<std::vector<特征概念I64闭区间>>(&d.值域);
+        return d.材料类型 == 特征概念材料物理类型::I64标量 && d.比较规则 == 特征概念比较规则::I64数值
+            && intervals && *intervals == std::vector<特征概念I64闭区间>{*expected};
+    }
+    const auto* r = std::get_if<特征概念信息引用值域>(&d.值域);
+    const bool conceptRef = n == 需求目标FT || n == 目标域 || n == 目标比较 || n == 参数信息类型 || n == 参数范围;
+    return d.材料类型 == 特征概念材料物理类型::信息节点引用 && r
+        && r->语义 == (conceptRef ? 信息引用语义::概念定义 : 信息引用语义::信息对象);
+}
+}
+
+正式概念身份读取结果 概念_特征类::读取正式概念身份保护(稳定编码 n) const noexcept {
+    try {
+        // 本owner的定义读取不调用提供者组；不得在此形成跨owner递归回调。
+        if (!结构已初始化()) return {正式概念读取状态::依赖未就绪, {}};
+        const auto start = 信息定义快照(n); if (!start) return {};
+        std::optional<稳定编码> type;
+        for (const auto& f : start->结构.字段组) if (f.字段节点 == 节点类型字段) {
+            const auto* v = std::get_if<稳定编码>(&f.内容);
+            if (!v || type) 信息引用定义故障(L"正式概念类型标记损坏。"); type = *v;
+        }
+        if (type != 特征概念节点类型) return {};
+        const auto p = 读取特征概念定义保护(n);
+        if (p.前提已变化) return {正式概念读取状态::前提已变化, {}};
+        if (p.状态 != 基础结构操作状态::已完成 || !p.信息 || p.预期节点组.empty())
+            信息引用定义故障(L"正式材料概念已识别但完整保护读取失败。");
+        if (p.信息->定义.节点 != n) 信息引用定义故障(L"正式材料概念身份与请求不一致。");
+        auto snapshot = std::find_if(p.预期节点组.begin(), p.预期节点组.end(), [&](const auto& x) { return x.结构.节点.编码 == n; });
+        if (snapshot == p.预期节点组.end()) 信息引用定义故障(L"正式概念完整保护漏目标。");
+        if (!信息定义快照相同(*start, *snapshot)) return {正式概念读取状态::前提已变化, {}};
+        基础节点组追加请求 check; check.预期联合节点组 = p.预期节点组;
+        const auto readback = 全局基础数据集.原子追加节点组(check);
+        if (readback.状态 == 基础节点组追加状态::预期不符) return {正式概念读取状态::前提已变化, {}};
+        if (readback.状态 != 基础节点组追加状态::已完成) 信息引用定义故障(L"正式概念身份前提核验故障。");
+        return {正式概念读取状态::已读取, 正式概念身份保护{n, p.预期节点组}};
+    } catch (...) { 信息引用定义故障(L"正式材料概念身份读取工程异常。"); }
+}
+
+先天特征类型槽结果 概念_特征类::读取先天特征类型槽(std::uint32_t number) const noexcept {
+    try {
+        std::lock_guard 锁(特征概念树互斥);
+        using S = 特征概念规则状态;
+        if (!是固定先天槽(number)) return {};
+        if (!结构已初始化()) return {S::读取接口未装配, {}, {}};
+        if (!结构仍存在()) 信息引用定义故障(L"先天槽schema不完整。");
+        const auto root = 信息定义快照(特征概念树); if (!root) 信息引用定义故障(L"先天槽组织根丢失。");
+        std::optional<稳定编码> found;
+        std::set<std::uint32_t> 已见序号;
+        std::vector<基础联合节点快照> protections{*root};
+        for (const auto& f : root->结构.字段组) {
+            if (f.字段节点 != 先天类型槽字段) continue;
+            const auto* id = std::get_if<稳定编码>(&f.内容);
+            if (!id || !有效(*id)) 信息引用定义故障(L"先天槽登记引用损坏。");
+            const auto record = 信息定义快照(*id); if (!record) 信息引用定义故障(L"先天槽记录丢失。");
+            std::optional<稳定编码> type, ft; std::optional<std::int64_t> ordinal;
+            for (const auto& field : record->结构.字段组) {
+                if (field.字段节点 == 节点类型字段 || field.字段节点 == 先天类型槽根字段) {
+                    const auto* p = std::get_if<稳定编码>(&field.内容);
+                    auto& dest = field.字段节点 == 节点类型字段 ? type : ft;
+                    if (!p || !有效(*p) || dest) 信息引用定义故障(L"先天槽字段损坏或重复。"); dest = *p;
+                } else if (field.字段节点 == 先天类型槽序号字段) {
+                    const auto* v = std::get_if<基础值>(&field.内容); const auto* p = v ? std::get_if<std::int64_t>(&v->材料) : nullptr;
+                    if (!p || ordinal) 信息引用定义故障(L"先天槽序号损坏或重复。"); ordinal = *p;
+                } else 信息引用定义故障(L"先天槽包含未知字段。");
+            }
+            if (type != 先天类型槽记录类型 || !ft || !ordinal || *ordinal < 0 || *ordinal > UINT32_MAX
+                || !是固定先天槽(static_cast<std::uint32_t>(*ordinal)) || !已见序号.insert(static_cast<std::uint32_t>(*ordinal)).second)
+                信息引用定义故障(L"先天槽记录身份、序号或唯一性不合法。");
+            if (static_cast<std::uint32_t>(*ordinal) != number) continue;
+            if (found) 信息引用定义故障(L"先天槽存在重复登记。");
+            found = *ft; protections.push_back(*record);
+        }
+        if (!found) {
+            const auto now = 信息定义快照(特征概念树);
+            if (!now || !信息定义快照相同(*root, *now)) return {S::前提已变化, {}, {}};
+            return {S::值不存在, {}, {*root}};
+        }
+        const auto definition = 读取特征概念定义保护(*found);
+        if (definition.前提已变化) return {S::前提已变化, {}, {}};
+        if (definition.状态 != 基础结构操作状态::已完成 || !definition.信息 || definition.信息->类型根 != *found)
+            信息引用定义故障(L"先天槽目标不是正式完整FT根。");
+        const auto normalized = 规范化定义(转为定义(definition.信息->定义));
+        if (!normalized || normalized->单位 || normalized->聚合规则 != 特征概念聚合规则::不自动聚合
+            || !固定槽定义相容(number, *normalized))
+            信息引用定义故障(L"先天槽正式定义与固定语义不相容。");
+        if (!合并正式定义保护(protections, definition.预期节点组)) return {S::前提已变化, {}, {}};
+        const auto now = 信息定义快照(特征概念树);
+        if (!now || !信息定义快照相同(*root, *now)) return {S::前提已变化, {}, {}};
+        基础节点组追加请求 read; read.预期联合节点组 = protections;
+        const auto check = 全局基础数据集.原子追加节点组(read);
+        if (check.状态 == 基础节点组追加状态::预期不符) return {S::前提已变化, {}, {}};
+        if (check.状态 != 基础节点组追加状态::已完成 || !check.新节点组.empty())
+            信息引用定义故障(L"先天槽完整保护读回故障。");
+        return {S::已完成, found, std::move(protections)};
+    } catch (...) { 信息引用定义故障(L"读取先天FT槽工程异常。"); }
+}
+
+先天特征类型槽结果 概念_特征类::建立或取得先天特征类型槽(
+    const 先天特征类型槽请求& input, const 新_特征值类& values,
+    std::span<const 正式概念身份读取接口* const> readers) noexcept {
+    try {
+        using S = 特征概念规则状态;
+        if (!是固定先天槽(input.语义序号)) return {};
+        const auto normalized = 规范化定义(input.定义);
+        if (!normalized || normalized->单位 || normalized->聚合规则 != 特征概念聚合规则::不自动聚合
+            || (normalized->材料类型 != 特征概念材料物理类型::I64标量 && normalized->材料类型 != 特征概念材料物理类型::信息节点引用)) return {};
+        if (!固定槽定义相容(input.语义序号, *normalized)) return {};
+        // 全部外部身份在取得本owner写锁之前采集；span及reader不存入任何字段或成员。
+        std::vector<基础联合节点快照> external;
+        if (const auto* domain = std::get_if<特征概念信息引用值域>(&normalized->值域)) {
+            bool proved = false, missing = false;
+            for (const auto* reader : readers) {
+                if (!reader) { missing = true; continue; }
+                const auto p = reader->读取正式概念身份保护(domain->内容概念);
+                if (p.状态 == 正式概念读取状态::前提已变化) return {S::前提已变化, {}, {}};
+                if (p.状态 == 正式概念读取状态::依赖未就绪) { missing = true; continue; }
+                if (p.状态 == 正式概念读取状态::非本提供者概念) continue;
+                if (p.状态 != 正式概念读取状态::已读取 || !p.身份
+                    || p.身份->概念节点 != domain->内容概念 || p.身份->完整保护组.empty())
+                    信息引用定义故障(L"正式概念提供者返回无效身份或不完整保护。");
+                if (!合并正式定义保护(external, p.身份->完整保护组)) return {S::前提已变化, {}, {}};
+                proved = true;
+            }
+            if (!proved) return {missing || readers.empty() ? S::读取接口未装配 : S::入口拒绝, {}, {}};
+        }
+        std::lock_guard 锁(特征概念树互斥);
+        if (!结构已初始化()) return {S::读取接口未装配, {}, {}};
+        if (!结构仍存在() || (特征值读取服务_ && 特征值读取服务_ != &values))
+            信息引用定义故障(L"先天槽owner或schema不符。");
+        const auto old = 读取先天特征类型槽(input.语义序号);
+        if (old.状态 == S::前提已变化) return old;
+        if (old.类型根) {
+            const auto d = 获取特征概念(*old.类型根);
+            if (!d) 信息引用定义故障(L"先天槽正式定义不可读。");
+            if (!结构定义相同(转为定义(*d), *normalized, &values)) return {};
+            auto out = old;
+            if (!合并正式定义保护(out.完整保护组, external)) return {S::前提已变化, {}, {}};
+            基础节点组追加请求 check; check.预期联合节点组 = out.完整保护组;
+            const auto q = 全局基础数据集.原子追加节点组(check);
+            if (q.状态 == 基础节点组追加状态::预期不符) return {S::前提已变化, {}, {}};
+            if (q.状态 != 基础节点组追加状态::已完成) 信息引用定义故障(L"既有先天槽外部身份复核失败。");
+            out.状态 = S::无变化; return out;
+        }
+        if (old.状态 != S::值不存在 || old.完整保护组.empty()) 信息引用定义故障(L"先天槽缺少明确空槽依据。");
+        基础节点组追加请求 请求; 请求.预期联合节点组 = old.完整保护组;
+        if (!合并正式定义保护(请求.预期联合节点组, external)) return {S::前提已变化, {}, {}};
+        for (const auto n : {节点类型字段, 特征概念节点类型, 材料类型字段, 比较规则字段, 聚合规则字段,
+            当前引用实例数字段, I64值域字段, 信息引用语义字段, 信息引用内容概念字段,
+            先天类型槽记录类型, 先天类型槽字段, 先天类型槽序号字段, 先天类型槽根字段}) {
+            const auto s = 信息定义快照(n); if (!s) 信息引用定义故障(L"先天FT槽schema端点丢失。");
+            if (!合并正式定义保护(请求.预期联合节点组, {*s})) return {S::前提已变化, {}, {}};
+        }
+        基础组内新节点 ft;
+        ft.字段组 = {{节点类型字段, 特征概念节点类型}, {材料类型字段, 基础值{static_cast<std::int64_t>(normalized->材料类型)}},
+            {比较规则字段, 基础值{static_cast<std::int64_t>(normalized->比较规则)}},
+            {聚合规则字段, 基础值{static_cast<std::int64_t>(normalized->聚合规则)}}, {当前引用实例数字段, 基础值{std::int64_t{0}}}};
+        if (const auto* i = std::get_if<std::vector<特征概念I64闭区间>>(&normalized->值域)) {
+            std::vector<std::int64_t> flat; for (const auto& v : *i) { flat.push_back(v.下界); flat.push_back(v.上界); }
+            ft.字段组.push_back({I64值域字段, 基础值{基础原始值{std::move(flat)}}});
+        } else if (const auto* r = std::get_if<特征概念信息引用值域>(&normalized->值域)) {
+            ft.字段组.push_back({信息引用语义字段, 基础值{static_cast<std::int64_t>(r->语义)}});
+            ft.字段组.push_back({信息引用内容概念字段, r->内容概念});
+        } else return {};
+        for (const auto name : normalized->名称关系) {
+            const auto s = 信息定义快照(name); if (!s) return {};
+            if (!合并正式定义保护(请求.预期联合节点组, {*s})) return {S::前提已变化, {}, {}};
+            ft.字段组.push_back({名称关系字段, name});
+        }
+        请求.新节点组.push_back(std::move(ft));
+        请求.新节点组.push_back({{{节点类型字段, 先天类型槽记录类型},
+            {先天类型槽序号字段, 基础值{static_cast<std::int64_t>(input.语义序号)}}, {先天类型槽根字段, 基础组内节点引用{0}}}});
+        请求.追加字段组.push_back({特征概念树, 先天类型槽字段, 基础组内节点引用{1}});
+        请求.追加外部关系组.push_back({特征概念树, 基础组内节点引用{0}, 基础外部关系类型::父子, 0});
+        const auto q = 全局基础数据集.原子追加节点组(请求);
+        if (q.状态 == 基础节点组追加状态::预期不符) return {S::前提已变化, {}, {}};
+        if (q.状态 != 基础节点组追加状态::已完成 || q.新节点组.size() != 2)
+            信息引用定义故障(L"先天FT根及槽同批发布失败。");
+        const auto result = 读取先天特征类型槽(input.语义序号);
+        if (result.状态 != S::已完成 || result.类型根 != q.新节点组[0])
+            信息引用定义故障(L"先天FT槽已发表但读回不符，保留已发表定义。");
+        return result;
+    } catch (...) { 信息引用定义故障(L"先天FT槽创建出现工程异常，已发表定义保留。"); }
 }
 
 } // namespace 海中鱼巣

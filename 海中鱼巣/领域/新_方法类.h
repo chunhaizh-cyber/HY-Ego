@@ -55,6 +55,8 @@ struct 新方法直接调用身份 final {
     bool 已收束 = false;
 };
 
+struct 方法统计特征类型 final { 稳定编码 运行次数, 成功次数, 可靠度; };
+
 class 新_方法类 final : public 新方法治理对象读取接口 {
 public:
     新_方法类(
@@ -68,6 +70,8 @@ public:
 
     // 只建立独立方法组织根以及本类使用的类型、字段节点。
     bool 初始化() noexcept;
+    std::optional<稳定编码> 获取方法启用特征类型() const noexcept;
+    std::optional<方法统计特征类型> 初始化并读取方法统计特征类型() noexcept;
     // 独立缺失列表：不建M/Vm/条件结果，不进方法根，不注册或调用函数。
     // 同一来源和规范化定义重复时复用。数据集生命周期内保留，不自动晋升/删除。
     新缺失方法登记结果 登记缺失方法(const 新缺失方法登记请求&) noexcept;

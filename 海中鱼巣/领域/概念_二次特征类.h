@@ -129,8 +129,9 @@ struct 二次特征定义保护结果 final {
     std::vector<基础联合节点快照> 预期节点组;
     bool 前提已变化 = false;
 };
-class 概念_二次特征类 final {
+class 概念_二次特征类 final : public 正式概念身份读取接口 {
 public:
+    正式概念身份读取结果 读取正式概念身份保护(稳定编码) const noexcept override;
     二次特征定义保护结果 读取二次特征定义保护(稳定编码) const noexcept;
     概念_二次特征类(
         概念_特征类& 特征概念服务,

@@ -183,7 +183,9 @@ struct 解码器 final {
     }
 };
 template<格式 F, class T> void 编码(std::vector<std::uint64_t>& out, const T& x) {
-    if constexpr (std::is_same_v<T, 特征概念任务集合值域> && F == 格式::旧方法副本) {
+    if constexpr (std::is_same_v<T, 特征概念信息引用值域>) {
+        throw std::runtime_error("当前归档格式不支持信息引用约束域");
+    } else if constexpr (std::is_same_v<T, 特征概念任务集合值域> && F == 格式::旧方法副本) {
         throw std::runtime_error("当前归档格式不支持任务集合约束域");
     } else if constexpr (std::is_enum_v<T>) 编码<F>(out,static_cast<std::underlying_type_t<T>>(x));
     else if constexpr (std::is_integral_v<T>) {
@@ -212,7 +214,9 @@ template<格式 F, std::size_t I=0,class T> void 解码变体(解码器& in,T& x
     } else throw std::runtime_error("归档变体判别非法");
 }
 template<格式 F, class T> void 解码(解码器& in,T& x) {
-    if constexpr (std::is_same_v<T, 特征概念任务集合值域> && F == 格式::旧方法副本) {
+    if constexpr (std::is_same_v<T, 特征概念信息引用值域>) {
+        throw std::runtime_error("当前归档格式不支持信息引用约束域");
+    } else if constexpr (std::is_same_v<T, 特征概念任务集合值域> && F == 格式::旧方法副本) {
         throw std::runtime_error("当前归档格式不支持任务集合约束域");
     } else if constexpr (std::is_enum_v<T>) {
         std::underlying_type_t<T> v{}; 解码<F>(in,v); x=static_cast<T>(v);

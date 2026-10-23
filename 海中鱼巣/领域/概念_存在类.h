@@ -1,9 +1,12 @@
 #pragma once
 
 #include <cstdint>
+#include <array>
 #include <exception>
 #include <optional>
 #include <vector>
+#include <variant>
+#include <span>
 
 #include "../核心/基础数据集.h"
 #include "概念_特征类.h"
@@ -11,6 +14,86 @@
 namespace 海中鱼巣 {
 
 class 概念_名称关系类;
+
+enum class 正式结构操作状态 : std::uint8_t {
+    已建立=1, 已复用, 已读取, 未找到, 输入拒绝, 依赖未就绪, 前提已变化, 定义冲突
+};
+struct 结构概念内容项 final {
+    std::uint32_t 序号;
+    稳定编码 特征类型, 内容概念;
+    std::vector<稳定编码> 读取路径;
+    friend bool operator==(const 结构概念内容项&, const 结构概念内容项&) = default;
+};
+struct 成员组织概念定义 final {
+    稳定编码 成员概念;
+    std::uint32_t 最少成员=0;
+    std::optional<std::uint32_t> 最多成员;
+    bool 有序=false, 全部成立=false;
+    friend bool operator==(const 成员组织概念定义&, const 成员组织概念定义&) = default;
+};
+enum class 基础概念原语 : std::uint8_t {
+    合法存在=1,合法FT根,合法特征概念,合法比较关系,正式信息身份,正式概念身份,
+    I64闭区间,I64有限枚举,具名领域身份,唯一存在
+};
+struct 基础范围概念定义 final {
+    基础概念原语 原语;
+    std::vector<std::int64_t> 整数参数;
+    std::vector<稳定编码> 引用参数;
+    friend bool operator==(const 基础范围概念定义&, const 基础范围概念定义&) = default;
+};
+enum class 结构约束原语 : std::uint8_t {
+    禁止项目=1,域属于FT,比较适用于目标,数值不大于,连续有序,同所属父链无环,
+    固定配对基数,允许未知当前值,需求父链合法
+};
+struct 结构约束定义 final {
+    结构约束原语 原语;
+    std::vector<稳定编码> 项目FT组;
+    std::vector<std::int64_t> 整数参数;
+    std::vector<稳定编码> 引用参数;
+    friend bool operator==(const 结构约束定义&, const 结构约束定义&) = default;
+};
+struct 信息结构概念定义 final {
+    std::vector<稳定编码> 上位结构概念组;
+    std::vector<结构概念内容项> 新增项组;
+    std::vector<std::pair<稳定编码,稳定编码>> 收窄组;
+    std::vector<稳定编码> 约束概念组;
+    friend bool operator==(const 信息结构概念定义&, const 信息结构概念定义&) = default;
+};
+using 正式结构定义=std::variant<基础范围概念定义,结构约束定义,成员组织概念定义,信息结构概念定义>;
+struct 正式结构概念信息 final {
+    稳定编码 节点;
+    正式结构定义 定义;
+    std::vector<稳定编码> 名称关系;
+    friend bool operator==(const 正式结构概念信息&, const 正式结构概念信息&) = default;
+};
+struct 正式结构概念结果 final {
+    正式结构操作状态 状态=正式结构操作状态::输入拒绝;
+    std::optional<正式结构概念信息> 信息;
+};
+struct 正式结构概念保护结果 final {
+    正式结构操作状态 状态=正式结构操作状态::输入拒绝;
+    std::optional<正式结构概念信息> 信息;
+    std::vector<基础联合节点快照> 完整保护组;
+};
+enum class 结构项概念保护状态 : std::uint8_t { 已读取=1,输入拒绝,依赖未就绪,未取得正式概念证明,前提已变化 };
+struct 结构项概念保护结果 final {
+    结构项概念保护状态 状态=结构项概念保护状态::输入拒绝;
+    std::optional<稳定编码> 特征类型根,内容概念;
+    std::vector<基础联合节点快照> 完整保护组;
+};
+struct 先天信息概念组 final {
+    稳定编码 需求,任务,方法;
+    std::vector<std::pair<std::uint32_t,稳定编码>> 子类与支持定义;
+    friend bool operator==(const 先天信息概念组&, const 先天信息概念组&) = default;
+};
+struct 先天信息概念结果 final {
+    正式结构操作状态 状态=正式结构操作状态::输入拒绝;
+    std::optional<先天信息概念组> 信息;
+};
+struct 先天信息类型依赖 final {
+    稳定编码 任务状态FT,任务服务值FT,方法启用FT;
+    稳定编码 方法运行次数FT,方法成功次数FT,方法可靠度FT;
+};
 
 enum class 专属存在概念身份读取状态 : std::uint8_t {
     已完成 = 1, 输入拒绝, 提供者未就绪, 节点不存在,
@@ -44,6 +127,12 @@ struct 存在概念信息 final {
     std::vector<稳定编码> 下位概念组;
     friend bool operator==(const 存在概念信息&,
         const 存在概念信息&) = default;
+};
+
+struct 普通存在概念定义保护结果 final {
+    正式概念读取状态 状态=正式概念读取状态::非本提供者概念;
+    std::optional<存在概念信息> 信息;
+    std::vector<基础联合节点快照> 完整保护组;
 };
 
 enum class 存在概念操作状态 : std::uint8_t {
@@ -196,8 +285,20 @@ struct 存在概念上位保护结果 final {
     std::vector<基础联合节点快照> 预期节点组;
     bool 前提已变化 = false;
 };
-class 概念_存在类 final {
+class 概念_存在类 final : public 正式概念身份读取接口 {
 public:
+    正式概念身份读取结果 读取正式概念身份保护(稳定编码) const noexcept override;
+    普通存在概念定义保护结果 读取普通存在概念定义保护(稳定编码) const noexcept;
+    结构项概念保护结果 读取结构项概念保护(稳定编码 特征类型, 稳定编码 内容概念,
+        std::span<const 正式概念身份读取接口* const> 提供者组) const noexcept;
+    正式结构概念结果 读取正式结构概念(稳定编码) const noexcept;
+    正式结构概念保护结果 读取正式结构概念保护(稳定编码) const noexcept;
+    先天信息概念结果 建立或取得先天需求任务方法概念(const 先天信息类型依赖&,
+        const 新_特征值类&, std::span<const 正式概念身份读取接口* const>) noexcept;
+    先天信息概念结果 建立或取得自我需求子概念(稳定编码 唯一自我存在,
+        const 特征存在成员读取接口& 实际存在读取,
+        std::span<const 正式概念身份读取接口* const>) noexcept;
+    先天信息概念结果 读取先天需求任务方法概念() const noexcept;
     专属存在概念身份保护结果 读取专属存在概念身份保护(
         稳定编码 专属概念节点, 稳定编码 预期存在节点,
         const 基础联合节点快照& 已读存在快照) const noexcept;
@@ -265,6 +366,10 @@ public:
 
 private:
     friend class 概念_名称关系类;
+    bool 绑定信息定义名称关系(稳定编码, 稳定编码) noexcept;
+    bool 解除信息定义名称关系(稳定编码, 稳定编码) noexcept;
+    正式结构操作状态 发布先天定义批(const 基础节点组追加请求&,
+        const std::vector<std::pair<std::uint32_t,std::size_t>>&) noexcept;
 
     bool 绑定名称关系(
         稳定编码 概念节点, 稳定编码 名称关系节点) noexcept;

@@ -8,6 +8,7 @@
 #include <mutex>
 #include <set>
 #include <stdexcept>
+#include <functional>
 
 namespace 海中鱼巣 {
 
@@ -2234,4 +2235,764 @@ bool 同一联合快照(const 基础联合节点快照& 左,
     } catch (...) { return {基础结构操作状态::资源失败, {}, {}, false}; }
 }
 
+} // namespace 海中鱼巣
+
+namespace 海中鱼巣 {
+namespace {
+using 正式状态=正式结构操作状态;
+enum 正式定义键序 : std::size_t {
+    基础类型键,约束类型键,成员类型键,结构类型键,项目类型键,收窄类型键,路径类型键,登记类型键,
+    原语键,整数键,引用键,成员概念键,最少成员键,最多成员键,有序键,全部键,
+    上位键,项目键,收窄键,约束键,序号键,项目FT键,内容概念键,路径键,
+    槽号键,槽目标键,登记键,正式键数
+};
+std::array<稳定编码,正式键数> 正式键{};
+[[noreturn]] void 正式定义故障(const char* message) {
+    工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"先天信息概念提供者",
+        L"定义读取或发布工程错误，不作为业务否定。",message);
+}
+bool 正式schema就绪() {
+    return 结构已初始化()&&std::all_of(正式键.begin(),正式键.end(),[](auto n){return 有效(n);});
+}
+bool 初始化正式schema() {
+    std::lock_guard lock(存在概念图互斥);
+    if (!结构仍存在()) return false;
+    if (正式schema就绪()) {
+        for(auto n:正式键) if(!节点仍存在(n)) 正式定义故障("schema endpoint missing");
+        return true;
+    }
+    if(std::any_of(正式键.begin(),正式键.end(),[](auto n){return 有效(n);})) 正式定义故障("partial schema");
+    auto r=全局基础数据集.原子建立节点组(std::vector<基础组内新节点>(正式键数));
+    if(r.状态!=基础结构操作状态::已完成||r.节点组.size()!=正式键数) 正式定义故障("schema publication failed");
+    std::copy(r.节点组.begin(),r.节点组.end(),正式键.begin());
+    return true;
+}
+bool 正式快照相同(const 基础联合节点快照&a,const 基础联合节点快照&b) {
+    return a.结构.节点==b.结构.节点&&a.结构.字段组==b.结构.字段组&&a.入向字段组==b.入向字段组
+        &&a.入向外部关系组==b.入向外部关系组&&a.出向外部关系组==b.出向外部关系组;
+}
+基础联合节点快照 正式快照(稳定编码 n) {
+    auto r=全局基础数据集.查询节点组完整结构({n});
+    if(r.状态!=基础结构操作状态::已完成||r.节点组.size()!=1||!r.节点组[0].快照)
+        正式定义故障("formal endpoint unreadable");
+    return *r.节点组[0].快照;
+}
+void 并保护(std::vector<基础联合节点快照>&all,const std::vector<基础联合节点快照>&add) {
+    for(const auto&s:add) {
+        auto it=std::find_if(all.begin(),all.end(),[&](const auto&t){return s.结构.节点==t.结构.节点;});
+        if(it==all.end()) all.push_back(s);
+        else if(!正式快照相同(*it,s)) throw 正式状态::前提已变化;
+    }
+}
+bool 正式保护未变(const std::vector<基础联合节点快照>&all) {
+    for(const auto&s:all) if(!正式快照相同(s,正式快照(s.结构.节点.编码))) return false;
+    return true;
+}
+std::vector<稳定编码> 正式引用组(const 基础节点结构&s,稳定编码 key) {
+    std::vector<稳定编码> out;
+    for(const auto&f:s.字段组) if(f.字段节点==key) {
+        auto p=std::get_if<稳定编码>(&f.内容);
+        if(!p||!有效(*p)) 正式定义故障("invalid reference field");
+        out.push_back(*p);
+    }
+    return out;
+}
+稳定编码 正式单引用(const 基础节点结构&s,稳定编码 key) {
+    auto a=正式引用组(s,key); if(a.size()!=1) 正式定义故障("reference cardinality"); return a[0];
+}
+std::vector<std::int64_t> 正式整数组(const 基础节点结构&s,稳定编码 key) {
+    const std::vector<std::int64_t>*value=nullptr;
+    for(const auto&f:s.字段组) if(f.字段节点==key) {
+        auto b=std::get_if<基础值>(&f.内容);
+        if(value||!b||!(value=std::get_if<std::vector<std::int64_t>>(&b->材料))) 正式定义故障("integer vector field");
+    }
+    if(!value) 正式定义故障("missing integer vector"); return *value;
+}
+std::int64_t 正式整数(const 基础节点结构&s,稳定编码 key) {
+    const std::int64_t*value=nullptr;
+    for(const auto&f:s.字段组) if(f.字段节点==key) {
+        auto b=std::get_if<基础值>(&f.内容);
+        if(value||!b||!(value=std::get_if<std::int64_t>(&b->材料))) 正式定义故障("integer field");
+    }
+    if(!value) 正式定义故障("missing integer"); return *value;
+}
+std::uint32_t 正式序号(const 基础节点结构&s,稳定编码 key) {
+    auto x=正式整数(s,key); if(x<0||x>UINT32_MAX) 正式定义故障("index out of range"); return static_cast<std::uint32_t>(x);
+}
+std::map<std::uint32_t,稳定编码> 读取正式登记(std::vector<基础联合节点快照>&protect) {
+    auto root=正式快照(存在概念图根节点); 并保护(protect,{root});
+    std::map<std::uint32_t,稳定编码> out;
+    for(auto n:正式引用组(root.结构,正式键[登记键])) {
+        auto s=正式快照(n); 并保护(protect,{s});
+        if(正式单引用(s.结构,节点类型字段)!=正式键[登记类型键]) 正式定义故障("slot record type");
+        auto slot=正式序号(s.结构,正式键[槽号键]);
+        if(!out.emplace(slot,正式单引用(s.结构,正式键[槽目标键])).second) 正式定义故障("duplicate definition slot");
+    }
+    return out;
+}
+std::optional<std::size_t> 正式形状(const 基础节点结构&s) {
+    auto types=正式引用组(s,节点类型字段);
+    if(types.size()!=1) {
+        for(auto t:types)for(std::size_t i=基础类型键;i<=结构类型键;++i)
+            if(t==正式键[i])正式定义故障("multiple formal type tags");
+        return {};
+    }
+    for(std::size_t i=基础类型键;i<=结构类型键;++i) if(types[0]==正式键[i]) return i;
+    return {};
+}
+void 核正式字段(const 基础节点结构&结构,std::initializer_list<稳定编码>允许字段) {
+    for(const auto&字段:结构.字段组)
+        if(std::find(允许字段.begin(),允许字段.end(),字段.字段节点)==允许字段.end())
+            正式定义故障("undeclared formal definition field");
+}
+void 核基础定义(const 基础范围概念定义&d) {
+    const auto p=static_cast<unsigned>(d.原语);
+    if(p<1||p>10) 正式定义故障("unknown primitive");
+    if(p<=6) {if(!d.整数参数.empty()||!d.引用参数.empty()) 正式定义故障("primitive arguments");}
+    else if(d.原语==基础概念原语::I64闭区间) {
+        if(d.整数参数.size()!=2||d.整数参数[0]>d.整数参数[1]||!d.引用参数.empty()) 正式定义故障("interval arguments");
+    } else if(d.原语==基础概念原语::I64有限枚举) {
+        if(d.整数参数.empty()||!std::is_sorted(d.整数参数.begin(),d.整数参数.end())
+            ||std::adjacent_find(d.整数参数.begin(),d.整数参数.end())!=d.整数参数.end()||!d.引用参数.empty()) 正式定义故障("enumeration arguments");
+    } else if(d.原语==基础概念原语::具名领域身份) {
+        if(d.整数参数.size()!=1||d.整数参数[0]<1||d.整数参数[0]>13||!d.引用参数.empty()) 正式定义故障("named identity arguments");
+    } else if(!d.整数参数.empty()||d.引用参数.size()!=1) 正式定义故障("unique existence arguments");
+}
+// 解码只读当前owner/L1；跨owner身份复核在调用者持本地锁之前进行。
+正式结构概念信息 解码正式定义(稳定编码 n,std::vector<基础联合节点快照>&protect,
+    std::set<稳定编码>&visited,bool 展开引用=true) {
+    auto s=正式快照(n); 并保护(protect,{s});
+    auto shape=正式形状(s.结构); if(!shape) 正式定义故障("not a formal definition");
+    正式结构概念信息 info; info.节点=n;
+    info.名称关系=正式引用组(s.结构,名称关系字段);
+    auto names=info.名称关系; 排序去重(names);
+    if(names.size()!=info.名称关系.size()) 正式定义故障("duplicate name relationship");
+    for(auto name:names) 并保护(protect,{正式快照(name)});
+    const auto rootCount=std::count_if(s.入向外部关系组.begin(),s.入向外部关系组.end(),[](const auto&r){
+        return r.源节点==存在概念图根节点&&r.类型==基础外部关系类型::父子&&r.角色或顺序==组织归属关系角色;});
+    if(rootCount!=1) 正式定义故障("formal definition root membership");
+    auto record=[&](稳定编码 x,正式定义键序 type){auto t=正式快照(x);并保护(protect,{t});
+        if(正式单引用(t.结构,节点类型字段)!=正式键[type]) 正式定义故障("owned record type");return t.结构;};
+    if(*shape==基础类型键) {
+        核正式字段(s.结构,{节点类型字段,名称关系字段,正式键[原语键],正式键[整数键],正式键[引用键]});
+        基础范围概念定义 d{static_cast<基础概念原语>(正式整数(s.结构,正式键[原语键])),正式整数组(s.结构,正式键[整数键]),正式引用组(s.结构,正式键[引用键])};
+        核基础定义(d); info.定义=std::move(d);
+    } else if(*shape==约束类型键) {
+        核正式字段(s.结构,{节点类型字段,名称关系字段,正式键[原语键],正式键[整数键],正式键[引用键],正式键[项目FT键]});
+        结构约束定义 d{static_cast<结构约束原语>(正式整数(s.结构,正式键[原语键])),
+            正式引用组(s.结构,正式键[项目FT键]),正式整数组(s.结构,正式键[整数键]),正式引用组(s.结构,正式键[引用键])};
+        if(static_cast<unsigned>(d.原语)<1||static_cast<unsigned>(d.原语)>9) 正式定义故障("unknown constraint");
+        info.定义=std::move(d);
+    } else if(*shape==成员类型键) {
+        核正式字段(s.结构,{节点类型字段,名称关系字段,正式键[成员概念键],正式键[最少成员键],正式键[最多成员键],正式键[有序键],正式键[全部键]});
+        auto min=正式序号(s.结构,正式键[最少成员键]);auto max=正式整数(s.结构,正式键[最多成员键]);
+        auto ordered=正式整数(s.结构,正式键[有序键]),all=正式整数(s.结构,正式键[全部键]);
+        if(max< -1||max>UINT32_MAX||(max>=0&&min>max)||(ordered!=0&&ordered!=1)||(all!=0&&all!=1)) 正式定义故障("member organization");
+        info.定义=成员组织概念定义{正式单引用(s.结构,正式键[成员概念键]),min,
+            max<0?std::nullopt:std::optional<std::uint32_t>{static_cast<std::uint32_t>(max)},ordered!=0,all!=0};
+    } else {
+        核正式字段(s.结构,{节点类型字段,名称关系字段,正式键[上位键],正式键[项目键],正式键[收窄键],正式键[约束键]});
+        信息结构概念定义 d;d.上位结构概念组=正式引用组(s.结构,正式键[上位键]);
+        for(auto x:正式引用组(s.结构,正式键[项目键])) {
+            auto r=record(x,项目类型键);结构概念内容项 item{正式序号(r,正式键[序号键]),正式单引用(r,正式键[项目FT键]),正式单引用(r,正式键[内容概念键]),{}};
+            核正式字段(r,{节点类型字段,正式键[序号键],正式键[项目FT键],正式键[内容概念键],正式键[路径键]});
+            std::map<std::uint32_t,稳定编码> path;
+            for(auto p:正式引用组(r,正式键[路径键])) {auto pr=record(p,路径类型键);
+                核正式字段(pr,{节点类型字段,正式键[序号键],正式键[项目FT键]});
+                if(!path.emplace(正式序号(pr,正式键[序号键]),正式单引用(pr,正式键[项目FT键])).second) 正式定义故障("duplicate path position");}
+            std::uint32_t pos=1;for(auto [i,v]:path){if(i!=pos++)正式定义故障("path sequence");item.读取路径.push_back(v);}
+            d.新增项组.push_back(std::move(item));
+        }
+        std::sort(d.新增项组.begin(),d.新增项组.end(),[](const auto&a,const auto&b){return a.序号<b.序号;});
+        for(std::size_t i=0;i<d.新增项组.size();++i) if(d.新增项组[i].序号!=i+1) 正式定义故障("item sequence");
+        for(auto x:正式引用组(s.结构,正式键[收窄键])) {auto r=record(x,收窄类型键);
+            核正式字段(r,{节点类型字段,正式键[项目FT键],正式键[内容概念键]});
+            d.收窄组.push_back({正式单引用(r,正式键[项目FT键]),正式单引用(r,正式键[内容概念键])});}
+        d.约束概念组=正式引用组(s.结构,正式键[约束键]);info.定义=std::move(d);
+    }
+    if(visited.insert(n).second&&展开引用) {
+        auto follow=[&](稳定编码 x){auto t=正式快照(x);并保护(protect,{t});
+            if(正式形状(t.结构)&&!visited.count(x)) (void)解码正式定义(x,protect,visited);};
+        std::visit([&](const auto&d){using D=std::decay_t<decltype(d)>;
+            if constexpr(std::is_same_v<D,基础范围概念定义>){for(auto x:d.引用参数)follow(x);}
+            else if constexpr(std::is_same_v<D,结构约束定义>){for(auto x:d.项目FT组)follow(x);for(auto x:d.引用参数)follow(x);}
+            else if constexpr(std::is_same_v<D,成员组织概念定义>)follow(d.成员概念);
+            else {for(auto x:d.上位结构概念组)follow(x);for(const auto&i:d.新增项组){follow(i.特征类型);follow(i.内容概念);for(auto x:i.读取路径)follow(x);}
+                for(auto [f,c]:d.收窄组){follow(f);follow(c);}for(auto x:d.约束概念组)follow(x);}
+        },info.定义);
+    }
+    return info;
+}
+void 核正式结构图(const std::vector<基础联合节点快照>&snapshots) {
+    std::map<稳定编码,正式结构定义> definitions;
+    for(const auto&s:snapshots)if(正式形状(s.结构)) {
+        std::vector<基础联合节点快照>p;std::set<稳定编码>v;
+        definitions.emplace(s.结构.节点.编码,解码正式定义(s.结构.节点.编码,p,v,false).定义);
+    }
+    auto basic=[&](稳定编码 n)->const 基础范围概念定义* {
+        auto it=definitions.find(n);return it==definitions.end()?nullptr:std::get_if<基础范围概念定义>(&it->second);};
+    std::function<bool(稳定编码,稳定编码,std::set<稳定编码>&)> narrower;
+    narrower=[&](稳定编码 child,稳定编码 parent,std::set<稳定编码>&visited) {
+        if(child==parent)return true;
+        auto a=basic(child),b=basic(parent);
+        if(a&&b) {
+            if(a->原语==基础概念原语::唯一存在&&b->原语==基础概念原语::合法存在)return true;
+            if(a->原语==基础概念原语::I64有限枚举&&b->原语==基础概念原语::I64有限枚举)
+                return std::includes(b->整数参数.begin(),b->整数参数.end(),a->整数参数.begin(),a->整数参数.end());
+            if(a->原语==基础概念原语::I64闭区间&&b->原语==基础概念原语::I64闭区间)
+                return a->整数参数[0]>=b->整数参数[0]&&a->整数参数[1]<=b->整数参数[1];
+            return false;
+        }
+        if(!visited.insert(child).second)return false;
+        auto it=definitions.find(child);
+        if(it!=definitions.end())if(auto d=std::get_if<信息结构概念定义>(&it->second))
+            for(auto p:d->上位结构概念组)if(narrower(p,parent,visited))return true;
+        return false;
+    };
+    auto isNarrow=[&](稳定编码 c,稳定编码 p){std::set<稳定编码>v;return narrower(c,p,v);};
+    using 项目图=std::map<稳定编码,结构概念内容项>;
+    std::map<稳定编码,项目图>effective;
+    std::set<稳定编码>active;
+    std::function<项目图(稳定编码)> expand=[&](稳定编码 n)->项目图 {
+        if(effective.count(n))return effective.at(n);
+        if(!active.insert(n).second)正式定义故障("classification cycle");
+        auto it=definitions.find(n);
+        if(it==definitions.end()||!std::holds_alternative<信息结构概念定义>(it->second))正式定义故障("parent is not structural concept");
+        const auto&d=std::get<信息结构概念定义>(it->second);项目图 merged;
+        std::set<稳定编码>parents;
+        for(auto p:d.上位结构概念组) {
+            if(!parents.insert(p).second)正式定义故障("duplicate parent");
+            for(auto [f,item]:expand(p)) {
+                auto [pos,inserted]=merged.emplace(f,item);
+                if(!inserted&&pos->second!=item) {
+                    if(pos->second.读取路径!=item.读取路径)正式定义故障("conflicting inherited read path");
+                    if(isNarrow(item.内容概念,pos->second.内容概念))pos->second=item;
+                    else if(!isNarrow(pos->second.内容概念,item.内容概念))正式定义故障("conflicting inherited content");
+                }
+            }
+        }
+        for(const auto&i:d.新增项组)if(!merged.emplace(i.特征类型,i).second)正式定义故障("redeclared inherited field");
+        std::set<稳定编码>narrowed;
+        for(auto[f,c]:d.收窄组) {
+            auto pos=merged.find(f);
+            if(pos==merged.end()||!narrowed.insert(f).second
+                ||std::any_of(d.新增项组.begin(),d.新增项组.end(),[&](const auto&i){return i.特征类型==f;})
+                ||!isNarrow(c,pos->second.内容概念))正式定义故障("invalid inherited narrowing");
+            pos->second.内容概念=c;
+        }
+        for(auto c:d.约束概念组) {
+            auto ci=definitions.find(c);
+            if(ci==definitions.end()||!std::holds_alternative<结构约束定义>(ci->second))正式定义故障("constraint identity");
+            const auto&r=std::get<结构约束定义>(ci->second);
+            if(r.原语!=结构约束原语::禁止项目)for(auto f:r.项目FT组)if(!merged.count(f))正式定义故障("constraint refers undeclared field");
+        }
+        active.erase(n);effective.emplace(n,merged);return merged;
+    };
+    for(const auto&[n,d]:definitions) {
+        if(std::holds_alternative<信息结构概念定义>(d)) (void)expand(n);
+        if(auto r=std::get_if<结构约束定义>(&d)) {
+            auto count=r->项目FT组.size();bool valid=false;
+            switch(r->原语) {
+            case 结构约束原语::禁止项目:valid=count>0&&r->整数参数.empty()&&r->引用参数.empty();break;
+            case 结构约束原语::域属于FT:case 结构约束原语::数值不大于:case 结构约束原语::同所属父链无环:
+                valid=count==2&&r->整数参数.empty()&&r->引用参数.empty();break;
+            case 结构约束原语::比较适用于目标:valid=count==3&&r->整数参数.empty()&&r->引用参数.empty();break;
+            case 结构约束原语::连续有序:case 结构约束原语::需求父链合法:valid=count==1&&r->整数参数.empty()&&r->引用参数.size()==1;break;
+            case 结构约束原语::允许未知当前值:valid=count==1&&r->整数参数.empty()&&r->引用参数.empty();break;
+            case 结构约束原语::固定配对基数:valid=count==1&&r->引用参数.empty()&&r->整数参数.size()==2
+                &&r->整数参数[0]>=0&&(r->整数参数[1]==-1||r->整数参数[1]>=r->整数参数[0]);break;
+            default:break;
+            }
+            if(!valid)正式定义故障("constraint primitive argument contract");
+        }
+    }
+}
+} // namespace
+
+普通存在概念定义保护结果 概念_存在类::读取普通存在概念定义保护(稳定编码 n) const noexcept {
+    using S=正式概念读取状态;
+    try {
+        if(!结构已初始化())return {S::依赖未就绪,{},{}};
+        if(!有效(n)||!节点仍存在(n))return {};
+        const auto first=正式快照(n);
+        if(!读取概念种类(n))return {};
+        存在概念信息 value;value.节点=n;value.种类=*读取概念种类(n);
+        if(value.种类==存在概念种类::专属)value.对应存在节点=正式单引用(first.结构,对应存在字段);
+        else if(!正式引用组(first.结构,对应存在字段).empty())正式定义故障("abstract definition has concrete existence");
+        value.名称关系=正式引用组(first.结构,名称关系字段);
+        std::vector<基础联合节点快照> protect{first};
+        for(auto x:正式引用组(first.结构,特征项字段)) {
+            auto item=正式快照(x);并保护(protect,{item});
+            if(正式单引用(item.结构,节点类型字段)!=特征项节点类型)正式定义故障("ordinary feature item type");
+            value.特征组.push_back({正式单引用(item.结构,特征类型概念字段),正式单引用(item.结构,具体特征概念字段)});
+        }
+        for(const auto&r:first.入向外部关系组){并保护(protect,{正式快照(r.源节点)});
+            if(r.类型==基础外部关系类型::父子&&r.角色或顺序==概念上下位关系角色)value.上位概念组.push_back(r.源节点);}
+        for(const auto&r:first.出向外部关系组){并保护(protect,{正式快照(r.目标节点)});
+            if(r.类型==基础外部关系类型::父子&&r.角色或顺序==概念上下位关系角色)value.下位概念组.push_back(r.目标节点);}
+        if(value.种类==存在概念种类::抽象&&value.特征组.empty()&&value.下位概念组.empty())正式定义故障("empty ordinary abstract definition");
+        if(value.对应存在节点)并保护(protect,{正式快照(*value.对应存在节点)});
+        排序特征项(value.特征组);
+        for(std::size_t i=1;i<value.特征组.size();++i)if(value.特征组[i-1].特征类型概念==value.特征组[i].特征类型概念)正式定义故障("duplicate ordinary feature type");
+        for(const auto&i:value.特征组) for(auto c:{i.特征类型概念,i.具体特征概念}) {
+            auto r=特征概念服务_.读取正式概念身份保护(c);
+            if(r.状态==S::前提已变化)return {S::前提已变化,{},{}};
+            if(!r.身份||r.身份->概念节点!=c)正式定义故障("ordinary FT identity unreadable");
+            并保护(protect,r.身份->完整保护组);
+        }
+        for(const auto&i:value.特征组){auto p=特征概念服务_.读取特征概念定义保护(i.具体特征概念);
+            if(p.前提已变化)return {S::前提已变化,{},{}};
+            if(!p.信息||p.信息->类型根!=i.特征类型概念)正式定义故障("ordinary concrete range type");并保护(protect,p.预期节点组);}
+        for(auto x:value.名称关系)并保护(protect,{正式快照(x)});
+        auto uniqueNames=value.名称关系;排序去重(uniqueNames);if(uniqueNames.size()!=value.名称关系.size())正式定义故障("ordinary duplicate names");
+        排序去重(value.上位概念组);排序去重(value.下位概念组);value.名称关系=std::move(uniqueNames);
+        if(!正式保护未变(protect))return {S::前提已变化,{},{}};
+        return {S::已读取,std::move(value),std::move(protect)};
+    }catch(正式状态){return {S::前提已变化,{},{}};}
+    catch(const std::exception&e){正式定义故障(e.what());}catch(...){正式定义故障("ordinary protection exception");}
+}
+正式结构概念保护结果 概念_存在类::读取正式结构概念保护(稳定编码 n) const noexcept {
+    try {
+        if(!正式schema就绪())return {正式状态::依赖未就绪,{},{}};
+        if(!有效(n)||!节点仍存在(n))return {正式状态::未找到,{},{}};
+        auto first=正式快照(n);if(!正式形状(first.结构))return {正式状态::未找到,{},{}};
+        std::vector<基础联合节点快照> protect;std::set<稳定编码>visited;
+        auto info=解码正式定义(n,protect,visited);
+        核正式结构图(protect);
+        // 普通FT完整保护在锁外读取，不能持本owner锁回调。
+        const auto captured=protect;
+        for(const auto&s:captured) {
+            auto id=s.结构.节点.编码;
+            if(正式形状(s.结构))continue;
+            if(特征概念服务_.是特征概念节点(id)) {
+                auto r=特征概念服务_.读取正式概念身份保护(id);
+                if(r.状态==正式概念读取状态::前提已变化)throw 正式状态::前提已变化;
+                if(!r.身份||r.身份->概念节点!=id)正式定义故障("referenced FT protection unavailable");
+                并保护(protect,r.身份->完整保护组);
+            }
+        }
+        if(!正式保护未变(protect))return {正式状态::前提已变化,{},{}};
+        return {正式状态::已读取,std::move(info),std::move(protect)};
+    }catch(正式状态 s){return {s,{},{}};}
+    catch(const std::exception&e){正式定义故障(e.what());}catch(...){正式定义故障("formal protection exception");}
+}
+正式结构概念结果 概念_存在类::读取正式结构概念(稳定编码 n) const noexcept {
+    auto r=读取正式结构概念保护(n);return {r.状态,std::move(r.信息)};
+}
+正式概念身份读取结果 概念_存在类::读取正式概念身份保护(稳定编码 n) const noexcept {
+    using S=正式概念读取状态;
+    auto normal=读取普通存在概念定义保护(n);
+    if(normal.状态==S::已读取)return {S::已读取,正式概念身份保护{n,std::move(normal.完整保护组)}};
+    if(normal.状态!=S::非本提供者概念)return {normal.状态,{}};
+    auto r=读取正式结构概念保护(n);
+    if(r.状态==正式状态::已读取)return {S::已读取,正式概念身份保护{n,std::move(r.完整保护组)}};
+    if(r.状态==正式状态::前提已变化)return {S::前提已变化,{}};
+    if(r.状态==正式状态::依赖未就绪)return {S::依赖未就绪,{}};
+    return {};
+}
+结构项概念保护结果 概念_存在类::读取结构项概念保护(稳定编码 f,稳定编码 c,
+    std::span<const 正式概念身份读取接口* const> readers) const noexcept {
+    using S=结构项概念保护状态;
+    try {
+        if(!有效(f)||!有效(c))return {};
+        auto fi=特征概念服务_.获取特征概念(f);
+        if(!fi)return {};
+        auto loc=特征概念服务_.比较单特征概念(f,f);
+        if(loc.状态==特征概念规则状态::前提已变化)return {S::前提已变化,{},{},{}};
+        if(!loc.特征类型根||*loc.特征类型根!=f)return {};
+        std::vector<基础联合节点快照> protect;
+        auto fp=特征概念服务_.读取正式概念身份保护(f);
+        if(fp.状态==正式概念读取状态::前提已变化)return {S::前提已变化,{},{},{}};
+        if(!fp.身份)return {S::依赖未就绪,{},{},{}};
+        并保护(protect,fp.身份->完整保护组);
+        bool found=false,missing=false;
+        for(auto reader:readers) {
+            if(!reader){missing=true;continue;}
+            auto r=reader->读取正式概念身份保护(c);
+            if(r.状态==正式概念读取状态::前提已变化)return {S::前提已变化,{},{},{}};
+            if(r.状态==正式概念读取状态::依赖未就绪){missing=true;continue;}
+            if(r.状态!=正式概念读取状态::已读取)continue;
+            if(!r.身份||r.身份->概念节点!=c||r.身份->完整保护组.empty())正式定义故障("identity reader returned wrong endpoint");
+            并保护(protect,r.身份->完整保护组);found=true;
+        }
+        if(!found)return {missing?S::依赖未就绪:S::未取得正式概念证明,{},{},{}};
+        if(!正式保护未变(protect))return {S::前提已变化,{},{},{}};
+        return {S::已读取,f,c,std::move(protect)};
+    }catch(正式状态){return {S::前提已变化,{},{},{}};}
+    catch(const std::exception&e){正式定义故障(e.what());}catch(...){正式定义故障("item identity exception");}
+}
+
+namespace {
+// 编译期槽引用与真实节点引用分账；槽号只在本次构造使用，不伪装成稳定编码。
+struct 定义模板 {
+    std::uint32_t 槽;
+    std::size_t 形状;
+    基础范围概念定义 基础{};
+    结构约束定义 约束{};
+    std::uint32_t 成员槽=0,最少=0;
+    bool 有序=false,全部=false;
+    std::vector<std::uint32_t> 上位,约束槽;
+    struct 项 {稳定编码 FT;std::uint32_t 内容槽;std::vector<稳定编码> 路径;};
+    std::vector<项> 项目;
+    std::vector<std::pair<稳定编码,std::uint32_t>> 收窄;
+};
+using 登记映射=std::map<std::uint32_t,稳定编码>;
+正式结构定义 模板定义(const 定义模板&t,const 登记映射&ids) {
+    if(t.形状==基础类型键)return t.基础;
+    if(t.形状==约束类型键)return t.约束;
+    if(t.形状==成员类型键)return 成员组织概念定义{ids.at(t.成员槽),t.最少,{},t.有序,t.全部};
+    信息结构概念定义 d;
+    for(auto x:t.上位)d.上位结构概念组.push_back(ids.at(x));
+    for(const auto&i:t.项目)d.新增项组.push_back({static_cast<std::uint32_t>(d.新增项组.size()+1),i.FT,ids.at(i.内容槽),i.路径});
+    for(auto[f,c]:t.收窄)d.收窄组.push_back({f,ids.at(c)});
+    for(auto c:t.约束槽)d.约束概念组.push_back(ids.at(c));
+    return d;
+}
+void 编译模板(const 定义模板&t,std::size_t index,基础节点组追加请求&request,
+    const 登记映射&old,const std::map<std::uint32_t,std::size_t>&fresh) {
+    auto ref=[&](std::uint32_t slot)->基础组内字段内容 {
+        auto it=old.find(slot);return it!=old.end()?基础组内字段内容{it->second}:基础组内字段内容{基础组内节点引用{fresh.at(slot)}};
+    };
+    auto field=[&](std::size_t i,正式定义键序 key,基础组内字段内容 value){request.新节点组[i].字段组.push_back({正式键[key],std::move(value)});};
+    auto number=[&](std::size_t i,正式定义键序 key,std::int64_t x){field(i,key,基础值{x});};
+    auto record=[&](正式定义键序 type){auto i=request.新节点组.size();request.新节点组.emplace_back();
+        request.新节点组[i].字段组.push_back({节点类型字段,正式键[type]});return i;};
+    request.新节点组[index].字段组.push_back({节点类型字段,正式键[t.形状]});
+    if(t.形状==基础类型键) {
+        number(index,原语键,static_cast<std::int64_t>(t.基础.原语));field(index,整数键,基础值{t.基础.整数参数});
+        for(auto x:t.基础.引用参数)field(index,引用键,x);
+    } else if(t.形状==约束类型键) {
+        number(index,原语键,static_cast<std::int64_t>(t.约束.原语));field(index,整数键,基础值{t.约束.整数参数});
+        for(auto x:t.约束.项目FT组)field(index,项目FT键,x);for(auto x:t.约束.引用参数)field(index,引用键,x);
+    } else if(t.形状==成员类型键) {
+        field(index,成员概念键,ref(t.成员槽));number(index,最少成员键,t.最少);number(index,最多成员键,-1);
+        number(index,有序键,t.有序);number(index,全部键,t.全部);
+    } else {
+        for(auto x:t.上位)field(index,上位键,ref(x));
+        for(std::size_t p=0;p<t.项目.size();++p) {
+            const auto&i=t.项目[p];auto r=record(项目类型键);field(index,项目键,基础组内节点引用{r});
+            number(r,序号键,p+1);field(r,项目FT键,i.FT);field(r,内容概念键,ref(i.内容槽));
+            for(std::size_t k=0;k<i.路径.size();++k){auto pr=record(路径类型键);field(r,路径键,基础组内节点引用{pr});
+                number(pr,序号键,k+1);field(pr,项目FT键,i.路径[k]);}
+        }
+        for(auto[f,c]:t.收窄){auto r=record(收窄类型键);field(index,收窄键,基础组内节点引用{r});field(r,项目FT键,f);field(r,内容概念键,ref(c));}
+        for(auto x:t.约束槽)field(index,约束键,ref(x));
+    }
+}
+// 调用者先在锁外prepare所有外部身份；此处只读本owner/L1及CAS。
+正式状态 准备定义批(const std::vector<定义模板>&templates,
+    std::vector<基础联合节点快照> external,基础节点组追加请求&request,
+    std::vector<std::pair<std::uint32_t,std::size_t>>&published,登记映射&ids) {
+    ids=读取正式登记(external);
+    std::map<std::uint32_t,std::size_t> fresh;
+    for(const auto&t:templates)if(!ids.count(t.槽)){fresh.emplace(t.槽,request.新节点组.size());request.新节点组.emplace_back();}
+    // 已有槽完整同义才复用；名称不进签名，循环定义等全部身份已有后可以直接核。
+    for(const auto&t:templates) if(ids.count(t.槽)) {
+        std::vector<基础联合节点快照> p;std::set<稳定编码>visited;
+        auto info=解码正式定义(ids.at(t.槽),p,visited);
+        核正式结构图(p);
+        if(std::any_of(templates.begin(),templates.end(),[&](const auto&x){return !ids.count(x.槽);})) {
+            // 阶段内循环组必须同批存在；独立基础定义允许逐项已完成。
+            if(t.形状!=基础类型键) 正式定义故障("partial recursive definition group");
+        }
+        if(info.定义!=模板定义(t,ids))return 正式状态::定义冲突;
+        并保护(external,p);
+    }
+    for(const auto&t:templates)if(auto it=fresh.find(t.槽);it!=fresh.end()) {
+        编译模板(t,it->second,request,ids,fresh);
+        request.追加外部关系组.push_back({存在概念图根节点,基础组内节点引用{it->second},基础外部关系类型::父子,组织归属关系角色});
+        auto r=request.新节点组.size();request.新节点组.push_back({{{节点类型字段,正式键[登记类型键]},
+            {正式键[槽号键],基础值{static_cast<std::int64_t>(t.槽)}},{正式键[槽目标键],基础组内节点引用{it->second}}}});
+        request.追加字段组.push_back({存在概念图根节点,正式键[登记键],基础组内节点引用{r}});
+        published.push_back({t.槽,it->second});
+    }
+    request.预期联合节点组=std::move(external);
+    return fresh.empty()?正式状态::已复用:正式状态::已建立;
+}
+std::vector<定义模板> 基础模板() {
+    std::vector<定义模板> out;
+    auto add=[&](std::uint32_t s,基础概念原语 p,std::vector<std::int64_t> ints={}){
+        定义模板 t{};t.槽=s;t.形状=基础类型键;t.基础={p,std::move(ints),{}};核基础定义(t.基础);out.push_back(std::move(t));};
+    for(std::uint32_t s=401;s<=406;++s)add(s,static_cast<基础概念原语>(s-400));
+    add(407,基础概念原语::I64闭区间,{INT64_MIN,INT64_MAX});add(408,基础概念原语::I64闭区间,{0,INT64_MAX});
+    add(409,基础概念原语::I64闭区间,{0,10000});add(410,基础概念原语::I64闭区间,{1,UINT32_MAX});
+    for(std::uint32_t s=411;s<=420;++s) {
+        std::vector<std::int64_t> values;
+        if(s==413)values={1,2,3,4};else if(s==416)for(int x=1;x<=12;++x)values.push_back(x);
+        else if(s==420)values={0,1};else values={1,2};
+        add(s,基础概念原语::I64有限枚举,std::move(values));
+    }
+    for(std::uint32_t n=1;n<=13;++n)add(500+n,基础概念原语::具名领域身份,{n});
+    // 具名收窄基础定义保留独立槽，不能将不同语义合并成同码。
+    for(auto [slot,value]:std::initializer_list<std::pair<std::uint32_t,std::int64_t>>{{810,12},{821,1},{822,2}})
+        add(slot,基础概念原语::I64有限枚举,{value});
+    return out;
+}
+} // namespace
+
+正式结构操作状态 概念_存在类::发布先天定义批(const 基础节点组追加请求&request,
+    const std::vector<std::pair<std::uint32_t,std::size_t>>&slots) noexcept {
+    try {
+        if(request.新节点组.empty())return 正式状态::已复用;
+        const auto r=全局基础数据集.原子追加节点组(request);
+        if(r.状态==基础节点组追加状态::预期不符)return 正式状态::前提已变化;
+        if(r.状态!=基础节点组追加状态::已完成||r.新节点组.size()!=request.新节点组.size())正式定义故障("definition batch publication failed");
+        for(auto[slot,index]:slots)if(index>=r.新节点组.size()||!有效(r.新节点组[index]))正式定义故障("published batch identity count");
+        return 正式状态::已建立;
+    }catch(const std::exception&e){正式定义故障(e.what());}catch(...){正式定义故障("definition batch exception");}
+}
+
+namespace {
+std::vector<定义模板> 三类定义模板(const 登记映射&f,const 先天信息类型依赖&dep) {
+    using namespace 先天特征类型槽;
+    std::vector<定义模板> out;
+    auto structure=[&](std::uint32_t s,std::vector<std::uint32_t> parents,
+        std::vector<std::pair<std::uint32_t,std::uint32_t>> items,
+        std::vector<std::pair<std::uint32_t,std::uint32_t>> narrow={},std::vector<std::uint32_t> constraints={}) {
+        定义模板 t{};t.槽=s;t.形状=结构类型键;t.上位=std::move(parents);t.约束槽=std::move(constraints);
+        for(auto [ft,content]:items)t.项目.push_back({f.at(ft),content,{}});
+        for(auto [ft,content]:narrow)t.收窄.push_back({f.at(ft),content});
+        out.push_back(std::move(t));
+    };
+    structure(1,{},{{需求主体,401},{需求执行域,411},{需求目标存在,401},{需求目标FT,402},{需求目标形式,412},{需求权重,408},{需求活动,413}});
+    structure(202,{1},{},{{需求执行域,821}});
+    structure(204,{1},{{目标域,403},{目标比较,404}},{{需求目标形式,821}},{801,802});
+    structure(205,{1},{{目标方向,414}},{{需求目标形式,822}});
+    structure(208,{1},{{理解来源,502},{内容确认来源,503}},{{需求执行域,822}});
+    structure(2,{},{{对应需求,202},{任务虚拟存在,301}});
+    out.back().项目.push_back({dep.任务状态FT,416,{f.at(任务虚拟存在),dep.任务状态FT}});
+    out.back().项目.push_back({dep.任务服务值FT,407,{f.at(任务虚拟存在),dep.任务服务值FT}});
+    structure(211,{2},{{采用方法,3}});structure(212,{2},{{执行组织,504}});structure(213,{2},{{执行实例,505}});
+    structure(214,{2},{{评估依据,506}});structure(215,{2},{{结算依据,507}});
+    out.back().收窄.push_back({dep.任务状态FT,810});
+    structure(3,{},{{方法头,303},{方法作用域,417},{方法实现方式,418},{方法行为,419},
+        {动作定义,508},{实现绑定,509},{方法虚拟存在,302},{共同约束,701},{条件结果知识,702}});
+    structure(221,{3},{{本能登记,510}},{{方法实现方式,821}});
+    structure(222,{3},{{执行组织,504}},{{方法实现方式,822}});
+    structure(301,{},{});out.back().项目={{dep.任务状态FT,416,{}},{dep.任务服务值FT,407,{}}};
+    structure(302,{},{{有序参数规格,706}},{},{804,805,809});
+    out.back().项目.insert(out.back().项目.begin(),{dep.方法启用FT,420,{}});
+    out.back().项目.push_back({dep.方法运行次数FT,408,{}});out.back().项目.push_back({dep.方法成功次数FT,408,{}});
+    out.back().项目.push_back({dep.方法可靠度FT,409,{}});
+    structure(303,{},{{作用存在概念,703},{涉及FT概念,704},{可能结果概念,705}});
+    structure(304,{},{{参数序号,410},{参数信息类型,406},{参数范围,406}});
+    structure(305,{},{{所属方法,3},{条件项,707},{配对结果,708}});
+    structure(306,{305},{{父条件,305}},{},{806});
+    structure(307,{},{{所属方法,3},{结果项,709}});
+    structure(308,{305},{},{},{807});structure(309,{305},{},{},{808});
+    const std::pair<std::uint32_t,std::uint32_t> members[]={{701,511},{702,305},{703,406},{704,402},{705,406},{706,304},{707,512},{708,307},{709,513}};
+    for(auto[s,c]:members){定义模板 t{};t.槽=s;t.形状=成员类型键;t.成员槽=c;t.最少=s==709?1:0;t.有序=s==706;t.全部=s==707;out.push_back(t);}
+    auto constraint=[&](std::uint32_t slot,结构约束原语 p,std::vector<稳定编码> fs,
+        std::vector<std::int64_t> ints={},std::vector<稳定编码> refs={}) {
+        定义模板 t{};t.槽=slot;t.形状=约束类型键;t.约束={p,std::move(fs),std::move(ints),std::move(refs)};out.push_back(t);};
+    constraint(801,结构约束原语::域属于FT,{f.at(目标域),f.at(需求目标FT)});
+    constraint(802,结构约束原语::比较适用于目标,{f.at(目标比较),f.at(需求目标FT),f.at(目标域)});
+    constraint(803,结构约束原语::禁止项目,{f.at(父需求),f.at(需求来源)});
+    constraint(804,结构约束原语::数值不大于,{dep.方法成功次数FT,dep.方法运行次数FT});
+    constraint(805,结构约束原语::连续有序,{f.at(有序参数规格)},{},{f.at(参数序号)});
+    constraint(806,结构约束原语::同所属父链无环,{f.at(所属方法),f.at(父条件)});
+    constraint(807,结构约束原语::固定配对基数,{f.at(配对结果)},{1,1});
+    constraint(808,结构约束原语::固定配对基数,{f.at(配对结果)},{2,-1});
+    constraint(809,结构约束原语::允许未知当前值,{dep.方法可靠度FT});
+    constraint(811,结构约束原语::需求父链合法,{f.at(父需求)},{},{f.at(需求根角色)});
+    return out;
+}
+std::vector<std::uint32_t> 所需FT槽() {
+    using namespace 先天特征类型槽;
+    return {需求主体,需求执行域,需求目标存在,需求目标FT,需求目标形式,需求权重,需求活动,
+        目标域,目标比较,目标方向,父需求,需求来源,需求根角色,理解来源,内容确认来源,
+        对应需求,任务虚拟存在,采用方法,执行组织,执行实例,评估依据,结算依据,
+        方法头,方法作用域,方法实现方式,方法行为,动作定义,实现绑定,方法虚拟存在,共同约束,条件结果知识,
+        本能登记,作用存在概念,涉及FT概念,可能结果概念,有序参数规格,方法运行次数,方法成功次数,方法可靠度,
+        参数序号,参数信息类型,参数范围,所属方法,条件项,父条件,配对结果,结果项};
+}
+特征概念定义 先天FT定义(std::uint32_t slot,const 登记映射&basic) {
+    using namespace 先天特征类型槽;
+    特征概念定义 d;
+    auto interval=[&](std::int64_t a,std::int64_t b){d.值域=std::vector<特征概念I64闭区间>{{a,b}};};
+    if(slot==需求执行域||slot==需求目标形式||slot==目标方向||slot==需求根角色
+        ||slot==方法作用域||slot==方法实现方式||slot==方法行为) {interval(1,2);return d;}
+    if(slot==需求活动){interval(1,4);return d;}
+    if(slot==需求权重||slot==方法运行次数||slot==方法成功次数){interval(0,INT64_MAX);return d;}
+    if(slot==方法可靠度){interval(0,10000);return d;}
+    if(slot==参数序号){interval(1,UINT32_MAX);return d;}
+    const bool isConceptReference = slot==需求目标FT||slot==目标域||slot==目标比较||slot==参数信息类型||slot==参数范围;
+    d.材料类型=特征概念材料物理类型::信息节点引用;
+    d.比较规则=特征概念比较规则::信息引用身份精确;
+    d.值域=特征概念信息引用值域{isConceptReference ? 信息引用语义::概念定义 : 信息引用语义::信息对象,basic.at(isConceptReference ? 406 : 405)};
+    return d;
+}
+先天信息概念组 概念组投影(const 登记映射&ids) {
+    先天信息概念组 out{ids.at(1),ids.at(2),ids.at(3),{}};
+    for(auto[s,n]:ids)if(s!=1&&s!=2&&s!=3)out.子类与支持定义.push_back({s,n});return out;
+}
+void 核对模板读回(const std::vector<定义模板>&templates,const 登记映射&ids,
+    const 概念_存在类&owner) {
+    for(const auto&t:templates) {
+        auto r=owner.读取正式结构概念(ids.at(t.槽));
+        if(r.状态==正式状态::前提已变化)throw 正式状态::前提已变化;
+        if(!r.信息||r.信息->定义!=模板定义(t,ids))正式定义故障("published template differs from complete readback");
+    }
+}
+void 核I64依赖(const 特征概念信息&i,std::int64_t low,std::int64_t high) {
+    auto domain=std::get_if<std::vector<特征概念I64闭区间>>(&i.值域);
+    if(i.材料类型!=特征概念材料物理类型::I64标量||i.比较规则!=特征概念比较规则::I64数值
+        ||i.聚合规则!=特征概念聚合规则::不自动聚合||i.单位||!domain
+        ||*domain!=std::vector<特征概念I64闭区间>{{low,high}})正式定义故障("existing business FT definition mismatch");
+}
+} // namespace
+
+先天信息概念结果 概念_存在类::建立或取得先天需求任务方法概念(const 先天信息类型依赖&dep,
+    const 新_特征值类&materials,std::span<const 正式概念身份读取接口* const> readers) noexcept {
+    try {
+        if(!初始化正式schema())return {正式状态::依赖未就绪,{}};
+        // 独立基础定义先行；这一步只依赖本owner schema。
+        auto bases=基础模板();登记映射 ids;
+        {
+            基础节点组追加请求 request;std::vector<std::pair<std::uint32_t,std::size_t>> slots;
+            std::lock_guard lock(存在概念图互斥);
+            auto s=准备定义批(bases,{},request,slots,ids);
+            if(s==正式状态::定义冲突)return {s,{}};
+            s=发布先天定义批(request,slots);if(s==正式状态::前提已变化)return {s,{}};
+        }
+        {std::vector<基础联合节点快照>p;ids=读取正式登记(p);}
+        核对模板读回(bases,ids,*this);
+        // 现有业务类型与新槽在本owner锁外完整prepare。
+        std::vector<基础联合节点快照> protect;登记映射 f;
+        for(auto x:{dep.任务状态FT,dep.任务服务值FT,dep.方法启用FT,dep.方法运行次数FT,dep.方法成功次数FT,dep.方法可靠度FT}) {
+            if(!有效(x))return {正式状态::依赖未就绪,{}};
+            auto p=特征概念服务_.读取特征概念定义保护(x);
+            if(p.前提已变化)return {正式状态::前提已变化,{}};
+            if(p.状态!=基础结构操作状态::已完成||!p.信息||p.信息->类型根!=x)正式定义故障("business FT root unavailable");
+            const auto&value=p.信息->定义;
+            if(x==dep.任务状态FT)核I64依赖(value,1,12);
+            else if(x==dep.任务服务值FT)核I64依赖(value,INT64_MIN,INT64_MAX);
+            else if(x==dep.方法启用FT)核I64依赖(value,0,1);
+            else if(x==dep.方法可靠度FT)核I64依赖(value,0,10000);
+            else 核I64依赖(value,0,INT64_MAX);
+        }
+        for(auto slot:所需FT槽()) {
+            auto r=特征概念服务_.建立或取得先天特征类型槽({slot,先天FT定义(slot,ids)},materials,readers);
+            if(r.状态==特征概念规则状态::前提已变化)return {正式状态::前提已变化,{}};
+            if(r.状态==特征概念规则状态::读取接口未装配)return {正式状态::依赖未就绪,{}};
+            if(!r.类型根)return {正式状态::定义冲突,{}};
+            f.emplace(slot,*r.类型根);
+            // 不保留先行建槽时的入向旧快照，统一在全部槽完成后重读。
+        }
+        for(auto slot:所需FT槽()) {auto r=特征概念服务_.读取先天特征类型槽(slot);
+            if(!r.类型根||*r.类型根!=f.at(slot))正式定义故障("FT slot readback mismatch");并保护(protect,r.完整保护组);}
+        for(auto x:{dep.任务状态FT,dep.任务服务值FT,dep.方法启用FT,dep.方法运行次数FT,dep.方法成功次数FT,dep.方法可靠度FT}) {
+            auto p=特征概念服务_.读取特征概念定义保护(x);
+            if(p.前提已变化)return {正式状态::前提已变化,{}};
+            if(p.状态!=基础结构操作状态::已完成||!p.信息)正式定义故障("business FT final prepare");
+            并保护(protect,p.预期节点组);
+        }
+        if(f.at(先天特征类型槽::方法运行次数)!=dep.方法运行次数FT
+            ||f.at(先天特征类型槽::方法成功次数)!=dep.方法成功次数FT
+            ||f.at(先天特征类型槽::方法可靠度)!=dep.方法可靠度FT)return {正式状态::定义冲突,{}};
+        // 前面FT增加基础概念入向引用，基础prepare必须在全部FT后重采。
+        for(const auto&t:bases){auto p=读取正式结构概念保护(ids.at(t.槽));if(!p.信息)return {p.状态,{}};并保护(protect,p.完整保护组);}
+        auto templates=三类定义模板(f,dep);
+        正式状态 status;
+        {
+            std::lock_guard lock(存在概念图互斥);基础节点组追加请求 request;std::vector<std::pair<std::uint32_t,std::size_t>>slots;
+            auto s=准备定义批(templates,std::move(protect),request,slots,ids);if(s==正式状态::定义冲突)return {s,{}};
+            status=发布先天定义批(request,slots);if(status==正式状态::前提已变化)return {status,{}};
+        }
+        auto back=读取先天需求任务方法概念();if(!back.信息)正式定义故障("innate batch readback failed");
+        {std::vector<基础联合节点快照>p;ids=读取正式登记(p);}
+        核对模板读回(templates,ids,*this);
+        return {status,std::move(back.信息)};
+    }catch(正式状态 s){return {s,{}};}
+    catch(const std::exception&e){正式定义故障(e.what());}catch(...){正式定义故障("innate initialization exception");}
+}
+
+先天信息概念结果 概念_存在类::读取先天需求任务方法概念() const noexcept {
+    try {
+        if(!正式schema就绪())return {正式状态::依赖未就绪,{}};
+        std::vector<基础联合节点快照>protect;auto ids=读取正式登记(protect);
+        if(!ids.count(1)&&!ids.count(2)&&!ids.count(3))return {正式状态::未找到,{}};
+        if(!ids.count(1)||!ids.count(2)||!ids.count(3))正式定义故障("partial DTM root registration");
+        for(auto[s,n]:ids){auto r=读取正式结构概念保护(n);if(r.状态==正式状态::前提已变化)return {r.状态,{}};
+            if(!r.信息||r.信息->节点!=n)正式定义故障("registered definition unreadable");并保护(protect,r.完整保护组);}
+        if(!正式保护未变(protect))return {正式状态::前提已变化,{}};
+        return {正式状态::已读取,概念组投影(ids)};
+    }catch(正式状态 s){return {s,{}};}
+    catch(const std::exception&e){正式定义故障(e.what());}catch(...){正式定义故障("innate group read exception");}
+}
+先天信息概念结果 概念_存在类::建立或取得自我需求子概念(稳定编码 self,
+    const 特征存在成员读取接口&reader,std::span<const 正式概念身份读取接口* const> readers) noexcept {
+    try {
+        if(!有效(self))return {};
+        auto ep=reader.读取存在集合成员身份(self);
+        if(ep.状态==特征概念规则状态::读取接口未装配)return {正式状态::依赖未就绪,{}};
+        if(ep.状态==特征概念规则状态::前提已变化)return {正式状态::前提已变化,{}};
+        if(ep.状态!=特征概念规则状态::已完成||!ep.存在节点||*ep.存在节点!=self||ep.身份保护.empty())
+            正式定义故障("successful initialization self identity is not readable");
+        auto prior=读取先天需求任务方法概念();if(!prior.信息)return {prior.状态,{}};
+        std::vector<基础联合节点快照>protect=ep.身份保护;登记映射 f;
+        for(auto slot:所需FT槽()){auto r=特征概念服务_.读取先天特征类型槽(slot);
+            if(!r.类型根)return {正式状态::依赖未就绪,{}};f.emplace(slot,*r.类型根);并保护(protect,r.完整保护组);}
+        // 栈借用的正式reader只在外部prepare调用，不存入定义或本owner。
+        for(auto [slot,n]:prior.信息->子类与支持定义) {
+            auto r=读取正式结构概念保护(n);if(!r.信息)return {r.状态,{}};并保护(protect,r.完整保护组);
+        }
+        (void)readers;
+        using namespace 先天特征类型槽;
+        std::vector<定义模板>templates;
+        定义模板 unique{};unique.槽=601;unique.形状=基础类型键;
+        unique.基础={基础概念原语::唯一存在,{}, {self}};templates.push_back(unique);
+        auto add=[&](std::uint32_t s,std::vector<std::uint32_t> parents){定义模板 t{};t.槽=s;t.形状=结构类型键;t.上位=std::move(parents);templates.push_back(t);};
+        add(201,{1});templates.back().收窄={{f.at(需求主体),601}};
+        add(203,{201,202});
+        add(206,{203});templates.back().项目={{f.at(父需求),1,{}},{f.at(需求来源),501,{}}};templates.back().约束槽={811};
+        add(207,{203});templates.back().项目={{f.at(需求根角色),415,{}}};templates.back().约束槽={803};
+        正式状态 status;
+        {
+            std::lock_guard lock(存在概念图互斥);基础节点组追加请求 request;登记映射 ids;
+            std::vector<std::pair<std::uint32_t,std::size_t>>slots;
+            auto s=准备定义批(templates,std::move(protect),request,slots,ids);if(s==正式状态::定义冲突)return {s,{}};
+            status=发布先天定义批(request,slots);if(status==正式状态::前提已变化)return {status,{}};
+        }
+        auto back=读取先天需求任务方法概念();if(!back.信息)正式定义故障("self concepts readback failed");
+        {std::vector<基础联合节点快照>p;auto ids=读取正式登记(p);核对模板读回(templates,ids,*this);}
+        return {status,std::move(back.信息)};
+    }catch(正式状态 s){return {s,{}};}
+    catch(const std::exception&e){正式定义故障(e.what());}catch(...){正式定义故障("self concepts exception");}
+}
+bool 概念_存在类::绑定信息定义名称关系(稳定编码 n,稳定编码 name) noexcept {
+    try {
+        auto prepared=读取正式结构概念保护(n);
+        if(!prepared.信息||!有效(name)||!节点仍存在(name))return false;
+        if(std::find(prepared.信息->名称关系.begin(),prepared.信息->名称关系.end(),name)!=prepared.信息->名称关系.end())return true;
+        auto np=正式快照(name);并保护(prepared.完整保护组,{np});
+        std::lock_guard lock(存在概念图互斥);
+        基础节点组追加请求 request;request.预期联合节点组=std::move(prepared.完整保护组);
+        request.追加字段组.push_back({n,名称关系字段,name});
+        auto r=全局基础数据集.原子追加节点组(request);
+        if(r.状态==基础节点组追加状态::预期不符)return false;
+        if(r.状态!=基础节点组追加状态::已完成)正式定义故障("name backlink publication failed");
+        return true;
+    }catch(正式状态){return false;}
+    catch(const std::exception&e){正式定义故障(e.what());}catch(...){正式定义故障("name bind exception");}
+}
+bool 概念_存在类::解除信息定义名称关系(稳定编码 n,稳定编码 name) noexcept {
+    try {
+        auto prepared=读取正式结构概念保护(n);if(!prepared.信息)return false;
+        auto source=std::find_if(prepared.完整保护组.begin(),prepared.完整保护组.end(),[&](const auto&s){return s.结构.节点.编码==n;});
+        if(source==prepared.完整保护组.end())正式定义故障("missing name parent snapshot");
+        std::optional<稳定编码>erase;
+        for(const auto&f:source->结构.字段组)if(f.字段节点==名称关系字段) {
+            auto p=std::get_if<稳定编码>(&f.内容);if(!p)正式定义故障("name backlink value");
+            if(*p==name){if(erase)正式定义故障("duplicate name backlink");erase=f.编码;}
+        }
+        if(!erase)return true;
+        std::lock_guard lock(存在概念图互斥);基础节点组追加请求 request;
+        request.预期联合节点组=std::move(prepared.完整保护组);request.删除字段关系组.push_back(*erase);
+        auto r=全局基础数据集.原子追加节点组(request);
+        if(r.状态==基础节点组追加状态::预期不符)return false;
+        if(r.状态!=基础节点组追加状态::已完成)正式定义故障("name backlink removal failed");return true;
+    }catch(正式状态){return false;}
+    catch(const std::exception&e){正式定义故障(e.what());}catch(...){正式定义故障("name unbind exception");}
+}
 } // namespace 海中鱼巣
