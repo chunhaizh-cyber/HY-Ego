@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <csignal>
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -213,6 +214,25 @@ struct 网页对话框事实回调组 final {
     bool (*确认页面)(const 网页对话框目标&) noexcept = nullptr;
     void (*发送完成)(const 网页定向发送事实&) noexcept = nullptr;
 };
+struct 网页输出队列项 final {
+    网页对话框目标 目标;
+    std::uint64_t 提交序号 = 0, 正式消息编码 = 0;
+    std::string UTF8正文;
+};
+enum class 网页输出队列状态 : std::uint8_t {
+    已入列 = 1, 已复用, 已领取, 已移除, 已清空, 空, 不在队列
+};
+struct 网页输出队列回执 final {
+    网页输出队列状态 状态 = 网页输出队列状态::空;
+    std::optional<网页输出队列项> 项;
+};
+// 只在宿主运行租约内借用；提供者不得回调宿主或重新取得应用上下文锁。
+struct 网页输出队列回调组 final {
+    std::function<网页输出队列回执(const 网页定向发送事实&)> 入列;
+    std::function<网页输出队列回执(const 网页对话框目标&)> 领取;
+    std::function<网页输出队列回执(const 网页对话框目标&, std::uint64_t)> 取消;
+    std::function<网页输出队列回执(const 网页对话框目标&)> 清空;
+};
 网页定向发送结果 提交网页对话框消息(const 网页定向发送请求&) noexcept;
 网页定向发送结果 查询网页对话框发送(
     const 网页对话框目标&, std::uint64_t 提交序号) noexcept;
@@ -246,5 +266,11 @@ bool 释放网页对话框出站占用(const 网页对话框目标&, std::uint64
     网页对话消息接收函数 消息接收,
     const 网页服务输入回调组& 服务输入,
     const 网页对话框事实回调组& 对话框事实) noexcept;
+网页对话宿主结果 运行本地网页对话宿主(
+    const volatile std::sig_atomic_t& 停止请求,
+    网页对话消息接收函数 消息接收,
+    const 网页服务输入回调组& 服务输入,
+    const 网页对话框事实回调组& 对话框事实,
+    const 网页输出队列回调组& 输出队列) noexcept;
 
 } // namespace 海中鱼巣

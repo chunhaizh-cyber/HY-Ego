@@ -2609,6 +2609,60 @@ bool 网页目标格式有效(const 网页对话框目标& 目标) noexcept {
         ? 当前->连接运行->取消(调用身份) : 新连接返回{新连接状态::来源失效};
 }
 
+网页输出队列回调组 取得普通应用网页输出队列回调() noexcept {
+    using namespace 普通应用装配内部;
+    try {
+        std::lock_guard 锁(上下文锁);
+        if (!上下文 || !上下文->装配结果 || !上下文->装配结果->成功())
+            throw std::runtime_error("outbound queue callbacks requested before assembly");
+        // 宿主及其停止清空先结束，应用上下文才按原顺序回收。
+        // 连接持有上下文锁也可提交，故闭包不能再通过上下文取得world。
+        auto* 世界 = &上下文->外设世界树;
+        const auto 定位 = [世界](const 网页对话框目标& 目标) {
+            const auto 结果 = 世界->查找对话框场景(目标.公开会话标识, 目标.对话框标识);
+            if (结果.状态 != 新外设事实状态::已完成 || !结果.定位 || !结果.定位->输出队列特征)
+                throw std::runtime_error("outbound queue page location unavailable");
+            return *结果.定位;
+        };
+        const auto 转换 = [](新外设输出队列结果&& 原) {
+            网页输出队列回执 结果;
+            switch (原.状态) {
+            case 新外设输出队列状态::已入列: 结果.状态 = 网页输出队列状态::已入列; break;
+            case 新外设输出队列状态::已复用: 结果.状态 = 网页输出队列状态::已复用; break;
+            case 新外设输出队列状态::已领取: 结果.状态 = 网页输出队列状态::已领取; break;
+            case 新外设输出队列状态::已移除: 结果.状态 = 网页输出队列状态::已移除; break;
+            case 新外设输出队列状态::已清空: 结果.状态 = 网页输出队列状态::已清空; break;
+            case 新外设输出队列状态::队列为空: 结果.状态 = 网页输出队列状态::空; break;
+            case 新外设输出队列状态::不在队列: 结果.状态 = 网页输出队列状态::不在队列; break;
+            default: throw std::runtime_error("formal output queue operation could not complete");
+            }
+            if (原.消息) {
+                auto& 消息 = *原.消息;
+                结果.项.emplace(网页输出队列项{
+                    {std::move(消息.来源.公开宿主会话), std::move(消息.来源.对话框标识)},
+                    消息.来源.来源序号, 消息.消息节点.值, std::move(消息.UTF8正文)});
+            }
+            return 结果;
+        };
+        return {
+            [世界, 定位, 转换](const 网页定向发送事实& 事实) {
+                return 转换(世界->输出入列({定位(事实.目标), 事实.提交序号, 事实.UTF8正文}));
+            },
+            [世界, 定位, 转换](const 网页对话框目标& 目标) {
+                return 转换(世界->领取输出队首(定位(目标)));
+            },
+            [世界, 定位, 转换](const 网页对话框目标& 目标, std::uint64_t 序号) {
+                return 转换(世界->移除待发输出(定位(目标), 序号));
+            },
+            [世界, 定位, 转换](const 网页对话框目标& 目标) {
+                return 转换(世界->清空待发输出(定位(目标)));
+            }};
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"取得网页输出队列端口",
+            L"正式外设队列端口或寿命未建立，不能回退宿主私有待发列表。");
+    }
+}
+
 bool 确认普通应用网页对话框(const 网页对话框目标& 目标) noexcept {
     using namespace 普通应用装配内部;
     if (!网页目标格式有效(目标)) return false;

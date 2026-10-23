@@ -216,6 +216,7 @@ struct 普通应用网页自我归类表达结果 final {
     std::string_view UTF8正文) noexcept;
 bool 确认普通应用网页对话框(const 网页对话框目标&) noexcept;
 void 接收普通应用网页发送事实(const 网页定向发送事实&) noexcept;
+网页输出队列回调组 取得普通应用网页输出队列回调() noexcept;
 
 // 可信进程内调用；不从网页请求自动推断目标与窗口的对应关系。
 新连接返回 开始普通应用连接(const 新连接请求&) noexcept;

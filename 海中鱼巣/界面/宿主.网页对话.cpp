@@ -98,7 +98,8 @@ struct HTTP请求 final {
 };
 
 struct 网页待发送项 final {
-    网页定向发送事实 事实;
+    网页对话框目标 目标;
+    std::uint64_t 提交序号 = 0, 正式消息编码 = 0;
     网页定向发送结果 结果;
 };
 struct 网页对话框传输状态 final {
@@ -118,27 +119,50 @@ struct 网页对话共享状态 final {
     std::vector<网页对话框传输状态> 页面组;
     std::uint64_t 下一上行序号 = 1;
     std::uint64_t 下一提交序号 = 1;
+    const 网页输出队列回调组* 输出队列 = nullptr;
 };
 
 网页对话共享状态 共享状态;
+std::mutex 队列操作互斥;
 
-// 调用者持有宿主锁；不清除会话，正在写出项仍须收口真实事实。
-void 停止接纳提交() noexcept {
-    共享状态.接纳提交 = false;
+// 调用者持队列操作锁；外部事实回调期间绝不持宿主共享锁。
+void 停止接纳提交_已持队列锁() {
+    std::vector<网页对话框目标> 目标组;
+    const 网页输出队列回调组* 回调 = nullptr;
+    {
+        std::lock_guard 锁(共享状态.互斥);
+        目标组.reserve(共享状态.页面组.size());
+        for (const auto& 页面 : 共享状态.页面组) 目标组.push_back(页面.目标);
+        回调 = 共享状态.输出队列;
+        共享状态.接纳提交 = false;
+    }
+    if (!目标组.empty() && (!回调 || !回调->清空))
+        throw std::runtime_error("outbound queue shutdown provider missing");
+    for (const auto& 目标 : 目标组) {
+        const auto 结果 = 回调->清空(目标);
+        if (结果.状态 != 网页输出队列状态::已清空 && 结果.状态 != 网页输出队列状态::空)
+            throw std::runtime_error("outbound queue shutdown incomplete");
+    }
+    std::lock_guard 锁(共享状态.互斥);
     for (auto& 页面 : 共享状态.页面组) {
         页面.出站占用身份.reset();
         for (auto& 项 : 页面.提交组)
-            if (项.结果.状态 == 网页定向发送状态::已排队)
-                项.结果.状态 = 网页定向发送状态::已取消;
+            if (项.结果.状态 == 网页定向发送状态::已排队) 项.结果.状态 = 网页定向发送状态::已取消;
     }
+}
+void 停止接纳提交() {
+    std::lock_guard 操作锁(队列操作互斥);
+    停止接纳提交_已持队列锁();
 }
 
 class 网页对话会话租约 final {
 public:
     网页对话会话租约() = default;
 
-    bool 开始(std::string_view 会话标识, const volatile std::sig_atomic_t& 停止请求) noexcept {
+    bool 开始(std::string_view 会话标识, const volatile std::sig_atomic_t& 停止请求,
+        const 网页输出队列回调组& 输出队列) noexcept {
         try {
+            std::lock_guard 操作锁(队列操作互斥);
             std::lock_guard 锁(共享状态.互斥);
             if (共享状态.运行中 || 会话标识.empty()) return false;
             共享状态.会话标识.assign(会话标识);
@@ -146,6 +170,7 @@ public:
             共享状态.下一上行序号 = 1;
             共享状态.下一提交序号 = 1;
             共享状态.停止信号 = &停止请求;
+            共享状态.输出队列 = &输出队列;
             共享状态.接纳提交 = 停止请求 == 0;
             共享状态.运行中 = true;
             已开始_ = true;
@@ -158,8 +183,9 @@ public:
     ~网页对话会话租约() {
         if (!已开始_) return;
         try {
+            std::lock_guard 操作锁(队列操作互斥);
+            停止接纳提交_已持队列锁();
             std::lock_guard 锁(共享状态.互斥);
-            停止接纳提交();
             共享状态.停止信号 = nullptr;
             共享状态.运行中 = false;
             for (auto& 页面 : 共享状态.页面组) {
@@ -171,6 +197,7 @@ public:
                 }
             }
             共享状态.会话标识.clear();
+            共享状态.输出队列 = nullptr;
         } catch (...) {
             工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"结束网页会话", L"传输状态取消失败。");
         }
@@ -973,8 +1000,10 @@ void 追加页面消息(网页对话框传输状态& 页面, 网页对话消息�
 bool 确认传输页面(const 网页对话框目标& 目标, const 网页对话框事实回调组& 回调) {
     // 不持宿主锁进入普通应用锁；返回后再核验运行身份。
     if (!回调.确认页面(目标)) return false;
+    std::lock_guard 操作锁(队列操作互斥);
     std::lock_guard 锁(共享状态.互斥);
-    if (!共享状态.运行中 || 共享状态.会话标识 != 目标.公开会话标识) return false;
+    if (!共享状态.运行中 || !共享状态.接纳提交
+        || 共享状态.会话标识 != 目标.公开会话标识) return false;
     if (!查找传输页面(目标)) 共享状态.页面组.push_back({目标});
     return true;
 }
@@ -992,21 +1021,46 @@ void 追加交互者消息(const 网页对话框目标& 目标,
 
 void 处理定向取件(SOCKET 客户端, const 网页对话框目标& 目标,
     const 网页对话框事实回调组& 回调) {
-    std::optional<网页定向发送事实> 事实;
+    std::optional<网页输出队列项> 事实;
     {
-        std::lock_guard 锁(共享状态.互斥);
-        auto* 页面 = 查找传输页面(目标);
-        if (!共享状态.运行中 || 共享状态.会话标识 != 目标.公开会话标识 || !页面)
-            throw std::runtime_error("outbound dialogue identity invalid");
-        if (!共享状态.停止信号) throw std::runtime_error("outbound stop signal unavailable");
-        if (*共享状态.停止信号 != 0) 停止接纳提交();
-        for (auto& 项 : 页面->提交组) {
-            if (项.结果.状态 != 网页定向发送状态::已排队) continue;
-            if (项.事实.目标 != 目标 || !项.结果.提交序号 || *项.结果.提交序号 != 项.事实.提交序号)
-                throw std::runtime_error("outbound item identity corrupted");
-            事实 = 项.事实;
-            项.结果.状态 = 网页定向发送状态::正在写出;
-            break;
+        std::lock_guard 操作锁(队列操作互斥);
+        const 网页输出队列回调组* 队列 = nullptr;
+        bool 请求停止 = false, 可领取 = true;
+        {
+            std::lock_guard 锁(共享状态.互斥);
+            const auto* 页面 = 查找传输页面(目标);
+            if (!共享状态.运行中 || 共享状态.会话标识 != 目标.公开会话标识 || !页面)
+                throw std::runtime_error("outbound dialogue identity invalid");
+            if (!共享状态.停止信号 || !共享状态.输出队列)
+                throw std::runtime_error("outbound queue/stop provider unavailable");
+            请求停止 = *共享状态.停止信号 != 0;
+            队列 = 共享状态.输出队列;
+            可领取 = 共享状态.接纳提交 && std::none_of(页面->提交组.begin(), 页面->提交组.end(),
+                [](const auto& 项) { return 项.结果.状态 == 网页定向发送状态::正在写出; });
+        }
+        if (请求停止) { 停止接纳提交_已持队列锁(); 可领取 = false; }
+        if (可领取) {
+            auto 领取 = 队列->领取(目标);
+            if (领取.状态 != 网页输出队列状态::空) {
+                if (领取.状态 != 网页输出队列状态::已领取 || !领取.项
+                    || 领取.项->目标 != 目标 || !领取.项->提交序号
+                    || !领取.项->正式消息编码 || 领取.项->UTF8正文.empty())
+                    throw std::runtime_error("outbound formal queue receipt invalid");
+                事实 = std::move(领取.项);
+                std::lock_guard 锁(共享状态.互斥);
+                auto* 页面 = 查找传输页面(目标);
+                if (!页面) throw std::runtime_error("outbound claimed page disappeared");
+                网页待发送项* 命中 = nullptr;
+                for (auto& 项 : 页面->提交组) if (项.提交序号 == 事实->提交序号) {
+                    if (命中) throw std::runtime_error("outbound submission duplicated");
+                    命中 = &项;
+                }
+                if (!命中 || 命中->目标 != 目标 || 命中->正式消息编码 != 事实->正式消息编码
+                    || 命中->结果.提交序号 != 事实->提交序号
+                    || 命中->结果.状态 != 网页定向发送状态::已排队)
+                    throw std::runtime_error("outbound formal queue and transport index disagree");
+                命中->结果.状态 = 网页定向发送状态::正在写出;
+            } else if (领取.项) throw std::runtime_error("empty outbound queue carried a message");
         }
     }
     if (!事实) {
@@ -1015,8 +1069,9 @@ void 处理定向取件(SOCKET 客户端, const 网页对话框目标& 目标,
     }
     const std::string 正文 = "{\"id\":\"" + std::to_string(事实->提交序号)
         + "\",\"text\":\"" + JSON转义(事实->UTF8正文) + "\"}";
+    const 网页定向发送事实 发送事实{事实->目标, 事实->提交序号, 事实->UTF8正文};
     const auto 写出 = 发送响应(客户端, "200 OK", "application/json;charset=utf-8", 正文);
-    if (写出.完整写出) 回调.发送完成(*事实);
+    if (写出.完整写出) 回调.发送完成(发送事实);
     {
         std::lock_guard 锁(共享状态.互斥);
         auto* 页面 = 查找传输页面(目标);
@@ -1024,12 +1079,12 @@ void 处理定向取件(SOCKET 客户端, const 网页对话框目标& 目标,
             throw std::runtime_error("outbound result dialogue disappeared");
         网页待发送项* 命中 = nullptr;
         for (auto& 项 : 页面->提交组) {
-            if (项.事实.提交序号 != 事实->提交序号) continue;
+            if (项.提交序号 != 事实->提交序号) continue;
             if (命中) throw std::runtime_error("outbound submission duplicated");
             命中 = &项;
         }
         if (!命中 || 命中->结果.状态 != 网页定向发送状态::正在写出
-            || 命中->事实.目标 != 目标 || 命中->事实.UTF8正文 != 事实->UTF8正文)
+            || 命中->目标 != 目标 || 命中->正式消息编码 != 事实->正式消息编码)
             throw std::runtime_error("outbound result payload changed");
         命中->结果.状态 = 写出.完整写出 ? 网页定向发送状态::已完整写出 : 网页定向发送状态::写出未完成;
         命中->结果.HTTP已写字节数 = 写出.已写字节数;
@@ -1129,10 +1184,7 @@ bool 处理请求(SOCKET 客户端,
         return true;
     }
     if (请求.方法 == "POST" && 请求.目标 == 结束路径 && 请求.正文.empty()) {
-        {
-            std::lock_guard 锁(共享状态.互斥);
-            停止接纳提交();
-        }
+        停止接纳提交();
         请求结束 = true;
         发送响应(客户端, "200 OK", "application/json;charset=utf-8",
             "{\"closed\":true}");
@@ -1174,22 +1226,52 @@ bool 网页对话宿主结果::成功() const noexcept {
         || !是合法对话框标识(请求.目标.对话框标识) || 请求.UTF8正文.empty()
         || 请求.UTF8正文.size() > 最大消息字节数 || !是有效UTF8(请求.UTF8正文)) return {};
     try {
-        std::lock_guard 锁(共享状态.互斥);
-        if (!共享状态.运行中) return {网页定向发送状态::宿主未运行};
-        if (共享状态.会话标识 != 请求.目标.公开会话标识) return {网页定向发送状态::会话失效};
-        if (!共享状态.停止信号) throw std::runtime_error("running dialogue lacks stop signal lifetime");
-        if (*共享状态.停止信号 != 0) 停止接纳提交();
-        if (!共享状态.接纳提交) return {网页定向发送状态::宿主未运行};
-        auto* 页面 = 查找传输页面(请求.目标);
-        if (!页面) return {网页定向发送状态::对话框未登记};
-        if (页面->出站占用身份 != 请求.出站占用身份)
-            return {网页定向发送状态::页面被占用};
-        if (!共享状态.下一提交序号 || 共享状态.下一提交序号 == (std::numeric_limits<std::uint64_t>::max)())
-            throw std::runtime_error("outbound submission sequence exhausted");
-        const auto 序号 = 共享状态.下一提交序号;
+        std::lock_guard 操作锁(队列操作互斥);
+        const 网页输出队列回调组* 队列 = nullptr;
+        std::uint64_t 序号 = 0;
+        bool 请求停止 = false;
+        {
+            std::lock_guard 锁(共享状态.互斥);
+            if (!共享状态.运行中) return {网页定向发送状态::宿主未运行};
+            if (共享状态.会话标识 != 请求.目标.公开会话标识) return {网页定向发送状态::会话失效};
+            if (!共享状态.停止信号 || !共享状态.输出队列)
+                throw std::runtime_error("running dialogue lacks output queue lifetime");
+            请求停止 = *共享状态.停止信号 != 0;
+            if (!请求停止 && !共享状态.接纳提交) return {网页定向发送状态::宿主未运行};
+            if (!请求停止) {
+                auto* 页面 = 查找传输页面(请求.目标);
+                if (!页面) return {网页定向发送状态::对话框未登记};
+                if (页面->出站占用身份 != 请求.出站占用身份)
+                    return {网页定向发送状态::页面被占用};
+                if (!共享状态.下一提交序号
+                    || 共享状态.下一提交序号 == (std::numeric_limits<std::uint64_t>::max)())
+                    throw std::runtime_error("outbound submission sequence exhausted");
+                页面->提交组.reserve(页面->提交组.size() + 1);
+                序号 = 共享状态.下一提交序号;
+                队列 = 共享状态.输出队列;
+            }
+        }
+        if (请求停止) {
+            停止接纳提交_已持队列锁();
+            return {网页定向发送状态::宿主未运行};
+        }
         网页定向发送结果 结果{网页定向发送状态::已排队, 序号};
-        页面->提交组.push_back({{请求.目标, 序号, 请求.UTF8正文}, 结果});
-        ++共享状态.下一提交序号;
+        网页待发送项 索引{请求.目标, 序号, 0, 结果};
+        const 网页定向发送事实 输入{请求.目标, 序号, 请求.UTF8正文};
+        const auto 入列 = 队列->入列(输入);
+        if ((入列.状态 != 网页输出队列状态::已入列 && 入列.状态 != 网页输出队列状态::已复用)
+            || !入列.项 || 入列.项->目标 != 请求.目标 || 入列.项->提交序号 != 序号
+            || !入列.项->正式消息编码 || 入列.项->UTF8正文 != 请求.UTF8正文)
+            throw std::runtime_error("outbound formal enqueue receipt invalid");
+        索引.正式消息编码 = 入列.项->正式消息编码;
+        {
+            std::lock_guard 锁(共享状态.互斥);
+            auto* 页面 = 查找传输页面(请求.目标);
+            if (!页面 || 共享状态.下一提交序号 != 序号)
+                throw std::runtime_error("outbound transport index changed during enqueue");
+            页面->提交组.push_back(std::move(索引));
+            ++共享状态.下一提交序号;
+        }
         return 结果;
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"提交定向网页消息", L"传输队列或载荷冻结失败。");
@@ -1202,6 +1284,7 @@ bool 取得网页对话框出站占用(const 网页对话框目标& 目标,
         || !是有效UTF8(目标.公开会话标识)
         || !是合法对话框标识(目标.对话框标识)) return false;
     try {
+        std::lock_guard 操作锁(队列操作互斥);
         std::lock_guard 锁(共享状态.互斥);
         if (!共享状态.运行中 || !共享状态.接纳提交
             || !共享状态.停止信号 || *共享状态.停止信号 != 0
@@ -1225,6 +1308,7 @@ bool 核验网页对话框出站占用可用(const 网页对话框目标& 目标
         || !是有效UTF8(目标.公开会话标识)
         || !是合法对话框标识(目标.对话框标识)) return false;
     try {
+        std::lock_guard 操作锁(队列操作互斥);
         std::lock_guard 锁(共享状态.互斥);
         if (!共享状态.运行中 || !共享状态.接纳提交
             || !共享状态.停止信号 || *共享状态.停止信号 != 0
@@ -1243,6 +1327,7 @@ bool 释放网页对话框出站占用(const 网页对话框目标& 目标,
         || !是有效UTF8(目标.公开会话标识)
         || !是合法对话框标识(目标.对话框标识)) return false;
     try {
+        std::lock_guard 操作锁(队列操作互斥);
         std::lock_guard 锁(共享状态.互斥);
         // 旧会话已经结束或切换时，本调用旧租约已不在当前宿主中；
         // 绝不按调用编码单独触碰新会话的页面。
@@ -1264,24 +1349,34 @@ bool 释放网页对话框出站占用(const 网页对话框目标& 目标,
         || !是有效UTF8(目标.公开会话标识)
         || !是合法对话框标识(目标.对话框标识)) return {};
     try {
-        std::lock_guard 锁(共享状态.互斥);
-        if (!共享状态.运行中) return {网页定向发送状态::宿主未运行};
-        if (共享状态.会话标识 != 目标.公开会话标识)
-            return {网页定向发送状态::会话失效};
-        auto* 页面 = 查找传输页面(目标);
-        if (!页面) return {网页定向发送状态::对话框未登记};
-        if (页面->出站占用身份 != 占用身份)
-            return {网页定向发送状态::页面被占用};
-        for (auto& 项 : 页面->提交组) {
-            if (项.事实.提交序号 != 提交序号) continue;
-            if (项.事实.目标 != 目标 || !项.结果.提交序号
-                || *项.结果.提交序号 != 提交序号)
-                throw std::runtime_error("outbound cancel item identity corrupted");
-            if (项.结果.状态 == 网页定向发送状态::已排队)
-                项.结果.状态 = 网页定向发送状态::已取消;
-            return 项.结果;
+        std::lock_guard 操作锁(队列操作互斥);
+        const 网页输出队列回调组* 队列 = nullptr;
+        网页待发送项* 命中 = nullptr;
+        {
+            std::lock_guard 锁(共享状态.互斥);
+            if (!共享状态.运行中) return {网页定向发送状态::宿主未运行};
+            if (共享状态.会话标识 != 目标.公开会话标识) return {网页定向发送状态::会话失效};
+            auto* 页面 = 查找传输页面(目标);
+            if (!页面) return {网页定向发送状态::对话框未登记};
+            if (页面->出站占用身份 != 占用身份) return {网页定向发送状态::页面被占用};
+            for (auto& 项 : 页面->提交组) if (项.提交序号 == 提交序号) {
+                if (命中 || 项.目标 != 目标 || 项.结果.提交序号 != 提交序号 || !项.正式消息编码)
+                    throw std::runtime_error("outbound cancel item identity corrupted");
+                命中 = &项;
+            }
+            if (!命中) return {网页定向发送状态::提交不存在};
+            if (命中->结果.状态 != 网页定向发送状态::已排队) return 命中->结果;
+            队列 = 共享状态.输出队列;
         }
-        return {网页定向发送状态::提交不存在};
+        if (!队列) throw std::runtime_error("outbound cancellation provider missing");
+        const auto 取消 = 队列->取消(目标, 提交序号);
+        if (取消.状态 != 网页输出队列状态::已移除 || !取消.项
+            || 取消.项->目标 != 目标 || 取消.项->提交序号 != 提交序号
+            || 取消.项->正式消息编码 != 命中->正式消息编码)
+            throw std::runtime_error("outbound cancellation and formal queue disagree");
+        std::lock_guard 锁(共享状态.互斥);
+        命中->结果.状态 = 网页定向发送状态::已取消;
+        return 命中->结果;
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"取消网页提交", L"页面传输结构读取失败。");
     }
@@ -1291,6 +1386,7 @@ bool 释放网页对话框出站占用(const 网页对话框目标& 目标,
     if (!提交序号 || 目标.公开会话标识.empty() || !是有效UTF8(目标.公开会话标识)
         || !是合法对话框标识(目标.对话框标识)) return {};
     try {
+        std::lock_guard 操作锁(队列操作互斥);
         std::lock_guard 锁(共享状态.互斥);
         if (!共享状态.运行中) return {网页定向发送状态::宿主未运行};
         if (共享状态.会话标识 != 目标.公开会话标识) return {网页定向发送状态::会话失效};
@@ -1298,9 +1394,9 @@ bool 释放网页对话框出站占用(const 网页对话框目标& 目标,
         if (!页面) return {网页定向发送状态::对话框未登记};
         const 网页待发送项* 命中 = nullptr;
         for (const auto& 项 : 页面->提交组) {
-            if (项.事实.目标 != 目标 || !项.结果.提交序号 || *项.结果.提交序号 != 项.事实.提交序号)
+            if (项.目标 != 目标 || 项.结果.提交序号 != 项.提交序号 || !项.正式消息编码)
                 throw std::runtime_error("outbound query item identity corrupted");
-            if (项.事实.提交序号 != 提交序号) continue;
+            if (项.提交序号 != 提交序号) continue;
             if (命中) throw std::runtime_error("outbound query duplicate submission");
             命中 = &项;
         }
@@ -1359,7 +1455,19 @@ bool 释放网页对话框出站占用(const 网页对话框目标& 目标,
     网页对话消息接收函数 消息接收,
     const 网页服务输入回调组& 服务输入,
     const 网页对话框事实回调组& 对话框事实) noexcept {
+    (void)停止请求; (void)消息接收; (void)服务输入; (void)对话框事实;
+    return {网页对话宿主状态::内部错误};
+}
+
+网页对话宿主结果 运行本地网页对话宿主(
+    const volatile std::sig_atomic_t& 停止请求,
+    网页对话消息接收函数 消息接收,
+    const 网页服务输入回调组& 服务输入,
+    const 网页对话框事实回调组& 对话框事实,
+    const 网页输出队列回调组& 输出队列) noexcept {
     try {
+        if (!输出队列.入列 || !输出队列.领取 || !输出队列.取消 || !输出队列.清空)
+            return {网页对话宿主状态::内部错误};
         if (!消息接收 || !对话框事实.确认页面 || !对话框事实.发送完成)
             return {网页对话宿主状态::会话绑定失败};
         const bool 有服务输入 = 服务输入.会话开始 || 服务输入.会话结束
@@ -1404,7 +1512,7 @@ bool 释放网页对话框出站占用(const 网页对话框目标& 目标,
             + std::to_string(ntohs(地址.sin_port)) + 基础路径;
         网页服务会话租约 服务会话(公开会话标识, 服务输入);
         网页对话会话租约 会话;
-        if (!会话.开始(公开会话标识, 停止请求)) return {网页对话宿主状态::运行失败};
+        if (!会话.开始(公开会话标识, 停止请求, 输出队列)) return {网页对话宿主状态::运行失败};
         if (!服务会话.开始()) return {网页对话宿主状态::会话绑定失败};
         if (!启动系统浏览器(浏览器地址)) {
             return {网页对话宿主状态::浏览器启动失败};
@@ -1435,10 +1543,7 @@ bool 释放网页对话框出站占用(const 网页对话框目标& 目标,
             (void)处理请求(客户端.取得(), 基础路径, 公开会话标识, 页面,
                 请求结束, 消息接收, 服务输入, 对话框事实);
         }
-        {
-            std::lock_guard 锁(共享状态.互斥);
-            停止接纳提交();
-        }
+        停止接纳提交();
         return {请求结束
             ? 网页对话宿主状态::用户结束
             : 网页对话宿主状态::停止信号结束};
