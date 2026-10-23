@@ -11144,15 +11144,44 @@ std::optional<新任务条件子需求项> 新_任务类::转换因果静态状�
 
 新任务因果子需求提议 新_任务类::提议任务因果子需求(
     稳定编码 T, const std::vector<新因果任务等待边>& edges) const {
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    // 只缓冲观察；所有局部业务锁退出后才执行日志I/O。
+    struct 因果监控缓冲 {
+        std::wstring 内容;
+        ~因果监控缓冲() noexcept {
+            try { (void)记录调试日志(L"CAUSAL_PREPARATION", L"任务筹办", L"提议任务因果子需求", 内容); }
+            catch (...) {}
+        }
+    } 监控;
+    const auto 观察 = [&](auto 写入) noexcept {
+        try {
+            if (监控.内容.size() >= 32768) return;
+            std::wostringstream 文本; 写入(文本);
+            监控.内容 += 文本.str().substr(0, 4096); 监控.内容 += L'\n';
+        } catch (...) {}
+    };
+    观察([&](auto& s) { s << L"进入因果子需求提议；任务定位=" << T.值; });
+#endif
     const 新因果筹办读取接口* reader = nullptr;
     稳定编码 featureType;
     {
         std::lock_guard 锁(新任务互斥);
         const auto task = 获取任务(T);
         const auto demand = task ? 需求服务_.获取需求(task->需求节点) : std::nullopt;
-        if (!task || !demand || demand->活动状态 == 新需求活动状态::失活 || !因果筹办读取_) return {};
+        if (!task || !demand || demand->活动状态 == 新需求活动状态::失活 || !因果筹办读取_) {
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+            观察([&](auto& s) { s << L"入口未进入逆推；任务存在=" << task.has_value()
+                << L"；需求存在=" << demand.has_value() << L"；读取接口已配置=" << (因果筹办读取_ != nullptr); });
+#endif
+            return {};
+        }
         // 无法表示成静态状态的目标保持真实能力边界，不填一个伪造的状态值。
-        if (!是条件包含目标(demand->目标, 特征概念服务_, 二次特征概念服务_)) return {};
+        if (!是条件包含目标(demand->目标, 特征概念服务_, 二次特征概念服务_)) {
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+            观察([](auto& s) { s << L"未进入逆推：目标不能表示为条件包含的静态状态"; });
+#endif
+            return {};
+        }
         reader = 因果筹办读取_; featureType = demand->目标.目标特征类型概念节点;
         for (const auto& edge : edges) {
             贡献要求(有效(edge.等待任务节点) && 有效(edge.被等待任务节点)
@@ -11160,6 +11189,9 @@ std::optional<新任务条件子需求项> 新_任务类::转换因果静态状�
         }
     }
     const auto rules = reader->读取先天结果规则(featureType);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    观察([&](auto& s) { s << L"先天结果规则数量=" << rules.size(); });
+#endif
     std::vector<std::optional<新先天因果信息>> options;
     if (rules.empty()) options.push_back({});
     else {
@@ -11173,7 +11205,19 @@ std::optional<新任务条件子需求项> 新_任务类::转换因果静态状�
     std::vector<新任务因果子需求提议> alternatives;
     for (const auto& rule : options) {
         const auto request = 构造因果筹办请求(T, rule, edges);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+        观察([&](auto& s) { s << L"即将调用因果逆推；先天规则=" << rule.has_value()
+            << L"；结算上下文=" << request.结算上下文.has_value();
+            if (request.结算上下文) s << L"；成员枚举完整=" << request.结算上下文->成员枚举完整
+                << L"；正式任务成员数量=" << request.结算上下文->正式任务成员组.size(); });
+#endif
         auto readback = reader->逆推(request);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+        观察([&](auto& s) { s << L"因果逆推已返回；结算分支数量=" << readback.分支组.size()
+            << L"；通用图分支数量=" << readback.通用反查图.分支组.size()
+            << L"；主动方法参考数量=" << readback.主动方法参考组.size()
+            << L"；能力缺口数量=" << readback.能力缺口组.size(); });
+#endif
         if (readback.状态 == 新因果筹办读取状态::材料已变化) {
             新任务因果子需求提议 changed; changed.状态 = 新任务因果子需求提议状态::材料已变化; return changed;
         }
@@ -11194,7 +11238,12 @@ std::optional<新任务条件子需求项> 新_任务类::转换因果静态状�
         proposal.状态 = readback.状态 == 新因果筹办读取状态::无已知路径
             ? 新任务因果子需求提议状态::无路径 : 新任务因果子需求提议状态::无需子需求;
         const auto causesCycle = [&](稳定编码 candidate) {
-            if (candidate == T) return true;
+            if (candidate == T) {
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+                观察([](auto& s) { s << L"循环原因：结算来源候选就是当前筹办任务自身"; });
+#endif
+                return true;
+            }
             std::lock_guard 锁(新任务互斥);
             const auto task = 获取任务(T); 贡献要求(task.has_value());
             const auto child = 获取任务(candidate); 贡献要求(child.has_value());
@@ -11202,19 +11251,34 @@ std::optional<新任务条件子需求项> 新_任务类::转换因果静态状�
             std::set<稳定编码> seen;
             while (demand && demand->父需求节点) {
                 贡献要求(seen.insert(demand->节点).second);
-                if (child->需求节点 == *demand->父需求节点) return true;
+                if (child->需求节点 == *demand->父需求节点) {
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+                    观察([](auto& s) { s << L"循环原因：结算来源候选对应当前需求的祖先需求"; });
+#endif
+                    return true;
+                }
                 demand = 需求服务_.获取需求(*demand->父需求节点);
             }
             std::vector<稳定编码> pending{candidate}; seen.clear();
             while (!pending.empty()) {
                 const auto n = pending.back(); pending.pop_back();
-                if (n == T) return true;
+                if (n == T) {
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+                    观察([](auto& s) { s << L"循环原因：候选任务等待链回到当前任务"; });
+#endif
+                    return true;
+                }
                 if (!seen.insert(n).second) continue;
                 for (const auto& edge : edges) if (edge.等待任务节点 == n) pending.push_back(edge.被等待任务节点);
             }
             return false;
         };
         for (const auto& branch : readback.分支组) {
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+            观察([&](auto& s) { s << L"结算分支；状态枚举=" << static_cast<int>(branch.状态)
+                << L"；候选事实=" << branch.候选事实.has_value()
+                << L"；条件数量=" << branch.全部条件.size(); });
+#endif
             for (const auto& condition : branch.全部条件)
                 if (condition.状态 != 新因果条件读回状态::满足) proposal.未满足关系组.push_back(condition);
             if (branch.候选事实) {
@@ -11231,7 +11295,14 @@ std::optional<新任务条件子需求项> 新_任务类::转换因果静态状�
                             proposal.未满足关系组.push_back({condition.序号, condition.种类,
                                 condition.关系概念, 新因果条件读回状态::尚未具备, {candidate.任务节点}});
                 }
-                if (candidate.既有消费 || !candidate.当前任务状态 || causesCycle(candidate.任务节点)) continue;
+                if (candidate.既有消费 || !candidate.当前任务状态 || causesCycle(candidate.任务节点)) {
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+                    观察([&](auto& s) { s << L"不继续推进候选；已有消费=" << candidate.既有消费.has_value()
+                        << L"；有当前状态=" << candidate.当前任务状态.has_value()
+                        << L"；若两项均非阻断则为循环依赖"; });
+#endif
+                    continue;
+                }
                 const auto state = static_cast<新任务状态>(*candidate.当前任务状态);
                 if (state != 新任务状态::已失败 && state != 新任务状态::已取消 && state != 新任务状态::已结算)
                     proposal.继续推进任务组.push_back(candidate.任务节点);
@@ -11333,6 +11404,12 @@ std::optional<新任务条件子需求项> 新_任务类::转换因果静态状�
             proposal.状态 = 新任务因果子需求提议状态::路径待选择;
             proposal.继续推进任务组.clear();
         }
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+        观察([&](auto& s) { s << L"本分支提议完成；子需求数量=" << proposal.子需求项组.size()
+            << L"；继续推进任务数量=" << proposal.继续推进任务组.size()
+            << L"；未满足关系数量=" << proposal.未满足关系组.size()
+            << L"；路径待选择=" << proposal.路径选择未确定; });
+#endif
         alternatives.push_back(std::move(proposal));
     }
     // 多条真正可行OR路径没有既有唯一选择时，不擅自把全图合为AND。

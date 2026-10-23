@@ -10,6 +10,9 @@
 #include <stdexcept>
 #include <tuple>
 #include <utility>
+#ifdef HY_EGO_DEBUG_LOG_METHOD_LOOKUP
+#include <sstream>
+#endif
 
 #include "新_存在类.h"
 #include "新_场景类.h"
@@ -4257,6 +4260,48 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
 
 新方法候选结果 新_方法类::查询候选方法(
     const 新方法候选查询& 查询) const noexcept {
+#ifdef HY_EGO_DEBUG_LOG_METHOD_LOOKUP
+    // 守卫在业务锁外创建，所有返回路径均先释放方法锁，再输出可选投影。
+    struct 查找监控 final {
+        std::wstring 内容;
+        bool 已截断 = false;
+        void 追加(std::wstring_view 行) noexcept {
+            try {
+                if (已截断) return;
+                if (行.size() > 65536 || 内容.size() > 65536 - 行.size()) {
+                    内容 += L"监控文本已截断；不裁剪实际方法遍历或查询结果。\n";
+                    已截断 = true;
+                    return;
+                }
+                内容.append(行);
+                内容 += L'\n';
+            } catch (...) {} // 仅丢失诊断，不改变业务结果。
+        }
+        ~查找监控() noexcept {
+            try {
+                (void)记录调试日志(L"METHOD_LOOKUP", L"方法查找", L"查询候选方法", 内容);
+            } catch (...) {}
+        }
+    } 监控;
+    const auto 记录监控 = [&](const auto& 写入) noexcept {
+        try {
+            std::wostringstream 行;
+            写入(行);
+            监控.追加(行.str());
+        } catch (...) {}
+    };
+    const auto 写编码组 = [](auto& 文本, const auto& 组) {
+        文本 << L"数量=" << 组.size() << L" [";
+        for (std::size_t i = 0; i < 组.size() && i < 8; ++i) 文本 << 组[i].值 << L",";
+        if (组.size() > 8) 文本 << L"后续编码省略";
+        文本 << L"]";
+    };
+    记录监控([&](auto& 文本) {
+        文本 << L"查询开始；所需FT="; 写编码组(文本, 查询.涉及特征类型概念组);
+        文本 << L"；所需存在概念="; 写编码组(文本, 查询.作用存在概念组);
+        文本 << L"；所需结果概念="; 写编码组(文本, 查询.可能结果概念组);
+    });
+#endif
     新方法候选结果 结果;
     try {
         std::lock_guard 锁(新方法互斥);
@@ -4276,14 +4321,36 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
             结果.状态 = 新方法操作状态::结构不一致;
             return 结果;
         }
+#ifdef HY_EGO_DEBUG_LOG_METHOD_LOOKUP
+        记录监控([&](auto& 文本) {
+            文本 << L"方法根=" << 新方法组织根节点.值 << L"；正式成员数量=" << 成员组->size();
+        });
+#endif
         for (const auto 方法节点 : *成员组) {
             const auto 方法 = 读取方法信息(方法节点, 特征概念服务_, *this);
             if (!方法) {
+#ifdef HY_EGO_DEBUG_LOG_METHOD_LOOKUP
+                记录监控([&](auto& 文本) { 文本 << L"遍历方法=" << 方法节点.值 << L"；方法读取失败"; });
+#endif
                 结果.状态 = 新方法操作状态::结构不一致;
                 结果.方法节点组.clear();
                 return 结果;
             }
-            if (是历史服务结算方法(方法节点)) continue;
+#ifdef HY_EGO_DEBUG_LOG_METHOD_LOOKUP
+            记录监控([&](auto& 文本) {
+                文本 << L"已读取方法头=" << 方法节点.值
+                    << L"；启用状态=" << static_cast<int>(方法->启用状态)
+                    << L"；来源副本=" << 方法->来源方法节点.has_value()
+                    << L"；条件结果对数量=" << 方法->条件结果组.size() << L"；头FT=";
+                写编码组(文本, 方法->方法头.涉及特征类型概念组);
+            });
+#endif
+            if (是历史服务结算方法(方法节点)) {
+#ifdef HY_EGO_DEBUG_LOG_METHOD_LOOKUP
+                记录监控([&](auto& 文本) { 文本 << L"排除方法=" << 方法节点.值 << L"；原因=历史结算方法"; });
+#endif
+                continue;
+            }
             if (方法->来源方法节点 || 方法->启用状态 != 新方法启用状态::启用
                 || (查询.作用域 && 方法->作用域 != *查询.作用域)
                 || (查询.实现方式 && 方法->实现方式 != *查询.实现方式)
@@ -4292,11 +4359,31 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
                 || !包含全部(方法->方法头.涉及特征类型概念组,
                     查询.涉及特征类型概念组)
                 || !包含全部(方法->方法头.可能结果概念组,
-                    查询.可能结果概念组)) continue;
+                    查询.可能结果概念组)) {
+#ifdef HY_EGO_DEBUG_LOG_METHOD_LOOKUP
+                记录监控([&](auto& 文本) {
+                    const wchar_t* 原因 = 方法->来源方法节点 ? L"方法副本"
+                        : 方法->启用状态 != 新方法启用状态::启用 ? L"方法未启用"
+                        : 查询.作用域 && 方法->作用域 != *查询.作用域 ? L"作用域不匹配"
+                        : 查询.实现方式 && 方法->实现方式 != *查询.实现方式 ? L"实现方式不匹配"
+                        : !包含全部(方法->方法头.作用存在概念组, 查询.作用存在概念组) ? L"作用存在概念不匹配"
+                        : !包含全部(方法->方法头.涉及特征类型概念组, 查询.涉及特征类型概念组) ? L"目标特征类型不匹配"
+                        : L"结果概念不匹配";
+                    文本 << L"排除方法=" << 方法节点.值 << L"；原因=" << 原因;
+                });
+#endif
+                continue;
+            }
             结果.方法节点组.push_back(方法节点);
+#ifdef HY_EGO_DEBUG_LOG_METHOD_LOOKUP
+            记录监控([&](auto& 文本) { 文本 << L"纳入候选方法=" << 方法节点.值; });
+#endif
         }
         std::sort(结果.方法节点组.begin(), 结果.方法节点组.end());
         结果.状态 = 新方法操作状态::已找到;
+#ifdef HY_EGO_DEBUG_LOG_METHOD_LOOKUP
+        记录监控([&](auto& 文本) { 文本 << L"查询完成；候选数量=" << 结果.方法节点组.size(); });
+#endif
         return 结果;
     } catch (...) {
         结果.状态 = 新方法操作状态::资源失败;
