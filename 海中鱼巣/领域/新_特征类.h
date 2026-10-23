@@ -200,6 +200,23 @@ struct 新特征存在引用准备结果 final {
     新特征I64准备状态 状态 = 新特征I64准备状态::入口拒绝;
     std::optional<新特征存在引用更新准备> 准备;
 };
+class 新特征需求引用更新准备 final {
+public:
+    新特征需求引用更新准备(新特征需求引用更新准备&&) noexcept;
+    新特征需求引用更新准备& operator=(新特征需求引用更新准备&&) noexcept;
+    ~新特征需求引用更新准备() noexcept;
+    新特征需求引用更新准备(const 新特征需求引用更新准备&) = delete;
+    新特征需求引用更新准备& operator=(const 新特征需求引用更新准备&) = delete;
+private:
+    struct 实现;
+    explicit 新特征需求引用更新准备(std::unique_ptr<实现>) noexcept;
+    std::unique_ptr<实现> 实现_;
+    friend class 新_特征类;
+};
+struct 新特征需求引用准备结果 final {
+    新特征I64准备状态 状态 = 新特征I64准备状态::入口拒绝;
+    std::optional<新特征需求引用更新准备> 准备;
+};
 
 enum class 新特征比较状态 : std::uint8_t {
     已完成 = 1,
@@ -319,6 +336,13 @@ public:
     新特征值添加结果 完成顶层存在引用更新(新特征存在引用更新准备&) noexcept;
     void 结束顶层存在引用更新(新特征存在引用更新准备&) noexcept;
     void 取消顶层存在引用更新(新特征存在引用更新准备&) noexcept;
+    void 装配需求引用读取接口(const 特征需求成员读取接口*) noexcept;
+    新特征需求引用准备结果 准备顶层需求引用更新(稳定编码 特征节点, 稳定编码 需求节点) noexcept;
+    新特征I64提交结果 提交顶层需求引用更新(新特征需求引用更新准备&,
+        const std::vector<基础封存追加片段>&) noexcept;
+    新特征值添加结果 完成顶层需求引用更新(新特征需求引用更新准备&) noexcept;
+    void 结束顶层需求引用更新(新特征需求引用更新准备&) noexcept;
+    void 取消顶层需求引用更新(新特征需求引用更新准备&) noexcept;
     新特征引用集合保护结果 捕获引用集合更新保护(稳定编码) const noexcept;
     新特征引用集合准备结果 准备顶层引用集合更新(稳定编码 特征节点, 稳定编码 新准确材料节点) noexcept;
     新特征引用集合准备结果 准备顶层消息集合更新(稳定编码 特征节点,
@@ -458,7 +482,9 @@ public:
 private:
     新特征I64准备结果 准备顶层准确值更新(
         稳定编码 特征节点, const 新特征准确值& 新值, bool 引用集合,
-        新消息待发表凭据* 待发表消息 = nullptr, bool 单存在引用 = false) noexcept;
+        新消息待发表凭据* 待发表消息 = nullptr, bool 单存在引用 = false,
+        bool 单需求引用 = false) noexcept;
+    const 特征需求成员读取接口* 需求引用读取接口_ = nullptr;
     const 特征存在成员读取接口* 存在成员身份读取接口_ = nullptr;
     新特征值添加结果 完成添加值归组(
         const 新特征信息& 原特征, const 新特征准确值& 新值,

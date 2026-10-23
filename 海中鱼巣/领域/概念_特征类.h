@@ -23,7 +23,8 @@ enum class 特征概念材料物理类型 : std::int64_t {
     二维二值格 = 5,
     三维二值格 = 6,
     // 值由稳定编码直接引用一个存在实例；值域由存在概念限定。
-    存在节点引用 = 7
+    存在节点引用 = 7,
+    需求节点引用 = 8
 };
 
 struct 特征概念I64闭区间 final {
@@ -107,7 +108,8 @@ enum class 特征概念比较规则 : std::int64_t {
     服务任务集合身份判等 = 4,
     需求集合身份判等 = 5,
     存在集合身份判等 = 6,
-    消息集合身份判等 = 7
+    消息集合身份判等 = 7,
+    需求身份精确 = 8
 };
 
 enum class 特征概念聚合规则 : std::int64_t {
@@ -236,10 +238,17 @@ struct 特征需求成员读取结果 final {
     std::optional<特征需求成员身份> 身份;
 };
 
+struct 特征需求引用读取结果 final {
+    特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
+    std::optional<特征需求成员身份> 身份;
+    std::vector<基础联合节点快照> 身份保护;
+};
+
 class 特征需求成员读取接口 {
 public:
     virtual ~特征需求成员读取接口() = default;
     virtual 特征需求成员读取结果 读取需求集合成员身份(稳定编码) const noexcept = 0;
+    virtual 特征需求引用读取结果 读取需求节点引用身份(稳定编码) const noexcept;
 };
 
 struct 特征需求集合条件比较结果 final {
@@ -414,6 +423,8 @@ public:
         稳定编码, const 特征概念准确值&, const 特征概念存在集合值域&,
         const 新_特征值类&) const noexcept;
     稳定编码 存在集合成员保护字段() const noexcept;
+    稳定编码 需求引用保护字段() const noexcept;
+    稳定编码 需求域引用保护字段() const noexcept;
     特征概念规则状态 确保存在集合材料保护(
         稳定编码, 稳定编码, const 新_特征值类&) noexcept;
     特征概念规则状态 核验存在集合材料保护(
