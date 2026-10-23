@@ -266,6 +266,8 @@ struct 新自我消息处理结果 final {
     std::optional<新自我等待复核决议> 等待复核决议;
     std::optional<新自我等待复核接收状态> 等待复核接收状态;
     std::optional<新外部服务需求采用结果> 外部服务需求采用;
+    std::optional<新任务贡献治理返回材料> 未确认直接贡献治理;
+    std::optional<新服务值最终消费结果> 未确认直接最终消费;
 };
 
 enum class 新自我消息接收状态 : std::uint8_t {
@@ -288,6 +290,7 @@ struct 新自我线程初始化结果 final {
     std::optional<新自我本能双根初始化结果> 本能双根结果;
     std::optional<新需求建立结果> 完成服务需求建立结果;
     std::optional<新服务值结算登记结果> 服务结算登记;
+    std::optional<新服务值治理初始化结果> 服务结算治理;
     std::optional<新需求建立结果> 需要服务对象需求建立结果;
     std::optional<稳定编码> 自我所在场景;
     std::optional<稳定编码> 自我存在;

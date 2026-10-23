@@ -455,6 +455,7 @@ public:
     新服务要求采用关系结果 查询服务要求采用关系(稳定编码 确认节点) const noexcept;
     新服务要求采用关系结果 查询服务需求取得来源(稳定编码 取得执行节点) const noexcept;
     新服务要求确认读取结果 读取服务要求确认身份(稳定编码 确认节点) const noexcept;
+    新部分服务要求读取结果 读取部分服务要求(稳定编码 要求节点) const noexcept;
     新服务要求确认读取结果 复核服务要求确认语义(稳定编码 确认节点) const noexcept;
     新服务要求执行守卫结果 复核需求服务要求语义(稳定编码 需求节点) const noexcept;
     std::optional<std::int64_t> 查询需求权重(
@@ -474,7 +475,8 @@ private:
     新需求操作状态 迁移既有自我需求归属(稳定编码 唯一自我) noexcept;
     friend class 新_自我线程类;
     新外部服务需求采用结果 建立或取得外部服务需求已核验(
-        const 新完整服务需求材料包&) noexcept;
+        const 新完整服务需求材料包&,
+        std::optional<稳定编码> 取得执行节点 = std::nullopt) noexcept;
     // 只供self在核验父需求与来源任务一一对应后采用任务条件子目标。
     新需求建立结果 建立或取得普通需求已核验(
         const 新普通需求建立请求& 请求,

@@ -13,12 +13,20 @@
 namespace 海中鱼巣 {
 inline constexpr std::string_view 新本能函数登记名_服务值结算 = "服务值结算";
 inline constexpr std::string_view 新本能函数登记名_获取服务对象 =
+    "builtin.service_object.acquire.v2";
+inline constexpr std::string_view 新本能函数登记名_旧两参数获取服务对象 =
     "builtin.service_object.acquire.v1";
 inline constexpr std::string_view 新本能函数登记名_建立连接 =
+    "builtin.connection.establish.v2";
+inline constexpr std::string_view 新本能函数登记名_旧六参数建立连接 =
     "builtin.connection.establish.v1";
 inline constexpr std::string_view 新本能函数登记名_主动获取服务需求 =
+    "builtin.service_requirement.acquire_active.v2";
+inline constexpr std::string_view 新本能函数登记名_旧主动获取服务需求 =
     "builtin.service_requirement.acquire_active.v1";
 inline constexpr std::string_view 新本能函数登记名_被动获取服务需求 =
+    "builtin.service_requirement.acquire_passive.v2";
+inline constexpr std::string_view 新本能函数登记名_旧被动获取服务需求 =
     "builtin.service_requirement.acquire_passive.v1";
 
 // 稳定程序内登记名不是自然语言方法名称，也不作为能力判断依据。

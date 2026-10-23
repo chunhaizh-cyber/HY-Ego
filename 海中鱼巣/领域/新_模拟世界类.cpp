@@ -151,10 +151,24 @@ struct 新_模拟世界类::实现 final {
     std::vector<新方法参数角色绑定> 通用绑定;
     std::map<稳定编码,新模拟有序参数输入> 通用参数;
     std::map<稳定编码,材料物理类型> 通用材料;
+    struct 任务投影 final { 稳定编码 来源; 新任务虚拟存在特征组 本地; };
+    std::map<稳定编码,任务投影> 通用任务;
     std::vector<稳定编码> 通用节点,通用字段,通用外部边;
     std::vector<新模拟输入事件> 通用事件;
     std::size_t 事件游标=0;
     std::int64_t 模拟步骤=0;
+    bool 记录复制读取=false,已读取复制上下文=false;
+    enum class 写入来源 : std::uint8_t { 未写入, 方法, 环境 };
+    bool 记录写回 = false, 写回窗口已关闭 = false;
+    std::map<稳定编码, 写入来源> 最后写入来源组;
+    std::vector<新模拟任务成员读取> 任务成员读取组;
+    写入来源* 准备写回槽(稳定编码 特征) {
+        if (!记录写回) return nullptr;
+        const auto 槽 = 最后写入来源组.find(特征);
+        if (槽 == 最后写入来源组.end())
+            throw std::runtime_error("simulation write target has no call-local attribution slot");
+        return &槽->second;
+    }
     void 收集追加(const 基础节点组追加结果& p) {
         通用节点.insert(通用节点.end(),p.新节点组.begin(),p.新节点组.end());
         通用字段.insert(通用字段.end(),p.追加字段关系组.begin(),p.追加字段关系组.end());
@@ -179,13 +193,16 @@ using 问题编码格式 = 方法问题归档内部::格式;
 constexpr const char* 旧问题格式 = "方法问题场景归档/1";
 constexpr const char* 组织问题格式 = "方法问题场景归档/2";
 constexpr const char* 有序参数问题格式 = "方法问题场景归档/3";
+constexpr const char* 任务成员问题格式 = "方法问题场景归档/4";
 问题编码格式 解析问题格式(const std::string& name) {
     if (name==旧问题格式) return 问题编码格式::旧方法副本;
     if (name==组织问题格式) return 问题编码格式::任务执行组织;
     if (name==有序参数问题格式) return 问题编码格式::有序参数任务执行组织;
+    if (name==任务成员问题格式) return 问题编码格式::任务成员有序参数任务执行组织;
     throw std::runtime_error("不支持的归档格式");
 }
 问题编码格式 材料格式(const 新方法问题反馈材料& x) {
+    if (方法问题归档内部::需要格式4(x)) return 问题编码格式::任务成员有序参数任务执行组织;
     if (方法问题归档内部::含有序参数(x)) {
         if (x.采用来源 != 新方法问题采用来源::任务执行组织)
             throw std::runtime_error("旧方法副本不能保存有序参数材料");
@@ -334,7 +351,8 @@ std::optional<稳定编码> 查归档身份(稳定编码 task,稳定编码 execu
         const auto format=材料格式(value);
         batch.原值(sample,字段组[归档格式],基础值{std::string{
             format==问题编码格式::旧方法副本 ? 旧问题格式 :
-            format==问题编码格式::任务执行组织 ? 组织问题格式 : 有序参数问题格式}});
+            format==问题编码格式::任务执行组织 ? 组织问题格式 :
+            format==问题编码格式::有序参数任务执行组织 ? 有序参数问题格式 : 任务成员问题格式}});
         batch.原值(sample,字段组[归档身份],基础值{问题身份(value)});
         batch.原值(sample,字段组[归档载荷],基础值{方法问题归档内部::编码问题头(value,format)});
         写归档快照(batch,sample,value.动作前场景,1,format);
@@ -532,6 +550,7 @@ std::optional<新特征信息> 新_模拟世界类::读取模拟特征(稳定编
             if(s.通用) {
                 const auto p=s.通用参数.find(n);
                 if(p==s.通用参数.end()||p->second.规格.信息类型!=新方法参数信息类型::特征) return {};
+                if(s.记录复制读取&&p->second.复制上下文)s.已读取复制上下文=true;
                 新特征信息 f;f.节点=n;f.特征概念节点=p->second.规格.范围概念节点;
                 const auto def=s.方法.读取模拟特征范围(f.特征概念节点);
                 if(!def) return {};
@@ -580,8 +599,43 @@ std::optional<新特征值信息> 新_模拟世界类::读取模拟特征值材�
     } catch (...) { return std::nullopt; }
 }
 std::optional<新任务虚拟存在读回> 新_模拟世界类::读取任务虚拟存在引用(const 新任务虚拟存在引用& v) const noexcept {
+    if(!实现_)return {};
+    std::lock_guard lock(实现_->互斥);
+    if(实现_->通用) {
+        const auto f=读取任务虚拟存在特征组(v);
+        return f?std::optional<新任务虚拟存在读回>{{v,f->状态.特征类型概念节点,f->状态.当前值}}:std::nullopt;
+    }
     const auto r = 读取样例(); if (!r || r->来源任务 != v) return std::nullopt;
     return 新任务虚拟存在读回{v,实现_->材料.任务状态类型根,r->任务当前值};
+}
+std::optional<新任务虚拟存在引用> 新_模拟世界类::查找任务虚拟存在引用(稳定编码 T) const noexcept {
+    if(!实现_)return {};
+    auto& s=*实现_;std::lock_guard lock(s.互斥);
+    const auto it=s.通用任务.find(T);
+    if(s.记录复制读取&&it!=s.通用任务.end())s.已读取复制上下文=true;
+    return s.通用&&it!=s.通用任务.end()?std::optional{it->second.本地.引用}:std::nullopt;
+}
+std::optional<新任务虚拟存在特征组> 新_模拟世界类::读取任务虚拟存在特征组(
+    const 新任务虚拟存在引用& ref) const noexcept {
+    if(!实现_)return {};
+    auto& s=*实现_;std::lock_guard lock(s.互斥);
+    const auto it=s.通用任务.find(ref.任务节点);
+    if(!s.通用||it==s.通用任务.end()||it->second.本地.引用!=ref)return {};
+    if(s.记录复制读取)s.已读取复制上下文=true;
+    auto result=it->second.本地;
+    const auto current=[&](新任务虚拟存在特征读回& f) {
+        const auto v=读值(f.特征节点,数值);
+        if(!v)工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取模拟任务治理特征",L"本地治理特征没有可读当前值，禁止回退现实。");
+        f.当前值=*v;
+    };
+    current(result.状态);if(result.服务值)current(*result.服务值);
+    return result;
+}
+std::optional<稳定编码> 新_模拟世界类::读取模拟任务来源(稳定编码 T) const {
+    if(!实现_)return {};
+    auto& s=*实现_;std::lock_guard lock(s.互斥);
+    const auto it=s.通用任务.find(T);
+    return s.通用&&it!=s.通用任务.end()?std::optional{it->second.来源}:std::nullopt;
 }
 新服务值结算本能端口* 新_模拟世界类::获取服务值结算模拟端口() noexcept { return this; }
 std::optional<新服务值结算登记材料> 新_模拟世界类::读取登记材料() const noexcept {
@@ -661,7 +715,8 @@ void 新_模拟世界类::报告并停止(std::string_view) noexcept {
 
 namespace 海中鱼巣 {
 新模拟世界建立结果 新_模拟世界类::建立有序样例(稳定编码 M,
-    const std::vector<新模拟有序参数输入>& 输入,const std::vector<新模拟输入事件>& 事件) {
+    const std::vector<新模拟有序参数输入>& 输入,const std::vector<新模拟输入事件>& 事件,
+    const std::vector<新模拟任务治理输入>& 任务组) {
     if(!实现_||!确保根()) throw std::runtime_error("generic simulation owner unavailable");
     auto& s=*实现_; std::lock_guard lock(s.互斥);
     if(s.已建立||s.通用||s.停止) return {};
@@ -681,7 +736,7 @@ namespace 海中鱼巣 {
     for(std::size_t i=0;i<代表.size();++i)代表[i]=查代表(i);
     for(std::size_t i=0;i<输入.size();++i) if(代表[i]!=i) {
         const auto& a=输入[i];const auto& b=输入[代表[i]];
-        if(a.值!=b.值||a.材料!=b.材料)return {};
+        if(a.值!=b.值||a.材料!=b.材料||a.来源任务成员组!=b.来源任务成员组)return {};
         if(a.规格.信息类型==新方法参数信息类型::特征) {
             if(a.所属存在参数&&b.所属存在参数
                 &&代表.at(a.所属存在参数-1)!=代表.at(b.所属存在参数-1))return {};
@@ -712,6 +767,15 @@ namespace 海中鱼巣 {
                         for(const auto V:*r) {
                             const auto v=s.方法.读取模拟候选材料(V);
                             if(!v)throw std::runtime_error("simulation alias material missing");
+                            if(d.比较规则==特征概念比较规则::服务任务集合身份判等) {
+                                const auto* members=std::get_if<std::vector<std::uint64_t>>(&v->材料);
+                                std::vector<std::uint64_t> sources;
+                                for(const auto T:a.来源任务成员组)sources.push_back(T.值);
+                                std::sort(sources.begin(),sources.end());
+                                sources.erase(std::unique(sources.begin(),sources.end()),sources.end());
+                                if(members&&sources==*members)return true;
+                                continue;
+                            }
                             if(a.材料&&*a.材料==v->材料)return true;
                         }
                         return false;
@@ -727,12 +791,31 @@ namespace 海中鱼巣 {
     for(std::size_t i=0;i<输入.size();++i)
         if(代表[i]==i&&输入[i].规格.信息类型==新方法参数信息类型::存在) E位置.push_back(i);
     std::map<std::size_t,稳定编码> E节点;
-    if(!E位置.empty()) {
-        auto 准备=全局基础数据集.原子建立节点组(std::vector<基础组内新节点>(E位置.size()));
-        if(准备.状态!=基础结构操作状态::已完成||准备.节点组.size()!=E位置.size())
+    std::map<稳定编码,稳定编码> T节点;
+    std::map<稳定编码,bool> 治理源身份;
+    for(const auto& t:任务组) {
+        const auto& f=t.治理特征;
+        if(!有效(f.引用.任务节点)||!有效(f.引用.虚拟存在节点)||!有效(f.引用.状态特征节点)
+            ||f.引用.状态特征节点!=f.状态.特征节点
+            ||(f.服务值&&f.服务值->特征节点==f.状态.特征节点)
+            ||!T节点.emplace(f.引用.任务节点,稳定编码{}).second)
+            throw std::invalid_argument("invalid or duplicate simulation task governance input");
+        const auto identity=[&](稳定编码 n) {
+            if(!有效(n)||!治理源身份.emplace(n,true).second)
+                throw std::invalid_argument("simulation task governance source identities overlap");
+        };
+        identity(f.引用.任务节点);identity(f.引用.虚拟存在节点);identity(f.状态.特征节点);
+        if(f.服务值)identity(f.服务值->特征节点);
+    }
+    if(!E位置.empty()||!任务组.empty()) {
+        const auto count=E位置.size()+任务组.size();
+        auto 准备=全局基础数据集.原子建立节点组(std::vector<基础组内新节点>(count));
+        if(准备.状态!=基础结构操作状态::已完成||准备.节点组.size()!=count)
             throw std::runtime_error("simulation private existence preparation failed");
         s.通用节点=std::move(准备.节点组);s.通用=true;s.通用方法=M;
         for(std::size_t i=0;i<E位置.size();++i)E节点.emplace(E位置[i],s.通用节点[i]);
+        for(std::size_t i=0;i<任务组.size();++i)
+            T节点.at(任务组[i].治理特征.引用.任务节点)=s.通用节点[E位置.size()+i];
     }
     基础节点组追加请求 q;
     const auto 新节点=[&](节点种类 k)->std::size_t {
@@ -742,6 +825,40 @@ namespace 海中鱼巣 {
     };
     const auto 场景=新节点(场景种类);
     q.追加外部关系组.push_back({模拟世界树根节点,基础组内节点引用{场景},基础外部关系类型::父子});
+    struct 任务索引 final { std::size_t Vt,状态F;std::optional<std::size_t> 服务F; };
+    std::vector<任务索引> 任务索引组;
+    for(const auto& input:任务组) {
+        const auto& t=input.治理特征;
+        const auto T=T节点.at(t.引用.任务节点);
+        const auto before=全局基础数据集.查询完整节点结构(T);
+        if(!before.结构||!before.结构->字段组.empty())throw std::runtime_error("simulation private task changed");
+        q.预期既有节点组.push_back(*before.结构);
+        const auto vt=新节点(虚拟种类);
+        q.追加字段组.push_back({T,字段组[类型],基础值{static_cast<std::int64_t>(任务种类)}});
+        q.追加字段组.push_back({T,字段组[根],模拟世界树根节点});
+        q.追加字段组.push_back({T,字段组[虚拟引用],基础组内节点引用{vt}});
+        q.新节点组[vt].字段组.push_back({字段组[任务引用],T});
+        const auto feature=[&](const 新任务虚拟存在特征读回& f) {
+            if(!有效(f.特征类型概念节点)||!有效(f.当前特征概念节点))
+                throw std::invalid_argument("simulation task governance feature concept missing");
+            const auto definition=s.方法.读取模拟特征范围(f.当前特征概念节点);
+            if(!definition||definition->特征类型根!=f.特征类型概念节点
+                ||definition->材料类型!=特征概念材料物理类型::I64标量)
+                throw std::invalid_argument("simulation task governance feature definition disagrees");
+            const auto n=新节点(特征种类);
+            q.新节点组[n].字段组.push_back({字段组[所属],基础组内节点引用{vt}});
+            q.新节点组[n].字段组.push_back({字段组[特征类型],f.当前特征概念节点});
+            q.新节点组[n].字段组.push_back({字段组[数值],基础值{f.当前值}});
+            q.追加外部关系组.push_back({基础组内节点引用{场景},基础组内节点引用{n},基础外部关系类型::父子});
+            return n;
+        };
+        任务索引 idx{vt,feature(t.状态),{}};
+        if(t.服务值)idx.服务F=feature(*t.服务值);
+        q.新节点组[vt].字段组.push_back({字段组[状态特征引用],基础组内节点引用{idx.状态F}});
+        q.追加外部关系组.push_back({基础组内节点引用{场景},T,基础外部关系类型::父子});
+        q.追加外部关系组.push_back({基础组内节点引用{场景},基础组内节点引用{vt},基础外部关系类型::父子});
+        任务索引组.push_back(idx);
+    }
     std::vector<std::size_t> index(输入.size());
     const auto 引用=[&](std::size_t i)->std::variant<稳定编码,基础组内节点引用> {
         i=代表.at(i);
@@ -790,6 +907,12 @@ namespace 海中鱼巣 {
                 if(!位置||位置>输入.size()||输入[位置-1].规格.信息类型!=新方法参数信息类型::存在)return {};
                 成员.push_back(E节点.at(代表[位置-1]).值);
             }
+        for(std::size_t j=0;j<输入.size();++j)if(代表[j]==i)
+            for(const auto source:输入[j].来源任务成员组) {
+                const auto it=T节点.find(source);
+                if(it==T节点.end())throw std::invalid_argument("simulation task member has no copied governance input");
+                成员.push_back(it->second.值);
+            }
         if(!成员.empty()) {
             if(材料&&(!std::holds_alternative<std::vector<std::uint64_t>>(*材料)
                 ||!std::get<std::vector<std::uint64_t>>(*材料).empty()))return {};
@@ -797,12 +920,26 @@ namespace 海中鱼巣 {
             材料=新特征值材料{std::move(成员)};
         }
         if(材料) {
+            const auto 定义=s.方法.读取模拟特征范围(p.规格.范围概念节点);
+            if(!定义)throw std::runtime_error("simulation material definition unavailable");
+            if(定义->比较规则==特征概念比较规则::存在集合身份判等) {
+                const auto* a=std::get_if<std::vector<std::uint64_t>>(&*材料);
+                if(!a)throw std::invalid_argument("simulation existence collection shape mismatch");
+                for(const auto ref:*a)if(std::none_of(E节点.begin(),E节点.end(),[&](const auto& x){return x.second.值==ref;}))
+                    throw std::invalid_argument("simulation collection contains an unmapped source existence");
+            } else if(定义->比较规则==特征概念比较规则::服务任务集合身份判等) {
+                const auto* a=std::get_if<std::vector<std::uint64_t>>(&*材料);
+                if(!a)throw std::invalid_argument("simulation task collection payload mismatch");
+                for(const auto ref:*a)if(std::none_of(T节点.begin(),T节点.end(),[&](const auto& x){return x.second.值==ref;}))
+                    throw std::invalid_argument("simulation task collection contains an unmapped source task");
+            } else if(定义->比较规则==特征概念比较规则::需求集合身份判等) {
+                const auto* a=std::get_if<std::vector<std::uint64_t>>(&*材料);
+                if(!a||!a->empty())throw std::invalid_argument("simulation task/demand collection has no isolated target owner");
+            }
             const auto v=新节点(材料种类);
             q.新节点组[index[i]].字段组.push_back({字段组[当前材料],基础组内节点引用{v}});
             q.新节点组[v].字段组.push_back({字段组[所属],基础组内节点引用{index[i]}});
             std::visit([&](const auto& value){q.新节点组[v].字段组.push_back({字段组[数值],基础值{value}});},*材料);
-            const auto 定义=s.方法.读取模拟特征范围(p.规格.范围概念节点);
-            if(!定义)throw std::runtime_error("simulation material definition unavailable");
             材料物理类型 物理类型;
             switch(定义->材料类型) {
             case 特征概念材料物理类型::U64数组:物理类型=材料物理类型::U64数组;break;
@@ -827,6 +964,21 @@ namespace 海中鱼巣 {
     const auto p=全局基础数据集.原子追加节点组(q);
     if(p.状态!=基础节点组追加状态::已完成)throw std::runtime_error("generic simulation graph publication failed, status="+std::to_string(static_cast<int>(p.状态)));
     s.通用=true;s.通用方法=M;s.收集追加(p);s.通用场景=p.新节点组[场景];
+    for(std::size_t i=0;i<任务组.size();++i) {
+        auto local=任务组[i].治理特征;
+        const auto source=local.引用.任务节点;
+        const auto& idx=任务索引组[i];
+        local.引用={T节点.at(source),p.新节点组[idx.Vt],p.新节点组[idx.状态F]};
+        local.状态.特征节点=local.引用.状态特征节点;
+        if(local.服务值)local.服务值->特征节点=p.新节点组[*idx.服务F];
+        s.通用任务.emplace(local.引用.任务节点,实现::任务投影{source,local});
+        const auto registerF=[&](const 新任务虚拟存在特征读回& f) {
+            新模拟有序参数输入 info{{0,新方法参数信息类型::特征,f.当前特征概念节点}};
+            info.复制上下文=true;
+            s.通用参数.emplace(f.特征节点,std::move(info));
+        };
+        registerF(local.状态);if(local.服务值)registerF(*local.服务值);
+    }
     for(std::size_t i=0;i<输入.size();++i) {
         const auto n=输入[i].规格.信息类型==新方法参数信息类型::存在
             ? E节点.at(代表[i]):p.新节点组[index[i]];
@@ -844,14 +996,102 @@ void 新_模拟世界类::释放有序样例() {
     if(!s.通用)return;
     const auto r=全局基础数据集.原子删除节点结构(s.通用节点,s.通用字段,s.通用外部边);
     if(r!=基础结构操作状态::已完成) throw std::runtime_error("simulation temporary nodes still referenced");
-    s.通用=false;s.通用绑定.clear();s.通用参数.clear();s.通用材料.clear();
+    s.通用=false;s.通用绑定.clear();s.通用参数.clear();s.通用材料.clear();s.通用任务.clear();s.任务成员读取组.clear();
+    s.记录复制读取=false;s.已读取复制上下文=false;
+    s.记录写回=false;s.写回窗口已关闭=false;s.最后写入来源组.clear();
     s.通用节点.clear();s.通用字段.clear();s.通用外部边.clear();s.通用事件.clear();
+}
+std::optional<稳定编码> 新_模拟世界类::读取模拟存在来源(稳定编码 E) const {
+    if(!实现_)return {};
+    auto& s=*实现_;std::lock_guard lock(s.互斥);
+    const auto it=s.通用参数.find(E);
+    if(!s.通用||it==s.通用参数.end()
+        ||it->second.规格.信息类型!=新方法参数信息类型::存在)return {};
+    return it->second.来源存在;
+}
+void 新_模拟世界类::开始记录复制上下文读取() {
+    if(!实现_)throw std::runtime_error("simulation owner unavailable");
+    auto& s=*实现_;std::lock_guard lock(s.互斥);
+    if(!s.通用)throw std::runtime_error("simulation sample unavailable");
+    if (s.记录写回 || s.记录复制读取)
+        throw std::runtime_error("simulation call recording already active");
+    std::map<稳定编码, 实现::写入来源> 新槽组;
+    for (const auto& [节点, 参数] : s.通用参数)
+        if (参数.规格.信息类型 == 新方法参数信息类型::特征)
+            新槽组.emplace(节点, 实现::写入来源::未写入);
+    for (const auto& [任务, 投影] : s.通用任务) {
+        新槽组.emplace(投影.本地.状态.特征节点, 实现::写入来源::未写入);
+        if (投影.本地.服务值)
+            新槽组.emplace(投影.本地.服务值->特征节点, 实现::写入来源::未写入);
+    }
+    s.最后写入来源组.swap(新槽组);
+    s.写回窗口已关闭=false;s.记录写回=true;
+    s.已读取复制上下文=false;s.任务成员读取组.clear();s.记录复制读取=true;
+}
+bool 新_模拟世界类::结束记录复制上下文读取() {
+    if(!实现_)throw std::runtime_error("simulation owner unavailable");
+    auto& s=*实现_;std::lock_guard lock(s.互斥);
+    if (!s.记录写回 || !s.记录复制读取)
+        throw std::runtime_error("simulation call recording is not active");
+    s.记录写回=false;s.写回窗口已关闭=true;
+    s.记录复制读取=false;return s.已读取复制上下文;
+}
+std::vector<稳定编码> 新_模拟世界类::读取本次写回特征组() const {
+    if (!实现_) throw std::runtime_error("simulation owner unavailable");
+    const auto& s=*实现_;std::lock_guard 锁(s.互斥);
+    if (!s.通用 || s.记录写回 || !s.写回窗口已关闭)
+        throw std::runtime_error("simulation write attribution requires a closed call window");
+    std::vector<稳定编码> 结果;
+    for (const auto& [特征, 来源] : s.最后写入来源组)
+        if (来源 == 实现::写入来源::方法) 结果.push_back(特征);
+    return 结果;
+}
+std::optional<新任务虚拟存在特征组> 新_模拟世界类::读取模拟集合任务治理(
+    std::uint32_t 位置, 稳定编码 T) const noexcept {
+    try {
+    if (!实现_) return {};
+    auto& s = *实现_; std::lock_guard lock(s.互斥);
+    if (!s.通用 || !位置 || 位置 > s.通用绑定.size()) return {};
+    const auto& 参数 = s.通用绑定[位置 - 1];
+    if (!参数.有序引用 || 参数.有序引用->序号 != 位置
+        || 参数.有序引用->信息类型 != 新方法参数信息类型::特征) return {};
+    const auto F = s.通用参数.find(参数.有序引用->信息节点);
+    const auto 定义 = F != s.通用参数.end() ? s.方法.读取模拟特征范围(F->second.规格.范围概念节点) : std::nullopt;
+    if (!定义 || 定义->比较规则 != 特征概念比较规则::服务任务集合身份判等) return {};
+    const auto V = 读引用(参数.有序引用->信息节点, 当前材料);
+    const auto 材料 = V ? 读取模拟特征值材料(*V) : std::nullopt;
+    const auto* 成员 = 材料 ? std::get_if<std::vector<std::uint64_t>>(&材料->材料) : nullptr;
+    if (!成员 || std::find(成员->begin(), 成员->end(), T.值) == 成员->end()) return {};
+    const auto it = s.通用任务.find(T);
+    if (it == s.通用任务.end()) return {};
+    const bool 记录 = s.记录复制读取;
+    s.记录复制读取 = false; // 该已解析路径自身不算未解析owner读取。
+    const auto result = 读取任务虚拟存在特征组(it->second.本地.引用);
+    s.记录复制读取 = 记录;
+    if (记录 && result) {
+        const auto 旧 = std::find_if(s.任务成员读取组.begin(), s.任务成员读取组.end(), [&](const auto& x) {
+            return x.集合参数序号 == 位置 && x.动作前.引用.任务节点 == T;
+        });
+        if (旧 == s.任务成员读取组.end()) s.任务成员读取组.push_back({位置, *result});
+    }
+    return result;
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"记录模拟成员读取",L"成员路径读取或记录失败。",e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"记录模拟成员读取",L"成员路径读取或记录失败。");
+    }
+}
+std::vector<新模拟任务成员读取> 新_模拟世界类::读取任务成员记录() const {
+    if (!实现_) return {};
+    std::lock_guard lock(实现_->互斥);
+    return 实现_->任务成员读取组;
 }
 std::optional<std::vector<稳定编码>> 新_模拟世界类::读取模拟存在特征组(稳定编码 E) const noexcept {
     if(!实现_) return {};
     auto& s=*实现_;std::lock_guard lock(s.互斥);
     const auto it=s.通用参数.find(E);
     if(!s.通用||it==s.通用参数.end()||it->second.规格.信息类型!=新方法参数信息类型::存在) return {};
+    if(s.记录复制读取&&it->second.来源存在)s.已读取复制上下文=true;
     std::vector<稳定编码> f;
     for(const auto& [n,p]:s.通用参数)
         if(p.规格.信息类型==新方法参数信息类型::特征&&读引用(n,所属)==E) f.push_back(n);
@@ -860,6 +1100,9 @@ std::optional<std::vector<稳定编码>> 新_模拟世界类::读取模拟存在
 std::optional<稳定编码> 新_模拟世界类::读取模拟所属场景(稳定编码 E) const noexcept {
     if(!实现_)return {};
     auto& s=*实现_;std::lock_guard lock(s.互斥);
+    const auto it=s.通用参数.find(E);
+    if(s.记录复制读取&&it!=s.通用参数.end()&&it->second.来源存在)
+        s.已读取复制上下文=true; // 本轮投影不表达来源场景组织，不能据此形成长期知识。
     return s.通用&&s.通用参数.contains(E)?std::optional{s.通用场景}:std::nullopt;
 }
 稳定编码 新_模拟世界类::建立模拟动作() {
@@ -895,7 +1138,11 @@ void 替换模拟数值(稳定编码 F,std::int64_t x) {
     if(!s.通用||!s.通用参数.contains(F)||!属于样例(A,动作种类,s.通用场景)) return 新模拟操作状态::输入不适用;
     const auto x=读值(F,数值);
     if(!x||*x<0||*x==(std::numeric_limits<std::int64_t>::max)())return 新模拟操作状态::输入不适用;
-    替换模拟数值(F,*x+1);return 新模拟操作状态::已完成;
+    auto* 写回槽=s.准备写回槽(F);
+    替换模拟数值(F,*x+1);
+    if (读值(F,数值) != *x+1) throw std::runtime_error("simulation counter write readback disagrees");
+    if (写回槽) *写回槽=实现::写入来源::方法;
+    return 新模拟操作状态::已完成;
 }
 新模拟操作状态 新_模拟世界类::推进模拟输入() {
     if(!实现_)return 新模拟操作状态::输入不适用;
@@ -906,7 +1153,12 @@ void 替换模拟数值(稳定编码 F,std::int64_t x) {
     if(!e.目标参数||e.目标参数>s.通用绑定.size())throw std::runtime_error("simulation event position");
     const auto& b=s.通用绑定[e.目标参数-1];
     if(!b.有序引用||b.有序引用->信息类型!=新方法参数信息类型::特征)throw std::runtime_error("simulation event kind");
-    替换模拟数值(b.有序引用->信息节点,e.值);++s.事件游标;
+    const auto 特征=b.有序引用->信息节点;
+    auto* 写回槽=s.准备写回槽(特征);
+    替换模拟数值(特征,e.值);
+    if (读值(特征,数值) != e.值) throw std::runtime_error("simulation input event readback disagrees");
+    if (写回槽) *写回槽=实现::写入来源::环境;
+    ++s.事件游标;
     return 新模拟操作状态::已完成;
 }
 新模拟操作状态 新_模拟世界类::模拟集合加入成员(稳定编码 F,稳定编码 E,稳定编码 A) {
@@ -914,6 +1166,13 @@ void 替换模拟数值(稳定编码 F,std::int64_t x) {
     auto& s=*实现_;std::lock_guard lock(s.互斥);
     if(!s.通用||!s.通用参数.contains(F)||!s.通用参数.contains(E)
         ||!属于样例(A,动作种类,s.通用场景))return 新模拟操作状态::输入不适用;
+    const auto& fInfo=s.通用参数.at(F);
+    if(fInfo.规格.信息类型!=新方法参数信息类型::特征
+        ||s.通用参数.at(E).规格.信息类型!=新方法参数信息类型::存在)
+        return 新模拟操作状态::输入不适用;
+    const auto definition=s.方法.读取模拟特征范围(fInfo.规格.范围概念节点);
+    if(!definition||definition->比较规则!=特征概念比较规则::存在集合身份判等)
+        return 新模拟操作状态::输入不适用; // 此端口只接收存在成员，不得污染任务集合。
     const auto old=读引用(F,当前材料);
     if(!old||!s.通用材料.contains(*old)||s.通用材料.at(*old)!=材料物理类型::U64数组) return 新模拟操作状态::输入不适用;
     const auto field=唯一字段(*old,数值);
@@ -923,6 +1182,7 @@ void 替换模拟数值(稳定编码 F,std::int64_t x) {
     auto members=*a;
     if(std::find(members.begin(),members.end(),E.值)!=members.end())return 新模拟操作状态::已完成;
     members.push_back(E.值);std::sort(members.begin(),members.end());
+    auto* 写回槽=s.准备写回槽(F);
     const auto structure=全局基础数据集.查询完整节点结构(F);
     const auto f=唯一字段(F,当前材料);
     if(!structure.结构||!f)throw std::runtime_error("simulation collection feature");
@@ -937,6 +1197,12 @@ void 替换模拟数值(稳定编码 F,std::int64_t x) {
     if(p.状态!=基础节点组追加状态::已完成)throw std::runtime_error("simulation collection publish failed");
     s.通用字段.erase(std::remove(s.通用字段.begin(),s.通用字段.end(),f->编码),s.通用字段.end());
     s.收集追加(p);s.通用材料.emplace(p.新节点组.front(),材料物理类型::U64数组);
+    const auto 新材料=读引用(F,当前材料);
+    const auto 后值=新材料 ? 读取模拟特征值材料(*新材料) : std::nullopt;
+    const auto* 后成员=后值 ? std::get_if<std::vector<std::uint64_t>>(&后值->材料) : nullptr;
+    if (!新材料 || *新材料 != p.新节点组.front() || !后成员 || *后成员 != members)
+        throw std::runtime_error("simulation collection write readback disagrees");
+    if (写回槽) *写回槽=实现::写入来源::方法;
     return 新模拟操作状态::已完成;
 }
 }

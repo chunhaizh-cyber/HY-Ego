@@ -109,6 +109,8 @@ struct 普通应用装配结果 final {
     std::optional<稳定编码> 服务任务特征节点;
     std::optional<稳定编码> 获取服务对象方法节点;
     std::optional<稳定编码> 建立连接方法节点;
+    std::optional<稳定编码> 主动获取服务需求方法节点;
+    std::optional<稳定编码> 被动获取服务需求方法节点;
 
     bool 成功() const noexcept;
 };

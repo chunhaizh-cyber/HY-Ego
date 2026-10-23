@@ -106,7 +106,8 @@ enum class 特征概念比较规则 : std::int64_t {
     存在身份精确 = 3,
     服务任务集合身份判等 = 4,
     需求集合身份判等 = 5,
-    存在集合身份判等 = 6
+    存在集合身份判等 = 6,
+    消息集合身份判等 = 7
 };
 
 enum class 特征概念聚合规则 : std::int64_t {
@@ -203,6 +204,16 @@ class 特征存在成员读取接口 {
 public:
     virtual ~特征存在成员读取接口() = default;
     virtual 特征存在成员读取结果 读取存在集合成员身份(稳定编码) const noexcept = 0;
+};
+struct 特征消息成员读取结果 final {
+    特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
+    std::optional<稳定编码> 消息节点;
+    std::vector<基础联合节点快照> 身份保护;
+};
+class 特征消息成员读取接口 {
+public:
+    virtual ~特征消息成员读取接口() = default;
+    virtual 特征消息成员读取结果 读取消息集合成员身份(稳定编码) const noexcept = 0;
 };
 struct 特征存在集合条件比较结果 final {
     特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
@@ -392,6 +403,13 @@ public:
     void 装配任务成员读取接口(const 特征任务成员读取接口*) noexcept;
     void 装配需求成员读取接口(const 特征需求成员读取接口*) noexcept;
     void 装配存在成员读取接口(const 特征存在成员读取接口*) noexcept;
+    void 装配消息成员读取接口(const 特征消息成员读取接口*) noexcept;
+    稳定编码 消息集合成员保护字段() const noexcept;
+    特征概念规则状态 读取消息成员身份(稳定编码,
+        std::vector<基础联合节点快照>* 身份保护 = nullptr) const noexcept;
+    特征概念规则状态 读取消息集合成员(
+        const 特征概念准确值&, const 新_特征值类&, std::vector<稳定编码>&,
+        std::vector<基础联合节点快照>* 身份保护 = nullptr) const noexcept;
     特征存在集合条件比较结果 比较存在集合值域(
         稳定编码, const 特征概念准确值&, const 特征概念存在集合值域&,
         const 新_特征值类&) const noexcept;
@@ -502,6 +520,7 @@ private:
     const 特征任务成员读取接口* 任务成员读取接口_ = nullptr;
     const 特征需求成员读取接口* 需求成员读取接口_ = nullptr;
     const 特征存在成员读取接口* 存在成员读取接口_ = nullptr;
+    const 特征消息成员读取接口* 消息成员读取接口_ = nullptr;
     // 初始化时借用，不拥有；服务须覆盖本对象的初始化后使用期。
     // 仅供无材料参数的值域比较入口读取有限材料，不另建材料owner。
     const 新_特征值类* 特征值读取服务_ = nullptr;

@@ -2361,3 +2361,355 @@ std::vector<新因果方法参考> 新_因果类::为目标状态查询方法参
 }
 
 } // namespace 海中鱼巣
+namespace 海中鱼巣 {
+namespace {
+namespace 先天存储 {
+稳定编码 类型{}, 关系类型{}, 版本类型{}, 条件类型{}, 列表{}, 概念列表{}, 格式{}, 种类{},
+    治理{}, 版本{}, 场景{}, 动作{}, 角色形状{}, 角色引用{}, 条件组{}, 序号{}, 关系{},
+    条件角色{}, 参数{}, 结果角色{}, 结果V类型{}, 结果V域{}, 结果Q类型{}, 结果Q域{},
+    关系角色种类{}, 关系参数类型{}, 版本整数{};
+std::vector<稳定编码*> 编码组() {
+    return {&类型,&关系类型,&版本类型,&条件类型,&列表,&概念列表,&格式,&种类,&治理,&版本,&场景,&动作,
+        &角色形状,&角色引用,&条件组,&序号,&关系,&条件角色,&参数,&结果角色,&结果V类型,&结果V域,
+        &结果Q类型,&结果Q域,&关系角色种类,&关系参数类型,&版本整数};
+}
+void 初始化() {
+    for (auto* k : 编码组()) {
+        if (!有效(*k)) *k = 全局基础数据集.新建节点();
+        if (!节点仍存在(*k)) throw std::logic_error("innate schema missing");
+    }
+}
+}
+using 先天结构 = 基础联合节点快照;
+先天结构 先天快照(稳定编码 n) {
+    const auto r = 全局基础数据集.查询节点组完整结构({n});
+    if (r.状态 != 基础结构操作状态::已完成 || r.节点组.size() != 1 || !r.节点组[0].快照)
+        throw std::logic_error("innate physical read failure");
+    return *r.节点组[0].快照;
+}
+std::vector<基础字段关系> 先天字段(const 先天结构& s, 稳定编码 key) {
+    std::vector<基础字段关系> r;
+    for (const auto& f : s.结构.字段组) if (f.字段节点 == key) r.push_back(f);
+    std::sort(r.begin(),r.end(),[](const auto& a,const auto& b){return a.编码 < b.编码;});
+    return r;
+}
+稳定编码 先天引用(const 先天结构& s, 稳定编码 key) {
+    const auto f = 先天字段(s,key);
+    if (f.size()!=1) throw std::logic_error("innate reference multiplicity");
+    const auto n=std::get_if<稳定编码>(&f.front().内容);
+    if (!n || !节点仍存在(*n)) throw std::logic_error("innate dangling reference");
+    return *n;
+}
+template<class T> T 先天值(const 先天结构& s, 稳定编码 key) {
+    const auto f=先天字段(s,key);
+    if (f.size()!=1) throw std::logic_error("innate value multiplicity");
+    const auto v=std::get_if<基础值>(&f.front().内容);
+    const auto p=v?std::get_if<T>(&v->材料):nullptr;
+    if (!p) throw std::logic_error("innate value type");
+    return *p;
+}
+std::vector<稳定编码> 先天引用组(const 先天结构& s,稳定编码 key) {
+    std::vector<稳定编码> r;
+    for(const auto& f:先天字段(s,key)) {
+        const auto n=std::get_if<稳定编码>(&f.内容);
+        if(!n || !节点仍存在(*n)) throw std::logic_error("innate list dangling reference");
+        r.push_back(*n);
+    } return r;
+}
+void 先天格式(const 先天结构& s,稳定编码 type) {
+    if(先天引用(s,节点类型字段)!=type || 先天值<std::int64_t>(s,先天存储::格式)!=1)
+        throw std::logic_error("innate format/type mismatch");
+}
+void 先天持有(const 先天结构& s,稳定编码 list) {
+    for(const auto& edge:s.入向外部关系组)
+        if(edge.类型==基础外部关系类型::父子)
+            throw std::logic_error("innate definition has additional parent organization");
+    std::size_t count=0;
+    for(const auto& f:s.入向字段组) if(f.字段节点==list) {
+        if(f.所属节点!=新因果信息图根节点) throw std::logic_error("innate foreign owner");
+        ++count;
+    }
+    if(count!=1) throw std::logic_error("innate owner missing or duplicate");
+}
+稳定编码 先天发布(std::vector<基础组内新节点> nodes,稳定编码 list) {
+    基础节点组追加请求 q;
+    q.新节点组=std::move(nodes);
+    q.追加字段组.push_back({新因果信息图根节点,list,基础组内节点引用{0}});
+    q.预期联合节点组.push_back(先天快照(新因果信息图根节点));
+    const auto r=全局基础数据集.原子追加节点组(q);
+    if(r.状态!=基础节点组追加状态::已完成 || r.新节点组.empty())
+        throw std::logic_error("innate atomic publish failed");
+    return r.新节点组[0];
+}
+std::vector<std::int64_t> 关系角色模式(新先天因果条件种类 k) {
+    using K=新先天因果条件种类;
+    switch(k) {
+    case K::存在有效: return {1,1,1};
+    case K::集合包含角色: case K::当前治理边界一致: return {2,1,1,1,2};
+    case K::任务虚拟存在归属: case K::需求任务关联: case K::直接父子关联:
+    case K::完成执行评估一致: case K::完成来源一致: case K::直接子接收完整:
+    case K::人类确认锚点: case K::结果观察及归因: case K::本来源未消费: case K::下层贡献未消费: return {1,1,2};
+    case K::特征值域: return {1,2,1,2}; // 位置数、每位置允许种类数、允许种类；一个位置允许E或T。
+    }
+    throw std::logic_error("innate unknown relation kind");
+}
+std::vector<std::int64_t> 关系参数模式(新先天因果条件种类 k) {
+    enum class 参数信息类型 : std::int64_t { 存在概念=1,任务概念=2,特征类型=3,特征值域=4,治理定义=5 };
+    const auto E=static_cast<std::int64_t>(参数信息类型::存在概念);
+    const auto T=static_cast<std::int64_t>(参数信息类型::任务概念);
+    const auto FT=static_cast<std::int64_t>(参数信息类型::特征类型);
+    const auto FC=static_cast<std::int64_t>(参数信息类型::特征值域);
+    const auto G=static_cast<std::int64_t>(参数信息类型::治理定义);
+    using K=新先天因果条件种类;
+    switch(k) {
+    case K::存在有效:return {E};
+    case K::集合包含角色:return {FT,T};
+    case K::任务虚拟存在归属:return {T};
+    case K::特征值域:return {FT,FC};
+    case K::当前治理边界一致:return {G};
+    case K::需求任务关联:case K::直接父子关联:case K::完成执行评估一致:case K::完成来源一致:
+    case K::直接子接收完整:case K::人类确认锚点:case K::结果观察及归因:case K::本来源未消费:
+    case K::下层贡献未消费:return {};
+    }
+    throw std::logic_error("innate unknown parameter pattern");
+}
+void 核验关系概念(稳定编码 n,新先天因果条件种类 k) {
+    const auto s=先天快照(n);先天格式(s,先天存储::关系类型);先天持有(s,先天存储::概念列表);
+    if(先天值<std::int64_t>(s,先天存储::种类)!=static_cast<std::int64_t>(k)
+        ||先天值<std::vector<std::int64_t>>(s,先天存储::关系角色种类)!=关系角色模式(k)
+        ||先天值<std::vector<std::int64_t>>(s,先天存储::关系参数类型)!=关系参数模式(k))
+        throw std::logic_error("innate relation concept mismatch");
+}
+新先天因果概念组 先天概念(稳定编码 governance) {
+    if(!节点仍存在(governance))throw std::logic_error("innate governance reference missing");
+    先天存储::初始化();
+    新先天因果概念组 r;
+    auto existing=先天引用组(先天快照(新因果信息图根节点),先天存储::概念列表);
+    for(auto n:existing) {
+        const auto s=先天快照(n);const auto t=先天引用(s,节点类型字段);
+        if(t==先天存储::版本类型) {
+            先天格式(s,t);先天持有(s,先天存储::概念列表);
+            if(先天引用(s,先天存储::治理)!=governance)continue;
+            if(先天值<std::int64_t>(s,先天存储::版本整数)!=1 || 有效(r.合同版本概念))
+                throw std::logic_error("innate version duplicate or conflict");
+            r.合同版本概念=n;
+        } else if(t!=先天存储::关系类型)throw std::logic_error("innate concept list wrong type");
+    }
+    if(!有效(r.合同版本概念)) {
+        基础组内新节点 n;
+        n.字段组={{节点类型字段,先天存储::版本类型},{先天存储::格式,基础值{std::int64_t{1}}},
+            {先天存储::治理,governance},{先天存储::版本整数,基础值{std::int64_t{1}}}};
+        r.合同版本概念=先天发布({n},先天存储::概念列表);
+    }
+    for(std::int64_t i=1;i<=14;++i) {
+        const auto k=static_cast<新先天因果条件种类>(i);稳定编码 found{};
+        for(auto n:existing) {
+            const auto s=先天快照(n);
+            if(先天引用(s,节点类型字段)!=先天存储::关系类型)continue;
+            const auto value=先天值<std::int64_t>(s,先天存储::种类);
+            if(value<1 || value>14)throw std::logic_error("innate relation enum corrupt");
+            if(value!=i)continue;
+            核验关系概念(n,k);
+            if(有效(found))throw std::logic_error("innate relation duplicate");
+            found=n;
+        }
+        if(!有效(found)) {
+            基础组内新节点 n;
+            n.字段组={{节点类型字段,先天存储::关系类型},{先天存储::格式,基础值{std::int64_t{1}}},
+                {先天存储::种类,基础值{i}},{先天存储::关系角色种类,基础值{关系角色模式(k)}},
+                {先天存储::关系参数类型,基础值{关系参数模式(k)}}};
+            found=先天发布({n},先天存储::概念列表);
+        }
+        核验关系概念(found,k);r.关系概念组.push_back({k,found});
+    }
+    return r;
+}
+void 核验先天形状(const 新先天因果定义& d) {
+    if(!节点仍存在(d.治理定义)||!节点仍存在(d.作用场景范围概念)||!节点仍存在(d.动作概念)
+        ||d.角色组.size()!=2||d.角色组[0].序号!=0||d.角色组[0].种类!=新先天因果角色种类::普通存在
+        ||d.角色组[1].序号!=1||d.角色组[1].种类!=新先天因果角色种类::任务信息
+        ||!节点仍存在(d.角色组[0].范围概念)||!节点仍存在(d.角色组[1].范围概念)
+        ||d.触发方式!=新因果动作触发方式::被动触发
+        ||d.唯一结果.结果存在角色!=0||d.唯一结果.加数任务角色!=1||d.全部条件.size()!=16)
+        throw std::logic_error("innate final rule role/result shape invalid");
+    const auto cs=先天快照(d.合同版本概念);先天格式(cs,先天存储::版本类型);先天持有(cs,先天存储::概念列表);
+    if(先天引用(cs,先天存储::治理)!=d.治理定义||先天值<std::int64_t>(cs,先天存储::版本整数)!=1)
+        throw std::logic_error("innate version identity mismatch");
+    using K=新先天因果条件种类;
+    const std::vector<K> kinds{K::存在有效,K::集合包含角色,K::任务虚拟存在归属,
+        K::特征值域,K::特征值域,K::特征值域,K::需求任务关联,K::直接父子关联,
+        K::完成执行评估一致,K::完成来源一致,K::直接子接收完整,K::人类确认锚点,
+        K::结果观察及归因,K::本来源未消费,K::下层贡献未消费,K::当前治理边界一致};
+    for(std::size_t i=0;i<16;++i) {
+        const auto& c=d.全部条件[i];
+        const std::vector<std::int64_t> roles=i==0||i==3?std::vector<std::int64_t>{0}
+            :i==1||i==15?std::vector<std::int64_t>{0,1}:std::vector<std::int64_t>{1};
+        if(c.序号!=static_cast<std::int64_t>(i)||c.种类!=kinds[i]||c.角色组!=roles
+            ||c.概念参数组.size()!=关系参数模式(c.种类).size())throw std::logic_error("innate condition table mismatch");
+        核验关系概念(c.关系概念,c.种类);
+        for(auto n:c.概念参数组)if(!节点仍存在(n))throw std::logic_error("innate condition parameter dangling");
+    }
+    if(d.全部条件[0].概念参数组!=std::vector<稳定编码>{d.角色组[0].范围概念}
+        ||d.全部条件[1].概念参数组[1]!=d.角色组[1].范围概念
+        ||d.全部条件[2].概念参数组!=std::vector<稳定编码>{d.角色组[1].范围概念}
+        ||d.全部条件[3].概念参数组!=std::vector<稳定编码>{d.唯一结果.结果特征类型,d.唯一结果.结果合法值域}
+        ||d.全部条件[5].概念参数组!=std::vector<稳定编码>{d.唯一结果.加数特征类型,d.唯一结果.加数合法值域}
+        ||d.全部条件[15].概念参数组!=std::vector<稳定编码>{d.治理定义})
+        throw std::logic_error("innate same role parameter mismatch");
+}
+新先天因果信息 先天解码(稳定编码 n) {
+    const auto s=先天快照(n);先天格式(s,先天存储::类型);先天持有(s,先天存储::列表);
+    if(先天值<std::int64_t>(s,先天存储::种类)!=1)throw std::logic_error("innate definition kind mismatch");
+    if(先天值<std::int64_t>(s,动作触发方式字段)!=static_cast<std::int64_t>(新因果动作触发方式::被动触发))
+        throw std::logic_error("innate governance trigger must be explicitly passive");
+    新先天因果信息 r;r.节点=n;auto& d=r.定义;
+    d.触发方式=static_cast<新因果动作触发方式>(先天值<std::int64_t>(s,动作触发方式字段));
+    d.治理定义=先天引用(s,先天存储::治理);d.合同版本概念=先天引用(s,先天存储::版本);
+    d.作用场景范围概念=先天引用(s,先天存储::场景);d.动作概念=先天引用(s,先天存储::动作);
+    const auto roles=先天值<std::vector<std::int64_t>>(s,先天存储::角色形状);
+    const auto refs=先天引用组(s,先天存储::角色引用);
+    if(roles.size()!=4||refs.size()!=2)throw std::logic_error("innate roles corrupt");
+    for(std::size_t i=0;i<2;++i)d.角色组.push_back({roles[2*i],static_cast<新先天因果角色种类>(roles[2*i+1]),refs[i]});
+    for(auto c:先天引用组(s,先天存储::条件组)) {
+        const auto cs=先天快照(c);先天格式(cs,先天存储::条件类型);
+        for(const auto& edge:cs.入向外部关系组)
+            if(edge.类型==基础外部关系类型::父子)
+                throw std::logic_error("innate condition has additional parent organization");
+        std::size_t count=0;for(const auto& f:cs.入向字段组)if(f.字段节点==先天存储::条件组) {
+            if(f.所属节点!=n)throw std::logic_error("innate condition foreign owner");++count;
+        }
+        if(count!=1)throw std::logic_error("innate condition owner duplicate");
+        d.全部条件.push_back({先天值<std::int64_t>(cs,先天存储::序号),
+            static_cast<新先天因果条件种类>(先天值<std::int64_t>(cs,先天存储::种类)),
+            先天引用(cs,先天存储::关系),先天值<std::vector<std::int64_t>>(cs,先天存储::条件角色),
+            先天引用组(cs,先天存储::参数)});
+    }
+    const auto result=先天值<std::vector<std::int64_t>>(s,先天存储::结果角色);
+    if(result.size()!=2)throw std::logic_error("innate result roles corrupt");
+    d.唯一结果={result[0],result[1],先天引用(s,先天存储::结果V类型),先天引用(s,先天存储::结果V域),
+        先天引用(s,先天存储::结果Q类型),先天引用(s,先天存储::结果Q域)};
+    r.统计={先天值<std::int64_t>(s,因果符合次数字段),先天值<std::int64_t>(s,因果不符合次数字段),
+        先天值<std::int64_t>(s,因果自我尝试次数字段),先天值<std::int64_t>(s,因果自我尝试符合次数字段)};
+    if(r.统计.符合出现次数<0||r.统计.不符合出现次数<0||r.统计.自我尝试次数<0
+        ||r.统计.自我尝试符合次数<0||r.统计.自我尝试符合次数>r.统计.自我尝试次数)
+        throw std::logic_error("innate statistics corrupt");
+    r.发生身份组=先天引用组(s,因果已计数发生字段);
+    if(std::set<稳定编码>(r.发生身份组.begin(),r.发生身份组.end()).size()!=r.发生身份组.size())
+        throw std::logic_error("innate occurrence duplicate");
+    核验先天形状(d);return r;
+}
+}
+新先天因果概念组 新_因果类::确保先天因果概念(稳定编码 治理定义) {
+    if(!初始化())throw std::logic_error("innate owner unavailable");
+    std::lock_guard lock(新因果互斥);return 先天概念(治理定义);
+}
+void 新_因果类::核验先天概念引用(const 新先天因果定义& d) const {
+    if(!存在概念服务_||!特征概念服务_||!动态概念服务_
+        ||!存在概念服务_->获取存在概念(d.角色组[0].范围概念)
+        ||!存在概念服务_->获取存在概念(d.作用场景范围概念))
+        throw std::logic_error("innate formal concept providers unavailable");
+    if(!动态概念服务_->是动作概念节点(d.动作概念))throw std::logic_error("innate action node wrong type");
+    const auto a=动态概念服务_->获取动态概念(d.动作概念);
+    if(!a || !a->动作定义)throw std::logic_error("innate action concept unavailable");
+    const auto& action=*a->动作定义;
+    if(action.能力类别!=动作能力定义类别::内部治理能力||action.能力定义节点!=d.治理定义
+        ||action.抽象方法节点||action.执行主体.存在概念节点!=std::optional{d.角色组[0].范围概念}
+        ||action.作用目标.存在概念节点!=std::optional{d.角色组[0].范围概念}
+        ||action.执行主体.对象类别!=动作参数对象类别::普通世界
+        ||action.作用目标.对象类别!=动作参数对象类别::普通世界
+        ||action.执行主体.参数角色节点||action.作用目标.参数角色节点||!action.参数规格组.empty()
+        ||action.目标特征类型概念节点!=std::optional{d.唯一结果.结果特征类型})
+        throw std::logic_error("innate action governance identity mismatch");
+    const auto set=特征概念服务_->获取特征概念(d.全部条件[1].概念参数组[0]);
+    const auto rel=特征概念服务_->比较单特征概念(d.全部条件[1].概念参数组[0],d.全部条件[1].概念参数组[0]);
+    if(!set||set->材料类型!=特征概念材料物理类型::U64数组
+        ||set->比较规则!=特征概念比较规则::服务任务集合身份判等
+        ||rel.状态!=特征概念规则状态::已完成||rel.特征类型根!=set->节点)
+        throw std::logic_error("innate task collection FT mismatch");
+    const auto signedDomain=特征概念值域{std::vector<特征概念I64闭区间>{{
+        (std::numeric_limits<std::int64_t>::min)(),(std::numeric_limits<std::int64_t>::max)()}}};
+    for(const auto& c:d.全部条件)if(c.种类==新先天因果条件种类::特征值域) {
+        const auto ft=特征概念服务_->获取特征概念(c.概念参数组[0]);
+        const auto fc=特征概念服务_->获取特征概念(c.概念参数组[1]);
+        const auto r=特征概念服务_->比较单特征概念(c.概念参数组[0],c.概念参数组[1]);
+        if(!ft||!fc||ft->材料类型!=特征概念材料物理类型::I64标量
+            ||fc->材料类型!=ft->材料类型||fc->单位!=ft->单位
+            ||r.状态!=特征概念规则状态::已完成||r.特征类型根!=c.概念参数组[0])
+            throw std::logic_error("innate feature domain invalid");
+        if(c.序号==3||c.序号==5) {
+            if(fc->值域!=signedDomain)throw std::logic_error("innate V/Q must be complete signed I64");
+        } else if(fc->值域!=特征概念值域{std::vector<特征概念I64闭区间>{{9,9}}})
+            throw std::logic_error("innate task completed domain mismatch");
+    }
+}
+稳定编码 新_因果类::确保先天因果(const 新先天因果定义& d) {
+    if(!初始化())throw std::logic_error("innate owner unavailable");
+    std::lock_guard lock(新因果互斥);
+    const auto concepts=先天概念(d.治理定义);
+    if(concepts.合同版本概念!=d.合同版本概念)throw std::logic_error("innate version not owner issued");
+    核验先天形状(d);
+    核验先天概念引用(d);
+    for(auto n:先天引用组(先天快照(新因果信息图根节点),先天存储::列表)) {
+        const auto old=先天解码(n);
+        if(old.定义==d)return n;
+        if(old.定义.治理定义==d.治理定义&&old.定义.合同版本概念==d.合同版本概念)
+            throw std::logic_error("innate same governance/version conflicting definition");
+    }
+    基础组内新节点 root;
+    root.字段组={{节点类型字段,先天存储::类型},{先天存储::格式,基础值{std::int64_t{1}}},
+        {先天存储::种类,基础值{std::int64_t{1}}},{先天存储::治理,d.治理定义},{先天存储::版本,d.合同版本概念},
+        {先天存储::场景,d.作用场景范围概念},{先天存储::动作,d.动作概念},
+        {动作触发方式字段,基础值{static_cast<std::int64_t>(d.触发方式)}},
+        {先天存储::角色形状,基础值{std::vector<std::int64_t>{0,1,1,2}}},
+        {先天存储::角色引用,d.角色组[0].范围概念},{先天存储::角色引用,d.角色组[1].范围概念},
+        {先天存储::结果角色,基础值{std::vector<std::int64_t>{0,1}}},
+        {先天存储::结果V类型,d.唯一结果.结果特征类型},{先天存储::结果V域,d.唯一结果.结果合法值域},
+        {先天存储::结果Q类型,d.唯一结果.加数特征类型},{先天存储::结果Q域,d.唯一结果.加数合法值域},
+        {因果符合次数字段,基础值{std::int64_t{0}}},{因果不符合次数字段,基础值{std::int64_t{0}}},
+        {因果自我尝试次数字段,基础值{std::int64_t{0}}},{因果自我尝试符合次数字段,基础值{std::int64_t{0}}}};
+    std::vector<基础组内新节点> nodes{root};
+    for(const auto& c:d.全部条件) {
+        nodes[0].字段组.push_back({先天存储::条件组,基础组内节点引用{nodes.size()}});
+        基础组内新节点 n;
+        n.字段组={{节点类型字段,先天存储::条件类型},{先天存储::格式,基础值{std::int64_t{1}}},
+            {先天存储::序号,基础值{c.序号}},{先天存储::种类,基础值{static_cast<std::int64_t>(c.种类)}},
+            {先天存储::关系,c.关系概念},{先天存储::条件角色,基础值{c.角色组}}};
+        for(auto p:c.概念参数组)n.字段组.push_back({先天存储::参数,p});
+        nodes.push_back(std::move(n));
+    }
+    const auto n=先天发布(std::move(nodes),先天存储::列表);
+    const auto result=先天解码(n);
+    if(result.定义!=d||result.统计!=新因果统计{}||!result.发生身份组.empty())
+        throw std::logic_error("innate publication readback mismatch");
+    return n;
+}
+std::optional<新先天因果信息> 新_因果类::读取先天因果(稳定编码 n) const {
+    std::lock_guard lock(新因果互斥);
+    if(!结构仍存在())throw std::logic_error("innate owner not initialized");
+    if(!有效(先天存储::类型))return {};
+    const auto node=全局基础数据集.查询节点(n);
+    if(!node) {
+        for(const auto& f:先天字段(先天快照(新因果信息图根节点),先天存储::列表))
+            if(const auto p=std::get_if<稳定编码>(&f.内容);p&&*p==n)
+                throw std::logic_error("innate listed definition disappeared");
+        return {};
+    }
+    const auto s=先天快照(n);
+    const auto types=先天字段(s,节点类型字段);
+    const bool held=std::any_of(s.入向字段组.begin(),s.入向字段组.end(),[](const auto& f){return f.字段节点==先天存储::列表;});
+    bool typed=false;for(const auto& f:types)if(const auto p=std::get_if<稳定编码>(&f.内容);p&&*p==先天存储::类型)typed=true;
+    if(!typed&&!held)return {};
+    auto r=先天解码(n);核验先天概念引用(r.定义);return r;
+}
+std::vector<稳定编码> 新_因果类::查询先天结果(稳定编码 ft) const {
+    std::lock_guard lock(新因果互斥);
+    if(!结构仍存在())throw std::logic_error("innate owner not initialized");
+    if(!特征概念服务_||!特征概念服务_->获取特征概念(ft))throw std::logic_error("innate queried FT missing");
+    if(!有效(先天存储::类型))return {};
+    std::vector<稳定编码> r;
+    for(auto n:先天引用组(先天快照(新因果信息图根节点),先天存储::列表)) {
+        const auto info=先天解码(n);核验先天概念引用(info.定义);if(info.定义.唯一结果.结果特征类型==ft)r.push_back(n);
+    }
+    return r;
+}
+} // namespace 海中鱼巣

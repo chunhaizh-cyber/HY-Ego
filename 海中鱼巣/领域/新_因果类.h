@@ -21,6 +21,10 @@ class 新_因果类 final
               const 新因果动作证据提供者 &动作证据提供者) noexcept;
 
     bool 初始化() noexcept;
+    稳定编码 确保先天因果(const 新先天因果定义&);
+    新先天因果概念组 确保先天因果概念(稳定编码 治理定义);
+    std::optional<新先天因果信息> 读取先天因果(稳定编码) const;
+    std::vector<稳定编码> 查询先天结果(稳定编码 结果特征类型) const;
     新_因果类(新_状态类 &, 新_动态类 &, 新_存在类 &, 概念_存在类 &, 概念_特征类 &, const 概念_动态类 &,
               const 新_特征值类 &, 新_场景类 &,
               const 新因果动作证据提供者 * = nullptr,
@@ -51,6 +55,7 @@ class 新_因果类 final
     新因果操作状态 登记方法执行结果(稳定编码 因果节点, 稳定编码 发生身份, bool 符合) noexcept;
 
   private:
+    void 核验先天概念引用(const 新先天因果定义&) const;
     void 尝试共同抽象(稳定编码) noexcept;
     新因果处理结果 处理发生(const 新因果发生记录 &发生, 新因果形成来源 来源,
                             const std::optional<新因果动作定义> &动作) noexcept;

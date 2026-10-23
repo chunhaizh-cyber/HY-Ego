@@ -172,6 +172,7 @@ struct 新方法条件项定义 final {
     std::optional<特征概念I64闭区间> 精确数值域;
     // 0仅指旧角色格式；非零时参数角色节点必须为空。
     std::uint32_t 参数序号 = 0;
+    std::uint32_t 任务成员变量序号 = 0;
     friend bool operator==(const 新方法条件项定义&,
         const 新方法条件项定义&) = default;
 };
@@ -186,6 +187,7 @@ struct 新方法结果项定义 final {
     // 禁止结果项复用本结构，同样不得同时保存概念域和私有精确域。
     std::optional<特征概念I64闭区间> 精确数值域;
     std::uint32_t 参数序号 = 0;
+    std::uint32_t 任务成员变量序号 = 0;
     friend bool operator==(const 新方法结果项定义&,
         const 新方法结果项定义&) = default;
 };

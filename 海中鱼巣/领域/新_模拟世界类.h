@@ -27,10 +27,22 @@ struct 新模拟有序参数输入 final {
     std::uint32_t 同一参数=0;
     std::vector<std::uint32_t> 集合成员参数组;
     std::uint32_t 引用存在参数=0;
+    // 仅复制来源映射元数据，绝不作为模拟图中的可写引用发布。
+    std::optional<稳定编码> 来源存在;
+    bool 复制上下文=false;
+    std::vector<稳定编码> 来源任务成员组;
+};
+struct 新模拟任务治理输入 final {
+    新任务虚拟存在特征组 治理特征;
 };
 struct 新模拟输入事件 final {
     std::uint32_t 目标参数=0;
     std::int64_t 值=0;
+};
+
+struct 新模拟任务成员读取 final {
+    std::uint32_t 集合参数序号 = 0;
+    新任务虚拟存在特征组 动作前;
 };
 
 class 新_模拟世界类 final : public 新方法模拟运行接口, public 新服务值结算本能端口,
@@ -45,8 +57,19 @@ public:
 
     新模拟世界建立结果 建立有序样例(稳定编码 M,
         const std::vector<新模拟有序参数输入>&,
-        const std::vector<新模拟输入事件>&);
+        const std::vector<新模拟输入事件>&,
+        const std::vector<新模拟任务治理输入>& 任务组 = {});
     void 释放有序样例();
+    std::optional<稳定编码> 读取模拟存在来源(稳定编码 本地存在) const;
+    std::optional<稳定编码> 读取模拟任务来源(稳定编码 本地任务) const;
+    std::optional<新任务虚拟存在引用> 查找任务虚拟存在引用(稳定编码) const noexcept override;
+    std::optional<新任务虚拟存在特征组> 读取任务虚拟存在特征组(const 新任务虚拟存在引用&) const noexcept override;
+    void 开始记录复制上下文读取();
+    bool 结束记录复制上下文读取();
+    // 只返回已关闭调用窗口中最后由方法实际提交的F身份；结果值仍须正式读回。
+    std::vector<稳定编码> 读取本次写回特征组() const;
+    std::optional<新任务虚拟存在特征组> 读取模拟集合任务治理(std::uint32_t, 稳定编码) const noexcept override;
+    std::vector<新模拟任务成员读取> 读取任务成员记录() const;
     std::optional<std::vector<稳定编码>> 读取模拟存在特征组(稳定编码) const noexcept override;
     std::optional<稳定编码> 读取模拟所属场景(稳定编码) const noexcept override;
     稳定编码 建立模拟动作() override;

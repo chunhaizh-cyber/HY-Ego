@@ -56,5 +56,7 @@ class 动作方法定义只读提供者 {
 public:
     virtual ~动作方法定义只读提供者()=default;
     virtual 动作概念定义 读取动作方法投影(const 动作方法投影请求&) const=0;
+    // 动态持锁读回专用：只读不可变治理定义，不取得task锁或调用完整方法投影。
+    virtual bool 核验普通治理动作定义(const 动作概念定义&) const=0;
 };
 }

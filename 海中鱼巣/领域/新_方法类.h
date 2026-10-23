@@ -20,6 +20,7 @@ class 概念_存在类;
 class 概念_特征类;
 class 新_任务类;
 class 新_状态类;
+struct 新存在信息;
 
 // 方法拥有自己的独立根；该根不挂入世界树、需求树或任务集合根。
 extern 稳定编码 新方法组织根节点;
@@ -82,6 +83,9 @@ public:
     std::optional<存在概念信息> 读取模拟存在范围(稳定编码 C) const noexcept;
     std::optional<新特征匹配定义快照> 读取模拟特征范围(稳定编码 C) const noexcept;
     std::optional<新特征值信息> 读取模拟候选材料(稳定编码 V) const noexcept;
+    // 单向复制的只读来源；调用者持有值快照，不取得源owner的写入口。
+    std::optional<新存在信息> 读取模拟来源存在(稳定编码 E) const;
+    std::optional<新特征匹配实例快照> 读取模拟来源特征(稳定编码 F) const;
     稳定编码 保存模拟材料值域(稳定编码 C,const 新特征值信息&);
 
     // 建立方法知识，不登记或调用本能函数。
@@ -133,6 +137,8 @@ public:
     新方法实例配对结果 查询实例条件结果(
         稳定编码 实例根节点) const noexcept;
     bool 是方法节点(稳定编码 节点) const noexcept;
+    // 只读识别退役结算家族，包含实例来源及父代；坏引用/环属于工程故障。
+    bool 是历史服务结算方法(稳定编码 方法节点) const;
     新方法候选结果 查询候选方法(
         const 新方法候选查询& 查询) const noexcept;
 
@@ -153,7 +159,8 @@ public:
         稳定编码 方法节点,
         std::vector<新方法参数角色绑定> 角色绑定组,
         const 新内部治理对象读取接口* 治理对象读取 = nullptr,
-        const 新服务要求材料读取接口* 服务要求读取 = nullptr) const noexcept;
+        const 新服务要求材料读取接口* 服务要求读取 = nullptr,
+        std::optional<新方法任务成员绑定> 任务成员绑定 = {}) const noexcept;
     新方法参数场景结果 建立本能登记参数场景(
         std::vector<新方法参数角色绑定> 角色绑定组) const noexcept;
     新方法参数场景结果 建立服务结算治理参数场景(
@@ -164,7 +171,8 @@ public:
     新方法参数场景结果 建立模拟参数场景(
         稳定编码 方法节点,
         std::vector<新方法参数角色绑定> 绑定,
-        std::shared_ptr<新方法模拟运行接口> 模拟) const noexcept;
+        std::shared_ptr<新方法模拟运行接口> 模拟,
+        std::optional<新方法任务成员绑定> 任务成员绑定 = {}) const noexcept;
 
     // 只在参数场景已经由本方法建立且方法仍启用时解析登记名并调用一次。
     // 本函数不建立任务执行实例，不判断需求满足，也不自动重试现实动作。

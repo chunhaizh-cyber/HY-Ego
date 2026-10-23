@@ -113,6 +113,11 @@ struct 新服务值结算登记结果 final {
     std::optional<稳定编码> 方法节点, 结算需求节点;
     std::optional<新服务值结算登记材料> 材料;
 };
+struct 新服务值治理初始化结果 final {
+    新服务值结算协作状态 状态 = 新服务值结算协作状态::入口拒绝;
+    std::optional<稳定编码> 结算需求节点;
+    std::optional<新服务值治理定义> 治理定义;
+};
 struct 新服务值结算动作回执 final {
     新服务值结算协作状态 状态 = 新服务值结算协作状态::入口拒绝;
     std::optional<稳定编码> 动作节点;
@@ -151,6 +156,8 @@ public:
     virtual ~新服务值结算确认接口() = default;
     virtual void 报告并停止(std::string_view 具名错误) noexcept = 0;
     virtual 新服务值结算登记结果 初始化(稳定编码 场景, 稳定编码 自我,
+        稳定编码 服务特征, 稳定编码 服务根) noexcept = 0;
+    virtual 新服务值治理初始化结果 初始化治理(稳定编码 场景, 稳定编码 自我,
         稳定编码 服务特征, 稳定编码 服务根) noexcept = 0;
     virtual 新服务值结算确认结果 确认并收尾(稳定编码 结算任务节点,
         稳定编码 执行实例节点, 稳定编码 影响评估节点) noexcept = 0;

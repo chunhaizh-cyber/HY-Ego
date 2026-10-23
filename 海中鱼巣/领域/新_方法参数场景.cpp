@@ -35,7 +35,8 @@ void 核验有序参数绑定组(const std::vector<新方法参数角色绑定>&
     const 新内部治理对象读取接口* 治理对象读取,
     std::shared_ptr<新方法模拟运行接口> 模拟运行,
     const 新服务要求材料读取接口* 服务要求读取,
-    std::optional<新任务贡献治理参数> 任务贡献治理参数) noexcept
+    std::optional<新任务贡献治理参数> 任务贡献治理参数,
+    std::optional<新方法任务成员绑定> 任务成员绑定) noexcept
     : 方法节点_(方法节点),
       角色绑定组_(std::move(角色绑定组)),
       特征服务_(&特征服务),
@@ -44,7 +45,8 @@ void 核验有序参数绑定组(const std::vector<新方法参数角色绑定>&
       治理对象读取_(治理对象读取),
       模拟运行_(std::move(模拟运行)),
       服务要求读取_(服务要求读取),
-      任务贡献治理参数_(std::move(任务贡献治理参数)) {
+      任务贡献治理参数_(std::move(任务贡献治理参数)),
+      任务成员绑定_(std::move(任务成员绑定)) {
     核验有序参数绑定组(角色绑定组_);
 }
 
@@ -138,6 +140,50 @@ std::optional<新任务虚拟存在特征组> 方法参数场景::读取绑定�
     }
     if (状态数 != 1 || Q数 > 1 || (绑定->实际特征组.size() == 2 && Q数 != 1)) return {};
     return 组;
+}
+
+std::optional<新任务虚拟存在特征组> 方法参数场景::读取绑定集合任务特征组(
+    std::uint32_t 位置,稳定编码 T) const noexcept {
+    if (任务成员绑定_ && (任务成员绑定_->集合参数序号 != 位置
+        || 任务成员绑定_->任务引用.任务节点 != T)) return {};
+    const auto* p=查询参数(位置);
+    if(!p||p->信息类型!=新方法参数信息类型::特征)return {};
+    const auto f=读取绑定特征(p->信息节点);
+    if(!f||!f->当前值||!特征服务_)return {};
+    const auto d=特征服务_->捕获特征匹配定义(f->特征概念节点);
+    if(!d||d->比较规则!=特征概念比较规则::服务任务集合身份判等)return {};
+    const auto* V=std::get_if<稳定编码>(&*f->当前值);
+    const auto v=V?读取绑定特征值材料(*V):std::nullopt;
+    const auto* a=v?std::get_if<std::vector<std::uint64_t>>(&v->材料):nullptr;
+    if(!a||std::find(a->begin(),a->end(),T.值)==a->end())return {};
+    const 新内部治理对象读取接口* owner=nullptr;
+    if(用途_==新方法参数场景用途::模拟) {
+        if(!模拟运行_||!模拟运行_->核验模拟参数(方法节点_,角色绑定组_))return {};
+        owner=模拟运行_.get();
+    }
+    else if(用途_==新方法参数场景用途::执行)owner=治理对象读取_;
+    if(!owner)return {};
+    if (用途_ == 新方法参数场景用途::模拟) {
+        const auto result = 模拟运行_->读取模拟集合任务治理(位置, T);
+        if (!result || result->引用.任务节点 != T) return {};
+        if (任务成员绑定_ && (result->引用 != 任务成员绑定_->任务引用
+            || 任务成员绑定_->服务值特征节点 != (result->服务值
+                ? std::optional<稳定编码>{result->服务值->特征节点} : std::nullopt))) return {};
+        return result;
+    }
+    const auto ref=owner->查找任务虚拟存在引用(T);
+    if(!ref||ref->任务节点!=T)return {};
+    const auto result=owner->读取任务虚拟存在特征组(*ref);
+    if (!result || result->引用 != *ref || result->状态.特征节点 != ref->状态特征节点) return {};
+    if (任务成员绑定_ && (任务成员绑定_->任务引用 != *ref
+        || 任务成员绑定_->服务值特征节点 != (result->服务值
+            ? std::optional<稳定编码>{result->服务值->特征节点} : std::nullopt))) return {};
+    return result;
+}
+
+std::optional<新方法任务成员绑定> 方法参数场景::读取绑定任务成员(
+    std::uint32_t 变量序号) const noexcept {
+    return 变量序号 == 1 ? 任务成员绑定_ : std::nullopt;
 }
 
 bool 方法参数场景::使用服务要求读取接口(

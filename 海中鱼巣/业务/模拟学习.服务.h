@@ -8,6 +8,7 @@ namespace 海中鱼巣 {
 class 新_方法类;
 struct 新方法信息;
 class 概念_特征类;
+class 模拟任务需求来源读取接口;
 struct 新学习结束通知 final {
     稳定编码 方法节点;
 };
@@ -31,13 +32,16 @@ private:
 };
 class 模拟学习服务 final {
 public:
-    模拟学习服务(新_方法类&, 概念_特征类&, const 新服务值结算本能端口&) noexcept;
+    模拟学习服务(新_方法类&, 概念_特征类&, const 新服务值结算本能端口&,
+        const 模拟任务需求来源读取接口&) noexcept;
     新学习结束通知 学习(稳定编码 方法节点,
         const std::function<bool()>& 停止检查 = {});
+    bool 可接收学习(稳定编码 方法节点) const;
 private:
     void 学习有序本能(const 新方法信息&,const std::function<bool()>&);
     新_方法类& 方法_;
     概念_特征类& 概念_;
     const 新服务值结算本能端口& 登记读取_;
+    const 模拟任务需求来源读取接口& 业务来源_;
 };
 } // namespace 海中鱼巣

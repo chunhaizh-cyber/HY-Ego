@@ -31,10 +31,8 @@ struct 新服务对象材料 final {
 };
 
 struct 新服务对象获取配置 final {
-    稳定编码 自我存在节点, 所在场景节点, 窗口存在节点;
-    稳定编码 窗口专属存在概念节点;
-    稳定编码 消息数量特征类型节点, 消息数量特征节点;
-    稳定编码 人类概念节点;
+    稳定编码 自我存在节点, 自我概念节点, 通用存在概念节点;
+    稳定编码 人类概念节点, 交互者特征类型节点;
     friend bool operator==(const 新服务对象获取配置&,
         const 新服务对象获取配置&) = default;
 };
@@ -43,18 +41,14 @@ using 新服务对象窗口来源读取函数 = std::optional<新服务对象窗
 class 方法参数场景;
 struct 新方法知识建立请求;
 struct 新方法建立结果;
+struct 新本能函数本次条件结果对;
 
 class 新服务对象获取本能端口 {
 public:
     virtual ~新服务对象获取本能端口() = default;
     virtual std::optional<新服务对象获取配置> 读取登记材料() const noexcept = 0;
     virtual 新方法建立结果 确保方法登记(const 新方法知识建立请求&) noexcept = 0;
-    virtual std::optional<新服务对象窗口来源> 读取窗口来源() const noexcept = 0;
-    virtual bool 核验执行(const 方法参数场景&,
-        const 新服务对象窗口来源&) const noexcept = 0;
-    virtual std::optional<稳定编码> 建立动作(const 方法参数场景&,
-        const 新服务对象窗口来源&) noexcept = 0;
-    virtual std::optional<新服务对象材料> 读取存在材料(
-        const 新服务对象窗口来源&) const noexcept = 0;
+    virtual 新本能函数本次条件结果对 执行任务(
+        const 方法参数场景&, 稳定编码 执行实例节点) noexcept = 0;
 };
 } // namespace 海中鱼巣

@@ -12,6 +12,7 @@ public:
     动作方法投影服务(新_方法类&, const 新_任务类&,
         const 概念_存在类&, const 概念_特征类&) noexcept;
     动作概念定义 读取动作方法投影(const 动作方法投影请求&) const override;
+    bool 核验普通治理动作定义(const 动作概念定义&) const override;
 private:
     新_方法类& 方法_;
     const 新_任务类& 任务_;

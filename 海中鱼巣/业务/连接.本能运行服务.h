@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <vector>
 
 #include "../领域/连接.本能合同.h"
 
@@ -35,6 +36,12 @@ struct 新连接返回 final {
     std::optional<新本能函数本次条件结果对> 运行材料;
 };
 
+// 本次查询读回的过程证据，不表示永久连接，也不授予后继动作执行许可。
+struct 新连接事实 final {
+    稳定编码 调用身份, 动作节点, 现实场景, 自我存在, 目标存在;
+    稳定编码 交互者特征, 外设窗口, 发送消息, 接收消息;
+};
+
 class 连接本能运行服务 final : public 新连接本能端口,
     public std::enable_shared_from_this<连接本能运行服务> {
 public:
@@ -49,6 +56,9 @@ public:
     新连接返回 开始(const 新连接请求&) noexcept;
     新连接返回 推进(稳定编码 调用身份) noexcept;
     新连接返回 取消(稳定编码 调用身份) noexcept;
+    std::vector<新连接事实> 读取已确认连接事实(
+        稳定编码 现实场景, 稳定编码 自我存在,
+        稳定编码 目标存在, 稳定编码 交互者特征) noexcept;
     void 关闭() noexcept;
     std::optional<新连接登记配置> 读取登记配置() const noexcept override;
     新方法建立结果 确保方法登记(const 新方法知识建立请求&) noexcept override;

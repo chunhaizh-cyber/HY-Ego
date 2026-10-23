@@ -102,6 +102,7 @@ struct 新任务管理快照 final {
     std::optional<稳定编码> 服务值结算需求;
     std::optional<稳定编码> 服务值结算任务;
     bool 服务值结算方法已配置 = false;
+    bool 服务值结算治理已配置 = false;
     std::optional<新学习结束通知> 最近方法学习结束;
     std::optional<新学习运行异常记录> 最近学习运行异常;
     bool 等待方法实例消费 = false;
@@ -119,9 +120,8 @@ struct 新长期服务值结算配置 final {
     稳定编码 服务值特征;
     稳定编码 完成服务需求;
     稳定编码 服务根需求;
-    稳定编码 登记方法校验节点;
-    std::int64_t 冻结前值 = 0;
-    稳定编码 目标值域概念节点;
+    稳定编码 自我概念节点, 服务值特征类型节点;
+    新结算能力引用 能力;
     新服务值结算确认接口* 工程诊断端口 = nullptr;
 
     bool 完整() const noexcept;
@@ -150,6 +150,7 @@ struct 新任务筹办处理结果 final {
     std::optional<新任务治理条件筹办结果> 条件筹办;
     std::optional<新任务治理条件筹办结果> 独立条件筹办;
     std::optional<新任务条件子需求提议> 独立子需求提议;
+    std::optional<新任务因果子需求提议> 因果子需求提议;
 };
 
 // manager只向self交付当前筹办结果的稳定定位；正式筹办内容必须由
@@ -256,7 +257,8 @@ enum class 新自我筹办裁决状态 : std::uint8_t {
     结构缺口,
     任务状态变化,
     需核查,
-    已处理条件子需求
+    已处理条件子需求,
+    已处理因果子需求
 };
 
 enum class 新自我执行前判断状态 : std::uint8_t {
@@ -372,6 +374,13 @@ struct 新自我筹办裁决 final {
     std::optional<新自我执行前判断> 执行前判断;
     std::optional<新子需求采用回执> 子需求回执;
     std::optional<新任务本能采用材料> 本能采用;
+    struct 因果采用回执 final {
+        新任务因果子需求提议 原提议;
+        std::vector<新子需求采用项> 项组;
+        bool 已完成处理 = false;
+        friend bool operator==(const 因果采用回执&, const 因果采用回执&) = default;
+    };
+    std::optional<因果采用回执> 因果回执;
     friend bool operator==(const 新自我筹办裁决&,
         const 新自我筹办裁决&) = default;
 };
@@ -404,6 +413,7 @@ public:
         const void* 自我所有者, std::uint64_t 工作编号,
         const 新任务贡献反馈定位&) noexcept;
     bool 绑定方法学习读取(const 新_方法类&) noexcept;
+    新任务管理操作状态 通知方法退出适用(稳定编码 方法节点) noexcept;
     // 交接编号仅作进程内去重；相关任务经self fresh复核后才能重新筹办。
     新方法学习接收状态 提交方法学习结束(
         const 新学习结束通知&, std::uint64_t 交接编号) noexcept;
@@ -422,6 +432,7 @@ public:
     std::stop_token 读取停止令牌() const noexcept;
     新任务管理操作结果 等待停止(std::uint64_t 等待毫秒) noexcept;
     新任务管理快照 读取快照() const noexcept;
+    std::vector<新因果任务等待边> 读取因果等待边() const;
     std::optional<新任务筹办处理结果> 读取最近筹办结果(
         稳定编码 任务节点) const noexcept;
     std::optional<新自我筹办裁决> 读取最近自我筹办裁决(
@@ -458,6 +469,8 @@ private:
     新任务工作操作状态 确认最终服务消费工作(
         const void* 自我所有者, std::uint64_t 工作编号,
         const 新服务值最终来源定位&) noexcept;
+    新任务完成结算确认状态 确认直接最终服务消费(
+        const 新服务值最终来源定位&, const 新服务值最终消费结果&) noexcept;
     新任务管理操作状态 绑定自我筹办反馈(
         const void* 所有者,
         筹办反馈接收函数 筹办接收,

@@ -4,6 +4,7 @@
 #include <memory>
 #include <optional>
 #include <variant>
+#include <utility>
 #include <vector>
 
 #include "../核心/基础数据集.h"
@@ -157,9 +158,47 @@ struct 新特征引用集合准备结果 final {
     std::optional<新特征引用集合更新准备> 准备;
 };
 
+// 仅外设owner可签发；空白私有节点身份与集合在同一次组合发布中生效。
+class 新消息待发表凭据 final {
+public:
+    新消息待发表凭据(新消息待发表凭据&&) noexcept = default;
+    新消息待发表凭据& operator=(新消息待发表凭据&&) noexcept = default;
+    新消息待发表凭据(const 新消息待发表凭据&) = delete;
+    新消息待发表凭据& operator=(const 新消息待发表凭据&) = delete;
+private:
+    新消息待发表凭据(稳定编码 消息节点, std::vector<基础联合节点快照> 完整前提,
+        基础封存追加片段 身份及来源片段)
+        : 消息节点(消息节点), 完整前提(std::move(完整前提)),
+          身份及来源片段(std::move(身份及来源片段)) {}
+    稳定编码 消息节点;
+    std::vector<基础联合节点快照> 完整前提;
+    基础封存追加片段 身份及来源片段;
+    bool 已采用 = false;
+    friend class 新_外设世界树类;
+    friend class 新_特征类;
+};
+
 struct 新特征引用集合提交结果 final {
     基础节点组追加状态 状态 = 基础节点组追加状态::入口拒绝;
     std::vector<基础片段发布回执> 附加片段回执组;
+};
+
+class 新特征存在引用更新准备 final {
+public:
+    新特征存在引用更新准备(新特征存在引用更新准备&&) noexcept;
+    新特征存在引用更新准备& operator=(新特征存在引用更新准备&&) noexcept;
+    ~新特征存在引用更新准备() noexcept;
+    新特征存在引用更新准备(const 新特征存在引用更新准备&) = delete;
+    新特征存在引用更新准备& operator=(const 新特征存在引用更新准备&) = delete;
+private:
+    struct 实现;
+    explicit 新特征存在引用更新准备(std::unique_ptr<实现>) noexcept;
+    std::unique_ptr<实现> 实现_;
+    friend class 新_特征类;
+};
+struct 新特征存在引用准备结果 final {
+    新特征I64准备状态 状态 = 新特征I64准备状态::入口拒绝;
+    std::optional<新特征存在引用更新准备> 准备;
 };
 
 enum class 新特征比较状态 : std::uint8_t {
@@ -273,8 +312,17 @@ struct 新特征清理准备结果 final {
 
 class 新_特征类 final {
 public:
+    void 装配存在成员身份读取接口(const 特征存在成员读取接口&) noexcept;
+    新特征存在引用准备结果 准备顶层存在引用更新(稳定编码 特征节点, 稳定编码 存在节点) noexcept;
+    新特征I64提交结果 提交顶层存在引用更新(新特征存在引用更新准备&,
+        const std::vector<基础封存追加片段>&) noexcept;
+    新特征值添加结果 完成顶层存在引用更新(新特征存在引用更新准备&) noexcept;
+    void 结束顶层存在引用更新(新特征存在引用更新准备&) noexcept;
+    void 取消顶层存在引用更新(新特征存在引用更新准备&) noexcept;
     新特征引用集合保护结果 捕获引用集合更新保护(稳定编码) const noexcept;
     新特征引用集合准备结果 准备顶层引用集合更新(稳定编码 特征节点, 稳定编码 新准确材料节点) noexcept;
+    新特征引用集合准备结果 准备顶层消息集合更新(稳定编码 特征节点,
+        稳定编码 新准确材料节点, 新消息待发表凭据&&) noexcept;
     新特征引用集合提交结果 提交顶层引用集合更新(新特征引用集合更新准备&,
         const std::vector<基础封存追加片段>&) noexcept;
     新特征值添加结果 完成顶层引用集合更新(新特征引用集合更新准备&) noexcept;
@@ -409,7 +457,9 @@ public:
 
 private:
     新特征I64准备结果 准备顶层准确值更新(
-        稳定编码 特征节点, const 新特征准确值& 新值, bool 引用集合) noexcept;
+        稳定编码 特征节点, const 新特征准确值& 新值, bool 引用集合,
+        新消息待发表凭据* 待发表消息 = nullptr, bool 单存在引用 = false) noexcept;
+    const 特征存在成员读取接口* 存在成员身份读取接口_ = nullptr;
     新特征值添加结果 完成添加值归组(
         const 新特征信息& 原特征, const 新特征准确值& 新值,
         稳定编码 活动记录节点, 新特征值添加结果 结果,

@@ -46,8 +46,19 @@ struct 新治理任务特征变化结果 final {
 enum class 新任务贡献动作种类 : std::int64_t {
     来源计值 = 1, 直接接收 = 2, 权威迁移 = 3, 直属结算收尾 = 4, 最终结算收尾 = 5
 };
+enum class 新结算能力类别 : std::uint8_t { 历史方法 = 1, 自我服务值治理 = 2 };
+struct 新结算能力引用 final {
+    新结算能力类别 类别;
+    稳定编码 节点;
+    friend bool operator==(const 新结算能力引用&, const 新结算能力引用&) = default;
+};
+struct 新服务值治理定义 final {
+    稳定编码 节点, 自我概念节点, 服务值特征类型节点;
+    friend bool operator==(const 新服务值治理定义&, const 新服务值治理定义&) = default;
+};
 struct 新任务结算边界证据 final {
-    稳定编码 结算任务节点, 结算需求节点, 服务根需求节点, 登记方法节点;
+    稳定编码 结算任务节点, 结算需求节点, 服务根需求节点;
+    新结算能力引用 能力;
     friend bool operator==(const 新任务结算边界证据&,
         const 新任务结算边界证据&) = default;
 };
@@ -212,6 +223,8 @@ public:
 class 新内部治理对象读取接口 {
 public:
     virtual ~新内部治理对象读取接口() = default;
+    virtual std::optional<新任务虚拟存在引用> 查找任务虚拟存在引用(
+        稳定编码) const noexcept { return std::nullopt; }
     virtual std::optional<新任务虚拟存在读回> 读取任务虚拟存在引用(
         const 新任务虚拟存在引用&) const noexcept = 0;
     // 未提供语义投影的模拟读取器不能因此转而查询现实任务。

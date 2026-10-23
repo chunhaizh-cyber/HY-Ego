@@ -112,6 +112,12 @@
     <ClInclude Include="海中鱼巣\业务\模拟学习.服务.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\模拟任务需求来源.服务.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\模拟任务需求来源.服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="海中鱼巣\领域\方法问题反馈.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -136,6 +142,12 @@
     <ClCompile Include="海中鱼巣\领域\新_模拟世界类.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="海中鱼巣\领域\任务结算.规则.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\领域\任务结算.规则.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="海中鱼巣\领域\新_模拟世界类.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -339,6 +351,12 @@
     <ClInclude Include="海中鱼巣\业务\因果.反向查询服务.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\业务\因果.任务筹办服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\因果.任务筹办服务.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\业务\因果.反向查询服务.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -499,6 +517,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClInclude Include="海中鱼巣\领域\新_因果公共类型.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\因果反向查询.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\因果筹办.只读合同.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="海中鱼巣\领域\新_因果类.h">

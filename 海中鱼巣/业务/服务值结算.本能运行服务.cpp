@@ -2,13 +2,16 @@
 #include "新_世界树类.h"
 #include "../领域/新_方法类.h"
 #include "../领域/新_任务类.h"
+#include "../领域/新_因果类.h"
 #include "../领域/新_本能函数管理类.h"
 #include "../适配/适配器.UTC时钟.h"
 #include "../核心/容错检查.h"
 #include <algorithm>
+#include <array>
 #include <limits>
 #include <mutex>
 #include <new>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -109,8 +112,9 @@ struct 服务值结算本能运行服务::实现 final {
     std::mutex 最终消费串行互斥;
     std::optional<新服务值结算登记材料> 材料;
     std::optional<稳定编码> 方法节点, 需求节点;
+    std::optional<新服务值治理定义> 治理定义;
+    std::optional<新普通需求建立请求> 待发布首子请求;
     bool 停止 = false, 已报告 = false;
-    bool 登记替代开放 = false;
     std::string 首条诊断;
 };
 
@@ -151,227 +155,276 @@ std::optional<新服务值结算登记材料> 服务值结算本能运行服务:
     catch (...) { return std::nullopt; }
 }
 
-新服务值结算登记结果 服务值结算本能运行服务::初始化(稳定编码 场景, 稳定编码 自我,
-    稳定编码 服务特征, 稳定编码 服务根) noexcept {
-    新服务值结算登记结果 结果;
-    const auto 失败 = [&](std::string_view 错误) { 报告并停止(错误); 结果.状态 = 新服务值结算协作状态::工程停止; return 结果; };
-    if (!实现_) return 失败("服务值结算：运行服务分配失败");
+新服务值治理初始化结果 服务值结算本能运行服务::初始化治理(
+    稳定编码 场景, 稳定编码 自我, 稳定编码 服务特征, 稳定编码 服务根) noexcept {
+    新服务值治理初始化结果 结果;
     try {
         std::lock_guard 初始化锁(实现_->初始化互斥);
         auto& s = *实现_;
-        { std::lock_guard 锁(s.互斥); if (s.停止) { 结果.状态 = 新服务值结算协作状态::工程停止; return 结果; } }
+        { std::lock_guard 锁(s.互斥);
+          if (s.停止) { 结果.状态 = 新服务值结算协作状态::工程停止; return 结果; }
+          if (s.材料 && (s.材料->自我所在场景 != 场景 || s.材料->自我存在 != 自我
+              || s.材料->服务值特征 != 服务特征 || s.材料->服务根需求 != 服务根))
+              throw std::logic_error("governance initialization identity changed"); }
         const auto 根 = s.需求.获取需求(服务根);
-        const auto f = s.世界.查询特征(服务特征);
-        const auto e = s.世界.查询存在(自我);
-        const auto c = s.世界.查询场景(场景);
-        const auto 状态类型 = s.任务.获取任务状态特征类型();
-        const auto 任务服务类型 = s.任务.获取任务服务值特征类型();
-        if (!根 || 根->根角色 != 新需求根角色::服务 || 根->目标存在节点 != 自我
-            || 根->目标.目标形式 != 新需求目标形式::变化方向
-            || 根->目标.目标变化方向 != 新需求变化方向::增加 || !f || !f->当前值
-            || !std::holds_alternative<std::int64_t>(*f->当前值) || !e || !c || !状态类型 || !任务服务类型
-            || !含有(c->直接成员存在组, 自我) || !含有(e->特征节点组, 服务特征))
-            return 失败("服务值结算：初始化现实身份或服务根不一致");
+        const auto E = s.世界.查询存在(自我);
+        const auto F = s.世界.查询特征(服务特征);
+        const auto S = s.世界.查询场景(场景);
+        if (!根 || !E || !F || !S || 根->根角色 != 新需求根角色::服务
+            || 根->目标存在节点 != 自我 || 根->目标.目标形式 != 新需求目标形式::变化方向
+            || 根->目标.目标变化方向 != 新需求变化方向::增加
+            || !含有(S->直接成员存在组, 自我) || !含有(E->特征节点组, 服务特征)
+            || 取得特征类型根(s.概念, F->特征概念节点) != 根->目标.目标特征类型概念节点)
+            throw std::logic_error("governance initialization real identity mismatch");
         新服务值结算登记材料 m;
-        m.自我所在场景 = 场景; m.自我存在 = 自我; m.服务值特征 = 服务特征; m.服务根需求 = 服务根;
-        m.服务值类型根 = 根->目标.目标特征类型概念节点; m.任务状态类型根 = *状态类型;
-        m.自我概念 = e->专属存在概念节点;
-        m.任务服务值类型根 = *任务服务类型;
-        const auto 非负域 = [&](稳定编码 类型) {
-            const auto 定义 = s.概念.获取特征概念(类型);
-            const auto 诊断前缀 = "服务值结算初始化：非负值域类型=" + std::to_string(类型.值) + "，";
-            if (!定义 || 定义->材料类型 != 特征概念材料物理类型::I64标量
-                || 取得特征类型根(s.概念, 类型) != 类型)
-                throw std::logic_error(诊断前缀 + "未取得有效I64类型根定义");
-            特征概念定义 域;
-            域.材料类型 = 定义->材料类型; 域.单位 = 定义->单位;
-            域.比较规则 = 定义->比较规则; 域.聚合规则 = 定义->聚合规则;
-            域.值域 = std::vector<特征概念I64闭区间>{{0, (std::numeric_limits<std::int64_t>::max)()}};
-            // 启动装配期取得本类型的域；比较算法归概念服务，严格建子合同不变。
-            // 元数据来自同一类型根，等域时复用该根，不能跨类型按值域合并。
-            const auto 比较 = s.概念.比较值域(定义->材料类型, 定义->值域, 域.值域);
-            if (比较.状态 != 特征概念规则状态::已完成 || !比较.关系)
-                throw std::logic_error(诊断前缀 + "值域比较未完成，状态="
-                    + std::to_string(static_cast<int>(比较.状态)));
-            if (*比较.关系 == 特征概念值域关系::相等) return 类型;
-            if (*比较.关系 != 特征概念值域关系::左包含右)
-                throw std::logic_error(诊断前缀 + "类型根未包含完整非负范围");
-            const auto 节点 = s.世界.建立特征概念(域, 类型);
-            if (!有效(节点))
-                throw std::logic_error(诊断前缀 + "严格子值域取得或建立失败");
-            return 节点;
-        };
-        m.服务值合法值域 = 非负域(m.服务值类型根);
-        m.任务服务值合法值域 = 非负域(m.任务服务值类型根);
-        if (!有效(m.自我概念) || !有效(m.服务值合法值域) || !有效(m.任务服务值合法值域))
-            return 失败("服务值结算：正式自我概念或非负值域未就绪");
-        // 登记在集合实例建立以前发生：这里只声明已有先天类型和非空域。
-        const auto 先天 = s.概念.获取先天特征概念();
-        const auto 集合类型 = 先天 ? s.概念.获取特征概念(先天->服务任务集合) : std::nullopt;
-        if (!集合类型 || 集合类型->材料类型 != 特征概念材料物理类型::U64数组
-            || 集合类型->比较规则 != 特征概念比较规则::服务任务集合身份判等
-            || 集合类型->单位 || !std::holds_alternative<特征概念全材料值域>(集合类型->值域))
-            return 失败("服务值结算：先天服务任务集合类型不一致");
-        m.服务任务集合类型根 = 先天->服务任务集合;
-        特征概念定义 集合定义;
-        集合定义.材料类型 = 集合类型->材料类型;
-        集合定义.比较规则 = 集合类型->比较规则;
-        集合定义.聚合规则 = 集合类型->聚合规则;
-        特征概念任务集合值域 非空域;
-        非空域.至少一个任务 = true;
-        集合定义.值域 = 非空域;
-        m.服务任务非空值域 = s.世界.建立特征概念(集合定义, m.服务任务集合类型根);
-        if (!有效(m.服务任务非空值域)) return 失败("服务值结算：服务任务非空域建立失败");
-        const auto 类型关系 = s.概念.比较单特征概念(f->特征概念节点, m.服务值类型根);
-        if (类型关系.特征类型根 != m.服务值类型根 || m.服务值类型根 == m.任务状态类型根)
-            return 失败("服务值结算：特征类型身份不一致");
-        const auto 登记 = s.方法.查询本能登记(std::string(新本能函数登记名_服务值结算));
-        const auto 全集 = s.需求.查询全部需求();
-        if (全集.状态 != 新需求操作状态::已找到) return 失败("服务值结算：需求全集无法完整读取");
-        std::optional<新需求信息> 已有首子;
-        for (const auto 节点 : 全集.需求节点组) {
-            const auto 治理 = s.需求.读取需求治理信息(节点);
-            if (!治理) return 失败("服务值结算：需求全集含破损节点");
-            if (!治理->完整目标) continue;
-            const auto 信息 = s.需求.获取需求(节点);
-            if (!信息) return 失败("服务值结算：需求全集含破损节点");
-            if (信息->父需求节点 != 服务根) continue;
-            if (已有首子) return 失败("服务值结算：服务根首子需求不唯一");
-            已有首子 = 信息;
+        m.自我所在场景 = 场景; m.自我存在 = 自我; m.服务值特征 = 服务特征;
+        m.服务根需求 = 服务根; m.自我概念 = E->专属存在概念节点;
+        m.服务值类型根 = 根->目标.目标特征类型概念节点;
+        auto 类型 = s.概念.获取特征概念(m.服务值类型根);
+        if (!类型 || 类型->材料类型 != 特征概念材料物理类型::I64标量)
+            throw std::logic_error("governance service feature type is not I64");
+        const 特征概念值域 有符号域 = std::vector<特征概念I64闭区间>{{
+            (std::numeric_limits<std::int64_t>::min)(), (std::numeric_limits<std::int64_t>::max)()}};
+        if (类型->值域 != 有符号域) {
+            const 特征概念值域 历史非负域 = std::vector<特征概念I64闭区间>{{0, (std::numeric_limits<std::int64_t>::max)()}};
+            if (类型->值域 != 历史非负域 || !s.概念.更新特征概念值域(m.服务值类型根,
+                    有符号域, s.世界.获取事实服务引用().特征值服务))
+                throw std::logic_error("governance signed service domain unavailable");
+            类型 = s.概念.获取特征概念(m.服务值类型根);
+            if (!类型 || 类型->值域 != 有符号域) throw std::logic_error("governance signed domain readback failed");
         }
-        bool 重复 = false;
-        if (登记.状态 == 新方法操作状态::方法不存在 && !登记.方法节点) {
-            if (已有首子) return 失败("服务值结算：旧首子需求不兼容，禁止静默新增");
-            m.冻结前值 = std::get<std::int64_t>(*f->当前值);
-            if (m.冻结前值 < 0 || m.冻结前值 == (std::numeric_limits<std::int64_t>::max)())
-                return 失败("服务值结算：初始固定子需求目标无法以I64表达");
-        } else if (登记.状态 == 新方法操作状态::已找到 && 登记.方法节点) {
-            重复 = true;
-            const auto 方法 = s.方法.获取方法(*登记.方法节点);
-            if (!方法 || 方法->启用状态 != 新方法启用状态::启用 || !已有首子
-                || 已有首子->目标存在节点 != 自我 || 已有首子->来源类型 != 新需求来源类型::本能定义
-                || 已有首子->目标.目标形式 != 新需求目标形式::值
-                || 已有首子->目标.目标特征类型概念节点 != m.服务值类型根
-                || !已有首子->目标.目标值域概念节点 || !已有首子->目标.目标比较关系概念节点)
-                return 失败("服务值结算：登记方法或既有首子需求不兼容");
-            // 同一运行服务重入不依赖尚未形成的条件结果知识，也不移动冻结目标。
-            const auto 原材料 = 读取登记材料();
-            std::optional<std::int64_t> 恢复前值;
-            if (原材料) {
-                if (原材料->自我存在 != 自我 || 原材料->自我所在场景 != 场景
-                    || 原材料->服务值特征 != 服务特征 || 原材料->服务根需求 != 服务根
-                    || 原材料->服务值类型根 != m.服务值类型根
-                    || 原材料->任务状态类型根 != m.任务状态类型根
-                    || 原材料->服务任务集合类型根 != m.服务任务集合类型根
-                    || 原材料->服务任务非空值域 != m.服务任务非空值域
-                    || 原材料->冻结前值 < 0)
-                    return 失败("服务值结算：重复初始化登记材料身份不一致");
-                恢复前值 = 原材料->冻结前值;
-            } else {
-                // A0是旧D/旧Vm声明，不是学习结果；只有头的合法旧方法也能恢复。
-                auto 冻结声明 = 方法;
-                if (方法->父代方法节点) {
-                    const auto 父代 = s.方法.读取服务结算固定加一父代(方法->节点);
-                    if (父代 != 方法->父代方法节点) return 失败("服务值结算：固定加一父代不一致");
-                    冻结声明 = s.方法.获取方法(*父代);
-                    if (!冻结声明) return 失败("服务值结算：固定加一父代不可读");
+        const auto 全集 = s.需求.查询全部需求();
+        if (全集.状态 != 新需求操作状态::已找到)
+            throw std::logic_error("governance demand list unavailable");
+        std::optional<新需求信息> 已有;
+        for (auto D : 全集.需求节点组) {
+            const auto d = s.需求.获取需求(D);
+            const auto g = s.需求.读取需求治理信息(D);
+            if (!g) throw std::logic_error("governance demand record corrupt");
+            if (g->父需求节点 != 服务根) continue;
+            if (!d || 已有) throw std::logic_error("governance first child absent target or ambiguous");
+            已有 = d;
+        }
+        if (已有) {
+            if (已有->目标存在节点 != 自我 || 已有->来源类型 != 新需求来源类型::本能定义
+                || 已有->来源承接节点 || 已有->目标.目标特征类型概念节点 != m.服务值类型根
+                || 已有->目标.目标形式 != 新需求目标形式::值 || !已有->目标.目标值域概念节点
+                || !已有->目标.目标比较关系概念节点 || !单值(s.概念, *已有->目标.目标值域概念节点)
+                || 取得特征类型根(s.概念, *已有->目标.目标值域概念节点) != m.服务值类型根)
+                throw std::logic_error("governance existing D target mismatch");
+            const std::vector<二次特征概念输入定义> 输入{
+                {0, 二次特征输入角色::左输入, 二次特征输入来源种类::特征准确值, m.服务值类型根},
+                {1, 二次特征输入角色::右输入, 二次特征输入来源种类::特征准确值, m.服务值类型根}};
+            const auto 关系 = s.二次.获取二次特征概念(*已有->目标.目标比较关系概念节点);
+            const auto 目标单值 = *单值(s.概念, *已有->目标.目标值域概念节点);
+            const 特征概念值域 精确相等域 = std::vector<特征概念I64闭区间>{{目标单值, 目标单值}};
+            if (!关系 || 关系->算法 != 二次特征算法::有向特征差值 || 关系->输入定义组 != 输入
+                || 关系->参照特征概念节点 != 已有->目标.目标值域概念节点
+                || 关系->输出特征概念.材料类型 != 特征概念材料物理类型::I64标量
+                || 关系->输出特征概念.比较规则 != 特征概念比较规则::I64数值
+                || 关系->输出特征概念.单位 || 关系->输出特征概念.值域 != 精确相等域
+                || std::find(关系->结果域种类组.begin(), 关系->结果域种类组.end(), 二次特征结果域种类::等于) == 关系->结果域种类组.end())
+                throw std::logic_error("governance existing D is not formal equality");
+            m.目标值域 = *已有->目标.目标值域概念节点;
+            m.准确相等概念 = *已有->目标.目标比较关系概念节点;
+        } else {
+            if (!s.待发布首子请求) {
+                if (!F->当前值 || !std::holds_alternative<std::int64_t>(*F->当前值))
+                    throw std::logic_error("governance initial A0 is not actual I64");
+                const auto A0 = std::get<std::int64_t>(*F->当前值);
+                if (A0 == (std::numeric_limits<std::int64_t>::max)())
+                    throw std::overflow_error("governance initial target A0+1 overflow");
+                const 特征概念值域 目标域 = std::vector<特征概念I64闭区间>{{A0 + 1, A0 + 1}};
+                const auto 比较 = s.概念.比较值域(类型->材料类型, 类型->值域, 目标域);
+                if (比较.状态 != 特征概念规则状态::已完成 || !比较.关系)
+                    throw std::logic_error("governance target domain comparison failed");
+                if (*比较.关系 == 特征概念值域关系::相等) m.目标值域 = m.服务值类型根;
+                else {
+                    特征概念定义 定义;
+                    定义.材料类型 = 类型->材料类型; 定义.值域 = 目标域; 定义.单位 = 类型->单位;
+                    定义.比较规则 = 类型->比较规则; 定义.聚合规则 = 类型->聚合规则;
+                    m.目标值域 = s.世界.建立特征概念(定义, m.服务值类型根);
                 }
-                const bool 固定声明 = std::any_of(冻结声明->参数规格组.begin(), 冻结声明->参数规格组.end(),
-                    [&](const auto& 规格) { return 规格.参数角色节点 == m.任务状态类型根
-                        && 规格.对象种类 == 新方法参数对象种类::任务虚拟存在 && 规格.特征规格组.size() == 1; });
-                if (固定声明) for (const auto& 规格 : 冻结声明->参数规格组) {
-                    if (规格.参数角色节点 != m.服务值类型根) continue;
-                    for (const auto& 项 : 规格.特征规格组)
-                        if (项.特征类型概念节点 == m.服务值类型根 && 项.值域概念节点)
-                            恢复前值 = 单值(s.概念, *项.值域概念节点);
-                }
-                const auto 目标值 = 单值(s.概念, *已有首子->目标.目标值域概念节点);
-                if (!固定声明 && !方法->父代方法节点 && 目标值 && *目标值 > 0)
-                    恢复前值 = *目标值 - 1; // 新装Q头仍复用原固定首子D，不迁移D目标。
-                if (!恢复前值 || *恢复前值 < 0 || !目标值 || *目标值 != 加一(*恢复前值))
-                    return 失败("服务值结算：旧Vm声明与既有首子目标不能唯一恢复");
+                if (!有效(m.目标值域)) throw std::logic_error("governance target singleton not published");
+                const std::vector<二次特征概念输入定义> 输入{
+                    {0, 二次特征输入角色::左输入, 二次特征输入来源种类::特征准确值, m.服务值类型根},
+                    {1, 二次特征输入角色::右输入, 二次特征输入来源种类::特征准确值, m.服务值类型根}};
+                const auto 比较概念 = s.二次.建立或取得默认二次特征概念(二次特征算法::有向特征差值, 输入, m.目标值域);
+                if (!比较概念.概念节点) throw std::logic_error("governance target comparison unavailable");
+                const auto 相等 = s.二次.建立或取得参照结果域概念(*比较概念.概念节点, 二次特征结果域种类::等于);
+                if (!相等.概念节点) throw std::logic_error("governance target equality unavailable");
+                m.准确相等概念 = *相等.概念节点;
+                新普通需求建立请求 请求;
+                请求.父需求节点 = 服务根; 请求.目标存在节点 = 自我; 请求.来源类型 = 新需求来源类型::本能定义;
+                请求.目标.目标特征类型概念节点 = m.服务值类型根;
+                请求.目标.目标值域概念节点 = m.目标值域; 请求.目标.目标比较关系概念节点 = m.准确相等概念;
+                s.待发布首子请求 = 请求;
             }
-            if (!恢复前值) return 失败("服务值结算：不能从正式声明恢复初值");
-            m.冻结前值 = *恢复前值;
-        } else return 失败("服务值结算：登记定位结构失败");
-        const auto 建单值 = [&](稳定编码 父, std::int64_t 值) {
-            const auto 父信息 = s.概念.获取特征概念(父);
-            if (!父信息) return 稳定编码{};
-            特征概念定义 定义;
-            定义.材料类型 = 特征概念材料物理类型::I64标量;
-            定义.值域 = std::vector<特征概念I64闭区间>{{值, 值}};
-            定义.单位 = 父信息->单位; 定义.比较规则 = 父信息->比较规则; 定义.聚合规则 = 父信息->聚合规则;
-            return s.世界.建立特征概念(定义, 父);
+            const auto 建立 = s.需求.建立或取得普通需求(*s.待发布首子请求);
+            if (建立.需求节点) 已有 = s.需求.获取需求(*建立.需求节点);
+            else {
+                const auto 复查 = s.需求.查询全部需求();
+                if (复查.状态 != 新需求操作状态::已找到) throw std::logic_error("governance first D publication unresolved");
+                for (auto D : 复查.需求节点组) {
+                    const auto d = s.需求.获取需求(D);
+                    if (!d || d->父需求节点 != 服务根) continue;
+                    if (已有 || d->目标存在节点 != 自我 || d->目标 != s.待发布首子请求->目标
+                        || d->来源类型 != 新需求来源类型::本能定义 || d->来源承接节点)
+                        throw std::logic_error("governance first D publication ambiguous");
+                    已有 = d;
+                }
+            }
+            if (!已有 || 已有->父需求节点 != 服务根 || 已有->目标 != s.待发布首子请求->目标)
+                throw std::logic_error("governance first D readback mismatch");
+            m.目标值域 = *已有->目标.目标值域概念节点;
+            m.准确相等概念 = *已有->目标.目标比较关系概念节点;
+        }
+        const auto 定义 = s.任务.确保服务值治理定义(m.自我概念, m.服务值类型根);
+        const auto 读回 = s.任务.读取服务值治理定义(定义.节点);
+        if (!读回 || *读回 != 定义) throw std::logic_error("governance definition readback mismatch");
+        const auto 先天 = s.概念.获取先天特征概念();
+        if (!先天) throw std::logic_error("governance task collection type missing");
+        m.服务任务集合类型根 = 先天->服务任务集合;
+        // 定义级初始化，不是执行一次结算。状态、动作实例和经验发生仍由真实运行产生。
+        const auto 状态类型 = s.任务.获取任务状态特征类型();
+        const auto 任务服务值类型 = s.任务.获取任务服务值特征类型();
+        if (!状态类型 || !任务服务值类型)
+            throw std::logic_error("innate settlement task feature types unavailable");
+        const auto 状态根 = s.概念.获取特征概念(*状态类型);
+        if (!状态根) throw std::logic_error("innate settlement state type unreadable");
+        特征概念定义 完成定义;
+        完成定义.材料类型 = 状态根->材料类型;
+        const auto 完成值 = static_cast<std::int64_t>(新任务状态::已完成);
+        完成定义.值域 = std::vector<特征概念I64闭区间>{{完成值, 完成值}};
+        完成定义.单位 = 状态根->单位;
+        完成定义.比较规则 = 状态根->比较规则;
+        完成定义.聚合规则 = 状态根->聚合规则;
+        const auto 完成域 = s.世界.建立特征概念(完成定义, *状态类型);
+        if (!有效(完成域)) throw std::logic_error("innate completed state domain unavailable");
+        const auto 任务范围 = s.任务.获取任务信息范围概念();
+        auto 事实 = s.世界.获取事实服务引用();
+        const auto 关系概念 = 事实.因果服务.确保先天因果概念(定义.节点);
+        动作方法投影请求 动作请求;
+        动作请求.动作定义节点 = 定义.节点;
+        动作请求.执行主体概念节点 = m.自我概念;
+        动作请求.普通目标概念节点 = m.自我概念;
+        动作请求.目标特征类型概念节点 = m.服务值类型根;
+        const auto 动作概念 = s.动态.确保动作定义概念(动作请求);
+        if (!动作概念.概念节点) throw std::logic_error("innate settlement action concept unavailable");
+        新先天因果定义 因果;
+        因果.治理定义 = 定义.节点;
+        因果.合同版本概念 = 关系概念.合同版本概念;
+        因果.作用场景范围概念 = S->专属存在概念节点;
+        因果.动作概念 = *动作概念.概念节点;
+        因果.触发方式 = 新因果动作触发方式::被动触发;
+        因果.角色组 = {{0, 新先天因果角色种类::普通存在, m.自我概念},
+            {1, 新先天因果角色种类::任务信息, 任务范围}};
+        因果.唯一结果 = {0, 1, m.服务值类型根, m.服务值类型根,
+            *任务服务值类型, *任务服务值类型};
+        using 条件种类 = 新先天因果条件种类;
+        const auto 添加条件 = [&](条件种类 种类, std::vector<std::int64_t> 角色,
+            std::vector<稳定编码> 参数) {
+            const auto 位置 = std::find_if(关系概念.关系概念组.begin(), 关系概念.关系概念组.end(),
+                [&](const auto& 项) { return 项.first == 种类; });
+            if (位置 == 关系概念.关系概念组.end())
+                throw std::logic_error("innate settlement relation concept missing");
+            因果.全部条件.push_back({static_cast<std::int64_t>(因果.全部条件.size()),
+                种类, 位置->second, std::move(角色), std::move(参数)});
         };
-        m.任务完成值域 = 建单值(m.任务状态类型根, 9);
-        m.动作前单值域 = 建单值(m.服务值类型根, m.冻结前值);
-        m.目标值域 = 建单值(m.服务值类型根, 加一(m.冻结前值));
-        if (!有效(m.任务完成值域) || !有效(m.动作前单值域) || !有效(m.目标值域))
-            return 失败("服务值结算：正式单值域建立失败");
-        const std::vector<二次特征概念输入定义> 输入{
-            {0, 二次特征输入角色::左输入, 二次特征输入来源种类::特征准确值, m.服务值类型根},
-            {1, 二次特征输入角色::右输入, 二次特征输入来源种类::特征准确值, m.服务值类型根}};
-        const auto 方向 = s.二次.建立或取得默认二次特征概念(二次特征算法::有向特征差值, 输入);
-        const auto 比较 = s.二次.建立或取得默认二次特征概念(二次特征算法::有向特征差值, 输入, m.目标值域);
-        if (!方向.概念节点 || !比较.概念节点) return 失败("服务值结算：比较概念建立失败");
-        const auto 增 = s.二次.建立或取得参照结果域概念(*方向.概念节点, 二次特征结果域种类::大于);
-        const auto 平 = s.二次.建立或取得参照结果域概念(*方向.概念节点, 二次特征结果域种类::等于);
-        const auto 等 = s.二次.建立或取得参照结果域概念(*比较.概念节点, 二次特征结果域种类::等于);
-        if (!增.概念节点 || !平.概念节点 || !等.概念节点) return 失败("服务值结算：关系值域建立失败");
-        m.增加方向概念 = *增.概念节点; m.不变方向概念 = *平.概念节点; m.准确相等概念 = *等.概念节点;
-        if (已有首子 && (已有首子->目标.目标值域概念节点 != m.目标值域
-            || 已有首子->目标.目标比较关系概念节点 != m.准确相等概念))
-            return 失败("服务值结算：登记目标与首子需求目标不一致");
+        添加条件(条件种类::存在有效, {0}, {m.自我概念});
+        添加条件(条件种类::集合包含角色, {0, 1}, {m.服务任务集合类型根, 任务范围});
+        添加条件(条件种类::任务虚拟存在归属, {1}, {任务范围});
+        添加条件(条件种类::特征值域, {0}, {m.服务值类型根, m.服务值类型根});
+        添加条件(条件种类::特征值域, {1}, {*状态类型, 完成域});
+        添加条件(条件种类::特征值域, {1}, {*任务服务值类型, *任务服务值类型});
+        for (const auto 种类 : {条件种类::需求任务关联, 条件种类::直接父子关联,
+            条件种类::完成执行评估一致, 条件种类::完成来源一致, 条件种类::直接子接收完整,
+            条件种类::人类确认锚点, 条件种类::结果观察及归因,
+            条件种类::本来源未消费, 条件种类::下层贡献未消费})
+            添加条件(种类, {1}, {});
+        添加条件(条件种类::当前治理边界一致, {0, 1}, {定义.节点});
+        const auto 因果节点 = 事实.因果服务.确保先天因果(因果);
+        const auto 因果读回 = 事实.因果服务.读取先天因果(因果节点);
+        if (!因果读回 || 因果读回->定义 != 因果)
+            throw std::logic_error("innate settlement definition readback mismatch");
         { std::lock_guard 锁(s.互斥);
-          if (s.材料 && (s.材料->自我存在 != 自我 || s.材料->自我所在场景 != 场景
-              || s.材料->服务值特征 != 服务特征 || s.材料->服务根需求 != 服务根
-              || s.材料->冻结前值 != m.冻结前值)) {
-              s.停止 = true; s.首条诊断 = "服务值结算：重复初始化身份不一致"; 结果.状态 = 新服务值结算协作状态::工程停止; return 结果;
-          }
-          s.材料 = m;
-          if (登记.方法节点) s.方法节点 = 登记.方法节点;
-          if (已有首子) s.需求节点 = 已有首子->节点; }
-        const auto 参数 = s.方法.建立本能登记参数场景({{m.服务值类型根, 场景, 自我, {{服务特征}}, std::nullopt}});
-        if (!参数.参数场景) return 失败("服务值结算：登记参数场景失败");
-        { std::lock_guard 锁(s.互斥); s.登记替代开放 = true; }
-        const auto 运行 = 新_本能函数管理类::执行(新本能函数登记名_服务值结算, *参数.参数场景);
-        { std::lock_guard 锁(s.互斥); s.登记替代开放 = false; }
-        if (运行.结果.状态 != 新本能函数执行状态::已按合同返回
-            || 运行.结果.动作阶段 != 新本能函数动作阶段::未进入动作)
-            return 失败("服务值结算：本能登记未完成");
-        { std::lock_guard 锁(s.互斥);
-          结果.材料 = s.材料; 结果.方法节点 = s.方法节点; 结果.结算需求节点 = s.需求节点; }
-        if (!结果.方法节点 || !结果.结算需求节点) return 失败("服务值结算：登记闭包缺失");
-        结果.状态 = 重复 ? 新服务值结算协作状态::精确重复 : 新服务值结算协作状态::已完成;
+          结果.状态 = s.治理定义 ? 新服务值结算协作状态::精确重复 : 新服务值结算协作状态::已完成;
+          if (s.治理定义 && *s.治理定义 != 定义) throw std::logic_error("governance definition changed");
+          s.材料 = m; s.治理定义 = 定义; s.需求节点 = 已有->节点; }
+        结果.结算需求节点 = 已有->节点; 结果.治理定义 = 定义;
         return 结果;
-    } catch (const std::exception& 异常) {
-        return 失败(异常.what());
-    } catch (...) { return 失败("服务值结算：初始化工程异常"); }
+    } catch (const std::exception& e) {
+        报告并停止(e.what()); 结果.状态 = 新服务值结算协作状态::工程停止; return 结果;
+    } catch (...) {
+        报告并停止("governance initialization unknown failure");
+        结果.状态 = 新服务值结算协作状态::工程停止; return 结果;
+    }
+}
+
+新服务值结算登记结果 服务值结算本能运行服务::初始化(
+    稳定编码 场景, 稳定编码 自我, 稳定编码 服务特征, 稳定编码 服务根) noexcept {
+    新服务值结算登记结果 结果;
+    结果.状态 = 新服务值结算协作状态::入口拒绝;
+    if (!实现_) return 结果;
+    try {
+        std::lock_guard 初始化锁(实现_->初始化互斥);
+        std::optional<新服务值结算登记材料> 材料;
+        std::optional<稳定编码> M, D;
+        { std::lock_guard 锁(实现_->互斥);
+          if (实现_->停止 || 实现_->治理定义) return 结果;
+          材料 = 实现_->材料; M = 实现_->方法节点; D = 实现_->需求节点; }
+        // 退役入口只读已有完整缓存；绝不恢复A0、补造材料或建立/迁移M。
+        if (!材料 || !M || !D || 材料->自我所在场景 != 场景 || 材料->自我存在 != 自我
+            || 材料->服务值特征 != 服务特征 || 材料->服务根需求 != 服务根) return 结果;
+        const auto 登记 = 实现_->方法.查询本能登记(std::string(新本能函数登记名_服务值结算));
+        const auto 方法 = 实现_->方法.获取方法(*M);
+        const auto 需求 = 实现_->需求.获取需求(*D);
+        const auto E = 实现_->世界.查询存在(自我);
+        const auto F = 实现_->世界.查询特征(服务特征);
+        const auto S = 实现_->世界.查询场景(场景);
+        if (登记.状态 != 新方法操作状态::已找到 || 登记.方法节点 != M
+            || !方法 || !实现_->方法.是历史服务结算方法(*M)
+            || 方法->本能函数登记名 != 新本能函数登记名_服务值结算
+            || 方法->来源方法节点 || 方法->实例根节点 || !需求
+            || 需求->父需求节点 != 服务根 || 需求->目标存在节点 != 自我
+            || 需求->来源类型 != 新需求来源类型::本能定义 || 需求->来源承接节点
+            || 需求->目标.目标形式 != 新需求目标形式::值
+            || 需求->目标.目标特征类型概念节点 != 材料->服务值类型根
+            || 需求->目标.目标值域概念节点 != std::optional{材料->目标值域}
+            || 需求->目标.目标比较关系概念节点 != std::optional{材料->准确相等概念}
+            || !E || E->专属存在概念节点 != 材料->自我概念 || !F || !S
+            || !含有(E->特征节点组, 服务特征) || !含有(S->直接成员存在组, 自我)
+            || 取得特征类型根(实现_->概念, F->特征概念节点) != 材料->服务值类型根)
+            return 结果;
+        结果.状态 = 新服务值结算协作状态::精确重复;
+        结果.材料 = 材料; 结果.方法节点 = M; 结果.结算需求节点 = D;
+        return 结果;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"历史结算初始化适配", L"历史身份读回损坏，禁止重建。");
+    }
 }
 
 新方法建立结果 服务值结算本能运行服务::确保方法登记(const 新方法知识建立请求& 请求) noexcept {
-    if (!读取登记材料() || !请求.条件结果组.empty()) return {};
+    if (!实现_ || !请求.条件结果组.empty()) return {新方法操作状态::方法不存在, {}};
     try {
-        std::optional<稳定编码> 已有;
-        bool 允许替代 = false;
-        { std::lock_guard 锁(实现_->互斥); 已有 = 实现_->方法节点; 允许替代 = 实现_->登记替代开放; }
-        if (!允许替代 && 已有) {
-            const auto 信息 = 实现_->方法.获取方法(*已有);
-            const auto 登记 = 实现_->方法.查询本能登记(std::string(新本能函数登记名_服务值结算));
-            if (!信息 || 信息->本能函数登记名 != 新本能函数登记名_服务值结算
-                || 登记.状态 != 新方法操作状态::已找到 || 登记.方法节点 != 已有
-                || 信息->启用状态 != 新方法启用状态::启用
-                || 信息->作用域 != 请求.作用域 || 信息->实现方式 != 请求.实现方式
-                || 信息->参数规格组 != 请求.参数规格组
-                || 信息->方法头 != 请求.方法头) return {};
-            // 已学习的配对不属于登记声明，原样保留，不要求或重建初始配对。
-            return {新方法操作状态::已找到, 已有};
-        }
-        if (!允许替代) return {}; // 运行期只能严格读回，不能临时迁移或建立头。
-        const auto 结果 = 实现_->方法.确保服务结算Q方法登记(请求);
-        if (结果.方法节点) { std::lock_guard 锁(实现_->互斥); 实现_->方法节点 = 结果.方法节点; }
-        return 结果;
-    } catch (...) { return {}; }
+        const auto 登记 = 实现_->方法.查询本能登记(std::string(新本能函数登记名_服务值结算));
+        if (登记.状态 != 新方法操作状态::已找到 || !登记.方法节点)
+            return {新方法操作状态::方法不存在, {}};
+        const auto 信息 = 实现_->方法.获取方法(*登记.方法节点);
+        if (!信息 || !实现_->方法.是历史服务结算方法(*登记.方法节点)
+            || 信息->本能函数登记名 != 新本能函数登记名_服务值结算
+            || 信息->来源方法节点 || 信息->实例根节点
+            || 信息->作用域 != 请求.作用域 || 信息->实现方式 != 请求.实现方式
+            || 信息->行为 != 请求.行为 || 信息->参数规格组 != 请求.参数规格组
+            || 信息->初始模拟关系组 != 请求.初始模拟关系组
+            || 信息->初始模拟事件参数组 != 请求.初始模拟事件参数组
+            || 信息->方法头 != 请求.方法头)
+            return {新方法操作状态::结构不一致, {}};
+        // 不修改启用状态、声明、配对或代际；只返回已有正式身份。
+        return {新方法操作状态::已找到, 登记.方法节点};
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"历史结算方法登记适配", L"历史方法正式读取损坏，禁止新建。");
+    }
 }
 新需求建立结果 服务值结算本能运行服务::确保首子需求(稳定编码 方法节点) noexcept {
     const auto m = 读取登记材料(); if (!m) return {};
@@ -494,27 +547,20 @@ std::optional<新服务值结算登记材料> 服务值结算本能运行服务:
         }
         if (参数.状态 != 新任务贡献治理参数读取状态::已读取 || !参数.参数
             || 参数.参数->完成来源 != 来源) throw std::logic_error("治理参数来源不一致");
-        if (!读取登记材料()) throw std::logic_error("治理工作缺少已初始化登记材料");
-        const auto 登记 = 实现_->方法.查询本能登记(std::string(新本能函数登记名_服务值结算));
-        if (登记.状态 != 新方法操作状态::已找到 || !登记.方法节点)
-            throw std::logic_error("治理工作未找到正式结算方法");
-        const auto 场景 = 实现_->方法.建立服务结算治理参数场景(
-            *登记.方法节点, *参数.参数, 实现_->任务);
-        if (!场景.参数场景) {
-            if (场景.状态 != 新方法操作状态::参数引用失效)
-                throw std::logic_error("治理参数场景构造工程故障");
-            const auto 当前 = 实现_->任务.读取任务贡献治理参数(来源);
-            if (当前.状态 == 新任务贡献治理参数读取状态::来源已变化
-                || 当前.参数 != 参数.参数) return 来源变化();
-            throw std::logic_error("来源未变化但治理参数场景建立失败");
-        }
-        if (场景.状态 != 新方法操作状态::已建立)
-            throw std::logic_error("治理参数场景构造状态与载荷不一致");
-        // 不持运行服务的最终消费锁进入本能；回调由task在原T/X/A锁区间推进。
-        const auto 调用 = 实现_->方法.调用本能函数(*登记.方法节点, *场景.参数场景);
-        if (调用.状态 != 新方法本能调用状态::已调用 || !调用.本次条件结果对)
-            throw std::logic_error("贡献治理本能未调用");
-        const auto& 返回 = *调用.本次条件结果对;
+        // 治理只依赖具名T/X/A及task owner的正式复核，不借用方法身份或参数场景。
+        // 不持运行服务最终消费锁；task在其原锁区间再次核验输入并发布事实。
+        auto 材料 = 实现_->任务.执行任务贡献治理(*参数.参数);
+        if (材料.返回.来源 != 来源
+            || 材料.返回.推进.状态 == 新任务贡献推进状态::工程故障)
+            throw std::logic_error("贡献治理owner返回不一致");
+        新本能函数本次条件结果对 返回;
+        返回.条件.任务贡献治理参数 = std::move(材料.实际参数);
+        返回.条件.治理动作前特征组 = std::move(材料.动作前特征组);
+        返回.结果.状态 = 新本能函数执行状态::已按合同返回;
+        返回.结果.动作阶段 = 材料.返回.本次动作组.empty()
+            ? 新本能函数动作阶段::未进入动作 : 新本能函数动作阶段::已按函数合同返回;
+        返回.结果.结果取得状态 = 新本能函数结果取得状态::已取得;
+        返回.结果.任务贡献治理 = std::move(材料.返回);
         const auto& r = 返回.结果;
         if (!r.任务贡献治理 || r.任务贡献治理->来源 != 来源
             || r.状态 != 新本能函数执行状态::已按合同返回
@@ -530,7 +576,7 @@ std::optional<新服务值结算登记材料> 服务值结算本能运行服务:
         return 返回;
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"执行贡献治理工作",
-            L"贡献治理来源、参数场景、本能调用或正式读回不一致。");
+            L"贡献治理来源、task执行或正式读回不一致。");
     }
 }
 
@@ -588,7 +634,7 @@ std::optional<新服务值最终消费结果> 服务值结算本能运行服务:
         }
         if (读取.状态 == 新任务最终来源读取状态::已入账待收尾) {
             if (!读取.既有消费) throw std::logic_error("final U resume evidence missing");
-            auto 准备 = 实现_->任务.准备任务最终消费(来源, 读取.既有消费->来源.边界.方法节点);
+            auto 准备 = 实现_->任务.准备任务最终消费(来源, 读取.既有消费->来源.边界.能力);
             if (准备.状态 != 新任务最终消费准备状态::已入账待收尾 || !准备.准备)
                 throw std::logic_error("final U resume token missing");
             return 实现_->任务.完成已入账任务最终收尾(*准备.准备);
@@ -601,146 +647,75 @@ std::optional<新服务值最终消费结果> 服务值结算本能运行服务:
 
 新服务值最终消费结果 服务值结算本能运行服务::执行最终来源工作(
     const 新服务值最终来源定位& 来源) noexcept {
-    try {
-        if (const auto 已有 = 读取或收尾既有最终消费(来源)) return *已有;
-        // 不跨本能调用持最终串行门；实际动作入口自己取得门并fresh复核。
-        const auto 材料 = 读取登记材料();
-        if (!材料) throw std::logic_error("final registration material unavailable");
-        const auto 读取 = 实现_->任务.读取任务最终消费来源(来源);
-        if (读取.状态 != 新任务最终来源读取状态::可新消费) {
-            if (const auto 已有 = 读取或收尾既有最终消费(来源)) return *已有;
-            return {新服务值最终消费状态::来源已变化, 来源};
-        }
-        if (!读取.来源 || !读取.来源->任务特征.服务值)
-            throw std::logic_error("final source feature closure absent");
-        const auto& 正式 = *读取.来源;
-        const auto 登记 = 实现_->方法.查询本能登记(std::string(新本能函数登记名_服务值结算));
-        if (登记.状态 != 新方法操作状态::已找到 || !登记.方法节点
-            || *登记.方法节点 != 正式.边界.方法节点
-            || 正式.自我场景节点 != 材料->自我所在场景 || 正式.自我存在节点 != 材料->自我存在
-            || 正式.自我特征节点 != 材料->服务值特征)
-            throw std::logic_error("final configured method or self identity mismatch");
-        const auto e = 实现_->世界.查询存在(材料->自我存在);
-        if (!e) throw std::logic_error("final self not readable");
-        std::optional<稳定编码> 集合F;
-        for (const auto F : e->特征节点组) {
-            const auto 信息 = 实现_->世界.查询特征(F);
-            if (!信息) throw std::logic_error("self feature not readable");
-            if (取得特征类型根(实现_->概念, 信息->特征概念节点) != 材料->服务任务集合类型根) continue;
-            if (集合F) throw std::logic_error("self task set feature duplicated");
-            集合F = F;
-        }
-        if (!集合F) throw std::logic_error("self task set feature missing");
-        新方法参数角色绑定 自我角色;
-        自我角色.参数角色节点 = 材料->服务值类型根;
-        自我角色.世界场景节点 = 材料->自我所在场景;
-        自我角色.实际存在节点 = 材料->自我存在;
-        自我角色.实际特征组 = {{材料->服务值特征}, {*集合F}};
-        新方法参数角色绑定 任务角色;
-        任务角色.参数角色节点 = 材料->任务状态类型根;
-        任务角色.任务虚拟存在引用 = 正式.任务特征.引用;
-        任务角色.实际特征组 = {{正式.任务特征.状态.特征节点}, {正式.任务特征.服务值->特征节点}};
-        const auto 参数 = 实现_->方法.建立参数场景(*登记.方法节点,
-            {std::move(自我角色), std::move(任务角色)}, &实现_->任务);
-        const auto 条件变化读回 = [&]() {
-            if (const auto 已有 = 读取或收尾既有最终消费(来源)) return *已有;
-            return 新服务值最终消费结果{新服务值最终消费状态::来源已变化, 来源};
-        };
-        if (!参数.参数场景) {
-            if (参数.状态 == 新方法操作状态::参数概念不相容
-                || 参数.状态 == 新方法操作状态::参数引用失效) return 条件变化读回();
-            throw std::logic_error("final invocation scene not built");
-        }
-        const auto 调用 = 实现_->方法.调用本能函数(*登记.方法节点, *参数.参数场景);
-        if (调用.状态 != 新方法本能调用状态::已调用 || !调用.本次条件结果对)
-            throw std::logic_error("final instinct invocation failed");
-        const auto& 返回 = 调用.本次条件结果对->结果;
-        if (返回.服务值消费节点) {
-            const auto 正式结果 = 读取最终来源结果(来源);
-            if (返回.状态 != 新本能函数执行状态::已按合同返回
-                || 返回.结果取得状态 != 新本能函数结果取得状态::已取得
-                || 正式结果.状态 != 新服务值最终消费状态::已完成
-                || 正式结果.消费节点 != 返回.服务值消费节点 || !正式结果.收尾阶段节点)
-                throw std::logic_error("final instinct U is not complete");
-            return 正式结果;
-        }
-        if (返回.状态 != 新本能函数执行状态::入口拒绝
-            || 返回.动作阶段 != 新本能函数动作阶段::未进入动作
-            || 返回.结果取得状态 != 新本能函数结果取得状态::未取得 || 返回.动作动态节点)
-            throw std::logic_error("final no-U invocation is not a preaction rejection");
-        return 条件变化读回();
-    } catch (...) {
-        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"执行最终来源工作", L"最终消费场景、调用或独立确认失败");
-    }
+    return 消费正式来源(来源);
 }
-
-新本能函数本次条件结果对 服务值结算本能运行服务::消费最终来源(
-    const 方法参数场景& 参数) noexcept {
+新服务值最终消费结果 服务值结算本能运行服务::消费正式来源(
+    const 新服务值最终来源定位& 定位) noexcept {
     try {
-        if (!实现_) throw std::logic_error("final runtime unavailable");
+        if (const auto 旧 = 读取或收尾既有最终消费(定位)) return *旧;
         std::lock_guard 串行锁(实现_->最终消费串行互斥);
+        auto& s = *实现_;
         const auto m = 读取登记材料();
-        if (!m || 参数.用途() != 新方法参数场景用途::执行)
-            throw std::logic_error("final consumption requires actual execution scene");
-        const auto* 自我绑定 = 参数.查询角色(m->服务值类型根);
-        const auto* 任务绑定 = 参数.查询角色(m->任务状态类型根);
-        const auto 任务特征 = 参数.读取绑定任务特征组(m->任务状态类型根);
-        if (!自我绑定 || !任务绑定 || !任务特征 || !任务特征->服务值
-            || 自我绑定->世界场景节点 != m->自我所在场景 || 自我绑定->实际存在节点 != m->自我存在
-            || 自我绑定->实际特征组.size() != 2 || 任务绑定->实际特征组.size() != 2
-            || 任务绑定->任务虚拟存在引用 != 任务特征->引用)
-            throw std::logic_error("final scene roles or formal task features missing");
-        const auto 交接 = 实现_->任务.读取任务完成贡献交接(任务特征->引用.任务节点);
-        if (交接.状态 == 新任务贡献交接读取状态::预期已变化) return {};
-        if (交接.状态 != 新任务贡献交接读取状态::已读取 || !交接.交接
-            || !交接.交接->完成结算节点 || !交接.交接->接收节点)
-            throw std::logic_error("final task K/R not readable");
-        const 新服务值最终来源定位 定位{任务特征->引用.任务节点,
-            *交接.交接->完成结算节点, *交接.交接->接收节点};
-        auto 准备 = 实现_->任务.准备任务最终消费(定位, 参数.方法节点());
-        const auto 返回既有U = [](稳定编码 U) {
-            新本能函数本次条件结果对 结果;
-            结果.结果.状态 = 新本能函数执行状态::已按合同返回;
-            结果.结果.结果取得状态 = 新本能函数结果取得状态::已取得;
-            结果.结果.服务值消费节点 = U;
-            return 结果;
-        };
+        std::optional<新服务值治理定义> 定义;
+        { std::lock_guard 锁(s.互斥); 定义 = s.治理定义; }
+        if (!m || !定义) return {新服务值最终消费状态::等待配置, 定位};
+        const auto 正式定义 = s.任务.读取服务值治理定义(定义->节点);
+        if (!正式定义 || *正式定义 != *定义)
+            throw std::logic_error("final governance definition changed");
+        const 新结算能力引用 能力{新结算能力类别::自我服务值治理, 定义->节点};
+        const auto 读取 = s.任务.读取任务最终消费来源(定位);
+        if (读取.状态 != 新任务最终来源读取状态::可新消费)
+            return 投影最终来源结果(定位, 读取);
+        if (!读取.来源) throw std::logic_error("final source missing");
+        const auto& 鲜读 = *读取.来源;
+        if (鲜读.边界.能力 != 能力 || 鲜读.自我场景节点 != m->自我所在场景
+            || 鲜读.自我存在节点 != m->自我存在 || 鲜读.自我特征节点 != m->服务值特征)
+            throw std::logic_error("final governance source identity mismatch");
+        const auto E = s.世界.查询存在(m->自我存在);
+        if (!E) throw std::logic_error("final self unreadable");
+        std::optional<新特征信息> 集合;
+        for (auto F : E->特征节点组) {
+            const auto f = s.世界.查询特征(F);
+            if (!f) throw std::logic_error("final self feature unreadable");
+            if (取得特征类型根(s.概念, f->特征概念节点) != m->服务任务集合类型根) continue;
+            if (集合) throw std::logic_error("final task collection ambiguous");
+            集合 = f;
+        }
+        if (!集合 || !集合->当前值) throw std::logic_error("final task collection current value missing");
+        const auto* 集合码 = std::get_if<稳定编码>(&*集合->当前值);
+        if (!集合码 || !有效(*集合码)) throw std::logic_error("final task collection material identity invalid");
+        const auto 集合值 = s.世界.获取事实服务引用().特征值服务.获取特征值(*集合码);
+        if (!集合值 || 集合值->物理类型 != 材料物理类型::U64数组)
+            throw std::logic_error("final task collection material missing or wrong type");
+        const auto* 成员 = 集合值 ? std::get_if<std::vector<std::uint64_t>>(&集合值->材料) : nullptr;
+        if (!成员) throw std::logic_error("final task collection payload invalid");
+        std::set<std::uint64_t> 已见;
+        for (auto 编码 : *成员)
+            if (!编码 || !已见.insert(编码).second || !s.任务.获取任务(稳定编码{编码}))
+                throw std::logic_error("final task collection member invalid or duplicated");
+        if (!已见.contains(定位.来源任务节点.值))
+            return {新服务值最终消费状态::来源条件不具备, 定位};
+        auto 准备 = s.任务.准备任务最终消费(定位, 能力);
         if (准备.状态 == 新任务最终消费准备状态::已完成) {
             if (!准备.既有消费) throw std::logic_error("repeated final U missing");
-            return 返回既有U(准备.既有消费->消费节点);
+            return 投影最终来源结果(定位, s.任务.读取任务最终消费来源(定位));
         }
         if (准备.状态 == 新任务最终消费准备状态::已入账待收尾) {
-            if (!准备.准备) throw std::logic_error("final U resume token missing");
-            const auto 完成 = 实现_->任务.完成已入账任务最终收尾(*准备.准备);
-            if (!完成.消费节点) throw std::logic_error("final U resume not completed");
-            return 返回既有U(*完成.消费节点);
+            if (!准备.准备) throw std::logic_error("resume final U token missing");
+            return s.任务.完成已入账任务最终收尾(*准备.准备);
         }
-        if (准备.状态 != 新任务最终消费准备状态::已准备) return {};
+        if (准备.状态 != 新任务最终消费准备状态::已准备)
+            return 投影最终来源结果(定位, s.任务.读取任务最终消费来源(定位));
         if (!准备.准备) throw std::logic_error("final source token missing");
-        const auto 冻结 = 实现_->任务.读取任务最终消费准备(*准备.准备);
+        const auto 冻结 = s.任务.读取任务最终消费准备(*准备.准备);
         const auto& 来源 = 冻结.来源;
-        if (来源.来源 != 定位 || 来源.边界.方法节点 != 参数.方法节点()
-            || 来源.任务特征.引用 != 任务特征->引用 || !来源.任务特征.服务值
-            || 来源.任务特征.状态.当前值 != 9 || 来源.贡献值 != 任务特征->服务值->当前值
-            || 来源.任务特征.服务值->特征节点 != 任务特征->服务值->特征节点
+        if (来源.来源 != 定位 || 来源.边界.能力 != 能力
             || 来源.自我场景节点 != m->自我所在场景 || 来源.自我存在节点 != m->自我存在
-            || 来源.自我特征节点 != m->服务值特征)
-            throw std::logic_error("published P and parameter scene changed identity");
-        std::optional<新特征信息> 集合;
-        for (const auto& F : 自我绑定->实际特征组) {
-            if (F.特征节点 == m->服务值特征) continue;
-            集合 = 参数.读取绑定特征(F.特征节点);
-        }
-        if (!集合 || !集合->当前值
-            || 取得特征类型根(实现_->概念, 集合->特征概念节点) != m->服务任务集合类型根)
-            throw std::logic_error("final parameter task-set feature invalid");
-        const auto 集合码 = std::get_if<稳定编码>(&*集合->当前值);
-        const auto 集合值 = 集合码 ? 参数.读取绑定特征值材料(*集合码) : std::nullopt;
-        const auto* 集合项 = 集合值 ? std::get_if<std::vector<std::uint64_t>>(&集合值->材料) : nullptr;
-        if (!集合项 || std::count(集合项->begin(), 集合项->end(), 定位.来源任务节点.值) != 1)
-            throw std::logic_error("published P source is not a unique task-set member");
+            || 来源.自我特征节点 != m->服务值特征 || !来源.任务特征.服务值
+            || 来源.贡献值 != 来源.任务特征.服务值->当前值 || 来源.任务特征.状态.当前值 != 9)
+            throw std::logic_error("published P identity mismatch");
         auto 世界准备 = 实现_->世界.准备存在I64增量({来源.自我场景节点, 来源.自我存在节点,
-            来源.自我特征节点, 来源.贡献值, 来源.边界.方法节点, 冻结.准备节点, 来源.自我存在节点});
+            来源.自我特征节点, 来源.贡献值, 来源.边界.能力.节点, 冻结.准备节点, 来源.自我存在节点});
         const auto 见证 = 实现_->世界.读取存在I64组合准备(世界准备);
         const auto 片段 = 实现_->任务.封存任务最终消费(*准备.准备,
             {见证.场景节点, 见证.存在节点, 见证.特征节点, 见证.前值, 见证.后值,
@@ -753,28 +728,62 @@ std::optional<新服务值最终消费结果> 服务值结算本能运行服务:
         const auto U = 实现_->任务.读取任务最终消费(定位.完成结算节点);
         if (!U || U->消费节点 != 完成.消费节点 || U->收尾阶段节点 != 完成.收尾阶段节点)
             throw std::logic_error("final U completion not readable");
-        新本能函数本次条件结果对 结果 = 返回既有U(U->消费节点);
-        新本能函数条件角色材料 自我条件;
-        自我条件.参数角色节点 = m->服务值类型根;
-        自我条件.世界场景节点 = m->自我所在场景; 自我条件.实际存在节点 = m->自我存在;
-        自我条件.实际特征组 = {{m->服务值特征, 新特征准确值{见证.前值}}, {集合->节点, 集合->当前值}};
-        新本能函数条件角色材料 任务条件;
-        任务条件.参数角色节点 = m->任务状态类型根;
-        任务条件.任务虚拟存在引用 = 来源.任务特征.引用;
-        任务条件.实际特征组 = {{来源.任务特征.状态.特征节点, 新特征准确值{std::int64_t{9}}},
-            {来源.任务特征.服务值->特征节点, 新特征准确值{来源.贡献值}}};
-        结果.条件.参数角色组 = {std::move(自我条件), std::move(任务条件)};
-        if (!U->零额) {
-            if (!U->普通动作节点 || !U->后状态节点 || !U->变化动态节点)
-                throw std::logic_error("positive final U result material incomplete");
-            结果.结果.动作阶段 = 新本能函数动作阶段::已按函数合同返回;
-            结果.结果.动作动态节点 = U->普通动作节点;
-            结果.结果.已形成状态节点组 = {*U->后状态节点};
-            结果.结果.已形成动态节点组 = {*U->变化动态节点};
-        }
+
+        const auto 独立 = 读取最终来源结果(定位);
+        if (独立.状态 != 新服务值最终消费状态::已完成 || 独立.消费节点 != U->消费节点
+            || 独立.收尾阶段节点 != U->收尾阶段节点)
+            throw std::logic_error("final source independent readback mismatch");
+        return 独立;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"消费正式来源",
+            L"最终消费发布或收尾不完整，保留正式事实且禁止重放");
+    }
+}
+新本能函数本次条件结果对 服务值结算本能运行服务::消费最终来源(
+    const 方法参数场景& 参数) noexcept {
+    try {
+        const auto m = 读取登记材料();
+        if (!m || 参数.用途() != 新方法参数场景用途::执行 || 参数.全部角色绑定().size() != 3)
+            throw std::logic_error("historical final adapter scene invalid");
+        if (!实现_->方法.是历史服务结算方法(参数.方法节点()))
+            throw std::logic_error("historical final adapter method invalid");
+        for (const auto& b : 参数.全部角色绑定())
+            if (b.世界场景节点 != m->自我所在场景)
+                throw std::logic_error("historical final adapter scene identity mismatch");
+        const auto* 自我 = 参数.查询参数(1);
+        const auto* F = 参数.查询参数(2);
+        const auto* 集合 = 参数.查询参数(3);
+        const auto 绑定 = 参数.读取绑定任务成员(1);
+        if (!自我 || 自我->信息类型 != 新方法参数信息类型::存在 || 自我->信息节点 != m->自我存在
+            || !F || F->信息类型 != 新方法参数信息类型::特征 || F->信息节点 != m->服务值特征
+            || !集合 || 集合->信息类型 != 新方法参数信息类型::特征 || !绑定 || 绑定->集合参数序号 != 3)
+            throw std::logic_error("historical final adapter roles invalid");
+        const auto E = 实现_->世界.查询存在(m->自我存在);
+        const auto setF = 参数.读取绑定特征(集合->信息节点);
+        if (!E || !含有(E->特征节点组, F->信息节点) || !含有(E->特征节点组, 集合->信息节点)
+            || !setF || 取得特征类型根(实现_->概念, setF->特征概念节点) != m->服务任务集合类型根)
+            throw std::logic_error("historical final adapter feature ownership mismatch");
+        const auto 任务特征 = 参数.读取绑定集合任务特征组(3, 绑定->任务引用.任务节点);
+        if (!任务特征 || !任务特征->服务值 || 任务特征->引用 != 绑定->任务引用
+            || 绑定->服务值特征节点 != 任务特征->服务值->特征节点)
+            return {};
+        const auto 交接 = 实现_->任务.读取任务完成贡献交接(绑定->任务引用.任务节点);
+        if (交接.状态 != 新任务贡献交接读取状态::已读取 || !交接.交接
+            || !交接.交接->完成结算节点 || !交接.交接->接收节点) return {};
+        const 新服务值最终来源定位 定位{绑定->任务引用.任务节点,
+            *交接.交接->完成结算节点, *交接.交接->接收节点};
+        const auto 正式 = 消费正式来源(定位);
+        新本能函数本次条件结果对 结果;
+        if (正式.状态 != 新服务值最终消费状态::已完成 && 正式.状态 != 新服务值最终消费状态::精确重复)
+            return 结果;
+        结果.结果.状态 = 新本能函数执行状态::已按合同返回;
+        结果.结果.结果取得状态 = 新本能函数结果取得状态::已取得;
+        结果.结果.服务值消费节点 = 正式.消费节点;
+        结果.结果.动作动态节点 = 正式.普通动作节点;
+        if (正式.普通动作节点) 结果.结果.动作阶段 = 新本能函数动作阶段::已按函数合同返回;
         return 结果;
     } catch (...) {
-        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"消费最终来源", L"最终消费发布或收尾不完整，保留正式事实且禁止重放");
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"历史最终消费适配", L"历史场景核验失败");
     }
 }
 

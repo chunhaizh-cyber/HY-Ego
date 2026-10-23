@@ -29,6 +29,14 @@ struct 新方法实际特征绑定 final {
         const 新方法实际特征绑定&) = default;
 };
 
+struct 新方法任务成员绑定 final {
+    std::uint32_t 集合参数序号 = 0;
+    新任务虚拟存在引用 任务引用;
+    std::optional<稳定编码> 服务值特征节点;
+    friend bool operator==(const 新方法任务成员绑定&,
+        const 新方法任务成员绑定&) = default;
+};
+
 struct 新方法参数角色绑定 final {
     稳定编码 参数角色节点;
     std::optional<稳定编码> 世界场景节点;
@@ -49,6 +57,8 @@ public:
 
     // 无此能力的模拟owner返回不适用，绝不回退现实owner。
     virtual std::optional<std::vector<稳定编码>> 读取模拟存在特征组(稳定编码) const noexcept { return {}; }
+    virtual std::optional<新任务虚拟存在特征组> 读取模拟集合任务治理(
+        std::uint32_t, 稳定编码) const noexcept { return {}; }
     virtual std::optional<稳定编码> 读取模拟所属场景(稳定编码) const noexcept { return {}; }
     virtual 稳定编码 建立模拟动作() { return {}; }
     virtual 新模拟操作状态 模拟递增计数(稳定编码,稳定编码) { return 新模拟操作状态::输入不适用; }
@@ -79,6 +89,9 @@ public:
         稳定编码 参数角色节点) const noexcept;
     std::optional<新任务虚拟存在特征组> 读取绑定任务特征组(
         稳定编码 参数角色节点) const noexcept;
+    std::optional<新任务虚拟存在特征组> 读取绑定集合任务特征组(
+        std::uint32_t 集合参数位置,稳定编码 任务节点) const noexcept;
+    std::optional<新方法任务成员绑定> 读取绑定任务成员(std::uint32_t 变量序号) const noexcept;
     新服务要求分项读取结果 读取绑定服务要求分项(
         稳定编码 参数角色节点) const noexcept;
     新服务要求确认读取结果 读取绑定服务要求确认身份(
@@ -107,7 +120,8 @@ private:
         const 新内部治理对象读取接口* 治理对象读取,
         std::shared_ptr<新方法模拟运行接口> 模拟运行 = {},
         const 新服务要求材料读取接口* 服务要求读取 = nullptr,
-        std::optional<新任务贡献治理参数> 任务贡献治理参数 = {}) noexcept;
+        std::optional<新任务贡献治理参数> 任务贡献治理参数 = {},
+        std::optional<新方法任务成员绑定> 任务成员绑定 = {}) noexcept;
 
     稳定编码 方法节点_;
     std::vector<新方法参数角色绑定> 角色绑定组_;
@@ -120,6 +134,7 @@ private:
     // 非拥有只读owner，必须覆盖整个参数场景寿命；模拟不得借此访问现实材料。
     const 新服务要求材料读取接口* 服务要求读取_;
     std::optional<新任务贡献治理参数> 任务贡献治理参数_;
+    std::optional<新方法任务成员绑定> 任务成员绑定_;
 };
 
 } // namespace 海中鱼巣

@@ -63,8 +63,8 @@ struct 新服务需求获取配置 final {
     稳定编码 自我存在节点, 自我存在概念节点, 所在场景节点;
     稳定编码 服务任务集合特征节点, 服务任务集合类型;
     稳定编码 服务任务集合全域, 数量变化量类型, 已新增值域;
-    // 顺序：来源人类、目标存在、目标特征类型、目标定义、确认、作用自我。
-    std::array<稳定编码, 6> 参数角色概念组;
+    稳定编码 通用存在概念节点, 人类概念节点;
+    稳定编码 交互者特征类型节点, 对象需求集合类型;
     friend bool operator==(const 新服务需求获取配置&, const 新服务需求获取配置&) = default;
 };
 struct 新服务需求获取动作回执 final {
@@ -81,6 +81,7 @@ struct 新服务需求执行回执 final {
 class 方法参数场景;
 struct 新方法知识建立请求;
 struct 新方法建立结果;
+struct 新本能函数本次条件结果对;
 
 // 动作身份保留在外层执行租约中，不作为函数的第二个上下文参数。
 class 新服务需求获取本能端口 {
@@ -89,11 +90,8 @@ public:
     virtual std::optional<新服务需求获取配置> 读取登记材料() const noexcept = 0;
     virtual 新方法建立结果 确保方法登记(新服务需求获取方式,
         const 新方法知识建立请求&) noexcept = 0;
-    virtual bool 核验执行(新服务需求获取方式, const 方法参数场景&) const noexcept = 0;
-    virtual 新服务需求获取动作回执 建立动作(新服务需求获取方式,
-        const 方法参数场景&, 稳定编码 来源人类节点) noexcept = 0;
-    virtual 新服务需求执行回执 执行服务需求采用(新服务需求获取方式,
-        const 方法参数场景&, 稳定编码 动作节点) noexcept = 0;
+    virtual 新本能函数本次条件结果对 执行任务(新服务需求获取方式,
+        const 方法参数场景&, 稳定编码 执行实例节点) noexcept = 0;
     virtual void 报告工程故障(std::string_view) noexcept = 0;
 };
 using 新服务需求工程报告函数 = void (*)(std::string_view) noexcept;

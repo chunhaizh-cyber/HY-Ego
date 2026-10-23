@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <optional>
 #include <vector>
+#include <utility>
 
 #include "新_状态类.h"
 #include "新_内部治理对象引用.h"
@@ -112,6 +113,53 @@ struct 新因果统计 final
     std::int64_t 自我尝试次数 = 0;
     std::int64_t 自我尝试符合次数 = 0;
     friend bool operator==(const 新因果统计 &, const 新因果统计 &) = default;
+};
+
+enum class 新先天因果角色种类 : std::uint8_t { 普通存在 = 1, 任务信息 = 2 };
+struct 新先天因果角色 final {
+    std::int64_t 序号;
+    新先天因果角色种类 种类;
+    稳定编码 范围概念;
+    friend bool operator==(const 新先天因果角色&, const 新先天因果角色&) = default;
+};
+enum class 新先天因果条件种类 : std::uint8_t {
+    存在有效 = 1, 集合包含角色, 任务虚拟存在归属, 特征值域,
+    需求任务关联, 直接父子关联, 完成执行评估一致, 完成来源一致,
+    直接子接收完整, 人类确认锚点, 结果观察及归因,
+    本来源未消费, 下层贡献未消费, 当前治理边界一致
+};
+struct 新先天因果条件 final {
+    std::int64_t 序号;
+    新先天因果条件种类 种类;
+    稳定编码 关系概念;
+    std::vector<std::int64_t> 角色组;
+    std::vector<稳定编码> 概念参数组;
+    friend bool operator==(const 新先天因果条件&, const 新先天因果条件&) = default;
+};
+struct 新先天因果加法结果 final {
+    std::int64_t 结果存在角色, 加数任务角色;
+    稳定编码 结果特征类型, 结果合法值域, 加数特征类型, 加数合法值域;
+    friend bool operator==(const 新先天因果加法结果&, const 新先天因果加法结果&) = default;
+};
+struct 新先天因果定义 final {
+    稳定编码 治理定义, 合同版本概念, 作用场景范围概念, 动作概念;
+    新因果动作触发方式 触发方式 = 新因果动作触发方式::尚未确定;
+    std::vector<新先天因果角色> 角色组;
+    std::vector<新先天因果条件> 全部条件;
+    新先天因果加法结果 唯一结果;
+    friend bool operator==(const 新先天因果定义&, const 新先天因果定义&) = default;
+};
+struct 新先天因果信息 final {
+    稳定编码 节点;
+    新先天因果定义 定义;
+    新因果统计 统计;
+    std::vector<稳定编码> 发生身份组;
+    friend bool operator==(const 新先天因果信息&, const 新先天因果信息&) = default;
+};
+struct 新先天因果概念组 final {
+    稳定编码 合同版本概念;
+    std::vector<std::pair<新先天因果条件种类, 稳定编码>> 关系概念组;
+    friend bool operator==(const 新先天因果概念组&, const 新先天因果概念组&) = default;
 };
 
 struct 新因果信息 final
