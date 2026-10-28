@@ -1,5 +1,11 @@
 # GOAL-SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER-IMPLEMENTATION
 
+> 2026-10-28归档复核：本文保留原目标身份、版本、状态事实截止、完成结论及未验证边界。正文“当前”“可执行”“下一动作”均指原记录时点，不是今天的派发依据；本次仅补历史适用边界，不重新打开目标或证明当前代码能力。
+
+正文安全/服务均为非负域、单值概念前置和generation见证仅属当时合同。现行0050第8节与6190规定服务值为有符号I64，安全值仍非负；1130重写实例特征，L1事实代次取消。本注记不否认原计划范围的历史完成。
+
+历史定位：已删除v1.0计划可用 `git cat-file -p c967a515b70a0302ce1380677a8c7cde32b4b8fd` 读取；施工记录可用 `git show 576189d3c42e179852871e093865358b0f939d9a:施工记录/20260921_SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER_施工记录_v0.1.md` 读取。本次已核验两对象存在。
+
 ## 1. 目标身份
 
 - 目标编号：`GOAL-SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER-IMPLEMENTATION`

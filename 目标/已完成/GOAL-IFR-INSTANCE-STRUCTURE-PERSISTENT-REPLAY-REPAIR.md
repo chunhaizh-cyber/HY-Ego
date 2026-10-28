@@ -1,5 +1,9 @@
 # GOAL-IFR-INSTANCE-STRUCTURE-PERSISTENT-REPLAY-REPAIR
 
+> 2026-10-28归档复核：本文保留原目标身份、版本、状态事实截止、完成结论及未验证边界。正文“当前”“可执行”“下一动作”均指原记录时点，不是今天的派发依据；本次仅补历史适用边界，不重新打开目标或证明当前代码能力。
+
+G/G0/Gread/H、首次写入结果与旧重放谓词仅作当时修复证据。[0050第1.1—1.3节](../../规范/0050_项目通用机器逻辑与禁止性规则总纲_20260721.md#11-data-l1-current-only取消裁决)已取消相冲突的事实代次、历史读取和公共请求账；旧两进程结果不证明现行current-only恢复通过。
+
 ## 1. 目标身份
 
 - 目标编号：`GOAL-IFR-INSTANCE-STRUCTURE-PERSISTENT-REPLAY-REPAIR`

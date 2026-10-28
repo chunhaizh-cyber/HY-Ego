@@ -1,5 +1,9 @@
 # GOAL-SECONDARY-RELATION-CONCEPT-STRUCTURE-P1-IMPLEMENTATION
 
+> 2026-10-28归档复核：本文保留原目标身份、版本、状态事实截止、完成结论及未验证边界。正文“当前”“可执行”“下一动作”均指原记录时点，不是今天的派发依据；本次仅补历史适用边界，不重新打开目标或证明当前代码能力。
+
+RC-P1原代码及专项结果只证明当时结构合同。0050及规范目录已退出旧owner公开分区、Gread/H、C/E/S和概念前置；可复用的RC算法须逐项核对。本文RC-P2后继不是当前派发决定。
+
 ## 1. 目标身份
 
 - 目标编号：`GOAL-SECONDARY-RELATION-CONCEPT-STRUCTURE-P1-IMPLEMENTATION`

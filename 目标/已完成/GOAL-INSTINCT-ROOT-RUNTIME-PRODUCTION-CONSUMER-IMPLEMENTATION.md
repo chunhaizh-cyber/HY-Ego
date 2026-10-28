@@ -1,5 +1,11 @@
 # GOAL-INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER-IMPLEMENTATION
 
+> 2026-10-28归档复核：本文保留原目标身份、版本、状态事实截止、完成结论及未验证边界。正文“当前”“可执行”“下一动作”均指原记录时点，不是今天的派发依据；本次仅补历史适用边界，不重新打开目标或证明当前代码能力。
+
+本文只证明当时计划冻结的生产接线和生命周期边界；旧阶段21锚点缓存及启动序号不代表现行8121初始化已经实现。G2-A后继和资源释放描述都是当时记录。
+
+历史定位：已退出的v0.3计划可用 `git show f11d94000322e8fa24f89d0c63384c7ff35525f7:计划/20260923_INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER_本能根运行生产消费代码实施计划_v0.1.md` 读取，也可按正文blob定位；本次已核验两对象存在。
+
 ## 1. 目标身份
 
 - 目标编号：`GOAL-INSTINCT-ROOT-RUNTIME-PRODUCTION-CONSUMER-IMPLEMENTATION`

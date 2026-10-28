@@ -1,5 +1,11 @@
 # GOAL-IFR-FEATURE-IDENTITY-CONSUMER-REPAIR
 
+> 2026-10-28归档复核：本文保留原目标身份、版本、状态事实截止、完成结论及未验证边界。正文“当前”“可执行”“下一动作”均指原记录时点，不是今天的派发依据；本次仅补历史适用边界，不重新打开目标或证明当前代码能力。
+
+本记录只证明当时唯一消费者实参的强类型包装及Debug构建；旧源码路径和行号不是当前接口定位，不据此恢复已退役代码。
+
+历史定位：已删除施工记录可用 `git show ad3d10df8faac3bad2d3226023065f35392f06e9:施工记录/IFR-FEATURE-IDENTITY-CONSUMER-REPAIR/施工记录_v0.1.md` 读取，本次已核验对象存在。
+
 ## 1. 目标身份
 
 - 目标编号：`GOAL-IFR-FEATURE-IDENTITY-CONSUMER-REPAIR`

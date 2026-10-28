@@ -1,5 +1,11 @@
 # GOAL-EXISTENCE-IDENTITY-CONTRACT-REPAIR
 
+> 2026-10-28归档复核：本文保留原目标身份、版本、状态事实截止、完成结论及未验证边界。正文“当前”“可执行”“下一动作”均指原记录时点，不是今天的派发依据；本次仅补历史适用边界，不重新打开目标或证明当前代码能力。
+
+本记录只证明当时公开身份类型缺失修复及独立头翻译；不证明该旧ABI仍是当前合同，也不证明当前IF/R、恢复或业务能力。
+
+历史定位：旧归档计划路径已不在当前树，计划正文可用 `git cat-file -p 089f49f4cce8ddf5b04f7e911d1a34595449cff4` 读取；已删除施工记录可用 `git show 81aa94e3ae71bbfa846830ff38ba3ca334f74488:施工记录/EXISTENCE-IDENTITY-CONTRACT-REPAIR/施工记录_v0.1.md` 读取。本次已核验上述Git对象存在，不恢复旧文件。
+
 ## 1. 目标身份与终态
 
 - 目标编号：`GOAL-EXISTENCE-IDENTITY-CONTRACT-REPAIR`
