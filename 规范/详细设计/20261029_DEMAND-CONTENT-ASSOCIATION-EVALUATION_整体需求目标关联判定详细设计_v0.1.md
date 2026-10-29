@@ -6,7 +6,7 @@
 身份：最早只读提供者叶；施工资格以计划索引精确登记为准
 基线：D:/海中鱼巣，main，db30a128afe4d33153536963ab1fcac880de9b17 加 root 联合生产 WIP。
 
-实施入口：[对应计划](../../计划/20261029_DEMAND-CONTENT-ASSOCIATION-EVALUATION_整体需求目标关联判定实施计划_v0.1.md)。
+本叶已实施并编译，见[施工与编译记录](../../验证记录/20261029_DEMAND-CONTENT-ASSOCIATION-EVALUATION_施工与编译记录.md)。计划已退出当前目录，原计划由 Git 提交 `8d00098c` 的 `计划/20261029_DEMAND-CONTENT-ASSOCIATION-EVALUATION_整体需求目标关联判定实施计划_v0.1.md` 追溯；不构成当前施工入口。
 
 ## 1. 目标及边界
 
