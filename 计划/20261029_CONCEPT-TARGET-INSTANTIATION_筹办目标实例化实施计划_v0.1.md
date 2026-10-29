@@ -1,9 +1,9 @@
 # 筹办目标实例化实施计划
 
-标识：CONCEPT-TARGET-INSTANTIATION  
-日期：2026-10-29  
-版本：v0.1  
-创建侧：最早提供者叶合同冻结，精确版本资格以计划索引及 root 发布后 S0 为准  
+标识：CONCEPT-TARGET-INSTANTIATION
+日期：2026-10-29
+版本：v0.1
+创建侧：最早提供者叶合同冻结，精确版本资格以计划索引及 root 发布后 S0 为准
 现场：D:/海中鱼巣，main，HEAD 6ba653574cb3fc650cfc26c9a148ba9a96e53ddb 加 root 联合 WIP。
 
 ## 1. 目标与依据
