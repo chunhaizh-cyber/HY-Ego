@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <array>
 #include <functional>
+#include <limits>
+#include <map>
 #include <set>
 #include <stdexcept>
 #include <tuple>
@@ -643,11 +645,68 @@ I S09状态(基础概念归类确认输入状态 s){
     case S::受询者不可读:return I::内部不一致;
     }throw std::logic_error("unknown S09 state");
 }
+U 图构式(const 语言图含义材料& 图) {
+    const auto 根=std::find_if(图.定义图.节点组.begin(),图.定义图.节点组.end(),[&](const auto& 节点){return 节点.局部编号==图.定义图.根含义编号;});
+    if(根==图.定义图.节点组.end())throw std::logic_error("language graph root missing");
+    if(根->操作==M::需求描述)return U::需求陈述;
+    if(根->操作==M::信息请求) {
+        if(根->子含义组.size()!=1)throw std::logic_error("language question graph child missing");
+        const auto 子=std::find_if(图.定义图.节点组.begin(),图.定义图.节点组.end(),[&](const auto& 节点){return 节点.局部编号==根->子含义组[0].子含义编号;});
+        if(子==图.定义图.节点组.end())throw std::logic_error("language question graph child dangling");
+        if(子->操作==M::需求描述)return U::需求确认;
+        if(子->操作==M::概念归类)return U::S09归类确认;
+        throw std::logic_error("language question graph operation unsupported");
+    }
+    if(根->操作==M::特征区间描述)return U::目标闭区间;
+    if(根->操作==M::特征方向描述)return U::目标方向;
+    if(根->操作==M::组成描述)return U::S05组成;
+    if(根->操作==M::概念归类) {
+        const auto 主体=std::find_if(根->参数组.begin(),根->参数组.end(),[](const auto& 参数){return 参数.参数==P::主体;});
+        if(主体==根->参数组.end())throw std::logic_error("classification graph subject missing");
+        const auto 角色=std::find_if(根->角色组.begin(),根->角色组.end(),[&](const auto& 项){return 项.局部编号==主体->规则角色;});
+        if(角色==根->角色组.end())throw std::logic_error("classification graph role missing");
+        return 角色->种类==新语言知识角色种类::领域对象引用 ? U::S01归类:U::S02上下位;
+    }
+    if(根->操作==M::特征描述) {
+        if(根->特征值分支==新语言知识特征值分支::概念条件)return U::S03特征概念条件;
+        if(根->特征值分支!=新语言知识特征值分支::准确值)throw std::logic_error("feature graph branch invalid");
+        for(const auto& 角色:根->角色组)for(const auto& 约束:角色.必要约束组)
+            if(std::find(约束.允许类别组.begin(),约束.允许类别组.end(),K::I64标量)!=约束.允许类别组.end())return U::S03整数;
+        return U::目标单值;
+    }
+    throw std::logic_error("language graph construction unsupported");
+}
+std::string 图词面语义键(const 语言图含义材料& 图) {
+    std::map<std::int64_t,const 新语言图含义节点*> 定义;
+    std::map<std::int64_t,const 语言图含义出现*> 出现;
+    for(const auto& 项:图.定义图.节点组)定义.emplace(项.局部编号,&项);
+    for(const auto& 项:图.出现组)出现.emplace(项.出现编号,&项);
+    std::set<std::int64_t> 活动;
+    const auto 展开=[&](auto&& 自身,std::int64_t 编号)->std::string {
+        if(!出现.contains(编号)||!活动.insert(编号).second)throw std::logic_error("runtime language graph invalid");
+        const auto& 实例=*出现.at(编号);const auto& 节点=*定义.at(实例.定义含义编号);
+        std::string 键="("+std::to_string(static_cast<int>(节点.操作))+":"+std::to_string(static_cast<int>(实例.有效作用域))
+            +":"+std::to_string(节点.方向 ? static_cast<int>(*节点.方向):0)+":"+std::to_string(节点.特征值分支 ? static_cast<int>(*节点.特征值分支):0)
+            +":"+std::to_string(节点.确认范围 ? static_cast<int>(*节点.确认范围):0);
+        auto 参数组=节点.参数组;std::sort(参数组.begin(),参数组.end(),[](auto 左,auto 右){return 左.参数<右.参数;});
+        for(auto 参数:参数组) {
+            const auto 绑定=std::find_if(实例.角色组.begin(),实例.角色组.end(),[&](const auto& 项){return 项.角色编号==参数.规则角色;});
+            if(绑定==实例.角色组.end())throw std::logic_error("runtime language role missing");
+            键+="/"+std::to_string(static_cast<int>(参数.参数))+"=";
+            if(const auto* 引用=std::get_if<语言图引用值>(&绑定->值))键+=std::to_string(static_cast<int>(引用->类别))+":"+std::to_string(引用->节点.值);
+            else if(const auto* 数=std::get_if<语言图整数值>(&绑定->值))键+=数->规范十进制+":"+(数->单位 ? std::to_string(数->单位->值):"-");
+            else 键+=自身(自身,std::get<语言图子出现引用>(绑定->值).出现编号);
+        }
+        活动.erase(编号);return 键+")";
+    };
+    return 展开(展开,图.根出现编号);
+}
 U 候选构式(const 语言基础统一候选& v){return std::visit([](const auto&x)->U{
     using T=std::decay_t<decltype(x)>;
     if constexpr(std::is_same_v<T,语言场景归类候选>)return U::S01归类;
     else if constexpr(std::is_same_v<T,基础概念上下位候选>)return U::S02上下位;
     else if constexpr(std::is_same_v<T,语言场景基础候选>)return 统一构式(x.构式);
+    else if constexpr(std::is_same_v<T,语言图含义材料>)return 图构式(x);
     else return U::S09归类确认;
 },v);}
 struct 统一键 final {
@@ -662,12 +721,14 @@ struct 统一键 final {
         if constexpr(std::is_same_v<T,语言场景归类候选>){key.身份={x.所用知识节点,x.主体概念节点,x.归类概念节点};if(names)for(const auto&o:x.出现组){key.身份.push_back(o.名称关系节点);key.身份.push_back(o.词条节点);}}
         else if constexpr(std::is_same_v<T,基础概念上下位候选>)conceptkey(x);
         else if constexpr(std::is_same_v<T,语言场景基础候选>){key.身份={x.所用知识节点};for(const auto&o:x.出现组){if(const auto*n=std::get_if<语言场景基础命名出现>(&o)){key.身份.push_back(n->概念节点);if(names){key.身份.push_back(n->名称关系节点);key.身份.push_back(n->词条节点);}}else key.数字.push_back(std::get<语言场景基础整数出现>(o).规范十进制);}}
+        else if constexpr(std::is_same_v<T,语言图含义材料>)key.数字.push_back(图词面语义键(x));
         else{conceptkey(x.被询归类);key.身份.insert(key.身份.begin(),x.外层知识节点);key.身份.push_back(x.子知识节点);if(x.受询者存在节点)key.身份.push_back(*x.受询者存在节点);}
     },v);return key;
 }
 bool S02完全相同(const 基础概念上下位候选&a,const 基础概念上下位候选&b){return a.类别==b.类别&&a.主体概念节点==b.主体概念节点&&a.归类概念节点==b.归类概念节点&&a.主体名称关系节点==b.主体名称关系节点&&a.归类名称关系节点==b.归类名称关系节点&&a.所用知识节点==b.所用知识节点&&范围相同(a.主体范围,b.主体范围)&&范围相同(a.归类范围,b.归类范围);}
 bool 统一候选相同(const 语言基础统一候选&a,const 语言基础统一候选&b){
     if(a.index()!=b.index()||统一候选键(a,true)!=统一候选键(b,true))return false;
+    if(const auto* 图=std::get_if<语言图含义材料>(&a)){const auto& 另=std::get<语言图含义材料>(b);return 图词面语义键(*图)==图词面语义键(另)&&图->固定原文==另.固定原文;}
     if(const auto*x=std::get_if<语言场景基础候选>(&a))return 候选相同(*x,std::get<语言场景基础候选>(b));
     if(const auto*x=std::get_if<基础概念上下位候选>(&a))return S02完全相同(*x,std::get<基础概念上下位候选>(b));
     if(const auto*x=std::get_if<基础概念归类确认候选>(&a)){const auto&y=std::get<基础概念归类确认候选>(b);return !x->受询者存在节点&&!y.受询者存在节点&&S02完全相同(x->被询归类,y.被询归类)&&范围相同(x->子句范围,y.子句范围)&&范围相同(x->确认词范围,y.确认词范围);}
@@ -793,14 +854,113 @@ I 核验纯概念来源(const 语言基础纯概念含义& p,稳定编码 lang,
     using T=std::decay_t<decltype(x)>;
     if constexpr(std::is_same_v<T,语言场景归类含义>)return 语言场景归类候选{x.主体来源概念节点,x.归类概念节点,x.所用知识节点,x.出现组};
     else if constexpr(std::is_same_v<T,语言场景基础含义>)return x.解释;
+    else if constexpr(std::is_same_v<T,语言图含义材料>)return x;
     else return std::visit([](const auto&v)->语言基础统一候选{return v;},x.解释);
 },m);}
+I 图输入状态(基础语言输入状态 状态) {
+    using 状态类=基础语言输入状态;
+    switch(状态) {
+    case 状态类::已形成唯一含义:return I::已形成值式图;
+    case 状态类::主体待绑定:return I::对象待绑定;
+#define 图状态直映(名称) case 状态类::名称:return I::名称
+    图状态直映(概念多义待解);图状态直映(多规则待解);图状态直映(未知词);图状态直映(缺名称);
+    图状态直映(缺规则);图状态直映(角色不相容);图状态直映(结构未支持);图状态直映(输入拒绝);
+    图状态直映(格式失败);图状态直映(引用不可读);图状态直映(额度不足);图状态直映(内部不一致);
+    图状态直映(工程未完成);图状态直映(读取漂移);
+#undef 图状态直映
+    case 状态类::世界能力未支持:case 状态类::对象短语未解:return I::结构未支持;
+    case 状态类::世界根不可读:case 状态类::主体不属于世界:return I::引用不可读;
+    case 状态类::资源失败:return I::工程未完成;
+    }throw std::logic_error("unknown graph interpretation state");
+}
+O 图表达输出状态(基础表达状态 状态) {
+    switch(状态) {
+    case 基础表达状态::已生成:return O::已生成且唯一回读;
+    case 基础表达状态::输入拒绝:case 基础表达状态::缺指称:case 基础表达状态::能力未支持:return O::输入拒绝;
+    case 基础表达状态::缺规则:return O::缺规则;
+    case 基础表达状态::缺名称:return O::缺名称;
+    case 基础表达状态::名称待选:return O::名称待选;
+    case 基础表达状态::多规则待选:return O::回读多义;
+    case 基础表达状态::引用不可读:return O::引用不可读;
+    case 基础表达状态::读取漂移:return O::读取漂移;
+    case 基础表达状态::额度不足:return O::额度不足;
+    case 基础表达状态::工程未完成:return O::工程未完成;
+    case 基础表达状态::内部不一致:return O::内部不一致;
+    }throw std::logic_error("unknown graph expression state");
+}
 } // namespace
 
 语言基础统一输入结果 转换单句基础语言到信息(const 语言基础统一输入请求& q,
     新_自然语言世界树类& world,const 新_语言类& lang,const 新_词类& words,const 概念_名称关系类& names,
     const 概念_存在类& es,const 概念_特征类& fs,const 新_存在类& instances){
     auto result=只读识别六类基础句型(q,lang,words,names,es,fs,instances);
+    if(技术未完成(result.状态))return result;
+    const auto 图解释=解释单句含义图({q.语言节点,q.固定原文,q.未核验来源语言记录节点,{}},lang,words,names,es,fs,instances);
+    result.图解释状态=图解释.状态;result.未覆盖范围组=图解释.未覆盖范围组;result.受阻节点组=图解释.受阻节点组;
+    const auto 图状态=图输入状态(图解释.状态);
+    const auto 清含义=[&](I 状态) {
+        result.状态=状态;result.完整候选组.clear();result.含义.reset();result.构式.reset();
+        result.已取得场景节点.reset();result.已取得对象绑定组.clear();
+    };
+    if(技术未完成(图状态)){清含义(图状态);return result;}
+    if(!图解释.完整候选组.empty()&&图解释.状态!=基础语言输入状态::已形成唯一含义
+        &&图解释.状态!=基础语言输入状态::主体待绑定&&图解释.状态!=基础语言输入状态::概念多义待解
+        &&图解释.状态!=基础语言输入状态::多规则待解)throw std::logic_error("failed graph interpretation retained candidates");
+    std::vector<语言图含义材料> 新图候选;
+    std::set<std::string> 新图语义;
+    for(const auto& 图:图解释.完整候选组) {
+        const auto 根=std::find_if(图.出现组.begin(),图.出现组.end(),[&](const auto& 出现){return 出现.出现编号==图.根出现编号;});
+        if(根==图.出现组.end())throw std::logic_error("interpreted graph root occurrence missing");
+        const auto 知识=lang.获取语言知识(根->所用知识节点,words,es);
+        if(知识.状态!=新语言知识状态::已完成) {
+            const auto 状态=知识.状态==新语言知识状态::读取漂移 ? I::读取漂移:
+                知识.状态==新语言知识状态::内部不一致 ? I::内部不一致:
+                知识.状态==新语言知识状态::工程未完成 ? I::工程未完成:
+                知识.状态==新语言知识状态::额度不足 ? I::额度不足:I::引用不可读;
+            清含义(状态);result.受阻节点组.push_back(根->所用知识节点);return result;
+        }
+        if(!知识.信息)throw std::logic_error("graph knowledge success missing material");
+        // 同一旧知识的图适配不是第二个解释。保留原六构式的完整消歧、载荷和后续物化合同。
+        if(const auto 兼容构式=知识构式(*知识.信息,q.语言节点);兼容构式&&*兼容构式==图构式(图))continue;
+        if(新图语义.insert(图词面语义键(图)).second)新图候选.push_back(图);
+    }
+    if(!新图候选.empty()) {
+        const bool 旧有候选=!result.完整候选组.empty();
+        for(const auto& 图:新图候选)result.完整候选组.emplace_back(图);
+        result.状态=旧有候选 ? I::多规则待解:图状态;
+        std::set<U> 构式组;for(const auto& 候选:result.完整候选组)构式组.insert(候选构式(候选));
+        if(构式组.size()==1)result.构式=*构式组.begin();else {result.构式.reset();result.状态=I::构式多义待解;}
+        result.含义.reset();result.已取得场景节点.reset();result.已取得对象绑定组.clear();
+        if(result.状态==I::已形成值式图||result.状态==I::对象待绑定) {
+            bool 有未决对象=false;
+            if(result.状态==I::已形成值式图&&新图候选.size()!=1)throw std::logic_error("unique graph interpretation missing unique material");
+            for(const auto& 图:新图候选)for(const auto& 出现:图.出现组) {
+                const auto 定义=std::find_if(图.定义图.节点组.begin(),图.定义图.节点组.end(),[&](const auto& 节点){return 节点.局部编号==出现.定义含义编号;});
+                if(定义==图.定义图.节点组.end())throw std::logic_error("interpreted graph definition missing");
+                for(const auto& 角色:定义->角色组)if(角色.种类==新语言知识角色种类::领域对象引用) {
+                    const auto 绑定=std::find_if(出现.角色组.begin(),出现.角色组.end(),[&](const auto& 项){return 项.角色编号==角色.局部编号;});
+                    if(绑定==出现.角色组.end())throw std::logic_error("interpreted graph object role missing");
+                    const auto* 引用=std::get_if<语言图引用值>(&绑定->值);
+                    if(!引用||(引用->类别!=K::存在&&引用->类别!=K::存在概念))throw std::logic_error("interpreted graph object role invalid");
+                    有未决对象|=引用->类别==K::存在概念;
+                }
+            }
+            if((result.状态==I::对象待绑定)!=有未决对象)throw std::logic_error("graph binding state does not match object material");
+        }
+        if(result.状态==I::已形成值式图) {
+            if(新图候选.size()!=1)throw std::logic_error("unique graph interpretation missing unique material");
+            const auto& 图=新图候选[0];
+            result.含义=图;
+        }
+        return result;
+    }
+    if(图解释.完整候选组.empty()) {
+        if(图解释.状态==基础语言输入状态::已形成唯一含义||图解释.状态==基础语言输入状态::主体待绑定)
+            throw std::logic_error("graph interpretation state has no candidate material");
+        if(result.完整候选组.empty()&&图解释.状态!=基础语言输入状态::缺规则) {
+            清含义(图状态);return result;
+        }
+    }
     if(result.状态!=I::已形成且读回)return result;
     const auto again=只读识别六类基础句型(q,lang,words,names,es,fs,instances);
     if(again.状态!=I::已形成且读回||result.完整候选组.size()!=1||again.完整候选组.size()!=1
@@ -941,6 +1101,35 @@ O 统一输出核验(const 语言基础统一输出请求&q,const std::string&te
     const 新_自然语言世界树类& world,const 新_语言类& lang,const 新_词类& words,const 概念_名称关系类& names,
     const 概念_存在类& es,const 概念_特征类& fs,const 新_存在类& instances){
     语言基础统一输出结果 result;
+    if(const auto* 图=std::get_if<语言图含义材料>(&q.含义)) {
+        const auto 根=std::find_if(图->定义图.节点组.begin(),图->定义图.节点组.end(),[&](const auto& 节点){return 节点.局部编号==图->定义图.根含义编号;});
+        if(根==图->定义图.节点组.end())return result;
+        基础表达请求 请求{};请求.语言节点=q.语言节点;请求.目的=根->操作==M::信息请求 ? 新语言知识表达目的::提问:新语言知识表达目的::陈述;
+        请求.操作=根->操作;请求.作用域=根->作用域;请求.含义图=*图;
+        请求.最大知识条目数=q.最大知识条目数;请求.最大名称条目数=q.最大名称候选数;请求.最大输出标量数=q.最大输出标量数;
+        const auto 表达=生成基础语言表达(请求,lang,words,names,es,fs,instances);
+        if(表达.状态!=基础表达状态::已生成){result.状态=图表达输出状态(表达.状态);return result;}
+        if(!表达.已用含义图)throw std::logic_error("graph expression success has no meaning material");
+        语言图解释请求 回读请求{q.语言节点,表达.文本,{}, {}};
+        for(const auto& 对齐:表达.对齐组)if(对齐.参数&&对齐.名称关系节点) {
+            for(const auto& 出现:表达.已用含义图->出现组) {
+                if(出现.所用知识节点!=对齐.所属知识节点||出现.结构项路径.size()+1!=对齐.结构项路径.size()
+                    ||!std::equal(出现.结构项路径.begin(),出现.结构项路径.end(),对齐.结构项路径.begin()))continue;
+                const auto 定义=std::find_if(图->定义图.节点组.begin(),图->定义图.节点组.end(),[&](const auto& 节点){return 节点.局部编号==出现.定义含义编号;});
+                if(定义==图->定义图.节点组.end())throw std::logic_error("graph alignment definition missing");
+                for(auto 参数:定义->参数组)if(参数.参数==*对齐.参数)for(const auto& 绑定:出现.角色组)if(绑定.角色编号==参数.规则角色)
+                    if(const auto* 引用=std::get_if<语言图引用值>(&绑定.值);引用&&引用->类别==K::存在)
+                        回读请求.对象绑定组.push_back({{对齐.起始标量,对齐.结束标量},引用->节点});
+            }
+        }
+        const auto 回读=解释单句含义图(回读请求,lang,words,names,es,fs,instances);
+        if(回读.状态!=基础语言输入状态::已形成唯一含义){result.状态=输出映射(图输入状态(回读.状态));return result;}
+        if(回读.完整候选组.size()!=1)throw std::logic_error("graph readback success has no unique material");
+        if(图词面语义键(*图)!=图词面语义键(回读.完整候选组[0])){result.状态=O::回读含义不一致;return result;}
+        result.状态=O::已生成且唯一回读;result.文本=表达.文本;result.构式=图构式(*图);result.所用知识节点组=表达.已用知识节点组;
+        for(const auto& 对齐:表达.对齐组)result.输出对齐组.push_back({{对齐.起始标量,对齐.结束标量},对齐.结构项路径,对齐.词条节点,对齐.名称关系节点,{},{},{}});
+        return result;
+    }
     if(!有效(q.语言节点)||!q.最大知识条目数||!q.最大名称候选数||!q.最大输出标量数||!q.最大回读原文标量数||!q.最大组合候选数||!q.最大确认候选数)return result;
     const auto ks=读取语言场景基础知识完整(q.语言节点,q.最大知识条目数,lang,words,es);
     if(ks.状态!=读取状态::已完成){result.状态=输出映射(输入映射(ks.状态));return result;}
@@ -986,5 +1175,180 @@ O 统一输出核验(const 语言基础统一输出请求&q,const std::string&te
     }
     if(result.输出对齐组.empty()){result.状态=O::读取漂移;return result;}
     result.文本=text;result.构式=form;result.所用知识节点组={k->节点};return result;
+}
+namespace {
+enum class 正式需求内容序号 : std::size_t {
+    主体=0,执行域,目标存在,目标特征类型,目标形式,权重,活动,目标域,比较,方向,父,来源,根,理解,确认
+};
+}
+正式需求语言投影结果 从正式需求投影形成语言图(const 正式信息参数读取结果& 源,稳定编码 语言节点,
+    bool 生成确认问句,const 新_语言类& 语言,const 新_词类& 词,const 概念_存在类& 存在概念) {
+    using 状态类=正式需求语言投影状态;正式需求语言投影结果 结果;结果.源材料=源;
+    if(源.状态!=正式信息参数读取状态::已读取)return 结果;
+    if(!源.信息)throw std::logic_error("formal demand reader success has no payload");
+    const auto& 投影=*源.信息;
+    if(!投影.引用概念语义){结果.状态=状态类::语义未提供;return 结果;}
+    const auto& 语义=*投影.引用概念语义;
+    if(语义.状态==正式引用概念语义状态::部分){结果.状态=状态类::目标待完善;return 结果;}
+    if(语义.状态==正式引用概念语义状态::引用内容未展开||语义.引用内容定位) {
+        结果.状态=状态类::目标形态未支持;结果.受阻节点组.push_back(投影.信息节点);
+        if(语义.引用内容定位)结果.受阻节点组.push_back(语义.引用内容定位->信息节点);return 结果;
+    }
+    if(语义.状态!=正式引用概念语义状态::完整||投影.直接内容组.size()!=15)throw std::logic_error("formal demand semantic layout invalid");
+    using 值类=正式内容值种类;using 值态=正式内容值状态;
+    const std::array<值类,15> 值种类{值类::存在引用,值类::I64数值,值类::存在引用,值类::概念引用,值类::I64数值,
+        值类::I64数值,值类::I64数值,值类::概念引用,值类::概念引用,值类::I64数值,值类::需求引用,
+        值类::I64数值,值类::I64数值,值类::语言理解引用,值类::内容确认引用};
+    std::set<稳定编码> 槽类型;
+    for(std::size_t 位置=0;位置<15;++位置) {
+        const auto& 槽=投影.直接内容组[位置];const auto& 内容=槽.内容;
+        if(!有效(槽.特征类型)||!槽类型.insert(槽.特征类型).second||内容.种类!=值种类[位置]
+            ||内容.状态<值态::已知||内容.状态>值态::不适用||(内容.状态==值态::已知)!=内容.值.has_value())throw std::logic_error("formal demand content slot invalid");
+        if(内容.值&&((内容.种类==值类::I64数值)!=std::holds_alternative<std::int64_t>(*内容.值)))throw std::logic_error("formal demand slot value type invalid");
+        if(内容.值&&内容.种类!=值类::I64数值&&!有效(std::get<稳定编码>(*内容.值)))throw std::logic_error("formal demand empty reference");
+    }
+    const auto 槽=[&](正式需求内容序号 编号)->const 正式内容值& {return 投影.直接内容组[static_cast<std::size_t>(编号)].内容;};
+    const auto 引用=[&](正式需求内容序号 编号) {const auto& 内容=槽(编号);if(内容.状态!=值态::已知||!内容.值)throw std::logic_error("complete demand reference unknown");return std::get<稳定编码>(*内容.值);};
+    const auto 数值=[&](正式需求内容序号 编号) {const auto& 内容=槽(编号);if(内容.状态!=值态::已知||!内容.值)throw std::logic_error("complete demand number unknown");return std::get<std::int64_t>(*内容.值);};
+    const auto 主体=引用(正式需求内容序号::主体),目标存在=引用(正式需求内容序号::目标存在),目标类型=引用(正式需求内容序号::目标特征类型);
+    const auto 形式=数值(正式需求内容序号::目标形式);
+    std::map<稳定编码,const 特征概念定义保护信息*> 特征表;std::map<稳定编码,const 二次特征概念信息*> 二次表;
+    for(const auto& 定义:语义.特征概念定义组)if(!特征表.emplace(定义.定义.节点,&定义).second)throw std::logic_error("duplicate formal feature definition");
+    for(const auto& 定义:语义.二次特征定义组)if(!二次表.emplace(定义.节点,&定义).second)throw std::logic_error("duplicate formal comparison definition");
+    const auto 取特征=[&](稳定编码 编号)->const 特征概念定义保护信息& {const auto 位置=特征表.find(编号);if(位置==特征表.end())throw std::logic_error("formal feature closure missing");return *位置->second;};
+    const auto& 类型=取特征(目标类型);
+    if(类型.类型根!=目标类型)throw std::logic_error("formal target FT is not root");
+    if(类型.定义.材料类型!=特征概念材料物理类型::I64标量||类型.定义.比较规则!=特征概念比较规则::I64数值){结果.状态=状态类::目标形态未支持;return 结果;}
+    新语言知识含义操作 目标操作=M::特征描述;std::optional<新语言知识特征方向> 目标方向;
+    std::int64_t 下界=0,上界=0;
+    if(形式==2) {
+        if(槽(正式需求内容序号::目标域).状态!=值态::不适用||槽(正式需求内容序号::比较).状态!=值态::不适用)throw std::logic_error("direction demand contains value relation");
+        const auto 方向=数值(正式需求内容序号::方向);if(方向!=1&&方向!=2)throw std::logic_error("formal demand direction invalid");
+        目标操作=M::特征方向描述;目标方向=static_cast<新语言知识特征方向>(方向);
+    }else if(形式==1) {
+        if(槽(正式需求内容序号::方向).状态!=值态::不适用)throw std::logic_error("value demand contains direction");
+        const auto 域节点=引用(正式需求内容序号::目标域),比较节点=引用(正式需求内容序号::比较);const auto& 域=取特征(域节点);
+        if(域.类型根!=目标类型||域.定义.单位!=类型.定义.单位)throw std::logic_error("formal demand domain root or unit mismatch");
+        const auto* 区间=std::get_if<std::vector<特征概念I64闭区间>>(&域.定义.值域);
+        if(!区间||区间->size()!=1){结果.状态=状态类::目标形态未支持;return 结果;}
+        下界=区间->front().下界;上界=区间->front().上界;if(下界>上界)throw std::logic_error("formal target interval invalid");
+        if(!二次表.contains(比较节点))throw std::logic_error("formal demand comparison missing");
+        const auto& 比较=*二次表.at(比较节点);
+        if(!二次表.contains(比较.二次特征类型根节点))throw std::logic_error("formal comparison root missing");
+        const auto& 比较根=*二次表.at(比较.二次特征类型根节点);const auto& 输出=取特征(比较.输出特征概念.节点);const auto& 输出根=取特征(比较根.输出特征概念.节点);
+        const auto 输入合法=[&](const 二次特征概念信息& 定义) {
+            if(定义.算法!=二次特征算法::有向特征差值||定义.输入定义组.size()!=2||定义.参照特征概念节点!=std::optional{域节点})return false;
+            for(std::size_t 位置=0;位置<2;++位置) {const auto& 输入=定义.输入定义组[位置];
+                if(输入.顺序!=static_cast<std::int64_t>(位置)||输入.角色!=(位置==0 ? 二次特征输入角色::左输入:二次特征输入角色::右输入)
+                    ||输入.来源种类!=二次特征输入来源种类::特征准确值||输入.特征类型概念节点!=std::optional{目标类型})return false;}
+            return true;
+        };
+        const auto* 输出区间=std::get_if<std::vector<特征概念I64闭区间>>(&输出.定义.值域);
+        const auto* 总区间=std::get_if<std::vector<特征概念I64闭区间>>(&输出根.定义.值域);
+        bool 相容=输入合法(比较)&&输入合法(比较根)&&比较根.二次特征类型根节点==比较根.节点
+            &&输出.类型根==输出根.定义.节点&&输出根.类型根==输出根.定义.节点
+            &&输出.定义.材料类型==特征概念材料物理类型::I64标量&&输出根.定义.材料类型==特征概念材料物理类型::I64标量
+            &&输出.定义.单位==类型.定义.单位&&输出根.定义.单位==类型.定义.单位&&输出区间&&*输出区间==*区间
+            &&总区间&&*总区间==std::vector<特征概念I64闭区间>{{(std::numeric_limits<std::int64_t>::min)(),(std::numeric_limits<std::int64_t>::max)()}};
+        std::set<二次特征结果域种类> 种类(比较.结果域种类组.begin(),比较.结果域种类组.end());
+        if(种类.empty())相容=false;
+        for(auto 种:种类)if(种!=二次特征结果域种类::包含于参照值域&&(下界!=上界||种!=二次特征结果域种类::等于))相容=false;
+        // D接受位置profile仅接受‘命中’，其逆像恰为目标闭域；不是把A-B当A。
+        if(!相容){结果.状态=状态类::比较关系未支持;结果.受阻节点组.push_back(比较节点);return 结果;}
+        if(下界!=上界)目标操作=M::特征区间描述;
+    }else throw std::logic_error("formal demand target form invalid");
+    const auto 语言失败=[](新语言知识状态 状态) {
+        if(状态==新语言知识状态::未找到)return 状态类::缺规则;
+        if(状态==新语言知识状态::读取漂移)return 状态类::读取漂移;
+        return 状态类::工程未完成;
+    };
+    const auto 采用=语言.读取当前结构采用(语言节点,词);
+    if(采用.状态!=新语言知识状态::已完成){结果.状态=语言失败(采用.状态);return 结果;}
+    if(!采用.采用)throw std::logic_error("adopted language read success missing reference");
+    const auto 集=语言.获取结构定义集(采用.采用->定义集节点,词);
+    if(集.状态!=新语言知识状态::已完成){结果.状态=语言失败(集.状态);return 结果;}
+    if(!集.信息)throw std::logic_error("language definition set success missing material");
+    std::vector<新语言知识信息> 匹配知识;
+    std::map<稳定编码,新语言知识信息> 知识保护;
+    for(const auto& 模式:集.信息->模式组)if(模式.定义.实现知识节点) {
+        if(知识保护.contains(*模式.定义.实现知识节点))continue;
+        const auto 知识=语言.获取语言知识(*模式.定义.实现知识节点,词,存在概念);
+        if(知识.状态!=新语言知识状态::已完成){结果.状态=语言失败(知识.状态);return 结果;}
+        if(!知识.信息)throw std::logic_error("language knowledge success missing material");
+        知识保护.emplace(知识.信息->节点,*知识.信息);
+        if(!知识.信息->定义.目标.含义图)continue;const auto& 图=*知识.信息->定义.目标.含义图;
+        std::map<std::int64_t,const 新语言图含义节点*> 节点表;for(const auto& 节点:图.节点组)节点表.emplace(节点.局部编号,&节点);
+        const auto& 根=*节点表.at(图.根含义编号);if(根.操作!=(生成确认问句 ? M::信息请求:M::需求描述))continue;
+        const 新语言图含义节点* 需求=&根;
+        if(生成确认问句){if(根.子含义组.size()!=1)continue;需求=节点表.at(根.子含义组[0].子含义编号);}
+        if(需求->操作!=M::需求描述||需求->子含义组.size()!=1)continue;
+        const auto& 目标=*节点表.at(需求->子含义组[0].子含义编号);
+        if(目标.操作==目标操作&&目标.方向==目标方向)匹配知识.push_back(*知识.信息);
+    }
+    if(匹配知识.size()!=1){结果.状态=状态类::缺规则;for(const auto& 知识:匹配知识)结果.受阻节点组.push_back(知识.节点);return 结果;}
+    const auto& 知识=匹配知识[0];语言图含义材料 材料{语言节点,*知识.定义.目标.含义图,0,{},{},{},投影};
+    std::map<std::int64_t,const 新语言图含义节点*> 图节点;for(const auto& 节点:材料.定义图.节点组)图节点.emplace(节点.局部编号,&节点);
+    std::map<std::int64_t,稳定编码> 出现知识;
+    std::set<稳定编码> 活动知识;
+    const auto 选子知识=[&](auto&& 自身,稳定编码 编号,const std::map<std::int64_t,std::int64_t>& 节点映射)->bool {
+        if(!活动知识.insert(编号).second)throw std::logic_error("language projection knowledge cycle");
+        struct 离域清理 final {std::set<稳定编码>& 活动;稳定编码 编号;~离域清理(){活动.erase(编号);}} 离域{活动知识,编号};
+        if(!知识保护.contains(编号)) {
+            const auto 读取=语言.获取语言知识(编号,词,存在概念);
+            if(读取.状态!=新语言知识状态::已完成){结果.状态=语言失败(读取.状态);return false;}
+            if(!读取.信息)throw std::logic_error("child knowledge success missing material");
+            知识保护.emplace(编号,*读取.信息);
+        }
+        const auto& 当前=知识保护.at(编号);
+        const auto 本地根=当前.定义.目标.含义图 ? 当前.定义.目标.含义图->根含义编号:1;
+        if(!节点映射.contains(本地根))throw std::logic_error("language projection root mapping incomplete");
+        出现知识.emplace(节点映射.at(本地根),编号);
+        for(const auto& 项:当前.定义.结构.有序项组)if(const auto* 子=std::get_if<新语言知识图子规则项>(&项.载荷)) {
+            if(子->允许子知识组.size()!=1) {
+                结果.状态=状态类::缺规则;结果.受阻节点组.insert(结果.受阻节点组.end(),子->允许子知识组.begin(),子->允许子知识组.end());return false;
+            }
+            std::map<std::int64_t,std::int64_t> 子映射;
+            for(const auto& 映射:子->映射组) {
+                if(!节点映射.contains(映射.来源.含义编号))throw std::logic_error("language projection source mapping missing");
+                const auto [位置,新增]=子映射.emplace(映射.目标.含义编号,节点映射.at(映射.来源.含义编号));
+                if(!新增&&位置->second!=节点映射.at(映射.来源.含义编号))throw std::logic_error("language projection mapping inconsistent");
+            }
+            if(!自身(自身,子->允许子知识组[0],子映射))return false;
+        }
+        return true;
+    };
+    std::map<std::int64_t,std::int64_t> 根映射;for(const auto& [编号,节点]:图节点)根映射.emplace(编号,编号);
+    if(!选子知识(选子知识,知识.节点,根映射))return 结果;
+    std::int64_t 次号=0;
+    const auto 建出现=[&](auto&& 自身,std::int64_t 定义编号)->std::int64_t {
+        const auto 编号=次号++;const auto& 定义=*图节点.at(定义编号);语言图含义出现 出现;
+        if(!出现知识.contains(定义编号))throw std::logic_error("language projection occurrence knowledge missing");
+        出现.出现编号=编号;出现.定义含义编号=定义编号;出现.有效作用域=定义.作用域;出现.所用知识节点=出现知识.at(定义编号);
+        for(auto 参数:定义.参数组) {
+            const auto 边=std::find_if(定义.子含义组.begin(),定义.子含义组.end(),[&](const auto& 项){return 项.本节点角色编号==参数.规则角色;});
+            if(边!=定义.子含义组.end())出现.角色组.push_back({参数.规则角色,语言图子出现引用{自身(自身,边->子含义编号)}});
+            else if(参数.参数==P::主体)出现.角色组.push_back({参数.规则角色,语言图引用值{K::存在,定义.操作==M::需求描述 ? 主体:目标存在,{},{}}});
+            else if(参数.参数==P::特征类型)出现.角色组.push_back({参数.规则角色,语言图引用值{K::I64标量特征类型,目标类型,{},{}}});
+            else if(参数.参数==P::特征值||参数.参数==P::下界||参数.参数==P::上界)
+                出现.角色组.push_back({参数.规则角色,语言图整数值{std::to_string(参数.参数==P::上界 ? 上界:下界),类型.定义.单位}});
+            else throw std::logic_error("target language graph parameter outside profile");
+        }
+        材料.出现组.push_back(std::move(出现));return 编号;
+    };
+    材料.根出现编号=建出现(建出现,材料.定义图.根含义编号);
+    std::sort(材料.出现组.begin(),材料.出现组.end(),[](const auto& 左,const auto& 右){return 左.出现编号<右.出现编号;});
+    const auto 再采用=语言.读取当前结构采用(语言节点,词);
+    if(再采用.状态!=新语言知识状态::已完成){结果.状态=再采用.状态==新语言知识状态::未找到 ? 状态类::读取漂移:语言失败(再采用.状态);return 结果;}
+    if(再采用.采用!=采用.采用){结果.状态=状态类::读取漂移;return 结果;}
+    const auto 再集=语言.获取结构定义集(采用.采用->定义集节点,词);
+    if(再集.状态!=新语言知识状态::已完成){结果.状态=再集.状态==新语言知识状态::未找到 ? 状态类::读取漂移:语言失败(再集.状态);return 结果;}
+    if(!再集.信息||再集.信息->节点!=集.信息->节点||再集.信息->语言节点!=集.信息->语言节点
+        ||再集.信息->原种子来源节点!=集.信息->原种子来源节点||再集.信息->声明!=集.信息->声明){结果.状态=状态类::读取漂移;return 结果;}
+    for(const auto& [编号,先前]:知识保护) {
+        const auto 再读=语言.获取语言知识(编号,词,存在概念);
+        if(再读.状态!=新语言知识状态::已完成){结果.状态=再读.状态==新语言知识状态::未找到 ? 状态类::读取漂移:语言失败(再读.状态);return 结果;}
+        if(!再读.信息||!知识相同(*再读.信息,先前)){结果.状态=状态类::读取漂移;return 结果;}
+    }
+    结果.状态=状态类::已投影;结果.含义=std::move(材料);return 结果;
 }
 } // namespace 海中鱼巣
