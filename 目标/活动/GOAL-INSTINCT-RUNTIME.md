@@ -5,10 +5,10 @@
 - 目标编号：`GOAL-INSTINCT-RUNTIME`
 - 名称：构建本能系统基于世界事实、实例特征和现实锚点持续运行的基础架构
 - 类型：集成能力目标
-- 记录版本：v0.25
+- 记录版本：v0.26
 - 创建时间：2026-09-21
-- 更新时间：2026-10-28
-- 当前状态：候选；经`GOAL-SELF-GOVERNANCE-CLOSURE`推进`GOAL-CONNECTION-RECEIVE-STATE`，本上位集成目标未完成
+- 更新时间：2026-10-30
+- 当前状态：候选；经`GOAL-SELF-GOVERNANCE-CLOSURE`推进`GOAL-SERVICE-MAINLINE-END-TO-END-REPAIR`，本上位集成目标未完成
 - 直接上位目标：无
 - 直接下位目标：`GOAL-IF-R-FOUNDATION`（已完成）、`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`（已完成）、`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-IFR-ACTUAL-F-PROVIDER-DESIGN`（完成）、`GOAL-SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-SELF-GOVERNANCE-CLOSURE`（候选，当前路线）
 - 目标账所有者：交互智能体
@@ -57,7 +57,7 @@
 - 阻断解除条件：当前provider无阻断；后继self/manager接线须等待provider真实发布并重新按届时代码形成精确合同。
 - 自动复核触发：上述合同、任务管理/工作线程入口、关联规范、计划索引、生产代码或验收变化；用户改变目标
 
-## 7. 当前路线刷新（2026-10-28）
+## 7. 历史路线刷新（2026-10-28，当前见第8节）
 
 - 状态事实截止：`1205cb1ccfb8ccd25159a065f7ba10b253882f57`；事务`TARGET-20261028-01`。
 - 当前直接子路线仍为[自我内部治理闭环](GOAL-SELF-GOVERNANCE-CLOSURE.md)，主推进叶为[连接接收状态重构](GOAL-CONNECTION-RECEIVE-STATE.md)。整体运行目标不变，第3节只清除已被0050替代的旧物理/代次要求，不降低最终集成证据下限。
@@ -68,3 +68,9 @@
 - 当前依赖/缺口：连接叶代码迁移及验证、服务需求承接后的任务执行、合法结算、连续多轮及最终集成仍须逐项取证。不再把消费者合同描述为尚未形成。下一动作以当前叶为准。
 - 阻断来源/解除条件：未记录新的上位硬阻断；局部计划或WIP不等于整体完成。第4—6节旧依赖不再形成现行门禁。
 - 自动复核触发：当前叶/上位闭环证据更新或用户改变路线；上位目标只在第3节证据满足后终态处置。
+
+## 8. 当前路线刷新（2026-10-30）
+
+- 状态事实截止`73576a6bfdc154154ac1f3897c8f6189d94e4830`；事务`TARGET-20261030-01`。本目标直接下位仍为自我内部治理闭环；用户确认的新主推进是其下的[服务主线全流程验证与修复](GOAL-SERVICE-MAINLINE-END-TO-END-REPAIR.md)。不把新目标重挂到本节点，旧连接叶及既有其它目标均保留未完成。
+- 最新依据为[10月30日完整验证未通过](../../验证记录/20261030_MAINLINE-FULL-REAL-RUN_完整流程验证.md)，其HEAD+联合WIP性质不升级为正式发布/恢复/连续运行验收。
+- 新主目标尚无独立新代码计划，设计及实施资格仍取正式规范、对应有效设计/计划和切片S0；下一动作由新目标导航。当前事实、风险和解除标准按新目标与本目标第3节分别核对，不能降低本长期集成目标的完成门槛。
