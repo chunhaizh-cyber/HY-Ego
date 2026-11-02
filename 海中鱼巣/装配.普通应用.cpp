@@ -2828,20 +2828,29 @@ void 初始化普通应用结构化子概念(普通应用上下文& 当前, 普�
     if (!found) throw std::logic_error("字段询问第三方指代缺失");
     return *found;
 }
-稳定编码 读取行动请求受话者概念(普通应用上下文& 当前) {
+稳定编码 读取行动请求作用域指代概念(普通应用上下文& 当前,指代声明规则 规则,
+    const char* 不唯一说明,const char* 缺失说明) {
     if (!当前.指代种子) throw std::logic_error("行动请求缺少指代初始化结果");
     std::optional<稳定编码> found;
     for (const auto& item:当前.指代种子->项组) {
         if (!item.定义读回 || !item.定义读回->信息) throw std::logic_error("行动请求指代定义读回未完成");
         const auto& info=*item.定义读回->信息;
-        if (info.定义.规则!=指代声明规则::作用域受话者) continue;
+        if (info.定义.规则!=规则) continue;
         const auto live=当前.世界事实.存在概念服务.获取指代概念(info.节点);
         if (!live.信息 || live.信息->定义!=info.定义 || found)
-            throw std::logic_error("行动请求受话者指代不唯一或定义已变化");
+            throw std::logic_error(不唯一说明);
         found=info.节点;
     }
-    if (!found) throw std::logic_error("行动请求受话者指代缺失");
+    if (!found) throw std::logic_error(缺失说明);
     return *found;
+}
+稳定编码 读取行动请求受话者概念(普通应用上下文& 当前) {
+    return 读取行动请求作用域指代概念(当前,指代声明规则::作用域受话者,
+        "行动请求受话者指代不唯一或定义已变化","行动请求受话者指代缺失");
+}
+稳定编码 读取行动请求说话者概念(普通应用上下文& 当前) {
+    return 读取行动请求作用域指代概念(当前,指代声明规则::作用域说话者,
+        "行动请求说话者指代不唯一或定义已变化","行动请求说话者指代缺失");
 }
 std::vector<初始化语言概念名称绑定> 读取字段询问名称绑定(普通应用上下文& 当前) {
     const auto d=当前.世界事实.存在概念服务.读取先天需求任务方法概念();
@@ -2854,7 +2863,8 @@ std::vector<初始化语言概念名称绑定> 读取字段询问名称绑定(�
         {"DEMAND-TARGET-COMPARISON",读取字段询问先天类型(当前,1009)},
         {"DEMAND-TARGET-DIRECTION",读取字段询问先天类型(当前,1010)},
         {"THIRD-PARTY",读取字段询问第三方概念(当前)},
-        {"ADDRESSEE",读取行动请求受话者概念(当前)}};
+        {"ADDRESSEE",读取行动请求受话者概念(当前)},
+        {"SPEAKER",读取行动请求说话者概念(当前)}};
 }
 void 初始化普通应用语言知识(普通应用上下文& 当前, 普通应用装配结果& 结果,
     const std::string& 标准文本, bool 只读) noexcept {
