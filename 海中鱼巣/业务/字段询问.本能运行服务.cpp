@@ -1,4 +1,5 @@
 #include "字段询问.本能运行服务.h"
+#include "正式表达需求.h"
 #include "新_世界树类.h"
 #include "新_外设世界树类.h"
 #include "../领域/新_方法类.h"
@@ -26,14 +27,18 @@ void 要求(bool ok,const char* text) { if (!ok) throw std::logic_error(text); }
 thread_local const 方法参数场景* 发送工作场景=nullptr;
 thread_local const 新字段询问候选* 发送工作候选=nullptr;
 thread_local const std::function<bool()>* 发送工作来源=nullptr;
+thread_local const std::vector<基础联合节点快照>* 发送工作来源保护=nullptr;
 }
 字段询问发送工作守卫::字段询问发送工作守卫(const 方法参数场景& s,
-    const 新字段询问候选& c,const std::function<bool()>& guard) {
+    const 新字段询问候选& c,const std::function<bool()>& guard,
+    const std::vector<基础联合节点快照>& protect) {
     要求(!发送工作场景 && guard,"field send work context nested or missing source guard");
     发送工作场景=&s;发送工作候选=&c;发送工作来源=&guard;
+    要求(!protect.empty(),"field send source protection missing");发送工作来源保护=&protect;
 }
 字段询问发送工作守卫::~字段询问发送工作守卫() {
     发送工作场景=nullptr;发送工作候选=nullptr;发送工作来源=nullptr;
+    发送工作来源保护=nullptr;
 }
 新本能函数本次条件结果对 执行本次任务字段发送(const 方法参数场景& scene) {
     要求(发送工作场景==&scene && 发送工作候选 && 发送工作来源,"field send must consume adopted task work context");
@@ -137,6 +142,71 @@ bool 字段询问本能运行服务::复核发送会话(稳定编码 窗口,std:
     const auto w=s.外设.读取对话框来源(窗口);
     return w && w->公开宿主会话==宿主 && w->对话框标识==对话框;
 }
+bool 字段询问本能运行服务::原子发送合同已接通() const noexcept {
+    std::lock_guard lock(实现_->锁);
+    return 实现_->配置.has_value() && 实现_->语言 && !实现_->已关闭;
+}
+bool 字段询问本能运行服务::准备发送动作定义(const 方法参数场景& scene) {
+    auto& s=*实现_;实现::租约 lease(s);
+    const auto read=读取询问材料(scene);
+    if(read.状态!=新字段询问材料状态::已取得 || !read.材料)return false;
+    const auto& m=*read.材料;
+    const auto actor=s.存在.获取存在(m.自我),target=s.存在.获取存在(m.窗口);
+    const auto feature=s.特征.获取特征(m.输出特征);
+    if(!actor || !target || !feature)return false;
+    const auto root=s.特征概念.比较单特征概念(feature->特征概念节点,feature->特征概念节点);
+    要求(root.状态==特征概念规则状态::已完成 && root.特征类型根.has_value(),
+        "field send action definition feature root unreadable");
+    const auto result=s.动态.确保动作定义概念({scene.方法节点(),actor->专属存在概念节点,
+        target->专属存在概念节点,root.特征类型根,false});
+    要求(result.概念节点.has_value(),"field send action definition unavailable");
+    return true;
+}
+std::optional<新字段询问原子发送读回> 字段询问本能运行服务::原子提交询问输出(
+    const 方法参数场景& scene,const 新字段询问材料& m,const 新字段询问候选& c,
+    const std::function<bool()>& sourceGuard) {
+    auto& s=*实现_;实现::租约 lease(s);
+    要求(c.话语.状态==新字段询问文字状态::已生成且唯一回读 && !c.话语.完整保护组.empty(),
+        "atomic question send requires generated/readback complete protection");
+    auto source=新_本能函数管理类::读取本次执行实例(scene);
+    if(!source)source=新_本能函数管理类::读取本次直接调用(scene);
+    const bool own=!source.has_value();
+    if(own)source=s.方法.建立直接调用身份(scene.方法节点(),scene.全部角色绑定(),m.执行场景,m.外设场景).节点;
+    const auto w=s.外设.读取对话框来源(m.窗口);
+    if(!w || w->定位.场景节点!=m.外设场景 || w->定位.输出队列特征!=m.输出特征
+        || !sourceGuard || 已请求停止() || !sourceGuard()) {
+        if(own)s.方法.收束直接调用身份(*source);
+        return {};
+    }
+    const auto guard=[&] { return !已请求停止() && sourceGuard(); };
+    auto protect=c.话语.完整保护组;
+    要求(发送工作来源保护 && !发送工作来源保护->empty(),"atomic question source read set missing");
+    for(const auto& item:*发送工作来源保护) {
+        const auto it=std::find_if(protect.begin(),protect.end(),[&](const auto& x){
+            return x.结构.节点.编码==item.结构.节点.编码;});
+        if(it==protect.end()){protect.push_back(item);continue;}
+        if(it->结构.节点!=item.结构.节点 || it->结构.字段组!=item.结构.字段组
+            || it->入向字段组!=item.入向字段组 || it->入向外部关系组!=item.入向外部关系组
+            || it->出向外部关系组!=item.出向外部关系组) {
+            if(own)s.方法.收束直接调用身份(*source);
+            return {};
+        }
+    }
+    const auto r=s.外设.原子提交发送({w->定位,m.执行场景,m.自我,scene.方法节点(),*source,
+        c.话语.UTF8正文,std::move(protect)},guard);
+    if(r.输出.状态==新外设输出队列状态::前提已变化) {
+        要求(!r.动作节点 && !r.输出.消息,"atomic send rejected with published facts");
+        if(own)s.方法.收束直接调用身份(*source);
+        return {};
+    }
+    要求(r.输出.状态==新外设输出队列状态::已入列 && r.动作节点 && r.输出.消息
+        && r.输出.入列状态 && r.输出.入列动态,"atomic question send receipt incomplete");
+    if(own || 新_本能函数管理类::读取本次直接调用(scene))
+        s.方法.绑定直接调用动作(*source,*r.动作节点);
+    if(own)s.方法.收束直接调用身份(*source);
+    return 新字段询问原子发送读回{*r.动作节点,{r.输出.消息->消息节点,*r.输出.入列状态,
+        *r.输出.入列动态,r.输出.消息->来源.来源序号}};
+}
 稳定编码 字段询问本能运行服务::建立输出动作(const 方法参数场景& scene,const 新字段询问材料& m) {
     auto& s=*实现_;实现::租约 lease(s);
     auto source=新_本能函数管理类::读取本次执行实例(scene);
@@ -207,7 +277,7 @@ bool 字段询问本能运行服务::复核发送会话(稳定编码 窗口,std:
         if (material.状态!=新字段询问材料状态::已取得) { publishRead(material); return r; }
         if (!material.材料) throw std::logic_error("field question material missing");
         const auto& m=*material.材料;
-        // 提交本地表达请求取得候选；不建立正式表达需求或输出动作。
+        // 值式表达请求由正式适配器形成候选；不建立输出动作。
         auto target=m.表达上下文;
         target.被询内容=m.定位;
         target.说话者=m.自我; target.受询者=m.受询者;
@@ -228,7 +298,7 @@ bool 字段询问本能运行服务::复核发送会话(稳定编码 窗口,std:
         新本能字段询问返回材料 out;
         out.原因=新本能字段询问原因::已取得候选;
         out.正式定位=m.定位;out.已读取字段=m.字段内容;
-        out.表达候选=新字段询问候选{std::move(target),text,{}};
+        out.表达候选=装配字段询问候选(从字段询问表达需求形成(target),text);
         r.结果.字段询问=std::move(out);
         r.结果.状态=新本能函数执行状态::已按合同返回;
         r.结果.结果取得状态=新本能函数结果取得状态::已取得;
@@ -246,11 +316,8 @@ bool 字段询问本能运行服务::复核发送会话(稳定编码 窗口,std:
     };
     if(!发送.原子发送合同已接通())return 不发送(新本能字段询问原因::发送合同待对接);
     if(!复核来源 || 读取.已请求停止() || !复核来源())return 不发送(新本能字段询问原因::前提已变化);
-    if(候选.话语.状态!=新字段询问文字状态::已生成且唯一回读||候选.话语.UTF8正文.empty())
+    if(候选.话语.状态!=新字段询问文字状态::已生成且唯一回读)
         return 不发送(新本能字段询问原因::缺语言知识);
-    // 正式对象尚由队友提供；不把未接入的节点当成已消费、已核验的表达需求。
-    if(候选.正式表达需求节点)
-        throw std::logic_error("formal expression demand adapter is not connected");
     const auto material=读取.读取询问材料(场景);
     if(material.状态!=新字段询问材料状态::已取得)
         return 不发送(material.状态==新字段询问材料状态::字段已有值 ? 新本能字段询问原因::字段已有值
@@ -259,13 +326,15 @@ bool 字段询问本能运行服务::复核发送会话(稳定编码 窗口,std:
     if(!material.材料)throw std::logic_error("send decision material missing");
     const auto& m=*material.材料;
     const auto text=读取.生成询问文字(m.表达上下文);
-    const 新字段询问候选 当前{m.表达上下文,text,{}};
+    const auto 当前=装配字段询问候选(从字段询问目标形成表达需求(m.表达上下文),
+        text,候选.正式表达需求节点);
     if(!(当前==候选))return 不发送(新本能字段询问原因::前提已变化);
     const auto fresh=读取.读取询问材料(场景);
     if(fresh.状态!=新字段询问材料状态::已取得||!fresh.材料)
         return 不发送(新本能字段询问原因::前提已变化);
     const auto& f=*fresh.材料;
-    const 新字段询问候选 末次{f.表达上下文,text,{}};
+    const auto 末次=装配字段询问候选(从字段询问目标形成表达需求(f.表达上下文),
+        text,当前.正式表达需求节点);
     if(!(末次==当前)||f.输出特征!=m.输出特征||f.执行场景!=m.执行场景
         ||读取.已请求停止() || !复核来源())return 不发送(新本能字段询问原因::前提已变化);
     for(const auto& b:场景.全部角色绑定()) {
@@ -277,10 +346,13 @@ bool 字段询问本能运行服务::复核发送会话(稳定编码 窗口,std:
         }
         r.条件.参数角色组.push_back(std::move(c));
     }
-    const auto action=发送.建立输出动作(场景,f);
-    if(!有效(action))throw std::logic_error("send action publication failed");
+    auto* atomic=dynamic_cast<字段询问本能运行服务*>(&发送);
+    if(!atomic)throw std::logic_error("atomic field sender owner mismatch");
+    const auto published=atomic->原子提交询问输出(场景,f,候选,复核来源);
+    if(!published)return 不发送(新本能字段询问原因::前提已变化);
+    const auto action=published->动作节点;
     r.结果.动作动态节点=action;r.结果.动作阶段=新本能函数动作阶段::已进入动作;
-    const auto receipt=发送.提交询问输出(场景,f,action,text.UTF8正文);
+    const auto& receipt=published->入列;
     新本能字段询问返回材料 out;out.原因=新本能字段询问原因::已入列;
     out.正式定位=f.定位;out.已读取字段=f.字段内容;out.表达候选=候选;
     out.已提交输出=新本能已提交输出结果{f.窗口,f.输出特征,receipt.消息节点,action,

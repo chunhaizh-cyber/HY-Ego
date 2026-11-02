@@ -9,6 +9,10 @@ namespace 海中鱼巣 {
 class 新_世界树类; class 新_外设世界树类; class 新_方法类;
 class 新_需求类; class 新_存在类; class 新_特征类; class 新_动态类;
 class 概念_存在类; class 概念_特征类;
+struct 新字段询问原子发送读回 final {
+    稳定编码 动作节点;
+    新字段询问入列读回 入列;
+};
 新本能函数本次条件结果对 执行指定需求字段询问核心(
     const 方法参数场景&,新本能字段询问运行接口&);
 // 独立普通动作：fresh裁决通过后才建立输出动作，绝不从询问本能调用。
@@ -20,7 +24,7 @@ class 概念_存在类; class 概念_特征类;
 class 字段询问发送工作守卫 final {
 public:
     字段询问发送工作守卫(const 方法参数场景&,const 新字段询问候选&,
-        const std::function<bool()>&);
+        const std::function<bool()>&,const std::vector<基础联合节点快照>& 来源保护);
     ~字段询问发送工作守卫();
     字段询问发送工作守卫(const 字段询问发送工作守卫&)=delete;
     字段询问发送工作守卫& operator=(const 字段询问发送工作守卫&)=delete;
@@ -46,6 +50,11 @@ public:
     新字段询问文字结果 生成询问文字(const 新正式字段询问目标&) const override;
     bool 已请求停止() const noexcept override;
     bool 复核发送会话(稳定编码,std::string_view,std::string_view) const override;
+    bool 原子发送合同已接通() const noexcept override;
+    bool 准备发送动作定义(const 方法参数场景&);
+    std::optional<新字段询问原子发送读回> 原子提交询问输出(
+        const 方法参数场景&,const 新字段询问材料&,const 新字段询问候选&,
+        const std::function<bool()>&);
     稳定编码 建立输出动作(const 方法参数场景&,const 新字段询问材料&) override;
     新字段询问入列读回 提交询问输出(const 方法参数场景&,
         const 新字段询问材料&,稳定编码,std::string_view) override;

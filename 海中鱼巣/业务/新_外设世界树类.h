@@ -4,6 +4,7 @@
 #include "../领域/消息交互.数据.h"
 #include <string>
 #include <string_view>
+#include <functional>
 
 namespace 海中鱼巣 {
 
@@ -21,7 +22,7 @@ struct 新外设对话框来源 final {
 };
 enum class 新外设输出队列状态 : std::uint8_t {
     已入列=1, 已复用, 已领取, 已移除, 已清空, 已读取,
-    队列为空, 不在队列, 来源不存在, 目标不符, 未初始化
+    队列为空, 不在队列, 来源不存在, 目标不符, 未初始化, 前提已变化
 };
 struct 新外设输出入列请求 final {
     新外设对话框定位 定位;
@@ -37,6 +38,16 @@ struct 新外设输出队列结果 final {
     新外设输出队列状态 状态;
     std::optional<新外设消息信息> 消息;
     std::optional<稳定编码> 入列状态, 入列动态;
+};
+struct 新外设原子发送请求 final {
+    新外设对话框定位 定位;
+    稳定编码 执行场景, 执行主体, 动作定义, 动作来源;
+    std::string UTF8正文;
+    std::vector<基础联合节点快照> 完整保护组;
+};
+struct 新外设原子发送结果 final {
+    新外设输出队列结果 输出{新外设输出队列状态::前提已变化, {}};
+    std::optional<稳定编码> 动作节点;
 };
 struct 新外设输出队列读取结果 final {
     新外设输出队列状态 状态;
@@ -89,6 +100,9 @@ public:
         const 新状态强时间&) noexcept;
     新外设输出队列结果 输出入列(const 新外设输出入列请求&) noexcept;
     新外设输出队列结果 提交输出(const 新外设输出提交请求&) noexcept;
+    // 语言读集、正式消息、独立动作及队列核心只提交一次；变化治理在成功后进行。
+    新外设原子发送结果 原子提交发送(const 新外设原子发送请求&,
+        const std::function<bool()>& 复核来源) noexcept;
     新外设输出队列结果 领取输出队首(const 新外设对话框定位&) noexcept;
     新外设输出队列结果 移除待发输出(
         const 新外设对话框定位&, std::uint64_t 提交序号) noexcept;

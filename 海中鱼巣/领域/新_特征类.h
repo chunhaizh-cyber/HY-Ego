@@ -531,6 +531,10 @@ public:
     新特征I64准备结果 准备顶层I64更新(
         稳定编码 特征节点, std::int64_t 新值,
         const std::vector<基础联合节点快照>& 附加完整预期) noexcept;
+    // 完整材料精确的U64队列；复用准确值核心的准备/提交/收尾状态机。
+    新特征I64准备结果 准备顶层完整材料更新(
+        稳定编码 特征节点, 稳定编码 新材料,
+        const std::vector<基础联合节点快照>& 附加完整预期) noexcept;
     新特征I64提交结果 提交顶层I64更新(
         新特征I64更新准备& 准备,
         const std::vector<基础封存追加片段>& 附加片段组) noexcept;
@@ -602,7 +606,7 @@ private:
         新消息待发表凭据* 待发表消息 = nullptr, bool 单存在引用 = false,
         bool 单需求引用 = false,
         const std::vector<基础联合节点快照>* 附加完整预期 = nullptr,
-        bool 单概念引用 = false) noexcept;
+        bool 单概念引用 = false, bool 完整材料 = false) noexcept;
     const 特征需求成员读取接口* 需求引用读取接口_ = nullptr;
     const 特征存在成员读取接口* 存在成员身份读取接口_ = nullptr;
     新特征值添加结果 完成添加值归组(

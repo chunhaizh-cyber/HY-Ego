@@ -796,15 +796,24 @@ void 新_动态类::设置动作方法定义提供者(const 动作方法定义�
     return 结果;
 }
 
+新普通动作准备结果 新_动态类::准备普通动作动态(
+    const 新动作动态建立请求& 请求) noexcept {
+    新普通动作准备结果 准备;
+    const auto 结果 = 建立已核验动作动态(请求, std::nullopt, nullptr, &准备);
+    准备.状态 = 结果.状态;
+    return 准备;
+}
+
 新动态建立结果 新_动态类::建立已核验动作动态(
     const 新动作动态建立请求& 请求,
     const std::optional<新任务虚拟存在引用>& 内部目标,
-    新事实追加保护增量* 增量) noexcept {
+    新事实追加保护增量* 增量, 新普通动作准备结果* 组合准备) noexcept {
     新动态建立结果 结果;
     try {
         // 先识别同源重放，不能为了重放补造一次概念形成或动作。
         const auto 来源 = 按来源查询动作(请求.动作来源节点);
         if (来源.状态 == 新动态操作状态::已完成 && 来源.动作) {
+            if (组合准备) return {新动态操作状态::动作来源冲突, {}, {}};
             const auto& 已有 = *来源.动作;
             if (已有.主题存在节点 == 请求.执行主体节点
                 && 已有.动作定义节点 == 请求.动作定义节点
@@ -892,6 +901,7 @@ void 新_动态类::设置动作方法定义提供者(const 动作方法定义�
             return 结果;
         }
         if (来源引用.size() == 1) {
+            if (组合准备) return {新动态操作状态::动作来源冲突, {}, {}};
             const auto 已有 = 获取动态(来源引用.front().所属节点);
             if (!已有 || 已有->种类 != 新动态种类::动作
                 || !已有->动作定义节点 || !已有->动作来源节点
@@ -942,6 +952,62 @@ void 新_动态类::设置动作方法定义提供者(const 动作方法定义�
             增量->新建节点组.reserve(1 + 概念增量.新建节点组.size());
             增量->新增字段组.reserve(原子请求.字段组.size() + 概念增量.新增字段组.size());
             增量->新增外部关系组.reserve(概念增量.新增外部关系组.size());
+        }
+        if (组合准备) {
+            // 动作事实仅在调用方组合提交时出现；裸节点只提供跨片段稳定引用。
+            const auto 裸 = 全局基础数据集.原子建立节点({});
+            if (裸.状态 != 基础结构操作状态::已完成 || !裸.节点)
+                throw std::runtime_error("atomic action technical node allocation failed");
+            const auto 清理 = [&]() {
+                const auto 结构 = 全局基础数据集.查询完整节点结构(*裸.节点);
+                if (结构.状态 != 基础结构操作状态::已完成 || !结构.结构
+                    || !结构.结构->字段组.empty())
+                    throw std::runtime_error("unpublished action technical node changed");
+                (void)全局基础数据集.删除节点(*裸.节点);
+            };
+            try {
+                基础节点组追加请求 追加;
+                std::vector<稳定编码> 保护节点组{*裸.节点, 请求.动作来源节点,
+                    请求.动作定义节点, 请求.执行主体节点, 请求.目标存在节点,
+                    *动作概念.概念节点};
+                if (请求.目标特征节点) 保护节点组.push_back(*请求.目标特征节点);
+                std::sort(保护节点组.begin(), 保护节点组.end());
+                保护节点组.erase(std::unique(保护节点组.begin(), 保护节点组.end()), 保护节点组.end());
+                const auto 保护 = 全局基础数据集.查询节点组完整结构(保护节点组);
+                if (保护.状态 != 基础结构操作状态::已完成 || 保护.节点组.size() != 保护节点组.size())
+                    throw std::runtime_error("action preparation protection read failed");
+                for (const auto& 项 : 保护.节点组) {
+                    if (!项.快照) throw std::runtime_error("action preparation endpoint disappeared");
+                    追加.预期联合节点组.push_back(*项.快照);
+                }
+                // source查询和快照之间出现竞争动作时，不把其快照当成新依据。
+                const auto 源保护 = std::find_if(追加.预期联合节点组.begin(), 追加.预期联合节点组.end(),
+                    [&](const auto& 项) { return 项.结构.节点.编码 == 请求.动作来源节点; });
+                if (std::any_of(源保护->入向字段组.begin(), 源保护->入向字段组.end(),
+                    [&](const auto& f) { return f.字段节点 == 动作来源字段; })) {
+                    清理(); return {新动态操作状态::动作来源冲突, {}, {}};
+                }
+                for (const auto& 字段 : 原子请求.字段组)
+                    std::visit([&](const auto& 值) {
+                        追加.追加字段组.push_back({*裸.节点, 字段.字段节点, 值});
+                    }, 字段.内容);
+                // 类型标记、冻结能力和抽象方法也都是实际引用，须随片段保护身份。
+                std::set<稳定编码> 已保护(保护节点组.begin(), 保护节点组.end());
+                for (const auto& 字段 : 原子请求.字段组) {
+                    const auto* 引用 = std::get_if<稳定编码>(&字段.内容);
+                    if (!引用 || !已保护.insert(*引用).second) continue;
+                    const auto 节点 = 全局基础数据集.查询节点(*引用);
+                    if (!节点) throw std::runtime_error("action preparation reference disappeared");
+                    追加.只读预期.节点组.push_back(*节点);
+                }
+                const auto 封存 = 全局基础数据集.封存原子追加片段(追加);
+                if (封存.状态 != 基础节点组追加状态::已完成 || !封存.片段)
+                    throw std::runtime_error("action preparation seal failed");
+                组合准备->动作节点 = *裸.节点;
+                组合准备->动态概念节点 = 动作概念.概念节点;
+                组合准备->片段 = *封存.片段;
+                return {新动态操作状态::已完成, *裸.节点, 动作概念.概念节点};
+            } catch (...) { 清理(); throw; }
         }
         const auto 新建 = 全局基础数据集.原子建立节点(原子请求);
         if (新建.状态 != 基础结构操作状态::已完成 || !新建.节点)

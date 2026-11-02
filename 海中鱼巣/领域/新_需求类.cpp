@@ -8113,31 +8113,53 @@ bool 新_需求类::是需求节点(稳定编码 节点) const noexcept {
 
 
 新需求操作状态 新_需求类::复核字段追问来源(const 新需求字段追问来源& q) const noexcept {
+    return 读取字段追问来源保护(q).状态;
+}
+新需求字段追问来源保护结果 新_需求类::读取字段追问来源保护(
+    const 新需求字段追问来源& q) const noexcept {
     using S=新需求操作状态;
     try {
         const auto& source=q.请求;
         if(!有效(q.自我场景)||!有效(q.窗口)||!有效(q.外设场景)||!有效(q.输出特征)
-            ||!有效(q.父需求)||q.公开宿主会话.empty()||q.对话框标识.empty())return S::入口拒绝;
+            ||!有效(q.父需求)||q.公开宿主会话.empty()||q.对话框标识.empty())return {S::入口拒绝,{}};
         const auto* language=接收认知语言读取接口_;
-        if(!language)return S::尚未初始化;
+        if(!language)return {S::尚未初始化,{}};
         const auto r=language->读取采用行动请求保护(source.需求来源.采用含义节点,source.受请求者节点,特征服务_,存在服务_);
-        if(r.状态==新语言含义采用状态::资源失败)return S::资源失败;
-        if(r.状态==新语言含义采用状态::前提已变化||r.状态==新语言含义采用状态::未找到)return S::前提已变化;
+        if(r.状态==新语言含义采用状态::资源失败)return {S::资源失败,{}};
+        if(r.状态==新语言含义采用状态::前提已变化||r.状态==新语言含义采用状态::未找到)return {S::前提已变化,{}};
         if((r.状态!=新语言含义采用状态::已采用&&r.状态!=新语言含义采用状态::精确重复)||!r.信息)
-            return S::认知来源不合法;
+            return {S::认知来源不合法,{}};
         if(r.信息->需求来源!=source.需求来源.键||r.信息->说话者H!=source.来源人类节点
-            ||r.信息->受请求者E!=source.受请求者节点)return S::认知来源不合法;
+            ||r.信息->受请求者E!=source.受请求者节点)return {S::认知来源不合法,{}};
         const auto d=查询接收认知来源需求(source.需求来源,*language,特征服务_);
-        if(d.状态!=S::已找到)return d.状态;
+        if(d.状态!=S::已找到)return {d.状态,{}};
         if(!d.信息||d.信息->节点!=source.被认知需求节点
             ||d.信息->需求主体存在节点!=source.来源人类节点
-            ||d.信息->执行域!=新需求执行域::被认知)return S::认知来源不合法;
-        const auto parent=读取需求治理信息(q.父需求);
-        if(!parent||parent->执行域!=新需求执行域::自我执行
-            ||parent->需求主体存在节点!=source.受请求者节点)return S::父需求不合法;
-        return S::已找到;
-    }catch(const std::bad_alloc&){return S::资源失败;}
-    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"复核字段追问来源",L"正式请求来源读取工程错误");}
+            ||d.信息->执行域!=新需求执行域::被认知)return {S::认知来源不合法,{}};
+        auto parentRead=读取来源准备单需求治理保护(q.父需求,std::stop_token{});
+        const auto* parent=std::get_if<来源准备单需求治理保护结果>(&parentRead);
+        要求需求物理(parent!=nullptr);
+        using P=来源准备治理读取状态;
+        if(parent->状态==P::资源失败)return {S::资源失败,{}};
+        if(parent->状态==P::前提已变化)return {S::前提已变化,{}};
+        if(parent->状态==P::尚未初始化)return {S::尚未初始化,{}};
+        if(parent->状态==P::依赖未就绪)return {S::目标内容依赖未就绪,{}};
+        if(parent->状态!=P::已读取||!parent->信息
+            ||parent->信息->执行域!=新需求执行域::自我执行
+            ||parent->信息->需求主体存在节点!=source.受请求者节点)return {S::父需求不合法,{}};
+        要求需求物理(!r.完整保护.empty()&&!d.完整保护.empty()&&!parent->完整保护.empty());
+        auto 保护=r.完整保护;
+        // 只合并各owner实际读取的原始依据；冲突和末尾变化均返回零动作前提变化。
+        if(!并需求保护(保护,d.完整保护)||!并需求保护(保护,parent->完整保护)
+            ||!需求内容保护未变(保护))return {S::前提已变化,{}};
+        return {S::已找到,std::move(保护)};
+    }catch(const std::bad_alloc&){return {S::资源失败,{}};}
+    catch(const std::length_error&){return {S::资源失败,{}};}
+    catch(const 需求物理读取失败& e){
+        if(e.原因==基础结构操作状态::资源失败)return {S::资源失败,{}};
+        if(e.原因==基础结构操作状态::节点不存在)return {S::前提已变化,{}};
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取字段追问来源保护",L"正式请求来源物理结构损坏");}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取字段追问来源保护",L"正式请求来源读取工程错误");}
 }
 新需求建立结果 新_需求类::建立请求字段完善需求(
     const 新需求字段追问来源& q,稳定编码 父任务) noexcept {

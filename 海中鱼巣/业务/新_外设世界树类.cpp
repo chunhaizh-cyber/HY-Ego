@@ -1107,6 +1107,211 @@ std::vector<新外设消息信息> 新_外设世界树类::读取输出队列成
     }
 }
 
+新外设原子发送结果 新_外设世界树类::原子提交发送(
+    const 新外设原子发送请求& 请求, const std::function<bool()>& 复核来源) noexcept {
+    try {
+        if (请求.完整保护组.empty() || !复核来源)
+            throw std::logic_error("atomic send requires complete language protection and source guard");
+        std::unique_lock 锁(外设互斥);
+        if (!有效(外设根) || !有效(消息根)) return {};
+        if (!请求.定位.输出队列特征 || 读取窗口定位(请求.定位.场景节点) != 请求.定位)
+            return {};
+        if (!服务_.场景服务.存在属于场景范围(请求.执行场景, 请求.执行主体)
+            || !服务_.场景服务.存在属于场景范围(请求.执行场景, 请求.定位.窗口节点)) return {};
+        // 生成/独立唯一回读的原读集不得用发送时的fresh快照替换。
+        基础节点组追加请求 消息请求;
+        消息请求.预期联合节点组 = 请求.完整保护组;
+        const auto 并入 = [&](const 基础联合节点快照& s) {
+            const auto it = std::find_if(消息请求.预期联合节点组.begin(), 消息请求.预期联合节点组.end(),
+                [&](const auto& x) { return x.结构.节点.编码 == s.结构.节点.编码; });
+            if (it != 消息请求.预期联合节点组.end()) return 消息快照相同(*it, s);
+            消息请求.预期联合节点组.push_back(s); return true;
+        };
+        const auto 加保护 = [&](稳定编码 n) {
+            const auto r=全局基础数据集.查询节点组完整结构({n});
+            if(r.状态!=基础结构操作状态::已完成 || r.节点组.size()!=1)
+                throw std::logic_error("atomic send protection read failed");
+            return r.节点组[0].快照 && 并入(*r.节点组[0].快照);
+        };
+        for (const auto& s : 请求.完整保护组) if (!加保护(s.结构.节点.编码)) return {};
+        // 保护场景归属路径，迁移不能在条件核验与核心CAS之间漏过。
+        for(const auto e:{请求.执行主体,请求.定位.窗口节点}) {
+            auto parent=服务_.场景服务.查询所属场景(e);
+            std::set<稳定编码> seen;
+            while(parent) {
+                if(!seen.insert(*parent).second)throw std::logic_error("atomic send scene ancestry cycle");
+                if(!加保护(*parent))return {};
+                if(*parent==请求.执行场景)break;
+                parent=服务_.场景服务.查询父场景(*parent);
+            }
+            if(!parent)return {};
+        }
+        const auto 场景 = 场景_.获取场景(请求.定位.场景节点);
+        if (!场景) return {};
+        const auto 会话 = 读取文本特征(读取类型特征(场景->特征节点组, 类型[0]));
+        const auto 页面 = 读取文本特征(读取类型特征(场景->特征节点组, 类型[1]));
+        for (const auto n : 场景->特征节点组) {
+            if (!加保护(n)) return {};
+            const auto f = 服务_.特征服务.获取特征(n);
+            if (!f) return {};
+            if (f->当前值) if (const auto* v = std::get_if<稳定编码>(&*f->当前值))
+                if (!加保护(*v)) return {};
+        }
+        const auto 根 = 读取消息快照(消息根);
+        if (!并入(根)) return {};
+        std::uint64_t 最大序号 = 0;
+        std::set<std::uint64_t> 序号组;
+        for (const auto& f : 根.结构.字段组) {
+            if (f.字段节点 != 消息字段[10]) throw std::logic_error("atomic send message index corrupt");
+            const auto m = 读取正式消息(std::get<稳定编码>(f.内容));
+            if (!m) throw std::logic_error("atomic send indexed message unreadable");
+            if (m->来源.方向 != 新外设消息方向::输出 || m->来源.公开宿主会话 != 会话
+                || m->来源.对话框标识 != 页面) continue;
+            if (m->场景节点 != 请求.定位.场景节点 || m->窗口节点 != 请求.定位.窗口节点
+                || !序号组.insert(m->来源.来源序号).second)
+                throw std::logic_error("atomic send source identity conflicts");
+            最大序号 = (std::max)(最大序号, m->来源.来源序号);
+        }
+        if (最大序号 == (std::numeric_limits<std::uint64_t>::max)())
+            throw std::logic_error("atomic send source sequence exhausted");
+        const auto 原队列 = 读取输出队列成员(请求.定位);
+        const auto F = 服务_.特征服务.获取特征(*请求.定位.输出队列特征);
+        const auto 前 = 读取最近特征状态(请求.定位.场景节点, 请求.定位.窗口节点, *请求.定位.输出队列特征);
+        if (!F || !F->当前值 || !前 || 前->固定准确值 != *F->当前值)
+            throw std::logic_error("atomic send queue/current state mismatch");
+        for (const auto n : {请求.执行场景, 请求.执行主体, 请求.动作定义, 请求.动作来源,
+            请求.定位.场景节点, 请求.定位.窗口节点, *请求.定位.输出队列特征, 前->节点})
+            if (!加保护(n)) return {};
+        const auto 正文材料 = 服务_.特征值服务.保存或取得特征值(材料物理类型::UTF8字符串, 请求.UTF8正文);
+        if (!有效(正文材料)) throw std::logic_error("atomic send body material unavailable");
+        // 两个空节点只是未发布技术材料，直到CAS成功才取得消息/动作身份。
+        const auto 裸消息 = 全局基础数据集.新建节点();
+        if (!有效(裸消息)) throw std::logic_error("atomic send private message allocation failed");
+        std::optional<稳定编码> 裸动作;
+        bool 已提交 = false;
+        struct 清理守卫 final {
+            稳定编码 消息; std::optional<稳定编码>& 动作; bool& 提交;
+            ~清理守卫() {
+                if (提交) return;
+                for (const auto n : {消息, 动作.value_or(稳定编码{})}) {
+                    if (!有效(n)) continue;
+                    const auto s = 读取消息快照(n);
+                    if (!s.结构.字段组.empty() || !s.入向字段组.empty()
+                        || !s.入向外部关系组.empty() || !s.出向外部关系组.empty()
+                        || !全局基础数据集.删除节点(n))
+                        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子发送取消", L"未发布技术节点释放失败。");
+                }
+            }
+        } 清理{裸消息, 裸动作, 已提交};
+        auto 动作时间 = 当前强时间();
+        if (动作时间.纳秒 < 前->强时间.纳秒) throw std::logic_error("atomic send time moved backwards");
+        const 新动作动态建立请求 动作请求{请求.执行主体, 请求.动作定义, 请求.动作来源,
+            请求.定位.窗口节点, 请求.定位.输出队列特征, 动作时间};
+        const auto 动作准备 = 服务_.动态服务.准备普通动作动态(动作请求);
+        if (动作准备.状态 == 新动态操作状态::动作来源冲突) return {};
+        if (动作准备.状态 != 新动态操作状态::已完成 || !动作准备.动作节点 || !动作准备.片段)
+            throw std::logic_error("atomic send action preparation failed");
+        裸动作 = 动作准备.动作节点;
+        std::vector<std::uint64_t> 编码组;
+        for (const auto& m : 原队列) 编码组.push_back(m.消息节点.值);
+        编码组.push_back(裸消息.值);
+        const auto 新材料 = 服务_.特征值服务.保存或取得特征值(材料物理类型::U64数组, 编码组);
+        if (!有效(新材料)) throw std::logic_error("atomic send queue material unavailable");
+        for (const auto n : {裸消息, 正文材料, 新材料}) if (!加保护(n)) return {};
+        const 新外设消息来源键 来源{会话, 页面, 新外设消息方向::输出, 最大序号 + 1};
+        const std::array<基础组内字段内容, 10> 值{消息字段[11], 消息根,
+            请求.定位.场景节点, 请求.定位.窗口节点,
+            基础值{基础原始值{会话}}, 基础值{基础原始值{页面}},
+            基础值{基础原始值{std::int64_t{3}}},
+            基础值{基础原始值{std::vector<std::uint64_t>{来源.来源序号}}}, 正文材料,
+            基础值{基础原始值{动作时间.纳秒}}};
+        for (std::size_t i = 0; i < 值.size(); ++i)
+            消息请求.追加字段组.push_back({裸消息, 消息字段[i], 值[i]});
+        消息请求.追加字段组.push_back({消息根, 消息字段[10], 裸消息});
+        const auto 保护字段 = 服务_.特征概念服务.消息集合成员保护字段();
+        if (!有效(保护字段)) throw std::logic_error("atomic send membership key unavailable");
+        for (const auto n : 编码组) {
+            消息请求.追加字段组.push_back({新材料, 保护字段, 稳定编码{n}});
+            const auto node = 全局基础数据集.查询节点(稳定编码{n});
+            if (!node) return {};
+            消息请求.只读预期.节点组.push_back(*node);
+        }
+        const auto 消息标记 = 全局基础数据集.查询节点(消息字段[11]);
+        if (!消息标记) throw std::logic_error("atomic send message type missing");
+        消息请求.只读预期.节点组.push_back(*消息标记);
+        const auto 封存 = 全局基础数据集.封存原子追加片段(消息请求);
+        if (封存.状态 == 基础节点组追加状态::预期不符
+            || 封存.状态 == 基础节点组追加状态::节点不存在
+            || 封存.状态 == 基础节点组追加状态::引用不存在) return {};
+        if (封存.状态 != 基础节点组追加状态::已完成 || !封存.片段)
+            throw std::logic_error("atomic send message seal failed");
+        // 来源核验会再次读取会话；不能持外设锁反向回调。
+        // 释放期间的变化仍由下面同一CAS中的原定位/队列/语言快照拒绝。
+        锁.unlock();
+        const bool 来源有效 = 复核来源();
+        锁.lock();
+        if (!来源有效) return {};
+        auto 准备 = 服务_.特征服务.准备顶层完整材料更新(*请求.定位.输出队列特征,
+            新材料, 消息请求.预期联合节点组);
+        if (准备.状态 == 新特征I64准备状态::预期已变化
+            || 准备.状态 == 新特征I64准备状态::联合更新占用) return {};
+        if (准备.状态 != 新特征I64准备状态::已准备 || !准备.准备)
+            throw std::logic_error("atomic send queue preparation failed");
+        const auto 提交 = 服务_.特征服务.提交顶层I64更新(*准备.准备, {*动作准备.片段, *封存.片段});
+        if (提交.状态 != 基础节点组追加状态::已完成) {
+            服务_.特征服务.取消顶层I64更新(*准备.准备);
+            if (提交.状态 == 基础节点组追加状态::预期不符
+                || 提交.状态 == 基础节点组追加状态::节点不存在
+                || 提交.状态 == 基础节点组追加状态::引用不存在) return {};
+            throw std::logic_error("atomic send combined publication failed");
+        }
+        已提交 = true;
+        if (提交.附加片段回执组.size() != 2
+            || !提交.附加片段回执组[0].对应片段(*动作准备.片段)
+            || !提交.附加片段回执组[1].对应片段(*封存.片段))
+            throw std::logic_error("atomic send combined receipt mismatch");
+        const auto 特征结果 = 服务_.特征服务.完成顶层I64更新(*准备.准备);
+        const auto 消息 = 读取正式消息(裸消息);
+        if (!消息 || 消息->来源 != 来源 || 消息->UTF8正文 != 请求.UTF8正文)
+            throw std::logic_error("atomic send formal message readback failed");
+        const auto 动作 = 服务_.动态服务.获取动态(*裸动作);
+        if (!动作 || 动作->种类 != 新动态种类::动作 || 动作->主题存在节点 != 请求.执行主体
+            || 动作->动作定义节点 != 请求.动作定义 || 动作->动作来源节点 != 请求.动作来源
+            || 动作->动作目标存在节点 != 请求.定位.窗口节点
+            || 动作->动作目标特征节点 != 请求.定位.输出队列特征 || 动作->动作时间 != 动作时间
+            || !动作->动作结果组.empty())
+            throw std::logic_error("atomic send formal action readback failed");
+        const auto 挂接 = 服务_.场景服务.添加动态(请求.执行场景, *裸动作);
+        if (挂接 != 新场景操作状态::已完成) throw std::logic_error("atomic send action attachment failed");
+        auto 后时间 = 当前强时间();
+        if (后时间.纳秒 <= 动作时间.纳秒 || 后时间.纳秒 <= 前->强时间.纳秒)
+            throw std::logic_error("atomic send completion time did not advance");
+        const auto 后 = 服务_.存在服务.完成已提交完整材料特征变化(请求.定位.窗口节点,
+            *请求.定位.输出队列特征, 特征结果, 输出队列类型, 新材料, 后时间);
+        if (后.状态 != 新存在操作状态::已完成 || !后.状态结果 || !后.状态结果->状态节点)
+            throw std::logic_error("atomic send state completion failed");
+        const auto 后节点 = *后.状态结果->状态节点;
+        if (场景_.添加状态(请求.定位.场景节点, 后节点) != 新场景操作状态::已完成)
+            throw std::logic_error("atomic send state attachment failed");
+        const auto 变化 = 服务_.动态服务.建立原子动态(请求.定位.窗口节点, 前->节点, 后节点);
+        if (变化.状态 != 新动态操作状态::已完成 || !变化.动态节点
+            || 场景_.添加动态(请求.定位.场景节点, *变化.动态节点) != 新场景操作状态::已完成
+            || 服务_.动态服务.关联动作结果(*裸动作, *变化.动态节点, 新动作结果关系类型::导致变化)
+                != 新动态操作状态::已完成)
+            throw std::logic_error("atomic send actual change completion failed");
+        核验并处理已发布动态(请求.定位.场景节点, *变化.动态节点);
+        const auto 已入列 = 读取输出队列成员(请求.定位);
+        if (已入列.size() != 原队列.size() + 1 || 已入列.back().消息节点 != 裸消息)
+            throw std::logic_error("atomic send queue readback mismatch");
+        服务_.特征服务.结束顶层I64更新(*准备.准备);
+        return {{新外设输出队列状态::已入列, 消息, 后节点, 变化.动态节点}, 裸动作};
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子字段发送", L"组合提交或后续治理工程故障，保留已提交事实。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子字段发送", L"未知工程故障，保留已提交事实。");
+    }
+}
+
 新外设输出队列结果 新_外设世界树类::提交输出(
     const 新外设输出提交请求& 请求) noexcept {
     if (请求.UTF8正文.empty()) return {新外设输出队列状态::目标不符, {}};
