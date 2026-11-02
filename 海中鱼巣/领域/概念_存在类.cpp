@@ -521,6 +521,61 @@ bool 概念_存在类::初始化() noexcept {
             (void)记录调试日志(L"ASK_BACK_INFORMATION_GUARD",L"概念owner",L"专属特征项替换前",text.str());
         }catch(...){}
 #endif
+        const bool 同类型集合=新特征组->size()==原特征组->size()
+            &&std::equal(新特征组->begin(),新特征组->end(),原特征组->begin(),
+                [](const auto& x,const auto& y){return x.特征类型概念==y.特征类型概念;});
+        if(同类型集合) {
+            // FT身份未变时保留项及类型引用，只原子替换实际变化的FC引用。
+            const auto 持有组=全局基础数据集.查询字段(专属概念节点,特征项字段);
+            std::set<稳定编码> 端点{专属概念节点};
+            for(const auto& f:持有组) {
+                const auto* n=std::get_if<稳定编码>(&f.内容);
+                if(!n)return 存在概念操作状态::结构不一致;
+                端点.insert(*n);
+            }
+            for(const auto& x:*原特征组)端点.insert(x.具体特征概念);
+            for(const auto& x:*新特征组)端点.insert(x.具体特征概念);
+            const auto 捕获=全局基础数据集.查询节点组完整结构({端点.begin(),端点.end()});
+            if(捕获.状态==基础结构操作状态::资源失败)return 存在概念操作状态::资源失败;
+            if(捕获.状态!=基础结构操作状态::已完成||捕获.节点组.size()!=端点.size())
+                return 存在概念操作状态::结构不一致;
+            基础节点组追加请求 请求;
+            std::map<稳定编码,const 基础联合节点快照*> 快照组;
+            for(const auto& x:捕获.节点组) {
+                if(!x.快照)return 存在概念操作状态::结构不一致;
+                快照组.emplace(x.查询节点,&*x.快照);请求.预期联合节点组.push_back(*x.快照);
+            }
+            std::vector<基础字段关系> 当前持有;
+            for(const auto& f:快照组.at(专属概念节点)->结构.字段组)
+                if(f.字段节点==特征项字段)当前持有.push_back(f);
+            if(当前持有!=持有组||持有组.size()!=原特征组->size())return 存在概念操作状态::结构不一致;
+            std::set<稳定编码> 已核类型;
+            for(const auto& f:持有组) {
+                const auto n=std::get<稳定编码>(f.内容);
+                const auto& fields=快照组.at(n)->结构.字段组;
+                const 基础字段关系 *type=nullptr,*ft=nullptr,*fc=nullptr;
+                for(const auto& item:fields) {
+                    if(item.字段节点==节点类型字段)type=&item;
+                    else if(item.字段节点==特征类型概念字段)ft=&item;
+                    else if(item.字段节点==具体特征概念字段)fc=&item;
+                }
+                if(fields.size()!=3||!type||!ft||!fc||type->内容!=基础字段内容{特征项节点类型}
+                    ||!std::holds_alternative<稳定编码>(ft->内容))return 存在概念操作状态::结构不一致;
+                const auto FT=std::get<稳定编码>(ft->内容);
+                const auto old=std::find_if(原特征组->begin(),原特征组->end(),[&](const auto& x){return x.特征类型概念==FT;});
+                if(old==原特征组->end()||!已核类型.insert(FT).second||fc->内容!=基础字段内容{old->具体特征概念})
+                    return 存在概念操作状态::结构不一致;
+                const auto index=static_cast<std::size_t>(old-原特征组->begin());
+                const auto replacement=(*新特征组)[index].具体特征概念;
+                if(old->具体特征概念!=replacement)请求.替换字段组.push_back({fc->编码,replacement});
+            }
+            const auto 发布=全局基础数据集.原子追加节点组(请求);
+            if(发布.状态==基础节点组追加状态::资源失败)return 存在概念操作状态::资源失败;
+            if(发布.状态!=基础节点组追加状态::已完成)return 存在概念操作状态::结构不一致;
+            const auto 读回=读取特征组(专属概念节点,特征概念服务_);
+            if(!读回||*读回!=*新特征组)
+                工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"更新专属存在概念",L"同类型特征项原子替换读回不一致");
+        } else {
         auto 新特征项组 = 建立特征项节点组(*新特征组);
         if (!新特征项组
             || !挂接特征项节点组(专属概念节点, *新特征项组)) {
@@ -547,6 +602,8 @@ bool 概念_存在类::初始化() noexcept {
                 }
             }
             (void)全局基础数据集.删除节点(*旧项节点);
+        }
+
         }
 
         for (const auto& 上位关系 : 查询概念关系(专属概念节点, true)) {
