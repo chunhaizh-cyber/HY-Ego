@@ -48,7 +48,8 @@ public:
 class 新字段询问发送运行接口 {
 public:
     virtual ~新字段询问发送运行接口()=default;
-    // 只有独立动作定义及完整语言/来源读集已能原子提交时才可开放。
+    // 只有独立动作定义及语言结果.完整保护组（生成+唯一回读）已能原子提交时才可开放。
+    // 语言侧交付非空完整保护后，由本能实现覆写为 true；默认保持关闭。
     virtual bool 原子发送合同已接通() const noexcept { return false; }
     virtual bool 复核发送会话(稳定编码,std::string_view,std::string_view) const { return false; }
     virtual 稳定编码 建立输出动作(const 方法参数场景&, const 新字段询问材料&)=0;
