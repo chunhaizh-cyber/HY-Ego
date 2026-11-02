@@ -509,6 +509,18 @@ bool 概念_存在类::初始化() noexcept {
         }
         if (*新特征组 == *原特征组) return 存在概念操作状态::无变化;
 
+#ifdef HY_EGO_DEBUG_LOG_RECEIVED_DEMAND_PARSE
+        try {
+            std::wostringstream text;text<<L"EC="<<专属概念节点.值
+                <<L"；类型概念字段="<<特征类型概念字段.值<<L"；具体概念字段="<<具体特征概念字段.值;
+            const auto items=[&](const wchar_t* label,const auto& group) {
+                std::size_t count=0;
+                for(const auto& item:group)if(count++<16)text<<L"；"<<label<<L"[FT="<<item.特征类型概念.值<<L",FC="<<item.具体特征概念.值<<L"]";
+            };
+            items(L"原",*原特征组);items(L"新",*新特征组);
+            (void)记录调试日志(L"ASK_BACK_INFORMATION_GUARD",L"概念owner",L"专属特征项替换前",text.str());
+        }catch(...){}
+#endif
         auto 新特征项组 = 建立特征项节点组(*新特征组);
         if (!新特征项组
             || !挂接特征项节点组(专属概念节点, *新特征项组)) {
@@ -2417,7 +2429,9 @@ bool 正式快照相同(const 基础联合节点快照&a,const 基础联合节�
         std::size_t count=0;
         const auto fields=[&](const wchar_t* label,const auto& x,const auto& y) {
             for(const auto& f:x)if(std::find(y.begin(),y.end(),f)==y.end()&&count++<16) {
-                text<<L"；"<<label<<L"[关系="<<f.编码.值<<L",owner="<<f.所属节点.值<<L",字段="<<f.字段节点.值;
+                text<<L"；"<<label<<L"[关系="<<f.编码.值<<L",owner="<<f.所属节点.值<<L",字段="<<f.字段节点.值
+                    <<L",类型概念字段="<<(f.字段节点==特征类型概念字段)
+                    <<L",具体概念字段="<<(f.字段节点==具体特征概念字段);
                 if(const auto* ref=std::get_if<稳定编码>(&f.内容))text<<L",引用="<<ref->值;
                 text<<L"]";
             }
