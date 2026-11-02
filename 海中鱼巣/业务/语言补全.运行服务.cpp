@@ -227,30 +227,68 @@ void 语言补全运行服务::关闭() noexcept {
     for(const auto id : calls)实现_->方法.收束直接调用身份(id);
 }
 bool 语言补全运行服务::初始化(const 新字段询问登记配置& cfg) {
-    auto& s=*实现_;if(s.配置)return false;
+    auto& s=*实现_;
+    const auto fail=[](const std::string& stage,std::int64_t status,const std::string& contract)->void {
+        throw std::runtime_error("language completion initialization stage="+stage
+            +", owner status="+std::to_string(status)+", contract="+contract);
+    };
+    if(s.配置)fail("configuration",0,"runtime already initialized; startup-only declaration");
+    for(const auto id : {cfg.需求根概念,cfg.自我范围概念,cfg.人类概念,cfg.通用存在概念,cfg.输出队列类型,cfg.语言节点})
+        if(!有效(id))fail("configuration",0,"five-role range or language identity is empty");
     特征概念定义 def;def.值域=std::vector<特征概念I64闭区间>{{0,1}};
-    const auto FT=s.特征概念.建立或取得特征概念(def,s.值);if(!有效(FT))return false;
+    const auto root=s.特征概念.建立或取得特征概念强类型(def,s.值);
+    if(!root.概念节点||(root.状态!=特征概念规则状态::已完成&&root.状态!=特征概念规则状态::无变化))
+        fail("pronoun-state-FT",static_cast<std::int64_t>(root.状态),"owner=concept-feature; status-type=feature-rule; I64 [0,1], no unit, exact numeric comparison");
+    const auto FT=*root.概念节点;
     def.值域=std::vector<特征概念I64闭区间>{{1,1}};
-    const auto domain=s.特征概念.建立或取得特征概念(def,s.值,FT);if(!有效(domain))return false;
+    const auto target=s.特征概念.建立或取得特征概念强类型(def,s.值,FT);
+    if(!target.概念节点||(target.状态!=特征概念规则状态::已完成&&target.状态!=特征概念规则状态::无变化))
+        fail("pronoun-resolved-domain",static_cast<std::int64_t>(target.状态),"owner=concept-feature; status-type=feature-rule; I64 [1,1] under state FT="+std::to_string(FT.值));
+    const auto domain=*target.概念节点;
+    // 二次owner公开合同要求输入顺序恰为0/1；左右输入是同一FT的准确值。
     const auto compare=s.二次.建立或取得默认二次特征概念(二次特征算法::有向特征差值,
-        {{1,二次特征输入角色::左输入,二次特征输入来源种类::特征准确值,FT},
-         {2,二次特征输入角色::右输入,二次特征输入来源种类::特征准确值,FT}},domain);
-    if(!compare.概念节点)return false;
+        {{0,二次特征输入角色::左输入,二次特征输入来源种类::特征准确值,FT},
+         {1,二次特征输入角色::右输入,二次特征输入来源种类::特征准确值,FT}},domain);
+    if(!compare.概念节点||(compare.状态!=二次特征概念操作状态::已建立&&compare.状态!=二次特征概念操作状态::已复用))
+        fail("pronoun-comparison-type",static_cast<std::int64_t>(compare.状态),"owner=concept-secondary; status-type=secondary-operation; directed I64 difference; input order 0/1; same FT="
+            +std::to_string(FT.值)+"; reference domain="+std::to_string(domain.值));
     const auto C=s.二次.建立或取得参照结果域概念(*compare.概念节点,二次特征结果域种类::包含于参照值域);
-    if(!C.概念节点)return false;
-    s.指代={FT,domain,*C.概念节点};s.配置=cfg;
+    if(!C.概念节点||(C.状态!=二次特征概念操作状态::已建立&&C.状态!=二次特征概念操作状态::已复用))
+        fail("pronoun-comparison-domain",static_cast<std::int64_t>(C.状态),"owner=concept-secondary; status-type=secondary-operation; included-in-reference-domain; comparison="+std::to_string(compare.概念节点->值));
     for(std::size_t k=0;k<2;++k)for(std::size_t a=0;a<3;++a) {
+        const auto name=std::string(登记名[k][a]);
         const auto registered=新_本能函数管理类::登记(登记名[k][a],&补全入口);
-        if(registered!=新本能函数登记状态::已登记&&registered!=新本能函数登记状态::精确重复)return false;
-        新方法知识建立请求 req;req.作用域=新方法作用域::普通世界;req.实现方式=新方法实现方式::本能;req.行为=新方法行为::改变;
-        req.方法头.作用存在概念组={a==1 ? cfg.通用存在概念 : cfg.需求根概念};
-        req.方法头.涉及特征类型概念组={a==1 ? cfg.输出队列类型 : FT};req.方法头.可能结果概念组=req.方法头.涉及特征类型概念组;
+        if(registered!=新本能函数登记状态::已登记&&registered!=新本能函数登记状态::精确重复)
+            fail("builtin-registration "+name,static_cast<std::int64_t>(registered),"owner=builtin-manager; status-type=builtin-registration; typed function registration");
+        新方法知识建立请求 req;req.作用域=新方法作用域::普通世界;req.实现方式=新方法实现方式::本能;
+        req.方法头.作用存在概念组={cfg.通用存在概念};
+        if(a==0) {
+            // 询问只读取语言材料并返回表达候选，没有输出队列或指代状态写入。
+            req.行为=新方法行为::读取;
+            req.方法头.可能结果概念组={cfg.通用存在概念};
+        }else if(a==1) {
+            req.行为=新方法行为::改变;
+            req.方法头.涉及特征类型概念组={cfg.输出队列类型};
+            req.方法头.可能结果概念组={cfg.输出队列类型};
+        }else if(k==1) {
+            req.行为=新方法行为::改变;
+            req.方法头.涉及特征类型概念组={FT};req.方法头.可能结果概念组={FT};
+        }else {
+            // 词条写回发布语言/概念/名称信息；不伪称改变指代FT或需求字段。
+            req.行为=新方法行为::改变;
+            req.方法头.可能结果概念组={cfg.通用存在概念};
+        }
         for(const auto spec : std::array<新方法有序参数规格,5>{{{1,新方法参数信息类型::存在,cfg.需求根概念},{2,新方法参数信息类型::存在,cfg.自我范围概念},
             {3,新方法参数信息类型::存在,cfg.人类概念},{4,新方法参数信息类型::存在,cfg.通用存在概念},{5,新方法参数信息类型::特征,cfg.输出队列类型}}}) {
             新方法参数规格 p;p.有序规格=spec;req.参数规格组.push_back(std::move(p));}
         req.初始模拟关系组={{新方法参数关系种类::不同,2,3},{新方法参数关系种类::特征所属存在,5,4}};
-        const auto method=s.方法.确保本能方法登记(std::string(登记名[k][a]),req);if(!method.方法节点)return false;s.方法组[k][a]=*method.方法节点;
+        const auto method=s.方法.确保本能方法登记(name,req);
+        if(!method.方法节点||(method.状态!=新方法操作状态::已建立&&method.状态!=新方法操作状态::已找到&&method.状态!=新方法操作状态::无变化))
+            fail("method-registration "+name,static_cast<std::int64_t>(method.状态),"owner=method; status-type=method-operation; five ordered roles; behavior="
+                +(req.行为 ? std::to_string(static_cast<std::int64_t>(*req.行为)) : std::string{"undeclared"})+"; explicit direct result range");
+        s.方法组[k][a]=*method.方法节点;
     }
+    s.指代={FT,domain,*C.概念节点};s.配置=cfg;
     return true;
 }
 std::optional<稳定编码> 语言补全运行服务::读取方法(新语言补全种类 kind,新语言补全动作 action) const {
